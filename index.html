@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Research Summit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/layout.css">
+</head>
+<body>
+
+<!-- ─── Loading overlay ─── -->
+<div class="loading-wrap" id="loadingWrap">
+  <div class="brand">Summit</div>
+  <div class="loading-spinner"></div>
+  <div class="status" id="status">Authenticating...</div>
+</div>
+
+<!-- ─── App shell (hidden until authenticated) ─── -->
+<div class="app" id="appShell" style="display:none;">
+
+  <!-- ─── Sidebar ─── -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-brand-name">Summit</div>
+      <div class="sb-brand-sub">Research Portal</div>
+    </div>
+
+    <nav class="sb-nav">
+      <div class="nav-item" data-page="dashboard" onclick="window._nav('dashboard')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        Dashboard
+      </div>
+    </nav>
+
+    <div class="sb-foot">
+      <div class="sb-user-info">
+        <span class="sb-dot"></span>
+        <div>
+          <div class="sb-user-name" id="sbUserName">&mdash;</div>
+          <div class="sb-user-role" id="sbUserRole">&mdash;</div>
+        </div>
+      </div>
+      <button class="sb-signout-btn" id="signOutBtn">Sign out</button>
+    </div>
+  </aside>
+
+  <!-- ─── Main content ─── -->
+  <div class="main">
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <section class="page" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="page-sub">Research portal home</div>
+        </div>
+      </div>
+      <div id="dashboard-content">
+        <p style="color: var(--t2); font-size: 14px;">Welcome to Research Summit. Dashboards will appear here as they are built.</p>
+      </div>
+    </section>
+
+  </div><!-- .main -->
+</div><!-- .app -->
+
+<script src="env.js"></script>
+<script type="module">
+import { initAuth, getCurrentUser, signOut } from './js/auth.js';
+import { initNav, registerPageLoader } from './js/nav.js';
+
+const statusEl = document.getElementById('status');
+
+async function boot() {
+  const result = await initAuth();
+
+  switch (result.status) {
+    case 'authenticated': {
+      statusEl.textContent = 'Loading...';
+
+      // Register page loaders here as you add dashboards
+      // registerPageLoader('dashboard', loadDashboard);
+
+      document.getElementById('loadingWrap').style.display = 'none';
+      document.getElementById('appShell').style.display = '';
+
+      initNav();
+      startInactivityTimer();
+      break;
+    }
+    case 'unauthorized':
+      statusEl.className = 'status error';
+      statusEl.textContent = 'This account is not authorized.';
+      break;
+    case 'no-session':
+      break;
+  }
+}
+
+boot();
+
+function startInactivityTimer() {
+  const TIMEOUT = 2 * 60 * 60 * 1000;
+  let timer = setTimeout(() => signOut(), TIMEOUT);
+  const reset = () => { clearTimeout(timer); timer = setTimeout(() => signOut(), TIMEOUT); };
+  for (const evt of ['mousemove', 'keydown', 'scroll', 'click', 'touchstart']) {
+    document.addEventListener(evt, reset, { passive: true });
+  }
+}
+</script>
+</body>
+</html>

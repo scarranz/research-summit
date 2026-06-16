@@ -1,0 +1,26 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --w: #ffffff;
+  --off: #fafaf8;
+  --b: #e8e5e0;
+  --t: #1a1a18;
+  --t2: #6b6860;
+  --t3: #a8a49e;
+  --green: #2d6a4f;
+  --greenl: #eaf4ef;
+  --red: #c0392b;
+  --redl: #fdf0ee;
+  --blue: #2563eb;
+  --bluel: #eff6ff;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Jost', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--off);
+  color: var(--t);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}

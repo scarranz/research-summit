@@ -1,0 +1,112 @@
+/* ─── App shell ─── */
+.app {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ─── Sidebar ─── */
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: var(--w);
+  border-right: 1px solid var(--b);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0;
+}
+
+.sb-brand { padding: 0 20px; margin-bottom: 28px; }
+.sb-brand-name { font-size: 22px; font-weight: 400; letter-spacing: 0.04em; }
+.sb-brand-sub { font-size: 9px; color: var(--t3); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; font-weight: 500; }
+
+.sb-nav { flex: 1; }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 20px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--t2);
+  transition: background 0.12s, color 0.12s;
+}
+
+.nav-item:hover { background: var(--off); color: var(--t); }
+.nav-item.active { background: var(--off); color: var(--t); font-weight: 500; }
+
+.nav-icon { width: 18px; height: 18px; stroke-width: 1.5; flex-shrink: 0; }
+
+.sb-foot { padding: 0 20px; border-top: 1px solid var(--b); padding-top: 16px; }
+.sb-user-info { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.sb-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.sb-user-name { font-size: 12px; font-weight: 500; }
+.sb-user-role { font-size: 10px; color: var(--t3); }
+
+.sb-signout-btn {
+  width: 100%;
+  padding: 7px;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  color: var(--t2);
+  background: transparent;
+  border: 1px solid var(--b);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.sb-signout-btn:hover { background: var(--off); }
+
+/* ─── Main content ─── */
+.main {
+  flex: 1;
+  padding: 32px 36px;
+  overflow-y: auto;
+}
+
+.page { display: none; }
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.page-title { font-size: 20px; font-weight: 500; }
+.page-sub { font-size: 11px; color: var(--t3); margin-top: 2px; }
+
+/* ─── Loading overlay ─── */
+.loading-wrap {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--off);
+  z-index: 9999;
+}
+
+.brand {
+  font-family: 'Jost', sans-serif;
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  margin-bottom: 24px;
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--b);
+  border-top-color: var(--t);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.status { font-size: 12px; color: var(--t3); margin-top: 16px; }
+.status.error { color: var(--red); }

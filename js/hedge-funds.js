@@ -1,5 +1,5 @@
 // hedge-funds.js — extracted from summit-research-portal.html
-import { INVESTORS, SP500_REF, HF_FUNDS, HF_BMK, HF_AYEARS, YEARS, SP500, IMGS } from './portal-data.js';
+import { INVESTORS, SP500_REF, SP500_B26, HF_FUNDS, HF_BMK, HF_AYEARS, YEARS, SP500, IMGS } from './portal-data.js';
 
 let alphaChart = null, ALPHA_MODE = 'cum', HF_SEL = {}, HF_START = '2015';
 

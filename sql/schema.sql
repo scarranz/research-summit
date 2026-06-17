@@ -165,5 +165,15 @@ insert into companies (ticker, name, price, sector, group_name, logo_domain, mon
   ('TPL', 'Texas Pacific Land Corp.', 1100.00, 'Energy', 'Commodities', 'texaspacific.com', 'TPL', 'active'),
   ('UBER', 'Uber Technologies', 82.40, 'Technology', 'Transportation', 'uber.com', 'UB', 'active'),
   ('V', 'Visa Inc.', 290.00, 'Financials', 'Networks', 'visa.com', 'V', 'active'),
-  ('VITL', 'Vital Farms Inc.', 38.90, 'Consumer Staples', 'Consumer', 'vitalfarms.com', 'VF', 'active')
+  ('VITL', 'Vital Farms Inc.', 38.90, 'Consumer Staples', 'Consumer', 'vitalfarms.com', 'VF', 'active'),
+  ('RELY', 'Remitly Global Inc.', null, 'Technology', 'Financial Services', 'remitly.com', 'RE', 'active')
 on conflict (ticker) do nothing;
+
+-- ─── 6. Seed: Remitly executives ────────────────────────────────
+
+insert into company_executives (company_id, name, role, since, ownership, sort_order) values
+  ((select id from companies where ticker = 'RELY'), 'Sebastian J. Gunningham', 'CEO', '2026', '—', 1),
+  ((select id from companies where ticker = 'RELY'), 'Matt Oppenheimer', 'Exec. Chairman & Co-Founder', '2011', '3.3%', 2),
+  ((select id from companies where ticker = 'RELY'), 'Vikas Mehta', 'CFO', '2024', '—', 3),
+  ((select id from companies where ticker = 'RELY'), 'Pankaj Sharma', 'Chief Business Officer', '2018', '<1%', 4),
+  ((select id from companies where ticker = 'RELY'), 'Joshua Hug', 'Co-Founder, Director', '2011', '2.3%', 5);

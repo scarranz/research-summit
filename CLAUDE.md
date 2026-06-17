@@ -106,6 +106,39 @@ If a PR has merge conflicts:
 2. Resolve conflicts in the affected files
 3. Commit and push — the PR updates automatically
 
+## Companies tab — how it works
+
+The Companies tab is the core of the portal. Each company has a profile that is **designed and built individually with Claude's help**.
+
+### Adding a company
+
+1. User clicks "Add Company" in the portal
+2. Fills in the minimum: **ticker** and **company name**
+3. The portal inserts a row in the `companies` table in Supabase (exchange, sector, group, logo, etc. can be filled later)
+4. The company appears in the grid immediately (empty profile, draft status)
+
+### Building a company profile
+
+Each company profile is **unique** — there is no fixed template. The user works with Claude to design what appears on each company's profile page.
+
+- The user describes what they want: *"Add a management section with these executives"*, *"Create a DCF snapshot with these numbers"*, *"Show a revenue breakdown chart"*
+- Claude writes the code (HTML, JS, CSS) to render that section in the company's detail view
+- Each company can have completely different sections, layouts, and data
+- The visual design should follow the existing portal style (Inter font, navy/steel palette, card-based layout)
+
+### Data storage
+
+- **Company list** → `companies` table in Supabase (basic info: ticker, name, sector, logo, status)
+- **Profile content** → designed as code by Claude per company. What each profile shows and how it looks is determined by Claude and the user together, not by a rigid schema
+- The `companies` table is the single source of truth for which companies exist. The grid reads from it.
+
+### Key principles
+
+- The portal has an "Add Company" button — no need to touch code or the database directly
+- Profiles are built incrementally — a company can exist in the grid with no profile yet
+- Each profile is a custom design, not a cookie-cutter template
+- Claude handles all the technical work — the user just describes what they want to see
+
 ## Do not
 
 - Add npm dependencies or a build step — this is a zero-build static site

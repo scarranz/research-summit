@@ -131,8 +131,6 @@ function openAddModal() {
 function closeAddModal() {
   document.getElementById('addCoModal').classList.remove('open');
   document.getElementById('addCoForm').reset();
-  document.getElementById('addCo-brand').value = '#1E2733';
-  document.getElementById('addCo-brand-hex').value = '#1E2733';
   var msg = document.getElementById('addCo-msg');
   msg.textContent = '';
   msg.className = 'modal-msg';
@@ -147,37 +145,26 @@ function showModalMsg(text, type) {
 async function handleAddCompany(e) {
   e.preventDefault();
   var btn = document.getElementById('addCoSave');
-  var ticker = document.getElementById('addCo-ticker').value.trim().toUpperCase();
   var name = document.getElementById('addCo-name').value.trim();
 
-  if (!ticker || !name) { showModalMsg('Ticker and name are required.', 'error'); return; }
+  if (!name) { showModalMsg('Company name is required.', 'error'); return; }
 
-  // Check for duplicates in hardcoded + DB
+  // Check for duplicates by name
   var all = getAllCompanies();
-  if (all.find(function(c){ return c.tk === ticker; })) {
-    showModalMsg('A company with ticker ' + ticker + ' already exists.', 'error');
+  if (all.find(function(c){ return c.nm.toLowerCase() === name.toLowerCase(); })) {
+    showModalMsg(name + ' already exists.', 'error');
     return;
   }
 
   btn.disabled = true;
   btn.textContent = 'Adding...';
 
-  var exchange = document.getElementById('addCo-exchange').value;
-  var sector = document.getElementById('addCo-sector').value;
-  var group = document.getElementById('addCo-group').value.trim();
-  var logoDomain = document.getElementById('addCo-logo').value.trim();
-  var brandColor = document.getElementById('addCo-brand-hex').value.trim();
-  var mono = ticker.slice(0, 2);
+  var mono = name.split(/\s+/).map(function(w){ return w[0]; }).join('').slice(0, 2).toUpperCase();
 
   var row = {
-    ticker: ticker,
+    ticker: name.split(/\s+/)[0].toUpperCase().slice(0, 5),
     name: name,
-    exchange: exchange || null,
-    sector: sector || null,
-    group_name: group || null,
-    logo_domain: logoDomain || null,
     mono: mono,
-    brand_color: brandColor || null,
     status: 'active',
   };
 
@@ -240,15 +227,7 @@ function initAddModal() {
     if (e.target === overlay) closeAddModal();
   });
 
-  // Sync color picker ↔ hex input
-  var colorPicker = document.getElementById('addCo-brand');
-  var colorHex = document.getElementById('addCo-brand-hex');
-  if (colorPicker && colorHex) {
-    colorPicker.addEventListener('input', function() { colorHex.value = colorPicker.value; });
-    colorHex.addEventListener('input', function() {
-      if (/^#[0-9a-fA-F]{6}$/.test(colorHex.value)) colorPicker.value = colorHex.value;
-    });
-  }
+
 }
 
 // Expose to window for inline onclick handlers

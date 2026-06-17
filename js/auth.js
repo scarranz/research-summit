@@ -99,7 +99,7 @@ export async function initAuth() {
 
 // Listen for auth state changes
 supabase.auth.onAuthStateChange((event) => {
-  if (event === 'SIGNED_OUT') {
+  if (event === 'SIGNED_OUT' && !window.location.pathname.endsWith('/login.html')) {
     window.location.href = '/login.html';
   }
 });

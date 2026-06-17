@@ -6,7 +6,7 @@ import { supabase } from './supabase-client.js';
 // 'admin' has access to everything; other roles see only their pages.
 
 const ROLE_CONFIG = {
-  admin: { name: 'Admin', label: 'Admin', allowedPages: ['companies', 'market-analysis', 'hedge-funds'], defaultPage: 'companies' },
+  admin: { name: 'Admin', label: 'Admin', allowedPages: ['companies', 'market-analysis', 'hedge-funds', 'prueba'], defaultPage: 'companies' },
 };
 
 let _currentRole = null;
@@ -99,7 +99,7 @@ export async function initAuth() {
 
 // Listen for auth state changes
 supabase.auth.onAuthStateChange((event) => {
-  if (event === 'SIGNED_OUT') {
+  if (event === 'SIGNED_OUT' && !window.location.pathname.endsWith('/login.html')) {
     window.location.href = '/login.html';
   }
 });

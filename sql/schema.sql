@@ -112,7 +112,41 @@ create policy "authenticated_update_companies" on companies
   for update using (auth.uid() is not null);
 
 
--- ─── 4. Seed: migrate hardcoded companies ──────────────────────
+-- ─── 4. company_executives ─────────────────────────────────────
+
+create table company_executives (
+  id           uuid primary key default gen_random_uuid(),
+  company_id   uuid not null references companies(id) on delete cascade,
+  name         text not null,
+  role         text not null,
+  since        text,
+  ownership    text,
+  sort_order   int not null default 0,
+  created_at   timestamptz default now(),
+  updated_at   timestamptz default now()
+);
+
+create trigger company_executives_updated_at
+  before update on company_executives
+  for each row
+  execute function set_updated_at();
+
+alter table company_executives enable row level security;
+
+create policy "authenticated_read_executives" on company_executives
+  for select using (auth.uid() is not null);
+
+create policy "authenticated_insert_executives" on company_executives
+  for insert with check (auth.uid() is not null);
+
+create policy "authenticated_update_executives" on company_executives
+  for update using (auth.uid() is not null);
+
+create policy "authenticated_delete_executives" on company_executives
+  for delete using (auth.uid() is not null);
+
+
+-- ─── 5. Seed: migrate hardcoded companies ──────────────────────
 -- Run this AFTER creating the companies table.
 -- These are the original 15 companies from portal-data.js.
 
@@ -131,5 +165,15 @@ insert into companies (ticker, name, price, sector, group_name, logo_domain, mon
   ('TPL', 'Texas Pacific Land Corp.', 1100.00, 'Energy', 'Commodities', 'texaspacific.com', 'TPL', 'active'),
   ('UBER', 'Uber Technologies', 82.40, 'Technology', 'Transportation', 'uber.com', 'UB', 'active'),
   ('V', 'Visa Inc.', 290.00, 'Financials', 'Networks', 'visa.com', 'V', 'active'),
-  ('VITL', 'Vital Farms Inc.', 38.90, 'Consumer Staples', 'Consumer', 'vitalfarms.com', 'VF', 'active')
+  ('VITL', 'Vital Farms Inc.', 38.90, 'Consumer Staples', 'Consumer', 'vitalfarms.com', 'VF', 'active'),
+  ('RELY', 'Remitly Global Inc.', null, 'Technology', 'Financial Services', 'remitly.com', 'RE', 'active')
 on conflict (ticker) do nothing;
+
+-- ─── 6. Seed: Remitly executives ────────────────────────────────
+
+insert into company_executives (company_id, name, role, since, ownership, sort_order) values
+  ((select id from companies where ticker = 'RELY'), 'Sebastian J. Gunningham', 'CEO', '2026', '—', 1),
+  ((select id from companies where ticker = 'RELY'), 'Matt Oppenheimer', 'Exec. Chairman & Co-Founder', '2011', '3.3%', 2),
+  ((select id from companies where ticker = 'RELY'), 'Vikas Mehta', 'CFO', '2024', '—', 3),
+  ((select id from companies where ticker = 'RELY'), 'Pankaj Sharma', 'Chief Business Officer', '2018', '<1%', 4),
+  ((select id from companies where ticker = 'RELY'), 'Joshua Hug', 'Co-Founder, Director', '2011', '2.3%', 5);

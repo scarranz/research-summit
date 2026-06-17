@@ -7,6 +7,12 @@ let coEstChart = null;
 let _companies = []; // companies loaded from Supabase
 let _pendingLookup = null; // data from ticker lookup
 
+// Pillar scores by ticker for the Analysis tab (the companies table has no
+// pillars column). Each pillar is 1–5: qb, qg, qm, qv.
+var CO_PILLARS = {
+  RELY: { qb: 4, qg: 5, qm: 4, qv: 2 }, // Remitly
+};
+
 function coSegs(score,max){var h='';for(var i=1;i<=max;i++)h+='<i class="'+(i<=score?'on':'')+'"></i>';return h;}
 
 function coSubScore(comp,i){var off=[0,-1,1,0][i%4],v=comp+off;return v<1?1:(v>5?5:v);}
@@ -249,6 +255,7 @@ async function loadCompaniesFromDb() {
   var { data, error } = await supabase.from('companies').select('*').eq('status', 'active').order('name');
   if (error) { console.warn('Could not load companies from DB:', error.message); return; }
   _companies = data || [];
+  _companies.forEach(function(c){ if (CO_PILLARS[c.ticker]) c.pillars = CO_PILLARS[c.ticker]; });
 }
 
 function initAddModal() {

@@ -94,6 +94,7 @@
       <button class="cotab" data-pane="mgmt" onclick="coTab('mgmt')">Management</button>
       <button class="cotab" data-pane="est" onclick="coTab('est')">Estimates</button>
       <button class="cotab" data-pane="val" onclick="coTab('val')">Valuation</button>
+      <button class="cotab" id="co-links-tab" data-pane="links" onclick="coTab('links')" style="display:none">Relevant Links</button>
     </div>
 
     <div class="copane active" data-pane="analysis">
@@ -163,6 +164,11 @@
           </table>
         </div>
       </div>
+    </div>
+
+    <div class="copane" data-pane="links">
+      <p style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:16px;max-width:760px">Primary sources for this company &mdash; official filings, financial models, transcripts and relevant media. Links open in a new tab.</p>
+      <div id="co-links"></div>
     </div>
   </div>
 </div>

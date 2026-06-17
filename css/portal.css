@@ -238,6 +238,21 @@ body{font-family:'Inter',-apple-system,system-ui,sans-serif;background:var(--w);
 .pscore i.on{background:var(--steel)}
 .coplace{border:1px dashed var(--bdr);border-radius:10px;padding:16px;color:var(--mu);font-size:12px;text-align:center;background:var(--surface)}
 .cochart{position:relative;height:250px}
+/* relevant links */
+.lnk-list{display:flex;flex-direction:column;gap:6px}
+.lnk{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--bdr);border-radius:9px;background:var(--w);text-decoration:none;color:var(--text);transition:border-color .15s,background .15s,transform .05s}
+.lnk:hover{border-color:var(--steel);background:var(--pale)}
+.lnk:active{transform:translateY(1px)}
+.lnk-ic{flex:0 0 28px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:7px;background:var(--surface);color:var(--steel);font-size:13px}
+.lnk-spotify .lnk-ic{background:#1DB95417;color:#1DB954}
+.lnk-youtube .lnk-ic{background:#FF000012;color:#FF0000}
+.lnk-fiscal .lnk-ic{background:#2563EB14;color:var(--gold2)}
+.lnk-badge{flex:0 0 auto;font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--steel);background:var(--surface);border:1px solid var(--bdr);border-radius:5px;padding:2px 7px;font-variant-numeric:tabular-nums}
+.lnk-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.lnk-title{font-size:13px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lnk-meta{font-size:11px;color:var(--mu)}
+.lnk-go{flex:0 0 auto;color:var(--mu);font-size:13px;transition:color .15s,transform .15s}
+.lnk:hover .lnk-go{color:var(--steel);transform:translate(2px,-2px)}
 /* logos + four-pillar */
 .cocard-top{display:flex;align-items:center;gap:11px}
 .cocard-id{min-width:0;flex:1}

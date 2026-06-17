@@ -5,6 +5,50 @@ import { supabase } from './supabase-client.js';
 let coEstChart = null;
 let _dbCompanies = []; // companies loaded from Supabase
 
+// ─── Relevant Links (per-company profile content) ────────────
+// Keyed by a normalized key. Resolved against ticker or name so it
+// attaches to a company regardless of how it was added (code or DB).
+const RELEVANT_LINKS = {
+  symbotic: {
+    match: { tickers: ['SYM', 'SYMBO', 'SYMBOTIC'], name: 'symbotic' },
+    filings: [
+      { period: 'Q2 FY2026', form: '10-Q', date: '2026-05-06', url: 'https://www.sec.gov/Archives/edgar/data/1837240/000183724026000024/sym-20260328.htm' },
+      { period: 'Q1 FY2026', form: '10-Q', date: '2026-02-04', url: 'https://www.sec.gov/Archives/edgar/data/1837240/000183724026000009/sym-20251227.htm' },
+      { period: 'FY2025', form: '10-K', date: '2025-11-24', url: 'https://www.sec.gov/Archives/edgar/data/1837240/000183724025000278/sym-20250927.htm' },
+      { period: 'Q3 FY2025', form: '10-Q', date: '2025-08-06', url: 'https://www.sec.gov/Archives/edgar/data/1837240/000183724025000263/sym-20250628.htm' },
+      { period: 'Q2 FY2025', form: '10-Q', date: '2025-05-07', url: 'https://www.sec.gov/Archives/edgar/data/1837240/000183724025000152/sym-20250329.htm' },
+      { period: 'Q1 FY2025', form: '10-Q', date: '2025-02-05', url: 'https://www.sec.gov/Archives/edgar/data/1837240/000183724025000044/sym-20241228.htm' },
+      { period: 'FY2024', form: '10-K', date: '2024-12-04', url: 'https://www.sec.gov/Archives/edgar/data/1837240/000183724024000232/sym-20240928.htm' },
+      { period: 'Q3 FY2024', form: '10-Q', date: '2024-07-31', url: 'https://www.sec.gov/Archives/edgar/data/1837240/000183724024000168/sym-20240629.htm' },
+    ],
+    financials: [
+      { label: 'Income Statement — Annual', sub: 'Fiscal.ai financial model', kind: 'fiscal', url: 'https://fiscal.ai/company/NasdaqGM-SYM/financials/income-statement/annual/' },
+    ],
+    transcripts: [
+      { label: 'Investor Relations & Transcripts', sub: 'Fiscal.ai', kind: 'fiscal', url: 'https://fiscal.ai/company/NasdaqGM-SYM/investor-relations/' },
+    ],
+    media: [
+      { label: 'Symbotic — podcast episode', sub: 'Spotify', kind: 'spotify', url: 'https://open.spotify.com/episode/2vPskyHUYQaWHM7Pn9AtE3' },
+      { label: 'Symbotic — feature video', sub: 'YouTube', kind: 'youtube', url: 'https://youtu.be/EAAV9JxdjF0?si=sTsicnzUbpo_BphH' },
+      { label: 'Symbotic review', sub: 'YouTube', kind: 'youtube', url: 'https://www.youtube.com/watch?v=_-KZzL1mPCQ&pp=ygUQc3ltYm90aWMgcmV2aWV3IA%3D%3D' },
+      { label: '"symbotic review" — search results', sub: 'YouTube', kind: 'youtube', url: 'https://www.youtube.com/results?search_query=symbotic+review+' },
+    ],
+  },
+};
+
+function getCompanyLinks(c) {
+  if (!c) return null;
+  var tk = (c.tk || '').toUpperCase();
+  var nm = (c.nm || '').toLowerCase();
+  for (var key in RELEVANT_LINKS) {
+    var m = RELEVANT_LINKS[key].match;
+    if ((m.tickers && m.tickers.indexOf(tk) >= 0) || (m.name && nm.indexOf(m.name) >= 0)) {
+      return RELEVANT_LINKS[key];
+    }
+  }
+  return null;
+}
+
 function coComposite(c){var p=c.pillars;return (p.qb+p.qg+p.qm+p.qv)/4;}
 
 function coSegs(score,max){var h='';for(var i=1;i<=max;i++)h+='<i class="'+(i<=score?'on':'')+'"></i>';return h;}
@@ -42,6 +86,54 @@ function renderCoAnalysis(c){
       '<div class="fp-subs">'+subs+'</div>'+
       '<div class="fp-note">'+f.desc+'</div></div>';
   }).join('');
+}
+
+function lnkIcon(kind){
+  var m={
+    sec:'▤', fiscal:'∑', spotify:'▶', youtube:'▷', web:'↗'
+  };
+  return m[kind]||m.web;
+}
+
+function lnkRow(href, icon, title, meta, badge){
+  return '<a class="lnk lnk-'+icon+'" href="'+href+'" target="_blank" rel="noopener noreferrer">'+
+    '<span class="lnk-ic">'+lnkIcon(icon)+'</span>'+
+    (badge?'<span class="lnk-badge">'+badge+'</span>':'')+
+    '<span class="lnk-body"><span class="lnk-title">'+title+'</span>'+
+    (meta?'<span class="lnk-meta">'+meta+'</span>':'')+'</span>'+
+    '<span class="lnk-go">↗</span></a>';
+}
+
+function renderCoLinks(c){
+  var box=document.getElementById('co-links');if(!box)return false;
+  var L=getCompanyLinks(c);
+  if(!L){box.innerHTML='';return false;}
+  var html='';
+
+  if(L.filings&&L.filings.length){
+    html+='<div class="card" style="margin-bottom:16px"><div class="sect" style="margin-bottom:12px">Company filings &middot; SEC EDGAR</div><div class="lnk-list">'+
+      L.filings.map(function(f){return lnkRow(f.url,'sec',f.period,'Filed '+f.date,f.form);}).join('')+
+      '</div><div class="est-note">Direct links to official filings on SEC EDGAR &middot; most recent 8 quarters.</div></div>';
+  }
+
+  var two='';
+  if(L.financials&&L.financials.length){
+    two+='<div class="card"><div class="sect" style="margin-bottom:12px">Financials</div><div class="lnk-list">'+
+      L.financials.map(function(x){return lnkRow(x.url,x.kind||'fiscal',x.label,x.sub,'');}).join('')+'</div></div>';
+  }
+  if(L.transcripts&&L.transcripts.length){
+    two+='<div class="card"><div class="sect" style="margin-bottom:12px">Transcripts &amp; IR</div><div class="lnk-list">'+
+      L.transcripts.map(function(x){return lnkRow(x.url,x.kind||'fiscal',x.label,x.sub,'');}).join('')+'</div></div>';
+  }
+  if(two) html+='<div class="cotwo" style="margin-bottom:16px">'+two+'</div>';
+
+  if(L.media&&L.media.length){
+    html+='<div class="card"><div class="sect" style="margin-bottom:12px">Media &amp; podcasts</div><div class="lnk-list">'+
+      L.media.map(function(x){return lnkRow(x.url,x.kind||'web',x.label,x.sub,'');}).join('')+'</div></div>';
+  }
+
+  box.innerHTML=html;
+  return true;
 }
 
 function coFmtYtd(v){return (v>=0?'+':'')+v.toFixed(2)+'% YTD';}
@@ -88,6 +180,9 @@ function openCo(tk){
   var px = c.px != null ? '$'+c.px.toFixed(2) : '—';
   document.getElementById('co-px').textContent=px;
   renderCoAnalysis(c);
+  var hasLinks=renderCoLinks(c);
+  var linksTab=document.getElementById('co-links-tab');
+  if(linksTab) linksTab.style.display=hasLinks?'':'none';
   document.getElementById('co-gridview').style.display='none';
   document.getElementById('co-detailview').style.display='block';
   coTab('analysis');

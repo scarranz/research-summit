@@ -1,11 +1,11 @@
 // companies.js — grid, detail view, add-company modal
-import { COMPANIES, COMPANY_NAMES, IMGS, FRAMEWORK } from './portal-data.js';
+// All companies are loaded from Supabase. No hardcoded data.
+import { FRAMEWORK } from './portal-data.js';
 import { supabase } from './supabase-client.js';
 
 let coEstChart = null;
-let _dbCompanies = []; // companies loaded from Supabase
-
-function coComposite(c){var p=c.pillars;return (p.qb+p.qg+p.qm+p.qv)/4;}
+let _companies = []; // companies loaded from Supabase
+let _pendingLookup = null; // data from ticker lookup
 
 function coSegs(score,max){var h='';for(var i=1;i<=max;i++)h+='<i class="'+(i<=score?'on':'')+'"></i>';return h;}
 
@@ -21,10 +21,9 @@ function logoFallback(img){
 }
 
 function coLogo(c,cls){
-  var domain = c.logo || c.logo_domain || '';
-  var mono = c.mono || (c.tk || '??').slice(0,2).toUpperCase();
-  var brand = c.brand || c.brand_color || '';
-  return '<div class="cologo'+(cls?' '+cls:'')+'" data-mono="'+mono+'" data-brand="'+brand+'">'+
+  var domain = c.logo_domain || '';
+  var mono = c.mono || (c.ticker || '??').slice(0,2).toUpperCase();
+  return '<div class="cologo'+(cls?' '+cls:'')+'" data-mono="'+mono+'">'+
     (domain ? '<img src="https://logo.clearbit.com/'+domain+'" alt="" data-domain="'+domain+'" data-step="0" onerror="logoFallback(this)">' : mono) +'</div>';
 }
 
@@ -44,16 +43,7 @@ function renderCoAnalysis(c){
   }).join('');
 }
 
-function coFmtYtd(v){return (v>=0?'+':'')+v.toFixed(2)+'% YTD';}
-
-function getAllCompanies() {
-  // Merge hardcoded + DB companies; DB takes precedence on duplicate tickers
-  var dbTickers = new Set(_dbCompanies.map(function(c){ return c.tk; }));
-  var hardcoded = COMPANIES.filter(function(c){ return !dbTickers.has(c.tk); });
-  return hardcoded.concat(_dbCompanies);
-}
-
-function coGroups(){var s={};getAllCompanies().forEach(function(c){s[c.grp]=1;});return Object.keys(s).sort();}
+function coGroups(){var s={};_companies.forEach(function(c){if(c.group_name)s[c.group_name]=1;});return Object.keys(s).sort();}
 
 function initCoControls(){
   var sel=document.getElementById('co-groupfilter');if(!sel)return;
@@ -64,28 +54,26 @@ function renderCoGrid(){
   var grid=document.getElementById('co-grid');if(!grid)return;
   var si=document.getElementById('co-search'),gf=document.getElementById('co-groupfilter');
   var q=(si&&si.value||'').trim().toLowerCase(),g=(gf&&gf.value)||'All';
-  var all=getAllCompanies();
-  var list=all.filter(function(c){
-    var grp = c.grp || '';
+  var list=_companies.filter(function(c){
+    var grp = c.group_name || '';
     var okg=(g==='All'||grp===g);
-    var okq=(!q||c.tk.toLowerCase().indexOf(q)>=0||c.nm.toLowerCase().indexOf(q)>=0);
+    var okq=(!q||c.ticker.toLowerCase().indexOf(q)>=0||c.name.toLowerCase().indexOf(q)>=0);
     return okg&&okq;
   });
   if(!list.length){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--mu);padding:34px;font-size:13px">No companies match that search.</div>';return;}
   grid.innerHTML=list.map(function(c){
-    return '<div class="cotile" onclick="openCo(\''+c.tk+'\')">'+coLogo(c,'circ')+
-      '<div class="cotile-nm">'+c.nm+'</div>'+
-      '<div class="cotile-meta">'+c.tk+' &middot; '+(c.grp||'—')+'</div></div>';
+    return '<div class="cotile" onclick="openCo(\''+c.ticker+'\')">'+coLogo(c,'circ')+
+      '<div class="cotile-nm">'+c.name+'</div>'+
+      '<div class="cotile-meta">'+c.ticker+' &middot; '+(c.group_name||'—')+'</div></div>';
   }).join('');
 }
 
 function openCo(tk){
-  var all=getAllCompanies();
-  var c=all.find(function(x){return x.tk===tk;});if(!c)return;
+  var c=_companies.find(function(x){return x.ticker===tk;});if(!c)return;
   document.getElementById('co-logo').innerHTML=coLogo(c,'lg');
-  document.getElementById('co-name').textContent=c.nm;
-  document.getElementById('co-sub').innerHTML=(c.ex||'—')+': '+c.tk+' &middot; '+(c.grp||'—');
-  var px = c.px != null ? '$'+c.px.toFixed(2) : '—';
+  document.getElementById('co-name').textContent=c.name;
+  document.getElementById('co-sub').innerHTML=c.ticker+' &middot; '+(c.group_name||'—');
+  var px = c.price != null ? '$'+Number(c.price).toFixed(2) : '—';
   document.getElementById('co-px').textContent=px;
   renderCoAnalysis(c);
   document.getElementById('co-gridview').style.display='none';
@@ -121,6 +109,71 @@ function drawCoEst(){
               y:{grid:{color:'#E8EFF7'},ticks:{color:'#5A6E83',font:{size:10}}}}}});
 }
 
+// ─── Ticker Lookup ───────────────────────────────────────────
+
+async function lookupTicker(ticker) {
+  // Use Supabase Edge Function to look up company info
+  var { data, error } = await supabase.functions.invoke('lookup-ticker', {
+    body: { ticker: ticker },
+  });
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+async function handleLookup() {
+  var tickerInput = document.getElementById('addCo-ticker');
+  var lookupBtn = document.getElementById('addCoLookup');
+  var saveBtn = document.getElementById('addCoSave');
+  var autofillSection = document.getElementById('addCo-autofill');
+  var ticker = tickerInput.value.trim().toUpperCase();
+
+  if (!ticker) { showModalMsg('Enter a ticker first.', 'error'); return; }
+
+  // Check if already exists
+  if (_companies.find(function(c){ return c.ticker === ticker; })) {
+    showModalMsg(ticker + ' already exists.', 'error');
+    return;
+  }
+
+  lookupBtn.disabled = true;
+  lookupBtn.textContent = 'Looking up...';
+  showModalMsg('', '');
+
+  try {
+    var info = await lookupTicker(ticker);
+
+    _pendingLookup = {
+      ticker: ticker,
+      name: info.name || ticker,
+      sector: info.sector || '',
+      industry: info.industry || '',
+      logo_domain: info.logo_domain || '',
+    };
+
+    document.getElementById('addCo-name').value = _pendingLookup.name;
+    document.getElementById('addCo-sector').value = _pendingLookup.sector;
+    document.getElementById('addCo-industry').value = _pendingLookup.industry;
+    autofillSection.style.display = '';
+    saveBtn.disabled = false;
+    showModalMsg('Company found. Review and click Add Company.', 'success');
+  } catch (err) {
+    // If lookup fails, let user add manually
+    _pendingLookup = { ticker: ticker, name: '', sector: '', industry: '', logo_domain: '' };
+    document.getElementById('addCo-name').value = '';
+    document.getElementById('addCo-name').readOnly = false;
+    document.getElementById('addCo-name').placeholder = 'Type company name manually';
+    document.getElementById('addCo-sector').value = '';
+    document.getElementById('addCo-industry').value = '';
+    autofillSection.style.display = '';
+    saveBtn.disabled = false;
+    showModalMsg('Could not find ' + ticker + '. You can enter details manually.', 'error');
+  }
+
+  lookupBtn.disabled = false;
+  lookupBtn.textContent = 'Look up';
+}
+
 // ─── Add Company Modal ───────────────────────────────────────
 
 function openAddModal() {
@@ -131,6 +184,10 @@ function openAddModal() {
 function closeAddModal() {
   document.getElementById('addCoModal').classList.remove('open');
   document.getElementById('addCoForm').reset();
+  document.getElementById('addCo-autofill').style.display = 'none';
+  document.getElementById('addCoSave').disabled = true;
+  document.getElementById('addCo-name').readOnly = true;
+  _pendingLookup = null;
   var msg = document.getElementById('addCo-msg');
   msg.textContent = '';
   msg.className = 'modal-msg';
@@ -145,25 +202,29 @@ function showModalMsg(text, type) {
 async function handleAddCompany(e) {
   e.preventDefault();
   var btn = document.getElementById('addCoSave');
+  var ticker = document.getElementById('addCo-ticker').value.trim().toUpperCase();
   var name = document.getElementById('addCo-name').value.trim();
 
+  if (!ticker) { showModalMsg('Ticker is required.', 'error'); return; }
   if (!name) { showModalMsg('Company name is required.', 'error'); return; }
 
-  // Check for duplicates by name
-  var all = getAllCompanies();
-  if (all.find(function(c){ return c.nm.toLowerCase() === name.toLowerCase(); })) {
-    showModalMsg(name + ' already exists.', 'error');
+  if (_companies.find(function(c){ return c.ticker === ticker; })) {
+    showModalMsg(ticker + ' already exists.', 'error');
     return;
   }
 
   btn.disabled = true;
   btn.textContent = 'Adding...';
 
-  var mono = name.split(/\s+/).map(function(w){ return w[0]; }).join('').slice(0, 2).toUpperCase();
+  var mono = ticker.slice(0, 2).toUpperCase();
+  var lookup = _pendingLookup || {};
 
   var row = {
-    ticker: name.split(/\s+/)[0].toUpperCase().slice(0, 5),
+    ticker: ticker,
     name: name,
+    sector: lookup.sector || null,
+    group_name: lookup.industry || null,
+    logo_domain: lookup.logo_domain || null,
     mono: mono,
     status: 'active',
   };
@@ -178,35 +239,16 @@ async function handleAddCompany(e) {
     return;
   }
 
-  // Add to local cache and re-render
-  _dbCompanies.push(mapDbCompany(data));
+  _companies.push(data);
   initCoControls();
   renderCoGrid();
   closeAddModal();
 }
 
-function mapDbCompany(row) {
-  return {
-    tk: row.ticker,
-    nm: row.name,
-    px: row.price || null,
-    ex: row.exchange || '',
-    sec: row.sector || '',
-    grp: row.group_name || '',
-    logo: row.logo_domain || '',
-    logo_domain: row.logo_domain || '',
-    mono: row.mono || row.ticker.slice(0, 2),
-    brand: row.brand_color || '',
-    brand_color: row.brand_color || '',
-    pillars: null,
-    _fromDb: true,
-  };
-}
-
-async function loadDbCompanies() {
-  var { data, error } = await supabase.from('companies').select('*').eq('status', 'active');
+async function loadCompaniesFromDb() {
+  var { data, error } = await supabase.from('companies').select('*').eq('status', 'active').order('name');
   if (error) { console.warn('Could not load companies from DB:', error.message); return; }
-  _dbCompanies = (data || []).map(mapDbCompany);
+  _companies = data || [];
 }
 
 function initAddModal() {
@@ -222,12 +264,19 @@ function initAddModal() {
   var form = document.getElementById('addCoForm');
   if (form) form.addEventListener('submit', handleAddCompany);
 
+  var lookupBtn = document.getElementById('addCoLookup');
+  if (lookupBtn) lookupBtn.addEventListener('click', handleLookup);
+
+  // Also trigger lookup on Enter in ticker field
+  var tickerInput = document.getElementById('addCo-ticker');
+  if (tickerInput) tickerInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); handleLookup(); }
+  });
+
   var overlay = document.getElementById('addCoModal');
   if (overlay) overlay.addEventListener('click', function(e) {
     if (e.target === overlay) closeAddModal();
   });
-
-
 }
 
 // Expose to window for inline onclick handlers
@@ -238,7 +287,7 @@ window.renderCoGrid = renderCoGrid;
 window.logoFallback = logoFallback;
 
 export async function loadCompaniesPage() {
-  await loadDbCompanies();
+  await loadCompaniesFromDb();
   initCoControls();
   renderCoGrid();
   initAddModal();

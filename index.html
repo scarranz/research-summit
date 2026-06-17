@@ -334,13 +334,32 @@
     </div>
     <form id="addCoForm" autocomplete="off">
       <div class="modal-field">
-        <label class="modal-label">Company Name <span class="modal-req">*</span></label>
-        <input class="modal-input" id="addCo-name" placeholder="e.g. Apple Inc." required>
+        <label class="modal-label">Ticker <span class="modal-req">*</span></label>
+        <div class="modal-ticker-wrap">
+          <input class="modal-input" id="addCo-ticker" placeholder="e.g. AAPL" required>
+          <button type="button" class="modal-btn modal-btn--lookup" id="addCoLookup">Look up</button>
+        </div>
+      </div>
+      <div class="modal-autofill" id="addCo-autofill" style="display:none">
+        <div class="modal-field">
+          <label class="modal-label">Company Name</label>
+          <input class="modal-input" id="addCo-name" readonly>
+        </div>
+        <div class="modal-row">
+          <div class="modal-field">
+            <label class="modal-label">Sector</label>
+            <input class="modal-input" id="addCo-sector" readonly>
+          </div>
+          <div class="modal-field">
+            <label class="modal-label">Industry</label>
+            <input class="modal-input" id="addCo-industry" readonly>
+          </div>
+        </div>
       </div>
       <div class="modal-msg" id="addCo-msg"></div>
       <div class="modal-actions">
         <button type="button" class="modal-btn modal-btn--cancel" id="addCoCancel">Cancel</button>
-        <button type="submit" class="modal-btn modal-btn--save" id="addCoSave">Add Company</button>
+        <button type="submit" class="modal-btn modal-btn--save" id="addCoSave" disabled>Add Company</button>
       </div>
     </form>
   </div>

@@ -43,6 +43,40 @@ function renderCoAnalysis(c){
   }).join('');
 }
 
+async function renderCoMgmt(c) {
+  var box = document.getElementById('co-mgmt');
+  if (!box) return;
+  box.innerHTML = '<p style="color:var(--mu);font-size:13px">Loading management...</p>';
+
+  var { data: execs, error } = await supabase
+    .from('company_executives')
+    .select('*')
+    .eq('company_id', c.id)
+    .order('sort_order');
+
+  if (error) {
+    box.innerHTML = '<p style="color:var(--mu);font-size:13px">Could not load management data.</p>';
+    return;
+  }
+
+  if (!execs || !execs.length) {
+    box.innerHTML = '<p style="color:var(--mu);font-size:13px">No management data yet. Work with Claude to add executives for this company.</p>';
+    return;
+  }
+
+  var rows = execs.map(function(e) {
+    return '<tr><td>' + e.name + '</td><td class="neu">' + e.role + '</td>' +
+      '<td>' + (e.since || '—') + '</td>' +
+      '<td style="text-align:right">' + (e.ownership || '—') + '</td></tr>';
+  }).join('');
+
+  box.innerHTML = '<div class="card">' +
+    '<div class="sect" style="margin-bottom:12px">Key executives</div>' +
+    '<table class="rt">' +
+    '<thead><tr><th>Name</th><th>Role</th><th>Since</th><th style="text-align:right">Ownership</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody></table></div>';
+}
+
 function coGroups(){var s={};_companies.forEach(function(c){if(c.group_name)s[c.group_name]=1;});return Object.keys(s).sort();}
 
 function initCoControls(){
@@ -76,6 +110,7 @@ function openCo(tk){
   var px = c.price != null ? '$'+Number(c.price).toFixed(2) : '—';
   document.getElementById('co-px').textContent=px;
   renderCoAnalysis(c);
+  renderCoMgmt(c);
   document.getElementById('co-gridview').style.display='none';
   document.getElementById('co-detailview').style.display='block';
   coTab('analysis');

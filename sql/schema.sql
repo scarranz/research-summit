@@ -112,7 +112,41 @@ create policy "authenticated_update_companies" on companies
   for update using (auth.uid() is not null);
 
 
--- ─── 4. Seed: migrate hardcoded companies ──────────────────────
+-- ─── 4. company_executives ─────────────────────────────────────
+
+create table company_executives (
+  id           uuid primary key default gen_random_uuid(),
+  company_id   uuid not null references companies(id) on delete cascade,
+  name         text not null,
+  role         text not null,
+  since        text,
+  ownership    text,
+  sort_order   int not null default 0,
+  created_at   timestamptz default now(),
+  updated_at   timestamptz default now()
+);
+
+create trigger company_executives_updated_at
+  before update on company_executives
+  for each row
+  execute function set_updated_at();
+
+alter table company_executives enable row level security;
+
+create policy "authenticated_read_executives" on company_executives
+  for select using (auth.uid() is not null);
+
+create policy "authenticated_insert_executives" on company_executives
+  for insert with check (auth.uid() is not null);
+
+create policy "authenticated_update_executives" on company_executives
+  for update using (auth.uid() is not null);
+
+create policy "authenticated_delete_executives" on company_executives
+  for delete using (auth.uid() is not null);
+
+
+-- ─── 5. Seed: migrate hardcoded companies ──────────────────────
 -- Run this AFTER creating the companies table.
 -- These are the original 15 companies from portal-data.js.
 

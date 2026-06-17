@@ -1,6 +1,6 @@
 [build]
   publish = "."
-  command = "echo \"window.ENV = { SUPABASE_URL: '$SUPABASE_URL', SUPABASE_ANON_KEY: '$SUPABASE_ANON_KEY' };\" > env.js"
+  command = "printf 'window.ENV = { SUPABASE_URL: \"%s\", SUPABASE_ANON_KEY: \"%s\" };\n' \"$SUPABASE_URL\" \"$SUPABASE_ANON_KEY\" > env.js"
 
 [[redirects]]
   from = "/login"

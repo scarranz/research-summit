@@ -9,14 +9,12 @@ const TAB_MAP = {
   'companies': 'co',
   'market-analysis': 'rot',
   'hedge-funds': 'inv',
-  'screener': 'screener',
 };
 
 const TAB_TITLES = {
   'co': 'Companies',
   'rot': 'Market Analysis',
   'inv': 'Hedge Funds',
-  'screener': 'Screener',
 };
 
 export function registerPageLoader(page, loader) {

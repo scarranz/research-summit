@@ -294,6 +294,13 @@ body{font-family:'Inter',-apple-system,system-ui,sans-serif;background:var(--w);
 .modal-input::placeholder{color:var(--mu)}
 .modal-select{height:38px;border:1px solid var(--bdr);border-radius:8px;padding:0 10px;font-family:'Inter',sans-serif;font-size:13px;color:var(--text);background:var(--w);cursor:pointer;outline:none;width:100%;transition:border-color .15s}
 .modal-select:focus{border-color:var(--steel)}
+.modal-ticker-wrap{display:flex;gap:8px}
+.modal-ticker-wrap .modal-input{flex:1;text-transform:uppercase}
+.modal-btn--lookup{height:38px;padding:0 16px;border-radius:8px;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--steel);background:var(--w);color:var(--steel);transition:all .12s;white-space:nowrap}
+.modal-btn--lookup:hover{background:var(--surface)}
+.modal-btn--lookup:disabled{opacity:.4;cursor:default}
+.modal-autofill{animation:modalIn .18s ease-out}
+.modal-input[readonly]{background:var(--surface);color:var(--text);cursor:default}
 .modal-msg{font-size:12px;min-height:18px;margin-bottom:6px}
 .modal-msg.success{color:var(--pos)}.modal-msg.error{color:var(--neg)}
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;padding-top:6px;border-top:1px solid var(--bdr)}

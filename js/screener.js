@@ -67,18 +67,6 @@ function buildHTML() {
         </select>
       </div>
 
-      <!-- Return min -->
-      <div class="screener-fg screener-fg--sm">
-        <label class="screener-lbl">Min Return (%)</label>
-        <input class="screener-inp" type="number" id="pr-rmin" placeholder="e.g. 10">
-      </div>
-
-      <!-- Return max -->
-      <div class="screener-fg screener-fg--sm">
-        <label class="screener-lbl">Max Return (%)</label>
-        <input class="screener-inp" type="number" id="pr-rmax" placeholder="e.g. 100">
-      </div>
-
       <!-- Buttons -->
       <div class="screener-fg screener-fg--btn">
         <button class="screener-clear" id="pr-clear">Clear</button>
@@ -132,8 +120,6 @@ function bindEvents() {
   document.getElementById('pr-sector').addEventListener('change', onSectorChange);
   document.getElementById('pr-sub').addEventListener('change', applyFilters);
   document.getElementById('pr-ryear').addEventListener('change', applyFilters);
-  document.getElementById('pr-rmin').addEventListener('input', applyFilters);
-  document.getElementById('pr-rmax').addEventListener('input', applyFilters);
   document.getElementById('pr-clear').addEventListener('click', clearFilters);
 
   document.getElementById('pr-tbl').querySelector('thead').addEventListener('click', e => {
@@ -160,17 +146,10 @@ function applyFilters() {
   const sec   = document.getElementById('pr-sector').value;
   const sub   = document.getElementById('pr-sub').value;
   const ryear = document.getElementById('pr-ryear').value;
-  const rmin  = parseFloat(document.getElementById('pr-rmin').value);
-  const rmax  = parseFloat(document.getElementById('pr-rmax').value);
 
   _filtered = ALL_STOCKS.filter(s => {
     if (sec && s.s !== sec) return false;
     if (sub && s.i !== sub) return false;
-    if (ryear) {
-      const v = s[ryear];
-      if (!isNaN(rmin) && v < rmin) return false;
-      if (!isNaN(rmax) && v > rmax) return false;
-    }
     return true;
   });
 
@@ -181,8 +160,6 @@ function clearFilters() {
   document.getElementById('pr-sector').value = '';
   document.getElementById('pr-sub').innerHTML = '<option value="">Todos</option>';
   document.getElementById('pr-ryear').value = '';
-  document.getElementById('pr-rmin').value = '';
-  document.getElementById('pr-rmax').value = '';
   applyFilters();
 }
 

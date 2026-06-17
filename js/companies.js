@@ -36,6 +36,22 @@ const RELEVANT_LINKS = {
       { label: '"symbotic review" — search results', sub: 'YouTube', kind: 'youtube', url: 'https://www.youtube.com/results?search_query=symbotic+review+' },
     ],
   },
+  remitly: {
+    match: { tickers: ['RELY', 'REMIT', 'REMITLY'], name: 'remitly' },
+    filings: [
+      { period: 'Q1 FY2026', form: '10-Q', date: '2026-05-06', url: 'https://www.sec.gov/Archives/edgar/data/1782170/000162828026031371/rely-20260331.htm' },
+      { period: 'FY2025', form: '10-K', date: '2026-02-18', url: 'https://www.sec.gov/Archives/edgar/data/1782170/000162828026009038/rely-20251231.htm' },
+    ],
+    transcripts: [
+      { label: 'Quarterly results & investor slides', sub: 'Remitly IR', kind: 'web', url: 'https://ir.remitly.com/financial-information/quarterly-results' },
+    ],
+  },
+};
+
+// Pillar scores by ticker for the Analysis tab (interim — the companies table
+// has no pillars column yet). Each pillar is 1–5: qb, qg, qm, qv.
+var CO_PILLARS = {
+  RELY: { qb: 4, qg: 5, qm: 4, qv: 2 }, // Remitly
 };
 
 function getCompanyLinks(c) {
@@ -379,6 +395,7 @@ async function loadCompaniesFromDb() {
   var { data, error } = await supabase.from('companies').select('*').eq('status', 'active').order('name');
   if (error) { console.warn('Could not load companies from DB:', error.message); return; }
   _companies = data || [];
+  _companies.forEach(function(c){ if (CO_PILLARS[c.ticker]) c.pillars = CO_PILLARS[c.ticker]; });
 }
 
 function initAddModal() {

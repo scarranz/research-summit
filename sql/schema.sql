@@ -80,12 +80,10 @@ create table companies (
   id           uuid primary key default gen_random_uuid(),
   ticker       text not null unique,
   name         text not null,
-  exchange     text,
   sector       text,
   group_name   text,
   logo_domain  text,
   mono         text,
-  brand_color  text,
   price        numeric,
   status       text not null default 'active',
   created_by   uuid references auth.users(id),
@@ -118,20 +116,20 @@ create policy "authenticated_update_companies" on companies
 -- Run this AFTER creating the companies table.
 -- These are the original 15 companies from portal-data.js.
 
-insert into companies (ticker, name, price, exchange, sector, group_name, logo_domain, mono, brand_color, status) values
-  ('AMZN', 'Amazon.com Inc.', 201.30, 'NASDAQ', 'Consumer Disc.', 'Consumer', 'amazon.com', 'AZ', '#FF9900', 'active'),
-  ('TBBB', 'BBB Foods Inc.', 31.07, 'NYSE', 'Consumer Staples', 'Consumer', 'tiendas3b.com', '3B', '#E2231A', 'active'),
-  ('PAC', 'Grupo Aeroportuario del Pacífico', 210.00, 'NYSE', 'Industrials', 'Airports', 'aeropuertosgap.com.mx', 'PAC', '#1A2A6C', 'active'),
-  ('CART', 'Instacart', 44.18, 'NASDAQ', 'Consumer Disc.', 'Consumer', 'instacart.com', 'IC', '#FF7009', 'active'),
-  ('IBKR', 'Interactive Brokers', 205.00, 'NASDAQ', 'Financials', 'Financial Services', 'interactivebrokers.com', 'IB', '#D81222', 'active'),
-  ('LYFT', 'Lyft Inc.', 16.92, 'NASDAQ', 'Technology', 'Transportation', 'lyft.com', 'LY', '#FF00BF', 'active'),
-  ('MA', 'Mastercard Inc.', 525.00, 'NYSE', 'Financials', 'Networks', 'mastercard.com', 'MA', '#EB001B', 'active'),
-  ('META', 'Meta Platforms', 612.18, 'NASDAQ', 'Communication', 'Technology', 'meta.com', 'M', '#0866FF', 'active'),
-  ('NVDA', 'NVIDIA Corp.', 138.55, 'NASDAQ', 'Semiconductors', 'Semiconductors', 'nvidia.com', 'NV', '#76B900', 'active'),
-  ('SOFI', 'SoFi Technologies', 14.61, 'NASDAQ', 'Financials', 'Banks', 'sofi.com', 'SO', '#00A0DF', 'active'),
-  ('SPOT', 'Spotify Technology', 498.22, 'NYSE', 'Communication', 'Streaming', 'spotify.com', 'SP', '#1DB954', 'active'),
-  ('TPL', 'Texas Pacific Land Corp.', 1100.00, 'NYSE', 'Energy', 'Commodities', 'texaspacific.com', 'TPL', '#0A2342', 'active'),
-  ('UBER', 'Uber Technologies', 82.40, 'NYSE', 'Technology', 'Transportation', 'uber.com', 'UB', '#000000', 'active'),
-  ('V', 'Visa Inc.', 290.00, 'NYSE', 'Financials', 'Networks', 'visa.com', 'V', '#1A1F71', 'active'),
-  ('VITL', 'Vital Farms Inc.', 38.90, 'NASDAQ', 'Consumer Staples', 'Consumer', 'vitalfarms.com', 'VF', '#C8102E', 'active')
+insert into companies (ticker, name, price, sector, group_name, logo_domain, mono, status) values
+  ('AMZN', 'Amazon.com Inc.', 201.30, 'Consumer Disc.', 'Consumer', 'amazon.com', 'AZ', 'active'),
+  ('TBBB', 'BBB Foods Inc.', 31.07, 'Consumer Staples', 'Consumer', 'tiendas3b.com', '3B', 'active'),
+  ('PAC', 'Grupo Aeroportuario del Pacífico', 210.00, 'Industrials', 'Airports', 'aeropuertosgap.com.mx', 'PAC', 'active'),
+  ('CART', 'Instacart', 44.18, 'Consumer Disc.', 'Consumer', 'instacart.com', 'IC', 'active'),
+  ('IBKR', 'Interactive Brokers', 205.00, 'Financials', 'Financial Services', 'interactivebrokers.com', 'IB', 'active'),
+  ('LYFT', 'Lyft Inc.', 16.92, 'Technology', 'Transportation', 'lyft.com', 'LY', 'active'),
+  ('MA', 'Mastercard Inc.', 525.00, 'Financials', 'Networks', 'mastercard.com', 'MA', 'active'),
+  ('META', 'Meta Platforms', 612.18, 'Communication', 'Technology', 'meta.com', 'M', 'active'),
+  ('NVDA', 'NVIDIA Corp.', 138.55, 'Semiconductors', 'Semiconductors', 'nvidia.com', 'NV', 'active'),
+  ('SOFI', 'SoFi Technologies', 14.61, 'Financials', 'Banks', 'sofi.com', 'SO', 'active'),
+  ('SPOT', 'Spotify Technology', 498.22, 'Communication', 'Streaming', 'spotify.com', 'SP', 'active'),
+  ('TPL', 'Texas Pacific Land Corp.', 1100.00, 'Energy', 'Commodities', 'texaspacific.com', 'TPL', 'active'),
+  ('UBER', 'Uber Technologies', 82.40, 'Technology', 'Transportation', 'uber.com', 'UB', 'active'),
+  ('V', 'Visa Inc.', 290.00, 'Financials', 'Networks', 'visa.com', 'V', 'active'),
+  ('VITL', 'Vital Farms Inc.', 38.90, 'Consumer Staples', 'Consumer', 'vitalfarms.com', 'VF', 'active')
 on conflict (ticker) do nothing;

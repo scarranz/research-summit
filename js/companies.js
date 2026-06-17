@@ -23,8 +23,7 @@ function logoFallback(img){
 function coLogo(c,cls){
   var domain = c.logo_domain || '';
   var mono = c.mono || (c.ticker || '??').slice(0,2).toUpperCase();
-  var brand = c.brand_color || '';
-  return '<div class="cologo'+(cls?' '+cls:'')+'" data-mono="'+mono+'" data-brand="'+brand+'">'+
+  return '<div class="cologo'+(cls?' '+cls:'')+'" data-mono="'+mono+'">'+
     (domain ? '<img src="https://logo.clearbit.com/'+domain+'" alt="" data-domain="'+domain+'" data-step="0" onerror="logoFallback(this)">' : mono) +'</div>';
 }
 
@@ -73,7 +72,7 @@ function openCo(tk){
   var c=_companies.find(function(x){return x.ticker===tk;});if(!c)return;
   document.getElementById('co-logo').innerHTML=coLogo(c,'lg');
   document.getElementById('co-name').textContent=c.name;
-  document.getElementById('co-sub').innerHTML=(c.exchange||'—')+': '+c.ticker+' &middot; '+(c.group_name||'—');
+  document.getElementById('co-sub').innerHTML=c.ticker+' &middot; '+(c.group_name||'—');
   var px = c.price != null ? '$'+Number(c.price).toFixed(2) : '—';
   document.getElementById('co-px').textContent=px;
   renderCoAnalysis(c);
@@ -149,7 +148,6 @@ async function handleLookup() {
       name: info.name || ticker,
       sector: info.sector || '',
       industry: info.industry || '',
-      exchange: info.exchange || '',
       logo_domain: info.logo_domain || '',
     };
 
@@ -161,7 +159,7 @@ async function handleLookup() {
     showModalMsg('Company found. Review and click Add Company.', 'success');
   } catch (err) {
     // If lookup fails, let user add manually
-    _pendingLookup = { ticker: ticker, name: '', sector: '', industry: '', exchange: '', logo_domain: '' };
+    _pendingLookup = { ticker: ticker, name: '', sector: '', industry: '', logo_domain: '' };
     document.getElementById('addCo-name').value = '';
     document.getElementById('addCo-name').readOnly = false;
     document.getElementById('addCo-name').placeholder = 'Type company name manually';
@@ -226,7 +224,6 @@ async function handleAddCompany(e) {
     name: name,
     sector: lookup.sector || null,
     group_name: lookup.industry || null,
-    exchange: lookup.exchange || null,
     logo_domain: lookup.logo_domain || null,
     mono: mono,
     status: 'active',

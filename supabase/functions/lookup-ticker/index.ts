@@ -55,7 +55,6 @@ serve(async (req) => {
     const result = {
       ticker: symbol,
       name: name,
-      exchange: quote.exchange || "",
       sector: quote.sector || "",
       industry: quote.industry || "",
       logo_domain: guessDomain(name),

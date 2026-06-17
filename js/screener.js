@@ -73,16 +73,6 @@ function buildHTML() {
       </div>
     </div>
 
-    <!-- Placeholder filters (coming soon) -->
-    <div class="screener-coming">
-      <span class="screener-chip screener-chip--soon">P/E</span>
-      <span class="screener-chip screener-chip--soon">EV/EBITDA</span>
-      <span class="screener-chip screener-chip--soon">P/S</span>
-      <span class="screener-chip screener-chip--soon">Price</span>
-      <span class="screener-chip screener-chip--soon">Volatility</span>
-      <span class="screener-chip screener-chip--soon">DCF Upside</span>
-      <span class="screener-soon-lbl">Coming soon — Summit Financial Data</span>
-    </div>
   </div>
 
   <!-- ── Results ── -->
@@ -104,10 +94,6 @@ function buildHTML() {
           <th class="pr-th pr-num" data-col="r25">2025</th>
           <th class="pr-th pr-num" data-col="r26">2026 YTD</th>
           <th class="pr-th pr-num" data-col="c3">3yr Cumul.</th>
-          <th class="pr-th pr-num pr-soon" title="Coming soon">P/E</th>
-          <th class="pr-th pr-num pr-soon" title="Coming soon">EV/EBITDA</th>
-          <th class="pr-th pr-num pr-soon" title="Coming soon">Price</th>
-          <th class="pr-th pr-num pr-soon" title="Coming soon">Volatility</th>
         </tr></thead>
         <tbody id="pr-body"></tbody>
       </table>
@@ -185,7 +171,7 @@ function renderTable() {
 
   const body = document.getElementById('pr-body');
   if (!sorted.length) {
-    body.innerHTML = `<tr><td colspan="14" style="text-align:center;padding:32px;color:var(--mu);font-size:13px">No companies match the selected filters</td></tr>`;
+    body.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--mu);font-size:13px">No companies match the selected filters</td></tr>`;
     return;
   }
 
@@ -203,10 +189,6 @@ function renderTable() {
       <td class="pr-num ${cls(s.r25)}">${fmt(s.r25)}</td>
       <td class="pr-num ${cls(s.r26)}">${fmt(s.r26)}</td>
       <td class="pr-num ${cls(s.c3)}">${fmt(s.c3)}</td>
-      <td class="pr-num pr-soon">—</td>
-      <td class="pr-num pr-soon">—</td>
-      <td class="pr-num pr-soon">—</td>
-      <td class="pr-num pr-soon">—</td>
     </tr>`;
   }).join('');
 }

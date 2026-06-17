@@ -138,6 +138,15 @@ window.showStep = showStep;
 
 let _pendingEmail = null;
 
+async function boot() {
+  const result = await initAuth();
+  if (result.status === 'unauthorized') {
+    showMsg('email-msg', 'error', 'This account is not authorized.');
+  }
+}
+
+boot();
+
 async function handleSendCode() {
   const input = document.getElementById('email-input');
   const btn = document.getElementById('email-btn');

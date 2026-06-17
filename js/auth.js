@@ -6,7 +6,7 @@ import { supabase } from './supabase-client.js';
 // 'admin' has access to everything; other roles see only their pages.
 
 const ROLE_CONFIG = {
-  admin: { name: 'Admin', label: 'Admin', allowedPages: ['companies', 'market-analysis', 'hedge-funds', 'prueba'], defaultPage: 'companies' },
+  admin: { name: 'Admin', label: 'Admin', allowedPages: ['companies', 'market-analysis', 'hedge-funds', 'screener'], defaultPage: 'companies' },
 };
 
 let _currentRole = null;

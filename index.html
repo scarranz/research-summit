@@ -34,7 +34,7 @@
     <button class="ntb nav-item active" data-tab="co" data-page="companies" onclick="switchTab('co')"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Companies</button>
     <button class="ntb nav-item" data-tab="rot" data-page="market-analysis" onclick="switchTab('rot')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>Market Analysis</button>
     <button class="ntb nav-item" data-tab="inv" data-page="hedge-funds" onclick="switchTab('inv')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20v-1.5a4.5 4.5 0 0 1 7-3.7"/><circle cx="17" cy="10" r="2.6"/><path d="M14 20v-1a3.6 3.6 0 0 1 6.5-2.1"/></svg>Hedge Funds</button>
-    <button class="ntb nav-item" data-tab="prueba" data-page="prueba" onclick="switchTab('prueba')"><svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4"/><path d="M19 3h-4"/><path d="M19 21h-4"/><path d="M5 21H3a2 2 0 0 1-2-2v-4"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>Prueba</button>
+    <button class="ntb nav-item" data-tab="screener" data-page="screener" onclick="switchTab('screener')"><svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4"/><path d="M19 3h-4"/><path d="M19 21h-4"/><path d="M5 21H3a2 2 0 0 1-2-2v-4"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>Screener</button>
   </nav>
   <div class="snav-lbl">Pipeline</div>
   <nav class="snav">
@@ -325,10 +325,8 @@
   </p>
 </div>
 
-<!-- PRUEBA TAB -->
-<div id="tp-prueba" class="tp">
-  <h1 class="co-h1">Prueba</h1>
-  <p class="co-sub">Esta es la página de prueba.</p>
+<!-- SCREENER TAB -->
+<div id="tp-screener" class="tp">
 </div>
 
 </main>
@@ -347,7 +345,7 @@ import { initNav, registerPageLoader } from './js/nav.js';
 import { loadCompaniesPage } from './js/companies.js';
 import { loadMarketAnalysisPage } from './js/market-analysis.js';
 import { loadHedgeFundsPage } from './js/hedge-funds.js';
-import { loadPruebaPage } from './js/prueba.js';
+import { loadScreenerPage } from './js/screener.js';
 
 const statusEl = document.getElementById('status');
 
@@ -368,7 +366,7 @@ async function boot() {
       registerPageLoader('companies', loadCompaniesPage);
       registerPageLoader('market-analysis', loadMarketAnalysisPage);
       registerPageLoader('hedge-funds', loadHedgeFundsPage);
-      registerPageLoader('prueba', loadPruebaPage);
+      registerPageLoader('screener', loadScreenerPage);
 
       // Update user display
       const user = getCurrentUser();

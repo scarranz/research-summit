@@ -19,8 +19,8 @@ let _sortCol = 'r26';
 let _sortDir = -1; // -1 = desc
 let _filtered = [];
 
-export function loadPruebaPage() {
-  const el = document.getElementById('tp-prueba');
+export function loadScreenerPage() {
+  const el = document.getElementById('tp-screener');
   el.innerHTML = buildHTML();
   bindEvents();
   applyFilters();
@@ -28,17 +28,17 @@ export function loadPruebaPage() {
 
 function buildHTML() {
   return `
-<div class="prueba-wrap">
+<div class="screener-wrap">
   <h1 class="co-h1">S&P 500 Screener</h1>
   <p class="co-sub">Filter 500+ index companies by sector, subsector, and returns. Multiples, price, and volatility will be connected via Summit Financial Data.</p>
 
   <!-- ── Filter panel ── -->
   <div class="card" style="margin-bottom:18px;padding:18px 20px">
-    <div class="prueba-filters">
+    <div class="screener-filters">
 
       <!-- Sector -->
-      <div class="prueba-fg">
-        <label class="prueba-lbl">Sector</label>
+      <div class="screener-fg">
+        <label class="screener-lbl">Sector</label>
         <select class="fsel" id="pr-sector" style="width:100%">
           <option value="">All</option>
           ${SECTORS.map(s => `<option>${s}</option>`).join('')}
@@ -46,16 +46,16 @@ function buildHTML() {
       </div>
 
       <!-- Subsector -->
-      <div class="prueba-fg">
-        <label class="prueba-lbl">Subsector</label>
+      <div class="screener-fg">
+        <label class="screener-lbl">Subsector</label>
         <select class="fsel" id="pr-sub" style="width:100%">
           <option value="">All</option>
         </select>
       </div>
 
       <!-- Return year -->
-      <div class="prueba-fg">
-        <label class="prueba-lbl">Return Year</label>
+      <div class="screener-fg">
+        <label class="screener-lbl">Return Year</label>
         <select class="fsel" id="pr-ryear" style="width:100%">
           <option value="">Any year</option>
           <option value="r26">2026 YTD</option>
@@ -68,32 +68,32 @@ function buildHTML() {
       </div>
 
       <!-- Return min -->
-      <div class="prueba-fg prueba-fg--sm">
-        <label class="prueba-lbl">Min Return (%)</label>
-        <input class="prueba-inp" type="number" id="pr-rmin" placeholder="e.g. 10">
+      <div class="screener-fg screener-fg--sm">
+        <label class="screener-lbl">Min Return (%)</label>
+        <input class="screener-inp" type="number" id="pr-rmin" placeholder="e.g. 10">
       </div>
 
       <!-- Return max -->
-      <div class="prueba-fg prueba-fg--sm">
-        <label class="prueba-lbl">Max Return (%)</label>
-        <input class="prueba-inp" type="number" id="pr-rmax" placeholder="e.g. 100">
+      <div class="screener-fg screener-fg--sm">
+        <label class="screener-lbl">Max Return (%)</label>
+        <input class="screener-inp" type="number" id="pr-rmax" placeholder="e.g. 100">
       </div>
 
       <!-- Buttons -->
-      <div class="prueba-fg prueba-fg--btn">
-        <button class="prueba-clear" id="pr-clear">Clear</button>
+      <div class="screener-fg screener-fg--btn">
+        <button class="screener-clear" id="pr-clear">Clear</button>
       </div>
     </div>
 
     <!-- Placeholder filters (coming soon) -->
-    <div class="prueba-coming">
-      <span class="prueba-chip prueba-chip--soon">P/E</span>
-      <span class="prueba-chip prueba-chip--soon">EV/EBITDA</span>
-      <span class="prueba-chip prueba-chip--soon">P/S</span>
-      <span class="prueba-chip prueba-chip--soon">Price</span>
-      <span class="prueba-chip prueba-chip--soon">Volatility</span>
-      <span class="prueba-chip prueba-chip--soon">DCF Upside</span>
-      <span class="prueba-soon-lbl">Coming soon — Summit Financial Data</span>
+    <div class="screener-coming">
+      <span class="screener-chip screener-chip--soon">P/E</span>
+      <span class="screener-chip screener-chip--soon">EV/EBITDA</span>
+      <span class="screener-chip screener-chip--soon">P/S</span>
+      <span class="screener-chip screener-chip--soon">Price</span>
+      <span class="screener-chip screener-chip--soon">Volatility</span>
+      <span class="screener-chip screener-chip--soon">DCF Upside</span>
+      <span class="screener-soon-lbl">Coming soon — Summit Financial Data</span>
     </div>
   </div>
 

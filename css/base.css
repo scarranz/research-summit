@@ -1,26 +1,42 @@
-* { box-sizing: border-box; margin: 0; padding: 0; }
+/* ─── Design tokens ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --w: #ffffff;
-  --off: #fafaf8;
-  --b: #e8e5e0;
-  --t: #1a1a18;
-  --t2: #6b6860;
-  --t3: #a8a49e;
-  --green: #2d6a4f;
-  --greenl: #eaf4ef;
-  --red: #c0392b;
-  --redl: #fdf0ee;
-  --blue: #2563eb;
-  --bluel: #eff6ff;
+  --navy: #1E2733;
+  --blue: #2C3E54;
+  --steel: #3E5A82;
+  --mid: #7C8694;
+  --ice: #EEF1F5;
+  --pale: #F4F6F9;
+  --surface: #F6F7F9;
+  --w: #FFFFFF;
+  --text: #1E2733;
+  --mu: #8A93A0;
+  --bdr: #E7EAEE;
+  --pos: #16A34A;
+  --neg: #DC2626;
+  --gold: #64748B;
+  --gold2: #2563EB;
+  --accent: #2563EB;
+  /* Legacy aliases (used by login.html / layout.css loading overlay) */
+  --off: #F6F7F9;
+  --b: #E7EAEE;
+  --t: #1E2733;
+  --t2: #7C8694;
+  --t3: #8A93A0;
+  --green: #16A34A;
+  --red: #DC2626;
 }
+
+html { scroll-behavior: smooth; }
 
 html, body {
   height: 100%;
-  font-family: 'Jost', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: var(--off);
-  color: var(--t);
-  font-size: 13px;
-  line-height: 1.5;
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  background: var(--w);
+  color: var(--text);
+  min-height: 100vh;
+  font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.005em;
 }

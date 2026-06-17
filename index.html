@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Research Summit</title>
+<title>Summit Management — Research Portal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/portal.css">
 </head>
 <body>
 
@@ -20,59 +21,333 @@
 </div>
 
 <!-- ─── App shell (hidden until authenticated) ─── -->
-<div class="app" id="appShell" style="display:none;">
+<div class="shell" id="appShell" style="display:none;">
 
-  <!-- ─── Sidebar ─── -->
-  <aside class="sidebar">
-    <div class="sb-brand">
-      <div class="sb-brand-name">Summit</div>
-      <div class="sb-brand-sub">Research Portal</div>
+<!-- ─── Sidebar ─── -->
+<aside class="side">
+  <div class="lw">
+    <img class="logomark" src="data:image/png;base64,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" alt="Summit">
+    <div class="lnm">Summit</div>
+    <span class="collapse" title="Collapse"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg></span>
+  </div>
+  <nav class="snav">
+    <button class="ntb nav-item active" data-tab="co" data-page="companies" onclick="switchTab('co')"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Companies</button>
+    <button class="ntb nav-item" data-tab="rot" data-page="market-analysis" onclick="switchTab('rot')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>Market Analysis</button>
+    <button class="ntb nav-item" data-tab="inv" data-page="hedge-funds" onclick="switchTab('inv')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20v-1.5a4.5 4.5 0 0 1 7-3.7"/><circle cx="17" cy="10" r="2.6"/><path d="M14 20v-1a3.6 3.6 0 0 1 6.5-2.1"/></svg>Hedge Funds</button>
+  </nav>
+  <div class="snav-lbl">Pipeline</div>
+  <nav class="snav">
+    <button class="ntb" disabled style="opacity:.55;cursor:default"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>Watchlist</button>
+    <button class="ntb" disabled style="opacity:.55;cursor:default"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Idea Backlog</button>
+  </nav>
+  <div class="side-foot">
+    <div class="sfnav"></div>
+    <div class="userbox">
+      <div class="userav" id="sbUserInitial">—</div>
+      <div><div class="username" id="sbUserName">—</div><div class="userrole" id="sbUserRole">—</div></div>
+      <span class="chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-4 4 4"/><path d="M16 15l-4 4-4-4"/></svg></span>
+    </div>
+    <button class="ntb" id="signOutBtn" style="margin-top:4px;color:var(--mu)"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign out</button>
+  </div>
+</aside>
+
+<!-- ─── Content wrap ─── -->
+<div class="contentwrap">
+  <div class="topbar">
+    <div class="topbar-title" id="tbTitle">Companies</div>
+    <div class="topbar-right">
+      <span class="tb-date" id="tbDate"></span>
+      <span class="tb-status">Confidential</span>
+    </div>
+  </div>
+  <main class="main">
+<!-- COMPANIES TAB -->
+<div id="tp-co" class="tp active">
+  <!-- GRID VIEW -->
+  <div id="co-gridview">
+    <h1 class="co-h1">Portfolio Companies</h1>
+    <p class="co-sub">Companies Summit Management Technologies actively researches and covers.</p>
+    <div class="co-controls">
+      <div class="srw" style="margin-bottom:0;flex:1;max-width:440px">
+        <span class="sric">&#9906;</span>
+        <input class="sri" id="co-search" placeholder="Search by name or ticker&hellip;" oninput="renderCoGrid()" autocomplete="off">
+      </div>
+      <select class="fsel" id="co-groupfilter" onchange="renderCoGrid()"></select>
+    </div>
+    <div class="card co-coverage">
+      <div class="co-grid" id="co-grid"></div>
+    </div>
+    <p class="co-disclaim">Coverage only &mdash; not a current portfolio disclosure. Summit Management Technologies may hold positions in some, all, or none of the companies listed. <a href="#" onclick="return false">Full disclosure</a></p>
+  </div>
+
+  <!-- DETAIL VIEW -->
+  <div id="co-detailview" style="display:none">
+    <div class="coback" onclick="closeCo()">&#x2190; All companies</div>
+    <div class="cohead">
+      <div id="co-logo"></div>
+      <div class="cotitle"><div class="co-eyebrow">Company Profile</div><h2 id="co-name">Uber Technologies</h2><div class="sub" id="co-sub">NYSE: UBER &middot; Transport</div></div>
+      <div class="copx"><div class="big" id="co-px">$82.40</div></div>
+    </div>
+    <div class="cotabs">
+      <button class="cotab active" data-pane="analysis" onclick="coTab('analysis')">Analysis</button>
+      <button class="cotab" data-pane="mgmt" onclick="coTab('mgmt')">Management</button>
+      <button class="cotab" data-pane="est" onclick="coTab('est')">Estimates</button>
+      <button class="cotab" data-pane="val" onclick="coTab('val')">Valuation</button>
     </div>
 
-    <nav class="sb-nav">
-      <div class="nav-item" data-page="dashboard" onclick="window._nav('dashboard')">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
-        Dashboard
-      </div>
-    </nav>
-
-    <div class="sb-foot">
-      <div class="sb-user-info">
-        <span class="sb-dot"></span>
-        <div>
-          <div class="sb-user-name" id="sbUserName">&mdash;</div>
-          <div class="sb-user-role" id="sbUserRole">&mdash;</div>
-        </div>
-      </div>
-      <button class="sb-signout-btn" id="signOutBtn">Sign out</button>
+    <div class="copane active" data-pane="analysis">
+      <p style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:16px;max-width:760px">Every holding is underwritten against the same four pillars. Each is a 1&ndash;5 read; the composite appears on the coverage card. The note under each pillar describes what that lens evaluates.</p>
+      <div class="fp" id="co-analysis"></div>
     </div>
-  </aside>
 
-  <!-- ─── Main content ─── -->
-  <div class="main">
-
-    <!-- ═══ DASHBOARD ═══ -->
-    <section class="page" id="page-dashboard">
-      <div class="page-header">
-        <div>
-          <div class="page-title">Dashboard</div>
-          <div class="page-sub">Research portal home</div>
+    <div class="copane" data-pane="mgmt">
+      <div class="cotwo">
+        <div class="card">
+          <div class="sect" style="margin-bottom:12px">Key executives</div>
+          <table class="rt">
+            <thead><tr><th>Name</th><th>Role</th><th>Since</th><th style="text-align:right">Ownership</th></tr></thead>
+            <tbody>
+              <tr><td>Dara Khosrowshahi</td><td class="neu">CEO</td><td>2017</td><td style="text-align:right">0.4%</td></tr>
+              <tr><td>Prashanth Mahendra-Rajah</td><td class="neu">CFO</td><td>2023</td><td style="text-align:right">&mdash;</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="sect" style="margin-bottom:12px">Capital allocation</div>
+          <p style="font-size:12.5px;color:var(--mu);line-height:1.6;margin-bottom:12px">Insider ownership, compensation alignment, buyback cadence and stated capital-return policy populate this pane automatically from filings.</p>
+          <div class="coplace">Comp tables &middot; insider transactions &middot; buyback history</div>
         </div>
       </div>
-      <div id="dashboard-content">
-        <p style="color: var(--t2); font-size: 14px;">Welcome to Research Summit. Dashboards will appear here as they are built.</p>
+    </div>
+
+    <div class="copane" data-pane="est">
+      <div class="card">
+        <div class="sect" style="margin-bottom:12px">Consensus estimates vs. actuals</div>
+        <div class="cochart"><canvas id="co-estchart"></canvas></div>
       </div>
-    </section>
+      <div class="card" style="margin-top:16px">
+        <table class="rt">
+          <thead><tr><th>Metric</th><th style="text-align:right">FY24A</th><th style="text-align:right">FY25E</th><th style="text-align:right">FY26E</th><th style="text-align:right">FY27E</th></tr></thead>
+          <tbody>
+            <tr><td>Revenue ($B)</td><td style="text-align:right">43.9</td><td style="text-align:right">50.6</td><td style="text-align:right">58.1</td><td style="text-align:right">66.0</td></tr>
+            <tr><td>EBITDA ($B)</td><td style="text-align:right">6.5</td><td style="text-align:right">8.4</td><td style="text-align:right">10.6</td><td style="text-align:right">13.1</td></tr>
+            <tr><td>EPS ($)</td><td style="text-align:right">1.86</td><td style="text-align:right">2.41</td><td style="text-align:right">3.05</td><td style="text-align:right">3.80</td></tr>
+          </tbody>
+        </table>
+        <div class="est-note">Consensus from S&amp;P Global / Morningstar &middot; refreshed daily.</div>
+      </div>
+    </div>
 
-  </div><!-- .main -->
-</div><!-- .app -->
+    <div class="copane" data-pane="val">
+      <div class="cotwo">
+        <div class="card">
+          <div class="sect" style="margin-bottom:12px">Summit DCF snapshot</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="sc" style="border-top-color:var(--steel)"><div class="sl">Intrinsic value</div><div class="sv">$104</div></div>
+            <div class="sc" style="border-top-color:var(--pos)"><div class="sl">Upside</div><div class="sv" style="color:var(--pos)">+26%</div></div>
+            <div class="sc"><div class="sl">WACC</div><div class="sv">9.2%</div></div>
+            <div class="sc"><div class="sl">Terminal g</div><div class="sv">3.0%</div></div>
+          </div>
+          <div class="est-note">Pulled from the Summit Financial Data model &middot; snapshot 2026-05-20.</div>
+        </div>
+        <div class="card">
+          <div class="sect" style="margin-bottom:12px">Multiples</div>
+          <table class="rt">
+            <tbody>
+              <tr><td>EV / EBITDA (FY26E)</td><td style="text-align:right">21.3x</td></tr>
+              <tr><td>P / E (FY26E)</td><td style="text-align:right">27.0x</td></tr>
+              <tr><td>FCF yield (FY26E)</td><td style="text-align:right">3.6%</td></tr>
+              <tr><td>PEG</td><td style="text-align:right">1.1x</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
+<!-- MARKET ANALYSIS TAB -->
+<div id="tp-rot" class="tp">
+  <div class="srow">
+    <div class="sc"><div class="sl">S&amp;P 500 Universe</div><div class="sv">503</div><div class="ss">Companies Analyzed</div></div>
+    <div class="sc" style="border-top-color:#177A4E"><div class="sl">Positive YTD 2026</div><div class="sv" style="color:#177A4E">265</div><div class="ss">53% of companies</div></div>
+    <div class="sc" style="border-top-color:#1E3A5F"><div class="sl">Beating S&amp;P 500</div><div class="sv">186</div><div class="ss">vs +7.6% benchmark</div></div>
+    <div class="sc" style="border-top-color:#177A4E"><div class="sl">S&amp;P 500 YTD 2026</div><div class="sv" style="color:#177A4E">+7.6%</div><div class="ss">May 19, 2026</div></div>
+  </div>
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Sector Alpha &mdash; Avg Annual Return by Sector</span></div>
+    <div class="card">
+      <div class="sb-secrow" id="sb-secrow"></div>
+      <div class="sbl">
+      <div class="sb-toggle" id="sb-yearfilter" style="gap:6px;padding:3px;flex-wrap:wrap">
+        <button class="sb-tbtn active" data-yr="2017" onclick="toggleYear('2017')">2017</button>
+        <button class="sb-tbtn active" data-yr="2018" onclick="toggleYear('2018')">2018</button>
+        <button class="sb-tbtn active" data-yr="2019" onclick="toggleYear('2019')">2019</button>
+        <button class="sb-tbtn active" data-yr="2020" onclick="toggleYear('2020')">2020</button>
+        <button class="sb-tbtn active" data-yr="2021" onclick="toggleYear('2021')">2021</button>
+        <button class="sb-tbtn active" data-yr="2022" onclick="toggleYear('2022')">2022</button>
+        <button class="sb-tbtn active" data-yr="2023" onclick="toggleYear('2023')">2023</button>
+        <button class="sb-tbtn active" data-yr="2024" onclick="toggleYear('2024')">2024</button>
+        <button class="sb-tbtn active" data-yr="2025" onclick="toggleYear('2025')">2025</button>
+        <button class="sb-tbtn active" data-yr="2026" onclick="toggleYear('2026')">2026</button>
+      </div>
+      <div class="sb-toggle">
+        <button class="sb-tbtn active" id="sb-abs" onclick="setSBMode('abs')">Absolute</button>
+        <button class="sb-tbtn" id="sb-rel" onclick="setSBMode('rel')">Relative</button>
+      </div>
+    </div><div class="sbrs" id="sb-wrap"></div></div>
+  </div>
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Sector Summary &mdash; Market Beaters</span><span class="secn">Stock counts update with filters above</span></div>
+    <div class="card">
+      <div class="fbar">
+        <span class="flm">Filters:</span>
+        <label class="fc" id="fc-p26"><input type="checkbox" onchange="applyFilters()"> &#x2713; Positive 2026</label>
+        <label class="fc" id="fc-b26"><input type="checkbox" onchange="applyFilters()"> &#x2191; Beat Market 2026</label>
+        <label class="fc" id="fc-p25"><input type="checkbox" onchange="applyFilters()"> &#x2713; Positive 2025</label>
+        <label class="fc" id="fc-b25"><input type="checkbox" onchange="applyFilters()"> &#x2191; Beat Market 2025</label>
+        <label class="fc" id="fc-p24"><input type="checkbox" onchange="applyFilters()"> &#x2713; Positive 2024</label>
+        <label class="fc" id="fc-b24"><input type="checkbox" onchange="applyFilters()"> &#x2191; Beat Market 2024</label>
+        <label class="fc" id="fc-p23"><input type="checkbox" onchange="applyFilters()"> &#x2713; Positive 2023</label>
+        <label class="fc" id="fc-b23"><input type="checkbox" onchange="applyFilters()"> &#x2191; Beat Market 2023</label>
+        <label class="fc" id="fc-p22"><input type="checkbox" onchange="applyFilters()"> &#x2713; Positive 2022</label>
+        <label class="fc" id="fc-b22"><input type="checkbox" onchange="applyFilters()"> &#x2191; Beat Market 2022</label>
+        <button onclick="clearFilters()" style="padding:5px 11px;border:1px solid var(--bdr);border-radius:7px;background:var(--w);cursor:pointer;font-size:11px;color:var(--mu)">Clear</button>
+      </div>
+      <div class="sb-secrow" id="sec-excl-row"></div>
+      <table class="rt" id="sec-summary-tbl" style="margin-top:6px"><thead><tr>
+        <th>Sector</th>
+        <th style="text-align:right">Stocks Matching</th>
+        <th style="text-align:right">% of Sector</th>
+        <th style="text-align:right">Total in Sector</th>
+        <th style="text-align:right">2026 YTD</th>
+      </tr></thead><tbody id="sec-summary-body"></tbody></table>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sechdr"><span class="sect">S&amp;P 500 Companies Explorer</span><span class="secn">Working copy</span></div>
+    <div class="card">
+      <div class="fbar">
+        <span class="flm">Filters:</span>
+        <label class="fc" id="fc2-p26"><input type="checkbox" onchange="applyFilters2()"> &#x2713; Positive 2026</label>
+        <label class="fc" id="fc2-b26"><input type="checkbox" onchange="applyFilters2()"> &#x2191; Beat Market 2026</label>
+        <label class="fc" id="fc2-p25"><input type="checkbox" onchange="applyFilters2()"> &#x2713; Positive 2025</label>
+        <label class="fc" id="fc2-b25"><input type="checkbox" onchange="applyFilters2()"> &#x2191; Beat Market 2025</label>
+        <label class="fc" id="fc2-p24"><input type="checkbox" onchange="applyFilters2()"> &#x2713; Positive 2024</label>
+        <label class="fc" id="fc2-b24"><input type="checkbox" onchange="applyFilters2()"> &#x2191; Beat Market 2024</label>
+        <button onclick="clearFilters2()" style="padding:5px 11px;border:1px solid var(--bdr);border-radius:7px;background:var(--w);cursor:pointer;font-size:11px;color:var(--mu)">Clear</button>
+      </div>
+      <div class="fbar2">
+        <span class="flm">Sector:</span>
+        <select class="fsel" id="sec-flt2" onchange="onSecChange('tbl2')">
+          <option value="">All Sectors</option>
+          <option>Communication Services</option><option>Consumer Discretionary</option><option>Consumer Staples</option><option>Energy</option><option>Financials</option><option>Health Care</option><option>Industrials</option><option>Materials</option><option>Real Estate</option><option>Technology</option><option>Utilities</option>
+        </select>
+        <span class="flm">Subsector:</span>
+        <select class="fsel" id="ind-flt2" onchange="applyFilters2()" style="max-width:240px"><option value="">All Subsectors</option></select>
+      </div>
+      <div class="tcnt" id="tbl-cnt2">503 <span>companies shown</span></div>
+      <div class="twrap"><table class="dt" id="main-tbl2">
+        <thead><tr>
+          <th onclick="sortTbl2(0)">Ticker<span class="sa">&#x25BC;</span></th>
+          <th onclick="sortTbl2(1)">Sector<span class="sa">&#x25BC;</span></th>
+          <th onclick="sortTbl2(2)">Industry<span class="sa">&#x25BC;</span></th>
+          <th onclick="sortTbl2(3)">2022<span class="sa">&#x25BC;</span></th>
+          <th onclick="sortTbl2(4)">2023<span class="sa">&#x25BC;</span></th>
+          <th onclick="sortTbl2(5)">2024<span class="sa">&#x25BC;</span></th>
+          <th onclick="sortTbl2(6)">2025<span class="sa">&#x25BC;</span></th>
+          <th onclick="sortTbl2(7)">2026 YTD<span class="sa">&#x25BC;</span></th>
+          <th onclick="sortTbl2(8)" style="white-space:nowrap">3yr Cumul.<span class="sa">&#x25BC;</span></th>
+        </tr></thead>
+        <tbody id="tbl-body2"></tbody>
+      </table></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Return Scatter &mdash; 2025 vs 2026 YTD</span><span class="secn">Quadrant counts update with filters</span></div>
+    <div class="card">
+      <div class="fbar2" style="margin-bottom:10px">
+        <span class="flm">Sector:</span>
+        <select class="fsel" id="scat-sec" onchange="onSecChange('scat')">
+          <option value="">All Sectors</option>
+          <option>Communication Services</option><option>Consumer Discretionary</option><option>Consumer Staples</option><option>Energy</option><option>Financials</option><option>Health Care</option><option>Industrials</option><option>Materials</option><option>Real Estate</option><option>Technology</option><option>Utilities</option>
+        </select>
+        <span class="flm">Subsector:</span>
+        <select class="fsel" id="scat-ind" onchange="renderScatter()" style="max-width:240px"><option value="">All Subsectors</option></select>
+      </div>
+      <div class="qcounts" id="quad-counts"></div>
+      <div class="scrl">
+        <span class="scrli"><span class="scline" style="border-color:#4A7FB5"></span>S&amp;P 2025 (+15.7%)</span>
+        <span class="scrli"><span class="scline" style="border-color:#177A4E"></span>S&amp;P 2026 (+7.6%)</span>
+        <span class="scrli"><span style="width:12px;height:12px;background:rgba(180,30,30,.1);border:1px solid rgba(180,30,30,.25);display:inline-block;border-radius:2px"></span>Lag both years</span>
+      </div>
+      <div style="position:relative;height:390px"><canvas id="scat-c"></canvas></div>
+      <div class="scleg" id="scleg"></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Stock Lookup &amp; Rotation Winners</span></div>
+    <div class="card">
+      <div class="srw"><span class="sric">&#x1F50D;</span><input type="text" class="sri" id="sr-inp" placeholder="Search any S&amp;P 500 ticker (AAPL, XOM, DVN...)" autocomplete="off"><div class="srres" id="sr-res"></div></div>
+      <div id="sr-det" style="display:none;margin-bottom:16px"><div style="background:var(--surface);border-radius:10px;padding:14px 17px;border:1px solid var(--bdr)"><div id="sr-det-c"></div></div></div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:9px;letter-spacing:.5px">NEGATIVE 2025 &rarr; BEATING MARKET 2026</div>
+      <table class="rt"><thead><tr><th>Ticker</th><th>Sector</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th><th>2026 YTD</th><th>3yr Cumulative</th><th>vs S&amp;P 3yr</th></tr></thead><tbody id="rot-body"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- HEDGE FUNDS TAB -->
+<div id="tp-inv" class="tp">
+  <div class="sechdr" style="margin-bottom:18px">
+    <span class="sect">Cumulative Return vs S&amp;P 500 &mdash; 2015&ndash;2025</span>
+    <span class="secn">Four managers benchmarked to the index</span>
+  </div>
+  <div class="card" style="margin-bottom:30px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;gap:9px"><span style="font-size:12px;color:var(--mu)">Start year</span><select class="fsel" id="alpha-start" onchange="setAlphaStart(this.value)"><option>2015</option><option>2016</option><option>2017</option><option>2018</option><option>2019</option><option>2020</option><option>2021</option><option>2022</option><option>2023</option><option>2024</option><option>2025</option></select></div>
+      <div class="sb-toggle" id="alpha-toggle">
+        <button class="sb-tbtn" data-am="annual" onclick="setAlphaMode('annual')">Annual</button>
+        <button class="sb-tbtn active" data-am="cum" onclick="setAlphaMode('cum')">Cumulative</button>
+      </div>
+    </div>
+    <div class="sb-secrow" id="fund-chips" style="margin-bottom:14px"></div>
+    <div style="position:relative;height:380px"><canvas id="alphaChart"></canvas><div id="alphaStatus" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#8A93A0;font-size:13px;text-align:center;padding:20px;line-height:1.5"></div></div>
+  </div>
+  <div class="sechdr" style="margin-bottom:18px">
+    <span class="sect">Superinvestor Holdings &amp; Performance</span>
+    <span class="secn">Q1 2026 13F positions &middot; YTD returns through May 19, 2026</span>
+  </div>
+  <div class="inv-bench" id="inv-bench"></div>
+  <div class="inv-grid" id="inv-grid"></div>
+  <p style="margin-top:16px;font-size:11px;color:var(--mu);line-height:1.6">
+    Holdings: SEC 13F filings (Q1 2026) &middot; Returns: YTD through May 19, 2026 &middot; Einhorn Q1 2026 verified via Greenlight investor letter &middot; &#x26A0; Altimeter returns estimated from portfolio composition
+  </p>
+</div>
+
+</main>
+<footer class="ftr"><div class="ftri">
+  <div><div class="ftrt">Summit Management Technologies ABX, LP &middot; CIK: 0002074211 &middot; info@summit-mgmtx.com</div><div class="ftrd">All returns net of fees. Past performance is not indicative of future results. For informational purposes only.</div></div>
+  <div style="text-align:right"><div class="ftrt" style="color:rgba(168,196,224,.6)">Research Portal</div><div class="ftrd" id="footerDate"></div></div>
+</div></footer>
+</div><!-- /contentwrap -->
+</div><!-- /shell -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="env.js"></script>
 <script type="module">
 import { initAuth, getCurrentUser, signOut } from './js/auth.js';
 import { initNav, registerPageLoader } from './js/nav.js';
+import { loadCompaniesPage } from './js/companies.js';
+import { loadMarketAnalysisPage } from './js/market-analysis.js';
+import { loadHedgeFundsPage } from './js/hedge-funds.js';
 
 const statusEl = document.getElementById('status');
+
+// Set dynamic date
+const now = new Date();
+const dateStr = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+document.getElementById('tbDate').textContent = dateStr;
+document.getElementById('footerDate').textContent = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
 async function boot() {
   const result = await initAuth();
@@ -81,8 +356,15 @@ async function boot() {
     case 'authenticated': {
       statusEl.textContent = 'Loading...';
 
-      // Register page loaders here as you add dashboards
-      // registerPageLoader('dashboard', loadDashboard);
+      // Register page loaders
+      registerPageLoader('companies', loadCompaniesPage);
+      registerPageLoader('market-analysis', loadMarketAnalysisPage);
+      registerPageLoader('hedge-funds', loadHedgeFundsPage);
+
+      // Update user display
+      const user = getCurrentUser();
+      const initial = (user.email || 'U')[0].toUpperCase();
+      document.getElementById('sbUserInitial').textContent = initial;
 
       document.getElementById('loadingWrap').style.display = 'none';
       document.getElementById('appShell').style.display = '';

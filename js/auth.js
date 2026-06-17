@@ -6,7 +6,7 @@ import { supabase } from './supabase-client.js';
 // 'admin' has access to everything; other roles see only their pages.
 
 const ROLE_CONFIG = {
-  admin: { name: 'Admin', label: 'Admin', allowedPages: ['dashboard'], defaultPage: 'dashboard' },
+  admin: { name: 'Admin', label: 'Admin', allowedPages: ['companies', 'market-analysis', 'hedge-funds'], defaultPage: 'companies' },
 };
 
 let _currentRole = null;
@@ -26,7 +26,7 @@ export function canAccess(page) {
 export async function sendOtp(email) {
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { shouldCreateUser: false },
+    options: { shouldCreateUser: true },
   });
   return { error };
 }

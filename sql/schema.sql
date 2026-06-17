@@ -72,3 +72,43 @@ create policy "admin_reads_all_roles" on user_roles
       select 1 from user_roles where user_id = auth.uid() and role = 'admin'
     )
   );
+
+
+-- ─── 3. companies ─────────────────────────────────────────────
+
+create table companies (
+  id           uuid primary key default gen_random_uuid(),
+  ticker       text not null unique,
+  name         text not null,
+  exchange     text,
+  sector       text,
+  group_name   text,
+  logo_domain  text,
+  mono         text,
+  brand_color  text,
+  price        numeric,
+  status       text not null default 'active',
+  created_by   uuid references auth.users(id),
+  updated_by   uuid references auth.users(id),
+  created_at   timestamptz default now(),
+  updated_at   timestamptz default now()
+);
+
+create trigger companies_updated_at
+  before update on companies
+  for each row
+  execute function set_updated_at();
+
+alter table companies enable row level security;
+
+-- Any authenticated user can read companies
+create policy "authenticated_read_companies" on companies
+  for select using (auth.uid() is not null);
+
+-- Any authenticated user can insert companies
+create policy "authenticated_insert_companies" on companies
+  for insert with check (auth.uid() is not null);
+
+-- Any authenticated user can update companies
+create policy "authenticated_update_companies" on companies
+  for update using (auth.uid() is not null);

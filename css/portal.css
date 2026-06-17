@@ -272,4 +272,38 @@ body{font-family:'Inter',-apple-system,system-ui,sans-serif;background:var(--w);
 .fp-sub .sseg i{width:11px;height:4px;border-radius:2px;background:var(--ice)}
 .fp-sub .sseg i.on{background:var(--mid)}
 .fp-note{font-size:13px;color:var(--text);line-height:1.6;border-top:1px solid var(--bdr);padding-top:12px}
+/* ── Add Company button ── */
+.co-add-btn{width:38px;height:38px;border-radius:10px;border:1.5px dashed var(--bdr);background:var(--w);color:var(--mu);font-size:22px;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;line-height:1}
+.co-add-btn:hover{border-color:var(--steel);color:var(--steel);background:var(--surface)}
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;z-index:999;background:rgba(30,39,51,.45);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal-card{background:var(--w);border-radius:16px;width:100%;max-width:480px;box-shadow:0 8px 32px rgba(0,0,0,.12);animation:modalIn .18s ease-out}
+@keyframes modalIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:22px 26px 0}
+.modal-title{font-size:18px;font-weight:600;color:var(--text);letter-spacing:-0.02em}
+.modal-close{width:30px;height:30px;border:none;background:var(--surface);border-radius:8px;font-size:20px;color:var(--mu);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s}
+.modal-close:hover{background:var(--ice);color:var(--text)}
+#addCoForm{padding:20px 26px 24px}
+.modal-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.modal-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.modal-label{font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.05em}
+.modal-req{color:var(--neg)}
+.modal-input{height:38px;border:1px solid var(--bdr);border-radius:8px;padding:0 12px;font-family:'Inter',sans-serif;font-size:13px;color:var(--text);background:var(--w);outline:none;transition:border-color .15s;width:100%}
+.modal-input:focus{border-color:var(--steel)}
+.modal-input::placeholder{color:var(--mu)}
+.modal-select{height:38px;border:1px solid var(--bdr);border-radius:8px;padding:0 10px;font-family:'Inter',sans-serif;font-size:13px;color:var(--text);background:var(--w);cursor:pointer;outline:none;width:100%;transition:border-color .15s}
+.modal-select:focus{border-color:var(--steel)}
+.modal-color-wrap{display:flex;gap:8px;align-items:center}
+.modal-color{width:38px;height:38px;border:1px solid var(--bdr);border-radius:8px;padding:2px;cursor:pointer;background:var(--w)}
+.modal-input--color{flex:1}
+.modal-msg{font-size:12px;min-height:18px;margin-bottom:6px}
+.modal-msg.success{color:var(--pos)}.modal-msg.error{color:var(--neg)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;padding-top:6px;border-top:1px solid var(--bdr)}
+.modal-btn{height:38px;padding:0 20px;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .12s;border:none}
+.modal-btn--cancel{background:var(--surface);color:var(--mu)}
+.modal-btn--cancel:hover{background:var(--ice);color:var(--text)}
+.modal-btn--save{background:var(--navy);color:#fff}
+.modal-btn--save:hover{opacity:.88}
+.modal-btn--save:disabled{opacity:.4;cursor:default}
 @media(max-width:768px){.main{padding:16px}.srow{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}.inv-grid{grid-template-columns:1fr}.sbn{min-width:100px}.cotwo{grid-template-columns:1fr}.fp-subs{grid-template-columns:1fr}.co-grid{grid-template-columns:repeat(2,1fr)}.cohead{flex-wrap:wrap}.copx{margin-left:0}.shell{flex-direction:column}.side{width:100%;height:auto;position:static;padding:14px 12px}.snav{flex-direction:row;flex-wrap:wrap;gap:4px}.ntb{width:auto;border-radius:7px;border-left:none;padding:8px 12px}.ntb.active{border-left:none}.side-foot{display:none}.lw{border-bottom:none;padding-bottom:8px}}

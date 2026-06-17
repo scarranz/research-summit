@@ -73,6 +73,7 @@
         <input class="sri" id="co-search" placeholder="Search by name or ticker&hellip;" oninput="renderCoGrid()" autocomplete="off">
       </div>
       <select class="fsel" id="co-groupfilter" onchange="renderCoGrid()"></select>
+      <button class="co-add-btn" id="co-add-btn" title="Add company">+</button>
     </div>
     <div class="card co-coverage">
       <div class="co-grid" id="co-grid"></div>
@@ -322,6 +323,79 @@
   <p style="margin-top:16px;font-size:11px;color:var(--mu);line-height:1.6">
     Holdings: SEC 13F filings (Q1 2026) &middot; Returns: YTD through May 19, 2026 &middot; Einhorn Q1 2026 verified via Greenlight investor letter &middot; &#x26A0; Altimeter returns estimated from portfolio composition
   </p>
+</div>
+
+<!-- ADD COMPANY MODAL -->
+<div class="modal-overlay" id="addCoModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 class="modal-title">Add Company</h2>
+      <button class="modal-close" id="addCoClose">&times;</button>
+    </div>
+    <form id="addCoForm" autocomplete="off">
+      <div class="modal-row">
+        <div class="modal-field">
+          <label class="modal-label">Ticker <span class="modal-req">*</span></label>
+          <input class="modal-input" id="addCo-ticker" placeholder="e.g. AAPL" required>
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">Exchange</label>
+          <select class="modal-select" id="addCo-exchange">
+            <option value="">Select</option>
+            <option>NYSE</option>
+            <option>NASDAQ</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Company Name <span class="modal-req">*</span></label>
+        <input class="modal-input" id="addCo-name" placeholder="e.g. Apple Inc." required>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field">
+          <label class="modal-label">Sector</label>
+          <select class="modal-select" id="addCo-sector">
+            <option value="">Select</option>
+            <option>Communication</option>
+            <option>Consumer Disc.</option>
+            <option>Consumer Staples</option>
+            <option>Energy</option>
+            <option>Financials</option>
+            <option>Health Care</option>
+            <option>Industrials</option>
+            <option>Materials</option>
+            <option>Real Estate</option>
+            <option>Semiconductors</option>
+            <option>Technology</option>
+            <option>Utilities</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">Group</label>
+          <input class="modal-input" id="addCo-group" placeholder="e.g. Transportation">
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field">
+          <label class="modal-label">Website Domain</label>
+          <input class="modal-input" id="addCo-logo" placeholder="e.g. apple.com">
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">Brand Color</label>
+          <div class="modal-color-wrap">
+            <input type="color" class="modal-color" id="addCo-brand" value="#1E2733">
+            <input class="modal-input modal-input--color" id="addCo-brand-hex" value="#1E2733" placeholder="#000000">
+          </div>
+        </div>
+      </div>
+      <div class="modal-msg" id="addCo-msg"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn modal-btn--cancel" id="addCoCancel">Cancel</button>
+        <button type="submit" class="modal-btn modal-btn--save" id="addCoSave">Add Company</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 </main>

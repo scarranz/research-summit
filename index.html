@@ -34,6 +34,7 @@
     <button class="ntb nav-item active" data-tab="co" data-page="companies" onclick="switchTab('co')"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Companies</button>
     <button class="ntb nav-item" data-tab="rot" data-page="market-analysis" onclick="switchTab('rot')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>Market Analysis</button>
     <button class="ntb nav-item" data-tab="inv" data-page="hedge-funds" onclick="switchTab('inv')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20v-1.5a4.5 4.5 0 0 1 7-3.7"/><circle cx="17" cy="10" r="2.6"/><path d="M14 20v-1a3.6 3.6 0 0 1 6.5-2.1"/></svg>Hedge Funds</button>
+    <button class="ntb nav-item" data-tab="team" data-page="team" onclick="switchTab('team')"><svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>Team</button>
   </nav>
   <div class="snav-lbl">Pipeline</div>
   <nav class="snav">
@@ -315,6 +316,66 @@
   </p>
 </div>
 
+<!-- TEAM TAB -->
+<div id="tp-team" class="tp">
+  <div class="sec">
+    <div class="sechdr"><span class="sect">Investment Portfolio</span></div>
+    <div class="card" style="overflow-x:auto">
+      <table class="rt port-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th style="text-align:center">April 30, 2026</th>
+            <th style="text-align:center">August 31, 2026</th>
+            <th style="text-align:center" colspan="2">December 31, 2026</th>
+            <th style="text-align:center">Total</th>
+          </tr>
+          <tr class="port-subhead">
+            <th></th>
+            <th></th>
+            <th></th>
+            <th style="text-align:center">Return<br><span style="font-weight:400">(Puntos)</span></th>
+            <th style="text-align:center">Return/Risk 2X<br><span style="font-weight:400">(Puntos)</span></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="port-name">DAA</td>
+            <td><input class="port-input" type="number" step="0.1" min="0" placeholder="—" data-key="daa-apr" id="pi-daa-apr"></td>
+            <td><input class="port-input" type="number" step="0.1" min="0" placeholder="—" data-key="daa-aug" id="pi-daa-aug"></td>
+            <td><input class="port-input" type="number" step="0.1" min="0" placeholder="—" data-key="daa-dec-ret" id="pi-daa-dec-ret"></td>
+            <td><input class="port-input" type="number" step="0.1" min="0" placeholder="—" data-key="daa-dec-rr" id="pi-daa-dec-rr"></td>
+            <td class="port-total" id="pt-daa">—</td>
+          </tr>
+          <tr>
+            <td class="port-name">SAB</td>
+            <td><input class="port-input" type="number" step="0.1" min="0" placeholder="—" data-key="sab-apr" id="pi-sab-apr"></td>
+            <td><input class="port-input" type="number" step="0.1" min="0" placeholder="—" data-key="sab-aug" id="pi-sab-aug"></td>
+            <td><input class="port-input" type="number" step="0.1" min="0" placeholder="—" data-key="sab-dec-ret" id="pi-sab-dec-ret"></td>
+            <td><input class="port-input" type="number" step="0.1" min="0" placeholder="—" data-key="sab-dec-rr" id="pi-sab-dec-rr"></td>
+            <td class="port-total" id="pt-sab">—</td>
+          </tr>
+          <tr>
+            <td class="port-name">PVG</td>
+            <td><input class="port-input" type="number" step="0.1" min="0" placeholder="—" data-key="pvg-apr" id="pi-pvg-apr"></td>
+            <td><input class="port-input" type="number" step="0.1" min="0" placeholder="—" data-key="pvg-aug" id="pi-pvg-aug"></td>
+            <td><input class="port-input" type="number" step="0.1" min="0" placeholder="—" data-key="pvg-dec-ret" id="pi-pvg-dec-ret"></td>
+            <td><input class="port-input" type="number" step="0.1" min="0" placeholder="—" data-key="pvg-dec-rr" id="pi-pvg-dec-rr"></td>
+            <td class="port-total" id="pt-pvg">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="sec" style="margin-top:32px">
+      <div class="sechdr"><span class="sect">Investment Ideas</span></div>
+      <div class="card">
+        <p style="font-size:13px;color:var(--mu)">Coming soon.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ADD COMPANY MODAL -->
 <div class="modal-overlay" id="addCoModal">
   <div class="modal-card">
@@ -371,6 +432,7 @@ import { initNav, registerPageLoader } from './js/nav.js';
 import { loadCompaniesPage } from './js/companies.js';
 import { loadMarketAnalysisPage } from './js/market-analysis.js';
 import { loadHedgeFundsPage } from './js/hedge-funds.js';
+import { loadTeamPage } from './js/team.js';
 
 const statusEl = document.getElementById('status');
 
@@ -391,6 +453,7 @@ async function boot() {
       registerPageLoader('companies', loadCompaniesPage);
       registerPageLoader('market-analysis', loadMarketAnalysisPage);
       registerPageLoader('hedge-funds', loadHedgeFundsPage);
+      registerPageLoader('team', loadTeamPage);
 
       // Update user display
       const user = getCurrentUser();

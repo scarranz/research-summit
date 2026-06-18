@@ -325,4 +325,14 @@ body{font-family:'Inter',-apple-system,system-ui,sans-serif;background:var(--w);
 .modal-btn--save{background:var(--navy);color:#fff}
 .modal-btn--save:hover{opacity:.88}
 .modal-btn--save:disabled{opacity:.4;cursor:default}
+/* ── Investment Portfolio table (Team tab) ── */
+.port-table td{padding:10px 14px;vertical-align:middle;text-align:center}
+.port-table td:first-child{text-align:left}
+.port-name{font-weight:600;font-size:14px;white-space:nowrap}
+.port-input{width:90px;text-align:center;border:1px solid var(--bdr);border-radius:6px;padding:6px 8px;font-family:inherit;font-size:13px;color:var(--text);background:var(--surface);outline:none;transition:border-color .12s,background .12s;-moz-appearance:textfield}
+.port-input::-webkit-inner-spin-button,.port-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.port-input:focus{border-color:var(--steel);background:var(--w)}
+.port-input::placeholder{color:var(--mu)}
+.port-subhead th{padding-top:4px;padding-bottom:10px;font-size:11px;color:var(--mu);font-weight:600;letter-spacing:.02em;border-bottom:1px solid var(--bdr)}
+.port-total{font-weight:700;font-size:15px;color:var(--navy);text-align:center;white-space:nowrap}
 @media(max-width:768px){.main{padding:16px}.srow{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}.inv-grid{grid-template-columns:1fr}.sbn{min-width:100px}.cotwo{grid-template-columns:1fr}.fp-subs{grid-template-columns:1fr}.co-grid{grid-template-columns:repeat(2,1fr)}.cohead{flex-wrap:wrap}.copx{margin-left:0}.shell{flex-direction:column}.side{width:100%;height:auto;position:static;padding:14px 12px}.snav{flex-direction:row;flex-wrap:wrap;gap:4px}.ntb{width:auto;border-radius:7px;border-left:none;padding:8px 12px}.ntb.active{border-left:none}.side-foot{display:none}.lw{border-bottom:none;padding-bottom:8px}}

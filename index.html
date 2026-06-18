@@ -90,67 +90,19 @@
       <div class="copx"><div class="big" id="co-px">$82.40</div></div>
     </div>
     <div class="cotabs">
-      <button class="cotab active" data-pane="analysis" onclick="coTab('analysis')">Analysis</button>
-      <button class="cotab" data-pane="mgmt" onclick="coTab('mgmt')">Management</button>
-      <button class="cotab" data-pane="est" onclick="coTab('est')">Estimates</button>
-      <button class="cotab" data-pane="val" onclick="coTab('val')">Valuation</button>
-      <button class="cotab" id="co-links-tab" data-pane="links" onclick="coTab('links')" style="display:none">Relevant Links</button>
+      <button class="cotab active" data-pane="overview" onclick="coTab('overview')">Overview</button>
+      <button class="cotab" data-pane="pillars" onclick="coTab('pillars')">Pillars</button>
+      <button class="cotab" data-pane="resources" onclick="coTab('resources')">Resources</button>
     </div>
 
-    <div class="copane active" data-pane="analysis">
+    <div class="copane active" data-pane="overview" style="min-height:240px"></div>
+
+    <div class="copane" data-pane="pillars">
       <p style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:16px;max-width:760px">Every holding is underwritten against the same four pillars. Each is a 1&ndash;5 read; the composite appears on the coverage card. The note under each pillar describes what that lens evaluates.</p>
       <div class="fp" id="co-analysis"></div>
     </div>
 
-    <div class="copane" data-pane="mgmt">
-      <div id="co-mgmt"></div>
-    </div>
-
-    <div class="copane" data-pane="est">
-      <div class="card">
-        <div class="sect" style="margin-bottom:12px">Consensus estimates vs. actuals</div>
-        <div class="cochart"><canvas id="co-estchart"></canvas></div>
-      </div>
-      <div class="card" style="margin-top:16px">
-        <table class="rt">
-          <thead><tr><th>Metric</th><th style="text-align:right">FY24A</th><th style="text-align:right">FY25E</th><th style="text-align:right">FY26E</th><th style="text-align:right">FY27E</th></tr></thead>
-          <tbody>
-            <tr><td>Revenue ($B)</td><td style="text-align:right">43.9</td><td style="text-align:right">50.6</td><td style="text-align:right">58.1</td><td style="text-align:right">66.0</td></tr>
-            <tr><td>EBITDA ($B)</td><td style="text-align:right">6.5</td><td style="text-align:right">8.4</td><td style="text-align:right">10.6</td><td style="text-align:right">13.1</td></tr>
-            <tr><td>EPS ($)</td><td style="text-align:right">1.86</td><td style="text-align:right">2.41</td><td style="text-align:right">3.05</td><td style="text-align:right">3.80</td></tr>
-          </tbody>
-        </table>
-        <div class="est-note">Consensus from S&amp;P Global / Morningstar &middot; refreshed daily.</div>
-      </div>
-    </div>
-
-    <div class="copane" data-pane="val">
-      <div class="cotwo">
-        <div class="card">
-          <div class="sect" style="margin-bottom:12px">Summit DCF snapshot</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div class="sc" style="border-top-color:var(--steel)"><div class="sl">Intrinsic value</div><div class="sv">$104</div></div>
-            <div class="sc" style="border-top-color:var(--pos)"><div class="sl">Upside</div><div class="sv" style="color:var(--pos)">+26%</div></div>
-            <div class="sc"><div class="sl">WACC</div><div class="sv">9.2%</div></div>
-            <div class="sc"><div class="sl">Terminal g</div><div class="sv">3.0%</div></div>
-          </div>
-          <div class="est-note">Pulled from the Summit Financial Data model &middot; snapshot 2026-05-20.</div>
-        </div>
-        <div class="card">
-          <div class="sect" style="margin-bottom:12px">Multiples</div>
-          <table class="rt">
-            <tbody>
-              <tr><td>EV / EBITDA (FY26E)</td><td style="text-align:right">21.3x</td></tr>
-              <tr><td>P / E (FY26E)</td><td style="text-align:right">27.0x</td></tr>
-              <tr><td>FCF yield (FY26E)</td><td style="text-align:right">3.6%</td></tr>
-              <tr><td>PEG</td><td style="text-align:right">1.1x</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <div class="copane" data-pane="links">
+    <div class="copane" data-pane="resources">
       <p style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:16px;max-width:760px">Primary sources for this company &mdash; official filings, financial models, transcripts and relevant media. Links open in a new tab.</p>
       <div id="co-links"></div>
     </div>

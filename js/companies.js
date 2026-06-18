@@ -3,7 +3,6 @@
 import { FRAMEWORK } from './portal-data.js';
 import { supabase } from './supabase-client.js';
 
-let coEstChart = null;
 let _companies = []; // companies loaded from Supabase
 let _pendingLookup = null; // data from ticker lookup
 
@@ -106,7 +105,7 @@ function lnkRow(href, icon, title, meta, badge){
 function renderCoLinks(c){
   var box=document.getElementById('co-links');if(!box)return false;
   var L=getCompanyLinks(c);
-  if(!L){box.innerHTML='';return false;}
+  if(!L){box.innerHTML='<div class="coplace">No resources yet. Work with Claude to add filings, models, transcripts and media for this company.</div>';return false;}
   var html='';
 
   if(L.filings&&L.filings.length){
@@ -133,40 +132,6 @@ function renderCoLinks(c){
 
   box.innerHTML=html;
   return true;
-}
-
-async function renderCoMgmt(c) {
-  var box = document.getElementById('co-mgmt');
-  if (!box) return;
-  box.innerHTML = '<p style="color:var(--mu);font-size:13px">Loading management...</p>';
-
-  var { data: execs, error } = await supabase
-    .from('company_executives')
-    .select('*')
-    .eq('company_id', c.id)
-    .order('sort_order');
-
-  if (error) {
-    box.innerHTML = '<p style="color:var(--mu);font-size:13px">Could not load management data.</p>';
-    return;
-  }
-
-  if (!execs || !execs.length) {
-    box.innerHTML = '<p style="color:var(--mu);font-size:13px">No management data yet. Work with Claude to add executives for this company.</p>';
-    return;
-  }
-
-  var rows = execs.map(function(e) {
-    return '<tr><td>' + e.name + '</td><td class="neu">' + e.role + '</td>' +
-      '<td>' + (e.since || '—') + '</td>' +
-      '<td style="text-align:right">' + (e.ownership || '—') + '</td></tr>';
-  }).join('');
-
-  box.innerHTML = '<div class="card">' +
-    '<div class="sect" style="margin-bottom:12px">Key executives</div>' +
-    '<table class="rt">' +
-    '<thead><tr><th>Name</th><th>Role</th><th>Since</th><th style="text-align:right">Ownership</th></tr></thead>' +
-    '<tbody>' + rows + '</tbody></table></div>';
 }
 
 function coGroups(){var s={};_companies.forEach(function(c){if(c.group_name)s[c.group_name]=1;});return Object.keys(s).sort();}
@@ -202,13 +167,10 @@ function openCo(tk){
   var px = c.price != null ? '$'+Number(c.price).toFixed(2) : '—';
   document.getElementById('co-px').textContent=px;
   renderCoAnalysis(c);
-  renderCoMgmt(c);
-  var hasLinks=renderCoLinks(c);
-  var linksTab=document.getElementById('co-links-tab');
-  if(linksTab) linksTab.style.display=hasLinks?'':'none';
+  renderCoLinks(c);
   document.getElementById('co-gridview').style.display='none';
   document.getElementById('co-detailview').style.display='block';
-  coTab('analysis');
+  coTab('overview');
   window.scrollTo(0,0);
 }
 
@@ -221,22 +183,6 @@ function closeCo(){
 function coTab(pane){
   document.querySelectorAll('.cotab').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-pane')===pane);});
   document.querySelectorAll('.copane').forEach(function(p){p.classList.toggle('active',p.getAttribute('data-pane')===pane);});
-  if(pane==='est') drawCoEst();
-}
-
-function drawCoEst(){
-  if(coEstChart) return;
-  var cv=document.getElementById('co-estchart');if(!cv)return;
-  coEstChart=new Chart(cv,{type:'bar',
-    data:{labels:['FY23','FY24','FY25E','FY26E','FY27E'],
-      datasets:[
-        {label:'Revenue ($B)',data:[37.3,43.9,50.6,58.1,66.0],backgroundColor:'#1E2733',borderRadius:4},
-        {label:'EBITDA ($B)',data:[4.1,6.5,8.4,10.6,13.1],backgroundColor:'#C9CFD7',borderRadius:4}
-      ]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{boxWidth:10,color:'#5A6E83',font:{family:'Inter',size:11}}}},
-      scales:{x:{grid:{display:false},ticks:{color:'#5A6E83',font:{size:10}}},
-              y:{grid:{color:'#E8EFF7'},ticks:{color:'#5A6E83',font:{size:10}}}}}});
 }
 
 // ─── Ticker Lookup ───────────────────────────────────────────

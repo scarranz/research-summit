@@ -1,0 +1,287 @@
+/* ─── Hedge Funds: benchmark bar + investor cards ─── */
+
+.inv-bench {
+  background: var(--w);
+  border: 1px solid var(--bdr);
+  border-radius: 14px;
+  padding: 18px 24px;
+  margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.inv-bench-left { min-width: 180px; }
+
+.inv-bench-title {
+  font-size: 15px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.inv-bench-sub {
+  font-size: 11px;
+  color: var(--mu);
+  margin-top: 2px;
+}
+
+.inv-bench-mets {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex: 1;
+}
+
+.inv-bench-m { min-width: 100px; }
+
+.inv-bench-ml {
+  font-size: 10px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--mu);
+  margin-bottom: 3px;
+}
+
+.inv-bench-mv {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.inv-bench-mv.neg { color: var(--neg); }
+
+.inv-bench-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 40px;
+  flex: 1;
+}
+
+.ibb-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+}
+
+.ibb-wrap {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 32px;
+  width: 100%;
+  align-items: center;
+}
+
+.ibb-pos {
+  background: rgba(22, 163, 74, .55);
+  width: 100%;
+  border-radius: 1px 1px 0 0;
+  min-height: 1px;
+}
+
+.ibb-neg {
+  background: rgba(220, 38, 38, .5);
+  width: 100%;
+  border-radius: 0 0 1px 1px;
+  min-height: 1px;
+}
+
+.ibb-lbl {
+  font-size: 9px;
+  color: var(--mu);
+}
+
+.inv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(370px, 1fr));
+  gap: 18px;
+}
+
+.icard {
+  background: var(--w);
+  border: .5px solid var(--bdr);
+  border-radius: 12px;
+  padding: 20px;
+  position: relative;
+}
+
+.icard.summit { border-top: 3px solid var(--gold2); }
+
+.icard-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--bdr);
+}
+
+.icard-left {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.icard-photo {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center top;
+  border: 2px solid var(--bdr);
+  flex-shrink: 0;
+}
+
+.icard-photo.sp { border-color: var(--gold2); }
+
+.icard-ini {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--bdr);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', monospace;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--steel);
+  flex-shrink: 0;
+}
+
+.icard-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--navy);
+  letter-spacing: -.01em;
+  margin-bottom: 2px;
+}
+
+.icard-fund {
+  font-family: 'Inter', monospace;
+  font-size: 11px;
+  color: var(--gold2);
+  letter-spacing: .03em;
+}
+
+.icard-aum-lbl {
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--mu);
+  margin-bottom: 2px;
+  text-align: right;
+}
+
+.icard-aum-val {
+  font-family: 'Inter', monospace;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--navy);
+  text-align: right;
+}
+
+.icard-mets {
+  display: flex;
+  border: .5px solid var(--bdr);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.icard-met {
+  flex: 1;
+  padding: 8px 10px;
+  border-right: .5px solid var(--bdr);
+  background: var(--surface);
+  text-align: center;
+}
+
+.icard-met:last-child { border-right: none; }
+
+.icard-ml {
+  font-family: 'Inter', monospace;
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mu);
+  margin-bottom: 3px;
+}
+
+.icard-mv {
+  font-family: 'Inter', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.icard-mv.gold { color: var(--gold2); }
+.icard-mv.gp { color: var(--pos); }
+.icard-mv.rn { color: var(--neg); }
+
+.icard-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.icard-tbl th {
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mu);
+  padding: 7px 6px 7px 0;
+  border-bottom: 1px solid var(--bdr);
+  font-weight: 500;
+  text-align: left;
+}
+
+.icard-tbl th.nr {
+  text-align: right;
+  padding-right: 0;
+}
+
+.icard-tbl td {
+  padding: 9px 6px 9px 0;
+  border-bottom: .5px solid #F0F4F8;
+  font-size: 12px;
+}
+
+.icard-tbl tr:last-child td { border-bottom: none; }
+.icard-tbl tr:hover td { background: #F7FAFD; }
+
+.icard-tbl td.nr {
+  text-align: right;
+  font-family: 'Inter', monospace;
+  font-weight: 500;
+  padding-right: 0;
+}
+
+.iticker {
+  font-family: 'Inter', monospace;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.ico {
+  font-size: 11px;
+  color: var(--mu);
+}
+
+.rpill {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-family: 'Inter', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  min-width: 66px;
+  text-align: right;
+}
+
+.rpill.rp { background: rgba(23, 122, 78, .1); color: var(--pos); }
+.rpill.rn { background: rgba(155, 42, 32, .1); color: var(--neg); }

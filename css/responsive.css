@@ -1,0 +1,39 @@
+/* ─── Responsive overrides (load last) ─── */
+
+@media (max-width: 768px) {
+  .main { padding: 16px; }
+  .srow { grid-template-columns: 1fr 1fr; }
+  .g2 { grid-template-columns: 1fr; }
+  .inv-grid { grid-template-columns: 1fr; }
+  .sbn { min-width: 100px; }
+  .cotwo { grid-template-columns: 1fr; }
+  .fp-subs { grid-template-columns: 1fr; }
+  .co-grid { grid-template-columns: repeat(2, 1fr); }
+  .cohead { flex-wrap: wrap; }
+  .copx { margin-left: 0; }
+
+  .shell { flex-direction: column; }
+  .side {
+    width: 100%;
+    height: auto;
+    position: static;
+    padding: 14px 12px;
+  }
+  .snav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .ntb {
+    width: auto;
+    border-radius: 7px;
+    border-left: none;
+    padding: 8px 12px;
+  }
+  .ntb.active { border-left: none; }
+  .side-foot { display: none; }
+  .lw {
+    border-bottom: none;
+    padding-bottom: 8px;
+  }
+}

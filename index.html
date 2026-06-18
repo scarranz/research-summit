@@ -369,9 +369,82 @@
     </div>
     <div class="sec" style="margin-top:32px">
       <div class="sechdr"><span class="sect">Investment Ideas</span></div>
-      <div class="card">
-        <p style="font-size:13px;color:var(--mu)">Coming soon.</p>
+      <div class="cotabs">
+        <button class="cotab active ii-tab" data-pane="sessions" onclick="iiTab('sessions')">Sessions</button>
+        <button class="cotab ii-tab" data-pane="analysts" onclick="iiTab('analysts')">Analysts</button>
       </div>
+
+      <div class="ii-pane" data-pane="sessions">
+        <div class="ii-session-nav" id="ii-sessionNav"></div>
+        <div class="ii-sub-lbl" id="ii-sessionLabel" style="margin-bottom:12px"></div>
+        <div class="ii-companies-grid" id="ii-companiesGrid"></div>
+      </div>
+
+      <div class="ii-pane" data-pane="analysts" style="display:none">
+        <div class="ii-analyst-cards" id="ii-analystCards"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- II: NEW SESSION MODAL -->
+<div class="ii-modal-overlay" id="ii-newSessionModal" style="display:none" onclick="if(event.target===this)iiCloseModal('ii-newSessionModal')">
+  <div class="ii-modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 style="font-size:15px;font-weight:600" id="ii-sessionModalTitle">New session</h2>
+      <button class="modal-close" onclick="iiCloseModal('ii-newSessionModal')">&times;</button>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Date</label>
+      <input class="modal-input" type="date" id="ii-newSessionDate">
+    </div>
+    <div class="modal-field" style="margin-top:12px">
+      <label class="modal-label">Participating analysts</label>
+      <div class="ii-pills-row" id="ii-newSessionAnalysts"></div>
+    </div>
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="modal-btn modal-btn--cancel" onclick="iiCloseModal('ii-newSessionModal')">Cancel</button>
+      <button class="modal-btn modal-btn--save" id="ii-sessionModalSave" onclick="iiConfirmNewSession()">Create session</button>
+    </div>
+  </div>
+</div>
+
+<!-- II: NEW COMPANY MODAL -->
+<div class="ii-modal-overlay" id="ii-newCompanyModal" style="display:none" onclick="if(event.target===this)iiCloseModal('ii-newCompanyModal')">
+  <div class="ii-modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 style="font-size:15px;font-weight:600">Add company</h2>
+      <button class="modal-close" onclick="iiCloseModal('ii-newCompanyModal')">&times;</button>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field">
+        <label class="modal-label">Ticker</label>
+        <input class="modal-input" type="text" id="ii-newTicker" placeholder="AAPL" style="text-transform:uppercase">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Name</label>
+        <input class="modal-input" type="text" id="ii-newName" placeholder="Apple Inc.">
+      </div>
+    </div>
+    <div class="modal-field" style="margin-top:12px">
+      <label class="modal-label">Brief description</label>
+      <textarea class="ii-comment" id="ii-newDesc" style="height:64px;width:100%" placeholder="What does this company do?"></textarea>
+    </div>
+    <div class="modal-field" style="margin-top:12px">
+      <label class="modal-label">Sector</label>
+      <div class="ii-pills-row" id="ii-sectorPills"></div>
+    </div>
+    <div class="modal-field" style="margin-top:12px">
+      <label class="modal-label">Presenter</label>
+      <div class="ii-pills-row" id="ii-presenterPills"></div>
+    </div>
+    <div class="modal-field" style="margin-top:12px">
+      <label class="modal-label">Presentation price <span style="color:var(--mu)">(optional)</span></label>
+      <input class="modal-input" type="number" id="ii-newPrice" placeholder="0.00" step="0.01">
+    </div>
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="modal-btn modal-btn--cancel" onclick="iiCloseModal('ii-newCompanyModal')">Cancel</button>
+      <button class="modal-btn modal-btn--save" onclick="iiConfirmNewCompany()">Add</button>
     </div>
   </div>
 </div>

@@ -49,8 +49,6 @@
   line-height: 1.1;
 }
 
-.lsb { display: none; }
-
 .snav-lbl {
   font-size: 10px;
   letter-spacing: .06em;
@@ -107,8 +105,6 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-
-.ntb .gly { display: none; }
 
 /* ─── Sidebar footer & user box ─── */
 

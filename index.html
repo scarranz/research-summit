@@ -323,6 +323,15 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="env.js"></script>
+<script>
+// Global error handler — logs unhandled errors to console with context
+window.addEventListener('error', function(e) {
+  console.error('[Research Portal Error]', e.message, e.filename, 'line', e.lineno);
+});
+window.addEventListener('unhandledrejection', function(e) {
+  console.error('[Research Portal Unhandled Promise]', e.reason);
+});
+</script>
 <script type="module">
 import { initAuth, getCurrentUser, signOut } from './js/auth.js';
 import { initNav, registerPageLoader } from './js/nav.js';
@@ -375,11 +384,15 @@ boot();
 
 function startInactivityTimer() {
   const TIMEOUT = 2 * 60 * 60 * 1000;
+  const EVENTS = ['mousemove', 'keydown', 'scroll', 'click', 'touchstart'];
   let timer = setTimeout(() => signOut(), TIMEOUT);
   const reset = () => { clearTimeout(timer); timer = setTimeout(() => signOut(), TIMEOUT); };
-  for (const evt of ['mousemove', 'keydown', 'scroll', 'click', 'touchstart']) {
-    document.addEventListener(evt, reset, { passive: true });
-  }
+  for (const evt of EVENTS) document.addEventListener(evt, reset, { passive: true });
+  // Cleanup on sign-out to prevent stacked timers
+  window.addEventListener('beforeunload', () => {
+    clearTimeout(timer);
+    for (const evt of EVENTS) document.removeEventListener(evt, reset);
+  });
 }
 </script>
 </body>

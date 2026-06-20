@@ -98,33 +98,43 @@ function fmt(v){return v==null?'&mdash;':(v>0?'+':'')+v.toFixed(1)+'%';}
 
 function cls(r,b){return r==null?'neu':r>b?'pos':r>0?'neu':'neg';}
 
+// Shared filter logic — applies year-based positive/beat-market filters to a stock array
+function filterStocks(data, filters) {
+  var yearCfg = [
+    { yr: '26', field: 'r26', bench: SP500_B26 },
+    { yr: '25', field: 'r25', bench: SP500_B25 },
+    { yr: '24', field: 'r24', bench: SP500_B24 },
+    { yr: '23', field: 'r23', bench: SP500_BMK['2023'] },
+    { yr: '22', field: 'r22', bench: SP500_BMK['2022'] },
+  ];
+  yearCfg.forEach(function(cfg) {
+    if (filters['p' + cfg.yr]) data = data.filter(function(s) { return s[cfg.field] != null && s[cfg.field] > 0; });
+    if (filters['b' + cfg.yr]) data = data.filter(function(s) { return s[cfg.field] != null && s[cfg.field] > cfg.bench; });
+  });
+  return data;
+}
+
+function readCheckboxFilters(prefix, years) {
+  var filters = {};
+  years.forEach(function(yr) {
+    var pEl = document.querySelector('#' + prefix + '-p' + yr + ' input');
+    var bEl = document.querySelector('#' + prefix + '-b' + yr + ' input');
+    if (pEl) { filters['p' + yr] = pEl.checked; pEl.parentElement.classList.toggle('active', pEl.checked); }
+    if (bEl) { filters['b' + yr] = bEl.checked; bEl.parentElement.classList.toggle('active', bEl.checked); }
+  });
+  return filters;
+}
+
 function applyFilters(){
-  document.querySelectorAll('#fc-p26, #fc-b26, #fc-p25, #fc-b25, #fc-p24, #fc-b24, #fc-p23, #fc-b23, #fc-p22, #fc-b22').forEach(function(lbl){var c=lbl.querySelector('input');if(c)lbl.classList.toggle('active',c.checked);});
-  var p26=document.querySelector('#fc-p26 input').checked,b26=document.querySelector('#fc-b26 input').checked;
-  var p25=document.querySelector('#fc-p25 input').checked,b25=document.querySelector('#fc-b25 input').checked;
-  var p24=document.querySelector('#fc-p24 input').checked,b24=document.querySelector('#fc-b24 input').checked;
-  var p23=document.querySelector('#fc-p23 input').checked,b23=document.querySelector('#fc-b23 input').checked;
-  var p22=document.querySelector('#fc-p22 input').checked,b22=document.querySelector('#fc-b22 input').checked;
-  var data=ALL_STOCKS.slice();
-  if(p26) data=data.filter(function(s){return s.r26!=null&&s.r26>0;});
-  if(b26) data=data.filter(function(s){return s.r26!=null&&s.r26>SP500_B26;});
-  if(p25) data=data.filter(function(s){return s.r25!=null&&s.r25>0;});
-  if(b25) data=data.filter(function(s){return s.r25!=null&&s.r25>SP500_B25;});
-  if(p24) data=data.filter(function(s){return s.r24!=null&&s.r24>0;});
-  if(b24) data=data.filter(function(s){return s.r24!=null&&s.r24>SP500_B24;});
-  if(p23) data=data.filter(function(s){return s.r23!=null&&s.r23>0;});
-  if(b23) data=data.filter(function(s){return s.r23!=null&&s.r23>SP500_BMK['2023'];});
-  if(p22) data=data.filter(function(s){return s.r22!=null&&s.r22>0;});
-  if(b22) data=data.filter(function(s){return s.r22!=null&&s.r22>SP500_BMK['2022'];});
-  tblData=data;renderTbl();
+  var filters = readCheckboxFilters('fc', ['26','25','24','23','22']);
+  tblData = filterStocks(ALL_STOCKS.slice(), filters);
+  renderTbl();
 }
 
 function clearFilters(){
   document.querySelectorAll('#fc-p26 input, #fc-b26 input, #fc-p25 input, #fc-b25 input, #fc-p24 input, #fc-b24 input, #fc-p23 input, #fc-b23 input, #fc-p22 input, #fc-b22 input').forEach(function(c){c.checked=false;c.parentElement.classList.remove('active');});
   tblData=ALL_STOCKS.slice();renderTbl();
 }
-
-function sortTbl(){/* deprecated for sector summary */}
 
 function renderTbl(){
   var body=document.getElementById('sec-summary-body');if(!body)return;
@@ -248,18 +258,9 @@ function toggleSecExp(sec){
 }
 
 function applyFilters2(){
-  document.querySelectorAll('#fc2-p26, #fc2-b26, #fc2-p25, #fc2-b25, #fc2-p24, #fc2-b24').forEach(function(lbl){var c=lbl.querySelector('input');if(c)lbl.classList.toggle('active',c.checked);});
-  var p26=document.querySelector('#fc2-p26 input').checked,b26=document.querySelector('#fc2-b26 input').checked;
-  var p25=document.querySelector('#fc2-p25 input').checked,b25=document.querySelector('#fc2-b25 input').checked;
-  var p24=document.querySelector('#fc2-p24 input').checked,b24=document.querySelector('#fc2-b24 input').checked;
+  var filters = readCheckboxFilters('fc2', ['26','25','24']);
   var sec=safeVal('sec-flt2'),ind=safeVal('ind-flt2');
-  var data=ALL_STOCKS.slice();
-  if(p26) data=data.filter(function(s){return s.r26>0;});
-  if(b26) data=data.filter(function(s){return s.r26>SP500_B26;});
-  if(p25) data=data.filter(function(s){return s.r25>0;});
-  if(b25) data=data.filter(function(s){return s.r25>SP500_B25;});
-  if(p24) data=data.filter(function(s){return s.r24>0;});
-  if(b24) data=data.filter(function(s){return s.r24>SP500_B24;});
+  var data = filterStocks(ALL_STOCKS.slice(), filters);
   if(sec) data=data.filter(function(s){return s.s===sec;});
   if(ind) data=data.filter(function(s){return s.i===ind;});
   tblData2=data;renderTbl2();
@@ -446,6 +447,11 @@ window.showDetail = showDetail;
 window.toggleSecExp = toggleSecExp;
 
 export function loadMarketAnalysisPage() {
+  if (!ALL_STOCKS || !ALL_STOCKS.length) {
+    var main = document.getElementById('tp-rot');
+    if (main) main.innerHTML = '<div style="text-align:center;color:var(--neg);padding:34px;font-size:13px">Market data failed to load. Please refresh the page.</div>';
+    return;
+  }
   tblData = ALL_STOCKS.slice();
   tblData2 = ALL_STOCKS.slice();
 

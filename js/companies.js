@@ -6,6 +6,9 @@ import { supabase } from './supabase-client.js';
 let _companies = []; // companies loaded from Supabase
 let _pendingLookup = null; // data from ticker lookup
 
+// Escape HTML entities in user-sourced strings to prevent XSS
+function esc(str) { if (!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
 // ─── Relevant Links (per-company profile content) ────────────
 // Keyed by a normalized key. Resolved against ticker or name so it
 // attaches to a company regardless of how it was added (code or DB).
@@ -153,9 +156,9 @@ function renderCoGrid(){
   });
   if(!list.length){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--mu);padding:34px;font-size:13px">No companies match that search.</div>';return;}
   grid.innerHTML=list.map(function(c){
-    return '<div class="cotile" onclick="openCo(\''+c.ticker+'\')">'+coLogo(c,'circ')+
-      '<div class="cotile-nm">'+c.name+'</div>'+
-      '<div class="cotile-meta">'+c.ticker+' &middot; '+(c.group_name||'—')+'</div></div>';
+    return '<div class="cotile" onclick="openCo(\''+esc(c.ticker)+'\')">'+coLogo(c,'circ')+
+      '<div class="cotile-nm">'+esc(c.name)+'</div>'+
+      '<div class="cotile-meta">'+esc(c.ticker)+' &middot; '+(esc(c.group_name)||'—')+'</div></div>';
   }).join('');
 }
 
@@ -163,7 +166,7 @@ function openCo(tk){
   var c=_companies.find(function(x){return x.ticker===tk;});if(!c)return;
   document.getElementById('co-logo').innerHTML=coLogo(c,'lg');
   document.getElementById('co-name').textContent=c.name;
-  document.getElementById('co-sub').innerHTML=c.ticker+' &middot; '+(c.group_name||'—');
+  document.getElementById('co-sub').innerHTML=esc(c.ticker)+' &middot; '+(esc(c.group_name)||'—');
   var px = c.price != null ? '$'+Number(c.price).toFixed(2) : '—';
   document.getElementById('co-px').textContent=px;
   renderCoAnalysis(c);
@@ -353,6 +356,10 @@ function initAddModal() {
   if (overlay) overlay.addEventListener('click', function(e) {
     if (e.target === overlay) closeAddModal();
   });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('addCoModal').classList.contains('open')) closeAddModal();
+  });
 }
 
 // Expose to window for inline onclick handlers
@@ -363,8 +370,16 @@ window.renderCoGrid = renderCoGrid;
 window.logoFallback = logoFallback;
 
 export async function loadCompaniesPage() {
-  await loadCompaniesFromDb();
-  initCoControls();
-  renderCoGrid();
-  initAddModal();
+  var grid = document.getElementById('co-grid');
+  if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px"><div class="loading-spinner" style="margin:0 auto 12px;width:28px;height:28px"></div><div style="color:var(--mu);font-size:13px">Loading companies...</div></div>';
+  try {
+    await loadCompaniesFromDb();
+    initCoControls();
+    renderCoGrid();
+    initAddModal();
+  } catch (err) {
+    console.error('Failed to load Companies tab:', err);
+    var grid = document.getElementById('co-grid');
+    if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--neg);padding:34px;font-size:13px">Something went wrong loading companies. Please refresh the page.</div>';
+  }
 }

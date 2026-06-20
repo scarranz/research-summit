@@ -155,6 +155,11 @@ window.setAlphaStart = setAlphaStart;
 window.setAlphaMode = setAlphaMode;
 
 export function loadHedgeFundsPage() {
+  if (!HF_FUNDS || !HF_FUNDS.length || !INVESTORS || !INVESTORS.length) {
+    var main = document.getElementById('tp-inv');
+    if (main) main.innerHTML = '<div style="text-align:center;color:var(--neg);padding:34px;font-size:13px">Hedge fund data failed to load. Please refresh the page.</div>';
+    return;
+  }
   renderFundChips();
   renderAlphaChart();
   renderBenchmark();

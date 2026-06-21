@@ -1,7 +1,7 @@
 // companies.js — grid, detail view, add-company modal
 // All companies are loaded from Supabase. No hardcoded data.
 import { FRAMEWORK } from './portal-data.js';
-import { supabase } from './supabase-client.js';
+import { fetchCompanies, insertCompany, lookupTicker, fetchResources, insertResource, updateResource, deleteResource, uploadFile, getFileUrl } from './api.js';
 
 let _companies = []; // companies loaded from Supabase
 let _pendingLookup = null; // data from ticker lookup
@@ -9,49 +9,36 @@ let _pendingLookup = null; // data from ticker lookup
 // Escape HTML entities in user-sourced strings to prevent XSS
 function esc(str) { if (!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-// ─── Relevant Links (per-company profile content) ────────────
-// Keyed by a normalized key. Resolved against ticker or name so it
-// attaches to a company regardless of how it was added (code or DB).
-const RELEVANT_LINKS = {
-  symbotic: {
-    match: { tickers: ['SYM', 'SYMBO', 'SYMBOTIC'], name: 'symbotic' },
-    filings: [
-      { period: 'Q2 FY2026', form: '10-Q', date: '2026-05-06', url: 'https://www.sec.gov/Archives/edgar/data/1837240/000183724026000024/sym-20260328.htm' },
-      { period: 'Q1 FY2026', form: '10-Q', date: '2026-02-04', url: 'https://www.sec.gov/Archives/edgar/data/1837240/000183724026000009/sym-20251227.htm' },
-      { period: 'FY2025', form: '10-K', date: '2025-11-24', url: 'https://www.sec.gov/Archives/edgar/data/1837240/000183724025000278/sym-20250927.htm' },
-      { period: 'Q3 FY2025', form: '10-Q', date: '2025-08-06', url: 'https://www.sec.gov/Archives/edgar/data/1837240/000183724025000263/sym-20250628.htm' },
-      { period: 'Q2 FY2025', form: '10-Q', date: '2025-05-07', url: 'https://www.sec.gov/Archives/edgar/data/1837240/000183724025000152/sym-20250329.htm' },
-      { period: 'Q1 FY2025', form: '10-Q', date: '2025-02-05', url: 'https://www.sec.gov/Archives/edgar/data/1837240/000183724025000044/sym-20241228.htm' },
-      { period: 'FY2024', form: '10-K', date: '2024-12-04', url: 'https://www.sec.gov/Archives/edgar/data/1837240/000183724024000232/sym-20240928.htm' },
-      { period: 'Q3 FY2024', form: '10-Q', date: '2024-07-31', url: 'https://www.sec.gov/Archives/edgar/data/1837240/000183724024000168/sym-20240629.htm' },
-    ],
-    financials: [
-      { label: 'Income Statement — Annual', sub: 'Fiscal.ai financial model', kind: 'fiscal', url: 'https://fiscal.ai/company/NasdaqGM-SYM/financials/income-statement/annual/' },
-    ],
-    transcripts: [
-      { label: 'Investor Relations & Transcripts', sub: 'Fiscal.ai', kind: 'fiscal', url: 'https://fiscal.ai/company/NasdaqGM-SYM/investor-relations/' },
-    ],
-    media: [
-      { label: 'Symbotic — podcast episode', sub: 'Spotify', kind: 'spotify', url: 'https://open.spotify.com/episode/2vPskyHUYQaWHM7Pn9AtE3' },
-      { label: 'Symbotic — feature video', sub: 'YouTube', kind: 'youtube', url: 'https://youtu.be/EAAV9JxdjF0?si=sTsicnzUbpo_BphH' },
-      { label: 'Symbotic review', sub: 'YouTube', kind: 'youtube', url: 'https://www.youtube.com/watch?v=_-KZzL1mPCQ&pp=ygUQc3ltYm90aWMgcmV2aWV3IA%3D%3D' },
-      { label: '"symbotic review" — search results', sub: 'YouTube', kind: 'youtube', url: 'https://www.youtube.com/results?search_query=symbotic+review+' },
-    ],
-  },
-};
-
-function getCompanyLinks(c) {
-  if (!c) return null;
-  var tk = (c.ticker || '').toUpperCase();
-  var nm = (c.name || '').toLowerCase();
-  for (var key in RELEVANT_LINKS) {
-    var m = RELEVANT_LINKS[key].match;
-    if ((m.tickers && m.tickers.indexOf(tk) >= 0) || (m.name && nm.indexOf(m.name) >= 0)) {
-      return RELEVANT_LINKS[key];
-    }
-  }
-  return null;
+function showConfirmModal(title, detail, message, onConfirm) {
+  var id = 'confirmModal_' + Date.now();
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = id;
+  overlay.innerHTML =
+    '<div class="modal-card" style="width:340px;text-align:center;padding:28px 32px;" onclick="event.stopPropagation()">' +
+      '<div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--mu);font-weight:500;margin-bottom:14px">' + title + '</div>' +
+      '<div style="font-size:14px;color:var(--text);margin-bottom:6px;font-weight:500">' + detail + '</div>' +
+      '<div style="font-size:11px;color:var(--mu);margin-bottom:22px">' + message + '</div>' +
+      '<div style="display:flex;gap:8px;justify-content:center">' +
+        '<button class="modal-btn modal-btn--cancel" id="' + id + '_cancel">Cancel</button>' +
+        '<button class="modal-btn" style="background:var(--neg);color:#fff" id="' + id + '_confirm">Delete</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  document.getElementById(id + '_cancel').addEventListener('click', function() { overlay.remove(); });
+  document.getElementById(id + '_confirm').addEventListener('click', function() { overlay.remove(); onConfirm(); });
 }
+
+// Category display labels and order
+var CATEGORY_META = {
+  filing:     'Company Filings',
+  financial:  'Reports',
+  transcript: 'Transcripts & IR',
+  media:      'Media & Podcasts',
+  other:      'Other Resources',
+};
+var CATEGORY_ORDER = ['filing', 'financial', 'transcript', 'media', 'other'];
 
 function coSegs(score,max){var h='';for(var i=1;i<=max;i++)h+='<i class="'+(i<=score?'on':'')+'"></i>';return h;}
 
@@ -89,52 +76,488 @@ function renderCoAnalysis(c){
   }).join('');
 }
 
-function lnkIcon(kind){
-  var m={
-    sec:'▤', fiscal:'∑', spotify:'▶', youtube:'▷', web:'↗'
+
+// ─── Add Resource Modal ─────────────────────────────────────
+
+var _currentCompanyForResource = null;
+var _resMode = 'url'; // 'url' or 'file'
+var _resSelectedFile = null;
+
+function openAddResourceModal(companyId) {
+  _currentCompanyForResource = companyId;
+  document.getElementById('addResModal').classList.add('open');
+  document.getElementById('addRes-name').focus();
+  setResMode('url');
+}
+
+function closeAddResourceModal() {
+  document.getElementById('addResModal').classList.remove('open');
+  document.getElementById('addResForm').reset();
+  _currentCompanyForResource = null;
+  _resSelectedFile = null;
+  document.getElementById('addRes-preview').style.display = 'none';
+  document.getElementById('addRes-dropzone').style.display = '';
+  var msg = document.getElementById('addRes-msg');
+  msg.textContent = '';
+  msg.className = 'modal-msg';
+}
+
+function setResMode(mode) {
+  _resMode = mode;
+  _resSelectedFile = null;
+  document.querySelectorAll('.res-toggle-btn').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-mode') === mode);
+  });
+  document.getElementById('addRes-url-row').style.display = mode === 'url' ? '' : 'none';
+  document.getElementById('addRes-file-row').style.display = mode === 'file' ? '' : 'none';
+  document.getElementById('addRes-preview').style.display = 'none';
+  document.getElementById('addRes-dropzone').style.display = '';
+}
+
+function showResFile(file) {
+  _resSelectedFile = file;
+  document.getElementById('addRes-fileName').textContent = file.name;
+  document.getElementById('addRes-dropzone').style.display = 'none';
+  document.getElementById('addRes-preview').style.display = '';
+}
+
+function removeResFile() {
+  _resSelectedFile = null;
+  document.getElementById('addRes-file').value = '';
+  document.getElementById('addRes-preview').style.display = 'none';
+  document.getElementById('addRes-dropzone').style.display = '';
+}
+
+function showResMsg(text, type) {
+  var msg = document.getElementById('addRes-msg');
+  msg.textContent = text;
+  msg.className = 'modal-msg ' + type;
+}
+
+async function handleAddResource(e) {
+  e.preventDefault();
+  var btn = document.getElementById('addResSave');
+  var name = document.getElementById('addRes-name').value.trim();
+  var category = document.getElementById('addRes-category').value;
+  var date = new Date().toISOString().slice(0, 10);
+
+  if (!name) { showResMsg('Name is required.', 'error'); return; }
+  if (!_currentCompanyForResource) { showResMsg('No company selected.', 'error'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Adding...';
+
+  var row = {
+    company_id: _currentCompanyForResource,
+    name: name,
+    date: date,
+    category: category,
   };
-  return m[kind]||m.web;
+
+  if (_resMode === 'url') {
+    var url = document.getElementById('addRes-url').value.trim();
+    if (!url) { showResMsg('URL is required.', 'error'); btn.disabled = false; btn.textContent = 'Add Resource'; return; }
+    row.type = 'link';
+    row.url = url;
+  } else {
+    if (!_resSelectedFile) { showResMsg('Please select a file.', 'error'); btn.disabled = false; btn.textContent = 'Add Resource'; return; }
+    var filePath = _currentCompanyForResource + '/' + Date.now() + '-' + _resSelectedFile.name;
+    var uploadResult = await uploadFile(filePath, _resSelectedFile);
+    if (!uploadResult.success) {
+      showResMsg('Upload failed: ' + uploadResult.error.message, 'error');
+      btn.disabled = false; btn.textContent = 'Add Resource';
+      return;
+    }
+    row.type = 'file';
+    row.url = filePath;
+  }
+
+  var result = await insertResource(row);
+
+  btn.disabled = false;
+  btn.textContent = 'Add Resource';
+
+  if (!result.success) {
+    showResMsg('Error: ' + result.error.message, 'error');
+    return;
+  }
+
+  closeAddResourceModal();
+  var tk = document.getElementById('co-name').textContent;
+  var c = _companies.find(function(x) { return x.name === tk; });
+  if (c) renderCoLinks(c);
 }
 
-function lnkRow(href, icon, title, meta, badge){
-  return '<a class="lnk lnk-'+icon+'" href="'+href+'" target="_blank" rel="noopener noreferrer">'+
-    '<span class="lnk-ic">'+lnkIcon(icon)+'</span>'+
-    (badge?'<span class="lnk-badge">'+badge+'</span>':'')+
-    '<span class="lnk-body"><span class="lnk-title">'+title+'</span>'+
-    (meta?'<span class="lnk-meta">'+meta+'</span>':'')+'</span>'+
-    '<span class="lnk-go">↗</span></a>';
+var _currentResources = [];
+var _currentResFilter = 'all';
+
+function renderResFilter() {
+  var filterBox = document.getElementById('res-filter');
+  if (!filterBox) return;
+
+  // Find which categories have resources
+  var cats = [];
+  CATEGORY_ORDER.forEach(function(cat) {
+    if (_currentResources.some(function(r) { return r.category === cat; })) cats.push(cat);
+  });
+
+  if (cats.length <= 1) { filterBox.innerHTML = ''; return; }
+
+  var html = '<button type="button" class="res-filter-btn' + (_currentResFilter === 'all' ? ' active' : '') + '" data-cat="all">All</button>';
+  cats.forEach(function(cat) {
+    html += '<button type="button" class="res-filter-btn' + (_currentResFilter === cat ? ' active' : '') + '" data-cat="' + cat + '">' + esc(CATEGORY_META[cat] || cat) + '</button>';
+  });
+  filterBox.innerHTML = html;
+
+  filterBox.querySelectorAll('.res-filter-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      _currentResFilter = btn.getAttribute('data-cat');
+      renderResFilter();
+      renderResLinks();
+    });
+  });
 }
 
-function renderCoLinks(c){
-  var box=document.getElementById('co-links');if(!box)return false;
-  var L=getCompanyLinks(c);
-  if(!L){box.innerHTML='<div class="coplace">No resources yet. Work with Claude to add filings, models, transcripts and media for this company.</div>';return false;}
-  var html='';
+function renderResLinks() {
+  var box = document.getElementById('co-links'); if (!box) return;
 
-  if(L.filings&&L.filings.length){
-    html+='<div class="card" style="margin-bottom:16px"><div class="sect" style="margin-bottom:12px">Company filings &middot; SEC EDGAR</div><div class="lnk-list">'+
-      L.filings.map(function(f){return lnkRow(f.url,'sec',f.period,'Filed '+f.date,f.form);}).join('')+
-      '</div><div class="est-note">Direct links to official filings on SEC EDGAR &middot; most recent 8 quarters.</div></div>';
+  var filtered = _currentResFilter === 'all'
+    ? _currentResources
+    : _currentResources.filter(function(r) { return r.category === _currentResFilter; });
+
+  if (!filtered.length) {
+    box.innerHTML = '<div class="coplace">No resources in this category.</div>';
+    return;
   }
 
-  var two='';
-  if(L.financials&&L.financials.length){
-    two+='<div class="card"><div class="sect" style="margin-bottom:12px">Financials</div><div class="lnk-list">'+
-      L.financials.map(function(x){return lnkRow(x.url,x.kind||'fiscal',x.label,x.sub,'');}).join('')+'</div></div>';
-  }
-  if(L.transcripts&&L.transcripts.length){
-    two+='<div class="card"><div class="sect" style="margin-bottom:12px">Transcripts &amp; IR</div><div class="lnk-list">'+
-      L.transcripts.map(function(x){return lnkRow(x.url,x.kind||'fiscal',x.label,x.sub,'');}).join('')+'</div></div>';
-  }
-  if(two) html+='<div class="cotwo" style="margin-bottom:16px">'+two+'</div>';
+  // Group by category
+  var groups = {};
+  filtered.forEach(function(r) {
+    if (!groups[r.category]) groups[r.category] = [];
+    groups[r.category].push(r);
+  });
 
-  if(L.media&&L.media.length){
-    html+='<div class="card"><div class="sect" style="margin-bottom:12px">Media &amp; podcasts</div><div class="lnk-list">'+
-      L.media.map(function(x){return lnkRow(x.url,x.kind||'web',x.label,x.sub,'');}).join('')+'</div></div>';
+  var html = '';
+  CATEGORY_ORDER.forEach(function(cat) {
+    var items = groups[cat];
+    if (!items || !items.length) return;
+    var label = CATEGORY_META[cat] || cat;
+    html += '<div style="margin-bottom:20px">' +
+      '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);padding:0 14px;margin-bottom:6px">' + esc(label) + '</div>' +
+      '<div class="lnk-list">';
+    items.forEach(function(r) {
+      html += '<div class="lnk-row" data-res-id="' + esc(r.id) + '">' +
+        '<div class="lnk">' +
+        '<span class="lnk-body"><span class="lnk-title">' + esc(r.name) + '</span>' +
+        (r.date ? '<span class="lnk-meta">' + esc(r.date) + '</span>' : '') + '</span>' +
+        '<span class="lnk-go">↗</span></div>' +
+        '</div>';
+    });
+    html += '</div></div>';
+  });
+
+  box.innerHTML = html;
+
+  box.querySelectorAll('.lnk-row').forEach(function(row) {
+    row.addEventListener('click', function() {
+      var resId = row.getAttribute('data-res-id');
+      var res = _currentResources.find(function(r) { return r.id === resId; });
+      if (res) openResDetailModal(res);
+    });
+  });
+}
+
+// ─── Resource Detail Modal ────────────────────────────────────
+
+function openResDetailModal(res) {
+  var id = 'resDetail_' + Date.now();
+  var isFile = res.type === 'file';
+  var catLabel = CATEGORY_META[res.category] || res.category;
+  var fileName = isFile && res.url ? res.url.split('/').pop().replace(/^\d+-/, '') : '';
+
+  var sourceHtml = '';
+  if (isFile) {
+    sourceHtml = '<div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px 12px;background:var(--surface);border-radius:8px">' +
+      '<span style="font-size:18px">&#x1F4C4;</span>' +
+      '<span style="font-size:12px;color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(fileName) + '</span>' +
+      '</div>';
+  } else if (res.url) {
+    sourceHtml = '<div style="font-size:12px;color:var(--steel);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:8px">' + esc(res.url) + '</div>';
   }
 
-  box.innerHTML=html;
-  return true;
+  var openAction = '';
+  if (isFile) {
+    openAction = '<button style="font-size:12px;color:var(--steel);background:none;border:none;cursor:pointer;font-family:Inter,sans-serif;font-weight:500" id="' + id + '_download">Download</button>';
+  } else if (res.url) {
+    openAction = '<a href="' + esc(res.url) + '" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:var(--steel);text-decoration:none;font-weight:500">Open ↗</a>';
+  }
+
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = id;
+  overlay.innerHTML =
+    '<div class="modal-card" style="width:400px;padding:0" onclick="event.stopPropagation()">' +
+      '<div style="padding:24px 28px 20px">' +
+        '<div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);font-weight:500;margin-bottom:12px">' + esc(catLabel) + '</div>' +
+        '<div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">' + esc(res.name) + '</div>' +
+        (res.date ? '<div style="font-size:12px;color:var(--mu);margin-bottom:4px">' + esc(res.date) + '</div>' : '') +
+        sourceHtml +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:12px;padding:14px 28px 18px;border-top:1px solid var(--bdr)">' +
+        openAction +
+        '<button style="font-size:12px;color:var(--mu);background:none;border:none;cursor:pointer;font-family:Inter,sans-serif;font-weight:500" id="' + id + '_edit">Edit</button>' +
+        '<div style="flex:1"></div>' +
+        '<button style="font-size:11px;color:var(--neg);background:none;border:none;cursor:pointer;font-family:Inter,sans-serif;font-weight:500;opacity:.7" id="' + id + '_delete">Delete</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  document.addEventListener('keydown', function handler(e) {
+    if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', handler); }
+  });
+
+  // Download handler for files
+  if (isFile) {
+    document.getElementById(id + '_download').addEventListener('click', async function() {
+      var result = await getFileUrl(res.url);
+      if (result.success && result.data && result.data.signedUrl) {
+        window.open(result.data.signedUrl, '_blank');
+      } else {
+        alert('Could not generate download link.');
+      }
+    });
+  }
+
+  document.getElementById(id + '_delete').addEventListener('click', function() {
+    overlay.remove();
+    showConfirmModal('Delete Resource', esc(res.name), 'This action cannot be undone.', async function() {
+      var result = await deleteResource(res.id);
+      if (result.success) {
+        _currentResources = _currentResources.filter(function(r) { return r.id !== res.id; });
+        renderResFilter();
+        renderResLinks();
+      }
+    });
+  });
+
+  document.getElementById(id + '_edit').addEventListener('click', function() {
+    overlay.remove();
+    openResEditModal(res);
+  });
+}
+
+// ─── Resource Edit Modal ─────────────────────────────────────
+
+function openResEditModal(res) {
+  var id = 'resEdit_' + Date.now();
+  var isFile = res.type === 'file';
+  var fileName = isFile && res.url ? res.url.split('/').pop().replace(/^\d+-/, '') : '';
+  var _editFile = null; // replacement file
+  var _fileRemoved = false;
+
+  var sourceField = '';
+  if (isFile) {
+    sourceField =
+      '<div class="modal-field" id="' + id + '_fileField">' +
+        '<label class="modal-label">File <span class="modal-req">*</span></label>' +
+        '<div id="' + id + '_filePreview" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface);border-radius:8px;border:1px solid var(--bdr)">' +
+          '<span style="font-size:16px">&#x1F4C4;</span>' +
+          '<span style="font-size:13px;color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" id="' + id + '_fileName">' + esc(fileName) + '</span>' +
+          '<button type="button" class="res-file-remove" id="' + id + '_fileRemove" title="Remove file">&times;</button>' +
+        '</div>' +
+        '<div id="' + id + '_fileDrop" style="display:none">' +
+          '<div class="res-dropzone" id="' + id + '_dropzone">' +
+            '<div class="res-dropzone-text">Drop file here or <span class="res-browse">browse</span></div>' +
+            '<input type="file" id="' + id + '_fileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.ppt,.pptx" style="display:none">' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  } else {
+    sourceField =
+      '<div class="modal-field">' +
+        '<label class="modal-label">URL <span class="modal-req">*</span></label>' +
+        '<input class="modal-input" id="' + id + '_url" value="' + esc(res.url || '') + '" type="text" placeholder="https://...">' +
+      '</div>';
+  }
+
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = id;
+  overlay.innerHTML =
+    '<div class="modal-card" style="width:440px;padding:0" onclick="event.stopPropagation()">' +
+      '<div class="modal-header"><h2 class="modal-title">Edit Resource</h2>' +
+        '<button class="modal-close" id="' + id + '_close">&times;</button></div>' +
+      '<div style="padding:20px 26px 24px">' +
+        '<div class="modal-field">' +
+          '<label class="modal-label">Name <span class="modal-req">*</span></label>' +
+          '<input class="modal-input" id="' + id + '_name" value="' + esc(res.name) + '">' +
+        '</div>' +
+        sourceField +
+        '<div class="modal-field">' +
+          '<label class="modal-label">Category</label>' +
+          '<select class="modal-input" id="' + id + '_cat">' +
+            '<option value="filing"' + (res.category === 'filing' ? ' selected' : '') + '>Filing</option>' +
+            '<option value="financial"' + (res.category === 'financial' ? ' selected' : '') + '>Report</option>' +
+            '<option value="transcript"' + (res.category === 'transcript' ? ' selected' : '') + '>Transcript</option>' +
+            '<option value="media"' + (res.category === 'media' ? ' selected' : '') + '>Media</option>' +
+            '<option value="other"' + (res.category === 'other' ? ' selected' : '') + '>Other</option>' +
+          '</select>' +
+        '</div>' +
+        '<div class="modal-msg" id="' + id + '_msg"></div>' +
+        '<div class="modal-actions">' +
+          '<button class="modal-btn modal-btn--cancel" id="' + id + '_cancel">Cancel</button>' +
+          '<button class="modal-btn modal-btn--save" id="' + id + '_save">Save</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+
+  function validateEdit() {
+    var nameVal = document.getElementById(id + '_name').value.trim();
+    var saveBtn = document.getElementById(id + '_save');
+    var valid = true;
+
+    if (!nameVal) valid = false;
+
+    if (isFile) {
+      // Must have existing file or a replacement
+      if (_fileRemoved && !_editFile) valid = false;
+    } else {
+      var urlEl = document.getElementById(id + '_url');
+      if (urlEl && !urlEl.value.trim()) valid = false;
+    }
+
+    saveBtn.disabled = !valid;
+    saveBtn.style.opacity = valid ? '' : '.4';
+  }
+
+  // Run initial validation
+  validateEdit();
+
+  // Live validation on inputs
+  document.getElementById(id + '_name').addEventListener('input', validateEdit);
+  if (!isFile) {
+    document.getElementById(id + '_url').addEventListener('input', validateEdit);
+  }
+
+  // File replace logic
+  if (isFile) {
+    var showFile = function(file) {
+      _editFile = file;
+      _fileRemoved = false;
+      document.getElementById(id + '_fileName').textContent = file.name;
+      document.getElementById(id + '_filePreview').style.display = '';
+      document.getElementById(id + '_fileDrop').style.display = 'none';
+      validateEdit();
+    };
+
+    document.getElementById(id + '_fileRemove').addEventListener('click', function() {
+      _editFile = null;
+      _fileRemoved = true;
+      document.getElementById(id + '_filePreview').style.display = 'none';
+      document.getElementById(id + '_fileDrop').style.display = '';
+      validateEdit();
+    });
+
+    var dropzone = document.getElementById(id + '_dropzone');
+    var fileInput = document.getElementById(id + '_fileInput');
+
+    dropzone.addEventListener('click', function() { fileInput.click(); });
+    fileInput.addEventListener('change', function() {
+      if (fileInput.files && fileInput.files[0]) showFile(fileInput.files[0]);
+    });
+    dropzone.addEventListener('dragover', function(e) { e.preventDefault(); dropzone.classList.add('drag-over'); });
+    dropzone.addEventListener('dragleave', function() { dropzone.classList.remove('drag-over'); });
+    dropzone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropzone.classList.remove('drag-over');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) showFile(e.dataTransfer.files[0]);
+    });
+  }
+
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  document.getElementById(id + '_close').addEventListener('click', function() { overlay.remove(); });
+  document.getElementById(id + '_cancel').addEventListener('click', function() { overlay.remove(); });
+  document.addEventListener('keydown', function handler(e) {
+    if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', handler); }
+  });
+
+  document.getElementById(id + '_save').addEventListener('click', async function() {
+    var nameVal = document.getElementById(id + '_name').value.trim();
+    var catVal = document.getElementById(id + '_cat').value;
+    var msgEl = document.getElementById(id + '_msg');
+
+    if (!nameVal) { msgEl.textContent = 'Name is required.'; msgEl.className = 'modal-msg error'; return; }
+
+    var saveBtn = document.getElementById(id + '_save');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+
+    var updates = { name: nameVal, category: catVal };
+
+    if (isFile) {
+      if (_editFile) {
+        // Upload replacement file
+        var companyId = res.company_id;
+        var filePath = companyId + '/' + Date.now() + '-' + _editFile.name;
+        var uploadResult = await uploadFile(filePath, _editFile);
+        if (!uploadResult.success) {
+          msgEl.textContent = 'Upload failed: ' + uploadResult.error.message;
+          msgEl.className = 'modal-msg error';
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Save';
+          return;
+        }
+        updates.url = filePath;
+      } else if (_fileRemoved) {
+        msgEl.textContent = 'A file is required.';
+        msgEl.className = 'modal-msg error';
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save';
+        return;
+      }
+    } else {
+      var urlEl = document.getElementById(id + '_url');
+      var urlVal = urlEl ? urlEl.value.trim() : '';
+      if (!urlVal) { msgEl.textContent = 'URL is required.'; msgEl.className = 'modal-msg error'; saveBtn.disabled = false; saveBtn.textContent = 'Save'; return; }
+      updates.url = urlVal;
+    }
+
+    var result = await updateResource(res.id, updates);
+
+    if (!result.success) {
+      msgEl.textContent = 'Error: ' + result.error.message;
+      msgEl.className = 'modal-msg error';
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save';
+      return;
+    }
+
+    var idx = _currentResources.findIndex(function(r) { return r.id === res.id; });
+    if (idx >= 0) _currentResources[idx] = result.data;
+
+    overlay.remove();
+    renderResFilter();
+    renderResLinks();
+  });
+}
+
+async function renderCoLinks(c) {
+  var box = document.getElementById('co-links'); if (!box) return;
+  box.innerHTML = '<div style="text-align:center;padding:20px;color:var(--mu);font-size:13px">Loading resources...</div>';
+
+  var result = await fetchResources(c.id);
+  _currentResources = result.success ? result.data : [];
+  _currentResFilter = 'all';
+
+  if (!_currentResources.length) {
+    document.getElementById('res-filter').innerHTML = '';
+    box.innerHTML = '<div class="coplace">No resources yet. Use the + button to add filings, links, and documents.</div>';
+    return;
+  }
+
+  renderResFilter();
+  renderResLinks();
 }
 
 function coGroups(){var s={};_companies.forEach(function(c){if(c.group_name)s[c.group_name]=1;});return Object.keys(s).sort();}
@@ -171,6 +594,9 @@ function openCo(tk){
   document.getElementById('co-px').textContent=px;
   renderCoAnalysis(c);
   renderCoLinks(c);
+  // Wire up add-resource button for this company
+  var addResBtn = document.getElementById('co-add-resource');
+  if (addResBtn) addResBtn.onclick = function() { openAddResourceModal(c.id); };
   document.getElementById('co-gridview').style.display='none';
   document.getElementById('co-detailview').style.display='block';
   coTab('overview');
@@ -189,16 +615,6 @@ function coTab(pane){
 }
 
 // ─── Ticker Lookup ───────────────────────────────────────────
-
-async function lookupTicker(ticker) {
-  // Use Supabase Edge Function to look up company info
-  var { data, error } = await supabase.functions.invoke('lookup-ticker', {
-    body: { ticker: ticker },
-  });
-
-  if (error) throw new Error(error.message);
-  return data;
-}
 
 async function handleLookup() {
   var tickerInput = document.getElementById('addCo-ticker');
@@ -220,7 +636,9 @@ async function handleLookup() {
   showModalMsg('', '');
 
   try {
-    var info = await lookupTicker(ticker);
+    var result = await lookupTicker(ticker);
+    if (!result.success) throw new Error(result.error.message);
+    var info = result.data;
 
     _pendingLookup = {
       ticker: ticker,
@@ -308,26 +726,26 @@ async function handleAddCompany(e) {
     status: 'active',
   };
 
-  var { data, error } = await supabase.from('companies').insert([row]).select().single();
+  var result = await insertCompany(row);
 
   btn.disabled = false;
   btn.textContent = 'Add Company';
 
-  if (error) {
-    showModalMsg('Error: ' + error.message, 'error');
+  if (!result.success) {
+    showModalMsg('Error: ' + result.error.message, 'error');
     return;
   }
 
-  _companies.push(data);
+  _companies.push(result.data);
   initCoControls();
   renderCoGrid();
   closeAddModal();
 }
 
 async function loadCompaniesFromDb() {
-  var { data, error } = await supabase.from('companies').select('*').eq('status', 'active').order('name');
-  if (error) { console.warn('Could not load companies from DB:', error.message); return; }
-  _companies = data || [];
+  var result = await fetchCompanies();
+  if (!result.success) { console.warn('Could not load companies:', result.error.message); return; }
+  _companies = result.data;
 }
 
 function initAddModal() {
@@ -362,6 +780,56 @@ function initAddModal() {
   });
 }
 
+function initResourceModal() {
+  var closeBtn = document.getElementById('addResClose');
+  if (closeBtn) closeBtn.addEventListener('click', closeAddResourceModal);
+
+  var cancelBtn = document.getElementById('addResCancel');
+  if (cancelBtn) cancelBtn.addEventListener('click', closeAddResourceModal);
+
+  var form = document.getElementById('addResForm');
+  if (form) form.addEventListener('submit', handleAddResource);
+
+  // Toggle buttons
+  document.querySelectorAll('.res-toggle-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() { setResMode(btn.getAttribute('data-mode')); });
+  });
+
+  // Dropzone click → open file picker
+  var dropzone = document.getElementById('addRes-dropzone');
+  var fileInput = document.getElementById('addRes-file');
+  if (dropzone) dropzone.addEventListener('click', function() { fileInput.click(); });
+
+  // File input change
+  if (fileInput) fileInput.addEventListener('change', function() {
+    if (fileInput.files && fileInput.files[0]) showResFile(fileInput.files[0]);
+  });
+
+  // Drag and drop
+  if (dropzone) {
+    dropzone.addEventListener('dragover', function(e) { e.preventDefault(); dropzone.classList.add('drag-over'); });
+    dropzone.addEventListener('dragleave', function() { dropzone.classList.remove('drag-over'); });
+    dropzone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropzone.classList.remove('drag-over');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) showResFile(e.dataTransfer.files[0]);
+    });
+  }
+
+  // Remove file
+  var removeBtn = document.getElementById('addRes-fileRemove');
+  if (removeBtn) removeBtn.addEventListener('click', removeResFile);
+
+  var overlay = document.getElementById('addResModal');
+  if (overlay) overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeAddResourceModal();
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('addResModal').classList.contains('open')) closeAddResourceModal();
+  });
+}
+
 // Expose to window for inline onclick handlers
 window.openCo = openCo;
 window.closeCo = closeCo;
@@ -377,6 +845,7 @@ export async function loadCompaniesPage() {
     initCoControls();
     renderCoGrid();
     initAddModal();
+    initResourceModal();
   } catch (err) {
     console.error('Failed to load Companies tab:', err);
     var grid = document.getElementById('co-grid');

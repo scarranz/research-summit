@@ -583,7 +583,8 @@
   display: flex;
   gap: 10px;
   justify-content: flex-end;
-  padding-top: 6px;
+  padding: 16px 26px 22px;
+  margin: 0 -26px -24px;
   border-top: 1px solid var(--bdr);
 }
 

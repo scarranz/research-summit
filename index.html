@@ -109,7 +109,10 @@
     </div>
 
     <div class="copane" data-pane="resources">
-      <p style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:16px;max-width:760px">Primary sources for this company &mdash; official filings, financial models, transcripts and relevant media. Links open in a new tab.</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;max-width:760px">
+        <div class="res-filter" id="res-filter"></div>
+        <button class="co-add-btn" id="co-add-resource" title="Add resource" style="flex-shrink:0;margin-left:12px">+</button>
+      </div>
       <div id="co-links"></div>
     </div>
   </div>
@@ -308,6 +311,58 @@
       <div class="modal-actions">
         <button type="button" class="modal-btn modal-btn--cancel" id="addCoCancel">Cancel</button>
         <button type="submit" class="modal-btn modal-btn--save" id="addCoSave" disabled>Add Company</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ADD RESOURCE MODAL -->
+<div class="modal-overlay" id="addResModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 class="modal-title">Add Resource</h2>
+      <button class="modal-close" id="addResClose">&times;</button>
+    </div>
+    <form id="addResForm" autocomplete="off">
+      <div class="modal-field">
+        <label class="modal-label">Name <span class="modal-req">*</span></label>
+        <input class="modal-input" id="addRes-name" placeholder="e.g. Q2 FY2026 · 10-Q" required>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Source <span class="modal-req">*</span></label>
+        <div class="res-toggle">
+          <button type="button" class="res-toggle-btn active" data-mode="url">URL</button>
+          <button type="button" class="res-toggle-btn" data-mode="file">File</button>
+        </div>
+        <div id="addRes-url-row">
+          <input class="modal-input" id="addRes-url" placeholder="https://..." type="text">
+        </div>
+        <div id="addRes-file-row" style="display:none">
+          <div class="res-dropzone" id="addRes-dropzone">
+            <div class="res-dropzone-text">Drop file here or <span class="res-browse">browse</span></div>
+            <input type="file" id="addRes-file" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.ppt,.pptx" style="display:none">
+          </div>
+          <div class="res-file-preview" id="addRes-preview" style="display:none">
+            <span class="res-file-icon">&#x1F4C4;</span>
+            <span class="res-file-name" id="addRes-fileName"></span>
+            <button type="button" class="res-file-remove" id="addRes-fileRemove">&times;</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Category</label>
+        <select class="modal-input" id="addRes-category">
+          <option value="filing">Filing</option>
+          <option value="financial">Report</option>
+          <option value="transcript">Transcript</option>
+          <option value="media">Media</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="modal-msg" id="addRes-msg"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn modal-btn--cancel" id="addResCancel">Cancel</button>
+        <button type="submit" class="modal-btn modal-btn--save" id="addResSave">Add Resource</button>
       </div>
     </form>
   </div>

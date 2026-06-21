@@ -1,5 +1,6 @@
 // Auth module — magic-link login, session management, role gates
 import { supabase } from './supabase-client.js';
+import { fetchUserRole, backfillUserRole } from './api.js';
 
 // ─── Role config ───────────────────────────────────────────
 // Add team members here as roles. allowedPages controls sidebar visibility.
@@ -59,27 +60,20 @@ export async function initAuth() {
     return { status: 'no-session' };
   }
 
-  // Fetch role
-  let { data: roleRow, error: roleErr } = await supabase
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', session.user.id)
-    .single();
+  // Fetch role via API layer
+  var roleResult = await fetchUserRole(session.user.id);
 
-  if (roleErr || !roleRow) {
-    await supabase.rpc('backfill_user_role_on_login');
+  if (!roleResult.success) {
+    await backfillUserRole();
+    roleResult = await fetchUserRole(session.user.id);
 
-    ({ data: roleRow, error: roleErr } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', session.user.id)
-      .single());
-
-    if (roleErr || !roleRow) {
+    if (!roleResult.success) {
       await supabase.auth.signOut();
       return { status: 'unauthorized' };
     }
   }
+
+  var roleRow = roleResult.data;
 
   const config = ROLE_CONFIG[roleRow.role];
   if (!config) {

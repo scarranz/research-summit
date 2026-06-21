@@ -23,6 +23,7 @@ js/portal-data.js       — All data arrays (stocks, investors, companies, image
 js/companies.js         — Companies tab (grid, detail view, four-pillar analysis)
 js/market-analysis.js   — Market Analysis tab (sector bars, filters, scatter, tables)
 js/hedge-funds.js       — Hedge Funds tab (alpha chart, benchmark, investor cards)
+js/team.js              — Team tab (Investment Portfolio + Investment Ideas)
 css/base.css            — CSS variables and reset
 css/layout.css          — Loading overlay styles
 css/shared.css          — Cards, sections, tables, filters, modals (shared components)
@@ -31,6 +32,7 @@ css/topbar.css          — Sticky top bar, main container, footer
 css/companies.css       — Company grid, detail view, four-pillar analysis
 css/market-analysis.css — Sector bars, chips, scatter plot styles
 css/hedge-funds.css     — Investor cards, benchmark bar, holdings table
+css/team.css            — Investment Ideas cards, voting UI, portfolio table
 css/responsive.css      — Mobile breakpoints
 sql/schema.sql          — Database schema (run in Supabase SQL Editor)
 netlify.toml            — Netlify build + routing config
@@ -156,6 +158,51 @@ Each company profile is **unique** — there is no fixed template. The user work
 - Profiles are built incrementally — a company can exist in the grid with no profile yet
 - Each profile is a custom design, not a cookie-cutter template
 - Claude handles all the technical work — the user just describes what they want to see
+
+## Team tab — how it works
+
+The Team tab has two sections: **Investment Portfolio** and **Investment Ideas**.
+
+### Current state (needs migration to Supabase)
+
+**IMPORTANT:** Both features currently store data client-side only. This is a known limitation that needs to be fixed.
+
+- **Investment Portfolio** — editable scoring table stored in `localStorage`. Data is device-specific and not shared across users.
+- **Investment Ideas** — session-based voting system with hardcoded seed data in `js/team.js`. All runtime changes (new sessions, votes, companies) are **lost on page refresh**.
+
+### How Investment Ideas works
+
+- **Sessions** are time-based containers (e.g. "Feb 2026") with a set of participating analysts
+- Each session has **companies** — each presented by one or more analysts
+- Other analysts **vote** on each company across 5 categories: Thesis, Valuation, Risk, Conviction, Presentation (scores: -1 to 3)
+- Presenters cannot vote on their own company
+- The **Analysts** sub-tab shows per-analyst history of presentations and ratings
+
+### Next steps to build properly
+
+When migrating to Supabase persistence:
+
+1. **Create tables** (follow patterns in `sql/`):
+   - `idea_sessions` (id, label, date, created_at)
+   - `idea_session_analysts` (session_id, analyst_initials)
+   - `idea_companies` (id, session_id, ticker, name, sector, description, presenter, price_at_presentation, current_price)
+   - `idea_votes` (id, company_id, analyst_initials, thesis, valuation, risk, conviction, presentation, comment)
+   - `portfolio_scores` (id, person, field, value, updated_at)
+
+2. **Add CRUD functions to `js/api.js`** — follow the same envelope pattern (`{ success, data, error }`)
+
+3. **Replace hardcoded data** — swap `II_SESSIONS` array with API calls, keep the rendering logic intact
+
+4. **Replace `localStorage`** — move portfolio scores to a Supabase table
+
+5. **Add RLS policies** — authenticated users can read/write (same pattern as `company_resources`)
+
+### Key constants in `js/team.js`
+
+- `II_ALL_ANALYSTS` — list of analyst initials: `['DA', 'DG', 'LC', 'PV', 'SA']`
+- `II_CATS` — voting categories: Thesis, Valuation, Risk, Conviction, Presentation
+- `II_SECTORS` — company sector options
+- `PORT_PEOPLE` — portfolio table people: `['daa', 'sab', 'pvg']`
 
 ## Do not
 

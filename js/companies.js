@@ -1,7 +1,7 @@
 // companies.js — grid, detail view, add-company modal
 // All companies are loaded from Supabase. No hardcoded data.
 import { FRAMEWORK, ALL_STOCKS } from './portal-data.js';
-import { fetchCompanies, insertCompany, lookupTicker, fetchResources, insertResource, updateResource, deleteResource, uploadFile, getFileUrl, fetchExecutives, fetchInsiderTransactions, syncManagement, fetchAnalystRatings, syncRatings } from './api.js';
+import { fetchCompanies, insertCompany, lookupTicker, searchCompany, fetchResources, insertResource, updateResource, deleteResource, uploadFile, getFileUrl, fetchExecutives, fetchInsiderTransactions, syncManagement, fetchAnalystRatings, syncRatings } from './api.js';
 
 let _companies = []; // companies loaded from Supabase
 let _pendingLookup = null; // data from ticker lookup
@@ -972,6 +972,8 @@ function selectCompanyResult(item) {
   });
 }
 
+var _searchVersion = 0; // tracks latest search to discard stale API results
+
 function handleCompanySearch() {
   var searchInput = document.getElementById('addCo-search');
   var resultsBox = document.getElementById('addCo-results');
@@ -982,7 +984,8 @@ function handleCompanySearch() {
     return;
   }
 
-  var items = ALL_STOCKS
+  // 1) Search the local S&P 500 list first (instant)
+  var localItems = ALL_STOCKS
     .map(function(s) {
       var ticker = (s.t || '').toLowerCase();
       var name = (s.n || '').toLowerCase();
@@ -999,12 +1002,31 @@ function handleCompanySearch() {
     .sort(function(a, b) { return b._score - a._score; })
     .slice(0, 8);
 
-  if (!items.length) {
-    resultsBox.innerHTML = '<div class="co-search-loading">No results found</div>';
-    resultsBox.classList.add('open');
+  if (localItems.length) {
+    renderSearchResults(resultsBox, localItems);
     return;
   }
 
+  // 2) No local results — fall back to API search
+  var version = ++_searchVersion;
+  resultsBox.innerHTML = '<div class="co-search-loading">Searching…</div>';
+  resultsBox.classList.add('open');
+
+  searchCompany(q).then(function(result) {
+    if (version !== _searchVersion) return; // stale response
+    if (!result.success || !result.data || !result.data.length) {
+      resultsBox.innerHTML = '<div class="co-search-loading">No results found</div>';
+      resultsBox.classList.add('open');
+      return;
+    }
+    var apiItems = result.data.map(function(c) {
+      return { ticker: c.ticker, name: c.name, sector: c.sector, industry: c.industry };
+    });
+    renderSearchResults(resultsBox, apiItems);
+  });
+}
+
+function renderSearchResults(resultsBox, items) {
   resultsBox.innerHTML = items.map(function(item) {
     return '<div class="co-search-item">' +
       '<span class="co-search-ticker">' + esc(item.ticker) + '</span>' +

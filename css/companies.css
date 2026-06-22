@@ -330,6 +330,13 @@
   color: var(--mu);
 }
 
+/* Highlighted sub-characteristics (the ones relevant/present for this company) */
+.pillar-sub.on {
+  background: #EAF0FE;
+  color: var(--accent);
+  font-weight: 600;
+}
+
 .pillar-card-desc {
   font-size: 12px;
   color: var(--mu);

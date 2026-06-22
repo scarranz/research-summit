@@ -1,0 +1,243 @@
+/* ─── Company Overview (per-company, custom) ───────────────────────────────
+   Shared layout for the Companies → Overview pane. Each company sets its own
+   brand accent via a scoped `--brand` variable (see .ov-rely below). */
+
+.ov {
+  max-width: 1040px;
+  --brand: var(--accent);            /* default; companies override */
+  --brand-soft: #EFF3FE;
+}
+
+/* Remitly brand accent (estimate — swap for the official press-kit hex). */
+.ov-rely {
+  --brand: #1F4DD8;
+  --brand-soft: #EEF2FE;
+}
+
+/* ── Snapshot card ── */
+.ov-snap {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1px;
+  background: var(--bdr);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.ov-snap-cell { background: var(--w); padding: 12px 14px; }
+.ov-snap-k {
+  font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--mu); font-weight: 600; margin-bottom: 4px;
+}
+.ov-snap-v { font-size: 13px; font-weight: 600; color: var(--navy); }
+
+.ov-lede {
+  font-size: 13px; line-height: 1.65; color: var(--blue);
+  margin: 0 0 20px; max-width: 880px;
+}
+
+/* ── KPI tiles ── */
+.ov-kpis {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 10px; margin-bottom: 10px;
+}
+.ov-kpi {
+  border: 1px solid var(--bdr); border-radius: 10px;
+  padding: 14px 16px; background: var(--w);
+  border-top: 2px solid var(--brand);
+}
+.ov-kpi-l {
+  font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--mu); font-weight: 600; margin-bottom: 6px;
+}
+.ov-kpi-v { font-size: 22px; font-weight: 600; color: var(--navy); letter-spacing: -0.02em; }
+.ov-kpi-d { font-size: 11px; font-weight: 600; margin-top: 3px; }
+.ov-kpi-d.up { color: var(--pos); }
+.ov-kpi-d.down { color: var(--neg); }
+.ov-kpi-d.muted { color: var(--mu); font-weight: 500; }
+
+.ov-asof {
+  font-size: 11px; color: var(--mu); margin: 0 0 10px; font-style: italic;
+}
+
+.ov-fynote {
+  font-size: 11.5px; line-height: 1.55; color: var(--mu);
+  background: var(--surface); border: 1px solid var(--bdr);
+  border-radius: 8px; padding: 10px 14px; margin-bottom: 22px;
+}
+
+/* ── Charts ── */
+.ov-charts {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 14px; margin-bottom: 26px;
+}
+.ov-chart-card {
+  border: 1px solid var(--bdr); border-radius: 10px;
+  padding: 16px 18px 12px; background: var(--w);
+}
+.ov-chart-t { font-size: 12px; font-weight: 600; color: var(--navy); margin-bottom: 12px; }
+.ov-chart-t span { color: var(--mu); font-weight: 500; }
+.ov-chart-wrap { position: relative; height: 200px; }
+
+/* ── Sections ── */
+.ov-sec { margin-bottom: 26px; }
+.ov-sec-h {
+  font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--navy); font-weight: 700;
+  padding-bottom: 8px; margin-bottom: 14px;
+  border-bottom: 1px solid var(--bdr);
+}
+
+.ov-bullets { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.ov-bullets li {
+  position: relative; padding-left: 18px;
+  font-size: 12.5px; line-height: 1.6; color: var(--blue);
+}
+.ov-bullets li::before {
+  content: ''; position: absolute; left: 2px; top: 8px;
+  width: 6px; height: 6px; border-radius: 50%; background: var(--brand);
+}
+.ov-bullets b { color: var(--navy); font-weight: 600; }
+
+/* ── Key/value rows (segments, corridors) ── */
+.ov-row {
+  display: grid; grid-template-columns: 200px 1fr; gap: 16px;
+  padding: 11px 0; border-bottom: 1px solid var(--bdr);
+}
+.ov-row:last-child { border-bottom: none; }
+.ov-row-k { font-size: 12px; font-weight: 600; color: var(--navy); }
+.ov-row-v { font-size: 12.5px; line-height: 1.55; color: var(--mu); }
+
+/* ── Tags ── */
+.ov-tag {
+  display: inline-block; font-size: 11px; font-weight: 500;
+  padding: 3px 10px; border-radius: 20px;
+  background: var(--brand-soft); color: var(--brand);
+  margin: 0 5px 4px 0;
+}
+
+/* ── Timeline ── */
+.ov-timeline { position: relative; padding-left: 8px; }
+.ov-tl-item {
+  position: relative; display: grid;
+  grid-template-columns: 92px 1fr; gap: 14px;
+  padding: 0 0 16px 18px; border-left: 1px solid var(--bdr);
+}
+.ov-tl-item:last-child { border-left: 1px solid transparent; padding-bottom: 0; }
+.ov-tl-dot {
+  position: absolute; left: -4.5px; top: 3px;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--brand); border: 2px solid var(--w);
+}
+.ov-tl-yr { font-size: 12px; font-weight: 700; color: var(--brand); }
+.ov-tl-body { font-size: 12.5px; line-height: 1.55; color: var(--blue); }
+.ov-tl-body b { color: var(--navy); font-weight: 600; }
+
+/* ── M&A cards ── */
+.ov-mna {
+  border: 1px solid var(--bdr); border-radius: 10px;
+  padding: 16px 18px; background: var(--w); margin-bottom: 10px;
+}
+.ov-mna-head { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.ov-mna-name { font-size: 14px; font-weight: 600; color: var(--navy); margin-right: 4px; }
+.ov-mna-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
+.ov-mna-grid > div { font-size: 12px; line-height: 1.5; color: var(--blue); }
+.ov-mna-k {
+  display: block; font-size: 9px; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--mu); font-weight: 600; margin-bottom: 3px;
+}
+
+/* ── Corridor stats ── */
+.ov-corr-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 10px; margin-bottom: 6px;
+}
+.ov-corr-stat {
+  border: 1px solid var(--bdr); border-radius: 10px;
+  padding: 14px 16px; background: var(--surface); text-align: center;
+}
+.ov-corr-v { font-size: 16px; font-weight: 600; color: var(--navy); }
+.ov-corr-l {
+  font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--mu); font-weight: 600; margin-top: 4px;
+}
+
+/* ── Callout (prefunding) ── */
+.ov-callout {
+  border: 1px solid var(--bdr); border-left: 3px solid var(--brand);
+  border-radius: 8px; background: var(--brand-soft);
+  padding: 16px 18px;
+}
+.ov-callout .ov-bullets li { color: var(--blue); }
+
+/* ── Peers table ── */
+.ov-table { width: 100%; border-collapse: collapse; }
+.ov-table thead th {
+  text-align: left; font-size: 10px; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--mu); font-weight: 600; padding: 0 14px 9px; border-bottom: 1px solid var(--bdr);
+}
+.ov-table tbody td {
+  font-size: 12px; line-height: 1.5; color: var(--mu);
+  padding: 12px 14px; border-bottom: 1px solid var(--bdr); vertical-align: top;
+}
+.ov-table tbody tr:last-child td { border-bottom: none; }
+.ov-td-name { font-weight: 600; color: var(--navy); white-space: nowrap; }
+
+/* ── Tailwinds / Headwinds ── */
+.ov-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.ov-wind { border: 1px solid var(--bdr); border-radius: 10px; padding: 16px 18px; background: var(--w); }
+.ov-wind-h {
+  font-size: 11px; letter-spacing: .05em; text-transform: uppercase;
+  font-weight: 700; margin-bottom: 12px;
+}
+.ov-wind-up { border-top: 2px solid var(--pos); }
+.ov-wind-up .ov-wind-h { color: var(--pos); }
+.ov-wind-up .ov-bullets li::before { background: var(--pos); }
+.ov-wind-down { border-top: 2px solid var(--neg); }
+.ov-wind-down .ov-wind-h { color: var(--neg); }
+.ov-wind-down .ov-bullets li::before { background: var(--neg); }
+
+/* ── Strategic Focus: TAM / target boxes + driver cards ── */
+.ov-subh {
+  font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+  font-weight: 700; color: var(--mu); margin: 18px 0 10px;
+}
+.ov-subh:first-child { margin-top: 0; }
+
+.ov-targets {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 10px; margin-bottom: 4px;
+}
+.ov-targets-3 { grid-template-columns: repeat(3, 1fr); }
+.ov-target {
+  border: 1px solid var(--bdr); border-top: 2px solid var(--brand);
+  border-radius: 10px; padding: 14px 16px; background: var(--w);
+}
+.ov-target-v { font-size: 20px; font-weight: 600; color: var(--navy); letter-spacing: -0.02em; }
+.ov-target-l { font-size: 11px; font-weight: 600; color: var(--navy); margin-top: 5px; }
+.ov-target-s { font-size: 11px; color: var(--mu); margin-top: 3px; line-height: 1.45; }
+
+.ov-drivers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.ov-driver {
+  border: 1px solid var(--bdr); border-radius: 10px;
+  padding: 14px 16px; background: var(--surface);
+}
+.ov-driver-t { font-size: 12.5px; font-weight: 600; color: var(--navy); margin-bottom: 5px; }
+.ov-driver-d { font-size: 11.5px; color: var(--mu); line-height: 1.5; }
+
+/* ── Footer ── */
+.ov-foot {
+  font-size: 10.5px; line-height: 1.5; color: var(--mu);
+  border-top: 1px solid var(--bdr); padding-top: 12px; margin-top: 4px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 860px) {
+  .ov-snap { grid-template-columns: repeat(3, 1fr); }
+  .ov-kpis { grid-template-columns: repeat(2, 1fr); }
+  .ov-charts, .ov-grid2, .ov-mna-grid { grid-template-columns: 1fr; }
+  .ov-row { grid-template-columns: 1fr; gap: 4px; }
+  .ov-corr-stats { grid-template-columns: 1fr; }
+  .ov-targets, .ov-targets-3, .ov-drivers { grid-template-columns: 1fr 1fr; }
+}

@@ -2,6 +2,7 @@
 // All companies are loaded from Supabase. No hardcoded data.
 import { FRAMEWORK, ALL_STOCKS } from './portal-data.js';
 import { fetchCompanies, insertCompany, lookupTicker, fetchResources, insertResource, updateResource, deleteResource, uploadFile, getFileUrl, fetchExecutives, fetchInsiderTransactions, syncManagement, fetchAnalystRatings, syncRatings } from './api.js';
+import { getOverview } from './overviews/index.js';
 
 let _companies = []; // companies loaded from Supabase
 let _pendingLookup = null; // data from ticker lookup
@@ -114,22 +115,37 @@ function renderPillarFilter() {
   });
 }
 
+// Per-company highlighted sub-characteristics inside each pillar. Endemic per ticker:
+// companies NOT listed here render no highlights and look exactly as before. Tiny inline
+// store on purpose — no extra files, DB or fallbacks.
+var PILLAR_HIGHLIGHTS = {
+  RELY: {
+    qb: ['Market structure', 'Unit economics'],
+    qg: ['Market runway / TAM', 'Organic durability', 'Mix shift'],
+    qm: ['Capital allocation', 'Insider alignment', 'Operating record'],
+    qv: ['FCF yield'],
+  },
+};
+
 async function renderPillarContent() {
   var box = document.getElementById('co-analysis');
   if (!box) return;
 
   var items = _currentPillar === 'all' ? FRAMEWORK : FRAMEWORK.filter(function(f) { return f.key === _currentPillar; });
+  var hlSet = PILLAR_HIGHLIGHTS[_currentTicker] || null;
 
   var html = '';
   for (var i = 0; i < items.length; i++) {
     var f = items[i];
+    var hl = (hlSet && hlSet[f.key]) ? hlSet[f.key].map(function(x) { return x.toLowerCase(); }) : [];
     html += '<div class="pillar-card">' +
       '<div class="pillar-card-header">' +
         '<span class="pillar-card-name">' + esc(f.name) + '</span>' +
       '</div>' +
       '<div class="pillar-card-subs">' +
         f.subs.map(function(s) {
-          return '<span class="pillar-sub">' + esc(s) + '</span>';
+          var on = hl.indexOf(s.toLowerCase()) >= 0;
+          return '<span class="pillar-sub' + (on ? ' on' : '') + '">' + esc(s) + '</span>';
         }).join('') +
       '</div>' +
       '<div class="pillar-card-desc">' + esc(f.desc) + '</div>';
@@ -904,6 +920,7 @@ function openCo(tk){
   document.getElementById('co-sub').innerHTML=esc(c.ticker)+' &middot; '+(esc(c.group_name)||'—');
   var px = c.price != null ? '$'+Number(c.price).toFixed(2) : '—';
   document.getElementById('co-px').textContent=px;
+  renderOverview(c);
   renderCoAnalysis(c.id, c.ticker);
   renderCoLinks(c);
   // Wire up add-resource button for this company
@@ -924,6 +941,26 @@ function closeCo(){
 function coTab(pane){
   document.querySelectorAll('.cotab').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-pane')===pane);});
   document.querySelectorAll('.copane').forEach(function(p){p.classList.toggle('active',p.getAttribute('data-pane')===pane);});
+  // Charts need a laid-out (visible) canvas to size correctly — (re)init when Overview becomes active.
+  if (pane === 'overview' && _currentOverview && _currentOverview.init) {
+    requestAnimationFrame(function(){ _currentOverview.init(); });
+  }
+}
+
+var _currentOverview = null;
+
+// Renders the per-company Overview pane. Each company can look different (see overviews/).
+function renderOverview(c){
+  var pane = document.querySelector('.copane[data-pane="overview"]');
+  if (!pane) return;
+  _currentOverview = getOverview(c.ticker);
+  if (!_currentOverview) {
+    pane.innerHTML = '<div class="coplace">No overview yet for this company. Work with the team to build one.</div>';
+    return;
+  }
+  pane.innerHTML = _currentOverview.html(c);
+  // openCo() opens on the Overview tab, so the pane is visible — init charts now.
+  if (_currentOverview.init) requestAnimationFrame(function(){ _currentOverview.init(); });
 }
 
 // ─── Ticker Lookup ───────────────────────────────────────────

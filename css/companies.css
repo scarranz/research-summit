@@ -286,6 +286,270 @@
 .copane { display: none; }
 .copane.active { display: block; }
 
+/* Pillar filter + cards */
+.pillar-filter {
+  display: inline-flex;
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+  margin-bottom: 20px;
+}
+
+.pillar-card {
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  padding: 20px 22px;
+  margin-bottom: 12px;
+  background: var(--w);
+}
+
+.pillar-card-header {
+  margin-bottom: 12px;
+}
+
+.pillar-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.pillar-card-subs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.pillar-sub {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--mu);
+}
+
+.pillar-card-desc {
+  font-size: 12px;
+  color: var(--mu);
+  line-height: 1.6;
+}
+
+/* Management data */
+.mgmt-section {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--bdr);
+}
+
+.mgmt-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--mu);
+  margin-bottom: 10px;
+}
+
+.mgmt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.mgmt-table th {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--mu);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--bdr);
+  text-align: left;
+}
+
+.mgmt-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--bdr);
+  color: var(--text);
+}
+
+.mgmt-table tr:last-child td {
+  border-bottom: none;
+}
+
+.mgmt-name {
+  font-weight: 500;
+}
+
+.mgmt-role {
+  color: var(--mu);
+}
+
+.mgmt-empty {
+  padding: 16px 0 4px;
+  font-size: 12px;
+  color: var(--mu);
+}
+
+.mgmt-tx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mgmt-tx-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 12px;
+}
+
+.mgmt-tx-date {
+  color: var(--mu);
+  font-size: 11px;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.mgmt-tx-name {
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mgmt-tx-type {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.mgmt-tx-type.buy {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.mgmt-tx-type.sell {
+  background: #FEF2F2;
+  color: #991B1B;
+}
+
+.mgmt-tx-detail {
+  color: var(--mu);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* Analyst Ratings */
+.ratings-consensus {
+  margin-bottom: 16px;
+}
+
+.ratings-summary {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 10px;
+}
+
+.ratings-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.ratings-stat-num {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.ratings-stat-num.buy { color: #065F46; }
+.ratings-stat-num.hold { color: var(--mu); }
+.ratings-stat-num.sell { color: #991B1B; }
+.ratings-stat-num.pt { color: var(--navy); font-size: 16px; }
+
+.ratings-stat-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--mu);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.ratings-bar {
+  display: flex;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.ratings-bar-seg.buy { background: #34D399; }
+.ratings-bar-seg.hold { background: var(--bdr); }
+.ratings-bar-seg.sell { background: #F87171; }
+
+.ratings-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.ratings-table th {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--mu);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--bdr);
+  text-align: left;
+}
+
+.ratings-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--bdr);
+  color: var(--text);
+}
+
+.ratings-table tr:last-child td { border-bottom: none; }
+.ratings-table tr:hover td { background: var(--surface); }
+
+.ratings-firm {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ratings-date {
+  color: var(--mu);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.ratings-rating {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--mu);
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.ratings-rating.upgrade { background: #D1FAE5; color: #065F46; }
+.ratings-rating.downgrade { background: #FEF2F2; color: #991B1B; }
+
 .cotwo {
   display: grid;
   grid-template-columns: 1.45fr 1fr;
@@ -576,97 +840,6 @@
   text-align: right;
 }
 
-.fp {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.fp-block {
-  border: 1px solid var(--bdr);
-  border-radius: 14px;
-  padding: 18px 20px;
-  background: var(--w);
-}
-
-.fp-head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.fp-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.fp-meter {
-  display: flex;
-  gap: 4px;
-  margin-left: auto;
-}
-
-.fp-meter i {
-  width: 26px;
-  height: 6px;
-  border-radius: 3px;
-  background: var(--ice);
-}
-
-.fp-meter i.on { background: var(--steel); }
-
-.fp-score {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text);
-  width: 34px;
-  text-align: right;
-}
-
-.fp-subs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px 26px;
-  margin-bottom: 14px;
-}
-
-.fp-sub {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 12.5px;
-}
-
-.fp-sub .sname {
-  flex: 1;
-  color: var(--mu);
-}
-
-.fp-sub .sseg {
-  display: flex;
-  gap: 2px;
-  flex-shrink: 0;
-}
-
-.fp-sub .sseg i {
-  width: 11px;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--ice);
-}
-
-.fp-sub .sseg i.on { background: var(--mid); }
-
-.fp-note {
-  font-size: 13px;
-  color: var(--text);
-  line-height: 1.6;
-  border-top: 1px solid var(--bdr);
-  padding-top: 12px;
-}
-
 /* Add Company button */
 .co-add-btn {
   width: 38px;
@@ -695,33 +868,75 @@
 /* Add Company modal extras */
 #addCoForm { padding: 20px 26px 24px; }
 
-.modal-ticker-wrap {
-  display: flex;
-  gap: 8px;
+.co-search-wrap {
+  position: relative;
 }
 
-.modal-ticker-wrap .modal-input {
-  flex: 1;
-  text-transform: uppercase;
-}
-
-.modal-btn--lookup {
-  height: 38px;
-  padding: 0 16px;
-  border-radius: 8px;
-  font-family: 'Inter', sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid var(--steel);
+.co-search-results {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
   background: var(--w);
-  color: var(--steel);
-  transition: all .12s;
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  margin-top: 4px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.co-search-results.open { display: block; }
+
+.co-search-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background .1s;
+}
+
+.co-search-item:first-child { border-radius: 10px 10px 0 0; }
+.co-search-item:last-child { border-radius: 0 0 10px 10px; }
+.co-search-item:only-child { border-radius: 10px; }
+
+.co-search-item:hover { background: var(--surface); }
+
+.co-search-item + .co-search-item {
+  border-top: 1px solid var(--bdr);
+}
+
+.co-search-ticker {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+  min-width: 50px;
+}
+
+.co-search-name {
+  font-size: 13px;
+  color: var(--text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.modal-btn--lookup:hover { background: var(--surface); }
-.modal-btn--lookup:disabled { opacity: .4; cursor: default; }
+.co-search-meta {
+  font-size: 10px;
+  color: var(--mu);
+  white-space: nowrap;
+}
+
+.co-search-loading {
+  padding: 14px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--mu);
+}
 
 .modal-autofill { animation: modalIn .18s ease-out; }
 

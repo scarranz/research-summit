@@ -106,8 +106,8 @@
     <div class="copane active" data-pane="overview" style="min-height:240px"></div>
 
     <div class="copane" data-pane="pillars">
-      <p style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:16px;max-width:760px">Every holding is underwritten against the same four pillars. Each is a 1&ndash;5 read; the composite appears on the coverage card. The note under each pillar describes what that lens evaluates.</p>
-      <div class="fp" id="co-analysis"></div>
+      <div class="pillar-filter" id="pillar-filter"></div>
+      <div id="co-analysis"></div>
     </div>
 
     <div class="copane" data-pane="resources">
@@ -424,10 +424,10 @@
     </div>
     <form id="addCoForm" autocomplete="off">
       <div class="modal-field">
-        <label class="modal-label">Ticker <span class="modal-req">*</span></label>
-        <div class="modal-ticker-wrap">
-          <input class="modal-input" id="addCo-ticker" placeholder="e.g. AAPL" required>
-          <button type="button" class="modal-btn modal-btn--lookup" id="addCoLookup">Look up</button>
+        <label class="modal-label">Search company <span class="modal-req">*</span></label>
+        <div class="co-search-wrap">
+          <input class="modal-input" id="addCo-search" placeholder="Type ticker or company name..." autocomplete="off">
+          <div class="co-search-results" id="addCo-results"></div>
         </div>
       </div>
       <div class="modal-autofill" id="addCo-autofill" style="display:none">

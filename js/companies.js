@@ -1,10 +1,11 @@
 // companies.js — grid, detail view, add-company modal
 // All companies are loaded from Supabase. No hardcoded data.
-import { FRAMEWORK } from './portal-data.js';
-import { fetchCompanies, insertCompany, lookupTicker, fetchResources, insertResource, updateResource, deleteResource, uploadFile, getFileUrl } from './api.js';
+import { FRAMEWORK, ALL_STOCKS } from './portal-data.js';
+import { fetchCompanies, insertCompany, lookupTicker, fetchResources, insertResource, updateResource, deleteResource, uploadFile, getFileUrl, fetchExecutives, fetchInsiderTransactions, syncManagement, fetchAnalystRatings, syncRatings } from './api.js';
 
 let _companies = []; // companies loaded from Supabase
 let _pendingLookup = null; // data from ticker lookup
+let _pendingLookupPromise = null;
 
 // Escape HTML entities in user-sourced strings to prevent XSS
 function esc(str) { if (!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -40,40 +41,347 @@ var CATEGORY_META = {
 };
 var CATEGORY_ORDER = ['filing', 'financial', 'transcript', 'media', 'other'];
 
-function coSegs(score,max){var h='';for(var i=1;i<=max;i++)h+='<i class="'+(i<=score?'on':'')+'"></i>';return h;}
-
-function coSubScore(comp,i){var off=[0,-1,1,0][i%4],v=comp+off;return v<1?1:(v>5?5:v);}
-
 function logoFallback(img){
-  var s=img.getAttribute('data-step')||'0',d=img.getAttribute('data-domain');
-  if(s==='0'){img.setAttribute('data-step','1');img.src='https://www.google.com/s2/favicons?sz=128&domain='+d;return;}
-  var w=img.parentNode;w.classList.add('mono');
-  var b=w.getAttribute('data-brand');
-  if(b){w.style.background=b;w.style.color='#fff';w.style.borderColor='transparent';}
-  w.textContent=w.getAttribute('data-mono');
+  var step = img.getAttribute('data-step') || '0';
+  var domain = img.getAttribute('data-domain') || '';
+  // Step 0: Parqet failed → try Google favicon
+  if (step === '0' && domain) {
+    img.setAttribute('data-step', '1');
+    img.src = 'https://www.google.com/s2/favicons?sz=128&domain=' + domain;
+    return;
+  }
+  // Step 1 (or no domain): show monogram
+  var w = img.parentNode; w.classList.add('mono');
+  var b = w.getAttribute('data-brand');
+  if (b) { w.style.background = b; w.style.color = '#fff'; w.style.borderColor = 'transparent'; }
+  w.textContent = w.getAttribute('data-mono');
 }
 
 function coLogo(c,cls){
+  var ticker = c.ticker || '';
   var domain = c.logo_domain || '';
-  var mono = c.mono || (c.ticker || '??').slice(0,2).toUpperCase();
+  var mono = c.mono || ticker.slice(0,2).toUpperCase();
   return '<div class="cologo'+(cls?' '+cls:'')+'" data-mono="'+mono+'">'+
-    (domain ? '<img src="https://logo.clearbit.com/'+domain+'" alt="" data-domain="'+domain+'" data-step="0" onerror="logoFallback(this)">' : mono) +'</div>';
+    (ticker ? '<img src="https://assets.parqet.com/logos/symbol/'+ticker+'" alt="" data-step="0" data-domain="'+domain+'" onerror="logoFallback(this)">' : mono) +'</div>';
 }
 
-function renderCoAnalysis(c){
-  var box=document.getElementById('co-analysis');if(!box)return;
-  if (!c.pillars) { box.innerHTML='<p style="color:var(--mu);font-size:13px">No analysis yet. Work with Claude to build this company\'s profile.</p>'; return; }
-  box.innerHTML=FRAMEWORK.map(function(f){
-    var sc=c.pillars[f.key];
-    var subs=f.subs.map(function(s,i){
-      return '<div class="fp-sub"><span class="sname">'+s+'</span><span class="sseg">'+coSegs(coSubScore(sc,i),5)+'</span></div>';
-    }).join('');
-    return '<div class="fp-block">'+
-      '<div class="fp-head"><span class="fp-name">'+f.name+'</span>'+
-        '<span class="fp-meter">'+coSegs(sc,5)+'</span><span class="fp-score">'+sc+'/5</span></div>'+
-      '<div class="fp-subs">'+subs+'</div>'+
-      '<div class="fp-note">'+f.desc+'</div></div>';
-  }).join('');
+var _currentPillar = 'all';
+var _currentCompanyId = null;
+var _currentTicker = null;
+
+// Cache threshold — don't re-sync if data is younger than this (in hours)
+var SYNC_CACHE_HOURS = 24;
+
+function isFresh(records) {
+  if (!records || !records.length) return false;
+  var newest = records[0].created_at || '';
+  if (!newest) return false;
+  var age = Date.now() - new Date(newest).getTime();
+  return age < SYNC_CACHE_HOURS * 60 * 60 * 1000;
+}
+
+function formatShares(n) {
+  if (n == null) return '—';
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  return n.toLocaleString();
+}
+
+function renderPillarFilter() {
+  var filterBox = document.getElementById('pillar-filter');
+  if (!filterBox) return;
+
+  var pillars = [
+    { key: 'all', label: 'All' },
+    { key: 'qb', label: 'Business' },
+    { key: 'qg', label: 'Growth' },
+    { key: 'qm', label: 'Management' },
+    { key: 'qv', label: 'Valuation' },
+  ];
+
+  var html = '';
+  pillars.forEach(function(p) {
+    html += '<button type="button" class="res-filter-btn' + (_currentPillar === p.key ? ' active' : '') + '" data-pillar="' + p.key + '">' + p.label + '</button>';
+  });
+  filterBox.innerHTML = html;
+
+  filterBox.querySelectorAll('.res-filter-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      _currentPillar = btn.getAttribute('data-pillar');
+      renderPillarFilter();
+      renderPillarContent();
+    });
+  });
+}
+
+async function renderPillarContent() {
+  var box = document.getElementById('co-analysis');
+  if (!box) return;
+
+  var items = _currentPillar === 'all' ? FRAMEWORK : FRAMEWORK.filter(function(f) { return f.key === _currentPillar; });
+
+  var html = '';
+  for (var i = 0; i < items.length; i++) {
+    var f = items[i];
+    html += '<div class="pillar-card">' +
+      '<div class="pillar-card-header">' +
+        '<span class="pillar-card-name">' + esc(f.name) + '</span>' +
+      '</div>' +
+      '<div class="pillar-card-subs">' +
+        f.subs.map(function(s) {
+          return '<span class="pillar-sub">' + esc(s) + '</span>';
+        }).join('') +
+      '</div>' +
+      '<div class="pillar-card-desc">' + esc(f.desc) + '</div>';
+
+    // Management pillar: show key people + insider transactions
+    if (f.key === 'qm' && _currentCompanyId) {
+      html += '<div id="mgmt-data-slot"></div>';
+    }
+
+    // Valuation pillar: show analyst ratings
+    if (f.key === 'qv' && _currentCompanyId) {
+      html += '<div id="valuation-data-slot"></div>';
+    }
+
+    html += '</div>';
+  }
+
+  box.innerHTML = html;
+
+  // Load management data if the management pillar is visible
+  var showMgmt = items.some(function(f) { return f.key === 'qm'; });
+  if (showMgmt && _currentCompanyId) {
+    loadManagementData(_currentCompanyId);
+  }
+
+  // Load valuation data if the valuation pillar is visible
+  var showVal = items.some(function(f) { return f.key === 'qv'; });
+  if (showVal && _currentCompanyId) {
+    loadValuationData(_currentCompanyId);
+  }
+}
+
+async function loadManagementData(companyId) {
+  var slot = document.getElementById('mgmt-data-slot');
+  if (!slot) return;
+
+  slot.innerHTML = '<div style="padding:16px 0 4px;color:var(--mu);font-size:12px">Loading management data...</div>';
+
+  var execResult = await fetchExecutives(companyId);
+  var txResult = await fetchInsiderTransactions(companyId);
+
+  var execs = execResult.success ? execResult.data : [];
+  var txns = txResult.success ? txResult.data : [];
+
+  var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-top:16px;border-top:1px solid var(--bdr)">' +
+    '<div class="mgmt-section-title" style="margin:0">Management</div>' +
+    '<button class="ii-btn-sm" id="mgmt-sync-btn" title="Sync from Fiscal.ai">Sync ↻</button>' +
+  '</div>';
+
+  if (!execs.length && !txns.length) {
+    // No data — auto-sync from Fiscal.ai
+    html += '<div style="color:var(--mu);font-size:12px">Pulling management data from Fiscal.ai...</div>';
+    slot.innerHTML = html;
+    var autoResult = await syncManagement(_currentTicker, companyId);
+    if (autoResult.success && autoResult.data && !autoResult.data.unavailable && (autoResult.data.executives > 0 || autoResult.data.transactions > 0)) {
+      loadManagementData(companyId);
+    } else {
+      var msg = (autoResult.success && autoResult.data && autoResult.data.unavailable)
+        ? 'This company is not available on the current Fiscal.ai plan.'
+        : 'No management data found.';
+      slot.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-top:16px;border-top:1px solid var(--bdr)">' +
+        '<div class="mgmt-section-title" style="margin:0">Management</div>' +
+        '<button class="ii-btn-sm" id="mgmt-sync-btn" title="Sync from Fiscal.ai">Sync ↻</button></div>' +
+        '<div class="mgmt-empty">' + esc(msg) + '</div>';
+      document.getElementById('mgmt-sync-btn').addEventListener('click', handleMgmtSync);
+    }
+    return;
+  }
+
+  // Data exists but is stale — re-sync in background (don't block UI)
+  if (!isFresh(execs) && !isFresh(txns)) {
+    syncManagement(_currentTicker, companyId);
+  }
+
+  // Key People
+  if (execs.length) {
+    html += '<div class="mgmt-section">' +
+      '<div class="mgmt-section-title">Key People</div>' +
+      '<table class="mgmt-table"><thead><tr>' +
+        '<th>Name</th><th>Role</th><th style="text-align:right">Shares</th><th style="text-align:right">Ownership</th>' +
+      '</tr></thead><tbody>';
+    execs.forEach(function(e) {
+      var pct = e.ownership_pct != null ? e.ownership_pct + '%' : (e.ownership || '—');
+      html += '<tr>' +
+        '<td class="mgmt-name">' + esc(e.name) + '</td>' +
+        '<td class="mgmt-role">' + esc(e.role) + '</td>' +
+        '<td style="text-align:right;font-variant-numeric:tabular-nums">' + formatShares(e.shares) + '</td>' +
+        '<td style="text-align:right;font-variant-numeric:tabular-nums">' + esc(pct) + '</td>' +
+      '</tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
+  // Insider Transactions
+  if (txns.length) {
+    html += '<div class="mgmt-section">' +
+      '<div class="mgmt-section-title">Recent Insider Activity</div>' +
+      '<div class="mgmt-tx-list">';
+    txns.forEach(function(tx) {
+      var isBuy = tx.transaction_type === 'buy';
+      var date = tx.transaction_date || '';
+      var price = tx.price_per_share != null ? '$' + Number(tx.price_per_share).toFixed(2) : '';
+      html += '<div class="mgmt-tx-row">' +
+        '<span class="mgmt-tx-date">' + esc(date) + '</span>' +
+        '<span class="mgmt-tx-name">' + esc(tx.person_name) + '</span>' +
+        '<span class="mgmt-tx-type ' + (isBuy ? 'buy' : 'sell') + '">' + (isBuy ? 'Bought' : 'Sold') + '</span>' +
+        '<span class="mgmt-tx-detail">' + formatShares(tx.shares) + ' shares' + (price ? ' @ ' + price : '') + '</span>' +
+      '</div>';
+    });
+    html += '</div></div>';
+  }
+
+  slot.innerHTML = html;
+  document.getElementById('mgmt-sync-btn').addEventListener('click', handleMgmtSync);
+}
+
+async function handleMgmtSync() {
+  var btn = document.getElementById('mgmt-sync-btn');
+  if (!btn || !_currentTicker || !_currentCompanyId) return;
+  btn.disabled = true;
+  btn.textContent = 'Syncing...';
+
+  var result = await syncManagement(_currentTicker, _currentCompanyId);
+
+  btn.disabled = false;
+  btn.textContent = 'Sync ↻';
+
+  if (!result.success) {
+    alert('Sync failed: ' + result.error.message);
+    return;
+  }
+
+  // Reload management data
+  loadManagementData(_currentCompanyId);
+}
+
+// ─── Valuation Pillar: Analyst Ratings ────────────────────────
+
+async function loadValuationData(companyId) {
+  var slot = document.getElementById('valuation-data-slot');
+  if (!slot) return;
+
+  slot.innerHTML = '<div style="padding:16px 0 4px;color:var(--mu);font-size:12px">Loading analyst ratings...</div>';
+
+  // Read from DB first
+  var result = await fetchAnalystRatings(companyId);
+  var ratings = result.success ? result.data : [];
+
+  // If no data or stale — sync from Massive
+  if (!ratings.length) {
+    slot.innerHTML = '<div style="padding:16px 0 4px;color:var(--mu);font-size:12px">Pulling analyst ratings...</div>';
+    await syncRatings(_currentTicker, companyId);
+    result = await fetchAnalystRatings(companyId);
+    ratings = result.success ? result.data : [];
+  } else if (!isFresh(ratings)) {
+    // Stale data — re-sync in background, show cached data now
+    syncRatings(_currentTicker, companyId);
+  }
+
+  // Determine last updated time from the most recent created_at
+  var updatedStr = 'Unknown';
+  if (ratings.length && ratings[0].created_at) {
+    var lastSync = new Date(ratings[0].created_at);
+    updatedStr = lastSync.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' at ' +
+      lastSync.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
+
+  var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;padding-top:16px;border-top:1px solid var(--bdr)">' +
+    '<div class="mgmt-section-title" style="margin:0">Analyst Ratings</div>' +
+    '<button class="ii-btn-sm" id="ratings-sync-btn" title="Refresh ratings">Refresh ↻</button>' +
+  '</div>' +
+  '<div style="font-size:10px;color:var(--mu);margin-bottom:14px">Updated ' + esc(updatedStr) + '</div>';
+
+  if (!ratings.length) {
+    html += '<div class="mgmt-empty">No analyst ratings available for this company.</div>';
+    slot.innerHTML = html;
+    document.getElementById('ratings-sync-btn').addEventListener('click', handleRatingsSync);
+    return;
+  }
+
+  // Compute consensus summary
+  var buyCount = 0, holdCount = 0, sellCount = 0;
+  var ptSum = 0, ptCount = 0;
+  ratings.forEach(function(r) {
+    var rat = (r.rating || '').toLowerCase();
+    if (rat.includes('buy') || rat.includes('overweight') || rat.includes('outperform')) buyCount++;
+    else if (rat.includes('sell') || rat.includes('underweight') || rat.includes('underperform')) sellCount++;
+    else holdCount++;
+    if (r.price_target) { ptSum += Number(r.price_target); ptCount++; }
+  });
+  var avgPt = ptCount > 0 ? (ptSum / ptCount).toFixed(2) : null;
+
+  // Consensus bar
+  var total = buyCount + holdCount + sellCount;
+  html += '<div class="ratings-consensus">' +
+    '<div class="ratings-summary">' +
+      '<div class="ratings-stat"><span class="ratings-stat-num buy">' + buyCount + '</span><span class="ratings-stat-label">Buy</span></div>' +
+      '<div class="ratings-stat"><span class="ratings-stat-num hold">' + holdCount + '</span><span class="ratings-stat-label">Hold</span></div>' +
+      '<div class="ratings-stat"><span class="ratings-stat-num sell">' + sellCount + '</span><span class="ratings-stat-label">Sell</span></div>' +
+      (avgPt ? '<div class="ratings-stat"><span class="ratings-stat-num pt">$' + avgPt + '</span><span class="ratings-stat-label">Avg PT</span></div>' : '') +
+    '</div>' +
+    '<div class="ratings-bar">' +
+      '<div class="ratings-bar-seg buy" style="width:' + (buyCount / total * 100) + '%"></div>' +
+      '<div class="ratings-bar-seg hold" style="width:' + (holdCount / total * 100) + '%"></div>' +
+      '<div class="ratings-bar-seg sell" style="width:' + (sellCount / total * 100) + '%"></div>' +
+    '</div>' +
+  '</div>';
+
+  // Ratings table
+  html += '<table class="ratings-table"><thead><tr>' +
+    '<th>Bank</th><th>Date</th><th>Rating</th><th style="text-align:right">Price</th><th style="text-align:right">Previous</th>' +
+  '</tr></thead><tbody>';
+  ratings.slice(0, 20).forEach(function(r) {
+    var actionClass = '';
+    var actionLabel = r.rating_action || '';
+    if (actionLabel === 'upgrades') actionClass = 'upgrade';
+    else if (actionLabel === 'downgrades') actionClass = 'downgrade';
+
+    var ptChange = '';
+    if (r.price_target_action === 'raises') ptChange = ' <span style="color:#065F46">↑</span>';
+    else if (r.price_target_action === 'lowers') ptChange = ' <span style="color:#991B1B">↓</span>';
+
+    html += '<tr>' +
+      '<td class="ratings-firm">' + esc(r.firm) + '</td>' +
+      '<td class="ratings-date">' + esc(r.date || '') + '</td>' +
+      '<td><span class="ratings-rating ' + actionClass + '">' + esc(r.rating) + '</span></td>' +
+      '<td style="text-align:right;font-variant-numeric:tabular-nums">' + (r.price_target ? '$' + Number(r.price_target).toFixed(0) + ptChange : '—') + '</td>' +
+      '<td style="text-align:right;font-variant-numeric:tabular-nums;color:var(--mu)">' + (r.previous_price_target ? '$' + Number(r.previous_price_target).toFixed(0) : '—') + '</td>' +
+    '</tr>';
+  });
+  html += '</tbody></table>';
+
+  slot.innerHTML = html;
+  document.getElementById('ratings-sync-btn').addEventListener('click', handleRatingsSync);
+}
+
+async function handleRatingsSync() {
+  var btn = document.getElementById('ratings-sync-btn');
+  if (!btn || !_currentTicker || !_currentCompanyId) return;
+  btn.disabled = true;
+  btn.textContent = 'Refreshing...';
+
+  await syncRatings(_currentTicker, _currentCompanyId);
+  await loadValuationData(_currentCompanyId);
+}
+
+function renderCoAnalysis(companyId, ticker) {
+  _currentPillar = 'all';
+  _currentCompanyId = companyId;
+  _currentTicker = ticker;
+  renderPillarFilter();
+  renderPillarContent();
 }
 
 
@@ -592,7 +900,7 @@ function openCo(tk){
   document.getElementById('co-sub').innerHTML=esc(c.ticker)+' &middot; '+(esc(c.group_name)||'—');
   var px = c.price != null ? '$'+Number(c.price).toFixed(2) : '—';
   document.getElementById('co-px').textContent=px;
-  renderCoAnalysis(c);
+  renderCoAnalysis(c.id, c.ticker);
   renderCoLinks(c);
   // Wire up add-resource button for this company
   var addResBtn = document.getElementById('co-add-resource');
@@ -616,71 +924,110 @@ function coTab(pane){
 
 // ─── Ticker Lookup ───────────────────────────────────────────
 
-async function handleLookup() {
-  var tickerInput = document.getElementById('addCo-ticker');
-  var lookupBtn = document.getElementById('addCoLookup');
-  var saveBtn = document.getElementById('addCoSave');
-  var autofillSection = document.getElementById('addCo-autofill');
-  var ticker = tickerInput.value.trim().toUpperCase();
+var _searchTimer = null;
 
-  if (!ticker) { showModalMsg('Enter a ticker first.', 'error'); return; }
+function selectCompanyResult(item) {
+  var autofillSection = document.getElementById('addCo-autofill');
+  var saveBtn = document.getElementById('addCoSave');
+  var searchInput = document.getElementById('addCo-search');
+  var resultsBox = document.getElementById('addCo-results');
 
   // Check if already exists
-  if (_companies.find(function(c){ return c.ticker === ticker; })) {
-    showModalMsg(ticker + ' already exists.', 'error');
+  if (_companies.find(function(c){ return c.ticker === item.ticker; })) {
+    showModalMsg(item.ticker + ' already exists.', 'error');
     return;
   }
 
-  lookupBtn.disabled = true;
-  lookupBtn.textContent = 'Looking up...';
+  // Guess domain immediately from company name
+  var guessedDomain = (item.name || '').replace(/,?\s*(Inc\.?|Corp\.?|Corporation|Ltd\.?|Limited|plc|PLC|Co\.?|Company|Group|Holdings?|Technologies|Platforms?)$/gi, '').trim().toLowerCase().replace(/[^a-z0-9]/g, '') + '.com';
+
+  _pendingLookup = {
+    ticker: item.ticker,
+    name: item.name || item.ticker,
+    sector: item.sector || '',
+    industry: item.industry || '',
+    logo_domain: guessedDomain,
+  };
+
+  searchInput.value = item.ticker + ' — ' + item.name;
+  resultsBox.classList.remove('open');
+  document.getElementById('addCo-name').value = _pendingLookup.name;
+  document.getElementById('addCo-sector').value = _pendingLookup.sector;
+  document.getElementById('addCo-industry').value = _pendingLookup.industry;
+  autofillSection.style.display = '';
+  saveBtn.disabled = false;
   showModalMsg('', '');
 
-  try {
-    var result = await lookupTicker(ticker);
-    if (!result.success) throw new Error(result.error.message);
-    var info = result.data;
+  // Fetch proper domain via lookup-ticker (has domain overrides for MSFT, META, etc.)
+  _pendingLookupPromise = lookupTicker(item.ticker).then(function(result) {
+    if (result.success && result.data && result.data.logo_domain && _pendingLookup && _pendingLookup.ticker === item.ticker) {
+      _pendingLookup.logo_domain = result.data.logo_domain;
+    }
+  });
+}
 
-    _pendingLookup = {
-      ticker: ticker,
-      name: info.name || ticker,
-      sector: info.sector || '',
-      industry: info.industry || '',
-      logo_domain: info.logo_domain || '',
-    };
+function handleCompanySearch() {
+  var searchInput = document.getElementById('addCo-search');
+  var resultsBox = document.getElementById('addCo-results');
+  var q = searchInput.value.trim().toLowerCase();
 
-    document.getElementById('addCo-name').value = _pendingLookup.name;
-    document.getElementById('addCo-sector').value = _pendingLookup.sector;
-    document.getElementById('addCo-industry').value = _pendingLookup.industry;
-    autofillSection.style.display = '';
-    saveBtn.disabled = false;
-    showModalMsg('Company found. Review and click Add Company.', 'success');
-  } catch (err) {
-    // If lookup fails, let user add manually
-    _pendingLookup = { ticker: ticker, name: '', sector: '', industry: '', logo_domain: '' };
-    document.getElementById('addCo-name').value = '';
-    document.getElementById('addCo-name').readOnly = false;
-    document.getElementById('addCo-name').placeholder = 'Type company name manually';
-    document.getElementById('addCo-sector').value = '';
-    document.getElementById('addCo-industry').value = '';
-    autofillSection.style.display = '';
-    saveBtn.disabled = false;
-    showModalMsg('Could not find ' + ticker + '. You can enter details manually.', 'error');
+  if (q.length < 1) {
+    resultsBox.classList.remove('open');
+    return;
   }
 
-  lookupBtn.disabled = false;
-  lookupBtn.textContent = 'Look up';
+  var items = ALL_STOCKS
+    .map(function(s) {
+      var ticker = (s.t || '').toLowerCase();
+      var name = (s.n || '').toLowerCase();
+      var score = 0;
+      if (ticker === q) score = 100;
+      else if (ticker.startsWith(q)) score = 80;
+      else if (ticker.includes(q)) score = 60;
+      else if (name.startsWith(q)) score = 50;
+      else if (name.includes(q)) score = 30;
+      if (!score) return null;
+      return { ticker: s.t, name: s.n, sector: s.s, industry: s.i, _score: score };
+    })
+    .filter(function(x) { return x !== null; })
+    .sort(function(a, b) { return b._score - a._score; })
+    .slice(0, 8);
+
+  if (!items.length) {
+    resultsBox.innerHTML = '<div class="co-search-loading">No results found</div>';
+    resultsBox.classList.add('open');
+    return;
+  }
+
+  resultsBox.innerHTML = items.map(function(item) {
+    return '<div class="co-search-item">' +
+      '<span class="co-search-ticker">' + esc(item.ticker) + '</span>' +
+      '<span class="co-search-name">' + esc(item.name) + '</span>' +
+      '<span class="co-search-meta">' + esc(item.sector || '') + '</span>' +
+    '</div>';
+  }).join('');
+  resultsBox.classList.add('open');
+
+  resultsBox.querySelectorAll('.co-search-item').forEach(function(el, i) {
+    el.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      selectCompanyResult(items[i]);
+    });
+  });
 }
 
 // ─── Add Company Modal ───────────────────────────────────────
 
 function openAddModal() {
   document.getElementById('addCoModal').classList.add('open');
-  document.getElementById('addCo-ticker').focus();
+  document.getElementById('addCo-search').focus();
 }
 
 function closeAddModal() {
   document.getElementById('addCoModal').classList.remove('open');
   document.getElementById('addCoForm').reset();
+  document.getElementById('addCo-results').classList.remove('open');
+  document.getElementById('addCo-results').innerHTML = '';
   document.getElementById('addCo-autofill').style.display = 'none';
   document.getElementById('addCoSave').disabled = true;
   document.getElementById('addCo-name').readOnly = true;
@@ -699,10 +1046,11 @@ function showModalMsg(text, type) {
 async function handleAddCompany(e) {
   e.preventDefault();
   var btn = document.getElementById('addCoSave');
-  var ticker = document.getElementById('addCo-ticker').value.trim().toUpperCase();
-  var name = document.getElementById('addCo-name').value.trim();
+  var lookup = _pendingLookup || {};
+  var ticker = (lookup.ticker || '').toUpperCase();
+  var name = document.getElementById('addCo-name').value.trim() || lookup.name;
 
-  if (!ticker) { showModalMsg('Ticker is required.', 'error'); return; }
+  if (!ticker) { showModalMsg('Select a company from the search first.', 'error'); return; }
   if (!name) { showModalMsg('Company name is required.', 'error'); return; }
 
   if (_companies.find(function(c){ return c.ticker === ticker; })) {
@@ -712,6 +1060,9 @@ async function handleAddCompany(e) {
 
   btn.disabled = true;
   btn.textContent = 'Adding...';
+
+  // Wait for logo domain lookup to finish
+  if (_pendingLookupPromise) await _pendingLookupPromise;
 
   var mono = ticker.slice(0, 2).toUpperCase();
   var lookup = _pendingLookup || {};
@@ -761,13 +1112,23 @@ function initAddModal() {
   var form = document.getElementById('addCoForm');
   if (form) form.addEventListener('submit', handleAddCompany);
 
-  var lookupBtn = document.getElementById('addCoLookup');
-  if (lookupBtn) lookupBtn.addEventListener('click', handleLookup);
+  // Typeahead search with debounce
+  var searchInput = document.getElementById('addCo-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      clearTimeout(_searchTimer);
+      _searchTimer = setTimeout(handleCompanySearch, 300);
+    });
+    searchInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') document.getElementById('addCo-results').classList.remove('open');
+    });
+  }
 
-  // Also trigger lookup on Enter in ticker field
-  var tickerInput = document.getElementById('addCo-ticker');
-  if (tickerInput) tickerInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') { e.preventDefault(); handleLookup(); }
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function(e) {
+    var results = document.getElementById('addCo-results');
+    var wrap = document.querySelector('.co-search-wrap');
+    if (results && wrap && !wrap.contains(e.target)) results.classList.remove('open');
   });
 
   var overlay = document.getElementById('addCoModal');

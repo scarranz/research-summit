@@ -44,6 +44,58 @@ export async function fetchExecutives(companyId) {
   return ok(data || []);
 }
 
+// ─── Insider Transactions ────────────────────────────────────
+
+export async function fetchInsiderTransactions(companyId) {
+  var { data, error } = await supabase
+    .from('insider_transactions')
+    .select('*')
+    .eq('company_id', companyId)
+    .order('transaction_date', { ascending: false });
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+// ─── Analyst Ratings ─────────────────────────────────────────
+
+export async function fetchAnalystRatings(companyId) {
+  var { data, error } = await supabase
+    .from('analyst_ratings')
+    .select('*')
+    .eq('company_id', companyId)
+    .order('date', { ascending: false });
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function syncRatings(ticker, companyId) {
+  var { data, error } = await supabase.functions.invoke('sync-ratings', {
+    body: { ticker: ticker, companyId: companyId },
+  });
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+// ─── Sync Management (Fiscal.ai) ─────────────────────────────
+
+export async function syncManagement(ticker, companyId) {
+  var { data, error } = await supabase.functions.invoke('sync-management', {
+    body: { ticker: ticker, companyId: companyId },
+  });
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+// ─── Company Search (Fiscal.ai) ──────────────────────────────
+
+export async function searchCompany(query) {
+  var { data, error } = await supabase.functions.invoke('search-company', {
+    body: { query: query },
+  });
+  if (error) return fail(error.message);
+  return ok(data && data.data ? data.data : []);
+}
+
 // ─── Ticker Lookup ──────────────────────────────────────────
 
 export async function lookupTicker(ticker) {

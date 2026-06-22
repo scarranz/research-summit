@@ -66,7 +66,7 @@ function coLogo(c,cls){
     (ticker ? '<img src="https://assets.parqet.com/logos/symbol/'+ticker+'" alt="" data-step="0" data-domain="'+domain+'" onerror="logoFallback(this)">' : mono) +'</div>';
 }
 
-var _currentPillar = 'all';
+var _currentPillar = 'qb';
 var _currentCompanyId = null;
 var _currentTicker = null;
 
@@ -93,7 +93,6 @@ function renderPillarFilter() {
   if (!filterBox) return;
 
   var pillars = [
-    { key: 'all', label: 'All' },
     { key: 'qb', label: 'Business' },
     { key: 'qg', label: 'Growth' },
     { key: 'qm', label: 'Management' },
@@ -131,7 +130,7 @@ async function renderPillarContent() {
   var box = document.getElementById('co-analysis');
   if (!box) return;
 
-  var items = _currentPillar === 'all' ? FRAMEWORK : FRAMEWORK.filter(function(f) { return f.key === _currentPillar; });
+  var items = FRAMEWORK.filter(function(f) { return f.key === _currentPillar; });
   var hlSet = PILLAR_HIGHLIGHTS[_currentTicker] || null;
 
   var html = '';
@@ -397,7 +396,7 @@ async function handleRatingsSync() {
 }
 
 function renderCoAnalysis(companyId, ticker) {
-  _currentPillar = 'all';
+  _currentPillar = 'qb';
   _currentCompanyId = companyId;
   _currentTicker = ticker;
   renderPillarFilter();

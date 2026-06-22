@@ -84,6 +84,53 @@ This pattern is designed so that when the project migrates to the Summit API, on
 |---|---|---|
 | `fetchExecutives(companyId)` | `company_executives` | Key people: name, role, shares, ownership % |
 | `fetchInsiderTransactions(companyId)` | `insider_transactions` | Recent insider buys/sells |
+| `syncManagement(ticker, companyId)` | Edge Function → Fiscal.ai | Pull fresh management data |
+
+**Company profile — Pillars tab (Valuation pillar):**
+
+| Function | Table | Purpose |
+|---|---|---|
+| `fetchAnalystRatings(companyId)` | `analyst_ratings` | Analyst ratings, price targets, firms |
+| `syncRatings(ticker, companyId)` | Edge Function → Massive | Pull fresh analyst ratings |
+
+**Company search (Add Company modal):**
+
+| Function | Source | Purpose |
+|---|---|---|
+| `searchCompany(query)` | Edge Function → Fiscal.ai | Search 12K+ companies by name or ticker |
+| `lookupTicker(ticker)` | Edge Function → Yahoo Finance | Get company name, sector, logo domain |
+
+## Supabase Edge Functions
+
+All edge functions are in `supabase/functions/`. Deploy with:
+```bash
+supabase functions deploy <function-name> --project-ref bvflqjndivouhgwqfbrq
+```
+
+| Function | External API | Purpose |
+|---|---|---|
+| `lookup-ticker` | Yahoo Finance | Auto-fill company info + logo domain when adding a company |
+| `search-company` | Fiscal.ai `/v2/companies-list` | Company search for Add Company modal |
+| `sync-management` | Fiscal.ai `/v1/company/ownership/insider/*` | Pull executives + insider transactions |
+| `sync-ratings` | Massive `/benzinga/v1/ratings` | Pull analyst ratings + price targets |
+
+**Security:** All edge functions restrict CORS to `research-summit.netlify.app` and `localhost:8000`. Ticker and companyId inputs are validated.
+
+**Caching:** Management and ratings data are cached for 24 hours. The portal checks `created_at` on records — if data is fresh, no API call is made. Users can force a refresh with the Sync/Refresh button.
+
+**Fiscal.ai free plan limitation:** Only ~25 companies are available (AMZN, MA, NVDA, UBER, V from our portfolio). Upgrading to the API plan ($990/yr) unlocks 100K+ companies. The code handles unavailable companies gracefully — no changes needed after upgrading.
+
+## Working with non-technical team members
+
+Most team members using this portal are **not developers**. When they ask Claude to make changes, follow these guidelines:
+
+- **Explain what you're doing in plain language** — avoid jargon like "edge function", "RLS", "foreign key". Say "I'm updating the database" or "I'm adding a new section to the company page".
+- **Always confirm before destructive actions** — deleting data, removing features, or changing how things look. Show what will change before doing it.
+- **Keep the UI consistent** — use the existing design language (Inter font, navy/steel palette, card-based layout, pill toggles). Don't introduce new patterns without reason.
+- **Don't break what works** — when adding features, make sure existing tabs and functions still work. Test by reading the code flow, not just the new code.
+- **When asked to "add data" for a company** — use the portal's Add Resource button or the Supabase SQL Editor. Don't hardcode data in JavaScript files.
+- **When asked about management or analyst data** — explain that it syncs automatically from Fiscal.ai and Massive. The user doesn't need to enter this manually.
+- **When something fails** — check the browser console for errors (Cmd+Option+J). Common issues: expired auth session (refresh the page), API rate limits (wait and retry), missing data (company not on Fiscal.ai free plan).
 
 ## Conventions
 
@@ -93,7 +140,7 @@ This pattern is designed so that when the project migrates to the Summit API, on
 - Each dashboard tab is a `<div class="tp" id="tp-{tab}">` inside `index.html`
 - Page data loaders are registered in `index.html` via `registerPageLoader(name, loaderFn)`
 - Navigation items are `.ntb.nav-item[data-page][data-tab]` buttons in the sidebar
-- Tab IDs map: companies→co, market-analysis→rot, hedge-funds→inv (defined in js/nav.js)
+- Tab IDs map: companies→co, market-analysis→rot, hedge-funds→inv, team→team (defined in js/nav.js)
 - Role access is controlled in `js/auth.js` ROLE_CONFIG — add new roles there
 - CSS variables are defined in `css/base.css` (:root)
 
@@ -168,30 +215,40 @@ The Companies tab is the core of the portal. Each company has a profile that is 
 ### Adding a company
 
 1. User clicks "Add Company" in the portal
-2. Fills in the minimum: **ticker** and **company name**
-3. The portal inserts a row in the `companies` table in Supabase (exchange, sector, group, logo, etc. can be filled later)
-4. The company appears in the grid immediately (empty profile, draft status)
+2. Types a ticker or company name in the search field — instant results from 503 stocks
+3. Selects the company — name, sector, industry, and logo domain are auto-filled
+4. Clicks "Add Company" — the portal inserts a row in the `companies` table
+5. The company appears in the grid immediately with its logo
 
-### Building a company profile
+### Company profile tabs
 
-Each company profile is **unique** — there is no fixed template. The user works with Claude to design what appears on each company's profile page.
+Every company has three tabs: **Overview**, **Pillars**, and **Resources**.
 
-- The user describes what they want: *"Add a management section with these executives"*, *"Create a DCF snapshot with these numbers"*, *"Show a revenue breakdown chart"*
-- Claude writes the code (HTML, JS, CSS) to render that section in the company's detail view
-- Each company can have completely different sections, layouts, and data
-- The visual design should follow the existing portal style (Inter font, navy/steel palette, card-based layout)
+**Overview** — empty by default. The user works with Claude to build custom content for each company (charts, metrics, notes). Each company can look different.
+
+**Pillars** — standardized across all companies. Four pillars with a toggle filter:
+- **Business** — competitive moat, market structure, unit economics, pricing power
+- **Growth** — market runway, reinvestment, organic durability, mix shift
+- **Management** — auto-populated from Fiscal.ai: key people table (name, role, shares, ownership %) + recent insider buys/sells. Syncs automatically, cached 24 hours.
+- **Valuation** — auto-populated from Massive: analyst ratings table (bank, date, rating with color coding, price target, previous PT) + consensus bar (buy/hold/sell). Syncs automatically, cached 24 hours.
+
+**Resources** — links and files organized by category (Filing, Report, Transcript, Media, Other). Users can add, edit, and delete resources through the UI.
 
 ### Data storage
 
-- **Company list** → `companies` table in Supabase (basic info: ticker, name, sector, logo, status)
-- **Profile content** → designed as code by Claude per company. What each profile shows and how it looks is determined by Claude and the user together, not by a rigid schema
-- The `companies` table is the single source of truth for which companies exist. The grid reads from it.
+- **Company list** → `companies` table (ticker, name, sector, logo_domain, status)
+- **Resources** → `company_resources` table (name, url, category, type, date)
+- **Management** → `company_executives` table (name, role, shares, ownership_pct) — synced from Fiscal.ai
+- **Insider activity** → `insider_transactions` table (person, type, date, shares, price) — synced from Fiscal.ai
+- **Analyst ratings** → `analyst_ratings` table (firm, analyst, rating, price_target, date) — synced from Massive
+- **Logos** → loaded from `https://assets.parqet.com/logos/symbol/{TICKER}` with Google favicon fallback
 
 ### Key principles
 
 - The portal has an "Add Company" button — no need to touch code or the database directly
-- Profiles are built incrementally — a company can exist in the grid with no profile yet
-- Each profile is a custom design, not a cookie-cutter template
+- Management and Valuation data sync automatically from external APIs
+- Resources are managed through the portal UI (add/edit/delete)
+- Overview is custom-designed per company with Claude's help
 - Claude handles all the technical work — the user just describes what they want to see
 
 ## Team tab — how it works
@@ -241,50 +298,56 @@ When migrating to Supabase persistence:
 
 ## External APIs
 
-### Fiscal.ai — Financial Data
-
-The portal uses [Fiscal.ai](https://fiscal.ai) to pull management and insider data for companies.
+### Fiscal.ai — Management Data & Company Search
 
 - **API docs:** https://docs.fiscal.ai/docs/api-reference
 - **Base URL:** `https://api.fiscal.ai`
-- **Auth:** header `X-Api-Key` with API key
-- **API key:** stored as Supabase secret `FISCAL_AI_API_KEY` (never in code)
+- **Auth:** header `X-Api-Key`
+- **Secret:** `FISCAL_AI_API_KEY` in Supabase secrets
+- **Plan:** Free trial (25 companies). Paid API plan ($990/yr) unlocks 100K+ companies.
 
 **Endpoints used:**
 
-| Endpoint | Purpose | Populates |
+| Endpoint | Purpose | Edge Function |
 |---|---|---|
-| `/v1/company/ownership/insider/holders` | Management team + share ownership | `company_executives` table |
-| `/v1/company/ownership/insider/transactions` | Insider buy/sell activity | `insider_transactions` table |
+| `/v1/company/ownership/insider/holders` | Management team + share ownership | `sync-management` |
+| `/v1/company/ownership/insider/transactions` | Insider buy/sell activity | `sync-management` |
+| `/v2/companies-list` | Company search (12K+ companies) | `search-company` |
 
-**How it works:**
+**Currently available companies on free plan:** AMZN, MA, NVDA, UBER, V. All others show "not available on current plan".
 
-1. User clicks **Sync ↻** on a company's Management pillar
-2. Portal calls the `sync-management` Supabase Edge Function
-3. Edge function calls Fiscal.ai with the company ticker
-4. Fiscal.ai returns holders and transactions
-5. Edge function clears old data and inserts fresh data into Supabase
-6. Portal re-renders the management section
+### Massive — Analyst Ratings
 
-**Testing the API directly:**
+- **Base URL:** `https://api.massive.com`
+- **Auth:** header `Authorization: Bearer <key>`
+- **Secret:** `MASSIVE_API_KEY` in Supabase secrets
+
+**Endpoints used:**
+
+| Endpoint | Purpose | Edge Function |
+|---|---|---|
+| `/benzinga/v1/ratings` | Analyst ratings, price targets, firm names | `sync-ratings` |
+
+### Supabase secrets
+
+All API keys are stored as Supabase secrets. To view or update:
 ```bash
-curl -H "X-Api-Key: $FISCAL_AI_API_KEY" \
-  "https://api.fiscal.ai/v1/company/ownership/insider/holders?ticker=UBER&pageSize=10"
+supabase secrets list --project-ref bvflqjndivouhgwqfbrq
+supabase secrets set KEY_NAME=value --project-ref bvflqjndivouhgwqfbrq
 ```
 
-**Deploying changes to the edge function:**
-```bash
-supabase functions deploy sync-management --project-ref bvflqjndivouhgwqfbrq
-```
-
-**Updating the API key (if rotated):**
-```bash
-supabase secrets set FISCAL_AI_API_KEY=<new-key> --project-ref bvflqjndivouhgwqfbrq
-```
+Current secrets: `FISCAL_AI_API_KEY`, `MASSIVE_API_KEY`, plus Supabase system secrets.
 
 ## Do not
 
 - Add npm dependencies or a build step — this is a zero-build static site
 - Commit `env.js` or any file containing credentials
+- Hardcode API keys — always use Supabase secrets for external API keys
+- Use `CASCADE` on foreign keys — always `RESTRICT` to prevent accidental data loss
 - Remove or weaken Row Level Security policies
+- Import `supabase-client.js` from page modules — only `api.js` and `auth.js` may import it
+- Set CORS to `*` in edge functions — restrict to `research-summit.netlify.app` and `localhost:8000`
+- Call external APIs (Fiscal.ai, Massive) directly from the browser — always go through edge functions
 - Change the auth flow without discussing with San first
+- Modify `js/portal-data.js` — this file contains static reference data (stocks, investors) and is not auto-generated
+- Delete a company without first deleting its related data (executives, transactions, ratings, resources) — FK constraints will block it

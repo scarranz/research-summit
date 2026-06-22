@@ -419,6 +419,27 @@ body {
   font-size: 12px;
   color: var(--text-secondary);
 }
+
+/* TIMELINE RANGE CONTROL */
+.timeline-bar{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:14px 20px 12px;margin-bottom:24px;}
+.tl-head{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;}
+.tl-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-tertiary);}
+.tl-range{font-size:15px;font-weight:700;color:var(--text-primary);}
+.tl-toggle{margin-left:auto;font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;}
+.tl-toggle input{accent-color:var(--accent-sea);cursor:pointer;}
+.tl-slider{position:relative;height:34px;}
+.tl-slider input[type=range]{position:absolute;top:5px;left:0;width:100%;height:18px;margin:0;background:none;-webkit-appearance:none;appearance:none;pointer-events:none;}
+.tl-slider input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent-sea);border:3px solid #fff;box-shadow:0 1px 4px rgba(30,39,51,0.25);cursor:grab;pointer-events:auto;}
+.tl-slider input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent-sea);border:3px solid #fff;box-shadow:0 1px 4px rgba(30,39,51,0.25);cursor:grab;pointer-events:auto;}
+.tl-track{position:absolute;top:13px;left:0;width:100%;height:4px;background:var(--border-subtle);border-radius:2px;}
+.tl-fill{position:absolute;top:13px;height:4px;background:var(--accent-sea);border-radius:2px;}
+.tl-ticks{position:absolute;top:24px;left:0;width:100%;display:flex;justify-content:space-between;font-size:9px;color:var(--text-tertiary);pointer-events:none;}
+.chart-stats{margin-top:12px;padding-top:10px;border-top:1px solid var(--border-subtle);font-size:11.5px;color:var(--text-secondary);line-height:1.5;}
+.chart-stats b{color:var(--text-primary);font-weight:600;}
+.chart-stats .pos{color:#16A34A;font-weight:600;}
+.chart-stats .neg{color:#DC2626;font-weight:600;}
+.yoy-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.yoy-chip{font-size:10px;padding:3px 7px;border-radius:5px;background:var(--bg-surface);border:1px solid var(--border-subtle);color:var(--text-secondary);}
 </style>
 
 <div class="dashboard">
@@ -447,6 +468,22 @@ body {
     <button class="nav-tab" data-tab="shopee">Shopee</button>
     <button class="nav-tab" data-tab="monee">Monee</button>
     <button class="nav-tab" data-tab="garena">Garena</button>
+  </div>
+
+  <!-- Timeline range control -->
+  <div class="timeline-bar">
+    <div class="tl-head">
+      <span class="tl-title">Timeline</span>
+      <span class="tl-range" id="tlRange">2020 – 2028E</span>
+      <label class="tl-toggle"><input type="checkbox" id="tlYoY"> Show YoY per year</label>
+    </div>
+    <div class="tl-slider">
+      <div class="tl-track"></div>
+      <div class="tl-fill" id="tlFill"></div>
+      <input type="range" id="tlMin" min="2020" max="2028" step="1" value="2020">
+      <input type="range" id="tlMax" min="2020" max="2028" step="1" value="2028">
+      <div class="tl-ticks" id="tlTicks"></div>
+    </div>
   </div>
 
   <!-- ==================== OVERVIEW ==================== -->
@@ -536,7 +573,7 @@ body {
     <div class="chart-grid">
       <div class="chart-card">
         <div class="chart-title">Total revenue ($B)</div>
-        <div class="chart-subtitle">FY2020 — FY2025E</div>
+        <div class="chart-subtitle">FY2020 — FY2028E &middot; faded = estimates</div>
         <div class="chart-wrap"><canvas id="chartRevenue"></canvas></div>
       </div>
       <div class="chart-card">
@@ -582,7 +619,7 @@ body {
     <!-- Adj EBITDA trend -->
     <div class="chart-card full-width" style="margin-bottom:24px;">
       <div class="chart-title">Adjusted EBITDA ($M)</div>
-      <div class="chart-subtitle">FY2021 — FY2025E: from deep losses to $3.4B</div>
+      <div class="chart-subtitle">FY2021 — FY2028E &middot; faded bars = estimates</div>
       <div class="chart-wrap"><canvas id="chartEBTrend"></canvas></div>
     </div>
   </div>
@@ -593,28 +630,28 @@ body {
       <div class="segment-icon" style="background:var(--accent-shopee-dim);color:var(--accent-shopee);">S</div>
       <div>
         <div class="segment-name">Shopee</div>
-        <div class="segment-tagline">E-Commerce &middot; $16.6B Revenue &middot; 72% of Sea</div>
+        <div class="segment-tagline">E-Commerce &middot; $16.5B Revenue &middot; 72% of Sea</div>
       </div>
     </div>
 
     <div class="metrics-row">
       <div class="metric-card">
         <div class="accent-line" style="background:linear-gradient(90deg,var(--accent-shopee),transparent);"></div>
-        <div class="metric-label">GMV (2024)</div>
-        <div class="metric-value">$100.5B</div>
-        <div class="metric-delta positive">+28% YoY</div>
+        <div class="metric-label">GMV (2025)</div>
+        <div class="metric-value">$127.4B</div>
+        <div class="metric-delta positive">+27% YoY</div>
       </div>
       <div class="metric-card">
         <div class="accent-line" style="background:linear-gradient(90deg,var(--accent-shopee),transparent);"></div>
-        <div class="metric-label">Take Rate</div>
-        <div class="metric-value">12.3%</div>
-        <div class="metric-delta positive">+80bps YoY</div>
+        <div class="metric-label">Take Rate (2025)</div>
+        <div class="metric-value">13.0%</div>
+        <div class="metric-delta positive">+60bps YoY</div>
       </div>
       <div class="metric-card">
         <div class="accent-line" style="background:linear-gradient(90deg,var(--accent-shopee),transparent);"></div>
-        <div class="metric-label">Orders (2024)</div>
-        <div class="metric-value">10.9B</div>
-        <div class="metric-delta positive">+34% YoY</div>
+        <div class="metric-label">Orders (2025)</div>
+        <div class="metric-value">13.9B</div>
+        <div class="metric-delta positive">+27% YoY</div>
       </div>
       <div class="metric-card">
         <div class="accent-line" style="background:linear-gradient(90deg,var(--accent-shopee),transparent);"></div>
@@ -627,7 +664,7 @@ body {
     <div class="chart-grid">
       <div class="chart-card">
         <div class="chart-title">GMV ($B)</div>
-        <div class="chart-subtitle">2021 — 2026E &middot; 26% CAGR</div>
+        <div class="chart-subtitle">2021 — 2028E &middot; faded = estimates</div>
         <div class="chart-wrap"><canvas id="chartGMV"></canvas></div>
       </div>
       <div class="chart-card">
@@ -637,7 +674,7 @@ body {
       </div>
       <div class="chart-card">
         <div class="chart-title">Gross orders (B)</div>
-        <div class="chart-subtitle">2021 — 2026E &middot; 28% CAGR</div>
+        <div class="chart-subtitle">2021 — 2028E &middot; faded = estimates</div>
         <div class="chart-wrap"><canvas id="chartOrders"></canvas></div>
       </div>
       <div class="chart-card">
@@ -781,17 +818,17 @@ body {
     <div class="chart-grid">
       <div class="chart-card">
         <div class="chart-title">Loans outstanding ($B)</div>
-        <div class="chart-subtitle">Quarterly — 179% growth in 2 years</div>
+        <div class="chart-subtitle">2023 — 2028E &middot; faded = estimates</div>
         <div class="chart-wrap"><canvas id="chartLoans"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-title">NPL 90+ rate (%)</div>
-        <div class="chart-subtitle">Credit quality improving as book scales</div>
+        <div class="chart-subtitle">2022 — 2025 &middot; historical · credit quality improving</div>
         <div class="chart-wrap"><canvas id="chartNPL"></canvas></div>
       </div>
       <div class="chart-card full-width">
-        <div class="chart-title">DFS quarterly revenue ($M)</div>
-        <div class="chart-subtitle">FY2025: $3.8B revenue (+60% YoY)</div>
+        <div class="chart-title">DFS revenue ($M)</div>
+        <div class="chart-subtitle">FY2021 — FY2028E &middot; faded = estimates</div>
         <div class="chart-wrap"><canvas id="chartDFSRev"></canvas></div>
       </div>
     </div>
@@ -1013,219 +1050,162 @@ function merge(overrides) {
 }
 
 let charts = {};
+function destroyAll(){ Object.values(charts).forEach(function(c){ try{c.destroy();}catch(e){} }); charts={}; }
 
-function destroyAll() {
-  Object.values(charts).forEach(c => c.destroy());
-  charts = {};
+// Estimate (lighter) and fill colors per base color
+var LIGHT={}; LIGHT[SHOPEE]='rgba(238,77,45,0.45)'; LIGHT[MONEE]='rgba(99,102,241,0.45)'; LIGHT[GARENA]='rgba(245,158,11,0.45)'; LIGHT[SEA]='rgba(44,62,84,0.40)';
+var FILL={};  FILL[SHOPEE]='rgba(238,77,45,0.10)';  FILL[MONEE]='rgba(99,102,241,0.10)';  FILL[GARENA]='rgba(245,158,11,0.10)';  FILL[SEA]='rgba(44,62,84,0.08)';
+
+// Formatters
+var f$B=function(v){return '$'+(Math.round(v*10)/10)+'B';};
+var f$M=function(v){return (v<0?'-':'')+'$'+Math.abs(Math.round(v)).toLocaleString()+'M';};
+var fPct=function(v){return v+'%';};
+var f$1=function(v){return '$'+(Math.round(v*100)/100).toFixed(2);};
+var fB=function(v){return v+'B';};
+
+// Time-series registry (driven by the timeline)
+var SERIES={
+  chartRevenue:{section:'overview',type:'bar',color:SEA,fy:true,yfmt:f$B,
+    years:[2020,2021,2022,2023,2024,2025,2026,2027,2028],
+    data:[4.38,9.96,12.45,13.06,16.82,22.94,30.26,36.74,42.76],
+    est:[false,false,false,false,false,false,true,true,true]},
+  chartOpInc:{section:'overview',type:'bar',signed:true,posColor:'#16A34A',lightPos:'rgba(22,163,74,0.45)',fy:true,yfmt:f$M,
+    years:[2020,2021,2022,2023,2024,2025,2026,2027,2028],
+    data:[-1300,-1583,-1488,225,662,1985,2433,3471,4711],
+    est:[false,false,false,false,false,false,true,true,true]},
+  chartEBTrend:{section:'overview',type:'bar',signed:true,posColor:SEA,lightPos:'rgba(44,62,84,0.40)',fy:true,yfmt:f$M,
+    years:[2021,2022,2023,2024,2025,2026,2027,2028],
+    data:[-594,-878,1179,1962,3437,3865,4929,6143],
+    est:[false,false,false,false,false,true,true,true]},
+  chartGMV:{section:'shopee',type:'bar',color:SHOPEE,fy:false,yfmt:f$B,
+    years:[2021,2022,2023,2024,2025,2026,2027,2028],
+    data:[62.6,73.5,78.5,100.5,127.4,159.8,189.1,216.3],
+    est:[false,false,false,false,false,true,true,true]},
+  chartTakeRate:{section:'shopee',type:'line',color:SHOPEE,fy:false,pct:true,ymin:6,ymax:16,yfmt:fPct,
+    years:[2021,2022,2023,2024,2025,2026,2027,2028],
+    data:[8.2,9.9,11.5,12.4,13.0,13.8,14.1,14.3],
+    est:[false,false,false,false,false,true,true,true]},
+  chartOrders:{section:'shopee',type:'bar',color:SHOPEE,fy:false,yfmt:fB,
+    years:[2021,2022,2023,2024,2025,2026,2027,2028],
+    data:[6.1,7.6,8.2,10.9,13.9,17.6,20.7,23.5],
+    est:[false,false,false,false,false,true,true,true]},
+  chartAOV:{section:'shopee',type:'line',color:SHOPEE,fy:false,ymin:6,ymax:11,yfmt:f$1,
+    years:[2021,2022,2023,2024,2025,2026,2027,2028],
+    data:[7.42,9.70,9.57,9.22,9.17,9.10,9.12,9.19],
+    est:[false,false,false,false,false,true,true,true]},
+  chartLoans:{section:'monee',type:'bar',color:MONEE,fy:false,yfmt:f$B,
+    years:[2023,2024,2025,2026,2027,2028],
+    data:[3.3,5.1,9.2,13.3,17.3,21.6],
+    est:[false,false,false,true,true,true]},
+  chartNPL:{section:'monee',type:'line',color:MONEE,fy:false,pct:true,ymin:0,ymax:3.5,yfmt:fPct,
+    years:[2022,2023,2024,2025],
+    data:[2.9,2.4,1.5,1.1],
+    est:[false,false,false,false]},
+  chartDFSRev:{section:'monee',type:'bar',color:MONEE,fy:false,yfmt:f$M,
+    years:[2021,2022,2023,2024,2025,2026,2027,2028],
+    data:[470,1222,1759,2368,3792,5386,6998,8650],
+    est:[false,false,false,false,false,true,true,true]},
+  chartBookingsAnn:{section:'garena',type:'bar',color:GARENA,fy:true,yfmt:f$B,
+    years:[2021,2022,2023,2024,2025,2026,2027,2028],
+    data:[4.6,2.8,1.8,2.1,2.9,3.22,3.38,3.41],
+    est:[false,false,false,false,false,true,true,true]}
+};
+
+var Y0=2020, Y1=2028, yrStart=2020, yrEnd=2028, showYoY=false;
+
+function lblYr(y,est,fy){ var b=fy?('FY'+String(y).slice(2)):String(y); return b+(est?'E':''); }
+function sliceSeries(s){
+  var o={years:[],labels:[],data:[],est:[]};
+  for(var i=0;i<s.years.length;i++){ if(s.years[i]>=yrStart && s.years[i]<=yrEnd){
+    o.years.push(s.years[i]); o.data.push(s.data[i]); o.est.push(s.est[i]); o.labels.push(lblYr(s.years[i],s.est[i],s.fy)); } }
+  return o;
 }
-
-function initCharts() {
-  destroyAll();
-  const active = document.querySelector('.section.active')?.id;
-
-  if (active === 'sec-overview') {
-    // Revenue
-    charts.rev = new Chart(document.getElementById('chartRevenue'), {
-      type: 'bar',
-      data: {
-        labels: ['FY20','FY21','FY22','FY23','FY24','FY25E'],
-        datasets: [{
-          data: [4.38, 9.96, 12.45, 13.06, 16.82, 22.9],
-          backgroundColor: [SEA,SEA,SEA,SEA,SEA,'rgba(0,201,167,0.6)'],
-          borderRadius: 6,
-          barPercentage: 0.65
-        }]
-      },
-      options: merge({
-        scales: {
-          ...baseOpts.scales,
-          y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => '$'+v+'B' } }
-        }
-      })
-    });
-
-    // Rev mix donut
-    charts.revMix = new Chart(document.getElementById('chartRevMix'), {
-      type: 'doughnut',
-      data: {
-        labels: ['Shopee','Monee','Garena','Other'],
-        datasets: [{ data: [16.6,3.8,2.4,0.1], backgroundColor: [SHOPEE,MONEE,GARENA,GRAY], borderWidth: 0 }]
-      },
-      options: { responsive: true, maintainAspectRatio: true, cutout: '68%', plugins: { legend: { display: false }, tooltip: baseOpts.plugins.tooltip } }
-    });
-
-    // Op Income
-    charts.opInc = new Chart(document.getElementById('chartOpInc'), {
-      type: 'bar',
-      data: {
-        labels: ['FY20','FY21','FY22','FY23','FY24','FY25E'],
-        datasets: [{
-          data: [-1300, -1500, -1600, 225, 662, 2000],
-          backgroundColor: v => v.raw >= 0 ? '#16A34A' : '#DC2626',
-          borderRadius: 6,
-          barPercentage: 0.65
-        }]
-      },
-      options: merge({
-        scales: {
-          ...baseOpts.scales,
-          y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => (v<0?'-':'')+'$'+Math.abs(v)+'M' } }
-        }
-      })
-    });
-
-    // EBITDA mix donut
-    charts.ebMix = new Chart(document.getElementById('chartEBMix'), {
-      type: 'doughnut',
-      data: {
-        labels: ['Garena','Monee','Shopee'],
-        datasets: [{ data: [1600,1000,881], backgroundColor: [GARENA,MONEE,SHOPEE], borderWidth: 0 }]
-      },
-      options: { responsive: true, maintainAspectRatio: true, cutout: '68%', plugins: { legend: { display: false }, tooltip: baseOpts.plugins.tooltip } }
-    });
-
-    // EBITDA trend
-    charts.ebTrend = new Chart(document.getElementById('chartEBTrend'), {
-      type: 'bar',
-      data: {
-        labels: ['FY21','FY22','FY23','FY24','FY25E'],
-        datasets: [{
-          data: [-878, -594, 1200, 2000, 3400],
-          backgroundColor: v => v.raw >= 0 ? SEA : '#DC2626',
-          borderRadius: 6,
-          barPercentage: 0.6
-        }]
-      },
-      options: merge({
-        scales: {
-          ...baseOpts.scales,
-          y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => (v<0?'-':'')+'$'+Math.abs(v)+'M' } }
-        }
-      })
-    });
+function datasetFor(s,sl){
+  if(s.type==='bar'){
+    var bg;
+    if(s.signed){ bg=sl.data.map(function(v,i){ return v<0?'#DC2626':(sl.est[i]?s.lightPos:s.posColor); }); }
+    else { bg=sl.est.map(function(e){ return e?LIGHT[s.color]:s.color; }); }
+    return {data:sl.data, backgroundColor:bg, borderRadius:6, barPercentage:0.65};
   }
-
-  if (active === 'sec-shopee') {
-    charts.gmv = new Chart(document.getElementById('chartGMV'), {
-      type: 'bar',
-      data: {
-        labels: ['2021','2022','2023','2024','2025E','2026E'],
-        datasets: [{
-          data: [50,73.5,78.5,100.6,127.3,159.2],
-          backgroundColor: [SHOPEE,SHOPEE,SHOPEE,SHOPEE,'rgba(238,77,45,0.6)','rgba(238,77,45,0.4)'],
-          borderRadius: 6, barPercentage: 0.65
-        }]
-      },
-      options: merge({ scales: { ...baseOpts.scales, y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => '$'+v+'B' } } } })
-    });
-
-    charts.takeRate = new Chart(document.getElementById('chartTakeRate'), {
-      type: 'line',
-      data: {
-        labels: ['2021','2022','2023','2024','2025E','2026E'],
-        datasets: [{
-          data: [10.2,9.9,11.5,12.3,13.0,13.4],
-          borderColor: SHOPEE, backgroundColor: 'rgba(238,77,45,0.1)',
-          fill: true, tension: 0.35, pointRadius: 5, pointBackgroundColor: SHOPEE, borderWidth: 2.5
-        }]
-      },
-      options: merge({ scales: { ...baseOpts.scales, y: { ...baseOpts.scales.y, min: 8, max: 15, ticks: { ...baseOpts.scales.y.ticks, callback: v => v+'%' } } } })
-    });
-
-    charts.orders = new Chart(document.getElementById('chartOrders'), {
-      type: 'bar',
-      data: {
-        labels: ['2021','2022','2023','2024','2025E','2026E'],
-        datasets: [{
-          data: [5.1,7.6,8.12,10.9,14.0,17.7],
-          backgroundColor: SHOPEE, borderRadius: 6, barPercentage: 0.65
-        }]
-      },
-      options: merge({ scales: { ...baseOpts.scales, y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => v+'B' } } } })
-    });
-
-    charts.aov = new Chart(document.getElementById('chartAOV'), {
-      type: 'line',
-      data: {
-        labels: ['2021','2022','2023','2024','2025E','2026E'],
-        datasets: [{
-          data: [7.42,9.70,9.91,9.22,9.09,9.00],
-          borderColor: SHOPEE, backgroundColor: 'rgba(238,77,45,0.08)',
-          fill: true, tension: 0.35, pointRadius: 5, pointBackgroundColor: SHOPEE, borderWidth: 2.5
-        }]
-      },
-      options: merge({ scales: { ...baseOpts.scales, y: { ...baseOpts.scales.y, min: 6, max: 11, ticks: { ...baseOpts.scales.y.ticks, callback: v => '$'+v.toFixed(1) } } } })
-    });
+  return {data:sl.data, borderColor:s.color, backgroundColor:(FILL[s.color]||'rgba(0,0,0,0.05)'),
+    fill:true, tension:0.35, pointRadius:4, borderWidth:2.5,
+    pointBackgroundColor: sl.est.map(function(e){ return e?LIGHT[s.color]:s.color; }),
+    segment:{ borderDash:function(ctx){ return sl.est[ctx.p1DataIndex]?[6,4]:undefined; } } };
+}
+function optsFor(s){
+  var o={ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#1E2733', titleColor:'#FFFFFF', bodyColor:'#CBD5E1', borderColor:'rgba(148,163,184,0.2)', borderWidth:1, cornerRadius:8, padding:10, titleFont:{family:'Inter',size:13,weight:'600'}, bodyFont:{family:'Inter',size:12}, callbacks:{ label:function(ctx){ return ' '+s.yfmt(ctx.parsed.y); } } } },
+    scales:{ x:{ grid:{color:GRID}, ticks:{color:TEXT,font:{family:'Inter',size:11}}, border:{display:false} },
+             y:{ grid:{color:GRID}, ticks:{color:TEXT,font:{family:'Inter',size:11},callback:s.yfmt}, border:{display:false} } } };
+  if(s.ymin!=null) o.scales.y.min=s.ymin;
+  if(s.ymax!=null) o.scales.y.max=s.ymax;
+  return o;
+}
+function footerFor(id,s,sl){
+  var cv=document.getElementById(id); if(!cv) return;
+  var card=cv.closest('.chart-card'); if(!card) return;
+  var el=card.querySelector('.chart-stats');
+  if(!el){ el=document.createElement('div'); el.className='chart-stats'; card.appendChild(el); }
+  var n=sl.data.length;
+  if(n<2){ el.innerHTML='<span style="color:var(--text-tertiary)">Pick a wider range</span>'; return; }
+  var a=sl.data[0], z=sl.data[n-1], yoy=(z/sl.data[n-2]-1)*100;
+  function cls(x){return x>=0?'pos':'neg';} function sg(x){return x>=0?'+':'';}
+  var main;
+  if(s.pct){ var dpp=z-a; main='<b>'+sl.labels[0]+'</b> '+a+'% &rarr; <b>'+sl.labels[n-1]+'</b> '+z+'% &middot; <span class="'+cls(dpp)+'">'+sg(dpp)+dpp.toFixed(1)+'pp</span>'; }
+  else if(a>0&&z>0){ var cagr=(Math.pow(z/a,1/(sl.years[n-1]-sl.years[0]))-1)*100; main='CAGR '+sl.labels[0]+'&ndash;'+sl.labels[n-1]+': <span class="'+cls(cagr)+'">'+sg(cagr)+cagr.toFixed(1)+'%</span> &middot; YoY '+sl.labels[n-1]+': <span class="'+cls(yoy)+'">'+sg(yoy)+yoy.toFixed(1)+'%</span>'; }
+  else { main='YoY '+sl.labels[n-1]+': <span class="'+cls(yoy)+'">'+sg(yoy)+yoy.toFixed(1)+'%</span> &middot; '+sl.labels[0]+' '+s.yfmt(a)+' &rarr; '+sl.labels[n-1]+' '+s.yfmt(z); }
+  var html=main;
+  if(showYoY){
+    var chips='';
+    for(var i=1;i<n;i++){ var txt;
+      if(s.pct){ var d=sl.data[i]-sl.data[i-1]; txt=sg(d)+d.toFixed(1)+'pp'; }
+      else if(sl.data[i-1]>0&&sl.data[i]>0){ var r=(sl.data[i]/sl.data[i-1]-1)*100; txt=sg(r)+r.toFixed(0)+'%'; }
+      else txt='n/m';
+      chips+='<span class="yoy-chip">'+sl.labels[i]+' '+txt+'</span>'; }
+    html+='<div class="yoy-chips">'+chips+'</div>';
   }
+  el.innerHTML=html;
+}
+function renderSeries(id,s){
+  var cv=document.getElementById(id); if(!cv) return;
+  var sl=sliceSeries(s); var ds=datasetFor(s,sl);
+  if(charts[id]){ charts[id].data.labels=sl.labels; charts[id].data.datasets[0]=ds; charts[id].update('none'); }
+  else { charts[id]=new Chart(cv,{type:s.type,data:{labels:sl.labels,datasets:[ds]},options:optsFor(s)}); }
+  footerFor(id,s,sl);
+}
+function activeSec(){ var a=document.querySelector('.section.active'); return a?a.id.replace('sec-',''):''; }
+function renderActive(){ var sec=activeSec(); Object.keys(SERIES).forEach(function(id){ if(SERIES[id].section===sec) renderSeries(id,SERIES[id]); }); }
 
-  if (active === 'sec-monee') {
-    const qLabels = ["Q1'24","Q2'24","Q3'24","Q4'24","Q1'25","Q2'25","Q3'25","Q4'25"];
-
-    charts.loans = new Chart(document.getElementById('chartLoans'), {
-      type: 'bar',
-      data: {
-        labels: qLabels,
-        datasets: [{
-          data: [3.3,3.5,4.6,5.1,5.8,6.9,7.9,9.2],
-          backgroundColor: MONEE, borderRadius: 6, barPercentage: 0.65
-        }]
-      },
-      options: merge({ scales: { ...baseOpts.scales, x: { ...baseOpts.scales.x, ticks: { ...baseOpts.scales.x.ticks, maxRotation: 45 } }, y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => '$'+v+'B' } } } })
-    });
-
-    charts.npl = new Chart(document.getElementById('chartNPL'), {
-      type: 'line',
-      data: {
-        labels: qLabels,
-        datasets: [{
-          data: [1.4,1.3,1.2,1.2,1.1,1.0,1.1,1.1],
-          borderColor: MONEE, backgroundColor: 'rgba(99,102,241,0.1)',
-          fill: true, tension: 0.35, pointRadius: 5, pointBackgroundColor: MONEE, borderWidth: 2.5
-        }]
-      },
-      options: merge({ scales: { ...baseOpts.scales, x: { ...baseOpts.scales.x, ticks: { ...baseOpts.scales.x.ticks, maxRotation: 45 } }, y: { ...baseOpts.scales.y, min: 0.5, max: 2, ticks: { ...baseOpts.scales.y.ticks, callback: v => v.toFixed(1)+'%' } } } })
-    });
-
-    charts.dfsRev = new Chart(document.getElementById('chartDFSRev'), {
-      type: 'bar',
-      data: {
-        labels: qLabels,
-        datasets: [{
-          data: [499,519,616,733,787,883,990,1132],
-          backgroundColor: MONEE, borderRadius: 6, barPercentage: 0.65
-        }]
-      },
-      options: merge({ scales: { ...baseOpts.scales, x: { ...baseOpts.scales.x, ticks: { ...baseOpts.scales.x.ticks, maxRotation: 45 } }, y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => '$'+v+'M' } } } })
-    });
+function buildStatic(){
+  var sec=activeSec();
+  if(sec==='overview'){
+    charts.revMix=new Chart(document.getElementById('chartRevMix'),{type:'doughnut',data:{labels:['Shopee','Monee','Garena','Other'],datasets:[{data:[16.6,3.8,2.4,0.1],backgroundColor:[SHOPEE,MONEE,GARENA,GRAY],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:true,cutout:'68%',plugins:{legend:{display:false}}}});
+    charts.ebMix=new Chart(document.getElementById('chartEBMix'),{type:'doughnut',data:{labels:['Garena','Monee','Shopee'],datasets:[{data:[1600,1000,881],backgroundColor:[GARENA,MONEE,SHOPEE],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:true,cutout:'68%',plugins:{legend:{display:false}}}});
   }
-
-  if (active === 'sec-garena') {
-    charts.bookAnn = new Chart(document.getElementById('chartBookingsAnn'), {
-      type: 'bar',
-      data: {
-        labels: ['FY21','FY22','FY23','FY24','FY25'],
-        datasets: [{
-          data: [3.5,2.73,2.15,1.81,2.95],
-          backgroundColor: [GARENA,'rgba(245,158,11,0.7)','rgba(245,158,11,0.5)','rgba(245,158,11,0.4)',GARENA],
-          borderRadius: 6, barPercentage: 0.65
-        }]
-      },
-      options: merge({ scales: { ...baseOpts.scales, y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => '$'+v.toFixed(1)+'B' } } } })
-    });
-
-    charts.bookQ = new Chart(document.getElementById('chartBookingsQ'), {
-      type: 'bar',
-      data: {
-        labels: ["Q1'24","Q2'24","Q3'24","Q4'24","Q1'25","Q2'25","Q3'25","Q4'25"],
-        datasets: [{
-          data: [512,537,543,557,661,672,775,841],
-          backgroundColor: GARENA, borderRadius: 6, barPercentage: 0.65
-        }]
-      },
-      options: merge({ scales: { ...baseOpts.scales, x: { ...baseOpts.scales.x, ticks: { ...baseOpts.scales.x.ticks, maxRotation: 45 } }, y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => '$'+v+'M' } } } })
-    });
+  if(sec==='garena'){
+    charts.bookQ=new Chart(document.getElementById('chartBookingsQ'),{type:'bar',data:{labels:["Q1'24","Q2'24","Q3'24","Q4'24","Q1'25","Q2'25","Q3'25","Q4'25"],datasets:[{data:[512,537,543,557,661,672,775,841],backgroundColor:GARENA,borderRadius:6,barPercentage:0.65}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:GRID},ticks:{color:TEXT,maxRotation:45,font:{family:'Inter',size:11}},border:{display:false}},y:{grid:{color:GRID},ticks:{color:TEXT,font:{family:'Inter',size:11},callback:function(v){return '$'+v+'M';}},border:{display:false}}}}});
   }
 }
+function initCharts(){ destroyAll(); renderActive(); buildStatic(); }
+
+// Timeline slider wiring
+(function(){
+  var mn=document.getElementById('tlMin'), mx=document.getElementById('tlMax');
+  var fill=document.getElementById('tlFill'), rng=document.getElementById('tlRange'), yo=document.getElementById('tlYoY'), tk=document.getElementById('tlTicks');
+  if(!mn) return;
+  var th=''; for(var y=Y0;y<=Y1;y++){ th+='<span>'+"'"+String(y).slice(2)+(y>=2026?'E':'')+'</span>'; } tk.innerHTML=th;
+  function paint(){
+    var lo=Math.min(+mn.value,+mx.value), hi=Math.max(+mn.value,+mx.value);
+    yrStart=lo; yrEnd=hi;
+    var pa=(lo-Y0)/(Y1-Y0)*100, pb=(hi-Y0)/(Y1-Y0)*100;
+    fill.style.left=pa+'%'; fill.style.width=(pb-pa)+'%';
+    rng.textContent=lblYr(lo,lo>=2026,false)+' – '+lblYr(hi,hi>=2026,false);
+  }
+  function onInput(){ paint(); renderActive(); }
+  mn.addEventListener('input',onInput); mx.addEventListener('input',onInput);
+  yo.addEventListener('change',function(){ showYoY=yo.checked; renderActive(); });
+  paint();
+})();
 
 initCharts();
 </script>

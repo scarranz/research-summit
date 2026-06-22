@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Research Summit · Sea Limited (SE)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg-deep: #F4F6F9;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F6F7F9;
+  --bg-surface: #EEF1F5;
+  --accent-sea: #2563EB;
+  --accent-sea-dim: rgba(37,99,235,0.10);
+  --accent-shopee: #EE4D2D;
+  --accent-monee: #6366F1;
+  --accent-garena: #F59E0B;
+  --accent-shopee-dim: rgba(238,77,45,0.10);
+  --accent-monee-dim: rgba(99,102,241,0.10);
+  --accent-garena-dim: rgba(245,158,11,0.12);
+  --text-primary: #1E2733;
+  --text-secondary: #566372;
+  --text-tertiary: #8A93A0;
+  --border-subtle: #E7EAEE;
+  --border-glow: rgba(37,99,235,0.30);
+  --font-display: 'Inter', -apple-system, system-ui, sans-serif;
+  --font-body: 'Inter', -apple-system, system-ui, sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  overflow-x: hidden;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+}
+
+.dashboard {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.header-left { display: flex; align-items: center; gap: 20px; }
+.logo-badge {
+  width: 56px; height: 56px;
+  background: #1E2733;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 20px; color: #FFFFFF;
+  letter-spacing: -0.5px;
+}
+.header-title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+}
+.header-subtitle {
+  font-size: 14px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.market-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.market-badge .price {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.market-badge .mcap {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* Navigation Tabs */
+.nav-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 28px;
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 4px;
+  border: 1px solid var(--border-subtle);
+  overflow-x: auto;
+}
+.nav-tab {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+}
+.nav-tab:hover { color: var(--text-secondary); background: rgba(30,39,51,0.04); }
+.nav-tab.active {
+  color: var(--accent-sea);
+  background: var(--accent-sea-dim);
+}
+
+/* Section containers */
+.section { display: none; animation: fadeIn 0.3s ease; }
+.section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Metric Cards */
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.metric-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 16px 20px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.metric-card:hover {
+  border-color: var(--border-glow);
+  transform: translateY(-1px);
+}
+.metric-card .accent-line {
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.metric-label {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-tertiary);
+  margin-bottom: 6px;
+}
+.metric-value {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+}
+.metric-delta {
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+.metric-delta.positive { color: #16A34A; }
+.metric-delta.negative { color: #DC2626; }
+
+/* Chart containers */
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+@media (max-width: 800px) { .chart-grid { grid-template-columns: 1fr; } }
+
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 20px;
+  transition: border-color 0.2s;
+}
+.chart-card:hover { border-color: #D2D8E0; }
+.chart-card.full-width { grid-column: 1 / -1; }
+.chart-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.chart-subtitle {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-bottom: 16px;
+}
+.chart-wrap {
+  position: relative;
+  width: 100%;
+  height: 260px;
+}
+.chart-wrap.tall { height: 320px; }
+
+/* Segment cards */
+.segment-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.segment-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700;
+}
+.segment-name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+}
+.segment-tagline {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* Flywheel / Business Model */
+.flywheel-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+@media (max-width: 800px) { .flywheel-container { grid-template-columns: 1fr; } }
+
+.flywheel-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 18px;
+}
+.flywheel-num {
+  width: 26px; height: 26px;
+  border-radius: 7px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  margin-bottom: 10px;
+}
+.flywheel-item h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.flywheel-item p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Market position bars */
+.market-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.market-bar-label {
+  width: 110px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-align: right;
+  flex-shrink: 0;
+}
+.market-bar-track {
+  flex: 1;
+  height: 28px;
+  background: rgba(30,39,51,0.05);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+.market-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  transition: width 1s ease;
+}
+.market-bar-value {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  width: 60px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Donut center */
+.donut-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+.donut-center .big {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.donut-center .small {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+/* Legend */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.legend-item {
+  display: flex; align-items: center; gap: 5px;
+}
+.legend-dot {
+  width: 8px; height: 8px; border-radius: 2px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(30,39,51,0.2); border-radius: 3px; }
+
+/* Advantage pills */
+.advantage-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.advantage-pill {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid;
+}
+
+/* Timeline */
+.timeline {
+  position: relative;
+  padding-left: 28px;
+  margin-bottom: 20px;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--accent-garena), transparent);
+  border-radius: 2px;
+}
+.timeline-item {
+  position: relative;
+  margin-bottom: 16px;
+}
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -24px;
+  top: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-garena);
+  border: 2px solid var(--bg-deep);
+}
+.timeline-year {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-garena);
+}
+.timeline-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+</style>
+
+<div class="dashboard">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-badge">SE</div>
+      <div>
+        <div class="header-title">Sea Limited</div>
+        <div class="header-subtitle">NYSE: SE &middot; Southeast Asia's leading consumer internet company</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="market-badge">
+        <div>
+          <div class="price">$81.38</div>
+          <div class="mcap">Mkt cap $47B &middot; P/E 30x</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav Tabs -->
+  <div class="nav-tabs" id="navTabs">
+    <button class="nav-tab active" data-tab="overview">Overview</button>
+    <button class="nav-tab" data-tab="shopee">Shopee</button>
+    <button class="nav-tab" data-tab="monee">Monee</button>
+    <button class="nav-tab" data-tab="garena">Garena</button>
+  </div>
+
+  <!-- ==================== OVERVIEW ==================== -->
+  <div class="section active" id="sec-overview">
+
+    <!-- Business description -->
+    <div class="chart-card full-width" style="margin-bottom:16px;">
+      <div class="chart-title">What is Sea Limited?</div>
+      <div class="chart-subtitle">Southeast Asia's leading consumer internet company · NYSE: SE</div>
+      <p style="font-size:13.5px;line-height:1.7;color:var(--text-secondary);max-width:1040px;">
+        Sea operates three integrated businesses across Southeast Asia, Taiwan and Latin America.
+        <strong style="color:var(--text-primary);">Shopee</strong>, the pan-regional e-commerce marketplace, drives ~72% of revenue and is the customer-acquisition engine for the group.
+        <strong style="color:var(--text-primary);">Garena</strong>, the original digital entertainment business, contributes ~10% of revenue but nearly half of segment EBITDA — anchored by Free Fire, an 8-year-old battle royale that grew 30%+ bookings in each of the last two years.
+        <strong style="color:var(--text-primary);">Monee</strong> (rebranded from SeaMoney in 2025) is the digital financial services arm, built around consumer and SME credit, with a $9.2B loan book that grew 80% YoY while keeping 90-day NPLs at 1.1%.
+        The three businesses are commercially integrated: Shopee distribution accelerates Monee customer acquisition, Monee credit lifts Shopee conversion, and Garena's mature cashflow seeded both — that cross-leverage is the strategic logic of the group.
+      </p>
+    </div>
+
+    <!-- Segment descriptions -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:24px;">
+      <div class="chart-card">
+        <div class="segment-header">
+          <div class="segment-icon" style="background:var(--accent-shopee-dim);color:var(--accent-shopee);">S</div>
+          <div>
+            <div class="segment-name">Shopee</div>
+            <div class="segment-tagline">E-Commerce · 72% of revenue</div>
+          </div>
+        </div>
+        <p style="font-size:12.5px;line-height:1.6;color:var(--text-secondary);margin:0;">Pan-regional e-commerce marketplace and the group's customer-acquisition engine. ~400M active buyers and ~20M sellers across SEA, Taiwan and Brazil. Monetized through marketplace commissions, advertising and logistics services.</p>
+      </div>
+      <div class="chart-card">
+        <div class="segment-header">
+          <div class="segment-icon" style="background:var(--accent-monee-dim);color:var(--accent-monee);">M</div>
+          <div>
+            <div class="segment-name">Monee</div>
+            <div class="segment-tagline">Digital Financial Services · 17% of revenue</div>
+          </div>
+        </div>
+        <p style="font-size:12.5px;line-height:1.6;color:var(--text-secondary);margin:0;">Consumer &amp; SME credit (SPayLater + cash loans), digital wallet and digital banking. $9.2B loan book (+80% YoY) with 90-day NPLs at just 1.1%. 37M+ active credit users, with ~80% of revenue from the credit business.</p>
+      </div>
+      <div class="chart-card">
+        <div class="segment-header">
+          <div class="segment-icon" style="background:var(--accent-garena-dim);color:var(--accent-garena);">G</div>
+          <div>
+            <div class="segment-name">Garena</div>
+            <div class="segment-tagline">Digital Entertainment · 10% of revenue</div>
+          </div>
+        </div>
+        <p style="font-size:12.5px;line-height:1.6;color:var(--text-secondary);margin:0;">The group's original cash engine, anchored by Free Fire — a top global mobile battle royale. ~633M quarterly active users and a 51% operating margin that funds investment in Shopee and Monee.</p>
+      </div>
+    </div>
+
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="accent-line" style="background: linear-gradient(90deg, var(--accent-sea), transparent);"></div>
+        <div class="metric-label">FY2025 Revenue</div>
+        <div class="metric-value">$22.9B</div>
+        <div class="metric-delta positive">+39% YoY</div>
+      </div>
+      <div class="metric-card">
+        <div class="accent-line" style="background: linear-gradient(90deg, #16A34A, transparent);"></div>
+        <div class="metric-label">Operating Income</div>
+        <div class="metric-value">$2.0B</div>
+        <div class="metric-delta positive">+201% YoY</div>
+      </div>
+      <div class="metric-card">
+        <div class="accent-line" style="background: linear-gradient(90deg, var(--accent-monee), transparent);"></div>
+        <div class="metric-label">Adj. EBITDA</div>
+        <div class="metric-value">$3.4B</div>
+        <div class="metric-delta positive">+70% YoY</div>
+      </div>
+      <div class="metric-card">
+        <div class="accent-line" style="background: linear-gradient(90deg, var(--accent-garena), transparent);"></div>
+        <div class="metric-label">EPS (TTM)</div>
+        <div class="metric-value">$2.58</div>
+        <div class="metric-delta positive">Profitable</div>
+      </div>
+      <div class="metric-card">
+        <div class="accent-line" style="background: linear-gradient(90deg, var(--accent-shopee), transparent);"></div>
+        <div class="metric-label">GMV (Shopee)</div>
+        <div class="metric-value">$100.5B</div>
+        <div class="metric-delta positive">+28% YoY</div>
+      </div>
+    </div>
+
+    <!-- Revenue + EBITDA charts -->
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">Total revenue ($B)</div>
+        <div class="chart-subtitle">FY2020 — FY2025E</div>
+        <div class="chart-wrap"><canvas id="chartRevenue"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Revenue mix — FY2025E</div>
+        <div class="chart-subtitle">By business segment</div>
+        <div class="chart-wrap" style="display:flex;align-items:center;justify-content:center;">
+          <canvas id="chartRevMix" style="max-height:220px;max-width:220px;"></canvas>
+          <div class="donut-center">
+            <div class="big">$22.9B</div>
+            <div class="small">Total</div>
+          </div>
+        </div>
+        <div class="legend" style="justify-content:center;">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent-shopee);"></div>Shopee 72%</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent-monee);"></div>Monee 17%</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent-garena);"></div>Garena 10%</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#64748b;"></div>Other 1%</div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Operating income ($M)</div>
+        <div class="chart-subtitle">Path to profitability</div>
+        <div class="chart-wrap"><canvas id="chartOpInc"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">EBITDA mix — FY2025E</div>
+        <div class="chart-subtitle">By business segment</div>
+        <div class="chart-wrap" style="display:flex;align-items:center;justify-content:center;">
+          <canvas id="chartEBMix" style="max-height:220px;max-width:220px;"></canvas>
+          <div class="donut-center">
+            <div class="big">$3.4B</div>
+            <div class="small">Adj. EBITDA</div>
+          </div>
+        </div>
+        <div class="legend" style="justify-content:center;">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent-garena);"></div>Garena 46%</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent-monee);"></div>Monee 29%</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent-shopee);"></div>Shopee 25%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Adj EBITDA trend -->
+    <div class="chart-card full-width" style="margin-bottom:24px;">
+      <div class="chart-title">Adjusted EBITDA ($M)</div>
+      <div class="chart-subtitle">FY2021 — FY2025E: from deep losses to $3.4B</div>
+      <div class="chart-wrap"><canvas id="chartEBTrend"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ==================== SHOPEE ==================== -->
+  <div class="section" id="sec-shopee">
+    <div class="segment-header">
+      <div class="segment-icon" style="background:var(--accent-shopee-dim);color:var(--accent-shopee);">S</div>
+      <div>
+        <div class="segment-name">Shopee</div>
+        <div class="segment-tagline">E-Commerce &middot; $16.6B Revenue &middot; 72% of Sea</div>
+      </div>
+    </div>
+
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="accent-line" style="background:linear-gradient(90deg,var(--accent-shopee),transparent);"></div>
+        <div class="metric-label">GMV (2024)</div>
+        <div class="metric-value">$100.5B</div>
+        <div class="metric-delta positive">+28% YoY</div>
+      </div>
+      <div class="metric-card">
+        <div class="accent-line" style="background:linear-gradient(90deg,var(--accent-shopee),transparent);"></div>
+        <div class="metric-label">Take Rate</div>
+        <div class="metric-value">12.3%</div>
+        <div class="metric-delta positive">+80bps YoY</div>
+      </div>
+      <div class="metric-card">
+        <div class="accent-line" style="background:linear-gradient(90deg,var(--accent-shopee),transparent);"></div>
+        <div class="metric-label">Orders (2024)</div>
+        <div class="metric-value">10.9B</div>
+        <div class="metric-delta positive">+34% YoY</div>
+      </div>
+      <div class="metric-card">
+        <div class="accent-line" style="background:linear-gradient(90deg,var(--accent-shopee),transparent);"></div>
+        <div class="metric-label">MAU</div>
+        <div class="metric-value">200M+</div>
+        <div class="metric-delta positive">#2 global app</div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">GMV ($B)</div>
+        <div class="chart-subtitle">2021 — 2026E &middot; 26% CAGR</div>
+        <div class="chart-wrap"><canvas id="chartGMV"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Take rate (%)</div>
+        <div class="chart-subtitle">Monetization inflection driven by ads + logistics</div>
+        <div class="chart-wrap"><canvas id="chartTakeRate"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Gross orders (B)</div>
+        <div class="chart-subtitle">2021 — 2026E &middot; 28% CAGR</div>
+        <div class="chart-wrap"><canvas id="chartOrders"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Average order value ($)</div>
+        <div class="chart-subtitle">Stabilizing around $9</div>
+        <div class="chart-wrap"><canvas id="chartAOV"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Take Rate Drivers -->
+    <div style="margin-bottom:24px;">
+      <div class="chart-title" style="margin-bottom:14px;">Take rate expansion drivers</div>
+      <div class="flywheel-container">
+        <div class="flywheel-item">
+          <div class="flywheel-num" style="background:var(--accent-shopee-dim);color:var(--accent-shopee);">1</div>
+          <h4>Advertising monetization</h4>
+          <p>Ad revenue growing 50%+ YoY. Currently ~2% of GMV versus 4-5% at mature peers like Alibaba and Amazon. Each 1% take rate increase adds ~$1.2B in gross profit.</p>
+        </div>
+        <div class="flywheel-item">
+          <div class="flywheel-num" style="background:var(--accent-shopee-dim);color:var(--accent-shopee);">2</div>
+          <h4>Logistics fees (SPX Express)</h4>
+          <p>In-house fulfillment covers 50%+ of orders. Sellers pay shipping and handling fees that flow directly to take rate. 1,000+ warehouses and delivery centres.</p>
+        </div>
+        <div class="flywheel-item">
+          <div class="flywheel-num" style="background:var(--accent-shopee-dim);color:var(--accent-shopee);">3</div>
+          <h4>Commission fees</h4>
+          <p>Higher marketplace commissions as Shopee gains pricing power from dominant market share. Up to 6-8% on Shopee Mall verified brands.</p>
+        </div>
+        <div class="flywheel-item">
+          <div class="flywheel-num" style="background:var(--accent-shopee-dim);color:var(--accent-shopee);">4</div>
+          <h4>Live commerce and value-added</h4>
+          <p>Premium seller tools, live-stream commerce integration, and Shopee Mall fees driving incremental take rate.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Market Position -->
+    <div class="chart-card full-width" style="margin-bottom:24px;">
+      <div class="chart-title">Southeast Asia GMV market share — 2024</div>
+      <div class="chart-subtitle">Source: Momentum Works</div>
+      <div style="padding:12px 0;">
+        <div class="market-bar-row">
+          <div class="market-bar-label">Shopee</div>
+          <div class="market-bar-track"><div class="market-bar-fill" style="width:52%;background:var(--accent-shopee);">$66.8B</div></div>
+          <div class="market-bar-value">52%</div>
+        </div>
+        <div class="market-bar-row">
+          <div class="market-bar-label">TikTok Shop</div>
+          <div class="market-bar-track"><div class="market-bar-fill" style="width:18%;background:#64748b;">$22.6B</div></div>
+          <div class="market-bar-value">18%</div>
+        </div>
+        <div class="market-bar-row">
+          <div class="market-bar-label">Lazada</div>
+          <div class="market-bar-track"><div class="market-bar-fill" style="width:14%;background:#475569;">~$19B</div></div>
+          <div class="market-bar-value">14%</div>
+        </div>
+        <div class="market-bar-row">
+          <div class="market-bar-label">Others</div>
+          <div class="market-bar-track"><div class="market-bar-fill" style="width:16%;background:#334155;">~$20B</div></div>
+          <div class="market-bar-value">16%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card full-width" style="margin-bottom:24px;">
+      <div class="chart-title">Brazil e-commerce GMV market share — 2025</div>
+      <div class="chart-subtitle">Source: BTG Pactual / NeoFeed</div>
+      <div style="padding:12px 0;">
+        <div class="market-bar-row">
+          <div class="market-bar-label">Mercado Libre</div>
+          <div class="market-bar-track"><div class="market-bar-fill" style="width:39%;background:#3b82f6;">~$26B</div></div>
+          <div class="market-bar-value">39%</div>
+        </div>
+        <div class="market-bar-row">
+          <div class="market-bar-label">Shopee</div>
+          <div class="market-bar-track"><div class="market-bar-fill" style="width:14%;background:var(--accent-shopee);">~$9.4B</div></div>
+          <div class="market-bar-value">14%</div>
+        </div>
+        <div class="market-bar-row">
+          <div class="market-bar-label">Amazon</div>
+          <div class="market-bar-track"><div class="market-bar-fill" style="width:12%;background:#f59e0b;">~$8B</div></div>
+          <div class="market-bar-value">12%</div>
+        </div>
+        <div class="market-bar-row">
+          <div class="market-bar-label">Mag. Luiza</div>
+          <div class="market-bar-track"><div class="market-bar-fill" style="width:10%;background:#64748b;">~$6.7B</div></div>
+          <div class="market-bar-value">10%</div>
+        </div>
+        <div class="market-bar-row">
+          <div class="market-bar-label">Others</div>
+          <div class="market-bar-track"><div class="market-bar-fill" style="width:25%;background:#334155;">~$16.7B</div></div>
+          <div class="market-bar-value">25%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MONEE ==================== -->
+  <div class="section" id="sec-monee">
+    <div class="segment-header">
+      <div class="segment-icon" style="background:var(--accent-monee-dim);color:var(--accent-monee);">M</div>
+      <div>
+        <div class="segment-name">Monee</div>
+        <div class="segment-tagline">Digital Financial Services &middot; $3.8B Revenue &middot; 17% of Sea</div>
+      </div>
+    </div>
+
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="accent-line" style="background:linear-gradient(90deg,var(--accent-monee),transparent);"></div>
+        <div class="metric-label">Loan book (Q4'25)</div>
+        <div class="metric-value">$9.2B</div>
+        <div class="metric-delta positive">+80% YoY</div>
+      </div>
+      <div class="metric-card">
+        <div class="accent-line" style="background:linear-gradient(90deg,var(--accent-monee),transparent);"></div>
+        <div class="metric-label">NPL 90+</div>
+        <div class="metric-value">1.1%</div>
+        <div class="metric-delta positive">vs 3% in 2023</div>
+      </div>
+      <div class="metric-card">
+        <div class="accent-line" style="background:linear-gradient(90deg,var(--accent-monee),transparent);"></div>
+        <div class="metric-label">Active borrowers</div>
+        <div class="metric-value">28M+</div>
+        <div class="metric-delta positive">Growing</div>
+      </div>
+      <div class="metric-card">
+        <div class="accent-line" style="background:linear-gradient(90deg,var(--accent-monee),transparent);"></div>
+        <div class="metric-label">EBITDA margin</div>
+        <div class="metric-value">~26%</div>
+        <div class="metric-delta positive">Scalable</div>
+      </div>
+      <div class="metric-card">
+        <div class="accent-line" style="background:linear-gradient(90deg,var(--accent-monee),transparent);"></div>
+        <div class="metric-label">Op. income (Q4)</div>
+        <div class="metric-value">$658M</div>
+        <div class="metric-delta positive">+34% YoY</div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">Loans outstanding ($B)</div>
+        <div class="chart-subtitle">Quarterly — 179% growth in 2 years</div>
+        <div class="chart-wrap"><canvas id="chartLoans"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">NPL 90+ rate (%)</div>
+        <div class="chart-subtitle">Credit quality improving as book scales</div>
+        <div class="chart-wrap"><canvas id="chartNPL"></canvas></div>
+      </div>
+      <div class="chart-card full-width">
+        <div class="chart-title">DFS quarterly revenue ($M)</div>
+        <div class="chart-subtitle">FY2025: $3.8B revenue (+60% YoY)</div>
+        <div class="chart-wrap"><canvas id="chartDFSRev"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Structural Advantages -->
+    <div style="margin-bottom:24px;">
+      <div class="chart-title" style="margin-bottom:14px;">Structural advantages</div>
+      <div class="advantage-row">
+        <div class="advantage-pill" style="background:var(--accent-monee-dim);border-color:rgba(99,102,241,0.3);color:#4F46E5;">Zero CAC — 400M Shopee users</div>
+        <div class="advantage-pill" style="background:var(--accent-monee-dim);border-color:rgba(99,102,241,0.3);color:#4F46E5;">AI credit scoring — 1.1% NPL</div>
+        <div class="advantage-pill" style="background:var(--accent-monee-dim);border-color:rgba(99,102,241,0.3);color:#4F46E5;">Ecosystem flywheel</div>
+        <div class="advantage-pill" style="background:var(--accent-monee-dim);border-color:rgba(99,102,241,0.3);color:#4F46E5;">Near-zero marginal cost per loan</div>
+      </div>
+    </div>
+
+    <!-- Credit Flywheel -->
+    <div class="chart-title" style="margin-bottom:14px;">Credit flywheel</div>
+    <div class="flywheel-container">
+      <div class="flywheel-item">
+        <div class="flywheel-num" style="background:var(--accent-monee-dim);color:var(--accent-monee);">1</div>
+        <h4>Shopee data moat</h4>
+        <p>400M users generate transaction, search, and behavioral data that feeds proprietary credit scoring models.</p>
+      </div>
+      <div class="flywheel-item">
+        <div class="flywheel-num" style="background:var(--accent-monee-dim);color:var(--accent-monee);">2</div>
+        <h4>Instant underwriting</h4>
+        <p>AI-driven credit decisions in less than 2 seconds at checkout. 70% of SEA population lacks formal credit access.</p>
+      </div>
+      <div class="flywheel-item">
+        <div class="flywheel-num" style="background:var(--accent-monee-dim);color:var(--accent-monee);">3</div>
+        <h4>Low-cost distribution</h4>
+        <p>Zero CAC for lending — credit offered at point of sale within the Shopee app via SPayLater and seller loans.</p>
+      </div>
+      <div class="flywheel-item">
+        <div class="flywheel-num" style="background:var(--accent-monee-dim);color:var(--accent-monee);">4</div>
+        <h4>Virtuous loop</h4>
+        <p>More lending generates more data, enabling better risk models, lower NPLs, expanded credit, and ecosystem growth.</p>
+      </div>
+    </div>
+
+    <!-- Revenue Streams -->
+    <div class="chart-title" style="margin:24px 0 14px;">Revenue streams</div>
+    <div class="flywheel-container">
+      <div class="flywheel-item">
+        <div class="flywheel-num" style="background:var(--accent-monee-dim);color:var(--accent-monee);">$</div>
+        <h4>Interest income (~80%)</h4>
+        <p>SPayLater / SLoan: 1.5-3.5%/mo rates on BNPL and cash loans. Largest Monee revenue driver.</p>
+      </div>
+      <div class="flywheel-item">
+        <div class="flywheel-num" style="background:var(--accent-monee-dim);color:var(--accent-monee);">$</div>
+        <h4>Payment fees</h4>
+        <p>MDR of 0.5-2% per ShopeePay transaction. 400M users + offline QR and billers across 8 SEA markets.</p>
+      </div>
+      <div class="flywheel-item">
+        <div class="flywheel-num" style="background:var(--accent-monee-dim);color:var(--accent-monee);">$</div>
+        <h4>Banking NIM</h4>
+        <p>SeaBank / MariBank: 5-12% NIM spread. Both banks profitable with full digital bank licenses.</p>
+      </div>
+      <div class="flywheel-item">
+        <div class="flywheel-num" style="background:var(--accent-monee-dim);color:var(--accent-monee);">$</div>
+        <h4>Insurtech and fees</h4>
+        <p>Micro-insurance at checkout, FX spread, investment wrap fees, premium tiers.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== GARENA ==================== -->
+  <div class="section" id="sec-garena">
+    <div class="segment-header">
+      <div class="segment-icon" style="background:var(--accent-garena-dim);color:var(--accent-garena);">G</div>
+      <div>
+        <div class="segment-name">Garena</div>
+        <div class="segment-tagline">Digital Entertainment &middot; $2.4B Revenue &middot; 51% Op. Margin</div>
+      </div>
+    </div>
+
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="accent-line" style="background:linear-gradient(90deg,var(--accent-garena),transparent);"></div>
+        <div class="metric-label">QAU</div>
+        <div class="metric-value">670M</div>
+        <div class="metric-delta positive">+36% from trough</div>
+      </div>
+      <div class="metric-card">
+        <div class="accent-line" style="background:linear-gradient(90deg,var(--accent-garena),transparent);"></div>
+        <div class="metric-label">QPU</div>
+        <div class="metric-value">66M</div>
+        <div class="metric-delta positive">Recovered</div>
+      </div>
+      <div class="metric-card">
+        <div class="accent-line" style="background:linear-gradient(90deg,var(--accent-garena),transparent);"></div>
+        <div class="metric-label">FY25 Bookings</div>
+        <div class="metric-value">$2.95B</div>
+        <div class="metric-delta positive">+37% YoY</div>
+      </div>
+      <div class="metric-card">
+        <div class="accent-line" style="background:linear-gradient(90deg,var(--accent-garena),transparent);"></div>
+        <div class="metric-label">Op. Margin</div>
+        <div class="metric-value">51%</div>
+        <div class="metric-delta positive">Cash engine</div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="chart-card full-width" style="margin-bottom:24px;">
+      <div class="chart-title">Free Fire timeline</div>
+      <div class="chart-subtitle">From launch to global #1 battle royale</div>
+      <div style="padding:16px 0;">
+        <div class="timeline">
+          <div class="timeline-item"><div class="timeline-year">2017</div><div class="timeline-text">Free Fire launches</div></div>
+          <div class="timeline-item"><div class="timeline-year">2019</div><div class="timeline-text">#1 battle royale mobile globally</div></div>
+          <div class="timeline-item"><div class="timeline-year">2021</div><div class="timeline-text">Peak: $4.3B bookings</div></div>
+          <div class="timeline-item"><div class="timeline-year">2022</div><div class="timeline-text">India ban, post-COVID decline</div></div>
+          <div class="timeline-item"><div class="timeline-year">2023</div><div class="timeline-text">Trough: $1.8B bookings &middot; India re-launch (Sep)</div></div>
+          <div class="timeline-item"><div class="timeline-year">2024</div><div class="timeline-text">Recovery begins &middot; 51% operating margin</div></div>
+          <div class="timeline-item"><div class="timeline-year">2025</div><div class="timeline-text">$2.95B bookings (+37% YoY) &middot; 670M QAU</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">Annual bookings ($B)</div>
+        <div class="chart-subtitle">Peak to trough to recovery</div>
+        <div class="chart-wrap"><canvas id="chartBookingsAnn"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Quarterly bookings ($M)</div>
+        <div class="chart-subtitle">Q1'24 — Q4'25</div>
+        <div class="chart-wrap"><canvas id="chartBookingsQ"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Recovery drivers -->
+    <div class="chart-title" style="margin-bottom:14px;">Recovery drivers</div>
+    <div class="flywheel-container">
+      <div class="flywheel-item">
+        <div class="flywheel-num" style="background:var(--accent-garena-dim);color:var(--accent-garena);">1</div>
+        <h4>India re-launch</h4>
+        <p>Free Fire returned after 18-month ban. India now #1 contributor to QAU recovery (+130M users).</p>
+      </div>
+      <div class="flywheel-item">
+        <div class="flywheel-num" style="background:var(--accent-garena-dim);color:var(--accent-garena);">2</div>
+        <h4>Content cadence</h4>
+        <p>Major collabs (Naruto, One Punch Man, Justin Bieber) drove QPU back above 60M from 39M trough.</p>
+      </div>
+      <div class="flywheel-item">
+        <div class="flywheel-num" style="background:var(--accent-garena-dim);color:var(--accent-garena);">3</div>
+        <h4>Competitive positioning</h4>
+        <p>Free Fire's 600MB client dominates on low-end Android versus PUBG's 2GB requirement. Gaining share in SEA.</p>
+      </div>
+      <div class="flywheel-item">
+        <div class="flywheel-num" style="background:var(--accent-garena-dim);color:var(--accent-garena);">4</div>
+        <h4>Ecosystem role</h4>
+        <p>Cash engine funding Shopee/Monee. 670M gamers cross-sell into Shopee. In-game purchases drive Monee adoption.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// Tab Navigation
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('sec-' + tab.dataset.tab).classList.add('active');
+    initCharts();
+  });
+});
+
+const SHOPEE = '#ee4d2d';
+const MONEE = '#6366f1';
+const GARENA = '#f59e0b';
+const SEA = '#2C3E54';
+const GRAY = '#8A93A0';
+const GRID = 'rgba(30,39,51,0.07)';
+const TEXT = '#8A93A0';
+
+const baseOpts = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: '#1E2733',
+      titleColor: '#FFFFFF',
+      bodyColor: '#CBD5E1',
+      borderColor: 'rgba(148,163,184,0.2)',
+      borderWidth: 1,
+      cornerRadius: 8,
+      padding: 10,
+      titleFont: { family: 'Inter', size: 13, weight: '600' },
+      bodyFont: { family: 'Inter', size: 12 },
+    }
+  },
+  scales: {
+    x: {
+      grid: { color: GRID, drawBorder: false },
+      ticks: { color: TEXT, font: { family: 'Inter', size: 11 } },
+      border: { display: false }
+    },
+    y: {
+      grid: { color: GRID, drawBorder: false },
+      ticks: { color: TEXT, font: { family: 'Inter', size: 11 } },
+      border: { display: false }
+    }
+  }
+};
+
+function merge(overrides) {
+  return JSON.parse(JSON.stringify({ ...baseOpts, ...overrides,
+    plugins: { ...baseOpts.plugins, ...overrides.plugins },
+    scales: { ...baseOpts.scales, ...overrides.scales }
+  }));
+}
+
+let charts = {};
+
+function destroyAll() {
+  Object.values(charts).forEach(c => c.destroy());
+  charts = {};
+}
+
+function initCharts() {
+  destroyAll();
+  const active = document.querySelector('.section.active')?.id;
+
+  if (active === 'sec-overview') {
+    // Revenue
+    charts.rev = new Chart(document.getElementById('chartRevenue'), {
+      type: 'bar',
+      data: {
+        labels: ['FY20','FY21','FY22','FY23','FY24','FY25E'],
+        datasets: [{
+          data: [4.38, 9.96, 12.45, 13.06, 16.82, 22.9],
+          backgroundColor: [SEA,SEA,SEA,SEA,SEA,'rgba(0,201,167,0.6)'],
+          borderRadius: 6,
+          barPercentage: 0.65
+        }]
+      },
+      options: merge({
+        scales: {
+          ...baseOpts.scales,
+          y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => '$'+v+'B' } }
+        }
+      })
+    });
+
+    // Rev mix donut
+    charts.revMix = new Chart(document.getElementById('chartRevMix'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Shopee','Monee','Garena','Other'],
+        datasets: [{ data: [16.6,3.8,2.4,0.1], backgroundColor: [SHOPEE,MONEE,GARENA,GRAY], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: true, cutout: '68%', plugins: { legend: { display: false }, tooltip: baseOpts.plugins.tooltip } }
+    });
+
+    // Op Income
+    charts.opInc = new Chart(document.getElementById('chartOpInc'), {
+      type: 'bar',
+      data: {
+        labels: ['FY20','FY21','FY22','FY23','FY24','FY25E'],
+        datasets: [{
+          data: [-1300, -1500, -1600, 225, 662, 2000],
+          backgroundColor: v => v.raw >= 0 ? '#16A34A' : '#DC2626',
+          borderRadius: 6,
+          barPercentage: 0.65
+        }]
+      },
+      options: merge({
+        scales: {
+          ...baseOpts.scales,
+          y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => (v<0?'-':'')+'$'+Math.abs(v)+'M' } }
+        }
+      })
+    });
+
+    // EBITDA mix donut
+    charts.ebMix = new Chart(document.getElementById('chartEBMix'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Garena','Monee','Shopee'],
+        datasets: [{ data: [1600,1000,881], backgroundColor: [GARENA,MONEE,SHOPEE], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: true, cutout: '68%', plugins: { legend: { display: false }, tooltip: baseOpts.plugins.tooltip } }
+    });
+
+    // EBITDA trend
+    charts.ebTrend = new Chart(document.getElementById('chartEBTrend'), {
+      type: 'bar',
+      data: {
+        labels: ['FY21','FY22','FY23','FY24','FY25E'],
+        datasets: [{
+          data: [-878, -594, 1200, 2000, 3400],
+          backgroundColor: v => v.raw >= 0 ? SEA : '#DC2626',
+          borderRadius: 6,
+          barPercentage: 0.6
+        }]
+      },
+      options: merge({
+        scales: {
+          ...baseOpts.scales,
+          y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => (v<0?'-':'')+'$'+Math.abs(v)+'M' } }
+        }
+      })
+    });
+  }
+
+  if (active === 'sec-shopee') {
+    charts.gmv = new Chart(document.getElementById('chartGMV'), {
+      type: 'bar',
+      data: {
+        labels: ['2021','2022','2023','2024','2025E','2026E'],
+        datasets: [{
+          data: [50,73.5,78.5,100.6,127.3,159.2],
+          backgroundColor: [SHOPEE,SHOPEE,SHOPEE,SHOPEE,'rgba(238,77,45,0.6)','rgba(238,77,45,0.4)'],
+          borderRadius: 6, barPercentage: 0.65
+        }]
+      },
+      options: merge({ scales: { ...baseOpts.scales, y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => '$'+v+'B' } } } })
+    });
+
+    charts.takeRate = new Chart(document.getElementById('chartTakeRate'), {
+      type: 'line',
+      data: {
+        labels: ['2021','2022','2023','2024','2025E','2026E'],
+        datasets: [{
+          data: [10.2,9.9,11.5,12.3,13.0,13.4],
+          borderColor: SHOPEE, backgroundColor: 'rgba(238,77,45,0.1)',
+          fill: true, tension: 0.35, pointRadius: 5, pointBackgroundColor: SHOPEE, borderWidth: 2.5
+        }]
+      },
+      options: merge({ scales: { ...baseOpts.scales, y: { ...baseOpts.scales.y, min: 8, max: 15, ticks: { ...baseOpts.scales.y.ticks, callback: v => v+'%' } } } })
+    });
+
+    charts.orders = new Chart(document.getElementById('chartOrders'), {
+      type: 'bar',
+      data: {
+        labels: ['2021','2022','2023','2024','2025E','2026E'],
+        datasets: [{
+          data: [5.1,7.6,8.12,10.9,14.0,17.7],
+          backgroundColor: SHOPEE, borderRadius: 6, barPercentage: 0.65
+        }]
+      },
+      options: merge({ scales: { ...baseOpts.scales, y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => v+'B' } } } })
+    });
+
+    charts.aov = new Chart(document.getElementById('chartAOV'), {
+      type: 'line',
+      data: {
+        labels: ['2021','2022','2023','2024','2025E','2026E'],
+        datasets: [{
+          data: [7.42,9.70,9.91,9.22,9.09,9.00],
+          borderColor: SHOPEE, backgroundColor: 'rgba(238,77,45,0.08)',
+          fill: true, tension: 0.35, pointRadius: 5, pointBackgroundColor: SHOPEE, borderWidth: 2.5
+        }]
+      },
+      options: merge({ scales: { ...baseOpts.scales, y: { ...baseOpts.scales.y, min: 6, max: 11, ticks: { ...baseOpts.scales.y.ticks, callback: v => '$'+v.toFixed(1) } } } })
+    });
+  }
+
+  if (active === 'sec-monee') {
+    const qLabels = ["Q1'24","Q2'24","Q3'24","Q4'24","Q1'25","Q2'25","Q3'25","Q4'25"];
+
+    charts.loans = new Chart(document.getElementById('chartLoans'), {
+      type: 'bar',
+      data: {
+        labels: qLabels,
+        datasets: [{
+          data: [3.3,3.5,4.6,5.1,5.8,6.9,7.9,9.2],
+          backgroundColor: MONEE, borderRadius: 6, barPercentage: 0.65
+        }]
+      },
+      options: merge({ scales: { ...baseOpts.scales, x: { ...baseOpts.scales.x, ticks: { ...baseOpts.scales.x.ticks, maxRotation: 45 } }, y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => '$'+v+'B' } } } })
+    });
+
+    charts.npl = new Chart(document.getElementById('chartNPL'), {
+      type: 'line',
+      data: {
+        labels: qLabels,
+        datasets: [{
+          data: [1.4,1.3,1.2,1.2,1.1,1.0,1.1,1.1],
+          borderColor: MONEE, backgroundColor: 'rgba(99,102,241,0.1)',
+          fill: true, tension: 0.35, pointRadius: 5, pointBackgroundColor: MONEE, borderWidth: 2.5
+        }]
+      },
+      options: merge({ scales: { ...baseOpts.scales, x: { ...baseOpts.scales.x, ticks: { ...baseOpts.scales.x.ticks, maxRotation: 45 } }, y: { ...baseOpts.scales.y, min: 0.5, max: 2, ticks: { ...baseOpts.scales.y.ticks, callback: v => v.toFixed(1)+'%' } } } })
+    });
+
+    charts.dfsRev = new Chart(document.getElementById('chartDFSRev'), {
+      type: 'bar',
+      data: {
+        labels: qLabels,
+        datasets: [{
+          data: [499,519,616,733,787,883,990,1132],
+          backgroundColor: MONEE, borderRadius: 6, barPercentage: 0.65
+        }]
+      },
+      options: merge({ scales: { ...baseOpts.scales, x: { ...baseOpts.scales.x, ticks: { ...baseOpts.scales.x.ticks, maxRotation: 45 } }, y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => '$'+v+'M' } } } })
+    });
+  }
+
+  if (active === 'sec-garena') {
+    charts.bookAnn = new Chart(document.getElementById('chartBookingsAnn'), {
+      type: 'bar',
+      data: {
+        labels: ['FY21','FY22','FY23','FY24','FY25'],
+        datasets: [{
+          data: [3.5,2.73,2.15,1.81,2.95],
+          backgroundColor: [GARENA,'rgba(245,158,11,0.7)','rgba(245,158,11,0.5)','rgba(245,158,11,0.4)',GARENA],
+          borderRadius: 6, barPercentage: 0.65
+        }]
+      },
+      options: merge({ scales: { ...baseOpts.scales, y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => '$'+v.toFixed(1)+'B' } } } })
+    });
+
+    charts.bookQ = new Chart(document.getElementById('chartBookingsQ'), {
+      type: 'bar',
+      data: {
+        labels: ["Q1'24","Q2'24","Q3'24","Q4'24","Q1'25","Q2'25","Q3'25","Q4'25"],
+        datasets: [{
+          data: [512,537,543,557,661,672,775,841],
+          backgroundColor: GARENA, borderRadius: 6, barPercentage: 0.65
+        }]
+      },
+      options: merge({ scales: { ...baseOpts.scales, x: { ...baseOpts.scales.x, ticks: { ...baseOpts.scales.x.ticks, maxRotation: 45 } }, y: { ...baseOpts.scales.y, ticks: { ...baseOpts.scales.y.ticks, callback: v => '$'+v+'M' } } } })
+    });
+  }
+}
+
+initCharts();
+</script>
+</body>
+</html>

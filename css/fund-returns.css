@@ -1,0 +1,99 @@
+/* Fund Returns tab */
+
+.fr-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.fr-h1 {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.fr-sub {
+  font-size: 13px;
+  color: var(--mu);
+  margin-top: 5px;
+  max-width: 640px;
+  line-height: 1.5;
+}
+
+.fr-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(37, 99, 235, .08);
+  border-radius: 5px;
+  padding: 2px 7px;
+  margin-left: 4px;
+}
+
+.fr-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.fr-ctl {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: var(--mu);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fr-ctl input {
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text);
+  padding: 6px 9px;
+  border: 1px solid var(--bdr);
+  border-radius: 8px;
+  background: var(--w);
+}
+
+.fr-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 7px;
+  white-space: nowrap;
+}
+.fr-badge-ok { color: var(--pos); background: rgba(22, 163, 74, .1); }
+.fr-badge-warn { color: var(--neg); background: rgba(220, 38, 38, .1); }
+.fr-badge-neutral { color: var(--mu); background: var(--ice); }
+
+.fr-msg {
+  background: rgba(220, 38, 38, .07);
+  border: 1px solid rgba(220, 38, 38, .25);
+  color: var(--neg);
+  font-size: 13px;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+}
+
+.fr-chartcard { margin-bottom: 18px; }
+
+.fr-charttitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.fr-canvas-wrap { position: relative; height: 340px; }
+.fr-canvas-short { height: 260px; }

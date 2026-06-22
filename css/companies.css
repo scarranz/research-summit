@@ -541,14 +541,13 @@
   font-weight: 500;
   padding: 2px 8px;
   border-radius: 10px;
-  background: var(--surface);
-  color: var(--mu);
   text-transform: capitalize;
   white-space: nowrap;
 }
 
-.ratings-rating.upgrade { background: #D1FAE5; color: #065F46; }
-.ratings-rating.downgrade { background: #FEF2F2; color: #991B1B; }
+.ratings-rating.bullish { background: #D1FAE5; color: #065F46; }
+.ratings-rating.neutral { background: #FEF3C7; color: #92400E; }
+.ratings-rating.bearish { background: #FEF2F2; color: #991B1B; }
 
 .cotwo {
   display: grid;

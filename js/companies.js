@@ -347,10 +347,10 @@ async function loadValuationData(companyId) {
     '<th>Bank</th><th>Date</th><th>Rating</th><th style="text-align:right">Price</th><th style="text-align:right">Previous</th>' +
   '</tr></thead><tbody>';
   ratings.slice(0, 20).forEach(function(r) {
-    var actionClass = '';
-    var actionLabel = r.rating_action || '';
-    if (actionLabel === 'upgrades') actionClass = 'upgrade';
-    else if (actionLabel === 'downgrades') actionClass = 'downgrade';
+    var rat = (r.rating || '').toLowerCase();
+    var ratingClass = 'neutral';
+    if (rat.includes('buy') || rat.includes('overweight') || rat.includes('outperform')) ratingClass = 'bullish';
+    else if (rat.includes('sell') || rat.includes('underweight') || rat.includes('underperform')) ratingClass = 'bearish';
 
     var ptChange = '';
     if (r.price_target_action === 'raises') ptChange = ' <span style="color:#065F46">↑</span>';
@@ -359,7 +359,7 @@ async function loadValuationData(companyId) {
     html += '<tr>' +
       '<td class="ratings-firm">' + esc(r.firm) + '</td>' +
       '<td class="ratings-date">' + esc(r.date || '') + '</td>' +
-      '<td><span class="ratings-rating ' + actionClass + '">' + esc(r.rating) + '</span></td>' +
+      '<td><span class="ratings-rating ' + ratingClass + '">' + esc(r.rating) + '</span></td>' +
       '<td style="text-align:right;font-variant-numeric:tabular-nums">' + (r.price_target ? '$' + Number(r.price_target).toFixed(0) + ptChange : '—') + '</td>' +
       '<td style="text-align:right;font-variant-numeric:tabular-nums;color:var(--mu)">' + (r.previous_price_target ? '$' + Number(r.previous_price_target).toFixed(0) : '—') + '</td>' +
     '</tr>';

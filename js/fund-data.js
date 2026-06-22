@@ -1,19 +1,23 @@
 // fund-data.js — Data adapter for the Fund Returns tab.
 //
-// DESIGN PHASE (today): reads local CSVs in /data (served only by the local dev
-// server; gitignored, never deployed):
-//   · STRATEGY_RETURNS.csv — the spliced strategy daily series 2022→2026
-//     (strategy through 2025-09-30, then EGB), columns date,period_return,total_beta
-//   · BENCHMARK_SPY.csv — SPY daily closes 2020→2026, columns date,close
+// Source priority:
+//   1. Supabase (RLS-gated tables) — shared, so the whole logged-in team sees it.
+//   2. Local CSVs in /data — design-phase fallback so the dashboard still works
+//      locally before the Supabase tables have been loaded (gitignored, local only).
 //
-// PRODUCTION (later): swap the internals so the strategy series comes from the
-// Summit DB (spliced upstream, by portfolio_id) and the benchmark from Massive
-// (SPY/S&P prices). The calc engine and page never change — only this file.
+// The strategy series is the spliced track record (strategy through 2025-09-30,
+// then EGB); the benchmark is SPY closes (interim → Massive in production).
+// PRODUCTION: swap the Supabase calls for the Summit DB + Massive — the calc
+// engine and page never change.
+import { fetchFundReturns, fetchBenchmarkPrices } from './api.js';
 
-async function loadCsv(path) {
-  const res = await fetch(path);
-  if (!res.ok) throw new Error(`No se pudo cargar ${path} (HTTP ${res.status})`);
-  return parseCsv(await res.text());
+const CSV_STRATEGY = 'data/STRATEGY_RETURNS.csv';
+const CSV_BENCHMARK = 'data/BENCHMARK_SPY.csv';
+
+// 'YYYY-MM-DD...' → local-midnight Date (avoids timezone drift in grouping)
+function toDate(s) {
+  const [y, m, d] = String(s).slice(0, 10).split('-').map(Number);
+  return new Date(y, m - 1, d);
 }
 
 function parseCsv(text) {
@@ -26,50 +30,53 @@ function parseCsv(text) {
     return row;
   });
 }
+async function loadCsv(path) {
+  const res = await fetch(path);
+  if (!res.ok) throw new Error(`No se pudo cargar ${path} (HTTP ${res.status})`);
+  return parseCsv(await res.text());
+}
 
-// 'YYYY-MM-DD...' → local-midnight Date (avoids timezone drift in grouping)
-function toDate(s) {
-  const [y, m, d] = s.slice(0, 10).split('-').map(Number);
-  return new Date(y, m - 1, d);
+// Supabase first; fall back to the local CSV if the tables aren't there yet.
+async function loadRows(supabaseFetch, csvPath) {
+  try {
+    const res = await supabaseFetch();
+    if (res.success && res.data && res.data.length) return res.data;
+  } catch (_) { /* fall through to CSV */ }
+  return loadCsv(csvPath);
 }
 
 // Strategy daily return series. [{ date, r, beta }]
 export async function getStrategy() {
-  const rows = await loadCsv('data/STRATEGY_RETURNS.csv');
+  const rows = await loadRows(() => fetchFundReturns('STRATEGY'), CSV_STRATEGY);
   return rows
-    .filter(r => r.date && r.period_return !== '')
     .map(r => ({
       date: toDate(r.date),
-      r: parseFloat(r.period_return),
-      beta: r.total_beta !== undefined && r.total_beta !== '' ? parseFloat(r.total_beta) : null,
+      r: Number(r.period_return),
+      beta: (r.total_beta != null && r.total_beta !== '') ? Number(r.total_beta) : null,
     }))
     .filter(p => !Number.isNaN(p.r))
     .sort((a, b) => a.date - b.date);
 }
 
 // Benchmark daily returns aligned 1:1 to the strategy dates. The return on each
-// fund date is close_t / close_(prev fund date) − 1; the very first fund date
-// uses the close of the prior available business day (validated: SPY reproduces
-// the Excel/guide benchmark exactly, e.g. EGB 2025 +16.35%, overall +24.71%).
+// fund date is close_t / close_(prev fund date) − 1; the first fund date uses
+// the close of the prior available business day.
 export async function getBenchmark(strategyDates) {
-  const rows = await loadCsv('data/BENCHMARK_SPY.csv');
+  const rows = await loadRows(() => fetchBenchmarkPrices('SPY'), CSV_BENCHMARK);
   const spy = rows
-    .filter(r => r.date && r.close !== '')
-    .map(r => ({ date: toDate(r.date), close: parseFloat(r.close) }))
+    .map(r => ({ date: toDate(r.date), close: Number(r.close) }))
     .filter(p => !Number.isNaN(p.close))
     .sort((a, b) => a.date - b.date);
 
-  // close on `target` or the most recent close before it (two-pointer over spy)
+  const out = [];
+  if (!strategyDates.length || !spy.length) return out;
+
   let j = 0;
   const closeOnOrBefore = (target) => {
     while (j + 1 < spy.length && spy[j + 1].date <= target) j++;
     return spy[j].close;
   };
 
-  const out = [];
-  if (!strategyDates.length || !spy.length) return out;
-
-  // prior business-day close for the first fund date
   const first = strategyDates[0];
   let prevClose = spy[0].close;
   for (const p of spy) { if (p.date < first) prevClose = p.close; else break; }

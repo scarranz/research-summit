@@ -32,15 +32,6 @@
   font-size: 13px; border-radius: 10px; padding: 14px 16px; margin-bottom: 18px;
 }
 
-/* KPI strip */
-.fr-kpis {
-  display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 18px;
-}
-.fr-kpis .sc { background: var(--w); border: 1px solid var(--bdr); border-radius: 12px; padding: 14px 16px; }
-.fr-kpis .sl { font-size: 10px; letter-spacing: .04em; color: var(--mu); text-transform: uppercase; margin-bottom: 6px; font-weight: 500; }
-.fr-kpis .sv { font-size: 24px; font-weight: 600; line-height: 1; letter-spacing: -.02em; }
-.fr-kpis .ss { font-size: 11px; color: var(--mu); margin-top: 4px; }
-
 /* Charts */
 .fr-charttitle { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
 .fr-canvas-wrap { position: relative; height: 300px; }
@@ -96,7 +87,6 @@
 
 /* Responsive */
 @media (max-width: 1100px) {
-  .fr-kpis { grid-template-columns: repeat(3, 1fr); }
   .fr-hero, .fr-tables { grid-template-columns: 1fr; }
   .fr-secgrid { grid-template-columns: 1fr; }
 }

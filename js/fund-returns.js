@@ -32,7 +32,6 @@ export async function loadFundReturnsPage() {
       </div>
     </div>
     <div id="fr-msg" class="fr-msg" style="display:none"></div>
-    <div class="fr-kpis" id="fr-kpis"></div>
 
     <div class="fr-hero">
       <div class="card">
@@ -117,20 +116,17 @@ function recompute() {
   if (s.length === 0) { setBadge('No data in range', 'warn'); return; }
 
   const sArr = C.rets(s), bArr = C.rets(b);
+  // M holds just what the validation badge checks (the detail tables compute
+  // their own figures).
   const M = {
     totalS: C.totalReturnArr(sArr), totalB: C.totalReturnArr(bArr),
-    annS: C.annualizedArr(sArr), annB: C.annualizedArr(bArr),
-    volS: C.volArr(sArr, false), volB: C.volArr(bArr, false),
-    sharpeS: C.sharpe(sArr, rfr, false), sharpeB: C.sharpe(bArr, rfr, false),
-    corr: C.correlation(sArr, bArr), betaPost: C.betaPost(sArr, bArr), betaAnte: C.betaAnte(s),
-    ir: C.informationRatio(sArr, bArr),
+    volS: C.volArr(sArr, false), corr: C.correlation(sArr, bArr),
   };
   const sM = C.monthlySeries(s), bM = C.monthlySeries(b);
   const ma = C.monthlyAligned(sM, bM);
   const capture = C.captureRatios(ma.a, ma.b);
 
   renderMeta(s, b);
-  renderKpis(M, capture);
   renderAnalysisTable(s, b, ini, fin);
   renderMetricsTable(s, b, ini, fin, rfr);
   renderCaptureTable(capture);
@@ -166,21 +162,6 @@ function renderMeta(s, b) {
       <span>Benchmark Proxy: SPY</span><span>Period: ${fmtMonthLong(d0)} – ${fmtMonthLong(d1)}</span>
       <span class="fr-source">Portfolio: EGB · sample data — pending DB/Massive</span>
     </div>`;
-}
-
-function renderKpis(M, capture) {
-  const cards = [
-    kpi('Total Return', pct(M.totalS), 'S&P ' + pct(M.totalB), sign(M.totalS)),
-    kpi('Annualized', pct(M.annS), 'S&P ' + pct(M.annB), sign(M.annS)),
-    kpi('Volatility', pct(M.volS), 'S&P ' + pct(M.volB), ''),
-    kpi('Sharpe', num(M.sharpeS), 'S&P ' + num(M.sharpeB), sign(M.sharpeS)),
-    kpi('Information Ratio', num(M.ir), 'vs S&P 500', sign(M.ir)),
-    kpi('Capture Ratio', num(capture.ratio), 'up / down', sign(capture.ratio - 1)),
-  ];
-  document.getElementById('fr-kpis').innerHTML = cards.join('');
-}
-function kpi(label, big, sub, cls) {
-  return `<div class="sc"><div class="sl">${label}</div><div class="sv ${cls}">${big}</div><div class="ss">${sub}</div></div>`;
 }
 
 // ─── Renderers: tables ──────────────────────────────────────
@@ -296,11 +277,10 @@ function renderWindowTable() {
       <select id="fr-win-range" class="fr-sel">${opts}</select>
     </div>
     <table class="fr-table">
-      <thead><tr><th></th><th>Summit</th><th class="fr-bm">S&amp;P 500</th></tr></thead>
+      <thead><tr><th></th><th>Return</th><th>Volatility</th><th>Risk Adjusted</th></tr></thead>
       <tbody>
-        <tr><td class="fr-rl">Return</td><td>${pct(C.totalReturnArr(sArr))}</td><td class="fr-bm">${pct(C.totalReturnArr(bArr))}</td></tr>
-        <tr><td class="fr-rl">Volatility</td><td>${pct(C.volArr(sArr, false))}</td><td class="fr-bm">${pct(C.volArr(bArr, false))}</td></tr>
-        <tr><td class="fr-rl">Risk Adjusted</td><td>${num(C.riskAdjusted(sArr))}</td><td class="fr-bm">${num(C.riskAdjusted(bArr))}</td></tr>
+        <tr><td class="fr-rl">Summit</td><td>${pct(C.totalReturnArr(sArr))}</td><td>${pct(C.volArr(sArr, false))}</td><td>${num(C.riskAdjusted(sArr))}</td></tr>
+        <tr><td class="fr-rl fr-bm">S&amp;P 500</td><td class="fr-bm">${pct(C.totalReturnArr(bArr))}</td><td class="fr-bm">${pct(C.volArr(bArr, false))}</td><td class="fr-bm">${num(C.riskAdjusted(bArr))}</td></tr>
       </tbody></table>`;
   cont.querySelectorAll('.fr-tg').forEach(btn =>
     btn.addEventListener('click', () => { _winLen = +btn.dataset.len; _winStart = null; renderWindowTable(); }));

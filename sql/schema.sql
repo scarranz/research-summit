@@ -116,7 +116,7 @@ create policy "authenticated_update_companies" on companies
 
 create table company_executives (
   id           uuid primary key default gen_random_uuid(),
-  company_id   uuid not null references companies(id) on delete cascade,
+  company_id   uuid not null references companies(id) on delete restrict,
   name         text not null,
   role         text not null,
   since        text,

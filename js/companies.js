@@ -165,12 +165,14 @@ async function renderPillarContent() {
 async function loadManagementData(companyId) {
   var slot = document.getElementById('mgmt-data-slot');
   if (!slot) return;
+  if (companyId !== _currentCompanyId) return;
 
   slot.innerHTML = '<div style="padding:16px 0 4px;color:var(--mu);font-size:12px">Loading management data...</div>';
 
   var execResult = await fetchExecutives(companyId);
   var txResult = await fetchInsiderTransactions(companyId);
 
+  if (companyId !== _currentCompanyId) return;
   var execs = execResult.success ? execResult.data : [];
   var txns = txResult.success ? txResult.data : [];
 
@@ -201,7 +203,7 @@ async function loadManagementData(companyId) {
 
   // Data exists but is stale — re-sync in background (don't block UI)
   if (!isFresh(execs) && !isFresh(txns)) {
-    syncManagement(_currentTicker, companyId);
+    syncManagement(_currentTicker, companyId).catch(function() {});
   }
 
   // Key People
@@ -271,11 +273,13 @@ async function handleMgmtSync() {
 async function loadValuationData(companyId) {
   var slot = document.getElementById('valuation-data-slot');
   if (!slot) return;
+  if (companyId !== _currentCompanyId) return;
 
   slot.innerHTML = '<div style="padding:16px 0 4px;color:var(--mu);font-size:12px">Loading analyst ratings...</div>';
 
   // Read from DB first
   var result = await fetchAnalystRatings(companyId);
+  if (companyId !== _currentCompanyId) return;
   var ratings = result.success ? result.data : [];
 
   // If no data or stale — sync from Massive
@@ -286,7 +290,7 @@ async function loadValuationData(companyId) {
     ratings = result.success ? result.data : [];
   } else if (!isFresh(ratings)) {
     // Stale data — re-sync in background, show cached data now
-    syncRatings(_currentTicker, companyId);
+    syncRatings(_currentTicker, companyId).catch(function() {});
   }
 
   // Determine last updated time from the most recent created_at

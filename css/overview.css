@@ -14,6 +14,45 @@
   --brand-soft: #EEF2FE;
 }
 
+/* Visa brand accent — official navy (#1A1F71) + gold (#F7B600). */
+.ov-visa {
+  --brand: #1A1F71;
+  --brand-soft: #ECEDF5;
+  --brand-2: #F7B600;
+}
+.ov-visa .ov-snap { border-top: 3px solid var(--brand-2); }
+
+/* ── Diagrams (four-party model, share-class dynamics) ── */
+.ov-diagram {
+  margin: 2px 0 16px; border: 1px solid var(--bdr); border-radius: 10px;
+  padding: 16px 18px; background: var(--w);
+}
+.ov-diagram svg { width: 100%; height: auto; display: block; }
+.ov-diagram-cap { font-size: 11px; color: var(--mu); margin-top: 12px; line-height: 1.5; }
+.ov-diagram-cap b { color: var(--navy); font-weight: 600; }
+
+/* Interactive four-party nodes */
+.ov-fpm-node { cursor: pointer; }
+.ov-fpm-node rect { transition: stroke .12s, stroke-width .12s; }
+.ov-fpm-node.on rect { stroke: var(--brand); stroke-width: 3; }
+.ov-fpm-detail {
+  margin-top: 12px; font-size: 12px; line-height: 1.55; color: var(--blue);
+  background: var(--surface); border: 1px solid var(--bdr); border-radius: 8px; padding: 12px 14px;
+}
+.ov-fpm-detail b { color: var(--navy); font-weight: 600; }
+
+/* Time-series chart placeholders */
+.ov-phs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.ov-ph {
+  border: 1.5px dashed var(--bdr); border-radius: 10px; background: var(--surface);
+  min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 14px;
+}
+.ov-ph-ic { font-size: 20px; opacity: .35; margin-bottom: 6px; }
+.ov-ph-t { font-size: 12px; font-weight: 600; color: var(--navy); }
+.ov-ph-s { font-size: 10px; color: var(--mu); margin-top: 4px; }
+@media (max-width: 860px){ .ov-phs { grid-template-columns: 1fr; } }
+
 /* ── Snapshot card ── */
 .ov-snap {
   display: grid;

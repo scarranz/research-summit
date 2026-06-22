@@ -1,7 +1,7 @@
 // companies.js — grid, detail view, add-company modal
 // All companies are loaded from Supabase. No hardcoded data.
 import { FRAMEWORK, ALL_STOCKS } from './portal-data.js';
-import { fetchCompanies, insertCompany, lookupTicker, fetchResources, insertResource, updateResource, deleteResource, uploadFile, getFileUrl, fetchExecutives, fetchInsiderTransactions, syncManagement, fetchAnalystRatings, syncRatings } from './api.js';
+import { fetchCompanies, insertCompany, lookupTicker, searchCompany, fetchResources, insertResource, updateResource, deleteResource, uploadFile, getFileUrl, fetchExecutives, fetchInsiderTransactions, syncManagement, fetchAnalystRatings, syncRatings } from './api.js';
 import { getOverview } from './overviews/index.js';
 
 let _companies = []; // companies loaded from Supabase
@@ -467,7 +467,7 @@ async function handleAddResource(e) {
   var btn = document.getElementById('addResSave');
   var name = document.getElementById('addRes-name').value.trim();
   var category = document.getElementById('addRes-category').value;
-  var date = new Date().toISOString().slice(0, 10);
+  var today = new Date().toISOString().slice(0, 10);
 
   if (!name) { showResMsg('Name is required.', 'error'); return; }
   if (!_currentCompanyForResource) { showResMsg('No company selected.', 'error'); return; }
@@ -478,7 +478,8 @@ async function handleAddResource(e) {
   var row = {
     company_id: _currentCompanyForResource,
     name: name,
-    date: date,
+    date_published: today,
+    date_uploaded: today,
     category: category,
   };
 
@@ -577,7 +578,7 @@ function renderResLinks() {
       html += '<div class="lnk-row" data-res-id="' + esc(r.id) + '">' +
         '<div class="lnk">' +
         '<span class="lnk-body"><span class="lnk-title">' + esc(r.name) + '</span>' +
-        (r.date ? '<span class="lnk-meta">' + esc(r.date) + '</span>' : '') + '</span>' +
+        (r.date_published ? '<span class="lnk-meta">' + esc(r.date_published) + '</span>' : '') + '</span>' +
         '<span class="lnk-go">↗</span></div>' +
         '</div>';
     });
@@ -628,7 +629,8 @@ function openResDetailModal(res) {
       '<div style="padding:24px 28px 20px">' +
         '<div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);font-weight:500;margin-bottom:12px">' + esc(catLabel) + '</div>' +
         '<div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">' + esc(res.name) + '</div>' +
-        (res.date ? '<div style="font-size:12px;color:var(--mu);margin-bottom:4px">' + esc(res.date) + '</div>' : '') +
+        (res.date_published ? '<div style="font-size:12px;color:var(--mu);margin-bottom:4px">Published: ' + esc(res.date_published) + '</div>' : '') +
+        (res.date_uploaded ? '<div style="font-size:11px;color:var(--mu);margin-bottom:4px">Uploaded: ' + esc(res.date_uploaded) + '</div>' : '') +
         sourceHtml +
       '</div>' +
       '<div style="display:flex;align-items:center;gap:12px;padding:14px 28px 18px;border-top:1px solid var(--bdr)">' +
@@ -1007,6 +1009,8 @@ function selectCompanyResult(item) {
   });
 }
 
+var _searchVersion = 0; // tracks latest search to discard stale API results
+
 function handleCompanySearch() {
   var searchInput = document.getElementById('addCo-search');
   var resultsBox = document.getElementById('addCo-results');
@@ -1017,7 +1021,8 @@ function handleCompanySearch() {
     return;
   }
 
-  var items = ALL_STOCKS
+  // 1) Search the local S&P 500 list first (instant)
+  var localItems = ALL_STOCKS
     .map(function(s) {
       var ticker = (s.t || '').toLowerCase();
       var name = (s.n || '').toLowerCase();
@@ -1034,12 +1039,31 @@ function handleCompanySearch() {
     .sort(function(a, b) { return b._score - a._score; })
     .slice(0, 8);
 
-  if (!items.length) {
-    resultsBox.innerHTML = '<div class="co-search-loading">No results found</div>';
-    resultsBox.classList.add('open');
+  if (localItems.length) {
+    renderSearchResults(resultsBox, localItems);
     return;
   }
 
+  // 2) No local results — fall back to API search
+  var version = ++_searchVersion;
+  resultsBox.innerHTML = '<div class="co-search-loading">Searching…</div>';
+  resultsBox.classList.add('open');
+
+  searchCompany(q).then(function(result) {
+    if (version !== _searchVersion) return; // stale response
+    if (!result.success || !result.data || !result.data.length) {
+      resultsBox.innerHTML = '<div class="co-search-loading">No results found</div>';
+      resultsBox.classList.add('open');
+      return;
+    }
+    var apiItems = result.data.map(function(c) {
+      return { ticker: c.ticker, name: c.name, sector: c.sector, industry: c.industry };
+    });
+    renderSearchResults(resultsBox, apiItems);
+  });
+}
+
+function renderSearchResults(resultsBox, items) {
   resultsBox.innerHTML = items.map(function(item) {
     return '<div class="co-search-item">' +
       '<span class="co-search-ticker">' + esc(item.ticker) + '</span>' +

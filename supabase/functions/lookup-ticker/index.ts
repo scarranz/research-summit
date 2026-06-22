@@ -1,9 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = ["https://research-summit.netlify.app", "http://localhost:8000"];
+function corsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  return {
+    "Access-Control-Allow-Origin": ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 // Well-known ticker → domain overrides for companies whose domain can't be guessed
 const DOMAIN_OVERRIDES: Record<string, string> = {
@@ -28,7 +32,7 @@ function guessDomain(name: string, ticker: string): string {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: CORS_HEADERS });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   try {
@@ -36,7 +40,7 @@ serve(async (req) => {
     if (!ticker) {
       return new Response(JSON.stringify({ error: "ticker is required" }), {
         status: 400,
-        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -58,7 +62,7 @@ serve(async (req) => {
     if (!quote) {
       return new Response(JSON.stringify({ error: "Ticker not found" }), {
         status: 404,
-        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -72,12 +76,12 @@ serve(async (req) => {
     };
 
     return new Response(JSON.stringify(result), {
-      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
-      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });

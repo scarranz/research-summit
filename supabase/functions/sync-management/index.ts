@@ -1,10 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = ["https://research-summit.netlify.app", "http://localhost:8000"];
+function corsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  return {
+    "Access-Control-Allow-Origin": ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 const FISCAL_API = "https://api.fiscal.ai";
 const FISCAL_KEY = Deno.env.get("FISCAL_AI_API_KEY") || "";
@@ -30,7 +34,7 @@ async function fiscalGet(path: string, params: Record<string, string>) {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: CORS_HEADERS });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   try {
@@ -38,7 +42,17 @@ serve(async (req) => {
     if (!ticker || !companyId) {
       return new Response(JSON.stringify({ error: "ticker and companyId are required" }), {
         status: 400,
-        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+    if (ticker.length > 10 || !/^[A-Za-z0-9.\-]+$/.test(ticker)) {
+      return new Response(JSON.stringify({ error: "Invalid ticker format" }), {
+        status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+    if (!/^[0-9a-f\-]{36}$/.test(companyId)) {
+      return new Response(JSON.stringify({ error: "Invalid companyId format" }), {
+        status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -115,12 +129,12 @@ serve(async (req) => {
       transactions: txns.length,
       unavailable: unavailable || false,
     }), {
-      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
-      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });

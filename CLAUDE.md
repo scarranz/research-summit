@@ -50,6 +50,41 @@ All database queries go through `js/api.js` — **never import supabase directly
 
 This pattern is designed so that when the project migrates to the Summit API, only `api.js` internals change — all consumers stay the same.
 
+### API calls by context
+
+**Page load (auth):**
+
+| Function | Table | Purpose |
+|---|---|---|
+| `fetchUserRole(userId)` | `user_roles` | Get the user's role for access control |
+| `backfillUserRole()` | RPC | Auto-assign role on first login |
+
+**Companies grid:**
+
+| Function | Table | Purpose |
+|---|---|---|
+| `fetchCompanies()` | `companies` | All active companies (name, ticker, price, sector, logo) |
+| `insertCompany(row)` | `companies` | Add a new company via the Add Company modal |
+| `lookupTicker(ticker)` | Edge Function | Auto-fill company info from ticker symbol |
+
+**Company profile — Resources tab:**
+
+| Function | Table | Purpose |
+|---|---|---|
+| `fetchResources(companyId)` | `company_resources` | Links & files grouped by category |
+| `insertResource(row)` | `company_resources` | Add a new resource (URL or file) |
+| `updateResource(id, updates)` | `company_resources` | Edit name, URL, or category |
+| `deleteResource(id)` | `company_resources` | Remove a resource |
+| `uploadFile(path, file)` | Storage: `company-files` | Upload a file to Supabase Storage |
+| `getFileUrl(path)` | Storage: `company-files` | Generate a signed download URL |
+
+**Company profile — Pillars tab (Management pillar):**
+
+| Function | Table | Purpose |
+|---|---|---|
+| `fetchExecutives(companyId)` | `company_executives` | Key people: name, role, shares, ownership % |
+| `fetchInsiderTransactions(companyId)` | `insider_transactions` | Recent insider buys/sells |
+
 ## Conventions
 
 - All JS uses ES module imports (`import/export`), loaded via `<script type="module">`
@@ -203,6 +238,49 @@ When migrating to Supabase persistence:
 - `II_CATS` — voting categories: Thesis, Valuation, Risk, Conviction, Presentation
 - `II_SECTORS` — company sector options
 - `PORT_PEOPLE` — portfolio table people: `['daa', 'sab', 'pvg']`
+
+## External APIs
+
+### Fiscal.ai — Financial Data
+
+The portal uses [Fiscal.ai](https://fiscal.ai) to pull management and insider data for companies.
+
+- **API docs:** https://docs.fiscal.ai/docs/api-reference
+- **Base URL:** `https://api.fiscal.ai`
+- **Auth:** header `X-Api-Key` with API key
+- **API key:** stored as Supabase secret `FISCAL_AI_API_KEY` (never in code)
+
+**Endpoints used:**
+
+| Endpoint | Purpose | Populates |
+|---|---|---|
+| `/v1/company/ownership/insider/holders` | Management team + share ownership | `company_executives` table |
+| `/v1/company/ownership/insider/transactions` | Insider buy/sell activity | `insider_transactions` table |
+
+**How it works:**
+
+1. User clicks **Sync ↻** on a company's Management pillar
+2. Portal calls the `sync-management` Supabase Edge Function
+3. Edge function calls Fiscal.ai with the company ticker
+4. Fiscal.ai returns holders and transactions
+5. Edge function clears old data and inserts fresh data into Supabase
+6. Portal re-renders the management section
+
+**Testing the API directly:**
+```bash
+curl -H "X-Api-Key: $FISCAL_AI_API_KEY" \
+  "https://api.fiscal.ai/v1/company/ownership/insider/holders?ticker=UBER&pageSize=10"
+```
+
+**Deploying changes to the edge function:**
+```bash
+supabase functions deploy sync-management --project-ref bvflqjndivouhgwqfbrq
+```
+
+**Updating the API key (if rotated):**
+```bash
+supabase secrets set FISCAL_AI_API_KEY=<new-key> --project-ref bvflqjndivouhgwqfbrq
+```
 
 ## Do not
 

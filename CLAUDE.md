@@ -153,11 +153,37 @@ Most team members using this portal are **not developers**. When they ask Claude
 5. Add the tab→page mapping in `js/nav.js` TAB_MAP and TAB_TITLES
 6. Add the page name to the appropriate role's `allowedPages` in `js/auth.js`
 
-## Adding a new team member
+## Team and permissions
+
+### Who can do what
+
+| Person | GitHub | Can merge PRs | Can edit DB | Can deploy functions |
+|---|---|---|---|---|
+| **San** (Santiago Carranza) | `scarranz` | Yes | Yes | Yes |
+| **Oscar** (Oscar Cordova) | `ocordova` | Yes | Yes | Yes |
+| SAB (Santiago Alvarez) | `salvarez-summit` | No — open PRs only | No | No |
+| Deborah | `posterdeb` | No — open PRs only | No | No |
+| Pablo (Pablo Valles) | `pvalles96` | No — open PRs only | No | No |
+| Dani (Daniel Alvarez) | `DOAA351` | No — open PRs only | No | No |
+
+**Only San and Oscar** can:
+- Approve and merge pull requests
+- Run SQL in the Supabase SQL Editor
+- Deploy edge functions (`supabase functions deploy`)
+- Manage Supabase secrets (`supabase secrets set`)
+- Push directly to `main` (emergency only)
+
+**All other team members** work through Claude:
+- They describe what they want → Claude creates a branch, writes code, opens a PR
+- San or Oscar reviews and merges the PR
+- They should **never** run SQL, deploy functions, or touch the database directly
+
+### Adding a new team member
 
 1. Insert their email into `user_roles` in Supabase: `insert into user_roles (email, role) values ('email', 'role_name')`
 2. Add their role to ROLE_CONFIG in `js/auth.js` if it's a new role
 3. They sign in with their email — Supabase sends a magic-link code
+4. Invite them to the GitHub repo: `gh api repos/scarranz/research-summit/collaborators/USERNAME -X PUT -f permission=write`
 
 ## Environment
 
@@ -183,7 +209,7 @@ Before making ANY code changes, Claude MUST:
 4. **Make changes**, commit with clear messages
 5. **Push the branch:** `git push -u origin <branch-name>`
 6. **Open a PR** using `gh pr create` — include a clear summary of what changed and why
-7. **Never merge the PR** — leave it for a team member to review and approve
+7. **Never merge the PR** — leave it for San or Oscar to review and merge
 8. **If the user asks to work on something new**, go back to step 1 (new branch from main)
 
 ### For team members
@@ -191,8 +217,9 @@ Before making ANY code changes, Claude MUST:
 Most team members are non-technical. Claude handles all git operations for them. Team members just need to:
 
 - **Describe what they want** — Claude creates the branch, writes code, and opens the PR
-- **Review PRs on GitHub** — look at the changes, approve or request changes
+- **Review PRs on GitHub** — only San and Oscar can approve and merge
 - **Never edit files on `main` directly** — always ask Claude to make changes
+- **Never run SQL or deploy functions** — only San and Oscar handle database and infrastructure
 
 ### Branch rules
 

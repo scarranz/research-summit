@@ -20,6 +20,83 @@
   --brand-soft: #E9F3FB;
 }
 
+/* SoFi sub-tabs — refreshed segmented / pill style (scoped to SoFi only). */
+.ov-sofi .ovt-tabs {
+  display: inline-flex;
+  gap: 4px;
+  border-bottom: none;
+  background: var(--surface);
+  border: 1px solid var(--bdr);
+  border-radius: 11px;
+  padding: 4px;
+  margin: 0 0 22px;
+}
+.ov-sofi .ovt-tab {
+  border: none;
+  border-radius: 8px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mu);
+  padding: 8px 16px;
+  margin-bottom: 0;
+  transition: background .15s, color .15s;
+}
+.ov-sofi .ovt-tab:hover { color: var(--navy); background: rgba(14,124,192,0.06); }
+.ov-sofi .ovt-tab.active {
+  color: #fff;
+  background: var(--brand);
+  border-bottom: none;
+  box-shadow: 0 1px 3px rgba(14,124,192,0.28);
+}
+.ov-sofi .ovt-tab.active:hover { color: #fff; }
+
+/* SoFi member chart wants more vertical room than the default chart card. */
+.ov-chart-wrap.ovs-tall { height: 360px; }
+
+/* "Coming soon" placeholder pane for tabs not built yet. */
+.ovs-soon {
+  border: 1px dashed var(--bdr);
+  border-radius: 12px;
+  padding: 56px 24px;
+  text-align: center;
+  background: var(--surface);
+}
+.ovs-soon-t { font-size: 16px; font-weight: 700; color: var(--navy); }
+.ovs-soon-d { font-size: 12.5px; color: var(--mu); margin-top: 6px; }
+
+/* ── Year-window slider (dual-handle range control, shared component) ── */
+.sg-controls { margin: 6px 2px 18px; }
+.sg-slider { position: relative; height: 32px; }
+.sg-track {
+  position: absolute; left: 0; right: 0; top: 14px;
+  height: 4px; background: var(--bdr); border-radius: 2px;
+}
+.sg-fill { position: absolute; top: 0; height: 100%; background: var(--brand); border-radius: 2px; }
+.sg-slider input[type=range] {
+  position: absolute; top: 0; left: 0; width: 100%; height: 32px; margin: 0;
+  background: none; pointer-events: none;
+  -webkit-appearance: none; appearance: none;
+}
+.sg-slider input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; pointer-events: auto;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--w); border: 2px solid var(--brand);
+  box-shadow: 0 1px 3px rgba(0,0,0,.22); cursor: pointer;
+}
+.sg-slider input[type=range]::-moz-range-thumb {
+  pointer-events: auto; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--w); border: 2px solid var(--brand); cursor: pointer;
+}
+.sg-slider input[type=range]::-moz-range-track { background: none; }
+.sg-ends { display: flex; justify-content: space-between; font-size: 11px; color: var(--mu); margin-top: 2px; }
+.sg-readout { display: flex; gap: 18px; align-items: baseline; margin-top: 12px; flex-wrap: wrap; }
+.sg-range { font-weight: 700; color: var(--navy); font-size: 15px; }
+.sg-stat { font-size: 13px; color: var(--mu); }
+.sg-stat b { color: var(--navy); font-weight: 600; }
+.sg-cagr b { color: var(--brand); }
+
 /* ── Snapshot card ── */
 .ov-snap {
   display: grid;

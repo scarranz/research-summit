@@ -131,6 +131,18 @@ var LEADERSHIP = [
 
 var SOURCES = 'Sources: SoFi Technologies, Inc. (Nasdaq: SOFI) FY2025 Annual Report on Form 10-K (year ended December 31, 2025), Q1 2026 Form 10-Q (quarter ended March 31, 2026), and the Q1 2026 investor presentation and earnings call. All figures in US dollars. Adjusted measures (adjusted net revenue, adjusted EBITDA, adjusted net income) are non-GAAP and are labeled as such; "2026E" and long-term figures are company guidance/targets, not results. Peer descriptions summarize public information.';
 
+// ─── Members tab — total members at year-end (in thousands) ───────────────────
+// 2020–2025 are actuals; 2026E–2027E are estimates and 2028E is a stated target.
+var MEM_YEARS     = ['2020','2021','2022','2023','2024','2025','2026E','2027E','2028E'];
+var MEM_K         = [ 1800,  3460,  5223,  7542, 10127, 13651, 17750, 23050, 30000 ]; // thousands
+var MEM_FIRST_EST = 6; // index of the first estimated year (2026E) — lighter bars
+var MEM_NOTE      = 'Total members at year-end, in millions (members shown in thousands in the underlying data). 2020–2025 are actuals; 2026E–2027E are estimates and 2028E is a stated target. Drag the two handles to choose a window — the bars, the year-over-year growth on each bar, and the CAGR update to that range. Source: SoFi company disclosures and investor presentations; forward years are estimates/targets.';
+var _chartMem = null;
+
+function memYoY(i){ return i <= 0 ? null : (MEM_K[i] / MEM_K[i-1] - 1) * 100; }
+function memCAGR(a, b){ return b <= a ? null : (Math.pow(MEM_K[b] / MEM_K[a], 1 / (b - a)) - 1) * 100; }
+function memM(vK){ return (vK / 1000).toFixed(vK >= 10000 ? 1 : 2); } // millions, trimmed precision
+
 // ─── Render helpers ──────────────────────────────────────────────────────────
 function sec(title, inner){ return '<section class="ov-sec"><div class="ov-sec-h">'+esc(title)+'</div>'+inner+'</section>'; }
 function bullets(arr){ return '<ul class="ov-bullets">'+arr.map(function(b){return '<li>'+b+'</li>';}).join('')+'</ul>'; }
@@ -214,13 +226,171 @@ function overviewBody(c){
   return h;
 }
 
-function html(c){
-  // Single Overview view for now — no sub-tab bar. Additional tabs will be added later.
-  return '<div class="ov ov-sofi" data-brand="SOFI">' + overviewBody(c) + '</div>';
+// "Members" sub-tab body — interactive member-growth bar chart with a year-window slider.
+function membersBody(c){
+  var maxI = MEM_YEARS.length - 1;
+  var h = '';
+
+  h += '<div class="ov-sec-h">Member Growth</div>';
+
+  // Dual-handle year-window slider + live readout.
+  h += '<div class="sg-controls">'+
+    '<div class="sg-slider">'+
+      '<div class="sg-track"><div class="sg-fill" id="memFill"></div></div>'+
+      '<input type="range" id="memMin" min="0" max="'+maxI+'" value="0" step="1" aria-label="Start year">'+
+      '<input type="range" id="memMax" min="0" max="'+maxI+'" value="'+maxI+'" step="1" aria-label="End year">'+
+    '</div>'+
+    '<div class="sg-ends"><span>'+esc(MEM_YEARS[0])+'</span><span>'+esc(MEM_YEARS[maxI])+'</span></div>'+
+    '<div class="sg-readout" id="memReadout"></div>'+
+  '</div>';
+
+  h += '<div class="ov-chart-card">'+
+    '<div class="ov-chart-t">Total Members <span>(year-end, millions · light bars = estimate/target · blue = YoY growth)</span></div>'+
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="sofiChartMem"></canvas></div>'+
+  '</div>';
+  h += '<div class="ov-foot">'+esc(MEM_NOTE)+'</div>';
+
+  return h;
 }
 
-// No interactive wiring yet (no sub-tabs / charts). Kept for interface parity with
-// other overview modules; will hold tab + chart setup once more tabs are added.
-function init(c){}
+// Placeholder body for tabs that are not built yet.
+function soonBody(label){
+  return '<div class="ovs-soon"><div class="ovs-soon-t">'+esc(label)+'</div>'+
+    '<div class="ovs-soon-d">En desarrollo — lo construimos a continuación.</div></div>';
+}
+
+function html(c){
+  var h = '<div class="ov ov-sofi" data-brand="SOFI">';
+  // Sub-tab bar
+  h += '<div class="ovt-tabs">'+
+    '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="members">Members</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="interest">Interest Income</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="fees">Fee Income</button>'+
+  '</div>';
+  // Panes
+  h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="members" hidden>'+membersBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="interest" hidden>'+soonBody('Interest Income')+'</div>';
+  h += '<div class="ovt-pane" data-ovt="fees" hidden>'+soonBody('Fee Income')+'</div>';
+  h += '</div>';
+  return h;
+}
+
+// ─── Members chart ────────────────────────────────────────────────────────────
+var BRAND = '#0E7CC0';   // SoFi blue
+
+// Inline plugin: draw the member count (millions) and YoY growth above each bar.
+var memLabels = {
+  id: 'memLabels',
+  afterDatasetsDraw: function(chart){
+    var ctx = chart.ctx;
+    var meta = chart.getDatasetMeta(0);
+    var yoy = chart.$yoy || [];
+    meta.data.forEach(function(bar, i){
+      var vK = chart.data.datasets[0].data[i];
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.font = '700 12px Inter, sans-serif';
+      ctx.fillStyle = '#1E2733';
+      ctx.fillText(memM(vK) + 'M', bar.x, bar.y - 22);
+      if (yoy[i] != null) {
+        ctx.font = '600 11px Inter, sans-serif';
+        ctx.fillStyle = BRAND;
+        ctx.fillText('+' + yoy[i].toFixed(1) + '%', bar.x, bar.y - 7);
+      }
+      ctx.restore();
+    });
+  }
+};
+
+function buildMemChart(){
+  var cv = document.getElementById('sofiChartMem');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_chartMem) { _chartMem.destroy(); _chartMem = null; }
+  _chartMem = new Chart(cv.getContext('2d'), {
+    type: 'bar',
+    data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderRadius: 4, maxBarThickness: 64 }] },
+    options: {
+      responsive:true, maintainAspectRatio:false, animation:false,
+      layout:{ padding:{ top:34, bottom:4 } },
+      plugins:{
+        legend:{ display:false },
+        tooltip:{ callbacks:{ label:function(ctx){
+          var yy = (_chartMem && _chartMem.$yoy) ? _chartMem.$yoy[ctx.dataIndex] : null;
+          return Number(ctx.parsed.y * 1000).toLocaleString() + ' members' + (yy != null ? '  (+' + yy.toFixed(1) + '% YoY)' : '');
+        } } }
+      },
+      scales:{
+        y:{ display:false, beginAtZero:true, grace:'14%' },
+        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:12 } } }
+      }
+    },
+    plugins: [memLabels]
+  });
+}
+
+// Update the member chart + readout for the selected [a, b] year window.
+function renderMem(a, b){
+  if (!_chartMem) return;
+  var labels = [], data = [], colors = [], yoy = [];
+  for (var i = a; i <= b; i++){
+    labels.push(MEM_YEARS[i]);
+    data.push(MEM_K[i]);
+    colors.push(i >= MEM_FIRST_EST ? 'rgba(14,124,192,0.40)' : BRAND);
+    yoy.push(memYoY(i)); // YoY vs. the true prior year (null for 2020)
+  }
+  _chartMem.data.labels = labels;
+  _chartMem.data.datasets[0].data = data;
+  _chartMem.data.datasets[0].backgroundColor = colors;
+  _chartMem.$yoy = yoy;
+  _chartMem.update('none');
+}
+
+// Wire the dual-handle year slider. Idempotent (uses oninput assignment).
+function setupMemSlider(){
+  var mn = document.getElementById('memMin'), mx = document.getElementById('memMax');
+  var fill = document.getElementById('memFill'), read = document.getElementById('memReadout');
+  if (!mn || !mx || !fill || !read) return;
+  var maxI = MEM_YEARS.length - 1;
+  function apply(){
+    var a = +mn.value, b = +mx.value;
+    fill.style.left  = (a / maxI * 100) + '%';
+    fill.style.width = ((b - a) / maxI * 100) + '%';
+    renderMem(a, b);
+    var cg = memCAGR(a, b);
+    read.innerHTML =
+      '<span class="sg-range">' + MEM_YEARS[a] + ' → ' + MEM_YEARS[b] + '</span>' +
+      '<span class="sg-stat"><b>' + memM(MEM_K[a]) + 'M</b> → <b>' + memM(MEM_K[b]) + 'M</b> members</span>' +
+      (cg != null ? '<span class="sg-stat sg-cagr">CAGR <b>' + cg.toFixed(1) + '%</b></span>' : '<span class="sg-stat">CAGR —</span>');
+  }
+  // Keep the two handles from crossing (min stays at least one year below max).
+  mn.oninput = function(){ if (+mn.value >= +mx.value) mn.value = +mx.value - 1; apply(); };
+  mx.oninput = function(){ if (+mx.value <= +mn.value) mx.value = +mn.value + 1; apply(); };
+  apply();
+}
+
+function buildMembersTab(){
+  buildMemChart();
+  setupMemSlider();
+}
+
+// Switch sub-tab. Builds the tab's chart lazily the first time it becomes visible.
+function showOvt(root, key){
+  root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt') === key); });
+  root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt') !== key); });
+  if (key === 'members') requestAnimationFrame(buildMembersTab);
+}
+
+function init(c){
+  var root = document.querySelector('.ov-sofi');
+  if (!root) return;
+  // Idempotent wiring (init may run again when the Overview pane is re-activated).
+  root.querySelectorAll('.ovt-tab').forEach(function(btn){
+    btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };
+  });
+  var active = root.querySelector('.ovt-tab.active');
+  if (active && active.getAttribute('data-ovt') === 'members') requestAnimationFrame(buildMembersTab);
+}
 
 export var sofiOverview = { html: html, init: init };

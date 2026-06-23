@@ -4,6 +4,10 @@ env.js
 node_modules/
 .DS_Store
 
+# Confidential fund data — repo is PUBLIC, never commit
+data/
+data.zip
+
 # Multiples playground — local-only secrets & pulled data (repo is public)
 playground/.massive-key
 playground/summit-data.local.js

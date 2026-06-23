@@ -44,6 +44,11 @@
   .grid2{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:start;}
   .muted{color:var(--mu);font-size:12px;margin-top:10px;line-height:1.5;}
   .explorer button{margin:0 8px 8px 0;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;}
+  .chip{font-size:13px;font-weight:600;padding:6px 12px;border-radius:20px;border:1px solid var(--bdr);background:var(--w);color:var(--steel);cursor:pointer;}
+  .chip:hover{background:var(--ice);}
+  .chip.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+  .chip .fx{font-weight:500;opacity:.7;font-size:11px;}
   pre{background:var(--navy);color:#cfe;border-radius:10px;padding:14px;font-size:12px;overflow:auto;max-height:340px;white-space:pre-wrap;word-break:break-word;}
   .row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
   .err{color:var(--neg);font-weight:600;}
@@ -60,6 +65,8 @@
     </div>
   </div>
   <div class="sub">Massive (live) &nbsp;⟷&nbsp; Summit (forward DCF) &nbsp;·&nbsp; local playground, nothing stored</div>
+
+  <div class="chips" id="chips"></div>
 
   <div id="status"></div>
 

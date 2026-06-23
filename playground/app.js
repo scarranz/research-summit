@@ -72,13 +72,14 @@ async function load(ticker) {
       'P/E': rt.price_to_earnings,
       'P/S': rt.price_to_sales,
     };
+    const fx = su && su.currency && su.currency !== 'USD'; // price is USD; foreign-ccy fundamentals need FX
     const fwd = (year) => {
-      if (!su || !su.years[year]) return {};
+      if (!su || fx || !su.years[year]) return {};
       const y = su.years[year];
       return {
-        'EV/EBITDA': ev != null ? ev / (y.ebitda * 1e6) : null,
-        'P/E': mktCap != null ? mktCap / (y.earnings * 1e6) : null,
-        'P/S': mktCap != null ? mktCap / (y.rev * 1e6) : null,
+        'EV/EBITDA': (ev != null && y.ebitda) ? ev / (y.ebitda * 1e6) : null,
+        'P/E': (mktCap != null && y.earnings) ? mktCap / (y.earnings * 1e6) : null,
+        'P/S': (mktCap != null && y.rev) ? mktCap / (y.rev * 1e6) : null,
       };
     };
     const f26 = fwd(2026), f27 = fwd(2027);
@@ -96,9 +97,11 @@ async function load(ticker) {
     }).join('');
     $('mtab').innerHTML = rows;
     $('cmp').hidden = false;
-    $('cmpnote').innerHTML = su
-      ? `Forward = live EV/market-cap (Massive) ÷ Summit projections (snapshot ${su.snapshot_date}). <span class="cheap">Green</span> = cheaper than TTM.`
-      : `<span class="err">No Summit data for ${ticker}.</span> Ask Claude to pull its DCF projections to fill the forward columns.`;
+    $('cmpnote').innerHTML = !su
+      ? `<span class="err">No Summit data for ${ticker}.</span> Ask Claude to pull its DCF projections to fill the forward columns.`
+      : fx
+        ? `<span class="err">${ticker} reports in ${su.currency}.</span> Forward multiples need FX (Massive price is USD) — not shown to avoid wrong numbers. TTM (Massive) is still valid.`
+        : `Forward = live EV/market-cap (Massive) ÷ Summit projections (snapshot ${su.snapshot_date}). <span class="cheap">Green</span> = cheaper than TTM.`;
 
     // Chart: EV/EBITDA trailing → forward
     drawChart([
@@ -154,7 +157,19 @@ function setupExplorer(ticker) {
   });
 }
 
+// ── Ticker chips (the 10 Summit-covered companies) ─────────────────────────────
+function renderChips(active) {
+  $('chips').innerHTML = Object.keys(SUMMIT).map((tk) => {
+    const fx = SUMMIT[tk].currency !== 'USD' ? ` <span class="fx">${SUMMIT[tk].currency}</span>` : '';
+    return `<button class="chip${tk === active ? ' active' : ''}" data-tk="${tk}">${tk}${fx}</button>`;
+  }).join('');
+  $('chips').querySelectorAll('.chip').forEach((c) => {
+    c.onclick = () => { $('ticker').value = c.dataset.tk; load(c.dataset.tk); };
+  });
+}
+
 // ── Wire up ───────────────────────────────────────────────────────────────────
-$('load').onclick = () => load($('ticker').value.trim().toUpperCase());
-$('ticker').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('load').click(); });
-load('UBER');
+function go(tk) { tk = (tk || '').trim().toUpperCase(); if (tk) { renderChips(tk); load(tk); } }
+$('load').onclick = () => go($('ticker').value);
+$('ticker').addEventListener('keydown', (e) => { if (e.key === 'Enter') go($('ticker').value); });
+go('UBER');

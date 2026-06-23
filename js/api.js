@@ -76,6 +76,27 @@ export async function syncRatings(ticker, companyId) {
   return ok(data);
 }
 
+// ─── Company Segments (Fiscal.ai) ────────────────────────────
+
+export async function fetchSegments(companyId) {
+  var { data, error } = await supabase
+    .from('company_segments')
+    .select('*')
+    .eq('company_id', companyId)
+    .order('segment_group')
+    .order('sort_order');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function syncSegments(ticker, companyId) {
+  var { data, error } = await supabase.functions.invoke('sync-segments', {
+    body: { ticker: ticker, companyId: companyId },
+  });
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
 // ─── Sync Management (Fiscal.ai) ─────────────────────────────
 
 export async function syncManagement(ticker, companyId) {

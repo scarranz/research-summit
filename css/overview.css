@@ -696,6 +696,97 @@
   .ov-segmap, .ov-prod { grid-template-columns: 1fr; }
 }
 
+/* ─── Segments & KPIs (shared, auto-populated from Fiscal.ai) ──────────── */
+
+.seg-section {
+  margin-bottom: 26px;
+}
+.seg-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.seg-loading {
+  padding: 16px 0 4px;
+  color: var(--mu);
+  font-size: 12px;
+}
+.seg-group {
+  margin-bottom: 18px;
+}
+.seg-group-title {
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--navy);
+  font-weight: 700;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--bdr);
+}
+.seg-year {
+  font-weight: 500;
+  color: var(--mu);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.seg-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.seg-table td {
+  font-size: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--bdr);
+  vertical-align: middle;
+}
+.seg-table tr:last-child td {
+  border-bottom: none;
+}
+.seg-name {
+  font-weight: 600;
+  color: var(--navy);
+  width: 200px;
+}
+.seg-val {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--blue);
+  width: 100px;
+  padding-right: 12px !important;
+}
+.seg-pct {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  color: var(--mu);
+  width: 44px;
+  padding-right: 12px !important;
+}
+.seg-bar-cell {
+  width: 40%;
+}
+.seg-bar {
+  height: 8px;
+  background: var(--accent);
+  border-radius: 4px;
+  min-width: 2px;
+}
+.seg-total {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mu);
+  text-align: right;
+  padding-top: 6px;
+  max-width: 300px;
+}
+
+@media (max-width: 860px) {
+  .seg-name { width: 140px; }
+  .seg-bar-cell { display: none; }
+}
+
 /* ═══ Sea Limited (SE) overview ═══════════════════════════════════════════════
    Sub-tabs, timeline range slider, segment headers, market-share bars, flywheel
    cards. Each pane sets its own --brand so KPI tiles / bullets recolor per segment. */

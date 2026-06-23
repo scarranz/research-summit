@@ -188,7 +188,7 @@ var _chartMix = null;
 // Figures in Mexican pesos. Sales/store and negative-WC % are from the FY2025 20-F
 // and the 4Q24/1Q26 decks; capex per store is derived from the FY2026 budget.
 var UE_STEPS = [
-  { n:'1', t:'Suppliers deliver on credit', d:'3B receives its products and pays nothing yet — suppliers give it roughly 2–3 months to pay.' },
+  { n:'1', t:'Suppliers deliver on credit', d:'3B receives its products and pays nothing yet — suppliers give it about 2 months (~59 days) to pay.' },
   { n:'2', t:'It sells fast, for cash',     d:'Shoppers buy the goods within about 3 weeks and pay in cash on the spot, so the money comes in almost right away.' },
   { n:'3', t:'It pays suppliers later',     d:'3B only settles the bill about 2.9× later. In between it keeps — and spends — that cash to open new stores.' },
 ];
@@ -206,7 +206,7 @@ var UE_COST_DESC  = 'Covers leasehold improvements, refrigeration, shelving, equ
 var UE_COST_NOTE  = 'Cost to open a store estimated from the company\'s FY2026 capital-expenditure budget of ~Ps.3,555M for new stores, spread over a store-opening pace of ~580–600 per year (≈Ps.5–6M each). Source: BBB Foods FY2025 Form 20-F.';
 
 var UE_VINT_NOTE = 'New-store productivity keeps rising: a store\'s first-year sales (median 12-month sales per store, in real pesos) have roughly tripled from ~Ps.5M for mid-2000s vintages to ~Ps.16M for the 2025 vintage, and each store then ramps toward ~Ps.25M+ at maturity. Values for 2008–2023 are approximate reads from the company\'s "Median Sales per Store by Vintage" chart (4Q24 earnings deck); the 2025 figure is approximate, consistent with the continuing upward trend.';
-var UE_WC_NOTE = 'Working-capital figures (FY2025): inventories of ~Ps.4.2B against cost of sales of ~Ps.65.5B imply 3B sells its inventory in ~24 days (turning it ~15× a year); the company reports paying suppliers ~2.9× slower than it sells inventory; negative working capital was ~Ps.5.9B at year-end 2025 (up from ~Ps.2.6B in 2024), funding most of the ~Ps.3.6B spent opening 574 new stores. Sources: BBB Foods FY2025 Form 20-F and 4Q24 earnings deck.';
+var UE_WC_NOTE = 'Working-capital figures (FY2025), computed on average balances (365 ÷ (cost of sales ÷ average inventory or payables)): 3B sells its inventory in ~20.2 days (turning it ~18× a year) and pays suppliers in ~58.9 days — the 2.9× payable-to-inventory ratio the company cites for 2025. Because shoppers pay cash, that ~39-day gap is free financing: negative working capital reached ~Ps.5.9B at year-end 2025 (up from ~Ps.2.6B in 2024), funding most of the ~Ps.3.6B spent opening 574 new stores. Sources: BBB Foods FY2025 Form 20-F and 4Q24 earnings deck.';
 var _chartUe = null;
 
 // ─── Render helpers ──────────────────────────────────────────────────────────
@@ -377,13 +377,13 @@ function ueBody(c){
   // The cash timeline (visual).
   h += '<div class="wc-flow">'+
     '<div class="wc-bar">'+
-      '<div class="wc-seg wc-sell"><span>Sell the inventory</span><small>~24 days</small></div>'+
-      '<div class="wc-seg wc-free"><span>Hold the cash — free</span><small>~46 days</small></div>'+
+      '<div class="wc-seg wc-sell"><span>Sell the inventory</span><small>~20 days</small></div>'+
+      '<div class="wc-seg wc-free"><span>Hold the cash — free</span><small>~39 days</small></div>'+
     '</div>'+
     '<div class="wc-ticks">'+
       '<span class="wc-tick wc-tick-start" style="left:0%"><b>Day 0</b><small>get goods on credit</small></span>'+
-      '<span class="wc-tick" style="left:34%"><b>~Day 24</b><small>sold · cash in</small></span>'+
-      '<span class="wc-tick wc-tick-end" style="left:100%"><b>~Day 70</b><small>pay the supplier</small></span>'+
+      '<span class="wc-tick" style="left:34%"><b>~Day 20</b><small>sold · cash in</small></span>'+
+      '<span class="wc-tick wc-tick-end" style="left:100%"><b>~Day 59</b><small>pay the supplier</small></span>'+
     '</div>'+
   '</div>';
 
@@ -394,9 +394,9 @@ function ueBody(c){
 
   // The two numbers behind it.
   h += sec('The two numbers behind it',
-    '<div class="ov-row"><div class="ov-row-k">Inventory turnover</div><div class="ov-row-v">3B sells its products in about <b>24 days</b> — it cycles through its entire inventory roughly <b>15 times a year</b>. Fast sales mean cash arrives quickly.</div></div>'+
-    '<div class="ov-row"><div class="ov-row-k">Accounts payable</div><div class="ov-row-v">3B pays its suppliers about <b>2.9× slower</b> than it sells the inventory (~2–3 months). The longer it waits to pay, the more cash it holds in the meantime.</div></div>'+
-    '<div class="ov-row"><div class="ov-row-k">The result (2025)</div><div class="ov-row-v">Because shoppers pay <b>cash on the spot</b>, 3B has the money ~46 days before it pays for the goods. By year-end 2025 this freed up <b>~Ps.5.9B</b> of cash (up ~Ps.3.2B in the year) — most of what it spent opening <b>574 new stores</b>.</div></div>'
+    '<div class="ov-row"><div class="ov-row-k">Inventory turnover</div><div class="ov-row-v">3B sells its products in about <b>20 days</b> — it cycles through its entire inventory roughly <b>18 times a year</b>. Fast sales mean cash arrives quickly.</div></div>'+
+    '<div class="ov-row"><div class="ov-row-k">Accounts payable</div><div class="ov-row-v">3B pays its suppliers in about <b>59 days</b> — roughly <b>2.9× slower</b> than it sells the inventory. The longer it waits to pay, the more cash it holds in the meantime.</div></div>'+
+    '<div class="ov-row"><div class="ov-row-k">The result (2025)</div><div class="ov-row-v">Because shoppers pay <b>cash on the spot</b>, 3B has the money ~<b>39 days</b> before it pays for the goods. By year-end 2025 this freed up <b>~Ps.5.9B</b> of cash (up ~Ps.3.2B in the year) — most of what it spent opening <b>574 new stores</b>.</div></div>'
   );
 
   // Everyday analogy.

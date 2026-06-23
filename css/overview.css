@@ -52,6 +52,34 @@
 }
 .ov-sofi .ovt-tab.active:hover { color: #fff; }
 
+/* SoFi Fee Income — nested (second-level) sub-tabs. Lighter, rounded "ghost" pills
+   so the hierarchy reads clearly below the filled level-1 segmented control. */
+.ov-sofi .ovf-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 22px;
+}
+.ov-sofi .ovf-tab {
+  border: 1px solid var(--bdr);
+  background: var(--w);
+  border-radius: 20px;
+  color: var(--mu);
+  font-family: 'Inter', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 7px 15px;
+  cursor: pointer;
+  transition: color .15s, background .15s, border-color .15s;
+}
+.ov-sofi .ovf-tab:hover { color: var(--navy); border-color: var(--brand); }
+.ov-sofi .ovf-tab.active {
+  color: var(--brand);
+  background: var(--brand-soft);
+  border-color: var(--brand);
+}
+.ovf-pane[hidden] { display: none; }
+
 /* SoFi member chart wants more vertical room than the default chart card. */
 .ov-chart-wrap.ovs-tall { height: 360px; }
 

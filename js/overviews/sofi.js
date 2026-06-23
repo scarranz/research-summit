@@ -317,6 +317,24 @@ function interestBody(c){
   return h;
 }
 
+// "Fee Income" sub-tab body — itself split into three nested sub-tabs.
+var FEE_INTRO = 'Fee-based (capital-light) income is one of SoFi\'s fastest-growing revenue streams — it carries no balance-sheet credit risk. It comes from three sources: the Loan Platform Business, the Technology Platform, and Financial Services. Use the sub-tabs below to explore each.';
+
+function feeBody(c){
+  var h = '<p class="ov-lede">'+esc(FEE_INTRO)+'</p>';
+  // Nested (second-level) sub-tab bar.
+  h += '<div class="ovf-tabs">'+
+    '<button type="button" class="ovf-tab active" data-ovf="lpb">Loan Platform Business</button>'+
+    '<button type="button" class="ovf-tab" data-ovf="tech">Technology Platform</button>'+
+    '<button type="button" class="ovf-tab" data-ovf="fs">Financial Services</button>'+
+  '</div>';
+  // Nested panes (placeholders for now — LPB is built first).
+  h += '<div class="ovf-pane" data-ovf="lpb">'+soonBody('Loan Platform Business (LPB)')+'</div>';
+  h += '<div class="ovf-pane" data-ovf="tech" hidden>'+soonBody('Technology Platform')+'</div>';
+  h += '<div class="ovf-pane" data-ovf="fs" hidden>'+soonBody('Financial Services')+'</div>';
+  return h;
+}
+
 // Placeholder body for tabs that are not built yet.
 function soonBody(label){
   return '<div class="ovs-soon"><div class="ovs-soon-t">'+esc(label)+'</div>'+
@@ -336,7 +354,7 @@ function html(c){
   h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="members" hidden>'+membersBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="interest" hidden>'+interestBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="fees" hidden>'+soonBody('Fee Income')+'</div>';
+  h += '<div class="ovt-pane" data-ovt="fees" hidden>'+feeBody(c)+'</div>';
   h += '</div>';
   return h;
 }
@@ -539,12 +557,33 @@ function buildInterestTab(){
   LOANS.forEach(function(cfg){ buildLoanChart(cfg); setupLoanSlider(cfg); });
 }
 
-// Switch sub-tab. Builds the tab's chart(s) lazily the first time it becomes visible.
+// ─── Fee Income — nested (second-level) sub-tabs ──────────────────────────────
+// Builds whichever nested Fee Income sub-tab is active. Chart builders for each
+// nested pane will be dispatched here as they are developed (LPB first).
+function buildFeeTab(){
+  var root = document.querySelector('.ov-sofi');
+  if (!root) return;
+  var act = root.querySelector('.ovf-tab.active');
+  var k = act ? act.getAttribute('data-ovf') : '';
+  // if (k === 'lpb')  requestAnimationFrame(buildFeeLPB);
+  // if (k === 'tech') requestAnimationFrame(buildFeeTech);
+  // if (k === 'fs')   requestAnimationFrame(buildFeeFS);
+}
+
+// Switch a nested Fee Income sub-tab.
+function showOvf(root, key){
+  root.querySelectorAll('.ovf-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovf') === key); });
+  root.querySelectorAll('.ovf-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovf') !== key); });
+  buildFeeTab();
+}
+
+// Switch top-level sub-tab. Builds the tab's chart(s) lazily the first time it becomes visible.
 function showOvt(root, key){
   root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt') === key); });
   root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt') !== key); });
   if (key === 'members') requestAnimationFrame(buildMembersTab);
   if (key === 'interest') requestAnimationFrame(buildInterestTab);
+  if (key === 'fees') requestAnimationFrame(buildFeeTab);
 }
 
 function init(c){
@@ -554,10 +593,14 @@ function init(c){
   root.querySelectorAll('.ovt-tab').forEach(function(btn){
     btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };
   });
+  root.querySelectorAll('.ovf-tab').forEach(function(btn){
+    btn.onclick = function(){ showOvf(root, btn.getAttribute('data-ovf')); };
+  });
   var active = root.querySelector('.ovt-tab.active');
   var activeKey = active ? active.getAttribute('data-ovt') : '';
   if (activeKey === 'members') requestAnimationFrame(buildMembersTab);
   if (activeKey === 'interest') requestAnimationFrame(buildInterestTab);
+  if (activeKey === 'fees') requestAnimationFrame(buildFeeTab);
 }
 
 export var sofiOverview = { html: html, init: init };

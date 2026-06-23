@@ -3,6 +3,7 @@ env.js
 .env.*
 node_modules/
 .DS_Store
+_preview-*.html
 
 # Confidential fund data — NEVER commit to the public repo
 data/

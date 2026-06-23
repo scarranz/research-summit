@@ -14,6 +14,145 @@
   --brand-soft: #EEF2FE;
 }
 
+/* BBB Foods / Tiendas 3B brand accent — corporate red (façades are red & green). */
+.ov-tbbb {
+  --brand: #E1251B;
+  --brand-soft: #FCEBE9;
+}
+
+/* ── Overview sub-tabs (per-company internal tabs, e.g. Overview / SSS) ── */
+.ovt-tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--bdr);
+  margin: 0 0 22px;
+}
+.ovt-tab {
+  background: none;
+  border: none;
+  color: var(--mu);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 11px 18px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all .15s;
+}
+.ovt-tab:hover { color: var(--navy); }
+.ovt-tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+.ovt-pane[hidden] { display: none; }
+
+/* The SSS chart wants more vertical room than the default chart card.
+   Compound selector so it beats `.ov-chart-wrap { height:200px }` regardless of order. */
+.ov-chart-wrap.ovt-sss-wrap { height: 440px; }
+.ov-chart-wrap.ovt-stores-wrap { height: 360px; }
+.ov-chart-wrap.ovt-vs-wrap { height: 380px; }
+.ov-chart-wrap.ovt-mix-wrap { height: 380px; }
+.ov-chart-wrap.ovt-ue-wrap { height: 340px; }
+
+/* ── Cost to open a store ── */
+.ue-cost { display: flex; gap: 20px; align-items: center; border: 1px solid var(--bdr); border-left: 3px solid var(--brand); border-radius: 10px; padding: 18px 22px; background: var(--brand-soft); margin: 2px 0 6px; }
+.ue-cost-fig { flex: none; font-size: 30px; font-weight: 800; color: var(--brand); line-height: 1; text-align: center; }
+.ue-cost-fig span { display: block; font-size: 10px; font-weight: 700; color: var(--mu); margin-top: 6px; text-transform: uppercase; letter-spacing: .5px; }
+.ue-cost-t { font-weight: 700; color: var(--navy); font-size: 14px; margin-bottom: 5px; }
+.ue-cost-d { font-size: 13px; color: var(--navy); line-height: 1.55; }
+
+/* ── Negative working capital: cash timeline + steps ── */
+.wc-flow { margin: 10px 0 30px; }
+.wc-bar { display: flex; height: 58px; border-radius: 10px; overflow: hidden; }
+.wc-seg { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; padding: 0 8px; text-align: center; }
+.wc-seg span { font-weight: 700; font-size: 13px; line-height: 1.2; }
+.wc-seg small { font-size: 11px; opacity: .92; margin-top: 3px; }
+.wc-sell { flex: 0 0 34%; background: #9AA3AE; }
+.wc-free { flex: 1; background: #22A35A; }
+.wc-ticks { position: relative; height: 42px; margin-top: 12px; }
+.wc-tick { position: absolute; transform: translateX(-50%); text-align: center; font-size: 11.5px; color: var(--navy); white-space: nowrap; }
+.wc-tick b { font-weight: 700; }
+.wc-tick small { display: block; font-weight: 500; color: var(--mu); font-size: 10.5px; white-space: normal; width: 120px; margin: 2px auto 0; }
+.wc-tick::before { content: ''; position: absolute; top: -16px; left: 50%; transform: translateX(-50%); width: 2px; height: 11px; background: var(--bdr); }
+.wc-tick-start { transform: translateX(0); text-align: left; }
+.wc-tick-start small { margin-left: 0; }
+.wc-tick-start::before { left: 1px; transform: none; }
+.wc-tick-end { transform: translateX(-100%); text-align: right; }
+.wc-tick-end small { margin-right: 0; margin-left: auto; }
+.wc-tick-end::before { left: auto; right: 1px; transform: none; }
+
+.wc-steps { display: flex; gap: 12px; margin: 4px 0 18px; }
+.wc-step { flex: 1; border: 1px solid var(--bdr); border-radius: 10px; padding: 14px 15px; }
+.wc-step-n { width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; margin-bottom: 9px; }
+.wc-step-t { font-weight: 700; color: var(--navy); font-size: 13.5px; margin-bottom: 5px; }
+.wc-step-d { font-size: 12.5px; color: var(--mu); line-height: 1.5; }
+
+/* ── Private-label economics: milk comparison ── */
+.milk-compare { display: flex; align-items: stretch; gap: 14px; margin: 8px 0 14px; }
+.milk-card { flex: 1; border: 1px solid var(--bdr); border-radius: 10px; padding: 18px 16px 16px; text-align: center; background: var(--w); }
+.milk-pl { border-top: 3px solid #E1251B; }
+.milk-br { border-top: 3px solid #3A2E8C; }
+.milk-img { display: block; width: 118px; height: 118px; object-fit: contain; margin: 0 auto 10px; }
+.milk-brand { font-weight: 700; color: var(--navy); font-size: 14px; }
+.milk-tag { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; padding: 2px 7px; border-radius: 10px; margin-left: 4px; vertical-align: middle; }
+.milk-pl .milk-tag { background: #FCEBE9; color: #E1251B; }
+.milk-br .milk-tag { background: #ECEAF7; color: #3A2E8C; }
+.milk-price { font-size: 30px; font-weight: 800; color: var(--navy); margin: 10px 0 2px; }
+.milk-price span { font-size: 13px; font-weight: 600; color: var(--mu); }
+.milk-margin { font-size: 13px; color: var(--mu); }
+.milk-margin b { color: var(--navy); font-weight: 700; }
+.milk-vs { align-self: center; font-weight: 700; color: var(--mu); font-size: 13px; }
+.milk-takeaway { background: var(--brand-soft); border-left: 3px solid var(--brand); border-radius: 8px; padding: 12px 14px; font-size: 13px; line-height: 1.55; color: var(--navy); }
+.milk-takeaway b { font-weight: 700; }
+
+/* Manual legend for the OXXO-vs-3B chart (datasets use per-bar colors). */
+.ovt-legend { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin-top: 10px; padding-left: 2px; }
+.ovt-lg { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--navy); font-weight: 600; }
+.ovt-lg i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.ovt-lg-muted { color: var(--mu); font-weight: 500; }
+
+/* OXXO logo badge + "today" callout on the comparison chart. */
+.ovt-oxxo-note { display: flex; align-items: center; gap: 10px; margin: 2px 0 6px; font-size: 12.5px; color: var(--navy); }
+.ovt-oxxo-note b { font-weight: 700; }
+.oxxo-logo {
+  display: inline-block; flex: none;
+  background: #FFD200; color: #E1251B;
+  font-family: 'Inter', sans-serif; font-weight: 800; font-size: 13px; letter-spacing: .5px;
+  padding: 3px 9px; border-radius: 5px; line-height: 1.2;
+}
+
+/* ── Store count growth: heading + dual-handle year slider ── */
+.ovt-store-h { margin-top: 30px; }
+.sg-controls { margin: 6px 2px 18px; }
+.sg-slider { position: relative; height: 32px; }
+.sg-track {
+  position: absolute; left: 0; right: 0; top: 14px;
+  height: 4px; background: var(--bdr); border-radius: 2px;
+}
+.sg-fill { position: absolute; top: 0; height: 100%; background: var(--brand); border-radius: 2px; }
+.sg-slider input[type=range] {
+  position: absolute; top: 0; left: 0; width: 100%; height: 32px; margin: 0;
+  background: none; pointer-events: none;
+  -webkit-appearance: none; appearance: none;
+}
+.sg-slider input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; pointer-events: auto;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--w); border: 2px solid var(--brand);
+  box-shadow: 0 1px 3px rgba(0,0,0,.22); cursor: pointer;
+}
+.sg-slider input[type=range]::-moz-range-thumb {
+  pointer-events: auto; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--w); border: 2px solid var(--brand); cursor: pointer;
+}
+.sg-slider input[type=range]::-moz-range-track { background: none; }
+.sg-ends { display: flex; justify-content: space-between; font-size: 11px; color: var(--mu); margin-top: 2px; }
+.sg-readout { display: flex; gap: 18px; align-items: baseline; margin-top: 12px; flex-wrap: wrap; }
+.sg-range { font-weight: 700; color: var(--navy); font-size: 15px; }
+.sg-stat { font-size: 13px; color: var(--mu); }
+.sg-stat b { color: var(--navy); font-weight: 600; }
+.sg-cagr b { color: var(--brand); }
+
 /* Visa brand accent — official navy (#1A1F71) + gold (#F7B600). */
 .ov-visa {
   --brand: #1A1F71;

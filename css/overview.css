@@ -153,6 +153,45 @@
 .sg-stat b { color: var(--navy); font-weight: 600; }
 .sg-cagr b { color: var(--brand); }
 
+/* Visa brand accent — official navy (#1A1F71) + gold (#F7B600). */
+.ov-visa {
+  --brand: #1A1F71;
+  --brand-soft: #ECEDF5;
+  --brand-2: #F7B600;
+}
+.ov-visa .ov-snap { border-top: 3px solid var(--brand-2); }
+
+/* ── Diagrams (four-party model, share-class dynamics) ── */
+.ov-diagram {
+  margin: 2px 0 16px; border: 1px solid var(--bdr); border-radius: 10px;
+  padding: 16px 18px; background: var(--w);
+}
+.ov-diagram svg { width: 100%; height: auto; display: block; }
+.ov-diagram-cap { font-size: 11px; color: var(--mu); margin-top: 12px; line-height: 1.5; }
+.ov-diagram-cap b { color: var(--navy); font-weight: 600; }
+
+/* Interactive four-party nodes */
+.ov-fpm-node { cursor: pointer; }
+.ov-fpm-node rect { transition: stroke .12s, stroke-width .12s; }
+.ov-fpm-node.on rect { stroke: var(--brand); stroke-width: 3; }
+.ov-fpm-detail {
+  margin-top: 12px; font-size: 12px; line-height: 1.55; color: var(--blue);
+  background: var(--surface); border: 1px solid var(--bdr); border-radius: 8px; padding: 12px 14px;
+}
+.ov-fpm-detail b { color: var(--navy); font-weight: 600; }
+
+/* Time-series chart placeholders */
+.ov-phs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.ov-ph {
+  border: 1.5px dashed var(--bdr); border-radius: 10px; background: var(--surface);
+  min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 14px;
+}
+.ov-ph-ic { font-size: 20px; opacity: .35; margin-bottom: 6px; }
+.ov-ph-t { font-size: 12px; font-weight: 600; color: var(--navy); }
+.ov-ph-s { font-size: 10px; color: var(--mu); margin-top: 4px; }
+@media (max-width: 860px){ .ov-phs { grid-template-columns: 1fr; } }
+
 /* ── Snapshot card ── */
 .ov-snap {
   display: grid;
@@ -371,6 +410,203 @@
   border-top: 1px solid var(--bdr); padding-top: 12px; margin-top: 4px;
 }
 
+/* ── Clickable affordance (cards, pillars, diagram nodes) ── */
+.ov-clickable { cursor: pointer; transition: border-color .14s, box-shadow .14s, transform .14s; }
+.ov-clickable:hover { border-color: var(--brand); box-shadow: 0 4px 16px rgba(26,31,113,.10); transform: translateY(-1px); }
+.ov-more {
+  font-size: 10.5px; font-weight: 600; color: var(--brand);
+  margin-top: 10px; letter-spacing: .01em;
+}
+
+/* ── Generic detail cards (VAS, M&A) ── */
+.ov-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.ov-cards-mna { grid-template-columns: repeat(4, 1fr); }
+.ov-card {
+  border: 1px solid var(--bdr); border-radius: 10px;
+  padding: 14px 16px; background: var(--w);
+  border-top: 2px solid var(--brand);
+  display: flex; flex-direction: column;
+}
+.ov-card-big { border-top-color: var(--brand-2); }
+.ov-card-h { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 5px; }
+.ov-card-n { font-size: 13px; font-weight: 600; color: var(--navy); }
+.ov-card-s { font-size: 11px; color: var(--mu); line-height: 1.45; flex: 1; }
+.ov-chip {
+  display: inline-block; font-size: 9.5px; font-weight: 600;
+  padding: 2px 8px; border-radius: 20px;
+  background: var(--brand-soft); color: var(--brand); white-space: nowrap;
+}
+.ov-chip-neg { background: #FDECEC; color: var(--neg); }
+
+/* ── Centered modal ── */
+.ov-modal-back {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(12,16,40,.55); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  opacity: 0; transition: opacity .18s;
+}
+.ov-modal-back.on { opacity: 1; }
+.ov-modal {
+  position: relative; background: var(--w);
+  border-radius: 14px; max-width: 560px; width: 100%; max-height: 85vh; overflow: auto;
+  box-shadow: 0 24px 70px rgba(0,0,0,.32);
+  padding: 26px 28px 24px;
+  transform: translateY(10px) scale(.985); transition: transform .18s;
+}
+.ov-modal-back.on .ov-modal { transform: none; }
+.ov-modal-x {
+  position: absolute; top: 12px; right: 14px;
+  width: 30px; height: 30px; border: none; background: var(--surface);
+  border-radius: 50%; font-size: 20px; line-height: 1; color: var(--mu);
+  cursor: pointer; transition: background .12s, color .12s;
+}
+.ov-modal-x:hover { background: var(--bdr); color: var(--navy); }
+.ov-modal-t {
+  font-size: 16px; font-weight: 700; color: var(--navy);
+  margin-bottom: 14px; padding-right: 30px; line-height: 1.3;
+}
+.ov-modal-sub { font-size: 11px; font-weight: 600; color: var(--brand); white-space: nowrap; }
+.ov-modal-b { font-size: 12.5px; line-height: 1.65; color: var(--blue); }
+.ov-modal-b b { color: var(--navy); font-weight: 600; }
+
+/* ── Transaction-flow animation ── */
+.ov-flow {
+  margin-top: 14px; border: 1px solid var(--bdr); border-radius: 12px;
+  background: var(--surface); padding: 18px 18px 16px;
+}
+.ov-flow-nodes { display: flex; align-items: stretch; justify-content: space-between; gap: 4px; }
+.ov-flow-node {
+  flex: 1; text-align: center; padding: 10px 4px; border-radius: 9px;
+  background: var(--w); border: 1px solid var(--bdr);
+  opacity: .45; transition: opacity .25s, border-color .25s, box-shadow .25s, transform .25s;
+}
+.ov-flow-node.on {
+  opacity: 1; border-color: var(--brand);
+  box-shadow: 0 4px 14px rgba(26,31,113,.16); transform: translateY(-2px);
+}
+.ov-flow-node[data-node="visa"].on { border-color: var(--brand-2); box-shadow: 0 4px 14px rgba(247,182,0,.30); }
+.ov-flow-ic { font-size: 20px; line-height: 1; }
+.ov-flow-l { font-size: 10px; font-weight: 600; color: var(--navy); margin-top: 5px; }
+.ov-flow-link { align-self: center; color: var(--mu); font-size: 13px; opacity: .6; }
+.ov-flow-stage {
+  margin-top: 14px; background: var(--w); border: 1px solid var(--bdr);
+  border-radius: 9px; padding: 13px 15px; min-height: 78px;
+}
+.ov-flow-step {
+  display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--brand);
+  background: var(--brand-soft); padding: 2px 9px; border-radius: 5px; margin-bottom: 8px;
+}
+.ov-flow-cap { font-size: 12.5px; line-height: 1.55; color: var(--blue); }
+.ov-flow-cap b { color: var(--navy); font-weight: 600; }
+.ov-flow-earn {
+  margin-top: 10px; font-size: 11.5px; line-height: 1.5; font-weight: 500;
+  padding: 8px 11px; border-radius: 7px;
+}
+.ov-flow-earn b { font-weight: 700; }
+.ov-flow-earn.earn-none  { background: #F1F3F7; color: var(--mu); border: 1px dashed var(--bdr); }
+.ov-flow-earn.earn-visa  { background: #FEF6E0; color: #8A6A00; border: 1px solid var(--brand-2); }
+.ov-flow-earn.earn-split { background: #ECF6EF; color: #1B6B43; border: 1px solid #BFE3CC; }
+.ov-flow-ctrl { display: flex; align-items: center; gap: 8px; margin-top: 13px; flex-wrap: wrap; }
+.ov-flow-btn {
+  border: 1px solid var(--brand); background: var(--brand); color: #fff;
+  font-size: 11.5px; font-weight: 600; padding: 7px 14px; border-radius: 7px; cursor: pointer;
+  transition: opacity .12s;
+}
+.ov-flow-btn:hover { opacity: .88; }
+.ov-flow-btn.ov-flow-sec { background: var(--w); color: var(--brand); }
+.ov-flow-dots { display: flex; gap: 6px; margin-left: auto; }
+.ov-flow-dot {
+  width: 9px; height: 9px; border-radius: 50%; background: var(--bdr);
+  cursor: pointer; transition: background .15s, transform .15s;
+}
+.ov-flow-dot.on { background: var(--brand); transform: scale(1.25); }
+.ov-flow-note {
+  margin-top: 13px; font-size: 11px; line-height: 1.55; color: var(--mu);
+  border-top: 1px solid var(--bdr); padding-top: 11px;
+}
+.ov-flow-note b { color: var(--navy); font-weight: 600; }
+
+/* ── Operating-trends charts (2×2) ── */
+.ov-charts-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 6px; }
+.ov-charts-2 .ov-chart-wrap { height: 230px; }
+
+/* ── Open vs closed loop ── */
+.ov-loop { border: 1px solid var(--bdr); border-radius: 10px; padding: 16px 18px; background: var(--w); }
+.ov-loop-open { border-top: 2px solid var(--brand); }
+.ov-loop-closed { border-top: 2px solid var(--brand-2); }
+.ov-loop-h { font-size: 12.5px; font-weight: 700; color: var(--navy); margin-bottom: 12px; }
+
+/* ── FIX: the [hidden] attribute must win over display:flex (else the invisible
+   modal backdrop sits on top and eats every click). ── */
+.ov-modal-back[hidden] { display: none; }
+
+/* ── Sequential step cards (dilution sequence) ── */
+.ov-seq { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.ov-seq-step {
+  flex: 1 1 180px; position: relative;
+  border: 1px solid var(--bdr); border-radius: 10px; padding: 13px 15px;
+  background: var(--w); border-top: 2px solid var(--brand);
+}
+.ov-seq-n {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 50%; background: var(--brand); color: #fff;
+  font-size: 11px; font-weight: 700; margin-bottom: 8px;
+}
+.ov-seq-t { font-size: 12px; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+.ov-seq-d { font-size: 11.5px; line-height: 1.5; color: var(--mu); }
+.ov-seq-d b { color: var(--navy); font-weight: 600; }
+
+/* two-box compare (thesis vs reality) */
+.ov-vs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ov-vs-box { border: 1px solid var(--bdr); border-radius: 10px; padding: 14px 16px; background: var(--surface); }
+.ov-vs-box.is-claim { border-left: 3px solid var(--brand-2); }
+.ov-vs-box.is-real { border-left: 3px solid var(--pos); }
+.ov-vs-h { font-size: 10px; letter-spacing: .05em; text-transform: uppercase; font-weight: 700; margin-bottom: 7px; }
+.ov-vs-box.is-claim .ov-vs-h { color: #8A6A00; }
+.ov-vs-box.is-real .ov-vs-h { color: var(--pos); }
+.ov-vs-box p { font-size: 11.5px; line-height: 1.55; color: var(--blue); margin: 0; }
+.ov-vs-box b { color: var(--navy); font-weight: 600; }
+
+/* ── Escrow mechanism chain ── */
+.ov-chain { display: flex; flex-direction: column; margin-bottom: 16px; }
+.ov-chain-step {
+  position: relative; padding: 11px 14px 11px 44px; margin-bottom: 9px;
+  border: 1px solid var(--bdr); border-radius: 10px; background: var(--w);
+}
+.ov-chain-step:not(:last-child)::after {
+  content: '▾'; position: absolute; left: 17px; bottom: -14px; color: var(--brand);
+  font-size: 13px; z-index: 1;
+}
+.ov-chain-n {
+  position: absolute; left: 12px; top: 11px;
+  width: 22px; height: 22px; border-radius: 50%; background: var(--brand-soft); color: var(--brand);
+  display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;
+}
+.ov-chain-step.is-payoff { border: 1px solid var(--brand-2); background: #FEF6E0; }
+.ov-chain-step.is-payoff .ov-chain-n { background: var(--brand-2); color: #fff; }
+.ov-chain-t { font-size: 12px; font-weight: 600; color: var(--navy); }
+.ov-chain-d { font-size: 11.5px; line-height: 1.5; color: var(--mu); margin-top: 2px; }
+.ov-chain-d b { color: var(--navy); font-weight: 600; }
+
+/* who pays / protected trio */
+.ov-who { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 4px; }
+.ov-who-box { border: 1px solid var(--bdr); border-radius: 10px; padding: 12px 14px; text-align: center; background: var(--surface); }
+.ov-who-box.pays { border-top: 2px solid var(--neg); }
+.ov-who-box.safe { border-top: 2px solid var(--pos); }
+.ov-who-k { font-size: 12px; font-weight: 700; color: var(--navy); }
+.ov-who-v { font-size: 10.5px; font-weight: 700; margin-top: 3px; letter-spacing: .03em; text-transform: uppercase; }
+.ov-who-box.pays .ov-who-v { color: var(--neg); }
+.ov-who-box.safe .ov-who-v { color: var(--pos); }
+.ov-who-s { font-size: 10.5px; color: var(--mu); margin-top: 5px; line-height: 1.4; }
+
+/* clickable timeline item */
+.ov-tl-item.is-click { cursor: pointer; }
+.ov-tl-item.is-click:hover .ov-tl-head b { color: var(--brand); }
+.ov-tl-head { font-size: 12.5px; line-height: 1.5; color: var(--blue); }
+.ov-tl-head b { color: var(--navy); font-weight: 600; transition: color .12s; }
+.ov-tl-more { font-size: 10.5px; font-weight: 600; color: var(--brand); margin-top: 3px; }
+
 /* ── Responsive ── */
 @media (max-width: 860px) {
   .ov-snap { grid-template-columns: repeat(3, 1fr); }
@@ -379,4 +615,101 @@
   .ov-row { grid-template-columns: 1fr; gap: 4px; }
   .ov-corr-stats { grid-template-columns: 1fr; }
   .ov-targets, .ov-targets-3, .ov-drivers { grid-template-columns: 1fr 1fr; }
+  .ov-segcards, .ov-fly, .ov-charts-2 { grid-template-columns: 1fr; }
+  .ov-cards, .ov-cards-mna { grid-template-columns: 1fr 1fr; }
+  .ov-flow-l { font-size: 9px; }
+  .ov-flow-ic { font-size: 17px; }
+  .ov-vs, .ov-who { grid-template-columns: 1fr; }
 }
+
+/* ═══ Sea Limited (SE) overview ═══════════════════════════════════════════════
+   Sub-tabs, timeline range slider, segment headers, market-share bars, flywheel
+   cards. Each pane sets its own --brand so KPI tiles / bullets recolor per segment. */
+.ov-se { --brand: #2C3E54; --brand-soft: #EEF1F5; }
+.ov-pane { display: none; }
+.ov-pane.active { display: block; }
+.ov-pane[data-seapane="overview"] { --brand: #2C3E54; --brand-soft: #EEF1F5; }
+.ov-pane[data-seapane="shopee"]   { --brand: #EE4D2D; --brand-soft: #FDEDE9; }
+.ov-pane[data-seapane="monee"]    { --brand: #6366F1; --brand-soft: #EEF0FE; }
+.ov-pane[data-seapane="garena"]   { --brand: #F59E0B; --brand-soft: #FEF3E2; }
+
+/* Sub-tab bar */
+.ov-subtabs {
+  display: flex; gap: 4px; background: var(--surface);
+  border: 1px solid var(--bdr); border-radius: 10px; padding: 4px;
+  margin-bottom: 16px; overflow-x: auto;
+}
+.ov-subtab {
+  flex: 1; min-width: 90px; padding: 8px 14px; border: none; background: transparent;
+  border-radius: 7px; font-size: 12.5px; font-weight: 600; color: var(--mu);
+  cursor: pointer; font-family: inherit; white-space: nowrap; transition: color .15s;
+}
+.ov-subtab:hover { color: var(--navy); }
+.ov-subtab.active { background: var(--w); color: var(--navy); box-shadow: 0 1px 2px rgba(30,39,51,.08); }
+
+/* Timeline range slider */
+.ov-rangebar { background: var(--w); border: 1px solid var(--bdr); border-radius: 10px; padding: 12px 16px 8px; margin-bottom: 18px; }
+.ov-range-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.ov-range-title { font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--mu); font-weight: 700; }
+.ov-range-val { font-size: 14px; font-weight: 700; color: var(--navy); }
+.ov-range-toggle { margin-left: auto; font-size: 11.5px; color: var(--mu); display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+.ov-range-toggle input { accent-color: var(--accent); cursor: pointer; }
+.ov-range-slider { position: relative; height: 30px; }
+.ov-range-slider input[type=range] { position: absolute; top: 3px; left: 0; width: 100%; height: 18px; margin: 0; background: none; -webkit-appearance: none; appearance: none; pointer-events: none; }
+.ov-range-slider input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); border: 3px solid var(--w); box-shadow: 0 1px 3px rgba(30,39,51,.3); cursor: grab; pointer-events: auto; }
+.ov-range-slider input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); border: 3px solid var(--w); cursor: grab; pointer-events: auto; }
+.ov-range-track { position: absolute; top: 10px; left: 0; width: 100%; height: 4px; background: var(--bdr); border-radius: 2px; }
+.ov-range-fill { position: absolute; top: 10px; height: 4px; background: var(--accent); border-radius: 2px; }
+.ov-range-ticks { position: absolute; top: 20px; left: 0; width: 100%; display: flex; justify-content: space-between; font-size: 9px; color: var(--mu); pointer-events: none; }
+
+/* Segment cards (overview) + segment header (panes) */
+.ov-segcards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+.ov-segcard { border: 1px solid var(--bdr); border-radius: 10px; padding: 14px 16px; background: var(--w); }
+.ov-segcard-p { font-size: 12px; line-height: 1.55; color: var(--mu); margin: 10px 0 0; }
+.ov-seg { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.ov-seg-icon { width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; flex-shrink: 0; }
+.ov-seg-name { font-size: 18px; font-weight: 700; color: var(--navy); }
+.ov-seg-tag { font-size: 11.5px; color: var(--mu); margin-top: 2px; }
+
+/* Chart grids (override the default 3-col .ov-charts) */
+.ov-charts-2 { grid-template-columns: repeat(2, 1fr); }
+.ov-charts-1 { grid-template-columns: 1fr; }
+
+/* CAGR / YoY stat line under each chart */
+.ov-statline { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--bdr); font-size: 11px; color: var(--mu); line-height: 1.5; }
+.ov-statline b { color: var(--navy); font-weight: 600; }
+.ov-statline .pos { color: var(--pos); font-weight: 600; }
+.ov-statline .neg { color: var(--neg); font-weight: 600; }
+.ov-stat-mut { color: var(--mu); font-style: italic; }
+.ov-yoychips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+.ov-yoychip { font-size: 10px; padding: 2px 7px; border-radius: 5px; background: var(--surface); border: 1px solid var(--bdr); color: var(--mu); }
+
+/* Market-share bars */
+.ov-mbars { padding: 4px 0; }
+.ov-mbar { display: flex; align-items: center; gap: 12px; margin-bottom: 9px; }
+.ov-mbar:last-child { margin-bottom: 0; }
+.ov-mbar-l { width: 110px; font-size: 11.5px; font-weight: 600; color: var(--navy); text-align: right; flex-shrink: 0; }
+.ov-mbar-track { flex: 1; height: 26px; background: var(--surface); border-radius: 6px; overflow: hidden; }
+.ov-mbar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; padding: 0 10px; font-size: 11px; font-weight: 600; color: #fff; white-space: nowrap; }
+.ov-mbar-v { width: 42px; text-align: right; font-size: 11px; font-weight: 600; color: var(--mu); flex-shrink: 0; }
+
+/* Flywheel / driver cards */
+.ov-fly { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.ov-fly-item { border: 1px solid var(--bdr); border-radius: 10px; padding: 14px 16px; background: var(--w); }
+.ov-fly-num { width: 26px; height: 26px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin-bottom: 9px; }
+.ov-fly-h { font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+.ov-fly-p { font-size: 12px; line-height: 1.5; color: var(--mu); }
+
+/* Advantage pills */
+.ov-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.ov-pill { font-size: 11.5px; font-weight: 500; padding: 6px 12px; border-radius: 8px; background: var(--brand-soft); color: var(--brand); }
+
+/* Doughnut + legend */
+.ov-donut-wrap { display: flex; align-items: center; justify-content: center; }
+.ov-donut-wrap canvas { max-height: 180px; max-width: 180px; }
+.ov-donut-c { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; }
+.ov-donut-big { font-size: 18px; font-weight: 700; color: var(--navy); }
+.ov-donut-small { font-size: 10px; color: var(--mu); }
+.ov-legend { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 10px; font-size: 11px; color: var(--mu); }
+.ov-legend-i { display: flex; align-items: center; gap: 5px; }
+.ov-legend-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }

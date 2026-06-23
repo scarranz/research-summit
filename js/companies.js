@@ -124,6 +124,16 @@ var PILLAR_HIGHLIGHTS = {
     qm: ['Capital allocation', 'Insider alignment', 'Operating record'],
     qv: ['FCF yield'],
   },
+  // Visa: moat/structure/economics are the standouts; growth is organic + mix-shifting
+  // to CMS/VAS; mgmt excels at capital allocation & operating record (insider alignment
+  // left off — huge $ holdings but very low % ownership, so not a differentiator);
+  // valuation case rests on FCF yield + downside protection.
+  V: {
+    qb: ['Competitive moat', 'Market structure', 'Unit economics'],
+    qg: ['Organic durability', 'Mix shift'],
+    qm: ['Capital allocation', 'Operating record'],
+    qv: ['FCF yield', 'Downside protection'],
+  },
 };
 
 async function renderPillarContent() {

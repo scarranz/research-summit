@@ -400,6 +400,9 @@ var LPB_SOURCES = 'Sources: SoFi FY2025 Form 10-K and Q2 2025–Q1 2026 earnings
 function lpbBody(c){
   var h = '';
 
+  // 0 — LPB origination volume chart (the first thing shown in this tab).
+  h += loanBlock(LPB_ORIG);
+
   // 1 — Hero / one-line definition + badges.
   h += '<div class="lpb-hero">'+
     '<div class="lpb-hero-t">'+LPB_HERO_T+'</div>'+
@@ -419,9 +422,6 @@ function lpbBody(c){
   h += '<div class="lpb-back">'+LPB_BACK.map(function(b){
     return '<div class="lpb-back-item"><b>'+esc(b[0])+'</b>'+esc(b[1])+'</div>';
   }).join('')+'</div>';
-
-  // 2b — How fast LPB is scaling (origination volume, reuses the ranged bar component).
-  h += loanBlock(LPB_ORIG);
 
   // 3 — Expand-to-learn-more (progressive disclosure: nothing else shown until clicked).
   // (a) How SoFi gets paid

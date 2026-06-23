@@ -3,3 +3,7 @@ env.js
 .env.*
 node_modules/
 .DS_Store
+
+# Multiples playground — local-only secrets & pulled data (repo is public)
+playground/.massive-key
+playground/summit-data.local.js

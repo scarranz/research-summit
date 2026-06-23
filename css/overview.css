@@ -161,6 +161,14 @@
 }
 .ov-visa .ov-snap { border-top: 3px solid var(--brand-2); }
 
+/* Microsoft brand accent — official blue (#0078D4) + gold (#FFB900). */
+.ov-msft {
+  --brand: #0078D4;
+  --brand-soft: #EAF3FB;
+  --brand-2: #FFB900;
+}
+.ov-msft .ov-snap { border-top: 3px solid var(--brand-2); }
+
 /* ── Diagrams (four-party model, share-class dynamics) ── */
 .ov-diagram {
   margin: 2px 0 16px; border: 1px solid var(--bdr); border-radius: 10px;
@@ -311,6 +319,8 @@
 .ov-tl-yr { font-size: 12px; font-weight: 700; color: var(--brand); }
 .ov-tl-body { font-size: 12.5px; line-height: 1.55; color: var(--blue); }
 .ov-tl-body b { color: var(--navy); font-weight: 600; }
+.ov-tl-head { font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 2px; }
+.ov-tl-more { font-size: 10.5px; font-weight: 600; color: var(--brand); margin-top: 4px; }
 
 /* ── M&A cards ── */
 .ov-mna {
@@ -361,6 +371,10 @@
 }
 .ov-table tbody tr:last-child td { border-bottom: none; }
 .ov-td-name { font-weight: 600; color: var(--navy); white-space: nowrap; }
+.ov-table.ov-cmp thead th { text-align: center; }
+.ov-table.ov-cmp thead th:first-child { text-align: left; }
+.ov-table.ov-cmp tbody td { text-align: center; font-size: 11.5px; }
+.ov-table.ov-cmp tbody td:first-child { text-align: left; }
 
 /* ── Tailwinds / Headwinds ── */
 .ov-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -412,7 +426,7 @@
 
 /* ── Clickable affordance (cards, pillars, diagram nodes) ── */
 .ov-clickable { cursor: pointer; transition: border-color .14s, box-shadow .14s, transform .14s; }
-.ov-clickable:hover { border-color: var(--brand); box-shadow: 0 4px 16px rgba(26,31,113,.10); transform: translateY(-1px); }
+.ov-clickable:hover { border-color: var(--brand); box-shadow: 0 4px 16px rgba(0,0,0,.08); transform: translateY(-1px); }
 .ov-more {
   font-size: 10.5px; font-weight: 600; color: var(--brand);
   margin-top: 10px; letter-spacing: .01em;
@@ -437,6 +451,64 @@
   background: var(--brand-soft); color: var(--brand); white-space: nowrap;
 }
 .ov-chip-neg { background: #FDECEC; color: var(--neg); }
+.ov-card-meta { font-size: 11px; font-weight: 600; margin-top: 6px; }
+.ov-card-meta.up { color: var(--pos); }
+.ov-card-meta.dn { color: var(--neg); }
+.ov-card-q { font-size: 12.5px; font-weight: 600; color: var(--navy); line-height: 1.45; margin-top: 2px; }
+.ov-card-kpis { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 2px 0 8px; }
+.ov-card-kpis span { font-size: 10.5px; font-weight: 600; color: var(--mu); }
+.ov-card-kpis span:first-child { color: var(--navy); }
+
+/* Switching-cost hub diagram (non-sequential; clickable nodes → modal) */
+.ov-hub { border: 1px solid var(--bdr); border-radius: 12px; background: var(--surface); padding: 20px 18px 18px; }
+.ov-hub-center { text-align: center; }
+.ov-hub-box {
+  display: inline-block; border: 2px solid var(--brand); background: var(--brand-soft);
+  color: var(--navy); border-radius: 10px; padding: 9px 18px; font-weight: 600; font-size: 12.5px;
+}
+.ov-hub-stem { width: 2px; height: 18px; background: var(--bdr); margin: 0 auto; }
+.ov-hub-nodes {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+  border-top: 2px solid var(--bdr); padding-top: 16px; position: relative;
+}
+.ov-hub-node {
+  position: relative; border: 1px solid var(--bdr); border-top: 2px solid var(--brand);
+  border-radius: 10px; background: var(--w); padding: 13px 10px; text-align: center;
+}
+.ov-hub-node::before {
+  content: ''; position: absolute; top: -16px; left: 50%; width: 2px; height: 14px; background: var(--bdr);
+}
+.ov-hub-ic { font-size: 22px; line-height: 1; }
+.ov-hub-l { font-size: 12px; font-weight: 600; color: var(--navy); margin-top: 7px; }
+.ov-hub-s { font-size: 10.5px; color: var(--mu); margin-top: 3px; line-height: 1.4; }
+.ov-hub-more { font-size: 10px; font-weight: 600; color: var(--brand); margin-top: 8px; }
+
+/* Segment architecture map (3 panels → clickable sub-segment nodes → product modal) */
+.ov-segmap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.ov-segpanel { border: 1px solid var(--bdr); border-top: 3px solid var(--brand); border-radius: 12px; background: var(--surface); padding: 14px 13px; }
+.ov-segpanel-h { margin-bottom: 11px; padding-bottom: 9px; border-bottom: 1px solid var(--bdr); }
+.ov-segpanel-n { font-size: 12.5px; font-weight: 700; color: var(--navy); line-height: 1.3; }
+.ov-segpanel-m { font-size: 10.5px; font-weight: 600; color: var(--mu); margin-top: 3px; }
+.ov-segnodes { display: flex; flex-direction: column; gap: 8px; }
+.ov-segnode {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  border: 1px solid var(--bdr); border-radius: 8px; background: var(--w); padding: 10px 12px;
+  transition: border-color .14s, box-shadow .14s, transform .14s;
+}
+.ov-segnode:hover { border-color: var(--brand); box-shadow: 0 3px 12px rgba(0,0,0,.08); transform: translateY(-1px); }
+.ov-segnode-n { font-size: 12px; font-weight: 600; color: var(--navy); }
+.ov-segnode-r { font-size: 10px; font-weight: 600; color: var(--mu); white-space: nowrap; }
+
+/* Product sub-diagram (inside the modal) */
+.ov-sub-line { font-size: 12.5px; line-height: 1.6; color: var(--blue); }
+.ov-sub-line b { color: var(--navy); font-weight: 600; }
+.ov-sub-mon {
+  font-size: 12px; line-height: 1.55; color: var(--blue);
+  background: var(--brand-soft); border-left: 3px solid var(--brand); border-radius: 6px;
+  padding: 9px 12px; margin-top: 10px;
+}
+.ov-sub-mon b { color: var(--navy); font-weight: 600; }
+.ov-prod { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
 /* ── Centered modal ── */
 .ov-modal-back {
@@ -620,6 +692,8 @@
   .ov-flow-l { font-size: 9px; }
   .ov-flow-ic { font-size: 17px; }
   .ov-vs, .ov-who { grid-template-columns: 1fr; }
+  .ov-hub-nodes { grid-template-columns: repeat(3, 1fr); }
+  .ov-segmap, .ov-prod { grid-template-columns: 1fr; }
 }
 
 /* ═══ Sea Limited (SE) overview ═══════════════════════════════════════════════

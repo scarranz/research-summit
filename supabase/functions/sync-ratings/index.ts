@@ -66,16 +66,17 @@ serve(async (req) => {
       rating: r.rating || "—",
       previous_rating: r.previous_rating || null,
       rating_action: r.rating_action || null,
-      price_target: r.price_target || null,
-      previous_price_target: r.previous_price_target || null,
+      price_target: r.price_target ?? null,
+      previous_price_target: r.previous_price_target ?? null,
       price_target_action: r.price_target_action || null,
     }));
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
     // Clear existing ratings for this company, then insert fresh
-    await supabase.from("analyst_ratings").delete().eq("company_id", companyId);
+    // Only delete+insert when we have new data to avoid wiping cached ratings
     if (ratings.length) {
+      await supabase.from("analyst_ratings").delete().eq("company_id", companyId);
       const { error } = await supabase.from("analyst_ratings").insert(ratings);
       if (error) throw new Error(`Insert ratings: ${error.message}`);
     }
@@ -87,7 +88,7 @@ serve(async (req) => {
       headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 500,
       headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });

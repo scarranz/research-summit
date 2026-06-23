@@ -31,6 +31,142 @@ async function fiscalGet(path: string, params: Record<string, string>) {
   return resp.json();
 }
 
+/**
+ * Parse the Fiscal.ai segments response into flat rows for company_segments.
+ *
+ * The v2 response uses nested structures with metrics/segmentGroups/data.
+ * We flatten into one row per (segmentGroup, segmentName, metric, period).
+ *
+ * Known response shapes from Fiscal.ai v2:
+ *  - { metrics: [...], segmentGroups: [...], data: { metricsValues: {...} } }
+ *  - { data: [ { segmentGroup, segmentName, kpiId, metricName, periods: [...] } ] }
+ *
+ * We handle both shapes defensively.
+ */
+function parseSegments(resp: any, companyId: string): any[] {
+  const rows: any[] = [];
+
+  // Shape A: flat array in resp.data with period values
+  if (Array.isArray(resp.data)) {
+    for (const item of resp.data) {
+      const group = item.segmentGroup || item.segment_group || "Other";
+      const name = item.segmentName || item.segment_name || group;
+      const metric = item.metricName || item.metric_name || "Revenue";
+      const kpiId = item.kpiId || item.kpi_id || null;
+
+      // If item has periods array
+      if (Array.isArray(item.periods)) {
+        for (const p of item.periods) {
+          rows.push({
+            company_id: companyId,
+            segment_group: group,
+            segment_name: name,
+            kpi_id: kpiId,
+            metric_name: metric,
+            period_type: p.periodType || p.period_type || "annual",
+            fiscal_year: p.fiscalYear || p.fiscal_year || p.year,
+            fiscal_quarter: p.fiscalQuarter ?? p.fiscal_quarter ?? null,
+            value: p.value ?? null,
+            currency: p.currency || "USD",
+            sort_order: 0,
+          });
+        }
+      }
+      // If item has metricsValues (nested by period key)
+      else if (item.metricsValues && typeof item.metricsValues === "object") {
+        for (const [periodKey, val] of Object.entries(item.metricsValues)) {
+          const year = parseInt(periodKey) || null;
+          if (year) {
+            rows.push({
+              company_id: companyId,
+              segment_group: group,
+              segment_name: name,
+              kpi_id: kpiId,
+              metric_name: metric,
+              period_type: "annual",
+              fiscal_year: year,
+              fiscal_quarter: null,
+              value: val ?? null,
+              currency: "USD",
+              sort_order: 0,
+            });
+          }
+        }
+      }
+      // If item has a direct value + fiscalYear
+      else if (item.fiscalYear || item.fiscal_year) {
+        rows.push({
+          company_id: companyId,
+          segment_group: group,
+          segment_name: name,
+          kpi_id: kpiId,
+          metric_name: metric,
+          period_type: item.periodType || item.period_type || "annual",
+          fiscal_year: item.fiscalYear || item.fiscal_year,
+          fiscal_quarter: item.fiscalQuarter ?? item.fiscal_quarter ?? null,
+          value: item.value ?? null,
+          currency: item.currency || "USD",
+          sort_order: 0,
+        });
+      }
+    }
+  }
+
+  // Shape B: nested with segmentGroups + metrics + data.metricsValues
+  else if (resp.segmentGroups && resp.metrics && resp.data?.metricsValues) {
+    const metrics = resp.metrics || [];
+    const groups = resp.segmentGroups || [];
+    const values = resp.data.metricsValues;
+
+    for (const metric of metrics) {
+      const metricId = String(metric.kpiId || metric.id || "");
+      const metricName = metric.name || metric.metricName || "Unknown";
+
+      for (const group of groups) {
+        const groupName = group.name || group.segmentGroup || "Other";
+        const segments = group.segments || [group];
+
+        for (const seg of segments) {
+          const segName = seg.name || seg.segmentName || groupName;
+          const key = `${metricId}_${seg.id || segName}`;
+          const periodValues = values[key] || values[metricId] || {};
+
+          if (typeof periodValues === "object" && !Array.isArray(periodValues)) {
+            for (const [periodKey, val] of Object.entries(periodValues)) {
+              const year = parseInt(periodKey) || null;
+              if (year) {
+                rows.push({
+                  company_id: companyId,
+                  segment_group: groupName,
+                  segment_name: segName,
+                  kpi_id: metric.kpiId || null,
+                  metric_name: metricName,
+                  period_type: "annual",
+                  fiscal_year: year,
+                  fiscal_quarter: null,
+                  value: val ?? null,
+                  currency: "USD",
+                  sort_order: 0,
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Assign sort_order within each group
+  const groupOrder: Record<string, number> = {};
+  for (const row of rows) {
+    const key = `${row.segment_group}__${row.metric_name}__${row.fiscal_year}`;
+    groupOrder[key] = (groupOrder[key] || 0) + 1;
+    row.sort_order = groupOrder[key];
+  }
+
+  return rows;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders(req) });
@@ -62,26 +198,32 @@ serve(async (req) => {
       currency: "USD",
     });
 
-    // Log the raw response so we can see the actual structure
-    console.log("=== FISCAL.AI SEGMENTS RAW RESPONSE ===");
-    console.log(JSON.stringify(segResp, null, 2));
-    console.log("=== END RAW RESPONSE ===");
-
     if (segResp._unavailable) {
       return new Response(JSON.stringify({ success: true, segments: 0, unavailable: true }), {
         headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
+    // ─── Parse and write to DB ────────────────────────────────
+    const rows = parseSegments(segResp, companyId);
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+    // Only delete+insert when we have new data
+    if (rows.length) {
+      await supabase.from("company_segments").delete().eq("company_id", companyId);
+      const { error } = await supabase.from("company_segments").insert(rows);
+      if (error) throw new Error(`Insert segments: ${error.message}`);
+    }
+
     return new Response(JSON.stringify({
       success: true,
-      raw: segResp,
-      message: "Discovery mode — raw response returned for inspection",
+      segments: rows.length,
     }), {
       headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 500,
       headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });

@@ -37,10 +37,15 @@ serve(async (req) => {
 
   try {
     const { ticker } = await req.json();
-    if (!ticker) {
+    if (!ticker || typeof ticker !== "string") {
       return new Response(JSON.stringify({ error: "ticker is required" }), {
         status: 400,
         headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+    if (ticker.length > 10 || !/^[A-Za-z0-9.\-]+$/.test(ticker)) {
+      return new Response(JSON.stringify({ error: "Invalid ticker format" }), {
+        status: 400, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -48,9 +53,13 @@ serve(async (req) => {
 
     // Try Yahoo Finance quote endpoint for company info
     const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbol)}&fields=shortName,longName,exchange,sector,industry`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
     const resp = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0" },
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
 
     if (!resp.ok) {
       throw new Error(`Yahoo API returned ${resp.status}`);
@@ -79,7 +88,7 @@ serve(async (req) => {
       headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 500,
       headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });

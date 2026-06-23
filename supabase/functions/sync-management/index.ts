@@ -78,7 +78,8 @@ serve(async (req) => {
       }));
 
     // Clear existing executives for this company, then insert fresh
-    if (holders.length) {
+    // Skip if API was unavailable (free plan) to avoid wiping cached data
+    if (!holdersResp._unavailable && holders.length) {
       await supabase.from("company_executives").delete().eq("company_id", companyId);
       const { error: insErr } = await supabase.from("company_executives").insert(holders);
       if (insErr) throw new Error(`Insert executives: ${insErr.message}`);
@@ -115,8 +116,9 @@ serve(async (req) => {
       });
 
     // Clear existing transactions for this company, then insert fresh
-    await supabase.from("insider_transactions").delete().eq("company_id", companyId);
-    if (txns.length) {
+    // Skip if API was unavailable (free plan) to avoid wiping cached data
+    if (!txResp._unavailable && txns.length) {
+      await supabase.from("insider_transactions").delete().eq("company_id", companyId);
       const { error: txErr } = await supabase.from("insider_transactions").insert(txns);
       if (txErr) throw new Error(`Insert transactions: ${txErr.message}`);
     }
@@ -132,7 +134,7 @@ serve(async (req) => {
       headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 500,
       headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });

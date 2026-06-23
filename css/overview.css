@@ -55,6 +55,9 @@
 /* SoFi member chart wants more vertical room than the default chart card. */
 .ov-chart-wrap.ovs-tall { height: 360px; }
 
+/* Stacked loan-origination blocks (Interest Income tab) — separate each product. */
+.ovs-loan + .ovs-loan { margin-top: 34px; border-top: 1px solid var(--bdr); padding-top: 26px; }
+
 /* "Coming soon" placeholder pane for tabs not built yet. */
 .ovs-soon {
   border: 1px dashed var(--bdr);

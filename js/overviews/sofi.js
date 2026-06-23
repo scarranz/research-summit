@@ -143,6 +143,39 @@ function memYoY(i){ return i <= 0 ? null : (MEM_K[i] / MEM_K[i-1] - 1) * 100; }
 function memCAGR(a, b){ return b <= a ? null : (Math.pow(MEM_K[b] / MEM_K[a], 1 / (b - a)) - 1) * 100; }
 function memM(vK){ return (vK / 1000).toFixed(vK >= 10000 ? 1 : 2); } // millions, trimmed precision
 
+// ─── Interest Income tab — loan origination volume by product ─────────────────
+// Annual loan ORIGINATION VOLUME (dollars of loans funded), in US$ millions. This is
+// origination volume, not interest revenue. 2020–2025 actuals; 2026E–2027E estimates;
+// 2028E is a target. Each product renders as its own ranged bar chart (slider + YoY + CAGR).
+var LOAN_YEARS   = ['2020','2021','2022','2023','2024','2025','2026E','2027E','2028E'];
+var LOAN_FIRST_EST = 6; // first estimated year (2026E)
+
+var INT_INTRO = 'Interest income is driven by SoFi\'s three lending products. The charts below show annual origination volume — the dollar value of loans funded each year — split into Personal, Student and Home loans. This is origination volume, not interest revenue (revenue is covered separately). 2020–2025 are actuals; 2026E–2027E are estimates and 2028E is a target. Drag the handles on each chart to choose a year window — the bars, the per-bar YoY growth and the CAGR update to that range.';
+
+var LOAN_PL = {
+  key:'pl', title:'Personal Loans', years:LOAN_YEARS, firstEst:LOAN_FIRST_EST,
+  dataM:[ 613.8, 5386.9, 9773.7, 13801.1, 17615.0, 27495.5, 35140.4, 42168, 50602 ],
+  chartTitle:'Personal Loan Originations',
+  note:'Personal loan origination volume by year ($B). Personal loans are SoFi\'s largest lending product and have compounded rapidly off a small 2020 base. Figures are origination volume (loans funded), not revenue. Source: SoFi company disclosures and investor presentations; 2026E–2027E are estimates, 2028E is a target.'
+};
+var LOAN_SL = {
+  key:'sl', title:'Student Loans', years:LOAN_YEARS, firstEst:LOAN_FIRST_EST,
+  dataM:[ 971, 4294, 2245, 2630, 3781, 5538, 8885, 12439, 17415 ],
+  chartTitle:'Student Loan Originations',
+  note:'Student loan origination volume by year ($B). Volume fell sharply in 2022 when the federal student-loan payment pause removed most refinancing demand, then recovered as rates and the policy backdrop normalized. Figures are origination volume, not revenue. Source: SoFi company disclosures and investor presentations; 2026E–2027E are estimates, 2028E is a target.'
+};
+var LOAN_HL = {
+  key:'hl', title:'Home Loans', years:LOAN_YEARS, firstEst:LOAN_FIRST_EST,
+  dataM:[ 673, 2978, 966, 997, 1820, 3389, 5970, 7462, 9328 ],
+  chartTitle:'Home Loan Originations',
+  note:'Home loan origination volume by year ($B). Volume dropped sharply in 2022 as rising mortgage rates cut refinancing, then resumed strong growth (SoFi has posted record home-loan quarters recently). Figures are origination volume, not revenue. Source: SoFi company disclosures and investor presentations; 2026E–2027E are estimates, 2028E is a target.'
+};
+var LOANS = [LOAN_PL, LOAN_SL, LOAN_HL];
+
+function loanYoY(cfg, i){ return i <= 0 ? null : (cfg.dataM[i] / cfg.dataM[i-1] - 1) * 100; }
+function loanCAGR(cfg, a, b){ return b <= a ? null : (Math.pow(cfg.dataM[b] / cfg.dataM[a], 1 / (b - a)) - 1) * 100; }
+function loanB(vM){ return (vM / 1000).toFixed(vM >= 10000 ? 1 : 2); } // $ billions, trimmed precision
+
 // ─── Render helpers ──────────────────────────────────────────────────────────
 function sec(title, inner){ return '<section class="ov-sec"><div class="ov-sec-h">'+esc(title)+'</div>'+inner+'</section>'; }
 function bullets(arr){ return '<ul class="ov-bullets">'+arr.map(function(b){return '<li>'+b+'</li>';}).join('')+'</ul>'; }
@@ -253,6 +286,37 @@ function membersBody(c){
   return h;
 }
 
+// One ranged loan-origination block (heading + slider + chart + footnote).
+function loanBlock(cfg){
+  var maxI = cfg.years.length - 1;
+  var k = cfg.key;
+  var h = '<div class="ovs-loan">';
+  h += '<div class="ov-sec-h">'+esc(cfg.title)+'</div>';
+  h += '<div class="sg-controls">'+
+    '<div class="sg-slider">'+
+      '<div class="sg-track"><div class="sg-fill" id="'+k+'Fill"></div></div>'+
+      '<input type="range" id="'+k+'Min" min="0" max="'+maxI+'" value="0" step="1" aria-label="Start year">'+
+      '<input type="range" id="'+k+'Max" min="0" max="'+maxI+'" value="'+maxI+'" step="1" aria-label="End year">'+
+    '</div>'+
+    '<div class="sg-ends"><span>'+esc(cfg.years[0])+'</span><span>'+esc(cfg.years[maxI])+'</span></div>'+
+    '<div class="sg-readout" id="'+k+'Readout"></div>'+
+  '</div>';
+  h += '<div class="ov-chart-card">'+
+    '<div class="ov-chart-t">'+esc(cfg.chartTitle)+' <span>(annual volume, $B · light bars = estimate/target · red = YoY decline)</span></div>'+
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="sofiChart_'+k+'"></canvas></div>'+
+  '</div>';
+  h += '<div class="ov-foot">'+esc(cfg.note)+'</div>';
+  h += '</div>';
+  return h;
+}
+
+// "Interest Income" sub-tab body — three loan-origination charts (volume, not revenue).
+function interestBody(c){
+  var h = '<p class="ov-lede">'+esc(INT_INTRO)+'</p>';
+  h += LOANS.map(loanBlock).join('');
+  return h;
+}
+
 // Placeholder body for tabs that are not built yet.
 function soonBody(label){
   return '<div class="ovs-soon"><div class="ovs-soon-t">'+esc(label)+'</div>'+
@@ -271,7 +335,7 @@ function html(c){
   // Panes
   h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="members" hidden>'+membersBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="interest" hidden>'+soonBody('Interest Income')+'</div>';
+  h += '<div class="ovt-pane" data-ovt="interest" hidden>'+interestBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="fees" hidden>'+soonBody('Fee Income')+'</div>';
   h += '</div>';
   return h;
@@ -375,11 +439,112 @@ function buildMembersTab(){
   setupMemSlider();
 }
 
-// Switch sub-tab. Builds the tab's chart lazily the first time it becomes visible.
+// ─── Interest Income charts (generic ranged loan-origination bar chart) ───────
+var _loanCharts = {}; // cfg.key -> Chart instance
+
+// Inline plugin: draw the volume ($B) and YoY (signed; red when negative) above each bar.
+var loanLabels = {
+  id: 'loanLabels',
+  afterDatasetsDraw: function(chart){
+    var ctx = chart.ctx;
+    var meta = chart.getDatasetMeta(0);
+    var yoy = chart.$yoy || [];
+    meta.data.forEach(function(bar, i){
+      var vM = chart.data.datasets[0].data[i];
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.font = '700 12px Inter, sans-serif';
+      ctx.fillStyle = '#1E2733';
+      ctx.fillText('$' + loanB(vM) + 'B', bar.x, bar.y - 22);
+      if (yoy[i] != null) {
+        var g = yoy[i];
+        ctx.font = '600 11px Inter, sans-serif';
+        ctx.fillStyle = g < 0 ? '#C0392B' : BRAND;
+        ctx.fillText((g < 0 ? '−' : '+') + Math.abs(g).toFixed(1) + '%', bar.x, bar.y - 7);
+      }
+      ctx.restore();
+    });
+  }
+};
+
+function buildLoanChart(cfg){
+  var cv = document.getElementById('sofiChart_' + cfg.key);
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_loanCharts[cfg.key]) { _loanCharts[cfg.key].destroy(); _loanCharts[cfg.key] = null; }
+  _loanCharts[cfg.key] = new Chart(cv.getContext('2d'), {
+    type: 'bar',
+    data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderRadius: 4, maxBarThickness: 64 }] },
+    options: {
+      responsive:true, maintainAspectRatio:false, animation:false,
+      layout:{ padding:{ top:34, bottom:4 } },
+      plugins:{
+        legend:{ display:false },
+        tooltip:{ callbacks:{ label:function(ctx){
+          var ch = _loanCharts[cfg.key];
+          var yy = (ch && ch.$yoy) ? ch.$yoy[ctx.dataIndex] : null;
+          var sign = yy == null ? '' : '  (' + (yy < 0 ? '−' : '+') + Math.abs(yy).toFixed(1) + '% YoY)';
+          return '$' + loanB(ctx.parsed.y) + 'B originated' + sign;
+        } } }
+      },
+      scales:{
+        y:{ display:false, beginAtZero:true, grace:'14%' },
+        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:12 } } }
+      }
+    },
+    plugins: [loanLabels]
+  });
+}
+
+// Update one loan chart + its readout for the selected [a, b] year window.
+function renderLoan(cfg, a, b){
+  var ch = _loanCharts[cfg.key];
+  if (!ch) return;
+  var labels = [], data = [], colors = [], yoy = [];
+  for (var i = a; i <= b; i++){
+    labels.push(cfg.years[i]);
+    data.push(cfg.dataM[i]);
+    colors.push(i >= cfg.firstEst ? 'rgba(14,124,192,0.40)' : BRAND);
+    yoy.push(loanYoY(cfg, i)); // YoY vs. the true prior year
+  }
+  ch.data.labels = labels;
+  ch.data.datasets[0].data = data;
+  ch.data.datasets[0].backgroundColor = colors;
+  ch.$yoy = yoy;
+  ch.update('none');
+}
+
+// Wire one loan chart's dual-handle slider. Idempotent (oninput assignment).
+function setupLoanSlider(cfg){
+  var mn = document.getElementById(cfg.key + 'Min'), mx = document.getElementById(cfg.key + 'Max');
+  var fill = document.getElementById(cfg.key + 'Fill'), read = document.getElementById(cfg.key + 'Readout');
+  if (!mn || !mx || !fill || !read) return;
+  var maxI = cfg.years.length - 1;
+  function apply(){
+    var a = +mn.value, b = +mx.value;
+    fill.style.left  = (a / maxI * 100) + '%';
+    fill.style.width = ((b - a) / maxI * 100) + '%';
+    renderLoan(cfg, a, b);
+    var cg = loanCAGR(cfg, a, b);
+    read.innerHTML =
+      '<span class="sg-range">' + cfg.years[a] + ' → ' + cfg.years[b] + '</span>' +
+      '<span class="sg-stat"><b>$' + loanB(cfg.dataM[a]) + 'B</b> → <b>$' + loanB(cfg.dataM[b]) + 'B</b> originated</span>' +
+      (cg != null ? '<span class="sg-stat sg-cagr">CAGR <b>' + cg.toFixed(1) + '%</b></span>' : '<span class="sg-stat">CAGR —</span>');
+  }
+  mn.oninput = function(){ if (+mn.value >= +mx.value) mn.value = +mx.value - 1; apply(); };
+  mx.oninput = function(){ if (+mx.value <= +mn.value) mx.value = +mn.value + 1; apply(); };
+  apply();
+}
+
+function buildInterestTab(){
+  LOANS.forEach(function(cfg){ buildLoanChart(cfg); setupLoanSlider(cfg); });
+}
+
+// Switch sub-tab. Builds the tab's chart(s) lazily the first time it becomes visible.
 function showOvt(root, key){
   root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt') === key); });
   root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt') !== key); });
   if (key === 'members') requestAnimationFrame(buildMembersTab);
+  if (key === 'interest') requestAnimationFrame(buildInterestTab);
 }
 
 function init(c){
@@ -390,7 +555,9 @@ function init(c){
     btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };
   });
   var active = root.querySelector('.ovt-tab.active');
-  if (active && active.getAttribute('data-ovt') === 'members') requestAnimationFrame(buildMembersTab);
+  var activeKey = active ? active.getAttribute('data-ovt') : '';
+  if (activeKey === 'members') requestAnimationFrame(buildMembersTab);
+  if (activeKey === 'interest') requestAnimationFrame(buildInterestTab);
 }
 
 export var sofiOverview = { html: html, init: init };

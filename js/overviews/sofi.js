@@ -340,6 +340,10 @@ var LPB_HERO_T  = 'SoFi makes the loan — but <b>someone else\'s money funds it
 var LPB_HERO_D  = 'The Loan Platform Business lets SoFi originate loans for third-party partners who put up the capital. SoFi earns fees and keeps the member — without using its own balance sheet or taking the credit risk.';
 var LPB_BADGES  = ['Capital-light — no SoFi capital used', 'No retained credit risk', 'Cash paid up front'];
 
+// The "escape valve": LPB monetizes the ~$100B of annual loan demand SoFi can't fund itself.
+var LPB_VALVE_QUOTE = '"…effectively monetizing more of the roughly $100 billion of loan applications that we are not able to meet each year."';
+var LPB_VALVE_CITE  = '— Anthony Noto, CEO · SoFi Q2 2025 earnings call (reiterated Q3 2025)';
+
 // The three-node flow + the "what flows back to SoFi" band.
 var LPB_FLOW = [
   { ic:'1',    t:'A member borrows',          d:'A member applies for a personal, student or home loan inside the SoFi app.' },
@@ -409,6 +413,20 @@ function lpbBody(c){
     '<div class="lpb-hero-d">'+esc(LPB_HERO_D)+'</div>'+
     '<div class="lpb-badges">'+LPB_BADGES.map(function(b){ return '<span class="lpb-badge">'+esc(b)+'</span>'; }).join('')+'</div>'+
   '</div>';
+
+  // 1b — The "escape valve": LPB monetizes the ~$100B of demand SoFi can't fund itself.
+  h += '<div class="lpb-valve">'+
+    '<div class="lpb-valve-in">'+
+      '<div class="lpb-valve-num">~$100B</div>'+
+      '<div class="lpb-valve-lbl">in loan applications SoFi turns away every year — demand it can\'t fund on its own balance sheet</div>'+
+    '</div>'+
+    '<div class="lpb-valve-mid"><div class="lpb-valve-arrow">→</div><div class="lpb-valve-tag">escape valve</div></div>'+
+    '<div class="lpb-valve-out">'+
+      '<div class="lpb-valve-out-t">LPB turns it into fee revenue</div>'+
+      '<div class="lpb-valve-out-d">Instead of simply declining that demand, SoFi originates these loans with a partner\'s capital (earning a fee) or refers the borrower out — monetizing applications it would otherwise reject.</div>'+
+    '</div>'+
+  '</div>';
+  h += '<div class="lpb-valve-q">'+esc(LPB_VALVE_QUOTE)+'<cite>'+esc(LPB_VALVE_CITE)+'</cite></div>';
 
   // 2 — The flow diagram (the always-visible core).
   h += '<div class="ov-sec-h">How a loan flows through LPB</div>';

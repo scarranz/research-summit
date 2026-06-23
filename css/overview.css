@@ -100,6 +100,39 @@
   background: var(--w); border: 1px solid var(--brand); border-radius: 20px; padding: 5px 12px;
 }
 
+/* "Escape valve": ~$100B of declined demand → LPB → fee revenue */
+.lpb-valve {
+  display: flex; align-items: stretch;
+  border: 1px solid var(--bdr); border-radius: 12px; overflow: hidden; margin: 18px 0 10px;
+}
+.lpb-valve-in {
+  flex: 1; background: var(--surface); padding: 18px 20px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.lpb-valve-num { font-size: 32px; font-weight: 800; color: var(--navy); line-height: 1; letter-spacing: -0.02em; }
+.lpb-valve-lbl { font-size: 12px; color: var(--mu); line-height: 1.5; margin-top: 8px; }
+.lpb-valve-mid {
+  flex: none; width: 96px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 6px;
+  background: var(--w); border-left: 1px solid var(--bdr); border-right: 1px solid var(--bdr);
+}
+.lpb-valve-arrow { font-size: 28px; color: var(--brand); line-height: 1; }
+.lpb-valve-tag {
+  font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--brand); text-align: center;
+}
+.lpb-valve-out {
+  flex: 1.25; background: var(--brand-soft); padding: 18px 20px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.lpb-valve-out-t { font-size: 14px; font-weight: 800; color: var(--brand); margin-bottom: 5px; }
+.lpb-valve-out-d { font-size: 12px; color: var(--navy); line-height: 1.55; }
+.lpb-valve-q {
+  font-size: 12px; font-style: italic; color: var(--blue); line-height: 1.6;
+  border-left: 3px solid var(--brand); padding: 4px 0 4px 14px; margin: 0 0 6px;
+}
+.lpb-valve-q cite { display: block; font-style: normal; font-size: 11px; font-weight: 600; color: var(--mu); margin-top: 5px; }
+
 /* Flow diagram: borrower → SoFi → partner */
 .lpb-flow {
   display: grid; grid-template-columns: 1fr auto 1fr auto 1fr;
@@ -186,6 +219,10 @@
 .lpb-acc-item.open .lpb-acc-body { display: block; }
 
 @media (max-width: 860px) {
+  .lpb-valve { flex-direction: column; }
+  .lpb-valve-mid { width: auto; flex-direction: row; gap: 10px; padding: 8px;
+    border-left: none; border-right: none; border-top: 1px solid var(--bdr); border-bottom: 1px solid var(--bdr); }
+  .lpb-valve-mid .lpb-valve-arrow { transform: rotate(90deg); }
   .lpb-flow { grid-template-columns: 1fr; }
   .lpb-conn { min-width: 0; padding: 2px 0; }
   .lpb-conn-arrow { transform: rotate(90deg); }

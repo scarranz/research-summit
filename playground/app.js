@@ -4,6 +4,13 @@ import { SUMMIT } from './summit-data.js';
 const $ = (id) => document.getElementById(id);
 const USD = Object.keys(SUMMIT).filter((k) => SUMMIT[k].currency === 'USD');
 
+// Foreign currency → Massive forex pair. invert=true means pair is USD/XXX,
+// so XXX→USD = 1 / close (e.g. USDMXN). EUR uses EURUSD directly.
+const FXCFG = {
+  EUR: { pair: 'EURUSD', invert: false },
+  MXN: { pair: 'USDMXN', invert: true },
+};
+
 // ── Massive proxy ─────────────────────────────────────────────────────────────
 async function mfetch(resource, ticker, params = {}) {
   const qs = new URLSearchParams({ resource, ticker, ...params });
@@ -23,22 +30,34 @@ const money = (d) => {
   return `$${d.toFixed(0)}`;
 };
 const mult = (x) => (x == null || isNaN(x) || !isFinite(x)) ? '—' : `${x.toFixed(1)}x`;
+const peg  = (x) => (x == null || isNaN(x) || !isFinite(x)) ? '—' : x.toFixed(2);
 const pct  = (x) => (x == null || isNaN(x)) ? '—' : `${x >= 0 ? '+' : ''}${x.toFixed(0)}%`;
 const num  = (x) => (x == null || isNaN(x)) ? '—' : x.toLocaleString('en-US', { maximumFractionDigits: 0 });
 const cheapCls = (v, base) => (base > 0 && v > 0 && v < base) ? 'cheap' : (base > 0 && v > 0 ? 'rich' : '');
+const isNullish = (v) => v == null || isNaN(v) || !isFinite(v);
 
 let chart;
 
 // ── Fetch + compute one company's metrics (no rendering) ──────────────────────
 async function getData(ticker) {
-  const [details, snap, ratiosResp] = await Promise.all([
-    mfetch('details', ticker),
-    mfetch('snapshot', ticker),
-    mfetch('ratios', ticker),
-  ]);
+  const su = SUMMIT[ticker];
+  const isF = !!(su && su.currency !== 'USD');
+
+  const reqs = [mfetch('details', ticker), mfetch('snapshot', ticker), mfetch('ratios', ticker)];
+  if (isF) reqs.push(mfetch('fx', FXCFG[su.currency].pair).catch(() => null));
+  const [details, snap, ratiosResp, fxResp] = await Promise.all(reqs);
+
   const d = details.results || {};
   const t = snap.ticker || {};
   const rt = (ratiosResp.results && ratiosResp.results[0]) || {};
+
+  // FX: convert Summit (foreign) values to USD with a live Massive rate.
+  let fxRate = 1, fxNote = '';
+  if (isF) {
+    const cfg = FXCFG[su.currency];
+    const c = fxResp?.results?.[0]?.c;
+    if (c) { fxRate = cfg.invert ? 1 / c : c; fxNote = `${su.currency}→USD @ ${fxRate.toFixed(4)} (live)`; }
+  }
 
   const price = t.lastTrade?.p ?? t.day?.c ?? t.prevDay?.c ?? rt.price;
   const chgPct = t.todaysChangePerc;
@@ -48,23 +67,30 @@ async function getData(ticker) {
     ? rt.enterprise_value - rt.market_cap : null;
   const ev = (mktCap != null && netDebt != null) ? mktCap + netDebt : rt.enterprise_value;
 
-  const su = SUMMIT[ticker];
-  const fx = su && su.currency !== 'USD';
   const ttm = { 'EV/EBITDA': rt.ev_to_ebitda, 'P/E': rt.price_to_earnings, 'P/S': rt.price_to_sales };
   const fwd = (year) => {
-    if (!su || fx || !su.years[year]) return {};
-    const y = su.years[year];
+    if (!su || !su.years[year]) return {};
+    const y = su.years[year], f = fxRate; // Summit value × f = USD
     return {
-      'EV/EBITDA': (ev != null && y.ebitda) ? ev / (y.ebitda * 1e6) : null,
-      'P/E': (mktCap != null && y.earnings) ? mktCap / (y.earnings * 1e6) : null,
-      'P/S': (mktCap != null && y.rev) ? mktCap / (y.rev * 1e6) : null,
+      'EV/EBITDA': (ev != null && y.ebitda) ? ev / (y.ebitda * f * 1e6) : null,
+      'P/E': (mktCap != null && y.earnings) ? mktCap / (y.earnings * f * 1e6) : null,
+      'P/S': (mktCap != null && y.rev) ? mktCap / (y.rev * f * 1e6) : null,
     };
   };
-  const revGrowth = (su && !fx && su.years[2026] && su.years[2025])
-    ? (su.years[2026].rev / su.years[2025].rev - 1) * 100 : null;
+  const f26 = fwd(2026), f27 = fwd(2027);
 
-  return { d, t, rt, price, chgPct, shares, mktCap, netDebt, ev, su, fx,
-           ttm, f26: fwd(2026), f27: fwd(2027), revGrowth };
+  // Growth is a currency-independent ratio.
+  const y25 = su?.years[2025], y26 = su?.years[2026];
+  const revGrowth = (y25 && y26) ? (y26.rev / y25.rev - 1) * 100 : null;
+  const earnGrowth = (y25 && y26 && y25.earnings > 0 && y26.earnings != null)
+    ? (y26.earnings / y25.earnings - 1) * 100 : null;
+  // PEG = forward P/E ÷ earnings growth %. Skip if growth is non-positive or a
+  // low-base artifact (>150%).
+  const pegVal = (earnGrowth != null && earnGrowth > 0 && earnGrowth <= 150 && f26['P/E'])
+    ? f26['P/E'] / earnGrowth : null;
+
+  return { d, t, rt, price, chgPct, shares, mktCap, netDebt, ev, su, isF, fxNote,
+           ttm, f26, f27, revGrowth, earnGrowth, peg: pegVal };
 }
 
 // ── Single-company view ───────────────────────────────────────────────────────
@@ -97,8 +123,8 @@ async function load(ticker) {
     $('cmp').hidden = false;
     $('cmpnote').innerHTML = !m.su
       ? `<span class="err">No Summit data for ${ticker}.</span> Ask Claude to pull its DCF projections.`
-      : m.fx
-        ? `<span class="err">${ticker} reports in ${m.su.currency}.</span> Forward multiples need FX (Massive price is USD) — not shown to avoid wrong numbers. TTM (Massive) is still valid.`
+      : m.isF
+        ? `Summit values converted to USD: <b>${m.fxNote || 'FX unavailable'}</b>. P/E & P/S shown; EV/EBITDA needs net debt (no Massive financials for this ADR). <span class="cheap">Green</span> = cheaper than TTM.`
         : `Forward = live EV/market-cap (Massive) ÷ Summit projections (snapshot ${m.su.snapshot_date}). <span class="cheap">Green</span> = cheaper than TTM.`;
 
     drawChart([
@@ -126,36 +152,71 @@ function drawChart(data) {
   });
 }
 
-// ── Peers view — all USD companies side by side ───────────────────────────────
-async function buildPeers() {
-  $('peerswrap').innerHTML = `<div class="muted">Loading ${USD.length} companies live…</div>`;
-  const results = await Promise.all(USD.map(async (tk) => {
-    try { return { tk, m: await getData(tk) }; } catch (e) { return { tk, err: e.message }; }
-  }));
+// ── Peers view — sortable table of all USD companies ──────────────────────────
+let peerData = [];
+let peerSort = { key: 'mcap', dir: 'desc' };
+const PEERCOLS = [
+  { key: 'co',      label: 'Company',       get: (r) => r.tk, type: 'str' },
+  { key: 'mcap',    label: 'Mkt Cap',       get: (r) => r.m.mktCap, fmt: money },
+  { key: 'evebTTM', label: 'EV/EBITDA TTM', get: (r) => r.m.ttm['EV/EBITDA'], fmt: mult },
+  { key: 'eveb26',  label: '26E',           get: (r) => r.m.f26['EV/EBITDA'], fmt: mult, base: (r) => r.m.ttm['EV/EBITDA'] },
+  { key: 'eveb27',  label: '27E',           get: (r) => r.m.f27['EV/EBITDA'], fmt: mult, base: (r) => r.m.ttm['EV/EBITDA'] },
+  { key: 'pe26',    label: 'P/E 26E',       get: (r) => r.m.f26['P/E'], fmt: mult },
+  { key: 'peg',     label: 'PEG',           get: (r) => r.m.peg, fmt: peg, lowGood: true },
+  { key: 'ps26',    label: 'P/S 26E',       get: (r) => r.m.f26['P/S'], fmt: mult },
+  { key: 'revgr',   label: 'Rev gr 26E',    get: (r) => r.m.revGrowth, fmt: pct },
+];
 
-  const head = `<thead><tr>
-    <th>Company</th><th>Mkt Cap</th>
-    <th>EV/EBITDA TTM</th><th>26E</th><th>27E</th>
-    <th>P/E 26E</th><th>P/S 26E</th><th>Rev gr 26E</th>
-  </tr></thead>`;
+function renderPeers() {
+  const { key, dir } = peerSort;
+  const col = PEERCOLS.find((c) => c.key === key);
+  const ok = peerData.filter((r) => !r.err);
+  const errs = peerData.filter((r) => r.err);
 
-  const body = results.map(({ tk, m, err }) => {
-    if (err) return `<tr><td>${tk}</td><td colspan="7" class="err">${err}</td></tr>`;
-    const c = (v, base) => v == null ? '<td>—</td>' : `<td class="${cheapCls(v, base)}">${mult(v)}</td>`;
-    return `<tr>
-      <td><b>${tk}</b></td>
-      <td>${money(m.mktCap)}</td>
-      <td>${mult(m.ttm['EV/EBITDA'])}</td>
-      ${c(m.f26['EV/EBITDA'], m.ttm['EV/EBITDA'])}
-      ${c(m.f27['EV/EBITDA'], m.ttm['EV/EBITDA'])}
-      <td>${mult(m.f26['P/E'])}</td>
-      <td>${mult(m.f26['P/S'])}</td>
-      <td>${pct(m.revGrowth)}</td>
-    </tr>`;
-  }).join('');
+  ok.sort((a, b) => {
+    if (col.type === 'str') {
+      return dir === 'asc' ? String(col.get(a)).localeCompare(col.get(b)) : String(col.get(b)).localeCompare(col.get(a));
+    }
+    const va = col.get(a), vb = col.get(b), na = isNullish(va), nb = isNullish(vb);
+    if (na && nb) return 0; if (na) return 1; if (nb) return -1; // nulls always last
+    return dir === 'asc' ? va - vb : vb - va;
+  });
+
+  const head = '<thead><tr>' + PEERCOLS.map((c) => {
+    const arrow = c.key === key ? (dir === 'asc' ? ' ▲' : ' ▼') : '';
+    return `<th data-key="${c.key}" class="sortable">${c.label}${arrow}</th>`;
+  }).join('') + '</tr></thead>';
+
+  const body = ok.map((r) => '<tr>' + PEERCOLS.map((c) => {
+    if (c.key === 'co') return `<td><b>${r.tk}</b></td>`;
+    const v = c.get(r);
+    let cls = '';
+    if (c.base) cls = cheapCls(v, c.base(r));
+    else if (c.lowGood) cls = (v != null && v > 0 && v < 1) ? 'cheap' : '';
+    return `<td class="${cls}">${c.fmt(v)}</td>`;
+  }).join('') + '</tr>').join('')
+  + errs.map((r) => `<tr><td><b>${r.tk}</b></td><td colspan="${PEERCOLS.length - 1}" class="err">${r.err}</td></tr>`).join('');
 
   $('peerswrap').innerHTML = `<table>${head}<tbody>${body}</tbody></table>
-    <div class="muted">TTM from Massive · 26E/27E forward from Summit DCF · <span class="cheap">green</span> = forward cheaper than TTM. Click a row's ticker chip above to drill in.</div>`;
+    <div class="muted">Click any header to sort. TTM from Massive · 26E/27E forward from Summit DCF ·
+    <span class="cheap">green</span> = forward cheaper than TTM (PEG &lt; 1 for PEG col). PEG = P/E 26E ÷ earnings growth %.</div>`;
+
+  $('peerswrap').querySelectorAll('th[data-key]').forEach((th) => {
+    th.onclick = () => {
+      const k = th.dataset.key;
+      if (peerSort.key === k) peerSort.dir = peerSort.dir === 'asc' ? 'desc' : 'asc';
+      else peerSort = { key: k, dir: k === 'co' ? 'asc' : 'desc' };
+      renderPeers();
+    };
+  });
+}
+
+async function buildPeers() {
+  $('peerswrap').innerHTML = `<div class="muted">Loading ${USD.length} companies live…</div>`;
+  peerData = await Promise.all(USD.map(async (tk) => {
+    try { return { tk, m: await getData(tk) }; } catch (e) { return { tk, err: e.message }; }
+  }));
+  renderPeers();
 }
 
 // ── API explorer ──────────────────────────────────────────────────────────────

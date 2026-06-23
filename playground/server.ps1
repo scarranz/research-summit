@@ -37,6 +37,10 @@ function Resolve-Route([string]$resource, [string]$t, [hashtable]$q) {
       $to   = if ($q.to)   { $q.to }   else { (Get-Date).ToString("yyyy-MM-dd") }
       return "/v2/aggs/ticker/$t/range/1/day/$from/$to?adjusted=true&sort=asc&limit=5000"
     }
+    "fx"        {
+      # $t is a forex pair like EURUSD or USDMXN; previous daily close (no dates needed).
+      return "/v2/aggs/ticker/C:$t/prev?adjusted=true"
+    }
     default { return $null }
   }
 }

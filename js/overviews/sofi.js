@@ -384,22 +384,8 @@ var LPB_FUNDERS = [
   ['Insurers',                      'Have long-duration capital that pairs naturally with the steady, predictable cash flows of amortizing consumer loans.'],
 ];
 
-var LPB_SEC = [
-  ['Q3 2025', '98 bps', '$466M securitized'],
-  ['Q4 2025', '101 bps', '$463M securitized'],
-  ['Q1 2026', '86 bps', '$919M · best execution to date'],
-];
-
-var LPB_KPIS = [
-  { l:'LPB volume (Q1 2026)',       v:'~$3.0B',  d:'+90% YoY',            dir:'up' },
-  { l:'Annualized run-rate',        v:'~$14.5B', d:'from ~$2.1B in 2024', dir:'up' },
-  { l:'New commitments (Q1 2026)',  v:'$3.6B',   d:'3 new partners',      dir:'up' },
-  { l:'LPB fee run-rate',           v:'~$775M',  d:'~3× YoY',             dir:'up' },
-];
-
-var LPB_FORWARD = 'A forward-flow agreement is a commitment to buy loans before they exist: a partner pre-commits to purchase a set volume of loans over time, as long as each one meets agreed credit criteria. SoFi then originates against that commitment — so the funding is lined up in advance and SoFi can scale lending without scaling its own balance sheet. Demand from partners already runs above SoFi\'s contractual commitments.';
-var LPB_STRUCT  = 'Partners hold the loans inside their own funds and vehicles. To give them liquidity, SoFi also packages LPB loans into securitizations on their behalf — at an improving cost of funds. To satisfy risk-retention rules SoFi keeps only a 5% "vertical slice" spread evenly across all tranches — never a concentrated first-loss position.';
-var LPB_SOURCES = 'Sources: SoFi FY2025 Form 10-K and Q2 2025–Q1 2026 earnings calls; SoFi press releases on the Blue Owl ($5B, Mar 2025) and Fortress (Oct 2024, expanded Apr 2025) agreements. LPB is fee-based and capital-light; SoFi retains servicing but, after transfer, has no funding obligation and no retained credit risk (a small, immaterial loss-share applies on certain whole-loan sales). Named partners are publicly announced; the Q1 2026 additions are described by type, not named.';
+var LPB_FORWARD = 'A forward-flow agreement is a commitment to buy loans before they exist: a partner pre-commits to purchase a set volume of loans over time, as long as each one meets agreed credit criteria. SoFi then originates against that commitment — so the funding is lined up in advance and SoFi can scale lending without scaling its own balance sheet.';
+var LPB_SOURCES = 'Sources: SoFi FY2025 Form 10-K and Q2 2025–Q1 2026 earnings calls; SoFi press releases on the Blue Owl ($5B, Mar 2025) and Fortress (Oct 2024, expanded Apr 2025) agreements. LPB is fee-based and capital-light: after transfer, SoFi has no funding obligation and no retained credit risk. Named partners are publicly announced; the Q1 2026 additions are described by type, not named.';
 
 // "Loan Platform Business" nested-pane body — a visual explainer of how LPB works.
 function lpbBody(c){
@@ -412,7 +398,7 @@ function lpbBody(c){
     '<div class="lpb-badges">'+LPB_BADGES.map(function(b){ return '<span class="lpb-badge">'+esc(b)+'</span>'; }).join('')+'</div>'+
   '</div>';
 
-  // 2 — The flow diagram.
+  // 2 — The flow diagram (the always-visible core).
   h += '<div class="ov-sec-h">How a loan flows through LPB</div>';
   var flow = '';
   flow += '<div class="lpb-node">'+nodeInner(LPB_FLOW[0])+'</div>';
@@ -425,15 +411,14 @@ function lpbBody(c){
     return '<div class="lpb-back-item"><b>'+esc(b[0])+'</b>'+esc(b[1])+'</div>';
   }).join('')+'</div>';
 
-  // 3 — How SoFi gets paid.
-  h += '<div class="ov-sec-h ovs-h">How SoFi gets paid</div>';
-  h += '<div class="lpb-fees">'+LPB_FEES.map(function(f){
+  // 3 — Expand-to-learn-more (progressive disclosure: nothing else shown until clicked).
+  // (a) How SoFi gets paid
+  var feesHtml = '<div class="lpb-fees">'+LPB_FEES.map(function(f){
     return '<div class="lpb-fee"><div class="lpb-fee-t">'+esc(f[0])+'</div><div class="lpb-fee-d">'+esc(f[1])+'</div></div>';
-  }).join('')+'</div>';
-  h += '<div class="ov-callout" style="margin-top:12px"><b>What SoFi does <i>not</i> get:</b> interest income or credit risk — those stay with the partner. SoFi trades a smaller, capital-light fee today for a loan it would not have put on its own balance sheet anyway.</div>';
+  }).join('')+'</div>'+
+  '<div class="ov-callout" style="margin-top:12px"><b>What SoFi does <i>not</i> get:</b> interest income or credit risk — those stay with the partner. SoFi trades a smaller, capital-light fee today for a loan it would not have put on its own balance sheet anyway.</div>';
 
-  // 4 — Balance sheet vs LPB comparison.
-  h += '<div class="ov-sec-h ovs-h">Balance sheet vs. Loan Platform Business</div>';
+  // (b) Why not just lend off its own balance sheet?
   var cmp = '<div class="lpb-cmp-h lpb-cmp-dim"></div>'+
     '<div class="lpb-cmp-h">'+esc(LPB_CMP_COLS[0])+'</div>'+
     '<div class="lpb-cmp-h lpb-cmp-hl">'+esc(LPB_CMP_COLS[1])+'</div>';
@@ -442,12 +427,14 @@ function lpbBody(c){
       '<div>'+esc(r[1])+'</div>'+
       '<div class="lpb-cmp-hl">'+esc(r[2])+'</div>';
   }).join('');
-  h += '<div class="lpb-cmp">'+cmp+'</div>';
+  var cmpHtml = '<div class="lpb-cmp">'+cmp+'</div>';
 
-  // 5 — Forward-flow agreements + partner commitments.
-  h += '<div class="ov-sec-h ovs-h">Forward-flow agreements: funding lined up in advance</div>';
-  h += '<p class="ov-lede">'+esc(LPB_FORWARD)+'</p>';
-  h += '<div class="lpb-commit">'+LPB_COMMITS.map(function(p){
+  // (c) Who funds the loans — and how it's committed
+  var fundHtml = '<div class="lpb-funders">'+LPB_FUNDERS.map(function(f){
+    return '<div class="lpb-funder"><div class="lpb-funder-t">'+esc(f[0])+'</div><div class="lpb-funder-d">'+esc(f[1])+'</div></div>';
+  }).join('')+'</div>'+
+  '<p class="ov-lede" style="margin-top:14px">'+esc(LPB_FORWARD)+'</p>'+
+  '<div class="lpb-commit">'+LPB_COMMITS.map(function(p){
     var w = Math.round(p[1] / LPB_COMMIT_MAX * 100);
     return '<div class="lpb-commit-row">'+
       '<div class="lpb-commit-top"><span class="lpb-commit-p">'+esc(p[0])+'</span><span class="lpb-commit-v">'+esc(p[2])+'</span></div>'+
@@ -456,30 +443,24 @@ function lpbBody(c){
     '</div>';
   }).join('')+'</div>';
 
-  // 6 — Who funds the loans.
-  h += '<div class="ov-sec-h ovs-h">Who funds the loans</div>';
-  h += '<div class="lpb-funders">'+LPB_FUNDERS.map(function(f){
-    return '<div class="lpb-funder"><div class="lpb-funder-t">'+esc(f[0])+'</div><div class="lpb-funder-d">'+esc(f[1])+'</div></div>';
-  }).join('')+'</div>';
+  h += '<div class="lpb-acc">'+
+    accItem('How does SoFi get paid?', true, feesHtml)+
+    accItem('Why not just lend off its own balance sheet?', false, cmpHtml)+
+    accItem('Who funds the loans?', false, fundHtml)+
+  '</div>';
 
-  // 7 — The structure with private-credit funds (securitization / liquidity).
-  h += '<div class="ov-sec-h ovs-h">The structure with private-credit funds</div>';
-  h += '<p class="ov-lede">'+esc(LPB_STRUCT)+'</p>';
-  h += '<div class="lpb-sec">'+LPB_SEC.map(function(s){
-    return '<div class="lpb-sec-card"><div class="lpb-sec-q">'+esc(s[0])+'</div><div class="lpb-sec-v">'+esc(s[1])+'</div><div class="lpb-sec-d">'+esc(s[2])+'</div></div>';
-  }).join('')+'</div>';
-  h += '<div class="ov-foot" style="border:none;padding-top:8px">Securitization cost of funds = weighted-average spread on LPB deals SoFi executes for partners (lower is cheaper). SoFi retains a 5% vertical slice, no first-loss position.</div>';
-
-  // 8 — Scale.
-  h += '<div class="ov-sec-h ovs-h">Scale</div>';
-  h += '<div class="ov-kpis">'+LPB_KPIS.map(function(k){
-    return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d '+(k.dir||'muted')+'">'+esc(k.d)+'</div></div>';
-  }).join('')+'</div>';
-
-  // 9 — Sources.
+  // 4 — Sources.
   h += '<div class="ov-foot">'+esc(LPB_SOURCES)+'</div>';
 
   return h;
+}
+
+// One expand/collapse accordion item.
+function accItem(title, open, bodyHtml){
+  return '<div class="lpb-acc-item'+(open ? ' open' : '')+'">'+
+    '<button type="button" class="lpb-acc-h"><span>'+esc(title)+'</span><span class="lpb-acc-ic">'+(open ? '–' : '+')+'</span></button>'+
+    '<div class="lpb-acc-body">'+bodyHtml+'</div>'+
+  '</div>';
 }
 
 function nodeInner(n){
@@ -748,6 +729,15 @@ function init(c){
   });
   root.querySelectorAll('.ovf-tab').forEach(function(btn){
     btn.onclick = function(){ showOvf(root, btn.getAttribute('data-ovf')); };
+  });
+  // LPB accordion (progressive disclosure).
+  root.querySelectorAll('.lpb-acc-h').forEach(function(btn){
+    btn.onclick = function(){
+      var item = btn.parentElement;
+      var open = item.classList.toggle('open');
+      var ic = btn.querySelector('.lpb-acc-ic');
+      if (ic) ic.textContent = open ? '–' : '+';
+    };
   });
   var active = root.querySelector('.ovt-tab.active');
   var activeKey = active ? active.getAttribute('data-ovt') : '';

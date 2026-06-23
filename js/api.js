@@ -186,6 +186,34 @@ export async function getFileUrl(filePath) {
   return ok(data);
 }
 
+// ─── Fund Returns ───────────────────────────────────────────
+// Daily series for the Performance Analysis dashboard. Tables are RLS-gated,
+// so only authenticated users can read them. Rows exceed PostgREST's 1000-row
+// page limit, so fetch them in pages.
+
+async function fetchAllRows(table, build) {
+  const pageSize = 1000;
+  let from = 0, all = [];
+  for (;;) {
+    let q = build(supabase.from(table).select('*'));
+    q = q.range(from, from + pageSize - 1);
+    var { data, error } = await q;
+    if (error) return fail(error.message);
+    all = all.concat(data || []);
+    if (!data || data.length < pageSize) break;
+    from += pageSize;
+  }
+  return ok(all);
+}
+
+export async function fetchFundReturns(portfolio) {
+  return fetchAllRows('fund_daily_returns', q => q.eq('portfolio', portfolio || 'STRATEGY').order('date'));
+}
+
+export async function fetchBenchmarkPrices(symbol) {
+  return fetchAllRows('benchmark_prices', q => q.eq('symbol', symbol || 'SPY').order('date'));
+}
+
 // ─── Auth ───────────────────────────────────────────────────
 
 export async function fetchUserRole(userId) {

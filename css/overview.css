@@ -20,11 +20,6 @@
   --brand-soft: #E9F3FB;
 }
 
-/* SoFi Growth-tab charts want more vertical room than the default chart card.
-   Compound selector so it beats `.ov-chart-wrap { height:200px }` regardless of order. */
-.ov-chart-wrap.ovs-tall { height: 360px; }
-.ovs-h { margin-top: 30px; }
-
 /* ── Snapshot card ── */
 .ov-snap {
   display: grid;

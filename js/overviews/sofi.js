@@ -1,9 +1,9 @@
 // overviews/sofi.js — custom Overview for SoFi Technologies, Inc. (Nasdaq: SOFI)
 // Built individually per the portal's per-company Overview model (see CLAUDE.md).
 //
-// This module renders two internal sub-tabs inside the Overview pane:
-//   1. Overview — company profile (one-stop digital bank: three segments on a national charter)
-//   2. Growth   — the member/product flywheel, operating leverage, and path to profitability
+// This module renders the company profile (one-stop digital bank: three segments on a
+// national charter). Additional sub-tabs will be added later; for now there is a single
+// Overview view, rendered directly without a sub-tab bar.
 //
 // Figures are in US dollars. Headline KPIs are for the most recent quarter (Q1 2026,
 // ended March 31, 2026); annual figures are fiscal years ended December 31. Sourced from
@@ -131,29 +131,6 @@ var LEADERSHIP = [
 
 var SOURCES = 'Sources: SoFi Technologies, Inc. (Nasdaq: SOFI) FY2025 Annual Report on Form 10-K (year ended December 31, 2025), Q1 2026 Form 10-Q (quarter ended March 31, 2026), and the Q1 2026 investor presentation and earnings call. All figures in US dollars. Adjusted measures (adjusted net revenue, adjusted EBITDA, adjusted net income) are non-GAAP and are labeled as such; "2026E" and long-term figures are company guidance/targets, not results. Peer descriptions summarize public information.';
 
-// ─── Growth tab: time series ──────────────────────────────────────────────────
-// Members & Products by quarter (millions). Source: Q1 2026 investor deck, Company Metrics.
-var GQ_LABELS  = ['Q1·24','Q2·24','Q3·24','Q4·24','Q1·25','Q2·25','Q3·25','Q4·25','Q1·26'];
-var GQ_MEMBERS = [ 8.13,  8.77,  9.37, 10.13, 10.92, 11.75, 12.64, 13.65, 14.71 ];
-var GQ_PRODUCTS= [11.83, 12.78, 13.65, 14.75, 15.92, 17.14, 18.55, 20.17, 22.16 ];
-var GQ_NOTE = 'Total members and total products at quarter-end (millions). Members have grown at a ~38% CAGR since 2022 and products at ~37%; products grow faster than members because existing members keep adding products (43% of new products in Q1 2026 came from existing members). Source: SoFi Q1 2026 investor presentation.';
-var _chartMP = null;
-
-// Adjusted net revenue (annual, $B) with EBITDA margin overlay. 2026E = company guidance.
-var REV_YEARS   = ['2022','2023','2024','2025','2026E'];
-var REV_ADJ     = [ 1.54,  2.07,  2.61,  3.59,  4.66 ];   // adjusted net revenue, $B
-var REV_MARGIN  = [    9,    21,    26,    29,    34 ];    // adjusted EBITDA margin, %
-var REV_FIRST_EST = 4;                                     // index of first estimated year (2026E)
-var REV_NOTE = 'Adjusted net revenue (bars, $B, left) and adjusted EBITDA margin (line, %, right), fiscal years. 2022–2025 are actuals; 2026E is company guidance (~$4.66B revenue at a ~34% margin). SoFi also targets ~$7.9B of adjusted net revenue by 2028 (~30% CAGR). Revenue has compounded while margin expanded every year — the operating-leverage story. Source: SoFi Q1 2026 investor presentation.';
-var _chartRev = null;
-
-// Path to profitability — adjusted net income (annual, $M). 2026E = guidance.
-var NI_YEARS    = ['2022','2023','2024','2025','2026E'];
-var NI_ADJ      = [ -320,  -54,   227,   481,   825 ];     // adjusted net income, $M
-var NI_FIRST_EST = 4;
-var NI_NOTE = 'Adjusted net income by fiscal year ($M). SoFi crossed from losses to durable profit in 2024 and roughly doubled adjusted net income in 2025; 2026E is company guidance of ~$825M. (Adjusted basis is used so the 2024 one-time tax benefit does not distort the trend.) Source: SoFi Q1 2026 investor presentation.';
-var _chartNI = null;
-
 // ─── Render helpers ──────────────────────────────────────────────────────────
 function sec(title, inner){ return '<section class="ov-sec"><div class="ov-sec-h">'+esc(title)+'</div>'+inner+'</section>'; }
 function bullets(arr){ return '<ul class="ov-bullets">'+arr.map(function(b){return '<li>'+b+'</li>';}).join('')+'</ul>'; }
@@ -237,225 +214,13 @@ function overviewBody(c){
   return h;
 }
 
-// "Growth" sub-tab body — the three story charts.
-function growthBody(c){
-  var h = '';
-
-  // 1 — Members & Products (the flywheel).
-  h += '<div class="ov-chart-card">'+
-    '<div class="ov-chart-t">Members & Products <span>(quarter-end, millions)</span></div>'+
-    '<div class="ov-chart-wrap ovs-tall"><canvas id="sofiChartMP"></canvas></div>'+
-  '</div>';
-  h += '<div class="ov-foot">'+esc(GQ_NOTE)+'</div>';
-
-  // 2 — Adjusted net revenue + EBITDA margin (operating leverage).
-  h += '<div class="ov-sec-h ovs-h">Revenue & Operating Leverage</div>';
-  h += '<div class="ov-chart-card">'+
-    '<div class="ov-chart-t">Adjusted Net Revenue & EBITDA Margin <span>($B bars · light = guidance · line = adj. EBITDA margin %)</span></div>'+
-    '<div class="ov-chart-wrap ovs-tall"><canvas id="sofiChartRev"></canvas></div>'+
-  '</div>';
-  h += '<div class="ov-foot">'+esc(REV_NOTE)+'</div>';
-
-  // 3 — Path to profitability.
-  h += '<div class="ov-sec-h ovs-h">Path to Profitability</div>';
-  h += '<div class="ov-chart-card">'+
-    '<div class="ov-chart-t">Adjusted Net Income <span>($M · light = guidance)</span></div>'+
-    '<div class="ov-chart-wrap ovs-tall"><canvas id="sofiChartNI"></canvas></div>'+
-  '</div>';
-  h += '<div class="ov-foot">'+esc(NI_NOTE)+'</div>';
-
-  return h;
-}
-
 function html(c){
-  var h = '<div class="ov ov-sofi" data-brand="SOFI">';
-  // Sub-tab bar
-  h += '<div class="ovt-tabs">'+
-    '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="growth">Growth</button>'+
-  '</div>';
-  // Panes
-  h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="growth" hidden>'+growthBody(c)+'</div>';
-  h += '</div>';
-  return h;
+  // Single Overview view for now — no sub-tab bar. Additional tabs will be added later.
+  return '<div class="ov ov-sofi" data-brand="SOFI">' + overviewBody(c) + '</div>';
 }
 
-// ─── Charts ──────────────────────────────────────────────────────────────────
-var BRAND = '#0E7CC0';   // SoFi blue
-var BRAND2 = '#16C2A3';  // teal accent (products / margin)
-
-// Value labels above the last point of each line in the Members/Products chart.
-var mpEndLabels = {
-  id: 'mpEndLabels',
-  afterDatasetsDraw: function(chart){
-    var ctx = chart.ctx;
-    chart.data.datasets.forEach(function(ds, di){
-      var meta = chart.getDatasetMeta(di);
-      if (meta.hidden || !meta.data.length) return;
-      var i = meta.data.length - 1;
-      var pt = meta.data[i];
-      ctx.save();
-      ctx.font = '700 12px Inter, sans-serif';
-      ctx.fillStyle = ds.borderColor;
-      ctx.textAlign = 'right';
-      ctx.fillText(Number(ds.data[i]).toFixed(1) + 'M', pt.x - 6, pt.y - 8);
-      ctx.restore();
-    });
-  }
-};
-
-function buildMPChart(){
-  var cv = document.getElementById('sofiChartMP');
-  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
-  if (_chartMP) { _chartMP.destroy(); _chartMP = null; }
-  _chartMP = new Chart(cv.getContext('2d'), {
-    type: 'line',
-    data: { labels: GQ_LABELS, datasets: [
-      { label:'Products', data:GQ_PRODUCTS, borderColor:BRAND2, backgroundColor:'rgba(22,194,163,0.08)',
-        borderWidth:2.5, pointRadius:3, pointHoverRadius:5, tension:.3, fill:true },
-      { label:'Members', data:GQ_MEMBERS, borderColor:BRAND, backgroundColor:'rgba(14,124,192,0.08)',
-        borderWidth:2.5, pointRadius:3, pointHoverRadius:5, tension:.3, fill:true },
-    ]},
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      layout:{ padding:{ top:20, right:30 } },
-      interaction:{ mode:'index', intersect:false },
-      plugins:{
-        legend:{ display:true, position:'bottom', labels:{ usePointStyle:true, font:{size:12} } },
-        tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label+': '+Number(ctx.parsed.y).toFixed(2)+'M'; } } }
-      },
-      scales:{
-        y:{ beginAtZero:true, grid:{ color:'#EEF1F5' }, ticks:{ color:'#8A93A0', font:{size:11}, callback:function(v){ return v+'M'; } } },
-        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{size:11} } }
-      }
-    },
-    plugins: [mpEndLabels]
-  });
-}
-
-// Labels above each revenue bar.
-var revLabels = {
-  id: 'revLabels',
-  afterDatasetsDraw: function(chart){
-    var ctx = chart.ctx;
-    var meta = chart.getDatasetMeta(0);
-    meta.data.forEach(function(bar, i){
-      ctx.save();
-      ctx.textAlign = 'center';
-      ctx.font = '700 12px Inter, sans-serif';
-      ctx.fillStyle = '#1E2733';
-      ctx.fillText('$' + Number(REV_ADJ[i]).toFixed(2) + 'B', bar.x, bar.y - 8);
-      ctx.restore();
-    });
-  }
-};
-
-function buildRevChart(){
-  var cv = document.getElementById('sofiChartRev');
-  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
-  if (_chartRev) { _chartRev.destroy(); _chartRev = null; }
-  var barColors = REV_ADJ.map(function(_, i){ return i >= REV_FIRST_EST ? 'rgba(14,124,192,0.40)' : BRAND; });
-  _chartRev = new Chart(cv.getContext('2d'), {
-    type: 'bar',
-    data: { labels: REV_YEARS, datasets: [
-      { type:'bar', label:'Adjusted net revenue ($B)', data:REV_ADJ, backgroundColor:barColors,
-        borderRadius:4, maxBarThickness:64, yAxisID:'y', order:2 },
-      { type:'line', label:'Adjusted EBITDA margin (%)', data:REV_MARGIN, borderColor:'#E8932A',
-        backgroundColor:'#E8932A', borderWidth:2.5, pointRadius:3, pointHoverRadius:5, tension:.3,
-        fill:false, yAxisID:'y1', order:1 },
-    ]},
-    options: {
-      responsive:true, maintainAspectRatio:false, animation:false,
-      layout:{ padding:{ top:26 } },
-      interaction:{ mode:'index', intersect:false },
-      plugins:{
-        legend:{ display:true, position:'bottom', labels:{ usePointStyle:true, font:{size:12} } },
-        tooltip:{ callbacks:{ label:function(ctx){
-          return ctx.dataset.yAxisID === 'y1'
-            ? 'Adj. EBITDA margin: ' + ctx.parsed.y + '%'
-            : 'Adj. net revenue: $' + Number(ctx.parsed.y).toFixed(2) + 'B'; } } }
-      },
-      scales:{
-        y:{ display:false, beginAtZero:true, grace:'16%' },
-        y1:{ position:'right', beginAtZero:true, max:50, grid:{ display:false },
-             ticks:{ color:'#E8932A', font:{size:11}, callback:function(v){ return v+'%'; } } },
-        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{size:12} } }
-      }
-    },
-    plugins: [revLabels]
-  });
-}
-
-// Labels above/below each net-income bar (handles negatives).
-var niLabels = {
-  id: 'niLabels',
-  afterDatasetsDraw: function(chart){
-    var ctx = chart.ctx;
-    var meta = chart.getDatasetMeta(0);
-    meta.data.forEach(function(bar, i){
-      var v = NI_ADJ[i];
-      ctx.save();
-      ctx.textAlign = 'center';
-      ctx.font = '700 12px Inter, sans-serif';
-      ctx.fillStyle = v < 0 ? '#C0392B' : '#1E7A4B';
-      var txt = (v < 0 ? '–$' + Math.abs(v) : '$' + v) + 'M';
-      ctx.fillText(txt, bar.x, v < 0 ? bar.y + 16 : bar.y - 8);
-      ctx.restore();
-    });
-  }
-};
-
-function buildNIChart(){
-  var cv = document.getElementById('sofiChartNI');
-  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
-  if (_chartNI) { _chartNI.destroy(); _chartNI = null; }
-  var colors = NI_ADJ.map(function(v, i){
-    if (v < 0) return '#E2B4AE';                                  // loss years
-    return i >= NI_FIRST_EST ? 'rgba(30,122,75,0.40)' : '#1E7A4B'; // profit (light = guidance)
-  });
-  _chartNI = new Chart(cv.getContext('2d'), {
-    type: 'bar',
-    data: { labels: NI_YEARS, datasets: [{ data: NI_ADJ, backgroundColor: colors, borderRadius:4, maxBarThickness:64 }] },
-    options: {
-      responsive:true, maintainAspectRatio:false, animation:false,
-      layout:{ padding:{ top:24, bottom:8 } },
-      plugins:{
-        legend:{ display:false },
-        tooltip:{ callbacks:{ label:function(ctx){ var v=ctx.parsed.y; return 'Adjusted net income: ' + (v<0?'–$'+Math.abs(v):'$'+v) + 'M'; } } }
-      },
-      scales:{
-        y:{ display:false, grace:'18%', grid:{ display:false } },
-        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{size:12} } }
-      }
-    },
-    plugins: [niLabels]
-  });
-}
-
-function buildGrowthTab(){
-  buildMPChart();
-  buildRevChart();
-  buildNIChart();
-}
-
-// Switch sub-tab. Builds the tab's charts lazily the first time it becomes visible.
-function showOvt(root, key){
-  root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt') === key); });
-  root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt') !== key); });
-  if (key === 'growth') requestAnimationFrame(buildGrowthTab);
-}
-
-function init(c){
-  var root = document.querySelector('.ov-sofi');
-  if (!root) return;
-  // Idempotent wiring (init may run again when the Overview pane is re-activated).
-  root.querySelectorAll('.ovt-tab').forEach(function(btn){
-    btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };
-  });
-  var active = root.querySelector('.ovt-tab.active');
-  var activeKey = active ? active.getAttribute('data-ovt') : '';
-  if (activeKey === 'growth') requestAnimationFrame(buildGrowthTab);
-}
+// No interactive wiring yet (no sub-tabs / charts). Kept for interface parity with
+// other overview modules; will hold tab + chart setup once more tabs are added.
+function init(c){}
 
 export var sofiOverview = { html: html, init: init };

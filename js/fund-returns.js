@@ -16,6 +16,7 @@ let _bench = null;
 let _charts = {};
 let _winLen = 3;        // Rolling Window Analysis: window length in years
 let _winStart = null;   // ...and chosen start year (null = auto-pick latest)
+let _heroStartYear = null; // Hero charts: chosen start calendar year (null = Max / inception)
 
 export async function loadFundReturnsPage() {
   const root = document.getElementById('fr-root');
@@ -32,6 +33,11 @@ export async function loadFundReturnsPage() {
       </div>
     </div>
     <div id="fr-msg" class="fr-msg" style="display:none"></div>
+
+    <div class="fr-hero-bar">
+      <span class="fr-hero-label">Period</span>
+      <div class="fr-toggle" id="fr-hero-toggle"></div>
+    </div>
 
     <div class="fr-hero">
       <div class="card">
@@ -98,6 +104,7 @@ export async function loadFundReturnsPage() {
   document.getElementById('fr-rfr').value = (RFR_DEFAULT * 100).toFixed(1);
   ['fr-ini', 'fr-fin', 'fr-rfr'].forEach(id =>
     document.getElementById(id).addEventListener('change', recompute));
+  renderHeroToggle();
   recompute();
 }
 
@@ -130,8 +137,7 @@ function recompute() {
   renderAnalysisTable(s, b, ini, fin);
   renderMetricsTable(s, b, ini, fin, rfr);
   renderCaptureTable(capture);
-  renderCumChart(s, b);
-  renderAlphaChart(s, b);
+  renderHeroCharts();
   renderMonthlyBars('fr-mbars', ma.labels, ma.a);
   renderMonthlyBars('fr-abars', ma.labels, ma.alpha);
   renderStatsBlock('fr-abs-stats', ma.a, ma.labels, 'Up', 'Down', true);
@@ -160,7 +166,7 @@ function renderMeta(s, b) {
     </div>
     <div class="fr-meta-row fr-meta-sub">
       <span>Benchmark Proxy: SPY</span><span>Period: ${fmtMonthLong(d0)} – ${fmtMonthLong(d1)}</span>
-      <span class="fr-source">Portfolio: EGB · sample data — pending DB/Massive</span>
+      <span class="fr-source">Daily total returns</span>
     </div>`;
 }
 
@@ -169,9 +175,12 @@ function renderAnalysisTable(s, b, ini, fin) {
   const years = [...new Set(s.map(p => p.date.getFullYear()))].sort((a, c) => c - a);
   const rowFor = (label, sSlice, bSlice, mode) => {
     const sr = C.rets(sSlice), br = C.rets(bSlice);
-    const ret = (a) => mode === 'annualized' ? pct(C.annualizedArr(a)) : pct(C.totalReturnArr(a));
+    // Risk Adjusted divides whatever return the row shows by the annualized vol,
+    // so each row's Return ÷ Volatility = its Risk Adjusted column.
+    const retVal = (a) => mode === 'annualized' ? C.annualizedArr(a) : C.totalReturnArr(a);
+    const ret = (a) => pct(retVal(a));
     const vol = (a) => mode === 'overall' ? '—' : pct(C.volArr(a, false));
-    const rar = (a) => mode === 'overall' ? '—' : num(C.riskAdjusted(a));
+    const rar = (a) => { if (mode === 'overall') return '—'; const v = C.volArr(a, false); return v ? num(retVal(a) / v) : '—'; };
     return `<tr><td class="fr-rl">${label}</td>
       <td>${ret(sr)}</td><td class="fr-bm">${ret(br)}</td>
       <td>${vol(sr)}</td><td class="fr-bm">${vol(br)}</td>
@@ -301,6 +310,33 @@ function renderMonthlyTable(ma) {
 }
 
 // ─── Renderers: charts ──────────────────────────────────────
+// Hero period toggle — "Max" (full inception) plus every calendar year present.
+// Drives the two hero charts only; picking a year shows just that calendar year
+// (Jan–Dec) with the cumulative series rebased to 0 at its start. Independent of
+// the From/To filter that drives the tables.
+function renderHeroToggle() {
+  const years = [...new Set(_strategy.map(p => p.date.getFullYear()))].sort((a, b) => a - b);
+  const btn = (val, label, active) => `<button class="fr-tg ${active ? 'active' : ''}" data-year="${val}">${label}</button>`;
+  const el = document.getElementById('fr-hero-toggle');
+  el.innerHTML = btn('max', 'Max', _heroStartYear == null)
+    + years.map(y => btn(y, y, _heroStartYear === y)).join('');
+  el.querySelectorAll('.fr-tg').forEach(b => b.addEventListener('click', () => {
+    _heroStartYear = b.dataset.year === 'max' ? null : +b.dataset.year;
+    renderHeroToggle();
+    renderHeroCharts();
+  }));
+}
+function renderHeroCharts() {
+  let s = _strategy, b = _bench;
+  if (_heroStartYear != null) {
+    s = []; b = [];
+    for (let i = 0; i < _strategy.length; i++)
+      if (_strategy[i].date.getFullYear() === _heroStartYear) { s.push(_strategy[i]); b.push(_bench[i]); }
+  }
+  if (!s.length) return;
+  renderCumChart(s, b);
+  renderAlphaChart(s, b);
+}
 function renderCumChart(s, b) {
   const cs = C.cumulativeSeries(s), cb = C.cumulativeSeries(b);
   build('cum', 'fr-cum', {

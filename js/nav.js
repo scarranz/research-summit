@@ -18,7 +18,7 @@ const TAB_TITLES = {
   'rot': 'Market Analysis',
   'inv': 'Hedge Funds',
   'team': 'Team',
-  'ret': 'Fund Returns',
+  'ret': 'Return Analysis',
 };
 
 export function registerPageLoader(page, loader) {

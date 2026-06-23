@@ -74,8 +74,11 @@ export function informationRatio(summit, bench) {
   const te = volArr(diff, false);
   return te === 0 ? 0 : (annualizedArr(summit) - annualizedArr(bench)) / te;
 }
-// Risk Adjusted Return (slide-2 table): annualized / vol
-export function riskAdjusted(a) { const v = volArr(a, false); return v === 0 ? 0 : annualizedArr(a) / v; }
+// Risk Adjusted Return (slide-2 table): period total return / annualized vol.
+// Note: numerator is the cumulative return to date (NOT annualized) by design —
+// the team reads it as "return earned so far" against annualized risk, so for a
+// partial year the two are intentionally on different time scales.
+export function riskAdjusted(a) { const v = volArr(a, false); return v === 0 ? 0 : totalReturnArr(a) / v; }
 
 // ─── period aggregations ────────────────────────────────────
 export function yearlyReturns(series) {

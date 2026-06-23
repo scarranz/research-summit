@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Preview — SoFi (SOFI) Overview</title>
+  <!-- Real project styles so the preview matches production exactly. -->
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/shared.css">
+  <link rel="stylesheet" href="css/overview.css">
+  <!-- Chart.js (production loads this globally; the preview needs it for the Growth charts). -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    body { margin: 0; background: #F4F6F9; font-family: Inter, system-ui, sans-serif; }
+    .preview-bar { background:#1E2733; color:#fff; padding:10px 20px; font-size:13px; font-weight:600; }
+    .preview-bar span { opacity:.7; font-weight:400; }
+    .preview-wrap { padding: 24px; }
+  </style>
+</head>
+<body>
+  <div class="preview-bar">Local preview — Companies → Overview → SoFi (SOFI) &nbsp; <span>not committed · auth bypassed for visual check only</span></div>
+  <div class="preview-wrap"><div id="root"></div></div>
+
+  <script type="module">
+    import { sofiOverview } from './js/overviews/sofi.js';
+    // Mock company row, same shape the portal passes to overview.html(c).
+    var mockCompany = { ticker: 'SOFI', name: 'SoFi Technologies, Inc.', logo_domain: 'sofi.com' };
+    document.getElementById('root').innerHTML = sofiOverview.html(mockCompany);
+    if (sofiOverview.init) sofiOverview.init(mockCompany);
+  </script>
+</body>
+</html>

@@ -7,7 +7,10 @@ import { fetchUserRole, backfillUserRole } from './api.js';
 // 'admin' has access to everything; other roles see only their pages.
 
 const ROLE_CONFIG = {
-  admin: { name: 'Admin', label: 'Admin', allowedPages: ['companies', 'market-analysis', 'hedge-funds', 'team'], defaultPage: 'companies' },
+  // 'fund-returns' is restricted to the investment committee / internal team.
+  // For now only 'admin' exists, so it lives here; when more roles are added,
+  // simply omit 'fund-returns' from any role that should not see it.
+  admin: { name: 'Admin', label: 'Admin', allowedPages: ['companies', 'market-analysis', 'hedge-funds', 'team', 'fund-returns'], defaultPage: 'companies' },
 };
 
 let _currentRole = null;

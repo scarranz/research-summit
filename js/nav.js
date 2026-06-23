@@ -10,6 +10,7 @@ const TAB_MAP = {
   'market-analysis': 'rot',
   'hedge-funds': 'inv',
   'team': 'team',
+  'fund-returns': 'ret',
 };
 
 const TAB_TITLES = {
@@ -17,6 +18,7 @@ const TAB_TITLES = {
   'rot': 'Market Analysis',
   'inv': 'Hedge Funds',
   'team': 'Team',
+  'ret': 'Return Analysis',
 };
 
 export function registerPageLoader(page, loader) {

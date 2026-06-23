@@ -369,14 +369,14 @@ var LPB_FEES = [
   ['Referral fee',    'For borrowers outside SoFi\'s own credit box, SoFi refers them to a partner (via its Lantern marketplace) and earns a referral fee.'],
 ];
 
-// Publicly announced partner commitments (forward-flow). Bars scaled to the largest ($5B).
-var LPB_COMMIT_MAX = 5.0;
-var LPB_COMMITS = [
-  ['Blue Owl Capital',          5.0, '$5.0B', 'Mar 2025 · largest LPB agreement to date'],
-  ['3 new partners (Q1 2026)',  3.6, '$3.6B', 'A global bank · an insurer · a top-5 asset manager'],
-  ['Fortress Investment Group', 2.0, '$2.0B', 'Oct 2024 · first LPB partner (later expanded)'],
-  ['Fortress × Edge Focus JV',  1.2, '$1.2B', 'Apr 2025'],
+// Publicly announced LPB capital commitments, by partner — pie chart + logo legend.
+var LPB_PIE = [
+  { name:'Blue Owl Capital',          v:5.0, clr:'#0E7CC0', domain:'blueowl.com',           sub:'Mar 2025 · largest agreement to date' },
+  { name:'3 new partners (Q1 2026)',  v:3.6, clr:'#AEB8C4', domain:null, mark:'+3',         sub:'A global bank · an insurer · a top-5 asset manager' },
+  { name:'Fortress Investment Group', v:2.0, clr:'#0A4E78', domain:'fortress.com',          sub:'Oct 2024 · first LPB partner' },
+  { name:'Fortress × Edge Focus JV',  v:1.2, clr:'#5BB0E3', domain:'edgefocuspartners.com', sub:'Apr 2025' },
 ];
+var LPB_PIE_TOTAL = LPB_PIE.reduce(function(s, p){ return s + p.v; }, 0);
 
 var LPB_FUNDERS = [
   ['Private-credit asset managers', 'Blue Owl, Fortress and others manage huge pools of capital hunting for yield. They want diversified consumer-credit assets but have no consumer-origination engine of their own.'],
@@ -434,14 +434,19 @@ function lpbBody(c){
     return '<div class="lpb-funder"><div class="lpb-funder-t">'+esc(f[0])+'</div><div class="lpb-funder-d">'+esc(f[1])+'</div></div>';
   }).join('')+'</div>'+
   '<p class="ov-lede" style="margin-top:14px">'+esc(LPB_FORWARD)+'</p>'+
-  '<div class="lpb-commit">'+LPB_COMMITS.map(function(p){
-    var w = Math.round(p[1] / LPB_COMMIT_MAX * 100);
-    return '<div class="lpb-commit-row">'+
-      '<div class="lpb-commit-top"><span class="lpb-commit-p">'+esc(p[0])+'</span><span class="lpb-commit-v">'+esc(p[2])+'</span></div>'+
-      '<div class="lpb-commit-track"><div class="lpb-commit-fill" style="width:'+w+'%"></div></div>'+
-      '<div class="lpb-commit-d">'+esc(p[3])+'</div>'+
-    '</div>';
-  }).join('')+'</div>';
+  '<div class="lpb-pie">'+
+    '<div class="lpb-pie-chart"><canvas id="sofiLpbPie"></canvas></div>'+
+    '<div class="lpb-pie-leg">'+LPB_PIE.map(function(p){
+      var pct = Math.round(p.v / LPB_PIE_TOTAL * 100);
+      var mark = p.domain ? logoImg(p.domain) : '<span class="lpb-pie-txt">'+esc(p.mark || '')+'</span>';
+      return '<div class="lpb-pie-leg-row">'+
+        '<span class="lpb-pie-mark" style="border-color:'+p.clr+'">'+mark+'</span>'+
+        '<span class="lpb-pie-info"><span class="lpb-pie-name">'+esc(p.name)+'</span><span class="lpb-pie-sub">'+esc(p.sub)+'</span></span>'+
+        '<span class="lpb-pie-val">$'+p.v.toFixed(1)+'B<small>'+pct+'%</small></span>'+
+      '</div>';
+    }).join('')+'</div>'+
+  '</div>'+
+  '<div class="ov-foot" style="border:none;padding-top:8px">Share of publicly announced LPB capital commitments (~$'+LPB_PIE_TOTAL.toFixed(1)+'B total). The Q1 2026 additions are described by type, not named.</div>';
 
   h += '<div class="lpb-acc">'+
     accItem('How does SoFi get paid?', true, feesHtml)+
@@ -461,6 +466,13 @@ function accItem(title, open, bodyHtml){
     '<button type="button" class="lpb-acc-h"><span>'+esc(title)+'</span><span class="lpb-acc-ic">'+(open ? '–' : '+')+'</span></button>'+
     '<div class="lpb-acc-body">'+bodyHtml+'</div>'+
   '</div>';
+}
+
+// Company logo via Clearbit, falling back to a Google favicon if Clearbit has no logo.
+function logoImg(domain){
+  return '<img class="lpb-pie-logo" src="https://logo.clearbit.com/'+domain+'" '+
+    'onerror="this.onerror=null;this.src=\'https://www.google.com/s2/favicons?domain='+domain+'&sz=64\'" '+
+    'alt="" loading="lazy">';
 }
 
 function nodeInner(n){
@@ -694,12 +706,37 @@ function buildInterestTab(){
 // ─── Fee Income — nested (second-level) sub-tabs ──────────────────────────────
 // Builds whichever nested Fee Income sub-tab is active. Chart builders for each
 // nested pane will be dispatched here as they are developed (LPB first).
+var _lpbPie = null;
+// Pie chart of LPB capital commitments by partner. Lives inside a collapsed accordion,
+// so it is built when its section first becomes visible (offsetParent check).
+function buildLpbPie(){
+  var cv = document.getElementById('sofiLpbPie');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return; // not visible yet
+  if (_lpbPie) return;                                                 // already built
+  _lpbPie = new Chart(cv.getContext('2d'), {
+    type: 'pie',
+    data: { labels: LPB_PIE.map(function(p){ return p.name; }),
+      datasets: [{ data: LPB_PIE.map(function(p){ return p.v; }),
+        backgroundColor: LPB_PIE.map(function(p){ return p.clr; }),
+        borderColor: '#fff', borderWidth: 2 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: function(ctx){
+          return ' ' + ctx.label + ': $' + Number(ctx.parsed).toFixed(1) + 'B (' + Math.round(ctx.parsed / LPB_PIE_TOTAL * 100) + '%)';
+        } } }
+      }
+    }
+  });
+}
+
 function buildFeeTab(){
   var root = document.querySelector('.ov-sofi');
   if (!root) return;
   var act = root.querySelector('.ovf-tab.active');
   var k = act ? act.getAttribute('data-ovf') : '';
-  // if (k === 'lpb')  requestAnimationFrame(buildFeeLPB);
+  if (k === 'lpb') requestAnimationFrame(buildLpbPie);
   // if (k === 'tech') requestAnimationFrame(buildFeeTech);
   // if (k === 'fs')   requestAnimationFrame(buildFeeFS);
 }
@@ -730,13 +767,14 @@ function init(c){
   root.querySelectorAll('.ovf-tab').forEach(function(btn){
     btn.onclick = function(){ showOvf(root, btn.getAttribute('data-ovf')); };
   });
-  // LPB accordion (progressive disclosure).
+  // LPB accordion (progressive disclosure). Build the pie when its section first opens.
   root.querySelectorAll('.lpb-acc-h').forEach(function(btn){
     btn.onclick = function(){
       var item = btn.parentElement;
       var open = item.classList.toggle('open');
       var ic = btn.querySelector('.lpb-acc-ic');
       if (ic) ic.textContent = open ? '–' : '+';
+      if (open) requestAnimationFrame(buildLpbPie);
     };
   });
   var active = root.querySelector('.ovt-tab.active');

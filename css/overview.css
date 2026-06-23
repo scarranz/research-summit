@@ -141,14 +141,23 @@
 .lpb-fee-t { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
 .lpb-fee-d { font-size: 12px; color: var(--mu); line-height: 1.5; }
 
-/* Partner commitment bars */
-.lpb-commit { display: flex; flex-direction: column; gap: 13px; }
-.lpb-commit-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
-.lpb-commit-p { font-size: 12.5px; font-weight: 700; color: var(--navy); }
-.lpb-commit-v { font-size: 13px; font-weight: 800; color: var(--brand); }
-.lpb-commit-track { height: 10px; background: var(--surface); border: 1px solid var(--bdr); border-radius: 6px; overflow: hidden; }
-.lpb-commit-fill { height: 100%; background: var(--brand); border-radius: 6px; }
-.lpb-commit-d { font-size: 11px; color: var(--mu); margin-top: 4px; }
+/* Partner-commitment pie chart + logo legend */
+.lpb-pie { display: flex; align-items: center; gap: 24px; margin-top: 8px; flex-wrap: wrap; }
+.lpb-pie-chart { position: relative; width: 200px; height: 200px; flex: none; }
+.lpb-pie-leg { display: flex; flex-direction: column; gap: 11px; flex: 1; min-width: 250px; }
+.lpb-pie-leg-row { display: flex; align-items: center; gap: 11px; }
+.lpb-pie-mark {
+  flex: none; width: 36px; height: 36px; border-radius: 50%;
+  border: 2px solid var(--bdr); background: var(--w);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.lpb-pie-logo { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
+.lpb-pie-txt { font-size: 12px; font-weight: 800; color: var(--mu); }
+.lpb-pie-info { flex: 1; min-width: 0; }
+.lpb-pie-name { display: block; font-size: 12.5px; font-weight: 700; color: var(--navy); }
+.lpb-pie-sub { display: block; font-size: 10.5px; color: var(--mu); line-height: 1.4; }
+.lpb-pie-val { flex: none; text-align: right; font-size: 14px; font-weight: 800; color: var(--navy); }
+.lpb-pie-val small { display: block; font-size: 11px; font-weight: 700; color: var(--brand); }
 
 /* Funder type cards */
 .lpb-funders { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
@@ -180,6 +189,7 @@
   .lpb-conn { min-width: 0; padding: 2px 0; }
   .lpb-conn-arrow { transform: rotate(90deg); }
   .lpb-back, .lpb-fees, .lpb-funders { grid-template-columns: 1fr; }
+  .lpb-pie-chart { margin: 0 auto; }
   .lpb-cmp { grid-template-columns: 1fr; }
   .lpb-cmp > div { border-bottom: 1px solid var(--bdr); }
   .lpb-cmp-h:empty { display: none; }

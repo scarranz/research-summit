@@ -184,6 +184,31 @@ var MIX_BR    = MIX_PL.map(function(p){ return Math.round((100 - p) * 10) / 10; 
 var MIX_NOTE  = 'Share of merchandise sales. Here "branded" is all non-private-label sales (branded plus spot products), so it differs slightly from the three-way breakdown on the Overview tab. Private label has climbed from 42.8% of sales in 2022 to 58.2% in 2025 — overtaking branded in 2024 — as 3B widens its own-brand range (113 brands, 525+ SKUs). Sources: BBB Foods earnings disclosures and FY2025 Form 20-F.';
 var _chartMix = null;
 
+// ─── Unit economics (per single store) ────────────────────────────────────────
+// Figures in Mexican pesos. Sales/store and negative-WC % are from the FY2025 20-F
+// and the 4Q24/1Q26 decks; capex per store is derived from the FY2026 budget.
+var UE_STEPS = [
+  { n:'1', t:'Suppliers deliver on credit', d:'3B receives its products and pays nothing yet — suppliers give it roughly 2–3 months to pay.' },
+  { n:'2', t:'It sells fast, for cash',     d:'Shoppers buy the goods within about 3 weeks and pay in cash on the spot, so the money comes in almost right away.' },
+  { n:'3', t:'It pays suppliers later',     d:'3B only settles the bill about 2.9× later. In between it keeps — and spends — that cash to open new stores.' },
+];
+var UE_ANALOGY = 'Think of a fruit stand that sells all its fruit by Friday but doesn\'t pay the farmer until next month. For those weeks it holds and uses money it hasn\'t paid out yet. Multiply that across <b>3,346 stores</b> and ~<b>Ps.78B</b> of yearly sales and it becomes a large, <b>free source of funding</b> for opening new stores.';
+
+// New-store first-year sales by vintage (median 12-month sales per store, real Ps. MM).
+// Approximate reads from the company's "Median Sales per Store by Vintage" chart (4Q24 deck).
+var UE_VINT_YEARS  = ['2008','2012','2016','2020','2023','2025'];
+var UE_VINT_SALES  = [ 5.5,   7.0,   9.5,   11.5,  14.5,  16.0 ];
+var UE_VINT_MATURE = 25; // approx. sales per store at maturity (Ps. MM)
+
+// What it costs to open a store.
+var UE_STORE_COST = '~Ps.5–6M';
+var UE_COST_DESC  = 'Covers leasehold improvements, refrigeration, shelving, equipment and signage — deliberately low for a hard-discount format. The store\'s negative working capital (~Ps.2.5M of supplier financing) covers roughly half of that, and its own cash flow pays back the rest quickly, so expansion is largely self-funded.';
+var UE_COST_NOTE  = 'Cost to open a store estimated from the company\'s FY2026 capital-expenditure budget of ~Ps.3,555M for new stores, spread over a store-opening pace of ~580–600 per year (≈Ps.5–6M each). Source: BBB Foods FY2025 Form 20-F.';
+
+var UE_VINT_NOTE = 'New-store productivity keeps rising: a store\'s first-year sales (median 12-month sales per store, in real pesos) have roughly tripled from ~Ps.5M for mid-2000s vintages to ~Ps.16M for the 2025 vintage, and each store then ramps toward ~Ps.25M+ at maturity. Values for 2008–2023 are approximate reads from the company\'s "Median Sales per Store by Vintage" chart (4Q24 earnings deck); the 2025 figure is approximate, consistent with the continuing upward trend.';
+var UE_WC_NOTE = 'Working-capital figures (FY2025): inventories of ~Ps.4.2B against cost of sales of ~Ps.65.5B imply 3B sells its inventory in ~24 days (turning it ~15× a year); the company reports paying suppliers ~2.9× slower than it sells inventory; negative working capital was ~Ps.5.9B at year-end 2025 (up from ~Ps.2.6B in 2024), funding most of the ~Ps.3.6B spent opening 574 new stores. Sources: BBB Foods FY2025 Form 20-F and 4Q24 earnings deck.';
+var _chartUe = null;
+
 // ─── Render helpers ──────────────────────────────────────────────────────────
 function sec(title, inner){ return '<section class="ov-sec"><div class="ov-sec-h">'+esc(title)+'</div>'+inner+'</section>'; }
 function bullets(arr){ return '<ul class="ov-bullets">'+arr.map(function(b){return '<li>'+b+'</li>';}).join('')+'</ul>'; }
@@ -324,6 +349,63 @@ function storesBody(c){
   return h;
 }
 
+// "Unit Economics" sub-tab body — why 3B runs on negative working capital, in plain language.
+function ueBody(c){
+  var h = '';
+
+  // 1 — New-store first-year sales by vintage (now the lead chart).
+  h += '<div class="ov-subh">How much a new store sells in its first year</div>';
+  h += '<p class="ov-lede">Each new generation ("vintage") of 3B stores opens stronger than the last: a brand-new store now sells far more in its first year than one opened a decade ago, and it keeps ramping toward maturity.</p>';
+  h += '<div class="ov-chart-card">'+
+    '<div class="ov-chart-t">First-Year Sales per New Store <span>(median, real Ps. MM · dashed = ~maturity)</span></div>'+
+    '<div class="ov-chart-wrap ovt-ue-wrap"><canvas id="bbbChartUe"></canvas></div>'+
+  '</div>';
+  h += '<div class="ov-foot">'+UE_VINT_NOTE+'</div>';
+
+  // 2 — What it costs to open a store.
+  h += '<div class="ov-sec-h ovt-store-h">What it costs to open a store</div>';
+  h += '<div class="ue-cost">'+
+    '<div class="ue-cost-fig">'+esc(UE_STORE_COST)+'<span>per store</span></div>'+
+    '<div class="ue-cost-body"><div class="ue-cost-t">to build and open a new Tiendas 3B store</div><div class="ue-cost-d">'+esc(UE_COST_DESC)+'</div></div>'+
+  '</div>';
+  h += '<div class="ov-foot">'+esc(UE_COST_NOTE)+'</div>';
+
+  // 3 — Why 3B runs on negative working capital (moved to the bottom).
+  h += '<div class="ov-sec-h ovt-store-h">Why 3B\'s suppliers fund its growth</div>';
+  h += '<p class="ov-lede">"Negative working capital" sounds like a problem, but for 3B it is a superpower: the company collects cash from shoppers well before it has to pay its suppliers, so it grows largely on other people\'s money.</p>';
+
+  // The cash timeline (visual).
+  h += '<div class="wc-flow">'+
+    '<div class="wc-bar">'+
+      '<div class="wc-seg wc-sell"><span>Sell the inventory</span><small>~24 days</small></div>'+
+      '<div class="wc-seg wc-free"><span>Hold the cash — free</span><small>~46 days</small></div>'+
+    '</div>'+
+    '<div class="wc-ticks">'+
+      '<span class="wc-tick wc-tick-start" style="left:0%"><b>Day 0</b><small>get goods on credit</small></span>'+
+      '<span class="wc-tick" style="left:34%"><b>~Day 24</b><small>sold · cash in</small></span>'+
+      '<span class="wc-tick wc-tick-end" style="left:100%"><b>~Day 70</b><small>pay the supplier</small></span>'+
+    '</div>'+
+  '</div>';
+
+  // Three simple steps.
+  h += '<div class="wc-steps">' + UE_STEPS.map(function(s){
+    return '<div class="wc-step"><div class="wc-step-n">'+esc(s.n)+'</div><div class="wc-step-t">'+esc(s.t)+'</div><div class="wc-step-d">'+esc(s.d)+'</div></div>';
+  }).join('') + '</div>';
+
+  // The two numbers behind it.
+  h += sec('The two numbers behind it',
+    '<div class="ov-row"><div class="ov-row-k">Inventory turnover</div><div class="ov-row-v">3B sells its products in about <b>24 days</b> — it cycles through its entire inventory roughly <b>15 times a year</b>. Fast sales mean cash arrives quickly.</div></div>'+
+    '<div class="ov-row"><div class="ov-row-k">Accounts payable</div><div class="ov-row-v">3B pays its suppliers about <b>2.9× slower</b> than it sells the inventory (~2–3 months). The longer it waits to pay, the more cash it holds in the meantime.</div></div>'+
+    '<div class="ov-row"><div class="ov-row-k">The result (2025)</div><div class="ov-row-v">Because shoppers pay <b>cash on the spot</b>, 3B has the money ~46 days before it pays for the goods. By year-end 2025 this freed up <b>~Ps.5.9B</b> of cash (up ~Ps.3.2B in the year) — most of what it spent opening <b>574 new stores</b>.</div></div>'
+  );
+
+  // Everyday analogy.
+  h += '<div class="milk-takeaway">'+UE_ANALOGY+'</div>';
+  h += '<div class="ov-foot">'+UE_WC_NOTE+'</div>';
+
+  return h;
+}
+
 // "Product Mix" sub-tab body — private label vs. branded evolution + economics example.
 function mixBody(c){
   var h = '';
@@ -365,11 +447,13 @@ function html(c){
     '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
     '<button type="button" class="ovt-tab" data-ovt="stores">Stores</button>'+
     '<button type="button" class="ovt-tab" data-ovt="mix">Product Mix</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="ue">Unit Economics</button>'+
   '</div>';
   // Panes
   h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="stores" hidden>'+storesBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="mix" hidden>'+mixBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="ue" hidden>'+ueBody(c)+'</div>';
   h += '</div>';
   return h;
 }
@@ -625,6 +709,56 @@ function buildMixChart(){
   });
 }
 
+// Value labels (Ps.MM) above each vintage bar.
+var ueLabels = {
+  id: 'ueLabels',
+  afterDatasetsDraw: function(chart){
+    var ctx = chart.ctx;
+    var meta = chart.getDatasetMeta(0);
+    meta.data.forEach(function(bar, i){
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.font = '700 12px Inter, sans-serif';
+      ctx.fillStyle = '#E1251B';
+      ctx.fillText('Ps.' + Number(chart.data.datasets[0].data[i]).toFixed(1) + 'M', bar.x, bar.y - 8);
+      ctx.restore();
+    });
+  }
+};
+
+function buildUeChart(){
+  var cv = document.getElementById('bbbChartUe');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_chartUe) { _chartUe.destroy(); _chartUe = null; }
+  var mature = UE_VINT_YEARS.map(function(){ return UE_VINT_MATURE; });
+  _chartUe = new Chart(cv.getContext('2d'), {
+    type: 'bar',
+    data: { labels: UE_VINT_YEARS, datasets: [
+      { type:'bar', label:'First-year sales', data:UE_VINT_SALES, backgroundColor:'#E1251B',
+        borderRadius:4, maxBarThickness:70, order:2 },
+      { type:'line', label:'~Maturity (~Ps.25M)', data:mature, borderColor:'#9AA3AE',
+        borderDash:[6,4], borderWidth:2, pointRadius:0, fill:false, order:1 },
+    ]},
+    options: {
+      responsive:true, maintainAspectRatio:false, animation:false,
+      layout:{ padding:{ top:26 } },
+      plugins:{
+        legend:{ display:false },
+        tooltip:{ callbacks:{ label:function(ctx){
+          return ctx.datasetIndex === 0
+            ? 'First-year sales: Ps.' + Number(ctx.parsed.y).toFixed(1) + 'M'
+            : 'Approx. maturity: ~Ps.' + ctx.parsed.y + 'M'; } } }
+      },
+      scales:{
+        y:{ display:false, beginAtZero:true, suggestedMax: UE_VINT_MATURE + 4 },
+        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:12 } },
+            title:{ display:true, text:'Store vintage (year opened)', color:'#8A93A0', font:{ size:11 } } }
+      }
+    },
+    plugins: [ueLabels]
+  });
+}
+
 // Build everything the Stores tab needs once it becomes visible.
 function buildStoresTab(){
   buildSSSChart();
@@ -639,6 +773,7 @@ function showOvt(root, key){
   root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt') !== key); });
   if (key === 'stores') requestAnimationFrame(buildStoresTab);
   if (key === 'mix') requestAnimationFrame(buildMixChart);
+  if (key === 'ue') requestAnimationFrame(buildUeChart);
 }
 
 function init(c){
@@ -653,6 +788,7 @@ function init(c){
   var activeKey = active ? active.getAttribute('data-ovt') : '';
   if (activeKey === 'stores') requestAnimationFrame(buildStoresTab);
   if (activeKey === 'mix') requestAnimationFrame(buildMixChart);
+  if (activeKey === 'ue') requestAnimationFrame(buildUeChart);
 }
 
 export var bbbOverview = { html: html, init: init };

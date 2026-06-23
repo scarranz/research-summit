@@ -52,6 +52,40 @@
 .ov-chart-wrap.ovt-stores-wrap { height: 360px; }
 .ov-chart-wrap.ovt-vs-wrap { height: 380px; }
 .ov-chart-wrap.ovt-mix-wrap { height: 380px; }
+.ov-chart-wrap.ovt-ue-wrap { height: 340px; }
+
+/* ── Cost to open a store ── */
+.ue-cost { display: flex; gap: 20px; align-items: center; border: 1px solid var(--bdr); border-left: 3px solid var(--brand); border-radius: 10px; padding: 18px 22px; background: var(--brand-soft); margin: 2px 0 6px; }
+.ue-cost-fig { flex: none; font-size: 30px; font-weight: 800; color: var(--brand); line-height: 1; text-align: center; }
+.ue-cost-fig span { display: block; font-size: 10px; font-weight: 700; color: var(--mu); margin-top: 6px; text-transform: uppercase; letter-spacing: .5px; }
+.ue-cost-t { font-weight: 700; color: var(--navy); font-size: 14px; margin-bottom: 5px; }
+.ue-cost-d { font-size: 13px; color: var(--navy); line-height: 1.55; }
+
+/* ── Negative working capital: cash timeline + steps ── */
+.wc-flow { margin: 10px 0 30px; }
+.wc-bar { display: flex; height: 58px; border-radius: 10px; overflow: hidden; }
+.wc-seg { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; padding: 0 8px; text-align: center; }
+.wc-seg span { font-weight: 700; font-size: 13px; line-height: 1.2; }
+.wc-seg small { font-size: 11px; opacity: .92; margin-top: 3px; }
+.wc-sell { flex: 0 0 34%; background: #9AA3AE; }
+.wc-free { flex: 1; background: #22A35A; }
+.wc-ticks { position: relative; height: 42px; margin-top: 12px; }
+.wc-tick { position: absolute; transform: translateX(-50%); text-align: center; font-size: 11.5px; color: var(--navy); white-space: nowrap; }
+.wc-tick b { font-weight: 700; }
+.wc-tick small { display: block; font-weight: 500; color: var(--mu); font-size: 10.5px; white-space: normal; width: 120px; margin: 2px auto 0; }
+.wc-tick::before { content: ''; position: absolute; top: -16px; left: 50%; transform: translateX(-50%); width: 2px; height: 11px; background: var(--bdr); }
+.wc-tick-start { transform: translateX(0); text-align: left; }
+.wc-tick-start small { margin-left: 0; }
+.wc-tick-start::before { left: 1px; transform: none; }
+.wc-tick-end { transform: translateX(-100%); text-align: right; }
+.wc-tick-end small { margin-right: 0; margin-left: auto; }
+.wc-tick-end::before { left: auto; right: 1px; transform: none; }
+
+.wc-steps { display: flex; gap: 12px; margin: 4px 0 18px; }
+.wc-step { flex: 1; border: 1px solid var(--bdr); border-radius: 10px; padding: 14px 15px; }
+.wc-step-n { width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; margin-bottom: 9px; }
+.wc-step-t { font-weight: 700; color: var(--navy); font-size: 13.5px; margin-bottom: 5px; }
+.wc-step-d { font-size: 12.5px; color: var(--mu); line-height: 1.5; }
 
 /* ── Private-label economics: milk comparison ── */
 .milk-compare { display: flex; align-items: stretch; gap: 14px; margin: 8px 0 14px; }

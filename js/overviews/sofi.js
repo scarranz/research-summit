@@ -707,27 +707,46 @@ function buildInterestTab(){
 // Builds whichever nested Fee Income sub-tab is active. Chart builders for each
 // nested pane will be dispatched here as they are developed (LPB first).
 var _lpbPie = null;
-// Pie chart of LPB capital commitments by partner. Lives inside a collapsed accordion,
-// so it is built when its section first becomes visible (offsetParent check).
+// Inline plugin: total committed capital in the center of the doughnut.
+var lpbPieCenter = {
+  id: 'lpbPieCenter',
+  afterDatasetsDraw: function(chart){
+    var a = chart.chartArea; if (!a) return;
+    var cx = (a.left + a.right) / 2, cy = (a.top + a.bottom) / 2;
+    var ctx = chart.ctx;
+    ctx.save();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#1E2733';
+    ctx.font = '800 23px Inter, sans-serif';
+    ctx.fillText('$' + LPB_PIE_TOTAL.toFixed(1) + 'B', cx, cy - 8);
+    ctx.fillStyle = '#8A93A0';
+    ctx.font = '600 10px Inter, sans-serif';
+    ctx.fillText('committed', cx, cy + 13);
+    ctx.restore();
+  }
+};
+// Doughnut of LPB capital commitments by partner (total shown in the center). Lives inside
+// a collapsed accordion, so it is built when its section first becomes visible.
 function buildLpbPie(){
   var cv = document.getElementById('sofiLpbPie');
   if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return; // not visible yet
   if (_lpbPie) return;                                                 // already built
   _lpbPie = new Chart(cv.getContext('2d'), {
-    type: 'pie',
+    type: 'doughnut',
     data: { labels: LPB_PIE.map(function(p){ return p.name; }),
       datasets: [{ data: LPB_PIE.map(function(p){ return p.v; }),
         backgroundColor: LPB_PIE.map(function(p){ return p.clr; }),
         borderColor: '#fff', borderWidth: 2 }] },
     options: {
-      responsive: true, maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
       plugins: {
         legend: { display: false },
         tooltip: { callbacks: { label: function(ctx){
           return ' ' + ctx.label + ': $' + Number(ctx.parsed).toFixed(1) + 'B (' + Math.round(ctx.parsed / LPB_PIE_TOTAL * 100) + '%)';
         } } }
       }
-    }
+    },
+    plugins: [lpbPieCenter]
   });
 }
 

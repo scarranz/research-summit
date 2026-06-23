@@ -86,6 +86,93 @@
 /* Stacked loan-origination blocks (Interest Income tab) — separate each product. */
 .ovs-loan + .ovs-loan { margin-top: 34px; border-top: 1px solid var(--bdr); padding-top: 26px; }
 
+/* ── Loan Platform Business (LPB) visual explainer ── */
+.lpb-hero {
+  background: var(--brand-soft); border: 1px solid var(--bdr); border-left: 3px solid var(--brand);
+  border-radius: 12px; padding: 18px 20px; margin-bottom: 18px;
+}
+.lpb-hero-t { font-size: 17px; font-weight: 700; color: var(--navy); line-height: 1.5; }
+.lpb-hero-t b { color: var(--brand); }
+.lpb-hero-d { font-size: 13px; color: var(--blue); line-height: 1.6; margin-top: 8px; max-width: 760px; }
+.lpb-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.lpb-badge {
+  font-size: 11.5px; font-weight: 700; color: var(--brand);
+  background: var(--w); border: 1px solid var(--brand); border-radius: 20px; padding: 5px 12px;
+}
+
+/* Flow diagram: borrower → SoFi → partner */
+.lpb-flow {
+  display: grid; grid-template-columns: 1fr auto 1fr auto 1fr;
+  align-items: stretch; gap: 8px; margin: 6px 0 14px;
+}
+.lpb-node {
+  border: 1px solid var(--bdr); border-radius: 12px; background: var(--w);
+  padding: 16px 15px; text-align: center;
+}
+.lpb-node-hl { border-color: var(--brand); border-top: 3px solid var(--brand); box-shadow: 0 2px 12px rgba(14,124,192,.08); }
+.lpb-node-ic {
+  width: 44px; height: 44px; margin: 0 auto 10px; border-radius: 50%;
+  background: var(--brand-soft); color: var(--brand);
+  font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center;
+}
+.lpb-node-hl .lpb-node-ic { background: var(--brand); color: #fff; }
+.lpb-node-t { font-size: 13.5px; font-weight: 700; color: var(--navy); margin-bottom: 5px; }
+.lpb-node-d { font-size: 12px; color: var(--mu); line-height: 1.5; }
+.lpb-conn { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 64px; }
+.lpb-conn-arrow { font-size: 24px; color: var(--brand); line-height: 1; }
+.lpb-conn-l { font-size: 9.5px; font-weight: 600; color: var(--mu); text-transform: uppercase; letter-spacing: .04em; margin-top: 5px; text-align: center; }
+
+.lpb-back { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 4px; }
+.lpb-back-item { border: 1px solid var(--bdr); border-radius: 10px; background: var(--surface); padding: 12px 14px; font-size: 12px; color: var(--mu); line-height: 1.5; }
+.lpb-back-item b { color: var(--navy); display: block; margin-bottom: 3px; font-size: 12.5px; }
+
+/* Comparison grid: dimension | balance sheet | LPB (highlighted) */
+.lpb-cmp { display: grid; grid-template-columns: 1.1fr 1fr 1fr; border: 1px solid var(--bdr); border-radius: 12px; overflow: hidden; }
+.lpb-cmp > div { padding: 11px 14px; border-bottom: 1px solid var(--bdr); font-size: 12.5px; color: var(--mu); line-height: 1.45; }
+.lpb-cmp > div:nth-last-child(-n+3) { border-bottom: none; }
+.lpb-cmp-h { font-weight: 700; color: var(--navy); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; background: var(--surface); }
+.lpb-cmp-dim { font-weight: 600; color: var(--navy); background: var(--surface); }
+.lpb-cmp-hl { background: var(--brand-soft); color: var(--navy); font-weight: 600; }
+.lpb-cmp-h.lpb-cmp-hl { color: var(--brand); }
+
+/* Fee cards */
+.lpb-fees { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.lpb-fee { border: 1px solid var(--bdr); border-top: 2px solid var(--brand); border-radius: 10px; padding: 14px 16px; background: var(--w); }
+.lpb-fee-t { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+.lpb-fee-d { font-size: 12px; color: var(--mu); line-height: 1.5; }
+
+/* Partner commitment bars */
+.lpb-commit { display: flex; flex-direction: column; gap: 13px; }
+.lpb-commit-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+.lpb-commit-p { font-size: 12.5px; font-weight: 700; color: var(--navy); }
+.lpb-commit-v { font-size: 13px; font-weight: 800; color: var(--brand); }
+.lpb-commit-track { height: 10px; background: var(--surface); border: 1px solid var(--bdr); border-radius: 6px; overflow: hidden; }
+.lpb-commit-fill { height: 100%; background: var(--brand); border-radius: 6px; }
+.lpb-commit-d { font-size: 11px; color: var(--mu); margin-top: 4px; }
+
+/* Funder type cards */
+.lpb-funders { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.lpb-funder { border: 1px solid var(--bdr); border-radius: 10px; padding: 14px 16px; background: var(--surface); }
+.lpb-funder-t { font-size: 12.5px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+.lpb-funder-d { font-size: 12px; color: var(--mu); line-height: 1.5; }
+
+/* Securitization stat cards */
+.lpb-sec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 4px; }
+.lpb-sec-card { border: 1px solid var(--bdr); border-radius: 10px; padding: 12px 14px; text-align: center; background: var(--w); }
+.lpb-sec-q { font-size: 10.5px; font-weight: 700; color: var(--mu); text-transform: uppercase; letter-spacing: .05em; }
+.lpb-sec-v { font-size: 21px; font-weight: 800; color: var(--brand); margin: 4px 0 2px; }
+.lpb-sec-d { font-size: 11px; color: var(--mu); }
+
+@media (max-width: 860px) {
+  .lpb-flow { grid-template-columns: 1fr; }
+  .lpb-conn { min-width: 0; padding: 2px 0; }
+  .lpb-conn-arrow { transform: rotate(90deg); }
+  .lpb-back, .lpb-fees, .lpb-funders, .lpb-sec { grid-template-columns: 1fr; }
+  .lpb-cmp { grid-template-columns: 1fr; }
+  .lpb-cmp > div { border-bottom: 1px solid var(--bdr); }
+  .lpb-cmp-h:empty { display: none; }
+}
+
 /* "Coming soon" placeholder pane for tabs not built yet. */
 .ovs-soon {
   border: 1px dashed var(--bdr);

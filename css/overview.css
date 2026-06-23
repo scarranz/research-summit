@@ -125,6 +125,7 @@
 .lpb-back { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 4px; }
 .lpb-back-item { border: 1px solid var(--bdr); border-radius: 10px; background: var(--surface); padding: 12px 14px; font-size: 12px; color: var(--mu); line-height: 1.5; }
 .lpb-back-item b { color: var(--navy); display: block; margin-bottom: 3px; font-size: 12.5px; }
+.lpb-back + .ovs-loan { margin-top: 26px; }
 
 /* Comparison grid: dimension | balance sheet | LPB (highlighted) */
 .lpb-cmp { display: grid; grid-template-columns: 1.1fr 1fr 1fr; border: 1px solid var(--bdr); border-radius: 12px; overflow: hidden; }

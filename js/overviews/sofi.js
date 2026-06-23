@@ -378,6 +378,15 @@ var LPB_PIE = [
 ];
 var LPB_PIE_TOTAL = LPB_PIE.reduce(function(s, p){ return s + p.v; }, 0);
 
+// LPB loan origination volume by year ($ millions). Reuses the generic ranged bar
+// chart (slider + YoY + CAGR) from the Interest Income tab. 2026E–2027E estimates, 2028E target.
+var LPB_ORIG = {
+  key:'lpborig', title:'How fast LPB is scaling', years:['2024','2025','2026E','2027E','2028E'], firstEst:2,
+  dataM:[ 2115, 11106, 16463, 24000, 35000 ],
+  chartTitle:'LPB Loan Originations',
+  note:'Annual LPB loan origination volume ($B) — the dollar value of loans SoFi originates for third-party partners. From a $2.1B standing start in 2024 it has scaled rapidly. 2024–2025 are actuals; 2026E–2027E are estimates and 2028E is a target. This is origination volume, not fee revenue. Drag the handles to choose a window — the bars, YoY and CAGR update.'
+};
+
 var LPB_FUNDERS = [
   ['Private-credit asset managers', 'Blue Owl, Fortress and others manage huge pools of capital hunting for yield. They want diversified consumer-credit assets but have no consumer-origination engine of their own.'],
   ['Banks & investment banks',      'Deploy capital into prime consumer credit and gain access to SoFi\'s high-quality, high-volume loan flow — without building a direct-to-consumer brand.'],
@@ -410,6 +419,9 @@ function lpbBody(c){
   h += '<div class="lpb-back">'+LPB_BACK.map(function(b){
     return '<div class="lpb-back-item"><b>'+esc(b[0])+'</b>'+esc(b[1])+'</div>';
   }).join('')+'</div>';
+
+  // 2b — How fast LPB is scaling (origination volume, reuses the ranged bar component).
+  h += loanBlock(LPB_ORIG);
 
   // 3 — Expand-to-learn-more (progressive disclosure: nothing else shown until clicked).
   // (a) How SoFi gets paid
@@ -755,7 +767,10 @@ function buildFeeTab(){
   if (!root) return;
   var act = root.querySelector('.ovf-tab.active');
   var k = act ? act.getAttribute('data-ovf') : '';
-  if (k === 'lpb') requestAnimationFrame(buildLpbPie);
+  if (k === 'lpb') requestAnimationFrame(function(){
+    buildLoanChart(LPB_ORIG); setupLoanSlider(LPB_ORIG); // origination chart (visible)
+    buildLpbPie();                                       // commitments pie (inside accordion)
+  });
   // if (k === 'tech') requestAnimationFrame(buildFeeTech);
   // if (k === 'fs')   requestAnimationFrame(buildFeeFS);
 }

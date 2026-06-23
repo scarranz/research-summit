@@ -124,6 +124,12 @@ var PILLAR_HIGHLIGHTS = {
     qm: ['Capital allocation', 'Insider alignment', 'Operating record'],
     qv: ['FCF yield'],
   },
+  MSFT: {
+    qb: ['Market structure', 'Unit economics', 'Pricing power'],
+    qg: ['Mix shift'],
+    qm: ['Capital allocation', 'Insider alignment'],
+    qv: ['FCF yield'],
+  },
 };
 
 async function renderPillarContent() {

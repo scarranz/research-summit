@@ -232,6 +232,167 @@
   border-top: 1px solid var(--bdr); padding-top: 12px; margin-top: 4px;
 }
 
+/* ── Microsoft brand accent ── */
+.ov-msft {
+  --brand: #0078D4;
+  --brand-soft: #EAF3FB;
+  --brand-2: #FFB900;
+}
+.ov-msft .ov-snap { border-top: 3px solid var(--brand-2); }
+
+/* ── Diagram caption (also used for table notes) ── */
+.ov-diagram-cap { font-size: 11px; color: var(--mu); margin-top: 12px; line-height: 1.5; }
+.ov-diagram-cap b { color: var(--navy); font-weight: 600; }
+
+/* ── Shared interactive components (modal, cards, charts-2, vs, chain) ────────
+   These are generic per-company Overview building blocks. (Visa introduces the
+   same block on its branch; when both merge, the duplicate is trivially deduped.) */
+
+/* Clickable affordance */
+.ov-clickable { cursor: pointer; transition: border-color .14s, box-shadow .14s, transform .14s; }
+.ov-clickable:hover { border-color: var(--brand); box-shadow: 0 4px 16px rgba(0,120,212,.10); transform: translateY(-1px); }
+.ov-more { font-size: 10.5px; font-weight: 600; color: var(--brand); margin-top: 10px; }
+
+/* Detail cards */
+.ov-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.ov-cards-mna { grid-template-columns: repeat(3, 1fr); }
+.ov-card {
+  border: 1px solid var(--bdr); border-radius: 10px; padding: 14px 16px; background: var(--w);
+  border-top: 2px solid var(--brand); display: flex; flex-direction: column;
+}
+.ov-card-big { border-top-color: var(--brand-2); }
+.ov-card-h { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 5px; }
+.ov-card-n { font-size: 13px; font-weight: 600; color: var(--navy); }
+.ov-card-s { font-size: 11px; color: var(--mu); line-height: 1.45; flex: 1; }
+.ov-card-meta { font-size: 11px; font-weight: 600; margin-top: 6px; }
+.ov-card-meta.up { color: var(--pos); }
+.ov-card-meta.dn { color: var(--neg); }
+.ov-card-q { font-size: 12.5px; font-weight: 600; color: var(--navy); line-height: 1.45; margin-top: 2px; }
+.ov-card-kpis { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 2px 0 8px; }
+.ov-card-kpis span { font-size: 10.5px; font-weight: 600; color: var(--mu); }
+.ov-card-kpis span:first-child { color: var(--navy); }
+.ov-chip {
+  display: inline-block; font-size: 9.5px; font-weight: 600; padding: 2px 8px; border-radius: 20px;
+  background: var(--brand-soft); color: var(--brand); white-space: nowrap;
+}
+.ov-chip-neg { background: #FDECEC; color: var(--neg); }
+
+/* Switching-cost hub diagram (non-sequential; clickable nodes → modal) */
+.ov-hub { border: 1px solid var(--bdr); border-radius: 12px; background: var(--surface); padding: 20px 18px 18px; }
+.ov-hub-center { text-align: center; }
+.ov-hub-box {
+  display: inline-block; border: 2px solid var(--brand); background: var(--brand-soft);
+  color: var(--navy); border-radius: 10px; padding: 9px 18px; font-weight: 600; font-size: 12.5px;
+}
+.ov-hub-stem { width: 2px; height: 18px; background: var(--bdr); margin: 0 auto; }
+.ov-hub-nodes {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+  border-top: 2px solid var(--bdr); padding-top: 16px; position: relative;
+}
+.ov-hub-node {
+  position: relative; border: 1px solid var(--bdr); border-top: 2px solid var(--brand);
+  border-radius: 10px; background: var(--w); padding: 13px 10px; text-align: center;
+}
+.ov-hub-node::before {
+  content: ''; position: absolute; top: -16px; left: 50%; width: 2px; height: 14px; background: var(--bdr);
+}
+.ov-hub-ic { font-size: 22px; line-height: 1; }
+.ov-hub-l { font-size: 12px; font-weight: 600; color: var(--navy); margin-top: 7px; }
+.ov-hub-s { font-size: 10.5px; color: var(--mu); margin-top: 3px; line-height: 1.4; }
+.ov-hub-more { font-size: 10px; font-weight: 600; color: var(--brand); margin-top: 8px; }
+
+/* Segment architecture map (3 panels → clickable sub-segment nodes → product modal) */
+.ov-segmap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.ov-segpanel { border: 1px solid var(--bdr); border-top: 3px solid var(--brand); border-radius: 12px; background: var(--surface); padding: 14px 13px; }
+.ov-segpanel-h { margin-bottom: 11px; padding-bottom: 9px; border-bottom: 1px solid var(--bdr); }
+.ov-segpanel-n { font-size: 12.5px; font-weight: 700; color: var(--navy); line-height: 1.3; }
+.ov-segpanel-m { font-size: 10.5px; font-weight: 600; color: var(--mu); margin-top: 3px; }
+.ov-segnodes { display: flex; flex-direction: column; gap: 8px; }
+.ov-segnode {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  border: 1px solid var(--bdr); border-radius: 8px; background: var(--w); padding: 10px 12px;
+  transition: border-color .14s, box-shadow .14s, transform .14s;
+}
+.ov-segnode:hover { border-color: var(--brand); box-shadow: 0 3px 12px rgba(0,120,212,.10); transform: translateY(-1px); }
+.ov-segnode-n { font-size: 12px; font-weight: 600; color: var(--navy); }
+.ov-segnode-r { font-size: 10px; font-weight: 600; color: var(--mu); white-space: nowrap; }
+
+/* Product sub-diagram (inside the modal) */
+.ov-sub-line { font-size: 12.5px; line-height: 1.6; color: var(--blue); }
+.ov-sub-line b { color: var(--navy); font-weight: 600; }
+.ov-sub-mon {
+  font-size: 12px; line-height: 1.55; color: var(--blue);
+  background: var(--brand-soft); border-left: 3px solid var(--brand); border-radius: 6px;
+  padding: 9px 12px; margin-top: 10px;
+}
+.ov-sub-mon b { color: var(--navy); font-weight: 600; }
+.ov-prod { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ov-prod-tile { border: 1px solid var(--bdr); border-top: 2px solid var(--brand); border-radius: 8px; background: var(--w); padding: 9px 11px; }
+.ov-prod-n { font-size: 11.5px; font-weight: 700; color: var(--navy); }
+.ov-prod-d { font-size: 11px; line-height: 1.45; color: var(--mu); margin-top: 3px; }
+.ov-prod-d b { color: var(--navy); font-weight: 600; }
+.ov-sub-comp { font-size: 11.5px; line-height: 1.5; color: var(--mu); margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--bdr); }
+.ov-sub-comp b { color: var(--navy); font-weight: 600; }
+
+/* Charts 2×2 */
+.ov-charts-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 6px; }
+.ov-charts-2 .ov-chart-wrap { height: 230px; }
+
+/* Two-box compare (bull vs bear) */
+.ov-vs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ov-vs-box { border: 1px solid var(--bdr); border-radius: 10px; padding: 14px 16px; background: var(--surface); }
+.ov-vs-box.is-claim { border-left: 3px solid var(--neg); }
+.ov-vs-box.is-real { border-left: 3px solid var(--pos); }
+.ov-vs-h { font-size: 10px; letter-spacing: .05em; text-transform: uppercase; font-weight: 700; margin-bottom: 7px; }
+.ov-vs-box.is-claim .ov-vs-h { color: var(--neg); }
+.ov-vs-box.is-real .ov-vs-h { color: var(--pos); }
+.ov-vs-box p { font-size: 11.5px; line-height: 1.55; color: var(--blue); margin: 0; }
+.ov-vs-box b { color: var(--navy); font-weight: 600; }
+
+/* Mechanism chain */
+.ov-chain { display: flex; flex-direction: column; margin-bottom: 16px; }
+.ov-chain-step {
+  position: relative; padding: 11px 14px 11px 44px; margin-bottom: 9px;
+  border: 1px solid var(--bdr); border-radius: 10px; background: var(--w);
+}
+.ov-chain-step:not(:last-child)::after {
+  content: '▾'; position: absolute; left: 17px; bottom: -14px; color: var(--brand); font-size: 13px; z-index: 1;
+}
+.ov-chain-n {
+  position: absolute; left: 12px; top: 11px; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--brand-soft); color: var(--brand);
+  display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;
+}
+.ov-chain-step.is-payoff { border: 1px solid var(--brand-2); background: #FFF8E6; }
+.ov-chain-step.is-payoff .ov-chain-n { background: var(--brand-2); color: #5a4500; }
+.ov-chain-t { font-size: 12px; font-weight: 600; color: var(--navy); }
+.ov-chain-d { font-size: 11.5px; line-height: 1.5; color: var(--mu); margin-top: 2px; }
+.ov-chain-d b { color: var(--navy); font-weight: 600; }
+
+/* Centered modal */
+.ov-modal-back {
+  position: fixed; inset: 0; z-index: 1000; background: rgba(12,16,40,.55); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; transition: opacity .18s;
+}
+.ov-modal-back[hidden] { display: none; }   /* must win over display:flex */
+.ov-modal-back.on { opacity: 1; }
+.ov-modal {
+  position: relative; background: var(--w); border-radius: 14px; max-width: 580px; width: 100%;
+  max-height: 85vh; overflow: auto; box-shadow: 0 24px 70px rgba(0,0,0,.32);
+  padding: 26px 28px 24px; transform: translateY(10px) scale(.985); transition: transform .18s;
+}
+.ov-modal-back.on .ov-modal { transform: none; }
+.ov-modal-x {
+  position: absolute; top: 12px; right: 14px; width: 30px; height: 30px; border: none;
+  background: var(--surface); border-radius: 50%; font-size: 20px; line-height: 1; color: var(--mu);
+  cursor: pointer; transition: background .12s, color .12s;
+}
+.ov-modal-x:hover { background: var(--bdr); color: var(--navy); }
+.ov-modal-t { font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 14px; padding-right: 30px; line-height: 1.35; }
+.ov-modal-sub { font-size: 11px; font-weight: 600; color: var(--brand); white-space: nowrap; }
+.ov-modal-b { font-size: 12.5px; line-height: 1.65; color: var(--blue); }
+.ov-modal-b b { color: var(--navy); font-weight: 600; }
+
 /* ── Responsive ── */
 @media (max-width: 860px) {
   .ov-snap { grid-template-columns: repeat(3, 1fr); }
@@ -240,4 +401,8 @@
   .ov-row { grid-template-columns: 1fr; gap: 4px; }
   .ov-corr-stats { grid-template-columns: 1fr; }
   .ov-targets, .ov-targets-3, .ov-drivers { grid-template-columns: 1fr 1fr; }
+  .ov-cards, .ov-cards-mna, .ov-charts-2, .ov-vs { grid-template-columns: 1fr; }
+  .ov-hub-nodes { grid-template-columns: 1fr 1fr; }
+  .ov-segmap { grid-template-columns: 1fr; }
+  .ov-prod { grid-template-columns: 1fr; }
 }

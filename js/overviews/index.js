@@ -3,9 +3,11 @@
 // To add one: create js/overviews/<name>.js exporting { html(company), init(company) },
 // then map its ticker here.
 import { remitlyOverview } from './remitly.js';
+import { msftOverview } from './microsoft.js';
 
 var OVERVIEWS = {
   RELY: remitlyOverview,
+  MSFT: msftOverview,
 };
 
 // Returns the overview module for a ticker, or null if none is built yet.

@@ -1200,3 +1200,27 @@
 .ov-legend { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 10px; font-size: 11px; color: var(--mu); }
 .ov-legend-i { display: flex; align-items: center; gap: 5px; }
 .ov-legend-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+
+/* ─── Mastercard (MA) Overview — company-specific additions ──────────────────
+   Shared overview components (cards, flow, segmap, modal, prod, sub) already
+   live above; here we only add the MA brand scope and the few selectors the
+   Mastercard profile introduces. Rules that would collide with another
+   company's global rule (flow node/earn colors) are scoped under .ov-mastercard. */
+.ov-mastercard {
+  --brand: #CF0A2C;
+  --brand-soft: #FCEDEF;
+  --brand-2: #FF9F00;
+}
+.ov-mastercard .ov-snap { border-top: 3px solid var(--brand-2); }
+.ov-mastercard .ov-flow-node.on { box-shadow: 0 4px 14px rgba(207,10,44,.16); }
+.ov-mastercard .ov-flow-node[data-node="net"].on { border-color: var(--brand-2); box-shadow: 0 4px 14px rgba(255,159,0,.30); }
+.ov-mastercard .ov-flow-earn.earn-net { background: #FCEDEF; color: #9B0B23; border: 1px solid var(--brand); }
+.ov-segmap-2 { grid-template-columns: 1fr 1fr; }
+.ov-prod-tile { border: 1px solid var(--bdr); border-top: 2px solid var(--brand); border-radius: 8px; background: var(--w); padding: 9px 11px; }
+.ov-prod-n { font-size: 11.5px; font-weight: 700; color: var(--navy); }
+.ov-prod-d { font-size: 11px; line-height: 1.45; color: var(--mu); margin-top: 3px; }
+.ov-sub-comp { font-size: 11.5px; line-height: 1.5; color: var(--mu); margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--bdr); }
+.ov-sub-comp b { color: var(--navy); font-weight: 600; }
+@media (max-width: 860px) {
+  .ov-segmap-2 { grid-template-columns: 1fr; }
+}

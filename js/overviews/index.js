@@ -8,6 +8,7 @@ import { msftOverview } from './microsoft.js';
 import { bbbOverview } from './bbb.js';
 import { visaOverview } from './visa.js';
 import { seaOverview } from './sea.js';
+import { mastercardOverview } from './mastercard.js';
 
 var OVERVIEWS = {
   RELY: remitlyOverview,
@@ -16,6 +17,7 @@ var OVERVIEWS = {
   TBBB: bbbOverview,
   V: visaOverview,
   SE: seaOverview,
+  MA: mastercardOverview,
 };
 
 // Returns the overview module for a ticker, or null if none is built yet.

@@ -253,6 +253,22 @@
   .tech-clients { grid-template-columns: 1fr 1fr; }
 }
 
+/* Legend for the accounts (bars) vs. revenue (line) combo chart. */
+.tech-leg { display: flex; gap: 18px; flex-wrap: wrap; margin: 2px 0 10px; font-size: 12px; font-weight: 600; color: var(--mu); }
+.tech-leg-i { display: inline-flex; align-items: center; gap: 7px; }
+.tech-leg-bar { width: 13px; height: 13px; border-radius: 3px; background: rgba(14,124,192,0.85); }
+.tech-leg-ln { width: 16px; border-top: 3px solid #1E2733; border-radius: 2px; }
+
+/* ── Financial Services tab ── */
+.fs-prods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.fs-tag {
+  display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .02em;
+  text-transform: uppercase; color: var(--brand); background: var(--brand-soft);
+  border-radius: 20px; padding: 2px 9px; margin-left: 8px; vertical-align: middle;
+}
+@media (max-width: 860px) { .fs-prods { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .fs-prods { grid-template-columns: 1fr; } }
+
 /* "Coming soon" placeholder pane for tabs not built yet. */
 .ovs-soon {
   border: 1px dashed var(--bdr);

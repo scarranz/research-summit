@@ -37,7 +37,7 @@ var HOW_MONEY = [
   'Three businesses sit on one <b>national-bank</b> platform: <b>Lending</b>, <b>Financial Services</b> and a B2B <b>Technology Platform</b>.',
   '<b>Lending</b> (FY2025 net revenue <b>$1.85B</b>) earns net interest income on personal, student and home loans, gains on loan sales and securitizations, and capital-light fees from its <b>Loan Platform Business</b> (originating loans for third parties).',
   '<b>Financial Services</b> (<b>$1.54B</b>, +88% YoY) monetizes SoFi Money, Invest, Credit Card, Relay and Crypto through net interest income on <b>deposits</b>, interchange and fees.',
-  '<b>Technology Platform</b> (<b>$450M</b>) provides the rails — card issuing, payments and core-banking software (Galileo + Technisys) — that power other fintechs and banks.',
+  '<b>Technology Platform</b> (<b>$361M</b>) provides the rails — card issuing, payments and core-banking software (Galileo + Technisys) — that power other fintechs and banks.',
   'The flywheel is the <b>Financial Services Productivity Loop</b>: a strong member experience drives existing members to add more products (<b>43% cross-buy</b> in Q1 2026), lowering acquisition cost and lifting lifetime value.',
   'SoFi is ~<b>96% deposit-funded</b>, giving it a low cost of capital and a ~<b>5.9% net interest margin</b>.',
 ];
@@ -46,7 +46,7 @@ var HOW_MONEY = [
 var SEGMENTS = [
   ['Lending — $1.85B net revenue', 'Personal, student and home loans. Earns net interest income on loans held for investment, gains on loan sales/securitizations, and capital-light origination fees from the Loan Platform Business. FY2025 contribution profit $1.02B (~55% margin). Up from $1.49B revenue in FY2024.'],
   ['Financial Services — $1.54B net revenue', 'SoFi Money (checking & savings), SoFi Invest, Credit Card, Relay, Crypto, At Work and Protect. Monetized through deposit-driven net interest income, interchange and fees. FY2025 contribution profit $793M — nearly doubled from $821M revenue in FY2024 (+88%).'],
-  ['Technology Platform — $450M net revenue', 'Galileo (card issuing & payments APIs) and Technisys (cloud-native core banking) — the infrastructure behind other fintechs and banks. FY2025 contribution profit $144M. Revenue pressured by a large client transitioning off the platform.'],
+  ['Technology Platform — $361M net revenue', 'Galileo (card issuing & payments APIs) and Technisys (cloud-native core banking) — the infrastructure behind other fintechs and banks. FY2025 contribution profit $144M. Up modestly from $352M in FY2024 — revenue growth was muted as a large client transitioned off the platform (enabled accounts fell while revenue still edged up).'],
 ];
 
 var TIMELINE = [
@@ -331,7 +331,7 @@ function feeBody(c){
   // Nested panes (LPB is built; the other two are placeholders for now).
   h += '<div class="ovf-pane" data-ovf="lpb">'+lpbBody(c)+'</div>';
   h += '<div class="ovf-pane" data-ovf="tech" hidden>'+techBody(c)+'</div>';
-  h += '<div class="ovf-pane" data-ovf="fs" hidden>'+soonBody('Financial Services')+'</div>';
+  h += '<div class="ovf-pane" data-ovf="fs" hidden>'+fsBody(c)+'</div>';
   return h;
 }
 
@@ -528,6 +528,17 @@ var TECH_CLIENTS = [
 var TECH_CLIENTS_NOTE = 'Clients shown are publicly disclosed; many contracts are confidential. Together, Galileo and Technisys enable ~158M end-customer accounts (Q3 2025) for neobanks, fintechs and banks across the U.S. and Latin America.';
 var TECH_SOURCES = 'Sources: SoFi press releases on the Galileo (Apr 2020, ~$1.2B) and Technisys (announced Feb 22, 2022; closed Mar 3, 2022; ~$1.1B in stock) acquisitions; SoFi FY2025 Form 10-K and investor presentations (segment revenue and contribution profit, enabled accounts); Galileo press pages. All figures in US dollars.';
 
+// ── Scale chart: enabled accounts (bars) vs. segment net revenue (line) ──
+// Year-end "enabled accounts" (total accounts powered by Galileo + Technisys), in
+// millions, and Technology Platform reportable-segment net revenue, in US$ millions.
+// Both series are FY actuals from the Summit financial model (SoFi 10-K segment data).
+var TECH_CHART_YEARS = ['2021', '2022', '2023', '2024', '2025', '2026E', '2027E', '2028E'];
+var TECH_ACCTS_M     = [ 99.7, 130.7, 145.4, 167.7, 128.5, 141.3, 155.4, 171.0 ]; // enabled accounts, millions (year-end)
+var TECH_REV_M       = [ 193.5, 306.0, 324.0, 351.7, 360.9, 231.5, 260.4, 291.2 ]; // segment net revenue, $M
+var TECH_FIRST_EST   = 5; // index of the first estimated year (2026E) — light bars + dashed line
+var TECH_CHART_NOTE  = 'In 2025, enabled accounts fell from 167.7M to 128.5M as a large client transitioned off the platform — yet segment net revenue still rose to $360.9M, lifting revenue per account. The Summit model then expects revenue to step down in 2026E (to ~$231M) as that client\'s remaining revenue fully rolls off, before the now-ex-client account base resumes organic growth and revenue re-accelerates toward ~$291M by 2028E.';
+var TECH_CHART_SRC   = 'Bars: total enabled accounts at year-end (millions). Line: Technology Platform reportable-segment net revenue ($M). 2021–2025 are actuals; 2026E–2028E are Summit model estimates (lighter bars / dashed line). Source: Summit financial model, from SoFi 10-K segment disclosures. All figures in US dollars.';
+
 // "Technology Platform" nested-pane body.
 function techBody(c){
   var h = '';
@@ -539,6 +550,20 @@ function techBody(c){
     '<div class="lpb-hero-d">'+esc(TECH_HERO_D)+'</div>'+
     '<div class="lpb-badges">'+TECH_BADGES.map(function(b){ return '<span class="lpb-badge">'+esc(b)+'</span>'; }).join('')+'</div>'+
   '</div>';
+
+  // Scale chart — enabled accounts (bars) vs. segment net revenue (line).
+  h += sec('Scale — accounts & revenue',
+    '<div class="tech-leg">'+
+      '<span class="tech-leg-i"><span class="tech-leg-bar"></span>Enabled accounts (left · millions)</span>'+
+      '<span class="tech-leg-i"><span class="tech-leg-ln"></span>Net revenue (right · $M)</span>'+
+    '</div>'+
+    '<div class="ov-chart-card">'+
+      '<div class="ov-chart-t">Technology Platform — accounts vs. net revenue <span>(accounts year-end · light bars / dashed = estimate)</span></div>'+
+      '<div class="ov-chart-wrap ovs-tall"><canvas id="sofiTechChart"></canvas></div>'+
+    '</div>'+
+    '<div class="ov-callout" style="margin-top:12px">'+esc(TECH_CHART_NOTE)+'</div>'+
+    '<div class="ov-foot" style="border:none;padding-top:8px">'+esc(TECH_CHART_SRC)+'</div>'
+  );
 
   // The two pieces that make up the platform.
   h += sec('The two pieces that make it up',
@@ -569,6 +594,89 @@ function techBody(c){
 
   // 4 — Sources.
   h += '<div class="ov-foot">'+esc(TECH_SOURCES)+'</div>';
+
+  return h;
+}
+
+// ─── Financial Services (nested Fee Income sub-tab) ──────────────────────────
+// An explainer of SoFi's everyday-money segment: what it is, the products that
+// make it up, how it earns, and why it is structured this way.
+var FS_INTRO = 'Financial Services is SoFi\'s everyday-money business — the suite of daily-use products members touch all the time: checking and savings (SoFi Money), investing (SoFi Invest), a credit card, crypto and more. Where Lending earns interest on loans, Financial Services gathers low-cost deposits and earns interchange and fees. It has been SoFi\'s fastest-growing segment, and it is the engine behind the cross-buy flywheel.';
+
+var FS_HERO_T = 'Financial Services is SoFi\'s <b>everyday-money</b> layer — and its <b>deposit engine.</b>';
+var FS_HERO_D = 'These are the high-frequency products members use daily — a place to bank, spend, save and invest inside one app. They keep members engaged, gather low-cost deposits that fund the loan book, and generate fee and interchange income with little capital and no credit risk.';
+var FS_BADGES = ['Everyday-money products', 'Deposit-funded', 'Interchange + fees + NII'];
+
+// Headline KPIs for the segment (FY2025).
+var FS_KPIS = [
+  { l:'FY2025 net revenue', v:'$1.54B', d:'+88% YoY · fastest-growing segment', dir:'up' },
+  { l:'Contribution profit', v:'$793M',  d:'~51% contribution margin',          dir:'up' },
+  { l:'Total deposits',      v:'$37.5B', d:'+44% YoY · mostly SoFi Money',       dir:'up' },
+  { l:'Share of net revenue',v:'~43%',   d:'of SoFi\'s $3.61B FY2025 total',     dir:'muted' },
+];
+
+// The products that make up the segment. Third field = how it primarily monetizes.
+var FS_PRODUCTS = [
+  ['SoFi Money', 'Checking & savings in one FDIC-insured account — competitive APY, no account fees, paycheck up to two days early, and savings "vaults." The everyday hub and the source of SoFi\'s low-cost deposits.', 'Deposits · NII'],
+  ['SoFi Invest', 'Self-directed brokerage (stocks, ETFs, options, fractional shares), a robo-advisor, retirement accounts and access to alternatives — bringing investing into the same app.', 'Fees'],
+  ['SoFi Credit Card', 'A cash-back rewards card that pays more when rewards are redeemed into SoFi accounts — pulling spending and balances back into the ecosystem.', 'Interchange · NII'],
+  ['SoFi Relay', 'Free credit-score monitoring, spending insights and outside-account aggregation — a no-cost hook that drives engagement and acquisition.', 'Engagement'],
+  ['SoFi Crypto', 'Buy and sell crypto, relaunched in 2025. SoFi became the first national bank to issue a stablecoin (SoFiUSD) on a public blockchain.', 'Fees'],
+  ['SoFi At Work', 'Financial-wellness benefits sold to employers (student-loan, emergency-savings and more) — a B2B2C channel that brings in members at low cost.', 'Fees'],
+  ['SoFi Protect', 'Insurance — auto, home, life and more — offered through partners inside the app.', 'Referral fees'],
+];
+
+// The three ways Financial Services makes money.
+var FS_MONEY = [
+  ['Net interest income on deposits', 'SoFi Money gathers low-cost, FDIC-insured deposits that earn a spread and fund the loan book at ~96% deposit funding. This is the largest FS revenue driver and the strategic core of the segment.'],
+  ['Interchange', 'Every swipe on a SoFi debit or credit card pays SoFi a small fee from the merchant. It scales directly with spending and engagement — fee income with no credit risk on debit.'],
+  ['Product & subscription fees', 'Brokerage and options activity, crypto, the SoFi Plus membership, insurance referrals and At Work contracts — a widening base of recurring, capital-light fees.'],
+];
+
+// Why SoFi composes the segment this way (strategic rationale).
+var FS_WHY = [
+  'These are the <b>high-frequency, daily-use</b> products that keep members in the app — which is what powers cross-buy: <b>43%</b> of new products in Q1 2026 came from existing members.',
+  'SoFi Money turns that engagement into <b>low-cost deposits</b>, funding the loan book at ~<b>96% deposit funding</b> and cutting cost of capital versus warehouse and securitization markets.',
+  'Most FS revenue is <b>capital-light</b> — interchange and fees carry no credit risk, and deposit NII needs far less capital than balance-sheet lending.',
+  'It diversifies SoFi away from <b>lending-only</b> earnings toward durable, recurring deposit and fee income that is steadier across the rate and credit cycle.',
+];
+
+var FS_SOURCES = 'Sources: SoFi FY2025 Form 10-K and Q1 2026 investor materials — Financial Services segment net revenue $1.54B (+88% YoY), contribution profit $793M, total deposits $37.5B (+44%). Product descriptions summarize public SoFi disclosures. All figures in US dollars.';
+
+// "Financial Services" nested-pane body — first version: explainer of the segment.
+function fsBody(c){
+  var h = '';
+
+  // 1 — Lede + hero + KPIs.
+  h += '<p class="ov-lede">'+esc(FS_INTRO)+'</p>';
+  h += '<div class="lpb-hero">'+
+    '<div class="lpb-hero-t">'+FS_HERO_T+'</div>'+
+    '<div class="lpb-hero-d">'+esc(FS_HERO_D)+'</div>'+
+    '<div class="lpb-badges">'+FS_BADGES.map(function(b){ return '<span class="lpb-badge">'+esc(b)+'</span>'; }).join('')+'</div>'+
+  '</div>';
+  h += '<div class="ov-kpis">'+FS_KPIS.map(function(k){
+    return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d '+(k.dir||'muted')+'">'+esc(k.d)+'</div></div>';
+  }).join('')+'</div>';
+
+  // 2 — What's inside: the products.
+  h += sec('What\'s inside — the products',
+    '<div class="fs-prods">'+FS_PRODUCTS.map(function(p){
+      return '<div class="lpb-fee"><div class="lpb-fee-t">'+esc(p[0])+'<span class="fs-tag">'+esc(p[2])+'</span></div><div class="lpb-fee-d">'+esc(p[1])+'</div></div>';
+    }).join('')+'</div>'
+  );
+
+  // 3 — How it makes money.
+  h += sec('How it makes money',
+    '<div class="tech-prods">'+FS_MONEY.map(function(m){
+      return '<div class="lpb-fee"><div class="lpb-fee-t">'+esc(m[0])+'</div><div class="lpb-fee-d">'+esc(m[1])+'</div></div>';
+    }).join('')+'</div>'
+  );
+
+  // 4 — Why it's composed this way.
+  h += sec('Why SoFi builds it this way', '<div class="ov-callout">'+bullets(FS_WHY)+'</div>');
+
+  // 5 — Sources.
+  h += '<div class="ov-foot">'+esc(FS_SOURCES)+'</div>';
 
   return h;
 }
@@ -863,6 +971,78 @@ function buildLpbPie(){
   });
 }
 
+// ── Technology Platform combo chart — accounts (bars) + revenue (line) ──
+var _techChart = null;
+// Inline plugin: account count above each bar, revenue $ above each line point.
+var techChartLabels = {
+  id: 'techChartLabels',
+  afterDatasetsDraw: function(chart){
+    var ctx = chart.ctx;
+    var bars = chart.getDatasetMeta(0).data;
+    bars.forEach(function(bar, i){                              // bars = accounts
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.font = '700 12px Inter, sans-serif';
+      ctx.fillStyle = i >= TECH_FIRST_EST ? 'rgba(14,124,192,0.65)' : BRAND;
+      ctx.fillText(chart.data.datasets[0].data[i].toFixed(1) + 'M', bar.x, bar.y - 8);
+      ctx.restore();
+    });
+    chart.getDatasetMeta(1).data.forEach(function(pt, i){       // line = revenue
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.font = '700 11.5px Inter, sans-serif';
+      ctx.fillStyle = '#1E2733';
+      // Put the label below the point when the revenue line sits at/below the bar top,
+      // so the account label (above the bar) and the revenue label never collide.
+      var bar = bars[i];
+      var y = (bar && pt.y > bar.y - 20) ? pt.y + 16 : pt.y - 11;
+      ctx.fillText('$' + Math.round(chart.data.datasets[1].data[i]) + 'M', pt.x, y);
+      ctx.restore();
+    });
+  }
+};
+function buildTechChart(){
+  var cv = document.getElementById('sofiTechChart');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return; // not visible yet
+  if (_techChart) { _techChart.destroy(); _techChart = null; }
+  var barColors  = TECH_ACCTS_M.map(function(_, i){ return i >= TECH_FIRST_EST ? 'rgba(14,124,192,0.38)' : 'rgba(14,124,192,0.85)'; });
+  var ptBorders  = TECH_REV_M.map(function(_, i){ return i >= TECH_FIRST_EST ? '#8A93A0' : '#1E2733'; });
+  _techChart = new Chart(cv.getContext('2d'), {
+    data: {
+      labels: TECH_CHART_YEARS,
+      datasets: [
+        { type:'bar', label:'Enabled accounts', data:TECH_ACCTS_M, yAxisID:'yA',
+          backgroundColor:barColors, borderRadius:4, maxBarThickness:62, order:2 },
+        { type:'line', label:'Net revenue', data:TECH_REV_M, yAxisID:'yR',
+          borderColor:'#1E2733', borderWidth:2.5, tension:0.3, order:1,
+          // Dash the line once it enters the estimate years.
+          segment:{ borderDash:function(ctx){ return ctx.p1DataIndex >= TECH_FIRST_EST ? [5,4] : undefined; } },
+          pointBackgroundColor:'#fff', pointBorderColor:ptBorders, pointBorderWidth:2, pointRadius:4 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false, animation:false,
+      layout:{ padding:{ top:30, bottom:4 } },
+      plugins:{
+        legend:{ display:false },
+        tooltip:{ callbacks:{ label:function(ctx){
+          return ctx.datasetIndex === 0
+            ? ' ' + ctx.parsed.y.toFixed(1) + 'M enabled accounts'
+            : ' $' + ctx.parsed.y.toFixed(1) + 'M net revenue';
+        } } }
+      },
+      scales:{
+        yA:{ position:'left',  display:false, beginAtZero:true, suggestedMax:240 },
+        yR:{ position:'right', beginAtZero:true, suggestedMax:420,
+             grid:{ display:false },
+             ticks:{ color:'#8A93A0', font:{ size:11 }, callback:function(v){ return '$' + v + 'M'; } } },
+        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:12 } } }
+      }
+    },
+    plugins: [techChartLabels]
+  });
+}
+
 function buildFeeTab(){
   var root = document.querySelector('.ov-sofi');
   if (!root) return;
@@ -872,7 +1052,7 @@ function buildFeeTab(){
     buildLoanChart(LPB_ORIG); setupLoanSlider(LPB_ORIG); // origination chart (visible)
     buildLpbPie();                                       // commitments pie (inside accordion)
   });
-  // if (k === 'tech') requestAnimationFrame(buildFeeTech);
+  if (k === 'tech') requestAnimationFrame(buildTechChart);
   // if (k === 'fs')   requestAnimationFrame(buildFeeFS);
 }
 

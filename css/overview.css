@@ -878,3 +878,25 @@
 .ov-legend { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 10px; font-size: 11px; color: var(--mu); }
 .ov-legend-i { display: flex; align-items: center; gap: 5px; }
 .ov-legend-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+
+/* ─── Instacart (CART) Overview — company-specific additions ─────────────────
+   Reuses the shared overview components (subtabs, panes, hub, flow, segmap,
+   cards, modal). Only the brand scope + flow earn/highlight colors are added,
+   scoped under .ov-cart so they don't collide with other companies. */
+.ov-cart {
+  --brand: #0AAD0A;
+  --brand-soft: #E8F7E8;
+  --brand-2: #FF7009;
+}
+.ov-cart .ov-flow-node.on { box-shadow: 0 4px 14px rgba(10,173,10,.16); }
+.ov-cart .ov-flow-node[data-node="ic"].on { border-color: var(--brand-2); box-shadow: 0 4px 14px rgba(255,112,9,.30); }
+.ov-cart .ov-flow-earn.earn-ic    { background: #E8F7E8; color: #0A7A0A; border: 1px solid var(--brand); }
+.ov-cart .ov-flow-earn.earn-ad    { background: #FFF1E6; color: #B4500A; border: 1px solid var(--brand-2); }
+.ov-cart .ov-flow-earn.earn-cost  { background: #FDECEC; color: var(--neg); border: 1px solid #F5C6C6; }
+.ov-cart .ov-flow-earn.earn-split { background: #ECF6EF; color: #1B6B43; border: 1px solid #BFE3CC; }
+/* Product sub-tiles + competition line used in the segment-detail modal */
+.ov-prod-tile { border: 1px solid var(--bdr); border-top: 2px solid var(--brand); border-radius: 8px; background: var(--w); padding: 9px 11px; }
+.ov-prod-n { font-size: 11.5px; font-weight: 700; color: var(--navy); }
+.ov-prod-d { font-size: 11px; line-height: 1.45; color: var(--mu); margin-top: 3px; }
+.ov-sub-comp { font-size: 11.5px; line-height: 1.5; color: var(--mu); margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--bdr); }
+.ov-sub-comp b { color: var(--navy); font-weight: 600; }

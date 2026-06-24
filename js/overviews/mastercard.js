@@ -57,6 +57,27 @@ var PN_INTRO = 'The payment network is the core switching business — ~58% of n
 var VOL_NOTE = '<b>How to read this.</b> One chart, two cuts: switch the <b>metric</b> (Purchase Volume, GDV, Purchase Transactions, Cards) and the <b>breakdown</b> (by geography, or Credit vs Debit) — both cuts sum to the same yearly total. <b>GDV = Purchase Volume + Cash Volume</b>; cash is largely excluded as a driver (minimal monetization, same criterion as Visa). <b>Numbers shown are illustrative placeholders</b> pending the team\'s Bloomberg series.';
 var XBORDER_NOTE = '<b>Cross-border is a different cut from the volumes above.</b> "International" here means volume on cards <i>issued outside the U.S.</i>; <b>cross-border</b> means the <i>card country ≠ merchant country</i> (travel + cross-border e-commerce). Cross-border earns a premium rate + FX — the <b>highest-yield</b> line and a key growth driver (+13% lc in Q1 26) — and is tracked separately from the issuance-geography split.';
 
+// ─── Financials (from the Summit DCF model) ──────────────────────────────────
+// Annual, USD millions. Actuals 2021–2025; 2026–2029 are the model's projection.
+// SOURCE: Summit DCF for MA (REV / OP_INCOME / EBITDA / FCF), pulled from the
+// model — NOT hand-invented. These are seeded here for now; the next step is to
+// feed them from a remote source that refreshes on its own (see the team note).
+// Operating income isn't carried as an annual projection in the model, so its
+// forecast years are null (no bar) rather than fabricated.
+var FIN_YEARS = [2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029];
+var FIN_EST   = [false, false, false, false, false, true, true, true, true];
+var FIN_FMT   = function(v){ return v==null ? '—' : '$'+(v/1000).toFixed(1)+'B'; };
+var FIN_SERIES = {
+  finRev:    { label:'Revenue',          type:'bar',  color:'#CF0A2C', data:[18884, 22237, 25098, 28167, 32791, 38162, 41902, 46640, 52166] },
+  finOpInc:  { label:'Operating Income', type:'bar',  color:'#7A8699', data:[10079, 12127, 13824, 15278, 18554, null, null, null, null] },
+  finEbitda: { label:'EBITDA',           type:'bar',  color:'#FF9F00', data:[11461, 12816, 14829, 16493, 20100, 23505, 26302, 29249, 32770] },
+  finFcf:    { label:'Free Cash Flow',   type:'line', color:'#16A34A', data:[9056, 10753, 11705, 14306, 17159, 18024, 19455, 21654, 24318] },
+};
+var FIN_INTRO = 'Mastercard\'s financials, pulled from the <b>Summit DCF model</b> — <b>actuals through FY2025</b> and the model\'s <b>projection to FY2029</b> (faded / dashed). Drag the timeline handles to mold the window; each chart\'s CAGR updates to your selection.';
+var FIN_NOTE  = 'Annual, USD billions. <b>2021–2025 actuals · 2026–2029 = DCF projection.</b> Source: Summit DCF model for Mastercard. Operating-income forecast isn\'t carried annually in the model, so its projection years are blank (not estimated). This section reads from the model, not hand-typed figures — the next step is wiring it to refresh automatically.';
+var _finStart=2021, _finEnd=2029, _finCharts={};
+function _hexRgba(hex, a){ var h=hex.replace('#',''); return 'rgba('+parseInt(h.substr(0,2),16)+','+parseInt(h.substr(2,2),16)+','+parseInt(h.substr(4,2),16)+','+a+')'; }
+
 // ─── Snapshot & narrative ────────────────────────────────────────────────────
 var SNAPSHOT = [
   ['Listing', 'NYSE: MA'],
@@ -323,6 +344,11 @@ function volSection(){
     '<div class="ov-diagram-cap" style="margin-top:10px">'+VOL_NOTE+'</div>'+
   '</section>';
 }
+function finCard(id, title, sub){
+  return '<div class="ov-chart-card"><div class="ov-chart-t">'+esc(title)+' <span>'+esc(sub)+'</span></div>'+
+    '<div class="ov-chart-wrap"><canvas id="'+id+'"></canvas></div>'+
+    '<div class="ov-statline" id="stat-'+id+'"></div></div>';
+}
 
 function html(c){
   var h = '<div class="ov ov-mastercard" data-brand="MA">';
@@ -332,6 +358,7 @@ function html(c){
     '<button class="ov-subtab active" data-matab="overview">Overview</button>'+
     '<button class="ov-subtab" data-matab="network">Payment Network</button>'+
     '<button class="ov-subtab" data-matab="vas">Value-Added Services</button>'+
+    '<button class="ov-subtab" data-matab="fin">Financials</button>'+
   '</div>';
 
   // ══ PANE 1 — Overview (what it is + how it earns + company context) ══
@@ -418,6 +445,25 @@ function html(c){
   );
   h += '</div>'; // end vas pane
 
+  // ══ PANE 4 — Financials (from the Summit DCF; actuals + projection) ══
+  h += '<div class="ov-pane" data-mapane="fin">';
+  h += '<p class="ov-lede">'+FIN_INTRO+'</p>';
+  h += '<div class="ov-rangebar">'+
+    '<div class="ov-range-head"><span class="ov-range-title">Timeline</span><span class="ov-range-val" id="ovFinVal">2021 – 2029E</span></div>'+
+    '<div class="ov-range-slider"><div class="ov-range-track"></div><div class="ov-range-fill" id="ovFinFill"></div>'+
+      '<input type="range" id="ovFinMin" min="2021" max="2029" step="1" value="2021">'+
+      '<input type="range" id="ovFinMax" min="2021" max="2029" step="1" value="2029">'+
+      '<div class="ov-range-ticks" id="ovFinTicks"></div></div>'+
+  '</div>';
+  h += '<div class="ov-charts ov-charts-2">'+
+    finCard('finRev','Revenue','FY21 – FY29E')+
+    finCard('finOpInc','Operating Income','FY21 – FY25 · actuals')+
+    finCard('finEbitda','EBITDA','FY21 – FY29E')+
+    finCard('finFcf','Free Cash Flow','FY21 – FY29E')+
+  '</div>';
+  h += '<div class="ov-diagram-cap" style="margin-top:10px">'+FIN_NOTE+'</div>';
+  h += '</div>'; // end fin pane
+
   h += '<div class="ov-foot">'+esc(SOURCES)+'</div>';
   h += '<div class="ov-modal-back" id="ovModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
     '<button class="ov-modal-x" id="ovModalX" aria-label="Close">×</button>'+
@@ -459,6 +505,43 @@ function renderVol(){
   }
 }
 
+// ─── Financials charts (DCF actuals + projection, timeline-moldable) ─────────
+function finSlice(s){
+  var o={years:[],labels:[],data:[],est:[]};
+  for(var i=0;i<FIN_YEARS.length;i++){ var y=FIN_YEARS[i];
+    if(y>=_finStart && y<=_finEnd){ o.years.push(y); o.data.push(s.data[i]); o.est.push(FIN_EST[i]); o.labels.push(String(y)+(FIN_EST[i]?'E':'')); } }
+  return o;
+}
+function makeFin(id){
+  var s=FIN_SERIES[id]; var cv=document.getElementById(id); if(!cv) return;
+  var sl=finSlice(s);
+  var ds;
+  if(s.type==='bar'){
+    ds={ data:sl.data, backgroundColor:sl.est.map(function(e){ return e?_hexRgba(s.color,0.4):s.color; }), borderRadius:5, maxBarThickness:46 };
+  } else {
+    ds={ data:sl.data, borderColor:s.color, backgroundColor:_hexRgba(s.color,0.08), fill:true, tension:0.3, borderWidth:2.5, pointRadius:3, pointHoverRadius:5, spanGaps:true,
+      pointBackgroundColor: sl.est.map(function(e){ return e?_hexRgba(s.color,0.4):s.color; }),
+      segment:{ borderDash:function(ctx){ return sl.est[ctx.p1DataIndex]?[6,4]:undefined; } } };
+  }
+  _finCharts[id]=new Chart(cv.getContext('2d'), { type:s.type, data:{labels:sl.labels, datasets:[ds]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:function(ctx){ return ' '+FIN_FMT(ctx.parsed.y); } } } },
+      scales:{ x:{ grid:{display:false}, ticks:{color:C_AXIS,font:{size:10}} },
+               y:{ grid:{color:C_GRID}, ticks:{color:C_AXIS,font:{size:10},callback:FIN_FMT} } } }
+  });
+  var el=document.getElementById('stat-'+id); if(!el) return;
+  var idxs=[]; for(var j=0;j<sl.data.length;j++) if(sl.data[j]!=null) idxs.push(j);
+  if(idxs.length>=2){ var fi=idxs[0], li=idxs[idxs.length-1], a=sl.data[fi], z=sl.data[li], yrs=sl.years[li]-sl.years[fi];
+    var cagr=(Math.pow(z/a, 1/(yrs||1))-1)*100;
+    el.innerHTML='<b>'+sl.labels[fi]+'</b> '+FIN_FMT(a)+' → <b>'+sl.labels[li]+'</b> '+FIN_FMT(z)+' · CAGR <span class="'+(cagr>=0?'pos':'neg')+'">'+(cagr>=0?'+':'')+cagr.toFixed(1)+'%</span>';
+  } else { el.innerHTML='<span class="ov-stat-mut">Pick a wider range</span>'; }
+}
+function renderFin(){
+  if (typeof Chart === 'undefined') return;
+  Object.keys(_finCharts).forEach(function(id){ try{ _finCharts[id].destroy(); }catch(e){} }); _finCharts={};
+  Object.keys(FIN_SERIES).forEach(makeFin);
+}
+
 function flowHtml(){
   return '<div class="ov-flow" id="ovFlow">'+
     '<div class="ov-flow-nodes">'+
@@ -487,8 +570,28 @@ function init(c){
       var tab = b.getAttribute('data-matab');
       root.querySelectorAll('.ov-pane').forEach(function(p){ p.classList.toggle('active', p.getAttribute('data-mapane')===tab); });
       if (tab==='network') requestAnimationFrame(renderVol); // charts need a visible (sized) canvas
+      if (tab==='fin') requestAnimationFrame(renderFin);
     };
   });
+
+  // ── Financials timeline slider ──
+  var fmn = root.querySelector('#ovFinMin'), fmx = root.querySelector('#ovFinMax');
+  var ffill = root.querySelector('#ovFinFill'), fval = root.querySelector('#ovFinVal'), ftk = root.querySelector('#ovFinTicks');
+  if (fmn){
+    var FY0=2021, FY1=2029, th='';
+    for (var y=FY0; y<=FY1; y++) th += '<span>' + "'" + String(y).slice(2) + (y>=2026?'E':'') + '</span>';
+    ftk.innerHTML = th;
+    var paintFin = function(){
+      var lo=Math.min(+fmn.value,+fmx.value), hi=Math.max(+fmn.value,+fmx.value);
+      _finStart=lo; _finEnd=hi;
+      var pa=(lo-FY0)/(FY1-FY0)*100, pb=(hi-FY0)/(FY1-FY0)*100;
+      ffill.style.left=pa+'%'; ffill.style.width=(pb-pa)+'%';
+      fval.textContent = lo + ' – ' + hi + (hi>=2026?'E':'');
+    };
+    fmn.oninput = function(){ paintFin(); renderFin(); };
+    fmx.oninput = function(){ paintFin(); renderFin(); };
+    paintFin();
+  }
 
   // ── Volume explorer: metric selector + dimension toggle ──
   var mPills = root.querySelector('#ovVolMetric'), dPills = root.querySelector('#ovVolDim');

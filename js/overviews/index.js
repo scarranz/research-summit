@@ -4,10 +4,18 @@
 // then map its ticker here.
 import { remitlyOverview } from './remitly.js';
 import { sofiOverview } from './sofi.js';
+import { msftOverview } from './microsoft.js';
+import { bbbOverview } from './bbb.js';
+import { visaOverview } from './visa.js';
+import { seaOverview } from './sea.js';
 
 var OVERVIEWS = {
   RELY: remitlyOverview,
   SOFI: sofiOverview,
+  MSFT: msftOverview,
+  TBBB: bbbOverview,
+  V: visaOverview,
+  SE: seaOverview,
 };
 
 // Returns the overview module for a ticker, or null if none is built yet.

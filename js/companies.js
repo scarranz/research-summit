@@ -1,7 +1,7 @@
 // companies.js — grid, detail view, add-company modal
 // All companies are loaded from Supabase. No hardcoded data.
 import { FRAMEWORK, ALL_STOCKS } from './portal-data.js';
-import { fetchCompanies, insertCompany, lookupTicker, searchCompany, fetchResources, insertResource, updateResource, deleteResource, uploadFile, getFileUrl, fetchExecutives, fetchInsiderTransactions, syncManagement, fetchAnalystRatings, syncRatings } from './api.js';
+import { fetchCompanies, insertCompany, lookupTicker, searchCompany, fetchResources, insertResource, updateResource, deleteResource, uploadFile, getFileUrl, fetchExecutives, fetchInsiderTransactions, syncManagement, fetchAnalystRatings, syncRatings, fetchSegments, syncSegments } from './api.js';
 import { getOverview } from './overviews/index.js';
 
 let _companies = []; // companies loaded from Supabase
@@ -123,6 +123,22 @@ var PILLAR_HIGHLIGHTS = {
     qg: ['Market runway / TAM', 'Organic durability', 'Mix shift'],
     qm: ['Capital allocation', 'Insider alignment', 'Operating record'],
     qv: ['FCF yield'],
+  },
+  MSFT: {
+    qb: ['Market structure', 'Unit economics', 'Pricing power'],
+    qg: ['Mix shift'],
+    qm: ['Capital allocation', 'Insider alignment'],
+    qv: ['FCF yield'],
+  },
+  // Visa: moat/structure/economics are the standouts; growth is organic + mix-shifting
+  // to CMS/VAS; mgmt excels at capital allocation & operating record (insider alignment
+  // left off — huge $ holdings but very low % ownership, so not a differentiator);
+  // valuation case rests on FCF yield + downside protection.
+  V: {
+    qb: ['Competitive moat', 'Market structure', 'Unit economics'],
+    qg: ['Organic durability', 'Mix shift'],
+    qm: ['Capital allocation', 'Operating record'],
+    qv: ['FCF yield', 'Downside protection'],
   },
 };
 
@@ -955,13 +971,143 @@ function renderOverview(c){
   var pane = document.querySelector('.copane[data-pane="overview"]');
   if (!pane) return;
   _currentOverview = getOverview(c.ticker);
-  if (!_currentOverview) {
-    pane.innerHTML = '<div class="coplace">No overview yet for this company. Work with the team to build one.</div>';
+  var html = '<div id="segments-data-slot"></div>';
+  if (_currentOverview) {
+    html += _currentOverview.html(c);
+  }
+  pane.innerHTML = html;
+  loadSegmentData(c.id, c.ticker);
+  if (_currentOverview && _currentOverview.init) requestAnimationFrame(function(){ _currentOverview.init(); });
+}
+
+// ─── Segment Data (Fiscal.ai) ─────────────────────────────────
+
+async function loadSegmentData(companyId, ticker) {
+  var slot = document.getElementById('segments-data-slot');
+  if (!slot) return;
+  if (companyId !== _currentCompanyId) return;
+
+  slot.innerHTML = '<div class="seg-loading">Loading segment data...</div>';
+
+  var result = await fetchSegments(companyId);
+  if (companyId !== _currentCompanyId) return;
+  var segments = result.success ? result.data : [];
+
+  if (!segments.length) {
+    slot.innerHTML = '<div class="seg-loading">Pulling segment data...</div>';
+    await syncSegments(ticker, companyId);
+    result = await fetchSegments(companyId);
+    if (companyId !== _currentCompanyId) return;
+    segments = result.success ? result.data : [];
+  } else if (!isFresh(segments)) {
+    syncSegments(ticker, companyId).catch(function() {});
+  }
+
+  if (!segments.length) {
+    slot.innerHTML = '';
     return;
   }
-  pane.innerHTML = _currentOverview.html(c);
-  // openCo() opens on the Overview tab, so the pane is visible — init charts now.
-  if (_currentOverview.init) requestAnimationFrame(function(){ _currentOverview.init(); });
+
+  renderSegments(slot, segments, ticker);
+}
+
+async function handleSegmentsSync() {
+  var btn = document.getElementById('segments-sync-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Syncing...'; }
+  await syncSegments(_currentTicker, _currentCompanyId);
+  await loadSegmentData(_currentCompanyId, _currentTicker);
+}
+
+function renderSegments(slot, segments, ticker) {
+  // Group by segment_group
+  var groups = {};
+  segments.forEach(function(s) {
+    var key = s.segment_group;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(s);
+  });
+
+  // Find the latest fiscal year for the default view
+  var latestYear = 0;
+  segments.forEach(function(s) {
+    if (s.period_type === 'annual' && s.fiscal_year > latestYear) latestYear = s.fiscal_year;
+  });
+
+  var html = '<div class="seg-section">' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">' +
+      '<div class="seg-section-title">Segments & KPIs</div>' +
+      '<button class="ii-btn-sm" id="segments-sync-btn" title="Refresh segment data">Sync ↻</button>' +
+    '</div>';
+
+  var groupKeys = Object.keys(groups);
+  for (var g = 0; g < groupKeys.length; g++) {
+    var groupName = groupKeys[g];
+    var items = groups[groupName];
+
+    // Filter to annual data for the latest year
+    var yearItems = items.filter(function(s) {
+      return s.period_type === 'annual' && s.fiscal_year === latestYear;
+    });
+    if (!yearItems.length) continue;
+
+    // Group by metric within this segment group
+    var metrics = {};
+    yearItems.forEach(function(s) {
+      if (!metrics[s.metric_name]) metrics[s.metric_name] = [];
+      metrics[s.metric_name].push(s);
+    });
+
+    var metricKeys = Object.keys(metrics);
+    for (var m = 0; m < metricKeys.length; m++) {
+      var metricName = metricKeys[m];
+      var rows = metrics[metricName].sort(function(a, b) { return a.sort_order - b.sort_order; });
+
+      // Compute total for percentage bars
+      var total = 0;
+      rows.forEach(function(r) { if (r.value > 0) total += Number(r.value); });
+
+      html += '<div class="seg-group">' +
+        '<div class="seg-group-title">' + esc(groupName) + ' — ' + esc(metricName) +
+        ' <span class="seg-year">FY ' + latestYear + '</span></div>';
+
+      html += '<table class="seg-table"><tbody>';
+      for (var r = 0; r < rows.length; r++) {
+        var row = rows[r];
+        var val = Number(row.value);
+        var pct = total > 0 ? (Math.abs(val) / total * 100) : 0;
+        var fmtVal = formatSegValue(val, row.currency);
+
+        html += '<tr>' +
+          '<td class="seg-name">' + esc(row.segment_name) + '</td>' +
+          '<td class="seg-val">' + fmtVal + '</td>' +
+          '<td class="seg-pct">' + (total > 0 ? pct.toFixed(0) + '%' : '') + '</td>' +
+          '<td class="seg-bar-cell"><div class="seg-bar" style="width:' + pct.toFixed(1) + '%"></div></td>' +
+        '</tr>';
+      }
+      html += '</tbody></table>';
+
+      // Total row
+      if (total > 0) {
+        html += '<div class="seg-total">Total: ' + formatSegValue(total, rows[0].currency) + '</div>';
+      }
+
+      html += '</div>';
+    }
+  }
+
+  html += '</div>';
+  slot.innerHTML = html;
+  document.getElementById('segments-sync-btn').addEventListener('click', handleSegmentsSync);
+}
+
+function formatSegValue(val, currency) {
+  var abs = Math.abs(val);
+  var sign = val < 0 ? '-' : '';
+  var sym = currency === 'USD' ? '$' : currency + ' ';
+  if (abs >= 1e9) return sign + sym + (abs / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+  if (abs >= 1e6) return sign + sym + (abs / 1e6).toFixed(0) + 'M';
+  if (abs >= 1e3) return sign + sym + (abs / 1e3).toFixed(0) + 'K';
+  return sign + sym + abs.toFixed(0);
 }
 
 // ─── Ticker Lookup ───────────────────────────────────────────

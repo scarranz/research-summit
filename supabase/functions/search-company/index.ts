@@ -27,21 +27,34 @@ async function getCompanyList(): Promise<any[]> {
   while (hasNext) {
     const url = `${FISCAL_API}/v2/companies-list?pageSize=1000&pageNumber=${page}`;
     const resp = await fetch(url, { headers: { "X-Api-Key": FISCAL_KEY } });
-    if (!resp.ok) break;
+    if (!resp.ok) {
+      const body = await resp.text().catch(() => "");
+      console.error(`Fiscal.ai companies-list page ${page} failed: ${resp.status} ${body}`);
+      break;
+    }
     const json = await resp.json();
     all.push(...(json.data || []));
     hasNext = json.pagination?.hasNextPage || false;
     page++;
   }
 
-  _cache = all;
-  _cacheTime = Date.now();
-  return all;
+  // Only cache if we got results — avoid caching empty on API failure
+  if (all.length) {
+    _cache = all;
+    _cacheTime = Date.now();
+  }
+  return _cache || all;
 }
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders(req) });
+  }
+
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+    });
   }
 
   try {
@@ -92,7 +105,7 @@ serve(async (req) => {
       headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 500,
       headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });

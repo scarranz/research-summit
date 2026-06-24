@@ -21,12 +21,12 @@ var SNAPSHOT = [
 var DESC = 'Instacart (legally Maplebear Inc.) is <b>North America\'s leading grocery-technology platform</b>. It runs two connected motions: a consumer <b>Marketplace</b> — an app to order groceries from <b>~1,800 retail banners / 85,000+ stores</b>, fulfilled by a gig <b>shopper</b> network — and <b>Instacart Platform (Enterprise)</b>, the white-label e-commerce, fulfillment, ads and insights tech that powers retailers\' <i>own</i> websites and apps. Riding on top is a large, fast-growing and <b>high-margin Advertising</b> business, where <b>CPG brands</b> pay to be discovered at the point of purchase. Instacart does not own inventory or stores — it sits in the middle of a <b>multi-sided network</b> (consumers, retailers, shoppers, advertisers) and earns <b>transaction fees</b> on the volume it enables plus <b>advertising</b> on the demand it creates.';
 
 var KPIS = [
-  { l:'GTV (FY24)',          v:'$33.5B', d:'+11% YoY',                 dir:'up' },
-  { l:'Orders (FY24)',       v:'~277M',  d:'+12% YoY',                 dir:'up' },
-  { l:'Advertising & other', v:'~$1.1B', d:'~3.4% of GTV · high-margin', dir:'up' },
-  { l:'Adj. EBITDA (FY24)',  v:'~$0.88B','d':'profitable & scaling',   dir:'up' },
+  { l:'GTV (FY25)',          v:'$37.2B', d:'+11% YoY',                   dir:'up' },
+  { l:'Orders (FY25)',       v:'339M',   d:'+12% YoY',                   dir:'up' },
+  { l:'Advertising & other', v:'$1.08B', d:'~2.9% of GTV · high-margin', dir:'up' },
+  { l:'Adj. EBITDA (FY25)',  v:'$1.09B', d:'profitable & scaling',       dir:'up' },
 ];
-var AS_OF = 'Headline figures are approximate <b>FY2024</b> (fiscal year = calendar year) and are <b>placeholders to refresh</b> with the latest reported period. <b>GTV</b> = Gross Transaction Value (the dollar value of orders + fees flowing through the marketplace). Instacart reports revenue in two lines — <b>Transaction revenue</b> and <b>Advertising &amp; other revenue</b>; the three "motions" below (Marketplace / Advertising / Enterprise) are the strategic view. Time-series charts are placeholders pending the team\'s data.';
+var AS_OF = 'Headline figures are <b>FY2025</b> actuals (fiscal year = calendar year), from the Summit DCF model. <b>GTV</b> = Gross Transaction Value (the dollar value of orders + fees flowing through the marketplace). Instacart reports revenue in two lines — <b>Transaction revenue</b> and <b>Advertising &amp; other revenue</b>; the three "motions" below (Marketplace / Advertising / Enterprise) are the strategic view. See the <b>Financials</b> tab for the historical KPI charts.';
 
 var HOW_MONEY = [
   '<b>Not a grocer:</b> Instacart owns <b>no inventory and no stores</b>. It provides the technology, demand and fulfillment that connect shoppers, retailers and brands — and never takes grocery inventory risk.',
@@ -154,14 +154,63 @@ var HEADWINDS = [
   '<b>Thin grocery economics & retailer concentration.</b> Low category margins and dependence on a few large banners — <i>mechanism:</i> a big retailer leaving (or building in-house) can move volume materially.',
 ];
 
-var SOURCES = 'Sources: Instacart (Maplebear Inc., NASDAQ: CART) public filings &amp; investor materials (10-K / quarterly results, S-1) and company disclosures on GTV, orders, advertising and the Instacart Platform. Headline figures are approximate FY2024 and marked to refresh; some segment splits are the strategic view, not the two reported revenue lines. Time-series charts are placeholders pending the team\'s data.';
+var SOURCES = 'Sources: Instacart (Maplebear Inc., NASDAQ: CART) — KPI &amp; financial charts (GTV, orders, transaction &amp; advertising revenue, adjusted EBITDA) are <b>historical actuals from the Summit DCF model (FY2021–2025)</b>; qualitative content from public filings &amp; investor materials (10-K / quarterly results, S-1). Some segment splits are the strategic view, not the two reported revenue lines. Forecast years are excluded by design.';
+
+// ─── KPIs & Financials (HISTORICAL ONLY, from the Summit DCF model) ──────────
+// Annual; $ in USD millions, orders in millions. We deliberately use ACTUALS
+// ONLY (FY2021–2025): the stored Summit DCF doesn't carry complete/reliable
+// forecasts (several series leave future years blank), so we treat the DCF as a
+// source of history, not projections. Source: Summit DCF for CART
+// (GTV / ORD / TRANSACTION_REVENUE / ADVERTISING_REVENUE / EBITDA_ADJ).
+var FIN_YEARS = [2021, 2022, 2023, 2024, 2025];
+var fB = function(v){ return v==null ? '—' : '$'+(v/1000).toFixed(1)+'B'; };
+var fM = function(v){ return v==null ? '—' : Math.round(v)+'M'; };
+var FIN_SERIES = {
+  finGTV:    { label:'GTV', unit:'$B', fmt:fB, type:'bar', color:'#0AAD0A', data:[24909,28826,31986,33646,37225] },
+  finORD:    { label:'Orders', unit:'M', fmt:fM, type:'bar', color:'#3A7BD5', data:[223,263,295,302,339] },
+  finMix:    { label:'Revenue — Transaction vs Advertising', unit:'$B', fmt:fB, type:'stack',
+               stack:[ {name:'Transaction', color:'#0AAD0A', data:[1262,1935,2239,2420,2677]},
+                       {name:'Advertising', color:'#FF7009', data:[572,740,871,958,1079]} ] },
+  finEbitda: { label:'Adjusted EBITDA', unit:'$B', fmt:fB, type:'bar', color:'#7A8699', data:[null,207,641,885,1087] },
+};
+var FIN_INTRO = 'Instacart\'s KPIs &amp; financials — <b>historical actuals (FY2021–2025)</b>, pulled from the <b>Summit DCF model</b>. Forecast years are intentionally excluded (the stored model\'s projections aren\'t complete/reliable), so this shows reported history only.';
+var FIN_NOTE  = 'GTV &amp; revenue in USD billions; orders in millions. Source: Summit DCF for CART (actuals). The <b>Transaction vs Advertising</b> split shows the high-margin ad engine rising as a share of revenue. Adj. EBITDA starts in 2022 (2021 pre-profitability). Reads from the model, not hand-typed.';
+var C_AXIS='#8A93A0', C_GRID='#EEF2F7', _finCharts={};
 
 // ─── Render helpers ──────────────────────────────────────────────────────────
 function sec(title, inner){ return '<section class="ov-sec"><div class="ov-sec-h">'+esc(title)+'</div>'+inner+'</section>'; }
 function bullets(arr){ return '<ul class="ov-bullets">'+arr.map(function(b){return '<li>'+b+'</li>';}).join('')+'</ul>'; }
 function kpis(arr){ return '<div class="ov-kpis">'+arr.map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d '+(k.dir||'muted')+'">'+esc(k.d)+'</div></div>'; }).join('')+'</div>'; }
 function snap(arr){ return '<div class="ov-snap">'+arr.map(function(p){ return '<div class="ov-snap-cell"><div class="ov-snap-k">'+esc(p[0])+'</div><div class="ov-snap-v">'+esc(p[1])+'</div></div>'; }).join('')+'</div>'; }
-function phs(arr){ return '<div class="ov-phs">'+arr.map(function(p){ return '<div class="ov-ph"><div class="ov-ph-ic">📊</div><div class="ov-ph-t">'+esc(p[0])+'</div><div class="ov-ph-s">'+esc(p[1])+' · placeholder</div></div>'; }).join('')+'</div>'; }
+function finCard(id, title, sub){
+  return '<div class="ov-chart-card"><div class="ov-chart-t">'+esc(title)+' <span>'+esc(sub)+'</span></div>'+
+    '<div class="ov-chart-wrap"><canvas id="'+id+'"></canvas></div><div class="ov-statline" id="stat-'+id+'"></div></div>';
+}
+function makeFin(id){
+  var s=FIN_SERIES[id]; var cv=document.getElementById(id); if(!cv) return;
+  var labels=FIN_YEARS.map(String), datasets;
+  if(s.type==='stack'){
+    datasets=s.stack.map(function(d){ return { label:d.name, data:d.data, backgroundColor:d.color, borderRadius:4, stack:'s', maxBarThickness:46 }; });
+  } else {
+    datasets=[{ data:s.data, backgroundColor:s.color, borderRadius:5, maxBarThickness:46 }];
+  }
+  _finCharts[id]=new Chart(cv.getContext('2d'), { type:'bar', data:{labels:labels, datasets:datasets},
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{ display:s.type==='stack', position:'bottom', labels:{boxWidth:10,font:{size:10},color:C_AXIS} },
+        tooltip:{ callbacks:{
+          label:function(ctx){ return ' '+(s.type==='stack'?ctx.dataset.label+': ':'')+s.fmt(ctx.parsed.y); },
+          footer:(s.type==='stack' ? function(items){ var t=0; items.forEach(function(i){ t+=i.parsed.y; }); return 'Total: '+s.fmt(t); } : undefined) } } },
+      scales:{ x:{ stacked:s.type==='stack', grid:{display:false}, ticks:{color:C_AXIS,font:{size:10}} },
+               y:{ stacked:s.type==='stack', grid:{color:C_GRID}, ticks:{color:C_AXIS,font:{size:10},callback:s.fmt} } } }
+  });
+  var el=document.getElementById('stat-'+id); if(!el) return;
+  var vals = s.type==='stack' ? FIN_YEARS.map(function(_,i){ return s.stack.reduce(function(a,d){ return a+(d.data[i]||0); },0); }) : s.data;
+  var idxs=[]; for(var i=0;i<vals.length;i++) if(vals[i]!=null && vals[i]!==0) idxs.push(i);
+  if(idxs.length>=2){ var fi=idxs[0],li=idxs[idxs.length-1],a=vals[fi],z=vals[li],yrs=FIN_YEARS[li]-FIN_YEARS[fi];
+    var cagr=(Math.pow(z/a,1/(yrs||1))-1)*100;
+    el.innerHTML='<b>'+FIN_YEARS[fi]+'</b> '+s.fmt(a)+' → <b>'+FIN_YEARS[li]+'</b> '+s.fmt(z)+' · CAGR <span class="'+(cagr>=0?'pos':'neg')+'">'+(cagr>=0?'+':'')+cagr.toFixed(1)+'%</span>'; }
+}
+function renderFin(){ if (typeof Chart==='undefined') return; Object.keys(_finCharts).forEach(function(id){ try{_finCharts[id].destroy();}catch(e){} }); _finCharts={}; Object.keys(FIN_SERIES).forEach(makeFin); }
 function subDetailHtml(s){
   return '<div class="ov-sub-line"><b>What it is.</b> '+s.what+'</div>'+
     '<div class="ov-sub-mon"><b>How it monetizes:</b> '+s.monetizes+'</div>'+
@@ -204,6 +253,7 @@ function html(c){
     '<button class="ov-subtab" data-catab="marketplace">Marketplace</button>'+
     '<button class="ov-subtab" data-catab="advertising">Advertising</button>'+
     '<button class="ov-subtab" data-catab="enterprise">Enterprise</button>'+
+    '<button class="ov-subtab" data-catab="fin">Financials</button>'+
   '</div>';
 
   // ══ PANE 1 — Overview ══
@@ -222,7 +272,6 @@ function html(c){
         '<div class="ov-segpanel-h"><div class="ov-segpanel-n">'+esc(seg.n)+'</div><div class="ov-segpanel-m">'+esc(seg.rev)+' · '+esc(seg.margin)+'</div></div>'+
         '<div class="ov-segnodes">'+seg.subs.map(function(s){ return '<div class="ov-segnode ov-clickable" data-detail="sub:'+esc(s.k)+'"><span class="ov-segnode-n">'+esc(s.n)+'</span><span class="ov-segnode-r">'+esc(s.rev)+'</span></div>'; }).join('')+'</div></div>';
     }).join('')+'</div>');
-  h += sec('Operating Trends (charts pending data)', phs([['GTV & Orders','quarterly trend'],['Revenue: Transaction vs Advertising','mix over time'],['Adjusted EBITDA','margin ramp']]));
   h += sec('Tailwinds & Headwinds',
     '<div class="ov-grid2"><div class="ov-wind ov-wind-up"><div class="ov-wind-h">Tailwinds</div>'+bullets(TAILWINDS)+'</div>'+
     '<div class="ov-wind ov-wind-down"><div class="ov-wind-h">Headwinds</div>'+bullets(HEADWINDS)+'</div></div>');
@@ -237,7 +286,6 @@ function html(c){
     '<div class="ov-callout" style="margin-top:14px">'+bullets(UE_BULLETS)+'</div>');
   h += sec('Who Uses Instacart — Customer Types',
     '<div class="ov-cards ov-cards-mna">'+CUSTOMERS.map(function(cu){ return '<div class="ov-card"><div class="ov-card-h"><span class="ov-card-n">'+esc(cu[0])+'</span></div><div class="ov-card-s">'+cu[1]+'</div></div>'; }).join('')+'</div>');
-  h += sec('Marketplace Trends (charts pending data)', phs([['GTV','quarterly'],['Orders','quarterly'],['GTV per order','basket size']]));
   h += '</div>'; // end marketplace
 
   // ══ PANE 3 — Advertising ══
@@ -246,7 +294,6 @@ function html(c){
   h += sec('Advertising Lines', pillarCards('ads'));
   h += sec('The Advertising Flywheel',
     '<div class="ov-fly">'+AD_FLY.map(function(f){ return '<div class="ov-fly-item"><div class="ov-fly-num" style="background:#FF70091A;color:#FF7009">'+esc(f[0])+'</div><div class="ov-fly-h">'+esc(f[1])+'</div><div class="ov-fly-p">'+esc(f[2])+'</div></div>'; }).join('')+'</div>');
-  h += sec('Advertising Trends (charts pending data)', phs([['Advertising revenue','quarterly'],['Ad % of GTV','attach rate'],['Active advertisers','count']]));
   h += '</div>'; // end advertising
 
   // ══ PANE 4 — Enterprise ══
@@ -256,6 +303,18 @@ function html(c){
   h += sec('Enterprise Lines', pillarCards('ent'));
   h += '<div class="ov-fynote">Marketplace vs Enterprise, in one line: in the <b>Marketplace</b> Instacart owns the consumer and earns a full take + ads; in <b>Enterprise</b> the retailer owns the consumer and Instacart earns a smaller tech fee — trading take rate for reach and stickiness.</div>';
   h += '</div>'; // end enterprise
+
+  // ══ PANE 5 — Financials (historical KPIs from the DCF) ══
+  h += '<div class="ov-pane" data-capane="fin">';
+  h += '<p class="ov-lede">'+FIN_INTRO+'</p>';
+  h += '<div class="ov-charts ov-charts-2">'+
+    finCard('finGTV','GTV','FY21–FY25 · $B')+
+    finCard('finORD','Orders','FY21–FY25 · M')+
+    finCard('finMix','Revenue mix','Transaction vs Advertising · $B')+
+    finCard('finEbitda','Adjusted EBITDA','FY22–FY25 · $B')+
+  '</div>';
+  h += '<div class="ov-diagram-cap" style="margin-top:10px">'+FIN_NOTE+'</div>';
+  h += '</div>'; // end fin pane
 
   h += '<div class="ov-foot">'+esc(SOURCES)+'</div>';
   h += '<div class="ov-modal-back" id="ovModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
@@ -274,6 +333,7 @@ function init(c){
       root.querySelectorAll('.ov-subtab').forEach(function(x){ x.classList.toggle('active', x===b); });
       var tab = b.getAttribute('data-catab');
       root.querySelectorAll('.ov-pane').forEach(function(p){ p.classList.toggle('active', p.getAttribute('data-capane')===tab); });
+      if (tab==='fin') requestAnimationFrame(renderFin); // charts need a visible (sized) canvas
     };
   });
 

@@ -615,15 +615,17 @@ var FS_KPIS = [
   { l:'Share of net revenue',v:'~43%',   d:'of SoFi\'s $3.61B FY2025 total',     dir:'muted' },
 ];
 
-// The products that make up the segment. Third field = how it primarily monetizes.
-var FS_PRODUCTS = [
-  ['SoFi Money', 'Checking & savings in one FDIC-insured account — competitive APY, no account fees, paycheck up to two days early, and savings "vaults." The everyday hub and the source of SoFi\'s low-cost deposits.', 'Deposits · NII'],
-  ['SoFi Invest', 'Self-directed brokerage (stocks, ETFs, options, fractional shares), a robo-advisor, retirement accounts and access to alternatives — bringing investing into the same app.', 'Fees'],
-  ['SoFi Credit Card', 'A cash-back rewards card that pays more when rewards are redeemed into SoFi accounts — pulling spending and balances back into the ecosystem.', 'Interchange · NII'],
-  ['SoFi Relay', 'Free credit-score monitoring, spending insights and outside-account aggregation — a no-cost hook that drives engagement and acquisition.', 'Engagement'],
-  ['SoFi Crypto', 'Buy and sell crypto, relaunched in 2025. SoFi became the first national bank to issue a stablecoin (SoFiUSD) on a public blockchain.', 'Fees'],
-  ['SoFi At Work', 'Financial-wellness benefits sold to employers (student-loan, emergency-savings and more) — a B2B2C channel that brings in members at low cost.', 'Fees'],
-  ['SoFi Protect', 'Insurance — auto, home, life and more — offered through partners inside the app.', 'Referral fees'],
+// The "everything app" product suite, recreated from SoFi's Q1 2026 investor
+// presentation slide "Everything App for Digital Financial Services" — one phone
+// screenshot per product, with the slide's own copy. Images live in /img/sofi/.
+var FS_APP_INTRO = 'SoFi has developed a suite of financial products that offers the speed, selection, content and convenience that only an integrated digital platform can provide.';
+var FS_APP = [
+  { k:'Member',      img:'member',      d:'SoFi\'s dedicated member team leverages an AI-driven Coach to provide a personalized experience across the entire SoFi platform.' },
+  { k:'Banking',     img:'banking',     d:'SoFi Money provides members with a high APY, $3M of FDIC insurance, early paychecks, no account fees, and easy money-movement features.' },
+  { k:'Credit Card', img:'credit-card', d:'SoFi offers a suite of credit cards with unique cashback rewards, zero fraud liability, no surprise fees and automatic credit-line reviews.' },
+  { k:'Invest',      img:'invest',      d:'SoFi Invest empowers members with the same tailored insights and high-tier investment options traditionally reserved for the ultra-wealthy.' },
+  { k:'Loans',       img:'loans',       d:'SoFi supports members through life\'s biggest moments, offering seamless borrowing for education, home buying, debt consolidation and more.' },
+  { k:'Crypto',      img:'crypto',      d:'SoFi is the first nationally licensed bank providing members with the ability to buy, sell and hold dozens of tokens.' },
 ];
 
 // The three ways Financial Services makes money.
@@ -658,11 +660,20 @@ function fsBody(c){
     return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d '+(k.dir||'muted')+'">'+esc(k.d)+'</div></div>';
   }).join('')+'</div>';
 
-  // 2 — What's inside: the products.
-  h += sec('What\'s inside — the products',
-    '<div class="fs-prods">'+FS_PRODUCTS.map(function(p){
-      return '<div class="lpb-fee"><div class="lpb-fee-t">'+esc(p[0])+'<span class="fs-tag">'+esc(p[2])+'</span></div><div class="lpb-fee-d">'+esc(p[1])+'</div></div>';
-    }).join('')+'</div>'
+  // 2 — What's inside: the "everything app" (recreated from the Q1 2026 slide).
+  h += sec('What\'s inside — the SoFi app',
+    '<div class="fs-slide-band">'+
+      '<div class="fs-slide-band-t">Get Your Money Right</div>'+
+      '<div class="fs-slide-band-d">'+esc(FS_APP_INTRO)+'</div>'+
+    '</div>'+
+    '<div class="fs-app">'+FS_APP.map(function(p){
+      return '<div class="fs-app-card">'+
+        '<img class="fs-app-img" src="img/sofi/'+p.img+'.png" alt="SoFi '+esc(p.k)+' app screen" loading="lazy">'+
+        '<div class="fs-app-k">'+esc(p.k)+'</div>'+
+        '<div class="fs-app-d">'+esc(p.d)+'</div>'+
+      '</div>';
+    }).join('')+'</div>'+
+    '<div class="ov-foot" style="border:none;padding-top:8px">Recreated from SoFi\'s Q1 2026 investor presentation, slide "Everything App for Digital Financial Services." Loans is part of the Lending segment; shown here as part of the full app suite.</div>'
   );
 
   // 3 — How it makes money.

@@ -330,7 +330,7 @@ function feeBody(c){
   '</div>';
   // Nested panes (LPB is built; the other two are placeholders for now).
   h += '<div class="ovf-pane" data-ovf="lpb">'+lpbBody(c)+'</div>';
-  h += '<div class="ovf-pane" data-ovf="tech" hidden>'+soonBody('Technology Platform')+'</div>';
+  h += '<div class="ovf-pane" data-ovf="tech" hidden>'+techBody(c)+'</div>';
   h += '<div class="ovf-pane" data-ovf="fs" hidden>'+soonBody('Financial Services')+'</div>';
   return h;
 }
@@ -490,6 +490,89 @@ function lpbBody(c){
   return h;
 }
 
+// ─── Technology Platform (nested Fee Income sub-tab) ──────────────────────────
+// A B2B explainer: what the platform is, how it was built (Galileo + Technisys
+// acquisitions), and who the main clients are.
+var TECH_INTRO = 'The Technology Platform is SoFi\'s B2B business: instead of selling products to the end consumer, it sells the underlying technology to other banks and fintechs. If SoFi\'s apps are the "product," this platform is the "engine" running behind the scenes — the rails other companies rent to launch their own cards, accounts and financial experiences. SoFi built it by acquiring two companies: Galileo and Technisys.';
+
+var TECH_HERO_T = 'SoFi isn\'t just a bank — it also sells the <b>rails</b> that other fintechs run on.';
+var TECH_HERO_D = 'When a fintech wants to issue a card, open accounts or move money without building that technology from scratch, it can plug into SoFi\'s platform through APIs. SoFi charges for usage — a capital-light, fee-based revenue stream with no credit risk.';
+var TECH_BADGES = ['B2B · capital-light', 'Galileo + Technisys', 'APIs + cloud core banking'];
+
+// The two acquired pieces that make up the platform.
+var TECH_PRODUCTS = [
+  ['Galileo', '2020', 'The payments processing and card-issuing engine, delivered via API. It lets a fintech issue debit or credit cards, authorize transactions in real time and move money — the layer that "talks" to the card networks. It was already powering many of the largest U.S. fintechs when SoFi bought it.'],
+  ['Technisys', '2022', 'The cloud-native core banking system — the bank\'s "operating system": accounts, deposits, loans and products. It lets a bank build and configure financial products fast, without the rigid legacy systems of traditional banks. It also brings a strong base of clients across Latin America.'],
+];
+var TECH_COMBINED = 'Together they form an <b>end-to-end</b> stack: Technisys is the core (the accounts and products) and Galileo is the processing (the cards and payments). SoFi is one of the few players to offer <b>both layers integrated</b>, so a client can stand up a complete digital bank on a single platform.';
+
+// Timeline of how the platform was assembled (the two acquisitions + integration).
+var TECH_TIMELINE = [
+  ['Apr 2020', 'SoFi acquires <b>Galileo</b> for <b>~$1.2B</b> (cash and stock). Its entry into the B2B business: Galileo was already processing payments for many of the leading U.S. fintechs.'],
+  ['Feb–Mar 2022', 'SoFi announces (Feb 22) and closes (Mar 3) the acquisition of <b>Technisys</b> for <b>~$1.1B</b> in stock (~84M shares). It adds cloud core banking and completes the technology stack.'],
+  ['2023–2024', 'Integration of the two: Galileo (processing) and Technisys (core) come together into a <b>single end-to-end offering</b> capable of powering fintechs and banks alike.'],
+  ['2025', 'Rebranded and relaunched as <b>"SoFi Technology Solutions,"</b> expanding into processing, core banking, payments and fraud. Segment revenue was pressured by the <b>departure of a large client</b> that migrated off the platform.'],
+];
+
+// Publicly known clients of Galileo / SoFi's Technology Platform (logos via Clearbit).
+var TECH_CLIENTS = [
+  { name:'Chime',     domain:'chime.com',     d:'U.S. neobank — historically Galileo\'s largest client.' },
+  { name:'Robinhood', domain:'robinhood.com', d:'Debit card and cash management for the investing app.' },
+  { name:'MoneyLion', domain:'moneylion.com', d:'All-in-one financial app.' },
+  { name:'Dave',      domain:'dave.com',      d:'Everyday-banking neobank with paycheck advances.' },
+  { name:'Toast',     domain:'toasttab.com',  d:'Payments and financial services for restaurants.' },
+  { name:'DailyPay',  domain:'dailypay.com',  d:'Earned-wage access (early access to pay).' },
+  { name:'Varo',      domain:'varomoney.com', d:'Digital bank with its own banking charter.' },
+  { name:'HSBC',      domain:'hsbc.com',      d:'Global bank — client for digital initiatives.' },
+];
+var TECH_CLIENTS_NOTE = 'Clients shown are publicly disclosed; many contracts are confidential. Together, Galileo and Technisys enable ~158M end-customer accounts (Q3 2025) for neobanks, fintechs and banks across the U.S. and Latin America.';
+var TECH_SOURCES = 'Sources: SoFi press releases on the Galileo (Apr 2020, ~$1.2B) and Technisys (announced Feb 22, 2022; closed Mar 3, 2022; ~$1.1B in stock) acquisitions; SoFi FY2025 Form 10-K and investor presentations (segment revenue and contribution profit, enabled accounts); Galileo press pages. All figures in US dollars.';
+
+// "Technology Platform" nested-pane body.
+function techBody(c){
+  var h = '';
+
+  // 1 — Simple explanation: lede + hero + KPIs.
+  h += '<p class="ov-lede">'+esc(TECH_INTRO)+'</p>';
+  h += '<div class="lpb-hero">'+
+    '<div class="lpb-hero-t">'+TECH_HERO_T+'</div>'+
+    '<div class="lpb-hero-d">'+esc(TECH_HERO_D)+'</div>'+
+    '<div class="lpb-badges">'+TECH_BADGES.map(function(b){ return '<span class="lpb-badge">'+esc(b)+'</span>'; }).join('')+'</div>'+
+  '</div>';
+
+  // The two pieces that make up the platform.
+  h += sec('The two pieces that make it up',
+    '<div class="tech-prods">'+TECH_PRODUCTS.map(function(p){
+      return '<div class="lpb-fee"><div class="lpb-fee-t">'+esc(p[0])+'<span class="tech-prod-yr">Acquired '+esc(p[1])+'</span></div><div class="lpb-fee-d">'+esc(p[2])+'</div></div>';
+    }).join('')+'</div>'+
+    '<div class="ov-callout" style="margin-top:12px">'+TECH_COMBINED+'</div>'
+  );
+
+  // 2 — Timeline of the acquisitions.
+  h += sec('How it was built — acquisitions', '<div class="ov-timeline">'+TECH_TIMELINE.map(function(t){
+    return '<div class="ov-tl-item"><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t[0])+'</div><div class="ov-tl-body">'+t[1]+'</div></div>';
+  }).join('')+'</div>');
+
+  // 3 — Main clients.
+  h += sec('Main clients',
+    '<div class="tech-clients">'+TECH_CLIENTS.map(function(cl){
+      return '<div class="tech-client">'+
+        '<img class="tech-client-logo" src="https://logo.clearbit.com/'+cl.domain+'" '+
+          'onerror="this.onerror=null;this.src=\'https://www.google.com/s2/favicons?domain='+cl.domain+'&sz=64\'" '+
+          'alt="'+esc(cl.name)+'" loading="lazy">'+
+        '<div class="tech-client-name">'+esc(cl.name)+'</div>'+
+        '<div class="tech-client-d">'+esc(cl.d)+'</div>'+
+      '</div>';
+    }).join('')+'</div>'+
+    '<div class="ov-foot" style="border:none;padding-top:8px">'+esc(TECH_CLIENTS_NOTE)+'</div>'
+  );
+
+  // 4 — Sources.
+  h += '<div class="ov-foot">'+esc(TECH_SOURCES)+'</div>';
+
+  return h;
+}
+
 // One expand/collapse accordion item.
 function accItem(title, open, bodyHtml){
   return '<div class="lpb-acc-item'+(open ? ' open' : '')+'">'+
@@ -514,7 +597,7 @@ function nodeInner(n){
 // Placeholder body for tabs that are not built yet.
 function soonBody(label){
   return '<div class="ovs-soon"><div class="ovs-soon-t">'+esc(label)+'</div>'+
-    '<div class="ovs-soon-d">En desarrollo — lo construimos a continuación.</div></div>';
+    '<div class="ovs-soon-d">In development — building this next.</div></div>';
 }
 
 function html(c){

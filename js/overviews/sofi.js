@@ -915,6 +915,15 @@ function sensBody(c){
   h += '<div class="ov-sec-h">LPB Sensitivity — origination × take rate</div>';
   h += '<p class="ov-lede">'+esc(SENS_INTRO)+'</p>';
 
+  // Live price banner — feeds the Fwd P/E line. Falls back to the fixed price.
+  h += '<div class="sens-live">'+
+    '<span class="sens-live-tk">SOFI</span>'+
+    '<span class="sens-live-px" id="sensLivePx">$'+SENS.price.toFixed(2)+'</span>'+
+    '<span class="sens-live-ch" id="sensLiveCh"></span>'+
+    '<span class="sens-live-ts" id="sensLiveTs">price held fixed</span>'+
+    '<button type="button" class="sens-live-rf" id="sensLiveRf">↻ Live</button>'+
+  '</div>';
+
   h += '<div class="sens-controls">'+
     sensRow('sensOrig', 'LPB origination (annual)', 2, 50, 0.5, SENS.origB, '$B') +
     sensRow('sensTake', 'Take rate (origination fee)', 1.0, 9.0, 0.1, SENS.takePct, '%') +
@@ -984,7 +993,58 @@ function setupSensSliders(){
   renderSens();
 }
 
-function buildSensTab(){ setupSensSliders(); }
+// ── Live price (via the get-quote edge function; falls back to the fixed price) ──
+var _liveQuote = null;
+function fetchSofiQuote(){
+  var env = window.ENV;
+  if (!env || !env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) return Promise.reject(new Error('no-env'));
+  var base = String(env.SUPABASE_URL).replace(/\/+$/, '');
+  return fetch(base + '/functions/v1/get-quote?ticker=SOFI', {
+    headers: { 'apikey': env.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + env.SUPABASE_ANON_KEY }
+  }).then(function(r){ if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+    .then(function(j){ if (j && typeof j.price === 'number') return j; throw new Error('bad payload'); });
+}
+
+function renderLiveBanner(){
+  var px = document.getElementById('sensLivePx');
+  var ch = document.getElementById('sensLiveCh');
+  if (px) px.textContent = '$' + SENS.price.toFixed(2);
+  if (ch && _liveQuote && typeof _liveQuote.changePct === 'number'){
+    var p = _liveQuote.changePct;
+    ch.textContent = (p >= 0 ? '▲ +' : '▼ −') + Math.abs(p).toFixed(2) + '%';
+    ch.className = 'sens-live-ch ' + (p >= 0 ? 'up' : 'down');
+  }
+}
+
+function applyLiveQuote(q){
+  _liveQuote = q;
+  if (typeof q.price === 'number') SENS.price = q.price;
+  renderLiveBanner();
+  renderSens(); // recompute P/E and implied price off the live price
+  var ts = document.getElementById('sensLiveTs');
+  if (ts){
+    var t = q.time ? new Date(q.time * 1000) : null;
+    var hhmm = t ? (('0'+t.getHours()).slice(-2)+':'+('0'+t.getMinutes()).slice(-2)) : '';
+    var state = (q.marketState && q.marketState !== 'REGULAR') ? (' · ' + q.marketState.toLowerCase()) : '';
+    ts.textContent = 'live · ' + (q.exchange || 'NASDAQ') + (hhmm ? (' · ' + hhmm) : '') + state;
+  }
+}
+
+function refreshLiveQuote(){
+  var ts = document.getElementById('sensLiveTs');
+  if (ts) ts.textContent = 'fetching live price…';
+  fetchSofiQuote().then(applyLiveQuote).catch(function(){
+    if (ts) ts.textContent = 'live price unavailable here — using $' + SENS.price.toFixed(2) + ' (last close)';
+  });
+}
+
+function buildSensTab(){
+  setupSensSliders();
+  renderLiveBanner();
+  var rf = document.getElementById('sensLiveRf');
+  if (rf) rf.onclick = refreshLiveQuote;
+  refreshLiveQuote(); // try to pull a live price when the tab opens
+}
 
 // One expand/collapse accordion item.
 function accItem(title, open, bodyHtml){

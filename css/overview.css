@@ -298,6 +298,15 @@
 .ave-subh-note { font-weight: 500; color: var(--mu); font-size: 12px; }
 
 /* ── Sensitivity tab — LPB origination × take rate ── */
+.sens-live { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 12px 0 4px; padding: 10px 14px; border: 1px solid var(--bdr); border-radius: 10px; background: var(--w); }
+.sens-live-tk { font-size: 12px; font-weight: 800; letter-spacing: .03em; color: var(--mu); }
+.sens-live-px { font-size: 20px; font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; }
+.sens-live-ch { font-size: 13px; font-weight: 700; }
+.sens-live-ch.up { color: #1E9E62; }
+.sens-live-ch.down { color: #C0392B; }
+.sens-live-ts { font-size: 11.5px; color: var(--mu); margin-left: auto; }
+.sens-live-rf { font: 600 12px Inter, sans-serif; color: var(--brand); background: var(--brand-soft); border: none; border-radius: 16px; padding: 5px 12px; cursor: pointer; }
+.sens-live-rf:hover { background: var(--brand); color: #fff; }
 .sens-controls { margin: 14px 0 6px; }
 .sens-ctrl { display: flex; align-items: center; gap: 14px; margin: 12px 0; }
 .sens-ctrl-l { min-width: 200px; font-size: 13px; font-weight: 600; color: var(--navy); }

@@ -8,6 +8,12 @@ _preview-*.html
 # Confidential fund data — NEVER commit to the public repo
 data/
 data.zip
+# Covered-calls model + working files (real positions — keep local)
+coveredcalls.xlsx
+*.xlsx
+*.xlsm
+# Massive API key — never commit (repo is public)
+**/.massive-key
 # Spec contains real fund returns / AUM — keep local until repo is private
 docs/fund-returns-spec.md
 # Local dev helper

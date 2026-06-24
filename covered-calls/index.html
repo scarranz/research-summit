@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Covered Calls — Live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --navy:#1E2733; --blue:#2C3E54; --steel:#3E5A82; --mid:#7C8694;
+    --ice:#EEF1F5; --pale:#F4F6F9; --w:#FFFFFF; --text:#1E2733; --mu:#8A93A0;
+    --bdr:#E7EAEE; --pos:#16A34A; --neg:#DC2626; --accent:#2563EB; --warn:#B45309;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--pale);color:var(--text);
+       font-variant-numeric:tabular-nums;letter-spacing:-.005em;-webkit-font-smoothing:antialiased;padding:24px;}
+  h1{font-size:20px;font-weight:700;}
+  h2{font-size:12px;font-weight:600;color:var(--steel);text-transform:uppercase;letter-spacing:.04em;}
+  .wrap{max-width:1480px;margin:0 auto;}
+  .topbar{display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap;}
+  .sub{color:var(--mu);font-size:13px;margin-bottom:18px;}
+  .controls{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap;margin-left:auto;}
+  .ctl{display:flex;flex-direction:column;gap:4px;}
+  .ctl label{font-size:10px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+  input,select,button{font-family:inherit;font-size:13px;border:1px solid var(--bdr);border-radius:7px;padding:7px 10px;background:var(--w);color:var(--text);}
+  button{background:var(--navy);color:#fff;border-color:var(--navy);cursor:pointer;font-weight:600;}
+  button.ghost{background:var(--w);color:var(--steel);border-color:var(--bdr);font-weight:500;}
+  button:hover{opacity:.92;}
+  button.sm{padding:4px 8px;font-size:12px;}
+
+  /* summary strip */
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px;}
+  .kpi{background:var(--w);border:1px solid var(--bdr);border-radius:12px;padding:14px 16px;}
+  .kpi .l{font-size:10px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+  .kpi .v{font-size:22px;font-weight:700;margin-top:4px;}
+  .kpi .s{font-size:11px;color:var(--mu);margin-top:2px;}
+
+  .card{background:var(--w);border:1px solid var(--bdr);border-radius:14px;padding:6px 6px 14px;overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{padding:8px 9px;border-bottom:1px solid var(--bdr);white-space:nowrap;text-align:right;}
+  th{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.03em;font-weight:600;position:sticky;top:0;background:var(--w);}
+  th:first-child,td:first-child{text-align:left;}
+  td.tk{font-weight:700;}
+  tbody tr:hover{background:var(--pale);}
+  .grp{font-size:9px;color:var(--steel);text-align:center;font-weight:700;letter-spacing:.06em;border-bottom:none;padding-bottom:2px;}
+  .sep{border-left:1px solid var(--bdr);}
+  td.edit input{width:62px;text-align:right;padding:4px 6px;font-size:12px;font-weight:600;}
+  td.edit input.ovr{color:var(--accent);border-color:var(--accent);}
+  .big{font-weight:700;}
+  .cheap{color:var(--pos);} .rich{color:var(--neg);}
+  .up{color:var(--pos);} .dn{color:var(--neg);}
+  .muted{color:var(--mu);font-size:11px;}
+  .pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;background:var(--ice);color:var(--steel);}
+  .err{color:var(--neg);font-weight:600;}
+  .warn{color:var(--warn);}
+  .foot{margin-top:12px;font-size:11px;color:var(--mu);line-height:1.6;}
+  .addrow{display:flex;gap:8px;align-items:flex-end;margin-top:14px;flex-wrap:wrap;}
+  .addrow .ctl input{width:84px;}
+  .spin{color:var(--mu);font-size:13px;padding:20px;}
+  .x{color:var(--mu);cursor:pointer;font-weight:700;border:none;background:none;font-size:14px;padding:2px 6px;}
+  .x:hover{color:var(--neg);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <h1>Covered Calls — Live</h1>
+    <span class="pill" id="clock">live · Massive</span>
+    <div class="controls">
+      <div class="ctl">
+        <label>Target expiry</label>
+        <select id="expiry"><option>loading…</option></select>
+      </div>
+      <div class="ctl">
+        <label>Portfolio value ($)</label>
+        <input id="portval" type="number" step="100000" />
+      </div>
+      <div class="ctl">
+        <label>&nbsp;</label>
+        <button id="refresh">↻ Refresh live</button>
+      </div>
+    </div>
+  </div>
+  <div class="sub">Premium, IV &amp; greeks pull live from the Massive option chain for each strike/expiry · valuation-if-exercised uses Summit forward EBITDA/EPS · nothing is stored</div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="card">
+    <div id="status" class="spin">Loading live data…</div>
+    <table id="tbl" hidden>
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="addrow">
+    <div class="ctl"><label>Add ticker</label><input id="newtk" placeholder="TICKER" /></div>
+    <div class="ctl"><label>Strike</label><input id="newstrike" type="number" step="1" /></div>
+    <div class="ctl"><label>Contracts</label><input id="newcontracts" type="number" step="1" /></div>
+    <div class="ctl"><label>&nbsp;</label><button id="addbtn" class="ghost sm">+ Add position</button></div>
+  </div>
+
+  <div class="foot" id="foot"></div>
+</div>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

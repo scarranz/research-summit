@@ -274,6 +274,29 @@
 @media (max-width: 1000px) { .fs-app { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 560px)  { .fs-app { grid-template-columns: repeat(2, 1fr); } }
 
+/* ── Valuation → Actuals vs. Estimates ── */
+.ave-groups { display: flex; flex-direction: column; gap: 9px; margin: 4px 0 16px; }
+.ave-group { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.ave-group-l {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--mu); min-width: 74px; flex-shrink: 0;
+}
+.ave-group .ave-pills { margin: 0; }
+.ave-pills { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 14px; }
+.ave-pill {
+  font: 600 12.5px Inter, sans-serif; color: var(--mu);
+  background: var(--w); border: 1px solid var(--bdr); border-radius: 20px;
+  padding: 6px 14px; cursor: pointer; transition: color .15s, background .15s, border-color .15s;
+}
+.ave-pill:hover { border-color: var(--brand); color: var(--brand); }
+.ave-pill.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+.ave-leg { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; margin: 2px 0 10px; font-size: 12px; font-weight: 600; color: var(--mu); }
+.ave-leg-est { width: 13px; height: 13px; border-radius: 3px; background: #C7CED6; }
+.ave-leg-act { width: 13px; height: 13px; border-radius: 3px; background: rgba(14,124,192,0.95); }
+.ave-leg-up { color: #1E9E62; font-size: 11px; }
+.ave-leg-dn { color: #C0392B; font-size: 11px; }
+.ave-subh-note { font-weight: 500; color: var(--mu); font-size: 12px; }
+
 /* "Coming soon" placeholder pane for tabs not built yet. */
 .ovs-soon {
   border: 1px dashed var(--bdr);

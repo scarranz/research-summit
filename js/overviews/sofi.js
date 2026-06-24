@@ -692,6 +692,192 @@ function fsBody(c){
   return h;
 }
 
+// ─── Valuation → Actuals vs. Estimates ───────────────────────────────────────
+// Compares Summit's DCF quarterly ESTIMATE (projection) against SoFi's REPORTED
+// actual, quarter by quarter, and derives a beat/miss track record. Data pulled
+// from the Summit DCF (latest snapshot 2026-05-13): projection_history vs
+// actuals_history. Values in US$ millions.
+//
+// Data-quality note: the model carries a clean quarterly estimate series for
+// total net revenue back to 2Q22 (16 quarters). For Adj. EBITDA and Adj. Net
+// Income the model's quarterly estimates only become meaningful from 2Q25, so
+// those start there (GAAP net income has no stored estimates and is omitted).
+var AVE_INTRO = 'How our Summit DCF estimates have stacked up against what SoFi actually reported, quarter by quarter — across operating KPIs and every revenue line. Each quarter shows the model\'s estimate vs the reported actual, and the surprise (how far above or below we were). Pick a metric, then drag the handles to window the quarters — the chart and every statistic below recompute for the range you select.';
+
+// Each metric: quarters / est (DCF projection) / act (reported). fmt drives the
+// tooltip units — 'usd' = $M, 'cnt' = count in millions (stored in thousands),
+// 'vol' = origination volume ($M stored, shown $B). Windows start where the
+// model's quarterly estimate becomes meaningful (some lines only from 2Q25).
+var AVE_METRICS = {
+  // ── KPIs ──
+  memb: { label:'Members', short:'Members', fmt:'cnt',
+    quarters:['2Q22','3Q22','4Q22','1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'],
+    est:[3573,4072,4766,5319,6029,6576,7195,7777,8710,9646,10389,11182,11669,12185,13671,14191],
+    act:[4319,4743,5223,5656,6240,6957,7542,8132,8774,9373,10127,10916,11746,12642,13651,14706],
+    note:'Total members (end of quarter). 16-quarter estimate history — tracked closely, with small misses either way; recently the model has slightly under-forecast member adds.' },
+  plpbo: { label:'LPB Loan Originations', short:'LPB orig.', fmt:'vol',
+    quarters:['2Q25','3Q25','4Q25','1Q26'],
+    est:[1800,2450,4000,4000],
+    act:[2450,3400,3656,2963],
+    note:'Loan Platform Business origination volume. Short 4-quarter estimate history (from 2Q25); 1Q26 came in well below the model.' },
+  tpa: { label:'Tech Platform Accounts', short:'TP accounts', fmt:'cnt',
+    quarters:['2Q22','3Q22','4Q22','1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'],
+    est:[94683,106573,119593,131624,139884,149199,156845,151592,155227,164087,174510,181259,177473,171392,176100,190119],
+    act:[116570,124333,130704,126327,129356,136739,145425,151049,158458,160179,167714,158432,160046,157860,128462,132874],
+    note:'Total enabled accounts on the Technology Platform. The model stayed too optimistic through 2025 as a large client offboarded — a clear miss streak.' },
+  // ── Revenue ──
+  rev: { label:'Total Net Revenue', short:'Overall', fmt:'usd',
+    quarters:['2Q22','3Q22','4Q22','1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'],
+    est:[327.6,362.7,452.9,490.6,575.8,588.0,628.7,646.2,700.9,657.3,735.3,707.7,779.5,831.0,1009.8,1020.9],
+    act:[359.3,420.1,506.1,472.3,499.8,537.1,615.4,645.0,599.8,697.1,734.1,771.8,854.9,961.6,1025.1,1100.4],
+    note:'Total net revenue (consolidated). Optimistic through 2023 (a miss streak) and conservative through 2025–26 (a beat streak).' },
+  nim: { label:'Net Interest Margin Revenue', short:'NIM', fmt:'usd',
+    quarters:['2Q22','3Q22','4Q22','1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'],
+    est:[121.1,150.4,203.7,200.0,331.2,370.0,429.6,422.0,456.8,471.7,503.9,488.3,497.6,498.4,566.7,572.6],
+    act:[122.7,158.2,210.4,236.2,292.9,345.0,389.6,402.7,413.6,431.0,470.2,498.7,517.8,585.1,617.3,693.0],
+    note:'Net interest margin revenue. Overshot through 2023–24, then under-forecast in 2025–26 as NIM expanded.' },
+  ii: { label:'Interest Income', short:'Interest income', fmt:'usd',
+    quarters:['2Q22','3Q22','4Q22','1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'],
+    est:[173.8,197.1,243.5,254.7,413.7,481.8,529.2,592.9,649.1,687.1,765.4,782.7,816.5,832.0,903.8,876.4],
+    act:[149.3,197.4,307.9,371.5,470.8,564.3,645.2,665.9,675.6,723.4,743.9,763.8,792.4,891.6,927.4,1001.0],
+    note:'Total interest income. Mostly under-forecast — the loan book and yields outran the model.' },
+  lii: { label:'Loans Interest Income', short:'Loans int. inc.', fmt:'usd',
+    quarters:['2Q22','3Q22','4Q22','1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'],
+    est:[156.7,180.3,225.3,229.5,392.1,459.9,506.6,564.1,618.4,651.5,722.0,732.3,756.3,770.9,836.4,807.5],
+    act:[145.3,191.5,297.8,357.3,443.0,537.9,597.2,618.4,619.9,670.1,687.3,711.5,737.4,828.7,862.8,930.5],
+    note:'Interest income from loans. Similar pattern to total interest income — broadly under-forecast.' },
+  ie: { label:'Interest Expense', short:'Interest expense', fmt:'usd',
+    quarters:['2Q22','3Q22','4Q22','1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'],
+    est:[-52.7,-46.7,-39.9,-54.7,-82.6,-111.8,-99.6,-170.9,-192.3,-215.5,-261.5,-294.4,-318.9,-333.6,-337.1,-303.8],
+    act:[-26.6,-39.2,-97.4,-135.3,-177.9,-219.3,-255.6,-263.2,-262.0,-292.4,-273.8,-265.1,-274.6,-306.4,-310.1,-308.0],
+    note:'Interest expense — a NEGATIVE line (a cost). Green here means the actual landed above (less negative than) the estimate, i.e. lower expense; red means higher expense than modeled.' },
+  lpb: { label:'Loan Platform Business Revenue', short:'LPB', fmt:'usd',
+    quarters:['2Q25','3Q25','4Q25','1Q26'],
+    est:[85.5,115.9,208.0,208.0],
+    act:[127.4,164.9,190.9,138.3],
+    note:'Total LPB revenue. Short 4-quarter estimate history (from 2Q25); strong beats early, then a 1Q26 miss as LPB volume cooled.' },
+  lpbo: { label:'LPB Loan-Origination Revenue', short:'Loan origination', fmt:'usd',
+    quarters:['2Q25','3Q25','4Q25','1Q26'],
+    est:[81.0,110.2,180.0,180.0],
+    act:[104.9,146.9,171.1,119.0],
+    note:'The loan-origination-fee component of LPB. Short history (from 2Q25). Mapping note: best fit for "Loan origination" — tell me if you meant a different line.' },
+  loss: { label:'Loan Origination, Sales & Securitizations', short:'Sales & securit.', fmt:'usd',
+    quarters:['2Q22','3Q22','4Q22','1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'],
+    est:[145.7,136.2,164.5,142.1,134.8,95.0,78.0,85.5,61.1,60.3,77.7,81.6,46.5,58.7,68.6,50.4],
+    act:[144.4,163.7,139.6,126.5,90.2,75.4,82.9,57.0,54.9,70.1,73.9,48.4,62.9,65.4,53.9,142.2],
+    note:'Gains on loan origination, sales and securitizations. Volatile and hard to call — note the large 1Q26 beat.' },
+  other: { label:'Other Revenue', short:'Other FS', fmt:'usd',
+    quarters:['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'],
+    est:[52.6,15.0,18.1,19.0,40.1,87.5,29.2,43.7,43.6,46.1,50.3,67.2,71.8],
+    act:[14.0,17.2,18.3,38.9,81.7,26.5,39.5,39.4,41.0,48.1,56.5,69.1,76.7],
+    note:'Other revenue (the best available proxy for "other financial services" — there is no standalone FS-segment revenue line). Starts 1Q23; 2022 is excluded because near-zero estimates produce meaningless percentages.' },
+  tp: { label:'Technology Platform Revenue', short:'Tech Platform', fmt:'usd',
+    quarters:['2Q22','3Q22','4Q22','1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'],
+    est:[51.7,75.1,78.9,82.1,81.2,95.3,93.9,90.8,88.1,88.8,99.0,95.7,99.1,99.4,99.3,118.1],
+    act:[82.2,82.2,81.5,73.2,82.2,81.5,87.1,85.9,86.1,91.0,88.7,86.4,90.8,89.7,94.0,49.4],
+    note:'Technology Platform revenue. Roughly in line for years, then a sharp 1Q26 miss as a large client rolled off.' },
+  // ── Operating Expenses (costs — green/▼ = actual UNDER estimate) ──
+  tpd: { exp:true, label:'Technology & Product Development', short:'Tech & product', fmt:'usd',
+    quarters:['2Q22','3Q22','4Q22','1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'],
+    est:[88.8,95.3,84.9,104.8,127.2,141.7,145.0,149.8,162.4,160.9,181.5,167.6,158.6,160.7,171.3,203.1],
+    act:[99.4,110.7,113.3,117.1,126.8,125.7,141.8,130.9,132.2,139.7,149.0,156.2,152.1,167.1,172.8,187.7],
+    note:'Technology & product development expense. A cost line — green/▼ = actual came in BELOW estimate (under budget). Broadly in line; the model over-projected 1Q26.' },
+  sme: { exp:true, label:'Sales & Marketing', short:'Sales & mktg', fmt:'usd',
+    quarters:['2Q22','3Q22','4Q22','1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'],
+    est:[147.2,178.2,201.0,214.1,223.0,251.3,269.2,271.5,283.4,289.4,270.8,259.4,249.4,268.6,298.0,285.8],
+    act:[143.9,162.1,173.7,175.2,182.8,186.7,174.7,167.4,184.8,214.9,229.3,238.2,264.7,286.9,305.6,335.5],
+    note:'Sales & marketing expense. The model ran high in 2022–24 (we over-budgeted; actuals came well under), then SoFi out-spent the estimate through 2025–26.' },
+  coo: { exp:true, label:'Cost of Operations', short:'Cost of ops', fmt:'usd',
+    quarters:['2Q22','3Q22','4Q22','1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'],
+    est:[95.8,110.0,109.3,111.3,125.0,131.3,127.4,132.6,148.3,155.2,164.2,158.1,153.6,160.8,166.6,168.0],
+    act:[79.1,83.1,80.6,83.9,93.9,98.3,103.9,100.1,109.7,123.7,128.2,135.5,150.4,161.4,161.6,171.1],
+    note:'Cost of operations. Persistently over-projected — actuals have come in under estimate almost every quarter.' },
+  gae: { exp:true, label:'General & Administrative', short:'G&A', fmt:'usd',
+    quarters:['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'],
+    est:[208.9,192.5,193.1,173.0,189.2,200.7,190.4,201.5,222.2,159.5,163.8,185.1,187.7],
+    act:[123.7,131.2,124.5,131.7,145.2,145.0,148.9,160.9,156.4,165.4,188.4,194.2,197.6],
+    note:'General & administrative expense. Starts 1Q23 (2022 estimates were erratic). The model over-projected G&A for years; actuals have since converged.' },
+  pcl: { exp:true, label:'Provision for Credit Losses', short:'Provision (PCL)', fmt:'usd',
+    quarters:['4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'],
+    est:[5.9,6.0,7.7,7.9,8.2,9.0],
+    act:[6.9,5.7,10.0,9.2,5.4,8.9],
+    note:'Provision for credit losses. Short window from 4Q24 — earlier estimates were near-zero and meaningless. Volatile and hard to forecast.' },
+  // ── Profitability ──
+  ebitda: { label:'Adj. EBITDA', short:'Adj. EBITDA', fmt:'usd',
+    quarters:['2Q25','3Q25','4Q25','1Q26'],
+    est:[188.4,208.5,316.6,289.0],
+    act:[249.1,276.9,317.6,339.9],
+    note:'Adjusted EBITDA. The model\'s quarterly estimate series is only meaningful from 2Q25 — a short 4-quarter window.' },
+  ani: { label:'Adj. Net Income', short:'Adj. Net Inc.', fmt:'usd',
+    quarters:['2Q25','3Q25','4Q25','1Q26'],
+    est:[45.6,63.7,162.5,142.2],
+    act:[97.3,139.4,173.5,166.7],
+    note:'Adjusted net income. Short 4-quarter estimate history (from 2Q25). GAAP net income is omitted — the model carries no stored estimate for it.' }
+};
+var AVE_GROUPS = [
+  { label:'KPIs',          keys:['memb','plpbo','tpa'] },
+  { label:'Revenue',       keys:['rev','nim','ii','lii','ie','lpb','lpbo','loss','other','tp'] },
+  { label:'Operating Exp.', keys:['tpd','sme','coo','gae','pcl'] },
+  { label:'Profitability', keys:['ebitda','ani'] }
+];
+var AVE_SOURCE = 'Source: Summit DCF model for SOFI (latest snapshot 2026-05-13) — projection_history (estimate) vs actuals_history (reported). Revenue and profitability in US$ millions; Members and Tech Platform accounts in millions; LPB originations in $B. "Surprise" = (actual − estimate) ÷ |estimate|. Estimates are the model\'s stored quarterly projections, not a frozen pre-announcement consensus. Some lines (LPB, originations, Adj. EBITDA/Net Income) only have a meaningful quarterly estimate from 2Q25; GAAP net income has none and is omitted.';
+
+function aveSurprise(m, i){ return (m.act[i] - m.est[i]) / Math.abs(m.est[i]) * 100; }
+function aveFmt(m, v){
+  if (m.fmt === 'cnt') return (v / 1000).toFixed(1) + 'M';
+  if (m.fmt === 'vol') return '$' + (v / 1000).toFixed(2) + 'B';
+  return '$' + Math.round(v).toLocaleString() + 'M';
+}
+
+// "Valuation" pane — first (and so far only) view: Actuals vs. Estimates.
+function valuationBody(c){
+  var def = AVE_METRICS.rev;
+  var maxI = def.quarters.length - 1;
+  var h = '';
+
+  h += '<div class="ov-sec-h">Actuals vs. Estimates</div>';
+  h += '<p class="ov-lede">'+esc(AVE_INTRO)+'</p>';
+
+  // Grouped metric selector (KPIs · Revenue · Profitability).
+  h += '<div class="ave-groups">'+AVE_GROUPS.map(function(g){
+    return '<div class="ave-group"><div class="ave-group-l">'+esc(g.label)+'</div>'+
+      '<div class="ave-pills">'+g.keys.map(function(k){
+        return '<button type="button" class="ave-pill'+(k===_aveMetric?' active':'')+'" data-ave="'+k+'">'+esc(AVE_METRICS[k].short)+'</button>';
+      }).join('')+'</div></div>';
+  }).join('')+'</div>';
+
+  // Dual-handle quarter-window slider (rebuilt when the metric changes).
+  h += '<div class="sg-controls">'+
+    '<div class="sg-slider">'+
+      '<div class="sg-track"><div class="sg-fill" id="aveFill"></div></div>'+
+      '<input type="range" id="aveMin" min="0" max="'+maxI+'" value="0" step="1" aria-label="Start quarter">'+
+      '<input type="range" id="aveMax" min="0" max="'+maxI+'" value="'+maxI+'" step="1" aria-label="End quarter">'+
+    '</div>'+
+    '<div class="sg-ends"><span id="aveEnd0">'+esc(def.quarters[0])+'</span><span id="aveEnd1">'+esc(def.quarters[maxI])+'</span></div>'+
+    '<div class="sg-readout" id="aveReadout"></div>'+
+  '</div>';
+
+  // Chart (grouped bars: estimate vs actual, surprise % above each pair).
+  h += '<div class="ave-leg">'+
+    '<span class="tech-leg-i"><span class="ave-leg-act" style="background:#1E9E62"></span>Favorable (beat / under-budget)</span>'+
+    '<span class="tech-leg-i"><span class="ave-leg-act" style="background:#C0392B"></span>Unfavorable (miss / over-budget)</span>'+
+    '<span class="tech-leg-i">▲ above · ▼ below estimate</span>'+
+  '</div>';
+  h += '<div class="ov-chart-card">'+
+    '<div class="ov-chart-t" id="aveChartT">Net Revenue — surprise vs estimate <span>(%, per quarter · hover for $)</span></div>'+
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="sofiAveChart"></canvas></div>'+
+  '</div>';
+
+  // Analytics tiles — recomputed live for the selected window.
+  h += '<div class="ov-subh">Track record <span class="ave-subh-note" id="aveStatScope"></span></div>';
+  h += '<div class="ov-kpis" id="aveStats"></div>';
+
+  h += '<div class="ov-foot" id="aveNote">'+esc(def.note)+'</div>';
+  h += '<div class="ov-foot">'+esc(AVE_SOURCE)+'</div>';
+
+  return h;
+}
+
 // One expand/collapse accordion item.
 function accItem(title, open, bodyHtml){
   return '<div class="lpb-acc-item'+(open ? ' open' : '')+'">'+
@@ -727,12 +913,14 @@ function html(c){
     '<button type="button" class="ovt-tab" data-ovt="members">Members</button>'+
     '<button type="button" class="ovt-tab" data-ovt="interest">Interest Income</button>'+
     '<button type="button" class="ovt-tab" data-ovt="fees">Fee Income</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="valuation">Valuation</button>'+
   '</div>';
   // Panes
   h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="members" hidden>'+membersBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="interest" hidden>'+interestBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="fees" hidden>'+feeBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="valuation" hidden>'+valuationBody(c)+'</div>';
   h += '</div>';
   return h;
 }
@@ -1067,6 +1255,202 @@ function buildFeeTab(){
   // if (k === 'fs')   requestAnimationFrame(buildFeeFS);
 }
 
+// ─── Valuation: Actuals vs. Estimates engine ─────────────────────────────────
+var _aveChart = null;
+var _aveMetric = 'rev';
+var AVE_GREEN = '#1E9E62', AVE_RED = '#C0392B', AVE_GRAY = '#C7CED6';
+
+function avePct(v){ return (v < 0 ? '−' : '+') + Math.abs(v).toFixed(1) + '%'; }
+
+// Inline plugin: zero baseline + the surprise % on each diverging bar.
+var aveLabels = {
+  id: 'aveLabels',
+  afterDatasetsDraw: function(chart){
+    var surp = chart.$surp || [];
+    var bars = chart.getDatasetMeta(0).data;
+    var ctx = chart.ctx, area = chart.chartArea;
+    if (area){ // zero baseline
+      var y0 = chart.scales.y.getPixelForValue(0);
+      ctx.save();
+      ctx.strokeStyle = '#D7DDE4'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(area.left, y0); ctx.lineTo(area.right, y0); ctx.stroke();
+      ctx.restore();
+    }
+    for (var i = 0; i < surp.length; i++){
+      var bar = bars[i]; if (!bar) continue;
+      var above = surp[i] >= 0;                          // actual vs estimate (direction)
+      var fav = (chart.$exp ? -surp[i] : surp[i]) >= 0;  // favorable outcome? (expenses flip)
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.font = '700 11px Inter, sans-serif';
+      ctx.fillStyle = fav ? AVE_GREEN : AVE_RED;
+      ctx.fillText((above ? '▲ ' : '▼ ') + avePct(surp[i]), bar.x, above ? bar.y - 7 : bar.y + 15);
+      ctx.restore();
+    }
+  }
+};
+
+// Single diverging-bar chart: surprise % per quarter (green = beat, red = miss).
+function buildAveChart(){
+  var cv = document.getElementById('sofiAveChart');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_aveChart) { _aveChart.destroy(); _aveChart = null; }
+  _aveChart = new Chart(cv.getContext('2d'), {
+    type: 'bar',
+    data: { labels: [], datasets: [
+      { label:'Surprise', data:[], backgroundColor:[], borderRadius:3, maxBarThickness:56 }
+    ] },
+    options: {
+      responsive:true, maintainAspectRatio:false, animation:false,
+      layout:{ padding:{ top:24, bottom:22 } },
+      plugins:{
+        legend:{ display:false },
+        tooltip:{ callbacks:{
+          title:function(items){ return (_aveChart.$q || [])[items[0].dataIndex] || ''; },
+          label:function(ctx){
+            var i = ctx.dataIndex, m = AVE_METRICS[_aveMetric];
+            return [ 'Estimate: ' + aveFmt(m, (_aveChart.$est || [])[i]),
+                     'Actual: '   + aveFmt(m, (_aveChart.$act || [])[i]),
+                     'Surprise: ' + avePct((_aveChart.$surp || [])[i]) ];
+          }
+        } }
+      },
+      scales:{
+        y:{ display:false, grace:'22%' },
+        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:11 } } }
+      }
+    },
+    plugins: [aveLabels]
+  });
+}
+
+// Compute the beat/miss analytics for metric m over the window [a, b].
+function computeAveStats(m, a, b){
+  var surp = [], beats = 0;
+  // "Beat"/best/worst are judged by FAVORABILITY: for expenses (m.exp) coming in
+  // below estimate is favorable, so the favorable-signed value flips.
+  var best = { f:-Infinity, s:0, q:'' }, worst = { f:Infinity, s:0, q:'' };
+  for (var i = a; i <= b; i++){
+    var s = aveSurprise(m, i);
+    var f = m.exp ? -s : s;
+    surp.push(s);
+    if (f >= 0) beats++;
+    if (f > best.f) { best = { f:f, s:s, q:m.quarters[i] }; }
+    if (f < worst.f) { worst = { f:f, s:s, q:m.quarters[i] }; }
+  }
+  var n = surp.length;
+  var sum = surp.reduce(function(t, v){ return t + v; }, 0);
+  var sumAbs = surp.reduce(function(t, v){ return t + Math.abs(v); }, 0);
+  var sorted = surp.slice().sort(function(x, y){ return x - y; });
+  var mid = Math.floor(n / 2);
+  var median = n === 0 ? 0 : (n % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2);
+  var avg = n ? sum / n : 0;
+  return {
+    n: n, beats: beats, misses: n - beats, exp: !!m.exp,
+    beatRate: n ? beats / n * 100 : 0, missRate: n ? (n - beats) / n * 100 : 0,
+    avg: avg, avgFav: m.exp ? -avg : avg, avgAbs: n ? sumAbs / n : 0,
+    median: median, medFav: m.exp ? -median : median,
+    best: best, worst: worst,
+    last: { s: surp[n - 1], f: m.exp ? -surp[n - 1] : surp[n - 1], q: m.quarters[b] }
+  };
+}
+
+function renderAveStats(m, a, b){
+  var box = document.getElementById('aveStats');
+  var scope = document.getElementById('aveStatScope');
+  if (!box) return;
+  var s = computeAveStats(m, a, b);
+  if (scope) scope.textContent = '· ' + m.quarters[a] + '–' + m.quarters[b] + ' · ' + s.n + ' quarters';
+  function tile(l, v, sub, dir){
+    return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(l)+'</div><div class="ov-kpi-v">'+v+
+      '</div><div class="ov-kpi-d '+(dir||'muted')+'">'+esc(sub)+'</div></div>';
+  }
+  var beatDir = s.beatRate >= s.missRate ? 'up' : 'down';
+  // Expense lines: "beat" = came in under estimate; bias wording flips.
+  var beatSub = s.beats + ' of ' + s.n + (s.exp ? ' under estimate' : ' above estimate');
+  var missSub = s.misses + ' of ' + s.n + (s.exp ? ' over estimate' : ' below estimate');
+  var avgSub  = s.exp ? (s.avg>=0 ? 'we under-budgeted (spent more)' : 'we over-budgeted (spent less)')
+                      : (s.avg>=0 ? 'we ran conservative' : 'we ran optimistic');
+  var lastSub = s.exp ? (s.last.f>=0 ? 'under estimate' : 'over estimate')
+                      : (s.last.f>=0 ? 'beat estimate' : 'missed estimate');
+  box.innerHTML =
+    tile('Beat rate', s.beatRate.toFixed(0)+'%', beatSub, beatDir) +
+    tile('Miss rate', s.missRate.toFixed(0)+'%', missSub, s.missRate>s.beatRate?'down':'muted') +
+    tile('Avg surprise', avePct(s.avg), avgSub, s.avgFav>=0?'up':'down') +
+    tile('Median surprise', avePct(s.median), 'middle quarter', s.medFav>=0?'up':'down') +
+    tile('Avg gap (abs)', s.avgAbs.toFixed(1)+'%', 'typical distance from estimate', 'muted') +
+    tile('Biggest beat', avePct(s.best.s), s.best.q, 'up') +
+    tile('Biggest miss', avePct(s.worst.s), s.worst.q, 'down') +
+    tile('Latest ('+s.last.q+')', avePct(s.last.s), lastSub, s.last.f>=0?'up':'down');
+}
+
+// Update chart + readout + stats for the selected window.
+function renderAve(a, b){
+  var m = AVE_METRICS[_aveMetric];
+  if (_aveChart){
+    var labels = [], est = [], act = [], surp = [], colors = [];
+    for (var i = a; i <= b; i++){
+      var s = aveSurprise(m, i);
+      labels.push(m.quarters[i]); est.push(m.est[i]); act.push(m.act[i]);
+      surp.push(+s.toFixed(1)); colors.push((m.exp ? -s : s) >= 0 ? AVE_GREEN : AVE_RED);
+    }
+    _aveChart.data.labels = labels;
+    _aveChart.data.datasets[0].data = surp;
+    _aveChart.data.datasets[0].backgroundColor = colors;
+    _aveChart.$surp = surp; _aveChart.$est = est; _aveChart.$act = act; _aveChart.$q = labels; _aveChart.$exp = !!m.exp;
+    _aveChart.update('none');
+  }
+  var read = document.getElementById('aveReadout');
+  if (read){
+    var sa = aveSurprise(m, a), sb = aveSurprise(m, b);
+    read.innerHTML =
+      '<span class="sg-range">'+m.quarters[a]+' → '+m.quarters[b]+'</span>'+
+      '<span class="sg-stat">est <b>'+aveFmt(m, m.est[b])+'</b> vs act <b>'+aveFmt(m, m.act[b])+'</b></span>'+
+      '<span class="sg-stat '+(sb>=0?'sg-cagr':'')+'">'+m.quarters[b]+' surprise <b>'+avePct(sb)+'</b></span>';
+  }
+  renderAveStats(m, a, b);
+}
+
+// (Re)wire the quarter-window slider for the active metric. Resets to the full range.
+function setupAveSlider(){
+  var mn = document.getElementById('aveMin'), mx = document.getElementById('aveMax');
+  var fill = document.getElementById('aveFill'), read = document.getElementById('aveReadout');
+  if (!mn || !mx || !fill || !read) return;
+  var m = AVE_METRICS[_aveMetric];
+  var maxI = m.quarters.length - 1;
+  mn.max = maxI; mx.max = maxI; mn.value = 0; mx.value = maxI;
+  var e0 = document.getElementById('aveEnd0'), e1 = document.getElementById('aveEnd1');
+  if (e0) e0.textContent = m.quarters[0];
+  if (e1) e1.textContent = m.quarters[maxI];
+  function apply(){
+    var a = +mn.value, b = +mx.value;
+    fill.style.left  = (a / maxI * 100) + '%';
+    fill.style.width = ((b - a) / maxI * 100) + '%';
+    renderAve(a, b);
+  }
+  mn.oninput = function(){ if (+mn.value >= +mx.value) mn.value = +mx.value - 1; apply(); };
+  mx.oninput = function(){ if (+mx.value <= +mn.value) mx.value = +mn.value + 1; apply(); };
+  apply();
+}
+
+function buildAveTab(){
+  buildAveChart();
+  setupAveSlider();
+}
+
+// Switch the metric (Revenue / Adj. EBITDA / Adj. Net Income).
+function switchAveMetric(root, k){
+  if (!AVE_METRICS[k]) return;
+  _aveMetric = k;
+  root.querySelectorAll('.ave-pill').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ave') === k); });
+  var m = AVE_METRICS[k];
+  var t = document.getElementById('aveChartT');
+  if (t) t.innerHTML = esc(m.label) + ' — surprise vs estimate <span>(%, per quarter · hover for $)</span>';
+  var note = document.getElementById('aveNote');
+  if (note) note.textContent = m.note;
+  setupAveSlider(); // resets window to full range and re-renders chart + stats
+}
+
 // Switch a nested Fee Income sub-tab.
 function showOvf(root, key){
   root.querySelectorAll('.ovf-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovf') === key); });
@@ -1081,6 +1465,7 @@ function showOvt(root, key){
   if (key === 'members') requestAnimationFrame(buildMembersTab);
   if (key === 'interest') requestAnimationFrame(buildInterestTab);
   if (key === 'fees') requestAnimationFrame(buildFeeTab);
+  if (key === 'valuation') requestAnimationFrame(buildAveTab);
 }
 
 function init(c){
@@ -1092,6 +1477,10 @@ function init(c){
   });
   root.querySelectorAll('.ovf-tab').forEach(function(btn){
     btn.onclick = function(){ showOvf(root, btn.getAttribute('data-ovf')); };
+  });
+  // Valuation → Actuals vs. Estimates: metric selector pills.
+  root.querySelectorAll('.ave-pill').forEach(function(btn){
+    btn.onclick = function(){ switchAveMetric(root, btn.getAttribute('data-ave')); };
   });
   // LPB accordion (progressive disclosure). Build the pie when its section first opens.
   root.querySelectorAll('.lpb-acc-h').forEach(function(btn){

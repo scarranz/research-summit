@@ -297,6 +297,23 @@
 .ave-leg-dn { color: #C0392B; font-size: 11px; }
 .ave-subh-note { font-weight: 500; color: var(--mu); font-size: 12px; }
 
+/* ── Sensitivity tab — LPB origination × take rate ── */
+.sens-controls { margin: 14px 0 6px; }
+.sens-ctrl { display: flex; align-items: center; gap: 14px; margin: 12px 0; }
+.sens-ctrl-l { min-width: 200px; font-size: 13px; font-weight: 600; color: var(--navy); }
+.sens-ctrl input[type=range] { flex: 1; min-width: 120px; accent-color: var(--brand); height: 4px; }
+.sens-ctrl-v { min-width: 56px; text-align: right; font-size: 16px; font-weight: 800; color: var(--brand); font-variant-numeric: tabular-nums; }
+.sens-ctrl-u { min-width: 24px; font-size: 12px; font-weight: 600; color: var(--mu); }
+.sens-eq {
+  background: var(--brand-soft); border-radius: 10px; padding: 13px 16px;
+  font-size: 14px; color: var(--navy); margin: 14px 0 16px; text-align: center;
+}
+.sens-eq b { color: var(--brand); font-size: 16px; }
+@media (max-width: 560px) {
+  .sens-ctrl { flex-wrap: wrap; }
+  .sens-ctrl-l { min-width: 100%; }
+}
+
 /* "Coming soon" placeholder pane for tabs not built yet. */
 .ovs-soon {
   border: 1px dashed var(--bdr);

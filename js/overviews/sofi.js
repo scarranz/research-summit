@@ -878,6 +878,114 @@ function valuationBody(c){
   return h;
 }
 
+// ─── Sensitivity: LPB origination × take rate ────────────────────────────────
+// Interactive single-point sensitivity. Two inputs are "live": LPB origination
+// volume and the take rate (origination fee). Everything else in the model is
+// held at its FY2026E base. The incremental LPB revenue flows 100% to pre-tax
+// (LPB is capital-light — no funding or credit cost), is taxed at the model
+// rate, and drops to net income / EPS / P/E.
+var SENS = {
+  origB:   16.5,   // base LPB origination, $B (FY2026E, Summit model)
+  takePct: 5.0,    // base take rate, % (origination fee on volume)
+  totalRevB: 4.66, // base FY2026E total net revenue, $B
+  niM:     828.7,  // base FY2026E net income, $M (model earnings)
+  shares:  1378.0, // diluted shares, M (Q1 2026 actual)
+  price:   17.57,  // share price held fixed for the P/E line ($, intraday 24-Jun-2026)
+  taxRate: 0.25    // tax applied to incremental LPB pre-tax income
+};
+SENS.baseLpbM   = SENS.origB * 1000 * SENS.takePct / 100;     // base LPB revenue, $M
+SENS.nonLpbM    = SENS.totalRevB * 1000 - SENS.baseLpbM;       // all other revenue, held fixed
+SENS.baseEps    = SENS.niM / SENS.shares;                      // base EPS
+SENS.basePe     = SENS.price / SENS.baseEps;                   // base fwd P/E
+
+var SENS_INTRO = 'A single-point sensitivity on the two levers behind SoFi\'s Loan Platform Business: the annual origination volume and the take rate (the fee SoFi earns per dollar originated). LPB revenue = origination × take rate. Everything else in the model is held at its FY2026E base, so the change you make flows straight through to revenue, net income, EPS and the multiple. Drag the two sliders.';
+var SENS_NOTE = 'Base case (FY2026E, Summit model): LPB origination $16.5B × 5.0% take = $825M LPB revenue, inside $4.66B total net revenue; net income $829M; 1,378M shares → EPS $0.60; at $17.57 that is ~29x forward earnings. Assumptions when you move the sliders: all non-LPB lines are held constant, incremental LPB revenue flows 100% to pre-tax (capital-light) and is taxed at 25%; share price and share count are held fixed. This is a back-of-envelope sensitivity, not a re-solved model.';
+
+function sensRow(id, label, min, max, step, val, suffix){
+  return '<div class="sens-ctrl">'+
+    '<div class="sens-ctrl-l">'+esc(label)+'</div>'+
+    '<input type="range" id="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'">'+
+    '<div class="sens-ctrl-v" id="'+id+'V"></div>'+
+    '<div class="sens-ctrl-u">'+esc(suffix)+'</div>'+
+  '</div>';
+}
+
+function sensBody(c){
+  var h = '';
+  h += '<div class="ov-sec-h">LPB Sensitivity — origination × take rate</div>';
+  h += '<p class="ov-lede">'+esc(SENS_INTRO)+'</p>';
+
+  h += '<div class="sens-controls">'+
+    sensRow('sensOrig', 'LPB origination (annual)', 2, 50, 0.5, SENS.origB, '$B') +
+    sensRow('sensTake', 'Take rate (origination fee)', 1.0, 9.0, 0.1, SENS.takePct, '%') +
+  '</div>';
+
+  // The live equation line.
+  h += '<div class="sens-eq" id="sensEq"></div>';
+
+  // Output tiles (recomputed live).
+  h += '<div class="ov-kpis" id="sensOut"></div>';
+
+  h += '<div class="ov-foot">'+esc(SENS_NOTE)+'</div>';
+  return h;
+}
+
+function sensCompute(origB, takePct){
+  var lpbM    = origB * 1000 * takePct / 100;
+  var dLpb    = lpbM - SENS.baseLpbM;
+  var totalM  = SENS.nonLpbM + lpbM;
+  var dNi     = dLpb * (1 - SENS.taxRate);
+  var niM     = SENS.niM + dNi;
+  var eps     = niM / SENS.shares;
+  var pe      = SENS.price / eps;
+  var implied = SENS.basePe * eps; // price if the base multiple were held
+  return { lpbM:lpbM, dLpb:dLpb, totalM:totalM, niM:niM, dNi:dNi, eps:eps, pe:pe, implied:implied };
+}
+
+function sensSigned(v, money){
+  var s = v >= 0 ? '+' : '−';
+  return s + (money ? '$' : '') + Math.abs(v).toLocaleString(undefined, {maximumFractionDigits: money ? 0 : 2});
+}
+
+function renderSens(){
+  var so = document.getElementById('sensOrig'), st = document.getElementById('sensTake');
+  if (!so || !st) return;
+  var origB = +so.value, takePct = +st.value;
+  var ov = document.getElementById('sensOrigV'), tv = document.getElementById('sensTakeV');
+  if (ov) ov.textContent = origB.toFixed(1);
+  if (tv) tv.textContent = takePct.toFixed(1);
+
+  var r = sensCompute(origB, takePct);
+  var eq = document.getElementById('sensEq');
+  if (eq) eq.innerHTML = '$'+origB.toFixed(1)+'B origination &nbsp;×&nbsp; '+takePct.toFixed(1)+'% take rate &nbsp;=&nbsp; <b>$'+Math.round(r.lpbM).toLocaleString()+'M</b> LPB revenue';
+
+  var box = document.getElementById('sensOut');
+  if (!box) return;
+  function tile(l, v, sub, dir){
+    return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(l)+'</div><div class="ov-kpi-v">'+v+
+      '</div><div class="ov-kpi-d '+(dir||'muted')+'">'+esc(sub)+'</div></div>';
+  }
+  var revPct = (r.totalM / (SENS.totalRevB*1000) - 1) * 100;
+  var prcPct = (r.implied / SENS.price - 1) * 100;
+  box.innerHTML =
+    tile('LPB revenue', '$'+Math.round(r.lpbM).toLocaleString()+'M', sensSigned(r.dLpb, true)+'M vs base', r.dLpb>=0?'up':'down') +
+    tile('Total net revenue', '$'+(r.totalM/1000).toFixed(2)+'B', sensSigned(revPct)+'% vs base', revPct>=0?'up':'down') +
+    tile('Net income', '$'+Math.round(r.niM).toLocaleString()+'M', sensSigned(r.dNi, true)+'M vs base', r.dNi>=0?'up':'down') +
+    tile('EPS (FY2026E)', '$'+r.eps.toFixed(2), sensSigned(r.eps-SENS.baseEps)+' vs $'+SENS.baseEps.toFixed(2), (r.eps-SENS.baseEps)>=0?'up':'down') +
+    tile('Fwd P/E @ $'+SENS.price.toFixed(2), r.pe.toFixed(1)+'x', 'base '+SENS.basePe.toFixed(1)+'x', 'muted') +
+    tile('Implied price @ '+SENS.basePe.toFixed(1)+'x', '$'+r.implied.toFixed(2), sensSigned(prcPct)+'% vs $'+SENS.price.toFixed(2), prcPct>=0?'up':'down');
+}
+
+function setupSensSliders(){
+  var so = document.getElementById('sensOrig'), st = document.getElementById('sensTake');
+  if (!so || !st) return;
+  so.oninput = renderSens;
+  st.oninput = renderSens;
+  renderSens();
+}
+
+function buildSensTab(){ setupSensSliders(); }
+
 // One expand/collapse accordion item.
 function accItem(title, open, bodyHtml){
   return '<div class="lpb-acc-item'+(open ? ' open' : '')+'">'+
@@ -914,6 +1022,7 @@ function html(c){
     '<button type="button" class="ovt-tab" data-ovt="interest">Interest Income</button>'+
     '<button type="button" class="ovt-tab" data-ovt="fees">Fee Income</button>'+
     '<button type="button" class="ovt-tab" data-ovt="valuation">Valuation</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="sensitivity">Sensitivity</button>'+
   '</div>';
   // Panes
   h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
@@ -921,6 +1030,7 @@ function html(c){
   h += '<div class="ovt-pane" data-ovt="interest" hidden>'+interestBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="fees" hidden>'+feeBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="valuation" hidden>'+valuationBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="sensitivity" hidden>'+sensBody(c)+'</div>';
   h += '</div>';
   return h;
 }
@@ -1466,6 +1576,7 @@ function showOvt(root, key){
   if (key === 'interest') requestAnimationFrame(buildInterestTab);
   if (key === 'fees') requestAnimationFrame(buildFeeTab);
   if (key === 'valuation') requestAnimationFrame(buildAveTab);
+  if (key === 'sensitivity') requestAnimationFrame(buildSensTab);
 }
 
 function init(c){

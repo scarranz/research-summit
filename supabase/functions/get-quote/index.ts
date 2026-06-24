@@ -1,4 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 // Live quote proxy. Fetches a real-time-ish price from Yahoo Finance server-side
 // (avoids browser CORS) and returns a small JSON payload. Used by the SoFi
@@ -23,6 +27,18 @@ serve(async (req) => {
       status,
       headers: { ...corsHeaders(req), "Content-Type": "application/json" },
     });
+
+  // Verify the caller is an authenticated user
+  const authHeader = req.headers.get("authorization") || "";
+  const authToken = authHeader.replace("Bearer ", "");
+  if (!authToken) {
+    return json({ error: "Unauthorized" }, 401);
+  }
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+  const { data: { user }, error: authErr } = await supabase.auth.getUser(authToken);
+  if (authErr || !user) {
+    return json({ error: "Unauthorized" }, 401);
+  }
 
   try {
     // Accept ?ticker=SOFI (GET) or { ticker } (POST).

@@ -1,4 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 const ALLOWED_ORIGINS = ["https://research-summit.netlify.app", "http://localhost:8000"];
 function corsHeaders(req: Request) {
@@ -33,6 +37,22 @@ function guessDomain(name: string, ticker: string): string {
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders(req) });
+  }
+
+  // Verify the caller is an authenticated user
+  const authHeader = req.headers.get("authorization") || "";
+  const token = authHeader.replace("Bearer ", "");
+  if (!token) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+    });
+  }
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+  const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
+  if (authErr || !user) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+    });
   }
 
   try {

@@ -6,6 +6,57 @@
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+// ─── Chart palette / formatters ──────────────────────────────────────────────
+var C_AXIS='#8A93A0', C_GRID='#EEF2F7';
+var GEO_COLORS  = { 'US':'#CF0A2C', 'Europe':'#FF9F00', 'Canada':'#6366F1', 'LATAM':'#16A34A', 'APAC-EMEA':'#0EA5E9' };
+var TYPE_COLORS = { 'Credit':'#CF0A2C', 'Debit':'#FF9F00' };
+var fT  = function(v){ return '$'+(Math.round(v*100)/100)+'T'; };       // trillions
+var fBn = function(v){ return (Math.round(v*10)/10)+'B'; };             // billions (txns / cards)
+
+// ─── Network volumes — METRIC × DIMENSION (PLACEHOLDER DATA) ─────────────────
+// Each of these metrics is reported on the same two cuts the DCF carries:
+//   · by geography  → US + International broken into Europe / Canada / LATAM / APAC-EMEA
+//   · by product    → Credit vs Debit
+// One chart renders any metric in either cut (metric selector + dimension toggle).
+//
+// ⚠️ The numbers below are ILLUSTRATIVE placeholders so the toggle is visible NOW.
+//    They are generated from round totals × fixed shares — NOT real Mastercard data.
+//    To wire real figures: replace VOL_DATA[metric] with explicit per-series arrays
+//    from Bloomberg, e.g.
+//      VOL_DATA.pv = { geo:{ 'US':[...], 'Europe':[...], ... }, type:{ 'Credit':[...], 'Debit':[...] } };
+//    Keep each array aligned to VOL_YEARS and flag projection years in VOL_EST.
+var VOL_YEARS = [2021, 2022, 2023, 2024, 2025];
+var VOL_EST   = [false, false, false, false, false]; // set true on years that are estimates
+var VOL_METRICS = {
+  pv:    { label:'Purchase Volume',       unit:'$T', fmt:fT  },
+  gdv:   { label:'Gross Dollar Volume',   unit:'$T', fmt:fT  },
+  txns:  { label:'Purchase Transactions', unit:'B',  fmt:fBn },
+  cards: { label:'Cards',                 unit:'B',  fmt:fBn },
+};
+function splitArr(tot, frac){ return tot.map(function(x){ return Math.round(x*frac*100)/100; }); }
+var _GEO_SHARE  = { 'US':0.35, 'Europe':0.22, 'Canada':0.05, 'LATAM':0.10, 'APAC-EMEA':0.28 };
+var _TYPE_SHARE = { 'Credit':0.58, 'Debit':0.42 };
+function _mkVol(tot){
+  var geo={}, type={};
+  Object.keys(_GEO_SHARE).forEach(function(k){ geo[k]=splitArr(tot,_GEO_SHARE[k]); });
+  Object.keys(_TYPE_SHARE).forEach(function(k){ type[k]=splitArr(tot,_TYPE_SHARE[k]); });
+  return { geo:geo, type:type };
+}
+var _VOL_TOTALS = { // PLACEHOLDER totals per year (geo split and type split each sum to these)
+  pv:    [5.0, 6.0, 7.0, 8.0, 9.0],       // $T
+  gdv:   [7.0, 8.2, 9.4, 10.6, 11.8],     // $T
+  txns:  [100, 115, 132, 150, 170],       // B transactions
+  cards: [2.9, 3.0, 3.1, 3.3, 3.5],       // B cards
+};
+var VOL_DATA = {};
+Object.keys(_VOL_TOTALS).forEach(function(k){ VOL_DATA[k]=_mkVol(_VOL_TOTALS[k]); });
+
+var _volMetric='pv', _volDim='geo', _volChart=null;
+
+var PN_INTRO = 'The payment network is the core switching business — ~58% of net revenue. It earns on the dollar <b>volume</b> and the <b>number of transactions</b> that flow over Mastercard rails: <b>domestic assessments</b> (basis points of volume), <b>cross-border</b> fees (the highest-yield line) and <b>transaction processing</b> (per transaction). The volume metrics below are the drivers of this pillar.';
+var VOL_NOTE = '<b>How to read this.</b> One chart, two cuts: switch the <b>metric</b> (Purchase Volume, GDV, Purchase Transactions, Cards) and the <b>breakdown</b> (by geography, or Credit vs Debit) — both cuts sum to the same yearly total. <b>GDV = Purchase Volume + Cash Volume</b>; cash is largely excluded as a driver (minimal monetization, same criterion as Visa). <b>Numbers shown are illustrative placeholders</b> pending the team\'s Bloomberg series.';
+var XBORDER_NOTE = '<b>Cross-border is a different cut from the volumes above.</b> "International" here means volume on cards <i>issued outside the U.S.</i>; <b>cross-border</b> means the <i>card country ≠ merchant country</i> (travel + cross-border e-commerce). Cross-border earns a premium rate + FX — the <b>highest-yield</b> line and a key growth driver (+13% lc in Q1 26) — and is tracked separately from the issuance-geography split.';
+
 // ─── Snapshot & narrative ────────────────────────────────────────────────────
 var SNAPSHOT = [
   ['Listing', 'NYSE: MA'],
@@ -243,33 +294,62 @@ function subDetailHtml(s){
     (s.products && s.products.length ? '<div class="ov-subh" style="margin-top:14px">Inside it</div><div class="ov-prod">'+s.products.map(function(p){ return '<div class="ov-prod-tile"><div class="ov-prod-n">'+esc(p.n)+'</div><div class="ov-prod-d">'+p.d+'</div></div>'; }).join('')+'</div>' : '')+
     (s.competition ? '<div class="ov-sub-comp"><b>Competition:</b> '+s.competition+'</div>' : '');
 }
+function kpis(arr){ return '<div class="ov-kpis">'+arr.map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d '+(k.dir||'muted')+'">'+esc(k.d)+'</div></div>'; }).join('')+'</div>'; }
+function snap(arr){ return '<div class="ov-snap">'+arr.map(function(p){ return '<div class="ov-snap-cell"><div class="ov-snap-k">'+esc(p[0])+'</div><div class="ov-snap-v">'+esc(p[1])+'</div></div>'; }).join('')+'</div>'; }
+// A pillar's sub-lines as clickable cards (full detail opens in the modal).
+function pillarCards(segKey){
+  var seg = SEGMENTS.filter(function(s){ return s.k===segKey; })[0]; if(!seg) return '';
+  return '<div class="ov-cards">'+seg.subs.map(function(s){
+    return '<div class="ov-card ov-clickable" data-detail="sub:'+esc(s.k)+'">'+
+      '<div class="ov-card-h"><span class="ov-card-n">'+esc(s.n)+'</span><span class="ov-chip">'+esc(s.rev)+'</span></div>'+
+      '<div class="ov-card-s">'+s.what+'</div>'+
+      '<div class="ov-more">How it monetizes ›</div></div>';
+  }).join('')+'</div>';
+}
+// The metric × dimension volume explorer (one chart, two controls).
+function volSection(){
+  return '<section class="ov-sec"><div class="ov-sec-h">Network Volumes <span class="ov-ph-badge">datos ilustrativos · pendiente Bloomberg</span></div>'+
+    '<div class="ov-volctrl">'+
+      '<div class="ov-volpills" id="ovVolMetric">'+Object.keys(VOL_METRICS).map(function(k){
+        return '<button class="ov-volpill'+(k===_volMetric?' on':'')+'" data-metric="'+k+'">'+esc(VOL_METRICS[k].label)+'</button>'; }).join('')+'</div>'+
+      '<div class="ov-volpills ov-volpills-dim" id="ovVolDim">'+
+        '<button class="ov-volpill'+(_volDim==='geo'?' on':'')+'" data-dim="geo">Por geografía</button>'+
+        '<button class="ov-volpill'+(_volDim==='type'?' on':'')+'" data-dim="type">Credit vs Debit</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t" id="ovVolTitle"></div>'+
+      '<div class="ov-chart-wrap" style="height:300px"><canvas id="ovVolChart"></canvas></div>'+
+      '<div class="ov-statline" id="ovVolStat"></div></div>'+
+    '<div class="ov-diagram-cap" style="margin-top:10px">'+VOL_NOTE+'</div>'+
+  '</section>';
+}
 
 function html(c){
   var h = '<div class="ov ov-mastercard" data-brand="MA">';
 
-  h += '<div class="ov-snap">' + SNAPSHOT.map(function(p){ return '<div class="ov-snap-cell"><div class="ov-snap-k">'+esc(p[0])+'</div><div class="ov-snap-v">'+esc(p[1])+'</div></div>'; }).join('') + '</div>';
+  // ── Sub-tab bar (chapters) ──
+  h += '<div class="ov-subtabs">'+
+    '<button class="ov-subtab active" data-matab="overview">Overview</button>'+
+    '<button class="ov-subtab" data-matab="network">Payment Network</button>'+
+    '<button class="ov-subtab" data-matab="vas">Value-Added Services</button>'+
+  '</div>';
+
+  // ══ PANE 1 — Overview (what it is + how it earns + company context) ══
+  h += '<div class="ov-pane active" data-mapane="overview">';
+  h += snap(SNAPSHOT);
   h += '<p class="ov-lede">'+DESC+'</p>';
-  h += '<div class="ov-kpis">' + KPIS.map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d '+(k.dir||'muted')+'">'+esc(k.d)+'</div></div>'; }).join('') + '</div>';
+  h += kpis(KPIS);
   h += '<div class="ov-asof">'+AS_OF+'</div>';
   h += '<div class="ov-fynote">'+FY_NOTE+'</div>';
 
-  // How it makes money + four-party diagram + flow
   h += sec('How Mastercard Makes Money',
     bullets(HOW_MONEY) +
     '<div class="ov-diagram" style="margin-top:14px">'+FOURPARTY_SVG+'<div class="ov-diagram-cap">The <b>four-party (open-loop) model</b>. Tap any box for its role; then press <b>Play</b> to follow a single $100 purchase and see who earns at each step.</div></div>'+
     flowHtml()
   );
 
-  // Charts (placeholders)
-  h += sec('Operating Trends (charts pending KPI data)',
-    '<div class="ov-phs">'+[['Net Revenue & GDV','quarterly trend'],['Cross-Border Volume','index / growth'],['Payment Network vs VAS','revenue mix over time']].map(function(p){
-      return '<div class="ov-ph"><div class="ov-ph-ic">📈</div><div class="ov-ph-t">'+esc(p[0])+'</div><div class="ov-ph-s">'+esc(p[1])+' · placeholder</div></div>';
-    }).join('')+'</div>'
-  );
-
-  // Revenue structure (two-pillar architecture map)
   h += sec('Revenue Structure — Two Pillars',
-    '<div class="ov-diagram-cap" style="margin:0 0 12px">Mastercard reports net revenue in two pillars. <b>Tap any component</b> for what it is, how it\'s billed, and what\'s inside.</div>'+
+    '<div class="ov-diagram-cap" style="margin:0 0 12px">Mastercard reports net revenue in two pillars — explored in depth in the <b>Payment Network</b> and <b>Value-Added Services</b> tabs. <b>Tap any component</b> for a quick read.</div>'+
     '<div class="ov-segmap ov-segmap-2">'+SEGMENTS.map(function(seg){
       return '<div class="ov-segpanel" style="border-top-color:'+seg.accent+'">'+
         '<div class="ov-segpanel-h"><div class="ov-segpanel-n">'+esc(seg.n)+'</div><div class="ov-segpanel-m">'+esc(seg.rev)+' · '+esc(seg.margin)+'</div></div>'+
@@ -280,29 +360,55 @@ function html(c){
     }).join('')+'</div>'
   );
 
-  // Rebates & Incentives (gross-to-net)
-  h += sec('Rebates & Incentives — The Gross-to-Net Bridge',
-    '<p class="ov-lede" style="margin-bottom:14px">'+REBATES_INTRO+'</p>'+
-    '<div class="ov-corr-stats">'+REBATES_BRIDGE.map(function(b){ return '<div class="ov-corr-stat"><div class="ov-corr-v">'+esc(b.v)+'</div><div class="ov-corr-l">'+esc(b.l)+'</div></div>'; }).join('')+'</div>'+
-    '<div class="ov-callout" style="margin-top:14px">'+bullets(REBATES)+'</div>'
-  );
-
-  // Value-Added Services deep dive
-  h += sec('Value-Added Services — The Growth Engine', '<div class="ov-callout">'+bullets(VAS_DEEP)+'</div>');
-
-  // Who uses Mastercard
-  h += sec('Who Uses Mastercard — The Demand Mix',
-    '<p class="ov-lede" style="margin-bottom:12px">'+USERMIX_INTRO+'</p>'+ bullets(USERMIX));
-
-  // History
   h += sec('History — From #2 Challenger to Network + Services',
     '<div class="ov-diagram-cap" style="margin:0 0 12px">How a bank alliance built to challenge the leader became a global network-plus-services company — <b>tap any milestone</b>.</div>'+
     '<div class="ov-timeline">'+TIMELINE.map(function(t,i){
       return '<div class="ov-tl-item is-click" data-detail="hist:'+i+'"><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body"><div class="ov-tl-head">'+t.head+'</div><div class="ov-tl-more">Full story ›</div></div></div>';
     }).join('')+'</div>');
 
-  // M&A
+  h += sec('Peers & Competitive Landscape',
+    '<table class="ov-table ov-cmp"><thead><tr><th>Dimension</th><th>'+PEER_COLS.map(esc).join('</th><th>')+'</th></tr></thead><tbody>'+
+    PEER_ROWS.map(function(r){ return '<tr><td class="ov-td-name">'+esc(r[0])+'</td>'+r.slice(1).map(function(cell){ return '<td>'+cell+'</td>'; }).join('')+'</tr>'; }).join('')+
+    '</tbody></table><div class="ov-diagram-cap" style="margin-top:10px">'+PEER_NOTE+'</div>'
+  );
+
+  h += sec('Litigation & Legal — Borne Directly', '<p class="ov-lede" style="margin-bottom:12px">'+LIT_INTRO+'</p><div class="ov-callout">'+bullets(LIT)+'</div>');
+
+  h += sec('Tailwinds & Headwinds',
+    '<div class="ov-grid2">'+
+      '<div class="ov-wind ov-wind-up"><div class="ov-wind-h">Tailwinds</div>'+bullets(TAILWINDS)+'</div>'+
+      '<div class="ov-wind ov-wind-down"><div class="ov-wind-h">Headwinds</div>'+bullets(HEADWINDS)+'</div>'+
+    '</div>'
+  );
+  h += '</div>'; // end overview pane
+
+  // ══ PANE 2 — Payment Network (the rails: volume drivers, ~58%) ══
+  h += '<div class="ov-pane" data-mapane="network">';
+  h += '<p class="ov-lede">'+PN_INTRO+'</p>';
+  h += volSection();
+  h += '<div class="ov-callout" style="margin-bottom:18px">'+XBORDER_NOTE+'</div>';
+  h += sec('Fee Structure — The Three Network Lines',
+    '<div class="ov-diagram-cap" style="margin:0 0 12px">How the rails monetize. <b>Tap any line</b> for what it is, how it\'s billed, and what drives it.</div>'+
+    pillarCards('pn')
+  );
+  h += sec('Rebates & Incentives — The Gross-to-Net Bridge',
+    '<p class="ov-lede" style="margin-bottom:14px">'+REBATES_INTRO+'</p>'+
+    '<div class="ov-corr-stats">'+REBATES_BRIDGE.map(function(b){ return '<div class="ov-corr-stat"><div class="ov-corr-v">'+esc(b.v)+'</div><div class="ov-corr-l">'+esc(b.l)+'</div></div>'; }).join('')+'</div>'+
+    '<div class="ov-callout" style="margin-top:14px">'+bullets(REBATES)+'</div>'
+  );
+  h += sec('Who Uses Mastercard — The Demand Mix',
+    '<p class="ov-lede" style="margin-bottom:12px">'+USERMIX_INTRO+'</p>'+ bullets(USERMIX));
+  h += '</div>'; // end network pane
+
+  // ══ PANE 3 — Value-Added Services (the growth engine, ~42%) ══
+  h += '<div class="ov-pane" data-mapane="vas">';
+  h += sec('Value-Added Services — The Growth Engine', '<div class="ov-callout">'+bullets(VAS_DEEP)+'</div>');
+  h += sec('The Service Families',
+    '<div class="ov-diagram-cap" style="margin:0 0 12px">The five VAS families — most sold <b>across networks</b>, not just Mastercard\'s. <b>Tap any</b> for detail.</div>'+
+    pillarCards('vas')
+  );
   h += sec('M&A — Terms & What Each Deal Added',
+    '<div class="ov-diagram-cap" style="margin:0 0 12px">The acquisitions that built the services and real-time-payment pillars — <b>tap any deal</b>.</div>'+
     '<div class="ov-cards ov-cards-mna">'+MNA.map(function(m){
       return '<div class="ov-card ov-clickable'+(m.big?' ov-card-big':'')+'" data-detail="mna:'+esc(m.n)+'">'+
         '<div class="ov-card-h"><span class="ov-card-n">'+esc(m.n)+'</span><span class="ov-chip">'+esc(m.cat)+'</span></div>'+
@@ -310,24 +416,7 @@ function html(c){
         '<div class="ov-more">What it added ›</div></div>';
     }).join('')+'</div>'
   );
-
-  // Litigation
-  h += sec('Litigation & Legal — Borne Directly', '<p class="ov-lede" style="margin-bottom:12px">'+LIT_INTRO+'</p><div class="ov-callout">'+bullets(LIT)+'</div>');
-
-  // Peers
-  h += sec('Peers & Competitive Landscape',
-    '<table class="ov-table ov-cmp"><thead><tr><th>Dimension</th><th>'+PEER_COLS.map(esc).join('</th><th>')+'</th></tr></thead><tbody>'+
-    PEER_ROWS.map(function(r){ return '<tr><td class="ov-td-name">'+esc(r[0])+'</td>'+r.slice(1).map(function(cell){ return '<td>'+cell+'</td>'; }).join('')+'</tr>'; }).join('')+
-    '</tbody></table><div class="ov-diagram-cap" style="margin-top:10px">'+PEER_NOTE+'</div>'
-  );
-
-  // Tailwinds / Headwinds
-  h += sec('Tailwinds & Headwinds',
-    '<div class="ov-grid2">'+
-      '<div class="ov-wind ov-wind-up"><div class="ov-wind-h">Tailwinds</div>'+bullets(TAILWINDS)+'</div>'+
-      '<div class="ov-wind ov-wind-down"><div class="ov-wind-h">Headwinds</div>'+bullets(HEADWINDS)+'</div>'+
-    '</div>'
-  );
+  h += '</div>'; // end vas pane
 
   h += '<div class="ov-foot">'+esc(SOURCES)+'</div>';
   h += '<div class="ov-modal-back" id="ovModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
@@ -335,6 +424,39 @@ function html(c){
     '<div class="ov-modal-t" id="ovModalT"></div><div class="ov-modal-b" id="ovModalB"></div></div></div>';
   h += '</div>';
   return h;
+}
+
+// ─── Volume chart (metric × dimension) ───────────────────────────────────────
+function renderVol(){
+  if (typeof Chart === 'undefined') return;
+  var cv = document.getElementById('ovVolChart'); if(!cv) return;
+  if(_volChart){ try{ _volChart.destroy(); }catch(e){} _volChart=null; }
+  var m = VOL_METRICS[_volMetric];
+  var series = VOL_DATA[_volMetric][_volDim];
+  var colors = _volDim==='geo' ? GEO_COLORS : TYPE_COLORS;
+  var labels = VOL_YEARS.map(function(y,i){ return String(y)+(VOL_EST[i]?'E':''); });
+  var datasets = Object.keys(series).map(function(name){
+    return { label:name, data:series[name], backgroundColor:colors[name]||'#94A3B8', borderRadius:4, stack:'s', maxBarThickness:54 };
+  });
+  var titleEl = document.getElementById('ovVolTitle');
+  if(titleEl) titleEl.innerHTML = esc(m.label)+' <span>'+(_volDim==='geo'?'por región':'crédito vs débito')+' · '+m.unit+' · ilustrativo</span>';
+  _volChart = new Chart(cv.getContext('2d'), { type:'bar',
+    data:{ labels:labels, datasets:datasets },
+    options:{ responsive:true, maintainAspectRatio:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{size:10}, color:C_AXIS } },
+        tooltip:{ callbacks:{
+          label:function(ctx){ return ' '+ctx.dataset.label+': '+m.fmt(ctx.parsed.y); },
+          footer:function(items){ var t=0; items.forEach(function(i){ t+=i.parsed.y; }); return 'Total: '+m.fmt(t); } } } },
+      scales:{ x:{ stacked:true, grid:{display:false}, ticks:{ color:C_AXIS, font:{size:10} } },
+               y:{ stacked:true, grid:{ color:C_GRID }, ticks:{ color:C_AXIS, font:{size:10}, callback:m.fmt } } } }
+  });
+  var st = document.getElementById('ovVolStat');
+  if(st){
+    var n=VOL_YEARS.length, tot=function(i){ var s=0; Object.keys(series).forEach(function(k){ s+=series[k][i]; }); return s; };
+    var a=tot(0), z=tot(n-1), cagr=(Math.pow(z/a, 1/(VOL_YEARS[n-1]-VOL_YEARS[0]))-1)*100;
+    st.innerHTML='<b>'+labels[0]+'</b> '+m.fmt(a)+' → <b>'+labels[n-1]+'</b> '+m.fmt(z)+' · CAGR <span class="'+(cagr>=0?'pos':'neg')+'">'+(cagr>=0?'+':'')+cagr.toFixed(1)+'%</span> <span class="ov-stat-mut">(ilustrativo)</span>';
+  }
 }
 
 function flowHtml(){
@@ -357,6 +479,28 @@ function flowHtml(){
 function init(c){
   var root = document.querySelector('.ov-mastercard');
   if (!root) return;
+
+  // ── Sub-tab (chapter) switching ──
+  root.querySelectorAll('.ov-subtab').forEach(function(b){
+    b.onclick = function(){
+      root.querySelectorAll('.ov-subtab').forEach(function(x){ x.classList.toggle('active', x===b); });
+      var tab = b.getAttribute('data-matab');
+      root.querySelectorAll('.ov-pane').forEach(function(p){ p.classList.toggle('active', p.getAttribute('data-mapane')===tab); });
+      if (tab==='network') requestAnimationFrame(renderVol); // charts need a visible (sized) canvas
+    };
+  });
+
+  // ── Volume explorer: metric selector + dimension toggle ──
+  var mPills = root.querySelector('#ovVolMetric'), dPills = root.querySelector('#ovVolDim');
+  if (mPills) mPills.querySelectorAll('.ov-volpill').forEach(function(b){
+    b.onclick = function(){ _volMetric=b.getAttribute('data-metric');
+      mPills.querySelectorAll('.ov-volpill').forEach(function(x){ x.classList.toggle('on', x===b); }); renderVol(); };
+  });
+  if (dPills) dPills.querySelectorAll('.ov-volpill').forEach(function(b){
+    b.onclick = function(){ _volDim=b.getAttribute('data-dim');
+      dPills.querySelectorAll('.ov-volpill').forEach(function(x){ x.classList.toggle('on', x===b); }); renderVol(); };
+  });
+
   var back = root.querySelector('#ovModalBack');
   var mT = root.querySelector('#ovModalT');
   var mB = root.querySelector('#ovModalB');

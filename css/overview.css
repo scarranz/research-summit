@@ -900,3 +900,8 @@
 .ov-prod-d { font-size: 11px; line-height: 1.45; color: var(--mu); margin-top: 3px; }
 .ov-sub-comp { font-size: 11.5px; line-height: 1.5; color: var(--mu); margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--bdr); }
 .ov-sub-comp b { color: var(--navy); font-weight: 600; }
+/* CART has 4 network parties (not 5) and 2 lines per pillar (not 3) — fit the
+   grids exactly so they read as complete, not missing a slot. */
+.ov-cart .ov-hub-nodes { grid-template-columns: repeat(4, 1fr); }
+.ov-cards.ov-cards-2 { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 860px) { .ov-cart .ov-hub-nodes { grid-template-columns: repeat(2, 1fr); } }

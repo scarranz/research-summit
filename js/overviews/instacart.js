@@ -219,7 +219,7 @@ function subDetailHtml(s){
 }
 function pillarCards(segKey){
   var seg = SEGMENTS.filter(function(s){ return s.k===segKey; })[0]; if(!seg) return '';
-  return '<div class="ov-cards">'+seg.subs.map(function(s){
+  return '<div class="ov-cards ov-cards-2">'+seg.subs.map(function(s){
     return '<div class="ov-card ov-clickable" data-detail="sub:'+esc(s.k)+'">'+
       '<div class="ov-card-h"><span class="ov-card-n">'+esc(s.n)+'</span><span class="ov-chip">'+esc(s.rev)+'</span></div>'+
       '<div class="ov-card-s">'+s.what+'</div><div class="ov-more">How it monetizes ›</div></div>';

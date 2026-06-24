@@ -162,18 +162,34 @@ var SOURCES = 'Sources: Instacart (Maplebear Inc., NASDAQ: CART) — KPI &amp; f
 // forecasts (several series leave future years blank), so we treat the DCF as a
 // source of history, not projections. Source: Summit DCF for CART
 // (GTV / ORD / TRANSACTION_REVENUE / ADVERTISING_REVENUE / EBITDA_ADJ).
-var FIN_YEARS = [2021, 2022, 2023, 2024, 2025];
 var fB = function(v){ return v==null ? '—' : '$'+(v/1000).toFixed(1)+'B'; };
 var fM = function(v){ return v==null ? '—' : Math.round(v)+'M'; };
-var FIN_SERIES = {
-  finGTV:    { label:'GTV', unit:'$B', fmt:fB, type:'bar', color:'#0AAD0A', data:[24909,28826,31986,33646,37225] },
-  finORD:    { label:'Orders', unit:'M', fmt:fM, type:'bar', color:'#3A7BD5', data:[223,263,295,302,339] },
-  finMix:    { label:'Revenue — Transaction vs Advertising', unit:'$B', fmt:fB, type:'stack',
-               stack:[ {name:'Transaction', color:'#0AAD0A', data:[1262,1935,2239,2420,2677]},
-                       {name:'Advertising', color:'#FF7009', data:[572,740,871,958,1079]} ] },
-  finEbitda: { label:'Adjusted EBITDA', unit:'$B', fmt:fB, type:'bar', color:'#7A8699', data:[null,207,641,885,1087] },
+// Chart metadata; the actual numbers live in FIN_DATA per period (annual / quarterly).
+var FIN_META = {
+  finGTV:    { label:'GTV',             unit:'$B', fmt:fB, type:'bar',   color:'#0AAD0A' },
+  finORD:    { label:'Orders',          unit:'M',  fmt:fM, type:'bar',   color:'#3A7BD5' },
+  finMix:    { label:'Revenue mix',     unit:'$B', fmt:fB, type:'stack', stackColors:{ Transaction:'#0AAD0A', Advertising:'#FF7009' } },
+  finEbitda: { label:'Adjusted EBITDA', unit:'$B', fmt:fB, type:'bar',   color:'#7A8699' },
 };
-var FIN_INTRO = 'Instacart\'s KPIs &amp; financials — <b>historical actuals (FY2021–2025)</b>, pulled from the <b>Summit DCF model</b>. Forecast years are intentionally excluded (the stored model\'s projections aren\'t complete/reliable), so this shows reported history only.';
+// Historical actuals from the Summit DCF (no forecasts). Annual FY21–25; quarterly 1Q22–1Q26.
+var FIN_DATA = {
+  annual: {
+    labels:['2021','2022','2023','2024','2025'],
+    finGTV:[24909,28826,31986,33646,37225],
+    finORD:[223,263,295,302,339],
+    finMix:{ Transaction:[1262,1935,2239,2420,2677], Advertising:[572,740,871,958,1079] },
+    finEbitda:[null,207,641,885,1087],
+  },
+  quarterly: {
+    labels:['1Q22','2Q22','3Q22','4Q22','1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'],
+    finGTV:[7391,7079,7080,7390,8092,7804,7832,8257,8319,8237,8303,8817,9122,9081,9170,9852,10288],
+    finORD:[68,64,64,69,76,72,72,75,75,74,74,79,83,83,83,90,93],
+    finMix:{ Transaction:[517,453,482,530,566,546,548,578,603,595,606,617,650,659,670,698,739], Advertising:[156,171,186,227,200,206,222,250,220,228,246,267,247,260,276,304,286] },
+    finEbitda:[null,null,74,133,169,110,163,199,198,208,227,252,244,262,278,303,300],
+  },
+};
+var FIN_PERIOD = 'annual';
+var FIN_INTRO = 'Instacart\'s KPIs &amp; financials — <b>historical actuals</b> from the <b>Summit DCF model</b>. Toggle <b>Annual</b> (FY2021–2025) or <b>Quarterly</b> (1Q22–1Q26). Forecast years are excluded (the stored model\'s projections aren\'t complete/reliable), so this is reported history only.';
 var FIN_NOTE  = 'GTV &amp; revenue in USD billions; orders in millions. Source: Summit DCF for CART (actuals). The <b>Transaction vs Advertising</b> split shows the high-margin ad engine rising as a share of revenue. Adj. EBITDA starts in 2022 (2021 pre-profitability). Reads from the model, not hand-typed.';
 var C_AXIS='#8A93A0', C_GRID='#EEF2F7', _finCharts={};
 
@@ -187,30 +203,30 @@ function finCard(id, title, sub){
     '<div class="ov-chart-wrap"><canvas id="'+id+'"></canvas></div><div class="ov-statline" id="stat-'+id+'"></div></div>';
 }
 function makeFin(id){
-  var s=FIN_SERIES[id]; var cv=document.getElementById(id); if(!cv) return;
-  var labels=FIN_YEARS.map(String), datasets;
-  if(s.type==='stack'){
-    datasets=s.stack.map(function(d){ return { label:d.name, data:d.data, backgroundColor:d.color, borderRadius:4, stack:'s', maxBarThickness:46 }; });
+  var m=FIN_META[id]; var cv=document.getElementById(id); if(!cv) return;
+  var D=FIN_DATA[FIN_PERIOD], labels=D.labels, datasets;
+  if(m.type==='stack'){
+    var st=D[id];
+    datasets=Object.keys(st).map(function(name){ return { label:name, data:st[name], backgroundColor:m.stackColors[name], borderRadius:4, stack:'s', maxBarThickness:46 }; });
   } else {
-    datasets=[{ data:s.data, backgroundColor:s.color, borderRadius:5, maxBarThickness:46 }];
+    datasets=[{ data:D[id], backgroundColor:m.color, borderRadius:5, maxBarThickness:46 }];
   }
   _finCharts[id]=new Chart(cv.getContext('2d'), { type:'bar', data:{labels:labels, datasets:datasets},
     options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
-      plugins:{ legend:{ display:s.type==='stack', position:'bottom', labels:{boxWidth:10,font:{size:10},color:C_AXIS} },
+      plugins:{ legend:{ display:m.type==='stack', position:'bottom', labels:{boxWidth:10,font:{size:10},color:C_AXIS} },
         tooltip:{ callbacks:{
-          label:function(ctx){ return ' '+(s.type==='stack'?ctx.dataset.label+': ':'')+s.fmt(ctx.parsed.y); },
-          footer:(s.type==='stack' ? function(items){ var t=0; items.forEach(function(i){ t+=i.parsed.y; }); return 'Total: '+s.fmt(t); } : undefined) } } },
-      scales:{ x:{ stacked:s.type==='stack', grid:{display:false}, ticks:{color:C_AXIS,font:{size:10}} },
-               y:{ stacked:s.type==='stack', grid:{color:C_GRID}, ticks:{color:C_AXIS,font:{size:10},callback:s.fmt} } } }
+          label:function(ctx){ return ' '+(m.type==='stack'?ctx.dataset.label+': ':'')+m.fmt(ctx.parsed.y); },
+          footer:(m.type==='stack' ? function(items){ var t=0; items.forEach(function(i){ t+=i.parsed.y; }); return 'Total: '+m.fmt(t); } : undefined) } } },
+      scales:{ x:{ stacked:m.type==='stack', grid:{display:false}, ticks:{color:C_AXIS,font:{size:10},maxRotation:0,autoSkip:true} },
+               y:{ stacked:m.type==='stack', grid:{color:C_GRID}, ticks:{color:C_AXIS,font:{size:10},callback:m.fmt} } } }
   });
   var el=document.getElementById('stat-'+id); if(!el) return;
-  var vals = s.type==='stack' ? FIN_YEARS.map(function(_,i){ return s.stack.reduce(function(a,d){ return a+(d.data[i]||0); },0); }) : s.data;
+  var vals = m.type==='stack' ? labels.map(function(_,i){ var st=D[id]; return Object.keys(st).reduce(function(a,k){ return a+(st[k][i]||0); },0); }) : D[id];
   var idxs=[]; for(var i=0;i<vals.length;i++) if(vals[i]!=null && vals[i]!==0) idxs.push(i);
-  if(idxs.length>=2){ var fi=idxs[0],li=idxs[idxs.length-1],a=vals[fi],z=vals[li],yrs=FIN_YEARS[li]-FIN_YEARS[fi];
-    var cagr=(Math.pow(z/a,1/(yrs||1))-1)*100;
-    el.innerHTML='<b>'+FIN_YEARS[fi]+'</b> '+s.fmt(a)+' → <b>'+FIN_YEARS[li]+'</b> '+s.fmt(z)+' · CAGR <span class="'+(cagr>=0?'pos':'neg')+'">'+(cagr>=0?'+':'')+cagr.toFixed(1)+'%</span>'; }
+  if(idxs.length>=2){ var fi=idxs[0],li=idxs[idxs.length-1],a=vals[fi],z=vals[li], chg=(z/a-1)*100;
+    el.innerHTML='<b>'+labels[fi]+'</b> '+m.fmt(a)+' &rarr; <b>'+labels[li]+'</b> '+m.fmt(z)+' &middot; <span class="'+(chg>=0?'pos':'neg')+'">'+(chg>=0?'+':'')+chg.toFixed(0)+'%</span>'; }
 }
-function renderFin(){ if (typeof Chart==='undefined') return; Object.keys(_finCharts).forEach(function(id){ try{_finCharts[id].destroy();}catch(e){} }); _finCharts={}; Object.keys(FIN_SERIES).forEach(makeFin); }
+function renderFin(){ if (typeof Chart==='undefined') return; Object.keys(_finCharts).forEach(function(id){ try{_finCharts[id].destroy();}catch(e){} }); _finCharts={}; Object.keys(FIN_META).forEach(makeFin); }
 function subDetailHtml(s){
   return '<div class="ov-sub-line"><b>What it is.</b> '+s.what+'</div>'+
     '<div class="ov-sub-mon"><b>How it monetizes:</b> '+s.monetizes+'</div>'+
@@ -307,11 +323,12 @@ function html(c){
   // ══ PANE 5 — Financials (historical KPIs from the DCF) ══
   h += '<div class="ov-pane" data-capane="fin">';
   h += '<p class="ov-lede">'+FIN_INTRO+'</p>';
+  h += '<div class="ov-fintog" id="ovFinTog"><button class="on" data-period="annual">Annual</button><button data-period="quarterly">Quarterly</button></div>';
   h += '<div class="ov-charts ov-charts-2">'+
-    finCard('finGTV','GTV','FY21–FY25 · $B')+
-    finCard('finORD','Orders','FY21–FY25 · M')+
+    finCard('finGTV','GTV','$B')+
+    finCard('finORD','Orders','M')+
     finCard('finMix','Revenue mix','Transaction vs Advertising · $B')+
-    finCard('finEbitda','Adjusted EBITDA','FY22–FY25 · $B')+
+    finCard('finEbitda','Adjusted EBITDA','$B')+
   '</div>';
   h += '<div class="ov-diagram-cap" style="margin-top:10px">'+FIN_NOTE+'</div>';
   h += '</div>'; // end fin pane
@@ -335,6 +352,13 @@ function init(c){
       root.querySelectorAll('.ov-pane').forEach(function(p){ p.classList.toggle('active', p.getAttribute('data-capane')===tab); });
       if (tab==='fin') requestAnimationFrame(renderFin); // charts need a visible (sized) canvas
     };
+  });
+
+  // Financials period toggle (Annual / Quarterly)
+  var tog = root.querySelector('#ovFinTog');
+  if (tog) tog.querySelectorAll('button').forEach(function(b){
+    b.onclick = function(){ FIN_PERIOD = b.getAttribute('data-period');
+      tog.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x===b); }); renderFin(); };
   });
 
   // Modal

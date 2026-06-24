@@ -905,3 +905,8 @@
 .ov-cart .ov-hub-nodes { grid-template-columns: repeat(4, 1fr); }
 .ov-cards.ov-cards-2 { grid-template-columns: repeat(2, 1fr); }
 @media (max-width: 860px) { .ov-cart .ov-hub-nodes { grid-template-columns: repeat(2, 1fr); } }
+/* Annual / Quarterly toggle on the Financials tab */
+.ov-fintog { display: inline-flex; gap: 6px; background: var(--surface); border: 1px solid var(--bdr); border-radius: 9px; padding: 4px; margin-bottom: 14px; }
+.ov-fintog button { border: none; background: transparent; color: var(--mu); font-size: 11.5px; font-weight: 600; padding: 6px 14px; border-radius: 7px; cursor: pointer; transition: background .12s, color .12s; }
+.ov-fintog button:hover { color: var(--navy); }
+.ov-fintog button.on { background: var(--brand); color: #fff; }

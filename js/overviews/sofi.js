@@ -829,13 +829,26 @@ function aveFmt(m, v){
   return '$' + Math.round(v).toLocaleString() + 'M';
 }
 
-// "Valuation" pane — first (and so far only) view: Actuals vs. Estimates.
+// "Valuation" pane — split into two nested sub-tabs: Actuals vs. Estimates
+// (our Summit DCF model vs reported) and Actuals vs. Guidance (SoFi's own
+// published guidance vs reported).
 function valuationBody(c){
+  var h = '';
+  h += '<div class="ovv-tabs">'+
+    '<button type="button" class="ovv-tab active" data-ovv="estimates">Actuals vs Estimates</button>'+
+    '<button type="button" class="ovv-tab" data-ovv="guidance">Actuals vs Guidance</button>'+
+  '</div>';
+  h += '<div class="ovv-pane" data-ovv="estimates">'+aveBody(c)+'</div>';
+  h += '<div class="ovv-pane" data-ovv="guidance" hidden>'+guidanceBody(c)+'</div>';
+  return h;
+}
+
+// Actuals vs. Estimates view — our Summit DCF model's estimate vs SoFi's reported actual.
+function aveBody(c){
   var def = AVE_METRICS.rev;
   var maxI = def.quarters.length - 1;
   var h = '';
 
-  h += '<div class="ov-sec-h">Actuals vs. Estimates</div>';
   h += '<p class="ov-lede">'+esc(AVE_INTRO)+'</p>';
 
   // Grouped metric selector (KPIs · Revenue · Profitability).
@@ -875,6 +888,151 @@ function valuationBody(c){
   h += '<div class="ov-foot" id="aveNote">'+esc(def.note)+'</div>';
   h += '<div class="ov-foot">'+esc(AVE_SOURCE)+'</div>';
 
+  // ── Estimate revisions across snapshots (vintage chart) ──
+  h += '<div class="ov-sec-h evo-sec-h">How our estimates have evolved across snapshots</div>';
+  h += '<p class="ov-lede">'+esc(EVO_INTRO)+'</p>';
+  h += '<div class="evo-pills">'+['rev','ebitda','ani'].map(function(k){
+    return '<button type="button" class="evo-pill'+(k===_evoMetric?' active':'')+'" data-evo="'+k+'">'+esc(EVO_METRICS[k].short)+'</button>';
+  }).join('')+'</div>';
+  h += '<div class="ov-chart-card"><div class="ov-chart-t" id="evoChartT"></div>'+
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="sofiEvoChart"></canvas></div></div>';
+  h += '<div class="ov-subh">Net revision since first snapshot <span class="ave-subh-note" id="evoScope"></span></div>';
+  h += '<div class="ov-kpis" id="evoStats"></div>';
+  h += '<div class="ov-foot" id="evoNote"></div>';
+  h += '<div class="ov-foot">'+esc(EVO_SOURCE)+'</div>';
+
+  return h;
+}
+
+// ─── Valuation → Actuals vs. Guidance ────────────────────────────────────────
+// SoFi's own published guidance (full-year, revised each quarter; plus next-quarter)
+// vs what it actually reported. Sourced from SoFi quarterly earnings releases
+// (SEC EDGAR Form 8-K, Exhibit 99.1), FY2021–FY2026. Revenue / EBITDA / Net income
+// in US$ millions; EPS in US$. Guidance ranges stored as {lo, hi} (lo===hi means
+// SoFi gave a single point). Midpoint drives the line and the raise/cut math; the
+// full range shows on hover.
+var GUID_SOURCE = 'Source: SoFi quarterly earnings releases (SEC EDGAR Form 8-K, Exhibit 99.1), FY2021–FY2026 — full-year guidance as issued at each earnings date, and next-quarter guidance, vs reported actuals. Guidance ranges are SoFi\'s stated low–high; the chart uses the midpoint. Net Income / EPS were guided on a GAAP basis through mid-2025 and on an Adjusted basis thereafter; the FY2024 actual Net Income / EPS shown is the adjusted figure (it excludes a one-time ~$271M deferred-tax benefit) for a like-for-like comparison with the guide. Quarters where SoFi gave no discrete quarterly guide (full-year-only or half-year-block periods, and near-zero early EBITDA guides) are omitted from the Quarterly view.';
+
+// Annual full-year guidance evolution. g = guidance points in chronological order
+// (Initial = issued at the prior-year Q4 release; then revised at Q1/Q2/Q3). a = the
+// reported full-year actual (null while the year is still in progress).
+var GUID_ANNUAL = {
+  rev: {
+    short:'Adj. Revenue', label:'Adjusted Net Revenue', unit:'usd',
+    years:[
+      { fy:'FY21', g:[ {s:'Initial',lo:980,hi:980}, {s:'Q3',lo:1002,hi:1012} ], a:1010.3 },
+      { fy:'FY22', g:[ {s:'Initial',lo:1570,hi:1570}, {s:'Q1',lo:1505,hi:1510}, {s:'Q2',lo:1508,hi:1513}, {s:'Q3',lo:1517,hi:1522} ], a:1540.5 },
+      { fy:'FY23', g:[ {s:'Initial',lo:1925,hi:2000}, {s:'Q1',lo:1955,hi:2020}, {s:'Q2',lo:1974,hi:2034}, {s:'Q3',lo:2045,hi:2065} ], a:2073.9 },
+      { fy:'FY24', g:[ {s:'Initial',lo:2365,hi:2405}, {s:'Q1',lo:2390,hi:2430}, {s:'Q2',lo:2425,hi:2465}, {s:'Q3',lo:2535,hi:2550} ], a:2606.2 },
+      { fy:'FY25', g:[ {s:'Initial',lo:3200,hi:3275}, {s:'Q1',lo:3235,hi:3310}, {s:'Q2',lo:3375,hi:3375}, {s:'Q3',lo:3540,hi:3540} ], a:3591.4 },
+      { fy:'FY26', g:[ {s:'Initial',lo:4655,hi:4655}, {s:'Q1',lo:4655,hi:4655} ], a:null }
+    ],
+    note:'Full-year Adjusted Net Revenue guidance ($M) at each update vs the reported actual. SoFi guides a range; the line is the midpoint and the band/hover shows the range. The dashed green line marks the actual. FY21 only has an initial point and a Q3 raise (SoFi went public mid-2021). SoFi has beaten its own full-year revenue guide every single year.'
+  },
+  ebitda: {
+    short:'Adj. EBITDA', label:'Adjusted EBITDA', unit:'usd',
+    years:[
+      { fy:'FY21', g:[ {s:'Initial',lo:27,hi:27}, {s:'Q3',lo:28,hi:31} ], a:30.2 },
+      { fy:'FY22', g:[ {s:'Initial',lo:180,hi:180}, {s:'Q1',lo:100,hi:105}, {s:'Q2',lo:104,hi:109}, {s:'Q3',lo:115,hi:120} ], a:143.3 },
+      { fy:'FY23', g:[ {s:'Initial',lo:260,hi:280}, {s:'Q1',lo:268,hi:288}, {s:'Q2',lo:333,hi:343}, {s:'Q3',lo:386,hi:396} ], a:431.7 },
+      { fy:'FY24', g:[ {s:'Initial',lo:580,hi:590}, {s:'Q1',lo:590,hi:600}, {s:'Q2',lo:605,hi:615}, {s:'Q3',lo:640,hi:645} ], a:666.5 },
+      { fy:'FY25', g:[ {s:'Initial',lo:845,hi:865}, {s:'Q1',lo:875,hi:895}, {s:'Q2',lo:960,hi:960}, {s:'Q3',lo:1035,hi:1035} ], a:1053.9 },
+      { fy:'FY26', g:[ {s:'Initial',lo:1600,hi:1600}, {s:'Q1',lo:1600,hi:1600} ], a:null }
+    ],
+    note:'Full-year Adjusted EBITDA guidance ($M) at each update vs the reported actual. Note FY22: SoFi CUT the initial $180M guide to ~$100M at Q1 (federal student-loan moratorium hit lending), then raised it twice — the actual ($143M) still beat the final guide. Every other year, guidance only went up.'
+  },
+  ni: {
+    short:'Net Income', label:'Net Income', unit:'usd',
+    years:[
+      { fy:'FY24', g:[ {s:'Initial',lo:95,hi:105}, {s:'Q1',lo:165,hi:175}, {s:'Q2',lo:175,hi:185}, {s:'Q3',lo:204,hi:206} ], a:227.2 },
+      { fy:'FY25', g:[ {s:'Initial',lo:285,hi:305}, {s:'Q1',lo:320,hi:330}, {s:'Q2',lo:370,hi:370}, {s:'Q3',lo:455,hi:455} ], a:481.3 },
+      { fy:'FY26', g:[ {s:'Initial',lo:825,hi:825}, {s:'Q1',lo:825,hi:825} ], a:null }
+    ],
+    note:'Full-year net income guidance ($M). SoFi did not guide net income before FY2024. It guided GAAP net income through mid-2025, then switched to ADJUSTED net income (Q3 2025 on). The FY24 actual shown is the $227M ADJUSTED figure — the headline GAAP $499M was inflated by a one-time ~$271M deferred-tax benefit, so adjusted is the apples-to-apples comparison vs the $204–206M guide.'
+  },
+  eps: {
+    short:'EPS', label:'Diluted EPS', unit:'eps',
+    years:[
+      { fy:'FY24', g:[ {s:'Initial',lo:0.07,hi:0.08}, {s:'Q1',lo:0.08,hi:0.09}, {s:'Q2',lo:0.09,hi:0.10}, {s:'Q3',lo:0.11,hi:0.12} ], a:0.15 },
+      { fy:'FY25', g:[ {s:'Initial',lo:0.25,hi:0.27}, {s:'Q1',lo:0.27,hi:0.28}, {s:'Q2',lo:0.31,hi:0.31}, {s:'Q3',lo:0.37,hi:0.37} ], a:0.39 },
+      { fy:'FY26', g:[ {s:'Initial',lo:0.60,hi:0.60}, {s:'Q1',lo:0.60,hi:0.60} ], a:null }
+    ],
+    note:'Full-year diluted EPS guidance ($). Not guided before FY2024. GAAP through mid-2025, then ADJUSTED (Q3 2025 on). The FY24 actual shown is the $0.15 ADJUSTED EPS (GAAP $0.39 included the one-time deferred-tax benefit) — the like-for-like comparison vs the $0.11–0.12 guide.'
+  }
+};
+
+// Quarterly next-quarter guidance vs reported actual. g = {lo, hi} guide, or null when
+// SoFi gave no discrete quarterly guide that period (full-year-only / half-year block /
+// near-zero early EBITDA). a = reported actual. Only quarters with a guide are charted.
+var GUID_QTR = {
+  rev: {
+    short:'Adj. Revenue', label:'Adjusted Net Revenue', unit:'usd',
+    note:'Next-quarter Adjusted Net Revenue guidance vs the actual SoFi reported, expressed as the surprise (actual vs guide midpoint). SoFi has beaten its quarterly revenue guide every single quarter it gave one. Periods with no discrete quarterly guide (it guided only the full year, or an H2 block) are omitted.',
+    q:[ {q:'3Q21',g:{lo:245,hi:255},a:277.2}, {q:'4Q21',g:{lo:272,hi:282},a:279.9},
+        {q:'1Q22',g:{lo:280,hi:285},a:321.7}, {q:'2Q22',g:{lo:330,hi:340},a:356.1}, {q:'3Q22',g:null,a:419.3}, {q:'4Q22',g:null,a:443.4},
+        {q:'1Q23',g:{lo:430,hi:440},a:460.2}, {q:'2Q23',g:{lo:470,hi:480},a:488.8}, {q:'3Q23',g:null,a:530.7}, {q:'4Q23',g:null,a:594.2},
+        {q:'1Q24',g:{lo:550,hi:560},a:580.6}, {q:'2Q24',g:{lo:555,hi:565},a:597.0}, {q:'3Q24',g:{lo:625,hi:645},a:689.4}, {q:'4Q24',g:null,a:739.1},
+        {q:'1Q25',g:{lo:725,hi:745},a:770.7}, {q:'2Q25',g:{lo:785,hi:805},a:858.2}, {q:'3Q25',g:null,a:949.6}, {q:'4Q25',g:null,a:1012.8},
+        {q:'1Q26',g:{lo:1040,hi:1040},a:1087.2} ]
+  },
+  ebitda: {
+    short:'Adj. EBITDA', label:'Adjusted EBITDA', unit:'usd',
+    note:'Next-quarter Adjusted EBITDA guidance vs actual (surprise = actual vs guide midpoint). 2021–2022 quarterly EBITDA guides were near zero (single-digit $M), which makes a percentage surprise meaningless, so the series starts in 1Q23. Periods with no discrete quarterly guide are omitted.',
+    q:[ {q:'1Q23',g:{lo:40,hi:45},a:75.7}, {q:'2Q23',g:{lo:50,hi:60},a:76.8}, {q:'3Q23',g:null,a:98.0}, {q:'4Q23',g:null,a:181.2},
+        {q:'1Q24',g:{lo:110,hi:120},a:144.4}, {q:'2Q24',g:{lo:115,hi:125},a:137.9}, {q:'3Q24',g:{lo:160,hi:165},a:186.2}, {q:'4Q24',g:null,a:198.0},
+        {q:'1Q25',g:{lo:175,hi:185},a:210.3}, {q:'2Q25',g:{lo:200,hi:210},a:249.1}, {q:'3Q25',g:null,a:276.9}, {q:'4Q25',g:null,a:317.6},
+        {q:'1Q26',g:{lo:300,hi:300},a:339.9} ]
+  },
+  ni: {
+    short:'Net Income', label:'Net Income', unit:'usd',
+    note:'Next-quarter net income guidance vs actual (surprise = actual vs guide midpoint). SoFi began giving quarterly net-income guides in FY2024. Guide levels are small in $ terms, so percentage surprises are large and volatile. Periods with no discrete quarterly guide are omitted.',
+    q:[ {q:'1Q24',g:{lo:10,hi:20},a:88.0}, {q:'2Q24',g:{lo:5,hi:10},a:17.4}, {q:'3Q24',g:{lo:40,hi:45},a:60.7}, {q:'4Q24',g:null,a:332.5},
+        {q:'1Q25',g:{lo:30,hi:40},a:71.1}, {q:'2Q25',g:{lo:60,hi:70},a:97.3}, {q:'3Q25',g:null,a:139.4}, {q:'4Q25',g:null,a:173.5},
+        {q:'1Q26',g:{lo:160,hi:160},a:166.7} ]
+  },
+  eps: {
+    short:'EPS', label:'Diluted EPS', unit:'eps',
+    note:'Next-quarter diluted EPS guidance vs actual (surprise = actual vs guide midpoint). SoFi only gave a quarterly EPS point in select quarters from 3Q24 on, so this series is sparse. Periods with no quarterly EPS guide are omitted.',
+    q:[ {q:'3Q24',g:{lo:0.04,hi:0.04},a:0.05}, {q:'1Q25',g:{lo:0.03,hi:0.03},a:0.06}, {q:'2Q25',g:{lo:0.05,hi:0.06},a:0.08}, {q:'1Q26',g:{lo:0.12,hi:0.12},a:0.12} ]
+  }
+};
+
+// "Actuals vs. Guidance" view — Annual / Quarterly toggle, metric selector, chart,
+// raise/cut analytics and a per-year table. The engine lives further down.
+function guidanceBody(c){
+  var h = '';
+  // Mode toggle (Annual / Quarterly).
+  h += '<div class="guid-modes">'+
+    '<button type="button" class="guid-mode active" data-guidmode="annual">Annual</button>'+
+    '<button type="button" class="guid-mode" data-guidmode="quarterly">Quarterly</button>'+
+  '</div>';
+  // Metric selector.
+  h += '<div class="guid-pills">'+['rev','ebitda','ni','eps'].map(function(k){
+    return '<button type="button" class="guid-pill'+(k===_guidMetric?' active':'')+'" data-guidm="'+k+'">'+esc(GUID_ANNUAL[k].short)+'</button>';
+  }).join('')+'</div>';
+  // Annual controls — fiscal-year selector (filled by JS per metric).
+  h += '<div id="guidAnnualControls"><div class="guid-sub">Fiscal year</div><div class="guid-years" id="guidYearPills"></div></div>';
+  // Quarterly controls — dual-handle quarter-window slider.
+  h += '<div id="guidQtrControls" hidden>'+
+    '<div class="sg-controls"><div class="sg-slider"><div class="sg-track"><div class="sg-fill" id="guidFill"></div></div>'+
+      '<input type="range" id="guidMin" min="0" max="1" value="0" step="1" aria-label="Start quarter">'+
+      '<input type="range" id="guidMax" min="0" max="1" value="1" step="1" aria-label="End quarter"></div>'+
+    '<div class="sg-ends"><span id="guidEnd0"></span><span id="guidEnd1"></span></div>'+
+    '<div class="sg-readout" id="guidReadout"></div></div>'+
+  '</div>';
+  // Legend (set per mode by JS).
+  h += '<div class="ave-leg" id="guidLeg"></div>';
+  // Chart.
+  h += '<div class="ov-chart-card"><div class="ov-chart-t" id="guidChartT"></div>'+
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="sofiGuidChart"></canvas></div></div>';
+  // Analytics tiles.
+  h += '<div class="ov-subh">Track record <span class="ave-subh-note" id="guidStatScope"></span></div>';
+  h += '<div class="ov-kpis" id="guidStats"></div>';
+  // Per-fiscal-year table (Annual mode only).
+  h += '<div id="guidTableWrap"><div class="ov-subh">By fiscal year</div><div class="guid-tbl-wrap" id="guidTable"></div></div>';
+  // Footnotes.
+  h += '<div class="ov-foot" id="guidNote"></div>';
+  h += '<div class="ov-foot">'+esc(GUID_SOURCE)+'</div>';
   return h;
 }
 
@@ -1606,6 +1764,7 @@ function setupAveSlider(){
 function buildAveTab(){
   buildAveChart();
   setupAveSlider();
+  requestAnimationFrame(buildEvoTab);
 }
 
 // Switch the metric (Revenue / Adj. EBITDA / Adj. Net Income).
@@ -1621,11 +1780,428 @@ function switchAveMetric(root, k){
   setupAveSlider(); // resets window to full range and re-renders chart + stats
 }
 
+// ─── Valuation → Estimate revisions across snapshots (vintage chart) ─────────
+// For each projected fiscal year, how the Summit DCF estimate changed across the
+// model's stored snapshots. Values in US$ millions, from projection_history.
+// SoFi has 3 snapshots: 2026-02-03, 2026-04-29, 2026-05-13 (the last carried the
+// same projections as 2026-04-29 — no change).
+var EVO_INTRO = 'Our Summit DCF model is re-snapshotted over time. This shows, for each projected fiscal year, how the model\'s estimate has moved from one snapshot to the next — e.g. how the 2027 revenue projection changed between February and April 2026. Pick a metric; each line is a future year.';
+var EVO_SOURCE = 'Source: Summit DCF model for SOFI — projection_history across the three stored snapshots (3 Feb 2026, 29 Apr 2026, 13 May 2026). Values in US$ millions. The 13 May 2026 snapshot carried forward the same projections as 29 Apr 2026 (no change). Data sourced from Summit DCF models.';
+var EVO_SNAPS  = [ { d:'2026-02-03', l:'Feb 2026' }, { d:'2026-04-29', l:'Apr 2026' }, { d:'2026-05-13', l:'May 2026' } ];
+var EVO_YEARS  = ['2026','2027','2028','2029'];
+var EVO_COLORS = ['#0E7CC0','#1E9E62','#E8833A','#8E6FD0'];
+// proj[year] = [value at snapshot0, snapshot1, snapshot2] in US$ millions.
+var EVO_METRICS = {
+  rev: { short:'Revenue', label:'Total Net Revenue', unit:'usd',
+    proj:{ '2026':[4613,4670,4670], '2027':[6105,6288,6288], '2028':[7986,8133,8133], '2029':[8839,9408,9408] },
+    note:'Total net revenue projection by fiscal year, at each model snapshot. All four out-years were nudged up between the Feb and Apr 2026 snapshots; the May 2026 snapshot left them unchanged.' },
+  ebitda: { short:'Adj. EBITDA', label:'Adjusted EBITDA', unit:'usd',
+    proj:{ '2026':[1716,1852,1852], '2027':[2204,2293,2293], '2028':[3086,3112,3112], '2029':[2850,3268,3268] },
+    note:'Adjusted EBITDA projection by fiscal year. Note FY2029: the Feb snapshot modeled it below FY2028, then the Apr snapshot revised it back above — the model smoothed the out-year curve.' },
+  ani: { short:'Adj. Net Income', label:'Adjusted Net Income', unit:'usd',
+    proj:{ '2026':[939,1160,1160], '2027':[1244,1292,1292], '2028':[1874,1865,1865], '2029':[1816,2160,2160] },
+    note:'Adjusted net income projection by fiscal year. FY2026 saw the largest upward revision (+24% Feb→Apr); FY2028 ticked slightly down while FY2029 was raised sharply.' }
+};
+var _evoChart = null;
+var _evoMetric = 'rev';
+
+function buildEvoChart(){
+  var cv = document.getElementById('sofiEvoChart');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_evoChart){ _evoChart.destroy(); _evoChart = null; }
+  _evoChart = new Chart(cv.getContext('2d'), {
+    type: 'line',
+    data: { labels: EVO_SNAPS.map(function(s){ return s.l; }), datasets: [] },
+    options: {
+      responsive:true, maintainAspectRatio:false, animation:false,
+      layout:{ padding:{ top:10, right:14 } },
+      plugins:{
+        legend:{ display:true, position:'bottom', labels:{ boxWidth:12, font:{ size:11 }, color:'#5A6473', usePointStyle:true } },
+        tooltip:{ callbacks:{ label:function(ctx){
+          var ds = EVO_METRICS[_evoMetric], arr = ds.proj[EVO_YEARS[ctx.datasetIndex]];
+          var base = arr[0], v = ctx.parsed.y, pc = base ? (v - base) / base * 100 : 0;
+          return 'FY'+EVO_YEARS[ctx.datasetIndex]+': '+guidFmt(ds.unit, v)+'  ('+(pc>=0?'+':'−')+Math.abs(pc).toFixed(1)+'% vs first)';
+        } } }
+      },
+      scales:{
+        y:{ display:true, grace:'8%', grid:{ color:'rgba(0,0,0,0.04)' },
+          ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return guidFmt(EVO_METRICS[_evoMetric].unit, v); } } },
+        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:11 } } }
+      }
+    }
+  });
+}
+
+function renderEvo(){
+  var ds = EVO_METRICS[_evoMetric];
+  if (_evoChart){
+    _evoChart.data.datasets = EVO_YEARS.map(function(y, i){
+      return { label:'FY'+y, data:ds.proj[y], borderColor:EVO_COLORS[i], backgroundColor:EVO_COLORS[i],
+        borderWidth:2.5, pointRadius:3.5, pointBackgroundColor:'#fff', pointBorderColor:EVO_COLORS[i], pointBorderWidth:1.5, fill:false, tension:0 };
+    });
+    _evoChart.update('none');
+  }
+  var t = document.getElementById('evoChartT');
+  if (t) t.innerHTML = esc(ds.label) + ' estimate by projection year <span>(across snapshots · hover for % vs first)</span>';
+  var note = document.getElementById('evoNote'); if (note) note.textContent = ds.note;
+  var box = document.getElementById('evoStats'), scope = document.getElementById('evoScope');
+  if (scope) scope.textContent = '· ' + ds.label + ' · ' + EVO_SNAPS[0].l + ' → ' + EVO_SNAPS[EVO_SNAPS.length - 1].l;
+  if (box){
+    box.innerHTML = EVO_YEARS.map(function(y){
+      var arr = ds.proj[y], base = arr[0], last = arr[arr.length - 1];
+      var pc = base ? (last - base) / base * 100 : 0;
+      var dir = pc > 0.05 ? 'up' : (pc < -0.05 ? 'down' : 'muted');
+      var sub = (pc >= 0 ? '+' : '−') + Math.abs(pc).toFixed(1) + '% since ' + EVO_SNAPS[0].l;
+      return '<div class="ov-kpi"><div class="ov-kpi-l">FY'+y+'</div><div class="ov-kpi-v">'+guidFmt(ds.unit, last)+
+        '</div><div class="ov-kpi-d '+dir+'">'+esc(sub)+'</div></div>';
+    }).join('');
+  }
+}
+
+function buildEvoTab(){ buildEvoChart(); renderEvo(); }
+
+function switchEvoMetric(root, k){
+  if (!EVO_METRICS[k]) return;
+  _evoMetric = k;
+  root.querySelectorAll('.evo-pill').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-evo') === k); });
+  renderEvo();
+}
+
+// ─── Valuation: Actuals vs. Guidance engine ──────────────────────────────────
+var _guidChart  = null;
+var _guidMode   = 'annual';     // 'annual' | 'quarterly'
+var _guidMetric = 'rev';        // rev | ebitda | ni | eps
+var _guidYear   = 'FY25';
+
+function guidMid(g){ return (g.lo + g.hi) / 2; }
+function guidPct(v){ return (v < 0 ? '−' : '+') + Math.abs(v).toFixed(1) + '%'; }
+function guidFmt(unit, v){
+  if (v == null) return '—';
+  if (unit === 'eps') return '$' + v.toFixed(2);
+  return '$' + Math.round(v).toLocaleString() + 'M';
+}
+
+// ── Annual mode ──
+// Inline plugin: dashed "actual" reference line + value & %-vs-prior on each guide point.
+var guidAnnLabels = {
+  id: 'guidAnnLabels',
+  afterDatasetsDraw: function(chart){
+    var area = chart.chartArea; if (!area) return;
+    var ctx = chart.ctx;
+    var actual = chart.$gactual, unit = chart.$unit, info = chart.$ginfo || [];
+    if (actual != null && chart.scales.y){
+      var ya = chart.scales.y.getPixelForValue(actual);
+      ctx.save();
+      ctx.strokeStyle = AVE_GREEN; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]);
+      ctx.beginPath(); ctx.moveTo(area.left, ya); ctx.lineTo(area.right, ya); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = AVE_GREEN; ctx.font = '700 10px Inter, sans-serif'; ctx.textAlign = 'right';
+      ctx.fillText('Actual ' + guidFmt(unit, actual), area.right - 2, ya - 5);
+      ctx.restore();
+    }
+    var meta = chart.getDatasetMeta(2); if (!meta) return;
+    meta.data.forEach(function(pt, i){
+      var d = info[i]; if (!d) return;
+      ctx.save(); ctx.textAlign = 'center';
+      ctx.fillStyle = '#1E2733'; ctx.font = '700 11px Inter, sans-serif';
+      ctx.fillText(guidFmt(unit, d.mid), pt.x, pt.y - 22);
+      if (d.pct != null){
+        ctx.font = '600 10px Inter, sans-serif';
+        ctx.fillStyle = d.pct >= 0 ? AVE_GREEN : AVE_RED;
+        ctx.fillText((d.pct >= 0 ? '▲' : '▼') + guidPct(d.pct), pt.x, pt.y - 9);
+      }
+      ctx.restore();
+    });
+  }
+};
+
+// Raise/cut analytics across every fiscal year for a metric.
+function computeGuidRaises(metricKey){
+  var ds = GUID_ANNUAL[metricKey];
+  var raises = 0, cuts = 0, rSum = 0, cSum = 0, beat = 0, beatN = 0, perYear = [];
+  // Accuracy of the FINAL guide vs the actual, across years that have reported.
+  var aLow = 0, aMid = 0, aHigh = 0, upSum = 0, upN = 0, dnSum = 0, dnN = 0;
+  ds.years.forEach(function(yr){
+    var r = 0, c = 0, prev = null;
+    yr.g.forEach(function(g){
+      var m = guidMid(g);
+      if (prev != null){
+        var pc = (m - prev) / prev * 100;
+        if (pc > 0.05) { raises++; r++; rSum += pc; }
+        else if (pc < -0.05) { cuts++; c++; cSum += pc; }
+      }
+      prev = m;
+    });
+    var last = yr.g[yr.g.length - 1];
+    var initMid = guidMid(yr.g[0]), finalMid = guidMid(last);
+    var bF = null, bI = null;
+    if (yr.a != null){
+      beatN++; if (yr.a >= finalMid) beat++;
+      bF = (yr.a - finalMid) / finalMid * 100; bI = (yr.a - initMid) / initMid * 100;
+      if (yr.a >= last.lo) aLow++;
+      if (yr.a >= finalMid) aMid++;
+      if (yr.a >= last.hi) aHigh++;
+      if (bF >= 0) { upSum += bF; upN++; } else { dnSum += bF; dnN++; }
+    }
+    perYear.push({ fy:yr.fy, raises:r, cuts:c, init:initMid, final:finalMid, actual:yr.a, beatFinal:bF, beatInit:bI });
+  });
+  return { raises:raises, cuts:cuts, avgRaise: raises ? rSum / raises : 0, avgCut: cuts ? cSum / cuts : 0,
+    beat:beat, beatN:beatN, perYear:perYear,
+    accN:beatN, aboveLow:aLow, aboveMid:aMid, aboveHigh:aHigh,
+    avgAbove: upN ? upSum / upN : null, avgBelow: dnN ? dnSum / dnN : null };
+}
+
+function renderGuidYearPills(){
+  var box = document.getElementById('guidYearPills'); if (!box) return;
+  var ds = GUID_ANNUAL[_guidMetric];
+  if (!ds.years.some(function(y){ return y.fy === _guidYear; })) _guidYear = ds.years[ds.years.length - 1].fy;
+  box.innerHTML = ds.years.map(function(y){
+    return '<button type="button" class="guid-year'+(y.fy === _guidYear ? ' active' : '')+'" data-guidy="'+y.fy+'">'+esc(y.fy)+'</button>';
+  }).join('');
+}
+
+function renderGuidStatsAnnual(){
+  var box = document.getElementById('guidStats'), scope = document.getElementById('guidStatScope');
+  if (!box) return;
+  var ds = GUID_ANNUAL[_guidMetric], st = computeGuidRaises(_guidMetric);
+  if (scope) scope.textContent = '· ' + ds.label + ' · all fiscal years · "above" = vs final guide';
+  function tile(l, v, sub, dir){
+    return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(l)+'</div><div class="ov-kpi-v">'+v+
+      '</div><div class="ov-kpi-d '+(dir||'muted')+'">'+esc(sub)+'</div></div>';
+  }
+  function rate(c){ return st.accN ? Math.round(c / st.accN * 100) + '%' : '—'; }
+  box.innerHTML =
+    tile('Guidance raises', String(st.raises), 'times SoFi raised the full-year guide', 'up') +
+    tile('Avg raise', st.raises ? guidPct(st.avgRaise) : '—', 'per upward revision', 'up') +
+    tile('Guidance cuts', String(st.cuts), st.cuts ? 'times SoFi cut the guide' : 'never cut the guide', st.cuts ? 'down' : 'up') +
+    tile('Avg cut', st.cuts ? guidPct(st.avgCut) : '—', st.cuts ? 'per downward revision' : 'no cuts on record', st.cuts ? 'down' : 'muted') +
+    tile('Above low', rate(st.aboveLow), st.aboveLow + ' of ' + st.accN + ' yrs ≥ final low', 'up') +
+    tile('Above mid', rate(st.aboveMid), st.aboveMid + ' of ' + st.accN + ' yrs ≥ final mid', 'up') +
+    tile('Above high', rate(st.aboveHigh), st.aboveHigh + ' of ' + st.accN + ' yrs ≥ final high', 'up') +
+    tile('Avg above guide', st.avgAbove != null ? guidPct(st.avgAbove) : '—', 'when actual beat (vs final mid)', 'up') +
+    tile('Avg below guide', st.avgBelow != null ? guidPct(st.avgBelow) : '—', st.avgBelow != null ? 'when actual missed' : 'never missed final guide', st.avgBelow != null ? 'down' : 'muted');
+}
+
+function renderGuidTable(){
+  var box = document.getElementById('guidTable'); if (!box) return;
+  var ds = GUID_ANNUAL[_guidMetric], st = computeGuidRaises(_guidMetric);
+  var rows = st.perYear.map(function(p){
+    var act = p.actual != null ? guidFmt(ds.unit, p.actual) : '<span class="guid-mut">in progress</span>';
+    var bf = p.beatFinal != null ? '<span class="'+(p.beatFinal >= 0 ? 'guid-up' : 'guid-dn')+'">'+guidPct(p.beatFinal)+'</span>' : '—';
+    var bi = p.beatInit != null ? '<span class="'+(p.beatInit >= 0 ? 'guid-up' : 'guid-dn')+'">'+guidPct(p.beatInit)+'</span>' : '—';
+    return '<tr data-fy="'+p.fy+'"'+(p.fy === _guidYear ? ' class="guid-row-on"' : '')+'><td>'+esc(p.fy)+'</td><td>'+guidFmt(ds.unit, p.init)+
+      '</td><td>'+guidFmt(ds.unit, p.final)+'</td><td>'+act+'</td><td>'+p.raises+'↑ / '+p.cuts+'↓</td><td>'+bf+'</td><td>'+bi+'</td></tr>';
+  }).join('');
+  box.innerHTML = '<table class="guid-tbl"><thead><tr><th>FY</th><th>Initial</th><th>Final guide</th><th>Actual</th><th>Revisions</th><th>vs final</th><th>vs initial</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+function renderGuidAnnual(){
+  renderGuidYearPills();
+  var ds = GUID_ANNUAL[_guidMetric], years = ds.years, yr = null;
+  for (var k = 0; k < years.length; k++){ if (years[k].fy === _guidYear){ yr = years[k]; break; } }
+  if (!yr){ yr = years[years.length - 1]; _guidYear = yr.fy; }
+  var labels = [], mid = [], lo = [], hi = [], info = [], prev = null;
+  yr.g.forEach(function(g){
+    labels.push(g.s === 'Initial' ? 'Initial guide' : g.s + ' revision');
+    var m = guidMid(g); mid.push(m); lo.push(g.lo); hi.push(g.hi);
+    info.push({ mid:m, lo:g.lo, hi:g.hi, pct: prev != null ? (m - prev) / prev * 100 : null });
+    prev = m;
+  });
+  // Y-axis bounds must include the actual line (it can sit above/below the guide band).
+  var yMax = Math.max.apply(null, hi), yMin = Math.min.apply(null, lo);
+  if (yr.a != null){ yMax = Math.max(yMax, yr.a); yMin = Math.min(yMin, yr.a); }
+  var cv = document.getElementById('sofiGuidChart');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_guidChart){ _guidChart.destroy(); _guidChart = null; }
+  _guidChart = new Chart(cv.getContext('2d'), {
+    type: 'line',
+    data: { labels: labels, datasets: [
+      { label:'hi', data:hi, borderColor:'transparent', pointRadius:0, fill:false, tension:0 },
+      { label:'lo', data:lo, borderColor:'transparent', pointRadius:0, fill:'-1', backgroundColor:'rgba(14,124,192,0.10)', tension:0 },
+      { label:'Guide', data:mid, borderColor:BRAND, backgroundColor:BRAND, borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#fff', pointBorderColor:BRAND, pointBorderWidth:2, fill:false, tension:0 }
+    ] },
+    options: {
+      responsive:true, maintainAspectRatio:false, animation:false,
+      layout:{ padding:{ top:42, bottom:6, right:10 } },
+      plugins:{
+        legend:{ display:false },
+        tooltip:{ filter:function(it){ return it.datasetIndex === 2; }, callbacks:{
+          label:function(ctx){
+            var d = info[ctx.dataIndex], o = ['Guide: ' + guidFmt(ds.unit, d.mid)];
+            if (d.hi > d.lo) o.push('Range: ' + guidFmt(ds.unit, d.lo) + ' – ' + guidFmt(ds.unit, d.hi));
+            if (d.pct != null) o.push('vs prior guide: ' + guidPct(d.pct));
+            if (yr.a != null) o.push('vs actual: ' + guidPct((d.mid - yr.a) / yr.a * 100));
+            return o;
+          }
+        } }
+      },
+      scales:{
+        y:{ display:true, grace:'12%', suggestedMin:yMin, suggestedMax:yMax, grid:{ color:'rgba(0,0,0,0.04)' },
+          ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return guidFmt(ds.unit, v); } } },
+        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:11 } } }
+      }
+    },
+    plugins: [guidAnnLabels]
+  });
+  _guidChart.$ginfo = info; _guidChart.$gactual = yr.a; _guidChart.$unit = ds.unit;
+  _guidChart.update('none');
+  var t = document.getElementById('guidChartT');
+  if (t) t.innerHTML = esc(ds.label) + ' — ' + esc(yr.fy) + ' guidance vs actual <span>(line = guide midpoint · band = range · dashed = actual)</span>';
+  var note = document.getElementById('guidNote'); if (note) note.textContent = ds.note;
+  renderGuidStatsAnnual();
+}
+
+// ── Quarterly mode ──
+// Build the metric series, filtered to quarters that actually had a guide.
+function guidQtrSeries(metricKey){
+  var ds = GUID_QTR[metricKey];
+  var quarters = [], est = [], act = [], lo = [], hi = [];
+  ds.q.forEach(function(x){ if (x.g){ quarters.push(x.q); est.push(guidMid(x.g)); act.push(x.a); lo.push(x.g.lo); hi.push(x.g.hi); } });
+  return { quarters:quarters, est:est, act:act, lo:lo, hi:hi, unit:ds.unit, label:ds.label, note:ds.note, exp:false };
+}
+
+function buildGuidQtrChart(){
+  var cv = document.getElementById('sofiGuidChart');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_guidChart){ _guidChart.destroy(); _guidChart = null; }
+  _guidChart = new Chart(cv.getContext('2d'), {
+    type: 'bar',
+    data: { labels: [], datasets: [ { label:'Surprise', data:[], backgroundColor:[], borderRadius:3, maxBarThickness:48 } ] },
+    options: {
+      responsive:true, maintainAspectRatio:false, animation:false,
+      layout:{ padding:{ top:24, bottom:22 } },
+      plugins:{
+        legend:{ display:false },
+        tooltip:{ callbacks:{
+          title:function(items){ return (_guidChart.$q || [])[items[0].dataIndex] || ''; },
+          label:function(ctx){
+            var i = ctx.dataIndex, u = _guidChart.$unit;
+            return [ 'Guide: ' + guidFmt(u, (_guidChart.$est || [])[i]),
+                     'Actual: ' + guidFmt(u, (_guidChart.$act || [])[i]),
+                     'Surprise: ' + guidPct((_guidChart.$surp || [])[i]) ];
+          }
+        } }
+      },
+      scales:{ y:{ display:false, grace:'22%' }, x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:11 } } } }
+    },
+    plugins: [aveLabels]
+  });
+}
+
+function renderGuidQtr(a, b){
+  var s = guidQtrSeries(_guidMetric);
+  if (_guidChart){
+    var labels = [], est = [], act = [], surp = [], colors = [];
+    for (var i = a; i <= b; i++){
+      var sp = (s.act[i] - s.est[i]) / Math.abs(s.est[i]) * 100;
+      labels.push(s.quarters[i]); est.push(s.est[i]); act.push(s.act[i]);
+      surp.push(+sp.toFixed(1)); colors.push(sp >= 0 ? AVE_GREEN : AVE_RED);
+    }
+    _guidChart.data.labels = labels;
+    _guidChart.data.datasets[0].data = surp;
+    _guidChart.data.datasets[0].backgroundColor = colors;
+    _guidChart.$surp = surp; _guidChart.$est = est; _guidChart.$act = act; _guidChart.$q = labels; _guidChart.$exp = false; _guidChart.$unit = s.unit;
+    _guidChart.update('none');
+  }
+  var read = document.getElementById('guidReadout');
+  if (read){
+    var sb = (s.act[b] - s.est[b]) / Math.abs(s.est[b]) * 100;
+    read.innerHTML =
+      '<span class="sg-range">'+s.quarters[a]+' → '+s.quarters[b]+'</span>'+
+      '<span class="sg-stat">guide <b>'+guidFmt(s.unit, s.est[b])+'</b> vs act <b>'+guidFmt(s.unit, s.act[b])+'</b></span>'+
+      '<span class="sg-stat '+(sb >= 0 ? 'sg-cagr' : '')+'">'+s.quarters[b]+' surprise <b>'+guidPct(sb)+'</b></span>';
+  }
+  var t = document.getElementById('guidChartT');
+  if (t) t.innerHTML = esc(s.label) + ' — quarterly guide vs actual <span>(surprise %, per quarter · hover for $)</span>';
+  var note = document.getElementById('guidNote'); if (note) note.textContent = s.note;
+  renderGuidStatsQtr(a, b);
+}
+
+function renderGuidStatsQtr(a, b){
+  var box = document.getElementById('guidStats'), scope = document.getElementById('guidStatScope');
+  if (!box) return;
+  var s = guidQtrSeries(_guidMetric), st = computeAveStats(s, a, b);
+  if (scope) scope.textContent = '· ' + s.quarters[a] + '–' + s.quarters[b] + ' · ' + st.n + ' guided quarters';
+  // Accuracy vs each quarter's guide range (low / mid / high) over the window.
+  var aLow = 0, aMid = 0, aHigh = 0, upSum = 0, upN = 0, dnSum = 0, dnN = 0, nn = 0;
+  for (var i = a; i <= b; i++){
+    nn++;
+    var av = s.act[i], mid = s.est[i];
+    if (av >= s.lo[i]) aLow++;
+    if (av >= mid)     aMid++;
+    if (av >= s.hi[i]) aHigh++;
+    var sp = (av - mid) / Math.abs(mid) * 100;
+    if (sp >= 0) { upSum += sp; upN++; } else { dnSum += sp; dnN++; }
+  }
+  function rate(c){ return nn ? Math.round(c / nn * 100) + '%' : '—'; }
+  function tile(l, v, sub, dir){
+    return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(l)+'</div><div class="ov-kpi-v">'+v+
+      '</div><div class="ov-kpi-d '+(dir||'muted')+'">'+esc(sub)+'</div></div>';
+  }
+  box.innerHTML =
+    tile('Above low', rate(aLow), aLow+' of '+nn+' ≥ guide low', 'up') +
+    tile('Above mid', rate(aMid), aMid+' of '+nn+' ≥ guide mid', 'up') +
+    tile('Above high', rate(aHigh), aHigh+' of '+nn+' ≥ guide high', 'up') +
+    tile('Avg above guide', upN ? guidPct(upSum / upN) : '—', 'avg beat (vs mid) when above', 'up') +
+    tile('Avg below guide', dnN ? guidPct(dnSum / dnN) : '—', dnN ? 'avg miss (vs mid) when below' : 'never below mid', dnN ? 'down' : 'muted') +
+    tile('Avg surprise', guidPct(st.avg), 'overall vs guide midpoint', st.avg >= 0 ? 'up' : 'down') +
+    tile('Biggest beat', guidPct(st.best.s), st.best.q, 'up') +
+    tile('Latest ('+st.last.q+')', guidPct(st.last.s), st.last.f >= 0 ? 'beat guide' : 'missed guide', st.last.f >= 0 ? 'up' : 'down');
+}
+
+function setupGuidQtrSlider(){
+  var mn = document.getElementById('guidMin'), mx = document.getElementById('guidMax');
+  var fill = document.getElementById('guidFill');
+  if (!mn || !mx || !fill) return;
+  var s = guidQtrSeries(_guidMetric), maxI = s.quarters.length - 1;
+  mn.max = maxI; mx.max = maxI; mn.value = 0; mx.value = maxI;
+  var e0 = document.getElementById('guidEnd0'), e1 = document.getElementById('guidEnd1');
+  if (e0) e0.textContent = s.quarters[0];
+  if (e1) e1.textContent = s.quarters[maxI];
+  function apply(){
+    var a = Math.min(+mn.value, +mx.value), b = Math.max(+mn.value, +mx.value);
+    fill.style.left  = (a / maxI * 100) + '%';
+    fill.style.width = ((b - a) / maxI * 100) + '%';
+    renderGuidQtr(a, b);
+  }
+  mn.oninput = apply; mx.oninput = apply; apply();
+}
+
+// Apply the current Annual/Quarterly mode: toggle controls, set legend, (re)build chart.
+function applyGuidMode(){
+  var ann = _guidMode === 'annual';
+  var ac = document.getElementById('guidAnnualControls'); if (ac) ac.hidden = !ann;
+  var qc = document.getElementById('guidQtrControls');    if (qc) qc.hidden = ann;
+  var tw = document.getElementById('guidTableWrap');      if (tw) tw.hidden = !ann;
+  var leg = document.getElementById('guidLeg');
+  if (leg){
+    leg.innerHTML = ann
+      ? '<span class="tech-leg-i"><span class="ave-leg-act" style="background:'+BRAND+'"></span>Guide (midpoint)</span>'+
+        '<span class="tech-leg-i"><span class="ave-leg-act" style="background:rgba(14,124,192,0.20)"></span>Guided range</span>'+
+        '<span class="tech-leg-i"><span class="guid-leg-line"></span>Actual</span>'
+      : '<span class="tech-leg-i"><span class="ave-leg-act" style="background:'+AVE_GREEN+'"></span>Beat guide</span>'+
+        '<span class="tech-leg-i"><span class="ave-leg-act" style="background:'+AVE_RED+'"></span>Missed guide</span>'+
+        '<span class="tech-leg-i">▲ above · ▼ below guide</span>';
+  }
+  if (ann) requestAnimationFrame(function(){ renderGuidAnnual(); renderGuidTable(); });
+  else     requestAnimationFrame(function(){ buildGuidQtrChart(); setupGuidQtrSlider(); });
+}
+
+function buildGuidanceTab(){ applyGuidMode(); }
+
 // Switch a nested Fee Income sub-tab.
 function showOvf(root, key){
   root.querySelectorAll('.ovf-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovf') === key); });
   root.querySelectorAll('.ovf-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovf') !== key); });
   buildFeeTab();
+}
+
+// Switch a nested Valuation sub-tab.
+function showOvv(root, key){
+  root.querySelectorAll('.ovv-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovv') === key); });
+  root.querySelectorAll('.ovv-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovv') !== key); });
+  if (key === 'estimates') requestAnimationFrame(buildAveTab);
+  if (key === 'guidance')  requestAnimationFrame(buildGuidanceTab);
 }
 
 // Switch top-level sub-tab. Builds the tab's chart(s) lazily the first time it becomes visible.
@@ -1649,9 +2225,47 @@ function init(c){
   root.querySelectorAll('.ovf-tab').forEach(function(btn){
     btn.onclick = function(){ showOvf(root, btn.getAttribute('data-ovf')); };
   });
+  root.querySelectorAll('.ovv-tab').forEach(function(btn){
+    btn.onclick = function(){ showOvv(root, btn.getAttribute('data-ovv')); };
+  });
   // Valuation → Actuals vs. Estimates: metric selector pills.
   root.querySelectorAll('.ave-pill').forEach(function(btn){
     btn.onclick = function(){ switchAveMetric(root, btn.getAttribute('data-ave')); };
+  });
+  // Valuation → Estimate revisions across snapshots: metric pills.
+  root.querySelectorAll('.evo-pill').forEach(function(btn){
+    btn.onclick = function(){ switchEvoMetric(root, btn.getAttribute('data-evo')); };
+  });
+  // Valuation → Actuals vs. Guidance: mode toggle, metric pills, year pills, table.
+  root.querySelectorAll('.guid-mode').forEach(function(btn){
+    btn.onclick = function(){
+      var m = btn.getAttribute('data-guidmode');
+      if (m === _guidMode) return;
+      _guidMode = m;
+      root.querySelectorAll('.guid-mode').forEach(function(x){ x.classList.toggle('active', x === btn); });
+      applyGuidMode();
+    };
+  });
+  root.querySelectorAll('.guid-pill').forEach(function(btn){
+    btn.onclick = function(){
+      var k = btn.getAttribute('data-guidm');
+      if (!GUID_ANNUAL[k]) return;
+      _guidMetric = k;
+      root.querySelectorAll('.guid-pill').forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-guidm') === k); });
+      applyGuidMode();
+    };
+  });
+  var gyp = document.getElementById('guidYearPills');
+  if (gyp) gyp.addEventListener('click', function(e){
+    var b = e.target.closest('.guid-year'); if (!b) return;
+    _guidYear = b.getAttribute('data-guidy');
+    renderGuidAnnual(); renderGuidTable();
+  });
+  var gtbl = document.getElementById('guidTable');
+  if (gtbl) gtbl.addEventListener('click', function(e){
+    var tr = e.target.closest('tr[data-fy]'); if (!tr) return;
+    _guidYear = tr.getAttribute('data-fy');
+    renderGuidAnnual(); renderGuidTable();
   });
   // LPB accordion (progressive disclosure). Build the pie when its section first opens.
   root.querySelectorAll('.lpb-acc-h').forEach(function(btn){

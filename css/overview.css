@@ -389,6 +389,29 @@
 .sotp-field-u { font-size: 12px; font-weight: 600; color: var(--mu); white-space: nowrap; }
 .sotp-fwd { font-size: 13px; color: var(--navy); background: var(--brand-soft); border-radius: 9px; padding: 9px 13px; margin: 0 0 12px; }
 .sotp-fwd b { color: var(--brand); }
+
+/* ── Peers tab ── */
+.peer-tbl-wrap { overflow-x: auto; margin: 4px 0 22px; }
+.peer-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.peer-tbl th { text-align: right; font-weight: 700; color: var(--mu); padding: 9px 12px; border-bottom: 1px solid var(--bdr); white-space: nowrap; }
+.peer-tbl th:first-child { text-align: left; }
+.peer-tbl td { text-align: right; padding: 11px 12px; border-bottom: 1px solid var(--bg, #EEF1F5); color: var(--navy); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.peer-tbl td:first-child { text-align: left; }
+.peer-tbl tr.peer-row-sofi { background: var(--brand-soft); }
+.peer-co { display: flex; align-items: center; gap: 10px; }
+.peer-logo { width: 26px; height: 26px; border-radius: 6px; object-fit: contain; background: #fff; border: 1px solid var(--bdr); flex: none; }
+.peer-co-t { display: flex; flex-direction: column; line-height: 1.25; }
+.peer-ulab { font-size: 11px; color: var(--mu); font-weight: 500; }
+.peer-pills { display: flex; gap: 8px; flex-wrap: wrap; margin: 2px 0 14px; }
+.peer-pill { border: 1px solid var(--bdr); background: var(--w); border-radius: 18px; color: var(--mu); font: 600 12.5px Inter, sans-serif; padding: 7px 15px; cursor: pointer; transition: color .15s, background .15s, border-color .15s; }
+.peer-pill:hover { border-color: var(--brand); color: var(--brand); }
+.peer-pill.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+.peer-ctl-row { display: flex; gap: 16px 26px; flex-wrap: wrap; align-items: center; margin: 2px 0 14px; }
+.peer-ctl-row .peer-pills { margin: 0; }
+.peer-views { display: inline-flex; gap: 4px; padding: 4px; background: var(--bg, #F2F5F8); border: 1px solid var(--bdr); border-radius: 20px; }
+.peer-view { border: none; background: none; border-radius: 16px; color: var(--mu); font: 600 12px Inter, sans-serif; padding: 6px 14px; cursor: pointer; transition: color .15s, background .15s; }
+.peer-view:hover { color: var(--navy); }
+.peer-view.active { background: var(--brand); color: #fff; }
 .sens-controls { margin: 14px 0 6px; }
 .sens-ctrl { display: flex; align-items: center; gap: 14px; margin: 12px 0; }
 .sens-ctrl-l { min-width: 200px; font-size: 13px; font-weight: 600; color: var(--navy); }

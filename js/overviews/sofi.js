@@ -1395,6 +1395,289 @@ function setupSotpInputs(){
   renderSotp();
 }
 
+// ─── Peers — SoFi vs other fintechs ──────────────────────────────────────────
+// FY2025 (latest full fiscal year) comparison across scale (users), revenue model
+// (fee vs interest), growth and valuation. Sourced from each company's SEC filings.
+// pe = FORWARD P/E (price on 25-Jun-2026 ÷ FY2026E consensus EPS). epsG = FY2025→FY2026E
+// consensus EPS growth (%). peg = forward P/E ÷ epsG (null = not meaningful when EPS declines).
+var PEERS = [
+  { id:'SOFI', name:'SoFi',                sofi:true, domain:'sofi.com',               usersLabel:'Members',           users:13.7, rev:3613,  growth:35.1, ni:481,  niG:-3.5, pe:29.3, epsG:59.5, peg:0.49, interestPct:61.4, feePct:38.6 },
+  { id:'HOOD', name:'Robinhood',                      domain:'robinhood.com',          usersLabel:'Funded customers',  users:27.0, rev:4473,  growth:52.0, ni:1883, niG:33.5, pe:42.6, epsG:-6.0, peg:null, interestPct:33.8, feePct:66.2 },
+  { id:'IBKR', name:'Interactive Brokers',            domain:'interactivebrokers.com', usersLabel:'Customer accounts', users:4.4,  rev:6205,  growth:19.7, ni:984,  niG:30.3, pe:36.7, epsG:14.6, peg:2.51, interestPct:57.4, feePct:42.6 },
+  { id:'NU',   name:'Nu Holdings',                    domain:'nubank.com.br',          usersLabel:'Customers',         users:131.0,rev:15775, growth:37.0, ni:2872, niG:45.6, pe:14.2, epsG:38.1, peg:0.37, interestPct:85.2, feePct:14.8 }
+];
+// Series by fiscal year-end, 2020–2028, per company. 2020–2025 are actuals; 2026–2028
+// are estimates (SoFi from our Summit DCF; peers from market consensus) — drawn dashed.
+// Users in millions; revenue & net income in US$ BILLIONS (net income can be negative).
+// null = no value available (e.g. peers have no published forward user estimate).
+var PEER_YEARS = ['2020','2021','2022','2023','2024','2025','2026','2027','2028'];
+var PEER_FIRST_EST = 6;  // index of first estimate year (2026)
+var PEER_COLORS = { SOFI:'#0E7CC0', HOOD:'#1E9E62', IBKR:'#E8833A', NU:'#8E6FD0' };
+var PEER_SERIES = {
+  users: { label:'Users', log:true, fmt:function(v){ return v.toFixed(1)+'M'; }, data:{
+    SOFI:[1.85,3.46,5.22,7.54,10.13,13.70,17.75,23.07,29.99], HOOD:[12.5,22.7,23.0,23.4,25.2,27.0,null,null,null], IBKR:[1.07,1.68,2.09,2.56,3.34,4.40,null,null,null], NU:[33.3,53.9,74.6,93.9,114.2,131.0,null,null,null] } },
+  rev: { label:'Revenue', log:false, fmt:function(v){ return '$'+v.toFixed(1)+'B'; }, data:{
+    SOFI:[0.57,0.98,1.57,2.12,2.67,3.61,4.67,6.29,8.13], HOOD:[0.96,1.82,1.36,1.87,2.95,4.47,5.0,5.9,6.7], IBKR:[2.22,2.71,3.07,4.34,5.19,6.21,7.0,7.6,8.3], NU:[0.74,1.70,4.79,8.03,11.52,15.77,21.0,23.0,28.0] } },
+  ni: { label:'Net income', log:false, fmt:function(v){ return (v<0?'−$':'$')+Math.abs(v).toFixed(2)+'B'; }, data:{
+    SOFI:[-0.22,-0.48,-0.32,-0.30,0.50,0.48,1.16,1.29,1.87], HOOD:[0.01,-3.69,-1.03,-0.54,1.41,1.88,2.20,2.67,3.17], IBKR:[0.20,0.31,0.38,0.60,0.76,0.98,1.13,1.25,1.47], NU:[-0.17,-0.17,-0.36,1.03,1.97,2.87,4.3,5.6,6.85] } }
+};
+var PEER_SERIES_KEYS = ['users','rev','ni'];
+// Fee income as % of total revenue, by year 2020–2028 (interest% = 100 − fee%).
+// 2026–2028 estimate: SoFi from DCF; peers null (forward mix not separately forecast).
+var PEER_FEE = {
+  SOFI:[68.5,74.4,62.9,40.6,35.8,38.6,37.9,40.1,42.8], HOOD:[81.5,85.8,68.8,50.2,62.4,66.2,null,null,null], IBKR:[60.7,57.7,45.6,35.6,39.3,42.6,null,null,null], NU:[48.1,38.4,25.8,19.8,16.4,14.8,null,null,null]
+};
+var PEERS_INTRO = 'How SoFi stacks up against other consumer-finance and fintech platforms on what matters: scale (users), the revenue model (fee vs interest), growth, and what the market pays for it (P/E). Figures are each company\'s latest full fiscal year (FY2025). User metrics are each company\'s own headline (members, funded customers, accounts, customers) — compare scale, not definitions. Use the trends-over-time chart to see how users, revenue or net income have grown — switch between level, year-over-year and CAGR over any year range; the mix and valuation charts add context.';
+var PEERS_SOURCE = 'Sources: company FY2025 results (SEC 10-K / 20-F / 8-K / 6-K) for users, revenue, mix, growth and net income; analyst consensus EPS for the multiples. Revenue mix is fee/noninterest vs net interest income as a share of total revenue. FORWARD P/E = share price on 25-Jun-2026 ÷ FY2026E consensus EPS (SoFi $17.31/$0.59, Robinhood $93.62/$2.20, IBKR $92.12/$2.51, Nu $12.39/$0.87). PEG = forward P/E ÷ FY2025→FY2026E consensus EPS growth (SoFi +60%, IBKR +15%, Nu +38%); Robinhood is "n/m" because its FY2026E EPS is below FY2025 (2025 was a peak year). Interactive Brokers EPS is the public Class-A company, which owns ~26% of IBG LLC — the whole group\'s economic earnings are larger. Nu: IFRS revenue in USD, +37% YoY (+45% FX-neutral; BRL depreciation weighs on USD). SoFi\'s FY2024 GAAP net income included a one-time ~$265M deferred-tax benefit, so its 2024→2025 net income looks flat even though underlying earnings grew strongly. Trends-over-time series (users, total revenue, net income): 2020–2025 actuals from each company\'s filings; 2026–2028 estimates (dashed) — SoFi from our Summit DCF, peers from market consensus (stockanalysis / Yahoo / MarketBeat). Peer forward revenue is lower-confidence for 2027–2028 (thin coverage; Nu\'s feeds mix BRL/USD), while net income / EPS consensus is firmer. No analyst publishes forward user/customer counts for the peers, so their user lines stop at 2025. Fee % of revenue over time is from the income statements (SoFi forward from the DCF). User definitions differ by company. Illustrative, not investment advice.';
+var PEER_GRAY = '#9DB4C4';
+var _peerMetric = 'users';
+var _peerView = 'level';    // 'level' | 'yoy' | 'cagr'
+var _peerMix = null, _peerScatter = null, _peerTS = null;
+
+function peerLogo(domain){
+  return '<img class="peer-logo" src="https://logo.clearbit.com/'+domain+'" '+
+    'onerror="this.onerror=null;this.src=\'https://www.google.com/s2/favicons?domain='+domain+'&sz=64\'" alt="" loading="lazy">';
+}
+function peersTable(){
+  var rows = PEERS.map(function(p){
+    return '<tr'+(p.sofi?' class="peer-row-sofi"':'')+'>'+
+      '<td class="peer-co">'+peerLogo(p.domain)+'<span class="peer-co-t"><b>'+esc(p.name)+'</b><span class="peer-ulab">'+esc(p.usersLabel)+'</span></span></td>'+
+      '<td>'+p.users.toFixed(1)+'M</td>'+
+      '<td>$'+(p.rev/1000).toFixed(1)+'B</td>'+
+      '<td>'+p.feePct.toFixed(0)+'% / '+p.interestPct.toFixed(0)+'%</td>'+
+      '<td>$'+Math.round(p.ni).toLocaleString()+'M</td>'+
+      '<td>'+p.pe.toFixed(0)+'x</td>'+
+      '<td>'+(p.peg == null ? '<span class="guid-mut">n/m</span>' : p.peg.toFixed(2))+'</td></tr>';
+  }).join('');
+  return '<table class="peer-tbl"><thead><tr><th>Company</th><th>Users</th><th>FY25 revenue</th><th>Fee / Int</th><th>Net income</th><th>Fwd P/E</th><th>PEG</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+function peersBody(c){
+  var h = '';
+  h += '<p class="ov-lede">'+esc(PEERS_INTRO)+'</p>';
+  h += '<div class="peer-tbl-wrap">'+peersTable()+'</div>';
+
+  // Interactive trends-over-time widget: metric + view (level / YoY / CAGR) + year window.
+  h += '<div class="ov-subh">Trends over time</div>';
+  h += '<div class="peer-ctl-row">';
+  h += '<div class="peer-pills">'+PEER_SERIES_KEYS.map(function(k){
+    return '<button type="button" class="peer-pill'+(k===_peerMetric?' active':'')+'" data-peer="'+k+'">'+esc(PEER_SERIES[k].label)+'</button>';
+  }).join('')+'</div>';
+  h += '<div class="peer-views">'+[['level','Level'],['yoy','YoY growth'],['cagr','CAGR']].map(function(v){
+    return '<button type="button" class="peer-view'+(v[0]===_peerView?' active':'')+'" data-peerview="'+v[0]+'">'+esc(v[1])+'</button>';
+  }).join('')+'</div>';
+  h += '</div>';
+  // Year-window slider.
+  h += '<div class="sg-controls"><div class="sg-slider"><div class="sg-track"><div class="sg-fill" id="peerFill"></div></div>'+
+    '<input type="range" id="peerMin" min="0" max="'+(PEER_YEARS.length-1)+'" value="0" step="1" aria-label="Start year">'+
+    '<input type="range" id="peerMax" min="0" max="'+(PEER_YEARS.length-1)+'" value="'+(PEER_YEARS.length-1)+'" step="1" aria-label="End year"></div>'+
+    '<div class="sg-ends"><span id="peerEnd0">'+PEER_YEARS[0]+'</span><span id="peerEnd1">'+PEER_YEARS[PEER_YEARS.length-1]+'</span></div></div>';
+  h += '<div class="ov-chart-card"><div class="ov-chart-t" id="peerTST"></div><div class="ov-chart-wrap ovs-tall"><canvas id="sofiPeerTS"></canvas></div></div>';
+
+  h += '<div class="ov-subh">Revenue model — fee % of revenue over time</div>';
+  h += '<div class="ov-chart-card"><div class="ov-chart-t">Fee income as a share of revenue, 2020–2028E <span>(higher = more fee-based; the rest is net interest · dashed = estimate · SoFi forward from our DCF)</span></div><div class="ov-chart-wrap ovs-tall"><canvas id="sofiPeerMix"></canvas></div></div>';
+  h += '<div class="ov-subh">Valuation vs growth</div>';
+  h += '<div class="ov-chart-card"><div class="ov-chart-t">Forward P/E vs revenue growth <span>(bubble size = users · SoFi in blue · lower-right = cheaper for the growth)</span></div><div class="ov-chart-wrap ovs-tall"><canvas id="sofiPeerScatter"></canvas></div></div>';
+  h += '<div class="ov-foot">'+esc(PEERS_SOURCE)+'</div>';
+  return h;
+}
+
+// ── Interactive trends-over-time engine (metric × view × year window) ──
+function peerWin(){
+  var mn = document.getElementById('peerMin'), mx = document.getElementById('peerMax');
+  if (!mn || !mx) return [0, PEER_YEARS.length - 1];
+  return [Math.min(+mn.value, +mx.value), Math.max(+mn.value, +mx.value)];
+}
+function peerHasNeg(metric, a, b){
+  for (var ci=0; ci<PEERS.length; ci++){ var s = metric.data[PEERS[ci].id]; for (var i=a; i<=b; i++){ if (s[i] != null && s[i] < 0) return true; } }
+  return false;
+}
+function peerLineDatasets(metric, view, a, b){
+  var off = (view === 'yoy') ? a+1 : a; // absolute year index of the first plotted point
+  return PEERS.map(function(p){
+    var s = metric.data[p.id], col = PEER_COLORS[p.id] || PEER_GRAY, arr = [];
+    if (view === 'yoy'){ for (var i=a+1; i<=b; i++){ var pr=s[i-1], cu=s[i]; arr.push((pr!=null && cu!=null && pr>0) ? +(((cu/pr)-1)*100).toFixed(1) : null); } }
+    else { for (var j=a; j<=b; j++) arr.push(s[j]); }
+    return { label:p.name, data:arr, borderColor:col, backgroundColor:col, borderWidth:p.sofi?3.5:2,
+      pointRadius:p.sofi?4:3, pointBackgroundColor:'#fff', pointBorderColor:col, pointBorderWidth:1.5, tension:0, fill:false, spanGaps:false,
+      segment:{ borderDash:function(ctx){ return (off + ctx.p1DataIndex) >= PEER_FIRST_EST ? [6,5] : undefined; } } };
+  });
+}
+function peerCagrData(metric, a, b){
+  var n = b - a;
+  return PEERS.map(function(p){ var s = metric.data[p.id]; if (n <= 0) return null; var v0=s[a], v1=s[b]; if (v0==null || v1==null || v0<=0 || v1<=0) return null; return +((Math.pow(v1/v0, 1/n) - 1) * 100).toFixed(1); });
+}
+// End-of-line value label (Level view only).
+var peerTSEndLabels = {
+  id:'peerTSEndLabels',
+  afterDatasetsDraw:function(chart){
+    if (!chart.$endfmt) return;
+    var ctx = chart.ctx;
+    chart.data.datasets.forEach(function(ds, di){
+      var meta = chart.getDatasetMeta(di); if (meta.hidden) return;
+      var pt = meta.data[meta.data.length - 1]; if (!pt) return;
+      var v = ds.data[ds.data.length - 1]; if (v == null) return;
+      ctx.save(); ctx.textAlign='left'; ctx.font='700 11px Inter, sans-serif'; ctx.fillStyle = ds.borderColor;
+      ctx.fillText(chart.$endfmt(v), pt.x + 7, pt.y); ctx.restore();
+    });
+  }
+};
+// CAGR bar value labels (n/m where a sign change makes CAGR meaningless).
+var peerTSBarLabels = {
+  id:'peerTSBarLabels',
+  afterDatasetsDraw:function(chart){
+    var ctx = chart.ctx, meta = chart.getDatasetMeta(0), area = chart.chartArea;
+    meta.data.forEach(function(bar, i){
+      var v = chart.data.datasets[0].data[i];
+      var txt = (v == null) ? 'n/m' : ((v>=0?'+':'')+v.toFixed(1)+'%');
+      var y = (v == null || isNaN(bar.y)) ? (area ? area.bottom - 6 : 0) : (v>=0 ? bar.y - 7 : bar.y + 15);
+      ctx.save(); ctx.textAlign='center'; ctx.font='700 12px Inter, sans-serif'; ctx.fillStyle = (v == null) ? '#8A93A0' : '#1E2733';
+      ctx.fillText(txt, bar.x, y); ctx.restore();
+    });
+  }
+};
+function buildPeerTS(){
+  var cv = document.getElementById('sofiPeerTS'); if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_peerTS){ _peerTS.destroy(); _peerTS = null; }
+  var metric = PEER_SERIES[_peerMetric], w = peerWin(), a = w[0], b = w[1];
+  var t = document.getElementById('peerTST');
+
+  if (_peerView === 'cagr'){
+    if (t) t.innerHTML = metric.label + ' — CAGR ' + PEER_YEARS[a] + '–' + PEER_YEARS[b] + ' <span>(compound annual growth · SoFi in blue)</span>';
+    _peerTS = new Chart(cv.getContext('2d'), {
+      type:'bar',
+      data:{ labels:PEERS.map(function(p){ return p.name; }), datasets:[{ data:peerCagrData(metric, a, b), backgroundColor:PEERS.map(function(p){ return p.sofi ? BRAND : PEER_GRAY; }), borderRadius:4, maxBarThickness:72 }] },
+      options:{ responsive:true, maintainAspectRatio:false, animation:false, layout:{ padding:{ top:26, bottom:18 } },
+        plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(ctx){ var v=ctx.parsed.y; return v==null?'n/m (sign change)':((v>=0?'+':'')+v.toFixed(1)+'% CAGR'); } } } },
+        scales:{ y:{ display:false, grace:'20%' }, x:{ grid:{ display:false }, ticks:{ color:'#5A6473', font:{ size:12 } } } } },
+      plugins:[peerTSBarLabels]
+    });
+    return;
+  }
+
+  var isYoY = _peerView === 'yoy';
+  var yrs = isYoY ? PEER_YEARS.slice(a+1, b+1) : PEER_YEARS.slice(a, b+1);
+  if (t) t.innerHTML = metric.label + (isYoY ? ' — year-over-year growth ' : ' — by year ') + PEER_YEARS[a] + '–' + PEER_YEARS[b] +
+    ' <span>(' + (isYoY ? '% YoY' : (metric.log ? 'log scale' : 'level')) + ' · 2026–28 dashed = est. · SoFi in blue)</span>';
+  var yScale = isYoY
+    ? { grid:{ color:'rgba(0,0,0,0.04)' }, ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return (v>=0?'+':'')+v+'%'; } } }
+    : (metric.log
+        ? { type:'logarithmic', grid:{ color:'rgba(0,0,0,0.04)' }, ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return ([0.5,1,2,5,10,20,50,100,200].indexOf(v)>=0) ? metric.fmt(v) : ''; } } }
+        : { grid:{ color:'rgba(0,0,0,0.04)' }, beginAtZero:!peerHasNeg(metric, a, b), ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return metric.fmt(v); } } });
+  _peerTS = new Chart(cv.getContext('2d'), {
+    type:'line',
+    data:{ labels:yrs, datasets:peerLineDatasets(metric, _peerView, a, b) },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, layout:{ padding:{ right:isYoY?14:46, top:8 } },
+      plugins:{
+        legend:{ display:true, position:'bottom', labels:{ boxWidth:12, usePointStyle:true, font:{ size:11 }, color:'#5A6473' } },
+        tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label + ': ' + (isYoY ? ((ctx.parsed.y>=0?'+':'')+ctx.parsed.y.toFixed(1)+'%') : metric.fmt(ctx.parsed.y)); } } }
+      },
+      scales:{ y:yScale, x:{ grid:{ display:false }, ticks:{ color:'#5A6473', font:{ size:12 } } } } },
+    plugins: isYoY ? [] : [peerTSEndLabels]
+  });
+  _peerTS.$endfmt = isYoY ? null : metric.fmt;
+}
+
+// Label the last available point of each fee% line.
+var peerMixEndLabels = {
+  id:'peerMixEndLabels',
+  afterDatasetsDraw:function(chart){
+    var ctx = chart.ctx;
+    chart.data.datasets.forEach(function(ds, di){
+      var meta = chart.getDatasetMeta(di); if (meta.hidden) return;
+      var li = -1; for (var i=ds.data.length-1; i>=0; i--){ if (ds.data[i] != null){ li = i; break; } }
+      if (li < 0) return; var pt = meta.data[li]; if (!pt) return;
+      ctx.save(); ctx.textAlign='left'; ctx.font='700 11px Inter, sans-serif'; ctx.fillStyle = ds.borderColor;
+      ctx.fillText(Math.round(ds.data[li])+'%', pt.x + 6, pt.y); ctx.restore();
+    });
+  }
+};
+function buildPeerMix(){
+  var cv = document.getElementById('sofiPeerMix'); if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_peerMix){ _peerMix.destroy(); _peerMix = null; }
+  _peerMix = new Chart(cv.getContext('2d'), {
+    type:'line',
+    data:{ labels:PEER_YEARS, datasets:PEERS.map(function(p){
+      var col = PEER_COLORS[p.id] || PEER_GRAY;
+      return { label:p.name, data:PEER_FEE[p.id], borderColor:col, backgroundColor:col, borderWidth:p.sofi?3.5:2,
+        pointRadius:p.sofi?4:3, pointBackgroundColor:'#fff', pointBorderColor:col, pointBorderWidth:1.5, tension:0, fill:false, spanGaps:false,
+        segment:{ borderDash:function(ctx){ return ctx.p1DataIndex >= PEER_FIRST_EST ? [6,5] : undefined; } } };
+    }) },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, layout:{ padding:{ right:42, top:8 } },
+      plugins:{
+        legend:{ display:true, position:'bottom', labels:{ boxWidth:12, usePointStyle:true, font:{ size:11 }, color:'#5A6473' } },
+        tooltip:{ callbacks:{ label:function(ctx){ if (ctx.parsed.y == null) return null; return ctx.dataset.label+': '+ctx.parsed.y.toFixed(0)+'% fee / '+(100-ctx.parsed.y).toFixed(0)+'% interest'; } } }
+      },
+      scales:{ y:{ min:0, max:100, grid:{ color:'rgba(0,0,0,0.04)' }, ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return v+'%'; } } },
+        x:{ grid:{ display:false }, ticks:{ color:'#5A6473', font:{ size:12 } } } },
+    plugins:[peerMixEndLabels] }
+  });
+}
+
+// Company labels above each bubble.
+var peerScatterLabels = {
+  id:'peerScatterLabels',
+  afterDatasetsDraw:function(chart){
+    var ctx = chart.ctx, meta = chart.getDatasetMeta(0);
+    meta.data.forEach(function(pt, i){
+      ctx.save(); ctx.textAlign='center'; ctx.font='700 11px Inter, sans-serif'; ctx.fillStyle='#1E2733';
+      ctx.fillText(PEERS[i].name, pt.x, pt.y - (pt.options.radius || 8) - 5); ctx.restore();
+    });
+  }
+};
+function buildPeerScatter(){
+  var cv = document.getElementById('sofiPeerScatter'); if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_peerScatter){ _peerScatter.destroy(); _peerScatter = null; }
+  _peerScatter = new Chart(cv.getContext('2d'), {
+    type:'bubble',
+    data:{ datasets:[{
+      data:PEERS.map(function(p){ return { x:p.growth, y:p.pe, r:6 + Math.sqrt(p.users)*2 }; }),
+      backgroundColor:PEERS.map(function(p){ return p.sofi ? 'rgba(14,124,192,0.85)' : 'rgba(157,180,196,0.65)'; }),
+      borderColor:PEERS.map(function(p){ return p.sofi ? BRAND : '#7E8C9A'; }), borderWidth:1.5
+    }] },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, layout:{ padding:{ top:18, right:16, left:6 } },
+      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(ctx){ var p=PEERS[ctx.dataIndex]; return [p.name, 'Rev growth: +'+p.growth.toFixed(0)+'%', 'Fwd P/E: '+p.pe.toFixed(0)+'x', 'PEG: '+(p.peg==null?'n/m':p.peg.toFixed(2)), 'Users: '+p.users.toFixed(1)+'M']; } } } },
+      scales:{
+        x:{ title:{ display:true, text:'FY2025 revenue growth (YoY %)', color:'#5A6473', font:{ size:11 } }, grid:{ color:'rgba(0,0,0,0.04)' }, ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return v+'%'; } } },
+        y:{ title:{ display:true, text:'Forward P/E (x)', color:'#5A6473', font:{ size:11 } }, beginAtZero:true, grace:'14%', grid:{ color:'rgba(0,0,0,0.04)' }, ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return v+'x'; } } }
+      } },
+    plugins:[peerScatterLabels]
+  });
+}
+// Wire the year-window slider (rebuilds the trends chart on every change).
+function setupPeerSlider(){
+  var mn = document.getElementById('peerMin'), mx = document.getElementById('peerMax'), fill = document.getElementById('peerFill');
+  if (!mn || !mx || !fill) return;
+  var maxI = PEER_YEARS.length - 1;
+  var e0 = document.getElementById('peerEnd0'), e1 = document.getElementById('peerEnd1');
+  function apply(){
+    var a = Math.min(+mn.value, +mx.value), b = Math.max(+mn.value, +mx.value);
+    fill.style.left = (a / maxI * 100) + '%';
+    fill.style.width = ((b - a) / maxI * 100) + '%';
+    if (e0) e0.textContent = PEER_YEARS[a];
+    if (e1) e1.textContent = PEER_YEARS[b];
+    buildPeerTS();
+  }
+  mn.oninput = apply; mx.oninput = apply; apply();
+}
+function buildPeersTab(){
+  setupPeerSlider(); // also builds the trends chart
+  buildPeerMix();
+  buildPeerScatter();
+}
+function switchPeerMetric(root, k){
+  if (!PEER_SERIES[k]) return;
+  _peerMetric = k;
+  root.querySelectorAll('.peer-pill').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-peer') === k); });
+  buildPeerTS();
+}
+function switchPeerView(root, v){
+  if (['level','yoy','cagr'].indexOf(v) < 0) return;
+  _peerView = v;
+  root.querySelectorAll('.peer-view').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-peerview') === v); });
+  buildPeerTS();
+}
+
 // One expand/collapse accordion item.
 function accItem(title, open, bodyHtml){
   return '<div class="lpb-acc-item'+(open ? ' open' : '')+'">'+
@@ -1432,6 +1715,7 @@ function html(c){
     '<button type="button" class="ovt-tab" data-ovt="fees">Fee Income</button>'+
     '<button type="button" class="ovt-tab" data-ovt="valuation">Valuation</button>'+
     '<button type="button" class="ovt-tab" data-ovt="sensitivity">Sensitivity</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="peers">Peers</button>'+
   '</div>';
   // Panes
   h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
@@ -1440,6 +1724,7 @@ function html(c){
   h += '<div class="ovt-pane" data-ovt="fees" hidden>'+feeBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="valuation" hidden>'+valuationBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="sensitivity" hidden>'+sensBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="peers" hidden>'+peersBody(c)+'</div>';
   h += '</div>';
   return h;
 }
@@ -2404,6 +2689,7 @@ function showOvt(root, key){
   if (key === 'fees') requestAnimationFrame(buildFeeTab);
   if (key === 'valuation') requestAnimationFrame(buildAveTab);
   if (key === 'sensitivity') requestAnimationFrame(buildSensTab);
+  if (key === 'peers') requestAnimationFrame(buildPeersTab);
 }
 
 function init(c){
@@ -2430,6 +2716,13 @@ function init(c){
   // Sensitivity: driver category buttons.
   root.querySelectorAll('.senscat').forEach(function(btn){
     btn.onclick = function(){ switchSensScen(root, btn.getAttribute('data-senscat')); };
+  });
+  // Peers: trends metric pills + view (level/YoY/CAGR) toggles.
+  root.querySelectorAll('.peer-pill').forEach(function(btn){
+    btn.onclick = function(){ switchPeerMetric(root, btn.getAttribute('data-peer')); };
+  });
+  root.querySelectorAll('.peer-view').forEach(function(btn){
+    btn.onclick = function(){ switchPeerView(root, btn.getAttribute('data-peerview')); };
   });
   // Valuation → Actuals vs. Guidance: mode toggle, metric pills, year pills, table.
   root.querySelectorAll('.guid-mode').forEach(function(btn){

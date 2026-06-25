@@ -153,7 +153,7 @@ async function fetchRow(row) {
       delta: contract?.greeks?.delta ?? null, theta: contract?.greeks?.theta ?? null,
       oi: contract?.open_interest ?? null, name: d.name || row.ticker,
       shares, mktCap, netDebt, fxRate, fxNote,
-      bid: q.bid ?? null, ask: q.ask ?? null,
+      bid: q.bid ?? null, ask: q.ask ?? null, mid: q.midpoint ?? null,
       lastTrade: lt.price ?? null, lastTradeTs: lt.sip_timestamp ?? lt.timestamp ?? null,
       usedStrike: contract?.details?.strike_price ?? null,
       usedExpiry: contract?.details?.expiration_date ?? null,
@@ -208,13 +208,13 @@ function daysTo(dateStr) {
   return Math.max(0, Math.round((t - now) / 86400000));
 }
 
-// Massive option last_trade timestamps come in ns / ms / s — normalize to a
-// "YYYY-MM-DD HH:MM" stamp for the hover tooltip.
+// Massive option last_trade timestamps come in ns / ms / s — normalize and show
+// in the viewer's local time for the hover tooltip.
 function tradeStamp(ts) {
   if (ts == null) return '—';
   const ms = ts > 1e15 ? ts / 1e6 : ts > 1e12 ? ts : ts * 1000;
   const d = new Date(ms);
-  return isNaN(d) ? '—' : d.toISOString().slice(0, 16).replace('T', ' ');
+  return isNaN(d) ? '—' : d.toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 // EBITDA / Net Income for t0..t+2 with YoY growth, from the Summit model.
@@ -302,7 +302,7 @@ function render() {
     const cur = SUMMIT[r.ticker]?.currency || 'USD';
     const peg = (x) => x == null ? '' : `PEG ${x.toFixed(2)}`;
     const q2 = (x) => x != null ? `$${x.toFixed(2)}` : '—';
-    const qtip = `<b>Bid</b> ${q2(L.bid)} · <b>Ask</b> ${q2(L.ask)} · <b>Last</b> ${q2(L.lastTrade)} · <b>Traded</b> ${tradeStamp(L.lastTradeTs)} UTC`;
+    const qtip = `<b>Bid</b> ${q2(L.bid)}   <b>Ask</b> ${q2(L.ask)}   <b>Mid</b> ${q2(L.mid)}<br><b>Last</b> ${q2(L.lastTrade)} · ${tradeStamp(L.lastTradeTs)}`;
     const fund = showFund
       ? fundSection(fundSeries(r.ticker, 'ebitda'), cagr(r.ticker, 'ebitda'), m.pegEv)
         + fundSection(fundSeries(r.ticker, 'earnings'), cagr(r.ticker, 'earnings'), m.pegPe)
@@ -319,7 +319,7 @@ function render() {
       <td class="${richer(m.peS, m.peP)}"><div class="fv">${mult(m.peS)}</div><div class="fg">${peg(m.pegPeS)}</div></td>
       <td class="${richer(m.evS, m.evP)}"><div class="fv">${mult(m.evS)}</div><div class="fg">${peg(m.pegEvS)}</div></td>
       <td class="sep edit"><input type="number" step="0.1" value="${(r.weight * 100).toFixed(2)}" data-weight="${r.id}" title="portfolio weight %"></td>
-      <td class="edit" data-tip="${qtip}"><input type="number" step="0.01" value="${premVal}" data-prem="${r.id}" class="${ovr ? 'ovr' : ''}" title="${ovr ? 'manual override' : 'live midpoint — type to override'}"></td>
+      <td class="edit"><input type="number" step="0.01" value="${premVal}" data-prem="${r.id}" class="${ovr ? 'ovr' : ''}" title="${ovr ? 'manual override' : 'live midpoint — type to override'}"><span class="ttip" data-tip="${qtip}">i</span></td>
       <td class="big up">${pct(m.yld, 2)}</td>
       <td class="big up">${pct(m.contrib, 2)}</td>
       <td>${pct(share, 1)}</td>
@@ -334,7 +334,7 @@ function render() {
   $('foot').innerHTML = `
     <b>EBITDA / Net Income</b> = Summit model ${fyLabel(FY[0])}–${fyLabel(FY[2])} (t0 = last reported FY), native-currency millions with YoY growth below · <b>CAGR</b> = ${FY[0]}→${FY[2]} · <b>PEG</b> = current multiple ÷ basis growth% ·
     <b>Multiple basis (${mulBasis})</b> drives every P/E &amp; EV/EBITDA${mulBasis === 'NTM' ? ' — NTM is a calendar-weighted blend of '+fyLabel(FY[1])+'/'+fyLabel(FY[2])+' (no quarterly data)' : ''} · <b>Current</b> uses live price, <b>Target</b> uses the strike; the PEG under each multiple = that multiple ÷ basis growth · <b>Impl. Upside</b> = strike ÷ price − 1 ·
-    hover the <b>Premium</b> cell for live bid / ask / last trade &amp; time ·
+    hover the <b>i</b> by Premium for live bid / ask / mid and last trade (local time) ·
     <b>Yield</b> = premium ÷ price · <b>Port. yield</b> = yield × weight · <b>Contrib.</b> = Port. yield ÷ Σ Port. yield (share of total) ·
     <span class="cheap">green</span> = target multiple richer than current (called away at an expensive valuation).<br>
     Premium/IV/greeks are the live Massive option chain for each strike &amp; target expiry. Edit strike or weight inline; type a premium to override the live midpoint. All figures are in % — no dollar amounts, no contracts, no portfolio value.

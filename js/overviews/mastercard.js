@@ -19,42 +19,21 @@ var fBn = function(v){ return (Math.round(v*10)/10)+'B'; };             // billi
 //   · by product    → Credit vs Debit
 // One chart renders any metric in either cut (metric selector + dimension toggle).
 //
-// ⚠️ The numbers below are ILLUSTRATIVE placeholders so the toggle is visible NOW.
-//    They are generated from round totals × fixed shares — NOT real Mastercard data.
-//    To wire real figures: replace VOL_DATA[metric] with explicit per-series arrays
-//    from Bloomberg, e.g.
-//      VOL_DATA.pv = { geo:{ 'US':[...], 'Europe':[...], ... }, type:{ 'Credit':[...], 'Debit':[...] } };
-//    Keep each array aligned to VOL_YEARS and flag projection years in VOL_EST.
-var VOL_YEARS = [2021, 2022, 2023, 2024, 2025];
-var VOL_EST   = [false, false, false, false, false]; // set true on years that are estimates
+// Planned metrics for the Network Volumes explorer. Mastercard DOES disclose these
+// by region and by Credit vs Debit in its filings — they're just not in the Summit
+// DCF yet. They'll be sourced from our data pipeline (an API, or a future DCF
+// snapshot) in a follow-up branch. Until then the explorer shows an honest
+// "coming soon" placeholder (no figures). Labels/units kept so the UI can preview.
 var VOL_METRICS = {
   pv:    { label:'Purchase Volume',       unit:'$T', fmt:fT  },
   gdv:   { label:'Gross Dollar Volume',   unit:'$T', fmt:fT  },
   txns:  { label:'Purchase Transactions', unit:'B',  fmt:fBn },
   cards: { label:'Cards',                 unit:'B',  fmt:fBn },
 };
-function splitArr(tot, frac){ return tot.map(function(x){ return Math.round(x*frac*100)/100; }); }
-var _GEO_SHARE  = { 'US':0.35, 'Europe':0.22, 'Canada':0.05, 'LATAM':0.10, 'APAC-EMEA':0.28 };
-var _TYPE_SHARE = { 'Credit':0.58, 'Debit':0.42 };
-function _mkVol(tot){
-  var geo={}, type={};
-  Object.keys(_GEO_SHARE).forEach(function(k){ geo[k]=splitArr(tot,_GEO_SHARE[k]); });
-  Object.keys(_TYPE_SHARE).forEach(function(k){ type[k]=splitArr(tot,_TYPE_SHARE[k]); });
-  return { geo:geo, type:type };
-}
-var _VOL_TOTALS = { // PLACEHOLDER totals per year (geo split and type split each sum to these)
-  pv:    [5.0, 6.0, 7.0, 8.0, 9.0],       // $T
-  gdv:   [7.0, 8.2, 9.4, 10.6, 11.8],     // $T
-  txns:  [100, 115, 132, 150, 170],       // B transactions
-  cards: [2.9, 3.0, 3.1, 3.3, 3.5],       // B cards
-};
-var VOL_DATA = {};
-Object.keys(_VOL_TOTALS).forEach(function(k){ VOL_DATA[k]=_mkVol(_VOL_TOTALS[k]); });
 
 var _volMetric='pv', _volDim='geo', _volChart=null;
 
 var PN_INTRO = 'The payment network is the core switching business — ~58% of net revenue. It earns on the dollar <b>volume</b> and the <b>number of transactions</b> that flow over Mastercard rails: <b>domestic assessments</b> (basis points of volume), <b>cross-border</b> fees (the highest-yield line) and <b>transaction processing</b> (per transaction). The volume metrics below are the drivers of this pillar.';
-var VOL_NOTE = '<b>How to read this.</b> One chart, two cuts: switch the <b>metric</b> (Purchase Volume, GDV, Purchase Transactions, Cards) and the <b>breakdown</b> (by geography, or Credit vs Debit) — both cuts sum to the same yearly total. <b>GDV = Purchase Volume + Cash Volume</b>; cash is largely excluded as a driver (minimal monetization, same criterion as Visa). <b>Numbers shown are illustrative placeholders</b> pending the team\'s Bloomberg series.';
 var XBORDER_NOTE = '<b>Cross-border is a different cut from the volumes above.</b> "International" here means volume on cards <i>issued outside the U.S.</i>; <b>cross-border</b> means the <i>card country ≠ merchant country</i> (travel + cross-border e-commerce). Cross-border earns a premium rate + FX — the <b>highest-yield</b> line and a key growth driver (+13% lc in Q1 26) — and is tracked separately from the issuance-geography split.';
 
 // ─── Financials (from the Summit DCF model) ──────────────────────────────────
@@ -62,19 +41,20 @@ var XBORDER_NOTE = '<b>Cross-border is a different cut from the volumes above.</
 // SOURCE: Summit DCF for MA (REV / OP_INCOME / EBITDA / FCF), pulled from the
 // model — NOT hand-invented. These are seeded here for now; the next step is to
 // feed them from a remote source that refreshes on its own (see the team note).
-// Operating income isn't carried as an annual projection in the model, so its
-// forecast years are null (no bar) rather than fabricated.
+// Forecast years (2026–2029) are the model's projection_history; historicals are
+// actuals. Op-income forecast is now carried in the model (snapshot 2026-06-24);
+// Rev/EBITDA/FCF forecasts were unchanged from the prior snapshot.
 var FIN_YEARS = [2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029];
 var FIN_EST   = [false, false, false, false, false, true, true, true, true];
 var FIN_FMT   = function(v){ return v==null ? '—' : '$'+(v/1000).toFixed(1)+'B'; };
 var FIN_SERIES = {
   finRev:    { label:'Revenue',          type:'bar',  color:'#CF0A2C', data:[18884, 22237, 25098, 28167, 32791, 38162, 41902, 46640, 52166] },
-  finOpInc:  { label:'Operating Income', type:'bar',  color:'#7A8699', data:[10079, 12127, 13824, 15278, 18554, null, null, null, null] },
+  finOpInc:  { label:'Operating Income', type:'bar',  color:'#7A8699', data:[10079, 12127, 13824, 15278, 18554, 22085, 23928, 26614, 29859] },
   finEbitda: { label:'EBITDA',           type:'bar',  color:'#FF9F00', data:[11461, 12816, 14829, 16493, 20100, 23505, 26302, 29249, 32770] },
   finFcf:    { label:'Free Cash Flow',   type:'line', color:'#16A34A', data:[9056, 10753, 11705, 14306, 17159, 18024, 19455, 21654, 24318] },
 };
 var FIN_INTRO = 'Mastercard\'s financials, pulled from the <b>Summit DCF model</b> — <b>actuals through FY2025</b> and the model\'s <b>projection to FY2029</b> (faded / dashed). Drag the timeline handles to mold the window; each chart\'s CAGR updates to your selection.';
-var FIN_NOTE  = 'Annual, USD billions. <b>2021–2025 actuals · 2026–2029 = DCF projection.</b> Source: Summit DCF model for Mastercard. Operating-income forecast isn\'t carried annually in the model, so its projection years are blank (not estimated). This section reads from the model, not hand-typed figures — the next step is wiring it to refresh automatically.';
+var FIN_NOTE  = 'Annual, USD billions. <b>2021–2025 actuals · 2026–2029 = DCF projection</b> (faded/dashed). Source: Summit DCF model for Mastercard (snapshot 2026-06-24). All four series — Revenue, Operating Income, EBITDA and Free Cash Flow — now carry the model\'s full projection. This section reads from the model, not hand-typed figures — the next step is wiring it to refresh automatically.';
 var _finStart=2021, _finEnd=2029, _finCharts={};
 function _hexRgba(hex, a){ var h=hex.replace('#',''); return 'rgba('+parseInt(h.substr(0,2),16)+','+parseInt(h.substr(2,2),16)+','+parseInt(h.substr(4,2),16)+','+a+')'; }
 
@@ -82,7 +62,7 @@ function _hexRgba(hex, a){ var h=hex.replace('#',''); return 'rgba('+parseInt(h.
 var SNAPSHOT = [
   ['Listing', 'NYSE: MA'],
   ['Founded', '1966 — Interbank'],
-  ['IPO', 'May 2006 · $39.00'],
+  ['IPO', 'May 2006 · $39.00 ($3.90 split-adj.)'],
   ['HQ', 'Purchase, NY'],
   ['CEO', 'Michael Miebach'],
   ['Employees', '~35,000'],
@@ -215,13 +195,6 @@ var VAS_DEEP = [
 
 // ─── Who uses Mastercard — the demand mix (relative tilts) ────────────────────
 var USERMIX_INTRO = 'All the global networks serve broad consumer bases, but the <i>mix</i> tilts differently — and the tilt matters for yield and cyclicality. Mastercard\'s relative leanings (these are tilts at the margin, not absolutes):';
-var USERMIX = [
-  '<b>More international, less U.S.-debit-heavy.</b> The larger peer dominates U.S. debit, where routing rules (Durbin) shape economics. Mastercard\'s mix leans relatively more <b>international</b> and more toward <b>credit and cross-border</b> — so its revenue is more exposed to high-yield cross-border and to international cash-to-digital conversion.',
-  '<b>Higher cross-border intensity.</b> Cross-border (travel + cross-border e-commerce) is a larger growth driver and grew <b>faster than the leader\'s in 2025</b> (~15% vs ~12%). Cross-border earns a premium rate + FX, so a unit of Mastercard volume carries relatively more high-yield spend → <b>structurally higher blended yield</b>, but more sensitivity to the travel/discretionary cycle (visible as "cross-border softness" in soft months — flagged in April 2026).',
-  '<b>A premium / travel-skewed product ladder.</b> Standard → <b>World</b> → <b>World Elite</b> → the new <b>World Legend</b> (ultra-high-net-worth). Affluent cardholders spend more, travel more and generate disproportionate cross-border and discretionary volume — the segment Mastercard markets hardest toward.',
-  '<b>A bigger services mix.</b> ~42% VAS vs ~27% at the leader, so a larger share of revenue is <b>recurring services</b> rather than pure consumer-spend fees — a somewhat more diversified, less spend-cyclical profile.',
-  '<b>Net read:</b> Mastercard\'s revenue is relatively more geared to <b>discretionary, cross-border and affluent</b> spend (higher yield, more travel-cyclical) and to <b>recurring services</b>, versus a peer mix that is heavier in domestic U.S. debit. The trade-off: a richer yield profile, but more exposure to the travel/discretionary cycle on the network side.',
-];
 
 // ─── History — origin, the #2 dynamic, IPO, and how it gained share ──────────
 var TIMELINE = [
@@ -233,7 +206,7 @@ var TIMELINE = [
     detail:'"Master Charge" becomes <b>MasterCard</b>, with the interlocking-circles mark. Through the 1980s–90s it operates as a bank-owned association, building global acceptance and the Maestro debit brand.' },
   { y:'2002', head:'<b>Merges with Europay International</b> — one global franchise.',
     detail:'MasterCard International merges with <b>Europay International</b> (which included Eurocard) to form <b>MasterCard Incorporated</b>, consolidating the franchise globally ahead of going public.' },
-  { y:'May 2006', head:'<b>IPO at $39</b> — two years before Visa, and a cleaner structure.',
+  { y:'May 2006', head:'<b>IPO at $39.00</b> (≈ <b>$3.90</b> split-adjusted) — two years before Visa, and a cleaner structure.',
     detail:'Mastercard goes public on May 25, 2006 (95.5M shares at $39 — the largest U.S. IPO since 2004), <b>two years before Visa</b>. Going public earlier gave it a head start as an independent, growth-minded company. The IPO reduced the member banks\' control (an independent board) — partly to address antitrust exposure — and created the independent <b>Mastercard Foundation</b>, endowed with ~10% of the company. Unlike Visa\'s later IPO, there is <b>no multi-class / litigation-escrow share structure</b> (see Litigation).' },
   { y:'2010–20', head:'<b>The Ajay Banga decade</b> — the pivot to services.',
     detail:'Under CEO <b>Ajay Banga</b>, revenue roughly <b>triples</b> and market value rises ~10×. The defining choice: build a large <b>value-added services</b> business (cybersecurity, identity, data &amp; analytics) on top of the rails, diversifying beyond pure transaction fees. This services tilt, plus a strong international and cross-border mix, is the main reason a structural #2 kept gaining share and economics.' },
@@ -329,19 +302,22 @@ function pillarCards(segKey){
 }
 // The metric × dimension volume explorer (one chart, two controls).
 function volSection(){
-  return '<section class="ov-sec"><div class="ov-sec-h">Network Volumes <span class="ov-ph-badge">datos ilustrativos · pendiente Bloomberg</span></div>'+
-    '<div class="ov-volctrl">'+
-      '<div class="ov-volpills" id="ovVolMetric">'+Object.keys(VOL_METRICS).map(function(k){
-        return '<button class="ov-volpill'+(k===_volMetric?' on':'')+'" data-metric="'+k+'">'+esc(VOL_METRICS[k].label)+'</button>'; }).join('')+'</div>'+
-      '<div class="ov-volpills ov-volpills-dim" id="ovVolDim">'+
-        '<button class="ov-volpill'+(_volDim==='geo'?' on':'')+'" data-dim="geo">Por geografía</button>'+
-        '<button class="ov-volpill'+(_volDim==='type'?' on':'')+'" data-dim="type">Credit vs Debit</button>'+
+  return '<section class="ov-sec"><div class="ov-sec-h">Network Volumes <span class="ov-ph-badge">data integration — coming soon</span></div>'+
+    '<p class="ov-lede" style="margin:0 0 12px">The payment network earns on the <b>dollar volume</b> and the <b>number of transactions</b> on Mastercard rails. The explorer will switch <b>metric</b> (Purchase Volume, Gross Dollar Volume, Purchase Transactions, Cards) and <b>breakdown</b> (by geography, or Credit vs Debit).</p>'+
+    // Preview of the planned controls — inert until the data is wired.
+    '<div class="ov-volctrl" style="opacity:.45;pointer-events:none" aria-hidden="true">'+
+      '<div class="ov-volpills">'+Object.keys(VOL_METRICS).map(function(k,i){
+        return '<span class="ov-volpill'+(i===0?' on':'')+'">'+esc(VOL_METRICS[k].label)+'</span>'; }).join('')+'</div>'+
+      '<div class="ov-volpills ov-volpills-dim">'+
+        '<span class="ov-volpill on">By geography</span><span class="ov-volpill">Credit vs Debit</span>'+
       '</div>'+
     '</div>'+
-    '<div class="ov-chart-card"><div class="ov-chart-t" id="ovVolTitle"></div>'+
-      '<div class="ov-chart-wrap" style="height:300px"><canvas id="ovVolChart"></canvas></div>'+
-      '<div class="ov-statline" id="ovVolStat"></div></div>'+
-    '<div class="ov-diagram-cap" style="margin-top:10px">'+VOL_NOTE+'</div>'+
+    // Honest empty state — NO fabricated figures shown.
+    '<div class="ov-ph" style="min-height:200px">'+
+      '<div class="ov-ph-ic">📊</div>'+
+      '<div class="ov-ph-t">Volumes wire up in a follow-up</div>'+
+      '<div class="ov-ph-s" style="max-width:480px">Mastercard <b>discloses</b> Gross Dollar Volume and Purchase Volume by region and by Credit vs Debit in its filings — these series just aren\'t in the Summit DCF yet. They\'ll be sourced from our data pipeline (an API, or a future DCF snapshot) in a follow-up branch. No figures are shown until then.</div>'+
+    '</div>'+
   '</section>';
 }
 function finCard(id, title, sub){
@@ -424,12 +400,31 @@ function html(c){
     '<div class="ov-callout" style="margin-top:14px">'+bullets(REBATES)+'</div>'
   );
   h += sec('Who Uses Mastercard — The Demand Mix',
-    '<p class="ov-lede" style="margin-bottom:12px">'+USERMIX_INTRO+'</p>'+ bullets(USERMIX));
+    '<p class="ov-lede" style="margin-bottom:14px">'+USERMIX_INTRO+'</p>'+
+    '<div class="ov-subh">A bigger recurring-services base than the leader</div>'+
+    '<div class="ov-mbars" style="margin-bottom:16px">'+
+      '<div class="ov-mbar"><div class="ov-mbar-l">Services mix — Mastercard</div><div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:42%;background:#FF9F00;">recurring services</div></div><div class="ov-mbar-v">~42%</div></div>'+
+      '<div class="ov-mbar"><div class="ov-mbar-l">Services mix — the leader</div><div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:27%;background:#C9CFD8;">recurring services</div></div><div class="ov-mbar-v">~27%</div></div>'+
+    '</div>'+
+    '<div class="ov-subh">A premium / travel-skewed product ladder</div>'+
+    '<div class="ov-chain" style="margin-bottom:8px">'+
+      '<div class="ov-chain-step"><div class="ov-chain-n">1</div><div class="ov-chain-t">Standard</div><div class="ov-chain-d">mass market</div></div>'+
+      '<div class="ov-chain-step"><div class="ov-chain-n">2</div><div class="ov-chain-t">World</div><div class="ov-chain-d">affluent</div></div>'+
+      '<div class="ov-chain-step"><div class="ov-chain-n">3</div><div class="ov-chain-t">World Elite</div><div class="ov-chain-d">high-spend · travel</div></div>'+
+      '<div class="ov-chain-step is-payoff"><div class="ov-chain-n">4</div><div class="ov-chain-t">World Legend</div><div class="ov-chain-d">ultra-high-net-worth</div></div>'+
+    '</div>'+
+    '<div class="ov-diagram-cap">Up the ladder, cardholders spend more, travel more and skew to <b>cross-border</b>. Mastercard\'s mix also leans <b>more international</b> and less U.S.-debit-heavy, with <b>higher cross-border intensity</b> — cross-border grew ~<b>15%</b> in 2025 vs ~<b>12%</b> at the leader. <b>Net read:</b> a richer, higher-yield mix tilted to <b>discretionary, cross-border and affluent</b> spend (more travel-cyclical) plus <b>recurring services</b> — versus a peer heavier in U.S. debit.</div>');
   h += '</div>'; // end network pane
 
   // ══ PANE 3 — Value-Added Services (the growth engine, ~42%) ══
   h += '<div class="ov-pane" data-mapane="vas">';
-  h += sec('Value-Added Services — The Growth Engine', '<div class="ov-callout">'+bullets(VAS_DEEP)+'</div>');
+  h += sec('Value-Added Services — The Growth Engine',
+    '<div class="ov-mbars" style="margin-bottom:14px">'+
+      '<div class="ov-mbar"><div class="ov-mbar-l">Payment Network</div><div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:58%;background:#7A8699;">the core rails</div></div><div class="ov-mbar-v">~58%</div></div>'+
+      '<div class="ov-mbar"><div class="ov-mbar-l">Value-Added Services</div><div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:42%;background:#FF9F00;">+22% YoY ▲</div></div><div class="ov-mbar-v">~42%</div></div>'+
+    '</div>'+
+    '<div class="ov-diagram-cap" style="margin:-4px 0 14px">VAS is ~42% of net revenue and compounding <b>faster than the network</b> (+22% YoY) — so each year it takes a bigger slice of the pie and pulls up the whole company\'s growth rate. That widening orange slice is the "growth engine."</div>'+
+    '<div class="ov-callout">'+bullets(VAS_DEEP)+'</div>');
   h += sec('The Service Families',
     '<div class="ov-diagram-cap" style="margin:0 0 12px">The five VAS families — most sold <b>across networks</b>, not just Mastercard\'s. <b>Tap any</b> for detail.</div>'+
     pillarCards('vas')
@@ -457,7 +452,7 @@ function html(c){
   '</div>';
   h += '<div class="ov-charts ov-charts-2">'+
     finCard('finRev','Revenue','FY21 – FY29E')+
-    finCard('finOpInc','Operating Income','FY21 – FY25 · actuals')+
+    finCard('finOpInc','Operating Income','FY21 – FY29E')+
     finCard('finEbitda','EBITDA','FY21 – FY29E')+
     finCard('finFcf','Free Cash Flow','FY21 – FY29E')+
   '</div>';
@@ -472,38 +467,11 @@ function html(c){
   return h;
 }
 
-// ─── Volume chart (metric × dimension) ───────────────────────────────────────
-function renderVol(){
-  if (typeof Chart === 'undefined') return;
-  var cv = document.getElementById('ovVolChart'); if(!cv) return;
-  if(_volChart){ try{ _volChart.destroy(); }catch(e){} _volChart=null; }
-  var m = VOL_METRICS[_volMetric];
-  var series = VOL_DATA[_volMetric][_volDim];
-  var colors = _volDim==='geo' ? GEO_COLORS : TYPE_COLORS;
-  var labels = VOL_YEARS.map(function(y,i){ return String(y)+(VOL_EST[i]?'E':''); });
-  var datasets = Object.keys(series).map(function(name){
-    return { label:name, data:series[name], backgroundColor:colors[name]||'#94A3B8', borderRadius:4, stack:'s', maxBarThickness:54 };
-  });
-  var titleEl = document.getElementById('ovVolTitle');
-  if(titleEl) titleEl.innerHTML = esc(m.label)+' <span>'+(_volDim==='geo'?'por región':'crédito vs débito')+' · '+m.unit+' · ilustrativo</span>';
-  _volChart = new Chart(cv.getContext('2d'), { type:'bar',
-    data:{ labels:labels, datasets:datasets },
-    options:{ responsive:true, maintainAspectRatio:false,
-      interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{size:10}, color:C_AXIS } },
-        tooltip:{ callbacks:{
-          label:function(ctx){ return ' '+ctx.dataset.label+': '+m.fmt(ctx.parsed.y); },
-          footer:function(items){ var t=0; items.forEach(function(i){ t+=i.parsed.y; }); return 'Total: '+m.fmt(t); } } } },
-      scales:{ x:{ stacked:true, grid:{display:false}, ticks:{ color:C_AXIS, font:{size:10} } },
-               y:{ stacked:true, grid:{ color:C_GRID }, ticks:{ color:C_AXIS, font:{size:10}, callback:m.fmt } } } }
-  });
-  var st = document.getElementById('ovVolStat');
-  if(st){
-    var n=VOL_YEARS.length, tot=function(i){ var s=0; Object.keys(series).forEach(function(k){ s+=series[k][i]; }); return s; };
-    var a=tot(0), z=tot(n-1), cagr=(Math.pow(z/a, 1/(VOL_YEARS[n-1]-VOL_YEARS[0]))-1)*100;
-    st.innerHTML='<b>'+labels[0]+'</b> '+m.fmt(a)+' → <b>'+labels[n-1]+'</b> '+m.fmt(z)+' · CAGR <span class="'+(cagr>=0?'pos':'neg')+'">'+(cagr>=0?'+':'')+cagr.toFixed(1)+'%</span> <span class="ov-stat-mut">(ilustrativo)</span>';
-  }
-}
+// ─── Volume chart — disabled until the data is wired (no fabricated data) ────
+// The explorer renders an honest placeholder (see volSection); this is a no-op
+// so any leftover control hooks stay safe. Restore a Chart build here once the
+// real per-region / Credit-vs-Debit series are sourced (API or DCF snapshot).
+function renderVol(){ /* Network Volumes pending data-pipeline integration */ }
 
 // ─── Financials charts (DCF actuals + projection, timeline-moldable) ─────────
 function finSlice(s){

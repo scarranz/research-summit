@@ -1036,56 +1036,85 @@ function guidanceBody(c){
   return h;
 }
 
-// ─── Sensitivity: LPB origination × take rate ────────────────────────────────
-// Interactive single-point sensitivity. Two inputs are "live": LPB origination
-// volume and the take rate (origination fee). Everything else in the model is
-// held at its FY2026E base. The incremental LPB revenue flows 100% to pre-tax
-// (LPB is capital-light — no funding or credit cost), is taxed at the model
-// rate, and drops to net income / EPS / P/E.
-var SENS = {
-  origB:   16.5,   // base LPB origination, $B (FY2026E, Summit model)
-  takePct: 5.0,    // base take rate, % (origination fee on volume)
-  totalRevB: 4.66, // base FY2026E total net revenue, $B
-  niM:     828.7,  // base FY2026E net income, $M (model earnings)
-  shares:  1378.0, // diluted shares, M (Q1 2026 actual)
-  price:   17.57,  // share price held fixed for the P/E line ($, intraday 24-Jun-2026)
-  taxRate: 0.25    // tax applied to incremental LPB pre-tax income
+// ─── Sensitivity — multi-driver framework ────────────────────────────────────
+// Pick a driver (LPB, Interest Income, …); its variables become sliders. Every
+// other line in the model is held at its FY2026E base, so the change flows
+// straight through to revenue → net income → EPS → the multiple. Each scenario
+// defines its variables, a revenue function, and a flow-through-to-pre-tax rate.
+var SENS_BASE = {
+  totalRevB: 4.66,  // FY2026E total net revenue, $B
+  niM:       828.7, // FY2026E net income, $M (model earnings)
+  shares:    1378.0,// diluted shares, M (Q1 2026 actual)
+  price:     17.57, // share price for the P/E line ($) — replaced by the live quote when available
+  taxRate:   0.25   // tax applied to incremental pre-tax income
 };
-SENS.baseLpbM   = SENS.origB * 1000 * SENS.takePct / 100;     // base LPB revenue, $M
-SENS.nonLpbM    = SENS.totalRevB * 1000 - SENS.baseLpbM;       // all other revenue, held fixed
-SENS.baseEps    = SENS.niM / SENS.shares;                      // base EPS
-SENS.basePe     = SENS.price / SENS.baseEps;                   // base fwd P/E
+SENS_BASE.baseEps = SENS_BASE.niM / SENS_BASE.shares;     // base EPS
+SENS_BASE.basePe  = SENS_BASE.price / SENS_BASE.baseEps;  // base fwd P/E (reference multiple, fixed at $17.57)
 
-var SENS_INTRO = 'A single-point sensitivity on the two levers behind SoFi\'s Loan Platform Business: the annual origination volume and the take rate (the fee SoFi earns per dollar originated). LPB revenue = origination × take rate. Everything else in the model is held at its FY2026E base, so the change you make flows straight through to revenue, net income, EPS and the multiple. Drag the two sliders.';
-var SENS_NOTE = 'Base case (FY2026E, Summit model): LPB origination $16.5B × 5.0% take = $825M LPB revenue, inside $4.66B total net revenue; net income $829M; 1,378M shares → EPS $0.60; at $17.57 that is ~29x forward earnings. Assumptions when you move the sliders: all non-LPB lines are held constant, incremental LPB revenue flows 100% to pre-tax (capital-light) and is taxed at 25%; share price and share count are held fixed. This is a back-of-envelope sensitivity, not a re-solved model.';
+// Each scenario: vars (sliders), rev(v) → driver revenue $M, flow = fraction of
+// incremental driver revenue that reaches pre-tax income, eq(v,rev) → equation line.
+var SENS_SCEN = {
+  lpb: {
+    label:'LPB', title:'LPB Sensitivity — origination × take rate', driver:'LPB revenue', flow:1.0,
+    intro:'The two levers behind SoFi\'s Loan Platform Business: annual origination volume and the take rate (the fee SoFi earns per dollar originated). LPB revenue = origination × take rate. LPB is capital-light, so incremental revenue flows straight to pre-tax income.',
+    vars:[
+      { id:'origB',   label:'LPB origination (annual)',      min:2,   max:50,  step:0.5, base:16.5, unit:'$B', dec:1 },
+      { id:'takePct', label:'Take rate (origination fee)',    min:1.0, max:9.0, step:0.1, base:5.0,  unit:'%',  dec:1 }
+    ],
+    rev:function(v){ return v.origB * 1000 * v.takePct / 100; },
+    eq:function(v, rev){ return '$'+v.origB.toFixed(1)+'B origination &nbsp;×&nbsp; '+v.takePct.toFixed(1)+'% take rate &nbsp;=&nbsp; <b>$'+Math.round(rev).toLocaleString()+'M</b> LPB revenue'; },
+    note:'Base case (FY2026E, Summit model): $16.5B origination × 5.0% take = ~$825M LPB revenue, inside $4.66B total net revenue. LPB is capital-light, so incremental LPB revenue flows 100% to pre-tax and is taxed at 25%.'
+  },
+  ii: {
+    label:'Interest Income', title:'Net interest income — NIM × earning assets', driver:'Net interest income', flow:1.0,
+    intro:'The two levers behind net interest income: the average rate SoFi nets on its balance sheet (net interest margin) and the size of its interest-earning assets (the loan book plus cash and investments). Net interest income = earning assets × NIM. It is already net of funding cost, so it flows to pre-tax income.',
+    vars:[
+      { id:'nimPct', label:'Net interest margin (avg rate kept on earning assets)', min:3.0, max:9.0, step:0.05, base:5.88, unit:'%',  dec:2 },
+      { id:'ieaB',   label:'Interest-earning assets (loan book + cash & investments)', min:25, max:90, step:0.5,  base:49.3, unit:'$B', dec:1 }
+    ],
+    rev:function(v){ return v.ieaB * 1000 * v.nimPct / 100; },
+    eq:function(v, rev){ return '$'+v.ieaB.toFixed(1)+'B earning assets &nbsp;×&nbsp; '+v.nimPct.toFixed(2)+'% NIM &nbsp;=&nbsp; <b>$'+Math.round(rev).toLocaleString()+'M</b> net interest income'; },
+    note:'Base case (FY2026E, Summit DCF): $49.3B interest-earning assets × 5.88% net interest margin ≈ $2.9B net interest income, inside $4.66B total net revenue. The NIM already nets out funding cost, so incremental net interest income flows to pre-tax and is taxed at 25% (credit provisions on a bigger book are not separately modeled).'
+  }
+};
+var SENS_ORDER = ['lpb','ii'];
+var _sensScen = 'lpb';
+var SENS_FOOT = 'Single-driver sensitivity: the selected variables move while every other line in the model is held at its FY2026E base (total net revenue $4.66B, net income $829M, 1,378M diluted shares, 25% tax). Incremental driver revenue flows to pre-tax income at the stated rate and is taxed; share count is held fixed and forward P/E uses the live price when available, else $17.57 (last close). The "implied price" holds the base ~29x multiple constant. This is a back-of-envelope sensitivity, not a re-solved model. Base values from the Summit DCF (snapshot 2026-05-13).';
 
-function sensRow(id, label, min, max, step, val, suffix){
+function sensVarsBase(scen){ var v = {}; scen.vars.forEach(function(x){ v[x.id] = x.base; }); return v; }
+
+function sensRowG(x){
   return '<div class="sens-ctrl">'+
-    '<div class="sens-ctrl-l">'+esc(label)+'</div>'+
-    '<input type="range" id="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'">'+
-    '<div class="sens-ctrl-v" id="'+id+'V"></div>'+
-    '<div class="sens-ctrl-u">'+esc(suffix)+'</div>'+
+    '<div class="sens-ctrl-l">'+esc(x.label)+'</div>'+
+    '<input type="range" id="sensV_'+x.id+'" min="'+x.min+'" max="'+x.max+'" step="'+x.step+'" value="'+x.base+'">'+
+    '<div class="sens-ctrl-v" id="sensV_'+x.id+'V"></div>'+
+    '<div class="sens-ctrl-u">'+esc(x.unit)+'</div>'+
   '</div>';
 }
 
 function sensBody(c){
+  var scen = SENS_SCEN[_sensScen];
   var h = '';
-  h += '<div class="ov-sec-h">LPB Sensitivity — origination × take rate</div>';
-  h += '<p class="ov-lede">'+esc(SENS_INTRO)+'</p>';
+  h += '<div class="ov-sec-h" id="sensTitle">'+esc(scen.title)+'</div>';
+
+  // Driver selector (category buttons).
+  h += '<div class="senscat-bar">'+SENS_ORDER.map(function(k){
+    return '<button type="button" class="senscat'+(k===_sensScen?' active':'')+'" data-senscat="'+k+'">'+esc(SENS_SCEN[k].label)+'</button>';
+  }).join('')+'</div>';
+
+  h += '<p class="ov-lede" id="sensIntro">'+esc(scen.intro)+'</p>';
 
   // Live price banner — feeds the Fwd P/E line. Falls back to the fixed price.
   h += '<div class="sens-live">'+
     '<span class="sens-live-tk">SOFI</span>'+
-    '<span class="sens-live-px" id="sensLivePx">$'+SENS.price.toFixed(2)+'</span>'+
+    '<span class="sens-live-px" id="sensLivePx">$'+SENS_BASE.price.toFixed(2)+'</span>'+
     '<span class="sens-live-ch" id="sensLiveCh"></span>'+
     '<span class="sens-live-ts" id="sensLiveTs">price held fixed</span>'+
     '<button type="button" class="sens-live-rf" id="sensLiveRf">↻ Live</button>'+
   '</div>';
 
-  h += '<div class="sens-controls">'+
-    sensRow('sensOrig', 'LPB origination (annual)', 2, 50, 0.5, SENS.origB, '$B') +
-    sensRow('sensTake', 'Take rate (origination fee)', 1.0, 9.0, 0.1, SENS.takePct, '%') +
-  '</div>';
+  // Variable sliders for the active driver (rebuilt on switch).
+  h += '<div class="sens-controls" id="sensCtrls">'+scen.vars.map(sensRowG).join('')+'</div>';
 
   // The live equation line.
   h += '<div class="sens-eq" id="sensEq"></div>';
@@ -1093,20 +1122,42 @@ function sensBody(c){
   // Output tiles (recomputed live).
   h += '<div class="ov-kpis" id="sensOut"></div>';
 
-  h += '<div class="ov-foot">'+esc(SENS_NOTE)+'</div>';
+  h += '<div class="ov-foot" id="sensNote"></div>';
+  h += '<div class="ov-foot">'+esc(SENS_FOOT)+'</div>';
+
+  // ── Sum-of-the-Parts: forward-earnings valuation ──
+  h += '<div class="ov-sec-h evo-sec-h">Sum-of-the-Parts — forward-earnings valuation</div>';
+  h += '<p class="ov-lede">'+esc(SOTP_INTRO)+'</p>';
+  // Typed inputs: valuation date, fee/interest mix of earnings, and the two P/E multiples.
+  h += '<div class="sotp-fields">'+
+    sotpField('sotpDate', 'Valuation date', 'date', 'min="2026-01-01" max="2028-12-31"', '2026-12-31', '') +
+    sotpField('sotpFee', 'Fee % of earnings', 'number', 'min="0" max="100" step="1"', '50', '%') +
+    sotpField('sotpInt', 'Interest % of earnings', 'number', 'min="0" max="100" step="1"', '50', '%') +
+    sotpField('sotpFeePE', 'Fee multiple', 'number', 'min="1" step="0.5"', '30', 'x P/E') +
+    sotpField('sotpIntPE', 'Interest multiple', 'number', 'min="1" step="0.5"', '12', 'x P/E') +
+  '</div>';
+  h += '<div class="sotp-fwd" id="sotpFwd"></div>';
+  h += '<div class="sens-eq" id="sotpEq"></div>';
+  h += '<div class="ov-chart-card" id="sotpChartCard"><div class="ov-chart-t" id="sotpChartT"></div>'+
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="sofiSotpChart"></canvas></div></div>';
+  h += '<div class="ov-kpis" id="sotpOut"></div>';
+  h += '<div class="ov-foot">'+esc(SOTP_NOTE)+'</div>';
+
   return h;
 }
 
-function sensCompute(origB, takePct){
-  var lpbM    = origB * 1000 * takePct / 100;
-  var dLpb    = lpbM - SENS.baseLpbM;
-  var totalM  = SENS.nonLpbM + lpbM;
-  var dNi     = dLpb * (1 - SENS.taxRate);
-  var niM     = SENS.niM + dNi;
-  var eps     = niM / SENS.shares;
-  var pe      = SENS.price / eps;
-  var implied = SENS.basePe * eps; // price if the base multiple were held
-  return { lpbM:lpbM, dLpb:dLpb, totalM:totalM, niM:niM, dNi:dNi, eps:eps, pe:pe, implied:implied };
+// Compute fundamentals + multiples for a scenario at variable values v.
+function sensCompute(scen, v){
+  var baseRev = scen.rev(sensVarsBase(scen));
+  var newRev  = scen.rev(v);
+  var dRev    = newRev - baseRev;
+  var totalM  = (SENS_BASE.totalRevB * 1000 - baseRev) + newRev; // non-driver revenue held fixed
+  var dNi     = dRev * scen.flow * (1 - SENS_BASE.taxRate);
+  var niM     = SENS_BASE.niM + dNi;
+  var eps     = niM / SENS_BASE.shares;
+  var pe      = SENS_BASE.price / eps;
+  var implied = SENS_BASE.basePe * eps; // price if the base multiple were held
+  return { baseRev:baseRev, newRev:newRev, dRev:dRev, totalM:totalM, niM:niM, dNi:dNi, eps:eps, pe:pe, implied:implied };
 }
 
 function sensSigned(v, money){
@@ -1115,40 +1166,60 @@ function sensSigned(v, money){
 }
 
 function renderSens(){
-  var so = document.getElementById('sensOrig'), st = document.getElementById('sensTake');
-  if (!so || !st) return;
-  var origB = +so.value, takePct = +st.value;
-  var ov = document.getElementById('sensOrigV'), tv = document.getElementById('sensTakeV');
-  if (ov) ov.textContent = origB.toFixed(1);
-  if (tv) tv.textContent = takePct.toFixed(1);
+  var scen = SENS_SCEN[_sensScen];
+  var v = {}, ok = true;
+  scen.vars.forEach(function(x){
+    var el = document.getElementById('sensV_'+x.id);
+    if (!el) { ok = false; return; }
+    v[x.id] = +el.value;
+    var lab = document.getElementById('sensV_'+x.id+'V');
+    if (lab) lab.textContent = v[x.id].toFixed(x.dec);
+  });
+  if (!ok) return;
 
-  var r = sensCompute(origB, takePct);
+  var r = sensCompute(scen, v);
   var eq = document.getElementById('sensEq');
-  if (eq) eq.innerHTML = '$'+origB.toFixed(1)+'B origination &nbsp;×&nbsp; '+takePct.toFixed(1)+'% take rate &nbsp;=&nbsp; <b>$'+Math.round(r.lpbM).toLocaleString()+'M</b> LPB revenue';
+  if (eq) eq.innerHTML = scen.eq(v, r.newRev);
+  var note = document.getElementById('sensNote');
+  if (note) note.textContent = scen.note;
 
   var box = document.getElementById('sensOut');
   if (!box) return;
-  function tile(l, v, sub, dir){
-    return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(l)+'</div><div class="ov-kpi-v">'+v+
+  function tile(l, val, sub, dir){
+    return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(l)+'</div><div class="ov-kpi-v">'+val+
       '</div><div class="ov-kpi-d '+(dir||'muted')+'">'+esc(sub)+'</div></div>';
   }
-  var revPct = (r.totalM / (SENS.totalRevB*1000) - 1) * 100;
-  var prcPct = (r.implied / SENS.price - 1) * 100;
+  var revPct = (r.totalM / (SENS_BASE.totalRevB*1000) - 1) * 100;
+  var prcPct = (r.implied / SENS_BASE.price - 1) * 100;
   box.innerHTML =
-    tile('LPB revenue', '$'+Math.round(r.lpbM).toLocaleString()+'M', sensSigned(r.dLpb, true)+'M vs base', r.dLpb>=0?'up':'down') +
+    tile(scen.driver, '$'+Math.round(r.newRev).toLocaleString()+'M', sensSigned(r.dRev, true)+'M vs base', r.dRev>=0?'up':'down') +
     tile('Total net revenue', '$'+(r.totalM/1000).toFixed(2)+'B', sensSigned(revPct)+'% vs base', revPct>=0?'up':'down') +
     tile('Net income', '$'+Math.round(r.niM).toLocaleString()+'M', sensSigned(r.dNi, true)+'M vs base', r.dNi>=0?'up':'down') +
-    tile('EPS (FY2026E)', '$'+r.eps.toFixed(2), sensSigned(r.eps-SENS.baseEps)+' vs $'+SENS.baseEps.toFixed(2), (r.eps-SENS.baseEps)>=0?'up':'down') +
-    tile('Fwd P/E @ $'+SENS.price.toFixed(2), r.pe.toFixed(1)+'x', 'base '+SENS.basePe.toFixed(1)+'x', 'muted') +
-    tile('Implied price @ '+SENS.basePe.toFixed(1)+'x', '$'+r.implied.toFixed(2), sensSigned(prcPct)+'% vs $'+SENS.price.toFixed(2), prcPct>=0?'up':'down');
+    tile('EPS (FY2026E)', '$'+r.eps.toFixed(2), sensSigned(r.eps-SENS_BASE.baseEps)+' vs $'+SENS_BASE.baseEps.toFixed(2), (r.eps-SENS_BASE.baseEps)>=0?'up':'down') +
+    tile('Fwd P/E @ $'+SENS_BASE.price.toFixed(2), r.pe.toFixed(1)+'x', 'base '+SENS_BASE.basePe.toFixed(1)+'x', 'muted') +
+    tile('Implied price @ '+SENS_BASE.basePe.toFixed(1)+'x', '$'+r.implied.toFixed(2), sensSigned(prcPct)+'% vs $'+SENS_BASE.price.toFixed(2), prcPct>=0?'up':'down');
 }
 
 function setupSensSliders(){
-  var so = document.getElementById('sensOrig'), st = document.getElementById('sensTake');
-  if (!so || !st) return;
-  so.oninput = renderSens;
-  st.oninput = renderSens;
+  var scen = SENS_SCEN[_sensScen];
+  scen.vars.forEach(function(x){
+    var el = document.getElementById('sensV_'+x.id);
+    if (el) el.oninput = renderSens;
+  });
   renderSens();
+}
+
+// Switch the active driver: rebuild its sliders, intro and title, recompute.
+function switchSensScen(root, k){
+  if (!SENS_SCEN[k]) return;
+  _sensScen = k;
+  var scen = SENS_SCEN[k];
+  root.querySelectorAll('.senscat').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-senscat') === k); });
+  var ctrls = document.getElementById('sensCtrls');
+  if (ctrls) ctrls.innerHTML = scen.vars.map(sensRowG).join('');
+  var title = document.getElementById('sensTitle'); if (title) title.textContent = scen.title;
+  var intro = document.getElementById('sensIntro'); if (intro) intro.textContent = scen.intro;
+  setupSensSliders();
 }
 
 // ── Live price (via the get-quote edge function; falls back to the fixed price) ──
@@ -1166,7 +1237,7 @@ function fetchSofiQuote(){
 function renderLiveBanner(){
   var px = document.getElementById('sensLivePx');
   var ch = document.getElementById('sensLiveCh');
-  if (px) px.textContent = '$' + SENS.price.toFixed(2);
+  if (px) px.textContent = '$' + SENS_BASE.price.toFixed(2);
   if (ch && _liveQuote && typeof _liveQuote.changePct === 'number'){
     var p = _liveQuote.changePct;
     ch.textContent = (p >= 0 ? '▲ +' : '▼ −') + Math.abs(p).toFixed(2) + '%';
@@ -1176,9 +1247,10 @@ function renderLiveBanner(){
 
 function applyLiveQuote(q){
   _liveQuote = q;
-  if (typeof q.price === 'number') SENS.price = q.price;
+  if (typeof q.price === 'number') SENS_BASE.price = q.price;
   renderLiveBanner();
   renderSens(); // recompute P/E and implied price off the live price
+  renderSotp(); // SOTP upside is vs the live price too
   var ts = document.getElementById('sensLiveTs');
   if (ts){
     var t = q.time ? new Date(q.time * 1000) : null;
@@ -1192,7 +1264,7 @@ function refreshLiveQuote(){
   var ts = document.getElementById('sensLiveTs');
   if (ts) ts.textContent = 'fetching live price…';
   fetchSofiQuote().then(applyLiveQuote).catch(function(){
-    if (ts) ts.textContent = 'live price unavailable here — using $' + SENS.price.toFixed(2) + ' (last close)';
+    if (ts) ts.textContent = 'live price unavailable here — using $' + SENS_BASE.price.toFixed(2) + ' (last close)';
   });
 }
 
@@ -1202,6 +1274,127 @@ function buildSensTab(){
   var rf = document.getElementById('sensLiveRf');
   if (rf) rf.onclick = refreshLiveQuote;
   refreshLiveQuote(); // try to pull a live price when the tab opens
+  requestAnimationFrame(function(){ buildSotpChart(); setupSotpInputs(); });
+}
+
+// ─── Sensitivity → Sum-of-the-Parts (forward-earnings valuation) ─────────────
+// A forward-earnings SOTP. You stand on a valuation date and capitalise the NEXT
+// twelve months of net income (e.g. standing at 31-Dec-2026 values FY2027). You
+// split those forward earnings into a fee share and an interest share, give each
+// its own P/E, and read off the implied share price. All inputs are typed.
+// Net income by fiscal year ($M), Summit DCF (snapshot 2026-05-13, adj. net income).
+var SOTP_NI = { '2026':1160, '2027':1292, '2028':1865, '2029':2160 };
+var SOTP_FYEARS = [2026, 2027, 2028, 2029]; // forward earnings years available to capitalise
+var SOTP_INTRO = 'A forward-earnings sum-of-the-parts. Pick a valuation date — you capitalise the next twelve months of earnings (standing at 31-Dec-2026 values FY2027). Split those forward earnings into a fee share and an interest share, then give each part its own P/E: fee income is capital-light and recurring, so it earns a richer multiple than net interest income. The implied price is the sum of the parts ÷ shares. Type any value — date, the two mix shares (they stay complementary), and the two P/E multiples.';
+var SOTP_NOTE = 'Method: forward net income = next-twelve-months net income from the valuation date (linear blend of the two straddling fiscal years; standing at a year-end gives the next full year). Equity value = (forward NI × fee%) × fee P/E + (forward NI × interest%) × interest P/E; implied price = value ÷ 1,378M shares; blended P/E = fee% × fee P/E + interest% × interest P/E. Net income by year from the Summit DCF (snapshot 2026-05-13, adjusted net income): FY2026 $1.16B, FY2027 $1.29B, FY2028 $1.87B, FY2029 $2.16B. The fee/interest split of EARNINGS is your assumption (the model does not report segment net income). Illustrative, not a target price.';
+var _sotpChart = null;
+
+function sotpField(id, label, type, attrs, val, unit){
+  return '<label class="sotp-field" for="'+id+'"><span class="sotp-field-l">'+esc(label)+'</span>'+
+    '<span class="sotp-field-in"><input type="'+type+'" id="'+id+'" '+attrs+' value="'+val+'">'+
+    (unit ? '<span class="sotp-field-u">'+esc(unit)+'</span>' : '')+'</span></label>';
+}
+function sotpNum(id, fallback){ var el = document.getElementById(id); var v = el ? parseFloat(el.value) : NaN; return isNaN(v) ? fallback : v; }
+
+// Forward (next-twelve-months) net income for a valuation date, blending the two
+// straddling fiscal years. Returns { ni, label } or null.
+function sotpForwardNI(dateStr){
+  var d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  var y = d.getFullYear();
+  var start = new Date(y, 0, 1).getTime(), end = new Date(y + 1, 0, 1).getTime();
+  var f = (d.getTime() - start) / (end - start);          // fraction of the year elapsed
+  var a = SOTP_NI[y], b = SOTP_NI[y + 1];
+  if (a == null) a = b; if (b == null) b = a;
+  if (a == null) return null;
+  var ni = (1 - f) * a + f * b;
+  var label;
+  if (f < 0.02) label = 'FY' + y + 'E';
+  else if (f > 0.98) label = 'FY' + (y + 1) + 'E';
+  else label = Math.round((1 - f) * 100) + '% FY' + y + 'E + ' + Math.round(f * 100) + '% FY' + (y + 1) + 'E';
+  return { ni: ni, label: label };
+}
+
+function buildSotpChart(){
+  var cv = document.getElementById('sofiSotpChart');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_sotpChart){ _sotpChart.destroy(); _sotpChart = null; }
+  _sotpChart = new Chart(cv.getContext('2d'), {
+    data: { labels: SOTP_FYEARS.map(function(y){ return 'FY' + y + 'E'; }), datasets: [
+      { type:'bar', label:'Interest earnings', data:[], backgroundColor:'#9DB4C4', stack:'e', yAxisID:'y', borderRadius:3, maxBarThickness:70 },
+      { type:'bar', label:'Fee earnings', data:[], backgroundColor:BRAND, stack:'e', yAxisID:'y', borderRadius:3, maxBarThickness:70 },
+      { type:'line', label:'Implied price', data:[], borderColor:'#E8833A', backgroundColor:'#E8833A', yAxisID:'y1', borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#fff', pointBorderColor:'#E8833A', tension:0 }
+    ] },
+    options: {
+      responsive:true, maintainAspectRatio:false, animation:false,
+      layout:{ padding:{ top:10 } },
+      plugins:{
+        legend:{ display:true, position:'bottom', labels:{ boxWidth:12, usePointStyle:true, font:{ size:11 }, color:'#5A6473' } },
+        tooltip:{ callbacks:{ label:function(ctx){
+          if (ctx.dataset.yAxisID === 'y1') return 'Implied price: $' + ctx.parsed.y.toFixed(2);
+          return ctx.dataset.label + ': $' + ctx.parsed.y.toFixed(2) + 'B';
+        } } }
+      },
+      scales:{
+        y:{ stacked:true, position:'left', beginAtZero:true, grid:{ color:'rgba(0,0,0,0.04)' },
+          ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return '$'+v+'B'; } } },
+        y1:{ position:'right', grid:{ drawOnChartArea:false }, grace:'25%', beginAtZero:true,
+          ticks:{ color:'#E8833A', font:{ size:10 }, callback:function(v){ return '$'+v.toFixed(0); } } },
+        x:{ stacked:true, grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:12 } } }
+      }
+    }
+  });
+}
+
+function renderSotp(){
+  var dateEl = document.getElementById('sotpDate'); if (!dateEl) return;
+  var feePct = Math.max(0, Math.min(100, sotpNum('sotpFee', 50)));
+  var intPct = 100 - feePct;
+  var feePE = sotpNum('sotpFeePE', 30), intPE = sotpNum('sotpIntPE', 12);
+  var blendedPE = feePct/100 * feePE + intPct/100 * intPE;
+  var cur = SENS_BASE.price;
+
+  // Chart: implied price by forward year, given the current mix & multiples.
+  if (_sotpChart){
+    _sotpChart.data.datasets[0].data = SOTP_FYEARS.map(function(y){ return +((SOTP_NI[y]*intPct/100)/1000).toFixed(2); });
+    _sotpChart.data.datasets[1].data = SOTP_FYEARS.map(function(y){ return +((SOTP_NI[y]*feePct/100)/1000).toFixed(2); });
+    _sotpChart.data.datasets[2].data = SOTP_FYEARS.map(function(y){ return +((SOTP_NI[y]*blendedPE)/SENS_BASE.shares).toFixed(2); });
+    _sotpChart.update('none');
+  }
+  var ct = document.getElementById('sotpChartT');
+  if (ct) ct.innerHTML = 'Implied price by forward earnings year <span>(bars = earnings split · line = implied price at '+blendedPE.toFixed(1)+'x blended P/E)</span>';
+
+  // Single-point valuation for the typed date.
+  var fwd = sotpForwardNI(dateEl.value);
+  var fwdEl = document.getElementById('sotpFwd');
+  var eq = document.getElementById('sotpEq');
+  var box = document.getElementById('sotpOut');
+  if (!fwd){ if (fwdEl) fwdEl.textContent = 'Enter a valuation date between 2026 and 2028.'; if (box) box.innerHTML = ''; return; }
+
+  var E = fwd.ni, feeE = E*feePct/100, intE = E*intPct/100;
+  var value = feeE*feePE + intE*intPE, price = value/SENS_BASE.shares, up = (price/cur - 1) * 100;
+
+  if (fwdEl) fwdEl.innerHTML = 'Standing at <b>'+esc(dateEl.value)+'</b> → forward earnings ≈ <b>'+esc(fwd.label)+'</b> · forward net income <b>$'+Math.round(E).toLocaleString()+'M</b>';
+  if (eq) eq.innerHTML = feePct.toFixed(0)+'% fee × '+feePE.toFixed(1)+'x &nbsp;+&nbsp; '+intPct.toFixed(0)+'% interest × '+intPE.toFixed(1)+'x &nbsp;=&nbsp; <b>'+blendedPE.toFixed(1)+'x</b> blended P/E on forward earnings';
+
+  function tile(l, v, sub, dir){
+    return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(l)+'</div><div class="ov-kpi-v">'+v+
+      '</div><div class="ov-kpi-d '+(dir||'muted')+'">'+esc(sub)+'</div></div>';
+  }
+  if (box) box.innerHTML =
+    tile('Implied price', '$'+price.toFixed(2), sensSigned(up)+'% vs $'+cur.toFixed(2), up>=0?'up':'down') +
+    tile('Blended P/E', blendedPE.toFixed(1)+'x', feePct.toFixed(0)+'% fee / '+intPct.toFixed(0)+'% interest', 'muted') +
+    tile('Equity value', '$'+(value/1000).toFixed(1)+'B', 'on $'+(E/1000).toFixed(2)+'B fwd earnings', 'muted') +
+    tile('Fee earnings', '$'+Math.round(feeE).toLocaleString()+'M', feePct.toFixed(0)+'% × '+feePE.toFixed(1)+'x', 'muted') +
+    tile('Interest earnings', '$'+Math.round(intE).toLocaleString()+'M', intPct.toFixed(0)+'% × '+intPE.toFixed(1)+'x', 'muted');
+}
+
+function setupSotpInputs(){
+  var fee = document.getElementById('sotpFee'), intp = document.getElementById('sotpInt');
+  if (fee) fee.oninput = function(){ var v = Math.max(0, Math.min(100, parseFloat(fee.value)||0)); if (intp) intp.value = (100 - v); renderSotp(); };
+  if (intp) intp.oninput = function(){ var v = Math.max(0, Math.min(100, parseFloat(intp.value)||0)); if (fee) fee.value = (100 - v); renderSotp(); };
+  ['sotpDate','sotpFeePE','sotpIntPE'].forEach(function(id){ var el = document.getElementById(id); if (el) el.oninput = renderSotp; });
+  renderSotp();
 }
 
 // One expand/collapse accordion item.
@@ -2235,6 +2428,10 @@ function init(c){
   // Valuation → Estimate revisions across snapshots: metric pills.
   root.querySelectorAll('.evo-pill').forEach(function(btn){
     btn.onclick = function(){ switchEvoMetric(root, btn.getAttribute('data-evo')); };
+  });
+  // Sensitivity: driver category buttons.
+  root.querySelectorAll('.senscat').forEach(function(btn){
+    btn.onclick = function(){ switchSensScen(root, btn.getAttribute('data-senscat')); };
   });
   // Valuation → Actuals vs. Guidance: mode toggle, metric pills, year pills, table.
   root.querySelectorAll('.guid-mode').forEach(function(btn){

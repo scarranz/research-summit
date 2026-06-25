@@ -374,6 +374,21 @@
 .sens-live-ts { font-size: 11.5px; color: var(--mu); margin-left: auto; }
 .sens-live-rf { font: 600 12px Inter, sans-serif; color: var(--brand); background: var(--brand-soft); border: none; border-radius: 16px; padding: 5px 12px; cursor: pointer; }
 .sens-live-rf:hover { background: var(--brand); color: #fff; }
+.senscat-bar { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 14px; }
+.senscat { border: 1px solid var(--bdr); background: var(--w); border-radius: 18px; color: var(--mu); font: 600 12.5px Inter, sans-serif; padding: 7px 16px; cursor: pointer; transition: color .15s, background .15s, border-color .15s; }
+.senscat:hover { border-color: var(--brand); color: var(--brand); }
+.senscat.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+/* SOTP forward-earnings typed inputs. */
+.sotp-fields { display: flex; flex-wrap: wrap; gap: 14px 18px; margin: 6px 0 14px; }
+.sotp-field { display: flex; flex-direction: column; gap: 5px; }
+.sotp-field-l { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--mu); }
+.sotp-field-in { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--bdr); background: var(--w); border-radius: 9px; padding: 7px 11px; transition: border-color .15s; }
+.sotp-field-in:focus-within { border-color: var(--brand); }
+.sotp-field-in input { border: none; outline: none; background: none; font: 700 15px Inter, sans-serif; color: var(--navy); width: 84px; font-variant-numeric: tabular-nums; }
+.sotp-field-in input[type=date] { width: 130px; }
+.sotp-field-u { font-size: 12px; font-weight: 600; color: var(--mu); white-space: nowrap; }
+.sotp-fwd { font-size: 13px; color: var(--navy); background: var(--brand-soft); border-radius: 9px; padding: 9px 13px; margin: 0 0 12px; }
+.sotp-fwd b { color: var(--brand); }
 .sens-controls { margin: 14px 0 6px; }
 .sens-ctrl { display: flex; align-items: center; gap: 14px; margin: 12px 0; }
 .sens-ctrl-l { min-width: 200px; font-size: 13px; font-weight: 600; color: var(--navy); }

@@ -61,7 +61,7 @@ var AD_FLOW=[
 ];
 var SEGMENTS=[
   ['Family of Apps', '<b>The cash machine.</b> Facebook, Instagram, WhatsApp, Messenger, Threads. ~$199B revenue (FY25) — ~98% advertising — at ~50%+ operating margin. Driver: <b>impressions × price per ad</b>, both lifted by AI ranking and Reels/Advantage+.'],
-  ['Reality Labs', '<b>The long bet.</b> Quest VR headsets, Ray-Ban Meta smart glasses, Orion AR prototype, and the metaverse/AI-device platform. ~$2.2B revenue but a <b>~$19B operating loss (FY25)</b> — ~$79B cumulative since 2020.'],
+  ['Reality Labs', '<b>The long bet — now reframed around AI.</b> The breakout is <b>Ray-Ban / Oakley Meta AI glasses</b> (&gt;7M sold in 2025), pitched as the next computing platform for "personal superintelligence"; Quest/VR is de-emphasized and Orion AR is still a prototype. ~$2.2B revenue but a <b>~$19B operating loss (FY25)</b> — ~$79B cumulative since 2020.'],
   ['Advertising', '~98% of revenue. AI-driven targeting + auction pricing; Reels and business messaging (WhatsApp/click-to-message) are the newer growth surfaces.'],
   ['AI infrastructure', 'Not a segment but the swing cost: $69.7B capex in FY25 (+87%), guided higher — GPUs and data centers powering both the ad engine and the consumer AI assistant (Meta AI).'],
 ];
@@ -77,8 +77,8 @@ var TIMELINE=[
     d:'A brutal year: Apple\'s <b>App Tracking Transparency</b> (ATT) hit ad targeting (~$10B revenue headwind), a macro ad recession, TikTok competition, and surging Reality Labs spend collapsed the stock to ~$88. It set up the turnaround.' },
   { y:'2023', t:'<b>"Year of Efficiency"</b> — ~21k layoffs; margins and stock recover sharply.',
     d:'Zuckerberg declared a <b>"Year of Efficiency,"</b> cutting ~21,000 roles, flattening management and refocusing on AI and Reels. Operating margin re-expanded and the stock more than tripled off the lows.' },
-  { y:'2024–26', t:'<b>AI re-rate</b> — record profit and a massive AI-capex buildout.',
-    d:'AI-driven ad improvements (Andromeda, Advantage+) lifted price and conversion; revenue and profit hit records. Meta initiated its <b>first dividend</b> (2024) and ramped <b>capex toward $70B+</b> for AI infrastructure — the central debate of the current thesis: durable ROI vs. over-spend.' },
+  { y:'2024–26', t:'<b>AI re-rate</b> — record profit, an all-in AI push, and the FTC win.',
+    d:'AI-driven ad improvements (Andromeda, Advantage+) lifted price and conversion; revenue and profit hit records, and Meta initiated its <b>first dividend</b> (2024). In 2025 it went all-in on AI: a <b>$14.3B stake in Scale AI</b> bringing <b>Alexandr Wang</b> as Chief AI Officer, the new <b>Superintelligence Labs</b>, a costly talent war, and an <b>open→closed model pivot</b>. It <b>won the FTC antitrust case (Nov 2025)</b> — no Instagram/WhatsApp breakup — and ramped <b>capex toward ~$125–145B</b> for AI infrastructure. The central debate: durable ROI vs. over-spend.' },
 ];
 var PEERS=[
   ['Alphabet (Google)', 'The other ad giant — Search + YouTube.', 'The largest digital-ad rival; both are re-rating on AI. Meta owns <b>social/feed</b> attention and the best <b>direct-response</b> engine; Google owns <b>intent</b> (search). Both face the same AI-capex test.'],
@@ -87,17 +87,17 @@ var PEERS=[
   ['Apple', 'Platform owner — not an ad peer, a <b>gatekeeper</b>.', 'ATT privacy changes structurally taxed Meta\'s targeting; Apple controls the iOS rules Meta lives under — a standing strategic risk, not a product competitor.'],
 ];
 var TAILWINDS=[
-  '<b>AI is monetizing directly:</b> Andromeda ranking + Advantage+ automation lift price-per-ad <i>and</i> conversions — AI capex showing up as ad revenue, not just cost.',
-  '<b>Reels &amp; business messaging:</b> Reels monetization now near feed levels; WhatsApp/click-to-message and paid messaging are large, under-monetized surfaces.',
-  '<b>Operating discipline:</b> post-"Year of Efficiency" the Family of Apps runs at ~50%+ margin — a cash machine funding everything else.',
-  '<b>Optionality:</b> Threads, Meta AI (consumer assistant at scale), and Ray-Ban Meta glasses are cheap call options on the next platform.',
-  '<b>Capital returns:</b> first dividend (2024) + large buybacks on top of ~$46B free cash flow.',
+  '<b>AI monetizes directly:</b> Andromeda ranking + Advantage+ are moving from "AI-assisted targeting" to a <b>full campaign autopilot</b> — the end-state Zuckerberg pitches is "agentic" advertising where a business just states a goal + budget + product link and Meta\'s AI generates the creative, audience and optimization. AI capex showing up as ad revenue, not just cost.',
+  '<b>Business messaging — the next pillar:</b> <b>click-to-WhatsApp ads are Meta\'s fastest-growing ad product</b>, and paid messaging crossed a ~$2B run-rate. >1B daily business-message threads is the install base to monetize "Business AIs."',
+  '<b>Operating discipline:</b> post-"Year of Efficiency" the Family of Apps runs at ~50%+ margin — a cash machine funding everything else; management guides 2026 operating income <i>above</i> 2025 despite the capex step-up ("spend through it").',
+  '<b>AI glasses as the next platform:</b> <b>Ray-Ban / Oakley Meta sold &gt;7M units in 2025</b> (the surprise winner) — reframing Reality Labs from a metaverse money-pit into a credible owned next platform for "personal superintelligence."',
+  '<b>Legal overhang cleared:</b> the FTC antitrust case was <b>dismissed (Nov 2025)</b> — no Instagram/WhatsApp breakup; plus the first dividend (2024) and large buybacks on ~$46B FCF.',
 ];
 var HEADWINDS=[
-  '<b>AI-capex ROI:</b> $69.7B capex (+87%) guided higher — the bet that AI infrastructure earns its cost is the single biggest debate; depreciation will pressure margins.',
-  '<b>Reality Labs burn:</b> ~$19B/yr operating loss (~$79B cumulative) with no near-term path to profit — a permanent drag the market tolerates only while FoA delivers.',
-  '<b>Regulatory / antitrust:</b> the <b>FTC</b> case seeking to unwind Instagram/WhatsApp, the EU <b>DMA</b>, and global privacy rules are open existential-tail risks.',
-  '<b>Platform dependence:</b> Apple ATT showed a gatekeeper can tax targeting overnight; AI-driven content/answers could also shift attention.',
+  '<b>The most binary AI-capex bet in megacap:</b> 2026 capex guided to ~<b>$125–145B</b> that must be monetized <b>internally</b> — Meta has no AWS/GCP-style cloud to absorb it. The stock fell ~6% on the capex guide; when pressed for ROI evidence, Zuckerberg deflected. Depreciation pressures margins before returns are visible.',
+  '<b>Reality Labs burn:</b> ~$19B/yr operating loss (~$79B cumulative), no near-term path to profit — tolerated only while FoA delivers; component costs and friction with EssilorLuxottica pressure the glasses economics.',
+  '<b>AI strategy whiplash:</b> a costly talent war ($100M+ packages, the $14.3B Scale AI deal for Alexandr Wang), an <b>open→closed Llama pivot</b> and the Llama "Behemoth"→closed "Avocado" reset have caused internal churn — the differentiated product is still unproven.',
+  '<b>Regulatory residue &amp; platform risk:</b> EU <b>DMA</b> (€200M fine; forced a "less-personalized ads" option, Jan 2026) nibbles at targeting; teen/AI-safety pressure is rising; and Apple ATT showed a gatekeeper can tax targeting overnight.',
   '<b>Governance:</b> dual-class structure gives the founder voting control — minority holders have little say.',
 ];
 var SOURCES='Quantitative series: Summit DCF model for META, actuals_history sheet (snapshot 2026-05-22) — reported FY2019–FY2025; the model\'s projection out-years are excluded as unreliable (per the team\'s DCF-historical-only policy). Segment split (Family of Apps vs Reality Labs) is clean from FY2021. Qualitative content: Meta 10-Ks, quarterly results and earnings calls; ~3.4B daily-active-people and ~98%-advertising mix are company disclosures. Forward figures are not shown. Brand colors approximate Meta blue.';
@@ -158,7 +158,7 @@ function segBody(){
     'Runs at ~<b>50%+ operating margin</b> — the profit that funds Reality Labs, AI capex, buybacks and the dividend.',
   ])+'</div>');
   h+=sec('Reality Labs — the long bet', '<div class="ov-callout">'+bullets([
-    '<b>Products:</b> Quest VR, <b>Ray-Ban Meta</b> smart glasses (the breakout hit), the <b>Orion</b> AR prototype, and Meta\'s on-device AI ambitions.',
+    '<b>Products:</b> <b>Ray-Ban / Oakley Meta AI glasses</b> are the breakout (&gt;7M sold in 2025, with a $799 display model + a $299 line) — now framed as the next computing platform; Quest VR is de-emphasized and <b>Orion</b> AR remains a prototype.',
     '<b>Economics:</b> ~$2.2B revenue against a ~<b>$19B operating loss</b> in FY2025 — losses have widened every year.',
     '<b>The debate:</b> a visionary bet on the next computing platform, or a ~$79B-and-counting money pit. The market tolerates it only while the Family of Apps keeps delivering.',
   ])+'</div>');

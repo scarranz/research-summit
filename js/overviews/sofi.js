@@ -849,8 +849,6 @@ function aveBody(c){
   var maxI = def.quarters.length - 1;
   var h = '';
 
-  h += '<p class="ov-lede">'+esc(AVE_INTRO)+'</p>';
-
   // Grouped metric selector (KPIs · Revenue · Profitability).
   h += '<div class="ave-groups">'+AVE_GROUPS.map(function(g){
     return '<div class="ave-group"><div class="ave-group-l">'+esc(g.label)+'</div>'+

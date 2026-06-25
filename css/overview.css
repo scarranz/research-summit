@@ -491,6 +491,56 @@
 }
 .ov-msft .ov-snap { border-top: 3px solid var(--brand-2); }
 
+/* Lyft brand accent — Lyft pink (#E6007A) + purple (#6B2BD9). */
+.ov-lyft {
+  --brand: #E6007A;
+  --brand-soft: #FCE4F1;
+  --brand-2: #6B2BD9;
+}
+.ov-lyft .ov-snap { border-top: 3px solid var(--brand-2); }
+/* Lyft uses the SoFi-style filled segmented sub-tabs (pink). */
+.ov-lyft .ovt-tabs {
+  display: inline-flex; gap: 4px; border-bottom: none;
+  background: var(--surface); border: 1px solid var(--bdr);
+  border-radius: 11px; padding: 4px; margin: 0 0 22px;
+}
+.ov-lyft .ovt-tab {
+  border: none; border-radius: 8px; text-transform: none; letter-spacing: 0;
+  font-size: 13px; font-weight: 600; color: var(--mu);
+  padding: 8px 16px; margin-bottom: 0; transition: background .15s, color .15s;
+}
+.ov-lyft .ovt-tab:hover { color: var(--navy); background: rgba(230,0,122,0.06); }
+.ov-lyft .ovt-tab.active {
+  color: #fff; background: var(--brand); border-bottom: none;
+  box-shadow: 0 1px 3px rgba(230,0,122,0.28);
+}
+.ov-lyft .ovt-tab.active:hover { color: #fff; }
+
+/* Uber brand accent — Uber black (#10141A) + Uber Eats green (#06C167). */
+.ov-uber {
+  --brand: #10141A;
+  --brand-soft: #EEF0F2;
+  --brand-2: #06C167;
+}
+.ov-uber .ov-snap { border-top: 3px solid var(--brand-2); }
+/* Uber uses the SoFi-style filled segmented sub-tabs (black). */
+.ov-uber .ovt-tabs {
+  display: inline-flex; flex-wrap: wrap; gap: 4px; border-bottom: none;
+  background: var(--surface); border: 1px solid var(--bdr);
+  border-radius: 11px; padding: 4px; margin: 0 0 22px;
+}
+.ov-uber .ovt-tab {
+  border: none; border-radius: 8px; text-transform: none; letter-spacing: 0;
+  font-size: 13px; font-weight: 600; color: var(--mu);
+  padding: 8px 16px; margin-bottom: 0; transition: background .15s, color .15s;
+}
+.ov-uber .ovt-tab:hover { color: var(--navy); background: rgba(16,20,26,0.06); }
+.ov-uber .ovt-tab.active {
+  color: #fff; background: var(--brand); border-bottom: none;
+  box-shadow: 0 1px 3px rgba(16,20,26,0.28);
+}
+.ov-uber .ovt-tab.active:hover { color: #fff; }
+
 /* ── Diagrams (four-party model, share-class dynamics) ── */
 .ov-diagram {
   margin: 2px 0 16px; border: 1px solid var(--bdr); border-radius: 10px;

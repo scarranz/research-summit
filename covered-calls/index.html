@@ -28,6 +28,10 @@
   button.ghost{background:var(--w);color:var(--steel);border-color:var(--bdr);font-weight:500;}
   button:hover{opacity:.92;}
   button.sm{padding:4px 8px;font-size:12px;}
+  .seg{display:inline-flex;border:1px solid var(--bdr);border-radius:7px;overflow:hidden;}
+  .seg button{border:none;border-radius:0;background:var(--w);color:var(--steel);padding:7px 12px;font-weight:600;}
+  .seg button.on{background:var(--navy);color:#fff;}
+  .seg button+button{border-left:1px solid var(--bdr);}
 
   /* summary strip */
   .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px;}
@@ -38,18 +42,28 @@
 
   .card{background:var(--w);border:1px solid var(--bdr);border-radius:14px;padding:6px 6px 14px;overflow-x:auto;}
   table{width:100%;border-collapse:collapse;font-size:13px;}
-  th,td{padding:8px 9px;border-bottom:1px solid var(--bdr);white-space:nowrap;text-align:right;}
+  th,td{padding:8px 9px;border-bottom:1px solid var(--bdr);white-space:nowrap;text-align:center;}
   th{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.03em;font-weight:600;position:sticky;top:0;background:var(--w);}
-  th:first-child,td:first-child{text-align:left;}
+  td:first-child{text-align:left;}
+  th.tkh{text-align:left;}
   td.tk{font-weight:700;}
   tbody tr:hover{background:var(--pale);}
   .grp{font-size:9px;color:var(--steel);text-align:center;font-weight:700;letter-spacing:.06em;border-bottom:none;padding-bottom:2px;}
   .sep{border-left:1px solid var(--bdr);}
-  td.edit input{width:62px;text-align:right;padding:4px 6px;font-size:12px;font-weight:600;}
+  td.edit input{width:62px;text-align:center;padding:4px 6px;font-size:12px;font-weight:600;}
   td.edit input.ovr{color:var(--accent);border-color:var(--accent);}
+  td[data-tip]{cursor:help;}
   .big{font-weight:700;}
   .cheap{color:var(--pos);} .rich{color:var(--neg);}
   .up{color:var(--pos);} .dn{color:var(--neg);}
+  td.fund{text-align:center;}
+  .fv{font-weight:600;font-size:12.5px;}
+  .fg{font-size:10px;margin-top:1px;color:var(--mu);}
+  .fg.up{color:var(--pos);} .fg.dn{color:var(--neg);}
+  .cc{font-size:9px;font-weight:700;color:var(--steel);background:var(--ice);padding:1px 5px;border-radius:6px;margin-left:4px;letter-spacing:.02em;}
+  #tip{position:fixed;z-index:50;background:var(--navy);color:#fff;font-size:11px;font-weight:500;padding:7px 10px;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .1s;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.2);}
+  #tip.on{opacity:1;}
+  #tip b{color:#9DB4D4;font-weight:600;}
   .muted{color:var(--mu);font-size:11px;}
   .pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;background:var(--ice);color:var(--steel);}
   .err{color:var(--neg);font-weight:600;}
@@ -73,8 +87,14 @@
         <select id="expiry"><option>loading…</option></select>
       </div>
       <div class="ctl">
-        <label>Portfolio value ($)</label>
-        <input id="portval" type="number" step="100000" />
+        <label>Multiple basis</label>
+        <div class="seg" id="basisSel">
+          <button data-basis="2026E">2026E</button><button data-basis="2027E">2027E</button><button data-basis="NTM">NTM</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <label>&nbsp;</label>
+        <button id="togFund" class="ghost">Hide EBITDA / NI</button>
       </div>
       <div class="ctl">
         <label>&nbsp;</label>
@@ -97,12 +117,13 @@
   <div class="addrow">
     <div class="ctl"><label>Add ticker</label><input id="newtk" placeholder="TICKER" /></div>
     <div class="ctl"><label>Strike</label><input id="newstrike" type="number" step="1" /></div>
-    <div class="ctl"><label>Contracts</label><input id="newcontracts" type="number" step="1" /></div>
+    <div class="ctl"><label>Weight (%)</label><input id="newweight" type="number" step="0.1" /></div>
     <div class="ctl"><label>&nbsp;</label><button id="addbtn" class="ghost sm">+ Add position</button></div>
   </div>
 
   <div class="foot" id="foot"></div>
 </div>
+<div id="tip"></div>
 <script type="module" src="./app.js"></script>
 </body>
 </html>

@@ -49,6 +49,8 @@ let rows = POSITIONS.map((p, i) => ({ id: i, ...p, override: null, live: null, l
 let expiry = null;
 let mulBasis = '2026E';  // '2026E' | '2027E' | 'NTM' — fundamental year driving every multiple + PEG
 let showFund = true;     // show/hide the EBITDA & Net Income blocks
+let sortKey = null;      // 'wt' | 'yield' | 'portyield' | 'contrib' | null (book order)
+let sortDir = -1;        // -1 = descending (high→low), 1 = ascending
 
 // Fraction of the next-twelve-months window that falls in calendar FY[1] (t+1).
 // Used to blend FY[1]/FY[2] estimates into an NTM figure (no quarterly data).
@@ -246,6 +248,27 @@ function fundSection(series, cagrVal, pegVal) {
 // expensive valuation (good for a call seller); cheaper → red.
 const richer = (v, base) => (v != null && base != null) ? (v > base ? 'cheap' : 'rich') : '';
 
+// Sortable Economics columns. 'portyield' and 'contrib' share an ordering since
+// Contrib. = Port. yield ÷ constant. Missing values always sink to the bottom.
+function sortVal(r, key) {
+  if (key === 'wt') return r.weight ?? null;
+  const m = metrics(r);
+  if (key === 'yield') return m.yld ?? null;
+  return m.contrib ?? null; // portyield + contrib
+}
+function sortedRows() {
+  if (!sortKey) return rows;
+  return rows.slice().sort((a, b) => {
+    const va = sortVal(a, sortKey), vb = sortVal(b, sortKey);
+    const na = va == null || isNaN(va), nb = vb == null || isNaN(vb);
+    if (na && nb) return 0;
+    if (na) return 1;
+    if (nb) return -1;
+    return (va - vb) * sortDir;
+  });
+}
+const sarrow = (k) => sortKey === k ? (sortDir < 0 ? ' ▾' : ' ▴') : '';
+
 function render() {
   // KPIs — everything in %, derived purely from weights (no $, no portfolio value).
   let portYld = 0, portAnn = 0, wUp = 0, wYld = 0, wIv = 0, wSum = 0, priced = 0;
@@ -285,12 +308,12 @@ function render() {
       <th class="sep">Price</th><th>P/E</th><th>EV/EBITDA</th>
       ${fundLabels}
       <th class="sep">Strike</th><th>Impl. Upside</th><th>P/E</th><th>EV/EBITDA</th>
-      <th class="sep">Wt</th><th>Premium</th><th>Yield</th><th>Port. yield</th><th>Contrib.</th>
+      <th class="sep sortable" data-sort="wt">Wt${sarrow('wt')}</th><th>Premium</th><th class="sortable" data-sort="yield">Yield${sarrow('yield')}</th><th class="sortable" data-sort="portyield">Port. yield${sarrow('portyield')}</th><th class="sortable" data-sort="contrib">Contrib.${sarrow('contrib')}</th>
     </tr>`;
   const ncol = 1 + 3 + (showFund ? 10 : 0) + 4 + 5 + 1; // total columns for colspans
 
   // body
-  $('cc-tbody').innerHTML = rows.map((r) => {
+  $('cc-tbody').innerHTML = sortedRows().map((r) => {
     if (r.loading) return `<tr><td class="tk">${r.ticker}</td><td colspan="${ncol - 1}" class="muted">loading…</td></tr>`;
     if (r.err) return `<tr><td class="tk">${r.ticker}</td><td colspan="${ncol - 2}" class="err">${r.err}</td>
       <td class="sep"><button class="x" data-del="${r.id}">✕</button></td></tr>`;
@@ -429,6 +452,17 @@ function wireControls() {
     .forEach((b) => b.classList.toggle('on', b.dataset.basis === mulBasis));
   document.querySelectorAll('#cc-basisSel button').forEach((b) => b.onclick = () => { mulBasis = b.dataset.basis; syncBasis(); render(); });
   syncBasis();
+
+  // Sortable Economics headers (Wt / Yield / Port. yield / Contrib.). Click to
+  // sort high→low, click again to flip. Delegated so it survives re-renders.
+  document.addEventListener('click', (e) => {
+    const th = e.target.closest('#cc-root th[data-sort]');
+    if (!th) return;
+    const key = th.dataset.sort;
+    if (sortKey === key) sortDir = -sortDir;
+    else { sortKey = key; sortDir = -1; }
+    render();
+  });
 
   // Hide / show the EBITDA & Net Income blocks.
   $('cc-togFund').onclick = () => {

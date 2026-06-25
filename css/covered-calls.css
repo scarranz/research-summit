@@ -35,6 +35,8 @@
 #cc-root th{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.03em;font-weight:600;position:sticky;top:0;background:var(--w);}
 #cc-root td:first-child{text-align:left;}
 #cc-root th.tkh{text-align:left;}
+#cc-root th.sortable{cursor:pointer;user-select:none;}
+#cc-root th.sortable:hover{color:var(--steel);}
 #cc-root td.tk{font-weight:700;}
 #cc-root tbody tr:hover{background:var(--pale);}
 #cc-root .grp{font-size:9px;color:var(--steel);text-align:center;font-weight:700;letter-spacing:.06em;border-bottom:none;padding-bottom:2px;}

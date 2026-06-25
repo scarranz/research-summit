@@ -76,19 +76,15 @@ var KPIS = [
 var AS_OF = 'Headline KPIs are FY2025 (year ended Dec 31, 2025). Latest reported quarter is Q1 2026 — $4.95B bookings (+19% YoY), $1.65B revenue (+14%), 236.9M rides (+8.5%), 28.3M active riders (+17%), $133M Adj. EBITDA (+25%), and a record ~$1.12B TTM free cash flow.';
 var FY_NOTE = 'FY2025: record 945.5M rides (+14%), $18.5B bookings (+15%), $529M Adj. EBITDA (+38%), >$1B free cash flow. GAAP net income was $2.84B, but that includes a ~$2.9B one-time non-cash deferred-tax benefit — so Adj. EBITDA and FCF are the cleaner profit signals (FY2024 was the first full-year GAAP profit). Forward years (2026E–2029E) are Summit DCF estimates.';
 
-var HOW_MONEY = [
-  'A <b>marketplace take</b>: riders pay <b>Gross Bookings</b>; drivers keep their pay plus incentives; Lyft keeps the spread plus rider fees. Revenue is ~<b>33%</b> of bookings — the rest flows to drivers and insurance.',
-  '<b>Lyft Media</b> — in-app, in-car tablet and bikeshare advertising — adds high-margin revenue (~$100M annualized run-rate) that scales with riders, not driver cost.',
-  '<b>Bikes &amp; scooters</b> (Citi Bike, Divvy, Bay Wheels) bring subscription and per-ride revenue and the largest US bikeshare footprint.',
-  '<b>Insurance is the swing factor:</b> the single largest cost-of-revenue component. As insurance cost per ride falls, gross profit per ride expands — the core of the 2025–26 margin story.',
-];
 
+// Lyft reports ONE segment (consolidated); these are revenue *sources*, not GAAP segments. Each is shown with its driver.
 var SEGMENTS = [
-  ['Rideshare (core)', 'Real-time marketplace matching riders and drivers across the US and Canada. The vast majority of revenue. Reported as a single segment.'],
-  ['Lyft Media', 'Advertising across the app, in-car tablets and bikeshare stations (~$100M annualized run-rate). Small but fast-growing and high-margin — a key driver of margin expansion.'],
-  ['Bikes & Scooters', 'Operates Citi Bike (NYC), Divvy (Chicago), Bay Wheels (SF) and more — the largest US bikeshare network. Seasonal (peaks in summer).'],
-  ['Autonomous (AV)', 'Asset-light platform: AV partners (Waymo, May Mobility, Baidu, Mobileye, Tensor) deploy fleets on the Lyft network. Lyft supplies demand and fleet operations rather than owning the cars.'],
-  ['FreeNow (Europe)', 'Acquired July 2025 (~$235M) — a leading European taxi / multi-mobility app across 9 countries and 180+ cities. ~€1B annualized run-rate; full app integration planned for 2027.'],
+  ['Rideshare (core)', '<b>Driver: rides × bookings/ride × take rate.</b> The real-time US/Canada marketplace and the vast majority of revenue. Rides come from active riders × frequency; bookings/ride from mix (airport, long-distance, premium); Lyft keeps ~33% net after driver pay. This is the whole engine.'],
+  ['Lyft Media (ads)', '<b>Driver: riders × ad load × CPM.</b> In-app, in-car tablet and bikeshare-station advertising (~$100M annualized run-rate). High-margin revenue that scales with <i>riders</i>, not driver cost — a structural margin lever (advertisers: McDonald\'s, Sephora, Google).'],
+  ['Bikes & Scooters', '<b>Driver: stations × utilization × season.</b> Citi Bike (NYC), Divvy (Chicago), Bay Wheels (SF) — the largest US bikeshare network. <b>Growing</b> (Citi Bike 46M+ rides in 2025, e-bikes ~70% of trips), but highly seasonal (summer peak).'],
+  ['Autonomous (AV)', '<b>Driver: partner fleets on the network.</b> Asset-light "hybrid": Waymo (Nashville), May Mobility (Atlanta, live), Baidu, Mobileye, Tensor deploy fleets; Lyft supplies demand + fleet ops rather than owning cars — same hybrid logic as Uber.'],
+  ['FreeNow (Europe)', '<b>Driver: new geography.</b> Acquired Jul 2025 (~$197M / €175M) — a European taxi / multi-mobility app across ~9 countries; ~€1B annualized run-rate. Lyft\'s first move outside North America; one-app integration planned for 2027.'],
+  ['Lyft Rentals — wound down', '<b>Not a growth line — already gone.</b> The rider-facing car-rental product was <b>shut down in 2022 and discontinued by ~2023</b>; it is not a meaningful disclosed line today. <i>Do not confuse</i> it with <b>Express Drive / Flexdrive</b> (car rentals <i>for drivers</i>), which continues. So "Rentals losing share / may not be reported" is correct — for riders it effectively already isn\'t.'],
 ];
 
 // Timeline with optional modal detail (`d`).
@@ -106,15 +102,16 @@ var TIMELINE = [
   { y:'Jun 2024', t:'<b>First Investor Day</b> sets 2027 targets: ~15% bookings CAGR, ~4% Adj. EBITDA margin, &gt;90% FCF conversion.',
     d:'At its <b>first-ever Investor Day (June 6, 2024)</b>, Lyft issued 2027 medium-term targets: a <b>~15% Gross Bookings CAGR</b> (2024–2027), an <b>Adjusted EBITDA margin of ~4% of Gross Bookings</b> by 2027 (from ~2% in 2024), and <b>free-cash-flow conversion &gt;90% of Adj. EBITDA</b> each year 2025–2027. (Note: a February 2024 earnings call — not the Investor Day — was the source of an embarrassing margin-guidance typo, often confused with this event.)' },
   { y:'2025', t:'Signs <b>AV partnerships</b> (Waymo, May Mobility, Baidu, Mobileye, Tensor); acquires <b>FreeNow</b> (Europe); $500M buyback.',
-    d:'A pivotal year: a wave of <b>AV partnerships</b> (Waymo→Nashville, May Mobility→Atlanta, Baidu→Europe, Mobileye/Benteler shuttles, Tensor "Lyft-ready" cars, NVIDIA DRIVE), the <b>FreeNow acquisition</b> (closed July 31, 2025, ~$235M) opening 9 European countries, and a <b>$500M buyback</b> authorization. Lyft also signed/extended consumer partnerships (DoorDash, Chase Sapphire through 2027, United Airlines).' },
+    d:'A pivotal year: a wave of <b>AV partnerships</b> (Waymo→Nashville, May Mobility→Atlanta, Baidu→Europe, Mobileye/Benteler shuttles, Tensor "Lyft-ready" cars, NVIDIA DRIVE), the <b>FreeNow acquisition</b> (closed July 31, 2025, ~$197M / €175M) opening ~9 European countries, and a <b>$500M buyback</b> authorization. Lyft also signed/extended consumer partnerships (DoorDash, Chase Sapphire through 2027, United Airlines).' },
 ];
 
 var PEERS = [
-  ['Uber', 'Global super-app — rides + delivery, far larger scale, structurally profitable.', 'Lyft is US/Canada-focused and rides-pure; competes on price, reliability and driver experience.'],
-  ['Waymo (Alphabet)', 'Robotaxi operator, live in several US cities.', 'Both a threat and a partner — Lyft\'s asset-light model hosts third-party AV fleets (incl. Waymo in Nashville) rather than building its own.'],
-  ['DoorDash', 'US delivery marketplace.', 'Adjacent, not head-to-head — now a partner; DoorDash users are high-frequency Lyft riders.'],
-  ['Bolt / FreeNow', 'European mobility apps.', 'Lyft now operates here directly via the FreeNow acquisition (July 2025).'],
+  ['Uber', 'Global super-app — rides + delivery + ads + freight; ~3–4× Lyft\'s US rides and structurally more profitable.', 'Uber holds ~70%+ of US rides; Lyft ~24–29%. Same ~30% take, so the gap is <b>scale and cross-sell</b>, not pricing. Lyft\'s counter: price/reliability parity, driver experience, and a tighter US focus. It cannot match Uber\'s Eats-funded CAC.'],
+  ['Waymo (Alphabet)', 'Robotaxi operator, live in several US cities.', 'Threat <i>and</i> partner — Lyft hosts third-party AV fleets (Waymo→Nashville) on its network rather than building its own. Same asset-light hybrid bet as Uber, but Lyft has less demand density to offer fleets.'],
+  ['DoorDash', 'US delivery leader.', 'Adjacent, not head-to-head — now a <b>partner</b>. DoorDash users are high-frequency Lyft riders; the partnership skews Lyft\'s mix toward higher-value trips.'],
+  ['Bolt / FreeNow', 'European mobility apps.', 'Lyft now competes here <b>directly</b> via FreeNow (Jul 2025) — but as a new, sub-scale entrant against incumbents, with EU gig-regulation exposure it didn\'t have before.'],
 ];
+var PEER_NOTE='The structural reality: <b>Lyft is the US-concentrated #2</b> in a duopoly. It has no take-rate edge and far less scale than Uber, so its thesis rests on <b>profitable-growth discipline</b> (mix up, insurance cost down) rather than winning share. Its sharpest single risk is also its concentration — <b>US driver regulation</b> hits Lyft harder than its global peer (see Regulation).';
 
 var TAILWINDS = [
   '<b>Insurance reform:</b> California SB 371 (eff. Jan 2026) cut mandated coverage — lowering insurance cost per ride in Lyft\'s largest market and lifting gross margin.',
@@ -139,24 +136,23 @@ var TARGETS = [
   { v:'~4%',   l:'Adj. EBITDA margin',  s:'Of Gross Bookings by 2027 (from ~2% in 2024).' },
   { v:'>90%',  l:'FCF conversion',      s:'Of Adj. EBITDA, each year 2025–2027.' },
 ];
-// Strategic initiative cards.
+// Clickable initiative cards: teaser on the card, full story in a modal (key = `init:<k>`).
 var INITIATIVES = [
-  ['Higher-value rides', 'Airport, longer trips, premium modes and Price Lock. High-value mode volume grew ~50% YoY (Q4\'25) and ~35% YoY (Q1\'26) — lifting bookings and profit per ride faster than total rides.'],
-  ['Lyft Media (ads)', '~$100M annualized revenue run-rate; in-app, in-car tablet and bikeshare advertising. High-margin, scales with riders not driver cost. Advertisers: McDon\'s, Sephora, Google, Adobe.'],
-  ['Autonomous (AV)', 'Asset-light "hybrid network": Waymo (Nashville), May Mobility (Atlanta, live), Baidu Apollo Go (Europe), Mobileye/Benteler shuttles, Tensor "Lyft-ready" cars, NVIDIA DRIVE.'],
-  ['FreeNow (Europe)', 'Acquired Jul 2025 (~$235M); ~€1B annualized run-rate across 9 countries. Unified into one Lyft app experience planned for 2027.'],
-  ['Partnerships', 'DoorDash (high-frequency riders), Chase Sapphire (extended to 2027: $10/mo credit, 5× points), United Airlines (more business riders, higher bookings/ride). Partnership rides hit a record 27% of total.'],
-  ['Price Lock & Lyft Silver', 'Price Lock subscription locks a commute price (early, "promising"); Lyft Silver simplifies the app for older riders — both aimed at frequency and retention.'],
+  { k:'highvalue', t:'Higher-value rides', teaser:'Airport, long-distance, premium, Price Lock.',
+    d:'<b>Mix over volume.</b> High-value modes (airport, longer trips, premium, Price Lock) grew ~<b>50% YoY in Q4\'25</b> and ~<b>35% YoY in Q1\'26</b> — well ahead of total rides — lifting bookings and profit per ride. This is the deliberate up-market tilt at the centre of the profitable-growth thesis.' },
+  { k:'media', t:'Lyft Media (ads)', teaser:'~$100M run-rate; scales with riders, not driver cost.',
+    d:'<b>High-margin and structural.</b> ~$100M annualized run-rate; in-app, in-car tablet and bikeshare advertising (advertisers: McDonald\'s, Sephora, Google, Adobe). Because it scales with riders rather than driver cost, every incremental ad dollar is near-pure margin — a genuine lever, even if small today.' },
+  { k:'av', t:'Autonomous (AV)', teaser:'Asset-light hybrid network of AV partners.',
+    d:'<b>Host fleets, don\'t build them.</b> Waymo (Nashville), May Mobility (Atlanta, live), Baidu Apollo Go (Europe), Mobileye/Benteler shuttles, Tensor "Lyft-ready" cars, NVIDIA DRIVE. Lyft supplies demand + fleet operations — the same hybrid logic as Uber, but from a smaller demand base.' },
+  { k:'freenow', t:'FreeNow (Europe)', teaser:'~$197M; first move outside North America.',
+    d:'<b>Step-change in addressable market.</b> Acquired Jul 31 2025 (~$197M / €175M); ~€1B annualized run-rate across ~9 European countries. Unified into one Lyft app experience planned for 2027. Adds growth — and EU gig-regulation exposure Lyft didn\'t previously carry.' },
+  { k:'partners', t:'Partnerships', teaser:'Record 27% of rides — DoorDash, Chase, United.',
+    d:'<b>Demand from other people\'s users.</b> DoorDash (high-frequency riders), Chase Sapphire (extended to 2027: $10/mo credit, 5× points), United Airlines (more business riders, higher bookings/ride). <b>Partnership rides hit a record 27% of total</b> — a low-CAC channel that also skews mix upward.' },
+  { k:'pricelock', t:'Price Lock & Lyft Silver', teaser:'Frequency & retention plays.',
+    d:'<b>Habit and accessibility.</b> Price Lock (a subscription that locks a commute price; early, management calls it "promising") targets commuter frequency; Lyft Silver simplifies the app for older riders. Both aim to lift frequency and retention rather than headline acquisition.' },
 ];
 
-// ── Insurance model ──
-var INSURANCE = [
-  'Auto insurance is Lyft\'s <b>single largest cost-of-revenue component</b> — and it doesn\'t appear as its own income-statement line, so it shows up mainly in the <i>change</i> in cost of revenue.',
-  'Lyft runs a <b>captive insurer (PVIC, Hawaii)</b> that reinsures a portion of auto risk back from third-party carriers; it funds trust accounts from which insurers are reimbursed for claims.',
-  '<b>Insurance reserves</b> reached <b>$2.18B</b> at year-end 2025 (+28% YoY) — Lyft\'s largest liability — set quarterly via actuarial loss-development factors (a Critical Audit Matter).',
-  'The main third-party program <b>renews each October 1</b>. The Oct 2025 renewal landed at a <b>mid-single-digit increase per ride</b> — management called it "a great outcome."',
-];
-// Legacy-risk transfers (loss portfolio transfers) — sells the matured "tail" to run-off specialists.
+// ── Insurance — legacy-risk transfers (loss portfolio transfers): sells the matured "tail" to run-off specialists. ──
 var RISK_XFER = [
   ['Mar 2020', 'Enstar', '~$465M legacy reserves (Oct 2015–Sep 2018) reinsured.'],
   ['Apr 2021', 'DARAG', 'Quota-share on the Oct 2018–Oct 2020 book.'],
@@ -179,19 +175,97 @@ var GM_CAUTION = [
 
 // ── Regulation & driver classification ──
 var REG = [
-  ['California — the existential risk, now contained', 'AB5 (2020) threatened to make drivers employees. <b>Prop 22</b> (Nov 2020) carved them out as contractors with a pay floor; the <b>California Supreme Court upheld it in July 2024</b>. The state legal challenge is exhausted.'],
-  ['The "third way" spreading', 'Drivers stay contractors but gain pay floors/benefits: <b>Massachusetts</b> ($32.50/hr engaged floor + a 2024 ballot right to unionize), <b>Minnesota</b> ($1.28/mi + $0.31/min, 2024), <b>NYC</b> TLC floors (raised again 2025–26), <b>Seattle</b>. These raise cost without forcing employee status.'],
-  ['Federal — receding', 'The 2024 DOL independent-contractor rule is dormant in enforcement (paused May 2025) and the DOL <b>proposed rescinding it (Feb 2026)</b> — lowering federal reclassification risk under the current administration.'],
-  ['Europe — new exposure via FreeNow', 'The <b>EU Platform Work Directive</b> (transpose by Dec 2026) creates a rebuttable employment presumption; the UK already treats drivers as "workers" (<i>Aslam</i>). Relevant now that Lyft owns FreeNow.'],
+  ['Why this matters more for Lyft', 'Lyft is ~<b>US-concentrated</b> (FreeNow aside), so US driver rules hit it harder than its global peer. The good news: the <b>existential</b> question (employee reclassification) is largely contained; what remains is <b>cost</b> (pay floors) and a <b>new unionization</b> vector.'],
+  ['California — existential risk contained', 'AB5 (2020) threatened to make drivers employees. <b>Prop 22</b> (Nov 2020) carved them out as contractors with a pay floor; the <b>California Supreme Court upheld it unanimously in July 2024</b> (<i>Castellanos</i>). The state legal challenge is exhausted — and <b>SB 371</b> (Jan 2026) even cut insurance-coverage mandates, a cost tailwind.'],
+  ['Massachusetts — cost + a union first', 'A June 2024 AG settlement keeps drivers as contractors but adds a <b>$32.50/hr engaged-time floor</b> + benefits (companies paid <b>$175M</b>). Ballot <b>Question 3 passed (Nov 2024)</b> giving drivers the right to unionize — and in <b>May 2026 the App Drivers Union was certified</b>, the first US rideshare union. First-contract bargaining is the new watch item.'],
+  ['Minnesota / NYC / Seattle — pay floors', '<b>Minnesota</b> (statewide, eff. Dec 2024): <b>$1.28/mi + $0.31/min</b> engaged, $5 min/ride. <b>NYC</b> TLC: per-trip minimum raised <b>+5% (Aug 2025)</b> with new <b>lockout protections</b> (72-hr notice, $500/violation). <b>Seattle/WA</b> (HB 2076): <b>$0.70/min + $1.63/mile</b>, $6.12 min in Seattle (Jan 2026) + sick leave & deactivation protections. All keep contractor status but raise cost.'],
+  ['Federal — receding (a tailwind, not yet operative)', 'The 2024 Biden-era DOL independent-contractor rule is technically on the books but <b>unenforced since May 2025</b>, and the DOL <b>proposed rescinding it (Feb 2026)</b> toward a business-favorable two-factor test. FLSA classification doesn\'t preempt state ABC tests/wage floors, so it caps — not removes — risk.'],
+  ['Europe — new exposure via FreeNow', 'The <b>EU Platform Work Directive</b> (transpose by Dec 2026) creates a rebuttable employment presumption; the UK already treats drivers as "workers" (<i>Aslam</i>). New exposure now that Lyft owns FreeNow.'],
   ['How Lyft frames it', 'The 10-K says reclassification could force it to "significantly alter" its model or exit jurisdictions — but states the possible loss <b>"cannot be reasonably estimated."</b> No dollar figure is disclosed.'],
 ];
 
 var SOURCES = 'Quantitative series: Summit DCF model, snapshot 2026-05-13 (actuals_history = reported; projection_history = model estimate). Per-ride figures are derived (revenue is reported net of driver pay, so Gross Bookings − Revenue ≈ amount to drivers). Qualitative content: Lyft FY2024 & FY2025 Forms 10-K, Q1 2026 Form 10-Q, the June 6 2024 Investor Day, and Q3 2025 / Q4 2025 / Q1 2026 earnings calls & prepared remarks; California SB 371; CA Supreme Court Prop 22 ruling (Jul 2024). Forward years (2026E–2029E) are model estimates, not company guidance. Brand colors approximate Lyft\'s press-kit pink/purple.';
 
+// ─── How Lyft makes money: interactive per-ride chain ─────────────────────────
+var RIDE_FLOW=[
+  { t:'Rider requests & sees an upfront price', d:'Lyft shows an <b>upfront, all-in price</b> before the rider confirms. Lyft controls pricing (mix, Price Lock subscriptions), which shapes the take rate trip-by-trip.' },
+  { t:'Trip happens; rider pays the full fare', d:'Payment is <b>card / digital wallet</b>. Lyft collects the entire <b>Gross Bookings</b> amount (fare + fees). Revenue is then reported <i>net of driver pay</i>, which is what makes the headline "take rate" optics tricky (see Unit Economics).' },
+  { t:'Driver keeps their pay (≥70% commitment)', d:'Since Feb 2024 Lyft <b>guarantees drivers at least 70%</b> of rider payments each week (after external fees), capping Lyft\'s economic take ~30%. <b>Timing:</b> weekly by default, or <b>Express Pay</b> instant cashout for a small fee.' },
+  { t:'Lyft keeps the spread + rider fees', d:'Lyft\'s <b>revenue</b> is the marketplace spread plus rider service fees — roughly <b>33% of bookings</b>. From here, the question is how much survives cost of revenue.' },
+  { t:'Cost of revenue — mostly insurance', d:'The biggest cost slice is <b>auto insurance</b> (plus payment processing and hosting). Insurance is the <b>swing factor</b>: as cost per ride falls, gross profit per ride expands. It doesn\'t get its own income-statement line — it shows up in the <i>change</i> in cost of revenue.', payoff:false },
+  { t:'What\'s left is gross profit', d:'Gross profit is ~<b>$3.32 / ride</b> (Q1 2026) — ~16% of bookings, ~48% of revenue. The 2025–26 margin story is <b>not</b> a higher take rate; it\'s a <b>lower insurance cost per ride</b>.', payoff:true },
+];
+// Per-ride marketplace split (Q1 2026: bookings/ride ≈ $20.88).
+var RIDE_SPLIT=[
+  ['Driver pay', 67, '$13.91', GRAY],
+  ['Cost of revenue (insurance + processing)', 17, '$3.65', EST_FILL],
+  ['Lyft gross profit', 16, '$3.32', BRAND],
+];
+
+// ─── Take-rate anomaly: why "revenue ÷ bookings" is misleading ─────────────────
+var TAKE_EXPL='<b>The line is plotted correctly — but the metric is misleading.</b> Lyft\'s real economic cut is ~30% (capped by the 70% driver-earnings commitment); the zig-zag is an <b>accounting-presentation</b> effect, not Lyft taking a bigger slice:'+
+  '<ul class="ov-bullets" style="margin-top:8px">'+
+  '<li><b>2023 → 32% (down): real.</b> The Uber/Lyft price war — fare cuts, less Prime Time, a new driver earnings floor — are contra-revenue. Revenue +8% vs bookings +14%.</li>'+
+  '<li><b>2024 → 35.9% (up): mostly presentation.</b> The Feb 2024 <b>70% driver-earnings commitment</b> moved certain markets to <b>gross-basis</b> reporting (driver fares booked in <i>both</i> revenue and cost of revenue), and <b>Lyft Media</b> ads grew ~250% (revenue with no offsetting booking). Revenue +31% vs bookings +17% — the gross-up fingerprint.</li>'+
+  '<li><b>2025 → 34.1% (ease): a one-off.</b> FY2025 revenue carries a ~<b>$168M</b> legal/tax/regulatory reserve & settlement drag; ex-item, take rate would have held ~35%.</li>'+
+  '</ul><b>Net:</b> the 2024 step-up is an accounting artifact, not a structural change in Lyft\'s cut. Watch <b>gross profit per ride</b>, not take rate.';
+
+// ─── Cost of revenue: the Q4'25 → Q1'26 drop ──────────────────────────────────
+var COGS_NOTE='Cost of revenue fell from ~<b>$971.8M (Q4 2025)</b> to ~<b>$864.1M (Q1 2026)</b> even with bookings strong (+19% YoY) — and it looks <b>structural</b>, not a one-off:'+
+  '<ul class="ov-bullets" style="margin-top:8px">'+
+  '<li><b>Cause — lower insurance cost per ride.</b> California <b>SB 371</b> (effective Jan 1 2026) cut mandated uninsured/under-insured coverage from <b>$1M → $60k/$300k</b>, plus insurance-strategy execution. CFO Erin Brewer: gross-margin expansion "driven by a <b>reduction in our average insurance cost per ride</b>."</li>'+
+  '<li><b>Not a reserve release.</b> Insurance reserves actually <i>rose</i> ($2,180.4M → $2,245.0M) — the opposite of a release.</li>'+
+  '<li><b>Seasonality is secondary</b> — lower Q1 bikes/FreeNow and ~3M rides lost to weather.</li>'+
+  '</ul>Result: Q1 2026 gross margin <b>47.6%</b> (+~710 bps YoY) — though the YoY base was flattered by a prior-year benefit (see the structural-vs-one-time debate below).';
+
+// ─── Lyft insurance: the captive (PVIC) cycle ─────────────────────────────────
+var PVIC_CHAIN=[
+  { t:'Rider funds insurance in the fare', d:'Auto insurance is required on every ride; the cost is embedded in the fare — but it never gets its own income-statement line, so it shows up inside <b>cost of revenue</b>.' },
+  { t:'Lyft buys coverage from third-party carriers', d:'Lyft\'s main third-party insurance program <b>renews each October 1</b>. The Oct 2025 renewal landed at a <b>mid-single-digit</b> per-ride increase — management called it "a great outcome."' },
+  { t:'Its captive (PVIC, Hawaii) reinsures part of the risk', d:'Lyft runs a <b>captive insurer — Pacific Valley Insurance Company</b> — that reinsures a portion of auto risk back from the carriers, funding trust accounts from which insurers are reimbursed for claims. Keeping risk in-house captures underwriting economics.', payoff:false },
+  { t:'Reserves are set quarterly (a Critical Audit Matter)', d:'Reserves are set via actuarial loss-development factors and reached <b>$2.18B</b> at year-end 2025 (+28% YoY) — Lyft\'s largest liability. The estimate\'s sensitivity makes it a <b>Critical Audit Matter</b>.' },
+  { t:'Mature "tail" is sold to run-off specialists', d:'Periodically Lyft sells the matured loss "tail" via <b>Loss Portfolio Transfers</b> (Enstar 2020, DARAG 2021, RiverStone Feb 2025) — moving old liabilities off the balance sheet and smoothing volatility.', payoff:true },
+];
+
+// ─── M&A — terms & what each deal added (clickable cards, key = `mna:<n>`) ─────
+var MNA=[
+  { n:'Motivate', y:'2018', deal:'~$250M', terms:'cash (est.)', own:'Operating', cat:'Bikeshare', big:true,
+    detail:'<b>Terms:</b> ~$250M (press estimate — never confirmed by Lyft); closed late 2018.<br><br><b>What it added:</b> the largest US bikeshare operator — <b>Citi Bike, Divvy, Bay Wheels</b> and more.<br><br><b>Status:</b> still operating (Lyft explored a sale ~2023 at a ~$500M valuation but retained it). Citi Bike did 46M+ rides in 2025.' },
+  { n:'Halo Cars', y:'2020', deal:'undisclosed', terms:'—', own:'Integrated', cat:'Advertising',
+    detail:'<b>Terms:</b> undisclosed (Feb 2020).<br><br><b>What it added:</b> car-top digital advertising — the seed of <b>Lyft Media</b>.<br><br><b>Status:</b> integrated; Lyft Media is now ~$100M run-rate.' },
+  { n:'Flexdrive', y:'2020', deal:'~$20M', terms:'cash + leases', own:'Integrated', cat:'Driver rentals',
+    detail:'<b>Terms:</b> ~$20M cash + assumed vehicle leases (Feb 2020).<br><br><b>What it added:</b> the fleet that powers <b>Express Drive</b> — car rentals <i>for drivers</i> (not riders).<br><br><b>Status:</b> integrated subsidiary; ongoing.' },
+  { n:'PBSC Urban Solutions', y:'2022', deal:'~$160M', terms:'cash', own:'Integrated', cat:'Bikeshare tech',
+    detail:'<b>Terms:</b> ~$160M (May 2022).<br><br><b>What it added:</b> bikeshare <b>hardware & technology</b> (~95k bikes deployed globally).<br><br><b>Status:</b> integrated as <b>Lyft Urban Solutions</b>.' },
+  { n:'FreeNow', y:'2025', deal:'~$197M', terms:'cash (€175M)', own:'Operating', cat:'Europe', big:true,
+    detail:'<b>Terms:</b> ~$197M / €175M; closed Jul 31 2025.<br><br><b>What it added:</b> a European taxi / multi-mobility app across ~9 countries — Lyft\'s <b>first expansion outside North America</b>; ~€1B annualized run-rate.<br><br><b>Status:</b> operating/integrating; one-app experience planned for 2027.' },
+];
+var MNA_NOTE='Lyft also made the defining <b>divestiture</b> of its strategy: it sold its self-driving unit <b>Level 5 → Toyota\'s Woven Planet</b> (2021, ~$550M), choosing to be the asset-light demand + fleet-ops layer for third-party AV rather than building its own stack. Note: Waymo, May Mobility, Baidu, Tensor are <b>partnerships, not acquisitions</b>.';
+
 // ─── Render helpers (shared overview.css classes) ─────────────────────────────
 function sec(title, inner){ return '<section class="ov-sec"><div class="ov-sec-h">'+esc(title)+'</div>'+inner+'</section>'; }
 function bullets(arr){ return '<ul class="ov-bullets">'+arr.map(function(b){return '<li>'+b+'</li>';}).join('')+'</ul>'; }
 function rows(arr){ return arr.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+r[1]+'</div></div>'; }).join(''); }
+// Numbered, optionally-clickable step chain (shared .ov-chain). detailKey → data-detail="<key>:<i>".
+function chain(arr, detailKey){ return '<div class="ov-chain">'+arr.map(function(s,i){
+  var cls='ov-chain-step'+(s.payoff?' is-payoff':'')+(detailKey?' ov-clickable':'');
+  var attr=detailKey?' data-detail="'+detailKey+':'+i+'"':'';
+  var more=detailKey?' <span class="ov-tl-more">tap ›</span>':'';
+  return '<div class="'+cls+'"'+attr+'><div class="ov-chain-n">'+(i+1)+'</div><div class="ov-chain-t">'+esc(s.t)+more+'</div><div class="ov-chain-d">'+s.d+'</div></div>';
+}).join('')+'</div>'; }
+// Horizontal proportion bars (shared .ov-mbars). rows = [label, pct, valueLabel, color].
+function mbars(arr){ return '<div class="ov-mbars">'+arr.map(function(r){
+  return '<div class="ov-mbar"><div class="ov-mbar-l">'+esc(r[0])+'</div>'+
+    '<div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:'+r[1]+'%;background:'+r[3]+';">'+esc(r[2])+'</div></div>'+
+    '<div class="ov-mbar-v">'+r[1]+'%</div></div>';
+}).join('')+'</div>'; }
+// M&A cards (shared .ov-cards-mna), key = `mna:<n>`.
+function mnaCards(arr){ return '<div class="ov-cards ov-cards-mna">'+arr.map(function(m){
+  return '<div class="ov-card ov-clickable'+(m.big?' ov-card-big':'')+'" data-detail="mna:'+esc(m.n)+'">'+
+    '<div class="ov-card-h"><span class="ov-card-n">'+esc(m.n)+'</span><span class="ov-chip'+(m.miss?' ov-chip-neg':'')+'">'+esc(m.cat)+'</span></div>'+
+    '<div class="ov-card-kpis"><span>'+esc(m.y)+'</span><span>'+esc(m.deal)+'</span><span>'+esc(m.terms)+'</span><span>'+esc(m.own)+'</span></div>'+
+    '<div class="ov-more">What it added ›</div></div>';
+}).join('')+'</div>'; }
 // Dual-handle year slider (fill goes INSIDE the track — otherwise it renders as a solid block).
 function rangeSlider(key, maxI, endA, endB){
   return '<div class="sg-controls"><div class="sg-slider">'+
@@ -208,6 +282,7 @@ function overviewBody(c){
   h += '<div class="ov-snap">' + SNAPSHOT.map(function(p){
     return '<div class="ov-snap-cell"><div class="ov-snap-k">'+esc(p[0])+'</div><div class="ov-snap-v">'+esc(p[1])+'</div></div>';
   }).join('') + '</div>';
+  h += '<div class="ov-live" id="lyLive" hidden></div>';
   h += '<p class="ov-lede">'+esc(DESC)+'</p>';
   h += '<div class="ov-kpis">' + KPIS.map(function(k){
     return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d '+(k.dir||'muted')+'">'+esc(k.d)+'</div></div>';
@@ -218,9 +293,14 @@ function overviewBody(c){
     '<div class="ov-chart-card"><div class="ov-chart-t">Gross Bookings <span>($B, FY · light = estimate)</span></div><div class="ov-chart-wrap"><canvas id="lyChartGB"></canvas></div></div>'+
     '<div class="ov-chart-card"><div class="ov-chart-t">Adj. EBITDA <span>($M, FY · light = estimate)</span></div><div class="ov-chart-wrap"><canvas id="lyChartEbitda"></canvas></div></div>'+
   '</div>';
-  h += sec('How Lyft Makes Money', bullets(HOW_MONEY));
+  h += sec('How Lyft Makes Money — follow a single ride',
+    '<p class="ov-lede" style="margin:0 0 14px">A rideshare trip, end to end — <b>tap any step</b> for the driver-pay split and payout timing.</p>'+
+    chain(RIDE_FLOW,'ride')+
+    '<div class="ov-sec-h ovt-store-h" style="margin-top:20px">Where each $ of a ride goes <span class="ave-subh-note">(Q1 2026, per ride ≈ $20.88)</span></div>'+
+    mbars(RIDE_SPLIT)+
+    '<div class="ov-fynote">Revenue is reported <b>net of driver pay</b>, so the marketplace split is driver pay (~67%) + cost of revenue (~17%, mostly insurance) + Lyft gross profit (~16%). The margin story is the middle slice shrinking.</div>');
   h += sec('Products & Segments', SEGMENTS.map(function(s){
-    return '<div class="ov-row"><div class="ov-row-k">'+esc(s[0])+'</div><div class="ov-row-v">'+esc(s[1])+'</div></div>';
+    return '<div class="ov-row"><div class="ov-row-k">'+esc(s[0])+'</div><div class="ov-row-v">'+s[1]+'</div></div>';
   }).join(''));
   // History with modal detail on milestones.
   h += sec('History & Milestones', '<div class="ov-timeline">'+TIMELINE.map(function(t, i){
@@ -229,10 +309,15 @@ function overviewBody(c){
     var attr = t.d ? ' data-detail="hist:'+i+'"' : '';
     return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>';
   }).join('')+'</div>');
+  h += sec('M&A — Terms & What Each Deal Added',
+    '<div class="ov-diagram-cap" style="margin:0 0 12px">Lyft\'s deals cluster around <b>bikeshare</b> (Motivate, PBSC), the <b>ads</b> seed (Halo), <b>driver rentals</b> (Flexdrive) and now <b>Europe</b> (FreeNow). Tap any card.</div>'+
+    mnaCards(MNA)+
+    '<div class="ov-diagram-cap" style="margin-top:12px">'+MNA_NOTE+'</div>');
   h += sec('Peers & Competitive Landscape',
-    '<table class="ov-table"><thead><tr><th>Peer</th><th>What they are</th><th>How Lyft differs</th></tr></thead><tbody>'+
-    PEERS.map(function(p){return '<tr><td class="ov-td-name">'+esc(p[0])+'</td><td>'+esc(p[1])+'</td><td>'+esc(p[2])+'</td></tr>';}).join('')+
-    '</tbody></table>');
+    '<table class="ov-table"><thead><tr><th>Peer</th><th>What they are</th><th>Where share moves · the structural edge</th></tr></thead><tbody>'+
+    PEERS.map(function(p){return '<tr><td class="ov-td-name">'+esc(p[0])+'</td><td>'+p[1]+'</td><td>'+p[2]+'</td></tr>';}).join('')+
+    '</tbody></table>'+
+    '<div class="ov-diagram-cap" style="margin-top:10px">'+PEER_NOTE+'</div>');
   h += sec('Tailwinds & Headwinds',
     '<div class="ov-grid2">'+
       '<div class="ov-wind ov-wind-up"><div class="ov-wind-h">Tailwinds</div>'+bullets(TAILWINDS)+'</div>'+
@@ -259,8 +344,9 @@ function strategyBody(c){
     ])+
     '<div class="ov-fynote"><b>The nuance:</b> the upmarket tilt is clearly intentional. But management frames the <i>ride-count slowdown</i> as cyclical/structural (mature-metro saturation, weather), not as a deliberate "profit-over-volume" sacrifice. Whether decelerating volume is a chosen tradeoff or an industry reality is the most contestable point in the thesis.</div>');
   h += sec('Strategic Initiatives',
+    '<div class="ov-diagram-cap" style="margin:0 0 12px"><b>Tap any card</b> for the full detail.</div>'+
     '<div class="ov-drivers">'+INITIATIVES.map(function(d){
-      return '<div class="ov-driver"><div class="ov-driver-t">'+esc(d[0])+'</div><div class="ov-driver-d">'+d[1]+'</div></div>';
+      return '<div class="ov-driver ov-clickable" data-detail="init:'+esc(d.k)+'"><div class="ov-driver-t">'+esc(d.t)+'</div><div class="ov-driver-d">'+esc(d.teaser)+'</div><div class="ov-more">More ›</div></div>';
     }).join('')+'</div>');
   return h;
 }
@@ -307,14 +393,18 @@ function unitBody(c){
   // Take rate line
   h += '<div class="ov-sec-h ovt-store-h">Take Rate — Revenue ÷ Gross Bookings</div>';
   h += '<div class="ov-chart-wrap ovt-ue-wrap"><canvas id="lyUEtake"></canvas></div>';
-  h += '<div class="ov-fynote">Take rate has drifted from ~36% (2024) toward ~33% — Lyft\'s net cut is growing a touch slower than the price a rider pays. The margin story is <b>not</b> a higher take rate; it\'s a <b>lower cost per ride</b> (insurance).</div>';
-  // Insurance model
-  h += sec('The Insurance Model', '<div class="ov-callout">'+bullets(INSURANCE)+'</div>'+
+  h += '<div class="ov-fynote">Take rate has drifted from ~36% (2024) toward ~33% — but the line is <b>not</b> what it looks like. The margin story is a <b>lower cost per ride</b> (insurance), not a higher take rate.</div>';
+  h += sec('Why the take-rate line zig-zags (and why it\'s misleading)', '<div class="ov-callout"><div class="ov-tl-body">'+TAKE_EXPL+'</div></div>');
+  // Cost of revenue drop
+  h += sec('The Q4\'25 → Q1\'26 Cost-of-Revenue Drop', '<div class="ov-callout"><div class="ov-tl-body">'+COGS_NOTE+'</div></div>');
+  // Insurance model — captive (PVIC) cycle as a step chain
+  h += sec('The Insurance Model — the captive (PVIC) cycle',
+    '<p class="ov-lede" style="margin:0 0 14px">Auto insurance is Lyft\'s single largest cost-of-revenue component, and it runs a <b>captive insurer</b> to capture the economics. <b>Tap any step.</b></p>'+
+    chain(PVIC_CHAIN,'pvic')+
     '<div class="ov-subh" style="margin-top:16px">Legacy-risk transfers (loss portfolio transfers)</div>'+
     '<table class="ov-table"><thead><tr><th>Date</th><th>Counterparty</th><th>What was transferred</th></tr></thead><tbody>'+
     RISK_XFER.map(function(r){return '<tr><td class="ov-td-name">'+esc(r[0])+'</td><td class="ov-td-name">'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>';}).join('')+
-    '</tbody></table>'+
-    '<div class="ave-subh-note" style="margin-top:8px">Lyft keeps current-year auto risk in its captive (PVIC) and periodically sells the matured "tail" to run-off specialists — smoothing balance-sheet volatility.</div>');
+    '</tbody></table>');
   // Gross margin debate
   h += sec('Gross Margin — Structural or One-Time?',
     '<p class="ov-lede" style="margin-bottom:14px">Q1 2026 gross margin jumped to <b>47.6%</b> (+~710 bps YoY). The key question: is the insurance-driven lift <b>durable</b>, or flattered by an easy comparison?</p>'+
@@ -681,17 +771,46 @@ function wireModal(root){
   function closeM(){ back.classList.remove('on'); document.removeEventListener('keydown', onEsc); setTimeout(function(){ back.hidden=true; }, 180); }
   root.querySelector('#lyModalX').onclick = closeM;
   back.onclick = function(e){ if (e.target===back) closeM(); };
+  function resolve(key){
+    var p=key.split(':'), kind=p[0], id=p.slice(1).join(':');
+    if (kind==='hist'){ var t=TIMELINE[+id]; return t&&t.d?{t:t.y,h:t.d}:null; }
+    if (kind==='ride'){ var s=RIDE_FLOW[+id]; return s?{t:'Step '+(+id+1)+' — '+s.t,h:s.d}:null; }
+    if (kind==='pvic'){ var v=PVIC_CHAIN[+id]; return v?{t:'Insurance — '+v.t,h:v.d}:null; }
+    if (kind==='init'){ var d=INITIATIVES.filter(function(x){return x.k===id;})[0]; return d?{t:d.t,h:d.d}:null; }
+    if (kind==='mna'){ var m=MNA.filter(function(x){return x.n===id;})[0]; return m?{t:m.n+' <span class="ov-modal-sub">'+esc(m.y)+' · '+esc(m.deal)+'</span>',h:m.detail}:null; }
+    return null;
+  }
   root.querySelectorAll('[data-detail]').forEach(function(el){
-    el.onclick = function(){
-      var key=el.getAttribute('data-detail'), parts=key.split(':');
-      if (parts[0]==='hist'){ var t=TIMELINE[+parts[1]]; if (t&&t.d) openM(t.y, t.d); }
-    };
+    el.style.cursor='pointer';
+    el.onclick = function(){ var d=resolve(el.getAttribute('data-detail')); if (d) openM(d.t, d.h); };
   });
 }
 
+// ── Live price (via the shared get-quote edge function; informational banner) ──
+function fetchQuote(ticker){
+  var env=(typeof window!=='undefined')&&window.ENV;
+  if(!env||!env.SUPABASE_URL||!env.SUPABASE_ANON_KEY) return Promise.reject(new Error('no-env'));
+  var base=String(env.SUPABASE_URL).replace(/\/+$/,'');
+  return fetch(base+'/functions/v1/get-quote?ticker='+ticker,{ headers:{ apikey:env.SUPABASE_ANON_KEY, Authorization:'Bearer '+env.SUPABASE_ANON_KEY } })
+    .then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
+    .then(function(j){ if(j&&typeof j.price==='number') return j; throw new Error('bad payload'); });
+}
+function renderLive(root){
+  var el=root.querySelector('#lyLive'); if(!el) return;
+  el.hidden=false; el.innerHTML='<span class="ov-live-ts">fetching live price…</span>';
+  fetchQuote('LYFT').then(function(q){
+    var p=q.changePct, up=(p==null||p>=0);
+    var t=q.time?new Date(q.time*1000):null, hhmm=t?(('0'+t.getHours()).slice(-2)+':'+('0'+t.getMinutes()).slice(-2)):'';
+    var st=(q.marketState&&q.marketState!=='REGULAR')?(' · '+String(q.marketState).toLowerCase()):'';
+    el.innerHTML='<span class="ov-live-dot"></span><span class="ov-live-tk">LYFT</span><span class="ov-live-px">$'+q.price.toFixed(2)+'</span>'+
+      (p!=null?'<span class="ov-live-ch '+(up?'up':'down')+'">'+(up?'▲ +':'▼ −')+Math.abs(p).toFixed(2)+'%</span>':'')+
+      '<span class="ov-live-ts">live · '+esc(q.exchange||'NASDAQ')+(hhmm?(' · '+hhmm):'')+st+'</span>';
+  }).catch(function(){ el.hidden=true; el.innerHTML=''; }); // hide cleanly until the get-quote edge fn is deployed
+}
 function init(c){
   var root = document.querySelector('.ov-lyft');
   if (!root) return;
+  renderLive(root);
   root.querySelectorAll('.ovt-tab').forEach(function(btn){
     btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };
   });

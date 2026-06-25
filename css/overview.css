@@ -491,6 +491,25 @@
 }
 .ov-msft .ov-snap { border-top: 3px solid var(--brand-2); }
 
+/* Live-price banner (shared) — informational quote via the get-quote edge function. */
+.ov-live {
+  display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  margin: 10px 0 0; padding: 8px 12px;
+  background: var(--surface, #fff); border: 1px solid var(--bdr, #E3E8EF); border-radius: 10px;
+  font-size: 13px;
+}
+.ov-live-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #1E9E62;
+  box-shadow: 0 0 0 0 rgba(30,158,98,0.5); animation: ovLivePulse 1.8s infinite;
+}
+@keyframes ovLivePulse { 0%{box-shadow:0 0 0 0 rgba(30,158,98,0.45);} 70%{box-shadow:0 0 0 6px rgba(30,158,98,0);} 100%{box-shadow:0 0 0 0 rgba(30,158,98,0);} }
+.ov-live-tk { font-weight: 700; letter-spacing: .04em; color: var(--navy, #1E2733); }
+.ov-live-px { font-weight: 700; font-size: 15px; color: var(--navy, #1E2733); }
+.ov-live-ch { font-weight: 600; }
+.ov-live-ch.up { color: #1E9E62; }
+.ov-live-ch.down { color: #C0392B; }
+.ov-live-ts { color: var(--mu, #8A93A0); font-size: 12px; margin-left: auto; }
+
 /* Lyft brand accent — Lyft pink (#E6007A) + purple (#6B2BD9). */
 .ov-lyft {
   --brand: #E6007A;

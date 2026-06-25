@@ -1419,16 +1419,40 @@ var PEER_SERIES = {
   rev: { label:'Revenue', log:false, fmt:function(v){ return '$'+v.toFixed(1)+'B'; }, data:{
     SOFI:[0.57,0.98,1.57,2.12,2.67,3.61,4.67,6.29,8.13], HOOD:[0.96,1.82,1.36,1.87,2.95,4.47,5.0,5.9,6.7], IBKR:[2.22,2.71,3.07,4.34,5.19,6.21,7.0,7.6,8.3], NU:[0.74,1.70,4.79,8.03,11.52,15.77,21.0,23.0,28.0] } },
   ni: { label:'Net income', log:false, fmt:function(v){ return (v<0?'−$':'$')+Math.abs(v).toFixed(2)+'B'; }, data:{
-    SOFI:[-0.22,-0.48,-0.32,-0.30,0.50,0.48,1.16,1.29,1.87], HOOD:[0.01,-3.69,-1.03,-0.54,1.41,1.88,2.20,2.67,3.17], IBKR:[0.20,0.31,0.38,0.60,0.76,0.98,1.13,1.25,1.47], NU:[-0.17,-0.17,-0.36,1.03,1.97,2.87,4.3,5.6,6.85] } }
+    SOFI:[-0.22,-0.48,-0.32,-0.30,0.50,0.48,1.16,1.29,1.87], HOOD:[0.01,-3.69,-1.03,-0.54,1.41,1.88,2.20,2.67,3.17], IBKR:[0.20,0.31,0.38,0.60,0.76,0.98,1.13,1.25,1.47], NU:[-0.17,-0.17,-0.36,1.03,1.97,2.87,4.3,5.6,6.85] } },
+  // Derived metrics (computed from the base series above).
+  arpu: { label:'ARPU', log:false, fmt:function(v){ return '$'+Math.round(v); }, derive:function(id){
+    var r=PEER_SERIES.rev.data[id], u=PEER_SERIES.users.data[id];
+    return r.map(function(rv,i){ return (rv!=null && u[i]!=null && u[i]>0) ? rv*1000/u[i] : null; }); } },
+  niu: { label:'NI / user', log:false, fmt:function(v){ return (v<0?'−$':'$')+Math.abs(Math.round(v)); }, derive:function(id){
+    var n=PEER_SERIES.ni.data[id], u=PEER_SERIES.users.data[id];
+    return n.map(function(nv,i){ return (nv!=null && u[i]!=null && u[i]>0) ? nv*1000/u[i] : null; }); } },
+  margin: { label:'Net margin', log:false, fmt:function(v){ return v.toFixed(0)+'%'; }, derive:function(id){
+    var n=PEER_SERIES.ni.data[id], r=PEER_SERIES.rev.data[id];
+    return n.map(function(nv,i){ return (nv!=null && r[i]!=null && r[i]>0) ? nv/r[i]*100 : null; }); } },
+  rule40: { label:'Rule of 40', log:false, fmt:function(v){ return v.toFixed(0); }, derive:function(id){
+    var r=PEER_SERIES.rev.data[id], n=PEER_SERIES.ni.data[id];
+    return r.map(function(rv,i){ if (i===0 || rv==null || r[i-1]==null || r[i-1]<=0 || n[i]==null) return null; return (rv/r[i-1]-1)*100 + n[i]/rv*100; }); } },
+  // ROE on average equity (Nu's basis; matches its reported 28%/30%). IBKR on total-company
+  // equity (its public-stock ROE is ~18%). 2020 (and HOOD 2021) omitted — pre/at-IPO equity
+  // made the ratio meaningless. Historical only (no forward).
+  roe: { label:'ROE', log:false, fmt:function(v){ return v.toFixed(0)+'%'; }, data:{
+    SOFI:[null,-22.7,-6.7,-5.8,8.5,5.7,null,null,null], HOOD:[null,null,-14.4,-7.9,19.2,22.0,null,null,null], IBKR:[null,17.0,16.9,21.9,22.2,23.5,null,null,null], NU:[null,-6.8,-7.8,18.2,28.1,30.3,null,null,null] } },
+  // Client assets ($B, year-end) — a brokerage metric: IBKR customer equity, Robinhood AUC
+  // (2025 = Total Platform Assets). SoFi & Nu are banks/lenders, not custodians → N/A.
+  auc: { label:'Client assets', log:true, fmt:function(v){ return '$'+Math.round(v)+'B'; }, data:{
+    SOFI:[null,null,null,null,null,null,null,null,null], HOOD:[63,98,62,102.6,193,324,null,null,null], IBKR:[288,373,306,426,568,779.9,null,null,null], NU:[null,null,null,null,null,null,null,null,null] } }
 };
-var PEER_SERIES_KEYS = ['users','rev','ni'];
+var PEER_SERIES_KEYS = ['users','rev','ni','arpu','niu','margin','rule40','roe','auc'];
+// Resolve a company's series array for a metric (stored data or derived).
+function peerArr(metric, id){ return metric.derive ? metric.derive(id) : metric.data[id]; }
 // Fee income as % of total revenue, by year 2020–2028 (interest% = 100 − fee%).
 // 2026–2028 estimate: SoFi from DCF; peers null (forward mix not separately forecast).
 var PEER_FEE = {
   SOFI:[68.5,74.4,62.9,40.6,35.8,38.6,37.9,40.1,42.8], HOOD:[81.5,85.8,68.8,50.2,62.4,66.2,null,null,null], IBKR:[60.7,57.7,45.6,35.6,39.3,42.6,null,null,null], NU:[48.1,38.4,25.8,19.8,16.4,14.8,null,null,null]
 };
 var PEERS_INTRO = 'How SoFi stacks up against other consumer-finance and fintech platforms on what matters: scale (users), the revenue model (fee vs interest), growth, and what the market pays for it (P/E). Figures are each company\'s latest full fiscal year (FY2025). User metrics are each company\'s own headline (members, funded customers, accounts, customers) — compare scale, not definitions. Use the trends-over-time chart to see how users, revenue or net income have grown — switch between level, year-over-year and CAGR over any year range; the mix and valuation charts add context.';
-var PEERS_SOURCE = 'Sources: company FY2025 results (SEC 10-K / 20-F / 8-K / 6-K) for users, revenue, mix, growth and net income; analyst consensus EPS for the multiples. Revenue mix is fee/noninterest vs net interest income as a share of total revenue. FORWARD P/E = share price on 25-Jun-2026 ÷ FY2026E consensus EPS (SoFi $17.31/$0.59, Robinhood $93.62/$2.20, IBKR $92.12/$2.51, Nu $12.39/$0.87). PEG = forward P/E ÷ FY2025→FY2026E consensus EPS growth (SoFi +60%, IBKR +15%, Nu +38%); Robinhood is "n/m" because its FY2026E EPS is below FY2025 (2025 was a peak year). Interactive Brokers EPS is the public Class-A company, which owns ~26% of IBG LLC — the whole group\'s economic earnings are larger. Nu: IFRS revenue in USD, +37% YoY (+45% FX-neutral; BRL depreciation weighs on USD). SoFi\'s FY2024 GAAP net income included a one-time ~$265M deferred-tax benefit, so its 2024→2025 net income looks flat even though underlying earnings grew strongly. Trends-over-time series (users, total revenue, net income): 2020–2025 actuals from each company\'s filings; 2026–2028 estimates (dashed) — SoFi from our Summit DCF, peers from market consensus (stockanalysis / Yahoo / MarketBeat). Peer forward revenue is lower-confidence for 2027–2028 (thin coverage; Nu\'s feeds mix BRL/USD), while net income / EPS consensus is firmer. No analyst publishes forward user/customer counts for the peers, so their user lines stop at 2025. Fee % of revenue over time is from the income statements (SoFi forward from the DCF). User definitions differ by company. Illustrative, not investment advice.';
+var PEERS_SOURCE = 'Sources: company FY2025 results (SEC 10-K / 20-F / 8-K / 6-K) for users, revenue, mix, growth and net income; analyst consensus EPS for the multiples. Revenue mix is fee/noninterest vs net interest income as a share of total revenue. FORWARD P/E = share price on 25-Jun-2026 ÷ FY2026E consensus EPS (SoFi $17.31/$0.59, Robinhood $93.62/$2.20, IBKR $92.12/$2.51, Nu $12.39/$0.87). PEG = forward P/E ÷ FY2025→FY2026E consensus EPS growth (SoFi +60%, IBKR +15%, Nu +38%); Robinhood is "n/m" because its FY2026E EPS is below FY2025 (2025 was a peak year). Interactive Brokers EPS is the public Class-A company, which owns ~26% of IBG LLC — the whole group\'s economic earnings are larger. Nu: IFRS revenue in USD, +37% YoY (+45% FX-neutral; BRL depreciation weighs on USD). SoFi\'s FY2024 GAAP net income included a one-time ~$265M deferred-tax benefit, so its 2024→2025 net income looks flat even though underlying earnings grew strongly. Trends-over-time series (users, total revenue, net income): 2020–2025 actuals from each company\'s filings; 2026–2028 estimates (dashed) — SoFi from our Summit DCF, peers from market consensus (stockanalysis / Yahoo / MarketBeat). Peer forward revenue is lower-confidence for 2027–2028 (thin coverage; Nu\'s feeds mix BRL/USD), while net income / EPS consensus is firmer. No analyst publishes forward user/customer counts for the peers, so their user lines stop at 2025. Fee % of revenue over time is from the income statements (SoFi forward from the DCF). ROE is net income ÷ average shareholders\' equity (matches Nu\'s reported ~28%/30%); IBKR is shown on total-company equity (its public-stock ROE is ~18%); 2020 and Robinhood\'s 2021 are omitted because pre/at-IPO equity made the ratio meaningless, and SoFi\'s 2024 was lifted by a one-time tax benefit. Client assets is a brokerage metric (IBKR customer equity; Robinhood AUC / 2025 Total Platform Assets) — SoFi and Nu are banks/lenders, not custodians, so N/A. ROE and client assets are historical only (no forward). User definitions differ by company. Illustrative, not investment advice.';
 var PEER_GRAY = '#9DB4C4';
 var _peerMetric = 'users';
 var _peerView = 'level';    // 'level' | 'yoy' | 'cagr'
@@ -1454,7 +1478,6 @@ function peersTable(){
 
 function peersBody(c){
   var h = '';
-  h += '<p class="ov-lede">'+esc(PEERS_INTRO)+'</p>';
   h += '<div class="peer-tbl-wrap">'+peersTable()+'</div>';
 
   // Interactive trends-over-time widget: metric + view (level / YoY / CAGR) + year window.
@@ -1489,13 +1512,13 @@ function peerWin(){
   return [Math.min(+mn.value, +mx.value), Math.max(+mn.value, +mx.value)];
 }
 function peerHasNeg(metric, a, b){
-  for (var ci=0; ci<PEERS.length; ci++){ var s = metric.data[PEERS[ci].id]; for (var i=a; i<=b; i++){ if (s[i] != null && s[i] < 0) return true; } }
+  for (var ci=0; ci<PEERS.length; ci++){ var s = peerArr(metric, PEERS[ci].id); for (var i=a; i<=b; i++){ if (s[i] != null && s[i] < 0) return true; } }
   return false;
 }
 function peerLineDatasets(metric, view, a, b){
   var off = (view === 'yoy') ? a+1 : a; // absolute year index of the first plotted point
   return PEERS.map(function(p){
-    var s = metric.data[p.id], col = PEER_COLORS[p.id] || PEER_GRAY, arr = [];
+    var s = peerArr(metric, p.id), col = PEER_COLORS[p.id] || PEER_GRAY, arr = [];
     if (view === 'yoy'){ for (var i=a+1; i<=b; i++){ var pr=s[i-1], cu=s[i]; arr.push((pr!=null && cu!=null && pr>0) ? +(((cu/pr)-1)*100).toFixed(1) : null); } }
     else { for (var j=a; j<=b; j++) arr.push(s[j]); }
     return { label:p.name, data:arr, borderColor:col, backgroundColor:col, borderWidth:p.sofi?3.5:2,
@@ -1505,7 +1528,7 @@ function peerLineDatasets(metric, view, a, b){
 }
 function peerCagrData(metric, a, b){
   var n = b - a;
-  return PEERS.map(function(p){ var s = metric.data[p.id]; if (n <= 0) return null; var v0=s[a], v1=s[b]; if (v0==null || v1==null || v0<=0 || v1<=0) return null; return +((Math.pow(v1/v0, 1/n) - 1) * 100).toFixed(1); });
+  return PEERS.map(function(p){ var s = peerArr(metric, p.id); if (n <= 0) return null; var v0=s[a], v1=s[b]; if (v0==null || v1==null || v0<=0 || v1<=0) return null; return +((Math.pow(v1/v0, 1/n) - 1) * 100).toFixed(1); });
 }
 // End-of-line value label (Level view only).
 var peerTSEndLabels = {

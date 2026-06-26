@@ -50,7 +50,6 @@ var OPINC_X    = OPINC.concat(OPINC_F);
 var CAPEX_X    = CAPEX.concat(CAPEX_F);
 var DA_YEARS_X = DA_YEARS.concat(YEARS_F);
 var DA_X       = DA.concat(DA_F);
-var OPMARGIN_X = OPINC_X.map(function(v,i){ return v/REV_X[i]*100; });
 var EST_CAP = 'Shaded / lighter bars (2026E–2027E) are <b>Summit DCF estimates</b> (snapshot May 2026), not reported actuals.';
 // Segment split — clean from FY2021.
 var SEG_YEARS = ['2021','2022','2023','2024','2025'];
@@ -68,7 +67,7 @@ var SNAPSHOT=[
   ['Listing','NASDAQ: META'],['Founded','2004 — Cambridge, MA'],['IPO','May 2012 · $38.00'],
   ['CEO','Mark Zuckerberg (founder)'],['Segments','Family of Apps · Reality Labs'],['Control','Dual-class — founder voting control'],
 ];
-var DESC='Meta is the world\'s largest social-advertising business. The <b>Family of Apps</b> — Facebook, Instagram, WhatsApp, Messenger and Threads (~3.5B daily people) — is the engine: an AI-driven advertising machine whose <b>segment</b> operating margin runs ~50%+ and is almost entirely walled-garden (Meta owns every layer of the ad stack, so it keeps the whole ad dollar). <b>Note:</b> that ~50% is the Family-of-Apps <i>segment</i>; the <b>consolidated company runs ~41%</b> because Reality Labs loses ~$19B a year. That FoA cash machine funds <b>Reality Labs</b>, the AR/VR + AI-hardware bet — losses management now expects to peak around 2025 and then narrow. The whole story is: how much of the FoA cash gets re-invested into AI capex, and whether it pays off.';
+var DESC='Meta is the world\'s largest social-advertising business. The <b>Family of Apps</b> — Facebook, Instagram, WhatsApp, Messenger and Threads (~3.5B daily people) — is the engine: a walled-garden advertising machine (Meta owns every layer of the ad stack, so it keeps essentially the whole ad dollar) running at a <b>~50%+ segment operating margin</b>. The <b>consolidated</b> company runs <b>~41%</b> — the gap is Reality Labs, the AR/VR + AI-hardware bet that loses ~$19B a year and which the FoA cash funds. Management guides Reality Labs losses to <b>peak in 2026</b>, then gradually narrow. The whole story is: how much of the FoA cash gets re-invested into AI capex, and whether it pays off.';
 var KPIS=[
   { l:'Revenue',          v:'$201B', d:pctStr((REV[6]/REV[5]-1)*100)+' YoY',  dir:'up' },
   { l:'Operating Income', v:'$83.3B',d:'~41% op margin',                       dir:'up' },
@@ -127,15 +126,27 @@ var RL_NOTE='Reality Labs is the long bet — and it is run at a deliberate, lar
 var RL_POINTS=[
   '<b>Revenue mix &amp; recognition:</b> RL revenue ≈ a platform/"proxy" line + <b>Meta Quest</b> (Meta sells the headset directly and books the <b>full device price</b>) + <b>smart glasses</b> (Ray-Ban / Oakley Meta). Crucially, <b>EssilorLuxottica manufactures and is the device seller of record</b> for the glasses — it books the retail sales in its own Wearables division — so Meta recognizes only its <b>shared / partial economics, not the full retail price</b> (the exact split is undisclosed). So glasses can sell huge units while adding comparatively little reported RL revenue — versus Quest, which is full-device revenue.',
   '<b>The breakout is glasses, not VR:</b> Ray-Ban / Oakley Meta sold <b>&gt;7M units in 2025</b>; management is pivoting investment <b>toward wearables and away from VR/Horizon</b> (~1,500 RL roles cut), pitching glasses as the next platform for "personal superintelligence." Orion (full AR) is still a prototype.',
-  '<b>Losses are at their peak:</b> RL lost ~<b>$19B in 2025</b> (~$79B cumulative). Zuckerberg (Q4 2025): 2026 losses will be "<i>similar to last year, and this will likely be the peak as we start to gradually reduce our losses going forward.</i>" Still red — but the inflection the FoA cash machine is built to absorb.',
+  '<b>Losses peak in 2026:</b> RL lost ~<b>$19B in 2025</b> (~$79B cumulative). Zuckerberg (Q4 2025 call): <b>2026</b> losses will be "<i>similar to last year, and this will likely be the peak as we start to gradually reduce our losses going forward.</i>" So 2026 — the year we are in — is the high-water mark, not the past. Still red, but the inflection the FoA cash machine is built to absorb.',
 ];
 
 // ── The Spend Engine (the "devil's accounting") ──
 var SPEND_LEDE='Meta\'s reported capex is enormous — but it is only part of the AI build. A lot of the spend lands in the P&L as <b>lease and cloud-commitment expense</b> rather than as capex, so the <b>true investment intensity</b> is hard to read off the headline number. To make it legible, the Summit team <b>reconstructed</b> the spend from Meta\'s 10-K/10-Q Note-8 commitment disclosures plus vendor 8-Ks and press. What follows is that <b>estimate</b> — not a clean company disclosure and not a live time series (it never will be), but enough to give a real notion of how the buildout is funded, in <b>three ways</b>:';
 var SPEND_WAYS=[
-  { k:'owned', t:'1 · Owned capex → depreciation', d:'Servers + data centers Meta buys outright become PP&E and flow through the P&L as <b>D&A</b>, which has exploded ($8B in 2021 → ~$18.6B in 2025, heading toward ~$29B). This is the "clean" part — but the depreciation wave it creates will pressure margins for years.' },
-  { k:'leases', t:'2 · Leases (data centers)', d:'Much of the footprint is <b>leased</b>, not bought — operating + finance leases. Disclosed lease obligations ballooned from ~$34B (2024) to ~$104B (2025) toward ~$183B — a large, long-dated (≈13–15yr) commitment that lands in the P&L as it is recognized.' },
-  { k:'cloud', t:'3 · Third-party cloud commitments', d:'The murkiest piece: Meta also <b>rents</b> huge compute via multi-year deals — <b>Google Cloud (~$10B), Oracle OCI (~$20B), CoreWeave (~$14B + ~$21B), Nebius (~$12B + ~$9B)</b> and more. Total purchase commitments hit ~<b>$237.7B</b> (10-K Note 8). Roughly ~70% is recognized as <b>cloud operating expense</b> (split between COGS for <b>inference</b> serving and R&D for <b>training</b>), the rest is capex-adjacent.' },
+  { k:'owned', t:'1 · Owned capex → depreciation',
+    teaser:'Servers &amp; data centers Meta buys outright. Hits the P&L slowly, as <b>D&A</b>.',
+    detail:'<b>What it is:</b> the servers, networking gear and data-center shells Meta <b>buys outright</b>.<br><br><b>How it hits the P&L:</b> capitalized as PP&E and expensed <b>gradually as depreciation &amp; amortization (D&A)</b> over the asset life — it does <i>not</i> hit earnings the year it is spent.<br><br><b>Why it matters:</b> D&A has exploded ($8B in 2021 → ~$18.6B in 2025 → ~$29.6B 2026E → ~$44B 2027E). This is the "clean," visible part — but the depreciation wave it builds pressures margins for years <i>after</i> the cash goes out.' },
+  { k:'leases', t:'2 · Leases (data centers)',
+    teaser:'Much of the footprint is <b>leased</b>, not bought. Hits the P&L as lease cost.',
+    detail:'<b>What it is:</b> a large part of the data-center footprint is <b>leased</b>, not owned — operating + finance leases under GAAP lease accounting (ASC 842).<br><br><b>How it hits the P&L:</b> as <b>lease cost</b> (plus interest and ROU-asset amortization on finance leases), recognized over the lease term as capacity is used — not upfront.<br><br><b>Why it matters:</b> disclosed lease obligations ballooned from ~$34B (2024) to ~$104B (2025) toward ~$183B (2026E) — a long-dated (≈13–15-yr) commitment at ~4.1–4.3% that sits in the P&L for over a decade.' },
+  { k:'cloud', t:'3 · Third-party cloud commitments',
+    teaser:'Meta also <b>rents</b> compute via multi-year deals. The murkiest piece — mostly opex.',
+    detail:'<b>What it is:</b> multi-year deals to <b>rent</b> compute from outside vendors — <b>Google Cloud (~$10B), Oracle OCI (~$20B), CoreWeave (~$14B + ~$21B), Nebius (~$12B + ~$9B)</b> and more; total purchase commitments hit ~<b>$237.7B</b> (10-K Note 8).<br><br><b>How it hits the P&L:</b> mostly as <b>operating expense</b>, not capex — ~71% of the 2026 commitments due land in COGS (inference serving) and R&D (model training); only ~29% is capex-adjacent.<br><br><b>Why it matters:</b> because it is opex, this huge spend is <i>invisible</i> in the capex line yet sits straight in the cost base — the core of the "where is the AI spend?" question (see the common-size split below).' },
+];
+// Common-size: where the ~$42B of 2026 cloud commitments lands (Summit bridge estimate).
+var SPEND_MIX=[
+  ['COGS — inference serving', 42, '~$17.8B', '#0866FF'],
+  ['R&D — model training', 29, '~$12.1B', '#7AA9FF'],
+  ['Capex-adjacent (servers / DC)', 29, '~$12.3B', '#B8C0CA'],
 ];
 var SPEND_NOTE='<b>Why it matters:</b> a large share of Meta\'s "AI spend" lands in cost of revenue and R&D as lease and cloud-commitment expense rather than as capex — so the true investment intensity is larger than the headline capex line, and the depreciation + commitment run-off becomes a multi-year margin question. Summit\'s <b>commitment bridge</b> estimates that of the cloud commitments coming due in <b>2026, ~71% is recognized as operating expense</b> (split COGS for <b>inference</b> serving and R&D for <b>training</b>) and ~<b>29%</b> is capex-adjacent (server purchases / data-center construction). <span class="ave-subh-note">All Spend-Engine figures are a Summit analytical reconstruction from Meta\'s 10-K/10-Q Note-8 commitments + vendor 8-Ks/press — an estimate, not a clean company breakdown and not a live series; shown to convey the shape of the spend, not sourced into the charts.</span>';
 var EFFIC=[
@@ -176,7 +187,7 @@ var TAILWINDS=[
 var HEADWINDS=[
   '<b>The most binary AI-capex bet in megacap:</b> 2026 capex guided to ~<b>$125–145B</b> (raised in Apr 2026 from $115–135B), and Meta must earn the return <b>entirely through its own products</b> — unlike Amazon/Microsoft/Google, it has <b>no external cloud business</b> to rent that compute to and defray the cost. Every server only pays off if it lifts Meta\'s own ad monetization, which makes the bet unusually all-or-nothing; the stock fell ~9% on the Q1 2026 capex raise.',
   '<b>A large, long-dated spending commitment:</b> beyond headline capex, Meta has ~<b>$183B</b> of lease obligations and ~<b>$237.7B</b> of multi-year cloud-purchase commitments. The headwind isn\'t that they\'re disclosed opaquely — it\'s the <b>sheer magnitude and the future P&L drag</b>: as this depreciation, lease cost and committed spend run through the income statement over the next several years, it pressures margins well before the AI returns are proven.',
-  '<b>Reality Labs burn:</b> ~$19B/yr (~$79B cumulative); losses expected to peak ~2025 but stay negative — tolerated only while FoA delivers.',
+  '<b>Reality Labs burn:</b> ~$19B/yr (~$79B cumulative); losses guided to <b>peak in 2026</b> then narrow, but stay negative for years — tolerated only while FoA delivers.',
   '<b>AI strategy whiplash:</b> a costly talent war, the $14.3B Scale AI deal, and an open→closed Llama pivot have caused internal churn; the differentiated product is unproven.',
   '<b>Regulatory + governance:</b> EU DMA "pay-or-consent" fights and teen/AI-safety pressure persist; dual-class control leaves minority holders little say.',
 ];
@@ -214,9 +225,18 @@ var REV_E = [28313,31023,34353,39659,35041,38455,41083,47346,42957,45970,50766,5
 var REV_A = [28645,31999,34146,40111,36455,39071,40589,48385,42314,47516,51242,59893,56311];
 var OPI_E = [6799, 8300, 11827,14235,13578,15406,15774,19870,17394,18372,20904,24420,24990];
 var OPI_A = [7227, 9392, 13748,16384,13818,14847,17350,23365,17555,20441,20535,24745,22872];
+// Advertising revenue (~98% of total) — quarterly est vs act, populated from 1Q24.
+var Q9    = ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'];
+var ADV_E = [34283,37798,40372,45673,42049,45228,49856,57543,51549];
+var ADV_A = [35635,38329,39885,46783,41392,46563,50082,58137,55024];
+// Operating margin (%) — DERIVED from the revenue & operating-income series.
+var OPM_E = OPI_E.map(function(v,i){ return v/REV_E[i]*100; });
+var OPM_A = OPI_A.map(function(v,i){ return v/REV_A[i]*100; });
 var AVE={
-  rev:{ label:'Revenue', fmt:'usd', quarters:Q13, est:REV_E, act:REV_A, note:'Total revenue. The model tracked tightly through 2025; advertising re-accelerated into 1Q26, so the actual came in ahead of estimate.' },
-  opinc:{ label:'Operating income', fmt:'usd', quarters:Q13, est:OPI_E, act:OPI_A, note:'GAAP operating income. Meta consistently out-earned the model through 2024–25; 1Q26 came in below estimate as the AI-capex ramp lifted the expense base.' },
+  rev:    { label:'Revenue',            fmt:'usd', quarters:Q13, est:REV_E, act:REV_A, note:'Total revenue. The model tracked tightly through 2025; advertising re-accelerated into 1Q26, so the actual came in ahead of estimate.' },
+  adv:    { label:'Advertising revenue', fmt:'usd', quarters:Q9, est:ADV_E, act:ADV_A, note:'Advertising revenue (~98% of the total). Tracked closely; 1Q26 came in well ahead as AI-driven ad pricing and impressions accelerated.' },
+  opinc:  { label:'Operating income',   fmt:'usd', quarters:Q13, est:OPI_E, act:OPI_A, note:'GAAP operating income. Meta consistently out-earned the model through 2024–25; 1Q26 came in below estimate as the AI-capex ramp lifted the expense base.' },
+  opmargin:{ label:'Operating margin',  fmt:'pct', quarters:Q13, est:OPM_E, act:OPM_A, note:'Consolidated operating margin (operating income ÷ revenue). The telling quarter is 1Q26: revenue BEAT but margin MISSED ~7pp — the AI-capex/expense ramp lifted the cost base faster than the model assumed, so a revenue beat still meant a margin (and operating-income) miss.' },
 };
 var _aveMetric='rev', AVE_GREEN='#16A34A', AVE_RED='#C0392B';
 
@@ -335,22 +355,14 @@ function spendBody(){
   '</div>';
   h+='<div class="ov-diagram-cap">'+EST_CAP+' Capex ~doubles to ~$141B (2026E) and ~$174B (2027E); the D&A wave roughly triples by 2028 — the multi-year margin question.</div>';
   h+=sec('Three ways the buildout is funded',
-    '<div class="ov-drivers">'+SPEND_WAYS.map(function(w){ return '<div class="ov-driver"><div class="ov-driver-t">'+esc(w.t)+'</div><div class="ov-driver-d">'+w.d+'</div></div>'; }).join('')+'</div>'+
-    '<div class="ov-fynote">'+SPEND_NOTE+'</div>');
+    '<div class="ov-diagram-cap" style="margin:0 0 12px"><b>Tap any card</b> for what the spend is, how it lands in the P&L, and why it matters.</div>'+
+    '<div class="ov-drivers">'+SPEND_WAYS.map(function(w){ return '<div class="ov-driver ov-clickable" data-detail="spend:'+w.k+'"><div class="ov-driver-t">'+esc(w.t)+'</div><div class="ov-driver-d">'+w.teaser+'</div><div class="ov-more">More ›</div></div>'; }).join('')+'</div>');
+  h+=sec('Where the AI spend actually lands — clearing the fog',
+    '<p class="ov-lede" style="margin:0 0 12px">The reason the AI spend is hard to see: most of it is <b>not</b> capex. Of the ~<b>$42B</b> of cloud commitments coming due in 2026, this is the common-size split of where it hits the income statement — ~<b>71% is operating expense</b> (COGS + R&D), only ~29% capex-adjacent.</p>'+
+    '<div class="ov-sec-h ovt-store-h">Where each $1 of 2026 cloud commitments lands <span class="ave-subh-note">(common size · Summit estimate)</span></div>'+
+    mbars(SPEND_MIX)+
+    '<div class="ov-fynote" style="margin-top:20px">'+SPEND_NOTE+'</div>');
   h+=sec('Where tomorrow\'s efficiencies could come from', '<div class="ov-callout">'+bullets(EFFIC)+'</div>');
-  h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
-  return h;
-}
-
-// ─── Pane: Financials ─────────────────────────────────────────────────────────
-function finBody(){
-  var h='';
-  h+='<p class="ov-lede">From the Summit DCF — reported actuals (FY2019–FY2025) plus the model\'s <b>2026E–2027E</b> estimates for operating margin. Profit recovered hard off the 2022 trough; the open question is the <b>capex wave</b> and the depreciation it creates.</p>';
-  h+='<div class="ov-charts" style="grid-template-columns:1fr 1fr">'+
-    '<div class="ov-chart-card"><div class="ov-chart-t">Operating margin <span>(% of revenue · actuals + Summit est.)</span></div><div class="ov-chart-wrap"><canvas id="meMargin"></canvas></div></div>'+
-    '<div class="ov-chart-card"><div class="ov-chart-t">Free cash flow <span>($B, FY · actuals only)</span></div><div class="ov-chart-wrap"><canvas id="meFcf"></canvas></div></div>'+
-  '</div>';
-  h+='<div class="ov-fynote">Operating margin re-expanded to ~41% (2025) and the Summit model has it <b>continuing to widen to ~46–47% by 2027E</b> — the ad engine is profitable enough to absorb the depreciation wave. FCF held at ~$46B in 2025 <i>despite</i> capex jumping to $69.7B. <span class="ave-subh-note">Forward FCF is intentionally left off this chart: the model\'s interim (Q2–Q4) quarters and out-year cash flows aren\'t fully formulated, so a projected FY FCF figure wouldn\'t be a real estimate — we only show reported FCF.</span></div>';
   h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
   return h;
 }
@@ -363,14 +375,12 @@ function html(c){
     '<button type="button" class="ovt-tab" data-ovt="foa">Family of Apps</button>'+
     '<button type="button" class="ovt-tab" data-ovt="rl">Reality Labs</button>'+
     '<button type="button" class="ovt-tab" data-ovt="spend">Spend Engine</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="fin">Financials</button>'+
     '<button type="button" class="ovt-tab" data-ovt="model">Model vs. Reality</button>'+
   '</div>';
   h+='<div class="ovt-pane" data-ovt="overview">'+overviewBody()+'</div>';
   h+='<div class="ovt-pane" data-ovt="foa" hidden>'+foaBody()+'</div>';
   h+='<div class="ovt-pane" data-ovt="rl" hidden>'+rlBody()+'</div>';
   h+='<div class="ovt-pane" data-ovt="spend" hidden>'+spendBody()+'</div>';
-  h+='<div class="ovt-pane" data-ovt="fin" hidden>'+finBody()+'</div>';
   h+='<div class="ovt-pane" data-ovt="model" hidden>'+modelBody()+'</div>';
   h+='<div class="ov-modal-back" id="meModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
     '<button class="ov-modal-x" id="meModalX" aria-label="Close">×</button>'+
@@ -432,26 +442,26 @@ function buildRl(){
   grouped('meSegOp', SEG_YEARS, { label:'Family of Apps', data:FOA_OP, color:FOA }, { label:'Reality Labs', data:RL_OP, color:RL }, money);
 }
 function buildSpend(){ bar('meCapex', YEARS_X, CAPEX_X, YEARS_X.map(function(l,i){ return /E$/.test(l)?FC:(i===6?NEG:GRAY); }), money); bar('meDa', DA_YEARS_X, DA_X, fcCol(DA_YEARS_X,RL), money); }
-function buildFin(){ line('meMargin', YEARS_X, OPMARGIN_X, BRAND, pf); bar('meFcf', YEARS, FCF, BRAND2, money); }
 
 // ═══ Model vs. Reality (quarterly back-test) ══════════════════════════════════
 function groupRow(label,items){ return '<div class="ave-group"><span class="ave-group-l">'+esc(label)+'</span><div class="ave-pills">'+items.map(function(it){ return '<button type="button" class="ave-pill" data-ave="'+it[0]+'">'+esc(it[1])+'</button>'; }).join('')+'</div></div>'; }
-function aveFmt(m,v){ if(v==null) return '—'; return money(v); }
-function aveSurprise(m,i){ var e=m.est[i]; if(e==null||e===0) return 0; return (m.act[i]-e)/Math.abs(e)*100; }
+function aveFmt(m,v){ if(v==null) return '—'; return m.fmt==='pct'?v.toFixed(1)+'%':money(v); }
+function aveSurprise(m,i){ var e=m.est[i]; if(e==null) return 0; if(m.fmt==='pct') return m.act[i]-e; if(e===0) return 0; return (m.act[i]-e)/Math.abs(e)*100; }
 function avePctS(v){ return (v<0?'−':'+')+Math.abs(v).toFixed(1)+'%'; }
+function aveSurpStr(m,v){ return (v<0?'−':'+')+Math.abs(v).toFixed(1)+(m&&m.fmt==='pct'?'pp':'%'); }
 var aveLabels={ id:'aveLabels', afterDatasetsDraw:function(chart){
   var surp=chart.$surp||[], bars=chart.getDatasetMeta(0).data, ctx=chart.ctx, area=chart.chartArea;
   if(area){ var y0=chart.scales.y.getPixelForValue(0); ctx.save(); ctx.strokeStyle='#D7DDE4'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(area.left,y0); ctx.lineTo(area.right,y0); ctx.stroke(); ctx.restore(); }
   for(var i=0;i<surp.length;i++){ var bar=bars[i]; if(!bar) continue; var above=surp[i]>=0;
     ctx.save(); ctx.textAlign='center'; ctx.font='700 11px Inter, sans-serif'; ctx.fillStyle=above?AVE_GREEN:AVE_RED;
-    ctx.fillText((above?'▲ ':'▼ ')+avePctS(surp[i]), bar.x, above?bar.y-7:bar.y+15); ctx.restore(); } } };
+    ctx.fillText((above?'▲ ':'▼ ')+aveSurpStr(AVE[_aveMetric],surp[i]), bar.x, above?bar.y-7:bar.y+15); ctx.restore(); } } };
 function buildAveChart(){
   var id='meAveChart', cv=document.getElementById(id); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return; destroy(id);
   _charts[id]=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:[], datasets:[{ data:[], backgroundColor:[], borderRadius:3, maxBarThickness:54 }] },
     options:{ responsive:true, maintainAspectRatio:false, animation:false, layout:{ padding:{ top:24, bottom:22 } },
       plugins:{ legend:{ display:false }, tooltip:{ callbacks:{
         title:function(items){ return (_charts.meAveChart.$q||[])[items[0].dataIndex]||''; },
-        label:function(ctx){ var i=ctx.dataIndex,m=AVE[_aveMetric]; return ['Estimate: '+aveFmt(m,(_charts.meAveChart.$est||[])[i]),'Actual: '+aveFmt(m,(_charts.meAveChart.$act||[])[i]),'Surprise: '+avePctS((_charts.meAveChart.$surp||[])[i])]; } } } },
+        label:function(ctx){ var i=ctx.dataIndex,m=AVE[_aveMetric]; return ['Estimate: '+aveFmt(m,(_charts.meAveChart.$est||[])[i]),'Actual: '+aveFmt(m,(_charts.meAveChart.$act||[])[i]),'Surprise: '+aveSurpStr(m,(_charts.meAveChart.$surp||[])[i])]; } } } },
       scales:{ y:{ display:false, grace:'22%' }, x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:11 } } } } },
     plugins:[ aveLabels ] });
 }
@@ -465,14 +475,15 @@ function computeAveStats(m,a,b){
 function renderAveStats(m,a,b){
   var box=document.getElementById('meAveStats'); if(!box) return; var s=computeAveStats(m,a,b);
   function tile(l,v,sub,dir){ return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(l)+'</div><div class="ov-kpi-v">'+v+'</div><div class="ov-kpi-d '+(dir||'muted')+'">'+esc(sub)+'</div></div>'; }
+  var u=m.fmt==='pct'?'pp':'%';
   box.innerHTML=tile('Beat rate', s.beatRate.toFixed(0)+'%', s.beats+' of '+s.n+' above estimate', s.beatRate>=s.missRate?'up':'down')+
     tile('Miss rate', s.missRate.toFixed(0)+'%', s.misses+' of '+s.n+' below estimate', s.missRate>s.beatRate?'down':'muted')+
-    tile('Avg surprise', avePctS(s.avg), s.avg>=0?'model ran conservative':'model ran optimistic', s.avg>=0?'up':'down')+
-    tile('Median surprise', avePctS(s.median), 'middle quarter', s.median>=0?'up':'down')+
-    tile('Avg gap (abs)', s.avgAbs.toFixed(1)+'%', 'typical distance from estimate', 'muted')+
-    tile('Biggest beat', avePctS(s.best.s), s.best.q, 'up')+
-    tile('Biggest miss', avePctS(s.worst.s), s.worst.q, 'down')+
-    tile('Latest ('+s.last.q+')', avePctS(s.last.s), s.last.s>=0?'beat estimate':'missed estimate', s.last.s>=0?'up':'down');
+    tile('Avg surprise', aveSurpStr(m,s.avg), s.avg>=0?'model ran conservative':'model ran optimistic', s.avg>=0?'up':'down')+
+    tile('Median surprise', aveSurpStr(m,s.median), 'middle quarter', s.median>=0?'up':'down')+
+    tile('Avg gap (abs)', s.avgAbs.toFixed(1)+u, 'typical distance from estimate', 'muted')+
+    tile('Biggest beat', aveSurpStr(m,s.best.s), s.best.q, 'up')+
+    tile('Biggest miss', aveSurpStr(m,s.worst.s), s.worst.q, 'down')+
+    tile('Latest ('+s.last.q+')', aveSurpStr(m,s.last.s), s.last.s>=0?'beat estimate':'missed estimate', s.last.s>=0?'up':'down');
 }
 function renderAve(a,b){
   var m=AVE[_aveMetric], ch=_charts.meAveChart;
@@ -499,14 +510,17 @@ function buildModelTab(){ var root=document.querySelector('.ov-meta'); if(!root)
 function modelBody(){
   var h='';
   h+='<p class="ov-lede" style="margin-bottom:14px">How the <b>Summit DCF</b>\'s quarterly estimate stacked up against what Meta actually reported. Each bar is the <b>surprise</b> (actual vs estimate); green = favorable (beat), red = unfavorable (miss). Pick a metric and drag the handles to window the quarters — chart and tiles recompute live.</p>';
-  h+='<div class="ave-groups">'+groupRow('P&L', [['rev','Revenue'],['opinc','Operating income']])+'</div>';
+  h+='<div class="ave-groups">'+
+    groupRow('Revenue', [['rev','Total revenue'],['adv','Advertising revenue']])+
+    groupRow('Profitability', [['opinc','Operating income'],['opmargin','Operating margin']])+
+    '</div>';
   h+='<div class="ave-leg"><span class="ave-leg-i"><span class="ave-leg-up">▲</span> favorable (beat)</span><span class="ave-leg-i"><span class="ave-leg-dn">▼</span> unfavorable (miss)</span></div>';
   h+='<div class="ov-chart-t" id="meAveT"></div>';
   h+='<div class="ov-chart-wrap ovt-vs-wrap"><canvas id="meAveChart"></canvas></div>';
   h+=rangeSlider('ave', 1, '', '');
   h+='<div class="ave-subh-note" id="meAveNote" style="margin:6px 2px 16px"></div>';
   h+='<div class="ov-kpis" id="meAveStats" style="grid-template-columns:repeat(4,1fr)"></div>';
-  h+='<div class="ov-foot">Estimates are the model\'s projection_history; actuals are reported. Quarterly back-test 1Q23–1Q26 (Revenue &amp; Operating income are the cleanly-populated quarterly series). Snapshot 2026-05-22.</div>';
+  h+='<div class="ov-foot">Estimates are the model\'s projection_history; actuals are reported. Quarterly back-test 1Q23–1Q26 (Advertising revenue starts 1Q24). Operating margin is derived (operating income ÷ revenue) and its surprise is shown in <b>percentage points (pp)</b>. Snapshot 2026-05-22.</div>';
   return h;
 }
 
@@ -530,7 +544,6 @@ function showOvt(root,key){
   if(key==='foa')      requestAnimationFrame(buildFoa);
   if(key==='rl')       requestAnimationFrame(buildRl);
   if(key==='spend')    requestAnimationFrame(buildSpend);
-  if(key==='fin')      requestAnimationFrame(buildFin);
   if(key==='model')    requestAnimationFrame(buildModelTab);
 }
 function wireModal(root){
@@ -542,6 +555,7 @@ function wireModal(root){
   function resolve(key){ var p=key.split(':'), kind=p[0], id=p.slice(1).join(':');
     if(kind==='hist'){ var t=TIMELINE[+id]; return t&&t.d?{t:t.y,h:t.d}:null; }
     if(kind==='ad'){ var s=AD_FLOW[+id]; return s?{t:'Step '+(+id+1)+' — '+s.t,h:(s.detail||s.d)}:null; }
+    if(kind==='spend'){ var w=SPEND_WAYS.filter(function(x){return x.k===id;})[0]; return w?{t:w.t,h:w.detail}:null; }
     return null; }
   root.querySelectorAll('[data-detail]').forEach(function(el){ el.style.cursor='pointer';
     el.onclick=function(){ var d=resolve(el.getAttribute('data-detail')); if(d) openM(d.t,d.h); }; });

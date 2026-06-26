@@ -316,6 +316,104 @@ function overviewBody(c){
 }
 
 // "Members" sub-tab body — interactive member-growth bar chart with a year-window slider.
+// ─── "Rule of 40" sub-tab ─────────────────────────────────────────────────────
+// SoFi's Rule of 40 = YoY adjusted net revenue growth (%) + adjusted EBITDA margin
+// (%). 18 straight quarters above 40 since the 2021 IPO. Source: SoFi Q1 2026
+// investor presentation (Rule of 40 slide) + earnings-call transcripts.
+var R40_LABELS = ['4Q21','1Q22','2Q22','3Q22','4Q22','1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'];
+var R40_REV    = [54,49,50,51,58,43,37,27,34,26,22,30,24,33,44,38,37,41];
+var R40_EBITDA = [ 2, 3, 6,11,16,16,16,18,30,25,23,27,27,27,29,29,31,31];
+var R40_SCORE  = [55,52,56,62,74,59,53,45,65,51,45,57,51,60,73,67,68,72];
+var R40_QUOTES = [
+  { t:'One way to measure this success is the Rule of 40 calculation, which is revenue growth plus EBITDA margin. We’ve beaten the Rule of 40 benchmark every quarter since going public — 17 straight quarters, with an average score of 58 — making us a top performer among fintechs and technology companies more broadly.', w:'Q3 2025 earnings call' },
+  { t:'Our diversified business is uniquely built to deliver a winning combination of growth and returns. The consistency with which we’ve exceeded the Rule of 40 continues to put us in rarefied air among fintechs and technology companies more broadly.', w:'Q4 2025 earnings call' },
+  { t:'We’ve achieved 18 consecutive quarters of exceeding the Rule of 40, far exceeding it again this quarter at 72 — 41% revenue growth and 31% EBITDA margins. When other companies are stumbling, our revenue growth is accelerating.', w:'Q1 2026 earnings call' },
+];
+
+function rule40Body(){
+  var h = '';
+  h += '<div class="ov-sec-h">The “Rule of 40”</div>';
+  h += '<div class="ov-callout">A health test for growth companies: <b>revenue growth % + profit margin % &ge; 40</b>. SoFi measures it as year-over-year adjusted net revenue growth plus adjusted EBITDA margin. SoFi has cleared 40 <b>every quarter since its 2021 IPO — 18 straight</b>, averaging ~59. Each bar stacks the two components; the number on top is the score.</div>';
+  h += '<div class="ov-chart-card">'+
+    '<div class="ov-chart-t">Rule of 40 by quarter <span>(adj. revenue growth + adj. EBITDA margin · dashed line = 40 threshold)</span></div>'+
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="sofiR40Chart"></canvas></div>'+
+  '</div>';
+  h += '<div class="ov-subh">In Anthony Noto’s words</div>';
+  h += '<div class="r40-quotes">'+R40_QUOTES.map(function(q){
+    return '<blockquote class="r40-q"><div class="r40-q-t">“'+esc(q.t)+'”</div><div class="r40-q-c">— Anthony Noto, CEO · '+esc(q.w)+'</div></blockquote>';
+  }).join('')+'</div>';
+  h += '<div class="ov-foot">Rule of 40 = YoY adjusted net revenue growth + adjusted EBITDA margin (both non-GAAP). Components may not sum exactly to the score due to rounding. Source: SoFi Q1 2026 investor presentation (Rule of 40 slide) and earnings-call transcripts (Q3 2025 – Q1 2026).</div>';
+  return h;
+}
+
+// ─── "Capital Raises" sub-tab ─────────────────────────────────────────────────
+// Offerings completed in the last ~2 years + the rise in book value (total equity,
+// BV/share, tangible BV/share). Sources: SoFi IR press releases, SEC filings, XBRL.
+var OFFERINGS = [
+  { date:'Mar 2024', type:'Convertible senior notes', amt:'$862.5M',
+    terms:'1.25% coupon, due 2029 · ~$9.45 conversion price (~25% premium) · issued with capped calls to limit dilution',
+    use:'Fund the capped-call cost + general corporate purposes' },
+  { date:'Mar 2024', type:'Convertible exchange (debt → equity)', amt:'$600M',
+    terms:'Exchanged $600M of the 0% convertible notes due 2026 for ~61.7M shares of common stock',
+    use:'Deleverage ahead of the 2026 convertible maturity' },
+  { date:'Jul 2025', type:'Common stock offering', amt:'$1.5B',
+    terms:'71.9M shares priced at $20.85',
+    use:'General corporate purposes / fund growth' },
+  { date:'Dec 2025', type:'Common stock offering', amt:'$1.5B',
+    terms:'54.5M shares priced at $27.50',
+    use:'Strengthen capital position + fund incremental growth' },
+];
+var CAPR_LABELS = ['2022','2023','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'];
+var CAPR_EQ     = [5.2, 5.2, 5.8, 5.9, 6.1, 6.5, 6.7, 6.9, 8.8, 10.5, 10.8];   // total equity, $B
+var CAPR_BVPS   = [5.58, 5.36, 5.51, 5.54, 5.65, 5.96, 6.05, 6.16, 7.29, 8.26, 8.44]; // book value / share
+var CAPR_TBVPS  = [3.37, 3.56, 3.87, 3.92, 4.07, 4.41, 4.53, 4.67, 5.93, 6.98, 7.18]; // tangible BV / share
+
+function capRaisesBody(){
+  var h = '';
+  h += '<div class="ov-sec-h">Capital Raises &amp; Book Value</div>';
+  h += '<div class="ov-callout">Since reaching GAAP profitability, SoFi\'s <b>book value (total equity) has roughly doubled</b> — from ~$5.2B at year-end 2022 to <b>~$10.8B at Q1 2026</b> — driven by retained earnings plus four capital raises in 2024–2025. Crucially, the raises grew the pie faster than they diluted it: <b>book value per share rose ~$5.58 → ~$8.44</b> and tangible book value per share more than doubled (~$3.37 → ~$7.18).</div>';
+  h += '<div class="ov-chart-card">'+
+    '<div class="ov-chart-t">Book value over time <span>(bars: total equity $B · lines: book value &amp; tangible book value per share)</span></div>'+
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="sofiCapRChart"></canvas></div>'+
+  '</div>';
+  h += '<div class="ov-subh">Offerings — last 2 years</div>';
+  h += '<div class="cr-list">'+OFFERINGS.map(function(o){
+    return '<div class="cr-card">'+
+      '<div class="cr-card-top"><span class="cr-date">'+esc(o.date)+'</span><span class="cr-amt">'+esc(o.amt)+'</span></div>'+
+      '<div class="cr-type">'+esc(o.type)+'</div>'+
+      '<div class="cr-terms">'+esc(o.terms)+'</div>'+
+      '<div class="cr-use"><b>Use:</b> '+esc(o.use)+'</div>'+
+    '</div>';
+  }).join('')+'</div>';
+  h += '<div class="ov-foot">Total equity, goodwill, intangibles and shares from SoFi 10-Q/10-K (SEC XBRL); per-share figures are computed. Offering terms from SoFi IR press releases and SEC filings. The 0% convertible notes due 2026 (issued 2021) predate this window and are the security referenced by the Mar 2024 exchange.</div>';
+  return h;
+}
+
+// "Milestones" sub-tab — SoFi's history & key milestones (reuses the timeline data).
+function milestonesBody(){
+  var h = '<div class="ov-sec-h">History &amp; Milestones</div>';
+  h += '<div class="ov-timeline">'+TIMELINE.map(function(t){
+    return '<div class="ov-tl-item"><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t[0])+'</div><div class="ov-tl-body">'+t[1]+'</div></div>';
+  }).join('')+'</div>';
+  return h;
+}
+
+// "General" pane — nested sub-tabs: Milestones · Members · Rule of 40 · Capital Raises.
+function generalBody(c){
+  var h = '';
+  h += '<div class="ovg-tabs">'+
+    '<button type="button" class="ovg-tab active" data-ovg="milestones">Milestones</button>'+
+    '<button type="button" class="ovg-tab" data-ovg="members">Members</button>'+
+    '<button type="button" class="ovg-tab" data-ovg="rule40">Rule of 40</button>'+
+    '<button type="button" class="ovg-tab" data-ovg="raises">Capital Raises</button>'+
+  '</div>';
+  h += '<div class="ovg-pane" data-ovg="milestones">'+milestonesBody()+'</div>';
+  h += '<div class="ovg-pane" data-ovg="members" hidden>'+membersBody(c)+'</div>';
+  h += '<div class="ovg-pane" data-ovg="rule40" hidden>'+rule40Body()+'</div>';
+  h += '<div class="ovg-pane" data-ovg="raises" hidden>'+capRaisesBody()+'</div>';
+  return h;
+}
+
 function membersBody(c){
   var maxI = MEM_YEARS.length - 1;
   var h = '';
@@ -2420,7 +2518,7 @@ function html(c){
   // Sub-tab bar
   h += '<div class="ovt-tabs">'+
     '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="members">Members</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="members">General</button>'+
     '<button type="button" class="ovt-tab" data-ovt="interest">Interest Income</button>'+
     '<button type="button" class="ovt-tab" data-ovt="fees">Fee Income</button>'+
     '<button type="button" class="ovt-tab" data-ovt="management">Management</button>'+
@@ -2430,7 +2528,7 @@ function html(c){
   '</div>';
   // Panes
   h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="members" hidden>'+membersBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="members" hidden>'+generalBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="interest" hidden>'+interestBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="fees" hidden>'+feeBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="management" hidden>'+managementBody(c)+'</div>';
@@ -2537,6 +2635,94 @@ function setupMemSlider(){
 function buildMembersTab(){
   buildMemChart();
   setupMemSlider();
+}
+
+// Rule of 40: stacked bars (rev growth + EBITDA margin), 40-threshold line, score on top.
+var _r40Chart = null;
+var r40Plugin = {
+  id: 'r40plugin',
+  afterDatasetsDraw: function(chart){
+    var ctx = chart.ctx, ca = chart.chartArea;
+    var y40 = chart.scales.y.getPixelForValue(40);
+    ctx.save();
+    // 40 threshold line
+    ctx.strokeStyle = '#DC2626'; ctx.lineWidth = 1.4; ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(ca.left, y40); ctx.lineTo(ca.right, y40); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#DC2626'; ctx.font = '700 9px Inter, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('Rule of 40', ca.left + 3, y40 - 4);
+    // score on top of each stacked bar
+    var top = chart.getDatasetMeta(1).data;
+    ctx.fillStyle = '#0F1720'; ctx.font = '700 9.5px Inter, sans-serif'; ctx.textAlign = 'center';
+    top.forEach(function(bar, i){ ctx.fillText(R40_SCORE[i], bar.x, bar.y - 5); });
+    ctx.restore();
+  }
+};
+function buildRule40Chart(){
+  var cv = document.getElementById('sofiR40Chart');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_r40Chart) { _r40Chart.destroy(); _r40Chart = null; }
+  _r40Chart = new Chart(cv.getContext('2d'), {
+    type: 'bar',
+    data: { labels: R40_LABELS, datasets: [
+      { label:'Revenue growth (YoY)', data: R40_REV, backgroundColor:'#A9BCC6', stack:'r40', maxBarThickness:30 },
+      { label:'Adj. EBITDA margin', data: R40_EBITDA, backgroundColor:'#0E7CC0', stack:'r40', maxBarThickness:30 }
+    ]},
+    options: {
+      responsive:true, maintainAspectRatio:false, animation:false,
+      layout:{ padding:{ top:22 } },
+      plugins:{
+        legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{ size:10 }, padding:8, color:'#5b6470' } },
+        tooltip:{ mode:'index', intersect:false, callbacks:{
+          label:function(ctx){ return ctx.dataset.label + ': ' + ctx.parsed.y + '%'; },
+          footer:function(items){ return 'Rule of 40 score: ' + R40_SCORE[items[0].dataIndex]; }
+        } }
+      },
+      scales:{
+        y:{ stacked:true, beginAtZero:true, max:85, grid:{ color:'rgba(0,0,0,.05)' },
+          ticks:{ color:'#8A93A0', font:{ size:10 } } },
+        x:{ stacked:true, grid:{ display:false },
+          ticks:{ color:'#8A93A0', font:{ size:9 }, maxRotation:0, autoSkip:false } }
+      }
+    },
+    plugins: [r40Plugin]
+  });
+}
+
+// Capital raises: total equity ($B) bars + book value / tangible BV per share lines.
+var _capRChart = null;
+function buildCapRaiseChart(){
+  var cv = document.getElementById('sofiCapRChart');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_capRChart) { _capRChart.destroy(); _capRChart = null; }
+  _capRChart = new Chart(cv.getContext('2d'), {
+    data: { labels: CAPR_LABELS, datasets: [
+      { type:'bar', label:'Total equity ($B)', data: CAPR_EQ, yAxisID:'y',
+        backgroundColor:'rgba(14,124,192,.85)', borderRadius:3, maxBarThickness:34, order:3 },
+      { type:'line', label:'Book value / share', data: CAPR_BVPS, yAxisID:'y1',
+        borderColor:'#0F1720', backgroundColor:'#0F1720', fill:false, tension:.3, pointRadius:2.5, borderWidth:2, order:1 },
+      { type:'line', label:'Tangible BV / share', data: CAPR_TBVPS, yAxisID:'y1',
+        borderColor:'#E8833A', backgroundColor:'#E8833A', borderDash:[5,4], fill:false, tension:.3, pointRadius:0, borderWidth:1.6, order:2 }
+    ]},
+    options: {
+      responsive:true, maintainAspectRatio:false, animation:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{ size:9.5 }, padding:8, color:'#5b6470' } },
+        tooltip:{ callbacks:{ label:function(ctx){
+          if (ctx.dataset.yAxisID === 'y1') return ctx.dataset.label + ': $' + ctx.parsed.y.toFixed(2);
+          return ctx.dataset.label + ': $' + ctx.parsed.y.toFixed(1) + 'B';
+        } } }
+      },
+      scales:{
+        y:{ position:'left', beginAtZero:true, max:12, grid:{ color:'rgba(0,0,0,.05)' },
+          ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return '$' + v + 'B'; } } },
+        y1:{ position:'right', beginAtZero:true, max:10, grid:{ display:false },
+          ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return '$' + v; } } },
+        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:9.5 } } }
+      }
+    }
+  });
 }
 
 // ─── Interest Income charts (generic ranged loan-origination bar chart) ───────
@@ -3431,6 +3617,15 @@ function showOvf(root, key){
   buildFeeTab();
 }
 
+// Switch a nested General sub-tab (Milestones / Members / Rule of 40 / Capital Raises).
+function showOvg(root, key){
+  root.querySelectorAll('.ovg-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovg') === key); });
+  root.querySelectorAll('.ovg-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovg') !== key); });
+  if (key === 'members') requestAnimationFrame(buildMembersTab);
+  if (key === 'rule40')  requestAnimationFrame(buildRule40Chart);
+  if (key === 'raises')  requestAnimationFrame(buildCapRaiseChart);
+}
+
 // Switch a nested Management sub-tab (Organization Chart / Insider Activity).
 function showOvm(root, key){
   root.querySelectorAll('.ovm-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovm') === key); });
@@ -3469,6 +3664,9 @@ function init(c){
   });
   root.querySelectorAll('.ovv-tab').forEach(function(btn){
     btn.onclick = function(){ showOvv(root, btn.getAttribute('data-ovv')); };
+  });
+  root.querySelectorAll('.ovg-tab').forEach(function(btn){
+    btn.onclick = function(){ showOvg(root, btn.getAttribute('data-ovg')); };
   });
   root.querySelectorAll('.ovm-tab').forEach(function(btn){
     btn.onclick = function(){ showOvm(root, btn.getAttribute('data-ovm')); };

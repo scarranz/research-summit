@@ -1473,6 +1473,34 @@
 .int-fico-note { font-size: 10px; line-height: 1.45; color: var(--mu); text-align: center; }
 @media (max-width: 560px) { .int-top { justify-content: center; } }
 
+/* ── Capital Raises — offering cards ── */
+.cr-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.cr-card { border: 1px solid var(--bdr); border-top: 3px solid var(--brand); border-radius: 9px; background: var(--w); padding: 12px 14px; }
+.cr-card-top { display: flex; justify-content: space-between; align-items: baseline; }
+.cr-date { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--mu); }
+.cr-amt { font-size: 19px; font-weight: 800; color: var(--navy); letter-spacing: -.02em; }
+.cr-type { font-size: 12.5px; font-weight: 700; color: var(--brand); margin: 3px 0 6px; }
+.cr-terms { font-size: 11.5px; line-height: 1.5; color: var(--navy); }
+.cr-use { font-size: 11px; line-height: 1.45; color: var(--mu); margin-top: 7px; }
+.cr-use b { color: var(--navy); font-weight: 600; }
+
+/* ── Rule of 40 — Noto quote cards ── */
+.r40-quotes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.r40-q { margin: 0; border: 1px solid var(--bdr); border-left: 3px solid var(--brand); border-radius: 8px; background: var(--w); padding: 12px 14px; }
+.r40-q-t { font-size: 12.5px; line-height: 1.55; color: var(--navy); font-style: italic; }
+.r40-q-c { font-size: 10.5px; font-weight: 700; color: var(--brand); margin-top: 8px; }
+
+/* ── General → nested sub-tabs (Milestones / Members / Rule of 40 / Capital Raises) ── */
+.ov-sofi .ovg-tabs { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 22px; }
+.ov-sofi .ovg-tab {
+  border: 1px solid var(--bdr); background: var(--w); border-radius: 20px; color: var(--mu);
+  font: 600 12.5px 'Inter', sans-serif; padding: 7px 15px; cursor: pointer;
+  transition: color .15s, background .15s, border-color .15s;
+}
+.ov-sofi .ovg-tab:hover { color: var(--navy); border-color: var(--brand); }
+.ov-sofi .ovg-tab.active { color: var(--brand); background: var(--brand-soft); border-color: var(--brand); }
+.ovg-pane[hidden] { display: none; }
+
 /* ── Management → nested sub-tabs (Organization Chart / Insider Activity) ── */
 .ov-sofi .ovm-tabs { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 22px; }
 .ov-sofi .ovm-tab {

@@ -1,10 +1,12 @@
 // overviews/meta.js — custom Overview for Meta Platforms, Inc. (NASDAQ: META)
 // Built individually per the portal's per-company Overview model (see CLAUDE.md).
 //
-// Quantitative series: Summit DCF model for META (actuals_history sheet, snapshot
-// 2026-05-22). HISTORICAL ONLY — the model's projection out-years are unreliable
-// for META, so per the team's DCF policy we chart reported ACTUALS (FY2019–FY2025)
-// and exclude forecast years.
+// Quantitative series: Summit DCF model for META (snapshot 2026-05-22). We chart
+// reported ACTUALS (FY2019–FY2025, actuals_history) plus the model's CONSOLIDATED
+// 2026E–2027E projections (projection_history) for revenue, operating income,
+// margin, capex and D&A — shown shaded. We deliberately EXCLUDE: segment-level
+// (FoA/RL) projections and 2028+ (thin/unreliable in the model) and forward FCF
+// (the model's interim quarters aren't formulated, so an FY FCF estimate isn't real).
 // The "Spend Engine" decomposition (leases / cloud commitments) is an ANALYTICAL
 // reconstruction by the Summit team from Meta 10-K/10-Q Note-8 commitments + vendor
 // 8-Ks/press — it is NOT a clean company disclosure and lives outside the snapshots,
@@ -20,7 +22,7 @@ function money(m){ if(m==null) return '—'; var neg=m<0,a=Math.abs(m),s;
 function pctStr(p){ return (p>=0?'+':'−')+Math.abs(p).toFixed(0)+'%'; }
 
 // ─── Brand: Meta blue + Reality Labs violet ──────────────────────────────────
-var BRAND='#0866FF', BRAND2='#1877F2', FOA='#0866FF', AD='#0866FF', OTHER='#7AA9FF', RL='#8B5CF6', GRAY='#B8C0CA', NEG='#C0392B', GREEN='#16A34A';
+var BRAND='#0866FF', BRAND2='#1877F2', FOA='#0866FF', AD='#0866FF', OTHER='#7AA9FF', RL='#8B5CF6', GRAY='#B8C0CA', NEG='#C0392B', GREEN='#16A34A', FC='#A8C7FF';
 
 // ─── Annual ACTUALS, USD millions ────────────────────────────────────────────
 var YEARS  = ['2019','2020','2021','2022','2023','2024','2025'];
@@ -32,6 +34,24 @@ var OPMARGIN = OPINC.map(function(v,i){ return v/REV[i]*100; });
 // Depreciation & amortization, FY2021–2025 (the capex→D&A story).
 var DA_YEARS = ['2021','2022','2023','2024','2025'];
 var DA       = [7967, 8686, 11178, 15498, 18616];
+// ── Summit DCF projections (snapshot 2026-05-22). The CONSOLIDATED 2026E–2027E
+// lines are reliable; segment splits (FoA/RL) and 2028+ are NOT, so we only
+// forecast company totals here. FCF projection is intentionally EXCLUDED — the
+// model's interim quarters aren't formulated, so its FY FCF figure isn't a real
+// estimate (we chart FCF actuals only).
+var YEARS_F  = ['2026E','2027E'];
+var REV_F    = [256182, 322461];
+var OPINC_F  = [117085, 151691];
+var CAPEX_F  = [140900, 174129];
+var DA_F     = [29600, 43641];
+var YEARS_X    = YEARS.concat(YEARS_F);
+var REV_X      = REV.concat(REV_F);
+var OPINC_X    = OPINC.concat(OPINC_F);
+var CAPEX_X    = CAPEX.concat(CAPEX_F);
+var DA_YEARS_X = DA_YEARS.concat(YEARS_F);
+var DA_X       = DA.concat(DA_F);
+var OPMARGIN_X = OPINC_X.map(function(v,i){ return v/REV_X[i]*100; });
+var EST_CAP = 'Shaded / lighter bars (2026E–2027E) are <b>Summit DCF estimates</b> (snapshot May 2026), not reported actuals.';
 // Segment split — clean from FY2021.
 var SEG_YEARS = ['2021','2022','2023','2024','2025'];
 var FOA_REV = [115655, 114450, 133005, 162354, 198758];
@@ -48,7 +68,7 @@ var SNAPSHOT=[
   ['Listing','NASDAQ: META'],['Founded','2004 — Cambridge, MA'],['IPO','May 2012 · $38.00'],
   ['CEO','Mark Zuckerberg (founder)'],['Segments','Family of Apps · Reality Labs'],['Control','Dual-class — founder voting control'],
 ];
-var DESC='Meta is the world\'s largest social-advertising business. The <b>Family of Apps</b> — Facebook, Instagram, WhatsApp, Messenger and Threads (~3.5B daily people) — is the engine: an AI-driven advertising machine running at ~50% operating margin and almost entirely walled-garden (Meta owns every layer of the ad stack, so it keeps the whole ad dollar). That cash machine funds <b>Reality Labs</b>, the AR/VR + AI-hardware bet that still loses ~$19B a year — losses management now expects to peak around 2025 and then narrow. The whole story is: how much of the FoA cash gets re-invested into AI capex, and whether it pays off.';
+var DESC='Meta is the world\'s largest social-advertising business. The <b>Family of Apps</b> — Facebook, Instagram, WhatsApp, Messenger and Threads (~3.5B daily people) — is the engine: an AI-driven advertising machine whose <b>segment</b> operating margin runs ~50%+ and is almost entirely walled-garden (Meta owns every layer of the ad stack, so it keeps the whole ad dollar). <b>Note:</b> that ~50% is the Family-of-Apps <i>segment</i>; the <b>consolidated company runs ~41%</b> because Reality Labs loses ~$19B a year. That FoA cash machine funds <b>Reality Labs</b>, the AR/VR + AI-hardware bet — losses management now expects to peak around 2025 and then narrow. The whole story is: how much of the FoA cash gets re-invested into AI capex, and whether it pays off.';
 var KPIS=[
   { l:'Revenue',          v:'$201B', d:pctStr((REV[6]/REV[5]-1)*100)+' YoY',  dir:'up' },
   { l:'Operating Income', v:'$83.3B',d:'~41% op margin',                       dir:'up' },
@@ -56,15 +76,20 @@ var KPIS=[
   { l:'Capex',            v:'$69.7B',d:pctStr((CAPEX[6]/CAPEX[5]-1)*100)+' YoY · AI build', dir:'down' },
 ];
 var AS_OF='Headline KPIs are FY2025 (reported). Revenue $201.0B (+22%), operating income $83.3B (~41% margin), free cash flow $46.1B, and a record $69.7B of capex (+87% YoY). ~3.5B daily active people across the Family of Apps; advertising is ~98% of revenue.';
-var FY_NOTE='Two engines, one company. <b>Family of Apps</b> generated ~$199B of revenue and ~$102B of segment operating profit in FY2025 — that profit <b>funds Reality Labs</b>, which lost ~$19B (~$79B cumulative since 2020). Forward years are intentionally excluded: the Summit DCF\'s META projection is unreliable in the out-years, so this overview charts reported actuals only (FY2019–FY2025), sourced from the model.';
+var FY_NOTE='Two engines, one company. <b>Family of Apps</b> generated ~$199B of revenue and ~$102B of segment operating profit in FY2025 — that profit <b>funds Reality Labs</b>, which lost ~$19B (~$79B cumulative since 2020). Charts show reported actuals (FY2019–FY2025) plus the <b>Summit DCF\'s 2026E–2027E estimates</b> for company totals (shaded). Segment-level splits and 2028+ are charted as actuals only — the model\'s projection is reliable for consolidated totals but thin at the segment level and in the far out-years.';
 
 // ── How Meta makes money: the ad auction (clickable chain) ──
 var AD_FLOW=[
-  { t:'A user opens Facebook / Instagram / Threads', d:'~3.5B daily people generate billions of ad impressions. Each impression is an <b>auction</b> held in real time — Meta\'s inventory is its attention.' },
-  { t:'Advertisers bid for the impression', d:'Advertisers set a budget and a goal (a click, install, purchase). Meta runs an <b>auction</b>, not a fixed price — so pricing rises with demand and ad quality.' },
-  { t:'AI ranks the auction', d:'The winner ≈ <b>bid × estimated action rate × ad quality</b>. Meta\'s AI (the GEM ranking model, Advantage+ automation) predicts who will convert — recent models drove +3.5% ad clicks on Facebook and >1% more conversions on Instagram (Q4 2025). This is where AI turns directly into revenue.' },
-  { t:'The ad is shown; advertiser pays per result', d:'Meta keeps essentially <b>all</b> of the ad revenue (it owns every layer of the ad stack — see the walled garden). Advertising is ~<b>98%</b> of total revenue.' },
-  { t:'It converts to cash at high margin', d:'Family-of-Apps operating margin is ~<b>50%+</b>; the cash funds buybacks, a dividend, and the Reality Labs + AI-capex bet.', payoff:true },
+  { t:'A user opens Facebook / Instagram / Threads', d:'~3.5B daily people generate billions of ad impressions. Each impression is an <b>auction</b> held in real time — Meta\'s inventory is its attention.',
+    detail:'Every time a feed, Story or Reel loads, Meta has milliseconds to decide which ad (if any) to show in each ad slot. The <b>supply</b> side is engagement: more daily users × more time-spent × more sessions = more impressions to auction. That is why the engagement work (Reels, AI-recommended content, Threads) feeds the ad business directly — it manufactures more auction inventory. Meta reports the two levers separately: <b>ad impressions delivered</b> (+18% YoY in Q4 2025) and <b>average price per ad</b> (+6%).' },
+  { t:'Advertisers bid for the impression', d:'Advertisers set a budget and a goal (a click, install, purchase). Meta runs an <b>auction</b>, not a fixed price — so pricing rises with demand and ad quality.',
+    detail:'Advertisers don\'t buy a fixed slot at a list price — they enter a continuous auction and state an <b>objective</b> (link clicks, app installs, purchases, leads) and a budget. Meta uses a <b>second-price-style</b> auction: you don\'t pay your full bid, you pay just enough to beat the next-best ad. Because the ranking also weights predicted relevance (next step), a <i>more relevant</i> ad can win while bidding <i>less</i> — which is what lets Meta raise price-per-ad and advertiser ROI at the same time.' },
+  { t:'AI ranks the auction', d:'The winner ≈ <b>bid × estimated action rate × ad quality</b>. Meta\'s AI predicts who will convert — this is where AI turns directly into revenue.',
+    detail:'The ranking score ≈ <b>bid × estimated action rate × ad quality</b>. The hard part is the middle term — predicting the probability <i>this</i> user takes <i>this</i> action — and that is what Meta\'s ad-ranking AI does. The current generation is <b>GEM (Generative Ads recommendation Model)</b>, a single large transformer-based model that replaced many smaller per-surface models (see the GEM explainer on this tab). Better predictions raised measured outcomes: <b>+3.5% ad clicks on Facebook</b> and <b>&gt;1% more conversions on Instagram</b> (Q4 2025). Every accuracy gain is monetized immediately as higher conversion and higher winning bids.' },
+  { t:'The ad is shown; advertiser pays per result', d:'Meta keeps essentially <b>all</b> of the ad revenue (it owns every layer of the ad stack — see the walled garden). Advertising is ~<b>98%</b> of total revenue.',
+    detail:'In the open programmatic web a chain of middlemen (DSP, exchange, SSP, data vendors) skims ~45¢ of every advertiser dollar before it reaches the publisher. Meta is a <b>walled garden</b>: it is the publisher, the buy-side, the sell-side, the exchange and the data layer all at once, so essentially the <b>entire dollar</b> stays inside Meta — no leakage to intermediaries. That is why ~98% of revenue is advertising and why the margin structure is so different from open-web players. See "the walled garden" section for the full $1.00 breakdown.' },
+  { t:'It converts to cash at high margin', d:'Family-of-Apps <b>segment</b> operating margin is ~<b>50%+</b> (consolidated ~41% after Reality Labs); the cash funds capex, buybacks, a dividend and the AI bet.', payoff:true,
+    detail:'Because Meta keeps the whole ad dollar and its cost base (data centers, R&D, S&M) grows slower than revenue, incremental ad dollars drop through at very high margins — the <b>FoA segment</b> runs ~50%+ operating margin. At the <b>consolidated</b> level the company runs ~41%, the gap being Reality Labs\' ~$19B annual loss. That FoA cash is what funds the four uses of capital: the record AI capex build, the Reality Labs bet, buybacks, and the dividend (first paid 2024).' },
 ];
 // The ad ecosystem (Summit primer): in the OPEN web each intermediary takes a cut.
 var ECO_OPEN=[
@@ -74,7 +99,7 @@ var ECO_OPEN=[
   ['SSP (sell-side)', 20, '−$0.20', '#CBD3DD'],
   ['→ Publisher keeps', 55, '$0.55', GREEN],
 ];
-var WALLED='In the <b>open web</b>, an advertiser\'s dollar passes through a chain of middlemen — a DSP (buy-side, ~5–20%), an ad exchange, an SSP (sell-side, ~10–25%), plus data &amp; verification vendors — so only ~<b>$0.55</b> of each $1.00 reaches the publisher. <b>Meta is a "walled garden": it IS every layer at once</b> — publisher (FB/IG), SSP, DSP, ad exchange, data platform and verification, all in one closed loop. So Meta <b>keeps the entire ad dollar</b> (no leakage to intermediaries), owns the user data end-to-end, and controls the whole auction. That full vertical integration is a structural margin <i>and</i> moat advantage that DSP/SSP-dependent rivals can\'t match.';
+var WALLED='In the <b>open web</b>, an advertiser\'s dollar passes through a chain of middlemen before it reaches the website showing the ad: a <b>DSP</b> (Demand-Side Platform — the software advertisers use to buy ad space, ~5–20%), an <b>ad exchange</b> (the marketplace that runs the auction), an <b>SSP</b> (Supply-Side Platform — the software publishers use to sell their ad space, ~10–25%), plus data &amp; verification vendors. After all those cuts, only ~<b>$0.55</b> of each $1.00 reaches the publisher. <b>Meta is a "walled garden": it IS every layer at once</b> — the publisher (FB/IG), the SSP, the DSP, the ad exchange, and the data &amp; verification platform, all in one closed loop. So Meta <b>keeps essentially the entire ad dollar</b> (no leakage to intermediaries), owns the user data end-to-end, and controls the whole auction. That full vertical integration is a structural margin <i>and</i> moat advantage that rivals dependent on third-party DSPs/SSPs can\'t match.';
 var FOA_WINS=[
   '<b>AI ranking turns straight into revenue:</b> the new <b>GEM</b> ad model drove <b>+3.5% ad clicks on Facebook</b> and <b>&gt;1% more conversions on Instagram</b> (Q4 2025); ad <b>impressions +18% YoY</b> with <b>price-per-ad +6%</b>.',
   '<b>AI recommendations lift time-spent:</b> AI-recommended (unconnected) content is now <b>40%+ of the Facebook feed</b>, and Facebook surfaces ~25% more same-day Reels — the same ranking AI that powers ads keeps users on-app longer, compounding impressions.',
@@ -82,8 +107,22 @@ var FOA_WINS=[
   '<b>Threads is ramping:</b> time-spent <b>+20% YoY</b> (Q4 2025) with ad monetization scaling — a near-zero-CAC surface built off the Instagram graph.',
   '<b>Business messaging:</b> click-to-WhatsApp / Instagram ads are among the fastest-growing ad products — turning messaging into the next monetization surface.',
 ];
+// ── GEM explainer (what it is / how it works / what changed) ──
+var GEM_WHAT='<b>GEM = Generative Ads recommendation Model.</b> It is the large AI model that decides, for each ad auction, how likely <i>you</i> are to act on <i>this</i> ad — the prediction that drives both the ranking and the price.';
+var GEM_POINTS=[
+  '<b>What it replaced:</b> for years Meta ran <b>many smaller, specialized models</b> — a different ranker per surface (Feed, Reels, Stories) and per objective (click, install, purchase). They were hard to improve in lockstep and couldn\'t share what they learned.',
+  '<b>How it works:</b> GEM is a <b>single, much larger transformer-based model</b> (the same family of architecture behind LLMs), trained on far more data and signals at once. One big model generalizes across surfaces and objectives, so a pattern learned on Instagram conversions also sharpens Facebook click prediction. Meta scaled the training compute massively (a chunk of the AI capex) specifically to make this model bigger and more accurate.',
+  '<b>What changes for the ad:</b> better conversion prediction means the auction shows each user a more relevant ad, which lifts measured results — <b>+3.5% ad clicks on Facebook</b> and <b>&gt;1% more conversions on Instagram</b> (Q4 2025) — and lets Meta raise price-per-ad <i>and</i> advertiser ROI simultaneously. It also underpins <b>Advantage+</b>, where the advertiser just gives a goal + budget + creative and the AI does the targeting, bidding and optimization.',
+];
 
 // ── Reality Labs ──
+var RL_WHAT='<b>What the segment actually is.</b> Reality Labs (RL) is Meta\'s <b>hardware + software bet on the next computing platform</b> — the businesses Meta hopes will, one day, reduce its dependence on phones (where Apple and Google control the rules). It is reported separately from advertising so investors can see its cost. It is <b>~1% of revenue and ~−$19B of operating profit</b>: a venture bet sitting inside a mega-cap, not a business that pays its own way yet. It traces back to the <b>2014 Oculus acquisition (~$2B)</b> and became a <b>separate reported segment with the Oct-2021 rebrand to "Meta"</b> — which is when its multi-billion-dollar losses became visible for the first time.';
+var RL_PRODUCTS=[
+  '<b>Meta Quest (VR/MR headsets):</b> the core hardware line (Quest 3 / 3S). Meta sells the headset <b>direct</b> and books the <b>full device price</b> as RL revenue, plus a cut of <b>Quest Store</b> app/game sales. Historically sold near or below cost to grow the install base.',
+  '<b>Ray-Ban &amp; Oakley Meta smart glasses:</b> the breakout product — camera/audio/AI glasses built with <b>EssilorLuxottica</b>. <b>&gt;7M units sold in 2025</b>. Key accounting nuance: EssilorLuxottica is the <b>seller of record</b> and books the retail sale in its own Wearables division, so Meta recognizes only its <b>shared/partial economics, not the full retail price</b> — glasses can sell huge units while adding comparatively little reported RL revenue.',
+  '<b>Horizon &amp; software platform:</b> Horizon Worlds (social VR) and the developer platform — a small "platform/proxy" revenue line today, strategically the bet on an owned social+OS layer.',
+  '<b>Orion / AR (R&D, pre-revenue):</b> full augmented-reality glasses — still a <b>prototype</b>, not a product; the long-dated "personal superintelligence" ambition that absorbs much of the R&D loss.',
+];
 var RL_NOTE='Reality Labs is the long bet — and it is run at a deliberate, large loss. Two things matter for modelling it:';
 var RL_POINTS=[
   '<b>Revenue mix &amp; recognition:</b> RL revenue ≈ a platform/"proxy" line + <b>Meta Quest</b> (Meta sells the headset directly and books the <b>full device price</b>) + <b>smart glasses</b> (Ray-Ban / Oakley Meta). Crucially, <b>EssilorLuxottica manufactures and is the device seller of record</b> for the glasses — it books the retail sales in its own Wearables division — so Meta recognizes only its <b>shared / partial economics, not the full retail price</b> (the exact split is undisclosed). So glasses can sell huge units while adding comparatively little reported RL revenue — versus Quest, which is full-device revenue.',
@@ -92,13 +131,13 @@ var RL_POINTS=[
 ];
 
 // ── The Spend Engine (the "devil's accounting") ──
-var SPEND_LEDE='Here is the part the market — and Summit — can\'t fully reconcile: Meta\'s algorithms are <b>advertising-aimed</b>, not as obviously compute-hungry as AWS, Google Cloud or Azure (which also carry physical/other businesses), yet Meta burns capital at a staggering rate. A Summit analysis reverse-engineered the spend from the 10-K commitments and vendor filings. The buildout is funded <b>three ways</b>:';
+var SPEND_LEDE='Meta\'s reported capex is enormous — but it is only part of the AI build. A lot of the spend lands in the P&L as <b>lease and cloud-commitment expense</b> rather than as capex, so the <b>true investment intensity</b> is hard to read off the headline number. To make it legible, the Summit team <b>reconstructed</b> the spend from Meta\'s 10-K/10-Q Note-8 commitment disclosures plus vendor 8-Ks and press. What follows is that <b>estimate</b> — not a clean company disclosure and not a live time series (it never will be), but enough to give a real notion of how the buildout is funded, in <b>three ways</b>:';
 var SPEND_WAYS=[
   { k:'owned', t:'1 · Owned capex → depreciation', d:'Servers + data centers Meta buys outright become PP&E and flow through the P&L as <b>D&A</b>, which has exploded ($8B in 2021 → ~$18.6B in 2025, heading toward ~$29B). This is the "clean" part — but the depreciation wave it creates will pressure margins for years.' },
   { k:'leases', t:'2 · Leases (data centers)', d:'Much of the footprint is <b>leased</b>, not bought — operating + finance leases. Disclosed lease obligations ballooned from ~$34B (2024) to ~$104B (2025) toward ~$183B — a large, long-dated (≈13–15yr) commitment that lands in the P&L as it is recognized.' },
   { k:'cloud', t:'3 · Third-party cloud commitments', d:'The murkiest piece: Meta also <b>rents</b> huge compute via multi-year deals — <b>Google Cloud (~$10B), Oracle OCI (~$20B), CoreWeave (~$14B + ~$21B), Nebius (~$12B + ~$9B)</b> and more. Total purchase commitments hit ~<b>$237.7B</b> (10-K Note 8). Roughly ~70% is recognized as <b>cloud operating expense</b> (split between COGS for <b>inference</b> serving and R&D for <b>training</b>), the rest is capex-adjacent.' },
 ];
-var SPEND_NOTE='<b>Why it matters:</b> a big chunk of Meta\'s "AI spend" never shows up as capex — it hides in cost of revenue and R&D as lease and cloud-commitment expense. That makes the true investment intensity larger than the headline capex line, and the eventual depreciation + commitment run-off a multi-year margin question. <span class="ave-subh-note">Figures are a Summit analytical reconstruction from Meta\'s commitment disclosures + vendor 8-Ks/press — estimates, not a clean company breakdown; shown for understanding, not sourced into the charts.</span>';
+var SPEND_NOTE='<b>Why it matters:</b> a large share of Meta\'s "AI spend" lands in cost of revenue and R&D as lease and cloud-commitment expense rather than as capex — so the true investment intensity is larger than the headline capex line, and the depreciation + commitment run-off becomes a multi-year margin question. Summit\'s <b>commitment bridge</b> estimates that of the cloud commitments coming due in <b>2026, ~71% is recognized as operating expense</b> (split COGS for <b>inference</b> serving and R&D for <b>training</b>) and ~<b>29%</b> is capex-adjacent (server purchases / data-center construction). <span class="ave-subh-note">All Spend-Engine figures are a Summit analytical reconstruction from Meta\'s 10-K/10-Q Note-8 commitments + vendor 8-Ks/press — an estimate, not a clean company breakdown and not a live series; shown to convey the shape of the spend, not sourced into the charts.</span>';
 var EFFIC=[
   '<b>Custom silicon (MTIA):</b> MTIA Gen-2 is in production for recommendation inference, and a Broadcom partnership targets <b>&gt;1 GW</b> of in-house silicon — cited as meaningfully cheaper per inference than merchant GPUs.',
   '<b>Silicon diversification:</b> the Andromeda inference engine now spans <b>NVIDIA + AMD + MTIA</b>, with compute efficiency reportedly ~<b>tripled</b> — lowering cost per inference as workloads scale.',
@@ -135,13 +174,13 @@ var TAILWINDS=[
   '<b>Legal overhang cleared:</b> the FTC antitrust case was <b>dismissed (Nov 2025)</b> — no breakup; plus the first dividend (2024) and large buybacks.',
 ];
 var HEADWINDS=[
-  '<b>The most binary AI-capex bet in megacap:</b> 2026 capex guided to ~<b>$125–145B</b> (raised in Apr 2026 from $115–135B) that must be monetized <b>internally</b> — Meta has no AWS/GCP-style cloud to absorb it. The depreciation + cloud-commitment wave pressures margins before returns are proven; the stock fell ~9% on the Q1 2026 raise.',
-  '<b>Opaque spend:</b> much of the AI build hides in leases (~$183B obligations) and cloud commitments (~$237.7B) rather than capex — the true investment intensity, and its run-off, is hard to model.',
+  '<b>The most binary AI-capex bet in megacap:</b> 2026 capex guided to ~<b>$125–145B</b> (raised in Apr 2026 from $115–135B), and Meta must earn the return <b>entirely through its own products</b> — unlike Amazon/Microsoft/Google, it has <b>no external cloud business</b> to rent that compute to and defray the cost. Every server only pays off if it lifts Meta\'s own ad monetization, which makes the bet unusually all-or-nothing; the stock fell ~9% on the Q1 2026 capex raise.',
+  '<b>A large, long-dated spending commitment:</b> beyond headline capex, Meta has ~<b>$183B</b> of lease obligations and ~<b>$237.7B</b> of multi-year cloud-purchase commitments. The headwind isn\'t that they\'re disclosed opaquely — it\'s the <b>sheer magnitude and the future P&L drag</b>: as this depreciation, lease cost and committed spend run through the income statement over the next several years, it pressures margins well before the AI returns are proven.',
   '<b>Reality Labs burn:</b> ~$19B/yr (~$79B cumulative); losses expected to peak ~2025 but stay negative — tolerated only while FoA delivers.',
   '<b>AI strategy whiplash:</b> a costly talent war, the $14.3B Scale AI deal, and an open→closed Llama pivot have caused internal churn; the differentiated product is unproven.',
   '<b>Regulatory + governance:</b> EU DMA "pay-or-consent" fights and teen/AI-safety pressure persist; dual-class control leaves minority holders little say.',
 ];
-var SOURCES='Quantitative series: Summit DCF model for META, actuals_history sheet (snapshot 2026-05-22) — reported FY2019–FY2025; the model\'s projection out-years are excluded as unreliable. Family DAP (~3.5B) and ARPP are company disclosures (not carried in this snapshot). The Spend Engine decomposition (leases, third-party cloud commitments by vendor) is a Summit analytical reconstruction from Meta 10-K/10-Q Note-8 commitment disclosures + vendor 8-Ks and press — estimates, shown for understanding and not sourced into the charts. Other qualitative content: Meta 10-Ks and Q4 2025 / Q1 2026 earnings calls, and a Summit "Ad Ecosystem" primer. Brand colors approximate Meta blue.';
+var SOURCES='Quantitative series: Summit DCF model for META (snapshot 2026-05-22) — reported actuals FY2019–FY2025 plus the model\'s 2026E–2027E projections for company totals (revenue, operating income, margin, capex, D&A), shown shaded. Segment splits (FoA/RL) and 2028+ are charted as actuals only, and forward FCF is excluded — those parts of the model are not reliable enough to chart. Family DAP (~3.5B) and ARPP are company disclosures (not carried in this snapshot). The Spend Engine decomposition (leases, third-party cloud commitments by vendor) is a Summit analytical reconstruction from Meta 10-K/10-Q Note-8 commitment disclosures + vendor 8-Ks and press — estimates, shown for understanding and not sourced into the charts. Other qualitative content: Meta 10-Ks and Q4 2025 / Q1 2026 earnings calls, and a Summit "Ad Ecosystem" primer. Brand colors approximate Meta blue.';
 
 // ─── Render helpers ──────────────────────────────────────────────────────────
 function sec(t,inner){ return '<section class="ov-sec"><div class="ov-sec-h">'+esc(t)+'</div>'+inner+'</section>'; }
@@ -167,9 +206,10 @@ function overviewBody(){
   h+='<div class="ov-asof">'+esc(AS_OF)+'</div>';
   h+='<div class="ov-fynote">'+FY_NOTE+'</div>';
   h+='<div class="ov-charts" style="grid-template-columns:1fr 1fr">'+
-    '<div class="ov-chart-card"><div class="ov-chart-t">Revenue <span>($B, FY · actuals)</span></div><div class="ov-chart-wrap"><canvas id="meRev"></canvas></div></div>'+
-    '<div class="ov-chart-card"><div class="ov-chart-t">Operating Income <span>($B, FY · actuals)</span></div><div class="ov-chart-wrap"><canvas id="meOp"></canvas></div></div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Revenue <span>($B, FY · actuals + Summit est.)</span></div><div class="ov-chart-wrap"><canvas id="meRev"></canvas></div></div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Operating Income <span>($B, FY · actuals + Summit est.)</span></div><div class="ov-chart-wrap"><canvas id="meOp"></canvas></div></div>'+
   '</div>';
+  h+='<div class="ov-diagram-cap">'+EST_CAP+'</div>';
   h+=sec('How Meta Makes Money — the ad auction',
     '<p class="ov-lede" style="margin:0 0 14px">~98% of revenue is advertising sold by real-time auction — <b>tap any step</b>.</p>'+chain(AD_FLOW,'ad'));
   h+=sec('History & Milestones','<div class="ov-timeline">'+TIMELINE.map(function(t,i){
@@ -200,8 +240,9 @@ function foaBody(){
     '<div class="ov-sec-h ovt-store-h">Where each $1.00 of advertiser spend goes <span class="ave-subh-note">(open web · illustrative)</span></div>'+
     mbars(ECO_OPEN)+
     '<div class="ov-diagram-cap" style="margin-top:8px"><b>Meta (walled garden):</b> being publisher + SSP + DSP + ad-exchange + data + verification all at once, Meta keeps <b>~the entire $1.00</b> — no leakage to intermediaries.</div>');
+  h+=sec('GEM — the AI model behind the ads', '<p class="ov-lede" style="margin:0 0 12px">'+GEM_WHAT+'</p><div class="ov-callout">'+bullets(GEM_POINTS)+'</div>');
   h+=sec('Family of Apps — recent wins', '<div class="ov-callout">'+bullets(FOA_WINS)+'</div>');
-  h+=sec('The cash machine', '<div class="ov-callout"><div class="ov-tl-body">FoA segment operating profit reached ~<b>$102B</b> in FY2025 at ~<b>50%+ margin</b>. That is the profit that funds <i>everything</i> — Reality Labs, the AI-capex buildout, buybacks and the dividend. See the Reality Labs tab for it against RL\'s loss.</div></div>');
+  h+=sec('Where the cash goes — capital allocation', '<div class="ov-callout"><div class="ov-tl-body">FoA threw off ~<b>$102B</b> of segment operating profit in FY2025 (~50%+ segment margin). The question that matters is where it goes, in four uses: <b>(1)</b> the record <b>AI-capex build</b> ($69.7B in 2025 → guided ~<b>$125–145B</b> for 2026); <b>(2)</b> the <b>Reality Labs</b> bet (~−$19B/yr); <b>(3)</b> <b>buybacks</b>; and <b>(4)</b> the <b>dividend</b> (first paid 2024). The whole investment debate is the balance between <b>reinvestment</b> (#1+#2) and <b>returning cash</b> (#3+#4) — and whether the reinvestment earns its keep.</div></div>');
   h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
   return h;
 }
@@ -217,6 +258,7 @@ function rlBody(){
     '<div class="ov-chart-card"><div class="ov-chart-t">Operating income by segment <span>($B, FY · RL is a loss)</span></div><div class="ov-chart-wrap"><canvas id="meSegOp"></canvas></div></div>'+
   '</div>';
   h+='<div class="ov-fynote">Family of Apps made ~<b>$102B</b> of operating profit in FY2025; Reality Labs <b>lost ~$19B</b> — cumulative ~<b>$'+(RL_CUM/1000).toFixed(0)+'B</b> since 2020.</div>';
+  h+=sec('What Reality Labs is — products &amp; how it monetizes', '<p class="ov-lede" style="margin:0 0 12px">'+RL_WHAT+'</p><div class="ov-callout">'+bullets(RL_PRODUCTS)+'</div>');
   h+=sec('How to read Reality Labs', '<p class="ov-lede" style="margin:0 0 12px">'+RL_NOTE+'</p><div class="ov-callout">'+bullets(RL_POINTS)+'</div>');
   h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
   return h;
@@ -227,9 +269,10 @@ function spendBody(){
   var h='';
   h+='<p class="ov-lede">'+SPEND_LEDE+'</p>';
   h+='<div class="ov-charts" style="grid-template-columns:1fr 1fr">'+
-    '<div class="ov-chart-card"><div class="ov-chart-t">Capex <span>($B, FY · the AI build)</span></div><div class="ov-chart-wrap"><canvas id="meCapex"></canvas></div></div>'+
-    '<div class="ov-chart-card"><div class="ov-chart-t">Depreciation & amortization <span>($B, FY · the wave)</span></div><div class="ov-chart-wrap"><canvas id="meDa"></canvas></div></div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Capex <span>($B, FY · actuals + Summit est.)</span></div><div class="ov-chart-wrap"><canvas id="meCapex"></canvas></div></div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Depreciation & amortization <span>($B, FY · the wave + est.)</span></div><div class="ov-chart-wrap"><canvas id="meDa"></canvas></div></div>'+
   '</div>';
+  h+='<div class="ov-diagram-cap">'+EST_CAP+' Capex ~doubles to ~$141B (2026E) and ~$174B (2027E); the D&A wave roughly triples by 2028 — the multi-year margin question.</div>';
   h+=sec('Three ways the buildout is funded',
     '<div class="ov-drivers">'+SPEND_WAYS.map(function(w){ return '<div class="ov-driver"><div class="ov-driver-t">'+esc(w.t)+'</div><div class="ov-driver-d">'+w.d+'</div></div>'; }).join('')+'</div>'+
     '<div class="ov-fynote">'+SPEND_NOTE+'</div>');
@@ -241,12 +284,12 @@ function spendBody(){
 // ─── Pane: Financials ─────────────────────────────────────────────────────────
 function finBody(){
   var h='';
-  h+='<p class="ov-lede">Reported financials from the Summit DCF (actuals, FY2019–FY2025). Profit and cash recovered hard off the 2022 trough; the open question is the <b>capex wave</b> and the depreciation it creates.</p>';
+  h+='<p class="ov-lede">From the Summit DCF — reported actuals (FY2019–FY2025) plus the model\'s <b>2026E–2027E</b> estimates for operating margin. Profit recovered hard off the 2022 trough; the open question is the <b>capex wave</b> and the depreciation it creates.</p>';
   h+='<div class="ov-charts" style="grid-template-columns:1fr 1fr">'+
-    '<div class="ov-chart-card"><div class="ov-chart-t">Operating margin <span>(% of revenue)</span></div><div class="ov-chart-wrap"><canvas id="meMargin"></canvas></div></div>'+
-    '<div class="ov-chart-card"><div class="ov-chart-t">Free cash flow <span>($B, FY)</span></div><div class="ov-chart-wrap"><canvas id="meFcf"></canvas></div></div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Operating margin <span>(% of revenue · actuals + Summit est.)</span></div><div class="ov-chart-wrap"><canvas id="meMargin"></canvas></div></div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Free cash flow <span>($B, FY · actuals only)</span></div><div class="ov-chart-wrap"><canvas id="meFcf"></canvas></div></div>'+
   '</div>';
-  h+='<div class="ov-fynote">Operating margin re-expanded to ~41% (2025); FCF held at ~$46B <i>despite</i> capex jumping to $69.7B — the ad engine is that profitable. Whether capex out-runs cash flow is the number to watch.</div>';
+  h+='<div class="ov-fynote">Operating margin re-expanded to ~41% (2025) and the Summit model has it <b>continuing to widen to ~46–47% by 2027E</b> — the ad engine is profitable enough to absorb the depreciation wave. FCF held at ~$46B in 2025 <i>despite</i> capex jumping to $69.7B. <span class="ave-subh-note">Forward FCF is intentionally left off this chart: the model\'s interim (Q2–Q4) quarters and out-year cash flows aren\'t fully formulated, so a projected FY FCF figure wouldn\'t be a real estimate — we only show reported FCF.</span></div>';
   h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
   return h;
 }
@@ -318,14 +361,15 @@ function line(id, labels, data, color, fmt){
       scales:{ y:{ grid:{ color:'#EEF2F7' }, ticks:{ color:'#8A93A0', font:{ size:10 }, callback:fmt } }, x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:11 } } } } } });
 }
 function pf(v){ return v.toFixed(0)+'%'; }
-function buildOverview(){ bar('meRev', YEARS, REV, BRAND, money); bar('meOp', YEARS, OPINC, BRAND2, money); }
+function fcCol(labels, solid){ return labels.map(function(l){ return /E$/.test(l)?FC:solid; }); }
+function buildOverview(){ bar('meRev', YEARS_X, REV_X, fcCol(YEARS_X,BRAND), money); bar('meOp', YEARS_X, OPINC_X, fcCol(YEARS_X,BRAND2), money); }
 function buildFoa(){ stacked2('meFoaRev', SEG_YEARS, { label:'Advertising', data:ADV_S, color:AD }, { label:'Other', data:OTH_S, color:OTHER }, money); }
 function buildRl(){
   grouped('meSegRev', SEG_YEARS, { label:'Family of Apps', data:FOA_REV, color:FOA }, { label:'Reality Labs', data:RL_REV, color:RL }, money);
   grouped('meSegOp', SEG_YEARS, { label:'Family of Apps', data:FOA_OP, color:FOA }, { label:'Reality Labs', data:RL_OP, color:RL }, money);
 }
-function buildSpend(){ bar('meCapex', YEARS, CAPEX, CAPEX.map(function(v,i){ return i===CAPEX.length-1?NEG:GRAY; }), money); bar('meDa', DA_YEARS, DA, RL, money); }
-function buildFin(){ line('meMargin', YEARS, OPMARGIN, BRAND, pf); bar('meFcf', YEARS, FCF, BRAND2, money); }
+function buildSpend(){ bar('meCapex', YEARS_X, CAPEX_X, YEARS_X.map(function(l,i){ return /E$/.test(l)?FC:(i===6?NEG:GRAY); }), money); bar('meDa', DA_YEARS_X, DA_X, fcCol(DA_YEARS_X,RL), money); }
+function buildFin(){ line('meMargin', YEARS_X, OPMARGIN_X, BRAND, pf); bar('meFcf', YEARS, FCF, BRAND2, money); }
 
 // ─── Live price (shared get-quote edge fn; hides gracefully if not deployed) ──
 function fetchQuote(t){ var env=(typeof window!=='undefined')&&window.ENV; if(!env||!env.SUPABASE_URL||!env.SUPABASE_ANON_KEY) return Promise.reject();
@@ -357,7 +401,7 @@ function wireModal(root){
   root.querySelector('#meModalX').onclick=closeM; back.onclick=function(e){ if(e.target===back) closeM(); };
   function resolve(key){ var p=key.split(':'), kind=p[0], id=p.slice(1).join(':');
     if(kind==='hist'){ var t=TIMELINE[+id]; return t&&t.d?{t:t.y,h:t.d}:null; }
-    if(kind==='ad'){ var s=AD_FLOW[+id]; return s?{t:'Step '+(+id+1)+' — '+s.t,h:s.d}:null; }
+    if(kind==='ad'){ var s=AD_FLOW[+id]; return s?{t:'Step '+(+id+1)+' — '+s.t,h:(s.detail||s.d)}:null; }
     return null; }
   root.querySelectorAll('[data-detail]').forEach(function(el){ el.style.cursor='pointer';
     el.onclick=function(){ var d=resolve(el.getAttribute('data-detail')); if(d) openM(d.t,d.h); }; });

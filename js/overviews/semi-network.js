@@ -13,7 +13,7 @@
 //
 // A company-level drill-down (select a company → its own suppliers/customers) is next.
 
-import { BUCKETS, MCAP, LOGO_DOMAIN, uniqueCompanies, getBucket } from './semi-map-data.js';
+import { BUCKETS, MCAP, LOGO_DOMAIN, logoCandidates, wireLogoFallback, uniqueCompanies, getBucket } from './semi-map-data.js';
 import { SPLC_EDGES } from './semi-edges.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -74,7 +74,7 @@ function buildElements(){
   var els = [];
   BUCKETS.forEach(function(b){
     var mc = _agg.mcap[b.id]||0;
-    var size = Math.max(130, Math.min(250, 80 + Math.sqrt(mc/maxMc)*170));
+    var size = Math.max(230, Math.min(420, 150 + Math.sqrt(mc/maxMc)*300));
     els.push({ data:{ id:b.id, label:b.name, accent:b.accent, flow:b.flow, size:size, ncos:_agg.comps[b.id]||0 } });
   });
 
@@ -97,10 +97,10 @@ function styleSheet(){
   return [
     { selector:'node', style:{
       'background-color':'data(accent)','background-opacity':0.12,'width':'data(size)','height':'data(size)',
-      'label':'data(label)','color':'#1E2733','font-size':12,'font-weight':700,
-      'text-valign':'bottom','text-margin-y':5,'text-wrap':'wrap','text-max-width':130,
-      'text-background-color':'#fff','text-background-opacity':0.85,'text-background-padding':3,'text-background-shape':'roundrectangle',
-      'border-width':2.5,'border-color':'data(accent)' }},
+      'label':'data(label)','color':'#1E2733','font-size':30,'font-weight':700,
+      'text-valign':'bottom','text-margin-y':10,'text-wrap':'wrap','text-max-width':260,
+      'text-background-color':'#fff','text-background-opacity':0.9,'text-background-padding':6,'text-background-shape':'roundrectangle',
+      'border-width':3,'border-color':'data(accent)' }},
     { selector:'edge', style:{
       'width':'data(w)','line-color':'data(accent)','opacity':0.5,'curve-style':'bezier',
       'control-point-step-size':55,'target-arrow-shape':'triangle','target-arrow-color':'data(accent)','arrow-scale':1.15 }},
@@ -108,6 +108,15 @@ function styleSheet(){
     { selector:'node.hot', style:{ 'border-width':3.5,'z-index':40 }},
     { selector:'edge.hot', style:{ 'opacity':0.95,'z-index':40 }},
   ];
+}
+
+// Segment zoom toggle (one chip per segment + an "All" chip).
+function segtabsHtml(){
+  var tabs = BUCKETS.slice().sort(function(a,b){ return a.flow-b.flow; }).map(function(b){
+    return '<button type="button" class="snet-segtab" data-seg="'+esc(b.id)+'" style="--accent:'+esc(b.accent)+'">'+esc(b.name)+'</button>';
+  }).join('');
+  return '<div class="snet-segtabs" id="snetSegtabs">'+
+    '<button type="button" class="snet-segtab snet-segtab-all active" data-seg="">All segments</button>'+tabs+'</div>';
 }
 
 // ─── Static shell ─────────────────────────────────────────────────────────────
@@ -122,6 +131,7 @@ function html(opts){
           '<button type="button" class="snet-btn" data-act="fit">Reset</button>'+
         '</div>'+
       '</div>'+
+      segtabsHtml()+
       '<div class="snet-canvas" id="snetCanvas"><div class="snet-loading">Loading map…</div>'+
         '<div class="snet-logos" id="snetLogos"></div><div class="snet-tip" id="snetTip" hidden></div></div>'+
       '<div class="smap-panel snet-panel"></div>'+
@@ -135,16 +145,14 @@ function buildLogoOverlay(){
   BUCKETS.forEach(function(b){
     var n = _cy.getElementById(b.id);
     var sz = n.data('size');
-    var logos = topLogos(b.id, sz >= 210 ? 4 : sz >= 150 ? 3 : 2);
+    var logos = topLogos(b.id, sz >= 360 ? 5 : sz >= 280 ? 4 : 3);
     if (!logos.length) return;
     var grp = document.createElement('div'); grp.className = 'snet-logo-grp'; grp.dataset.bucket = b.id;
     logos.forEach(function(L){
+      var cands = logoCandidates(L.ticker, L.domain); if (!cands.length) return;
       var img = document.createElement('img'); img.className = 'snet-logo'; img.alt = L.ticker;
-      img.src = 'https://logo.clearbit.com/'+L.domain;
-      img.addEventListener('error', function(){
-        if (!img.dataset.f){ img.dataset.f='1'; img.src = 'https://www.google.com/s2/favicons?domain='+L.domain+'&sz=64'; }
-        else { img.style.display='none'; }
-      });
+      img.src = cands[0]; img.setAttribute('data-srcs', cands.slice(1).join(' '));
+      wireLogoFallback(img);
       grp.appendChild(img);
     });
     layer.appendChild(grp);
@@ -157,7 +165,7 @@ function positionLogos(){
   grps.forEach(function(grp){
     var n = _cy.getElementById(grp.dataset.bucket); if (!n || !n.length) return;
     var p = n.renderedPosition(), rw = n.renderedWidth(), rh = n.renderedHeight();
-    var sz = Math.max(15, Math.min(56, rw*0.2));
+    var sz = Math.max(18, Math.min(96, rw*0.19));
     grp.querySelectorAll('img').forEach(function(im){ im.style.width = sz+'px'; im.style.height = sz+'px'; });
     grp.style.left = p.x+'px';
     grp.style.top  = (p.y - rh*0.16)+'px';
@@ -169,7 +177,7 @@ function scheduleReposition(){ if (_raf) return; _raf = requestAnimationFrame(fu
 function panelDefault(root){
   root.querySelector('.snet-panel').innerHTML =
     '<div class="smap-p-h">Supply-Chain Segments · Bloomberg SPLC</div>'+
-    '<p class="smap-p-d">Each circle is a segment; arrows show the aggregate money flow between segments (who sells to whom). To keep it readable, each segment shows its main supplier and customer segments. Click a segment for detail; hover an arrow for the total. A company-level drill-down comes next.</p>';
+    '<p class="smap-p-d">Each circle is a segment; arrows show the aggregate money flow between segments (who sells to whom). <b>Click a circle</b> to fade everything unrelated and see only its relationships. Use the <b>chips above</b> to zoom into a segment. Hover an arrow for the total.</p>';
 }
 // Clickable company logos for a segment (click → open the Company view on that company).
 function segLogos(bid){
@@ -179,8 +187,9 @@ function segLogos(bid){
   var more = all.length - list.length;
   var chips = list.map(function(t){
     var dom = LOGO_DOMAIN[t], nm = _tname[t]||t;
-    var inner = dom ? '<img src="https://logo.clearbit.com/'+esc(dom)+'" data-domain="'+esc(dom)+'" alt="'+esc(nm)+'">'
-                    : '<span class="snet-co-txt">'+esc(nm)+'</span>';
+    var cands = logoCandidates(t, dom);
+    var inner = cands.length ? '<img src="'+esc(cands[0])+'" data-srcs="'+esc(cands.slice(1).join(' '))+'" alt="'+esc(nm)+'">'
+                             : '<span class="snet-co-txt">'+esc(nm)+'</span>';
     return '<button type="button" class="snet-co-logo" data-co="'+esc(t)+'" title="'+esc(nm)+'">'+inner+'</button>';
   }).join('');
   var moreChip = more>0 ? '<span class="snet-co-more">+'+more+' more</span>' : '';
@@ -205,15 +214,7 @@ function pairLinks(src, tgt){
   return SPLC_EDGES.filter(function(e){ return _t2b[e.a]===src && _t2b[e.b]===tgt; })
     .sort(function(x,y){ return (y.amt||0)-(x.amt||0); });
 }
-function wireLogoErrors(el){
-  el.querySelectorAll('.snet-co-logo img').forEach(function(img){
-    img.addEventListener('error', function(){
-      var d = img.getAttribute('data-domain');
-      if (!img.dataset.f){ img.dataset.f='1'; img.src='https://www.google.com/s2/favicons?domain='+d+'&sz=64'; }
-      else { img.style.display='none'; }
-    });
-  });
-}
+function wireLogoErrors(el){ el.querySelectorAll('img[data-srcs]').forEach(wireLogoFallback); }
 function panelBucket(root, b){
   var el = root.querySelector('.snet-panel');
   el.innerHTML =
@@ -248,6 +249,29 @@ function moveTip(ev){
 }
 function hideTip(){ var tip=document.getElementById('snetTip'); if (tip) tip.hidden = true; }
 
+// ─── Segment zoom (camera only — does NOT touch the fade/highlight state) ──────
+function setActiveSeg(id){
+  document.querySelectorAll('#snetSegtabs .snet-segtab').forEach(function(t){
+    t.classList.toggle('active', t.getAttribute('data-seg')===(id||''));
+  });
+}
+function zoomToSegment(id){
+  if (!_cy) return;
+  var n = _cy.getElementById(id); if (!n || !n.length) return;
+  setActiveSeg(id);
+  _cy.animate({ fit:{ eles:n, padding:70 } }, { duration:420 });
+}
+function zoomAll(){
+  if (!_cy) return;
+  setActiveSeg('');
+  _cy.animate({ fit:{ eles:_cy.elements(), padding:25 } }, { duration:420 });
+}
+// Clear the fade/highlight (separate from the camera).
+function clearFocus(root){
+  if (!_cy) return;
+  _cy.elements().removeClass('hot faded'); panelDefault(root);
+}
+
 // ─── Init ─────────────────────────────────────────────────────────────────────
 function init(){
   var root = document.querySelector('.snet');
@@ -276,9 +300,18 @@ function init(){
   root.querySelectorAll('.snet-btn').forEach(function(btn){
     var act = btn.getAttribute('data-act');
     btn.onclick = function(){
-      if (act==='fit' && _cy){ _cy.elements().removeClass('hot faded'); panelDefault(root); _cy.fit(undefined,46); }
-      if (act==='expand'){ var c=document.getElementById('snetCanvas'); c.classList.toggle('snet-canvas--big'); btn.textContent = c.classList.contains('snet-canvas--big')?'Shrink':'Expand'; if(_cy) requestAnimationFrame(function(){ _cy.resize(); _cy.fit(undefined,46); positionLogos(); }); }
+      if (act==='fit'){ clearFocus(root); zoomAll(); }
+      if (act==='expand'){ var c=document.getElementById('snetCanvas'); c.classList.toggle('snet-canvas--big'); btn.textContent = c.classList.contains('snet-canvas--big')?'Shrink':'Expand'; if(_cy) requestAnimationFrame(function(){ _cy.resize(); zoomAll(); }); }
     };
+  });
+
+  // Segment zoom toggle: click a chip → ONLY zoom to that segment's circle ("All" → zoom out).
+  // It does not touch the fade/highlight (that lives on clicking a circle).
+  var segtabs = document.getElementById('snetSegtabs');
+  if (segtabs) segtabs.addEventListener('click', function(ev){
+    var btn = ev.target.closest('.snet-segtab'); if (!btn) return;
+    var id = btn.getAttribute('data-seg');
+    if (id) zoomToSegment(id); else zoomAll();
   });
 
   ensureCytoscape().then(function(){
@@ -289,14 +322,16 @@ function init(){
 
     _cy = window.cytoscape({
       container: canvas, elements: buildElements(), style: styleSheet(),
-      wheelSensitivity:0.2, minZoom:0.3, maxZoom:2.5,
-      layout: { name:'circle', padding:70, spacingFactor:1.5, sort:function(a,b){ return a.data('flow')-b.data('flow'); } },
+      wheelSensitivity:0.2, minZoom:0.08, maxZoom:2.5,
+      layout: { name:'circle', padding:25, spacingFactor:1.05, sort:function(a,b){ return a.data('flow')-b.data('flow'); } },
     });
 
     buildLogoOverlay();
     _cy.on('render', scheduleReposition);
+    // Click a circle → fade everything unrelated + highlight its relationships (the key view).
     _cy.on('tap', 'node', function(evt){ focusBucket(root, evt.target); });
-    _cy.on('tap', function(evt){ if (evt.target===_cy){ _cy.elements().removeClass('hot faded'); panelDefault(root); } });
+    // Click empty space → clear the fade.
+    _cy.on('tap', function(evt){ if (evt.target===_cy){ clearFocus(root); } });
     _cy.on('mouseover', 'edge', function(evt){ showTip(evt.target, evt); });
     _cy.on('mousemove', 'edge', function(evt){ moveTip(evt); });
     _cy.on('mouseout', 'edge', hideTip);

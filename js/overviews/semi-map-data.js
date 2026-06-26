@@ -432,6 +432,26 @@ export function uniqueCompanies(){
   return out;
 }
 
+// Logo source chain (best quality first). Parqet serves crisp/high-res (often vector)
+// logos by ticker symbol — used by the rest of the portal — so we try it first for
+// US-style tickers, then Clearbit by domain, then a Google favicon as a last resort.
+export function logoCandidates(ticker, domain){
+  var l = [];
+  if (ticker && /^[A-Za-z][A-Za-z.\-]{0,5}$/.test(ticker)) l.push('https://assets.parqet.com/logos/symbol/'+ticker.toUpperCase());
+  if (domain){ l.push('https://logo.clearbit.com/'+domain); l.push('https://www.google.com/s2/favicons?domain='+domain+'&sz=128'); }
+  return l;
+}
+// Wire an <img> (whose src is candidate #0 and data-srcs holds the rest, space-separated)
+// to walk to the next source on error, hiding the image only when all sources fail.
+export function wireLogoFallback(img){
+  if (img._wf) return; img._wf = 1;
+  img.addEventListener('error', function(){
+    var r = (img.getAttribute('data-srcs')||'').split(' ').filter(Boolean);
+    if (r.length){ img.setAttribute('data-srcs', r.slice(1).join(' ')); img.src = r[0]; }
+    else { img.style.display = 'none'; }
+  });
+}
+
 // Convenience lookups (used by the renderer).
 export function getBucket(id){ for (var i=0;i<BUCKETS.length;i++){ if (BUCKETS[i].id===id) return BUCKETS[i]; } return null; }
 export function getGroup(bucketId, groupId){

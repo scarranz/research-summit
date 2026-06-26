@@ -15,24 +15,18 @@
 //
 // All state lives on the root element's dataset, so the module is stateless/reentrant.
 
-import { BUCKETS, getBucket, getGroup, bucketsWithTicker, LOGO_DOMAIN } from './semi-map-data.js';
+import { BUCKETS, getBucket, getGroup, bucketsWithTicker, LOGO_DOMAIN, logoCandidates, wireLogoFallback } from './semi-map-data.js';
 import { COMPANY_RELS } from './semi-company-rels.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmtAmt(v){ if(v==null) return '—'; if(v>=1e9) return '$'+(v/1e9).toFixed(2)+'B'; if(v>=1e6) return '$'+(v/1e6).toFixed(0)+'M'; return '$'+Math.round(v); }
-function clearbit(d){ return 'https://logo.clearbit.com/'+d; }
-function favicon(d){ return 'https://www.google.com/s2/favicons?domain='+d+'&sz=64'; }
-// Attach a clearbit → favicon → hide fallback chain to any unwired img[data-dom].
-function wireImgs(root){
-  root.querySelectorAll('img[data-dom]:not([data-w])').forEach(function(img){
-    img.setAttribute('data-w','1');
-    img.addEventListener('error', function(){
-      var d = img.getAttribute('data-dom');
-      if (!img.dataset.f){ img.dataset.f='1'; img.src = favicon(d); }
-      else { img.style.visibility='hidden'; }
-    });
-  });
+// <img> markup for a company logo (parqet → clearbit → favicon chain). '' if no source.
+function logoImg(cls, ticker, domain){
+  var c = logoCandidates(ticker, domain);
+  if (!c.length) return '';
+  return '<img class="'+cls+'" src="'+esc(c[0])+'" data-srcs="'+esc(c.slice(1).join(' '))+'" alt="">';
 }
+function wireImgs(root){ root.querySelectorAll('img[data-srcs]').forEach(wireLogoFallback); }
 
 // ─── Static shell ─────────────────────────────────────────────────────────────
 function html(opts){
@@ -121,9 +115,8 @@ function renderStage(root){
   stage.style.setProperty('--accent', b2.accent);
   stage.innerHTML = g2.companies.map(function(c){
     var isHl = highlight && c.ticker===highlight;
-    var dom = LOGO_DOMAIN[c.ticker];
-    var logo = dom ? '<img class="smap-co-logo" data-dom="'+esc(dom)+'" src="'+clearbit(dom)+'" alt="">'
-                   : '<span class="smap-co-logo smap-co-logo-x" style="background:'+esc(b2.accent)+'"></span>';
+    var logo = logoImg('smap-co-logo', c.ticker, LOGO_DOMAIN[c.ticker])
+            || '<span class="smap-co-logo smap-co-logo-x" style="background:'+esc(b2.accent)+'"></span>';
     return '<button type="button" class="smap-node smap-co'+(isHl?' is-hl':'')+'" data-node="co:'+esc(c.ticker)+'" style="--accent:'+esc(b2.accent)+'">'+
         logo +
         '<span class="smap-co-name">'+esc(c.name)+'</span>'+
@@ -160,7 +153,7 @@ function top5(ticker){
   function lst(rows, label){
     var top = rows.slice(0, 5); if (!top.length) return '';
     return '<div class="smap-p-rel-h">'+label+'</div><ul class="smap-rel5">'+top.map(function(r){
-      var ic = r.dom ? '<img class="smap-rel5-logo" data-dom="'+esc(r.dom)+'" src="'+clearbit(r.dom)+'" alt="">' : '<span class="smap-rel5-dot"></span>';
+      var ic = logoImg('smap-rel5-logo', r.id, r.dom) || '<span class="smap-rel5-dot"></span>';
       return '<li>'+ic+'<span class="smap-rel5-n">'+esc(r.name)+'</span><b>'+fmtAmt(r.amt)+'</b></li>';
     }).join('')+'</ul>';
   }

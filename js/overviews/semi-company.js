@@ -5,7 +5,7 @@
 // belongs to, with the company logo on the node where we have one). Below the map, two
 // tables list ALL of its relationships from the Bloomberg SPLC document (amount, rev %, cost %).
 
-import { getBucket } from './semi-map-data.js';
+import { getBucket, logoCandidates, wireLogoFallback } from './semi-map-data.js';
 import { COMPANY_RELS } from './semi-company-rels.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -13,15 +13,11 @@ function fmtAmt(v){ if(v==null) return '—'; if(v>=1e9) return '$'+(v/1e9).toFi
 function fmtPct(v){ return v==null ? '—' : (+v).toFixed(1)+'%'; }
 function segColor(seg){ var b = seg && getBucket(seg); return b ? b.accent : '#9aa6b4'; }
 function segName(seg){ var b = seg && getBucket(seg); return b ? b.name : 'Other / external'; }
-function clearbit(dom){ return 'https://logo.clearbit.com/'+dom; }
-function favicon(dom){ return 'https://www.google.com/s2/favicons?domain='+dom+'&sz=64'; }
-// Attach a clearbit → google-favicon → hide fallback chain to an <img>.
-function wireImg(img){
-  img.addEventListener('error', function(){
-    var d = img.getAttribute('data-dom');
-    if (!img.dataset.f){ img.dataset.f='1'; img.src = favicon(d); }
-    else { img.style.visibility='hidden'; }
-  });
+// <img> markup for a logo (parqet → clearbit → favicon chain). '' if no source.
+function logoImg(cls, ticker, domain){
+  var c = logoCandidates(ticker, domain);
+  if (!c.length) return '';
+  return '<img class="'+cls+'" src="'+esc(c[0])+'" data-srcs="'+esc(c.slice(1).join(' '))+'" alt="">';
 }
 
 var _loading = null;
@@ -70,13 +66,14 @@ function buildGraph(){
   function sz(a){ return Math.max(30, Math.min(96, 20 + Math.sqrt((a||0)/maxAmt)*78)); }
 
   var els = [];
-  els.push({ data:{ id:'__c', label:data.name, kind:'ctr', accent:segColor(data.seg), dom:data.dom||null, hasLogo:data.dom?1:0 }, position:{x:0,y:0}, classes:'ctr' });
+  els.push({ data:{ id:'__c', label:data.name, kind:'ctr', accent:segColor(data.seg),
+      dom:data.dom||null, tkr:_sel, hasLogo: logoCandidates(_sel, data.dom).length?1:0 }, position:{x:0,y:0}, classes:'ctr' });
   function place(list, side){
     var n=list.length;
     list.forEach(function(r,i){
       var id=(side<0?'s_':'c_')+i;
       els.push({ data:{ id:id, label:r.name, accent:segColor(r.seg), size:sz(r.amt), amt:r.amt, seg:r.seg,
-          dom:r.dom||null, hasLogo:r.dom?1:0, coid:(r.id && COMPANY_RELS[r.id]) ? r.id : null },
+          dom:r.dom||null, tkr:r.id||null, hasLogo: logoCandidates(r.id, r.dom).length?1:0, coid:(r.id && COMPANY_RELS[r.id]) ? r.id : null },
         position:{ x:side*400, y:(i-(n-1)/2)*70 }, classes:(side<0?'sup':'cus') });
       var w = 1.4+6*Math.pow((r.amt||0)/maxAmt,0.6);
       els.push(side<0 ? { data:{ id:'e'+id, source:id, target:'__c', w:w } }
@@ -113,10 +110,11 @@ function buildEgoLogos(){
   var layer = document.getElementById('scoLogos'); if (!layer || !_cy) return;
   layer.innerHTML = '';
   _cy.nodes('[hasLogo = 1]').forEach(function(n){
-    var dom = n.data('dom'); if (!dom) return;
+    var cands = logoCandidates(n.data('tkr'), n.data('dom')); if (!cands.length) return;
     var g = document.createElement('div'); g.className = 'sco-logo-grp'; g.dataset.id = n.id();
-    var img = document.createElement('img'); img.className = 'sco-logo-img'; img.src = clearbit(dom); img.setAttribute('data-dom', dom);
-    wireImg(img); g.appendChild(img); layer.appendChild(g);
+    var img = document.createElement('img'); img.className = 'sco-logo-img';
+    img.src = cands[0]; img.setAttribute('data-srcs', cands.slice(1).join(' '));
+    wireLogoFallback(img); g.appendChild(img); layer.appendChild(g);
   });
   positionEgoLogos();
 }
@@ -134,8 +132,7 @@ function scheduleReposition(){ if (_raf) return; _raf = requestAnimationFrame(fu
 
 // ─── Tables ───────────────────────────────────────────────────────────────────
 function nameCell(r){
-  var ic = r.dom ? '<img class="sco-logo" data-dom="'+esc(r.dom)+'" src="'+clearbit(r.dom)+'" alt="">'
-                 : '<span class="sco-dot" style="background:'+segColor(r.seg)+'"></span>';
+  var ic = logoImg('sco-logo', r.id, r.dom) || '<span class="sco-dot" style="background:'+segColor(r.seg)+'"></span>';
   return '<td>'+ic+'<span>'+esc(r.name)+'</span></td>';
 }
 function table(title, rows, revLabel, costLabel){
@@ -159,7 +156,7 @@ function renderTables(){
   el.innerHTML =
     table('Suppliers · who '+data.name+' buys from', data.suppliers, 'Their rev %', 'Its cost %') +
     table('Customers · who '+data.name+' sells to', data.customers, 'Its rev %', 'Their cost %');
-  el.querySelectorAll('img.sco-logo').forEach(wireImg);
+  el.querySelectorAll('img[data-srcs]').forEach(wireLogoFallback);
 }
 function renderSub(){
   var data = COMPANY_RELS[_sel]; var sub = document.getElementById('scoSub'); if (!sub) return;

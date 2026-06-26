@@ -159,13 +159,29 @@
 .snet-btn:hover { border-color: var(--steel); color: var(--navy); }
 
 .snet-canvas {
-  position: relative; height: 740px; width: 100%;
+  position: relative; height: 820px; width: 100%;
   background:
     radial-gradient(circle at 1px 1px, var(--bdr) 1px, transparent 0) 0 0 / 22px 22px,
     var(--w);
   border: 1px solid var(--bdr); border-radius: 12px; overflow: hidden;
 }
-.snet-canvas--big { height: 85vh; }
+.snet-canvas--big { height: 92vh; }
+
+/* Segment zoom toggle */
+.snet-segtabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.snet-segtab {
+  --accent: var(--steel);
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font: inherit;
+  font-size: 12px; font-weight: 600; color: var(--mid);
+  background: var(--w); border: 1px solid var(--bdr); border-radius: 20px; padding: 5px 13px;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.snet-segtab::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); flex: none; }
+.snet-segtab.snet-segtab-all::before { display: none; }
+.snet-segtab:hover { border-color: var(--accent); color: var(--navy); }
+.snet-segtab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.snet-segtab.active::before { background: #fff; }
+.snet-segtab.snet-segtab-all.active { background: var(--navy); border-color: var(--navy); }
 .snet-loading {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   color: var(--mu); font-size: 13px; text-align: center; padding: 24px;

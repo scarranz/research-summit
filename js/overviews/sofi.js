@@ -150,7 +150,63 @@ function memM(vK){ return (vK / 1000).toFixed(vK >= 10000 ? 1 : 2); } // million
 var LOAN_YEARS   = ['2020','2021','2022','2023','2024','2025','2026E','2027E','2028E'];
 var LOAN_FIRST_EST = 6; // first estimated year (2026E)
 
-var INT_INTRO = 'Interest income is driven by SoFi\'s three lending products. The charts below show annual origination volume — the dollar value of loans funded each year — split into Personal, Student and Home loans. This is origination volume, not interest revenue (revenue is covered separately). 2020–2025 are actuals; 2026E–2027E are estimates and 2028E is a target. Drag the handles on each chart to choose a year window — the bars, the per-bar YoY growth and the CAGR update to that range.';
+// ─── Borrower FICO gauge (classic FICO meter) ─────────────────────────────────
+// SoFi lends to prime / super-prime borrowers. Weighted-average FICO at
+// origination — Personal 746, Student 765 (SoFi Q4 2025 disclosures).
+var FICO_MIN = 300, FICO_MAX = 850, FICO_MARK = 746;
+var FICO_BANDS = [
+  [300, 580, '#E0524E', 'Poor'],
+  [580, 670, '#EE8B3A', 'Fair'],
+  [670, 740, '#E6BE36', 'Good'],
+  [740, 800, '#7CC05C', 'Very Good'],
+  [800, 850, '#2E9E5B', 'Exceptional'],
+];
+function ficoAngle(v){ return 180 * (1 - (v - FICO_MIN) / (FICO_MAX - FICO_MIN)); }
+function ficoPolar(r, deg){ var a = deg * Math.PI / 180; return [(100 + r * Math.cos(a)).toFixed(2), (100 - r * Math.sin(a)).toFixed(2)]; }
+function ficoArc(r, v1, v2){
+  var p1 = ficoPolar(r, ficoAngle(v1)), p2 = ficoPolar(r, ficoAngle(v2));
+  return 'M' + p1[0] + ' ' + p1[1] + ' A' + r + ' ' + r + ' 0 0 1 ' + p2[0] + ' ' + p2[1];
+}
+function ficoGauge(){
+  var R = 80, sw = 15;
+  var segs = FICO_BANDS.map(function(b){
+    return '<path d="' + ficoArc(R, b[0], b[1]) + '" stroke="' + b[2] + '" stroke-width="' + sw + '" fill="none"/>';
+  }).join('');
+  var tip = ficoPolar(R - 7, ficoAngle(FICO_MARK));
+  var needle = '<line x1="100" y1="100" x2="' + tip[0] + '" y2="' + tip[1] + '" stroke="#0F1720" stroke-width="2.6" stroke-linecap="round"/>' +
+               '<circle cx="100" cy="100" r="5.5" fill="#0F1720"/>';
+  var ends = '<text x="14" y="113" class="fico-end">300</text><text x="186" y="113" class="fico-end" text-anchor="end">850</text>';
+  return '<svg viewBox="0 0 200 118" class="fico-gauge" role="img" aria-label="FICO gauge — SoFi borrowers at ' + FICO_MARK + '">' +
+    segs + needle + ends + '</svg>';
+}
+function ficoCard(){
+  return '<div class="int-fico">' +
+    '<div class="int-fico-h">SoFi borrower credit quality</div>' +
+    ficoGauge() +
+    '<div class="int-fico-score">' + FICO_MARK + '<span>weighted-avg FICO · personal loans</span></div>' +
+    '<div class="int-fico-chips"><span class="int-fico-chip">Personal 746</span><span class="int-fico-chip">Student 765</span></div>' +
+    '<div class="int-fico-note">Prime / super-prime borrowers (740+ = "Very Good"). Weighted-average FICO at origination. Source: SoFi Q4 2025.</div>' +
+  '</div>';
+}
+
+// ─── SoFi Bank — Total Risk-Based Capital & lending headroom ───────────────────
+// Bank-level total risk-based capital ratio vs the 10.5% required minimum (incl.
+// capital conservation buffer), plus loans outstanding and the implied lending
+// capacity if the ratio fell to the minimum. Source: SoFi 10-K / 10-Q.
+var CAP_YEARS = ['2022', '2023', '2024', '2025', 'Q1 26'];
+var CAP_RATIO = [15.1, 17.6, 17.5, 16.6, 15.4];   // SoFi Bank total risk-based capital ratio, %
+var CAP_REQ   = 10.5;                              // required minimum (incl. buffer), %
+var CAP_LOANS = [13.9, 23.0, 27.5, 38.0, 42.2];    // total loans outstanding, $B
+// Implied max lending at the 10.5% floor (capital held constant → loans scale by ratio/min).
+var CAP_POT = CAP_LOANS.map(function(l, i){ return +(l * CAP_RATIO[i] / CAP_REQ).toFixed(1); });
+
+function capCard(){
+  return '<div class="int-cap">' +
+    '<div class="int-cap-h">Total risk-based capital &amp; lending headroom — SoFi Bank, N.A.</div>' +
+    '<div class="int-cap-chart"><canvas id="sofiCapChart"></canvas></div>' +
+    '<div class="int-cap-note">Bank total risk-based capital ratio vs the 10.5% required minimum (incl. buffer). Shaded: loans outstanding and the extra lending capacity if the ratio fell to 10.5% (capital held constant). Source: SoFi 10-K / 10-Q.</div>' +
+  '</div>';
+}
 
 var LOAN_PL = {
   key:'pl', title:'Personal Loans', years:LOAN_YEARS, firstEst:LOAN_FIRST_EST,
@@ -260,6 +316,104 @@ function overviewBody(c){
 }
 
 // "Members" sub-tab body — interactive member-growth bar chart with a year-window slider.
+// ─── "Rule of 40" sub-tab ─────────────────────────────────────────────────────
+// SoFi's Rule of 40 = YoY adjusted net revenue growth (%) + adjusted EBITDA margin
+// (%). 18 straight quarters above 40 since the 2021 IPO. Source: SoFi Q1 2026
+// investor presentation (Rule of 40 slide) + earnings-call transcripts.
+var R40_LABELS = ['4Q21','1Q22','2Q22','3Q22','4Q22','1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'];
+var R40_REV    = [54,49,50,51,58,43,37,27,34,26,22,30,24,33,44,38,37,41];
+var R40_EBITDA = [ 2, 3, 6,11,16,16,16,18,30,25,23,27,27,27,29,29,31,31];
+var R40_SCORE  = [55,52,56,62,74,59,53,45,65,51,45,57,51,60,73,67,68,72];
+var R40_QUOTES = [
+  { t:'One way to measure this success is the Rule of 40 calculation, which is revenue growth plus EBITDA margin. We’ve beaten the Rule of 40 benchmark every quarter since going public — 17 straight quarters, with an average score of 58 — making us a top performer among fintechs and technology companies more broadly.', w:'Q3 2025 earnings call' },
+  { t:'Our diversified business is uniquely built to deliver a winning combination of growth and returns. The consistency with which we’ve exceeded the Rule of 40 continues to put us in rarefied air among fintechs and technology companies more broadly.', w:'Q4 2025 earnings call' },
+  { t:'We’ve achieved 18 consecutive quarters of exceeding the Rule of 40, far exceeding it again this quarter at 72 — 41% revenue growth and 31% EBITDA margins. When other companies are stumbling, our revenue growth is accelerating.', w:'Q1 2026 earnings call' },
+];
+
+function rule40Body(){
+  var h = '';
+  h += '<div class="ov-sec-h">The “Rule of 40”</div>';
+  h += '<div class="ov-callout">A health test for growth companies: <b>revenue growth % + profit margin % &ge; 40</b>. SoFi measures it as year-over-year adjusted net revenue growth plus adjusted EBITDA margin. SoFi has cleared 40 <b>every quarter since its 2021 IPO — 18 straight</b>, averaging ~59. Each bar stacks the two components; the number on top is the score.</div>';
+  h += '<div class="ov-chart-card">'+
+    '<div class="ov-chart-t">Rule of 40 by quarter <span>(adj. revenue growth + adj. EBITDA margin · dashed line = 40 threshold)</span></div>'+
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="sofiR40Chart"></canvas></div>'+
+  '</div>';
+  h += '<div class="ov-subh">In Anthony Noto’s words</div>';
+  h += '<div class="r40-quotes">'+R40_QUOTES.map(function(q){
+    return '<blockquote class="r40-q"><div class="r40-q-t">“'+esc(q.t)+'”</div><div class="r40-q-c">— Anthony Noto, CEO · '+esc(q.w)+'</div></blockquote>';
+  }).join('')+'</div>';
+  h += '<div class="ov-foot">Rule of 40 = YoY adjusted net revenue growth + adjusted EBITDA margin (both non-GAAP). Components may not sum exactly to the score due to rounding. Source: SoFi Q1 2026 investor presentation (Rule of 40 slide) and earnings-call transcripts (Q3 2025 – Q1 2026).</div>';
+  return h;
+}
+
+// ─── "Capital Raises" sub-tab ─────────────────────────────────────────────────
+// Offerings completed in the last ~2 years + the rise in book value (total equity,
+// BV/share, tangible BV/share). Sources: SoFi IR press releases, SEC filings, XBRL.
+var OFFERINGS = [
+  { date:'Mar 2024', type:'Convertible senior notes', amt:'$862.5M',
+    terms:'1.25% coupon, due 2029 · ~$9.45 conversion price (~25% premium) · issued with capped calls to limit dilution',
+    use:'Fund the capped-call cost + general corporate purposes' },
+  { date:'Mar 2024', type:'Convertible exchange (debt → equity)', amt:'$600M',
+    terms:'Exchanged $600M of the 0% convertible notes due 2026 for ~61.7M shares of common stock',
+    use:'Deleverage ahead of the 2026 convertible maturity' },
+  { date:'Jul 2025', type:'Common stock offering', amt:'$1.5B',
+    terms:'71.9M shares priced at $20.85',
+    use:'General corporate purposes / fund growth' },
+  { date:'Dec 2025', type:'Common stock offering', amt:'$1.5B',
+    terms:'54.5M shares priced at $27.50',
+    use:'Strengthen capital position + fund incremental growth' },
+];
+var CAPR_LABELS = ['2022','2023','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26'];
+var CAPR_EQ     = [5.2, 5.2, 5.8, 5.9, 6.1, 6.5, 6.7, 6.9, 8.8, 10.5, 10.8];   // total equity, $B
+var CAPR_BVPS   = [5.58, 5.36, 5.51, 5.54, 5.65, 5.96, 6.05, 6.16, 7.29, 8.26, 8.44]; // book value / share
+var CAPR_TBVPS  = [3.37, 3.56, 3.87, 3.92, 4.07, 4.41, 4.53, 4.67, 5.93, 6.98, 7.18]; // tangible BV / share
+
+function capRaisesBody(){
+  var h = '';
+  h += '<div class="ov-sec-h">Capital Raises &amp; Book Value</div>';
+  h += '<div class="ov-callout">Since reaching GAAP profitability, SoFi\'s <b>book value (total equity) has roughly doubled</b> — from ~$5.2B at year-end 2022 to <b>~$10.8B at Q1 2026</b> — driven by retained earnings plus four capital raises in 2024–2025. Crucially, the raises grew the pie faster than they diluted it: <b>book value per share rose ~$5.58 → ~$8.44</b> and tangible book value per share more than doubled (~$3.37 → ~$7.18).</div>';
+  h += '<div class="ov-chart-card">'+
+    '<div class="ov-chart-t">Book value over time <span>(bars: total equity $B · lines: book value &amp; tangible book value per share)</span></div>'+
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="sofiCapRChart"></canvas></div>'+
+  '</div>';
+  h += '<div class="ov-subh">Offerings — last 2 years</div>';
+  h += '<div class="cr-list">'+OFFERINGS.map(function(o){
+    return '<div class="cr-card">'+
+      '<div class="cr-card-top"><span class="cr-date">'+esc(o.date)+'</span><span class="cr-amt">'+esc(o.amt)+'</span></div>'+
+      '<div class="cr-type">'+esc(o.type)+'</div>'+
+      '<div class="cr-terms">'+esc(o.terms)+'</div>'+
+      '<div class="cr-use"><b>Use:</b> '+esc(o.use)+'</div>'+
+    '</div>';
+  }).join('')+'</div>';
+  h += '<div class="ov-foot">Total equity, goodwill, intangibles and shares from SoFi 10-Q/10-K (SEC XBRL); per-share figures are computed. Offering terms from SoFi IR press releases and SEC filings. The 0% convertible notes due 2026 (issued 2021) predate this window and are the security referenced by the Mar 2024 exchange.</div>';
+  return h;
+}
+
+// "Milestones" sub-tab — SoFi's history & key milestones (reuses the timeline data).
+function milestonesBody(){
+  var h = '<div class="ov-sec-h">History &amp; Milestones</div>';
+  h += '<div class="ov-timeline">'+TIMELINE.map(function(t){
+    return '<div class="ov-tl-item"><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t[0])+'</div><div class="ov-tl-body">'+t[1]+'</div></div>';
+  }).join('')+'</div>';
+  return h;
+}
+
+// "General" pane — nested sub-tabs: Milestones · Members · Rule of 40 · Capital Raises.
+function generalBody(c){
+  var h = '';
+  h += '<div class="ovg-tabs">'+
+    '<button type="button" class="ovg-tab active" data-ovg="milestones">Milestones</button>'+
+    '<button type="button" class="ovg-tab" data-ovg="members">Members</button>'+
+    '<button type="button" class="ovg-tab" data-ovg="rule40">Rule of 40</button>'+
+    '<button type="button" class="ovg-tab" data-ovg="raises">Capital Raises</button>'+
+  '</div>';
+  h += '<div class="ovg-pane" data-ovg="milestones">'+milestonesBody()+'</div>';
+  h += '<div class="ovg-pane" data-ovg="members" hidden>'+membersBody(c)+'</div>';
+  h += '<div class="ovg-pane" data-ovg="rule40" hidden>'+rule40Body()+'</div>';
+  h += '<div class="ovg-pane" data-ovg="raises" hidden>'+capRaisesBody()+'</div>';
+  return h;
+}
+
 function membersBody(c){
   var maxI = MEM_YEARS.length - 1;
   var h = '';
@@ -311,8 +465,19 @@ function loanBlock(cfg){
 }
 
 // "Interest Income" sub-tab body — three loan-origination charts (volume, not revenue).
+function incomeSquare(){
+  return '<div class="int-income">' +
+    '<div class="int-income-v">$158K</div>' +
+    '<div class="int-income-l">avg. borrower income</div>' +
+    '<div class="int-income-s">personal loans · Q4 2025</div>' +
+  '</div>';
+}
+
 function interestBody(c){
-  var h = '<p class="ov-lede">'+esc(INT_INTRO)+'</p>';
+  var h = '<div class="int-top">'+
+    '<div class="int-left">'+ficoCard()+incomeSquare()+'</div>'+
+    '<div class="int-right">'+capCard()+'</div>'+
+  '</div>';
   h += LOANS.map(loanBlock).join('');
   return h;
 }
@@ -1728,23 +1893,645 @@ function soonBody(label){
     '<div class="ovs-soon-d">In development — building this next.</div></div>';
 }
 
+// ─── Management — insider open-market activity (SEC Form 4) ───────────────────
+// Every open-market buy (code P) and sale (code S) reported by SoFi insiders on
+// Form 4 over the last ~5 years, pulled from SEC EDGAR. Option exercises, RSU
+// vesting and tax-withholding (codes M / A / F) are deliberately excluded.
+// Columns: [date, insider, role, grp (M=management · B=board · I=10% owner), type (B/S), shares, price]
+var INSIDER_TX = [
+  ['2026-06-22','Kelli Keough','EVP, GBU Lending & SIPS','M','S',10954,17.3506],
+  ['2026-06-18','Robert Lavet','General Counsel','M','S',1188,17.546],
+  ['2026-06-17','Jeremy Rishel','Chief Technology Officer','M','S',102123,17.78],
+  ['2026-06-16','Anthony Noto','Chief Executive Officer','M','B',13888,18.0578],
+  ['2026-05-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',10037,15.5346],
+  ['2026-05-11','Anthony Noto','Chief Executive Officer','M','B',15545,16.0039],
+  ['2026-05-08','Anthony Noto','Chief Executive Officer','M','B',15878,15.7305],
+  ['2026-04-21','Kelli Keough','EVP, GBU Lending & SIPS','M','S',9742,19.2518],
+  ['2026-03-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',9742,16.9438],
+  ['2026-03-18','Jeremy Rishel','Chief Technology Officer','M','S',94958,17.43],
+  ['2026-03-17','Anthony Noto','Chief Executive Officer','M','B',28900,17.3189],
+  ['2026-03-02','Anthony Noto','Chief Executive Officer','M','B',56000,17.8842],
+  ['2026-02-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',9755,18.8742],
+  ['2026-02-06','Robert Lavet','General Counsel','M','B',5000,21.044],
+  ['2026-02-06','Steven Freiberg','Director','B','S',94225,20.31],
+  ['2026-02-05','Eric Schuppenhauer','EVP, GBU Lending Borrow','M','B',5000,19.93],
+  ['2026-01-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',9468,25.7496],
+  ['2025-12-23','Kelli Keough','EVP, GBU Lending & SIPS','M','S',9468,27.1386],
+  ['2025-12-17','Jeremy Rishel','Chief Technology Officer','M','S',91837,26.64],
+  ['2025-11-21','Arun Pinto','Chief Risk Officer','M','S',46132,24.7598],
+  ['2025-11-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',10340,26.4309],
+  ['2025-10-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',10036,28.3257],
+  ['2025-09-18','Kelli Keough','EVP, GBU Lending & SIPS','M','S',10036,27.8616],
+  ['2025-09-18','Jeremy Rishel','Chief Technology Officer','M','S',98733,27.5],
+  ['2025-08-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',10578,22.1253],
+  ['2025-07-18','Kelli Keough','EVP, GBU Lending & SIPS','M','S',10267,21.7954],
+  ['2025-06-20','Jeremy Rishel','Chief Technology Officer','M','S',66847,15.55],
+  ['2025-06-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',10267,15.2224],
+  ['2025-06-10','Magdalena Yesil','Director','B','S',87140,14.3911],
+  ['2025-06-05','Magdalena Yesil','Director','B','S',87140,13.9518],
+  ['2025-05-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',11520,13.379],
+  ['2025-04-21','Kelli Keough','EVP, GBU Lending & SIPS','M','S',11181,10.7063],
+  ['2025-03-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',11181,12.7214],
+  ['2025-03-20','Jeremy Rishel','Chief Technology Officer','M','S',68625,12.64],
+  ['2025-02-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',9185,15.4275],
+  ['2025-01-21','Kelli Keough','EVP, GBU Lending & SIPS','M','S',8914,17.5825],
+  ['2024-12-23','Kelli Keough','EVP, GBU Lending & SIPS','M','S',8914,15.5877],
+  ['2024-12-19','Jeremy Rishel','Chief Technology Officer','M','S',64991,15.72],
+  ['2024-12-16','Eric Schuppenhauer','EVP, GBU Lending Borrow','M','B',30600,16.34],
+  ['2024-12-12','Ruzwana Bashir','Director','B','S',52000,16.0228],
+  ['2024-12-04','Silver Lake (SLTA IV)','10% Owner','I','S',4320831,16.13],
+  ['2024-12-04','Silver Lake (SLTA IV)','10% Owner','I','S',323290,16.011],
+  ['2024-12-04','Silver Lake (SLTA IV)','10% Owner','I','S',19389745,16.011],
+  ['2024-12-04','Silver Lake (SLTA IV)','10% Owner','I','S',72042,16.13],
+  ['2024-12-03','Silver Lake (SLTA IV)','10% Owner','I','S',1003,15.96],
+  ['2024-12-03','Silver Lake (SLTA IV)','10% Owner','I','S',60131,15.96],
+  ['2024-12-03','Silver Lake (SLTA IV)','10% Owner','I','S',5142822,15.9],
+  ['2024-12-03','Silver Lake (SLTA IV)','10% Owner','I','S',85748,15.9],
+  ['2024-12-02','Silver Lake (SLTA IV)','10% Owner','I','S',1729713,16.06],
+  ['2024-12-02','Silver Lake (SLTA IV)','10% Owner','I','S',28840,16.06],
+  ['2024-11-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',9590,14.5562],
+  ['2024-10-21','Kelli Keough','EVP, GBU Lending & SIPS','M','S',9308,10.3629],
+  ['2024-09-23','Kelli Keough','EVP, GBU Lending & SIPS','M','S',9308,7.987],
+  ['2024-09-20','Jeremy Rishel','Chief Technology Officer','M','S',68081,8.12],
+  ['2024-08-22','Kelli Keough','EVP, GBU Lending & SIPS','M','S',24939,7.2558],
+  ['2024-06-20','Jeremy Rishel','Chief Technology Officer','M','S',56273,6.41],
+  ['2024-06-14','Anthony Noto','Chief Executive Officer','M','B',30715,6.4825],
+  ['2024-06-13','Qatar Investment Authority','10% Owner','I','S',19840073,6.78],
+  ['2024-05-24','Anthony Noto','Chief Executive Officer','M','B',28860,6.9214],
+  ['2024-05-23','Anthony Noto','Chief Executive Officer','M','B',28900,6.9181],
+  ['2024-05-03','Anthony Noto','Chief Executive Officer','M','B',28775,6.9],
+  ['2024-03-19','Jeremy Rishel','Chief Technology Officer','M','S',56273,6.93],
+  ['2023-12-19','Jeremy Rishel','Chief Technology Officer','M','S',56273,9.78],
+  ['2023-11-21','Anthony Noto','Chief Executive Officer','M','B',22500,6.5017],
+  ['2023-11-09','Anthony Noto','Chief Executive Officer','M','B',44000,6.7783],
+  ['2023-11-09','Christopher Lapointe','Chief Financial Officer','M','B',14950,6.69],
+  ['2023-11-06','Lauren Stafford Webb','Chief Marketing Officer','M','S',135832,7.5814],
+  ['2023-11-03','Aaron Webster','Chief Risk Officer','M','S',215299,8.0843],
+  ['2023-11-02','Chad Borton','President, SoFi Bank','M','S',152041,7.9925],
+  ['2023-09-01','Jeremy Rishel','Chief Technology Officer','M','S',53532,8.88],
+  ['2023-06-16','Chad Borton','President, SoFi Bank','M','S',90458,8.6779],
+  ['2023-06-15','Lauren Stafford Webb','Chief Marketing Officer','M','S',100000,9.288],
+  ['2023-06-14','Aaron Webster','Chief Risk Officer','M','S',200000,9.6906],
+  ['2023-05-15','Anthony Noto','Chief Executive Officer','M','B',108000,4.6732],
+  ['2023-05-09','Jeremy Rishel','Chief Technology Officer','M','S',200000,5.4656],
+  ['2023-05-05','Anthony Noto','Chief Executive Officer','M','B',30000,5.1171],
+  ['2023-05-05','Anthony Noto','Chief Executive Officer','M','B',19833,5.03],
+  ['2023-05-04','Anthony Noto','Chief Executive Officer','M','B',50000,4.7341],
+  ['2023-03-16','Anthony Noto','Chief Executive Officer','M','B',45000,5.3936],
+  ['2023-03-10','Anthony Noto','Chief Executive Officer','M','B',180000,5.5283],
+  ['2023-03-08','Jeremy Rishel','Chief Technology Officer','M','S',81000,6.4602],
+  ['2023-02-02','Robert Lavet','General Counsel','M','S',200000,8.062],
+  ['2022-12-16','Anthony Noto','Chief Executive Officer','M','B',300000,4.5934],
+  ['2022-12-15','Anthony Noto','Chief Executive Officer','M','B',225000,4.5921],
+  ['2022-12-13','Anthony Noto','Chief Executive Officer','M','B',318965,4.5833],
+  ['2022-12-12','Anthony Noto','Chief Executive Officer','M','B',132600,4.2934],
+  ['2022-12-09','Anthony Noto','Chief Executive Officer','M','B',682500,4.3634],
+  ['2022-09-12','Anthony Noto','Chief Executive Officer','M','B',1500,6.33],
+  ['2022-08-08','SoftBank Group','10% Owner','I','S',6683133,8.17],
+  ['2022-08-05','SoftBank Group','10% Owner','I','S',5381785,7.99],
+  ['2022-06-16','Anthony Noto','Chief Executive Officer','M','B',53540,5.5841],
+  ['2022-06-15','Anthony Noto','Chief Executive Officer','M','B',3000,5.94],
+  ['2022-06-14','Michelle Gill','Executive Vice President','M','S',50000,5.48],
+  ['2022-06-13','Harvey Schwartz','Director','B','B',53500,5.59],
+  ['2022-06-13','Anthony Noto','Chief Executive Officer','M','B',46500,5.3664],
+  ['2022-06-10','Anthony Noto','Chief Executive Officer','M','B',33455,5.979],
+  ['2022-06-09','Anthony Noto','Chief Executive Officer','M','B',47625,6.2975],
+  ['2022-06-08','Anthony Noto','Chief Executive Officer','M','B',16907,6.6491],
+  ['2022-06-06','Anthony Noto','Chief Executive Officer','M','B',21750,6.8975],
+  ['2022-06-01','Anthony Noto','Chief Executive Officer','M','B',21215,7.0713],
+  ['2022-05-27','Anthony Noto','Chief Executive Officer','M','B',3000,7.48],
+  ['2022-05-24','Anthony Noto','Chief Executive Officer','M','B',37056,6.7203],
+  ['2022-05-20','Anthony Noto','Chief Executive Officer','M','B',27000,7.3181],
+  ['2022-05-19','Anthony Noto','Chief Executive Officer','M','B',13500,7.7884],
+  ['2022-05-13','Harvey Schwartz','Director','B','B',15000,6.5],
+  ['2022-05-13','Anthony Noto','Chief Executive Officer','M','B',39000,6.5],
+  ['2022-03-17','Anthony Noto','Chief Executive Officer','M','B',34000,8.912],
+  ['2022-03-17','Harvey Schwartz','Director','B','B',58000,8.8376],
+  ['2022-03-17','Micah Heavener','Head of Operations','M','S',5000,8.0092],
+  ['2022-03-16','Anthony Noto','Chief Executive Officer','M','B',17375,8.6215],
+  ['2022-03-14','Micah Heavener','Head of Operations','M','B',5000,7.9899],
+  ['2022-03-14','Anthony Noto','Chief Executive Officer','M','B',19042,7.8473],
+  ['2022-03-11','Anthony Noto','Chief Executive Officer','M','B',16704,8.9467],
+  ['2022-03-10','Anthony Noto','Chief Executive Officer','M','B',15873,9.4424],
+  ['2022-03-07','Anthony Noto','Chief Executive Officer','M','B',15350,9.7264],
+  ['2022-03-04','Anthony Noto','Chief Executive Officer','M','B',15000,9.9639],
+  ['2022-03-04','Anthony Noto','Chief Executive Officer','M','B',3926,10.19],
+  ['2022-01-20','Micah Heavener','Head of Operations','M','S',2000,15],
+  ['2021-12-10','Aaron Webster','Chief Risk Officer','M','B',1000,14.9],
+  ['2021-11-30','Tom Hutton','Director','B','S',16800,18.5014],
+  ['2021-11-29','Tom Hutton','Director','B','S',103462,18.5155],
+  ['2021-11-18','Silver Lake (SLTA IV)','10% Owner','I','S',120725,21.6],
+  ['2021-11-18','Qatar Investment Authority','10% Owner','I','S',4687985,21.6],
+  ['2021-11-18','Silver Lake (SLTA IV)','10% Owner','I','S',7240653,21.6],
+  ['2021-11-18','SoftBank Group','10% Owner','I','S',22514038,21.6],
+  ['2021-11-18','Thomas Wilkes','Vice Chairman, Galileo','M','S',10076668,21.6],
+  ['2021-09-13','Thomas Wilkes','Vice Chairman, Galileo','M','S',1119413,15.16],
+  ['2021-09-07','Micah Heavener','Head of Operations','M','S',6250,16],
+  ['2021-08-26','Anthony Noto','Chief Executive Officer','M','B',7150,14.3063],
+  ['2021-08-25','Micah Heavener','Head of Operations','M','S',5000,14.97],
+  ['2021-08-24','Micah Heavener','Head of Operations','M','S',20000,14.83],
+  ['2021-08-23','Aaron Webster','Chief Risk Officer','M','B',1000,14.34],
+  ['2021-08-23','Anthony Noto','Chief Executive Officer','M','B',100,14.23],
+  ['2021-08-20','Anthony Noto','Chief Executive Officer','M','B',1000,14.05],
+  ['2021-08-19','Anthony Noto','Chief Executive Officer','M','B',400,13.99],
+  ['2021-08-19','Christopher Lapointe','Chief Financial Officer','M','B',3500,14.02],
+  ['2021-08-19','Anthony Noto','Chief Executive Officer','M','B',7150,13.9325],
+  ['2021-08-18','Anthony Noto','Chief Executive Officer','M','B',7150,14.4646],
+  ['2021-08-18','Anthony Noto','Chief Executive Officer','M','B',500,13.97],
+  ['2021-08-17','Anthony Noto','Chief Executive Officer','M','B',7150,13.7811],
+  ['2021-03-16','Ahmed Al-Hammadi','Director (QIA)','B','B',10000,8.4]
+];
+
+// SOFI shares outstanding — Q1 2026 Form 10-Q (cover page, as of 2026-04-30).
+var SHARES_OUT = 1282741200;
+
+// Latest reported direct common-share holding per insider, from each one's most
+// recent Form 4 (sharesOwnedFollowingTransaction). [shares, asOfDate]. Drives the
+// ownership % column. Insiders who have left or stopped filing reflect their last
+// report (e.g. SoftBank, Wilkes) — the as-of date is shown on hover.
+var INSIDER_OWN = {
+  'Anthony Noto':              [11960507, '2026-06-16'],
+  'Michelle Gill':             [1911258,  '2022-09-14'],
+  'Christopher Lapointe':      [1825479,  '2026-06-15'],
+  'Jeremy Rishel':             [895089,   '2026-06-08'],
+  'Aaron Webster':             [615080,   '2024-03-14'],
+  'Steven Freiberg':           [593998,   '2026-06-09'],
+  'Magdalena Yesil':           [433104,   '2026-06-15'],
+  'Kelli Keough':              [378682,   '2026-06-22'],
+  'Harvey Schwartz':           [361289,   '2024-05-21'],
+  'Chad Borton':               [336432,   '2024-03-14'],
+  'Lauren Stafford Webb':      [315675,   '2023-12-14'],
+  'Eric Schuppenhauer':        [298589,   '2026-06-15'],
+  'Arun Pinto':                [199016,   '2026-06-15'],
+  'Micah Heavener':            [170926,   '2022-06-14'],
+  'Silver Lake (SLTA IV)':     [112971,   '2024-12-02'],
+  'Robert Lavet':              [88200,    '2026-06-17'],
+  'Ahmed Al-Hammadi':          [87937,    '2024-05-21'],
+  'Ruzwana Bashir':            [79359,    '2026-06-09'],
+  'Tom Hutton':                [18388,    '2026-06-09'],
+  'Thomas Wilkes':             [42645574, '2021-11-18'],
+  'SoftBank Group':            [83216977, '2022-08-05'],
+  'Qatar Investment Authority':[0,        '2024-06-13']
+};
+
+// Ownership % cell from the latest Form 4 holding; as-of date shown on hover.
+function insOwnCell(name){
+  var o = INSIDER_OWN[name];
+  if (!o || !o[0]) return '<span class="ins-dash">—</span>';
+  var pct = o[0] / SHARES_OUT * 100;
+  var txt = pct < 0.01 ? '&lt;0.01%' : pct.toFixed(2) + '%';
+  return '<span class="ins-own" title="'+insNum(o[0])+' shares held as of '+o[1]+'">'+txt+'</span>';
+}
+
+// Ownership value cell = latest holding × the reference share price.
+function insOwnValCell(name){
+  var o = INSIDER_OWN[name];
+  if (!o || !o[0]) return '<span class="ins-dash">—</span>';
+  return '<span class="ins-own" title="'+insNum(o[0])+' shares × $'+SENS_BASE.price.toFixed(2)+' (as of '+o[1]+')">'+insUsd(o[0]*SENS_BASE.price)+'</span>';
+}
+
+var INS_GRP_LABEL = { M:'Management', B:'Board', I:'10% Owner' };
+
+// Compact USD formatter for the insider tables ($1.2M, $984M, $12K).
+function insUsd(v){
+  var a = Math.abs(v);
+  if (a >= 1e9) return '$' + (v/1e9).toFixed(2) + 'B';
+  if (a >= 1e6) return '$' + (v/1e6).toFixed(1) + 'M';
+  if (a >= 1e3) return '$' + Math.round(v/1e3) + 'K';
+  return '$' + Math.round(v);
+}
+function insNum(n){ return Math.round(n).toLocaleString(); }
+
+// Aggregate buys/sells over a filtered slice of INSIDER_TX.
+function insAgg(pred){
+  var b = {n:0, sh:0, val:0}, s = {n:0, sh:0, val:0};
+  INSIDER_TX.forEach(function(t){
+    if (pred && !pred(t)) return;
+    var v = t[5] * t[6], side = (t[4] === 'B') ? b : s;
+    side.n++; side.sh += t[5]; side.val += v;
+  });
+  return { b:b, s:s };
+}
+
+// Active table filters (module-level; reset each time the body is built).
+var _insGroup = 'all', _insType = 'all', _insYear = 'all';
+
+function insVisibleRows(){
+  return INSIDER_TX.filter(function(t){
+    if (_insGroup !== 'all' && t[3] !== _insGroup) return false;
+    if (_insType  !== 'all' && t[4] !== _insType)  return false;
+    if (_insYear  !== 'all' && t[0].slice(0, 4) !== _insYear) return false;
+    return true;
+  });
+}
+
+// Net buy/(sell) cell: green "+$X" for net buying, red "($X)" for net selling.
+function insNet(v){
+  if (Math.round(v) === 0) return '<span class="ins-dash">—</span>';
+  if (v > 0) return '<span class="ins-pos">+' + insUsd(v) + '</span>';
+  return '<span class="ins-neg">(' + insUsd(-v) + ')</span>';
+}
+
+// Local-date YYYY-MM-DD (no timezone shift), used to build period cutoffs.
+function insYmd(d){
+  var m = d.getMonth() + 1, day = d.getDate();
+  return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (day < 10 ? '0' : '') + day;
+}
+
+// Trailing-year window for the second net column (1–5 yr; chosen via the header select).
+var _insYrCol = 1;
+
+function insYrOptions(){
+  var s = '';
+  for (var y = 1; y <= 5; y++) s += '<option value="'+y+'"'+(y===_insYrCol?' selected':'')+'>'+y+'Y</option>';
+  return s;
+}
+
+// Per-insider rollup table (respects the group filter, sorted by total $ traded).
+// Net columns: YTD (current calendar year) and trailing N years = buys $ − sells $.
+function insByPersonHTML(){
+  var now = new Date();
+  var ytdCut = now.getFullYear() + '-01-01';
+  var perCut = insYmd(new Date(now.getFullYear() - _insYrCol, now.getMonth(), now.getDate()));
+  var by = {};
+  INSIDER_TX.forEach(function(t){
+    if (_insGroup !== 'all' && t[3] !== _insGroup) return;
+    var k = t[1];
+    if (!by[k]) by[k] = { name:t[1], role:t[2], grp:t[3], b:{n:0,val:0}, s:{n:0,val:0}, ytd:0, per:0 };
+    var v = t[5]*t[6], side = (t[4]==='B') ? by[k].b : by[k].s;
+    side.n++; side.val += v;
+    var signed = (t[4]==='B' ? 1 : -1) * v;
+    if (t[0] >= ytdCut) by[k].ytd += signed;
+    if (t[0] >= perCut) by[k].per += signed;
+  });
+  var arr = Object.keys(by).map(function(k){ return by[k]; });
+  arr.sort(function(a,z){ return (z.b.val+z.s.val) - (a.b.val+a.s.val); });
+  var body = arr.map(function(p){
+    var buy  = p.b.n ? '<span class="ins-pos">'+insUsd(p.b.val)+'</span> <small>('+p.b.n+')</small>' : '<span class="ins-dash">—</span>';
+    var sell = p.s.n ? '<span class="ins-neg">'+insUsd(p.s.val)+'</span> <small>('+p.s.n+')</small>' : '<span class="ins-dash">—</span>';
+    return '<tr>'+
+      '<td class="ov-td-name">'+esc(p.name)+'</td>'+
+      '<td class="ins-role">'+esc(p.role)+'</td>'+
+      '<td class="ins-num">'+buy+'</td>'+
+      '<td class="ins-num">'+sell+'</td>'+
+      '<td class="ins-num ins-hl ins-hl-a">'+insNet(p.ytd)+'</td>'+
+      '<td class="ins-num ins-hl">'+insNet(p.per)+'</td>'+
+      '<td class="ins-num">'+insOwnCell(p.name)+'</td>'+
+      '<td class="ins-num">'+insOwnValCell(p.name)+'</td>'+
+    '</tr>';
+  }).join('');
+  return '<table class="ov-table ins-table"><thead><tr>'+
+    '<th>Insider</th><th>Role</th>'+
+    '<th class="ins-num">Open-market buys</th><th class="ins-num">Open-market sells</th>'+
+    '<th class="ins-num ins-hl ins-hl-a">YTD buy/(sell)</th>'+
+    '<th class="ins-num ins-hl"><select class="ins-yrsel" aria-label="Trailing period">'+insYrOptions()+'</select> buy/(sell)</th>'+
+    '<th class="ins-num">Ownership %</th>'+
+    '<th class="ins-num">Ownership value</th>'+
+    '</tr></thead><tbody>'+body+'</tbody></table>';
+}
+
+// Detailed, filterable transaction table (rebuilt on every filter change).
+function insTxTableHTML(){
+  var rows = insVisibleRows();
+  if (!rows.length) return '<div class="ins-empty">No transactions match this filter.</div>';
+  var body = rows.map(function(t){
+    var v = t[5]*t[6];
+    var badge = (t[4]==='B')
+      ? '<span class="ins-badge ins-buy">Buy</span>'
+      : '<span class="ins-badge ins-sell">Sell</span>';
+    return '<tr>'+
+      '<td class="ins-date">'+esc(t[0])+'</td>'+
+      '<td class="ov-td-name">'+esc(t[1])+'</td>'+
+      '<td class="ins-role">'+esc(t[2])+'</td>'+
+      '<td>'+badge+'</td>'+
+      '<td class="ins-num">'+insNum(t[5])+'</td>'+
+      '<td class="ins-num">$'+t[6].toFixed(2)+'</td>'+
+      '<td class="ins-num">'+insUsd(v)+'</td>'+
+    '</tr>';
+  }).join('');
+  return '<div class="ins-count">'+rows.length+' transactions</div>'+
+    '<table class="ov-table ins-table"><thead><tr>'+
+      '<th>Date</th><th>Insider</th><th>Role</th><th>Type</th>'+
+      '<th class="ins-num">Shares</th><th class="ins-num">Price</th><th class="ins-num">Value</th>'+
+    '</tr></thead><tbody>'+body+'</tbody></table>';
+}
+
+function pill(group, val, label, active){
+  // Dedicated class (NOT .ave-pill) so the Valuation tab's .ave-pill click
+  // wiring in init() doesn't clobber these handlers.
+  var cls = (group === 'g') ? 'ins-gpill' : 'ins-tpill';
+  var attr = (group === 'g') ? 'data-insg' : 'data-inst';
+  return '<button type="button" class="ins-pill '+cls+(active?' active':'')+'" '+attr+'="'+val+'">'+esc(label)+'</button>';
+}
+
+// "Insider Activity" sub-tab — insider open-market activity from SEC Form 4.
+function insiderActivityBody(c){
+  _insGroup = 'all'; _insType = 'all'; _insYrCol = 1; _insYear = 'all';
+  var h = '';
+  h += '<div class="ov-sec-h">Insider Activity — Open-Market Buys &amp; Sells</div>';
+
+  var noto    = insAgg(function(t){ return t[1] === 'Anthony Noto'; });
+  var mgmt    = insAgg(function(t){ return t[3] === 'M'; });
+  // Operating-management sells, excluding Thomas Wilkes' one-time 2021 Galileo
+  // founder lock-up sale ($235M), which is a post-acquisition unwind, not a signal.
+  var mgmtSellOp = insAgg(function(t){ return t[3] === 'M' && t[1] !== 'Thomas Wilkes'; }).s;
+  var inst    = insAgg(function(t){ return t[3] === 'I'; });
+
+  function kpi(l, v, d, dir){
+    return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(l)+'</div><div class="ov-kpi-v">'+v+'</div><div class="ov-kpi-d '+(dir||'muted')+'">'+esc(d)+'</div></div>';
+  }
+  h += '<div class="ov-kpis">'+
+    kpi('CEO Anthony Noto', insUsd(noto.b.val), noto.b.n+' buys · '+noto.s.n+' sells', 'up')+
+    kpi('Management buys', insUsd(mgmt.b.val), mgmt.b.n+' transactions', 'up')+
+    kpi('Management sells', insUsd(mgmtSellOp.val), mgmtSellOp.n+' txns · ex-founder lock-up', 'down')+
+    kpi('Pre-IPO owners sold', insUsd(inst.s.val), 'SoftBank · QIA · Silver Lake', 'muted')+
+  '</div>';
+
+  // Group filter — applies to BOTH tables below.
+  h += '<div class="ave-pills">'+
+    pill('g','all','All', true)+
+    pill('g','M','Management', false)+
+    pill('g','B','Board', false)+
+    pill('g','I','10% Owners', false)+
+  '</div>';
+
+  h += '<div class="ov-subh">By insider</div>';
+  h += '<div id="insByPersonWrap">'+insByPersonHTML()+'</div>';
+
+  h += '<div class="ov-callout">SoFi\'s insider signal is unusually clean: CEO <b>Anthony Noto</b> has bought stock on the open market <b>'+noto.b.n+' times</b> and never sold a share. The large-dollar sales come almost entirely from early pre-IPO backers — <b>SoftBank</b>, the <b>Qatar Investment Authority</b> and <b>Silver Lake</b> ($'+(inst.s.val/1e9).toFixed(1)+'B combined) — plus a one-off $235M lock-up sale by Galileo founder <b>Thomas Wilkes</b> in 2021, unwinding stakes rather than operators losing conviction. Stripping those out, operating management has sold just '+insUsd(mgmtSellOp.val)+' over five years — mostly CTO Jeremy Rishel and EVP Kelli Keough selling in small, regular monthly increments typical of pre-scheduled 10b5-1 plans.</div>';
+
+  h += '<div class="ov-subh">All transactions</div>';
+  h += '<div class="ave-pills">'+
+    pill('t','all','Buys & Sells', true)+
+    pill('t','B','Buys only', false)+
+    pill('t','S','Sells only', false)+
+  '</div>';
+  // Year filter: "All" pill + a year dropdown (2026 … 2021).
+  var yrOpts = '';
+  for (var yy = 2026; yy >= 2021; yy--) yrOpts += '<option value="'+yy+'">'+yy+'</option>';
+  h += '<div class="ave-pills">'+
+    '<button type="button" class="ins-pill ins-ypill active" data-insy="all">All</button>'+
+    '<select class="ins-ysel" aria-label="Filter by year">'+yrOpts+'</select>'+
+  '</div>';
+  h += '<div id="insTableWrap">'+insTxTableHTML()+'</div>';
+
+  h += '<div class="ov-foot">Source: SEC EDGAR Form 4 filings (CIK 0001818874), '+INSIDER_TX[INSIDER_TX.length-1][0]+' – '+INSIDER_TX[0][0]+'. Open-market buys (code P) and sells (code S) only; derivative transactions, grants, exercises and tax-withholding excluded. Value = shares × reported price per share. Ownership % = each insider\'s latest reported direct common shares ÷ '+(SHARES_OUT/1e9).toFixed(2)+'B shares outstanding (Q1 2026 10-Q); ownership value = those shares × $'+SENS_BASE.price.toFixed(2)+' (last close). Hover either figure for the as-of date — holders who have since exited or stopped filing (e.g. SoftBank, Wilkes) reflect their last report.</div>';
+  return h;
+}
+
+// ─── Management → Organization Chart ──────────────────────────────────────────
+// Leadership structure from SoFi public disclosures (leadership page, proxy) and
+// recent Form 4 officer titles. Reporting lines are simplified/functional groupings.
+var ORG_CEO = ['Anthony Noto', 'Chief Executive Officer & Director', 'AN'];
+
+var ORG_GROUPS = [
+  { title:'Finance, Legal & People', people:[
+    ['Chris Lapointe', 'Chief Financial Officer'],
+    ['Rob Lavet', 'General Counsel'],
+    ['Anna Avalos', 'Chief People Officer'],
+    ['William Tanona', 'SVP, Corporate Development & Strategic Partnerships'],
+  ]},
+  { title:'Technology & Marketing', people:[
+    ['Jeremy Rishel', 'Chief Technology Officer'],
+    ['Lauren Stafford Webb', 'Chief Marketing Officer'],
+  ]},
+  { title:'Business Units', people:[
+    ['Kelli Keough', 'EVP — Spend, Invest, Protect & Save'],
+    ['Eric Schuppenhauer', 'EVP — Borrow & SoFi Bank, N.A.'],
+  ]},
+  { title:'Risk', people:[
+    ['Arun Pinto', 'Chief Risk Officer'],
+  ]},
+];
+
+// Board of Directors (chair + directors). The CEO also serves on the board.
+// Sourced from recent Form 4 director filings (2025–26) and the FY2026 proxy.
+var ORG_BOARD = {
+  chair: ['Tom Hutton', 'Chairman of the Board'],
+  vice:  ['Steven Freiberg', 'Vice Chairman'],
+  members: ['Anthony Noto (CEO)', 'Gary Meltzer', 'Clara Liang', 'Magdalena Yesil', 'Ruzwana Bashir', 'John C.R. Hele', 'William A. Borden'],
+};
+
+// Legal entities and the three reportable segments.
+var ORG_ENTITIES = [
+  ['SoFi Bank, N.A.', 'National bank charter (Feb 2022) — holds deposits & loans on balance sheet'],
+  ['Galileo', 'Card issuing & payments APIs (acquired 2020)'],
+  ['Technisys', 'Cloud-native core banking platform (acquired 2022)'],
+];
+var ORG_SEGMENTS = [
+  ['Lending', 'Personal, student & home loans'],
+  ['Financial Services', 'Money, Invest, Credit Card, Protect, Crypto'],
+  ['Technology Platform', 'Galileo + Technisys (B2B)'],
+];
+
+function orgInitials(name){
+  var parts = name.replace(/\(.*\)/, '').trim().split(/\s+/);
+  var a = parts[0] ? parts[0][0] : '';
+  var b = parts.length > 1 ? parts[parts.length-1][0] : '';
+  return (a + b).toUpperCase();
+}
+
+// Per-person profiles (photo, role, career bio, education, prior roles).
+// Bios compiled from public sources (Wikipedia, company/board bio pages, press
+// releases) and verified for accuracy; photos stored same-origin under /img.
+var PROFILES = {
+  'Anthony Noto': { role:'Chief Executive Officer & Director', photo:'/img/leadership/noto.jpg',
+    bio:'Anthony Noto has been CEO of SoFi since January 2018, expanding it from a student-loan refinancer into a full-suite digital bank. He spent ~15 years at Goldman Sachs, becoming a partner and co-head of global TMT investment banking and a top-rated internet analyst, and was CFO of the NFL (2008–2010). He joined Twitter as CFO in 2014 and later became its COO before leaving to lead SoFi.',
+    edu:'B.S., U.S. Military Academy at West Point; MBA, Wharton (UPenn)',
+    prior:['COO & CFO, Twitter','CFO, NFL','Partner & Co-head Global TMT Banking, Goldman Sachs'] },
+  'Chris Lapointe': { role:'Chief Financial Officer', photo:'',
+    bio:'Chris Lapointe joined SoFi in June 2018 as VP and Head of Business Operations and became CFO in April 2020, helping lead the company through its 2021 public listing and its turn to profitability. Before SoFi he was Global Head of FP&A, Corporate Finance and FinTech at Uber, and earlier a VP in TMT investment banking at Goldman Sachs.',
+    edu:'B.A. Math & Economics, Dartmouth; MBA, Tuck School of Business',
+    prior:['Global Head of FP&A/Corp Finance/FinTech, Uber','VP, TMT Investment Banking, Goldman Sachs'] },
+  'Jeremy Rishel': { role:'Chief Technology Officer', photo:'/img/leadership/rishel.jpg',
+    bio:'Jeremy Rishel joined SoFi as CTO in June 2022, overseeing products, technology strategy, architecture and infrastructure. He brings deep engineering leadership experience as a former VP of Engineering at Twitter and senior engineering leader at DoorDash, Splunk and Bluefin Labs. He is a U.S. Marine Corps veteran who left active duty as a Captain.',
+    edu:'B.S. Computer Science & Philosophy, MIT; MBA, MIT Sloan',
+    prior:['VP Engineering, Twitter','Engineering leadership, DoorDash','SVP Engineering, Splunk'] },
+  'Lauren Stafford Webb': { role:'Chief Marketing Officer', photo:'/img/leadership/stafford-webb.jpg',
+    bio:'Lauren Stafford Webb is CMO of SoFi, overseeing brand and advertising and credited with driving SoFi\'s brand growth. She joined in 2019 from Intuit, where she led global corporate marketing and delivered the company\'s first corporate brand strategy. Earlier she spent years at Procter & Gamble in marketing leadership across brands including Tide, Herbal Essences and COVERGIRL.',
+    edu:'B.S. Finance, The Ohio State University',
+    prior:['VP/Director of Marketing, Intuit','Brand leadership (Tide, Herbal Essences, COVERGIRL), P&G'] },
+  'Rob Lavet': { role:'General Counsel', photo:'',
+    bio:'Rob Lavet is General Counsel of SoFi, originally joining in September 2012 as ~its 33rd employee and building the legal function behind SoFi\'s 2021 public listing, its 2022 national bank charter, and the Galileo and Technisys acquisitions; he also negotiated the 20-year SoFi Stadium naming-rights deal. He began at Howrey & Simon, was a DOJ Civil Division trial attorney, and spent ~16 years at Sallie Mae, rising to SVP & General Counsel.',
+    edu:'J.D., Georgetown; B.A., University of Pennsylvania',
+    prior:['SVP & General Counsel, Sallie Mae','Trial Attorney, U.S. Dept. of Justice','Associate, Howrey & Simon'] },
+  'Anna Avalos': { role:'Chief People Officer', photo:'/img/leadership/avalos.jpg',
+    bio:'Anna Avalos is Chief People Officer of SoFi, leading total talent and HR strategy and a culture-focused employer brand. Before SoFi she led HR for Tesla\'s EMEA region, and prior to that spent roughly 14 years at Stryker across product operations, business-unit leadership and HR roles.',
+    edu:'B.A. Communications & MBA, University of Arizona',
+    prior:['Head of HR, EMEA, Tesla','~14 years at Stryker (ops, BU leadership, HR)'] },
+  'William Tanona': { role:'SVP, Corporate Development & Strategic Partnerships', photo:'/img/leadership/tanona.jpg',
+    bio:'Bill Tanona leads Corporate Development, Strategic Partnerships and Investor Relations at SoFi (joined June 2018), running M&A, strategic investments and joint ventures. He was previously President, CFO and Treasurer of GSV Capital Corp, and earlier spent nearly two decades across J.P. Morgan, Goldman Sachs, UBS and Fortress Investment Group. He is a CFA charterholder.',
+    edu:'B.S. Accounting, Villanova; CFA charterholder',
+    prior:['President, CFO & Treasurer, GSV Capital','J.P. Morgan','Goldman Sachs','Fortress Investment Group'] },
+  'Kelli Keough': { role:'EVP — Spend, Invest, Protect & Save', photo:'/img/leadership/keough.jpg',
+    bio:'Kelli Keough joined SoFi in March 2023 as EVP leading Spend, Invest, Protect and Save — SoFi Money, credit card, Invest, insurance and partnerships. She previously spent 2015–2023 at JPMorgan Chase, most recently as Managing Director and Head of Product, Digital and Client Solutions at J.P. Morgan Wealth Management. Earlier she was an SVP at Charles Schwab and began her career as a psychology professor at UT Austin.',
+    edu:'B.A., Yale; M.A. & Ph.D. Social Psychology, Stanford',
+    prior:['MD & Head of Product/Digital, J.P. Morgan Wealth Mgmt','SVP, Charles Schwab','Professor of Psychology, UT Austin'] },
+  'Eric Schuppenhauer': { role:'EVP — Borrow & SoFi Bank, N.A.', photo:'',
+    bio:'Eric Schuppenhauer joined SoFi in August 2024 as EVP leading Borrow — Home Loans, Personal Loans, Student Loans, Pricing, and SoFi Bank, N.A. He previously sat on the executive committee at Citizens Financial Group, rising to President of Consumer Lending and National Banking. Before Citizens he was Head of Mortgage at Capital One, with earlier mortgage leadership at JPMorgan Chase and Fannie Mae.',
+    edu:'',
+    prior:['President, Consumer Lending & National Banking, Citizens','Head of Mortgage, Capital One','Mortgage leadership, JPMorgan Chase'] },
+  'Arun Pinto': { role:'Chief Risk Officer', photo:'',
+    bio:'Arun Pinto joined SoFi in February 2024 as Chief Risk Officer. He previously spent ~three years as CRO of Consumer and Small Business Banking at Wells Fargo, and about nine years at JPMorgan Chase in risk leadership including CRO of the Auto business and CRO for Mortgage Servicing and Capital Markets. Earlier he held risk executive roles at Bank of America.',
+    edu:'B.A.Sc. Chemical Engineering, UC Berkeley',
+    prior:['CRO, Consumer & Small Business Banking, Wells Fargo','CRO Auto / Mortgage Servicing, JPMorgan Chase','Risk executive, Bank of America'] },
+  'Tom Hutton': { role:'Chairman of the Board', photo:'/img/leadership/hutton.jpg',
+    bio:'Tom Hutton is Managing Partner of Thompson Hutton LLC, investing in financial-services and fintech funds. He was previously CEO of Risk Management Solutions (RMS) and CEO of White Mountains Re Group, and a public-company director at XL Group, Safeco and Montpelier Re. He joined the Social Finance board in 2011, served as SoFi\'s interim CEO (2017–2018), and has been independent Chairman of SoFi\'s board since May 2021.',
+    edu:'MBA, Harvard; M.S. Mechanical Engineering & B.A. Economics, Stanford',
+    prior:['Managing Partner, Thompson Hutton','CEO, White Mountains Re','CEO, Risk Management Solutions','Interim CEO, SoFi (2017–18)'] },
+  'Steven Freiberg': { role:'Vice Chairman of the Board', photo:'/img/leadership/freiberg.png',
+    bio:'Steven Freiberg spent ~three decades at Citigroup, including as Co-Chairman and CEO of its Global Consumer Group, then served as CEO of E*TRADE Financial, leading it back to profitability after the 2008 crisis. He founded Grand Vista Partners and has served on boards including Mastercard and Regional Management. He joined the Social Finance board in 2017 and has been Vice Chairman since May 2021.',
+    edu:'',
+    prior:['CEO, E*TRADE Financial','Co-Chairman & CEO, Citigroup Global Consumer Group','Founder, Grand Vista Partners','Director, Mastercard'] },
+  'Gary Meltzer': { role:'Director — Audit Committee Chair', photo:'',
+    bio:'Gary Meltzer spent ~35 years at PricewaterhouseCoopers (1985–2020), most recently as Managing Partner for PwC\'s Bay Area and Northwest market and a member of its Extended Leadership Team, having earlier led the firm\'s Asset and Wealth Management sector. A CPA, he also serves on the boards of American Century Investments and Apollo Realty Income Solutions (Audit Chair). He joined SoFi\'s board in June 2024 and chairs its Audit Committee.',
+    edu:'B.S. Accounting, Binghamton University; CPA',
+    prior:['Managing Partner, PwC (Bay Area & NW)','Leader, PwC Asset & Wealth Management','Director, American Century Investments'] },
+  'Clara Liang': { role:'Director', photo:'',
+    bio:'Clara Liang is a technology product leader who joined SoFi\'s board in October 2019 while a VP and General Manager at Airbnb. Earlier she was Chief Product Officer at Jive Software and spent ~11 years at IBM. She is now Head of Global Strategic Operations at Stripe (general manager of Link) and also serves on the board of Navan.',
+    edu:'B.S. Symbolic Systems, Stanford; M.S. Tech Commercialization, UT Austin',
+    prior:['VP & General Manager, Airbnb','Chief Product Officer, Jive Software','Head of Global Strategic Operations, Stripe'] },
+  'John C.R. Hele': { role:'Director — Risk Committee Chair', photo:'',
+    bio:'John C.R. Hele is a veteran insurance-industry finance executive who joined SoFi\'s board in May 2023 and chairs its Risk Committee. He was EVP and CFO of MetLife (2012–2018), and previously CFO at Arch Capital Group and ING, later President and COO of Resolution Life. He is a Fellow of the Society of Actuaries.',
+    edu:'B.Math, University of Waterloo; FSA',
+    prior:['EVP & CFO, MetLife','CFO, Arch Capital Group','CFO, ING','President & COO, Resolution Life'] },
+  'William A. Borden': { role:'Director', photo:'/img/leadership/borden.png',
+    bio:'Bill Borden is Corporate VP of Worldwide Financial Services at Microsoft (since 2019), leading industry strategy for banking, capital markets and insurance. Before Microsoft he spent ~seven years at Bank of America Merrill Lynch, last as a managing director leading global transaction-services strategy, with earlier senior roles at Citi and IBM. He joined SoFi\'s board in 2024.',
+    edu:'',
+    prior:['Corporate VP, Worldwide Financial Services, Microsoft','MD, Global Transaction Services, BofA Merrill Lynch','Senior roles at Citi and IBM'] },
+};
+
+function orgCard(name, title){
+  var p = PROFILES[name];
+  var ava = (p && p.photo)
+    ? '<img class="org-ava org-photo" src="'+p.photo+'" alt="'+esc(name)+'" loading="lazy">'
+    : '<div class="org-ava">'+esc(orgInitials(name))+'</div>';
+  var cls = 'org-card' + (p ? ' org-click' : '');
+  var attr = p ? ' data-person="'+esc(name)+'"' : '';
+  return '<div class="'+cls+'"'+attr+'>'+
+    ava+
+    '<div class="org-meta"><div class="org-name">'+esc(name)+'</div>'+
+    '<div class="org-title">'+esc(title)+'</div></div>'+
+  '</div>';
+}
+
+// Board member chip — clickable when a profile exists. Label may carry a "(CEO)" tag.
+function orgChip(label){
+  var key = label.replace(/\s*\(.*\)$/, '').trim();
+  var p = PROFILES[key];
+  if (p) return '<span class="org-chip org-click" data-person="'+esc(key)+'">'+esc(label)+'</span>';
+  return '<span class="org-chip">'+esc(label)+'</span>';
+}
+
+// Person profile modal (single, reused). Hidden until a name is clicked.
+function orgModalHTML(){
+  return '<div class="org-modal" id="orgModal" hidden>'+
+    '<div class="org-modal-bg" data-omclose></div>'+
+    '<div class="org-modal-card" role="dialog" aria-modal="true">'+
+      '<button type="button" class="org-modal-x" data-omclose aria-label="Close">&times;</button>'+
+      '<div class="org-modal-head">'+
+        '<div class="org-modal-photo" id="omPhoto"></div>'+
+        '<div><div class="org-modal-name" id="omName"></div><div class="org-modal-role" id="omRole"></div></div>'+
+      '</div>'+
+      '<div class="org-modal-bio" id="omBio"></div>'+
+      '<div class="org-modal-sec" id="omEduWrap"><div class="org-modal-h">Education</div><div id="omEdu"></div></div>'+
+      '<div class="org-modal-sec" id="omPriorWrap"><div class="org-modal-h">Previously</div><div id="omPrior"></div></div>'+
+    '</div>'+
+  '</div>';
+}
+
+// Populate and open the profile modal for a person.
+function showPerson(root, name){
+  var p = PROFILES[name], m = root.querySelector('#orgModal');
+  if (!p || !m) return;
+  root.querySelector('#omPhoto').innerHTML = p.photo
+    ? '<img src="'+p.photo+'" alt="'+esc(name)+'">'
+    : '<div class="org-modal-init">'+esc(orgInitials(name))+'</div>';
+  root.querySelector('#omName').textContent = name;
+  root.querySelector('#omRole').textContent = p.role || '';
+  root.querySelector('#omBio').textContent = p.bio || '';
+  var eduWrap = root.querySelector('#omEduWrap');
+  if (p.edu) { root.querySelector('#omEdu').textContent = p.edu; eduWrap.hidden = false; } else { eduWrap.hidden = true; }
+  var priorWrap = root.querySelector('#omPriorWrap');
+  if (p.prior && p.prior.length) {
+    root.querySelector('#omPrior').innerHTML = p.prior.map(function(x){ return '<span class="org-prior">'+esc(x)+'</span>'; }).join('');
+    priorWrap.hidden = false;
+  } else { priorWrap.hidden = true; }
+  m.hidden = false;
+}
+
+// "Organization Chart" sub-tab — leadership tree + corporate/business structure.
+function orgChartBody(c){
+  var h = '';
+  h += '<div class="ov-sec-h">Organization &amp; Structure</div>';
+
+  // Board of Directors.
+  h += '<div class="ov-subh">Board of Directors</div>';
+  h += '<div class="org-board">'+
+    '<div class="org-board-lead">'+orgCard(ORG_BOARD.chair[0], ORG_BOARD.chair[1])+orgCard(ORG_BOARD.vice[0], ORG_BOARD.vice[1])+'</div>'+
+    '<div class="org-board-list">'+ORG_BOARD.members.map(function(m){ return orgChip(m); }).join('')+'</div>'+
+  '</div>';
+
+  // Executive leadership tree: CEO → functional groups.
+  h += '<div class="ov-subh">Executive Leadership</div>';
+  h += '<div class="org-tree">';
+  h += '<div class="org-ceo">'+orgCard(ORG_CEO[0], ORG_CEO[1])+'</div>';
+  h += '<div class="org-trunk"></div>';
+  h += '<div class="org-groups">'+ORG_GROUPS.map(function(g){
+    return '<div class="org-group">'+
+      '<div class="org-group-h">'+esc(g.title)+'</div>'+
+      g.people.map(function(p){ return orgCard(p[0], p[1]); }).join('')+
+    '</div>';
+  }).join('')+'</div>';
+  h += '</div>';
+
+  // Corporate & business structure.
+  h += '<div class="ov-subh">Corporate &amp; Business Structure</div>';
+  h += '<div class="org-struct">'+
+    '<div class="org-struct-col"><div class="org-struct-h">Key legal entities</div>'+
+      ORG_ENTITIES.map(function(e){ return '<div class="org-srow"><div class="org-srow-k">'+esc(e[0])+'</div><div class="org-srow-d">'+esc(e[1])+'</div></div>'; }).join('')+
+    '</div>'+
+    '<div class="org-struct-col"><div class="org-struct-h">Reportable segments</div>'+
+      ORG_SEGMENTS.map(function(e){ return '<div class="org-srow"><div class="org-srow-k">'+esc(e[0])+'</div><div class="org-srow-d">'+esc(e[1])+'</div></div>'; }).join('')+
+    '</div>'+
+  '</div>';
+
+  h += '<div class="ov-foot">Click any name with a photo or highlighted chip to see their photo and career background. Leadership and structure compiled from SoFi Technologies public disclosures (leadership page, proxy statement) and recent Form 4 officer titles. Functional groupings are simplified and do not necessarily reflect exact reporting lines. The board has additional members not all shown.</div>';
+  h += orgModalHTML();
+  return h;
+}
+
+// "Management" pane — nested sub-tabs: Organization Chart + Insider Activity.
+function managementBody(c){
+  var h = '';
+  h += '<div class="ovm-tabs">'+
+    '<button type="button" class="ovm-tab active" data-ovm="org">Organization Chart</button>'+
+    '<button type="button" class="ovm-tab" data-ovm="insiders">Insider Activity</button>'+
+  '</div>';
+  h += '<div class="ovm-pane" data-ovm="org">'+orgChartBody(c)+'</div>';
+  h += '<div class="ovm-pane" data-ovm="insiders" hidden>'+insiderActivityBody(c)+'</div>';
+  return h;
+}
+
 function html(c){
   var h = '<div class="ov ov-sofi" data-brand="SOFI">';
   // Sub-tab bar
   h += '<div class="ovt-tabs">'+
     '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="members">Members</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="members">General</button>'+
     '<button type="button" class="ovt-tab" data-ovt="interest">Interest Income</button>'+
     '<button type="button" class="ovt-tab" data-ovt="fees">Fee Income</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="management">Management</button>'+
     '<button type="button" class="ovt-tab" data-ovt="valuation">Valuation</button>'+
     '<button type="button" class="ovt-tab" data-ovt="sensitivity">Sensitivity</button>'+
     '<button type="button" class="ovt-tab" data-ovt="peers">Peers</button>'+
   '</div>';
   // Panes
   h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="members" hidden>'+membersBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="members" hidden>'+generalBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="interest" hidden>'+interestBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="fees" hidden>'+feeBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="management" hidden>'+managementBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="valuation" hidden>'+valuationBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="sensitivity" hidden>'+sensBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="peers" hidden>'+peersBody(c)+'</div>';
@@ -1850,6 +2637,94 @@ function buildMembersTab(){
   setupMemSlider();
 }
 
+// Rule of 40: stacked bars (rev growth + EBITDA margin), 40-threshold line, score on top.
+var _r40Chart = null;
+var r40Plugin = {
+  id: 'r40plugin',
+  afterDatasetsDraw: function(chart){
+    var ctx = chart.ctx, ca = chart.chartArea;
+    var y40 = chart.scales.y.getPixelForValue(40);
+    ctx.save();
+    // 40 threshold line
+    ctx.strokeStyle = '#DC2626'; ctx.lineWidth = 1.4; ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(ca.left, y40); ctx.lineTo(ca.right, y40); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#DC2626'; ctx.font = '700 9px Inter, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('Rule of 40', ca.left + 3, y40 - 4);
+    // score on top of each stacked bar
+    var top = chart.getDatasetMeta(1).data;
+    ctx.fillStyle = '#0F1720'; ctx.font = '700 9.5px Inter, sans-serif'; ctx.textAlign = 'center';
+    top.forEach(function(bar, i){ ctx.fillText(R40_SCORE[i], bar.x, bar.y - 5); });
+    ctx.restore();
+  }
+};
+function buildRule40Chart(){
+  var cv = document.getElementById('sofiR40Chart');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_r40Chart) { _r40Chart.destroy(); _r40Chart = null; }
+  _r40Chart = new Chart(cv.getContext('2d'), {
+    type: 'bar',
+    data: { labels: R40_LABELS, datasets: [
+      { label:'Revenue growth (YoY)', data: R40_REV, backgroundColor:'#A9BCC6', stack:'r40', maxBarThickness:30 },
+      { label:'Adj. EBITDA margin', data: R40_EBITDA, backgroundColor:'#0E7CC0', stack:'r40', maxBarThickness:30 }
+    ]},
+    options: {
+      responsive:true, maintainAspectRatio:false, animation:false,
+      layout:{ padding:{ top:22 } },
+      plugins:{
+        legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{ size:10 }, padding:8, color:'#5b6470' } },
+        tooltip:{ mode:'index', intersect:false, callbacks:{
+          label:function(ctx){ return ctx.dataset.label + ': ' + ctx.parsed.y + '%'; },
+          footer:function(items){ return 'Rule of 40 score: ' + R40_SCORE[items[0].dataIndex]; }
+        } }
+      },
+      scales:{
+        y:{ stacked:true, beginAtZero:true, max:85, grid:{ color:'rgba(0,0,0,.05)' },
+          ticks:{ color:'#8A93A0', font:{ size:10 } } },
+        x:{ stacked:true, grid:{ display:false },
+          ticks:{ color:'#8A93A0', font:{ size:9 }, maxRotation:0, autoSkip:false } }
+      }
+    },
+    plugins: [r40Plugin]
+  });
+}
+
+// Capital raises: total equity ($B) bars + book value / tangible BV per share lines.
+var _capRChart = null;
+function buildCapRaiseChart(){
+  var cv = document.getElementById('sofiCapRChart');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_capRChart) { _capRChart.destroy(); _capRChart = null; }
+  _capRChart = new Chart(cv.getContext('2d'), {
+    data: { labels: CAPR_LABELS, datasets: [
+      { type:'bar', label:'Total equity ($B)', data: CAPR_EQ, yAxisID:'y',
+        backgroundColor:'rgba(14,124,192,.85)', borderRadius:3, maxBarThickness:34, order:3 },
+      { type:'line', label:'Book value / share', data: CAPR_BVPS, yAxisID:'y1',
+        borderColor:'#0F1720', backgroundColor:'#0F1720', fill:false, tension:.3, pointRadius:2.5, borderWidth:2, order:1 },
+      { type:'line', label:'Tangible BV / share', data: CAPR_TBVPS, yAxisID:'y1',
+        borderColor:'#E8833A', backgroundColor:'#E8833A', borderDash:[5,4], fill:false, tension:.3, pointRadius:0, borderWidth:1.6, order:2 }
+    ]},
+    options: {
+      responsive:true, maintainAspectRatio:false, animation:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{ size:9.5 }, padding:8, color:'#5b6470' } },
+        tooltip:{ callbacks:{ label:function(ctx){
+          if (ctx.dataset.yAxisID === 'y1') return ctx.dataset.label + ': $' + ctx.parsed.y.toFixed(2);
+          return ctx.dataset.label + ': $' + ctx.parsed.y.toFixed(1) + 'B';
+        } } }
+      },
+      scales:{
+        y:{ position:'left', beginAtZero:true, max:12, grid:{ color:'rgba(0,0,0,.05)' },
+          ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return '$' + v + 'B'; } } },
+        y1:{ position:'right', beginAtZero:true, max:10, grid:{ display:false },
+          ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return '$' + v; } } },
+        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:9.5 } } }
+      }
+    }
+  });
+}
+
 // ─── Interest Income charts (generic ranged loan-origination bar chart) ───────
 var _loanCharts = {}; // cfg.key -> Chart instance
 
@@ -1948,6 +2823,53 @@ function setupLoanSlider(cfg){
 
 function buildInterestTab(){
   LOANS.forEach(function(cfg){ buildLoanChart(cfg); setupLoanSlider(cfg); });
+  buildCapChart();
+}
+
+var _capChart = null;
+function buildCapChart(){
+  var cv = document.getElementById('sofiCapChart');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_capChart) { _capChart.destroy(); _capChart = null; }
+  var reqLine = CAP_YEARS.map(function(){ return CAP_REQ; });
+  _capChart = new Chart(cv.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: CAP_YEARS,
+      datasets: [
+        { label:'Lending capacity at 10.5% min', data: CAP_POT, yAxisID:'y1',
+          borderColor:'rgba(14,124,192,.40)', backgroundColor:'rgba(14,124,192,.10)',
+          fill:'origin', tension:.3, pointRadius:0, borderWidth:1 },
+        { label:'Loans outstanding', data: CAP_LOANS, yAxisID:'y1',
+          borderColor:'#0E7CC0', backgroundColor:'rgba(14,124,192,.32)',
+          fill:'origin', tension:.3, pointRadius:2.5, borderWidth:2 },
+        { label:'Total risk-based capital ratio', data: CAP_RATIO, yAxisID:'y',
+          borderColor:'#0F1720', backgroundColor:'#0F1720', fill:false, tension:.3,
+          pointRadius:3, borderWidth:2 },
+        { label:'Required minimum (10.5%)', data: reqLine, yAxisID:'y',
+          borderColor:'#DC2626', borderDash:[5,4], fill:false, pointRadius:0, borderWidth:1.5 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false, animation:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{ display:true, position:'bottom', labels:{ boxWidth:9, font:{ size:9 }, padding:6, color:'#5b6470' } },
+        tooltip:{ callbacks:{ label:function(ctx){
+          var v = ctx.parsed.y;
+          if (ctx.dataset.yAxisID === 'y') return ctx.dataset.label + ': ' + v.toFixed(1) + '%';
+          return ctx.dataset.label + ': $' + v.toFixed(1) + 'B';
+        } } }
+      },
+      scales:{
+        y:{ position:'left', min:8, max:20, grid:{ color:'rgba(0,0,0,.05)' },
+          ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return v + '%'; } } },
+        y1:{ position:'right', min:0, max:72, grid:{ display:false },
+          ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return '$' + v + 'B'; } } },
+        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:11 } } }
+      }
+    }
+  });
 }
 
 // ─── Fee Income — nested (second-level) sub-tabs ──────────────────────────────
@@ -2695,6 +3617,21 @@ function showOvf(root, key){
   buildFeeTab();
 }
 
+// Switch a nested General sub-tab (Milestones / Members / Rule of 40 / Capital Raises).
+function showOvg(root, key){
+  root.querySelectorAll('.ovg-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovg') === key); });
+  root.querySelectorAll('.ovg-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovg') !== key); });
+  if (key === 'members') requestAnimationFrame(buildMembersTab);
+  if (key === 'rule40')  requestAnimationFrame(buildRule40Chart);
+  if (key === 'raises')  requestAnimationFrame(buildCapRaiseChart);
+}
+
+// Switch a nested Management sub-tab (Organization Chart / Insider Activity).
+function showOvm(root, key){
+  root.querySelectorAll('.ovm-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovm') === key); });
+  root.querySelectorAll('.ovm-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovm') !== key); });
+}
+
 // Switch a nested Valuation sub-tab.
 function showOvv(root, key){
   root.querySelectorAll('.ovv-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovv') === key); });
@@ -2728,6 +3665,74 @@ function init(c){
   root.querySelectorAll('.ovv-tab').forEach(function(btn){
     btn.onclick = function(){ showOvv(root, btn.getAttribute('data-ovv')); };
   });
+  root.querySelectorAll('.ovg-tab').forEach(function(btn){
+    btn.onclick = function(){ showOvg(root, btn.getAttribute('data-ovg')); };
+  });
+  root.querySelectorAll('.ovm-tab').forEach(function(btn){
+    btn.onclick = function(){ showOvm(root, btn.getAttribute('data-ovm')); };
+  });
+  // Organization chart: click a name → open the person profile modal.
+  root.querySelectorAll('.org-click').forEach(function(el){
+    el.onclick = function(){ showPerson(root, el.getAttribute('data-person')); };
+  });
+  var orgModal = root.querySelector('#orgModal');
+  if (orgModal) {
+    orgModal.querySelectorAll('[data-omclose]').forEach(function(b){
+      b.onclick = function(){ orgModal.hidden = true; };
+    });
+    if (!window.__sofiOrgEsc) {
+      window.__sofiOrgEsc = true;
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') { var m = document.querySelector('#orgModal'); if (m && !m.hidden) m.hidden = true; }
+      });
+    }
+  }
+  // Management: insider-transaction filter pills (group + buy/sell).
+  function refreshInsTable(){
+    var wrap = root.querySelector('#insTableWrap');
+    if (wrap) wrap.innerHTML = insTxTableHTML();
+  }
+  // Re-render the "By insider" table and (re)wire its period <select>.
+  function refreshByPerson(){
+    var pw = root.querySelector('#insByPersonWrap');
+    if (!pw) return;
+    pw.innerHTML = insByPersonHTML();
+    var sel = pw.querySelector('.ins-yrsel');
+    if (sel) sel.onchange = function(){ _insYrCol = parseInt(sel.value, 10); refreshByPerson(); };
+  }
+  refreshByPerson();   // wire the select that html() already rendered
+  root.querySelectorAll('.ins-gpill').forEach(function(btn){
+    btn.onclick = function(){
+      _insGroup = btn.getAttribute('data-insg');
+      root.querySelectorAll('.ins-gpill').forEach(function(x){ x.classList.toggle('active', x === btn); });
+      // Group filter drives both tables.
+      refreshByPerson();
+      refreshInsTable();
+    };
+  });
+  root.querySelectorAll('.ins-tpill').forEach(function(btn){
+    btn.onclick = function(){
+      _insType = btn.getAttribute('data-inst');
+      root.querySelectorAll('.ins-tpill').forEach(function(x){ x.classList.toggle('active', x === btn); });
+      refreshInsTable();
+    };
+  });
+  // Year filter: "All" pill clears it; the dropdown picks a single year.
+  var ysel = root.querySelector('.ins-ysel');
+  root.querySelectorAll('.ins-ypill').forEach(function(btn){
+    btn.onclick = function(){
+      _insYear = 'all';
+      btn.classList.add('active');
+      if (ysel) ysel.classList.remove('active');
+      refreshInsTable();
+    };
+  });
+  if (ysel) ysel.onchange = function(){
+    _insYear = ysel.value;
+    ysel.classList.add('active');
+    root.querySelectorAll('.ins-ypill').forEach(function(x){ x.classList.remove('active'); });
+    refreshInsTable();
+  };
   // Valuation → Actuals vs. Estimates: metric selector pills.
   root.querySelectorAll('.ave-pill').forEach(function(btn){
     btn.onclick = function(){ switchAveMetric(root, btn.getAttribute('data-ave')); };

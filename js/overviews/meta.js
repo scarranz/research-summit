@@ -810,30 +810,26 @@ function modelBody(){
 // Requires a logged-in portal user (the edge fn verifies the JWT); on any failure
 // (not logged in, off-hours error, vendor hiccup) the banner hides gracefully.
 // Dynamic import keeps this module loadable in non-browser contexts.
-function meNum(v){ return (typeof v==='number' && isFinite(v)) ? v : null; }
-function meMktCap(m){ if(m==null) return null; if(m>=1e12) return '$'+(m/1e12).toFixed(2)+'T'; if(m>=1e9) return '$'+(m/1e9).toFixed(1)+'B'; return '$'+Math.round(m/1e6)+'M'; }
+// Compact $ formatter (sign-aware): 1.92e12 -> "$1.92T"; 1.7e10 -> "$17B".
+function meBig(m){ if(m==null) return null; var a=Math.abs(m); if(a>=1e12) return '$'+(a/1e12).toFixed(2)+'T'; if(a>=1e9) return '$'+(a/1e9).toFixed(a/1e9>=100?0:1)+'B'; return '$'+Math.round(a/1e6)+'M'; }
+// Live price + valuation for META via the shared api.liveQuote (Massive): price,
+// change %, market cap, enterprise value, net cash/debt and shares. Each field is
+// optional; the banner hides only if no price can be sourced (not logged in / off-hours).
 function renderLive(root){
   var el=root.querySelector('#meLive'); if(!el) return;
-  el.hidden=false; el.innerHTML='<span class="ov-live-ts">fetching live price…</span>';
-  import('../api.js').then(function(api){
-    return Promise.all([
-      api.coveredCallsQuote('snapshot','META').catch(function(){ return null; }),
-      api.coveredCallsQuote('ratios','META').catch(function(){ return null; })
-    ]);
-  }).then(function(res){
-    var snap=res[0], rat=res[1];
-    var tk = (snap && (snap.ticker || (snap.results && snap.results.ticker))) || null;
-    var price = tk ? (meNum(tk.lastTrade&&tk.lastTrade.p) || meNum(tk.min&&tk.min.c) || meNum(tk.day&&tk.day.c) || meNum(tk.prevDay&&tk.prevDay.c)) : null;
-    var chg   = tk ? meNum(tk.todaysChangePerc) : null;
-    var r0 = (rat && rat.results && rat.results[0]) || {};
-    if(price==null) price=meNum(r0.price);
-    var mktCap = meNum(r0.market_cap);
-    if(price==null){ el.hidden=true; el.innerHTML=''; return; }
-    var up=(chg==null||chg>=0);
-    el.innerHTML='<span class="ov-live-dot"></span><span class="ov-live-tk">META</span><span class="ov-live-px">$'+price.toFixed(2)+'</span>'+
-      (chg!=null?'<span class="ov-live-ch '+(up?'up':'down')+'">'+(up?'▲ +':'▼ −')+Math.abs(chg).toFixed(2)+'%</span>':'')+
-      (mktCap!=null?'<span class="ov-live-mc">'+meMktCap(mktCap)+' mkt cap</span>':'')+
-      '<span class="ov-live-ts">live · NASDAQ · Massive</span>';
+  el.hidden=false; el.innerHTML='<span class="ov-live-ts">fetching live data…</span>';
+  import('../api.js').then(function(api){ return api.liveQuote('META'); }).then(function(res){
+    var q=(res && res.success) ? res.data : null;
+    if(!q || q.price==null){ el.hidden=true; el.innerHTML=''; return; }
+    var up=(q.changePct==null||q.changePct>=0);
+    var html='<span class="ov-live-dot"></span><span class="ov-live-tk">META</span><span class="ov-live-px">$'+q.price.toFixed(2)+'</span>';
+    if(q.changePct!=null) html+='<span class="ov-live-ch '+(up?'up':'down')+'">'+(up?'▲ +':'▼ −')+Math.abs(q.changePct).toFixed(2)+'%</span>';
+    if(q.marketCap!=null) html+='<span class="ov-live-mc">'+meBig(q.marketCap)+' mkt cap</span>';
+    if(q.ev!=null)        html+='<span class="ov-live-mc">'+meBig(q.ev)+' EV</span>';
+    if(q.netDebt!=null)   html+='<span class="ov-live-mc">'+(q.netDebt<0?'net cash ':'net debt ')+meBig(q.netDebt)+'</span>';
+    if(q.shares!=null)    html+='<span class="ov-live-mc">'+(q.shares/1e9).toFixed(2)+'B sh</span>';
+    html+='<span class="ov-live-ts">live · NASDAQ · Massive</span>';
+    el.innerHTML=html;
   }).catch(function(){ el.hidden=true; el.innerHTML=''; });
 }
 

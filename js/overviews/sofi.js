@@ -1877,6 +1877,54 @@ var INSIDER_TX = [
   ['2021-03-16','Ahmed Al-Hammadi','Director (QIA)','B','B',10000,8.4]
 ];
 
+// SOFI shares outstanding — Q1 2026 Form 10-Q (cover page, as of 2026-04-30).
+var SHARES_OUT = 1282741200;
+
+// Latest reported direct common-share holding per insider, from each one's most
+// recent Form 4 (sharesOwnedFollowingTransaction). [shares, asOfDate]. Drives the
+// ownership % column. Insiders who have left or stopped filing reflect their last
+// report (e.g. SoftBank, Wilkes) — the as-of date is shown on hover.
+var INSIDER_OWN = {
+  'Anthony Noto':              [11960507, '2026-06-16'],
+  'Michelle Gill':             [1911258,  '2022-09-14'],
+  'Christopher Lapointe':      [1825479,  '2026-06-15'],
+  'Jeremy Rishel':             [895089,   '2026-06-08'],
+  'Aaron Webster':             [615080,   '2024-03-14'],
+  'Steven Freiberg':           [593998,   '2026-06-09'],
+  'Magdalena Yesil':           [433104,   '2026-06-15'],
+  'Kelli Keough':              [378682,   '2026-06-22'],
+  'Harvey Schwartz':           [361289,   '2024-05-21'],
+  'Chad Borton':               [336432,   '2024-03-14'],
+  'Lauren Stafford Webb':      [315675,   '2023-12-14'],
+  'Eric Schuppenhauer':        [298589,   '2026-06-15'],
+  'Arun Pinto':                [199016,   '2026-06-15'],
+  'Micah Heavener':            [170926,   '2022-06-14'],
+  'Silver Lake (SLTA IV)':     [112971,   '2024-12-02'],
+  'Robert Lavet':              [88200,    '2026-06-17'],
+  'Ahmed Al-Hammadi':          [87937,    '2024-05-21'],
+  'Ruzwana Bashir':            [79359,    '2026-06-09'],
+  'Tom Hutton':                [18388,    '2026-06-09'],
+  'Thomas Wilkes':             [42645574, '2021-11-18'],
+  'SoftBank Group':            [83216977, '2022-08-05'],
+  'Qatar Investment Authority':[0,        '2024-06-13']
+};
+
+// Ownership % cell from the latest Form 4 holding; as-of date shown on hover.
+function insOwnCell(name){
+  var o = INSIDER_OWN[name];
+  if (!o || !o[0]) return '<span class="ins-dash">—</span>';
+  var pct = o[0] / SHARES_OUT * 100;
+  var txt = pct < 0.01 ? '&lt;0.01%' : pct.toFixed(2) + '%';
+  return '<span class="ins-own" title="'+insNum(o[0])+' shares held as of '+o[1]+'">'+txt+'</span>';
+}
+
+// Ownership value cell = latest holding × the reference share price.
+function insOwnValCell(name){
+  var o = INSIDER_OWN[name];
+  if (!o || !o[0]) return '<span class="ins-dash">—</span>';
+  return '<span class="ins-own" title="'+insNum(o[0])+' shares × $'+SENS_BASE.price.toFixed(2)+' (as of '+o[1]+')">'+insUsd(o[0]*SENS_BASE.price)+'</span>';
+}
+
 var INS_GRP_LABEL = { M:'Management', B:'Board', I:'10% Owner' };
 
 // Compact USD formatter for the insider tables ($1.2M, $984M, $12K).
@@ -1963,6 +2011,8 @@ function insByPersonHTML(){
       '<td class="ins-num">'+sell+'</td>'+
       '<td class="ins-num ins-hl ins-hl-a">'+insNet(p.ytd)+'</td>'+
       '<td class="ins-num ins-hl">'+insNet(p.per)+'</td>'+
+      '<td class="ins-num">'+insOwnCell(p.name)+'</td>'+
+      '<td class="ins-num">'+insOwnValCell(p.name)+'</td>'+
     '</tr>';
   }).join('');
   return '<table class="ov-table ins-table"><thead><tr>'+
@@ -1970,6 +2020,8 @@ function insByPersonHTML(){
     '<th class="ins-num">Open-market buys</th><th class="ins-num">Open-market sells</th>'+
     '<th class="ins-num ins-hl ins-hl-a">YTD buy/(sell)</th>'+
     '<th class="ins-num ins-hl"><select class="ins-yrsel" aria-label="Trailing period">'+insYrOptions()+'</select> buy/(sell)</th>'+
+    '<th class="ins-num">Ownership %</th>'+
+    '<th class="ins-num">Ownership value</th>'+
     '</tr></thead><tbody>'+body+'</tbody></table>';
 }
 
@@ -2058,7 +2110,7 @@ function managementBody(c){
   '</div>';
   h += '<div id="insTableWrap">'+insTxTableHTML()+'</div>';
 
-  h += '<div class="ov-foot">Source: SEC EDGAR Form 4 filings (CIK 0001818874), '+INSIDER_TX[INSIDER_TX.length-1][0]+' – '+INSIDER_TX[0][0]+'. Open-market buys (code P) and sells (code S) only; derivative transactions, grants, exercises and tax-withholding excluded. Value = shares × reported price per share.</div>';
+  h += '<div class="ov-foot">Source: SEC EDGAR Form 4 filings (CIK 0001818874), '+INSIDER_TX[INSIDER_TX.length-1][0]+' – '+INSIDER_TX[0][0]+'. Open-market buys (code P) and sells (code S) only; derivative transactions, grants, exercises and tax-withholding excluded. Value = shares × reported price per share. Ownership % = each insider\'s latest reported direct common shares ÷ '+(SHARES_OUT/1e9).toFixed(2)+'B shares outstanding (Q1 2026 10-Q); ownership value = those shares × $'+SENS_BASE.price.toFixed(2)+' (last close). Hover either figure for the as-of date — holders who have since exited or stopped filing (e.g. SoftBank, Wilkes) reflect their last report.</div>';
   return h;
 }
 

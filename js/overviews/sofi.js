@@ -150,7 +150,63 @@ function memM(vK){ return (vK / 1000).toFixed(vK >= 10000 ? 1 : 2); } // million
 var LOAN_YEARS   = ['2020','2021','2022','2023','2024','2025','2026E','2027E','2028E'];
 var LOAN_FIRST_EST = 6; // first estimated year (2026E)
 
-var INT_INTRO = 'Interest income is driven by SoFi\'s three lending products. The charts below show annual origination volume — the dollar value of loans funded each year — split into Personal, Student and Home loans. This is origination volume, not interest revenue (revenue is covered separately). 2020–2025 are actuals; 2026E–2027E are estimates and 2028E is a target. Drag the handles on each chart to choose a year window — the bars, the per-bar YoY growth and the CAGR update to that range.';
+// ─── Borrower FICO gauge (classic FICO meter) ─────────────────────────────────
+// SoFi lends to prime / super-prime borrowers. Weighted-average FICO at
+// origination — Personal 746, Student 765 (SoFi Q4 2025 disclosures).
+var FICO_MIN = 300, FICO_MAX = 850, FICO_MARK = 746;
+var FICO_BANDS = [
+  [300, 580, '#E0524E', 'Poor'],
+  [580, 670, '#EE8B3A', 'Fair'],
+  [670, 740, '#E6BE36', 'Good'],
+  [740, 800, '#7CC05C', 'Very Good'],
+  [800, 850, '#2E9E5B', 'Exceptional'],
+];
+function ficoAngle(v){ return 180 * (1 - (v - FICO_MIN) / (FICO_MAX - FICO_MIN)); }
+function ficoPolar(r, deg){ var a = deg * Math.PI / 180; return [(100 + r * Math.cos(a)).toFixed(2), (100 - r * Math.sin(a)).toFixed(2)]; }
+function ficoArc(r, v1, v2){
+  var p1 = ficoPolar(r, ficoAngle(v1)), p2 = ficoPolar(r, ficoAngle(v2));
+  return 'M' + p1[0] + ' ' + p1[1] + ' A' + r + ' ' + r + ' 0 0 1 ' + p2[0] + ' ' + p2[1];
+}
+function ficoGauge(){
+  var R = 80, sw = 15;
+  var segs = FICO_BANDS.map(function(b){
+    return '<path d="' + ficoArc(R, b[0], b[1]) + '" stroke="' + b[2] + '" stroke-width="' + sw + '" fill="none"/>';
+  }).join('');
+  var tip = ficoPolar(R - 7, ficoAngle(FICO_MARK));
+  var needle = '<line x1="100" y1="100" x2="' + tip[0] + '" y2="' + tip[1] + '" stroke="#0F1720" stroke-width="2.6" stroke-linecap="round"/>' +
+               '<circle cx="100" cy="100" r="5.5" fill="#0F1720"/>';
+  var ends = '<text x="14" y="113" class="fico-end">300</text><text x="186" y="113" class="fico-end" text-anchor="end">850</text>';
+  return '<svg viewBox="0 0 200 118" class="fico-gauge" role="img" aria-label="FICO gauge — SoFi borrowers at ' + FICO_MARK + '">' +
+    segs + needle + ends + '</svg>';
+}
+function ficoCard(){
+  return '<div class="int-fico">' +
+    '<div class="int-fico-h">SoFi borrower credit quality</div>' +
+    ficoGauge() +
+    '<div class="int-fico-score">' + FICO_MARK + '<span>weighted-avg FICO · personal loans</span></div>' +
+    '<div class="int-fico-chips"><span class="int-fico-chip">Personal 746</span><span class="int-fico-chip">Student 765</span></div>' +
+    '<div class="int-fico-note">Prime / super-prime borrowers (740+ = "Very Good"). Weighted-average FICO at origination. Source: SoFi Q4 2025.</div>' +
+  '</div>';
+}
+
+// ─── SoFi Bank — Total Risk-Based Capital & lending headroom ───────────────────
+// Bank-level total risk-based capital ratio vs the 10.5% required minimum (incl.
+// capital conservation buffer), plus loans outstanding and the implied lending
+// capacity if the ratio fell to the minimum. Source: SoFi 10-K / 10-Q.
+var CAP_YEARS = ['2022', '2023', '2024', '2025', 'Q1 26'];
+var CAP_RATIO = [15.1, 17.6, 17.5, 16.6, 15.4];   // SoFi Bank total risk-based capital ratio, %
+var CAP_REQ   = 10.5;                              // required minimum (incl. buffer), %
+var CAP_LOANS = [13.9, 23.0, 27.5, 38.0, 42.2];    // total loans outstanding, $B
+// Implied max lending at the 10.5% floor (capital held constant → loans scale by ratio/min).
+var CAP_POT = CAP_LOANS.map(function(l, i){ return +(l * CAP_RATIO[i] / CAP_REQ).toFixed(1); });
+
+function capCard(){
+  return '<div class="int-cap">' +
+    '<div class="int-cap-h">Total risk-based capital &amp; lending headroom — SoFi Bank, N.A.</div>' +
+    '<div class="int-cap-chart"><canvas id="sofiCapChart"></canvas></div>' +
+    '<div class="int-cap-note">Bank total risk-based capital ratio vs the 10.5% required minimum (incl. buffer). Shaded: loans outstanding and the extra lending capacity if the ratio fell to 10.5% (capital held constant). Source: SoFi 10-K / 10-Q.</div>' +
+  '</div>';
+}
 
 var LOAN_PL = {
   key:'pl', title:'Personal Loans', years:LOAN_YEARS, firstEst:LOAN_FIRST_EST,
@@ -311,8 +367,19 @@ function loanBlock(cfg){
 }
 
 // "Interest Income" sub-tab body — three loan-origination charts (volume, not revenue).
+function incomeSquare(){
+  return '<div class="int-income">' +
+    '<div class="int-income-v">$158K</div>' +
+    '<div class="int-income-l">avg. borrower income</div>' +
+    '<div class="int-income-s">personal loans · Q4 2025</div>' +
+  '</div>';
+}
+
 function interestBody(c){
-  var h = '<p class="ov-lede">'+esc(INT_INTRO)+'</p>';
+  var h = '<div class="int-top">'+
+    '<div class="int-left">'+ficoCard()+incomeSquare()+'</div>'+
+    '<div class="int-right">'+capCard()+'</div>'+
+  '</div>';
   h += LOANS.map(loanBlock).join('');
   return h;
 }
@@ -2570,6 +2637,53 @@ function setupLoanSlider(cfg){
 
 function buildInterestTab(){
   LOANS.forEach(function(cfg){ buildLoanChart(cfg); setupLoanSlider(cfg); });
+  buildCapChart();
+}
+
+var _capChart = null;
+function buildCapChart(){
+  var cv = document.getElementById('sofiCapChart');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_capChart) { _capChart.destroy(); _capChart = null; }
+  var reqLine = CAP_YEARS.map(function(){ return CAP_REQ; });
+  _capChart = new Chart(cv.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: CAP_YEARS,
+      datasets: [
+        { label:'Lending capacity at 10.5% min', data: CAP_POT, yAxisID:'y1',
+          borderColor:'rgba(14,124,192,.40)', backgroundColor:'rgba(14,124,192,.10)',
+          fill:'origin', tension:.3, pointRadius:0, borderWidth:1 },
+        { label:'Loans outstanding', data: CAP_LOANS, yAxisID:'y1',
+          borderColor:'#0E7CC0', backgroundColor:'rgba(14,124,192,.32)',
+          fill:'origin', tension:.3, pointRadius:2.5, borderWidth:2 },
+        { label:'Total risk-based capital ratio', data: CAP_RATIO, yAxisID:'y',
+          borderColor:'#0F1720', backgroundColor:'#0F1720', fill:false, tension:.3,
+          pointRadius:3, borderWidth:2 },
+        { label:'Required minimum (10.5%)', data: reqLine, yAxisID:'y',
+          borderColor:'#DC2626', borderDash:[5,4], fill:false, pointRadius:0, borderWidth:1.5 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false, animation:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{ display:true, position:'bottom', labels:{ boxWidth:9, font:{ size:9 }, padding:6, color:'#5b6470' } },
+        tooltip:{ callbacks:{ label:function(ctx){
+          var v = ctx.parsed.y;
+          if (ctx.dataset.yAxisID === 'y') return ctx.dataset.label + ': ' + v.toFixed(1) + '%';
+          return ctx.dataset.label + ': $' + v.toFixed(1) + 'B';
+        } } }
+      },
+      scales:{
+        y:{ position:'left', min:8, max:20, grid:{ color:'rgba(0,0,0,.05)' },
+          ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return v + '%'; } } },
+        y1:{ position:'right', min:0, max:72, grid:{ display:false },
+          ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return '$' + v + 'B'; } } },
+        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:11 } } }
+      }
+    }
+  });
 }
 
 // ─── Fee Income — nested (second-level) sub-tabs ──────────────────────────────

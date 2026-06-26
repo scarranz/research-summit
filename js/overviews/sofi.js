@@ -2082,8 +2082,6 @@ function insiderActivityBody(c){
     kpi('Pre-IPO owners sold', insUsd(inst.s.val), 'SoftBank · QIA · Silver Lake', 'muted')+
   '</div>';
 
-  h += '<div class="ov-callout">SoFi\'s insider signal is unusually clean: CEO <b>Anthony Noto</b> has bought stock on the open market <b>'+noto.b.n+' times</b> and never sold a share. The large-dollar sales come almost entirely from early pre-IPO backers — <b>SoftBank</b>, the <b>Qatar Investment Authority</b> and <b>Silver Lake</b> ($'+(inst.s.val/1e9).toFixed(1)+'B combined) — plus a one-off $235M lock-up sale by Galileo founder <b>Thomas Wilkes</b> in 2021, unwinding stakes rather than operators losing conviction. Stripping those out, operating management has sold just '+insUsd(mgmtSellOp.val)+' over five years — mostly CTO Jeremy Rishel and EVP Kelli Keough selling in small, regular monthly increments typical of pre-scheduled 10b5-1 plans.</div>';
-
   // Group filter — applies to BOTH tables below.
   h += '<div class="ave-pills">'+
     pill('g','all','All', true)+
@@ -2094,6 +2092,8 @@ function insiderActivityBody(c){
 
   h += '<div class="ov-subh">By insider</div>';
   h += '<div id="insByPersonWrap">'+insByPersonHTML()+'</div>';
+
+  h += '<div class="ov-callout">SoFi\'s insider signal is unusually clean: CEO <b>Anthony Noto</b> has bought stock on the open market <b>'+noto.b.n+' times</b> and never sold a share. The large-dollar sales come almost entirely from early pre-IPO backers — <b>SoftBank</b>, the <b>Qatar Investment Authority</b> and <b>Silver Lake</b> ($'+(inst.s.val/1e9).toFixed(1)+'B combined) — plus a one-off $235M lock-up sale by Galileo founder <b>Thomas Wilkes</b> in 2021, unwinding stakes rather than operators losing conviction. Stripping those out, operating management has sold just '+insUsd(mgmtSellOp.val)+' over five years — mostly CTO Jeremy Rishel and EVP Kelli Keough selling in small, regular monthly increments typical of pre-scheduled 10b5-1 plans.</div>';
 
   h += '<div class="ov-subh">All transactions</div>';
   h += '<div class="ave-pills">'+

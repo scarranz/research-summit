@@ -2059,8 +2059,8 @@ function pill(group, val, label, active){
   return '<button type="button" class="ins-pill '+cls+(active?' active':'')+'" '+attr+'="'+val+'">'+esc(label)+'</button>';
 }
 
-// "Management" pane — insider open-market activity from SEC Form 4.
-function managementBody(c){
+// "Insider Activity" sub-tab — insider open-market activity from SEC Form 4.
+function insiderActivityBody(c){
   _insGroup = 'all'; _insType = 'all'; _insYrCol = 1; _insYear = 'all';
   var h = '';
   h += '<div class="ov-sec-h">Insider Activity — Open-Market Buys &amp; Sells</div>';
@@ -2111,6 +2111,240 @@ function managementBody(c){
   h += '<div id="insTableWrap">'+insTxTableHTML()+'</div>';
 
   h += '<div class="ov-foot">Source: SEC EDGAR Form 4 filings (CIK 0001818874), '+INSIDER_TX[INSIDER_TX.length-1][0]+' – '+INSIDER_TX[0][0]+'. Open-market buys (code P) and sells (code S) only; derivative transactions, grants, exercises and tax-withholding excluded. Value = shares × reported price per share. Ownership % = each insider\'s latest reported direct common shares ÷ '+(SHARES_OUT/1e9).toFixed(2)+'B shares outstanding (Q1 2026 10-Q); ownership value = those shares × $'+SENS_BASE.price.toFixed(2)+' (last close). Hover either figure for the as-of date — holders who have since exited or stopped filing (e.g. SoftBank, Wilkes) reflect their last report.</div>';
+  return h;
+}
+
+// ─── Management → Organization Chart ──────────────────────────────────────────
+// Leadership structure from SoFi public disclosures (leadership page, proxy) and
+// recent Form 4 officer titles. Reporting lines are simplified/functional groupings.
+var ORG_CEO = ['Anthony Noto', 'Chief Executive Officer & Director', 'AN'];
+
+var ORG_GROUPS = [
+  { title:'Finance, Legal & People', people:[
+    ['Chris Lapointe', 'Chief Financial Officer'],
+    ['Rob Lavet', 'General Counsel'],
+    ['Anna Avalos', 'Chief People Officer'],
+    ['William Tanona', 'SVP, Corporate Development & Strategic Partnerships'],
+  ]},
+  { title:'Technology & Marketing', people:[
+    ['Jeremy Rishel', 'Chief Technology Officer'],
+    ['Lauren Stafford Webb', 'Chief Marketing Officer'],
+  ]},
+  { title:'Business Units', people:[
+    ['Kelli Keough', 'EVP — Spend, Invest, Protect & Save'],
+    ['Eric Schuppenhauer', 'EVP — Borrow & SoFi Bank, N.A.'],
+  ]},
+  { title:'Risk', people:[
+    ['Arun Pinto', 'Chief Risk Officer'],
+  ]},
+];
+
+// Board of Directors (chair + directors). The CEO also serves on the board.
+// Sourced from recent Form 4 director filings (2025–26) and the FY2026 proxy.
+var ORG_BOARD = {
+  chair: ['Tom Hutton', 'Chairman of the Board'],
+  vice:  ['Steven Freiberg', 'Vice Chairman'],
+  members: ['Anthony Noto (CEO)', 'Gary Meltzer', 'Clara Liang', 'Magdalena Yesil', 'Ruzwana Bashir', 'John C.R. Hele', 'William A. Borden'],
+};
+
+// Legal entities and the three reportable segments.
+var ORG_ENTITIES = [
+  ['SoFi Bank, N.A.', 'National bank charter (Feb 2022) — holds deposits & loans on balance sheet'],
+  ['Galileo', 'Card issuing & payments APIs (acquired 2020)'],
+  ['Technisys', 'Cloud-native core banking platform (acquired 2022)'],
+];
+var ORG_SEGMENTS = [
+  ['Lending', 'Personal, student & home loans'],
+  ['Financial Services', 'Money, Invest, Credit Card, Protect, Crypto'],
+  ['Technology Platform', 'Galileo + Technisys (B2B)'],
+];
+
+function orgInitials(name){
+  var parts = name.replace(/\(.*\)/, '').trim().split(/\s+/);
+  var a = parts[0] ? parts[0][0] : '';
+  var b = parts.length > 1 ? parts[parts.length-1][0] : '';
+  return (a + b).toUpperCase();
+}
+
+// Per-person profiles (photo, role, career bio, education, prior roles).
+// Bios compiled from public sources (Wikipedia, company/board bio pages, press
+// releases) and verified for accuracy; photos stored same-origin under /img.
+var PROFILES = {
+  'Anthony Noto': { role:'Chief Executive Officer & Director', photo:'/img/leadership/noto.jpg',
+    bio:'Anthony Noto has been CEO of SoFi since January 2018, expanding it from a student-loan refinancer into a full-suite digital bank. He spent ~15 years at Goldman Sachs, becoming a partner and co-head of global TMT investment banking and a top-rated internet analyst, and was CFO of the NFL (2008–2010). He joined Twitter as CFO in 2014 and later became its COO before leaving to lead SoFi.',
+    edu:'B.S., U.S. Military Academy at West Point; MBA, Wharton (UPenn)',
+    prior:['COO & CFO, Twitter','CFO, NFL','Partner & Co-head Global TMT Banking, Goldman Sachs'] },
+  'Chris Lapointe': { role:'Chief Financial Officer', photo:'',
+    bio:'Chris Lapointe joined SoFi in June 2018 as VP and Head of Business Operations and became CFO in April 2020, helping lead the company through its 2021 public listing and its turn to profitability. Before SoFi he was Global Head of FP&A, Corporate Finance and FinTech at Uber, and earlier a VP in TMT investment banking at Goldman Sachs.',
+    edu:'B.A. Math & Economics, Dartmouth; MBA, Tuck School of Business',
+    prior:['Global Head of FP&A/Corp Finance/FinTech, Uber','VP, TMT Investment Banking, Goldman Sachs'] },
+  'Jeremy Rishel': { role:'Chief Technology Officer', photo:'/img/leadership/rishel.jpg',
+    bio:'Jeremy Rishel joined SoFi as CTO in June 2022, overseeing products, technology strategy, architecture and infrastructure. He brings deep engineering leadership experience as a former VP of Engineering at Twitter and senior engineering leader at DoorDash, Splunk and Bluefin Labs. He is a U.S. Marine Corps veteran who left active duty as a Captain.',
+    edu:'B.S. Computer Science & Philosophy, MIT; MBA, MIT Sloan',
+    prior:['VP Engineering, Twitter','Engineering leadership, DoorDash','SVP Engineering, Splunk'] },
+  'Lauren Stafford Webb': { role:'Chief Marketing Officer', photo:'/img/leadership/stafford-webb.jpg',
+    bio:'Lauren Stafford Webb is CMO of SoFi, overseeing brand and advertising and credited with driving SoFi\'s brand growth. She joined in 2019 from Intuit, where she led global corporate marketing and delivered the company\'s first corporate brand strategy. Earlier she spent years at Procter & Gamble in marketing leadership across brands including Tide, Herbal Essences and COVERGIRL.',
+    edu:'B.S. Finance, The Ohio State University',
+    prior:['VP/Director of Marketing, Intuit','Brand leadership (Tide, Herbal Essences, COVERGIRL), P&G'] },
+  'Rob Lavet': { role:'General Counsel', photo:'',
+    bio:'Rob Lavet is General Counsel of SoFi, originally joining in September 2012 as ~its 33rd employee and building the legal function behind SoFi\'s 2021 public listing, its 2022 national bank charter, and the Galileo and Technisys acquisitions; he also negotiated the 20-year SoFi Stadium naming-rights deal. He began at Howrey & Simon, was a DOJ Civil Division trial attorney, and spent ~16 years at Sallie Mae, rising to SVP & General Counsel.',
+    edu:'J.D., Georgetown; B.A., University of Pennsylvania',
+    prior:['SVP & General Counsel, Sallie Mae','Trial Attorney, U.S. Dept. of Justice','Associate, Howrey & Simon'] },
+  'Anna Avalos': { role:'Chief People Officer', photo:'/img/leadership/avalos.jpg',
+    bio:'Anna Avalos is Chief People Officer of SoFi, leading total talent and HR strategy and a culture-focused employer brand. Before SoFi she led HR for Tesla\'s EMEA region, and prior to that spent roughly 14 years at Stryker across product operations, business-unit leadership and HR roles.',
+    edu:'B.A. Communications & MBA, University of Arizona',
+    prior:['Head of HR, EMEA, Tesla','~14 years at Stryker (ops, BU leadership, HR)'] },
+  'William Tanona': { role:'SVP, Corporate Development & Strategic Partnerships', photo:'/img/leadership/tanona.jpg',
+    bio:'Bill Tanona leads Corporate Development, Strategic Partnerships and Investor Relations at SoFi (joined June 2018), running M&A, strategic investments and joint ventures. He was previously President, CFO and Treasurer of GSV Capital Corp, and earlier spent nearly two decades across J.P. Morgan, Goldman Sachs, UBS and Fortress Investment Group. He is a CFA charterholder.',
+    edu:'B.S. Accounting, Villanova; CFA charterholder',
+    prior:['President, CFO & Treasurer, GSV Capital','J.P. Morgan','Goldman Sachs','Fortress Investment Group'] },
+  'Kelli Keough': { role:'EVP — Spend, Invest, Protect & Save', photo:'/img/leadership/keough.jpg',
+    bio:'Kelli Keough joined SoFi in March 2023 as EVP leading Spend, Invest, Protect and Save — SoFi Money, credit card, Invest, insurance and partnerships. She previously spent 2015–2023 at JPMorgan Chase, most recently as Managing Director and Head of Product, Digital and Client Solutions at J.P. Morgan Wealth Management. Earlier she was an SVP at Charles Schwab and began her career as a psychology professor at UT Austin.',
+    edu:'B.A., Yale; M.A. & Ph.D. Social Psychology, Stanford',
+    prior:['MD & Head of Product/Digital, J.P. Morgan Wealth Mgmt','SVP, Charles Schwab','Professor of Psychology, UT Austin'] },
+  'Eric Schuppenhauer': { role:'EVP — Borrow & SoFi Bank, N.A.', photo:'',
+    bio:'Eric Schuppenhauer joined SoFi in August 2024 as EVP leading Borrow — Home Loans, Personal Loans, Student Loans, Pricing, and SoFi Bank, N.A. He previously sat on the executive committee at Citizens Financial Group, rising to President of Consumer Lending and National Banking. Before Citizens he was Head of Mortgage at Capital One, with earlier mortgage leadership at JPMorgan Chase and Fannie Mae.',
+    edu:'',
+    prior:['President, Consumer Lending & National Banking, Citizens','Head of Mortgage, Capital One','Mortgage leadership, JPMorgan Chase'] },
+  'Arun Pinto': { role:'Chief Risk Officer', photo:'',
+    bio:'Arun Pinto joined SoFi in February 2024 as Chief Risk Officer. He previously spent ~three years as CRO of Consumer and Small Business Banking at Wells Fargo, and about nine years at JPMorgan Chase in risk leadership including CRO of the Auto business and CRO for Mortgage Servicing and Capital Markets. Earlier he held risk executive roles at Bank of America.',
+    edu:'B.A.Sc. Chemical Engineering, UC Berkeley',
+    prior:['CRO, Consumer & Small Business Banking, Wells Fargo','CRO Auto / Mortgage Servicing, JPMorgan Chase','Risk executive, Bank of America'] },
+  'Tom Hutton': { role:'Chairman of the Board', photo:'/img/leadership/hutton.jpg',
+    bio:'Tom Hutton is Managing Partner of Thompson Hutton LLC, investing in financial-services and fintech funds. He was previously CEO of Risk Management Solutions (RMS) and CEO of White Mountains Re Group, and a public-company director at XL Group, Safeco and Montpelier Re. He joined the Social Finance board in 2011, served as SoFi\'s interim CEO (2017–2018), and has been independent Chairman of SoFi\'s board since May 2021.',
+    edu:'MBA, Harvard; M.S. Mechanical Engineering & B.A. Economics, Stanford',
+    prior:['Managing Partner, Thompson Hutton','CEO, White Mountains Re','CEO, Risk Management Solutions','Interim CEO, SoFi (2017–18)'] },
+  'Steven Freiberg': { role:'Vice Chairman of the Board', photo:'/img/leadership/freiberg.png',
+    bio:'Steven Freiberg spent ~three decades at Citigroup, including as Co-Chairman and CEO of its Global Consumer Group, then served as CEO of E*TRADE Financial, leading it back to profitability after the 2008 crisis. He founded Grand Vista Partners and has served on boards including Mastercard and Regional Management. He joined the Social Finance board in 2017 and has been Vice Chairman since May 2021.',
+    edu:'',
+    prior:['CEO, E*TRADE Financial','Co-Chairman & CEO, Citigroup Global Consumer Group','Founder, Grand Vista Partners','Director, Mastercard'] },
+  'Gary Meltzer': { role:'Director — Audit Committee Chair', photo:'',
+    bio:'Gary Meltzer spent ~35 years at PricewaterhouseCoopers (1985–2020), most recently as Managing Partner for PwC\'s Bay Area and Northwest market and a member of its Extended Leadership Team, having earlier led the firm\'s Asset and Wealth Management sector. A CPA, he also serves on the boards of American Century Investments and Apollo Realty Income Solutions (Audit Chair). He joined SoFi\'s board in June 2024 and chairs its Audit Committee.',
+    edu:'B.S. Accounting, Binghamton University; CPA',
+    prior:['Managing Partner, PwC (Bay Area & NW)','Leader, PwC Asset & Wealth Management','Director, American Century Investments'] },
+  'Clara Liang': { role:'Director', photo:'',
+    bio:'Clara Liang is a technology product leader who joined SoFi\'s board in October 2019 while a VP and General Manager at Airbnb. Earlier she was Chief Product Officer at Jive Software and spent ~11 years at IBM. She is now Head of Global Strategic Operations at Stripe (general manager of Link) and also serves on the board of Navan.',
+    edu:'B.S. Symbolic Systems, Stanford; M.S. Tech Commercialization, UT Austin',
+    prior:['VP & General Manager, Airbnb','Chief Product Officer, Jive Software','Head of Global Strategic Operations, Stripe'] },
+  'John C.R. Hele': { role:'Director — Risk Committee Chair', photo:'',
+    bio:'John C.R. Hele is a veteran insurance-industry finance executive who joined SoFi\'s board in May 2023 and chairs its Risk Committee. He was EVP and CFO of MetLife (2012–2018), and previously CFO at Arch Capital Group and ING, later President and COO of Resolution Life. He is a Fellow of the Society of Actuaries.',
+    edu:'B.Math, University of Waterloo; FSA',
+    prior:['EVP & CFO, MetLife','CFO, Arch Capital Group','CFO, ING','President & COO, Resolution Life'] },
+  'William A. Borden': { role:'Director', photo:'/img/leadership/borden.png',
+    bio:'Bill Borden is Corporate VP of Worldwide Financial Services at Microsoft (since 2019), leading industry strategy for banking, capital markets and insurance. Before Microsoft he spent ~seven years at Bank of America Merrill Lynch, last as a managing director leading global transaction-services strategy, with earlier senior roles at Citi and IBM. He joined SoFi\'s board in 2024.',
+    edu:'',
+    prior:['Corporate VP, Worldwide Financial Services, Microsoft','MD, Global Transaction Services, BofA Merrill Lynch','Senior roles at Citi and IBM'] },
+};
+
+function orgCard(name, title){
+  var p = PROFILES[name];
+  var ava = (p && p.photo)
+    ? '<img class="org-ava org-photo" src="'+p.photo+'" alt="'+esc(name)+'" loading="lazy">'
+    : '<div class="org-ava">'+esc(orgInitials(name))+'</div>';
+  var cls = 'org-card' + (p ? ' org-click' : '');
+  var attr = p ? ' data-person="'+esc(name)+'"' : '';
+  return '<div class="'+cls+'"'+attr+'>'+
+    ava+
+    '<div class="org-meta"><div class="org-name">'+esc(name)+'</div>'+
+    '<div class="org-title">'+esc(title)+'</div></div>'+
+  '</div>';
+}
+
+// Board member chip — clickable when a profile exists. Label may carry a "(CEO)" tag.
+function orgChip(label){
+  var key = label.replace(/\s*\(.*\)$/, '').trim();
+  var p = PROFILES[key];
+  if (p) return '<span class="org-chip org-click" data-person="'+esc(key)+'">'+esc(label)+'</span>';
+  return '<span class="org-chip">'+esc(label)+'</span>';
+}
+
+// Person profile modal (single, reused). Hidden until a name is clicked.
+function orgModalHTML(){
+  return '<div class="org-modal" id="orgModal" hidden>'+
+    '<div class="org-modal-bg" data-omclose></div>'+
+    '<div class="org-modal-card" role="dialog" aria-modal="true">'+
+      '<button type="button" class="org-modal-x" data-omclose aria-label="Close">&times;</button>'+
+      '<div class="org-modal-head">'+
+        '<div class="org-modal-photo" id="omPhoto"></div>'+
+        '<div><div class="org-modal-name" id="omName"></div><div class="org-modal-role" id="omRole"></div></div>'+
+      '</div>'+
+      '<div class="org-modal-bio" id="omBio"></div>'+
+      '<div class="org-modal-sec" id="omEduWrap"><div class="org-modal-h">Education</div><div id="omEdu"></div></div>'+
+      '<div class="org-modal-sec" id="omPriorWrap"><div class="org-modal-h">Previously</div><div id="omPrior"></div></div>'+
+    '</div>'+
+  '</div>';
+}
+
+// Populate and open the profile modal for a person.
+function showPerson(root, name){
+  var p = PROFILES[name], m = root.querySelector('#orgModal');
+  if (!p || !m) return;
+  root.querySelector('#omPhoto').innerHTML = p.photo
+    ? '<img src="'+p.photo+'" alt="'+esc(name)+'">'
+    : '<div class="org-modal-init">'+esc(orgInitials(name))+'</div>';
+  root.querySelector('#omName').textContent = name;
+  root.querySelector('#omRole').textContent = p.role || '';
+  root.querySelector('#omBio').textContent = p.bio || '';
+  var eduWrap = root.querySelector('#omEduWrap');
+  if (p.edu) { root.querySelector('#omEdu').textContent = p.edu; eduWrap.hidden = false; } else { eduWrap.hidden = true; }
+  var priorWrap = root.querySelector('#omPriorWrap');
+  if (p.prior && p.prior.length) {
+    root.querySelector('#omPrior').innerHTML = p.prior.map(function(x){ return '<span class="org-prior">'+esc(x)+'</span>'; }).join('');
+    priorWrap.hidden = false;
+  } else { priorWrap.hidden = true; }
+  m.hidden = false;
+}
+
+// "Organization Chart" sub-tab — leadership tree + corporate/business structure.
+function orgChartBody(c){
+  var h = '';
+  h += '<div class="ov-sec-h">Organization &amp; Structure</div>';
+
+  // Board of Directors.
+  h += '<div class="ov-subh">Board of Directors</div>';
+  h += '<div class="org-board">'+
+    '<div class="org-board-lead">'+orgCard(ORG_BOARD.chair[0], ORG_BOARD.chair[1])+orgCard(ORG_BOARD.vice[0], ORG_BOARD.vice[1])+'</div>'+
+    '<div class="org-board-list">'+ORG_BOARD.members.map(function(m){ return orgChip(m); }).join('')+'</div>'+
+  '</div>';
+
+  // Executive leadership tree: CEO → functional groups.
+  h += '<div class="ov-subh">Executive Leadership</div>';
+  h += '<div class="org-tree">';
+  h += '<div class="org-ceo">'+orgCard(ORG_CEO[0], ORG_CEO[1])+'</div>';
+  h += '<div class="org-trunk"></div>';
+  h += '<div class="org-groups">'+ORG_GROUPS.map(function(g){
+    return '<div class="org-group">'+
+      '<div class="org-group-h">'+esc(g.title)+'</div>'+
+      g.people.map(function(p){ return orgCard(p[0], p[1]); }).join('')+
+    '</div>';
+  }).join('')+'</div>';
+  h += '</div>';
+
+  // Corporate & business structure.
+  h += '<div class="ov-subh">Corporate &amp; Business Structure</div>';
+  h += '<div class="org-struct">'+
+    '<div class="org-struct-col"><div class="org-struct-h">Key legal entities</div>'+
+      ORG_ENTITIES.map(function(e){ return '<div class="org-srow"><div class="org-srow-k">'+esc(e[0])+'</div><div class="org-srow-d">'+esc(e[1])+'</div></div>'; }).join('')+
+    '</div>'+
+    '<div class="org-struct-col"><div class="org-struct-h">Reportable segments</div>'+
+      ORG_SEGMENTS.map(function(e){ return '<div class="org-srow"><div class="org-srow-k">'+esc(e[0])+'</div><div class="org-srow-d">'+esc(e[1])+'</div></div>'; }).join('')+
+    '</div>'+
+  '</div>';
+
+  h += '<div class="ov-foot">Click any name with a photo or highlighted chip to see their photo and career background. Leadership and structure compiled from SoFi Technologies public disclosures (leadership page, proxy statement) and recent Form 4 officer titles. Functional groupings are simplified and do not necessarily reflect exact reporting lines. The board has additional members not all shown.</div>';
+  h += orgModalHTML();
+  return h;
+}
+
+// "Management" pane — nested sub-tabs: Organization Chart + Insider Activity.
+function managementBody(c){
+  var h = '';
+  h += '<div class="ovm-tabs">'+
+    '<button type="button" class="ovm-tab active" data-ovm="org">Organization Chart</button>'+
+    '<button type="button" class="ovm-tab" data-ovm="insiders">Insider Activity</button>'+
+  '</div>';
+  h += '<div class="ovm-pane" data-ovm="org">'+orgChartBody(c)+'</div>';
+  h += '<div class="ovm-pane" data-ovm="insiders" hidden>'+insiderActivityBody(c)+'</div>';
   return h;
 }
 
@@ -3083,6 +3317,12 @@ function showOvf(root, key){
   buildFeeTab();
 }
 
+// Switch a nested Management sub-tab (Organization Chart / Insider Activity).
+function showOvm(root, key){
+  root.querySelectorAll('.ovm-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovm') === key); });
+  root.querySelectorAll('.ovm-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovm') !== key); });
+}
+
 // Switch a nested Valuation sub-tab.
 function showOvv(root, key){
   root.querySelectorAll('.ovv-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovv') === key); });
@@ -3116,6 +3356,25 @@ function init(c){
   root.querySelectorAll('.ovv-tab').forEach(function(btn){
     btn.onclick = function(){ showOvv(root, btn.getAttribute('data-ovv')); };
   });
+  root.querySelectorAll('.ovm-tab').forEach(function(btn){
+    btn.onclick = function(){ showOvm(root, btn.getAttribute('data-ovm')); };
+  });
+  // Organization chart: click a name → open the person profile modal.
+  root.querySelectorAll('.org-click').forEach(function(el){
+    el.onclick = function(){ showPerson(root, el.getAttribute('data-person')); };
+  });
+  var orgModal = root.querySelector('#orgModal');
+  if (orgModal) {
+    orgModal.querySelectorAll('[data-omclose]').forEach(function(b){
+      b.onclick = function(){ orgModal.hidden = true; };
+    });
+    if (!window.__sofiOrgEsc) {
+      window.__sofiOrgEsc = true;
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') { var m = document.querySelector('#orgModal'); if (m && !m.hidden) m.hidden = true; }
+      });
+    }
+  }
   // Management: insider-transaction filter pills (group + buy/sell).
   function refreshInsTable(){
     var wrap = root.querySelector('#insTableWrap');

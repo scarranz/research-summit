@@ -1,0 +1,273 @@
+/* css/semi-map.css — interactive semiconductor supply-chain map (Industry Analysis).
+   Clean, card-based, navy/steel palette. Drill-down stage on top, detail panel below. */
+
+.smap { --accent: var(--steel); margin-top: 4px; }
+
+.smap-intro {
+  font-size: 13px; line-height: 1.55; color: var(--mid);
+  background: var(--pale); border: 1px solid var(--bdr); border-radius: 10px;
+  padding: 10px 14px; margin-bottom: 14px;
+}
+.smap-intro b { color: var(--navy); font-weight: 600; }
+
+/* ─── Breadcrumb ─── */
+.smap-bc { display: flex; align-items: center; flex-wrap: wrap; gap: 2px; margin-bottom: 12px; }
+.smap-crumb {
+  background: none; border: 0; cursor: pointer; font: inherit;
+  font-size: 12px; font-weight: 600; color: var(--steel);
+  padding: 4px 8px; border-radius: 6px;
+}
+.smap-crumb:hover { background: var(--ice); color: var(--navy); }
+.smap-crumb:last-child { color: var(--navy); }
+.smap-sep { color: var(--mu); font-size: 12px; }
+
+/* ─── Stage ─── */
+.smap-stage { margin-bottom: 16px; }
+
+/* Level 0 — flow row of buckets with arrows between them. */
+.smap-flowrow {
+  display: flex; align-items: stretch; flex-wrap: wrap; gap: 6px;
+}
+.smap-arrow { align-self: center; color: var(--mu); font-size: 16px; padding: 0 1px; user-select: none; }
+
+/* Levels 1 & 2 — responsive grid. */
+.smap-grid {
+  display: grid; gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+/* ─── Node cards (shared) ─── */
+.smap-node {
+  position: relative; text-align: left; cursor: pointer; font: inherit;
+  background: var(--w); border: 1px solid var(--bdr); border-radius: 10px;
+  padding: 12px 14px; display: flex; flex-direction: column; gap: 3px;
+  transition: border-color .12s, box-shadow .12s, transform .08s;
+}
+.smap-node:hover { border-color: var(--accent); box-shadow: 0 2px 10px rgba(30,39,51,.08); transform: translateY(-1px); }
+.smap-node:active { transform: translateY(0); }
+
+/* Bucket cards (level 0) */
+.smap-bucket {
+  flex: 1 1 150px; min-width: 150px; border-top: 3px solid var(--accent);
+  padding-top: 11px;
+}
+.smap-flow {
+  position: absolute; top: 8px; right: 10px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--accent); color: #fff; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; opacity: .9;
+}
+.smap-node-t { font-size: 13.5px; font-weight: 700; color: var(--navy); padding-right: 20px; }
+.smap-node-tag { font-size: 11px; color: var(--mid); line-height: 1.35; }
+.smap-node-n { font-size: 10.5px; color: var(--mu); font-weight: 600; margin-top: 2px; text-transform: uppercase; letter-spacing: .02em; }
+
+/* Group cards (level 1) */
+.smap-group .smap-node-t { padding-right: 0; }
+
+/* Company cards (level 2) */
+.smap-co { flex-direction: row; align-items: center; gap: 9px; }
+.smap-co-logo { width: 26px; height: 26px; flex: none; object-fit: contain; border-radius: 5px; background: #fff; border: 1px solid var(--bdr); padding: 2px; }
+.smap-co-logo-x { border: 0; }
+.smap-co-name { flex: 1; font-size: 13px; font-weight: 600; color: var(--navy); }
+.smap-co-tkr { font-size: 11px; font-weight: 600; color: var(--mu); white-space: nowrap; }
+
+/* Top-5 supplier/customer lists in the company panel */
+.smap-rel5-wrap { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--bdr); }
+.smap-rel5 { list-style: none; display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+.smap-rel5 li { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--blue); padding: 3px 0; }
+.smap-rel5-logo { width: 20px; height: 20px; flex: none; object-fit: contain; border-radius: 4px; background: #fff; border: 1px solid var(--bdr); padding: 1px; }
+.smap-rel5-dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--mu); margin: 0 6px; }
+.smap-rel5-n { flex: 1; color: var(--navy); }
+.smap-rel5 li b { color: var(--navy); font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.smap-co.is-sel { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, #fff); box-shadow: 0 0 0 1px var(--accent) inset; }
+
+/* Highlighted node (the company this profile belongs to, e.g. NVIDIA) */
+.smap-node.is-hl {
+  border-color: #76B900; box-shadow: 0 0 0 1px #76B900 inset;
+}
+.smap-node.is-hl .smap-flow { background: #76B900; opacity: 1; }
+.smap-co.is-hl .smap-co-tkr { color: #5E9400; }
+
+/* ─── Detail panel ─── */
+.smap-panel {
+  background: var(--pale); border: 1px solid var(--bdr); border-radius: 12px;
+  padding: 16px 18px; min-height: 96px;
+}
+.smap-p-h {
+  --accent: var(--steel);
+  font-size: 15px; font-weight: 700; color: var(--navy);
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.smap-p-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); flex: none; }
+.smap-p-sub { font-size: 12px; font-weight: 600; color: var(--mu); }
+.smap-p-d { font-size: 13px; line-height: 1.6; color: var(--blue); }
+.smap-p-meta { font-size: 11.5px; color: var(--mu); font-weight: 600; margin-top: 10px; text-transform: uppercase; letter-spacing: .02em; }
+.smap-p-callout {
+  margin-top: 10px; font-size: 12.5px; color: var(--navy);
+  background: rgba(118,185,0,.10); border: 1px solid rgba(118,185,0,.35);
+  border-radius: 8px; padding: 8px 12px;
+}
+.smap-p-callout b { color: #4d7a00; }
+
+.smap-p-rel-h { font-size: 11.5px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: .03em; margin: 12px 0 5px; }
+.smap-p-rel { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.smap-p-rel li { font-size: 12.5px; color: var(--blue); padding-left: 14px; position: relative; line-height: 1.45; }
+.smap-p-rel li::before { content: '→'; position: absolute; left: 0; color: var(--steel); font-weight: 700; }
+
+/* ─── Tags / badges ─── */
+.smap-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.smap-tag {
+  font-size: 10.5px; font-weight: 600; color: var(--steel);
+  background: var(--ice); border-radius: 5px; padding: 2px 7px; letter-spacing: .01em;
+}
+
+/* ─── NVDA brand accent on the sub-tab bar ─── */
+.ov-nvda { --brand: #76B900; }
+.ov-nvda .ovt-tab.active { color: #4d7a00; border-bottom-color: #76B900; }
+
+@media (max-width: 640px){
+  .smap-flowrow { flex-direction: column; }
+  .smap-arrow { transform: rotate(90deg); align-self: flex-start; margin-left: 18px; }
+  .smap-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ─── Flow / Network toggle ─── */
+.sind-toggle {
+  display: inline-flex; gap: 2px; padding: 3px;
+  background: var(--ice); border-radius: 9px; margin-bottom: 14px;
+}
+.sind-tab {
+  background: none; border: 0; cursor: pointer; font: inherit;
+  font-size: 12.5px; font-weight: 600; color: var(--mid);
+  padding: 6px 18px; border-radius: 7px; transition: background .12s, color .12s;
+}
+.sind-tab:hover { color: var(--navy); }
+.sind-tab.active { background: var(--w); color: var(--navy); box-shadow: 0 1px 3px rgba(30,39,51,.12); }
+
+/* ─── Network view (Cytoscape) ─── */
+.snet-toolbar {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 10px 18px; margin-bottom: 12px;
+}
+.snet-legend { flex: 1 1 320px; font-size: 12px; line-height: 1.5; color: var(--mid); }
+.snet-legend b { color: var(--navy); font-weight: 600; }
+.snet-ctl-btns { display: inline-flex; gap: 6px; margin-left: auto; }
+
+.snet-btn {
+  background: var(--w); border: 1px solid var(--bdr); border-radius: 7px; cursor: pointer;
+  font: inherit; font-size: 12px; font-weight: 600; color: var(--steel); padding: 6px 12px;
+}
+.snet-btn:hover { border-color: var(--steel); color: var(--navy); }
+
+.snet-canvas {
+  position: relative; height: 740px; width: 100%;
+  background:
+    radial-gradient(circle at 1px 1px, var(--bdr) 1px, transparent 0) 0 0 / 22px 22px,
+    var(--w);
+  border: 1px solid var(--bdr); border-radius: 12px; overflow: hidden;
+}
+.snet-canvas--big { height: 85vh; }
+.snet-loading {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: var(--mu); font-size: 13px; text-align: center; padding: 24px;
+}
+
+/* Logo overlay (positioned over the segment circles) */
+.snet-logos { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+.snet-logo-grp {
+  position: absolute; transform: translate(-50%, -50%);
+  display: flex; gap: 3px; align-items: center;
+}
+.snet-logo {
+  border-radius: 4px; background: #fff; padding: 2px; object-fit: contain;
+  box-shadow: 0 1px 3px rgba(30,39,51,.18);
+}
+
+/* Edge hover tooltip */
+.snet-tip {
+  position: absolute; z-index: 50; pointer-events: none;
+  background: var(--navy); color: #fff; border-radius: 8px; padding: 8px 10px;
+  font-size: 11.5px; min-width: 180px; box-shadow: 0 6px 20px rgba(30,39,51,.25);
+}
+.snet-tip-h { font-weight: 700; font-size: 12px; margin-bottom: 5px; }
+.snet-tip-h span { color: #76B900; }
+.snet-tip-row { display: flex; justify-content: space-between; gap: 14px; line-height: 1.5; }
+.snet-tip-row span { color: #aeb8c6; }
+.snet-tip-row b { color: #fff; font-weight: 600; }
+
+.snet-panel { margin-top: 14px; }
+.snet-seg { font-size: 11.5px; font-weight: 600; color: var(--mu); margin: -2px 0 8px; text-transform: uppercase; letter-spacing: .02em; }
+.snet-rel-t { color: var(--mu); font-weight: 500; font-size: 11.5px; white-space: nowrap; }
+.snet-hint { font-weight: 500; color: var(--mu); text-transform: none; letter-spacing: 0; }
+
+/* Segment detail box — clickable company logos */
+.snet-box-logos { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 6px; }
+.snet-co-logo {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; padding: 4px; cursor: pointer;
+  background: var(--w); border: 1px solid var(--bdr); border-radius: 8px;
+}
+.snet-co-logo:hover { border-color: var(--steel); box-shadow: 0 2px 8px rgba(30,39,51,.12); }
+.snet-co-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.snet-co-txt { font-size: 9.5px; font-weight: 600; color: var(--steel); line-height: 1.05; text-align: center; overflow: hidden; }
+.snet-co-more { align-self: center; font-size: 11px; font-weight: 600; color: var(--mu); padding: 0 4px; }
+
+/* Segment detail box — expandable flow rows */
+.snet-flows { display: flex; flex-direction: column; gap: 3px; }
+.snet-flow {
+  display: block; width: 100%; text-align: left; cursor: pointer; font: inherit;
+  background: var(--w); border: 1px solid var(--bdr); border-radius: 8px; padding: 7px 10px;
+}
+.snet-flow:hover { border-color: var(--steel); }
+.snet-flow.open { border-color: var(--steel); background: var(--pale); }
+.snet-flow-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.snet-flow-n { font-size: 12.5px; font-weight: 600; color: var(--navy); }
+.snet-flow-n::before { content: '▸ '; color: var(--mu); font-size: 10px; }
+.snet-flow.open .snet-flow-n::before { content: '▾ '; }
+.snet-flow-exp:empty { display: none; }
+.snet-links { list-style: none; margin: 8px 0 2px; display: flex; flex-direction: column; gap: 4px; }
+.snet-links li { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--blue); padding: 2px 0; border-top: 1px solid var(--bdr); padding-top: 5px; }
+.snet-links li i { color: var(--steel); font-style: normal; }
+.snet-links li b { color: var(--navy); white-space: nowrap; }
+
+/* ─── Company view ─── */
+.sco-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 18px; margin-bottom: 12px; }
+.sco-pick { display: inline-flex; align-items: center; gap: 8px; }
+.sco-pick span { font-size: 11px; font-weight: 600; color: var(--mu); text-transform: uppercase; letter-spacing: .03em; }
+.sco-select { font: inherit; font-size: 13px; font-weight: 600; color: var(--navy); padding: 7px 10px; border: 1px solid var(--bdr); border-radius: 8px; background: var(--w); cursor: pointer; min-width: 220px; }
+.sco-sub { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sco-chip { --accent: var(--steel); font-size: 11.5px; font-weight: 700; color: #fff; background: var(--accent); border-radius: 6px; padding: 3px 9px; }
+.sco-subnote { font-size: 11.5px; color: var(--mu); }
+.sco-canvas {
+  position: relative; height: 600px; width: 100%;
+  background: radial-gradient(circle at 1px 1px, var(--bdr) 1px, transparent 0) 0 0 / 22px 22px, var(--w);
+  border: 1px solid var(--bdr); border-radius: 12px; overflow: hidden;
+}
+/* Logo overlay on the ego-graph nodes */
+.sco-logos { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+.sco-logo-grp { position: absolute; transform: translate(-50%, -50%); }
+.sco-logo-img { display: block; object-fit: contain; border-radius: 3px; }
+/* Small logo / dot in the tables */
+.sco-table td img.sco-logo {
+  width: 18px; height: 18px; object-fit: contain; border-radius: 4px;
+  margin-right: 7px; vertical-align: middle; background: #fff;
+}
+.sco-table td span { vertical-align: middle; }
+.sco-tables { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+.sco-table-wrap { border: 1px solid var(--bdr); border-radius: 12px; overflow: hidden; }
+.sco-table-h { font-size: 13px; font-weight: 700; color: var(--navy); padding: 10px 12px; background: var(--pale); border-bottom: 1px solid var(--bdr); }
+.sco-table-h span { color: var(--mu); font-weight: 600; }
+.sco-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.sco-table th { text-align: left; font-size: 10.5px; font-weight: 600; color: var(--mu); text-transform: uppercase; letter-spacing: .02em; padding: 7px 10px; border-bottom: 1px solid var(--bdr); }
+.sco-table td { padding: 7px 10px; border-bottom: 1px solid var(--ice); color: var(--blue); }
+.sco-table tr:last-child td { border-bottom: 0; }
+.sco-table .sco-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--navy); font-weight: 600; }
+.sco-table .sco-seg { color: var(--mu); font-size: 11px; }
+.sco-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.sco-empty { color: var(--mu); text-align: center; padding: 16px; }
+
+@media (max-width: 760px){ .sco-tables { grid-template-columns: 1fr; } }
+@media (max-width: 640px){
+  .snet-canvas { height: 460px; }
+  .snet-ctl-btns { margin-left: 0; }
+  .sco-canvas { height: 440px; }
+}

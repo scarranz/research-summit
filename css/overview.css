@@ -637,6 +637,7 @@
 .ov-live-ch { font-weight: 600; }
 .ov-live-ch.up { color: #1E9E62; }
 .ov-live-ch.down { color: #C0392B; }
+.ov-live-mc { font-weight: 600; color: var(--navy, #1E2733); font-size: 12px; }
 .ov-live-ts { color: var(--mu, #8A93A0); font-size: 12px; margin-left: auto; }
 /* Hidden state must win over .ov-live's display:flex (else an empty banner shows). */
 .ov-live[hidden] { display: none; }

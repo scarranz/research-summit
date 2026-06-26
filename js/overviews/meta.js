@@ -12,7 +12,8 @@
 // 8-Ks/press — it is NOT a clean company disclosure and lives outside the snapshots,
 // so it is presented as estimated context (no per-line sourcing claimed).
 // Qualitative content: Meta 10-Ks, Q4 2025 / Q1 2026 earnings calls, and a Summit
-// "Ad Ecosystem" primer. No live API except the shared get-quote price banner.
+// "Ad Ecosystem" primer. Live data: price + market cap from Massive via the
+// covered-calls-massive edge function (api.js → coveredCallsQuote), logged-in only.
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -130,6 +131,19 @@ var RL_POINTS=[
 ];
 
 // ── The Spend Engine (the "devil's accounting") ──
+// RL product details for modal pop-ups (resolved by wireModal as kind 'rl').
+var RL_DETAIL = [
+  { t:'Meta Quest \u2014 VR/MR headsets', h:'<b>The core hardware line</b> (Quest 3 / 3S). Meta sells the headset <b>direct</b> and books the <b>full device price</b> as RL revenue, plus a cut of Quest Store app/game sales. Historically sold near or below cost to grow the install base.<br><br><b>Revenue recognition:</b> full device revenue \u2192 Reality Labs segment. This is the cleanest RL revenue line.' },
+  { t:'Ray-Ban & Oakley Meta \u2014 smart glasses', h:'<b>The breakout product</b> \u2014 camera/audio/AI glasses built with <b>EssilorLuxottica</b>. <b>>7M units sold in 2025</b>.<br><br><b>Key accounting nuance:</b> EssilorLuxottica is the <b>seller of record</b> and books the retail sale, so Meta recognizes only its <b>shared/partial economics, not the full retail price</b>. Glasses can sell huge units while adding comparatively little reported RL revenue.<br><br><b>Why it matters:</b> unit sales are a better signal of traction than RL revenue for this product.' },
+  { t:'Horizon & Software Platform', h:'<b>Horizon Worlds</b> (social VR) and the developer platform. A small \u201cplatform/proxy\u201d revenue line today.<br><br><b>Strategic bet:</b> an owned social + OS layer that doesn\u2019t depend on Apple or Google. Management pivoting Horizon toward <b>mobile</b> (not just VR). AI-generated interactive content is the unlock.<br><br><b>Financial reality:</b> small revenue, large cost. Strategic, not financial, at this stage.' },
+  { t:'Orion AR \u2014 full augmented reality', h:'<b>Full holographic AR glasses</b> \u2014 still a <b>prototype</b>, not a product. Absorbs a large share of RL\u2019s R&D loss.<br><br><b>Timeline:</b> years away from consumer product. The near-term bet is the Ray-Ban/Oakley line; Orion is the long-term option value.' },
+];
+var RL_READ_DETAIL = [
+  { t:'Revenue recognition \u2014 why RL revenue understates traction', h:'RL revenue \u2248 platform/\u201cproxy\u201d line + <b>Quest</b> (full device price) + <b>smart glasses</b> (partial economics only).<br><br><b>EssilorLuxottica is the seller of record</b> for the glasses \u2014 it books the retail sale. Meta recognizes only its shared economics. So glasses can sell huge units while adding comparatively little RL revenue.<br><br><b>Implication:</b> don\u2019t read RL revenue as a proxy for glasses traction \u2014 it structurally understates the story.' },
+  { t:'The breakout is glasses, not VR', h:'Ray-Ban / Oakley Meta sold <b>>7M units in 2025</b>. Management is pivoting investment <b>toward wearables and away from VR/Horizon</b> (~1,500 RL roles cut).<br><br>Zuckerberg\u2019s thesis: "glasses are the ideal form factor for AI \u2014 you can let your AI see what you see, hear what you hear." The pivot is from holographic metaverse (years away) to AI glasses (shipping now).' },
+  { t:'Losses peak in 2026 \u2014 the inflection', h:'RL lost ~<b>$19B in 2025</b> (~$79B cumulative). Zuckerberg (Q4 2025 call): 2026 losses will be \u201c<i>similar to last year, and this will likely be the peak.</i>\u201d<br><br>2026 is the high-water mark. Losses are still enormous, but the direction changes. The FoA cash machine (~$102B segment OpInc) is built to absorb this.' },
+];
+
 var SPEND_LEDE='Meta\'s reported capex is enormous — but it is only part of the AI build. A lot of the spend lands in the P&L as <b>lease and cloud-commitment expense</b> rather than as capex, so the <b>true investment intensity</b> is hard to read off the headline number. To make it legible, the Summit team <b>reconstructed</b> the spend from Meta\'s 10-K/10-Q Note-8 commitment disclosures plus vendor 8-Ks and press. What follows is that <b>estimate</b> — not a clean company disclosure and not a live time series (it never will be), but enough to give a real notion of how the buildout is funded, in <b>three ways</b>:';
 var SPEND_WAYS=[
   { k:'owned', t:'1 · Owned capex → depreciation',
@@ -240,6 +254,116 @@ var AVE={
 };
 var _aveMetric='rev', AVE_GREEN='#16A34A', AVE_RED='#C0392B';
 
+
+// ─── Supply Chain tab data (Bloomberg SPLC, as of 26-Jun-2026) ──────────────
+var SC_SUPPLIERS = [
+  { n:'NVIDIA',             ind:'Semiconductors',  rel:11182.59, costPct:13.07, cat:'CAPEX', supRev:4.10  },
+  { n:'SK hynix',           ind:'Semiconductors',  rel:4593.50,  costPct:5.14,  cat:'CAPEX', supRev:6.51  },
+  { n:'GoerTek',            ind:'Tech Hardware',   rel:4504.29,  costPct:12.23, cat:'COGS',  supRev:26.38 },
+  { n:'Broadcom',           ind:'Semiconductors',  rel:3682.44,  costPct:4.89,  cat:'CAPEX', supRev:5.11  },
+  { n:'Celestica',          ind:'Tech Hardware',   rel:1931.51,  costPct:2.56,  cat:'CAPEX', supRev:15.12 },
+  { n:'AMD',                ind:'Semiconductors',  rel:1688.28,  costPct:2.55,  cat:'CAPEX', supRev:5.49  },
+  { n:'Western Digital',    ind:'Tech Hardware',   rel:1530.89,  costPct:1.79,  cat:'CAPEX', supRev:12.69 },
+  { n:'Accton Technology',  ind:'Tech Hardware',   rel:970.38,   costPct:2.63,  cat:'COGS',  supRev:9.95  },
+  { n:'Qualcomm',           ind:'Semiconductors',  rel:857.27,   costPct:2.33,  cat:'COGS',  supRev:1.90  },
+  { n:'Ciena',              ind:'Tech Hardware',   rel:590.95,   costPct:0.78,  cat:'CAPEX', supRev:9.41  },
+  { n:'Corning',            ind:'Tech Hardware',   rel:537.88,   costPct:0.63,  cat:'CAPEX', supRev:3.19  },
+  { n:'Hanwha Solutions',   ind:'Chemicals',       rel:431.56,   costPct:1.27,  cat:'COGS',  supRev:4.84  },
+  { n:'CoreWeave',          ind:'Software',        rel:388.83,   costPct:1.14,  cat:'COGS',  supRev:8.02  },
+  { n:'TaskUS',             ind:'IT Services',     rel:307.72,   costPct:1.27,  cat:'SGA',   supRev:26.00 },
+  { n:'Zhongji Innolight',  ind:'Tech Hardware',   rel:285.46,   costPct:0.43,  cat:'CAPEX', supRev:6.36  },
+  { n:'Jabil',              ind:'Tech Hardware',   rel:253.27,   costPct:0.84,  cat:'COGS',  supRev:0.81  },
+  { n:'Penguin Solutions',  ind:'Semiconductors',  rel:249.78,   costPct:0.29,  cat:'CAPEX', supRev:18.20 },
+  { n:'Nokia',              ind:'Tech Hardware',   rel:247.60,   costPct:0.33,  cat:'CAPEX', supRev:1.18  },
+  { n:'Microsoft',          ind:'Software',        rel:225.80,   costPct:0.75,  cat:'COGS',  supRev:0.08  },
+];
+var _scFilter = 'ALL';
+var SC_GEO = [
+  { c:'United States',  n:109, pct:38.52, fac:1184, facPct:32.98 },
+  { c:'China',          n:35,  pct:12.37, fac:460,  facPct:12.81 },
+  { c:'South Korea',    n:19,  pct:6.71,  fac:85,   facPct:2.37  },
+  { c:'United Kingdom', n:17,  pct:6.01,  fac:130,  facPct:3.62  },
+  { c:'Taiwan',         n:15,  pct:5.30,  fac:48,   facPct:1.34  },
+  { c:'France',         n:14,  pct:4.95,  fac:111,  facPct:3.09  },
+];
+var SC_GEO_TOTAL = { suppliers:283, facilities:3590 };
+var SC_CUST_TOP = [
+  { n:'TD SYNNEX',                rel:41.01,  revPct:'0.02' },
+  { n:'Casino Guichard Perrachon',rel:35.99,  revPct:'0.02' },
+  { n:'CDW Corp',                 rel:11.55,  revPct:'<0.01' },
+  { n:'Insight Enterprises',      rel:4.54,   revPct:'<0.01' },
+  { n:'El Puerto de Liverpool',   rel:2.46,   revPct:'<0.01' },
+];
+var SC_CUST_GEO = { total:244, facilities:2722 };
+var SC_NOTE='Source: Bloomberg Supply Chain Analysis (SPLC) for META US Equity, as of 26-Jun-2026. Total Relationship Size is Bloomberg\u2019s estimate of the dollar value of the commercial relationship. Cost Category indicates where the spend lands in Meta\u2019s financials. Supplier\u2019s Source Revenue % indicates the supplier\u2019s revenue dependency on Meta. Point-in-time snapshot, not a live feed.';
+
+// ─── Earnings Calls tab — management narrative tracker ──────────────────────
+var CALLS = [
+  { q:'Q1 2026', date:'Apr 29, 2026', chg:-8.6,
+    hl:[
+      'CapEx raised AGAIN to $125\u2013145B \u2014 "higher component costs, particularly <b>memory pricing</b>."',
+      'Muse Spark released (MSL\u2019s first model). "Fastest lab from standing up to widely accepted strong model."',
+      'Narrative: assistant \u2192 <b>agent</b>. "Agents that understand your goals and work day and night to help you achieve them." Business AIs: 10M weekly conversations (from 1M at year start).',
+    ]},
+  { q:'Q4 2025', date:'Jan 28, 2026', chg:+10.4,
+    hl:[
+      '"RL losses will <b>peak in 2026</b>, then gradually reduce" \u2014 first concrete inflection guidance on Reality Labs.',
+      'CapEx guided $115\u2013135B; expenses $162\u2013169B \u2014 but: "operating income above 2025." Spending through it, not at the expense of profit.',
+      '"Personal superintelligence" \u2014 AI that understands your goals and tailors feeds + agents to help you achieve them.',
+    ]},
+  { q:'Q3 2025', date:'Oct 29, 2025', chg:-11.3,
+    hl:[
+      '"Front-load for the <b>most optimistic</b> superintelligence cases" \u2014 capex philosophy crystallized. If slower, "extra compute accelerates core business profitably."',
+      'Instagram 3B MAU; Threads 150M DAP; Reels ARR >$50B \u2014 core business strength IS the funding mechanism.',
+      'Display glasses sold out in 48 hours \u2014 "clearly leading." RL investment pivoting toward wearables, away from VR.',
+    ]},
+  { q:'Q2 2025', date:'Jul 30, 2025', chg:+11.2,
+    hl:[
+      '<b>Meta Superintelligence Labs (MSL)</b> founded \u2014 Wang, Friedman, Shengjia Zhao. "Highest talent-density lab in the industry."',
+      '"Superintelligence is now <b>in sight</b>" \u2014 most aggressive timeline statement. Self-improvement: "slow for now, but undeniable."',
+      'Infrastructure named: Prometheus (1GW+), Hyperion (5GW), multiple Titan clusters.',
+    ]},
+  { q:'Q1 2025', date:'Apr 30, 2025', chg:+4.2,
+    hl:[
+      'Five opportunities framework: improved ads, engaging experiences, business messaging, Meta AI, AI devices. "Don\u2019t need to succeed in ALL five to have good ROI."',
+      'CapEx raised to $64\u201372B; 2026 will see "similarly significant dollar growth." GEM ads model: 2\u00d7 more efficient per unit of compute.',
+      '~1B Meta AI MAU; standalone app launched \u2014 but re-set expectations: "at least the next year" focused on scaling, not monetizing.',
+    ]},
+  { q:'Q4 2024', date:'Jan 29, 2025', chg:+1.6,
+    hl:[
+      '"<b>48 weeks</b> to get on the trajectory we want in AI" \u2014 urgency framing. AI coding agent: "potentially one of the most important innovations in history."',
+      'CapEx guided $60\u201365B for 2025 \u2014 nearly doubled. "Hundreds of billions over the long term."',
+      'DeepSeek response: "more compute at inference means we can provide <b>higher quality of service</b> than those without the business model to sustain it."',
+    ]},
+  { q:'Q3 2024', date:'Oct 30, 2024', chg:-4.1,
+    hl:[
+      'Llama 4 training on a <b>100K+ H100</b> cluster \u2014 "bigger than anything I\u2019ve seen reported for what others are doing."',
+      'Ray-Ban Meta clear edition sold out, reselling at >$1,000 \u2014 <b>glasses category validated</b> as real consumer electronics.',
+      'Budget planning: "a lot of new opportunities to accelerate the core business with strong ROI \u2014 I think we should invest more."',
+    ]},
+  { q:'Q2 2024', date:'Jul 31, 2024', chg:+4.8,
+    hl:[
+      'Llama 3.1 released \u2014 "first frontier-level open source model; an <b>inflection point</b> where open source becomes the industry standard."',
+      'Long-term ad vision: "advertisers will just tell us an objective and a budget, and <b>we\u2019ll do the rest</b>."',
+      '"Significant CapEx growth in 2025" \u2014 first forward signal, preparing the market one quarter early.',
+    ]},
+  { q:'Q1 2024', date:'Apr 24, 2024', chg:-10.6,
+    hl:[
+      'Explicit investor warning: "<b>multi-year investment cycle</b> before Meta AI is profitable \u2014 expect stock volatility." Market sold off hard.',
+      'CapEx raised to $35\u201340B (from $30\u201337B) \u2014 the opening move of the infrastructure ramp.',
+      '"Meta AI with Llama 3 is the most intelligent AI assistant you can freely use" \u2014 quality claim staked; playbook: scale first, monetize later.',
+    ]},
+  { q:'Q4 2023', date:'Feb 1, 2024', chg:+20.3,
+    hl:[
+      'Year of Efficiency declared successful \u2014 leaner company as a <b>permanent operating philosophy</b>, not a one-off cost cut.',
+      'Full general intelligence is now the stated product goal \u2014 "need reasoning, planning, coding, memory." FAIR moved closer to Gen AI team.',
+      'First-ever dividend declared ($0.50/share quarterly) + $50B buyback auth \u2014 signaled the business can fund AI AND return cash.',
+    ]},
+];
+var CALLS_NOTE='Highlights extracted from Meta Platforms earnings call transcripts. Written from the perspective of what was said AT THE TIME, not with hindsight. Stock-price changes are approximate next-trading-day moves. Source: Meta investor relations.';
+
+
+
 // ─── Render helpers ──────────────────────────────────────────────────────────
 function sec(t,inner){ return '<section class="ov-sec"><div class="ov-sec-h">'+esc(t)+'</div>'+inner+'</section>'; }
 function rangeSlider(key,maxI,a,b){
@@ -279,6 +403,140 @@ function mbars(arr){ return '<div class="ov-mbars">'+arr.map(function(r){
 }).join('')+'</div>'; }
 
 // ─── Pane: Overview ───────────────────────────────────────────────────────────
+
+// ─── Pane: Supply Chain (Bloomberg SPLC) ─────────────────────────────────────
+function scMoney(v){ if(v>=1000) return '$'+(v/1000).toFixed(1)+'B'; return '$'+Math.round(v)+'M'; }
+
+// Build the supplier bars + detail rows for a given category filter.
+function scRenderSuppliers(){
+  var cat=_scFilter;
+  var list=SC_SUPPLIERS.filter(function(s){ return cat==='ALL'||s.cat===cat; });
+  var maxRel=list.length?list[0].rel:1;
+  // Summary line
+  var totalRel=0; list.forEach(function(s){ totalRel+=s.rel; });
+  var sumEl=document.getElementById('scSum');
+  if(sumEl){
+    var label=cat==='ALL'?'All categories':(cat==='CAPEX'?'CAPEX \u2014 capitalized, hits P&L as D&A over asset life':(cat==='COGS'?'COGS \u2014 hits the P&L immediately':'SGA \u2014 selling, general & administrative'));
+    sumEl.innerHTML='<b>'+list.length+' suppliers</b> \u00b7 '+scMoney(totalRel)+' total relationship \u00b7 <span class="ave-subh-note">'+label+'</span>';
+  }
+  // Bars + rows
+  var box=document.getElementById('scBars'); if(!box) return;
+  var h='';
+  list.forEach(function(s){
+    var w=Math.max(2, s.rel/maxRel*100);
+    var dep=s.supRev>=15;
+    var barColor=s.cat==='CAPEX'?BRAND:(s.cat==='COGS'?'#C0392B':'#8A93A0');
+    h+='<div class="sc-row">';
+    h+='<div class="sc-row-name">'+esc(s.n)+'<span class="sc-row-ind">'+esc(s.ind)+'</span></div>';
+    h+='<div class="sc-row-bar"><div class="sc-row-fill" style="width:'+w.toFixed(1)+'%;background:'+barColor+'"></div></div>';
+    h+='<div class="sc-row-val">'+scMoney(s.rel)+'</div>';
+    h+='<div class="sc-row-meta"><span class="ov-chip'+(s.cat==='COGS'?' ov-chip-neg':'')+'">'+s.cat+'</span>';
+    h+='<span class="sc-row-pct">'+s.costPct.toFixed(1)+'% of cost</span>';
+    h+='<span class="sc-row-dep'+(dep?' sc-dep-warn':'')+'">'+s.supRev.toFixed(1)+'% dep'+(dep?' \u26a0':'')+'</span>';
+    h+='</div></div>';
+  });
+  box.innerHTML=h;
+}
+
+function switchScFilter(root,cat){
+  _scFilter=cat;
+  root.querySelectorAll('.sc-pill').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-sccat')===cat); });
+  scRenderSuppliers();
+}
+
+// ─── Pane: Earnings Calls — management narrative tracker ─────────────────────
+function callsBody(){
+  var h='';
+  h+='<p class="ov-lede">How management\u2019s narrative has evolved, call by call. Each entry shows the <b>2\u20133 most important qualitative takeaways</b> \u2014 the \u201cwhy,\u201d not the numbers \u2014 written from what was known <b>at the time</b>, not with hindsight. The badge shows the next-day stock reaction (close-to-close).</p>';
+  h+='<div class="lpb-acc" id="meCallsAcc">';
+  CALLS.forEach(function(c,i){
+    var up=c.chg>=0;
+    var badge='<span style="display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;margin-left:10px;'+(up?'background:#ECFDF5;color:#16A34A':'background:#FEF2F2;color:#C0392B')+'">'+(up?'\u25b2 +':'\u25bc ')+Math.abs(c.chg)+'%</span>';
+    h+='<div class="lpb-acc-item'+(i===0?' open':'')+'">'+
+      '<button type="button" class="lpb-acc-h"><span><b>'+esc(c.q)+'</b> \u00b7 '+esc(c.date)+badge+'</span><span class="lpb-acc-ic">'+(i===0?'\u2013':'+')+'</span></button>'+
+      '<div class="lpb-acc-body"><ul class="ov-bullets">'+c.hl.map(function(h){return '<li>'+h+'</li>';}).join('')+'</ul></div>'+
+    '</div>';
+  });
+  h+='</div>';
+  h+='<div class="ov-foot">'+CALLS_NOTE+'</div>';
+  return h;
+}
+
+function supplyBody(){
+  var h='';
+  h+='<style>'+
+    '.sc-sum{font-size:12px;color:var(--navy);margin:6px 0 14px;line-height:1.5}.sc-sum b{font-weight:700}'+
+    '.sc-bars{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}'+
+    '.sc-row{display:grid;grid-template-columns:160px 1fr 70px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--bdr)}'+
+    '.sc-row:last-child{border-bottom:none}'+
+    '.sc-row-name{font-size:12px;font-weight:600;color:var(--navy);line-height:1.3}'+
+    '.sc-row-ind{display:block;font-size:10px;font-weight:500;color:var(--mu)}'+
+    '.sc-row-bar{height:22px;background:var(--surface);border-radius:5px;overflow:hidden}'+
+    '.sc-row-fill{height:100%;border-radius:5px;min-width:2px;transition:width .25s}'+
+    '.sc-row-val{font-size:12px;font-weight:700;color:var(--navy);text-align:right;font-variant-numeric:tabular-nums}'+
+    '.sc-row-meta{grid-column:1/-1;display:flex;gap:8px;align-items:center;padding:2px 0 4px}'+
+    '.sc-row-pct{font-size:10.5px;color:var(--mu)}'+
+    '.sc-row-dep{font-size:10.5px;color:var(--mu)}'+
+    '.sc-dep-warn{color:#C0392B;font-weight:600}'+
+    '@media(max-width:860px){.sc-row{grid-template-columns:120px 1fr 60px}}'+
+  '</style>';
+  h+='<p class="ov-lede">Who receives Meta\u2019s dollars \u2014 and who depends on Meta for theirs. The supplier side shows <b>where the AI-capex buildout actually lands</b>; the customer side shows the <b>structural absence of concentration</b> that defines the walled garden. Data: Bloomberg Supply Chain Analysis (SPLC), 26-Jun-2026.</p>';
+
+  // ── Top suppliers with category filter ──
+  h+=sec('Top suppliers by relationship size',
+    '<p class="ov-lede" style="margin:0 0 12px">Bloomberg\u2019s estimate of the dollar value of each supplier relationship. Filter by cost category to see what\u2019s capitalized infrastructure (CAPEX) vs what hits the income statement now (COGS).</p>'+
+    '<div class="ave-pills" id="scPills">'+
+      '<button type="button" class="ave-pill sc-pill active" data-sccat="ALL">All</button>'+
+      '<button type="button" class="ave-pill sc-pill" data-sccat="CAPEX">CAPEX</button>'+
+      '<button type="button" class="ave-pill sc-pill" data-sccat="COGS">COGS</button>'+
+      '<button type="button" class="ave-pill sc-pill" data-sccat="SGA">SGA</button>'+
+    '</div>'+
+    '<div class="sc-sum" id="scSum"></div>'+
+    '<div class="sc-bars" id="scBars"></div>'+
+    '<div class="ov-fynote">\u26a0 = supplier derives >15% of revenue from Meta \u2014 concentration risk for the supplier (and a negotiating lever for Meta). <b>NVIDIA</b> is the largest relationship (~$11.2B, 13% of Meta\u2019s cost) but Meta is only ~4% of NVIDIA\u2019s revenue. <b>GoerTek</b> (Quest assembly) and <b>TaskUS</b> (content moderation) are the most Meta-dependent (~26% each). CAPEX items depreciate over years; COGS items hit the P&L immediately.</div>');
+
+  // ── Where the spend lands (aggregate) ──
+  var capexS=0,cogsS=0,sgaS=0;
+  SC_SUPPLIERS.forEach(function(s){ if(s.cat==='CAPEX') capexS+=s.rel; else if(s.cat==='COGS') cogsS+=s.rel; else sgaS+=s.rel; });
+  var totalS=capexS+cogsS+sgaS;
+  h+=sec('Where the supplier spend lands',
+    '<p class="ov-lede" style="margin:0 0 12px">Of the top-19 supplier relationships (~'+scMoney(totalS)+' total), the split by cost category shows what is capitalized infrastructure vs what hits the income statement immediately:</p>'+
+    mbars([
+      ['CAPEX (capitalized \u2192 D&A)', Math.round(capexS/totalS*100), scMoney(capexS)+' ('+Math.round(capexS/totalS*100)+'%)', BRAND],
+      ['COGS (P&L immediate)', Math.round(cogsS/totalS*100), scMoney(cogsS)+' ('+Math.round(cogsS/totalS*100)+'%)', '#C0392B'],
+      ['SGA', Math.max(1,Math.round(sgaS/totalS*100)), scMoney(sgaS)+' ('+Math.round(sgaS/totalS*100)+'%)', GRAY],
+    ])+
+    '<div class="ov-fynote">This ties directly to the <b>Spend Engine</b>: the CAPEX bucket (NVIDIA, SK hynix, Broadcom, Celestica, AMD) is the AI-infrastructure build that depreciates over years. The COGS bucket (GoerTek, Accton, CoreWeave, Qualcomm) hits the P&L now. The reason the \u201ctrue investment intensity\u201d is hard to read: COGS suppliers are invisible in the capex headline but sit straight in the cost base.</div>');
+
+  // ── Geographic concentration ──
+  h+=sec('Supplier geographic concentration',
+    '<p class="ov-lede" style="margin:0 0 12px">'+SC_GEO_TOTAL.suppliers+' suppliers across '+SC_GEO_TOTAL.facilities+' facilities. Top countries by suppliers domiciled:</p>'+
+    mbars(SC_GEO.map(function(g){ return [g.c, Math.round(g.pct), g.n+' suppliers ('+g.pct+'%)', g.c==='United States'?BRAND:(g.c==='China'?'#C0392B':(g.c==='Taiwan'||g.c==='South Korea'?RL:GRAY))]; }))+
+    '<div class="ov-fynote">The silicon supply chain runs through Asia: <b>China</b> (12.4%), <b>South Korea</b> (6.7% \u2014 SK hynix), <b>Taiwan</b> (5.3% \u2014 TSMC fabrication). A US\u2013China decoupling or Taiwan disruption would stress the AI buildout directly. MTIA custom silicon and the Broadcom partnership are partial hedges, but NVIDIA (fabbed by TSMC) remains the #1 relationship.</div>');
+
+  // ── Customer concentration ──
+  h+=sec('Customer concentration \u2014 there is none',
+    '<p class="ov-lede" style="margin:0 0 12px">'+SC_CUST_GEO.total+' customer relationships across '+SC_CUST_GEO.facilities+' facilities. The largest is <b>$41M</b> \u2014 that is <b>0.02%</b> of Meta\u2019s revenue.</p>'+
+    '<div style="overflow-x:auto"><table class="ov-table"><thead><tr>'+
+    '<th>Customer</th><th style="text-align:right">Relationship ($M)</th>'+
+    '<th style="text-align:right">% of META revenue</th></tr></thead><tbody>'+
+    SC_CUST_TOP.map(function(c){
+      return '<tr><td class="ov-td-name">'+esc(c.n)+'</td>'+
+        '<td style="text-align:right;font-variant-numeric:tabular-nums">'+scMoney(c.rel)+'</td>'+
+        '<td style="text-align:right;font-variant-numeric:tabular-nums">'+c.revPct+'%</td></tr>';
+    }).join('')+
+    '<tr><td class="ov-td-name" style="color:var(--mu)">\u2026 239 more</td><td style="text-align:right;color:var(--mu)">all < $2.5M</td><td style="text-align:right;color:var(--mu)">all < 0.01%</td></tr>'+
+    '</tbody></table></div>'+
+    '<div class="ov-callout"><ul class="ov-bullets">'+
+    '<li><b>This IS the walled garden in data form.</b> ~10M+ advertisers; no single customer is remotely material. Compare to enterprise software where a top-5 customer might be 10\u201320% of revenue.</li>'+
+    '<li><b>Negotiating implication:</b> Meta sets the auction rules and the take rate. No advertiser has leverage to demand a discount \u2014 the ad auction IS the pricing power.</li>'+
+    '<li><b>The asymmetry:</b> NVIDIA alone is ~$11.2B (13% of Meta\u2019s cost base). The supplier side has real concentration; the customer side has none \u2014 the reverse of most businesses.</li>'+
+    '</ul></div>');
+
+  h+='<div class="ov-foot">'+SC_NOTE+'</div>';
+  return h;
+}
+
 function overviewBody(){
   var h='';
   h+='<div class="ov-snap">'+SNAPSHOT.map(function(p){ return '<div class="ov-snap-cell"><div class="ov-snap-k">'+esc(p[0])+'</div><div class="ov-snap-v">'+esc(p[1])+'</div></div>'; }).join('')+'</div>';
@@ -323,7 +581,6 @@ function foaBody(){
     flowHtml());
   h+=sec('GEM — the AI model behind the ads', '<p class="ov-lede" style="margin:0 0 12px">'+GEM_WHAT+'</p><div class="ov-callout">'+bullets(GEM_POINTS)+'</div>');
   h+=sec('Family of Apps — recent wins', '<div class="ov-callout">'+bullets(FOA_WINS)+'</div>');
-  h+=sec('Where the cash goes — capital allocation', '<div class="ov-callout"><div class="ov-tl-body">FoA threw off ~<b>$102B</b> of segment operating profit in FY2025 (~50%+ segment margin). The question that matters is where it goes, in four uses: <b>(1)</b> the record <b>AI-capex build</b> ($69.7B in 2025 → guided ~<b>$125–145B</b> for 2026); <b>(2)</b> the <b>Reality Labs</b> bet (~−$19B/yr); <b>(3)</b> <b>buybacks</b>; and <b>(4)</b> the <b>dividend</b> (first paid 2024). The whole investment debate is the balance between <b>reinvestment</b> (#1+#2) and <b>returning cash</b> (#3+#4) — and whether the reinvestment earns its keep.</div></div>');
   h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
   return h;
 }
@@ -331,21 +588,40 @@ function foaBody(){
 // ─── Pane: Reality Labs (the bet) ─────────────────────────────────────────────
 function rlBody(){
   var h='';
-  h+='<p class="ov-lede">Reality Labs is the <b>bet</b>, not the business — a deliberate, large loss the Family of Apps is built to absorb. Keep the focus proportional: it is ~1% of revenue and ~−$19B of profit.</p>';
+  h+='<p class="ov-lede">Reality Labs is the <b>bet</b>, not the business — a deliberate, large loss the Family of Apps is built to absorb. Keep the focus proportional: it is ~1% of revenue and ~\u2212$19B of profit.</p>';
   h+='<div class="tech-leg"><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+FOA+'"></span>Family of Apps</span>'+
      '<span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+RL+'"></span>Reality Labs</span></div>';
   h+='<div class="ov-charts" style="grid-template-columns:1fr 1fr">'+
     '<div class="ov-chart-card"><div class="ov-chart-t">Revenue by segment <span>($B, FY)</span></div><div class="ov-chart-wrap"><canvas id="meSegRev"></canvas></div></div>'+
-    '<div class="ov-chart-card"><div class="ov-chart-t">Operating income by segment <span>($B, FY · RL is a loss)</span></div><div class="ov-chart-wrap"><canvas id="meSegOp"></canvas></div></div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Operating income by segment <span>($B, FY \u00b7 RL is a loss)</span></div><div class="ov-chart-wrap"><canvas id="meSegOp"></canvas></div></div>'+
   '</div>';
-  h+='<div class="ov-fynote">Family of Apps made ~<b>$102B</b> of operating profit in FY2025; Reality Labs <b>lost ~$19B</b> — cumulative ~<b>$'+(RL_CUM/1000).toFixed(0)+'B</b> since 2020.</div>';
-  h+=sec('What Reality Labs is — products &amp; how it monetizes', '<p class="ov-lede" style="margin:0 0 12px">'+RL_WHAT+'</p><div class="ov-callout">'+bullets(RL_PRODUCTS)+'</div>');
-  h+=sec('How to read Reality Labs', '<p class="ov-lede" style="margin:0 0 12px">'+RL_NOTE+'</p><div class="ov-callout">'+bullets(RL_POINTS)+'</div>');
+  h+='<div class="ov-fynote">Family of Apps made ~<b>$102B</b> of operating profit in FY2025; Reality Labs <b>lost ~$19B</b> \u2014 cumulative ~<b>$'+(RL_CUM/1000).toFixed(0)+'B</b> since 2020.</div>';
+
+  // ── Product portfolio — compact cards, tap for detail (modal) ──
+  h+=sec('What Reality Labs is \u2014 the product portfolio',
+    '<p class="ov-lede" style="margin:0 0 14px">'+RL_WHAT+'</p>'+
+    '<div class="ov-cards" style="grid-template-columns:1fr 1fr">'+
+    '<div class="ov-card ov-clickable" style="border-top-color:'+RL+'" data-detail="rl:0"><div class="ov-card-h"><span style="font-size:20px;margin-right:4px">\ud83e\udd7d</span><span class="ov-card-n">Meta Quest</span><span class="ov-chip">Shipping</span></div><div class="ov-card-s">VR/MR headsets \u2014 full device revenue to RL segment</div><div class="ov-more">Details \u203a</div></div>'+
+    '<div class="ov-card ov-clickable" style="border-top-color:#06C167" data-detail="rl:1"><div class="ov-card-h"><span style="font-size:20px;margin-right:4px">\ud83d\udd76\ufe0f</span><span class="ov-card-n">Ray-Ban & Oakley Meta</span><span class="ov-chip" style="background:#ECFDF5;color:#06C167">>7M units</span></div><div class="ov-card-s">AI glasses w/ EssilorLuxottica \u2014 <b>partial</b> revenue recognition</div><div class="ov-more">Details \u203a</div></div>'+
+    '<div class="ov-card ov-clickable" style="border-top-color:#7AA9FF" data-detail="rl:2"><div class="ov-card-h"><span style="font-size:20px;margin-right:4px">\ud83c\udf10</span><span class="ov-card-n">Horizon & Platform</span><span class="ov-chip" style="background:#EEF0FE;color:#6366F1">Building</span></div><div class="ov-card-s">Social VR + developer platform \u2014 strategic, not financial yet</div><div class="ov-more">Details \u203a</div></div>'+
+    '<div class="ov-card ov-clickable" style="border-top-color:#F59E0B" data-detail="rl:3"><div class="ov-card-h"><span style="font-size:20px;margin-right:4px">\ud83d\udd2e</span><span class="ov-card-n">Orion AR</span><span class="ov-chip" style="background:#FEF3E2;color:#D97706">Prototype</span></div><div class="ov-card-s">Full AR glasses \u2014 pre-revenue, absorbs most of R&D loss</div><div class="ov-more">Details \u203a</div></div>'+
+    '</div>');
+
+  // ── How to read RL — 3 key analyst insights, tap for detail ──
+  h+=sec('How to read Reality Labs',
+    '<p class="ov-lede" style="margin:0 0 12px">'+RL_NOTE+'</p>'+
+    '<div class="ov-drivers" style="grid-template-columns:1fr 1fr 1fr">'+
+    '<div class="ov-driver ov-clickable" style="border-top:2px solid '+RL+'" data-detail="rlread:0"><div class="ov-driver-t">Revenue understates traction</div><div class="ov-driver-d">Glasses sell millions but EssilorLuxottica books the sale \u2014 RL revenue is structurally misleading.</div><div class="ov-more">Why \u203a</div></div>'+
+    '<div class="ov-driver ov-clickable" style="border-top:2px solid #06C167" data-detail="rlread:1"><div class="ov-driver-t">Glasses are the bet, not VR</div><div class="ov-driver-d">>7M units sold; investment pivoting toward wearables, away from VR/Horizon.</div><div class="ov-more">Why \u203a</div></div>'+
+    '<div class="ov-driver ov-clickable" style="border-top:2px solid #C0392B" data-detail="rlread:2"><div class="ov-driver-t">Losses peak in 2026</div><div class="ov-driver-d">~$19B/yr, ~$79B cumulative \u2014 management guided the inflection is now.</div><div class="ov-more">Why \u203a</div></div>'+
+    '</div>');
+
   h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
   return h;
 }
 
-// ─── Pane: Spend Engine (the devil's accounting) ──────────────────────────────
+
+
 function spendBody(){
   var h='';
   h+='<p class="ov-lede">'+SPEND_LEDE+'</p>';
@@ -376,12 +652,16 @@ function html(c){
     '<button type="button" class="ovt-tab" data-ovt="rl">Reality Labs</button>'+
     '<button type="button" class="ovt-tab" data-ovt="spend">Spend Engine</button>'+
     '<button type="button" class="ovt-tab" data-ovt="model">Model vs. Reality</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="supply">Supply Chain</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="calls">Earnings Calls</button>'+
   '</div>';
   h+='<div class="ovt-pane" data-ovt="overview">'+overviewBody()+'</div>';
   h+='<div class="ovt-pane" data-ovt="foa" hidden>'+foaBody()+'</div>';
   h+='<div class="ovt-pane" data-ovt="rl" hidden>'+rlBody()+'</div>';
   h+='<div class="ovt-pane" data-ovt="spend" hidden>'+spendBody()+'</div>';
   h+='<div class="ovt-pane" data-ovt="model" hidden>'+modelBody()+'</div>';
+  h+='<div class="ovt-pane" data-ovt="supply" hidden>'+supplyBody()+'</div>';
+  h+='<div class="ovt-pane" data-ovt="calls" hidden>'+callsBody()+'</div>';
   h+='<div class="ov-modal-back" id="meModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
     '<button class="ov-modal-x" id="meModalX" aria-label="Close">×</button>'+
     '<div class="ov-modal-t" id="meModalT"></div><div class="ov-modal-b" id="meModalB"></div></div></div>';
@@ -524,17 +804,38 @@ function modelBody(){
   return h;
 }
 
-// ─── Live price (shared get-quote edge fn; hides gracefully if not deployed) ──
-function fetchQuote(t){ var env=(typeof window!=='undefined')&&window.ENV; if(!env||!env.SUPABASE_URL||!env.SUPABASE_ANON_KEY) return Promise.reject();
-  var base=String(env.SUPABASE_URL).replace(/\/+$/,'');
-  return fetch(base+'/functions/v1/get-quote?ticker='+t,{ headers:{ apikey:env.SUPABASE_ANON_KEY, Authorization:'Bearer '+env.SUPABASE_ANON_KEY } })
-    .then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(j){ if(j&&typeof j.price==='number') return j; throw 0; }); }
-function renderLive(root){ var el=root.querySelector('#meLive'); if(!el) return; el.hidden=false; el.innerHTML='<span class="ov-live-ts">fetching live price…</span>';
-  fetchQuote('META').then(function(q){ var p=q.changePct, up=(p==null||p>=0); var t=q.time?new Date(q.time*1000):null, hh=t?(('0'+t.getHours()).slice(-2)+':'+('0'+t.getMinutes()).slice(-2)):'';
-    el.innerHTML='<span class="ov-live-dot"></span><span class="ov-live-tk">META</span><span class="ov-live-px">$'+q.price.toFixed(2)+'</span>'+
-      (p!=null?'<span class="ov-live-ch '+(up?'up':'down')+'">'+(up?'▲ +':'▼ −')+Math.abs(p).toFixed(2)+'%</span>':'')+
-      '<span class="ov-live-ts">live · '+esc(q.exchange||'NASDAQ')+(hh?(' · '+hh):'')+'</span>';
-  }).catch(function(){ el.hidden=true; el.innerHTML=''; }); }
+// ─── Live price + market cap ──────────────────────────────────────────────────
+// Sourced from Massive via the covered-calls-massive edge function (api.js →
+// coveredCallsQuote): `snapshot` = live equity quote, `ratios` = market cap.
+// Requires a logged-in portal user (the edge fn verifies the JWT); on any failure
+// (not logged in, off-hours error, vendor hiccup) the banner hides gracefully.
+// Dynamic import keeps this module loadable in non-browser contexts.
+function meNum(v){ return (typeof v==='number' && isFinite(v)) ? v : null; }
+function meMktCap(m){ if(m==null) return null; if(m>=1e12) return '$'+(m/1e12).toFixed(2)+'T'; if(m>=1e9) return '$'+(m/1e9).toFixed(1)+'B'; return '$'+Math.round(m/1e6)+'M'; }
+function renderLive(root){
+  var el=root.querySelector('#meLive'); if(!el) return;
+  el.hidden=false; el.innerHTML='<span class="ov-live-ts">fetching live price…</span>';
+  import('../api.js').then(function(api){
+    return Promise.all([
+      api.coveredCallsQuote('snapshot','META').catch(function(){ return null; }),
+      api.coveredCallsQuote('ratios','META').catch(function(){ return null; })
+    ]);
+  }).then(function(res){
+    var snap=res[0], rat=res[1];
+    var tk = (snap && (snap.ticker || (snap.results && snap.results.ticker))) || null;
+    var price = tk ? (meNum(tk.lastTrade&&tk.lastTrade.p) || meNum(tk.min&&tk.min.c) || meNum(tk.day&&tk.day.c) || meNum(tk.prevDay&&tk.prevDay.c)) : null;
+    var chg   = tk ? meNum(tk.todaysChangePerc) : null;
+    var r0 = (rat && rat.results && rat.results[0]) || {};
+    if(price==null) price=meNum(r0.price);
+    var mktCap = meNum(r0.market_cap);
+    if(price==null){ el.hidden=true; el.innerHTML=''; return; }
+    var up=(chg==null||chg>=0);
+    el.innerHTML='<span class="ov-live-dot"></span><span class="ov-live-tk">META</span><span class="ov-live-px">$'+price.toFixed(2)+'</span>'+
+      (chg!=null?'<span class="ov-live-ch '+(up?'up':'down')+'">'+(up?'▲ +':'▼ −')+Math.abs(chg).toFixed(2)+'%</span>':'')+
+      (mktCap!=null?'<span class="ov-live-mc">'+meMktCap(mktCap)+' mkt cap</span>':'')+
+      '<span class="ov-live-ts">live · NASDAQ · Massive</span>';
+  }).catch(function(){ el.hidden=true; el.innerHTML=''; });
+}
 
 // ─── Orchestration ────────────────────────────────────────────────────────────
 function showOvt(root,key){
@@ -545,6 +846,7 @@ function showOvt(root,key){
   if(key==='rl')       requestAnimationFrame(buildRl);
   if(key==='spend')    requestAnimationFrame(buildSpend);
   if(key==='model')    requestAnimationFrame(buildModelTab);
+  if(key==='supply')   requestAnimationFrame(scRenderSuppliers);
 }
 function wireModal(root){
   var back=root.querySelector('#meModalBack'), mT=root.querySelector('#meModalT'), mB=root.querySelector('#meModalB'); if(!back) return;
@@ -556,6 +858,8 @@ function wireModal(root){
     if(kind==='hist'){ var t=TIMELINE[+id]; return t&&t.d?{t:t.y,h:t.d}:null; }
     if(kind==='ad'){ var s=AD_FLOW[+id]; return s?{t:'Step '+(+id+1)+' — '+s.t,h:(s.detail||s.d)}:null; }
     if(kind==='spend'){ var w=SPEND_WAYS.filter(function(x){return x.k===id;})[0]; return w?{t:w.t,h:w.detail}:null; }
+        if(kind==='rl'){ var rlD=RL_DETAIL[+id]; return rlD?{t:rlD.t,h:rlD.h}:null; }
+    if(kind==='rlread'){ var rlR=RL_READ_DETAIL[+id]; return rlR?{t:rlR.t,h:rlR.h}:null; }
     return null; }
   root.querySelectorAll('[data-detail]').forEach(function(el){ el.style.cursor='pointer';
     el.onclick=function(){ var d=resolve(el.getAttribute('data-detail')); if(d) openM(d.t,d.h); }; });
@@ -589,6 +893,9 @@ function init(c){
   root.querySelectorAll('.ave-pill').forEach(function(b){ b.onclick=function(){ switchAveMetric(root, b.getAttribute('data-ave')); }; });
   wireModal(root);
   wireFlow(root);
+  // Earnings calls accordion
+  root.querySelectorAll('#meCallsAcc .lpb-acc-h').forEach(function(btn){ btn.onclick=function(){ var item=btn.parentElement; var open=item.classList.toggle('open'); var ic=btn.querySelector('.lpb-acc-ic'); if(ic) ic.textContent=open?'\u2013':'+'; }; });
+  root.querySelectorAll('.sc-pill').forEach(function(b){ b.onclick=function(){ switchScFilter(root, b.getAttribute('data-sccat')); }; });
   var active=root.querySelector('.ovt-tab.active'); showOvt(root, active?active.getAttribute('data-ovt'):'overview');
 }
 export var metaOverview = { html: html, init: init };

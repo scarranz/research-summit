@@ -1728,6 +1728,340 @@ function soonBody(label){
     '<div class="ovs-soon-d">In development — building this next.</div></div>';
 }
 
+// ─── Management — insider open-market activity (SEC Form 4) ───────────────────
+// Every open-market buy (code P) and sale (code S) reported by SoFi insiders on
+// Form 4 over the last ~5 years, pulled from SEC EDGAR. Option exercises, RSU
+// vesting and tax-withholding (codes M / A / F) are deliberately excluded.
+// Columns: [date, insider, role, grp (M=management · B=board · I=10% owner), type (B/S), shares, price]
+var INSIDER_TX = [
+  ['2026-06-22','Kelli Keough','EVP, GBU Lending & SIPS','M','S',10954,17.3506],
+  ['2026-06-18','Robert Lavet','General Counsel','M','S',1188,17.546],
+  ['2026-06-17','Jeremy Rishel','Chief Technology Officer','M','S',102123,17.78],
+  ['2026-06-16','Anthony Noto','Chief Executive Officer','M','B',13888,18.0578],
+  ['2026-05-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',10037,15.5346],
+  ['2026-05-11','Anthony Noto','Chief Executive Officer','M','B',15545,16.0039],
+  ['2026-05-08','Anthony Noto','Chief Executive Officer','M','B',15878,15.7305],
+  ['2026-04-21','Kelli Keough','EVP, GBU Lending & SIPS','M','S',9742,19.2518],
+  ['2026-03-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',9742,16.9438],
+  ['2026-03-18','Jeremy Rishel','Chief Technology Officer','M','S',94958,17.43],
+  ['2026-03-17','Anthony Noto','Chief Executive Officer','M','B',28900,17.3189],
+  ['2026-03-02','Anthony Noto','Chief Executive Officer','M','B',56000,17.8842],
+  ['2026-02-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',9755,18.8742],
+  ['2026-02-06','Robert Lavet','General Counsel','M','B',5000,21.044],
+  ['2026-02-06','Steven Freiberg','Director','B','S',94225,20.31],
+  ['2026-02-05','Eric Schuppenhauer','EVP, GBU Lending Borrow','M','B',5000,19.93],
+  ['2026-01-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',9468,25.7496],
+  ['2025-12-23','Kelli Keough','EVP, GBU Lending & SIPS','M','S',9468,27.1386],
+  ['2025-12-17','Jeremy Rishel','Chief Technology Officer','M','S',91837,26.64],
+  ['2025-11-21','Arun Pinto','Chief Risk Officer','M','S',46132,24.7598],
+  ['2025-11-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',10340,26.4309],
+  ['2025-10-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',10036,28.3257],
+  ['2025-09-18','Kelli Keough','EVP, GBU Lending & SIPS','M','S',10036,27.8616],
+  ['2025-09-18','Jeremy Rishel','Chief Technology Officer','M','S',98733,27.5],
+  ['2025-08-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',10578,22.1253],
+  ['2025-07-18','Kelli Keough','EVP, GBU Lending & SIPS','M','S',10267,21.7954],
+  ['2025-06-20','Jeremy Rishel','Chief Technology Officer','M','S',66847,15.55],
+  ['2025-06-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',10267,15.2224],
+  ['2025-06-10','Magdalena Yesil','Director','B','S',87140,14.3911],
+  ['2025-06-05','Magdalena Yesil','Director','B','S',87140,13.9518],
+  ['2025-05-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',11520,13.379],
+  ['2025-04-21','Kelli Keough','EVP, GBU Lending & SIPS','M','S',11181,10.7063],
+  ['2025-03-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',11181,12.7214],
+  ['2025-03-20','Jeremy Rishel','Chief Technology Officer','M','S',68625,12.64],
+  ['2025-02-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',9185,15.4275],
+  ['2025-01-21','Kelli Keough','EVP, GBU Lending & SIPS','M','S',8914,17.5825],
+  ['2024-12-23','Kelli Keough','EVP, GBU Lending & SIPS','M','S',8914,15.5877],
+  ['2024-12-19','Jeremy Rishel','Chief Technology Officer','M','S',64991,15.72],
+  ['2024-12-16','Eric Schuppenhauer','EVP, GBU Lending Borrow','M','B',30600,16.34],
+  ['2024-12-12','Ruzwana Bashir','Director','B','S',52000,16.0228],
+  ['2024-12-04','Silver Lake (SLTA IV)','10% Owner','I','S',4320831,16.13],
+  ['2024-12-04','Silver Lake (SLTA IV)','10% Owner','I','S',323290,16.011],
+  ['2024-12-04','Silver Lake (SLTA IV)','10% Owner','I','S',19389745,16.011],
+  ['2024-12-04','Silver Lake (SLTA IV)','10% Owner','I','S',72042,16.13],
+  ['2024-12-03','Silver Lake (SLTA IV)','10% Owner','I','S',1003,15.96],
+  ['2024-12-03','Silver Lake (SLTA IV)','10% Owner','I','S',60131,15.96],
+  ['2024-12-03','Silver Lake (SLTA IV)','10% Owner','I','S',5142822,15.9],
+  ['2024-12-03','Silver Lake (SLTA IV)','10% Owner','I','S',85748,15.9],
+  ['2024-12-02','Silver Lake (SLTA IV)','10% Owner','I','S',1729713,16.06],
+  ['2024-12-02','Silver Lake (SLTA IV)','10% Owner','I','S',28840,16.06],
+  ['2024-11-20','Kelli Keough','EVP, GBU Lending & SIPS','M','S',9590,14.5562],
+  ['2024-10-21','Kelli Keough','EVP, GBU Lending & SIPS','M','S',9308,10.3629],
+  ['2024-09-23','Kelli Keough','EVP, GBU Lending & SIPS','M','S',9308,7.987],
+  ['2024-09-20','Jeremy Rishel','Chief Technology Officer','M','S',68081,8.12],
+  ['2024-08-22','Kelli Keough','EVP, GBU Lending & SIPS','M','S',24939,7.2558],
+  ['2024-06-20','Jeremy Rishel','Chief Technology Officer','M','S',56273,6.41],
+  ['2024-06-14','Anthony Noto','Chief Executive Officer','M','B',30715,6.4825],
+  ['2024-06-13','Qatar Investment Authority','10% Owner','I','S',19840073,6.78],
+  ['2024-05-24','Anthony Noto','Chief Executive Officer','M','B',28860,6.9214],
+  ['2024-05-23','Anthony Noto','Chief Executive Officer','M','B',28900,6.9181],
+  ['2024-05-03','Anthony Noto','Chief Executive Officer','M','B',28775,6.9],
+  ['2024-03-19','Jeremy Rishel','Chief Technology Officer','M','S',56273,6.93],
+  ['2023-12-19','Jeremy Rishel','Chief Technology Officer','M','S',56273,9.78],
+  ['2023-11-21','Anthony Noto','Chief Executive Officer','M','B',22500,6.5017],
+  ['2023-11-09','Anthony Noto','Chief Executive Officer','M','B',44000,6.7783],
+  ['2023-11-09','Christopher Lapointe','Chief Financial Officer','M','B',14950,6.69],
+  ['2023-11-06','Lauren Stafford Webb','Chief Marketing Officer','M','S',135832,7.5814],
+  ['2023-11-03','Aaron Webster','Chief Risk Officer','M','S',215299,8.0843],
+  ['2023-11-02','Chad Borton','President, SoFi Bank','M','S',152041,7.9925],
+  ['2023-09-01','Jeremy Rishel','Chief Technology Officer','M','S',53532,8.88],
+  ['2023-06-16','Chad Borton','President, SoFi Bank','M','S',90458,8.6779],
+  ['2023-06-15','Lauren Stafford Webb','Chief Marketing Officer','M','S',100000,9.288],
+  ['2023-06-14','Aaron Webster','Chief Risk Officer','M','S',200000,9.6906],
+  ['2023-05-15','Anthony Noto','Chief Executive Officer','M','B',108000,4.6732],
+  ['2023-05-09','Jeremy Rishel','Chief Technology Officer','M','S',200000,5.4656],
+  ['2023-05-05','Anthony Noto','Chief Executive Officer','M','B',30000,5.1171],
+  ['2023-05-05','Anthony Noto','Chief Executive Officer','M','B',19833,5.03],
+  ['2023-05-04','Anthony Noto','Chief Executive Officer','M','B',50000,4.7341],
+  ['2023-03-16','Anthony Noto','Chief Executive Officer','M','B',45000,5.3936],
+  ['2023-03-10','Anthony Noto','Chief Executive Officer','M','B',180000,5.5283],
+  ['2023-03-08','Jeremy Rishel','Chief Technology Officer','M','S',81000,6.4602],
+  ['2023-02-02','Robert Lavet','General Counsel','M','S',200000,8.062],
+  ['2022-12-16','Anthony Noto','Chief Executive Officer','M','B',300000,4.5934],
+  ['2022-12-15','Anthony Noto','Chief Executive Officer','M','B',225000,4.5921],
+  ['2022-12-13','Anthony Noto','Chief Executive Officer','M','B',318965,4.5833],
+  ['2022-12-12','Anthony Noto','Chief Executive Officer','M','B',132600,4.2934],
+  ['2022-12-09','Anthony Noto','Chief Executive Officer','M','B',682500,4.3634],
+  ['2022-09-12','Anthony Noto','Chief Executive Officer','M','B',1500,6.33],
+  ['2022-08-08','SoftBank Group','10% Owner','I','S',6683133,8.17],
+  ['2022-08-05','SoftBank Group','10% Owner','I','S',5381785,7.99],
+  ['2022-06-16','Anthony Noto','Chief Executive Officer','M','B',53540,5.5841],
+  ['2022-06-15','Anthony Noto','Chief Executive Officer','M','B',3000,5.94],
+  ['2022-06-14','Michelle Gill','Executive Vice President','M','S',50000,5.48],
+  ['2022-06-13','Harvey Schwartz','Director','B','B',53500,5.59],
+  ['2022-06-13','Anthony Noto','Chief Executive Officer','M','B',46500,5.3664],
+  ['2022-06-10','Anthony Noto','Chief Executive Officer','M','B',33455,5.979],
+  ['2022-06-09','Anthony Noto','Chief Executive Officer','M','B',47625,6.2975],
+  ['2022-06-08','Anthony Noto','Chief Executive Officer','M','B',16907,6.6491],
+  ['2022-06-06','Anthony Noto','Chief Executive Officer','M','B',21750,6.8975],
+  ['2022-06-01','Anthony Noto','Chief Executive Officer','M','B',21215,7.0713],
+  ['2022-05-27','Anthony Noto','Chief Executive Officer','M','B',3000,7.48],
+  ['2022-05-24','Anthony Noto','Chief Executive Officer','M','B',37056,6.7203],
+  ['2022-05-20','Anthony Noto','Chief Executive Officer','M','B',27000,7.3181],
+  ['2022-05-19','Anthony Noto','Chief Executive Officer','M','B',13500,7.7884],
+  ['2022-05-13','Harvey Schwartz','Director','B','B',15000,6.5],
+  ['2022-05-13','Anthony Noto','Chief Executive Officer','M','B',39000,6.5],
+  ['2022-03-17','Anthony Noto','Chief Executive Officer','M','B',34000,8.912],
+  ['2022-03-17','Harvey Schwartz','Director','B','B',58000,8.8376],
+  ['2022-03-17','Micah Heavener','Head of Operations','M','S',5000,8.0092],
+  ['2022-03-16','Anthony Noto','Chief Executive Officer','M','B',17375,8.6215],
+  ['2022-03-14','Micah Heavener','Head of Operations','M','B',5000,7.9899],
+  ['2022-03-14','Anthony Noto','Chief Executive Officer','M','B',19042,7.8473],
+  ['2022-03-11','Anthony Noto','Chief Executive Officer','M','B',16704,8.9467],
+  ['2022-03-10','Anthony Noto','Chief Executive Officer','M','B',15873,9.4424],
+  ['2022-03-07','Anthony Noto','Chief Executive Officer','M','B',15350,9.7264],
+  ['2022-03-04','Anthony Noto','Chief Executive Officer','M','B',15000,9.9639],
+  ['2022-03-04','Anthony Noto','Chief Executive Officer','M','B',3926,10.19],
+  ['2022-01-20','Micah Heavener','Head of Operations','M','S',2000,15],
+  ['2021-12-10','Aaron Webster','Chief Risk Officer','M','B',1000,14.9],
+  ['2021-11-30','Tom Hutton','Director','B','S',16800,18.5014],
+  ['2021-11-29','Tom Hutton','Director','B','S',103462,18.5155],
+  ['2021-11-18','Silver Lake (SLTA IV)','10% Owner','I','S',120725,21.6],
+  ['2021-11-18','Qatar Investment Authority','10% Owner','I','S',4687985,21.6],
+  ['2021-11-18','Silver Lake (SLTA IV)','10% Owner','I','S',7240653,21.6],
+  ['2021-11-18','SoftBank Group','10% Owner','I','S',22514038,21.6],
+  ['2021-11-18','Thomas Wilkes','Vice Chairman, Galileo','M','S',10076668,21.6],
+  ['2021-09-13','Thomas Wilkes','Vice Chairman, Galileo','M','S',1119413,15.16],
+  ['2021-09-07','Micah Heavener','Head of Operations','M','S',6250,16],
+  ['2021-08-26','Anthony Noto','Chief Executive Officer','M','B',7150,14.3063],
+  ['2021-08-25','Micah Heavener','Head of Operations','M','S',5000,14.97],
+  ['2021-08-24','Micah Heavener','Head of Operations','M','S',20000,14.83],
+  ['2021-08-23','Aaron Webster','Chief Risk Officer','M','B',1000,14.34],
+  ['2021-08-23','Anthony Noto','Chief Executive Officer','M','B',100,14.23],
+  ['2021-08-20','Anthony Noto','Chief Executive Officer','M','B',1000,14.05],
+  ['2021-08-19','Anthony Noto','Chief Executive Officer','M','B',400,13.99],
+  ['2021-08-19','Christopher Lapointe','Chief Financial Officer','M','B',3500,14.02],
+  ['2021-08-19','Anthony Noto','Chief Executive Officer','M','B',7150,13.9325],
+  ['2021-08-18','Anthony Noto','Chief Executive Officer','M','B',7150,14.4646],
+  ['2021-08-18','Anthony Noto','Chief Executive Officer','M','B',500,13.97],
+  ['2021-08-17','Anthony Noto','Chief Executive Officer','M','B',7150,13.7811],
+  ['2021-03-16','Ahmed Al-Hammadi','Director (QIA)','B','B',10000,8.4]
+];
+
+var INS_GRP_LABEL = { M:'Management', B:'Board', I:'10% Owner' };
+
+// Compact USD formatter for the insider tables ($1.2M, $984M, $12K).
+function insUsd(v){
+  var a = Math.abs(v);
+  if (a >= 1e9) return '$' + (v/1e9).toFixed(2) + 'B';
+  if (a >= 1e6) return '$' + (v/1e6).toFixed(1) + 'M';
+  if (a >= 1e3) return '$' + Math.round(v/1e3) + 'K';
+  return '$' + Math.round(v);
+}
+function insNum(n){ return Math.round(n).toLocaleString(); }
+
+// Aggregate buys/sells over a filtered slice of INSIDER_TX.
+function insAgg(pred){
+  var b = {n:0, sh:0, val:0}, s = {n:0, sh:0, val:0};
+  INSIDER_TX.forEach(function(t){
+    if (pred && !pred(t)) return;
+    var v = t[5] * t[6], side = (t[4] === 'B') ? b : s;
+    side.n++; side.sh += t[5]; side.val += v;
+  });
+  return { b:b, s:s };
+}
+
+// Active table filters (module-level; reset each time the body is built).
+var _insGroup = 'all', _insType = 'all', _insYear = 'all';
+
+function insVisibleRows(){
+  return INSIDER_TX.filter(function(t){
+    if (_insGroup !== 'all' && t[3] !== _insGroup) return false;
+    if (_insType  !== 'all' && t[4] !== _insType)  return false;
+    if (_insYear  !== 'all' && t[0].slice(0, 4) !== _insYear) return false;
+    return true;
+  });
+}
+
+// Net buy/(sell) cell: green "+$X" for net buying, red "($X)" for net selling.
+function insNet(v){
+  if (Math.round(v) === 0) return '<span class="ins-dash">—</span>';
+  if (v > 0) return '<span class="ins-pos">+' + insUsd(v) + '</span>';
+  return '<span class="ins-neg">(' + insUsd(-v) + ')</span>';
+}
+
+// Local-date YYYY-MM-DD (no timezone shift), used to build period cutoffs.
+function insYmd(d){
+  var m = d.getMonth() + 1, day = d.getDate();
+  return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (day < 10 ? '0' : '') + day;
+}
+
+// Trailing-year window for the second net column (1–5 yr; chosen via the header select).
+var _insYrCol = 1;
+
+function insYrOptions(){
+  var s = '';
+  for (var y = 1; y <= 5; y++) s += '<option value="'+y+'"'+(y===_insYrCol?' selected':'')+'>'+y+'Y</option>';
+  return s;
+}
+
+// Per-insider rollup table (respects the group filter, sorted by total $ traded).
+// Net columns: YTD (current calendar year) and trailing N years = buys $ − sells $.
+function insByPersonHTML(){
+  var now = new Date();
+  var ytdCut = now.getFullYear() + '-01-01';
+  var perCut = insYmd(new Date(now.getFullYear() - _insYrCol, now.getMonth(), now.getDate()));
+  var by = {};
+  INSIDER_TX.forEach(function(t){
+    if (_insGroup !== 'all' && t[3] !== _insGroup) return;
+    var k = t[1];
+    if (!by[k]) by[k] = { name:t[1], role:t[2], grp:t[3], b:{n:0,val:0}, s:{n:0,val:0}, ytd:0, per:0 };
+    var v = t[5]*t[6], side = (t[4]==='B') ? by[k].b : by[k].s;
+    side.n++; side.val += v;
+    var signed = (t[4]==='B' ? 1 : -1) * v;
+    if (t[0] >= ytdCut) by[k].ytd += signed;
+    if (t[0] >= perCut) by[k].per += signed;
+  });
+  var arr = Object.keys(by).map(function(k){ return by[k]; });
+  arr.sort(function(a,z){ return (z.b.val+z.s.val) - (a.b.val+a.s.val); });
+  var body = arr.map(function(p){
+    var buy  = p.b.n ? '<span class="ins-pos">'+insUsd(p.b.val)+'</span> <small>('+p.b.n+')</small>' : '<span class="ins-dash">—</span>';
+    var sell = p.s.n ? '<span class="ins-neg">'+insUsd(p.s.val)+'</span> <small>('+p.s.n+')</small>' : '<span class="ins-dash">—</span>';
+    return '<tr>'+
+      '<td class="ov-td-name">'+esc(p.name)+'</td>'+
+      '<td class="ins-role">'+esc(p.role)+'</td>'+
+      '<td class="ins-num">'+buy+'</td>'+
+      '<td class="ins-num">'+sell+'</td>'+
+      '<td class="ins-num ins-hl ins-hl-a">'+insNet(p.ytd)+'</td>'+
+      '<td class="ins-num ins-hl">'+insNet(p.per)+'</td>'+
+    '</tr>';
+  }).join('');
+  return '<table class="ov-table ins-table"><thead><tr>'+
+    '<th>Insider</th><th>Role</th>'+
+    '<th class="ins-num">Open-market buys</th><th class="ins-num">Open-market sells</th>'+
+    '<th class="ins-num ins-hl ins-hl-a">YTD buy/(sell)</th>'+
+    '<th class="ins-num ins-hl"><select class="ins-yrsel" aria-label="Trailing period">'+insYrOptions()+'</select> buy/(sell)</th>'+
+    '</tr></thead><tbody>'+body+'</tbody></table>';
+}
+
+// Detailed, filterable transaction table (rebuilt on every filter change).
+function insTxTableHTML(){
+  var rows = insVisibleRows();
+  if (!rows.length) return '<div class="ins-empty">No transactions match this filter.</div>';
+  var body = rows.map(function(t){
+    var v = t[5]*t[6];
+    var badge = (t[4]==='B')
+      ? '<span class="ins-badge ins-buy">Buy</span>'
+      : '<span class="ins-badge ins-sell">Sell</span>';
+    return '<tr>'+
+      '<td class="ins-date">'+esc(t[0])+'</td>'+
+      '<td class="ov-td-name">'+esc(t[1])+'</td>'+
+      '<td class="ins-role">'+esc(t[2])+'</td>'+
+      '<td>'+badge+'</td>'+
+      '<td class="ins-num">'+insNum(t[5])+'</td>'+
+      '<td class="ins-num">$'+t[6].toFixed(2)+'</td>'+
+      '<td class="ins-num">'+insUsd(v)+'</td>'+
+    '</tr>';
+  }).join('');
+  return '<div class="ins-count">'+rows.length+' transactions</div>'+
+    '<table class="ov-table ins-table"><thead><tr>'+
+      '<th>Date</th><th>Insider</th><th>Role</th><th>Type</th>'+
+      '<th class="ins-num">Shares</th><th class="ins-num">Price</th><th class="ins-num">Value</th>'+
+    '</tr></thead><tbody>'+body+'</tbody></table>';
+}
+
+function pill(group, val, label, active){
+  // Dedicated class (NOT .ave-pill) so the Valuation tab's .ave-pill click
+  // wiring in init() doesn't clobber these handlers.
+  var cls = (group === 'g') ? 'ins-gpill' : 'ins-tpill';
+  var attr = (group === 'g') ? 'data-insg' : 'data-inst';
+  return '<button type="button" class="ins-pill '+cls+(active?' active':'')+'" '+attr+'="'+val+'">'+esc(label)+'</button>';
+}
+
+// "Management" pane — insider open-market activity from SEC Form 4.
+function managementBody(c){
+  _insGroup = 'all'; _insType = 'all'; _insYrCol = 1; _insYear = 'all';
+  var h = '';
+  h += '<div class="ov-sec-h">Insider Activity — Open-Market Buys &amp; Sells</div>';
+
+  var noto    = insAgg(function(t){ return t[1] === 'Anthony Noto'; });
+  var mgmt    = insAgg(function(t){ return t[3] === 'M'; });
+  // Operating-management sells, excluding Thomas Wilkes' one-time 2021 Galileo
+  // founder lock-up sale ($235M), which is a post-acquisition unwind, not a signal.
+  var mgmtSellOp = insAgg(function(t){ return t[3] === 'M' && t[1] !== 'Thomas Wilkes'; }).s;
+  var inst    = insAgg(function(t){ return t[3] === 'I'; });
+
+  function kpi(l, v, d, dir){
+    return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(l)+'</div><div class="ov-kpi-v">'+v+'</div><div class="ov-kpi-d '+(dir||'muted')+'">'+esc(d)+'</div></div>';
+  }
+  h += '<div class="ov-kpis">'+
+    kpi('CEO Anthony Noto', insUsd(noto.b.val), noto.b.n+' buys · '+noto.s.n+' sells', 'up')+
+    kpi('Management buys', insUsd(mgmt.b.val), mgmt.b.n+' transactions', 'up')+
+    kpi('Management sells', insUsd(mgmtSellOp.val), mgmtSellOp.n+' txns · ex-founder lock-up', 'down')+
+    kpi('Pre-IPO owners sold', insUsd(inst.s.val), 'SoftBank · QIA · Silver Lake', 'muted')+
+  '</div>';
+
+  h += '<div class="ov-callout">SoFi\'s insider signal is unusually clean: CEO <b>Anthony Noto</b> has bought stock on the open market <b>'+noto.b.n+' times</b> and never sold a share. The large-dollar sales come almost entirely from early pre-IPO backers — <b>SoftBank</b>, the <b>Qatar Investment Authority</b> and <b>Silver Lake</b> ($'+(inst.s.val/1e9).toFixed(1)+'B combined) — plus a one-off $235M lock-up sale by Galileo founder <b>Thomas Wilkes</b> in 2021, unwinding stakes rather than operators losing conviction. Stripping those out, operating management has sold just '+insUsd(mgmtSellOp.val)+' over five years — mostly CTO Jeremy Rishel and EVP Kelli Keough selling in small, regular monthly increments typical of pre-scheduled 10b5-1 plans.</div>';
+
+  // Group filter — applies to BOTH tables below.
+  h += '<div class="ave-pills">'+
+    pill('g','all','All', true)+
+    pill('g','M','Management', false)+
+    pill('g','B','Board', false)+
+    pill('g','I','10% Owners', false)+
+  '</div>';
+
+  h += '<div class="ov-subh">By insider</div>';
+  h += '<div id="insByPersonWrap">'+insByPersonHTML()+'</div>';
+
+  h += '<div class="ov-subh">All transactions</div>';
+  h += '<div class="ave-pills">'+
+    pill('t','all','Buys & Sells', true)+
+    pill('t','B','Buys only', false)+
+    pill('t','S','Sells only', false)+
+  '</div>';
+  // Year filter: "All" pill + a year dropdown (2026 … 2021).
+  var yrOpts = '';
+  for (var yy = 2026; yy >= 2021; yy--) yrOpts += '<option value="'+yy+'">'+yy+'</option>';
+  h += '<div class="ave-pills">'+
+    '<button type="button" class="ins-pill ins-ypill active" data-insy="all">All</button>'+
+    '<select class="ins-ysel" aria-label="Filter by year">'+yrOpts+'</select>'+
+  '</div>';
+  h += '<div id="insTableWrap">'+insTxTableHTML()+'</div>';
+
+  h += '<div class="ov-foot">Source: SEC EDGAR Form 4 filings (CIK 0001818874), '+INSIDER_TX[INSIDER_TX.length-1][0]+' – '+INSIDER_TX[0][0]+'. Open-market buys (code P) and sells (code S) only; derivative transactions, grants, exercises and tax-withholding excluded. Value = shares × reported price per share.</div>';
+  return h;
+}
+
 function html(c){
   var h = '<div class="ov ov-sofi" data-brand="SOFI">';
   // Sub-tab bar
@@ -1736,6 +2070,7 @@ function html(c){
     '<button type="button" class="ovt-tab" data-ovt="members">Members</button>'+
     '<button type="button" class="ovt-tab" data-ovt="interest">Interest Income</button>'+
     '<button type="button" class="ovt-tab" data-ovt="fees">Fee Income</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="management">Management</button>'+
     '<button type="button" class="ovt-tab" data-ovt="valuation">Valuation</button>'+
     '<button type="button" class="ovt-tab" data-ovt="sensitivity">Sensitivity</button>'+
     '<button type="button" class="ovt-tab" data-ovt="peers">Peers</button>'+
@@ -1745,6 +2080,7 @@ function html(c){
   h += '<div class="ovt-pane" data-ovt="members" hidden>'+membersBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="interest" hidden>'+interestBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="fees" hidden>'+feeBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="management" hidden>'+managementBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="valuation" hidden>'+valuationBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="sensitivity" hidden>'+sensBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="peers" hidden>'+peersBody(c)+'</div>';
@@ -2728,6 +3064,52 @@ function init(c){
   root.querySelectorAll('.ovv-tab').forEach(function(btn){
     btn.onclick = function(){ showOvv(root, btn.getAttribute('data-ovv')); };
   });
+  // Management: insider-transaction filter pills (group + buy/sell).
+  function refreshInsTable(){
+    var wrap = root.querySelector('#insTableWrap');
+    if (wrap) wrap.innerHTML = insTxTableHTML();
+  }
+  // Re-render the "By insider" table and (re)wire its period <select>.
+  function refreshByPerson(){
+    var pw = root.querySelector('#insByPersonWrap');
+    if (!pw) return;
+    pw.innerHTML = insByPersonHTML();
+    var sel = pw.querySelector('.ins-yrsel');
+    if (sel) sel.onchange = function(){ _insYrCol = parseInt(sel.value, 10); refreshByPerson(); };
+  }
+  refreshByPerson();   // wire the select that html() already rendered
+  root.querySelectorAll('.ins-gpill').forEach(function(btn){
+    btn.onclick = function(){
+      _insGroup = btn.getAttribute('data-insg');
+      root.querySelectorAll('.ins-gpill').forEach(function(x){ x.classList.toggle('active', x === btn); });
+      // Group filter drives both tables.
+      refreshByPerson();
+      refreshInsTable();
+    };
+  });
+  root.querySelectorAll('.ins-tpill').forEach(function(btn){
+    btn.onclick = function(){
+      _insType = btn.getAttribute('data-inst');
+      root.querySelectorAll('.ins-tpill').forEach(function(x){ x.classList.toggle('active', x === btn); });
+      refreshInsTable();
+    };
+  });
+  // Year filter: "All" pill clears it; the dropdown picks a single year.
+  var ysel = root.querySelector('.ins-ysel');
+  root.querySelectorAll('.ins-ypill').forEach(function(btn){
+    btn.onclick = function(){
+      _insYear = 'all';
+      btn.classList.add('active');
+      if (ysel) ysel.classList.remove('active');
+      refreshInsTable();
+    };
+  });
+  if (ysel) ysel.onchange = function(){
+    _insYear = ysel.value;
+    ysel.classList.add('active');
+    root.querySelectorAll('.ins-ypill').forEach(function(x){ x.classList.remove('active'); });
+    refreshInsTable();
+  };
   // Valuation → Actuals vs. Estimates: metric selector pills.
   root.querySelectorAll('.ave-pill').forEach(function(btn){
     btn.onclick = function(){ switchAveMetric(root, btn.getAttribute('data-ave')); };

@@ -127,6 +127,18 @@ export async function lookupTicker(ticker) {
   return ok(data);
 }
 
+// ─── Covered Calls (Massive option chain proxy) ──────────────
+// Forwards one allowlisted resource to Massive via the covered-calls-massive
+// edge function (key injected server-side). Returns the raw Massive JSON.
+
+export async function coveredCallsQuote(resource, ticker, params) {
+  var { data, error } = await supabase.functions.invoke('covered-calls-massive', {
+    body: { resource: resource, ticker: ticker, params: params || {} },
+  });
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
 // ─── Company Resources ──────────────────────────────────────
 
 export async function fetchResources(companyId) {

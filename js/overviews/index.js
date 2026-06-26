@@ -11,6 +11,7 @@ import { seaOverview } from './sea.js';
 import { mastercardOverview } from './mastercard.js';
 import { lyftOverview } from './lyft.js';
 import { uberOverview } from './uber.js';
+import { nvidiaOverview } from './nvidia.js';
 
 var OVERVIEWS = {
   RELY: remitlyOverview,
@@ -22,6 +23,7 @@ var OVERVIEWS = {
   MA: mastercardOverview,
   LYFT: lyftOverview,
   UBER: uberOverview,
+  NVDA: nvidiaOverview,
 };
 
 // Returns the overview module for a ticker, or null if none is built yet.

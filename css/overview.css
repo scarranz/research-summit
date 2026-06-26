@@ -1101,6 +1101,8 @@
 .ov-flow-earn.earn-none  { background: #F1F3F7; color: var(--mu); border: 1px dashed var(--bdr); }
 .ov-flow-earn.earn-visa  { background: #FEF6E0; color: #8A6A00; border: 1px solid var(--brand-2); }
 .ov-flow-earn.earn-split { background: #ECF6EF; color: #1B6B43; border: 1px solid #BFE3CC; }
+.ov-flow-earn.earn-pos { background: #ECF6EF; color: #1B6B43; border: 1px solid #BFE3CC; }
+.ov-flow-earn.earn-neg { background: #FBEBEA; color: #B23B30; border: 1px solid #F2C9C4; }
 .ov-flow-ctrl { display: flex; align-items: center; gap: 8px; margin-top: 13px; flex-wrap: wrap; }
 .ov-flow-btn {
   border: 1px solid var(--brand); background: var(--brand); color: #fff;

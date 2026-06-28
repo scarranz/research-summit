@@ -596,6 +596,30 @@
 }
 .ov-msft .ov-snap { border-top: 3px solid var(--brand-2); }
 
+/* Meta brand accent — Meta blue (#0866FF) + Reality Labs violet (#8B5CF6). */
+.ov-meta {
+  --brand: #0866FF;
+  --brand-soft: #E7F0FF;
+  --brand-2: #8B5CF6;
+}
+.ov-meta .ov-snap { border-top: 3px solid var(--brand); }
+.ov-meta .ovt-tabs {
+  display: inline-flex; gap: 4px; border-bottom: none;
+  background: var(--surface); border: 1px solid var(--bdr);
+  border-radius: 11px; padding: 4px; margin: 0 0 22px;
+}
+.ov-meta .ovt-tab {
+  border: none; border-radius: 8px; text-transform: none; letter-spacing: 0;
+  font-size: 13px; font-weight: 600; color: var(--mu);
+  padding: 8px 16px; margin-bottom: 0; transition: background .15s, color .15s;
+}
+.ov-meta .ovt-tab:hover { color: var(--navy); background: rgba(8,102,255,0.06); }
+.ov-meta .ovt-tab.active {
+  color: #fff; background: var(--brand); border-bottom: none;
+  box-shadow: 0 1px 3px rgba(8,102,255,0.28);
+}
+.ov-meta .ovt-tab.active:hover { color: #fff; }
+
 /* Live-price banner (shared) — informational quote via the get-quote edge function. */
 .ov-live {
   display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
@@ -613,7 +637,10 @@
 .ov-live-ch { font-weight: 600; }
 .ov-live-ch.up { color: #1E9E62; }
 .ov-live-ch.down { color: #C0392B; }
+.ov-live-mc { font-weight: 600; color: var(--navy, #1E2733); font-size: 12px; }
 .ov-live-ts { color: var(--mu, #8A93A0); font-size: 12px; margin-left: auto; }
+/* Hidden state must win over .ov-live's display:flex (else an empty banner shows). */
+.ov-live[hidden] { display: none; }
 
 /* Lyft brand accent — Lyft pink (#E6007A) + purple (#6B2BD9). */
 .ov-lyft {
@@ -1075,6 +1102,8 @@
 .ov-flow-earn.earn-none  { background: #F1F3F7; color: var(--mu); border: 1px dashed var(--bdr); }
 .ov-flow-earn.earn-visa  { background: #FEF6E0; color: #8A6A00; border: 1px solid var(--brand-2); }
 .ov-flow-earn.earn-split { background: #ECF6EF; color: #1B6B43; border: 1px solid #BFE3CC; }
+.ov-flow-earn.earn-pos { background: #ECF6EF; color: #1B6B43; border: 1px solid #BFE3CC; }
+.ov-flow-earn.earn-neg { background: #FBEBEA; color: #B23B30; border: 1px solid #F2C9C4; }
 .ov-flow-ctrl { display: flex; align-items: center; gap: 8px; margin-top: 13px; flex-wrap: wrap; }
 .ov-flow-btn {
   border: 1px solid var(--brand); background: var(--brand); color: #fff;

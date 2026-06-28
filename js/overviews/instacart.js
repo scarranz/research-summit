@@ -154,6 +154,30 @@ var HEADWINDS = [
   '<b>Thin grocery economics & retailer concentration.</b> Low category margins and dependence on a few large banners — <i>mechanism:</i> a big retailer leaving (or building in-house) can move volume materially.',
 ];
 
+// ─── History & Milestones (sourced; dates verified on the load-bearing ones) ──
+var TIMELINE = [
+  { y:'2012', t:'<b>Founded</b> in San Francisco by <b>Apoorva Mehta</b> (ex-Amazon) with Max Mullen &amp; Brandon Leonardo; joins Y Combinator (S12).',
+    d:'Mehta, a former Amazon supply-chain engineer, built an asset-light grocery-delivery marketplace — customers order from partner retailers and a gig "shopper" picks and delivers. Instacart owned <b>no stores or inventory</b> from day one — the economics that still define it. He famously got into Y Combinator late by using the app to deliver a six-pack to a partner.' },
+  { y:'2014', t:'<b>Whole Foods</b> becomes the first national retail partner; Series B ($44M, Andreessen Horowitz) scales one-hour delivery.' },
+  { y:'2015', t:'Reaches a <b>$2B valuation</b> (Series C, Kleiner Perkins) — the unicorn moment; the partner-retailer model becomes the path to scale.' },
+  { y:'2017', t:'<b>Amazon buys Whole Foods</b> — rival grocers rush to Instacart; Kroger &amp; Albertsons deals drive the <b>platform pivot</b>.',
+    d:'Amazon\'s $13.7B Whole Foods acquisition (Aug 2017) spooked every other grocer, who rushed to Instacart to power their own delivery (Kroger, Albertsons, Costco). This is when Instacart\'s identity shifted from a consumer app toward a <b>B2B platform</b> powering retailers\' e-commerce — the seed of today\'s Enterprise motion. (Whole Foods itself ended its Instacart partnership in 2019.)' },
+  { y:'2020', t:'<b>COVID-19 demand explosion</b> — orders surge ~150%+ YoY; first profitability; <b>self-serve advertising</b> launches.',
+    d:'The pandemic pulled forward years of online-grocery adoption almost overnight; Instacart hit its first profitable month around April 2020 and scaled toward ~750,000 shoppers. Critically, it launched a <b>self-serve ad platform</b> (sponsored products) in May 2020 — seeding the high-margin advertising business that is now the profit engine.' },
+  { y:'Mar 2021', t:'<b>Valuation peaks at $39B</b> — the all-time high and last major private round.' },
+  { y:'Aug 2021', t:'<b>Fidji Simo</b> (ex-Facebook, architect of FB\'s mobile-ads business) becomes <b>CEO</b>; founder Mehta moves to Executive Chairman.',
+    d:'Bringing in Simo — who built Facebook\'s mobile advertising and monetization machine — was an explicit signal of the strategy: pivot from pure delivery toward high-margin <b>advertising</b> and <b>enterprise software</b> ahead of an eventual IPO. That pivot defines the company\'s margin story today.' },
+  { y:'2021–22', t:'Acquisition spree builds the platform: <b>Caper AI</b> (~$350M, smart carts), FoodStorm, Eversight, Rosie; launches <b>Instacart Platform / Carrot</b>.',
+    d:'Caper AI (computer-vision smart carts) pushed Instacart into the <b>physical store</b> and on-cart retail media; FoodStorm (catering / order-ahead), Eversight (AI pricing) and Rosie (e-commerce for independent grocers) rounded out the retailer-tech suite. All were folded under "Instacart Platform" and the <b>Carrot</b> brand (Carrot Ads, Warehouses, Insights) in Mar 2022 — the Enterprise motion made explicit.' },
+  { y:'Sep 2023', t:'<b>IPO</b> on Nasdaq at <b>$30.00</b> (ticker CART) — ~$10B valuation, ~75% below the $39B peak; profitable &amp; FCF-positive going in.',
+    d:'A rare profitable 2023 tech IPO (PepsiCo took a $175M concurrent stake). The ~$10B valuation was a stark "down round" vs the 2021 $39B peak — emblematic of the broader tech-valuation reset. Shares opened ~$42, faded to close ~+12%, and slipped below the $30 IPO price within about a week.' },
+  { y:'2024', t:'<b>Advertising tops $1B</b>; <b>Uber Eats</b> powers restaurant delivery on Instacart; shoppable YouTube ads; first share buybacks.' },
+  { y:'2025', t:'<b>CEO transition:</b> Fidji Simo leaves to lead applications at <b>OpenAI</b>; <b>Chris Rogers</b> (ex-Apple, P&amp;G; CBO) becomes CEO (Aug 15); Simo stays Chair.',
+    d:'OpenAI hired Simo as "CEO of Applications" (May 2025). The board promoted <b>Chris Rogers</b> — Chief Business Officer through the growth years, earlier ~11 years at Apple and before that P&amp;G — to CEO effective Aug 15, 2025, with Simo remaining Chair of the board. The ads/enterprise strategy continues unchanged.' },
+  { y:'Dec 2025', t:'Launches inside <b>OpenAI\'s ChatGPT</b> with Instant Checkout — first grocery partner with embedded end-to-end shopping across 1,800+ retailers.' },
+];
+var TL_NOTE = 'Milestones from Instacart press releases and public reporting; load-bearing dates (IPO, CEO changes, the $39B peak, acquisitions) verified against primary sources.';
+
 var SOURCES = 'Sources: Instacart (Maplebear Inc., NASDAQ: CART) — KPI &amp; financial charts (GTV, orders, transaction &amp; advertising revenue, adjusted EBITDA) are <b>historical actuals from the Summit DCF model (FY2021–2025)</b>; qualitative content from public filings &amp; investor materials (10-K / quarterly results, S-1). Some segment splits are the strategic view, not the two reported revenue lines. Forecast years are excluded by design.';
 
 // ─── KPIs & Financials (HISTORICAL ONLY, from the Summit DCF model) ──────────
@@ -291,6 +315,13 @@ function html(c){
   h += sec('Tailwinds & Headwinds',
     '<div class="ov-grid2"><div class="ov-wind ov-wind-up"><div class="ov-wind-h">Tailwinds</div>'+bullets(TAILWINDS)+'</div>'+
     '<div class="ov-wind ov-wind-down"><div class="ov-wind-h">Headwinds</div>'+bullets(HEADWINDS)+'</div></div>');
+  h += sec('History & Milestones',
+    '<div class="ov-diagram-cap" style="margin:0 0 12px">From a 2012 grocery-delivery app to a multi-sided platform with advertising and enterprise software. <b>Tap any milestone</b> with "Read more" for detail.</div>'+
+    '<div class="ov-timeline">'+TIMELINE.map(function(t,i){
+      var more=t.d?'<div class="ov-tl-more">Read more ›</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':'';
+      return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>';
+    }).join('')+'</div>'+
+    '<div class="ov-fynote" style="margin-top:6px">'+esc(TL_NOTE)+'</div>');
   h += '</div>'; // end overview
 
   // ══ PANE 2 — Marketplace ══
@@ -373,6 +404,7 @@ function init(c){
     var parts=key.split(':'), kind=parts[0], id=parts.slice(1).join(':');
     if (kind==='party'){ var p=PARTY_DETAIL[id]; return p && { t:p.t, h:p.h }; }
     if (kind==='sub'){ var s=findSub(id); return s && { t:s.n+' <span class="ov-modal-sub">'+esc(s.rev)+'</span>', h:subDetailHtml(s) }; }
+    if (kind==='hist'){ var ht=TIMELINE[+id]; return ht && ht.d ? { t:ht.y, h:ht.d } : null; }
     return null;
   }
   root.querySelectorAll('[data-detail]').forEach(function(el){

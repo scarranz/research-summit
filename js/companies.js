@@ -1,7 +1,7 @@
 // companies.js — grid, detail view, add-company modal
 // All companies are loaded from Supabase. No hardcoded data.
 import { FRAMEWORK, ALL_STOCKS } from './portal-data.js';
-import { fetchCompanies, insertCompany, lookupTicker, searchCompany, fetchResources, insertResource, updateResource, deleteResource, uploadFile, getFileUrl, fetchExecutives, fetchInsiderTransactions, syncManagement, fetchAnalystRatings, syncRatings, fetchSegments, syncSegments } from './api.js';
+import { fetchCompanies, insertCompany, lookupTicker, searchCompany, fetchResources, insertResource, updateResource, deleteResource, uploadFile, getFileUrl, fetchExecutives, fetchInsiderTransactions, syncManagement, fetchAnalystRatings, syncRatings, fetchSegments, syncSegments, liveQuote } from './api.js';
 import { getOverview } from './overviews/index.js';
 
 let _companies = []; // companies loaded from Supabase
@@ -936,7 +936,9 @@ function openCo(tk){
   document.getElementById('co-name').textContent=c.name;
   document.getElementById('co-sub').innerHTML=esc(c.ticker)+' &middot; '+(esc(c.group_name)||'—');
   var px = c.price != null ? '$'+Number(c.price).toFixed(2) : '—';
-  document.getElementById('co-px').textContent=px;
+  document.getElementById('co-px').textContent=px;             // static fallback (DB price)
+  var pxsub=document.getElementById('co-pxsub'); if(pxsub) pxsub.innerHTML='';
+  updateLiveHeader(c);                                         // then refresh with a live Massive quote
   renderOverview(c);
   renderCoAnalysis(c.id, c.ticker);
   renderCoLinks(c);
@@ -947,6 +949,31 @@ function openCo(tk){
   document.getElementById('co-detailview').style.display='block';
   coTab('overview');
   window.scrollTo(0,0);
+}
+
+// ─── Live header quote (Massive) ─────────────────────────────
+// Replaces the static DB price in the header with a live quote (price + change% +
+// market cap) for any ticker Massive covers. Falls back to the static price on any
+// failure (not logged in, foreign listing, vendor hiccup).
+var _openTicker = null;
+function coFmtBig(m){ if(m==null) return '—'; var a=Math.abs(m); if(a>=1e12) return '$'+(a/1e12).toFixed(2)+'T'; if(a>=1e9) return '$'+(a/1e9).toFixed(a/1e9>=100?0:1)+'B'; return '$'+Math.round(a/1e6)+'M'; }
+function updateLiveHeader(c){
+  _openTicker = c.ticker;
+  var pxEl=document.getElementById('co-px'), sub=document.getElementById('co-pxsub');
+  if(!pxEl) return;
+  liveQuote(c.ticker).then(function(res){
+    if(_openTicker!==c.ticker) return;                  // user navigated away — ignore stale result
+    var q=(res && res.success) ? res.data : null;
+    if(!q || q.price==null) return;                     // keep the static DB price
+    pxEl.textContent='$'+Number(q.price).toFixed(2);
+    if(sub){
+      var bits=[];
+      if(q.changePct!=null){ var up=q.changePct>=0; bits.push('<span class="co-px-ch '+(up?'up':'down')+'">'+(up?'▲ +':'▼ −')+Math.abs(q.changePct).toFixed(2)+'%</span>'); }
+      if(q.marketCap!=null) bits.push('<span class="co-px-mc">'+coFmtBig(q.marketCap)+' mkt cap</span>');
+      bits.push('<span class="co-px-live">live · Massive</span>');
+      sub.innerHTML=bits.join('');
+    }
+  }).catch(function(){ /* keep static price */ });
 }
 
 function closeCo(){

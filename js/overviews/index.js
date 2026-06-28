@@ -3,19 +3,31 @@
 // To add one: create js/overviews/<name>.js exporting { html(company), init(company) },
 // then map its ticker here.
 import { remitlyOverview } from './remitly.js';
+import { sofiOverview } from './sofi.js';
 import { msftOverview } from './microsoft.js';
 import { bbbOverview } from './bbb.js';
 import { visaOverview } from './visa.js';
 import { seaOverview } from './sea.js';
 import { instacartOverview } from './instacart.js';
+import { metaOverview } from './meta.js';
+import { mastercardOverview } from './mastercard.js';
+import { lyftOverview } from './lyft.js';
+import { uberOverview } from './uber.js';
+import { nvidiaOverview } from './nvidia.js';
 
 var OVERVIEWS = {
   RELY: remitlyOverview,
+  SOFI: sofiOverview,
   MSFT: msftOverview,
   TBBB: bbbOverview,
   V: visaOverview,
   SE: seaOverview,
   CART: instacartOverview,
+  META: metaOverview,
+  MA: mastercardOverview,
+  LYFT: lyftOverview,
+  UBER: uberOverview,
+  NVDA: nvidiaOverview,
 };
 
 // Returns the overview module for a ticker, or null if none is built yet.

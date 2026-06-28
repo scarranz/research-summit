@@ -12,3 +12,10 @@ data.zip
 docs/fund-returns-spec.md
 # Local dev helper
 dev-server.ps1
+# Massive API key for any local dashboard proxy — never commit (repo is public)
+**/.massive-key
+# Local-only covered-calls dashboard scratch dirs (gitignored keys live here)
+playground/
+
+# Reference screenshots (Chip Stock Investor) — local only, do not commit
+nvidia-map-reference/

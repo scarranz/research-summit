@@ -37,6 +37,22 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders(req) });
   }
 
+  // Verify the caller is an authenticated user
+  const authHeader = req.headers.get("authorization") || "";
+  const token = authHeader.replace("Bearer ", "");
+  if (!token) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+    });
+  }
+  const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+  const { data: { user }, error: authErr } = await supabaseAuth.auth.getUser(token);
+  if (authErr || !user) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders(req), "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const { ticker, companyId } = await req.json();
     if (!ticker || !companyId) {
@@ -56,7 +72,7 @@ serve(async (req) => {
       });
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    const supabase = supabaseAuth;
 
     // ─── 1. Fetch insider holders from Fiscal.ai ────────────
     const holdersResp = await fiscalGet("/v1/company/ownership/insider/holders", {

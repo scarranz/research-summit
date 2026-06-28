@@ -127,6 +127,46 @@ export async function lookupTicker(ticker) {
   return ok(data);
 }
 
+// ─── Covered Calls (Massive option chain proxy) ──────────────
+// Forwards one allowlisted resource to Massive via the covered-calls-massive
+// edge function (key injected server-side). Returns the raw Massive JSON.
+
+export async function coveredCallsQuote(resource, ticker, params) {
+  var { data, error } = await supabase.functions.invoke('covered-calls-massive', {
+    body: { resource: resource, ticker: ticker, params: params || {} },
+  });
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+// Live market data for a ticker via Massive (covered-calls-massive). Combines
+// snapshot (live quote) + details (shares outstanding) + ratios (market cap / EV).
+// Market cap is computed price × shares (most current), falling back to
+// ratios.market_cap. Net debt = enterprise_value − market_cap (negative = net cash).
+// Returns { price, changePct, marketCap, ev, netDebt, shares } with null for any
+// unavailable field; data is null if no price could be sourced. Single source of
+// truth for live quotes (used by the company header and per-company Overviews).
+export async function liveQuote(ticker) {
+  function num(v) { return (typeof v === 'number' && isFinite(v)) ? v : null; }
+  async function mf(resource) {
+    var r = await coveredCallsQuote(resource, ticker).catch(function () { return null; });
+    return (r && r.success) ? r.data : null;
+  }
+  var parts = await Promise.all([mf('snapshot'), mf('ratios'), mf('details')]);
+  var snap = parts[0], rat = parts[1], det = parts[2];
+  var tk = snap && (snap.ticker || (snap.results && snap.results.ticker));
+  var price = tk ? (num(tk.lastTrade && tk.lastTrade.p) || num(tk.min && tk.min.c) || num(tk.day && tk.day.c) || num(tk.prevDay && tk.prevDay.c)) : null;
+  var r0 = (rat && rat.results && rat.results[0]) || {};
+  var d0 = (det && det.results) || {};
+  if (price == null) price = num(r0.price);
+  if (price == null) return ok(null);
+  var shares = num(d0.weighted_shares_outstanding) || num(d0.share_class_shares_outstanding);
+  var marketCap = (shares != null) ? price * shares : num(r0.market_cap);
+  var ev = num(r0.enterprise_value);
+  var netDebt = (ev != null && marketCap != null) ? ev - marketCap : null;
+  return ok({ price: price, changePct: tk ? num(tk.todaysChangePerc) : null, marketCap: marketCap, ev: ev, netDebt: netDebt, shares: shares });
+}
+
 // ─── Company Resources ──────────────────────────────────────
 
 export async function fetchResources(companyId) {

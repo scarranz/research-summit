@@ -473,6 +473,132 @@
 .ovt-tab.active { color: var(--brand); border-bottom-color: var(--brand); }
 .ovt-pane[hidden] { display: none; }
 
+/* ── Nested sub-tabs (pill style) inside a pane, e.g. TBBB Stores → SSS / Store Growth ── */
+.ovt-subtabs {
+  display: inline-flex;
+  gap: 3px;
+  background: var(--brand-soft);
+  border: 1px solid var(--bdr);
+  border-radius: 9px;
+  padding: 4px;
+  margin: 0 0 20px;
+}
+.ovt-subtab {
+  background: none;
+  border: none;
+  color: var(--mu);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 7px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.ovt-subtab:hover { color: var(--navy); }
+.ovt-subtab.active { background: var(--brand); color: #fff; }
+.ovt-subpane[hidden] { display: none; }
+
+/* ── BİM Blueprint (TBBB) — alignment banner, comparison table, cards ── */
+.bim-banner {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  flex-wrap: wrap; background: var(--brand-soft); border: 1px solid var(--bdr);
+  border-radius: 12px; padding: 18px 16px; margin: 4px 0 8px;
+}
+.bim-stat { text-align: center; flex: 1 1 160px; max-width: 220px; }
+.bim-stat-v { font-size: 30px; font-weight: 800; color: var(--navy); line-height: 1.05; }
+.bim-stat-l { font-size: 11.5px; color: var(--mu); margin-top: 5px; line-height: 1.35; }
+.bim-arrow { font-size: 24px; font-weight: 700; color: var(--mu); flex: none; }
+
+.bim-stores-wrap { height: 360px; }
+.bim-margins-wrap { height: 300px; }
+
+/* Comparison table */
+.bim-cmp { width: 100%; border-collapse: collapse; margin: 2px 0 6px; font-size: 13px; }
+.bim-cmp th, .bim-cmp td { padding: 9px 12px; text-align: center; border-bottom: 1px solid var(--bdr); }
+.bim-cmp thead th { font-size: 12px; color: var(--mu); font-weight: 700; vertical-align: bottom; }
+.bim-cmp thead th span { display: block; font-size: 10.5px; font-weight: 500; color: var(--mu); margin-top: 2px; }
+.bim-cmp th:first-child, .bim-cmp td.bim-k { text-align: left; }
+.bim-cmp td.bim-k { font-weight: 600; color: var(--navy); }
+.bim-cmp td { color: var(--navy); }
+.bim-cmp .bim-col-3b { background: var(--brand-soft); }
+.bim-cmp thead th.bim-col-3b { color: var(--brand); border-bottom: 2px solid var(--brand); }
+.bim-cmp tbody tr:hover td { background: rgba(0,0,0,0.015); }
+.bim-cmp tbody tr:hover td.bim-col-3b { background: #FBDED9; }
+
+/* Read-through cards */
+.bim-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 2px 0 4px; }
+.bim-card { border: 1px solid var(--bdr); border-left: 3px solid var(--brand); border-radius: 10px; padding: 14px 16px; background: #fff; }
+.bim-card-h { font-size: 14px; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
+.bim-card-b { font-size: 12.5px; color: var(--navy); line-height: 1.55; }
+
+@media (max-width: 720px){
+  .bim-cards { grid-template-columns: 1fr; }
+  .bim-cmp { font-size: 12px; }
+  .bim-cmp th, .bim-cmp td { padding: 7px 7px; }
+}
+
+/* ── Competitive Landscape (TBBB) — choropleth + scale + profile cards ── */
+.clz-modes { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 14px; }
+.clz-mode {
+  background: #fff; border: 1px solid var(--bdr); color: var(--mu);
+  font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;
+  letter-spacing: .3px; padding: 7px 14px; border-radius: 7px; cursor: pointer;
+  transition: all .15s;
+}
+.clz-mode:hover { color: var(--navy); border-color: var(--brand); }
+.clz-mode.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+.clz-mapwrap { position: relative; width: 100%; max-width: 760px; margin: 0 auto; }
+.clz-map { display: block; width: 100%; height: auto; }
+.clz-st {
+  fill: #EDF1F4; stroke: #fff; stroke-width: 1.1;
+  transition: fill .18s, stroke .12s; cursor: pointer;
+}
+.clz-st.hot { stroke: var(--navy); stroke-width: 1.8; }
+
+.clz-tip {
+  position: absolute; z-index: 5; pointer-events: none;
+  background: #fff; border: 1px solid var(--bdr); border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(16,24,40,.14); padding: 8px 11px; min-width: 120px;
+}
+.clz-tip-st { font-size: 12.5px; font-weight: 700; color: var(--navy); margin-bottom: 5px; }
+.clz-tip-chs { display: flex; flex-wrap: wrap; gap: 5px 9px; }
+.clz-tip-ch { display: inline-flex; align-items: center; font-size: 11.5px; font-weight: 600; color: var(--navy); }
+.clz-tip-ch i { width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; }
+.clz-tip-none { font-size: 11.5px; color: var(--mu); }
+
+.clz-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 16px; margin: 12px 0 0; }
+.clz-lg { display: inline-flex; align-items: center; font-size: 12px; color: var(--navy); }
+.clz-lg i { width: 13px; height: 13px; border-radius: 3px; margin-right: 6px; border: 1px solid rgba(0,0,0,.06); }
+
+/* Scale bars */
+.clz-bars { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 2px; }
+.clz-bar-row { display: grid; grid-template-columns: 64px 1fr 72px; align-items: center; gap: 12px; }
+.clz-bar-lab { display: inline-flex; align-items: center; font-size: 13px; font-weight: 700; color: var(--navy); }
+.clz-bar-lab i { width: 11px; height: 11px; border-radius: 3px; margin-right: 7px; }
+.clz-bar-track { background: #EDF1F4; border-radius: 6px; height: 22px; overflow: hidden; }
+.clz-bar-fill { height: 100%; border-radius: 6px; transition: width .3s; }
+.clz-bar-val { font-size: 13px; font-weight: 700; color: var(--navy); text-align: right; }
+
+/* Profile cards */
+.clz-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 2px 0 4px; }
+.clz-card { border: 1px solid var(--bdr); border-top: 3px solid var(--brand); border-radius: 10px; padding: 14px 15px; background: #fff; }
+.clz-card-h { display: flex; align-items: center; font-size: 14px; font-weight: 800; color: var(--navy); }
+.clz-dot { width: 11px; height: 11px; border-radius: 50%; margin-right: 8px; flex: none; }
+.clz-card-parent { font-size: 12px; color: var(--mu); margin: 3px 0 10px; }
+.clz-kv { display: flex; justify-content: space-between; align-items: baseline; font-size: 12.5px; padding: 4px 0; border-bottom: 1px dashed var(--bdr); }
+.clz-kv span { color: var(--mu); }
+.clz-kv b { color: var(--navy); }
+.clz-card-fmt { font-size: 12px; color: var(--navy); margin: 10px 0 0; line-height: 1.5; }
+.clz-card-edge { font-size: 12.5px; color: var(--navy); margin: 8px 0 0; line-height: 1.55; }
+
+@media (max-width: 760px){
+  .clz-cards { grid-template-columns: 1fr; }
+}
+
 /* The SSS chart wants more vertical room than the default chart card.
    Compound selector so it beats `.ov-chart-wrap { height:200px }` regardless of order. */
 .ov-chart-wrap.ovt-sss-wrap { height: 440px; }

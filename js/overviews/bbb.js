@@ -1,11 +1,15 @@
 // overviews/bbb.js — custom Overview for BBB Foods Inc. (NYSE: TBBB / "Tiendas 3B")
 // Built individually per the portal's per-company Overview model (see CLAUDE.md).
 //
-// This module renders two internal sub-tabs inside the Overview pane:
-//   1. Overview — company profile (figures from the FY2025 Form 20-F, in MXN / Ps.)
-//   2. SSS      — Same Store Sales growth, TBBB vs. ANTAD, quarterly (replicating the
-//                 chart in the 4Q24 and 1Q26 earnings presentations)
+// This module renders internal sub-tabs inside the Overview pane:
+//   1. Overview              — company profile (FY2025 Form 20-F figures, MXN / Ps.)
+//   2. Stores                — nested sub-tabs: SSS (vs. ANTAD) and Store Growth
+//   3. Competitive Landscape — 3B vs. Neto vs. BARA (see ./bbb-landscape.js)
+//   4. Product Mix / Unit Economics
 // The company does not report EBITDA in its filing text, so it is intentionally omitted.
+
+import { bbbLandscape } from './bbb-landscape.js';
+import { bbbBim } from './bbb-bim.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -299,21 +303,31 @@ function overviewBody(c){
   return h;
 }
 
-// "Stores" sub-tab body — the SSS line chart plus the interactive store-growth chart.
+// "Stores" sub-tab body — split into two nested sub-tabs: SSS and Store Growth.
 function storesBody(c){
   var maxI = STORE_YEARS.length - 1;
   var h = '';
 
-  // 1 — Same Store Sales chart (kept).
-  h += '<div class="ov-chart-card ovt-sss-card">'+
+  // Nested sub-tab bar (inside the Stores pane).
+  h += '<div class="ovt-subtabs">'+
+    '<button type="button" class="ovt-subtab active" data-ovst="sss">SSS</button>'+
+    '<button type="button" class="ovt-subtab" data-ovst="growth">Store Growth</button>'+
+  '</div>';
+
+  // ── Sub-tab 1: SSS — Same Store Sales growth, TBBB vs. ANTAD ──
+  var s = '';
+  s += '<div class="ov-chart-card ovt-sss-card">'+
     '<div class="ov-chart-t">Same Store Sales Growth — TBBB vs. ANTAD <span>(quarterly, %)</span></div>'+
     '<div class="ov-chart-wrap ovt-sss-wrap"><canvas id="bbbChartSSS"></canvas></div>'+
   '</div>';
-  h += '<div class="ov-foot">'+esc(SSS_NOTE)+'</div>';
+  s += '<div class="ov-foot">'+esc(SSS_NOTE)+'</div>';
+  h += '<div class="ovt-subpane" data-ovst="sss">'+s+'</div>';
 
-  // 2 — Interactive store count growth.
-  h += '<div class="ov-sec-h ovt-store-h">Store Count Growth</div>';
-  h += '<div class="sg-controls">'+
+  // ── Sub-tab 2: Store Growth — store-count expansion + OXXO age comparison ──
+  var g = '';
+  // 1 — Interactive store count growth.
+  g += '<div class="ov-sec-h ovt-store-h">Store Count Growth</div>';
+  g += '<div class="sg-controls">'+
     '<div class="sg-slider">'+
       '<div class="sg-track"><div class="sg-fill" id="sgFill"></div></div>'+
       '<input type="range" id="sgMin" min="0" max="'+maxI+'" value="0" step="1" aria-label="Start year">'+
@@ -322,16 +336,16 @@ function storesBody(c){
     '<div class="sg-ends"><span>'+esc(STORE_YEARS[0])+'</span><span>'+esc(STORE_YEARS[maxI])+'</span></div>'+
     '<div class="sg-readout" id="sgReadout"></div>'+
   '</div>';
-  h += '<div class="ov-chart-card">'+
+  g += '<div class="ov-chart-card">'+
     '<div class="ov-chart-t">Total Stores <span>(year-end · light bars = estimate · red = YoY growth)</span></div>'+
     '<div class="ov-chart-wrap ovt-stores-wrap"><canvas id="bbbChartStores"></canvas></div>'+
   '</div>';
-  h += '<div class="ov-foot">'+esc(STORE_NOTE)+'</div>';
+  g += '<div class="ov-foot">'+esc(STORE_NOTE)+'</div>';
 
-  // 3 — Expansion vs. OXXO at the same company age.
-  h += '<div class="ov-sec-h ovt-store-h">Store Expansion vs. OXXO — Same Company Age</div>';
-  h += bullets(VS_CTX);
-  h += '<div class="ov-chart-card">'+
+  // 2 — Expansion vs. OXXO at the same company age.
+  g += '<div class="ov-sec-h ovt-store-h">Store Expansion vs. OXXO — Same Company Age</div>';
+  g += bullets(VS_CTX);
+  g += '<div class="ov-chart-card">'+
     '<div class="ov-chart-t">Stores by Company Age — OXXO vs. Tiendas 3B <span>(ages since first store; final 3B point = stated white space · hollow / dashed = estimated / projected)</span></div>'+
     // OXXO logo + "where they are now" callout.
     '<div class="ovt-oxxo-note">'+
@@ -344,7 +358,8 @@ function storesBody(c){
       '<span class="ovt-lg"><i style="background:#E1251B"></i>Tiendas 3B</span>'+
     '</div>'+
   '</div>';
-  h += '<div class="ov-foot">'+esc(VS_NOTE)+'</div>';
+  g += '<div class="ov-foot">'+esc(VS_NOTE)+'</div>';
+  h += '<div class="ovt-subpane" data-ovst="growth" hidden>'+g+'</div>';
 
   return h;
 }
@@ -448,12 +463,16 @@ function html(c){
     '<button type="button" class="ovt-tab" data-ovt="stores">Stores</button>'+
     '<button type="button" class="ovt-tab" data-ovt="mix">Product Mix</button>'+
     '<button type="button" class="ovt-tab" data-ovt="ue">Unit Economics</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="landscape">Competitive Landscape</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="bim">BİM Blueprint</button>'+
   '</div>';
   // Panes
   h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="stores" hidden>'+storesBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="mix" hidden>'+mixBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="ue" hidden>'+ueBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="landscape" hidden>'+bbbLandscape.body(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="bim" hidden>'+bbbBim.body(c)+'</div>';
   h += '</div>';
   return h;
 }
@@ -759,19 +778,45 @@ function buildUeChart(){
   });
 }
 
-// Build everything the Stores tab needs once it becomes visible.
-function buildStoresTab(){
+// ── Stores tab — two nested sub-tabs: SSS and Store Growth ──
+// Each nested sub-pane builds its own charts lazily, only once it is visible
+// (Chart.js needs the canvas to have layout, i.e. a non-null offsetParent).
+function buildStoresSubSSS(){
   buildSSSChart();
+}
+function buildStoresSubGrowth(){
   buildStoresChart();
   setupStoreSlider();
   buildVsChart();
+}
+
+// Switch the nested Stores sub-tab and (re)build that sub-pane's charts.
+function showStoresSub(root, key){
+  root.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovst') === key); });
+  root.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovst') !== key); });
+  if (key === 'sss')    requestAnimationFrame(buildStoresSubSSS);
+  if (key === 'growth') requestAnimationFrame(buildStoresSubGrowth);
+}
+
+// Build the Stores tab once it becomes visible: wire the nested sub-tabs
+// (idempotent) and build whichever sub-pane is currently active.
+function buildStoresTab(root){
+  root.querySelectorAll('.ovt-subtab').forEach(function(btn){
+    btn.onclick = function(){ showStoresSub(root, btn.getAttribute('data-ovst')); };
+  });
+  var active = root.querySelector('.ovt-subtab.active');
+  var key = active ? active.getAttribute('data-ovst') : 'sss';
+  if (key === 'sss')    buildStoresSubSSS();
+  if (key === 'growth') buildStoresSubGrowth();
 }
 
 // Switch sub-tab. Builds the tab's charts lazily the first time it becomes visible.
 function showOvt(root, key){
   root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt') === key); });
   root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt') !== key); });
-  if (key === 'stores') requestAnimationFrame(buildStoresTab);
+  if (key === 'stores') requestAnimationFrame(function(){ buildStoresTab(root); });
+  if (key === 'landscape') requestAnimationFrame(function(){ bbbLandscape.init(root); });
+  if (key === 'bim') requestAnimationFrame(function(){ bbbBim.init(root); });
   if (key === 'mix') requestAnimationFrame(buildMixChart);
   if (key === 'ue') requestAnimationFrame(buildUeChart);
 }
@@ -786,7 +831,9 @@ function init(c){
   // If a chart tab is the active one, (re)build its charts now.
   var active = root.querySelector('.ovt-tab.active');
   var activeKey = active ? active.getAttribute('data-ovt') : '';
-  if (activeKey === 'stores') requestAnimationFrame(buildStoresTab);
+  if (activeKey === 'stores') requestAnimationFrame(function(){ buildStoresTab(root); });
+  if (activeKey === 'landscape') requestAnimationFrame(function(){ bbbLandscape.init(root); });
+  if (activeKey === 'bim') requestAnimationFrame(function(){ bbbBim.init(root); });
   if (activeKey === 'mix') requestAnimationFrame(buildMixChart);
   if (activeKey === 'ue') requestAnimationFrame(buildUeChart);
 }

@@ -117,10 +117,10 @@ var TIMELINE=[
 ];
 // Richer peer table: who they are, where share moves, and the structural edge.
 var PEERS=[
-  ['Lyft', 'US/Canada rideshare #2 (~24–29% US rides share).', 'Uber holds ~70%+ of US rides and is the only one that is global + multi-product. Lyft competes on price/reliability in its home turf; Uber\'s cross-sell (Eats ⇄ rides) and Uber One bundle structurally lower its CAC. Lyft has <b>no take-rate advantage</b> — both sit ~30% net — so scale, not pricing, is the moat.'],
-  ['DoorDash', 'US delivery leader — ~<b>60%+</b> US food-delivery share vs Uber Eats ~22–25%.', 'The one peer that out-scales Uber in a category. DoorDash is winning US suburbs and grocery; Uber counters with Mobility cross-sell, Uber One bundling and a faster-growing ads business. Internationally Uber Eats is far larger. Share is contested but stable.'],
-  ['Waymo (Alphabet)', 'Robotaxi operator — on the Uber app in Austin/Atlanta, on its <i>own</i> app in SF/Phoenix/LA.', 'Simultaneously partner and rival — the defining structural question. Uber bets demand-aggregation + fleet utilization beats capital-heavy AV-only fleets (see Strategy ▸ AV).'],
-  ['Bolt / Grab / Didi', 'Regional super-apps — Europe (Bolt), SE Asia (Grab), China/LatAm (Didi).', 'Uber competes locally or holds <b>equity stakes</b> (Grab, Didi legacy from the 2016/2018 exits). Local density wins market-by-market; Uber\'s global brand + capital are the edge.'],
+  { n:'Lyft', dom:'lyft.com', arena:'US/Canada rideshare · #2', edge:'Uber holds ~70%+ of US rides and is the only global, multi-product player. Same ~30% take — so scale + the Eats⇄rides bundle are the moat, not pricing.' },
+  { n:'DoorDash', dom:'doordash.com', arena:'US delivery leader', edge:'The one peer that out-scales Uber in a category (~60% US food vs Eats ~22–25%). Uber counters with Mobility cross-sell, Uber One & ads; Eats is far bigger internationally.' },
+  { n:'Waymo', dom:'waymo.com', arena:'Robotaxi · partner & rival', edge:'On the Uber app in Austin/Atlanta, on its own app in SF/Phoenix/LA — the defining AV question (see Strategy ▸ AV).' },
+  { n:'Grab · Bolt · Didi', dom:'grab.com', arena:'Regional super-apps', edge:'SE Asia, Europe, China/LatAm. Uber competes locally or holds equity stakes; its global brand + capital are the edge.' },
 ];
 var PEER_NOTE='Ride-hailing economics rarely turn on take rate (peers cluster ~30%) — they turn on <b>density, cross-sell and regulatory positioning</b>, where Uber\'s global scale and bundle are the edge.';
 // Secular / market tailwinds — the forces outside Uber's own levers (which live in "What drives Uber" + Strategy).
@@ -296,38 +296,47 @@ function rangeSlider(key,maxI,a,b){
 // Uber's SPLC reveals two stories: (1) the AV ecosystem build-out on the supplier side,
 // and (2) the restaurant/grocery merchant network on the customer side.
 // Very sparse relationship-size data — most entries are undisclosed.
-// Suppliers grouped by what they DO for Uber. Each: short narrative + key players (logos, hover=name).
+// Suppliers grouped by what they DO for Uber: role (what they do) + impact (how it helps/threatens Uber).
 var SC_SUPPLIERS = [
   { h:'Autonomous & Automotive', tag:'30+ partners', big:true,
-    why:'The biggest supplier group — and the build-out of the <b>hybrid AV network</b>. These are mostly <b>strategic/equity ties, not vendor bills</b>: Uber brings the demand, partners bring the cars. (Serve Robotics gets ~31% of its revenue from Uber — the highest dependency.)',
-    players:[['Waymo','waymo.com'],['Aurora','aurora.tech'],['Nuro','nuro.ai'],['Lucid','lucidmotors.com'],['WeRide','weride.ai'],['Pony.ai','pony.ai'],['NVIDIA','nvidia.com'],['Stellantis','stellantis.com'],['Rivian','rivian.com'],['Zoox','zoox.com']] },
+    role:'Supply the autonomous vehicles and the self-driving stack — sensors, compute, robotaxis, OEM cars.',
+    players:[['Waymo','waymo.com'],['Aurora','aurora.tech'],['Nuro','nuro.ai'],['Lucid','lucidmotors.com'],['WeRide','weride.ai'],['Pony.ai','pony.ai'],['NVIDIA','nvidia.com'],['Stellantis','stellantis.com'],['Rivian','rivian.com'],['Zoox','zoox.com']],
+    impact:{ kind:'mixed', text:'The future of low-cost supply — but the <b>one group that can disintermediate Uber</b> (Waymo already runs its own app). Mostly strategic/equity ties, not vendor bills. Uber’s hedge: aggregate 30+ so no single AV owns the demand.' } },
   { h:'Tech & Cloud', tag:'the plumbing',
-    why:'Cloud, mapping, comms and outsourced engineering. The <b>only large disclosed vendor bills</b>: HCL <b>$127M</b> (engineering/IT) and Oracle <b>$55M</b> (database/cloud) — Uber runs lean on infra.',
-    players:[['Oracle','oracle.com'],['HCLTech','hcltech.com'],['Adobe','adobe.com'],['Twilio','twilio.com'],['TomTom','tomtom.com']] },
-  { h:'Payments & Fintech', tag:'money movement',
-    why:'Global card processing and <b>driver payouts</b>. Marqeta powers the Uber Pro debit card (Instant Pay); Adyen & Stripe move consumer payments at scale.',
-    players:[['Adyen','adyen.com'],['Stripe','stripe.com'],['Marqeta','marqeta.com'],['Block','block.xyz'],['Klarna','klarna.com']] },
+    role:'Cloud hosting, mapping, messaging and outsourced engineering.',
+    players:[['Oracle','oracle.com'],['HCLTech','hcltech.com'],['Adobe','adobe.com'],['Twilio','twilio.com'],['TomTom','tomtom.com']],
+    impact:{ kind:'good', text:'Keeps Uber <b>asset-light</b> with strikingly low disclosed spend (HCL $127M, Oracle $55M are the only big bills). Commoditized inputs — little leverage over Uber.' } },
+  { h:'Payments & Fintech', tag:'money in & out',
+    role:'Move money in (rider payments) and out (driver & courier payouts).',
+    players:[['Adyen','adyen.com'],['Stripe','stripe.com'],['Marqeta','marqeta.com'],['Block','block.xyz'],['Klarna','klarna.com']],
+    impact:{ kind:'good', text:'Enable global card acceptance + <b>Instant Pay</b> (driver loyalty). Collecting upfront and paying out on Uber’s schedule makes the float mildly <b>working-capital-positive</b>.' } },
   { h:'Fleet & Charging', tag:'~15% of supply hours',
-    why:'Where AV/EV supply is produced — rental fleets and charging. <b>Hertz</b> is also the AV fleet-management partner (Q4 2025); ~<b>15%</b> of mobility supply hours come from fleets.',
-    players:[['Hertz','hertz.com'],['Avis','avisbudgetgroup.com'],['EVgo','evgo.com'],['Moove','moove.io']] },
-  { h:'Ad Tech & Marketing', tag:'feeds >$2B ads',
-    why:'Measurement & demand that make Uber’s <b>near-100%-margin ad inventory</b> sellable to brands — the lever behind the >$2B ads run-rate.',
-    players:[['The Trade Desk','thetradedesk.com'],['Criteo','criteo.com'],['DoubleVerify','doubleverify.com']] },
+    role:'Provide vehicle supply (rental fleets) and EV charging infrastructure.',
+    players:[['Hertz','hertz.com'],['Avis','avisbudgetgroup.com'],['EVgo','evgo.com'],['Moove','moove.io']],
+    impact:{ kind:'good', text:'~<b>15% of mobility supply hours</b> come from fleets; the on-ramp for EV/AV supply. Hertz also runs Uber’s AV fleet operations.' } },
+  { h:'Ad Tech & Marketing', tag:'feeds the ads engine',
+    role:'Measure, target and verify Uber’s in-app advertising.',
+    players:[['The Trade Desk','thetradedesk.com'],['Criteo','criteo.com'],['DoubleVerify','doubleverify.com']],
+    impact:{ kind:'good', text:'Make the <b>>$2B, ~100%-margin ads business</b> sellable to brands — the clearest pure-margin lever Uber has.' } },
   { h:'Real Estate & Infra', tag:'AV depots',
-    why:'Offices, data centers and the <b>AV depots Uber is buying</b> for charging & repair — the physical footprint behind the asset-light story. Alexandria is the largest disclosed (<b>$28M</b>).',
-    players:[['Alexandria','are.com'],['Equinix','equinix.com'],['Hudson Pacific','hudsonpacificproperties.com']] },
+    role:'Offices, data centers, and the AV depots Uber is buying for charging & repair.',
+    players:[['Alexandria','are.com'],['Equinix','equinix.com'],['Hudson Pacific','hudsonpacificproperties.com']],
+    impact:{ kind:'good', text:'Physical backbone for the AV scale-up; small dollars (Alexandria $28M is the largest), mostly optionality.' } },
 ];
-// Customers = the merchant network (Eats / Uber Direct). No single one is material — the breadth is the point.
+// Customers in SPLC = the merchant network (Eats / Uber Direct). They are really SUPPLY for the Eats marketplace.
 var SC_CUSTOMERS = [
   { h:'Restaurants', tag:'QSR → casual dining',
-    why:'From fast food to casual dining — the original Eats supply.',
-    players:[['McDonald’s','mcdonalds.com'],['Domino’s','dominos.com'],['Chipotle','chipotle.com'],['Darden','darden.com'],['Little Caesars','littlecaesars.com']] },
-  { h:'Grocery & Retail', tag:'validates ~$12B run-rate',
-    why:'Five of the top-10 US grocers plus big-box retail — validates the ~<b>$12B grocery/retail run-rate</b> from earnings calls.',
-    players:[['Costco','costco.com'],['Kroger','kroger.com'],['Albertsons','albertsons.com'],['Carrefour','carrefour.com'],['Coles','coles.com.au'],['Best Buy','bestbuy.com']] },
-  { h:'International & Notable', tag:'global Eats footprint',
-    why:'The global merchant footprint — and the <b>Instacart (Maplebear)</b> tie-up where baskets run ~20% larger.',
-    players:[['FEMSA','femsa.com'],['Rakuten','rakuten.com'],['Cencosud','cencosud.com'],['Loblaw','loblaw.ca'],['Instacart','instacart.com'],['Delta','delta.com']] },
+    role:'List menus on Eats; Uber delivers and takes a fee.',
+    players:[['McDonald’s','mcdonalds.com'],['Domino’s','dominos.com'],['Chipotle','chipotle.com'],['Darden','darden.com'],['Little Caesars','littlecaesars.com']],
+    impact:{ kind:'good', text:'Core Eats supply — Uber keeps ~<b>19%</b> + ads. No single chain is material, so pricing power sits with Uber.' } },
+  { h:'Grocery & Retail', tag:'fastest-growing',
+    role:'Stock Eats / Uber Direct with groceries and big-box goods.',
+    players:[['Costco','costco.com'],['Kroger','kroger.com'],['Albertsons','albertsons.com'],['Carrefour','carrefour.com'],['Coles','coles.com.au'],['Best Buy','bestbuy.com']],
+    impact:{ kind:'good', text:'The fastest-growing piece (~<b>$12B run-rate</b>) — bigger baskets, higher frequency, 5 of the top-10 US grocers on platform.' } },
+  { h:'International & Notable', tag:'global + partners',
+    role:'Extend the merchant network globally, plus partnerships (Instacart, airlines).',
+    players:[['FEMSA','femsa.com'],['Rakuten','rakuten.com'],['Cencosud','cencosud.com'],['Loblaw','loblaw.ca'],['Instacart','instacart.com'],['Delta','delta.com']],
+    impact:{ kind:'mixed', text:'Broadens reach into emerging markets (cheaper baskets, lower take in $). The <b>Instacart (Maplebear)</b> tie-up adds suburban demand with ~20% larger baskets.' } },
 ];
 var SC_SUP_GEO = [
   { c:'United States', fpct:49.4, fac:1280 },
@@ -353,15 +362,18 @@ var SC_CUS_GEO = [
   { c:'South Korea', fpct:0.7, fac:19 },
 ];
 
-// Grayscale logo chip (clearbit → favicon fallback); hover shows the name + colorizes.
+// Grayscale logo chip (clearbit -> favicon fallback); hover shows the name + colorizes.
 function scLogo(name,domain){
   return '<div class="usc-logo" title="'+esc(name)+'"><img src="https://logo.clearbit.com/'+domain+'" alt="'+esc(name)+'" loading="lazy" onerror="this.onerror=null;this.src=\'https://www.google.com/s2/favicons?domain='+domain+'&sz=64\'"></div>';
 }
 function scCard(g){
+  var imp=g.impact?'<div class="usc-imp usc-imp-'+g.impact.kind+'"><b>'+(g.impact.kind==='mixed'?'For Uber ⚠':'For Uber ✓')+'</b> '+g.impact.text+'</div>':'';
+  var role=g.role?'<div class="usc-role"><b>What they do —</b> '+esc(g.role)+'</div>':'';
   return '<div class="usc-card'+(g.big?' usc-card-wide':'')+'">'+
     '<div class="usc-card-h">'+esc(g.h)+(g.tag?'<span class="usc-tag">'+esc(g.tag)+'</span>':'')+'</div>'+
-    '<div class="usc-why">'+g.why+'</div>'+
+    role+
     '<div class="usc-logos">'+g.players.map(function(p){ return scLogo(p[0],p[1]); }).join('')+'</div>'+
+    imp+
   '</div>';
 }
 function supplyBody(){
@@ -369,25 +381,43 @@ function supplyBody(){
     '.usc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 8px}'+
     '.usc-card{background:var(--w);border:1px solid var(--bdr);border-radius:10px;padding:14px 16px}'+
     '.usc-card-wide{grid-column:1 / -1;border-top:3px solid var(--brand-2)}'+
-    '.usc-card-h{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}'+
+    '.usc-card-h{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:7px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}'+
     '.usc-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);background:var(--surface);border:1px solid var(--bdr);border-radius:12px;padding:2px 8px}'+
-    '.usc-why{font-size:12px;color:var(--mu);line-height:1.55;margin-bottom:10px}.usc-why b{color:var(--navy)}'+
+    '.usc-role{font-size:12px;color:var(--mu);line-height:1.5;margin-bottom:9px}.usc-role b{color:var(--navy)}'+
     '.usc-logos{display:flex;flex-wrap:wrap;gap:8px}'+
-    '.usc-logo{width:96px;height:44px;border:1px solid var(--bdr);border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;padding:7px;transition:border-color .15s,box-shadow .15s}'+
+    '.usc-logo{width:92px;height:42px;border:1px solid var(--bdr);border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;padding:7px;transition:border-color .15s,box-shadow .15s}'+
     '.usc-logo:hover{border-color:var(--brand);box-shadow:0 2px 8px rgba(0,0,0,.07)}'+
     '.usc-logo img{max-width:100%;max-height:100%;object-fit:contain;filter:grayscale(1);opacity:.72;transition:filter .15s,opacity .15s}'+
     '.usc-logo:hover img{filter:grayscale(0);opacity:1}'+
+    '.usc-imp{font-size:11.5px;line-height:1.5;margin-top:11px;padding:8px 11px;border-radius:8px}.usc-imp b{font-weight:700}'+
+    '.usc-imp-good{background:rgba(6,193,103,0.08);border:1px solid rgba(6,193,103,0.28);color:var(--navy)}'+
+    '.usc-imp-good b{color:#06965A}'+
+    '.usc-imp-mixed{background:rgba(232,160,12,0.09);border:1px solid rgba(232,160,12,0.32);color:var(--navy)}'+
+    '.usc-imp-mixed b{color:#B7791F}'+
     '.usc-geo-row{display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12.5px}'+
     '.usc-geo-lbl{min-width:104px;color:var(--navy)}.usc-geo-bar{height:15px;border-radius:4px}'+
     '.usc-geo-pct{color:var(--mu);font-size:12px;min-width:38px;text-align:right}'+
     '@media(max-width:860px){.usc-grid{grid-template-columns:1fr}}'+
   '</style>';
-  h+='<p class="ov-lede">Uber’s supply chain tells <b>two stories</b>: who <b>powers</b> Uber (suppliers — overwhelmingly the AV build-out) and who Uber <b>serves</b> (the merchant network behind Eats). Hover any logo for the name. <span class="ave-subh-note">Bloomberg SPLC, 29-Jun-2026 · 138 suppliers, 100+ merchants.</span></p>';
-  h+=sec('Who Powers Uber — Suppliers by role',
+  h+='<p class="ov-lede">Uber’s supply chain is really a story about <b>who Uber depends on, and who could depend on Uber back</b>. The data is from Bloomberg SPLC (29-Jun-2026). Start with how the pieces fit, then each group’s role and what it means for Uber.</p>';
+  // ── Ecosystem map: the interaction at a glance ──
+  h+=sec('How the Ecosystem Fits Together',
+    '<div class="lpb-flow">'+
+      '<div class="lpb-node"><div class="lpb-node-ic">IN</div><div class="lpb-node-t">Suppliers</div><div class="lpb-node-d">cars &amp; AV · money rails · cloud · ad-tech · depots</div></div>'+
+      '<div class="lpb-conn"><div class="lpb-conn-arrow">→</div><div class="lpb-conn-l">inputs</div></div>'+
+      '<div class="lpb-node lpb-node-hl"><div class="lpb-node-ic">U</div><div class="lpb-node-t">Uber platform</div><div class="lpb-node-d">owns the demand · sets price · takes ~20–30%</div></div>'+
+      '<div class="lpb-conn"><div class="lpb-conn-arrow">→</div><div class="lpb-conn-l">demand</div></div>'+
+      '<div class="lpb-node"><div class="lpb-node-t">Riders &amp; merchants</div><div class="lpb-node-d">170M+ consumers · millions of restaurants, grocers &amp; fleets</div></div>'+
+    '</div>'+
+    '<div class="ov-diagram-cap"><b>The whole point:</b> Uber sits in the middle and owns the <b>demand</b> — that is the leverage. Suppliers compete to provide inputs (good for Uber: cheap, replaceable, low pricing power). The <b>only</b> group that can also reach the demand directly — and therefore <b>threaten</b> Uber — is AV (Waymo on its own app). That is exactly why Uber aggregates 30+ AV partners instead of betting on one, and why this tab and <b>Strategy &amp; AV</b> tell the same story from two angles.</div>');
+  // ── Suppliers: role + impact ──
+  h+=sec('Who Powers Uber — each supplier group & what it means',
     '<div class="usc-grid">'+SC_SUPPLIERS.map(scCard).join('')+'</div>');
-  h+=sec('Who Uber Serves — the Merchant Network',
-    '<div class="ov-diagram-cap" style="margin:0 0 10px">No single merchant is material — Uber’s marketplace means the <b>breadth</b> is the moat, not any one name.</div>'+
+  // ── Customers (merchants) ──
+  h+=sec('Who Uber Serves — the merchant network',
+    '<div class="ov-diagram-cap" style="margin:0 0 10px">These are Eats’ supply. No single merchant is material, so the <b>breadth</b> is the moat — and the take/ads sit with Uber.</div>'+
     '<div class="usc-grid">'+SC_CUSTOMERS.map(scCard).join('')+'</div>');
+  // ── Geographic footprint, tied to a thesis ──
   h+=sec('Geographic Footprint — and what it tells us',
     '<div class="ov-grid2">'+
       '<div><div class="ov-subh">Supplier facilities (2,593)</div>'+
@@ -397,7 +427,7 @@ function supplyBody(){
         SC_CUS_GEO.map(function(g){ var w=Math.max(g.fpct*1.15,3); return '<div class="usc-geo-row"><span class="usc-geo-lbl">'+esc(g.c)+'</span><div class="usc-geo-bar" style="width:'+w+'%;background:'+BRAND2+'"></div><span class="usc-geo-pct">'+g.fpct+'%</span></div>'; }).join('')+
       '</div>'+
     '</div>'+
-    '<div class="ov-fynote" style="margin-top:12px"><b>The story:</b> suppliers are globally diversified (49% US) — the worldwide AV race (China, Germany, Japan, Israel). Merchants look US-heavy (77%), yet ~<b>60% of mobility bookings are international</b>. That gap <i>is</i> the emerging-markets dynamic: abroad, Uber sells cheaper trips (the barbell’s low-cost wing) and a lower Uber One fee, so <b>revenue per user falls even as volume rises</b> — diluting ARPU but widening the funnel. <span class="ave-subh-note">Regulatory read: the more international the bookings, the wider Uber’s exposure to per-market driver-classification & VAT rules.</span></div>');
+    '<div class="ov-fynote" style="margin-top:12px"><b>The story:</b> suppliers are globally diversified (49% US) — the worldwide AV race (China, Germany, Japan, Israel). Merchants look US-heavy (77%), yet ~<b>60% of mobility bookings are international</b>. That gap <i>is</i> the emerging-markets dynamic: abroad, Uber sells cheaper trips (the barbell’s low-cost wing) and a lower Uber One fee, so <b>revenue per user falls even as volume rises</b> — diluting ARPU but widening the funnel. <span class="ave-subh-note">Regulatory read: the more international the bookings, the wider Uber’s exposure to per-market driver-classification &amp; VAT rules.</span></div>');
   return h;
 }
 
@@ -593,8 +623,22 @@ function overviewBody(c){
     mnaCards(MNA)+
     '<div class="ov-diagram-cap" style="margin-top:12px">'+MNA_NOTE+'</div>');
   h+=sec('Peers & Competitive Landscape',
-    '<table class="ov-table"><thead><tr><th>Peer</th><th>What they are</th><th>Where share moves · the structural edge</th></tr></thead><tbody>'+
-    PEERS.map(function(p){return '<tr><td class="ov-td-name">'+esc(p[0])+'</td><td>'+p[1]+'</td><td>'+p[2]+'</td></tr>';}).join('')+'</tbody></table>'+
+    '<style>'+
+      '.ucomp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:2px 0 6px}'+
+      '.ucomp-card{border:1px solid var(--bdr);border-radius:10px;padding:14px 16px;background:var(--w)}'+
+      '.ucomp-top{display:flex;align-items:center;gap:11px;margin-bottom:9px}'+
+      '.ucomp-logo{width:34px;height:34px;border-radius:8px;border:1px solid var(--bdr);background:#fff;object-fit:contain;padding:5px;flex:none}'+
+      '.ucomp-n{font-size:14px;font-weight:800;color:var(--navy);line-height:1.2}'+
+      '.ucomp-arena{font-size:11px;color:var(--mu);font-weight:600;margin-top:2px}'+
+      '.ucomp-edge{font-size:12px;color:var(--mu);line-height:1.5}.ucomp-edge b{color:var(--navy)}'+
+      '@media(max-width:720px){.ucomp-grid{grid-template-columns:1fr}}'+
+    '</style>'+
+    '<div class="ucomp-grid">'+PEERS.map(function(p){
+      return '<div class="ucomp-card"><div class="ucomp-top">'+
+        '<img class="ucomp-logo" src="https://logo.clearbit.com/'+p.dom+'" alt="'+esc(p.n)+'" loading="lazy" onerror="this.onerror=null;this.src=\'https://www.google.com/s2/favicons?domain='+p.dom+'&sz=64\'">'+
+        '<div><div class="ucomp-n">'+esc(p.n)+'</div><div class="ucomp-arena">'+esc(p.arena)+'</div></div></div>'+
+        '<div class="ucomp-edge"><b>Uber’s edge —</b> '+p.edge+'</div></div>';
+    }).join('')+'</div>'+
     '<div class="ov-diagram-cap" style="margin-top:10px">'+PEER_NOTE+'</div>');
   h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
   return h;

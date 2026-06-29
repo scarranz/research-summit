@@ -125,6 +125,87 @@ function treeHTML(root, showNames){
 }
 
 // ─── Body ─────────────────────────────────────────────────────────────────────
+// ─── Ownership & Dilution ─────────────────────────────────────────────────────
+// From the FY2025 Form 20-F (Item 7, beneficial ownership as of Mar 31, 2026).
+var OWN_CLASSES = [
+  ['Class A', '62.6M', '1', 'Listed on the NYSE — the public float'],
+  ['Class B', '5.2M', '15', '100% founder (Bolton Partners) — super-voting'],
+  ['Class C', '50.0M', '1', 'Pre-IPO holders — convert to Class A on sale'],
+];
+// [block, economic %, voting %, color]
+var OWN_BLOCKS = [
+  ['Founder & insiders (18)',      15.2, 47.6, '#E1251B'],
+  ['Quilvest Capital (PE)',         9.8,  6.0, '#F59E0B'],
+  ['Index & active institutions',  22.7, 14.0, '#0E8F8F'],
+  ['Other public float',           52.3, 32.4, '#9AA3AE'],
+];
+// [holder, role, economic %, voting %]
+var OWN_CAP = [
+  ['K. Anthony Hatoum',          'Founder · Chairman · CEO (Bolton Partners)', 11.1, 45.2],
+  ['Quilvest Capital Partners',  'Private equity', 9.8, 6.0],
+  ['Capital Group (CRMC)',       'Institutional', 9.1, 5.6],
+  ['GIC',                        'Singapore sovereign fund', 4.9, 3.0],
+  ['Sami Khouri (MNCF)',         'Director', 3.2, 2.0],
+  ['Fidelity (FMR)',             'Institutional', 3.0, 1.8],
+  ['Wasatch Advisors',           'Institutional', 2.9, 1.8],
+  ['Orbis',                      'Institutional', 2.8, 1.7],
+];
+var OWN_SBC = [['2023',385],['2024',523],['2025',2930],['2026',2391],['2027',882],['2028',216],['2029',50]];
+var OWN_SBC_EST = 3; // first projected index (2026E)
+
+function ownershipBody(c){
+  var h = '';
+  h += '<p class="ov-lede">3B is <b>founder-controlled</b> through a <b>triple-class</b> share structure. Anthony Hatoum holds about '+
+    '<b>11% of the economics but ~45% of the votes</b> via super-voting Class B shares (15 votes each); insiders together control ~48% of the vote.</p>';
+
+  // 1 — Share classes
+  h += '<div class="ov-sec-h ovt-store-h">Share structure</div>';
+  h += '<div class="own-classes">' + OWN_CLASSES.map(function(k){
+    return '<div class="own-class">'+
+      '<div class="own-class-h">'+esc(k[0])+'</div>'+
+      '<div class="own-class-row"><span>Shares</span><b>'+esc(k[1])+'</b></div>'+
+      '<div class="own-class-row"><span>Votes / share</span><b>'+esc(k[2])+'</b></div>'+
+      '<div class="own-class-d">'+esc(k[3])+'</div>'+
+    '</div>';
+  }).join('') + '</div>';
+  h += '<div class="ov-foot">117.9M shares and ~190.6M votes outstanding (Mar 2026). Class B carries 15 votes/share so long as it stays ≥1% of shares; it converts to Class A on a public sale.</div>';
+
+  // 2 — Economics vs control
+  h += '<div class="ov-sec-h ovt-store-h">Economics vs. control</div>';
+  h += '<div class="own-cmp"><div class="own-cmp-hd"><span></span><span>Economic ownership</span><span>Voting power</span></div>'+
+    OWN_BLOCKS.map(function(b){
+      return '<div class="own-cmp-row">'+
+        '<div class="own-cmp-l"><i style="background:'+b[3]+'"></i>'+esc(b[0])+'</div>'+
+        '<div class="own-bar"><div class="own-bar-f" style="width:'+b[1]+'%;background:'+b[3]+'"></div><span>'+b[1].toFixed(1)+'%</span></div>'+
+        '<div class="own-bar"><div class="own-bar-f" style="width:'+b[2]+'%;background:'+b[3]+'"></div><span>'+b[2].toFixed(1)+'%</span></div>'+
+      '</div>';
+    }).join('') + '</div>';
+  h += '<div class="milk-takeaway">The founder turns ~<b>11% of the economics into 45% of the votes</b> — and insiders as a group hold ~<b>48% of the voting power</b> with ~15% of the shares. Investors get the upside but very limited governance influence.</div>';
+
+  // 3 — Cap table
+  h += '<div class="ov-sec-h ovt-store-h">Major shareholders</div>';
+  h += '<table class="own-cap"><thead><tr><th>Holder</th><th></th><th>Economic</th><th>Voting</th></tr></thead><tbody>'+
+    OWN_CAP.map(function(r){
+      return '<tr><td class="own-cap-n">'+esc(r[0])+'</td><td class="own-cap-r">'+esc(r[1])+'</td>'+
+        '<td class="own-cap-v">'+r[2].toFixed(1)+'%</td><td class="own-cap-v">'+r[3].toFixed(1)+'%</td></tr>';
+    }).join('') + '</tbody></table>';
+  h += '<div class="ov-foot">Beneficial ownership per FY2025 Form 20-F (Item 7), as of Mar 31, 2026, plus 13G filings. Economic % is derived (shares ÷ 117.9M total) and approximate; Capital Group = combined CRMC divisions. <b>Offerings & lock-ups:</b> IPO Feb 2024 (US$17.50); a Feb 2025 follow-on (US$28.25) was mostly a secondary sell-down by pre-IPO holders; the liquidity lock-up on Class B/C ends <b>Jul 8, 2026</b>.</div>';
+
+  // 4 — Dilution & SBC
+  h += '<div class="ov-sec-h ovt-store-h">Dilution & stock-based compensation</div>';
+  h += '<p class="ov-lede">Share-based compensation spiked around the IPO and then fades fast. Shares grew from ~84M (pre-IPO) to ~118M; an option overhang of ~51M (mostly legacy 2004-plan Class C options) implies ~169M fully diluted (~30%).</p>';
+  var sbcMax = 2930;
+  h += '<div class="own-sbc"><div class="own-sbc-t">Stock-based compensation <span>(Ps. MM · light = projected)</span></div>'+
+    OWN_SBC.map(function(s, i){
+      return '<div class="own-sbc-row"><span class="own-sbc-y">'+s[0]+(i>=OWN_SBC_EST?'E':'')+'</span>'+
+        '<div class="own-sbc-bar"><div class="own-sbc-f'+(i>=OWN_SBC_EST?' own-sbc-est':'')+'" style="width:'+(s[1]/sbcMax*100).toFixed(1)+'%"></div></div>'+
+        '<span class="own-sbc-v">'+s[1].toLocaleString()+'</span></div>';
+    }).join('') + '</div>';
+  h += '<div class="ov-foot">SBC (Ps. MM): Ps.2,930M in 2025 and Ps.2,391M in 2026E, tapering to Ps.50M by 2029E — front-loaded IPO grants that fade (from ~3.7% to ~0.02% of revenue). This non-cash charge drove the FY2025–26 GAAP net loss; net income turns positive from 2027. The Summit model holds shares roughly flat at ~115M (assumes minimal net dilution after the taper; the 2026 evergreen plan increase was set to zero). Sources: FY2025 Form 20-F; Summit DCF model.</div>';
+
+  return h;
+}
+
 function mgmtBody(c){
   var h = '';
   h += '<p class="ov-lede">Tiendas 3B runs on a <b>lean corporate HQ</b> plus a <b>decentralized network of autonomous regions</b> — '+
@@ -134,6 +215,7 @@ function mgmtBody(c){
   h += '<div class="mgmt-modes">'+
     '<button type="button" class="mgmt-mode active" data-mg="corp">Corporate</button>'+
     '<button type="button" class="mgmt-mode" data-mg="regional">Regional</button>'+
+    '<button type="button" class="mgmt-mode" data-mg="ownership">Ownership &amp; Dilution</button>'+
   '</div>';
 
   h += '<div class="mgmt-pane" data-mg="corp">'+
@@ -145,6 +227,8 @@ function mgmtBody(c){
     treeHTML(REGIONAL, false)+
     '<div class="ov-foot">How a single autonomous region is organized — positions only; the same template repeats across every region. Each region is led by a Regional Director and contains its full functional stack (HR, real estate, logistics, IT, regional purchasing &amp; accounting), pairing store operations with its own distribution center and truck fleet. Disclosed spans: ~3 Zone Managers per region (40–80 stores each) → District Managers (5–8 stores each) → Store Managers (a store runs with 1 manager, 2 assistant managers and ~4 sales associates). The DC Manager reports directly to the Regional Director. Source: FY2025 Form 20-F (Item 4).</div>'+
   '</div>';
+
+  h += '<div class="mgmt-pane" data-mg="ownership" hidden>'+ownershipBody(c)+'</div>';
 
   // CV modal (hidden until a leader is clicked).
   h += '<div class="mgmt-modal" hidden>'+

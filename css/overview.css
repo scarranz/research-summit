@@ -657,6 +657,48 @@
   .lg-why { grid-template-columns: 1fr; }
 }
 
+/* ── Ownership & Dilution (TBBB) ── */
+.own-classes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 2px 0 4px; }
+.own-class { border: 1px solid var(--bdr); border-top: 3px solid var(--brand); border-radius: 11px; padding: 14px 15px; background: #fff; }
+.own-class-h { font-size: 15px; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
+.own-class-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 12.5px; padding: 3px 0; }
+.own-class-row span { color: var(--mu); }
+.own-class-row b { color: var(--navy); }
+.own-class-d { font-size: 11.5px; color: var(--mu); margin-top: 8px; line-height: 1.45; }
+
+.own-cmp { border: 1px solid var(--bdr); border-radius: 11px; padding: 6px 16px 12px; background: #fff; }
+.own-cmp-hd { display: grid; grid-template-columns: 220px 1fr 1fr; gap: 12px; padding: 8px 0 6px; font-size: 10.5px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--mu); }
+.own-cmp-row { display: grid; grid-template-columns: 220px 1fr 1fr; gap: 12px; align-items: center; padding: 7px 0; border-top: 1px solid var(--bdr); }
+.own-cmp-l { display: flex; align-items: center; font-size: 12.5px; font-weight: 600; color: var(--navy); }
+.own-cmp-l i { width: 10px; height: 10px; border-radius: 3px; margin-right: 8px; flex: none; }
+.own-bar { position: relative; height: 20px; background: #EDF1F4; border-radius: 5px; }
+.own-bar-f { height: 100%; border-radius: 5px; min-width: 2px; }
+.own-bar span { position: absolute; right: 7px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 700; color: var(--navy); }
+
+.own-cap { width: 100%; border-collapse: collapse; margin: 2px 0 4px; font-size: 13px; }
+.own-cap th { font-size: 11px; color: var(--mu); font-weight: 700; text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--bdr); }
+.own-cap th:first-child, .own-cap th:nth-child(2) { text-align: left; }
+.own-cap td { padding: 8px 10px; border-bottom: 1px solid var(--bdr); }
+.own-cap-n { font-weight: 700; color: var(--navy); }
+.own-cap-r { font-size: 11.5px; color: var(--mu); }
+.own-cap-v { text-align: right; font-weight: 700; color: var(--navy); }
+.own-cap tbody tr:hover td { background: rgba(0,0,0,.015); }
+
+.own-sbc { border: 1px solid var(--bdr); border-radius: 11px; padding: 12px 16px 14px; background: #fff; }
+.own-sbc-t { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 10px; }
+.own-sbc-t span { font-weight: 500; color: var(--mu); font-size: 11px; }
+.own-sbc-row { display: grid; grid-template-columns: 46px 1fr 56px; gap: 10px; align-items: center; padding: 3px 0; }
+.own-sbc-y { font-size: 12px; font-weight: 600; color: var(--navy); }
+.own-sbc-bar { height: 16px; background: #EDF1F4; border-radius: 4px; }
+.own-sbc-f { height: 100%; border-radius: 4px; background: var(--brand); min-width: 2px; }
+.own-sbc-f.own-sbc-est { background: rgba(225,37,27,0.40); }
+.own-sbc-v { font-size: 12px; font-weight: 700; color: var(--navy); text-align: right; }
+
+@media (max-width: 760px){
+  .own-classes { grid-template-columns: 1fr; }
+  .own-cmp-hd, .own-cmp-row { grid-template-columns: 120px 1fr 1fr; }
+}
+
 /* ── Management (TBBB) — toggle + pure-CSS org charts ── */
 .mgmt-modes { display: flex; gap: 6px; margin: 2px 0 16px; }
 .mgmt-mode {

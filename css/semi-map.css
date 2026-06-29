@@ -162,6 +162,16 @@
 .nv-seg-btn[disabled] { opacity: .45; cursor: default; }
 .nv-seg-btn[disabled]:hover { color: var(--mu); background: none; }
 
+/* Technology tab — "what NVIDIA sells" layered stack. */
+.tech-stack { display: flex; flex-direction: column; gap: 7px; margin: 4px 0 6px; }
+.tech-layer {
+  border: 1px solid var(--bdr); border-left: 4px solid var(--mu);
+  border-radius: 8px; padding: 11px 14px; background: var(--w);
+}
+.tech-layer-t { font-size: 13px; font-weight: 700; color: var(--navy); }
+.tech-layer-d { font-size: 12.5px; color: var(--mu); margin-top: 3px; line-height: 1.5; }
+.tech-layer-d b { color: var(--navy); font-weight: 600; }
+
 @media (max-width: 640px){
   .smap-flowrow { flex-direction: column; }
   .smap-arrow { transform: rotate(90deg); align-self: flex-start; margin-left: 18px; }

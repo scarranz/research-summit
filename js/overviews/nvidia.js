@@ -386,17 +386,85 @@ function segmentsBody(){
 // ════════════════════════════════════════════════════════════════════════════════
 // 3 — TECHNOLOGY  (work in progress)
 // ════════════════════════════════════════════════════════════════════════════════
+// CPU vs GPU contrast cards.
+var CPU_GPU = [
+  ['CPU — the brain', '#6B7A8F', 'A few powerful cores built for <b>general-purpose, sequential (linear) processing</b>. It runs the operating system and logic step by step — versatile, but it does one hard thing at a time.'],
+  ['GPU — the accelerator', '#1F8A70', 'Thousands of smaller cores built for <b>parallel processing</b> — many simple calculations at once. The matrix math behind graphics and AI is massively parallel, which is exactly what a GPU is built for.'],
+];
+// What NVIDIA sells — the full stack, silicon up to software.
+var TECH_STACK = [
+  ['Software & ecosystem', '#1F8A70', 'CUDA, cuDNN, TensorRT, AI Enterprise, NIM microservices and Omniverse — the platform developers build on. This is the moat.'],
+  ['Systems', '#2E9E78', 'DGX / HGX servers and GB200 / GB300 NVL72 rack-scale "AI factories" — NVIDIA increasingly sells the whole rack, not just the chip.'],
+  ['Networking', '#3A7CA5', 'NVLink, InfiniBand and Spectrum-X Ethernet (from the Mellanox acquisition) — moving data between thousands of GPUs as if they were one.'],
+  ['Processors', '#5B53A8', 'The GPU (Blackwell), the Grace CPU and the BlueField DPU — designed together to work as one system.'],
+  ['Silicon', '#6B7A8F', 'Chips designed by NVIDIA, manufactured by TSMC, with HBM memory from SK hynix / Micron and advanced (CoWoS) packaging.'],
+];
+// Architecture & product timeline.
+var TECH_TIMELINE = [
+  ['1999', 'Ships the <b>GeForce 256</b>, marketed as the world’s first "GPU".'],
+  ['2006', 'Launches <b>CUDA</b> — opening the GPU to general-purpose computing. The foundation of today’s software moat.'],
+  ['2014', 'Introduces <b>NVLink</b>, a high-speed interconnect to link GPUs; the crypto-mining surge starts shifting GPUs from graphics to raw compute.'],
+  ['2016', '<b>Pascal</b> + the <b>DGX-1</b>, the first "AI supercomputer in a box" — hand-delivered to OpenAI.'],
+  ['2017', '<b>Volta</b> adds <b>Tensor Cores</b>, dedicated hardware for the matrix math of deep learning.'],
+  ['2020', '<b>Ampere</b> (A100) and the <b>Mellanox</b> acquisition, adding the data-center networking stack.'],
+  ['2021', 'Announces the <b>Omniverse</b> platform for industrial digital twins and simulation.'],
+  ['2022', '<b>Hopper</b> (H100) launches into the ChatGPT demand wave — the workhorse of the AI build-out.'],
+  ['2024', '<b>Blackwell</b> (B200 / GB200); NVIDIA executes a 10-for-1 split and briefly becomes the world’s most valuable company.'],
+  ['2025–26', '<b>GB200 / GB300 NVL72</b> rack-scale systems ramp; <b>Rubin</b> is the next platform on the annual cadence.'],
+];
+
 function technologyBody(){
-  return wipNote({
-    lead: 'A clear walk-through of what NVIDIA actually sells and why it wins — the products and the software, with a timeline of when each was created and where it came from.',
-    items: [
-      '<b>GPUs</b> — the architecture lineage (Pascal → Volta → Ampere → Hopper → Blackwell → Rubin) and what each generation changed.',
-      '<b>CUDA & software</b> — the platform moat: CUDA, cuDNN, the AI Enterprise / NIM stack and why developers build NVIDIA-first.',
-      '<b>Networking</b> — NVLink, InfiniBand and Spectrum-X (from the Mellanox acquisition) and how rack-scale systems are assembled.',
-      '<b>Omniverse & systems</b> — DGX/HGX/GB200/GB300, Omniverse digital twins, Grace CPUs and DPUs.',
-      'A <b>product timeline</b> showing when each product launched and which acquisition or technology it grew out of.',
-    ],
-  });
+  var h = '';
+  h += '<p class="ov-lede">At its core, NVIDIA sells <b>computing power</b>. This tab walks through the basic logic — from the transistor up to the full AI system — and why NVIDIA’s approach wins. It draws on the Summit team’s 2024 semiconductor case-study deck and public materials.</p>';
+
+  // 1 — The basic logic: transistors & computing power
+  h += sec('The basic logic: transistors = computing power',
+    '<div class="ov-callout">A chip is built from <b>transistors</b> — tiny switches that flip between 0 and 1. Computing power comes from <b>how many you can pack into a given area</b>: shrink the transistors, fit more of them closer together, and you get more performance using less energy. Every generation of progress is, at bottom, "more transistors, smaller and closer."</div>'+
+    bullets([
+      'A modern GPU contains <b>tens of billions</b> of transistors.',
+      'Beyond the transistors, a chip also carries <b>memory (HBM/RAM), cache and I/O controllers</b> — and increasingly several chips are packaged together (advanced packaging) to act as one.',
+      'The whole industry — covered in the <b>Industry Analysis</b> tab — exists to keep shrinking and packaging transistors.',
+    ]));
+
+  // 2 — Moore's Law
+  h += sec('Moore’s Law — and why it matters now',
+    '<div class="ov-callout"><b>Moore’s Law</b> (Gordon Moore, 1965): the number of transistors on a chip roughly <b>doubles about every two years</b>. For decades that delivered exponential gains in compute at falling cost — the engine behind modern computing.</div>'+
+    bullets([
+      'Moore’s Law is <b>slowing</b>: at a few nanometers, physics makes each shrink harder, slower and more expensive.',
+      'NVIDIA’s answer is <b>accelerated computing</b>: instead of relying on the CPU getting faster, offload the heavy, parallel work to the GPU — picking up where Moore’s Law leaves off.',
+      'This is why <b>parallel processing, advanced packaging and full systems</b> — not just smaller transistors — now drive performance.',
+    ]));
+
+  // 3 — CPU vs GPU
+  h += sec('CPU vs GPU — serial vs parallel',
+    '<div class="ov-grid2">'+CPU_GPU.map(function(c){
+      return '<div class="ov-callout" style="border-left:4px solid '+c[1]+'"><div class="ov-sec-h" style="margin:0 0 6px">'+esc(c[0])+'</div>'+c[2]+'</div>';
+    }).join('')+'</div>'+
+    '<div class="ov-asof">AI is built on massive parallel math, so the <b>GPU</b> — not the CPU — became the engine of the AI era. NVIDIA pairs both in products like the <b>Grace Hopper Superchip</b> (Grace CPU + Hopper GPU joined by NVLink).</div>');
+
+  // 4 — What NVIDIA sells (the stack)
+  h += sec('What NVIDIA sells — the full stack',
+    '<p class="ov-p">NVIDIA is often described as "a chip company", but it sells a <b>full computing stack</b> — from the silicon up to the software. Owning every layer is what lets it deliver performance rivals can’t match with a chip alone, and it is where the durable margin lives.</p>'+
+    '<div class="tech-stack">'+TECH_STACK.map(function(l){
+      return '<div class="tech-layer" style="border-left-color:'+l[1]+'"><div class="tech-layer-t">'+esc(l[0])+'</div><div class="tech-layer-d">'+l[2]+'</div></div>';
+    }).join('')+'</div>');
+
+  // 5 — CUDA moat
+  h += sec('CUDA — the software moat',
+    '<div class="ov-callout"><b>CUDA</b> (2006) lets developers program the GPU directly. Twenty years later, essentially every AI framework, library and model is written and optimized for NVIDIA first — so developers build where the install base is, and the install base grows because that’s where the software is. That self-reinforcing loop, more than any single chip, is NVIDIA’s deepest moat and the source of its switching costs.</div>');
+
+  // 6 — Architecture & product timeline
+  h += sec('Architecture & product timeline', '<div class="ov-timeline">'+TECH_TIMELINE.map(function(t){
+    return '<div class="ov-tl-item"><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t[0])+'</div><div class="ov-tl-body">'+t[1]+'</div></div>';
+  }).join('')+'</div>');
+
+  // 7 — The AI data-center stack
+  h += sec('Putting it together: the AI data center',
+    '<p class="ov-p">An AI "factory" is far more than GPUs. NVIDIA’s rack-scale systems combine <b>compute</b> (GPUs + Grace CPUs), <b>networking</b> (NVLink / InfiniBand / Spectrum-X), <b>servers</b> and <b>storage</b> into one tightly-integrated machine — sold as a unit (e.g. the GB200 NVL72 connects 72 GPUs to act as a single giant GPU). The value is in the <b>system</b>, not just the die.</p>'+
+    '<div class="ov-asof">Adjacent platforms extend the same compute engine into new markets: <b>Omniverse</b> (industrial digital twins & simulation), <b>Isaac</b> (robotics) and <b>DRIVE</b> (automotive).</div>');
+
+  h += '<div class="ov-foot">Sources: Summit research team 2024 semiconductor case-study deck (internal), plus NVIDIA public materials and technical documentation. Simplified for explanation; transistor counts and dates are approximate.</div>';
+  return h;
 }
 
 // ════════════════════════════════════════════════════════════════════════════════

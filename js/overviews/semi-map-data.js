@@ -468,3 +468,17 @@ export function bucketsWithTicker(ticker){
   });
   return out;
 }
+
+// First (upstream-most, in flow order) bucket+group that contains this ticker.
+// Used to pre-drill the Flow view straight to a company's place in the chain.
+// Returns { bucket, group } or null.
+export function locateTicker(ticker){
+  for (var i=0;i<BUCKETS.length;i++){
+    var b = BUCKETS[i];
+    for (var j=0;j<b.groups.length;j++){
+      var g = b.groups[j];
+      if (g.companies.some(function(c){ return c.ticker===ticker; })) return { bucket:b.id, group:g.id };
+    }
+  }
+  return null;
+}

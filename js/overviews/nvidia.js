@@ -47,7 +47,9 @@ function overviewBody(c){
 // Industry Analysis sub-tab — intro + the shared map (Flow + Network), NVIDIA highlighted.
 function industryBody(c){
   return '<div class="ov-sec-h" style="margin-bottom:10px">Semiconductor Supply-Chain Map</div>'+
-    semiIndustry.html({ highlight: 'NVDA' });
+    // focus:true → the Flow view opens pre-drilled to NVIDIA's place in the chain.
+    // Drop the focus flag (or call with no opts) to get the standalone, industry-wide map.
+    semiIndustry.html({ highlight: 'NVDA', focus: true });
 }
 
 function html(c){

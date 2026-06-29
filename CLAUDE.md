@@ -401,6 +401,28 @@ Top-level tabs use `.ovt-tab` / `.ovt-pane[data-ovt]`; nested sub-tabs use `.ovt
 - `netlify.toml` CSP includes `frame-src https://my.matterport.com https://*.matterport.com` for the Store-Tour iframe — keep it when editing the CSP.
 - Not in git: `env.js` (Supabase creds), and the source PDFs (10-Ks & earnings decks) that live outside the repo.
 
+## SoFi (SOFI) Overview — architecture & handoff
+
+The **SoFi Technologies (NASDAQ: SOFI)** Overview is the other deeply-built profile. Unlike TBBB (split into `bbb-*.js`), SoFi is a **single file**: `js/overviews/sofi.js` (exports `sofiOverview`; registered in `js/overviews/index.js`).
+
+### Tab structure (top-level → nested)
+Top-level tabs use `.ovt-tab` / `.ovt-pane[data-ovt]`:
+`Overview · General · Interest Income · Fee Income · Management · Valuation · Sensitivity · Peers`
+- The **General** tab's `data-ovt` is legacy `"members"` (label is "General").
+- SoFi predates the shared nested-subtab system, so each section has its **own** sub-tab classes:
+  - **General** → `.ovg-tab`/`.ovg-pane[data-ovg]`: Milestones · Members · Rule of 40 · Capital Raises
+  - **Fee Income** → `.ovf-tab`/`.ovf-pane[data-ovf]`: Loan Platform Business · Technology Platform · Financial Services
+  - **Valuation** → `.ovv-tab`/`.ovv-pane[data-ovv]`: Actuals vs Estimates · Actuals vs Guidance
+
+### Key components (functions in `sofi.js`)
+- Bodies: `overviewBody`, `generalBody` (→ `milestonesBody`/`membersBody`/`rule40Body`/`capRaisesBody`), `interestBody`, `feeBody` (→ `lpbBody`/`techBody`/`fsBody`), management (insider **Form 4** activity), `valuationBody` (→ `aveBody`/`guidanceBody`), `sensBody`, peers. `html(c)` assembles the tab bar; `init(c)` wires tabs and builds Chart.js charts lazily per visible pane.
+- **Sensitivity** (`SENS_SCEN`, `sensBody`, `sensCompute`, `renderSens`): a **multi-driver** framework — pick a scenario category, move per-driver sliders → KPI tiles → implied price (`P/E × EPS`), anchored to `SENS_BASE` (price, shares, base EPS/PE). (Different design from TBBB's matrix — keep them distinct.)
+- **SOTP** (`SOTP_NI`, `renderSotp`): a forward-earnings sum-of-the-parts — capitalise next-year net income split between Interest and Fee segments at separate P/Es; Chart.js stacked bar + implied price.
+
+### Data & live price
+- Fundamentals are **hardcoded in `sofi.js`** from SoFi's 10-K / earnings (FY2024 vs FY2025), plus peers and Form-4 insider data.
+- **Live price** comes from the **`get-quote` Supabase edge function** (`/functions/v1/get-quote?ticker=SOFI`), with a fixed-price fallback; Sensitivity P/E and SOTP upside recompute against it. (TBBB instead uses the IBKR MCP for live price — different mechanism.)
+
 ## Do not
 
 - Add npm dependencies or a build step — this is a zero-build static site

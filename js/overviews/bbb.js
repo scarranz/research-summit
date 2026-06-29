@@ -427,14 +427,7 @@ function ueBody(c){
 function mixBody(c){
   var h = '';
 
-  // 1 — Mix evolution chart (KPI boxes removed per request).
-  h += '<div class="ov-chart-card">'+
-    '<div class="ov-chart-t">Product Mix — Private Label vs. Branded <span>(% of sales)</span></div>'+
-    '<div class="ov-chart-wrap ovt-mix-wrap"><canvas id="bbbChartMix"></canvas></div>'+
-  '</div>';
-  h += '<div class="ov-foot">'+esc(MIX_NOTE)+'</div>';
-
-  // 2 — Why it matters: private-label economics, illustrated with 1 L milk.
+  // 1 — Why it matters: private-label economics, illustrated with 1 L milk.
   h += '<div class="ov-sec-h ovt-store-h">Private Label Economics — Milk (1 L)</div>';
   h += '<div class="milk-compare">'+
     '<div class="milk-card milk-pl">'+
@@ -454,20 +447,25 @@ function mixBody(c){
   h += '<div class="milk-takeaway">3B\'s own-brand milk (<b>Vaca Blanca</b>) is about <b>40% cheaper</b> for the shopper (<b>$20</b> vs <b>$33</b>) yet earns 3B <b>more than double the margin</b> (~<b>22%</b> vs ~<b>10%</b>) and more pesos per litre (<b>$4.5</b> vs <b>$3.3</b>). That is the private-label flywheel — better value for the customer <i>and</i> better economics for 3B — which is why private label keeps taking share (<b>58.2%</b> of sales in 2025).</div>';
   h += '<div class="ov-foot">Product photos: Vaca Blanca (Tiendas 3B) and Alpura Clásica, 1 L. Representative shelf prices and per-unit margins (MXN) for illustration.</div>';
 
+  // 2 — Mix evolution chart (KPI boxes removed per request).
+  h += '<div class="ov-chart-card">'+
+    '<div class="ov-chart-t">Product Mix — Private Label vs. Branded <span>(% of sales)</span></div>'+
+    '<div class="ov-chart-wrap ovt-mix-wrap"><canvas id="bbbChartMix"></canvas></div>'+
+  '</div>';
+  h += '<div class="ov-foot">'+esc(MIX_NOTE)+'</div>';
+
   return h;
 }
 
-// "General" tab — bundles Product Mix, Logistics and BİM Blueprint as nested sub-tabs.
+// "General" tab — bundles Store Tour, Logistics and BİM Blueprint as nested sub-tabs.
 function generalBody(c){
   var h = '';
   h += '<div class="ovt-subtabs">'+
     '<button type="button" class="ovt-subtab active" data-ovst="tour">Store Tour</button>'+
-    '<button type="button" class="ovt-subtab" data-ovst="mix">Product Mix</button>'+
     '<button type="button" class="ovt-subtab" data-ovst="logistics">Logistics</button>'+
     '<button type="button" class="ovt-subtab" data-ovst="bim">BİM Blueprint</button>'+
   '</div>';
   h += '<div class="ovt-subpane" data-ovst="tour">'+bbbLogistics.tourBody(c)+'</div>';
-  h += '<div class="ovt-subpane" data-ovst="mix" hidden>'+mixBody(c)+'</div>';
   h += '<div class="ovt-subpane" data-ovst="logistics" hidden>'+bbbLogistics.body(c)+'</div>';
   h += '<div class="ovt-subpane" data-ovst="bim" hidden>'+bbbBim.body(c)+'</div>';
   return h;
@@ -480,6 +478,7 @@ function html(c){
     '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
     '<button type="button" class="ovt-tab" data-ovt="general">General</button>'+
     '<button type="button" class="ovt-tab" data-ovt="stores">Stores</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="mix">Product Mix</button>'+
     '<button type="button" class="ovt-tab" data-ovt="ue">Unit Economics</button>'+
     '<button type="button" class="ovt-tab" data-ovt="landscape">Competitive Landscape</button>'+
     '<button type="button" class="ovt-tab" data-ovt="mgmt">Management</button>'+
@@ -488,6 +487,7 @@ function html(c){
   h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="general" hidden>'+generalBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="stores" hidden>'+storesBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="mix" hidden>'+mixBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="ue" hidden>'+ueBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="mgmt" hidden>'+bbbManagement.body(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="landscape" hidden>'+bbbLandscape.body(c)+'</div>';
@@ -814,9 +814,8 @@ function buildSub(root, group, key){
     if (key === 'sss')         buildStoresSubSSS();
     else if (key === 'growth') buildStoresSubGrowth();
   } else if (group === 'general'){
-    if (key === 'mix')              buildMixChart();
-    else if (key === 'logistics')   bbbLogistics.init(root);
-    else if (key === 'bim')         bbbBim.init(root);
+    if (key === 'logistics')   bbbLogistics.init(root);
+    else if (key === 'bim')    bbbBim.init(root);
   }
 }
 
@@ -844,6 +843,7 @@ function showOvt(root, key){
   root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt') !== key); });
   if (key === 'stores') requestAnimationFrame(function(){ wireSubtabs(root, 'stores'); });
   if (key === 'general') requestAnimationFrame(function(){ wireSubtabs(root, 'general'); });
+  if (key === 'mix') requestAnimationFrame(buildMixChart);
   if (key === 'mgmt') requestAnimationFrame(function(){ bbbManagement.init(root); });
   if (key === 'landscape') requestAnimationFrame(function(){ bbbLandscape.init(root); });
   if (key === 'ue') requestAnimationFrame(buildUeChart);
@@ -861,6 +861,7 @@ function init(c){
   var activeKey = active ? active.getAttribute('data-ovt') : '';
   if (activeKey === 'stores') requestAnimationFrame(function(){ wireSubtabs(root, 'stores'); });
   if (activeKey === 'general') requestAnimationFrame(function(){ wireSubtabs(root, 'general'); });
+  if (activeKey === 'mix') requestAnimationFrame(buildMixChart);
   if (activeKey === 'mgmt') requestAnimationFrame(function(){ bbbManagement.init(root); });
   if (activeKey === 'landscape') requestAnimationFrame(function(){ bbbLandscape.init(root); });
   if (activeKey === 'ue') requestAnimationFrame(buildUeChart);

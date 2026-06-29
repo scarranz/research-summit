@@ -212,7 +212,10 @@
   background: linear-gradient(90deg, #1F8A70, #76B900);
   transition: width 1.15s cubic-bezier(.22,.61,.36,1); }
 .gen-bars.go .gen-fill { width: var(--w); }
+.gen-fill.ramping { background: repeating-linear-gradient(45deg, #76B900, #76B900 7px, #5fa600 7px, #5fa600 14px); }
 .gen-val { width: 48px; flex: none; text-align: right; font-size: 12px; font-weight: 700; color: var(--navy); }
+.gen-tag { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  color: #5a7a00; background: #e8f3d0; border-radius: 4px; padding: 1px 5px; margin-left: 6px; vertical-align: middle; }
 
 /* "What NVIDIA sells" — interactive pseudo-3D layer stack */
 .nv3d { margin: 6px 0 8px; }

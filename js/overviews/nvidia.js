@@ -61,7 +61,7 @@ var HOW_MONEY = [
   'The vast majority of revenue is <b>Data Center</b> — selling AI training and inference compute to hyperscalers, cloud providers, enterprises and sovereign-AI buyers.',
   'The moat is <b>CUDA</b>: a ~20-year software platform and developer ecosystem that makes NVIDIA GPUs the default target for AI frameworks, creating high switching costs.',
   'NVIDIA is <b>fabless</b> — it captures the design and platform margin while <b>TSMC</b> manufactures the silicon, <b>SK hynix / Micron / Samsung</b> supply HBM, and <b>Foxconn</b> and others assemble systems.',
-  'An <b>annual product cadence</b> (Hopper → Blackwell → Rubin) keeps performance-per-watt ahead of rivals and pulls customers through repeated upgrade cycles.',
+  'An <b>annual product cadence</b> (Hopper → Blackwell → <b>Vera Rubin</b>, ramping in 2026) keeps performance-per-watt ahead of rivals and pulls customers through repeated upgrade cycles.',
 ];
 
 var FINANCIALS = [
@@ -85,7 +85,7 @@ var TAILWINDS = [
   'A multi-year <b>AI infrastructure super-cycle</b> — hyperscaler capex keeps rising and broadening to enterprises and sovereign-AI buyers.',
   'The <b>CUDA software moat</b> and a ~20-year developer ecosystem create high switching costs and default-platform status.',
   '<b>Full-stack expansion</b> — Grace CPUs, NVLink, Mellanox/Spectrum networking, rack-scale systems and software — raises content per deployment.',
-  'An <b>annual product cadence</b> (Hopper → Blackwell → Rubin) compounds a performance-per-watt lead rivals struggle to match.',
+  'An <b>annual product cadence</b> (Hopper → Blackwell → <b>Vera Rubin</b>, ramping in 2026) compounds a performance-per-watt lead rivals struggle to match.',
   'Shift from training toward <b>inference</b> and "agentic" AI expands the addressable compute base over time.',
 ];
 var HEADWINDS = [
@@ -372,7 +372,7 @@ function segmentsBody(){
       '<div class="ov-target"><div class="ov-target-v">$14.8B</div><div class="ov-target-l">DC Networking</div><div class="ov-target-s">+199% YoY (prior sub-market)</div></div>'+
       '<div class="ov-target"><div class="ov-target-v">$91.0B</div><div class="ov-target-l">Q2 FY27 guide</div><div class="ov-target-s">±2% · no China DC compute assumed</div></div>'+
     '</div>'+
-    '<div class="ov-callout">Q1 FY2027 (ended April 26, 2026): record revenue with GAAP gross margin back to 74.9% (the prior year’s 60.5% carried the $4.5B H20 charge). GAAP net income was $58.3B (+211%), but that includes a one-time <b>$15.9B gain on equity securities</b> — operating income (+147% to $53.5B) is the cleaner read. <b>No Data Center Hopper shipments to China</b> occurred in the quarter (vs $4.6B a year earlier). NVIDIA raised its dividend from $0.01 to $0.25 and added $80B to buybacks. Networking (NVLink, Spectrum-X, InfiniBand) is the fastest-growing line — see the Industry Analysis tab.</div>');
+    '<div class="ov-callout">Q1 FY2027 (ended April 26, 2026): record revenue with GAAP gross margin back to 74.9% (the prior year’s 60.5% carried the $4.5B H20 charge). GAAP net income was $58.3B (+211%), but that includes a one-time <b>$15.9B gain on equity securities</b> — operating income (+147% to $53.5B) is the cleaner read. <b>No Data Center Hopper shipments to China</b> occurred in the quarter (vs $4.6B a year earlier). NVIDIA raised its dividend from $0.01 to $0.25 and added $80B to buybacks. Networking (NVLink, Spectrum-X, InfiniBand) is the fastest-growing line — see the Industry Analysis tab. The next platform, <b>Vera Rubin</b> (Rubin GPU + Vera CPU), is ramping into H2 2026 and drives the FY2027+ forecast.</div>');
 
   // Milestones
   h += sec('Milestones by segment', SEG_MILESTONES.map(function(m){
@@ -394,9 +394,9 @@ var CPU_GPU = [
 // What NVIDIA sells — the full stack, silicon up to software.
 var TECH_STACK = [
   ['Software & ecosystem', '#1F8A70', 'CUDA, cuDNN, TensorRT, AI Enterprise, NIM microservices and Omniverse — the platform developers build on. This is the moat.'],
-  ['Systems', '#2E9E78', 'DGX / HGX servers and GB200 / GB300 NVL72 rack-scale "AI factories" — NVIDIA increasingly sells the whole rack, not just the chip.'],
-  ['Networking', '#3A7CA5', 'NVLink, InfiniBand and Spectrum-X Ethernet (from the Mellanox acquisition) — moving data between thousands of GPUs as if they were one.'],
-  ['Processors', '#5B53A8', 'The GPU (Blackwell), the Grace CPU and the BlueField DPU — designed together to work as one system.'],
+  ['Systems', '#2E9E78', 'DGX / HGX servers and rack-scale "AI factories" — GB200 / GB300 NVL72 today, the new <b>Vera Rubin NVL72</b> (72 Rubin GPUs + 36 Vera CPUs) ramping. NVIDIA increasingly sells the whole rack, not just the chip.'],
+  ['Networking', '#3A7CA5', 'NVLink (now 6th-gen, 3.6 TB/s on Rubin), InfiniBand and Spectrum-X Ethernet (from the Mellanox acquisition) — moving data between thousands of GPUs as if they were one.'],
+  ['Processors', '#5B53A8', 'The GPU (Blackwell → <b>Rubin</b>, ramping now), the CPU (Grace → the new <b>Vera</b>) and the BlueField DPU — designed together to work as one system.'],
   ['Silicon', '#6B7A8F', 'Chips designed by NVIDIA, manufactured by TSMC, with HBM memory from SK hynix / Micron and advanced (CoWoS) packaging.'],
 ];
 // Architecture & product timeline.
@@ -410,7 +410,8 @@ var TECH_TIMELINE = [
   ['2021', 'Announces the <b>Omniverse</b> platform for industrial digital twins and simulation.'],
   ['2022', '<b>Hopper</b> (H100) launches into the ChatGPT demand wave — the workhorse of the AI build-out.'],
   ['2024', '<b>Blackwell</b> (B200 / GB200); NVIDIA executes a 10-for-1 split and briefly becomes the world’s most valuable company.'],
-  ['2025–26', '<b>GB200 / GB300 NVL72</b> rack-scale systems ramp; <b>Rubin</b> is the next platform on the annual cadence.'],
+  ['2025', '<b>GB200 / GB300 NVL72</b> rack-scale systems ramp.'],
+  ['2026', '<b>Vera Rubin</b> — the Rubin R200 GPU (up to ~336B transistors on TSMC 3nm, 288GB HBM4, ~50 PFLOPS FP4) paired with the new <b>Vera</b> CPU — enters production and begins its <b>ramp</b> (Vera Rubin NVL72). <b>Rubin Ultra</b> follows in 2027.'],
 ];
 
 // ── Animated visuals (native CSS/SVG/Chart.js — no external assets) ──────────────
@@ -424,10 +425,12 @@ var MOORE = [
   [2012, 7100000000, 'NVIDIA Kepler GK110', 'n', 28, null], [2016, 15300000000, 'NVIDIA Pascal GP100', 'n', 16, 21],
   [2017, 21100000000, 'NVIDIA Volta GV100', 'n', 12, 125], [2020, 54200000000, 'NVIDIA Ampere GA100', 'n', 7, 312],
   [2022, 80000000000, 'NVIDIA Hopper H100', 'n', 4, 990], [2024, 208000000000, 'NVIDIA Blackwell B200', 'n', 4, 2250],
+  [2026, 336000000000, 'NVIDIA Rubin R200 (ramping)', 'n', 3, null],
 ];
 // Flagship data-center GPU transistor counts (billions) by architecture.
 var GPU_GENS = [['Pascal · 2016','GP100',15.3], ['Volta · 2017','GV100',21.1],
-  ['Ampere · 2020','GA100',54.2], ['Hopper · 2022','GH100',80], ['Blackwell · 2024','GB200',208]];
+  ['Ampere · 2020','GA100',54.2], ['Hopper · 2022','GH100',80], ['Blackwell · 2024','GB200',208],
+  ['Rubin · 2026','R200',336,true]];
 // Transistor-shrink steps: [process node, year reached, transistor label, grid dimension].
 var TR_STEPS = [['90 nm','2004','~50M transistors',7], ['45 nm','2008','~250M transistors',10],
   ['28 nm','2011','~1.5B transistors',13], ['16 nm','2015','~8B transistors',17], ['7 nm','2018','~20B transistors',22],
@@ -449,7 +452,7 @@ function mooreCard(){
   return '<div class="ov-chart-card"><div class="ov-chart-t">Transistors, process node &amp; AI compute · 1971–2024 '+
     '<span>(log scales · green = transistors/chip, orange = process node nm, blue = AI TFLOPS)</span></div>'+
     '<div class="ov-chart-wrap ovs-tall"><canvas id="nvdaMooreChart"></canvas></div>'+
-    '<div class="ov-asof" style="margin-top:10px">As the <b>process node shrinks</b> (orange, falling) more transistors fit per chip (green, rising) and <b>AI compute explodes</b> (blue) — Hopper and Blackwell deliver thousands of FP16 TFLOPS. AI TFLOPS are FP16 tensor figures, illustrative; the CPUs of the 1970s–2000s predate this metric.</div></div>';
+    '<div class="ov-asof" style="margin-top:10px">As the <b>process node shrinks</b> (orange, falling) more transistors fit per chip (green, rising) and <b>AI compute explodes</b> (blue) — Hopper and Blackwell deliver thousands of FP16 TFLOPS. <b>Vera Rubin</b> (2026, ramping) extends the curve to ~336B transistors on a 3nm node. AI TFLOPS are FP16 tensor figures, illustrative; the CPUs of the 1970s–2000s predate this metric.</div></div>';
 }
 function transistorShrink(){
   return '<div class="tr-shrink"><div class="tr-die" id="trDie"></div>'+
@@ -459,13 +462,13 @@ function transistorShrink(){
     '<span class="tr-hint">Smaller process node → more transistors, smaller and closer together. The year marks roughly when each node reached volume production. The dots are an illustration, not to scale.</span></div></div>';
 }
 function gpuGenBars(){
-  var max=208;
+  var max=336;
   return '<div class="gen-bars" id="genBars">'+GPU_GENS.map(function(g){
-    return '<div class="gen-row"><div class="gen-name">'+esc(g[0])+'</div>'+
-      '<div class="gen-track"><div class="gen-fill" style="--w:'+(g[2]/max*100).toFixed(1)+'%"></div></div>'+
+    return '<div class="gen-row"><div class="gen-name">'+esc(g[0])+(g[3]?' <span class="gen-tag">ramping</span>':'')+'</div>'+
+      '<div class="gen-track"><div class="gen-fill'+(g[3]?' ramping':'')+'" style="--w:'+(g[2]/max*100).toFixed(1)+'%"></div></div>'+
       '<div class="gen-val">'+g[2]+'B</div></div>';
   }).join('')+'</div>'+
-  '<div class="ov-asof">Bars = transistors per flagship data-center GPU (billions). Architectural advances (Tensor Cores, FP8/FP4 precision) multiplied real AI throughput even faster than transistor count. Blackwell B200 packs 208B across two dies joined as one.</div>';
+  '<div class="ov-asof">Bars = transistors per flagship data-center GPU (billions). <b>Vera Rubin (R200, 2026)</b> — up to ~336B transistors on TSMC 3nm with HBM4 — is <b>ramping now</b> and roughly doubles Blackwell’s FP4 throughput (~50 vs ~20 PFLOPS). Architectural advances (Tensor Cores, FP8/FP4 precision) lifted real AI performance even faster than transistor count. Rubin figures are as reported during its ramp.</div>';
 }
 // Interactive pseudo-3D "what NVIDIA sells" stack. Slabs are stacked silicon→software in an
 // isometric scene; toggles highlight one layer and show its detail (+ a slot for product photos).
@@ -617,7 +620,7 @@ function buildMooreChart(){
             if(id==='yFl') return 'AI compute: '+(v>=1000?(v/1000).toFixed(2)+' PFLOPS':v+' TFLOPS')+' (FP16)';
             return 'Transistors: '+fmtTr(v); } } } },
       scales:{
-        x:{ type:'linear', min:1970, max:2026, grid:{ display:false },
+        x:{ type:'linear', min:1970, max:2027, grid:{ display:false },
           ticks:{ color:'#8A93A0', font:{size:10}, stepSize:10, callback:function(v){ return v; } } },
         y:{ type:'logarithmic', position:'left', grid:{ color:'rgba(0,0,0,.05)' },
           title:{ display:true, text:'Transistors / chip', color:'#5a9e16', font:{size:10,weight:'600'} },

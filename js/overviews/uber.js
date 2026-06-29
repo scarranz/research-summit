@@ -284,7 +284,7 @@ var SC_CUSTOMERS = [
     impact:{ kind:'good', text:'The fastest-growing piece (~<b>$12B run-rate</b>) — bigger baskets, higher frequency, 5 of the top-10 US grocers on platform.' } },
   { h:'International & Notable', tag:'global + partners',
     role:'Extend the merchant network globally, plus partnerships (Instacart, airlines).',
-    players:[['FEMSA','femsa.com'],['Rakuten','rakuten.com'],['Cencosud','cencosud.com'],['Loblaw','loblaw.ca'],['Instacart','instacart.com'],['Delta','delta.com']],
+    players:[['FEMSA','femsa.com','FMX'],['Rakuten','rakuten.com','RKUNY'],['Cencosud','cencosud.com'],['Loblaw','loblaw.ca'],['Instacart','instacart.com','CART'],['Delta','delta.com','DAL']],
     impact:{ kind:'mixed', text:'Broadens reach into emerging markets (cheaper baskets, lower take in $). The <b>Instacart (Maplebear)</b> tie-up adds suburban demand with ~20% larger baskets.' } },
 ];
 var SC_SUP_GEO = [
@@ -311,9 +311,15 @@ var SC_CUS_GEO = [
   { c:'South Korea', fpct:0.7, fac:19 },
 ];
 
-// Grayscale logo chip (clearbit -> favicon fallback); hover shows the name + colorizes.
-function scLogo(name,domain){
-  return '<div class="usc-logo" title="'+esc(name)+'"><img src="https://logo.clearbit.com/'+domain+'" alt="'+esc(name)+'" loading="lazy" onerror="this.onerror=null;this.src=\'https://www.google.com/s2/favicons?domain='+domain+'&sz=64\'"></div>';
+// Color logo chip. Primary = parqet-by-ticker when a ticker is given (most reliable, CSP-allowed),
+// else Clearbit by domain; falls back through Clearbit then a Google favicon. p = [name, domain, ticker?].
+function scLogo(name,domain,ticker){
+  var primary = ticker ? 'https://assets.parqet.com/logos/symbol/'+ticker : 'https://logo.clearbit.com/'+domain;
+  var fav = 'https://www.google.com/s2/favicons?domain='+domain+'&sz=64';
+  var clear = 'https://logo.clearbit.com/'+domain;
+  // primary -> clearbit -> favicon
+  var onerr = "this.onerror=function(){this.onerror=null;this.src='"+fav+"'};this.src='"+clear+"'";
+  return '<div class="usc-logo" title="'+esc(name)+'"><img src="'+primary+'" alt="'+esc(name)+'" loading="lazy" onerror="'+onerr+'"></div>';
 }
 function scCard(g){
   var imp=g.impact?'<div class="usc-imp usc-imp-'+g.impact.kind+'"><b>'+(g.impact.kind==='mixed'?'For Uber ⚠':'For Uber ✓')+'</b> '+g.impact.text+'</div>':'';
@@ -321,9 +327,28 @@ function scCard(g){
   return '<div class="usc-card'+(g.big?' usc-card-wide':'')+'">'+
     '<div class="usc-card-h">'+esc(g.h)+(g.tag?'<span class="usc-tag">'+esc(g.tag)+'</span>':'')+'</div>'+
     role+
-    '<div class="usc-logos">'+g.players.map(function(p){ return scLogo(p[0],p[1]); }).join('')+'</div>'+
+    '<div class="usc-logos">'+g.players.map(function(p){ return scLogo(p[0],p[1],p[2]); }).join('')+'</div>'+
     imp+
   '</div>';
+}
+// Aleka insurance "float" as a clickable money-flow diagram (steps map to ALEKA_CHAIN modals).
+function alkFlow(){
+  var h='<style>'+
+    '.alk-flow{display:flex;align-items:stretch;flex-wrap:wrap;margin:6px 0 2px}'+
+    '.alk-step{flex:1;min-width:130px;border:1px solid var(--bdr);border-radius:10px;padding:11px 12px;background:var(--w);cursor:pointer;transition:border-color .15s,box-shadow .15s}'+
+    '.alk-step:hover{border-color:var(--brand);box-shadow:0 2px 8px rgba(0,0,0,.06)}'+
+    '.alk-step.pay{border:2px solid #06C167;background:rgba(6,193,103,.07)}'+
+    '.alk-n{font-size:9px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.04em}'+
+    '.alk-t{font-size:12px;font-weight:700;color:var(--navy);margin-top:4px;line-height:1.3}'+
+    '.alk-more{font-size:10px;color:var(--brand);font-weight:600;margin-top:5px}'+
+    '.alk-arr{flex:none;align-self:center;color:var(--brand);font-size:18px;font-weight:700;padding:0 5px}'+
+    '@media(max-width:720px){.alk-step{min-width:100%}.alk-arr{transform:rotate(90deg);padding:4px 0;width:100%;text-align:center}}'+
+  '</style><div class="alk-flow">';
+  ALEKA_CHAIN.forEach(function(s,i){
+    if(i) h+='<div class="alk-arr">→</div>';
+    h+='<div class="alk-step ov-clickable'+(s.payoff?' pay':'')+'" data-detail="aleka:'+i+'"><div class="alk-n">Step '+(i+1)+(s.payoff?' · payoff':'')+'</div><div class="alk-t">'+esc(s.t)+'</div><div class="alk-more">tap ›</div></div>';
+  });
+  return h+'</div>';
 }
 // Map our country labels to the GeoJSON's names (which differ for a few).
 function geoName(c){ return ({ 'United States':'USA', 'United Kingdom':'England' })[c] || c; }
@@ -444,8 +469,12 @@ var UBERONE_STAT=[
   { l:'Members', v:'50M+', s:'+50% YoY (Q1 2026)' },
   { l:'% of bookings', v:'>50%', s:'of combined Mobility+Delivery' },
   { l:'Member spend', v:'~3×', s:'vs non-members' },
-  { l:'Penetration', v:'~25%', s:'of monthly users — the runway' },
+  { l:'Countries', v:'42', s:'up from 28 a year earlier' },
 ];
+// Member count over time (millions) — from the earnings calls.
+var UBERONE_GROWTH={ labels:['4Q23','1Q24','2Q24','4Q24','2Q25','3Q25','1Q26'], data:[19,22,25,30,36,46,50] };
+// Monthly spend per user (Summit deck, Dec 2024) — the gap is the whole thesis.
+var UBERONE_SPEND=[ ['Uber One member', 100, '~$192/mo', BRAND2], ['Non-member', 33, '~$64/mo', GRAY] ];
 function barbellDiagram(){
   var h='<style>'+
     '.bb-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 0}'+
@@ -539,7 +568,7 @@ function mobilityBody(c){
     '.usc-logos{display:flex;flex-wrap:wrap;gap:8px}'+
     '.usc-logo{width:92px;height:42px;border:1px solid var(--bdr);border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;padding:7px;transition:border-color .15s,box-shadow .15s}'+
     '.usc-logo:hover{border-color:var(--brand);box-shadow:0 2px 8px rgba(0,0,0,.07)}'+
-    '.usc-logo img{max-width:100%;max-height:100%;object-fit:contain;filter:grayscale(1);opacity:.72;transition:filter .15s,opacity .15s}.usc-logo:hover img{filter:grayscale(0);opacity:1}'+
+    '.usc-logo img{max-width:100%;max-height:100%;object-fit:contain}'+
     '.usc-imp{font-size:11.5px;line-height:1.5;margin-top:11px;padding:8px 11px;border-radius:8px}.usc-imp b{font-weight:700}'+
     '.usc-imp-good{background:rgba(6,193,103,0.08);border:1px solid rgba(6,193,103,0.28);color:var(--navy)}.usc-imp-good b{color:#06965A}'+
     '.usc-imp-mixed{background:rgba(232,160,12,0.09);border:1px solid rgba(232,160,12,0.32);color:var(--navy)}.usc-imp-mixed b{color:#B7791F}'+
@@ -567,16 +596,35 @@ function mobilityBody(c){
     '<div class="tech-leg"><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+MOB+'"></span>Mobility</span><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+DEL+'"></span>Delivery</span></div>'+
     '<div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartTake"></canvas></div>'+
     '<div class="ov-fynote" style="margin-top:10px">Mobility take held ~30% until the 1Q26 dip to ~25.8% — a <span class="ov-clickable" data-detail="note:take" style="color:#06C167;font-weight:600;cursor:pointer">UK accounting artifact ›</span>, not real compression.</div>');
-  h+=sec('Autonomous Vehicles — partner or threat?',
-    '<div class="ov-callout"><div class="ov-tl-body"><b>The one question that decides the long term:</b> do robotaxis disrupt Uber, or does Uber become where AV fleets find demand? Uber sold its own AV unit in 2020 and bet on <b>aggregating demand, not building cars.</b></div></div>'+
-    '<div class="ov-sec-h" style="margin-top:18px">The evidence</div>'+
-    bullets([
-      '<b>Asset-light:</b> sold ATG → Aurora (2020); it’s the demand layer, not a fleet owner.',
-      '<b>30+ AV partners</b> (Waymo, Lucid+Nuro, WeRide, Pony.ai, Zoox, NVIDIA…), capped by Uber Autonomous Solutions (Feb 2026).',
-      '<b>Scaling:</b> AV mobility trips <b>>10× YoY</b> (Q1 2026); 15+ cities targeted by end-2026.',
-      '<b>Hybrid edge:</b> human + AV supply smooths peaks; ~30% higher trips/vehicle than AV-only.',
-    ])+
-    '<div class="ov-fynote"><b>The real risk:</b> Waymo runs its own app in SF/Phoenix/LA — direct disintermediation. Uber’s counter (Q1 2026): <b>"no effect on our overall business,"</b> with US mobility accelerating. AV is run as the newest barbell growth bet.</div>');
+  h+=sec('Autonomous Vehicles — Partner or Threat?',
+    '<style>'+
+      '.av-vs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 4px}'+
+      '.av-col{border:1px solid var(--bdr);border-radius:10px;padding:14px 16px;background:var(--w)}'+
+      '.av-bad{border-top:3px solid #C0392B}.av-good{border-top:3px solid #06C167;background:var(--surface)}'+
+      '.av-col-h{font-size:13px;font-weight:800;color:var(--navy)}'+
+      '.av-col-s{font-size:11px;color:var(--mu);margin:2px 0 10px}'+
+      '.av-li{font-size:12px;color:var(--navy);line-height:1.45;padding:6px 0;border-top:1px solid var(--bdr);display:flex;gap:7px}'+
+      '.av-li:first-of-type{border-top:none}.av-li b{font-weight:700}'+
+      '.av-li .av-k{color:var(--mu);min-width:70px;flex:none;font-weight:600}'+
+      '@media(max-width:720px){.av-vs{grid-template-columns:1fr}}'+
+    '</style>'+
+    '<div class="ov-callout"><div class="ov-tl-body"><b>The question that hit the multiple.</b> When Tesla and other AV players unveiled robotaxi launches, UBER’s multiple <b>compressed</b> — the market feared autonomy would disintermediate the platform. Uber’s answer in every call: the future is <b>hybrid</b> (human + AV), and Uber is the demand layer for it.</div></div>'+
+    '<div class="av-vs">'+
+      '<div class="av-col av-bad"><div class="av-col-h">Own the robotaxi fleet</div><div class="av-col-s">Tesla · Waymo on its own app</div>'+
+        '<div class="av-li"><span class="av-k">Cars</span><span>bought & maintained by <b>one company</b></span></div>'+
+        '<div class="av-li"><span class="av-k">Capex</span><span><b>Heavy</b> — a balance-sheet sink</span></div>'+
+        '<div class="av-li"><span class="av-k">Margins</span><span><b>Lower</b> — fleet, depot, insurance costs</span></div>'+
+        '<div class="av-li"><span class="av-k">Scale</span><span>city-by-city, gated by capital</span></div>'+
+      '</div>'+
+      '<div class="av-col av-good"><div class="av-col-h">Aggregate the demand — Uber</div><div class="av-col-s">30+ AV partners · cars Uber doesn’t own</div>'+
+        '<div class="av-li"><span class="av-k">Cars</span><span><b>millions</b> Uber doesn’t own (incl. AV partners)</span></div>'+
+        '<div class="av-li"><span class="av-k">Capex</span><span><b>Asset-light</b> → ~100% FCF conversion</span></div>'+
+        '<div class="av-li"><span class="av-k">Margins</span><span><b>Higher</b> — marketplace take, no fleet</span></div>'+
+        '<div class="av-li"><span class="av-k">Scale</span><span>instant via existing demand; hedged across partners</span></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="ov-callout" style="border-left:3px solid var(--brand)"><div class="ov-tl-body"><b>Summit’s take:</b> ripping out Uber’s network of <b>millions of cars it doesn’t own</b> and replacing it with capex-heavy fleets owned by one or two companies is structurally <b>worse</b> — it destroys the asset-light model (turning a ~100%-FCF compounder into a capex sink) and the margins would be far lower. <b>That is what a lower multiple prices in.</b> The hybrid model — Uber aggregating others’ AVs — keeps the economics that make Uber, Uber. We read the post-Tesla de-rating as over-weighting the threat.</div></div>'+
+    '<div class="ov-fynote" style="margin-top:12px"><b>Evidence it’s working:</b> AV mobility trips <b>>10× YoY</b> (Q1 2026), 30+ partners, 15+ cities targeted by end-2026, ~30% higher trips/vehicle on Uber-managed AV vs AV-only — and management reports <b>"no effect of the Waymo launches on our overall business."</b></div>');
   h+=sec('Who Powers Mobility — the supplier ecosystem',
     '<div class="ov-diagram-cap" style="margin:0 0 10px">Mostly strategic/equity ties (not vendor bills): Uber brings the demand, partners bring cars, rails & infra. Hover a logo for the name.</div>'+
     '<div class="usc-grid">'+SC_SUPPLIERS.map(scCard).join('')+'</div>'+
@@ -584,8 +632,9 @@ function mobilityBody(c){
     worldChoropleth(SC_SUP_GEO, BRAND)+
     '<div class="ov-fynote" style="margin-top:8px"><b>Non-obvious:</b> Uber sources AV from the US <i>and China</i> (WeRide, Pony.ai) though it exited China in 2016 — buying Chinese AV capability to deploy everywhere else. <span class="ave-subh-note">Bloomberg SPLC, 29-Jun-2026.</span></div>');
   h+=sec('Insurance — the Aleka float',
-    '<p class="ov-lede" style="margin:0 0 12px">Uber owns its insurer, <b>Aleka</b>: riders fund insurance in the fare, Aleka invests the float, the spread returns to Uber. <b>Tap any step.</b></p>'+
-    chain(ALEKA_CHAIN,'aleka')+
+    '<p class="ov-lede" style="margin:0 0 12px">Uber owns its insurer, <b>Aleka</b>: riders fund insurance in the fare, Aleka invests the float (~<b>$12.9B</b> reserves), and the underwriting spread returns to Uber. <b>Tap any step.</b></p>'+
+    alkFlow()+
+    '<div class="ov-fynote" style="margin-top:10px">The payoff: <b>premiums + investment income − claims = a spread</b> that lands in Uber’s cash flow — ~<b>$0.35 of every $10 trip</b>. A cash-burning crutch in 2021–22; a steady supplement now.</div>'+
     '<div class="ov-sec-h ovt-store-h" style="margin-top:18px">From crutch to tailwind</div>'+
     '<div class="ir-phases">'+irPhase(INS_TL[0],'crutch','Crutch')+irPhase(INS_TL[1],'head','Headwind')+irPhase(INS_TL[2],'tail','Tailwind')+'</div>');
   h+=sec('Regulation & Driver Classification', '<div class="ir-reg">'+REGV.map(regCard).join('')+'</div>');
@@ -629,13 +678,15 @@ function deliveryBody(c){
 // ─── Pane: Uber One (membership + the cross-sell flywheel) ───────────────────
 function uberOneBody(c){
   var h='';
-  h+='<p class="ov-lede"><b>Uber One</b> is the membership that binds Mobility and Delivery — the cross-sell flywheel in one product.</p>';
+  h+='<p class="ov-lede"><b>Uber One</b> is the membership that binds Mobility and Delivery — the cross-sell flywheel in one product, and one of the most important pieces of the Uber story.</p>';
   h+='<div class="ov-kpis">'+UBERONE_STAT.map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d muted">'+esc(k.s)+'</div></div>'; }).join('')+'</div>';
-  h+=sec('Why it compounds', bullets([
-    '<b>Members spend ~3×</b> non-members and retain ~35% better.',
-    'In Delivery, members already drive ~<b>two-thirds</b> of bookings.',
-    'New members run <b>negative-margin ~6 months</b> (benefits cost), then turn profitable — so penetration (~25% of monthly users) is the lever.',
-  ]));
+  h+=sec('Explosive Member Growth — 19M → 50M+ in ~2 years',
+    '<div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartMembers"></canvas></div>'+
+    '<div class="ave-subh-note" style="margin-top:4px">~20M members added in the last year alone · now live in <b>42 countries</b> (up from 28). "Don’t see it slowing down." — mgmt, Q1 2026</div>');
+  h+=sec('Why Members Are Worth ~3×',
+    '<div class="ov-subh">Monthly spend per user <span class="ave-subh-note">(Summit deck, Dec 2024)</span></div>'+
+    mbars(UBERONE_SPEND)+
+    '<div class="ov-fynote" style="margin-top:10px"><b>The gap is the whole thesis.</b> Members spend ~3× and retain ~35% better; in Delivery they already drive ~<b>two-thirds</b> of bookings. New members run <b>negative-margin ~6 months</b> (benefits cost) then turn profitable — so penetration (~25% of monthly users) is the lever still to pull.</div>');
   h+=sec('The Cross-Sell Flywheel', '<div class="ov-callout"><div class="ov-tl-body"><b>"Go anywhere, get anything."</b> One demand graph cross-sells rides ⇄ eats ⇄ grocery. ~<b>40%</b> of users use multiple products; ~⅓ of Eats customers arrived through the Rides app (near-zero CAC). Each added product lowers blended CAC and lifts LTV — a moat rivals can’t cheaply copy.</div></div>');
   h+=sec('Platform Expansion',
     '<div class="ov-row"><div class="ov-row-k">Uber for Business</div><div class="ov-row-v">B2B corporate rides, meals & travel — >$5B of bookings, growing >2× faster than Mobility.</div></div>'+
@@ -824,12 +875,14 @@ function buildOverviewCharts(){
 }
 function buildMobilityCharts(){ buildLines('ubChartTake', Q13, { label:'Mobility', data:MOB_TAKE, color:MOB }, { label:'Delivery', data:DEL_TAKE, color:DEL }, pf); }
 function buildDeliveryCharts(){ buildLines('ubChartMargin', Q13.slice(0,12), { label:'Mobility', data:MOB_MARGIN, color:MOB }, { label:'Delivery', data:DEL_MARGIN, color:DEL }, pf); }
+function buildUberOneCharts(){ buildLines('ubChartMembers', UBERONE_GROWTH.labels, { label:'Members', data:UBERONE_GROWTH.data, color:BRAND2 }, null, function(v){ return v+'M'; }); }
 function showOvt(root,key){
   root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt')===key); });
   root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovt')!==key); });
   if(key==='overview') requestAnimationFrame(buildOverviewCharts);
   if(key==='mobility') requestAnimationFrame(buildMobilityCharts);
   if(key==='delivery') requestAnimationFrame(buildDeliveryCharts);
+  if(key==='uberone') requestAnimationFrame(buildUberOneCharts);
   if(key==='model')    requestAnimationFrame(buildModelTab);
 }
 function wireModal(root){

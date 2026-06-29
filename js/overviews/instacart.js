@@ -154,6 +154,38 @@ var HEADWINDS = [
   '<b>Thin grocery economics & retailer concentration.</b> Low category margins and dependence on a few large banners — <i>mechanism:</i> a big retailer leaving (or building in-house) can move volume materially.',
 ];
 
+// ─── Peers / Competitive Landscape ──────────────────────────────────────────
+var PEERS = [
+  { n:'DoorDash', k:'DASH', angle:'Grocery as an <b>extension of restaurant delivery</b>. Small-basket, high-frequency convenience model. Largest US last-mile network but grocery baskets are ~3\u00d7 smaller than Instacart\u2019s.',
+    edge:'Last-mile density, brand recognition with younger/urban consumers, DashPass cross-sell.',
+    gap:'No enterprise platform for retailers, no in-store tech, no closed-loop ad network at Instacart\u2019s scale.' },
+  { n:'Amazon Fresh / Whole Foods', k:'AMZN', angle:'Full vertical: <b>owns stores, warehouses, logistics, and Prime</b>. The existential competitor \u2014 the reason independent retailers partner with Instacart in the first place.',
+    edge:'Prime 200M+ members, owned fulfillment, unlimited capital, Whole Foods + Amazon Fresh physical footprint.',
+    gap:'Retailers view Amazon as the threat, not a partner. Amazon\u2019s ad network is massive but not grocery-specific. Fresh/Whole Foods market share still small vs traditional grocery.' },
+  { n:'Walmart', k:'WMT', angle:'<b>Largest US grocer</b> with owned stores, pickup infrastructure, and Walmart+ membership. Does not need a third-party marketplace.',
+    edge:'Unmatched physical footprint, price leadership, $100B+ grocery revenue, Walmart Connect ads.',
+    gap:'Closed ecosystem \u2014 only Walmart stores. No multi-retailer platform, no enterprise offering for other grocers.' },
+  { n:'Uber Eats', k:'UBER', angle:'Restaurant-first platform expanding into grocery/convenience. <b>Instacart partner</b> (powers restaurant delivery on the Instacart app) and competitor simultaneously.',
+    edge:'Global footprint, massive driver network, Uber One cross-sell with rides.',
+    gap:'Grocery baskets smaller, no retailer enterprise suite, no in-store tech. The Instacart partnership suggests Uber sees more value partnering than competing head-on in large-basket grocery.' },
+];
+
+// ─── Strategic Initiatives (things the calls discuss but the overview doesn't cover) ──
+var STRAT_INIT = [
+  { ic:'\ud83c\udf54', n:'Restaurant Integration', chip:'live',
+    s:'Uber Eats powers restaurant delivery inside the Instacart app. Not a revenue play \u2014 restaurant customers <b>return more frequently for grocery</b> and adopt Instacart+ at higher rates. Baskets exceed Uber\u2019s own platform average because Instacart\u2019s user base skews family/suburban.',
+  },
+  { ic:'\ud83d\udcb0', n:'Affordability & Price Parity', chip:'scaling',
+    s:'Systematic investment in closing the gap between in-store and delivery prices. $10 minimum basket (viable only at Instacart\u2019s order density). Price-sensitive cohorts show <b>better retention than average</b> \u2014 affordability is a customer-quality tool, not just expansion.',
+  },
+  { ic:'\ud83c\udf0d', n:'International Expansion (Instaleap)', chip:'Apr 2026',
+    s:'<b>What it is:</b> Instacart <b>acquired Instaleap</b> (Apr 2026, terms undisclosed) \u2014 a Colombia-born grocery-<b>fulfillment software</b> company that already powers ~100 retailers across ~30 countries in Europe, Latin America and the Middle East. <b>Why it matters:</b> Instacart\'s consumer Marketplace is US/Canada-only and brutally expensive to rebuild abroad (demand, a shopper network, a brand). Instaleap is the shortcut \u2014 an <b>instant international base of retailer relationships</b> Instacart can monetize by layering on its high-margin <b>Enterprise</b> tech (ads, data, Connected Stores, AI) <b>without building its own marketplace or delivery network</b>. In short: the international arm of the <b>Enterprise</b> motion \u2014 asset-light, lean capital, land-and-expand.',
+  },
+  { ic:'\ud83e\udd16', n:'Agentic Commerce', chip:'early',
+    s:'Native checkout inside <b>ChatGPT</b> (Instant Checkout across 1,800+ retailers). Cart Assistant live with ~25% of U.S. customers \u2014 removes friction from recipe discovery, meal planning, basket assembly. Positioning: co-create what grocery looks like <b>inside AI platforms</b> before patterns calcify.',
+  },
+];
+
 // ─── History & Milestones (sourced; dates verified on the load-bearing ones) ──
 var TIMELINE = [
   { y:'2012', t:'<b>Founded</b> in San Francisco by <b>Apoorva Mehta</b> (ex-Amazon) with Max Mullen &amp; Brandon Leonardo; joins Y Combinator (S12).',
@@ -178,7 +210,73 @@ var TIMELINE = [
 ];
 var TL_NOTE = 'Milestones from Instacart press releases and public reporting; load-bearing dates (IPO, CEO changes, the $39B peak, acquisitions) verified against primary sources.';
 
-var SOURCES = 'Sources: Instacart (Maplebear Inc., NASDAQ: CART) — KPI &amp; financial charts (GTV, orders, transaction &amp; advertising revenue, adjusted EBITDA) are <b>historical actuals from the Summit DCF model (FY2021–2025)</b>; qualitative content from public filings &amp; investor materials (10-K / quarterly results, S-1). Some segment splits are the strategic view, not the two reported revenue lines. Forecast years are excluded by design.';
+var SOURCES = 'Sources: Instacart (Maplebear Inc., NASDAQ: CART) \u2014 KPI & financial charts are historical actuals from the Summit DCF model (annual FY2021\u20132025, quarterly 1Q22\u20131Q26). Qualitative content from public filings & investor materials. Earnings call highlights from Quartr transcripts. Stock-price changes from Investing.com (close-to-close). Competitor profiles from public information. Forecast years excluded by design.';
+
+// ─── Earnings Calls (10 calls, Q3 2023 → Q1 2026, most recent first) ────────
+// Price changes: close on call day → close next trading day (Investing.com).
+// Highlights: qualitative only, as of that point in time. Source: Quartr transcripts.
+var CALLS = [
+  { q:'Q1 2026', date:'May 6, 2026', chg:-8.2,
+    hl:[
+      'Cart Assistant live with a quarter of U.S. customers — removing friction from <b>recipe discovery, meal planning, basket assembly</b>. Management frames this as accelerating total online grocery adoption, not just Instacart share.',
+      'Price parity with in-store no longer a negotiation talking point — <b>consistent data on faster growth and retention</b> when retailers adopt it. Challenge reframed as retailer short-term margin vs long-term share.',
+      '<b>Instaleap acquisition</b> moves international from concept to execution; existing fulfillment platform with retailer relationships in Europe and Latin America fits land-and-expand model.',
+    ]},
+  { q:'Q4 2025', date:'Feb 12, 2026', chg:+9.2,
+    hl:[
+      'Competition reframed as <b>tailwind for enterprise adoption</b> — Amazon\u2019s grocery expansion creates urgency for independent retailers to partner, and Instacart is the only player with both marketplace and enterprise.',
+      'AI reframed as a <b>data compounding</b> story: physical operations (shoppers making replacements, scanning shelves) generate operational grocery data purely digital companies cannot acquire.',
+      'Agentic commerce framing — native checkout integrations with <b>ChatGPT</b> "urgent to co-create what grocery looks like inside AI platforms."',
+    ]},
+  { q:'Q3 2025', date:'Nov 10, 2025', chg:+5.0,
+    hl:[
+      'Identity formally redefined: <b>"technology and enablement partner for the grocery industry"</b> not just marketplace. Enterprise platform with five pillars becomes the narrative center.',
+      'Advertising Q4 guide flagged as <b>unsatisfactory</b>; double-digit return committed for next year with specific building blocks: on-platform formats, Carrot Ads expansion, Caper in-store ads, off-platform partnerships.',
+      'International expansion concrete and near-term — taking existing enterprise products into markets with same retailer problems; commitment to <b>no marketplace buildout</b>, lean capital profile.',
+    ]},
+  { q:'Q2 2025', date:'Aug 7, 2025', chg:+3.7,
+    hl:[
+      'Instacart dominant by sales share among digital-first platforms <b>across basket sizes</b>; non-exclusive retailers plateau while Instacart grows.',
+      'Single large brand pullback absorbed with healthy ad growth — <b>multi-year diversification effort validated</b>; same shock a year prior would have caused several-point deceleration.',
+      'Large CPG pressure is <b>structural</b> — portfolio repositioning toward high-protein and away from sugar/alcohol — making brands systematically more cautious advertisers regardless of macro.',
+    ]},
+  { q:'Q1 2025', date:'May 1, 2025', chg:+13.6,
+    hl:[
+      'Macro and regulatory uncertainty (tariffs, SNAP cuts, ingredient regulations) creating advertiser caution, but <b>no platform behavior changes observed</b>.',
+      'Small basket program captures genuinely <b>additive midweek fill-in orders</b> without pulling down large-basket weekly shop behavior.',
+      'Carrot Ads network <b>self-reinforcing</b>: existing CPG demand validates the technology before pitching new retailers, unlike pure-play retail media vendors.',
+    ]},
+  { q:'Q4 2024', date:'Feb 25, 2025', chg:-12.3,
+    hl:[
+      '$10 minimum basket economical <b>only at Instacart\u2019s order density</b> — small orders batch on top of existing dense networks, making what competitors find unprofitable entirely viable.',
+      'Affordability infrastructure reached coverage threshold; <b>recent cohort quality improvement now visible in data</b>, linking customer engagement directly to cumulative investment.',
+      'AI moved from experimentation to operational infrastructure — continuous decade-long improvement in <b>replacements and found/fill rates</b> reflects proprietary operational data competitors cannot access.',
+    ]},
+  { q:'Q3 2024', date:'Nov 12, 2024', chg:-11.0,
+    hl:[
+      'Affordability programs convert price-sensitive users who show <b>better retention than average</b>, making price removal a customer quality tool not just market expansion.',
+      '<b>Caper Carts reaching meaningful in-store penetration in months</b> rather than years, positioning the physical store as Instacart\u2019s next frontier.',
+      'Restaurant and grocery treated as <b>one integrated platform</b> intentionally; separating them would misrepresent how restaurants drive value back into grocery.',
+    ]},
+  { q:'Q2 2024', date:'Aug 6, 2024', chg:+2.8,
+    hl:[
+      'Restaurant customers return more frequently for grocery and spend more; restaurant baskets <b>exceed Uber\u2019s platform average</b>, attributed to the family-skewed user base.',
+      'Enterprise storefronts improve in-store order density \u2192 better batching \u2192 affordability reinvestment — a <b>flywheel marketplace competitors cannot replicate</b>.',
+      'Emerging brands growing faster than platform and offsetting large brand pullback; the work is as much a <b>product problem</b> (self-serve tooling, ROI clarity) as a sales problem.',
+    ]},
+  { q:'Q1 2024', date:'May 8, 2024', chg:-3.7,
+    hl:[
+      '<b>Uber Eats restaurant partnership</b> creates habitual app usage; financial benefit shows up indirectly through grocery frequency and subscription adoption, not restaurant revenue.',
+      'Large brand advertising pullback <b>concentrated in alcohol</b>; diversifying away from that concentration became the top strategic priority.',
+      'Enterprise platform evolved into an <b>integrated suite</b> where retailers could access storefront, Caper Carts, FoodStorm, and Carrot Ads simultaneously.',
+    ]},
+  { q:'Q3 2023', date:'Nov 8, 2023', chg:-10.1,
+    hl:[
+      'Large basket grocery <b>defensible against restaurant delivery entrants</b> — converting small baskets into large ones is uniquely difficult and structural to who owns the category.',
+      'Non-exclusive retailers actually <b>deepen their relationship</b> through enterprise products and higher-fee structures — exclusivity was never the strategy.',
+      'Advertising growth softening was <b>mechanical</b> (lapping 2022 launches) not structural, with four long-term levers outlined to sustain growth.',
+    ]},
+];
 
 // ─── KPIs & Financials (HISTORICAL ONLY, from the Summit DCF model) ──────────
 // Annual; $ in USD millions, orders in millions. We deliberately use ACTUALS
@@ -265,6 +363,20 @@ function pillarCards(segKey){
       '<div class="ov-card-s">'+s.what+'</div><div class="ov-more">How it monetizes ›</div></div>';
   }).join('')+'</div>';
 }
+function peersHtml(){
+  return '<div class="ov-cards ov-cards-2">'+PEERS.map(function(p){
+    return '<div class="ov-card ov-clickable" data-detail="peer:'+esc(p.k)+'">'+
+      '<div class="ov-card-h"><span class="ov-card-n">'+esc(p.n)+'</span><span class="ov-chip">'+esc(p.k)+'</span></div>'+
+      '<div class="ov-card-s">'+p.angle+'</div><div class="ov-more">Edge & gap ›</div></div>';
+  }).join('')+'</div>';
+}
+function stratHtml(){
+  return '<div class="ov-cards ov-cards-2">'+STRAT_INIT.map(function(s){
+    return '<div class="ov-card">'+
+      '<div class="ov-card-h"><span class="ov-card-n">'+s.ic+' '+esc(s.n)+'</span><span class="ov-chip">'+esc(s.chip)+'</span></div>'+
+      '<div class="ov-card-s">'+s.s+'</div></div>';
+  }).join('')+'</div>';
+}
 function hubHtml(){
   return '<div class="ov-hub"><div class="ov-hub-center">'+
     '<div class="ov-hub-box ov-clickable" data-detail="party:ic">🥕 Instacart</div><div class="ov-hub-stem"></div></div>'+
@@ -285,6 +397,20 @@ function flowHtml(){
     '</div><div class="ov-flow-note">'+FLOW_NOTE+'</div></div>';
 }
 
+function callsBody(){
+  var h='<p class="ov-lede">How management\u2019s narrative has evolved, call by call. Each entry shows the <b>2\u20133 most important qualitative takeaways</b> \u2014 the \u201cwhy,\u201d not the numbers \u2014 written from what was known <b>at the time</b>, not with hindsight. The badge shows the next-day stock reaction (close-to-close). Source: Quartr transcripts.</p>';
+  h+='<div class="lpb-acc" id="caCallsAcc">';
+  for(var i=0;i<CALLS.length;i++){
+    var c=CALLS[i], up=c.chg>=0;
+    var badge='<span style="display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;margin-left:10px;'+(up?'background:#ECFDF5;color:#16A34A':'background:#FEF2F2;color:#C0392B')+'">'+(up?'\u25b2 +':'\u25bc ')+Math.abs(c.chg)+'%</span>';
+    h+='<div class="lpb-acc-item'+(i===0?' open':'')+'">'+
+      '<button type="button" class="lpb-acc-h"><span><b>'+esc(c.q)+'</b> \u00b7 '+esc(c.date)+badge+'</span><span class="lpb-acc-ic">'+(i===0?'\u2013':'+')+'</span></button>'+
+      '<div class="lpb-acc-body"><ul class="ov-bullets">'+c.hl.map(function(b){return '<li>'+b+'</li>';}).join('')+'</ul></div></div>';
+  }
+  h+='</div>';
+  return h;
+}
+
 function html(c){
   var h = '<div class="ov ov-cart" data-brand="CART">';
 
@@ -294,6 +420,7 @@ function html(c){
     '<button class="ov-subtab" data-catab="advertising">Advertising</button>'+
     '<button class="ov-subtab" data-catab="enterprise">Enterprise</button>'+
     '<button class="ov-subtab" data-catab="fin">Financials</button>'+
+    '<button class="ov-subtab" data-catab="calls">Earnings Calls</button>'+
   '</div>';
 
   // ══ PANE 1 — Overview ══
@@ -315,6 +442,12 @@ function html(c){
   h += sec('Tailwinds & Headwinds',
     '<div class="ov-grid2"><div class="ov-wind ov-wind-up"><div class="ov-wind-h">Tailwinds</div>'+bullets(TAILWINDS)+'</div>'+
     '<div class="ov-wind ov-wind-down"><div class="ov-wind-h">Headwinds</div>'+bullets(HEADWINDS)+'</div></div>');
+  h += sec('Competitive Landscape',
+    '<div class="ov-diagram-cap" style="margin:0 0 12px">Instacart competes on <b>three fronts</b>: marketplace delivery (DoorDash, Uber), full-vertical grocery (Amazon, Walmart), and enterprise tech. <b>Tap any competitor</b> for its edge and gap vs Instacart.</div>'+
+    peersHtml());
+  h += sec('Strategic Initiatives',
+    '<div class="ov-diagram-cap" style="margin:0 0 12px">Four themes management is investing against — drawn from the earnings-call narrative arc, not the KPIs.</div>'+
+    stratHtml());
   h += sec('History & Milestones',
     '<div class="ov-diagram-cap" style="margin:0 0 12px">From a 2012 grocery-delivery app to a multi-sided platform with advertising and enterprise software. <b>Tap any milestone</b> with "Read more" for detail.</div>'+
     '<div class="ov-timeline">'+TIMELINE.map(function(t,i){
@@ -364,6 +497,11 @@ function html(c){
   h += '<div class="ov-diagram-cap" style="margin-top:10px">'+FIN_NOTE+'</div>';
   h += '</div>'; // end fin pane
 
+  // ══ PANE 6 — Earnings Calls ══
+  h += '<div class="ov-pane" data-capane="calls">';
+  h += callsBody();
+  h += '</div>'; // end calls pane
+
   h += '<div class="ov-foot">'+esc(SOURCES)+'</div>';
   h += '<div class="ov-modal-back" id="ovModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
     '<button class="ov-modal-x" id="ovModalX" aria-label="Close">×</button>'+
@@ -405,11 +543,15 @@ function init(c){
     if (kind==='party'){ var p=PARTY_DETAIL[id]; return p && { t:p.t, h:p.h }; }
     if (kind==='sub'){ var s=findSub(id); return s && { t:s.n+' <span class="ov-modal-sub">'+esc(s.rev)+'</span>', h:subDetailHtml(s) }; }
     if (kind==='hist'){ var ht=TIMELINE[+id]; return ht && ht.d ? { t:ht.y, h:ht.d } : null; }
+    if (kind==='peer'){ var pe=PEERS.filter(function(p){return p.k===id;})[0]; return pe ? { t:pe.n, h:'<div class="ov-sub-line"><b>Angle:</b> '+pe.angle+'</div><div class="ov-sub-mon" style="margin-top:12px"><b>Their edge:</b> '+pe.edge+'</div><div class="ov-sub-comp" style="margin-top:12px"><b>Their gap vs Instacart:</b> '+pe.gap+'</div>' } : null; }
     return null;
   }
   root.querySelectorAll('[data-detail]').forEach(function(el){
     el.addEventListener('click', function(){ var d=resolve(el.getAttribute('data-detail')); if (d) openModal(d.t, d.h); });
   });
+
+  // Earnings calls accordion
+  root.querySelectorAll('#caCallsAcc .lpb-acc-h').forEach(function(btn){ btn.onclick=function(){ var item=btn.parentElement; var open=item.classList.toggle('open'); var ic=btn.querySelector('.lpb-acc-ic'); if(ic) ic.textContent=open?'\u2013':'+'; }; });
 
   // Flow animation
   var flow = root.querySelector('#ovFlow');

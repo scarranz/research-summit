@@ -413,6 +413,58 @@ var TECH_TIMELINE = [
   ['2025–26', '<b>GB200 / GB300 NVL72</b> rack-scale systems ramp; <b>Rubin</b> is the next platform on the annual cadence.'],
 ];
 
+// ── Animated visuals (native CSS/SVG/Chart.js — no external assets) ──────────────
+// Moore's Law datapoints: [year, transistors, name, era('i'=CPU/Intel,'n'=NVIDIA GPU)].
+var MOORE = [
+  [1971, 2300, 'Intel 4004', 'i'], [1978, 29000, 'Intel 8086', 'i'],
+  [1985, 275000, 'Intel 386', 'i'], [1989, 1180000, 'Intel 486', 'i'],
+  [1993, 3100000, 'Intel Pentium', 'i'], [2000, 42000000, 'Pentium 4', 'i'],
+  [2006, 291000000, 'Intel Core 2 Duo', 'i'], [2008, 1400000000, 'NVIDIA GT200', 'n'],
+  [2012, 7100000000, 'NVIDIA Kepler GK110', 'n'], [2016, 15300000000, 'NVIDIA Pascal GP100', 'n'],
+  [2017, 21100000000, 'NVIDIA Volta GV100', 'n'], [2020, 54200000000, 'NVIDIA Ampere GA100', 'n'],
+  [2022, 80000000000, 'NVIDIA Hopper H100', 'n'], [2024, 208000000000, 'NVIDIA Blackwell B200', 'n'],
+];
+// Flagship data-center GPU transistor counts (billions) by architecture.
+var GPU_GENS = [['Pascal · 2016','GP100',15.3], ['Volta · 2017','GV100',21.1],
+  ['Ampere · 2020','GA100',54.2], ['Hopper · 2022','GH100',80], ['Blackwell · 2024','GB200',208]];
+// Transistor-shrink steps: [process node, transistor label, grid dimension].
+var TR_STEPS = [['90 nm','~50M transistors',7], ['45 nm','~250M transistors',10],
+  ['28 nm','~1.5B transistors',13], ['16 nm','~8B transistors',17], ['7 nm','~20B transistors',22],
+  ['4 nm','~80B transistors',28], ['3 nm','~150B+ transistors',34]];
+
+function cgGridCells(){ var h=''; for(var i=0;i<64;i++) h+='<span class="cg-cell"></span>'; return h; }
+function cpuGpuDemo(){
+  return '<div class="cg-demo">'+
+    '<div class="cg-head"><button type="button" class="cg-run" id="cgRun">▶ Run again</button>'+
+      '<span class="cg-cap">Both render the same 64-pixel image — watch <b>how</b> each does it.</span></div>'+
+    '<div class="cg-panels">'+
+      '<div class="cg-panel"><div class="cg-title">CPU · a few cores, <b>one pixel at a time</b></div>'+
+        '<div class="cg-grid" id="cgCpu">'+cgGridCells()+'</div><div class="cg-stat" id="cgCpuStat">sequential</div></div>'+
+      '<div class="cg-panel"><div class="cg-title">GPU · thousands of cores, <b>all at once</b></div>'+
+        '<div class="cg-grid" id="cgGpu">'+cgGridCells()+'</div><div class="cg-stat" id="cgGpuStat">parallel</div></div>'+
+    '</div></div>';
+}
+function mooreCard(){
+  return '<div class="ov-chart-card"><div class="ov-chart-t">Transistors per chip, 1971–2024 '+
+    '<span>(log scale · grey = CPUs, green = NVIDIA GPUs)</span></div>'+
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="nvdaMooreChart"></canvas></div></div>';
+}
+function transistorShrink(){
+  return '<div class="tr-shrink"><div class="tr-die" id="trDie"></div>'+
+    '<div class="tr-meta"><span class="tr-node" id="trNode">—</span>'+
+    '<span class="tr-count" id="trCount"></span>'+
+    '<span class="tr-hint">Smaller process node → more transistors, smaller and closer together. The dots are an illustration, not to scale.</span></div></div>';
+}
+function gpuGenBars(){
+  var max=208;
+  return '<div class="gen-bars" id="genBars">'+GPU_GENS.map(function(g){
+    return '<div class="gen-row"><div class="gen-name">'+esc(g[0])+'</div>'+
+      '<div class="gen-track"><div class="gen-fill" style="--w:'+(g[2]/max*100).toFixed(1)+'%"></div></div>'+
+      '<div class="gen-val">'+g[2]+'B</div></div>';
+  }).join('')+'</div>'+
+  '<div class="ov-asof">Bars = transistors per flagship data-center GPU (billions). Architectural advances (Tensor Cores, FP8/FP4 precision) multiplied real AI throughput even faster than transistor count. Blackwell B200 packs 208B across two dies joined as one.</div>';
+}
+
 function technologyBody(){
   var h = '';
   h += '<p class="ov-lede">At its core, NVIDIA sells <b>computing power</b>. This tab walks through the basic logic — from the transistor up to the full AI system — and why NVIDIA’s approach wins. It draws on the Summit team’s 2024 semiconductor case-study deck and public materials.</p>';
@@ -420,6 +472,7 @@ function technologyBody(){
   // 1 — The basic logic: transistors & computing power
   h += sec('The basic logic: transistors = computing power',
     '<div class="ov-callout">A chip is built from <b>transistors</b> — tiny switches that flip between 0 and 1. Computing power comes from <b>how many you can pack into a given area</b>: shrink the transistors, fit more of them closer together, and you get more performance using less energy. Every generation of progress is, at bottom, "more transistors, smaller and closer."</div>'+
+    transistorShrink()+
     bullets([
       'A modern GPU contains <b>tens of billions</b> of transistors.',
       'Beyond the transistors, a chip also carries <b>memory (HBM/RAM), cache and I/O controllers</b> — and increasingly several chips are packaged together (advanced packaging) to act as one.',
@@ -433,10 +486,12 @@ function technologyBody(){
       'Moore’s Law is <b>slowing</b>: at a few nanometers, physics makes each shrink harder, slower and more expensive.',
       'NVIDIA’s answer is <b>accelerated computing</b>: instead of relying on the CPU getting faster, offload the heavy, parallel work to the GPU — picking up where Moore’s Law leaves off.',
       'This is why <b>parallel processing, advanced packaging and full systems</b> — not just smaller transistors — now drive performance.',
-    ]));
+    ])+
+    mooreCard());
 
   // 3 — CPU vs GPU
   h += sec('CPU vs GPU — serial vs parallel',
+    cpuGpuDemo()+
     '<div class="ov-grid2">'+CPU_GPU.map(function(c){
       return '<div class="ov-callout" style="border-left:4px solid '+c[1]+'"><div class="ov-sec-h" style="margin:0 0 6px">'+esc(c[0])+'</div>'+c[2]+'</div>';
     }).join('')+'</div>'+
@@ -458,6 +513,9 @@ function technologyBody(){
     return '<div class="ov-tl-item"><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t[0])+'</div><div class="ov-tl-body">'+t[1]+'</div></div>';
   }).join('')+'</div>');
 
+  // 6b — Generation-over-generation growth
+  h += sec('Generation over generation', gpuGenBars());
+
   // 7 — The AI data-center stack
   h += sec('Putting it together: the AI data center',
     '<p class="ov-p">An AI "factory" is far more than GPUs. NVIDIA’s rack-scale systems combine <b>compute</b> (GPUs + Grace CPUs), <b>networking</b> (NVLink / InfiniBand / Spectrum-X), <b>servers</b> and <b>storage</b> into one tightly-integrated machine — sold as a unit (e.g. the GB200 NVL72 connects 72 GPUs to act as a single giant GPU). The value is in the <b>system</b>, not just the die.</p>'+
@@ -465,6 +523,83 @@ function technologyBody(){
 
   h += '<div class="ov-foot">Sources: Summit research team 2024 semiconductor case-study deck (internal), plus NVIDIA public materials and technical documentation. Simplified for explanation; transistor counts and dates are approximate.</div>';
   return h;
+}
+
+// ── Technology-tab animation drivers ─────────────────────────────────────────────
+var _cgTimers = [], _trTimer = null, _mooreChart = null;
+function fmtTr(v){
+  if (v>=1e9) return +(v/1e9).toFixed(v<1e10?1:0)+'B';
+  if (v>=1e6) return Math.round(v/1e6)+'M';
+  if (v>=1e3) return Math.round(v/1e3)+'K';
+  return Math.round(v);
+}
+function cgCells(id){ var el=document.getElementById(id); return el ? Array.prototype.slice.call(el.querySelectorAll('.cg-cell')) : []; }
+function cgRun(){
+  _cgTimers.forEach(clearTimeout); _cgTimers=[];
+  var cpu=cgCells('cgCpu'), gpu=cgCells('cgGpu');
+  cpu.concat(gpu).forEach(function(c){ c.classList.remove('on'); });
+  var setS=function(id,t){ var e=document.getElementById(id); if(e) e.textContent=t; };
+  setS('cgCpuStat','rendering… one pixel at a time'); setS('cgGpuStat','rendering…');
+  cpu.forEach(function(c,i){ _cgTimers.push(setTimeout(function(){ c.classList.add('on'); }, 26*i)); });
+  gpu.forEach(function(c,i){ _cgTimers.push(setTimeout(function(){ c.classList.add('on'); }, 3*(i%8)+30)); });
+  _cgTimers.push(setTimeout(function(){ setS('cgGpuStat','done — 64 pixels in parallel ⚡'); }, 130));
+  _cgTimers.push(setTimeout(function(){ setS('cgCpuStat','done — 64 sequential steps'); }, 26*64+120));
+}
+function initCpuGpu(){
+  var btn=document.getElementById('cgRun'); if(!btn) return;
+  if(!btn._w){ btn._w=1; btn.onclick=cgRun; }
+  cgRun();
+}
+function initTransistor(){
+  var die=document.getElementById('trDie'); if(!die) return;
+  if(_trTimer){ clearInterval(_trTimer); _trTimer=null; }
+  var i=0;
+  function step(){
+    var s=TR_STEPS[i % TR_STEPS.length], cols=s[2], n=cols*cols, g='';
+    for(var k=0;k<n;k++) g+='<span class="tr-dot"></span>';
+    die.style.gridTemplateColumns='repeat('+cols+',1fr)';
+    die.innerHTML=g;
+    var node=document.getElementById('trNode'), cnt=document.getElementById('trCount');
+    if(node) node.textContent=s[0]; if(cnt) cnt.textContent=s[1];
+    i++;
+  }
+  step(); _trTimer=setInterval(step, 1900);
+}
+function initGenBars(){
+  var el=document.getElementById('genBars'); if(!el) return;
+  el.classList.remove('go');
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){ el.classList.add('go'); }); });
+}
+function buildMooreChart(){
+  var cv=document.getElementById('nvdaMooreChart');
+  if(!cv || typeof Chart==='undefined' || !cv.offsetParent) return;
+  if(_mooreChart){ _mooreChart.destroy(); _mooreChart=null; }
+  var pts=MOORE.map(function(d){ return { x:d[0], y:d[1], name:d[2], era:d[3] }; });
+  _mooreChart=new Chart(cv.getContext('2d'), {
+    type:'line',
+    data:{ datasets:[{ label:'Transistors per chip', data:pts, parsing:{xAxisKey:'x',yAxisKey:'y'},
+      borderColor:'rgba(118,185,0,0.5)', borderWidth:2, tension:0.1, pointRadius:5, pointHoverRadius:7,
+      pointBackgroundColor:pts.map(function(p){ return p.era==='n' ? '#76B900' : '#9aa6b4'; }),
+      pointBorderColor:'#fff', pointBorderWidth:1 }] },
+    options:{ responsive:true, maintainAspectRatio:false, animation:{ duration:1500, easing:'easeOutCubic' },
+      plugins:{ legend:{ display:false },
+        tooltip:{ callbacks:{ title:function(it){ return it[0].raw.name; },
+          label:function(ctx){ return ctx.raw.x+' · '+fmtTr(ctx.raw.y)+' transistors'; } } } },
+      scales:{
+        x:{ type:'linear', min:1970, max:2026, grid:{ display:false },
+          ticks:{ color:'#8A93A0', font:{size:10}, stepSize:10, callback:function(v){ return v; } } },
+        y:{ type:'logarithmic', grid:{ color:'rgba(0,0,0,.05)' },
+          ticks:{ color:'#8A93A0', font:{size:10}, callback:function(v){ return fmtTr(v); } } }
+      }
+    }
+  });
+}
+function initTech(){
+  requestAnimationFrame(function(){ initCpuGpu(); buildMooreChart(); initTransistor(); initGenBars(); });
+}
+function stopTech(){
+  if(_trTimer){ clearInterval(_trTimer); _trTimer=null; }
+  _cgTimers.forEach(clearTimeout); _cgTimers=[];
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -558,8 +693,10 @@ function html(){
 function showOvt(root, key){
   root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt') === key); });
   root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt') !== key); });
+  if (key !== 'technology') stopTech();
   if (key === 'industry') requestAnimationFrame(function(){ semiIndustry.init(); });
   if (key === 'segments') requestAnimationFrame(function(){ buildSegChart(); });
+  if (key === 'technology') initTech();
 }
 
 function init(){

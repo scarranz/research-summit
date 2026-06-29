@@ -172,6 +172,50 @@
 .tech-layer-d { font-size: 12.5px; color: var(--mu); margin-top: 3px; line-height: 1.5; }
 .tech-layer-d b { color: var(--navy); font-weight: 600; }
 
+/* CPU vs GPU parallel-processing demo */
+.cg-demo { border: 1px solid var(--bdr); border-radius: 10px; padding: 14px 16px; background: var(--w); margin: 4px 0 12px; }
+.cg-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.cg-run { border: none; background: #76B900; color: #1E2733; font: 700 12px 'Inter', sans-serif;
+  border-radius: 7px; padding: 7px 14px; cursor: pointer; }
+.cg-run:hover { filter: brightness(1.06); }
+.cg-cap { font-size: 12px; color: var(--mu); }
+.cg-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.cg-panel { border: 1px solid var(--bdr); border-radius: 8px; padding: 12px; background: var(--surface); }
+.cg-title { font-size: 12px; color: var(--mu); margin-bottom: 10px; min-height: 30px; }
+.cg-title b { color: var(--navy); font-weight: 700; }
+.cg-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; }
+.cg-cell { aspect-ratio: 1; border-radius: 2px; background: #e7ecf1; transition: background .1s; }
+.cg-cell.on { background: #76B900; }
+.cg-stat { margin-top: 10px; font-size: 11.5px; font-weight: 600; color: var(--mu); }
+
+/* Transistor-density shrink animation */
+.tr-shrink { display: flex; align-items: center; gap: 22px; border: 1px solid var(--bdr);
+  border-radius: 10px; padding: 16px; background: var(--w); margin: 4px 0 12px; }
+.tr-die { width: 168px; height: 168px; flex: none; display: grid; gap: 2px; padding: 9px;
+  background: #0f1720; border-radius: 8px; }
+.tr-dot { aspect-ratio: 1; border-radius: 50%; background: #76B900; animation: trDotIn .55s ease both; }
+@keyframes trDotIn { from { opacity: 0; transform: scale(.25); } to { opacity: 1; transform: scale(1); } }
+.tr-meta { display: flex; flex-direction: column; gap: 3px; }
+.tr-node { font-size: 28px; font-weight: 800; color: var(--navy); line-height: 1; }
+.tr-count { font-size: 15px; font-weight: 700; color: #5a9e16; }
+.tr-hint { font-size: 12px; color: var(--mu); margin-top: 6px; max-width: 380px; line-height: 1.5; }
+
+/* GPU generation-over-generation bars */
+.gen-bars { display: flex; flex-direction: column; gap: 9px; margin: 4px 0 4px; }
+.gen-row { display: flex; align-items: center; gap: 12px; }
+.gen-name { width: 132px; flex: none; font-size: 12.5px; font-weight: 600; color: var(--navy); }
+.gen-track { flex: 1; height: 26px; background: #eef2f6; border-radius: 6px; overflow: hidden; }
+.gen-fill { width: 0; height: 100%; border-radius: 6px;
+  background: linear-gradient(90deg, #1F8A70, #76B900);
+  transition: width 1.15s cubic-bezier(.22,.61,.36,1); }
+.gen-bars.go .gen-fill { width: var(--w); }
+.gen-val { width: 48px; flex: none; text-align: right; font-size: 12px; font-weight: 700; color: var(--navy); }
+
+@media (max-width: 640px) {
+  .cg-panels { grid-template-columns: 1fr; }
+  .tr-shrink { flex-direction: column; align-items: flex-start; }
+}
+
 @media (max-width: 640px){
   .smap-flowrow { flex-direction: column; }
   .smap-arrow { transform: rotate(90deg); align-self: flex-start; margin-left: 18px; }

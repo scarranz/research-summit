@@ -122,8 +122,24 @@
 }
 
 /* ─── NVDA brand accent on the sub-tab bar ─── */
-.ov-nvda { --brand: #76B900; }
-.ov-nvda .ovt-tab.active { color: #4d7a00; border-bottom-color: #76B900; }
+/* NVIDIA green. Filled segmented control that wraps for the multi-tab profile. */
+.ov-nvda { --brand: #76B900; --brand-soft: #f0f7e0; }
+.ov-nvda .ovt-tabs {
+  display: inline-flex; flex-wrap: wrap; gap: 4px; border-bottom: none;
+  background: var(--surface); border: 1px solid var(--bdr);
+  border-radius: 11px; padding: 4px; margin: 0 0 22px;
+}
+.ov-nvda .ovt-tab {
+  border: none; border-radius: 8px; text-transform: none; letter-spacing: 0;
+  font-size: 13px; font-weight: 600; color: var(--mu);
+  padding: 8px 16px; margin-bottom: 0; transition: background .15s, color .15s;
+}
+.ov-nvda .ovt-tab:hover { color: var(--navy); background: rgba(118,185,0,0.10); }
+.ov-nvda .ovt-tab.active {
+  color: #1E2733; background: var(--brand); border-bottom: none;
+  box-shadow: 0 1px 3px rgba(118,185,0,0.30);
+}
+.ov-nvda .ovt-tab.active:hover { color: #1E2733; }
 
 @media (max-width: 640px){
   .smap-flowrow { flex-direction: column; }

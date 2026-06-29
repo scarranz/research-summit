@@ -134,6 +134,7 @@ function hubMarker(h, idx, hidden){
 }
 function builderSVG(){
   return '<svg class="lg-sim" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Distribution-network expansion simulator">'+
+    '<g class="lg-rings"></g>'+
     '<g class="lg-routes"></g>'+
     '<g class="lg-dots"></g>'+
     HUBS.map(function(h, i){ return hubMarker(h, i, i > 0); }).join('')+
@@ -220,17 +221,26 @@ function dcUpdate(scope, n){
   // Active DCs and per-DC store counts.
   var active = [];
   for (var hi = 0; hi < HUBS.length; hi++){ if (n >= HUBS[hi].at) active.push(hi); }
-  var counts = {}; active.forEach(function(i){ counts[i] = 0; });
+  var counts = {}, maxR = {}; active.forEach(function(i){ counts[i] = 0; maxR[i] = 0; });
   var routes = '', dots = '';
   for (var i = 0; i < n; i++){
     var p = STORE_POS[i];
     var best = active[0], bd = Infinity;
     for (var a = 0; a < active.length; a++){ var d = dist(p, HUBS[active[a]]); if (d < bd){ bd = d; best = active[a]; } }
     counts[best]++;
+    if (bd > maxR[best]) maxR[best] = bd;   // farthest store served by this DC
     var col = HUBS[best].color, hb = HUBS[best];
     routes += '<line x1="'+p.x.toFixed(1)+'" y1="'+p.y.toFixed(1)+'" x2="'+hb.x+'" y2="'+hb.y+'" stroke="'+col+'" stroke-width="0.8" opacity="0.18"/>';
     dots   += '<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="3.3" fill="'+col+'" stroke="#fff" stroke-width="0.7"/>';
   }
+  // Coverage circle around each active DC, hugging the stores it serves.
+  var rings = active.map(function(hi){
+    var r = (counts[hi] > 0 ? maxR[hi] + 11 : 26);
+    var c = HUBS[hi].color;
+    return '<circle cx="'+HUBS[hi].x+'" cy="'+HUBS[hi].y+'" r="'+r.toFixed(1)+'" fill="'+c+'" fill-opacity="0.05" '+
+      'stroke="'+c+'" stroke-opacity="0.45" stroke-width="1.4" stroke-dasharray="5 5"/>';
+  }).join('');
+  scope.querySelector('.lg-rings').innerHTML = rings;
   scope.querySelector('.lg-routes').innerHTML = routes;
   scope.querySelector('.lg-dots').innerHTML = dots;
   for (var j = 0; j < HUBS.length; j++){

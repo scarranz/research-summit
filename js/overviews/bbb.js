@@ -457,16 +457,19 @@ function mixBody(c){
   return h;
 }
 
-// "General" tab — bundles Store Tour, Logistics and BİM Blueprint as nested sub-tabs.
+// "General" tab — bundles Store Tour, Logistics, Competitive Landscape and BİM
+// Blueprint as nested sub-tabs.
 function generalBody(c){
   var h = '';
   h += '<div class="ovt-subtabs">'+
     '<button type="button" class="ovt-subtab active" data-ovst="tour">Store Tour</button>'+
     '<button type="button" class="ovt-subtab" data-ovst="logistics">Logistics</button>'+
+    '<button type="button" class="ovt-subtab" data-ovst="landscape">Competitive Landscape</button>'+
     '<button type="button" class="ovt-subtab" data-ovst="bim">BİM Blueprint</button>'+
   '</div>';
   h += '<div class="ovt-subpane" data-ovst="tour">'+bbbLogistics.tourBody(c)+'</div>';
   h += '<div class="ovt-subpane" data-ovst="logistics" hidden>'+bbbLogistics.body(c)+'</div>';
+  h += '<div class="ovt-subpane" data-ovst="landscape" hidden>'+bbbLandscape.body(c)+'</div>';
   h += '<div class="ovt-subpane" data-ovst="bim" hidden>'+bbbBim.body(c)+'</div>';
   return h;
 }
@@ -480,7 +483,6 @@ function html(c){
     '<button type="button" class="ovt-tab" data-ovt="stores">Stores</button>'+
     '<button type="button" class="ovt-tab" data-ovt="mix">Product Mix</button>'+
     '<button type="button" class="ovt-tab" data-ovt="ue">Unit Economics</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="landscape">Competitive Landscape</button>'+
     '<button type="button" class="ovt-tab" data-ovt="mgmt">Management</button>'+
   '</div>';
   // Panes
@@ -490,7 +492,6 @@ function html(c){
   h += '<div class="ovt-pane" data-ovt="mix" hidden>'+mixBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="ue" hidden>'+ueBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="mgmt" hidden>'+bbbManagement.body(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="landscape" hidden>'+bbbLandscape.body(c)+'</div>';
   h += '</div>';
   return h;
 }
@@ -814,8 +815,9 @@ function buildSub(root, group, key){
     if (key === 'sss')         buildStoresSubSSS();
     else if (key === 'growth') buildStoresSubGrowth();
   } else if (group === 'general'){
-    if (key === 'logistics')   bbbLogistics.init(root);
-    else if (key === 'bim')    bbbBim.init(root);
+    if (key === 'logistics')        bbbLogistics.init(root);
+    else if (key === 'landscape')   bbbLandscape.init(root);
+    else if (key === 'bim')         bbbBim.init(root);
   }
 }
 
@@ -845,7 +847,6 @@ function showOvt(root, key){
   if (key === 'general') requestAnimationFrame(function(){ wireSubtabs(root, 'general'); });
   if (key === 'mix') requestAnimationFrame(buildMixChart);
   if (key === 'mgmt') requestAnimationFrame(function(){ bbbManagement.init(root); });
-  if (key === 'landscape') requestAnimationFrame(function(){ bbbLandscape.init(root); });
   if (key === 'ue') requestAnimationFrame(buildUeChart);
 }
 
@@ -863,7 +864,6 @@ function init(c){
   if (activeKey === 'general') requestAnimationFrame(function(){ wireSubtabs(root, 'general'); });
   if (activeKey === 'mix') requestAnimationFrame(buildMixChart);
   if (activeKey === 'mgmt') requestAnimationFrame(function(){ bbbManagement.init(root); });
-  if (activeKey === 'landscape') requestAnimationFrame(function(){ bbbLandscape.init(root); });
   if (activeKey === 'ue') requestAnimationFrame(buildUeChart);
 }
 

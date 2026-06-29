@@ -467,6 +467,22 @@ function gpuGenBars(){
   }).join('')+'</div>'+
   '<div class="ov-asof">Bars = transistors per flagship data-center GPU (billions). Architectural advances (Tensor Cores, FP8/FP4 precision) multiplied real AI throughput even faster than transistor count. Blackwell B200 packs 208B across two dies joined as one.</div>';
 }
+// Interactive pseudo-3D "what NVIDIA sells" stack. Slabs are stacked silicon→software in an
+// isometric scene; toggles highlight one layer and show its detail (+ a slot for product photos).
+function sellsMap(){
+  var layers = TECH_STACK.slice().reverse(); // bottom→top: Silicon → … → Software
+  var slabs = layers.map(function(l,i){
+    return '<div class="nv3d-slab" data-layer="'+i+'" style="--lvl:'+i+';background:'+l[1]+'"><span>'+esc(l[0])+'</span></div>';
+  }).join('');
+  var btns = '<button type="button" class="nv-seg-btn active" data-layer="-1">Full stack</button>'+
+    layers.map(function(l,i){ return '<button type="button" class="nv-seg-btn" data-layer="'+i+'">'+esc(l[0])+'</button>'; }).join('');
+  return '<div class="nv3d">'+
+    '<div class="nv3d-toggles" id="nv3dToggles">'+btns+'</div>'+
+    '<div class="nv3d-main">'+
+      '<div class="nv3d-stage"><div class="nv3d-scene" id="nv3dScene">'+slabs+'</div></div>'+
+      '<div class="nv3d-panel" id="nv3dPanel"></div>'+
+    '</div></div>';
+}
 
 function technologyBody(){
   var h = '';
@@ -500,12 +516,10 @@ function technologyBody(){
     }).join('')+'</div>'+
     '<div class="ov-asof">AI is built on massive parallel math, so the <b>GPU</b> — not the CPU — became the engine of the AI era. NVIDIA pairs both in products like the <b>Grace Hopper Superchip</b> (Grace CPU + Hopper GPU joined by NVLink).</div>');
 
-  // 4 — What NVIDIA sells (the stack)
+  // 4 — What NVIDIA sells (interactive 3D stack)
   h += sec('What NVIDIA sells — the full stack',
-    '<p class="ov-p">NVIDIA is often described as "a chip company", but it sells a <b>full computing stack</b> — from the silicon up to the software. Owning every layer is what lets it deliver performance rivals can’t match with a chip alone, and it is where the durable margin lives.</p>'+
-    '<div class="tech-stack">'+TECH_STACK.map(function(l){
-      return '<div class="tech-layer" style="border-left-color:'+l[1]+'"><div class="tech-layer-t">'+esc(l[0])+'</div><div class="tech-layer-d">'+l[2]+'</div></div>';
-    }).join('')+'</div>');
+    '<p class="ov-p">NVIDIA is often described as "a chip company", but it sells a <b>full computing stack</b> — from the silicon up to the software. Owning every layer is what lets it deliver performance rivals can’t match with a chip alone, and it is where the durable margin lives. <b>Tap a layer</b> to explore it.</p>'+
+    sellsMap());
 
   // 5 — CUDA moat
   h += sec('CUDA — the software moat',
@@ -618,8 +632,41 @@ function buildMooreChart(){
     }
   });
 }
+function initSellsMap(){
+  var scene=document.getElementById('nv3dScene'), panel=document.getElementById('nv3dPanel'), tog=document.getElementById('nv3dToggles');
+  if(!scene || !panel) return;
+  var layers=TECH_STACK.slice().reverse();
+  var slabs=Array.prototype.slice.call(scene.querySelectorAll('.nv3d-slab'));
+  function layout(sel){
+    slabs.forEach(function(s,i){
+      var z=i*30; if(sel>=0 && i===sel) z+=46;
+      s.style.transform='translateZ('+z+'px)';
+      s.style.opacity = (sel>=0 && i!==sel) ? 0.28 : 0.96;
+      s.classList.toggle('sel', sel>=0 && i===sel);
+    });
+    if(sel<0){
+      panel.innerHTML='<div class="nv3d-p-h">The full stack</div>'+
+        '<div class="nv3d-p-d">NVIDIA sells every layer from the <b>silicon</b> up to the <b>software</b> — that vertical integration is what rivals can’t match with a chip alone, and where the durable margin lives.</div>'+
+        '<div class="nv3d-img">Product photos — coming in a later pass</div>';
+    } else {
+      var l=layers[sel];
+      panel.innerHTML='<div class="nv3d-p-h" style="color:'+l[1]+'">'+esc(l[0])+'</div>'+
+        '<div class="nv3d-p-d">'+l[2]+'</div>'+
+        '<div class="nv3d-img" style="border-color:'+l[1]+'">Product photo — coming in a later pass</div>';
+    }
+  }
+  if(tog && !tog._w){ tog._w=1;
+    tog.querySelectorAll('.nv-seg-btn').forEach(function(b){
+      b.onclick=function(){
+        tog.querySelectorAll('.nv-seg-btn').forEach(function(x){ x.classList.toggle('active', x===b); });
+        layout(parseInt(b.getAttribute('data-layer'),10));
+      };
+    });
+  }
+  layout(-1);
+}
 function initTech(){
-  requestAnimationFrame(function(){ initCpuGpu(); buildMooreChart(); initTransistor(); initGenBars(); });
+  requestAnimationFrame(function(){ initCpuGpu(); buildMooreChart(); initTransistor(); initGenBars(); initSellsMap(); });
 }
 function stopTech(){
   if(_trTimer){ clearInterval(_trTimer); _trTimer=null; }

@@ -214,9 +214,31 @@
 .gen-bars.go .gen-fill { width: var(--w); }
 .gen-val { width: 48px; flex: none; text-align: right; font-size: 12px; font-weight: 700; color: var(--navy); }
 
+/* "What NVIDIA sells" — interactive pseudo-3D layer stack */
+.nv3d { margin: 6px 0 8px; }
+.nv3d-toggles { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.nv3d-main { display: grid; grid-template-columns: 1fr 300px; gap: 18px; align-items: center; }
+.nv3d-stage { perspective: 1300px; height: 300px; display: flex; align-items: center; justify-content: center; }
+.nv3d-scene { position: relative; width: 300px; height: 130px; transform-style: preserve-3d;
+  transform: rotateX(54deg) rotateZ(-30deg); }
+.nv3d-slab { position: absolute; inset: 0; border-radius: 12px; border: 1px solid rgba(255,255,255,.45);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 22px rgba(15,23,32,.22); cursor: pointer;
+  transition: transform .4s cubic-bezier(.22,.61,.36,1), opacity .35s, box-shadow .35s; }
+.nv3d-slab span { color: #fff; font-weight: 700; font-size: 13px; letter-spacing: .01em;
+  text-shadow: 0 1px 3px rgba(0,0,0,.35); }
+.nv3d-slab.sel { box-shadow: 0 18px 38px rgba(15,23,32,.34); }
+.nv3d-panel { border: 1px solid var(--bdr); border-radius: 10px; padding: 16px; background: var(--w); min-height: 178px; }
+.nv3d-p-h { font-size: 15px; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
+.nv3d-p-d { font-size: 12.5px; line-height: 1.55; color: var(--mu); }
+.nv3d-p-d b { color: var(--navy); font-weight: 600; }
+.nv3d-img { margin-top: 12px; border: 1px dashed var(--bdr); border-radius: 8px; padding: 16px;
+  text-align: center; font-size: 11px; color: var(--mu); background: var(--surface); }
+
 @media (max-width: 640px) {
   .cg-panels { grid-template-columns: 1fr; }
   .tr-shrink { flex-direction: column; align-items: flex-start; }
+  .nv3d-main { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px){

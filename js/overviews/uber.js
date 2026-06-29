@@ -123,20 +123,19 @@ var PEERS=[
   { n:'Grab · Bolt · Didi', dom:'grab.com', arena:'Regional super-apps', edge:'SE Asia, Europe, China/LatAm. Uber competes locally or holds equity stakes; its global brand + capital are the edge.' },
 ];
 var PEER_NOTE='Ride-hailing economics rarely turn on take rate (peers cluster ~30%) — they turn on <b>density, cross-sell and regulatory positioning</b>, where Uber\'s global scale and bundle are the edge.';
-// Secular / market tailwinds — the forces outside Uber's own levers (which live in "What drives Uber" + Strategy).
-var TAILWINDS=[
-  '<b>Mobility-as-a-service is early:</b> ride-hail is still a low-single-digit share of the trillions spent on personal transport — a long runway as car ownership gives way to on-demand.',
-  '<b>Delivery & grocery under-penetrated:</b> online food/grocery is still a minority of the category in most markets; Uber Eats compounds as habits shift.',
-  '<b>Engagement deepening:</b> trips are growing faster than users (+20% vs +17%) — people transact <i>more often</i>, not just in greater numbers.',
-  '<b>Insurance costs moderating:</b> the largest US Mobility cost is easing; Uber is passing savings into lower fares, which is re-accelerating trip growth (see Unit Economics ▸ Insurance).',
+// What moves the thesis — each item pairs a specific claim with the SIGNAL a reader should track.
+// Reframed from a generic tailwinds/headwinds list so the section adds forward-looking value.
+var THESIS_FOR=[
+  { t:'<b>Insurance costs keep easing</b> → cheaper US fares re-accelerate trips.', w:'US Mobility trip growth (esp. SF/LA) · insurance CPI' },
+  { t:'<b>Uber One penetration climbs</b> from ~25% of users → more frequency & retention.', w:'member count · % of combined bookings' },
+  { t:'<b>Advertising compounds</b> past ~2% of Delivery bookings → near-pure-margin upside.', w:'ads run-rate ($2B→?) · ads % of Delivery GB' },
+  { t:'<b>AV stays a tailwind Uber aggregates</b>, not a disruptor it must outbuild.', w:'Uber AV trips vs Waymo own-app share' },
 ];
-// Note: "GAAP earnings volatility" and "equity-investment swings" are deliberately NOT headwinds — they are accounting
-// features of holding large stakes (Aurora, Grab, Didi). See the FY note on Uber's shift off Adj. EBITDA.
-var HEADWINDS=[
-  '<b>AV disintermediation risk:</b> Waymo (and a Tesla wildcard) can bypass Uber with their own apps and structurally lower driverless costs — the genuine long-term threat to the aggregator model.',
-  '<b>Delivery competition:</b> DoorDash out-scales Uber Eats in the US (~60%+ vs ~22–25% share); Mobility competition keeps incentives elevated.',
-  '<b>Global regulatory exposure:</b> as the only truly global player, Uber carries the widest surface area — UK structural changes (worker status since <i>Aslam</i>, the 2026 VAT/agency-model shift), the EU Platform Work Directive (transpose by Dec 2026), and per-market pay floors. More exposed than US-only peers.',
-  '<b>Insurance severity:</b> still the largest US Mobility cost; reserves ~$12.9B and rising with volume — though now moderating (see Insurance).',
+var THESIS_AGAINST=[
+  { t:'<b>AV disintermediation</b> — Waymo/Tesla route demand through their own apps.', w:'AV own-app trips · partners launching without Uber' },
+  { t:'<b>DoorDash keeps out-scaling Eats in the US</b> → delivery share & incentive pressure.', w:'US delivery share (~22–25%) · Delivery margin' },
+  { t:'<b>Regulation reclassifies drivers</b> — EU Platform Work Directive, per-market pay floors.', w:'EU transposition (Dec 2026) · UK · new pay floors' },
+  { t:'<b>Insurance severity re-accelerates</b> → fares up, trips down again.', w:'insurance CPI · reserve growth (~$12.9B)' },
 ];
 // ── Strategy ──
 var TARGETS=[
@@ -505,6 +504,11 @@ var UB_THEMES = [
       { q:'Q4 2025', items:['40% of Q4 consumers using >2 products. <b>$15B delivery GBs from mobility app</b> (run rate). ~$10B free cash flow, +42%.','Balaji Krishnamurthy becomes CFO (Feb 2026). Prashanth Mahendra-Rajah departs for "opportunity to serve America."'] },
       { q:'Q1 2026', items:['<b>$3B returned to shareholders</b> in Q1 (record). Non-GAAP EPS <b>+44% YoY</b>. Go-Get event showcased hotels, Travel Mode, One Search.','50M Uber One members + 10M drivers/couriers globally \u2014 "important milestones." Freight returned to growth for first time in ~2 years.'] },
     ]},
+  { theme:'AI in the Product (emerging)',
+    why:'The newest narrative thread \u2014 AI moving from the back-end into consumer- and earner-facing features. Early, but flagged as a multi-year lever to watch.',
+    updates:[
+      { q:'Q1 2026', items:['<b>Cart Assistant</b> launched \u2014 an AI helper that builds grocery/retail orders for consumers.','AI earner tools for drivers & couriers (smarter dispatch and support).','Management framed AI as a multi-year <b>efficiency + experience lever</b> \u2014 "early innings," something to track rather than a 2026 numbers driver.'] },
+    ]},
 ];
 
 function callsBody(){
@@ -673,10 +677,16 @@ function strategyBody(c){
       '<b>Sense of scale:</b> AV is still ~0.1% of global rideshare trips — Uber\'s human network adds ~50× the entire global AV volume every year.',
     ])+
     '<div class="ov-fynote"><b>The real risk to watch:</b> Waymo already runs its <i>own</i> app in SF/Phoenix/LA — direct disintermediation. Uber\'s counter, in management\'s words (Q1 2026): <b>"no effect of the Waymo launches on our overall business,"</b> with US mobility actually accelerating. AV is run as the newest <b>barbell growth bet</b> — invest at negative margins now, turn profitable later.</div>');
-  h+=sec('Tailwinds & Headwinds',
-    '<div class="ov-grid2"><div class="ov-wind ov-wind-up"><div class="ov-wind-h">Tailwinds</div>'+bullets(TAILWINDS)+'</div>'+
-    '<div class="ov-wind ov-wind-down"><div class="ov-wind-h">Headwinds</div>'+bullets(HEADWINDS)+'</div></div>');
+  h+=sec('What Moves the Thesis — and the signals to watch',
+    '<div class="ov-diagram-cap" style="margin:0 0 12px">Not a generic pros/cons list — the <b>specific variables a reader should track</b>, each paired with the signal that tells you it’s playing out.</div>'+
+    '<div class="ov-grid2">'+thesisCol('Supports the thesis ✓','ov-wind-up',THESIS_FOR)+thesisCol('Threatens the thesis ⚠','ov-wind-down',THESIS_AGAINST)+'</div>');
   return h;
+}
+// Two-column "what to watch": claim + the signal/metric to monitor.
+function thesisCol(title,cls,arr){
+  return '<div class="ov-wind '+cls+'"><div class="ov-wind-h">'+title+'</div><ul class="ov-bullets">'+
+    arr.map(function(x){ return '<li>'+x.t+'<div style="font-size:10.5px;color:var(--mu);margin-top:4px"><b style="color:var(--brand)">Watch:</b> '+esc(x.w)+'</div></li>'; }).join('')+
+  '</ul></div>';
 }
 
 // (The former "Segments" tab was folded into the Overview — see overviewBody.)

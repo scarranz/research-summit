@@ -93,9 +93,9 @@ var KEY_DRIVERS=[
 ];
 // Each segment is "Gross Bookings × take rate = revenue". Driver of each is what moves Gross Bookings.
 var SEGMENTS=[
-  ['Mobility', 'Ridesharing across ~70 countries — the profit engine. <b>Driver: Gross Bookings × take rate.</b> Bookings = trips × price/trip; Uber keeps ~<b>30%</b> as revenue (the rest to drivers + per-trip insurance). Highest take and the largest profit dollars (record ~7.7% segment operating-income margin in Q1 2026).'],
-  ['Delivery', 'Uber Eats — food, grocery & retail. <b>Same engine: Gross Bookings × take rate</b>, but bookings = orders × basket size and the take is lower (~<b>19%</b>) because merchants also get paid. Bookings have nearly caught Mobility; margin has more than doubled (1.9%→4.0% of bookings) on advertising + scale.'],
-  ['Freight', 'Digital logistics brokerage (shippers ⇄ carriers). Reported <b>gross</b> (revenue ≈ bookings, so no "take rate"), roughly breakeven, negligible profit — but still a GAAP segment. ~$5B of bookings, flat-to-shrinking; returned to slight growth in Q1 2026 after ~2 years of freight-recession contraction.'],
+  ['Mobility', 'The <b>profit engine</b> — ridesharing in ~70 countries. Uber keeps ~<b>30%</b> of bookings; highest take, biggest profit (~7.7% segment op-margin, Q1 2026).'],
+  ['Delivery', 'Uber Eats — food, grocery, retail. Lower take (~<b>19%</b>, merchants paid too), but bookings nearly match Mobility and margin has <b>doubled</b> on ads + scale.'],
+  ['Freight', 'Logistics brokerage, reported <b>gross</b> (no take rate). ~$5B bookings, near-breakeven — kept for optionality, not profit.'],
 ];
 // Note: Advertising and Uber One are NOT reportable segments — they cut across Mobility & Delivery,
 // so they now live in "What Truly Drives Uber" (top of Overview) instead of being listed here twice.
@@ -122,7 +122,7 @@ var PEERS=[
   ['Waymo (Alphabet)', 'Robotaxi operator — on the Uber app in Austin/Atlanta, on its <i>own</i> app in SF/Phoenix/LA.', 'Simultaneously partner and rival — the defining structural question. Uber bets demand-aggregation + fleet utilization beats capital-heavy AV-only fleets (see Strategy ▸ AV).'],
   ['Bolt / Grab / Didi', 'Regional super-apps — Europe (Bolt), SE Asia (Grab), China/LatAm (Didi).', 'Uber competes locally or holds <b>equity stakes</b> (Grab, Didi legacy from the 2016/2018 exits). Local density wins market-by-market; Uber\'s global brand + capital are the edge.'],
 ];
-var PEER_NOTE='Structurally, ride-hailing economics rarely turn on take rate (peers cluster ~30%) — they turn on <b>density, cross-sell and regulatory positioning</b>. Uber spends heavily on policy: it bankrolled California\'s <b>Prop 22</b> (the most expensive ballot measure in state history) and lobbies globally on driver classification. A light market-sentiment footnote: in May 2026 a disclosure under <b>Nancy Pelosi</b>\'s name showed her husband bought 200 UBER call options ($50 strike, March 2027 expiry) — a widely-watched, if non-fundamental, vote of confidence.';
+var PEER_NOTE='Ride-hailing economics rarely turn on take rate (peers cluster ~30%) — they turn on <b>density, cross-sell and regulatory positioning</b>, where Uber\'s global scale and bundle are the edge.';
 // Secular / market tailwinds — the forces outside Uber's own levers (which live in "What drives Uber" + Strategy).
 var TAILWINDS=[
   '<b>Mobility-as-a-service is early:</b> ride-hail is still a low-single-digit share of the trillions spent on personal transport — a long runway as car ownership gives way to on-demand.',
@@ -261,11 +261,13 @@ function sec(title,inner){ return '<section class="ov-sec"><div class="ov-sec-h"
 function bullets(arr){ return '<ul class="ov-bullets">'+arr.map(function(b){return '<li>'+b+'</li>';}).join('')+'</ul>'; }
 function rows(arr){ return arr.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+r[1]+'</div></div>'; }).join(''); }
 // Numbered, optionally-clickable step chain (reuses shared .ov-chain). detailKey → data-detail="<key>:<i>".
-function chain(arr, detailKey){ return '<div class="ov-chain">'+arr.map(function(s,i){
+// compact=true hides the inline description (it lives in the tap-to-open modal) — keeps the Overview light.
+function chain(arr, detailKey, compact){ return '<div class="ov-chain">'+arr.map(function(s,i){
   var cls='ov-chain-step'+(s.payoff?' is-payoff':'')+(detailKey?' ov-clickable':'');
   var attr=detailKey?' data-detail="'+detailKey+':'+i+'"':'';
   var more=detailKey?' <span class="ov-tl-more">tap ›</span>':'';
-  return '<div class="'+cls+'"'+attr+'><div class="ov-chain-n">'+(i+1)+'</div><div class="ov-chain-t">'+esc(s.t)+more+'</div><div class="ov-chain-d">'+s.d+'</div></div>';
+  var body=compact?'':'<div class="ov-chain-d">'+s.d+'</div>';
+  return '<div class="'+cls+'"'+attr+'><div class="ov-chain-n">'+(i+1)+'</div><div class="ov-chain-t">'+esc(s.t)+more+'</div>'+body+'</div>';
 }).join('')+'</div>'; }
 // Horizontal proportion bars (reuses shared .ov-mbars). rows = [label, pct, valueLabel, color].
 function mbars(arr){ return '<div class="ov-mbars">'+arr.map(function(r){
@@ -528,7 +530,7 @@ function barbellDiagram(){
       '<div class="bb-chips">'+BB_PREM.map(function(x){return '<span class="bb-chip">'+esc(x)+'</span>';}).join('')+'</div>'+
       '<div class="bb-stat"><b>~3.5×</b> the profit growth of the core · Reserve <b>+60%</b> · premium >$10B GBs — fewer trips, richer economics.</div></div>'+
   '</div>'+
-  '<div class="ov-fynote" style="margin-top:12px">Why it matters: the two wings together lift first-time user acquisition ~<b>25%</b>, and the model is self-funding — premium margins bankroll the low-cost and AV growth bets. It also explains the ARPU optics: adding cheap emerging-market trips <i>lowers</i> revenue per user but <i>raises</i> volume and engagement. <b>AV is the newest growth bet — same barbell playbook:</b> invest at negative margins, build liquidity, then turn profitable.</div>';
+  '<div class="ov-fynote" style="margin-top:12px"><b>Self-funding:</b> premium margins bankroll the low-cost & AV bets, and the two wings lift new-user acquisition ~<b>25%</b>. It also explains the ARPU optics — cheap emerging-market trips lower revenue/user but raise volume. <b>AV is the newest barbell bet.</b></div>';
   return h;
 }
 
@@ -553,14 +555,14 @@ function overviewBody(c){
     '<div class="ov-chart-card"><div class="ov-chart-t">Gross Bookings by segment <span>($B, FY · light = estimate)</span></div><div class="ov-chart-wrap"><canvas id="ubChartGB"></canvas></div></div>'+
     '<div class="ov-chart-card"><div class="ov-chart-t">Adj. EBITDA <span>($B, FY · light = estimate)</span></div><div class="ov-chart-wrap"><canvas id="ubChartEbitda"></canvas></div></div>'+
   '</div>';
-  h+=sec('How Uber Makes Money — follow a single trip',
-    '<p class="ov-lede" style="margin:0 0 14px">A Mobility trip, end to end — <b>tap any step</b> for the cash-vs-card economics and payout timing.</p>'+
-    chain(TRIP_FLOW,'trip')+
-    '<div class="ov-sec-h ovt-store-h" style="margin-top:20px">Where every $10 of a trip goes <span class="ave-subh-note">(illustrative Mobility split)</span></div>'+
-    mbars(TRIP_SPLIT)+
-    '<div class="ov-subh" style="margin-top:14px">…and what Uber does with its ~$3.00 take</div>'+
-    mbars(TRIP_TAKE)+
-    '<div class="ov-fynote">'+TRIP_CASH+'</div>');
+  h+=sec('How Uber Makes Money — one $10 trip',
+    '<p class="ov-lede" style="margin:0 0 12px">The six steps of a Mobility trip — <b>tap any step</b> for the detail. Below: where the $10 lands.</p>'+
+    chain(TRIP_FLOW,'trip',true)+
+    '<div class="ov-grid2" style="margin-top:18px">'+
+      '<div><div class="ov-subh">Where every $10 goes</div>'+mbars(TRIP_SPLIT)+'</div>'+
+      '<div><div class="ov-subh">…and Uber\'s ~$3.00 take</div>'+mbars(TRIP_TAKE)+'</div>'+
+    '</div>'+
+    '<div class="ov-fynote" style="margin-top:12px"><b>~$0.75 of every $10 trip converts to cash</b> for Uber (incl. the ~$0.35 Aleka insurance float). <span class="ave-subh-note">Illustrative Mobility economics — Summit deck, Dec 2024.</span></div>');
   // ── Segments folded into Overview (no separate tab) ──
   h+=sec('The Three Segments & Their Economics',
     SEGMENTS.map(function(s){ return '<div class="ov-row"><div class="ov-row-k">'+esc(s[0])+'</div><div class="ov-row-v">'+s[1]+'</div></div>'; }).join('')+
@@ -585,9 +587,6 @@ function overviewBody(c){
     '<table class="ov-table"><thead><tr><th>Peer</th><th>What they are</th><th>Where share moves · the structural edge</th></tr></thead><tbody>'+
     PEERS.map(function(p){return '<tr><td class="ov-td-name">'+esc(p[0])+'</td><td>'+p[1]+'</td><td>'+p[2]+'</td></tr>';}).join('')+'</tbody></table>'+
     '<div class="ov-diagram-cap" style="margin-top:10px">'+PEER_NOTE+'</div>');
-  h+=sec('Tailwinds & Headwinds',
-    '<div class="ov-grid2"><div class="ov-wind ov-wind-up"><div class="ov-wind-h">Tailwinds</div>'+bullets(TAILWINDS)+'</div>'+
-    '<div class="ov-wind ov-wind-down"><div class="ov-wind-h">Headwinds</div>'+bullets(HEADWINDS)+'</div></div>');
   h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
   return h;
 }
@@ -614,6 +613,9 @@ function strategyBody(c){
       '<b>Sense of scale:</b> AV is still ~0.1% of global rideshare trips — Uber\'s human network adds ~50× the entire global AV volume every year.',
     ])+
     '<div class="ov-fynote"><b>The real risk to watch:</b> Waymo already runs its <i>own</i> app in SF/Phoenix/LA — direct disintermediation. Uber\'s counter, in management\'s words (Q1 2026): <b>"no effect of the Waymo launches on our overall business,"</b> with US mobility actually accelerating. AV is run as the newest <b>barbell growth bet</b> — invest at negative margins now, turn profitable later.</div>');
+  h+=sec('Tailwinds & Headwinds',
+    '<div class="ov-grid2"><div class="ov-wind ov-wind-up"><div class="ov-wind-h">Tailwinds</div>'+bullets(TAILWINDS)+'</div>'+
+    '<div class="ov-wind ov-wind-down"><div class="ov-wind-h">Headwinds</div>'+bullets(HEADWINDS)+'</div></div>');
   return h;
 }
 

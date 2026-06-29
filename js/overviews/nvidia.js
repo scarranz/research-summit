@@ -685,14 +685,14 @@ function stopTech(){
 // ════════════════════════════════════════════════════════════════════════════════
 // 4 — MANAGEMENT
 // ════════════════════════════════════════════════════════════════════════════════
-// Executive team — [name, role, photo, bio, ownership label, initials, accent].
+// Executive team — [name, role, photo, bio, ownership label, initials, accent, shares].
 var LEADERS = [
-  ['Jensen Huang','Founder, President & CEO','nvda-jensen.jpg','Co-founded NVIDIA in 1993 and has led it ever since — the architect of its bet on accelerated computing and CUDA, and the company’s strategic and public face.','812.0M · 3.36%','JH','#1F8A70'],
-  ['Colette Kress','EVP & Chief Financial Officer','nvda-colette.jpg','CFO since 2013 — leads finance, capital allocation and investor relations through the scale-up to a $200B+ revenue company.','4.85M · 0.02%','CK','#5B53A8'],
-  ['Jay Puri','EVP, Worldwide Field Operations','nvda-jay.jpg','With NVIDIA since 2005 — runs global sales and go-to-market field operations.','3.67M · 0.02%','JP','#2D6A9F'],
-  ['Debora Shoquist','EVP, Operations','nvda-debora.jpg','Leads global supply chain and manufacturing operations — central to navigating the AI supply crunch.','1.95M · 0.01%','DS','#C0772C'],
-  ['Tim Teter','EVP, General Counsel & Secretary','nvda-tim.jpg','NVIDIA’s chief legal officer — oversees legal, intellectual property and compliance.','3.05M · 0.01%','TT','#B0506A'],
-  ['Chris Malachowsky','Co-founder & NVIDIA Fellow','nvda-chris.jpg','One of NVIDIA’s three co-founders (with Jensen Huang and Curtis Priem) and a long-time technical leader and NVIDIA Fellow.','—','CM','#3A7CA5'],
+  ['Jensen Huang','Founder, President & CEO','nvda-jensen.jpg','Co-founded NVIDIA in 1993 and has led it ever since — the architect of its bet on accelerated computing and CUDA, and the company’s strategic and public face.','812.0M · 3.36%','JH','#1F8A70', 812004746],
+  ['Colette Kress','EVP & Chief Financial Officer','nvda-colette.jpg','CFO since 2013 — leads finance, capital allocation and investor relations through the scale-up to a $200B+ revenue company.','4.85M · 0.02%','CK','#5B53A8', 4851271],
+  ['Jay Puri','EVP, Worldwide Field Operations','nvda-jay.jpg','With NVIDIA since 2005 — runs global sales and go-to-market field operations.','3.67M · 0.02%','JP','#2D6A9F', 3665228],
+  ['Debora Shoquist','EVP, Operations','nvda-debora.jpg','Leads global supply chain and manufacturing operations — central to navigating the AI supply crunch.','1.95M · 0.01%','DS','#C0772C', 1946358],
+  ['Tim Teter','EVP, General Counsel & Secretary','nvda-tim.jpg','NVIDIA’s chief legal officer — oversees legal, intellectual property and compliance.','3.05M · 0.01%','TT','#B0506A', 3052096],
+  ['Chris Malachowsky','Co-founder & NVIDIA Fellow','nvda-chris.jpg','One of NVIDIA’s three co-founders (with Jensen Huang and Curtis Priem) and a long-time technical leader and NVIDIA Fellow.','—','CM','#3A7CA5', null],
 ];
 // Insider & board ownership — [name, role, shares, % out, latest Form 4 net change, date].
 // Source: Bloomberg holdings export (NVDA_OWN), positions as of the latest Form 4 filings.
@@ -716,51 +716,115 @@ var OWNERSHIP = [
   ['Ellen Ochoa','Director', 4968, '<0.01%', 1799, 'Jun 26, 2025'],
 ];
 
-function leadAvatar(initials, accent, file){
-  return '<div class="lead-av" style="--c:'+accent+'"><span>'+esc(initials)+'</span>'+
+function leadAvatar(initials, accent, file, extra){
+  return '<div class="lead-av '+(extra||'')+'" style="--c:'+accent+'"><span>'+esc(initials)+'</span>'+
     (file ? '<img src="img/leadership/'+esc(file)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '')+'</div>';
 }
+// Interactive org tree — clickable nodes with small photos; detail renders into #mgDetail.
+function orgNode(idx, sublabel, cls){
+  var p=LEADERS[idx];
+  return '<button type="button" class="org-node org-click '+(cls||'')+'" data-lead="'+idx+'">'+
+    leadAvatar(p[5],p[6],p[2],'lead-av-sm')+
+    '<div class="org-txt"><div class="org-name">'+esc(p[0])+'</div><div class="org-role">'+esc(sublabel||p[1])+'</div></div></button>';
+}
 function orgTree(){
-  var reports=[
-    ['Colette Kress','Finance · CFO'],
-    ['Jay Puri','Worldwide Field Operations'],
-    ['Debora Shoquist','Operations'],
-    ['Tim Teter','Legal · General Counsel'],
-    ['Engineering · Architecture · AI Software · Research','~50+ more direct reports'],
-  ];
   return '<div class="org">'+
-    '<div class="org-ceo"><div class="org-name">Jensen Huang</div><div class="org-role">Founder, President &amp; CEO</div></div>'+
-    '<div class="org-reports">'+reports.map(function(r){
-      return '<div class="org-node"><div class="org-name">'+esc(r[0])+'</div><div class="org-role">'+esc(r[1])+'</div></div>';
-    }).join('')+'</div></div>'+
-    '<div class="ov-asof">NVIDIA runs an unusually <b>flat</b> organization — Jensen Huang has ~50–60 direct reports and there are no divisional general managers; teams are organized by function and assembled around projects. The named reports are the company’s executive officers.</div>';
+    orgNode(0,'Founder, President & CEO','org-ceo')+
+    '<div class="org-reports">'+
+      orgNode(1,'Finance · CFO')+orgNode(2,'WW Field Operations')+
+      orgNode(3,'Operations')+orgNode(4,'Legal · General Counsel')+
+      '<div class="org-node org-info"><div class="org-txt"><div class="org-name">Engineering · Architecture · AI Software · Research</div><div class="org-role">~50+ more direct reports</div></div></div>'+
+    '</div></div>'+
+    '<div class="org-founders">Co-founders (1993): '+
+      '<button type="button" class="org-chip" data-lead="0">Jensen Huang</button> · '+
+      '<button type="button" class="org-chip" data-lead="5">Chris Malachowsky</button> · Curtis Priem</div>'+
+    '<div class="ov-asof">NVIDIA runs an unusually <b>flat</b> organization — Jensen Huang has ~50–60 direct reports and no divisional general managers; teams are organized by function. The named reports are the executive officers. <b>Click any person</b> for their detail and live holdings value.</div>';
+}
+// Live-price valuation helpers.
+var _mgPrice = null, _mgSel = 0;
+function mgUsd(v){
+  if(v>=1e9) return '$'+(v/1e9).toFixed(2)+'B';
+  if(v>=1e6) return '$'+(v/1e6).toFixed(1)+'M';
+  return '$'+Math.round(v).toLocaleString('en-US');
+}
+function mgValSpan(shares){
+  return '<span class="mg-val" data-sh="'+shares+'">'+(_mgPrice!=null?mgUsd(shares*_mgPrice):'…')+'</span>';
+}
+function mgRenderDetail(idx){
+  var el=document.getElementById('mgDetail'); if(!el) return;
+  _mgSel=idx;
+  var p=LEADERS[idx], sh=p[7];
+  var own = (sh!=null)
+    ? (sh/1e6).toFixed(2)+'M shares · '+(p[4].split('·')[1]||'').trim()+' of shares out · worth <b>'+mgValSpan(sh)+'</b>'
+    : 'Not a Section 16 insider filer (co-founder &amp; Fellow).';
+  el.innerHTML='<div class="mg-d-top">'+leadAvatar(p[5],p[6],p[2])+
+    '<div><div class="mg-d-name">'+esc(p[0])+'</div><div class="mg-d-role">'+esc(p[1])+'</div></div></div>'+
+    '<div class="mg-d-bio">'+esc(p[3])+'</div>'+
+    '<div class="mg-d-own">'+own+'</div>';
 }
 function ownTable(){
   function sh(n){ return (n/1e6).toFixed(2)+'M'; }
   function chg(n){ return '<span class="'+(n>=0?'own-up':'own-dn')+'">'+(n>=0?'+':'−')+Math.abs(n).toLocaleString('en-US')+'</span>'; }
+  var total=OWNERSHIP.reduce(function(a,o){ return a+o[2]; },0);
+  var body=OWNERSHIP.map(function(o){
+    return '<tr><td class="ov-td-name">'+esc(o[0])+'</td><td>'+esc(o[1])+'</td>'+
+      '<td style="text-align:right">'+sh(o[2])+'</td><td style="text-align:right">'+esc(o[3])+'</td>'+
+      '<td style="text-align:right">'+mgValSpan(o[2])+'</td>'+
+      '<td>'+chg(o[4])+' · '+esc(o[5])+'</td></tr>';
+  }).join('');
+  var tot='<tr class="own-total"><td class="ov-td-name">Total · insiders &amp; directors</td><td></td>'+
+    '<td style="text-align:right">'+sh(total)+'</td><td style="text-align:right">~3.5%</td>'+
+    '<td style="text-align:right">'+mgValSpan(total)+'</td><td></td></tr>';
   return '<div style="overflow-x:auto"><table class="ov-table"><thead><tr><th>Name</th><th>Role</th>'+
-    '<th style="text-align:right">Shares</th><th style="text-align:right">% out</th><th>Latest Form 4</th></tr></thead><tbody>'+
-    OWNERSHIP.map(function(o){
-      return '<tr><td class="ov-td-name">'+esc(o[0])+'</td><td>'+esc(o[1])+'</td>'+
-        '<td style="text-align:right">'+sh(o[2])+'</td><td style="text-align:right">'+esc(o[3])+'</td>'+
-        '<td>'+chg(o[4])+' · '+esc(o[5])+'</td></tr>';
-    }).join('')+'</tbody></table></div>';
+    '<th style="text-align:right">Shares</th><th style="text-align:right">% out</th>'+
+    '<th style="text-align:right">Value (live)</th><th>Latest Form 4</th></tr></thead>'+
+    '<tbody>'+body+tot+'</tbody></table></div>';
 }
 function managementBody(){
   var h='';
-  h+='<p class="ov-lede">NVIDIA is <b>founder-led</b> and deliberately <b>flat</b>: Jensen Huang has run the company since founding it in 1993, with an unusually wide span of direct reports and few management layers. Below are the executive team, the org structure and insider ownership.</p>';
-  h+=sec('Executive team', '<div class="lead-grid">'+LEADERS.map(function(p){
-    return '<div class="lead-card">'+leadAvatar(p[5],p[6],p[2])+
-      '<div class="lead-name">'+esc(p[0])+'</div>'+
-      '<div class="lead-role">'+esc(p[1])+'</div>'+
-      '<div class="lead-bio">'+esc(p[3])+'</div>'+
-      (p[4] && p[4]!=='—' ? '<div class="lead-own">'+esc(p[4])+'</div>' : '')+
-    '</div>';
-  }).join('')+'</div>');
-  h+=sec('Organizational structure', orgTree());
+  h+='<p class="ov-lede">NVIDIA is <b>founder-led</b> and deliberately <b>flat</b>: Jensen Huang has run the company since founding it in 1993, with an unusually wide span of direct reports and few management layers. <b>Click a person in the tree</b> to see their detail and live holdings value.</p>';
+  h+='<div class="ov-live" id="mgLive" hidden></div>';
+  h+=sec('Leadership & organization',
+    '<div id="mgWrap" class="mg-wrap">'+orgTree()+'<div class="mg-detail" id="mgDetail"></div></div>');
   h+=sec('Insider &amp; board ownership', ownTable());
-  h+='<div class="ov-foot">Ownership from a Bloomberg holdings export (NVDA insiders &amp; directors); positions as of the latest Form 4 filings (mostly June 2026). Shares in millions; "% out" is percent of shares outstanding. Large holders’ sales are typically pre-arranged 10b5-1 plans, and small positive changes are routine grants / RSU vesting. Executive headshots © NVIDIA newsroom.</div>';
+  h+='<div class="ov-foot">Ownership from a Bloomberg holdings export (NVDA insiders &amp; directors); positions as of the latest Form 4 filings (mostly June 2026). "Value (live)" = shares × the live NVDA price (Massive); requires a logged-in session. Large holders’ sales are typically pre-arranged 10b5-1 plans; small positive changes are routine grants / RSU vesting. Executive headshots © NVIDIA newsroom.</div>';
   return h;
+}
+// Wire org clicks + fetch the live NVDA price and fill all value cells.
+function initManagement(){
+  var wrap=document.getElementById('mgWrap');
+  if(wrap && !wrap._w){ wrap._w=1;
+    wrap.addEventListener('click', function(e){
+      var n=e.target.closest('[data-lead]'); if(!n) return;
+      var idx=parseInt(n.getAttribute('data-lead'),10);
+      wrap.querySelectorAll('.org-click').forEach(function(x){ x.classList.toggle('sel', x.getAttribute('data-lead')==String(idx)); });
+      mgRenderDetail(idx);
+      if(_mgPrice!=null) mgFillValues();
+    });
+  }
+  mgRenderDetail(_mgSel);
+  var sel=wrap && wrap.querySelector('.org-click[data-lead="'+_mgSel+'"]'); if(sel) sel.classList.add('sel');
+  if(_mgPrice!=null){ mgFillValues(); return; }
+  import('../api.js').then(function(api){ return api.liveQuote('NVDA'); }).then(function(res){
+    var q=res&&res.data; if(!q||q.price==null){ mgClearValues(); return; }
+    _mgPrice=q.price; mgFillValues();
+    var lv=document.getElementById('mgLive');
+    if(lv){ var up=(q.changePct||0)>=0; lv.hidden=false;
+      lv.innerHTML='<span class="ov-live-dot"></span><span class="ov-live-tk">NVDA</span>'+
+        '<span class="ov-live-px">$'+_mgPrice.toFixed(2)+'</span>'+
+        (q.changePct!=null?'<span class="ov-live-ch '+(up?'up':'down')+'">'+(up?'▲ +':'▼ −')+Math.abs(q.changePct).toFixed(2)+'%</span>':'')+
+        '<span class="ov-live-ts">live · NASDAQ · Massive · holdings valued at this price</span>';
+    }
+  }).catch(function(){ mgClearValues(); });
+}
+function mgFillValues(){
+  if(_mgPrice==null) return;
+  document.querySelectorAll('.ov-nvda .mg-val').forEach(function(s){
+    var sh=parseFloat(s.getAttribute('data-sh')); if(isFinite(sh)) s.textContent=mgUsd(sh*_mgPrice);
+  });
+}
+function mgClearValues(){
+  document.querySelectorAll('.ov-nvda .mg-val').forEach(function(s){ if(s.textContent==='…') s.textContent='—'; });
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -845,6 +909,7 @@ function showOvt(root, key){
   if (key === 'industry') requestAnimationFrame(function(){ semiIndustry.init(); });
   if (key === 'segments') requestAnimationFrame(function(){ buildSegChart(); });
   if (key === 'technology') initTech();
+  if (key === 'management') requestAnimationFrame(function(){ initManagement(); });
 }
 
 function init(){

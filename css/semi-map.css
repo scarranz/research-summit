@@ -253,20 +253,45 @@
 .lead-own { font-size: 11.5px; font-weight: 700; color: var(--navy); margin-top: 8px;
   border-top: 1px solid var(--bdr); padding-top: 8px; }
 
-/* Management tab — org tree */
+/* Management tab — interactive org tree */
+.lead-av-sm { width: 38px; height: 38px; font-size: 13px; margin: 0; flex: none; }
 .org { text-align: center; margin: 6px 0 4px; }
-.org-ceo { display: inline-block; border: 2px solid #76B900; border-radius: 10px; padding: 10px 18px; background: var(--surface); }
 .org-name { font-size: 13px; font-weight: 700; color: var(--navy); }
 .org-role { font-size: 11px; color: var(--mu); margin-top: 2px; }
+.org-txt { text-align: left; }
+.org-node { position: relative; display: inline-flex; align-items: center; gap: 9px;
+  border: 1px solid var(--bdr); border-radius: 9px; padding: 8px 12px; background: var(--w); max-width: 210px; }
+.org-ceo { border: 2px solid #76B900; padding: 10px 16px; }
+.org-click { cursor: pointer; font-family: 'Inter', sans-serif; transition: border-color .15s, box-shadow .15s; }
+.org-click:hover { border-color: #76B900; }
+.org-click.sel { border-color: #76B900; box-shadow: 0 0 0 2px rgba(118,185,0,.25); }
+.org-info { background: var(--surface); max-width: 230px; }
+.org-info .org-name { font-weight: 600; color: var(--mu); }
 .org-reports { position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 34px; }
 .org-reports::after { content: ''; position: absolute; top: -34px; left: 50%; width: 1px; height: 16px; background: var(--bdr); }
 .org-reports::before { content: ''; position: absolute; top: -18px; left: 8%; right: 8%; height: 1px; background: var(--bdr); }
-.org-node { position: relative; border: 1px solid var(--bdr); border-radius: 9px; padding: 9px 13px; background: var(--w); max-width: 180px; }
-.org-node::before { content: ''; position: absolute; top: -18px; left: 50%; width: 1px; height: 18px; background: var(--bdr); }
+.org-node.org-click::before { content: ''; position: absolute; top: -18px; left: 50%; width: 1px; height: 18px; background: var(--bdr); }
+.org-founders { text-align: center; font-size: 12px; color: var(--mu); margin-top: 18px; }
+.org-chip { border: 1px solid var(--bdr); background: var(--surface); border-radius: 20px; padding: 3px 10px;
+  font: 600 12px 'Inter', sans-serif; color: var(--navy); cursor: pointer; }
+.org-chip:hover { border-color: #76B900; }
 
-/* Management tab — ownership change colors */
+/* Management tab — selected-person detail panel */
+.mg-detail { margin-top: 20px; border: 1px solid var(--bdr); border-left: 3px solid #76B900;
+  border-radius: 10px; padding: 16px 18px; background: var(--w); }
+.mg-d-top { display: flex; align-items: center; gap: 14px; }
+.mg-d-top .lead-av { width: 64px; height: 64px; font-size: 20px; margin: 0; }
+.mg-d-name { font-size: 16px; font-weight: 800; color: var(--navy); }
+.mg-d-role { font-size: 12px; font-weight: 600; color: #5a9e16; margin-top: 2px; }
+.mg-d-bio { font-size: 12.5px; color: var(--mu); margin-top: 10px; line-height: 1.55; }
+.mg-d-own { font-size: 12.5px; color: var(--navy); margin-top: 10px; border-top: 1px solid var(--bdr); padding-top: 10px; }
+.mg-d-own b { color: #1F8A70; }
+.mg-val { font-variant-numeric: tabular-nums; }
+
+/* Management tab — ownership change colors + total */
 .own-up { color: #1E9E62; font-weight: 600; }
 .own-dn { color: #D2533F; font-weight: 600; }
+.own-total td { border-top: 2px solid var(--bdr); font-weight: 700; color: var(--navy); }
 
 @media (max-width: 760px) { .lead-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 640px) {

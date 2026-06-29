@@ -125,20 +125,6 @@ var PEERS=[
   { n:'Grab · Bolt · Didi', dom:'grab.com', arena:'Regional super-apps', edge:'SE Asia, Europe, China/LatAm. Uber competes locally or holds equity stakes; its global brand + capital are the edge.' },
 ];
 var PEER_NOTE='Ride-hailing economics rarely turn on take rate (peers cluster ~30%) — they turn on <b>density, cross-sell and regulatory positioning</b>, where Uber\'s global scale and bundle are the edge.';
-// What moves the thesis — each item pairs a specific claim with the SIGNAL a reader should track.
-// Reframed from a generic tailwinds/headwinds list so the section adds forward-looking value.
-var THESIS_FOR=[
-  { t:'<b>Insurance costs keep easing</b> → cheaper US fares re-accelerate trips.', w:'US Mobility trip growth (esp. SF/LA) · insurance CPI' },
-  { t:'<b>Uber One penetration climbs</b> from ~25% of users → more frequency & retention.', w:'member count · % of combined bookings' },
-  { t:'<b>Advertising compounds</b> past ~2% of Delivery bookings → near-pure-margin upside.', w:'ads run-rate ($2B→?) · ads % of Delivery GB' },
-  { t:'<b>AV stays a tailwind Uber aggregates</b>, not a disruptor it must outbuild.', w:'Uber AV trips vs Waymo own-app share' },
-];
-var THESIS_AGAINST=[
-  { t:'<b>AV disintermediation</b> — Waymo/Tesla route demand through their own apps.', w:'AV own-app trips · partners launching without Uber' },
-  { t:'<b>DoorDash keeps out-scaling Eats in the US</b> → delivery share & incentive pressure.', w:'US delivery share (~22–25%) · Delivery margin' },
-  { t:'<b>Regulation reclassifies drivers</b> — EU Platform Work Directive, per-market pay floors.', w:'EU transposition (Dec 2026) · UK · new pay floors' },
-  { t:'<b>Insurance severity re-accelerates</b> → fares up, trips down again.', w:'insurance CPI · reserve growth (~$12.9B)' },
-];
 // ── Strategy ──
 var TARGETS=[
   { v:'Mid–high teens', l:'Gross Bookings CAGR', s:'3-yr target (Feb 2024 Investor Day). FY25 actual: +19%.' },
@@ -380,28 +366,10 @@ function supplyBody(){
     '.usc-imp-good b{color:#06965A}'+
     '.usc-imp-mixed{background:rgba(232,160,12,0.09);border:1px solid rgba(232,160,12,0.32);color:var(--navy)}'+
     '.usc-imp-mixed b{color:#B7791F}'+
-    '.ueco{display:flex;align-items:stretch;margin:4px 0 10px}'+
-    '.ueco-box{flex:1;border:1px solid var(--bdr);border-radius:10px;background:var(--w);padding:14px;text-align:center;min-width:0}'+
-    '.ueco-box.is-hub{border:2px solid var(--brand);background:var(--surface)}'+
-    '.ueco-k{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin-bottom:6px}'+
-    '.ueco-t{font-size:14px;font-weight:800;color:var(--navy);margin-bottom:5px}'+
-    '.ueco-d{font-size:11px;color:var(--mu);line-height:1.45}'+
-    '.ueco-arr{flex:none;align-self:center;display:flex;flex-direction:column;align-items:center;padding:0 10px;color:var(--brand)}'+
-    '.ueco-arr i{font-style:normal;font-size:22px;line-height:1}.ueco-arr small{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);margin-top:3px}'+
-    '@media(max-width:720px){.ueco{flex-direction:column}.ueco-arr{padding:6px 0}.ueco-arr i{transform:rotate(90deg)}}'+
     '@media(max-width:860px){.usc-grid{grid-template-columns:1fr}}'+
   '</style>';
   h+='<p class="ov-lede">Uber’s supply chain is really a story about <b>who Uber depends on, and who could depend on Uber back</b>. The data is from Bloomberg SPLC (29-Jun-2026). Start with how the pieces fit, then each group’s role and what it means for Uber.</p>';
   // ── Ecosystem map: the interaction at a glance ──
-  h+=sec('How the Ecosystem Fits Together',
-    '<div class="ueco">'+
-      '<div class="ueco-box"><div class="ueco-k">Suppliers · inputs</div><div class="ueco-t">Who powers Uber</div><div class="ueco-d">cars &amp; AV · money rails · cloud · ad-tech · depots</div></div>'+
-      '<div class="ueco-arr"><i>→</i><small>inputs</small></div>'+
-      '<div class="ueco-box is-hub"><div class="ueco-k">The platform</div><div class="ueco-t">Uber owns the demand</div><div class="ueco-d">sets the price · runs the marketplace · keeps ~20–30%</div></div>'+
-      '<div class="ueco-arr"><i>→</i><small>demand</small></div>'+
-      '<div class="ueco-box"><div class="ueco-k">Demand · output</div><div class="ueco-t">Riders &amp; merchants</div><div class="ueco-d">170M+ consumers · millions of restaurants, grocers &amp; fleets</div></div>'+
-    '</div>'+
-    '<div class="ov-diagram-cap"><b>The whole point:</b> Uber sits in the middle and owns the <b>demand</b> — that is the leverage. Suppliers compete to provide inputs (good for Uber: cheap, replaceable, low pricing power). The <b>only</b> group that can also reach the demand directly — and therefore <b>threaten</b> Uber — is AV (Waymo on its own app). That is exactly why Uber aggregates 30+ AV partners instead of betting on one, and why this tab and <b>Strategy &amp; AV</b> tell the same story from two angles.</div>');
   // ── Suppliers: role + impact ──
   h+=sec('Who Powers Uber — each supplier group & what it means',
     '<div class="usc-grid">'+SC_SUPPLIERS.map(scCard).join('')+'</div>');
@@ -663,16 +631,7 @@ function strategyBody(c){
       '<b>Sense of scale:</b> AV is still ~0.1% of global rideshare trips — Uber\'s human network adds ~50× the entire global AV volume every year.',
     ])+
     '<div class="ov-fynote"><b>The real risk to watch:</b> Waymo already runs its <i>own</i> app in SF/Phoenix/LA — direct disintermediation. Uber\'s counter, in management\'s words (Q1 2026): <b>"no effect of the Waymo launches on our overall business,"</b> with US mobility actually accelerating. AV is run as the newest <b>barbell growth bet</b> — invest at negative margins now, turn profitable later.</div>');
-  h+=sec('What Moves the Thesis — and the signals to watch',
-    '<div class="ov-diagram-cap" style="margin:0 0 12px">Not a generic pros/cons list — the <b>specific variables a reader should track</b>, each paired with the signal that tells you it’s playing out.</div>'+
-    '<div class="ov-grid2">'+thesisCol('Supports the thesis ✓','ov-wind-up',THESIS_FOR)+thesisCol('Threatens the thesis ⚠','ov-wind-down',THESIS_AGAINST)+'</div>');
   return h;
-}
-// Two-column "what to watch": claim + the signal/metric to monitor.
-function thesisCol(title,cls,arr){
-  return '<div class="ov-wind '+cls+'"><div class="ov-wind-h">'+title+'</div><ul class="ov-bullets">'+
-    arr.map(function(x){ return '<li>'+x.t+'<div style="font-size:10.5px;color:var(--mu);margin-top:4px"><b style="color:var(--brand)">Watch:</b> '+esc(x.w)+'</div></li>'; }).join('')+
-  '</ul></div>';
 }
 
 // (The former "Segments" tab was folded into the Overview — see overviewBody.)

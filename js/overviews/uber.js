@@ -157,20 +157,7 @@ var INITIATIVES=[
     d:'<b>Extending the platform up the traveler value chain.</b> "Hotels on Uber" launched Apr 2026 (Expedia, 700k+ properties) alongside Vrbo and a dedicated <b>Travel Mode</b>.<br><br>Explicitly <i>not</i> meant to become a core business — it signals intent to own more stages of the trip (book the ride, the meal, now the stay) and feed Uber One engagement and frequency.' },
 ];
 // (AV bull/bear lists removed — reworked into an evidence-based framing in strategyBody.)
-// ── Unit economics / regulation ──
-var FLY=[
-  'Uber discloses MAPCs (monthly active platform consumers) and Trips, not segment trip counts — so per-trip economics are read at the platform level.',
-  '<b>Frequency is rising:</b> Trips growth (+20%) consistently outpaces MAPC growth (+17%) — users transacting more often, the flywheel working.',
-  '<b>Uber One</b> members are ~2× as likely to use both Mobility and Delivery (2-in-5 vs 1-in-5 platform-wide) and spend ~3× more.',
-  'Gross Bookings per MAPC has risen from ~$881/yr (2022) to ~$958/yr (2025) on mix and frequency, not just price.',
-];
 var UK_NOTE='In January 2026, after a UK tax ruling, Uber moved its UK rideshare (outside London) from a <b>principal (merchant)</b> to an <b>agent</b> model. Driver payments reclassified from cost of revenue to contra-revenue — cutting reported revenue ~$1.0B and Mobility\'s revenue margin by ~<b>400 bps</b> in Q1 2026, with an equal-and-opposite drop in cost of revenue. <b>Zero impact on Adjusted EBITDA or underlying economics.</b> So the reported Q1 2026 Mobility take rate (~25.8%) understates the real ~30% — a pure gross-to-net accounting artifact, not deteriorating economics.';
-var REG=[
-  ['US — classification de-risked', '<b>Prop 22</b> upheld by the California Supreme Court (July 2024); the federal DOL\'s 2024 contractor rule is unenforced and <b>proposed for rescission</b> (Feb 2026). The dominant model is "contractor + pay floor" (Massachusetts, Minnesota, NYC, Seattle), not reclassification.'],
-  ['International — mixed, trending favorable', '<b>UK</b>: drivers are "workers" since <i>Aslam</i> (2021), and Uber lost a VAT fight (2025). <b>Netherlands</b> (Jan 2026) and <b>France</b> (2025) delivered pro-contractor reversals. The <b>EU Platform Work Directive</b> (transpose by Dec 2026) is the key open risk — its bite depends on national law.'],
-  ['How Uber frames it', 'The 10-K says reclassification "would require us to fundamentally change our business model" — but, unlike some peers, it <b>does not say the loss "cannot be estimated."</b> It affirmatively states the aggregate reasonably-possible loss would <b>not be material</b>.'],
-  ['Other', 'NYC congestion pricing ($1.50/trip, Jan 2025); a Dutch GDPR fine (€290M, under appeal); an open FTC case on Uber One cancellation flows (filed 2025). Mostly cost/PR drags, not existential.'],
-];
 var SOURCES='Quantitative series: Summit DCF model, snapshot 2026-05-07 (actuals_history = reported; projection_history = model estimate). Segment Adjusted EBITDA actuals end Q4 2025 — Uber moved its primary segment-profit measure to Segment Operating Income in Q1 2026. Take rates are derived (revenue ÷ segment gross bookings) and the Q1 2026 Mobility figure is depressed ~400 bps by a UK gross-to-net accounting change. Qualitative content: Uber FY2024 & FY2025 10-Ks, Q4 2025 & Q1 2026 results and prepared remarks, the Feb 2024 Investor Day, and the Cal. Supreme Court Prop 22 ruling (Jul 2024). Forward years (2026E–2029E) are model estimates, not company guidance. Brand colors approximate Uber black and Uber Eats green.';
 
 // ─── How Uber makes money: interactive per-trip chain (Mobility) ──────────────
@@ -195,22 +182,6 @@ var TRIP_TAKE=[
   ['Adjusted EBITDA', 27, '~$0.80', BRAND2],
 ];
 var TRIP_CASH='From the $0.80 of Adj. EBITDA, less other expenses (≈$0.40) → ~$0.40 cash from the core trip; add the <b>Aleka insurance float</b> (≈$0.35) and <b>~$0.75 of every $10 trip converts into cash</b> for Uber. <span class="ave-subh-note">Illustrative Mobility economics — Summit deck, Dec 2024.</span>';
-
-// ─── Uber One: member vs non-member economics ─────────────────────────────────
-var UBERONE_STAT=[
-  { l:'Members', v:'50M+', s:'Q1 2026, +50% YoY (~30M end-2024)' },
-  { l:'% of combined GB', v:'>50%', s:'members now drive a majority of Mobility+Delivery bookings' },
-  { l:'Member spend', v:'~3×', s:'vs non-members (~$192 vs ~$64/mo, Summit deck Dec 2024)' },
-  { l:'MAPC penetration', v:'~25%', s:'~1 in 4 monthly users — the conversion runway' },
-];
-var UBERONE_NOTE=[
-  '<b>The spending gap is the whole thesis.</b> A member spends ~<b>3×</b> a non-member; in Delivery, members already generate ~<b>two-thirds</b> of bookings. The 2023 expansion ($0 delivery fees, up to 30% off service fees, 5% off rides + priority) primarily pulled forward <b>delivery demand</b> — Delivery began compounding faster than before.',
-  '<b>Conversion is the lever, and it\'s early.</b> Members are only ~25% of MAPCs and only ~20% of eligible users use <i>both</i> Mobility and Delivery — so most of the cross-sell runway is unconverted. New members run <b>negative-margin for ~6 months</b> (benefits cost) then turn profitable; Uber is steering members from monthly to annual plans to lift retention.',
-  '<b>Why it compounds:</b> members retain ~35% better and habituate into multi-product use — turning a marketing cost into a structurally higher-frequency, higher-LTV cohort and a moat competitors can\'t cheaply replicate.',
-];
-
-// ─── Emerging-markets / FX: does adding users dilute GB per user? ──────────────
-var EMERGING='<b>Determined — the mechanism is real but currently out-run by frequency.</b> Management confirms trips outside the US/Canada are at a <b>lower price point</b> (two- and three-wheelers, auto-rickshaws, UberX Share in India/LatAm), so each new emerging-market user adds <i>less</i> Gross Bookings than a developed-market user — and a weaker local currency dilutes the blended USD average further. <b>But</b> blended Gross Bookings per MAPC is still <i>rising</i> (~$252→$270/qtr, +7% YoY in Q1 2026): low-cost products drive ~<b>75% higher trip frequency</b> while premium products drive ~<b>3.5× the profit growth</b> (the "barbell"), and FX has recently flipped to a <b>tailwind</b> (+4pts in Q1 2026). So affordability dilutes price-per-trip but lifts volume and engagement — net positive, not net dilutive, in the current window.';
 
 // ─── Insurance / Aleka deep-dive ──────────────────────────────────────────────
 // The captive-insurer money cycle, as a step chain (clickable → detail).
@@ -639,7 +610,7 @@ function overviewBody(c){
         '<div class="tech-leg"><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+MOB+'"></span>Mobility</span><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+DEL+'"></span>Delivery</span></div>'+
         '<div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartMargin"></canvas></div></div>'+
     '</div>'+
-    '<div class="ov-fynote" style="margin-top:12px">The convergence that matters: <b>Delivery margin has more than doubled</b> (~1.9%→4.0% of bookings) toward Mobility\'s ~8%, on advertising + scale. Mobility\'s 1Q26 take-rate dip to ~25.8% is a <b>UK accounting artifact</b> (~400bps), not real compression.</div>');
+    '<div class="ov-fynote" style="margin-top:12px">The convergence that matters: <b>Delivery margin has more than doubled</b> (~1.9%→4.0% of bookings) toward Mobility\'s ~8%, on advertising + scale. Mobility\'s 1Q26 take-rate dip to ~25.8% is a <span class="ov-clickable" data-detail="note:take" style="color:#06C167;font-weight:600;cursor:pointer">UK accounting artifact ›</span> (~400bps), not real compression.</div>');
   h+=sec('History & Milestones', '<div class="ov-timeline">'+TIMELINE.map(function(t,i){
     var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':'';
     return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>';
@@ -706,27 +677,44 @@ function thesisCol(title,cls,arr){
 
 // (The former "Segments" tab was folded into the Overview — see overviewBody.)
 
-// ─── Pane: Unit Economics & Regulation ───────────────────────────────────────
+// ─── Pane: Insurance & Regulation (the two genuinely-unique deep topics) ─────
+// (Flywheel, Uber One, take-rate & emerging/FX moved to driver cards / Supply Chain /
+//  a tap-modal — this tab is no longer a grab-bag.)
+var REGV=[
+  { h:'US — classification de-risked', chip:'DE-RISKED', cls:'ir-b-tail',
+    d:'<b>Prop 22 upheld</b> by the CA Supreme Court (2024); the federal contractor rule is unenforced & proposed for rescission. The dominant model is "<b>contractor + pay floor</b>" (MA, MN, NYC, Seattle), not reclassification.' },
+  { h:'International — mixed, trending favorable', chip:'MIXED', cls:'ir-b-head',
+    d:'UK drivers are "workers" since <i>Aslam</i> (2021) plus a lost VAT fight; but Netherlands & France delivered pro-contractor reversals. The <b>EU Platform Work Directive</b> (transpose by Dec 2026) is the key open risk.' },
+  { h:'How Uber frames it', chip:'FRAMING', cls:'ir-b-mut',
+    d:'The 10-K says reclassification "would require us to fundamentally change our business model" — but, unlike some peers, it affirmatively states the reasonably-possible loss would <b>not be material</b>.' },
+  { h:'Other drags', chip:'MINOR', cls:'ir-b-mut',
+    d:'NYC congestion pricing ($1.50/trip); a Dutch GDPR fine (€290M, under appeal); an FTC case on Uber One cancellation flows. Cost/PR drags, not existential.' },
+];
+function irPhase(p,bcls,blabel){ return '<div class="ir-phase"><div class="ir-phase-y">'+esc(p.y)+'</div><div class="ir-phase-b ir-b-'+bcls+'">'+blabel+'</div><div class="ir-phase-d">'+p.t+'</div></div>'; }
+function regCard(r){ return '<div class="ir-reg-card"><div class="ir-reg-h">'+esc(r.h)+'<span class="ir-reg-chip '+r.cls+'">'+esc(r.chip)+'</span></div><div class="ir-reg-d">'+r.d+'</div></div>'; }
 function unitBody(c){
-  var h='';
-  h+='<p class="ov-lede">Uber\'s unit economics are a <b>demand-density</b> story: more products per user, more trips per user, monetized by membership and ads — with an accounting quirk that currently masks the Mobility take rate.</p>';
-  h+=sec('The Cross-Sell Flywheel', '<div class="ov-callout">'+bullets(FLY)+'</div>');
-  h+='<div class="ov-chart-t" style="margin-top:6px">Gross Bookings per MAPC <span>(annual $, all products · light = estimate)</span></div>';
-  h+='<div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartGBPU"></canvas></div>';
-  h+=sec('Emerging Markets & FX — does adding users dilute spend per user?', '<div class="ov-callout"><div class="ov-tl-body">'+EMERGING+'</div></div>');
-  h+=sec('Uber One — member vs non-member economics',
-    '<div class="ov-kpis">'+UBERONE_STAT.map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d muted">'+esc(k.s)+'</div></div>'; }).join('')+'</div>'+
-    '<div class="ov-callout" style="margin-top:14px">'+bullets(UBERONE_NOTE)+'</div>');
-  h+=sec('The Mobility Take-Rate "Drop" — an accounting artifact',
-    '<div class="ov-callout"><div class="ov-tl-body">'+UK_NOTE+'</div></div>'+
-    '<div class="ov-subh" style="margin-top:16px">In management\'s own words</div>'+
-    TAKE_QUOTES.map(function(q){ return '<div class="ov-callout" style="margin-top:10px"><div class="ov-who-k">'+esc(q[0])+'</div><div class="ov-tl-body" style="margin-top:4px">'+q[1]+'</div></div>'; }).join(''));
+  var h='<style>'+
+    '.ir-phases{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0 2px}'+
+    '.ir-phase{border:1px solid var(--bdr);border-radius:10px;padding:13px 15px;background:var(--w)}'+
+    '.ir-phase-y{font-size:11px;font-weight:700;color:var(--mu)}'+
+    '.ir-phase-b{display:inline-block;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;border-radius:12px;padding:2px 9px;margin:6px 0 8px}'+
+    '.ir-b-crutch{background:rgba(192,57,43,.10);color:#C0392B}.ir-b-head{background:rgba(232,160,12,.13);color:#B7791F}.ir-b-tail{background:rgba(6,193,103,.13);color:#06965A}.ir-b-mut{background:var(--surface);color:var(--mu)}'+
+    '.ir-phase-d{font-size:12px;color:var(--mu);line-height:1.5}.ir-phase-d b{color:var(--navy)}'+
+    '.ir-reg{display:grid;grid-template-columns:1fr 1fr;gap:10px}'+
+    '.ir-reg-card{border:1px solid var(--bdr);border-left:3px solid var(--brand);border-radius:10px;padding:13px 15px;background:var(--w)}'+
+    '.ir-reg-h{font-size:12.5px;font-weight:800;color:var(--navy);margin-bottom:6px;display:flex;gap:7px;align-items:center;flex-wrap:wrap}'+
+    '.ir-reg-chip{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;border-radius:10px;padding:2px 8px}'+
+    '.ir-reg-d{font-size:11.5px;color:var(--mu);line-height:1.5}.ir-reg-d b{color:var(--navy)}'+
+    '@media(max-width:720px){.ir-phases,.ir-reg{grid-template-columns:1fr}}'+
+  '</style>';
+  h+='<p class="ov-lede">Two forces that move Uber’s economics and risk below the headlines: the <b>captive-insurance float (Aleka)</b> and Uber’s <b>global regulatory surface area</b>.</p>';
   h+=sec('Insurance — the Aleka float',
-    '<p class="ov-lede" style="margin:0 0 14px">Uber owns its own insurer, <b>Aleka</b>. Riders fund commercial insurance inside the fare; Aleka holds the float and the underwriting spread returns to Uber. <b>Tap any step.</b></p>'+
+    '<p class="ov-lede" style="margin:0 0 12px">Uber owns its insurer, <b>Aleka</b>: riders fund commercial insurance in the fare, Aleka invests the float, and the underwriting spread returns to Uber. <b>Tap any step.</b></p>'+
     chain(ALEKA_CHAIN,'aleka')+
-    '<div class="ov-sec-h ovt-store-h" style="margin-top:18px">How it has evolved</div>'+
-    '<div class="ov-timeline">'+INS_TL.map(function(t){ return '<div class="ov-tl-item"><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+'</div></div>'; }).join('')+'</div>');
-  h+=sec('Regulation & Driver Classification — Uber\'s global surface area', rows(REG));
+    '<div class="ov-sec-h ovt-store-h" style="margin-top:18px">From crutch to tailwind</div>'+
+    '<div class="ir-phases">'+irPhase(INS_TL[0],'crutch','Crutch')+irPhase(INS_TL[1],'head','Headwind')+irPhase(INS_TL[2],'tail','Tailwind')+'</div>');
+  h+=sec('Regulation & Driver Classification — the global surface area',
+    '<div class="ir-reg">'+REGV.map(regCard).join('')+'</div>');
   h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
   return h;
 }
@@ -758,7 +746,7 @@ function html(c){
   h+='<div class="ovt-tabs">'+
     '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
     '<button type="button" class="ovt-tab" data-ovt="strategy">Strategy &amp; AV</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="unit">Unit Economics</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="unit">Insurance &amp; Regulation</button>'+
     '<button type="button" class="ovt-tab" data-ovt="model">Model vs. Reality</button>'+
     '<button type="button" class="ovt-tab" data-ovt="calls">Earnings Narrative</button>'+
     '<button type="button" class="ovt-tab" data-ovt="supply">Supply Chain</button>'+
@@ -913,15 +901,10 @@ function buildOverviewCharts(){
   buildLines('ubChartTake', Q13, { label:'Mobility', data:MOB_TAKE, color:MOB }, { label:'Delivery', data:DEL_TAKE, color:DEL }, pf);
   buildLines('ubChartMargin', Q13.slice(0,12), { label:'Mobility', data:MOB_MARGIN, color:MOB }, { label:'Delivery', data:DEL_MARGIN, color:DEL }, pf);
 }
-function buildUnitTab(){
-  var gbpu=A_TOT_GB.map(function(g,i){ return g/A_MAPC[i]; }); // annual GB per MAPC ($)
-  buildLines('ubChartGBPU', YEARS, { label:'GB / MAPC', data:gbpu, color:BRAND2 }, null, function(v){ return '$'+Math.round(v); }, { estFrom:FIRST_EST });
-}
 function showOvt(root,key){
   root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt')===key); });
   root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovt')!==key); });
   if(key==='overview') requestAnimationFrame(buildOverviewCharts);
-  if(key==='unit')     requestAnimationFrame(buildUnitTab);
   if(key==='model')    requestAnimationFrame(buildModelTab);
 }
 function wireModal(root){
@@ -937,6 +920,7 @@ function wireModal(root){
     if(kind==='aleka'){ var a=ALEKA_CHAIN[+id]; return a?{t:'Aleka — '+a.t,h:a.d}:null; }
     if(kind==='key'){ var k=KEY_DRIVERS.filter(function(x){return x.k===id;})[0]; return k?{t:k.t,h:k.d}:null; }
     if(kind==='note'&&id==='gaap'){ return {t:'How to read Uber’s profitability',h:GAAP_NOTE}; }
+    if(kind==='note'&&id==='take'){ return {t:'The Mobility take-rate “drop” — accounting, not economics',h:UK_NOTE+'<br><br>'+TAKE_QUOTES.map(function(q){ return '<div style="margin-top:8px"><b>'+esc(q[0])+'</b><br>'+q[1]+'</div>'; }).join('')}; }
     if(kind==='init'){ var d=INITIATIVES.filter(function(x){return x.k===id;})[0]; return d?{t:d.t,h:d.d}:null; }
     if(kind==='mna'){ var m=MNA.filter(function(x){return x.n===id;})[0]; return m?{t:m.n+' <span class="ov-modal-sub">'+esc(m.y)+' · '+esc(m.deal)+'</span>',h:m.detail}:null; }
     return null;

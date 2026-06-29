@@ -148,8 +148,6 @@ var TARGETS=[
 // NOTE: the flywheel / Uber One / advertising are now the front-door "drivers" on the Overview tab.
 // Strategy holds the forward-looking BETS — where management is taking the business next.
 var INITIATIVES=[
-  { k:'av', t:'Autonomous (AV)', teaser:'~20 partners; aggregate demand, stay asset-light.',
-    d:'<b>Asset-light, hybrid network.</b> ~20 partners (Waymo, Lucid+Nuro, WeRide, Pony.ai, Avride, Wayve, VW…), capped by <b>Uber Autonomous Solutions</b> (Feb 2026) and capital commitments (Nuro ~$500M, Lucid, Rivian up to $1.25B).<br><br>Goal: AV in 15+ cities by end-2026; "largest facilitator of AV trips in the world" by 2029. The bet: owning robotaxis is capital-heavy, so the platform with the most demand drives the highest fleet utilization. See Strategy ▸ AV for the bull/bear.' },
   { k:'capital', t:'Capital returns', teaser:'$20B buyback; ~2% annual share-count reduction.',
     d:'<b>From cash-burner to capital-returner.</b> First-ever buyback (2024, $7B) scaled to a <b>$20B authorization</b>; a record ~$3B repurchased in Q1 2026; ~2% annual share-count reduction.<br><br>Funded by record ~$9.8B TTM free cash flow at ~100%+ conversion of Adj. EBITDA — the asset-light model in action.' },
   { k:'u4b', t:'Uber for Business', teaser:'B2B >$5B of bookings, growing >2× Mobility.',
@@ -254,7 +252,7 @@ var MNA=[
 var MNA_NOTE='Uber\'s biggest "deals" are also its <b>divestitures</b>: it exited China → <b>Didi</b> (2016), SE Asia → <b>Grab</b> (2018) and Russia → <b>Yandex</b> (2021) for equity stakes, and sold its self-driving unit <b>ATG → Aurora</b> (2020, ~26% stake). Those equity stakes are exactly what makes GAAP net income swing — and why Uber now guides on Non-GAAP EPS. Recent AV "deals" are capital commitments, not acquisitions (Nuro ~$500M, Lucid, Rivian up to $1.25B).';
 
 // ─── Summit thesis ────────────────────────────────────────────────────────────
-var THESIS='We have seen Uber\'s deeper integration into users\' daily lives, driven by a compelling product offering and a wider ecosystem. <b>Uber One has exhibited significantly higher spending and retention</b>, building strong barriers to entry and leading to sustainable long-term Gross Bookings growth. Building on that engagement, Uber has achieved significant <b>margin expansion</b> through economies of scale and disciplined incentive management. The strength of core Mobility and Delivery is now translating into <b>powerful, predictable cash flow</b> — supplemented by the insurance (Aleka) float — which solidifies Uber\'s financial resilience. Combined with a compelling valuation, these factors reinforce our conviction in sustainable long-term growth and attractive returns.';
+var THESIS='<b>Uber One</b> drives higher spend and retention, compounding Gross Bookings while scale and incentive discipline expand margins. Core Mobility + Delivery now throw off <b>powerful, predictable cash flow</b> (plus the Aleka float) — which, at a reasonable valuation, underpins our conviction in durable growth and attractive returns.';
 
 // ─── Render helpers ──────────────────────────────────────────────────────────
 function sec(title,inner){ return '<section class="ov-sec"><div class="ov-sec-h">'+esc(title)+'</div>'+inner+'</section>'; }
@@ -397,17 +395,26 @@ function supplyBody(){
     '.usc-geo-row{display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12.5px}'+
     '.usc-geo-lbl{min-width:104px;color:var(--navy)}.usc-geo-bar{height:15px;border-radius:4px}'+
     '.usc-geo-pct{color:var(--mu);font-size:12px;min-width:38px;text-align:right}'+
+    '.ueco{display:flex;align-items:stretch;margin:4px 0 10px}'+
+    '.ueco-box{flex:1;border:1px solid var(--bdr);border-radius:10px;background:var(--w);padding:14px;text-align:center;min-width:0}'+
+    '.ueco-box.is-hub{border:2px solid var(--brand);background:var(--surface)}'+
+    '.ueco-k{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin-bottom:6px}'+
+    '.ueco-t{font-size:14px;font-weight:800;color:var(--navy);margin-bottom:5px}'+
+    '.ueco-d{font-size:11px;color:var(--mu);line-height:1.45}'+
+    '.ueco-arr{flex:none;align-self:center;display:flex;flex-direction:column;align-items:center;padding:0 10px;color:var(--brand)}'+
+    '.ueco-arr i{font-style:normal;font-size:22px;line-height:1}.ueco-arr small{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);margin-top:3px}'+
+    '@media(max-width:720px){.ueco{flex-direction:column}.ueco-arr{padding:6px 0}.ueco-arr i{transform:rotate(90deg)}}'+
     '@media(max-width:860px){.usc-grid{grid-template-columns:1fr}}'+
   '</style>';
   h+='<p class="ov-lede">Uber’s supply chain is really a story about <b>who Uber depends on, and who could depend on Uber back</b>. The data is from Bloomberg SPLC (29-Jun-2026). Start with how the pieces fit, then each group’s role and what it means for Uber.</p>';
   // ── Ecosystem map: the interaction at a glance ──
   h+=sec('How the Ecosystem Fits Together',
-    '<div class="lpb-flow">'+
-      '<div class="lpb-node"><div class="lpb-node-ic">IN</div><div class="lpb-node-t">Suppliers</div><div class="lpb-node-d">cars &amp; AV · money rails · cloud · ad-tech · depots</div></div>'+
-      '<div class="lpb-conn"><div class="lpb-conn-arrow">→</div><div class="lpb-conn-l">inputs</div></div>'+
-      '<div class="lpb-node lpb-node-hl"><div class="lpb-node-ic">U</div><div class="lpb-node-t">Uber platform</div><div class="lpb-node-d">owns the demand · sets price · takes ~20–30%</div></div>'+
-      '<div class="lpb-conn"><div class="lpb-conn-arrow">→</div><div class="lpb-conn-l">demand</div></div>'+
-      '<div class="lpb-node"><div class="lpb-node-t">Riders &amp; merchants</div><div class="lpb-node-d">170M+ consumers · millions of restaurants, grocers &amp; fleets</div></div>'+
+    '<div class="ueco">'+
+      '<div class="ueco-box"><div class="ueco-k">Suppliers · inputs</div><div class="ueco-t">Who powers Uber</div><div class="ueco-d">cars &amp; AV · money rails · cloud · ad-tech · depots</div></div>'+
+      '<div class="ueco-arr"><i>→</i><small>inputs</small></div>'+
+      '<div class="ueco-box is-hub"><div class="ueco-k">The platform</div><div class="ueco-t">Uber owns the demand</div><div class="ueco-d">sets the price · runs the marketplace · keeps ~20–30%</div></div>'+
+      '<div class="ueco-arr"><i>→</i><small>demand</small></div>'+
+      '<div class="ueco-box"><div class="ueco-k">Demand · output</div><div class="ueco-t">Riders &amp; merchants</div><div class="ueco-d">170M+ consumers · millions of restaurants, grocers &amp; fleets</div></div>'+
     '</div>'+
     '<div class="ov-diagram-cap"><b>The whole point:</b> Uber sits in the middle and owns the <b>demand</b> — that is the leverage. Suppliers compete to provide inputs (good for Uber: cheap, replaceable, low pricing power). The <b>only</b> group that can also reach the demand directly — and therefore <b>threaten</b> Uber — is AV (Waymo on its own app). That is exactly why Uber aggregates 30+ AV partners instead of betting on one, and why this tab and <b>Strategy &amp; AV</b> tell the same story from two angles.</div>');
   // ── Suppliers: role + impact ──
@@ -504,8 +511,8 @@ function callsBody(){
   var h='<p class="ov-lede">The key narrative threads from <b>10 earnings calls</b> (Q4 2023 \u2192 Q1 2026) \u2014 organized by <b>theme</b> so you can trace how each story evolved. Tap any theme to expand.</p>';
   h+='<div class="lpb-acc" id="ubCallsAcc">';
   UB_THEMES.forEach(function(ct,i){
-    h+='<div class="lpb-acc-item'+(i===0?' open':'')+'">';
-    h+='<button type="button" class="lpb-acc-h"><span>'+esc(ct.theme)+'</span><span class="lpb-acc-ic">'+(i===0?'–':'+')+'</span></button>';
+    h+='<div class="lpb-acc-item">';
+    h+='<button type="button" class="lpb-acc-h"><span>'+esc(ct.theme)+'</span><span class="lpb-acc-ic">+</span></button>';
     h+='<div class="lpb-acc-body">';
     h+='<p style="font-size:12px;color:var(--mu);margin:0 0 10px;font-style:italic">'+esc(ct.why)+'</p>';
     ct.updates.forEach(function(u){

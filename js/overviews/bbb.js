@@ -10,6 +10,8 @@
 
 import { bbbLandscape } from './bbb-landscape.js';
 import { bbbBim } from './bbb-bim.js';
+import { bbbManagement } from './bbb-management.js';
+import { bbbLogistics } from './bbb-logistics.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -455,24 +457,38 @@ function mixBody(c){
   return h;
 }
 
+// "General" tab — bundles Product Mix, Logistics and BİM Blueprint as nested sub-tabs.
+function generalBody(c){
+  var h = '';
+  h += '<div class="ovt-subtabs">'+
+    '<button type="button" class="ovt-subtab active" data-ovst="mix">Product Mix</button>'+
+    '<button type="button" class="ovt-subtab" data-ovst="logistics">Logistics</button>'+
+    '<button type="button" class="ovt-subtab" data-ovst="bim">BİM Blueprint</button>'+
+  '</div>';
+  h += '<div class="ovt-subpane" data-ovst="mix">'+mixBody(c)+'</div>';
+  h += '<div class="ovt-subpane" data-ovst="logistics" hidden>'+bbbLogistics.body(c)+'</div>';
+  h += '<div class="ovt-subpane" data-ovst="bim" hidden>'+bbbBim.body(c)+'</div>';
+  return h;
+}
+
 function html(c){
   var h = '<div class="ov ov-tbbb" data-brand="TBBB">';
   // Sub-tab bar
   h += '<div class="ovt-tabs">'+
     '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="general">General</button>'+
     '<button type="button" class="ovt-tab" data-ovt="stores">Stores</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="mix">Product Mix</button>'+
     '<button type="button" class="ovt-tab" data-ovt="ue">Unit Economics</button>'+
     '<button type="button" class="ovt-tab" data-ovt="landscape">Competitive Landscape</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="bim">BİM Blueprint</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="mgmt">Management</button>'+
   '</div>';
   // Panes
   h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="general" hidden>'+generalBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="stores" hidden>'+storesBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="mix" hidden>'+mixBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="ue" hidden>'+ueBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="mgmt" hidden>'+bbbManagement.body(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="landscape" hidden>'+bbbLandscape.body(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="bim" hidden>'+bbbBim.body(c)+'</div>';
   h += '</div>';
   return h;
 }
@@ -778,9 +794,9 @@ function buildUeChart(){
   });
 }
 
-// ── Stores tab — two nested sub-tabs: SSS and Store Growth ──
-// Each nested sub-pane builds its own charts lazily, only once it is visible
-// (Chart.js needs the canvas to have layout, i.e. a non-null offsetParent).
+// ── Nested sub-tabs (pane-scoped) — used by both Stores and General ──
+// Each nested sub-pane builds its own charts/interactions lazily, only once it is
+// visible (Chart.js / canvases need a non-null offsetParent to size correctly).
 function buildStoresSubSSS(){
   buildSSSChart();
 }
@@ -790,34 +806,44 @@ function buildStoresSubGrowth(){
   buildVsChart();
 }
 
-// Switch the nested Stores sub-tab and (re)build that sub-pane's charts.
-function showStoresSub(root, key){
-  root.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovst') === key); });
-  root.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovst') !== key); });
-  if (key === 'sss')    requestAnimationFrame(buildStoresSubSSS);
-  if (key === 'growth') requestAnimationFrame(buildStoresSubGrowth);
+// Build whichever nested sub-pane is active, dispatched by its group.
+function buildSub(root, group, key){
+  if (group === 'stores'){
+    if (key === 'sss')         buildStoresSubSSS();
+    else if (key === 'growth') buildStoresSubGrowth();
+  } else if (group === 'general'){
+    if (key === 'mix')              buildMixChart();
+    else if (key === 'logistics')   bbbLogistics.init(root);
+    else if (key === 'bim')         bbbBim.init(root);
+  }
 }
 
-// Build the Stores tab once it becomes visible: wire the nested sub-tabs
-// (idempotent) and build whichever sub-pane is currently active.
-function buildStoresTab(root){
-  root.querySelectorAll('.ovt-subtab').forEach(function(btn){
-    btn.onclick = function(){ showStoresSub(root, btn.getAttribute('data-ovst')); };
+// Switch a nested sub-tab WITHIN one pane (scoped so Stores and General don't collide).
+function showSub(root, pane, group, key){
+  pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovst') === key); });
+  pane.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovst') !== key); });
+  requestAnimationFrame(function(){ buildSub(root, group, key); });
+}
+
+// Wire a nested sub-tab group (idempotent) and build its currently-active sub-pane.
+function wireSubtabs(root, group){
+  var pane = root.querySelector('.ovt-pane[data-ovt="'+group+'"]');
+  if (!pane) return;
+  pane.querySelectorAll('.ovt-subtab').forEach(function(btn){
+    btn.onclick = function(){ showSub(root, pane, group, btn.getAttribute('data-ovst')); };
   });
-  var active = root.querySelector('.ovt-subtab.active');
-  var key = active ? active.getAttribute('data-ovst') : 'sss';
-  if (key === 'sss')    buildStoresSubSSS();
-  if (key === 'growth') buildStoresSubGrowth();
+  var active = pane.querySelector('.ovt-subtab.active');
+  if (active) buildSub(root, group, active.getAttribute('data-ovst'));
 }
 
 // Switch sub-tab. Builds the tab's charts lazily the first time it becomes visible.
 function showOvt(root, key){
   root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt') === key); });
   root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt') !== key); });
-  if (key === 'stores') requestAnimationFrame(function(){ buildStoresTab(root); });
+  if (key === 'stores') requestAnimationFrame(function(){ wireSubtabs(root, 'stores'); });
+  if (key === 'general') requestAnimationFrame(function(){ wireSubtabs(root, 'general'); });
+  if (key === 'mgmt') requestAnimationFrame(function(){ bbbManagement.init(root); });
   if (key === 'landscape') requestAnimationFrame(function(){ bbbLandscape.init(root); });
-  if (key === 'bim') requestAnimationFrame(function(){ bbbBim.init(root); });
-  if (key === 'mix') requestAnimationFrame(buildMixChart);
   if (key === 'ue') requestAnimationFrame(buildUeChart);
 }
 
@@ -831,10 +857,10 @@ function init(c){
   // If a chart tab is the active one, (re)build its charts now.
   var active = root.querySelector('.ovt-tab.active');
   var activeKey = active ? active.getAttribute('data-ovt') : '';
-  if (activeKey === 'stores') requestAnimationFrame(function(){ buildStoresTab(root); });
+  if (activeKey === 'stores') requestAnimationFrame(function(){ wireSubtabs(root, 'stores'); });
+  if (activeKey === 'general') requestAnimationFrame(function(){ wireSubtabs(root, 'general'); });
+  if (activeKey === 'mgmt') requestAnimationFrame(function(){ bbbManagement.init(root); });
   if (activeKey === 'landscape') requestAnimationFrame(function(){ bbbLandscape.init(root); });
-  if (activeKey === 'bim') requestAnimationFrame(function(){ bbbBim.init(root); });
-  if (activeKey === 'mix') requestAnimationFrame(buildMixChart);
   if (activeKey === 'ue') requestAnimationFrame(buildUeChart);
 }
 

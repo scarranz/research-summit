@@ -87,8 +87,8 @@ function mapSVG(){
     'role="img" aria-label="Map of Mexico: hard-discount competitive footprint">'+paths+'</svg>';
 }
 
-// ─── Body ────────────────────────────────────────────────────────────────────────
-function landscapeBody(){
+// ─── Hard-discount (direct peers) — the original map + cards ──────────────────────
+function hardDiscountBody(){
   var h = '';
 
   h += '<p class="ov-lede">Mexico’s <b>hard-discount</b> race is led by three chains, each with a very different owner: '+
@@ -143,6 +143,90 @@ function landscapeBody(){
   return h;
 }
 
+// ─── Comparison tables (other business models) ────────────────────────────────
+// Each row: [metric, Tiendas 3B, …competitors]. The 3B column (index 1) is highlighted.
+var CLASSIC_ROWS = [
+  ['Main banners','Tiendas 3B','Bodega Aurrerá · Walmart · Sam’s · Express','Chedraui · Súper Che · Supercito','La Comer · City Market · Fresko'],
+  ['Stores (Mexico)','~3,469','3,316','683','92'],
+  ['Revenue (FY2025)','Ps.78B','Ps.1,012B','~Ps.295B','~Ps.48B'],
+  ['Avg. store size','~300 m²','1,200–11,000 m²','~6,500 m²','~6,800 m²'],
+  ['SKUs','~850–900','tens of thousands','~101,300','broad / gourmet'],
+  ['Model','Hard discount · EDLP','Multi-format: discount → club','Hypermarket · hi-lo','Premium supermarket'],
+  ['Target shopper','Low-income (C/D) staples','Mass · all segments','Mid-market full basket','Affluent (A/B)'],
+];
+var OTHER_ROWS = [
+  ['Type','Hard-discount grocery','Convenience / proximity','Traditional mom-and-pop'],
+  ['Stores (Mexico)','~3,469','~23,200','~1.0–1.1 million'],
+  ['Scale','Ps.78B revenue','~Ps.307B (proximity)','~36–55% of FMCG sales'],
+  ['Store size','~300 m²','~100 m²','very small · informal'],
+  ['Pricing','Lowest price (EDLP)','Premium / impulse','Higher than 3B'],
+  ['Shopping mission','Weekly value stock-up','Impulse / immediate','Daily top-up'],
+  ['Relation to 3B','—','Different mission; OXXO’s discount answer is its BARA format','3B’s primary share donor — same proximity, lower prices'],
+];
+var PENETRATION = [['Poland',36.8],['Turkey',24.6],['Germany',24.2],['Mexico',3.0]];
+
+function cmpTable(cols, rows){
+  var h = '<div class="clz-cmp-wrap"><table class="clz-cmp"><thead><tr>';
+  cols.forEach(function(c, i){ h += '<th'+(i===1?' class="clz-cmp-hi"':'')+'>'+esc(c)+'</th>'; });
+  h += '</tr></thead><tbody>';
+  rows.forEach(function(r){
+    h += '<tr>';
+    r.forEach(function(v, i){
+      var cls = i===0 ? 'clz-cmp-k' : (i===1 ? 'clz-cmp-hi' : '');
+      h += '<td'+(cls?' class="'+cls+'"':'')+'>'+esc(v)+'</td>';
+    });
+    h += '</tr>';
+  });
+  return h + '</tbody></table></div>';
+}
+
+// ─── Classic channel (Walmex, Chedraui, La Comer) ─────────────────────────────
+function classicBody(){
+  var h = '';
+  h += '<p class="ov-lede">3B barely overlaps with Mexico’s big organized supermarkets — it competes <i>against</i> them with a different model entirely. '+
+    'The classic channel sells huge assortments in large stores to the whole market; 3B sells ~850 staples in ~300 m² stores at the lowest price to low-income households.</p>';
+  h += cmpTable(['', 'Tiendas 3B', 'Walmex', 'Chedraui', 'La Comer'], CLASSIC_ROWS);
+  h += '<div class="milk-takeaway">3B is roughly <b>13× smaller than Walmex</b> by revenue, yet grows several times faster. It doesn’t fight on assortment or store size — it wins on '+
+    '<b>price + proximity</b> for low-income staples. Tellingly, Walmex has publicly named <b>Bodega Aurrerá</b> as its hard-discount answer to 3B.</div>';
+  h += '<div class="ov-foot">Stores and revenue from company filings (Walmex 4Q25, Chedraui 4Q25, La Comer FY2025), latest available; Chedraui FY2025 revenue and the SKU/size figures are disclosed (Chedraui ~101,300 SKUs) or directional. Sources: Walmex, Chedraui and La Comer investor relations; Expansión; El Financiero.</div>';
+  return h;
+}
+
+// ─── Other competitors (OXXO, tienditas) ──────────────────────────────────────
+function otherBody(){
+  var h = '';
+  h += '<p class="ov-lede">3B’s real fight isn’t with OXXO or the supermarkets — it’s with the <b>~1 million “tienditas”</b> it converts, store by store. '+
+    'OXXO plays a different mission (convenience and impulse); the fragmented traditional channel is the share donor.</p>';
+  h += cmpTable(['', 'Tiendas 3B', 'OXXO', 'Tienditas'], OTHER_ROWS);
+
+  h += '<div class="ov-sec-h ovt-store-h">The runway — hard-discount penetration</div>';
+  var penMax = 40;
+  h += '<div class="clz-pen">' + PENETRATION.map(function(p){
+    var hi = (p[0] === 'Mexico');
+    return '<div class="clz-pen-row"><span class="clz-pen-l">'+esc(p[0])+'</span>'+
+      '<div class="clz-pen-track"><div class="clz-pen-f'+(hi?' clz-pen-hi':'')+'" style="width:'+(p[1]/penMax*100).toFixed(1)+'%"></div></div>'+
+      '<span class="clz-pen-v">'+p[1].toFixed(1)+'%</span></div>';
+  }).join('') + '</div>';
+  h += '<div class="milk-takeaway">Hard discount is only ~<b>3% of Mexican grocery</b> — a fraction of Germany (24%), Turkey (25%, BİM’s home) or Poland (37%). '+
+    'That gap is 3B’s runway: management sees room for <b>≥14,000</b> stores (vs ~3,469 today).</div>';
+  h += '<div class="ov-foot">OXXO ~23,200 Mexico stores (FEMSA, YE2024); tiendita estimates ~1.0–1.1M (ANPEC/Nielsen) and ~36–55% of FMCG sales (methodology-dependent). Hard-discount penetration: Mexico ~3.0% (2023) vs Germany/Turkey/Poland (Euromonitor/NielsenIQ via the company’s investor materials). Sources: FEMSA; ANPEC; BBB Foods company-overview deck.</div>';
+  return h;
+}
+
+// ─── Body — category toggle over the three business models ────────────────────────
+function landscapeBody(){
+  var h = '';
+  h += '<div class="clz-cats">'+
+    '<button type="button" class="clz-cat active" data-cat="hd">Hard discount<small>direct peers</small></button>'+
+    '<button type="button" class="clz-cat" data-cat="classic">Classic channel<small>Walmex · Chedraui · La Comer</small></button>'+
+    '<button type="button" class="clz-cat" data-cat="other">Other<small>OXXO · tienditas</small></button>'+
+  '</div>';
+  h += '<div class="clz-cat-pane" data-cat="hd">'+hardDiscountBody()+'</div>';
+  h += '<div class="clz-cat-pane" data-cat="classic" hidden>'+classicBody()+'</div>';
+  h += '<div class="clz-cat-pane" data-cat="other" hidden>'+otherBody()+'</div>';
+  return h;
+}
+
 // ─── Interactions ──────────────────────────────────────────────────────────────
 function fillFor(mode, id){
   var present = PRESENCE[id] || [];
@@ -179,7 +263,18 @@ function tipHTML(id, nameById){
 }
 
 function initLandscape(root){
-  var scope = root.querySelector('.ovt-pane[data-ovt="landscape"]') || root;
+  var scope = root.querySelector('.ovt-pane[data-ovt="landscape"]') ||
+              root.querySelector('.ovt-subpane[data-ovst="landscape"]') || root;
+
+  // Category toggle (Hard discount / Classic channel / Other competitors).
+  scope.querySelectorAll('.clz-cat').forEach(function(btn){
+    btn.onclick = function(){
+      var k = btn.getAttribute('data-cat');
+      scope.querySelectorAll('.clz-cat').forEach(function(b){ b.classList.toggle('active', b === btn); });
+      scope.querySelectorAll('.clz-cat-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-cat') !== k); });
+    };
+  });
+
   var svg = scope.querySelector('.clz-map');
   if (!svg) return;
 

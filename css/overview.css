@@ -821,6 +821,35 @@ img.mgmt-av { border: 1px solid var(--bdr); }
   .bim-cmp th, .bim-cmp td { padding: 7px 7px; }
 }
 
+/* ── Competitive Landscape (TBBB) — category toggle + comparison tables ── */
+.clz-cats { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 18px; }
+.clz-cat { display: flex; flex-direction: column; align-items: flex-start; text-align: left;
+  background: #fff; border: 1px solid var(--bdr); color: var(--navy); font-family: 'Inter', sans-serif;
+  font-size: 13px; font-weight: 700; padding: 9px 16px; border-radius: 9px; cursor: pointer; transition: all .15s; }
+.clz-cat small { font-size: 10px; font-weight: 500; color: var(--mu); margin-top: 2px; }
+.clz-cat:hover { border-color: var(--brand); }
+.clz-cat.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+.clz-cat.active small { color: rgba(255,255,255,.8); }
+.clz-cat-pane[hidden] { display: none; }
+
+.clz-cmp-wrap { overflow-x: auto; }
+.clz-cmp { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 560px; }
+.clz-cmp th, .clz-cmp td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--bdr); vertical-align: top; }
+.clz-cmp thead th { font-size: 12px; font-weight: 800; color: var(--navy); border-bottom: 2px solid var(--bdr); }
+.clz-cmp td.clz-cmp-k { font-weight: 600; color: var(--mu); white-space: nowrap; }
+.clz-cmp .clz-cmp-hi { background: var(--brand-soft); color: var(--navy); }
+.clz-cmp thead th.clz-cmp-hi { color: var(--brand); border-bottom-color: var(--brand); }
+.clz-cmp tbody tr:hover td { background: rgba(0,0,0,.015); }
+.clz-cmp tbody tr:hover td.clz-cmp-hi { background: #FBDED9; }
+
+.clz-pen { border: 1px solid var(--bdr); border-radius: 11px; padding: 14px 16px; background: #fff; }
+.clz-pen-row { display: grid; grid-template-columns: 70px 1fr 52px; gap: 12px; align-items: center; padding: 5px 0; }
+.clz-pen-l { font-size: 12.5px; font-weight: 700; color: var(--navy); }
+.clz-pen-track { height: 18px; background: #EDF1F4; border-radius: 5px; }
+.clz-pen-f { height: 100%; border-radius: 5px; background: #9AA3AE; min-width: 3px; }
+.clz-pen-f.clz-pen-hi { background: var(--brand); }
+.clz-pen-v { font-size: 12.5px; font-weight: 700; color: var(--navy); text-align: right; }
+
 /* ── Competitive Landscape (TBBB) — choropleth + scale + profile cards ── */
 .clz-modes { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 14px; }
 .clz-mode {

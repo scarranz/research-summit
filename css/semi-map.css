@@ -141,6 +141,20 @@
 }
 .ov-nvda .ovt-tab.active:hover { color: #1E2733; }
 
+/* Old/new segment toggle on the Segments quarterly chart. */
+.nv-seg-toggle {
+  display: inline-flex; gap: 4px; margin: 0 0 12px;
+  background: var(--surface); border: 1px solid var(--bdr);
+  border-radius: 9px; padding: 3px;
+}
+.nv-seg-btn {
+  border: none; background: none; border-radius: 7px;
+  font: 600 12px 'Inter', sans-serif; color: var(--mu);
+  padding: 6px 14px; cursor: pointer; transition: background .15s, color .15s;
+}
+.nv-seg-btn:hover { color: var(--navy); }
+.nv-seg-btn.active { background: #76B900; color: #1E2733; }
+
 @media (max-width: 640px){
   .smap-flowrow { flex-direction: column; }
   .smap-arrow { transform: rotate(90deg); align-self: flex-start; margin-left: 18px; }

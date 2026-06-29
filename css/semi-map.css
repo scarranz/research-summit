@@ -141,9 +141,14 @@
 }
 .ov-nvda .ovt-tab.active:hover { color: #1E2733; }
 
-/* Old/new segment toggle on the Segments quarterly chart. */
+/* Toggles on the Segments revenue chart (segment framework / view / forecast source). */
+.nv-seg-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 7px 12px; margin: 0 0 12px; }
+.nv-seg-lbl {
+  font: 700 10px 'Inter', sans-serif; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--mu);
+}
 .nv-seg-toggle {
-  display: inline-flex; gap: 4px; margin: 0 0 12px;
+  display: inline-flex; gap: 4px; margin: 0;
   background: var(--surface); border: 1px solid var(--bdr);
   border-radius: 9px; padding: 3px;
 }
@@ -154,6 +159,8 @@
 }
 .nv-seg-btn:hover { color: var(--navy); }
 .nv-seg-btn.active { background: #76B900; color: #1E2733; }
+.nv-seg-btn[disabled] { opacity: .45; cursor: default; }
+.nv-seg-btn[disabled]:hover { color: var(--mu); background: none; }
 
 @media (max-width: 640px){
   .smap-flowrow { flex-direction: column; }

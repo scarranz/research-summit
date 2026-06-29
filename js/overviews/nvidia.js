@@ -208,37 +208,81 @@ var SEGX_OLD = {
   other:  [ 3481, 3768, 4311, 3751, 4950, 5647, 5791,    N, 6369,    N,    N,    N,    N,    N,    N,    N,    N,    N,    N,    N],
 };
 
-var _segChart = null, _segMode = 'new';
-// Stacked quarterly bar. Data Center sub-markets share a green family so they read as one
-// Data Center block; the other platforms get contrasting colors. Forecast quarters (from BBG)
-// are drawn at lower opacity.
+// Annual roll-up ($M). FY25/FY26 actual; FY27–FY29 are forecast (FY27 = 1 actual + 3 forecast
+// quarters → treated as forecast). Old-framework FY25/FY26 use the clean 10-K annual split;
+// FY27 carries a small "Other" = the undisclosed 1Q27 non-Data-Center split.
+var SEGA_LABELS = ['FY25','FY26','FY27','FY28','FY29'];
+var SEGA_FCST = 2;
+var SEGA_NEW = {
+  hyper: [53796,105636,184921,261300,321242],
+  acie:  [61390, 88101,177259,259450,317358],
+  edge:  [15311, 22201, 26721, 30214, 33877],
+};
+var SEGA_OLD = {
+  dc:     [115186,193737,365336,526048,656977],
+  gaming: [11350, 16000, 12076, 17571, 19578],
+  pv:     [ 1878,  3200,  4752,  7457,  7767],
+  auto:   [ 1694,  2300,  2228,  3605,  4729],
+  oem:    [  389,   700,   616,   966,  1063],
+  other:  [    0,     0,  6369,     0,     0],
+};
+
+// Forecast-region plugin: shades the projected periods, draws a dashed divider and labels the
+// source, so projections read clearly as estimates rather than reported actuals.
+var _segFcst = 9, _segFcstLabel = 'BBG consensus forecast';
+var fcstShade = {
+  id:'fcstShade',
+  beforeDatasetsDraw:function(chart){
+    var f = _segFcst; if (f==null || f<=0) return;
+    var x=chart.scales.x, a=chart.chartArea, ctx=chart.ctx;
+    var bx = (x.getPixelForValue(f-1)+x.getPixelForValue(f))/2;
+    ctx.save();
+    ctx.fillStyle='rgba(118,130,142,0.09)';
+    ctx.fillRect(bx, a.top, a.right-bx, a.bottom-a.top);
+    ctx.setLineDash([5,4]); ctx.strokeStyle='rgba(90,100,110,0.6)'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(bx,a.top); ctx.lineTo(bx,a.bottom); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#6b7682'; ctx.font='700 10px Inter, sans-serif'; ctx.textAlign='left';
+    ctx.fillText('▸ '+_segFcstLabel, bx+6, a.top+12);
+    ctx.restore();
+  }
+};
+
+var _segChart = null, _segMode = 'new', _segGran = 'q', _segSrc = 'bbg';
+// Stacked revenue bar with old/new segment, quarterly/annual and forecast-source toggles.
+// Data Center sub-markets share a green family so they read as one block; forecast bars are
+// translucent and the forecast region is shaded by the fcstShade plugin.
 function buildSegChart(){
   var cv = document.getElementById('nvdaSegChart');
   if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
   if (_segChart) { _segChart.destroy(); _segChart = null; }
+  var annual = _segGran === 'a';
+  var labels = annual ? SEGA_LABELS : SEGX_LABELS;
+  var NEW    = annual ? SEGA_NEW    : SEGX_NEW;
+  var OLD    = annual ? SEGA_OLD    : SEGX_OLD;
+  _segFcst = annual ? SEGA_FCST : SEGX_FCST;
+  _segFcstLabel = (_segSrc === 'summit' ? 'Summit' : 'BBG consensus') + ' forecast';
   function toB(a){ return a.map(function(v){ return v==null ? null : +(v/1000).toFixed(2); }); }
-  // per-bar color: solid for actuals, translucent for forecast quarters.
-  function col(hex){ return SEGX_LABELS.map(function(_,i){ return i < SEGX_FCST ? hex : hex+'8c'; }); }
-  function ds(label, data, hex){ return { label:label, data:toB(data), backgroundColor:col(hex), stack:'rev', maxBarThickness:30 }; }
+  function col(hex){ return labels.map(function(_,i){ return i < _segFcst ? hex : hex+'8c'; }); }
+  function ds(label, data, hex){ return { label:label, data:toB(data), backgroundColor:col(hex), stack:'rev', maxBarThickness: annual?64:30 }; }
   var datasets = _segMode === 'old'
-    ? [ ds('Data Center', SEGX_OLD.dc, '#1F8A70'),
-        ds('Gaming', SEGX_OLD.gaming, '#2D6A9F'),
-        ds('Professional Visualization', SEGX_OLD.pv, '#5B53A8'),
-        ds('Automotive', SEGX_OLD.auto, '#C0772C'),
-        ds('OEM & Other', SEGX_OLD.oem, '#B0506A'),
-        ds('Other (non-Data Center)', SEGX_OLD.other, '#9aa6b4') ]
-    : [ ds('Data Center — Hyperscale', SEGX_NEW.hyper, '#1F8A70'),
-        ds('Data Center — ACIE', SEGX_NEW.acie, '#7fd0b8'),
-        ds('Edge Computing', SEGX_NEW.edge, '#2D6A9F') ];
+    ? [ ds('Data Center', OLD.dc, '#1F8A70'),
+        ds('Gaming', OLD.gaming, '#2D6A9F'),
+        ds('Professional Visualization', OLD.pv, '#5B53A8'),
+        ds('Automotive', OLD.auto, '#C0772C'),
+        ds('OEM & Other', OLD.oem, '#B0506A'),
+        ds('Other (non-Data Center)', OLD.other, '#9aa6b4') ]
+    : [ ds('Data Center — Hyperscale', NEW.hyper, '#1F8A70'),
+        ds('Data Center — ACIE', NEW.acie, '#7fd0b8'),
+        ds('Edge Computing', NEW.edge, '#2D6A9F') ];
   _segChart = new Chart(cv.getContext('2d'), {
     type:'bar',
-    data:{ labels: SEGX_LABELS, datasets: datasets },
+    data:{ labels: labels, datasets: datasets },
     options:{
       responsive:true, maintainAspectRatio:false, animation:false,
       plugins:{
         legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{size:11}, padding:8, color:'#5b6470' } },
         tooltip:{ mode:'index', intersect:false, callbacks:{
-          title:function(items){ var i=items[0].dataIndex; return SEGX_LABELS[i] + (i<SEGX_FCST?' · actual':' · BBG forecast'); },
+          title:function(items){ var i=items[0].dataIndex; return labels[i] + (i<_segFcst?' · actual':' · '+_segFcstLabel.replace(' forecast',' (est.)')); },
           label:function(ctx){ return ctx.parsed.y==null ? null : ctx.dataset.label+': $'+ctx.parsed.y.toFixed(1)+'B'; },
           footer:function(items){ var t=0; items.forEach(function(i){ t+=(i.parsed.y||0); }); return 'Total: $'+t.toFixed(1)+'B'; }
         } }
@@ -247,9 +291,10 @@ function buildSegChart(){
         y:{ stacked:true, beginAtZero:true, grid:{ color:'rgba(0,0,0,.05)' },
           ticks:{ color:'#8A93A0', font:{size:10}, callback:function(v){ return '$'+v+'B'; } } },
         x:{ stacked:true, grid:{ display:false },
-          ticks:{ color:'#8A93A0', font:{size:9}, maxRotation:0, autoSkip:false } }
+          ticks:{ color:'#8A93A0', font:{size: annual?12:9}, maxRotation:0, autoSkip:false } }
       }
-    }
+    },
+    plugins:[fcstShade]
   });
 }
 
@@ -257,15 +302,28 @@ function segmentsBody(){
   var h = '';
   h += '<p class="ov-lede">NVIDIA reports revenue by <b>market platform</b>. In <b>Q1 FY2027</b> (reported May 2026) it overhauled that framework to reflect where growth now comes from — re-cutting Data Center by <b>customer type</b> (Hyperscale vs everyone else) and folding the old Gaming / Pro Viz / Auto platforms into a new <b>Edge Computing</b> platform. Only FY2025–FY2026 were recast.</p>';
 
-  // Quarterly stacked bar (hero visual) with old/new segment toggle
-  h += sec('Quarterly revenue by segment ($B)',
-    '<div class="nv-seg-toggle">'+
-      '<button type="button" class="nv-seg-btn active" data-segmode="new">New segments (FY2027+)</button>'+
-      '<button type="button" class="nv-seg-btn" data-segmode="old">Old segments (pre-FY2027)</button>'+
+  // Stacked revenue bar (hero visual) with segment / view / forecast-source toggles
+  h += sec('Revenue by segment ($B)',
+    '<div class="nv-seg-bar">'+
+      '<span class="nv-seg-lbl">Segments</span>'+
+      '<div class="nv-seg-toggle">'+
+        '<button type="button" class="nv-seg-btn active" data-segmode="new">New (FY2027+)</button>'+
+        '<button type="button" class="nv-seg-btn" data-segmode="old">Old (pre-FY2027)</button>'+
+      '</div>'+
+      '<span class="nv-seg-lbl">View</span>'+
+      '<div class="nv-seg-toggle">'+
+        '<button type="button" class="nv-seg-btn active" data-seggran="q">Quarterly</button>'+
+        '<button type="button" class="nv-seg-btn" data-seggran="a">Annual</button>'+
+      '</div>'+
+      '<span class="nv-seg-lbl">Forecast</span>'+
+      '<div class="nv-seg-toggle">'+
+        '<button type="button" class="nv-seg-btn active" data-segsrc="bbg">BBG consensus</button>'+
+        '<button type="button" class="nv-seg-btn" data-segsrc="summit" disabled>Summit · soon</button>'+
+      '</div>'+
     '</div>'+
-    '<div class="ov-chart-card"><div class="ov-chart-t">NVIDIA quarterly revenue by segment <span>(stacked · solid = reported, faded = BBG forecast)</span></div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">NVIDIA revenue by segment <span>(stacked · solid bars = reported · shaded region = forecast)</span></div>'+
     '<div class="ov-chart-wrap ovs-tall"><canvas id="nvdaSegChart"></canvas></div></div>'+
-    '<div class="ov-asof"><b>New segments:</b> the two green stacks are the Data Center sub-markets (Hyperscale + ACIE); blue is Edge Computing. <b>Old segments:</b> Data Center plus the discontinued Gaming / Pro Viz / Auto / OEM split — for the early quarters where that split was never disclosed, a single grey "Other (non-Data Center)" block keeps the bars tied to total revenue. Actuals 1Q25–1Q27 from NVIDIA’s recast filing; 2Q27–4Q29 are Bloomberg forecast estimates. Fiscal year ends late January (1Q25 = quarter ended ~Apr 2024).</div>');
+    '<div class="ov-asof"><b>Shaded region = projections.</b> Actuals are NVIDIA reported results (1Q25–1Q27 / FY25–FY26); the shaded bars to the right are <b>BBG consensus</b> — Bloomberg’s aggregate of sell-side analyst estimates — out to FY2029. A <b>Summit-model</b> view will be added as a second forecast source. <b>New segments:</b> two greens = Data Center sub-markets (Hyperscale + ACIE), blue = Edge Computing. <b>Old segments:</b> Data Center plus the discontinued Gaming / Pro Viz / Auto / OEM split — where the old quarterly split was never disclosed, a grey "Other (non-Data Center)" block keeps the bars tied to total revenue. Fiscal year ends late January (1Q25 = quarter ended ~Apr 2024).</div>');
 
   // FY2026 mix (new framework)
   h += sec('FY2026 revenue mix (new framework)',
@@ -442,13 +500,19 @@ function init(){
   root.querySelectorAll('.ovt-tab').forEach(function(btn){
     btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };
   });
-  // Segments tab: old/new segment toggle on the quarterly chart.
-  root.querySelectorAll('.nv-seg-btn').forEach(function(btn){
-    btn.onclick = function(){
-      root.querySelectorAll('.nv-seg-btn').forEach(function(x){ x.classList.toggle('active', x===btn); });
-      _segMode = btn.getAttribute('data-segmode');
-      buildSegChart();
-    };
+  // Segments tab: segment / view / forecast-source toggles on the revenue chart.
+  // Each .nv-seg-toggle is its own group; active state and state var are scoped to the group.
+  root.querySelectorAll('.nv-seg-toggle').forEach(function(grp){
+    grp.querySelectorAll('.nv-seg-btn').forEach(function(btn){
+      if (btn.disabled) return;
+      btn.onclick = function(){
+        grp.querySelectorAll('.nv-seg-btn').forEach(function(x){ x.classList.toggle('active', x===btn); });
+        if (btn.hasAttribute('data-segmode')) _segMode = btn.getAttribute('data-segmode');
+        if (btn.hasAttribute('data-seggran')) _segGran = btn.getAttribute('data-seggran');
+        if (btn.hasAttribute('data-segsrc'))  _segSrc  = btn.getAttribute('data-segsrc');
+        buildSegChart();
+      };
+    });
   });
   var active = root.querySelector('.ovt-tab.active');
   if (active && active.getAttribute('data-ovt') === 'industry') requestAnimationFrame(function(){ semiIndustry.init(); });

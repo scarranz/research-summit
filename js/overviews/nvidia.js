@@ -685,13 +685,81 @@ function stopTech(){
 // ════════════════════════════════════════════════════════════════════════════════
 // 4 — MANAGEMENT
 // ════════════════════════════════════════════════════════════════════════════════
-var LEADERSHIP = [
-  ['Jensen Huang', 'Co-founder, President & CEO (since 1993) — set NVIDIA’s bet on accelerated computing and CUDA long before the AI wave, and remains the company’s strategic and public face.'],
-  ['Colette Kress', 'Executive Vice President & CFO (since 2013) — leads finance, capital allocation and investor relations through NVIDIA’s scale-up to a $200B+ revenue company.'],
+// Executive team — [name, role, photo, bio, ownership label, initials, accent].
+var LEADERS = [
+  ['Jensen Huang','Founder, President & CEO','nvda-jensen.jpg','Co-founded NVIDIA in 1993 and has led it ever since — the architect of its bet on accelerated computing and CUDA, and the company’s strategic and public face.','812.0M · 3.36%','JH','#1F8A70'],
+  ['Colette Kress','EVP & Chief Financial Officer','nvda-colette.jpg','CFO since 2013 — leads finance, capital allocation and investor relations through the scale-up to a $200B+ revenue company.','4.85M · 0.02%','CK','#5B53A8'],
+  ['Jay Puri','EVP, Worldwide Field Operations','nvda-jay.jpg','With NVIDIA since 2005 — runs global sales and go-to-market field operations.','3.67M · 0.02%','JP','#2D6A9F'],
+  ['Debora Shoquist','EVP, Operations','nvda-debora.jpg','Leads global supply chain and manufacturing operations — central to navigating the AI supply crunch.','1.95M · 0.01%','DS','#C0772C'],
+  ['Tim Teter','EVP, General Counsel & Secretary','nvda-tim.jpg','NVIDIA’s chief legal officer — oversees legal, intellectual property and compliance.','3.05M · 0.01%','TT','#B0506A'],
+  ['Chris Malachowsky','Co-founder & NVIDIA Fellow','nvda-chris.jpg','One of NVIDIA’s three co-founders (with Jensen Huang and Curtis Priem) and a long-time technical leader and NVIDIA Fellow.','—','CM','#3A7CA5'],
 ];
+// Insider & board ownership — [name, role, shares, % out, latest Form 4 net change, date].
+// Source: Bloomberg holdings export (NVDA_OWN), positions as of the latest Form 4 filings.
+var OWNERSHIP = [
+  ['Jensen Huang','Founder, President & CEO', 812004746, '3.36%', -45723, 'Jun 17, 2026'],
+  ['Mark A. Stevens','Director', 31769633, '0.13%', 1211, 'Jun 25, 2026'],
+  ['Tench Coxe','Director', 30581218, '0.13%', 1211, 'Jun 25, 2026'],
+  ['Harvey C. Jones','Director', 7004898, '0.03%', 1211, 'Jun 25, 2026'],
+  ['Colette Kress','EVP & CFO', 4851271, '0.02%', -40746, 'Jun 17, 2026'],
+  ['Jay (Ajay) Puri','EVP, Worldwide Field Operations', 3665228, '0.02%', -36927, 'Jun 17, 2026'],
+  ['Tim Teter','EVP, General Counsel', 3052096, '0.01%', -35742, 'Jun 17, 2026'],
+  ['A. Brooke Seawell','Director', 2507818, '0.01%', 1211, 'Jun 25, 2026'],
+  ['Debora Shoquist','EVP, Operations', 1946358, '0.01%', -35012, 'Jun 17, 2026'],
+  ['Dawn Hudson','Director', 370098, '<0.01%', 1211, 'Jun 25, 2026'],
+  ['Robert Burgess','Director', 202843, '<0.01%', 1799, 'Jun 26, 2025'],
+  ['Stephen Neal','Lead Director', 170578, '<0.01%', 1211, 'Jun 25, 2026'],
+  ['Persis Drell','Director', 142627, '<0.01%', -40000, 'Sep 19, 2025'],
+  ['Aarti Shah','Director', 37218, '<0.01%', 1211, 'Jun 25, 2026'],
+  ['Melissa Lora','Director', 16868, '<0.01%', 1211, 'Jun 25, 2026'],
+  ['John Dabiri','Director', 15374, '<0.01%', 1211, 'Jun 25, 2026'],
+  ['Ellen Ochoa','Director', 4968, '<0.01%', 1799, 'Jun 26, 2025'],
+];
+
+function leadAvatar(initials, accent, file){
+  return '<div class="lead-av" style="--c:'+accent+'"><span>'+esc(initials)+'</span>'+
+    (file ? '<img src="img/leadership/'+esc(file)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '')+'</div>';
+}
+function orgTree(){
+  var reports=[
+    ['Colette Kress','Finance · CFO'],
+    ['Jay Puri','Worldwide Field Operations'],
+    ['Debora Shoquist','Operations'],
+    ['Tim Teter','Legal · General Counsel'],
+    ['Engineering · Architecture · AI Software · Research','~50+ more direct reports'],
+  ];
+  return '<div class="org">'+
+    '<div class="org-ceo"><div class="org-name">Jensen Huang</div><div class="org-role">Founder, President &amp; CEO</div></div>'+
+    '<div class="org-reports">'+reports.map(function(r){
+      return '<div class="org-node"><div class="org-name">'+esc(r[0])+'</div><div class="org-role">'+esc(r[1])+'</div></div>';
+    }).join('')+'</div></div>'+
+    '<div class="ov-asof">NVIDIA runs an unusually <b>flat</b> organization — Jensen Huang has ~50–60 direct reports and there are no divisional general managers; teams are organized by function and assembled around projects. The named reports are the company’s executive officers.</div>';
+}
+function ownTable(){
+  function sh(n){ return (n/1e6).toFixed(2)+'M'; }
+  function chg(n){ return '<span class="'+(n>=0?'own-up':'own-dn')+'">'+(n>=0?'+':'−')+Math.abs(n).toLocaleString('en-US')+'</span>'; }
+  return '<div style="overflow-x:auto"><table class="ov-table"><thead><tr><th>Name</th><th>Role</th>'+
+    '<th style="text-align:right">Shares</th><th style="text-align:right">% out</th><th>Latest Form 4</th></tr></thead><tbody>'+
+    OWNERSHIP.map(function(o){
+      return '<tr><td class="ov-td-name">'+esc(o[0])+'</td><td>'+esc(o[1])+'</td>'+
+        '<td style="text-align:right">'+sh(o[2])+'</td><td style="text-align:right">'+esc(o[3])+'</td>'+
+        '<td>'+chg(o[4])+' · '+esc(o[5])+'</td></tr>';
+    }).join('')+'</tbody></table></div>';
+}
 function managementBody(){
-  var h = sec('Leadership', rowsKV(LEADERSHIP));
-  h += '<div class="ov-callout">More to come: founder-led culture and tenure, the broader executive bench, board, insider ownership and recent insider activity (the portal’s Pillars tab already syncs management &amp; insider data from Fiscal.ai). Capital return is now material — NVIDIA raised its dividend 25× (to $0.25/qtr) and added $80B to buybacks in Q1 FY2027.</div>';
+  var h='';
+  h+='<p class="ov-lede">NVIDIA is <b>founder-led</b> and deliberately <b>flat</b>: Jensen Huang has run the company since founding it in 1993, with an unusually wide span of direct reports and few management layers. Below are the executive team, the org structure and insider ownership.</p>';
+  h+=sec('Executive team', '<div class="lead-grid">'+LEADERS.map(function(p){
+    return '<div class="lead-card">'+leadAvatar(p[5],p[6],p[2])+
+      '<div class="lead-name">'+esc(p[0])+'</div>'+
+      '<div class="lead-role">'+esc(p[1])+'</div>'+
+      '<div class="lead-bio">'+esc(p[3])+'</div>'+
+      (p[4] && p[4]!=='—' ? '<div class="lead-own">'+esc(p[4])+'</div>' : '')+
+    '</div>';
+  }).join('')+'</div>');
+  h+=sec('Organizational structure', orgTree());
+  h+=sec('Insider &amp; board ownership', ownTable());
+  h+='<div class="ov-foot">Ownership from a Bloomberg holdings export (NVDA insiders &amp; directors); positions as of the latest Form 4 filings (mostly June 2026). Shares in millions; "% out" is percent of shares outstanding. Large holders’ sales are typically pre-arranged 10b5-1 plans, and small positive changes are routine grants / RSU vesting. Executive headshots © NVIDIA newsroom.</div>';
   return h;
 }
 

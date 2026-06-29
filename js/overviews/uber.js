@@ -440,15 +440,15 @@ function supplyBody(){
     '<div class="usc-grid">'+SC_CUSTOMERS.map(scCard).join('')+'</div>');
   // ── Geographic footprint, tied to a thesis ──
   function topList(geoArr){ return geoArr.slice(0,4).map(function(g){ return esc(g.c)+' '+g.fpct+'%'; }).join(' · '); }
-  h+=sec('Geographic Footprint — and what it tells us',
-    '<div class="ov-diagram-cap" style="margin:0 0 10px">Darker = more facilities. <b>Hover any country</b> for its share. The contrast between the two maps is the whole insight.</div>'+
-    '<div class="ov-grid2">'+
-      '<div><div class="ov-subh">Suppliers · 2,593 facilities</div>'+worldChoropleth(SC_SUP_GEO, BRAND)+
-        '<div class="ave-subh-note" style="margin-top:6px">'+topList(SC_SUP_GEO)+'</div></div>'+
-      '<div><div class="ov-subh">Merchants · 2,591 facilities</div>'+worldChoropleth(SC_CUS_GEO, BRAND2)+
-        '<div class="ave-subh-note" style="margin-top:6px">'+topList(SC_CUS_GEO)+'</div></div>'+
-    '</div>'+
-    '<div class="ov-fynote" style="margin-top:12px"><b>The story:</b> suppliers are globally diversified (49% US) — the worldwide AV race spreads across China, Germany, Japan & Israel. Merchants look US-heavy (77%), yet ~<b>60% of mobility bookings are international</b>. That gap <i>is</i> the emerging-markets dynamic: abroad Uber sells cheaper trips (the barbell’s low-cost wing) and a lower Uber One fee, so <b>revenue per user falls even as volume rises</b> — diluting ARPU but widening the funnel. <span class="ave-subh-note">Regulatory read: the more international the bookings, the wider Uber’s exposure to per-market driver-classification &amp; VAT rules.</span></div>');
+  h+=sec('Geographic Footprint — where Uber sources vs. where it sells',
+    '<div class="guid-modes" id="ubGeoToggle"><button type="button" class="guid-mode active" data-geo="sup">Suppliers</button><button type="button" class="guid-mode" data-geo="cus">Merchants</button></div>'+
+    '<div class="ov-diagram-cap" style="margin:0 0 8px">Darker = more facilities · <b>hover any country</b> for its share. Toggle the two views — the difference between them is the point.</div>'+
+    '<div data-geoview="sup">'+worldChoropleth(SC_SUP_GEO, BRAND)+
+      '<div class="ave-subh-note" style="margin-top:6px">'+topList(SC_SUP_GEO)+'</div>'+
+      '<div class="ov-fynote" style="margin-top:10px"><b>The non-obvious read:</b> Uber sources autonomy from the US <i>and China</i> (WeRide, Pony.ai) — even though it <b>exited China in 2016 and doesn’t operate there</b>. It is buying <b>Chinese AV capability to deploy everywhere else</b>. So this isn’t a procurement map — it’s a map of <b>where the robotaxi race gets decided</b>, and Uber has a partner planted on every front.</div></div>'+
+    '<div data-geoview="cus" hidden>'+worldChoropleth(SC_CUS_GEO, BRAND2)+
+      '<div class="ave-subh-note" style="margin-top:6px">'+topList(SC_CUS_GEO)+'</div>'+
+      '<div class="ov-fynote" style="margin-top:10px"><b>The non-obvious read:</b> Eats’ merchant base is <b>77% US</b> — far more concentrated than Uber’s ~<b>60%-international bookings</b>. Delivery has barely gone global. So <b>where this map is empty is where Uber expands next</b>: the unbuilt international Eats runway is the real story here, not just the ARPU dilution from cheaper emerging-market orders.</div></div>');
   return h;
 }
 
@@ -973,6 +973,10 @@ function init(c){
   wireModal(root);
   // Earnings calls accordion
   root.querySelectorAll('#ubCallsAcc .lpb-acc-h').forEach(function(btn){ btn.onclick=function(){ var item=btn.parentElement; var open=item.classList.toggle('open'); var ic=btn.querySelector('.lpb-acc-ic'); if(ic) ic.textContent=open?'\u2013':'+'; }; });
+  // Supply-chain geographic map toggle (Suppliers / Merchants)
+  root.querySelectorAll('#ubGeoToggle .guid-mode').forEach(function(btn){ btn.onclick=function(){ var k=btn.getAttribute('data-geo');
+    root.querySelectorAll('#ubGeoToggle .guid-mode').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    root.querySelectorAll('[data-geoview]').forEach(function(v){ v.hidden=(v.getAttribute('data-geoview')!==k); }); }; });
   var active=root.querySelector('.ovt-tab.active'); showOvt(root, active?active.getAttribute('data-ovt'):'overview');
 }
 export var uberOverview = { html: html, init: init };

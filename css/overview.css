@@ -1155,20 +1155,20 @@ img.mgmt-av { border: 1px solid var(--bdr); }
 
 /* ── KPI tiles ── */
 .ov-kpis {
-  display: grid; grid-template-columns: repeat(4, 1fr);
-  gap: 10px; margin-bottom: 10px;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 8px; margin-bottom: 10px;
 }
 .ov-kpi {
   border: 1px solid var(--bdr); border-radius: 10px;
-  padding: 14px 16px; background: var(--w);
+  padding: 11px 12px; background: var(--w);
   border-top: 2px solid var(--brand);
 }
 .ov-kpi-l {
-  font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
-  color: var(--mu); font-weight: 600; margin-bottom: 6px;
+  font-size: 9.5px; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--mu); font-weight: 600; margin-bottom: 5px;
 }
-.ov-kpi-v { font-size: 22px; font-weight: 600; color: var(--navy); letter-spacing: -0.02em; }
-.ov-kpi-d { font-size: 11px; font-weight: 600; margin-top: 3px; }
+.ov-kpi-v { font-size: 18px; font-weight: 600; color: var(--navy); letter-spacing: -0.02em; }
+.ov-kpi-d { font-size: 10.5px; font-weight: 600; margin-top: 3px; }
 .ov-kpi-d.up { color: var(--pos); }
 .ov-kpi-d.down { color: var(--neg); }
 .ov-kpi-d.muted { color: var(--mu); font-weight: 500; }

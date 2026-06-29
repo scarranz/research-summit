@@ -34,6 +34,7 @@ var KPIS = [
   { l:'Same-Store Sales',  v:'+18.3%',   d:'FY2025',      dir:'up' },
   { l:'Stores',            v:'3,346',    d:'+574 net new', dir:'up' },
   { l:'Gross Margin',      v:'16.2%',    d:'16.3% FY24',  dir:'muted' },
+  { l:'Employees',         v:'29,202',   d:'FY2025',      dir:'muted' },
 ];
 var AS_OF = 'Figures are in Mexican pesos (Ps.) unless noted. Headline metrics are for the fiscal year ended December 31, 2025 (FY2025), per the company\'s annual report on Form 20-F.';
 var FY_NOTE = 'FY2025: total revenue Ps.78.2B (+36%) · gross profit Ps.12.6B (16.2% margin) · 825M transactions (+23%) · average ticket Ps.94.9 (+11%). The company reported a net loss of Ps.2.84B (vs. a Ps.0.33B profit in FY2024), driven primarily by a one-time, non-cash share-based compensation charge of ~Ps.2.93B tied to RSUs granted under its Liquidity Event Share Plan, plus an FX translation loss and strategic investment in new regions.';
@@ -245,60 +246,13 @@ function overviewBody(c){
   h += sec('Financial Performance (FY2024 → FY2025)',
     '<table class="ov-table"><thead><tr><th>Metric</th><th>FY2024</th><th>FY2025</th></tr></thead><tbody>'+
     FINANCIALS.map(function(r){return '<tr><td class="ov-td-name">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>';}).join('')+
-    '</tbody></table>'+
-    '<div class="ov-callout">'+esc(FIN_NOTE)+'</div>'
-  );
-
-  // 5 — Product mix
-  h += sec('Product Mix', SEGMENTS.map(function(s){
-    return '<div class="ov-row"><div class="ov-row-k">'+esc(s[0])+'</div><div class="ov-row-v">'+esc(s[1])+'</div></div>';
-  }).join(''));
-
-  // 6 — Footprint & store model
-  h += sec('Footprint & Store Model',
-    '<div class="ov-corr-stats">'+
-      FOOTPRINT.stats.map(function(s){return '<div class="ov-corr-stat"><div class="ov-corr-v">'+esc(s[0])+'</div><div class="ov-corr-l">'+esc(s[1])+'</div></div>';}).join('')+
-    '</div>'+ rows(FOOTPRINT.rows)
+    '</tbody></table>'
   );
 
   // 7 — Timeline
   h += sec('History & Milestones', '<div class="ov-timeline">'+TIMELINE.map(function(t){
     return '<div class="ov-tl-item"><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t[0])+'</div><div class="ov-tl-body">'+t[1]+'</div></div>';
   }).join('')+'</div>');
-
-  // 8 — Negative working capital engine
-  h += sec('The Efficiency & Working-Capital Engine', '<div class="ov-callout">'+bullets(ENGINE)+'</div>');
-
-  // 9 — Peers
-  h += sec('Peers & Competitive Landscape',
-    '<table class="ov-table"><thead><tr><th>Peer</th><th>What they offer</th><th>How 3B differs</th></tr></thead><tbody>'+
-    PEERS.map(function(p){return '<tr><td class="ov-td-name">'+esc(p[0])+'</td><td>'+esc(p[1])+'</td><td>'+esc(p[2])+'</td></tr>';}).join('')+
-    '</tbody></table>'
-  );
-
-  // 10 — Tailwinds / Headwinds
-  h += sec('Tailwinds & Headwinds',
-    '<div class="ov-grid2">'+
-      '<div class="ov-wind ov-wind-up"><div class="ov-wind-h">Tailwinds</div>'+bullets(TAILWINDS)+'</div>'+
-      '<div class="ov-wind ov-wind-down"><div class="ov-wind-h">Headwinds</div>'+bullets(HEADWINDS)+'</div>'+
-    '</div>'
-  );
-
-  // 11 — Strategic focus: white-space boxes + growth drivers
-  function statBox(b){ return '<div class="ov-target"><div class="ov-target-v">'+esc(b.v)+'</div><div class="ov-target-l">'+esc(b.l)+'</div><div class="ov-target-s">'+esc(b.s)+'</div></div>'; }
-  h += sec('Strategic Focus',
-    '<div class="ov-subh">Scale & White Space</div>'+
-    '<div class="ov-targets">'+TAM.map(statBox).join('')+'</div>'+
-    '<div class="ov-subh">Growth Drivers</div>'+
-    '<div class="ov-drivers">'+DRIVERS.map(function(d){
-      return '<div class="ov-driver"><div class="ov-driver-t">'+esc(d[0])+'</div><div class="ov-driver-d">'+esc(d[1])+'</div></div>';
-    }).join('')+'</div>'
-  );
-
-  // 12 — Leadership
-  h += sec('Leadership (Founder-Led)', LEADERSHIP.map(function(l){
-    return '<div class="ov-row"><div class="ov-row-k">'+esc(l[0])+'</div><div class="ov-row-v">'+esc(l[1])+'</div></div>';
-  }).join(''));
 
   // 13 — Sources
   h += '<div class="ov-foot">'+esc(SOURCES)+'</div>';

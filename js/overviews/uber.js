@@ -296,25 +296,38 @@ function rangeSlider(key,maxI,a,b){
 // Uber's SPLC reveals two stories: (1) the AV ecosystem build-out on the supplier side,
 // and (2) the restaurant/grocery merchant network on the customer side.
 // Very sparse relationship-size data — most entries are undisclosed.
-var SC_SUP_FN = [
-  { h:'\ud83d\ude97 AV & Automotive (30+)', items:'Waymo (Alphabet) \u00b7 Aurora Innovation \u00b7 Lucid Group \u00b7 Nuro \u00b7 May Mobility \u00b7 Avride \u00b7 WeRide \u00b7 Pony AI \u00b7 Waabi \u00b7 Momenta \u00b7 BYD \u00b7 Volkswagen \u00b7 Mercedes-Benz \u00b7 Stellantis \u00b7 Rivian \u00b7 Aptiv \u00b7 Innoviz \u00b7 Joby Aviation \u00b7 NVIDIA \u00b7 Serve Robotics \u00b7 Wayve \u00b7 AVO Mobility \u00b7 Electrodrive \u00b7 Nissan \u00b7 Volvo \u00b7 GM \u00b7 PACCAR',
-    note:'The largest functional group by count. Reflects Uber\u2019s stated 30+ AV partnerships and the hybrid-network strategy. Most relationships have <b>no disclosed $ size</b> — these are strategic, not traditional procurement relationships.' },
-  { h:'\u2601\ufe0f Tech & Cloud', items:'Oracle ($54.6M, COGS) \u00b7 HCL Technologies ($127.1M, SGA) \u00b7 Adobe ($1.4M, SGA) \u00b7 Elastic NV \u00b7 Confluent \u00b7 JFrog \u00b7 Twilio \u00b7 UiPath \u00b7 Bandwidth \u00b7 Sinch AB \u00b7 TomTom \u00b7 Baidu (mapping)',
-    note:'IT services and cloud infrastructure. <b>HCL ($127M)</b> is the largest disclosed relationship — likely outsourced engineering/IT. <b>Oracle ($55M)</b> is likely database/cloud.' },
-  { h:'\ud83d\udcb3 Payments & Fintech', items:'Klarna \u00b7 Marqeta \u00b7 Adyen \u00b7 Stripe \u00b7 Block Inc \u00b7 Checkout Ltd \u00b7 Payfare \u00b7 Euronet Worldwide',
-    note:'Payment processing and driver payout infrastructure. Marqeta likely powers the driver debit card. Klarna for consumer BNPL.' },
-  { h:'\ud83c\udfe2 Fleet & Charging', items:'Hertz \u00b7 Avis Budget \u00b7 Moove Cars Fleet \u00b7 EVgo \u00b7 Wallbox \u00b7 IONITY \u00b7 Revel Transit \u00b7 Otto Car',
-    note:'Fleet management and EV charging partners. Hertz announced as AV fleet management partner (Q4 2025). ~15% of mobility supply hours come from fleets.' },
-  { h:'\ud83d\udcca Ad Tech & Marketing', items:'Trade Desk \u00b7 Criteo \u00b7 Cars.com \u00b7 DoubleVerify \u00b7 Pureprofile \u00b7 SEMrush \u00b7 Enero Group \u00b7 Perion Network',
-    note:'Advertising technology and marketing analytics for Uber\u2019s growing ads business (~$1B+ run rate).' },
-  { h:'\ud83c\udfe0 Real Estate & Infra', items:'Alexandria RE ($27.8M, SGA) \u00b7 Equinix \u00b7 Fibra Uno \u00b7 Hudson Pacific \u00b7 GPT Group \u00b7 RioCan',
-    note:'Office, data center, and AV depot real estate. Uber is actively "acquiring depots" for AV charging/repair infrastructure.' },
+// Suppliers grouped by what they DO for Uber. Each: short narrative + key players (logos, hover=name).
+var SC_SUPPLIERS = [
+  { h:'Autonomous & Automotive', tag:'30+ partners', big:true,
+    why:'The biggest supplier group — and the build-out of the <b>hybrid AV network</b>. These are mostly <b>strategic/equity ties, not vendor bills</b>: Uber brings the demand, partners bring the cars. (Serve Robotics gets ~31% of its revenue from Uber — the highest dependency.)',
+    players:[['Waymo','waymo.com'],['Aurora','aurora.tech'],['Nuro','nuro.ai'],['Lucid','lucidmotors.com'],['WeRide','weride.ai'],['Pony.ai','pony.ai'],['NVIDIA','nvidia.com'],['Stellantis','stellantis.com'],['Rivian','rivian.com'],['Zoox','zoox.com']] },
+  { h:'Tech & Cloud', tag:'the plumbing',
+    why:'Cloud, mapping, comms and outsourced engineering. The <b>only large disclosed vendor bills</b>: HCL <b>$127M</b> (engineering/IT) and Oracle <b>$55M</b> (database/cloud) — Uber runs lean on infra.',
+    players:[['Oracle','oracle.com'],['HCLTech','hcltech.com'],['Adobe','adobe.com'],['Twilio','twilio.com'],['TomTom','tomtom.com']] },
+  { h:'Payments & Fintech', tag:'money movement',
+    why:'Global card processing and <b>driver payouts</b>. Marqeta powers the Uber Pro debit card (Instant Pay); Adyen & Stripe move consumer payments at scale.',
+    players:[['Adyen','adyen.com'],['Stripe','stripe.com'],['Marqeta','marqeta.com'],['Block','block.xyz'],['Klarna','klarna.com']] },
+  { h:'Fleet & Charging', tag:'~15% of supply hours',
+    why:'Where AV/EV supply is produced — rental fleets and charging. <b>Hertz</b> is also the AV fleet-management partner (Q4 2025); ~<b>15%</b> of mobility supply hours come from fleets.',
+    players:[['Hertz','hertz.com'],['Avis','avisbudgetgroup.com'],['EVgo','evgo.com'],['Moove','moove.io']] },
+  { h:'Ad Tech & Marketing', tag:'feeds >$2B ads',
+    why:'Measurement & demand that make Uber’s <b>near-100%-margin ad inventory</b> sellable to brands — the lever behind the >$2B ads run-rate.',
+    players:[['The Trade Desk','thetradedesk.com'],['Criteo','criteo.com'],['DoubleVerify','doubleverify.com']] },
+  { h:'Real Estate & Infra', tag:'AV depots',
+    why:'Offices, data centers and the <b>AV depots Uber is buying</b> for charging & repair — the physical footprint behind the asset-light story. Alexandria is the largest disclosed (<b>$28M</b>).',
+    players:[['Alexandria','are.com'],['Equinix','equinix.com'],['Hudson Pacific','hudsonpacificproperties.com']] },
 ];
-var SC_CUS_CAT = [
-  { cat:'REST', label:'Restaurants', items:'Domino\u2019s Pizza \u00b7 McDonald\u2019s (Japan) \u00b7 Chipotle \u00b7 Darden (Olive Garden) \u00b7 Little Caesars \u00b7 Brinker (Chili\u2019s) \u00b7 Cracker Barrel \u00b7 White Castle \u00b7 El Pollo Loco \u00b7 Nathan\u2019s Famous \u00b7 Carrols Restaurant', color:'#10141A' },
-  { cat:'GROC', label:'Grocery & Retail', items:'Albertsons \u00b7 Costco \u00b7 Kroger \u00b7 Wegmans \u00b7 Aldi \u00b7 Carrefour \u00b7 Coles \u00b7 Woolworths \u00b7 Loblaw \u00b7 J Sainsbury \u00b7 Dollar General \u00b7 Dollar Tree \u00b7 Five Below \u00b7 Home Depot \u00b7 Lowe\u2019s \u00b7 Best Buy \u00b7 Dick\u2019s Sporting Goods', color:'#06C167' },
-  { cat:'INTL', label:'International', items:'Fomento Econ\u00f3mico Mexicano (FEMSA) \u00b7 Distribuidora Internacional \u00b7 Sendas (Brazil) \u00b7 Cencosud (Chile) \u00b7 Rakuten (Japan) \u00b7 Aeon Kyushu \u00b7 Lawson \u00b7 Waldos (Mexico) \u00b7 Casino Guichard (France)', color:'#9AA3AE' },
-  { cat:'OTHER', label:'Other', items:'Maplebear (Instacart) \u00b7 JetBlue \u00b7 Air Canada \u00b7 Life360 \u00b7 Petco \u00b7 JD Sports \u00b7 GameStop \u00b7 Apollo Global Mgmt \u00b7 Live Nation \u00b7 Cinemark \u00b7 Tampa Intl Airport \u00b7 Designer Brands', color:'#64748B' },
+// Customers = the merchant network (Eats / Uber Direct). No single one is material — the breadth is the point.
+var SC_CUSTOMERS = [
+  { h:'Restaurants', tag:'QSR → casual dining',
+    why:'From fast food to casual dining — the original Eats supply.',
+    players:[['McDonald’s','mcdonalds.com'],['Domino’s','dominos.com'],['Chipotle','chipotle.com'],['Darden','darden.com'],['Little Caesars','littlecaesars.com']] },
+  { h:'Grocery & Retail', tag:'validates ~$12B run-rate',
+    why:'Five of the top-10 US grocers plus big-box retail — validates the ~<b>$12B grocery/retail run-rate</b> from earnings calls.',
+    players:[['Costco','costco.com'],['Kroger','kroger.com'],['Albertsons','albertsons.com'],['Carrefour','carrefour.com'],['Coles','coles.com.au'],['Best Buy','bestbuy.com']] },
+  { h:'International & Notable', tag:'global Eats footprint',
+    why:'The global merchant footprint — and the <b>Instacart (Maplebear)</b> tie-up where baskets run ~20% larger.',
+    players:[['FEMSA','femsa.com'],['Rakuten','rakuten.com'],['Cencosud','cencosud.com'],['Loblaw','loblaw.ca'],['Instacart','instacart.com'],['Delta','delta.com']] },
 ];
 var SC_SUP_GEO = [
   { c:'United States', fpct:49.4, fac:1280 },
@@ -340,55 +353,51 @@ var SC_CUS_GEO = [
   { c:'South Korea', fpct:0.7, fac:19 },
 ];
 
+// Grayscale logo chip (clearbit → favicon fallback); hover shows the name + colorizes.
+function scLogo(name,domain){
+  return '<div class="usc-logo" title="'+esc(name)+'"><img src="https://logo.clearbit.com/'+domain+'" alt="'+esc(name)+'" loading="lazy" onerror="this.onerror=null;this.src=\'https://www.google.com/s2/favicons?domain='+domain+'&sz=64\'"></div>';
+}
+function scCard(g){
+  return '<div class="usc-card'+(g.big?' usc-card-wide':'')+'">'+
+    '<div class="usc-card-h">'+esc(g.h)+(g.tag?'<span class="usc-tag">'+esc(g.tag)+'</span>':'')+'</div>'+
+    '<div class="usc-why">'+g.why+'</div>'+
+    '<div class="usc-logos">'+g.players.map(function(p){ return scLogo(p[0],p[1]); }).join('')+'</div>'+
+  '</div>';
+}
 function supplyBody(){
-  var h='';
-  h+='<style>'+
-    '.usc-fn-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 18px}'+
-    '.usc-fn-card{background:var(--w);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px}'+
-    '.usc-fn-h{font-size:12px;font-weight:700;color:var(--brand);margin-bottom:6px}'+
-    '.usc-fn-list{font-size:11.5px;color:var(--navy);line-height:1.7}'+
-    '.usc-fn-note{font-size:10.5px;color:var(--mu);margin-top:6px;line-height:1.4}'+
-    '.usc-geo-row{display:flex;align-items:center;gap:8px;margin:3px 0;font-size:13px}'+
-    '.usc-geo-lbl{min-width:110px;color:var(--navy)}.usc-geo-bar{height:16px;border-radius:4px;transition:width .25s}'+
-    '.usc-geo-pct{color:var(--mu);font-size:12px;min-width:40px;text-align:right}'+
-    '@media(max-width:860px){.usc-fn-grid{grid-template-columns:1fr}}'+
+  var h='<style>'+
+    '.usc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 8px}'+
+    '.usc-card{background:var(--w);border:1px solid var(--bdr);border-radius:10px;padding:14px 16px}'+
+    '.usc-card-wide{grid-column:1 / -1;border-top:3px solid var(--brand-2)}'+
+    '.usc-card-h{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}'+
+    '.usc-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);background:var(--surface);border:1px solid var(--bdr);border-radius:12px;padding:2px 8px}'+
+    '.usc-why{font-size:12px;color:var(--mu);line-height:1.55;margin-bottom:10px}.usc-why b{color:var(--navy)}'+
+    '.usc-logos{display:flex;flex-wrap:wrap;gap:8px}'+
+    '.usc-logo{width:96px;height:44px;border:1px solid var(--bdr);border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;padding:7px;transition:border-color .15s,box-shadow .15s}'+
+    '.usc-logo:hover{border-color:var(--brand);box-shadow:0 2px 8px rgba(0,0,0,.07)}'+
+    '.usc-logo img{max-width:100%;max-height:100%;object-fit:contain;filter:grayscale(1);opacity:.72;transition:filter .15s,opacity .15s}'+
+    '.usc-logo:hover img{filter:grayscale(0);opacity:1}'+
+    '.usc-geo-row{display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12.5px}'+
+    '.usc-geo-lbl{min-width:104px;color:var(--navy)}.usc-geo-bar{height:15px;border-radius:4px}'+
+    '.usc-geo-pct{color:var(--mu);font-size:12px;min-width:38px;text-align:right}'+
+    '@media(max-width:860px){.usc-grid{grid-template-columns:1fr}}'+
   '</style>';
-  h+='<p class="ov-lede">Uber\u2019s SPLC data reveals <b>two distinct ecosystems</b>. The <b>supplier side</b> is dominated by 30+ autonomous vehicle and automotive partners \u2014 a visual map of the hybrid-network strategy. The <b>customer side</b> shows the restaurant and grocery merchant network that powers Eats and Uber Direct. Data: Bloomberg SPLC, 29-Jun-2026.</p>';
-
-  // ── Suppliers by function ──
-  h+=sec('Technology & AV Ecosystem (Suppliers \u2014 138 identified)',
-    '<p style="font-size:13px;color:var(--txt2);margin:0 0 12px">Uber\u2019s supplier base reads like a <b>who\u2019s who of the AV industry</b>. 30+ automotive/AV companies reflect the stated partnership strategy. Very few disclosed relationship sizes \u2014 only HCL ($127M), Oracle ($55M), and Alexandria RE ($28M) have data. 50% of suppliers US-domiciled; 2,593 supplier facilities globally.</p>'+
-    '<div class="usc-fn-grid">'+SC_SUP_FN.map(function(g){
-      return '<div class="usc-fn-card"><div class="usc-fn-h">'+g.h+'</div><div class="usc-fn-list">'+g.items+'</div><div class="usc-fn-note">'+g.note+'</div></div>';
-    }).join('')+'</div>'+
-    '<div class="ov-fynote"><b>Key insight:</b> Serve Robotics ($0.8M relationship) derives <b>31% of its revenue</b> from Uber \u2014 the highest supplier dependency. By contrast, NVIDIA and the major OEMs show no meaningful dependency. The sparse relationship data reflects that most AV partnerships are <b>strategic/equity investments</b>, not traditional vendor contracts. Uber has invested in Aurora, Waabi, Nuro-Lucid and others with committed vehicle purchases.</div>');
-
-  // ── Customers (merchants) ──
-  h+=sec('Merchant & Delivery Partners (Customers \u2014 100+ identified)',
-    '<p style="font-size:13px;color:var(--txt2);margin:0 0 6px">Uber\u2019s customer base in SPLC is the <b>merchant network</b> \u2014 restaurants, grocers, and retailers that use Uber Eats, Uber Direct, or have partnership deals. 100 customers identified, 52% US-domiciled, 2,591 customer facilities globally. <b>No disclosed relationship sizes</b> for any customer \u2014 consistent with Uber\u2019s marketplace model where no single merchant is a significant revenue contributor.</p>'+
-    '<div class="usc-fn-grid">'+SC_CUS_CAT.map(function(g){
-      return '<div class="usc-fn-card"><div class="usc-fn-h" style="color:'+g.color+'">'+esc(g.label)+'</div><div class="usc-fn-list">'+g.items+'</div></div>';
-    }).join('')+'</div>'+
-    '<div class="ov-fynote"><b>Key insight:</b> The customer list includes <b>Maplebear (Instacart)</b> \u2014 reflecting the Uber Eats partnership where Instacart baskets are 20% larger. The breadth of grocery names (Albertsons, Costco, Kroger, Coles, Carrefour) validates the "$12B grocery/retail run rate" from earnings calls. Restaurant chains span from fast food (Domino\u2019s, McDonald\u2019s) to casual dining (Darden, Brinker) to QSR (Chipotle).</div>');
-
-  // ── Geographic concentration ──
-  h+=sec('Geographic Concentration',
+  h+='<p class="ov-lede">Uber’s supply chain tells <b>two stories</b>: who <b>powers</b> Uber (suppliers — overwhelmingly the AV build-out) and who Uber <b>serves</b> (the merchant network behind Eats). Hover any logo for the name. <span class="ave-subh-note">Bloomberg SPLC, 29-Jun-2026 · 138 suppliers, 100+ merchants.</span></p>';
+  h+=sec('Who Powers Uber — Suppliers by role',
+    '<div class="usc-grid">'+SC_SUPPLIERS.map(scCard).join('')+'</div>');
+  h+=sec('Who Uber Serves — the Merchant Network',
+    '<div class="ov-diagram-cap" style="margin:0 0 10px">No single merchant is material — Uber’s marketplace means the <b>breadth</b> is the moat, not any one name.</div>'+
+    '<div class="usc-grid">'+SC_CUSTOMERS.map(scCard).join('')+'</div>');
+  h+=sec('Geographic Footprint — and what it tells us',
     '<div class="ov-grid2">'+
-      '<div><div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px">Supplier Facilities (2,593)</div>'+
-      SC_SUP_GEO.map(function(g){
-        var w=Math.max(g.fpct*1.5,3);
-        return '<div class="usc-geo-row"><span class="usc-geo-lbl">'+esc(g.c)+'</span><div class="usc-geo-bar" style="width:'+w+'%;background:'+BRAND+'"></div><span class="usc-geo-pct">'+g.fpct+'%</span></div>';
-      }).join('')+
+      '<div><div class="ov-subh">Supplier facilities (2,593)</div>'+
+        SC_SUP_GEO.map(function(g){ var w=Math.max(g.fpct*1.6,3); return '<div class="usc-geo-row"><span class="usc-geo-lbl">'+esc(g.c)+'</span><div class="usc-geo-bar" style="width:'+w+'%;background:'+BRAND+'"></div><span class="usc-geo-pct">'+g.fpct+'%</span></div>'; }).join('')+
       '</div>'+
-      '<div><div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px">Customer Facilities (2,591)</div>'+
-      SC_CUS_GEO.map(function(g){
-        var w=Math.max(g.fpct*1.1,3);
-        return '<div class="usc-geo-row"><span class="usc-geo-lbl">'+esc(g.c)+'</span><div class="usc-geo-bar" style="width:'+w+'%;background:'+BRAND2+'"></div><span class="usc-geo-pct">'+g.fpct+'%</span></div>';
-      }).join('')+
+      '<div><div class="ov-subh">Merchant facilities (2,591)</div>'+
+        SC_CUS_GEO.map(function(g){ var w=Math.max(g.fpct*1.15,3); return '<div class="usc-geo-row"><span class="usc-geo-lbl">'+esc(g.c)+'</span><div class="usc-geo-bar" style="width:'+w+'%;background:'+BRAND2+'"></div><span class="usc-geo-pct">'+g.fpct+'%</span></div>'; }).join('')+
       '</div>'+
     '</div>'+
-    '<div class="ov-fynote">Supplier geography is highly diversified (49% US) \u2014 reflecting global AV partnerships in China, Germany, Japan, and Israel. Customer geography is US-heavy (77%) \u2014 consistent with the US being Uber\u2019s largest and most profitable market, though 60% of <b>mobility gross bookings</b> are international. The customer-facility footprint will diversify as Uber Eats expands in Europe and APAC.</div>');
-
+    '<div class="ov-fynote" style="margin-top:12px"><b>The story:</b> suppliers are globally diversified (49% US) — the worldwide AV race (China, Germany, Japan, Israel). Merchants look US-heavy (77%), yet ~<b>60% of mobility bookings are international</b>. That gap <i>is</i> the emerging-markets dynamic: abroad, Uber sells cheaper trips (the barbell’s low-cost wing) and a lower Uber One fee, so <b>revenue per user falls even as volume rises</b> — diluting ARPU but widening the funnel. <span class="ave-subh-note">Regulatory read: the more international the bookings, the wider Uber’s exposure to per-market driver-classification & VAT rules.</span></div>');
   return h;
 }
 

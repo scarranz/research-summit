@@ -6,6 +6,8 @@
 // Qualitative content: Uber FY2024 & FY2025 10-Ks, Q4 2025 / Q1 2026 results &
 // prepared remarks, the Feb 2024 "Go-Get" Investor Day (see SOURCES). No live API.
 
+import { WORLD_PATHS, WORLD_VB } from './world-paths.js';
+
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ─── Formatting ──────────────────────────────────────────────────────────────
@@ -373,6 +375,22 @@ function scCard(g){
     imp+
   '</div>';
 }
+// Map our country labels to the GeoJSON's names (which differ for a few).
+function geoName(c){ return ({ 'United States':'USA', 'United Kingdom':'England' })[c] || c; }
+// Choropleth world map (pre-projected paths, no library/fetch — CSP-safe & deterministic).
+// geoArr = [{c,fpct,fac}]; base = fill color. Darker = more facilities.
+function worldChoropleth(geoArr, base){
+  var max=Math.max.apply(null, geoArr.map(function(g){ return g.fpct; }));
+  var vals={}; geoArr.forEach(function(g){ vals[geoName(g.c)]={ pct:g.fpct, fac:g.fac, c:g.c }; });
+  var body=WORLD_PATHS.map(function(p){
+    var v=vals[p.n];
+    if(v){ var op=(0.25+0.75*(v.pct/max)).toFixed(2);
+      return '<path d="'+p.d+'" fill="'+base+'" fill-opacity="'+op+'" stroke="#fff" stroke-width="0.6"><title>'+esc(v.c)+' — '+v.pct+'% · '+v.fac+' facilities</title></path>'; }
+    return '<path d="'+p.d+'" fill="#E9EDF1" stroke="#fff" stroke-width="0.4"/>';
+  }).join('');
+  // Crop poles (skip empty top + Antarctica) so the map fills the card.
+  return '<svg viewBox="0 14 '+WORLD_VB[0]+' 404" style="width:100%;height:auto;display:block" role="img" aria-label="facility concentration by country">'+body+'</svg>';
+}
 function supplyBody(){
   var h='<style>'+
     '.usc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 8px}'+
@@ -391,9 +409,6 @@ function supplyBody(){
     '.usc-imp-good b{color:#06965A}'+
     '.usc-imp-mixed{background:rgba(232,160,12,0.09);border:1px solid rgba(232,160,12,0.32);color:var(--navy)}'+
     '.usc-imp-mixed b{color:#B7791F}'+
-    '.usc-geo-row{display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12.5px}'+
-    '.usc-geo-lbl{min-width:104px;color:var(--navy)}.usc-geo-bar{height:15px;border-radius:4px}'+
-    '.usc-geo-pct{color:var(--mu);font-size:12px;min-width:38px;text-align:right}'+
     '.ueco{display:flex;align-items:stretch;margin:4px 0 10px}'+
     '.ueco-box{flex:1;border:1px solid var(--bdr);border-radius:10px;background:var(--w);padding:14px;text-align:center;min-width:0}'+
     '.ueco-box.is-hub{border:2px solid var(--brand);background:var(--surface)}'+
@@ -424,16 +439,16 @@ function supplyBody(){
     '<div class="ov-diagram-cap" style="margin:0 0 10px">These are Eats’ supply. No single merchant is material, so the <b>breadth</b> is the moat — and the take/ads sit with Uber.</div>'+
     '<div class="usc-grid">'+SC_CUSTOMERS.map(scCard).join('')+'</div>');
   // ── Geographic footprint, tied to a thesis ──
+  function topList(geoArr){ return geoArr.slice(0,4).map(function(g){ return esc(g.c)+' '+g.fpct+'%'; }).join(' · '); }
   h+=sec('Geographic Footprint — and what it tells us',
+    '<div class="ov-diagram-cap" style="margin:0 0 10px">Darker = more facilities. <b>Hover any country</b> for its share. The contrast between the two maps is the whole insight.</div>'+
     '<div class="ov-grid2">'+
-      '<div><div class="ov-subh">Supplier facilities (2,593)</div>'+
-        SC_SUP_GEO.map(function(g){ var w=Math.max(g.fpct*1.6,3); return '<div class="usc-geo-row"><span class="usc-geo-lbl">'+esc(g.c)+'</span><div class="usc-geo-bar" style="width:'+w+'%;background:'+BRAND+'"></div><span class="usc-geo-pct">'+g.fpct+'%</span></div>'; }).join('')+
-      '</div>'+
-      '<div><div class="ov-subh">Merchant facilities (2,591)</div>'+
-        SC_CUS_GEO.map(function(g){ var w=Math.max(g.fpct*1.15,3); return '<div class="usc-geo-row"><span class="usc-geo-lbl">'+esc(g.c)+'</span><div class="usc-geo-bar" style="width:'+w+'%;background:'+BRAND2+'"></div><span class="usc-geo-pct">'+g.fpct+'%</span></div>'; }).join('')+
-      '</div>'+
+      '<div><div class="ov-subh">Suppliers · 2,593 facilities</div>'+worldChoropleth(SC_SUP_GEO, BRAND)+
+        '<div class="ave-subh-note" style="margin-top:6px">'+topList(SC_SUP_GEO)+'</div></div>'+
+      '<div><div class="ov-subh">Merchants · 2,591 facilities</div>'+worldChoropleth(SC_CUS_GEO, BRAND2)+
+        '<div class="ave-subh-note" style="margin-top:6px">'+topList(SC_CUS_GEO)+'</div></div>'+
     '</div>'+
-    '<div class="ov-fynote" style="margin-top:12px"><b>The story:</b> suppliers are globally diversified (49% US) — the worldwide AV race (China, Germany, Japan, Israel). Merchants look US-heavy (77%), yet ~<b>60% of mobility bookings are international</b>. That gap <i>is</i> the emerging-markets dynamic: abroad, Uber sells cheaper trips (the barbell’s low-cost wing) and a lower Uber One fee, so <b>revenue per user falls even as volume rises</b> — diluting ARPU but widening the funnel. <span class="ave-subh-note">Regulatory read: the more international the bookings, the wider Uber’s exposure to per-market driver-classification &amp; VAT rules.</span></div>');
+    '<div class="ov-fynote" style="margin-top:12px"><b>The story:</b> suppliers are globally diversified (49% US) — the worldwide AV race spreads across China, Germany, Japan & Israel. Merchants look US-heavy (77%), yet ~<b>60% of mobility bookings are international</b>. That gap <i>is</i> the emerging-markets dynamic: abroad Uber sells cheaper trips (the barbell’s low-cost wing) and a lower Uber One fee, so <b>revenue per user falls even as volume rises</b> — diluting ARPU but widening the funnel. <span class="ave-subh-note">Regulatory read: the more international the bookings, the wider Uber’s exposure to per-market driver-classification &amp; VAT rules.</span></div>');
   return h;
 }
 

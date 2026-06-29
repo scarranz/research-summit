@@ -392,12 +392,13 @@ var CPU_GPU = [
   ['GPU — the accelerator', '#1F8A70', 'Thousands of smaller cores built for <b>parallel processing</b> — many simple calculations at once. The matrix math behind graphics and AI is massively parallel, which is exactly what a GPU is built for.'],
 ];
 // What NVIDIA sells — the full stack, silicon up to software.
+// [name, accent, description, product image (in img/products/)]
 var TECH_STACK = [
-  ['Software & ecosystem', '#1F8A70', 'CUDA, cuDNN, TensorRT, AI Enterprise, NIM microservices and Omniverse — the platform developers build on. This is the moat.'],
-  ['Systems', '#2E9E78', 'DGX / HGX servers and rack-scale "AI factories" — GB200 / GB300 NVL72 today, the new <b>Vera Rubin NVL72</b> (72 Rubin GPUs + 36 Vera CPUs) ramping. NVIDIA increasingly sells the whole rack, not just the chip.'],
-  ['Networking', '#3A7CA5', 'NVLink (now 6th-gen, 3.6 TB/s on Rubin), InfiniBand and Spectrum-X Ethernet (from the Mellanox acquisition) — moving data between thousands of GPUs as if they were one.'],
-  ['Processors', '#5B53A8', 'The GPU (Blackwell → <b>Rubin</b>, ramping now), the CPU (Grace → the new <b>Vera</b>) and the BlueField DPU — designed together to work as one system.'],
-  ['Silicon', '#6B7A8F', 'Chips designed by NVIDIA, manufactured by TSMC, with HBM memory from SK hynix / Micron and advanced (CoWoS) packaging.'],
+  ['Software & ecosystem', '#1F8A70', 'CUDA, cuDNN, TensorRT, AI Enterprise, NIM microservices and Omniverse — the platform developers build on. This is the moat.', ''],
+  ['Systems', '#2E9E78', 'DGX / HGX servers and rack-scale "AI factories" — GB200 / GB300 NVL72 today, the new <b>Vera Rubin NVL72</b> (72 Rubin GPUs + 36 Vera CPUs) ramping. NVIDIA increasingly sells the whole rack, not just the chip.', 'nvda-gb300-nvl72.jpg'],
+  ['Networking', '#3A7CA5', 'NVLink (now 6th-gen, 3.6 TB/s on Rubin), InfiniBand and Spectrum-X Ethernet (from the Mellanox acquisition) — moving data between thousands of GPUs as if they were one.', 'nvda-networking.jpg'],
+  ['Processors', '#5B53A8', 'The GPU (Blackwell → <b>Rubin</b>, ramping now), the CPU (Grace → the new <b>Vera</b>) and the BlueField DPU — designed together to work as one system.', 'nvda-superchip.jpg'],
+  ['Silicon', '#6B7A8F', 'Chips designed by NVIDIA, manufactured by TSMC, with HBM memory from SK hynix / Micron and advanced (CoWoS) packaging.', 'nvda-dies.jpg'],
 ];
 // Architecture & product timeline.
 var TECH_TIMELINE = [
@@ -541,7 +542,7 @@ function technologyBody(){
     '<p class="ov-p">An AI "factory" is far more than GPUs. NVIDIA’s rack-scale systems combine <b>compute</b> (GPUs + Grace CPUs), <b>networking</b> (NVLink / InfiniBand / Spectrum-X), <b>servers</b> and <b>storage</b> into one tightly-integrated machine — sold as a unit (e.g. the GB200 NVL72 connects 72 GPUs to act as a single giant GPU). The value is in the <b>system</b>, not just the die.</p>'+
     '<div class="ov-asof">Adjacent platforms extend the same compute engine into new markets: <b>Omniverse</b> (industrial digital twins & simulation), <b>Isaac</b> (robotics) and <b>DRIVE</b> (automotive).</div>');
 
-  h += '<div class="ov-foot">Sources: Summit research team 2024 semiconductor case-study deck (internal), plus NVIDIA public materials and technical documentation. Simplified for explanation; transistor counts and dates are approximate.</div>';
+  h += '<div class="ov-foot">Sources: Summit research team 2024 semiconductor case-study deck (internal), plus NVIDIA public materials and technical documentation. Product renders © NVIDIA (press / newsroom imagery), shown for illustration. Simplified for explanation; transistor counts and dates are approximate.</div>';
   return h;
 }
 
@@ -647,15 +648,20 @@ function initSellsMap(){
       s.style.opacity = (sel>=0 && i!==sel) ? 0.28 : 0.96;
       s.classList.toggle('sel', sel>=0 && i===sel);
     });
+    function photo(file){
+      return file
+        ? '<div class="nv3d-imgbox"><img class="nv3d-photo" src="img/products/'+file+'" alt="" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></div>'
+        : '<div class="nv3d-img">Software isn’t a "photo" — it’s CUDA, NIM &amp; Omniverse, the platform layer.</div>';
+    }
     if(sel<0){
       panel.innerHTML='<div class="nv3d-p-h">The full stack</div>'+
-        '<div class="nv3d-p-d">NVIDIA sells every layer from the <b>silicon</b> up to the <b>software</b> — that vertical integration is what rivals can’t match with a chip alone, and where the durable margin lives.</div>'+
-        '<div class="nv3d-img">Product photos — coming in a later pass</div>';
+        '<div class="nv3d-p-d">NVIDIA sells every layer from the <b>silicon</b> up to the <b>software</b> — that vertical integration is what rivals can’t match with a chip alone, and where the durable margin lives. Tap a layer to see the product.</div>'+
+        photo('nvda-gb300-nvl72.jpg');
     } else {
       var l=layers[sel];
       panel.innerHTML='<div class="nv3d-p-h" style="color:'+l[1]+'">'+esc(l[0])+'</div>'+
         '<div class="nv3d-p-d">'+l[2]+'</div>'+
-        '<div class="nv3d-img" style="border-color:'+l[1]+'">Product photo — coming in a later pass</div>';
+        photo(l[3]);
     }
   }
   if(tog && !tog._w){ tog._w=1;

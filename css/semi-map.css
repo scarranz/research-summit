@@ -237,6 +237,8 @@
 .nv3d-p-d b { color: var(--navy); font-weight: 600; }
 .nv3d-img { margin-top: 12px; border: 1px dashed var(--bdr); border-radius: 8px; padding: 16px;
   text-align: center; font-size: 11px; color: var(--mu); background: var(--surface); }
+.nv3d-imgbox { margin-top: 12px; height: 150px; border-radius: 8px; overflow: hidden; background: #0a0e13; }
+.nv3d-photo { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
 
 @media (max-width: 640px) {
   .cg-panels { grid-template-columns: 1fr; }

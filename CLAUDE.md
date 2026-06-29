@@ -401,6 +401,12 @@ Top-level tabs use `.ovt-tab` / `.ovt-pane[data-ovt]`; nested sub-tabs use `.ovt
 - `netlify.toml` CSP includes `frame-src https://my.matterport.com https://*.matterport.com` for the Store-Tour iframe — keep it when editing the CSP.
 - Not in git: `env.js` (Supabase creds), and the source PDFs (10-Ks & earnings decks) that live outside the repo.
 
+### Backlog / next ideas (discussed, not yet built)
+- **Valuation tab** — base-case fair value / price target from the Summit DCF + multiples, upside vs the live IBKR price, a football field, and an EV → equity → per-share bridge. (Natural complement to Sensitivity.)
+- **Investment Thesis & Risks** — structured Bull / Base / Bear, key risks (execution of openings, FEMSA-Bara & Salinas-Neto competition, peso/macro, founder dependency, SBC dilution, lease obligations), catalysts.
+- **Financial Summary** — 3-statement + KPI trends (revenue, gross profit, EBITDA, net income, FCF) over time, from the Summit model.
+- **Peer financial comparison** — multiples / growth / margins vs Walmex, FEMSA, Chedraui, La Comer and global discounters (BİM, Dollar General).
+
 ## SoFi (SOFI) Overview — architecture & handoff
 
 The **SoFi Technologies (NASDAQ: SOFI)** Overview is the other deeply-built profile. Unlike TBBB (split into `bbb-*.js`), SoFi is a **single file**: `js/overviews/sofi.js` (exports `sofiOverview`; registered in `js/overviews/index.js`).

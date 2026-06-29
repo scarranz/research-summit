@@ -461,11 +461,13 @@ function mixBody(c){
 function generalBody(c){
   var h = '';
   h += '<div class="ovt-subtabs">'+
-    '<button type="button" class="ovt-subtab active" data-ovst="mix">Product Mix</button>'+
+    '<button type="button" class="ovt-subtab active" data-ovst="tour">Store Tour</button>'+
+    '<button type="button" class="ovt-subtab" data-ovst="mix">Product Mix</button>'+
     '<button type="button" class="ovt-subtab" data-ovst="logistics">Logistics</button>'+
     '<button type="button" class="ovt-subtab" data-ovst="bim">BİM Blueprint</button>'+
   '</div>';
-  h += '<div class="ovt-subpane" data-ovst="mix">'+mixBody(c)+'</div>';
+  h += '<div class="ovt-subpane" data-ovst="tour">'+bbbLogistics.tourBody(c)+'</div>';
+  h += '<div class="ovt-subpane" data-ovst="mix" hidden>'+mixBody(c)+'</div>';
   h += '<div class="ovt-subpane" data-ovst="logistics" hidden>'+bbbLogistics.body(c)+'</div>';
   h += '<div class="ovt-subpane" data-ovst="bim" hidden>'+bbbBim.body(c)+'</div>';
   return h;

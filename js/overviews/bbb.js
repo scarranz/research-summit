@@ -12,6 +12,7 @@ import { bbbLandscape } from './bbb-landscape.js';
 import { bbbBim } from './bbb-bim.js';
 import { bbbManagement } from './bbb-management.js';
 import { bbbLogistics } from './bbb-logistics.js';
+import { bbbSensitivity } from './bbb-sensitivity.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -484,6 +485,7 @@ function html(c){
     '<button type="button" class="ovt-tab" data-ovt="mix">Product Mix</button>'+
     '<button type="button" class="ovt-tab" data-ovt="ue">Unit Economics</button>'+
     '<button type="button" class="ovt-tab" data-ovt="mgmt">Management</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="sens">Sensitivity</button>'+
   '</div>';
   // Panes
   h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
@@ -492,6 +494,7 @@ function html(c){
   h += '<div class="ovt-pane" data-ovt="mix" hidden>'+mixBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="ue" hidden>'+ueBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="mgmt" hidden>'+bbbManagement.body(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="sens" hidden>'+bbbSensitivity.body(c)+'</div>';
   h += '</div>';
   return h;
 }
@@ -846,6 +849,7 @@ function showOvt(root, key){
   if (key === 'stores') requestAnimationFrame(function(){ wireSubtabs(root, 'stores'); });
   if (key === 'general') requestAnimationFrame(function(){ wireSubtabs(root, 'general'); });
   if (key === 'mix') requestAnimationFrame(buildMixChart);
+  if (key === 'sens') requestAnimationFrame(function(){ bbbSensitivity.init(root); });
   if (key === 'mgmt') requestAnimationFrame(function(){ bbbManagement.init(root); });
   if (key === 'ue') requestAnimationFrame(buildUeChart);
 }
@@ -863,6 +867,7 @@ function init(c){
   if (activeKey === 'stores') requestAnimationFrame(function(){ wireSubtabs(root, 'stores'); });
   if (activeKey === 'general') requestAnimationFrame(function(){ wireSubtabs(root, 'general'); });
   if (activeKey === 'mix') requestAnimationFrame(buildMixChart);
+  if (activeKey === 'sens') requestAnimationFrame(function(){ bbbSensitivity.init(root); });
   if (activeKey === 'mgmt') requestAnimationFrame(function(){ bbbManagement.init(root); });
   if (activeKey === 'ue') requestAnimationFrame(buildUeChart);
 }

@@ -414,23 +414,24 @@ var TECH_TIMELINE = [
 ];
 
 // ── Animated visuals (native CSS/SVG/Chart.js — no external assets) ──────────────
-// Moore's Law datapoints: [year, transistors, name, era('i'=CPU/Intel,'n'=NVIDIA GPU)].
+// Moore's Law datapoints:
+// [year, transistors, name, era('i'=CPU/Intel,'n'=NVIDIA GPU), process_nm, AI_TFLOPS_FP16(illustrative)].
 var MOORE = [
-  [1971, 2300, 'Intel 4004', 'i'], [1978, 29000, 'Intel 8086', 'i'],
-  [1985, 275000, 'Intel 386', 'i'], [1989, 1180000, 'Intel 486', 'i'],
-  [1993, 3100000, 'Intel Pentium', 'i'], [2000, 42000000, 'Pentium 4', 'i'],
-  [2006, 291000000, 'Intel Core 2 Duo', 'i'], [2008, 1400000000, 'NVIDIA GT200', 'n'],
-  [2012, 7100000000, 'NVIDIA Kepler GK110', 'n'], [2016, 15300000000, 'NVIDIA Pascal GP100', 'n'],
-  [2017, 21100000000, 'NVIDIA Volta GV100', 'n'], [2020, 54200000000, 'NVIDIA Ampere GA100', 'n'],
-  [2022, 80000000000, 'NVIDIA Hopper H100', 'n'], [2024, 208000000000, 'NVIDIA Blackwell B200', 'n'],
+  [1971, 2300, 'Intel 4004', 'i', 10000, null], [1978, 29000, 'Intel 8086', 'i', 3000, null],
+  [1985, 275000, 'Intel 386', 'i', 1500, null], [1989, 1180000, 'Intel 486', 'i', 1000, null],
+  [1993, 3100000, 'Intel Pentium', 'i', 800, null], [2000, 42000000, 'Pentium 4', 'i', 180, null],
+  [2006, 291000000, 'Intel Core 2 Duo', 'i', 65, null], [2008, 1400000000, 'NVIDIA GT200', 'n', 65, null],
+  [2012, 7100000000, 'NVIDIA Kepler GK110', 'n', 28, null], [2016, 15300000000, 'NVIDIA Pascal GP100', 'n', 16, 21],
+  [2017, 21100000000, 'NVIDIA Volta GV100', 'n', 12, 125], [2020, 54200000000, 'NVIDIA Ampere GA100', 'n', 7, 312],
+  [2022, 80000000000, 'NVIDIA Hopper H100', 'n', 4, 990], [2024, 208000000000, 'NVIDIA Blackwell B200', 'n', 4, 2250],
 ];
 // Flagship data-center GPU transistor counts (billions) by architecture.
 var GPU_GENS = [['Pascal · 2016','GP100',15.3], ['Volta · 2017','GV100',21.1],
   ['Ampere · 2020','GA100',54.2], ['Hopper · 2022','GH100',80], ['Blackwell · 2024','GB200',208]];
-// Transistor-shrink steps: [process node, transistor label, grid dimension].
-var TR_STEPS = [['90 nm','~50M transistors',7], ['45 nm','~250M transistors',10],
-  ['28 nm','~1.5B transistors',13], ['16 nm','~8B transistors',17], ['7 nm','~20B transistors',22],
-  ['4 nm','~80B transistors',28], ['3 nm','~150B+ transistors',34]];
+// Transistor-shrink steps: [process node, year reached, transistor label, grid dimension].
+var TR_STEPS = [['90 nm','2004','~50M transistors',7], ['45 nm','2008','~250M transistors',10],
+  ['28 nm','2011','~1.5B transistors',13], ['16 nm','2015','~8B transistors',17], ['7 nm','2018','~20B transistors',22],
+  ['4 nm','2022','~80B transistors',28], ['3 nm','2023','~150B+ transistors',34]];
 
 function cgGridCells(){ var h=''; for(var i=0;i<64;i++) h+='<span class="cg-cell"></span>'; return h; }
 function cpuGpuDemo(){
@@ -445,15 +446,17 @@ function cpuGpuDemo(){
     '</div></div>';
 }
 function mooreCard(){
-  return '<div class="ov-chart-card"><div class="ov-chart-t">Transistors per chip, 1971–2024 '+
-    '<span>(log scale · grey = CPUs, green = NVIDIA GPUs)</span></div>'+
-    '<div class="ov-chart-wrap ovs-tall"><canvas id="nvdaMooreChart"></canvas></div></div>';
+  return '<div class="ov-chart-card"><div class="ov-chart-t">Transistors, process node &amp; AI compute · 1971–2024 '+
+    '<span>(log scales · green = transistors/chip, orange = process node nm, blue = AI TFLOPS)</span></div>'+
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="nvdaMooreChart"></canvas></div>'+
+    '<div class="ov-asof" style="margin-top:10px">As the <b>process node shrinks</b> (orange, falling) more transistors fit per chip (green, rising) and <b>AI compute explodes</b> (blue) — Hopper and Blackwell deliver thousands of FP16 TFLOPS. AI TFLOPS are FP16 tensor figures, illustrative; the CPUs of the 1970s–2000s predate this metric.</div></div>';
 }
 function transistorShrink(){
   return '<div class="tr-shrink"><div class="tr-die" id="trDie"></div>'+
-    '<div class="tr-meta"><span class="tr-node" id="trNode">—</span>'+
+    '<div class="tr-meta"><div class="tr-nodeline"><span class="tr-node" id="trNode">—</span>'+
+    '<span class="tr-year" id="trYear"></span></div>'+
     '<span class="tr-count" id="trCount"></span>'+
-    '<span class="tr-hint">Smaller process node → more transistors, smaller and closer together. The dots are an illustration, not to scale.</span></div></div>';
+    '<span class="tr-hint">Smaller process node → more transistors, smaller and closer together. The year marks roughly when each node reached volume production. The dots are an illustration, not to scale.</span></div></div>';
 }
 function gpuGenBars(){
   var max=208;
@@ -555,12 +558,12 @@ function initTransistor(){
   if(_trTimer){ clearInterval(_trTimer); _trTimer=null; }
   var i=0;
   function step(){
-    var s=TR_STEPS[i % TR_STEPS.length], cols=s[2], n=cols*cols, g='';
+    var s=TR_STEPS[i % TR_STEPS.length], cols=s[3], n=cols*cols, g='';
     for(var k=0;k<n;k++) g+='<span class="tr-dot"></span>';
     die.style.gridTemplateColumns='repeat('+cols+',1fr)';
     die.innerHTML=g;
-    var node=document.getElementById('trNode'), cnt=document.getElementById('trCount');
-    if(node) node.textContent=s[0]; if(cnt) cnt.textContent=s[1];
+    var node=document.getElementById('trNode'), yr=document.getElementById('trYear'), cnt=document.getElementById('trCount');
+    if(node) node.textContent=s[0]; if(yr) yr.textContent='≈ '+s[1]; if(cnt) cnt.textContent=s[2];
     i++;
   }
   step(); _trTimer=setInterval(step, 1900);
@@ -574,22 +577,43 @@ function buildMooreChart(){
   var cv=document.getElementById('nvdaMooreChart');
   if(!cv || typeof Chart==='undefined' || !cv.offsetParent) return;
   if(_mooreChart){ _mooreChart.destroy(); _mooreChart=null; }
-  var pts=MOORE.map(function(d){ return { x:d[0], y:d[1], name:d[2], era:d[3] }; });
+  var tr=MOORE.map(function(d){ return { x:d[0], y:d[1], name:d[2], era:d[3] }; });
+  var nm=MOORE.filter(function(d){ return d[4]!=null; }).map(function(d){ return { x:d[0], y:d[4], name:d[2] }; });
+  var fl=MOORE.filter(function(d){ return d[5]!=null; }).map(function(d){ return { x:d[0], y:d[5], name:d[2] }; });
+  var P={ parsing:{xAxisKey:'x',yAxisKey:'y'}, tension:0.12, pointBorderColor:'#fff', pointBorderWidth:1 };
   _mooreChart=new Chart(cv.getContext('2d'), {
-    type:'line',
-    data:{ datasets:[{ label:'Transistors per chip', data:pts, parsing:{xAxisKey:'x',yAxisKey:'y'},
-      borderColor:'rgba(118,185,0,0.5)', borderWidth:2, tension:0.1, pointRadius:5, pointHoverRadius:7,
-      pointBackgroundColor:pts.map(function(p){ return p.era==='n' ? '#76B900' : '#9aa6b4'; }),
-      pointBorderColor:'#fff', pointBorderWidth:1 }] },
+    data:{ datasets:[
+      Object.assign({ type:'line', label:'Transistors / chip', data:tr, yAxisID:'y',
+        borderColor:'rgba(118,185,0,0.55)', borderWidth:2, pointRadius:4, pointHoverRadius:7,
+        pointBackgroundColor:tr.map(function(p){ return p.era==='n' ? '#76B900' : '#9aa6b4'; }) }, P),
+      Object.assign({ type:'line', label:'Process node (nm)', data:nm, yAxisID:'yNm',
+        borderColor:'#C0772C', borderWidth:2, borderDash:[5,3], pointRadius:3, pointHoverRadius:6,
+        pointBackgroundColor:'#C0772C' }, P),
+      Object.assign({ type:'line', label:'AI compute (FP16 TFLOPS)', data:fl, yAxisID:'yFl',
+        borderColor:'#2D6A9F', borderWidth:2, pointRadius:4, pointHoverRadius:7,
+        pointBackgroundColor:'#2D6A9F' }, P),
+    ] },
     options:{ responsive:true, maintainAspectRatio:false, animation:{ duration:1500, easing:'easeOutCubic' },
-      plugins:{ legend:{ display:false },
-        tooltip:{ callbacks:{ title:function(it){ return it[0].raw.name; },
-          label:function(ctx){ return ctx.raw.x+' · '+fmtTr(ctx.raw.y)+' transistors'; } } } },
+      interaction:{ mode:'nearest', intersect:false },
+      plugins:{ legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{size:11}, padding:10, color:'#5b6470' } },
+        tooltip:{ callbacks:{
+          title:function(it){ return it[0].raw.name+' ('+it[0].raw.x+')'; },
+          label:function(ctx){ var v=ctx.raw.y, id=ctx.dataset.yAxisID;
+            if(id==='yNm') return 'Process node: '+v+' nm';
+            if(id==='yFl') return 'AI compute: '+(v>=1000?(v/1000).toFixed(2)+' PFLOPS':v+' TFLOPS')+' (FP16)';
+            return 'Transistors: '+fmtTr(v); } } } },
       scales:{
         x:{ type:'linear', min:1970, max:2026, grid:{ display:false },
           ticks:{ color:'#8A93A0', font:{size:10}, stepSize:10, callback:function(v){ return v; } } },
-        y:{ type:'logarithmic', grid:{ color:'rgba(0,0,0,.05)' },
-          ticks:{ color:'#8A93A0', font:{size:10}, callback:function(v){ return fmtTr(v); } } }
+        y:{ type:'logarithmic', position:'left', grid:{ color:'rgba(0,0,0,.05)' },
+          title:{ display:true, text:'Transistors / chip', color:'#5a9e16', font:{size:10,weight:'600'} },
+          ticks:{ color:'#8A93A0', font:{size:9}, callback:function(v){ return fmtTr(v); } } },
+        yNm:{ type:'logarithmic', position:'right', grid:{ drawOnChartArea:false }, reverse:false,
+          title:{ display:true, text:'Process node (nm)', color:'#C0772C', font:{size:10,weight:'600'} },
+          ticks:{ color:'#C0772C', font:{size:9}, callback:function(v){ return v+'nm'; } } },
+        yFl:{ type:'logarithmic', position:'right', grid:{ drawOnChartArea:false },
+          title:{ display:true, text:'AI TFLOPS', color:'#2D6A9F', font:{size:10,weight:'600'} },
+          ticks:{ color:'#2D6A9F', font:{size:9}, callback:function(v){ return v>=1000?(v/1000)+'P':v; } } }
       }
     }
   });

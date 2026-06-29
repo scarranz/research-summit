@@ -196,6 +196,9 @@
 .tr-dot { aspect-ratio: 1; border-radius: 50%; background: #76B900; animation: trDotIn .55s ease both; }
 @keyframes trDotIn { from { opacity: 0; transform: scale(.25); } to { opacity: 1; transform: scale(1); } }
 .tr-meta { display: flex; flex-direction: column; gap: 3px; }
+.tr-nodeline { display: flex; align-items: baseline; gap: 10px; }
+.tr-year { font-size: 13px; font-weight: 700; color: #1E2733; background: #dff0c2;
+  border-radius: 6px; padding: 2px 9px; }
 .tr-node { font-size: 28px; font-weight: 800; color: var(--navy); line-height: 1; }
 .tr-count { font-size: 15px; font-weight: 700; color: #5a9e16; }
 .tr-hint { font-size: 12px; color: var(--mu); margin-top: 6px; max-width: 380px; line-height: 1.5; }

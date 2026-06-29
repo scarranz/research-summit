@@ -183,9 +183,57 @@ function mixBar(rows, total){
   return bar+legend;
 }
 
+// Quarterly recast revenue by market platform ($M). Source: NVIDIA Q1 FY2027 press release.
+// FY ends late January, so 1Q25 = quarter ended ~Apr 2024.
+var SEGQ_LABELS = ['1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27'];
+var SEGQ = {
+  hyper: [10690,10622,13390,19094,17599,23883,30340,33814,37869],
+  acie:  [11873,15650,17381,16486,21513,17213,20875,28500,37377],
+  edge:  [ 3481, 3768, 4311, 3751, 4950, 5647, 5791, 5813, 6369],
+};
+var _segChart = null;
+// Stacked quarterly bar: the two Data Center sub-markets share a green family so they
+// read as one Data Center block; Edge Computing is a contrasting blue.
+function buildSegChart(){
+  var cv = document.getElementById('nvdaSegChart');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_segChart) { _segChart.destroy(); _segChart = null; }
+  function toB(a){ return a.map(function(v){ return +(v/1000).toFixed(2); }); }
+  _segChart = new Chart(cv.getContext('2d'), {
+    type:'bar',
+    data:{ labels: SEGQ_LABELS, datasets:[
+      { label:'Data Center — Hyperscale', data:toB(SEGQ.hyper), backgroundColor:'#1F8A70', stack:'rev', maxBarThickness:46 },
+      { label:'Data Center — ACIE',       data:toB(SEGQ.acie),  backgroundColor:'#7fd0b8', stack:'rev', maxBarThickness:46 },
+      { label:'Edge Computing',           data:toB(SEGQ.edge),  backgroundColor:'#2D6A9F', stack:'rev', maxBarThickness:46 },
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:false,
+      plugins:{
+        legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{size:11}, padding:10, color:'#5b6470' } },
+        tooltip:{ mode:'index', intersect:false, callbacks:{
+          label:function(ctx){ return ctx.dataset.label+': $'+ctx.parsed.y.toFixed(1)+'B'; },
+          footer:function(items){ var t=0; items.forEach(function(i){ t+=i.parsed.y; }); return 'Total: $'+t.toFixed(1)+'B'; }
+        } }
+      },
+      scales:{
+        y:{ stacked:true, beginAtZero:true, grid:{ color:'rgba(0,0,0,.05)' },
+          ticks:{ color:'#8A93A0', font:{size:10}, callback:function(v){ return '$'+v+'B'; } } },
+        x:{ stacked:true, grid:{ display:false },
+          ticks:{ color:'#8A93A0', font:{size:10}, maxRotation:0, autoSkip:false } }
+      }
+    }
+  });
+}
+
 function segmentsBody(){
   var h = '';
   h += '<p class="ov-lede">NVIDIA reports revenue by <b>market platform</b>. In <b>Q1 FY2027</b> (reported May 2026) it overhauled that framework to reflect where growth now comes from — re-cutting Data Center by <b>customer type</b> (Hyperscale vs everyone else) and folding the old Gaming / Pro Viz / Auto platforms into a new <b>Edge Computing</b> platform. Only FY2025–FY2026 were recast.</p>';
+
+  // Quarterly stacked bar (hero visual)
+  h += sec('Quarterly revenue by segment ($B)',
+    '<div class="ov-chart-card"><div class="ov-chart-t">NVIDIA quarterly revenue by market platform <span>(stacked · two greens = Data Center sub-markets, blue = Edge Computing · recast)</span></div>'+
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="nvdaSegChart"></canvas></div></div>'+
+    '<div class="ov-asof">The two green stacks are the Data Center sub-markets (Hyperscale + ACIE); blue is Edge Computing. Recast "Revenue by Market Platform"; source: NVIDIA Q1 FY2027 release. Fiscal year ends late January (1Q25 = quarter ended ~Apr 2024).</div>');
 
   // FY2026 mix (new framework)
   h += sec('FY2026 revenue mix (new framework)',
@@ -357,6 +405,7 @@ function showOvt(root, key){
   root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt') === key); });
   root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt') !== key); });
   if (key === 'industry') requestAnimationFrame(function(){ semiIndustry.init(); });
+  if (key === 'segments') requestAnimationFrame(function(){ buildSegChart(); });
 }
 
 function init(){

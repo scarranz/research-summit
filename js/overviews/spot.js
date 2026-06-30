@@ -120,32 +120,48 @@ function timelineBlock(){
   }).join('')+'</div>';
 }
 
+// BEFORE pane — the music-only model.
+function beforePane(){
+  return '<div class="spot-state" data-state="before">'+
+    '<div class="spot-state-h">Almost every euro was <b>music</b> — and ~70% of it went straight to the record labels.</div>'+
+    euroBar()+
+    '<div class="spot-bigstat is-low"><span class="spot-bigstat-v">≈ 25%</span><span class="spot-bigstat-l">consolidated gross margin · stuck in the mid-20s% for a decade</span></div>'+
+  '</div>';
+}
+// AFTER pane — the three-format platform.
+function afterPane(){
+  return '<div class="spot-state" data-state="after" hidden>'+
+    '<div class="spot-state-h">Revenue now spreads across <b>three formats</b>. Podcasts &amp; audiobooks don’t pay the label toll, so they lift the blend.</div>'+
+    formatBars()+
+    '<div class="spot-bigstat is-high"><span class="spot-bigstat-v">33.0%</span><span class="spot-bigstat-l">consolidated gross margin · Q1 2026 record (+133 bps Y/Y)</span></div>'+
+  '</div>';
+}
+
 function productMixBody(c){
   var h = '';
   h += '<p class="ov-lede">'+PM_LEDE+'</p>';
 
-  // 1 — Hero chart (the breakout)
-  h += sec('The breakout — gross margin, 2019 → today',
-    '<div class="ov-chart-card"><div class="ov-chart-t">Gross margin <span>(%, reported · consolidated vs. segment)</span></div>'+
-      '<div class="ov-chart-wrap ovt-mix-wrap"><canvas id="spotGmChart"></canvas></div>'+
-      '<div class="ovt-legend">'+
-        '<span class="ovt-lg"><i style="background:#1DB954"></i>Consolidated</span>'+
-        '<span class="ovt-lg"><i style="background:#11833b"></i>Premium</span>'+
-        '<span class="ovt-lg"><i style="background:#9AA7B4"></i>Ad-Supported</span>'+
-      '</div>'+
-      '<div class="ov-chart-t" style="margin-top:8px;font-weight:600;color:var(--mu)"><span>Flat in the mid-20s% for a decade → dipped in 2022 on podcast spend → broke out past 30% from 2024.</span></div>'+
-    '</div>');
+  // ── EXPLANATION first ──
+  // 1 — Before / After toggle + swappable panes
+  h += sec('How the model changed',
+    '<div class="spot-toggle">'+
+      '<button type="button" class="spot-tg active" data-state="before">Before</button>'+
+      '<button type="button" class="spot-tg" data-state="after">After</button>'+
+    '</div>'+
+    beforePane()+afterPane());
 
-  // 2 — The mechanism (the €1 bar)
-  h += sec('Why music caps the margin', euroBar());
-
-  // 3 — Format toll bars
-  h += sec('The toll, by format', formatBars());
-
-  // 4 — The pivot timeline
+  // 2 — The pivot timeline (what happened in between)
   h += sec('How Spotify changed the mix', timelineBlock());
 
-  // 5 — Why it matters (stat cards)
+  // ── RESULT last ──
+  // 3 — Gross margin BAR chart, full width, at the bottom
+  h += sec('The result — gross margin by year',
+    '<div class="ov-chart-card"><div class="ov-chart-t">Consolidated gross margin <span>(%, reported · green = post-mix breakout)</span></div>'+
+      '<div class="ov-chart-wrap ovt-mix-wrap"><canvas id="spotGmChart"></canvas></div>'+
+    '</div>'+
+    '<div class="ov-statline" style="margin-top:10px">Flat in the mid-20s% for a decade → dipped in 2022 on podcast spend → broke out past 30% from 2024 → <b>33.0%</b> record in Q1’26.</div>');
+
+  // 4 — Why it matters (stat cards)
   h += sec('Why it matters', kpis(WHY_STATS));
 
   h += '<div class="ov-foot">'+esc(PM_SOURCES)+'</div>';
@@ -175,21 +191,34 @@ function buildGmChart(){
   if(!cv || typeof Chart==='undefined' || !cv.offsetParent) return; // not visible yet
   destroy(id);
   var pf=function(v){ return v+'%'; };
+  // Highlight the post-mix breakout (>=30%) in brand green; earlier years muted grey.
+  var cols=GM_CONS.map(function(v){ return v>=30 ? '#1DB954' : '#C9CFD8'; });
+  // Lightweight value-label plugin (no external dep) — prints the % above each bar.
+  var valLabels={ id:'spotGmVals', afterDatasetsDraw:function(chart){
+    var ctx=chart.ctx, meta=chart.getDatasetMeta(0);
+    meta.data.forEach(function(bar,i){ var v=GM_CONS[i]; if(v==null) return;
+      ctx.save(); ctx.fillStyle=(v>=30?'#11833b':'#8A93A0'); ctx.font='700 12px Inter, sans-serif';
+      ctx.textAlign='center'; ctx.fillText((v%1?v.toFixed(1):v)+'%', bar.x, bar.y-7); ctx.restore(); });
+  } };
   _charts[id]=new Chart(cv.getContext('2d'),{
-    type:'line',
+    type:'bar',
     data:{ labels:GM_LABELS, datasets:[
-      { label:'Consolidated', data:GM_CONS, borderColor:'#1DB954', backgroundColor:'rgba(29,185,84,0.10)', borderWidth:3, tension:.3, pointRadius:4, pointBackgroundColor:'#fff', pointBorderColor:'#1DB954', pointBorderWidth:2, fill:true },
-      { label:'Premium', data:GM_PREM, borderColor:'#11833b', backgroundColor:'transparent', borderWidth:2, borderDash:[5,4], tension:.3, pointRadius:3, pointBackgroundColor:'#fff', pointBorderColor:'#11833b', pointBorderWidth:2, spanGaps:false, fill:false },
-      { label:'Ad-Supported', data:GM_ADS, borderColor:'#9AA7B4', backgroundColor:'transparent', borderWidth:2, borderDash:[2,3], tension:.3, pointRadius:3, pointBackgroundColor:'#fff', pointBorderColor:'#9AA7B4', pointBorderWidth:2, spanGaps:false, fill:false },
+      { label:'Gross margin', data:GM_CONS, backgroundColor:cols, borderRadius:5, maxBarThickness:60 },
     ] },
     options:{ responsive:true, maintainAspectRatio:false, animation:false,
-      interaction:{ mode:'index', intersect:false },
+      layout:{ padding:{ top:18 } },
       plugins:{ legend:{ display:false },
-        tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label+': '+(ctx.parsed.y==null?'n/a':ctx.parsed.y+'%'); } } } },
+        tooltip:{ callbacks:{ label:function(ctx){ return 'Gross margin: '+ctx.parsed.y+'%'; } } } },
       scales:{
         y:{ beginAtZero:true, suggestedMax:40, grid:{ color:'#EEF2F7' }, ticks:{ color:'#8A93A0', font:{ size:10 }, callback:pf } },
-        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:11 } } } } }
-  });
+        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:11 } } } },
+    plugins:[valLabels] });
+}
+
+// Before / After toggle inside the Product Mix pane.
+function showState(root, state){
+  root.querySelectorAll('.spot-tg').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-state')===state); });
+  root.querySelectorAll('.spot-state').forEach(function(p){ p.hidden = (p.getAttribute('data-state')!==state); });
 }
 
 function showOvt(root, key){
@@ -203,6 +232,9 @@ function init(c){
   if (!root) return;
   root.querySelectorAll('.ovt-tab').forEach(function(btn){
     btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };
+  });
+  root.querySelectorAll('.spot-tg').forEach(function(btn){
+    btn.onclick = function(){ showState(root, btn.getAttribute('data-state')); };
   });
   var active = root.querySelector('.ovt-tab.active');
   if (active && active.getAttribute('data-ovt') === 'mix') requestAnimationFrame(buildGmChart);

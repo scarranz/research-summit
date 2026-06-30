@@ -162,6 +162,24 @@
 .nv-seg-btn[disabled] { opacity: .45; cursor: default; }
 .nv-seg-btn[disabled]:hover { color: var(--mu); background: none; }
 
+/* Valuation calculator — sliders + implied-price result. */
+.nv-cal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 22px; align-items: end; margin: 2px 0 10px; }
+.nv-cal-sl-h { font: 600 12px 'Inter', sans-serif; color: var(--mu); margin-bottom: 7px; display: flex; justify-content: space-between; align-items: baseline; }
+.nv-cal-sl-h b { font-size: 15px; color: var(--navy); font-variant-numeric: tabular-nums; }
+.nv-cal-grid input[type=range] { height: 4px; }
+.nv-cal-px { display: flex; flex-direction: column; gap: 7px; }
+.nv-cal-lbl { font: 600 12px 'Inter', sans-serif; color: var(--mu); }
+.nv-cal-result {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px;
+  background: var(--brand-soft); border: 1px solid #d7e8b4; border-radius: 12px;
+  padding: 12px 16px; margin: 4px 0 2px;
+}
+.nv-cal-res-l { font: 700 11px 'Inter', sans-serif; text-transform: uppercase; letter-spacing: .05em; color: #5a7a16; }
+.nv-cal-res-v { font: 700 30px 'Inter', sans-serif; color: var(--navy); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.nv-cal-res-s { font: 500 13px 'Inter', sans-serif; color: var(--navy); margin-left: auto; }
+.nv-cal-res-s b { font-variant-numeric: tabular-nums; }
+@media (max-width: 720px){ .nv-cal-grid { grid-template-columns: 1fr; } .nv-cal-res-s { margin-left: 0; width: 100%; } }
+
 /* Technology tab — "what NVIDIA sells" layered stack. */
 .tech-stack { display: flex; flex-direction: column; gap: 7px; margin: 4px 0 6px; }
 .tech-layer {

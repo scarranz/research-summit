@@ -480,6 +480,10 @@
 .ov-chart-wrap.ovt-vs-wrap { height: 380px; }
 .ov-chart-wrap.ovt-mix-wrap { height: 380px; }
 .ov-chart-wrap.ovt-ue-wrap { height: 340px; }
+.ov-chart-wrap.ovt-users-wrap { height: 360px; }
+.ov-chart-wrap.ovt-region-wrap { height: 260px; }
+.ov-chart-wrap.ovt-arpu-wrap { height: 320px; }
+.ov-chart-wrap.ovt-admargin-wrap { height: 320px; }
 
 /* ── Cost to open a store ── */
 .ue-cost { display: flex; gap: 20px; align-items: center; border: 1px solid var(--bdr); border-left: 3px solid var(--brand); border-radius: 10px; padding: 18px 22px; background: var(--brand-soft); margin: 2px 0 6px; }
@@ -1530,6 +1534,16 @@
 .ov-sofi .ovg-tab.active { color: var(--brand); background: var(--brand-soft); border-color: var(--brand); }
 .ovg-pane[hidden] { display: none; }
 
+/* Spotify — nested General sub-tabs (MAU / ARPU) */
+.ov-spot .ovg-tabs { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 22px; }
+.ov-spot .ovg-tab {
+  border: 1px solid var(--bdr); background: var(--w); border-radius: 20px; color: var(--mu);
+  font: 600 12.5px 'Inter', sans-serif; padding: 7px 15px; cursor: pointer;
+  transition: color .15s, background .15s, border-color .15s;
+}
+.ov-spot .ovg-tab:hover { color: var(--navy); border-color: var(--brand); }
+.ov-spot .ovg-tab.active { color: #11833b; background: rgba(29,185,84,.10); border-color: var(--brand); }
+
 /* ── Management → nested sub-tabs (Organization Chart / Insider Activity) ── */
 .ov-sofi .ovm-tabs { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 22px; }
 .ov-sofi .ovm-tab {
@@ -1629,3 +1643,95 @@ img.org-photo { object-fit: cover; }
 .spot-bigstat.is-low  .spot-bigstat-v { color: #C0392B; }
 .spot-bigstat.is-high .spot-bigstat-v { color: #11833b; }
 .spot-bigstat-l { font-size: 12.5px; font-weight: 600; color: var(--navy); }
+
+/* ═══ Spotify · vs Netflix — diverging comparison bars ═══ */
+.spot-vs { border: 1px solid var(--bdr); border-radius: 14px; padding: 16px 18px; background: var(--w); }
+.spot-vs-head { display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; margin-bottom: 12px; }
+.spot-vs-head .s { color: #11833b; }
+.spot-vs-head .n { color: #E50914; }
+.spot-vs-row { display: grid; grid-template-columns: 72px 1fr 72px; align-items: center; gap: 10px; }
+.spot-vs-v { font-size: 15px; font-weight: 800; letter-spacing: -.01em; }
+.spot-vs-v.s { color: #11833b; text-align: right; }
+.spot-vs-v.n { color: #E50914; text-align: left; }
+.spot-vs-track { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+.spot-vs-half { height: 16px; display: flex; }
+.spot-vs-half.l { justify-content: flex-end; }
+.spot-vs-half.r { justify-content: flex-start; }
+.spot-vs-fill { height: 100%; border-radius: 5px; display: block; min-width: 4px; }
+.spot-vs-fill.s { background: #1DB954; }
+.spot-vs-fill.n { background: #E50914; }
+.spot-vs-mid { text-align: center; min-width: 116px; font-size: 11.5px; font-weight: 700; color: var(--navy); line-height: 1.25; }
+.spot-vs-mid small { display: block; font-weight: 500; color: var(--mu); font-size: 10px; }
+.spot-vs-note { font-size: 11px; color: var(--mu); text-align: center; margin: 3px 0 13px; line-height: 1.4; }
+.spot-vs-note:last-child { margin-bottom: 0; }
+
+/* Two business-model cards */
+.spot-models { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.spot-model { border: 1px solid var(--bdr); border-radius: 12px; padding: 16px 18px; background: var(--w); }
+.spot-model-h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
+.spot-model-co { font-size: 16px; font-weight: 800; }
+.spot-model-tag { font-size: 10.5px; font-weight: 600; color: var(--mu); letter-spacing: .03em; }
+.spot-model-t { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 10px; }
+.spot-model-list { margin: 0; padding-left: 18px; }
+.spot-model-list li { font-size: 12.5px; color: var(--navy); line-height: 1.5; margin-bottom: 5px; }
+
+/* ═══ Spotify · Investor Day 2026 ═══ */
+.spot-hero { border-radius: 16px; padding: 26px 28px; margin-bottom: 22px; color: #fff;
+  background: linear-gradient(120deg, #1DB954 0%, #11833b 60%, #0a5c2a 100%); box-shadow: 0 6px 20px rgba(17,131,59,.22); }
+.spot-hero-badge { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  background: rgba(255,255,255,.18); padding: 4px 12px; border-radius: 20px; margin-bottom: 12px; }
+.spot-hero-t { font-size: 28px; font-weight: 900; letter-spacing: -.02em; line-height: 1.12; }
+.spot-hero-d { font-size: 12.5px; font-weight: 500; opacity: .92; margin-top: 10px; }
+
+/* 2030 target "from → to" cards */
+.spot-tgts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.spot-tgt { border: 1px solid var(--bdr); border-radius: 12px; padding: 14px 16px; background: var(--w); }
+.spot-tgt-l { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--mu); margin-bottom: 10px; }
+.spot-tgt-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.spot-tgt-now { font-size: 16px; font-weight: 700; color: #9AA3AF; }
+.spot-tgt-arr { font-size: 16px; font-weight: 800; color: #1DB954; }
+.spot-tgt-goal { font-size: 22px; font-weight: 900; letter-spacing: -.02em; color: #11833b; }
+.spot-tgt-d { font-size: 11px; color: var(--mu); margin-top: 8px; line-height: 1.4; }
+
+/* North Star band */
+.spot-north { border-radius: 14px; padding: 18px 20px; margin: 22px 0; border: 1px dashed rgba(29,185,84,.5); background: rgba(29,185,84,.06); }
+.spot-north-h { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: #11833b; margin-bottom: 14px; }
+.spot-north-h small { display: inline; text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--mu); margin-left: 8px; }
+.spot-north-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.spot-north-cell { text-align: center; }
+.spot-north-v { font-size: 32px; font-weight: 900; letter-spacing: -.02em; color: #11833b; line-height: 1; }
+.spot-north-l { font-size: 11.5px; font-weight: 600; color: var(--navy); margin-top: 6px; }
+
+/* Strategic pillars */
+.spot-pillars { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.spot-pillar { border: 1px solid var(--bdr); border-radius: 12px; padding: 16px; background: var(--w); }
+.spot-pillar-ic { font-size: 24px; line-height: 1; margin-bottom: 10px; }
+.spot-pillar-t { font-size: 13.5px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+.spot-pillar-d { font-size: 12px; color: var(--mu); line-height: 1.5; }
+
+/* What's new — announcement cards */
+.spot-news { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+.spot-newscard { border: 1px solid var(--bdr); border-radius: 12px; padding: 15px 16px; background: var(--w); position: relative; }
+.spot-news-tag { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+  color: #11833b; background: rgba(29,185,84,.12); padding: 3px 9px; border-radius: 14px; margin-bottom: 9px; }
+.spot-news-t { font-size: 13.5px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+.spot-news-d { font-size: 12px; color: var(--mu); line-height: 1.5; }
+
+/* Pull-quotes */
+.spot-quotes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.spot-quote { margin: 0; border-left: 3px solid #1DB954; background: var(--surface, #F1F4F7); border-radius: 0 10px 10px 0;
+  padding: 14px 16px; font-size: 13.5px; font-style: italic; color: var(--navy); line-height: 1.5; }
+.spot-quote cite { display: block; margin-top: 10px; font-style: normal; font-size: 11.5px; font-weight: 700; color: #11833b; }
+
+/* Advertising — SAX panel & partner chips */
+.spot-sax { border: 1px solid var(--bdr); border-radius: 12px; padding: 16px 18px; background: rgba(29,185,84,.05); margin-bottom: 16px; }
+.spot-sax-t { font-size: 13.5px; font-weight: 700; color: #11833b; margin-bottom: 6px; }
+.spot-sax-d { font-size: 12.5px; color: var(--navy); line-height: 1.55; }
+.spot-chipgrp { margin-bottom: 13px; }
+.spot-chipgrp-l { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--mu); margin-bottom: 7px; }
+.spot-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.spot-chip { font-size: 12px; font-weight: 600; color: var(--navy); background: var(--w); border: 1px solid var(--bdr); border-radius: 20px; padding: 5px 12px; }
+
+@media (max-width: 720px) {
+  .spot-models, .spot-tgts, .spot-north-row { grid-template-columns: 1fr; }
+}

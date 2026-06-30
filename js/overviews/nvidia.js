@@ -931,28 +931,43 @@ function initConsensus(){
       }
     }));
   }
-  // ── Chart C: guidance-vs-actual dumbbell (bar from guided→actual, dot at each end) ──
+  // ── Chart C: reported actual (bar) vs guidance midpoint (dot) with the ±2% range ──
   var cvC = document.getElementById('nvdaConsChart');
   if (cvC && typeof Chart !== 'undefined' && cvC.offsetParent){
     var labels = GUIDE.map(function(g){ return g[0]; });
     var guided = GUIDE.map(function(g){ return g[1]; });
     var actual = GUIDE.map(function(g){ return g[2]; });
+    // NVIDIA guides revenue to a midpoint "± 2%"; draw that band as a capped whisker
+    // around each guidance dot so you can see the range they actually committed to.
+    var guideRange = { id:'guideRange', afterDatasetsDraw:function(chart){
+      var x=chart.scales.x, y=chart.scales.y, ctx=chart.ctx; if(!x||!y) return;
+      ctx.save(); ctx.strokeStyle='#5b6470'; ctx.lineWidth=1.5;
+      guided.forEach(function(g,i){
+        var cx=x.getPixelForValue(i), yHi=y.getPixelForValue(g*1.02), yLo=y.getPixelForValue(g*0.98), cap=5;
+        ctx.beginPath();
+        ctx.moveTo(cx,yHi); ctx.lineTo(cx,yLo);
+        ctx.moveTo(cx-cap,yHi); ctx.lineTo(cx+cap,yHi);
+        ctx.moveTo(cx-cap,yLo); ctx.lineTo(cx+cap,yLo);
+        ctx.stroke();
+      });
+      ctx.restore();
+    }};
     _consCharts.push(new Chart(cvC.getContext('2d'), {
       type:'bar',
       data:{ labels:labels, datasets:[
-        { label:'Beat (guidance → actual)', type:'bar', data:GUIDE.map(function(g){ return [g[1], g[2]]; }),
-          backgroundColor:'rgba(31,138,112,0.22)', barThickness:5, order:3 },
-        { label:'Guidance (midpoint)', type:'line', data:guided, showLine:false, pointRadius:5, pointHoverRadius:7,
-          pointBackgroundColor:'#9aa6b4', pointBorderColor:'#9aa6b4', order:1 },
-        { label:'Reported actual', type:'line', data:actual, showLine:false, pointRadius:5, pointHoverRadius:7,
-          pointBackgroundColor:'#1F8A70', pointBorderColor:'#1F8A70', order:1 },
+        { label:'Reported actual', type:'bar', data:actual, backgroundColor:'#1F8A70', maxBarThickness:30, order:3 },
+        { label:'Guidance (midpoint ± 2%)', type:'line', data:guided, showLine:false, pointRadius:4.5, pointHoverRadius:7,
+          pointBackgroundColor:'#5b6470', pointBorderColor:'#fff', pointBorderWidth:1.5, order:1 },
       ]},
       options:{ responsive:true, maintainAspectRatio:false, animation:false,
         plugins:{
-          legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{size:11}, padding:8, color:'#5b6470',
-            filter:function(i){ return i.text!=='Beat (guidance → actual)'; } } },
+          legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{size:11}, padding:8, color:'#5b6470' } },
           tooltip:{ mode:'index', intersect:false, callbacks:{
-            label:function(ctx){ if(ctx.dataset.type==='bar') return null; return ctx.dataset.label+': $'+ctx.parsed.y.toFixed(1)+'B'; },
+            label:function(ctx){
+              if(ctx.dataset.type==='bar') return 'Reported: $'+ctx.parsed.y.toFixed(1)+'B';
+              var g=guided[ctx.dataIndex];
+              return 'Guidance: $'+g.toFixed(1)+'B  (± 2%: $'+(g*0.98).toFixed(1)+'–$'+(g*1.02).toFixed(1)+'B)';
+            },
             afterBody:function(items){ var i=items[0].dataIndex, g=guided[i], a=actual[i];
               return 'Beat: +$'+(a-g).toFixed(2)+'B (+'+((a/g-1)*100).toFixed(1)+'%)'; } } }
         },
@@ -960,7 +975,8 @@ function initConsensus(){
           y:{ beginAtZero:true, grid:{ color:'rgba(0,0,0,.05)' }, ticks:{ color:'#8A93A0', font:{size:10}, callback:function(v){ return '$'+v+'B'; } } },
           x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{size:9}, maxRotation:0, autoSkip:false } }
         }
-      }
+      },
+      plugins:[guideRange]
     }));
   }
 }
@@ -991,7 +1007,7 @@ function consensusBody(){
     '<div class="ov-kpi"><div class="ov-kpi-l">Next guide · Q2 FY27</div><div class="ov-kpi-v">$91.0B</div><div class="ov-kpi-d muted">reports ~Aug 2026</div></div>'+
     '</div>';
   h += sec('Guidance vs. reported revenue ($B)',
-    '<div class="ov-chart-card"><div class="ov-chart-t">Each quarter: guided midpoint → reported actual <span>(grey dot = guidance · green dot = actual · bar = the beat)</span></div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Reported revenue vs. the guidance NVIDIA gave <span>(green bar = reported actual · dot = guided midpoint · whisker = the ± 2% guided range)</span></div>'+
     '<div class="ov-chart-wrap ovs-tall"><canvas id="nvdaConsChart"></canvas></div></div>');
   var rows = GUIDE.map(function(g,i){
     return '<tr><td class="ov-td-name">'+esc(g[0])+'</td><td>$'+g[1].toFixed(1)+'B</td><td>$'+g[2].toFixed(1)+'B</td>'+

@@ -9,8 +9,8 @@
 //                  operating segments, guidance and per-segment milestones.
 //   3 Technology — what NVIDIA sells (GPUs, CUDA, Omniverse, networking) + product timeline. [WIP]
 //   4 Management — leadership.
-//   5 Consensus  — how NVIDIA has beaten consensus every quarter/year since FY2023. [WIP]
-//   6 Valuation  — multiples + the Summit DCF forward view.
+//   5 Consensus  — guidance-vs-actual beat track record (13 straight beats) + forward consensus.
+//   6 Valuation  — interactive forward multiples on consensus + the Summit DCF forward view.
 //   7 Industry Analysis — the shared semiconductor supply-chain map, pre-drilled to NVDA.
 //
 // Figures: NVIDIA reports in US dollars on a fiscal year ending the last Sunday in January
@@ -830,16 +830,89 @@ function mgClearValues(){
 // ════════════════════════════════════════════════════════════════════════════════
 // 5 — CONSENSUS  (work in progress)
 // ════════════════════════════════════════════════════════════════════════════════
-function consensusBody(){
-  return wipNote({
-    lead: 'NVIDIA has out-run Street estimates almost every quarter since the AI cycle began in FY2023 — revenue and EPS have been repeatedly revised up and still beaten (e.g. Q1 FY2027 guided $78.0B → delivered $81.6B). This tab will make that pattern visual.',
-    items: [
-      'A chart of <b>consensus revenue/EPS estimate vs actual</b> by quarter since FY2023, with the beat clearly marked.',
-      'How the <b>full-year estimate was revised upward</b> over time as each quarter printed.',
-      'The <b>guidance-vs-actual</b> track record (NVIDIA guides one quarter ahead and has repeatedly exceeded it).',
-      'Magnitude of beats over time — are they shrinking as the base grows?',
-    ],
+// NVIDIA gives a single revenue outlook one quarter ahead ("$X.0B, ± 2%"); each row
+// pairs that guidance MIDPOINT with the revenue actually reported. $B.
+// Guidance = NVIDIA quarterly outlook (press releases); actuals = reported revenue.
+var GUIDE = [
+  ['Q1 FY24',  6.50,  7.19], ['Q2 FY24', 11.00, 13.51], ['Q3 FY24', 16.00, 18.12], ['Q4 FY24', 20.00, 22.10],
+  ['Q1 FY25', 24.00, 26.04], ['Q2 FY25', 28.00, 30.04], ['Q3 FY25', 32.50, 35.08], ['Q4 FY25', 37.50, 39.33],
+  ['Q1 FY26', 43.00, 44.06], ['Q2 FY26', 45.00, 46.74], ['Q3 FY26', 54.00, 57.01], ['Q4 FY26', 65.00, 68.13],
+  ['Q1 FY27', 78.00, 81.62],
+];
+var NEXT_GUIDE = ['Q2 FY27', 91.00]; // guided; reports ~Aug 2026.
+
+// Forward consensus — Bloomberg sell-side aggregate (NVDA_BBG.xlsx), quarterly
+// estimates summed to fiscal years. rev/ebitda/ni/fcf in $B; adj diluted EPS in $.
+var CONS = [
+  { fy:'FY2027E', rev:393.2, eps:9.02,  ebitda:267.4, ni:217.7, fcf:208.3, revYoY:'+82%' },
+  { fy:'FY2028E', rev:559.8, eps:12.85, ebitda:382.4, ni:308.7, fcf:301.3, revYoY:'+42%' },
+  { fy:'FY2029E', rev:684.7, eps:15.77, ebitda:477.2, ni:376.6, fcf:365.8, revYoY:'+22%' },
+];
+
+var _consChart = null;
+// Grouped bars: guided midpoint (grey) vs reported actual (green), per quarter.
+function buildConsensusChart(){
+  var cv = document.getElementById('nvdaConsChart');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_consChart) { _consChart.destroy(); _consChart = null; }
+  var labels = GUIDE.map(function(g){ return g[0]; });
+  var guided = GUIDE.map(function(g){ return g[1]; });
+  var actual = GUIDE.map(function(g){ return g[2]; });
+  _consChart = new Chart(cv.getContext('2d'), {
+    type:'bar',
+    data:{ labels:labels, datasets:[
+      { label:'Guidance (midpoint)', data:guided, backgroundColor:'#c3ccd6', maxBarThickness:20 },
+      { label:'Reported actual',     data:actual, backgroundColor:'#1F8A70', maxBarThickness:20 },
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:false,
+      plugins:{
+        legend:{ display:true, position:'bottom', labels:{ boxWidth:10, font:{size:11}, padding:8, color:'#5b6470' } },
+        tooltip:{ mode:'index', intersect:false, callbacks:{
+          label:function(ctx){ return ctx.dataset.label+': $'+ctx.parsed.y.toFixed(1)+'B'; },
+          afterBody:function(items){ var i=items[0].dataIndex, g=guided[i], a=actual[i];
+            return 'Beat: +$'+(a-g).toFixed(2)+'B (+'+((a/g-1)*100).toFixed(1)+'%)'; }
+        } }
+      },
+      scales:{
+        y:{ beginAtZero:true, grid:{ color:'rgba(0,0,0,.05)' },
+          ticks:{ color:'#8A93A0', font:{size:10}, callback:function(v){ return '$'+v+'B'; } } },
+        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{size:9}, maxRotation:0, autoSkip:false } }
+      }
+    }
   });
+}
+
+function consensusBody(){
+  var beats = GUIDE.map(function(g){ return (g[2]/g[1]-1)*100; });
+  var avgBeat = beats.reduce(function(a,b){ return a+b; },0)/beats.length;
+  var h = '';
+  h += '<p class="ov-lede">NVIDIA guides <b>one quarter ahead</b> — a single revenue number "± 2%" — and through the AI cycle it has <b>beaten that guidance every single quarter</b>. The chart pairs each quarter’s guidance midpoint with the revenue it actually reported; the table quantifies the beat. The bottom section shows what <b>sell-side consensus</b> now expects forward — the bar NVIDIA has to clear next.</p>';
+  h += '<div class="ov-kpis">'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Consecutive beats</div><div class="ov-kpi-v">'+GUIDE.length+'</div><div class="ov-kpi-d up">quarters · Q1 FY24 → Q1 FY27</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Average beat</div><div class="ov-kpi-v">+'+avgBeat.toFixed(1)+'%</div><div class="ov-kpi-d up">above the guided midpoint</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Latest · Q1 FY27</div><div class="ov-kpi-v">$81.6B</div><div class="ov-kpi-d up">vs $78.0B guide · +4.6%</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Next guide · Q2 FY27</div><div class="ov-kpi-v">$91.0B</div><div class="ov-kpi-d muted">reports ~Aug 2026</div></div>'+
+    '</div>';
+  h += sec('Guidance vs. reported revenue ($B)',
+    '<div class="ov-chart-card"><div class="ov-chart-t">Reported above the guided midpoint, every quarter <span>(grey = guidance · green = actual)</span></div>'+
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="nvdaConsChart"></canvas></div></div>');
+  var rows = GUIDE.map(function(g,i){
+    return '<tr><td class="ov-td-name">'+esc(g[0])+'</td><td>$'+g[1].toFixed(1)+'B</td><td>$'+g[2].toFixed(1)+'B</td>'+
+      '<td class="own-up">+$'+(g[2]-g[1]).toFixed(1)+'B</td><td class="own-up">+'+beats[i].toFixed(1)+'%</td></tr>';
+  }).join('');
+  rows += '<tr><td class="ov-td-name">'+esc(NEXT_GUIDE[0])+'</td><td>$'+NEXT_GUIDE[1].toFixed(1)+'B</td><td colspan="3" style="color:#8A93A0">guided — reports ~Aug 2026</td></tr>';
+  h += sec('Beat track record',
+    '<div style="overflow-x:auto"><table class="ov-table"><thead><tr><th>Quarter</th><th>Guidance (mid)</th><th>Reported</th><th>Beat $</th><th>Beat %</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="ov-callout">NVIDIA guides total revenue to a midpoint "± 2%". The beat has <b>compressed</b> as the base has grown — from +20%+ in early FY24 to ~+3–5% recently — but it has stayed <b>positive every quarter</b>. The Q2 FY26 guide notably <b>excluded H20 China revenue</b> after export limits.</div>');
+  var crows = CONS.map(function(c){
+    return '<tr><td class="ov-td-name">'+esc(c.fy)+'</td><td>$'+c.rev.toFixed(1)+'B</td><td class="own-up">'+esc(c.revYoY)+'</td><td>$'+c.eps.toFixed(2)+'</td><td>$'+c.ebitda.toFixed(0)+'B</td><td>$'+c.fcf.toFixed(0)+'B</td></tr>';
+  }).join('');
+  h += sec('What consensus expects forward — Bloomberg sell-side aggregate',
+    '<div style="overflow-x:auto"><table class="ov-table"><thead><tr><th>Fiscal year</th><th>Revenue</th><th>YoY</th><th>Adj. dil. EPS</th><th>EBITDA</th><th>Free cash flow</th></tr></thead><tbody>'+crows+'</tbody></table></div>'+
+    '<div class="ov-callout">Consensus has revenue compounding from <b>$215.9B (FY2026 actual)</b> to <b>~$685B by FY2029</b> — still +82% next year, decelerating to ~+22% by FY2029 as the base scales. Adjusted EPS roughly <b>triples</b> ($9.0 → $15.8). These are Bloomberg’s aggregate of sell-side estimates — the benchmark NVIDIA is measured against, not company guidance.</div>');
+  h += '<div class="ov-foot">Guidance = NVIDIA quarterly revenue outlook midpoint (press releases); actuals = reported revenue. Forward figures are Bloomberg consensus (NVDA_BBG.xlsx, sell-side aggregate) summed to fiscal years; adjusted diluted EPS excludes stock-based comp. Fiscal year ends late January. All figures in US dollars.</div>';
+  return h;
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -852,21 +925,108 @@ var DCF_TARGETS = [
   { v:'$566.7B', l:'FY2028E revenue',    s:'Summit DCF model · +45% YoY.' },
   { v:'~$310B',  l:'FY2028E net income', s:'Summit DCF model.' },
 ];
+// Forward consensus bases for the multiples grid (Bloomberg, NVDA_BBG.xlsx).
+// rev/ebitda/fcf in $B; eps in $.
+var VAL_FY = [
+  { fy:'FY2027E', rev:393.2, eps:9.02,  ebitda:267.4, fcf:208.3 },
+  { fy:'FY2028E', rev:559.8, eps:12.85, ebitda:382.4, fcf:301.3 },
+  { fy:'FY2029E', rev:684.7, eps:15.77, ebitda:477.2, fcf:365.8 },
+];
+var VAL_SHARES  = 24.39e9;   // diluted shares (BBG, latest reported ~Q1 FY27)
+var VAL_NETCASH = 109.2e9;   // net cash (BBG, latest reported ~Q1 FY27)
+var _valPrice = null;
+
+// Sign-aware compact $ formatter: 7.3e12 -> "$7.32T", 1.09e11 -> "$109B".
+function nvBig(m){ if(m==null) return '—'; var a=Math.abs(m), s=m<0?'−':'';
+  if(a>=1e12) return s+'$'+(a/1e12).toFixed(2)+'T';
+  if(a>=1e9)  return s+'$'+(a/1e9).toFixed(a/1e9>=100?0:1)+'B';
+  return s+'$'+Math.round(a/1e6)+'M'; }
+
+function valMultiplesTable(){
+  var body = VAL_FY.map(function(c,i){
+    return '<tr data-valrow="'+i+'"><td class="ov-td-name">'+esc(c.fy)+'</td>'+
+      '<td>$'+c.eps.toFixed(2)+'</td><td class="val-pe">—</td><td class="val-evs">—</td>'+
+      '<td class="val-eve">—</td><td class="val-fcfy">—</td></tr>';
+  }).join('');
+  return '<div style="overflow-x:auto"><table class="ov-table"><thead><tr>'+
+    '<th>Fiscal year</th><th>Adj. EPS</th><th>P / E</th><th>EV / Sales</th><th>EV / EBITDA</th><th>FCF yield</th>'+
+    '</tr></thead><tbody>'+body+'</tbody></table></div>';
+}
+
+// Recompute the live banner + every multiples cell from the current _valPrice.
+function valComputeFill(){
+  var p = _valPrice;
+  var mc = (p!=null) ? p*VAL_SHARES : null;
+  var ev = (mc!=null) ? mc-VAL_NETCASH : null;
+  var lv = document.getElementById('nvValLive');
+  if(lv){
+    if(p!=null){ lv.hidden=false;
+      lv.innerHTML='<span class="ov-live-dot"></span><span class="ov-live-tk">NVDA</span>'+
+        '<span class="ov-live-px">$'+p.toFixed(2)+'</span>'+
+        '<span class="ov-live-mc">'+nvBig(mc)+' mkt cap</span>'+
+        '<span class="ov-live-mc">'+nvBig(ev)+' EV</span>'+
+        '<span class="ov-live-mc">net cash '+nvBig(VAL_NETCASH)+'</span>'+
+        '<span class="ov-live-mc">'+(VAL_SHARES/1e9).toFixed(2)+'B sh</span>';
+    } else { lv.hidden=true; lv.innerHTML=''; }
+  }
+  document.querySelectorAll('.ov-nvda [data-valrow]').forEach(function(tr){
+    var c=VAL_FY[+tr.getAttribute('data-valrow')];
+    var pe  =(p!=null)? p/c.eps : null;
+    var evs =(ev!=null)? ev/(c.rev*1e9) : null;
+    var eve =(ev!=null)? ev/(c.ebitda*1e9) : null;
+    var fcfy=(mc!=null)? (c.fcf*1e9)/mc*100 : null;
+    tr.querySelector('.val-pe').textContent  = pe  !=null? pe.toFixed(1)+'×'  : '—';
+    tr.querySelector('.val-evs').textContent = evs !=null? evs.toFixed(1)+'×' : '—';
+    tr.querySelector('.val-eve').textContent = eve !=null? eve.toFixed(1)+'×' : '—';
+    tr.querySelector('.val-fcfy').textContent= fcfy!=null? fcfy.toFixed(1)+'%' : '—';
+  });
+}
+
 function valuationBody(){
   var h = '';
-  h += '<p class="ov-lede">Two lenses: NVIDIA’s reported results against the multiples the market is paying, and the Summit team’s own DCF model for the forward path. Multiples and a fuller DCF write-up are still to be added.</p>';
+  h += '<p class="ov-lede">Two lenses on value: the <b>multiples the market is paying</b> against Bloomberg consensus earnings, and the <b>Summit team’s own DCF</b> for the forward path. Enter a price — or sign in for the live quote — and the multiples recompute.</p>';
+  h += '<div class="ov-live" id="nvValLive" hidden></div>';
+  h += sec('Forward multiples on consensus',
+    '<div class="nv-seg-bar"><span class="nv-seg-lbl">NVDA price</span>'+
+    '<span class="sotp-field-in" style="display:inline-flex;align-items:center;border:1px solid #d8dee6;border-radius:8px;padding:3px 10px;background:#fff">'+
+      '<span style="color:#8A93A0;font-weight:700;margin-right:2px">$</span>'+
+      '<input id="nvValPx" type="number" step="0.01" min="0" inputmode="decimal" placeholder="—" style="width:80px" /></span>'+
+    '<span class="ov-asof" style="margin:0;flex:1;min-width:220px">Auto-fills from the live quote when signed in; type any price to test. Share count (24.39B) &amp; net cash ($109.2B) are from the latest reported balance sheet.</span></div>'+
+    valMultiplesTable()+
+    '<div class="ov-callout">Because consensus earnings grow so fast, the <b>multiple compresses sharply over time</b> — the same price is a far lower multiple of FY2029 earnings than of FY2027. P/E = price ÷ adjusted EPS; EV/Sales &amp; EV/EBITDA use enterprise value (market cap − $109.2B net cash); FCF yield = consensus free cash flow ÷ market cap. Consensus bases from Bloomberg (NVDA_BBG.xlsx).</div>');
   h += sec('Forward view — Summit DCF model',
     '<div class="ov-targets">'+DCF_TARGETS.map(function(b){
       return '<div class="ov-target"><div class="ov-target-v">'+esc(b.v)+'</div><div class="ov-target-l">'+esc(b.l)+'</div><div class="ov-target-s">'+esc(b.s)+'</div></div>';
     }).join('')+'</div>'+
-    '<div class="ov-callout">These are the Summit team’s internal DCF projections (Summit Financial Data, synced June 2026), shown to frame the forward view — an in-house estimate, not NVIDIA guidance or consensus, reflecting a very aggressive AI-demand scenario. Note FY2026 actual ($215.9B) landed in line with the model, and Q1 FY2027 printed $81.6B (above the $78.0B guide), with Q2 guided to $91.0B.</div>');
+    '<div class="ov-callout">These are the Summit team’s internal DCF projections (Summit Financial Data, synced June 2026) — an in-house estimate, not NVIDIA guidance or consensus, reflecting a very aggressive AI-demand scenario. FY2026 actual ($215.9B) landed in line with the model; Q1 FY2027 printed $81.6B (above the $78.0B guide), with Q2 guided to $91.0B.</div>');
+  h += sec('Scenario framing (illustrative)',
+    '<div style="overflow-x:auto"><table class="ov-table"><thead><tr><th>Scenario</th><th>FY2028E revenue</th><th>Adj. EPS</th><th>Narrative</th></tr></thead><tbody>'+
+    '<tr><td class="ov-td-name">Bull</td><td>~$600B+</td><td>~$14+</td><td>AI-capex super-cycle persists; Rubin ramps cleanly; share holds.</td></tr>'+
+    '<tr><td class="ov-td-name">Base · consensus</td><td>$559.8B</td><td>$12.85</td><td>Bloomberg sell-side aggregate — strong growth, gradual deceleration.</td></tr>'+
+    '<tr><td class="ov-td-name">Bear</td><td>~$430–480B</td><td>~$9–10</td><td>Hyperscaler capex digestion, more custom-ASIC share, China drag.</td></tr>'+
+    '</tbody></table></div>'+
+    '<div class="ov-callout">Bull/bear are <b>illustrative</b> framing around the consensus base — not modeled outputs — to bound the range while the full Summit DCF assumptions are written up.</div>');
   h += sec('Still to add', bullets([
-    'Trading multiples — P/E, EV/Sales, EV/EBITDA — current vs historical range.',
-    'PEG and growth-adjusted valuation given the FY2027–28 trajectory.',
+    'Historical multiple range — how today’s forward P/E compares to NVIDIA’s own 3–5 year band.',
+    'PEG and growth-adjusted valuation across the FY2027–2029 trajectory.',
     'A walk-through of the Summit DCF assumptions (growth, margins, discount rate, terminal value).',
-    'Scenario / sensitivity table (bull / base / bear).',
   ]));
+  h += '<div class="ov-foot">Forward bases are Bloomberg consensus (NVDA_BBG.xlsx) summed to fiscal years; shares &amp; net cash from the latest reported balance sheet. Live price via Massive (requires a signed-in session). Multiples recompute from the price field. All figures in US dollars; fiscal year ends late January.</div>';
   return h;
+}
+
+// Wire the price field, seed from the live quote, recompute the grid.
+function initValuation(){
+  var inp=document.getElementById('nvValPx'); if(!inp) return;
+  if(!inp._w){ inp._w=1; inp.addEventListener('input', function(){
+    var v=parseFloat(inp.value); _valPrice=(isFinite(v)&&v>0)? v : null; valComputeFill();
+  }); }
+  if(_valPrice!=null){ if(!inp.value) inp.value=_valPrice; valComputeFill(); return; }
+  valComputeFill();
+  import('../api.js').then(function(api){ return api.liveQuote('NVDA'); }).then(function(res){
+    var q=res&&res.data; if(!q||q.price==null) return;
+    _valPrice=q.price; if(inp && !inp.value) inp.value=q.price.toFixed(2); valComputeFill();
+  }).catch(function(){});
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -910,6 +1070,8 @@ function showOvt(root, key){
   if (key === 'segments') requestAnimationFrame(function(){ buildSegChart(); });
   if (key === 'technology') initTech();
   if (key === 'management') requestAnimationFrame(function(){ initManagement(); });
+  if (key === 'consensus') requestAnimationFrame(function(){ buildConsensusChart(); });
+  if (key === 'valuation') requestAnimationFrame(function(){ initValuation(); });
 }
 
 function init(){

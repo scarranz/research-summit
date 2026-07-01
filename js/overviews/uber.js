@@ -6,8 +6,6 @@
 // Qualitative content: Uber FY2024 & FY2025 10-Ks, Q4 2025 / Q1 2026 results &
 // prepared remarks, the Feb 2024 "Go-Get" Investor Day (see SOURCES). No live API.
 
-import { WORLD_PATHS, WORLD_VB } from './world-paths.js';
-
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ─── Formatting ──────────────────────────────────────────────────────────────
@@ -172,9 +170,9 @@ var ALEKA_CHAIN=[
   { t:'The spread returns to Uber as cash flow', d:'<b>Provision + investment income − claims paid = a spread that returns to Uber</b>, showing up in Cash Flow from Operations. On the illustrative $10 trip this is the ~$0.35 insurance-float contribution. It buffered Uber\'s cash flow in 2021–22 and is now a steady supplement.', payoff:true },
 ];
 var INS_TL=[
-  { y:'2021–22', t:'<b>Insurance float buffers a cash-burning business.</b> Reserves and investment income provided an important share of operating cash flow while the core business was barely breakeven (Mobility CFO margin ~1.2% in 2022).' },
-  { y:'2022–24', t:'<b>Insurance inflation forces fare hikes.</b> US claim severity spiked; higher fares (esp. California) suppressed trip growth. Insurance became the single largest US Mobility cost.' },
-  { y:'2025–26', t:'<b>Costs moderate; savings passed to riders.</b> Insurance cost growth eased; Uber began passing savings through, citing "meaningfully" improving trip growth in San Francisco and Los Angeles. The core business now generates the cash; insurance is a supplement, not the crutch.' },
+  { y:'2021–22', t:'<b>Crutch.</b> The insurance float propped up a barely-breakeven business (Mobility CFO margin ~1.2%).' },
+  { y:'2022–24', t:'<b>Headwind.</b> Claim severity spiked → fare hikes (esp. CA) suppressed trips. The #1 US Mobility cost.' },
+  { y:'2025–26', t:'<b>Tailwind.</b> Costs moderate, savings passed to riders → trip growth reaccelerates in SF/LA. Now a supplement, not the crutch.' },
 ];
 
 // ─── Mobility take-rate: management's own words ────────────────────────────────
@@ -202,8 +200,8 @@ var MNA=[
 ];
 var MNA_NOTE='Uber\'s biggest "deals" are also its <b>divestitures</b>: it exited China → <b>Didi</b> (2016), SE Asia → <b>Grab</b> (2018) and Russia → <b>Yandex</b> (2021) for equity stakes, and sold its self-driving unit <b>ATG → Aurora</b> (2020, ~26% stake). Those equity stakes are exactly what makes GAAP net income swing — and why Uber now guides on Non-GAAP EPS. Recent AV "deals" are capital commitments, not acquisitions (Nuro ~$500M, Lucid, Rivian up to $1.25B).';
 
-// ─── Summit thesis ────────────────────────────────────────────────────────────
-var THESIS='<b>Uber One</b> drives higher spend and retention, compounding Gross Bookings while scale and incentive discipline expand margins. Core Mobility + Delivery now throw off <b>powerful, predictable cash flow</b> (plus the Aleka float) — which, at a reasonable valuation, underpins our conviction in durable growth and attractive returns.';
+// ─── Summit thesis ──────────────────────────────────────────────────────────────────────────────
+// Uber thesis intentionally removed \u2014 this overview carries NO Summit thesis.
 
 // ─── Render helpers ──────────────────────────────────────────────────────────
 function sec(title,inner){ return '<section class="ov-sec"><div class="ov-sec-h">'+esc(title)+'</div>'+inner+'</section>'; }
@@ -287,30 +285,6 @@ var SC_CUSTOMERS = [
     players:[['FEMSA','femsa.com','FMX'],['Rakuten','rakuten.com','RKUNY'],['Cencosud','cencosud.com'],['Loblaw','loblaw.ca'],['Instacart','instacart.com','CART'],['Delta','delta.com','DAL']],
     impact:{ kind:'mixed', text:'Broadens reach into emerging markets (cheaper baskets, lower take in $). The <b>Instacart (Maplebear)</b> tie-up adds suburban demand with ~20% larger baskets.' } },
 ];
-var SC_SUP_GEO = [
-  { c:'United States', fpct:49.4, fac:1280 },
-  { c:'China', fpct:6.9, fac:179 },
-  { c:'Germany', fpct:6.2, fac:160 },
-  { c:'Canada', fpct:3.6, fac:92 },
-  { c:'United Kingdom', fpct:3.4, fac:87 },
-  { c:'Mexico', fpct:3.3, fac:85 },
-  { c:'Japan', fpct:3.2, fac:83 },
-  { c:'France', fpct:3.1, fac:81 },
-  { c:'India', fpct:2.2, fac:56 },
-  { c:'Brazil', fpct:2.2, fac:56 },
-];
-var SC_CUS_GEO = [
-  { c:'United States', fpct:77.3, fac:2004 },
-  { c:'Canada', fpct:8.9, fac:231 },
-  { c:'Mexico', fpct:2.7, fac:71 },
-  { c:'United Kingdom', fpct:2.0, fac:51 },
-  { c:'France', fpct:1.7, fac:43 },
-  { c:'Australia', fpct:1.6, fac:41 },
-  { c:'Japan', fpct:1.3, fac:34 },
-  { c:'Spain', fpct:0.9, fac:22 },
-  { c:'South Korea', fpct:0.7, fac:19 },
-];
-
 // Color logo chip. Primary = parqet-by-ticker when a ticker is given (most reliable, CSP-allowed),
 // else Clearbit by domain; falls back through Clearbit then a Google favicon. p = [name, domain, ticker?].
 function scLogo(name,domain,ticker){
@@ -349,22 +323,6 @@ function alkFlow(){
     h+='<div class="alk-step ov-clickable'+(s.payoff?' pay':'')+'" data-detail="aleka:'+i+'"><div class="alk-n">Step '+(i+1)+(s.payoff?' · payoff':'')+'</div><div class="alk-t">'+esc(s.t)+'</div><div class="alk-more">tap ›</div></div>';
   });
   return h+'</div>';
-}
-// Map our country labels to the GeoJSON's names (which differ for a few).
-function geoName(c){ return ({ 'United States':'USA', 'United Kingdom':'England' })[c] || c; }
-// Choropleth world map (pre-projected paths, no library/fetch — CSP-safe & deterministic).
-// geoArr = [{c,fpct,fac}]; base = fill color. Darker = more facilities.
-function worldChoropleth(geoArr, base){
-  var max=Math.max.apply(null, geoArr.map(function(g){ return g.fpct; }));
-  var vals={}; geoArr.forEach(function(g){ vals[geoName(g.c)]={ pct:g.fpct, fac:g.fac, c:g.c }; });
-  var body=WORLD_PATHS.map(function(p){
-    var v=vals[p.n];
-    if(v){ var op=(0.25+0.75*(v.pct/max)).toFixed(2);
-      return '<path d="'+p.d+'" fill="'+base+'" fill-opacity="'+op+'" stroke="#fff" stroke-width="0.6"><title>'+esc(v.c)+' — '+v.pct+'% · '+v.fac+' facilities</title></path>'; }
-    return '<path d="'+p.d+'" fill="#E9EDF1" stroke="#fff" stroke-width="0.4"/>';
-  }).join('');
-  // Crop poles (skip empty top + Antarctica) so the map fills the card.
-  return '<svg viewBox="0 14 '+WORLD_VB[0]+' 404" style="width:100%;height:auto;display:block" role="img" aria-label="facility concentration by country">'+body+'</svg>';
 }
 // ─── Earnings Narrative: theme-based across 10 calls (Q4 2023 → Q1 2026) ────
 var UB_THEMES = [
@@ -477,50 +435,54 @@ var UBERONE_GROWTH={ labels:['4Q23','1Q24','2Q24','4Q24','2Q25','3Q25','1Q26'], 
 var UBERONE_SPEND=[ ['Uber One member', 100, '~$192/mo', BRAND2], ['Non-member', 33, '~$64/mo', GRAY] ];
 function barbellDiagram(){
   var h='<style>'+
-    '.bb-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 0}'+
-    '.bb-card{border:1px solid var(--bdr);border-radius:10px;padding:14px 16px;background:var(--w)}'+
-    '.bb-low{border-top:3px solid #06C167}.bb-prem{border-top:3px solid #10141A}'+
-    '.bb-card-h{font-size:12px;font-weight:800;color:var(--navy);margin-bottom:2px}'+
-    '.bb-card-s{font-size:11px;color:var(--mu);margin-bottom:9px}'+
-    '.bb-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}'+
-    '.bb-chip{font-size:10.5px;font-weight:600;color:var(--navy);background:var(--surface);border:1px solid var(--bdr);border-radius:14px;padding:3px 9px}'+
-    '.bb-stat{font-size:13px;color:var(--navy);line-height:1.45}.bb-stat b{font-weight:800}'+
-    '@media(max-width:720px){.bb-cards{grid-template-columns:1fr}}'+
+    '.bb2-cap{font-size:12.5px;color:var(--mu);line-height:1.55;margin:0 0 12px}'+
+    '.bb2-grid{display:grid;grid-template-columns:1.25fr 0.62fr 1.25fr;gap:10px;align-items:stretch}'+
+    '.bb2-col{border:1px solid var(--bdr);border-radius:10px;padding:13px 15px;background:var(--w);display:flex;flex-direction:column}'+
+    '.bb2-low{border-top:3px solid #06C167;background:rgba(6,193,103,0.05)}'+
+    '.bb2-prem{border-top:3px solid #10141A;background:rgba(16,20,26,0.035)}'+
+    '.bb2-core{background:rgba(138,147,160,0.10);align-items:center;text-align:center;justify-content:center}'+
+    '.bb2-tag{font-size:11px;font-weight:800;letter-spacing:.05em;color:#06965A}'+
+    '.bb2-prem .bb2-tag{color:#10141A}'+
+    '.bb2-sub{font-size:11px;color:var(--mu);margin:1px 0 9px}'+
+    '.bb2-stat{font-size:24px;font-weight:800;color:var(--navy);line-height:1.1}.bb2-stat span{display:block;font-size:11px;font-weight:600;color:var(--mu);margin-top:2px;line-height:1.4}'+
+    '.bb2-chips{display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 9px}'+
+    '.bb2-chip{font-size:10.5px;font-weight:600;color:var(--navy);background:#F2F5F8;border:1px solid var(--bdr);border-radius:14px;padding:3px 9px}'+
+    '.bb2-buys{font-size:11.5px;color:var(--navy);line-height:1.45;margin-top:auto}'+
+    '.bb2-corex{font-size:11px;color:var(--mu);line-height:1.5;margin-top:6px}'+
+    '.bb2-flow{font-size:11.5px;font-weight:600;color:var(--navy);background:#EDF0F4;border-radius:8px;padding:10px 14px;margin-top:11px;line-height:1.5;text-align:center}'+
+    '@media(max-width:720px){.bb2-grid{grid-template-columns:1fr}}'+
   '</style>';
   // U-shaped "barbell" curve: heavy ends, thin middle. Green = low-cost, black = premium.
-  h+='<div class="ov-diagram"><svg viewBox="0 0 640 250" role="img" aria-label="Barbell strategy curve">'+
-    '<defs><marker id="bbArr" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9AA3AE"/></marker></defs>'+
-    // baseline axis
-    '<line x1="60" y1="208" x2="592" y2="208" stroke="#9AA3AE" stroke-width="1.5" marker-end="url(#bbArr)"/>'+
-    '<text x="62" y="230" font-family="Inter,sans-serif" font-size="10.5" fill="#8A93A0">← more affordable</text>'+
-    '<text x="326" y="230" font-family="Inter,sans-serif" font-size="10.5" fill="#8A93A0" text-anchor="middle">price / spend per trip</text>'+
-    '<text x="590" y="230" font-family="Inter,sans-serif" font-size="10.5" fill="#8A93A0" text-anchor="end">more premium →</text>'+
-    // the barbell curve (high ends, dipped middle)
-    '<path d="M105 78 Q 230 196 325 184 Q 430 171 540 60" fill="none" stroke="#C7CED6" stroke-width="3.5"/>'+
-    // squeezed middle marker
-    '<circle cx="325" cy="184" r="6" fill="#B8C0CA"/>'+
-    '<text x="325" y="172" font-family="Inter,sans-serif" font-size="10.5" fill="#8A93A0" text-anchor="middle" font-style="italic">the squeezed core</text>'+
-    '<text x="325" y="201" font-family="Inter,sans-serif" font-size="9.5" fill="#A6AEB8" text-anchor="middle">standard UberX</text>'+
-    // left weight (low-cost)
-    '<circle cx="105" cy="78" r="40" fill="#06C167"/>'+
-    '<text x="105" y="72" font-family="Inter,sans-serif" font-size="11" font-weight="800" fill="#fff" text-anchor="middle">HIGH</text>'+
-    '<text x="105" y="88" font-family="Inter,sans-serif" font-size="11" font-weight="800" fill="#fff" text-anchor="middle">FREQUENCY</text>'+
-    '<text x="105" y="138" font-family="Inter,sans-serif" font-size="12" font-weight="800" fill="#06965A" text-anchor="middle">~75% more trips</text>'+
-    // right weight (premium)
-    '<circle cx="540" cy="60" r="40" fill="#10141A"/>'+
-    '<text x="540" y="54" font-family="Inter,sans-serif" font-size="11" font-weight="800" fill="#fff" text-anchor="middle">HIGH</text>'+
-    '<text x="540" y="70" font-family="Inter,sans-serif" font-size="11" font-weight="800" fill="#fff" text-anchor="middle">PROFIT</text>'+
-    '<text x="540" y="120" font-family="Inter,sans-serif" font-size="12" font-weight="800" fill="#10141A" text-anchor="middle">~3.5× profit growth</text>'+
-  '</svg><div class="ov-diagram-cap">Uber deliberately grows the <b>two ends</b> of the price ladder and leans away from the squeezed middle: cheap-but-frequent rides on one side, premium-but-profitable on the other. The combined "growth bets" portfolio is now ~<b>$20B</b> of gross bookings, growing ~<b>80%</b>.</div></div>';
-  h+='<div class="bb-cards">'+
-    '<div class="bb-card bb-low"><div class="bb-card-h">Low-cost wing — wins on frequency</div><div class="bb-card-s">cheap alternatives (even transit) people use constantly</div>'+
-      '<div class="bb-chips">'+BB_LOW.map(function(x){return '<span class="bb-chip">'+esc(x)+'</span>';}).join('')+'</div>'+
-      '<div class="bb-stat"><b>~75%</b> higher trip frequency than the core · sparse/emerging markets growing ~<b>2×</b> faster · lower price per trip but far more trips.</div></div>'+
-    '<div class="bb-card bb-prem"><div class="bb-card-h">Premium wing — wins on profit</div><div class="bb-card-s">higher-spend profiles that ride less but earn Uber more</div>'+
-      '<div class="bb-chips">'+BB_PREM.map(function(x){return '<span class="bb-chip">'+esc(x)+'</span>';}).join('')+'</div>'+
-      '<div class="bb-stat"><b>~3.5×</b> the profit growth of the core · Reserve <b>+60%</b> · premium >$10B GBs — fewer trips, richer economics.</div></div>'+
-  '</div>'+
-  '<div class="ov-fynote" style="margin-top:12px"><b>Self-funding:</b> premium margins bankroll the low-cost & AV bets, and the two wings lift new-user acquisition ~<b>25%</b>. It also explains the ARPU optics — cheap emerging-market trips lower revenue/user but raise volume. <b>AV is the newest barbell bet.</b></div>';
+  h+='<div class="bb2-cap"><b>The barbell, drawn as the economics.</b> A rival at one price (dashed) captures only the middle. Uber prices at <b>every point on the demand curve</b> — so it also captures the two green wedges a single price leaves on the table: <b>premium riders who would pay more</b> (top-left) and <b>price-sensitive demand only a cheap trip unlocks</b> (bottom-right). One asset-light network, near-zero cost to serve either.</div>';
+  h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" role="img" aria-label="Barbell as a demand curve">'+
+    '<text x="64" y="50" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">$$$</text>'+
+    '<text x="64" y="252" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">$</text>'+
+    '<text x="598" y="278" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">trips · volume →</text>'+
+    '<path d="M112,62 Q150,78 200,102 Q270,132 330,162 L112,162 Z" fill="rgba(6,193,103,0.13)"/>'+
+    '<path d="M330,162 Q390,188 445,205 Q500,222 552,236 L552,162 Z" fill="rgba(6,193,103,0.13)"/>'+
+    '<line x1="70" y1="42" x2="70" y2="256" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<line x1="70" y1="256" x2="600" y2="256" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<line x1="112" y1="162" x2="560" y2="162" stroke="#8A93A0" stroke-width="1.3" stroke-dasharray="5,4"/>'+
+    '<text x="290" y="157" font-family="Inter,sans-serif" font-size="9.5" fill="#8A93A0" text-anchor="middle">what a single-price rival captures</text>'+
+    '<path d="M112,62 Q150,78 200,102 Q270,132 330,162 Q390,188 445,205 Q500,222 552,236" fill="none" stroke="#10141A" stroke-width="2.5"/>'+
+    '<circle cx="112" cy="62" r="6" fill="#10141A"/>'+
+    '<text x="120" y="54" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#10141A">Uber Black / Reserve · ~$90</text>'+
+    '<circle cx="200" cy="102" r="4" fill="#5A6472"/>'+
+    '<circle cx="330" cy="162" r="5" fill="#9AA3AE"/>'+
+    '<text x="330" y="181" font-family="Inter,sans-serif" font-size="9.5" fill="#6B7480" text-anchor="middle">standard UberX — the core</text>'+
+    '<circle cx="445" cy="205" r="4" fill="#3EA76B"/>'+
+    '<circle cx="552" cy="236" r="6" fill="#06C167"/>'+
+    '<text x="548" y="250" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#06965A" text-anchor="end">Moto / Share · ~$4</text>'+
+    '<text x="150" y="122" font-family="Inter,sans-serif" font-size="11" font-weight="800" fill="#10141A">PREMIUM END</text>'+
+    '<text x="150" y="136" font-family="Inter,sans-serif" font-size="10.5" font-weight="700" fill="#10141A">~3.5× profit growth</text>'+
+    '<text x="470" y="188" font-family="Inter,sans-serif" font-size="11" font-weight="800" fill="#06965A">CHEAP END</text>'+
+    '<text x="470" y="202" font-family="Inter,sans-serif" font-size="10.5" font-weight="700" fill="#06965A">~75% more trips</text>'+
+  '</svg></div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">'+
+    '<div class="bb2-col bb2-prem"><div class="bb2-tag">PREMIUM END · the products</div><div class="bb2-sub">top-left of the curve · wins on margin</div><div class="bb2-chips">'+BB_PREM.map(function(x){return '<span class="bb2-chip">'+esc(x)+'</span>';}).join('')+'</div></div>'+
+    '<div class="bb2-col bb2-low"><div class="bb2-tag">CHEAP END · the products</div><div class="bb2-sub">bottom-right of the curve · wins on frequency</div><div class="bb2-chips">'+BB_LOW.map(function(x){return '<span class="bb2-chip">'+esc(x)+'</span>';}).join('')+'</div></div>'+
+  '</div>';
+  h+='<div class="ov-fynote" style="margin-top:10px">Why a fleet-heavy rival cannot copy it: owning the cars makes cheap trips loss-making, so it is forced to one price and forfeits both ends. Uber grows the two ends instead — combined ~<b>$20B</b> GB, +<b>80%</b>. AV is simply the newest cheap-end entrant.</div>'
   return h;
 }
 
@@ -543,7 +505,6 @@ function overviewBody(c){
   h+=sec('The Business in Three Parts',
     SEGMENTS.map(function(s){ return '<div class="ov-row"><div class="ov-row-k">'+esc(s[0])+'</div><div class="ov-row-v">'+s[1]+'</div></div>'; }).join('')+
     '<div class="ov-diagram-cap" style="margin-top:10px">Open the <b>Mobility</b> and <b>Delivery</b> tabs for each engine’s economics; <b>Uber One</b> is the membership that binds them. Freight is a near-breakeven line kept for optionality.</div>');
-  h+=sec('Summit Thesis', '<div class="ov-callout"><div class="ov-tl-body">'+THESIS+'</div></div>');
   h+=sec('3-Year Targets — Investor Day (Feb 2024)',
     '<div class="ov-targets ov-targets-3">'+TARGETS.map(function(b){ return '<div class="ov-target"><div class="ov-target-v">'+esc(b.v)+'</div><div class="ov-target-l">'+esc(b.l)+'</div><div class="ov-target-s">'+esc(b.s)+'</div></div>'; }).join('')+'</div>'+
     '<div class="ov-fynote" style="margin-top:14px">Uber is <b>running ahead of all three</b> — bookings ~+20%/yr while free cash flow compounds far faster.</div>');
@@ -585,7 +546,7 @@ function mobilityBody(c){
     '.ir-reg-d{font-size:11.5px;color:var(--mu);line-height:1.5}.ir-reg-d b{color:var(--navy)}'+
     '@media(max-width:720px){.usc-grid,.ir-phases,.ir-reg{grid-template-columns:1fr}}'+
   '</style>';
-  h+='<p class="ov-lede"><b>Mobility</b> — ridesharing in ~70 countries, Uber’s <b>profit engine</b>. Uber keeps ~<b>30%</b> of each fare; growth comes from more trips (the barbell) and, eventually, AV.</p>';
+  h+='<p class="ov-lede"><b>Mobility</b> — ridesharing in ~70 countries, Uber’s profit engine (~<b>$83B</b> gross bookings FY2025). At the Feb 2024 Investor Day (“Go-Get”), management guided mid-to-high-teens GB growth and expanding EBITDA margins. <b>Where it came from:</b> the post-COVID recovery doubled trips from the 2020 trough. <b>Where it’s going:</b> the barbell (low-cost + premium products), insurance savings, and AV as hybrid supply. <b>Why believe:</b> the Model vs. Reality tab shows Uber consistently beat its own estimates on Mobility GB, take rate held ~30%, and US trip growth is <i>accelerating</i> as insurance costs fall.</p>';
   h+=sec('The Barbell — grow both ends, lean away from the middle', barbellDiagram());
   h+=sec('How a Trip Makes Money — one $10 ride',
     '<p class="ov-lede" style="margin:0 0 12px">Six steps of a Mobility trip — <b>tap any step</b> for detail. Below: where the $10 lands.</p>'+
@@ -623,21 +584,18 @@ function mobilityBody(c){
         '<div class="av-li"><span class="av-k">Scale</span><span>instant via existing demand; hedged across partners</span></div>'+
       '</div>'+
     '</div>'+
-    '<div class="ov-callout" style="border-left:3px solid var(--brand)"><div class="ov-tl-body"><b>Summit’s take:</b> ripping out Uber’s network of <b>millions of cars it doesn’t own</b> and replacing it with capex-heavy fleets owned by one or two companies is structurally <b>worse</b> — it destroys the asset-light model (turning a ~100%-FCF compounder into a capex sink) and the margins would be far lower. <b>That is what a lower multiple prices in.</b> The hybrid model — Uber aggregating others’ AVs — keeps the economics that make Uber, Uber. We read the post-Tesla de-rating as over-weighting the threat.</div></div>'+
     '<div class="ov-fynote" style="margin-top:12px"><b>Evidence it’s working:</b> AV mobility trips <b>>10× YoY</b> (Q1 2026), 30+ partners, 15+ cities targeted by end-2026, ~30% higher trips/vehicle on Uber-managed AV vs AV-only — and management reports <b>"no effect of the Waymo launches on our overall business."</b></div>');
   h+=sec('Who Powers Mobility — the supplier ecosystem',
-    '<div class="ov-diagram-cap" style="margin:0 0 10px">Mostly strategic/equity ties (not vendor bills): Uber brings the demand, partners bring cars, rails & infra. Hover a logo for the name.</div>'+
+    '<style>.alp{display:flex;align-items:center;gap:16px;background:rgba(6,193,103,0.07);border:1px solid rgba(6,193,103,0.25);border-radius:12px;padding:14px 18px;margin:0 0 12px}.alp-big{font-size:34px;font-weight:800;color:#06965A;line-height:1;flex:none}.alp-txt{font-size:12.5px;color:var(--navy);line-height:1.5}.alp-txt b{font-weight:800}@media(max-width:560px){.alp{flex-direction:column;align-items:flex-start;gap:6px}}</style><div class="alp"><div class="alp-big">0.13%</div><div class="alp-txt">of Uber’s ~<b>$163B</b> gross bookings is <b>disclosed supplier spend</b> — ~<b>$210M</b> across 138 suppliers, and only three carry any dollar value (HCL $127M, Oracle $55M, Alexandria $28M). <b>Uber does not run a supply chain; it aggregates one.</b></div></div>'+'<div class="ov-diagram-cap" style="margin:0 0 10px">Uber’s supplier base sorted by <b>what they do</b> for the platform. Most are strategic ties, not traditional vendor contracts — which is itself the asset-light thesis in data form.</div>'+
     '<div class="usc-grid">'+SC_SUPPLIERS.map(scCard).join('')+'</div>'+
-    '<div class="ov-sec-h ovt-store-h" style="margin-top:16px">Where suppliers sit — and the AV race</div>'+
-    worldChoropleth(SC_SUP_GEO, BRAND)+
-    '<div class="ov-fynote" style="margin-top:8px"><b>Non-obvious:</b> Uber sources AV from the US <i>and China</i> (WeRide, Pony.ai) though it exited China in 2016 — buying Chinese AV capability to deploy everywhere else. <span class="ave-subh-note">Bloomberg SPLC, 29-Jun-2026.</span></div>');
+    '<div class="ov-fynote" style="margin-top:12px"><b>The asset-light proof in the data:</b> across 138 identified suppliers, Bloomberg finds only <b>three relationships with disclosed dollar values</b> — HCL ($127M, outsourced engineering), Oracle ($55M, cloud/DB), and Alexandria RE ($28M, offices). Total disclosed supplier spend: ~<b>$210M</b> against ~<b>$163B</b> of gross bookings — a ratio that screams platform, not operator. The AV partners are split by depth: <b>equity + committed vehicles</b> (Waymo, Aurora, Nuro-Lucid 20K, Waabi 25K exclusive) vs <b>deployed/operational</b> (WeRide, May Mobility, Avride) vs <b>announced MOUs</b> (NVIDIA, Stellantis, Zoox, Pony.ai). The “30+ partners” headline includes all three tiers — only ~5–7 have real money on the table. <span class="ave-subh-note">Bloomberg SPLC, 29-Jun-2026.</span></div>');
   h+=sec('Insurance — the Aleka float',
     '<p class="ov-lede" style="margin:0 0 12px">Uber owns its insurer, <b>Aleka</b>: riders fund insurance in the fare, Aleka invests the float (~<b>$12.9B</b> reserves), and the underwriting spread returns to Uber. <b>Tap any step.</b></p>'+
     alkFlow()+
     '<div class="ov-fynote" style="margin-top:10px">The payoff: <b>premiums + investment income − claims = a spread</b> that lands in Uber’s cash flow — ~<b>$0.35 of every $10 trip</b>. A cash-burning crutch in 2021–22; a steady supplement now.</div>'+
     '<div class="ov-sec-h ovt-store-h" style="margin-top:18px">From crutch to tailwind</div>'+
     '<div class="ir-phases">'+irPhase(INS_TL[0],'crutch','Crutch')+irPhase(INS_TL[1],'head','Headwind')+irPhase(INS_TL[2],'tail','Tailwind')+'</div>');
-  h+=sec('Regulation & Driver Classification', '<div class="ir-reg">'+REGV.map(regCard).join('')+'</div>');
+  h+=sec('Regulation & Driver Classification', '<div class="ir-diagram-cap" style="font-size:12px;color:var(--mu);margin:0 0 8px">The core question — <b>do drivers stay contractors?</b> — is largely settled in Uber\u2019s favor. Tap any card for the detail.</div><div class="ir-reg">'+REGV.map(function(r,i){return regCard(r,i);}).join('')+'</div>');
   h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
   return h;
 }
@@ -646,19 +604,23 @@ function mobilityBody(c){
 //  a tap-modal — this tab is no longer a grab-bag.)
 var REGV=[
   { h:'US — classification de-risked', chip:'DE-RISKED', cls:'ir-b-tail',
+    teaser:'Prop 22 upheld; the model is <b>contractor + pay floor</b>, not reclassification.',
     d:'<b>Prop 22 upheld</b> by the CA Supreme Court (2024); the federal contractor rule is unenforced & proposed for rescission. The dominant model is "<b>contractor + pay floor</b>" (MA, MN, NYC, Seattle), not reclassification.' },
   { h:'International — mixed, trending favorable', chip:'MIXED', cls:'ir-b-head',
+    teaser:'UK = "workers"; NL & FR reversed pro-contractor. <b>EU Directive</b> is the open risk.',
     d:'UK drivers are "workers" since <i>Aslam</i> (2021) plus a lost VAT fight; but Netherlands & France delivered pro-contractor reversals. The <b>EU Platform Work Directive</b> (transpose by Dec 2026) is the key open risk.' },
   { h:'How Uber frames it', chip:'FRAMING', cls:'ir-b-mut',
+    teaser:'Its own 10-K says a reclassification loss would be <b>"not material."</b>',
     d:'The 10-K says reclassification "would require us to fundamentally change our business model" — but, unlike some peers, it affirmatively states the reasonably-possible loss would <b>not be material</b>.' },
   { h:'Other drags', chip:'MINOR', cls:'ir-b-mut',
+    teaser:'NYC congestion pricing, a Dutch GDPR fine, an FTC case — cost/PR, not existential.',
     d:'NYC congestion pricing ($1.50/trip); a Dutch GDPR fine (€290M, under appeal); an FTC case on Uber One cancellation flows. Cost/PR drags, not existential.' },
 ];
 function irPhase(p,bcls,blabel){ return '<div class="ir-phase"><div class="ir-phase-y">'+esc(p.y)+'</div><div class="ir-phase-b ir-b-'+bcls+'">'+blabel+'</div><div class="ir-phase-d">'+p.t+'</div></div>'; }
-function regCard(r){ return '<div class="ir-reg-card"><div class="ir-reg-h">'+esc(r.h)+'<span class="ir-reg-chip '+r.cls+'">'+esc(r.chip)+'</span></div><div class="ir-reg-d">'+r.d+'</div></div>'; }
+function regCard(r,i){ return '<div class="ir-reg-card ov-clickable" data-detail="reg:'+i+'"><div class="ir-reg-h">'+esc(r.h)+'<span class="ir-reg-chip '+r.cls+'">'+esc(r.chip)+'</span></div><div class="ir-reg-d">'+r.teaser+' <span class="alk-more">tap \u203a</span></div></div>'; }
 function deliveryBody(c){
   var h='';
-  h+='<p class="ov-lede"><b>Delivery (Uber Eats)</b> — food, grocery & retail. Lower take (~<b>19%</b>; merchants get paid too), but <b>advertising</b> and grocery are lifting margins fast.</p>';
+  h+='<p class="ov-lede"><b>Delivery (Uber Eats)</b> — food, grocery & retail (~<b>$78B</b> gross bookings FY2025). <b>Where it came from:</b> pandemic-era growth that many assumed was transient. <b>Where it’s going:</b> Investor Day guided Delivery margin convergence toward Mobility’s ~8% via ads + grocery scale. <b>Why believe:</b> Delivery Adj. EBITDA margin has more than doubled (1.9% → 4.0%) and advertising is now >$2B run-rate at ~100% incremental margin. Take rate is lower (~19%) because merchants are paid, but the <b>ads layer lifts the effective take without touching the marketplace split</b>.</p>';
   h+=sec('Margin Convergence — the Delivery story',
     '<div class="tech-leg"><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+MOB+'"></span>Mobility</span><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+DEL+'"></span>Delivery</span></div>'+
     '<div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartMargin"></canvas></div>'+
@@ -669,25 +631,65 @@ function deliveryBody(c){
   h+=sec('The Merchant Network',
     '<div class="ov-diagram-cap" style="margin:0 0 10px">No single merchant is material — the <b>breadth</b> is the moat, and the take/ads sit with Uber. Hover a logo for the name.</div>'+
     '<div class="usc-grid">'+SC_CUSTOMERS.map(scCard).join('')+'</div>'+
-    '<div class="ov-sec-h ovt-store-h" style="margin-top:16px">Where the merchants are</div>'+
-    worldChoropleth(SC_CUS_GEO, BRAND2)+
-    '<div class="ov-fynote" style="margin-top:8px"><b>The opportunity:</b> merchants are <b>77% US</b> vs ~60%-international bookings — Delivery has barely gone global. Where this map is empty is where Uber expands next. <span class="ave-subh-note">Bloomberg SPLC, 29-Jun-2026.</span></div>');
+    '<div class="ov-fynote" style="margin-top:12px"><b>The opportunity:</b> Bloomberg SPLC puts Uber\'s merchant base at ~<b>77% US</b> vs ~60%-international mobility bookings — Delivery has barely gone global, and that international whitespace is the runway. <span class="ave-subh-note">Bloomberg SPLC, 29-Jun-2026.</span></div>');
   h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
   return h;
 }
 // ─── Pane: Uber One (membership + the cross-sell flywheel) ───────────────────
+function uberOnePricing(){
+  var x0=55,x1=600,pmax=10.5;
+  function xf(p){ return (x0+(p/pmax)*(x1-x0)); }
+  function tk(x){ return x.toFixed(1); }
+  function dot(p,name,side){
+    var x=xf(p), ly=side>0?106:152, vy=side>0?92:166;
+    var end=(p>9)?' text-anchor="end"':' text-anchor="middle"';
+    var lx=(p>9)?(x+8):x;
+    return '<circle cx="'+tk(x)+'" cy="130" r="4.5" fill="#10141A"/>'+
+      '<line x1="'+tk(x)+'" y1="130" x2="'+tk(x)+'" y2="'+(side>0?113:147)+'" stroke="#B8C0CA" stroke-width="1"/>'+
+      '<text x="'+tk(lx)+'" y="'+ly+'" font-family="Inter,sans-serif" font-size="9.5" font-weight="700" fill="#3A4552"'+end+'>'+name+'</text>'+
+      '<text x="'+tk(lx)+'" y="'+vy+'" font-family="Inter,sans-serif" font-size="9.5" font-weight="800" fill="#10141A"'+end+'>$'+p.toFixed(2)+'</text>';
+  }
+  var h='<div class="ov-diagram-cap" style="margin:0 0 6px">Uber One is <b>not one global price</b> — it is set to <b>local purchasing power</b>. Each mark is a country at its <b>USD-equivalent monthly</b> price (13 markets, confirmed from official Uber pages, ~Jul 2026).</div>';
+  h+='<div class="ov-diagram"><svg viewBox="0 0 640 190" role="img" aria-label="Uber One price distribution across markets">'+
+    '<rect x="'+tk(xf(0))+'" y="72" width="'+tk(xf(3.5)-xf(0))+'" height="58" fill="rgba(192,57,43,0.05)"/>'+
+    '<rect x="'+tk(xf(3.5))+'" y="72" width="'+tk(xf(6)-xf(3.5))+'" height="58" fill="rgba(230,176,50,0.06)"/>'+
+    '<rect x="'+tk(xf(6))+'" y="72" width="'+tk(xf(10.5)-xf(6))+'" height="58" fill="rgba(6,193,103,0.06)"/>'+
+    '<text x="'+tk(xf(1.75))+'" y="66" font-family="Inter,sans-serif" font-size="9.5" font-weight="800" fill="#C0392B" text-anchor="middle" letter-spacing=".05em">EMERGING</text>'+
+    '<text x="'+tk(xf(4.75))+'" y="66" font-family="Inter,sans-serif" font-size="9.5" font-weight="800" fill="#B8860B" text-anchor="middle" letter-spacing=".05em">MID-MARKET</text>'+
+    '<text x="'+tk(xf(8.25))+'" y="66" font-family="Inter,sans-serif" font-size="9.5" font-weight="800" fill="#06965A" text-anchor="middle" letter-spacing=".05em">DEVELOPED</text>'+
+    '<line x1="'+tk(xf(0))+'" y1="130" x2="'+tk(xf(10.5))+'" y2="130" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<line x1="'+tk(xf(2))+'" y1="130" x2="'+tk(xf(2))+'" y2="134" stroke="#C7CED6"/><text x="'+tk(xf(2))+'" y="146" font-family="Inter,sans-serif" font-size="8.5" fill="#8A93A0" text-anchor="middle">$2</text>'+
+    '<line x1="'+tk(xf(4))+'" y1="130" x2="'+tk(xf(4))+'" y2="134" stroke="#C7CED6"/><text x="'+tk(xf(4))+'" y="146" font-family="Inter,sans-serif" font-size="8.5" fill="#8A93A0" text-anchor="middle">$4</text>'+
+    '<line x1="'+tk(xf(6))+'" y1="130" x2="'+tk(xf(6))+'" y2="134" stroke="#C7CED6"/><text x="'+tk(xf(6))+'" y="146" font-family="Inter,sans-serif" font-size="8.5" fill="#8A93A0" text-anchor="middle">$6</text>'+
+    '<line x1="'+tk(xf(8))+'" y1="130" x2="'+tk(xf(8))+'" y2="134" stroke="#C7CED6"/><text x="'+tk(xf(8))+'" y="146" font-family="Inter,sans-serif" font-size="8.5" fill="#8A93A0" text-anchor="middle">$8</text>'+
+    '<line x1="'+tk(xf(10))+'" y1="130" x2="'+tk(xf(10))+'" y2="134" stroke="#C7CED6"/><text x="'+tk(xf(10))+'" y="146" font-family="Inter,sans-serif" font-size="8.5" fill="#8A93A0" text-anchor="middle">$10</text>'+
+    // developed cluster shown as a RANGE (its own insight: 6 markets converge ~$6-7.3)
+    '<rect x="'+tk(xf(6.05))+'" y="122" width="'+tk(xf(7.30)-xf(6.05))+'" height="16" rx="4" fill="#06C167"/>'+
+    '<text x="'+tk(xf(6.68))+'" y="112" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#06965A" text-anchor="middle">UK · France · Ireland · Canada · Australia · NZ</text>'+
+    '<text x="'+tk(xf(6.68))+'" y="152" font-family="Inter,sans-serif" font-size="9.5" font-weight="800" fill="#06965A" text-anchor="middle">6 markets · $6.0–7.3</text>'+
+    dot(1.75,'India',1)+
+    dot(3.05,'S. Africa',-1)+
+    dot(3.70,'Brazil · Mexico',1)+
+    dot(4.53,'Saudi Arabia',-1)+
+    dot(5.85,'Colombia',1)+
+    dot(9.99,'United States',1)+
+  '</svg></div>';
+  h+='<div class="ov-fynote" style="margin-top:8px"><b>A ~6× spread</b> ($1.75 → $9.99) is the tell: Uber One is localized to purchasing power, not a flat global product. So <b>"50M members" is economically lopsided</b> — a US member (paying $9.99, with <b>&gt;35% of US Mobility bookings</b> already running through members) is worth a multiple of an India member in reported dollars, and <b>FX drags the international side further</b> (Q1 2026 bookings +14% reported vs ~+10% constant-currency). The <i>unit</i> growth increasingly comes from the cheap end while the <i>reported value</i> concentrates at the rich end — so the membership can look like "half the bookings" and still have most of its dollar runway abroad. Prices confirmed from official Uber pages (~Jul 2026); FX/promotions move them.</div>';
+  return h;
+}
 function uberOneBody(c){
   var h='';
-  h+='<p class="ov-lede"><b>Uber One</b> is the membership that binds Mobility and Delivery — the cross-sell flywheel in one product, and one of the most important pieces of the Uber story.</p>';
+  h+='<p class="ov-lede"><b>Uber One</b> is the paid membership that bundles rides + Eats + grocery. <b>50M+ members</b> (Q1 2026, ~+50% YoY) drive <b>&gt;50% of combined Mobility+Delivery gross bookings</b> and spend <b>~3×</b> more than non-members. Against 199M monthly active consumers, roughly <b>a quarter of the base</b> are members — and in the US, <b>&gt;35% of Mobility bookings</b> already run through them.</p>';
   h+='<div class="ov-kpis">'+UBERONE_STAT.map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d muted">'+esc(k.s)+'</div></div>'; }).join('')+'</div>';
   h+=sec('Explosive Member Growth — 19M → 50M+ in ~2 years',
     '<div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartMembers"></canvas></div>'+
     '<div class="ave-subh-note" style="margin-top:4px">~20M members added in the last year alone · now live in <b>42 countries</b> (up from 28). "Don’t see it slowing down." — mgmt, Q1 2026</div>');
+  h+=sec('Priced to the Planet — one membership, many prices', uberOnePricing());
   h+=sec('Why Members Are Worth ~3×',
     '<div class="ov-subh">Monthly spend per user <span class="ave-subh-note">(Summit deck, Dec 2024)</span></div>'+
     mbars(UBERONE_SPEND)+
-    '<div class="ov-fynote" style="margin-top:10px"><b>The gap is the whole thesis.</b> Members spend ~3× and retain ~35% better; in Delivery they already drive ~<b>two-thirds</b> of bookings. New members run <b>negative-margin ~6 months</b> (benefits cost) then turn profitable — so penetration (~25% of monthly users) is the lever still to pull.</div>');
-  h+=sec('The Cross-Sell Flywheel', '<div class="ov-callout"><div class="ov-tl-body"><b>"Go anywhere, get anything."</b> One demand graph cross-sells rides ⇄ eats ⇄ grocery. ~<b>40%</b> of users use multiple products; ~⅓ of Eats customers arrived through the Rides app (near-zero CAC). Each added product lowers blended CAC and lifts LTV — a moat rivals can’t cheaply copy.</div></div>');
+    '<div class="ov-fynote" style="margin-top:10px"><b>The re-rating math.</b> Members spend ~3× and are far stickier; they already drive <b>&gt;50% of combined Mobility+Delivery bookings</b>. Uber One is a lower-margin but <b>LTV-positive</b> investment — Uber leans in precisely because members compound. At ~<b>25% penetration</b> of monthly actives, the ceiling is far away — Amazon Prime is at ~70% of US households. Each point of penetration shifts more of Uber’s revenue from one-off transactions to <b>recurring, predictable, higher-LTV spend</b>. That’s the multiple expansion case: the business is the same, but the revenue quality is structurally better.</div>');
+  h+=sec('The Cross-Sell Flywheel', '<div class="ov-callout"><div class="ov-tl-body"><b>"Go anywhere, get anything."</b> One demand graph cross-sells rides ⇄ eats ⇄ grocery. ~<b>40%</b> of users use multiple products; ~⅓ of Eats customers arrived through the Rides app (near-zero CAC). Each product the member adds <b>raises the cost of leaving</b> — not through lock-in (cancellation is easy, $9.99/mo) but because no competitor offers rides + food + grocery + hotels in one membership. That breadth-as-switching-cost is the structural moat.</div></div>');
   h+=sec('Platform Expansion',
     '<div class="ov-row"><div class="ov-row-k">Uber for Business</div><div class="ov-row-v">B2B corporate rides, meals & travel — >$5B of bookings, growing >2× faster than Mobility.</div></div>'+
     '<div class="ov-row"><div class="ov-row-k">Travel</div><div class="ov-row-v">"Hotels on Uber" (Expedia, 700k+ properties) + Vrbo + Travel Mode — feeding membership engagement, not meant as a core business.</div></div>');
@@ -711,6 +713,19 @@ function modelBody(c){
   h+='<div class="ave-subh-note" id="ubAveNote" style="margin:6px 2px 16px"></div>';
   h+='<div class="ov-kpis" id="ubAveStats" style="grid-template-columns:repeat(4,1fr)"></div>';
   h+='<div class="ov-foot">Estimates are the model\'s projection_history; actuals are reported. Free Cash Flow starts 2Q24 (where the model carries a stable forecast). Snapshot 2026-05-07.</div>';
+
+  // ── Management's own guidance vs. reality (chart: guided band · actual · model) ──
+  h+='<div style="border-top:1px solid var(--bdr);margin:34px 0 0"></div>';
+  h+='<div class="ov-subh">Management\'s own yardstick — guidance vs. reality</div>';
+  h+='<p class="ov-lede" style="margin-bottom:12px">The back-test above grades the <b>Summit model</b>. This grades <b>management</b> — on the same quarters, so the two read together. Each bar is the <b>range Uber guided</b> for that quarter; the <b>solid dot is what it reported</b> (green = above the range, dark = inside, red = below); the <b>dashed line is the Summit model</b>. The pattern: a <b>rising bar Uber keeps clearing</b> — guided GB steps up every quarter (~$31B → ~$56B) yet reported bookings land upper-half-or-above, and <b>Adj. EBITDA beat the top of its guide in every quarter of 2023</b> and again in 1Q26. Uber frames GB growth on a <b>constant-currency</b> basis (shown on hover).</p>';
+  h+='<div class="guid-pills">'+['gb','ebitda'].map(function(k){
+    return '<button type="button" class="guid-pill'+(k===_guideMetric?' active':'')+'" data-guidm="'+k+'">'+esc(GUIDE[k].label)+'</button>';
+  }).join('')+'</div>';
+  h+='<div class="guid-leg" id="ubGuideLeg"></div>';
+  h+='<div class="ov-chart-wrap ovt-vs-wrap"><canvas id="ubGuideChart"></canvas></div>';
+  h+='<div class="ave-subh-note" id="ubGuideNote" style="margin:8px 2px 12px"></div>';
+  h+='<div class="guid-tbl-wrap" id="ubGuideTbl"></div>';
+  h+='<div class="ov-foot">Guidance = the range issued for the upcoming quarter on the prior earnings call (Uber 8-K / press releases; GB growth guided constant-currency, shown on hover); reported actuals & the Summit model reuse the back-test series above. 2Q26 is the current outstanding guide (issued 2026-05-06); its quarter is not yet reported. Snapshot 2026-05-07.</div>';
   return h;
 }
 function groupRow(label,items){ return '<div class="ave-group"><span class="ave-group-l">'+esc(label)+'</span><div class="ave-pills">'+items.map(function(it){ return '<button type="button" class="ave-pill" data-ave="'+it[0]+'">'+esc(it[1])+'</button>'; }).join('')+'</div></div>'; }
@@ -807,6 +822,48 @@ var AVE={
   fcf:{ label:'Free Cash Flow', fmt:'usd', quarters:Q13.slice(5), est:FCF_E.slice(5), act:FCF_A.slice(5), note:'Free cash flow (window from 2Q24, where the model carries a forecast). Lumpy but generally ahead of estimate.' },
 };
 var _aveMetric='gb', AVE_GREEN='#1E9E62', AVE_RED='#C0392B';
+
+// ═══ Management Guidance vs. Reality ══════════════════════════════════════════
+// A second yardstick beside the model back-test: Uber's own next-quarter guidance
+// (Gross Bookings + Adjusted EBITDA) vs what it reported, with the Summit estimate
+// overlaid so all three read together. Both metrics span the full back-test window
+// (1Q23 → 2Q26), congruent with the chart above. Reported actuals & Summit
+// estimates reuse the back-test series (Total GB = Mobility + Delivery + Freight);
+// guidance is from Uber 8-K / press releases. Uber frames GB growth constant-
+// currency. 2Q26 is the current outstanding guide. Snapshot 2026-05-07.
+var GQ=['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26'];
+var GUIDE={
+  gb:{ label:'Gross Bookings', unit:'usd', q:GQ,
+    glo:[31000,33000,34000,36500,37000,38750,40250,42750,42000,45750,48250,52250,52000,56250],
+    ghi:[32000,34000,35000,37500,38500,40250,41750,44250,43500,47250,49750,53750,53500,57750],
+    cc:['+20–24%','—','—','—','—','+18–23%','+18–23%','+16–20%','+17–21%','+16–20%','+17–21%','+17–21%','+17–21%','+18–22%'],
+    act:TOT_GB_A.concat([null]),
+    est:TOT_GB_E.concat([null]),
+    note:'Gross Bookings guidance, framed constant-currency (hover for the cc-growth). A rising bar Uber keeps clearing — guided GB steps up every quarter yet reported bookings land in the upper half of the range almost every quarter, beating the top outright in the most recent two (4Q25, 1Q26) as Mobility and Delivery both reaccelerated.' },
+  ebitda:{ label:'Adj. EBITDA', unit:'usd', q:GQ,
+    glo:[660,800,975,1180,1260,1450,1580,1780,1790,2020,2190,2410,2370,2700],
+    ghi:[700,850,1025,1240,1340,1530,1680,1880,1890,2120,2290,2510,2470,2800],
+    act:EB_A.concat([null]),
+    est:EB_E.concat([null]),
+    note:'Adj. EBITDA is where Uber sandbags hardest: reported Adj. EBITDA beat the TOP of its guided range in every quarter of 2023 (and again in 1Q26), landing in the upper half the rest of the time. Management guides profitability conservatively and clears it — advertising (~100% margin) and insurance leverage compound the beat.' },
+};
+var _guideMetric='gb';
+function guideColor(act, lo, hi){
+  if(act==null) return GRAY;
+  if(lo==null||hi==null) return BRAND;
+  if(act>=hi) return AVE_GREEN;
+  if(act>=lo-(lo+hi)/2*0.004) return BRAND;
+  return AVE_RED;
+}
+function guideLand(act, lo, hi){
+  if(act==null) return { t:'current guide', c:'guid-mut' };
+  if(lo==null||hi==null) return { t:'not guided', c:'guid-mut' };
+  var mid=(lo+hi)/2;
+  if(act>=hi) return { t:'above range', c:'guid-up' };
+  if(act>=mid) return { t:'upper half', c:'' };
+  if(act>=lo-mid*0.004) return { t:'in range', c:'' };
+  return { t:'below range', c:'guid-dn' };
+}
 function aveFmt(m,v){ if(v==null) return '—'; return m.fmt==='cnt'?v.toFixed(0)+'M':money(v); }
 function aveSurprise(m,i){ var e=m.est[i]; if(e==null||e===0) return 0; return (m.act[i]-e)/Math.abs(e)*100; }
 function avePctS(v){ return (v<0?'−':'+')+Math.abs(v).toFixed(1)+'%'; }
@@ -866,7 +923,69 @@ function switchAveMetric(root,k){
   if(t) t.innerHTML=esc(m.label)+' — surprise vs estimate <span>(%, per quarter · hover for value)</span>';
   if(note) note.textContent=m.note; setupAveSlider();
 }
-function buildModelTab(){ var root=document.querySelector('.ov-uber'); if(!root) return; buildAveChart(); switchAveMetric(root,_aveMetric); }
+function buildModelTab(){ var root=document.querySelector('.ov-uber'); if(!root) return; buildAveChart(); switchAveMetric(root,_aveMetric); renderGuide(); }
+function guideLegend(){
+  var s='display:inline-flex;align-items:center;gap:7px;margin:0 18px 6px 0;font-size:12px;font-weight:600;color:var(--mu)';
+  function dot(c){ return '<span style="width:11px;height:11px;border-radius:50%;background:'+c+';flex:none"></span>'; }
+  function band(){ return '<span style="width:16px;height:11px;border-radius:3px;background:rgba(16,20,26,0.10);border:1px solid rgba(16,20,26,0.30);flex:none"></span>'; }
+  function dash(c){ return '<span style="width:16px;border-top:2px dashed '+c+';flex:none"></span>'; }
+  return '<span style="'+s+'">'+band()+'Guided range</span><span style="'+s+'">'+dot(BRAND)+'Reported actual</span><span style="'+s+'">'+dash(GRAY)+'Summit model</span>';
+}
+function guideTip(ctx){
+  var g=GUIDE[_guideMetric], i=ctx.dataIndex, dl=ctx.dataset.label;
+  if(dl==='Guided range'){ if(g.glo[i]==null) return 'Not guided'; var cc=(g.cc&&g.cc[i]&&g.cc[i]!=='—')?'  ·  '+g.cc[i]+' cc':''; return 'Guided: '+money(g.glo[i])+' – '+money(g.ghi[i])+cc; }
+  if(dl==='Reported actual'){ return g.act[i]==null ? 'Reported: pending' : 'Reported: '+money(g.act[i]); }
+  if(dl==='Summit model'){ return g.est[i]==null ? null : 'Summit model: '+money(g.est[i]); }
+  return null;
+}
+function buildGuideChart(){
+  var id='ubGuideChart', cv=document.getElementById(id);
+  if(!cv || typeof Chart==='undefined' || !cv.offsetParent) return;
+  destroy(id);
+  var g=GUIDE[_guideMetric], q=g.q, ds=[];
+  ds.push({ type:'bar', label:'Guided range', order:3, maxBarThickness:30, borderSkipped:false, borderRadius:3, borderWidth:1,
+    data:g.glo.map(function(lo,i){ return (lo==null||g.ghi[i]==null)?null:[lo,g.ghi[i]]; }),
+    backgroundColor:'rgba(16,20,26,0.10)', borderColor:'rgba(16,20,26,0.30)' });
+  ds.push({ type:'line', label:'Reported actual', data:g.act, borderColor:BRAND, borderWidth:2, tension:0, spanGaps:false, fill:false, order:1,
+    pointRadius:g.act.map(function(v){ return v==null?0:5; }),
+    pointBackgroundColor:g.act.map(function(v,i){ return guideColor(v,g.glo[i],g.ghi[i]); }),
+    pointBorderColor:'#fff', pointBorderWidth:1.5 });
+  ds.push({ type:'line', label:'Summit model', data:g.est, borderColor:GRAY, borderWidth:1.5, borderDash:[5,4], tension:0, spanGaps:false, fill:false, order:2,
+    pointRadius:g.est.map(function(v){ return v==null?0:3; }), pointBackgroundColor:'#fff', pointBorderColor:GRAY, pointBorderWidth:1.5 });
+  _charts[id]=new Chart(cv.getContext('2d'),{ type:'bar',
+    data:{ labels:q, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false,
+      layout:{ padding:{ top:16, bottom:2 } },
+      interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:guideTip } } },
+      scales:{ y:{ grace:'8%', grid:{ color:'#EEF2F7' }, ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return money(v); } } },
+        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:10.5 } } } }
+    }
+  });
+}
+function renderGuideTable(){
+  var box=document.getElementById('ubGuideTbl'); if(!box) return;
+  var g=GUIDE[_guideMetric];
+  var rows=g.q.map(function(q,i){
+    var lo=g.glo[i], hi=g.ghi[i], a=g.act[i], land=guideLand(a,lo,hi);
+    var range=(lo==null)?'<span class="guid-mut">not guided</span>':money(lo)+' – '+money(hi)+((g.cc&&g.cc[i]&&g.cc[i]!=='—')?' <span class="guid-mut">('+g.cc[i]+' cc)</span>':'');
+    var rep=(a==null)?'<span class="guid-mut">pending</span>':'<b>'+money(a)+'</b>';
+    var model=(g.est[i]==null)?'<span class="guid-mut">—</span>':money(g.est[i]);
+    return '<tr><td>'+esc(q)+'</td><td>'+range+'</td><td>'+rep+'</td><td>'+model+'</td><td class="'+land.c+'">'+land.t+'</td></tr>';
+  }).join('');
+  box.innerHTML='<table class="guid-tbl"><thead><tr><th>Quarter</th><th>Guided range</th><th>Reported</th><th>Summit model</th><th>Landing</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+function renderGuide(){
+  var leg=document.getElementById('ubGuideLeg'); if(leg) leg.innerHTML=guideLegend();
+  var note=document.getElementById('ubGuideNote'); if(note) note.innerHTML=GUIDE[_guideMetric].note;
+  buildGuideChart();
+  renderGuideTable();
+}
+function switchGuideMetric(root,k){
+  if(!GUIDE[k]) return; _guideMetric=k;
+  root.querySelectorAll('.guid-pill').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-guidm')===k); });
+  renderGuide();
+}
 
 // ─── Tab orchestration ────────────────────────────────────────────────────────
 function buildOverviewCharts(){
@@ -899,6 +1018,7 @@ function wireModal(root){
     if(kind==='key'){ var k=KEY_DRIVERS.filter(function(x){return x.k===id;})[0]; return k?{t:k.t,h:k.d}:null; }
     if(kind==='note'&&id==='gaap'){ return {t:'How to read Uber’s profitability',h:GAAP_NOTE}; }
     if(kind==='note'&&id==='take'){ return {t:'The Mobility take-rate “drop” — accounting, not economics',h:UK_NOTE+'<br><br>'+TAKE_QUOTES.map(function(q){ return '<div style="margin-top:8px"><b>'+esc(q[0])+'</b><br>'+q[1]+'</div>'; }).join('')}; }
+    if(kind==='reg'){ var rg=REGV[+id]; return rg?{t:rg.h,h:rg.d}:null; }
     if(kind==='mna'){ var m=MNA.filter(function(x){return x.n===id;})[0]; return m?{t:m.n+' <span class="ov-modal-sub">'+esc(m.y)+' · '+esc(m.deal)+'</span>',h:m.detail}:null; }
     return null;
   }
@@ -931,6 +1051,7 @@ function init(c){
   renderLive(root);
   root.querySelectorAll('.ovt-tab').forEach(function(btn){ btn.onclick=function(){ showOvt(root, btn.getAttribute('data-ovt')); }; });
   root.querySelectorAll('.ave-pill').forEach(function(btn){ btn.onclick=function(){ switchAveMetric(root, btn.getAttribute('data-ave')); }; });
+  root.querySelectorAll('.guid-pill').forEach(function(btn){ btn.onclick=function(){ switchGuideMetric(root, btn.getAttribute('data-guidm')); }; });
   wireModal(root);
   // Earnings calls accordion
   root.querySelectorAll('#ubCallsAcc .lpb-acc-h').forEach(function(btn){ btn.onclick=function(){ var item=btn.parentElement; var open=item.classList.toggle('open'); var ic=btn.querySelector('.lpb-acc-ic'); if(ic) ic.textContent=open?'\u2013':'+'; }; });

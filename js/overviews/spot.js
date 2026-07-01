@@ -310,7 +310,61 @@ var ARPU_BRIDGE = [
   { l:'Net change FY2025',    v:'−€0.06', d:'€4.69 → €4.63',                        dir:'down' },
 ];
 
-var ARPU_SOURCES = 'Sources: Spotify FY2021–FY2025 Form 20-F KPI tables (Premium ARPU, €/month); Q1 2026 6-K (p.28) and Shareholder Deck (p.9) for Q1’26 €4.76 and the constant-currency figure; FY2025 ARPU bridge from the FY2025 20-F (p.50). ARPU is reported for the Premium segment only; Spotify does not disclose ARPU by region.';
+var ARPU_SOURCES = 'Sources: Spotify FY2021–FY2025 Form 20-F KPI tables (Premium ARPU, €/month); Q1 2026 6-K (p.28) and Shareholder Deck (p.9) for Q1’26 €4.76 and the constant-currency figure; FY2025 ARPU bridge from the FY2025 20-F (p.50). ARPU is reported for the Premium segment only; Spotify does not disclose ARPU by region. Per-market prices are Premium Individual list prices from Spotify Newsroom & support pages and press (CNBC, Variety, Music Business Worldwide, Android Authority, Spotify Newsroom, ~mid-2026); non-US USD figures are approximate FX conversions and move with currencies. Emerging-market local amounts (Nigeria, South Africa, Philippines) are best-estimate and less firmly confirmed than major markets.';
+
+// Premium Individual monthly price by market, ordered most→least expensive in USD.
+// USD figures are approximate FX conversions (~mid-2026) and swing with currencies.
+var PRICE_ROWS = [
+  { r:'Europe',            m:'United Kingdom', loc:'£12.99',  usd:16.75 },
+  { r:'Europe (Eurozone)', m:'Germany',        loc:'€12.99',  usd:15.05 },
+  { r:'Europe (Eurozone)', m:'France',         loc:'€11.99',  usd:13.90 },
+  { r:'North America',     m:'United States',  loc:'$12.99',  usd:12.99, base:true },
+  { r:'Oceania',           m:'Australia',      loc:'A$15.99', usd:10.55 },
+  { r:'Latin America',     m:'Mexico',         loc:'MX$129',  usd:6.90 },
+  { r:'East Asia',         m:'Japan',          loc:'¥980',    usd:6.50 },
+  { r:'Latin America',     m:'Brazil',         loc:'R$21.90', usd:4.10 },
+  { r:'Africa',            m:'South Africa',   loc:'R59.99',  usd:3.33 },
+  { r:'Southeast Asia',    m:'Philippines',    loc:'₱169',    usd:2.90 },
+  { r:'South Asia',        m:'India',          loc:'₹119',    usd:1.40 },
+  { r:'Africa',            m:'Nigeria',        loc:'₦1,300',  usd:0.87 },
+];
+
+// Major Spotify Premium price increases (Individual plan, with other tiers noted).
+var PRICE_HIST = [
+  { d:'Jul 2023', m:'United States (first-ever) + ~50 markets',
+    c:'Individual $9.99 → $10.99 (+$1). First US rise since the 2011 launch. Also Duo $12.99→$14.99, Family $15.99→$16.99, Student $4.99→$5.99.' },
+  { d:'Jun–Jul 2024', m:'United States + many markets (incl. UK)',
+    c:'Individual $10.99 → $11.99 (+$1). US Family $16.99→$19.99, Duo $14.99→$16.99. UK Individual ~£10.99→£11.99.' },
+  { d:'Aug–Sep 2025', m:'International — Europe, UK, LatAm, Africa, APAC (NOT the US)',
+    c:'Individual up ~8–9%. Eurozone €10.99→€11.99 (Germany a step higher to €12.99); UK £11.99→£12.99; Australia A$13.99→A$15.99.' },
+  { d:'Jan 2026', m:'United States (eff. Feb 2026) + parts of S. America, Europe & Asia',
+    c:'Individual $11.99 → $12.99 (+$1). US Family $19.99→$21.99, Duo $16.99→$18.99, Student $5.99→$6.99. Third US rise in ~4 years.' },
+];
+
+function priceTable(){
+  var max = PRICE_ROWS[0].usd;
+  var rows = PRICE_ROWS.map(function(p){
+    var w = Math.max(4, Math.round(p.usd/max*100));
+    return '<tr'+(p.base?' class="pr-base"':'')+'>'+
+      '<td class="ov-td-name">'+esc(p.m)+(p.base?' <span class="pr-tag">base</span>':'')+'</td>'+
+      '<td>'+esc(p.r)+'</td>'+
+      '<td class="pr-num">'+esc(p.loc)+'</td>'+
+      '<td class="pr-usd"><div class="pr-usdwrap"><span class="pr-track"><span class="pr-fill" style="width:'+w+'%"></span></span><b>$'+p.usd.toFixed(2)+'</b></div></td>'+
+    '</tr>';
+  }).join('');
+  return '<div class="ov-chart-card"><table class="ov-table pr-table">'+
+    '<thead><tr><th>Market</th><th>Region</th><th>Local price</th><th>≈ USD / month</th></tr></thead>'+
+    '<tbody>'+rows+'</tbody></table></div>';
+}
+
+function priceHistTable(){
+  return '<div class="ov-chart-card"><table class="ov-table pr-hist">'+
+    '<thead><tr><th>When</th><th>Markets</th><th>What changed</th></tr></thead><tbody>'+
+    PRICE_HIST.map(function(x){
+      return '<tr><td class="ov-td-name">'+esc(x.d)+'</td><td class="pr-mkt">'+esc(x.m)+'</td><td>'+esc(x.c)+'</td></tr>';
+    }).join('')+
+    '</tbody></table></div>';
+}
 
 function arpuBody(c){
   var h = '';
@@ -328,6 +382,16 @@ function arpuBody(c){
 
   // 3 — The FY2025 ARPU bridge (why reported ARPU looks flat)
   h += sec('Why reported ARPU looks flat — the FY2025 bridge', kpis(ARPU_BRIDGE));
+
+  // 4 — Premium price by region (the ARPU story in one table)
+  h += sec('What Premium costs around the world',
+    priceTable()+
+    '<div class="ov-statline" style="margin-top:10px">The spread <i>is</i> the ARPU story: mature markets sit at <b>$13–17/mo</b> while emerging markets run <b>$1–7</b>. Because Spotify’s user growth is led by low-price regions, blended Premium ARPU stays near <b>€4.76</b> even as headline prices keep rising. Non-US USD figures are approximate FX conversions (~mid-2026).</div>');
+
+  // 5 — Price-increase history
+  h += sec('Price-increase history',
+    priceHistTable()+
+    '<div class="ov-statline" style="margin-top:10px">Spotify held prices flat for over a decade, then began raising them in <b>2023</b>. The US has now risen <b>three times in ~4 years</b> ($9.99 → $12.99), while 2025’s big move was international-only.</div>');
 
   h += '<div class="ov-foot">'+esc(ARPU_SOURCES)+'</div>';
   return h;
@@ -350,25 +414,27 @@ function generalBody(c){
 // ════════════════════════════════════════════════════════════════════════════
 // vs NETFLIX  (sub-tab of General) — context on the streaming/subscription space
 // ════════════════════════════════════════════════════════════════════════════
-var NF_LEDE = 'Spotify and Netflix are the two scaled subscription-media platforms — but they monetize <b>opposite</b> ways. Netflix runs <b>fewer, higher-value</b> subscribers at ~2.5× the ARPU and roughly double the margins, because it <b>owns</b> much of its content. Spotify runs <b>enormous reach</b> (761M listeners) at low ARPU and thin-but-rising margins, because ~70% of revenue flows out as <b>music royalties</b>. The gap is both the opportunity and the debate.';
+var NF_LEDE = 'Spotify and Netflix are the two scaled subscription-media platforms — but they monetize <b>opposite</b> ways. Spotify plays for <b>reach</b>: ~760M listeners at low ARPU, monetizing only the Premium slice. Netflix plays for <b>value</b>: fewer, higher-paying members at roughly <b>2.5× the ARPU</b>. The charts below track how that scale-vs-monetization split has evolved — the metrics that actually separate them.';
 
 // Diverging-bar comparison. sv/nv are the numeric magnitudes used for bar widths.
 var VS_ROWS = [
   { m:'Paid subscribers', u:'millions',         s:'293M',   sv:293,  n:'325M',   nv:325,  note:'Spotify Premium (Q1’26) vs Netflix “crossed 325M” (FY2025 milestone). Netflix stopped reporting quarterly subs in 2025.' },
   { m:'Monthly ARPU',     u:'per subscriber',   s:'€4.76',  sv:4.76, n:'$11.70', nv:11.70,note:'Netflix global ARM (FY2024, last reported) ≈ 2.5× Spotify Premium ARPU. EUR vs USD — not converted.' },
   { m:'Revenue',          u:'fiscal year 2025', s:'€17.2B', sv:17.2, n:'~$45B',  nv:45,   note:'Spotify FY2025 €17.2B (+10%) vs Netflix FY2025 ~$45B (+16%). EUR vs USD.' },
-  { m:'Gross margin',     u:'% of revenue',     s:'~32%',   sv:32,   n:'~46%',   nv:46,   note:'Spotify is structurally capped — ~70% of revenue is paid out as royalties to labels & publishers.' },
-  { m:'Operating margin', u:'% of revenue',     s:'12.8%',  sv:12.8, n:'29.5%',  nv:29.5, note:'Spotify FY2025 12.8% (rising fast from 8.7%) vs Netflix FY2025 29.5%.' },
-  { m:'Free cash flow',   u:'fiscal year 2025', s:'~€2.9B', sv:2.9,  n:'$9.5B',  nv:9.5,  note:'EUR vs USD — consistent with the ~$45B vs €17B revenue gap.' },
-  { m:'Market cap',       u:'≈ Jun 2026',       s:'~$95B',  sv:94.6, n:'~$399B', nv:399,  note:'Yet Spotify trades at a HIGHER P/E (~31× vs ~24×) — the market prices in margin-expansion upside.' },
 ];
 
-var VS_MODELS = [
-  { co:'Spotify', col:'#1DB954', tag:'NYSE: SPOT',   t:'Licenses music royalties', pts:['Enormous reach — 761M listeners, 293M paying','Low ARPU (€4.76/mo) across 184 markets','~70% of revenue paid to labels & publishers','Thin-but-rising margins: ~32% gross · ~13% operating'] },
-  { co:'Netflix', col:'#E50914', tag:'NASDAQ: NFLX', t:'Owns & licenses content',  pts:['Fewer, higher-value subs — ~325M households','High ARPU ($11.70+/mo, ~2.5× Spotify)','Content is amortized capex, not a revenue share','Fat margins: ~46% gross · ~30% operating'] },
-];
+// MAU / subscribers & ARPU time series (FY2019–FY2025) for the trend charts.
+// Spotify MAU = total reach (free+paid); Spotify Premium = paying subs; Netflix
+// = paid memberships (Netflix reports no MAU). Netflix FY2025 = "crossed 325M".
+var VS_YEARS     = ['2019','2020','2021','2022','2023','2024','2025'];
+var VS_SPOT_MAU  = [271, 345, 406, 489, 602, 675, 713];
+var VS_SPOT_SUBS = [124, 155, 180, 205, 236, 263, 281];
+var VS_NFLX_SUBS = [167, 204, 222, 231, 260, 302, 325];
+// Monthly ARPU: Spotify Premium ARPU (€) vs Netflix global ARM ($, last reported FY2024).
+var VS_SPOT_ARPU = [4.89, 4.31, 4.40, 4.55, 4.39, 4.72, 4.76];
+var VS_NFLX_ARPU = [10.82, 10.91, 11.67, 11.76, 11.64, 11.70, null];
 
-var VS_SOURCES = 'Sources: Netflix Q4’24 & Q4’25 shareholder letters and FY2024 10-K (memberships, global ARM $11.70, revenue, margins, FCF); Spotify FY2025 6-K and Q1 2026 materials; market data via stockanalysis.com (≈ Jun 2026). Netflix discontinued quarterly subscriber & ARM reporting in Q1 2025 — its latest official ARM is FY2024 and FY2025 membership is a milestone (“crossed 325M”). Netflix does not report MAU, so Spotify’s 761M reach is not directly comparable. Figures in native currency (EUR vs USD) — not FX-converted, so treat absolute €/$ comparisons as approximate.';
+var VS_SOURCES = 'Sources: Netflix Q4’24 & Q4’25 shareholder letters and FY2024 10-K (memberships, global ARM $11.70, revenue, margins, FCF); Spotify FY2025 6-K and Q1 2026 materials; market data via stockanalysis.com (≈ Jun 2026). Netflix discontinued quarterly subscriber & ARM reporting in Q1 2025 — its latest official ARM is FY2024 and FY2025 membership is a milestone (“crossed 325M”). Netflix does not report MAU, so Spotify’s 761M reach is not directly comparable. Figures in native currency (EUR vs USD) — not FX-converted, so treat absolute €/$ comparisons as approximate. MAU/subscriber and ARPU time series compiled from Spotify and Netflix annual filings & shareholder letters (FY2019–FY2025); FY2025 Netflix membership is the “crossed 325M” milestone and its ARM is last reported for FY2024. Churn figures are management commentary (Spotify: Premium churn “at record lows”) and third-party panel estimates (Netflix ~2%/month), not standardized reported metrics.';
 
 function vsRows(){
   return VS_ROWS.map(function(r){
@@ -387,12 +453,29 @@ function vsRows(){
   }).join('');
 }
 
-function vsModels(){
-  return '<div class="spot-models">'+VS_MODELS.map(function(m){
+function vsTrendCharts(){
+  return '<div class="ov-chart-card"><div class="ov-chart-t">Users &amp; subscribers over time <span>(millions, FY-end · Spotify MAU is total reach; Netflix reports paid memberships, not MAU)</span></div>'+
+      '<div class="ov-chart-wrap spot-vsc-wrap"><canvas id="spotVsUsersChart"></canvas></div>'+
+    '</div>'+
+    '<div class="ov-chart-card" style="margin-top:14px"><div class="ov-chart-t">Monthly ARPU over time <span>(per subscriber · Spotify € vs Netflix $, not FX-converted · Netflix ARM last reported FY2024)</span></div>'+
+      '<div class="ov-chart-wrap spot-vsc-wrap"><canvas id="spotVsArpuChart"></canvas></div>'+
+    '</div>';
+}
+
+// Churn commentary — neither company reports a standardized quarterly churn rate.
+var VS_CHURN = [
+  { co:'Spotify', col:'#1DB954', t:'Premium churn near record lows',
+    d:'Spotify doesn’t publish a fixed churn rate, but management repeatedly cites Premium churn at <b>all-time lows</b>. Music is a habitual, lean-back subscription — once it’s in your daily routine, retention is high, which is why Premium subs compound steadily even with ARPU roughly flat.' },
+  { co:'Netflix', col:'#E50914', t:'Among the lowest churn in streaming',
+    d:'Netflix is <b>widely estimated at ~2% monthly churn</b> (US, third-party panels) — best-in-class for streaming. Owned, must-watch franchises plus the 2023 paid-sharing crackdown keep cancellations low; Netflix no longer discloses churn directly.' },
+];
+
+function vsChurn(){
+  return '<div class="spot-models">'+VS_CHURN.map(function(m){
     return '<div class="spot-model" style="border-top:3px solid '+m.col+'">'+
-      '<div class="spot-model-h"><span class="spot-model-co" style="color:'+m.col+'">'+esc(m.co)+'</span><span class="spot-model-tag">'+esc(m.tag)+'</span></div>'+
+      '<div class="spot-model-h"><span class="spot-model-co" style="color:'+m.col+'">'+esc(m.co)+'</span></div>'+
       '<div class="spot-model-t">'+esc(m.t)+'</div>'+
-      '<ul class="spot-model-list">'+m.pts.map(function(p){ return '<li>'+esc(p)+'</li>'; }).join('')+'</ul>'+
+      '<div class="spot-model-d">'+m.d+'</div>'+
     '</div>';
   }).join('')+'</div>';
 }
@@ -400,13 +483,15 @@ function vsModels(){
 function vsBody(c){
   var h = '';
   h += '<p class="ov-lede">'+NF_LEDE+'</p>';
-  h += sec('Spotify vs Netflix — the numbers',
+  h += sec('Spotify vs Netflix — where they stand today',
     '<div class="spot-vs">'+
       '<div class="spot-vs-head"><span class="spot-vs-co s">● Spotify</span><span class="spot-vs-co n">Netflix ●</span></div>'+
       vsRows()+
-    '</div>'+
-    '<div class="ov-statline" style="margin-top:14px">The pattern is consistent: <b>Netflix monetizes deeper</b> (2.5× ARPU, ~2× margins) on fewer relationships; <b>Spotify monetizes wider</b> (761M reach) but shallower. The bull case is Spotify closing that margin gap as higher-ARPU formats scale.</div>');
-  h += sec('Two opposite business models', vsModels());
+    '</div>');
+  h += sec('How MAU &amp; ARPU have evolved',
+    vsTrendCharts()+
+    '<div class="ov-statline" style="margin-top:12px"><b>Reading it:</b> Spotify’s <b>total reach</b> (MAU) is roughly 2× Netflix’s subscriber base and still climbing — but Spotify only monetizes the <b>Premium</b> slice, which tracks close to Netflix on subscriber count. ARPU is the whole story: Netflix earns <b>~2.5×</b> per subscriber. The metrics aren’t identical — Netflix reports paying members (no MAU), and its ARM is in USD, last reported FY2024.</div>');
+  h += sec('What about churn?', vsChurn());
   h += '<div class="ov-foot">'+esc(VS_SOURCES)+'</div>';
   return h;
 }
@@ -459,8 +544,7 @@ var AD_QUOTES = [
 var AD_SOURCES = 'Sources: Spotify FY2025 Form 20-F (Ad-Supported segment, MD&A & “Spotify Ad Exchange”, pp. 8, 44, 47–48, Note 23); Q1 2026 6-K (Note 20 segment information) & Shareholder Deck (advertising transformation); Q1 2026 earnings call prepared remarks (quotes). SAX partners and the +222% advertiser growth are web-corroborated (Spotify Newsroom, AdExchanger, eMarketer, The Trade Desk). FY2021 ad gross margin is web-sourced/approximate; figures are €/IFRS and a Jan 1 2026 reclassification moved some non-advertising activity to Premium (2023–2025 restated; 2022 not recast).';
 
 function adChips(){
-  return '<div class="spot-sax"><div class="spot-sax-t">Spotify Ad Exchange (SAX)</div><div class="spot-sax-d">'+AD_SAX_INTRO+'</div></div>'+
-    AD_SAX_GROUPS.map(function(grp){
+  return AD_SAX_GROUPS.map(function(grp){
       return '<div class="spot-chipgrp"><div class="spot-chipgrp-l">'+esc(grp.g)+'</div><div class="spot-chips">'+
         grp.items.map(function(it){ return '<span class="spot-chip">'+esc(it)+'</span>'; }).join('')+'</div></div>';
     }).join('');
@@ -476,45 +560,118 @@ function adBiddableBar(){
   '</div>';
 }
 
+// ── SAX deep-dive: narrative, auction schematic, and before/after ────────────
+var SAX_NARR =
+  '<p class="sax-lead">Launched <b>April 1, 2025</b>, the <b>Spotify Ad Exchange (SAX)</b> is Spotify’s own programmatic marketplace: it auctions Spotify’s audio, video and display inventory in <b>real time</b> to the ~50 DSPs advertisers already use. Biddable is already <b>over a third of ad revenue</b> (advertisers <b>+222% since launch</b>). <b>Tap any box below</b> to see what it does and the players involved.</p>';
+
+// One impression's journey through a real-time auction on SAX.
+var SAX_STEPS = [
+  'A listener opens Spotify and an <b>ad slot opens up</b>. SAX packages that one impression as a <b>bid request</b> carrying anonymised audience and context signals.',
+  'SAX <b>broadcasts the impression</b> in real time to the ~50 connected DSPs.',
+  'Each DSP <b>values the impression</b> using the advertiser’s own first-party data, matched through identity graphs (UID2 / RampID / PAIR), and returns a <b>bid</b>.',
+  'SAX runs a <b>real-time auction</b> and picks the winning bid — the whole auction clears in <b>milliseconds</b>, before the ad even plays.',
+  'The winning <b>ad is served</b> to the listener — as audio, video or display.',
+  'Independent <b>measurement</b> partners verify delivery, viewability and outcomes, feeding results back so the next bid is smarter.'
+];
+
+// What biddable/SAX changes versus the legacy, direct-sold model.
+var SAX_CMP = [
+  ['How you buy',      'Manual insertion orders via a Spotify salesperson', 'Self-serve and automated through any connected DSP'],
+  ['Pricing',          'Fixed, negotiated CPMs',                            'Real-time auction sets a market-clearing price'],
+  ['Speed to live',    'Days to weeks of human back-and-forth',             'Minutes, programmatically'],
+  ['Targeting',        'Broad segments Spotify defines',                    'Advertiser’s own first-party data via UID2 / RampID / PAIR'],
+  ['Measurement',      'Spotify-reported metrics',                          'Independent third parties (DoubleVerify, IAS, AppsFlyer, Kochava)'],
+  ['Access and scale', 'Gated by Spotify’s direct sales team',              'Bought alongside all other media in one workflow, at scale'],
+];
+
+var SAX_CHANGE_NOTE = 'The shift is structural: Spotify goes from being <b>a place you buy directly</b> to <b>a node on the open programmatic grid</b>. That widens the pool of advertisers who can reach Spotify and strips out friction — but it also <b>swaps fixed CPMs for auction pricing</b>. That is exactly why reported ad revenue dipped in the short term (−5% in Q1’26) even as biddable volume grew 30%+: the new auction-priced engine is not yet big enough to offset the shrinking legacy direct-sold book.';
+
+// Interactive supply-chain schematic (Trade Desk IR style). Each box and base
+// layer is clickable and drives the detail panel below with a one-line explainer
+// plus the players involved, shown with their logos.
+var SAX_NODES = {
+  adv:  { t:'Advertiser', brief:'The brand and its budget — the demand that kicks off every auction. Any advertiser or agency can buy Spotify through the tools they already use.', players:[] },
+  dsp:  { t:'DSP — demand-side platform', brief:'Where buyers set targeting and bids. SAX connects to ~50 DSPs, so advertisers buy Spotify inside their existing workflow.',
+    players:[ {n:'The Trade Desk',d:'thetradedesk.com'}, {n:'Google DV360',d:'google.com'}, {n:'Yahoo DSP',d:'yahooinc.com'}, {n:'Adform',d:'adform.com'}, {n:'Magnite',d:'magnite.com'} ] },
+  sax:  { t:'Spotify Ad Exchange (SAX)', brief:'Spotify’s own marketplace. It runs the real-time auction that matches buyer demand to Spotify’s inventory in milliseconds, before the ad plays.',
+    players:[ {n:'Spotify',d:'spotify.com'} ] },
+  inv:  { t:'Spotify inventory', brief:'The Spotify ad slots put up for auction — sold programmatically across every format.', players:[], types:['Audio','Video','Display','Programmatic Guaranteed'] },
+  usr:  { t:'Listener', brief:'The Spotify user who hears or sees the winning ad — served instantly once the auction resolves.', players:[] },
+  id:   { t:'Identity layer', brief:'Matches a listener to the advertiser’s first-party data without third-party cookies, so targeting works across the open internet.',
+    players:[ {n:'Unified ID 2.0',d:'thetradedesk.com'}, {n:'LiveRamp RampID',d:'liveramp.com'}, {n:'Google PAIR',d:'google.com'} ] },
+  meas: { t:'Measurement layer', brief:'Independent third parties verify that ads were delivered, viewable and effective — so Spotify isn’t marking its own homework.',
+    players:[ {n:'DoubleVerify',d:'doubleverify.com'}, {n:'IAS',d:'integralads.com'}, {n:'AppsFlyer',d:'appsflyer.com'}, {n:'Kochava',d:'kochava.com'} ] }
+};
+var SAX_DETAIL_DEFAULT = '<div class="sax-detail-hint">Tap any box or layer above for a quick explainer and the companies involved.</div>';
+
+// Logo chip — Clearbit by domain, falling back to a Google favicon (both allowed by CSP).
+function saxLogo(p){
+  var fav = 'https://www.google.com/s2/favicons?domain='+p.d+'&sz=64';
+  return '<span class="sax-logo"><img src="https://logo.clearbit.com/'+p.d+'" alt="" loading="lazy" '+
+    'onerror="this.onerror=null;this.src=\''+fav+'\'">'+esc(p.n)+'</span>';
+}
+
+function saxDetailHtml(key){
+  var n = SAX_NODES[key];
+  if(!n) return SAX_DETAIL_DEFAULT;
+  var body = '';
+  if(n.players && n.players.length) body = '<div class="sax-logos">'+n.players.map(saxLogo).join('')+'</div>';
+  else if(n.types) body = '<div class="sax-logos">'+n.types.map(function(t){ return '<span class="sax-logo is-plain">'+esc(t)+'</span>'; }).join('')+'</div>';
+  return '<div class="sax-detail-t">'+esc(n.t)+'</div><div class="sax-detail-d">'+esc(n.brief)+'</div>'+body;
+}
+
+function saxSchematic(){
+  function node(k,t,s){ return '<div class="ttd-node" role="button" tabindex="0" data-sax="'+k+'"><b>'+t+'</b><span>'+s+'</span></div>'; }
+  return '<div class="ttd-flow">'+
+    '<div class="ttd-zones"><span>Demand · buy-side</span><span class="r">Supply · sell-side</span></div>'+
+    '<div class="ttd-track">'+
+      node('adv','Advertiser','Brand &amp; budget')+
+      node('dsp','DSP','TTD · DV360 · ~50')+
+      '<div class="ttd-hub" role="button" tabindex="0" data-sax="sax"><b>SAX</b><span>Real-time auction</span></div>'+
+      node('inv','Spotify','Audio · Video · Display')+
+      node('usr','Listener','Impression served')+
+    '</div>'+
+    '<div class="ttd-base">'+
+      '<div class="ttd-base-cell" role="button" tabindex="0" data-sax="id"><span class="ttd-base-l">Identity layer</span>Unified ID 2.0 · RampID · PAIR</div>'+
+      '<div class="ttd-base-cell" role="button" tabindex="0" data-sax="meas"><span class="ttd-base-l">Measurement layer</span>DoubleVerify · IAS · AppsFlyer · Kochava</div>'+
+    '</div>'+
+    '<div class="sax-detail" id="saxDetail">'+SAX_DETAIL_DEFAULT+'</div>'+
+  '</div>';
+}
+
+function saxSteps(){
+  return '<div class="sax-steps">'+SAX_STEPS.map(function(s,i){
+    return '<div class="sax-step"><div class="sax-step-n">'+(i+1)+'</div><div class="sax-step-b">'+s+'</div></div>';
+  }).join('')+'</div>';
+}
+
+function saxChanges(){
+  var head = '<div class="sax-cmp-head"><div class="sp"></div>'+
+    '<div class="old">Legacy direct sales</div><div class="new">Biddable via SAX</div></div>';
+  var rows = SAX_CMP.map(function(r){
+    return '<div class="sax-cmp-row">'+
+      '<div class="sax-cmp-k">'+esc(r[0])+'</div>'+
+      '<div class="sax-cell old"><span class="sax-tag old">Before</span>'+esc(r[1])+'</div>'+
+      '<div class="sax-cell new"><span class="sax-tag new">Now</span>'+esc(r[2])+'</div>'+
+    '</div>';
+  }).join('');
+  return '<div class="sax-cmp">'+head+rows+'</div>';
+}
+
 function advertisingBody(c){
   var h = '';
   h += '<p class="ov-lede">'+AD_LEDE+'</p>';
 
-  // 1 — Headline KPIs
-  h += kpis(AD_KPIS);
+  // 1 — SAX: what it is + interactive flow (click a box for the players)
+  h += sec('Spotify Ad Exchange (SAX) — the new engine', SAX_NARR + saxSchematic());
 
-  // 2 — Ad gross margin trough & recovery (vs Premium)
-  h += sec('Ad gross margin — the trough & the recovery',
-    '<div class="ov-chart-card"><div class="ov-chart-t">Gross margin by segment <span>(%, reported · green bars = Ad-Supported · line = Premium for contrast)</span></div>'+
-      '<div class="ov-chart-wrap ovt-admargin-wrap"><canvas id="spotAdMarginChart"></canvas></div>'+
-      '<div class="ovt-legend">'+
-        '<span class="ovt-lg"><i style="background:#1DB954"></i>Ad-Supported gross margin</span>'+
-        '<span class="ovt-lg"><i style="background:#9AA3AF"></i>Premium gross margin</span>'+
-      '</div>'+
-    '</div>'+
-    '<div class="ov-statline" style="margin-top:10px">Ad margin cratered to <b>2% (2022)</b> under podcast costs, then climbed back to <b>18% (2025)</b> on cost discipline — still only about <b>half</b> of Premium’s ~34%.</div>');
+  // 2 — What it changes vs the old way of buying
+  h += sec('What SAX changes vs the old model',
+    saxChanges()+
+    '<p class="sax-note">'+SAX_CHANGE_NOTE+'</p>');
 
-  // 3 — Strategy timeline
-  h += sec('How the strategy evolved', '<div class="ov-timeline">'+AD_TIMELINE.map(function(t){
-    return '<div class="ov-tl-item"><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t[0])+'</div>'+
-      '<div class="ov-tl-body">'+esc(t[1])+'</div></div>';
-  }).join('')+'</div>');
-
-  // 4 — The pivot to biddable
-  h += sec('The pivot — from direct sales to biddable', adBiddableBar());
-
-  // 5 — SAX & the programmatic stack
-  h += sec('The programmatic stack & partners', adChips());
-
-  // 6 — Latest commentary
-  h += sec('Latest commentary — Q1 2026 call',
-    '<div class="spot-quotes">'+AD_QUOTES.map(function(q){
-      return '<blockquote class="spot-quote">“'+esc(q.q)+'”<cite>— '+esc(q.a)+'</cite></blockquote>';
-    }).join('')+'</div>');
-
-  // 7 — Structural ceiling
-  h += sec('The structural ceiling',
-    '<div class="spot-bigstat is-low"><span class="spot-bigstat-v">483M</span><span class="spot-bigstat-l">Ad-Supported MAUs (Q1’26, +14% Y/Y) — but growth is led by <b>Latin America & Rest of World</b>, exactly where ads monetize <b>worst</b>. The free base scales in low-ARPU regions while ad dollars concentrate in mature Europe & North America. That is the core reason ad revenue lags user growth.</span></div>');
+  // 3 — Where the mix stands today
+  h += sec('The pivot — biddable is now over a third of ad revenue', adBiddableBar());
 
   h += '<div class="ov-foot">'+esc(AD_SOURCES)+'</div>';
   return h;
@@ -646,6 +803,257 @@ function investorDayBody(c){
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// SENSITIVITY — price-increase → valuation, driven off the Summit DCF
+// ════════════════════════════════════════════════════════════════════════════
+// Base figures are the Summit DCF FY2026 projection (snapshot 2026-05-22, EUR m)
+// plus a live SPOT reference price. The model: a $Δ/mo price rise on premium subs
+// in the selected regions → incremental revenue (net of churn & realization) →
+// incremental EBIT (flow-through) → after-tax FCF → capitalized as a growing
+// perpetuity (WACC, g) → Δ equity value → Δ per share vs the current price.
+// Per-region premium-subscriber splits are an ANALYST ASSUMPTION (the DCF does not
+// break subscribers out by region); base local prices reuse the ARPU-tab table.
+var SENS_BASE = {
+  fx:      1.08,    // EUR→USD (1 EUR = 1.08 USD)
+  shares:  206.6,   // m, DCF FY2026
+  price:   473.65,  // USD, live SPOT reference
+  tax:     0.12,    // DCF FY2026 tax rate
+  premRev: 17852,   // €m, DCF FY2026 Premium revenue
+  fcf:     3357,    // €m, DCF FY2026 free cash flow
+  // subs in millions (assumption); price = approx USD headline / mo (ARPU tab)
+  regions: [
+    { key:'eu',    name:'Europe',        subs:123, price:13.50 },
+    { key:'na',    name:'North America', subs:77,  price:12.99 },
+    { key:'latam', name:'Latin America', subs:68,  price:5.50  },
+    { key:'row',   name:'Rest of World', subs:40,  price:3.50  },
+  ],
+  netCash: 6000,   // €m, approx net cash — used to bridge EV → equity for EV multiples
+  // Summit DCF projection_history (snapshot 2026-05-22, €m). EBITDA = adj. EBITDA.
+  fwd: {
+    years:    [2026, 2027, 2028, 2029, 2030],
+    fcf:      [3357, 4119, 5246, 6533, 7983],
+    ebitda:   [3250, 4048, 5171, 6455, 7900],
+    rev:      [19775, 22958, 26605, 30489, 34889],
+    earnings: [2760, 3076, 4080, 5182, 6440],
+    shares:   [206.6, 202.8, 198.9, 198.9, 198.9],
+  },
+};
+var SENS_DEF = { dPrice:1, real:65, margin:55, churn:1, wacc:9, g:3, mult:22, year:2027, metric:'ebitda' };
+
+function sensMoney(eurM){ // €m in → "$X.XB" / "$XXXm" USD
+  var usd = eurM * SENS_BASE.fx;
+  return usd>=1000 ? '$'+(usd/1000).toFixed(2)+'B' : '$'+Math.round(usd)+'m';
+}
+function sensEur(eurM){ return eurM>=1000 ? '€'+(eurM/1000).toFixed(2)+'B' : '€'+Math.round(eurM)+'m'; }
+
+// Core calc. p = {dPrice, real, margin, churn (per $1), wacc, g, regions:{key:bool}}
+function sensCalc(p){
+  var B = SENS_BASE, dRevUsd = 0;
+  B.regions.forEach(function(r){
+    if(!p.regions[r.key]) return;
+    var churnFrac = Math.min(0.9, (p.churn/100) * p.dPrice);   // subs lost
+    var retained  = r.subs * (1 - churnFrac);
+    dRevUsd += retained * p.dPrice * 12 * (p.real/100);         // $m / yr
+  });
+  var dRevEur = dRevUsd / B.fx;
+  var dEbit   = dRevEur * (p.margin/100);
+  var dFcf    = dEbit * (1 - B.tax);
+  var denom   = Math.max(0.005, (p.wacc/100) - (p.g/100));
+  var dEv     = dFcf * (1 + p.g/100) / denom;                  // €m
+  var dPsEur  = dEv / B.shares;
+  var dPsUsd  = dPsEur * B.fx;
+  return { dRevUsd:dRevUsd, dRevEur:dRevEur, dFcf:dFcf, dEv:dEv,
+           dPsUsd:dPsUsd, newPrice:B.price + dPsUsd, upside:dPsUsd / B.price };
+}
+
+// Forward-multiple valuation: apply a chosen multiple to a forward-year metric
+// (EV/EBITDA, P/FCF or EV/Sales), before and after the price increase.
+function sensCalcMult(p){
+  var B = SENS_BASE, F = B.fwd;
+  var i = F.years.indexOf(p.year); if(i < 0) i = 0;
+  var shares = F.shares[i];
+  var dRev = sensCalc(p).dRevEur;                 // €m incremental revenue (today's subs)
+  var dEbitda = dRev * (p.margin/100);
+  var dFcf = dEbitda * (1 - B.tax);
+  var metric, dMetric, isEV, lbl;
+  if(p.metric === 'fcf')        { metric=F.fcf[i];      dMetric=dFcf;    isEV=false; lbl='P/FCF'; }
+  else if(p.metric === 'pe')    { metric=F.earnings[i]; dMetric=dFcf;    isEV=false; lbl='P/E'; }
+  else if(p.metric === 'sales') { metric=F.rev[i];      dMetric=dRev;    isEV=true;  lbl='EV/Sales'; }
+  else                          { metric=F.ebitda[i];   dMetric=dEbitda; isEV=true;  lbl='EV/EBITDA'; }
+  var nc = isEV ? B.netCash : 0;
+  var eqBase = p.mult*metric + nc, eqNew = p.mult*(metric+dMetric) + nc;
+  var tb = eqBase*B.fx/shares, tn = eqNew*B.fx/shares;
+  return { i:i, lbl:lbl, isEV:isEV, metric:metric, dMetric:dMetric, shares:shares,
+           tgtBase:tb, tgtNew:tn, dShare:tn-tb, upBase:tb/B.price-1, upNew:tn/B.price-1 };
+}
+
+// Read the live control values out of the DOM.
+function sensRead(root){
+  var g = function(id){ return root.querySelector('#'+id); };
+  var regions = {};
+  root.querySelectorAll('.sens-region').forEach(function(b){
+    regions[b.getAttribute('data-region')] = b.classList.contains('active');
+  });
+  var msel = g('sensMetric'), ysel = g('sensYear'), msl = g('sensMult');
+  var wa = g('sensWacc'), gg = g('sensG');
+  return {
+    dPrice: parseFloat(g('sensPrice').value),
+    real:   parseFloat(g('sensReal').value),
+    margin: parseFloat(g('sensMargin').value),
+    churn:  parseFloat(g('sensChurn').value),
+    wacc:   wa ? parseFloat(wa.value) : SENS_DEF.wacc,
+    g:      gg ? parseFloat(gg.value) : SENS_DEF.g,
+    method: 'mult',
+    metric: msel ? msel.value : SENS_DEF.metric,
+    year:   ysel ? parseInt(ysel.value, 10) : SENS_DEF.year,
+    mult:   msl ? parseFloat(msl.value) : SENS_DEF.mult,
+    regions: regions,
+  };
+}
+
+// Sensitivity grid — axes depend on the valuation method.
+function sensHeat(p){
+  var shade = function(up, cap){ var a=Math.max(0,Math.min(1,up/cap)); return 'rgba(29,185,84,'+(0.08+a*0.55).toFixed(2)+')'; };
+  if(p.method === 'mult'){
+    // multiple (rows) × forward year (cols) → target price ($, incl. the increase)
+    var mults = [15,20,25,30,35], years = SENS_BASE.fwd.years;
+    var rows = mults.map(function(m){
+      var tds = years.map(function(y){
+        var r = sensCalcMult(Object.assign({}, p, { mult:m, year:y }));
+        var cur = (m === Math.round(p.mult/5)*5 && y === p.year) ? ' sens-heat-cur' : '';
+        return '<td class="sens-heat-v'+cur+'" style="background:'+shade(r.upNew,0.6)+'">$'+r.tgtNew.toFixed(0)+'</td>';
+      }).join('');
+      return '<tr><th>'+m+'×</th>'+tds+'</tr>';
+    }).join('');
+    return '<table class="sens-heat-tbl"><thead><tr><th>×mult \\ FY</th>'+
+      years.map(function(y){ return '<th>'+y+'</th>'; }).join('')+'</tr></thead><tbody>'+rows+'</tbody></table>';
+  }
+  // perpetuity: WACC (rows) × price increase (cols) → % upside
+  var waccs = [7,8,9,10,11], prices = [0.5,1,1.5,2];
+  var cells = waccs.map(function(w){
+    var tds = prices.map(function(dp){
+      var r = sensCalc(Object.assign({}, p, { wacc:w, dPrice:dp }));
+      var cur = (w===Math.round(p.wacc) && dp===p.dPrice) ? ' sens-heat-cur' : '';
+      return '<td class="sens-heat-v'+cur+'" style="background:'+shade(r.upside,0.35)+'">'+(r.upside>=0?'+':'')+(r.upside*100).toFixed(0)+'%</td>';
+    }).join('');
+    return '<tr><th>'+w+'%</th>'+tds+'</tr>';
+  }).join('');
+  return '<table class="sens-heat-tbl"><thead><tr><th>WACC \\ +$/mo</th>'+
+    prices.map(function(dp){ return '<th>+$'+dp.toFixed(2)+'</th>'; }).join('')+'</tr></thead>'+
+    '<tbody>'+cells+'</tbody></table>';
+}
+
+// Recompute everything and paint the outputs + heatmap.
+function sensUpdate(root){
+  if(!root) return;
+  var p = sensRead(root);
+  // reflect slider values in their little value badges
+  var setv = function(id,txt){ var e=root.querySelector('#'+id+'V'); if(e) e.textContent=txt; };
+  setv('sensPrice', '+$'+p.dPrice.toFixed(2)); setv('sensReal', p.real+'%');
+  setv('sensMargin', p.margin+'%'); setv('sensChurn', p.churn.toFixed(1)+'% / $1');
+  setv('sensWacc', p.wacc+'%'); setv('sensG', p.g+'%');
+
+  setv('sensMult', p.mult+'×');
+  // keep the method buttons + control groups in sync
+  root.querySelectorAll('.sens-method button').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-method')===p.method); });
+  var pg = root.querySelector('#sensPerpCtrls'), mg = root.querySelector('#sensMultCtrls');
+  if(pg) pg.hidden = (p.method !== 'perp');
+  if(mg) mg.hidden = (p.method !== 'mult');
+
+  var cards;
+  if(p.method === 'mult'){
+    var m = sensCalcMult(p);
+    var ctx = p.mult+'× '+m.lbl+' · FY'+p.year;
+    cards = [
+      { l:'Δ '+m.lbl.split('/')[1]+' · FY'+p.year, v:sensMoney(m.dMetric), s:'from the price rise'+(m.isEV?'':' (equity)') },
+      { l:'Base target price',   v:'$'+m.tgtBase.toFixed(0), s:ctx+(m.isEV?' + net cash':''), big:true },
+      { l:'Target with +$'+p.dPrice.toFixed(2), v:'$'+m.tgtNew.toFixed(0), s:'incl. the price increase', big:true, up:true },
+      { l:'Upside',              v:(m.upNew>=0?'+':'')+(m.upNew*100).toFixed(1)+'%', s:'vs $'+SENS_BASE.price.toFixed(0)+' today', up:m.upNew>=0 },
+      { l:'Δ from price rise',   v:'+$'+m.dShare.toFixed(2), s:'per share' },
+      { l:'Base upside (no rise)', v:(m.upBase>=0?'+':'')+(m.upBase*100).toFixed(1)+'%', s:'the multiple alone' },
+    ];
+  } else {
+    var r = sensCalc(p);
+    cards = [
+      { l:'Δ Revenue / yr',        v:sensMoney(r.dRevEur), s:sensEur(r.dRevEur)+' · '+(r.dRevEur/SENS_BASE.premRev*100).toFixed(1)+'% of Premium rev' },
+      { l:'Δ Free cash flow / yr', v:sensMoney(r.dFcf),    s:sensEur(r.dFcf)+' · after-tax, flow-through' },
+      { l:'Δ Equity value',        v:sensMoney(r.dEv),     s:sensEur(r.dEv)+' · capitalized at WACC−g' },
+      { l:'Δ Value / share',       v:'+$'+r.dPsUsd.toFixed(2), s:'on '+SENS_BASE.shares+'m shares' },
+      { l:'Implied share price',   v:'$'+r.newPrice.toFixed(0), s:'from $'+SENS_BASE.price.toFixed(0)+' today', big:true },
+      { l:'Upside',                v:(r.upside>=0?'+':'')+(r.upside*100).toFixed(1)+'%', s:'vs current price', big:true, up:r.upside>=0 },
+    ];
+  }
+  var out = root.querySelector('#sensOut');
+  if(out){
+    out.innerHTML = cards.map(function(c){
+      return '<div class="sens-card'+(c.big?' is-big':'')+(c.up?' is-up':'')+'">'+
+        '<div class="sens-card-l">'+esc(c.l)+'</div>'+
+        '<div class="sens-card-v">'+esc(c.v)+'</div>'+
+        '<div class="sens-card-s">'+esc(c.s)+'</div></div>';
+    }).join('');
+  }
+  var heat = root.querySelector('#sensHeat');
+  if(heat) heat.innerHTML = sensHeat(p);
+}
+
+function sensSlider(id, label, min, max, step, def, unitHint){
+  return '<div class="spl-item">'+
+    '<div class="spl-head"><label for="'+id+'">'+esc(label)+'</label><span class="spl-val" id="'+id+'V"></span></div>'+
+    '<input type="range" id="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+def+'">'+
+    (unitHint?'<div class="spl-hint">'+esc(unitHint)+'</div>':'')+
+  '</div>';
+}
+
+function sensitivityBody(c){
+  var h = '';
+  h += '<p class="ov-lede">A <b>live price-increase sensitivity</b> built on the <b>Summit DCF</b> (FY2026, snapshot May 2026). Pick which regions get a monthly price rise and by how much, then watch it flow through the model to <b>revenue, free cash flow, and the implied share price</b>. Every lever is adjustable — dial them to see how sensitive the valuation is.</p>';
+
+  // Region toggles
+  h += sec('1 · Which regions raise price?',
+    '<div class="sens-regions">'+SENS_BASE.regions.map(function(r){
+      return '<button type="button" class="sens-region active" data-region="'+r.key+'">'+
+        '<span class="sens-region-n">'+esc(r.name)+'</span>'+
+        '<span class="sens-region-d">'+r.subs+'m subs · ~$'+r.price.toFixed(2)+'/mo</span></button>';
+    }).join('')+'</div>'+
+    '<div class="ov-statline" style="margin-top:10px">Premium subscribers by region are an <b>analyst split</b> (the DCF carries only the aggregate); base prices reuse the ARPU-tab table. Toggle regions on/off.</div>');
+
+  // Price levers (shared by both valuation methods)
+  h += sec('2 · Price levers',
+    '<div class="spl-grid">'+
+      sensSlider('sensPrice','Price increase',   0, 3, 0.5, SENS_DEF.dPrice,  'Extra $/month per subscriber')+
+      sensSlider('sensReal', 'Revenue realization',30,100,5, SENS_DEF.real,   'How much of the headline $ actually reaches ARPU (student / trials / promo)')+
+      sensSlider('sensMargin','Incremental margin',30,90,5, SENS_DEF.margin,  'Flow-through of the extra revenue to EBIT / EBITDA (price hikes are highly accretive)')+
+      sensSlider('sensChurn','Churn sensitivity', 0, 5, 0.5, SENS_DEF.churn,  '% of a region’s subs lost per +$1/mo')+
+    '</div>');
+
+  // Valuation method — perpetuity or forward multiple on a chosen year
+  var yearOpts = SENS_BASE.fwd.years.map(function(y){
+    return '<option value="'+y+'"'+(y===SENS_DEF.year?' selected':'')+'>FY'+y+'</option>'; }).join('');
+  h += sec('3 · Forward-multiple valuation',
+    '<div id="sensMultCtrls">'+
+      '<div class="sens-selrow">'+
+        '<div class="sens-sel"><label for="sensMetric">Multiple type</label><select id="sensMetric">'+
+          '<option value="ebitda" selected>EV / EBITDA</option><option value="fcf">P / FCF</option><option value="pe">P / E</option><option value="sales">EV / Sales</option>'+
+        '</select></div>'+
+        '<div class="sens-sel"><label for="sensYear">Forward year</label><select id="sensYear">'+yearOpts+'</select></div>'+
+      '</div>'+
+      '<div class="spl-grid">'+
+        sensSlider('sensMult','Multiple (×)', 5, 50, 1, SENS_DEF.mult, 'Applied to the chosen forward-year metric (from the Summit DCF) to set the valuation')+
+      '</div>'+
+    '</div>');
+
+  // Outputs
+  h += sec('Impact on valuation', '<div class="sens-out" id="sensOut"></div>');
+
+  // Heatmap
+  h += sec('Sensitivity grid',
+    '<div class="sens-heat-wrap" id="sensHeat"></div>'+
+    '<div class="ov-statline" style="margin-top:10px">Each cell is the implied <b>target price</b> across <b>multiple (rows) × forward year (cols)</b>, including the selected price increase and holding the other levers fixed. Your current selection is outlined.</div>');
+
+  h += '<div class="ov-foot">Base: Summit DCF SPOT model (snapshot 2026-05-22) — FY2026 Premium revenue €17.9B, FCF €3.4B, 12% tax; forward FY2026–30 FCF / EBITDA / revenue / shares from the DCF projection; live SPOT reference $473.65; EUR→USD 1.08. Forward-multiple mode applies your multiple to the chosen forward-year metric, bridging EV multiples to equity with ~€6B net cash (approx). Regional premium-subscriber splits and per-region base prices are analyst assumptions layered on the DCF (Spotify does not disclose subscribers or ARPU by region). This is a simplified single-driver sensitivity, not the full multi-year DCF. Data sourced from Summit DCF models.</div>';
+  return h;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 // SHELL + CHART + INIT
 // ════════════════════════════════════════════════════════════════════════════
 function html(c){
@@ -654,11 +1062,13 @@ function html(c){
     '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
     '<button type="button" class="ovt-tab" data-ovt="general">General</button>'+
     '<button type="button" class="ovt-tab" data-ovt="mix">Product Mix</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="sens">Sensitivity</button>'+
     '<button type="button" class="ovt-tab" data-ovt="id2026">Investor Day 2026</button>'+
   '</div>';
   h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="general" hidden>'+generalBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="mix" hidden>'+productMixBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="sens" hidden>'+sensitivityBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="id2026" hidden>'+investorDayBody(c)+'</div>';
   h += '</div>';
   return h;
@@ -793,6 +1203,57 @@ function buildArpuChart(){
     plugins:[valLabels] });
 }
 
+// vs Netflix — users/subscribers over time (Spotify MAU + Premium vs Netflix members).
+function buildVsUsersChart(){
+  var id='spotVsUsersChart', cv=document.getElementById(id);
+  if(!cv || typeof Chart==='undefined' || !cv.offsetParent) return;
+  destroy(id);
+  var mk=function(label,data,color,width,dash){
+    return { label:label, data:data, borderColor:color, backgroundColor:color, borderWidth:width, borderDash:dash||[],
+      pointRadius:3, pointHoverRadius:5, pointBackgroundColor:'#fff', pointBorderColor:color, pointBorderWidth:2, tension:0.25 };
+  };
+  _charts[id]=new Chart(cv.getContext('2d'),{
+    type:'line',
+    data:{ labels:VS_YEARS, datasets:[
+      mk('Spotify — total MAU', VS_SPOT_MAU, '#1DB954', 3),
+      mk('Spotify — Premium subs', VS_SPOT_SUBS, '#0E7C3A', 2.5, [5,4]),
+      mk('Netflix — paid memberships', VS_NFLX_SUBS, '#E50914', 3),
+    ] },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ display:true, position:'bottom', labels:{ boxWidth:12, font:{ size:11 }, color:'#3A4654' } },
+        tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label+': '+ctx.parsed.y+'M'; } } } },
+      scales:{
+        y:{ beginAtZero:true, suggestedMax:820, grid:{ color:'#EEF2F7' }, ticks:{ color:'#8A93A0', font:{ size:10 }, callback:function(v){ return v+'M'; } } },
+        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:11 } } } } }
+  });
+}
+
+// vs Netflix — monthly ARPU over time (Spotify € vs Netflix $, not FX-converted).
+function buildVsArpuChart(){
+  var id='spotVsArpuChart', cv=document.getElementById(id);
+  if(!cv || typeof Chart==='undefined' || !cv.offsetParent) return;
+  destroy(id);
+  var mk=function(label,data,color,sym){
+    return { label:label, data:data, borderColor:color, backgroundColor:color, borderWidth:3, _sym:sym,
+      pointRadius:3, pointHoverRadius:5, pointBackgroundColor:'#fff', pointBorderColor:color, pointBorderWidth:2, tension:0.25 };
+  };
+  _charts[id]=new Chart(cv.getContext('2d'),{
+    type:'line',
+    data:{ labels:VS_YEARS, datasets:[
+      mk('Spotify Premium ARPU (€)', VS_SPOT_ARPU, '#1DB954', '€'),
+      mk('Netflix ARM ($)', VS_NFLX_ARPU, '#E50914', '$'),
+    ] },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ display:true, position:'bottom', labels:{ boxWidth:12, font:{ size:11 }, color:'#3A4654' } },
+        tooltip:{ callbacks:{ label:function(ctx){ var s=ctx.dataset._sym||''; return ctx.dataset.label+': '+s+ctx.parsed.y.toFixed(2)+'/mo'; } } } },
+      scales:{
+        y:{ beginAtZero:true, suggestedMax:14, grid:{ color:'#EEF2F7' }, ticks:{ color:'#8A93A0', font:{ size:10 } } },
+        x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:11 } } } } }
+  });
+}
+
 // Ad gross margin (bars) vs Premium gross margin (line) — the trough & recovery.
 function buildAdMarginChart(){
   var id='spotAdMarginChart', cv=document.getElementById(id);
@@ -829,7 +1290,7 @@ function buildGeneral(root){
   if (k === 'arpu') buildArpuChart();
   else if (k === 'ads') buildAdMarginChart();
   else if (k === 'mau') { buildUsersChart(); buildRegionChart(); }
-  // 'vs' is static — no charts
+  else if (k === 'vs') { buildVsUsersChart(); buildVsArpuChart(); }
 }
 
 // Before / After toggle inside the Product Mix pane.
@@ -852,7 +1313,7 @@ function showOvg(root, key){
   if (key === 'arpu') requestAnimationFrame(buildArpuChart);
   else if (key === 'ads') requestAnimationFrame(buildAdMarginChart);
   else if (key === 'mau') requestAnimationFrame(function(){ buildUsersChart(); buildRegionChart(); });
-  // 'vs' is static — no charts
+  else if (key === 'vs') requestAnimationFrame(function(){ buildVsUsersChart(); buildVsArpuChart(); });
 }
 
 function init(c){
@@ -867,6 +1328,34 @@ function init(c){
   root.querySelectorAll('.ovg-tab').forEach(function(btn){
     btn.onclick = function(){ showOvg(root, btn.getAttribute('data-ovg')); };
   });
+  // Interactive SAX schematic: clicking (or Enter/Space on) a box shows its detail.
+  root.querySelectorAll('[data-sax]').forEach(function(el){
+    var pick = function(){
+      var k = el.getAttribute('data-sax');
+      root.querySelectorAll('[data-sax]').forEach(function(x){ x.classList.toggle('is-active', x === el); });
+      var d = root.querySelector('#saxDetail');
+      if (d) d.innerHTML = saxDetailHtml(k);
+    };
+    el.onclick = pick;
+    el.onkeydown = function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } };
+  });
+  // Sensitivity tab: live recompute on any slider move or region toggle.
+  root.querySelectorAll('.spl-grid input[type=range]').forEach(function(sl){
+    sl.oninput = function(){ sensUpdate(root); };
+  });
+  root.querySelectorAll('.sens-region').forEach(function(b){
+    b.onclick = function(){ b.classList.toggle('active'); sensUpdate(root); };
+  });
+  root.querySelectorAll('.sens-method button').forEach(function(b){
+    b.onclick = function(){
+      root.querySelectorAll('.sens-method button').forEach(function(x){ x.classList.toggle('active', x===b); });
+      sensUpdate(root);
+    };
+  });
+  root.querySelectorAll('#sensMetric, #sensYear').forEach(function(sel){
+    sel.onchange = function(){ sensUpdate(root); };
+  });
+  if (root.querySelector('#sensOut')) sensUpdate(root);
   var active = root.querySelector('.ovt-tab.active');
   var ak = active && active.getAttribute('data-ovt');
   if (ak === 'mix') requestAnimationFrame(buildGmChart);

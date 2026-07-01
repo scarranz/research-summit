@@ -1005,7 +1005,6 @@ function sensSlider(id, label, min, max, step, def, unitHint){
 
 function sensitivityBody(c){
   var h = '';
-  h += '<p class="ov-lede">A <b>live price-increase sensitivity</b> built on the <b>Summit DCF</b> (FY2026, snapshot May 2026). Pick which regions get a monthly price rise and by how much, then watch it flow through the model to <b>revenue, free cash flow, and the implied share price</b>. Every lever is adjustable — dial them to see how sensitive the valuation is.</p>';
 
   // Region toggles
   h += sec('1 · Which regions raise price?',

@@ -363,13 +363,123 @@ function incentiveTab(){
 }
 
 // ─── Tab registry + shell ───────────────────────────────────────────────────────
+// ─── Value Chain tab · fee waterfall + the full stack ───────────────────────────
+var WATERFALL = {
+  cardType:'US Visa Rewards Credit Card', mdr:2.30,
+  notes:[
+    'US debit (Durbin-regulated): interchange capped at ~$0.21 + 0.05% (~$0.26 on $100); merchant MDR ~0.40–0.80%; the merchant can route to a PIN network (STAR, NYCE) at lower cost.',
+    'Cross-border credit: add a network cross-border assessment ~0.80–1.00% plus a 1.5–3.0% FX spread the issuer charges the cardholder.',
+    'A2A (UPI, PIX): $0 merchant fee, $0 consumer fee, $0 interchange — the operator charges banks only ~$0.01–0.04 per transaction.',
+  ],
+};
+var FEE_SEGS = [
+  { l:'Interchange → issuing bank', v:1.80, p:78.3, c:'#B45309' },
+  { l:'Processor / acquirer margin', v:0.37, p:16.1, c:'#7C8694' },
+  { l:'Assessment → card network', v:0.13, p:5.7, c:'#16A34A' },
+];
+function waterfallBlock(){
+  var bar1 = '<div class="pay-wf"><div class="pay-wf-cap"><span>A $100 purchase · '+esc(WATERFALL.cardType)+'</span><span>total MDR ~'+WATERFALL.mdr.toFixed(2)+'%</span></div>'+
+    '<div class="pay-wf-bar"><div class="pay-wf-seg" style="width:97.7%;background:#3E5A82">Merchant keeps $97.70</div>'+
+    '<div class="pay-wf-seg" style="width:2.3%;background:#B45309"></div></div>'+
+    '<div class="pay-wf-key"><span class="pay-wf-ki"><span class="pay-wf-dot" style="background:#3E5A82"></span>Merchant net $97.70 (97.7%)</span>'+
+    '<span class="pay-wf-ki"><span class="pay-wf-dot" style="background:#B45309"></span>Total fees $2.30 (2.3%) — split below</span></span></div>';
+  var bar2 = '<div class="pay-wf"><div class="pay-wf-cap"><span>Where the $2.30 fee goes</span><span>= the 2.3% MDR</span></div>'+
+    '<div class="pay-wf-bar">'+FEE_SEGS.map(function(s){ return '<div class="pay-wf-seg" style="width:'+s.p+'%;background:'+s.c+'">$'+s.v.toFixed(2)+'</div>'; }).join('')+'</div>'+
+    '<div class="pay-wf-key">'+FEE_SEGS.map(function(s){ return '<span class="pay-wf-ki"><span class="pay-wf-dot" style="background:'+s.c+'"></span>'+esc(s.l)+' $'+s.v.toFixed(2)+' ('+Math.round(s.p)+'%)</span>'; }).join('')+'</div></div>';
+  var notes = '<div class="pay-inset" style="margin-top:4px">'+WATERFALL.notes.map(function(n){ return '<div class="pay-body" style="font-size:11px;margin-bottom:5px">• '+esc(n)+'</div>'; }).join('')+'</div>';
+  var callout = '<div class="pay-card" style="margin-top:10px"><div class="pay-body">The <b>card network’s slice is the smallest</b> — just <b>$0.13</b> of the $2.30 fee — yet Visa and Mastercard earn the best margins in the whole chain. Their cut is a <b>toll on volume</b> at near-zero marginal cost; the issuer takes the biggest slice (interchange, ~$1.80) for bearing credit and fraud risk.</div></div>';
+  return bar1 + bar2 + notes + callout;
+}
+var FOURPARTY = [
+  { n:'Cardholder', t:'Initiates & repays', b:'Taps card or wallet; repays the issuer over time (credit) or from balance (debit). Chooses the payment method — the demand that sets the whole chain in motion.' },
+  { n:'Merchant', t:'Pays the MDR', b:'Accepts the card and pays the full merchant discount rate (~2.30% on credit) to its acquirer. The primary cost-bearer of the four-party model.' },
+  { n:'Acquirer', t:'Collects MDR, remits', b:'Stripe / Adyen / Fiserv. Collects the MDR, remits interchange to the issuer and assessment to the network, and keeps the margin.' },
+  { n:'Network', t:'Routes · takes assessment', b:'Visa / Mastercard. Switches the authorization, runs fraud scoring, guarantees the payment — and takes a ~0.13% assessment, the smallest slice.' },
+  { n:'Issuer', t:'Funds · takes interchange', b:'Chase / BofA. Approves and funds the purchase, bears credit & fraud risk, and receives interchange (~1.80%) — the largest fee slice.' },
+];
+var VC_SEGMENTS = [
+  { name:'Core Banking & BaaS', tag:'Account-ledger infrastructure behind every issuer', flow:1,
+    cos:[{n:'Temenos'},{n:'Thought Machine'},{n:'Mambu'},{n:'Galileo'},{n:'Cross River'},{n:'Green Dot'}] },
+  { name:'Consumer / Cardholder', tag:'Origin of every transaction & spending volume', flow:1, cos:[] },
+  { name:'Digital Wallets & Super-apps', tag:'Consumer interface riding on card or proprietary rails', flow:2,
+    cos:[{n:'Apple Pay'},{n:'Google Pay'},{n:'PayPal'},{n:'Cash App'},{n:'Alipay'},{n:'WeChat Pay'},{n:'Revolut'}] },
+  { name:'Issuers', tag:'Banks that issue cards & receive interchange', flow:2,
+    cos:[{n:'JPMorgan Chase'},{n:'Bank of America'},{n:'Citi'},{n:'Capital One'},{n:'Amex'},{n:'HSBC'}] },
+  { name:'Issuer-Processors', tag:'Process card authorizations for issuers', flow:2,
+    cos:[{n:'Fiserv'},{n:'FIS'},{n:'TSYS'},{n:'Marqeta'},{n:'Pismo',own:'V'}] },
+  { name:'BNPL', tag:'Installment credit at POS; bypasses interchange', flow:2,
+    cos:[{n:'Affirm'},{n:'Klarna'},{n:'Afterpay'},{n:'PayPal Pay Later'},{n:'Zip'}] },
+  { name:'Card Networks', tag:'Rules · routing · fraud · brand — the trust platform', flow:3,
+    cos:[{n:'Visa'},{n:'Mastercard'},{n:'American Express'},{n:'Discover'},{n:'UnionPay'},{n:'RuPay'}] },
+  { name:'Fraud, Risk & Identity', tag:'Overlay intelligence across the chain', flow:3,
+    cos:[{n:'Featurespace',own:'V'},{n:'Recorded Future',own:'MA'},{n:'LexisNexis'},{n:'Socure'},{n:'BioCatch'}] },
+  { name:'A2A / Real-Time Rails', tag:'Instant bank-to-bank; zero interchange', flow:3,
+    cos:[{n:'UPI / NPCI'},{n:'PIX'},{n:'FedNow'},{n:'Zelle'},{n:'Visa Direct',own:'V'},{n:'Vocalink',own:'MA'}] },
+  { name:'Open Banking', tag:'Account-data access & payment initiation', flow:3,
+    cos:[{n:'Plaid'},{n:'Finicity',own:'MA'},{n:'Tink',own:'V'},{n:'TrueLayer'},{n:'Aiia',own:'MA'}] },
+  { name:'Crypto & Stablecoin Rails', tag:'Cryptographic settlement finality', flow:3,
+    cos:[{n:'Circle (USDC)'},{n:'Tether'},{n:'Coinbase'},{n:'BVNK',own:'MA'},{n:'Ripple'}] },
+  { name:'Acquirers', tag:'Merchant-side banks; collect the MDR', flow:4,
+    cos:[{n:'Stripe'},{n:'Adyen'},{n:'Fiserv'},{n:'Square'},{n:'Worldpay'},{n:'Checkout.com'}] },
+  { name:'Processors & Gateways', tag:'Route checkout → acquirer', flow:4,
+    cos:[{n:'CyberSource',own:'V'},{n:'Authorize.net',own:'V'},{n:'Braintree'},{n:'Stripe'},{n:'Adyen'}] },
+  { name:'Payment Orchestration', tag:'Routing intelligence above gateways', flow:4,
+    cos:[{n:'Spreedly'},{n:'Primer'},{n:'Payoneer'},{n:'Gr4vy'}] },
+  { name:'Cross-Border & FX', tag:'Highest-margin activity in the ecosystem', flow:4,
+    cos:[{n:'Wise'},{n:'Remitly'},{n:'Western Union'},{n:'Nium'},{n:'Airwallex'},{n:'Currencycloud',own:'V'}] },
+  { name:'POS Hardware & Terminals', tag:'Physical acceptance at the point of sale', flow:5,
+    cos:[{n:'Ingenico'},{n:'Verifone'},{n:'Clover'},{n:'Square'},{n:'Toast'},{n:'Lightspeed'}] },
+  { name:'Merchants', tag:'Final recipient; primary bearer of the MDR', flow:6, cos:[] },
+];
+var VC_TIERS = [
+  [1,'Upstream — infrastructure & origin'], [2,'Issuing side — cards, credit & processing'],
+  [3,'Core rails — networks, intelligence & alternatives'], [4,'Acquiring side — acceptance, routing & FX'],
+  [5,'Physical acceptance'], [6,'Downstream — demand'],
+];
+function vcStack(){
+  return VC_TIERS.map(function(tier){
+    var segs = VC_SEGMENTS.filter(function(s){ return s.flow===tier[0]; });
+    if(!segs.length) return '';
+    var cards = segs.map(function(s){
+      var chips = s.cos.length ? '<div class="pay-vc-chips">'+s.cos.map(function(c){
+        var own = c.own ? '<span class="pay-own pay-own-'+(c.own==='V'?'v':'ma')+'">'+c.own+'</span>' : '';
+        return '<span class="pay-chip">'+esc(c.n)+own+'</span>';
+      }).join('')+'</div>' : '<div class="pay-vc-empty">No investable pure-play — observed via volume.</div>';
+      return '<div class="pay-vc-card"><div class="pay-vc-name">'+esc(s.name)+'</div><div class="pay-vc-tag">'+esc(s.tag)+'</div>'+chips+'</div>';
+    }).join('');
+    return '<div class="pay-vc-tier">'+esc(tier[1])+'</div><div class="pay-vc-grid">'+cards+'</div>';
+  }).join('');
+}
+var VC_INSIGHTS = [
+  ['Networks are not processors','Visa &amp; Mastercard are four-layer trust platforms — rules, switching, fraud intelligence, brand — not payment processors. Real-time rails attack only the switching layer.'],
+  ['The smallest slice, the best business','The network keeps ~$0.13 of a $2.30 fee, yet earns ~60–68% operating margins — a toll on volume at near-zero marginal cost.'],
+  ['Cross-border is gold','A single cross-border purchase triggers a domestic assessment, a cross-border assessment AND a processing assessment at once — three revenue lines on one transaction.'],
+  ['Buying the disruptors','Rather than compete, V/MA acquire across the stack — fraud, open banking, gateways, A2A, cross-border, stablecoins — turning threats into owned fee layers.'],
+];
+function vcInsights(){
+  return '<div class="pay-g2">'+VC_INSIGHTS.map(function(it){
+    return '<div class="pay-card-sm"><div class="pay-lbl">'+esc(it[0])+'</div><div class="pay-body" style="font-size:11px">'+it[1]+'</div></div>';
+  }).join('')+'</div>';
+}
+function valueChainTab(){
+  var h = '<div class="pay-sec">Where a $100 card payment goes — and who does what in the chain</div>';
+  h += '<p class="pay-body" style="margin-bottom:14px">Visa and Mastercard sit in the middle of a deep, unbundled value chain — from the bank core that issues the card to the terminal that accepts it. Below: the fee split on a typical $100 purchase, the four-party money flow, and the full stack of 17 segments — with the networks’ own holdings marked <span class="pay-own pay-own-v">V</span> / <span class="pay-own pay-own-ma">MA</span>.</p>';
+  h += waterfallBlock();
+  h += '<div class="pay-sec">The four-party money flow</div>'+flowRow(FOURPARTY);
+  h += '<div class="pay-sec">The full payments value chain — 17 segments</div>'+vcStack();
+  h += '<div class="pay-card" style="margin:12px 0;border-left:3px solid var(--steel)"><div class="pay-lbl">The networks are everywhere</div><div class="pay-body">Visa and Mastercard don’t just run the switch — they’ve <b>bought into nearly every layer</b>: fraud (Featurespace → V, Recorded Future → MA), open banking (Tink → V, Finicity → MA), gateways (CyberSource &amp; Authorize.net → V), issuer processing (Pismo → V), A2A rails (Vocalink → MA, Visa Direct → V), cross-border (Currencycloud → V) and stablecoins (BVNK → MA). Lose a fee at the switch, capture it one layer over.</div></div>';
+  h += '<div class="pay-sec">Key economics</div>'+vcInsights();
+  return h;
+}
+
 var TABS = [
-  { key:'layers',    label:'The Four Layers',    n:'01', body:layersTab },
-  { key:'map',       label:'Competitive Map',    n:'02', body:mapTab },
-  { key:'threats',   label:'Threat Vectors',     n:'03', body:threatsTab },
-  { key:'rails',     label:'Rail Displacement',  n:'04', body:railsTab },
-  { key:'matrix',    label:'Replication Matrix', n:'05', body:matrixTab },
-  { key:'incentive', label:'Incentive Context',  n:'06', body:incentiveTab },
+  { key:'valuechain', label:'Value Chain',        body:valueChainTab },
+  { key:'layers',     label:'The Four Layers',    body:layersTab },
+  { key:'map',        label:'Competitive Map',    body:mapTab },
+  { key:'threats',    label:'Threat Vectors',     body:threatsTab },
+  { key:'rails',      label:'Rail Displacement',  body:railsTab },
+  { key:'matrix',     label:'Replication Matrix', body:matrixTab },
+  { key:'incentive',  label:'Incentive Context',  body:incentiveTab },
 ];
 
 function html(){
@@ -377,7 +487,7 @@ function html(){
   h += '<div class="pay-head"><div class="pay-h-title">Payment Network Competitive Landscape</div>'+
     '<div class="pay-h-sub">Structural analysis · Visa &amp; Mastercard moat and threat framework</div></div>';
   h += '<div class="pay-tabs">'+TABS.map(function(t,i){
-    return '<button type="button" class="pay-tab'+(i===0?' active':'')+'" data-pt="'+t.key+'"><span class="pay-tab-n">'+t.n+'</span>'+esc(t.label)+'</button>';
+    return '<button type="button" class="pay-tab'+(i===0?' active':'')+'" data-pt="'+t.key+'">'+esc(t.label)+'</button>';
   }).join('')+'</div>';
   h += TABS.map(function(t,i){
     return '<div class="pay-pane" data-pt="'+t.key+'"'+(i===0?'':' hidden')+'>'+t.body()+'</div>';

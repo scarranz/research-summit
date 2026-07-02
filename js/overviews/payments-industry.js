@@ -178,19 +178,198 @@ function buildMapChart(){
   });
 }
 
-// ─── Placeholder tabs (built next) ──────────────────────────────────────────────
-function soonTab(title, desc){
-  return '<div class="pay-soon"><b>'+esc(title)+'</b>'+esc(desc)+'<br><span style="font-size:11px">Coming next — validating the first two tabs first.</span></div>';
+// ─── Shared helpers ─────────────────────────────────────────────────────────────
+function badges(arr){ return arr.map(function(b){ return '<span class="pay-badge '+b[1]+'">'+esc(b[0])+'</span>'; }).join(''); }
+function bar(pct, color){ return '<span style="flex:1;height:4px;background:var(--ice);border-radius:2px;overflow:hidden;display:inline-block"><span style="display:block;height:4px;border-radius:2px;width:'+pct+'%;background:'+color+'"></span></span>'; }
+
+// ─── Tab 3 · Threat Vectors ─────────────────────────────────────────────────────
+var THREATS = [
+  { icon:'🏛️', bg:'var(--pale)', name:'Direct Network Replication', tag:'Category 1 · Must replicate all four layers simultaneously',
+    body:'Build a fourth global card network doing exactly what Visa does — same rules, switching, fraud intelligence, and brand — but cheaper. Hardest path that exists. The only example is UnionPay, built on Chinese government mandate with 1.4 billion captive cardholders, and it still does not have genuine global parity after 20 years. Without a state mandate forcing bank participation, the coordination problem is essentially unsolvable from scratch.',
+    tags:[['Highest difficulty','pay-b-mut'],['Lowest near-term risk','pay-b-green'],['Only viable via state mandate','pay-b-mut']] },
+  { icon:'⚡', bg:'var(--green-l)', name:'Real-Time Rail Displacement', tag:'Category 2 · Attacks Layer 2 only — the most credible structural medium-term threat',
+    body:'Government-mandated instant payment rails (UPI, PIX, FPS, FedNow/RTP) make the card-switching layer obsolete for domestic flows — cheaper, faster, and zero interchange for merchants. UPI already exceeds Visa and Mastercard combined for domestic India transactions. The critical question is whether rails acquire the fraud intelligence and rules layers over time, or remain dumb infrastructure.',
+    tags:[['Medium difficulty','pay-b-mut'],['Highest credible volume risk','pay-b-red'],['Long runway in US','pay-b-amber'],['Already dominant in India','pay-b-green']] },
+  { icon:'📱', bg:'var(--pale)', name:'Endpoint / Interface Capture', tag:'Category 3 · Currently rides on top of V/MA — could route beneath them',
+    body:'Apple Pay, Google Pay, WeChat, and Alipay capture the consumer-merchant interface and are building Layer 4 trust through their own brands. Currently they route transactions over Visa/Mastercard rails — V/MA still collect network fees. The risk: if Apple or Google establish direct bank relationships and add their own routing logic, they bypass the network fee. Apple’s Goldman Sachs partnership and Apple Savings are early signals. EU Digital Markets Act could compel open routing, removing the default V/MA preference baked into every iPhone.',
+    tags:[['Medium difficulty','pay-b-mut'],['Currently a partner, not a competitor','pay-b-amber'],['Watch: Apple bank charter','pay-b-mut']] },
+  { icon:'⛓️', bg:'var(--blue-l)', name:'Protocol / Cryptographic Replacement', tag:'Category 4 · Stablecoins — replaces institutional trust with mathematical proof',
+    body:'Stablecoins (USDC, USDT, tokenized bank deposits) make trust intermediation theoretically unnecessary — cryptographic settlement finality replaces the need for an entity every party trusts. The risk is not retail consumers paying with stablecoins instead of cards. The real risk is B2B and cross-border flows — supplier payments, payroll, FX settlement — bypassing card rails entirely without ever generating a V/MA transaction. Both companies are co-opting: Mastercard’s $1.8B BVNK acquisition, Visa’s stablecoin settlement program. A 10-year horizon, not a 5-year one.',
+    tags:[['Longest timeline','pay-b-mut'],['B2B and cross-border first','pay-b-blue'],['V/MA actively co-opting','pay-b-mut']] },
+];
+function threatsTab(){
+  return '<div class="pay-sec">Four categories of potential displacement</div>'+
+    THREATS.map(function(t){
+      return '<div class="pay-threat"><div class="pay-t-icon" style="background:'+t.bg+'">'+t.icon+'</div>'+
+        '<div><div class="pay-t-name">'+esc(t.name)+'</div><div class="pay-t-tag">'+esc(t.tag)+'</div>'+
+        '<div class="pay-t-body">'+esc(t.body)+'</div><div class="pay-t-tags">'+badges(t.tags)+'</div></div></div>';
+    }).join('');
+}
+
+// ─── Tab 4 · Rail Displacement ──────────────────────────────────────────────────
+var CARD_FLOW = [
+  { n:'Step 1', t:'Consumer taps card', b:'Card credential (PAN or token) sent to terminal. Merchant identifies the network from the card’s BIN number. V/MA logo determines which network to route to. Visa and Mastercard are in the flow from the first millisecond.', hl:'#EAF0F7' },
+  { n:'Step 2', t:'Acquirer → VisaNet', b:'Authorization request sent to VisaNet / Banknet. V/MA run fraud scoring on 500+ variables in real time using their global intelligence layer. Routes to the issuing bank. V/MA collect a network fee at this point.' },
+  { n:'Step 3', t:'Issuer authorizes', b:'Issuing bank approves or declines. Response returns through VisaNet to terminal in <100ms. V/MA guarantee the payment — if the acquirer fails, they make the issuer whole. This guarantee is central to the whole system’s trust.' },
+  { n:'Step 4', t:'Clearing & settlement', b:'V/MA calculate net positions between all banks at end of day. Issue settlement instructions. Collect assessment fees and network fees from acquirer and issuer — the revenue line for V/MA.' },
+];
+var RAIL_FLOW = [
+  { n:'Step 1', t:'Consumer scans QR / sends via app', b:'No card credential. No PAN. Consumer identifies payee via UPI ID, phone number, or QR code linked directly to their bank account. Visa and Mastercard have zero visibility into this transaction — they are not in the flow at all.', hl:'#E8F3EC' },
+  { n:'Step 2', t:'App → Central infrastructure', b:'Request goes directly to the central operator: NPCI (India), Banco Central (Brazil), Federal Reserve (US). No private network intermediary. The central operator routes between banks. V/MA earn nothing on this flow.' },
+  { n:'Step 3', t:'Accounts debited instantly', b:'Payer’s bank account debited in real time — not end of day. Payee’s account credited immediately. Settlement is final and irrevocable within seconds. The central bank is the guarantor — no private network guarantee needed.' },
+  { n:'Step 4', t:'Zero interchange', b:'No network fee. No interchange. Merchant cost: typically zero. The government operator charges banks a nominal participation fee — orders of magnitude below V/MA network fees. This is why merchants actively prefer rails where available.' },
+];
+var DISPLACE = [
+  ['Layer 2 network fees on domestic debit','Every domestic UPI or PIX transaction that would have been a Visa/MC debit card payment is a lost network fee. In India this is already material — V/MA earn nothing on those flows.'],
+  ['Debit card issuance pressure','If consumers use their bank account directly via app, issuing banks have less incentive to issue debit cards. Fewer debit cards = lower network volume = lower network fees and VAS attachment. Credit cards are more resilient because rails don’t extend credit.'],
+  ['Issuer negotiating leverage at renewal','When real-time rails exist, issuers can credibly threaten to migrate debit volume to the government rail. This is a real outside option that didn’t exist before UPI/PIX — and a structural driver of rising client incentives.'],
+];
+var NOTDISPLACE = [
+  ['Cross-border transactions','UPI, PIX, and FedNow are domestic rails. The Indian tourist paying in Tokyo still uses Visa or Mastercard. Multi-country coordination — rules, FX, fraud — is exactly what local rails cannot solve. International flows remain entirely V/MA territory.'],
+  ['Credit card economics','Rails move money between existing bank accounts. They do not extend credit. A UPI transaction cannot replace a credit card because the credit extension, rewards, and installment financing are provided by the issuing bank, not Visa. Credit volume (50–60% of V/MA revenue) is structurally insulated.'],
+  ['Fraud & dispute infrastructure','Real-time rails have severe fraud problems. PIX fraud in Brazil and UPI phishing are serious — there is no equivalent of the V/MA chargeback framework. Banks building on rails must solve this themselves or buy it. This is the opening for V/MA’s VAS products on top of rail infrastructure.'],
+];
+var SECURITY = [
+  { t:'1 — Strong customer authentication (SCA)', b:'UPI and PIX require two-factor authentication on every transaction: device PIN or biometric plus a bank UPI PIN or OTP. Authentication happens before the payment leaves the consumer’s device. Contrast with cards where authentication is optional and fraud liability is absorbed by the network guarantee.', tags:[['Effective for push payments','pay-b-green'],['Cannot stop authorized push fraud','pay-b-red']] },
+  { t:'2 — Irrevocable settlement + bank liability', b:'Rail transactions are final — no chargeback mechanism equivalent to V/MA exists. Liability shifts entirely to the sending bank: if a customer is defrauded, their bank is responsible for remediation. This creates strong incentives for banks to invest in their own fraud prevention. The UK PSR’s APP fraud reimbursement mandate (Oct 2024) is the regulatory expression of this shift.', tags:[['Different from card chargeback','pay-b-mut'],['Regulatory frameworks maturing','pay-b-amber']] },
+  { t:'3 — Central operator monitoring', b:'NPCI (UPI) and Banco Central (PIX) run their own transaction monitoring systems. Key weakness: they only see domestic transactions within their rail. Zero visibility into cross-border fraud patterns, no equivalent of V/MA’s global intelligence sharing. Fraud rates on UPI and PIX are meaningfully higher than on V/MA card networks per available data.', tags:[['Domestic visibility only','pay-b-amber'],['No cross-border intelligence','pay-b-red']] },
+  { t:'4 — Third-party fraud overlay (the V/MA opportunity)', b:'Banks on real-time rails increasingly buy fraud intelligence from third parties to compensate for what the central operator cannot provide. This is where Visa’s Protect for A2A and Mastercard’s Consumer Fraud Risk (on Vocalink) enter the picture. V/MA are selling their fraud intelligence layer on top of the rails that displace their switching layer — lose the routing fee, sell the intelligence the new routing cannot generate on its own.', tags:[['V/MA VAS opportunity on rails','pay-b-blue'],['Already live in UK','pay-b-green']] },
+];
+var VERDICT = [
+  ['Volume impact','Domestic debit volume in rail-dominant markets is at structural risk. Real — already happened in India. Not yet material in the US or Western Europe but the trajectory is clear. Model as a gradual debit volume headwind in EM markets, not a binary cliff.'],
+  ['Revenue impact','Network fees on displaced debit volume are lost. But VAS revenue may partially offset: fraud intelligence sold to rail participants, A2A fraud products, open banking platforms (Tink, Finicity) on top of rail infrastructure. Net revenue impact is smaller than gross volume impact.'],
+  ['Incentive impact','Rail existence increases issuer leverage at renewal. This is already flowing into higher client incentives — the CI/PV ratio drift is partly already a symptom of rail competition, not just bilateral V/MA bidding.'],
+];
+function flowRow(steps){
+  return '<div class="pay-flow-row">'+steps.map(function(f,i){
+    var arrow = i<steps.length-1 ? '<div class="pay-flow-arr">→</div>' : '';
+    return '<div class="pay-flow-step"'+(f.hl?' style="background:'+f.hl+'"':'')+'>'+
+      '<div class="pay-fn">'+esc(f.n)+'</div><div class="pay-ft">'+esc(f.t)+'</div><div class="pay-fb">'+esc(f.b)+'</div></div>'+arrow;
+  }).join('')+'</div>';
+}
+function noteList(items, color){
+  return items.map(function(it){
+    return '<div class="pay-note"><div class="pay-note-bar" style="background:'+color+'"></div>'+
+      '<div><div style="font:700 12px Inter,sans-serif;color:var(--navy);margin-bottom:2px">'+esc(it[0])+'</div>'+
+      '<div class="pay-body" style="font-size:11px">'+esc(it[1])+'</div></div></div>';
+  }).join('');
+}
+function railsTab(){
+  var h = '<div class="pay-sec">How local rail displacement works — and whether it dislocates V/MA</div>';
+  h += '<div class="pay-lbl" style="margin-bottom:8px">Card network transaction flow (Visa / Mastercard)</div>'+flowRow(CARD_FLOW);
+  h += '<div class="pay-lbl" style="margin-bottom:8px">Instant payment rail flow (UPI / PIX / FedNow)</div>'+flowRow(RAIL_FLOW);
+  h += '<div class="pay-sec">Does rail displacement actually dislocate Visa and Mastercard?</div>'+
+    '<div class="pay-g2" style="margin-bottom:14px">'+
+      '<div class="pay-card"><div class="pay-lbl" style="color:var(--green)">What it does displace</div>'+
+        '<div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">'+noteList(DISPLACE,'#16A34A')+'</div></div>'+
+      '<div class="pay-card"><div class="pay-lbl" style="color:var(--red)">What it does not displace</div>'+
+        '<div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">'+noteList(NOTDISPLACE,'#DC2626')+'</div></div>'+
+    '</div>';
+  h += '<div class="pay-sec">How do real-time rails secure transactions without Visa/Mastercard?</div>'+
+    '<div class="pay-card" style="margin-bottom:14px"><div class="pay-lbl" style="margin-bottom:12px">Four security mechanisms — and where they fall short</div>'+
+    '<div class="pay-g2">'+SECURITY.map(function(s){
+      return '<div class="pay-inset"><div style="font:700 12px Inter,sans-serif;color:var(--navy);margin-bottom:4px">'+esc(s.t)+'</div>'+
+        '<div class="pay-body" style="font-size:11px">'+esc(s.b)+'</div><div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap">'+badges(s.tags)+'</div></div>';
+    }).join('')+'</div></div>';
+  h += '<div class="pay-card" style="border-left:3px solid var(--navy)"><div class="pay-lbl">Verdict — the accurate framing for the DCF</div>'+
+    '<div class="pay-g3" style="margin-top:8px">'+VERDICT.map(function(v){
+      return '<div><div style="font:700 12px Inter,sans-serif;color:var(--navy);margin-bottom:4px">'+esc(v[0])+'</div><div class="pay-body" style="font-size:11px">'+esc(v[1])+'</div></div>';
+    }).join('')+'</div></div>';
+  return h;
+}
+
+// ─── Tab 5 · Replication Matrix ─────────────────────────────────────────────────
+var MATRIX = [
+  { section:'Direct network replication', rows:[
+    { flag:'🇨🇳', name:'UnionPay', sub:'State-mandated card network', d:[2,2,2,3], overall:['Low globally','pay-b-green'] },
+  ]},
+  { section:'Real-time rail displacement (Layer 2 attack)', rows:[
+    { flag:'🇮🇳', name:'UPI — India / NPCI', sub:'Government instant rail', d:['x',1,3,'x'], overall:['High — in India','pay-b-red'] },
+    { flag:'🇧🇷', name:'PIX — Brazil', sub:'Central bank instant payments', d:['x',1,3,'x'], overall:['High — in Brazil','pay-b-red'] },
+    { flag:'🇺🇸', name:'FedNow / RTP — US', sub:'Fed Reserve + Clearing House', d:['x',1,3,'x'], overall:['Low now — watch 10yr','pay-b-mut'] },
+  ]},
+  { section:'Endpoint / interface capture', rows:[
+    { flag:'📱', name:'Apple Pay / Google Pay', sub:'Currently routes over V/MA', d:['x',3,3,1], overall:['Medium — growing leverage','pay-b-amber'] },
+    { flag:'🇨🇳', name:'Alipay / WeChat Pay', sub:'Closed-loop ecosystem', d:['x',1,2,2], overall:['Low outside Asia','pay-b-green'] },
+  ]},
+  { section:'Protocol replacement', rows:[
+    { flag:'⛓️', name:'Stablecoins (USDC/USDT)', sub:'Cryptographic settlement', d:[3,1,'x',3], overall:['Low retail, watch B2B','pay-b-mut'] },
+  ]},
+];
+var MATRIX_KEY = [['1','pay-d1','Done / straightforward'],['2','pay-d2','Hard — years + capital'],['3','pay-d3','Very hard — needs state mandate'],['✕','pay-dn','Not attempting this layer']];
+var MATRIX_SUM = [
+  ['Most replicable','var(--green)','<b>Layer 2 — Switching.</b> Instant payment rails have already done this domestically. But Layer 2 alone generates no revenue without Layers 1, 3, and 4 built on top.'],
+  ['Least replicable','var(--red)','<b>Layer 3 — Fraud intelligence.</b> Requires cross-network global transaction data. No challenger has this without being the network. Self-reinforcing — the data advantage widens with volume.'],
+  ['Slowest to build','var(--mid)','<b>Layer 1 — Rules.</b> Requires government recognition in 200+ jurisdictions and legal precedent built over decades. Cannot be solved with technology alone.'],
+];
+function diffChip(v){ if(v==='x') return '<span class="pay-diff pay-dn">✕</span>'; return '<span class="pay-diff pay-d'+v+'">'+v+'</span>'; }
+function matrixTab(){
+  var key = MATRIX_KEY.map(function(k){ return '<span style="display:inline-flex;align-items:center;gap:5px"><span class="pay-diff '+k[1]+'" style="width:24px;height:24px;font-size:10px">'+k[0]+'</span><span class="pay-body" style="font-size:11px">'+esc(k[2])+'</span></span>'; }).join('');
+  var body = MATRIX.map(function(sec){
+    var rows = '<tr class="pay-rs"><td colspan="6">'+esc(sec.section)+'</td></tr>';
+    rows += sec.rows.map(function(r){
+      return '<tr><td><div class="pay-mtx-co"><span style="font-size:15px">'+r.flag+'</span><div><b>'+esc(r.name)+'</b><div class="sub">'+esc(r.sub)+'</div></div></div></td>'+
+        r.d.map(function(v){ return '<td>'+diffChip(v)+'</td>'; }).join('')+
+        '<td><span class="pay-badge '+r.overall[1]+'">'+esc(r.overall[0])+'</span></td></tr>';
+    }).join('');
+    return rows;
+  }).join('');
+  var sum = MATRIX_SUM.map(function(s){
+    return '<div class="pay-card-sm"><div class="pay-lbl" style="color:'+s[1]+'">'+esc(s[0])+'</div><div class="pay-body" style="font-size:11px">'+s[2]+'</div></div>';
+  }).join('');
+  return '<div class="pay-sec">Replication difficulty — layer by layer, challenger by challenger</div>'+
+    '<div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:12px"><span class="pay-lbl" style="margin:0">Difficulty key</span>'+key+'</div>'+
+    '<div class="pay-card" style="padding:0;overflow:hidden"><table class="pay-mtx"><thead><tr>'+
+      '<th>Challenger</th><th>L1 Rules</th><th>L2 Switching</th><th>L3 Fraud Intel</th><th>L4 Brand</th><th>Overall threat</th>'+
+    '</tr></thead><tbody>'+body+'</tbody></table></div>'+
+    '<div class="pay-g3" style="margin-top:12px">'+sum+'</div>';
+}
+
+// ─── Tab 6 · Incentive Context ──────────────────────────────────────────────────
+var INCENTIVES = [
+  { y:'FY2018', pct:29, amt:'$5.5B', c:'#3E5A82' }, { y:'FY2019', pct:30, amt:'$6.3B', c:'#3E5A82' },
+  { y:'FY2020', pct:32, amt:'$6.6B', c:'#3E5A82' }, { y:'FY2021', pct:31, amt:'$8.4B', c:'#3E5A82' },
+  { y:'FY2022', pct:33, amt:'$10.3B', c:'#3E5A82' }, { y:'FY2023', pct:35, amt:'$12.3B', c:'#7C8694' },
+  { y:'FY2024', pct:36, amt:'$13.8B', c:'#7C8694' }, { y:'FY2025', pct:37, amt:'$15.8B', c:'#1E2733', hl:true },
+];
+var LOOP = ['Rails emerge','Issuer outside option credible','Incentive leverage ↑','CI/PV ratio drifts up'];
+function incentiveTab(){
+  var bars = INCENTIVES.map(function(r){
+    return '<div class="pay-inc-row"><div class="pay-inc-yr'+(r.hl?' hl':'')+'">'+esc(r.y)+'</div>'+
+      '<div class="pay-inc-track"><div class="pay-inc-fill" style="width:'+r.pct+'%;background:'+r.c+'"><span class="pay-inc-pct">'+r.pct+'%</span></div></div>'+
+      '<div class="pay-inc-amt'+(r.hl?' hl':'')+'">'+esc(r.amt)+'</div></div>';
+  }).join('');
+  var loop = LOOP.map(function(l,i){
+    var arr = i<LOOP.length-1 ? '<span class="pay-loop-arr">→</span>' : '';
+    return '<span class="pay-loop-chip'+(i===LOOP.length-1?' end':'')+'">'+esc(l)+'</span>'+arr;
+  }).join('');
+  return '<div class="pay-sec">Why client incentives are rising — the competitive and structural context</div>'+
+    '<div class="pay-g2">'+
+      '<div class="pay-card"><div class="pay-lbl">Visa client incentives as % of gross revenue</div>'+
+        '<div style="margin-top:12px">'+bars+'</div>'+
+        '<div class="pay-inset" style="margin-top:12px"><div class="pay-body" style="font-size:11px">8 percentage points over 7 years. At current Visa gross revenue (~$43B), each additional percentage point = ~$430M of additional contra-revenue drag on net revenue.</div></div></div>'+
+      '<div class="pay-side">'+
+        '<div class="pay-card"><div class="pay-lbl">Driver 1 — V/MA bilateral competition</div>'+
+          '<div class="pay-body" style="margin-bottom:8px">When a large issuer portfolio comes up for renewal, Visa and Mastercard bid against each other. Neither has incentive to destroy the economics — this is bounded and self-limiting. But competition is real for the top-10 global issuer portfolios.</div>'+
+          '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">'+badges([['Chase','pay-b-blue'],['BofA','pay-b-blue'],['Citi','pay-b-blue'],['ICBC','pay-b-mut'],['HSBC','pay-b-mut']])+'</div>'+
+          '<div style="display:flex;align-items:center;gap:8px"><span class="pay-lbl" style="margin:0;white-space:nowrap">Intensity</span>'+bar(55,'#7C8694')+'<span class="pay-badge pay-b-amber">Bounded / self-limiting</span></div></div>'+
+        '<div class="pay-card" style="border-left:3px solid var(--red)"><div class="pay-lbl" style="color:var(--red)">Driver 2 — Issuers learned their leverage</div>'+
+          '<div class="pay-body" style="margin-bottom:8px">Fintechs (Chime, Revolut), EU interchange regulation, and real-time rail alternatives taught issuers precisely what they need from V/MA vs. what they can route elsewhere. Better-informed negotiators extract higher incentives at each renewal cycle.</div>'+
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span class="pay-lbl" style="margin:0;white-space:nowrap">Intensity</span>'+bar(75,'#DC2626')+'<span class="pay-badge pay-b-red">Growing — structural</span></div>'+
+          '<div class="pay-inset"><div class="pay-body" style="font-size:11px">Rail displacement strengthens Driver 2 directly: a real UPI or PIX alternative for debit makes the issuer’s outside option credible at renewal. The CI/PV ratio drift is partly already a symptom of rail competition.</div></div></div>'+
+        '<div class="pay-card-sm"><div class="pay-lbl">The compounding loop</div><div class="pay-loop">'+loop+'</div></div>'+
+      '</div>'+
+    '</div>';
 }
 
 // ─── Tab registry + shell ───────────────────────────────────────────────────────
 var TABS = [
-  { key:'layers',  label:'The Four Layers',    n:'01', body:layersTab },
-  { key:'map',     label:'Competitive Map',    n:'02', body:mapTab },
-  { key:'threats', label:'Threat Vectors',     n:'03', body:function(){ return soonTab('Threat Vectors','Four categories of potential displacement.'); } },
-  { key:'rails',   label:'Rail Displacement',  n:'04', body:function(){ return soonTab('Rail Displacement','How local rail displacement works — and whether it dislocates V/MA.'); } },
-  { key:'matrix',  label:'Replication Matrix', n:'05', body:function(){ return soonTab('Replication Matrix','Replication difficulty — layer by layer, challenger by challenger.'); } },
-  { key:'incentive', label:'Incentive Context', n:'06', body:function(){ return soonTab('Incentive Context','Why client incentives are rising — the competitive & structural context.'); } },
+  { key:'layers',    label:'The Four Layers',    n:'01', body:layersTab },
+  { key:'map',       label:'Competitive Map',    n:'02', body:mapTab },
+  { key:'threats',   label:'Threat Vectors',     n:'03', body:threatsTab },
+  { key:'rails',     label:'Rail Displacement',  n:'04', body:railsTab },
+  { key:'matrix',    label:'Replication Matrix', n:'05', body:matrixTab },
+  { key:'incentive', label:'Incentive Context',  n:'06', body:incentiveTab },
 ];
 
 function html(){

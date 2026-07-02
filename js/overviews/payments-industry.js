@@ -433,6 +433,14 @@ var VC_SEGMENTS = [
 ];
 var SEG_BY_ID = {}; VC_SEGMENTS.forEach(function(s){ SEG_BY_ID[s.id] = s; });
 var TIER_COLOR = { 1:'#94A3B8', 2:'#3E5A82', 3:'#1E2733', 4:'#B45309', 5:'#7C8694', 6:'#16A34A' };
+// One recognizable company per node to give it a "face" (not every node has one).
+var LOGO_BY_ID = {
+  'core-banking':'temenos.com', 'wallets':'paypal.com', 'issuers':'chase.com',
+  'issuer-processors':'fiserv.com', 'bnpl':'affirm.com', 'networks':'visa.com',
+  'fraud-risk':'experian.com', 'a2a':'zellepay.com', 'open-banking':'plaid.com',
+  'crypto-rails':'coinbase.com', 'acquirers':'stripe.com', 'processors-gateways':'adyen.com',
+  'cross-border-fx':'wise.com', 'pos-hardware':'toasttab.com',
+};
 // Directed money flows between segments (from payments-extract.json). w = 1–3 size.
 var PAY_FLOWS = [
   { a:'consumers', b:'issuers', l:'Interest, fees & payments', w:3 },
@@ -544,6 +552,16 @@ function payPanelFocus(id){
     '<div class="pay-card-sm"><div class="pay-lbl">Money in →</div>'+lines(f.inn,'in')+'</div>'+
     '<div class="pay-card-sm"><div class="pay-lbl">→ Money out</div>'+lines(f.out,'out')+'</div>';
 }
+// Logo <img> with a clearbit → favicon → hide fallback chain (HTML overlay avoids
+// the canvas CORS problem that blocks cytoscape background-image logos).
+function payLogoImg(domain){
+  var img = document.createElement('img');
+  img.style.cssText = 'position:absolute;transform:translate(-50%,-50%);object-fit:contain;pointer-events:none;transition:opacity .15s';
+  var srcs = ['https://logo.clearbit.com/'+domain, 'https://www.google.com/s2/favicons?domain='+domain+'&sz=128'];
+  var idx = 0; img.src = srcs[0];
+  img.onerror = function(){ idx++; if(idx<srcs.length){ img.src = srcs[idx]; } else { img.style.display = 'none'; } };
+  return img;
+}
 var _payCy = null;
 function buildPayMap(){
   var cv = document.getElementById('payMapCy'); if(!cv || !cv.offsetParent) return;
@@ -554,40 +572,64 @@ function buildPayMap(){
     var tiers = {}; VC_SEGMENTS.forEach(function(s){ (tiers[s.flow] = tiers[s.flow]||[]).push(s); });
     var els = [];
     VC_SEGMENTS.forEach(function(s){
-      var arr = tiers[s.flow], i = arr.indexOf(s), yc = (i-(arr.length-1)/2)*128;
-      els.push({ data:{ id:s.id, label:s.name, color:TIER_COLOR[s.flow], size:s.size }, position:{ x:(s.flow-1)*250, y:yc } });
+      var arr = tiers[s.flow], i = arr.indexOf(s), yc = (i-(arr.length-1)/2)*150;
+      var d = { id:s.id, label:s.name, color:TIER_COLOR[s.flow], size:Math.round(s.size*1.5) };
+      if(LOGO_BY_ID[s.id]) d.logo = 'https://logo.clearbit.com/'+LOGO_BY_ID[s.id];
+      els.push({ data:d, position:{ x:(s.flow-1)*235, y:yc } });
     });
     PAY_FLOWS.forEach(function(f, i){
-      els.push({ data:{ id:'pe'+i, source:f.a, target:f.b, label:f.l, w:1.3+f.w*1.5, color:TIER_COLOR[SEG_BY_ID[f.a].flow] } });
+      els.push({ data:{ id:'pe'+i, source:f.a, target:f.b, label:f.l, w:1.4+f.w*1.7, color:TIER_COLOR[SEG_BY_ID[f.a].flow] } });
     });
-    _payCy = window.cytoscape({ container:cv, elements:els, layout:{ name:'preset', fit:true, padding:40 },
-      wheelSensitivity:0.2, minZoom:0.3, maxZoom:2.2,
+    _payCy = window.cytoscape({ container:cv, elements:els, layout:{ name:'preset', fit:true, padding:46 },
+      wheelSensitivity:0.2, minZoom:0.35, maxZoom:2.6,
       style:[
-        { selector:'node', style:{ 'background-color':'data(color)','background-opacity':0.92,'width':'data(size)','height':'data(size)',
-          'label':'data(label)','color':'#1E2733','font-size':9.5,'font-weight':600,'text-wrap':'wrap','text-max-width':92,
-          'text-valign':'bottom','text-margin-y':4,'text-background-color':'#fff','text-background-opacity':0.85,
+        { selector:'node', style:{ 'background-color':'data(color)','background-opacity':0.95,'width':'data(size)','height':'data(size)',
+          'border-width':2,'border-color':'#fff',
+          'label':'data(label)','color':'#1E2733','font-size':13,'font-weight':600,'text-wrap':'wrap','text-max-width':118,
+          'text-valign':'bottom','text-margin-y':6,'text-background-color':'#fff','text-background-opacity':0.9,
           'text-background-padding':3,'text-background-shape':'roundrectangle' }},
-        { selector:'edge', style:{ 'width':'data(w)','line-color':'data(color)','opacity':0.28,'curve-style':'bezier',
-          'target-arrow-shape':'triangle','target-arrow-color':'data(color)','arrow-scale':0.8 }},
+        { selector:'node[logo]', style:{ 'background-color':'#fff','border-width':2.5,'border-color':'data(color)' }},
+        { selector:'edge', style:{ 'width':'data(w)','line-color':'data(color)','opacity':0.3,'curve-style':'bezier',
+          'target-arrow-shape':'triangle','target-arrow-color':'data(color)','arrow-scale':0.9 }},
         { selector:'.faded', style:{ 'opacity':0.06,'text-opacity':0.15 }},
-        { selector:'node.hot', style:{ 'border-width':3,'border-color':'#1E2733' }},
+        { selector:'node.hot', style:{ 'border-width':3.5,'border-color':'#1E2733' }},
         { selector:'edge.hot', style:{ 'opacity':0.92 }},
       ]
     });
     payPanelDefault();
+    // Company-logo overlay: HTML <img>s positioned over the logo nodes.
+    var logoLayer = document.createElement('div');
+    logoLayer.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden';
+    cv.appendChild(logoLayer);
+    VC_SEGMENTS.forEach(function(s){
+      if(!LOGO_BY_ID[s.id]) return;
+      var img = payLogoImg(LOGO_BY_ID[s.id]); img.setAttribute('data-node', s.id); logoLayer.appendChild(img);
+    });
+    function positionLogos(){
+      logoLayer.querySelectorAll('img').forEach(function(img){
+        var n = _payCy.getElementById(img.getAttribute('data-node')); if(!n || !n.length) return;
+        var p = n.renderedPosition(), sz = n.renderedWidth()*0.62;
+        img.style.width = sz+'px'; img.style.height = sz+'px';
+        img.style.left = p.x+'px'; img.style.top = p.y+'px';
+        img.style.opacity = n.hasClass('faded') ? '0.12' : '1';
+      });
+    }
+    var _lraf = null;
+    function schedPos(){ if(_lraf) return; _lraf = requestAnimationFrame(function(){ _lraf = null; positionLogos(); }); }
+    positionLogos();
+    _payCy.on('render pan zoom', schedPos);
     _payCy.on('tap', 'node', function(e){
       var n = e.target; _payCy.elements().removeClass('hot faded');
       var hood = n.closedNeighborhood(); _payCy.elements().not(hood).addClass('faded'); hood.addClass('hot');
-      payPanelFocus(n.id());
+      payPanelFocus(n.id()); schedPos();
     });
-    _payCy.on('tap', function(e){ if(e.target===_payCy){ _payCy.elements().removeClass('hot faded'); payPanelDefault(); } });
+    _payCy.on('tap', function(e){ if(e.target===_payCy){ _payCy.elements().removeClass('hot faded'); payPanelDefault(); schedPos(); } });
   }).catch(function(){ cv.innerHTML = '<div style="padding:22px;color:#8A93A0;font:400 12px Inter,sans-serif">Map failed to load (offline?).</div>'; });
 }
 function mapView(){
-  return '<div class="pay-map-wrap">'+
-    '<div class="pay-map-canvas" id="payMapCy"><div style="padding:22px;color:var(--mu);font:400 12px Inter,sans-serif">Loading map…</div></div>'+
-    '<div class="pay-map-panel" id="payMapPanel"></div></div>'+
-    '<div class="pay-asof" style="margin-top:8px">Nodes = value-chain segments (left → right is upstream → downstream), sized by relative importance; arrows = money flows, width ≈ magnitude. <b>Click a segment</b> to isolate its flows and see its players. Interchange (network → issuer) and the MDR (merchant → acquirer) are the thickest.</div>';
+  return '<div class="pay-map-canvas" id="payMapCy"><div style="padding:22px;color:var(--mu);font:400 12px Inter,sans-serif">Loading map…</div></div>'+
+    '<div class="pay-map-panel" id="payMapPanel"></div>'+
+    '<div class="pay-asof" style="margin-top:8px">Nodes = value-chain segments (left → right is upstream → downstream), sized by relative importance; the logo is one representative player. Arrows = money flows, width ≈ magnitude. <b>Click a segment</b> to isolate its flows and see its players; <b>scroll to zoom</b>, drag to pan. Interchange (network → issuer) and the MDR (merchant → acquirer) are the thickest.</div>';
 }
 
 function valueChainTab(){

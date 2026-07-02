@@ -7,6 +7,31 @@
 // are placeholders pending the team's data. CART has a Summit DCF model — financials
 // can be wired in later the same way as Mastercard's Financials tab.
 
+import { makeValuation } from './valuation.js';
+
+// Interactive "Scenario → price target" calculator (Valuation tab). Fundamentals from
+// the Summit DCF (FY2025 actuals; FY2026E estimate). GTV is one shared volume with two
+// take rates (transaction fees + advertising attach). Net cash & price are editable
+// (Summit model carries no balance sheet/quote); defaults reproduce the DCF FY2026E.
+var CART_VAL = makeValuation({
+  brand:'#0AAD0A', sharesM:279.621,
+  netCashDefaultM:731, netCashNote:'Dec 2025: cash $637M + short/long-term investments $131M − debt $37M ≈ +$0.73B net cash.',
+  priceDefault:44.02, priceAsOf:'Jul 1 2026',
+  priceHint:"$44.02 on Jul 1 2026; Street average PT ~$50. Editable — verify live.",
+  volLabel:'GTV', sharedVolume:true, sharedBaseM:37225, sharedGrowthDefaultPct:12,
+  volHint:{ growth:"'22 +15.7% · '23 +11.0% · '24 +5.2% · '25 +10.6%", guide:"Instacart guides GTV + Adj. EBITDA each quarter (see the Financials tab)." },
+  segments:[
+    { key:'txn', label:'Transaction', sub:'retailer + consumer fees', take2025Pct:7.19,
+      hint:{ take:"'22 6.7% · '23 7.0% · '24 7.2% · '25 7.2%" } },
+    { key:'ads', label:'Advertising', sub:'ad attach rate', take2025Pct:2.86,
+      hint:{ take:"'22 2.6% · '23 2.7% · '24 2.8% · '25 2.9%", guide:"The profit engine — the attach rate is the lever to model." } },
+  ],
+  marginBasePct:29.0, marginDefaultPct:30.6,
+  marginHint:"History: '22 7.7% · '23 20.6% · '24 26.2% · '25 29.0%. Instacart guides an Adj. EBITDA $ range each quarter.",
+  dcf:{ fy:'FY2026E', revM:4170.7, ebitdaM:1275.8 },
+  mult:{ evebitda:{min:5,max:18,def:9.1}, marginMin:20, marginMax:38 },
+});
+
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ─── Snapshot & narrative ────────────────────────────────────────────────────
@@ -786,6 +811,7 @@ function html(c){
     '<button class="ov-subtab" data-catab="enterprise">Enterprise</button>'+
     '<button class="ov-subtab" data-catab="supply">Supply Chain</button>'+
     '<button class="ov-subtab" data-catab="fin">Financials</button>'+
+    '<button class="ov-subtab" data-catab="valuation">Valuation</button>'+
     '<button class="ov-subtab" data-catab="calls">Earnings Calls</button>'+
   '</div>';
 
@@ -885,6 +911,7 @@ function html(c){
   h += '</div>'; // end fin pane
 
   // ══ PANE 6 — Earnings Calls ══
+  h += '<div class="ov-pane" data-capane="valuation">'+CART_VAL.body()+'</div>';
   h += '<div class="ov-pane" data-capane="calls">';
   h += callsBody();
   h += '</div>'; // end calls pane
@@ -957,6 +984,7 @@ function init(c){
       root.querySelectorAll('.ov-pane').forEach(function(p){ p.classList.toggle('active', p.getAttribute('data-capane')===tab); });
       if (tab==='fin') requestAnimationFrame(function(){ renderFin(); buildCartGuide(); }); // charts need a visible (sized) canvas
       if (tab==='advertising') requestAnimationFrame(buildAdChart);
+      if (tab==='valuation') requestAnimationFrame(function(){ CART_VAL.init(root); });
     };
   });
 

@@ -7,6 +7,26 @@
 // Qualitative content is from Lyft IR / SEC filings / earnings calls (see SOURCES).
 // No live API calls — every figure is baked from the model snapshot + cited filings.
 
+import { makeValuation } from './valuation.js';
+
+// Interactive "Scenario → price target" calculator (Valuation tab). Fundamentals from
+// the Summit DCF (FY2025 actuals; FY2026E estimate). Net cash & price are editable
+// (Summit model carries no balance sheet/quote); defaults reproduce the DCF FY2026E.
+var LYFT_VAL = makeValuation({
+  brand:'#EA0B8C', sharesM:417.659,
+  netCashDefaultM:900, netCashNote:'Q1 2026: cash + short-term investments ≈ $1.72B − ~$0.8B convertible notes ≈ +$0.9B net cash.',
+  priceDefault:14.70, priceAsOf:'~Jul 2026', priceHint:"≈$14.7 (Jul 2026). Editable — verify live.",
+  volLabel:'Gross Bookings',
+  segments:[
+    { key:'rides', label:'Rideshare', gb2025M:18507.1, take2025Pct:34.13, growthDefaultPct:17,
+      hint:{ take:"'22 34.0% · '23 32.0% · '24 35.9% · '25 34.1%", growth:"'23 +14% · '24 +17% · '25 +15%", guide:"Lyft guides Gross Bookings + Adj. EBITDA each quarter." } },
+  ],
+  marginBasePct:8.37, marginDefaultPct:9.37,
+  marginHint:"History: '22 −10.2% · '23 5.0% · '24 6.6% · '25 8.4%. Lyft guides an Adj. EBITDA $ range each quarter.",
+  dcf:{ fy:'FY2026E', revM:7372.7, ebitdaM:691.1 },
+  mult:{ evebitda:{min:4,max:16,def:7.6}, marginMin:4, marginMax:16 },
+});
+
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ─── Formatting helpers ──────────────────────────────────────────────────────
@@ -807,6 +827,7 @@ function html(c){
     '<button type="button" class="ovt-tab" data-ovt="growth">Rides &amp; Riders</button>'+
     '<button type="button" class="ovt-tab" data-ovt="unit">Unit Economics</button>'+
     '<button type="button" class="ovt-tab" data-ovt="model">Model vs. Reality</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="valuation">Valuation</button>'+
     '<button type="button" class="ovt-tab" data-ovt="calls">Earnings Narrative</button>'+
   '</div>';
   h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
@@ -814,6 +835,7 @@ function html(c){
   h += '<div class="ovt-pane" data-ovt="growth" hidden>'+growthBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="unit" hidden>'+unitBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="model" hidden>'+modelBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="valuation" hidden>'+LYFT_VAL.body()+'</div>';
   h += '<div class="ovt-pane" data-ovt="calls" hidden>'+callsBody()+'</div>';
   // Modal scaffold (shared overview.css). Hidden until a milestone is tapped.
   h += '<div class="ov-modal-back" id="lyModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
@@ -1249,6 +1271,7 @@ function showOvt(root, key){
   if (key==='growth')   requestAnimationFrame(buildGrowthTab);
   if (key==='unit')     requestAnimationFrame(buildUnitTab);
   if (key==='model')    requestAnimationFrame(buildModelTab);
+  if (key==='valuation') requestAnimationFrame(function(){ LYFT_VAL.init(root); });
 }
 
 // ─── Modal (milestone detail) ─────────────────────────────────────────────────

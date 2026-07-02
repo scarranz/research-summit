@@ -6,6 +6,30 @@
 // Qualitative content: Uber FY2024 & FY2025 10-Ks, Q4 2025 / Q1 2026 results &
 // prepared remarks, the Feb 2024 "Go-Get" Investor Day (see SOURCES). No live API.
 
+import { makeValuation } from './valuation.js';
+
+// Interactive "Scenario → price target" calculator (Valuation tab). Fundamentals from
+// the Summit DCF (FY2025 actuals; FY2026E estimate). Net cash & price are editable
+// (Summit model carries no balance sheet/quote); defaults reproduce the DCF FY2026E.
+var UBER_VAL = makeValuation({
+  brand:'#111827', sharesM:2119.689,
+  netCashDefaultM:-2888, netCashNote:'Q1 2026: cash + short-term investments ≈ $7.6B − long-term debt $10.5B ≈ −$2.9B net debt.',
+  priceDefault:70.00, priceAsOf:'~Jul 2026', priceHint:"≈$70–76 (Jul 2026); Q1’26 buyback avg $73. Editable — verify live.",
+  volLabel:'Gross Bookings',
+  segments:[
+    { key:'mobility', label:'Mobility', gb2025M:97497, take2025Pct:30.43,  growthDefaultPct:13,
+      hint:{ take:"'22 26.6% · '23 28.8% · '24 30.2% · '25 30.4%", growth:"'23 +31% · '24 +21% · '25 +17%", guide:"Uber guides total Gross Bookings + Adj. EBITDA each quarter." } },
+    { key:'delivery', label:'Delivery', gb2025M:90864, take2025Pct:18.98,  growthDefaultPct:15,
+      hint:{ take:"'22 19.5% · '23 19.2% · '24 18.4% · '25 19.0%", growth:"'23 +14% · '24 +17% · '25 +22%" } },
+    { key:'freight',  label:'Freight',  gb2025M:5093,  take2025Pct:100.12, growthDefaultPct:5,
+      hint:{ take:"'22 99.9% · '23 100.1% · '24 100.1% · '25 100.1%", growth:"'23 −25% · '24 −2% · '25 −1%", note:"Freight books revenue ≈ gross bookings (gross basis) — its ~100% take is not a real margin." } },
+  ],
+  marginBasePct:16.78, marginDefaultPct:19.67,
+  marginHint:"History: '22 5.4% · '23 10.9% · '24 14.7% · '25 16.8%. Uber guides an Adj. EBITDA $ range each quarter.",
+  dcf:{ fy:'FY2026E', revM:58695, ebitdaM:11547 },
+  mult:{ evebitda:{min:6,max:22,def:13}, marginMin:10, marginMax:28 },
+});
+
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ─── Formatting ──────────────────────────────────────────────────────────────
@@ -739,6 +763,7 @@ function html(c){
     '<button type="button" class="ovt-tab" data-ovt="delivery">Delivery</button>'+
     '<button type="button" class="ovt-tab" data-ovt="uberone">Uber One</button>'+
     '<button type="button" class="ovt-tab" data-ovt="model">Model vs. Reality</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="valuation">Valuation</button>'+
     '<button type="button" class="ovt-tab" data-ovt="calls">Earnings Narrative</button>'+
   '</div>';
   h+='<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
@@ -746,6 +771,7 @@ function html(c){
   h+='<div class="ovt-pane" data-ovt="delivery" hidden>'+deliveryBody(c)+'</div>';
   h+='<div class="ovt-pane" data-ovt="uberone" hidden>'+uberOneBody(c)+'</div>';
   h+='<div class="ovt-pane" data-ovt="model" hidden>'+modelBody(c)+'</div>';
+  h+='<div class="ovt-pane" data-ovt="valuation" hidden>'+UBER_VAL.body()+'</div>';
   h+='<div class="ovt-pane" data-ovt="calls" hidden>'+callsBody()+'</div>';
   h+='<div class="ov-modal-back" id="ubModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
     '<button class="ov-modal-x" id="ubModalX" aria-label="Close">×</button>'+
@@ -1003,6 +1029,7 @@ function showOvt(root,key){
   if(key==='delivery') requestAnimationFrame(buildDeliveryCharts);
   if(key==='uberone') requestAnimationFrame(buildUberOneCharts);
   if(key==='model')    requestAnimationFrame(buildModelTab);
+  if(key==='valuation') requestAnimationFrame(function(){ UBER_VAL.init(root); });
 }
 function wireModal(root){
   var back=root.querySelector('#ubModalBack'), mT=root.querySelector('#ubModalT'), mB=root.querySelector('#ubModalB'); if(!back) return;

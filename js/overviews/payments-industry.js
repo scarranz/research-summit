@@ -382,7 +382,7 @@ function waterfallBlock(){
     '<div class="pay-wf-bar"><div class="pay-wf-seg" style="width:97.7%;background:#3E5A82">Merchant keeps $97.70</div>'+
     '<div class="pay-wf-seg" style="width:2.3%;background:#B45309"></div></div>'+
     '<div class="pay-wf-key"><span class="pay-wf-ki"><span class="pay-wf-dot" style="background:#3E5A82"></span>Merchant net $97.70 (97.7%)</span>'+
-    '<span class="pay-wf-ki"><span class="pay-wf-dot" style="background:#B45309"></span>Total fees $2.30 (2.3%) — split below</span></span></div>';
+    '<span class="pay-wf-ki"><span class="pay-wf-dot" style="background:#B45309"></span>Total fees $2.30 (2.3%) — split below</span></div></div>';
   var bar2 = '<div class="pay-wf"><div class="pay-wf-cap"><span>Where the $2.30 fee goes</span><span>= the 2.3% MDR</span></div>'+
     '<div class="pay-wf-bar">'+FEE_SEGS.map(function(s){ return '<div class="pay-wf-seg" style="width:'+s.p+'%;background:'+s.c+'">$'+s.v.toFixed(2)+'</div>'; }).join('')+'</div>'+
     '<div class="pay-wf-key">'+FEE_SEGS.map(function(s){ return '<span class="pay-wf-ki"><span class="pay-wf-dot" style="background:'+s.c+'"></span>'+esc(s.l)+' $'+s.v.toFixed(2)+' ('+Math.round(s.p)+'%)</span>'; }).join('')+'</div></div>';

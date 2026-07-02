@@ -15,7 +15,7 @@
 //
 // All state lives on the root element's dataset, so the module is stateless/reentrant.
 
-import { BUCKETS, getBucket, getGroup, bucketsWithTicker, LOGO_DOMAIN, logoCandidates, wireLogoFallback } from './semi-map-data.js';
+import { BUCKETS, getBucket, getGroup, bucketsWithTicker, locateTicker, LOGO_DOMAIN, logoCandidates, wireLogoFallback } from './semi-map-data.js';
 import { COMPANY_RELS } from './semi-company-rels.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -31,10 +31,19 @@ function wireImgs(root){ root.querySelectorAll('img[data-srcs]').forEach(wireLog
 // ─── Static shell ─────────────────────────────────────────────────────────────
 function html(opts){
   opts = opts || {};
+  // focus: when truthy alongside highlight, the map opens pre-drilled to that company's
+  // place in the chain (used when embedded in a company Overview). Without it, the map
+  // opens at the industry-wide root — the standalone behaviour, unchanged.
+  var focusTkr = (opts.focus && opts.highlight) ? opts.highlight : '';
   var hl = opts.highlight ? ' data-hl="'+esc(opts.highlight)+'"' : '';
-  return '<div class="smap"'+hl+'>'+
-      '<div class="smap-intro">The semiconductor industry is <b>not vertically integrated</b> — each link in the chain is a distinct set of companies. '+
-        'Click a bucket to drill in; select any node to see detail below.</div>'+
+  var fo = focusTkr ? ' data-focus="'+esc(focusTkr)+'"' : '';
+  var intro = focusTkr
+    ? 'Showing <b>'+esc(focusTkr)+'</b>\'s position in the semiconductor value chain — the industry is <b>not vertically integrated</b>, so each link is a distinct set of companies. '+
+        'Click <b>Industry</b> in the breadcrumb to explore the full map.'
+    : 'The semiconductor industry is <b>not vertically integrated</b> — each link in the chain is a distinct set of companies. '+
+        'Click a bucket to drill in; select any node to see detail below.';
+  return '<div class="smap"'+hl+fo+'>'+
+      '<div class="smap-intro">'+intro+'</div>'+
       '<nav class="smap-bc" aria-label="breadcrumb"></nav>'+
       '<div class="smap-stage"></div>'+
       '<div class="smap-panel"></div>'+
@@ -199,6 +208,14 @@ function init(){
   if (!root || root._wired) { if (root) render(root); return; }
   root._wired = true;
 
+  // One-time focus drill-down: if opened from a company Overview (data-focus set) and the
+  // user hasn't navigated yet, jump straight to that company's bucket→group and select it.
+  var focusTkr = root.getAttribute('data-focus');
+  if (focusTkr && path(root).length === 0){
+    var loc = locateTicker(focusTkr);
+    if (loc){ setPath(root, [loc.bucket, loc.group]); root._focusCo = focusTkr; }
+  }
+
   // Node clicks (stage).
   root.querySelector('.smap-stage').addEventListener('click', function(e){
     var btn = e.target.closest('.smap-node'); if (!btn) return;
@@ -224,7 +241,14 @@ function init(){
     render(root);
   });
 
-  render(root);
+  // If pre-drilled to a company, open its detail panel and mark its card selected.
+  if (root._focusCo){
+    render(root, { type:'co', ticker: root._focusCo });
+    var card = root.querySelector('.smap-co[data-node="co:'+root._focusCo+'"]');
+    if (card) card.classList.add('is-sel');
+  } else {
+    render(root);
+  }
 }
 
 export var semiMap = { html: html, init: init };

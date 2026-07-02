@@ -398,38 +398,69 @@ var FOURPARTY = [
   { n:'Issuer', t:'Funds · takes interchange', b:'Chase / BofA. Approves and funds the purchase, bears credit & fraud risk, and receives interchange (~1.80%) — the largest fee slice.' },
 ];
 var VC_SEGMENTS = [
-  { name:'Core Banking & BaaS', tag:'Account-ledger infrastructure behind every issuer', flow:1,
+  { id:'core-banking', size:46, name:'Core Banking & BaaS', tag:'Account-ledger infrastructure behind every issuer', flow:1,
     cos:[{n:'Temenos'},{n:'Thought Machine'},{n:'Mambu'},{n:'Galileo'},{n:'Cross River'},{n:'Green Dot'}] },
-  { name:'Consumer / Cardholder', tag:'Origin of every transaction & spending volume', flow:1, cos:[] },
-  { name:'Digital Wallets & Super-apps', tag:'Consumer interface riding on card or proprietary rails', flow:2,
+  { id:'consumers', size:52, name:'Consumer / Cardholder', tag:'Origin of every transaction & spending volume', flow:1, cos:[] },
+  { id:'wallets', size:54, name:'Digital Wallets & Super-apps', tag:'Consumer interface riding on card or proprietary rails', flow:2,
     cos:[{n:'Apple Pay'},{n:'Google Pay'},{n:'PayPal'},{n:'Cash App'},{n:'Alipay'},{n:'WeChat Pay'},{n:'Revolut'}] },
-  { name:'Issuers', tag:'Banks that issue cards & receive interchange', flow:2,
+  { id:'issuers', size:64, name:'Issuers', tag:'Banks that issue cards & receive interchange', flow:2,
     cos:[{n:'JPMorgan Chase'},{n:'Bank of America'},{n:'Citi'},{n:'Capital One'},{n:'Amex'},{n:'HSBC'}] },
-  { name:'Issuer-Processors', tag:'Process card authorizations for issuers', flow:2,
+  { id:'issuer-processors', size:50, name:'Issuer-Processors', tag:'Process card authorizations for issuers', flow:2,
     cos:[{n:'Fiserv'},{n:'FIS'},{n:'TSYS'},{n:'Marqeta'},{n:'Pismo',own:'V'}] },
-  { name:'BNPL', tag:'Installment credit at POS; bypasses interchange', flow:2,
+  { id:'bnpl', size:46, name:'BNPL', tag:'Installment credit at POS; bypasses interchange', flow:2,
     cos:[{n:'Affirm'},{n:'Klarna'},{n:'Afterpay'},{n:'PayPal Pay Later'},{n:'Zip'}] },
-  { name:'Card Networks', tag:'Rules · routing · fraud · brand — the trust platform', flow:3,
+  { id:'networks', size:76, name:'Card Networks', tag:'Rules · routing · fraud · brand — the trust platform', flow:3,
     cos:[{n:'Visa'},{n:'Mastercard'},{n:'American Express'},{n:'Discover'},{n:'UnionPay'},{n:'RuPay'}] },
-  { name:'Fraud, Risk & Identity', tag:'Overlay intelligence across the chain', flow:3,
+  { id:'fraud-risk', size:50, name:'Fraud, Risk & Identity', tag:'Overlay intelligence across the chain', flow:3,
     cos:[{n:'Featurespace',own:'V'},{n:'Recorded Future',own:'MA'},{n:'LexisNexis'},{n:'Socure'},{n:'BioCatch'}] },
-  { name:'A2A / Real-Time Rails', tag:'Instant bank-to-bank; zero interchange', flow:3,
+  { id:'a2a', size:52, name:'A2A / Real-Time Rails', tag:'Instant bank-to-bank; zero interchange', flow:3,
     cos:[{n:'UPI / NPCI'},{n:'PIX'},{n:'FedNow'},{n:'Zelle'},{n:'Visa Direct',own:'V'},{n:'Vocalink',own:'MA'}] },
-  { name:'Open Banking', tag:'Account-data access & payment initiation', flow:3,
+  { id:'open-banking', size:46, name:'Open Banking', tag:'Account-data access & payment initiation', flow:3,
     cos:[{n:'Plaid'},{n:'Finicity',own:'MA'},{n:'Tink',own:'V'},{n:'TrueLayer'},{n:'Aiia',own:'MA'}] },
-  { name:'Crypto & Stablecoin Rails', tag:'Cryptographic settlement finality', flow:3,
+  { id:'crypto-rails', size:48, name:'Crypto & Stablecoin Rails', tag:'Cryptographic settlement finality', flow:3,
     cos:[{n:'Circle (USDC)'},{n:'Tether'},{n:'Coinbase'},{n:'BVNK',own:'MA'},{n:'Ripple'}] },
-  { name:'Acquirers', tag:'Merchant-side banks; collect the MDR', flow:4,
+  { id:'acquirers', size:64, name:'Acquirers', tag:'Merchant-side banks; collect the MDR', flow:4,
     cos:[{n:'Stripe'},{n:'Adyen'},{n:'Fiserv'},{n:'Square'},{n:'Worldpay'},{n:'Checkout.com'}] },
-  { name:'Processors & Gateways', tag:'Route checkout → acquirer', flow:4,
+  { id:'processors-gateways', size:52, name:'Processors & Gateways', tag:'Route checkout → acquirer', flow:4,
     cos:[{n:'CyberSource',own:'V'},{n:'Authorize.net',own:'V'},{n:'Braintree'},{n:'Stripe'},{n:'Adyen'}] },
-  { name:'Payment Orchestration', tag:'Routing intelligence above gateways', flow:4,
+  { id:'orchestration', size:44, name:'Payment Orchestration', tag:'Routing intelligence above gateways', flow:4,
     cos:[{n:'Spreedly'},{n:'Primer'},{n:'Payoneer'},{n:'Gr4vy'}] },
-  { name:'Cross-Border & FX', tag:'Highest-margin activity in the ecosystem', flow:4,
+  { id:'cross-border-fx', size:52, name:'Cross-Border & FX', tag:'Highest-margin activity in the ecosystem', flow:4,
     cos:[{n:'Wise'},{n:'Remitly'},{n:'Western Union'},{n:'Nium'},{n:'Airwallex'},{n:'Currencycloud',own:'V'}] },
-  { name:'POS Hardware & Terminals', tag:'Physical acceptance at the point of sale', flow:5,
+  { id:'pos-hardware', size:48, name:'POS Hardware & Terminals', tag:'Physical acceptance at the point of sale', flow:5,
     cos:[{n:'Ingenico'},{n:'Verifone'},{n:'Clover'},{n:'Square'},{n:'Toast'},{n:'Lightspeed'}] },
-  { name:'Merchants', tag:'Final recipient; primary bearer of the MDR', flow:6, cos:[] },
+  { id:'merchants', size:58, name:'Merchants', tag:'Final recipient; primary bearer of the MDR', flow:6, cos:[] },
+];
+var SEG_BY_ID = {}; VC_SEGMENTS.forEach(function(s){ SEG_BY_ID[s.id] = s; });
+var TIER_COLOR = { 1:'#94A3B8', 2:'#3E5A82', 3:'#1E2733', 4:'#B45309', 5:'#7C8694', 6:'#16A34A' };
+// Directed money flows between segments (from payments-extract.json). w = 1–3 size.
+var PAY_FLOWS = [
+  { a:'consumers', b:'issuers', l:'Interest, fees & payments', w:3 },
+  { a:'consumers', b:'wallets', l:'Wallet funding', w:2 },
+  { a:'wallets', b:'issuers', l:'Card-funded transaction', w:2 },
+  { a:'issuers', b:'issuer-processors', l:'Issuer processing fees', w:2 },
+  { a:'issuers', b:'networks', l:'Volume assessments', w:2 },
+  { a:'networks', b:'issuers', l:'Interchange + rebates', w:3 },
+  { a:'merchants', b:'acquirers', l:'Merchant discount rate', w:3 },
+  { a:'acquirers', b:'networks', l:'Assessment / scheme fees', w:2 },
+  { a:'acquirers', b:'issuers', l:'Interchange (settlement)', w:3 },
+  { a:'acquirers', b:'processors-gateways', l:'Processing fees', w:2 },
+  { a:'merchants', b:'processors-gateways', l:'Gateway fees', w:2 },
+  { a:'merchants', b:'bnpl', l:'Merchant fee 2.5–6%', w:2 },
+  { a:'consumers', b:'bnpl', l:'Installment repayments', w:2 },
+  { a:'merchants', b:'a2a', l:'~Zero acceptance fee', w:1 },
+  { a:'consumers', b:'a2a', l:'Bank-to-bank transfer', w:2 },
+  { a:'issuers', b:'open-banking', l:'Account data access', w:1 },
+  { a:'open-banking', b:'a2a', l:'Payment initiation', w:1 },
+  { a:'acquirers', b:'cross-border-fx', l:'FX conversion margin', w:2 },
+  { a:'consumers', b:'crypto-rails', l:'On-ramp fees', w:1 },
+  { a:'crypto-rails', b:'merchants', l:'Stablecoin settlement', w:1 },
+  { a:'core-banking', b:'issuers', l:'Core platform licensing', w:2 },
+  { a:'fraud-risk', b:'issuers', l:'Fraud scoring fees', w:2 },
+  { a:'fraud-risk', b:'acquirers', l:'Fraud screening fees', w:1 },
+  { a:'networks', b:'a2a', l:'Fraud VAS on rails', w:1 },
+  { a:'merchants', b:'pos-hardware', l:'Terminal lease + SaaS', w:1 },
+  { a:'orchestration', b:'acquirers', l:'Dynamic routing', w:1 },
 ];
 var VC_TIERS = [
   [1,'Upstream — infrastructure & origin'], [2,'Issuing side — cards, credit & processing'],
@@ -461,7 +492,7 @@ function vcInsights(){
     return '<div class="pay-card-sm"><div class="pay-lbl">'+esc(it[0])+'</div><div class="pay-body" style="font-size:11px">'+it[1]+'</div></div>';
   }).join('')+'</div>';
 }
-function valueChainTab(){
+function econView(){
   var h = '<div class="pay-sec">Where a $100 card payment goes — and who does what in the chain</div>';
   h += '<p class="pay-body" style="margin-bottom:14px">Visa and Mastercard sit in the middle of a deep, unbundled value chain — from the bank core that issues the card to the terminal that accepts it. Below: the fee split on a typical $100 purchase, the four-party money flow, and the full stack of 17 segments — with the networks’ own holdings marked <span class="pay-own pay-own-v">V</span> / <span class="pay-own pay-own-ma">MA</span>.</p>';
   h += waterfallBlock();
@@ -470,6 +501,102 @@ function valueChainTab(){
   h += '<div class="pay-card" style="margin:12px 0;border-left:3px solid var(--steel)"><div class="pay-lbl">The networks are everywhere</div><div class="pay-body">Visa and Mastercard don’t just run the switch — they’ve <b>bought into nearly every layer</b>: fraud (Featurespace → V, Recorded Future → MA), open banking (Tink → V, Finicity → MA), gateways (CyberSource &amp; Authorize.net → V), issuer processing (Pismo → V), A2A rails (Vocalink → MA, Visa Direct → V), cross-border (Currencycloud → V) and stablecoins (BVNK → MA). Lose a fee at the switch, capture it one layer over.</div></div>';
   h += '<div class="pay-sec">Key economics</div>'+vcInsights();
   return h;
+}
+
+// ── Interactive value-chain node map (Option B · cytoscape) ──────────────────────
+var _cyLoading = null;
+function ensureCytoscape(){
+  if(window.cytoscape) return Promise.resolve();
+  if(_cyLoading) return _cyLoading;
+  _cyLoading = new Promise(function(res, rej){
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/cytoscape@3.30.2/dist/cytoscape.min.js';
+    s.onload = res; s.onerror = function(){ rej(new Error('cytoscape load failed')); };
+    document.head.appendChild(s);
+  });
+  return _cyLoading;
+}
+function payFlowsFor(id){
+  return { inn:PAY_FLOWS.filter(function(f){ return f.b===id; }), out:PAY_FLOWS.filter(function(f){ return f.a===id; }) };
+}
+function payPanelDefault(){
+  var el = document.getElementById('payMapPanel'); if(!el) return;
+  var legend = [[1,'Upstream / origin'],[2,'Issuing side'],[3,'Core rails'],[4,'Acquiring side'],[5,'Acceptance'],[6,'Demand']].map(function(t){
+    return '<span class="pay-map-leg"><span class="pay-wf-dot" style="background:'+TIER_COLOR[t[0]]+'"></span>'+esc(t[1])+'</span>';
+  }).join('');
+  el.innerHTML = '<div class="pay-card-sm"><div class="pay-lbl">The payments money web</div>'+
+    '<div class="pay-body" style="font-size:11px">Every arrow is a fee or money movement between segments. <b>Interchange</b> (network → issuer) and the <b>MDR</b> (merchant → acquirer) are the thickest. <b>Click a node</b> to isolate it.</div></div>'+
+    '<div class="pay-card-sm"><div class="pay-lbl">Tiers</div><div class="pay-map-legend">'+legend+'</div></div>';
+}
+function payPanelFocus(id){
+  var el = document.getElementById('payMapPanel'), s = SEG_BY_ID[id]; if(!el || !s) return;
+  var f = payFlowsFor(id);
+  function lines(arr, dir){
+    if(!arr.length) return '<div class="pay-body" style="font-size:11px;color:var(--mu)">—</div>';
+    return arr.map(function(x){ var o = SEG_BY_ID[dir==='out'?x.b:x.a];
+      return '<div class="pay-flowline"><span>'+esc(o?o.name:'')+'</span><b>'+esc(x.l)+'</b></div>'; }).join('');
+  }
+  var chips = s.cos.length ? '<div class="pay-vc-chips">'+s.cos.map(function(c){
+      var own = c.own ? '<span class="pay-own pay-own-'+(c.own==='V'?'v':'ma')+'">'+c.own+'</span>' : '';
+      return '<span class="pay-chip">'+esc(c.n)+own+'</span>'; }).join('')+'</div>'
+    : '<div class="pay-vc-empty">No investable pure-play.</div>';
+  el.innerHTML = '<div class="pay-card"><div class="pay-vc-name">'+esc(s.name)+'</div><div class="pay-vc-tag">'+esc(s.tag)+'</div>'+chips+'</div>'+
+    '<div class="pay-card-sm"><div class="pay-lbl">Money in →</div>'+lines(f.inn,'in')+'</div>'+
+    '<div class="pay-card-sm"><div class="pay-lbl">→ Money out</div>'+lines(f.out,'out')+'</div>';
+}
+var _payCy = null;
+function buildPayMap(){
+  var cv = document.getElementById('payMapCy'); if(!cv || !cv.offsetParent) return;
+  if(_payCy){ requestAnimationFrame(function(){ _payCy.resize(); _payCy.fit(undefined,40); }); return; }
+  ensureCytoscape().then(function(){
+    if(!window.cytoscape){ cv.innerHTML = '<div style="padding:22px;color:#8A93A0;font:400 12px Inter,sans-serif">Could not load the map library.</div>'; return; }
+    cv.innerHTML = '';
+    var tiers = {}; VC_SEGMENTS.forEach(function(s){ (tiers[s.flow] = tiers[s.flow]||[]).push(s); });
+    var els = [];
+    VC_SEGMENTS.forEach(function(s){
+      var arr = tiers[s.flow], i = arr.indexOf(s), yc = (i-(arr.length-1)/2)*128;
+      els.push({ data:{ id:s.id, label:s.name, color:TIER_COLOR[s.flow], size:s.size }, position:{ x:(s.flow-1)*250, y:yc } });
+    });
+    PAY_FLOWS.forEach(function(f, i){
+      els.push({ data:{ id:'pe'+i, source:f.a, target:f.b, label:f.l, w:1.3+f.w*1.5, color:TIER_COLOR[SEG_BY_ID[f.a].flow] } });
+    });
+    _payCy = window.cytoscape({ container:cv, elements:els, layout:{ name:'preset', fit:true, padding:40 },
+      wheelSensitivity:0.2, minZoom:0.3, maxZoom:2.2,
+      style:[
+        { selector:'node', style:{ 'background-color':'data(color)','background-opacity':0.92,'width':'data(size)','height':'data(size)',
+          'label':'data(label)','color':'#1E2733','font-size':9.5,'font-weight':600,'text-wrap':'wrap','text-max-width':92,
+          'text-valign':'bottom','text-margin-y':4,'text-background-color':'#fff','text-background-opacity':0.85,
+          'text-background-padding':3,'text-background-shape':'roundrectangle' }},
+        { selector:'edge', style:{ 'width':'data(w)','line-color':'data(color)','opacity':0.28,'curve-style':'bezier',
+          'target-arrow-shape':'triangle','target-arrow-color':'data(color)','arrow-scale':0.8 }},
+        { selector:'.faded', style:{ 'opacity':0.06,'text-opacity':0.15 }},
+        { selector:'node.hot', style:{ 'border-width':3,'border-color':'#1E2733' }},
+        { selector:'edge.hot', style:{ 'opacity':0.92 }},
+      ]
+    });
+    payPanelDefault();
+    _payCy.on('tap', 'node', function(e){
+      var n = e.target; _payCy.elements().removeClass('hot faded');
+      var hood = n.closedNeighborhood(); _payCy.elements().not(hood).addClass('faded'); hood.addClass('hot');
+      payPanelFocus(n.id());
+    });
+    _payCy.on('tap', function(e){ if(e.target===_payCy){ _payCy.elements().removeClass('hot faded'); payPanelDefault(); } });
+  }).catch(function(){ cv.innerHTML = '<div style="padding:22px;color:#8A93A0;font:400 12px Inter,sans-serif">Map failed to load (offline?).</div>'; });
+}
+function mapView(){
+  return '<div class="pay-map-wrap">'+
+    '<div class="pay-map-canvas" id="payMapCy"><div style="padding:22px;color:var(--mu);font:400 12px Inter,sans-serif">Loading map…</div></div>'+
+    '<div class="pay-map-panel" id="payMapPanel"></div></div>'+
+    '<div class="pay-asof" style="margin-top:8px">Nodes = value-chain segments (left → right is upstream → downstream), sized by relative importance; arrows = money flows, width ≈ magnitude. <b>Click a segment</b> to isolate its flows and see its players. Interchange (network → issuer) and the MDR (merchant → acquirer) are the thickest.</div>';
+}
+
+function valueChainTab(){
+  return '<div class="pay-vc-toggle" id="payVcToggle">'+
+      '<button type="button" class="pay-vc-tab active" data-vcv="econ">Fee economics</button>'+
+      '<button type="button" class="pay-vc-tab" data-vcv="map">Value-chain map</button>'+
+    '</div>'+
+    '<div class="pay-vc-view" data-vcv="econ">'+econView()+'</div>'+
+    '<div class="pay-vc-view" data-vcv="map" hidden>'+mapView()+'</div>';
 }
 
 var TABS = [
@@ -502,12 +629,21 @@ function show(root, key){
   if(key==='map') requestAnimationFrame(buildMapChart);
 }
 
+function showVcView(root, v){
+  root.querySelectorAll('.pay-vc-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-vcv')===v); });
+  root.querySelectorAll('.pay-vc-view').forEach(function(p){ p.hidden = (p.getAttribute('data-vcv')!==v); });
+  if(v==='map') requestAnimationFrame(buildPayMap);
+}
+
 function init(){
   var root = document.querySelector('.pay');
   if(!root) return;
   if(!root._wired){ root._wired = true;
     root.querySelectorAll('.pay-tab').forEach(function(btn){
       btn.onclick = function(){ show(root, btn.getAttribute('data-pt')); };
+    });
+    root.querySelectorAll('.pay-vc-tab').forEach(function(btn){
+      btn.onclick = function(){ showVcView(root, btn.getAttribute('data-vcv')); };
     });
   }
   var active = root.querySelector('.pay-tab.active');

@@ -8,6 +8,7 @@ const _loaded = new Set();
 const TAB_MAP = {
   'companies': 'co',
   'market-analysis': 'rot',
+  'industry-analysis': 'ind',
   'hedge-funds': 'inv',
   'team': 'team',
   'fund-returns': 'ret',
@@ -17,6 +18,7 @@ const TAB_MAP = {
 const TAB_TITLES = {
   'co': 'Companies',
   'rot': 'Market Analysis',
+  'ind': 'Industry Analysis',
   'inv': 'Hedge Funds',
   'team': 'Team',
   'ret': 'Return Analysis',

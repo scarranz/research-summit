@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Industry Analysis — Summit Research</title>
+<!--
+  Standalone, isolated host for an industry supply-chain map (semi-industry.js).
+  Rendered inside an <iframe> by the portal's Industry Analysis tab so the map's
+  module-level state (cytoscape instance, element IDs) never collides with the same
+  map embedded inside a company profile (e.g. NVIDIA). No auth / Supabase needed —
+  the industry map is pure client-side data.
+-->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/overview.css">
+<link rel="stylesheet" href="css/semi-map.css">
+<style>
+  html, body { margin: 0; background: #fff; }
+  #emb { padding: 14px 18px 28px; max-width: 1400px; margin: 0 auto; }
+</style>
+</head>
+<body>
+<div id="emb" class="ov ov-nvda" data-brand="NVDA"></div>
+<script type="module">
+  import { semiIndustry } from './js/overviews/semi-industry.js';
+  // Which industry to show — only "semiconductors" exists today; the param keeps the
+  // door open for more (each would map to its own industry module / dataset).
+  const industry = new URLSearchParams(location.search).get('industry') || 'semiconductors';
+  const emb = document.getElementById('emb');
+  if (industry === 'semiconductors') {
+    // No `focus` / `highlight` → the full industry-wide map, not drilled to one company.
+    emb.innerHTML = semiIndustry.html();
+    requestAnimationFrame(() => semiIndustry.init());
+  } else {
+    emb.innerHTML = '<div style="padding:40px;text-align:center;color:#8A93A0;font-family:Inter,sans-serif">This industry is not available yet.</div>';
+  }
+</script>
+</body>
+</html>

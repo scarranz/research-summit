@@ -271,7 +271,7 @@ function railsTab(){
       return '<div class="pay-inset"><div style="font:700 12px Inter,sans-serif;color:var(--navy);margin-bottom:4px">'+esc(s.t)+'</div>'+
         '<div class="pay-body" style="font-size:11px">'+esc(s.b)+'</div><div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap">'+badges(s.tags)+'</div></div>';
     }).join('')+'</div></div>';
-  h += '<div class="pay-card" style="border-left:3px solid var(--navy)"><div class="pay-lbl">Verdict — the accurate framing for the DCF</div>'+
+  h += '<div class="pay-card" style="border-left:3px solid var(--navy)"><div class="pay-lbl">Verdict</div>'+
     '<div class="pay-g3" style="margin-top:8px">'+VERDICT.map(function(v){
       return '<div><div style="font:700 12px Inter,sans-serif;color:var(--navy);margin-bottom:4px">'+esc(v[0])+'</div><div class="pay-body" style="font-size:11px">'+esc(v[1])+'</div></div>';
     }).join('')+'</div></div>';

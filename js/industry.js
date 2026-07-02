@@ -1,19 +1,22 @@
-// Industry Analysis tab — a portal-level hub for cross-company, industry-wide
-// supply-chain maps. The map itself (semi-industry.js) is rendered inside an
-// isolated <iframe> (industry-embed.html) so its module-level state never collides
-// with the same map embedded inside a company profile (e.g. NVIDIA's Industry tab).
+// Industry Analysis tab — a portal-level hub for industry-wide analyses.
 //
-// Structure is built to grow: an industry selector sits above the frame; today only
-// Semiconductors exists. Adding another industry = a new option here + its dataset,
-// then point the frame at industry-embed.html?industry=<name>.
+// Each industry can present differently:
+//   • Semiconductors — the interactive supply-chain map (semi-industry.js), rendered
+//     inside an isolated <iframe> (industry-embed.html) so its module state can't
+//     collide with the same map embedded in a company profile (e.g. NVIDIA).
+//   • Payments — the Visa/Mastercard moat & threat analysis (payments-industry.js),
+//     pure presentation + Chart.js, rendered in-document (no isolation needed).
+//
+// The pill selector switches between them; adding another industry = a new option
+// here + its renderer.
 
 const INDUSTRIES = [
   { id: 'semiconductors', label: 'Semiconductors', ready: true },
-  // Add the next industry here once its map/dataset exists, e.g.:
-  // { id: 'payments', label: 'Payments', ready: false },
+  { id: 'payments',       label: 'Payments',       ready: true },
 ];
 
 let _wired = false;
+let _payLoaded = false;
 
 export function loadIndustryPage() {
   const root = document.getElementById('ind-root');
@@ -29,15 +32,18 @@ export function loadIndustryPage() {
     '<div class="ind-wrap">' +
       '<div class="ind-head">' +
         '<h2 class="ind-title">Industry Analysis</h2>' +
-        '<p class="ind-sub">Interactive supply-chain maps — explore who supplies whom across an industry, ' +
-          'segment by segment, with company-level drill-downs. The same map appears inside individual ' +
-          'company profiles, pre-focused to that company.</p>' +
+        '<p class="ind-sub">Interactive, industry-wide analyses — supply-chain maps, competitive ' +
+          'structure and threat frameworks. Some maps also appear inside individual company ' +
+          'profiles, pre-focused to that company.</p>' +
         '<div class="ind-pills">' + pills +
           '<span class="ind-soon">More industries coming soon</span>' +
         '</div>' +
       '</div>' +
-      '<iframe id="ind-frame" class="ind-frame" title="Industry supply-chain map" ' +
-        'src="industry-embed.html?industry=semiconductors"></iframe>' +
+      '<div id="ind-content">' +
+        '<iframe id="ind-frame" class="ind-frame" title="Industry supply-chain map" ' +
+          'src="industry-embed.html?industry=semiconductors"></iframe>' +
+        '<div id="ind-payments" hidden></div>' +
+      '</div>' +
     '</div>';
 
   if (_wired) return;
@@ -46,7 +52,26 @@ export function loadIndustryPage() {
     const btn = e.target.closest('.ind-pill');
     if (!btn || btn.disabled) return;
     root.querySelectorAll('.ind-pill').forEach((b) => b.classList.toggle('active', b === btn));
-    const frame = document.getElementById('ind-frame');
-    if (frame) frame.src = 'industry-embed.html?industry=' + encodeURIComponent(btn.dataset.ind);
+    showIndustry(btn.dataset.ind);
   });
+}
+
+async function showIndustry(id) {
+  const frame = document.getElementById('ind-frame');
+  const pay = document.getElementById('ind-payments');
+  if (id === 'payments') {
+    if (frame) frame.hidden = true;
+    if (pay) {
+      pay.hidden = false;
+      if (!_payLoaded) {
+        _payLoaded = true;
+        const m = await import('./overviews/payments-industry.js');
+        pay.innerHTML = m.paymentsIndustry.html();
+        requestAnimationFrame(() => m.paymentsIndustry.init());
+      }
+    }
+  } else {
+    if (pay) pay.hidden = true;
+    if (frame) frame.hidden = false;
+  }
 }

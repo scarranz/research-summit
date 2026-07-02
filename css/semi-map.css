@@ -122,8 +122,202 @@
 }
 
 /* ─── NVDA brand accent on the sub-tab bar ─── */
-.ov-nvda { --brand: #76B900; }
-.ov-nvda .ovt-tab.active { color: #4d7a00; border-bottom-color: #76B900; }
+/* NVIDIA green. Filled segmented control that wraps for the multi-tab profile. */
+.ov-nvda { --brand: #76B900; --brand-soft: #f0f7e0; }
+.ov-nvda .ovt-tabs {
+  display: inline-flex; flex-wrap: wrap; gap: 4px; border-bottom: none;
+  background: var(--surface); border: 1px solid var(--bdr);
+  border-radius: 11px; padding: 4px; margin: 0 0 22px;
+}
+.ov-nvda .ovt-tab {
+  border: none; border-radius: 8px; text-transform: none; letter-spacing: 0;
+  font-size: 13px; font-weight: 600; color: var(--mu);
+  padding: 8px 16px; margin-bottom: 0; transition: background .15s, color .15s;
+}
+.ov-nvda .ovt-tab:hover { color: var(--navy); background: rgba(118,185,0,0.10); }
+.ov-nvda .ovt-tab.active {
+  color: #1E2733; background: var(--brand); border-bottom: none;
+  box-shadow: 0 1px 3px rgba(118,185,0,0.30);
+}
+.ov-nvda .ovt-tab.active:hover { color: #1E2733; }
+
+/* Toggles on the Segments revenue chart (segment framework / view / forecast source). */
+.nv-seg-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 7px 12px; margin: 0 0 12px; }
+.nv-seg-lbl {
+  font: 700 10px 'Inter', sans-serif; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--mu);
+}
+.nv-seg-toggle {
+  display: inline-flex; gap: 4px; margin: 0;
+  background: var(--surface); border: 1px solid var(--bdr);
+  border-radius: 9px; padding: 3px;
+}
+.nv-seg-btn {
+  border: none; background: none; border-radius: 7px;
+  font: 600 12px 'Inter', sans-serif; color: var(--mu);
+  padding: 6px 14px; cursor: pointer; transition: background .15s, color .15s;
+}
+.nv-seg-btn:hover { color: var(--navy); }
+.nv-seg-btn.active { background: #76B900; color: #1E2733; }
+.nv-seg-btn[disabled] { opacity: .45; cursor: default; }
+.nv-seg-btn[disabled]:hover { color: var(--mu); background: none; }
+
+/* Valuation calculator — sliders + implied-price result. */
+.nv-cal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 22px; align-items: end; margin: 2px 0 10px; }
+.nv-cal-sl-h { font: 600 12px 'Inter', sans-serif; color: var(--mu); margin-bottom: 7px; display: flex; justify-content: space-between; align-items: baseline; }
+.nv-cal-sl-h b { font-size: 15px; color: var(--navy); font-variant-numeric: tabular-nums; }
+.nv-cal-grid input[type=range] { height: 4px; }
+.nv-cal-px { display: flex; flex-direction: column; gap: 7px; }
+.nv-cal-lbl { font: 600 12px 'Inter', sans-serif; color: var(--mu); }
+.nv-cal-result {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px;
+  background: var(--brand-soft); border: 1px solid #d7e8b4; border-radius: 12px;
+  padding: 12px 16px; margin: 4px 0 2px;
+}
+.nv-cal-res-l { font: 700 11px 'Inter', sans-serif; text-transform: uppercase; letter-spacing: .05em; color: #5a7a16; }
+.nv-cal-res-v { font: 700 30px 'Inter', sans-serif; color: var(--navy); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.nv-cal-res-s { font: 500 13px 'Inter', sans-serif; color: var(--navy); margin-left: auto; }
+.nv-cal-res-s b { font-variant-numeric: tabular-nums; }
+@media (max-width: 720px){ .nv-cal-grid { grid-template-columns: 1fr; } .nv-cal-res-s { margin-left: 0; width: 100%; } }
+
+/* Technology tab — "what NVIDIA sells" layered stack. */
+.tech-stack { display: flex; flex-direction: column; gap: 7px; margin: 4px 0 6px; }
+.tech-layer {
+  border: 1px solid var(--bdr); border-left: 4px solid var(--mu);
+  border-radius: 8px; padding: 11px 14px; background: var(--w);
+}
+.tech-layer-t { font-size: 13px; font-weight: 700; color: var(--navy); }
+.tech-layer-d { font-size: 12.5px; color: var(--mu); margin-top: 3px; line-height: 1.5; }
+.tech-layer-d b { color: var(--navy); font-weight: 600; }
+
+/* CPU vs GPU parallel-processing demo */
+.cg-demo { border: 1px solid var(--bdr); border-radius: 10px; padding: 14px 16px; background: var(--w); margin: 4px 0 12px; }
+.cg-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.cg-run { border: none; background: #76B900; color: #1E2733; font: 700 12px 'Inter', sans-serif;
+  border-radius: 7px; padding: 7px 14px; cursor: pointer; }
+.cg-run:hover { filter: brightness(1.06); }
+.cg-cap { font-size: 12px; color: var(--mu); }
+.cg-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.cg-panel { border: 1px solid var(--bdr); border-radius: 8px; padding: 12px; background: var(--surface); }
+.cg-title { font-size: 12px; color: var(--mu); margin-bottom: 10px; min-height: 30px; }
+.cg-title b { color: var(--navy); font-weight: 700; }
+.cg-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; }
+.cg-cell { aspect-ratio: 1; border-radius: 2px; background: #e7ecf1; transition: background .1s; }
+.cg-cell.on { background: #76B900; }
+.cg-stat { margin-top: 10px; font-size: 11.5px; font-weight: 600; color: var(--mu); }
+
+/* Transistor-density shrink animation */
+.tr-shrink { display: flex; align-items: center; gap: 22px; border: 1px solid var(--bdr);
+  border-radius: 10px; padding: 16px; background: var(--w); margin: 4px 0 12px; }
+.tr-die { width: 168px; height: 168px; flex: none; display: grid; gap: 2px; padding: 9px;
+  background: #0f1720; border-radius: 8px; }
+.tr-dot { aspect-ratio: 1; border-radius: 50%; background: #76B900; animation: trDotIn .55s ease both; }
+@keyframes trDotIn { from { opacity: 0; transform: scale(.25); } to { opacity: 1; transform: scale(1); } }
+.tr-meta { display: flex; flex-direction: column; gap: 3px; }
+.tr-nodeline { display: flex; align-items: baseline; gap: 10px; }
+.tr-year { font-size: 13px; font-weight: 700; color: #1E2733; background: #dff0c2;
+  border-radius: 6px; padding: 2px 9px; }
+.tr-node { font-size: 28px; font-weight: 800; color: var(--navy); line-height: 1; }
+.tr-count { font-size: 15px; font-weight: 700; color: #5a9e16; }
+.tr-hint { font-size: 12px; color: var(--mu); margin-top: 6px; max-width: 380px; line-height: 1.5; }
+
+/* GPU generation-over-generation bars */
+.gen-bars { display: flex; flex-direction: column; gap: 9px; margin: 4px 0 4px; }
+.gen-row { display: flex; align-items: center; gap: 12px; }
+.gen-name { width: 132px; flex: none; font-size: 12.5px; font-weight: 600; color: var(--navy); }
+.gen-track { flex: 1; height: 26px; background: #eef2f6; border-radius: 6px; overflow: hidden; }
+.gen-fill { width: 0; height: 100%; border-radius: 6px;
+  background: linear-gradient(90deg, #1F8A70, #76B900);
+  transition: width 1.15s cubic-bezier(.22,.61,.36,1); }
+.gen-bars.go .gen-fill { width: var(--w); }
+.gen-fill.ramping { background: repeating-linear-gradient(45deg, #76B900, #76B900 7px, #5fa600 7px, #5fa600 14px); }
+.gen-val { width: 48px; flex: none; text-align: right; font-size: 12px; font-weight: 700; color: var(--navy); }
+.gen-tag { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  color: #5a7a00; background: #e8f3d0; border-radius: 4px; padding: 1px 5px; margin-left: 6px; vertical-align: middle; }
+
+/* "What NVIDIA sells" — interactive pseudo-3D layer stack */
+.nv3d { margin: 6px 0 8px; }
+.nv3d-toggles { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.nv3d-main { display: grid; grid-template-columns: 1fr 300px; gap: 18px; align-items: center; }
+.nv3d-stage { perspective: 1300px; height: 300px; display: flex; align-items: center; justify-content: center; }
+.nv3d-scene { position: relative; width: 300px; height: 130px; transform-style: preserve-3d;
+  transform: rotateX(54deg) rotateZ(-30deg); }
+.nv3d-slab { position: absolute; inset: 0; border-radius: 12px; border: 1px solid rgba(255,255,255,.45);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 22px rgba(15,23,32,.22); cursor: pointer;
+  transition: transform .4s cubic-bezier(.22,.61,.36,1), opacity .35s, box-shadow .35s; }
+.nv3d-slab span { color: #fff; font-weight: 700; font-size: 13px; letter-spacing: .01em;
+  text-shadow: 0 1px 3px rgba(0,0,0,.35); }
+.nv3d-slab.sel { box-shadow: 0 18px 38px rgba(15,23,32,.34); }
+.nv3d-panel { border: 1px solid var(--bdr); border-radius: 10px; padding: 16px; background: var(--w); min-height: 178px; }
+.nv3d-p-h { font-size: 15px; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
+.nv3d-p-d { font-size: 12.5px; line-height: 1.55; color: var(--mu); }
+.nv3d-p-d b { color: var(--navy); font-weight: 600; }
+.nv3d-img { margin-top: 12px; border: 1px dashed var(--bdr); border-radius: 8px; padding: 16px;
+  text-align: center; font-size: 11px; color: var(--mu); background: var(--surface); }
+.nv3d-imgbox { margin-top: 12px; height: 150px; border-radius: 8px; overflow: hidden; background: #0a0e13; }
+.nv3d-photo { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+
+/* Management tab — executive cards */
+.lead-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.lead-card { border: 1px solid var(--bdr); border-radius: 10px; padding: 16px; background: var(--w); text-align: center; }
+.lead-av { width: 84px; height: 84px; border-radius: 50%; margin: 0 auto 10px; position: relative;
+  background: var(--c, #6B7A8F); display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 800; font-size: 23px; overflow: hidden; }
+.lead-av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lead-name { font-size: 14px; font-weight: 700; color: var(--navy); }
+.lead-role { font-size: 12px; font-weight: 600; color: #5a9e16; margin-top: 2px; }
+.lead-bio { font-size: 12px; color: var(--mu); margin-top: 8px; line-height: 1.5; }
+.lead-own { font-size: 11.5px; font-weight: 700; color: var(--navy); margin-top: 8px;
+  border-top: 1px solid var(--bdr); padding-top: 8px; }
+
+/* Management tab — interactive org tree */
+.lead-av-sm { width: 38px; height: 38px; font-size: 13px; margin: 0; flex: none; }
+.org { text-align: center; margin: 6px 0 4px; }
+.org-name { font-size: 13px; font-weight: 700; color: var(--navy); }
+.org-role { font-size: 11px; color: var(--mu); margin-top: 2px; }
+.org-txt { text-align: left; }
+.org-node { position: relative; display: inline-flex; align-items: center; gap: 9px;
+  border: 1px solid var(--bdr); border-radius: 9px; padding: 8px 12px; background: var(--w); max-width: 210px; }
+.org-ceo { border: 2px solid #76B900; padding: 10px 16px; }
+.org-click { cursor: pointer; font-family: 'Inter', sans-serif; transition: border-color .15s, box-shadow .15s; }
+.org-click:hover { border-color: #76B900; }
+.org-click.sel { border-color: #76B900; box-shadow: 0 0 0 2px rgba(118,185,0,.25); }
+.org-info { background: var(--surface); max-width: 230px; }
+.org-info .org-name { font-weight: 600; color: var(--mu); }
+.org-reports { position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 34px; }
+.org-reports::after { content: ''; position: absolute; top: -34px; left: 50%; width: 1px; height: 16px; background: var(--bdr); }
+.org-reports::before { content: ''; position: absolute; top: -18px; left: 8%; right: 8%; height: 1px; background: var(--bdr); }
+.org-node.org-click::before { content: ''; position: absolute; top: -18px; left: 50%; width: 1px; height: 18px; background: var(--bdr); }
+.org-founders { text-align: center; font-size: 12px; color: var(--mu); margin-top: 18px; }
+.org-chip { border: 1px solid var(--bdr); background: var(--surface); border-radius: 20px; padding: 3px 10px;
+  font: 600 12px 'Inter', sans-serif; color: var(--navy); cursor: pointer; }
+.org-chip:hover { border-color: #76B900; }
+
+/* Management tab — selected-person detail panel */
+.mg-detail { margin-top: 20px; border: 1px solid var(--bdr); border-left: 3px solid #76B900;
+  border-radius: 10px; padding: 16px 18px; background: var(--w); }
+.mg-d-top { display: flex; align-items: center; gap: 14px; }
+.mg-d-top .lead-av { width: 64px; height: 64px; font-size: 20px; margin: 0; }
+.mg-d-name { font-size: 16px; font-weight: 800; color: var(--navy); }
+.mg-d-role { font-size: 12px; font-weight: 600; color: #5a9e16; margin-top: 2px; }
+.mg-d-bio { font-size: 12.5px; color: var(--mu); margin-top: 10px; line-height: 1.55; }
+.mg-d-own { font-size: 12.5px; color: var(--navy); margin-top: 10px; border-top: 1px solid var(--bdr); padding-top: 10px; }
+.mg-d-own b { color: #1F8A70; }
+.mg-val { font-variant-numeric: tabular-nums; }
+
+/* Management tab — ownership change colors + total */
+.own-up { color: #1E9E62; font-weight: 600; }
+.own-dn { color: #D2533F; font-weight: 600; }
+.own-total td { border-top: 2px solid var(--bdr); font-weight: 700; color: var(--navy); }
+
+@media (max-width: 760px) { .lead-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) {
+  .cg-panels { grid-template-columns: 1fr; }
+  .tr-shrink { flex-direction: column; align-items: flex-start; }
+  .nv3d-main { grid-template-columns: 1fr; }
+  .lead-grid { grid-template-columns: 1fr; }
+}
 
 @media (max-width: 640px){
   .smap-flowrow { flex-direction: column; }

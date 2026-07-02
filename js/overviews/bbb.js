@@ -1,11 +1,18 @@
 // overviews/bbb.js — custom Overview for BBB Foods Inc. (NYSE: TBBB / "Tiendas 3B")
 // Built individually per the portal's per-company Overview model (see CLAUDE.md).
 //
-// This module renders two internal sub-tabs inside the Overview pane:
-//   1. Overview — company profile (figures from the FY2025 Form 20-F, in MXN / Ps.)
-//   2. SSS      — Same Store Sales growth, TBBB vs. ANTAD, quarterly (replicating the
-//                 chart in the 4Q24 and 1Q26 earnings presentations)
+// This module renders internal sub-tabs inside the Overview pane:
+//   1. Overview              — company profile (FY2025 Form 20-F figures, MXN / Ps.)
+//   2. Stores                — nested sub-tabs: SSS (vs. ANTAD) and Store Growth
+//   3. Competitive Landscape — 3B vs. Neto vs. BARA (see ./bbb-landscape.js)
+//   4. Product Mix / Unit Economics
 // The company does not report EBITDA in its filing text, so it is intentionally omitted.
+
+import { bbbLandscape } from './bbb-landscape.js';
+import { bbbBim } from './bbb-bim.js';
+import { bbbManagement } from './bbb-management.js';
+import { bbbLogistics } from './bbb-logistics.js';
+import { bbbSensitivity } from './bbb-sensitivity.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -27,6 +34,7 @@ var KPIS = [
   { l:'Same-Store Sales',  v:'+18.3%',   d:'FY2025',      dir:'up' },
   { l:'Stores',            v:'3,346',    d:'+574 net new', dir:'up' },
   { l:'Gross Margin',      v:'16.2%',    d:'16.3% FY24',  dir:'muted' },
+  { l:'Employees',         v:'29,202',   d:'FY2025',      dir:'muted' },
 ];
 var AS_OF = 'Figures are in Mexican pesos (Ps.) unless noted. Headline metrics are for the fiscal year ended December 31, 2025 (FY2025), per the company\'s annual report on Form 20-F.';
 var FY_NOTE = 'FY2025: total revenue Ps.78.2B (+36%) · gross profit Ps.12.6B (16.2% margin) · 825M transactions (+23%) · average ticket Ps.94.9 (+11%). The company reported a net loss of Ps.2.84B (vs. a Ps.0.33B profit in FY2024), driven primarily by a one-time, non-cash share-based compensation charge of ~Ps.2.93B tied to RSUs granted under its Liquidity Event Share Plan, plus an FX translation loss and strategic investment in new regions.';
@@ -238,20 +246,7 @@ function overviewBody(c){
   h += sec('Financial Performance (FY2024 → FY2025)',
     '<table class="ov-table"><thead><tr><th>Metric</th><th>FY2024</th><th>FY2025</th></tr></thead><tbody>'+
     FINANCIALS.map(function(r){return '<tr><td class="ov-td-name">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>';}).join('')+
-    '</tbody></table>'+
-    '<div class="ov-callout">'+esc(FIN_NOTE)+'</div>'
-  );
-
-  // 5 — Product mix
-  h += sec('Product Mix', SEGMENTS.map(function(s){
-    return '<div class="ov-row"><div class="ov-row-k">'+esc(s[0])+'</div><div class="ov-row-v">'+esc(s[1])+'</div></div>';
-  }).join(''));
-
-  // 6 — Footprint & store model
-  h += sec('Footprint & Store Model',
-    '<div class="ov-corr-stats">'+
-      FOOTPRINT.stats.map(function(s){return '<div class="ov-corr-stat"><div class="ov-corr-v">'+esc(s[0])+'</div><div class="ov-corr-l">'+esc(s[1])+'</div></div>';}).join('')+
-    '</div>'+ rows(FOOTPRINT.rows)
+    '</tbody></table>'
   );
 
   // 7 — Timeline
@@ -259,61 +254,37 @@ function overviewBody(c){
     return '<div class="ov-tl-item"><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t[0])+'</div><div class="ov-tl-body">'+t[1]+'</div></div>';
   }).join('')+'</div>');
 
-  // 8 — Negative working capital engine
-  h += sec('The Efficiency & Working-Capital Engine', '<div class="ov-callout">'+bullets(ENGINE)+'</div>');
-
-  // 9 — Peers
-  h += sec('Peers & Competitive Landscape',
-    '<table class="ov-table"><thead><tr><th>Peer</th><th>What they offer</th><th>How 3B differs</th></tr></thead><tbody>'+
-    PEERS.map(function(p){return '<tr><td class="ov-td-name">'+esc(p[0])+'</td><td>'+esc(p[1])+'</td><td>'+esc(p[2])+'</td></tr>';}).join('')+
-    '</tbody></table>'
-  );
-
-  // 10 — Tailwinds / Headwinds
-  h += sec('Tailwinds & Headwinds',
-    '<div class="ov-grid2">'+
-      '<div class="ov-wind ov-wind-up"><div class="ov-wind-h">Tailwinds</div>'+bullets(TAILWINDS)+'</div>'+
-      '<div class="ov-wind ov-wind-down"><div class="ov-wind-h">Headwinds</div>'+bullets(HEADWINDS)+'</div>'+
-    '</div>'
-  );
-
-  // 11 — Strategic focus: white-space boxes + growth drivers
-  function statBox(b){ return '<div class="ov-target"><div class="ov-target-v">'+esc(b.v)+'</div><div class="ov-target-l">'+esc(b.l)+'</div><div class="ov-target-s">'+esc(b.s)+'</div></div>'; }
-  h += sec('Strategic Focus',
-    '<div class="ov-subh">Scale & White Space</div>'+
-    '<div class="ov-targets">'+TAM.map(statBox).join('')+'</div>'+
-    '<div class="ov-subh">Growth Drivers</div>'+
-    '<div class="ov-drivers">'+DRIVERS.map(function(d){
-      return '<div class="ov-driver"><div class="ov-driver-t">'+esc(d[0])+'</div><div class="ov-driver-d">'+esc(d[1])+'</div></div>';
-    }).join('')+'</div>'
-  );
-
-  // 12 — Leadership
-  h += sec('Leadership (Founder-Led)', LEADERSHIP.map(function(l){
-    return '<div class="ov-row"><div class="ov-row-k">'+esc(l[0])+'</div><div class="ov-row-v">'+esc(l[1])+'</div></div>';
-  }).join(''));
-
   // 13 — Sources
   h += '<div class="ov-foot">'+esc(SOURCES)+'</div>';
 
   return h;
 }
 
-// "Stores" sub-tab body — the SSS line chart plus the interactive store-growth chart.
+// "Stores" sub-tab body — split into two nested sub-tabs: SSS and Store Growth.
 function storesBody(c){
   var maxI = STORE_YEARS.length - 1;
   var h = '';
 
-  // 1 — Same Store Sales chart (kept).
-  h += '<div class="ov-chart-card ovt-sss-card">'+
+  // Nested sub-tab bar (inside the Stores pane).
+  h += '<div class="ovt-subtabs">'+
+    '<button type="button" class="ovt-subtab active" data-ovst="sss">SSS</button>'+
+    '<button type="button" class="ovt-subtab" data-ovst="growth">Store Growth</button>'+
+  '</div>';
+
+  // ── Sub-tab 1: SSS — Same Store Sales growth, TBBB vs. ANTAD ──
+  var s = '';
+  s += '<div class="ov-chart-card ovt-sss-card">'+
     '<div class="ov-chart-t">Same Store Sales Growth — TBBB vs. ANTAD <span>(quarterly, %)</span></div>'+
     '<div class="ov-chart-wrap ovt-sss-wrap"><canvas id="bbbChartSSS"></canvas></div>'+
   '</div>';
-  h += '<div class="ov-foot">'+esc(SSS_NOTE)+'</div>';
+  s += '<div class="ov-foot">'+esc(SSS_NOTE)+'</div>';
+  h += '<div class="ovt-subpane" data-ovst="sss">'+s+'</div>';
 
-  // 2 — Interactive store count growth.
-  h += '<div class="ov-sec-h ovt-store-h">Store Count Growth</div>';
-  h += '<div class="sg-controls">'+
+  // ── Sub-tab 2: Store Growth — store-count expansion + OXXO age comparison ──
+  var g = '';
+  // 1 — Interactive store count growth.
+  g += '<div class="ov-sec-h ovt-store-h">Store Count Growth</div>';
+  g += '<div class="sg-controls">'+
     '<div class="sg-slider">'+
       '<div class="sg-track"><div class="sg-fill" id="sgFill"></div></div>'+
       '<input type="range" id="sgMin" min="0" max="'+maxI+'" value="0" step="1" aria-label="Start year">'+
@@ -322,16 +293,16 @@ function storesBody(c){
     '<div class="sg-ends"><span>'+esc(STORE_YEARS[0])+'</span><span>'+esc(STORE_YEARS[maxI])+'</span></div>'+
     '<div class="sg-readout" id="sgReadout"></div>'+
   '</div>';
-  h += '<div class="ov-chart-card">'+
+  g += '<div class="ov-chart-card">'+
     '<div class="ov-chart-t">Total Stores <span>(year-end · light bars = estimate · red = YoY growth)</span></div>'+
     '<div class="ov-chart-wrap ovt-stores-wrap"><canvas id="bbbChartStores"></canvas></div>'+
   '</div>';
-  h += '<div class="ov-foot">'+esc(STORE_NOTE)+'</div>';
+  g += '<div class="ov-foot">'+esc(STORE_NOTE)+'</div>';
 
-  // 3 — Expansion vs. OXXO at the same company age.
-  h += '<div class="ov-sec-h ovt-store-h">Store Expansion vs. OXXO — Same Company Age</div>';
-  h += bullets(VS_CTX);
-  h += '<div class="ov-chart-card">'+
+  // 2 — Expansion vs. OXXO at the same company age.
+  g += '<div class="ov-sec-h ovt-store-h">Store Expansion vs. OXXO — Same Company Age</div>';
+  g += bullets(VS_CTX);
+  g += '<div class="ov-chart-card">'+
     '<div class="ov-chart-t">Stores by Company Age — OXXO vs. Tiendas 3B <span>(ages since first store; final 3B point = stated white space · hollow / dashed = estimated / projected)</span></div>'+
     // OXXO logo + "where they are now" callout.
     '<div class="ovt-oxxo-note">'+
@@ -344,7 +315,8 @@ function storesBody(c){
       '<span class="ovt-lg"><i style="background:#E1251B"></i>Tiendas 3B</span>'+
     '</div>'+
   '</div>';
-  h += '<div class="ov-foot">'+esc(VS_NOTE)+'</div>';
+  g += '<div class="ov-foot">'+esc(VS_NOTE)+'</div>';
+  h += '<div class="ovt-subpane" data-ovst="growth" hidden>'+g+'</div>';
 
   return h;
 }
@@ -410,14 +382,7 @@ function ueBody(c){
 function mixBody(c){
   var h = '';
 
-  // 1 — Mix evolution chart (KPI boxes removed per request).
-  h += '<div class="ov-chart-card">'+
-    '<div class="ov-chart-t">Product Mix — Private Label vs. Branded <span>(% of sales)</span></div>'+
-    '<div class="ov-chart-wrap ovt-mix-wrap"><canvas id="bbbChartMix"></canvas></div>'+
-  '</div>';
-  h += '<div class="ov-foot">'+esc(MIX_NOTE)+'</div>';
-
-  // 2 — Why it matters: private-label economics, illustrated with 1 L milk.
+  // 1 — Why it matters: private-label economics, illustrated with 1 L milk.
   h += '<div class="ov-sec-h ovt-store-h">Private Label Economics — Milk (1 L)</div>';
   h += '<div class="milk-compare">'+
     '<div class="milk-card milk-pl">'+
@@ -437,6 +402,30 @@ function mixBody(c){
   h += '<div class="milk-takeaway">3B\'s own-brand milk (<b>Vaca Blanca</b>) is about <b>40% cheaper</b> for the shopper (<b>$20</b> vs <b>$33</b>) yet earns 3B <b>more than double the margin</b> (~<b>22%</b> vs ~<b>10%</b>) and more pesos per litre (<b>$4.5</b> vs <b>$3.3</b>). That is the private-label flywheel — better value for the customer <i>and</i> better economics for 3B — which is why private label keeps taking share (<b>58.2%</b> of sales in 2025).</div>';
   h += '<div class="ov-foot">Product photos: Vaca Blanca (Tiendas 3B) and Alpura Clásica, 1 L. Representative shelf prices and per-unit margins (MXN) for illustration.</div>';
 
+  // 2 — Mix evolution chart (KPI boxes removed per request).
+  h += '<div class="ov-chart-card">'+
+    '<div class="ov-chart-t">Product Mix — Private Label vs. Branded <span>(% of sales)</span></div>'+
+    '<div class="ov-chart-wrap ovt-mix-wrap"><canvas id="bbbChartMix"></canvas></div>'+
+  '</div>';
+  h += '<div class="ov-foot">'+esc(MIX_NOTE)+'</div>';
+
+  return h;
+}
+
+// "General" tab — bundles Store Tour, Logistics, Competitive Landscape and BİM
+// Blueprint as nested sub-tabs.
+function generalBody(c){
+  var h = '';
+  h += '<div class="ovt-subtabs">'+
+    '<button type="button" class="ovt-subtab active" data-ovst="tour">Store Tour</button>'+
+    '<button type="button" class="ovt-subtab" data-ovst="logistics">Logistics</button>'+
+    '<button type="button" class="ovt-subtab" data-ovst="landscape">Competitive Landscape</button>'+
+    '<button type="button" class="ovt-subtab" data-ovst="bim">BİM Blueprint</button>'+
+  '</div>';
+  h += '<div class="ovt-subpane" data-ovst="tour">'+bbbLogistics.tourBody(c)+'</div>';
+  h += '<div class="ovt-subpane" data-ovst="logistics" hidden>'+bbbLogistics.body(c)+'</div>';
+  h += '<div class="ovt-subpane" data-ovst="landscape" hidden>'+bbbLandscape.body(c)+'</div>';
+  h += '<div class="ovt-subpane" data-ovst="bim" hidden>'+bbbBim.body(c)+'</div>';
   return h;
 }
 
@@ -445,15 +434,21 @@ function html(c){
   // Sub-tab bar
   h += '<div class="ovt-tabs">'+
     '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="general">General</button>'+
     '<button type="button" class="ovt-tab" data-ovt="stores">Stores</button>'+
     '<button type="button" class="ovt-tab" data-ovt="mix">Product Mix</button>'+
     '<button type="button" class="ovt-tab" data-ovt="ue">Unit Economics</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="mgmt">Management</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="sens">Sensitivity</button>'+
   '</div>';
   // Panes
   h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="general" hidden>'+generalBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="stores" hidden>'+storesBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="mix" hidden>'+mixBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="ue" hidden>'+ueBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="mgmt" hidden>'+bbbManagement.body(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="sens" hidden>'+bbbSensitivity.body(c)+'</div>';
   h += '</div>';
   return h;
 }
@@ -759,20 +754,57 @@ function buildUeChart(){
   });
 }
 
-// Build everything the Stores tab needs once it becomes visible.
-function buildStoresTab(){
+// ── Nested sub-tabs (pane-scoped) — used by both Stores and General ──
+// Each nested sub-pane builds its own charts/interactions lazily, only once it is
+// visible (Chart.js / canvases need a non-null offsetParent to size correctly).
+function buildStoresSubSSS(){
   buildSSSChart();
+}
+function buildStoresSubGrowth(){
   buildStoresChart();
   setupStoreSlider();
   buildVsChart();
+}
+
+// Build whichever nested sub-pane is active, dispatched by its group.
+function buildSub(root, group, key){
+  if (group === 'stores'){
+    if (key === 'sss')         buildStoresSubSSS();
+    else if (key === 'growth') buildStoresSubGrowth();
+  } else if (group === 'general'){
+    if (key === 'logistics')        bbbLogistics.init(root);
+    else if (key === 'landscape')   bbbLandscape.init(root);
+    else if (key === 'bim')         bbbBim.init(root);
+  }
+}
+
+// Switch a nested sub-tab WITHIN one pane (scoped so Stores and General don't collide).
+function showSub(root, pane, group, key){
+  pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovst') === key); });
+  pane.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovst') !== key); });
+  requestAnimationFrame(function(){ buildSub(root, group, key); });
+}
+
+// Wire a nested sub-tab group (idempotent) and build its currently-active sub-pane.
+function wireSubtabs(root, group){
+  var pane = root.querySelector('.ovt-pane[data-ovt="'+group+'"]');
+  if (!pane) return;
+  pane.querySelectorAll('.ovt-subtab').forEach(function(btn){
+    btn.onclick = function(){ showSub(root, pane, group, btn.getAttribute('data-ovst')); };
+  });
+  var active = pane.querySelector('.ovt-subtab.active');
+  if (active) buildSub(root, group, active.getAttribute('data-ovst'));
 }
 
 // Switch sub-tab. Builds the tab's charts lazily the first time it becomes visible.
 function showOvt(root, key){
   root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt') === key); });
   root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt') !== key); });
-  if (key === 'stores') requestAnimationFrame(buildStoresTab);
+  if (key === 'stores') requestAnimationFrame(function(){ wireSubtabs(root, 'stores'); });
+  if (key === 'general') requestAnimationFrame(function(){ wireSubtabs(root, 'general'); });
   if (key === 'mix') requestAnimationFrame(buildMixChart);
+  if (key === 'sens') requestAnimationFrame(function(){ bbbSensitivity.init(root); });
+  if (key === 'mgmt') requestAnimationFrame(function(){ bbbManagement.init(root); });
   if (key === 'ue') requestAnimationFrame(buildUeChart);
 }
 
@@ -786,8 +818,11 @@ function init(c){
   // If a chart tab is the active one, (re)build its charts now.
   var active = root.querySelector('.ovt-tab.active');
   var activeKey = active ? active.getAttribute('data-ovt') : '';
-  if (activeKey === 'stores') requestAnimationFrame(buildStoresTab);
+  if (activeKey === 'stores') requestAnimationFrame(function(){ wireSubtabs(root, 'stores'); });
+  if (activeKey === 'general') requestAnimationFrame(function(){ wireSubtabs(root, 'general'); });
   if (activeKey === 'mix') requestAnimationFrame(buildMixChart);
+  if (activeKey === 'sens') requestAnimationFrame(function(){ bbbSensitivity.init(root); });
+  if (activeKey === 'mgmt') requestAnimationFrame(function(){ bbbManagement.init(root); });
   if (activeKey === 'ue') requestAnimationFrame(buildUeChart);
 }
 

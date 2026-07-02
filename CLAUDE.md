@@ -365,6 +365,70 @@ supabase secrets set KEY_NAME=value --project-ref bvflqjndivouhgwqfbrq
 
 Current secrets: `FISCAL_AI_API_KEY`, `MASSIVE_API_KEY`, plus Supabase system secrets.
 
+## Tiendas 3B (TBBB) Overview — architecture & handoff
+
+The **TBBB / BBB Foods (NYSE: TBBB)** company Overview is the most built-out profile. Its modules live in `js/overviews/` and render inside Companies → company → Overview. Use this as the map when continuing the work (branch `feat/tbbb-overview`, PR #40 → main).
+
+### Tab structure (top-level → nested)
+`Overview · General · Stores · Product Mix · Unit Economics · Management · Sensitivity`
+- **General** (nested sub-tabs): Store Tour · Logistics · Competitive Landscape · BİM Blueprint
+- **Stores** (nested): SSS · Store Growth
+- **Management** (toggle): Corporate · Regional · Ownership & Dilution
+
+### Modules (`js/overviews/`)
+- `bbb.js` — the shell: snapshot/KPIs/narrative (`overviewBody`), the top-level tab bar + `generalBody` (General's nested sub-tabs), Stores (`storesBody`), Product Mix (`mixBody`), Unit Economics (`ueBody`), and all Chart.js charts. Imports the sibling modules.
+- `bbb-landscape.js` — Competitive Landscape: CSP-safe Mexico choropleth (3B/Neto/BARA presence) + a category toggle comparing vs the classic channel (Walmex/Chedraui/La Comer) and OXXO/tienditas.
+- `bbb-logistics.js` — Logistics (supply-chain flow + interactive multi-DC network simulator) and the Store Tour (`tourBody`, embeds 3B's Matterport tour).
+- `bbb-bim.js` — BİM Blueprint (maturity comparison vs the Turkish hard-discounter 3B was modeled on).
+- `bbb-management.js` — Management: pure-CSS org charts (Corporate/Regional) + click-through CV modal, exec photos in `img/leadership/3b-*.png`, and Ownership & Dilution.
+- `bbb-sensitivity.js` — Sensitivity: interactive valuation matrix (implied EV to SSS × store growth).
+- `mx-map-data.js` — generated SVG paths for Mexico's 32 states.
+
+### Sub-tab system (convention)
+Top-level tabs use `.ovt-tab` / `.ovt-pane[data-ovt]`; nested sub-tabs use `.ovt-subtab` / `.ovt-subpane[data-ovst]`. Nested switching is **pane-scoped** (`wireSubtabs`/`showSub`/`buildSub` in `bbb.js`) so Stores and General don't collide. Each chart/interaction is built lazily when its pane becomes visible (Chart.js needs a non-null `offsetParent`). All custom graphics are inline SVG/HTML (CSP-safe); only Chart.js (CDN) and Three.js (cdnjs, Store-Tour fallback) are external.
+
+### Data sources
+- **Summit DCF model** (MCP `Summit_Financial_Data`, instrument `TBBB`, snapshot `2026-05-22`) — financials & projections. Store count is derived as `distribution centers (DC) × stores per DC (SPDC)`.
+- **FY2025 Form 20-F** (SEC EDGAR, CIK 0001978954) — business model, management, ownership (Item 7), logistics, store format.
+- **Live price** via IBKR MCP (`get_price_snapshot`, contract_id 682654122).
+- Competitor/ownership specifics from web research, cited in each section's footnote.
+
+### Key modelling notes
+- **Sensitivity**: Adjusted EBITDA = revenue × (16.2% gross margin − 10.3% sales − 2.7% admin ex-SBC) = revenue × 3.2%; SBC (2026 2,392 / 2027 882 / 2028 216 / 2029 50, Ps. MM) added back. Two inputs (SSS, store growth) flex flat from 2026 and compound; EV = Adj EBITDA × a user multiple.
+- **Ownership**: triple-class (A 1 vote, B 15 votes founder-only, C 1 vote); founder ~11% economics / ~45% votes.
+
+### CSP & local-only
+- `netlify.toml` CSP includes `frame-src https://my.matterport.com https://*.matterport.com` for the Store-Tour iframe — keep it when editing the CSP.
+- Not in git: `env.js` (Supabase creds), and the source PDFs (10-Ks & earnings decks) that live outside the repo.
+
+### Backlog / next ideas (discussed, not yet built)
+- **Valuation tab** — base-case fair value / price target from the Summit DCF + multiples, upside vs the live IBKR price, a football field, and an EV → equity → per-share bridge. (Natural complement to Sensitivity.)
+- **Investment Thesis & Risks** — structured Bull / Base / Bear, key risks (execution of openings, FEMSA-Bara & Salinas-Neto competition, peso/macro, founder dependency, SBC dilution, lease obligations), catalysts.
+- **Financial Summary** — 3-statement + KPI trends (revenue, gross profit, EBITDA, net income, FCF) over time, from the Summit model.
+- **Peer financial comparison** — multiples / growth / margins vs Walmex, FEMSA, Chedraui, La Comer and global discounters (BİM, Dollar General).
+
+## SoFi (SOFI) Overview — architecture & handoff
+
+The **SoFi Technologies (NASDAQ: SOFI)** Overview is the other deeply-built profile. Unlike TBBB (split into `bbb-*.js`), SoFi is a **single file**: `js/overviews/sofi.js` (exports `sofiOverview`; registered in `js/overviews/index.js`).
+
+### Tab structure (top-level → nested)
+Top-level tabs use `.ovt-tab` / `.ovt-pane[data-ovt]`:
+`Overview · General · Interest Income · Fee Income · Management · Valuation · Sensitivity · Peers`
+- The **General** tab's `data-ovt` is legacy `"members"` (label is "General").
+- SoFi predates the shared nested-subtab system, so each section has its **own** sub-tab classes:
+  - **General** → `.ovg-tab`/`.ovg-pane[data-ovg]`: Milestones · Members · Rule of 40 · Capital Raises
+  - **Fee Income** → `.ovf-tab`/`.ovf-pane[data-ovf]`: Loan Platform Business · Technology Platform · Financial Services
+  - **Valuation** → `.ovv-tab`/`.ovv-pane[data-ovv]`: Actuals vs Estimates · Actuals vs Guidance
+
+### Key components (functions in `sofi.js`)
+- Bodies: `overviewBody`, `generalBody` (→ `milestonesBody`/`membersBody`/`rule40Body`/`capRaisesBody`), `interestBody`, `feeBody` (→ `lpbBody`/`techBody`/`fsBody`), management (insider **Form 4** activity), `valuationBody` (→ `aveBody`/`guidanceBody`), `sensBody`, peers. `html(c)` assembles the tab bar; `init(c)` wires tabs and builds Chart.js charts lazily per visible pane.
+- **Sensitivity** (`SENS_SCEN`, `sensBody`, `sensCompute`, `renderSens`): a **multi-driver** framework — pick a scenario category, move per-driver sliders → KPI tiles → implied price (`P/E × EPS`), anchored to `SENS_BASE` (price, shares, base EPS/PE). (Different design from TBBB's matrix — keep them distinct.)
+- **SOTP** (`SOTP_NI`, `renderSotp`): a forward-earnings sum-of-the-parts — capitalise next-year net income split between Interest and Fee segments at separate P/Es; Chart.js stacked bar + implied price.
+
+### Data & live price
+- Fundamentals are **hardcoded in `sofi.js`** from SoFi's 10-K / earnings (FY2024 vs FY2025), plus peers and Form-4 insider data.
+- **Live price** comes from the **`get-quote` Supabase edge function** (`/functions/v1/get-quote?ticker=SOFI`), with a fixed-price fallback; Sensitivity P/E and SOTP upside recompute against it. (TBBB instead uses the IBKR MCP for live price — different mechanism.)
+
 ## Do not
 
 - Add npm dependencies or a build step — this is a zero-build static site

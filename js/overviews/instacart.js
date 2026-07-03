@@ -62,7 +62,7 @@ var CART_MGMT = makeManagement({
     { id:'jones', name:'Laura Jones', title:'Chief Marketing Officer', since:'CMO', img:'img/leadership/cart-jones.png',
       line:"Ex-Uber Global Head of Marketing (Rides); Google, Visa.",
       bio:"Chief Marketing Officer. Prior: 6 years at Uber (Global Head of Marketing, Rides); senior roles at Google and Visa. Serves on Match Group's board. Stanford MBA." },
-    { id:'hall', name:'Christina Hall', title:'Chief People Officer', since:'Joined 2020',
+    { id:'hall', name:'Christina Hall', title:'Chief People Officer', since:'Joined 2020', img:'img/leadership/cart-hall.jpg',
       line:"Ex-Chief People Officer of LinkedIn; Facebook, Intuit.",
       bio:"Chief People Officer since October 2020. Former Chief People Officer at LinkedIn; HR leadership at Facebook and Intuit; earlier a lawyer at Latham & Watkins." },
     { id:'maguire', name:'Tom Maguire', title:'VP, Head of Operations', since:'VP, Operations', img:'img/leadership/cart-maguire.png',
@@ -85,9 +85,9 @@ var CART_MGMT = makeManagement({
   ],
   boardNote:'8 of 9 independent; the CEO is also Chair, offset by a Lead Independent Director (Ravi Gupta).',
   gov:[
-    { h:'Share & voting', d:"Single class of common stock — <b>one share, one vote</b>. No dual-class or super-voting. Concentration is economic only: Sequoia ~12%, D1 Capital ~11%, co-founder Apoorva Mehta ~9%." },
-    { h:'Board · independence & structure', d:"<b>8 of 9 directors independent</b> (only the CEO is not). Rogers is a <b>combined CEO + Chairperson</b>, offset by a <b>Lead Independent Director</b> (Ravi Gupta). Note the board is <b>classified / staggered</b> — 3 classes, 3-year terms — an anti-takeover feature, not annual elections." },
-    { h:'CEO pay · FY2025', d:"Chris Rogers: <b>$29.8M</b> (partial year as CEO; ~72:1 pay ratio). After a weak 2025 say-on-pay (~55%), the 2026 grant shifts to <b>performance RSUs (relative TSR)</b> and approval recovered to <b>~79%</b>. Departing CEO Fidji Simo <b>forfeited all unvested equity</b> — no severance." },
+    { k:'Share & voting', v:'1 vote / share', d:'Sequoia ~12%, D1 ~11%, Mehta ~9% (economic only).' },
+    { k:'Board', v:'8 of 9 independent', d:'CEO = Chair; Gupta lead director · classified.' },
+    { k:'CEO pay · FY25', v:'$29.8M', d:'Say-on-pay 55% → 79%; Simo forfeited equity.' },
   ],
   foot:"Executives per Instacart’s leadership page; board, committees and governance per the 2026 proxy (DEF 14A) and the May 2026 8-K. Headshots from Instacart’s newsroom. Ownership and insider trades live in the Pillars → Management tab.",
 });
@@ -116,7 +116,7 @@ var AS_OF = 'Headline figures are <b>FY2025</b> actuals (fiscal year = calendar 
 var HOW_MONEY = [
   '<b>Not a grocer:</b> Instacart owns <b>no inventory and no stores</b>. It provides the technology, demand and fulfillment that connect shoppers, retailers and brands — and never takes grocery inventory risk.',
   '<b>Transaction revenue (the base):</b> fees from <b>retailers</b> (for the orders and tech it provides) and from <b>consumers</b> (service &amp; delivery fees), earned as a take of GTV. Includes both the Marketplace and the Enterprise platform.',
-  '<b>Advertising &amp; other (the margin engine):</b> <b>CPG brands</b> pay for sponsored products, displays and premium placement at the moment of purchase — high-margin and growing faster than transactions. ~30% of revenue on ~3-4% of GTV.',
+  '<b>Advertising &amp; other (the margin engine):</b> <b>CPG brands</b> pay for sponsored products, displays and premium placement at the moment of purchase — high-margin and growing faster than transactions. ~29% of revenue on ~3% of GTV.',
   '<b>Walk an order:</b> tap a party in the network below to see its role, then press Play to follow a single grocery order and see who earns at each step.',
 ];
 
@@ -195,7 +195,7 @@ var SEGMENTS = [
 var UE_STATS = [
   { v:'~$110', l:'GTV per order', s:'items + fees in a typical basket' },
   { v:'~7-8%', l:'Transaction take', s:'retailer + consumer fees ÷ GTV' },
-  { v:'~3-4%', l:'Ad take (of GTV)', s:'highest-margin layer, on top' },
+  { v:'~3%', l:'Ad take (of GTV)', s:'highest-margin layer, on top' },
 ];
 var UE_BULLETS = [
   '<b>Transaction revenue</b> ≈ a single-digit % of the ~$110 order — split between the <b>retailer fee</b> and <b>consumer fees</b> (service/delivery).',
@@ -221,11 +221,6 @@ var AD_FLY = [
 ];
 
 // ─── Enterprise deep dive ────────────────────────────────────────────────────
-var ENTERPRISE = [
-  '<b>What it is:</b> the same technology that runs Instacart\'s own app, sold to retailers to power <b>their own</b> e-commerce, fulfillment, ads and in-store tech — the retailer keeps the customer relationship.',
-  '<b>Why it matters:</b> it turns a potential competitor (a retailer wanting its own online channel) into a <b>customer</b>, and embeds Instacart deep in the retailer\'s operations — a defensive, sticky moat even if Marketplace economics are lower.',
-  '<b>From online to the aisle:</b> via the <b>Carrot</b> suite (Caper smart carts, electronic shelf labels, in-store fulfillment) Instacart now reaches the <b>physical store</b>, not just delivery — expanding the addressable market well beyond online grocery.',
-];
 
 // ─── Tailwinds / Headwinds ───────────────────────────────────────────────────
 var TAILWINDS = [
@@ -457,6 +452,31 @@ function pillarCards(segKey){
       '<div class="ov-card-s">'+s.what+'</div><div class="ov-more">How it monetizes ›</div></div>';
   }).join('')+'</div>';
 }
+function cdot(x,y,k,col,name,sub,main){
+  var r=main?11:8, ly=y-(main?18:14);
+  var attr=k?' class="ov-clickable cpm-dot" data-detail="peer:'+k+'" role="button" tabindex="0"':' class="cpm-dot"';
+  return '<g'+attr+'><circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+col+'"'+(main?' stroke="#fff" stroke-width="2.5"':'')+'><title>'+esc(name)+' — '+esc(sub)+'</title></circle>'+
+    '<text x="'+x+'" y="'+ly+'" font-family="Inter,sans-serif" font-size="'+(main?'12':'10.5')+'" font-weight="'+(main?'800':'700')+'" fill="'+(main?'#0AAD0A':'#3A4552')+'" text-anchor="middle">'+esc(name)+'</text></g>';
+}
+function cartPeerMap(){
+  var h='<style>.cpm-dot{cursor:pointer}.cpm-dot circle{transition:.1s}.cpm-dot:hover circle{stroke:#0AAD0A;stroke-width:2.5}</style>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 8px">Mapped by <b>how much of the grocery stack a player provides</b> (x) and its <b>asset model</b> (y — owns stores ↔ asset-light). Instacart sits <b>alone</b> in the asset-light, full-stack corner. <span style="opacity:.75">Tap any dot.</span></div>';
+  h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" role="img" aria-label="Grocery e-commerce positioning map">'+
+    '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<line x1="80" y1="252" x2="80" y2="40" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<text x="88" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0">← delivery only</text>'+
+    '<text x="610" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">full grocery-tech platform →</text>'+
+    '<text x="74" y="250" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">owns stores</text>'+
+    '<text x="74" y="48" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">asset-light</text>'+
+    cdot(158,112,'DASH','#9AA3AE','DoorDash','delivery-first · restaurant-heavy')+
+    cdot(232,150,'UBER','#9AA3AE','Uber Eats','delivery-first · global')+
+    cdot(478,214,'AMZN','#9AA3AE','Amazon','owns stores + warehouses')+
+    cdot(360,230,'WMT','#9AA3AE','Walmart','owns stores + Walmart+')+
+    cdot(548,92,'','#0AAD0A','Instacart','asset-light · full grocery-tech stack',true)+
+  '</svg></div>';
+  h+='<div class="ov-diagram-cap" style="margin-top:6px"><b>The whitespace is the moat:</b> the delivery players (DoorDash, Uber Eats) are asset-light but <b>not grocery-native</b>; the retail giants (Amazon, Walmart) own the full stack but <b>own the stores too</b> — so they compete with grocers. Instacart is the only <b>asset-light, full grocery-tech platform that arms retailers instead of competing with them.</b></div>';
+  return h;
+}
 function peersHtml(){
   return '<div class="ov-cards ov-cards-2">'+PEERS.map(function(p){
     return '<div class="ov-card ov-clickable" data-detail="peer:'+esc(p.k)+'">'+
@@ -509,7 +529,7 @@ function flowHtml(){
     '</div><div class="ov-flow-note">'+FLOW_NOTE+'</div></div>';
 }
 
-// ─── Earnings narrative: theme-based across 11 calls (Q3 2023 -> Q1 2026) ────
+// ─── Earnings narrative: theme-based across 10 calls (Q3 2023 -> Q1 2026) ────
 var CART_THEMES=[
   { theme:'Advertising — the margin engine, through its cycles',
     why:'The profit driver and the most-scrutinized line. Trace how the 2022-launch lapping and the CPG pullbacks got absorbed.',
@@ -623,7 +643,7 @@ function cartLogo(name, ticker, domain){
 }
 
 function callsBody(){
-  var h='<p class="ov-lede">The narrative threads across <b>11 earnings calls</b> (Q3 2023 → Q1 2026) — organized by <b>theme</b>, chronological within each, so you can trace how each story evolved. Tap any theme.</p>';
+  var h='<p class="ov-lede">The narrative threads across <b>10 earnings calls</b> (Q3 2023 → Q1 2026) — organized by <b>theme</b>, chronological within each, so you can trace how each story evolved. Tap any theme.</p>';
   h+='<div class="lpb-acc" id="caCallsAcc">';
   CART_THEMES.forEach(function(ct,i){
     h+='<div class="lpb-acc-item">'+
@@ -638,6 +658,37 @@ function callsBody(){
 }
 
 // The profit truth: advertising revenue is ~the size of the entire company Adj. EBITDA.
+function cartAdRole(){
+  var ROLES=[
+    ['Publisher','Owns the storefront &amp; search where the ad appears — sponsored products, display, coupons, in-store screens.'],
+    ['Ad platform','<b>Carrot Ads</b> — the self-serve + managed tools brands buy through; Instacart licenses the same stack to retailers.'],
+    ['First-party data','Real <b>purchase</b> data, not cookies — who bought what, when. The targeting layer no rival can replicate.'],
+    ['Off-platform demand','Extends beyond its own app: ads on retailers&rsquo; own sites (Carrot Ads) and off-site via <b>Roku, YouTube, The Trade Desk</b>.'],
+    ['Closed-loop measurement','Proves the sale happened → attribution → higher ROAS → brands send more budget.']
+  ];
+  var h='<style>'+
+    '.car-flow{display:flex;align-items:center;gap:10px;margin:2px 0 12px}'+
+    '.car-end{flex:0 0 auto;text-align:center;border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;background:#fff;min-width:104px}'+
+    '.car-end-k{font-size:11px;font-weight:800;color:var(--navy)}.car-end-s{font-size:10px;color:var(--mu);margin-top:2px}'+
+    '.car-mid{flex:1;text-align:center;background:#FF70090D;border:1px dashed #FF7009;border-radius:10px;padding:9px;font-size:11px;font-weight:800;color:#FF7009}'+
+    '.car-arw{flex:0 0 auto;font-size:20px;color:#FF7009;font-weight:900}'+
+    '.car-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}'+
+    '.car-c{border:1px solid var(--bdr);border-top:2px solid #FF7009;border-radius:10px;padding:10px 12px;background:#fff}'+
+    '.car-n{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#FF7009;display:flex;align-items:center;gap:6px}'+
+    '.car-num{width:16px;height:16px;border-radius:50%;background:#FF7009;color:#fff;font-size:9px;display:inline-flex;align-items:center;justify-content:center;font-weight:800}'+
+    '.car-d{font-size:11px;color:var(--navy);line-height:1.5;margin-top:5px}.car-d b{font-weight:800}'+
+    '@media(max-width:560px){.car-flow{flex-direction:column}.car-arw{transform:rotate(90deg)}}'+
+  '</style>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 10px">Between the <b>CPG brand</b> that wants to be discovered and the <b>shopper</b> filling a cart, Instacart plays <b>all five ad-value-chain roles at once</b> — that end-to-end stack is what rivals can’t easily copy.</div>';
+  h+='<div class="car-flow"><div class="car-end"><div class="car-end-k">CPG brand</div><div class="car-end-s">wants the sale</div></div>'+
+    '<div class="car-arw">&rarr;</div>'+
+    '<div class="car-mid">INSTACART<br>5 roles</div>'+
+    '<div class="car-arw">&rarr;</div>'+
+    '<div class="car-end"><div class="car-end-k">Shopper</div><div class="car-end-s">at point of purchase</div></div></div>';
+  h+='<div class="car-grid">'+ROLES.map(function(r,i){ return '<div class="car-c"><div class="car-n"><span class="car-num">'+(i+1)+'</span>'+r[0]+'</div><div class="car-d">'+r[1]+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="ov-fynote" style="margin-top:11px"><b>Why it is defensible:</b> pure ad-tech (The Trade Desk) has the tools but not the purchase data; retailers (Kroger, Albertsons) have the data but not the tech — <b>Instacart is the only one that is publisher, data owner and measurement in one</b>, then rents that stack out via Carrot Ads.</div>';
+  return h;
+}
 function driverHero(){
   var h='<style>'+
     '.dvh{background:linear-gradient(180deg,rgba(255,112,9,0.05),rgba(255,112,9,0.015));border:1px solid rgba(255,112,9,0.28);border-radius:12px;padding:16px 18px;margin:2px 0 16px}'+
@@ -738,7 +789,7 @@ function buildAdChart(){
         y1:{position:'right',grid:{display:false},min:0,max:40,ticks:{color:'#12356B',font:{size:10},callback:function(v){return v+'%';}}} } }
   });
   var st=document.getElementById('adStat');
-  if(st){ st.innerHTML='<b>1Q22</b> $'+ad[0]+'M ('+pct[0]+'% of revenue) &rarr; <b>1Q26</b> $'+ad[ad.length-1]+'M ('+pct[pct.length-1]+'%) &middot; advertising has climbed from <b>~23%</b> toward <b>~30%</b> of revenue at ~100% gross margin — the mix shift that turned Instacart profitable.'; }
+  if(st){ st.innerHTML='<b>1Q22</b> $'+ad[0]+'M ('+pct[0]+'% of revenue) &rarr; <b>1Q26</b> $'+ad[ad.length-1]+'M ('+pct[pct.length-1]+'%) &middot; advertising has climbed from <b>~23%</b> toward <b>~29%</b> of revenue at ~100% gross margin — the mix shift that turned Instacart profitable.'; }
 }
 function closedLoop(){
   return '<style>'+
@@ -765,7 +816,7 @@ function adResilience(){
   var levers=['On-platform ad formats','Carrot Ads (off Instacart)','Caper in-store ads','Off-platform partnerships'];
   return '<div class="ov-callout" style="border-left:3px solid #FF7009">'+
     '<div style="font-size:12.5px;font-weight:800;color:var(--navy);margin-bottom:6px">The resilience test — Q2 2025</div>'+
-    '<div style="font-size:12px;color:var(--navy);line-height:1.6">A single <b>large CPG brand cut its ad spend</b>. A year earlier that shock would have knocked several points off ad growth; this time it was <b>fully absorbed</b> — emerging brands now grow faster than the platform, so the multi-year push to <b>diversify away from a handful of big advertisers</b> (and away from alcohol concentration) had done its job. Large-CPG caution is <b>structural</b> — portfolios repositioning toward protein, away from sugar and alcohol — not a passing macro dip.</div>'+
+    '<div style="font-size:12px;color:var(--navy);line-height:1.6">A single <b>large CPG brand cut its ad spend</b> — a year earlier that would have dented growth; this time it was <b>fully absorbed</b>. Emerging brands now outgrow the platform, so the multi-year push to <b>diversify off a few big advertisers</b> (and off alcohol) did its job — the caution looks <b>structural</b>, not a macro blip.</div>'+
     '<div style="font-size:11.5px;color:var(--mu);margin:11px 0 5px">After flagging the Q4-2025 ad guide as <b>unsatisfactory</b>, management committed to a return to double-digit growth via four levers:</div>'+
     '<div>'+levers.map(function(l){ return '<span class="ov-chip" style="margin:3px 5px 0 0;background:rgba(255,112,9,0.10);color:#FF7009">'+esc(l)+'</span>'; }).join('')+'</div></div>';
 }
@@ -861,8 +912,53 @@ function whoPays(){
   '</style><div class="wp">'+w.map(function(x){ return '<div class="wp-c"><div class="wp-ic">'+x.ic+'</div><div><div class="wp-n">'+esc(x.n)+'</div><div class="wp-d">'+esc(x.d)+'</div></div></div>'; }).join('')+'</div>';
   return h;
 }
+// Instacart's role at each stage of Enterprise + Advertising — visual, pop-up driven.
+var ROLE_DETAIL = {
+  sign:{ t:'Stage 1 — Who signs the deal', h:'Instacart’s business-development team sells the platform into the retailer’s C-suite (a retailer must already sell on the Marketplace first). <b>Who signs depends on the ownership structure:</b><br><br>• <b>Corporate chain</b> — signs once, company-wide (<b>Aldi, Costco, Publix</b>).<br>• <b>Cooperative</b> — the co-op signs a master deal, then <b>each member store opts in on its own</b> (<b>Wakefern / ShopRite</b>’s ~48 owner-families; <b>IGA</b>’s 2,000+ stores).<br>• <b>Franchisee</b> — contracts separately (<b>Piggly Wiggly</b>).<br>• <b>Wholesaler</b> — onboards thousands of independents at once (<b>C&amp;S</b>).' },
+  storefront:{ t:'Stage 2 — Storefront (white-label e-commerce)', h:'Instacart powers the retailer’s <b>own</b> branded site and app — catalog, checkout, payments, fraud. <b>Here the RETAILER owns the customer relationship</b>, and on Storefront Pro the customer data is <b>tenant-isolated</b> (only that retailer can see it; Instacart processes, the retailer controls).<br><br>Real: <b>Publix, Aldi, Sprouts, Wegmans</b>; <b>Save Mart</b> upgraded to Pro across ~200 stores; <b>Costco</b> Storefront Pro in Spain &amp; France.' },
+  fulfillment:{ t:'Stage 3 — Fulfillment', h:'Instacart’s gig <b>shopper</b> network picks the items in the store and delivers them (as fast as ~1 hour) — on the retailer’s own orders (Fulfillment-as-a-Service) or Marketplace orders. <b>Instacart owns and dispatches the labor; the retailer supplies the goods.</b>' },
+  instore:{ t:'Stage 4 — Connected Stores (in the aisle)', h:'Instacart reaches <b>inside the physical store</b>: Caper AI smart carts, electronic shelf labels (Carrot Tags) and scan-and-pay — and the store screen becomes new ad inventory.<br><br>Real: <b>Wakefern / ShopRite</b> (first bricks-and-mortar Caper deployer), <b>Schnucks</b> (Carrot Tags chainwide), <b>Bristol Farms</b> (first full Connected Store), <b>Coles</b> (Australia). Caper deployments <b>tripled year-over-year</b>.' },
+  ads:{ t:'Stage 5 — Carrot Ads (the retailer’s own ad network)', h:'Instacart lets the retailer run its <b>own</b> retail-media network on its site and Caper carts — but Instacart supplies the <b>ad server, auction, formats, sales and measurement</b> (revenue-shared).<br><br><b>The structural edge:</b> Instacart <b>aggregates the CPG ad demand</b> already flowing through Instacart Ads and redistributes it to <b>240+ retailer networks</b>, so a grocer “skips building a demand engine from scratch.”<br><br>Real: <b>Sprouts, Schnucks</b> (7× retail-media revenue), <b>Hy-Vee</b>.' },
+  icads:{ t:'Advertising · Instacart Ads (owned inventory)', h:'A CPG brand — or its agency (<b>Flywheel, Publicis</b>) — buys Sponsored Products, display and video on the <b>Instacart Marketplace</b>, where Instacart <b>owns the inventory and the first-party purchase data</b>. Closed-loop: the ad and the sale are the same session, so return is measured to the cent.' },
+  offplat:{ t:'Advertising · Off-platform', h:'On <b>Roku</b> (connected-TV), <b>The Trade Desk</b> (DSP), <b>PubMatic</b> (SSP) and <b>YouTube</b>, the <b>partner supplies the ad inventory</b> and <b>Instacart supplies the first-party audiences + closed-loop measurement</b>.<br><br>Real: <b>Hershey ~4× ROAS</b> on Roku; <b>Danone</b> via The Trade Desk; <b>Mars</b> via PubMatic.' },
+};
+function cartRoleMap(){
+  var ENT=[['sign','🖊️','Sign the deal'],['storefront','🛍️','Storefront'],['fulfillment','🚚','Fulfillment'],['instore','🏬','In-store'],['ads','🎯','Ads']];
+  var ADS=[['icads','Instacart Ads','owns the inventory'],['ads','Carrot Ads','runs the retailer’s network'],['offplat','Off-platform','data + measurement']];
+  var h='<style>'+
+    '.crm-rail,.crm-adflow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap}'+
+    '.crm-cap{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:#f1f4f8;border:1px solid var(--bdr);border-radius:10px;padding:8px 12px;font-size:10.5px;font-weight:800;color:var(--navy);min-width:66px}'+
+    '.crm-cap span{font-size:9px;font-weight:600;color:var(--mu);margin-top:2px}'+
+    '.crm-nodes,.crm-adnodes{display:flex;align-items:center;gap:4px;flex:1;flex-wrap:wrap;justify-content:center}'+
+    '.crm-node{flex:1;min-width:72px;border:1px solid var(--bdr);border-top:2px solid #3A7BD5;border-radius:10px;padding:9px 5px;text-align:center;cursor:pointer;transition:.15s;background:#fff}'+
+    '.crm-node:hover{border-color:#3A7BD5;box-shadow:0 3px 10px rgba(58,123,213,.12);transform:translateY(-2px)}'+
+    '.crm-ic{font-size:19px;line-height:1}.crm-nl{font-size:10px;font-weight:800;color:var(--navy);margin-top:4px}'+
+    '.crm-arw{color:#C4CCD6;font-weight:800;font-size:14px}'+
+    '.crm-own{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:13px 0}@media(max-width:520px){.crm-own{grid-template-columns:1fr}}'+
+    '.crm-own-c{border:1px solid var(--bdr);border-radius:10px;padding:11px 13px}.crm-own-c.mkt{border-left:3px solid #0AAD0A}.crm-own-c.sf{border-left:3px solid #3A7BD5}'+
+    '.crm-own-h{font-size:11.5px;font-weight:800;margin-bottom:3px}.crm-own-c.mkt .crm-own-h{color:#0AAD0A}.crm-own-c.sf .crm-own-h{color:#3A7BD5}'+
+    '.crm-own-d{font-size:11.5px;color:var(--navy);line-height:1.5}.crm-own-d b{font-weight:800}'+
+    '.crm-sub{font-size:12.5px;font-weight:800;color:var(--navy);margin:16px 0 9px;padding-bottom:4px;border-bottom:1px solid var(--bdr)}'+
+    '.crm-adnode{flex:1;min-width:108px;border:1px solid var(--bdr);border-top:2px solid #FF7009;border-radius:10px;padding:10px 11px;cursor:pointer;transition:.15s;background:#fff}'+
+    '.crm-adnode:hover{border-color:#FF7009;box-shadow:0 3px 10px rgba(255,112,9,.12);transform:translateY(-2px)}'+
+    '.crm-adn{font-size:12px;font-weight:800;color:var(--navy)}.crm-add{font-size:10px;color:var(--mu);margin-top:2px}'+
+    '.crm-chip{font-size:12px;color:var(--navy);line-height:1.55;background:rgba(255,112,9,0.06);border-left:3px solid #FF7009;border-radius:8px;padding:10px 13px;margin-top:11px}.crm-chip b{font-weight:800}'+
+  '</style>';
+  h+='<p class="ov-lede" style="margin-bottom:14px">Instacart owns <b>no store and no inventory</b> — it is the <b>connective layer</b> of grocery. Below is the role it plays at every stage, and who really owns the customer. <b>Tap any stage.</b></p>';
+  h+='<div class="crm-rail"><div class="crm-cap">RETAILER<span>store · inventory</span></div>'+
+    '<div class="crm-nodes">'+ENT.map(function(n){ return '<div class="crm-node ov-clickable" data-detail="role:'+n[0]+'"><div class="crm-ic">'+n[1]+'</div><div class="crm-nl">'+n[2]+'</div></div>'; }).join('<span class="crm-arw">›</span>')+'</div>'+
+    '<div class="crm-cap">CONSUMER</div></div>';
+  h+='<div class="crm-own"><div class="crm-own-c mkt"><div class="crm-own-h">On the Marketplace</div><div class="crm-own-d"><b>Instacart</b> owns the customer and the first-party data — and monetizes it with ads.</div></div>'+
+    '<div class="crm-own-c sf"><div class="crm-own-h">On Storefront (enterprise)</div><div class="crm-own-d">The <b>retailer</b> owns the customer; data is tenant-isolated. Instacart is the invisible engine.</div></div></div>';
+  h+='<div class="crm-sub">Where the ad dollars flow</div>';
+  h+='<div class="crm-adflow"><div class="crm-cap">CPG brand<span>+ agency</span></div>'+
+    '<div class="crm-adnodes">'+ADS.map(function(a){ return '<div class="crm-adnode ov-clickable" data-detail="role:'+a[0]+'"><div class="crm-adn">'+esc(a[1])+'</div><div class="crm-add">'+a[2]+'</div></div>'; }).join('')+'</div>'+
+    '<div class="crm-cap">Shopper</div></div>';
+  h+='<div class="crm-chip">↳ Instacart <b>aggregates CPG demand</b> from its own Marketplace and <b>redistributes it to 240+ retailer ad networks</b> — the structural edge no single grocer can match.</div>';
+  return h;
+}
 function enterpriseExamples(){
-  var STATS=[['2,200+','retail banners'],['~100,000','stores'],['9,000+','active brands'],['98%+','of NA households']];
+  var STATS=[['1,800+','retail banners'],['85,000+','stores'],['6,000+','active brands'],['98%+','of NA households']];
   var DEPLOY=[
     { p:'Storefront & Storefront Pro', s:'white-label e-commerce (~380 grocer sites run on it)',
       ex:'Publix · ALDI · Sprouts · Wegmans · Woodman\u2019s · Save Mart (upgraded to Pro, ~200 stores) · Costco (Storefront Pro in Spain & France)',
@@ -925,6 +1021,19 @@ function html(c){
   h += kpis(KPIS);
   h += '<div class="ov-asof">'+AS_OF+'</div>';
   h += driverHero();
+  h += '<style>.icj{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:stretch;margin:4px 0}@media(max-width:640px){.icj{grid-template-columns:1fr}}'+
+    '.icj-step{border:1px solid var(--bdr);border-top:2px solid #C4CCD6;border-radius:10px;padding:11px 13px}.icj-step.now{border-top-color:#0AAD0A;background:rgba(10,173,10,0.03)}'+
+    '.icj-t{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--mu);margin-bottom:4px}.icj-step.now .icj-t{color:#0AAD0A}'+
+    '.icj-d{font-size:11.5px;color:var(--navy);line-height:1.5}.icj-d b{font-weight:800}'+
+    '.icj-ar{display:flex;align-items:center;color:#C4CCD6;font-weight:900;font-size:16px}@media(max-width:640px){.icj-ar{display:none}}</style>';
+  h += '<div class="ov-sec-h ovt-store-h" style="margin-top:6px">The arc — from a delivery app to grocery’s operating system</div>';
+  h += '<div class="icj">'+
+    '<div class="icj-step"><div class="icj-t">Was</div><div class="icj-d">A grocery-<b>delivery app</b> — thin margins, at the mercy of the retailers it served.</div></div>'+
+    '<div class="icj-ar">→</div>'+
+    '<div class="icj-step now"><div class="icj-t">Now</div><div class="icj-d"><b>Profitable</b> ($1.09B Adj. EBITDA, 29% margin) — the <b>tech platform grocers run on</b>, funded by ~100%-margin ads.</div></div>'+
+    '<div class="icj-ar">→</div>'+
+    '<div class="icj-step"><div class="icj-t">Next</div><div class="icj-d">Arming retailers everywhere (<b>Carrot, Caper</b>) and exporting the tech abroad (<b>Instaleap</b>) — asset-light.</div></div>'+
+  '</div>';
   h += sec('How Instacart Makes Money',
     bullets(HOW_MONEY)+
     '<div class="ov-diagram-cap" style="margin:4px 0 10px"><b>The multi-sided network.</b> Tap any party for its role.</div>'+hubHtml()+flowHtml());
@@ -936,7 +1045,8 @@ function html(c){
         '<div class="ov-segnodes">'+seg.subs.map(function(s){ return '<div class="ov-segnode ov-clickable" data-detail="sub:'+esc(s.k)+'"><span class="ov-segnode-n">'+esc(s.n)+'</span><span class="ov-segnode-r">'+esc(s.rev)+'</span></div>'; }).join('')+'</div></div>';
     }).join('')+'</div>');
   h += sec('Competitive Landscape',
-    '<div class="ov-diagram-cap" style="margin:0 0 12px">Instacart competes on <b>three fronts</b>: marketplace delivery (DoorDash, Uber), full-vertical grocery (Amazon, Walmart), and enterprise tech. <b>Tap any competitor</b> for its edge and gap vs Instacart.</div>'+
+    cartPeerMap()+
+    '<div class="ov-diagram-cap" style="margin:16px 0 12px">Its three fronts: marketplace delivery (DoorDash, Uber), full-vertical grocery (Amazon, Walmart), and enterprise tech. <b>Tap any competitor</b> for its edge and gap vs Instacart.</div>'+
     peersHtml());
   h += sec('Strategy — the flywheel',
     '<div class="ov-diagram-cap" style="margin:0 0 12px">Not a list of projects — a <b>self-reinforcing loop</b>: advertising profit funds the pivot from delivery app to grocery-industry tech platform, and each stage feeds the next. <b>Tap any stage.</b></div>'+
@@ -964,6 +1074,7 @@ function html(c){
   // ══ PANE 3 — Advertising ══
   h += '<div class="ov-pane" data-capane="advertising">';
   h += '<p class="ov-lede"><b>Advertising is the reason Instacart is profitable.</b> CPG brands pay to be discovered at the <b>point of purchase</b> — ~100% gross margin, and, as the Overview showed, roughly the size of the entire company\'s profit. Below: how big it has grown, why it converts, whether it is durable, and who it competes with.</p>';
+  h += sec('Instacart\u2019s role in the ad value chain', cartAdRole());
   h += sec('The mix shift that made Instacart profitable',
     '<div class="ov-diagram-cap" style="margin:0 0 10px">Quarterly <b>advertising revenue</b> (orange bars) and <b>ads as a share of total revenue</b> (navy line). The share, not just the dollars, is the story.</div>'+
     adGrowthChart());
@@ -980,7 +1091,7 @@ function html(c){
   h += '<p class="ov-lede"><b>Instacart Platform (Enterprise)</b> is the pivot from a delivery app to <b>the grocery industry’s tech vendor</b>. Instacart sells the same technology that runs its own app to retailers, to power <b>their</b> e-commerce, fulfillment, ads and in-store tech — the retailer keeps the customer. Lower take than the Marketplace, but it is how Instacart makes itself indispensable.</p>';
   h += sec('The flip — turning a competitor into a customer', entFlip());
   h += sec('Carrot — the platform management frames as five pillars', carrotPillars());
-  h += sec('The platform in the wild — real deployments', enterpriseExamples());
+  h += sec('Where Instacart sits — its role at every stage', cartRoleMap());
   h += sec('From online to the aisle — Connected Stores',
     '<div class="ov-callout"><b>Caper smart carts</b> reached meaningful in-store penetration in <b>months, not years</b>. With electronic shelf labels and scan-and-pay, Instacart reaches into the <b>physical aisle</b> — not just delivery — and the store itself becomes new <b>ad inventory</b>. This is how the addressable market extends far beyond online grocery, where penetration is still only low-teens %.</div>');
   h += sec('The international arm — Instaleap',
@@ -1116,6 +1227,7 @@ function init(c){
     if (kind==='party'){ var p=PARTY_DETAIL[id]; return p && { t:p.t, h:p.h }; }
     if (kind==='sub'){ var s=findSub(id); return s && { t:s.n+' <span class="ov-modal-sub">'+esc(s.rev)+'</span>', h:subDetailHtml(s) }; }
     if (kind==='hist'){ var ht=TIMELINE[+id]; return ht && ht.d ? { t:ht.y, h:ht.d } : null; }
+    if (kind==='role'){ var rd=ROLE_DETAIL[id]; return rd ? { t:rd.t, h:rd.h } : null; }
     if (kind==='strat'){ var sn=STRATEGY.loop.filter(function(n){return n.k===id;})[0]; return sn ? { t:sn.ic+' '+sn.n, h:'<div class="ov-sub-line">'+sn.detail+'</div>' } : null; }
     if (kind==='peer'){ var pe=PEERS.filter(function(p){return p.k===id;})[0]; return pe ? { t:pe.n, h:'<div class="ov-sub-line"><b>Angle:</b> '+pe.angle+'</div><div class="ov-sub-mon" style="margin-top:12px"><b>Their edge:</b> '+pe.edge+'</div><div class="ov-sub-comp" style="margin-top:12px"><b>Their gap vs Instacart:</b> '+pe.gap+'</div>' } : null; }
     return null;

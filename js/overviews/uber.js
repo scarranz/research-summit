@@ -84,9 +84,9 @@ var UBER_MGMT = makeManagement({
   ],
   boardNote:'9 of 10 independent; Chair and CEO roles are separate.',
   gov:[
-    { h:'Share & voting', d:"Single class of common stock — <b>one share, one vote</b>. No dual-class or super-voting; no founder control block." },
-    { h:'Board independence', d:"<b>9 of 10 directors are independent</b> — only the CEO is not. The Chair (Ron Sugar) is independent, so Chair and CEO are <b>separate roles</b>. Directors face <b>annual</b> election (board is not staggered)." },
-    { h:'CEO pay · FY2025', d:"Dara Khosrowshahi: <b>$35.6M</b> total (−11% YoY), of which <b>~96% is variable / at-risk</b> (mostly performance equity). Base salary just $1.08M. Say-on-pay approved <b>~94%</b>." },
+    { k:'Share & voting', v:'1 vote / share', d:'No dual-class or founder control.' },
+    { k:'Board', v:'9 of 10 independent', d:'Chair ≠ CEO · annual elections.' },
+    { k:'CEO pay · FY25', v:'$35.6M · 96% at-risk', d:'Base $1.08M · say-on-pay ~94%.' },
   ],
   foot:"Executives per Uber’s leadership page; board, committees and governance per the 2026 proxy (DEF 14A / corrected DEFR14A). Headshots from Uber’s newsroom CDN. Ownership and insider trades live in the Pillars → Management tab.",
 });
@@ -168,9 +168,9 @@ var KEY_DRIVERS=[
   { k:'flywheel', t:'The Flywheel', teaser:'One app for everything — rides, food, grocery, travel.',
     d:'<b>"Go anywhere, get anything."</b> A single demand graph that cross-sells rides ⇄ eats ⇄ grocery ⇄ travel.<br><br>~40% of users use multiple products; ~⅓ of Eats customers were acquired through the Rides app (a near-zero-CAC channel). Cross-platform users <b>spend ~3× and churn meaningfully less</b> — so each added product lowers blended CAC and lifts LTV. This is why Uber keeps adding adjacencies instead of chasing one vertical.' },
   { k:'uberone', t:'Uber One', teaser:'The membership that ties it all together — 50M+ members.',
-    d:'<b>The connective tissue of the whole platform.</b> 50M+ members (Q1 2026, +50% YoY); members now drive <b>>50% of combined Mobility+Delivery bookings</b> and ~⅔ of Delivery.<br><br>Members spend ~3× non-members and retain ~35% better. They run negative-margin for ~6 months (benefits cost) then turn profitable — so penetration (~25% of users) is the lever. See Unit Economics for the full member-vs-non-member math.' },
+    d:'<b>The connective tissue of the whole platform.</b> 50M+ members (Q1 2026, +50% YoY); members now drive <b>>50% of combined Mobility+Delivery bookings</b> and >50% of Delivery.<br><br>Members spend ~3× non-members and retain ~35% better. They run negative-margin for ~6 months (benefits cost) then turn profitable — so penetration (~25% of users) is the lever. See Unit Economics for the full member-vs-non-member math.' },
   { k:'barbell', t:'The Barbell', teaser:'Win the cheap end AND the premium end — skip the middle.',
-    d:'<b>Uber grows at both ends of the price ladder at once.</b><br><br><b>Affordable end</b> (UberX Share, two- & three-wheelers, auto-rickshaws, Uber Moto) drives ~<b>75% higher trip frequency</b> — more users, more often, especially in emerging markets.<br><br><b>Premium end</b> (Uber Black, Reserve, Comfort) drives ~<b>3.5× the profit growth</b>.<br><br>Serving both ends — not the squeezed middle — is why adding cheaper emerging-market trips is <i>net-positive</i>: price-per-trip falls, but volume, engagement and high-end profit more than offset it.' },
+    d:'<b>Uber grows at both ends of the price ladder at once</b> — the <b>affordable end</b> (UberX Share, two/three-wheelers, Moto) for frequency, the <b>premium end</b> (Black, Reserve, Comfort) for profit, skipping the squeezed middle. <b>Full breakdown — with the ~75% frequency and ~3.5× profit-growth figures — in the Mobility tab.</b>' },
   { k:'ads', t:'Advertising', teaser:'A near-100%-margin business hiding inside Delivery.',
     d:'<b>The clearest structural margin lever.</b> >$2B annualized run-rate, +50% YoY; crossed 2% of Delivery bookings (management targets higher).<br><br>Sponsored listings and in-app ads sit mostly inside Delivery and carry near-100% incremental margin — so ad growth lifts Delivery\'s take rate and margin <i>without</i> touching the marketplace split.' },
   { k:'cash', t:'The Cash Machine', teaser:'Asset-light: growth turns almost entirely into cash.',
@@ -571,6 +571,41 @@ function barbellDiagram(){
   return h;
 }
 
+function segParts(){
+  function s4(a){ return a.slice(a.length-4).reduce(function(x,y){return x+y;},0); }
+  var LA=FIRST_EST-1;
+  var mg=A_MOB_GB[LA], dg=A_DEL_GB[LA], fg=A_FRT_GB[LA], tot=mg+dg+fg;
+  var mm=s4(MOB_EB_A)/mg*100, dm=s4(DEL_EB_A)/dg*100;
+  var SEG=[
+    {n:'Mobility',col:MOB,gb:mg,sh:mg/tot*100,mg:mm.toFixed(1)+'%',tag:'profit engine',
+     role:'Ridesharing in ~70 countries. Highest take (~<b>30%</b> of bookings) and, at ~<b>8% margin</b>, the bulk of Uber’s profit.'},
+    {n:'Delivery',col:DEL,gb:dg,sh:dg/tot*100,mg:dm.toFixed(1)+'%',tag:'scaling engine',
+     role:'Uber Eats — food, grocery, retail. Lower take (~<b>19%</b>, merchants paid too), but bookings nearly match Mobility and margin has <b>doubled</b> on ads + scale.'},
+    {n:'Freight',col:FRT,gb:fg,sh:fg/tot*100,mg:'~0%',tag:'optionality',
+     role:'Logistics brokerage, reported <b>gross</b> (no take rate). Near-breakeven — kept for optionality, not profit.'}
+  ];
+  var h='<style>'+
+    '.usp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media(max-width:720px){.usp-grid{grid-template-columns:1fr}}'+
+    '.usp-c{border:1px solid var(--bdr);border-radius:12px;padding:13px 15px;background:#fff}'+
+    '.usp-top{display:flex;align-items:center;justify-content:space-between;gap:8px}'+
+    '.usp-n{font-size:14px;font-weight:800;color:var(--navy)}'+
+    '.usp-tag{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 9px}'+
+    '.usp-big{font-size:22px;font-weight:800;color:#10141A;margin:8px 0 2px;display:flex;align-items:baseline;gap:7px}.usp-big span{font-size:10.5px;font-weight:700;color:var(--mu)}'+
+    '.usp-bar{height:7px;border-radius:4px;background:#EEF2F7;overflow:hidden;margin:7px 0 8px}.usp-bar span{display:block;height:100%}'+
+    '.usp-meta{display:flex;justify-content:space-between;gap:8px;font-size:10.5px;color:var(--mu);border-bottom:1px dashed var(--bdr);padding-bottom:8px;margin-bottom:8px}.usp-meta b{color:var(--navy);font-weight:800;font-size:12px}'+
+    '.usp-role{font-size:11.5px;color:var(--navy);line-height:1.5}.usp-role b{font-weight:800}'+
+  '</style>';
+  h+='<div class="usp-grid">'+SEG.map(function(g){
+    return '<div class="usp-c" style="border-top:3px solid '+g.col+'">'+
+      '<div class="usp-top"><span class="usp-n">'+g.n+'</span><span class="usp-tag" style="background:'+g.col+'">'+g.tag+'</span></div>'+
+      '<div class="usp-big">~$'+Math.round(g.gb/1000)+'B<span>FY2025 bookings</span></div>'+
+      '<div class="usp-bar"><span style="width:'+g.sh.toFixed(0)+'%;background:'+g.col+'"></span></div>'+
+      '<div class="usp-meta"><span>share of GB<br><b>'+g.sh.toFixed(0)+'%</b></span><span style="text-align:right">segment EBITDA margin<br><b>'+g.mg+'</b></span></div>'+
+      '<div class="usp-role">'+g.role+'</div></div>';
+  }).join('')+'</div>';
+  h+='<div class="ov-diagram-cap" style="margin-top:11px">Mobility and Delivery are now <b>near-equal in size</b> — but Mobility still carries the profit (~2× the margin). Open the <b>Mobility</b> and <b>Delivery</b> tabs for each engine’s economics; <b>Uber One</b> binds them; Freight is optionality. <span class="ave-subh-note">FY2025 actuals — last full reported year.</span></div>';
+  return h;
+}
 function overviewBody(c){
   var h='';
   h+='<div class="ov-snap">'+SNAPSHOT.map(function(p){ return '<div class="ov-snap-cell"><div class="ov-snap-k">'+esc(p[0])+'</div><div class="ov-snap-v">'+esc(p[1])+'</div></div>'; }).join('')+'</div>';
@@ -579,6 +614,24 @@ function overviewBody(c){
   h+='<div class="ov-kpis">'+KPIS.map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d '+(k.dir||'muted')+'">'+esc(k.d)+'</div></div>'; }).join('')+'</div>';
   h+='<div class="ov-asof">'+esc(AS_OF)+'</div>';
   h+='<div class="ov-fynote">'+FY_NOTE+'</div>';
+  h+='<style>.utn{border:1px solid var(--bdr);border-radius:14px;padding:16px 18px;margin:8px 0 4px;background:linear-gradient(180deg,rgba(6,193,103,0.05),transparent)}'+
+    '.utn-big{font-size:16px;font-weight:900;color:var(--navy);letter-spacing:-.2px}'+
+    '.utn-prog{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}'+
+    '.utn-step{flex:1;min-width:118px;text-align:center;border:1px solid var(--bdr);border-radius:10px;padding:11px 8px}'+
+    '.utn-sv{font-size:22px;font-weight:900;line-height:1}.utn-sl{font-size:10px;color:var(--mu);font-weight:700;margin-top:4px}'+
+    '.utn-ar{color:#06C167;font-weight:900;font-size:20px}'+
+    '.utn-row{display:flex;flex-wrap:wrap;gap:8px}.utn-chip{font-size:11px;font-weight:700;color:var(--navy);background:rgba(6,193,103,0.08);border-radius:20px;padding:3px 11px}'+
+    '.utn-note{font-size:11px;color:var(--mu);margin-top:9px;line-height:1.5}</style>';
+  h+='<div class="utn"><div class="utn-big">From cash-burner to cash machine — one of tech’s great turnarounds</div>'+
+    '<div class="utn-prog">'+
+      '<div class="utn-step"><div class="utn-sv" style="color:#C0392B">−$3.5B</div><div class="utn-sl">GAAP operating loss · 2021</div></div>'+
+      '<span class="utn-ar">→</span>'+
+      '<div class="utn-step"><div class="utn-sv" style="color:#06965A">+$5.6B</div><div class="utn-sl">GAAP operating income · 2025</div></div>'+
+      '<span class="utn-ar">→</span>'+
+      '<div class="utn-step"><div class="utn-sv" style="color:#06965A">$9.8B</div><div class="utn-sl">free cash flow · 2025 (+42%)</div></div>'+
+    '</div>'+
+    '<div class="utn-row"><span class="utn-chip">Q2 2023: first-ever GAAP operating profit</span><span class="utn-chip">Investment-grade rated</span><span class="utn-chip">$20B buyback</span><span class="utn-chip">~$10B cumulative FCF</span></div>'+
+    '<div class="utn-note">After ~14 years of losses, Uber flipped — and cash now compounds far faster than bookings. (The engine behind it, and the debate over the insurance float, live in the <b>Insurance &amp; FCF</b> tab.)</div></div>';
   h+=sec('What Truly Drives Uber — the things that matter most',
     '<div class="ov-diagram-cap" style="margin:0 0 12px">If you read nothing else: these five levers explain the business. <b>Tap any card.</b></div>'+
     '<div class="ov-drivers">'+KEY_DRIVERS.map(function(d){ return '<div class="ov-driver ov-clickable" data-detail="key:'+esc(d.k)+'"><div class="ov-driver-t">'+esc(d.t)+'</div><div class="ov-driver-d">'+esc(d.teaser)+'</div><div class="ov-more">More ›</div></div>'; }).join('')+'</div>');
@@ -587,9 +640,7 @@ function overviewBody(c){
     '<div class="ov-chart-card"><div class="ov-chart-t">Gross Bookings by segment <span>($B, FY · light = estimate)</span></div><div class="ov-chart-wrap"><canvas id="ubChartGB"></canvas></div></div>'+
     '<div class="ov-chart-card"><div class="ov-chart-t">Adj. EBITDA <span>($B, FY · light = estimate)</span></div><div class="ov-chart-wrap"><canvas id="ubChartEbitda"></canvas></div></div>'+
   '</div>';
-  h+=sec('The Business in Three Parts',
-    SEGMENTS.map(function(s){ return '<div class="ov-row"><div class="ov-row-k">'+esc(s[0])+'</div><div class="ov-row-v">'+s[1]+'</div></div>'; }).join('')+
-    '<div class="ov-diagram-cap" style="margin-top:10px">Open the <b>Mobility</b> and <b>Delivery</b> tabs for each engine’s economics; <b>Uber One</b> is the membership that binds them. Freight is a near-breakeven line kept for optionality.</div>');
+  h+=sec('The Business in Three Parts', segParts());
   h+=sec('3-Year Targets — Investor Day (Feb 2024)',
     '<div class="ov-targets ov-targets-3">'+TARGETS.map(function(b){ return '<div class="ov-target"><div class="ov-target-v">'+esc(b.v)+'</div><div class="ov-target-l">'+esc(b.l)+'</div><div class="ov-target-s">'+esc(b.s)+'</div></div>'; }).join('')+'</div>'+
     '<div class="ov-fynote" style="margin-top:14px">Uber is <b>running ahead of all three</b> — bookings ~+20%/yr while free cash flow compounds far faster.</div>');
@@ -631,7 +682,7 @@ function mobilityBody(c){
     '.ir-reg-d{font-size:11.5px;color:var(--mu);line-height:1.5}.ir-reg-d b{color:var(--navy)}'+
     '@media(max-width:720px){.usc-grid,.ir-phases,.ir-reg{grid-template-columns:1fr}}'+
   '</style>';
-  h+='<p class="ov-lede"><b>Mobility</b> — ridesharing in ~70 countries, Uber’s profit engine (~<b>$83B</b> gross bookings FY2025). At the Feb 2024 Investor Day (“Go-Get”), management guided mid-to-high-teens GB growth and expanding EBITDA margins. <b>Where it came from:</b> the post-COVID recovery doubled trips from the 2020 trough. <b>Where it’s going:</b> the barbell (low-cost + premium products), insurance savings, and AV as hybrid supply. <b>Why believe:</b> the Model vs. Reality tab shows Uber consistently beat its own estimates on Mobility GB, take rate held ~30%, and US trip growth is <i>accelerating</i> as insurance costs fall.</p>';
+  h+='<p class="ov-lede"><b>Mobility</b> — ridesharing in ~70 countries, Uber’s profit engine (~<b>$97B</b> gross bookings FY2025). <b>Where it came from:</b> the post-COVID recovery doubled trips from the 2020 trough. <b>Where it’s going:</b> the barbell (low-cost + premium), insurance savings, and AV as hybrid supply. <b>Why believe:</b> the Model vs. Reality tab shows Uber consistently beating its own Mobility-GB estimates, take rate holding ~30%, and US trip growth <i>accelerating</i> as insurance costs fall.</p>';
   h+=sec('The Barbell — grow both ends, lean away from the middle', barbellDiagram());
   h+=sec('How a Trip Makes Money — one $10 ride',
     '<p class="ov-lede" style="margin:0 0 12px">Six steps of a Mobility trip — <b>tap any step</b> for detail. Below: where the $10 lands.</p>'+
@@ -671,15 +722,10 @@ function mobilityBody(c){
     '</div>'+
     '<div class="ov-fynote" style="margin-top:12px"><b>Evidence it’s working:</b> AV mobility trips <b>>10× YoY</b> (Q1 2026), 30+ partners, 15+ cities targeted by end-2026, ~30% higher trips/vehicle on Uber-managed AV vs AV-only — and management reports <b>"no effect of the Waymo launches on our overall business."</b></div>');
   h+=sec('Who Powers Mobility — the supplier ecosystem',
-    '<style>.alp{display:flex;align-items:center;gap:16px;background:rgba(6,193,103,0.07);border:1px solid rgba(6,193,103,0.25);border-radius:12px;padding:14px 18px;margin:0 0 12px}.alp-big{font-size:34px;font-weight:800;color:#06965A;line-height:1;flex:none}.alp-txt{font-size:12.5px;color:var(--navy);line-height:1.5}.alp-txt b{font-weight:800}@media(max-width:560px){.alp{flex-direction:column;align-items:flex-start;gap:6px}}</style><div class="alp"><div class="alp-big">0.13%</div><div class="alp-txt">of Uber’s ~<b>$163B</b> gross bookings is <b>disclosed supplier spend</b> — ~<b>$210M</b> across 138 suppliers, and only three carry any dollar value (HCL $127M, Oracle $55M, Alexandria $28M). <b>Uber does not run a supply chain; it aggregates one.</b></div></div>'+'<div class="ov-diagram-cap" style="margin:0 0 10px">Uber’s supplier base sorted by <b>what they do</b> for the platform. Most are strategic ties, not traditional vendor contracts — which is itself the asset-light thesis in data form.</div>'+
+    '<style>.alp{display:flex;align-items:center;gap:16px;background:rgba(6,193,103,0.07);border:1px solid rgba(6,193,103,0.25);border-radius:12px;padding:14px 18px;margin:0 0 12px}.alp-big{font-size:34px;font-weight:800;color:#06965A;line-height:1;flex:none}.alp-txt{font-size:12.5px;color:var(--navy);line-height:1.5}.alp-txt b{font-weight:800}@media(max-width:560px){.alp{flex-direction:column;align-items:flex-start;gap:6px}}</style><div class="alp"><div class="alp-big">0.11%</div><div class="alp-txt">of Uber’s ~<b>$193B</b> gross bookings is <b>disclosed supplier spend</b> — ~<b>$210M</b> across 138 suppliers, and only three carry any dollar value (HCL $127M, Oracle $55M, Alexandria $28M). <b>Uber does not run a supply chain; it aggregates one.</b></div></div>'+'<div class="ov-diagram-cap" style="margin:0 0 10px">Uber’s supplier base sorted by <b>what they do</b> for the platform. Most are strategic ties, not traditional vendor contracts — which is itself the asset-light thesis in data form.</div>'+
     '<div class="usc-grid">'+SC_SUPPLIERS.map(scCard).join('')+'</div>'+
-    '<div class="ov-fynote" style="margin-top:12px"><b>The asset-light proof in the data:</b> across 138 identified suppliers, Bloomberg finds only <b>three relationships with disclosed dollar values</b> — HCL ($127M, outsourced engineering), Oracle ($55M, cloud/DB), and Alexandria RE ($28M, offices). Total disclosed supplier spend: ~<b>$210M</b> against ~<b>$163B</b> of gross bookings — a ratio that screams platform, not operator. The AV partners are split by depth: <b>equity + committed vehicles</b> (Waymo, Aurora, Nuro-Lucid 20K, Waabi 25K exclusive) vs <b>deployed/operational</b> (WeRide, May Mobility, Avride) vs <b>announced MOUs</b> (NVIDIA, Stellantis, Zoox, Pony.ai). The “30+ partners” headline includes all three tiers — only ~5–7 have real money on the table. <span class="ave-subh-note">Bloomberg SPLC, 29-Jun-2026.</span></div>');
-  h+=sec('Insurance — the Aleka float',
-    '<p class="ov-lede" style="margin:0 0 12px">Uber owns its insurer, <b>Aleka</b>: riders fund insurance in the fare, Aleka invests the float (~<b>$12.9B</b> reserves), and the underwriting spread returns to Uber. <b>Tap any step.</b></p>'+
-    alkFlow()+
-    '<div class="ov-fynote" style="margin-top:10px">The payoff: <b>premiums + investment income − claims = a spread</b> that lands in Uber’s cash flow — ~<b>$0.35 of every $10 trip</b>. A cash-burning crutch in 2021–22; a steady supplement now.</div>'+
-    '<div class="ov-sec-h ovt-store-h" style="margin-top:18px">From crutch to tailwind</div>'+
-    '<div class="ir-phases">'+irPhase(INS_TL[0],'crutch','Crutch')+irPhase(INS_TL[1],'head','Headwind')+irPhase(INS_TL[2],'tail','Tailwind')+'</div>');
+    '<div class="ov-fynote" style="margin-top:12px"><b>The asset-light proof in the data:</b> of 138 identified suppliers, only <b>three carry disclosed dollar values</b> — HCL ($127M, engineering), Oracle ($55M, cloud), Alexandria RE ($28M, offices). Total ~<b>$210M</b> against ~<b>$193B</b> of gross bookings — a ratio that screams platform, not operator. (Of the 30+ AV partners, only ~<b>5–7</b> have real money committed; the rest are MOUs.) <span class="ave-subh-note">Bloomberg SPLC, 29-Jun-2026.</span></div>');
+  h+=sec('Insurance', '<div class="ov-callout">Insurance is central to Uber&rsquo;s cash story — <b>Aleka</b> (Uber&rsquo;s captive), the <b>~$12.9B reserve float</b>, and the crutch → tailwind turnaround now live in the dedicated <b>Insurance & FCF</b> tab. On a Mobility trip it is the largest cost — and the float adds ~<b>$0.35 of every $10</b> to cash (shown above).</div>');
   h+=sec('Regulation & Driver Classification', '<div class="ir-diagram-cap" style="font-size:12px;color:var(--mu);margin:0 0 8px">The core question — <b>do drivers stay contractors?</b> — is largely settled in Uber\u2019s favor. Tap any card for the detail.</div><div class="ir-reg">'+REGV.map(function(r,i){return regCard(r,i);}).join('')+'</div>');
   h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
   return h;
@@ -705,14 +751,44 @@ function irPhase(p,bcls,blabel){ return '<div class="ir-phase"><div class="ir-ph
 function regCard(r,i){ return '<div class="ir-reg-card ov-clickable" data-detail="reg:'+i+'"><div class="ir-reg-h">'+esc(r.h)+'<span class="ir-reg-chip '+r.cls+'">'+esc(r.chip)+'</span></div><div class="ir-reg-d">'+r.teaser+' <span class="alk-more">tap \u203a</span></div></div>'; }
 function deliveryBody(c){
   var h='';
-  h+='<p class="ov-lede"><b>Delivery (Uber Eats)</b> — food, grocery & retail (~<b>$78B</b> gross bookings FY2025). <b>Where it came from:</b> pandemic-era growth that many assumed was transient. <b>Where it’s going:</b> Investor Day guided Delivery margin convergence toward Mobility’s ~8% via ads + grocery scale. <b>Why believe:</b> Delivery Adj. EBITDA margin has more than doubled (1.9% → 4.0%) and advertising is now >$2B run-rate at ~100% incremental margin. Take rate is lower (~19%) because merchants are paid, but the <b>ads layer lifts the effective take without touching the marketplace split</b>.</p>';
+  h+='<style>.ued-hero{border:1px solid var(--bdr);border-left:3px solid '+DEL+';border-radius:12px;padding:14px 16px;margin:0 0 14px;background:linear-gradient(180deg,rgba(0,0,0,0.015),transparent)}'+
+    '.ued-big{font-size:16px;font-weight:900;color:var(--navy);letter-spacing:-.2px}'+
+    '.ued-sub{font-size:12.5px;color:var(--navy);line-height:1.55;margin-top:5px}.ued-sub b{font-weight:800}'+
+    '.ued-prog{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}'+
+    '.ued-step{flex:1;min-width:88px;text-align:center;border:1px solid var(--bdr);border-radius:9px;padding:8px 6px}'+
+    '.ued-step.now{border-color:'+DEL+';background:rgba(0,0,0,0.02)}'+
+    '.ued-sv{font-size:18px;font-weight:900;line-height:1}.ued-sl{font-size:9.5px;color:var(--mu);font-weight:700;margin-top:3px}'+
+    '.ued-ar{color:#C4CCD6;font-weight:800;font-size:16px}</style>';
+  h+='<div class="ued-hero"><div class="ued-big">The “pandemic fad” that became a profit engine</div>'+
+    '<div class="ued-sub">Uber Eats (~<b>$91B</b> gross bookings) was written off as transient. Instead its Adj. EBITDA margin <b>more than doubled</b>, and a <b>&gt;$2B advertising layer</b> at ~100% margin is pulling it toward Mobility’s level — <b>without touching the merchant split</b>. The same app that hails your ride now feeds you.</div>'+
+    '<div class="ued-prog">'+
+      '<div class="ued-step"><div class="ued-sv" style="color:#C0392B">1.9%</div><div class="ued-sl">margin · ~2021</div></div>'+
+      '<span class="ued-ar">›</span>'+
+      '<div class="ued-step now"><div class="ued-sv" style="color:'+DEL+'">4.0%</div><div class="ued-sl">margin · now</div></div>'+
+      '<span class="ued-ar">›</span>'+
+      '<div class="ued-step"><div class="ued-sv" style="color:#06965A">~8%</div><div class="ued-sl">Mobility-level target</div></div>'+
+    '</div></div>';
   h+=sec('Margin Convergence — the Delivery story',
     '<div class="tech-leg"><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+MOB+'"></span>Mobility</span><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+DEL+'"></span>Delivery</span></div>'+
     '<div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartMargin"></canvas></div>'+
     '<div class="ov-fynote" style="margin-top:10px"><b>Delivery margin has more than doubled</b> (~1.9%→4.0% of bookings) toward Mobility’s ~8%, on advertising + scale — the heart of the margin-expansion story. (Adj. EBITDA basis ends 4Q25.)</div>');
   h+=sec('Grocery & Advertising — the two growth engines',
-    '<div class="ov-row"><div class="ov-row-k">Grocery & retail</div><div class="ov-row-v">~<b>$12B run-rate</b> — bigger baskets, higher frequency; 5 of the top-10 US grocers on platform.</div></div>'+
-    '<div class="ov-row"><div class="ov-row-k">Advertising</div><div class="ov-row-v"><b>>$2B run-rate (+50%)</b>, near-100% incremental margin — lifts Delivery’s take without touching the marketplace split.</div></div>');
+    '<style>.ueg-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:600px){.ueg-two{grid-template-columns:1fr}}'+
+    '.ueg-c{border:1px solid var(--bdr);border-radius:11px;padding:13px 15px;background:#fff}'+
+    '.ueg-h{font-size:12px;font-weight:800;color:var(--navy)}'+
+    '.ueg-big{font-size:23px;font-weight:800;color:#10141A;margin:4px 0;display:flex;align-items:baseline;gap:8px}.ueg-big span{font-size:11px;font-weight:700;color:var(--mu)}'+
+    '.ueg-bar{height:7px;border-radius:4px;background:#EEF2F7;overflow:hidden;margin:6px 0 8px}.ueg-bar span{display:block;height:100%}'+
+    '.ueg-d{font-size:11.5px;color:var(--navy);line-height:1.5}.ueg-d b{font-weight:800}</style>'+
+    '<div class="ov-diagram-cap" style="margin:0 0 10px">Two engines lift Delivery’s take <b>without touching the driver or merchant split</b> — the whole point of the margin story.</div>'+
+    '<div class="ueg-two">'+
+      '<div class="ueg-c"><div class="ueg-h">Grocery & retail — grows the volume</div><div class="ueg-big">~$12B<span>run-rate bookings</span></div>'+
+        '<div class="ueg-bar"><span style="width:100%;background:#06C167"></span></div>'+
+        '<div class="ueg-d">Bigger baskets, higher frequency; <b>5 of the top-10 US grocers</b> on platform. Expands the pie Delivery earns on.</div></div>'+
+      '<div class="ueg-c"><div class="ueg-h">Advertising — grows the margin</div><div class="ueg-big">&gt;$2B<span>run-rate · +50% YoY</span></div>'+
+        '<div class="ueg-bar"><span style="width:17%;background:#FF7009"></span></div>'+
+        '<div class="ueg-d"><b>~100% incremental margin</b> — pure take-rate lift stacked on the existing marketplace, split untouched.</div></div>'+
+    '</div>'+
+    '<div class="ov-fynote" style="margin-top:10px">Bars are relative run-rate. Grocery grows the <b>volume</b>; advertising grows the <b>margin on that volume</b> — together, why Delivery take keeps rising.</div>');
   h+=sec('The Merchant Network',
     '<div class="ov-diagram-cap" style="margin:0 0 10px">No single merchant is material — the <b>breadth</b> is the moat, and the take/ads sit with Uber. Hover a logo for the name.</div>'+
     '<div class="usc-grid">'+SC_CUSTOMERS.map(scCard).join('')+'</div>'+
@@ -759,7 +835,7 @@ function uberOnePricing(){
     dot(5.85,'Colombia',1)+
     dot(9.99,'United States',1)+
   '</svg></div>';
-  h+='<div class="ov-fynote" style="margin-top:8px"><b>A ~6× spread</b> ($1.75 → $9.99) is the tell: Uber One is localized to purchasing power, not a flat global product. So <b>"50M members" is economically lopsided</b> — a US member (paying $9.99, with <b>&gt;35% of US Mobility bookings</b> already running through members) is worth a multiple of an India member in reported dollars, and <b>FX drags the international side further</b> (Q1 2026 bookings +14% reported vs ~+10% constant-currency). The <i>unit</i> growth increasingly comes from the cheap end while the <i>reported value</i> concentrates at the rich end — so the membership can look like "half the bookings" and still have most of its dollar runway abroad. Prices confirmed from official Uber pages (~Jul 2026); FX/promotions move them.</div>';
+  h+='<div class="ov-fynote" style="margin-top:8px"><b>A ~6× spread</b> ($1.75 India → $9.99 US) is the tell: Uber One is priced to local purchasing power, not flat globally. So <b>"50M members" is economically lopsided</b> — a US member is worth a multiple of an India member in reported dollars, and <b>FX drags the international side</b> (Q1 2026 bookings +14% reported vs ~+10% cc). Unit growth comes from the cheap end; reported value concentrates at the rich end. <span class="ave-subh-note">Official Uber pages, ~Jul 2026; FX/promotions move them.</span></div>';
   return h;
 }
 function uberOneBody(c){
@@ -773,7 +849,7 @@ function uberOneBody(c){
   h+=sec('Why Members Are Worth ~3×',
     '<div class="ov-subh">Monthly spend per user <span class="ave-subh-note">(Summit deck, Dec 2024)</span></div>'+
     mbars(UBERONE_SPEND)+
-    '<div class="ov-fynote" style="margin-top:10px"><b>The re-rating math.</b> Members spend ~3× and are far stickier; they already drive <b>&gt;50% of combined Mobility+Delivery bookings</b>. Uber One is a lower-margin but <b>LTV-positive</b> investment — Uber leans in precisely because members compound. At ~<b>25% penetration</b> of monthly actives, the ceiling is far away — Amazon Prime is at ~70% of US households. Each point of penetration shifts more of Uber’s revenue from one-off transactions to <b>recurring, predictable, higher-LTV spend</b>. That’s the multiple expansion case: the business is the same, but the revenue quality is structurally better.</div>');
+    '<div class="ov-fynote" style="margin-top:10px"><b>The re-rating math.</b> Members spend ~3×, are far stickier, and already drive <b>&gt;50% of combined bookings</b>. At just ~<b>25% penetration</b> of monthly actives (vs Amazon Prime ~70% of US households), the ceiling is far off. Each point of penetration shifts revenue from one-off transactions to <b>recurring, higher-LTV</b> spend — same business, structurally better revenue quality.</div>');
   h+=sec('The Cross-Sell Flywheel', '<div class="ov-callout"><div class="ov-tl-body"><b>"Go anywhere, get anything."</b> One demand graph cross-sells rides ⇄ eats ⇄ grocery. ~<b>40%</b> of users use multiple products; ~⅓ of Eats customers arrived through the Rides app (near-zero CAC). Each product the member adds <b>raises the cost of leaving</b> — not through lock-in (cancellation is easy, $9.99/mo) but because no competitor offers rides + food + grocery + hotels in one membership. That breadth-as-switching-cost is the structural moat.</div></div>');
   h+=sec('Platform Expansion',
     '<div class="ov-row"><div class="ov-row-k">Uber for Business</div><div class="ov-row-v">B2B corporate rides, meals & travel — >$5B of bookings, growing >2× faster than Mobility.</div></div>'+
@@ -860,6 +936,8 @@ function insuranceBody(){
     '<div class="uins-mc"><div class="uins-mc-h">It invests the float</div><div class="uins-mc-d">Uber holds and invests the reserved cash until claims settle — interest-free capital, Buffett-style. This is why <b>cash flow ran ahead of accounting profit</b> through the turnaround.</div></div>'+
   '</div>';
   // reserves
+  h+='<div class="uins-h">How its role flipped — crutch → tailwind</div>';
+  h+='<div class="ir-phases">'+irPhase(INS_TL[0],'crutch','Crutch')+irPhase(INS_TL[1],'head','Headwind')+irPhase(INS_TL[2],'tail','Tailwind')+'</div>';
   h+='<div class="uins-h">The reserve build — nearly tripled in two years</div>';
   h+=RES.map(function(r){ var w=Math.max(3,r[1]/resMax*100); return '<div class="uins-bar"><div class="uins-bar-y">'+r[0]+'</div><div class="uins-bar-t"><div class="uins-bar-f" style="width:'+w.toFixed(1)+'%"></div></div><div class="uins-bar-v">$'+r[1].toFixed(1)+'B</div></div>'; }).join('');
   h+='<div class="uins-cfo">The reserve <b>build</b> (claims accrued &gt; claims paid) flows straight into operating cash flow: <b>+$251M (2023) · +$399M (2024) · +$658M (2025)</b> — a recurring tailwind to reported cash generation, and the mechanism the bear case attacks.</div>';

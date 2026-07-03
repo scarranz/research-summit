@@ -8,6 +8,7 @@
 // can be wired in later the same way as Mastercard's Financials tab.
 
 import { makeValuation } from './valuation.js';
+import { makeManagement } from './management.js';
 
 // Interactive "Scenario → price target" calculator (Valuation tab). Fundamentals from
 // the Summit DCF (FY2025 actuals; FY2026E estimate). GTV is one shared volume with two
@@ -30,6 +31,65 @@ var CART_VAL = makeValuation({
   marginHint:"History: '22 7.7% · '23 20.6% · '24 26.2% · '25 29.0%. Instacart guides an Adj. EBITDA $ range each quarter.",
   dcf:{ fy:'FY2026E', revM:4170.7, ebitdaM:1275.8 },
   mult:{ evebitda:{min:5,max:18,def:9.1}, marginMin:20, marginMax:38 },
+});
+
+// Management roster (Management tab). Public-source bios; no ownership/trades.
+var CART_MGMT = makeManagement({
+  brand:'#0AAD0A',
+  lede:"Instacart is led by CEO <b>Chris Rogers</b>, a long-time insider (ex-Chief Business Officer) who took over in August 2025 when Fidji Simo left to run applications at OpenAI. Two things stand out: much of the senior team is <b>ex-Uber</b> (the CFO, CTO, CMO and Ops head all came from Uber), and Connected Stores is run by <b>Caper's own founder</b> — the in-store bet is led by the person who built it.",
+  execs:[
+    { id:'rogers', lead:true, name:'Chris Rogers', title:'CEO & Chairperson', since:'CEO since Aug 2025', img:'img/leadership/cart-rogers.png',
+      line:"Ex-Chief Business Officer; ~11 years at Apple; now Chair too.",
+      bio:"Chief Executive Officer since August 15, 2025 and Chairperson since November 2025; at Instacart since 2019 as Chief Business Officer (2022–2025). Prior: ~11 years at Apple (MD, Apple Canada); began his career at P&G." },
+    { id:'reuter', name:'Emily Reuter', title:'CFO & Treasurer', since:'CFO since 2024', img:'img/leadership/cart-reuter.png',
+      line:"Ex-Uber finance leader (CFO of Uber Mobility, Head of IR).",
+      bio:"Chief Financial Officer & Treasurer since 2024. Prior: ~a decade at Uber (Head of Corporate Finance, CFO of Uber Mobility, Head of IR). Also serves on Pinterest's board. Yale; Stanford MBA." },
+    { id:'fong', name:'Morgan Fong', title:'Chief Legal & Global Affairs', since:'General Counsel', img:'img/leadership/cart-fong.png',
+      line:"General Counsel & statutory officer; ex-Trulia, Wilson Sonsini.",
+      bio:"Chief Legal & Global Affairs Officer and Corporate Secretary — one of Instacart's three statutory executive officers. Prior: counsel at Trulia; private practice at Wilson Sonsini and Fenwick & West." },
+    { id:'kundu', name:'Anirban Kundu', title:'Chief Technology Officer', since:'CTO since 2024', img:'img/leadership/cart-kundu.jpg',
+      line:"Ex-VP Engineering, Uber Delivery; Postmates, Evernote.",
+      bio:"Chief Technology Officer since ~2024. Prior: led Uber Delivery engineering; earlier Postmates, and CTO roles at Evernote, Yahoo and Shazam." },
+    { id:'mcintosh', name:'David McIntosh', title:'Chief Connected Stores Officer', since:'Joined 2021 (via Caper AI)', img:'img/leadership/cart-mcintosh.png',
+      line:"Founder/CEO of Caper AI; now runs the in-store tech bet.",
+      bio:"Chief Connected Stores Officer; joined in 2021 through the Caper AI acquisition, where he was co-founder and CEO. Earlier co-founded Tenor (the GIF engine, acquired by Google in 2018). Leads Instacart's in-store technology — the core of the enterprise push (Caper Carts, Connected Stores)." },
+    { id:'hamburger', name:'Ryan Hamburger', title:'Chief Commercial Officer', since:'CCO 2025 · at Instacart since 2015', img:'img/leadership/cart-hamburger.png',
+      line:"Leads retailer & commercial relationships; ex-Bain.",
+      bio:"Chief Commercial Officer since 2025; at Instacart since 2015 across business development, new verticals and retail partnerships. Prior: Bain & Company. Michigan Ross." },
+    { id:'miller', name:'Ali Miller', title:'GM of Advertising', since:'Joined 2021', img:'img/leadership/cart-miller.jpg',
+      line:"Runs the ad business; 10+ years at Google (Ads, YouTube).",
+      bio:"General Manager of Advertising; at Instacart since 2021. Prior: senior product leadership at Google on Google Ads and YouTube Ads — 10+ years in ad products." },
+    { id:'jones', name:'Laura Jones', title:'Chief Marketing Officer', since:'CMO', img:'img/leadership/cart-jones.png',
+      line:"Ex-Uber Global Head of Marketing (Rides); Google, Visa.",
+      bio:"Chief Marketing Officer. Prior: 6 years at Uber (Global Head of Marketing, Rides); senior roles at Google and Visa. Serves on Match Group's board. Stanford MBA." },
+    { id:'hall', name:'Christina Hall', title:'Chief People Officer', since:'Joined 2020',
+      line:"Ex-Chief People Officer of LinkedIn; Facebook, Intuit.",
+      bio:"Chief People Officer since October 2020. Former Chief People Officer at LinkedIn; HR leadership at Facebook and Intuit; earlier a lawyer at Latham & Watkins." },
+    { id:'maguire', name:'Tom Maguire', title:'VP, Head of Operations', since:'VP, Operations', img:'img/leadership/cart-maguire.png',
+      line:"Ex-Uber GM, US & Canada operations; Goldman, Amazon.",
+      bio:"VP, Head of Operations. Prior: ~a decade at Uber (GM, US & Canada operations); earlier Goldman Sachs, Amazon and Kearney." },
+    { id:'adams', name:'John Adams', title:'VP, Head of Product', since:'Joined 2020', img:'img/leadership/cart-adams.png',
+      line:"Product lead; seven years at Dropbox.",
+      bio:"VP, Head of Product; joined in 2020 and leads product. Prior: seven years at Dropbox (Senior Director, Product Management). Instacart has no C-suite CPO — product is led at VP level." },
+  ],
+  board:[
+    { name:'Chris Rogers', chair:true, dual:true, independent:false, role:'CEO & Chairperson.' },
+    { name:'Ravi Gupta', independent:true, role:'Lead Independent Director · Partner at Sequoia Capital; ex-Instacart CFO/COO · chairs Compensation.' },
+    { name:'Daniel Sundheim', independent:true, role:'Founder & CIO of D1 Capital (holds ~11%) · Compensation.' },
+    { name:'Victoria Dolan', independent:true, role:'Ex-CFO of Revlon · chairs Audit.' },
+    { name:'Mary Beth Laughton', independent:true, role:'CEO of REI · Audit.' },
+    { name:'Josh Silverman', independent:true, role:'Executive Chair of Etsy (former CEO) · chairs Nominating & Governance.' },
+    { name:'Meredith Kopit Levien', independent:true, role:'President & CEO of The New York Times Company · Audit, Compensation.' },
+    { name:'Lily Sarafan', independent:true, role:'Co-Founder & Exec Chair of TheKey · former Lead Independent Director.' },
+    { name:'Michael Moritz', independent:true, role:'Sequoia Capital (emeritus) · not standing for re-election (board drops to 8).' },
+  ],
+  boardNote:'8 of 9 independent; the CEO is also Chair, offset by a Lead Independent Director (Ravi Gupta).',
+  gov:[
+    { h:'Share & voting', d:"Single class of common stock — <b>one share, one vote</b>. No dual-class or super-voting. Concentration is economic only: Sequoia ~12%, D1 Capital ~11%, co-founder Apoorva Mehta ~9%." },
+    { h:'Board · independence & structure', d:"<b>8 of 9 directors independent</b> (only the CEO is not). Rogers is a <b>combined CEO + Chairperson</b>, offset by a <b>Lead Independent Director</b> (Ravi Gupta). Note the board is <b>classified / staggered</b> — 3 classes, 3-year terms — an anti-takeover feature, not annual elections." },
+    { h:'CEO pay · FY2025', d:"Chris Rogers: <b>$29.8M</b> (partial year as CEO; ~72:1 pay ratio). After a weak 2025 say-on-pay (~55%), the 2026 grant shifts to <b>performance RSUs (relative TSR)</b> and approval recovered to <b>~79%</b>. Departing CEO Fidji Simo <b>forfeited all unvested equity</b> — no severance." },
+  ],
+  foot:"Executives per Instacart’s leadership page; board, committees and governance per the 2026 proxy (DEF 14A) and the May 2026 8-K. Headshots from Instacart’s newsroom. Ownership and insider trades live in the Pillars → Management tab.",
 });
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -801,6 +861,48 @@ function whoPays(){
   '</style><div class="wp">'+w.map(function(x){ return '<div class="wp-c"><div class="wp-ic">'+x.ic+'</div><div><div class="wp-n">'+esc(x.n)+'</div><div class="wp-d">'+esc(x.d)+'</div></div></div>'; }).join('')+'</div>';
   return h;
 }
+function enterpriseExamples(){
+  var STATS=[['2,200+','retail banners'],['~100,000','stores'],['9,000+','active brands'],['98%+','of NA households']];
+  var DEPLOY=[
+    { p:'Storefront & Storefront Pro', s:'white-label e-commerce (~380 grocer sites run on it)',
+      ex:'Publix · ALDI · Sprouts · Wegmans · Woodman\u2019s · Save Mart (upgraded to Pro, ~200 stores) · Costco (Storefront Pro in Spain & France)',
+      logos:[['Publix','','publix.com'],['ALDI','','aldi.us'],['Sprouts','SFM','sprouts.com']] },
+    { p:'Carrot Ads', s:'retailers run their OWN retail-media network on Instacart\u2019s ad stack (240+ sites)',
+      ex:'Sprouts (launched its RMN) · <b>Schnucks — 7\u00d7 retail-media revenue, 5.7\u00d7 ROAS</b> · Hy-Vee (RedMedia) · Thrive Market',
+      logos:[['Schnucks','','schnucks.com'],['Sprouts','SFM','sprouts.com'],['Hy-Vee','','hy-vee.com']] },
+    { p:'Caper Carts', s:'AI smart carts — deployment <b>tripled YoY</b> (100+ cities, 15 states, 12+ banners)',
+      ex:'Wakefern / ShopRite (first bricks-and-mortar deployer) · Schnucks · Gelson\u2019s · Bristol Farms · Weis · <b>Coles</b> (Australia) · Morrisons (UK pilot)',
+      logos:[['ShopRite','','shoprite.com'],['Coles','','coles.com.au'],['Weis','WMK','weismarkets.com']] },
+    { p:'Connected Stores', s:'the full in-store stack — carts + electronic shelf labels + scan & pay',
+      ex:'<b>Bristol Farms — the first FULL Connected Store</b> (every technology in one location) · Schnucks (Carrot Tags chainwide) · ALDI (Carrot Tags, 100+ stores)',
+      logos:[['Bristol Farms','','bristolfarms.com'],['ALDI','','aldi.us']] },
+    { p:'FoodStorm', s:'catering & order-ahead SaaS (live in 3,000+ stores)',
+      ex:'Uncle Giuseppe\u2019s · Balducci\u2019s · Kings · Roche Bros. · DeCicco & Sons',
+      logos:[] },
+  ];
+  var h='<style>'+
+    '.ent2-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 16px}@media(max-width:560px){.ent2-stats{grid-template-columns:repeat(2,1fr)}}'+
+    '.ent2-stat{border:1px solid var(--bdr);border-radius:10px;padding:10px 8px;text-align:center}'+
+    '.ent2-stat-v{font-size:18px;font-weight:900;color:#3A7BD5;line-height:1}.ent2-stat-l{font-size:10px;color:var(--mu);font-weight:700;margin-top:3px}'+
+    '.ent2-row{border:1px solid var(--bdr);border-left:3px solid #3A7BD5;border-radius:10px;padding:12px 14px;margin:9px 0}'+
+    '.ent2-p{font-size:13px;font-weight:800;color:var(--navy)}.ent2-s{font-size:11px;color:var(--mu);margin:1px 0 8px}.ent2-s b{color:var(--navy);font-weight:800}'+
+    '.ent2-ex{font-size:11.5px;color:var(--navy);line-height:1.55}.ent2-ex b{font-weight:800}'+
+    '.ent2-logos{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}'+
+    '.csc-logo{width:34px;height:34px;border:1px solid var(--bdr);border-radius:7px;background:#fff;display:flex;align-items:center;justify-content:center;padding:4px}.csc-logo img{max-width:100%;max-height:100%;object-fit:contain}'+
+    '.ent2-star{background:rgba(255,112,9,0.06);border-left:3px solid #FF7009;border-radius:8px;padding:11px 14px;font-size:12px;color:var(--navy);line-height:1.6;margin-top:6px}.ent2-star b{font-weight:800}'+
+    '.ent2-flip{background:rgba(58,123,213,0.05);border-left:3px solid #3A7BD5;border-radius:8px;padding:11px 14px;font-size:12px;color:var(--navy);line-height:1.6;margin-top:10px}.ent2-flip b{font-weight:800}'+
+  '</style>';
+  h+='<div class="ent2-stats">'+STATS.map(function(x){ return '<div class="ent2-stat"><div class="ent2-stat-v">'+x[0]+'</div><div class="ent2-stat-l">'+x[1]+'</div></div>'; }).join('')+'</div>';
+  h+=DEPLOY.map(function(d){
+    return '<div class="ent2-row"><div class="ent2-p">'+esc(d.p)+'</div><div class="ent2-s">'+d.s+'</div>'+
+      '<div class="ent2-ex">'+d.ex+'</div>'+
+      (d.logos.length?'<div class="ent2-logos">'+d.logos.map(function(l){ return cartLogo(l[0],l[1],l[2]); }).join('')+'</div>':'')+
+    '</div>';
+  }).join('');
+  h+='<div class="ent2-star"><b>The showcase: The Save Mart Companies.</b> In a single 2024 deal it adopted <b>four products at once</b> — Storefront Pro, Carrot Ads, FoodStorm and Caper Carts — the clearest proof that once a retailer is on the platform, Instacart cross-sells the whole suite.</div>';
+  h+='<div class="ent2-flip"><b>Competitor and customer, at the same time.</b> The same grocers appear on both sides: <b>ALDI, Publix and Sprouts</b> sell on the Marketplace <i>and</i> run their own sites on Storefront Pro; <b>Kroger, Wegmans, Schnucks and Wakefern</b> are Marketplace sellers <i>and</i> in-store-tech (Caper / Carrot Tags) customers. Instacart competes with them and arms them in the same breath — the essence of the enterprise strategy.</div>';
+  return h;
+}
 function html(c){
   var h = '<div class="ov ov-cart" data-brand="CART">';
 
@@ -812,6 +914,7 @@ function html(c){
     '<button class="ov-subtab" data-catab="supply">Supply Chain</button>'+
     '<button class="ov-subtab" data-catab="fin">Financials</button>'+
     '<button class="ov-subtab" data-catab="valuation">Valuation</button>'+
+    '<button class="ov-subtab" data-catab="mgmt">Management</button>'+
     '<button class="ov-subtab" data-catab="calls">Earnings Calls</button>'+
   '</div>';
 
@@ -877,6 +980,7 @@ function html(c){
   h += '<p class="ov-lede"><b>Instacart Platform (Enterprise)</b> is the pivot from a delivery app to <b>the grocery industry’s tech vendor</b>. Instacart sells the same technology that runs its own app to retailers, to power <b>their</b> e-commerce, fulfillment, ads and in-store tech — the retailer keeps the customer. Lower take than the Marketplace, but it is how Instacart makes itself indispensable.</p>';
   h += sec('The flip — turning a competitor into a customer', entFlip());
   h += sec('Carrot — the platform management frames as five pillars', carrotPillars());
+  h += sec('The platform in the wild — real deployments', enterpriseExamples());
   h += sec('From online to the aisle — Connected Stores',
     '<div class="ov-callout"><b>Caper smart carts</b> reached meaningful in-store penetration in <b>months, not years</b>. With electronic shelf labels and scan-and-pay, Instacart reaches into the <b>physical aisle</b> — not just delivery — and the store itself becomes new <b>ad inventory</b>. This is how the addressable market extends far beyond online grocery, where penetration is still only low-teens %.</div>');
   h += sec('The international arm — Instaleap',
@@ -912,6 +1016,7 @@ function html(c){
 
   // ══ PANE 6 — Earnings Calls ══
   h += '<div class="ov-pane" data-capane="valuation">'+CART_VAL.body()+'</div>';
+  h += '<div class="ov-pane" data-capane="mgmt">'+CART_MGMT.body()+'</div>';
   h += '<div class="ov-pane" data-capane="calls">';
   h += callsBody();
   h += '</div>'; // end calls pane
@@ -985,6 +1090,7 @@ function init(c){
       if (tab==='fin') requestAnimationFrame(function(){ renderFin(); buildCartGuide(); }); // charts need a visible (sized) canvas
       if (tab==='advertising') requestAnimationFrame(buildAdChart);
       if (tab==='valuation') requestAnimationFrame(function(){ CART_VAL.init(root); });
+      if (tab==='mgmt') requestAnimationFrame(function(){ CART_MGMT.init(root); });
     };
   });
 

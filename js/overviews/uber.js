@@ -7,6 +7,7 @@
 // prepared remarks, the Feb 2024 "Go-Get" Investor Day (see SOURCES). No live API.
 
 import { makeValuation } from './valuation.js';
+import { makeManagement } from './management.js';
 
 // Interactive "Scenario → price target" calculator (Valuation tab). Fundamentals from
 // the Summit DCF (FY2025 actuals; FY2026E estimate). Net cash & price are editable
@@ -28,6 +29,66 @@ var UBER_VAL = makeValuation({
   marginHint:"History: '22 5.4% · '23 10.9% · '24 14.7% · '25 16.8%. Uber guides an Adj. EBITDA $ range each quarter.",
   dcf:{ fy:'FY2026E', revM:58695, ebitdaM:11547 },
   mult:{ evebitda:{min:6,max:22,def:13}, marginMin:10, marginMax:28 },
+});
+
+// Management roster (Management tab). Public-source bios; no ownership/trades.
+var UBER_MGMT = makeManagement({
+  brand:'#111827',
+  lede:"Uber is run by a deep, long-tenured bench under CEO <b>Dara Khosrowshahi</b>, who engineered the turn from cash-burner to cash-compounder. One thing to watch: the <b>finance seat has turned over three times in three years</b>.",
+  execs:[
+    { id:'dara', lead:true, name:'Dara Khosrowshahi', title:'Chief Executive Officer', since:'CEO since 2017', img:'img/leadership/uber-dara.jpg',
+      line:"Architect of the turnaround; ex-CEO of Expedia.",
+      bio:"Chief Executive Officer since August 2017; leads Uber's platform across 70+ countries. Previously CEO of Expedia for ~12 years and CFO of IAC. Also a director of Expedia Group and Grab Holdings." },
+    { id:'macdonald', name:'Andrew Macdonald', title:'President & COO', since:'At Uber since 2012', img:'img/leadership/uber-macdonald.jpg',
+      line:"Top operating leader over Mobility & Delivery.",
+      bio:"President & Chief Operating Officer; joined in 2012 as Toronto's first general manager. Oversees Mobility and Delivery operations globally — effectively the top operating leader. Ex-Bain & Company." },
+    { id:'hazelbaker', name:'Jill Hazelbaker', title:'President, Corporate Affairs', since:'At Uber since 2015', img:'img/leadership/uber-hazelbaker.jpg',
+      line:"Leads marketing, comms, policy & safety; ex-Snap, Google.",
+      bio:"President & Chief Corporate Affairs Officer; oversees marketing, communications, public policy and safety. Prior: communications and public policy at Snap and comms/government relations at Google (EMEA)." },
+    { id:'balaji', name:'Balaji Krishnamurthy', title:'Chief Financial Officer', since:'CFO since Feb 2026', img:'img/leadership/uber-balaji.png',
+      line:"Internal promotion; ex-divisional CFO & IR; ex-Goldman Sachs.",
+      bio:"CFO since February 2026; at Uber since 2019, previously divisional CFO for Mobility and Delivery and head of Investor Relations. Earlier 8+ years at Goldman Sachs. Uber's third CFO in three years, after Nelson Chai and Prashanth Mahendra-Rajah." },
+    { id:'west', name:'Tony West', title:'Chief Legal Officer', since:'At Uber since 2017', img:'img/leadership/uber-west.jpg',
+      line:"Ex-US Associate Attorney General; ex-GC of PepsiCo.",
+      bio:"SVP, Chief Legal Officer & Corporate Secretary; leads Legal, Compliance & Ethics, and Security. Former General Counsel of PepsiCo and held two Senate-confirmed positions at the U.S. DOJ (Associate Attorney General). Stanford Law." },
+    { id:'anderson', name:'Susan Anderson', title:'Head of Delivery', since:'At Uber since 2016', img:'img/leadership/uber-anderson.jpg',
+      line:"Runs Uber Eats across 30+ countries.",
+      bio:"Head of Delivery; runs Uber Eats and global grocery/on-demand delivery. Joined in 2016, starting by leading Uber Eats in Queensland, Australia. Prior: Amazon, Bain, Capital One." },
+    { id:'kannan', name:'Madhu Kannan', title:'Chief Business Officer', since:'Rejoined 2023', img:'img/leadership/uber-kannan.jpg',
+      line:"Leads business development & corporate strategy; ex-BofA.",
+      bio:"Chief Business Officer; oversees global business development and corporate strategy. First joined Uber in 2017 and returned in 2023 from Bank of America Securities." },
+    { id:'kansal', name:'Sachin Kansal', title:'Chief Product Officer', since:'At Uber since 2017', img:'img/leadership/uber-kansal.jpg',
+      line:"Leads products, AV and sustainability.",
+      bio:"Chief Product Officer; joined in 2017 as the first product leader for safety technology. Oversees Mobility and Delivery products plus autonomous and sustainability initiatives. M.S. from Stanford." },
+    { id:'maredia', name:'Sarfraz Maredia', title:'Head of Autonomous', since:'At Uber since 2014', img:'img/leadership/uber-maredia.jpg',
+      line:"Leads Uber's autonomous mobility & delivery.",
+      bio:"Head of Autonomous Mobility & Delivery; leads Uber's AV efforts. Joined in 2014; previously ran US & Canada Mobility and the Americas for Uber Eats." },
+    { id:'praveen', name:'Praveen Neppalli Naga', title:'Chief Technology Officer', since:'At Uber since 2015', img:'img/leadership/uber-praveen.jpg',
+      line:"Leads engineering and science; ex-LinkedIn.",
+      bio:"Chief Technology Officer; leads engineering and science strategy. Joined in 2015; previously ~7 years at LinkedIn building products and data infrastructure." },
+    { id:'pradeep', name:'Pradeep Parameswaran', title:'Head of Mobility', since:'At Uber since 2017', img:'img/leadership/uber-pradeep.jpg',
+      line:"Runs global ride-sharing across 70+ countries.",
+      bio:"Head of Mobility; runs global ride-sharing across 70+ countries. Joined in 2017; previously led mobility in India, South Asia and APAC." },
+  ],
+  board:[
+    { name:'Ronald Sugar', chair:true, independent:true, role:'Independent Chair · ex-Chairman & CEO of Northrop Grumman · chairs Nominating & Governance.' },
+    { name:'Dara Khosrowshahi', dual:true, independent:false, role:'Chief Executive Officer.' },
+    { name:'John Thain', independent:true, role:'Ex-CEO of CIT Group & Merrill Lynch · chairs Audit.' },
+    { name:'Robert Eckert', independent:true, role:'Ex-CEO of Mattel · chairs Compensation.' },
+    { name:'Nikesh Arora', independent:true, role:'Chairman & CEO of Palo Alto Networks · Comp, Nom & Gov.' },
+    { name:'Ursula Burns', independent:true, role:'Ex-CEO of Xerox and VEON · Audit, Nom & Gov.' },
+    { name:'Revathi Advaithi', independent:true, role:'CEO of Flex · Audit.' },
+    { name:'Amanda Ginsberg', independent:true, role:'Ex-CEO of Match Group · Comp, Nom & Gov.' },
+    { name:'Alexander Wynaendts', independent:true, role:'Ex-CEO of Aegon · Audit.' },
+    { name:'Turqi Alnowaiser', independent:true, role:'Head of Int’l Investments, Saudi PIF · Audit.' },
+  ],
+  boardNote:'9 of 10 independent; Chair and CEO roles are separate.',
+  gov:[
+    { h:'Share & voting', d:"Single class of common stock — <b>one share, one vote</b>. No dual-class or super-voting; no founder control block." },
+    { h:'Board independence', d:"<b>9 of 10 directors are independent</b> — only the CEO is not. The Chair (Ron Sugar) is independent, so Chair and CEO are <b>separate roles</b>. Directors face <b>annual</b> election (board is not staggered)." },
+    { h:'CEO pay · FY2025', d:"Dara Khosrowshahi: <b>$35.6M</b> total (−11% YoY), of which <b>~96% is variable / at-risk</b> (mostly performance equity). Base salary just $1.08M. Say-on-pay approved <b>~94%</b>." },
+  ],
+  foot:"Executives per Uber’s leadership page; board, committees and governance per the 2026 proxy (DEF 14A / corrected DEFR14A). Headshots from Uber’s newsroom CDN. Ownership and insider trades live in the Pillars → Management tab.",
 });
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -755,6 +816,71 @@ function modelBody(c){
 function groupRow(label,items){ return '<div class="ave-group"><span class="ave-group-l">'+esc(label)+'</span><div class="ave-pills">'+items.map(function(it){ return '<button type="button" class="ave-pill" data-ave="'+it[0]+'">'+esc(it[1])+'</button>'; }).join('')+'</div></div>'; }
 
 // ─── Shell ────────────────────────────────────────────────────────────────────
+function insuranceBody(){
+  var RES=[['2021',3.99],['2022',4.72],['2023',6.74],['2024',9.80],['2025',12.46],['Q1 26',12.9]];
+  var OI=[['2021',-3.53],['2022',-1.78],['2023',0.99],['2024',2.83],['2025',5.60]];
+  var resMax=13, oiMax=5.6;
+  var h='<style>'+
+    '.uins-hero{display:flex;align-items:center;gap:18px;flex-wrap:wrap;border:1px solid rgba(6,193,103,0.3);border-radius:14px;background:linear-gradient(180deg,rgba(6,193,103,0.06),transparent);padding:16px 18px;margin:0 0 18px}'+
+    '.uins-hero-v{font-size:34px;font-weight:900;color:#049a4f;line-height:1;flex:none}'+
+    '.uins-hero-t{font-size:12.5px;color:var(--navy);line-height:1.6;flex:1;min-width:250px}.uins-hero-t b{font-weight:800}'+
+    '.uins-h{font-size:13px;font-weight:800;color:var(--navy);margin:20px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--bdr)}'+
+    '.uins-m{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:11px}'+
+    '.uins-mc{border:1px solid var(--bdr);border-radius:10px;padding:12px 14px}'+
+    '.uins-mc-h{font-size:12.5px;font-weight:800;color:#049a4f;margin-bottom:5px}'+
+    '.uins-mc-d{font-size:11.5px;color:var(--navy);line-height:1.5}.uins-mc-d b{font-weight:800}'+
+    '.uins-bar{display:grid;grid-template-columns:56px 1fr 60px;gap:9px;align-items:center;margin:5px 0}'+
+    '.uins-bar-y{font-size:11px;font-weight:700;color:var(--mu);text-align:right}'+
+    '.uins-bar-t{height:20px;background:rgba(138,147,160,0.10);border-radius:5px;overflow:hidden}'+
+    '.uins-bar-f{height:100%;background:#049a4f;border-radius:5px;opacity:.88}'+
+    '.uins-bar-v{font-size:11.5px;font-weight:800;color:var(--navy)}'+
+    '.uins-cfo{background:rgba(6,193,103,0.06);border-left:3px solid #049a4f;border-radius:8px;padding:10px 13px;font-size:12px;color:var(--navy);line-height:1.55;margin-top:10px}.uins-cfo b{font-weight:800}'+
+    '.uins-tr{margin:2px 0}'+
+    '.uins-tr-row{display:grid;grid-template-columns:56px 1fr 64px;gap:9px;align-items:center;margin:5px 0}'+
+    '.uins-tr-y{font-size:11px;font-weight:700;color:var(--mu);text-align:right}'+
+    '.uins-tr-track{position:relative;height:20px;background:rgba(138,147,160,0.08);border-radius:5px}'+
+    '.uins-tr-zero{position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--bdr)}'+
+    '.uins-tr-bar{position:absolute;top:0;bottom:0;border-radius:4px}'+
+    '.uins-tr-v{font-size:11.5px;font-weight:800}'+
+    '.uins-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:640px){.uins-two{grid-template-columns:1fr}}'+
+    '.uins-side{border:1px solid var(--bdr);border-radius:11px;padding:13px 15px}'+
+    '.uins-side.bull{border-color:rgba(6,193,103,0.4);background:rgba(6,193,103,0.04)}'+
+    '.uins-side.bear{border-color:rgba(192,57,43,0.35);background:rgba(192,57,43,0.035)}'+
+    '.uins-side-h{font-size:12.5px;font-weight:800;margin-bottom:7px}.uins-side.bull .uins-side-h{color:#049a4f}.uins-side.bear .uins-side-h{color:#C0392B}'+
+    '.uins-side-d{font-size:11.5px;color:var(--navy);line-height:1.55}.uins-side-d b{font-weight:800}.uins-side-d i{color:var(--mu)}'+
+    '.uins-tl{font-size:12px;color:var(--navy);line-height:1.6;background:rgba(58,123,213,0.05);border-left:3px solid #3A7BD5;border-radius:8px;padding:11px 14px;margin-top:4px}.uins-tl b{font-weight:800}'+
+  '</style>';
+  h+='<div class="uins-hero"><div class="uins-hero-v">$12.9B</div>'+
+    '<div class="uins-hero-t">Uber quietly runs one of the largest in-house insurers you have never heard of — a <b>~$12.9B</b> book of claims reserves (Q1 2026). Its <b>float</b> helped power the cash-flow turnaround; and as Gross Bookings compound ~20% a year, insurance is finally becoming a <b>smaller slice</b> of the model.</div></div>';
+  // machine
+  h+='<div class="uins-h">The self-insurance machine</div>';
+  h+='<div class="uins-m">'+
+    '<div class="uins-mc"><div class="uins-mc-h">~95% self-insured</div><div class="uins-mc-d">Uber must carry commercial auto insurance on every trip. Instead of buying it all, it <b>retains most of the risk</b> and reinsures it into its own captive, <b>Aleka Insurance</b> (a wholly-owned Hawaii subsidiary) — effectively running its own insurer.</div></div>'+
+    '<div class="uins-mc"><div class="uins-mc-h">Reserves = future claims</div><div class="uins-mc-d">It books an actuarial liability for <b>unpaid claims</b> (reported + incurred-but-not-reported) — an expense accrued now, paid in cash over years. That timing gap is the <b>float</b>.</div></div>'+
+    '<div class="uins-mc"><div class="uins-mc-h">It invests the float</div><div class="uins-mc-d">Uber holds and invests the reserved cash until claims settle — interest-free capital, Buffett-style. This is why <b>cash flow ran ahead of accounting profit</b> through the turnaround.</div></div>'+
+  '</div>';
+  // reserves
+  h+='<div class="uins-h">The reserve build — nearly tripled in two years</div>';
+  h+=RES.map(function(r){ var w=Math.max(3,r[1]/resMax*100); return '<div class="uins-bar"><div class="uins-bar-y">'+r[0]+'</div><div class="uins-bar-t"><div class="uins-bar-f" style="width:'+w.toFixed(1)+'%"></div></div><div class="uins-bar-v">$'+r[1].toFixed(1)+'B</div></div>'; }).join('');
+  h+='<div class="uins-cfo">The reserve <b>build</b> (claims accrued &gt; claims paid) flows straight into operating cash flow: <b>+$251M (2023) · +$399M (2024) · +$658M (2025)</b> — a recurring tailwind to reported cash generation, and the mechanism the bear case attacks.</div>';
+  // turnaround
+  h+='<div class="uins-h">From cash-burner to cash-compounder</div>';
+  h+='<div class="uins-tr">'+OI.map(function(o){ var v=o[1], neg=v<0, w=Math.abs(v)/oiMax*50, col=neg?'#C0392B':'#049a4f';
+    var bar='<div class="uins-tr-bar" style="'+(neg?'right:50%;':'left:50%;')+'width:'+w.toFixed(1)+'%;background:'+col+';opacity:.85"></div>';
+    return '<div class="uins-tr-row"><div class="uins-tr-y">'+o[0]+'</div><div class="uins-tr-track"><div class="uins-tr-zero"></div>'+bar+'</div><div class="uins-tr-v" style="color:'+col+';text-align:'+(neg?'left':'right')+'">'+(neg?'−$'+Math.abs(v).toFixed(2):'+$'+v.toFixed(2))+'B</div></div>'; }).join('')+'</div>';
+  h+='<div class="uins-cfo" style="border-left-color:#049a4f;background:rgba(6,193,103,0.06)"><b>GAAP operating income</b> swung from <b>−$3.5B (2021) to +$5.6B (2025)</b> — Q2 2023 was Uber&rsquo;s first-ever operating profit. Free cash flow scaled <b>$3.4B → $6.9B → $9.8B</b> (2025, +42%, a record $2.8B in Q4), earning an <b>investment-grade rating</b> and a <b>$20B buyback</b>.</div>';
+  // debate
+  h+='<div class="uins-h">Is the cash real? The debate</div>';
+  h+='<div class="uins-two">'+
+    '<div class="uins-side bull"><div class="uins-side-h">Bull — the cash is real</div><div class="uins-side-d">FY2025 free cash flow of <b>$9.8B (+42%)</b>, ~112% of Adj. EBITDA. An <b>investment-grade rating</b>, the first-ever buyback ($20B authorized, ~$3B/quarter), and ~$10B cumulative FCF. Asset-light growth converts almost fully to cash.</div></div>'+
+    '<div class="uins-side bear"><div class="uins-side-h">Bear — a float-fed mirage</div><div class="uins-side-d">Cedar Street argues that stripping stock-comp and the reserve build cuts &ldquo;real&rdquo; FCF from ~$8.6B to <b>~$4.1B</b>, calling Uber <b>&ldquo;an unregulated, under-capitalized insurance company.&rdquo;</b> Uber also <b>pulled ~$4.1B out of reserves into cash in 2024–25</b>; Consumer Watchdog&rsquo;s 2026 &ldquo;License to Kill&rdquo; report alleges it is trimming accident liability to help fund robotaxis. <i>Contested activist/analyst framings, not Uber&rsquo;s position.</i></div></div>'+
+  '</div>';
+  // smaller slice
+  h+='<div class="uins-h">Why it is becoming a smaller slice</div>';
+  h+='<div class="uins-tl">Insurance keeps rising in absolute dollars (more trips + premium inflation), and Uber&rsquo;s cost-of-revenue growth has repeatedly been blamed on it. But it is being <b>outgrown</b>: Gross Bookings compound ~20%+/yr while Uber pushes insurance down via <b>safety tech, in-house claims (Aleka) and tort reform</b> — insurance CPI cooled from a ~20%+ peak to <b>~11%</b> (Dec 2024), with wins like Georgia tort reform and California UM/UIM limit cuts. Net: a large, cash-generative liability that is slowly shrinking as a share of the whole.</div>';
+  h+='<div class="ov-foot" style="margin-top:14px">Reserves and operating results from Uber 10-Ks / Q1 2026 10-Q; the reserve&rarr;cash-flow contribution is from the Summit dataset. Uber does <b>not</b> disclose a clean standalone &ldquo;insurance % of Gross Bookings,&rdquo; so that trend is directional/inferred from cost-of-revenue commentary. The &ldquo;FCF mirage&rdquo; and reserve-raid narratives are <b>attributed</b> analyst/activist framings (Cedar Street; Consumer Watchdog), not Uber&rsquo;s own accounting characterization.</div>';
+  return h;
+}
 function html(c){
   var h='<div class="ov ov-uber" data-brand="UBER">';
   h+='<div class="ovt-tabs">'+
@@ -762,16 +888,20 @@ function html(c){
     '<button type="button" class="ovt-tab" data-ovt="mobility">Mobility</button>'+
     '<button type="button" class="ovt-tab" data-ovt="delivery">Delivery</button>'+
     '<button type="button" class="ovt-tab" data-ovt="uberone">Uber One</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="insurance">Insurance &amp; FCF</button>'+
     '<button type="button" class="ovt-tab" data-ovt="model">Model vs. Reality</button>'+
     '<button type="button" class="ovt-tab" data-ovt="valuation">Valuation</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="mgmt">Management</button>'+
     '<button type="button" class="ovt-tab" data-ovt="calls">Earnings Narrative</button>'+
   '</div>';
   h+='<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
   h+='<div class="ovt-pane" data-ovt="mobility" hidden>'+mobilityBody(c)+'</div>';
   h+='<div class="ovt-pane" data-ovt="delivery" hidden>'+deliveryBody(c)+'</div>';
   h+='<div class="ovt-pane" data-ovt="uberone" hidden>'+uberOneBody(c)+'</div>';
+  h+='<div class="ovt-pane" data-ovt="insurance" hidden>'+insuranceBody()+'</div>';
   h+='<div class="ovt-pane" data-ovt="model" hidden>'+modelBody(c)+'</div>';
   h+='<div class="ovt-pane" data-ovt="valuation" hidden>'+UBER_VAL.body()+'</div>';
+  h+='<div class="ovt-pane" data-ovt="mgmt" hidden>'+UBER_MGMT.body()+'</div>';
   h+='<div class="ovt-pane" data-ovt="calls" hidden>'+callsBody()+'</div>';
   h+='<div class="ov-modal-back" id="ubModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
     '<button class="ov-modal-x" id="ubModalX" aria-label="Close">×</button>'+
@@ -1030,6 +1160,7 @@ function showOvt(root,key){
   if(key==='uberone') requestAnimationFrame(buildUberOneCharts);
   if(key==='model')    requestAnimationFrame(buildModelTab);
   if(key==='valuation') requestAnimationFrame(function(){ UBER_VAL.init(root); });
+  if(key==='mgmt') requestAnimationFrame(function(){ UBER_MGMT.init(root); });
 }
 function wireModal(root){
   var back=root.querySelector('#ubModalBack'), mT=root.querySelector('#ubModalT'), mB=root.querySelector('#ubModalB'); if(!back) return;

@@ -8,6 +8,7 @@
 // No live API calls — every figure is baked from the model snapshot + cited filings.
 
 import { makeValuation } from './valuation.js';
+import { makeManagement } from './management.js';
 
 // Interactive "Scenario → price target" calculator (Valuation tab). Fundamentals from
 // the Summit DCF (FY2025 actuals; FY2026E estimate). Net cash & price are editable
@@ -27,6 +28,102 @@ var LYFT_VAL = makeValuation({
   mult:{ evebitda:{min:4,max:16,def:7.6}, marginMin:4, marginMax:16 },
 });
 
+// Management roster (Management tab). Public-source bios; no ownership/trades.
+var LYFT_MGMT = makeManagement({
+  brand:'#EA0B8C',
+  lede:"Lyft runs a lean-but-real leadership team under CEO <b>David Risher</b>, who took over in 2023 and refocused the company on profitable growth. Its IR page publishes only the three named executive officers, but the operating bench is deeper. The founder era formally ended in <b>August 2025</b>: Logan Green and John Zimmer left the board and their super-voting shares collapsed to one-share-one-vote.",
+  execs:[
+    { id:'risher', lead:true, name:'David Risher', title:'Chief Executive Officer', since:'CEO since 2023', img:'img/leadership/lyft-risher.jpg',
+      line:"Turnaround CEO; ex-Amazon SVP US Retail; founded Worldreader.",
+      bio:"Chief Executive Officer and director since April 2023; on the board since 2021. Co-founded and led the nonprofit Worldreader. Prior: SVP US Retail at Amazon and GM at Microsoft. Princeton; Harvard MBA. Took a single large performance-RSU grant in 2023 and $0 new equity since; has pledged his bonus to charity." },
+    { id:'brewer', name:'Erin Brewer', title:'Chief Financial Officer', since:'CFO since 2023', img:'img/leadership/lyft-brewer.jpg',
+      line:"Ex-Charles Schwab, Atlassian and McKesson.",
+      bio:"Chief Financial Officer since July 2023. Prior: MD of Enterprise Finance at Charles Schwab; Head of Strategy & Finance at Atlassian; senior finance roles at McKesson. Purdue; Berkeley Haas MBA." },
+    { id:'llewellyn', name:'Lindsay Llewellyn', title:'Chief Legal & Business Officer', since:'In role since 2024 · at Lyft since 2014', img:'img/leadership/lyft-llewellyn.jpg',
+      line:"11-year Lyft veteran; GC with expanded business scope.",
+      bio:"Chief Legal & Business Officer and Corporate Secretary since July 2024; at Lyft since 2014, rising from litigation counsel to General Counsel. Scope expanded to include business and People functions after the President role was folded in. Prior: Winston & Strawn." },
+    { id:'rasmussen', name:'Dana Rasmussen', title:'Chief People Officer', since:'CPO since 2025',
+      line:"Ex-Chief People Officer of Stitch Fix.",
+      bio:"Chief People Officer since July 2025. Prior: Chief People & Culture Officer at Stitch Fix; HR leadership at Honor, Flywheel, Yahoo and Oracle." },
+    { id:'golden', name:'Jerry Golden', title:'Chief Policy Officer', since:'Since 2024',
+      line:"Runs policy; ex-Eventbrite, Internet Association.",
+      bio:"Chief Policy Officer since August 2024. Prior: policy leadership at Eventbrite, the Internet Association, Vanguard and the U.S. Chamber of Commerce. Based in Washington, D.C." },
+    { id:'smith', name:'Kevin S. Smith', title:'Chief Information Officer', since:'Since ~2023',
+      line:"Top tech exec (CIO); ex-CIO of Cloudera.",
+      bio:"Chief Information Officer (Lyft's top technology executive; there is currently no C-level CTO). 30+ years in IT; previously CIO at Cloudera and senior IT roles at Aurora, Stripe and Twitch." },
+    { id:'bird', name:'Jeremy Bird', title:'EVP, Global Growth', since:'Long-tenured',
+      line:"Leads global growth; ran the 2026 London launch; ex-Obama field director.",
+      bio:"EVP, Global Growth; a long-tenured leader who previously served as Chief Policy Officer and led Driver Experience. Drove Lyft's April 2026 London black-cab (international) launch. Former national field director for the Obama 2012 campaign." },
+    { id:'kelman', name:'Jody Kelman', title:'Head of Lyft Autonomous', since:'Long-tenured',
+      line:"Leads Lyft Autonomous — the AV push.",
+      bio:"Leads Lyft Autonomous, the company's autonomous-vehicle strategy — central to the 2026 robotaxi push (May Mobility, Mobileye, Baidu partnerships). Previously led Lyft's rider/customer product organization." },
+    { id:'patil', name:'Siddharth Patil', title:'EVP, Data Science', since:'Long-tenured',
+      line:"Leads data science & marketplace efficiency.",
+      bio:"EVP, Data Science; a long-tenured technical leader overseeing data science and marketplace efficiency (matching, pricing, incentives)." },
+  ],
+  board:[
+    { name:'Sean Aggarwal', chair:true, independent:true, role:'Independent Chair · Co-Founder & Chairman of Borderless AI · chairs Nominating & Governance.' },
+    { name:'David Risher', dual:true, independent:false, role:'Chief Executive Officer.' },
+    { name:'Dave Stephenson', independent:true, role:'Chief Business Officer, Airbnb · chairs Audit.' },
+    { name:'David Lawee', independent:true, role:'Co-Founder of Crucible Labs; ex-Google (CapitalG) · chairs Compensation.' },
+    { name:'Janey Whiteside', independent:true, role:'Chief Growth Officer, Consello · Compensation, Nom & Gov.' },
+    { name:'Jill Beggs', independent:true, role:'EVP & CEO of Reinsurance, Everest Group · Audit.' },
+    { name:'Betsey Stevenson', independent:true, role:'Economist, University of Michigan (ex-CEA) · Audit, Nom & Gov.' },
+    { name:'Deborah Hersman', independent:true, role:'Ex-Chief Safety Officer at Waymo; former NTSB Chair · Nom & Gov.' },
+  ],
+  boardNote:'7 of 8 independent; independent Chair separate from the CEO.',
+  gov:[
+    { h:'Share & voting', d:"Formerly dual-class; now <b>single-class, one share one vote</b>. On Aug 15, 2025 the founders' high-vote Class B (20 votes/share) converted 1-for-1 into Class A — a <b>voluntary</b> conversion tied to their board exit (Lyft's 2019 IPO notoriously had no sunset clause). Founders' combined vote fell from ~30% to under 2%." },
+    { h:'Board · independence & structure', d:"<b>7 of 8 directors independent</b> — only the CEO is not. Independent Chair (Sean Aggarwal), separate from the CEO. The board is <b>classified / staggered</b> (three-year terms), not annual." },
+    { h:'CEO pay · FY2025', d:"David Risher: <b>$2.8M</b> total — and <b>out-earned by both the CFO and the CLO</b>, because he took <b>$0 in new equity</b>. On becoming CEO in 2023 he received a single <b>12.25M-share performance RSU</b> vesting only on stock-price hurdles (base ~$725K — not the '$1 salary' myth). He pledged his bonus to charity and buys stock in the open market. Pay ratio ~18:1." },
+  ],
+  foot:"The three statutory officers (Risher, Brewer, Llewellyn) are from Lyft’s 2026 proxy; the wider operating team is from Lyft’s newsroom and public sources (role confidence varies below the C-suite). Board, committees and governance per the 2026 proxy. Headshots from Lyft IR. Ownership and insider trades live in the Pillars → Management tab.",
+});
+
+function maBody(c){
+  var DEALS=[
+    { y:'2018', n:'Motivate', px:'~$250M', d:"Bought America's largest bikeshare operator (~80% of US trips) — Citi Bike, Divvy, Bay Wheels. Instant micromobility scale." },
+    { y:'2018', n:'Blue Vision Labs', px:'~$72M+', d:"London AR / computer-vision mapping startup — Lyft's first acquisition, fuel for its (later-sold) self-driving unit." },
+    { y:'2022', n:'PBSC Urban Solutions', px:'~$160M', d:"Montréal bikeshare hardware & software maker — vertical integration of the bike business (docks, bikes, fleet software)." },
+    { y:'2025', n:'FREENOW', px:'€175M', big:true, d:"Bought from BMW & Mercedes-Benz — Lyft's <b>first operation outside North America</b>: 150+ cities across 9 European countries; nearly doubles TAM to &gt;300B trips/yr." },
+    { y:'2025', n:'TBR Global Chauffeuring', px:'£83M', big:true, d:"UK premium chauffeur operator across 120 countries — pushes Lyft into <b>global luxury</b> ground transport." },
+  ];
+  var TGT=[
+    { h:'Gross Bookings CAGR', t:'~15%', prog:'FY2025: $18.5B, +15% YoY', pct:100, note:'on track' },
+    { h:'Adj. EBITDA margin (of GB)', t:'~4% by FY27', prog:'1.6% (2023) → 2.9% (2025) → 4% target', pct:72, note:'climbing' },
+    { h:'FCF conversion of Adj. EBITDA', t:'>90% / yr', prog:'2025–27; FY25 Adj. EBITDA $529M (+38%)', pct:100, note:'on track' },
+  ];
+  var h='<style>'+
+    '.lma-lede{font-size:13px;line-height:1.6;color:var(--navy);margin:0 0 14px}.lma-lede b{font-weight:800}'+
+    '.lma-h{font-size:13px;font-weight:800;color:var(--navy);margin:20px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--bdr)}'+
+    '.lma-deal{display:grid;grid-template-columns:52px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--bdr)}'+
+    '.lma-y{font-size:12px;font-weight:800;color:#EA0B8C}'+
+    '.lma-deal-h{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:3px}'+
+    '.lma-n{font-size:13px;font-weight:800;color:var(--navy)}'+
+    '.lma-px{font-size:10.5px;font-weight:800;color:#fff;background:#EA0B8C;border-radius:20px;padding:1px 8px}'+
+    '.lma-pivot{background:rgba(234,11,140,0.06);border-left:3px solid #EA0B8C;border-radius:8px;padding:11px 14px;font-size:12px;color:var(--navy);line-height:1.6;margin-top:4px}.lma-pivot b{font-weight:800}'+
+    '.lma-d{font-size:11.5px;color:var(--navy);line-height:1.5}.lma-d b{font-weight:800}'+
+    '.lma-av{font-size:12px;color:var(--navy);line-height:1.6;background:rgba(58,123,213,0.05);border-left:3px solid #3A7BD5;border-radius:8px;padding:11px 14px;margin-top:12px}.lma-av b{font-weight:800}'+
+    '.lma-tgt{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:11px}'+
+    '.lma-tc{border:1px solid var(--bdr);border-top:2px solid #EA0B8C;border-radius:11px;padding:13px 15px}'+
+    '.lma-tc-h{font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.4px}'+
+    '.lma-tc-t{font-size:22px;font-weight:900;color:#EA0B8C;line-height:1.1;margin:3px 0 8px}'+
+    '.lma-tc-bar{height:7px;background:rgba(138,147,160,0.15);border-radius:5px;overflow:hidden;margin-bottom:6px}'+
+    '.lma-tc-f{height:100%;background:#EA0B8C;border-radius:5px}'+
+    '.lma-tc-p{font-size:11px;color:var(--navy);line-height:1.45}.lma-tc-n{font-size:10px;font-weight:800;color:#0a8f0a;text-transform:uppercase;letter-spacing:.4px}'+
+  '</style>';
+  h+='<p class="lma-lede">Two things give the Lyft story punch beyond the US rideshare duopoly: an <b>acquisition-led pivot into Europe and luxury</b>, and a set of <b>public financial targets</b> management put its name behind at its first Investor Day.</p>';
+  // deals
+  h+='<div class="lma-h">Acquisitions — the diversification pivot</div>';
+  h+=DEALS.map(function(d){ return '<div class="lma-deal"><div class="lma-y">'+d.y+'</div><div><div class="lma-deal-h"><span class="lma-n">'+d.n+'</span><span class="lma-px">'+d.px+'</span></div><div class="lma-d">'+d.d+'</div></div></div>'; }).join('');
+  h+='<div class="lma-pivot"><b>2025 was the pivot.</b> In a single year Lyft bought its way into <b>Europe (FreeNow, €175M)</b> and <b>luxury (TBR, £83M)</b> — its first steps beyond North American rideshare, and a clear diversification of a business long boxed into one market against one rival.</div>';
+  h+='<div class="lma-av"><b>On autonomy, Lyft is deliberately asset-light.</b> It <b>sold</b> its self-driving unit (Level 5) to Toyota for $550M in 2021 and has <b>never acquired an AV company</b> — every robotaxi tie-up (May Mobility, live in Atlanta; Mobileye in Dallas; Baidu in Europe; Waymo in Nashville) is a partnership, often with a third party (e.g. Marubeni) financing the vehicles. It supplies demand, not capex.</div>';
+  // targets
+  h+='<div class="lma-h">The 2024 Investor Day targets (FY2024 → FY2027)</div>';
+  h+='<div class="lma-tgt">'+TGT.map(function(t){ return '<div class="lma-tc"><div class="lma-tc-h">'+t.h+'</div><div class="lma-tc-t">'+t.t+'</div><div class="lma-tc-bar"><div class="lma-tc-f" style="width:'+t.pct+'%"></div></div><div class="lma-tc-p">'+t.prog+'</div><div class="lma-tc-n" style="margin-top:5px">'+t.note+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="ov-foot" style="margin-top:12px">Targets from Lyft&rsquo;s first Investor Day (June 2024), for FY2024&rarr;FY2027; <b>reaffirmed, not revised</b> — management says it is &ldquo;on track.&rdquo; FY2025 actuals (Gross Bookings $18.5B, +15%; Adj. EBITDA $529M, +38%) are consistent with the trajectory. Deal values marked &ldquo;~&rdquo; are reported/estimated where terms were undisclosed (Motivate, PBSC); FreeNow €175M and TBR £83M are disclosed. Sources: Lyft press releases &amp; SEC 8-Ks.</div>';
+  return h;
+}
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ─── Formatting helpers ──────────────────────────────────────────────────────
@@ -824,18 +921,22 @@ function html(c){
   h += '<div class="ovt-tabs">'+
     '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
     '<button type="button" class="ovt-tab" data-ovt="strategy">Strategy</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="ma">M&amp;A &amp; Targets</button>'+
     '<button type="button" class="ovt-tab" data-ovt="growth">Rides &amp; Riders</button>'+
     '<button type="button" class="ovt-tab" data-ovt="unit">Unit Economics</button>'+
     '<button type="button" class="ovt-tab" data-ovt="model">Model vs. Reality</button>'+
     '<button type="button" class="ovt-tab" data-ovt="valuation">Valuation</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="mgmt">Management</button>'+
     '<button type="button" class="ovt-tab" data-ovt="calls">Earnings Narrative</button>'+
   '</div>';
   h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="strategy" hidden>'+strategyBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="ma" hidden>'+maBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="growth" hidden>'+growthBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="unit" hidden>'+unitBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="model" hidden>'+modelBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="valuation" hidden>'+LYFT_VAL.body()+'</div>';
+  h += '<div class="ovt-pane" data-ovt="mgmt" hidden>'+LYFT_MGMT.body()+'</div>';
   h += '<div class="ovt-pane" data-ovt="calls" hidden>'+callsBody()+'</div>';
   // Modal scaffold (shared overview.css). Hidden until a milestone is tapped.
   h += '<div class="ov-modal-back" id="lyModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
@@ -1272,6 +1373,7 @@ function showOvt(root, key){
   if (key==='unit')     requestAnimationFrame(buildUnitTab);
   if (key==='model')    requestAnimationFrame(buildModelTab);
   if (key==='valuation') requestAnimationFrame(function(){ LYFT_VAL.init(root); });
+  if (key==='mgmt') requestAnimationFrame(function(){ LYFT_MGMT.init(root); });
 }
 
 // ─── Modal (milestone detail) ─────────────────────────────────────────────────

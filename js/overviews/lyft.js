@@ -227,6 +227,17 @@ function insuranceBody(c){
   h+='<div class="ov-foot" style="margin-top:14px">Coverage structure and the two-lever strategy are from Lyft’s June-2024 Investor Day (Insurance section, Max Feldman, VP Head of Risk); limits per Lyft/Uber driver-insurance pages. Share-of-fare percentages are Uber advocacy estimates (directional). Cost figures from Lyft FY2024 10-K and Uber disclosures. State frameworks re-index annually — verify current-year figures.</div>';
   return h;
 }
+function lyEnginesGlance(){
+  var E=[
+    {n:'Lyft Media', v:'$100M&rarr;$400M', d:'~100%-margin ad surfaces (in-app, in-car, email) by 2027', role:'drives margin', rc:'#1E9E62', rb:'rgba(30,158,98,0.12)'},
+    {n:'Partnerships', v:'~1 in 4 rides', d:'low-CAC demand borrowed from United, Chase, DoorDash&hellip;', role:'drives frequency', rc:'#3A7BD5', rb:'rgba(58,123,213,0.12)'},
+    {n:'Healthcare (NEMT)', v:'21 states', d:'payer-funded, recurring rides that do not move with the consumer cycle', role:'drives durability', rc:'#B8860B', rb:'rgba(184,134,11,0.14)'},
+    {n:'Membership', v:'Pink + Price Lock', d:'a paid tier + a surge hedge that lock riders in', role:'drives retention', rc:'#E6007A', rb:'rgba(230,0,122,0.12)'}
+  ];
+  var h='<style>.lmg-eng{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:2px 0 8px}@media(max-width:760px){.lmg-eng{grid-template-columns:1fr 1fr}}.lmg-eng-c{border:1px solid var(--bdr);border-radius:11px;padding:12px 13px;background:#fff}.lmg-eng-n{font-size:12.5px;font-weight:800;color:var(--navy)}.lmg-eng-v{font-size:17px;font-weight:900;margin:5px 0 3px;line-height:1.05}.lmg-eng-d{font-size:10.5px;color:var(--mu);line-height:1.4;min-height:42px}.lmg-eng-role{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:10px;padding:2px 9px;margin-top:8px}</style>';
+  h+='<div class="lmg-eng">'+E.map(function(e){ return '<div class="lmg-eng-c" style="border-top:3px solid '+e.rc+'"><div class="lmg-eng-n">'+e.n+'</div><div class="lmg-eng-v" style="color:'+e.rc+'">'+e.v+'</div><div class="lmg-eng-d">'+e.d+'</div><span class="lmg-eng-role" style="color:'+e.rc+';background:'+e.rb+'">'+e.role+'</span></div>'; }).join('')+'</div>';
+  return h;
+}
 function mediaBody(c){
   var SURF=[
     { n:'Sponsored Rides', d:'A brand subsidizes the ride, across every screen.', st:'Shipped' },
@@ -262,7 +273,8 @@ function mediaBody(c){
     '.lmg-hc-d{font-size:12px;color:var(--navy);line-height:1.6}.lmg-hc-d b{font-weight:800}'+
   '</style>';
   h+='<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--brand);margin:0 0 8px">Beyond the ride · the high-margin growth engines</div>';
-  h+='<p class="lmg-lede">Beyond the ride, Lyft is building three under-appreciated engines: a <b>high-margin advertising business</b>, a <b>partnership machine</b> that already touches ~1 in 4 rides, and a quietly large <b>healthcare-transport</b> franchise. This is where the margin and the durability come from.</p>';
+  h+='<p class="lmg-lede">Beyond the ride, Lyft runs <b>four higher-margin, more-durable engines</b> — each playing a distinct role in the 2027 model. Here they are <b>at a glance</b>, then in depth.</p>';
+  h+=lyEnginesGlance();
   // Lyft Media
   h+='<div class="lmg-h">Lyft Media — the ad engine</div>';
   h+='<div class="lmg-vision"><div class="lmg-vision-t">The vision, from the Investor Day</div>'+

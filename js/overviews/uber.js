@@ -619,6 +619,26 @@ function segParts(){
   h+='<div class="ov-diagram-cap" style="margin-top:11px">Mobility and Delivery are now <b>near-equal in size</b> — but Mobility still carries the profit (~2× the margin). Open the <b>Mobility</b> and <b>Delivery</b> tabs for each engine’s economics; <b>Uber One</b> binds them; Freight is optionality. <span class="ave-subh-note">FY2025 actuals — last full reported year.</span></div>';
   return h;
 }
+function uberArenaMap(){
+  var A=[
+    {a:'Mobility (rideshare)', r:'vs Lyft &middot; Grab &middot; Bolt &middot; Didi', pos:'Leads', pc:'#1E9E62', pb:'rgba(30,158,98,0.12)', read:'~<b>70%+</b> of US rides and the only global, multi-product player. Peers sit at the same ~30% take &mdash; scale &amp; the bundle are the moat, not price.'},
+    {a:'Delivery (food)', r:'vs DoorDash', pos:'Contests', pc:'#B8860B', pb:'rgba(184,134,11,0.14)', read:'<b>#2 in the US</b> (Eats ~22&ndash;25% vs DoorDash ~60%) &mdash; but <b>bigger internationally</b>, and margin is converging up on ads + scale.'},
+    {a:'Grocery &amp; retail', r:'vs Instacart &middot; Amazon &middot; DoorDash', pos:'Challenger', pc:'#3A7BD5', pb:'rgba(58,123,213,0.12)', read:'~<b>$12B</b> run-rate and growing fast &mdash; an Eats cross-sell, not the category leader yet.'},
+    {a:'Advertising', r:'vs the retail-media field', pos:'Rising', pc:'#3A7BD5', pb:'rgba(58,123,213,0.12)', read:'<b>&gt;$2B</b> run-rate, ~100% margin, +50%/yr &mdash; a fast-emerging profit pool hiding inside Delivery.'},
+    {a:'Autonomous (AV)', r:'vs Waymo &middot; Tesla', pos:'Hybrid bet', pc:'#6b7684', pb:'#eef2f7', read:'<b>Partner AND rival</b> &mdash; Waymo rides on the Uber app in some cities, on its own in others. The defining open question (see AV tab).'},
+    {a:'Freight', r:'vs digital brokerages', pos:'Optionality', pc:'#6b7684', pb:'#eef2f7', read:'Subscale, near-breakeven &mdash; kept for optionality, not a battle Uber must win.'}
+  ];
+  var h='<style>'+
+    '.uam-row{display:grid;grid-template-columns:1.1fr auto 1.5fr;gap:12px;align-items:center;border:1px solid var(--bdr);border-left:4px solid #ccc;border-radius:10px;padding:10px 13px;margin-bottom:8px}'+
+    '.uam-a{font-size:12.5px;font-weight:800;color:var(--navy)}.uam-r{display:block;font-size:10px;color:var(--mu);font-weight:600;margin-top:2px}'+
+    '.uam-pos{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:4px 12px;text-align:center;white-space:nowrap}'+
+    '.uam-read{font-size:11.5px;color:var(--navy);line-height:1.45}.uam-read b{font-weight:800}'+
+    '@media(max-width:640px){.uam-row{grid-template-columns:1fr;gap:6px}.uam-pos{justify-self:start}}'+
+  '</style>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 10px">Uber is #1 or #2 almost everywhere, so the useful question is not &ldquo;who is the peer&rdquo; but <b>where it leads, where it contests, and where it is only placing a bet</b> &mdash; arena by arena.</div>';
+  h+=A.map(function(x){ return '<div class="uam-row" style="border-left-color:'+x.pc+'"><div class="uam-a">'+x.a+'<span class="uam-r">'+x.r+'</span></div><div class="uam-pos" style="color:'+x.pc+';background:'+x.pb+'">'+x.pos+'</div><div class="uam-read">'+x.read+'</div></div>'; }).join('');
+  return h;
+}
 function overviewBody(c){
   var h='';
   h+='<div class="ov-snap">'+SNAPSHOT.map(function(p){ return '<div class="ov-snap-cell"><div class="ov-snap-k">'+esc(p[0])+'</div><div class="ov-snap-v">'+esc(p[1])+'</div></div>'; }).join('')+'</div>';
@@ -659,7 +679,9 @@ function overviewBody(c){
     '<div class="ov-fynote" style="margin-top:14px">Uber is <b>running ahead of all three</b> — bookings ~+20%/yr while free cash flow compounds far faster.</div>');
   h+=sec('History & Milestones', '<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>');
   h+=sec('M&A — what each deal changed in the financials', mnaTimeline());
-  h+=sec('Peers & Competitive Landscape',
+  h+=sec('Competitive Landscape — the arena battle map',
+    uberArenaMap()+
+    '<div class="ov-subh" style="margin-top:18px">The rivals up close</div>'+
     '<style>.ucomp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:2px 0 6px}.ucomp-card{border:1px solid var(--bdr);border-radius:10px;padding:14px 16px;background:var(--w)}.ucomp-top{display:flex;align-items:center;gap:11px;margin-bottom:9px}.ucomp-logo{width:34px;height:34px;border-radius:8px;border:1px solid var(--bdr);background:#fff;object-fit:contain;padding:5px;flex:none}.ucomp-n{font-size:14px;font-weight:800;color:var(--navy);line-height:1.2}.ucomp-arena{font-size:11px;color:var(--mu);font-weight:600;margin-top:2px}.ucomp-edge{font-size:12px;color:var(--mu);line-height:1.5}.ucomp-edge b{color:var(--navy)}@media(max-width:720px){.ucomp-grid{grid-template-columns:1fr}}</style>'+
     '<div class="ucomp-grid">'+PEERS.map(function(p){ return '<div class="ucomp-card"><div class="ucomp-top"><img class="ucomp-logo" src="https://logo.clearbit.com/'+p.dom+'" alt="'+esc(p.n)+'" loading="lazy" onerror="this.onerror=null;this.src=\'https://www.google.com/s2/favicons?domain='+p.dom+'&sz=64\'"><div><div class="ucomp-n">'+esc(p.n)+'</div><div class="ucomp-arena">'+esc(p.arena)+'</div></div></div><div class="ucomp-edge"><b>Uber’s edge —</b> '+p.edge+'</div></div>'; }).join('')+'</div>'+
     '<div class="ov-diagram-cap" style="margin-top:10px">'+PEER_NOTE+'</div>');
@@ -851,18 +873,53 @@ function uberOnePricing(){
   h+='<div class="ov-fynote" style="margin-top:8px"><b>A ~6× spread</b> ($1.75 India → $9.99 US) is the tell: Uber One is priced to local purchasing power, not flat globally. So <b>"50M members" is economically lopsided</b> — a US member is worth a multiple of an India member in reported dollars, and <b>FX drags the international side</b> (Q1 2026 bookings +14% reported vs ~+10% cc). Unit growth comes from the cheap end; reported value concentrates at the rich end. <span class="ave-subh-note">Official Uber pages, ~Jul 2026; FX/promotions move them.</span></div>';
   return h;
 }
+function uberOneEconomics(){
+  var h='<style>'+
+    '.uo-e-h{font-size:12.5px;font-weight:800;color:var(--navy);margin:16px 0 8px}'+
+    '.uo-track{position:relative;height:26px;background:#eef2f7;border-radius:14px;margin:28px 0 8px}'+
+    '.uo-fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#06C167,#049a4f);border-radius:14px}'+
+    '.uo-now{position:absolute;top:-22px;transform:translateX(-50%);font-size:10px;font-weight:800;color:#049a4f;white-space:nowrap}'+
+    '.uo-mk{position:absolute;top:-3px;bottom:-3px;width:3px;background:#12356B;border-radius:2px}'+
+    '.uo-mk span{position:absolute;top:-19px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:800;color:#12356B;white-space:nowrap}'+
+    '.uo-scale{display:flex;justify-content:space-between;font-size:10px;color:var(--mu)}'+
+  '</style>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 8px">One member who uses <b>rides + Eats + grocery</b> spends <b>~3&times;</b> a non-member and churns far less &mdash; that is how the multi-vertical bet actually pays off. But a new member is <b>underwater first</b>: the benefits (free delivery, credits) cost Uber for <b>~6 months</b> before the higher, stickier spend compounds.</div>';
+  // payback curve
+  h+='<div style="border:1px solid var(--bdr);border-radius:12px;background:#fff;padding:6px 4px 2px"><svg viewBox="0 0 640 190" role="img" aria-label="Uber One member payback curve" style="width:100%;height:auto;font-family:Inter,sans-serif">';
+  h+='<rect x="55" y="115" width="177" height="58" fill="rgba(192,57,43,0.07)"/>';
+  h+='<rect x="232" y="42" width="378" height="73" fill="rgba(6,193,103,0.07)"/>';
+  h+='<line x1="55" y1="115" x2="612" y2="115" stroke="#B8C0CA" stroke-width="1" stroke-dasharray="4 4"/>';
+  h+='<path d="M55 115 C 120 178, 182 178, 232 115 C 332 66, 470 54, 610 46" fill="none" stroke="#12356B" stroke-width="3"/>';
+  h+='<circle cx="232" cy="115" r="5" fill="#12356B"/>';
+  h+='<text x="143" y="150" text-anchor="middle" font-size="10" font-weight="800" fill="#C0392B">~6 months underwater</text>';
+  h+='<text x="143" y="163" text-anchor="middle" font-size="9" fill="#9a5a52">benefits cost &gt; member spend</text>';
+  h+='<text x="238" y="106" font-size="9.5" font-weight="800" fill="#12356B">breakeven ~mo 6</text>';
+  h+='<text x="452" y="78" text-anchor="middle" font-size="10.5" font-weight="800" fill="#06965A">then it compounds</text>';
+  h+='<text x="452" y="92" text-anchor="middle" font-size="9" fill="#3A7a57">3&times; spend &middot; ~35% stickier</text>';
+  h+='<text x="55" y="186" font-size="9" fill="#8A93A0">join</text>';
+  h+='<text x="232" y="186" text-anchor="middle" font-size="9" fill="#8A93A0">month 6</text>';
+  h+='<text x="610" y="186" text-anchor="end" font-size="9" fill="#8A93A0">18+ months</text>';
+  h+='</svg></div>';
+  h+='<div class="ave-subh-note" style="margin:5px 2px 0">Cumulative member contribution margin over time &mdash; illustrative of the disclosed &ldquo;~6-month payback, then LTV-positive&rdquo; dynamic.</div>';
+  // spend evidence
+  h+='<div class="uo-e-h">Monthly spend per user <span class="ave-subh-note" style="font-weight:600">(Summit deck, Dec 2024)</span></div>';
+  h+=mbars(UBERONE_SPEND);
+  // penetration runway
+  h+='<div class="uo-e-h">Penetration runway &mdash; where the growth is</div>';
+  h+='<div class="uo-track"><div class="uo-fill" style="width:25%"></div><div class="uo-now" style="left:25%">Uber One ~25%</div><div class="uo-mk" style="left:70%"><span>Amazon Prime ~70%</span></div></div>';
+  h+='<div class="uo-scale"><span>0% of monthly consumers</span><span>100%</span></div>';
+  h+='<div class="ov-fynote" style="margin-top:10px"><b>The re-rating math.</b> Members already drive <b>&gt;50% of combined bookings</b> at just <b>~25%</b> penetration of ~199M monthly consumers &mdash; vs <b>~70%</b> for Amazon Prime in US households. Every point of penetration converts <b>one-off transactions into recurring, higher-LTV spend</b>: same business, structurally better revenue quality. That is the multiple-expansion case.</div>';
+  return h;
+}
 function uberOneBody(c){
   var h='';
-  h+='<p class="ov-lede"><b>Uber One</b> is the paid membership that bundles rides + Eats + grocery. <b>50M+ members</b> (Q1 2026, ~+50% YoY) drive <b>&gt;50% of combined Mobility+Delivery gross bookings</b> and spend <b>~3×</b> more than non-members. Against 199M monthly active consumers, roughly <b>a quarter of the base</b> are members — and in the US, <b>&gt;35% of Mobility bookings</b> already run through them.</p>';
+  h+='<p class="ov-lede"><b>Uber One is the monetization engine of the whole platform</b> — the mechanism that turns &ldquo;go anywhere, get anything&rdquo; into <b>recurring, higher-LTV</b> revenue. <b>50M+ members</b> (Q1 2026, ~+50% YoY) drive <b>&gt;50% of combined Mobility+Delivery bookings</b> and spend <b>~3×</b> non-members; at ~199M monthly consumers, roughly <b>a quarter</b> are members — and in the US, <b>&gt;35% of Mobility bookings</b> already run through them.</p>';
   h+='<div class="ov-kpis">'+UBERONE_STAT.map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d muted">'+esc(k.s)+'</div></div>'; }).join('')+'</div>';
   h+=sec('Explosive Member Growth — 19M → 50M+ in ~2 years',
     '<div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartMembers"></canvas></div>'+
     '<div class="ave-subh-note" style="margin-top:4px">~20M members added in the last year alone · now live in <b>42 countries</b> (up from 28). "Don’t see it slowing down." — mgmt, Q1 2026</div>');
   h+=sec('Priced to the Planet — one membership, many prices', uberOnePricing());
-  h+=sec('Why Members Are Worth ~3×',
-    '<div class="ov-subh">Monthly spend per user <span class="ave-subh-note">(Summit deck, Dec 2024)</span></div>'+
-    mbars(UBERONE_SPEND)+
-    '<div class="ov-fynote" style="margin-top:10px"><b>The re-rating math.</b> Members spend ~3×, are far stickier, and already drive <b>&gt;50% of combined bookings</b>. At just ~<b>25% penetration</b> of monthly actives (vs Amazon Prime ~70% of US households), the ceiling is far off. Each point of penetration shifts revenue from one-off transactions to <b>recurring, higher-LTV</b> spend — same business, structurally better revenue quality.</div>');
+  h+=sec('The member economics — why one member is worth many', uberOneEconomics());
   h+=sec('The Cross-Sell Flywheel', '<div class="ov-callout"><div class="ov-tl-body"><b>"Go anywhere, get anything."</b> One demand graph cross-sells rides ⇄ eats ⇄ grocery. ~<b>40%</b> of users use multiple products; ~⅓ of Eats customers arrived through the Rides app (near-zero CAC). Each product the member adds <b>raises the cost of leaving</b> — not through lock-in (cancellation is easy, $9.99/mo) but because no competitor offers rides + food + grocery + hotels in one membership. That breadth-as-switching-cost is the structural moat.</div></div>');
   h+=sec('Platform Expansion',
     '<div class="ov-row"><div class="ov-row-k">Uber for Business</div><div class="ov-row-v">B2B corporate rides, meals & travel — >$5B of bookings, growing >2× faster than Mobility.</div></div>'+

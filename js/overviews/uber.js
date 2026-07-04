@@ -298,7 +298,7 @@ function chain(arr, detailKey, compact){ return '<div class="ov-chain">'+arr.map
   var attr=detailKey?' data-detail="'+detailKey+':'+i+'"':'';
   var more=detailKey?' <span class="ov-tl-more">tap ›</span>':'';
   var body=compact?'':'<div class="ov-chain-d">'+s.d+'</div>';
-  var thumb=s.img?'<div class="ov-chain-img"><img src="img/steps/'+s.img+'" alt="'+esc(s.t)+'" loading="lazy"></div>':'';
+  var thumb='';
   return '<div class="'+cls+'"'+attr+'>'+thumb+'<div class="ov-chain-n">'+(i+1)+'</div><div class="ov-chain-t">'+esc(s.t)+more+'</div>'+body+'</div>';
 }).join('')+'</div>'; }
 // Horizontal proportion bars (reuses shared .ov-mbars). rows = [label, pct, valueLabel, color].
@@ -368,7 +368,7 @@ var SC_SUPPLIERS = [
     impact:{ kind:'mixed', text:'The future of low-cost supply — but the <b>one group that can disintermediate Uber</b> (Waymo already runs its own app). Mostly strategic/equity ties, not vendor bills. Uber’s hedge: aggregate 30+ so no single AV owns the demand.' } },
   { h:'Tech & Cloud', tag:'the plumbing',
     role:'Cloud hosting, mapping, messaging and outsourced engineering.',
-    players:[['Oracle','oracle.com'],['HCLTech','hcltech.com'],['Adobe','adobe.com'],['Twilio','twilio.com'],['TomTom','tomtom.com']],
+    players:[['Oracle','oracle.com'],['HCLTech','hcl.com'],['Adobe','adobe.com'],['Twilio','twilio.com'],['TomTom','tomtom.com']],
     impact:{ kind:'good', text:'Keeps Uber <b>asset-light</b> with strikingly low disclosed spend (HCL $127M, Oracle $55M are the only big bills). Commoditized inputs — little leverage over Uber.' } },
   { h:'Payments & Fintech', tag:'money in & out',
     role:'Move money in (rider payments) and out (driver & courier payouts).',
@@ -720,7 +720,7 @@ function mobilityBody(c){
   h+='<p class="ov-lede"><b>Mobility</b> — ridesharing in ~70 countries, Uber’s profit engine (~<b>$97B</b> gross bookings FY2025). <b>Where it came from:</b> the post-COVID recovery doubled trips from the 2020 trough. <b>Where it’s going:</b> the barbell (low-cost + premium), insurance savings, and AV as hybrid supply. <b>Why believe:</b> the Model vs. Reality tab shows Uber consistently beating its own Mobility-GB estimates, take rate holding ~30%, and US trip growth <i>accelerating</i> as insurance costs fall.</p>';
   h+=sec('The Barbell — grow both ends, lean away from the middle', barbellDiagram());
   h+=sec('How a Trip Makes Money — one $10 ride',
-    '<style>.ov-chain-img{height:78px;margin-bottom:8px;border-radius:8px;overflow:hidden;background:#eef2f7}.ov-chain-img img{width:100%;height:100%;object-fit:cover;display:block}.ov-gal-img{width:100%;height:300px;object-fit:cover;border-radius:10px;display:block;background:#eef2f7}.ov-gal-cap{font-size:12.5px;color:var(--navy);line-height:1.6;margin:12px 0}.ov-gal-nav{display:flex;align-items:center;justify-content:space-between;gap:12px}.ov-gal-btn{font-size:22px;font-weight:800;line-height:1;border:1px solid var(--bdr);background:#fff;border-radius:8px;min-width:46px;height:40px;cursor:pointer;color:var(--navy)}.ov-gal-btn:hover{background:#10141A;color:#fff;border-color:#10141A}.ov-gal-count{font-size:11px;color:var(--mu);font-weight:700}</style><p class="ov-lede" style="margin:0 0 12px">Six steps of a Mobility trip — <b>tap any step for a photo + the detail</b>, then use ‹ › to move through the trip. Below: where the $10 lands.</p>'+
+    '<style>.ov-gal-cap{font-size:12.5px;color:var(--navy);line-height:1.6;margin:12px 0}.ov-gal-nav{display:flex;align-items:center;justify-content:space-between;gap:12px}.ov-gal-btn{font-size:22px;font-weight:800;line-height:1;border:1px solid var(--bdr);background:#fff;border-radius:8px;min-width:46px;height:40px;cursor:pointer;color:var(--navy)}.ov-gal-btn:hover{background:#10141A;color:#fff;border-color:#10141A}.ov-gal-count{font-size:11px;color:var(--mu);font-weight:700}</style><p class="ov-lede" style="margin:0 0 12px">Six steps of a Mobility trip — <b>tap any step for a photo + the detail</b>, then use ‹ › to move through the trip. Below: where the $10 lands.</p>'+
     chain(TRIP_FLOW,'trip',true)+
     '<div class="ov-grid2" style="margin-top:18px"><div><div class="ov-subh">Where every $10 goes</div>'+mbars(TRIP_SPLIT)+'</div><div><div class="ov-subh">…and Uber’s ~$3.00 take</div>'+mbars(TRIP_TAKE)+'</div></div>'+
     '<div class="ov-fynote" style="margin-top:12px"><b>~$0.75 of every $10 trip converts to cash</b> (incl. the ~$0.35 Aleka insurance float). <span class="ave-subh-note">Illustrative — Summit deck, Dec 2024.</span></div>');
@@ -1366,7 +1366,7 @@ function wireModal(root){
   function openM(t,b){ mT.innerHTML=t; mB.innerHTML=b; back.hidden=false; requestAnimationFrame(function(){ back.classList.add('on'); }); document.addEventListener('keydown', onEsc); }
   function closeM(){ galIdx=-1; back.classList.remove('on'); document.removeEventListener('keydown', onEsc); setTimeout(function(){ back.hidden=true; }, 180); }
   function galBody(i){ var s=TRIP_FLOW[i], n=TRIP_FLOW.length, pv=(i-1+n)%n, nx=(i+1)%n;
-    return '<div class="ov-gal"><img class="ov-gal-img" src="img/steps/'+s.img+'" alt="'+esc(s.t)+'"><div class="ov-gal-cap">'+s.d+'</div>'+
+    return '<div class="ov-gal"><div class="ov-gal-cap">'+s.d+'</div>'+
       '<div class="ov-gal-nav"><button type="button" class="ov-gal-btn" data-gnav="'+pv+'" aria-label="previous">\u2039</button>'+
       '<span class="ov-gal-count">'+(i+1)+' / '+n+'</span>'+
       '<button type="button" class="ov-gal-btn" data-gnav="'+nx+'" aria-label="next">\u203a</button></div></div>'; }

@@ -173,6 +173,7 @@ function insuranceBody(c){
   var lcecss='';
   for(var ci=0;ci<LCE.length;ci++){ lcecss+='#lce-'+ci+':checked~.lce-rail label[for="lce-'+ci+'"] .lce-bar{background:#E6007A}#lce-'+ci+':checked~.lce-rail label[for="lce-'+ci+'"] .lce-lbl{color:#E6007A}#lce-'+ci+':checked~.lce-panels .lce-panel[data-i="'+ci+'"]{display:block}'; }
   h+='<div class="lins-h">The coverage &mdash; it escalates with the app state <span style="font-size:10px;font-weight:600;color:var(--mu)">(tap a state)</span></div>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 10px">Rideshare insurance runs on the industry-standard <b>3-period model</b> &mdash; your coverage (and its cost) depend on <b>what the app is doing</b>. The bars show coverage <b>escalating</b> from personal (app off) to Lyft&rsquo;s full <b>$1M</b> commercial policy once a rider is aboard, then dropping back at drop-off. <b>Tap any phase</b> for who pays and the limits.</div>';
   h+='<style>.lce-in{display:none}.lce-rail{display:flex;align-items:flex-end;gap:6px;height:150px;padding:0 2px;border-bottom:2px solid var(--bdr)}.lce-step{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;cursor:pointer;gap:6px}.lce-barwrap{width:100%;flex:1;display:flex;align-items:flex-end}.lce-bar{width:100%;background:#c9d2dc;border-radius:6px 6px 0 0;transition:.2s}.lce-step:hover .lce-bar{background:#f2a8cd}.lce-lbl{font-size:10px;font-weight:800;color:var(--mu);text-align:center;line-height:1.1}.lce-panel{display:none;border:1px solid var(--bdr);border-left:3px solid #E6007A;border-radius:10px;padding:12px 14px;margin-top:10px;animation:lcefade .25s ease}@keyframes lcefade{from{opacity:0;transform:translateY(4px)}to{opacity:1}}.lce-badge{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#E6007A}.lce-lim{font-size:20px;font-weight:900;color:var(--navy);margin:4px 0 2px}.lce-inc{font-size:12px;color:var(--navy);font-weight:700}.lce-note{font-size:11.5px;color:var(--mu);line-height:1.5;margin-top:6px}'+lcecss+'</style>';
   h+='<div class="lce">';
   for(var cj=0;cj<LCE.length;cj++){ h+='<input class="lce-in" type="radio" name="lcestate" id="lce-'+cj+'"'+(cj===2?' checked':'')+'>'; }
@@ -526,15 +527,15 @@ var PVIC_CHAIN=[
 
 // ─── M&A — terms & what each deal added (clickable cards, key = `mna:<n>`) ─────
 var MNA=[
-  { n:'Motivate', fp:'Created the <b>bikeshare business</b> — Citi Bike alone did 46M+ rides in 2025; a non-rideshare revenue leg.', y:'2018', deal:'~$250M', terms:'cash (est.)', own:'Operating', cat:'Bikeshare', big:true,
+  { n:'Motivate', val:'the US bikeshare leader &mdash; Citi Bike alone does <b>46M+ rides a year</b>', fp:'Created the <b>bikeshare business</b> — Citi Bike alone did 46M+ rides in 2025; a non-rideshare revenue leg.', y:'2018', deal:'~$250M', terms:'cash (est.)', own:'Operating', cat:'Bikeshare', big:true,
     detail:'<b>Terms:</b> ~$250M (press estimate — never confirmed by Lyft); closed late 2018.<br><br><b>What it added:</b> the largest US bikeshare operator — <b>Citi Bike, Divvy, Bay Wheels</b> and more.<br><br><b>Status:</b> still operating (Lyft explored a sale ~2023 at a ~$500M valuation but retained it). Citi Bike did 46M+ rides in 2025.' },
-  { n:'Halo Cars', fp:'<b>Seeded Lyft Media</b> — now a ~<b>$100M run-rate</b> ad business at ~100% margin; the highest-margin growth engine.', y:'2020', deal:'undisclosed', terms:'—', own:'Integrated', cat:'Advertising',
+  { n:'Halo Cars', val:'<b>Lyft Media</b> &mdash; a ~<b>$100M</b>, ~100%-margin ad business, from an undisclosed deal', fp:'<b>Seeded Lyft Media</b> — now a ~<b>$100M run-rate</b> ad business at ~100% margin; the highest-margin growth engine.', y:'2020', deal:'undisclosed', terms:'—', own:'Integrated', cat:'Advertising',
     detail:'<b>Terms:</b> undisclosed (Feb 2020).<br><br><b>What it added:</b> car-top digital advertising — the seed of <b>Lyft Media</b>.<br><br><b>Status:</b> integrated; Lyft Media is now ~$100M run-rate.' },
-  { n:'Flexdrive', fp:'The fleet behind <b>Express Drive</b> — driver car rentals that expand driver supply.', y:'2020', deal:'~$20M', terms:'cash + leases', own:'Integrated', cat:'Driver rentals',
+  { n:'Flexdrive', val:'the <b>Express Drive</b> fleet that keeps driver supply flexible', fp:'The fleet behind <b>Express Drive</b> — driver car rentals that expand driver supply.', y:'2020', deal:'~$20M', terms:'cash + leases', own:'Integrated', cat:'Driver rentals',
     detail:'<b>Terms:</b> ~$20M cash + assumed vehicle leases (Feb 2020).<br><br><b>What it added:</b> the fleet that powers <b>Express Drive</b> — car rentals <i>for drivers</i> (not riders).<br><br><b>Status:</b> integrated subsidiary; ongoing.' },
-  { n:'PBSC Urban Solutions', fp:'Bikeshare <b>hardware &amp; tech</b> (~95k bikes) → <b>Lyft Urban Solutions</b>, a B2B revenue line.', y:'2022', deal:'~$160M', terms:'cash', own:'Integrated', cat:'Bikeshare tech',
+  { n:'PBSC Urban Solutions', val:'<b>Lyft Urban Solutions</b> &mdash; a global B2B bikeshare-tech line', fp:'Bikeshare <b>hardware &amp; tech</b> (~95k bikes) → <b>Lyft Urban Solutions</b>, a B2B revenue line.', y:'2022', deal:'~$160M', terms:'cash', own:'Integrated', cat:'Bikeshare tech',
     detail:'<b>Terms:</b> ~$160M (May 2022).<br><br><b>What it added:</b> bikeshare <b>hardware & technology</b> (~95k bikes deployed globally).<br><br><b>Status:</b> integrated as <b>Lyft Urban Solutions</b>.' },
-  { n:'FreeNow', fp:'The <b>first revenue outside North America</b> — European taxi and multimodal, ~<b>€1B annualized</b>.', y:'2025', deal:'~$197M', terms:'cash (€175M)', own:'Operating', cat:'Europe', big:true,
+  { n:'FreeNow', val:'Lyft&rsquo;s entire <b>international</b> footprint (~&euro;1B run-rate)', fp:'The <b>first revenue outside North America</b> — European taxi and multimodal, ~<b>€1B annualized</b>.', y:'2025', deal:'~$197M', terms:'cash (€175M)', own:'Operating', cat:'Europe', big:true,
     detail:'<b>Terms:</b> ~$197M / €175M; closed Jul 31 2025.<br><br><b>What it added:</b> a European taxi / multi-mobility app across ~9 countries — Lyft\'s <b>first expansion outside North America</b>; ~€1B annualized run-rate.<br><br><b>Status:</b> operating/integrating; one-app experience planned for 2027.' },
 ];
 
@@ -547,7 +548,7 @@ function chain(arr, detailKey){ return '<div class="ov-chain">'+arr.map(function
   var cls='ov-chain-step'+(s.payoff?' is-payoff':'')+(detailKey?' ov-clickable':'');
   var attr=detailKey?' data-detail="'+detailKey+':'+i+'"':'';
   var more=detailKey?' <span class="ov-tl-more">tap ›</span>':'';
-  var thumb=s.img?'<div class="ov-chain-img"><img src="img/steps/'+s.img+'" alt="'+esc(s.t)+'" loading="lazy"></div>':'';
+  var thumb='';
   return '<div class="'+cls+'"'+attr+'>'+thumb+'<div class="ov-chain-n">'+(i+1)+'</div><div class="ov-chain-t">'+esc(s.t)+more+'</div><div class="ov-chain-d">'+s.d+'</div></div>';
 }).join('')+'</div>'; }
 // Horizontal proportion bars (shared .ov-mbars). rows = [label, pct, valueLabel, color].
@@ -573,6 +574,7 @@ function mnaTimeline(){
     '.mnt-yr{font-size:11px;font-weight:800;color:var(--navy)}.mnt-cat{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--mu);background:#eef2f7;border-radius:10px;padding:1px 7px}'+
     '.mnt-n{font-size:12.5px;font-weight:800;color:var(--navy);margin:5px 0 4px}'+
     '.mnt-fp{font-size:11px;color:var(--navy);line-height:1.45}.mnt-fp b{font-weight:800}'+
+    '.mnt-val{font-size:10.5px;font-weight:700;color:#0a8f0a;background:rgba(10,143,10,0.07);border-radius:7px;padding:6px 9px;margin-top:7px;line-height:1.4}.mnt-val b{font-weight:800}'+
     '.mnt-more{font-size:10px;color:#c0006a;font-weight:700;margin-top:6px}'+
     '.mnt-axis{text-align:center;font-size:11.5px;color:var(--navy);background:linear-gradient(90deg,transparent,rgba(230,0,122,.08),transparent);border-top:1px dashed var(--bdr);border-bottom:1px dashed var(--bdr);padding:9px;margin:14px 0}.mnt-axis b{font-weight:800}.mnt-star{color:#E8A00C}'+
     '.mnt-punch{font-size:11.5px;color:var(--navy);line-height:1.6;background:#f6f8fa;border-left:3px solid #E6007A;border-radius:8px;padding:11px 14px;margin-top:14px}.mnt-punch b{font-weight:800}'+
@@ -582,13 +584,13 @@ function mnaTimeline(){
   h+='<div class="mnt-rail">'+acq.map(function(m){
     return '<div class="mnt-chip acq ov-clickable" data-detail="mna:'+esc(m.n)+'">'+
       '<div class="mnt-top"><span class="mnt-yr">'+esc(m.y)+'</span><span class="mnt-cat">'+esc(m.cat)+'</span></div>'+
-      '<div class="mnt-n">'+esc(m.n)+'</div><div class="mnt-fp">'+(m.fp||'')+'</div><div class="mnt-more">terms ›</div></div>'; }).join('')+'</div>';
+      '<div class="mnt-n">'+esc(m.n)+'</div><div class="mnt-fp">'+(m.fp||'')+'</div>'+(m.val?'<div class="mnt-val">→ Worth today: '+m.val+'</div>':'')+'<div class="mnt-more">terms ›</div></div>'; }).join('')+'</div>';
   h+='<div class="mnt-axis"><span class="mnt-star">★</span> 2024–25 — first full-year profit for Lyft and a record <b>$1.1B free cash flow</b>, where the asset-light bet pays off</div>';
   h+='<div class="mnt-h2 dv">↓ Divestiture — what it <b>shed</b> → asset-light discipline</div>';
   h+='<div class="mnt-rail">'+DIV.map(function(d){
     return '<div class="mnt-chip dv'+(d.big?' big':'')+'"><div class="mnt-top"><span class="mnt-yr">'+esc(d.y)+'</span></div>'+
       '<div class="mnt-n">'+d.n+'</div><div class="mnt-fp">'+d.fp+'</div></div>'; }).join('')+'</div>';
-  h+='<div class="mnt-punch"><b>What actually changed in the financials:</b> the acquisitions built the higher-margin <b>&ldquo;beyond the ride&rdquo; legs</b> — Lyft Media (~$100M, ~100% margin), Urban Solutions and Europe — that now carry the margin and growth story. And by <b>selling Level 5</b> instead of funding a self-driving arms race, Lyft kept billions of R&D off its P&L — the discipline behind the first profit and $1.1B FCF. Note: Waymo, May Mobility and Baidu are <b>partnerships, not acquisitions</b>.</div>';
+  h+='<div class="mnt-punch"><b>The value-add, in one line:</b> a <b>tiny ad-tech deal (Halo Cars)</b> became a <b>$100M business</b>, a bikeshare buy became <b>Citi Bike + a B2B tech line</b>, and <b>FreeNow is all of Europe</b> — the higher-margin &ldquo;beyond the ride&rdquo; engines now carrying the margin and growth story. Meanwhile <b>selling Level 5</b> kept billions of AV R&D off the P&L — the discipline behind the first profit and $1.1B FCF. (Waymo, May Mobility, Baidu are <b>partnerships, not acquisitions</b>.)</div>';
   return h;
 }
 // Dual-handle year slider (fill goes INSIDE the track — otherwise it renders as a solid block).
@@ -851,7 +853,7 @@ function overviewBody(c){
     '<div class="ov-chart-card"><div class="ov-chart-t">Adj. EBITDA <span>($M, FY · light = estimate)</span></div><div class="ov-chart-wrap"><canvas id="lyChartEbitda"></canvas></div></div>'+
   '</div>';
   h += sec('How Lyft Makes Money — follow a single ride',
-    '<style>.ov-chain-img{height:78px;margin-bottom:8px;border-radius:8px;overflow:hidden;background:#eef2f7}.ov-chain-img img{width:100%;height:100%;object-fit:cover;display:block}.ov-gal-img{width:100%;height:300px;object-fit:cover;border-radius:10px;display:block;background:#eef2f7}.ov-gal-cap{font-size:12.5px;color:var(--navy);line-height:1.6;margin:12px 0}.ov-gal-nav{display:flex;align-items:center;justify-content:space-between;gap:12px}.ov-gal-btn{font-size:22px;font-weight:800;line-height:1;border:1px solid var(--bdr);background:#fff;border-radius:8px;min-width:46px;height:40px;cursor:pointer;color:var(--navy)}.ov-gal-btn:hover{background:#E6007A;color:#fff;border-color:#E6007A}.ov-gal-count{font-size:11px;color:var(--mu);font-weight:700}</style><p class="ov-lede" style="margin:0 0 14px">A rideshare trip, end to end — <b>tap any step for a photo + detail</b>, then use ‹ › to move through the ride.</p>'+
+    '<style>.ov-gal-cap{font-size:12.5px;color:var(--navy);line-height:1.6;margin:12px 0}.ov-gal-nav{display:flex;align-items:center;justify-content:space-between;gap:12px}.ov-gal-btn{font-size:22px;font-weight:800;line-height:1;border:1px solid var(--bdr);background:#fff;border-radius:8px;min-width:46px;height:40px;cursor:pointer;color:var(--navy)}.ov-gal-btn:hover{background:#E6007A;color:#fff;border-color:#E6007A}.ov-gal-count{font-size:11px;color:var(--mu);font-weight:700}</style><p class="ov-lede" style="margin:0 0 14px">A rideshare trip, end to end — <b>tap any step for a photo + detail</b>, then use ‹ › to move through the ride.</p>'+
     chain(RIDE_FLOW,'ride')+
     '<div class="ov-sec-h ovt-store-h" style="margin-top:20px">Where each $ of a ride goes <span class="ave-subh-note">(Q1 2026, per ride ≈ $20.88)</span></div>'+
     mbars(RIDE_SPLIT)+
@@ -991,14 +993,14 @@ function strategyBody(c){
     '.lst-av{background:linear-gradient(180deg,rgba(230,0,122,0.05),transparent);border:1px solid var(--bdr);border-left:3px solid var(--brand);border-radius:11px;padding:13px 15px;font-size:12px;color:var(--navy);line-height:1.6}.lst-av b{font-weight:800}'+
   '</style>';
   h+='<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--brand);margin:0 0 8px">The core · is the marketplace healthy &amp; improving?</div>';
-  h+='<p class="ov-lede">Every pillar below ladders up to one line from Lyft’s June-2024 Investor Day: <b>&ldquo;customer obsession drives profitable growth.&rdquo;</b> The cash-machine turnaround (top of the Overview) is the <i>result</i> — this is the <b>operating system</b> that produced it, including the deliberate bet <i>not</i> to win the self-driving arms race.</p>';
+  h+='<p class="ov-lede">It all ladders up to Lyft’s June-2024 Investor Day line — <b>&ldquo;customer obsession drives profitable growth.&rdquo;</b> The turnaround (top of the Overview) is the <i>result</i>; this is the operating system behind it.</p>';
   // 1 - the arc
   var rows=function(side,idx){ return ARC.map(function(a){ return '<div class="lst-r"><span class="lst-rl">'+esc(a[0])+'</span><span class="lst-rv">'+a[idx]+'</span></div>'; }).join(''); };
   h+=sec('The turnaround — from → to',
     '<div class="lst-arc"><div class="lst-was"><div class="lst-ch">Was · 2022</div>'+rows('was',1)+'</div>'+
     '<div class="lst-arw">→</div>'+
     '<div class="lst-now"><div class="lst-ch">Now · 2025</div>'+rows('now',2)+'</div></div>'+
-    '<div class="lst-cap">The comeback is real — but it lives in <b>cash flow and riders, not yet the multiple</b>: the stock still trades far below its $72 IPO, and FY2025’s headline <b>$2.8B “net income” is mostly a one-time deferred-tax benefit</b>, not operating profit.</div>');
+    '<div class="lst-cap">Real — but it lives in <b>cash flow and riders, not the multiple yet</b>: the stock still sits far below its $72 IPO, and FY2025’s headline <b>$2.8B is mostly a one-time tax benefit</b>, not operating profit.</div>');
   // 2 - the playbook
   h+=sec('The playbook — the flywheel that compounds', lyFlywheel());
   // 3 - M&A through-line (single home; clickable cards reused)
@@ -1008,10 +1010,11 @@ function strategyBody(c){
     TGT.map(function(t){ return '<div class="lst-tg"><div class="lst-tg-top"><span class="lst-tg-t">'+t.t+'</span><span class="lst-tg-st '+(t.ok?'lst-ok':'lst-hard')+'">'+esc(t.st)+'</span></div>'+
       '<div class="lst-tg-h"><b>How:</b> '+t.how+'</div>'+
       '<div class="lst-tg-p">'+esc(t.base)+' &nbsp;→&nbsp; <b>'+t.now+'</b></div></div>'; }).join('')+
-    '<div class="ov-diagram-cap" style="margin-top:6px">Set June 2024 (FY24→FY27), later made concrete as ~$25B GB / ~$1B Adj. EBITDA / &gt;$1B FCF. CFO Erin Brewer: <i>&ldquo;2024 was the first year in our multiyear plan, and we over-delivered on every target.&rdquo;</i></div>');
+    '<div class="ov-diagram-cap" style="margin-top:6px">Set June 2024 (FY24→FY27): ~$25B GB / ~$1B Adj. EBITDA / &gt;$1B FCF. CFO Erin Brewer: <i>&ldquo;we over-delivered on every target&rdquo;</i> in year one.</div>');
   // 5 - the AV bet
   h+=sec('The AV bet — be the network, not the carmaker',
-    '<div class="lst-av">Lyft’s contrarian bet: <b>don’t build the self-driving car — be the network every one plugs into.</b> Its <b>hybrid network</b> treats AVs as baseline supply and human drivers as the flex, kept asset-light via <b>Flexdrive</b> (a claimed <b>&gt;20% per-mile cost edge</b>). Curated partners: <b>May Mobility</b> (Atlanta), <b>Mobileye</b> (Dallas), <b>Baidu Apollo Go</b> (Europe), and a <b>Waymo</b> fleet deal in Nashville where Lyft <b>&ldquo;gets paid no matter what.&rdquo;</b> Risher’s yardstick: ~<b>10% of Lyft AV by 2030</b> would be &ldquo;an enormous success.&rdquo;</div>');
+    '<div class="lst-av">Lyft’s contrarian bet: <b>don’t build the self-driving car — be the network every AV plugs into.</b> The <b>hybrid network</b> treats AVs as baseline supply and human drivers as the flex, kept asset-light via <b>Flexdrive</b> (a claimed <b>&gt;20% per-mile cost edge</b>). Risher’s yardstick: ~<b>10% AV by 2030</b> would be &ldquo;an enormous success.&rdquo;</div>'+
+    '<div class="lst-chips" style="margin-top:9px"><span class="lst-chip">May Mobility · Atlanta</span><span class="lst-chip">Mobileye · Dallas</span><span class="lst-chip">Baidu Apollo Go · Europe</span><span class="lst-chip">Waymo · Nashville — paid no matter what</span></div>');
   // 6 - membership + ecosystem
   h+=sec('Who Powers Lyft — the supplier & customer ecosystem', supplySection());
   return h;
@@ -1140,7 +1143,14 @@ function unitBody(c){
     '.gm-tap{color:var(--brand);font-weight:700;cursor:pointer;white-space:nowrap}'+
     '@media(max-width:640px){.insarc{grid-template-columns:1fr}}'+
   '</style>';
-  h+='<p class="ov-lede">Revenue is reported <b>net of driver pay</b>, so the number that matters is <b>gross profit per ride</b> — and the whole 2025–26 story is one <b>shrinking slice: insurance</b>.</p>';
+  var corDown=PR_COR[i0]<PR_COR[i1];
+  h+='<style>.ue-ko{border:1px solid var(--bdr);border-left:4px solid #E6007A;border-radius:14px;background:linear-gradient(180deg,var(--brand-soft),transparent);padding:15px 17px;margin:2px 0 14px}.ue-ko-hd{font-size:14.5px;font-weight:800;color:var(--navy);line-height:1.4}.ue-ko-hd b{color:#c0006a}.ue-ko-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:13px}@media(max-width:560px){.ue-ko-row{grid-template-columns:1fr}}.ue-ko-c{background:#fff;border:1px solid var(--bdr);border-radius:10px;padding:11px 13px}.ue-ko-k{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--mu)}.ue-ko-flip{display:flex;align-items:baseline;gap:7px;margin:5px 0 2px}.ue-ko-was{font-size:14px;font-weight:800;color:var(--mu)}.ue-ko-now{font-size:19px;font-weight:900}.ue-ko-sub{font-size:10.5px;font-weight:700}</style>';
+  h+='<div class="ue-ko"><div class="ue-ko-hd">The whole tab in one line: <b>same fare, more profit per ride</b> &mdash; because <b>insurance is shrinking</b>, not because Lyft takes a bigger cut.</div>'+
+    '<div class="ue-ko-row">'+
+      '<div class="ue-ko-c"><div class="ue-ko-k">Gross profit / ride</div><div class="ue-ko-flip"><span class="ue-ko-was">'+usd2(PR_GP[i1])+'</span><span style="color:#1E9E62;font-weight:900">&rarr;</span><span class="ue-ko-now" style="color:#1E9E62">'+usd2(PR_GP[i0])+'</span></div><div class="ue-ko-sub" style="color:#1E9E62">'+pctStr((PR_GP[i0]/PR_GP[i1]-1)*100)+' YoY &middot; Q1&rsquo;25 &rarr; Q1&rsquo;26</div></div>'+
+      '<div class="ue-ko-c"><div class="ue-ko-k">Cost of revenue / ride &mdash; mostly insurance</div><div class="ue-ko-flip"><span class="ue-ko-was">'+usd2(PR_COR[i1])+'</span><span style="font-weight:900;color:'+(corDown?'#0a8f0a':'#C0392B')+'">&rarr;</span><span class="ue-ko-now" style="color:'+(corDown?'#0a8f0a':'#C0392B')+'">'+usd2(PR_COR[i0])+'</span></div><div class="ue-ko-sub" style="color:'+(corDown?'#0a8f0a':'#C0392B')+'">'+(corDown?'falling per ride &mdash; the entire margin unlock':'rising per ride')+'</div></div>'+
+    '</div></div>';
+  h+='<p class="ov-lede" style="margin-top:0">Revenue is net of driver pay, so the number that matters is <b>gross profit per ride</b>. Below: the per-ride split by quarter, why the take-rate line misleads, the regulation it all rests on, and whether the jump is durable.</p>';
   h+='<div class="ov-kpis">'+
     prTile('Bookings / ride', usd2(PR_GB[i0]), pctStr((PR_GB[i0]/PR_GB[i1]-1)*100)+' YoY', 'up')+
     prTile('Revenue / ride (net)', usd2(PR_REV[i0]), pctStr((PR_REV[i0]/PR_REV[i1]-1)*100)+' YoY', 'up')+
@@ -1154,16 +1164,17 @@ function unitBody(c){
     '<span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+BRAND+'"></span>Lyft gross profit</span>'+
   '</div>';
   h+='<div class="ov-chart-t">Where each $ of a ride goes <span>($ per ride, by quarter · label = gross profit / ride)</span></div>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 6px"><b>How to read it:</b> each bar is one quarter&rsquo;s ride, split into <b>driver pay</b>, <b>insurance</b> (the middle band) and <b>Lyft&rsquo;s gross profit</b> (pink). The fare barely moves &mdash; the <b>middle band shrinks</b> and the <b>pink grows</b>.</div>';
   h+='<div class="ov-chart-wrap ovt-vs-wrap"><canvas id="lyUEdecomp"></canvas></div>';
-  h+='<div class="ov-foot">The middle slice (cost of revenue, mostly insurance) shrinks while the pink slice (gross profit) grows — that IS the margin story, in one picture. Source: Summit DCF actuals, snapshot 2026-05-13.</div>';
+  h+='<div class="ov-foot">Source: Summit DCF actuals, snapshot 2026-05-13.</div>';
   h+='<div class="ov-sec-h ovt-store-h">Take rate — and why it misleads</div>';
   h+='<div class="ov-chart-wrap ovt-ue-wrap"><canvas id="lyUEtake"></canvas></div>';
   h+='<div class="ov-callout ov-clickable" data-detail="lnote:take"><div class="ov-tl-body">The line drifted ~36% → ~33% — but Lyft is <b>not</b> taking a smaller cut. Its real take is ~<b>30%</b> (the 70% driver floor caps it); the wobble is an <b>accounting artifact</b> (a gross-up move + Lyft Media). Watch gross profit per ride, not this line. <span class="gm-tap">Tap for the year-by-year ›</span></div></div>';
-  h+=sec('The foundation &mdash; driver classification (US &amp; Canada <i>is</i> the story)',
+  h+=sec('The foundation — driver classification (US & Canada IS the story)',
     '<style>.lreg-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px}.lreg-c{border:1px solid var(--bdr);border-radius:10px;padding:11px 13px;background:var(--w);cursor:pointer;transition:border-color .12s}.lreg-c:hover{border-color:var(--brand)}.lreg-hd{font-size:12.5px;font-weight:800;color:var(--navy);display:flex;justify-content:space-between;align-items:center;gap:8px}.lreg-chip{font-size:9px;font-weight:800;letter-spacing:.03em;border-radius:10px;padding:2px 8px;flex:none;white-space:nowrap}.lreg-g{background:rgba(30,158,98,0.12);color:#1E9E62}.lreg-a{background:rgba(184,134,11,0.14);color:#B8860B}.lreg-t{font-size:11.5px;color:var(--mu);line-height:1.5;margin-top:5px}@media(max-width:720px){.lreg-grid{grid-template-columns:1fr}}</style>'+
     '<div class="ov-callout" style="border-left:3px solid var(--brand);margin-bottom:12px"><b>Every per-ride number above rests on one question: do drivers stay independent contractors?</b> If they became employees, the whole cost structure would break. Lyft is <b>US/Canada-only</b>, so North-American rules <i>are</i> its regulatory story &mdash; there is no global market to hide behind &mdash; and that question is now <b>largely settled in Lyft&rsquo;s favor</b>. <b>Tap any card.</b></div>'+
     '<div class="lreg-grid">'+REG.map(function(r,i){ return '<div class="lreg-c ov-clickable" data-detail="lreg:'+i+'"><div class="lreg-hd">'+esc(r.h)+'<span class="lreg-chip lreg-'+r.cls+'">'+esc(r.chip)+'</span></div><div class="lreg-t">'+r.teaser+' <span style="color:var(--brand);font-weight:700">tap &rsaquo;</span></div></div>'; }).join('')+'</div>');
-  h+=sec('Is the margin jump durable? &mdash; the market&rsquo;s real debate',
+  h+=sec('Is the margin jump durable? — the market\'s real debate',
     '<style>.gm-ev{font-size:12px;color:var(--navy);line-height:1.55;background:rgba(30,158,98,0.06);border:1px solid rgba(30,158,98,0.25);border-radius:9px;padding:10px 13px;margin:12px 0;cursor:pointer}.gm-ev b{font-weight:800}.gmdb{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}@media(max-width:680px){.gmdb{grid-template-columns:1fr}}.gmdb-c{border:1px solid var(--bdr);border-radius:11px;padding:12px 14px}.gmdb-c.bull{border-top:3px solid #1E9E62;background:rgba(30,158,98,0.04)}.gmdb-c.bear{border-top:3px solid #B8860B;background:rgba(184,134,11,0.04)}.gmdb-h{font-size:12px;font-weight:800;margin-bottom:8px}.gmdb-c.bull .gmdb-h{color:#1E9E62}.gmdb-c.bear .gmdb-h{color:#B8860B}.gmdb-li{font-size:11.5px;color:var(--navy);line-height:1.5;padding-left:15px;position:relative;margin-bottom:8px}.gmdb-li:before{content:"";position:absolute;left:1px;top:6px;width:6px;height:6px;border-radius:50%}.gmdb-c.bull .gmdb-li:before{background:#1E9E62}.gmdb-c.bear .gmdb-li:before{background:#B8860B}.gmdb-li b{font-weight:800}</style>'+
     '<div class="ov-callout" style="border-left:3px solid var(--brand);margin-bottom:14px">The entire 2025&ndash;26 margin story is <b>insurance cost per ride falling</b> (not a higher take) &mdash; via <b>CA SB&nbsp;371</b> + the captive (full mechanics in the <b>Insurance</b> tab). The only question the model cares about: <b>is it durable?</b></div>'+
     '<div class="gm-v"><div class="gm-num"><b>47.6%</b> Q1 2026 gross margin <span class="gm-up">+710 bps YoY</span></div>'+
@@ -1692,7 +1703,7 @@ function wireModal(root){
     back.hidden=false; requestAnimationFrame(function(){ back.classList.add('on'); }); document.addEventListener('keydown', onEsc); }
   function closeM(){ galIdx=-1; back.classList.remove('on'); document.removeEventListener('keydown', onEsc); setTimeout(function(){ back.hidden=true; }, 180); }
   function galBody(i){ var s=RIDE_FLOW[i], n=RIDE_FLOW.length, pv=(i-1+n)%n, nx=(i+1)%n;
-    return '<div class="ov-gal"><img class="ov-gal-img" src="img/steps/'+s.img+'" alt="'+esc(s.t)+'"><div class="ov-gal-cap">'+s.d+'</div>'+
+    return '<div class="ov-gal"><div class="ov-gal-cap">'+s.d+'</div>'+
       '<div class="ov-gal-nav"><button type="button" class="ov-gal-btn" data-gnav="'+pv+'" aria-label="previous">\u2039</button>'+
       '<span class="ov-gal-count">'+(i+1)+' / '+n+'</span>'+
       '<button type="button" class="ov-gal-btn" data-gnav="'+nx+'" aria-label="next">\u203a</button></div></div>'; }

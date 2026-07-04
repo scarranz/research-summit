@@ -608,14 +608,16 @@ function supplyBody(){
     '.scx-arc-k{display:inline-block;min-width:74px;font-weight:800;color:#12356B}'+
     '.scx-risk{font-size:12px;color:var(--navy);line-height:1.55;background:rgba(192,57,43,0.05);border-left:3px solid #C0392B;border-radius:8px;padding:10px 13px;margin-top:10px}.scx-risk b{font-weight:800}'+
   '</style>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 12px;font-size:12.5px;line-height:1.6"><b>How to read this tab.</b> Bloomberg tracks <b>who a company buys from and sells to</b> &mdash; its supply chain. That map often shows what a business is <b>becoming</b> before the income statement does. Here is Instacart&rsquo;s: the <b>takeaway first</b>, then the three pieces of evidence.</div>';
   h+='<div class="scx-thesis">A company\u2019s suppliers reveal what it is <b>building</b>. Instacart\u2019s <b>customers are grocers</b> \u2014 but it spends its money on <b>ad-tech and AI</b>. Read the two sides together and the story is one line: Instacart is becoming an <b>advertising-and-data company that happens to move groceries.</b></div>';
+  h+='<div class="scx-tbl-h" style="margin-top:16px">1 &middot; The two sides &mdash; who it <b>serves</b> vs who it <b>pays</b></div>';
   h+='<div class="scx-flow">'+
     '<div><div class="scx-col-t" style="color:#0AAD0A">Customers \u2014 revenue in</div><div class="scx-col-s">The grocery industry \u00b7 ~90 banners</div><div class="scx-logos">'+L(groc)+'</div><div class="scx-col-tag">the old economy it serves</div></div>'+
     '<div class="scx-mid"><div class="scx-mid-ic">\ud83e\udd55</div><div class="scx-mid-t">Instacart</div><div class="scx-mid-s">owns nothing<br>in between</div></div>'+
     '<div><div class="scx-col-t" style="color:#3A7BD5">Suppliers \u2014 spend out</div><div class="scx-col-s">Ad-tech, cloud &amp; AI</div><div class="scx-logos">'+L(tech)+'</div><div class="scx-col-tag">the new economy it is building</div></div>'+
   '</div>';
   h+='<div class="scx-flow-cap">Its customers are grocers; its suppliers are <b>Roku, The Trade Desk, Snowflake and NVIDIA.</b> The pivot from delivery app to ad-and-data platform is not in the press release \u2014 <b>it is in who it does business with.</b></div>';
-  h+='<div class="scx-tbl-h">Anchored to no one</div>';
+  h+='<div class="scx-tbl-h" style="margin-top:18px">2 &middot; Anchored to no one &mdash; a rounding error to everyone</div>';
   h+='<table class="scx-tbl"><thead><tr><th>Partner</th><th>Side</th><th>Rel. size</th><th>% of Instacart</th><th>% of them</th></tr></thead><tbody>'+
     '<tr><td>Sprouts</td><td>Customer</td><td>$4.27M</td><td>0.12% of revenue</td><td>0.08% of their cost</td></tr>'+
     '<tr><td>Roku</td><td>Supplier</td><td>$4.09M</td><td>0.36% of cost</td><td>0.08% of their revenue</td></tr>'+
@@ -623,6 +625,7 @@ function supplyBody(){
     '<tr><td>Scotts Miracle-Gro</td><td>Supplier</td><td>$0.60M</td><td>0.05% of cost</td><td>0.04% of their revenue</td></tr>'+
   '</tbody></table>';
   h+='<div class="scx-cap">In every relationship that can be measured, Instacart is a rounding error \u2014 <b>and so is the partner.</b> Connective tissue for the whole industry, dependent on nobody. The strength: no single customer can sink it. The weakness: <b>no pricing power</b> \u2014 which is precisely why it must earn its money on <b>ads and data</b>, not the delivery fee.</div>';
+  h+='<div class="scx-tbl-h" style="margin-top:18px">3 &middot; The journey &mdash; fragile middleman &rarr; ad-and-data platform</div>';
   h+='<div class="scx-arc">'+
     '<div class="scx-arc-i"><span class="scx-arc-k">Was</span>a fragile middleman \u2014 when <b>Whole Foods left in 2019</b>, it hurt.</div>'+
     '<div class="scx-arc-i"><span class="scx-arc-k">Now</span>spread across ~90 banners, material to none \u2014 that single-customer dependency is largely gone.</div>'+
@@ -919,6 +922,22 @@ function carrotPillars(){
   return h;
 }
 // Anatomy of one order — a visual, not a text wall.
+function orderFlow(){
+  function node(x,t,sub){ return '<g><rect x="'+x+'" y="26" width="150" height="66" rx="11" fill="#fff" stroke="#0AAD0A" stroke-width="1.5"/><text x="'+(x+75)+'" y="55" text-anchor="middle" font-size="12" font-weight="800" fill="#0a7a0a">'+t+'</text><text x="'+(x+75)+'" y="73" text-anchor="middle" font-size="9" fill="#3A4552">'+sub+'</text></g>'; }
+  var h='<style>@keyframes oaflow{to{stroke-dashoffset:-26}}.oaf-l{stroke:#0AAD0A;stroke-width:4;stroke-dasharray:8 6;animation:oaflow .8s linear infinite;fill:none;stroke-linecap:round}</style>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 8px">A Marketplace order, end to end &mdash; the consumer <b>never leaves Instacart</b>, which is why Instacart <b>owns the customer &amp; the data</b> (the fuel for ads).</div>';
+  h+='<div style="border:1px solid var(--bdr);border-radius:12px;background:linear-gradient(180deg,#fafffa,#fff);padding:2px;margin-bottom:14px"><svg viewBox="0 0 680 112" style="width:100%;height:auto;font-family:Inter,sans-serif">';
+  h+='<defs><marker id="oam" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#0AAD0A"/></marker></defs>';
+  h+='<line class="oaf-l" x1="160" y1="59" x2="176" y2="59" marker-end="url(#oam)"/>';
+  h+='<line class="oaf-l" x1="330" y1="59" x2="346" y2="59" marker-end="url(#oam)"/>';
+  h+='<line class="oaf-l" x1="500" y1="59" x2="516" y2="59" marker-end="url(#oam)"/>';
+  h+=node(8,'Consumer','browses 85k+ stores');
+  h+=node(178,'Orders in-app','Instacart owns the customer');
+  h+=node(348,'Shopper picks','in the retailer store');
+  h+=node(518,'Delivered','as fast as ~1 hour');
+  h+='</svg></div>';
+  return h;
+}
 function orderAnatomy(){
   var h='<style>'+
     '.oa-lbl{font-size:11px;font-weight:700;color:var(--mu);margin-bottom:5px}'+
@@ -929,7 +948,7 @@ function orderAnatomy(){
     '.oa-c{border:1px solid var(--bdr);border-radius:9px;padding:10px 12px;font-size:11.5px;line-height:1.5;color:var(--navy)}.oa-c b{font-weight:800}'+
     '.oa-plus{border-left:3px solid #FF7009}.oa-minus{border-left:3px solid #C0392B}'+
     '.oa-say{font-size:12px;color:var(--navy);margin-top:12px;line-height:1.5;font-weight:700}.oa-say b{font-weight:800}'+
-  '</style>'+
+  '</style>'+orderFlow()+
     '<div class="oa-lbl">One ~$110 order (its GTV), and where Instacart’s cut sits</div>'+
     '<div class="oa-bar"><div class="oa-seg oa-groc" style="width:92%">Groceries — the retailer keeps its margin</div><div class="oa-seg oa-take" style="width:8%">Take ~8%</div></div>'+
     '<div class="oa-two">'+
@@ -968,23 +987,23 @@ var ROLE_DETAIL = {
 };
 function cartRoleMap(){
   var ST=[
-    {ic:'\U0001F58A️', n:'Sign',
+    {ic:'🖊️', n:'Sign',
      mkt:{who:'Instacart', d:'Retailer lists on the Instacart Marketplace; <b>Instacart owns the customer &amp; the data</b>.', flow:'No upfront fee — it buys the right to monetize the order + the ad surface.'},
      ent:{who:'Retailer', d:'Retailer signs for Storefront / Carrot; the <b>retailer keeps the customer</b>, Instacart is the vendor.', flow:'Lands a <b>recurring SaaS relationship</b> — stickier, lower take.'},
      spend:'Sales &amp; onboarding.'},
-    {ic:'\U0001F6CD️', n:'Storefront',
+    {ic:'🛍️', n:'Storefront',
      mkt:{who:'Instacart', d:'Order placed inside the Instacart app.', flow:'Takes the <b>full transaction take (~7% of GTV)</b> + service/delivery fees.'},
      ent:{who:'Retailer', d:'Order on the retailer’s white-label site (Storefront Pro).', flow:'Charges a <b>lower usage / SaaS fee</b>; the retailer keeps the margin &amp; the brand.'},
      spend:'Engineering, hosting, payments.'},
-    {ic:'\U0001F69A', n:'Fulfillment',
+    {ic:'🚚', n:'Fulfillment',
      mkt:{who:'Shopper &amp; consumer', d:'Instacart’s shopper network picks &amp; delivers the order.', flow:'Consumer pays delivery/service fees; <b>Instacart pays the shoppers</b> — the thin-margin leg.'},
      ent:{who:'Retailer', d:'Instacart powers the <b>retailer’s own</b> fulfillment (Carrot).', flow:'Fee to Instacart; the retailer runs (or rents) the last mile.'},
      spend:'<b>Biggest cash-out</b> — shopper batch payments &amp; logistics.'},
-    {ic:'\U0001F3EC', n:'In-store',
+    {ic:'🏬', n:'In-store',
      mkt:{who:'—', d:'Barely a Marketplace motion — this is where Enterprise shines.', flow:'n/a on the Marketplace.'},
      ent:{who:'Instacart + retailer', d:'Sells <b>Caper smart carts &amp; Carrot Tags (ESLs)</b> into the physical store.', flow:'Hardware + SaaS fees from the retailer — and it <b>opens a brand-new in-store ad surface</b>.'},
      spend:'Hardware COGS, R&amp;D.'},
-    {ic:'\U0001F3AF', n:'Ads',
+    {ic:'🎯', n:'Ads',
      mkt:{who:'Instacart', d:'Instacart <b>owns the ad inventory</b> on its own Marketplace.', flow:'CPG brands pay → <b>~100% margin</b>, kept almost entirely. The profit engine.'},
      ent:{who:'Shared', d:'<b>Carrot Ads</b> powers the retailer’s OWN media network.', flow:'Brand spend is <b>shared</b> with the retailer; Instacart takes a platform cut.'},
      spend:'Minimal — near-pure margin.'}
@@ -1024,8 +1043,8 @@ function cartRoleMap(){
   ST.forEach(function(st,k){
     h+='<div class="crm2-panel" data-i="'+k+'">'+
       '<div class="crm2-cols">'+
-        '<div class="crm2-col mkt"><div class="crm2-tg">MARKETPLACE</div><div class="crm2-who">Wins here: <b>'+st.mkt.who+'</b></div><div class="crm2-d">'+st.mkt.d+'</div><div class="crm2-flow">\U0001F4B5 '+st.mkt.flow+'</div></div>'+
-        '<div class="crm2-col ent"><div class="crm2-tg">ENTERPRISE</div><div class="crm2-who">Wins here: <b>'+st.ent.who+'</b></div><div class="crm2-d">'+st.ent.d+'</div><div class="crm2-flow">\U0001F4B5 '+st.ent.flow+'</div></div>'+
+        '<div class="crm2-col mkt"><div class="crm2-tg">MARKETPLACE</div><div class="crm2-who">Wins here: <b>'+st.mkt.who+'</b></div><div class="crm2-d">'+st.mkt.d+'</div><div class="crm2-flow">💵 '+st.mkt.flow+'</div></div>'+
+        '<div class="crm2-col ent"><div class="crm2-tg">ENTERPRISE</div><div class="crm2-who">Wins here: <b>'+st.ent.who+'</b></div><div class="crm2-d">'+st.ent.d+'</div><div class="crm2-flow">💵 '+st.ent.flow+'</div></div>'+
       '</div>'+
       '<div class="crm2-spend">Where Instacart <b>spends</b> at this stage: '+st.spend+'</div>'+'<div class="ov-clickable" data-detail="role:'+({Sign:'sign',Storefront:'storefront',Fulfillment:'fulfillment','In-store':'instore',Ads:'ads'}[st.n])+'" style="font-size:11px;font-weight:800;color:#0AAD0A;cursor:pointer;margin-top:8px">Real named examples &rsaquo;</div>'+
     '</div>';
@@ -1180,7 +1199,7 @@ function html(c){
   h += '<div class="ov-pane" data-capane="advertising">';
   h += '<p class="ov-lede"><b>Advertising is the reason Instacart is profitable.</b> CPG brands pay to be discovered at the <b>point of purchase</b> — ~100% gross margin, and, as the Overview showed, roughly the size of the entire company\'s profit. Below: how big it has grown, why it converts, whether it is durable, and who it competes with.</p>';
   h += sec('Instacart\u2019s role in the ad value chain', cartAdRole());
-  h += sec('Follow the ad dollar — where it enters &amp; who keeps it', cartAdFlow());
+  h += sec('Follow the ad dollar — where it enters & who keeps it', cartAdFlow());
   h += sec('The mix shift that made Instacart profitable',
     '<div class="ov-diagram-cap" style="margin:0 0 10px">Quarterly <b>advertising revenue</b> (orange bars) and <b>ads as a share of total revenue</b> (navy line). The share, not just the dollars, is the story.</div>'+
     adGrowthChart());

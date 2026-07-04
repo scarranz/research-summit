@@ -658,6 +658,50 @@ function callsBody(){
 }
 
 // The profit truth: advertising revenue is ~the size of the entire company Adj. EBITDA.
+function cartAdFlow(){
+  function mk(id,c){ return '<marker id="'+id+'" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="'+c+'"/></marker>'; }
+  var h='<style>'+
+    '@keyframes cafflow{to{stroke-dashoffset:-28}}'+
+    '.caf-wrap{border:1px solid var(--bdr);border-radius:14px;background:linear-gradient(180deg,#fffdfa,#fff);padding:6px 4px 2px;margin:2px 0}'+
+    '.caf-line{stroke-width:5;stroke-dasharray:8 7;animation:cafflow .8s linear infinite;fill:none;stroke-linecap:round}'+
+    '.caf-loop{stroke-width:2.5;stroke-dasharray:6 6;animation:cafflow 1.1s linear infinite;fill:none}'+
+    '.caf-node rect{transition:.15s}.caf-node:hover rect{stroke-width:2.5;filter:drop-shadow(0 2px 5px rgba(0,0,0,.10))}'+
+    '.caf-cap{font-size:11.5px;color:var(--navy);line-height:1.55;padding:9px 14px 4px}.caf-cap b{font-weight:800}'+
+  '</style>';
+  h+='<div class="caf-wrap"><svg viewBox="0 0 720 300" role="img" aria-label="Instacart advertising money flow" style="width:100%;height:auto;font-family:Inter,sans-serif">';
+  h+='<defs>'+mk('cafg','#0AAD0A')+mk('cafo','#FF7009')+mk('cafn','#12356B')+'</defs>';
+  // closed-loop return arc: shopper -> back to brands (data proves the ad -> more budget)
+  h+='<path class="caf-loop" d="M628 104 C 628 22, 92 22, 80 100" stroke="#12356B" marker-end="url(#cafn)"/>';
+  h+='<text x="354" y="20" text-anchor="middle" font-size="10" font-weight="800" fill="#12356B">closed-loop: the purchase proves the ad &#8594; more budget</text>';
+  // money forward: brands -> instacart -> shopper
+  h+='<line class="caf-line" x1="150" y1="150" x2="247" y2="150" stroke="#0AAD0A" marker-end="url(#cafg)"/>';
+  h+='<line class="caf-line" x1="454" y1="150" x2="555" y2="150" stroke="#FF7009" marker-end="url(#cafo)"/>';
+  h+='<text x="198" y="140" text-anchor="middle" font-size="10" font-weight="800" fill="#0AAD0A">ad $ ~$1.08B</text>';
+  h+='<text x="504" y="140" text-anchor="middle" font-size="9.5" font-weight="800" fill="#FF7009">sponsored placement</text>';
+  // off-platform branch: instacart -> Roku/YouTube/TTD
+  h+='<line class="caf-line" x1="352" y1="200" x2="352" y2="238" stroke="#FF7009" marker-end="url(#cafo)"/>';
+  // NODES
+  h+='<g class="caf-node"><rect x="14" y="114" width="136" height="72" rx="10" fill="#fff" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<text x="82" y="138" text-anchor="middle" font-size="12" font-weight="800" fill="#10141A">CPG brands</text>'+
+    '<text x="82" y="157" text-anchor="middle" font-size="10.5" fill="#3A4552">the money enters here</text>'+
+    '<text x="82" y="175" text-anchor="middle" font-size="10.5" font-weight="800" fill="#0AAD0A">ad budgets &#8594;</text><title>The advertiser pays. This is where the ad dollar originates.</title></g>';
+  h+='<g class="caf-node"><rect x="250" y="102" width="204" height="96" rx="12" fill="rgba(255,112,9,0.07)" stroke="#FF7009" stroke-width="2"/>'+
+    '<text x="352" y="128" text-anchor="middle" font-size="12.5" font-weight="800" fill="#FF7009">INSTACART &#183; Carrot Ads</text>'+
+    '<text x="352" y="152" text-anchor="middle" font-size="20" font-weight="900" fill="#FF7009">~100% margin</text>'+
+    '<text x="352" y="172" text-anchor="middle" font-size="10" fill="#2b3542">keeps almost all of it &#8212; the profit engine</text>'+
+    '<text x="352" y="189" text-anchor="middle" font-size="9.5" font-weight="700" fill="#6b7684">&#8776; the entire company&#8217;s FY25 profit</text><title>On-platform ads cost Instacart almost nothing to serve, so ad revenue is nearly pure profit.</title></g>';
+  h+='<g class="caf-node"><rect x="558" y="114" width="148" height="72" rx="10" fill="#fff" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<text x="632" y="136" text-anchor="middle" font-size="12" font-weight="800" fill="#10141A">Shopper</text>'+
+    '<text x="632" y="154" text-anchor="middle" font-size="10" fill="#3A4552">at point of purchase</text>'+
+    '<text x="632" y="171" text-anchor="middle" font-size="10" font-weight="700" fill="#12356B">sees ad &#8594; buys</text><title>The shopper never pays for the ad; the shopper is the target and the proof.</title></g>';
+  h+='<g class="caf-node"><rect x="252" y="238" width="200" height="44" rx="9" fill="#fff" stroke="#FF7009" stroke-width="1.2"/>'+
+    '<text x="352" y="257" text-anchor="middle" font-size="10.5" font-weight="800" fill="#FF7009">Off-platform: Roku &#183; YouTube &#183; TTD</text>'+
+    '<text x="352" y="273" text-anchor="middle" font-size="9" fill="#3A4552">buys reach beyond its own app, marked up</text><title>Instacart extends demand off its own surface via partnerships, paying for inventory and reselling it with its data.</title></g>';
+  h+='</svg>';
+  h+='<div class="caf-cap"><b>Where the ad dollar enters and who keeps it.</b> It comes <b>from the brand</b> and <b>stays with Instacart at ~100% margin</b> (~<b>$1.08B</b> &#8212; roughly the whole company&#8217;s FY2025 profit). The <b>shopper never pays for the ad</b>; the shopper&#8217;s <b>purchase is the proof</b> (closed-loop attribution) that pulls the next budget &#8212; the flywheel. Off-platform (Roku / YouTube / The Trade Desk) buys reach beyond Instacart&#8217;s own app and resells it with first-party data. <span class="ave-subh-note">Hover any node for detail.</span></div>';
+  h+='</div>';
+  return h;
+}
 function cartAdRole(){
   var ROLES=[
     ['Publisher','Owns the storefront &amp; search where the ad appears — sponsored products, display, coupons, in-store screens.'],
@@ -923,38 +967,99 @@ var ROLE_DETAIL = {
   offplat:{ t:'Advertising · Off-platform', h:'On <b>Roku</b> (connected-TV), <b>The Trade Desk</b> (DSP), <b>PubMatic</b> (SSP) and <b>YouTube</b>, the <b>partner supplies the ad inventory</b> and <b>Instacart supplies the first-party audiences + closed-loop measurement</b>.<br><br>Real: <b>Hershey ~4× ROAS</b> on Roku; <b>Danone</b> via The Trade Desk; <b>Mars</b> via PubMatic.' },
 };
 function cartRoleMap(){
-  var ENT=[['sign','🖊️','Sign the deal'],['storefront','🛍️','Storefront'],['fulfillment','🚚','Fulfillment'],['instore','🏬','In-store'],['ads','🎯','Ads']];
-  var ADS=[['icads','Instacart Ads','owns the inventory'],['ads','Carrot Ads','runs the retailer’s network'],['offplat','Off-platform','data + measurement']];
+  var ST=[
+    {ic:'\U0001F58A️', n:'Sign',
+     mkt:{who:'Instacart', d:'Retailer lists on the Instacart Marketplace; <b>Instacart owns the customer &amp; the data</b>.', flow:'No upfront fee — it buys the right to monetize the order + the ad surface.'},
+     ent:{who:'Retailer', d:'Retailer signs for Storefront / Carrot; the <b>retailer keeps the customer</b>, Instacart is the vendor.', flow:'Lands a <b>recurring SaaS relationship</b> — stickier, lower take.'},
+     spend:'Sales &amp; onboarding.'},
+    {ic:'\U0001F6CD️', n:'Storefront',
+     mkt:{who:'Instacart', d:'Order placed inside the Instacart app.', flow:'Takes the <b>full transaction take (~7% of GTV)</b> + service/delivery fees.'},
+     ent:{who:'Retailer', d:'Order on the retailer’s white-label site (Storefront Pro).', flow:'Charges a <b>lower usage / SaaS fee</b>; the retailer keeps the margin &amp; the brand.'},
+     spend:'Engineering, hosting, payments.'},
+    {ic:'\U0001F69A', n:'Fulfillment',
+     mkt:{who:'Shopper &amp; consumer', d:'Instacart’s shopper network picks &amp; delivers the order.', flow:'Consumer pays delivery/service fees; <b>Instacart pays the shoppers</b> — the thin-margin leg.'},
+     ent:{who:'Retailer', d:'Instacart powers the <b>retailer’s own</b> fulfillment (Carrot).', flow:'Fee to Instacart; the retailer runs (or rents) the last mile.'},
+     spend:'<b>Biggest cash-out</b> — shopper batch payments &amp; logistics.'},
+    {ic:'\U0001F3EC', n:'In-store',
+     mkt:{who:'—', d:'Barely a Marketplace motion — this is where Enterprise shines.', flow:'n/a on the Marketplace.'},
+     ent:{who:'Instacart + retailer', d:'Sells <b>Caper smart carts &amp; Carrot Tags (ESLs)</b> into the physical store.', flow:'Hardware + SaaS fees from the retailer — and it <b>opens a brand-new in-store ad surface</b>.'},
+     spend:'Hardware COGS, R&amp;D.'},
+    {ic:'\U0001F3AF', n:'Ads',
+     mkt:{who:'Instacart', d:'Instacart <b>owns the ad inventory</b> on its own Marketplace.', flow:'CPG brands pay → <b>~100% margin</b>, kept almost entirely. The profit engine.'},
+     ent:{who:'Shared', d:'<b>Carrot Ads</b> powers the retailer’s OWN media network.', flow:'Brand spend is <b>shared</b> with the retailer; Instacart takes a platform cut.'},
+     spend:'Minimal — near-pure margin.'}
+  ];
+  var css='';
+  for(var i=0;i<ST.length;i++){
+    css+='#crm2-'+i+':checked~.crm2-rail label[for="crm2-'+i+'"]{background:#0AAD0A;color:#fff;border-color:#0AAD0A}';
+    css+='#crm2-'+i+':checked~.crm2-rail label[for="crm2-'+i+'"] .crm2-n{color:#fff}';
+    css+='#crm2-'+i+':checked~.crm2-panels .crm2-panel[data-i="'+i+'"]{display:block}';
+  }
   var h='<style>'+
-    '.crm-rail,.crm-adflow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap}'+
-    '.crm-cap{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:#f1f4f8;border:1px solid var(--bdr);border-radius:10px;padding:8px 12px;font-size:10.5px;font-weight:800;color:var(--navy);min-width:66px}'+
-    '.crm-cap span{font-size:9px;font-weight:600;color:var(--mu);margin-top:2px}'+
-    '.crm-nodes,.crm-adnodes{display:flex;align-items:center;gap:4px;flex:1;flex-wrap:wrap;justify-content:center}'+
-    '.crm-node{flex:1;min-width:72px;border:1px solid var(--bdr);border-top:2px solid #3A7BD5;border-radius:10px;padding:9px 5px;text-align:center;cursor:pointer;transition:.15s;background:#fff}'+
-    '.crm-node:hover{border-color:#3A7BD5;box-shadow:0 3px 10px rgba(58,123,213,.12);transform:translateY(-2px)}'+
-    '.crm-ic{font-size:19px;line-height:1}.crm-nl{font-size:10px;font-weight:800;color:var(--navy);margin-top:4px}'+
-    '.crm-arw{color:#C4CCD6;font-weight:800;font-size:14px}'+
-    '.crm-own{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:13px 0}@media(max-width:520px){.crm-own{grid-template-columns:1fr}}'+
-    '.crm-own-c{border:1px solid var(--bdr);border-radius:10px;padding:11px 13px}.crm-own-c.mkt{border-left:3px solid #0AAD0A}.crm-own-c.sf{border-left:3px solid #3A7BD5}'+
-    '.crm-own-h{font-size:11.5px;font-weight:800;margin-bottom:3px}.crm-own-c.mkt .crm-own-h{color:#0AAD0A}.crm-own-c.sf .crm-own-h{color:#3A7BD5}'+
-    '.crm-own-d{font-size:11.5px;color:var(--navy);line-height:1.5}.crm-own-d b{font-weight:800}'+
-    '.crm-sub{font-size:12.5px;font-weight:800;color:var(--navy);margin:16px 0 9px;padding-bottom:4px;border-bottom:1px solid var(--bdr)}'+
-    '.crm-adnode{flex:1;min-width:108px;border:1px solid var(--bdr);border-top:2px solid #FF7009;border-radius:10px;padding:10px 11px;cursor:pointer;transition:.15s;background:#fff}'+
-    '.crm-adnode:hover{border-color:#FF7009;box-shadow:0 3px 10px rgba(255,112,9,.12);transform:translateY(-2px)}'+
-    '.crm-adn{font-size:12px;font-weight:800;color:var(--navy)}.crm-add{font-size:10px;color:var(--mu);margin-top:2px}'+
-    '.crm-chip{font-size:12px;color:var(--navy);line-height:1.55;background:rgba(255,112,9,0.06);border-left:3px solid #FF7009;border-radius:8px;padding:10px 13px;margin-top:11px}.crm-chip b{font-weight:800}'+
+    '.crm2-in{display:none}'+
+    '.crm2-rail{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap;margin:2px 0 12px}'+
+    '.crm2-cap{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:#f1f4f8;border:1px solid var(--bdr);border-radius:10px;padding:6px 10px;font-size:9.5px;font-weight:800;color:var(--navy);min-width:62px}.crm2-cap span{font-size:8px;font-weight:600;color:var(--mu);margin-top:2px}'+
+    '.crm2-tab{flex:1;min-width:78px;border:1px solid var(--bdr);border-radius:10px;padding:9px 5px;text-align:center;cursor:pointer;transition:.15s;background:#fff;display:flex;flex-direction:column;align-items:center;gap:3px}'+
+    '.crm2-tab:hover{border-color:#0AAD0A;box-shadow:0 3px 10px rgba(10,173,10,.12)}'+
+    '.crm2-ic{font-size:19px;line-height:1}.crm2-n{font-size:10.5px;font-weight:800;color:var(--navy)}'+
+    '.crm2-arw{align-self:center;color:#C4CCD6;font-weight:800;font-size:13px}'+
+    '.crm2-panel{display:none;animation:crm2fade .25s ease}@keyframes crm2fade{from{opacity:0;transform:translateY(4px)}to{opacity:1}}'+
+    '.crm2-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:560px){.crm2-cols{grid-template-columns:1fr}}'+
+    '.crm2-col{border:1px solid var(--bdr);border-radius:11px;padding:12px 14px}.crm2-col.mkt{border-top:3px solid #0AAD0A}.crm2-col.ent{border-top:3px solid #3A7BD5}'+
+    '.crm2-tg{font-size:9.5px;font-weight:800;letter-spacing:.5px}.crm2-col.mkt .crm2-tg{color:#0AAD0A}.crm2-col.ent .crm2-tg{color:#3A7BD5}'+
+    '.crm2-who{font-size:12.5px;color:var(--navy);margin:5px 0 4px}.crm2-who b{font-weight:800}'+
+    '.crm2-d{font-size:11.5px;color:var(--navy);line-height:1.5}.crm2-d b{font-weight:800}'+
+    '.crm2-flow{font-size:11.5px;color:#0a7a0a;line-height:1.5;margin-top:7px;background:rgba(10,173,10,0.06);border-radius:7px;padding:6px 9px}.crm2-col.ent .crm2-flow{color:#2f5fa8;background:rgba(58,123,213,0.06)}.crm2-flow b{font-weight:800}'+
+    '.crm2-spend{font-size:11px;color:var(--mu);margin-top:10px;padding-left:2px}.crm2-spend b{color:#C0392B;font-weight:800}'+
+    '.crm2-chip{font-size:11.5px;color:var(--navy);line-height:1.55;background:rgba(255,112,9,0.06);border-left:3px solid #FF7009;border-radius:8px;padding:9px 12px;margin-top:13px}.crm2-chip b{font-weight:800}'+
+    css+
   '</style>';
-  h+='<p class="ov-lede" style="margin-bottom:14px">Instacart owns <b>no store and no inventory</b> — it is the <b>connective layer</b> of grocery. Below is the role it plays at every stage, and who really owns the customer. <b>Tap any stage.</b></p>';
-  h+='<div class="crm-rail"><div class="crm-cap">RETAILER<span>store · inventory</span></div>'+
-    '<div class="crm-nodes">'+ENT.map(function(n){ return '<div class="crm-node ov-clickable" data-detail="role:'+n[0]+'"><div class="crm-ic">'+n[1]+'</div><div class="crm-nl">'+n[2]+'</div></div>'; }).join('<span class="crm-arw">›</span>')+'</div>'+
-    '<div class="crm-cap">CONSUMER</div></div>';
-  h+='<div class="crm-own"><div class="crm-own-c mkt"><div class="crm-own-h">On the Marketplace</div><div class="crm-own-d"><b>Instacart</b> owns the customer and the first-party data — and monetizes it with ads.</div></div>'+
-    '<div class="crm-own-c sf"><div class="crm-own-h">On Storefront (enterprise)</div><div class="crm-own-d">The <b>retailer</b> owns the customer; data is tenant-isolated. Instacart is the invisible engine.</div></div></div>';
-  h+='<div class="crm-sub">Where the ad dollars flow</div>';
-  h+='<div class="crm-adflow"><div class="crm-cap">CPG brand<span>+ agency</span></div>'+
-    '<div class="crm-adnodes">'+ADS.map(function(a){ return '<div class="crm-adnode ov-clickable" data-detail="role:'+a[0]+'"><div class="crm-adn">'+esc(a[1])+'</div><div class="crm-add">'+a[2]+'</div></div>'; }).join('')+'</div>'+
-    '<div class="crm-cap">Shopper</div></div>';
-  h+='<div class="crm-chip">↳ Instacart <b>aggregates CPG demand</b> from its own Marketplace and <b>redistributes it to 240+ retailer ad networks</b> — the structural edge no single grocer can match.</div>';
+  h+='<p class="ov-lede" style="margin-bottom:14px">Instacart owns <b>no store and no inventory</b> — it is the <b>connective layer</b> of grocery. <b>Tap any stage</b> to see <b>who wins</b> and <b>where the money goes</b> — and how it flips between the <b>Marketplace</b> (Instacart owns the customer) and <b>Enterprise</b> (the retailer does).</p>';
+  h+='<div class="crm2">';
+  for(var j=0;j<ST.length;j++){ h+='<input class="crm2-in" type="radio" name="crm2s" id="crm2-'+j+'"'+(j===0?' checked':'')+'>'; }
+  h+='<div class="crm2-rail"><div class="crm2-cap">RETAILER<span>store · inventory</span></div>';
+  ST.forEach(function(st,k){ h+=(k?'<span class="crm2-arw">›</span>':'')+'<label class="crm2-tab" for="crm2-'+k+'"><span class="crm2-ic">'+st.ic+'</span><span class="crm2-n">'+st.n+'</span></label>'; });
+  h+='<div class="crm2-cap">CONSUMER</div></div>';
+  h+='<div class="crm2-panels">';
+  ST.forEach(function(st,k){
+    h+='<div class="crm2-panel" data-i="'+k+'">'+
+      '<div class="crm2-cols">'+
+        '<div class="crm2-col mkt"><div class="crm2-tg">MARKETPLACE</div><div class="crm2-who">Wins here: <b>'+st.mkt.who+'</b></div><div class="crm2-d">'+st.mkt.d+'</div><div class="crm2-flow">\U0001F4B5 '+st.mkt.flow+'</div></div>'+
+        '<div class="crm2-col ent"><div class="crm2-tg">ENTERPRISE</div><div class="crm2-who">Wins here: <b>'+st.ent.who+'</b></div><div class="crm2-d">'+st.ent.d+'</div><div class="crm2-flow">\U0001F4B5 '+st.ent.flow+'</div></div>'+
+      '</div>'+
+      '<div class="crm2-spend">Where Instacart <b>spends</b> at this stage: '+st.spend+'</div>'+'<div class="ov-clickable" data-detail="role:'+({Sign:'sign',Storefront:'storefront',Fulfillment:'fulfillment','In-store':'instore',Ads:'ads'}[st.n])+'" style="font-size:11px;font-weight:800;color:#0AAD0A;cursor:pointer;margin-top:8px">Real named examples &rsaquo;</div>'+
+    '</div>';
+  });
+  h+='</div>';
+  h+='<div class="crm2-chip">↳ The full <b>ad-dollar flow</b> (brands → Instacart → shopper, and the closed loop) now lives in the <b>Advertising</b> tab — here the takeaway is that ads are the one stage Instacart <b>wins outright</b>.</div>';
+  h+='</div>';
+  return h;
+}
+function cartMnaTimeline(){
+  var M=[
+    {n:'Unata', y:'2018', deal:'undisclosed', cat:'E-commerce', prod:'Storefront', fp:'Became <b>Storefront</b> — the white-label e-commerce now running ~380 grocer sites. The <b>foundation</b> of the Enterprise motion.'},
+    {n:'Rosie', y:'2021', deal:'undisclosed', cat:'E-commerce', prod:'independent grocers', fp:'E-commerce for <b>independent grocers &amp; wholesalers</b> — extended reach beyond the big chains.'},
+    {n:'Caper AI', y:'2021', deal:'~$350M', cat:'In-store', prod:'Caper Carts', fp:'Pushed Instacart into the <b>physical store</b> — AI smart carts (deployments tripled YoY) and a new <b>in-store ad surface</b>. Its founder now runs Connected Stores.', big:true},
+    {n:'FoodStorm', y:'2021', deal:'undisclosed', cat:'Prepared foods', prod:'FoodStorm', fp:'Catering / order-ahead SaaS — now live in <b>3,000+ stores</b>; a new retailer workflow to monetize.'},
+    {n:'Eversight', y:'2022', deal:'undisclosed', cat:'Pricing AI', prod:'Carrot pricing', fp:'AI <b>pricing &amp; promotions</b> — folded into the Carrot ads / insights stack.'},
+    {n:'Instaleap', y:'2026', deal:'undisclosed', cat:'International', prod:'Intl fulfillment', fp:'The <b>international arm</b> — fulfillment software powering ~100 retailers across ~30 countries. An instant base to layer high-margin Enterprise tech onto, with no marketplace to build.', big:true}
+  ];
+  var h='<style>'+
+    '.mnt-rail{display:flex;flex-wrap:wrap;gap:9px}'+
+    '.mnt-chip{flex:1;min-width:170px;max-width:250px;border:1px solid var(--bdr);border-top:3px solid #0AAD0A;border-radius:11px;padding:10px 12px;background:#fff}'+
+    '.mnt-chip.big{box-shadow:0 0 0 2px rgba(10,173,10,.15)}'+
+    '.mnt-top{display:flex;justify-content:space-between;align-items:center;gap:6px}'+
+    '.mnt-yr{font-size:11px;font-weight:800;color:var(--navy)}.mnt-cat{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--mu);background:#eef2f7;border-radius:10px;padding:1px 7px}'+
+    '.mnt-n{font-size:12.5px;font-weight:800;color:var(--navy);margin:5px 0 4px}.mnt-becomes{font-size:10.5px;font-weight:800;color:#0AAD0A}'+
+    '.mnt-fp{font-size:11px;color:var(--navy);line-height:1.45}.mnt-fp b{font-weight:800}'+
+    '.mnt-punch{font-size:11.5px;color:var(--navy);line-height:1.6;background:#f6faf6;border-left:3px solid #0AAD0A;border-radius:8px;padding:11px 14px;margin-top:14px}.mnt-punch b{font-weight:800}'+
+  '</style>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 10px">Instacart never bought <b>revenue</b> — it bought <b>technology</b>, and turned each deal into a <b>product line in the Platform (Carrot)</b>. Follow the arrow: <b>deal → the product it became</b>.</div>';
+  h+='<div class="mnt-rail">'+M.map(function(m){
+    return '<div class="mnt-chip'+(m.big?' big':'')+'"><div class="mnt-top"><span class="mnt-yr">'+m.y+'</span><span class="mnt-cat">'+m.cat+'</span></div>'+
+      '<div class="mnt-n">'+m.n+' <span class="mnt-becomes">→ '+m.prod+'</span></div>'+
+      '<div class="mnt-fp">'+m.fp+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="mnt-punch"><b>The value, in one line:</b> these tuck-ins are the whole <b>Enterprise platform</b> — Storefront, Caper Carts, FoodStorm, pricing, and now international. That is how a delivery app became the grocery industry’s <b>tech vendor</b>: the same stack it built for itself, resold to retailers at higher-margin, stickier economics. The proof it compounds: <b>Save Mart adopted four of these products at once</b> (2024).</div>';
   return h;
 }
 function enterpriseExamples(){
@@ -1075,6 +1180,7 @@ function html(c){
   h += '<div class="ov-pane" data-capane="advertising">';
   h += '<p class="ov-lede"><b>Advertising is the reason Instacart is profitable.</b> CPG brands pay to be discovered at the <b>point of purchase</b> — ~100% gross margin, and, as the Overview showed, roughly the size of the entire company\'s profit. Below: how big it has grown, why it converts, whether it is durable, and who it competes with.</p>';
   h += sec('Instacart\u2019s role in the ad value chain', cartAdRole());
+  h += sec('Follow the ad dollar — where it enters &amp; who keeps it', cartAdFlow());
   h += sec('The mix shift that made Instacart profitable',
     '<div class="ov-diagram-cap" style="margin:0 0 10px">Quarterly <b>advertising revenue</b> (orange bars) and <b>ads as a share of total revenue</b> (navy line). The share, not just the dollars, is the story.</div>'+
     adGrowthChart());
@@ -1090,6 +1196,7 @@ function html(c){
   h += '<div class="ov-pane" data-capane="enterprise">';
   h += '<p class="ov-lede"><b>Instacart Platform (Enterprise)</b> is the pivot from a delivery app to <b>the grocery industry’s tech vendor</b>. Instacart sells the same technology that runs its own app to retailers, to power <b>their</b> e-commerce, fulfillment, ads and in-store tech — the retailer keeps the customer. Lower take than the Marketplace, but it is how Instacart makes itself indispensable.</p>';
   h += sec('The flip — turning a competitor into a customer', entFlip());
+  h += sec('How Instacart built the platform — every deal became a product', cartMnaTimeline());
   h += sec('Carrot — the platform management frames as five pillars', carrotPillars());
   h += sec('Where Instacart sits — its role at every stage', cartRoleMap());
   h += sec('From online to the aisle — Connected Stores',

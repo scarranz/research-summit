@@ -587,21 +587,29 @@ var CART_THEMES=[
 // The point: a company's suppliers reveal what it is BUILDING. Instacart serves
 // grocers but spends on ad-tech + AI -> it is becoming an ad/data company. The tab
 // teaches that one idea: the pivot is visible in who it does business with.
+var VC_DETAIL={
+  reach:{t:'Reach — extending ads off Instacart', h:'Instacart <b>syndicates its first-party audiences + closed-loop measurement</b> onto other screens, where the <b>partner supplies the inventory</b> and Instacart supplies the <b>data + attribution</b>:<br><br>&bull; <b>Roku</b> — connected-TV. Real: <b>Hershey ~4&times; ROAS</b>.<br>&bull; <b>The Trade Desk</b> — the demand-side platform for the open web. Real: <b>Danone</b>.<br>&bull; <b>PubMatic</b> — the supply-side platform. Real: <b>Mars</b>.<br><br><b>Why it matters:</b> a brand can reach a shopper on TV, then Instacart proves the ad drove an actual grocery purchase &mdash; the closed loop no pure ad-network can match.'},
+  dataai:{t:'Data & AI — the brain', h:'The infrastructure that turns billions of orders into targeting, ranking and forecasting:<br><br>&bull; <b>Snowflake</b> — the data warehouse + <b>clean rooms</b> where brands match their data to Instacart&rsquo;s <i>without</i> either side seeing raw customer data.<br>&bull; <b>NVIDIA</b> — the AI compute behind search ranking, recommendations and demand forecasting.<br>&bull; <b>Confluent</b> — real-time streaming that keeps inventory, pricing and availability live.<br><br><b>Why it matters:</b> the moat is the <b>first-party purchase data</b> &mdash; but data is only worth what you can compute on it. This is the &ldquo;AI&rdquo; half of &ldquo;ad-and-data company.&rdquo;'},
+  plumbing:{t:'Plumbing — running the marketplace', h:'Commodity inputs that keep the app working:<br><br>&bull; <b>Marqeta</b> — issues the virtual cards shoppers use to pay at checkout in the store.<br>&bull; <b>Twilio</b> — the SMS/notifications between shoppers, customers and support.<br><br><b>Why it matters:</b> low leverage, near-zero disclosed spend, easily swapped &mdash; the opposite of the ad-tech &amp; AI suppliers. This is the part that is <i>not</i> the strategy.'},
+  grocers:{t:'Grocers — the customer base', h:'~<b>1,800 retail banners / 85,000+ stores</b> pay Instacart two ways:<br><br>&bull; <b>Marketplace commission</b> — a take of GTV on orders placed in the Instacart app (Instacart owns that customer).<br>&bull; <b>Enterprise SaaS</b> — recurring fees for Storefront, Carrot Ads, FoodStorm and Caper (the retailer keeps the customer).<br><br><b>Why it matters:</b> no single grocer is material (see &ldquo;anchored to no one&rdquo;), so this is stable, diversified &mdash; but <b>low-margin</b> revenue. The profit is in the next box.'},
+  brands:{t:'CPG brands — the profit engine', h:'<b>6,000+</b> brands (and agencies &mdash; Flywheel, Publicis) buy advertising through <b>Carrot Ads</b>: sponsored products, display, coupons, in-store screens.<br><br>&bull; ~<b>$1.08B</b>/yr at ~<b>100% gross margin</b> &mdash; roughly the entire company&rsquo;s profit.<br>&bull; <b>Closed-loop</b>: the ad and the purchase are the same session, so return is measured to the cent.<br><br><b>Why it matters:</b> this is <i>why</i> Instacart spends on ad-tech &amp; AI (left side). The whole model exists to grow this box.'},
+  shoppers:{t:'Shoppers — the consumers', h:'The consumers who order pay:<br><br>&bull; <b>Delivery + service fees</b> per order.<br>&bull; <b>Instacart+</b> membership (~$99/yr) &mdash; free delivery + perks that lift basket size &amp; frequency.<br><br><b>Why it matters:</b> the consumer relationship is the <b>fuel</b> &mdash; every order generates the first-party purchase data that powers the ads brands pay for. The shopper never pays for an ad, but is the reason the ad works.'}
+};
 function cartValueChain(){
   var BUY=[
-    {role:'Reach &mdash; extend ads off-platform', players:'Roku &middot; The Trade Desk &middot; PubMatic', what:'push Instacart ads onto connected-TV &amp; the open web'},
-    {role:'Data &amp; AI &mdash; the brain', players:'Snowflake &middot; NVIDIA &middot; Confluent', what:'the data warehouse + AI that power targeting, ranking &amp; the app'},
-    {role:'Plumbing &mdash; run the marketplace', players:'Marqeta &middot; Twilio', what:'payments &amp; messaging that keep it running'}
+    {k:'reach', role:'Reach &mdash; extend ads off-platform', players:'Roku &middot; The Trade Desk &middot; PubMatic', what:'push Instacart ads onto connected-TV &amp; the open web'},
+    {k:'dataai', role:'Data &amp; AI &mdash; the brain', players:'Snowflake &middot; NVIDIA &middot; Confluent', what:'the data warehouse + AI that power targeting, ranking &amp; the app'},
+    {k:'plumbing', role:'Plumbing &mdash; run the marketplace', players:'Marqeta &middot; Twilio', what:'payments &amp; messaging that keep it running'}
   ];
   var PAY=[
-    {role:'Grocers', players:'Kroger &middot; Albertsons &middot; Aldi &middot; Wegmans', what:'commissions on orders + SaaS fees (Storefront, Carrot)'},
-    {role:'CPG brands', players:'L&rsquo;Or&eacute;al &middot; Scotts &middot; 6,000+ more', what:'advertising &mdash; ~100% margin, the profit engine'},
-    {role:'Shoppers', players:'the consumers', what:'delivery + service fees + Instacart+ membership'}
+    {k:'grocers', role:'Grocers', players:'Kroger &middot; Albertsons &middot; Aldi &middot; Wegmans', what:'commissions on orders + SaaS fees (Storefront, Carrot)'},
+    {k:'brands', role:'CPG brands', players:'L&rsquo;Or&eacute;al &middot; Scotts &middot; 6,000+ more', what:'advertising &mdash; ~100% margin, the profit engine'},
+    {k:'shoppers', role:'Shoppers', players:'the consumers', what:'delivery + service fees + Instacart+ membership'}
   ];
   var h='<style>'+
     '.cvc{display:grid;grid-template-columns:1fr 30px 1.05fr 30px 1fr;gap:8px;align-items:center;margin:2px 0 8px}@media(max-width:820px){.cvc{grid-template-columns:1fr}.cvc-arw{transform:rotate(90deg)}}'+
     '.cvc-zt{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin:0 0 6px}.cvc-zt.b{color:#3A7BD5}.cvc-zt.g{color:#0AAD0A}'+
-    '.cvc-card{border:1px solid var(--bdr);border-radius:9px;padding:8px 10px;background:#fff;margin-bottom:8px}.cvc-card.b{border-left:3px solid #3A7BD5}.cvc-card.g{border-left:3px solid #0AAD0A}'+
+    '.cvc-card{border:1px solid var(--bdr);border-radius:9px;padding:8px 10px;background:#fff;margin-bottom:8px}.cvc-card.b{border-left:3px solid #3A7BD5}.cvc-card.g{border-left:3px solid #0AAD0A}.cvc-card.ov-clickable{cursor:pointer;transition:.12s}.cvc-card.ov-clickable:hover{box-shadow:0 3px 10px rgba(0,0,0,.09);transform:translateY(-1px)}'+
     '.cvc-role{font-size:11px;font-weight:800;color:var(--navy)}'+
     '.cvc-pl{font-size:10px;font-weight:800;margin:2px 0}.cvc-card.b .cvc-pl{color:#3A7BD5}.cvc-card.g .cvc-pl{color:#0AAD0A}'+
     '.cvc-what{font-size:10px;color:var(--mu);line-height:1.35}'+
@@ -610,11 +618,11 @@ function cartValueChain(){
   '</style>';
   h+='<div class="ov-diagram-cap" style="margin:0 0 10px">Follow the sequence left to right: <b>what Instacart buys</b> to build the platform &rarr; <b>the platform</b> &rarr; <b>who pays for it</b>. The tell: its <b>spend</b> is ad-tech, data &amp; AI; its <b>revenue</b> increasingly is <b>ads</b>.</div>';
   h+='<div class="cvc">';
-  h+='<div><div class="cvc-zt b">1 &middot; What it buys (spend out)</div>'+BUY.map(function(x){ return '<div class="cvc-card b"><div class="cvc-role">'+x.role+'</div><div class="cvc-pl">'+x.players+'</div><div class="cvc-what">'+x.what+'</div></div>'; }).join('')+'</div>';
+  h+='<div><div class="cvc-zt b">1 &middot; What it buys (spend out)</div>'+BUY.map(function(x){ return '<div class="cvc-card b ov-clickable" data-detail="vc:'+x.k+'"><div class="cvc-role">'+x.role+'</div><div class="cvc-pl">'+x.players+'</div><div class="cvc-what">'+x.what+' <span style="color:#3A7BD5;font-weight:700">tap &rsaquo;</span></div></div>'; }).join('')+'</div>';
   h+='<div class="cvc-arw">&rarr;</div>';
   h+='<div class="cvc-hub"><div class="cvc-hub-n">INSTACART</div><div class="cvc-hub-d">The <b>ad-and-data platform</b> it is building: aggregates CPG demand, owns the <b>first-party purchase data</b>, and arms retailers instead of competing with them.</div></div>';
   h+='<div class="cvc-arw">&rarr;</div>';
-  h+='<div><div class="cvc-zt g">3 &middot; Who pays it (revenue in)</div>'+PAY.map(function(x){ return '<div class="cvc-card g"><div class="cvc-role">'+x.role+'</div><div class="cvc-pl">'+x.players+'</div><div class="cvc-what">'+x.what+'</div></div>'; }).join('')+'</div>';
+  h+='<div><div class="cvc-zt g">3 &middot; Who pays it (revenue in)</div>'+PAY.map(function(x){ return '<div class="cvc-card g ov-clickable" data-detail="vc:'+x.k+'"><div class="cvc-role">'+x.role+'</div><div class="cvc-pl">'+x.players+'</div><div class="cvc-what">'+x.what+' <span style="color:#0AAD0A;font-weight:700">tap &rsaquo;</span></div></div>'; }).join('')+'</div>';
   h+='</div>';
   h+='<div class="scx-flow-cap">The sequence gives away the pivot: Instacart <b>spends on ad-tech, data &amp; AI</b> (left) to build a platform whose <b>fastest-growing revenue is advertising</b> (right). Its customers are grocers; its suppliers are <b>Roku, The Trade Desk, Snowflake and NVIDIA</b> &mdash; <b>it is becoming what it buys.</b></div>';
   return h;
@@ -697,7 +705,7 @@ function cartAdFlow(){
     '.caf-wrap{border:1px solid var(--bdr);border-radius:14px;background:linear-gradient(180deg,#fffdfa,#fff);padding:6px 4px 2px;margin:2px 0}'+
     '.caf-line{stroke-width:5;stroke-dasharray:8 7;animation:cafflow .8s linear infinite;fill:none;stroke-linecap:round}'+
     '.caf-loop{stroke-width:2.5;stroke-dasharray:6 6;animation:cafflow 1.1s linear infinite;fill:none}'+
-    '.caf-node rect{transition:.15s}.caf-node:hover rect{stroke-width:2.5;filter:drop-shadow(0 2px 5px rgba(0,0,0,.10))}'+
+    '.caf-node.ov-clickable{cursor:pointer}.caf-node rect{transition:.15s}.caf-node:hover rect{stroke-width:2.5;filter:drop-shadow(0 2px 5px rgba(0,0,0,.10))}'+
     '.caf-cap{font-size:11.5px;color:var(--navy);line-height:1.55;padding:9px 14px 4px}.caf-cap b{font-weight:800}'+
   '</style>';
   h+='<div class="caf-wrap"><svg viewBox="0 0 720 300" role="img" aria-label="Instacart advertising money flow" style="width:100%;height:auto;font-family:Inter,sans-serif">';
@@ -713,24 +721,24 @@ function cartAdFlow(){
   // off-platform branch: instacart -> Roku/YouTube/TTD
   h+='<line class="caf-line" x1="352" y1="200" x2="352" y2="238" stroke="#FF7009" marker-end="url(#cafo)"/>';
   // NODES
-  h+='<g class="caf-node"><rect x="14" y="114" width="136" height="72" rx="10" fill="#fff" stroke="#C7CED6" stroke-width="1.5"/>'+
+  h+='<g class="caf-node ov-clickable" data-detail="vc:brands"><rect x="14" y="114" width="136" height="72" rx="10" fill="#fff" stroke="#C7CED6" stroke-width="1.5"/>'+
     '<text x="82" y="138" text-anchor="middle" font-size="12" font-weight="800" fill="#10141A">CPG brands</text>'+
     '<text x="82" y="157" text-anchor="middle" font-size="10.5" fill="#3A4552">the money enters here</text>'+
-    '<text x="82" y="175" text-anchor="middle" font-size="10.5" font-weight="800" fill="#0AAD0A">ad budgets &#8594;</text><title>The advertiser pays. This is where the ad dollar originates.</title></g>';
+    '<text x="82" y="175" text-anchor="middle" font-size="10.5" font-weight="800" fill="#0AAD0A">ad budgets &#8594;</text></g>';
   h+='<g class="caf-node"><rect x="250" y="102" width="204" height="96" rx="12" fill="rgba(255,112,9,0.07)" stroke="#FF7009" stroke-width="2"/>'+
     '<text x="352" y="128" text-anchor="middle" font-size="12.5" font-weight="800" fill="#FF7009">INSTACART &#183; Carrot Ads</text>'+
     '<text x="352" y="152" text-anchor="middle" font-size="20" font-weight="900" fill="#FF7009">~100% margin</text>'+
     '<text x="352" y="172" text-anchor="middle" font-size="10" fill="#2b3542">keeps almost all of it &#8212; the profit engine</text>'+
     '<text x="352" y="189" text-anchor="middle" font-size="9.5" font-weight="700" fill="#6b7684">&#8776; the entire company&#8217;s FY25 profit</text><title>On-platform ads cost Instacart almost nothing to serve, so ad revenue is nearly pure profit.</title></g>';
-  h+='<g class="caf-node"><rect x="558" y="114" width="148" height="72" rx="10" fill="#fff" stroke="#C7CED6" stroke-width="1.5"/>'+
+  h+='<g class="caf-node ov-clickable" data-detail="vc:shoppers"><rect x="558" y="114" width="148" height="72" rx="10" fill="#fff" stroke="#C7CED6" stroke-width="1.5"/>'+
     '<text x="632" y="136" text-anchor="middle" font-size="12" font-weight="800" fill="#10141A">Shopper</text>'+
     '<text x="632" y="154" text-anchor="middle" font-size="10" fill="#3A4552">at point of purchase</text>'+
-    '<text x="632" y="171" text-anchor="middle" font-size="10" font-weight="700" fill="#12356B">sees ad &#8594; buys</text><title>The shopper never pays for the ad; the shopper is the target and the proof.</title></g>';
-  h+='<g class="caf-node"><rect x="252" y="238" width="200" height="44" rx="9" fill="#fff" stroke="#FF7009" stroke-width="1.2"/>'+
+    '<text x="632" y="171" text-anchor="middle" font-size="10" font-weight="700" fill="#12356B">sees ad &#8594; buys</text></g>';
+  h+='<g class="caf-node ov-clickable" data-detail="vc:reach"><rect x="252" y="238" width="200" height="44" rx="9" fill="#fff" stroke="#FF7009" stroke-width="1.2"/>'+
     '<text x="352" y="257" text-anchor="middle" font-size="10.5" font-weight="800" fill="#FF7009">Off-platform: Roku &#183; YouTube &#183; TTD</text>'+
-    '<text x="352" y="273" text-anchor="middle" font-size="9" fill="#3A4552">buys reach beyond its own app, marked up</text><title>Instacart extends demand off its own surface via partnerships, paying for inventory and reselling it with its data.</title></g>';
+    '<text x="352" y="273" text-anchor="middle" font-size="9" fill="#3A4552">buys reach beyond its own app, marked up</text></g>';
   h+='</svg>';
-  h+='<div class="caf-cap"><b>Where the ad dollar enters and who keeps it.</b> It comes <b>from the brand</b> and <b>stays with Instacart at ~100% margin</b> (~<b>$1.08B</b> &#8212; roughly the whole company&#8217;s FY2025 profit). The <b>shopper never pays for the ad</b>; the shopper&#8217;s <b>purchase is the proof</b> (closed-loop attribution) that pulls the next budget &#8212; the flywheel. Off-platform (Roku / YouTube / The Trade Desk) buys reach beyond Instacart&#8217;s own app and resells it with first-party data. <span class="ave-subh-note">Hover any node for detail.</span></div>';
+  h+='<div class="caf-cap"><b>Where the ad dollar enters and who keeps it.</b> It comes <b>from the brand</b> and <b>stays with Instacart at ~100% margin</b> (~<b>$1.08B</b> &#8212; roughly the whole company&#8217;s FY2025 profit). The <b>shopper never pays for the ad</b>; the shopper&#8217;s <b>purchase is the proof</b> (closed-loop attribution) that pulls the next budget &#8212; the flywheel. Off-platform (Roku / YouTube / The Trade Desk) buys reach beyond Instacart&#8217;s own app and resells it with first-party data. <span class="ave-subh-note">Tap the brand, shopper or off-platform node for how it operates.</span></div>';
   h+='</div>';
   return h;
 }
@@ -1389,6 +1397,7 @@ function init(c){
     if (kind==='sub'){ var s=findSub(id); return s && { t:s.n+' <span class="ov-modal-sub">'+esc(s.rev)+'</span>', h:subDetailHtml(s) }; }
     if (kind==='hist'){ var ht=TIMELINE[+id]; return ht && ht.d ? { t:ht.y, h:ht.d } : null; }
     if (kind==='role'){ var rd=ROLE_DETAIL[id]; return rd ? { t:rd.t, h:rd.h } : null; }
+    if (kind==='vc'){ var vc=VC_DETAIL[id]; return vc ? { t:vc.t, h:vc.h } : null; }
     if (kind==='strat'){ var sn=STRATEGY.loop.filter(function(n){return n.k===id;})[0]; return sn ? { t:sn.ic+' '+sn.n, h:'<div class="ov-sub-line">'+sn.detail+'</div>' } : null; }
     if (kind==='peer'){ var pe=PEERS.filter(function(p){return p.k===id;})[0]; return pe ? { t:pe.n, h:'<div class="ov-sub-line"><b>Angle:</b> '+pe.angle+'</div><div class="ov-sub-mon" style="margin-top:12px"><b>Their edge:</b> '+pe.edge+'</div><div class="ov-sub-comp" style="margin-top:12px"><b>Their gap vs Instacart:</b> '+pe.gap+'</div>' } : null; }
     return null;

@@ -619,24 +619,32 @@ function segParts(){
   h+='<div class="ov-diagram-cap" style="margin-top:11px">Mobility and Delivery are now <b>near-equal in size</b> — but Mobility still carries the profit (~2× the margin). Open the <b>Mobility</b> and <b>Delivery</b> tabs for each engine’s economics; <b>Uber One</b> binds them; Freight is optionality. <span class="ave-subh-note">FY2025 actuals — last full reported year.</span></div>';
   return h;
 }
+var AR_DETAIL={
+  mob:{t:'Mobility — Uber leads', h:'Uber holds <b>~70%+ of US rideshare</b>; Lyft is the only real US rival, and it is a <b>US/Canada-only #2</b>. Take rates cluster ~<b>30%</b> across every player, so <b>price is not the battle</b> &mdash; <b>density, cross-sell</b> (Eats &harr; rides via Uber One) and <b>global scale</b> are. Regionally, Uber competes locally (Bolt in Europe, inDrive in emerging markets) or holds <b>equity stakes</b> from markets it exited (Didi/China, Grab/SE&nbsp;Asia, Yandex/Russia). <b>Why it leads:</b> the only platform that is global AND multi-product.'},
+  del:{t:'Delivery — Uber contests (US #2)', h:'The one arena where a rival <b>out-scales Uber</b>: <b>DoorDash ~60%</b> of US food delivery vs Uber Eats ~<b>22&ndash;25%</b>. But Eats is <b>far bigger internationally</b>, and Uber counters US share with <b>Mobility cross-sell, Uber One, grocery and a &gt;$2B ad layer</b> DoorDash cannot match at the same scale. Margin has <b>doubled</b> (~1.9% &rarr; ~4% of GB) on ads + scale, converging toward Mobility&rsquo;s ~8%.'},
+  groc:{t:'Grocery & retail — Uber is a challenger', h:'Grocery is an <b>Eats cross-sell</b>, not a standalone win yet: ~<b>$12B run-rate</b>, 5 of the top-10 US grocers on platform, bigger baskets &amp; higher frequency. It fights <b>Instacart</b> (the grocery-native leader), <b>Amazon</b> (Whole Foods + Fresh) and <b>DoorDash</b>. Uber&rsquo;s edge is the <b>existing delivery network + membership</b>; its gap is grocery-specific tech &amp; retailer relationships, where Instacart is ahead.'},
+  ads:{t:'Advertising — rising fast', h:'The clearest <b>structural margin lever</b>: <b>&gt;$2B run-rate, +50%/yr, ~100% incremental margin</b>, sitting mostly inside Delivery (sponsored listings, in-app). It competes for CPG / retail-media budgets with Amazon, Instacart and the retail-media field. <b>Why it is rising:</b> Uber has the <b>audience + purchase intent + closed loop</b>, and the ad dollar lifts Delivery&rsquo;s take <i>without</i> touching the marketplace split.'},
+  av:{t:'Autonomous — the hybrid bet', h:'The <b>defining open question</b>. Uber is <b>both partner and rival</b> to Waymo: Waymo rides are dispatched on the Uber app in Austin/Atlanta, but Waymo runs its own app in SF/Phoenix/LA. Uber&rsquo;s bet: be the <b>demand + fleet-management layer</b> every AV plugs into (30+ partners; &ldquo;no effect of the Waymo launches on our overall business&rdquo;), while Tesla threatens a closed network. <b>Contested</b> &mdash; see the AV tab for the hybrid-network case.'},
+  freight:{t:'Freight — optionality only', h:'Logistics brokerage, reported <b>gross</b> (no take rate). ~<b>$5B</b> bookings, <b>near-breakeven</b>, hit by the freight recession. Uber built it via <b>Transplace</b> (2021) but it is <b>subscale</b> vs incumbents. Kept for <b>optionality</b> (a data + network option on logistics), not a battle Uber must win &mdash; and a candidate to divest if it never turns.'}
+};
 function uberArenaMap(){
   var A=[
-    {a:'Mobility (rideshare)', r:'vs Lyft &middot; Grab &middot; Bolt &middot; Didi', pos:'Leads', pc:'#1E9E62', pb:'rgba(30,158,98,0.12)', read:'~<b>70%+</b> of US rides and the only global, multi-product player. Peers sit at the same ~30% take &mdash; scale &amp; the bundle are the moat, not price.'},
-    {a:'Delivery (food)', r:'vs DoorDash', pos:'Contests', pc:'#B8860B', pb:'rgba(184,134,11,0.14)', read:'<b>#2 in the US</b> (Eats ~22&ndash;25% vs DoorDash ~60%) &mdash; but <b>bigger internationally</b>, and margin is converging up on ads + scale.'},
-    {a:'Grocery &amp; retail', r:'vs Instacart &middot; Amazon &middot; DoorDash', pos:'Challenger', pc:'#3A7BD5', pb:'rgba(58,123,213,0.12)', read:'~<b>$12B</b> run-rate and growing fast &mdash; an Eats cross-sell, not the category leader yet.'},
-    {a:'Advertising', r:'vs the retail-media field', pos:'Rising', pc:'#3A7BD5', pb:'rgba(58,123,213,0.12)', read:'<b>&gt;$2B</b> run-rate, ~100% margin, +50%/yr &mdash; a fast-emerging profit pool hiding inside Delivery.'},
-    {a:'Autonomous (AV)', r:'vs Waymo &middot; Tesla', pos:'Hybrid bet', pc:'#6b7684', pb:'#eef2f7', read:'<b>Partner AND rival</b> &mdash; Waymo rides on the Uber app in some cities, on its own in others. The defining open question (see AV tab).'},
-    {a:'Freight', r:'vs digital brokerages', pos:'Optionality', pc:'#6b7684', pb:'#eef2f7', read:'Subscale, near-breakeven &mdash; kept for optionality, not a battle Uber must win.'}
+    {k:'mob', a:'Mobility (rideshare)', r:'vs Lyft &middot; Grab &middot; Bolt &middot; Didi', pos:'Leads', pc:'#1E9E62', pb:'rgba(30,158,98,0.12)', read:'~<b>70%+</b> of US rides and the only global, multi-product player. Peers sit at the same ~30% take &mdash; scale &amp; the bundle are the moat, not price.'},
+    {k:'del', a:'Delivery (food)', r:'vs DoorDash', pos:'Contests', pc:'#B8860B', pb:'rgba(184,134,11,0.14)', read:'<b>#2 in the US</b> (Eats ~22&ndash;25% vs DoorDash ~60%) &mdash; but <b>bigger internationally</b>, and margin is converging up on ads + scale.'},
+    {k:'groc', a:'Grocery &amp; retail', r:'vs Instacart &middot; Amazon &middot; DoorDash', pos:'Challenger', pc:'#3A7BD5', pb:'rgba(58,123,213,0.12)', read:'~<b>$12B</b> run-rate and growing fast &mdash; an Eats cross-sell, not the category leader yet.'},
+    {k:'ads', a:'Advertising', r:'vs the retail-media field', pos:'Rising', pc:'#3A7BD5', pb:'rgba(58,123,213,0.12)', read:'<b>&gt;$2B</b> run-rate, ~100% margin, +50%/yr &mdash; a fast-emerging profit pool hiding inside Delivery.'},
+    {k:'av', a:'Autonomous (AV)', r:'vs Waymo &middot; Tesla', pos:'Hybrid bet', pc:'#6b7684', pb:'#eef2f7', read:'<b>Partner AND rival</b> &mdash; Waymo rides on the Uber app in some cities, on its own in others. The defining open question (see AV tab).'},
+    {k:'freight', a:'Freight', r:'vs digital brokerages', pos:'Optionality', pc:'#6b7684', pb:'#eef2f7', read:'Subscale, near-breakeven &mdash; kept for optionality, not a battle Uber must win.'}
   ];
   var h='<style>'+
-    '.uam-row{display:grid;grid-template-columns:1.1fr auto 1.5fr;gap:12px;align-items:center;border:1px solid var(--bdr);border-left:4px solid #ccc;border-radius:10px;padding:10px 13px;margin-bottom:8px}'+
+    '.uam-row{display:grid;grid-template-columns:1.1fr auto 1.5fr;gap:12px;align-items:center;border:1px solid var(--bdr);border-left:4px solid #ccc;border-radius:10px;padding:10px 13px;margin-bottom:8px}.uam-row.ov-clickable{cursor:pointer;transition:.12s}.uam-row.ov-clickable:hover{box-shadow:0 3px 10px rgba(0,0,0,.08)}'+
     '.uam-a{font-size:12.5px;font-weight:800;color:var(--navy)}.uam-r{display:block;font-size:10px;color:var(--mu);font-weight:600;margin-top:2px}'+
     '.uam-pos{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:4px 12px;text-align:center;white-space:nowrap}'+
     '.uam-read{font-size:11.5px;color:var(--navy);line-height:1.45}.uam-read b{font-weight:800}'+
     '@media(max-width:640px){.uam-row{grid-template-columns:1fr;gap:6px}.uam-pos{justify-self:start}}'+
   '</style>';
-  h+='<div class="ov-diagram-cap" style="margin:0 0 10px">Uber is #1 or #2 almost everywhere, so the useful question is not &ldquo;who is the peer&rdquo; but <b>where it leads, where it contests, and where it is only placing a bet</b> &mdash; arena by arena.</div>';
-  h+=A.map(function(x){ return '<div class="uam-row" style="border-left-color:'+x.pc+'"><div class="uam-a">'+x.a+'<span class="uam-r">'+x.r+'</span></div><div class="uam-pos" style="color:'+x.pc+';background:'+x.pb+'">'+x.pos+'</div><div class="uam-read">'+x.read+'</div></div>'; }).join('');
+  h+='<div class="ov-diagram-cap" style="margin:0 0 10px">Uber is #1 or #2 almost everywhere, so the useful question is not &ldquo;who is the peer&rdquo; but <b>where it leads, where it contests, and where it is only placing a bet</b> &mdash; arena by arena. <b>Tap any arena</b> for the state of play.</div>';
+  h+=A.map(function(x){ return '<div class="uam-row ov-clickable" data-detail="arena:'+x.k+'" style="border-left-color:'+x.pc+'"><div class="uam-a">'+x.a+'<span class="uam-r">'+x.r+'</span></div><div class="uam-pos" style="color:'+x.pc+';background:'+x.pb+'">'+x.pos+'</div><div class="uam-read">'+x.read+' <span style="color:#10141A;font-weight:800;white-space:nowrap">detail ›</span></div></div>'; }).join('');
   return h;
 }
 function overviewBody(c){
@@ -1411,6 +1419,7 @@ function wireModal(root){
     if(kind==='note'&&id==='take'){ return {t:'The Mobility take-rate “drop” — accounting, not economics',h:UK_NOTE+'<br><br>'+TAKE_QUOTES.map(function(q){ return '<div style="margin-top:8px"><b>'+esc(q[0])+'</b><br>'+q[1]+'</div>'; }).join('')}; }
     if(kind==='reg'){ var rg=REGV[+id]; return rg?{t:rg.h,h:rg.d}:null; }
     if(kind==='mna'){ var m=MNA.filter(function(x){return x.n===id;})[0]; return m?{t:m.n+' <span class="ov-modal-sub">'+esc(m.y)+' · '+esc(m.deal)+'</span>',h:m.detail}:null; }
+    if(kind==='arena'){ var ar=AR_DETAIL[id]; return ar?{t:ar.t,h:ar.h}:null; }
     return null;
   }
   root.querySelectorAll('[data-detail]').forEach(function(el){ el.style.cursor='pointer';

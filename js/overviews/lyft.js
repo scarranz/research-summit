@@ -126,6 +126,31 @@ function linsMoneyFlow(){
   h+='</div>';
   return h;
 }
+function insModelCompare(){
+  var R=[
+    ['Captive insurer','<b>Aleka</b> (Hawaii)','<b>PVIC</b> &mdash; Pacific Valley (Hawaii)'],
+    ['How much risk it keeps','~<b>95% self-insured</b> &mdash; retains almost all of it','<b>Partial</b> &mdash; reinsures a slice back; still buys from 3rd-party carriers'],
+    ['Reserves / float','~<b>$12.9B</b> (large)','~<b>$2.18B</b> (smaller)'],
+    ['What the float is <i>for</i>','a <b>cash engine</b> &mdash; collect now, invest, pay claims years later','smaller; the story is <b>cost per ride falling</b>, not the float'],
+    ['The old &ldquo;tail&rdquo;','<b>kept</b> on the books and invested','<b>sold off</b> via Loss Portfolio Transfers (Enstar &rarr; DARAG &rarr; RiverStone) &mdash; off the balance sheet'],
+    ['The market&rsquo;s read','&ldquo;float-fed cash&rdquo; (bull) vs &ldquo;an unregulated insurer&rdquo; (bear)','&ldquo;bending the cost curve&rdquo; via SB&nbsp;371 + the captive']
+  ];
+  var h='<style>'+
+    '.imc-hd{font-size:12.5px;color:var(--navy);line-height:1.55;margin:0 0 12px}.imc-hd b{font-weight:800}'+
+    '.imc{border:1px solid var(--bdr);border-radius:12px;overflow:hidden}'+
+    '.imc-row{display:grid;grid-template-columns:1.05fr 1.5fr 1.5fr;border-top:1px solid var(--bdr)}.imc-row:first-child{border-top:none}'+
+    '.imc-cell{padding:9px 12px;font-size:11.5px;line-height:1.45;color:var(--navy);border-left:1px solid var(--bdr)}.imc-cell:first-child{border-left:none}.imc-cell b{font-weight:800}'+
+    '.imc-k{font-weight:800;background:#fafbfc}'+
+    '.imc-head .imc-cell{font-weight:900;background:#f4f6f9;font-size:12px}.imc-hu{color:#10141A}.imc-hl{color:#E6007A}'+
+    '.imc-so{font-size:12px;color:var(--navy);line-height:1.55;background:#f6f8fa;border-radius:9px;padding:11px 14px;margin-top:12px}.imc-so b{font-weight:800}'+
+    '@media(max-width:640px){.imc-row{grid-template-columns:1fr}.imc-cell{border-left:none;border-top:1px dashed var(--bdr)}.imc-cell:first-child{border-top:none}}'+
+  '</style>';
+  h+='<div class="imc-hd"><b>Both run their own captive insurer</b> &mdash; but they play it very differently. <b>Uber goes all-in on the float</b> (huge reserves it invests as a cash engine); <b>Lyft keeps it smaller and actively sells off the old risk</b> (LPT), betting on cost-per-ride reform instead.</div>';
+  h+='<div class="imc"><div class="imc-row imc-head"><div class="imc-cell"></div><div class="imc-cell imc-hu">UBER &middot; Aleka</div><div class="imc-cell imc-hl">LYFT &middot; PVIC</div></div>'+
+    R.map(function(r){ return '<div class="imc-row"><div class="imc-cell imc-k">'+r[0]+'</div><div class="imc-cell">'+r[1]+'</div><div class="imc-cell">'+r[2]+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="imc-so"><b>In one line:</b> Uber&rsquo;s insurance is a <b>cash-flow story</b> (the float it invests); Lyft&rsquo;s is a <b>cost-reduction story</b> (SB&nbsp;371 + offloading the tail). Same plumbing, opposite emphasis.</div>';
+  return h;
+}
 function insuranceBody(c){
   var SHARE=[['California','31'],['New York','27'],['GA · FL · TX','19'],['DC · Mass.','4']];
   var STATES=[
@@ -189,8 +214,10 @@ function insuranceBody(c){
     '<div class="lwb-c"><div class="lwb-v">&gt;50%</div><div class="lwb-l">Per-trip escalation</div><div class="lwb-d">Uber&rsquo;s US insurance cost rose &gt;50% per trip in just three years.</div></div>'+
     '<div class="lwb-c"><div class="lwb-v">most</div><div class="lwb-l">It is pass-through</div><div class="lwb-d">Most of riders&rsquo; recent price hikes are simply insurance passed straight through.</div></div>'+
   '</div>';
-  h+='<div class="lins-cap" style="margin:12px 0 4px">And it is <b>not evenly spread</b> &mdash; insurance as a share of the fare, by state <span style="font-style:italic">(Uber advocacy est.)</span></div>';
-  h+='<div class="lins-share">'+SHARE.map(function(x){ var w=(+x[1])/31*100; return '<div class="lins-sb"><div class="lins-sb-v">'+x[1]+'%</div><div class="lins-sb-bar" style="height:'+w+'%"></div><div class="lins-sb-l">'+x[0]+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="lins-cap" style="margin:14px 0 8px"><b>How much of a fare is just insurance?</b> Wildly <b>uneven</b> by state &mdash; which is exactly why <b>California</b> (SB&nbsp;371) is the whole battleground. <span style="font-style:italic;color:var(--mu)">(share of the fare; Uber advocacy est.)</span></div>';
+  h+='<style>.lshr-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}.lshr-l{flex:0 0 92px;font-size:11.5px;font-weight:700;color:var(--navy);text-align:right}.lshr-track{flex:1;height:24px;background:#f1f4f8;border-radius:7px;overflow:hidden}.lshr-fill{height:100%;background:linear-gradient(90deg,#E6007A,#c0006a);border-radius:7px;min-width:3px}.lshr-v{flex:0 0 46px;font-size:14px;font-weight:900;color:#E6007A}</style>';
+  h+='<div>'+SHARE.map(function(x){ return '<div class="lshr-row"><div class="lshr-l">'+x[0]+'</div><div class="lshr-track"><div class="lshr-fill" style="width:'+x[1]+'%"></div></div><div class="lshr-v">'+x[1]+'%</div></div>'; }).join('')+'</div>';
+  h+='<div class="lins-cap" style="margin-top:6px">Read it as <b>cents on the dollar</b>: in a <b>California</b> fare, ~<b>31¢</b> of every $1 is insurance; in DC/Mass, ~<b>4¢</b>. That spread is why one state&rsquo;s rules (SB&nbsp;371) move the <b>whole</b> margin story.</div>';
   // two-front war
   h+='<div class="lins-h">The two-front war to bend the curve</div>';
   h+='<div class="lins-two">'+
@@ -225,6 +252,8 @@ function insuranceBody(c){
     '<table class="ov-table"><thead><tr><th>Date</th><th>Counterparty</th><th>What was transferred</th></tr></thead><tbody>'+
     RISK_XFER.map(function(r){return '<tr><td class="ov-td-name">'+esc(r[0])+'</td><td class="ov-td-name">'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>';}).join('')+
     '</tbody></table>';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--navy);margin:20px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--bdr)">Uber vs Lyft — two ways to run insurance</div>';
+  h+=insModelCompare();
   h+='<div class="ov-foot" style="margin-top:14px">Coverage structure and the two-lever strategy are from Lyft’s June-2024 Investor Day (Insurance section, Max Feldman, VP Head of Risk); limits per Lyft/Uber driver-insurance pages. Share-of-fare percentages are Uber advocacy estimates (directional). Cost figures from Lyft FY2024 10-K and Uber disclosures. State frameworks re-index annually — verify current-year figures.</div>';
   return h;
 }

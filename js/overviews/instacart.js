@@ -587,6 +587,38 @@ var CART_THEMES=[
 // The point: a company's suppliers reveal what it is BUILDING. Instacart serves
 // grocers but spends on ad-tech + AI -> it is becoming an ad/data company. The tab
 // teaches that one idea: the pivot is visible in who it does business with.
+function cartValueChain(){
+  var BUY=[
+    {role:'Reach &mdash; extend ads off-platform', players:'Roku &middot; The Trade Desk &middot; PubMatic', what:'push Instacart ads onto connected-TV &amp; the open web'},
+    {role:'Data &amp; AI &mdash; the brain', players:'Snowflake &middot; NVIDIA &middot; Confluent', what:'the data warehouse + AI that power targeting, ranking &amp; the app'},
+    {role:'Plumbing &mdash; run the marketplace', players:'Marqeta &middot; Twilio', what:'payments &amp; messaging that keep it running'}
+  ];
+  var PAY=[
+    {role:'Grocers', players:'Kroger &middot; Albertsons &middot; Aldi &middot; Wegmans', what:'commissions on orders + SaaS fees (Storefront, Carrot)'},
+    {role:'CPG brands', players:'L&rsquo;Or&eacute;al &middot; Scotts &middot; 6,000+ more', what:'advertising &mdash; ~100% margin, the profit engine'},
+    {role:'Shoppers', players:'the consumers', what:'delivery + service fees + Instacart+ membership'}
+  ];
+  var h='<style>'+
+    '.cvc{display:grid;grid-template-columns:1fr 30px 1.05fr 30px 1fr;gap:8px;align-items:center;margin:2px 0 8px}@media(max-width:820px){.cvc{grid-template-columns:1fr}.cvc-arw{transform:rotate(90deg)}}'+
+    '.cvc-zt{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin:0 0 6px}.cvc-zt.b{color:#3A7BD5}.cvc-zt.g{color:#0AAD0A}'+
+    '.cvc-card{border:1px solid var(--bdr);border-radius:9px;padding:8px 10px;background:#fff;margin-bottom:8px}.cvc-card.b{border-left:3px solid #3A7BD5}.cvc-card.g{border-left:3px solid #0AAD0A}'+
+    '.cvc-role{font-size:11px;font-weight:800;color:var(--navy)}'+
+    '.cvc-pl{font-size:10px;font-weight:800;margin:2px 0}.cvc-card.b .cvc-pl{color:#3A7BD5}.cvc-card.g .cvc-pl{color:#0AAD0A}'+
+    '.cvc-what{font-size:10px;color:var(--mu);line-height:1.35}'+
+    '.cvc-hub{text-align:center;border:2px solid #0AAD0A;border-radius:12px;background:rgba(10,173,10,0.05);padding:13px 11px}.cvc-hub-n{font-size:14px;font-weight:900;color:#0AAD0A}.cvc-hub-d{font-size:10.5px;color:var(--navy);line-height:1.45;margin-top:6px}'+
+    '.cvc-arw{text-align:center;font-size:20px;font-weight:900;color:#0AAD0A}'+
+  '</style>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 10px">Follow the sequence left to right: <b>what Instacart buys</b> to build the platform &rarr; <b>the platform</b> &rarr; <b>who pays for it</b>. The tell: its <b>spend</b> is ad-tech, data &amp; AI; its <b>revenue</b> increasingly is <b>ads</b>.</div>';
+  h+='<div class="cvc">';
+  h+='<div><div class="cvc-zt b">1 &middot; What it buys (spend out)</div>'+BUY.map(function(x){ return '<div class="cvc-card b"><div class="cvc-role">'+x.role+'</div><div class="cvc-pl">'+x.players+'</div><div class="cvc-what">'+x.what+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="cvc-arw">&rarr;</div>';
+  h+='<div class="cvc-hub"><div class="cvc-hub-n">INSTACART</div><div class="cvc-hub-d">The <b>ad-and-data platform</b> it is building: aggregates CPG demand, owns the <b>first-party purchase data</b>, and arms retailers instead of competing with them.</div></div>';
+  h+='<div class="cvc-arw">&rarr;</div>';
+  h+='<div><div class="cvc-zt g">3 &middot; Who pays it (revenue in)</div>'+PAY.map(function(x){ return '<div class="cvc-card g"><div class="cvc-role">'+x.role+'</div><div class="cvc-pl">'+x.players+'</div><div class="cvc-what">'+x.what+'</div></div>'; }).join('')+'</div>';
+  h+='</div>';
+  h+='<div class="scx-flow-cap">The sequence gives away the pivot: Instacart <b>spends on ad-tech, data &amp; AI</b> (left) to build a platform whose <b>fastest-growing revenue is advertising</b> (right). Its customers are grocers; its suppliers are <b>Roku, The Trade Desk, Snowflake and NVIDIA</b> &mdash; <b>it is becoming what it buys.</b></div>';
+  return h;
+}
 function supplyBody(){
   var groc=[['Kroger','KR','kroger.com'],['Albertsons','ACI','albertsons.com'],['HEB','','heb.com'],['Meijer','','meijer.com'],['Hy-Vee','','hy-vee.com'],['Wegmans','','wegmans.com'],['BJ\u2019s','BJ','bjs.com'],['Aldi','','aldi.us']];
   var tech=[['Roku','ROKU','roku.com'],['The Trade Desk','TTD','thetradedesk.com'],['PubMatic','PUBM','pubmatic.com'],['Snowflake','SNOW','snowflake.com'],['NVIDIA','NVDA','nvidia.com'],['Confluent','CFLT','confluent.io'],['Marqeta','MQ','marqeta.com'],['Twilio','TWLO','twilio.com']];
@@ -612,13 +644,8 @@ function supplyBody(){
   '</style>';
   h+='<div class="ov-diagram-cap" style="margin:0 0 12px;font-size:12.5px;line-height:1.6"><b>How to read this tab.</b> Bloomberg tracks <b>who a company buys from and sells to</b> &mdash; its supply chain. That map often shows what a business is <b>becoming</b> before the income statement does. Here is Instacart&rsquo;s: the <b>takeaway first</b>, then the three pieces of evidence.</div>';
   h+='<div class="scx-thesis">A company\u2019s suppliers reveal what it is <b>building</b>. Instacart\u2019s <b>customers are grocers</b> \u2014 but it spends its money on <b>ad-tech and AI</b>. Read the two sides together and the story is one line: Instacart is becoming an <b>advertising-and-data company that happens to move groceries.</b></div>';
-  h+='<div class="scx-tbl-h" style="margin-top:16px">1 &middot; The two sides &mdash; who it <b>serves</b> vs who it <b>pays</b></div>';
-  h+='<div class="scx-flow">'+
-    '<div><div class="scx-col-t" style="color:#0AAD0A">Customers \u2014 revenue in</div><div class="scx-col-s">The grocery industry \u00b7 ~90 banners</div><div class="scx-logos">'+L(groc)+'</div><div class="scx-col-tag">the old economy it serves</div></div>'+
-    '<div class="scx-mid"><div class="scx-mid-ic">\ud83e\udd55</div><div class="scx-mid-t">Instacart</div><div class="scx-mid-s">owns nothing<br>in between</div></div>'+
-    '<div><div class="scx-col-t" style="color:#3A7BD5">Suppliers \u2014 spend out</div><div class="scx-col-s">Ad-tech, cloud &amp; AI</div><div class="scx-logos">'+L(tech)+'</div><div class="scx-col-tag">the new economy it is building</div></div>'+
-  '</div>';
-  h+='<div class="scx-flow-cap">Its customers are grocers; its suppliers are <b>Roku, The Trade Desk, Snowflake and NVIDIA.</b> The pivot from delivery app to ad-and-data platform is not in the press release \u2014 <b>it is in who it does business with.</b></div>';
+  h+='<div class="scx-tbl-h" style="margin-top:16px">1 &middot; The value chain &mdash; how the players operate</div>';
+  h+=cartValueChain();
   h+='<div class="scx-tbl-h" style="margin-top:18px">2 &middot; Anchored to no one &mdash; a rounding error to everyone</div>';
   h+='<table class="scx-tbl"><thead><tr><th>Partner</th><th>Side</th><th>Rel. size</th><th>% of Instacart</th><th>% of them</th></tr></thead><tbody>'+
     '<tr><td>Sprouts</td><td>Customer</td><td>$4.27M</td><td>0.12% of revenue</td><td>0.08% of their cost</td></tr>'+

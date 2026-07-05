@@ -1009,6 +1009,31 @@ function insMoneyFlow(){
   h+='</div>';
   return h;
 }
+function insModelCompare(){
+  var R=[
+    ['Captive insurer','<b>Aleka</b> (Hawaii)','<b>PVIC</b> &mdash; Pacific Valley (Hawaii)'],
+    ['How much risk it keeps','~<b>95% self-insured</b> &mdash; retains almost all of it','<b>Partial</b> &mdash; reinsures a slice back; still buys from 3rd-party carriers'],
+    ['Reserves / float','~<b>$12.9B</b> (large)','~<b>$2.18B</b> (smaller)'],
+    ['What the float is <i>for</i>','a <b>cash engine</b> &mdash; collect now, invest, pay claims years later','smaller; the story is <b>cost per ride falling</b>, not the float'],
+    ['The old &ldquo;tail&rdquo;','<b>kept</b> on the books and invested','<b>sold off</b> via Loss Portfolio Transfers (Enstar &rarr; DARAG &rarr; RiverStone) &mdash; off the balance sheet'],
+    ['The market&rsquo;s read','&ldquo;float-fed cash&rdquo; (bull) vs &ldquo;an unregulated insurer&rdquo; (bear)','&ldquo;bending the cost curve&rdquo; via SB&nbsp;371 + the captive']
+  ];
+  var h='<style>'+
+    '.imc-hd{font-size:12.5px;color:var(--navy);line-height:1.55;margin:0 0 12px}.imc-hd b{font-weight:800}'+
+    '.imc{border:1px solid var(--bdr);border-radius:12px;overflow:hidden}'+
+    '.imc-row{display:grid;grid-template-columns:1.05fr 1.5fr 1.5fr;border-top:1px solid var(--bdr)}.imc-row:first-child{border-top:none}'+
+    '.imc-cell{padding:9px 12px;font-size:11.5px;line-height:1.45;color:var(--navy);border-left:1px solid var(--bdr)}.imc-cell:first-child{border-left:none}.imc-cell b{font-weight:800}'+
+    '.imc-k{font-weight:800;background:#fafbfc}'+
+    '.imc-head .imc-cell{font-weight:900;background:#f4f6f9;font-size:12px}.imc-hu{color:#10141A}.imc-hl{color:#E6007A}'+
+    '.imc-so{font-size:12px;color:var(--navy);line-height:1.55;background:#f6f8fa;border-radius:9px;padding:11px 14px;margin-top:12px}.imc-so b{font-weight:800}'+
+    '@media(max-width:640px){.imc-row{grid-template-columns:1fr}.imc-cell{border-left:none;border-top:1px dashed var(--bdr)}.imc-cell:first-child{border-top:none}}'+
+  '</style>';
+  h+='<div class="imc-hd"><b>Both run their own captive insurer</b> &mdash; but they play it very differently. <b>Uber goes all-in on the float</b> (huge reserves it invests as a cash engine); <b>Lyft keeps it smaller and actively sells off the old risk</b> (LPT), betting on cost-per-ride reform instead.</div>';
+  h+='<div class="imc"><div class="imc-row imc-head"><div class="imc-cell"></div><div class="imc-cell imc-hu">UBER &middot; Aleka</div><div class="imc-cell imc-hl">LYFT &middot; PVIC</div></div>'+
+    R.map(function(r){ return '<div class="imc-row"><div class="imc-cell imc-k">'+r[0]+'</div><div class="imc-cell">'+r[1]+'</div><div class="imc-cell">'+r[2]+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="imc-so"><b>In one line:</b> Uber&rsquo;s insurance is a <b>cash-flow story</b> (the float it invests); Lyft&rsquo;s is a <b>cost-reduction story</b> (SB&nbsp;371 + offloading the tail). Same plumbing, opposite emphasis.</div>';
+  return h;
+}
 function insuranceBody(){
   var RES=[['2021',3.99],['2022',4.72],['2023',6.74],['2024',9.80],['2025',12.46],['Q1 26',12.9]];
   var OI=[['2021',-3.53],['2022',-1.78],['2023',0.99],['2024',2.83],['2025',5.60]];
@@ -1075,6 +1100,8 @@ function insuranceBody(){
   // smaller slice
   h+='<div class="uins-h">Why it is becoming a smaller slice</div>';
   h+='<div class="uins-tl">Insurance keeps rising in absolute dollars (more trips + premium inflation), and Uber&rsquo;s cost-of-revenue growth has repeatedly been blamed on it. But it is being <b>outgrown</b>: Gross Bookings compound ~20%+/yr while Uber pushes insurance down via <b>safety tech, in-house claims (Aleka) and tort reform</b> — insurance CPI cooled from a ~20%+ peak to <b>~11%</b> (Dec 2024), with wins like Georgia tort reform and California UM/UIM limit cuts. Net: a large, cash-generative liability that is slowly shrinking as a share of the whole.</div>';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--navy);margin:20px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--bdr)">Uber vs Lyft — two ways to run insurance</div>';
+  h+=insModelCompare();
   h+='<div class="ov-foot" style="margin-top:14px">Reserves and operating results from Uber 10-Ks / Q1 2026 10-Q; the reserve&rarr;cash-flow contribution is from the Summit dataset. Uber does <b>not</b> disclose a clean standalone &ldquo;insurance % of Gross Bookings,&rdquo; so that trend is directional/inferred from cost-of-revenue commentary. The &ldquo;FCF mirage&rdquo; and reserve-raid narratives are <b>attributed</b> analyst/activist framings (Cedar Street; Consumer Watchdog), not Uber&rsquo;s own accounting characterization.</div>';
   return h;
 }

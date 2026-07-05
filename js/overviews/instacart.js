@@ -452,15 +452,16 @@ function pillarCards(segKey){
       '<div class="ov-card-s">'+s.what+'</div><div class="ov-more">How it monetizes ›</div></div>';
   }).join('')+'</div>';
 }
-function cdot(x,y,k,col,name,sub,main){
+function cdot(x,y,k,col,name,why,main){
   var r=main?11:8, ly=y-(main?18:14);
-  var attr=k?' class="ov-clickable cpm-dot" data-detail="peer:'+k+'" role="button" tabindex="0"':' class="cpm-dot"';
-  return '<g'+attr+'><circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+col+'"'+(main?' stroke="#fff" stroke-width="2.5"':'')+'><title>'+esc(name)+' — '+esc(sub)+'</title></circle>'+
+  var cls=(k?'ov-clickable ':'')+'cpm-dot';
+  var extra=k?' data-detail="peer:'+k+'" role="button" tabindex="0"':'';
+  return '<g class="'+cls+'" data-name="'+esc(name)+'" data-why="'+esc(why||'')+'"'+extra+'><circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+col+'"'+(main?' stroke="#fff" stroke-width="2.5"':'')+'></circle>'+
     '<text x="'+x+'" y="'+ly+'" font-family="Inter,sans-serif" font-size="'+(main?'12':'10.5')+'" font-weight="'+(main?'800':'700')+'" fill="'+(main?'#0AAD0A':'#3A4552')+'" text-anchor="middle">'+esc(name)+'</text></g>';
 }
 function cartPeerMap(){
-  var h='<style>.cpm-dot{cursor:pointer}.cpm-dot circle{transition:.1s}.cpm-dot:hover circle{stroke:#0AAD0A;stroke-width:2.5}</style>';
-  h+='<div class="ov-diagram-cap" style="margin:0 0 8px">Mapped by <b>how much of the grocery stack a player provides</b> (x) and its <b>asset model</b> (y — owns stores ↔ asset-light). Instacart sits <b>alone</b> in the asset-light, full-stack corner. <span style="opacity:.75">Tap any dot.</span></div>';
+  var h='<style>.cpm-dot{cursor:pointer}.cpm-dot circle{transition:.1s}.cpm-dot:hover circle{stroke:#0AAD0A;stroke-width:2.5}.cpm-tip{position:fixed;z-index:60;max-width:250px;background:var(--navy);color:#fff;border-radius:9px;padding:9px 12px;font-size:11.5px;line-height:1.5;box-shadow:0 8px 22px rgba(16,20,26,0.28);pointer-events:none;border-top:3px solid #0AAD0A}.cpm-tip .pt-n{display:block;font-weight:800;font-size:12.5px;color:#0AAD0A;margin-bottom:3px}</style>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 8px">Mapped by <b>how much of the grocery stack a player provides</b> (x) and its <b>asset model</b> (y — owns stores ↔ asset-light). Instacart sits <b>alone</b> in the asset-light, full-stack corner. <span style="opacity:.75"><b>Hover</b> any dot for why it sits there; <b>tap</b> for its edge &amp; gap.</span></div>';
   h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" role="img" aria-label="Grocery e-commerce positioning map">'+
     '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
     '<line x1="80" y1="252" x2="80" y2="40" stroke="#C7CED6" stroke-width="1.5"/>'+
@@ -468,12 +469,13 @@ function cartPeerMap(){
     '<text x="610" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">full grocery-tech platform →</text>'+
     '<text x="74" y="250" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">owns stores</text>'+
     '<text x="74" y="48" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">asset-light</text>'+
-    cdot(158,112,'DASH','#9AA3AE','DoorDash','delivery-first · restaurant-heavy')+
-    cdot(232,150,'UBER','#9AA3AE','Uber Eats','delivery-first · global')+
-    cdot(478,214,'AMZN','#9AA3AE','Amazon','owns stores + warehouses')+
-    cdot(360,230,'WMT','#9AA3AE','Walmart','owns stores + Walmart+')+
-    cdot(548,92,'','#0AAD0A','Instacart','asset-light · full grocery-tech stack',true)+
+    cdot(158,112,'DASH','#9AA3AE','DoorDash','Delivery-first and restaurant-heavy. Asset-light (no stores), but grocery is a bolt-on &mdash; <b>not grocery-native</b> &mdash; so it sits far <b>left</b> (delivery only).')+
+    cdot(232,150,'UBER','#9AA3AE','Uber Eats','Delivery-first and global; grocery is a small add-on to food delivery. Asset-light, but <b>low on the grocery-stack</b> axis.')+
+    cdot(478,214,'AMZN','#9AA3AE','Amazon','Owns Whole Foods, warehouses and Fresh &mdash; a <b>full stack</b>, but it <b>owns the stores</b>, so it sits <b>low</b> (asset-heavy) and competes with grocers.')+
+    cdot(360,230,'WMT','#9AA3AE','Walmart','The largest US grocer, with its own e-commerce + Walmart+ &mdash; full stack, but it <b>is</b> the store, so <b>bottom</b> (owns inventory).')+
+    cdot(548,92,'','#0AAD0A','Instacart','Provides the <b>entire grocery-tech stack</b> (e-commerce, fulfillment, ads, in-store) while owning <b>no store and no inventory</b> &mdash; so <b>top-right, alone</b>.',true)+
   '</svg></div>';
+  h+='<div id="cartPeerTip" class="cpm-tip" hidden></div>';
   h+='<div class="ov-diagram-cap" style="margin-top:6px"><b>The whitespace is the moat:</b> the delivery players (DoorDash, Uber Eats) are asset-light but <b>not grocery-native</b>; the retail giants (Amazon, Walmart) own the full stack but <b>own the stores too</b> — so they compete with grocers. Instacart is the only <b>asset-light, full grocery-tech platform that arms retailers instead of competing with them.</b></div>';
   return h;
 }
@@ -1317,6 +1319,12 @@ function switchCartGuide(root,k){ if(!CGUIDE[k])return; _cgMetric=k; root.queryS
 
 function init(c){
   var root = document.querySelector('.ov-cart'); if (!root) return;
+  (function(){ var tip=root.querySelector('#cartPeerTip'); if(!tip) return;
+    root.querySelectorAll('.cpm-dot').forEach(function(dot){
+      dot.addEventListener('mouseenter',function(){ var w=dot.getAttribute('data-why'); if(!w) return; tip.innerHTML='<span class="pt-n">'+dot.getAttribute('data-name')+'</span>'+w; tip.hidden=false; });
+      dot.addEventListener('mousemove',function(e){ tip.style.left=Math.min(e.clientX+16, window.innerWidth-270)+'px'; tip.style.top=(e.clientY+16)+'px'; });
+      dot.addEventListener('mouseleave',function(){ tip.hidden=true; });
+    }); })();
 
   // Sub-tab switching
   root.querySelectorAll('.ov-subtab').forEach(function(b){

@@ -923,22 +923,30 @@ function membershipViz(){
   h+='<div class="ov-fynote" style="margin-top:11px"><b>Where the weight sits:</b> the paid tiers are deliberately modest — Lyft does not even disclose Pink member counts — so the <b>partnership channel does the heavy lifting</b>. Capital-light and low-CAC, but Lyft does not own those relationships, so loyalty can walk when a partner leaves.</div>';
   return h;
 }
+var FW_DETAIL=[
+  {t:'1 · Obsess over both sides', h:'Lyft&rsquo;s core belief: <b>the driver is Lyft&rsquo;s customer; the rider is the driver&rsquo;s customer.</b> Both sides of the marketplace are the product.<br><br><b>For drivers:</b> a <b>70% earnings guarantee</b> each week (after external fees) since Feb 2024 &mdash; the industry&rsquo;s only such floor; upfront pay + destination shown before accepting; Express Pay instant cashout.<br><br><b>For riders:</b> the <b>On-Time Pickup Promise</b> (credit if late), <b>Women+ Connect</b>, and <b>Price Lock</b>.<br><br><b>Why it matters:</b> happier drivers stay &rarr; reliable supply &rarr; better rider experience &rarr; the wheel turns. The opposite of squeezing either side for short-term margin.'},
+  {t:'2 · Riders &amp; rides grow', h:'A better experience pulls in <b>more riders, riding more often</b>.<br><br><b>Riders:</b> a record <b>~29M</b> active (Q4 2025), +18% YoY.<br><br><b>Frequency levers:</b> <b>Price Lock</b> (locks a commute route near its average price &mdash; kills surge, rideshare&rsquo;s &ldquo;most hated feature&rdquo;; 1.6M locked rides by Q4 2024), <b>Lyft Pink</b> membership, and the <b>partnership machine</b> (United, Chase Sapphire, DoorDash DashPass, Bilt) &mdash; now <b>~1 in 4 NA rides</b> comes through a partner at low CAC.<br><br><b>The catch:</b> in 2025 frequency turned <i>negative</i> as growth shifted to pure acquisition &mdash; the contestable point (see Rides &amp; Riders).'},
+  {t:'3 · Marketplace densifies', h:'More riders + more drivers in the same city = <b>a denser marketplace</b>, which is <i>self-improving</i>.<br><br><b>What density buys:</b> faster matching, shorter ETAs, fewer unfilled requests, less need for surge. Marketplace efficiency compounds <b>~10% a year</b>, and <b>Prime-Time surge fell ~40% over two years</b> &mdash; riders pay less <i>and</i> drivers stay busier at once.<br><br><b>Why it is a moat:</b> density is a <b>local network effect</b> &mdash; expensive for a #2 to replicate city-by-city, and it lets Lyft improve price and reliability without spending more.'},
+  {t:'4 · Economics improve', h:'A denser, more efficient marketplace + falling <b>insurance cost per ride</b> = <b>more gross profit per ride</b>, without charging riders more or paying drivers less.<br><br><b>The proof:</b> gross profit/ride ~<b>$3.32</b> (Q1 2026); the turnaround took Adj. EBITDA from <b>&minus;$417M to +$529M</b> and FCF from <b>&minus;$222M to +$1.12B</b>.<br><br><b>The loop closes here:</b> that profit funds <b>more driver incentives &amp; rider value</b> (step 1), which deepens the marketplace (step 3), which improves economics again. <b>Growth is the output of the loop, not an input you buy.</b>'}
+];
 function lyFlywheel(){
-  function node(x,y,w,hh,t,sub){
-    return '<g><rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="11" fill="#fff" stroke="#E6007A" stroke-width="1.5"/>'+
+  function node(x,y,w,hh,t,sub,i){
+    return '<g class="lyfw-node ov-clickable" data-detail="fw:'+i+'"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="11" fill="#fff" stroke="#E6007A" stroke-width="1.5"/>'+
       '<text x="'+(x+w/2)+'" y="'+(y+hh/2-4)+'" text-anchor="middle" font-size="11.5" font-weight="800" fill="#c0006a">'+t+'</text>'+
-      '<text x="'+(x+w/2)+'" y="'+(y+hh/2+13)+'" text-anchor="middle" font-size="9.5" fill="#3A4552">'+sub+'</text></g>';
+      '<text x="'+(x+w/2)+'" y="'+(y+hh/2+13)+'" text-anchor="middle" font-size="9.5" fill="#3A4552">'+sub+'</text>'+
+      '<text x="'+(x+w-9)+'" y="'+(y+15)+'" text-anchor="end" font-size="12" font-weight="900" fill="#E6007A">+</text></g>';
   }
   var h='<style>'+
     '@keyframes lyfwspin{to{stroke-dashoffset:-26}}'+
     '.lyfw-arw{stroke:#E6007A;stroke-width:4;fill:none;stroke-dasharray:9 7;animation:lyfwspin 1s linear infinite;stroke-linecap:round}'+
+    '.lyfw-node{cursor:pointer}.lyfw-node rect{transition:.12s}.lyfw-node:hover rect{stroke-width:2.5;filter:drop-shadow(0 2px 5px rgba(0,0,0,.12))}'+
     '.lyfw-src{margin-top:16px}.lyfw-src-h{font-size:12.5px;font-weight:800;color:var(--navy);margin:0 0 9px;padding-bottom:4px;border-bottom:1px solid var(--bdr)}'+
     '.lyfw-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:600px){.lyfw-grid{grid-template-columns:1fr}}'+
     '.lyfw-c{border:1px solid var(--bdr);border-left:3px solid #E6007A;border-radius:10px;padding:11px 13px}'+
     '.lyfw-c-h{font-size:12px;font-weight:800;color:var(--navy);margin-bottom:3px}.lyfw-c-d{font-size:11.5px;color:var(--navy);line-height:1.5}.lyfw-c-d b{font-weight:800}'+
     '.lyfw-punch{font-size:11.5px;color:var(--navy);line-height:1.6;background:var(--brand-soft);border-radius:9px;padding:11px 14px;margin-top:14px}.lyfw-punch b{font-weight:800}'+
   '</style>';
-  h+='<div class="ov-diagram-cap" style="margin:0 0 6px">Lyft&rsquo;s Investor-Day thesis is a <b>wheel, not a list</b>: obsess over both sides &rarr; the marketplace densifies &rarr; economics improve &rarr; that funds more driver pay &amp; rider value &rarr; the wheel spins faster.</div>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 6px">Lyft&rsquo;s Investor-Day thesis is a <b>wheel, not a list</b>: obsess over both sides &rarr; the marketplace densifies &rarr; economics improve &rarr; that funds more driver pay &amp; rider value &rarr; the wheel spins faster. <b>Tap any stage (+)</b> for the mechanics.</div>';
   h+='<div style="border:1px solid var(--bdr);border-radius:14px;background:linear-gradient(180deg,#fffafd,#fff);padding:4px 2px"><svg viewBox="0 0 640 470" role="img" aria-label="Lyft growth flywheel" style="width:100%;height:auto;font-family:Inter,sans-serif">';
   h+='<defs><marker id="lyfwh" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#E6007A"/></marker></defs>';
   // clockwise arrows N->E->S->W->N
@@ -952,10 +960,10 @@ function lyFlywheel(){
   h+='<text x="320" y="242" text-anchor="middle" font-size="11" font-weight="700" fill="#E6007A" font-family="Inter,sans-serif">&rarr; profitable growth</text>';
   h+='<text x="320" y="262" text-anchor="middle" font-size="9" fill="#6b7684" font-family="Inter,sans-serif">~15% bookings CAGR &middot; ~4% margin (2027)</text>';
   // nodes
-  h+=node(206,30,228,56,'1 &middot; Obsess over both sides','70% driver floor &middot; On-Time Promise &middot; Women+');
-  h+=node(450,200,182,66,'2 &middot; Riders &amp; rides grow','Price Lock &middot; ~1 in 4 rides via partners');
-  h+=node(206,384,228,56,'3 &middot; Marketplace densifies','better matching &middot; surge &minus;40% in 2 yrs');
-  h+=node(8,200,182,66,'4 &middot; Economics improve','~10%/yr efficiency &middot; lower cost/ride');
+  h+=node(206,30,228,56,'1 &middot; Obsess over both sides','70% driver floor &middot; On-Time Promise &middot; Women+',0);
+  h+=node(450,200,182,66,'2 &middot; Riders &amp; rides grow','Price Lock &middot; ~1 in 4 rides via partners',1);
+  h+=node(206,384,228,56,'3 &middot; Marketplace densifies','better matching &middot; surge &minus;40% in 2 yrs',2);
+  h+=node(8,200,182,66,'4 &middot; Economics improve','~10%/yr efficiency &middot; lower cost/ride',3);
   h+='</svg></div>';
   // where growth comes from
   h+='<div class="lyfw-src"><div class="lyfw-src-h">Where the ~15% bookings CAGR actually comes from</div><div class="lyfw-grid">'+
@@ -1168,11 +1176,21 @@ function unitBody(c){
   h+='<div class="ov-chart-wrap ovt-vs-wrap"><canvas id="lyUEdecomp"></canvas></div>';
   h+='<div class="ov-foot">Source: Summit DCF actuals, snapshot 2026-05-13.</div>';
   h+='<div class="ov-sec-h ovt-store-h">Take rate — and why it misleads</div>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 6px">You&rsquo;ll see a &lsquo;take rate&rsquo; line drift <b>down</b> (~36% &rarr; ~33%). <b>Ignore it</b> &mdash; Lyft is <b>not</b> taking a smaller cut. Here is why:</div>';
   h+='<div class="ov-chart-wrap ovt-ue-wrap"><canvas id="lyUEtake"></canvas></div>';
   h+='<div class="ov-callout ov-clickable" data-detail="lnote:take"><div class="ov-tl-body">The line drifted ~36% → ~33% — but Lyft is <b>not</b> taking a smaller cut. Its real take is ~<b>30%</b> (the 70% driver floor caps it); the wobble is an <b>accounting artifact</b> (a gross-up move + Lyft Media). Watch gross profit per ride, not this line. <span class="gm-tap">Tap for the year-by-year ›</span></div></div>';
   h+=sec('The foundation — driver classification (US & Canada IS the story)',
     '<style>.lreg-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px}.lreg-c{border:1px solid var(--bdr);border-radius:10px;padding:11px 13px;background:var(--w);cursor:pointer;transition:border-color .12s}.lreg-c:hover{border-color:var(--brand)}.lreg-hd{font-size:12.5px;font-weight:800;color:var(--navy);display:flex;justify-content:space-between;align-items:center;gap:8px}.lreg-chip{font-size:9px;font-weight:800;letter-spacing:.03em;border-radius:10px;padding:2px 8px;flex:none;white-space:nowrap}.lreg-g{background:rgba(30,158,98,0.12);color:#1E9E62}.lreg-a{background:rgba(184,134,11,0.14);color:#B8860B}.lreg-t{font-size:11.5px;color:var(--mu);line-height:1.5;margin-top:5px}@media(max-width:720px){.lreg-grid{grid-template-columns:1fr}}</style>'+
-    '<div class="ov-callout" style="border-left:3px solid var(--brand);margin-bottom:12px"><b>Every per-ride number above rests on one question: do drivers stay independent contractors?</b> If they became employees, the whole cost structure would break. Lyft is <b>US/Canada-only</b>, so North-American rules <i>are</i> its regulatory story &mdash; there is no global market to hide behind &mdash; and that question is now <b>largely settled in Lyft&rsquo;s favor</b>. <b>Tap any card.</b></div>'+
+    '<style>.ue-fnd-chain{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:stretch;margin:2px 0 10px}@media(max-width:640px){.ue-fnd-chain{grid-template-columns:1fr}.ue-fnd-arw{transform:rotate(90deg);justify-self:center}}.ue-fnd-box{border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;background:#fff}.ue-fnd-box.danger{border-left:3px solid #C0392B;background:rgba(192,57,43,0.04)}.ue-fnd-box b{font-size:12px;color:var(--navy)}.ue-fnd-box span{display:block;font-size:10.5px;color:var(--mu);margin-top:3px;line-height:1.4}.ue-fnd-box span b{color:var(--navy)}.ue-fnd-arw{display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:var(--brand)}.ue-fnd-note{font-size:12px;color:var(--navy);line-height:1.55;background:var(--brand-soft);border-radius:9px;padding:10px 13px;margin-bottom:12px}.ue-fnd-note b{font-weight:800}</style>'+
+    '<div style="font-size:12px;font-weight:800;color:var(--navy);margin:0 0 8px">Why a regulation question lives in Unit Economics &mdash; follow the chain:</div>'+
+    '<div class="ue-fnd-chain">'+
+      '<div class="ue-fnd-box"><b>Driver pay &asymp; 67% of every fare</b><span>by far the biggest slice in the split above (the &ge;70% driver guarantee)</span></div>'+
+      '<span class="ue-fnd-arw">&rarr;</span>'+
+      '<div class="ue-fnd-box"><b>It stays a <i>variable</i> cost</b><span>only because drivers are independent <b>contractors</b>, paid per ride</span></div>'+
+      '<span class="ue-fnd-arw">&rarr;</span>'+
+      '<div class="ue-fnd-box danger"><b>Reclassify them as employees?</b><span>fixed wages + benefits + payroll taxes &rarr; the whole per-ride model <b>breaks</b></span></div>'+
+    '</div>'+
+    '<div class="ue-fnd-note"><b>That is why this sits in Unit Economics:</b> driver classification is the foundation under Lyft&rsquo;s single biggest cost. The good news &mdash; it is <b>largely settled in Lyft&rsquo;s favor</b>. Lyft is <b>US/Canada-only</b>, so these North-American deals <i>are</i> its whole regulatory story; each keeps contractor status while conceding pay floors &amp; benefits. <b>Tap any card</b> for the state-by-state status.</div>'+
     '<div class="lreg-grid">'+REG.map(function(r,i){ return '<div class="lreg-c ov-clickable" data-detail="lreg:'+i+'"><div class="lreg-hd">'+esc(r.h)+'<span class="lreg-chip lreg-'+r.cls+'">'+esc(r.chip)+'</span></div><div class="lreg-t">'+r.teaser+' <span style="color:var(--brand);font-weight:700">tap &rsaquo;</span></div></div>'; }).join('')+'</div>');
   h+=sec('Is the margin jump durable? — the market\'s real debate',
     '<style>.gm-ev{font-size:12px;color:var(--navy);line-height:1.55;background:rgba(30,158,98,0.06);border:1px solid rgba(30,158,98,0.25);border-radius:9px;padding:10px 13px;margin:12px 0;cursor:pointer}.gm-ev b{font-weight:800}.gmdb{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}@media(max-width:680px){.gmdb{grid-template-columns:1fr}}.gmdb-c{border:1px solid var(--bdr);border-radius:11px;padding:12px 14px}.gmdb-c.bull{border-top:3px solid #1E9E62;background:rgba(30,158,98,0.04)}.gmdb-c.bear{border-top:3px solid #B8860B;background:rgba(184,134,11,0.04)}.gmdb-h{font-size:12px;font-weight:800;margin-bottom:8px}.gmdb-c.bull .gmdb-h{color:#1E9E62}.gmdb-c.bear .gmdb-h{color:#B8860B}.gmdb-li{font-size:11.5px;color:var(--navy);line-height:1.5;padding-left:15px;position:relative;margin-bottom:8px}.gmdb-li:before{content:"";position:absolute;left:1px;top:6px;width:6px;height:6px;border-radius:50%}.gmdb-c.bull .gmdb-li:before{background:#1E9E62}.gmdb-c.bear .gmdb-li:before{background:#B8860B}.gmdb-li b{font-weight:800}</style>'+
@@ -1716,6 +1734,7 @@ function wireModal(root){
     var p=key.split(':'), kind=p[0], id=p.slice(1).join(':');
     if (kind==='hist'){ var t=TIMELINE[+id]; return t&&t.d?{t:t.y,h:t.d}:null; }
     if (kind==='ride'){ var s=RIDE_FLOW[+id]; return s?{t:'Step '+(+id+1)+' — '+s.t,h:s.d}:null; }
+    if (kind==='fw'){ var fw=FW_DETAIL[+id]; return fw?{t:fw.t,h:fw.h}:null; }
     if (kind==='pvic'){ var v=PVIC_CHAIN[+id]; return v?{t:'Insurance — '+v.t,h:v.d}:null; }
     if (kind==='init'){ var d=INITIATIVES.filter(function(x){return x.k===id;})[0]; return d?{t:d.t,h:d.d}:null; }
     if (kind==='lreg'){ var rg=REG[+id]; return rg?{t:rg.h,h:rg.d}:null; }

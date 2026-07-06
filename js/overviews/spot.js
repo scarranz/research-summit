@@ -45,7 +45,7 @@ function overviewBody(c){
 // ════════════════════════════════════════════════════════════════════════════
 // PANE 2 — PRODUCT MIX  (visual-first)
 // ════════════════════════════════════════════════════════════════════════════
-var PM_LEDE = 'For a decade Spotify was, in effect, one product — <b>music</b> — and ~70% of every euro went to record labels. Adding <b>podcasts</b> and <b>audiobooks</b> (which don’t pay that toll) flipped the story: gross margin broke out from the mid-20s% to a record <b>33%</b>.';
+var PM_LEDE = 'Follow <b>$10</b> of Premium revenue through Spotify. For years almost all of it was <b>music</b>, and about <b>two-thirds</b> flowed straight back out to rights holders — which is why gross margin sat in the mid-20s% for a decade. Then the <b>2024 audiobook “bundle”</b> quietly cut the songwriter (mechanical) royalty and — with price hikes and podcast discipline — Spotify’s <b>keep</b> climbed from <b>$2.70 → $3.20</b> per $10.';
 
 // — Hero: reported consolidated gross margin trajectory (20-F + Q1'26 deck).
 // NON-monotonic: flat mid-20s% to 2021, dip in 2022 (peak podcast spend), breakout from 2024.
@@ -54,30 +54,26 @@ var GM_CONS   = [25.6, 25.6, 26.8, 24.9, 25.6, 30.1, 32.0, 33.0];   // consolida
 var GM_PREM   = [null, null, null, 28, 29, 33, 34, 34.8];           // Premium segment
 var GM_ADS    = [null, null, null, 2,  4,  11, 17, 13.0];           // Ad-Supported segment
 
-// — Inline format icons (clean SVG, brand-tinted).
-var IC = {
-  music: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>',
-  pod:   '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2a6 6 0 0 0-2 11.65V16a2 2 0 0 0 4 0v-2.35A6 6 0 0 0 12 2zm-1 18.93V22h2v-1.07a8 8 0 0 0 0-15.86V3a8 8 0 0 1 0 17.93z"/><circle cx="12" cy="8" r="3"/></svg>',
-  book:  '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M4 4h7a2 2 0 0 1 2 2v14a3 3 0 0 0-2-1H4V4zm16 0h-3a2 2 0 0 0-2 2v13a3 3 0 0 1 2-1h3V4z"/></svg>',
-};
-
-// — "Where each euro goes" — share of revenue paid to rights holders (lower = more margin).
-// Music ~70% is Spotify's framing; podcast/audiobook payouts are not disclosed (illustrative).
-var FORMATS = [
-  { ic:IC.music, n:'Music',      cost:70, tag:'pays the labels',         col:'#E2574C', note:'~70% to labels & publishers' },
-  { ic:IC.book,  n:'Audiobooks', cost:40, tag:'licensed per title',      col:'#E8A33D', note:'wholesale, capped 15 hrs/mo' },
-  { ic:IC.pod,   n:'Podcasts',   cost:25, tag:'owned / ad-supported',    col:'#1DB954', note:'no per-stream label royalty' },
-];
-
-// — The pivot, as a visual timeline (short labels).
-var TIMELINE = [
-  ['2019', 'Podcast land-grab — Gimlet, Anchor, Parcast'],
-  ['2020', 'Buys Megaphone ad platform ($235M)'],
-  ['2022', 'Acquires Findaway → enters audiobooks'],
-  ['Nov 2023', 'Audiobooks bundled into Premium'],
-  ['2023–25', 'First-ever Premium price increases'],
-  ['2024', 'First full-year profit (€1.4B op. income)'],
-];
+// — "Where does $10 go?" — per-$10 allocation of Premium revenue across cost buckets,
+//   BEFORE (~2023, pre-bundle · GM ~27%) vs AFTER (2024–25 · GM ~32%). Amounts are
+//   ILLUSTRATIVE — Spotify does not disclose per-format payouts; shares are anchored to
+//   reported gross margins and the MIDIA royalty split (~56% recording / 14% publishing /
+//   30% Spotify). The bundle cut ONLY the U.S. mechanical (songwriter) royalty; label
+//   (master) royalties were untouched (separately negotiated direct deals).
+function flowAlloc(state){
+  if(state === 'after') return [
+    { n:'Record labels',                    sub:'master recordings',            amt:5.20, col:'#E2574C' },
+    { n:'Publishers &amp; songwriters',      sub:'mechanical + performance',     amt:1.15, col:'#E8A33D' },
+    { n:'Payment &amp; other cost of rev.',  sub:'processing · cloud · delivery', amt:0.45, col:'#9AA3AF' },
+    { n:'Spotify gross profit',             sub:'what Spotify keeps',           amt:3.20, col:'#1DB954' },
+  ];
+  return [
+    { n:'Record labels',                    sub:'master recordings',            amt:5.20, col:'#E2574C' },
+    { n:'Publishers &amp; songwriters',      sub:'mechanical + performance',     amt:1.50, col:'#E8A33D' },
+    { n:'Payment &amp; other cost of rev.',  sub:'processing · cloud · delivery', amt:0.60, col:'#9AA3AF' },
+    { n:'Spotify gross profit',             sub:'what Spotify keeps',           amt:2.70, col:'#1DB954' },
+  ];
+}
 
 // — Why it matters, as big stat cards.
 var WHY_STATS = [
@@ -87,53 +83,71 @@ var WHY_STATS = [
   { l:'First full-year profit',   v:'FY2024', d:'driven by margin, not subs', dir:'up' },
 ];
 
-var PM_SOURCES = 'Sources: Spotify FY2024 Annual Report (Form 20-F) MD&A; Q1 2026 Shareholder Deck & earnings call (Apr 2026); historical 20-F income statements (2018–2021); Loud & Clear 2025; Investor Day 2022 & 2026. Consolidated/segment gross margin as reported (EUR); per-format payout shares are illustrative.';
+var PM_SOURCES = 'Sources: royalty split — MIDIA Research 2024 (≈56% recording / 14% publishing / 30% Spotify), via CBC (Mar 2025) & Music Business Worldwide. Bundle mechanics & mechanical-rate reduction (15.35% → under 12%): Billboard & Variety (May 2024); Spotify’s own Form 6-K disclosed €205M less paid to songwriters (Mar 2024–Mar 2025); NMPA estimated $150–230M first-year impact. Gross margin: Spotify Q4 2024 Shareholder Deck & 6-K (consolidated ~26.7% → 32.2%), Q1 2026 deck (33.0% record). The per-$10 and per-format splits are ILLUSTRATIVE — Spotify does not disclose payouts by format, and the publishing haircut is U.S.-specific. Also from Summit DCF models.';
 
-// Euro-split hero bar: one €1 of MUSIC revenue.
-function euroBar(){
-  return '<div class="spot-euro">'+
-    '<div class="spot-euro-bar">'+
-      '<div class="spot-euro-seg" style="width:70%;background:#E2574C">~70%<small>Rights holders</small></div>'+
-      '<div class="spot-euro-seg" style="width:30%;background:#1DB954">~30%<small>Spotify gross profit</small></div>'+
-    '</div>'+
-    '<div class="spot-euro-cap">Every <b>€1 of music</b> revenue — most flows straight to the labels &amp; publishers. Podcasts and audiobooks don’t carry that toll, so each one Spotify adds to the mix <b>lifts the blended margin</b>.</div>'+
-  '</div>';
+// The $10 flow map — an inline-SVG Sankey (CSP-safe, no library). A single "$10 in"
+// source on the left fans out into cost buckets on the right, each ribbon/node sized
+// by its share of the $10. Labels are decluttered so thin buckets stay readable.
+function flowSvg(state){
+  var A = flowAlloc(state);
+  var top = 24, flowH = 260, gap = 10;
+  var sx1 = 96, sx2 = 112, tx1 = 360, tx2 = 376, lx = 388;
+  var hs = A.map(function(a){ return a.amt / 10 * flowH; });
+  var span = flowH + (A.length - 1) * gap;                 // full target span incl. gaps
+  var srcTop = top + (span - flowH) / 2;                   // vertically centre the source
+  var sy = [], acc = srcTop;  A.forEach(function(a, i){ sy[i] = acc; acc += hs[i]; });
+  var ty = [], acc2 = top;    A.forEach(function(a, i){ ty[i] = acc2; acc2 += hs[i] + gap; });
+  var lc = A.map(function(a, i){ return ty[i] + hs[i] / 2; });
+  for(var i = 1; i < lc.length; i++){ if(lc[i] < lc[i-1] + 32) lc[i] = lc[i-1] + 32; }
+  var mid = (sx2 + tx1) / 2, parts = '';
+  // flow ribbons
+  A.forEach(function(a, i){
+    var y1t = sy[i], y1b = sy[i] + hs[i], y2t = ty[i], y2b = ty[i] + hs[i];
+    parts += '<path d="M'+sx2+','+y1t.toFixed(1)+' C'+mid+','+y1t.toFixed(1)+' '+mid+','+y2t.toFixed(1)+' '+tx1+','+y2t.toFixed(1)+
+      ' L'+tx1+','+y2b.toFixed(1)+' C'+mid+','+y2b.toFixed(1)+' '+mid+','+y1b.toFixed(1)+' '+sx2+','+y1b.toFixed(1)+' Z" '+
+      'fill="'+a.col+'" opacity="0.42"><title>'+a.n+' — $'+a.amt.toFixed(2)+' ('+a.sub+')</title></path>';
+  });
+  // target nodes + decluttered labels
+  A.forEach(function(a, i){
+    var cy = ty[i] + hs[i] / 2, pct = Math.round(a.amt * 100) / 10;
+    parts += '<rect x="'+tx1+'" y="'+ty[i].toFixed(1)+'" width="'+(tx2-tx1)+'" height="'+hs[i].toFixed(1)+'" rx="2" fill="'+a.col+'"/>';
+    if(Math.abs(cy - lc[i]) > 1) parts += '<line x1="'+tx2+'" y1="'+cy.toFixed(1)+'" x2="'+(lx-4)+'" y2="'+lc[i].toFixed(1)+'" stroke="'+a.col+'" stroke-width="1" opacity="0.45"/>';
+    parts += '<text x="'+lx+'" y="'+(lc[i]-2).toFixed(1)+'" class="flow-nm">'+a.n+'</text>'+
+      '<text x="'+lx+'" y="'+(lc[i]+13).toFixed(1)+'" class="flow-amt" fill="'+a.col+'">$'+a.amt.toFixed(2)+'<tspan class="flow-pct"> · '+pct+'%</tspan></text>';
+  });
+  // source node
+  parts += '<rect x="'+sx1+'" y="'+srcTop.toFixed(1)+'" width="'+(sx2-sx1)+'" height="'+flowH+'" rx="2" fill="#14181f"/>'+
+    '<text x="'+((sx1+sx2)/2)+'" y="'+(srcTop-8).toFixed(1)+'" class="flow-src" text-anchor="middle">$10.00</text>'+
+    '<text x="'+((sx1+sx2)/2)+'" y="'+(srcTop+flowH+16).toFixed(1)+'" class="flow-src-s" text-anchor="middle">Premium in</text>';
+  return '<svg viewBox="0 0 640 330" class="flow-svg" role="img" aria-label="Where each $10 of Spotify Premium revenue goes, '+state+' the bundle">'+parts+'</svg>';
 }
 
-// Format "toll" bars (shorter = more profit kept).
-function formatBars(){
-  return '<div class="spot-fmts">'+FORMATS.map(function(f){
-    return '<div class="spot-fmt">'+
-      '<div class="spot-fmt-h"><span class="spot-fmt-ic" style="color:'+f.col+'">'+f.ic+'</span>'+
-        '<span class="spot-fmt-n">'+esc(f.n)+'</span><span class="spot-fmt-tag">'+esc(f.tag)+'</span></div>'+
-      '<div class="spot-fmt-track"><div class="spot-fmt-fill" style="width:'+f.cost+'%;background:'+f.col+'"></div></div>'+
-      '<div class="spot-fmt-note">'+esc(f.note)+'</div>'+
-    '</div>';
-  }).join('')+'</div>'+
-  '<div class="spot-axis"><span>← more margin for Spotify</span><span>more paid to rights holders →</span></div>';
-}
-
-function timelineBlock(){
-  return '<div class="ov-timeline">'+TIMELINE.map(function(t){
-    return '<div class="ov-tl-item"><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t[0])+'</div>'+
-      '<div class="ov-tl-body">'+esc(t[1])+'</div></div>';
-  }).join('')+'</div>';
-}
-
-// BEFORE pane — the music-only model.
+// BEFORE pane — the pre-bundle split of $10.
 function beforePane(){
   return '<div class="spot-state" data-state="before">'+
-    '<div class="spot-state-h">Almost every euro was <b>music</b> — and ~70% of it went straight to the record labels.</div>'+
-    euroBar()+
-    '<div class="spot-bigstat is-low"><span class="spot-bigstat-v">≈ 25%</span><span class="spot-bigstat-l">consolidated gross margin · stuck in the mid-20s% for a decade</span></div>'+
+    '<div class="spot-state-h">Pre-bundle (~2023): of every <b>$10</b>, about <b>$6.70</b> flowed straight back to rights holders. Spotify kept <b>$2.70</b> — a <b>27%</b> gross margin.</div>'+
+    '<div class="flow-wrap">'+flowSvg('before')+'</div>'+
+    '<div class="ov-statline">Music dominates the mix, so ~67% of revenue is a royalty toll — the reason gross margin sat in the mid-20s% for a decade.</div>'+
   '</div>';
 }
-// AFTER pane — the three-format platform.
+// AFTER pane — the post-bundle split of $10.
 function afterPane(){
   return '<div class="spot-state" data-state="after" hidden>'+
-    '<div class="spot-state-h">Revenue now spreads across <b>three formats</b>. Podcasts &amp; audiobooks don’t pay the label toll, so they lift the blend.</div>'+
-    formatBars()+
-    '<div class="spot-bigstat is-high"><span class="spot-bigstat-v">33.0%</span><span class="spot-bigstat-l">consolidated gross margin · Q1 2026 record (+133 bps Y/Y)</span></div>'+
+    '<div class="spot-state-h">Post-bundle (2024–25): the <b>songwriter (mechanical) royalty shrank</b>, the <b>label share didn’t move</b>. Spotify now keeps <b>$3.20</b> — a <b>32%</b> gross margin.</div>'+
+    '<div class="flow-wrap">'+flowSvg('after')+'</div>'+
+    '<div class="ov-statline">The bundle shaved ~<b>$0.35</b> off publishers (effective mechanical rate 15.35% → under 12%). With price hikes &amp; podcast discipline, Spotify’s keep rose <b>$2.70 → $3.20</b> per $10.</div>'+
+  '</div>';
+}
+// The bundle-mechanism explainer.
+function flowNote(){
+  return '<div class="flow-note">'+
+    '<div class="flow-note-h">🎧 Audiobooks in → lower songwriter royalty out</div>'+
+    '<p>In <b>March 2024</b> Spotify added ~15 hrs/month of audiobooks to Premium and reclassified Premium/Duo/Family as a <b>“bundle”</b> under U.S. mechanical-royalty rules (Phonorecords IV). A bundle lets Spotify value the music slice at a discount <i>before</i> applying the ~15% publisher rate — so the <b>mechanical royalty to songwriters fell</b>. Crucially, <b>record-label (master) royalties were untouched</b> — those run on separately negotiated direct deals, not the statutory bundle rate.</p>'+
+    '<div class="flow-note-stats">'+
+      '<div class="flow-note-stat"><div class="flow-note-stat-v">€205M</div><div class="flow-note-stat-l">less paid to songwriters in year one — Spotify’s own Form 6-K (Mar’24–Mar’25)</div></div>'+
+      '<div class="flow-note-stat"><div class="flow-note-stat-v">≈130 bps</div><div class="flow-note-stat-l">direct gross-margin lift from that reduction</div></div>'+
+      '<div class="flow-note-stat"><div class="flow-note-stat-v">$150–230M</div><div class="flow-note-stat-l">NMPA’s estimate of the first-year songwriter impact</div></div>'+
+    '</div>'+
   '</div>';
 }
 
@@ -141,27 +155,25 @@ function productMixBody(c){
   var h = '';
   h += '<p class="ov-lede">'+PM_LEDE+'</p>';
 
-  // ── EXPLANATION first ──
-  // 1 — Before / After toggle + swappable panes
-  h += sec('How the model changed',
+  // 1 — THE HERO: the $10 flow map, before vs after the bundle
+  h += sec('Follow $10 through Spotify — before vs after the bundle',
     '<div class="spot-toggle">'+
-      '<button type="button" class="spot-tg active" data-state="before">Before</button>'+
-      '<button type="button" class="spot-tg" data-state="after">After</button>'+
+      '<button type="button" class="spot-tg active" data-state="before">Before bundle</button>'+
+      '<button type="button" class="spot-tg" data-state="after">After bundle</button>'+
     '</div>'+
     beforePane()+afterPane());
 
-  // 2 — The pivot timeline (what happened in between)
-  h += sec('How Spotify changed the mix', timelineBlock());
+  // 2 — What the bundle actually did (the mechanism)
+  h += sec('What the “bundle” actually did', flowNote());
 
-  // ── RESULT last ──
-  // 3 — Gross margin BAR chart, full width, at the bottom
+  // 3 — The result: gross margin by year
   h += sec('The result — gross margin by year',
     '<div class="ov-chart-card"><div class="ov-chart-t">Consolidated gross margin <span>(%, reported · green = post-mix breakout)</span></div>'+
       '<div class="ov-chart-wrap ovt-mix-wrap"><canvas id="spotGmChart"></canvas></div>'+
     '</div>'+
     '<div class="ov-statline" style="margin-top:10px">Flat in the mid-20s% for a decade → dipped in 2022 on podcast spend → broke out past 30% from 2024 → <b>33.0%</b> record in Q1’26.</div>');
 
-  // 4 — Why it matters (stat cards)
+  // 5 — Why it matters (stat cards)
   h += sec('Why it matters', kpis(WHY_STATS));
 
   h += '<div class="ov-foot">'+esc(PM_SOURCES)+'</div>';
@@ -191,12 +203,6 @@ var US_KPIS = [
   { l:'Premium subscribers',  v:'293M', d:'+9.3% Y/Y',             dir:'up' },
   { l:'Ad-Supported MAUs',    v:'483M', d:'+14.2% Y/Y',            dir:'up' },
   { l:'Premium ARPU',         v:'€4.76', d:'+5.7% Y/Y (const. FX)', dir:'up' },
-];
-
-// Q2'26 guidance (Shareholder Deck p.20).
-var US_GUIDE = [
-  { l:'Total MAUs (Q2’26 guide)',      v:'778M', d:'≈ +17M net adds',  dir:'up' },
-  { l:'Premium subs (Q2’26 guide)',    v:'299M', d:'≈ +6M net adds',   dir:'up' },
 ];
 
 var US_SOURCES = 'Sources: Spotify FY2021–FY2025 Form 20-F KPI tables; Q1 2026 Form 6-K (pp. 27–28); Q1 2026 Shareholder Deck (p.7 user metrics, p.9 ARPU, p.20 Q2’26 outlook). Figures in millions; ARPU in EUR per month. Total MAU is reported separately from Premium and Ad-Supported counts and is not their sum.';
@@ -268,9 +274,6 @@ function mauBody(c){
     '</div>'+
     '<div class="ov-statline" style="margin-top:10px">The bars tilt purple over time: <b>Rest of World</b> climbs 32% → 37% of MAU while Europe + North America recede — more users, but from <b>lower-ARPU</b> markets.</div>'+
     '<div class="ov-foot">'+esc(REG_NOTE)+'</div>');
-
-  // 5 — Forward guidance
-  h += sec('What’s next — Q2’26 guidance', kpis(US_GUIDE));
 
   h += '<div class="ov-foot">'+esc(US_SOURCES)+'</div>';
   return h;
@@ -427,8 +430,8 @@ var VS_ROWS = [
 // Spotify MAU = total reach (free+paid); Spotify Premium = paying subs; Netflix
 // = paid memberships (Netflix reports no MAU). Netflix FY2025 = "crossed 325M".
 var VS_YEARS     = ['2019','2020','2021','2022','2023','2024','2025'];
-var VS_SPOT_MAU  = [271, 345, 406, 489, 602, 675, 713];
-var VS_SPOT_SUBS = [124, 155, 180, 205, 236, 263, 281];
+var VS_SPOT_MAU  = [271, 345, 406, 489, 602, 675, 751];
+var VS_SPOT_SUBS = [124, 155, 180, 205, 236, 263, 290];
 var VS_NFLX_SUBS = [167, 204, 222, 231, 260, 302, 325];
 // Monthly ARPU: Spotify Premium ARPU (€) vs Netflix global ARM ($, last reported FY2024).
 var VS_SPOT_ARPU = [4.89, 4.31, 4.40, 4.55, 4.39, 4.72, 4.76];
@@ -709,26 +712,55 @@ var ID_PILLARS = [
   { ic:'🤝', t:'Deeper creator & live', d:'Record $11B+ paid to rights holders in 2025 ($70B+ all-time); live & fan-connection as differentiation.' },
 ];
 
+// Each card is clickable → opens a visual explainer (newsDetailHtml). Fields:
+//   d = short blurb on the card · icon/tagline/what = the explainer · facts = stat
+//   chips · viz = a small inline visual ('flow' | 'tiles' | 'stack').
 var ID_NEWS = [
-  { tag:'Surprise',   t:'No “Super Premium” tier', d:'Against market expectations, Spotify chose the power-law add-on approach over a single high-priced tier.' },
-  { tag:'AI',         t:'AI music creation & remix', d:'Landmark licensing with Universal Music Group & UMPG lets fans legally make AI covers/remixes — consent, credit, compensation. Launches as a paid Premium add-on.' },
-  { tag:'Superfans',  t:'Reserved by Spotify', d:'Premium superfans get 2 tour tickets held before general on-sale. Launches summer 2026 in the U.S. with Live Nation.' },
-  { tag:'Audiobooks', t:'Audiobooks+ scaling', d:'On track for $100M annualized recurring revenue by July 2026 — 700k+ titles, 22 markets, +60% listening hours ’24→’25.' },
-  { tag:'AI',         t:'Studio by Spotify', d:'Creator/AI labs (research preview, 20+ markets), plus Podcast Memberships and new audiobook creation tools.' },
-  { tag:'Engagement', t:'Beyond music', d:'Fitness hub with Peloton content; DJ at 94M users; Taste Profile beta — widening “time well spent”.' },
-];
-
-var ID_CAPITAL = [
-  { l:'Buyback mandate',     v:'10M shares', d:'over 5 years · approved at the April 2026 AGM' },
-  { l:'Cash position',       v:'€8.8B',      d:'no debt (ex-leases) · Q1 2026' },
-  { l:'Q1’26 repurchased',   v:'$361M',      d:'plus $1.5B exchangeable notes settled in cash' },
-  { l:'New headline KPI',    v:'FCF / share',d:'signals a capital-returns orientation' },
-];
-
-var ID_QUOTES = [
-  { q:'3.5% of the world subscribes to Spotify. Giving us 96% left to win over.', a:'Alex Norström, Co-CEO' },
-  { q:'The generative era rewards scale, data, and deep user understanding more than any era before.', a:'Gustav Söderström, Co-CEO' },
-  { q:'Our bet is on applying general intelligence to something proprietary, dynamic, and deeply personal.', a:'Gustav Söderström, Co-CEO' },
+  { tag:'Surprise',   t:'No “Super Premium” tier',
+    d:'Against market expectations, Spotify chose the power-law add-on approach over a single high-priced tier.',
+    icon:'🧩', tagline:'À-la-carte add-ons over one pricey tier',
+    what:'The market expected a single expensive “Super Premium” plan. Instead, Spotify keeps standard Premium as the price anchor and monetizes power users through modular add-ons they buy individually — AI remix, Audiobooks+, superfan perks. It’s a “power-law” bet: a small share of superfans spend a lot, without raising the price for everyone else.',
+    facts:[ {k:'Approach',v:'À-la-carte'}, {k:'Base price',v:'Unchanged'}, {k:'Upside',v:'Superfans'} ],
+    viz:{ type:'stack' } },
+  { tag:'AI',         t:'AI music creation & remix',
+    d:'Landmark licensing with Universal Music Group & UMPG lets fans legally make AI covers/remixes — consent, credit, compensation. Launches as a paid Premium add-on.',
+    icon:'🎛️', tagline:'Legal AI covers & remixes, built on consent',
+    what:'A landmark licensing deal with Universal Music Group and UMPG lets fans legally create AI covers and remixes of real, licensed songs. It rests on three principles — consent (artists opt in), credit, and compensation (artists get paid) — and ships as a paid Premium add-on rather than a free feature.',
+    facts:[ {k:'Partners',v:'UMG · UMPG'}, {k:'Principles',v:'Consent · Credit · Pay'}, {k:'Pricing',v:'Premium add-on'} ],
+    viz:{ type:'flow', steps:[ {ic:'🎵',l:'Licensed track'}, {ic:'🤖',l:'Fan makes AI remix'}, {ic:'✅',l:'Artist consent · credit · pay'} ] } },
+  { tag:'Superfans',  t:'Reserved by Spotify',
+    d:'Premium superfans get 2 tour tickets held before general on-sale. Launches summer 2026 in the U.S. with Live Nation.',
+    icon:'🎟️', tagline:'2 concert tickets held for superfans',
+    what:'Spotify uses its listening data to spot an artist’s true superfans and reserves 2 concert tickets for them before the public on-sale — turning streaming engagement into real-world access. It launches summer 2026 in the U.S. in partnership with Live Nation.',
+    facts:[ {k:'Tickets',v:'2 reserved'}, {k:'Launch',v:'Summer 2026'}, {k:'Market',v:'U.S.'}, {k:'Partner',v:'Live Nation'} ],
+    viz:{ type:'flow', steps:[ {ic:'🎧',l:'Superfan identified'}, {ic:'🎟️',l:'2 tickets reserved'}, {ic:'⭐',l:'Buy before general on-sale'} ] } },
+  { tag:'Audiobooks', t:'Audiobooks+ scaling',
+    d:'On track for $100M annualized recurring revenue by July 2026 — 700k+ titles, 22 markets, +60% listening hours ’24→’25.',
+    icon:'📚', tagline:'Marching toward $100M ARR',
+    what:'Audiobooks+ has become a real business inside Spotify. Management says it’s on track to reach $100M in annualized recurring revenue by July 2026, powered by a deep catalog, wide reach, and fast-growing engagement — higher-margin content that lifts overall gross margin.',
+    facts:[ {k:'ARR target',v:'$100M by Jul ’26'} ],
+    viz:{ type:'tiles', tiles:[
+      {ic:'📖',t:'700k+ titles',d:'A catalog rivaling dedicated audiobook apps.'},
+      {ic:'🌍',t:'22 markets',d:'Live and expanding across regions.'},
+      {ic:'📈',t:'+60% hours',d:'Listening hours grew ’24 → ’25.'} ] } },
+  { tag:'AI',         t:'Studio by Spotify',
+    d:'Creator/AI labs (research preview, 20+ markets), plus Podcast Memberships and new audiobook creation tools.',
+    icon:'🛠️', tagline:'A creator & AI toolkit',
+    what:'Studio by Spotify brings Spotify’s creator-facing tools together in one place, including AI-powered “labs” now in a research preview across 20+ markets. It adds Podcast Memberships (recurring revenue for podcasters) and new audiobook-creation tools — deepening Spotify’s role as a platform creators build on, not just distribute through.',
+    facts:[ {k:'Stage',v:'Research preview'}, {k:'Reach',v:'20+ markets'} ],
+    viz:{ type:'tiles', tiles:[
+      {ic:'🧪',t:'Creator AI labs',d:'Experimental AI tools for creators.'},
+      {ic:'🎙️',t:'Podcast Memberships',d:'Recurring revenue for podcasters.'},
+      {ic:'📗',t:'Audiobook creation',d:'New tools to produce audiobooks.'} ] } },
+  { tag:'Engagement', t:'Beyond music',
+    d:'Fitness hub with Peloton content; DJ at 94M users; Taste Profile beta — widening “time well spent”.',
+    icon:'🎧', tagline:'Widening “time well spent”',
+    what:'Spotify is pushing engagement beyond music to keep users in the app longer. A new fitness hub brings in Peloton content, the AI DJ has reached 94M users, and a Taste Profile beta gives listeners a clearer view of their own tastes — all aimed at more “time well spent” and lower churn.',
+    facts:[ {k:'AI DJ',v:'94M users'} ],
+    viz:{ type:'tiles', tiles:[
+      {ic:'🏃',t:'Fitness hub',d:'Workouts with Peloton content.'},
+      {ic:'🎚️',t:'AI DJ',d:'94M users and growing.'},
+      {ic:'🫧',t:'Taste Profile',d:'Beta — see your own listening taste.'} ] } },
 ];
 
 var ID_SOURCES = 'Sources: Spotify Newsroom — Investor Day 2026 recap & co-CEO remarks (May 21, 2026); Q1 2026 earnings call prepared remarks (baseline figures); press corroboration (Fortune, Inderes, Globe and Mail). NOTE: the official Investor Day presentation PDF was too large to parse, so figures here come from Spotify’s published recap and the earnings materials, not the slides themselves. “North Star” items (€100B revenue, 40%+ gross margin, 1B subscribers) are directional ambitions with no committed date; sources differ on whether the 1B goal is users or subscribers.';
@@ -771,17 +803,59 @@ function idPillars(){
   }).join('')+'</div>';
 }
 
-function idNews(){
-  return '<div class="spot-news">'+ID_NEWS.map(function(n){
-    return '<div class="spot-newscard"><span class="spot-news-tag">'+esc(n.tag)+'</span>'+
-      '<div class="spot-news-t">'+esc(n.t)+'</div><div class="spot-news-d">'+esc(n.d)+'</div></div>';
+var NEWS_DETAIL_DEFAULT = '<div class="spot-news-hint">Tap any announcement above for a visual explainer of what it is and why it matters.</div>';
+
+// Small inline visuals for the news explainer — CSP-safe HTML/SVG, no libraries.
+function newsViz(v){
+  if(!v) return '';
+  if(v.type === 'flow') return '<div class="spot-nflow">'+v.steps.map(function(s,i){
+    return (i ? '<span class="spot-nflow-arr">→</span>' : '')+
+      '<div class="spot-nflow-step"><span class="spot-nflow-ic">'+s.ic+'</span>'+
+      '<span class="spot-nflow-l">'+esc(s.l)+'</span></div>';
   }).join('')+'</div>';
+  if(v.type === 'tiles') return '<div class="spot-ntiles">'+v.tiles.map(function(t){
+    return '<div class="spot-ntile"><span class="spot-ntile-ic">'+t.ic+'</span>'+
+      '<div class="spot-ntile-t">'+esc(t.t)+'</div><div class="spot-ntile-d">'+esc(t.d)+'</div></div>';
+  }).join('')+'</div>';
+  if(v.type === 'stack') return '<div class="spot-nstack">'+
+    '<div class="spot-nstack-col"><div class="spot-nstack-cap">What the market expected</div>'+
+      '<div class="spot-nstack-tier">One pricey<br>“Super Premium” tier</div></div>'+
+    '<div class="spot-nstack-vs">vs</div>'+
+    '<div class="spot-nstack-col"><div class="spot-nstack-cap">What Spotify chose</div>'+
+      '<div class="spot-nstack-addon">＋ Superfan perks</div>'+
+      '<div class="spot-nstack-addon">＋ Audiobooks+</div>'+
+      '<div class="spot-nstack-addon">＋ AI remix</div>'+
+      '<div class="spot-nstack-base">Premium base (unchanged)</div></div>'+
+  '</div>';
+  return '';
 }
 
-function idQuotes(){
-  return '<div class="spot-quotes">'+ID_QUOTES.map(function(q){
-    return '<blockquote class="spot-quote">“'+esc(q.q)+'”<cite>— '+esc(q.a)+'</cite></blockquote>';
+function newsDetailHtml(i){
+  var n = ID_NEWS[i];
+  if(!n) return NEWS_DETAIL_DEFAULT;
+  var facts = (n.facts && n.facts.length) ? '<div class="spot-nfacts">'+n.facts.map(function(f){
+    return '<div class="spot-nfact"><span class="spot-nfact-k">'+esc(f.k)+'</span>'+
+      '<span class="spot-nfact-v">'+esc(f.v)+'</span></div>';
+  }).join('')+'</div>' : '';
+  return '<div class="spot-nd-head"><span class="spot-nd-ic">'+(n.icon || '✨')+'</span>'+
+      '<div><span class="spot-news-tag">'+esc(n.tag)+'</span>'+
+      '<div class="spot-nd-t">'+esc(n.t)+'</div>'+
+      (n.tagline ? '<div class="spot-nd-tag">'+esc(n.tagline)+'</div>' : '')+'</div></div>'+
+    '<div class="spot-nd-what">'+esc(n.what || n.d)+'</div>'+
+    newsViz(n.viz)+
+    facts;
+}
+
+function idNews(){
+  var cards = '<div class="spot-news">'+ID_NEWS.map(function(n,i){
+    return '<div class="spot-newscard is-clickable" role="button" tabindex="0" data-news="'+i+'" aria-label="'+esc(n.t)+' — open explainer">'+
+      '<span class="spot-news-tag">'+esc(n.tag)+'</span>'+
+      '<div class="spot-news-t">'+(n.icon ? '<span class="spot-news-ic">'+n.icon+'</span> ' : '')+esc(n.t)+'</div>'+
+      '<div class="spot-news-d">'+esc(n.d)+'</div>'+
+      '<span class="spot-news-more">Tap to explore →</span>'+
+    '</div>';
   }).join('')+'</div>';
+  return cards + '<div class="spot-news-detail" id="newsDetail">'+NEWS_DETAIL_DEFAULT+'</div>';
 }
 
 function investorDayBody(c){
@@ -796,8 +870,6 @@ function investorDayBody(c){
   h += sec('How big is the runway?', idPenetration());
   h += sec('Five strategic pillars', idPillars());
   h += sec('What’s new — products & announcements', idNews());
-  h += sec('Capital allocation', kpis(ID_CAPITAL));
-  h += sec('In their words', idQuotes());
   h += '<div class="ov-foot">'+esc(ID_SOURCES)+'</div>';
   return h;
 }
@@ -1003,7 +1075,7 @@ function sensSlider(id, label, min, max, step, def, unitHint){
   '</div>';
 }
 
-function sensitivityBody(c){
+function sensPriceBody(c){
   var h = '';
 
   // Region toggles
@@ -1053,6 +1125,198 @@ function sensitivityBody(c){
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// SENSITIVITY · sub-tab 2 — "INVESTOR DAY TARGETS"
+// ════════════════════════════════════════════════════════════════════════════
+// Scenario: overlay Spotify's 2030 Investor Day targets onto the Summit DCF, build
+// the 2030 target P&L, then value the company AT DEC-2029 by applying a user multiple
+// to the FY2030 forward metric (in Dec-2029 the market discounts the next year, 2030).
+// The sensitivity lever is that Dec-2029 multiple.
+//   • Revenue 2030   = FY2025 revenue compounded at a mid-teens CAGR (adjustable).
+//   • Gross margin   = 35–40% target (adjustable).       Operating margin = 20%+ (adjustable).
+//   • FCF margin     = "sustained ↑" target (adjustable).
+//   • Net cash @2029 = 2026 net cash + cumulative DCF FCF (2026–29) − buybacks.
+var IDT_REV2025  = 17200;   // €m, Spotify FY2025 revenue (actual)
+var IDT_DAPCT    = 2.6;     // D&A+ as % of revenue → adj. EBITDA = EBIT + rev×DAPCT (ties DCF 2030)
+var IDT_BUYBACK  = 6000;    // €m, est. capital returned 2026–29 (buybacks + exchangeable notes)
+var IDT_YEARS    = 3.42;    // yrs from today (Jul 2026) to Dec 2029, for the annualized return
+var IDT_DEF      = { cagr:15, gm:37.5, om:20, fcfm:22, tax:12, metric:'ebit', mult:22 };
+// Sensible default multiple per metric (used when the metric select changes).
+var IDT_MULTDEF  = { sales:5, ebitda:18, ebit:22, pe:30, fcf:28 };
+
+// Build the 2030 target scenario + the Dec-2029 valuation for a set of assumptions.
+function idtScenario(p){
+  var B = SENS_BASE, F = B.fwd;
+  var shares = F.shares[3];                                  // FY2029 shares (198.9m)
+  var rev  = IDT_REV2025 * Math.pow(1 + p.cagr/100, 5);      // €m, FY2030 revenue
+  var gp   = rev * (p.gm/100);
+  var ebit = rev * (p.om/100);
+  var ebitda = ebit + rev * (IDT_DAPCT/100);
+  var ni   = ebit * (1 - p.tax/100);                        // €m (approx; ignores net interest)
+  var fcf  = rev * (p.fcfm/100);
+  var eps  = ni / shares;                                   // €/sh
+  var cumFcf   = F.fcf[0] + F.fcf[1] + F.fcf[2] + F.fcf[3]; // 2026–2029 DCF FCF
+  var netCash  = B.netCash + cumFcf - IDT_BUYBACK;          // €m, net cash @ Dec-2029
+  // pick the multiple's metric
+  var metric, isEV, lbl;
+  if(p.metric === 'pe')        { metric = ni;     isEV = false; lbl = 'P/E'; }
+  else if(p.metric === 'fcf')  { metric = fcf;    isEV = false; lbl = 'P/FCF'; }
+  else if(p.metric === 'sales'){ metric = rev;    isEV = true;  lbl = 'EV/Sales'; }
+  else if(p.metric === 'ebitda'){ metric = ebitda; isEV = true; lbl = 'EV/EBITDA'; }
+  else                         { metric = ebit;   isEV = true;  lbl = 'EV/EBIT'; }
+  var ev     = p.mult * metric;                            // €m — EV or equity depending on metric
+  var equity = isEV ? ev + netCash : ev;                   // €m
+  var pxUsd  = (equity / shares) * B.fx;                   // $/sh at Dec-2029
+  var upside = pxUsd / B.price - 1;
+  var irr    = Math.pow(pxUsd / B.price, 1 / IDT_YEARS) - 1;
+  return { rev:rev, gp:gp, ebit:ebit, ebitda:ebitda, ni:ni, fcf:fcf, eps:eps,
+           netCash:netCash, shares:shares, lbl:lbl, isEV:isEV, metric:metric,
+           ev:ev, equity:equity, pxUsd:pxUsd, upside:upside, irr:irr };
+}
+
+// Grid column axis adapts to the selected metric's main driver.
+function idtDriver(metric, cur){
+  if(metric === 'fcf')   return { key:'fcfm', label:'FCF margin', cols:[cur.fcfm-2, cur.fcfm, cur.fcfm+2, cur.fcfm+4] };
+  if(metric === 'sales') return { key:'cagr', label:'Rev CAGR',   cols:[cur.cagr-2, cur.cagr-1, cur.cagr, cur.cagr+1, cur.cagr+2] };
+  return { key:'om', label:'Op. margin', cols:[cur.om-2, cur.om, cur.om+2, cur.om+4] };
+}
+
+// Sensitivity grid: Dec-2029 multiple (rows) × the metric's driver margin (cols) → implied price.
+function idtHeat(p){
+  var shade = function(px){ var a = Math.max(0, Math.min(1, (px/SENS_BASE.price - 1) / 1.5)); return 'rgba(29,185,84,'+(0.08 + a*0.55).toFixed(2)+')'; };
+  var mults = [-4, -2, 0, 2, 4, 6].map(function(d){ return Math.max(1, Math.round((p.mult + d)*2)/2); });
+  var curM  = Math.round(p.mult*2)/2;
+  var drv   = idtDriver(p.metric, p);
+  var curC  = p[drv.key];
+  var head  = '<th>×mult \\ '+esc(drv.label)+'</th>'+drv.cols.map(function(c){ return '<th>'+c.toFixed(0)+'%</th>'; }).join('');
+  var rows  = mults.map(function(m){
+    var tds = drv.cols.map(function(c){
+      var pp = Object.assign({}, p, { mult:m }); pp[drv.key] = c;
+      var r = idtScenario(pp);
+      var cur = (m === curM && c === curC) ? ' sens-heat-cur' : '';
+      return '<td class="sens-heat-v'+cur+'" style="background:'+shade(r.pxUsd)+'">$'+r.pxUsd.toFixed(0)+'</td>';
+    }).join('');
+    return '<tr><th>'+m.toFixed(1)+'×</th>'+tds+'</tr>';
+  }).join('');
+  return '<table class="sens-heat-tbl"><thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+function idtRead(root){
+  var g = function(id){ return root.querySelector('#'+id); };
+  var mt = g('idtMetric');
+  return {
+    cagr:   parseFloat(g('idtCagr').value),
+    gm:     parseFloat(g('idtGm').value),
+    om:     parseFloat(g('idtOm').value),
+    fcfm:   parseFloat(g('idtFcfm').value),
+    tax:    g('idtTax') ? parseFloat(g('idtTax').value) : IDT_DEF.tax,
+    metric: mt ? mt.value : IDT_DEF.metric,
+    mult:   parseFloat(g('idtMult').value),
+  };
+}
+
+function idtUpdate(root){
+  if(!root) return;
+  var p = idtRead(root);
+  var setv = function(id, txt){ var e = root.querySelector('#'+id+'V'); if(e) e.textContent = txt; };
+  setv('idtCagr', p.cagr.toFixed(1)+'%'); setv('idtGm', p.gm.toFixed(1)+'%');
+  setv('idtOm', p.om.toFixed(1)+'%');     setv('idtFcfm', p.fcfm.toFixed(1)+'%');
+  setv('idtTax', p.tax.toFixed(0)+'%');   setv('idtMult', p.mult.toFixed(1)+'×');
+  var s = idtScenario(p);
+
+  // 2030 target P&L readout
+  var pnl = root.querySelector('#idtPnl');
+  if(pnl){
+    var line = [
+      { l:'Revenue',            v:sensMoney(s.rev),    s:p.cagr.toFixed(1)+'% CAGR from FY2025' },
+      { l:'Gross profit',       v:sensMoney(s.gp),     s:p.gm.toFixed(1)+'% margin' },
+      { l:'Operating income',   v:sensMoney(s.ebit),   s:p.om.toFixed(1)+'% margin (EBIT)' },
+      { l:'Adj. EBITDA',        v:sensMoney(s.ebitda), s:'EBIT + D&A' },
+      { l:'Net income',         v:sensMoney(s.ni),     s:'at '+p.tax.toFixed(0)+'% tax' },
+      { l:'Free cash flow',     v:sensMoney(s.fcf),    s:p.fcfm.toFixed(1)+'% margin' },
+      { l:'EPS',                v:'$'+(s.eps*SENS_BASE.fx).toFixed(2), s:'on '+s.shares+'m shares' },
+    ];
+    pnl.innerHTML = line.map(function(c){
+      return '<div class="idt-pnl-cell"><div class="idt-pnl-l">'+esc(c.l)+'</div>'+
+        '<div class="idt-pnl-v">'+esc(c.v)+'</div><div class="idt-pnl-s">'+esc(c.s)+'</div></div>';
+    }).join('');
+  }
+
+  // Dec-2029 valuation cards
+  var cards = [
+    { l:'Implied price · Dec 2029', v:'$'+s.pxUsd.toFixed(0), s:p.mult.toFixed(1)+'× '+s.lbl+' on FY2030', big:true, up:true },
+    { l:'Upside vs today',          v:(s.upside>=0?'+':'')+(s.upside*100).toFixed(0)+'%', s:'vs $'+SENS_BASE.price.toFixed(0)+' today', big:true, up:s.upside>=0 },
+    { l:'Annualized return',        v:(s.irr>=0?'+':'')+(s.irr*100).toFixed(1)+'%/yr', s:'to Dec 2029 (~'+IDT_YEARS+' yrs)', up:s.irr>=0 },
+    { l:(s.isEV?'Enterprise value':'Equity value'), v:sensMoney(s.ev), s:p.mult.toFixed(1)+'× FY2030 '+s.lbl.split('/')[1] },
+    { l:'Equity value',             v:sensMoney(s.equity), s:s.isEV ? '+ '+sensMoney(s.netCash)+' net cash' : 'equity multiple' },
+    { l:'Net cash · Dec 2029',      v:sensMoney(s.netCash), s:'2026 cash + cum. DCF FCF − buybacks' },
+  ];
+  var out = root.querySelector('#idtOut');
+  if(out){
+    out.innerHTML = cards.map(function(c){
+      return '<div class="sens-card'+(c.big?' is-big':'')+(c.up?' is-up':'')+'">'+
+        '<div class="sens-card-l">'+esc(c.l)+'</div><div class="sens-card-v">'+esc(c.v)+'</div>'+
+        '<div class="sens-card-s">'+esc(c.s)+'</div></div>';
+    }).join('');
+  }
+
+  var heat = root.querySelector('#idtHeat');
+  if(heat) heat.innerHTML = idtHeat(p);
+}
+
+function idtBody(c){
+  var h = '';
+  h += '<div class="ov-statline" style="margin-bottom:16px">This scenario overlays Spotify’s <b>2030 Investor Day targets</b> onto the Summit DCF, builds the 2030 target P&amp;L, then values the company <b>at December 2029</b> — where the market discounts the next year (FY2030). Move the assumption sliders to hit the targets; the <b>sensitivity is the Dec-2029 multiple</b> you apply.</div>';
+
+  // 1 — 2030 target assumptions
+  h += sec('1 · 2030 targets (Investor Day) — assumptions',
+    '<div class="spl-grid">'+
+      sensSlider('idtCagr', 'Revenue CAGR ’25→’30', 12, 18, 0.5, IDT_DEF.cagr, 'Mid-teens % target (constant FX) → compounds FY2025 revenue to FY2030')+
+      sensSlider('idtGm',   'Gross margin (2030)',   32, 42, 0.5, IDT_DEF.gm,   'Investor Day target 35–40% by 2030 (from 32% today)')+
+      sensSlider('idtOm',   'Operating margin (2030)',15, 26, 0.5, IDT_DEF.om,  'Investor Day target 20%+ by 2030 (from ~13% today)')+
+      sensSlider('idtFcfm', 'FCF margin (2030)',     15, 26, 0.5, IDT_DEF.fcfm, 'FCF as % of revenue — the new headline KPI (“sustained ↑”)')+
+      sensSlider('idtTax',  'Tax rate (2030)',        5, 25, 1,   IDT_DEF.tax,  'Effective tax rate on operating income → net income / EPS (drives the P/E)')+
+    '</div>'+
+    '<div class="idt-pnl" id="idtPnl"></div>'+
+    '<div class="ov-statline" style="margin-top:10px">The chips above are the <b>2030 target P&amp;L</b> these assumptions imply — the numbers Spotify would post if it hits its Investor Day plan.</div>');
+
+  // 2 — Dec-2029 valuation lever (the multiple)
+  h += sec('2 · Valuation at Dec 2029 — the multiple is the sensitivity',
+    '<div class="sens-selrow">'+
+      '<div class="sens-sel"><label for="idtMetric">Multiple type</label><select id="idtMetric">'+
+        '<option value="ebit" selected>EV / EBIT (operating income)</option>'+
+        '<option value="ebitda">EV / EBITDA</option>'+
+        '<option value="pe">P / E (net income)</option>'+
+        '<option value="fcf">P / FCF</option>'+
+        '<option value="sales">EV / Sales</option>'+
+      '</select></div>'+
+    '</div>'+
+    '<div class="spl-grid">'+
+      sensSlider('idtMult', 'Dec-2029 multiple (×)', 3, 45, 0.5, IDT_DEF.mult, 'Applied to the FY2030 target metric at Dec-2029 (forward / NTM multiple)')+
+    '</div>');
+
+  // Outputs
+  h += sec('If they hit the 2030 targets — valuation at Dec 2029', '<div class="sens-out" id="idtOut"></div>');
+
+  // Sensitivity grid
+  h += sec('Sensitivity grid — Dec-2029 multiple × margin',
+    '<div class="sens-heat-wrap" id="idtHeat"></div>'+
+    '<div class="ov-statline" style="margin-top:10px">Each cell is the implied <b>Dec-2029 price</b> across the <b>multiple (rows)</b> and the metric’s driver margin <b>(cols)</b>, holding the other assumptions fixed. Your current pick is outlined.</div>');
+
+  h += '<div class="ov-foot">Scenario overlays Spotify’s 2030 Investor Day targets (gross margin 35–40%, operating margin 20%+, mid-teens revenue CAGR, sustained FCF) onto the Summit DCF (snapshot 2026-05-22). FY2030 revenue = FY2025 €17.2B compounded at the chosen CAGR; gross/operating/FCF margins as set; adj. EBITDA = EBIT + D&amp;A (~2.6% of revenue); net income at the chosen tax rate (ignores net interest). Valuation is AT DEC-2029: a forward multiple on the FY2030 metric, bridging EV→equity with net cash ≈ 2026 net cash + cumulative DCF FCF 2026–29 − ~€6B buybacks, on FY2029 shares (198.9m); EUR→USD 1.08. Annualized return runs from today’s $473.65 over ~3.4 years. Illustrative single-scenario sensitivity, not the full DCF. Targets: Spotify Investor Day (May 21, 2026) recap; financials: Summit DCF models.</div>';
+  return h;
+}
+
+// Sensitivity shell — wraps the two sub-tabs (Price increase · Investor Day targets).
+function sensitivityBody(c){
+  return '<div class="ovs-tabs">'+
+      '<button type="button" class="ovs-tab active" data-ovs="price">Price increase</button>'+
+      '<button type="button" class="ovs-tab" data-ovs="idt">Investor Day targets</button>'+
+    '</div>'+
+    '<div class="ovs-pane" data-ovs="price">'+sensPriceBody(c)+'</div>'+
+    '<div class="ovs-pane" data-ovs="idt" hidden>'+idtBody(c)+'</div>';
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 // SHELL + CHART + INIT
 // ════════════════════════════════════════════════════════════════════════════
 function html(c){
@@ -1061,14 +1325,14 @@ function html(c){
     '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
     '<button type="button" class="ovt-tab" data-ovt="general">General</button>'+
     '<button type="button" class="ovt-tab" data-ovt="mix">Product Mix</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="sens">Sensitivity</button>'+
     '<button type="button" class="ovt-tab" data-ovt="id2026">Investor Day 2026</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="sens">Sensitivity</button>'+
   '</div>';
   h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="general" hidden>'+generalBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="mix" hidden>'+productMixBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="sens" hidden>'+sensitivityBody(c)+'</div>';
   h += '<div class="ovt-pane" data-ovt="id2026" hidden>'+investorDayBody(c)+'</div>';
+  h += '<div class="ovt-pane" data-ovt="sens" hidden>'+sensitivityBody(c)+'</div>';
   h += '</div>';
   return h;
 }
@@ -1315,6 +1579,12 @@ function showOvg(root, key){
   else if (key === 'vs') requestAnimationFrame(function(){ buildVsUsersChart(); buildVsArpuChart(); });
 }
 
+// Switch the Sensitivity sub-tab (Price increase / Investor Day targets).
+function showOvs(root, key){
+  root.querySelectorAll('.ovs-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovs') === key); });
+  root.querySelectorAll('.ovs-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovs') !== key); });
+}
+
 function init(c){
   var root = document.querySelector('.ov-spot');
   if (!root) return;
@@ -1338,6 +1608,17 @@ function init(c){
     el.onclick = pick;
     el.onkeydown = function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } };
   });
+  // Investor Day "What's new" cards: click (or Enter/Space) opens a visual explainer.
+  root.querySelectorAll('[data-news]').forEach(function(el){
+    var pick = function(){
+      var i = el.getAttribute('data-news');
+      root.querySelectorAll('[data-news]').forEach(function(x){ x.classList.toggle('is-active', x === el); });
+      var d = root.querySelector('#newsDetail');
+      if (d) d.innerHTML = newsDetailHtml(+i);
+    };
+    el.onclick = pick;
+    el.onkeydown = function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } };
+  });
   // Sensitivity tab: live recompute on any slider move or region toggle.
   root.querySelectorAll('.spl-grid input[type=range]').forEach(function(sl){
     sl.oninput = function(){ sensUpdate(root); };
@@ -1355,6 +1636,21 @@ function init(c){
     sel.onchange = function(){ sensUpdate(root); };
   });
   if (root.querySelector('#sensOut')) sensUpdate(root);
+  // Sensitivity sub-tabs.
+  root.querySelectorAll('.ovs-tab').forEach(function(btn){
+    btn.onclick = function(){ showOvs(root, btn.getAttribute('data-ovs')); };
+  });
+  // Investor Day targets scenario: recompute on any slider or metric change.
+  root.querySelectorAll('#idtCagr, #idtGm, #idtOm, #idtFcfm, #idtTax, #idtMult').forEach(function(sl){
+    sl.oninput = function(){ idtUpdate(root); };
+  });
+  var idtMetric = root.querySelector('#idtMetric');
+  if (idtMetric) idtMetric.onchange = function(){
+    var msl = root.querySelector('#idtMult');
+    if (msl && IDT_MULTDEF[idtMetric.value] != null) msl.value = IDT_MULTDEF[idtMetric.value];
+    idtUpdate(root);
+  };
+  if (root.querySelector('#idtOut')) idtUpdate(root);
   var active = root.querySelector('.ovt-tab.active');
   var ak = active && active.getAttribute('data-ovt');
   if (ak === 'mix') requestAnimationFrame(buildGmChart);

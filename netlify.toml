@@ -19,4 +19,17 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://assets.parqet.com https://logo.clearbit.com https://www.google.com https://*.gstatic.com https://*.supabase.co data:; connect-src 'self' https://*.supabase.co https://*.supabase.in; frame-src https://my.matterport.com https://*.matterport.com; frame-ancestors 'none'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://assets.parqet.com https://logo.clearbit.com https://www.google.com https://*.gstatic.com https://*.supabase.co data:; connect-src 'self' https://*.supabase.co https://*.supabase.in; frame-src 'self' https://my.matterport.com https://*.matterport.com; frame-ancestors 'none'"
+
+# The Industry Analysis tab embeds industry-embed.html in a SAME-ORIGIN iframe so the
+# supply-chain map's module state can't collide with the same map inside a company
+# profile. Allow this one internal page to be framed by our own origin (only). This
+# more-specific rule overrides the "/*" X-Frame-Options / frame-ancestors above.
+[[headers]]
+  for = "/industry-embed.html"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://assets.parqet.com https://logo.clearbit.com https://www.google.com https://*.gstatic.com https://*.supabase.co data:; connect-src 'self' https://*.supabase.co https://*.supabase.in; frame-ancestors 'self'"

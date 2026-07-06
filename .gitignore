@@ -19,3 +19,6 @@ playground/
 
 # Reference screenshots (Chip Stock Investor) — local only, do not commit
 nvidia-map-reference/
+
+# Payment-networks industry dashboard + extracted data — local only, do not commit
+payments-industry-reference/

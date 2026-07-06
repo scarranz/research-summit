@@ -1914,6 +1914,22 @@ img.mgmt-av { border: 1px solid var(--bdr); }
 .ov-legend-i { display: flex; align-items: center; gap: 5px; }
 .ov-legend-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
 
+/* ─── Instacart (CART) Overview — company-specific additions ─────────────────
+   Reuses the shared overview components (subtabs, panes, hub, flow, segmap,
+   cards, modal). Only the brand scope + flow earn/highlight colors are added,
+   scoped under .ov-cart so they don't collide with other companies. */
+.ov-cart {
+  --brand: #0AAD0A;
+  --brand-soft: #E8F7E8;
+  --brand-2: #FF7009;
+}
+.ov-cart .ov-flow-node.on { box-shadow: 0 4px 14px rgba(10,173,10,.16); }
+.ov-cart .ov-flow-node[data-node="ic"].on { border-color: var(--brand-2); box-shadow: 0 4px 14px rgba(255,112,9,.30); }
+.ov-cart .ov-flow-earn.earn-ic    { background: #E8F7E8; color: #0A7A0A; border: 1px solid var(--brand); }
+.ov-cart .ov-flow-earn.earn-ad    { background: #FFF1E6; color: #B4500A; border: 1px solid var(--brand-2); }
+.ov-cart .ov-flow-earn.earn-cost  { background: #FDECEC; color: var(--neg); border: 1px solid #F5C6C6; }
+.ov-cart .ov-flow-earn.earn-split { background: #ECF6EF; color: #1B6B43; border: 1px solid #BFE3CC; }
+/* Product sub-tiles + competition line used in the segment-detail modal */
 /* ─── Mastercard (MA) Overview — company-specific additions ──────────────────
    Shared overview components (cards, flow, segmap, modal, prod, sub) already
    live above; here we only add the MA brand scope and the few selectors the
@@ -1934,6 +1950,16 @@ img.mgmt-av { border: 1px solid var(--bdr); }
 .ov-prod-d { font-size: 11px; line-height: 1.45; color: var(--mu); margin-top: 3px; }
 .ov-sub-comp { font-size: 11.5px; line-height: 1.5; color: var(--mu); margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--bdr); }
 .ov-sub-comp b { color: var(--navy); font-weight: 600; }
+/* CART has 4 network parties (not 5) and 2 lines per pillar (not 3) — fit the
+   grids exactly so they read as complete, not missing a slot. */
+.ov-cart .ov-hub-nodes { grid-template-columns: repeat(4, 1fr); }
+.ov-cards.ov-cards-2 { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 860px) { .ov-cart .ov-hub-nodes { grid-template-columns: repeat(2, 1fr); } }
+/* Annual / Quarterly toggle on the Financials tab */
+.ov-fintog { display: inline-flex; gap: 6px; background: var(--surface); border: 1px solid var(--bdr); border-radius: 9px; padding: 4px; margin-bottom: 14px; }
+.ov-fintog button { border: none; background: transparent; color: var(--mu); font-size: 11.5px; font-weight: 600; padding: 6px 14px; border-radius: 7px; cursor: pointer; transition: background .12s, color .12s; }
+.ov-fintog button:hover { color: var(--navy); }
+.ov-fintog button.on { background: var(--brand); color: #fff; }
 /* Volume explorer controls (metric selector + dimension toggle) */
 .ov-ph-badge { font-size: 9.5px; font-weight: 600; color: var(--brand); background: var(--brand-soft); border-radius: 20px; padding: 2px 9px; margin-left: 8px; letter-spacing: .01em; text-transform: none; vertical-align: middle; }
 .ov-volctrl { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 12px; }

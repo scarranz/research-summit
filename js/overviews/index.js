@@ -13,6 +13,7 @@ import { mastercardOverview } from './mastercard.js';
 import { lyftOverview } from './lyft.js';
 import { uberOverview } from './uber.js';
 import { nvidiaOverview } from './nvidia.js';
+import { instacartOverview } from './instacart.js';
 import { spotOverview } from './spot.js';
 import { avgoOverview } from './avgo.js';
 
@@ -28,6 +29,7 @@ var OVERVIEWS = {
   LYFT: lyftOverview,
   UBER: uberOverview,
   NVDA: nvidiaOverview,
+  CART: instacartOverview,
   SPOT: spotOverview,
   AVGO: avgoOverview,
 };

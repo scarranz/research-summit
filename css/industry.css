@@ -1,0 +1,24 @@
+/* Industry Analysis tab — hub header + isolated map frame. */
+.ind-wrap { display: flex; flex-direction: column; gap: 14px; }
+
+.ind-head { }
+.ind-title { font: 700 22px 'Inter', sans-serif; color: var(--navy, #1E2733); margin: 0 0 6px; letter-spacing: -0.01em; }
+.ind-sub { font: 400 13.5px 'Inter', sans-serif; color: var(--mu, #6b7682); line-height: 1.55; margin: 0 0 14px; max-width: 760px; }
+
+.ind-pills { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ind-pill {
+  border: 1px solid var(--bdr, #dfe4ea); background: #fff; border-radius: 999px;
+  font: 600 13px 'Inter', sans-serif; color: var(--navy, #1E2733);
+  padding: 7px 16px; cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+}
+.ind-pill:hover { border-color: #b9c2cd; }
+.ind-pill.active { background: var(--navy, #1E2733); color: #fff; border-color: var(--navy, #1E2733); }
+.ind-pill[disabled] { opacity: .5; cursor: default; }
+.ind-pill[disabled]:hover { border-color: var(--bdr, #dfe4ea); }
+.ind-soon { font: 500 12px 'Inter', sans-serif; color: var(--mu, #8A93A0); margin-left: 4px; }
+
+.ind-frame {
+  width: 100%; height: 82vh; min-height: 560px;
+  border: 1px solid var(--bdr, #e3e8ee); border-radius: 12px; background: #fff;
+  box-shadow: 0 1px 3px rgba(30, 39, 51, .04);
+}

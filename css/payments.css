@@ -1,0 +1,184 @@
+/* Payment Networks industry analysis — portal-skinned re-creation of the
+   V/MA moat & threat dashboard. Uses the portal's CSS variables (base.css). */
+.pay { --amber: #B45309; --amber-l: #FBF3E6; --blue-l: #EAF0F7; --green-l: #E8F3EC; --red-l: #FBEAEA; }
+.pay-head { margin-bottom: 4px; }
+.pay-h-title { font: 700 21px 'Inter', sans-serif; color: var(--navy); letter-spacing: -0.01em; margin: 0; }
+.pay-h-sub { font: 500 12px 'Inter', sans-serif; color: var(--mu); margin-top: 4px; }
+
+/* Tab bar */
+.pay-tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--bdr); margin: 14px 0 18px; }
+.pay-tab {
+  border: none; background: none; cursor: pointer; padding: 9px 14px; margin-bottom: -1px;
+  font: 600 11px 'Inter', sans-serif; letter-spacing: .02em; color: var(--mu);
+  border-bottom: 2px solid transparent; transition: color .12s, border-color .12s; white-space: nowrap;
+}
+.pay-tab:hover { color: var(--navy); }
+.pay-tab.active { color: var(--navy); border-bottom-color: var(--navy); }
+.pay-tab-n { color: var(--mid); font-weight: 700; margin-right: 6px; }
+.pay-pane[hidden] { display: none; }
+
+/* Section header */
+.pay-sec { font: 700 11px 'Inter', sans-serif; letter-spacing: .04em; text-transform: uppercase; color: var(--mu);
+  display: flex; align-items: center; gap: 12px; margin: 0 0 14px; }
+.pay-sec::after { content: ''; flex: 1; height: 1px; background: var(--bdr); }
+
+/* Generic cards */
+.pay-card { background: var(--w); border: 1px solid var(--bdr); border-radius: 10px; padding: 16px 18px; }
+.pay-card-sm { background: var(--w); border: 1px solid var(--bdr); border-radius: 10px; padding: 13px 14px; }
+.pay-inset { background: var(--pale); border-radius: 8px; padding: 11px 13px; }
+.pay-lbl { font: 700 10px 'Inter', sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--mu); margin-bottom: 6px; }
+.pay-body { font: 400 12px 'Inter', sans-serif; color: var(--blue); line-height: 1.65; }
+.pay-grid-main { display: grid; grid-template-columns: 1fr 340px; gap: 14px; }
+.pay-side { display: flex; flex-direction: column; gap: 10px; }
+.pay-g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Layer cards (moat stack) */
+.pay-layer { background: var(--w); border: 1px solid var(--bdr); border-left: 3px solid var(--steel);
+  border-radius: 10px; padding: 15px 17px; margin-bottom: 7px; transition: transform .15s; }
+.pay-layer:hover { transform: translateX(3px); }
+.pay-layer-n { font: 700 9.5px 'Inter', sans-serif; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 4px; }
+.pay-layer-t { font: 700 16px 'Inter', sans-serif; color: var(--navy); margin-bottom: 5px; letter-spacing: -0.01em; }
+.pay-layer-b { font: 400 11.5px 'Inter', sans-serif; color: var(--blue); line-height: 1.6; }
+.pay-layer-m { display: flex; align-items: center; gap: 10px; margin-top: 9px; }
+.pay-moat-track { flex: 0 0 120px; height: 4px; background: var(--ice); border-radius: 2px; overflow: hidden; }
+.pay-moat-fill { height: 4px; border-radius: 2px; background: var(--steel); }
+
+/* Badges */
+.pay-badge { display: inline-block; padding: 2px 9px; border-radius: 4px; font: 600 10px 'Inter', sans-serif; letter-spacing: .01em; }
+.pay-b-navy { background: var(--navy); color: #fff; }
+.pay-b-blue { background: var(--blue-l); color: var(--steel); }
+.pay-b-green { background: var(--green-l); color: var(--green); }
+.pay-b-amber { background: var(--amber-l); color: var(--amber); }
+.pay-b-red { background: var(--red-l); color: var(--red); }
+.pay-b-mut { background: var(--pale); color: var(--mid); }
+
+/* Stat tiles */
+.pay-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pay-stat { background: var(--w); border: 1px solid var(--bdr); border-radius: 10px; padding: 12px 13px; }
+.pay-stat-v { font: 700 25px 'Inter', sans-serif; color: var(--navy); letter-spacing: -0.02em; }
+.pay-stat-l { font: 400 10px 'Inter', sans-serif; color: var(--mu); margin-top: 2px; }
+
+/* Threat-structure note rows */
+.pay-note { display: flex; gap: 10px; align-items: flex-start; }
+.pay-note-bar { width: 3px; min-width: 3px; align-self: stretch; border-radius: 2px; margin-top: 3px; }
+
+/* Bubble map */
+.pay-chart-wrap { position: relative; background: var(--w); border: 1px solid var(--bdr); border-radius: 10px; padding: 8px; height: 460px; }
+.pay-legend-row { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+.pay-legend-dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid; flex-shrink: 0; }
+
+/* Rail volume mini-bars */
+.pay-rv-row { display: flex; justify-content: space-between; margin: 7px 0 2px; font: 500 10px 'Inter', sans-serif; color: var(--blue); }
+.pay-rv-track { height: 4px; background: var(--ice); border-radius: 2px; overflow: hidden; }
+.pay-rv-fill { height: 4px; border-radius: 2px; }
+
+/* Placeholder for tabs not built yet */
+.pay-soon { text-align: center; color: var(--mu); font: 400 13px 'Inter', sans-serif; padding: 60px 20px; }
+.pay-soon b { color: var(--navy); font-weight: 700; display: block; font-size: 15px; margin-bottom: 6px; }
+
+/* Threat cards (Tab 3) */
+.pay-threat { display: grid; grid-template-columns: 46px 1fr; gap: 14px; align-items: start;
+  background: var(--w); border: 1px solid var(--bdr); border-radius: 10px; padding: 16px 18px; margin-bottom: 10px; transition: border-color .12s; }
+.pay-threat:hover { border-color: var(--mid); }
+.pay-t-icon { width: 46px; height: 46px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.pay-t-name { font: 700 16px 'Inter', sans-serif; color: var(--navy); margin-bottom: 1px; letter-spacing: -0.01em; }
+.pay-t-tag { font: 600 10px 'Inter', sans-serif; color: var(--mu); margin-bottom: 7px; }
+.pay-t-body { font: 400 12px 'Inter', sans-serif; color: var(--blue); line-height: 1.65; }
+.pay-t-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 9px; }
+
+/* Flow steps (Tab 4) */
+.pay-flow-row { display: flex; align-items: stretch; margin-bottom: 16px; }
+.pay-flow-step { flex: 1; background: var(--w); border: 1px solid var(--bdr); padding: 12px 13px; }
+.pay-flow-step:first-child { border-radius: 8px 0 0 8px; }
+.pay-flow-step:last-child { border-radius: 0 8px 8px 0; }
+.pay-flow-arr { width: 24px; background: var(--pale); display: flex; align-items: center; justify-content: center;
+  color: var(--mu); border-top: 1px solid var(--bdr); border-bottom: 1px solid var(--bdr); flex-shrink: 0; }
+.pay-fn { font: 700 9px 'Inter', sans-serif; letter-spacing: .05em; text-transform: uppercase; color: var(--mu); margin-bottom: 3px; }
+.pay-ft { font: 700 13px 'Inter', sans-serif; color: var(--navy); margin-bottom: 4px; }
+.pay-fb { font: 400 11px 'Inter', sans-serif; color: var(--blue); line-height: 1.55; }
+
+/* Replication matrix (Tab 5) */
+.pay-mtx { width: 100%; border-collapse: collapse; }
+.pay-mtx th { font: 700 9.5px 'Inter', sans-serif; letter-spacing: .03em; text-transform: uppercase; color: var(--mu);
+  padding: 9px 10px; text-align: center; border-bottom: 2px solid var(--bdr); }
+.pay-mtx th:first-child { text-align: left; min-width: 175px; }
+.pay-mtx td { padding: 9px 10px; border-bottom: 1px solid var(--pale); text-align: center; font-size: 12px; }
+.pay-mtx td:first-child { text-align: left; }
+.pay-mtx tr:last-child td { border-bottom: none; }
+.pay-mtx .pay-rs td { font: 700 8.5px 'Inter', sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--mu);
+  padding: 9px 10px 4px; border-bottom: 1px solid var(--bdr); background: var(--pale); }
+.pay-diff { width: 30px; height: 30px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;
+  font: 600 11px 'Inter', sans-serif; }
+.pay-d1 { background: var(--green-l); color: var(--green); }
+.pay-d2 { background: var(--amber-l); color: var(--amber); }
+.pay-d3 { background: var(--red-l); color: var(--red); }
+.pay-dn { background: var(--pale); color: var(--mu); }
+.pay-mtx-co { display: flex; align-items: center; gap: 8px; }
+.pay-mtx-co b { font: 700 12px 'Inter', sans-serif; color: var(--navy); }
+.pay-mtx-co .sub { font: 400 10px 'Inter', sans-serif; color: var(--mu); }
+
+/* Incentive bars (Tab 6) */
+.pay-inc-row { display: grid; grid-template-columns: 52px 1fr 62px; gap: 10px; align-items: center; margin-bottom: 5px; }
+.pay-inc-yr { font: 500 10px 'Inter', sans-serif; color: var(--mu); }
+.pay-inc-yr.hl { color: var(--navy); font-weight: 700; }
+.pay-inc-track { height: 18px; background: var(--pale); border-radius: 4px; overflow: hidden; }
+.pay-inc-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; }
+.pay-inc-pct { font: 600 9px 'Inter', sans-serif; color: rgba(255,255,255,.92); }
+.pay-inc-amt { font: 600 10px 'Inter', sans-serif; color: var(--blue); text-align: right; }
+.pay-inc-amt.hl { color: var(--navy); font-weight: 700; }
+
+/* Compounding loop */
+.pay-loop { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pay-loop-chip { font: 500 11px 'Inter', sans-serif; padding: 5px 8px; background: var(--pale); border-radius: 6px; white-space: nowrap; color: var(--blue); }
+.pay-loop-chip.end { border: 1px solid var(--mid); background: var(--w); font-weight: 700; color: var(--navy); }
+.pay-loop-arr { color: var(--mu); }
+
+.pay-g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+/* Value Chain (Tab · fee waterfall + segment stack) */
+.pay-wf { margin: 4px 0 10px; }
+.pay-wf-cap { display: flex; justify-content: space-between; font: 600 11px 'Inter', sans-serif; color: var(--mu); margin-bottom: 6px; }
+.pay-wf-bar { display: flex; height: 32px; border-radius: 7px; overflow: hidden; background: var(--pale); }
+.pay-wf-seg { display: flex; align-items: center; justify-content: center; color: #fff; font: 600 10px 'Inter', sans-serif;
+  white-space: nowrap; overflow: hidden; min-width: 0; }
+.pay-wf-key { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 8px; }
+.pay-wf-ki { display: flex; align-items: center; gap: 6px; font: 500 11px 'Inter', sans-serif; color: var(--blue); }
+.pay-wf-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+.pay-vc-tier { font: 700 10px 'Inter', sans-serif; letter-spacing: .05em; text-transform: uppercase; color: var(--mu); margin: 16px 0 8px; }
+.pay-vc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.pay-vc-card { background: var(--w); border: 1px solid var(--bdr); border-radius: 10px; padding: 13px 14px; }
+.pay-vc-name { font: 700 13px 'Inter', sans-serif; color: var(--navy); }
+.pay-vc-tag { font: 400 10.5px 'Inter', sans-serif; color: var(--mu); margin: 2px 0 9px; line-height: 1.45; }
+.pay-vc-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.pay-chip { font: 500 10.5px 'Inter', sans-serif; color: var(--blue); background: var(--pale); border-radius: 5px;
+  padding: 3px 7px; display: inline-flex; align-items: center; gap: 4px; }
+.pay-own { font: 700 8px 'Inter', sans-serif; padding: 1px 4px; border-radius: 3px; color: #fff; }
+.pay-own-v { background: #3E5A82; }
+.pay-own-ma { background: #C0772C; }
+.pay-vc-empty { font: italic 400 11px 'Inter', sans-serif; color: var(--mu); }
+
+/* Value Chain — sub-toggle (Fee economics / Value-chain map) + node map */
+.pay-vc-toggle { display: inline-flex; gap: 4px; background: var(--pale); border: 1px solid var(--bdr);
+  border-radius: 9px; padding: 3px; margin-bottom: 16px; }
+.pay-vc-tab { border: none; background: none; border-radius: 7px; font: 600 12px 'Inter', sans-serif;
+  color: var(--mu); padding: 6px 15px; cursor: pointer; transition: background .15s, color .15s; }
+.pay-vc-tab:hover { color: var(--navy); }
+.pay-vc-tab.active { background: #fff; color: var(--navy); box-shadow: 0 1px 2px rgba(30,39,51,.08); }
+.pay-vc-view[hidden] { display: none; }
+
+.pay-map-canvas { height: 560px; background: var(--w); border: 1px solid var(--bdr); border-radius: 10px; position: relative; }
+.pay-map-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin-top: 10px; align-items: start; }
+.pay-map-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+.pay-map-leg { display: inline-flex; align-items: center; gap: 6px; font: 500 10.5px 'Inter', sans-serif; color: var(--blue); }
+.pay-map-leg .pay-wf-dot { border-radius: 50%; }
+.pay-flowline { display: flex; justify-content: space-between; gap: 8px; font: 500 11px 'Inter', sans-serif; color: var(--blue); padding: 4px 0; border-bottom: 1px solid var(--pale); }
+.pay-flowline b { color: var(--navy); font-weight: 700; white-space: nowrap; }
+@media (max-width: 820px){ .pay-map-canvas { height: 440px; } }
+
+@media (max-width: 820px){
+  .pay-grid-main { grid-template-columns: 1fr; }
+  .pay-g3 { grid-template-columns: 1fr; }
+  .pay-flow-row { flex-direction: column; }
+  .pay-flow-arr { width: auto; height: 20px; border: none; }
+}

@@ -37,12 +37,12 @@ function wipNote(lines){
 // 1 — OVERVIEW
 // ════════════════════════════════════════════════════════════════════════════════
 var SNAPSHOT = [
-  ['Listing', 'Nasdaq: NVDA'],
+  ['Model', 'Fabless chip designer'],
   ['HQ', 'Santa Clara, CA'],
   ['Founded', '1993'],
-  ['Model', 'Fabless chip designer'],
   ['Fiscal year', 'Ends late January'],
-  ['Founder, President & CEO', 'Jensen Huang'],
+  ['Last reported quarter', 'Q1 FY2027 · Apr 26, 2026'],
+  ['CEO', 'Jensen Huang'],
 ];
 var DESC = 'NVIDIA is a fabless designer of accelerated-computing platforms — and the company at the center of the AI build-out. It designs the GPUs, CPUs and full rack-scale systems that train and run modern AI, then outsources manufacturing to TSMC, sources HBM memory from SK hynix, and assembles systems through partners such as Foxconn. Its durable advantage is not just the chip but the full stack on top of it: the CUDA software platform and a two-decade developer ecosystem, plus a complete data-center networking stack (NVLink, InfiniBand, Spectrum) acquired via Mellanox. Because the semiconductor industry is not vertically integrated, NVIDIA sits inside a deep web of suppliers and partners — mapped in the Industry Analysis tab.';
 
@@ -98,33 +98,602 @@ var HEADWINDS = [
 
 var SOURCES = 'Sources: NVIDIA Corporation (Nasdaq: NVDA) FY2024–FY2026 press releases and Annual Reports on Form 10-K, and the Q1 FY2027 press release & CFO commentary (quarter ended April 26, 2026). Forward "Summit DCF model" figures are the Summit team’s internal projections (Summit Financial Data, NVDA model, synced June 4, 2026) — not company guidance or consensus. All figures in US dollars and split-adjusted for the June 2024 10-for-1 split. Peer descriptions summarize public information.';
 
+// ── Layered-reveal overview (progressive disclosure) ─────────────────────────────
+// The tab opens minimal — snapshot, one positioning line, KPIs and ONE signature
+// hero — then a chip selector reveals a single topic at a time, each built from
+// drill-down cards that expand on tap. Reusable pattern (.ovlr-*): another company
+// just refills POSITION / the hero mix / ovTopics() and keeps the render + init.
+
+var POSITION = 'The company at the center of the AI build-out — it designs the chips, systems and software that train and run modern AI, and captures the platform margin while others manufacture.';
+
+// Signature hero — the revenue mix "then vs now". Data Center is anchored left (green)
+// so its growth reads left-to-right; the blue (consumer/graphics → edge) collapses.
+// $M. FY2019 (10-K): Gaming 6,246 / Data Center 2,932 / ProViz+Auto+OEM 2,538 = 11,716.
+var MIX_THEN = { year:'FY2019', total:11716, rows:[
+  { name:'Data Center', v:2932, c:'#1F8A70', lab:'25%' },
+  { name:'Gaming',      v:6246, c:'#2D6A9F', lab:'53%' },
+  { name:'Pro Viz / Auto / OEM', v:2538, c:'#9aa6b4', lab:'' },
+]};
+var MIX_NOW = { year:'FY2026', total:215938, rows:[
+  { name:'Data Center', v:193737, c:'#1F8A70', lab:'~90%' },
+  { name:'Edge Computing', v:22201, c:'#2D6A9F', lab:'' },
+]};
+var MIX_LEGEND = [
+  ['Data Center', '#1F8A70'],
+  ['Gaming → Edge (consumer & physical AI)', '#2D6A9F'],
+  ['Pro Viz / Auto / OEM', '#9aa6b4'],
+];
+
+// One stacked bar of the hero (segment widths animate in via the .go class).
+function heroBar(m){
+  var segs = m.rows.map(function(r){
+    var p = r.v / m.total * 100;
+    var lab = r.lab ? '<span>'+esc(r.lab)+'</span>' : '';
+    return '<span class="ovlr-mix-seg" style="--p:'+p.toFixed(2)+'%;background:'+r.c+'" title="'+esc(r.name)+' · '+p.toFixed(0)+'%">'+lab+'</span>';
+  }).join('');
+  return '<div class="ovlr-mix-row"><div class="ovlr-mix-yr">'+esc(m.year)+'</div><div class="ovlr-mix-track">'+segs+'</div></div>';
+}
+// Compact big-dollar formatter for live values ($ → $x.xxT / $xxxB / $xxxM).
+function fmtBig(v){ if(v==null) return '—'; if(v>=1e12) return '$'+(v/1e12).toFixed(2)+'T'; if(v>=1e9) return '$'+(v/1e9).toFixed(0)+'B'; return '$'+(v/1e6).toFixed(0)+'M'; }
+
+// The mix-shift story now lives as a supporting visual inside "How it makes money".
+function mixShiftBlock(){
+  return '<div class="ovlr-mixshift">'+
+    '<div class="ovlr-mixshift-t">From a graphics company to the engine of AI</div>'+
+    '<div class="ovlr-hero-bars">'+heroBar(MIX_THEN)+heroBar(MIX_NOW)+'</div>'+
+    '<div class="ovlr-legend">'+MIX_LEGEND.map(function(l){ return '<span><i style="background:'+l[1]+'"></i>'+esc(l[0])+'</span>'; }).join('')+'</div>'+
+    '<p class="ov-p" style="margin:12px 0 0"><b>Data Center went from 25% to ~90% of revenue in seven years</b> — Gaming, once the majority of sales, is now a small slice of a company ~18× larger.</p>'+
+  '</div>';
+}
+
+// ── Universal hero, part 1: a market Scorecard ───────────────────────────────────
+// The investor’s instant read: size, scale, profitability and valuation. Fundamentals
+// are reported actuals; price / market cap / P/E fill live from liveQuote() and degrade
+// gracefully with no session. Replicable — another company just refills SCORE_TILES.
+var SCORE_TILES = [
+  { l:'Market cap',       v:'<span class="ovlr-mut">—</span>', id:'nvScoreMcap' },
+  { l:'Revenue (TTM)',    v:'$215.9B', s:'+65% YoY' },
+  { l:'Operating margin', v:'60%',     s:'GAAP' },
+  { l:'Net margin',       v:'56%',     s:'GAAP' },
+  { l:'P/E (TTM)',        v:'<span class="ovlr-mut">—</span>', id:'nvScorePE', s:'GAAP EPS $4.90' },
+];
+function heroScorecard(){
+  return '<div class="ovlr-score">'+
+    '<div class="ovlr-score-live">'+
+      '<span class="ov-live-dot"></span>'+
+      '<span class="ov-live-tk">NVDA · NASDAQ</span>'+
+      '<span class="ov-live-px" id="nvScorePx">$—</span>'+
+      '<span class="ov-live-ch" id="nvScoreCh"></span>'+
+      '<span class="ov-live-ts" id="nvScoreTs">fetching live price…</span>'+
+    '</div>'+
+    '<div class="ovlr-score-grid">'+SCORE_TILES.map(function(t){
+      return '<div class="ovlr-score-tile">'+
+        '<div class="ovlr-score-l">'+esc(t.l)+'</div>'+
+        '<div class="ovlr-score-v"'+(t.id?' id="'+t.id+'"':'')+'>'+t.v+'</div>'+
+        (t.s?'<div class="ovlr-score-s">'+esc(t.s)+'</div>':'')+
+      '</div>';
+    }).join('')+'</div>'+
+  '</div>';
+}
+
+// ── Universal hero, part 2: a Business snapshot ──────────────────────────────────
+// Four quadrants that explain any business at a glance. Replicable — refill BIZ.
+var BIZ = [
+  ['What it sells', 'AI-compute <b>platforms</b> — GPUs, full systems and the CUDA software that trains and runs modern AI.'],
+  ['Who buys it',   'Hyperscalers, cloud providers, enterprises and <b>sovereign-AI</b> buyers.'],
+  ['How it earns',  '<b>~90% Data Center</b> — selling AI training &amp; inference compute; the rest is Edge (gaming, pro-viz, auto, robotics).'],
+  ['The edge',      'CUDA’s <b>20-year software lock-in</b> plus the full networking &amp; systems stack — not just the chip.'],
+];
+function heroBusiness(){
+  return '<div class="ovlr-biz">'+BIZ.map(function(b){
+    return '<div class="ovlr-biz-cell"><div class="ovlr-biz-k">'+esc(b[0])+'</div><div class="ovlr-biz-v">'+b[1]+'</div></div>';
+  }).join('')+'</div>';
+}
+
+// ── Universal hero, part 3: Products — put a face to what the company sells ───────
+// Same slot for every company, different photos + copy. Images live in img/products/
+// (onerror hides a card if a photo is missing). Replicable — refill PRODUCTS.
+var PRODUCTS = [
+  { img:'nvda-gb300-nvl72.jpg', tag:'Rack-scale AI system', name:'GB300 NVL72',
+    d:'72 Blackwell GPUs wired to act as one giant GPU — an “AI factory” in a single rack.',
+    detail:'NVIDIA’s flagship “AI factory” in one rack. It links 72 Blackwell Ultra GPUs and 36 Grace CPUs over a 5th-generation NVLink fabric so they share memory and bandwidth as if they were a single enormous accelerator. Liquid-cooled and drawing well over 100 kW, one NVL72 delivers the training and inference throughput that used to need a room full of servers. Increasingly this — the whole machine, not the chip — is what NVIDIA actually sells.' },
+  { img:'nvda-superchip.jpg', tag:'GPU + CPU module', name:'Grace Blackwell Superchip',
+    d:'The GPU and Grace CPU fused by NVLink into one accelerated-computing module.',
+    detail:'Two Blackwell GPUs joined to an NVIDIA Grace CPU over a 900 GB/s NVLink-C2C link, packaged as a single module. Pairing NVIDIA’s own Arm-based CPU with the GPUs removes the traditional CPU–GPU bottleneck and keeps the accelerators fed with data at memory-coherent speed. It is the building block the NVL72 racks are assembled from.' },
+  { img:'nvda-networking.jpg', tag:'Networking', name:'NVLink · Spectrum-X',
+    d:'The fabric (NVLink, InfiniBand, Spectrum-X) that links thousands of GPUs into one machine.',
+    detail:'The part of NVIDIA most people overlook. NVLink connects GPUs inside a rack; InfiniBand and Spectrum-X Ethernet connect racks into clusters of tens of thousands of GPUs. Most of this stack arrived with the 2020 Mellanox acquisition, and it is what lets a whole data center behave as one computer — now one of NVIDIA’s fastest-growing revenue lines.' },
+  { img:'nvda-dies.jpg', tag:'The chip', name:'Blackwell silicon',
+    d:'The GPU die itself — designed by NVIDIA, built by TSMC with HBM memory.',
+    detail:'The GPU itself. A Blackwell package places two reticle-sized dies (~104B transistors each) side by side, joined by a 10 TB/s link so they behave as one chip, surrounded by stacks of HBM high-bandwidth memory. NVIDIA designs it, TSMC manufactures it on a custom 4nm process, and the memory comes from SK hynix / Micron — the “fabless” model in a single image.' },
+];
+function heroProducts(){
+  return '<div class="ovlr-prod">'+
+    '<div class="ovlr-prod-h">What they make — the products, up close <span class="ovlr-prod-hint">tap a product to enlarge</span></div>'+
+    '<div class="ovlr-prod-row">'+PRODUCTS.map(function(p,i){
+      return '<figure class="ovlr-prod-card ovlr-clickable" data-prod="'+i+'" tabindex="0" role="button" aria-label="'+esc(p.name)+' — enlarge">'+
+        '<div class="ovlr-prod-imgwrap"><img class="ovlr-prod-img" src="img/products/'+esc(p.img)+'" alt="'+esc(p.name)+'" loading="lazy" onerror="this.style.display=\'none\'"><span class="ovlr-prod-zoom">⤢</span></div>'+
+        '<figcaption class="ovlr-prod-body">'+
+          '<div class="ovlr-prod-tag">'+esc(p.tag)+'</div>'+
+          '<div class="ovlr-prod-name">'+esc(p.name)+'</div>'+
+          '<div class="ovlr-prod-d">'+esc(p.d)+'</div>'+
+        '</figcaption>'+
+      '</figure>';
+    }).join('')+'</div>'+
+    '<div class="ovlr-prod-note">Product imagery © NVIDIA newsroom, shown for illustration.</div>'+
+    '<div class="ovlr-modal" id="nvProdModal" hidden>'+
+      '<div class="ovlr-modal-box" role="dialog" aria-modal="true">'+
+        '<button type="button" class="ovlr-modal-x" id="nvProdX" aria-label="Close">×</button>'+
+        '<img class="ovlr-modal-img" id="nvProdImg" src="" alt="">'+
+        '<div class="ovlr-modal-body">'+
+          '<div class="ovlr-modal-tag" id="nvProdTag"></div>'+
+          '<div class="ovlr-modal-name" id="nvProdName"></div>'+
+          '<div class="ovlr-modal-d" id="nvProdDesc"></div>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+}
+
+// Topic model for the chip selector. Each topic renders an optional intro + custom
+// visual, then either drill-down cards (title · stat · expandable body) or raw html.
+// ── Universal hero, part 4: The differentiator ───────────────────────────────────
+// One non-obvious insight that carries the thesis — the thing not everyone knows.
+// Visually accented so it stands out. Replicable: refill DIFF (for NVIDIA it is the
+// CUDA software ecosystem and its self-reinforcing flywheel).
+var DIFF = {
+  eyebrow: 'The differentiator — the thing most people miss',
+  head: 'NVIDIA doesn’t just sell chips — it owns the software the entire AI industry is built on.',
+  body: 'In 2006 NVIDIA launched <b>CUDA</b>, the platform that lets developers program the GPU directly. Twenty years later, essentially every AI framework, library and model is written and optimized for NVIDIA <b>first</b>. A rival can match a chip on a spec sheet — but not two decades of software, tooling and a developer base in the millions. The chip is replaceable; the ecosystem is not.',
+  flyLabel: 'The CUDA flywheel — why the lead compounds',
+  flywheel: [
+    'More developers build on CUDA',
+    'More AI software & models run best on NVIDIA',
+    'NVIDIA becomes the default platform to buy',
+    'A bigger installed base attracts more developers',
+  ],
+  thesis: '<b>Why it matters for the thesis:</b> NVIDIA’s pricing power and ~75% gross margins rest on this ecosystem lock-in, not silicon alone — so the edge can persist even as competitors ship capable chips.',
+};
+function heroDiff(){
+  return '<div class="ovlr-diff">'+
+    '<div class="ovlr-diff-eyebrow"><span class="ovlr-diff-spark">◆</span>'+esc(DIFF.eyebrow)+'</div>'+
+    '<div class="ovlr-diff-head">'+DIFF.head+'</div>'+
+    '<p class="ovlr-diff-body">'+DIFF.body+'</p>'+
+    '<div class="ovlr-fw-label">'+esc(DIFF.flyLabel)+'</div>'+
+    '<div class="ovlr-flywheel">'+DIFF.flywheel.map(function(s,i){
+      return '<div class="ovlr-fw-step"><span class="ovlr-fw-n">'+(i+1)+'</span><span class="ovlr-fw-t">'+esc(s)+'</span></div>'+
+        (i < DIFF.flywheel.length-1 ? '<span class="ovlr-fw-arrow">→</span>' : '');
+    }).join('')+'</div>'+
+    '<div class="ovlr-fw-loopnote">↻ and the loop repeats — every turn makes NVIDIA harder to leave.</div>'+
+    '<div class="ovlr-diff-thesis">'+DIFF.thesis+'</div>'+
+  '</div>';
+}
+
+function ovTopics(){
+  return [
+    { key:'what', chip:'What it does',
+      intro:'NVIDIA sells accelerated-computing <b>platforms</b> — not just chips. Three things define the business.',
+      cards:[
+        { t:'It sells whole systems, not chips', stat:'silicon → software', body:
+          bullets([
+            'The product is a <b>full stack</b>: GPUs (Blackwell → Rubin), Grace CPUs, NVLink / InfiniBand / Spectrum networking, DGX / HGX reference systems and rack-scale GB200 / GB300 NVL72 "AI factories".',
+            'On top sits <b>CUDA</b> and the software (cuDNN, TensorRT, NIM, Omniverse) developers actually build on.',
+            'Increasingly NVIDIA sells the <b>whole rack</b>, not just the die — raising content per deployment. (See the <b>Technology</b> tab.)',
+          ]) },
+        { t:'It is fabless — it designs, it doesn’t manufacture', stat:'TSMC builds the silicon', body:
+          bullets([
+            'NVIDIA keeps the high-margin <b>design and platform</b> work; <b>TSMC</b> fabricates the chips, <b>SK hynix / Micron / Samsung</b> supply HBM memory, and <b>Foxconn</b> and others assemble the systems.',
+            'That is why it sits inside a deep supplier web — mapped in the <b>Industry Analysis</b> tab.',
+          ]) },
+        { t:'A new platform every year', stat:'Hopper → Blackwell → Vera Rubin', body:
+          '<div class="ov-timeline">'+[
+            ['2022','<b>Hopper</b> (H100) — the workhorse of the AI build-out.'],
+            ['2024','<b>Blackwell</b> (B200 / GB200) launches.'],
+            ['2025','<b>GB200 / GB300 NVL72</b> rack-scale systems ramp.'],
+            ['2026','<b>Vera Rubin</b> (Rubin GPU + Vera CPU) ramping now.'],
+          ].map(function(t){ return '<div class="ov-tl-item"><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t[0])+'</div><div class="ov-tl-body">'+t[1]+'</div></div>'; }).join('')+'</div>'+
+          '<p class="ov-p" style="margin:10px 0 0">An annual cadence keeps NVIDIA’s performance-per-watt lead ahead of rivals and pulls customers through repeated upgrade cycles.</p>' },
+      ] },
+    { key:'money', chip:'How it makes money',
+      intro:'Almost all of it is <b>Data Center</b> — selling AI training and inference compute. The FY2026 mix:',
+      custom: mixShiftBlock(),
+      cards:[
+        { t:'Data Center — ~90% of revenue', stat:'$193.7B · +68% YoY', body:
+          bullets([
+            'Split roughly half <b>Hyperscale</b> (the big clouds and consumer-internet giants) and half <b>ACIE</b> — purpose-built AI data centers across industry, enterprise and sovereigns.',
+            'GPUs plus the fastest-growing line, <b>networking</b> (NVLink, Spectrum-X, InfiniBand), and Grace CPUs. Full detail in the <b>Segments</b> tab.',
+          ]) },
+        { t:'Edge Computing — the other ~10%', stat:'$22.2B · +45% YoY', body:
+          bullets([
+            'On-device and physical AI: <b>gaming</b> (GeForce / RTX), <b>Pro Viz</b> (workstations / Omniverse), <b>automotive</b> (DRIVE) and <b>robotics</b> (Jetson / Isaac).',
+            'In FY2027 NVIDIA regrouped these once-separate platforms into a single "Edge Computing" line.',
+          ]) },
+        { t:'Who buys it', stat:'a handful of hyperscalers', body:
+          bullets([
+            'Microsoft, Amazon, Google and Meta are the largest customers — a source of both enormous demand and <b>concentration risk</b> (they also design their own chips).',
+            'See <b>Bull vs bear</b> for why that cuts both ways.',
+          ]) },
+      ] },
+    { key:'moat', chip:'The moat',
+      intro:'The durable advantage isn’t the chip — it’s everything around it.',
+      cards:[
+        { t:'CUDA — a 20-year software lock-in', stat:'since 2006', body:
+          '<p class="ov-p" style="margin:0">Essentially every AI framework, library and model is written and optimized for NVIDIA first. Developers build where the install base is, and the install base grows because that’s where the software is — a self-reinforcing loop that creates high switching costs. This, more than any single chip, is the deepest moat. (More in the <b>Technology</b> tab.)</p>' },
+        { t:'The full stack — networking + systems', stat:'Mellanox → rack-scale', body:
+          '<p class="ov-p" style="margin:0">Owning compute <b>plus networking</b> (from the Mellanox acquisition) <b>plus reference systems</b> lets NVIDIA connect thousands of GPUs to act as one giant GPU — something a merchant chip alone can’t match, and where a lot of the incremental value now lives.</p>' },
+        { t:'How it stacks up vs rivals', stat:'AMD · custom ASICs · Intel', body:
+          '<table class="ov-table"><thead><tr><th>Peer</th><th>What they offer</th><th>How NVIDIA differs</th></tr></thead><tbody>'+
+          PEERS.map(function(p){ return '<tr><td class="ov-td-name">'+esc(p[0])+'</td><td>'+esc(p[1])+'</td><td>'+esc(p[2])+'</td></tr>'; }).join('')+
+          '</tbody></table>' },
+      ] },
+    { key:'numbers', chip:'The numbers',
+      intro:'FY2026 (year ended Jan 25, 2026) — NVIDIA reported actuals, split-adjusted.',
+      html:
+        '<table class="ov-table"><thead><tr><th>Metric</th><th>FY2025</th><th>FY2026</th></tr></thead><tbody>'+
+        FINANCIALS.map(function(r){ return '<tr><td class="ov-td-name">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>'; }).join('')+
+        '</tbody></table>'+
+        '<div class="ov-callout">'+esc(FIN_NOTE)+'</div>'+
+        '<div class="ov-asof">'+esc(AS_OF)+'</div>' },
+    { key:'risk', chip:'Bull vs bear',
+      intro:'What could go right — and what could go wrong.',
+      html:
+        '<div class="ov-grid2">'+
+          '<div class="ov-wind ov-wind-up"><div class="ov-wind-h">Bull — tailwinds</div>'+bullets(TAILWINDS)+'</div>'+
+          '<div class="ov-wind ov-wind-down"><div class="ov-wind-h">Bear — headwinds</div>'+bullets(HEADWINDS)+'</div>'+
+        '</div>' },
+  ];
+}
+
+function drillCard(c, i){
+  return '<div class="ovlr-card" data-card="'+i+'">'+
+    '<button type="button" class="ovlr-card-h">'+
+      '<span class="ovlr-card-t">'+c.t+'</span>'+
+      (c.stat ? '<span class="ovlr-card-stat">'+c.stat+'</span>' : '')+
+      '<span class="ovlr-card-ch">+</span>'+
+    '</button>'+
+    '<div class="ovlr-card-b">'+c.body+'</div>'+
+  '</div>';
+}
+function topicPanel(t, idx){
+  var inner = (t.intro ? '<p class="ovlr-intro">'+t.intro+'</p>' : '')+
+    (t.custom || '')+
+    (t.cards ? '<div class="ovlr-cards">'+t.cards.map(drillCard).join('')+'</div>' : '')+
+    (t.html || '');
+  return '<div class="ovlr-panel'+(idx===0?' in':'')+'" data-topic="'+t.key+'"'+(idx===0?'':' hidden')+'>'+inner+'</div>';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Box-based overview (7 sections). Reusable collapsible-box pattern (.ovlr-box).
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Collapsible box: header (title + optional subtitle + chevron) → body.
+function ovBox(id, title, sub, body, open){
+  return '<section class="ovlr-box'+(open?' open':'')+'" data-box="'+id+'">'+
+    '<button type="button" class="ovlr-box-h">'+
+      '<span class="ovlr-box-t">'+esc(title)+'</span>'+
+      (sub ? '<span class="ovlr-box-sub">'+esc(sub)+'</span>' : '')+
+      '<span class="ovlr-box-ch">▾</span>'+
+    '</button>'+
+    '<div class="ovlr-box-b">'+body+'</div>'+
+  '</section>';
+}
+
+// ── 2 · Valuation multiples banner (trailing/forward toggle) ─────────────────────
+// One consistent basis (Summit model): EPS 4.51→8.84, EBITDA 136.2B→261.0B.
+// P/E & EV/EBITDA use the live price & EV; growth and PEG come from the model.
+var MULT = {
+  trailing: { eps:4.51, epsGr:59, ebitda:136225, ebGr:60 },  // FY2026 (Summit)
+  forward:  { eps:8.84, epsGr:96, ebitda:261030, ebGr:92 },  // FY2027 (Summit est.)
+};
+var _multMode = 'trailing', _multPrice = null, _multEv = null;
+function heroMultiples(){
+  var tiles = [['P/E','nvMultPE'],['Earnings growth','nvMultEG'],['PEG','nvMultPEG'],
+    ['EV / EBITDA','nvMultEV'],['EBITDA growth','nvMultEBG'],['PEG (EBITDA)','nvMultPEGE']];
+  return '<div class="ovlr-mult">'+
+    '<div class="ovlr-mult-top">'+
+      '<div class="ovlr-mult-live"><span class="ov-live-dot"></span><span class="ov-live-tk">NVDA</span>'+
+        '<span class="ov-live-px" id="nvMultPx">$—</span><span class="ov-live-ch" id="nvMultCh"></span></div>'+
+      '<div class="ovlr-seg" id="nvMultToggle">'+
+        '<button type="button" class="ovlr-seg-b active" data-mult="trailing">Trailing</button>'+
+        '<button type="button" class="ovlr-seg-b" data-mult="forward">Forward</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="ovlr-mult-grid">'+tiles.map(function(t){
+      return '<div class="ovlr-mult-tile"><div class="ovlr-mult-l">'+esc(t[0])+'</div>'+
+        '<div class="ovlr-mult-v" id="'+t[1]+'"><span class="ovlr-mut">—</span></div></div>';
+    }).join('')+'</div>'+
+    '<div class="ovlr-mult-note" id="nvMultNote"></div>'+
+  '</div>';
+}
+function multFill(pane){
+  var m = MULT[_multMode], p = _multPrice, ev = _multEv;
+  function set(id, txt){ var e = pane.querySelector('#'+id); if (e) e.textContent = txt; }
+  set('nvMultEG', '+'+m.epsGr+'%');
+  set('nvMultEBG', '+'+m.ebGr+'%');
+  if (p != null){ var pe = p/m.eps; set('nvMultPE', pe.toFixed(1)+'×'); set('nvMultPEG', (pe/m.epsGr).toFixed(2)); }
+  else { set('nvMultPE','—'); set('nvMultPEG','—'); }
+  if (ev != null){ var eve = ev/(m.ebitda*1e6); set('nvMultEV', eve.toFixed(1)+'×'); set('nvMultPEGE', (eve/m.ebGr).toFixed(2)); }
+  else { set('nvMultEV','—'); set('nvMultPEGE','—'); }
+  var note = pane.querySelector('#nvMultNote');
+  if (note) note.innerHTML = (_multMode==='trailing' ? '<b>Trailing</b> — FY2026 (Summit model).' : '<b>Forward</b> — FY2027 (Summit projections).')+
+    ' P/E &amp; EV/EBITDA use the live price &amp; EV; growth &amp; PEG from the Summit model. PEG = multiple ÷ growth-%.';
+}
+
+// ── 3 · Description (expandable) ─────────────────────────────────────────────────
+function descBox(){
+  return '<div class="ovlr-desc" data-desc>'+
+    '<p class="ovlr-desc-txt" id="nvDescTxt">'+esc(DESC)+'</p>'+
+    '<button type="button" class="ovlr-desc-more" id="nvDescMore">Read more ▾</button>'+
+  '</div>';
+}
+
+// ── 5 · Products body (cards + lightbox; header supplied by the box) ─────────────
+function productsBody(){
+  return '<div class="ovlr-prod">'+
+    '<div class="ovlr-prod-hint2">Tap a product to enlarge.</div>'+
+    '<div class="ovlr-prod-row">'+PRODUCTS.map(function(p,i){
+      return '<figure class="ovlr-prod-card ovlr-clickable" data-prod="'+i+'" tabindex="0" role="button" aria-label="'+esc(p.name)+' — enlarge">'+
+        '<div class="ovlr-prod-imgwrap"><img class="ovlr-prod-img" src="img/products/'+esc(p.img)+'" alt="'+esc(p.name)+'" loading="lazy" onerror="this.style.display=\'none\'"><span class="ovlr-prod-zoom">⤢</span></div>'+
+        '<figcaption class="ovlr-prod-body"><div class="ovlr-prod-tag">'+esc(p.tag)+'</div>'+
+          '<div class="ovlr-prod-name">'+esc(p.name)+'</div><div class="ovlr-prod-d">'+esc(p.d)+'</div></figcaption>'+
+      '</figure>';
+    }).join('')+'</div>'+
+    '<div class="ovlr-prod-note">Product imagery © NVIDIA newsroom, shown for illustration.</div>'+
+    '<div class="ovlr-modal" id="nvProdModal" hidden><div class="ovlr-modal-box" role="dialog" aria-modal="true">'+
+      '<button type="button" class="ovlr-modal-x" id="nvProdX" aria-label="Close">×</button>'+
+      '<img class="ovlr-modal-img" id="nvProdImg" src="" alt="">'+
+      '<div class="ovlr-modal-body"><div class="ovlr-modal-tag" id="nvProdTag"></div>'+
+        '<div class="ovlr-modal-name" id="nvProdName"></div><div class="ovlr-modal-d" id="nvProdDesc"></div></div>'+
+    '</div></div>'+
+  '</div>';
+}
+
+// ── 6 · How it makes money (segment / region doughnut) ───────────────────────────
+// Segment = reported FY2026 market-platform revenue ($B). Region = approximate FY2025
+// 10-K geography (% by billing location) — Summit has no geo data; refine w/ 10-K.
+var MONEY_SEG = { title:'FY2026 revenue by segment <span>($B · reported)</span>',
+  labels:['Hyperscale','ACIE','Edge Computing'], data:[105.6,88.1,22.2],
+  colors:['#1F8A70','#5cc0a6','#2D6A9F'], unit:'B',
+  note:'Reported FY2026 market-platform revenue. Data Center (Hyperscale + ACIE) ≈ 90% of sales — the products above are almost all Data Center.' };
+var MONEY_REG = { title:'Revenue by region <span>(% · approx · by billing location)</span>',
+  labels:['United States','Singapore*','Taiwan','China','Other'], data:[47,18,16,13,6],
+  colors:['#1F8A70','#3A7CA5','#5B53A8','#C0772C','#9aa6b4'], unit:'%',
+  note:'⚠️ Approximate FY2025 geography by customer <b>billing</b> location (not end-demand). *Singapore is largely an invoicing hub. Summit has no regional data — to be updated with exact FY2026 10-K figures.' };
+var _moneyMode = 'segment', _moneyChart = null;
+function moneyBody(){
+  return '<p class="ovlr-money-p">The products above are almost all <b>Data Center</b> — the NVL72 racks, superchips, networking and silicon NVIDIA sells to clouds and AI builders. Gaming, pro-viz, automotive and robotics make up the smaller <b>Edge</b> line.</p>'+
+    '<div class="ovlr-seg" id="nvMoneyToggle">'+
+      '<button type="button" class="ovlr-seg-b active" data-money="segment">By segment</button>'+
+      '<button type="button" class="ovlr-seg-b" data-money="region">By region</button>'+
+    '</div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t" id="nvMoneyTitle">'+MONEY_SEG.title+'</div>'+
+    '<div class="ov-chart-wrap"><canvas id="nvMoneyChart"></canvas></div></div>'+
+    '<div class="ovlr-money-note" id="nvMoneyNote">'+MONEY_SEG.note+'</div>';
+}
+function buildMoneyChart(){
+  var cv = document.getElementById('nvMoneyChart');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_moneyChart){ _moneyChart.destroy(); _moneyChart = null; }
+  var d = _moneyMode === 'region' ? MONEY_REG : MONEY_SEG;
+  _moneyChart = new Chart(cv.getContext('2d'), {
+    type:'doughnut',
+    data:{ labels:d.labels, datasets:[{ data:d.data, backgroundColor:d.colors, borderWidth:2, borderColor:'#fff' }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'58%',
+      plugins:{ legend:{ position:'right', labels:{ boxWidth:12, font:{size:12}, color:'#5b6470', padding:10 } },
+        tooltip:{ callbacks:{ label:function(ctx){ var t=ctx.dataset.data.reduce(function(a,b){return a+b;},0);
+          var v=ctx.parsed; return ' '+ctx.label+': '+(d.unit==='B'?'$'+v.toFixed(1)+'B':v+'%')+' ('+(v/t*100).toFixed(0)+'%)'; } } } } }
+  });
+}
+
+// ── 7 · Competitors (bubble: multiple × growth, size = market cap) ────────────────
+// Seeded from NVIDIA's 10-K peer set (approx values, editable). Market cap fills LIVE
+// from liveQuote per ticker. Multiples/growth are seed values until a live ratios-field
+// mapping is confirmed. Toggle: P/E vs EV/EBITDA, and trailing vs forward.
+var COMP = [
+  { ticker:'NVDA', name:'NVIDIA',      pe:38, peF:19, ev:30, evF:16, eg:59, egF:96, ebg:60, ebgF:92, mcap:4100, self:true },
+  { ticker:'AMD',  name:'AMD',         pe:45, peF:28, ev:33, evF:22, eg:35, egF:60, ebg:38, ebgF:55, mcap:260 },
+  { ticker:'AVGO', name:'Broadcom',    pe:38, peF:30, ev:28, evF:24, eg:25, egF:22, ebg:30, ebgF:26, mcap:1150 },
+  { ticker:'INTC', name:'Intel',       pe:35, peF:22, ev:11, evF:9,  eg:10, egF:20, ebg:8,  ebgF:18, mcap:130 },
+  { ticker:'QCOM', name:'Qualcomm',    pe:16, peF:14, ev:12, evF:11, eg:12, egF:10, ebg:11, ebgF:9,  mcap:190 },
+];
+var _compMult = 'pe', _compTime = 'trailing', _compChart = null;
+function competitorsBody(){
+  return '<p class="ovlr-money-p">NVIDIA’s public peers from its 10-K. <b>X</b> = valuation multiple, <b>Y</b> = growth, <b>bubble size</b> = market cap. Add or remove any public company.</p>'+
+    '<div class="ovlr-comp-ctl">'+
+      '<div class="ovlr-seg" id="nvCompMult">'+
+        '<button type="button" class="ovlr-seg-b active" data-cmult="pe">P/E · earnings</button>'+
+        '<button type="button" class="ovlr-seg-b" data-cmult="ev">EV/EBITDA</button>'+
+      '</div>'+
+      '<div class="ovlr-seg" id="nvCompTime">'+
+        '<button type="button" class="ovlr-seg-b active" data-ctime="trailing">Trailing</button>'+
+        '<button type="button" class="ovlr-seg-b" data-ctime="forward">Forward</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Peers — multiple × growth × size <span>(bubble = market cap)</span></div>'+
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="nvCompChart"></canvas></div></div>'+
+    '<div class="ovlr-comp-add"><input type="text" id="nvCompInput" placeholder="Add ticker (e.g. MRVL)" maxlength="6" autocomplete="off">'+
+      '<button type="button" id="nvCompAdd">+ Add</button></div>'+
+    '<div class="ovlr-comp-chips" id="nvCompChips"></div>'+
+    '<div class="ovlr-money-note">Market cap is <b>live</b> (Massive) per ticker. Multiples &amp; growth are seed values (editable) until a live ratios-field mapping is confirmed. Peers seeded from NVIDIA’s 10-K.</div>';
+}
+// Draws the ticker label above each competitor bubble.
+var compLabels = {
+  id:'compLabels',
+  afterDatasetsDraw:function(chart){
+    var ctx = chart.ctx, ds = chart.data.datasets[0], meta = chart.getDatasetMeta(0);
+    ctx.save(); ctx.font = '700 11px Inter, sans-serif'; ctx.textAlign = 'center';
+    meta.data.forEach(function(el, i){
+      var p = ds.data[i]; if (!p) return;
+      ctx.fillStyle = p.self ? '#5f9500' : '#1E2733';
+      ctx.fillText(p.t, el.x, el.y - (p.r || 6) - 5);
+    });
+    ctx.restore();
+  }
+};
+function buildCompChart(){
+  var cv = document.getElementById('nvCompChart');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_compChart){ _compChart.destroy(); _compChart = null; }
+  var fwd = _compTime === 'forward', isPe = _compMult === 'pe';
+  var pts = COMP.map(function(c){
+    var mult = isPe ? (fwd?c.peF:c.pe) : (fwd?c.evF:c.ev);
+    var gr   = isPe ? (fwd?c.egF:c.eg) : (fwd?c.ebgF:c.ebg);
+    if (mult == null || gr == null) return null;
+    return { x:mult, y:gr, r:Math.max(6, Math.sqrt(c.mcap||1)/2.4), t:c.ticker, mcap:c.mcap, self:c.self };
+  }).filter(Boolean);
+  _compChart = new Chart(cv.getContext('2d'), {
+    type:'bubble',
+    data:{ datasets:[{ data:pts,
+      backgroundColor:pts.map(function(p){ return p.self ? 'rgba(118,185,0,0.55)' : 'rgba(45,106,159,0.45)'; }),
+      borderColor:pts.map(function(p){ return p.self ? '#76B900' : '#2D6A9F'; }), borderWidth:2 }] },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false,
+      layout:{ padding:{ top:16, right:12, left:4 } },
+      plugins:{ legend:{ display:false },
+        tooltip:{ callbacks:{ label:function(ctx){ var p=ctx.raw;
+          return p.t+': '+(isPe?'P/E ':'EV/EBITDA ')+p.x+'× · growth '+p.y+'% · mcap $'+(p.mcap>=1000?(p.mcap/1000).toFixed(1)+'T':p.mcap+'B'); } } } },
+      scales:{ x:{ reverse:true, title:{ display:true, text:(isPe?'P/E':'EV/EBITDA')+' (×)'+(fwd?' · forward':' · trailing')+' · cheaper →', color:'#5b6470', font:{size:11,weight:'600'} },
+          grid:{ color:'rgba(0,0,0,.05)' }, ticks:{ color:'#8A93A0', callback:function(v){ return v+'×'; } } },
+        y:{ title:{ display:true, text:(isPe?'Earnings':'EBITDA')+' growth (%)'+(fwd?' · forward':' · trailing'), color:'#5b6470', font:{size:11,weight:'600'} },
+          grid:{ color:'rgba(0,0,0,.05)' }, ticks:{ color:'#8A93A0', callback:function(v){ return v+'%'; } } } } },
+    plugins:[compLabels]
+  });
+}
+function renderCompChips(){
+  var box = document.getElementById('nvCompChips'); if (!box) return;
+  box.innerHTML = COMP.map(function(c,i){
+    return '<span class="ovlr-comp-chip'+(c.self?' self':'')+'">'+esc(c.ticker)+
+      (c.mcap!=null?' · $'+(c.mcap>=1000?(c.mcap/1000).toFixed(1)+'T':c.mcap+'B'):'')+
+      (c.self?'':'<button type="button" class="ovlr-comp-x" data-rm="'+i+'" aria-label="remove">×</button>')+'</span>';
+  }).join('');
+}
+
 function overviewBody(){
   var h = '';
-  h += '<div class="ov-snap">' + SNAPSHOT.map(function(p){
+  // 1 — company banner
+  h += '<div class="ov-snap ovlr-snap6">' + SNAPSHOT.map(function(p){
     return '<div class="ov-snap-cell"><div class="ov-snap-k">'+esc(p[0])+'</div><div class="ov-snap-v">'+esc(p[1])+'</div></div>';
   }).join('') + '</div>';
-  h += '<p class="ov-lede">'+esc(DESC)+'</p>';
-  h += '<div class="ov-kpis">' + KPIS.map(function(k){
-    return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d '+(k.dir||'muted')+'">'+esc(k.d)+'</div></div>';
-  }).join('') + '</div>';
-  h += '<div class="ov-asof">'+esc(AS_OF)+'</div>';
-  h += '<div class="ov-fynote">'+esc(FY_NOTE)+'</div>';
-  h += sec('How NVIDIA Makes Money', bullets(HOW_MONEY));
-  h += sec('Financial Performance (FY2025 → FY2026)',
-    '<table class="ov-table"><thead><tr><th>Metric</th><th>FY2025</th><th>FY2026</th></tr></thead><tbody>'+
-    FINANCIALS.map(function(r){return '<tr><td class="ov-td-name">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>';}).join('')+
-    '</tbody></table><div class="ov-callout">'+esc(FIN_NOTE)+'</div>');
-  h += sec('Peers & Competitive Landscape',
-    '<table class="ov-table"><thead><tr><th>Peer</th><th>What they offer</th><th>How NVIDIA differs</th></tr></thead><tbody>'+
-    PEERS.map(function(p){return '<tr><td class="ov-td-name">'+esc(p[0])+'</td><td>'+esc(p[1])+'</td><td>'+esc(p[2])+'</td></tr>';}).join('')+
-    '</tbody></table>');
-  h += sec('Tailwinds & Headwinds',
-    '<div class="ov-grid2">'+
-      '<div class="ov-wind ov-wind-up"><div class="ov-wind-h">Tailwinds</div>'+bullets(TAILWINDS)+'</div>'+
-      '<div class="ov-wind ov-wind-down"><div class="ov-wind-h">Headwinds</div>'+bullets(HEADWINDS)+'</div>'+
-    '</div>');
+  // 2 — valuation multiples
+  h += heroMultiples();
+  // 3 — description (expandable)
+  h += descBox();
+  // 4 — business snapshot
+  h += heroBusiness();
+  // 5 — products (collapsible)
+  h += ovBox('products', 'Products — what they make', 'tap to expand', productsBody(), false);
+  // 6 — how it makes money (collapsible)
+  h += ovBox('money', 'How it makes money', 'segments & regions', moneyBody(), false);
+  // 7 — competitors (open)
+  h += ovBox('competitors', 'Competitors', 'multiple × growth × size', competitorsBody(), true);
   h += '<div class="ov-foot">'+esc(SOURCES)+'</div>';
   return h;
+}
+
+// Wire the box-based overview. Idempotent; safe to call on load and re-entry.
+function initOverview(){
+  var root = document.querySelector('.ov-nvda'); if (!root) return;
+  var pane = root.querySelector('.ovt-pane[data-ovt="overview"]'); if (!pane) return;
+
+  // 2 — multiples: trailing/forward toggle + live price/EV fill.
+  pane.querySelectorAll('#nvMultToggle .ovlr-seg-b').forEach(function(b){
+    b.onclick = function(){ _multMode = b.getAttribute('data-mult');
+      pane.querySelectorAll('#nvMultToggle .ovlr-seg-b').forEach(function(x){ x.classList.toggle('active', x===b); });
+      multFill(pane);
+    };
+  });
+  multFill(pane);
+  import('../api.js').then(function(api){ return api.liveQuote('NVDA'); }).then(function(res){
+    var q = res && res.data; if (!q || q.price == null) return;
+    _multPrice = q.price; _multEv = q.ev;
+    var px = pane.querySelector('#nvMultPx'); if (px) px.textContent = '$'+q.price.toFixed(2);
+    var ch = pane.querySelector('#nvMultCh');
+    if (ch && q.changePct != null){ var up = q.changePct >= 0; ch.className = 'ov-live-ch '+(up?'up':'down');
+      ch.textContent = (up?'▲ +':'▼ −')+Math.abs(q.changePct).toFixed(2)+'%'; }
+    multFill(pane);
+  }).catch(function(){});
+
+  // 3 — description expand/collapse.
+  var dMore = pane.querySelector('#nvDescMore');
+  if (dMore) dMore.onclick = function(){
+    var box = pane.querySelector('.ovlr-desc'); var open = box.classList.toggle('open');
+    dMore.textContent = open ? 'Read less ▴' : 'Read more ▾';
+  };
+
+  // 5/6/7 — collapsible boxes; build the lazy chart when a box opens.
+  pane.querySelectorAll('.ovlr-box-h').forEach(function(hb){
+    hb.onclick = function(){
+      var box = hb.parentElement; var open = box.classList.toggle('open');
+      if (open){
+        var id = box.getAttribute('data-box');
+        if (id === 'money') requestAnimationFrame(buildMoneyChart);
+        if (id === 'competitors') requestAnimationFrame(buildCompChart);
+      }
+    };
+  });
+
+  // 5 — products lightbox.
+  var modal = pane.querySelector('#nvProdModal');
+  if (modal){
+    var mImg = modal.querySelector('#nvProdImg'), mTag = modal.querySelector('#nvProdTag'),
+        mName = modal.querySelector('#nvProdName'), mDesc = modal.querySelector('#nvProdDesc');
+    var closeProd = function(){ modal.hidden = true; };
+    var openProd = function(card){ var p = PRODUCTS[parseInt(card.getAttribute('data-prod'),10)]; if (!p) return;
+      mImg.src = 'img/products/'+p.img; mImg.alt = p.name; mTag.textContent = p.tag; mName.textContent = p.name;
+      mDesc.innerHTML = p.detail || p.d; modal.hidden = false; };
+    pane.querySelectorAll('.ovlr-prod-card').forEach(function(card){
+      card.onclick = function(){ openProd(card); };
+      card.onkeydown = function(e){ if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openProd(card); } };
+    });
+    modal.onclick = function(e){ if (e.target === modal) closeProd(); };
+    var xb = modal.querySelector('#nvProdX'); if (xb) xb.onclick = closeProd;
+    if (!modal._esc){ modal._esc = 1; document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) closeProd(); }); }
+  }
+
+  // 6 — money segment/region toggle.
+  pane.querySelectorAll('#nvMoneyToggle .ovlr-seg-b').forEach(function(b){
+    b.onclick = function(){ _moneyMode = b.getAttribute('data-money');
+      pane.querySelectorAll('#nvMoneyToggle .ovlr-seg-b').forEach(function(x){ x.classList.toggle('active', x===b); });
+      var d = _moneyMode === 'region' ? MONEY_REG : MONEY_SEG;
+      var t = pane.querySelector('#nvMoneyTitle'); if (t) t.innerHTML = d.title;
+      var n = pane.querySelector('#nvMoneyNote'); if (n) n.innerHTML = d.note;
+      buildMoneyChart();
+    };
+  });
+
+  // 7 — competitors: toggles, add/remove, live market cap per ticker.
+  pane.querySelectorAll('#nvCompMult .ovlr-seg-b').forEach(function(b){
+    b.onclick = function(){ _compMult = b.getAttribute('data-cmult');
+      pane.querySelectorAll('#nvCompMult .ovlr-seg-b').forEach(function(x){ x.classList.toggle('active', x===b); });
+      buildCompChart(); };
+  });
+  pane.querySelectorAll('#nvCompTime .ovlr-seg-b').forEach(function(b){
+    b.onclick = function(){ _compTime = b.getAttribute('data-ctime');
+      pane.querySelectorAll('#nvCompTime .ovlr-seg-b').forEach(function(x){ x.classList.toggle('active', x===b); });
+      buildCompChart(); };
+  });
+  var liveMcap = function(tk){
+    import('../api.js').then(function(api){ return api.liveQuote(tk); }).then(function(res){
+      var q = res && res.data; if (!q || q.marketCap == null) return;
+      var row = COMP.filter(function(c){ return c.ticker === tk; })[0];
+      if (row){ row.mcap = Math.round(q.marketCap/1e9); renderCompChips(); buildCompChart(); }
+    }).catch(function(){});
+  };
+  COMP.forEach(function(c){ liveMcap(c.ticker); });   // refresh all sizes live
+  var addInput = pane.querySelector('#nvCompInput'), addBtn = pane.querySelector('#nvCompAdd');
+  var doAdd = function(){
+    var tk = (addInput.value||'').trim().toUpperCase().replace(/[^A-Z.]/g,''); if (!tk) return;
+    if (COMP.some(function(c){ return c.ticker === tk; })){ addInput.value=''; return; }
+    COMP.push({ ticker:tk, name:tk, pe:null, peF:null, ev:null, evF:null, eg:null, egF:null, ebg:null, ebgF:null, mcap:null });
+    addInput.value=''; renderCompChips(); liveMcap(tk);
+  };
+  if (addBtn) addBtn.onclick = doAdd;
+  if (addInput) addInput.onkeydown = function(e){ if (e.key === 'Enter'){ e.preventDefault(); doAdd(); } };
+  var chips = pane.querySelector('#nvCompChips');
+  if (chips) chips.onclick = function(e){ var t = e.target.closest('.ovlr-comp-x'); if (!t) return;
+    COMP.splice(parseInt(t.getAttribute('data-rm'),10), 1); renderCompChips(); buildCompChart(); };
+  renderCompChips();
+  // Competitors box starts open — build its chart now.
+  requestAnimationFrame(buildCompChart);
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -1268,6 +1837,7 @@ function showOvt(root, key){
   if (key === 'management') requestAnimationFrame(function(){ initManagement(); });
   if (key === 'consensus') requestAnimationFrame(function(){ initConsensus(); });
   if (key === 'valuation') requestAnimationFrame(function(){ initValuation(); });
+  if (key === 'overview') requestAnimationFrame(function(){ initOverview(); });
 }
 
 function init(){
@@ -1290,6 +1860,8 @@ function init(){
       };
     });
   });
+  // Overview is the default active tab — wire its chips / cards / hero on load.
+  requestAnimationFrame(function(){ initOverview(); });
   var active = root.querySelector('.ovt-tab.active');
   if (active && active.getAttribute('data-ovt') === 'industry') requestAnimationFrame(function(){ semiIndustry.init(); });
 }

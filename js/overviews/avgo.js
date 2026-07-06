@@ -1,0 +1,1091 @@
+// overviews/avgo.js — custom Overview for Broadcom Inc. (Nasdaq: AVGO)
+// Built per the portal's per-company Overview model (see CLAUDE.md).
+//
+// Ported from a standalone foundational-research dashboard, adapted to the portal's
+// multi-tab overview shell (.ovt-tabs / .ovt-pane) and CSS-scoped under `.ov-avgo`
+// (see css/avgo.css) so the dashboard's generic class names can't collide with the
+// rest of the portal. Charts use Chart.js 4.4.1 + the annotation plugin (both loaded
+// in index.html). Tabs:
+//   1 Segments               — segment revenue/mix/margin, KPI driver trees, product scope.
+//   2 Guidance               — the DCF guidance map (line by line) + debate priorities.
+//   3 AI Revenue             — AI dollars/growth/networking mix + the margin story.
+//   4 Customer Concentration — concentration over time + disclosure history.
+//   5 Value Chain            — where Broadcom's reach starts/ends (clickable, sourced).
+//   6 GW Roadmap             — contractual gigawatt commitments by customer + networking mix.
+//   7 Management             — All Management (leadership + live ownership/insider) & Hock Tan.
+//   8 M&A Deep Dive          — the capital-allocation machine, 7 deals + financial impact.
+//
+// Figures: Broadcom reports in US dollars on a fiscal year ending ~early November.
+// Sources are noted per card (10-K FY2025, Q1/Q2 FY26 calls & press releases, 8-K Apr 2026).
+// "LT" / projection figures are management guidance, not contract. Live ownership/insider
+// (Management tab) is pulled from Fiscal.ai via api.js — the same source as the Pillars tab.
+
+import { fetchExecutives, fetchInsiderTransactions, syncManagement, liveQuote } from '../api.js';
+
+// Register the annotation plugin once (used by the M&A financial-impact charts).
+if (window.Chart && window['chartjs-plugin-annotation']) {
+  try { window.Chart.register(window['chartjs-plugin-annotation']); } catch (e) {}
+}
+
+function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function formatShares(n){ if(n==null||n==='') return '—'; var v=Number(n); if(!isFinite(v)) return '—'; if(Math.abs(v)>=1e6) return (v/1e6).toFixed(2)+'M'; if(Math.abs(v)>=1e3) return (v/1e3).toFixed(1)+'K'; return v.toLocaleString(); }
+
+var _company = null;      // set in html(c); init() runs with no args, so we stash it.
+var _mgLoaded = false;    // guard the live management fetch per render
+
+// ════════════════════════════════════════════════════════════════════════════════
+//  CHART CONFIG HELPERS (ported from the source dashboard)
+// ════════════════════════════════════════════════════════════════════════════════
+var baseOpts = {responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+  plugins:{legend:{labels:{font:{family:'Figtree',size:11},color:'#6B7A8D',usePointStyle:true,pointStyleWidth:16,boxHeight:8}},
+    tooltip:{backgroundColor:'#141C2B',titleFont:{family:'Figtree',size:11},bodyFont:{family:'Figtree',size:12},padding:9,cornerRadius:7}},
+  scales:{x:{grid:{color:'#EDF0F5',drawTicks:false},border:{display:false},ticks:{font:{family:'Figtree',size:10.5},color:'#9AACBE',maxRotation:0,maxTicksLimit:9}},
+    y:{grid:{color:'#EDF0F5',drawTicks:false},border:{display:false},ticks:{font:{family:'Figtree',size:10.5},color:'#9AACBE'}}}};
+
+var donutOpts = {responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'bottom',labels:{font:{family:'Figtree',size:10},color:'#6B7A8D',usePointStyle:true,pointStyleWidth:10,boxHeight:8,padding:8}},tooltip:{backgroundColor:'#141C2B',titleFont:{family:'Figtree',size:10},bodyFont:{family:'Figtree',size:11},padding:8,cornerRadius:6,callbacks:{label:function(c){return c.label+': '+c.raw+'%';}}}}};
+
+// Drag-to-pan / wheel-to-zoom on the y axis (nice-to-have from the source dashboard).
+function yDrag(chart,el,keys){
+  keys = keys || ['y'];
+  var d=false,ly=0,sr={};
+  el.addEventListener('mousedown',function(e){d=true;ly=e.clientY;keys.forEach(function(k){var s=chart.scales[k];if(s)sr[k]={min:s.min,max:s.max};});});
+  document.addEventListener('mousemove',function(e){if(!d)return;var dy=e.clientY-ly,h=chart.chartArea.bottom-chart.chartArea.top;
+    keys.forEach(function(k){var r=sr[k],rg=r.max-r.min,sh=-(dy/h)*rg;chart.options.scales[k].min=r.min+sh;chart.options.scales[k].max=r.max+sh;});chart.update('none');});
+  document.addEventListener('mouseup',function(){d=false;});
+  el.addEventListener('wheel',function(e){e.preventDefault();var f=e.deltaY>0?1.12:0.88;keys.forEach(function(k){var s=chart.scales[k],r=s.max-s.min,c=(s.max+s.min)/2;chart.options.scales[k].min=c-(r*f)/2;chart.options.scales[k].max=c+(r*f)/2;});chart.update('none');},{passive:false});
+  el.addEventListener('dblclick',function(){keys.forEach(function(k){delete chart.options.scales[k].min;delete chart.options.scales[k].max;});chart.update();});
+  el.style.cursor='ns-resize';
+}
+
+// Destroy any chart already bound to a canvas, then build fresh (idempotent re-renders).
+function freshChart(id, cfg){
+  var el = document.getElementById(id); if(!el || !window.Chart) return null;
+  var prev = window.Chart.getChart(el); if(prev) prev.destroy();
+  return new window.Chart(el, cfg);
+}
+
+// ─── shared render helpers ────────────────────────────────────────────────────
+function card(title, sub, body, source){
+  return '<div class="card"><div class="card-header"><span class="card-title">'+title+'</span>'+
+    (sub?'<span class="card-subtitle">'+sub+'</span>':'')+'</div>'+body+
+    (source?'<div class="source">'+source+'</div>':'')+'</div>';
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// 1 — SEGMENTS
+// ════════════════════════════════════════════════════════════════════════════════
+var SEG_FY=['FY17','FY18','FY19','FY20','FY21','FY22','FY23','FY24','FY25'];
+var totalRev=[17636,20848,22597,23888,27450,33203,35819,51574,63887];
+var semiRev=[17636,19068,17441,17267,20383,25818,28182,30096,36858];
+var swRev=[0,1780,5156,6621,7067,7385,7637,21478,27029];
+var semiOM=[null,49,49,50,54,58,58,56,58];
+var swOM=[null,65,66,66,70,71,74,65,77];
+var segEvents=['Pre-SW','CA','Symantec','—','—','—','—','VMware','VMware FY'];
+
+function segmentsBody(){
+  return ''+
+  card('Segment revenue, mix &amp; margin','$M',
+    '<div class="card-body" style="padding:0"><table class="tbl">'+
+      '<thead><tr><th>FY</th><th>Total</th><th>Semi</th><th>SW</th><th>Semi %</th><th>SW %</th><th>Semi OM</th><th>SW OM</th><th style="text-align:left">Event</th></tr></thead>'+
+      '<tbody id="segBody"></tbody></table></div>',
+    'User-provided data + 10-K FY25. OM = segment operating income ÷ revenue.')+
+
+  '<div class="card"><div class="card-header"><span class="card-title">KPI driver trees</span>'+
+    '<div class="seg-toggle" data-seg-group="kpi">'+
+      '<button class="seg-btn active" data-seg="semi">Semiconductors</button>'+
+      '<button class="seg-btn" data-seg="sw">Software</button></div></div>'+
+    '<div class="card-body">'+
+      '<div class="seg-panel active" data-panel="kpi-semi">'+
+        '<div class="prose" style="margin-bottom:10px"><p>Audited 10-K reports <strong>one number</strong>. Management runs calls on an <strong>AI-vs-non-AI</strong> cut. AI = custom silicon (XPUs) + AI networking; lives mostly inside the Networking Connectivity end market.</p></div>'+
+        '<div class="mini-grid c2">'+
+          '<div class="mini l-ai"><div class="mini-t">AI — XPUs</div><div class="mini-d">Custom accelerators</div><span class="driver-pill">customers × content/GW × GW</span></div>'+
+          '<div class="mini l-ai"><div class="mini-t">AI — Networking</div><div class="mini-d">Switches, DSPs, optical</div><span class="driver-pill">cluster size · attach to compute</span></div>'+
+          '<div class="mini l-amber"><div class="mini-t">Non-AI — 4 markets</div><div class="mini-d">Wireless, broadband, server/storage, industrial</div><span class="driver-pill">end-market cycle × content/device</span></div>'+
+          '<div class="mini l-blue"><div class="mini-t">Engine: design wins</div><div class="mini-d">Win a socket → ship for its life</div><span class="driver-pill">backlog = leading indicator</span></div>'+
+        '</div></div>'+
+      '<div class="seg-panel" data-panel="kpi-sw">'+
+        '<div class="prose" style="margin-bottom:10px"><p>A <strong>renewal-and-conversion machine</strong>, not a units business. Drivers are retention, price, conversion.</p></div>'+
+        '<div class="mini-grid c2">'+
+          '<div class="mini l-purple"><div class="mini-t">VMware / VCF</div><div class="mini-d">Convert perpetual → subscription, land top ~10k accounts</div><span class="driver-pill">ARR +19% YoY</span></div>'+
+          '<div class="mini l-purple"><div class="mini-t">Upsell services</div><div class="mini-d">Security, AI, recovery on top of VCF</div><span class="driver-pill">price at renewal</span></div>'+
+          '<div class="mini l-amber"><div class="mini-t">Legacy (harvest)</div><div class="mini-d">Mainframe, cyber, enterprise, SAN</div><span class="driver-pill">high retention, low growth</span></div>'+
+          '<div class="mini l-blue"><div class="mini-t">KPIs reported</div><div class="mini-d">ARR · Bookings · TCV ($9.2B Q1)</div><span class="driver-pill">forward signals</span></div>'+
+        '</div></div>'+
+    '</div></div>'+
+
+  '<div class="grid-2">'+
+    card('The "Other / Unallocated" line','',
+      '<div class="card-body"><div class="caution"><strong>Segment OI (~$45B combined) ≈ 2× total GAAP operating income ($25.5B).</strong> The gap is M&amp;A cost excluded from segments: intangible amortization, SBC, restructuring. −$16.5B in FY25. Goodwill + intangibles ≈ $128B of the $170B balance sheet — the residue of the roll-up.</div></div>','')+
+    card('Three reporting lenses','',
+      '<div class="card-body"><div class="mini-grid" style="gap:8px">'+
+        '<div class="mini l-blue"><div class="mini-t">By segment</div><div class="mini-d">Semi / Software — the real economic cut</div></div>'+
+        '<div class="mini l-amber"><div class="mini-t">By type</div><div class="mini-d">Products / Subscriptions — contaminated by $7.8B upfront license in "Products". Don\'t model off it.</div></div>'+
+        '<div class="mini l-pink"><div class="mini-t">By geography</div><div class="mini-d">~58% "APAC" = where CMs take delivery, not end-demand. Low signal.</div></div>'+
+      '</div></div>','')+
+  '</div>'+
+
+  '<div class="card"><div class="card-header"><span class="card-title">Product scope — what\'s inside each segment</span>'+
+    '<div class="seg-toggle" data-seg-group="scope">'+
+      '<button class="seg-btn active" data-seg="semi">Semiconductors</button>'+
+      '<button class="seg-btn" data-seg="sw">Software</button></div></div>'+
+    '<div class="card-body">'+
+      '<div class="seg-panel active" data-panel="scope-semi">'+
+        '<table class="scope"><thead><tr><th style="width:24%">Product</th><th style="width:40%">Plain terms</th><th style="width:36%">Who buys it</th></tr></thead><tbody>'+
+          '<tr><td><span class="pn">Custom Silicon / XPUs</span><br><span class="badge b-ai" style="margin-top:4px">AI</span></td>'+
+            '<td>Custom AI chips Broadcom co-designs for one customer to run its models. The biggest growth driver.</td>'+
+            '<td><div class="logo-row"><span class="logo-chip lc-google"><span class="dot"></span>Google</span><span class="logo-chip lc-meta"><span class="dot"></span>Meta</span><span class="logo-chip lc-anthropic"><span class="dot"></span>Anthropic</span><span class="logo-chip lc-openai"><span class="dot"></span>OpenAI</span><span class="badge b-neutral">+2 unnamed</span></div></td></tr>'+
+          '<tr><td><span class="pn">Ethernet Switching &amp; Routing</span><br><span class="badge b-accent" style="margin-top:4px">AI + non-AI</span></td>'+
+            '<td>Switch/router chips (Tomahawk, Jericho) that wire chips into clusters. Also ordinary enterprise/carrier networks.</td>'+
+            '<td><div class="logo-row"><span class="badge b-neutral">Hyperscalers</span><span class="logo-chip lc-nvidia"><span class="dot"></span>+ Nvidia-GPU users</span><span class="badge b-neutral">Telecom OEMs</span></div><div style="font-size:10px;color:var(--text-tertiary);margin-top:4px">~90% share in deep-buffer AI switching</div></td></tr>'+
+          '<tr><td><span class="pn">PHYs · DSPs · Optical</span><br><span class="badge b-accent" style="margin-top:4px">AI + non-AI</span></td>'+
+            '<td>Components moving data over copper/fiber at speed — transceivers, 1.6Tb DSPs, lasers. Plus automotive Ethernet.</td>'+
+            '<td><div class="logo-row"><span class="badge b-neutral">Data-center buyers</span><span class="badge b-neutral">Optical-module makers</span></div></td></tr>'+
+          '<tr><td><span class="pn">RF / FBAR · Wi-Fi</span><br><span class="badge b-warn" style="margin-top:4px">non-AI</span></td>'+
+            '<td>Radio-signal filters (proprietary FBAR) and Wi-Fi/BT chips in smartphones. Seasonal "phone" business.</td>'+
+            '<td><div class="logo-row"><span class="logo-chip lc-apple"><span class="dot"></span>Apple*</span><span class="badge b-neutral">Premium handset OEMs</span></div><div style="font-size:10px;color:var(--text-tertiary);margin-top:4px">*consensus, unnamed in 10-K</div></td></tr>'+
+          '<tr><td><span class="pn">Server &amp; Storage</span><br><span class="badge b-warn" style="margin-top:4px">mostly non-AI</span></td>'+
+            '<td>PCIe switches (AI + non-AI), SAS/RAID, Fibre Channel, HDD/SSD controllers.</td>'+
+            '<td><div class="logo-row"><span class="logo-chip lc-dell"><span class="dot"></span>Dell</span><span class="logo-chip lc-hpe"><span class="dot"></span>HPE</span><span class="badge b-neutral">Storage OEMs</span></div></td></tr>'+
+          '<tr><td><span class="pn">Broadband</span><br><span class="badge b-warn" style="margin-top:4px">non-AI</span></td>'+
+            '<td>Set-top-box &amp; broadband-access chips (cable, fiber/PON, Wi-Fi). Recovering most strongly.</td>'+
+            '<td><div class="logo-row"><span class="badge b-neutral">Cable &amp; telecom operators</span></div></td></tr>'+
+          '<tr><td><span class="pn">Industrial</span><br><span class="badge b-warn" style="margin-top:4px">non-AI</span></td>'+
+            '<td>Optocouplers, sensors, LEDs, automotive (EV, ADAS). Slowest, longest-cycle.</td>'+
+            '<td><div class="logo-row"><span class="badge b-neutral">Factory / auto / medical / defense</span></div></td></tr>'+
+        '</tbody></table>'+
+        '<div class="insight" style="margin-top:11px"><strong>Switching straddles AI &amp; non-AI</strong> — you can\'t equate "all networking = AI". Management\'s AI figure carves out only the AI portion.</div></div>'+
+      '<div class="seg-panel" data-panel="scope-sw">'+
+        '<table class="scope"><thead><tr><th style="width:24%">Portfolio</th><th style="width:40%">Plain terms</th><th style="width:36%">Who buys it</th></tr></thead><tbody>'+
+          '<tr><td><span class="pn">Private Cloud (VMware/VCF)</span><br><span class="badge b-sw" style="margin-top:4px">the engine</span></td>'+
+            '<td>Run your own private cloud in your own data center instead of renting AWS/Azure. Runs on the customer\'s hardware — Broadcom ships no hardware here.</td>'+
+            '<td><div class="logo-row"><span class="badge b-neutral">Fortune 500</span><span class="badge b-neutral">Banks · insurers</span><span class="badge b-neutral">Telecom · healthcare</span></div></td></tr>'+
+          '<tr><td><span class="pn">Mainframe</span><br><span class="badge b-warn" style="margin-top:4px">harvest · ex-CA</span></td>'+
+            '<td>Tools that keep big-iron mainframes running. Nearly impossible to remove.</td>'+
+            '<td><div class="logo-row"><span class="badge b-neutral">Largest banks · airlines · governments</span></div></td></tr>'+
+          '<tr><td><span class="pn">Cybersecurity</span><br><span class="badge b-warn" style="margin-top:4px">harvest · Symantec</span></td>'+
+            '<td>Endpoint, network, data security + identity/access management.</td>'+
+            '<td><div class="logo-row"><span class="badge b-neutral">Large enterprises · governments</span></div></td></tr>'+
+          '<tr><td><span class="pn">Enterprise Software</span><br><span class="badge b-warn" style="margin-top:4px">harvest</span></td>'+
+            '<td>Plan/build/monitor software delivery — AIOps, automation, DevOps.</td>'+
+            '<td><div class="logo-row"><span class="badge b-neutral">Large IT organizations</span></div></td></tr>'+
+          '<tr><td><span class="pn">FC SAN Management</span><br><span class="badge b-warn" style="margin-top:4px">harvest · Brocade</span></td>'+
+            '<td>Fibre-channel storage switches + software. Partly hardware sitting in the software segment.</td>'+
+            '<td><div class="logo-row"><span class="badge b-neutral">Data centers · storage OEMs</span></div></td></tr>'+
+        '</tbody></table>'+
+        '<div class="insight" style="margin-top:11px"><strong>VCF runs on the customer\'s own hardware</strong> in their data center or a supported cloud — not on Broadcom infrastructure or Broadcom chips. Only VMware/VCF metrics are disclosed (ARR +19%, VCF +13%); legacy portfolios aren\'t separately quantified.</div></div>'+
+    '</div><div class="source">Source: 10-K FY2025. Customer names where reliably known; otherwise buyer type. Logo chips are styled wordmarks, not official brand artwork.</div></div>'+
+
+  '<div class="grid-2-wide">'+
+    card('Revenue &amp; segment mix','FY17–25, $M',
+      '<div class="card-body"><div class="chart-c"><canvas id="cRev"></canvas></div></div>',
+      'Step-changes FY19 (Symantec) &amp; FY24 (VMware) are M&amp;A, not organic.')+
+    card('Segment operating margins','software structurally more profitable',
+      '<div class="card-body"><div class="chart-c md"><canvas id="cMargin"></canvas></div></div>','')+
+  '</div>';
+}
+
+function initSegments(pane){
+  if(pane._charted) return; pane._charted = true;
+  // Segment table
+  var tb = document.getElementById('segBody');
+  if(tb){ tb.innerHTML='';
+    for(var i=0;i<SEG_FY.length;i++){
+      var sp=Math.round(100*semiRev[i]/totalRev[i]), wp=swRev[i]?Math.round(100*swRev[i]/totalRev[i]):0;
+      var tr=document.createElement('tr'); if(i===2||i===7)tr.className='row-hi';
+      tr.innerHTML='<td>'+SEG_FY[i]+'</td><td>$'+totalRev[i].toLocaleString()+'</td><td>$'+semiRev[i].toLocaleString()+'</td>'+
+        '<td>'+(swRev[i]?'$'+swRev[i].toLocaleString():'—')+'</td><td>'+sp+'%</td><td>'+(wp?wp+'%':'—')+'</td>'+
+        '<td>'+(semiOM[i]?semiOM[i]+'%':'—')+'</td><td>'+(swOM[i]?swOM[i]+'%':'—')+'</td>'+
+        '<td style="text-align:left;font-size:10.5px;color:var(--text-secondary)">'+segEvents[i]+'</td>';
+      tb.appendChild(tr);
+    }
+  }
+  var ch1=freshChart('cRev',{type:'bar',data:{labels:SEG_FY,datasets:[
+    {label:'Semiconductors',data:semiRev,backgroundColor:'#2E75B6',stack:'s',borderRadius:2},
+    {label:'Software',data:swRev,backgroundColor:'#7030A0',stack:'s',borderRadius:2}]},
+    options:Object.assign({},baseOpts,{scales:{x:Object.assign({},baseOpts.scales.x,{stacked:true}),y:Object.assign({},baseOpts.scales.y,{stacked:true,ticks:Object.assign({},baseOpts.scales.y.ticks,{callback:function(v){return '$'+(v/1000)+'B';}})})},
+    plugins:Object.assign({},baseOpts.plugins,{tooltip:Object.assign({},baseOpts.plugins.tooltip,{callbacks:{label:function(c){return c.dataset.label+': $'+c.raw.toLocaleString()+'M';}}})})})});
+  if(ch1) yDrag(ch1,document.getElementById('cRev'));
+  var ch2=freshChart('cMargin',{type:'line',data:{labels:SEG_FY,datasets:[
+    {label:'Semi OM',data:semiOM,borderColor:'#2E75B6',borderWidth:2.5,tension:0.3,pointRadius:0,pointHoverRadius:5,spanGaps:true},
+    {label:'Software OM',data:swOM,borderColor:'#7030A0',borderWidth:2.5,tension:0.3,pointRadius:0,pointHoverRadius:5,spanGaps:true}]},
+    options:Object.assign({},baseOpts,{scales:{x:baseOpts.scales.x,y:Object.assign({},baseOpts.scales.y,{min:40,max:85,ticks:Object.assign({},baseOpts.scales.y.ticks,{callback:function(v){return v+'%';}})})},
+    plugins:Object.assign({},baseOpts.plugins,{tooltip:Object.assign({},baseOpts.plugins.tooltip,{callbacks:{label:function(c){return c.dataset.label+': '+c.raw+'%';}}})})})});
+  if(ch2) yDrag(ch2,document.getElementById('cMargin'));
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// 2 — GUIDANCE  (static content; the tooltip .gq elements are pure CSS hover)
+// ════════════════════════════════════════════════════════════════════════════════
+function gRow(line,method,guide,note){
+  return '<tr><td class="ln '+line.lvl+'">'+line.t+'</td><td class="method">'+method+'</td><td>'+guide+'</td><td>'+note+'</td></tr>';
+}
+function tip(q,src){ return '<span class="tip"><span class="tq">'+q+'</span><span class="tsrc">'+src+'</span></span>'; }
+
+function guidanceBody(){
+  var rows='';
+  rows+='<tr class="sec"><td colspan="4">Revenue = SS + IS</td></tr>';
+  rows+=gRow({lvl:'lvl1',t:'Total revenue'},'sum','<span class="gq down"><span class="tag-nt">NT</span>Q1\'26 $19.3B (+29%); Q2\'26 guide ~$22B (+47%). <span class="tag-lt">LT</span>No annual guide given.'+tip('Q1 revenue of $19.3B, up 29% YoY; guiding Q2 consolidated revenue to approximately $22B.','Q1 FY26 earnings call &amp; press release, Mar 4 2026')+'</span>','One-quarter cadence');
+  rows+=gRow({lvl:'lvl2',t:'SS'},'sum AI + non-AI','<span class="gq down"><span class="tag-nt">NT</span>Q1\'26 $12.5B (+52%); Q2\'26 $14.8B (+76%).'+tip('Semiconductor revenue of $12.5B in Q1, up 52%; guided to about $14.8B in Q2.','Q1 FY26 earnings call, Mar 4 2026')+'</span>','');
+  rows+=gRow({lvl:'lvl3',t:'AI'},'YoY growth','<span class="gq down"><span class="tag-nt">NT</span>Q1\'26 $8.4B (+106%); Q2\'26 $10.7B (+140%); XPU +140%; networking 33→40% of AI. <span class="tag-lt">LT</span>"&gt;$100B chips 2027"; ~10 GW / 6 customers; FY25 base ~$20B.'+tip('AI revenue of $8.4B, up over 100%; expect Q2 AI revenue of $10.7B. We see line of sight to AI revenue from chips in excess of $100B in 2027 across our customers.','Q1 FY26 call (Mar 2026) + Q4 FY25 call (Dec 2025)')+'</span>','$/GW varies "dramatically" — blend by customer');
+  rows+=gRow({lvl:'lvl3',t:'Non-AI'},'YoY growth','<span class="gq down"><span class="tag-nt">NT</span>Q1\'26 $4.1B (flat); Q2\'26 ~$4.1B (+4%). <span class="tag-lt">LT</span>U-shaped recovery into mid/late \'26.'+tip('Non-AI semiconductor revenue was roughly $4.1B and has been bouncing along the bottom; recovery is U-shaped, expected through mid- to late-2026.','Q1 FY26 &amp; Q3 FY25 earnings calls')+'</span>','~$16–17B run-rate; flat/low-single');
+  rows+=gRow({lvl:'lvl2',t:'IS'},'YoY growth','<span class="gq down"><span class="tag-nt">NT</span>Q1\'26 $6.8B (+1%); Q2\'26 ~$7.2B (+9%); VMware +13%; ARR +19%; TCV $9.2B. <span class="tag-lt">LT</span>FY26 "low double-digit".'+tip('Infrastructure software revenue of $6.8B; annualized booking value (ARR) growing roughly 19%; we expect software to grow low double-digit percentage in fiscal 2026.','Q1 FY26 call + Q4 FY25 call')+'</span>','ARR leads revenue; pick guide vs ARR');
+
+  rows+='<tr class="sec"><td colspan="4">COGS = SS + IS + SBC COGS</td></tr>';
+  rows+=gRow({lvl:'lvl1',t:'COGS total'},'sum','<span class="gq down"><span class="tag-nt">NT</span>Consol. GM 77%; Q2\'26 guide flat 77%.'+tip('Consolidated gross margin was 77% in Q1; we expect Q2 gross margin to be roughly flat sequentially.','Q1 FY26 earnings call (CFO), Mar 2026')+'</span>','HBM/systems are pass-through');
+  rows+=gRow({lvl:'lvl2',t:'SS COGS'},'rev − GP (GM)','<span class="gq down"><span class="tag-nt">NT</span>Semi GM ~68% (+30bps). <span class="tag-lt">LT</span>Q4\'25: systems/racks WILL dilute. Q1\'26: Hock reversed — "not substantial".'+tip('Q4\'25: AI revenue carries lower gross margin and rack/system sales will dilute it. Q1\'26: those concerns are "a bit hallucinating"; the rack impact on margin is "not substantial at all."','Q4 FY25 call (Dec 2025) vs Q1 FY26 call (Mar 2026)')+'</span>','The key conflict — see below');
+  rows+=gRow({lvl:'lvl2',t:'IS COGS'},'rev − GP (GM)','<span class="gq down"><span class="tag-nt">NT</span>IS GM 93%, stable.'+tip('Infrastructure software gross margin was 93% in the quarter.','Q1 FY26 earnings call, Mar 2026')+'</span>','Low debate');
+  rows+=gRow({lvl:'lvl2',t:'SBC COGS'},'own line','<span class="gq down"><span class="tag-nt">NT</span>Total SBC $7,568M FY25 (COGS slice). <span class="tag-lt">LT</span>Schedule below.'+tip('Total stock-based compensation expense was $7,568M for fiscal 2025, recorded across cost of revenue and operating expense.','10-K FY2025, Stock-Based Compensation note')+'</span>','Don\'t double-count w/ Unalloc.');
+
+  rows+='<tr class="sec"><td colspan="4">Gross Profit = SS + IS</td></tr>';
+  rows+=gRow({lvl:'lvl2',t:'SS GP'},'gross margin','<span class="gq"><span class="tag-nt">NT</span>~68% margin.'+tip('Semiconductor gross margin was approximately 68%, up about 30 basis points year over year.','Q1 FY26 earnings call, Mar 2026')+'</span>','Mix-driven if AI split chips/systems');
+  rows+=gRow({lvl:'lvl2',t:'IS GP'},'gross margin','<span class="gq"><span class="tag-nt">NT</span>~93% margin.'+tip('Infrastructure software gross margin was 93%.','Q1 FY26 earnings call, Mar 2026')+'</span>','Hold flat');
+
+  rows+='<tr class="sec"><td colspan="4">Operating Expense = SS + IS + Unallocated</td></tr>';
+  rows+=gRow({lvl:'lvl2',t:'SS OpEx'},'\'26 c-size / \'27+ growth','<span class="gq"><span class="tag-nt">NT</span>Q1\'26 $1.1B = 8% of semi rev; semi OM 60% (+260bps). <span class="tag-lt">LT</span>FY25 R&amp;D +18% ("mostly SBC"), SG&amp;A −15%.'+tip('Semiconductor operating margin was 60%, up 260 bps YoY. FY25 R&amp;D rose 18% (primarily higher stock-based comp); SG&amp;A fell 15% on lower headcount.','Q1 FY26 call (segment split) + 10-K FY2025 MD&amp;A')+'</span>','Use cash-ex-SBC growth; bake in leverage');
+  rows+=gRow({lvl:'lvl3',t:'R&amp;D'},'common-size SS rev','<span class="gq blank">No quarterly history pre-Q1\'25 — common-size only.'+tip('Broadcom only began disclosing the operating-expense split by segment in Q1 FY26 (with a Q1 FY25 comparative). No earlier quarters exist for a YoY build.','10-K / Q1 FY26 segment disclosure')+'</span>','\'26 c-size, \'27+ growth');
+  rows+=gRow({lvl:'lvl3',t:'SG&amp;A'},'common-size SS rev','<span class="gq blank">No quarterly history pre-Q1\'25 — common-size only.'+tip('Segment-level R&amp;D / SG&amp;A split first reported in Q1 FY26; yearly figures exist for 2023–25 only.','10-K / Q1 FY26 segment disclosure')+'</span>','\'26 c-size, \'27+ growth');
+  rows+=gRow({lvl:'lvl2',t:'IS OpEx'},'\'26 c-size / \'27+ growth','<span class="gq"><span class="tag-nt">NT</span>Q1\'26 $979M; IS OM 78% (+190bps).'+tip('Infrastructure software operating margin was 78%, up about 190 bps year over year.','Q1 FY26 earnings call, Mar 2026')+'</span>','');
+  rows+=gRow({lvl:'lvl2',t:'Unallocated'},'sum of 4','<span class="gq"><span class="tag-nt">NT</span>FY25 −$16,513M (−4%).'+tip('Unallocated expenses — amortization of acquisition-related intangibles, SBC, restructuring and acquisition costs — were $16,513M in fiscal 2025, down 4%.','10-K FY2025, Segment Operating Results')+'</span>','Mostly run-off, not growth');
+  rows+=gRow({lvl:'lvl3',t:'Amort. of acq. intangibles'},'YoY growth','<span class="gq"><span class="tag-nt">NT</span>FY25 $8,062M ($6,031 COGS + $2,031 OpEx); OpEx piece −37%. <span class="tag-lt">LT</span>Runs off $32,273M net intangibles.'+tip('Amortization of acquisition-related intangibles: $6,031M in cost of revenue and $2,031M in operating expense; OpEx amortization fell 37% as non-VMware intangibles fully amortized. Net intangible assets were $32,273M.','10-K FY2025 income statement &amp; balance sheet')+'</span>','Declining schedule, not growth');
+  rows+=gRow({lvl:'lvl3',t:'SBC'},'YoY growth','<span class="gq"><span class="tag-nt">NT</span>FY25 $7,568M. <span class="tag-lt">LT</span>Disclosed runoff: \'26 $8,301M · \'27 $7,118M · \'28 $4,985M · \'29 $2,689M · \'30 $740M.'+tip('Unrecognized stock-based compensation expected to vest: 2026 $8,301M, 2027 $7,118M, 2028 $4,985M, 2029 $2,689M, 2030 $740M.','10-K FY2025, SBC unrecognized-cost table')+'</span>','Use schedule + new-grant layer');
+  rows+=gRow({lvl:'lvl3',t:'Restructuring &amp; other'},'YoY growth','<span class="gq"><span class="tag-nt">NT</span>FY25 $667M ($76 COGS + $591 OpEx); OpEx −61%.'+tip('Restructuring and other charges fell 61% in operating expense, primarily lower employee-termination costs as the VMware integration wound down.','10-K FY2025 MD&amp;A')+'</span>','Fade toward zero');
+  rows+=gRow({lvl:'lvl3',t:'Acquisition-related costs'},'YoY growth','<span class="gq"><span class="tag-nt">NT</span>Declining as VMware integration completes.'+tip('Acquisition-related costs declined as VMware integration was substantially completed.','10-K FY2025 MD&amp;A')+'</span>','~Zero absent new deal');
+
+  rows+='<tr class="sec"><td colspan="4">Operating Income = GP − OpEx (by segment)</td></tr>';
+  rows+=gRow({lvl:'lvl2',t:'SS OI'},'GP − OpEx','<span class="gq"><span class="tag-nt">NT</span>Semi OM 60% Q1\'26 (expanding). FY25 segment OI $21,232M.'+tip('Semiconductor operating margin of 60% in Q1; fiscal 2025 semiconductor segment operating income was $21,232M.','Q1 FY26 call + 10-K FY2025 segment results')+'</span>','Don\'t let margin contract');
+  rows+=gRow({lvl:'lvl2',t:'IS OI'},'GP − OpEx','<span class="gq"><span class="tag-nt">NT</span>IS OM 78% Q1\'26 (expanding). FY25 segment OI $20,765M.'+tip('Infrastructure software operating margin of 78%; fiscal 2025 software segment operating income was $20,765M.','Q1 FY26 call + 10-K FY2025 segment results')+'</span>','');
+
+  rows+='<tr class="sec"><td colspan="4">Adj EBITDA = OpInc + D&amp;A + SBC + Restructuring + Acq Costs</td></tr>';
+  rows+=gRow({lvl:'lvl1',t:'Adj EBITDA'},'bridge','<span class="gq"><span class="tag-nt">NT</span>~67–68% of rev; FY25 $43B = 67%; Q2\'26 ~68%. D&amp;A mostly amortization (depr. only ~$574M).'+tip('Adjusted EBITDA was about 67% of revenue in fiscal 2025; we expect Q2 adjusted EBITDA of approximately 68% of revenue. Depreciation was $574M.','Q1 FY26 call + 10-K FY2025 cash-flow statement')+'</span>','Master guardrail — must land ~67–68%');
+
+  rows+='<tr class="sec"><td colspan="4">Cross-cutting (needed for DCF, outside your line list)</td></tr>';
+  rows+=gRow({lvl:'lvl2',t:'Tax rate'},'assumption','<span class="gq"><span class="tag-nt">NT</span>Non-GAAP ~16.5% Q2\'26 (from 14%). <span class="tag-lt">LT</span>Singapore global min tax — material FY26.'+tip('We expect the non-GAAP tax rate to be approximately 16.5%, reflecting the global minimum tax; enactment in Singapore is effective in fiscal 2026 and expected to have a material impact.','Q1 FY26 call + 10-K FY2025 tax note')+'</span>','Step 14→16.5% in \'26');
+  rows+=gRow({lvl:'lvl2',t:'Capex'},'% of rev','<span class="gq"><span class="tag-nt">NT</span>"Higher in FY26"; FY25 only ~$623M (fabless).'+tip('We expect capital expenditures to be higher in fiscal 2026 compared to fiscal 2025; purchases of property and equipment were $623M in 2025.','10-K FY2025 liquidity &amp; cash-flow statement')+'</span>','Low % of revenue');
+  rows+=gRow({lvl:'lvl2',t:'Share count'},'assumption','<span class="gq"><span class="tag-nt">NT</span>~4.94B diluted; $10B buyback authorized.'+tip('Diluted share count guidance around 4.94B for Q2; board authorized a $10B repurchase program through end of 2026.','Q1 FY26 call + 10-K FY2025')+'</span>','');
+
+  return ''+
+  '<div class="card"><div class="card-header"><span class="card-title">DCF guidance map — line by line</span><span class="card-subtitle">tagged near-term (FY26 hard) vs long-term (FY27+ directional)</span></div>'+
+    '<div class="card-body"><div class="legend" style="margin-bottom:11px">'+
+      '<div class="legend-i"><span class="tag-nt">NT</span> FY26 hard guide / recent actual</div>'+
+      '<div class="legend-i"><span class="tag-lt">LT</span> FY27+ directional / projection</div>'+
+      '<div class="legend-i"><span class="blank" style="font-size:10.5px">blank</span> = not disclosed</div></div></div>'+
+    '<div class="card-body" style="padding:0"><table class="gtbl">'+
+      '<thead><tr><th style="width:20%">DCF line</th><th style="width:14%">Method</th><th style="width:46%">Management guidance</th><th style="width:20%">Modeling note</th></tr></thead>'+
+      '<tbody>'+rows+'</tbody></table></div>'+
+    '<div class="source">Sources: Q1 FY26 call + press release, Q4 FY25 call, Q3 FY25 call, Goldman conf, 10-K FY2025. LT figures are management projection, not contract.</div></div>'+
+
+  card('The five debate priorities','ranked by valuation impact',
+    '<div class="card-body"><div class="mini-grid c2">'+
+      '<div class="mini l-coral"><div class="mini-t">1 · AI trajectory &amp; chips-vs-systems</div><div class="mini-d">Is your AI line chips-only ($100B \'27) or chips+systems? Drives revenue AND SS gross margin.</div></div>'+
+      '<div class="mini l-amber"><div class="mini-t">2 · SS gross margin</div><div class="mini-d">Q4\'25 (dilutes) vs Q1\'26 (reversed). Resolve via chips/systems mix, or base + sensitivity.</div></div>'+
+      '<div class="mini l-purple"><div class="mini-t">3 · Unallocated run-off &amp; "next deal"</div><div class="mini-d">3 of 4 lines decay toward zero absent a new deal — mechanically widens GAAP margin.</div></div>'+
+      '<div class="mini l-blue"><div class="mini-t">4 · IS terminal growth</div><div class="mini-d">Low-double-digit now — does it fade post-VMware-conversion?</div></div>'+
+      '<div class="mini l-teal"><div class="mini-t">5 · Operating leverage in OpEx</div><div class="mini-d">Hold the common-size ratio, or let it improve as AI scales?</div></div>'+
+      '<div class="mini l-ai"><div class="mini-t">★ Guardrail</div><div class="mini-d">Adj EBITDA ~67–68%. If the build lands far off, a line assumption is wrong.</div></div>'+
+    '</div></div>','');
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// 3 — AI REVENUE
+// ════════════════════════════════════════════════════════════════════════════════
+function aiRevenueBody(){
+  return ''+
+  '<div class="stats-row c5">'+
+    '<div class="stat-card t-ai"><div class="stat-label">AI Rev Q2\'26</div><div class="stat-value">$10.8B</div><div class="stat-sub">+143% · record</div></div>'+
+    '<div class="stat-card t-ai"><div class="stat-label">FY26 Guide</div><div class="stat-value">~$56B</div><div class="stat-sub">+~180% YoY</div></div>'+
+    '<div class="stat-card t-accent"><div class="stat-label">FY27 Guide</div><div class="stat-value">&gt;$100B</div><div class="stat-sub">~10 GW</div></div>'+
+    '<div class="stat-card t-pos"><div class="stat-label">AI % of Total</div><div class="stat-value">49%</div><div class="stat-sub">Q2\'26</div></div>'+
+    '<div class="stat-card t-warn"><div class="stat-label">AI Bookings Q2</div><div class="stat-value">$30B+</div><div class="stat-sub">vs $10.8B shipped</div></div>'+
+  '</div>'+
+
+  card('AI revenue — dollars, growth &amp; networking mix','$B quarterly/annual · networking share overlaid',
+    '<div class="card-body" style="padding-top:14px"><div class="chart-c" style="height:300px"><canvas id="cAIRev"></canvas></div></div>',
+    'Q2 FY26 call + prior. Quarters Q3\'25–Q3\'26 are actuals/guide; FY26 (~$56B) and FY27 (&gt;$100B) are management annual guidance. Networking % (right axis) is management-stated for Q1/Q2\'26 (~33%/~40%), ~30% normal thereafter (illustrative forward).')+
+
+  '<div class="grid-2">'+
+    '<div class="card"><div class="card-header"><span class="card-title">The guidance, year by year</span></div>'+
+      '<div class="card-body" style="padding:0"><table class="tbl">'+
+        '<thead><tr><th>Period</th><th>AI Rev</th><th>Growth</th><th style="text-align:left">Basis</th></tr></thead><tbody>'+
+          '<tr><td>FY25</td><td>~$20B</td><td>—</td><td style="text-align:left;font-size:11px;font-weight:400">actual base</td></tr>'+
+          '<tr><td>Q1\'26</td><td>$8.4B</td><td>+106%</td><td style="text-align:left;font-size:11px;font-weight:400">actual</td></tr>'+
+          '<tr><td>Q2\'26</td><td>$10.8B</td><td>+143%</td><td style="text-align:left;font-size:11px;font-weight:400">actual · record</td></tr>'+
+          '<tr><td>Q3\'26</td><td>$16B</td><td>+&gt;200%</td><td style="text-align:left;font-size:11px;font-weight:400">guide</td></tr>'+
+          '<tr class="row-hi"><td>FY26</td><td>~$56B</td><td>+~180%</td><td style="text-align:left;font-size:11px;font-weight:700">guide · H1 ~$19B, 2× in H2</td></tr>'+
+          '<tr class="row-hi"><td>FY27</td><td>&gt;$100B</td><td>~+80%</td><td style="text-align:left;font-size:11px;font-weight:700">guide · ~10 GW, back-half loaded</td></tr>'+
+          '<tr><td>FY28</td><td>"a lot more"</td><td>substantial</td><td style="text-align:left;font-size:11px;font-weight:400">directional</td></tr>'+
+        '</tbody></table></div>'+
+      '<div class="source">Chips only — see Hock\'s framing at right. The &gt;$100B FY27 figure is AI revenue from chips, not systems.</div></div>'+
+    '<div class="card"><div class="card-header"><span class="card-title">"We\'re in the chip business only"</span><span class="card-subtitle">Hock Tan, Q2 FY26 call</span></div>'+
+      '<div class="card-body">'+
+        '<div class="prose" style="margin-bottom:10px"><p>Pressed on whether rack/system sales were diluting margin, management was emphatic: <strong>"No rack. It\'s all chips... we only chips."</strong> This retires the gross-margin worry from late FY25 — the AI franchise is silicon (XPUs + networking), not systems.</p></div>'+
+        '<div class="mini-grid" style="gap:9px">'+
+          '<div class="mini l-ai"><div class="mini-t">AI = XPUs + networking</div><div class="mini-d">"We provide chips... AI compute accelerators (XPUs) or networking chips that cluster them — switches, PCIe, DSP, lasers, NICs, routers."</div></div>'+
+          '<div class="mini l-blue"><div class="mini-t">No rack/system revenue</div><div class="mini-d">The $100B 2027 figure is chips only. Any rack/system economics sit with the customer/ODM, not Broadcom.</div></div>'+
+        '</div></div></div>'+
+  '</div>'+
+
+  '<div class="card"><div class="card-header"><span class="card-title">The margin story — gross margin dilutes, operating margin holds (or grows)</span></div>'+
+    '<div class="card-body"><div class="grid-2-wide">'+
+      '<div class="chart-c md"><canvas id="cAIMargin"></canvas></div>'+
+      '<div><div class="mini-grid" style="gap:9px">'+
+        '<div class="mini l-amber"><div class="mini-t">Gross margin falls — but it\'s mix, not structure</div><div class="mini-d">Q2 GM 77% (−230bps YoY); Q3 guide ~74%. Kirsten: this "does not represent a structural change... it reflects product mix between semiconductors and software."</div></div>'+
+        '<div class="mini l-teal"><div class="mini-t">Operating margin holds — even rises</div><div class="mini-d">Q2 op margin 67.3%, <strong>up 200bps YoY</strong> despite the GM fall, as opex stayed flat. Q3 guide ~67% (flat QoQ). Strong operating leverage.</div></div>'+
+        '<div class="mini l-blue"><div class="mini-t">Adj EBITDA at record</div><div class="mini-d">Q2 69% (record); Q3 guide ~68%. The master guardrail holds even as AI mix grows.</div></div>'+
+      '</div></div></div>'+
+      '<div class="insight" style="margin-top:12px"><strong>Why GM and OM move in opposite directions:</strong> AI semis (~70% GM) grow far faster than software (93% GM), pulling the <em>blended</em> gross margin down — pure mix. But because opex barely grows as revenue scales, operating margin <em>expands</em>. Management\'s instruction: <strong>"model semiconductor and infrastructure software margins separately"</strong> so the mix shift is captured properly rather than read as deterioration.</div></div>'+
+    '<div class="source">Q2 FY26 call. Within semis, Kirsten notes ASICs/TPU and some wireless carry lower margins while AI networking/connectivity carries "very rich margins."</div></div>';
+}
+
+function initAIRevenue(pane){
+  if(pane._charted) return; pane._charted = true;
+  var aiL=['Q3 25','Q4 25','Q1 26','Q2 26','Q3 26e','FY26e','FY27e'];
+  var aiRev=[5.2,6.5,8.4,10.8,16.0,56,103];
+  var aiNetPct=[null,null,33,40,33,32,30];
+  freshChart('cAIRev',{data:{labels:aiL,datasets:[
+    {type:'bar',label:'AI revenue ($B)',data:aiRev,backgroundColor:['#1D9E75','#1D9E75','#1D9E75','#1D9E75','#9FE1CB','#9FE1CB','#9FE1CB'],borderRadius:3,yAxisID:'y',order:2},
+    {type:'line',label:'Networking % of AI (right)',data:aiNetPct,borderColor:'#2E75B6',backgroundColor:'#2E75B6',borderWidth:2.5,tension:0.3,pointRadius:3,pointHoverRadius:5,spanGaps:false,yAxisID:'y1',order:1}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{position:'bottom',labels:{font:{family:'Figtree',size:10.5},color:'#6B7A8D',usePointStyle:true,pointStyleWidth:14,boxHeight:8,padding:9}},
+      tooltip:{backgroundColor:'#141C2B',titleFont:{family:'Figtree',size:11},bodyFont:{family:'Figtree',size:12},padding:9,cornerRadius:7,callbacks:{label:function(c){return c.datasetIndex===0?'AI rev: $'+c.raw+'B'+(c.dataIndex>=4?' (guide)':''):(c.raw==null?'':'Networking: '+c.raw+'% of AI'+(c.dataIndex>=4?' (est.)':''));}}}},
+    scales:{x:{grid:{display:false},border:{display:false},ticks:{font:{family:'Figtree',size:10.5},color:'#9AACBE'}},
+      y:{position:'left',grid:{color:'#EDF0F5',drawTicks:false},border:{display:false},title:{display:true,text:'AI revenue ($B)',font:{family:'Figtree',size:10},color:'#9AACBE'},ticks:{font:{family:'Figtree',size:10},color:'#9AACBE',callback:function(v){return '$'+v+'B';}}},
+      y1:{position:'right',min:0,max:60,grid:{drawOnChartArea:false},border:{display:false},title:{display:true,text:'Networking % of AI',font:{family:'Figtree',size:10},color:'#2E75B6'},ticks:{font:{family:'Figtree',size:10},color:'#2E75B6',callback:function(v){return v+'%';}}}}}});
+
+  var mL=['Q2 25','Q1 26','Q2 26','Q3 26e'];
+  freshChart('cAIMargin',{type:'line',data:{labels:mL,datasets:[
+    {label:'Gross margin',data:[79.4,77,77.1,74],borderColor:'#ED7D31',borderWidth:2.5,tension:0.3,pointRadius:3,pointHoverRadius:5},
+    {label:'Operating margin',data:[65.3,66,67.3,67],borderColor:'#1D9E75',borderWidth:2.5,tension:0.3,pointRadius:3,pointHoverRadius:5},
+    {label:'Adj EBITDA margin',data:[66,67,69,68],borderColor:'#2E75B6',borderWidth:2,borderDash:[4,3],tension:0.3,pointRadius:0,pointHoverRadius:4}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{position:'bottom',labels:{font:{family:'Figtree',size:10.5},color:'#6B7A8D',usePointStyle:true,pointStyleWidth:14,boxHeight:8,padding:9}},
+      tooltip:{backgroundColor:'#141C2B',titleFont:{family:'Figtree',size:11},bodyFont:{family:'Figtree',size:12},padding:9,cornerRadius:7,callbacks:{label:function(c){return c.dataset.label+': '+c.raw+'%'+(c.dataIndex===3?' (guide)':'');}}}},
+    scales:{x:{grid:{display:false},border:{display:false},ticks:{font:{family:'Figtree',size:10.5},color:'#9AACBE'}},
+      y:{min:60,max:85,grid:{color:'#EDF0F5',drawTicks:false},border:{display:false},ticks:{font:{family:'Figtree',size:10.5},color:'#9AACBE',callback:function(v){return v+'%';}}}}}});
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// 4 — CUSTOMER CONCENTRATION
+// ════════════════════════════════════════════════════════════════════════════════
+var concFY=['FY17','FY18','FY19','FY20','FY21','FY22','FY23','FY24','FY25','Q1 26'];
+var top5=[40,40,30,30,35,35,35,40,40,50];
+var appleC=[20,25,20,15,20,20,20,null,null,null];
+var distLg=[14,9,17,13,18,20,21,28,32,42];
+var distTot=[28,34,46,42,53,56,57,48,48,null];
+var concNote=['Foxconn named','Apple peak ~25%','top-5 dips; WT Micro; Huawei','Apple trough ~15%','','','last Apple disclosure','Apple drops; distributor unnamed','distributor 32%','top-5 jumps ~50%'];
+var concLg=['Foxconn 14%','Foxconn 9%','WT Micro 17%','WT Micro 13%','WT Micro 18%','WT Micro 20%','WT Micro 21%','unnamed 28%','unnamed 32%','unnamed 42%'];
+
+function concentrationBody(){
+  return ''+
+  '<div class="stats-row c4">'+
+    '<div class="stat-card t-warn"><div class="stat-label">Top-5 Q1\'26</div><div class="stat-value">~50%</div><div class="stat-sub">of net revenue</div></div>'+
+    '<div class="stat-card t-neutral"><div class="stat-label">Top-5 FY25</div><div class="stat-value">~40%</div><div class="stat-sub">vs ~30% FY20 trough</div></div>'+
+    '<div class="stat-card t-accent"><div class="stat-label">Largest Distributor</div><div class="stat-value">42%</div><div class="stat-sub">Q1\'26 · a channel, not a buyer</div></div>'+
+    '<div class="stat-card t-ai"><div class="stat-label">XPU Customers</div><div class="stat-value">6</div><div class="stat-sub">the AI concentration</div></div>'+
+  '</div>'+
+
+  card('Concentration over time','FY17–Q1\'26 · % of net revenue',
+    '<div class="card-body"><div class="chart-c md"><canvas id="cConc"></canvas></div></div>',
+    'From 10-K/10-Q customer-concentration disclosures. Apple % not disclosed after FY23. Q1\'26 top-5 is a single quarter, not full-year.')+
+
+  '<div class="grid-2">'+
+    card('The story changed character around FY24','',
+      '<div class="card-body"><div class="mini-grid" style="gap:9px">'+
+        '<div class="mini l-pink"><div class="mini-t">FY17–23 — an Apple story</div><div class="mini-d">Apple disclosed every year, 15–25% of revenue (peak ~25% FY18). Concentration was about <strong>wireless</strong>.</div></div>'+
+        '<div class="mini l-ai"><div class="mini-t">FY24+ — an AI story</div><div class="mini-d">Apple % <strong>drops from disclosure</strong>. The single named figure becomes "one semiconductor solutions customer, which is a distributor" — 28% → 32% → 42%, tracking the AI ramp.</div></div>'+
+      '</div><div class="insight" style="margin-top:11px"><strong>The re-concentration:</strong> diversification (LSI, Broadcom, software) pulled top-5 down to ~30% by FY20; AI is now pulling it back up toward ~50%. A few hyperscalers are re-concentrating the book.</div></div>','')+
+    card('Read it correctly','',
+      '<div class="card-body"><div class="mini-grid" style="gap:9px">'+
+        '<div class="mini l-amber"><div class="mini-t">The "42% distributor" is a channel</div><div class="mini-d">"One customer, which is a <strong>distributor</strong>" routes demand to many end customers (was WT Microelectronics FY19–23). It is <strong>not</strong> a single buyer with 42% of the company.</div></div>'+
+        '<div class="mini l-blue"><div class="mini-t">Top-5 end customers is the real metric</div><div class="mini-d">~40% FY25 → ~50% Q1\'26 (through all channels). This is the genuine end-customer exposure.</div></div>'+
+        '<div class="mini l-purple"><div class="mini-t">Apple is now buried</div><div class="mini-d">Since FY24 wireless concentration can\'t be tracked directly — folded into the undisclosed mix.</div></div>'+
+      '</div></div>','')+
+  '</div>'+
+
+  card('Disclosure history','% of net revenue',
+    '<div class="card-body" style="padding:0"><table class="tbl">'+
+      '<thead><tr><th>FY</th><th>Top-5 end</th><th>Apple (all ch.)</th><th>Largest distributor</th><th>Distributors total</th><th style="text-align:left">Note</th></tr></thead>'+
+      '<tbody id="concBody"></tbody></table></div>',
+    'Figures as disclosed; "&gt;" / "~" reflect the filing\'s own language. Q1\'26 row is quarterly. Apple via Foxconn (FY17–18), then WT Microelectronics (FY19–23), then unnamed.')+
+
+  card('Why it matters for the model','',
+    '<div class="card-body"><div class="mini-grid c2">'+
+      '<div class="mini l-ai"><div class="mini-t">AI growth = rising concentration</div><div class="mini-d">The 6 XPU customers are the concentration. If AI scales as guided, top-5 likely climbs further — model concentration risk as a <strong>function of AI mix</strong>.</div></div>'+
+      '<div class="mini l-amber"><div class="mini-t">Single-customer sensitivity</div><div class="mini-d">Loss of, or a pullback from, one hyperscaler (e.g. an XPU customer self-building, or Google\'s MediaTek hedge) hits a larger share than in the diversified FY20 era.</div></div>'+
+      '<div class="mini l-blue"><div class="mini-t">Two different risk profiles</div><div class="mini-d">Software is broad (Fortune 500); semis are concentrating. Blended risk is masked at the total level — assess by segment.</div></div>'+
+      '<div class="mini l-pink"><div class="mini-t">Disclosure opacity</div><div class="mini-d">Channel routing (one distributor at 42%) obscures true end-customer detail. Treat named distributor figures as channel artifacts.</div></div>'+
+    '</div></div>','');
+}
+
+function initConcentration(pane){
+  if(pane._charted) return; pane._charted = true;
+  var cc=freshChart('cConc',{data:{labels:concFY,datasets:[
+    {type:'line',label:'Top-5 end customers',data:top5,borderColor:'#ED7D31',backgroundColor:'#ED7D31',borderWidth:2.5,tension:0.25,pointRadius:3,pointHoverRadius:5},
+    {type:'line',label:'Apple (all channels)',data:appleC,borderColor:'#D4537E',backgroundColor:'#D4537E',borderWidth:2,borderDash:[4,3],tension:0.25,pointRadius:3,pointHoverRadius:5,spanGaps:false},
+    {type:'line',label:'Largest distributor (channel)',data:distLg,borderColor:'#2E75B6',backgroundColor:'#2E75B6',borderWidth:2,tension:0.25,pointRadius:3,pointHoverRadius:5},
+    {type:'bar',label:'Distributors total',data:distTot,backgroundColor:'rgba(136,153,170,0.18)',borderRadius:2,order:5}]},
+    options:Object.assign({},baseOpts,{plugins:Object.assign({},baseOpts.plugins,{tooltip:Object.assign({},baseOpts.plugins.tooltip,{callbacks:{label:function(c){return c.raw==null?c.dataset.label+': n/d':c.dataset.label+': '+c.raw+'%';}}})}),
+    scales:{x:baseOpts.scales.x,y:Object.assign({},baseOpts.scales.y,{min:0,max:60,ticks:Object.assign({},baseOpts.scales.y.ticks,{callback:function(v){return v+'%';}})})}})});
+  if(cc) yDrag(cc,document.getElementById('cConc'));
+
+  var cb=document.getElementById('concBody');
+  if(cb){ cb.innerHTML='';
+    for(var i=0;i<concFY.length;i++){
+      var tr=document.createElement('tr'); if(i===9)tr.className='row-hi';
+      var t5=(i<2?'>40%':i<4?'>30%':i<7?'~35%':i<9?'~40%':'~50%');
+      var ap=appleC[i]==null?'<span style="color:var(--text-tertiary)">n/d</span>':'~'+appleC[i]+'%';
+      var dt=distTot[i]==null?'<span style="color:var(--text-tertiary)">n/d</span>':distTot[i]+'%';
+      tr.innerHTML='<td>'+concFY[i]+'</td><td>'+t5+'</td><td>'+ap+'</td><td style="font-weight:400">'+concLg[i]+'</td><td>'+dt+'</td>'+
+        '<td style="text-align:left;font-size:10.5px;color:var(--text-secondary)">'+concNote[i]+'</td>';
+      cb.appendChild(tr);
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// 6 — GW ROADMAP  (defined before Value Chain in source order; kept as its own tab)
+// ════════════════════════════════════════════════════════════════════════════════
+function gwRoadmapBody(){
+  return ''+
+  '<div class="card"><div class="card-header"><span class="card-title">Contractual GW roadmap</span><span class="card-subtitle">compute capacity committed across the core customers · from Q2 FY26 call + 8-K</span></div>'+
+    '<div class="card-body"><div class="prose" style="margin-bottom:6px"><p>Management now sizes AI demand in <strong>gigawatts of compute</strong>. The bars below show the per-customer commitments disclosed on the Q2 FY26 call and the April 8-K, accumulating through 2028. Read this as <em>disclosed commitments</em>, not a forecast — and note it does <strong>not</strong> cleanly reconcile to the ~10 GW top-down figure (Google\'s internal workloads aren\'t separately quantified).</p></div></div>'+
+    '<div class="card-body" style="padding-top:0"><div class="chart-c" style="height:320px"><canvas id="cGW"></canvas></div></div>'+
+    '<div class="source">Q2 FY26 call (Jun 3 2026) + Broadcom 8-K (Apr 6 2026). Anthropic 2027 uses the 8-K\'s ~3.5 GW (the call also phrased it as "another 5 GW"). Google internal GW not separately disclosed. Bars are cumulative deployed/committed GW by year-end.</div></div>'+
+
+  card('The commitments, customer by customer','',
+    '<div class="card-body" style="padding:0"><table class="tbl">'+
+      '<thead><tr><th>Customer</th><th>2026</th><th>2027</th><th>2028</th><th style="text-align:left">Structure &amp; basis</th></tr></thead><tbody>'+
+        '<tr><td><span class="logo-chip lc-google"><span class="dot"></span>Google</span></td><td>—</td><td>—</td><td>—</td><td style="text-align:left;font-size:11px;font-weight:400">Multi-gen TPU + networking <strong>through up to 2031</strong>; internal-workload GW not quantified. The anchor.</td></tr>'+
+        '<tr><td><span class="logo-chip lc-anthropic"><span class="dot"></span>Anthropic</span></td><td>~1.0</td><td>~3.5</td><td>~3.5</td><td style="text-align:left;font-size:11px;font-weight:400">TPU-based compute <em>access</em> (not co-design); 2027 contingent on Anthropic\'s commercial success.</td></tr>'+
+        '<tr><td><span class="logo-chip lc-openai"><span class="dot"></span>OpenAI</span></td><td>—</td><td>~1.3</td><td>~1.3</td><td style="text-align:left;font-size:11px;font-weight:400">Silicon delivered; production late \'26; 1.3 GW contractual \'27 within a larger 10 GW-by-\'29 frame.</td></tr>'+
+        '<tr><td><span class="logo-chip lc-meta"><span class="dot"></span>Meta</span></td><td>—</td><td>~1.0</td><td>~3.0</td><td style="text-align:left;font-size:11px;font-weight:400">MTIA multi-gen; initial 1 GW (XPU+networking) delivers H2 \'27; ~3 GW through end \'28.</td></tr>'+
+        '<tr><td><span class="badge b-neutral">+2 unnamed</span></td><td>start</td><td>ramp</td><td>ramp</td><td style="text-align:left;font-size:11px;font-weight:400">Shipments begin late \'26, accelerate into \'27; $6B POs to date.</td></tr>'+
+        '<tr class="row-hi"><td>Top-down total</td><td>—</td><td>~10</td><td>"a lot more"</td><td style="text-align:left;font-size:11px;font-weight:700">~10 GW shipped in 2027 (back-half loaded); 2028 substantial growth. Separate from the per-customer sum.</td></tr>'+
+      '</tbody></table></div>',
+    '"—" = not disclosed / not yet ramping, not necessarily zero. Per-customer figures and the ~10 GW total are disclosed separately and don\'t reconcile exactly.')+
+
+  '<div class="grid-2">'+
+    card('Two relationship types in one roadmap','',
+      '<div class="card-body"><div class="mini-grid" style="gap:9px">'+
+        '<div class="mini l-ai"><div class="mini-t">Co-design (silicon customers)</div><div class="mini-d"><strong>Google, Meta</strong> — design their own accelerator with Broadcom, own the chip. GW = their own deployed compute.</div></div>'+
+        '<div class="mini l-purple"><div class="mini-t">Compute access (frontier labs)</div><div class="mini-d"><strong>Anthropic, OpenAI</strong> — buy access to TPU-based compute Broadcom provides, financed via the Apollo/Blackstone platform. GW = capacity consumed.</div></div>'+
+        '<div class="mini l-amber"><div class="mini-t">Why it matters</div><div class="mini-d">The access deals carry demand risk (Anthropic\'s is explicitly "dependent on continued commercial success") that the co-design deals don\'t.</div></div>'+
+      '</div></div>','')+
+    card('From GW to revenue','',
+      '<div class="card-body"><div class="mini-grid" style="gap:9px">'+
+        '<div class="mini l-blue"><div class="mini-t">$/GW roughly stable</div><div class="mini-d">More power per chip, fewer chips, higher ASP each — content per GW holds, then <strong>steps up generation-to-generation</strong>, not continuously.</div></div>'+
+        '<div class="mini l-teal"><div class="mini-t">The revenue anchors</div><div class="mini-d">FY26 AI ~$56B (+180%); FY27 &gt;$100B; 2028 substantial growth. GW is the volume driver behind these.</div></div>'+
+        '<div class="mini l-amber"><div class="mini-t">Modeling caution</div><div class="mini-d">Don\'t multiply 10 GW × a single $/GW — content varies "dramatically" by customer. Blend by mix, or anchor to the disclosed revenue figures.</div></div>'+
+      '</div></div>','')+
+  '</div>'+
+
+  '<div class="card"><div class="card-header"><span class="card-title">Networking as % of AI revenue — the second engine inside AI</span><span class="card-subtitle">the IP Broadcom has compounded longest, now attached to every cluster</span></div>'+
+    '<div class="card-body"><div class="prose" style="margin-bottom:6px"><p>AI revenue is <strong>XPUs + networking</strong>, and the networking share is the tell. Broadcom\'s switching/SerDes/optical IP — the portfolio it has led for decades — attaches to <em>both</em> its own XPUs <strong>and</strong> Nvidia-GPU clusters, so it scales with the entire AI buildout, not just custom silicon. That\'s the structural reason the partnerships compound: every gigawatt of compute, whoever\'s chip sits in it, needs the wiring.</p></div></div>'+
+    '<div class="card-body" style="padding-top:0"><div class="grid-2-wide">'+
+      '<div class="chart-c md"><canvas id="cNet"></canvas></div>'+
+      '<div><div class="mini-grid" style="gap:9px">'+
+        '<div class="mini l-blue"><div class="mini-t">Q1 → Q2 FY26</div><div class="mini-d">Networking rose from ~33% to ~40% of AI revenue as both XPU and non-XPU networking shipped.</div></div>'+
+        '<div class="mini l-amber"><div class="mini-t">40% was "stars align"</div><div class="mini-d">Hock: 40% is about as high as the share goes — a quarter where lots of non-XPU networking shipped alongside XPU growth.</div></div>'+
+        '<div class="mini l-teal"><div class="mini-t">~30% is the normal run-rate</div><div class="mini-d">Management guides the expected share back toward ~30% of AI revenue as XPU volume scales faster.</div></div>'+
+      '</div></div></div></div>'+
+    '<div class="source">Q2 FY26 call: networking ~1/3 of AI rev in Q1, ~40% in Q2; Hock frames 40% as a peak and ~30% as the expected normal share. The dashed line marks the ~30% normalization. FY26/27 splits are illustrative around that guidance, not disclosed quarterly.</div></div>'+
+
+  card('Why the networking attach is the durable edge','',
+    '<div class="card-body"><div class="mini-grid c3">'+
+      '<div class="mini l-ai"><div class="mini-t">Sells to XPUs <em>and</em> GPUs</div><div class="mini-d">Tomahawk/Jericho/optical wire any cluster. Even an all-Nvidia world still buys Broadcom networking — the hedge inside the hedge.</div></div>'+
+      '<div class="mini l-blue"><div class="mini-t">The longest-compounded IP</div><div class="mini-d">SerDes and switching are decades of accumulated lead — the moat that predates AI and now rides it. ~90% deep-buffer switching share.</div></div>'+
+      '<div class="mini l-teal"><div class="mini-t">Richer margin than XPUs</div><div class="mini-d">Kirsten: AI networking/connectivity carries "very rich margins" that offset the lower-margin ASIC/TPU mix — so a higher networking share lifts blended GM.</div></div>'+
+    '</div><div class="insight" style="margin-top:11px"><strong>For the AI-revenue model:</strong> split the AI line into XPU and networking. Networking ≈ 30% normal (up to ~40% in strong quarters), grows with total cluster build (XPU + GPU), and carries higher margin — so the XPU/networking mix drives both the revenue path <em>and</em> the blended AI gross margin.</div></div>','');
+}
+
+function initGwRoadmap(pane){
+  if(pane._charted) return; pane._charted = true;
+  var gwBase={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{position:'bottom',labels:{font:{family:'Figtree',size:11},color:'#6B7A8D',usePointStyle:true,pointStyleWidth:14,boxHeight:8,padding:10}},
+      tooltip:{backgroundColor:'#141C2B',titleFont:{family:'Figtree',size:11},bodyFont:{family:'Figtree',size:12},padding:9,cornerRadius:7,callbacks:{label:function(c){return c.dataset.label+': '+(c.raw>0?c.raw+' GW':'n/d');}}}},
+    scales:{x:{stacked:true,grid:{display:false},border:{display:false},ticks:{font:{family:'Figtree',size:12,weight:'600'},color:'#6B7A8D'}},
+      y:{stacked:true,grid:{color:'#EDF0F5',drawTicks:false},border:{display:false},title:{display:true,text:'Committed / deployed GW',font:{family:'Figtree',size:10},color:'#9AACBE'},ticks:{font:{family:'Figtree',size:10.5},color:'#9AACBE',callback:function(v){return v+' GW';}}}}};
+  freshChart('cGW',{type:'bar',data:{labels:['2026','2027','2028'],datasets:[
+    {label:'Anthropic',data:[1.0,3.5,3.5],backgroundColor:'#D97757',borderRadius:2,stack:'s'},
+    {label:'OpenAI',data:[0,1.3,1.3],backgroundColor:'#444441',borderRadius:2,stack:'s'},
+    {label:'Meta (MTIA)',data:[0,1.0,3.0],backgroundColor:'#0467DF',borderRadius:2,stack:'s'},
+    {label:'+2 unnamed (illustrative)',data:[0,1.5,3.0],backgroundColor:'rgba(136,153,170,0.45)',borderRadius:2,stack:'s'}
+  ]},options:gwBase});
+
+  var netLabels=['Q1 26','Q2 26','Q3 26e','FY26e','FY27e'];
+  freshChart('cNet',{type:'bar',data:{labels:netLabels,datasets:[
+    {type:'bar',label:'Networking % of AI rev',data:[33,40,33,32,30],backgroundColor:['#2E75B6','#2E75B6','#9FB8D4','#9FB8D4','#9FB8D4'],borderRadius:3,order:2},
+    {type:'line',label:'~30% normal share (guided)',data:[30,30,30,30,30],borderColor:'#ED7D31',borderWidth:2,borderDash:[5,4],pointRadius:0,order:1}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{position:'bottom',labels:{font:{family:'Figtree',size:10.5},color:'#6B7A8D',usePointStyle:true,pointStyleWidth:14,boxHeight:8,padding:9}},
+      tooltip:{backgroundColor:'#141C2B',titleFont:{family:'Figtree',size:11},bodyFont:{family:'Figtree',size:12},padding:9,cornerRadius:7,callbacks:{label:function(c){return c.dataset.label+': '+c.raw+'%'+(c.dataIndex>=2&&c.datasetIndex===0?' (est.)':'');}}}},
+    scales:{x:{grid:{display:false},border:{display:false},ticks:{font:{family:'Figtree',size:10.5},color:'#9AACBE'}},
+      y:{min:0,max:50,grid:{color:'#EDF0F5',drawTicks:false},border:{display:false},ticks:{font:{family:'Figtree',size:10.5},color:'#9AACBE',callback:function(v){return v+'%';}}}}}});
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// 5 — VALUE CHAIN  (clickable SVG + sourced drill-down modal)
+// ════════════════════════════════════════════════════════════════════════════════
+function valueChainBody(){
+  return ''+
+  '<div class="card"><div class="card-header"><span class="card-title">Value chain — where Broadcom\'s reach starts and ends</span><span class="card-subtitle">one spine, three lines · partners shown inside Broadcom\'s band</span></div>'+
+    '<div class="card-body"><div class="prose" style="margin-bottom:6px"><p>Every product runs the same path into a data center. The colored band is where <strong>Broadcom</strong> plays; chips inside it name who it works with at each step; the gray blocks name who owns the stages it doesn\'t touch. In none does Broadcom reach the data center itself — <em>"we\'re in the chip business only."</em> <span style="color:var(--accent);font-weight:600">Click any block to see the source basis for that claim.</span></p></div></div>'+
+    '<div class="card-body" style="padding-top:0;overflow-x:auto">'+ VC_SVG +'</div>'+
+    '<div class="source">Boundaries from 10-K + Q2 FY26 call ("chip business only — no rack"). Co-design confirmed: Meta calls MTIA "developed in close partnership with Broadcom"; Google owns the TPU system layer (Ironwood pods, optical circuit switching, JAX/GKE). Partner names at fab/EDA/HBM/OSAT are industry-standard inference, not Broadcom disclosure.</div></div>'+
+
+  '<div class="grid-2">'+
+    card('The same boundary, three relationship depths','',
+      '<div class="card-body"><div class="mini-grid" style="gap:9px">'+
+        '<div class="mini l-ai"><div class="mini-t">XPUs — deepest (co-design)</div><div class="mini-d">Customer brings architecture; Broadcom does physical design, hard IP (SerDes), foundry orchestration, packaging. A high-touch service relationship up to the chip. <strong>Risk axis: customer self-builds (COT).</strong></div></div>'+
+        '<div class="mini l-blue"><div class="mini-t">Switching — arm\'s-length (merchant)</div><div class="mini-d">Broadcom designs a standard product and sells it to many switch OEMs. <strong>Risk axis: Ethernet vs Nvidia\'s proprietary stack.</strong></div></div>'+
+        '<div class="mini l-purple"><div class="mini-t">Optical — component feed</div><div class="mini-d">Narrowest — supplies the DSP/laser into someone else\'s module. <strong>Risk axis: copper→optical timing, attach rate to compute.</strong></div></div>'+
+      '</div><div class="insight" style="margin-top:11px"><strong>The hedge within the hedge:</strong> the three lines fail or win under <em>different</em> futures. A world where hyperscalers insource XPU design still needs Broadcom\'s switching and optical. The bets aren\'t correlated.</div></div>','')+
+    card('The players past Broadcom\'s reach','',
+      '<div class="card-body"><div class="mini-grid" style="gap:9px">'+
+        '<div class="mini l-amber"><div class="mini-t">TSMC — the foundry</div><div class="mini-d">Fabricates all three lines. The critical upstream dependency; Broadcom orchestrates but doesn\'t make.</div></div>'+
+        '<div class="mini l-amber"><div class="mini-t">WT Microelectronics — distributor</div><div class="mini-d">The "one distributor" at 32% (FY25) → 42% (Q1\'26). Routes flows; a <strong>channel</strong>, not an end customer.</div></div>'+
+        '<div class="mini l-amber"><div class="mini-t">Foxconn / SMCI — system build</div><div class="mini-d">Contract manufacturers and system integrators turn chips into servers/racks. Step 6, past Broadcom\'s reach.</div></div>'+
+        '<div class="mini l-ai"><div class="mini-t">XPU financing platform — new</div><div class="mini-d">Apollo/Blackstone vehicle ($35B first tranche) funds Anthropic/OpenAI compute access. An <em>overlay</em>, not a chain stage — extends the relationship financially, not operationally.</div></div>'+
+      '</div></div>','')+
+  '</div>'+
+
+  '<div class="card"><div class="card-header"><span class="card-title">Two lenses on the same revenue — not additive</span><span class="card-subtitle">channel % and customer % describe the same dollars</span></div>'+
+    '<div class="card-body"><div class="grid-3" style="align-items:center">'+
+      '<div><div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.04em;text-align:center;margin-bottom:4px">Channel lens</div>'+
+        '<div style="font-size:10px;color:var(--text-tertiary);text-align:center;margin-bottom:6px">who Broadcom invoices</div>'+
+        '<div class="chart-c sm"><canvas id="cChannel"></canvas></div></div>'+
+      '<div style="text-align:center;padding:0 4px"><div style="font-size:34px;color:var(--text-tertiary);font-weight:300;line-height:1">⇄</div>'+
+        '<div style="font-size:11px;color:var(--text-secondary);line-height:1.5;margin-top:6px">Same<br><strong>$63.9B</strong><br>revenue base</div>'+
+        '<div style="font-size:10px;color:var(--text-tertiary);margin-top:8px;line-height:1.45">The two slices <strong>overlap</strong> — the big distributor partly routes the top-5\'s demand</div></div>'+
+      '<div><div style="font-size:11px;font-weight:700;color:#D4537E;text-transform:uppercase;letter-spacing:0.04em;text-align:center;margin-bottom:4px">Concentration lens</div>'+
+        '<div style="font-size:10px;color:var(--text-tertiary);text-align:center;margin-bottom:6px">who consumes (all channels)</div>'+
+        '<div class="chart-c sm"><canvas id="cConc2"></canvas></div></div>'+
+    '</div>'+
+      '<div class="caution" style="margin-top:11px"><strong>Don\'t add them.</strong> Each donut is the <em>full</em> $63.9B sliced a different way — by channel (left) and by end customer (right). The distributor\'s 48% and the top-5\'s 40% overlap by an undisclosed amount, because the hyperscalers\' demand is partly what flows through that one distributor. "48% + 40%" double-counts; they\'re two views of one revenue base, not two pieces that sum.</div></div>'+
+    '<div class="source">FY25 figures as disclosed: ~48% of revenue through distributors (one at 32%); ~40% to top-5 end customers through all channels. The overlap between the two is not quantified by Broadcom.</div></div>';
+}
+
+function initValueChain(pane){
+  if(!pane._charted){ pane._charted = true;
+    freshChart('cChannel',{type:'doughnut',data:{labels:['Through distributors','Direct'],datasets:[{data:[48,52],backgroundColor:['#2E75B6','#E4E8EE'],borderWidth:0}]},options:donutOpts});
+    freshChart('cConc2',{type:'doughnut',data:{labels:['Top-5 end customers','All others'],datasets:[{data:[40,60],backgroundColor:['#D4537E','#E4E8EE'],borderWidth:0}]},options:donutOpts});
+  }
+  // Wire the clickable SVG blocks (delegated), once per pane render.
+  if(!pane._vcWired){ pane._vcWired = true;
+    pane.addEventListener('click', function(e){
+      var t = e.target.closest('[data-vc]'); if(!t) return;
+      // #ddOverlay lives at the .ov-avgo root (a sibling of the panes), not inside this pane.
+      vcOpen(pane.closest('.ov-avgo') || document, t.getAttribute('data-vc'));
+    });
+  }
+}
+
+// The value-chain SVG (ported; onclick="vcOpen('X')" → data-vc="X").
+var VC_SVG = '<svg width="100%" viewBox="0 0 1080 500" role="img" style="min-width:1000px">'+
+  '<title>Broadcom value-chain participation with partners across three product lines</title>'+
+  '<desc>A chip value chain with three rows — XPUs, Ethernet switching, PHYs/DSP/optical — showing Broadcom\'s participation band with partner sub-blocks (EDA, TSMC, OSAT, HBM) and the external players owning the remaining stages.</desc>'+
+  '<g font-family="Figtree">'+
+  '<text x="16" y="28" font-size="11" font-weight="700" fill="#141C2B">STAGE</text>'+
+  '<text x="150" y="20" font-size="9" font-weight="600" fill="#6B7A8D" text-anchor="middle">Architecture</text><text x="150" y="31" font-size="9" font-weight="600" fill="#6B7A8D" text-anchor="middle">&amp; spec</text>'+
+  '<text x="280" y="20" font-size="9" font-weight="600" fill="#6B7A8D" text-anchor="middle">Logic / IP</text><text x="280" y="31" font-size="9" font-weight="600" fill="#6B7A8D" text-anchor="middle">design</text>'+
+  '<text x="410" y="20" font-size="9" font-weight="600" fill="#6B7A8D" text-anchor="middle">Physical +</text><text x="410" y="31" font-size="9" font-weight="600" fill="#6B7A8D" text-anchor="middle">SerDes</text>'+
+  '<text x="540" y="20" font-size="9" font-weight="600" fill="#6B7A8D" text-anchor="middle">Foundry</text><text x="540" y="31" font-size="9" font-weight="600" fill="#6B7A8D" text-anchor="middle">(fab)</text>'+
+  '<text x="670" y="20" font-size="9" font-weight="600" fill="#6B7A8D" text-anchor="middle">Packaging</text><text x="670" y="31" font-size="9" font-weight="600" fill="#6B7A8D" text-anchor="middle">+ test</text>'+
+  '<text x="800" y="20" font-size="9" font-weight="600" fill="#6B7A8D" text-anchor="middle">Board /</text><text x="800" y="31" font-size="9" font-weight="600" fill="#6B7A8D" text-anchor="middle">system</text>'+
+  '<text x="912" y="20" font-size="9" font-weight="600" fill="#6B7A8D" text-anchor="middle">Channel</text>'+
+  '<text x="1004" y="20" font-size="9" font-weight="600" fill="#6B7A8D" text-anchor="middle">Deploy</text><text x="1004" y="31" font-size="9" font-weight="600" fill="#6B7A8D" text-anchor="middle">+ run</text>'+
+  '</g>'+
+  '<g stroke="#E4E8EE" stroke-width="1">'+
+  '<line x1="85" y1="38" x2="85" y2="372"/><line x1="215" y1="38" x2="215" y2="372"/><line x1="345" y1="38" x2="345" y2="372"/><line x1="475" y1="38" x2="475" y2="372"/><line x1="605" y1="38" x2="605" y2="372"/><line x1="735" y1="38" x2="735" y2="372"/><line x1="865" y1="38" x2="865" y2="372"/><line x1="960" y1="38" x2="960" y2="372"/><line x1="1052" y1="38" x2="1052" y2="372"/>'+
+  '</g>'+
+  '<text x="16" y="92" font-size="12" font-weight="700" fill="#00A37A" font-family="Figtree">XPUs</text>'+
+  '<text x="16" y="105" font-size="8.5" fill="#9AACBE" font-family="Figtree">custom AI</text>'+
+  '<rect data-vc="xpu_cust" class="vc-clickable" x="85" y="58" width="260" height="46" rx="5" fill="rgba(136,153,170,0.10)" stroke="#D3D1C7" stroke-width="0.5"/>'+
+  '<text x="215" y="78" font-size="9" font-weight="600" fill="#5F5E5A" text-anchor="middle" font-family="Figtree">Customer brings architecture + IP</text>'+
+  '<g font-family="Figtree"><g class="vc-clickable" data-vc="cust_google"><rect x="118" y="85" width="56" height="14" rx="7" fill="#fff" stroke="#4285F4" stroke-width="0.8"/><circle cx="128" cy="92" r="3" fill="#4285F4"/><text x="148" y="95" font-size="8" font-weight="700" fill="#185FA5" text-anchor="middle">Google</text></g>'+
+  '<g class="vc-clickable" data-vc="cust_meta"><rect x="180" y="85" width="46" height="14" rx="7" fill="#fff" stroke="#0467DF" stroke-width="0.8"/><circle cx="189" cy="92" r="3" fill="#0467DF"/><text x="206" y="95" font-size="8" font-weight="700" fill="#0C447C" text-anchor="middle">Meta</text></g>'+
+  '<g class="vc-clickable" data-vc="cust_anthropic"><rect x="232" y="85" width="50" height="14" rx="7" fill="#fff" stroke="#D97757" stroke-width="0.8"/><circle cx="241" cy="92" r="3" fill="#D97757"/><text x="258" y="95" font-size="7.5" font-weight="700" fill="#993C1D" text-anchor="middle">Anthropic</text></g><g class="vc-clickable" data-vc="cust_openai"><rect x="285" y="85" width="47" height="14" rx="7" fill="#fff" stroke="#444441" stroke-width="0.8"/><circle cx="294" cy="92" r="3" fill="#000"/><text x="311" y="95" font-size="7.5" font-weight="700" fill="#2C2C2A" text-anchor="middle">OpenAI</text></g></g>'+
+  '<rect data-vc="xpu_bcm" class="vc-clickable" x="345" y="56" width="390" height="50" rx="6" fill="rgba(0,163,122,0.13)" stroke="#1D9E75" stroke-width="1.5"/>'+
+  '<text x="540" y="73" font-size="10" font-weight="700" fill="#0F6E56" text-anchor="middle" font-family="Figtree">BROADCOM — physical design · foundry orchestration · packaging</text>'+
+  '<g font-family="Figtree"><rect data-vc="partner_serdes" class="vc-clickable" x="356" y="82" width="74" height="16" rx="4" fill="#fff" stroke="#1D9E75" stroke-width="0.6"/><text x="393" y="93" font-size="8" fill="#0F6E56" text-anchor="middle">SerDes/IP (own)</text>'+
+  '<rect data-vc="partner_eda" class="vc-clickable" x="436" y="82" width="78" height="16" rx="4" fill="#fff" stroke="#888780" stroke-width="0.6"/><circle cx="446" cy="90" r="3" fill="#A259FF"/><text x="478" y="93" font-size="8" fill="#5F5E5A" text-anchor="middle">EDA: Synopsys</text>'+
+  '<rect data-vc="partner_tsmc" class="vc-clickable" x="520" y="82" width="64" height="16" rx="4" fill="#fff" stroke="#D4002A" stroke-width="0.8"/><circle cx="530" cy="90" r="3" fill="#D4002A"/><text x="558" y="93" font-size="8" font-weight="700" fill="#A32D2D" text-anchor="middle">TSMC fab</text>'+
+  '<rect data-vc="partner_osat" class="vc-clickable" x="590" y="82" width="68" height="16" rx="4" fill="#fff" stroke="#888780" stroke-width="0.6"/><text x="624" y="93" font-size="8" fill="#5F5E5A" text-anchor="middle">CoWoS+OSAT</text>'+
+  '<rect data-vc="partner_hbm" class="vc-clickable" x="664" y="82" width="62" height="16" rx="4" fill="#fff" stroke="#888780" stroke-width="0.6"/><text x="695" y="93" font-size="8" fill="#5F5E5A" text-anchor="middle">HBM: SK/Sams</text></g>'+
+  '<rect data-vc="xpu_ext" class="vc-clickable" x="735" y="58" width="345" height="46" rx="5" fill="rgba(136,153,170,0.10)" stroke="#D3D1C7" stroke-width="0.5"/>'+
+  '<text x="800" y="76" font-size="9" font-weight="600" fill="#5F5E5A" text-anchor="middle" font-family="Figtree">System</text><text x="800" y="89" font-size="8" fill="#888780" text-anchor="middle" font-family="Figtree">ODM/SMCI</text>'+
+  '<rect class="vc-clickable" data-vc="dist_detail" x="868" y="62" width="88" height="38" rx="4" fill="transparent"/><text x="912" y="76" font-size="9" font-weight="600" fill="#5F5E5A" text-anchor="middle" font-family="Figtree" style="pointer-events:none">Distributor</text><text x="912" y="89" font-size="8" fill="#888780" text-anchor="middle" font-family="Figtree" style="pointer-events:none">WTME</text>'+
+  '<text x="1006" y="76" font-size="9" font-weight="600" fill="#5F5E5A" text-anchor="middle" font-family="Figtree">Customer runs</text><text x="1006" y="89" font-size="8" fill="#888780" text-anchor="middle" font-family="Figtree">own cluster + SW</text>'+
+  '<text x="16" y="182" font-size="12" font-weight="700" fill="#2E75B6" font-family="Figtree">Switching</text>'+
+  '<text x="16" y="195" font-size="8.5" fill="#9AACBE" font-family="Figtree">Tomahawk</text>'+
+  '<rect data-vc="sw_bcm" class="vc-clickable" x="85" y="148" width="650" height="50" rx="6" fill="rgba(46,117,182,0.12)" stroke="#2E75B6" stroke-width="1.5"/>'+
+  '<text x="410" y="166" font-size="10" font-weight="700" fill="#185FA5" text-anchor="middle" font-family="Figtree">BROADCOM — designs the standard chip end-to-end (merchant silicon)</text>'+
+  '<g font-family="Figtree"><rect x="96" y="175" width="120" height="16" rx="4" fill="#fff" stroke="#2E75B6" stroke-width="0.6"/><text x="156" y="186" font-size="8" fill="#185FA5" text-anchor="middle">own architecture + SerDes</text>'+
+  '<rect x="430" y="175" width="78" height="16" rx="4" fill="#fff" stroke="#888780" stroke-width="0.6"/><circle cx="440" cy="183" r="3" fill="#A259FF"/><text x="472" y="186" font-size="8" fill="#5F5E5A" text-anchor="middle">EDA: Cadence</text>'+
+  '<rect x="514" y="175" width="64" height="16" rx="4" fill="#fff" stroke="#D4002A" stroke-width="0.8"/><circle cx="524" cy="183" r="3" fill="#D4002A"/><text x="552" y="186" font-size="8" font-weight="700" fill="#A32D2D" text-anchor="middle">TSMC fab</text>'+
+  '<rect x="640" y="175" width="62" height="16" rx="4" fill="#fff" stroke="#888780" stroke-width="0.6"/><text x="671" y="186" font-size="8" fill="#5F5E5A" text-anchor="middle">OSAT test</text></g>'+
+  '<rect data-vc="sw_ext" class="vc-clickable" x="735" y="148" width="345" height="50" rx="5" fill="rgba(136,153,170,0.10)" stroke="#D3D1C7" stroke-width="0.5"/>'+
+  '<text x="800" y="168" font-size="9" font-weight="600" fill="#5F5E5A" text-anchor="middle" font-family="Figtree">Switch OEM builds box</text>'+
+  '<g font-family="Figtree" class="vc-clickable" data-vc="oem_arista"><rect x="752" y="176" width="44" height="14" rx="7" fill="#fff" stroke="#1BA0D7" stroke-width="0.8"/><text x="774" y="186" font-size="8" font-weight="700" fill="#0C447C" text-anchor="middle">Arista</text><rect x="800" y="176" width="42" height="14" rx="7" fill="#fff" stroke="#1BA0D7" stroke-width="0.8"/><text x="821" y="186" font-size="8" font-weight="700" fill="#0C447C" text-anchor="middle">Cisco</text></g>'+
+  '<rect class="vc-clickable" data-vc="dist_detail" x="868" y="152" width="88" height="38" rx="4" fill="transparent"/><text x="912" y="170" font-size="9" font-weight="600" fill="#5F5E5A" text-anchor="middle" font-family="Figtree" style="pointer-events:none">Distributor</text>'+
+  '<text x="1006" y="170" font-size="9" font-weight="600" fill="#5F5E5A" text-anchor="middle" font-family="Figtree">Operator</text><text x="1006" y="183" font-size="8" fill="#888780" text-anchor="middle" font-family="Figtree">deploys + runs</text>'+
+  '<text x="16" y="272" font-size="12" font-weight="700" fill="#7030A0" font-family="Figtree">PHYs/DSP</text>'+
+  '<text x="16" y="285" font-size="8.5" fill="#9AACBE" font-family="Figtree">optical</text>'+
+  '<rect data-vc="opt_bcm" class="vc-clickable" x="85" y="238" width="650" height="50" rx="6" fill="rgba(112,48,160,0.12)" stroke="#7030A0" stroke-width="1.5"/>'+
+  '<text x="410" y="256" font-size="10" font-weight="700" fill="#3C3489" text-anchor="middle" font-family="Figtree">BROADCOM — designs the component (DSP · PHY · laser silicon)</text>'+
+  '<g font-family="Figtree"><rect x="96" y="265" width="120" height="16" rx="4" fill="#fff" stroke="#7030A0" stroke-width="0.6"/><text x="156" y="276" font-size="8" fill="#3C3489" text-anchor="middle">own DSP + optical IP</text>'+
+  '<rect x="514" y="265" width="64" height="16" rx="4" fill="#fff" stroke="#D4002A" stroke-width="0.8"/><circle cx="524" cy="273" r="3" fill="#D4002A"/><text x="552" y="276" font-size="8" font-weight="700" fill="#A32D2D" text-anchor="middle">TSMC fab</text>'+
+  '<rect x="640" y="265" width="78" height="16" rx="4" fill="#fff" stroke="#888780" stroke-width="0.6"/><text x="679" y="276" font-size="8" fill="#5F5E5A" text-anchor="middle">test (incl. CPO)</text></g>'+
+  '<rect data-vc="opt_ext" class="vc-clickable" x="735" y="238" width="345" height="50" rx="5" fill="rgba(136,153,170,0.10)" stroke="#D3D1C7" stroke-width="0.5"/>'+
+  '<text x="800" y="258" font-size="9" font-weight="600" fill="#5F5E5A" text-anchor="middle" font-family="Figtree">Module maker builds</text><text x="800" y="271" font-size="8" fill="#888780" text-anchor="middle" font-family="Figtree">transceiver → into box</text>'+
+  '<rect class="vc-clickable" data-vc="dist_detail" x="868" y="242" width="88" height="38" rx="4" fill="transparent"/><text x="912" y="260" font-size="9" font-weight="600" fill="#5F5E5A" text-anchor="middle" font-family="Figtree" style="pointer-events:none">Distributor</text>'+
+  '<text x="1006" y="260" font-size="9" font-weight="600" fill="#5F5E5A" text-anchor="middle" font-family="Figtree">Operator runs</text>'+
+  '<text x="16" y="334" font-size="12" font-weight="700" fill="#993C1D" font-family="Figtree">Wireless</text>'+
+  '<text x="16" y="347" font-size="8.5" fill="#9AACBE" font-family="Figtree">Apple (non-AI)</text>'+
+  '<g class="vc-clickable" data-vc="apple_chips"><rect x="85" y="312" width="650" height="50" rx="6" fill="rgba(217,119,87,0.12)" stroke="#D85A30" stroke-width="1.5"/>'+
+  '<text x="410" y="330" font-size="10" font-weight="700" fill="#993C1D" text-anchor="middle" font-family="Figtree">BROADCOM — RF front-end + connectivity (FBAR made in-house, not fabless)</text>'+
+  '<rect x="96" y="339" width="118" height="16" rx="4" fill="#fff" stroke="#D85A30" stroke-width="0.6"/><text x="155" y="350" font-size="8" fill="#993C1D" text-anchor="middle">FBAR filters — Fort Collins fab</text>'+
+  '<rect x="222" y="339" width="96" height="16" rx="4" fill="#fff" stroke="#D85A30" stroke-width="0.6"/><text x="270" y="350" font-size="8" fill="#993C1D" text-anchor="middle">Wi-Fi/BT combo</text>'+
+  '<rect x="326" y="339" width="120" height="16" rx="4" fill="#fff" stroke="#D85A30" stroke-width="0.6"/><text x="386" y="350" font-size="8" fill="#993C1D" text-anchor="middle">touch + charging ASICs</text>'+
+  '<rect x="514" y="339" width="64" height="16" rx="4" fill="#fff" stroke="#888780" stroke-width="0.6"/><text x="546" y="350" font-size="8" fill="#5F5E5A" text-anchor="middle">own US fabs</text></g>'+
+  '<g class="vc-clickable" data-vc="apple_bcm"><rect x="735" y="312" width="345" height="50" rx="5" fill="rgba(136,153,170,0.10)" stroke="#D3D1C7" stroke-width="0.5"/>'+
+  '<text x="800" y="332" font-size="9" font-weight="600" fill="#5F5E5A" text-anchor="middle" font-family="Figtree">Apple builds the iPhone</text>'+
+  '<rect x="772" y="340" width="56" height="14" rx="7" fill="#fff" stroke="#555" stroke-width="0.8"/><circle cx="782" cy="347" r="3" fill="#555"/><text x="802" y="350" font-size="8" font-weight="700" fill="#2C2C2A" text-anchor="middle">Apple</text>'+
+  '<text x="912" y="334" font-size="9" font-weight="600" fill="#5F5E5A" text-anchor="middle" font-family="Figtree">via Foxconn</text>'+
+  '<text x="1006" y="334" font-size="9" font-weight="600" fill="#5F5E5A" text-anchor="middle" font-family="Figtree">sold to consumer</text></g>'+
+  '<rect data-vc="fabless_note" class="vc-clickable" x="345" y="378" width="390" height="22" rx="4" fill="rgba(204,9,42,0.06)" stroke="#D4002A" stroke-width="0.6"/>'+
+  '<text x="540" y="392" font-size="8.5" fill="#A32D2D" text-anchor="middle" font-family="Figtree" style="pointer-events:none">The 3 AI lines are fabless (TSMC); wireless FBAR is the exception — made in Broadcom\'s own fabs</text>'+
+  '<g font-family="Figtree">'+
+  '<text x="16" y="432" font-size="11" font-weight="700" fill="#141C2B">Reading the bands · click any block for sources</text>'+
+  '<rect x="16" y="444" width="14" height="12" rx="3" fill="rgba(0,163,122,0.13)" stroke="#1D9E75" stroke-width="1"/><text x="36" y="454" font-size="9.5" fill="#6B7A8D">Broadcom\'s participation band (color = product line)</text>'+
+  '<rect x="360" y="444" width="14" height="12" rx="3" fill="#fff" stroke="#888780" stroke-width="0.6"/><text x="380" y="454" font-size="9.5" fill="#6B7A8D">Partner sub-block inside Broadcom\'s band</text>'+
+  '<rect x="730" y="444" width="14" height="12" rx="3" fill="rgba(136,153,170,0.10)" stroke="#D3D1C7" stroke-width="0.5"/><text x="750" y="454" font-size="9.5" fill="#6B7A8D">External players Broadcom doesn\'t touch</text>'+
+  '<text x="16" y="480" font-size="9" fill="#9AACBE">Logos are styled wordmarks for internal reference, not brand artwork. EDA split and OSAT/HBM names are illustrative inference — see each block\'s drill-down.</text>'+
+  '</g></svg>';
+
+// Value-chain drill-down data + modal (ported from VCDATA / vcOpen / vcClose).
+var VCDATA = {
+  xpu_cust:{t:"XPUs · customer brings architecture",tag:"External — customer-owned",tagcls:"med",role:"The hyperscaler defines the workload and the chip architecture. Google brings the most in-house IP; Anthropic and OpenAI lean more on Broadcom. Broadcom does not define what the chip is for.",conf:"hi",conftxt:"Disclosed / company-stated relationship",src:[{cls:"disclosed",q:"Broadcom and Google entered a Long Term Agreement for Broadcom to develop and supply custom TPUs for Google's future generations.",c:"Broadcom 8-K, Apr 6 2026"},{cls:"thirdparty",q:"MTIA is Meta's family of homegrown AI chips developed in close partnership with Broadcom.",c:"Meta AI blog, Mar 11 2026"},{cls:"thirdparty",q:"Google owns the TPU system layer — Ironwood pods, optical circuit switching, JAX/GKE software.",c:"Google Cloud TPU page"}]},
+  xpu_bcm:{t:"XPUs · Broadcom's participation band",tag:"Broadcom core",tagcls:"hi",role:"Broadcom contributes physical design, hard IP (SerDes), foundry orchestration, and packaging/test. Its band starts after the customer's architecture and ends at the validated chip — it does not build the system.",conf:"hi",conftxt:"Disclosed + Q2 FY26 call",src:[{cls:"disclosed",q:"“We provide chips... XPUs or networking chips... we're in the chip business only.” — no rack/system sales.",c:"Q2 FY26 earnings call, Jun 3 2026"},{cls:"thirdparty",q:"This is where Broadcom's ASIC IP comes in; Google and Broadcom send the design to a manufacturer like TSMC.",c:"Chip Stock Investor, XPU-vs-GPU explainer"}]},
+  partner_serdes:{t:"SerDes / hard IP (Broadcom-owned)",tag:"Broadcom core",tagcls:"hi",role:"The serializer/deserializer and physical-layer IP are Broadcom's deepest moat — the analog interface moving data on/off the chip at 200G/400G. Owned, not licensed.",conf:"hi",conftxt:"Company-stated leadership",src:[{cls:"disclosed",q:"“Industry-leading 200G and 400G SerDes, driving co-packaged copper with Ethernet and PCIe switches.”",c:"Q2 FY26 earnings call"}]},
+  partner_eda:{t:"EDA tools (licensed in)",tag:"Inference — industry standard",tagcls:"med",role:"Broadcom uses commercial electronic-design-automation tools (Synopsys, Cadence) for chip design, as every large fabless designer does. The specific vendor split per product line is illustrative.",conf:"med",conftxt:"Industry inference — not Broadcom-disclosed",why:"Why we infer Synopsys + Cadence: these two vendors plus Siemens EDA hold the overwhelming majority of the EDA market, and no leading-edge ASIC can be designed without their tools (synthesis, place-and-route, verification, IP libraries). It is certain Broadcom licenses commercial EDA; what we cannot verify is the per-line vendor split — Broadcom does not disclose it, so showing 'Synopsys' on one row and 'Cadence' on another is illustrative, not factual. Large designers typically use both.",src:[{cls:"inference",q:"Synopsys and Cadence are the two dominant EDA vendors; any leading-edge ASIC designer licenses both. Broadcom does not publish its EDA split.",c:"Industry-standard inference"},{cls:"thirdparty",q:"Synopsys (plus the Ansys acquisition) and Cadence are routinely cited as the EDA backbone of the fabless industry.",c:"Chip Stock Investor (Synopsys/Ansys mention)"}]},
+  partner_tsmc:{t:"TSMC — the foundry",tag:"External — critical dependency",tagcls:"med",role:"All three Broadcom lines are fabless; TSMC fabricates every leading-edge chip and supplies CoWoS advanced packaging. Broadcom orchestrates the relationship but makes no wafers itself.",conf:"hi",conftxt:"Disclosed dependency + strong external corroboration",why:"Why we name TSMC specifically: Broadcom's 10-K names reliance on a limited number of foundries without always naming them, but TSMC is the only foundry with the leading-edge nodes (3nm/5nm) and CoWoS packaging capacity that XPUs and Tomahawk require at volume. Multiple third-party teardowns and the explainer sources name TSMC directly. It is the highest-confidence 'inference' on the board — effectively a disclosed dependency.",src:[{cls:"disclosed",q:"Broadcom relies on a limited number of foundries; TSMC is its principal leading-edge manufacturing partner.",c:"10-K FY2025, supply/risk factors"},{cls:"thirdparty",q:"Google and Broadcom send the design to a manufacturer like TSMC, who manufactures the XPU.",c:"Chip Stock Investor, XPU-vs-GPU explainer"},{cls:"thirdparty",q:"Annapurna (the in-house contrast case) is itself a top-5 TSMC customer — the whole AI-ASIC field routes through TSMC.",c:"Wikipedia / SemiAnalysis"}]},
+  partner_hbm:{t:"HBM suppliers",tag:"External — pass-through input",tagcls:"med",role:"High-bandwidth memory is co-packaged with the XPU and sourced from SK Hynix, Samsung, or Micron. It is largely a pass-through cost that dilutes gross margin. Broadcom has secured supply through 2027-28.",conf:"hi",conftxt:"Disclosed (supply secured) + named-supplier inference",why:"Why these three names: HBM is a three-supplier market worldwide — SK Hynix, Samsung, and Micron are the only volume producers, so any HBM in a Broadcom XPU comes from one of them. Broadcom confirms it secures HBM supply but does not name which of the three per program; that part is inference constrained to a known three-way market.",src:[{cls:"disclosed",q:"“We are very comfortable that we have secured supply... for 2026, 2027. Working on 2028 and 2029.”",c:"Q2 FY26 call (Arcuri Q&A)"},{cls:"thirdparty",q:"Meta states MTIA 450/500 doubled and then raised HBM bandwidth further — HBM is central to the XPU and externally sourced.",c:"Meta AI blog, Mar 2026"}]},
+  partner_osat:{t:"Packaging & test (CoWoS / OSAT)",tag:"Broadcom-orchestrated",tagcls:"hi",role:"Advanced packaging (TSMC CoWoS) plus outsourced assembly & test houses. Broadcom manages this step and delivers a validated, packaged chip — increasingly with HBM integrated.",conf:"med",conftxt:"Disclosed step + industry inference on OSAT names",why:"Why we hedge the OSAT names: CoWoS itself is TSMC's packaging technology (high confidence). But final assembly/test is often split with OSAT houses (ASE, Amkor) — standard for fabless designers, though Broadcom does not disclose which it uses per product. Broadcom is also partly insourcing advanced packaging (its Singapore facility), so this step is a Broadcom-orchestrated mix rather than a single named vendor.",src:[{cls:"disclosed",q:"Broadcom performs up to 3-die advanced packaging and is partly insourcing it (Singapore facility).",c:"Earnings-call commentary"},{cls:"inference",q:"OSAT (ASE, Amkor) handle portions of assembly/test, standard for fabless designers.",c:"Industry inference"}]},
+  xpu_ext:{t:"XPUs · system build, channel & deploy",tag:"External — past Broadcom's reach",tagcls:"med",role:"After the chip ships, an ODM/integrator (Foxconn-type, SMCI) builds the server and rack, a distributor routes it, and the customer wires the cluster and runs it. Broadcom touches none of this.",conf:"hi",conftxt:"Disclosed boundary",src:[{cls:"disclosed",q:"Google's Ironwood pods (9,216 liquid-cooled chips), optical circuit switching, and Virgo network are Google-built and operated.",c:"Google Cloud TPU page"},{cls:"disclosed",q:"“No rack. It's all chips... we're in the chip business only.”",c:"Q2 FY26 call (Seymore Q&A)"}]},
+  sw_bcm:{t:"Switching · Broadcom's band",tag:"Broadcom core (merchant)",tagcls:"hi",role:"Unlike XPUs, Broadcom designs the standard switch/router chip end-to-end itself (Tomahawk, Jericho) and sells the same part to many OEMs. No per-customer co-design.",conf:"hi",conftxt:"Company-stated leadership",src:[{cls:"disclosed",q:"“Shipping the industry's only 100-terabit Ethernet switch, Tomahawk 6, for over a year; taping out the 200T this quarter.”",c:"Q2 FY26 call"},{cls:"disclosed",q:"Jericho 3 and Jericho 4 fabric solutions enable the world's largest deployments at multiple hyperscalers.",c:"Q2 FY26 call"}]},
+  sw_ext:{t:"Switching · OEM, channel & deploy",tag:"External — past Broadcom's reach",tagcls:"med",role:"The switch OEM (Arista, Cisco, white-box ODMs) builds the box around Broadcom's chip; the operator deploys and runs it. Broadcom's reach ends at the merchant chip sold to the OEM.",conf:"hi",conftxt:"Industry-standard structure",src:[{cls:"thirdparty",q:"Every switch OEM (Arista, Cisco, HPE) designs around Tomahawk; ~90% merchant Ethernet switching share.",c:"Colleague M&A working file / industry"}]},
+  opt_bcm:{t:"Optical · Broadcom's band",tag:"Broadcom core (component)",tagcls:"hi",role:"Narrowest scope — Broadcom designs the DSP, PHY, and laser silicon that go inside someone else's optical module. CPO (co-packaged optics) is pushing Broadcom's content deeper into the package.",conf:"hi",conftxt:"Company-stated leadership",src:[{cls:"disclosed",q:"“In CPOs, 1.6 Tb DSPs, CW and EML lasers, we are the de facto standard in the industry.”",c:"Q2 FY26 call"}]},
+  opt_ext:{t:"Optical · module, channel & deploy",tag:"External — past Broadcom's reach",tagcls:"med",role:"An optical-module maker builds the transceiver around Broadcom's DSP/laser; it goes into a box and is deployed. Broadcom supplies the component, not the module — though CPO shifts this boundary rightward over time.",conf:"med",conftxt:"Industry-standard structure",src:[{cls:"inference",q:"DSP/laser components are integrated by optical-module manufacturers into pluggable transceivers.",c:"Industry inference"}]},
+  fabless_note:{t:"Fabless — TSMC makes every wafer",tag:"Disclosed model",tagcls:"hi",role:"Broadcom designs and orchestrates but operates no leading-edge fabs (except its own FBAR filter fabs in Fort Collins). All three AI lines depend on TSMC for fabrication — the single largest upstream concentration.",conf:"hi",conftxt:"Disclosed",src:[{cls:"disclosed",q:"Broadcom is largely fabless, relying on third-party foundries for wafer fabrication.",c:"10-K FY2025"}]},
+  cust_google:{t:"Google — TPU",tag:"Disclosed customer",tagcls:"hi",role:"The anchor XPU customer since 2016 and an estimated majority of Broadcom's AI-ASIC revenue. Google brings deep in-house architecture (the most self-sufficient of the six); Broadcom supplies physical design, SerDes, and now networking. Now on its 7th-gen TPU (Ironwood); Google also resells TPU access externally.",conf:"hi",conftxt:"Disclosed — 8-K + company pages",why:"Why high confidence: Google is the only XPU partnership confirmed in a Broadcom SEC filing (the Apr 2026 8-K), plus Google's own TPU pages. The revenue-share estimate (majority of AI-ASIC) is third-party analyst color, not disclosed.",src:[{cls:"disclosed",q:"Long Term Agreement for Broadcom to develop and supply custom TPUs for Google's future generations, plus a Supply Assurance Agreement for networking through up to 2031.",c:"Broadcom 8-K, Apr 6 2026"},{cls:"thirdparty",q:"7th-gen TPU (Ironwood), 9,216 chips per pod; Google owns the system layer and resells TPU access.",c:"Google Cloud TPU page"},{cls:"thirdparty",q:"More than half of Broadcom's roughly $20B AI run-rate is Google TPU.",c:"Bloomberg / analyst commentary (estimate)"}]},
+  cust_meta:{t:"Meta — MTIA",tag:"Disclosed customer (co-design)",tagcls:"hi",role:"Co-designs the MTIA accelerator family with Broadcom. Meta brings the chiplet architecture, software stack (PyTorch-native), and rack/system design (OCP standards); Broadcom contributes physical design and IP. Four generations (MTIA 300-500) shipping or scheduled 2026-27.",conf:"hi",conftxt:"Company-stated (Meta blog) + Broadcom Q2 call",why:"Why high confidence: Meta explicitly names Broadcom as its co-design partner in its own engineering blog — a rare on-record confirmation from the customer side. Broadcom's Q2 call also names the multi-generation MTIA agreement.",src:[{cls:"thirdparty",q:"MTIA is Meta's family of homegrown AI chips developed in close partnership with Broadcom.",c:"Meta AI blog, Mar 11 2026"},{cls:"disclosed",q:"Partnership to deliver multiple generations of MTIA; ~3 GW through end of 2028, initial 1 GW order delivering H2 2027.",c:"Q2 FY26 call"}]},
+  cust_anthropic:{t:"Anthropic — TPU-based compute",tag:"Disclosed (via Google/Broadcom)",tagcls:"hi",role:"Accesses Broadcom TPU-based compute rather than designing its own chip — a capacity relationship, not a co-design. ~1 GW in 2026, expanding to ~3.5 GW beginning 2027, contingent on Anthropic's commercial success; financed via the Apollo/Blackstone-type platform.",conf:"hi",conftxt:"Disclosed — 8-K",why:"Why this differs from Google/Meta: Anthropic is not designing custom silicon — it buys access to TPU-based compute Broadcom provides. The 8-K conditions consumption on Anthropic's 'continued commercial success,' an unusual demand-risk caveat worth noting for the model.",src:[{cls:"disclosed",q:"Anthropic, beginning 2027, will access through Broadcom ~3.5 GW of next-generation TPU-based compute; consumption dependent on Anthropic's continued commercial success.",c:"Broadcom 8-K, Apr 6 2026"}]},
+  cust_openai:{t:"OpenAI — custom inference chip",tag:"Disclosed customer (newest)",tagcls:"hi",role:"The newest of the six. Silicon delivered, production targeted late 2026; a contractual 1.3 GW in 2027 within a larger ~10 GW-by-2029 framework. Following the 'Google TPU model' — custom silicon to cut cost per watt versus Nvidia.",conf:"hi",conftxt:"Q2 FY26 call (disclosed); analyst color on rationale",why:"Why high confidence on existence, lower on terms: Broadcom confirmed the OpenAI program and gigawatt schedule on the Q2 call. The rationale figures (cheaper per gigawatt, chips = majority of data-center cost) are third-party analyst commentary, not company-disclosed.",src:[{cls:"disclosed",q:"For OpenAI, silicon delivered; on track for production late 2026; contractual 1.3 GW in 2027 within a larger 10 GW-by-2029 framework.",c:"Q2 FY26 call"},{cls:"thirdparty",q:"OpenAI follows 'the Google TPU model'; custom silicon can cut cost per gigawatt since chips are the largest data-center cost component.",c:"Bloomberg TV (analyst estimate)"}]},
+  oem_arista:{t:"Arista / Cisco — switch OEMs",tag:"External — past Broadcom's reach",tagcls:"med",role:"The equipment makers that buy Broadcom's merchant switch silicon (Tomahawk/Jericho) and build the finished switch box that data centers deploy. Broadcom sells the chip; they build, brand, and support the system. White-box ODMs (Celestica, Accton) do the same for hyperscaler in-house switches.",conf:"med",conftxt:"Industry-standard merchant-silicon structure",why:"Why these names: Arista and Cisco are the leading data-center switch vendors and both build around Broadcom's silicon — widely documented. The exact share each represents to Broadcom is not disclosed; the structural relationship (merchant chip → OEM box) is well-established.",src:[{cls:"thirdparty",q:"Every switch OEM (Arista, Cisco, HPE) designs around Tomahawk; ~90% merchant Ethernet switching share.",c:"Colleague M&A working file / networking industry"}]},
+  apple_bcm:{t:"Apple — wireless & connectivity",tag:"Consensus customer (unnamed since FY24)",tagcls:"med",role:"Broadcom's largest wireless customer, understood to be Apple though no longer named in filings. Broadcom supplies the RF/FBAR filter front-end, Wi-Fi/Bluetooth combo chips, and touch/charging components inside iPhones. A multi-year supply agreement was renewed; Apple has tried for a decade to design Broadcom out and largely failed on FBAR. A non-AI, seasonal franchise (~$8-9B/yr) shrinking as a percentage of revenue as AI grows the denominator.",conf:"med",conftxt:"Consensus + disclosed concentration (Apple named through FY23)",why:"Why we say Apple without it being 'named' now: Broadcom's 10-K disclosed 'Apple Inc.' by name as ~20-25% of revenue every year through FY2023, then stopped from FY24 (when the AI distributor became the larger single exposure). The product content (FBAR, Wi-Fi/BT) is the well-documented substance of that relationship. So the identity is disclosed history; what is now opaque is the current exact percentage.",src:[{cls:"disclosed",q:"Aggregate sales to Apple Inc., through all channels, ~20% of net revenue for FY2023 — the last year disclosed by name.",c:"10-K FY2023 customer concentration"},{cls:"thirdparty",q:"Apple has tried for a decade to replace Broadcom's FBAR filters in the iPhone and failed; multi-year supply agreement renewed.",c:"Industry coverage"},{cls:"inference",q:"Wireless revenue ~$2.2B/qtr (~16% of total in FY24) maps to the single North American customer = Apple.",c:"Analyst inference from segment disclosure"}]},
+  apple_chips:{t:"What Broadcom sells Apple",tag:"Product detail",tagcls:"med",role:"Three component families inside the iPhone and other Apple devices: (1) FBAR/BAW RF filters — proprietary acoustic filters that separate signal from noise in the 5G radio, made in Broadcom's own Fort Collins fabs (not fabless); (2) Wi-Fi/Bluetooth combo connectivity chips; (3) touch controllers and wireless-charging ASICs. FBAR is the hardest to replace and the margin anchor.",conf:"med",conftxt:"Well-documented product content; customer unnamed in filings",why:"Why FBAR matters most: it is an analog/materials problem (thin-film acoustic resonators on exotic substrates), not a logic-design problem Apple's silicon team can simply absorb — which is why Apple has insourced CPUs/modems but not the filters. The Wi-Fi/BT content is more replaceable, and Apple has worked to reduce it.",src:[{cls:"disclosed",q:"Wireless franchise: RF/FBAR filters (made in-house, US fabs), Wi-Fi/BT combo, touch controllers, inductive-charging ASICs.",c:"10-K FY2025 product taxonomy"},{cls:"thirdparty",q:"FBAR is made at Broadcom's Fort Collins facility using a proprietary process Apple has been unable to replicate.",c:"Industry coverage / colleague M&A file"}]},
+  dist_detail:{t:"Distributors & channel — who routes Broadcom",tag:"Channel layer (step 7)",tagcls:"med",role:"Distributors and contract manufacturers route the substantial majority of Broadcom's semiconductor sales — ~48% of revenue flows through distributors. They are channels, not end customers: they take delivery, hold inventory, handle logistics to many buyers, and Broadcom invoices them directly. The named 'one distributor' at 32% (FY25) rising to 42% (Q1'26) is the AI-routing channel.",conf:"hi",conftxt:"Disclosed channel %s; some names historical",why:"The named distributors over time: Foxconn / Hon Hai (FY17-18, ~9-14% direct — routing the Apple/wireless flows), then WT Microelectronics (FY19-23, 13-21% — a Taiwanese semiconductor distributor), then an unnamed 'semiconductor solutions customer, which is a distributor' (FY24+, 28→42% — almost certainly routing the AI/hyperscaler flows). Note: SMCI (Supermicro) is a server-system builder/integrator, not a Broadcom distributor — it sits at the system-build step, not the channel. Broadcom stopped naming the distributor once it became the AI channel.",src:[{cls:"disclosed",q:"Sales to distributors ~48% of net revenue (FY25); one semiconductor-solutions distributor 32% (FY25), 42% (Q1'26).",c:"10-K FY2025 / Q1 FY26 10-Q"},{cls:"disclosed",q:"Direct sales to WT Microelectronics, a distributor, 17-21% of revenue (FY19-FY23).",c:"10-K FY2019-FY2023"},{cls:"disclosed",q:"Foxconn (Hon Hai) 9-14% of revenue (FY17-18), routing primarily wireless/Apple flows.",c:"10-K FY2017-FY2018"}]}
+};
+
+function vcOpen(root, id){
+  var d=VCDATA[id]; if(!d) return;
+  var ov=root.querySelector('#ddOverlay'); if(!ov) return;
+  var tagStyle=d.tagcls==='hi'?'background:var(--positive-bg);color:var(--positive)':'background:var(--warning-bg);color:var(--warning)';
+  var h='<div class="dd-panel"><div class="dd-head"><div><div class="dd-title">'+esc(d.t)+'</div><span class="dd-tag" style="'+tagStyle+'">'+esc(d.tag)+'</span></div><button class="dd-close" type="button">&times;</button></div><div class="dd-body">';
+  h+='<div class="dd-role">'+d.role+'</div>';
+  if(d.why){ h+='<div class="dd-why"><div class="dd-why-h">Why this is mapped here</div>'+esc(d.why)+'</div>'; }
+  h+='<div class="dd-conf '+(d.conf==='hi'?'hi':'med')+'">'+(d.conf==='hi'?'✓ ':'⚠ ')+esc(d.conftxt)+'</div>';
+  h+='<div class="dd-src-h" style="margin-top:13px">Source basis</div>';
+  d.src.forEach(function(s){ h+='<div class="dd-src '+s.cls+'"><div class="dd-src-q">“'+esc(s.q)+'”</div><div class="dd-src-c">'+esc(s.c)+'</div></div>'; });
+  h+='</div></div>';
+  ov.innerHTML=h; ov.classList.add('open');
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// 7 — MANAGEMENT  (All Management — built from scratch + live ownership/insider;
+//                  Hock Tan — ported from the source dashboard)
+// ════════════════════════════════════════════════════════════════════════════════
+// Named executive officers & key division leaders (roles/tenure from the 10-K & proxy).
+var AVGO_EXECS = [
+  ['Hock E. Tan','President &amp; Chief Executive Officer','2006','Finance/PE operator (MIT + Harvard), not an engineer. Architect of the roll-up; imprinted the "franchise" doctrine on every deal. Contract extended through at least 2030, package tied to ~$120B AI revenue. <b>The company is his strategy.</b>'],
+  ['Kirsten M. Spears','EVP, Chief Financial Officer &amp; Chief Accounting Officer','2021 (CFO)','At Broadcom since 2011; CFO since 2021. Runs the margin/cash discipline — the "keel" that funds the dividend, debt paydown and the next deal. Guides the model\'s guardrails (Adj EBITDA ~67–68%).'],
+  ['Charlie B. Kawwas, Ph.D.','President, Semiconductor Solutions Group','2023 (President)','Runs the chip business — AI XPUs + the networking franchise (Tomahawk/Jericho, SerDes, optical). The operating leader of the AI growth engine.'],
+  ['Mark D. Brazeal','Chief Legal &amp; Corporate Affairs Officer','—','Leads legal, regulatory and corporate affairs — the function that navigates M&amp;A (incl. CFIUS/antitrust) and the integration playbook.'],
+  ['Ram Velaga','SVP &amp; GM, Core Switching Group','—','Leads merchant switching — the Ethernet/AI-networking product line that attaches to both Broadcom XPUs and Nvidia-GPU clusters.'],
+];
+
+function managementBody(){
+  var execRows=AVGO_EXECS.map(function(e){
+    return '<tr><td class="mgmt-name" style="white-space:nowrap">'+e[0]+'</td>'+
+      '<td style="text-align:left">'+e[1]+'</td>'+
+      '<td style="text-align:left;white-space:nowrap">'+e[2]+'</td>'+
+      '<td style="text-align:left;font-weight:400;font-size:11px;color:var(--text-secondary)">'+e[3]+'</td></tr>';
+  }).join('');
+
+  var allView=
+    '<div class="stats-row c4">'+
+      '<div class="stat-card t-accent"><div class="stat-label">CEO Since</div><div class="stat-value">2006</div><div class="stat-sub">Hock Tan · ~20 yrs</div></div>'+
+      '<div class="stat-card t-accent"><div class="stat-label">CEO Locked To</div><div class="stat-value">2030+</div><div class="stat-sub">extended 2025</div></div>'+
+      '<div class="stat-card t-warn"><div class="stat-label">Comp Anchor</div><div class="stat-value">$120B</div><div class="stat-sub">AI-revenue target</div></div>'+
+      '<div class="stat-card t-neutral"><div class="stat-label">Model</div><div class="stat-value">Flat</div><div class="stat-sub">operator-led, lean</div></div>'+
+    '</div>'+
+    card('Leadership team','named executive officers &amp; key division leaders',
+      '<div class="card-body" style="padding:0"><table class="tbl">'+
+        '<thead><tr><th style="text-align:left">Name</th><th style="text-align:left">Role</th><th style="text-align:left">Since</th><th style="text-align:left">Why they matter</th></tr></thead>'+
+        '<tbody>'+execRows+'</tbody></table></div>',
+      'Roles &amp; tenure from the Broadcom 10-K FY2025 &amp; latest proxy (DEF 14A). Tenure "—" where the appointment date isn\'t central.')+
+    '<div class="card"><div class="card-header"><span class="card-title">Ownership &amp; insider activity</span>'+
+        '<span class="card-subtitle" id="mgmt-live-px"></span>'+
+        '<button class="modal-btn" id="mgmt-sync-btn" type="button" style="padding:5px 12px;font-size:11px">Sync ↻</button></div>'+
+      '<div class="card-body" id="mgmt-own-slot"><div class="seg-loading">Loading ownership data…</div></div>'+
+      '<div class="source">Insider holdings &amp; recent transactions are pulled live from Fiscal.ai via the portal\'s data layer — the same source as the Pillars → Management tab. "Value" columns use the live AVGO price where a session is available.</div></div>'+
+    card('Key-person risk — the flip side of the operator model','',
+      '<div class="card-body"><div class="insight"><strong>Broadcom is one operator\'s judgment.</strong> Two decades of capital-allocation outperformance are inseparable from Hock Tan; his contract runs through at least 2030 with a package tied to ~$120B of AI revenue, bolting operator and thesis together. The team is deliberately lean and finance-led — a strength for cost discipline, a concentration risk on succession. See the <b>Hock Tan</b> view for the full doctrine.</div></div>','');
+
+  var tanView = tanViewHtml();
+
+  return ''+
+    '<div class="ovt-subtabs" role="tablist">'+
+      '<button class="ovt-subtab active" type="button" data-mgview="all">All Management</button>'+
+      '<button class="ovt-subtab" type="button" data-mgview="tan">Hock Tan</button>'+
+    '</div>'+
+    '<div class="mg-subpane" data-mgview="all">'+allView+'</div>'+
+    '<div class="mg-subpane" data-mgview="tan" hidden>'+tanView+'</div>';
+}
+
+function tanViewHtml(){
+  return ''+
+  '<div class="stats-row c4">'+
+    '<div class="stat-card t-accent"><div class="stat-label">CEO Since</div><div class="stat-value">2006</div><div class="stat-sub">~20 yrs</div></div>'+
+    '<div class="stat-card t-accent"><div class="stat-label">Locked To</div><div class="stat-value">2030+</div><div class="stat-sub">extended 2025</div></div>'+
+    '<div class="stat-card t-pos"><div class="stat-label">Acquisitions</div><div class="stat-value">8+</div><div class="stat-sub">LSI → VMware</div></div>'+
+    '<div class="stat-card t-warn"><div class="stat-label">2030 Anchor</div><div class="stat-value">$120B</div><div class="stat-sub">AI rev target</div></div>'+
+  '</div>'+
+  card('Who sits behind the wheel','Broadcom is the strategy of one operator',
+    '<div class="card-body prose"><p>Most companies outlast their CEO\'s strategy. Broadcom <em>is</em> its CEO\'s strategy. <strong>Hock Tan</strong> didn\'t inherit Broadcom — he assembled it, deal by deal, over two decades, imprinting a single doctrine on every piece: own sticky franchises, run them for margin, recycle the cash into the next one. He\'s a <strong>finance/PE operator, not an engineer</strong> — which is precisely why Broadcom behaves like a capital-allocation machine rather than a typical chipmaker. His contract runs through at least 2030, with a package tied to ~$120B of AI revenue — operator and thesis bolted together.</p></div>','')+
+  '<div class="grid-2-wide">'+
+    card('How he makes decisions','a consistent mental model',
+      '<div class="card-body"><div class="mini-grid c2">'+
+        '<div class="mini l-blue"><div class="mini-t">Capital, not technology</div><div class="mini-d">Every decision is a return-on-capital question. Buys cash flows and market positions, not "innovation." Won\'t chase a roadmap that doesn\'t pay.</div></div>'+
+        '<div class="mini l-blue"><div class="mini-t">Franchise or fix/sell</div><div class="mini-d">If a business is a #1/#2 franchise, invest to defend it. If not, cut it or sell it within months. No sentimentality, no "strategic" loss-leaders.</div></div>'+
+        '<div class="mini l-blue"><div class="mini-t">Margin over growth</div><div class="mini-d">Mature industry → run for cash, not share-of-everything. Will shed revenue to raise margin (prunes low-margin lines post-deal).</div></div>'+
+        '<div class="mini l-blue"><div class="mini-t">Concentrate on the few</div><div class="mini-d">Serve the top ~500–1,000 customers who matter; overinvest to stay ahead of #2/#3; ignore the long tail.</div></div>'+
+        '<div class="mini l-amber"><div class="mini-t">Discipline on price paid</div><div class="mini-d">Walks away when price isn\'t right (took only Symantec\'s enterprise half; couldn\'t agree on all of it). The deal must pencil on cost-out, not hope.</div></div>'+
+        '<div class="mini l-amber"><div class="mini-t">Frugality as culture</div><div class="mini-d">Strips perks and overhead post-close; the unsentimental cost operator. Cost discipline is the DNA, not a one-time event.</div></div>'+
+      '</div></div>','')+
+    '<div class="card"><div class="card-header"><span class="card-title">A finance operator, not an engineer</span></div>'+
+      '<div class="card-body" style="padding:0"><table class="tbl"><tbody>'+
+        '<tr><td>MIT + Harvard</td><td style="text-align:left;font-weight:400;font-size:11.5px">finance lens, not engineering</td></tr>'+
+        '<tr><td>PepsiCo · GM</td><td style="text-align:left;font-weight:400;font-size:11.5px">corporate finance at scale</td></tr>'+
+        '<tr><td>Commodore</td><td style="text-align:left;font-weight:400;font-size:11.5px">lived a tech collapse (CFO into bankruptcy)</td></tr>'+
+        '<tr><td>ICS</td><td style="text-align:left;font-weight:400;font-size:11.5px">franchise doctrine born; LBO + IDT merger</td></tr>'+
+        '<tr class="row-hi"><td>Avago→AVGO</td><td style="text-align:left;font-weight:700;font-size:11.5px">Silver Lake hire 2006; builds by acquisition</td></tr>'+
+      '</tbody></table>'+
+      '<div style="padding:11px 13px"><div class="sig-box"><b>The throughline:</b> a CFO who watched a tech company die (Commodore) and learned to run mature franchises for cash (ICS) — then scaled that one idea for 20 years.</div></div></div></div>'+
+  '</div>'+
+  '<div class="card" style="border:2px solid var(--accent)">'+
+    '<div class="card-header" style="background:var(--accent-light)"><span class="card-title" style="color:var(--accent)">★ The Franchise Strategy</span><span class="card-subtitle">the single idea behind everything</span></div>'+
+    '<div class="card-body">'+
+      '<div class="prose" style="margin-bottom:13px"><p>Tan\'s whole career rests on one concept he calls a <strong>"franchise":</strong> a product with a dominant position and customers who <em>cannot practically leave</em>. The product is <strong>"bought, not sold"</strong> — demand is structural, not won by a sales pitch. The art is identifying these, acquiring them, and then extracting their full economic value while defending the moat. Everything else — the cost-cutting, the price hikes, the M&amp;A cadence — is downstream of this one idea.</p></div>'+
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--accent);margin-bottom:8px">The five franchise criteria</div>'+
+      '<div class="mini-grid c3" style="margin-bottom:14px">'+
+        '<div class="mini l-blue"><div class="mini-t">1 · #1 or #2 position</div><div class="mini-d">Dominant share in a defined category — the default choice in its niche.</div></div>'+
+        '<div class="mini l-blue"><div class="mini-t">2 · High switching costs</div><div class="mini-d">Leaving means re-qualifying, re-architecting, retraining — months to years of risk.</div></div>'+
+        '<div class="mini l-blue"><div class="mini-t">3 · Mission-critical</div><div class="mini-d">"Bought, not sold." If it stops, the customer\'s business stops.</div></div>'+
+        '<div class="mini l-blue"><div class="mini-t">4 · Predictable revenue</div><div class="mini-d">Recurring, embedded, sticky — models cleanly, services debt reliably.</div></div>'+
+        '<div class="mini l-blue"><div class="mini-t">5 · High margin potential</div><div class="mini-d">Pricing power once captive; gross margins that can be expanded post-deal.</div></div>'+
+        '<div class="mini l-amber"><div class="mini-t">The test in one line</div><div class="mini-d">"Can the customer realistically switch?" If no → franchise. If yes → pass or sell.</div></div>'+
+      '</div>'+
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--accent);margin-bottom:8px">The playbook — what he does once he owns one</div>'+
+      '<div class="mini-grid c3" style="margin-bottom:14px">'+
+        '<div class="mini l-teal"><div class="mini-t">Buy (debt-funded)</div><div class="mini-d">Often a target larger than Broadcom; lever up, because the cash flow is predictable enough to service it.</div></div>'+
+        '<div class="mini l-teal"><div class="mini-t">Cut 30–50%</div><div class="mini-d">Eliminate headcount, perks, and non-franchise R&amp;D. Bernstein: 60–70% OpEx cuts at CA/Symantec.</div></div>'+
+        '<div class="mini l-teal"><div class="mini-t">Sell non-franchise</div><div class="mini-d">Carve out and sell anything that fails the criteria within months (Axxia, Ruckus, IoT).</div></div>'+
+        '<div class="mini l-teal"><div class="mini-t">Raise prices at renewal</div><div class="mini-d">Captive customers; honor existing contracts, re-price at renewal (VCF bundle = 2–5×).</div></div>'+
+        '<div class="mini l-teal"><div class="mini-t">Convert to subscription</div><div class="mini-d">Where possible, shift perpetual → recurring (the VMware move) for predictability + ARR.</div></div>'+
+        '<div class="mini l-teal"><div class="mini-t">De-lever, then repeat</div><div class="mini-d">Margins expand in 12–24 mo; pay down debt; richer stock funds the next, larger franchise.</div></div>'+
+      '</div>'+
+      '<div class="insight"><strong>Why it compounds:</strong> each cycle raises margins and the stock, which lowers the cost of the next acquisition, which is bigger — so the absolute cash generated grows geometrically. Twenty years of this took EBITDA margin from ~47% to ~68% and the company from ~$4B to $600B+.</div>'+
+      '<div class="caution" style="margin-top:9px"><strong>The critique:</strong> this is a model built on <em>acquisition and optimization, not organic innovation</em>. Franchises must keep being bought, and large-enough targets eventually run out — part of what drove the Qualcomm reach and the software pivot. The R&amp;D-cutting also drew the CFIUS scrutiny that blocked Qualcomm. And it concentrates enormous dependence on one operator\'s judgment.</div>'+
+    '</div></div>'+
+  card('The pivots — strategy reshaped when reality forced it','doctrine constant, arena changing',
+    '<div class="card-body"><div class="mini-grid c2">'+
+      '<div class="mini l-blue"><div class="mini-t">2014 · Diversify off mobile</div><div class="mini-d">Mobile hit ~50% of rev. Bought LSI → data-center storage + the custom-silicon seed that became AI.</div></div>'+
+      '<div class="mini l-blue"><div class="mini-t">2016 · Go bigger</div><div class="mini-d">LSI lifted the stock → currency to buy Broadcom Corp ($37B) + Brocade. Took the name.</div></div>'+
+      '<div class="mini l-purple"><div class="mini-t">2018 · Pivot to software</div><div class="mini-d">Qualcomm blocked (CFIUS) → realized he\'d outgrown chip M&amp;A → CA, then Symantec. Lighter scrutiny, stickier cash.</div></div>'+
+      '<div class="mini l-ai"><div class="mini-t">2023 · Anchor + ride AI</div><div class="mini-d">VMware = the cash keel; the dormant LSI silicon = the AI engine. Two engines by design.</div></div>'+
+    '</div><div class="insight" style="margin-top:11px"><strong>The most consequential pivot was involuntary.</strong> Being blocked from Qualcomm — and recognizing the company had grown too big for chip-on-chip M&amp;A without regulatory walls — is what pushed Tan into software, which became today\'s stability. He adapts the arena; the doctrine never changes.</div></div>','')+
+  card('Two-engine machine — why cyclicality doesn\'t capsize it','',
+    '<div class="card-body"><div class="grid-2">'+
+      '<div class="mini l-blue" style="border-left-width:3px"><div class="mini-t">Engine 1 — Semiconductors</div><div style="font-size:10.5px;color:var(--accent);font-weight:600;margin:2px 0 7px">GROWTH &amp; CYCLICALITY</div><div class="logo-row"><span class="badge b-neutral">58% rev</span><span class="badge b-neutral">~58% OM</span><span class="badge b-ai">AI triple-digit</span><span class="badge b-warn">non-AI cyclical</span></div></div>'+
+      '<div class="mini l-purple" style="border-left-width:3px"><div class="mini-t">Engine 2 — Software</div><div style="font-size:10.5px;color:var(--sw);font-weight:600;margin:2px 0 7px">THE KEEL &amp; THE CASH</div><div class="logo-row"><span class="badge b-neutral">42% rev</span><span class="badge b-neutral">~77% OM</span><span class="badge b-sw">~93% gross</span><span class="badge b-neutral">stable cash</span></div></div>'+
+    '</div><div class="insight" style="margin-top:12px"><strong>The stability thesis:</strong> AI upside flows through Engine 1; any cyclicality is normalized by Engine 2 — barely grows, ~93% gross margins, predictable cash that funds the dividend, services debt, and lets Tan place volatile chip bets. <strong>Key-person risk</strong> is the flip side: the company is one operator\'s judgment.</div></div>','');
+}
+
+function initManagement(pane){
+  // Sub-tab (All Management / Hock Tan) switching — wire once per render.
+  if(!pane._mgWired){ pane._mgWired = true;
+    pane.querySelectorAll('.ovt-subtab').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var view=btn.getAttribute('data-mgview');
+        pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b===btn); });
+        pane.querySelectorAll('.mg-subpane').forEach(function(p){ p.hidden = (p.getAttribute('data-mgview')!==view); });
+      });
+    });
+    var sync=pane.querySelector('#mgmt-sync-btn');
+    if(sync) sync.addEventListener('click', function(){ loadMgmtOwnership(pane, true); });
+  }
+  // Load live ownership/insider once per render.
+  if(!_mgLoaded){ _mgLoaded = true; loadMgmtOwnership(pane, false); }
+}
+
+async function loadMgmtOwnership(pane, forceSync){
+  var slot = pane.querySelector('#mgmt-own-slot');
+  var pxEl = pane.querySelector('#mgmt-live-px');
+  if(!slot) return;
+  var c = _company;
+  if(!c || !c.id){ slot.innerHTML='<div class="seg-loading">No company context for live data.</div>'; return; }
+
+  if(forceSync){
+    var btn=pane.querySelector('#mgmt-sync-btn'); if(btn){ btn.disabled=true; btn.textContent='Syncing…'; }
+    try { await syncManagement(c.ticker, c.id); } catch(e){}
+    if(btn){ btn.disabled=false; btn.textContent='Sync ↻'; }
+  }
+
+  slot.innerHTML='<div class="seg-loading">Loading ownership data…</div>';
+  var execRes, txRes;
+  try { execRes = await fetchExecutives(c.id); txRes = await fetchInsiderTransactions(c.id); }
+  catch(e){ slot.innerHTML='<div class="seg-loading">Could not load ownership data.</div>'; return; }
+  var execs = (execRes && execRes.success) ? execRes.data : [];
+  var txns  = (txRes && txRes.success) ? txRes.data : [];
+
+  // First visit with no cached data → trigger a background sync, then refetch once.
+  if(!execs.length && !txns.length && !forceSync){
+    try { await syncManagement(c.ticker, c.id); execRes = await fetchExecutives(c.id); txRes = await fetchInsiderTransactions(c.id);
+      execs=(execRes&&execRes.success)?execRes.data:[]; txns=(txRes&&txRes.success)?txRes.data:[]; } catch(e){}
+  }
+
+  // Live price to value holdings (best-effort; requires a session).
+  var price=null;
+  try { var q=await liveQuote(c.ticker); if(q&&q.data&&q.data.price!=null) price=q.data.price; } catch(e){}
+  if(pxEl && price!=null) pxEl.textContent='AVGO $'+price.toFixed(2)+' · holdings valued live';
+
+  var h='';
+  if(execs.length){
+    h+='<table class="tbl"><thead><tr><th style="text-align:left">Name</th><th style="text-align:left">Role</th><th>Shares</th><th>Ownership</th><th>Value (live)</th></tr></thead><tbody>';
+    execs.forEach(function(e){
+      var pct = e.ownership_pct!=null ? e.ownership_pct+'%' : (e.ownership||'—');
+      var val = (price!=null && e.shares!=null) ? '$'+((Number(e.shares)*price)/1e6).toFixed(1)+'M' : '—';
+      h+='<tr><td style="text-align:left">'+esc(e.name)+'</td><td style="text-align:left;font-weight:400">'+esc(e.role)+'</td>'+
+        '<td>'+formatShares(e.shares)+'</td><td>'+esc(pct)+'</td><td>'+val+'</td></tr>';
+    });
+    h+='</tbody></table>';
+  }
+  if(txns.length){
+    h+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-tertiary);margin:14px 0 8px">Recent insider activity</div>';
+    h+='<table class="tbl"><thead><tr><th style="text-align:left">Date</th><th style="text-align:left">Person</th><th style="text-align:left">Action</th><th>Shares</th><th>Price</th></tr></thead><tbody>';
+    txns.slice(0,12).forEach(function(tx){
+      var isBuy = tx.transaction_type==='buy';
+      var price2 = tx.price_per_share!=null ? '$'+Number(tx.price_per_share).toFixed(2) : '—';
+      h+='<tr><td style="text-align:left">'+esc(tx.transaction_date||'')+'</td><td style="text-align:left;font-weight:400">'+esc(tx.person_name)+'</td>'+
+        '<td style="text-align:left"><span class="badge '+(isBuy?'b-pos':'b-neg')+'">'+(isBuy?'Bought':'Sold')+'</span></td>'+
+        '<td>'+formatShares(tx.shares)+'</td><td>'+price2+'</td></tr>';
+    });
+    h+='</tbody></table>';
+  }
+  if(!h) h='<div class="seg-loading">No ownership or insider data available for AVGO yet. Click <b>Sync ↻</b> to pull from Fiscal.ai.</div>';
+  slot.innerHTML=h;
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// 8 — M&A DEEP DIVE
+// ════════════════════════════════════════════════════════════════════════════════
+function deal(cls, num, name, meta, statsHtml, keptHtml, soldHtml, sig, soldHead){
+  return '<div class="deal '+cls+'"><div class="deal-head"><span class="deal-num">'+num+'</span><span class="deal-name">'+name+'</span>'+
+    '<div class="deal-meta">'+meta+'</div></div><div class="deal-body">'+
+    (statsHtml?'<div class="deal-stats">'+statsHtml+'</div>':'')+
+    '<div class="kept-sold"><div><div class="ks-h kept">Kept</div>'+keptHtml+'</div>'+
+      '<div><div class="ks-h sold">'+(soldHead||'Sold')+'</div>'+soldHtml+'</div></div>'+
+    '<div class="sig-box"><b>Significance:</b> '+sig+'</div></div></div>';
+}
+function ds(l,v){ return '<div class="ds"><div class="ds-l">'+l+'</div><div class="ds-v">'+v+'</div></div>'; }
+function ks(t){ return '<div class="ks-item">'+t+'</div>'; }
+
+function maDeepBody(){
+  var deals=''+
+  deal('marquee','1','LSI Logic','<span class="badge b-accent">May 2014</span><span class="badge b-neutral">$6.6B</span><span class="badge b-warn">70% leverage (LBO)</span>',
+    ds('Structure','$1B cash + $1B SL + $4.6B debt')+ds('EV/EBITDA','~8.25x')+ds('Acquirer size','Avago ~$2.5B rev')+ds('Recovered (sales)','$1.1B → net ~$5.5B'),
+    ks('<b>Custom silicon (ASIC) team</b> — ~$50M rev, ignored at the time. Became the Google TPU engine and the $20B+ AI business.')+ks('<b>RAID controllers (MegaRAID)</b> — #1 share, designed into Dell/HPE/Lenovo servers.')+ks('<b>PCIe switches</b> — route data inside servers; can\'t swap without board redesign.'),
+    ks('<b>Axxia networking</b> → Intel, $650M (4 months post-close)')+ks('<b>Flash/SSD controllers</b> → Seagate, $450M'),
+    'Set the template — LBO on a target half the acquirer\'s market cap, strip non-core for cash, expand margins. The AI outcome was pure serendipity: the "throwaway" ASIC team went from ~$50M to $8.4B in a single quarter (Q1 FY26).')+
+  deal('tuck','2','Emulex','<span class="badge b-neutral">May 2015</span><span class="badge b-neutral">$606M</span><span class="badge b-neutral">all cash</span>','',
+    ks('<b>Fibre Channel HBAs</b> — cards connecting servers to storage in banks/hospitals. Requalifying the storage network is something nobody does voluntarily.'),
+    ks('Nothing.'),
+    'Tuck-in to consolidate storage networking ahead of Brocade. Likely funded from LSI carve-out proceeds.')+
+  deal('marquee','3','Broadcom Corporation','<span class="badge b-accent">Feb 2016</span><span class="badge b-neutral">$37B</span><span class="badge b-accent">first stock deal (54%)</span>',
+    ds('Structure','~$17B cash + ~$20B stock')+ds('EV/EBITDA','~11.6x')+ds('Rev step-up','$6.8B → $17.6B')+ds('Goodwill added','~$24B'),
+    ks('<b>Tomahawk Ethernet switches</b> — ~90% merchant share; the foundation of the AI-networking story ($10B+ backlog today).')+ks('<b>FBAR RF filters</b> — proprietary, Fort Collins fab; the Apple franchise ($6–8B/yr).')+ks('<b>Wi-Fi/BT combo, broadband, GPS/touch</b>'),
+    ks('<b>Wireless IoT</b> → Cypress, $550M (commoditized, off-franchise)'),
+    'Avago took the Broadcom name (kept AVGO ticker). Gave it the complete networking portfolio behind the AI story — but the R&amp;D cuts drew the CFIUS scrutiny that blocked Qualcomm two years later.')+
+  deal('tuck','4','Brocade','<span class="badge b-neutral">Nov 2017</span><span class="badge b-neutral">$5.9B</span><span class="badge b-neutral">~6.6x — lowest multiple</span>','',
+    ks('<b>Fibre Channel SAN switches</b> — with Emulex HBAs + LSI RAID = end-to-end enterprise storage dominance. Banks won\'t rewire storage voluntarily.'),
+    ks('<b>Ruckus + ICX (IP networking)</b> → Arris, ~$800M. Announced upfront — net cost ~$5.1B.'),
+    'Completed the enterprise-storage stack. Last pure-semiconductor deal before the software pivot. A "melting ice cube" — declining but very slowly, high cash.')+
+  deal('pivot','5','CA Technologies','<span class="badge b-sw">Nov 2018</span><span class="badge b-neutral">$18.9B</span><span class="badge b-warn">100% debt</span><span class="badge b-neg">stock −20% on news</span>',
+    ds('Context','6 wks after Qualcomm block')+ds('EV/EBITDA','~10.5x')+ds('Target growth','~0% (pure harvest)')+ds('EBITDA margin','56% → 64% in 2 yrs'),
+    ks('<b>Mainframe software</b> — schedules bank batch jobs; security (ACF2), database (IDMS), monitoring. Mission-critical.')+ks('<b>The COBOL lock-in</b> — manages mainframes running 220B lines of COBOL (95% of ATM swipes). Migration is catastrophic (UK TSB 2018: £330M+, CEO resigned).'),
+    ks('Nothing material — pruned low-margin lines.'),
+    'The pivot deal. Analysts were furious ("runs completely against the narrative") — stock recovered in 6 months as margins expanded. Proved the franchise playbook works on software, with 90%+ gross margins. Changed Broadcom\'s identity.','Sold')+
+  deal('pivot','6','Symantec (Enterprise Security)','<span class="badge b-sw">Nov 2019</span><span class="badge b-neutral">$10.7B</span><span class="badge b-neutral">enterprise half only</span>','',
+    ks('<b>Endpoint Protection (SEP)</b> — on every corporate device; removing = 6–12 month rollout across 50,000+ devices.')+ks('<b>Web/Email security, DLP, IAM</b> — DLP often a regulatory requirement, not optional.'),
+    ks('<b>Consumer (Norton, LifeLock)</b> stayed behind → became Gen Digital. Consumer can switch in 5 min; enterprise is trapped.'),
+    'Reinforced software; proved CA was repeatable. Software went 0% → ~22% of revenue. Taking only the enterprise half suited Tan perfectly — the franchise half, none of the commodity half.','Not acquired')+
+  deal('marquee','7','VMware','<span class="badge b-accent">Nov 2023</span><span class="badge b-neutral">~$61B → ~$86B at close</span><span class="badge b-accent">largest tech deal ever</span>',
+    ds('Structure','$28.4B loans + $8B debt + ~$30B stock')+ds('Market share','72% server virtualization')+ds('SW op margin','74% → 65% → 78%')+ds('Goodwill added','+$53.9B (total $97.8B)'),
+    ks('<b>vSphere/ESXi</b> — the hypervisor, 72% share. Replacing = 2–3 yr, $50–100M+ migration.')+ks('<b>VCF bundle</b> — forced bundle of vSphere+NSX+vSAN on 3-yr subs; how prices rose 2–5×. 90%+ of top 10k adopted.')+ks('<b>NSX, vSAN, Tanzu, Private AI</b>'),
+    ks('Nothing — no carve-outs.'),
+    'The masterwork. Every element of the playbook at maximum scale. Created the two-engine model — volatile AI growth + the 93%-gross-margin software "keel" that funds the dividend, debt, AI investment, and future M&amp;A.');
+
+  return ''+
+  card('M&amp;A deep dive — the capital-allocation machine','7 deals, FY14–FY24, escalating scale',
+    '<div class="card-body"><div class="prose" style="margin-bottom:11px"><p>Broadcom is a machine that buys technology franchises — products with dominant positions and trapped customers — optimizes them for cash, and recycles proceeds into the next, larger target. The same playbook repeats at escalating scale: <strong>buy (debt-funded) → cut 30–50% of cost → sell non-franchise pieces → raise prices at renewal → convert to subscription → margins expand in 12–24 months → de-lever → richer stock funds the next deal.</strong></p></div>'+
+      '<div class="legend">'+
+        '<div class="legend-i"><span class="legend-sw" style="background:var(--accent)"></span>Marquee (each bigger than the last)</div>'+
+        '<div class="legend-i"><span class="legend-sw" style="background:var(--neutral-color)"></span>Tuck-in</div>'+
+        '<div class="legend-i"><span class="legend-sw" style="background:var(--sw)"></span>Software pivot</div>'+
+        '<div class="legend-i"><span class="legend-sw" style="background:var(--negative)"></span>Blocked</div>'+
+      '</div></div>','')+
+
+  card('The deal ladder','$6.6B → $0.6B → $37B → $5.9B → $18.9B → $10.7B → $61B',
+    '<div class="card-body">'+deals+'</div>','')+
+
+  '<div class="card"><div class="card-header"><span class="card-title">Financial impact — quarterly, FY14–Q1 FY26</span><span class="card-subtitle">dashed lines mark deal closings</span></div>'+
+    '<div class="card-body"><div class="prose" style="margin-bottom:11px"><p><strong>Why deals close in Q1:</strong> every marquee deal closes Nov–Feb (Q1 of the new fiscal year, since FY ends ~Oct 31). Not coincidence — closing in Q1 puts integration costs at the start of the year, giving a full year to optimize before the next annual comparison.</p></div>'+
+      '<div class="grid-2">'+
+        '<div class="dchart"><h4>Total revenue ($B)</h4><div class="ds-sub">each deal = a step-up; software (teal) only after CA</div><div class="dchart-c"><canvas id="dRev"></canvas></div></div>'+
+        '<div class="dchart"><h4>Total debt ($B)</h4><div class="ds-sub">spikes on close, then paid down; VMware the largest</div><div class="dchart-c"><canvas id="dDebt"></canvas></div></div>'+
+        '<div class="dchart"><h4>Goodwill ($B)</h4><div class="ds-sub">staircases up, never comes down — $97.8B, ~58% of assets</div><div class="dchart-c"><canvas id="dGw"></canvas></div></div>'+
+        '<div class="dchart"><h4>Cash &amp; equivalents ($B)</h4><div class="ds-sub">builds between deals, depleted on closing, rebuilds from FCF</div><div class="dchart-c"><canvas id="dCash"></canvas></div></div>'+
+        '<div class="dchart"><h4>Non-GAAP EBITDA margin (%)</h4><div class="ds-sub">each deal dilutes, then cost-cutting expands past prior peak</div><div class="dchart-c"><canvas id="dEbitda"></canvas></div></div>'+
+        '<div class="dchart"><h4>GAAP operating margin (%)</h4><div class="ds-sub">structurally lower — acquisition amortization; FY24 VMware dip</div><div class="dchart-c"><canvas id="dGaap"></canvas></div></div>'+
+      '</div>'+
+      '<div class="dchart"><h4>Free cash flow ($B)</h4><div class="ds-sub">the engine funding dividends, debt paydown, buybacks, and the next deal</div><div class="dchart-c" style="height:150px"><canvas id="dFcf"></canvas></div></div>'+
+    '</div><div class="source">Quarterly series and per-deal detail from analyst working files (colleague\'s M&amp;A workstream). Closing EVs differ from announced prices (e.g. VMware ~$61B announced, ~$86B at close).</div></div>'+
+
+  card('Trajectory patterns','',
+    '<div class="card-body"><div class="mini-grid c2">'+
+      '<div class="mini l-blue"><div class="mini-t">Size escalation</div><div class="mini-d">Each marquee bigger than the last: LSI → BRCM → CA → VMware. Smaller deals (Emulex, Brocade, Symantec) are tuck-ins between.</div></div>'+
+      '<div class="mini l-amber"><div class="mini-t">Financing evolution</div><div class="mini-d">Early deals more debt (LSI 70%); larger deals require stock (BRCM 54%, VMware ~50%). All-cash deals (CA, Symantec) bet cost cuts service the debt.</div></div>'+
+      '<div class="mini l-teal"><div class="mini-t">Margin compounding</div><div class="mini-d">Each deal dilutes EBITDA margin 2–5pts, then expands past prior peak in 12–24 mo: ~47% (FY14) → 68% (Q1 FY26). 20 years of compounding.</div></div>'+
+      '<div class="mini l-ai"><div class="mini-t">Where it\'s heading</div><div class="mini-d">Tan says no M&amp;A needed now — AI organic growth does what deals used to. De-levering ($73B→$68B) preserves capacity. If AI cools, software M&amp;A resumes.</div></div>'+
+    '</div></div>','');
+}
+
+// M&A quarterly series (ported).
+var MQ=['Q1 14','Q2 14','Q3 14','Q4 14','Q1 15','Q2 15','Q3 15','Q4 15','Q1 16','Q2 16','Q3 16','Q4 16','Q1 17','Q2 17','Q3 17','Q4 17','Q1 18','Q2 18','Q3 18','Q4 18','Q1 19','Q2 19','Q3 19','Q4 19','Q1 20','Q2 20','Q3 20','Q4 20','Q1 21','Q2 21','Q3 21','Q4 21','Q1 22','Q2 22','Q3 22','Q4 22','Q1 23','Q2 23','Q3 23','Q4 23','Q1 24','Q2 24','Q3 24','Q4 24','Q1 25','Q2 25','Q3 25','Q4 25','Q1 26'];
+var mSemiR=[1.05,1.05,1.35,1.55,1.55,1.6,1.7,1.95,1.95,3.3,3.5,3.6,4.2,4.3,4.5,4.6,4.4,5.1,5.2,5.3,5.8,5.5,5.5,5.8,5.9,5.7,5.8,6.5,6.2,6.6,7.0,7.4,6.6,6.6,6.9,7.2,7.1,6.8,7.0,7.3,7.4,7.2,7.3,8.2,8.2,8.4,9.2,11.1,12.5];
+var mSwR=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1.4,1.4,1.4,1.4,1.7,1.7,1.4,1.6,1.7,1.6,1.8,1.8,1.7,1.9,1.9,1.9,1.8,1.9,1.9,2.0,4.6,5.3,5.8,5.8,6.7,6.6,6.8,6.9,6.8];
+var mDebt=[2.5,2.5,6.5,6.2,6.0,6.0,5.8,5.5,5.2,22.5,22.0,21.0,19.0,17.8,17.5,17.2,17.8,18.0,17.5,17.5,32.5,32.0,31.5,31.0,35.5,35.0,34.5,34.0,32.0,31.0,30.0,29.5,29.0,28.5,28.0,27.5,28.0,28.5,28.0,39.0,73.5,73.0,72.0,71.0,68.8,68.5,67.5,67.1,68.0];
+var mGw=[0.7,0.7,3.8,3.8,3.8,3.8,4.0,4.0,4.0,26.7,26.7,26.7,26.9,26.9,26.9,26.9,26.9,26.9,26.9,26.9,37.0,37.0,37.0,37.0,37.0,37.0,37.0,37.0,37.0,37.0,37.0,37.0,37.5,37.5,37.5,37.5,43.6,43.6,43.6,43.8,97.8,97.8,97.8,97.8,97.8,97.8,97.8,97.8,97.8];
+var mCash=[0.5,0.5,0.8,0.9,1.0,1.1,1.2,1.5,1.5,2.0,2.8,3.3,4.1,4.5,4.8,5.0,4.8,4.2,4.5,5.0,4.8,4.5,4.3,5.9,5.2,4.6,5.1,5.2,7.6,8.5,10.0,12.2,11.5,11.0,12.1,12.4,12.7,13.2,13.9,14.2,9.3,8.5,9.5,10.7,9.3,9.5,10.7,16.2,14.2];
+var mEbitda=[44,45,46,47,47,48,49,49,50,48,50,52,53,53,53,53,54,55,56,56,53,55,56,57,54,56,57,54,59,60,60,60,62,63,64,65,64,64,64,65,60,59,60,63,68,67,67,68,68];
+var mGaap=[12,13,14,14,15,12,14,15,16,8,12,14,18,20,22,23,24,25,26,27,15,18,20,22,8,10,15,11,21,25,28,28,27,28,30,33,32,30,31,32,17,24,29,33,42,39,37,42,44];
+var mFcf=[0.35,0.35,0.5,0.6,0.6,0.6,0.65,0.7,0.7,0.9,1.1,1.2,1.5,1.7,1.8,1.8,1.7,2.0,2.2,2.2,1.8,2.0,2.3,2.5,2.1,2.1,2.3,2.6,2.5,2.5,2.6,2.6,3.0,3.1,3.5,3.6,3.8,3.8,3.3,3.5,3.5,3.0,3.5,4.2,4.7,4.3,4.4,5.5,6.0];
+var mDeals=[{x:'Q3 14',l:'LSI'},{x:'Q2 16',l:'BRCM'},{x:'Q1 18',l:'Brocade'},{x:'Q1 19',l:'CA'},{x:'Q1 20',l:'Symantec'},{x:'Q1 24',l:'VMware'}];
+
+function mAnnotations(){
+  var mAnn={};
+  mDeals.forEach(function(d,i){ mAnn['l'+i]={type:'line',scaleID:'x',value:d.x,borderColor:'rgba(46,117,182,0.45)',borderWidth:1.3,borderDash:[3,2],
+    label:{display:true,content:d.l,position:'start',font:{size:8,family:'Figtree',weight:'600'},color:'#2E75B6',backgroundColor:'rgba(255,255,255,0.85)',padding:2,yAdjust:-2}}; });
+  return mAnn;
+}
+function mOpts(cb,min,max){ return {responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},annotation:{annotations:mAnnotations()},tooltip:{backgroundColor:'#141C2B',titleFont:{family:'Figtree',size:10},bodyFont:{family:'Figtree',size:11},padding:8,cornerRadius:6,callbacks:{label:function(c){return (c.dataset.label?c.dataset.label+': ':'')+(cb?cb(c.raw):c.raw);}}}},
+  scales:{x:{grid:{display:false},border:{display:false},ticks:{font:{family:'Figtree',size:8},color:'#9AACBE',maxRotation:45,autoSkip:true,maxTicksLimit:13}},
+    y:{grid:{color:'#EDF0F5',drawTicks:false},border:{display:false},min:min,max:max,ticks:{font:{family:'Figtree',size:9},color:'#9AACBE',callback:cb||undefined}}}}; }
+
+function initMaDeep(pane){
+  if(pane._charted) return; pane._charted = true;
+  freshChart('dRev',{type:'bar',data:{labels:MQ,datasets:[
+    {label:'Semi',data:mSemiR,backgroundColor:'#CC092F',borderRadius:1},
+    {label:'Software',data:mSwR,backgroundColor:'#007A8C',borderRadius:1}]},
+    options:Object.assign({},mOpts(function(v){return '$'+v+'B';}),{scales:{x:{stacked:true,grid:{display:false},border:{display:false},ticks:{font:{family:'Figtree',size:8},color:'#9AACBE',maxRotation:45,autoSkip:true,maxTicksLimit:13}},y:{stacked:true,grid:{color:'#EDF0F5'},border:{display:false},ticks:{font:{family:'Figtree',size:9},color:'#9AACBE',callback:function(v){return '$'+v+'B';}}}}})});
+  function mk(id,data,color,cb,min,max,stepped){ return freshChart(id,{type:'line',data:{labels:MQ,datasets:[{data:data,borderColor:color,backgroundColor:color+'14',fill:true,tension:stepped?0:0.3,stepped:stepped||false,pointRadius:0,pointHoverRadius:4,borderWidth:2}]},options:mOpts(cb,min,max)}); }
+  mk('dDebt',mDebt,'#CC092F',function(v){return '$'+v+'B';});
+  mk('dGw',mGw,'#CC092F',function(v){return '$'+v+'B';},0,null,'before');
+  mk('dCash',mCash,'#007A8C',function(v){return '$'+v+'B';});
+  mk('dEbitda',mEbitda,'#CC092F',function(v){return v+'%';},40,72);
+  mk('dGaap',mGaap,'#5B3E96',function(v){return v+'%';},0,50);
+  freshChart('dFcf',{type:'bar',data:{labels:MQ,datasets:[{data:mFcf,backgroundColor:'rgba(204,9,47,0.7)',borderRadius:1}]},options:mOpts(function(v){return '$'+v+'B';})});
+}
+
+// ─── Tab registry + shell ───────────────────────────────────────────────────────
+var TABS = [
+  { key:'segments',      label:'Segments',              body:segmentsBody,      init:initSegments },
+  { key:'guidance',      label:'Guidance',              body:guidanceBody,      init:null },
+  { key:'airevenue',     label:'AI Revenue',            body:aiRevenueBody,     init:initAIRevenue },
+  { key:'concentration', label:'Customer Concentration',body:concentrationBody, init:initConcentration },
+  { key:'valuechain',    label:'Value Chain',           body:valueChainBody,    init:initValueChain },
+  { key:'gwroadmap',     label:'GW Roadmap',            body:gwRoadmapBody,     init:initGwRoadmap },
+  { key:'management',    label:'Management',            body:managementBody,    init:initManagement },
+  { key:'madeep',        label:'M&A Deep Dive',         body:maDeepBody,        init:initMaDeep },
+];
+
+function html(c){
+  _company = c || null;
+  _mgLoaded = false;
+  var h = '<div class="ov ov-avgo" data-brand="AVGO">';
+  h += '<div id="ddOverlay" class="dd-overlay"></div>';
+  h += '<div class="ovt-tabs">'+TABS.map(function(t,i){
+    return '<button type="button" class="ovt-tab'+(i===0?' active':'')+'" data-ovt="'+t.key+'">'+esc(t.label)+'</button>';
+  }).join('')+'</div>';
+  h += TABS.map(function(t,i){
+    return '<div class="ovt-pane" data-ovt="'+t.key+'"'+(i===0?'':' hidden')+'>'+t.body()+'</div>';
+  }).join('');
+  h += '</div>';
+  return h;
+}
+
+function paneFor(root, key){ return root.querySelector('.ovt-pane[data-ovt="'+key+'"]'); }
+function tabDef(key){ for(var i=0;i<TABS.length;i++){ if(TABS[i].key===key) return TABS[i]; } return null; }
+
+function showOvt(root, key){
+  root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt')===key); });
+  root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt')!==key); });
+  var t=tabDef(key), pane=paneFor(root,key);
+  if(t && t.init && pane) requestAnimationFrame(function(){ t.init(pane); });
+}
+
+function init(){
+  var root = document.querySelector('.ov-avgo');
+  if(!root) return;
+  root.querySelectorAll('.ovt-tab').forEach(function(btn){
+    btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };
+  });
+  // Seg toggles (semi/software) inside Segments — delegated per .seg-toggle group.
+  root.querySelectorAll('.seg-toggle').forEach(function(grp){
+    if(grp._wired) return; grp._wired = true;
+    grp.querySelectorAll('.seg-btn').forEach(function(btn){
+      btn.onclick = function(){
+        var seg=btn.getAttribute('data-seg'), group=grp.getAttribute('data-seg-group');
+        grp.querySelectorAll('.seg-btn').forEach(function(x){ x.classList.toggle('active', x===btn); });
+        var cardEl=grp.closest('.card');
+        if(cardEl){ cardEl.querySelectorAll('.seg-panel').forEach(function(p){ p.classList.toggle('active', p.getAttribute('data-panel')===group+'-'+seg); }); }
+      };
+    });
+  });
+  // Value-chain drill-down: close on backdrop click, close button, or Escape.
+  var ov=root.querySelector('#ddOverlay');
+  if(ov && !ov._wired){ ov._wired=true;
+    ov.addEventListener('click', function(e){ if(e.target===ov || e.target.closest('.dd-close')) ov.classList.remove('open'); });
+  }
+  if(!root._escWired){ root._escWired=true;
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ var o=document.querySelector('.ov-avgo #ddOverlay'); if(o) o.classList.remove('open'); } });
+  }
+  // Build the first (active) tab's charts.
+  var active = root.querySelector('.ovt-tab.active');
+  if(active){ var key=active.getAttribute('data-ovt'), t=tabDef(key), pane=paneFor(root,key);
+    if(t && t.init && pane) requestAnimationFrame(function(){ t.init(pane); }); }
+}
+
+export var avgoOverview = { html: html, init: init };

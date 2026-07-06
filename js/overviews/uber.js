@@ -307,43 +307,53 @@ function mbars(arr){ return '<div class="ov-mbars">'+arr.map(function(r){
     '<div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:'+r[1]+'%;background:'+r[3]+';">'+esc(r[2])+'</div></div>'+
     '<div class="ov-mbar-v">'+r[1]+'%</div></div>';
 }).join('')+'</div>'; }
-// M&A cards (reuses shared .ov-cards-mna).
+// M&A grouped by WHAT CHANGED IN THE FINANCIALS — short by default, full terms on tap.
 function mnaTimeline(){
+  var byName={}; MNA.forEach(function(m){ byName[m.n]=m; });
   var DIV=[
     {y:'2016', n:'China → Didi', fp:'Exited a cash-furnace market for a <b>Didi equity stake</b>.'},
     {y:'2018', n:'SE Asia → Grab', fp:'Swapped mounting losses for a <b>Grab stake</b>.'},
-    {y:'2020', n:'Self-driving (ATG) → Aurora', fp:'Shed heavy <b>AV R&D burn</b> — a major step toward the 2023 profit; kept a ~26% stake.', big:true},
+    {y:'2020', n:'Self-driving (ATG) → Aurora', fp:'Shed heavy <b>AV R&D burn</b> — a major step toward the 2023 profit; kept a ~26% stake.'},
     {y:'2021', n:'Russia → Yandex', fp:'Sold the JV stake for cash on the way out.'}
   ];
-  var acq=MNA.slice().sort(function(a,b){ return (+String(a.y).replace(/\D/g,''))-(+String(b.y).replace(/\D/g,'')); });
+  // impact → which deals, the color, and a one-line "so what"
+  var GROUPS=[
+    { label:'Created a whole segment', color:'#06965A', note:'Added a brand-new reporting line to the P&L.', click:true, items:[byName['Postmates'], byName['Transplace']] },
+    { label:'Opened grocery', color:'#1E9E62', note:'The on-ramp to today’s ~$12B grocery run-rate.', click:true, items:[byName['Cornershop']] },
+    { label:'Added new regions', color:'#2E6BE6', note:'Bought the local leader where Uber doesn’t operate itself.', click:true, items:[byName['Careem'], byName['Trendyol Go']] },
+    { label:'Turned losses into equity stakes', color:'#7A5AF8', note:'Exited cash-burning markets for shares — a key step to the 2023 profit (and why GAAP net income now swings).', click:false, items:DIV },
+    { label:'Misses & write-offs', color:'#C0392B', note:'The rare M&A that didn’t work.', click:true, items:[byName['Drizly'], byName['Foodpanda Taiwan']] }
+  ];
   var h='<style>'+
-    '.mnt-h2{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin:14px 0 8px}.mnt-h2.acq{color:#049a4f}.mnt-h2.dv{color:#2E6BE6}'+
-    '.mnt-rail{display:flex;flex-wrap:wrap;gap:9px}'+
-    '.mnt-chip{flex:1;min-width:158px;max-width:250px;border:1px solid var(--bdr);border-radius:11px;padding:10px 12px;background:#fff}'+
-    '.mnt-chip.acq{border-top:3px solid #06C167}.mnt-chip.dv{border-top:3px solid #2E6BE6}.mnt-chip.miss{border-top-color:#C0392B}'+
-    '.mnt-chip.acq.ov-clickable{cursor:pointer;transition:.15s}.mnt-chip.acq.ov-clickable:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-2px)}'+
-    '.mnt-chip.big{box-shadow:0 0 0 2px rgba(46,107,230,.16)}'+
-    '.mnt-top{display:flex;justify-content:space-between;align-items:center;gap:6px}'+
-    '.mnt-yr{font-size:11px;font-weight:800;color:var(--navy)}.mnt-cat{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--mu);background:#eef2f7;border-radius:10px;padding:1px 7px}'+
-    '.mnt-n{font-size:12.5px;font-weight:800;color:var(--navy);margin:5px 0 4px}.mnt-x{font-size:9px;color:#C0392B;font-weight:800;text-transform:uppercase}'+
-    '.mnt-fp{font-size:11px;color:var(--navy);line-height:1.45}.mnt-fp b{font-weight:800}'+
-    '.mnt-more{font-size:10px;color:#049a4f;font-weight:700;margin-top:6px}'+
-    '.mnt-axis{text-align:center;font-size:11.5px;color:var(--navy);background:linear-gradient(90deg,transparent,rgba(6,193,103,.10),transparent);border-top:1px dashed var(--bdr);border-bottom:1px dashed var(--bdr);padding:9px;margin:14px 0}.mnt-axis b{font-weight:800}.mnt-star{color:#E8A00C}'+
-    '.mnt-punch{font-size:11.5px;color:var(--navy);line-height:1.6;background:#f6f8fa;border-left:3px solid #10141A;border-radius:8px;padding:11px 14px;margin-top:14px}.mnt-punch b{font-weight:800}'+
+    '.mng-grp{border:1px solid var(--bdr);border-left:4px solid #ccc;border-radius:10px;padding:11px 13px;margin-bottom:9px}'+
+    '.mng-h{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:9px}'+
+    '.mng-t{font-size:12.5px;font-weight:800;color:var(--navy)}.mng-note{font-size:11px;color:var(--mu);line-height:1.4}'+
+    '.mng-rail{display:flex;flex-wrap:wrap;gap:8px}'+
+    '.mng-chip{flex:1;min-width:150px;max-width:230px;border:1px solid var(--bdr);border-radius:9px;padding:9px 11px;background:#fff}'+
+    '.mng-chip.click{cursor:pointer;transition:.14s}.mng-chip.click:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-2px)}'+
+    '.mng-chip.miss{border-color:#E7B7B0}'+
+    '.mng-top{display:flex;justify-content:space-between;align-items:center;gap:6px}'+
+    '.mng-yr{font-size:10.5px;font-weight:800;color:var(--navy)}.mng-deal{font-size:9.5px;font-weight:700;color:var(--mu);background:#eef2f7;border-radius:9px;padding:1px 7px}'+
+    '.mng-n{font-size:12px;font-weight:800;color:var(--navy);margin:4px 0 3px}.mng-x{font-size:8.5px;color:#C0392B;font-weight:800;text-transform:uppercase}'+
+    '.mng-fp{font-size:10.5px;color:var(--navy);line-height:1.4}.mng-fp b{font-weight:800}.mng-more{font-size:9.5px;font-weight:700;margin-top:5px}'+
   '</style>';
-  h+='<div class="ov-diagram-cap" style="margin:0 0 4px">Uber’s M&A runs on <b>two tracks</b>: acquisitions <b>add</b> bookings and whole segments; divestitures <b>shed</b> losses and turn them into equity stakes. Read together, they explain how the P&L reached profit. <b>Tap any acquisition</b> for terms.</div>';
-  h+='<div class="mnt-h2 acq">↑ Acquisitions — what they <b>added</b> (offense)</div>';
-  h+='<div class="mnt-rail">'+acq.map(function(m){ var mc=m.miss?' miss':'';
-    return '<div class="mnt-chip acq'+mc+' ov-clickable" data-detail="mna:'+esc(m.n)+'">'+
-      '<div class="mnt-top"><span class="mnt-yr">'+esc(m.y)+'</span><span class="mnt-cat">'+esc(m.cat)+'</span></div>'+
-      '<div class="mnt-n">'+esc(m.n)+(m.miss?' <span class="mnt-x">miss</span>':'')+'</div>'+
-      '<div class="mnt-fp">'+(m.fp||'')+'</div><div class="mnt-more">terms ›</div></div>'; }).join('')+'</div>';
-  h+='<div class="mnt-axis"><span class="mnt-star">★</span> Q2 2023 — Uber’s <b>first-ever GAAP operating profit</b>, where both tracks converge</div>';
-  h+='<div class="mnt-h2 dv">↓ Divestitures — what they <b>shed</b> → the path to profit (defense)</div>';
-  h+='<div class="mnt-rail">'+DIV.map(function(d){
-    return '<div class="mnt-chip dv'+(d.big?' big':'')+'"><div class="mnt-top"><span class="mnt-yr">'+esc(d.y)+'</span></div>'+
-      '<div class="mnt-n">'+d.n+'</div><div class="mnt-fp">'+d.fp+'</div></div>'; }).join('')+'</div>';
-  h+='<div class="mnt-punch"><b>What actually changed in the financials:</b> Postmates made <b>Delivery a co-equal segment</b>, Transplace <b>created Freight</b>, Cornershop opened <b>grocery</b>, Careem/Trendyol added <b>regions</b>. Meanwhile exiting China, SE Asia, Russia and self-driving turned cash-burning operations into <b>equity stakes</b> — which is exactly why <b>GAAP net income swings</b> quarter to quarter (and why Uber guides on <b>Non-GAAP EPS</b>). Recent AV “deals” are capital commitments, not acquisitions.</div>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 10px">Uber’s deals, grouped by <b>what each changed in the financials</b> — not by date. Acquisitions <b>added</b> segments, grocery and regions; divestitures <b>turned losses into equity stakes</b> (the quiet engine of the 2023 profit). <b>Tap any acquisition</b> for terms &amp; outcome.</div>';
+  function chip(m, click, accent){
+    if(!m) return '';
+    var cls='mng-chip'+(click?' click ov-clickable':'')+(m.miss?' miss':'');
+    var attr=click?' data-detail="mna:'+esc(m.n)+'"':'';
+    return '<div class="'+cls+'"'+attr+' style="border-top:3px solid '+accent+'">'+
+      '<div class="mng-top"><span class="mng-yr">'+esc(m.y)+'</span>'+(m.deal?'<span class="mng-deal">'+esc(m.deal)+'</span>':'')+'</div>'+
+      '<div class="mng-n">'+esc(m.n)+(m.miss?' <span class="mng-x">miss</span>':'')+'</div>'+
+      '<div class="mng-fp">'+(m.fp||'')+'</div>'+
+      (click?'<div class="mng-more" style="color:'+accent+'">terms ›</div>':'')+'</div>';
+  }
+  h+=GROUPS.map(function(g){
+    return '<div class="mng-grp" style="border-left-color:'+g.color+'">'+
+      '<div class="mng-h"><span class="mng-t">'+esc(g.label)+'</span><span class="mng-note">'+g.note+'</span></div>'+
+      '<div class="mng-rail">'+g.items.map(function(m){ return chip(m, g.click, g.color); }).join('')+'</div></div>';
+  }).join('');
+  h+=collapsible('Why this matters for the financials', '<div style="font-size:11.5px;color:var(--navy);line-height:1.6">Postmates made <b>Delivery a co-equal segment</b>, Transplace <b>created Freight</b>, Cornershop opened <b>grocery</b>, Careem/Trendyol added <b>regions</b>. Meanwhile exiting China, SE Asia, Russia and self-driving turned cash-burning operations into <b>equity stakes</b> — which is exactly why <b>GAAP net income swings</b> quarter to quarter (and why Uber guides on <b>Non-GAAP EPS</b>). Recent AV “deals” are capital commitments, not acquisitions.</div>', false);
   return h;
 }
 function rangeSlider(key,maxI,a,b){
@@ -496,10 +506,24 @@ var UB_THEMES = [
     ]},
 ];
 
+// Regroup the theme-tagged updates by quarter (newest first) \u2014 same data, different lens.
+function callsByQuarter(){
+  var map={}, order=[];
+  UB_THEMES.forEach(function(ct){ ct.updates.forEach(function(u){ if(!map[u.q]){ map[u.q]=[]; order.push(u.q); } map[u.q].push({ theme:ct.theme, items:u.items }); }); });
+  function qval(q){ var m=String(q).match(/Q(\d)\s+(\d{4})/); return m?(+m[2])*10+(+m[1]):0; }
+  order.sort(function(a,b){ return qval(b)-qval(a); });
+  return { order:order, map:map };
+}
 function callsBody(){
-  var h='<p class="ov-lede">The key narrative threads from <b>10 earnings calls</b> (Q4 2023 \u2192 Q1 2026) \u2014 organized by <b>theme</b> so you can trace how each story evolved. Tap any theme to expand.</p>';
-  h+='<div class="lpb-acc" id="ubCallsAcc">';
-  UB_THEMES.forEach(function(ct,i){
+  var h='<style>.calls-tog{display:inline-flex;gap:4px;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:3px;margin-bottom:14px}'+
+    '.calls-pill{border:none;background:transparent;font:inherit;font-size:12px;font-weight:700;color:var(--mu);padding:5px 15px;border-radius:999px;cursor:pointer;transition:.12s}'+
+    '.calls-pill:hover{color:var(--navy)}.calls-pill.active{background:var(--navy);color:#fff}'+
+    '.calls-tl{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--navy);margin:0 0 4px}</style>';
+  h+='<p class="ov-lede">The key narrative threads from <b>10 earnings calls</b> (Q4 2023 \u2192 Q1 2026). Switch lens: <b>By theme</b> traces how each story evolved; <b>By quarter</b> shows what mattered in a given call. Tap any row to expand.</p>';
+  h+='<div class="calls-tog" role="tablist"><button type="button" class="calls-pill active" data-callsv="theme">By theme</button><button type="button" class="calls-pill" data-callsv="quarter">By quarter</button></div>';
+  // \u2500\u2500 By theme (default) \u2500\u2500
+  h+='<div class="lpb-acc" id="ubCallsTheme">';
+  UB_THEMES.forEach(function(ct){
     h+='<div class="lpb-acc-item">';
     h+='<button type="button" class="lpb-acc-h"><span>'+esc(ct.theme)+'</span><span class="lpb-acc-ic">+</span></button>';
     h+='<div class="lpb-acc-body">';
@@ -507,6 +531,20 @@ function callsBody(){
     ct.updates.forEach(function(u){
       h+='<div style="margin-bottom:10px"><span class="ov-chip" style="margin-right:6px">'+esc(u.q)+'</span>';
       h+='<ul class="ov-bullets" style="margin-top:4px">'+u.items.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ul></div>';
+    });
+    h+='</div></div>';
+  });
+  h+='</div>';
+  // \u2500\u2500 By quarter \u2500\u2500
+  var byQ=callsByQuarter();
+  h+='<div class="lpb-acc" id="ubCallsQuarter" style="display:none">';
+  byQ.order.forEach(function(q){
+    h+='<div class="lpb-acc-item">';
+    h+='<button type="button" class="lpb-acc-h"><span>'+esc(q)+'</span><span class="lpb-acc-ic">+</span></button>';
+    h+='<div class="lpb-acc-body">';
+    byQ.map[q].forEach(function(row){
+      h+='<div style="margin-bottom:12px"><div class="calls-tl">'+esc(row.theme)+'</div>';
+      h+='<ul class="ov-bullets" style="margin-top:2px">'+row.items.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ul></div>';
     });
     h+='</div></div>';
   });
@@ -647,6 +685,62 @@ function uberArenaMap(){
   h+=A.map(function(x){ return '<div class="uam-row ov-clickable" data-detail="arena:'+x.k+'" style="border-left-color:'+x.pc+'"><div class="uam-a">'+x.a+'<span class="uam-r">'+x.r+'</span></div><div class="uam-pos" style="color:'+x.pc+';background:'+x.pb+'">'+x.pos+'</div><div class="uam-read">'+x.read+' <span style="color:#10141A;font-weight:800;white-space:nowrap">detail ›</span></div></div>'; }).join('');
   return h;
 }
+// Reusable collapsible section — main content stays; deeper detail folds away (reader's choice).
+function collapsible(title, inner, open){
+  return '<div class="ov-collap'+(open?' open':'')+'">'+
+    '<button type="button" class="ov-collap-h"><span class="ov-collap-ic">'+(open?'▾':'▸')+'</span>'+esc(title)+'</button>'+
+    '<div class="ov-collap-b"'+(open?'':' hidden')+'>'+inner+'</div></div>';
+}
+// Competitive map — rivals plotted by two business characteristics (not by "similarity to Uber").
+// x = business breadth (single-service specialist → multi-service platform); y = geographic reach (1 region → global).
+function uberRivalScatter(){
+  // Arena of competition with Uber → dot color (see legend). Uber itself = black (spans all arenas).
+  var AC={ mob:'#3A7BD5', del:'#E8830C', groc:'#1E9E62', av:'#7A5AF8', uber:'#10141A' };
+  var D=[
+    ['Uber',552,60,10,AC.uber,'',
+      'The broad-and-global corner. Rides + Delivery (~half of bookings) + Freight + Ads across ~70 countries. Its moat isn’t price — peers all take ~30% — it’s <b>scale + a cross-sell bundle</b> no single-service rival can match.',true],
+    ['DiDi',255,100,8,AC.mob,'',
+      '<b>Broad geography, mobility-led.</b> Rides + some delivery &amp; fintech across China, Brazil and Mexico. Uber exited these markets and <b>holds equity stakes</b> rather than competing head-on.'],
+    ['Grab',505,165,8,AC.mob,'',
+      '<b>Single-region super-app.</b> Rides + food + GrabPay finance — but only ~8 SE-Asian countries. High breadth, one region; Uber sold its SE-Asia arm to Grab for a stake.'],
+    ['Bolt',360,148,7,AC.mob,'',
+      '<b>Regional multi-service.</b> Rides + scooters + Bolt Food + grocery across ~45 European &amp; African countries. Mid-breadth, regional — where Uber competes locally.'],
+    ['DoorDash',305,172,9,AC.del,'',
+      '<b>Delivery-first, broadening.</b> ~60% of US food delivery (vs Eats ~22–25%), now adding grocery, ads and DashPass. Out-scales Uber in US food, but far smaller abroad and no mobility.'],
+    ['Lyft',205,196,8,AC.mob,'',
+      '<b>Pure rideshare, domestic.</b> ~7% of revenue is non-rideshare vs Uber’s ~50%. Same ~30% take and US #2 — so the gap is scale + a Delivery business funding rider CAC, not price.'],
+    ['Instacart',158,216,8,AC.groc,'',
+      '<b>Grocery specialist, US-only.</b> The category-native leader Uber’s grocery push fights — deep retailer integrations and 22M+ items. Narrow but deep; no mobility, no international.'],
+    ['Waymo',110,232,7,AC.av,'',
+      '<b>AV specialist, a few cities.</b> Robotaxis on its own app (SF/Phoenix/LA) and on Uber’s (Austin/Atlanta) — <b>partner and rival</b> at once. The defining open question for Mobility.']
+  ];
+  var LEG=[['Mobility',AC.mob],['Delivery',AC.del],['Grocery',AC.groc],['Autonomous',AC.av],['Uber — all arenas',AC.uber]];
+  function dot(d){ var name=d[0],x=d[1],y=d[2],r=d[3],col=d[4],why=d[6],hl=d[7];
+    return '<circle class="peer-dot" cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+col+'"'+(hl?' stroke="#fff" stroke-width="2"':'')+' style="cursor:pointer" data-name="'+esc(name)+'" data-why="'+esc(why)+'"></circle>'+
+      '<text x="'+x+'" y="'+(y-r-5)+'" font-family="Inter,sans-serif" font-size="'+(hl?12.5:11)+'" font-weight="'+(hl?800:700)+'" fill="'+(hl?col:'#3A4552')+'" text-anchor="middle" style="pointer-events:none">'+esc(name)+'</text>'; }
+  var h='<style>.peer-tip{position:fixed;z-index:60;max-width:250px;background:#10141A;color:#fff;border-radius:9px;padding:9px 12px;font-size:11.5px;line-height:1.5;box-shadow:0 8px 22px rgba(16,20,26,0.28);pointer-events:none;border-top:3px solid #06C167}'+
+    '.peer-tip .pt-n{display:block;font-weight:800;font-size:12.5px;color:#06C167;margin-bottom:3px}'+
+    '.peer-dot{transition:r .1s}.peer-dot:hover{stroke:#06C167;stroke-width:2}'+
+    '.ov-collap{border:1px solid var(--bdr);border-radius:10px;margin:14px 0 0;overflow:hidden}'+
+    '.ov-collap-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12px;font-weight:800;color:var(--navy);padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:8px}'+
+    '.ov-collap-h:hover{background:#EEF2F6}.ov-collap-ic{font-size:10px;color:var(--mu)}.ov-collap-b{padding:12px 14px 4px}'+
+    '.urs-leg{display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:center;margin:2px 0 4px}'+
+    '.urs-leg-i{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--navy)}'+
+    '.urs-leg-dot{width:10px;height:10px;border-radius:50%;flex:none}</style>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 6px">The rivals mapped by two business traits: <b>breadth</b> (single-service specialist → multi-service platform) and <b>geographic reach</b> (one region → global). Uber sits alone in the broad-and-global corner; everyone else is either <b>narrow</b> (Lyft, Instacart, DoorDash, Waymo) or <b>regional</b> (Grab, Bolt, DiDi). <span style="opacity:.75">Hover or tap any dot for the detail.</span></div>';
+  h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" role="img" aria-label="Uber competitive positioning map">'+
+    '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<line x1="80" y1="252" x2="80" y2="44" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<text x="88" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0">← single-service specialist</text>'+
+    '<text x="610" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">multi-service platform →</text>'+
+    '<text x="74" y="250" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">1 region</text>'+
+    '<text x="74" y="52" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">global</text>'+
+    D.map(dot).join('')+
+  '</svg></div>';
+  h+='<div class="urs-leg">'+LEG.map(function(l){ return '<span class="urs-leg-i"><span class="urs-leg-dot" style="background:'+l[1]+'"></span>'+esc(l[0])+'</span>'; }).join('')+'</div>';
+  h+='<div id="ubPeerTip" class="peer-tip" hidden></div>';
+  return h;
+}
 function overviewBody(c){
   var h='';
   h+='<div class="ov-snap">'+SNAPSHOT.map(function(p){ return '<div class="ov-snap-cell"><div class="ov-snap-k">'+esc(p[0])+'</div><div class="ov-snap-v">'+esc(p[1])+'</div></div>'; }).join('')+'</div>';
@@ -685,14 +779,11 @@ function overviewBody(c){
   h+=sec('3-Year Targets — Investor Day (Feb 2024)',
     '<div class="ov-targets ov-targets-3">'+TARGETS.map(function(b){ return '<div class="ov-target"><div class="ov-target-v">'+esc(b.v)+'</div><div class="ov-target-l">'+esc(b.l)+'</div><div class="ov-target-s">'+esc(b.s)+'</div></div>'; }).join('')+'</div>'+
     '<div class="ov-fynote" style="margin-top:14px">Uber is <b>running ahead of all three</b> — bookings ~+20%/yr while free cash flow compounds far faster.</div>');
-  h+=sec('History & Milestones', '<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>');
-  h+=sec('M&A — what each deal changed in the financials', mnaTimeline());
-  h+=sec('Competitive Landscape — the arena battle map',
-    uberArenaMap()+
-    '<div class="ov-subh" style="margin-top:18px">The rivals up close</div>'+
-    '<style>.ucomp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:2px 0 6px}.ucomp-card{border:1px solid var(--bdr);border-radius:10px;padding:14px 16px;background:var(--w)}.ucomp-top{display:flex;align-items:center;gap:11px;margin-bottom:9px}.ucomp-logo{width:34px;height:34px;border-radius:8px;border:1px solid var(--bdr);background:#fff;object-fit:contain;padding:5px;flex:none}.ucomp-n{font-size:14px;font-weight:800;color:var(--navy);line-height:1.2}.ucomp-arena{font-size:11px;color:var(--mu);font-weight:600;margin-top:2px}.ucomp-edge{font-size:12px;color:var(--mu);line-height:1.5}.ucomp-edge b{color:var(--navy)}@media(max-width:720px){.ucomp-grid{grid-template-columns:1fr}}</style>'+
-    '<div class="ucomp-grid">'+PEERS.map(function(p){ return '<div class="ucomp-card"><div class="ucomp-top"><img class="ucomp-logo" src="https://logo.clearbit.com/'+p.dom+'" alt="'+esc(p.n)+'" loading="lazy" onerror="this.onerror=null;this.src=\'https://www.google.com/s2/favicons?domain='+p.dom+'&sz=64\'"><div><div class="ucomp-n">'+esc(p.n)+'</div><div class="ucomp-arena">'+esc(p.arena)+'</div></div></div><div class="ucomp-edge"><b>Uber’s edge —</b> '+p.edge+'</div></div>'; }).join('')+'</div>'+
-    '<div class="ov-diagram-cap" style="margin-top:10px">'+PEER_NOTE+'</div>');
+  // History & Milestones + M&A moved to the History tab → see historyStoryBody().
+  h+=sec('Competitive Landscape — the rivals, mapped',
+    uberRivalScatter()+
+    collapsible('Arena by arena — where Uber leads, contests, or is only placing a bet', uberArenaMap(), false)+
+    '<div class="ov-diagram-cap" style="margin-top:12px">'+PEER_NOTE+'</div>');
   h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
   return h;
 }
@@ -768,7 +859,7 @@ function mobilityBody(c){
     '<style>.alp{display:flex;align-items:center;gap:16px;background:rgba(6,193,103,0.07);border:1px solid rgba(6,193,103,0.25);border-radius:12px;padding:14px 18px;margin:0 0 12px}.alp-big{font-size:34px;font-weight:800;color:#06965A;line-height:1;flex:none}.alp-txt{font-size:12.5px;color:var(--navy);line-height:1.5}.alp-txt b{font-weight:800}@media(max-width:560px){.alp{flex-direction:column;align-items:flex-start;gap:6px}}</style><div class="alp"><div class="alp-big">0.11%</div><div class="alp-txt">of Uber’s ~<b>$193B</b> gross bookings is <b>disclosed supplier spend</b> — ~<b>$210M</b> across 138 suppliers, and only three carry any dollar value (HCL $127M, Oracle $55M, Alexandria $28M). <b>Uber does not run a supply chain; it aggregates one.</b></div></div>'+'<div class="ov-diagram-cap" style="margin:0 0 10px">Uber’s supplier base sorted by <b>what they do</b> for the platform. Most are strategic ties, not traditional vendor contracts — which is itself the asset-light thesis in data form.</div>'+
     '<div class="usc-grid">'+SC_SUPPLIERS.map(scCard).join('')+'</div>'+
     '<div class="ov-fynote" style="margin-top:12px"><b>The asset-light proof in the data:</b> of 138 identified suppliers, only <b>three carry disclosed dollar values</b> — HCL ($127M, engineering), Oracle ($55M, cloud), Alexandria RE ($28M, offices). Total ~<b>$210M</b> against ~<b>$193B</b> of gross bookings — a ratio that screams platform, not operator. (Of the 30+ AV partners, only ~<b>5–7</b> have real money committed; the rest are MOUs.) <span class="ave-subh-note">Bloomberg SPLC, 29-Jun-2026.</span></div>');
-  h+=sec('Insurance', '<div class="ov-callout">Insurance is central to Uber&rsquo;s cash story — <b>Aleka</b> (Uber&rsquo;s captive), the <b>~$12.9B reserve float</b>, and the crutch → tailwind turnaround now live in the dedicated <b>Insurance & FCF</b> tab. On a Mobility trip it is the largest cost — and the float adds ~<b>$0.35 of every $10</b> to cash (shown above).</div>');
+  h+=sec('Insurance', '<div class="ov-callout">Insurance is central to Uber&rsquo;s cash story — <b>Aleka</b> (Uber&rsquo;s captive), the <b>~$12.9B reserve float</b>, and the crutch → tailwind turnaround now live in the dedicated <b>Insurance & FCF</b> tab. On a Mobility trip it is the largest single cost — and its <b>float</b> is a real contributor to cash. See the <b>Insurance &amp; FCF</b> tab for the full mechanism.</div>');
   h+=sec('Regulation & Driver Classification', '<div class="ir-diagram-cap" style="font-size:12px;color:var(--mu);margin:0 0 8px">The core question — <b>do drivers stay contractors?</b> — is largely settled in Uber\u2019s favor. Tap any card for the detail.</div><div class="ir-reg">'+REGV.map(function(r,i){return regCard(r,i);}).join('')+'</div>');
   h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
   return h;
@@ -990,11 +1081,10 @@ function insMoneyFlow(){
   h+='<text x="462" y="80" text-anchor="middle" font-size="9.5" font-weight="800" fill="#2E6BE6">invest</text>';
   h+='<text x="460" y="228" text-anchor="middle" font-size="9.5" font-weight="800" fill="#C77A11">pay LATER</text>';
   // source node -> aleka:0 (rider funds premium)
-  h+='<g class="mf-node ov-clickable" data-detail="aleka:0">'+
+  h+='<g class="mf-node ov-clickable" data-detail="ins:why">'+
     '<rect x="14" y="116" width="136" height="68" rx="10" fill="#fff" stroke="#C7CED6" stroke-width="1.5"/>'+
-    '<text x="82" y="140" text-anchor="middle" font-size="12" font-weight="800" fill="#10141A">Every $10 fare</text>'+
-    '<text x="82" y="159" text-anchor="middle" font-size="10.5" fill="#3A4552">insurance premium</text>'+
-    '<text x="82" y="177" text-anchor="middle" font-size="12.5" font-weight="800" fill="#06965A">~$0.50</text></g>';
+    '<text x="82" y="145" text-anchor="middle" font-size="12.5" font-weight="800" fill="#10141A">Every trip</text>'+
+    '<text x="82" y="164" text-anchor="middle" font-size="10.5" fill="#3A4552">funds the premium</text></g>';
   // reservoir (the float) -> aleka:2 (books provision & invests)
   h+='<g class="mf-node ov-clickable" data-detail="aleka:2">'+
     '<rect x="222" y="60" width="194" height="180" rx="13" fill="rgba(6,193,103,0.07)" stroke="#06965A" stroke-width="2"/>'+
@@ -1013,7 +1103,7 @@ function insMoneyFlow(){
     '<text x="603" y="204" text-anchor="middle" font-size="11.5" font-weight="800" fill="#C77A11">Claims paid out</text>'+
     '<text x="603" y="224" text-anchor="middle" font-size="10" fill="#3A4552">months &amp; years later</text></g>';
   h+='</svg>';
-  h+='<div class="mf-cap"><b>Collect now, pay later.</b> Riders fund the premium; it lands in the Aleka <b>$12.9B</b> reserve and is <b>invested</b> while Uber waits — sometimes years — to pay claims. That timing gap <i>is</i> the <b>float</b>: the reserve build threw <b>+$251M &#8594; +$399M &#8594; +$658M</b> into operating cash (2023&#8594;25), and ~<b>$0.35 of every $10 fare</b> becomes Uber cash. <span class="ave-subh-note">Tap any node for the accounting step. The bear case (below) argues drawing the reserve down flatters that cash.</span></div>';
+  h+='<div class="mf-cap"><b>Collect now, pay later.</b> Riders fund the premium; it lands in the Aleka <b>$12.9B</b> reserve and is <b>invested</b> while Uber waits — sometimes years — to pay claims. That timing gap <i>is</i> the <b>float</b>: the reserve build threw <b>+$251M &#8594; +$399M &#8594; +$658M</b> into operating cash (2023&#8594;25). <span class="ave-subh-note">Tap any node to learn the concept. Per-fare cent breakdowns from the one-pager are <b>illustrative only</b> — the reserve and cash-flow figures here are the reported ones.</span></div>';
   h+='</div>';
   return h;
 }
@@ -1042,6 +1132,17 @@ function insModelCompare(){
   h+='<div class="imc-so"><b>In one line:</b> Uber&rsquo;s insurance is a <b>cash-flow story</b> (the float it invests); Lyft&rsquo;s is a <b>cost-reduction story</b> (SB&nbsp;371 + offloading the tail). Same plumbing, opposite emphasis.</div>';
   return h;
 }
+// Beginner-friendly pop-ups for the insurance tab (assume the reader knows nothing about insurance).
+var INS_POP={
+  why:{ t:'Why does an Uber ride need insurance?', h:'Every time you take an Uber, the law in most places requires <b>commercial auto insurance</b> covering that specific trip — well beyond a normal personal car policy. If there is a crash, injuries and damage to the rider, driver and others have to be paid for. So insurance is not optional overhead for Uber; it is a <b>legal cost baked into every single trip</b>.' },
+  captive:{ t:'What is a “captive insurer”? (Aleka)', h:'Instead of <b>buying</b> insurance from an outside company (and paying their profit margin), Uber built <b>its own insurance company</b> — a wholly-owned subsidiary called <b>Aleka</b>, based in Hawaii. That is a <b>captive insurer</b>: it exists only to insure its parent. By keeping insurance in-house, Uber captures the economics (and the investment income on reserves) instead of handing them to a third party.' },
+  float:{ t:'What is the “float”?', h:'Uber collects insurance money from fares <b>today</b> but pays out most accident claims <b>months or years later</b>. In between, it sits on a large pile of cash. That pile is the <b>float</b>. Uber <b>invests</b> it and earns income while it waits to pay claims — using money it owes but has not paid yet. It is the same engine Warren Buffett’s insurers are famous for: <b>collect now, pay later, invest the gap.</b>' },
+  selfins:{ t:'“~95% self-insured” — what that means', h:'<b>Self-insured</b> means Uber <b>keeps most of the risk itself</b> instead of paying an outside insurer to take it. It routes ~95% of the risk into its own captive (Aleka) and only buys outside reinsurance for rare, very large losses. More risk kept = more reserves it controls and invests — but also more exposure if claims come in worse than expected.' },
+  reserves:{ t:'Reserves = money set aside for future claims', h:'After a crash, the final bill can take <b>years</b> to settle (medical, legal). Uber has to <b>estimate</b> what it will eventually owe — including claims that already happened but have not been reported yet — and set that money aside now as a <b>reserve</b> (a liability on the balance sheet). It is an expense booked today, paid in cash later. That “booked now, paid later” gap is what creates the float.' },
+  invest:{ t:'Investing the float', h:'The reserved cash is not idle — Uber <b>invests it</b> until claims come due, earning income on money it does not yet owe. This is why, through the turnaround, Uber’s <b>cash flow ran ahead of its accounting profit</b>: the reserve build and float added real cash while the P&L was still catching up.' },
+  bull:{ t:'Bull — the cash is real', h:'FY2025 free cash flow of <b>$9.8B (+42%)</b>, ~112% of Adjusted EBITDA. An <b>investment-grade credit rating</b>, the first-ever buyback (<b>$20B</b> authorized, ~$3B/quarter), and ~$10B cumulative FCF. The case: asset-light growth converts almost fully to cash, and the rating agencies and balance sheet back it up.' },
+  bear:{ t:'Bear — a float-fed mirage', h:'Cedar Street argues that stripping out stock-comp and the reserve build cuts “real” FCF from ~$8.6B to <b>~$4.1B</b>, calling Uber <b>“an unregulated, under-capitalized insurance company.”</b> Uber also <b>pulled ~$4.1B out of reserves into cash in 2024–25</b>; Consumer Watchdog’s 2026 “License to Kill” report alleges it is trimming accident liability to help fund robotaxis. <i>These are contested activist/analyst framings, not Uber’s position.</i>' }
+};
 function insuranceBody(){
   var RES=[['2021',3.99],['2022',4.72],['2023',6.74],['2024',9.80],['2025',12.46],['Q1 26',12.9]];
   var OI=[['2021',-3.53],['2022',-1.78],['2023',0.99],['2024',2.83],['2025',5.60]];
@@ -1055,6 +1156,13 @@ function insuranceBody(){
     '.uins-mc{border:1px solid var(--bdr);border-radius:10px;padding:12px 14px}'+
     '.uins-mc-h{font-size:12.5px;font-weight:800;color:#049a4f;margin-bottom:5px}'+
     '.uins-mc-d{font-size:11.5px;color:var(--navy);line-height:1.5}.uins-mc-d b{font-weight:800}'+
+    '.uins-mc.ov-clickable{cursor:pointer;transition:.14s}.uins-mc.ov-clickable:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);border-color:#06965A}'+
+    '.uins-primer{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:0 0 11px}'+
+    '.uins-primer-l{font-size:11.5px;font-weight:700;color:var(--mu)}'+
+    '.uins-chip{font:inherit;font-size:11px;font-weight:700;color:#049a4f;background:rgba(6,193,103,0.07);border:1px solid rgba(6,193,103,0.3);border-radius:999px;padding:4px 12px;cursor:pointer;transition:.14s}'+
+    '.uins-chip:hover{background:rgba(6,193,103,0.14)}'+
+    '.uins-more{display:inline-block;margin-top:5px;font-size:10.5px;font-weight:800;color:#049a4f;cursor:pointer}'+
+    '.uins-side .uins-more{margin-top:0}'+
     '.uins-bar{display:grid;grid-template-columns:56px 1fr 60px;gap:9px;align-items:center;margin:5px 0}'+
     '.uins-bar-y{font-size:11px;font-weight:700;color:var(--mu);text-align:right}'+
     '.uins-bar-t{height:20px;background:rgba(138,147,160,0.10);border-radius:5px;overflow:hidden}'+
@@ -1080,10 +1188,14 @@ function insuranceBody(){
     '<div class="uins-hero-t">Uber quietly runs one of the largest in-house insurers you have never heard of — a <b>~$12.9B</b> book of claims reserves (Q1 2026). Its <b>float</b> helped power the cash-flow turnaround; and as Gross Bookings compound ~20% a year, insurance is finally becoming a <b>smaller slice</b> of the model.</div></div>';
   // machine
   h+='<div class="uins-h">The self-insurance machine</div>';
+  h+='<div class="uins-primer"><span class="uins-primer-l">New to this? Start here:</span>'+
+    '<button type="button" class="uins-chip ov-clickable" data-detail="ins:why">Why a ride needs insurance</button>'+
+    '<button type="button" class="uins-chip ov-clickable" data-detail="ins:captive">What’s a captive insurer?</button>'+
+    '<button type="button" class="uins-chip ov-clickable" data-detail="ins:float">What’s the “float”?</button></div>';
   h+='<div class="uins-m">'+
-    '<div class="uins-mc"><div class="uins-mc-h">~95% self-insured</div><div class="uins-mc-d">Uber must carry commercial auto insurance on every trip. Instead of buying it all, it <b>retains most of the risk</b> and reinsures it into its own captive, <b>Aleka Insurance</b> (a wholly-owned Hawaii subsidiary) — effectively running its own insurer.</div></div>'+
-    '<div class="uins-mc"><div class="uins-mc-h">Reserves = future claims</div><div class="uins-mc-d">It books an actuarial liability for <b>unpaid claims</b> (reported + incurred-but-not-reported) — an expense accrued now, paid in cash over years. That timing gap is the <b>float</b>.</div></div>'+
-    '<div class="uins-mc"><div class="uins-mc-h">It invests the float</div><div class="uins-mc-d">Uber holds and invests the reserved cash until claims settle — interest-free capital, Buffett-style. This is why <b>cash flow ran ahead of accounting profit</b> through the turnaround.</div></div>'+
+    '<div class="uins-mc ov-clickable" data-detail="ins:selfins"><div class="uins-mc-h">~95% self-insured</div><div class="uins-mc-d">Uber must carry commercial insurance on every trip. Instead of buying it all, it <b>keeps most of the risk</b> in its own captive, <b>Aleka</b> (a Hawaii subsidiary) — effectively running its own insurer. <span class="uins-more">what this means ›</span></div></div>'+
+    '<div class="uins-mc ov-clickable" data-detail="ins:reserves"><div class="uins-mc-h">Reserves = future claims</div><div class="uins-mc-d">It sets aside money now for <b>claims it will pay years later</b> — an expense booked today, cash out later. That timing gap is the <b>float</b>. <span class="uins-more">how reserves work ›</span></div></div>'+
+    '<div class="uins-mc ov-clickable" data-detail="ins:invest"><div class="uins-mc-h">It invests the float</div><div class="uins-mc-d">Uber invests the reserved cash until claims settle — Buffett-style. This is why <b>cash flow ran ahead of accounting profit</b> through the turnaround. <span class="uins-more">the float, explained ›</span></div></div>'+
   '</div>';
   // reserves
   h+='<div class="uins-h">Follow the money — where the float comes from &amp; where it goes</div>';
@@ -1102,8 +1214,8 @@ function insuranceBody(){
   // debate
   h+='<div class="uins-h">Is the cash real? The debate</div>';
   h+='<div class="uins-two">'+
-    '<div class="uins-side bull"><div class="uins-side-h">Bull — the cash is real</div><div class="uins-side-d">FY2025 free cash flow of <b>$9.8B (+42%)</b>, ~112% of Adj. EBITDA. An <b>investment-grade rating</b>, the first-ever buyback ($20B authorized, ~$3B/quarter), and ~$10B cumulative FCF. Asset-light growth converts almost fully to cash.</div></div>'+
-    '<div class="uins-side bear"><div class="uins-side-h">Bear — a float-fed mirage</div><div class="uins-side-d">Cedar Street argues that stripping stock-comp and the reserve build cuts &ldquo;real&rdquo; FCF from ~$8.6B to <b>~$4.1B</b>, calling Uber <b>&ldquo;an unregulated, under-capitalized insurance company.&rdquo;</b> Uber also <b>pulled ~$4.1B out of reserves into cash in 2024–25</b>; Consumer Watchdog&rsquo;s 2026 &ldquo;License to Kill&rdquo; report alleges it is trimming accident liability to help fund robotaxis. <i>Contested activist/analyst framings, not Uber&rsquo;s position.</i></div></div>'+
+    '<div class="uins-side bull"><div class="uins-side-h">Bull — the cash is real</div><div class="uins-side-d">FCF <b>$9.8B (+42%)</b>, ~112% of Adj. EBITDA; investment-grade; a $20B buyback. <span class="uins-more ov-clickable" data-detail="ins:bull">read the full case ›</span></div></div>'+
+    '<div class="uins-side bear"><div class="uins-side-h">Bear — a float-fed mirage</div><div class="uins-side-d">Activists argue “real” FCF is closer to <b>~$4.1B</b> once stock-comp &amp; the reserve build are stripped out. <span class="uins-more ov-clickable" data-detail="ins:bear">read the full case ›</span></div></div>'+
   '</div>';
   // smaller slice
   h+='<div class="uins-h">Why it is becoming a smaller slice</div>';
@@ -1113,28 +1225,196 @@ function insuranceBody(){
   h+='<div class="ov-foot" style="margin-top:14px">Reserves and operating results from Uber 10-Ks / Q1 2026 10-Q; the reserve&rarr;cash-flow contribution is from the Summit dataset. Uber does <b>not</b> disclose a clean standalone &ldquo;insurance % of Gross Bookings,&rdquo; so that trend is directional/inferred from cost-of-revenue commentary. The &ldquo;FCF mirage&rdquo; and reserve-raid narratives are <b>attributed</b> analyst/activist framings (Cedar Street; Consumer Watchdog), not Uber&rsquo;s own accounting characterization.</div>';
   return h;
 }
+// ─── History tab body: company story (timeline) + M&A (reused from Overview) ───
+function historyStoryBody(){
+  var tl='<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>';
+  return sec('History & Milestones', tl)+sec('M&A — what each deal changed in the financials', mnaTimeline());
+}
+// ══════════════════════════════════════════════════════════════════════════════
+// STANDARDIZED OVERVIEW  (per docs/OVERVIEW_CONVENTIONS.md — the 7 fixed blocks)
+// Everything that does NOT fit these blocks is preserved in the Deep Dive tab,
+// never deleted (Golden Rule #1). The old bespoke Overview lives in Deep Dive ▸ Extras.
+// ══════════════════════════════════════════════════════════════════════════════
+// Block 1 — Key Facts. Canonical set; missing cells are omitted (never blank).
+// Sources: Uber FY2025 10-K (EDGAR CIK 0001543151, filed as a DOMESTIC 10-K), IR.
+// Exactly 10 cells (5 columns × 2 rows). CEO carries tenure; Market cap carries an as-of.
+var STD_FACTS=[
+  ['Listing','NYSE: UBER'],
+  ['HQ','San Francisco, CA, USA'],
+  ['Incorporation','Delaware, USA'],
+  ['SEC filer','Domestic (10-K/10-Q/8-K)'],
+  ['Founded','2009'],
+  ['IPO','May 2019'],
+  ['CEO','Dara Khosrowshahi · since 2017'],
+  ['Employees','~34,000 (Dec 2025)'],
+  ['Dividend','Non-payer'],
+  ['Market cap','~$195B · Jul 2026'],
+];
+function stdKeyFacts(){
+  return '<div class="stdkf">'+STD_FACTS.slice(0,10).map(function(p){ return '<div class="stdkf-cell"><div class="stdkf-k">'+esc(p[0])+'</div><div class="stdkf-v">'+esc(p[1])+'</div></div>'; }).join('')+'</div>'+
+    '<div class="ov-live" id="ubLive" hidden></div>';
+}
+// Block 3 — the 4-quadrant. Each cell ≤ ~30 words.
+var STD_BIZ=[
+  ['What it sells','Rides, food/grocery delivery and freight brokerage — plus Uber One membership and advertising — on one app across ~70 countries.'],
+  ['Who buys it','Consumers (riders &amp; eaters) on one side; the merchants, drivers/couriers and advertisers on the other side of the marketplace.'],
+  ['How it earns','A take (~20–30%) of gross bookings. Mobility is the profit engine; Delivery is scaling; advertising is ~100% incremental margin.'],
+  ['The edge','Global scale plus the cross-sell bundle — rides ⇄ eats ⇄ membership — that no single-service rival can match.'],
+];
+function stdFourQuad(){
+  return '<div class="stdq">'+STD_BIZ.map(function(b){ return '<div class="stdq-cell"><div class="stdq-k">'+esc(b[0])+'</div><div class="stdq-v">'+b[1]+'</div></div>'; }).join('')+'</div>';
+}
+// Block 4 — How it makes money (Segments ⇄ Geography toggle; both have ≥2 slices).
+var STD_SEG=[['Mobility',50,'~$97B',MOB],['Delivery',47,'~$90B',DEL],['Freight',3,'~$5B',FRT]];
+var STD_GEO=[['US & Canada',58,'$50.2B','#2E6BE6'],['EMEA',31,'$27.0B','#3A7BD5'],['Asia-Pacific',7,'$5.9B','#7A5AF8'],['Latin America',4,'$3.3B','#E8830C']];
+function stdMoneyMap(){
+  var h='<div class="mm-tog"><button type="button" class="mm-pill active" data-mm="seg">By segment</button><button type="button" class="mm-pill" data-mm="geo">By geography</button></div>';
+  h+='<div id="ubMMseg">'+mbars(STD_SEG)+'<div class="ov-diagram-cap" style="margin-top:6px">FY2025 gross-bookings mix. Mobility is the profit engine; Delivery is now nearly co-equal; Freight is small. <span class="ave-subh-note">Source: Uber FY2025 results.</span></div></div>';
+  h+='<div id="ubMMgeo" hidden>'+mbars(STD_GEO)+'<div class="ov-diagram-cap" style="margin-top:6px">FY2025 revenue by region — majority US &amp; Canada, but ~42% international. <span class="ave-subh-note">Source: Uber FY2025 10-K.</span></div></div>';
+  return h;
+}
+// Block 5 — Products. No photos on file → emoji stands in (icon fallback). Detail in pop-up.
+var STD_PRODUCTS=[
+  { k:'mob', ic:'🚗', n:'Mobility', d:'Ridesharing in ~70 countries — UberX, Black, Moto, Reserve.', detail:'Uber’s ridesharing product and profit engine: on-demand rides across ~70 countries, from low-cost UberX Share and two-wheelers to premium Black and scheduled Reserve. Uber keeps ~30% of the fare (its take rate); highest-margin of the three segments.' },
+  { k:'del', ic:'🍔', n:'Uber Eats', d:'Restaurant, grocery &amp; retail delivery.', detail:'Uber Eats delivers restaurant meals plus a fast-growing grocery &amp; retail business (~$12B run-rate). It cross-sells off the rides app and funds a >$2B advertising layer. US #2 behind DoorDash, but bigger internationally.' },
+  { k:'one', ic:'⭐', n:'Uber One', d:'The membership: discounts + free delivery. 50M+ members.', detail:'Uber One is the ~$9.99/mo (or annual) membership tying the platform together: free delivery and discounts across rides and eats. 50M+ members (Q1 2026), who spend ~3× more and now drive >50% of combined bookings.' },
+  { k:'frt', ic:'🚚', n:'Uber Freight', d:'Logistics brokerage matching shippers with carriers.', detail:'Uber Freight is a digital logistics brokerage matching shippers with truck carriers. ~$5B bookings, near-breakeven, hit by the freight recession — kept for optionality rather than as a core profit driver.' },
+  { k:'ads', ic:'📣', n:'Advertising', d:'Sponsored listings &amp; in-app ads. ~100% incremental margin.', detail:'A fast-emerging, high-margin profit pool sitting mostly inside Delivery: sponsored listings and in-app ads. >$2B run-rate, growing ~50%/yr at ~100% incremental margin — it lifts Delivery’s economics without touching the marketplace split.' },
+];
+function stdProducts(){
+  return '<div class="stdp">'+STD_PRODUCTS.map(function(p){
+    return '<div class="stdp-card ov-clickable" data-detail="uprod:'+esc(p.k)+'"><div class="stdp-ic">'+p.ic+'</div>'+
+      '<div class="stdp-n">'+esc(p.n)+'</div><div class="stdp-d">'+p.d+'</div><div class="stdp-more">More ›</div></div>';
+  }).join('')+'</div>';
+}
+// Block 6 — Competitors scatter. X=valuation multiple, Y=revenue growth, bubble=market cap (USD).
+// Multiple toggle: EV/EBITDA ⇄ P/E (never P/S — it is not a valuation multiple). Basis: Trailing ⇄ Forward.
+// A peer with no meaningful multiple (unprofitable → n/m P/E; or unlisted) drops out of that view.
+// ⚠ Peer figures are web-sourced APPROXIMATIONS pending the Fiscal.ai feed (flagged in audit).
+var STD_PEERS=[
+  { n:'Uber',      evT:28, evF:22, peT:35,   peF:28,   gt:14, gf:16, mc:195, hl:true, why:'The scaled, global, multi-product leader. Profitable and cash-generative — trades at a premium to pure ride-hailing but a discount to the faster growers.' },
+  { n:'DoorDash',  evT:40, evF:30, peT:70,   peF:52,   gt:22, gf:18, mc:90,  why:'US delivery leader (~60% food share), growing faster than Uber and richly valued on it. No mobility; smaller internationally.' },
+  { n:'Grab',      evT:45, evF:28, peT:null, peF:null, gt:24, gf:20, mc:18,  why:'SE-Asia super-app (rides + food + GrabPay). Fastest growth of the group; only recently profitable, so P/E is not yet meaningful.' },
+  { n:'Instacart', evT:18, evF:14, peT:28,   peF:22,   gt:14, gf:13, mc:13,  why:'US grocery-delivery specialist (Maplebear). Mid-teens growth, profitable and ad-driven — the value name of the group.' },
+  { n:'Lyft',      evT:14, evF:10, peT:30,   peF:18,   gt:13, gf:11, mc:5.4, why:'US/Canada #2 ride-hailing. Growing again but the cheapest of the group — the market prices its lack of scale &amp; diversification.' },
+];
+function stdPeerScatter(){
+  var h='<style>.mg-tog-row{display:flex;flex-wrap:wrap;gap:14px;margin:2px 0 8px}'+
+    '.mg-tog{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--mu)}'+
+    '.mg-seg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+
+    '.mg-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
+    '.mg-pill.active{background:var(--navy);color:#fff}'+
+    '.mg-dot{transition:.15s}.mg-node text{pointer-events:none}'+
+    '.mg-tip{position:fixed;z-index:60;max-width:250px;background:#10141A;color:#fff;border-radius:9px;padding:9px 12px;font-size:11.5px;line-height:1.5;box-shadow:0 8px 22px rgba(16,20,26,.28);pointer-events:none;border-top:3px solid #06C167}'+
+    '.mg-tip .mgt-n{display:block;font-weight:800;font-size:12.5px;color:#06C167;margin-bottom:3px}</style>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 6px">Listed peers mapped by <b>valuation multiple</b> (x) and <b>revenue growth</b> (y). <b>Bubble size = market cap in USD</b> (so a $195B Uber dwarfs a $5B Lyft, and currencies never distort the comparison). <span style="opacity:.75">Hover or tap a bubble for the read.</span></div>';
+  h+='<div class="mg-tog-row"><span class="mg-tog">Multiple: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgtype="ev">EV/EBITDA</button><button type="button" class="mg-pill" data-mgtype="pe">P/E</button></span></span>'+
+     '<span class="mg-tog">Basis: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgbasis="f">Forward</button><button type="button" class="mg-pill" data-mgbasis="t">Trailing</button></span></span></div>';
+  h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" id="ubMgSvg" role="img" aria-label="Peer valuation vs growth map">'+
+    '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<line x1="80" y1="252" x2="80" y2="44" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<text x="88" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0">← cheaper</text>'+
+    '<text x="610" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">more expensive →</text>'+
+    '<text x="346" y="288" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#6b7684" text-anchor="middle" id="ubMgXlab">EV/EBITDA · forward</text>'+
+    '<text x="74" y="250" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">slow</text>'+
+    '<text x="74" y="52" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">fast growth</text>'+
+    STD_PEERS.map(function(p){ var r=Math.max(6,Math.min(20,5+Math.sqrt(p.mc)*0.95));
+      return '<g class="mg-node" data-evt="'+p.evT+'" data-evf="'+p.evF+'" data-pet="'+(p.peT==null?'':p.peT)+'" data-pef="'+(p.peF==null?'':p.peF)+'" data-gt="'+p.gt+'" data-gf="'+p.gf+'" data-r="'+r.toFixed(1)+'" data-name="'+esc(p.n)+'" data-why="'+esc(p.why)+'">'+
+        '<circle class="mg-dot" r="'+r.toFixed(1)+'" fill="'+(p.hl?'#10141A':'#3A7BD5')+'"'+(p.hl?' stroke="#fff" stroke-width="2"':' opacity="0.82"')+' style="cursor:pointer"></circle>'+
+        '<text font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?'#10141A':'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>'; }).join('')+
+  '</svg></div>';
+  h+='<div class="ov-diagram-cap" style="margin-top:4px">Only <b>listed</b> peers with a public multiple appear here; a name drops out of the P/E view when it has no meaningful P/E. Unlisted rivals (Waymo, Bolt, DiDi) have no market multiple — they sit on the competitive map in <b>Deep Dive ▸ Deep Overview</b>. <span class="ave-subh-note">Multiples, growth &amp; market caps are approximate, web-sourced (mid-2026), pending the Fiscal.ai feed — directional, not exact.</span></div>';
+  h+='<div id="ubMgTip" class="mg-tip" hidden></div>';
+  return h;
+}
+// Block 7 — Timeline (compact; full history + M&A live in Deep Dive ▸ History).
+function stdTimeline(){
+  return '<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>';
+}
+// The standardized Overview body — the 7 blocks in fixed order.
+function stdOverviewBody(c){
+  var h='<style>.stdkf{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;background:var(--w);margin:2px 0}'+
+    '.stdkf-cell{padding:11px 13px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
+    '.stdkf-cell:nth-child(5n){border-right:none}.stdkf-cell:nth-child(n+6){border-bottom:none}'+
+    '.stdkf-k{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:3px}'+
+    '.stdkf-v{font-size:12px;font-weight:700;color:var(--navy);line-height:1.3}'+
+    '@media(max-width:720px){.stdkf{grid-template-columns:repeat(2,1fr)}.stdkf-cell{border-right:none}}'+
+    '.stdq{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0}'+
+    '.stdq-cell{border:1px solid var(--bdr);border-radius:11px;padding:12px 14px;background:var(--w)}'+
+    '.stdq-k{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#06965A;margin-bottom:5px}'+
+    '.stdq-v{font-size:12px;color:var(--navy);line-height:1.5}.stdq-v b{font-weight:800}'+
+    '.mm-tog{display:inline-flex;gap:4px;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:3px;margin-bottom:10px}'+
+    '.mm-pill{border:none;background:transparent;font:inherit;font-size:11.5px;font-weight:700;color:var(--mu);padding:5px 14px;border-radius:999px;cursor:pointer}.mm-pill.active{background:var(--navy);color:#fff}'+
+    '.stdp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}'+
+    '.stdp-card{border:1px solid var(--bdr);border-radius:11px;padding:13px 14px;background:var(--w);cursor:pointer;transition:.14s}'+
+    '.stdp-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-2px);border-color:#06965A}'+
+    '.stdp-ic{font-size:26px;line-height:1}.stdp-n{font-size:13px;font-weight:800;color:var(--navy);margin:7px 0 3px}'+
+    '.stdp-d{font-size:11px;color:var(--mu);line-height:1.45}.stdp-more{font-size:10px;font-weight:700;color:#06965A;margin-top:6px}'+
+    '.dd-tabs{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 14px;border-bottom:1px solid var(--bdr)}'+
+    '.dd-tab{border:none;background:transparent;font:inherit;font-size:12.5px;font-weight:700;color:var(--mu);padding:8px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}'+
+    '.dd-tab:hover{color:var(--navy)}.dd-tab.active{color:var(--navy);border-bottom-color:var(--navy)}'+
+    '.dd-pane[hidden]{display:none}</style>';
+  h+=stdKeyFacts();
+  h+='<p class="ov-lede">'+esc(DESC)+'</p>';
+  h+=sec('The business at a glance', stdFourQuad());
+  h+=sec('How it makes money', stdMoneyMap());
+  h+=sec('What it makes — the products', stdProducts());
+  h+=sec('Competitors — valuation vs growth', stdPeerScatter());
+  h+=sec('Timeline', stdTimeline());
+  h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
+  return h;
+}
 function html(c){
   var h='<div class="ov ov-uber" data-brand="UBER">';
   h+='<div class="ovt-tabs">'+
     '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="mobility">Mobility</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="delivery">Delivery</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="uberone">Uber One</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="insurance">Insurance &amp; FCF</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="model">Model vs. Reality</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="valuation">Valuation</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="mgmt">Management</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="calls">Earnings Narrative</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="deepdive">Deep Dive</button>'+
   '</div>';
-  h+='<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
-  h+='<div class="ovt-pane" data-ovt="mobility" hidden>'+mobilityBody(c)+'</div>';
-  h+='<div class="ovt-pane" data-ovt="delivery" hidden>'+deliveryBody(c)+'</div>';
-  h+='<div class="ovt-pane" data-ovt="uberone" hidden>'+uberOneBody(c)+'</div>';
-  h+='<div class="ovt-pane" data-ovt="insurance" hidden>'+insuranceBody()+'</div>';
-  h+='<div class="ovt-pane" data-ovt="model" hidden>'+modelBody(c)+'</div>';
-  h+='<div class="ovt-pane" data-ovt="valuation" hidden>'+UBER_VAL.body()+'</div>';
-  h+='<div class="ovt-pane" data-ovt="mgmt" hidden>'+UBER_MGMT.body()+'</div>';
-  h+='<div class="ovt-pane" data-ovt="calls" hidden>'+callsBody()+'</div>';
+  h+='<div class="ovt-pane" data-ovt="overview">'+stdOverviewBody(c)+'</div>';
+  // ── Deep Dive: everything deeper. Holds the prior tabs + Extras (the old Overview), nothing deleted. ──
+  h+='<div class="ovt-pane" data-ovt="deepdive" hidden>'+
+    '<div class="dd-tabs">'+
+      '<button type="button" class="dd-tab active" data-dd="extras">Deep Overview</button>'+
+      '<button type="button" class="dd-tab" data-dd="offer">Company Offer</button>'+
+      '<button type="button" class="dd-tab" data-dd="financials">Financials</button>'+
+      '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
+      '<button type="button" class="dd-tab" data-dd="history">History</button>'+
+    '</div>';
+  // Extras — the previous bespoke Overview (turnaround, drivers, 3-yr targets, arena map, breadth×geo scatter). MOVED here per Golden Rule #1, not deleted.
+  h+='<div class="dd-pane" data-dd="extras">'+overviewBody(c)+'</div>';
+  // Company Offer
+  h+='<div class="dd-pane" data-dd="offer" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="mobility">Mobility</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="delivery">Delivery</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="uberone">Uber One</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="mobility">'+mobilityBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="delivery" hidden>'+deliveryBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="uberone" hidden>'+uberOneBody(c)+'</div>'+
+    '</div>';
+  // Financials
+  h+='<div class="dd-pane" data-dd="financials" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="model">Model vs. Reality</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="valuation">Valuation</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="insurance">Insurance &amp; FCF</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="model">'+modelBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="valuation" hidden>'+UBER_VAL.body()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="insurance" hidden>'+insuranceBody()+'</div>'+
+    '</div>';
+  h+='<div class="dd-pane" data-dd="mgmt" hidden>'+UBER_MGMT.body()+'</div>';
+  // History
+  h+='<div class="dd-pane" data-dd="history" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="story">Company History &amp; M&amp;A</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="calls">Earnings Narrative</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="story">'+historyStoryBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="calls" hidden>'+callsBody()+'</div>'+
+    '</div>';
+  h+='</div>';
   h+='<div class="ov-modal-back" id="ubModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
     '<button class="ov-modal-x" id="ubModalX" aria-label="Close">×</button>'+
     '<div class="ov-modal-t" id="ubModalT"></div><div class="ov-modal-b" id="ubModalB"></div></div></div>';
@@ -1147,8 +1427,8 @@ var _charts={};
 function destroy(id){ if(_charts[id]){ _charts[id].destroy(); _charts[id]=null; } }
 
 // Stacked segment GB (Overview + Segments). estIdx → lighter fills.
-function stackLabels(){ return { id:'sl', afterDatasetsDraw:function(chart){
-  var top=chart.getDatasetMeta(2).data, ctx=chart.ctx, tot=chart.$tot||[];
+function stackLabels(totals){ return { id:'sl', afterDatasetsDraw:function(chart){
+  var top=chart.getDatasetMeta(2).data, ctx=chart.ctx, tot=totals||chart.$tot||[];
   top.forEach(function(bar,i){ ctx.save(); ctx.textAlign='center'; ctx.font='700 10.5px Inter, sans-serif'; ctx.fillStyle='#1E2733';
     ctx.fillText(moneyB(tot[i]), bar.x, bar.y-6); ctx.restore(); });
 } }; }
@@ -1167,7 +1447,7 @@ function buildSegStack(id, a, b){
     options:{ responsive:true, maintainAspectRatio:false, animation:false, layout:{ padding:{ top:22, bottom:2 } },
       plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label+': '+moneyB(ctx.parsed.y); } } } },
       scales:{ x:{ stacked:true, grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:11 } } }, y:{ stacked:true, display:false, grace:'12%' } } },
-    plugins:[ stackLabels() ] });
+    plugins:[ stackLabels(tot) ] });
   _charts[id].$tot=tot;
 }
 
@@ -1383,16 +1663,69 @@ function buildOverviewCharts(){
 function buildMobilityCharts(){ buildLines('ubChartTake', Q13, { label:'Mobility', data:MOB_TAKE, color:MOB }, { label:'Delivery', data:DEL_TAKE, color:DEL }, pf); }
 function buildDeliveryCharts(){ buildLines('ubChartMargin', Q13.slice(0,12), { label:'Mobility', data:MOB_MARGIN, color:MOB }, { label:'Delivery', data:DEL_MARGIN, color:DEL }, pf); }
 function buildUberOneCharts(){ buildLines('ubChartMembers', UBERONE_GROWTH.labels, { label:'Members', data:UBERONE_GROWTH.data, color:BRAND2 }, null, function(v){ return v+'M'; }); }
+// Build the lazy charts that live inside a sub-pane, by (group, sub-key).
+function buildSub(root, group, key){
+  if(group==='offer'){
+    if(key==='mobility')      buildMobilityCharts();
+    else if(key==='delivery') buildDeliveryCharts();
+    else if(key==='uberone')  buildUberOneCharts();
+  } else if(group==='financials'){
+    if(key==='model')          buildModelTab();
+    else if(key==='valuation') UBER_VAL.init(root);
+    // insurance: static, no charts
+  }
+  // history sub-panes: no charts
+}
+function activeSubKey(root, group){
+  var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return null;
+  var b=pane.querySelector('.ovt-subtab.active'); return b?b.getAttribute('data-ovst'):null;
+}
+function showSub(root, pane, group, key){
+  pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovst')===key); });
+  pane.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovst')!==key); });
+  requestAnimationFrame(function(){ buildSub(root, group, key); });
+}
+function wireSubtabs(root, group){
+  var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return;
+  pane.querySelectorAll('.ovt-subtab').forEach(function(btn){ btn.onclick=function(){ showSub(root, pane, group, btn.getAttribute('data-ovst')); }; });
+}
+// ── Deep Dive layer (dd-tabs inside the Deep Dive pane) ──
+function buildDD(root, key){
+  if(key==='extras') buildOverviewCharts();
+  else if(key==='mgmt') UBER_MGMT.init(root);
+  else if(key==='offer'||key==='financials'){ var s=activeSubKey(root,key); if(s) buildSub(root,key,s); }
+  // history: no charts
+}
+function activeDD(root){ var b=root.querySelector('.dd-tab.active'); return b?b.getAttribute('data-dd'):'extras'; }
+function showDD(root, key){
+  root.querySelectorAll('.dd-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-dd')===key); });
+  root.querySelectorAll('.dd-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-dd')!==key); });
+  requestAnimationFrame(function(){ buildDD(root, key); });
+}
+function wireDD(root){ root.querySelectorAll('.dd-tab').forEach(function(btn){ btn.onclick=function(){ showDD(root, btn.getAttribute('data-dd')); }; }); }
+// ── Standardized peer scatter: place bubbles from the active trailing/forward toggles ──
+function positionMG(root){
+  var svg=root.querySelector('#ubMgSvg'); if(!svg) return;
+  var tp=root.querySelector('.mg-pill[data-mgtype].active'), bp=root.querySelector('.mg-pill[data-mgbasis].active');
+  var type=(tp?tp.getAttribute('data-mgtype'):'ev'), basis=(bp?bp.getAttribute('data-mgbasis'):'f');
+  var XMAX=(type==='ev'?45:70);
+  svg.querySelectorAll('.mg-node').forEach(function(g){
+    var multAttr = type==='ev' ? (basis==='f'?'data-evf':'data-evt') : (basis==='f'?'data-pef':'data-pet');
+    var raw=g.getAttribute(multAttr), c=g.querySelector('circle'), t=g.querySelector('text');
+    if(raw===''||raw==null||isNaN(parseFloat(raw))){ if(c) c.style.display='none'; if(t) t.style.display='none'; return; }
+    if(c) c.style.display=''; if(t) t.style.display='';
+    var mult=parseFloat(raw), grow=parseFloat(g.getAttribute(basis==='f'?'data-gf':'data-gt')), r=parseFloat(g.getAttribute('data-r'));
+    var x=80+Math.min(1,mult/XMAX)*(612-80), y=252-Math.min(1,grow/30)*(252-44);
+    if(c){ c.setAttribute('cx',x.toFixed(1)); c.setAttribute('cy',y.toFixed(1)); }
+    if(t){ t.setAttribute('x',x.toFixed(1)); t.setAttribute('y',(y-r-5).toFixed(1)); }
+  });
+  var xl=root.querySelector('#ubMgXlab'); if(xl) xl.textContent=(type==='ev'?'EV/EBITDA':'P/E')+' · '+(basis==='f'?'forward':'trailing');
+}
 function showOvt(root,key){
   root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt')===key); });
   root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovt')!==key); });
-  if(key==='overview') requestAnimationFrame(buildOverviewCharts);
-  if(key==='mobility') requestAnimationFrame(buildMobilityCharts);
-  if(key==='delivery') requestAnimationFrame(buildDeliveryCharts);
-  if(key==='uberone') requestAnimationFrame(buildUberOneCharts);
-  if(key==='model')    requestAnimationFrame(buildModelTab);
-  if(key==='valuation') requestAnimationFrame(function(){ UBER_VAL.init(root); });
-  if(key==='mgmt') requestAnimationFrame(function(){ UBER_MGMT.init(root); });
+  if(key==='overview') requestAnimationFrame(function(){ positionMG(root); });
+  else if(key==='deepdive'){ var d=activeDD(root); requestAnimationFrame(function(){ buildDD(root,d); }); }
 }
 function wireModal(root){
   var back=root.querySelector('#ubModalBack'), mT=root.querySelector('#ubModalT'), mB=root.querySelector('#ubModalB'); if(!back) return;
@@ -1420,6 +1753,8 @@ function wireModal(root){
     if(kind==='reg'){ var rg=REGV[+id]; return rg?{t:rg.h,h:rg.d}:null; }
     if(kind==='mna'){ var m=MNA.filter(function(x){return x.n===id;})[0]; return m?{t:m.n+' <span class="ov-modal-sub">'+esc(m.y)+' · '+esc(m.deal)+'</span>',h:m.detail}:null; }
     if(kind==='arena'){ var ar=AR_DETAIL[id]; return ar?{t:ar.t,h:ar.h}:null; }
+    if(kind==='ins'){ var ip=INS_POP[id]; return ip?{t:ip.t,h:ip.h}:null; }
+    if(kind==='uprod'){ var pr=STD_PRODUCTS.filter(function(x){return x.k===id;})[0]; return pr?{t:pr.ic+' '+esc(pr.n),h:pr.detail}:null; }
     return null;
   }
   root.querySelectorAll('[data-detail]').forEach(function(el){ el.style.cursor='pointer';
@@ -1450,11 +1785,55 @@ function init(c){
   var root=document.querySelector('.ov-uber'); if(!root) return;
   renderLive(root);
   root.querySelectorAll('.ovt-tab').forEach(function(btn){ btn.onclick=function(){ showOvt(root, btn.getAttribute('data-ovt')); }; });
+  wireDD(root);
+  wireSubtabs(root,'offer'); wireSubtabs(root,'financials'); wireSubtabs(root,'history');
   root.querySelectorAll('.ave-pill').forEach(function(btn){ btn.onclick=function(){ switchAveMetric(root, btn.getAttribute('data-ave')); }; });
   root.querySelectorAll('.guid-pill').forEach(function(btn){ btn.onclick=function(){ switchGuideMetric(root, btn.getAttribute('data-guidm')); }; });
   wireModal(root);
-  // Earnings calls accordion
-  root.querySelectorAll('#ubCallsAcc .lpb-acc-h').forEach(function(btn){ btn.onclick=function(){ var item=btn.parentElement; var open=item.classList.toggle('open'); var ic=btn.querySelector('.lpb-acc-ic'); if(ic) ic.textContent=open?'\u2013':'+'; }; });
+  // Collapsible sections (reader chooses what to expand)
+  root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var c=btn.parentElement; var open=c.classList.toggle('open'); var b=c.querySelector('.ov-collap-b'); if(b) b.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.textContent=open?'▾':'▸'; }; });
+  // Competitive-map scatter: hover/tap a dot → floating detail tip
+  var ptip=root.querySelector('#ubPeerTip');
+  if(ptip){ root.querySelectorAll('.peer-dot').forEach(function(d){
+    function show(){ ptip.innerHTML='<span class="pt-n">'+d.getAttribute('data-name')+'</span>'+d.getAttribute('data-why'); ptip.hidden=false; }
+    function move(e){ ptip.style.left=Math.min(e.clientX+16, window.innerWidth-270)+'px'; ptip.style.top=(e.clientY+16)+'px'; }
+    d.addEventListener('mouseenter', show);
+    d.addEventListener('mousemove', move);
+    d.addEventListener('mouseleave', function(){ ptip.hidden=true; });
+    d.addEventListener('click', function(e){ show(); move(e); });
+  }); }
+  // Earnings calls accordion (covers both the theme and quarter lenses)
+  root.querySelectorAll('.lpb-acc-h').forEach(function(btn){ btn.onclick=function(){ var item=btn.parentElement; var open=item.classList.toggle('open'); var ic=btn.querySelector('.lpb-acc-ic'); if(ic) ic.textContent=open?'\u2013':'+'; }; });
+  // Earnings narrative lens toggle (theme \u2194 quarter)
+  root.querySelectorAll('.calls-pill').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-callsv');
+    root.querySelectorAll('.calls-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    var t=root.querySelector('#ubCallsTheme'), q=root.querySelector('#ubCallsQuarter');
+    if(t) t.style.display=(v==='theme')?'':'none';
+    if(q) q.style.display=(v==='quarter')?'':'none';
+  }; });
+  // Standardized peer scatter (Multiple × Growth): tooltip + trailing/forward toggles
+  var mgtip=root.querySelector('#ubMgTip');
+  if(mgtip){ root.querySelectorAll('.mg-node').forEach(function(g){
+    function show(){ mgtip.innerHTML='<span class="mgt-n">'+g.getAttribute('data-name')+'</span>'+g.getAttribute('data-why'); mgtip.hidden=false; }
+    function move(e){ mgtip.style.left=Math.min(e.clientX+16, window.innerWidth-270)+'px'; mgtip.style.top=(e.clientY+16)+'px'; }
+    g.addEventListener('mouseenter', show); g.addEventListener('mousemove', move);
+    g.addEventListener('mouseleave', function(){ mgtip.hidden=true; });
+    g.addEventListener('click', function(e){ show(); move(e); });
+  }); }
+  root.querySelectorAll('.mg-pill').forEach(function(btn){ btn.onclick=function(){
+    var grp=btn.hasAttribute('data-mgtype')?'data-mgtype':'data-mgbasis';
+    root.querySelectorAll('.mg-pill['+grp+']').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    positionMG(root);
+  }; });
+  positionMG(root);
+  // How-it-makes-money toggle (segments ⇄ geography)
+  root.querySelectorAll('.mm-pill').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-mm');
+    root.querySelectorAll('.mm-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    var s=root.querySelector('#ubMMseg'), g=root.querySelector('#ubMMgeo');
+    if(s) s.hidden=(v!=='seg'); if(g) g.hidden=(v!=='geo');
+  }; });
   var active=root.querySelector('.ovt-tab.active'); showOvt(root, active?active.getAttribute('data-ovt'):'overview');
 }
 export var uberOverview = { html: html, init: init };

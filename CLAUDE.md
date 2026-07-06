@@ -239,6 +239,10 @@ If a PR has merge conflicts:
 
 The Companies tab is the core of the portal. Each company has a profile that is **designed and built individually with Claude's help**.
 
+### Filling a company Overview (standardized)
+
+When asked to **fill, create, or refresh a company's Overview** (e.g. "llena el overview de Broadcom", "fill AVGO"), you **must** follow `docs/OVERVIEW_CONVENTIONS.md` — it defines the fixed Overview structure, the Key Facts set, the official-first source hierarchy, the anti-wall/pop-up rules, the competitor scatter spec, and a self-audit checklist. The `/fill-overview <TICKER>` command runs this end-to-end. Key invariants: **never delete existing content — move non-conforming Overview content into the most relevant Deep Dive section**; **sources decide (company IR/filings first, never a forum as authority)**; **no walls of text, no fake precision**; produce a **draft for review**, don't commit/push/PR automatically.
+
 ### Adding a company
 
 1. User clicks "Add Company" in the portal

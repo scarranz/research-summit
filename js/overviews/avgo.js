@@ -21,6 +21,7 @@
 // (Management tab) is pulled from Fiscal.ai via api.js — the same source as the Pillars tab.
 
 import { fetchExecutives, fetchInsiderTransactions, syncManagement, liveQuote } from '../api.js';
+import { semiIndustry } from './semi-industry.js';
 
 // Register the annotation plugin once (used by the M&A financial-impact charts).
 if (window.Chart && window['chartjs-plugin-annotation']) {
@@ -898,7 +899,10 @@ async function loadMgmtOwnership(pane, forceSync){
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
-// 8 — M&A DEEP DIVE
+// 8 — PE STRATEGY  (the Hock Tan private-equity playbook, since 2006)
+// Narrative sourced from avgo-context/AVGO_PE_strategy.md. Deal-level cost/price figures
+// are analyst/press estimates ([est]); company-disclosed items (goodwill, debt, margins,
+// revenue) are ground truth.
 // ════════════════════════════════════════════════════════════════════════════════
 function deal(cls, num, name, meta, statsHtml, keptHtml, soldHtml, sig, soldHead){
   return '<div class="deal '+cls+'"><div class="deal-head"><span class="deal-num">'+num+'</span><span class="deal-name">'+name+'</span>'+
@@ -910,6 +914,7 @@ function deal(cls, num, name, meta, statsHtml, keptHtml, soldHtml, sig, soldHead
 }
 function ds(l,v){ return '<div class="ds"><div class="ds-l">'+l+'</div><div class="ds-v">'+v+'</div></div>'; }
 function ks(t){ return '<div class="ks-item">'+t+'</div>'; }
+function pmini(cls,t,d){ return '<div class="mini '+cls+'"><div class="mini-t">'+t+'</div><div class="mini-d">'+d+'</div></div>'; }
 
 function maDeepBody(){
   var deals=''+
@@ -947,19 +952,59 @@ function maDeepBody(){
     'The masterwork. Every element of the playbook at maximum scale. Created the two-engine model — volatile AI growth + the 93%-gross-margin software "keel" that funds the dividend, debt, AI investment, and future M&amp;A.');
 
   return ''+
-  card('M&amp;A deep dive — the capital-allocation machine','7 deals, FY14–FY24, escalating scale',
-    '<div class="card-body"><div class="prose" style="margin-bottom:11px"><p>Broadcom is a machine that buys technology franchises — products with dominant positions and trapped customers — optimizes them for cash, and recycles proceeds into the next, larger target. The same playbook repeats at escalating scale: <strong>buy (debt-funded) → cut 30–50% of cost → sell non-franchise pieces → raise prices at renewal → convert to subscription → margins expand in 12–24 months → de-lever → richer stock funds the next deal.</strong></p></div>'+
+  card('The private-equity playbook under Hock Tan','a ~$2.5B carve-out → $600B+, by machine — not organic innovation',
+    '<div class="card-body"><div class="prose" style="margin-bottom:12px"><p>Broadcom&apos;s strategy isn&apos;t a corporate strategy that happens to have a CEO — it <b>is</b> the CEO. Since 2006, Hock Tan has run one repeatable idea at escalating scale: <b>buy a franchise with debt, cut its cost, optimize it for cash, then recycle the proceeds into the next, larger franchise.</b> The AI business is the serendipitous payoff of a franchise (LSI&apos;s ASIC team) bought a decade ago for entirely different reasons; the software keel (VMware) is the deliberate stabilizer that lets the volatile chip bets ride.</p></div>'+
+      '<div class="stats-row c5">'+
+        '<div class="stat-card t-accent"><div class="stat-label">Value created</div><div class="stat-value">$4B → $600B+</div><div class="stat-sub">2009 IPO → today</div></div>'+
+        '<div class="stat-card t-pos"><div class="stat-label">Adj. EBITDA margin</div><div class="stat-value">47% → 68%</div><div class="stat-sub">FY14 → Q1&apos;26</div></div>'+
+        '<div class="stat-card t-neutral"><div class="stat-label">Goodwill</div><div class="stat-value">$97.8B</div><div class="stat-sub">~58% of assets · roll-up residue</div></div>'+
+        '<div class="stat-card t-warn"><div class="stat-label">Largest deal</div><div class="stat-value">VMware ~$86B</div><div class="stat-sub">at close · biggest tech deal ever</div></div>'+
+        '<div class="stat-card t-ai"><div class="stat-label">Doctrine lock</div><div class="stat-value">2006 → 2030+</div><div class="stat-sub">Hock Tan tenure</div></div>'+
+      '</div></div>','')+
+
+  card('1 · Origin — where the doctrine came from','Broadcom was born a private-equity asset',
+    '<div class="card-body"><div class="prose" style="margin-bottom:11px"><p>In 2005 <b>KKR &amp; Silver Lake</b> bought Agilent&apos;s semiconductor division in a ~$2.65B leveraged buyout, creating <b>Avago</b> — so the discipline (buy with debt, cut cost, optimize for cash) was installed at birth, not adopted later. Silver Lake then installed the operator to run it.</p></div>'+
+      '<div class="mini-grid c2">'+
+        pmini('l-purple','PE parentage','Broadcom&apos;s DNA is literally a PE portfolio company. The LBO logic — buy, cut, optimize, compound — predates the semiconductors. Every capital-allocation decision since traces back to this.')+
+        pmini('l-blue','The operator — a financier, not an engineer','<b>Hock Tan</b>, CEO since 2006: MIT + Harvard MBA; corporate finance at PepsiCo &amp; GM; CFO of Commodore as it collapsed (the aversion to speculative, roadmap-driven R&amp;D was forged here); ran the ICS LBO where the <b>&ldquo;franchise&rdquo;</b> doctrine was born.')+
+      '</div>'+
+      '<div class="insight" style="margin-top:10px">A CFO who lived a tech collapse and learned to run mature franchises for cash — then scaled that single idea for ~20 years with progressively larger amounts of leverage.</div>'+
+    '</div>','')+
+
+  card('2 · The core concept — the &ldquo;franchise&rdquo;','buy products customers cannot practically leave',
+    '<div class="card-body"><div class="prose" style="margin-bottom:11px"><p>A <b>franchise</b> is a product with a dominant market position and customers who <b>cannot practically leave</b> — it is <i>bought, not sold</i>: demand is structural, not won by a sales pitch. Everything downstream (the leverage, the cost cuts, the price hikes, the M&amp;A cadence) exists to serve this one idea.</p></div>'+
+      '<div class="mini-grid c2">'+
+        pmini('l-blue','1 · #1 or #2 market position','The default choice in a defined category.')+
+        pmini('l-teal','2 · High switching costs','Leaving means re-qualifying, re-architecting, retraining — months to years of risk and cost.')+
+        pmini('l-coral','3 · Mission-critical','If the product stops, the customer&apos;s business stops.')+
+        pmini('l-amber','4 · Predictable revenue','Recurring, embedded, sticky — models cleanly and services debt reliably.')+
+        pmini('l-purple','5 · High margin potential','Pricing power once the customer is captive; gross margins expandable post-acquisition.')+
+      '</div>'+
+      '<div class="insight" style="margin-top:10px"><b>The one-line test:</b> &ldquo;Can the customer realistically switch?&rdquo; If <b>no</b> → it&apos;s a franchise: buy it and defend it. If <b>yes</b> → cut it, sell it, or don&apos;t buy it. This single test explains why Broadcom buys some things, refuses others, and sells off pieces within months of closing.</div>'+
+    '</div>','')+
+
+  card('3 · The playbook — the repeatable machine','the same six-step cycle, at escalating scale',
+    '<div class="card-body"><div class="mini-grid c3">'+
+        pmini('l-blue','1 · BUY','Debt-funded, often a target <i>bigger</i> than the buyer — underwritten on post-synergy cash flow, not current scale (LSI ~70% leverage; VMware ~$86B).')+
+        pmini('l-coral','2 · CUT','Strip 30–50%+ of cost immediately — headcount, overhead, and non-franchise R&amp;D. CA/Symantec cost-outs ~60–70% of opex [est].')+
+        pmini('l-amber','3 · SELL','Within months, carve out and sell whatever fails the franchise test — lowering the effective purchase price (LSI: Axxia→Intel $650M, Flash→Seagate $450M).')+
+        pmini('l-purple','4 · RAISE PRICES','Re-price captive customers at renewal. VMware&apos;s VCF bundle drove effective increases of <b>2–5×</b> [est]. Existing contracts honored — legally clean, economically brutal.')+
+        pmini('l-teal','5 · SUBSCRIBE','Convert perpetual licenses to recurring subscriptions — turning lumpy licenses into an annuity; builds ARR and lifetime value.')+
+        pmini('l-ai','6 · DE-LEVER &amp; REPEAT','Margins expand in 12–24 mo; FCF pays down the debt; a richer stock lowers the cost of the next, larger deal. Then repeat.')+
+      '</div>'+
+      '<div class="insight" style="margin-top:10px"><b>Why it compounds geometrically:</b> each cycle raises both margins <i>and</i> equity value, which lowers the relative cost of the next (bigger) deal — so the cash generated grows faster than linearly. Twenty years of it: EBITDA margin ~47% → ~68%; company value ~$4B → $600B+.</div>'+
+    '</div>','')+
+
+  card('4 · The deal ladder — the playbook at escalating scale','$6.6B → $0.6B → $37B → $5.9B → $18.9B → $10.7B → $61B · every marquee bigger than the last',
+    '<div class="card-body"><div class="prose" style="margin-bottom:10px"><p>Each marquee deal is bigger than the last; tuck-ins fill the gaps. <b>All marquee deals close in Q1 (Nov–Feb)</b> — the fiscal year ends ~Oct 31, so Tan times closings to put integration costs at the start of the year and get a full year to optimize before the next annual comparison.</p></div>'+
       '<div class="legend">'+
         '<div class="legend-i"><span class="legend-sw" style="background:var(--accent)"></span>Marquee (each bigger than the last)</div>'+
         '<div class="legend-i"><span class="legend-sw" style="background:var(--neutral-color)"></span>Tuck-in</div>'+
         '<div class="legend-i"><span class="legend-sw" style="background:var(--sw)"></span>Software pivot</div>'+
         '<div class="legend-i"><span class="legend-sw" style="background:var(--negative)"></span>Blocked</div>'+
-      '</div></div>','')+
+      '</div>'+deals+'</div>','')+
 
-  card('The deal ladder','$6.6B → $0.6B → $37B → $5.9B → $18.9B → $10.7B → $61B',
-    '<div class="card-body">'+deals+'</div>','')+
-
-  '<div class="card"><div class="card-header"><span class="card-title">Financial impact — quarterly, FY14–Q1 FY26</span><span class="card-subtitle">dashed lines mark deal closings</span></div>'+
+  '<div class="card"><div class="card-header"><span class="card-title">5 · Financial mechanics — the fingerprint on the statements</span><span class="card-subtitle">quarterly, FY14–Q1 FY26 · dashed lines mark deal closings</span></div>'+
     '<div class="card-body"><div class="prose" style="margin-bottom:11px"><p><strong>Why deals close in Q1:</strong> every marquee deal closes Nov–Feb (Q1 of the new fiscal year, since FY ends ~Oct 31). Not coincidence — closing in Q1 puts integration costs at the start of the year, giving a full year to optimize before the next annual comparison.</p></div>'+
       '<div class="grid-2">'+
         '<div class="dchart"><h4>Total revenue ($B)</h4><div class="ds-sub">each deal = a step-up; software (teal) only after CA</div><div class="dchart-c"><canvas id="dRev"></canvas></div></div>'+
@@ -972,13 +1017,27 @@ function maDeepBody(){
       '<div class="dchart"><h4>Free cash flow ($B)</h4><div class="ds-sub">the engine funding dividends, debt paydown, buybacks, and the next deal</div><div class="dchart-c" style="height:150px"><canvas id="dFcf"></canvas></div></div>'+
     '</div><div class="source">Quarterly series and per-deal detail from analyst working files (colleague\'s M&amp;A workstream). Closing EVs differ from announced prices (e.g. VMware ~$61B announced, ~$86B at close).</div></div>'+
 
-  card('Trajectory patterns','',
+  card('The Unallocated bucket links the strategy to the DCF','why GAAP and non-GAAP diverge so sharply',
+    '<div class="card-body"><div class="insight">Segment operating income (~$45B combined) is roughly <b>2× GAAP operating income</b> ($25.5B FY25). The ~$16.5B gap is the M&amp;A cost the strategy generates — <b>intangible amortization, SBC, restructuring, acquisition costs</b>. Three of those four run off over time <i>absent a new deal</i> — which is why &ldquo;will there be a next mega-deal?&rdquo; is the single biggest modeling fork: no deal → Unallocated falls → GAAP margin mechanically widens.</div></div>','')+
+
+  card('6 · Limits, risks &amp; critiques','the tensions a serious analysis has to hold',
     '<div class="card-body"><div class="mini-grid c2">'+
-      '<div class="mini l-blue"><div class="mini-t">Size escalation</div><div class="mini-d">Each marquee bigger than the last: LSI → BRCM → CA → VMware. Smaller deals (Emulex, Brocade, Symantec) are tuck-ins between.</div></div>'+
-      '<div class="mini l-amber"><div class="mini-t">Financing evolution</div><div class="mini-d">Early deals more debt (LSI 70%); larger deals require stock (BRCM 54%, VMware ~50%). All-cash deals (CA, Symantec) bet cost cuts service the debt.</div></div>'+
-      '<div class="mini l-teal"><div class="mini-t">Margin compounding</div><div class="mini-d">Each deal dilutes EBITDA margin 2–5pts, then expands past prior peak in 12–24 mo: ~47% (FY14) → 68% (Q1 FY26). 20 years of compounding.</div></div>'+
-      '<div class="mini l-ai"><div class="mini-t">Where it\'s heading</div><div class="mini-d">Tan says no M&amp;A needed now — AI organic growth does what deals used to. De-levering ($73B→$68B) preserves capacity. If AI cools, software M&amp;A resumes.</div></div>'+
-    '</div></div>','');
+        pmini('l-coral','Regulatory ceiling','The <b>Qualcomm bid ($103–117B, 2018) was blocked</b> on CFIUS national-security grounds — the involuntary pivot to software. Broadcom had outgrown chip-on-chip M&amp;A without regulatory walls; its R&amp;D-cutting reputation fed the scrutiny.')+
+        pmini('l-amber','Acquisition, not organic innovation','The model needs a steady supply of category-leading, debt-serviceable franchises — and each cycle needs a <i>bigger</i> one to move the needle. That scarcity is part of what drove the reach for Qualcomm.')+
+        pmini('l-coral','Customer &amp; reputational backlash','The price-hike playbook breeds resentment. VMware customers publicly protested the VCF re-pricing; pricing pressure reportedly pushed Google to add MediaTek as a second TPU source [est].')+
+        pmini('l-amber','Key-person dependence','Broadcom <i>is</i> Hock Tan&apos;s strategy. His contract runs to 2030+ (tied to ~$120B AI revenue), but the concentration of strategic judgment in one person has no obvious succession answer.')+
+        pmini('l-purple','The &ldquo;melting ice cube&rdquo;','Many acquired franchises (mainframe, FC SAN, legacy security) decline — but very slowly. The strategy monetizes decline efficiently; a chunk of the company is structurally shrinking, masked by price hikes and the AI growth on top.')+
+      '</div></div>','')+
+
+  card('7 · Where the strategy is heading','the AI era changed the inputs, not the logic',
+    '<div class="card-body"><div class="mini-grid c2">'+
+        pmini('l-ai','AI growth now does what M&amp;A used to','Tan signals no near-term need for a mega-deal — AI is growing fast enough organically ($56B FY26 guide, &gt;$100B FY27) to hit targets. New: for two decades, growth <i>was</i> M&amp;A.')+
+        pmini('l-blue','De-levering preserves optionality','Paying VMware debt down ($73B → ~$68B) rebuilds the capacity to do the next big deal when the moment comes.')+
+        pmini('l-teal','The recursion still stands','If AI cools, the playbook resumes — the likeliest next target class is software (lighter scrutiny than semis, stickier cash, proven at CA/Symantec/VMware).')+
+        pmini('l-purple','A new variant — PE applied outward','The Apollo/Blackstone <b>XPU financing platform</b> (20+ GW through 2028, $35B first tranche) applies PE-style structured finance to the <i>customer</i> side — funding frontier labs&apos; compute access.')+
+      '</div>'+
+      '<div class="insight" style="margin-top:10px"><b>The synthesis:</b> a 20-year compounding machine that buys sticky franchises, optimizes them ruthlessly for cash, and recycles the proceeds into progressively larger ones — leverage as fuel, free cash flow as the pump. The doctrine hasn&apos;t changed since 2006; only the arena has.</div>'+
+    '</div>','');
 }
 
 // M&A quarterly series (ported).
@@ -1020,6 +1079,136 @@ function initMaDeep(pane){
 }
 
 // ─── Tab registry + shell ───────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════════════
+// 9 — VALUATION  (live price from Massive → live P/E, EV/EBITDA & FCF yield on BBG consensus)
+// ════════════════════════════════════════════════════════════════════════════════
+// Denominators are Bloomberg consensus (estimate source BST) from avgo-context/AVGO_BBG.xlsx:
+// FY2025 is reported actual, FY2026E–FY2029E are Bloomberg forward estimates. Fiscal year
+// ends early November. The *numerator* (price, market cap, enterprise value) is pulled live
+// from Massive via liveQuote('AVGO'), so every multiple recomputes off the quote intraday.
+var VAL_FY      = ['FY25A','FY26E','FY27E','FY28E','FY29E'];
+var VAL_EST     = [false, true, true, true, true];              // true → forward estimate (dimmed row)
+var VAL_REV     = [63887, 105811, 173276, 226681, 312679];     // $M · Total revenue
+var VAL_EBITDA  = [43004, 71964, 116966, 154241, 205721];      // $M · Adjusted EBITDA
+var VAL_EPS     = [6.82, 11.59, 19.23, 25.72, 34.12];          // $  · Adjusted diluted EPS
+var VAL_FCF     = [26914, 50805, 90257, 117766, 158184];       // $M · Free cash flow
+var VAL_NETDEBT = 50283;   // $M · FY25A net debt (BBG) — EV fallback if the live quote omits EV
+var VAL_SHARES_FALLBACK = 4943e6;  // FY25A diluted shares (BBG) — fallback if the quote omits it
+
+var _valQuote = null;  // cached live AVGO quote for this render
+
+function valUsd(v){ if(v>=1e12) return '$'+(v/1e12).toFixed(2)+'T'; if(v>=1e9) return '$'+(v/1e9).toFixed(1)+'B'; return '$'+Math.round(v/1e6).toLocaleString()+'M'; }
+function valSetTxt(pane,id,t){ var el=pane.querySelector('#'+id); if(el) el.textContent=t; }
+// Live enterprise value: prefer Massive's EV; else market cap + FY25A net debt.
+function valEV(q){
+  if(q.ev!=null) return q.ev;
+  var sh = q.shares!=null ? q.shares : VAL_SHARES_FALLBACK;
+  var mc = q.marketCap!=null ? q.marketCap : q.price*sh;
+  return mc + VAL_NETDEBT*1e6;
+}
+function valMC(q){ return q.marketCap!=null ? q.marketCap : q.price*(q.shares!=null?q.shares:VAL_SHARES_FALLBACK); }
+function valKpi(id,label,cls){
+  return '<div class="stat-card '+cls+'"><div class="stat-label">'+label+'</div>'+
+    '<div class="stat-value" id="val-'+id+'">…</div><div class="stat-sub">at live price</div></div>';
+}
+
+function valuationBody(){
+  var h = '';
+  h += '<p class="ov-lede">How Broadcom is trading <b>right now</b> against <b>Bloomberg consensus</b>. Price, market cap and enterprise value come <b>live</b> from Massive (needs a signed-in session); every P/E, EV/EBITDA and FCF yield recomputes off that quote against FY25A actuals and the FY26E–FY29E Bloomberg estimates — so you can see the multiple <b>compress</b> as earnings grow into the price.</p>';
+  h += '<div class="ov-live" id="avgoValLive" hidden></div>';
+  h += '<div class="stats-row c5" id="avgoValKpis">'+
+      valKpi('pe25','P/E · FY25A','t-neutral')+
+      valKpi('pe26','P/E · FY26E','t-accent')+
+      valKpi('eve25','EV/EBITDA · FY25A','t-neutral')+
+      valKpi('eve26','EV/EBITDA · FY26E','t-accent')+
+      valKpi('fcf26','FCF yield · FY26E','t-pos')+
+    '</div>';
+  h += card('Multiples at the live price','implied off today’s quote, across the BBG consensus curve',
+      '<div class="card-body"><div style="overflow-x:auto"><table class="tbl" id="avgoValTbl">'+
+        '<thead><tr><th style="text-align:left">Fiscal year</th><th>Revenue</th><th>Adj. EBITDA</th>'+
+        '<th>Adj. EPS</th><th>FCF</th><th>P/E</th><th>EV/EBITDA</th></tr></thead><tbody></tbody></table></div></div>',
+      'FY25A reported actual; FY26E–FY29E Bloomberg consensus (BST). P/E = live price ÷ EPS · EV/EBITDA = live EV ÷ adj. EBITDA · using the live enterprise value across all years.');
+  h += card('Forward multiple compression','P/E &amp; EV/EBITDA at the live price, FY25A → FY29E',
+      '<div class="card-body"><div class="chart-c"><canvas id="cValFwd"></canvas></div></div>',
+      'Both lines hold the live price/EV constant and step across each year’s Bloomberg estimate — the fall shows how fast consensus growth de-rates the multiple. Needs a signed-in session to populate.');
+  h += '<div class="ov-foot">Fundamentals: Bloomberg consensus (estimate source BST), from <code>avgo-context/AVGO_BBG.xlsx</code> — FY25A reported, FY26E–FY29E forward. Live quote via Massive (<code>liveQuote(\'AVGO\')</code>); if values show “…”, the session isn’t authenticated or the feed is unavailable. FY25A net debt $50.3B; forward EV/EBITDA holds today’s EV constant (standard convention), not each year’s projected net cash.</div>';
+  return h;
+}
+
+function renderValTable(pane, q){
+  var tb = pane.querySelector('#avgoValTbl tbody'); if(!tb) return;
+  var ev = q ? valEV(q) : null;
+  var rows='';
+  for(var i=0;i<VAL_FY.length;i++){
+    var pe  = q ? (q.price/VAL_EPS[i]).toFixed(1)+'×' : '—';
+    var eve = (q && ev!=null) ? (ev/(VAL_EBITDA[i]*1e6)).toFixed(1)+'×' : '—';
+    rows += '<tr'+(VAL_EST[i]?' class="row-est"':'')+'>'+
+      '<td style="text-align:left">'+VAL_FY[i]+(VAL_EST[i]?' <span class="est-tag">BBG est</span>':'')+'</td>'+
+      '<td>$'+(VAL_REV[i]/1000).toFixed(1)+'B</td>'+
+      '<td>$'+(VAL_EBITDA[i]/1000).toFixed(1)+'B</td>'+
+      '<td>$'+VAL_EPS[i].toFixed(2)+'</td>'+
+      '<td>$'+(VAL_FCF[i]/1000).toFixed(1)+'B</td>'+
+      '<td>'+pe+'</td><td>'+eve+'</td></tr>';
+  }
+  tb.innerHTML = rows;
+}
+
+// Forward multiple compression: hold the live price/EV constant, step across each BBG year.
+function buildValFwdChart(q){
+  if(!q || q.price==null){ freshChart('cValFwd',{type:'line',data:{labels:[],datasets:[]}}); return; }
+  var ev=valEV(q);
+  var pe  = VAL_EPS.map(function(e){ return +(q.price/e).toFixed(1); });
+  var eve = VAL_EBITDA.map(function(x){ return +(ev/(x*1e6)).toFixed(1); });
+  freshChart('cValFwd',{type:'line',data:{labels:VAL_FY,datasets:[
+    {label:'P/E',data:pe,borderColor:'#2E75B6',backgroundColor:'#2E75B6',borderWidth:2.5,tension:0.3,pointRadius:4,pointHoverRadius:6},
+    {label:'EV/EBITDA',data:eve,borderColor:'#7030A0',backgroundColor:'#7030A0',borderWidth:2.5,tension:0.3,pointRadius:4,pointHoverRadius:6}]},
+    options:Object.assign({},baseOpts,{scales:{x:baseOpts.scales.x,y:Object.assign({},baseOpts.scales.y,{beginAtZero:true,ticks:Object.assign({},baseOpts.scales.y.ticks,{callback:function(v){return v+'×';}})})},
+      plugins:Object.assign({},baseOpts.plugins,{tooltip:Object.assign({},baseOpts.plugins.tooltip,{callbacks:{label:function(c){return c.dataset.label+': '+c.raw+'×';}}})})})});
+}
+
+function applyValLive(pane, q){
+  var ev = valEV(q), mc = valMC(q);
+  var lv = pane.querySelector('#avgoValLive');
+  if(lv){
+    var up=(q.changePct||0)>=0;
+    lv.hidden=false;
+    lv.innerHTML='<span class="ov-live-dot"></span><span class="ov-live-tk">AVGO</span> '+
+      '<span class="ov-live-px">$'+q.price.toFixed(2)+'</span> '+
+      '<span class="ov-live-ch '+(up?'up':'down')+'">'+(up?'+':'')+(q.changePct!=null?q.changePct.toFixed(2):'0.00')+'%</span> '+
+      '<span class="ov-live-mc">Mkt cap '+valUsd(mc)+' · EV '+valUsd(ev)+'</span>'+
+      '<span class="ov-live-ts">live · Massive</span>';
+  }
+  valSetTxt(pane,'val-pe25', (q.price/VAL_EPS[0]).toFixed(1)+'×');
+  valSetTxt(pane,'val-pe26', (q.price/VAL_EPS[1]).toFixed(1)+'×');
+  valSetTxt(pane,'val-eve25',(ev/(VAL_EBITDA[0]*1e6)).toFixed(1)+'×');
+  valSetTxt(pane,'val-eve26',(ev/(VAL_EBITDA[1]*1e6)).toFixed(1)+'×');
+  valSetTxt(pane,'val-fcf26',(100*VAL_FCF[1]*1e6/mc).toFixed(1)+'%');
+  renderValTable(pane, q);
+  buildValFwdChart(q);
+}
+
+function initValuation(pane){
+  // Render the fundamentals-only view first (works without a session), then overlay the live quote.
+  renderValTable(pane, null);
+  buildValFwdChart(null);
+  if(pane._valLoaded){ if(_valQuote) applyValLive(pane, _valQuote); return; }
+  pane._valLoaded = true;
+  liveQuote('AVGO').then(function(res){
+    var q = res && res.data;
+    if(!q || q.price==null) return;   // leave the fundamentals-only view in place
+    _valQuote = q;
+    applyValLive(pane, q);
+  }).catch(function(){});
+}
+
+// ── Industry Analysis (shared semiconductor supply-chain map, pre-drilled to AVGO) ──
+function industryBody(){
+  return '<div class="ov-sec-h" style="margin-bottom:10px">Semiconductor Supply-Chain Map</div>'+
+    // focus:true → the Flow view opens pre-drilled to Broadcom's place in the chain.
+    semiIndustry.html({ highlight: 'AVGO', focus: true });
+}
+function initIndustry(pane){ semiIndustry.init(); }
+
 var TABS = [
   { key:'segments',      label:'Segments',              body:segmentsBody,      init:initSegments },
   { key:'guidance',      label:'Guidance',              body:guidanceBody,      init:null },
@@ -1028,7 +1217,9 @@ var TABS = [
   { key:'valuechain',    label:'Value Chain',           body:valueChainBody,    init:initValueChain },
   { key:'gwroadmap',     label:'GW Roadmap',            body:gwRoadmapBody,     init:initGwRoadmap },
   { key:'management',    label:'Management',            body:managementBody,    init:initManagement },
-  { key:'madeep',        label:'M&A Deep Dive',         body:maDeepBody,        init:initMaDeep },
+  { key:'madeep',        label:'PE Strategy',           body:maDeepBody,        init:initMaDeep },
+  { key:'valuation',     label:'Valuation',             body:valuationBody,     init:initValuation },
+  { key:'industry',      label:'Industry Analysis',     body:industryBody,      init:initIndustry },
 ];
 
 function html(c){

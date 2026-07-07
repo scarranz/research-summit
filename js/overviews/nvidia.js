@@ -392,7 +392,8 @@ function heroMultiples(){
   return '<div class="ovlr-mult">'+
     '<div class="ovlr-mult-top">'+
       '<div class="ovlr-mult-live"><span class="ov-live-dot"></span><span class="ov-live-tk">NVDA</span>'+
-        '<span class="ov-live-px" id="nvMultPx">$—</span><span class="ov-live-ch" id="nvMultCh"></span></div>'+
+        '<span class="ov-live-kv">Mkt cap <b id="nvMultMc">—</b></span>'+
+        '<span class="ov-live-kv">EV <b id="nvMultEv">—</b></span></div>'+
       '<div class="ovlr-seg" id="nvMultToggle">'+
         '<button type="button" class="ovlr-seg-b active" data-mult="trailing">Trailing</button>'+
         '<button type="button" class="ovlr-seg-b" data-mult="forward">Forward</button>'+
@@ -430,6 +431,7 @@ function descBox(){
 // ── 5 · Products body (cards + lightbox; header supplied by the box) ─────────────
 function productsBody(){
   return '<div class="ovlr-prod">'+
+    '<p class="ovlr-money-p">NVIDIA doesn’t sell a single chip — it sells the whole <b>stack of accelerated computing</b>. The four below trace that stack from the bottom up: the GPU <b>silicon</b> NVIDIA designs, the CPU+GPU <b>modules</b> built from it, the <b>networking</b> that fuses thousands of GPUs into one machine, and the complete rack-scale <b>“AI factory”</b> it increasingly ships whole. Sitting on top of all of it — and the real moat — is the <b>CUDA</b> software every AI model is written for.</p>'+
     '<div class="ovlr-prod-hint2">Tap a product to enlarge.</div>'+
     '<div class="ovlr-prod-row">'+PRODUCTS.map(function(p,i){
       return '<figure class="ovlr-prod-card ovlr-clickable" data-prod="'+i+'" tabindex="0" role="button" aria-label="'+esc(p.name)+' — enlarge">'+
@@ -459,16 +461,42 @@ var MONEY_REG = { title:'Revenue by region <span>(% · approx · by billing loca
   labels:['United States','Singapore*','Taiwan','China','Other'], data:[47,18,16,13,6],
   colors:['#1F8A70','#3A7CA5','#5B53A8','#C0772C','#9aa6b4'], unit:'%',
   note:'⚠️ Approximate FY2025 geography by customer <b>billing</b> location (not end-demand). *Singapore is largely an invoicing hub. Summit has no regional data — to be updated with exact FY2026 10-K figures.' };
+// Per-segment explanation — makes the doughnut readable and ties each revenue slice
+// back to the products above. Shown in "By segment" mode. Colors match the chart.
+var MONEY_SEG_CARDS = [
+  { name:'Hyperscale', dot:'#1F8A70', rev:'$105.6B', yoy:'+96% YoY',
+    desc:'The public clouds and largest consumer-internet companies — Microsoft, Amazon, Google, Meta. They buy <b>GB300 NVL72 racks</b> and <b>Grace Blackwell superchips</b> at massive scale to train and serve frontier AI. About half of Data Center, and the fastest-growing slice.',
+    prod:'GB300 NVL72 · Superchip · networking · Blackwell silicon' },
+  { name:'ACIE — AI Clouds, Industrial & Enterprise', dot:'#5cc0a6', rev:'$88.1B', yoy:'+44% YoY',
+    desc:'Purpose-built “AI factories” outside the mega-clouds — enterprises, industries and <b>sovereign-AI</b> buyers standing up their own accelerated data centers. Same product stack as Hyperscale, different customers.',
+    prod:'Same Data-Center stack as above' },
+  { name:'Edge Computing', dot:'#2D6A9F', rev:'$22.2B', yoy:'+45% YoY',
+    desc:'On-device and physical AI: <b>GeForce / RTX</b> gaming, <b>Omniverse</b> & pro-viz workstations, <b>DRIVE</b> automotive and <b>Jetson / Isaac</b> robotics. In FY2027 NVIDIA folded these once-separate platforms into one line.',
+    prod:'Consumer & embedded — not pictured above' },
+];
+function moneySegCards(){
+  return '<div class="ovlr-mseg">'+MONEY_SEG_CARDS.map(function(s){
+    return '<div class="ovlr-mseg-card">'+
+      '<div class="ovlr-mseg-h"><span class="ovlr-mseg-dot" style="background:'+s.dot+'"></span>'+
+        '<span class="ovlr-mseg-nm">'+esc(s.name)+'</span>'+
+        '<span class="ovlr-mseg-rev">'+esc(s.rev)+' <em>'+esc(s.yoy)+'</em></span></div>'+
+      '<div class="ovlr-mseg-d">'+s.desc+'</div>'+
+      '<div class="ovlr-mseg-prod">↳ '+s.prod+'</div>'+
+    '</div>';
+  }).join('')+'</div>';
+}
+var MONEY_REG_DETAIL = '<p class="ovlr-mseg-note">Geography is approximate and by <b>billing</b> location, not end-demand — much of the “Singapore” and “Taiwan” revenue is product invoiced to systems partners (Foxconn and others) that assemble racks for customers elsewhere. Summit has no regional data; to be refined with exact FY2026 10-K figures.</p>';
 var _moneyMode = 'segment', _moneyChart = null;
 function moneyBody(){
-  return '<p class="ovlr-money-p">The products above are almost all <b>Data Center</b> — the NVL72 racks, superchips, networking and silicon NVIDIA sells to clouds and AI builders. Gaming, pro-viz, automotive and robotics make up the smaller <b>Edge</b> line.</p>'+
+  return '<p class="ovlr-money-p">About <b>90% of NVIDIA’s revenue is Data Center</b> — selling AI training and inference compute to whoever is building AI. In FY2027 NVIDIA re-cut that business by <b>customer type</b>: <b>Hyperscale</b> (the big clouds) versus <b>ACIE</b> (everyone else building AI factories), and folded gaming, pro-viz, auto and robotics into a single smaller <b>Edge Computing</b> line. The mix has shifted dramatically — Data Center was ~25% of sales seven years ago and is ~90% today. The cards below explain each segment and tie it back to the products above.</p>'+
     '<div class="ovlr-seg" id="nvMoneyToggle">'+
       '<button type="button" class="ovlr-seg-b active" data-money="segment">By segment</button>'+
       '<button type="button" class="ovlr-seg-b" data-money="region">By region</button>'+
     '</div>'+
     '<div class="ov-chart-card"><div class="ov-chart-t" id="nvMoneyTitle">'+MONEY_SEG.title+'</div>'+
     '<div class="ov-chart-wrap"><canvas id="nvMoneyChart"></canvas></div></div>'+
-    '<div class="ovlr-money-note" id="nvMoneyNote">'+MONEY_SEG.note+'</div>';
+    '<div class="ovlr-money-note" id="nvMoneyNote">'+MONEY_SEG.note+'</div>'+
+    '<div id="nvMoneyDetail">'+moneySegCards()+'</div>';
 }
 function buildMoneyChart(){
   var cv = document.getElementById('nvMoneyChart');
@@ -482,6 +510,161 @@ function buildMoneyChart(){
       plugins:{ legend:{ position:'right', labels:{ boxWidth:12, font:{size:12}, color:'#5b6470', padding:10 } },
         tooltip:{ callbacks:{ label:function(ctx){ var t=ctx.dataset.data.reduce(function(a,b){return a+b;},0);
           var v=ctx.parsed; return ' '+ctx.label+': '+(d.unit==='B'?'$'+v.toFixed(1)+'B':v+'%')+' ('+(v/t*100).toFixed(0)+'%)'; } } } } }
+  });
+}
+
+// ── 6.5 · Margins (interactive trend) ────────────────────────────────────────────
+// Margins as % of revenue, fiscal years (NVDA FY ends late January).
+//   Gross / Operating / Net  = NVIDIA reported GAAP (Summit's gross/op history lines
+//     are unreliable, so these come straight from the 10-K / press releases).
+//   EBITDA / CFO / FCF        = Summit DCF model for FY22+ (snapshot 2026-05-26);
+//     FY19–FY21 computed from reported statements (op income + D&A; CFO − capex).
+//   FY27E                     = Summit projection for the CURRENT fiscal year — the
+//     only forward point; the chart never projects past it.
+var MARGIN_METRICS = [
+  { key:'gross',  label:'Gross',     color:'#76B900' },
+  { key:'oper',   label:'Operating', color:'#2F80ED' },
+  { key:'net',    label:'Net',       color:'#7A5AF8' },
+  { key:'ebitda', label:'EBITDA',    color:'#12B5A5' },
+  { key:'cfo',    label:'CFO',       color:'#F2A73B' },
+  { key:'fcf',    label:'FCF',       color:'#EB5757' },
+];
+// FY27E projection (Summit model) — always appended after the actual-year history,
+// whatever the source of that history. The chart never projects past this one point.
+var MARGIN_PROJ = { fy:'FY27E', gross:74.1, oper:65.2, net:54.7, ebitda:66.9, cfo:53.1, fcf:51.1, proj:true };
+// Verified fallback history (GAAP for gross/op/net; Summit for EBITDA/CFO/FCF). Used
+// until the live Massive pull returns — then swapped for Massive-computed history.
+var MARGIN_FALLBACK = [
+  { fy:'FY19',  gross:61.2, oper:32.5, net:35.3, ebitda:34.7, cfo:31.9, fcf:26.8 },
+  { fy:'FY20',  gross:62.0, oper:26.1, net:25.6, ebitda:29.6, cfo:43.6, fcf:39.1 },
+  { fy:'FY21',  gross:62.3, oper:27.2, net:26.0, ebitda:33.8, cfo:34.9, fcf:28.1 },
+  { fy:'FY22',  gross:64.9, oper:37.3, net:36.2, ebitda:46.1, cfo:39.7, fcf:36.0 },
+  { fy:'FY23',  gross:56.9, oper:15.7, net:16.2, ebitda:32.9, cfo:37.2, fcf:30.4 },
+  { fy:'FY24',  gross:72.7, oper:54.1, net:48.9, ebitda:58.6, cfo:53.8, fcf:52.1 },
+  { fy:'FY25',  gross:75.0, oper:62.4, net:55.8, ebitda:65.2, cfo:53.7, fcf:51.3 },
+  { fy:'FY26',  gross:71.1, oper:60.4, net:55.6, ebitda:63.1, cfo:54.1, fcf:51.3 },
+];
+var MRG_NOTE_FALLBACK = 'Gross, operating &amp; net margins: NVIDIA reported <b>GAAP</b>. EBITDA, CFO &amp; FCF margins: <b>Summit</b> model (FY22+; FY19–21 from reported statements). <b>FY27E</b> = Summit projection for the current fiscal year. <span style="color:#B7791F">Live Massive feed pending edge-function deploy.</span>';
+var MRG_NOTE_MASSIVE  = 'Historical margins computed <b>live from Massive</b> (income &amp; cash-flow statements): gross/op/net = line ÷ revenue; EBITDA = (op income + D&amp;A) ÷ revenue; CFO &amp; FCF ÷ revenue. <b>FY27E</b> = Summit projection for the current fiscal year — the only forward point.';
+// prefix _mrg — _mg* is already taken by the Management org chart.
+// _mrgData = full history (ascending) + the projection last. _mrgStart/_mrgEnd are the
+// visible window (inclusive indices into _mrgData); the range slider drives them.
+var _mrgSel = { gross:true, oper:true, net:true, ebitda:false, cfo:false, fcf:false };
+var _mrgData = MARGIN_FALLBACK.concat([MARGIN_PROJ]);
+var _mrgStart = 0, _mrgEnd = 0, _mrgChart = null, _mrgSource = 'fallback';
+// Default window: last 5 ACTUAL years + the projection point.
+function mrgDefaultWindow(){
+  var n = _mrgData.length;
+  var lastActual = (n && _mrgData[n-1].proj) ? n-2 : n-1;
+  return [ Math.max(0, lastActual - 4), n-1 ];
+}
+function marginsBody(){
+  var chips = MARGIN_METRICS.map(function(m){
+    return '<button type="button" class="ovlr-mg-chip'+(_mrgSel[m.key]?' on':'')+'" data-mg="'+m.key+'" style="--mg:'+m.color+'">'+
+      '<span class="ovlr-mg-dot"></span>'+esc(m.label)+'</button>';
+  }).join('');
+  return '<p class="ovlr-money-p">Profitability &amp; cash margins as a % of revenue. Tap any line to toggle it on or off. Drag the <b>range slider</b> below the chart to widen or shift the years shown — the last point (<b>FY27E</b>) is the projection for the current fiscal year.</p>'+
+    '<div class="ovlr-mg-chips" id="nvMgChips">'+chips+'</div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Margins (% of revenue) <span>· fiscal years · FY27E = projection</span></div>'+
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="nvMgChart"></canvas></div></div>'+
+    '<div class="ovlr-mg-slider" id="nvMgSlider"></div>'+
+    '<div class="ovlr-money-note" id="nvMgNote">'+MRG_NOTE_FALLBACK+'</div>';
+}
+// Render the range slider (Fiscal.ai-style brush): a rail with a draggable selected
+// window + two edge handles, and a year tick label under each data point.
+function renderMrgSlider(){
+  var el = document.getElementById('nvMgSlider'); if (!el) return;
+  var n = _mrgData.length; if (n < 2){ el.innerHTML=''; return; }
+  var pos = function(i){ return (i/(n-1))*100; };
+  var lp = pos(_mrgStart), rp = pos(_mrgEnd);
+  var ticks = _mrgData.map(function(r,i){
+    var on = (i>=_mrgStart && i<=_mrgEnd);
+    return '<span class="ovlr-mg-tick'+(on?' in':'')+(r.proj?' proj':'')+'">'+esc(r.fy)+'</span>';
+  }).join('');
+  el.innerHTML =
+    '<div class="ovlr-mg-rail">'+
+      '<div class="ovlr-mg-fill" style="left:'+lp+'%;right:'+(100-rp)+'%"></div>'+
+      '<span class="ovlr-mg-handle" data-h="start" style="left:'+lp+'%" role="slider" tabindex="0" aria-label="range start"></span>'+
+      '<span class="ovlr-mg-handle" data-h="end" style="left:'+rp+'%" role="slider" tabindex="0" aria-label="range end"></span>'+
+    '</div>'+
+    '<div class="ovlr-mg-ticks">'+ticks+'</div>';
+}
+// Pointer-driven drag for the slider (handles + pan the window + click-to-move).
+function wireMrgSlider(pane){
+  var slider = pane.querySelector('#nvMgSlider'); if (!slider || slider._w) return; slider._w = 1;
+  var drag = null;
+  function idxFromX(clientX){
+    var rail = slider.querySelector('.ovlr-mg-rail'); if (!rail) return _mrgStart;
+    var rect = rail.getBoundingClientRect();
+    var f = (clientX - rect.left) / Math.max(1, rect.width);
+    return Math.round(Math.max(0, Math.min(1, f)) * (_mrgData.length - 1));
+  }
+  slider.addEventListener('pointerdown', function(e){
+    var h = e.target.closest('.ovlr-mg-handle');
+    if (h){ drag = { which:h.getAttribute('data-h') }; }
+    else if (e.target.closest('.ovlr-mg-fill')){ drag = { which:'pan', anchor:idxFromX(e.clientX), s0:_mrgStart, e0:_mrgEnd }; }
+    else { // click on the rail: move the nearer handle to that year
+      var i = idxFromX(e.clientX);
+      if (Math.abs(i-_mrgStart) <= Math.abs(i-_mrgEnd)) _mrgStart = Math.min(i, _mrgEnd-1);
+      else _mrgEnd = Math.max(i, _mrgStart+1);
+      renderMrgSlider(); buildMarginChart(); return;
+    }
+    try { slider.setPointerCapture(e.pointerId); } catch(_){}
+    e.preventDefault();
+  });
+  slider.addEventListener('pointermove', function(e){
+    if (!drag) return;
+    var i = idxFromX(e.clientX), n = _mrgData.length;
+    if (drag.which === 'start') _mrgStart = Math.max(0, Math.min(i, _mrgEnd-1));
+    else if (drag.which === 'end') _mrgEnd = Math.min(n-1, Math.max(i, _mrgStart+1));
+    else if (drag.which === 'pan'){ var w = drag.e0-drag.s0, ns = Math.max(0, Math.min(drag.s0 + (i-drag.anchor), n-1-w)); _mrgStart = ns; _mrgEnd = ns+w; }
+    renderMrgSlider(); buildMarginChart();
+  });
+  function endDrag(e){ if (drag){ try { slider.releasePointerCapture(e.pointerId); } catch(_){} drag = null; } }
+  slider.addEventListener('pointerup', endDrag);
+  slider.addEventListener('pointercancel', endDrag);
+}
+// Try to replace the fallback history with margins computed live from Massive.
+function loadMassiveMargins(){
+  import('../api.js').then(function(api){ return api.fetchMargins ? api.fetchMargins('NVDA') : null; }).then(function(res){
+    if (!res || !res.success || !res.data || res.data.length < 3) return;   // keep fallback
+    _mrgData = res.data.concat([MARGIN_PROJ]);
+    _mrgSource = 'massive';
+    var w = mrgDefaultWindow(); _mrgStart = w[0]; _mrgEnd = w[1];
+    var note = document.getElementById('nvMgNote'); if (note) note.innerHTML = MRG_NOTE_MASSIVE;
+    renderMrgSlider(); buildMarginChart();
+  }).catch(function(){ /* keep fallback */ });
+}
+function buildMarginChart(){
+  var cv = document.getElementById('nvMgChart');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if (_mrgChart){ _mrgChart.destroy(); _mrgChart = null; }
+  var rows = _mrgData.slice(_mrgStart, _mrgEnd + 1);
+  var projIdx = rows.reduce(function(acc,r,i){ return r.proj ? i : acc; }, -1);  // dash into projection
+  var labels = rows.map(function(r){ return r.fy; });
+  var datasets = MARGIN_METRICS.filter(function(m){ return _mrgSel[m.key]; }).map(function(m){
+    return {
+      label:m.label,
+      data:rows.map(function(r){ return r[m.key]; }),
+      borderColor:m.color, backgroundColor:m.color,
+      borderWidth:2.5, tension:0.3, pointHoverRadius:5, spanGaps:true,
+      pointStyle:rows.map(function(r){ return r.proj ? 'rectRot' : 'circle'; }),
+      pointRadius:rows.map(function(r){ return r.proj ? 5 : 3; }),
+      // dash only the final segment leading into the FY27E projection point
+      segment:{ borderDash:function(ctx){ return ctx.p1DataIndex === projIdx ? [5,4] : undefined; } }
+    };
+  });
+  _mrgChart = new Chart(cv.getContext('2d'), {
+    type:'line',
+    data:{ labels:labels, datasets:datasets },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ display:false },
+        tooltip:{ callbacks:{
+          title:function(items){ var l=items[0].label; return l==='FY27E' ? 'FY27E · projection' : l; },
+          label:function(ctx){ return ' '+ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+'%'; } } } },
+      scales:{ x:{ grid:{ color:'rgba(0,0,0,.05)' }, ticks:{ color:'#8A93A0', font:{weight:'600'} } },
+        y:{ grid:{ color:'rgba(0,0,0,.05)' }, ticks:{ color:'#8A93A0', callback:function(v){ return v+'%'; } } } } }
   });
 }
 
@@ -580,19 +763,22 @@ function overviewBody(){
   // 4 — business snapshot
   h += heroBusiness();
   // 5 — products (collapsible)
-  h += ovBox('products', 'Products — what they make', 'tap to expand', productsBody(), false);
+  h += ovBox('products', 'What they offer', 'products & platforms', productsBody(), false);
   // 6 — how it makes money (collapsible)
   h += ovBox('money', 'How it makes money', 'segments & regions', moneyBody(), false);
-  // 7 — competitors (open)
-  h += ovBox('competitors', 'Competitors', 'multiple × growth × size', competitorsBody(), true);
+  // 6.5 — margins (collapsible)
+  h += ovBox('margins', 'Margins', 'interactive · profitability & cash', marginsBody(), false);
+  // 7 — competitors (collapsible)
+  h += ovBox('competitors', 'Competitors', 'multiple × growth × size', competitorsBody(), false);
   h += '<div class="ov-foot">'+esc(SOURCES)+'</div>';
   return h;
 }
 
 // Wire the box-based overview. Idempotent; safe to call on load and re-entry.
 function initOverview(){
-  var root = document.querySelector('.ov-nvda'); if (!root) return;
-  var pane = root.querySelector('.ovt-pane[data-ovt="overview"]'); if (!pane) return;
+  // Scope directly to the overview pane. The Deep Dive shell is also `.ov-nvda`
+  // (for brand/tab styling), so target the pane by its unique data-ovt instead.
+  var pane = document.querySelector('.ovt-pane[data-ovt="overview"]'); if (!pane) return;
 
   // 2 — multiples: trailing/forward toggle + live price/EV fill.
   pane.querySelectorAll('#nvMultToggle .ovlr-seg-b').forEach(function(b){
@@ -604,11 +790,9 @@ function initOverview(){
   multFill(pane);
   import('../api.js').then(function(api){ return api.liveQuote('NVDA'); }).then(function(res){
     var q = res && res.data; if (!q || q.price == null) return;
-    _multPrice = q.price; _multEv = q.ev;
-    var px = pane.querySelector('#nvMultPx'); if (px) px.textContent = '$'+q.price.toFixed(2);
-    var ch = pane.querySelector('#nvMultCh');
-    if (ch && q.changePct != null){ var up = q.changePct >= 0; ch.className = 'ov-live-ch '+(up?'up':'down');
-      ch.textContent = (up?'▲ +':'▼ −')+Math.abs(q.changePct).toFixed(2)+'%'; }
+    _multPrice = q.price; _multEv = q.ev;   // price still drives the P/E tile, just not shown here
+    var mc = pane.querySelector('#nvMultMc'); if (mc && q.marketCap != null) mc.textContent = fmtBig(q.marketCap);
+    var evEl = pane.querySelector('#nvMultEv'); if (evEl && q.ev != null) evEl.textContent = fmtBig(q.ev);
     multFill(pane);
   }).catch(function(){});
 
@@ -626,6 +810,7 @@ function initOverview(){
       if (open){
         var id = box.getAttribute('data-box');
         if (id === 'money') requestAnimationFrame(buildMoneyChart);
+        if (id === 'margins') requestAnimationFrame(buildMarginChart);
         if (id === 'competitors') requestAnimationFrame(buildCompChart);
       }
     };
@@ -656,9 +841,21 @@ function initOverview(){
       var d = _moneyMode === 'region' ? MONEY_REG : MONEY_SEG;
       var t = pane.querySelector('#nvMoneyTitle'); if (t) t.innerHTML = d.title;
       var n = pane.querySelector('#nvMoneyNote'); if (n) n.innerHTML = d.note;
+      var det = pane.querySelector('#nvMoneyDetail');
+      if (det) det.innerHTML = _moneyMode === 'region' ? MONEY_REG_DETAIL : moneySegCards();
       buildMoneyChart();
     };
   });
+
+  // 6.5 — margins: metric toggle chips (multi-select) + range slider.
+  var mgChips = pane.querySelector('#nvMgChips');
+  if (mgChips) mgChips.onclick = function(e){ var b = e.target.closest('.ovlr-mg-chip'); if (!b) return;
+    var k = b.getAttribute('data-mg'); _mrgSel[k] = !_mrgSel[k]; b.classList.toggle('on', _mrgSel[k]); buildMarginChart(); };
+  var w = mrgDefaultWindow(); _mrgStart = w[0]; _mrgEnd = w[1];
+  wireMrgSlider(pane);
+  renderMrgSlider();
+  requestAnimationFrame(buildMarginChart);   // Margins box starts open — build now.
+  loadMassiveMargins();                       // upgrade history to the live Massive feed when available
 
   // 7 — competitors: toggles, add/remove, live market cap per ticker.
   pane.querySelectorAll('#nvCompMult .ovlr-seg-b').forEach(function(b){
@@ -1744,8 +1941,8 @@ function valuationBody(){
 
 // Wire toggles, sliders and the price field; seed the live quote; first paint.
 function initValuation(){
-  var root=document.querySelector('.ov-nvda'); if(!root) return;
-  var pane=root.querySelector('.ovt-pane[data-ovt="valuation"]'); if(!pane) return;
+  // Valuation lives in the Deep Dive shell (.ov-nvda-dd), not the Overview shell.
+  var pane=document.querySelector('.ovt-pane[data-ovt="valuation"]'); if(!pane) return;
   if(!pane._w){ pane._w=1;
     pane.querySelectorAll('#nvValYear .nv-seg-btn').forEach(function(btn){ btn.onclick=function(){
       pane.querySelectorAll('#nvValYear .nv-seg-btn').forEach(function(x){ x.classList.toggle('active', x===btn); });
@@ -1804,9 +2001,27 @@ function industryBody(){
     semiIndustry.html({ highlight: 'NVDA', focus: true });
 }
 
-// ─── Tab registry + shell ───────────────────────────────────────────────────────
-var TABS = [
-  { key:'overview',   label:'Overview',          body:overviewBody },
+// ─── Overview shell (the "Overview" company tab) ─────────────────────────────────
+// The Overview tab is now just the box-based overview — no internal sub-tab bar.
+// The former sub-tabs (Segments … Industry Analysis) moved to the "Deep Dive" tab
+// below. The overview body is wrapped in a .ovt-pane[data-ovt="overview"] so
+// initOverview()'s pane-scoped selectors keep working unchanged.
+
+function html(){
+  return '<div class="ov ov-nvda" data-brand="NVDA">'+
+    '<div class="ovt-pane" data-ovt="overview">'+overviewBody()+'</div>'+
+    '</div>';
+}
+
+function init(){
+  requestAnimationFrame(function(){ initOverview(); });
+}
+
+// ─── Deep Dive shell (the "Deep Dive" company tab) ───────────────────────────────
+// Same tab machinery as before, just without the Overview pane. The shell keeps the
+// .ov-nvda class (brand color + tab styling live there) plus .ov-nvda-dd as a unique
+// hook so its init can scope to it even though the Overview shell is also .ov-nvda.
+var DEEP_TABS = [
   { key:'segments',   label:'Segments',          body:segmentsBody },
   { key:'technology', label:'Technology',        body:technologyBody },
   { key:'management', label:'Management',         body:managementBody },
@@ -1815,12 +2030,12 @@ var TABS = [
   { key:'industry',   label:'Industry Analysis', body:industryBody },
 ];
 
-function html(){
-  var h = '<div class="ov ov-nvda" data-brand="NVDA">';
-  h += '<div class="ovt-tabs">'+TABS.map(function(t,i){
+function deepDiveHtml(){
+  var h = '<div class="ov ov-nvda ov-nvda-dd" data-brand="NVDA">';
+  h += '<div class="ovt-tabs">'+DEEP_TABS.map(function(t,i){
     return '<button type="button" class="ovt-tab'+(i===0?' active':'')+'" data-ovt="'+t.key+'">'+esc(t.label)+'</button>';
   }).join('')+'</div>';
-  h += TABS.map(function(t,i){
+  h += DEEP_TABS.map(function(t,i){
     return '<div class="ovt-pane" data-ovt="'+t.key+'"'+(i===0?'':' hidden')+'>'+t.body()+'</div>';
   }).join('');
   h += '</div>';
@@ -1837,11 +2052,13 @@ function showOvt(root, key){
   if (key === 'management') requestAnimationFrame(function(){ initManagement(); });
   if (key === 'consensus') requestAnimationFrame(function(){ initConsensus(); });
   if (key === 'valuation') requestAnimationFrame(function(){ initValuation(); });
-  if (key === 'overview') requestAnimationFrame(function(){ initOverview(); });
 }
 
-function init(){
-  var root = document.querySelector('.ov-nvda');
+// Idempotent: called every time the Deep Dive tab becomes visible. Wires the sub-tab
+// bar + segment toggles, then (re)builds whichever sub-tab is currently active now
+// that the pane has layout (Chart.js needs a non-null offsetParent).
+function deepDiveInit(){
+  var root = document.querySelector('.ov-nvda-dd');
   if (!root) return;
   root.querySelectorAll('.ovt-tab').forEach(function(btn){
     btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };
@@ -1860,10 +2077,13 @@ function init(){
       };
     });
   });
-  // Overview is the default active tab — wire its chips / cards / hero on load.
-  requestAnimationFrame(function(){ initOverview(); });
   var active = root.querySelector('.ovt-tab.active');
-  if (active && active.getAttribute('data-ovt') === 'industry') requestAnimationFrame(function(){ semiIndustry.init(); });
+  var key = active ? active.getAttribute('data-ovt') : 'segments';
+  requestAnimationFrame(function(){ showOvt(root, key); });
 }
 
-export var nvidiaOverview = { html: html, init: init };
+export var nvidiaOverview = {
+  html: html,
+  init: init,
+  deepDive: { html: deepDiveHtml, init: deepDiveInit }
+};

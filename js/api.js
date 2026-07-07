@@ -167,6 +167,50 @@ export async function liveQuote(ticker) {
   return ok({ price: price, changePct: tk ? num(tk.todaysChangePerc) : null, marketCap: marketCap, ev: ev, netDebt: netDebt, shares: shares });
 }
 
+// Historical margins for a ticker, computed from Massive's income + cash-flow
+// statements (via covered-calls-massive). Returns { success, data } where data is an
+// ascending-by-year array of { fy, gross, oper, net, ebitda, cfo, fcf } (margins as %,
+// one decimal) — or a failure envelope if Massive has no data (caller keeps its
+// fallback). Requires the edge function to allowlist `income-statements` and
+// `cash-flow-statements` (deploy-gated). Margins are unit-free so scaling is irrelevant.
+export async function fetchMargins(ticker) {
+  function num(v) { return (typeof v === 'number' && isFinite(v)) ? v : null; }
+  async function pull(resource) {
+    var r = await coveredCallsQuote(resource, ticker, { timeframe: 'annual', limit: 20 }).catch(function () { return null; });
+    return (r && r.success && r.data && Array.isArray(r.data.results)) ? r.data.results : null;
+  }
+  var parts = await Promise.all([pull('income-statements'), pull('cash-flow-statements')]);
+  var inc = parts[0], cf = parts[1];
+  if (!inc || !inc.length) return fail('no Massive income-statement data');
+  var cfByYr = {};
+  (cf || []).forEach(function (r) { if (r && r.fiscal_year != null) cfByYr[r.fiscal_year] = r; });
+  var rows = inc.map(function (r) {
+    var rev = num(r.revenue); if (!rev) return null;
+    var fy = r.fiscal_year, c = cfByYr[fy] || {};
+    var op = num(r.operating_income);
+    var ni = num(r.consolidated_net_income_loss);
+    if (ni == null) ni = num(r.net_income_loss_attributable_common_shareholders);
+    var cfo = num(c.net_cash_from_operating_activities);
+    var capex = num(c.purchase_of_property_plant_and_equipment);
+    var dna = num(c.depreciation_depletion_and_amortization);
+    var pct = function (x) { return x == null ? null : Math.round((x / rev) * 1000) / 10; };
+    return {
+      _y: fy,
+      fy: 'FY' + String(fy).slice(-2),
+      gross: pct(num(r.gross_profit)),
+      oper: pct(op),
+      net: pct(ni),
+      ebitda: (op != null && dna != null) ? pct(op + dna) : null,
+      cfo: pct(cfo),
+      fcf: (cfo != null && capex != null) ? pct(cfo - Math.abs(capex)) : null,
+    };
+  }).filter(Boolean);
+  if (!rows.length) return fail('no usable Massive rows');
+  rows.sort(function (a, b) { return a._y - b._y; });
+  if (rows.length > 12) rows = rows.slice(rows.length - 12);   // cap the history we surface
+  return ok(rows);
+}
+
 // ─── Company Resources ──────────────────────────────────────
 
 export async function fetchResources(companyId) {

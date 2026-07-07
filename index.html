@@ -107,11 +107,14 @@
     </div>
     <div class="cotabs">
       <button class="cotab active" data-pane="overview" onclick="coTab('overview')">Overview</button>
+      <button class="cotab" data-pane="deepdive" id="co-tab-deepdive" onclick="coTab('deepdive')" style="display:none">Deep Dive</button>
       <button class="cotab" data-pane="pillars" onclick="coTab('pillars')">Pillars</button>
       <button class="cotab" data-pane="resources" onclick="coTab('resources')">Resources</button>
     </div>
 
     <div class="copane active" data-pane="overview" style="min-height:240px"></div>
+
+    <div class="copane" data-pane="deepdive" style="min-height:240px"></div>
 
     <div class="copane" data-pane="pillars">
       <div class="pillar-filter" id="pillar-filter"></div>

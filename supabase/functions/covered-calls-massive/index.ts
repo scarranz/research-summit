@@ -31,6 +31,14 @@ function resolveRoute(resource: string, t: string, p: Record<string, unknown>): 
     case "snapshot": return `/v2/snapshot/locale/us/markets/stocks/tickers/${t}`;
     case "ratios":   return `/stocks/financials/v1/ratios?ticker=${t}&limit=1`;
     case "fx":       return `/v2/aggs/ticker/C:${t}/prev?adjusted=true`;
+    // Historical financial statements — for per-company margin trends. Only timeframe
+    // and a capped limit are forwarded; results sorted newest-first.
+    case "income-statements":
+    case "cash-flow-statements": {
+      const tf = ["annual", "quarterly", "trailing_twelve_months"].includes(String(p.timeframe)) ? String(p.timeframe) : "annual";
+      const lim = Math.min(Math.max(parseInt(String(p.limit ?? "20"), 10) || 20, 1), 50);
+      return `/stocks/financials/v1/${resource}?tickers=${t}&timeframe=${tf}&limit=${lim}&sort=fiscal_year.desc`;
+    }
     case "chain": {
       const keys = ["contract_type", "expiration_date", "strike_price", "strike_price.gte", "strike_price.lte", "limit", "order", "sort"];
       const qs = keys.filter((k) => p[k] != null && p[k] !== "").map((k) => `${k}=${enc(p[k])}`);

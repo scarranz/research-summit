@@ -1079,6 +1079,46 @@ img.mgmt-av { border: 1px solid var(--bdr); }
 .ov-live-ch.up { color: #1E9E62; }
 .ov-live-ch.down { color: #C0392B; }
 .ov-live-mc { font-weight: 600; color: var(--navy, #1E2733); font-size: 12px; }
+.ov-live-kv { font-size: 12px; color: var(--mu, #8A93A0); font-weight: 600; }
+.ov-live-kv b { color: var(--navy, #1E2733); font-weight: 700; font-size: 14px; margin-left: 3px; }
+
+/* Margins box — metric toggle chips + range control */
+.ovlr-mg-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 12px; }
+.ovlr-mg-chip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--bdr, #E2E6EA); background: #fff; color: #8A93A0; font: 600 12.5px Inter, sans-serif;
+  cursor: pointer; transition: border-color .15s, color .15s; }
+.ovlr-mg-chip:hover { border-color: var(--mg); color: var(--navy, #1E2733); }
+.ovlr-mg-dot { width: 10px; height: 10px; border-radius: 50%; background: transparent;
+  border: 2px solid #C2C8D0; transition: background .15s, border-color .15s; }
+.ovlr-mg-chip.on { border-color: var(--mg); color: var(--navy, #1E2733); }
+.ovlr-mg-chip.on .ovlr-mg-dot { background: var(--mg); border-color: var(--mg); }
+.ovlr-mg-ctl { display: flex; align-items: center; justify-content: flex-end; gap: 9px; margin-bottom: 10px; }
+.ovlr-mg-ctl-l { font: 600 12px Inter, sans-serif; color: var(--mu, #8A93A0); }
+/* Range slider (Fiscal.ai-style brush) under the margins chart */
+.ovlr-mg-slider { margin: 14px 4px 2px; user-select: none; touch-action: none; }
+.ovlr-mg-rail { position: relative; height: 6px; border-radius: 999px; background: #E7EAEE; margin: 10px 8px; }
+.ovlr-mg-fill { position: absolute; top: 0; bottom: 0; border-radius: 999px; background: var(--brand, #76B900);
+  opacity: .85; cursor: grab; }
+.ovlr-mg-handle { position: absolute; top: 50%; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%;
+  background: #fff; border: 2px solid var(--brand, #76B900); transform: translateY(-50%); cursor: ew-resize;
+  box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+.ovlr-mg-handle:focus-visible { outline: 2px solid var(--brand, #76B900); outline-offset: 2px; }
+.ovlr-mg-ticks { display: flex; justify-content: space-between; margin: 6px 8px 0; }
+.ovlr-mg-tick { font: 600 10.5px Inter, sans-serif; color: #B4BBC4; transition: color .12s; }
+.ovlr-mg-tick.in { color: var(--navy, #1E2733); }
+.ovlr-mg-tick.proj { font-style: italic; }
+
+/* How-it-makes-money — per-segment explanation cards */
+.ovlr-mseg { display: grid; gap: 10px; margin-top: 14px; }
+.ovlr-mseg-card { border: 1px solid var(--bdr, #E2E6EA); border-radius: 12px; padding: 12px 14px; background: #fff; }
+.ovlr-mseg-h { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
+.ovlr-mseg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.ovlr-mseg-nm { font: 700 13px Inter, sans-serif; color: var(--navy, #1E2733); }
+.ovlr-mseg-rev { margin-left: auto; font: 700 13px Inter, sans-serif; color: var(--navy, #1E2733); white-space: nowrap; }
+.ovlr-mseg-rev em { font-style: normal; font-weight: 600; font-size: 11.5px; color: #1E9E62; }
+.ovlr-mseg-d { font: 400 12.5px/1.55 Inter, sans-serif; color: #5b6470; }
+.ovlr-mseg-prod { margin-top: 6px; font: 600 11.5px Inter, sans-serif; color: #8A93A0; }
+.ovlr-mseg-note { font: 400 12.5px/1.55 Inter, sans-serif; color: #5b6470; margin-top: 14px; }
 .ov-live-ts { color: var(--mu, #8A93A0); font-size: 12px; margin-left: auto; }
 /* Hidden state must win over .ov-live's display:flex (else an empty banner shows). */
 .ov-live[hidden] { display: none; }

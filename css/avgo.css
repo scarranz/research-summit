@@ -431,6 +431,16 @@
 .ov-avgo { --brand:#CC092F; }
 /* Each tab pane stacks its cards with the gap the dashboard's .content-area gave. */
 .ov-avgo .ovt-pane:not([hidden]) { display:flex; flex-direction:column; gap:14px; }
+/* Nested Customers sub-panes need the same card spacing as top-level panes. */
+.ov-avgo .ovt-subpane:not([hidden]) { display:flex; flex-direction:column; gap:14px; }
+
+/* Top-Line Model — slider controls. */
+.ov-avgo .tl-ctl { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.ov-avgo .tl-sl { display:flex; flex-direction:column; gap:5px; }
+.ov-avgo .tl-sl label { font-size:11px; font-weight:600; color:var(--text-secondary); display:flex; justify-content:space-between; align-items:baseline; }
+.ov-avgo .tl-sl label b { font-size:12.5px; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; }
+.ov-avgo .tl-sl input[type=range] { width:100%; accent-color:var(--accent); cursor:pointer; }
+@media (max-width:720px){ .ov-avgo .tl-ctl { grid-template-columns:1fr; } }
 /* Drill-down modal sits above the app shell. */
 .ov-avgo .dd-overlay { z-index:1000; }
 /* Management sub-view (All Management / Hock Tan) toggle panes. */

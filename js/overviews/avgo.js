@@ -21,7 +21,7 @@
 // "LT" / projection figures are management guidance, not contract. Live ownership/insider
 // (Management tab) is pulled from Fiscal.ai via api.js — the same source as the Pillars tab.
 
-import { fetchExecutives, fetchInsiderTransactions, syncManagement, liveQuote } from '../api.js';
+import { fetchExecutives, fetchInsiderTransactions, syncManagement, liveQuote, fetchMargins } from '../api.js';
 import { semiIndustry } from './semi-industry.js';
 
 // Register the annotation plugin once (used by the M&A financial-impact charts).
@@ -1373,50 +1373,657 @@ function industryBody(){
 }
 function initIndustry(pane){ semiIndustry.init(); }
 
-var TABS = [
-  { key:'segments',      label:'Segments',              body:segmentsBody,      init:initSegments },
-  { key:'guidance',      label:'Guidance',              body:guidanceBody,      init:null },
-  { key:'airevenue',     label:'AI Revenue',            body:aiRevenueBody,     init:initAIRevenue },
-  { key:'concentration', label:'Customer Concentration',body:concentrationBody, init:initConcentration },
-  { key:'valuechain',    label:'Value Chain',           body:valueChainBody,    init:initValueChain },
-  { key:'gwroadmap',     label:'GW Roadmap',            body:gwRoadmapBody,     init:initGwRoadmap },
-  { key:'commitments',   label:'Customer Commitments',  body:commitmentsBody,   init:initCommitments },
-  { key:'management',    label:'Management',            body:managementBody,    init:initManagement },
-  { key:'madeep',        label:'PE Strategy',           body:maDeepBody,        init:initMaDeep },
-  { key:'valuation',     label:'Valuation',             body:valuationBody,     init:initValuation },
-  { key:'industry',      label:'Industry Analysis',     body:industryBody,      init:initIndustry },
+// ════════════════════════════════════════════════════════════════════════════════
+// 0 — OVERVIEW  (box-based landing, mirrors the NVIDIA overview pattern)
+// Snapshot banner · valuation multiples · description · business quadrants ·
+// collapsible boxes (Products · How it makes money · Margins · Competitors).
+// Shared overview.css classes (.ovlr-*, .ov-*). IDs prefixed avgoOv* to stay unique.
+// ════════════════════════════════════════════════════════════════════════════════
+var OV_SNAPSHOT = [
+  ['Model', 'Chips + infrastructure software'],
+  ['HQ', 'Palo Alto, CA'],
+  ['Founded', '1991 · IPO 2009 (Avago)'],
+  ['Fiscal year', 'Ends early November'],
+  ['Last reported quarter', 'Q2 FY2026 · Jun 3, 2026'],
+  ['CEO', 'Hock Tan (since 2006)'],
 ];
+var OV_DESC = 'Broadcom is a global technology leader that designs, develops and supplies a broad range of <b>semiconductor</b> and <b>infrastructure-software</b> products. It runs two engines. The first is a semiconductor business at the center of the AI build-out: custom AI accelerators (<b>XPUs</b>) co-designed with hyperscalers, the networking silicon (Tomahawk switching, Jericho routing, SerDes and optical) that wires AI clusters, plus wireless (the Apple RF franchise), broadband, server-storage and industrial chips. The second is a high-margin infrastructure-software business — <b>VMware</b>, mainframe (CA) and security (Symantec) — assembled through a two-decade, private-equity-style acquisition machine under CEO Hock Tan and run for durable, sticky cash flow. Broadcom is <b>fabless</b> (TSMC manufactures) and sits inside a deep supplier web mapped in the Industry Analysis tab.';
 
-function html(c){
+// Valuation multiples — Bloomberg consensus (avgo-context/AVGO_BBG.xlsx). Trailing = FY25A,
+// forward = FY26E. P/E & EV/EBITDA use the live price/EV; growth & PEG from consensus.
+var OV_MULT = {
+  trailing: { eps:6.82,  epsGr:36, ebitda:43004, ebGr:41 },   // FY2025A
+  forward:  { eps:11.59, epsGr:70, ebitda:71964, ebGr:67 },   // FY2026E (BBG)
+};
+var _ovMultMode = 'trailing', _ovMultPrice = null, _ovMultEv = null;
+function ovFmtBig(v){ if(v==null) return '—'; if(v>=1e12) return '$'+(v/1e12).toFixed(2)+'T'; if(v>=1e9) return '$'+(v/1e9).toFixed(0)+'B'; return '$'+(v/1e6).toFixed(0)+'M'; }
+function ovHeroMultiples(){
+  var tiles=[['P/E','avgoOvPE'],['Earnings growth','avgoOvEG'],['PEG','avgoOvPEG'],['EV / EBITDA','avgoOvEV'],['EBITDA growth','avgoOvEBG'],['PEG (EBITDA)','avgoOvPEGE']];
+  return '<div class="ovlr-mult">'+
+    '<div class="ovlr-mult-top">'+
+      '<div class="ovlr-mult-live"><span class="ov-live-dot"></span><span class="ov-live-tk">AVGO</span>'+
+        '<span class="ov-live-kv">Mkt cap <b id="avgoOvMc">—</b></span>'+
+        '<span class="ov-live-kv">EV <b id="avgoOvEv">—</b></span></div>'+
+      '<div class="ovlr-seg" id="avgoOvMultToggle">'+
+        '<button type="button" class="ovlr-seg-b active" data-mult="trailing">Trailing</button>'+
+        '<button type="button" class="ovlr-seg-b" data-mult="forward">Forward</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="ovlr-mult-grid">'+tiles.map(function(t){
+      return '<div class="ovlr-mult-tile"><div class="ovlr-mult-l">'+esc(t[0])+'</div>'+
+        '<div class="ovlr-mult-v" id="'+t[1]+'"><span class="ovlr-mut">—</span></div></div>';
+    }).join('')+'</div>'+
+    '<div class="ovlr-mult-note" id="avgoOvMultNote"></div>'+
+  '</div>';
+}
+function ovMultFill(pane){
+  var m = OV_MULT[_ovMultMode], p=_ovMultPrice, ev=_ovMultEv;
+  function set(id,txt){ var e=pane.querySelector('#'+id); if(e) e.textContent=txt; }
+  set('avgoOvEG','+'+m.epsGr+'%'); set('avgoOvEBG','+'+m.ebGr+'%');
+  if(p!=null){ var pe=p/m.eps; set('avgoOvPE',pe.toFixed(1)+'×'); set('avgoOvPEG',(pe/m.epsGr).toFixed(2)); }
+  else { set('avgoOvPE','—'); set('avgoOvPEG','—'); }
+  if(ev!=null){ var eve=ev/(m.ebitda*1e6); set('avgoOvEV',eve.toFixed(1)+'×'); set('avgoOvPEGE',(eve/m.ebGr).toFixed(2)); }
+  else { set('avgoOvEV','—'); set('avgoOvPEGE','—'); }
+  var note=pane.querySelector('#avgoOvMultNote');
+  if(note) note.innerHTML=(_ovMultMode==='trailing'?'<b>Trailing</b> — FY2025A (Bloomberg).':'<b>Forward</b> — FY2026E (Bloomberg consensus).')+
+    ' P/E &amp; EV/EBITDA use the live price &amp; EV; growth &amp; PEG from consensus. PEG = multiple ÷ growth-%.';
+}
+function ovDescBox(){
+  return '<div class="ovlr-desc" data-desc><p class="ovlr-desc-txt">'+OV_DESC+'</p>'+
+    '<button type="button" class="ovlr-desc-more" id="avgoOvDescMore">Read more ▾</button></div>';
+}
+var OV_BIZ = [
+  ['What it sells', 'Custom AI accelerators (<b>XPUs</b>), <b>networking</b> silicon (Tomahawk / Jericho / optical), wireless &amp; broadband chips — plus <b>infrastructure software</b> (VMware).'],
+  ['Who buys it',   'Hyperscalers (<b>Google, Meta, OpenAI, Anthropic</b>), <b>Apple</b> (wireless), and 300k+ enterprise software customers.'],
+  ['How it earns',  '~58% <b>semiconductors</b> (AI is the growth engine) + ~42% <b>infrastructure software</b> at ~90% gross margin.'],
+  ['The edge',      'Two engines: volatile <b>AI growth</b> + a software <b>“keel”</b> that funds the dividend, services debt &amp; funds the next acquisition.'],
+];
+function ovHeroBusiness(){
+  return '<div class="ovlr-biz">'+OV_BIZ.map(function(b){
+    return '<div class="ovlr-biz-cell"><div class="ovlr-biz-k">'+esc(b[0])+'</div><div class="ovlr-biz-v">'+b[1]+'</div></div>';
+  }).join('')+'</div>';
+}
+// Products — images downloaded from broadcom.com (img/products/avgo-*). onerror hides a
+// missing image; tap a card to enlarge (lightbox modal), same pattern as the NVIDIA overview.
+var OV_PRODUCTS = [
+  { img:'avgo-ai.jpg', tag:'Custom AI accelerator', name:'XPU (custom silicon)',
+    d:'Hyperscaler-designed AI accelerators — Google TPU, Meta MTIA, OpenAI — co-designed with Broadcom.',
+    detail:'Broadcom co-designs the custom AI accelerators (XPUs) that hyperscalers deploy at scale — Google\'s TPU, Meta\'s MTIA, OpenAI\'s accelerator. The customer brings the architecture; Broadcom contributes the physical design, hard IP (SerDes), advanced 3.5D packaging and foundry orchestration. It is the deepest, highest-content relationship — and the engine of the AI revenue ramp.' },
+  { img:'avgo-tomahawk.png', tag:'AI networking switch', name:'Tomahawk 6',
+    d:'The first 102.4 Tbps Ethernet switch — the fabric that wires AI clusters.',
+    detail:'Tomahawk 6 is the industry\'s first 102.4 Tbps Ethernet switch, with a co-packaged-optics variant (Davisson). It is the scale-up / scale-out fabric that connects thousands of accelerators into one cluster — and it attaches to any cluster, Broadcom-XPU or Nvidia-GPU alike, which is why networking scales with the entire AI build-out.' },
+  { img:'avgo-jericho.jpg', tag:'Scale-across router', name:'Jericho',
+    d:'The deep-buffer Ethernet fabric that extends AI clusters across data centers.',
+    detail:'Jericho (StrataDNX) is Broadcom\'s deep-buffer routing silicon — Jericho4 extends AI-scale Ethernet fabrics beyond a single data center with congestion-free RoCE. Broadcom holds ~90% deep-buffer switching share; decades-compounded IP that predates AI and now rides it.' },
+  { img:'avgo-optical.jpg', tag:'Optical interconnect', name:'Optical · SerDes · CPO',
+    d:'The DSPs, lasers and SerDes that move data between accelerators.',
+    detail:'The interconnect layer — optical DSPs, lasers, photodiodes and the SerDes IP that move bits between chips and racks at the lowest power. As clusters scale and copper runs out, co-packaged optics (CPO) pulls the optics onto the switch package. The longest-compounded IP in Broadcom\'s portfolio.' },
+  { img:'avgo-wireless.jpg', tag:'Wireless (Apple)', name:'FBAR / RF front-end',
+    d:'RF filters and wireless connectivity — the Apple franchise, locked through 2031.',
+    detail:'FBAR (film bulk acoustic resonator) filters and RF front-end modules that let a phone focus airwave signals and reduce interference. This is the Apple franchise — Broadcom\'s largest single customer relationship, US-made under the 2023 agreement and extended through 2031: a mature, high-margin baseline under the AI growth.' },
+];
+function ovProductsBody(){
+  return '<p class="ovlr-money-p">Broadcom does not sell one thing — it sells the <b>picks-and-shovels of the AI build-out</b> plus a high-margin software keel: the custom <b>XPU</b> silicon it co-designs, the <b>networking</b> &amp; <b>optical</b> that fuse clusters, and the <b>Apple wireless</b> franchise — alongside <b>VMware</b> in the software engine.</p>'+
+    '<div class="ovlr-prod-hint2">Tap a product to enlarge.</div>'+
+    '<div class="ovlr-prod-row">'+OV_PRODUCTS.map(function(p,i){
+      return '<figure class="ovlr-prod-card ovlr-clickable" data-prod="'+i+'" tabindex="0" role="button" aria-label="'+esc(p.name)+' — enlarge">'+
+        '<div class="ovlr-prod-imgwrap"><img class="ovlr-prod-img" src="img/products/'+esc(p.img)+'" alt="'+esc(p.name)+'" loading="lazy" onerror="this.style.display=\'none\'"><span class="ovlr-prod-zoom">⤢</span></div>'+
+        '<figcaption class="ovlr-prod-body"><div class="ovlr-prod-tag">'+esc(p.tag)+'</div>'+
+          '<div class="ovlr-prod-name">'+esc(p.name)+'</div><div class="ovlr-prod-d">'+p.d+'</div></figcaption>'+
+      '</figure>';
+    }).join('')+'</div>'+
+    '<div class="ovlr-prod-note">Product imagery © Broadcom, shown for illustration.</div>'+
+    '<div class="ovlr-modal" id="avgoOvProdModal" hidden><div class="ovlr-modal-box" role="dialog" aria-modal="true">'+
+      '<button type="button" class="ovlr-modal-x" id="avgoOvProdX" aria-label="Close">×</button>'+
+      '<img class="ovlr-modal-img" id="avgoOvProdImg" src="" alt="">'+
+      '<div class="ovlr-modal-body"><div class="ovlr-modal-tag" id="avgoOvProdTag"></div>'+
+        '<div class="ovlr-modal-name" id="avgoOvProdName"></div><div class="ovlr-modal-d" id="avgoOvProdDesc"></div></div>'+
+    '</div></div>';
+}
+// How it makes money — segment doughnut (two engines) + an AI-vs-non-AI driver cut.
+var OV_MONEY_SEG = { title:'FY2025 revenue by segment <span>($B · reported)</span>',
+  labels:['Semiconductor solutions','Infrastructure software'], data:[36.9,27.0],
+  colors:['#CC092F','#007A8C'], unit:'B',
+  note:'FY2025 reported (10-K): Semiconductors $36.9B (58%) · Infrastructure software $27.0B (42%). The software engine arrived via CA, Symantec and VMware.' };
+var OV_MONEY_ALT = { title:'FY2025 revenue by driver <span>($B · approx)</span>',
+  labels:['AI semiconductors','Non-AI semiconductors','Infrastructure software'], data:[20.0,16.9,27.0],
+  colors:['#7A5AF8','#CC092F','#007A8C'], unit:'B',
+  note:'⚠️ Approximate. AI ≈ $20B of the $36.9B semi segment (custom XPUs + AI networking); the rest is wireless, broadband, server-storage &amp; industrial. Software $27.0B reported.' };
+var OV_MONEY_SEG_CARDS = [
+  { name:'Semiconductor solutions', dot:'#CC092F', rev:'$36.9B', yoy:'58% of revenue',
+    desc:'Custom AI accelerators (<b>XPUs</b>) and <b>AI networking</b> — the growth engine — plus wireless (the Apple franchise), broadband, server-storage and industrial. AI is guided to ~$56B in FY26 and &gt;$100B in FY27.',
+    prod:'XPU · Tomahawk 6 · Jericho4 · optical · FBAR' },
+  { name:'Infrastructure software', dot:'#007A8C', rev:'$27.0B', yoy:'42% of revenue',
+    desc:'<b>VMware</b> (VCF), mainframe (CA) and security (Symantec) — sticky, ~90% gross margin, converted perpetual→subscription. The keel that funds the dividend, services debt and funds the next deal.',
+    prod:'VMware Cloud Foundation' },
+];
+var OV_MONEY_ALT_DETAIL = '<p class="ovlr-mseg-note"><b>AI ≈ $20B</b> of the semi segment is the driver — guided to ~$56B in FY26 and &gt;$100B in FY27. <b>Non-AI semi</b> (wireless, broadband, server-storage, industrial) is mature / cyclical. <b>Software</b> is the stable ~$27B keel. Approximate split — see the Segments &amp; AI Revenue tabs in the Deep Dive.</p>';
+var _ovMoneyMode = 'segment', _ovMoneyChart = null;
+function ovMoneySegCards(){
+  return '<div class="ovlr-mseg">'+OV_MONEY_SEG_CARDS.map(function(s){
+    return '<div class="ovlr-mseg-card">'+
+      '<div class="ovlr-mseg-h"><span class="ovlr-mseg-dot" style="background:'+s.dot+'"></span>'+
+        '<span class="ovlr-mseg-nm">'+esc(s.name)+'</span>'+
+        '<span class="ovlr-mseg-rev">'+esc(s.rev)+' <em>'+esc(s.yoy)+'</em></span></div>'+
+      '<div class="ovlr-mseg-d">'+s.desc+'</div>'+
+      '<div class="ovlr-mseg-prod">↳ '+esc(s.prod)+'</div>'+
+    '</div>';
+  }).join('')+'</div>';
+}
+function ovMoneyBody(){
+  return '<p class="ovlr-money-p">Broadcom runs on <b>two engines</b>: ~58% <b>semiconductors</b> (where AI custom silicon + networking is the growth story) and ~42% <b>infrastructure software</b> (VMware &amp; co — the high-margin keel). Toggle to see the <b>AI-vs-non-AI</b> cut of the chip business.</p>'+
+    '<div class="ovlr-seg" id="avgoOvMoneyToggle">'+
+      '<button type="button" class="ovlr-seg-b active" data-money="segment">By segment</button>'+
+      '<button type="button" class="ovlr-seg-b" data-money="driver">By driver</button>'+
+    '</div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t" id="avgoOvMoneyTitle">'+OV_MONEY_SEG.title+'</div>'+
+    '<div class="ov-chart-wrap"><canvas id="avgoOvMoneyChart"></canvas></div></div>'+
+    '<div class="ovlr-money-note" id="avgoOvMoneyNote">'+OV_MONEY_SEG.note+'</div>'+
+    '<div id="avgoOvMoneyDetail">'+ovMoneySegCards()+'</div>';
+}
+function ovBuildMoneyChart(){
+  var cv = document.getElementById('avgoOvMoneyChart');
+  if(!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if(_ovMoneyChart){ _ovMoneyChart.destroy(); _ovMoneyChart = null; }
+  var d = _ovMoneyMode === 'driver' ? OV_MONEY_ALT : OV_MONEY_SEG;
+  _ovMoneyChart = new Chart(cv.getContext('2d'), {
+    type:'doughnut',
+    data:{ labels:d.labels, datasets:[{ data:d.data, backgroundColor:d.colors, borderWidth:2, borderColor:'#fff' }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'58%',
+      plugins:{ legend:{ position:'right', labels:{ boxWidth:12, font:{size:12}, color:'#5b6470', padding:10 } },
+        tooltip:{ callbacks:{ label:function(ctx){ var t=ctx.dataset.data.reduce(function(a,b){return a+b;},0);
+          var v=ctx.parsed; return ' '+ctx.label+': $'+v.toFixed(1)+'B ('+(v/t*100).toFixed(0)+'%)'; } } } } }
+  });
+}
+// Margins — % of revenue, fiscal years (AVGO FY ends early Nov). Fallback history until
+// the live Massive get-margins feed returns (needs localhost:8000 / production CORS).
+var OV_MARGIN_METRICS = [
+  { key:'gross',  label:'Gross',     color:'#CC092F' },
+  { key:'oper',   label:'Operating', color:'#2F80ED' },
+  { key:'net',    label:'Net',       color:'#7A5AF8' },
+  { key:'ebitda', label:'EBITDA',    color:'#12B5A5' },
+  { key:'cfo',    label:'CFO',       color:'#F2A73B' },
+  { key:'fcf',    label:'FCF',       color:'#EB5757' },
+];
+var OV_MARGIN_PROJ = { fy:'FY26E', gross:68.0, oper:45.0, net:40.0, ebitda:68.0, cfo:50.0, fcf:48.0, proj:true };
+var OV_MARGIN_FALLBACK = [
+  { fy:'FY21', gross:61.4, oper:31.6, net:24.5, ebitda:56.9, cfo:49.4, fcf:47.9 },
+  { fy:'FY22', gross:66.6, oper:42.4, net:34.6, ebitda:63.5, cfo:50.8, fcf:49.0 },
+  { fy:'FY23', gross:68.9, oper:45.2, net:39.3, ebitda:65.0, cfo:47.9, fcf:46.4 },
+  { fy:'FY24', gross:62.8, oper:26.3, net:23.4, ebitda:61.9, cfo:41.2, fcf:39.3 },
+  { fy:'FY25', gross:66.5, oper:39.9, net:34.0, ebitda:67.3, cfo:45.5, fcf:42.1 },
+];
+var OV_MRG_NOTE_FALLBACK = 'Gross / operating / net = <b>GAAP</b>; EBITDA = <b>Adjusted EBITDA</b>; CFO &amp; FCF ÷ revenue. FY24 GAAP op / net dipped on <b>VMware</b> acquisition-amortization. <b>FY26E</b> = Bloomberg consensus. <span style="color:#B7791F">Directional fallback — live Massive feed loads on localhost:8000 / production.</span>';
+var OV_MRG_NOTE_MASSIVE  = 'Historical margins computed <b>live from Massive</b> (income &amp; cash-flow statements): gross/op/net = line ÷ revenue; EBITDA = (op income + D&amp;A) ÷ revenue; CFO &amp; FCF ÷ revenue. <b>FY26E</b> = Bloomberg consensus — the only forward point.';
+var _mrgSel = { gross:true, oper:true, net:true, ebitda:false, cfo:false, fcf:false };
+var _mrgData = OV_MARGIN_FALLBACK.concat([OV_MARGIN_PROJ]);
+var _mrgStart = 0, _mrgEnd = 0, _mrgChart = null, _mrgSource = 'fallback';
+function mrgDefaultWindow(){
+  var n = _mrgData.length;
+  var lastActual = (n && _mrgData[n-1].proj) ? n-2 : n-1;
+  return [ Math.max(0, lastActual - 4), n-1 ];
+}
+function ovMarginsBody(){
+  var chips = OV_MARGIN_METRICS.map(function(m){
+    return '<button type="button" class="ovlr-mg-chip'+(_mrgSel[m.key]?' on':'')+'" data-mg="'+m.key+'" style="--mg:'+m.color+'">'+
+      '<span class="ovlr-mg-dot"></span>'+esc(m.label)+'</button>';
+  }).join('');
+  return '<p class="ovlr-money-p">Profitability &amp; cash margins as a % of revenue. Tap any line to toggle it; drag the <b>range slider</b> to widen or shift the years — the last point (<b>FY26E</b>) is Bloomberg consensus.</p>'+
+    '<div class="ovlr-mg-chips" id="avgoOvMgChips">'+chips+'</div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Margins (% of revenue) <span>· fiscal years · FY26E = consensus</span></div>'+
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="avgoOvMgChart"></canvas></div></div>'+
+    '<div class="ovlr-mg-slider" id="avgoOvMgSlider"></div>'+
+    '<div class="ovlr-money-note" id="avgoOvMgNote">'+OV_MRG_NOTE_FALLBACK+'</div>';
+}
+function ovRenderMrgSlider(){
+  var el = document.getElementById('avgoOvMgSlider'); if(!el) return;
+  var n = _mrgData.length; if(n < 2){ el.innerHTML=''; return; }
+  var pos = function(i){ return (i/(n-1))*100; };
+  var lp = pos(_mrgStart), rp = pos(_mrgEnd);
+  var ticks = _mrgData.map(function(r,i){
+    var on = (i>=_mrgStart && i<=_mrgEnd);
+    return '<span class="ovlr-mg-tick'+(on?' in':'')+(r.proj?' proj':'')+'">'+esc(r.fy)+'</span>';
+  }).join('');
+  el.innerHTML =
+    '<div class="ovlr-mg-rail">'+
+      '<div class="ovlr-mg-fill" style="left:'+lp+'%;right:'+(100-rp)+'%"></div>'+
+      '<span class="ovlr-mg-handle" data-h="start" style="left:'+lp+'%" role="slider" tabindex="0" aria-label="range start"></span>'+
+      '<span class="ovlr-mg-handle" data-h="end" style="left:'+rp+'%" role="slider" tabindex="0" aria-label="range end"></span>'+
+    '</div>'+
+    '<div class="ovlr-mg-ticks">'+ticks+'</div>';
+}
+function ovWireMrgSlider(pane){
+  var slider = pane.querySelector('#avgoOvMgSlider'); if(!slider || slider._w) return; slider._w = 1;
+  var drag = null;
+  function idxFromX(clientX){
+    var rail = slider.querySelector('.ovlr-mg-rail'); if(!rail) return _mrgStart;
+    var rect = rail.getBoundingClientRect();
+    var f = (clientX - rect.left) / Math.max(1, rect.width);
+    return Math.round(Math.max(0, Math.min(1, f)) * (_mrgData.length - 1));
+  }
+  slider.addEventListener('pointerdown', function(e){
+    var h = e.target.closest('.ovlr-mg-handle');
+    if(h){ drag = { which:h.getAttribute('data-h') }; }
+    else if(e.target.closest('.ovlr-mg-fill')){ drag = { which:'pan', anchor:idxFromX(e.clientX), s0:_mrgStart, e0:_mrgEnd }; }
+    else { var i = idxFromX(e.clientX);
+      if(Math.abs(i-_mrgStart) <= Math.abs(i-_mrgEnd)) _mrgStart = Math.min(i, _mrgEnd-1);
+      else _mrgEnd = Math.max(i, _mrgStart+1);
+      ovRenderMrgSlider(); ovBuildMarginChart(); return;
+    }
+    try { slider.setPointerCapture(e.pointerId); } catch(_){}
+    e.preventDefault();
+  });
+  slider.addEventListener('pointermove', function(e){
+    if(!drag) return;
+    var i = idxFromX(e.clientX), n = _mrgData.length;
+    if(drag.which === 'start') _mrgStart = Math.max(0, Math.min(i, _mrgEnd-1));
+    else if(drag.which === 'end') _mrgEnd = Math.min(n-1, Math.max(i, _mrgStart+1));
+    else if(drag.which === 'pan'){ var w = drag.e0-drag.s0, ns = Math.max(0, Math.min(drag.s0 + (i-drag.anchor), n-1-w)); _mrgStart = ns; _mrgEnd = ns+w; }
+    ovRenderMrgSlider(); ovBuildMarginChart();
+  });
+  function endDrag(e){ if(drag){ try { slider.releasePointerCapture(e.pointerId); } catch(_){} drag = null; } }
+  slider.addEventListener('pointerup', endDrag);
+  slider.addEventListener('pointercancel', endDrag);
+}
+function ovLoadMassiveMargins(){
+  Promise.resolve(fetchMargins ? fetchMargins('AVGO') : null).then(function(res){
+    if(!res || !res.success || !res.data || res.data.length < 3) return;   // keep fallback
+    _mrgData = res.data.concat([OV_MARGIN_PROJ]);
+    _mrgSource = 'massive';
+    var w = mrgDefaultWindow(); _mrgStart = w[0]; _mrgEnd = w[1];
+    var note = document.getElementById('avgoOvMgNote'); if(note) note.innerHTML = OV_MRG_NOTE_MASSIVE;
+    ovRenderMrgSlider(); ovBuildMarginChart();
+  }).catch(function(){ /* keep fallback */ });
+}
+function ovBuildMarginChart(){
+  var cv = document.getElementById('avgoOvMgChart');
+  if(!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if(_mrgChart){ _mrgChart.destroy(); _mrgChart = null; }
+  var rows = _mrgData.slice(_mrgStart, _mrgEnd + 1);
+  var projIdx = rows.reduce(function(acc,r,i){ return r.proj ? i : acc; }, -1);
+  var labels = rows.map(function(r){ return r.fy; });
+  var datasets = OV_MARGIN_METRICS.filter(function(m){ return _mrgSel[m.key]; }).map(function(m){
+    return { label:m.label, data:rows.map(function(r){ return r[m.key]; }),
+      borderColor:m.color, backgroundColor:m.color, borderWidth:2.5, tension:0.3, pointHoverRadius:5, spanGaps:true,
+      pointStyle:rows.map(function(r){ return r.proj ? 'rectRot' : 'circle'; }),
+      pointRadius:rows.map(function(r){ return r.proj ? 5 : 3; }),
+      segment:{ borderDash:function(ctx){ return ctx.p1DataIndex === projIdx ? [5,4] : undefined; } } };
+  });
+  _mrgChart = new Chart(cv.getContext('2d'), {
+    type:'line', data:{ labels:labels, datasets:datasets },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ display:false },
+        tooltip:{ callbacks:{
+          title:function(items){ var l=items[0].label; return l==='FY26E' ? 'FY26E · consensus' : l; },
+          label:function(ctx){ return ' '+ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+'%'; } } } },
+      scales:{ x:{ grid:{ color:'rgba(0,0,0,.05)' }, ticks:{ color:'#8A93A0', font:{weight:'600'} } },
+        y:{ grid:{ color:'rgba(0,0,0,.05)' }, ticks:{ color:'#8A93A0', callback:function(v){ return v+'%'; } } } } }
+  });
+}
+// Competitors — bubble (multiple × growth, size = market cap). Seed values; mcap fills live.
+var OV_COMP = [
+  { ticker:'AVGO', name:'Broadcom',  pe:38, peF:30, ev:28, evF:24, eg:25, egF:22, ebg:30, ebgF:26, mcap:1500, self:true },
+  { ticker:'NVDA', name:'NVIDIA',    pe:38, peF:19, ev:30, evF:16, eg:59, egF:96, ebg:60, ebgF:92, mcap:4100 },
+  { ticker:'AMD',  name:'AMD',       pe:45, peF:28, ev:33, evF:22, eg:35, egF:60, ebg:38, ebgF:55, mcap:260 },
+  { ticker:'MRVL', name:'Marvell',   pe:35, peF:24, ev:28, evF:20, eg:30, egF:40, ebg:32, ebgF:38, mcap:90 },
+  { ticker:'QCOM', name:'Qualcomm',  pe:16, peF:14, ev:12, evF:11, eg:12, egF:10, ebg:11, ebgF:9,  mcap:190 },
+];
+var _ovCompMult = 'pe', _ovCompTime = 'trailing', _ovCompChart = null;
+function ovCompetitorsBody(){
+  return '<p class="ovlr-money-p">Broadcom\'s public peers. <b>X</b> = valuation multiple, <b>Y</b> = growth, <b>bubble size</b> = market cap. Add or remove any public company.</p>'+
+    '<div class="ovlr-comp-ctl">'+
+      '<div class="ovlr-seg" id="avgoOvCompMult">'+
+        '<button type="button" class="ovlr-seg-b active" data-cmult="pe">P/E · earnings</button>'+
+        '<button type="button" class="ovlr-seg-b" data-cmult="ev">EV/EBITDA</button>'+
+      '</div>'+
+      '<div class="ovlr-seg" id="avgoOvCompTime">'+
+        '<button type="button" class="ovlr-seg-b active" data-ctime="trailing">Trailing</button>'+
+        '<button type="button" class="ovlr-seg-b" data-ctime="forward">Forward</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Peers — multiple × growth × size <span>(bubble = market cap)</span></div>'+
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="avgoOvCompChart"></canvas></div></div>'+
+    '<div class="ovlr-comp-add"><input type="text" id="avgoOvCompInput" placeholder="Add ticker (e.g. TXN)" maxlength="6" autocomplete="off">'+
+      '<button type="button" id="avgoOvCompAdd">+ Add</button></div>'+
+    '<div class="ovlr-comp-chips" id="avgoOvCompChips"></div>'+
+    '<div class="ovlr-money-note">Market cap is <b>live</b> (Massive) per ticker. Multiples &amp; growth are editable seed values until a live ratios-field mapping is confirmed.</div>';
+}
+var ovCompLabels = { id:'ovCompLabels', afterDatasetsDraw:function(chart){
+  var ctx = chart.ctx, ds = chart.data.datasets[0], meta = chart.getDatasetMeta(0);
+  ctx.save(); ctx.font = '700 11px Inter, sans-serif'; ctx.textAlign = 'center';
+  meta.data.forEach(function(el, i){ var p = ds.data[i]; if(!p) return;
+    ctx.fillStyle = p.self ? '#8f0620' : '#1E2733';
+    ctx.fillText(p.t, el.x, el.y - (p.r || 6) - 5);
+  });
+  ctx.restore();
+} };
+function ovBuildCompChart(){
+  var cv = document.getElementById('avgoOvCompChart');
+  if(!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  if(_ovCompChart){ _ovCompChart.destroy(); _ovCompChart = null; }
+  var fwd = _ovCompTime === 'forward', isPe = _ovCompMult === 'pe';
+  var pts = OV_COMP.map(function(c){
+    var mult = isPe ? (fwd?c.peF:c.pe) : (fwd?c.evF:c.ev);
+    var gr   = isPe ? (fwd?c.egF:c.eg) : (fwd?c.ebgF:c.ebg);
+    if(mult == null || gr == null) return null;
+    return { x:mult, y:gr, r:Math.max(6, Math.sqrt(c.mcap||1)/2.4), t:c.ticker, mcap:c.mcap, self:c.self };
+  }).filter(Boolean);
+  _ovCompChart = new Chart(cv.getContext('2d'), {
+    type:'bubble',
+    data:{ datasets:[{ data:pts,
+      backgroundColor:pts.map(function(p){ return p.self ? 'rgba(204,9,47,0.5)' : 'rgba(45,106,159,0.45)'; }),
+      borderColor:pts.map(function(p){ return p.self ? '#CC092F' : '#2D6A9F'; }), borderWidth:2 }] },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, layout:{ padding:{ top:16, right:12, left:4 } },
+      plugins:{ legend:{ display:false },
+        tooltip:{ callbacks:{ label:function(ctx){ var p=ctx.raw;
+          return p.t+': '+(isPe?'P/E ':'EV/EBITDA ')+p.x+'× · growth '+p.y+'% · mcap $'+(p.mcap>=1000?(p.mcap/1000).toFixed(1)+'T':p.mcap+'B'); } } } },
+      scales:{ x:{ reverse:true, title:{ display:true, text:(isPe?'P/E':'EV/EBITDA')+' (×)'+(fwd?' · forward':' · trailing')+' · cheaper →', color:'#5b6470', font:{size:11,weight:'600'} },
+          grid:{ color:'rgba(0,0,0,.05)' }, ticks:{ color:'#8A93A0', callback:function(v){ return v+'×'; } } },
+        y:{ title:{ display:true, text:(isPe?'Earnings':'EBITDA')+' growth (%)'+(fwd?' · forward':' · trailing'), color:'#5b6470', font:{size:11,weight:'600'} },
+          grid:{ color:'rgba(0,0,0,.05)' }, ticks:{ color:'#8A93A0', callback:function(v){ return v+'%'; } } } } },
+    plugins:[ovCompLabels]
+  });
+}
+function ovRenderCompChips(){
+  var box = document.getElementById('avgoOvCompChips'); if(!box) return;
+  box.innerHTML = OV_COMP.map(function(c,i){
+    return '<span class="ovlr-comp-chip'+(c.self?' self':'')+'">'+esc(c.ticker)+
+      (c.mcap!=null?' · $'+(c.mcap>=1000?(c.mcap/1000).toFixed(1)+'T':c.mcap+'B'):'')+
+      (c.self?'':'<button type="button" class="ovlr-comp-x" data-rm="'+i+'" aria-label="remove">×</button>')+'</span>';
+  }).join('');
+}
+// Collapsible box: header (title + optional subtitle + chevron) → body.
+function ovBox(id, title, sub, body, open){
+  return '<section class="ovlr-box'+(open?' open':'')+'" data-box="'+id+'">'+
+    '<button type="button" class="ovlr-box-h">'+
+      '<span class="ovlr-box-t">'+esc(title)+'</span>'+
+      (sub ? '<span class="ovlr-box-sub">'+esc(sub)+'</span>' : '')+
+      '<span class="ovlr-box-ch">▾</span>'+
+    '</button>'+
+    '<div class="ovlr-box-b">'+body+'</div>'+
+  '</section>';
+}
+var OV_SOURCES = 'Sources: Broadcom Inc. (Nasdaq: AVGO) FY2025 Form 10-K, Q1–Q2 FY2026 earnings calls & press releases, and the April 2026 8-K. Valuation multiples use Bloomberg consensus (source BST, avgo-context/AVGO_BBG.xlsx) with live price/EV from Massive. Margin history upgrades to a live Massive feed when available (localhost:8000 / production). Competitor multiples are editable seed values; market caps fill live.';
+function overviewBody(){
+  var h = '';
+  h += '<div class="ov-snap ovlr-snap6">'+OV_SNAPSHOT.map(function(p){
+    return '<div class="ov-snap-cell"><div class="ov-snap-k">'+esc(p[0])+'</div><div class="ov-snap-v">'+esc(p[1])+'</div></div>';
+  }).join('')+'</div>';
+  h += ovHeroMultiples();
+  h += ovDescBox();
+  h += ovHeroBusiness();
+  h += ovBox('products', 'What they offer', 'products & platforms', ovProductsBody(), false);
+  h += ovBox('money', 'How it makes money', 'segments & drivers', ovMoneyBody(), false);
+  h += ovBox('margins', 'Margins', 'interactive · profitability & cash', ovMarginsBody(), false);
+  h += ovBox('competitors', 'Competitors', 'multiple × growth × size', ovCompetitorsBody(), false);
+  h += '<div class="ov-foot">'+esc(OV_SOURCES)+'</div>';
+  return h;
+}
+function initOverview(){
+  var pane = document.querySelector('.ov-avgo .ovt-pane[data-ovt="overview"]'); if(!pane) return;
+  // multiples toggle + live price/EV
+  pane.querySelectorAll('#avgoOvMultToggle .ovlr-seg-b').forEach(function(b){
+    b.onclick = function(){ _ovMultMode = b.getAttribute('data-mult');
+      pane.querySelectorAll('#avgoOvMultToggle .ovlr-seg-b').forEach(function(x){ x.classList.toggle('active', x===b); });
+      ovMultFill(pane);
+    };
+  });
+  ovMultFill(pane);
+  liveQuote('AVGO').then(function(res){
+    var q = res && res.data; if(!q || q.price == null) return;
+    _ovMultPrice = q.price; _ovMultEv = valEV(q);
+    var mc = pane.querySelector('#avgoOvMc'); if(mc) mc.textContent = ovFmtBig(valMC(q));
+    var evEl = pane.querySelector('#avgoOvEv'); if(evEl) evEl.textContent = ovFmtBig(_ovMultEv);
+    ovMultFill(pane);
+  }).catch(function(){});
+  // description expand/collapse
+  var dMore = pane.querySelector('#avgoOvDescMore');
+  if(dMore) dMore.onclick = function(){
+    var box = pane.querySelector('.ovlr-desc'); var open = box.classList.toggle('open');
+    dMore.textContent = open ? 'Read less ▴' : 'Read more ▾';
+  };
+  // products lightbox
+  var modal = pane.querySelector('#avgoOvProdModal');
+  if(modal){
+    var mImg = modal.querySelector('#avgoOvProdImg'), mTag = modal.querySelector('#avgoOvProdTag'),
+        mName = modal.querySelector('#avgoOvProdName'), mDesc = modal.querySelector('#avgoOvProdDesc');
+    var closeProd = function(){ modal.hidden = true; };
+    var openProd = function(card){ var p = OV_PRODUCTS[parseInt(card.getAttribute('data-prod'),10)]; if(!p) return;
+      mImg.src = 'img/products/'+p.img; mImg.alt = p.name; mTag.textContent = p.tag; mName.textContent = p.name;
+      mDesc.innerHTML = p.detail || p.d; modal.hidden = false; };
+    pane.querySelectorAll('.ovlr-prod-card').forEach(function(card){
+      card.onclick = function(){ openProd(card); };
+      card.onkeydown = function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openProd(card); } };
+    });
+    modal.onclick = function(e){ if(e.target === modal) closeProd(); };
+    var xb = modal.querySelector('#avgoOvProdX'); if(xb) xb.onclick = closeProd;
+    if(!modal._esc){ modal._esc = 1; document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !modal.hidden) closeProd(); }); }
+  }
+  // collapsible boxes → build the lazy chart when a box opens
+  pane.querySelectorAll('.ovlr-box-h').forEach(function(hb){
+    hb.onclick = function(){
+      var box = hb.parentElement; var open = box.classList.toggle('open');
+      if(open){ var id = box.getAttribute('data-box');
+        if(id === 'money') requestAnimationFrame(ovBuildMoneyChart);
+        if(id === 'margins') requestAnimationFrame(ovBuildMarginChart);
+        if(id === 'competitors') requestAnimationFrame(ovBuildCompChart);
+      }
+    };
+  });
+  // money segment/driver toggle
+  pane.querySelectorAll('#avgoOvMoneyToggle .ovlr-seg-b').forEach(function(b){
+    b.onclick = function(){ _ovMoneyMode = b.getAttribute('data-money');
+      pane.querySelectorAll('#avgoOvMoneyToggle .ovlr-seg-b').forEach(function(x){ x.classList.toggle('active', x===b); });
+      var d = _ovMoneyMode === 'driver' ? OV_MONEY_ALT : OV_MONEY_SEG;
+      var t = pane.querySelector('#avgoOvMoneyTitle'); if(t) t.innerHTML = d.title;
+      var n = pane.querySelector('#avgoOvMoneyNote'); if(n) n.innerHTML = d.note;
+      var det = pane.querySelector('#avgoOvMoneyDetail');
+      if(det) det.innerHTML = _ovMoneyMode === 'driver' ? OV_MONEY_ALT_DETAIL : ovMoneySegCards();
+      ovBuildMoneyChart();
+    };
+  });
+  // margins: metric chips + range slider (margins box starts open)
+  var mgChips = pane.querySelector('#avgoOvMgChips');
+  if(mgChips) mgChips.onclick = function(e){ var b = e.target.closest('.ovlr-mg-chip'); if(!b) return;
+    var k = b.getAttribute('data-mg'); _mrgSel[k] = !_mrgSel[k]; b.classList.toggle('on', _mrgSel[k]); ovBuildMarginChart(); };
+  var w = mrgDefaultWindow(); _mrgStart = w[0]; _mrgEnd = w[1];
+  ovWireMrgSlider(pane); ovRenderMrgSlider();
+  requestAnimationFrame(ovBuildMarginChart);
+  ovLoadMassiveMargins();
+  // competitors: toggles, add/remove, live market cap
+  pane.querySelectorAll('#avgoOvCompMult .ovlr-seg-b').forEach(function(b){
+    b.onclick = function(){ _ovCompMult = b.getAttribute('data-cmult');
+      pane.querySelectorAll('#avgoOvCompMult .ovlr-seg-b').forEach(function(x){ x.classList.toggle('active', x===b); });
+      ovBuildCompChart(); };
+  });
+  pane.querySelectorAll('#avgoOvCompTime .ovlr-seg-b').forEach(function(b){
+    b.onclick = function(){ _ovCompTime = b.getAttribute('data-ctime');
+      pane.querySelectorAll('#avgoOvCompTime .ovlr-seg-b').forEach(function(x){ x.classList.toggle('active', x===b); });
+      ovBuildCompChart(); };
+  });
+  var liveMcap = function(tk){
+    liveQuote(tk).then(function(res){
+      var q = res && res.data; if(!q || q.marketCap == null) return;
+      var row = OV_COMP.filter(function(c){ return c.ticker === tk; })[0];
+      if(row){ row.mcap = Math.round(q.marketCap/1e9); ovRenderCompChips(); ovBuildCompChart(); }
+    }).catch(function(){});
+  };
+  OV_COMP.forEach(function(c){ liveMcap(c.ticker); });
+  var addInput = pane.querySelector('#avgoOvCompInput'), addBtn = pane.querySelector('#avgoOvCompAdd');
+  var doAdd = function(){
+    var tk = (addInput.value||'').trim().toUpperCase().replace(/[^A-Z.]/g,''); if(!tk) return;
+    if(OV_COMP.some(function(c){ return c.ticker === tk; })){ addInput.value=''; return; }
+    OV_COMP.push({ ticker:tk, name:tk, pe:null, peF:null, ev:null, evF:null, eg:null, egF:null, ebg:null, ebgF:null, mcap:null });
+    addInput.value=''; ovRenderCompChips(); liveMcap(tk);
+  };
+  if(addBtn) addBtn.onclick = doAdd;
+  if(addInput) addInput.onkeydown = function(e){ if(e.key === 'Enter'){ e.preventDefault(); doAdd(); } };
+  var chips = pane.querySelector('#avgoOvCompChips');
+  if(chips) chips.onclick = function(e){ var t = e.target.closest('.ovlr-comp-x'); if(!t) return;
+    OV_COMP.splice(parseInt(t.getAttribute('data-rm'),10), 1); ovRenderCompChips(); ovBuildCompChart(); };
+  ovRenderCompChips();
+  requestAnimationFrame(ovBuildCompChart);
+}
+
+// ── Top-Line Model (bottom-up from the announced deals vs BBG consensus) ─────────
+// Bloomberg consensus (avgo-context/AVGO_BBG.xlsx, source BST), $B:
+var TL_FY        = ['FY25A','FY26E','FY27E','FY28E','FY29E'];
+var TL_BBG_TOTAL = [63.887, 105.811, 173.276, 226.681, 312.679];
+var TL_BBG_AI    = [20.138, 56.582, 119.296, 164.198, 246.074];
+var TL_BBG_SOFT  = [27.029, 31.940, 37.204, 37.967, 41.814];
+var TL_AI_FY25 = 20.138, TL_SOFT_FY25 = 27.029, TL_NONAI_FY25 = 16.720;  // non-AI semi = semi − AI
+
+// Bottom-up build: AI = GW × content/GW (FY26 locked to the ~$56B guide, FY27 anchored at
+// ~10 GW); non-AI semi compounds ~2%/yr; software compounds at the chosen rate.
+function tlCompute(dpg, gw29, softG){
+  var nonaiG = 2;
+  var gw = [null, null, 10, 10 + (gw29 - 10) * 0.45, gw29];   // FY27 anchor = ~10 GW
+  var ai = [TL_AI_FY25, 56.0, gw[2]*dpg, gw[3]*dpg, gw[4]*dpg];
+  var soft = [TL_SOFT_FY25], nonai = [TL_NONAI_FY25];
+  for(var i=1;i<5;i++){ soft.push(TL_SOFT_FY25*Math.pow(1+softG/100,i)); nonai.push(TL_NONAI_FY25*Math.pow(1+nonaiG/100,i)); }
+  var total = ai.map(function(a,i){ return a+soft[i]+nonai[i]; });
+  return { ai:ai, soft:soft, nonai:nonai, total:total, gw:gw };
+}
+function tlSlider(id,label,pre,suf,min,max,step,val){
+  return '<div class="tl-sl"><label for="'+id+'">'+esc(label)+' <b id="'+id+'v">'+pre+val+suf+'</b></label>'+
+    '<input type="range" id="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" data-pre="'+pre+'" data-suf="'+suf+'"></div>';
+}
+function toplineBody(){
+  return ''+
+  card('Modeling the top line from the announced deals','bottom-up build (GW commitments + software keel) vs Bloomberg consensus · FY25A→FY29E',
+    '<div class="card-body"><div class="prose" style="margin-bottom:2px"><p>Two ways to a revenue number. <strong>Top-down</strong>: take Bloomberg consensus. <strong>Bottom-up</strong>: build it from what Broadcom has actually <em>announced</em> — the GW commitments (× content per GW) for AI, plus the mature non-AI chips and the software keel. This lays the bottom-up against consensus so you can see <strong>how much of the market\'s number is already covered by announced visibility</strong> vs extrapolation. Management has given hard AI anchors only through <strong>FY27 (&gt;$100B, ~10 GW)</strong> and visibility to <strong>2028</strong>; FY29 is beyond it.</p></div></div>','')+
+  '<div class="stats-row c4">'+
+    '<div class="stat-card t-ai"><div class="stat-label">BBG AI · FY26E</div><div class="stat-value">$56.6B</div><div class="stat-sub">= guide ~$56B · in line</div></div>'+
+    '<div class="stat-card t-warn"><div class="stat-label">BBG AI · FY27E</div><div class="stat-value">$119B</div><div class="stat-sub">vs &gt;$100B guide · ~19% above</div></div>'+
+    '<div class="stat-card t-accent"><div class="stat-label">Announced GW · 2027</div><div class="stat-value">~10 GW</div><div class="stat-sub">→ implied ~$11–12B / GW</div></div>'+
+    '<div class="stat-card t-neutral"><div class="stat-label">Hard visibility</div><div class="stat-value">to 2028</div><div class="stat-sub">FY29 = consensus extrapolation</div></div>'+
+  '</div>'+
+  '<div class="card"><div class="card-header"><span class="card-title">Bottom-up build vs consensus</span><span class="card-subtitle">move the levers — AI = GW × content/GW</span></div>'+
+    '<div class="card-body">'+
+      '<div class="tl-ctl">'+tlSlider('tlDpg','Content per GW','$','B',8,16,0.2,11.2)+tlSlider('tlGw29','GW deployed by FY29','','GW',12,28,1,20)+tlSlider('tlSoft','Software growth','','%/yr',0,15,1,8)+'</div>'+
+      '<div class="chart-c" style="height:300px;margin-top:6px"><canvas id="tlChart"></canvas></div>'+
+    '</div>'+
+    '<div class="source">Bottom-up: <b>AI</b> = GW × content/GW (FY26 locked to the ~$56B guide; FY27 anchored at ~10 GW); <b>non-AI semi</b> grows ~2%/yr off FY25 $16.7B; <b>software</b> off FY25 $27.0B. Consensus line = Bloomberg (avgo-context/AVGO_BBG.xlsx). The default levers roughly reproduce the guided path.</div></div>'+
+  '<div class="card"><div class="card-header"><span class="card-title">Announced-build vs Bloomberg, year by year</span></div>'+
+    '<div class="card-body" style="padding:0"><table class="tbl" id="tlTbl"><thead><tr><th>FY</th><th>AI (build)</th><th>Non-AI semi</th><th>Software</th><th>Bottom-up</th><th>BBG consensus</th><th>Gap (BBG − build)</th></tr></thead><tbody></tbody></table></div>'+
+    '<div class="card-body" id="tlVerdict"></div></div>';
+}
+function tlRender(pane){
+  var dpg = parseFloat(pane.querySelector('#tlDpg').value);
+  var gw29 = parseFloat(pane.querySelector('#tlGw29').value);
+  var softG = parseFloat(pane.querySelector('#tlSoft').value);
+  var r = tlCompute(dpg, gw29, softG);
+  freshChart('tlChart',{type:'bar',data:{labels:TL_FY,datasets:[
+    {label:'AI (build)',data:r.ai,backgroundColor:'#7A5AF8',stack:'s',borderRadius:2,order:3},
+    {label:'Non-AI semi',data:r.nonai,backgroundColor:'#CC092F',stack:'s',borderRadius:2,order:3},
+    {label:'Software',data:r.soft,backgroundColor:'#007A8C',stack:'s',borderRadius:2,order:3},
+    {type:'line',label:'Bloomberg consensus (total)',data:TL_BBG_TOTAL,yAxisID:'y2',borderColor:'#141C2B',borderWidth:2.5,pointRadius:4,pointHoverRadius:6,tension:0.25,fill:false,order:1}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{position:'bottom',labels:{font:{family:'Figtree',size:10.5},color:'#6B7A8D',usePointStyle:true,pointStyleWidth:12,boxHeight:8,padding:9}},
+      tooltip:{backgroundColor:'#141C2B',titleFont:{family:'Figtree',size:11},bodyFont:{family:'Figtree',size:12},padding:9,cornerRadius:7,callbacks:{label:function(c){return c.dataset.label+': $'+c.raw.toFixed(1)+'B';}}}},
+    scales:{x:{stacked:true,grid:{display:false},border:{display:false},ticks:{font:{family:'Figtree',size:11,weight:'600'},color:'#6B7A8D'}},
+      y:{stacked:true,min:0,max:340,grid:{color:'#EDF0F5',drawTicks:false},border:{display:false},ticks:{font:{family:'Figtree',size:10},color:'#9AACBE',callback:function(v){return '$'+v+'B';}}},
+      y2:{display:false,min:0,max:340,stacked:false}}}});
+  var tb = pane.querySelector('#tlTbl tbody'); var rows='';
+  for(var i=0;i<5;i++){
+    var bu=r.total[i], bbg=TL_BBG_TOTAL[i], gap=bbg-bu;
+    var cls = i===0 ? 'b-neutral' : (gap>5?'b-warn':(gap<-5?'b-pos':'b-neutral'));
+    rows += '<tr'+(i===0?' class="row-hi"':'')+'><td>'+TL_FY[i]+'</td>'+
+      '<td>$'+r.ai[i].toFixed(0)+'B</td><td>$'+r.nonai[i].toFixed(0)+'B</td><td>$'+r.soft[i].toFixed(0)+'B</td>'+
+      '<td><strong>$'+bu.toFixed(0)+'B</strong></td><td>$'+bbg.toFixed(0)+'B</td>'+
+      '<td>'+(i===0?'—':'<span class="badge '+cls+'">'+(gap>=0?'+':'')+gap.toFixed(0)+'B</span>')+'</td></tr>';
+  }
+  if(tb) tb.innerHTML = rows;
+  var g27=TL_BBG_TOTAL[2]-r.total[2], g29=TL_BBG_TOTAL[4]-r.total[4];
+  var p27=g27/TL_BBG_TOTAL[2]*100, p29=g29/TL_BBG_TOTAL[4]*100;
+  var vv = pane.querySelector('#tlVerdict');
+  if(vv) vv.innerHTML = '<div class="'+(Math.abs(p27)<4?'insight':'caution')+'"><strong>Read:</strong> at these levers the announced-deal build reaches <strong>$'+r.total[2].toFixed(0)+'B in FY27</strong> ('+(g27>=0?'consensus $'+g27.toFixed(0)+'B / '+p27.toFixed(0)+'% above':'build $'+(-g27).toFixed(0)+'B above consensus')+') and <strong>$'+r.total[4].toFixed(0)+'B in FY29</strong> ('+(g29>=0?'consensus $'+g29.toFixed(0)+'B / '+p29.toFixed(0)+'% above':'build $'+(-g29).toFixed(0)+'B above')+'). '+(g27>4?'To reach consensus you must assume <strong>more GW or higher content/GW than Broadcom has disclosed</strong> — consensus is pricing upside beyond announced visibility.':'The announced GW roadmap already supports consensus through FY27.')+' FY28–29 sit beyond the hard-visibility window (2028).</div>';
+}
+function initTopline(pane){
+  if(!pane._tlWired){ pane._tlWired = true;
+    ['tlDpg','tlGw29','tlSoft'].forEach(function(id){
+      var el = pane.querySelector('#'+id); if(!el) return;
+      el.addEventListener('input', function(){
+        var lbl = pane.querySelector('#'+id+'v');
+        if(lbl) lbl.textContent = (el.getAttribute('data-pre')||'')+el.value+(el.getAttribute('data-suf')||'');
+        tlRender(pane);
+      });
+    });
+  }
+  tlRender(pane);
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+//  DEEP DIVE  (the company's "Deep Dive" tab — flat sub-tabs; Customers nests 5)
+// ════════════════════════════════════════════════════════════════════════════════
+// Customers groups the four customer views as nested sub-tabs (.ovt-subtab / .ovt-subpane).
+var CUST_SUBTABS = [
+  { key:'concentration', label:'Customer Concentration', body:concentrationBody, init:initConcentration },
+  { key:'valuechain',    label:'Value Chain',            body:valueChainBody,    init:initValueChain },
+  { key:'gwroadmap',     label:'GW Roadmap',             body:gwRoadmapBody,     init:initGwRoadmap },
+  { key:'commitments',   label:'Customer Commitments',   body:commitmentsBody,   init:initCommitments },
+  { key:'topline',       label:'Top-Line Model',         body:toplineBody,       init:initTopline },
+];
+function customersBody(){
+  return '<div class="ovt-subtabs">'+CUST_SUBTABS.map(function(t,i){
+    return '<button type="button" class="ovt-subtab'+(i===0?' active':'')+'" data-ovst="'+t.key+'">'+esc(t.label)+'</button>';
+  }).join('')+'</div>'+
+  CUST_SUBTABS.map(function(t,i){
+    return '<div class="ovt-subpane" data-ovst="'+t.key+'"'+(i===0?'':' hidden')+'>'+t.body()+'</div>';
+  }).join('');
+}
+function custSubDef(key){ for(var i=0;i<CUST_SUBTABS.length;i++){ if(CUST_SUBTABS[i].key===key) return CUST_SUBTABS[i]; } return null; }
+function showCustSub(custPane, key){
+  custPane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovst')===key); });
+  custPane.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovst')!==key); });
+  var t = custSubDef(key), sub = custPane.querySelector('.ovt-subpane[data-ovst="'+key+'"]');
+  if(t && t.init && sub) requestAnimationFrame(function(){ t.init(sub); });
+}
+function initCustomers(pane){
+  if(!pane._subWired){ pane._subWired = true;
+    pane.querySelectorAll('.ovt-subtab').forEach(function(btn){
+      btn.onclick = function(){ showCustSub(pane, btn.getAttribute('data-ovst')); };
+    });
+  }
+  var active = pane.querySelector('.ovt-subtab.active');
+  showCustSub(pane, active ? active.getAttribute('data-ovst') : CUST_SUBTABS[0].key);
+}
+
+var DEEP_TABS = [
+  { key:'segments',   label:'Segments',            body:segmentsBody,   init:initSegments },
+  { key:'guidance',   label:'Guidance',            body:guidanceBody,   init:null },
+  { key:'airevenue',  label:'AI Revenue',          body:aiRevenueBody,  init:initAIRevenue },
+  { key:'customers',  label:'Customers',           body:customersBody,  init:initCustomers },
+  { key:'management', label:'Management',          body:managementBody, init:initManagement },
+  { key:'madeep',     label:'PE Strategy',         body:maDeepBody,     init:initMaDeep },
+  { key:'valuation',  label:'Valuation',           body:valuationBody,  init:initValuation },
+  { key:'industry',   label:'Industry Analysis',   body:industryBody,   init:initIndustry },
+];
+function deepTabDef(key){ for(var i=0;i<DEEP_TABS.length;i++){ if(DEEP_TABS[i].key===key) return DEEP_TABS[i]; } return null; }
+function deepDiveHtml(c){
   _company = c || null;
-  _mgLoaded = false;
-  var h = '<div class="ov ov-avgo" data-brand="AVGO">';
+  var h = '<div class="ov ov-avgo ov-avgo-dd" data-brand="AVGO">';
   h += '<div id="ddOverlay" class="dd-overlay"></div>';
-  h += '<div class="ovt-tabs">'+TABS.map(function(t,i){
+  h += '<div class="ovt-tabs">'+DEEP_TABS.map(function(t,i){
     return '<button type="button" class="ovt-tab'+(i===0?' active':'')+'" data-ovt="'+t.key+'">'+esc(t.label)+'</button>';
   }).join('')+'</div>';
-  h += TABS.map(function(t,i){
+  h += DEEP_TABS.map(function(t,i){
     return '<div class="ovt-pane" data-ovt="'+t.key+'"'+(i===0?'':' hidden')+'>'+t.body()+'</div>';
   }).join('');
   h += '</div>';
   return h;
 }
-
-function paneFor(root, key){ return root.querySelector('.ovt-pane[data-ovt="'+key+'"]'); }
-function tabDef(key){ for(var i=0;i<TABS.length;i++){ if(TABS[i].key===key) return TABS[i]; } return null; }
-
-function showOvt(root, key){
+function deepShowOvt(root, key){
   root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt')===key); });
   root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt')!==key); });
-  var t=tabDef(key), pane=paneFor(root,key);
+  var t = deepTabDef(key), pane = root.querySelector('.ovt-pane[data-ovt="'+key+'"]');
   if(t && t.init && pane) requestAnimationFrame(function(){ t.init(pane); });
 }
-
-function init(){
-  var root = document.querySelector('.ov-avgo');
+function deepDiveInit(){
+  var root = document.querySelector('.ov-avgo-dd');
   if(!root) return;
   root.querySelectorAll('.ovt-tab').forEach(function(btn){
-    btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };
+    btn.onclick = function(){ deepShowOvt(root, btn.getAttribute('data-ovt')); };
   });
   // Seg toggles (semi/software) inside Segments — delegated per .seg-toggle group.
   root.querySelectorAll('.seg-toggle').forEach(function(grp){
@@ -1436,12 +2043,18 @@ function init(){
     ov.addEventListener('click', function(e){ if(e.target===ov || e.target.closest('.dd-close')) ov.classList.remove('open'); });
   }
   if(!root._escWired){ root._escWired=true;
-    document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ var o=document.querySelector('.ov-avgo #ddOverlay'); if(o) o.classList.remove('open'); } });
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ var o=document.querySelector('.ov-avgo-dd #ddOverlay'); if(o) o.classList.remove('open'); } });
   }
-  // Build the first (active) tab's charts.
   var active = root.querySelector('.ovt-tab.active');
-  if(active){ var key=active.getAttribute('data-ovt'), t=tabDef(key), pane=paneFor(root,key);
-    if(t && t.init && pane) requestAnimationFrame(function(){ t.init(pane); }); }
+  var key = active ? active.getAttribute('data-ovt') : DEEP_TABS[0].key;
+  requestAnimationFrame(function(){ deepShowOvt(root, key); });
 }
 
-export var avgoOverview = { html: html, init: init };
+function html(c){
+  _company = c || null;
+  _mgLoaded = false;
+  return '<div class="ov ov-avgo" data-brand="AVGO"><div class="ovt-pane" data-ovt="overview">'+overviewBody()+'</div></div>';
+}
+function init(){ requestAnimationFrame(function(){ initOverview(); }); }
+
+export var avgoOverview = { html: html, init: init, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

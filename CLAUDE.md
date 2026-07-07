@@ -113,6 +113,7 @@ supabase functions deploy <function-name> --project-ref bvflqjndivouhgwqfbrq
 | `search-company` | Fiscal.ai `/v2/companies-list` | Company search for Add Company modal |
 | `sync-management` | Fiscal.ai `/v1/company/ownership/insider/*` | Pull executives + insider transactions |
 | `sync-ratings` | Massive `/benzinga/v1/ratings` | Pull analyst ratings + price targets |
+| `get-margins` | Massive `/stocks/financials/v1/income-statements` + `/cash-flow-statements` | Historical profitability & cash margins (gross/op/net/EBITDA/CFO/FCF) for the Overview Margins box — computed server-side, no DB write |
 
 **Security:** All edge functions restrict CORS to `research-summit.netlify.app` and `localhost:8000`. Ticker and companyId inputs are validated.
 

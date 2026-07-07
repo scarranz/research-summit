@@ -1277,31 +1277,285 @@ function groupRow(label, items){
   '</div></div>';
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// STANDARDIZED OVERVIEW (per docs/OVERVIEW_CONVENTIONS.md) — the 7-block hook.
+// Mirrors overviews/uber.js's std machinery; ids prefixed `ly`, data vars `LY_`.
+// ═══════════════════════════════════════════════════════════════════════════════
+function collapsible(title, inner, open){
+  return '<div class="ov-collap'+(open?' open':'')+'">'+
+    '<button type="button" class="ov-collap-h"><span class="ov-collap-ic">'+(open?'▾':'▸')+'</span>'+esc(title)+'</button>'+
+    '<div class="ov-collap-b"'+(open?'':' hidden')+'>'+inner+'</div></div>';
+}
+// Block 1 — Key Facts. Exactly 10 cells (5×2). CEO carries tenure; Market cap carries an as-of
+// (and a live #lyMc span). No live price strip anywhere in the standardized overview.
+var LY_FACTS=[
+  ['Listing','NASDAQ: LYFT'],
+  ['HQ','San Francisco, CA, USA'],
+  ['Incorporation','Delaware, USA'],
+  ['SEC filer','Domestic (10-K/10-Q/8-K)'],
+  ['Founded','2012 (Zimride 2007)'],
+  ['IPO','Mar 2019 · $72.00'],
+  ['CEO','David Risher · since 2023'],
+  ['Employees','~3,913 · Dec 2025'],
+  ['Dividend','Non-payer ($1B buyback ’26)'],
+  ['Market cap','~$5.9B · Jul 2026'],
+];
+function stdKeyFacts(){
+  return '<div class="stdkf">'+LY_FACTS.slice(0,10).map(function(p){
+    var v=p[0]==='Market cap' ? '<span id="lyMc">'+esc(p[1])+'</span>' : esc(p[1]);
+    return '<div class="stdkf-cell"><div class="stdkf-k">'+esc(p[0])+'</div><div class="stdkf-v">'+v+'</div></div>'; }).join('')+'</div>';
+}
+// Block 2 — description (high-level "what it is" only; non-redundant with the blocks below).
+var LY_LEDE='Lyft runs the second-largest ridesharing network in North America, an app that matches riders with independent drivers across the United States and Canada. It owns no cars — it operates the marketplace (pricing, payments, insurance, safety) and keeps a share of each fare. Alongside core rideshare it runs city bikeshare and scooter systems and a small but fast-growing advertising business (Lyft Media). After years of losses it reached full-year GAAP profitability in 2024 and now generates strong free cash flow.';
+// Block 3 — the 4-quadrant, rendered as a 2×2 TABLE. Each cell ≤ ~30 words.
+var LY_BIZ=[
+  ['What it sells','On-demand rides via app, plus city bikeshare & scooters, in-app and vehicle-top advertising (Lyft Media), and a Lyft Business account offering.'],
+  ['Who buys it','Consumers needing point-to-point transport; enterprises and healthcare orgs (Lyft Business); advertisers reaching riders; cities that contract Lyft to run public bikeshare.'],
+  ['How it earns','It keeps a share of each fare’s Gross Bookings (a take of ~34% incl. an accounting effect). Small, fast-growing add-ons: bike/scooter rentals and Lyft Media ads.'],
+  ['The edge','Scale as the #2 North-American rideshare network (a liquidity/density flywheel), a strong consumer brand, and multi-year municipal bikeshare contracts with local network effects.'],
+];
+function stdFourQuad(){
+  return '<div class="q2">'+LY_BIZ.map(function(b){ return '<div class="q2-cell"><div class="q2-k">'+esc(b[0])+'</div><div class="q2-v">'+b[1]+'</div></div>'; }).join('')+'</div>';
+}
+// Block 4 — How it makes money. Lyft is a SINGLE reportable segment, so there is no segment split
+// to toggle. Show revenue-by-line (2 slices) + a compact key-metrics row + qualitative "What is X?"
+// accordions. Geography OMITTED (US/Canada; substantially all revenue US-based; no country split).
+var LY_REV=[['Rideshare & platform',93,'$5.90B',BRAND],['Rentals (bikes/scooters/car)',7,'$0.42B',BRAND2]];
+var LY_SEG_DEF=[
+  { seg:'Rideshare',
+    desc:'The core marketplace: it matches a rider requesting a trip with a nearby independent driver in real time; Lyft sets pricing, handles payments, insurance and safety, and keeps a portion of each fare.',
+    econ:[['Gross Bookings','$18.51B'],['Revenue','~$5.9B'],['Take rate','~34% (incl. insurance accounting)'],['Adj. EBITDA (co-wide)','$528.9M']] },
+  { seg:'Lyft Media',
+    desc:'An advertising business that monetizes rider attention across the app, emails, and in-car / vehicle-top screens.',
+    econ:[['Revenue run-rate','~$100M (2025 exit)'],['Growth','>100% YoY (approx.)']] },
+  { seg:'Bikes & Scooters',
+    desc:'City-partnered shared micromobility: Lyft operates and maintains public bikeshare fleets under multi-year municipal contracts, plus e-scooters in select markets.',
+    econ:[['Reported within','“Rentals revenue” ~$420.9M'],['Standalone figure','blended with car rentals; none disclosed']] },
+];
+function stdMoneyMap(){
+  var STATS=[['Gross Bookings','$18.51B'],['Rides','945.5M'],['Active Riders','29.2M'],['Adj. EBITDA','$528.9M'],['Free cash flow','$1.09B'],['Revenue / GB','~34%']];
+  var h='<div class="ov-diagram-cap" style="margin:0 0 8px">Lyft has a <b>single reportable segment</b>, so there is no segment split to toggle — here is FY2025 revenue by line, then the key metrics beneath.</div>';
+  h+=mbars(LY_REV);
+  h+='<div class="mm-stats">'+STATS.map(function(s){ return '<div class="mm-stat"><div class="mm-stat-k">'+esc(s[0])+'</div><div class="mm-stat-v">'+esc(s[1])+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="mm-defs acc-list" style="margin-top:6px">'+LY_SEG_DEF.map(function(s){
+    var econ='<div class="acc" style="margin-top:8px"><button type="button" class="acc-h">Economics (FY2025) <span class="acc-x">+</span></button><div class="acc-b" hidden>'+s.econ.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join('')+'</div></div>';
+    return '<div class="acc"><button type="button" class="acc-h">What is “'+esc(s.seg)+'”?<span class="acc-x">+</span></button><div class="acc-b" hidden><div class="famd">'+s.desc+'</div>'+econ+'</div></div>';
+  }).join('')+'</div>';
+  h+='<div class="ov-diagram-cap" style="margin-top:10px">FY2025, single reportable segment; reported total net revenue <b>$6,316.3M</b>. The headline ~<b>34% revenue/gross-bookings ratio is inflated by an insurance accounting change</b>, not a clean take rate. <span class="ave-subh-note">Geography omitted — operates in the US and Canada; substantially all revenue is US-based, and no country split is reported, so no geography view. Source: Lyft FY2025 10-K & Q4 2025 results; Summit model corroborates.</span></div>';
+  return h;
+}
+// Block 5 — Products (TWO TIERS): Tier-1 family cards → pop-up → Tier-2 the specific products.
+var LY_PROD_GROUPS=[
+  { seg:'Rideshare', families:[
+    { ic:'🚗', fam:'Everyday', d:'The mass-market core.', items:[
+      ['Standard','Everyday car, up to 4 riders — the volume core of Lyft.'],
+      ['Wait & Save','A lower price for a slightly longer wait or short walk.'],
+      ['Priority Pickup','Pay up for a faster driver match.'],
+    ]},
+    { ic:'✨', fam:'Bigger & premium', d:'Larger and higher-end rides.', items:[
+      ['Lyft XL','Larger vehicles for up to 6 riders.'],
+      ['Extra Comfort','Newer cars with top-rated drivers.'],
+      ['Lyft Black / Black SUV','Premium rides with professional drivers.'],
+    ]},
+    { ic:'📅', fam:'Plan ahead', d:'Book and lock in a price.', items:[
+      ['Scheduled Rides','Book a ride in advance for a set pickup time.'],
+      ['Price Lock','A small fee to cap a route’s price against surge.'],
+    ]},
+  ]},
+  { seg:'Membership & micromobility', families:[
+    { ic:'⭐', fam:'Lyft Pink', d:'The paid membership tier.', items:[
+      ['Lyft Pink','~$9.99/mo or ~$99/yr membership: ride discounts, free/discounted bike & scooter minutes, priority pricing (no disclosed member count).'],
+    ]},
+    { ic:'🚲', fam:'Bikes & Scooters', d:'City bikeshare systems.', items:[
+      ['Citi Bike (NYC)','New York City bikeshare — classic + e-bikes.'],
+      ['Divvy (Chicago)','Chicago’s public bikeshare system.'],
+      ['Bay Wheels (SF Bay Area)','Bikeshare across the San Francisco Bay Area.'],
+      ['BIKETOWN (Portland)','Portland’s public bikeshare system.'],
+      ['Bluebikes (Boston)','Metro Boston bikeshare.'],
+      ['Capital Bikeshare (DC)','Washington DC bikeshare; e-scooters in select cities.'],
+    ]},
+  ]},
+  { seg:'Enterprise, ads & autonomous', families:[
+    { ic:'💼', fam:'Lyft Business', d:'Rides for organizations.', items:[
+      ['Lyft Business','Corporate ride & meal accounts.'],
+      ['Lyft Healthcare','Non-emergency medical transport.'],
+    ]},
+    { ic:'📣', fam:'Lyft Media', d:'The advertising surfaces.', items:[
+      ['Ad placements','In-app, email and in-car / vehicle-top ad placements.'],
+    ]},
+    { ic:'🤖', fam:'Autonomous (partnerships)', d:'Asset-light AV network.', items:[
+      ['May Mobility','AVs live on Lyft in Atlanta since 2025.'],
+      ['Mobileye + Marubeni','Robotaxis planned for Dallas in 2026.'],
+      ['Waymo','Driverless rides planned for Nashville in 2026.'],
+      ['Level 5 (sold)','Lyft sold its in-house Level 5 self-driving unit to Toyota’s Woven Planet in 2021.'],
+    ]},
+  ]},
+];
+function stdProducts(){
+  return LY_PROD_GROUPS.map(function(g,gi){
+    return '<div class="stdp-group"><div class="stdp-seg">'+esc(g.seg)+'</div><div class="stdp">'+
+      g.families.map(function(f,fi){
+        return '<div class="stdp-card ov-clickable" data-detail="fam:'+gi+'-'+fi+'"><div class="stdp-ic">'+f.ic+'</div>'+
+          '<div class="stdp-n">'+esc(f.fam)+'</div><div class="stdp-d">'+esc(f.d)+'</div><div class="stdp-more">See products ›</div></div>';
+      }).join('')+'</div></div>';
+  }).join('');
+}
+// Block 6 — Competitors scatter (DYNAMIC). X = valuation multiple, Y = revenue growth, bubble =
+// LIVE market cap (api.liveQuote per ticker). Multiple: EV/EBITDA ⇄ P/E. Basis: Trailing ⇄ Forward.
+// Peers add/removable by ticker; the chip × DELETES a peer immediately. Multiples web-sourced (mid-2026).
+var LY_PEERS=[
+  { tk:'LYFT', n:'Lyft',     evT:10, evF:8.5, peT:null, peF:15,   gt:9,  gf:17, mc:5.9, hl:true, why:'The #2 North-American rideshare pure-play — now GAAP-profitable and cash-generative, and the cheapest mobility name; the market prices its lack of Uber’s scale and diversification. (Trailing P/E n.m. — FY25 net income is dominated by a one-time ~$2.9B tax benefit.)' },
+  { tk:'UBER', n:'Uber',     evT:22, evF:18,  peT:30,   peF:24,   gt:14, gf:15, mc:150, why:'The scaled, global, multi-product leader (rides + eats + freight). Profitable and cash-generative — the large-cap comp.' },
+  { tk:'DASH', n:'DoorDash', evT:49, evF:30,  peT:75,   peF:28,   gt:30, gf:22, mc:84,  why:'US delivery leader; an adjacency (delivery, not rideshare) shown for the gig-platform read — richly valued on fast growth.' },
+  { tk:'GRAB', n:'Grab',     evT:40, evF:22,  peT:null, peF:null, gt:24, gf:20, mc:16,  why:'SE-Asia super-app (rides + food + payments). Only recently profitable, so P/E is not yet meaningful; drops out of the P/E view.' },
+];
+var LY_SC={ type:'ev', basis:'f', peers:null };
+function lyScReset(){ LY_SC.peers=LY_PEERS.map(function(p){ var o={}; for(var k in p) o[k]=p[k]; o.on=true; return o; }); }
+function lyScMult(p){ if(LY_SC.type==='ev') return LY_SC.basis==='f'?p.evF:p.evT; return LY_SC.basis==='f'?p.peF:p.peT; }
+function stdPeerScatter(){
+  var h='<style>.mg-tog-row{display:flex;flex-wrap:wrap;gap:14px;margin:2px 0 8px}'+
+    '.mg-tog{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--mu)}'+
+    '.mg-seg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+
+    '.mg-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
+    '.mg-pill.active{background:var(--navy);color:#fff}'+
+    '.mg-dot{transition:.15s}.mg-node text{pointer-events:none}'+
+    '.lysc-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 2px}'+
+    '.lysc-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;border:1px solid var(--bdr);border-radius:999px;padding:3px 9px;background:var(--w);cursor:pointer;color:var(--navy)}'+
+    '.lysc-chip .x{color:var(--mu);font-weight:800}'+
+    '.lysc-add{display:inline-flex;gap:5px;align-items:center}'+
+    '.lysc-add input{width:74px;font:inherit;font-size:11px;border:1px solid var(--bdr);border-radius:7px;padding:3px 7px;text-transform:uppercase}'+
+    '.lysc-add button{font:inherit;font-size:11px;font-weight:700;border:1px solid var(--bdr);border-radius:7px;padding:3px 9px;background:#F2F5F8;cursor:pointer}'+
+    '.mg-tip{position:fixed;z-index:60;max-width:250px;background:#10141A;color:#fff;border-radius:9px;padding:9px 12px;font-size:11.5px;line-height:1.5;box-shadow:0 8px 22px rgba(16,20,26,.28);pointer-events:none;border-top:3px solid #E6007A}'+
+    '.mg-tip .mgt-n{display:block;font-weight:800;font-size:12.5px;color:#E6007A;margin-bottom:3px}</style>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 6px">Listed peers mapped by <b>valuation multiple</b> (x) and <b>revenue growth</b> (y). <b>Bubble size = live market cap in USD</b> (so a ~$150B Uber dwarfs a ~$6B Lyft, and currencies never distort the comparison). <span style="opacity:.75">Hover or tap a bubble for the read.</span></div>';
+  h+='<div class="mg-tog-row"><span class="mg-tog">Multiple: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgtype="ev">EV/EBITDA</button><button type="button" class="mg-pill" data-mgtype="pe">P/E</button></span></span>'+
+     '<span class="mg-tog">Basis: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgbasis="f">Forward</button><button type="button" class="mg-pill" data-mgbasis="t">Trailing</button></span></span></div>';
+  h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" id="lyScSvg" role="img" aria-label="Peer valuation vs growth map">'+
+    '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<line x1="80" y1="252" x2="80" y2="44" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<text x="88" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0">← cheaper</text>'+
+    '<text x="610" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">more expensive →</text>'+
+    '<text x="346" y="288" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#6b7684" text-anchor="middle" id="lyScXlab">EV/EBITDA · forward</text>'+
+    '<text x="74" y="250" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">slow</text>'+
+    '<text x="74" y="52" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">fast growth</text>'+
+    '<g id="lyScNodes"></g>'+
+  '</svg></div>';
+  h+='<div class="lysc-chips" id="lyScChips"></div>';
+  h+='<div class="ov-diagram-cap" style="margin-top:4px">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only <b>listed</b> peers with a public multiple plot here; a name drops out of the P/E view when it has no meaningful P/E — Grab is only recently profitable, and Lyft’s trailing P/E is <b>n.m.</b> (FY25 net income is dominated by a one-time ~$2.9B tax benefit). Unlisted rivals (DiDi, Bolt) have no market multiple — they sit on the competitive map in <b>Deep Dive ▸ Deep Overview</b>. <span class="ave-subh-note">Multiples & growth are approximate, web-sourced (mid-2026); market caps are live. Directional, not exact.</span></div>';
+  h+='<div id="lyScTip" class="mg-tip" hidden></div>';
+  return h;
+}
+function lyScRender(root){
+  var g=root.querySelector('#lyScNodes'); if(!g||!LY_SC.peers) return;
+  var maxMult=LY_SC.type==='ev'?52:80, X0=80, X1=612, Y0=252, Y1=44;
+  var lab=root.querySelector('#lyScXlab'); if(lab) lab.textContent=(LY_SC.type==='ev'?'EV/EBITDA':'P/E')+' · '+(LY_SC.basis==='f'?'forward':'trailing');
+  var frag='';
+  LY_SC.peers.forEach(function(p){
+    if(!p.on) return; var m=lyScMult(p); if(m==null||isNaN(m)) return; // drops out of this view
+    var growth=LY_SC.basis==='f'?p.gf:p.gt; if(growth==null) growth=p.gf!=null?p.gf:p.gt;
+    var x=X0+Math.max(0,Math.min(1,m/maxMult))*(X1-X0);
+    var y=Y0-Math.max(0,Math.min(1,(growth||0)/30))*(Y0-Y1);
+    var r=Math.max(6,Math.min(22,5+Math.sqrt(Math.max(1,p.mc))*0.9));
+    frag+='<g class="mg-node" data-name="'+esc(p.n)+'" data-why="'+esc(p.why||'')+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
+      '<circle class="mg-dot" r="'+r.toFixed(1)+'" fill="'+(p.hl?'#E6007A':'#3A7BD5')+'"'+(p.hl?' stroke="#fff" stroke-width="2"':' opacity="0.82"')+' style="cursor:pointer"></circle>'+
+      '<text y="'+(r+11).toFixed(1)+'" font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?'#10141A':'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>';
+  });
+  g.innerHTML=frag;
+}
+function lyScChips(root){
+  var box=root.querySelector('#lyScChips'); if(!box||!LY_SC.peers) return;
+  var h=LY_SC.peers.map(function(p,i){ return '<span class="lysc-chip" data-sci="'+i+'" title="Remove '+esc(p.n)+'">'+esc(p.n)+' <span class="x">×</span></span>'; }).join('');
+  h+='<span class="lysc-add"><input id="lyScAddTk" placeholder="+ TICKER" maxlength="6"><button type="button" id="lyScAddBtn">Add</button></span>';
+  box.innerHTML=h;
+}
+// Block 7 — Timeline (reuses the existing TIMELINE var + data-detail="hist:i", so the modal keeps working).
+function stdTimeline(){
+  return '<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>';
+}
+var LY_OV_SOURCES='Sources — Lyft FY2025 Form 10-K & Q4 2025 results (revenue, gross bookings, rides, active riders, Adjusted EBITDA, FCF); Summit DCF model (snapshot 2026-05-13) corroborating the actuals and supplying forward estimates; company IR for products & the AV partnerships. Market cap and peer bubbles are live via Massive; peer multiples & growth are web-sourced approximations (mid-2026). Geography split not shown (US/Canada; no reported country split). FY2025 GAAP net income is distorted by a one-time ~$2.9B deferred-tax benefit, so trailing P/E is shown n.m. Forward figures are model estimates, not company guidance.';
+// The standardized Overview body — 7 blocks in fixed order. Hook (Key Facts + Description + 2×2 table)
+// stays visible; every section below defaults collapsed (progressive disclosure).
+function stdOverviewBody(c){
+  var h='<style>.stdkf{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--bdr);border-top:3px solid var(--brand-2, var(--brand));border-radius:12px;overflow:hidden;background:var(--w);margin:2px 0}'+
+    '.stdkf-cell{padding:11px 13px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
+    '.stdkf-cell:nth-child(5n){border-right:none}.stdkf-cell:nth-child(n+6){border-bottom:none}'+
+    '.stdkf-k{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:3px}'+
+    '.stdkf-v{font-size:12px;font-weight:700;color:var(--navy);line-height:1.3}'+
+    '@media(max-width:720px){.stdkf{grid-template-columns:repeat(2,1fr)}.stdkf-cell{border-right:none}}'+
+    '.ov-lede{margin:16px 0 6px;font-size:13px;line-height:1.6;color:var(--navy)}'+
+    '.q2{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--bdr);border-radius:12px;overflow:hidden;background:var(--w);margin:4px 0}'+
+    '.q2-cell{padding:13px 15px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
+    '.q2-cell:nth-child(2n){border-right:none}.q2-cell:nth-child(n+3){border-bottom:none}'+
+    '.q2-k{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#E6007A;margin-bottom:5px}'+
+    '.q2-v{font-size:12px;color:var(--navy);line-height:1.5}.q2-v b{font-weight:800}'+
+    '@media(max-width:600px){.q2{grid-template-columns:1fr}.q2-cell{border-right:none}.q2-cell:nth-child(n+2){border-bottom:1px solid var(--bdr)}.q2-cell:last-child{border-bottom:none}}'+
+    '.mm-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}@media(max-width:520px){.mm-stats{grid-template-columns:repeat(2,1fr)}}'+
+    '.mm-stat{border:1px solid var(--bdr);border-radius:9px;padding:8px 11px;background:var(--w)}'+
+    '.mm-stat-k{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}.mm-stat-v{font-size:14px;font-weight:800;color:var(--navy);margin-top:2px}'+
+    '.acc-list .acc{border:1px solid var(--bdr);border-radius:9px;margin-top:6px;overflow:hidden;background:var(--w)}'+
+    '.acc-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12px;font-weight:700;color:var(--navy);padding:9px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}'+
+    '.acc-h:hover{background:#EEF2F6}.acc-x{color:var(--mu);font-weight:800}.acc-b{padding:10px 12px}'+
+    '.famd{font-size:12px;color:var(--navy);line-height:1.55}.famd b{font-weight:800}'+
+    '.ov-row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:11.5px}.ov-row:last-child{border-bottom:none}.ov-row-k{color:var(--mu);font-weight:600}.ov-row-v{color:var(--navy);font-weight:800}'+
+    '.stdp-seg{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:12px 0 7px}.stdp-group:first-child .stdp-seg{margin-top:2px}'+
+    '.stdp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}'+
+    '.stdp-card{border:1px solid var(--bdr);border-radius:11px;padding:13px 14px;background:var(--w);cursor:pointer;transition:.14s}'+
+    '.stdp-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-2px);border-color:#E6007A}'+
+    '.stdp-ic{font-size:26px;line-height:1}.stdp-n{font-size:13px;font-weight:800;color:var(--navy);margin:7px 0 3px}'+
+    '.stdp-d{font-size:11px;color:var(--mu);line-height:1.45}.stdp-more{font-size:10px;font-weight:700;color:#E6007A;margin-top:6px}'+
+    '.ov-collap{border:1px solid var(--bdr);border-radius:10px;margin:12px 0 0;overflow:hidden}'+
+    '.ov-collap-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12.5px;font-weight:800;color:var(--navy);padding:11px 14px;cursor:pointer;display:flex;align-items:center;gap:8px}'+
+    '.ov-collap-h:hover{background:#EEF2F6}.ov-collap-ic{font-size:10px;color:var(--mu)}.ov-collap-b{padding:12px 14px 6px}'+
+    '.dd-tabs{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 14px;border-bottom:1px solid var(--bdr)}'+
+    '.dd-tab{border:none;background:transparent;font:inherit;font-size:12.5px;font-weight:700;color:var(--mu);padding:8px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}'+
+    '.dd-tab:hover{color:var(--navy)}.dd-tab.active{color:var(--navy);border-bottom-color:var(--navy)}'+
+    '.dd-pane[hidden]{display:none}</style>';
+  h+=stdKeyFacts();
+  h+='<p class="ov-lede">'+esc(LY_LEDE)+'</p>';
+  h+=stdFourQuad();
+  h+=collapsible('How it makes money', stdMoneyMap());
+  h+=collapsible('What it makes — the products', stdProducts());
+  h+=collapsible('Competitors — valuation vs growth', stdPeerScatter());
+  h+=collapsible('Timeline', stdTimeline());
+  h+='<div class="ov-foot">'+esc(LY_OV_SOURCES)+'</div>';
+  return h;
+}
+
 // ─── Top-level shell ──────────────────────────────────────────────────────────
 function html(c){
   var h = '<div class="ov ov-lyft" data-brand="LYFT">';
+  // Two top-level tabs: the standardized Overview hook + the Deep Dive container.
   h += '<div class="ovt-tabs">'+
     '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="strategy">Strategy</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="media">Media & Growth</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="growth">Rides &amp; Riders</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="unit">Unit Economics</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="insurance">Insurance</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="model">Model vs. Reality</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="valuation">Valuation</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="mgmt">Management</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="calls">Earnings Narrative</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="deepdive">Deep Dive</button>'+
   '</div>';
-  h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="strategy" hidden>'+strategyBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="media" hidden>'+mediaBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="growth" hidden>'+growthBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="unit" hidden>'+unitBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="insurance" hidden>'+insuranceBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="model" hidden>'+modelBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="valuation" hidden>'+LYFT_VAL.body()+'</div>';
-  h += '<div class="ovt-pane" data-ovt="mgmt" hidden>'+LYFT_MGMT.body()+'</div>';
-  h += '<div class="ovt-pane" data-ovt="calls" hidden>'+callsBody()+'</div>';
+  h += '<div class="ovt-pane" data-ovt="overview">'+stdOverviewBody(c)+'</div>';
+  // ── Deep Dive: everything deeper. Holds all 10 prior tabs (the old "Overview" becomes
+  //    "Deep Overview"). Nothing deleted (Golden Rule #1). ──
+  h += '<div class="ovt-pane" data-ovt="deepdive" hidden>'+
+    '<div class="dd-tabs">'+
+      '<button type="button" class="dd-tab active" data-dd="overview">Deep Overview</button>'+
+      '<button type="button" class="dd-tab" data-dd="strategy">Strategy</button>'+
+      '<button type="button" class="dd-tab" data-dd="media">Media &amp; Growth</button>'+
+      '<button type="button" class="dd-tab" data-dd="growth">Rides &amp; Riders</button>'+
+      '<button type="button" class="dd-tab" data-dd="unit">Unit Economics</button>'+
+      '<button type="button" class="dd-tab" data-dd="insurance">Insurance</button>'+
+      '<button type="button" class="dd-tab" data-dd="model">Model vs. Reality</button>'+
+      '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
+      '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
+      '<button type="button" class="dd-tab" data-dd="calls">Earnings Narrative</button>'+
+    '</div>'+
+    '<div class="dd-pane" data-dd="overview">'+overviewBody(c)+'</div>'+
+    '<div class="dd-pane" data-dd="strategy" hidden>'+strategyBody(c)+'</div>'+
+    '<div class="dd-pane" data-dd="media" hidden>'+mediaBody(c)+'</div>'+
+    '<div class="dd-pane" data-dd="growth" hidden>'+growthBody(c)+'</div>'+
+    '<div class="dd-pane" data-dd="unit" hidden>'+unitBody(c)+'</div>'+
+    '<div class="dd-pane" data-dd="insurance" hidden>'+insuranceBody(c)+'</div>'+
+    '<div class="dd-pane" data-dd="model" hidden>'+modelBody(c)+'</div>'+
+    '<div class="dd-pane" data-dd="valuation" hidden>'+LYFT_VAL.body()+'</div>'+
+    '<div class="dd-pane" data-dd="mgmt" hidden>'+LYFT_MGMT.body()+'</div>'+
+    '<div class="dd-pane" data-dd="calls" hidden>'+callsBody()+'</div>'+
+  '</div>';
   // Modal scaffold (shared overview.css). Hidden until a milestone is tapped.
   h += '<div class="ov-modal-back" id="lyModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
     '<button class="ov-modal-x" id="lyModalX" aria-label="Close">×</button>'+
@@ -1729,15 +1983,29 @@ function buildOverviewCharts(){ buildAnnualBar('lyChartGB', A_GB, moneyB); build
 function buildGrowthTab(){ buildRangedBar(RIDES_CFG); setupRangedSlider(RIDES_CFG); buildRangedBar(RIDERS_CFG); setupRangedSlider(RIDERS_CFG); }
 function buildUnitTab(){ buildDecompChart(); buildTakeChart(); }
 
+// ── Deep Dive layer: build the charts for a given dd pane when it becomes visible ──
+function buildDD(root, key){
+  if (key==='overview')       buildOverviewCharts();
+  else if (key==='growth')    buildGrowthTab();
+  else if (key==='unit')      buildUnitTab();
+  else if (key==='model')     buildModelTab();
+  else if (key==='valuation') LYFT_VAL.init(root);
+  else if (key==='mgmt')      LYFT_MGMT.init(root);
+  // strategy / media / insurance / calls: no lazy charts
+}
+function activeDD(root){ var b=root.querySelector('.dd-tab.active'); return b?b.getAttribute('data-dd'):'overview'; }
+function showDD(root, key){
+  root.querySelectorAll('.dd-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-dd')===key); });
+  root.querySelectorAll('.dd-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-dd')!==key); });
+  requestAnimationFrame(function(){ buildDD(root, key); });
+}
+function wireDD(root){ root.querySelectorAll('.dd-tab').forEach(function(btn){ btn.onclick=function(){ showDD(root, btn.getAttribute('data-dd')); }; }); }
+// ── Top-level: Overview (standardized scatter) ⇄ Deep Dive ──
 function showOvt(root, key){
   root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt')===key); });
   root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt')!==key); });
-  if (key==='overview') requestAnimationFrame(buildOverviewCharts);
-  if (key==='growth')   requestAnimationFrame(buildGrowthTab);
-  if (key==='unit')     requestAnimationFrame(buildUnitTab);
-  if (key==='model')    requestAnimationFrame(buildModelTab);
-  if (key==='valuation') requestAnimationFrame(function(){ LYFT_VAL.init(root); });
-  if (key==='mgmt') requestAnimationFrame(function(){ LYFT_MGMT.init(root); });
+  if (key==='overview') requestAnimationFrame(function(){ lyScRender(root); });
+  else if (key==='deepdive'){ var d=activeDD(root); requestAnimationFrame(function(){ buildDD(root, d); }); }
 }
 
 // ─── Modal (milestone detail) ─────────────────────────────────────────────────
@@ -1771,6 +2039,9 @@ function wireModal(root){
     if (kind==='lnote'&&id==='cogs'){ return {t:'The Q4 → Q1 cost-of-revenue drop',h:COGS_NOTE}; }
     if (kind==='lnote'&&id==='gm'){ return {t:'Gross margin — structural or one-time?',h:'<div class="ov-wind-h">The structural case</div>'+bullets(GM_STRUCT)+'<div class="ov-wind-h" style="margin-top:14px">Reasons for caution</div>'+bullets(GM_CAUTION)}; }
     if (kind==='mna'){ var m=MNA.filter(function(x){return x.n===id;})[0]; return m?{t:m.n+' <span class="ov-modal-sub">'+esc(m.y)+' · '+esc(m.deal)+'</span>',h:m.detail}:null; }
+    if (kind==='fam'){ var gp=id.split('-'), gg=LY_PROD_GROUPS[+gp[0]]; var f=gg&&gg.families[+gp[1]]; if(!f) return null;
+      var body=f.items.map(function(it){ return '<div style="margin:0 0 10px"><div style="font-size:12.5px;font-weight:800;color:var(--navy)">'+esc(it[0])+'</div><div class="famd">'+esc(it[1])+'</div></div>'; }).join('');
+      return {t:f.ic+' '+esc(f.fam),h:'<div class="famd" style="margin-bottom:10px;color:var(--mu)">'+esc(f.d)+'</div>'+body}; }
     return null;
   }
   root.querySelectorAll('[data-detail]').forEach(function(el){
@@ -1803,10 +2074,11 @@ function renderLive(root){
 function init(c){
   var root = document.querySelector('.ov-lyft');
   if (!root) return;
-  renderLive(root);
+  renderLive(root); // Deep Dive ▸ Deep Overview keeps its #lyLive banner; the standardized Overview has no price strip.
   root.querySelectorAll('.ovt-tab').forEach(function(btn){
     btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };
   });
+  wireDD(root);
   root.querySelectorAll('.ave-pill').forEach(function(btn){
     btn.onclick = function(){ switchAveMetric(root, btn.getAttribute('data-ave')); };
   });
@@ -1827,6 +2099,43 @@ function init(c){
   })();
   // Earnings calls accordion
   root.querySelectorAll('#lyCallsAcc .lpb-acc-h').forEach(function(btn){ btn.onclick=function(){ var item=btn.parentElement; var open=item.classList.toggle('open'); var ic=btn.querySelector('.lpb-acc-ic'); if(ic) ic.textContent=open?'\u2013':'+'; }; });
+  // \u2500\u2500 Standardized Overview wiring: dynamic peer scatter, segment accordions, live market cap \u2500\u2500
+  lyScReset(); lyScRender(root); lyScChips(root);
+  var sctip=root.querySelector('#lyScTip');
+  function wireScNodes(){ if(!sctip) return; root.querySelectorAll('#lyScNodes .mg-node').forEach(function(g){
+    function show(){ sctip.innerHTML='<span class="mgt-n">'+g.getAttribute('data-name')+'</span>'+g.getAttribute('data-why'); sctip.hidden=false; }
+    function move(e){ sctip.style.left=Math.min(e.clientX+16, window.innerWidth-270)+'px'; sctip.style.top=(e.clientY+16)+'px'; }
+    g.addEventListener('mouseenter', show); g.addEventListener('mousemove', move);
+    g.addEventListener('mouseleave', function(){ sctip.hidden=true; });
+    g.addEventListener('click', function(e){ show(); move(e); });
+  }); }
+  function scRefresh(){ lyScRender(root); wireScNodes(); }
+  wireScNodes();
+  root.querySelectorAll('.mg-pill').forEach(function(btn){ btn.onclick=function(){
+    if(btn.hasAttribute('data-mgtype')){ LY_SC.type=btn.getAttribute('data-mgtype'); root.querySelectorAll('.mg-pill[data-mgtype]').forEach(function(b){ b.classList.toggle('active', b===btn); }); }
+    else { LY_SC.basis=btn.getAttribute('data-mgbasis'); root.querySelectorAll('.mg-pill[data-mgbasis]').forEach(function(b){ b.classList.toggle('active', b===btn); }); }
+    scRefresh();
+  }; });
+  // peer chips: \u00d7 DELETES a peer immediately (no toggle); ticker input re-adds (restoring a seed's multiples)
+  function wireChips(){
+    root.querySelectorAll('#lyScChips .lysc-chip[data-sci]').forEach(function(ch){ ch.onclick=function(){ var i=+ch.getAttribute('data-sci'); if(LY_SC.peers[i]){ LY_SC.peers.splice(i,1); lyScChips(root); wireChips(); scRefresh(); } }; });
+    var addBtn=root.querySelector('#lyScAddBtn'), addIn=root.querySelector('#lyScAddTk');
+    if(addBtn&&addIn){ addBtn.onclick=function(){ var tk=(addIn.value||'').trim().toUpperCase(); if(!tk) return;
+      if(!LY_SC.peers.some(function(p){ return p.tk===tk; })){
+        var seed=LY_PEERS.filter(function(p){ return p.tk===tk; })[0];
+        if(seed){ var o={}; for(var k in seed) o[k]=seed[k]; o.on=true; LY_SC.peers.push(o); } // restore a known peer's multiples
+        else LY_SC.peers.push({ tk:tk, n:tk, on:true, mc:10, evT:null,evF:null,peT:null,peF:null,gt:null,gf:null, why:'Added by ticker \u2014 live market cap only; no multiple on file, so it plots once one is available.' });
+      }
+      addIn.value=''; lyScChips(root); wireChips(); scRefresh(); lyLiveOne(tk); }; }
+  }
+  wireChips();
+  // Segment "What is X?" + economics accordions
+  root.querySelectorAll('.acc-h').forEach(function(btn){ btn.onclick=function(){ var b=btn.nextElementSibling; if(!b) return; var open=b.hidden; b.hidden=!open; var x=btn.querySelector('.acc-x'); if(x) x.textContent=open?'\u2013':'+'; }; });
+  // Collapsible sections (reader chooses what to expand)
+  root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var cc=btn.parentElement; var open=cc.classList.toggle('open'); var b=cc.querySelector('.ov-collap-b'); if(b) b.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.textContent=open?'\u25be':'\u25b8'; }; });
+  // Live market cap (Key Facts #lyMc + peer bubbles) \u2014 Massive via api.liveQuote; degrades gracefully in preview
+  function lyLiveOne(tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(q){ if(!q||q.marketCap==null) return; var mcB=q.marketCap/1e9; LY_SC.peers.forEach(function(p){ if(p.tk===tk) p.mc=mcB; }); if(tk==='LYFT'){ var el=root.querySelector('#lyMc'); if(el) el.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':(mcB>=10?Math.round(mcB):mcB.toFixed(1))+'B')+' \u00b7 live'; } scRefresh(); }).catch(function(){}); }
+  LY_SC.peers.forEach(function(p){ if(p.tk) lyLiveOne(p.tk); });
   var active = root.querySelector('.ovt-tab.active');
   showOvt(root, active ? active.getAttribute('data-ovt') : 'overview');
 }

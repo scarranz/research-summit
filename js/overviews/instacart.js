@@ -1160,11 +1160,284 @@ function enterpriseExamples(){
   h+='<div class="ent2-flip"><b>Competitor and customer, at the same time.</b> The same grocers appear on both sides: <b>ALDI, Publix and Sprouts</b> sell on the Marketplace <i>and</i> run their own sites on Storefront Pro; <b>Kroger, Wegmans, Schnucks and Wakefern</b> are Marketplace sellers <i>and</i> in-store-tech (Caper / Carrot Tags) customers. Instacart competes with them and arms them in the same breath — the essence of the enterprise strategy.</div>';
   return h;
 }
+// ══════════════════════════════════════════════════════════════════════════════
+// ═══ STANDARDIZED OVERVIEW (docs/OVERVIEW_CONVENTIONS.md) — the 7 blocks ════════
+// Mirrors overviews/uber.js verbatim where possible; id prefixes ub→ic, state
+// vars UB_→IC_. This is the "Overview" top-level tab; the whole legacy profile
+// below becomes the "Deep Dive" tab (Golden Rule #1 — nothing deleted).
+// ══════════════════════════════════════════════════════════════════════════════
+var IC_GREEN='#0AAD0A', IC_ORANGE='#FF7009';
+// Reusable collapsible section — hook content stays; deeper detail folds away.
+function collapsible(title, inner, open){
+  return '<div class="ov-collap'+(open?' open':'')+'">'+
+    '<button type="button" class="ov-collap-h"><span class="ov-collap-ic">'+(open?'▾':'▸')+'</span>'+esc(title)+'</button>'+
+    '<div class="ov-collap-b"'+(open?'':' hidden')+'>'+inner+'</div></div>';
+}
+// Horizontal proportion bars (reuses shared .ov-mbars). rows = [label, pct, valueLabel, color].
+function mbars(arr){ return '<div class="ov-mbars">'+arr.map(function(r){
+  return '<div class="ov-mbar"><div class="ov-mbar-l">'+esc(r[0])+'</div>'+
+    '<div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:'+r[1]+'%;background:'+r[3]+';">'+esc(r[2])+'</div></div>'+
+    '<div class="ov-mbar-v">'+r[1]+'%</div></div>';
+}).join('')+'</div>'; }
+
+// ─── Block 1 — Key Facts (exactly 10 cells, 5×2). Market cap cell is live (#icMc). ──
+var IC_FACTS=[
+  ['Listing','NASDAQ: CART'],
+  ['HQ','San Francisco, CA, USA'],
+  ['Incorporation','Delaware (Maplebear Inc.)'],
+  ['SEC filer','Domestic (10-K/10-Q/8-K)'],
+  ['Founded','2012'],
+  ['IPO','Sep 2023 · $30.00'],
+  ['CEO','Chris Rogers · since Aug 2025'],
+  ['Employees','~3,600 + ~600k shoppers · Dec 2025'],
+  ['Dividend','Non-payer ($1B buyback)'],
+  ['Market cap','~$10.9B · Jul 2026'],
+];
+function stdKeyFacts(){
+  return '<div class="stdkf">'+IC_FACTS.slice(0,10).map(function(p){
+    var v=p[0]==='Market cap' ? '<span id="icMc">'+esc(p[1])+'</span>' : esc(p[1]);
+    return '<div class="stdkf-cell"><div class="stdkf-k">'+esc(p[0])+'</div><div class="stdkf-v">'+v+'</div></div>'; }).join('')+'</div>';
+}
+// ─── Block 2 — Description (lede) — high-level only, NON-redundant with blocks below. ──
+var IC_LEDE="Instacart (legal name Maplebear Inc.) runs the largest online-grocery marketplace in North America, connecting shoppers with retailers and a network of independent 'shoppers' who pick and deliver orders from local stores. It owns no stores or inventory — it is the software-and-logistics layer grocers plug into. On top of the marketplace it runs a high-margin retail-media advertising business and licenses its e-commerce, fulfillment and in-store technology to retailers. It operates only in the United States and Canada.";
+// ─── Block 3 — the 4-quadrant, as a 2×2 TABLE. Each cell ≤ ~30 words. ──
+var IC_BIZ=[
+  ['What it sells','An online-grocery marketplace app (delivery/pickup from ~1,800 retail banners), a retail-media ad platform for brands, and enterprise grocery technology licensed to retailers.'],
+  ['Who buys it','Consumers and households ordering groceries; consumer-packaged-goods brands buying ads; grocery retailers licensing Instacart’s technology and fulfillment.'],
+  ['How it earns','It keeps a share of order value (Transaction revenue) and sells high-margin ads (Advertising & other). FY2025 revenue $3.74B, ~72% transaction / ~28% advertising.'],
+  ['The edge','The largest grocery-delivery marketplace and retailer network in North America, a high-margin ads flywheel funded by that scale, and deep retailer-tech integration that raises switching costs.'],
+];
+function stdFourQuad(){
+  return '<div class="q2">'+IC_BIZ.map(function(b){ return '<div class="q2-cell"><div class="q2-k">'+esc(b[0])+'</div><div class="q2-v">'+b[1]+'</div></div>'; }).join('')+'</div>';
+}
+// ─── Block 4 — How it makes money. TWO REAL reported revenue lines (genuine ≥2-slice
+// split); geography OMITTED (US/Canada, no reported country split). FY2025 reported. ──
+var IC_REV=[['Transaction revenue',71.5,'$2.68B',IC_GREEN],['Advertising & other',28.5,'$1.06B',IC_ORANGE]];
+var IC_MM_STATS=[['GTV','$37,224M'],['Orders','338.8M'],['AOV','~$110'],['Ads % of GTV','~2.9%'],['Adj. EBITDA','$1,088M'],['GAAP net income','$447M']];
+// "What is X?" is qualitative (no numbers — the chart has them); the nested "Segment
+// economics" adds the figures NOT shown in the bars above.
+var IC_SEG_DEF=[
+  { seg:'Transaction revenue',
+    desc:'What Instacart earns for facilitating and fulfilling a grocery order: the customer-side fees (delivery, service) plus the fees retailers pay for orders fulfilled through the marketplace. It is the core marketplace take.',
+    econ:[['Revenue','$2,677M (~72% of total)'],['GTV','$37,224M'],['Orders','338.8M'],['AOV','~$110']] },
+  { seg:'Advertising & other',
+    desc:'The retail-media business: consumer brands pay to feature their products (sponsored listings, display) to shoppers at the point of purchase, plus smaller “other” items. It monetizes shopper intent and carries structurally higher margins than transaction revenue.',
+    econ:[['Revenue','$1,065M (~28% of total, ~11% YoY)'],['% of GTV','~2.9%'],['Gross margin','~100% (mgmt) — the key profit driver']] },
+];
+function stdMoneyMap(){
+  var h=mbars(IC_REV);
+  h+='<div class="mm-stats">'+IC_MM_STATS.map(function(s){ return '<div class="mm-stat"><div class="mm-stat-v">'+esc(s[1])+'</div><div class="mm-stat-l">'+esc(s[0])+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="mm-defs acc-list" style="margin-top:12px">'+IC_SEG_DEF.map(function(s){
+    var econ='<div class="acc" style="margin-top:8px"><button type="button" class="acc-h">Segment economics (FY2025) <span class="acc-x">+</span></button><div class="acc-b" hidden>'+s.econ.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join('')+'</div></div>';
+    return '<div class="acc"><button type="button" class="acc-h">What is “'+esc(s.seg)+'”?<span class="acc-x">+</span></button><div class="acc-b" hidden><div class="famd">'+esc(s.desc)+'</div>'+econ+'</div></div>';
+  }).join('')+'</div>';
+  h+='<div class="ov-diagram-cap" style="margin-top:10px">Cross-check: Transaction $2,677M + Advertising $1,065M = <b>$3,742M</b> total revenue ✓ (ties to reported). GTV $37,224M. <b>Geography OMITTED</b> — North America (US + Canada); no reported country split. <span class="ave-subh-note">FY2025 reported. ~$1,088M Adjusted EBITDA (~29% margin); these are Instacart’s first GAAP-profitable years. Source: Instacart (Maplebear) FY2025 10-K & Q4 2025 results.</span></div>';
+  return h;
+}
+// ─── Block 5 — Products (TWO TIERS): groups → family cards → pop-up → specific items. ──
+var IC_PROD_GROUPS=[
+  { seg:'Consumer', families:[
+    { ic:'🛒', fam:'Marketplace', d:'The consumer grocery-delivery app.', items:[
+      ['Delivery','Same-day grocery delivery from ~1,800 banners / 100,000+ stores.'],
+      ['Pickup','Order online, then pick the groceries up in store yourself.'],
+      ['Priority / Express','Faster delivery windows for an added fee.'],
+    ]},
+    { ic:'⭐', fam:'Instacart+', d:'The paid membership.', items:[
+      ['Instacart+','~$99/yr membership: $0 delivery over a basket threshold, reduced service fees and perks.'],
+    ]},
+    { ic:'💼', fam:'Instacart Business', d:'B2B ordering.', items:[
+      ['Instacart Business','Business accounts: tax-exempt ordering, expense controls and multi-user access.'],
+    ]},
+    { ic:'🩺', fam:'Instacart Health', d:'Health & nutrition access.', items:[
+      ['Instacart Health','SNAP/EBT online payment, “Fresh Funds” and prescribed-nutrition programs.'],
+    ]},
+  ]},
+  { seg:'Advertising', families:[
+    { ic:'📣', fam:'Instacart Ads / Carrot Ads', d:'The retail-media ad platform.', items:[
+      ['Sponsored product listings','Promoted products in search & browse at the point of purchase.'],
+      ['Display & brand pages','Banners, featured deals and brand storefronts.'],
+      ['Carrot Ads','The same ad tech extended onto retailers’ own sites.'],
+    ]},
+  ]},
+  { seg:'Enterprise (Instacart Platform)', families:[
+    { ic:'🏬', fam:'Storefront', d:'White-label e-commerce.', items:[
+      ['Storefront / Storefront Pro','White-label e-commerce sites & apps for retailers.'],
+    ]},
+    { ic:'📦', fam:'Fulfillment', d:'Logistics as a service.', items:[
+      ['Fulfillment','Picking, delivery and logistics infrastructure for partners.'],
+    ]},
+    { ic:'🛒', fam:'In-store tech', d:'Hardware & software for the physical store.', items:[
+      ['Caper Carts','AI smart carts — scan-as-you-go, in-store ads.'],
+      ['Connected Stores','Smart carts, scan-and-pay and out-of-stock insights.'],
+      ['FoodStorm','Order-management / catering software.'],
+      ['Eversight','AI pricing & promotions.'],
+    ]},
+  ]},
+];
+function stdProducts(){
+  return IC_PROD_GROUPS.map(function(g,gi){
+    return '<div class="stdp-group"><div class="stdp-seg">'+esc(g.seg)+'</div><div class="stdp">'+
+      g.families.map(function(f,fi){
+        return '<div class="stdp-card ov-clickable" data-detail="fam:'+gi+'-'+fi+'"><div class="stdp-ic">'+f.ic+'</div>'+
+          '<div class="stdp-n">'+esc(f.fam)+'</div><div class="stdp-d">'+esc(f.d)+'</div><div class="stdp-more">See products ›</div></div>';
+      }).join('')+'</div></div>';
+  }).join('');
+}
+// ─── Block 6 — Competitors scatter (DYNAMIC). X = valuation multiple, Y = revenue
+// growth, bubble = LIVE market cap (api.liveQuote). Multiple toggle EV/EBITDA ⇄ P/E;
+// basis Trailing ⇄ Forward (default Forward). Peers add/removable by ticker; the chip
+// × DELETES the peer immediately. ⚠ Multiples & growth are web-sourced approximations. ──
+var IC_PEERS=[
+  { tk:'CART', n:'Instacart', evT:9,  evF:7,  peT:24, peF:18, gt:11, gf:12, mc:10.9, hl:true, why:'The largest North-American online-grocery marketplace and by far the value/ad-driven name — cheapest of the group on both forward P/E (~18x) and EV/EBITDA (~7x), with a high-margin advertising engine funding profitability, but lower top-line growth than DoorDash.' },
+  { tk:'DASH', n:'DoorDash',  evT:49, evF:30, peT:75, peF:28, gt:33, gf:26, mc:84,   why:'US delivery leader and the growth-premium name — grows faster than Instacart and is richly valued on it; competes in grocery delivery.' },
+  { tk:'UBER', n:'Uber',      evT:16, evF:18, peT:24, peF:19, gt:14, gf:13, mc:157,  why:'The scaled, global, multi-product platform (rides + eats + grocery); the large-cap comp that also delivers groceries via Uber Eats.' },
+];
+var IC_SC={ type:'ev', basis:'f', peers:null };
+function icScReset(){ IC_SC.peers=IC_PEERS.map(function(p){ var o={}; for(var k in p) o[k]=p[k]; o.on=true; return o; }); }
+function icScMult(p){ if(IC_SC.type==='ev') return IC_SC.basis==='f'?p.evF:p.evT; return IC_SC.basis==='f'?p.peF:p.peT; }
+function stdPeerScatter(){
+  var h='<style>.mg-tog-row{display:flex;flex-wrap:wrap;gap:14px;margin:2px 0 8px}'+
+    '.mg-tog{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--mu)}'+
+    '.mg-seg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+
+    '.mg-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
+    '.mg-pill.active{background:var(--navy);color:#fff}'+
+    '.mg-dot{transition:.15s}.mg-node text{pointer-events:none}'+
+    '.icsc-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 2px}'+
+    '.icsc-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;border:1px solid var(--bdr);border-radius:999px;padding:3px 9px;background:var(--w);cursor:pointer;color:var(--navy)}'+
+    '.icsc-chip .x{color:var(--mu);font-weight:800}'+
+    '.icsc-add{display:inline-flex;gap:5px;align-items:center}'+
+    '.icsc-add input{width:74px;font:inherit;font-size:11px;border:1px solid var(--bdr);border-radius:7px;padding:3px 7px;text-transform:uppercase}'+
+    '.icsc-add button{font:inherit;font-size:11px;font-weight:700;border:1px solid var(--bdr);border-radius:7px;padding:3px 9px;background:#F2F5F8;cursor:pointer}'+
+    '.mg-tip{position:fixed;z-index:60;max-width:250px;background:var(--navy);color:#fff;border-radius:9px;padding:9px 12px;font-size:11.5px;line-height:1.5;box-shadow:0 8px 22px rgba(16,20,26,.28);pointer-events:none;border-top:3px solid '+IC_GREEN+'}'+
+    '.mg-tip .mgt-n{display:block;font-weight:800;font-size:12.5px;color:'+IC_GREEN+';margin-bottom:3px}</style>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 6px">Listed peers mapped by <b>valuation multiple</b> (x) and <b>revenue growth</b> (y). <b>Bubble size = live market cap in USD</b> (so a ~$157B Uber dwarfs a ~$11B Instacart, and currencies never distort the comparison). <span style="opacity:.75">Hover or tap a bubble for the read.</span></div>';
+  h+='<div class="mg-tog-row"><span class="mg-tog">Multiple: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgtype="ev">EV/EBITDA</button><button type="button" class="mg-pill" data-mgtype="pe">P/E</button></span></span>'+
+     '<span class="mg-tog">Basis: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgbasis="f">Forward</button><button type="button" class="mg-pill" data-mgbasis="t">Trailing</button></span></span></div>';
+  h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" id="icScSvg" role="img" aria-label="Peer valuation vs growth map">'+
+    '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<line x1="80" y1="252" x2="80" y2="44" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<text x="88" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0">← cheaper</text>'+
+    '<text x="610" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">more expensive →</text>'+
+    '<text x="346" y="288" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#6b7684" text-anchor="middle" id="icScXlab">EV/EBITDA · forward</text>'+
+    '<text x="74" y="250" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">slow</text>'+
+    '<text x="74" y="52" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">fast growth</text>'+
+    '<g id="icScNodes"></g>'+
+  '</svg></div>';
+  h+='<div class="icsc-chips" id="icScChips"></div>';
+  h+='<div class="ov-diagram-cap" style="margin-top:4px">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only <b>listed</b> peers with a public multiple plot here; a name drops out of the P/E view when it has no meaningful P/E. <b>Amazon</b> (Amazon Fresh / Whole Foods) and <b>Walmart</b> are Instacart’s biggest structural rivals but are diversified giants, not clean pure-play comps; private rivals (Gopuff, Shipt) have no public multiple — all of them sit on the qualitative competitive map in <b>Deep Dive ▸ Deep Overview</b>, not this scatter. <span class="ave-subh-note">Multiples & growth are approximate, web-sourced (mid-2026); market caps are live. Directional, not exact.</span></div>';
+  h+='<div id="icScTip" class="mg-tip" hidden></div>';
+  return h;
+}
+// Draw the current working set into #icScNodes given the active type/basis.
+function icScRender(root){
+  var g=root.querySelector('#icScNodes'); if(!g||!IC_SC.peers) return;
+  var maxMult=IC_SC.type==='ev'?52:80, X0=80, X1=612, Y0=252, Y1=44;
+  var lab=root.querySelector('#icScXlab'); if(lab) lab.textContent=(IC_SC.type==='ev'?'EV/EBITDA':'P/E')+' · '+(IC_SC.basis==='f'?'forward':'trailing');
+  var frag='';
+  IC_SC.peers.forEach(function(p){
+    if(!p.on) return; var m=icScMult(p); if(m==null||isNaN(m)) return; // drops out of this view
+    var growth=IC_SC.basis==='f'?p.gf:p.gt; if(growth==null) growth=p.gf!=null?p.gf:p.gt;
+    var x=X0+Math.max(0,Math.min(1,m/maxMult))*(X1-X0);
+    var y=Y0-Math.max(0,Math.min(1,(growth||0)/35))*(Y0-Y1);
+    var r=Math.max(6,Math.min(22,5+Math.sqrt(Math.max(1,p.mc))*0.9));
+    frag+='<g class="mg-node" data-name="'+esc(p.n)+'" data-why="'+esc(p.why||'')+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
+      '<circle class="mg-dot" r="'+r.toFixed(1)+'" fill="'+(p.hl?IC_GREEN:'#3A7BD5')+'"'+(p.hl?' stroke="#fff" stroke-width="2"':' opacity="0.82"')+' style="cursor:pointer"></circle>'+
+      '<text y="'+(r+11).toFixed(1)+'" font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?IC_GREEN:'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>';
+  });
+  g.innerHTML=frag;
+}
+function icScChips(root){
+  var box=root.querySelector('#icScChips'); if(!box||!IC_SC.peers) return;
+  var h=IC_SC.peers.map(function(p,i){ return '<span class="icsc-chip" data-sci="'+i+'" title="Remove '+esc(p.n)+'">'+esc(p.n)+' <span class="x">×</span></span>'; }).join('');
+  h+='<span class="icsc-add"><input id="icScAddTk" placeholder="+ TICKER" maxlength="6"><button type="button" id="icScAddBtn">Add</button></span>';
+  box.innerHTML=h;
+}
+// ─── Block 7 — Timeline (reuses the existing TIMELINE var; Read-more via modal hist:i). ──
+function stdTimeline(){
+  return '<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>';
+}
+var IC_OV_SOURCES='Sources — Instacart (Maplebear) FY2025 Form 10-K & Q4 2025 results (transaction vs advertising revenue, GTV, orders, Adjusted EBITDA); Summit DCF model (snapshot 2026-05-13) for forward estimates (its historical transaction/ad split does NOT tie to the filing, so the REPORTED split is used here). Market cap and peer bubbles are live via Massive; peer multiples & growth are web-sourced approximations (mid-2026). Geography split not shown (US/Canada; no reported country split). Forward figures are model estimates, not company guidance.';
+// The standardized Overview body — the 7 blocks in fixed order. Hook (Key Facts +
+// Description + 2×2 quadrant) stays visible; every section below defaults collapsed.
+function stdOverviewBody(c){
+  var h='<style>.stdkf{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--bdr);border-top:3px solid var(--brand-2, var(--brand));border-radius:12px;overflow:hidden;background:var(--w);margin:2px 0}'+
+    '.stdkf-cell{padding:11px 13px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
+    '.stdkf-cell:nth-child(5n){border-right:none}.stdkf-cell:nth-child(n+6){border-bottom:none}'+
+    '.stdkf-k{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:3px}'+
+    '.stdkf-v{font-size:12px;font-weight:700;color:var(--navy);line-height:1.3}'+
+    '@media(max-width:720px){.stdkf{grid-template-columns:repeat(2,1fr)}.stdkf-cell{border-right:none}}'+
+    '.ov-lede{margin:16px 0 6px;font-size:13px;line-height:1.6;color:var(--navy)}'+
+    /* 4-quadrant as a shared-border 2×2 TABLE */
+    '.q2{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--bdr);border-radius:12px;overflow:hidden;background:var(--w);margin:4px 0}'+
+    '.q2-cell{padding:13px 15px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
+    '.q2-cell:nth-child(2n){border-right:none}.q2-cell:nth-child(n+3){border-bottom:none}'+
+    '.q2-k{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#06965A;margin-bottom:5px}'+
+    '.q2-v{font-size:12px;color:var(--navy);line-height:1.5}.q2-v b{font-weight:800}'+
+    '@media(max-width:600px){.q2{grid-template-columns:1fr}.q2-cell{border-right:none}.q2-cell:nth-child(n+2){border-bottom:1px solid var(--bdr)}.q2-cell:last-child{border-bottom:none}}'+
+    /* money-map stats row */
+    '.mm-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:14px 0 2px}@media(max-width:640px){.mm-stats{grid-template-columns:repeat(3,1fr)}}'+
+    '.mm-stat{border:1px solid var(--bdr);border-radius:9px;padding:8px 10px;text-align:center;background:var(--w)}'+
+    '.mm-stat-v{font-size:13px;font-weight:800;color:var(--navy)}.mm-stat-l{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin-top:2px}'+
+    /* segment "What is X?" accordions */
+    '.acc-list .acc{border:1px solid var(--bdr);border-radius:9px;margin-top:6px;overflow:hidden;background:var(--w)}'+
+    '.acc-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12px;font-weight:700;color:var(--navy);padding:9px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}'+
+    '.acc-h:hover{background:#EEF2F6}.acc-x{color:var(--mu);font-weight:800}.acc-b{padding:10px 12px}'+
+    '.famd{font-size:12px;color:var(--navy);line-height:1.55}.famd b{font-weight:800}'+
+    '.ov-row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:11.5px}.ov-row:last-child{border-bottom:none}.ov-row-k{color:var(--mu);font-weight:600}.ov-row-v{color:var(--navy);font-weight:800}'+
+    /* products (two-tier) */
+    '.stdp-seg{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:12px 0 7px}.stdp-group:first-child .stdp-seg{margin-top:2px}'+
+    '.stdp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}'+
+    '.stdp-card{border:1px solid var(--bdr);border-radius:11px;padding:13px 14px;background:var(--w);cursor:pointer;transition:.14s}'+
+    '.stdp-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-2px);border-color:#06965A}'+
+    '.stdp-ic{font-size:26px;line-height:1}.stdp-n{font-size:13px;font-weight:800;color:var(--navy);margin:7px 0 3px}'+
+    '.stdp-d{font-size:11px;color:var(--mu);line-height:1.45}.stdp-more{font-size:10px;font-weight:700;color:#06965A;margin-top:6px}'+
+    /* collapsible sections */
+    '.ov-collap{border:1px solid var(--bdr);border-radius:10px;margin:12px 0 0;overflow:hidden}'+
+    '.ov-collap-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12.5px;font-weight:800;color:var(--navy);padding:11px 14px;cursor:pointer;display:flex;align-items:center;gap:8px}'+
+    '.ov-collap-h:hover{background:#EEF2F6}.ov-collap-ic{font-size:10px;color:var(--mu)}.ov-collap-b{padding:12px 14px 6px}</style>';
+  // ── Hook (always visible): Key Facts, Description, 2×2 quadrant table ──
+  h+=stdKeyFacts();
+  h+='<p class="ov-lede">'+esc(IC_LEDE)+'</p>';
+  h+=stdFourQuad();
+  // ── Progressive disclosure: everything below defaults collapsed ──
+  h+=collapsible('How it makes money', stdMoneyMap());
+  h+=collapsible('What it makes — the products', stdProducts());
+  h+=collapsible('Competitors — valuation vs growth', stdPeerScatter());
+  h+=collapsible('Timeline', stdTimeline());
+  h+='<div class="ov-foot">'+esc(IC_OV_SOURCES)+'</div>';
+  return h;
+}
+// Reveal a top-level tab. Overview → (re)draw the peer scatter; Deep Dive → rebuild
+// the currently-active sub-tab's lazy charts (fin/advertising/valuation/mgmt).
+function showOvt(root,key){
+  root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt')===key); });
+  root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovt')!==key); });
+  if(key==='overview'){ requestAnimationFrame(function(){ icScRender(root); }); }
+  else if(key==='deepdive'){
+    var b=root.querySelector('.ov-subtab.active'), tab=b?b.getAttribute('data-catab'):null;
+    requestAnimationFrame(function(){
+      if(tab==='fin'){ renderFin(); buildCartGuide(); }
+      else if(tab==='advertising') buildAdChart();
+      else if(tab==='valuation') CART_VAL.init(root);
+      else if(tab==='mgmt') CART_MGMT.init(root);
+    });
+  }
+}
+
 function html(c){
   var h = '<div class="ov ov-cart" data-brand="CART">';
 
+  // ── Top-level tabs: Overview (standardized) + Deep Dive (the full legacy profile) ──
+  h += '<div class="ovt-tabs">'+
+    '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="deepdive">Deep Dive</button>'+
+  '</div>';
+  h += '<div class="ovt-pane" data-ovt="overview">'+stdOverviewBody(c)+'</div>';
+
+  // ══ DEEP DIVE — the entire prior Overview, preserved verbatim (Golden Rule #1) ══
+  h += '<div class="ovt-pane" data-ovt="deepdive" hidden>';
   h += '<div class="ov-subtabs">'+
-    '<button class="ov-subtab active" data-catab="overview">Overview</button>'+
+    '<button class="ov-subtab active" data-catab="overview">Deep Overview</button>'+
     '<button class="ov-subtab" data-catab="marketplace">Marketplace</button>'+
     '<button class="ov-subtab" data-catab="advertising">Advertising</button>'+
     '<button class="ov-subtab" data-catab="enterprise">Enterprise</button>'+
@@ -1296,6 +1569,7 @@ function html(c){
   h += '</div>'; // end calls pane
 
   h += '<div class="ov-foot">'+esc(SOURCES)+'</div>';
+  h += '</div>'; // end deepdive .ovt-pane
   h += '<div class="ov-modal-back" id="ovModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
     '<button class="ov-modal-x" id="ovModalX" aria-label="Close">×</button>'+
     '<div class="ov-modal-t" id="ovModalT"></div><div class="ov-modal-b" id="ovModalB"></div></div></div>';
@@ -1361,7 +1635,10 @@ function init(c){
       dot.addEventListener('mouseleave',function(){ tip.hidden=true; });
     }); })();
 
-  // Sub-tab switching
+  // Top-level tabs (Overview ⇄ Deep Dive)
+  root.querySelectorAll('.ovt-tab').forEach(function(btn){ btn.onclick=function(){ showOvt(root, btn.getAttribute('data-ovt')); }; });
+
+  // Deep-Dive sub-tab switching (unchanged — still drives the legacy panes)
   root.querySelectorAll('.ov-subtab').forEach(function(b){
     b.onclick = function(){
       root.querySelectorAll('.ov-subtab').forEach(function(x){ x.classList.toggle('active', x===b); });
@@ -1400,6 +1677,10 @@ function init(c){
     if (kind==='vc'){ var vc=VC_DETAIL[id]; return vc ? { t:vc.t, h:vc.h } : null; }
     if (kind==='strat'){ var sn=STRATEGY.loop.filter(function(n){return n.k===id;})[0]; return sn ? { t:sn.ic+' '+sn.n, h:'<div class="ov-sub-line">'+sn.detail+'</div>' } : null; }
     if (kind==='peer'){ var pe=PEERS.filter(function(p){return p.k===id;})[0]; return pe ? { t:pe.n, h:'<div class="ov-sub-line"><b>Angle:</b> '+pe.angle+'</div><div class="ov-sub-mon" style="margin-top:12px"><b>Their edge:</b> '+pe.edge+'</div><div class="ov-sub-comp" style="margin-top:12px"><b>Their gap vs Instacart:</b> '+pe.gap+'</div>' } : null; }
+    // Standardized Overview — two-tier products (family card → its specific items)
+    if (kind==='fam'){ var gp=id.split('-'), gg=IC_PROD_GROUPS[+gp[0]]; var f=gg&&gg.families[+gp[1]]; if(!f) return null;
+      var body=f.items.map(function(it){ return '<div style="margin:0 0 10px"><div style="font-size:12.5px;font-weight:800;color:var(--navy)">'+esc(it[0])+'</div><div class="famd">'+esc(it[1])+'</div></div>'; }).join('');
+      return { t:f.ic+' '+esc(f.fam), h:'<div class="famd" style="margin-bottom:10px;color:var(--mu)">'+esc(f.d)+'</div>'+body }; }
     return null;
   }
   root.querySelectorAll('[data-detail]').forEach(function(el){
@@ -1431,6 +1712,48 @@ function init(c){
     dots.forEach(function(d){ d.onclick=function(){ stop(); apply(parseInt(d.getAttribute('data-i'),10)); }; });
     apply(0);
   }
+
+  // ══ Standardized Overview wiring: collapsibles, dynamic peer scatter, accordions, live mcap ══
+  // Collapsible sections (reader chooses what to expand)
+  root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var cc=btn.parentElement; var open=cc.classList.toggle('open'); var b=cc.querySelector('.ov-collap-b'); if(b) b.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.textContent=open?'▾':'▸'; }; });
+  // Segment "What is X?" + economics accordions
+  root.querySelectorAll('.acc-h').forEach(function(btn){ btn.onclick=function(){ var b=btn.nextElementSibling; if(!b) return; var open=b.hidden; b.hidden=!open; var x=btn.querySelector('.acc-x'); if(x) x.textContent=open?'–':'+'; }; });
+  // Dynamic peer scatter
+  icScReset(); icScRender(root); icScChips(root);
+  var sctip=root.querySelector('#icScTip');
+  function wireScNodes(){ if(!sctip) return; root.querySelectorAll('#icScNodes .mg-node').forEach(function(g){
+    function show(){ sctip.innerHTML='<span class="mgt-n">'+g.getAttribute('data-name')+'</span>'+g.getAttribute('data-why'); sctip.hidden=false; }
+    function move(e){ sctip.style.left=Math.min(e.clientX+16, window.innerWidth-270)+'px'; sctip.style.top=(e.clientY+16)+'px'; }
+    g.addEventListener('mouseenter', show); g.addEventListener('mousemove', move);
+    g.addEventListener('mouseleave', function(){ sctip.hidden=true; });
+    g.addEventListener('click', function(e){ show(); move(e); });
+  }); }
+  function scRefresh(){ icScRender(root); wireScNodes(); }
+  wireScNodes();
+  root.querySelectorAll('.mg-pill').forEach(function(btn){ btn.onclick=function(){
+    if(btn.hasAttribute('data-mgtype')){ IC_SC.type=btn.getAttribute('data-mgtype'); root.querySelectorAll('.mg-pill[data-mgtype]').forEach(function(b){ b.classList.toggle('active', b===btn); }); }
+    else { IC_SC.basis=btn.getAttribute('data-mgbasis'); root.querySelectorAll('.mg-pill[data-mgbasis]').forEach(function(b){ b.classList.toggle('active', b===btn); }); }
+    scRefresh();
+  }; });
+  // peer chips: the × DELETES a peer immediately; add a peer by ticker (restores a known seed's multiples)
+  function wireChips(){
+    root.querySelectorAll('#icScChips .icsc-chip[data-sci]').forEach(function(ch){ ch.onclick=function(){ var i=+ch.getAttribute('data-sci'); if(IC_SC.peers[i]){ IC_SC.peers.splice(i,1); icScChips(root); wireChips(); scRefresh(); } }; });
+    var addBtn=root.querySelector('#icScAddBtn'), addIn=root.querySelector('#icScAddTk');
+    if(addBtn&&addIn){ addBtn.onclick=function(){ var tk=(addIn.value||'').trim().toUpperCase(); if(!tk) return;
+      if(!IC_SC.peers.some(function(p){ return p.tk===tk; })){
+        var seed=IC_PEERS.filter(function(p){ return p.tk===tk; })[0];
+        if(seed){ var o={}; for(var k in seed) o[k]=seed[k]; o.on=true; IC_SC.peers.push(o); } // restore a known peer's multiples
+        else IC_SC.peers.push({ tk:tk, n:tk, on:true, mc:10, evT:null,evF:null,peT:null,peF:null,gt:null,gf:null, why:'Added by ticker — live market cap only; no multiple on file, so it plots once one is available.' });
+      }
+      addIn.value=''; icScChips(root); wireChips(); scRefresh(); icLiveOne(tk); }; }
+  }
+  wireChips();
+  // Live market cap (Key Facts cell + peer bubbles) — Massive via api.liveQuote; degrades gracefully in preview
+  function icLiveOne(tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(q){ if(!q||q.marketCap==null) return; var mcB=q.marketCap/1e9; IC_SC.peers.forEach(function(p){ if(p.tk===tk) p.mc=mcB; }); if(tk==='CART'){ var el=root.querySelector('#icMc'); if(el) el.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':Math.round(mcB)+'B')+' · live'; } scRefresh(); }).catch(function(){}); }
+  IC_SC.peers.forEach(function(p){ if(p.tk) icLiveOne(p.tk); });
+
+  // Reveal the active top-level tab (Overview by default)
+  var activeOvt=root.querySelector('.ovt-tab.active'); showOvt(root, activeOvt?activeOvt.getAttribute('data-ovt'):'overview');
 }
 
 export var instacartOverview = { html: html, init: init };

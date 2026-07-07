@@ -60,15 +60,50 @@ than silently picking one. When unsure, say so and mark it for review.
 
 ## 3. Data lanes — how a field gets its number
 
-- **DCF available (Summit model via the Summit Financial Data MCP):** pull the real
-  figures from the model (segments, financial series). Cite the snapshot date.
-- **No DCF (e.g. Broadcom / AVGO today):** source the numbers from official sources on the
-  web (filings/IR). Label clearly what is reported vs estimated.
-- Always distinguish **firm (reported)** vs **estimate (model/derived)** in the copy or a
-  footnote. Forward years are estimates, not guidance.
+**Source every figure with this waterfall — applied FIELD-BY-FIELD, not once for the whole
+company.** Don't stop at the first source that returns a number; stop at the first source that
+returns a number you have **verified**. Having a DCF does not mean every field lives in it or
+reconciles with the filings.
+
+1. **Does a Summit DCF model even exist for this ticker?** Check *first* via the Summit Financial
+   Data MCP (`search_ticker` / `list_dcf_models`). If none exists → skip to step 3.
+2. **If a Summit model exists — is THIS field in it, and is it accurate?** For each field a block
+   needs: confirm the model actually carries it, then **cross-check the value against the latest
+   filing** (10-K/20-F/press release). Use it (and cite the snapshot date) **only if** it is
+   present, conclusive, and matches. If the model **lacks the field, or the value is inconclusive
+   or conflicts with the filing → do not force it; fall through.**
+3. **Massive and/or Fiscal.ai.** Pull the field from Massive (live quote/EV via `liveQuote`;
+   statements/ratios via `covered-calls-massive`) or Fiscal.ai (segments, when we have access —
+   only ~25 tickers today). **Cross-check for conflicts** against the filing (and against the
+   model if partially present); if the vendor value conflicts or is unavailable → fall through.
+4. **Hardcode from official web sources** — the filing / IR (10-K/20-F/press release). Always
+   available for *reported* figures; label reported vs estimated. This is the floor, **never the
+   default shortcut** — you only land here after 1–3 fail.
+
+**Across all lanes:** prefer the more official and more recent source; on any conflict, **note
+the discrepancy** rather than silently picking one (see §2). Record each figure's **provenance**
+(which lane + as-of / snapshot date). Distinguish **firm (reported)** vs **estimate
+(model/derived)**; forward years come from the Summit model when available, else are labeled
+estimates — never presented as guidance.
 - **Currency:** store and show market cap and any absolute figure normalized to **USD**,
   and keep the native currency + FX date noted. Never compare a EUR company to a GBP/CNY/JPY
   one without USD-normalizing (this matters for international names).
+- **Live market data (Massive — already wired).** Market cap, enterprise value and the live
+  price come from `api.liveQuote(ticker)` (Massive, via the `covered-calls-massive` edge function
+  already deployed on `main`) — **per ticker, no hardcoding.** It returns
+  `{price, changePct, marketCap, ev, netDebt, shares}` and degrades gracefully (any field may be
+  null) — always keep a labeled fallback. Use it for the Key Facts market-cap cell and the peer
+  scatter bubbles.
+- **Valuation multiples.** *Trailing* P/E & EV/EBITDA are **computable live** from Massive (live
+  EV from `liveQuote` + income/cash-flow statements) — attempt it, verify the payload mapping at
+  runtime, and **seed an approximate value as a labeled fallback.** *Forward* multiples/growth
+  are **not** reliably on Massive — pull from the **Summit DCF model** when one exists, else seed
+  and label as estimate. (This mirrors where San's NVDA scatter actually stands: market cap live,
+  multiples seeded pending confirmation — so never present a seed as if it were live.)
+- **Segments are still manual.** `sync-segments` is **Fiscal.ai**, which we do **not** have yet
+  (only ~25 tickers). Source segment revenue and definitions from the latest **10-K by hand**
+  until Fiscal lands; do not advertise segment auto-fill as available.
+- **No margins block** (by decision) — do not add a margins panel to the standardized Overview.
 
 ---
 
@@ -76,11 +111,22 @@ than silently picking one. When unsure, say so and mark it for review.
 
 Fixed order. A block that has no data is **omitted cleanly** (never shown as "N/A").
 
+**Exactly these seven blocks — nothing else.** Do **not** add an 8th element: **no live price
+strip / ticker tape / quote bar** below the Key Facts grid, no extra snapshot box, no author
+byline. The **only** live-price surface is the **Market cap cell inside Key Facts**, which may
+update in place — the standalone price strip is *not authorized*.
+
 ### 4.1 Key Facts (top strip of cells)
 **Exactly 10 cells, laid out 5 columns × 2 rows.** Clean look — **white cells with thin
 dividers, no gray shading**. **Hide any cell whose data is missing** — do not print blanks;
 if one of the ten cannot be sourced, substitute the next most relevant fact rather than
 leaving a hole.
+
+**Top accent line (required).** The Key Facts grid carries a **3px accent line along its top
+edge**, in the **company's palette accent color** — `border-top:3px solid var(--brand-2, var(--brand))`.
+This is the same treatment as the general-data grid (the 1×6 KPI strip) in the Deep Overview, and
+it anchors the block to the company's brand. The color follows each company's palette (e.g. the
+Uber Eats green for UBER, the company's primary accent otherwise) — never a hardcoded color.
 
 The canonical 10:
 - **Listing** — `Exchange: TICKER` (e.g. `NYSE: UBER`)
@@ -115,8 +161,10 @@ here. Plain, neutral, **no hype, no thesis** (banned: "disciplined", "industry-l
 "best-in-class", "mission-critical", "world-class").
 
 ### 4.3 The 4-quadrant (What it sells · Who buys it · How it earns · The edge)
-A 2×2 box. **Each cell ≤ ~30 words.** This is the "understand any business at a glance"
-block — keep it razor-tight.
+Render as a **single 2×2 table** — a bordered grid with shared cell borders (San's box style),
+**NOT four detached floating cards.** **Each cell ≤ ~30 words.** This is the "understand any
+business at a glance" block — keep it razor-tight, and keep it **always visible**: it is part of
+the top hook and is **never collapsed** (see §5).
 - **What it sells** — the actual product/platform.
 - **Who buys it** — the customer types.
 - **How it earns** — revenue mix in one line (e.g. "~90% Data Center").
@@ -129,10 +177,15 @@ A visual/diagram of the revenue engine, tied to **segments** and **geography**.
   single reportable segment or a single geography, **do not draw a one-bar chart** — state it
   in one line ("single reportable segment" / "~X% domestic") and show only the view that
   qualifies. If neither qualifies, omit the visual.
-- **Define each segment, don't just size it.** Every segment slice carries a **one-line plain
-  definition of what that segment actually is** — pulled from the latest 10-K's segment
-  description — not merely its % and $. This is where the reader learns *what* each segment
-  sells; the breakdown alone is not enough.
+- **Define each segment — qualitatively, and behind a disclosure.** Next to the chart, each
+  segment gets a collapsible **"What is [segment]?"** explanation. It must actually answer *what
+  the segment is, what it does, and how it earns* (summarized) — enough to resolve the obvious
+  reader questions, **not** a stub like "manages the acres" or "run through TPWR" with no follow-
+  through. **Carry NO numbers here** — the revenue chart above already has them.
+- **Subsegments (if they exist) go in a nested disclosure** *inside* the segment explanation
+  ("ver más within the ver más"). **Numbers ARE appropriate there**, because subsegment figures
+  are not shown in the chart above. Segment AND subsegment copy together must answer the
+  questions a reader would raise.
 - **Revenue cross-check (mandatory guardrail).** The Segments view and the Geography view are the
   **same total revenue seen two ways** — they MUST reconcile. Enforce
   `sum(segments) == sum(geographies) == reported total net revenue` (allow only stated rounding).
@@ -156,8 +209,21 @@ The peer map — **X = valuation multiple, Y = revenue growth**.
 - **Multiple toggle: EV/EBITDA ⇄ P/E.** **Never P/S** — it is not a valuation multiple and
   says nothing useful. Provide both EV/EBITDA and P/E so the analyst picks per company.
 - **Basis toggle: Trailing ⇄ Forward** (applies to both axes). Default to Forward.
-- **Bubble size = market cap, USD-normalized** (so international peers aren't distorted by
-  currency; a $195B name must dwarf a $5B one).
+- **Bubble size = market cap, sourced LIVE per ticker** via `api.liveQuote(ticker)` (Massive) —
+  USD-normalized, **no hardcoding** (a $195B name dwarfs a $5B one, always current). Null → hide
+  or use a labeled fallback.
+- **Add / remove peers by ticker (required).** The analyst types any public ticker to add a
+  bubble (market cap fills live) or removes one — the peer set is **editable, not a fixed list.**
+  San already does exactly this on NVDA and we have the same `liveQuote` access, so this is
+  table-stakes, not optional.
+- **Removing a peer = delete on click (not a toggle).** The **×** on a peer chip **removes that
+  peer immediately** from the set — do **not** strike it through / grey it out / leave a disabled
+  toggle. Re-adding it is done through the ticker input; when a re-added ticker matches a known
+  seed peer, **restore its seeded multiples** so it plots the same as before (don't degrade a
+  known name to a bubble-only node).
+- **Multiples:** trailing P/E & EV/EBITDA live from Massive where the payload is confirmed (live
+  EV + statements), **seeded & labeled approximate as fallback**; forward from the Summit model
+  when a DCF exists, else seeded/labeled. **Never render a seeded multiple as if it were live.**
 - **Axis labels:** x-axis reads **"cheaper ← … → more expensive"** (a low multiple is cheap,
   a high multiple is expensive — NOT "richer", which describes the company, not the valuation).
   y-axis reads **"slow … fast growth"**.
@@ -170,8 +236,9 @@ The peer map — **X = valuation multiple, Y = revenue growth**.
   Deep Dive must tell the *same story* — use the same core listed names. Divergences are
   allowed only for a principled reason (a private/unlisted rival has no multiple), and that
   reason must be stated. Do not silently show a different peer set in each.
-- Data source: web/official now; **Fiscal.ai API later** when access lands. Label figures as
-  approximate until the Fiscal.ai feed replaces them.
+- Data feeds: **market cap / EV / price are LIVE (Massive) today**; multiples degrade to labeled
+  seeds; **Fiscal.ai (segments/estimates) later** when access lands. Always label any seeded/
+  approximate figure as such.
 
 ### 4.7 Timeline — the corporate lineage, not a news feed
 At the very bottom. Every entry answers ONE question: **"why does this matter to what the
@@ -215,6 +282,16 @@ entries may carry one, per need. Inside a Read More use **bullet points, sequent
   that genuinely "made noise" for a giant (e.g. META's Reality Labs) may be included — but
   **ALWAYS state the scale/magnitude** so the reader isn't misled (Reality Labs is a rounding
   error next to Family of Apps; never imply parity).
+- **Business-model inflections / reinventions** — a point where *what the company fundamentally
+  is, or how it earns,* changed — **especially when driven by an external force** (a discovery on
+  its own assets, a technology / regulatory / macro regime shift, a new law), not a corporate
+  transaction. It can happen **more than once — and several times in a short span for a
+  multi-segment company** (each model/segment can re-invent on its own clock). This is distinct
+  from *segment evolution* (a segment growing internally): here the **earning model itself**
+  changes. For old companies these inflections ARE the story — actively ask *"what reinventions
+  or discontinuities happened between founding and today?"* instead of assuming nothing happened
+  because there were no deals. (E.g. oil discovered on a land trust's acreage turning it from a
+  land-seller into an oil-royalty business.)
 - **CEO transitions — only the load-bearing ones:** when the **current CEO** took over, and, if
   the **founder was CEO**, when they stepped down. NOT every CEO change. NOT chairmen/board.
 - **Only the LATEST trillion-dollar market-cap milestone** — a single entry for the highest
@@ -257,8 +334,20 @@ Keep each *visible* entry to a short line; push depth into a Read More with sequ
 
 - **Pop-ups over walls:** any explanation longer than ~1–2 lines goes in a pop-up/modal,
   reachable by a clear affordance ("More ›", "read the full case ›", "terms ›").
-- **Collapsibles:** deeper sub-sections start collapsed ("▸") and expand on the reader's
-  choice. Never hide everything — hide the *depth*, keep the *hook* visible.
+- **Collapsibles / progressive disclosure (the default layout).** The Overview opens on its
+  **hook — Key Facts, the Description, and the 2×2 quadrant — always visible.** **Every section
+  BELOW the hook** (How it makes money, Products, Competitors, Timeline) defaults **collapsed**
+  ("▸") and expands on the reader's choice (San's box-reveal style). Hide the *depth*, keep the
+  *hook* visible. **Two things are NEVER collapsed: the Description and the 2×2 quadrant.**
+- **No secondary snapshot box.** Do not add a second summary/KPI box beneath the Key Facts strip
+  (San has one on NVDA; we deliberately do **not** — it was not requested).
+- **Product photos are optional for now** — icon/emoji fallback is fine; never block on sourcing
+  images.
+- **Escaping — avoid the `&amp;` double-encode bug.** A string passed through `esc()` must
+  contain a **raw `&`**; only pre-encode as `&amp;` in strings you insert as **raw HTML** (labels
+  or copy rendered without `esc`). Never both — double-encoding prints a literal `&amp;` on
+  screen. Before shipping, grep the output for a literal `&amp;` and confirm every one sits in a
+  raw-HTML string, never in an `esc()`-wrapped field.
 - **Do not put a chart inside a collapsed container** unless it builds on expand (Chart.js
   will not render while hidden).
 - **Color:** any color that encodes meaning must have a legend. Reuse the app's palette
@@ -310,7 +399,8 @@ the code where content was relocated from.
 
 Print a PASS/FAIL line for each, and list any gaps:
 
-- [ ] Key Facts = **exactly 10 cells (5×2)**, clean/no-gray; missing ones substituted, not blank.
+- [ ] Key Facts = **exactly 10 cells (5×2)**, clean/no-gray; missing ones substituted, not blank;
+      **3px top accent line in the company's palette color** (like the Deep Overview KPI strip).
 - [ ] CEO cell carries **tenure**; Market cap carries an **as-of date**; Dividend is **payer/non-payer** (no yield).
 - [ ] Filer status was **verified on EDGAR**, not inferred from incorporation.
 - [ ] Market cap (and any absolute figure) is **USD-normalized**; native currency noted.
@@ -322,14 +412,30 @@ Print a PASS/FAIL line for each, and list any gaps:
       (sum segments == sum geographies == reported total net revenue).
 - [ ] Products are **two-tier**: family card → pop-up → expandable list of specific products
       (≤3 lines each); not all specific products shown at once.
-- [ ] Competitor scatter: multiple = **EV/EBITDA ⇄ P/E toggle (never P/S)**, Trailing⇄Forward
-      basis, **USD bubble size**, detail in pop-up; no-multiple/unlisted peers drop out; peer
-      set **consistent** with the Deep Overview's competitive map.
+- [ ] 4-quadrant rendered as a **single 2×2 table** (not four detached cards); always visible.
+- [ ] **Progressive disclosure**: hook (Key Facts + Description + 2×2 quadrant) always open;
+      every section below it defaults collapsed; Description & quadrant never collapsed; **no
+      secondary snapshot box**.
+- [ ] Market cap (Key Facts) and scatter bubbles are **live via Massive** (`api.liveQuote`), not
+      hardcoded; **no margins block**; segments/forward stay manual/labeled (no Fiscal yet).
+- [ ] **Only the 7 blocks** — no live price strip / ticker / any 8th element below Key Facts;
+      market cap (inside its cell) is the only live-price surface.
+- [ ] Segment **"What is X?" is qualitative with NO numbers** (chart has them) and answers
+      what/how it earns; **subsegments (if any) in a nested disclosure** where numbers belong.
+- [ ] No `&amp;` **double-encoding** on screen (raw `&` in `esc()` fields; `&amp;` only in raw HTML).
+- [ ] Competitor scatter: EV/EBITDA ⇄ P/E (never P/S) + Trailing⇄Forward toggles; **bubble =
+      LIVE market cap per ticker via `liveQuote`**; **peers add/removable by ticker** (editable
+      set, not fixed); the chip **×** **deletes** a peer immediately (no strike-through toggle),
+      re-add restores a known peer's seeded multiples; multiples live-where-confirmed else
+      **seeded & labeled**; detail in pop-up; no-multiple/unlisted peers drop out; peer set
+      **consistent** with any Deep Overview competitive map.
 - [ ] Timeline: **genesis established** (how the company came to exist — spin-off/merger/SPAC/
       reverse-merger/uplisting/roll-up — no loose ends); entries pass the **relevance rubric**
       (no splits, only the **latest** $T milestone, no board/chairman noise, ≤1 material litigation, only
       material/failed M&A, only first-ever dividend, only highly-dilutive capital events);
-      short visible lines with depth in **Read Mores that use sequential bullets**.
+      short visible lines with depth in **Read Mores that use sequential bullets**; captures
+      **business-model inflections/reinventions** (esp. externally-driven, can recur), not just
+      corporate actions — no century-long gaps for old/multi-segment companies.
 - [ ] Overview and Deep Dive have **separate source footers** (no author/analyst byline).
 - [ ] **No walls of text** anywhere in the Overview.
 - [ ] **No fake precision** — estimates labeled; illustrative flagged.

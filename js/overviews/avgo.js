@@ -12,6 +12,7 @@
 //   4 Customer Concentration — concentration over time + disclosure history.
 //   5 Value Chain            — where Broadcom's reach starts/ends (clickable, sourced).
 //   6 GW Roadmap             — contractual gigawatt commitments by customer + networking mix.
+//   6b Customer Commitments  — deal chronology, duration/horizon & implications (the order book).
 //   7 Management             — All Management (leadership + live ownership/insider) & Hock Tan.
 //   8 M&A Deep Dive          — the capital-allocation machine, 7 deals + financial impact.
 //
@@ -70,6 +71,14 @@ function card(title, sub, body, source){
   return '<div class="card"><div class="card-header"><span class="card-title">'+title+'</span>'+
     (sub?'<span class="card-subtitle">'+sub+'</span>':'')+'</div>'+body+
     (source?'<div class="source">'+source+'</div>':'')+'</div>';
+}
+
+// One entry in a .tl vertical timeline: colored dot, a header line (date badge + chips/badges), a description.
+function tlItem(color, date, head, desc){
+  return '<div class="tl-i">'+
+    '<span class="tl-dot" style="background:'+color+'"></span>'+
+    '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="tl-yr">'+date+'</span>'+head+'</div>'+
+    '<div class="tl-d">'+desc+'</div></div>';
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -448,7 +457,7 @@ function initConcentration(pane){
 function gwRoadmapBody(){
   return ''+
   '<div class="card"><div class="card-header"><span class="card-title">Contractual GW roadmap</span><span class="card-subtitle">compute capacity committed across the core customers · from Q2 FY26 call + 8-K</span></div>'+
-    '<div class="card-body"><div class="prose" style="margin-bottom:6px"><p>Management now sizes AI demand in <strong>gigawatts of compute</strong>. The bars below show the per-customer commitments disclosed on the Q2 FY26 call and the April 8-K, accumulating through 2028. Read this as <em>disclosed commitments</em>, not a forecast — and note it does <strong>not</strong> cleanly reconcile to the ~10 GW top-down figure (Google\'s internal workloads aren\'t separately quantified).</p></div></div>'+
+    '<div class="card-body"><div class="prose" style="margin-bottom:6px"><p>Management now sizes AI demand in <strong>gigawatts of compute</strong>. The bars below show the per-customer commitments disclosed on the Q2 FY26 call and the April 8-K, accumulating through 2028. Read this as <em>disclosed commitments</em>, not a forecast — and note it does <strong>not</strong> cleanly reconcile to the ~10 GW top-down figure (Google\'s internal workloads aren\'t separately quantified). For the deal-by-deal chronology, sizes and horizons behind these bars, see the <strong>Customer Commitments</strong> tab.</p></div></div>'+
     '<div class="card-body" style="padding-top:0"><div class="chart-c" style="height:320px"><canvas id="cGW"></canvas></div></div>'+
     '<div class="source">Q2 FY26 call (Jun 3 2026) + Broadcom 8-K (Apr 6 2026). Anthropic 2027 uses the 8-K\'s ~3.5 GW (the call also phrased it as "another 5 GW"). Google internal GW not separately disclosed. Bars are cumulative deployed/committed GW by year-end.</div></div>'+
 
@@ -521,6 +530,161 @@ function initGwRoadmap(pane){
       tooltip:{backgroundColor:'#141C2B',titleFont:{family:'Figtree',size:11},bodyFont:{family:'Figtree',size:12},padding:9,cornerRadius:7,callbacks:{label:function(c){return c.dataset.label+': '+c.raw+'%'+(c.dataIndex>=2&&c.datasetIndex===0?' (est.)':'');}}}},
     scales:{x:{grid:{display:false},border:{display:false},ticks:{font:{family:'Figtree',size:10.5},color:'#9AACBE'}},
       y:{min:0,max:50,grid:{color:'#EDF0F5',drawTicks:false},border:{display:false},ticks:{font:{family:'Figtree',size:10.5},color:'#9AACBE',callback:function(v){return v+'%';}}}}}});
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// 6b — CUSTOMER COMMITMENTS  (deal chronology, duration/horizon & implications)
+// The GW Roadmap tab shows committed GW *by year*; this tab is the *deal book* — each
+// customer/infrastructure commitment as disclosed over time, with its size, horizon
+// and what it implies. Data: company press releases, 8-Ks, Q3 FY25–Q2 FY26 calls.
+// ════════════════════════════════════════════════════════════════════════════════
+function commitmentsBody(){
+  return ''+
+  '<div class="stats-row c5">'+
+    '<div class="stat-card t-accent"><div class="stat-label">AI order backlog</div><div class="stat-value">&gt;$73B</div><div class="stat-sub">Q4\'25 · ~18-mo delivery</div></div>'+
+    '<div class="stat-card t-ai"><div class="stat-label">AI bookings Q2\'26</div><div class="stat-value">&gt;$30B</div><div class="stat-sub">&gt;3× the $10.8B shipped</div></div>'+
+    '<div class="stat-card t-accent"><div class="stat-label">FY27 AI revenue</div><div class="stat-value">&gt;$100B</div><div class="stat-sub">underpinned by these deals</div></div>'+
+    '<div class="stat-card t-pos"><div class="stat-label">Committed XPU customers</div><div class="stat-value">6</div><div class="stat-sub">+ networking to all clusters</div></div>'+
+    '<div class="stat-card t-warn"><div class="stat-label">Visibility</div><div class="stat-value">to 2028</div><div class="stat-sub">horizons run to 2031</div></div>'+
+  '</div>'+
+
+  card('What this tab tracks','the chronology, size &amp; duration of Broadcom\'s customer &amp; infrastructure commitments',
+    '<div class="card-body"><div class="prose" style="margin-bottom:2px"><p>The <strong>GW Roadmap</strong> tab shows committed compute <em>by year</em>. This tab is the <strong>deal book</strong>: each customer / infrastructure commitment as it was <em>disclosed over time</em> — when it landed, how big, how long it runs, and what it implies. Three commitment types run in parallel: <span class="badge b-ai">Co-design XPU</span> the customer owns the chip · <span class="badge b-accent">Compute-access</span> frontier labs buy TPU-based capacity · <span class="badge b-neutral">Networking / infra</span> attaches to every cluster, XPU or GPU.</p></div></div>','')+
+
+  '<div class="card"><div class="card-header"><span class="card-title">Where the relationships stand today</span><span class="card-subtitle">Bloomberg supply-chain relationship sizing · FY2025 · $ &amp; % of Broadcom revenue</span></div>'+
+    '<div class="card-body"><div class="prose" style="margin-bottom:6px"><p>Before the forward book, the current run-rate. Bloomberg\'s SPLC data (the same source behind the <strong>Industry Analysis</strong> relationship graph) sizes Broadcom\'s <em>disclosed / traceable</em> customer relationships — the base the multi-year deals build on. <strong>Google is already ~$2.3B (12.8% of revenue)</strong>; <strong>Apple and Meta each ~$0.9B (~5%)</strong>. Distributors (WT Micro, TD Synnex) are <em>channels</em> that partly route the hyperscalers\' demand — don\'t add them to the end customers.</p></div></div>'+
+    '<div class="card-body" style="padding-top:0"><div class="chart-c" style="height:300px"><canvas id="cRelSizing"></canvas></div></div>'+
+    '<div class="source">Bloomberg SPLC, FY2025 (from the Industry Analysis relationship graph, <code>COMPANY_RELS</code>). "amt" = Bloomberg-estimated relationship value; end-customer relationships (Google, Microsoft, Amazon, Oracle, Meta) are sized against the customer\'s <strong>capex</strong>, distributors &amp; Apple against COGS. This is a <em>partial</em> view — BBG traces ~$12.5B across 20 relationships and understates customers (like Apple) whose content ships through contract manufacturers. See the Apple card below for the full picture.</div></div>'+
+
+  '<div class="card"><div class="card-header"><span class="card-title">Apple — the franchise customer, in full</span><span class="card-subtitle">the longest, largest single relationship · now locked through 2031, with an emerging AI leg</span></div>'+
+    '<div class="card-body"><div class="grid-2">'+
+      '<div>'+
+        '<div class="gl-cat">The relationship arc</div>'+
+        '<div class="mini-grid" style="gap:8px">'+
+          '<div class="mini l-blue"><div class="mini-t">2007 → 2016 · connectivity &amp; touch</div><div class="mini-d">Started on the original iPhone with a <strong>touch controller</strong>, then added Wi-Fi/Bluetooth combo, GPS/GNSS and wireless-charging chips across iPhone, iPad and Apple Watch.</div></div>'+
+          '<div class="mini l-ai"><div class="mini-t">2016+ · RF front-end (the big leg)</div><div class="mini-d">With Avago\'s RF portfolio, <strong>FBAR filters + power amplifiers</strong> became the dominant content — RF-filter revenue compounding ~22%/yr through the 5G cycle.</div></div>'+
+          '<div class="mini l-purple"><div class="mini-t">The deal ladder</div><div class="mini-d"><strong>2020</strong> 3-yr ~$15B (secure 5G) → <strong>May 2023</strong> multi-year, US-made FBAR (Fort Collins) → <strong>Jul 6 2026</strong> extended <strong>through 2031</strong>.</div></div>'+
+          '<div class="mini l-amber"><div class="mini-t">The headwind &amp; the AI leg</div><div class="mini-d">Apple designed out Wi-Fi/BT with its own <strong>N1</strong> chip (iPhone 17) but still needs Broadcom\'s RF front-end. New upside: the reported <strong>"Baltra"</strong> AI-server co-design (~2027).</div></div>'+
+        '</div></div>'+
+      '<div>'+
+        '<div class="gl-cat">Is Apple ~20% of Broadcom\'s revenue?</div>'+
+        '<div class="caution"><strong>It was — in FY2022.</strong> Apple reached ~<strong>$6.6B, ~20%</strong> of net revenue at the 5G peak (up from $3.6B in FY20) — the disclosed largest customer. <strong>Not today.</strong> Since FY22, Broadcom\'s revenue roughly <strong>doubled</strong> ($33B → $64B: VMware +~$20B, AI +tens of $B) while Apple\'s dollars stayed roughly flat — so the same content is now a much smaller <em>share</em>.</div>'+
+        '<div class="insight" style="margin-top:9px"><strong>Best current read: high-single-digit %, not 20%.</strong> Bloomberg SPLC traces only ~$0.9B (~5%) because most Apple content ships through contract manufacturers (Foxconn) &amp; distributors — so it <em>undercounts</em> the true share. The "~20%" still repeated in 2026 press is a legacy figure, not reconciled to today\'s larger base.</div></div>'+
+    '</div></div>'+
+    '<div class="source">History &amp; scope: Apple/Broadcom press releases (2020, May 2023, Jul 6 2026), exploresemis, MacRumors/AppleInsider. FY22 ~$6.6B / ~20% from Broadcom\'s customer-concentration disclosure + analyst estimates; current share is an estimate — Broadcom now discloses <strong>top-5 end customers ~40%</strong>, no single &gt;20% customer. SPLC figure from the Industry Analysis graph.</div></div>'+
+
+  '<div class="card"><div class="card-header"><span class="card-title">The commitment timeline</span><span class="card-subtitle">disclosed deals &amp; orders · Sep 2025 → Jun 2026, anchored by the 2016 Google relationship</span></div>'+
+    '<div class="card-body"><div class="tl">'+
+      tlItem('#4285F4','2016',
+        '<span class="logo-chip lc-google"><span class="dot"></span>Google</span> <span class="badge b-ai">Co-design</span>',
+        '<b>Google TPU partnership begins.</b> Broadcom co-designs Google\'s Tensor Processing Units — the seed being LSI\'s ASIC team (acquired 2014). Still the anchor customer: largest, longest, and the template for every XPU deal since.')+
+      tlItem('#555','2020–23',
+        '<span class="logo-chip lc-apple"><span class="dot"></span>Apple</span> <span class="badge b-neutral">Wireless franchise</span>',
+        '<b>Apple locks in Broadcom\'s wireless content.</b> 2020: a 3-year ~$15B agreement to secure 5G RF. May 2023: extended with a new multi-year, multibillion-dollar deal for <strong>US-made FBAR filters</strong> (Fort Collins, CO). Apple is the longest, largest single relationship — see the Apple card above for the full arc.')+
+      tlItem('#2E75B6','Jun \'25',
+        '<span class="logo-chip lc-broadcom"><span class="dot"></span>Broadcom</span> <span class="badge b-neutral">Networking</span>',
+        '<b>Tomahawk 6 launches</b> — first 102.4 Tbps Ethernet switch (with co-packaged optics). The scale-up / scale-out fabric that attaches to <em>every</em> AI cluster, not just Broadcom\'s own XPUs — the "second engine inside AI."')+
+      tlItem('#9AACBE','Sep \'25',
+        '<span class="badge b-neutral">Q3 FY25 call</span> <span class="badge b-ai">Co-design · $10B</span>',
+        '<b>A new (4th) XPU customer places a $10B order</b>; the stock jumps ~9%. The market pegs it as OpenAI — it is later (December) revealed to be <strong>Anthropic</strong>.')+
+      tlItem('#444441','Oct 13 \'25',
+        '<span class="logo-chip lc-openai"><span class="dot"></span>OpenAI</span> <span class="badge b-ai">Co-design · 10 GW</span>',
+        '<b>OpenAI–Broadcom 10 GW strategic collaboration.</b> OpenAI designs the accelerators (the "Jalapeño" inference chip); Broadcom develops, deploys and wires them entirely with its Ethernet. Rollout <strong>H2 2026 → 2029</strong>.')+
+      tlItem('#2E75B6','Oct \'25',
+        '<span class="logo-chip lc-broadcom"><span class="dot"></span>Broadcom</span> <span class="badge b-neutral">Networking</span>',
+        '<b>ESUN scale-up Ethernet consortium + Jericho4.</b> At the OCP Summit, Broadcom convenes AMD, Arista, Cisco, Meta, Microsoft, Nvidia, OpenAI &amp; Oracle around open scale-up Ethernet; Jericho4 extends AI fabrics <em>across</em> data centers.')+
+      tlItem('#D97757','Dec 11 \'25',
+        '<span class="logo-chip lc-anthropic"><span class="dot"></span>Anthropic</span> <span class="badge b-accent">Compute-access · +$11B</span>',
+        '<b>Q4 FY25: the mystery $10B customer is Anthropic.</b> An additional <strong>$11B</strong> follow-on order lands for late-2026 delivery, and a <strong>5th customer</strong> is disclosed ($1B order, unnamed). Total AI order backlog crosses <strong>$73B</strong>.')+
+      tlItem('#444441','Mar 4 \'26',
+        '<span class="logo-chip lc-openai"><span class="dot"></span>OpenAI</span> <span class="badge b-ai">Co-design · 6th customer</span>',
+        '<b>Q1 FY26: OpenAI confirmed as the 6th committed XPU customer</b> ($10B+; mass production late 2026). AI semiconductor revenue is $8.4B, +106% YoY.')+
+      tlItem('#4285F4','Apr 6 \'26',
+        '<span class="logo-chip lc-google"><span class="dot"></span>Google</span> <span class="logo-chip lc-anthropic"><span class="dot"></span>Anthropic</span> <span class="badge b-accent">8-K · to 2031</span>',
+        '<b>Google Long-Term Agreement (8-K): TPUs + networking through 2031.</b> Broadcom stays Google\'s TPU partner for future generations (incl. "Sunfish" TPU v8, ~2027). Same day, <strong>Anthropic expands to ~3.5 GW from 2027</strong> — on top of the ~1 GW already coming online in 2026.')+
+      tlItem('#0467DF','Apr 14 \'26',
+        '<span class="logo-chip lc-meta"><span class="dot"></span>Meta</span> <span class="badge b-ai">Co-design · 1 GW+</span>',
+        '<b>Meta extends the MTIA partnership.</b> Initial commitment <strong>&gt;1 GW</strong>, first phase of a multi-gigawatt, <strong>multi-generation rollout through 2029</strong> (MTIA 300 / 400 / 450 / 500 on a ~6-month cadence). Inference &amp; recommendation workloads.')+
+      tlItem('#1B7A4B','Jun 3 \'26',
+        '<span class="badge b-neutral">Q2 FY26 call</span> <span class="badge b-accent">Bookings &gt;$30B</span>',
+        '<b>The order book compounds.</b> AI revenue $10.8B (+143%); AI-semi <strong>bookings exceed $30B</strong> — more than 3× the $10.8B shipped. Management reaffirms <strong>&gt;$100B AI revenue in FY27</strong> and visibility all the way to 2028.')+
+      tlItem('#555','Jul 6 \'26',
+        '<span class="logo-chip lc-apple"><span class="dot"></span>Apple</span> <span class="badge b-accent">Extended to 2031</span>',
+        '<b>Apple extends the Broadcom supply agreement through 2031.</b> Locks Broadcom\'s RF front-end / wireless content (FBAR filters, amplifiers, touch &amp; wireless-charging controllers) for five more years — killing the bear case that Apple designs Broadcom\'s wireless out. Confirmed to Reuters; no dollar value disclosed. Runs alongside the reported "Baltra" AI-server co-design.')+
+    '</div></div>'+
+    '<div class="source">Company press releases, 8-Ks &amp; Q3 FY25–Q2 FY26 earnings calls. Order values ($10B / $11B / $1B) and the &gt;$73B backlog are Broadcom-disclosed; the 2016 start and per-customer horizons are from company / customer announcements. Customers are named only where the customer itself has confirmed (Google, Meta, OpenAI, Anthropic).</div></div>'+
+
+  '<div class="card"><div class="card-header"><span class="card-title">How long each commitment runs</span><span class="card-subtitle">disclosed / implied horizons of the committed windows</span></div>'+
+    '<div class="card-body" style="padding-top:4px"><div class="grid-2-wide">'+
+      '<div class="chart-c md"><canvas id="cCommitHorizon"></canvas></div>'+
+      '<div><div class="mini-grid" style="gap:9px">'+
+        '<div class="mini l-ai"><div class="mini-t">Google — the longest</div><div class="mini-d">Relationship since 2016; the April 2026 Long-Term Agreement locks TPUs + networking <strong>through 2031</strong>.</div></div>'+
+        '<div class="mini l-purple"><div class="mini-t">Frontier labs — ~5-year windows</div><div class="mini-d"><strong>Anthropic</strong> runs 2026→2031; <strong>OpenAI</strong>\'s 10 GW deploys 2026→2029.</div></div>'+
+        '<div class="mini l-blue"><div class="mini-t">Meta — multi-generation</div><div class="mini-d">&gt;1 GW from H2 2027, four MTIA generations through <strong>2029</strong> on a ~6-month cadence.</div></div>'+
+      '</div></div>'+
+    '</div></div>'+
+    '<div class="source">Bars are the disclosed / implied committed windows, starting at first meaningful deployment year. Google is shown from 2024 for scale — the working relationship dates to 2016. Apple\'s RF/wireless content is locked through 2031 (Jul 2026 extension); its "Baltra" AI window is press-reported. The 5th (unnamed) customer\'s horizon beyond its late-2026 delivery is undisclosed.</div></div>'+
+
+  card('The commitment book, customer by customer','',
+    '<div class="card-body" style="padding:0"><table class="tbl">'+
+      '<thead><tr><th>Customer</th><th>Type</th><th>First firm order</th><th>Horizon</th><th>Scale</th><th>Order value</th><th style="text-align:left">What it implies</th></tr></thead><tbody>'+
+        '<tr><td><span class="logo-chip lc-google"><span class="dot"></span>Google</span></td><td>Co-design</td><td>2016 (rel.)</td><td><strong>to 2031</strong></td><td>multi-GW</td><td>self-funded</td><td style="text-align:left;font-size:11px;font-weight:400">The anchor. Longest &amp; largest; LTA locks TPUs + networking through 2031 (Ironwood now, Sunfish v8 ~2027). Internal-workload GW not separately quantified.</td></tr>'+
+        '<tr><td><span class="logo-chip lc-apple"><span class="dot"></span>Apple</span></td><td>Wireless + AI</td><td>2020 / 2023</td><td><strong>to 2031</strong></td><td>RF → Baltra</td><td>multibillion</td><td style="text-align:left;font-size:11px;font-weight:400">Historically the largest customer (~20% rev / $6.6B at the FY22 5G peak; ~high-single-digit % now as the base doubled). FBAR/RF wireless, US-made; extended through 2031 on Jul 6 2026. Plus a reported AI leg — the "Baltra" server inference chip (~2027).</td></tr>'+
+        '<tr><td><span class="logo-chip lc-meta"><span class="dot"></span>Meta</span></td><td>Co-design</td><td>Apr 2026</td><td>to 2029</td><td>&gt;1 GW → multi-GW</td><td>n/d</td><td style="text-align:left;font-size:11px;font-weight:400">MTIA multi-generation (300/400/450/500). Inference &amp; recommendation; diversifies Meta beyond Nvidia. First gen deploys H2 2027.</td></tr>'+
+        '<tr><td><span class="logo-chip lc-anthropic"><span class="dot"></span>Anthropic</span></td><td><span style="color:var(--accent)">Compute-access</span></td><td>Q3 2025</td><td>to 2031</td><td>~1 GW → 3.5 GW</td><td>$10B + $11B</td><td style="text-align:left;font-size:11px;font-weight:400">Buys TPU-based capacity (not co-design). 3.5 GW from 2027 is <em>contingent on continued commercial success</em> — carries demand risk. Financed via the Apollo/Blackstone platform.</td></tr>'+
+        '<tr><td><span class="logo-chip lc-openai"><span class="dot"></span>OpenAI</span></td><td>Co-design</td><td>Oct 2025</td><td>to 2029</td><td>10 GW</td><td>$10B+</td><td style="text-align:left;font-size:11px;font-weight:400">Largest single co-design win. OpenAI-designed "Jalapeño" inference silicon, all-Ethernet racks; mass production late 2026. Counted as the 6th customer in Q1 FY26.</td></tr>'+
+        '<tr><td><span class="badge b-neutral">5th customer</span></td><td>Co-design</td><td>Q4 2025</td><td>n/d</td><td>n/d</td><td>$1B</td><td style="text-align:left;font-size:11px;font-weight:400">Undisclosed. Delivery late 2026 — shows the pipeline still widening beyond the named four.</td></tr>'+
+        '<tr><td><span class="badge b-neutral">ByteDance</span> <span style="font-size:10px;color:var(--text-tertiary)">reported</span></td><td>Co-design</td><td>~2024</td><td>n/d</td><td>n/d</td><td>n/d</td><td style="text-align:left;font-size:11px;font-weight:400">Widely reported as an early XPU customer; not officially named by Broadcom and export-control sensitive. Included for completeness.</td></tr>'+
+        '<tr class="row-hi"><td>Networking</td><td>Merchant</td><td>ongoing</td><td>every cycle</td><td>all clusters</td><td>—</td><td style="text-align:left;font-size:11px;font-weight:700">Tomahawk 6 / Jericho4 / optical attach to XPU <em>and</em> GPU clusters alike — ~30% of AI revenue (up to ~40% in strong quarters), at richer margin. The cross-cutting commitment.</td></tr>'+
+      '</tbody></table></div>',
+    '"n/d" = not disclosed. Order values are Broadcom-disclosed; horizons combine company &amp; customer announcements. ByteDance is press-reported, not company-confirmed.')+
+
+  '<div class="grid-2">'+
+    card('Two commitment types, two risk profiles','',
+      '<div class="card-body"><div class="mini-grid" style="gap:9px">'+
+        '<div class="mini l-ai"><div class="mini-t">Co-design — structural demand</div><div class="mini-d"><strong>Google, Meta, OpenAI</strong> — and, reportedly, <strong>Apple</strong> (Baltra) — own the chip they design with Broadcom. Deep, multi-generation, high switching cost — the GW is their own committed compute.</div></div>'+
+        '<div class="mini l-purple"><div class="mini-t">Compute-access — demand-contingent</div><div class="mini-d"><strong>Anthropic</strong> buys TPU-based capacity, financed via the Apollo/Blackstone platform. Explicitly "dependent on continued commercial success" — the one window that can flex.</div></div>'+
+        '<div class="mini l-blue"><div class="mini-t">Networking — the hedge inside the hedge</div><div class="mini-d">Sells into <em>any</em> cluster, including all-Nvidia ones. De-correlated from which XPU wins — it rides the whole buildout.</div></div>'+
+      '</div></div>','')+
+    card('What the commitments imply','',
+      '<div class="card-body"><div class="mini-grid" style="gap:9px">'+
+        '<div class="mini l-teal"><div class="mini-t">Visibility, not just backlog</div><div class="mini-d">Multi-year, named commitments underpin the &gt;$100B FY27 target and visibility to 2028 — a step-change from the historically lumpy, book-and-ship semi model.</div></div>'+
+        '<div class="mini l-amber"><div class="mini-t">Concentration is the flip side</div><div class="mini-d">The order book sits in ~6 customers with Google still the anchor. Depth of relationship is the moat <em>and</em> the concentration risk (see the Customer Concentration tab).</div></div>'+
+        '<div class="mini l-blue"><div class="mini-t">The financing platform is new</div><div class="mini-d">The Apollo/Blackstone XPU vehicle ($35B first tranche, 20+ GW through 2028) applies PE-style structured finance to the <em>customer</em> side — extending commitments financially, not just operationally.</div></div>'+
+      '</div><div class="insight" style="margin-top:11px"><strong>The takeaway:</strong> Broadcom has converted the AI story from "will they win sockets?" into a dated, multi-year order book. The commitments give unusual forward visibility — as long as the frontier-lab demand behind the compute-access deals holds, and the concentration in a handful of customers doesn\'t reverse.</div></div>','')+
+  '</div>';
+}
+
+function initCommitments(pane){
+  if(pane._charted) return; pane._charted = true;
+  // BBG SPLC relationship sizing (FY2025) — top customer relationships by $ (from COMPANY_RELS).
+  var relLabels=['WT Micro (dist.)','Alphabet / Google','Apple','Meta','TD Synnex (dist.)','Quanta','Dell','Microsoft','Oracle','Amazon'];
+  var relAmt=[5.75,2.30,0.93,0.92,0.46,0.24,0.22,0.20,0.16,0.14];
+  var relRev=[31.9,12.8,5.2,5.1,2.6,1.3,1.2,1.1,0.9,0.8];
+  var relColors=['#9AACBE','#4285F4','#555555','#0467DF','#B8C2CE','#7A8896','#7A8896','#00A4EF','#C74634','#FF9900'];
+  freshChart('cRelSizing',{type:'bar',data:{labels:relLabels,datasets:[{data:relAmt,backgroundColor:relColors,borderRadius:3,barThickness:16}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{backgroundColor:'#141C2B',titleFont:{family:'Figtree',size:11},bodyFont:{family:'Figtree',size:12},padding:9,cornerRadius:7,
+          callbacks:{label:function(c){return '$'+c.raw.toFixed(2)+'B · '+relRev[c.dataIndex]+'% of AVGO rev';}}}},
+      scales:{x:{grid:{color:'#EDF0F5',drawTicks:false},border:{display:false},
+          ticks:{font:{family:'Figtree',size:10.5},color:'#9AACBE',callback:function(v){return '$'+v+'B';}}},
+        y:{grid:{display:false},border:{display:false},ticks:{font:{family:'Figtree',size:11},color:'#6B7A8D'}}}}});
+  // Horizon "gantt": floating horizontal bars [startYear, endYear] per committed window.
+  freshChart('cCommitHorizon',{type:'bar',data:{
+    labels:['Google · TPU','Apple · RF/AI','Anthropic','OpenAI','Meta · MTIA','5th customer'],
+    datasets:[{
+      data:[[2024,2031],[2024,2031],[2026,2031],[2026,2029],[2027,2029],[2026,2027]],
+      backgroundColor:['#4285F4','#555','#D97757','#444441','#0467DF','rgba(136,153,170,0.55)'],
+      borderRadius:3, barThickness:18
+    }]
+  },options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},
+      tooltip:{backgroundColor:'#141C2B',titleFont:{family:'Figtree',size:11},bodyFont:{family:'Figtree',size:12},padding:9,cornerRadius:7,
+        callbacks:{label:function(c){var v=c.raw;return v[0]+' → '+v[1]+(v[1]>=2031?' (LTA)':'');}}}},
+    scales:{x:{min:2024,max:2032,grid:{color:'#EDF0F5',drawTicks:false},border:{display:false},
+        ticks:{stepSize:1,font:{family:'Figtree',size:10.5},color:'#9AACBE',callback:function(v){return '’'+String(v).slice(2);}}},
+      y:{grid:{display:false},border:{display:false},ticks:{font:{family:'Figtree',size:11.5,weight:'600'},color:'#6B7A8D'}}}}});
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -1216,6 +1380,7 @@ var TABS = [
   { key:'concentration', label:'Customer Concentration',body:concentrationBody, init:initConcentration },
   { key:'valuechain',    label:'Value Chain',           body:valueChainBody,    init:initValueChain },
   { key:'gwroadmap',     label:'GW Roadmap',            body:gwRoadmapBody,     init:initGwRoadmap },
+  { key:'commitments',   label:'Customer Commitments',  body:commitmentsBody,   init:initCommitments },
   { key:'management',    label:'Management',            body:managementBody,    init:initManagement },
   { key:'madeep',        label:'PE Strategy',           body:maDeepBody,        init:initMaDeep },
   { key:'valuation',     label:'Valuation',             body:valuationBody,     init:initValuation },

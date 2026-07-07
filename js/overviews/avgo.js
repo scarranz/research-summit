@@ -1258,9 +1258,10 @@ var VAL_EPS     = [6.82, 11.59, 19.23, 25.72, 34.12];          // $  · Adjusted
 var VAL_FCF     = [26914, 50805, 90257, 117766, 158184];       // $M · Free cash flow
 var VAL_NETDEBT = 50283;   // $M · FY25A net debt (BBG) — EV fallback if the live quote omits EV
 var VAL_SHARES_FALLBACK = 4943e6;  // FY25A diluted shares (BBG) — fallback if the quote omits it
-// Fallback price (rough recent close, post-2024 10:1 split) so the multiples still compute
-// off the BBG fundamentals when the live Massive feed is unavailable (e.g. CORS on :8001).
-var VAL_PRICE_FALLBACK = 350;
+// Fallback price so the multiples still compute off the BBG fundamentals when the live
+// Massive feed is unavailable (e.g. no session on :8001). ~AVGO close Jul 7 2026 ($373.90);
+// the live Massive quote overrides this whenever a signed-in session is available.
+var VAL_PRICE_FALLBACK = 374;
 
 var _valQuote = null;  // cached live AVGO quote for this render
 
@@ -1665,7 +1666,7 @@ function ovBuildMarginChart(){
 }
 // Competitors — bubble (multiple × growth, size = market cap). Seed values; mcap fills live.
 var OV_COMP = [
-  { ticker:'AVGO', name:'Broadcom',  pe:38, peF:30, ev:28, evF:24, eg:25, egF:22, ebg:30, ebgF:26, mcap:1500, self:true },
+  { ticker:'AVGO', name:'Broadcom',  pe:38, peF:30, ev:28, evF:24, eg:25, egF:22, ebg:30, ebgF:26, mcap:1850, self:true },
   { ticker:'NVDA', name:'NVIDIA',    pe:38, peF:19, ev:30, evF:16, eg:59, egF:96, ebg:60, ebgF:92, mcap:4100 },
   { ticker:'AMD',  name:'AMD',       pe:45, peF:28, ev:33, evF:22, eg:35, egF:60, ebg:38, ebgF:55, mcap:260 },
   { ticker:'MRVL', name:'Marvell',   pe:35, peF:24, ev:28, evF:20, eg:30, egF:40, ebg:32, ebgF:38, mcap:90 },

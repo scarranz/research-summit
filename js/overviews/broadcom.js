@@ -1,6 +1,7 @@
 // overviews/broadcom.js — standardized Overview for Broadcom Inc. (Nasdaq: AVGO)
-// Built per docs/OVERVIEW_CONVENTIONS.md via the /fill-overview workflow.
-// No Summit DCF for AVGO → all figures web/official-sourced (FY2025 10-K, EDGAR CIK 0001730168, IR).
+// Rebuilt one-shot per docs/OVERVIEW_CONVENTIONS.md via /fill-overview.
+// No Summit DCF for AVGO → figures web/official-sourced. Primary: FY2025 Form 10-K
+// (fiscal year ended Nov 2, 2025; SEC EDGAR CIK 0001730168), Q4/FY2025 8-K, Broadcom IR.
 // Two top-level tabs: Overview (standardized) + Deep Dive (empty scaffold — filled by hand later).
 
 // ── shared tiny helpers (self-contained) ──
@@ -22,34 +23,102 @@ var BC_FACTS=[
   ['IPO','Aug 2009 (as Avago)'],
   ['CEO','Hock Tan · since 2006'],
   ['Employees','~33,000 (Nov 2025)'],
-  ['Dividend','Payer (since 2011)'],
+  ['Dividend','Payer (since 2010)'],
   ['Market cap','~$1.8T · Jul 2026'],
 ];
-var DESC='Broadcom designs and supplies a broad range of semiconductor and infrastructure-software products. It runs two segments: Semiconductor Solutions — AI accelerators (custom XPUs), Ethernet networking, broadband, wireless and storage — and Infrastructure Software, anchored by VMware plus mainframe and cybersecurity. It is known for mission-critical franchises with high switching costs, deep custom-silicon partnerships with hyperscalers, and CEO Hock Tan’s disciplined acquire-and-optimize, high-margin model.';
+
+// ── Block 2 — Description (tight, NON-redundant: identity/genesis only; no mix, no product list) ──
+var DESC='Broadcom (Nasdaq: AVGO) is one of the world’s largest semiconductor and infrastructure-software companies; its chips and software sit inside modern data centers, networks, broadband lines and smartphones. It is the product of acquisition rather than organic growth — a 2005 private-equity carve-out named Avago that later bought the original Broadcom and took its name, then expanded into enterprise software.';
 
 // ── Block 3 — 4-quadrant (each cell ≤ ~30 words) ──
 var BC_BIZ=[
-  ['What it sells','Semiconductors — AI accelerators &amp; networking chips, wireless, broadband, storage — and infrastructure software (VMware, mainframe, security).'],
-  ['Who buys it','Hyperscalers and cloud/data-center operators, device OEMs, telecom carriers, and large enterprises.'],
-  ['How it earns','~58% Semiconductor Solutions, ~42% Infrastructure Software. AI (custom XPUs + Ethernet networking) is the growth engine.'],
-  ['The edge','Mission-critical franchises with high switching costs, custom-silicon lock-in with hyperscalers, VMware’s enterprise base, and industry-leading margins.'],
+  ['What it sells','Semiconductor chips — AI accelerators, networking, wireless, broadband, storage — and infrastructure software (VMware, mainframe, security, Fibre Channel).'],
+  ['Who buys it','Hyperscalers and data-center operators, device OEMs, telecom carriers, and large enterprises &amp; governments.'],
+  ['How it earns','~58% Semiconductor Solutions, ~42% Infrastructure Software (FY2025). AI silicon — custom XPUs + Ethernet — is the fastest-growing part.'],
+  ['The edge','Custom silicon designed into a few hyperscalers’ roadmaps, sticky enterprise software with high switching costs, and scale in AI networking.'],
 ];
 
-// ── Block 4 — How it makes money (Segments ⇄ Geography; both ≥2 slices) ──
+// ── Block 4 — How it makes money (Segments ⇄ Geography; both reconcile to $63,887M FY2025) ──
+// Segment $/% and geography $ are FY2025 as reported in the 10-K. Σ each view = $63.9B (cross-check).
 var BC_SEG=[['Semiconductor Solutions',58,'$36.9B','#10141A'],['Infrastructure Software',42,'$27.0B','#C4122F']];
-var BC_GEO=[['Asia-Pacific',56,'$35.9B','#2E6BE6'],['Americas',30,'$18.9B','#3A7BD5'],['EMEA',14,'$9.1B','#7A5AF8']];
+var BC_SEG_DEF=[
+  ['Semiconductor Solutions','digital &amp; mixed-signal chips — AI accelerators, Ethernet switching/routing, broadband, wireless/RF, storage connectivity and optics — for data centers, networks and devices.'],
+  ['Infrastructure Software','software to run and secure enterprise IT — VMware private cloud, mainframe, cybersecurity, enterprise (ValueOps) and Fibre Channel SAN management.'],
+];
+// Geography = ship-to location (10-K names only US / China+HK / Singapore / Taiwan; rest = "other foreign").
+var BC_GEO=[['United States',26,'$16.5B','#2E6BE6'],['China (incl. HK)',17,'$11.2B','#3A7BD5'],['Singapore',17,'$10.8B','#5A8DEE'],['Taiwan',10,'$6.5B','#7A5AF8'],['Other foreign',30,'$19.0B','#9AA7B8']];
 
-// ── Block 5 — Products (icon fallback; detail in pop-up) ──
-var BC_PRODUCTS=[
-  { k:'xpu', ic:'🧠', n:'AI accelerators (XPUs)', d:'Custom AI silicon co-designed with hyperscalers.', detail:'Broadcom co-designs custom AI accelerators (“XPUs”/ASICs) with a handful of hyperscalers (e.g. Google’s TPU lineage). Unlike a merchant GPU, an XPU is tailored to one customer’s workload — Broadcom supplies the design, IP and manufacturing interface. This, plus AI networking, is the core of the AI growth story.' },
-  { k:'net', ic:'🌐', n:'Ethernet networking', d:'Tomahawk &amp; Jericho switch chips that link AI clusters.', detail:'Broadcom’s Tomahawk (switch) and Jericho (routing) silicon is the connective tissue of large AI clusters — moving data between tens of thousands of accelerators. As AI build-outs scale, networking content per cluster rises, making this one of the fastest-growing franchises.' },
-  { k:'vmw', ic:'☁️', n:'VMware Cloud Foundation', d:'Enterprise virtualization / private-cloud software.', detail:'Acquired for ~$69B in Nov 2023, VMware turned Broadcom into a top-tier enterprise software vendor. Broadcom simplified the portfolio into VMware Cloud Foundation (VCF) and shifted to subscriptions — lifting Infrastructure Software to ~42% of revenue at very high margins.' },
-  { k:'wl', ic:'📱', n:'Wireless / RF', d:'FBAR filters &amp; connectivity, heavy smartphone content.', detail:'Broadcom supplies RF front-end (FBAR filters), touch, and connectivity components with large content in flagship smartphones (notably a major North American handset customer). A mature, cash-generative franchise tied to the smartphone cycle.' },
-  { k:'sw', ic:'🛡️', n:'Mainframe &amp; security software', d:'CA and Symantec enterprise software.', detail:'From the 2018–19 acquisitions of CA Technologies and Symantec’s enterprise business: mission-critical mainframe tooling and cybersecurity sold to the world’s largest enterprises — sticky, high-margin, low-growth.' },
+// ── Block 5 — Products (two-tier: family card → pop-up → expandable specific products) ──
+var BC_PROD_GROUPS=[
+  { seg:'Semiconductor Solutions', families:[
+    { ic:'🧠', fam:'AI accelerators / custom XPUs', d:'Customer-specific AI compute silicon co-designed with hyperscalers.', items:[
+      ['Custom XPUs / AI ASICs','Customer-specific AI accelerators for hyperscalers, sold as design + IP + silicon (e.g. behind Google TPU, Meta MTIA) — not a Broadcom-branded chip.'],
+      ['3.5D XDSiP','Advanced packaging platform for custom AI XPUs — >6,000 mm² of silicon and up to 12 HBM stacks.'],
+      ['200G/lane SerDes IP','High-speed die-to-die and chip-to-chip interconnect embedded inside XPUs and switches.'],
+    ]},
+    { ic:'🌐', fam:'Ethernet switching & routing', d:'Switch and routing silicon that links AI clusters and cloud fabrics.', items:[
+      ['Tomahawk 6 (BCM78910)','102.4 Tb/s scale-out data-center switch; first with a co-packaged-optics option.'],
+      ['Tomahawk 5 (BCM78900)','51.2 Tb/s single-chip AI/cloud fabric switch.'],
+      ['Trident 5-X12 (BCM78800)','Programmable 50–800GbE switch with an on-chip inference engine, for enterprise / top-of-rack.'],
+      ['Jericho4','Deep-buffer routing/switch SoC for AI-scale fabrics and carrier core/edge.'],
+      ['Thor 2 NIC (BCM957608)','AI-optimized 400G Ethernet network adapter connecting servers/GPUs to the fabric.'],
+    ]},
+    { ic:'📡', fam:'Broadband', d:'Cable, fiber and set-top silicon for home connectivity.', items:[
+      ['DOCSIS 3.1/4.0 modem & CMTS SoCs','End-to-end cable-broadband silicon for the home and the headend.'],
+      ['PON OLT/ONU SoCs (BCM686xx / BCM55050)','Fiber-to-the-home headend and premises chips (GPON/XGS-PON), some with an embedded AI core.'],
+      ['BCM7218X set-top SoC','Ultra-HD set-top-box chip with AV1 decode and Wi-Fi 6.'],
+    ]},
+    { ic:'📱', fam:'Wireless / RF', d:'RF front-end and connectivity, with heavy flagship-smartphone content.', items:[
+      ['FBAR filters & RF front-end modules','BAW filters and PA/FEM modules for smartphone bands — major content in a leading North American handset.'],
+      ['FiFEM (Wi-Fi 7)','Wi-Fi 7 RF front-end module with integrated FBAR filtering.'],
+      ['Wi-Fi / Bluetooth combo SoCs','Integrated connectivity for phones, access points and IoT.'],
+      ['Custom touch-controller ASICs','Capacitive touchscreen controllers for phones and tablets.'],
+    ]},
+    { ic:'💾', fam:'Server storage connectivity', d:'RAID and host-bus silicon that moves data to drives.', items:[
+      ['MegaRAID 9600/9500','24G / Gen4 Tri-Mode RAID adapters spanning NVMe, SAS and SATA.'],
+      ['HBA 9500','Gen4 Tri-Mode host bus adapters for large SAS/SATA/NVMe fan-out.'],
+      ['SAS expanders / PCIe switches','Silicon enabling mixed-protocol drive bays and enclosure expansion.'],
+    ]},
+    { ic:'🔦', fam:'Optical & fiber', d:'Optical DSPs, lasers and components for AI-network links.', items:[
+      ['Taurus (BCM83640)','3nm 400G/lane optical DSP for 1.6T modules.'],
+      ['Sian3 / Sian2M','200G/lane optical DSPs for 800G/1.6T single-mode and short-reach multimode.'],
+      ['Lasers, photodetectors & transceivers','200G/400G optical interconnect components for AI networks.'],
+    ]},
+  ]},
+  { seg:'Infrastructure Software', families:[
+    { ic:'☁️', fam:'VMware (private cloud)', d:'Enterprise virtualization and private-cloud platform.', items:[
+      ['VMware Cloud Foundation (VCF)','Flagship integrated private-cloud platform — compute, storage, networking, containers and management.'],
+      ['vSphere','Core server virtualization (ESXi hypervisor + vCenter).'],
+      ['vSAN','Software-defined storage pooling local disks.'],
+      ['NSX','Software-defined networking and micro-segmentation security.'],
+      ['Tanzu','Kubernetes runtime and application platform.'],
+    ]},
+    { ic:'🖥️', fam:'Mainframe software', d:'z/OS tooling inherited from CA Technologies.', items:[
+      ['Endevor','Mainframe source-control and DevOps release automation.'],
+      ['Datacom / IDMS','Mainframe database management systems.'],
+      ['Mainframe DevOps Suite','Modern z/OS DevOps tooling — Git bridge, team build and test.'],
+    ]},
+    { ic:'🛡️', fam:'Cybersecurity', d:'Enterprise security from Symantec + Carbon Black.', items:[
+      ['Symantec CBX (Carbon Black XDR)','Unified cloud XDR merging Symantec prevention with Carbon Black detection & response.'],
+      ['Symantec Endpoint Security Complete','Enterprise endpoint protection and EDR.'],
+      ['Symantec DLP','Data-loss prevention across endpoint, network and cloud.'],
+      ['Symantec Cloud SWG / SASE','Cloud web security and secure-access-service-edge.'],
+    ]},
+    { ic:'📊', fam:'Enterprise software (ValueOps)', d:'Agile planning and value-stream management from CA.', items:[
+      ['Rally','Enterprise agile planning.'],
+      ['Clarity','Strategic portfolio / project management (PPM).'],
+      ['ValueOps Insights','Value-stream automation and outcome analytics.'],
+    ]},
+    { ic:'🔗', fam:'Fibre Channel SAN (Brocade)', d:'Storage-area-network switching from Brocade.', items:[
+      ['Brocade G730 switch','128-port 64G (Gen 7) Fibre Channel SAN switch.'],
+      ['Brocade X7 directors','Core Gen-7 Fibre Channel directors for large SANs.'],
+      ['64G FC optical transceivers','High-density Fibre Channel optics.'],
+    ]},
+  ]},
 ];
 
 // ── Block 6 — Competitors scatter. X=multiple (EV/EBITDA⇄P/E), Y=growth, bubble=market cap (USD). ──
-// ⚠ Peer figures are approximate, web-sourced (mid-2026), pending the Fiscal.ai feed.
+// ⚠ Peer figures are approximate, web-sourced (mid-2026), pending a data feed.
 var BC_PEERS=[
   { n:'Broadcom', evT:34, evF:28, peT:45, peF:35, gt:24, gf:18, mc:1800, hl:true, why:'Custom AI silicon + Ethernet networking + VMware software. Mid-20s% growth with software-grade margins — a premium multiple the market pays for the AI-networking franchise and the recurring software base.' },
   { n:'Nvidia',   evT:40, evF:30, peT:40, peF:32, gt:55, gf:40, mc:4000, why:'The merchant-GPU leader and the fastest grower of the group. Broadcom is a partner (networking) and an alternative (custom XPUs vs merchant GPUs) at once.' },
@@ -59,20 +128,19 @@ var BC_PEERS=[
   { n:'Texas Instruments', evT:22, evF:18, peT:34, peF:30, gt:9, gf:11, mc:170, why:'Analog/embedded blue-chip. Slow, cyclical growth but fortress margins and cash return — a very different, non-AI profile.' },
 ];
 
-// ── Block 7 — Timeline ──
+// ── Block 7 — Timeline (per §4.7 relevance rubric; genesis first, depth in Read Mores) ──
 var BC_TL=[
-  { y:'1991', t:'Broadcom Corp. founded (Henry Samueli &amp; Henry Nicholas).' },
-  { y:'2005', t:'Avago created — KKR &amp; Silver Lake buy Agilent’s semiconductor unit for ~$2.66B.' },
-  { y:'2009', t:'Avago IPOs on Nasdaq under <b>AVGO</b> (Aug 2009).' },
-  { y:'2016', t:'Avago acquires Broadcom Corp. (~$37B) and takes the <b>Broadcom</b> name.', d:'The deal that created today’s Broadcom: Avago’s operating discipline applied to Broadcom’s connectivity franchises. Ticker stayed AVGO.' },
-  { y:'2018', t:'Redomiciles to <b>Delaware</b>; a hostile bid for Qualcomm is blocked on US national-security grounds.', d:'Moving the legal home from Singapore to the US cleared the way for large US acquisitions — but the $117B Qualcomm bid was blocked by executive order.' },
-  { y:'2019', t:'Software pivot: acquires <b>CA Technologies</b> then <b>Symantec’s</b> enterprise unit.' },
-  { y:'2023', t:'Closes the <b>$69B VMware</b> acquisition (Nov) — software becomes ~40% of revenue.', d:'The largest deal in Broadcom’s history reshaped the model: Infrastructure Software jumped to ~40%+ of revenue at very high margins, and the portfolio was simplified around VMware Cloud Foundation.' },
-  { y:'2024', t:'10-for-1 stock split; AI revenue accelerates sharply.' },
-  { y:'2025', t:'Record <b>$63.9B</b> revenue (+24%); AI networking &amp; custom XPUs lead growth.' },
-  { y:'2026', t:'Surpasses a <b>$2T market cap</b> (April) — among the largest companies in the world.' },
+  { y:'1991', t:'Original <b>Broadcom Corporation</b> founded in Irvine, CA (Henry Samueli &amp; Henry Nicholas).', d:'<ul><li>Fabless designer of communications chips (broadband, networking, connectivity); IPO’d on Nasdaq (BRCM) in 1998.</li><li>Ran independently for 25 years — this is the <b>name</b> today’s Broadcom carries, <b>not</b> its operating lineage.</li><li>Its founders were charged in a stock-option <b>backdating</b> case (SEC, 2008); the criminal charges were <b>dismissed in 2009</b> for prosecutorial misconduct. (Predecessor entity — pre-2016.)</li></ul>' },
+  { y:'2005', t:'<b>Avago</b> is carved out of Agilent/HP — KKR &amp; Silver Lake buy the semiconductor unit for ~$2.66B.', d:'<ul><li>Hewlett-Packard (1939) spun off <b>Agilent</b> in 1999; Agilent then sold its Semiconductor Products Group to the two PE firms, creating <b>Avago Technologies</b> (~6,500 employees).</li><li>This private-equity carve-out — not the 1991 Broadcom — is the actual <b>operating company</b> behind AVGO today.</li></ul>' },
+  { y:'2009', t:'<b>Avago IPOs</b> on Nasdaq under <b>AVGO</b> (Aug 2009, $15/share, ~$3.8B).', d:'<ul><li>KKR and Silver Lake retained control after the IPO.</li><li>Avago then turned acquisitive — <b>LSI</b> (2014, ~$6.6B, storage/networking silicon) was its first large listed-target deal.</li></ul>' },
+  { y:'2010', t:'Declares its <b>first-ever dividend</b> — $0.07/share (Dec 2010).' },
+  { y:'2016', t:'Avago acquires the original <b>Broadcom</b> (~$37B) and takes its name — the two lineages merge.', d:'<ul><li>Closed Feb 2016; the combined entity was renamed <b>Broadcom Limited</b>; the ticker stayed <b>AVGO</b>.</li><li>Avago’s operating model was applied to Broadcom’s wireless / broadband / networking franchises — the core of today’s Semiconductor Solutions.</li></ul>' },
+  { y:'2018', t:'Redomiciles to <b>Delaware</b>; a hostile <b>~$117B bid for Qualcomm</b> is blocked by the US.', d:'<ul><li>Moving its legal home from Singapore to the US removed it from <b>CFIUS</b> jurisdiction, clearing the way for large US acquisitions.</li><li>The Qualcomm bid (raised to ~$121B, “best and final”) was <b>blocked by a Trump executive order</b> (Mar 12, 2018) on national-security / 5G grounds.</li></ul>' },
+  { y:'2018–19', t:'<b>Software pivot</b>: acquires <b>CA Technologies</b> ($18.9B), then <b>Symantec’s</b> enterprise security ($10.7B).', d:'<ul><li>CA <b>launched the Infrastructure Software segment</b> — mainframe plus enterprise software.</li><li>Symantec’s enterprise unit added <b>cybersecurity</b>.</li></ul>' },
+  { y:'2023', t:'Closes the <b>$69B VMware</b> acquisition (Nov) — software becomes ~42% of revenue.', d:'<ul><li>Largest deal in Broadcom’s history (~$61B equity / ~$69B enterprise value).</li><li>The portfolio was simplified around <b>VMware Cloud Foundation</b> and shifted to subscriptions, lifting Infrastructure Software to a high-margin ~42% of revenue.</li></ul>' },
+  { y:'2026', t:'Crosses a <b>$2T market cap</b> (April) — AI networking &amp; custom XPUs lead growth.', d:'<ul><li>Shares touched a record ~$422; ~6th company ever to reach $2T intraday (first passed $1T in Dec 2024).</li><li>Pulled back to ~$1.8T by mid-2026.</li></ul>' },
 ];
-var SOURCES='Sources: Broadcom Inc. (Nasdaq: AVGO) FY2025 Form 10-K (SEC EDGAR CIK 0001730168), Q4/FY2025 results & IR, and public company history. Segment and geographic figures are FY2025 as reported. Peer multiples, growth and market caps are approximate, web-sourced (mid-2026) and pending the Fiscal.ai data feed — directional, not exact.';
+var SOURCES='Sources: Broadcom Inc. (Nasdaq: AVGO) FY2025 Form 10-K (fiscal year ended Nov 2, 2025; SEC EDGAR CIK 0001730168), Q4/FY2025 results & IR, and public company history. Segment and geographic revenue are FY2025 as reported (geography is by ship-to location, not end-demand). Peer multiples, growth and market caps are approximate, web-sourced (mid-2026), pending a data feed — directional, not exact.';
 
 // ── Renderers ──
 function bcKeyFacts(){
@@ -84,15 +152,21 @@ function bcFourQuad(){
 }
 function bcMoneyMap(){
   var h='<div class="mm-tog"><button type="button" class="mm-pill active" data-mm="seg">By segment</button><button type="button" class="mm-pill" data-mm="geo">By geography</button></div>';
-  h+='<div id="bcMMseg">'+mbars(BC_SEG)+'<div class="ov-diagram-cap" style="margin-top:6px">FY2025 revenue mix. Semiconductors (led by AI) still the larger half; Infrastructure Software (VMware) is the high-margin ~42%. <span class="ave-subh-note">Source: AVGO FY2025 results.</span></div></div>';
-  h+='<div id="bcMMgeo" hidden>'+mbars(BC_GEO)+'<div class="ov-diagram-cap" style="margin-top:6px">FY2025 revenue by region (ship-to). Asia-Pacific dominates because chips ship to Asian manufacturers; China alone was ~17%. <span class="ave-subh-note">Source: AVGO FY2025 10-K.</span></div></div>';
+  h+='<div id="bcMMseg">'+mbars(BC_SEG)+
+    '<div class="mm-defs acc-list" style="margin-top:12px">'+BC_SEG_DEF.map(function(d){ return '<div class="acc"><button type="button" class="acc-h">What is “'+esc(d[0])+'”?<span class="acc-x">+</span></button><div class="acc-b" hidden>'+d[1]+'</div></div>'; }).join('')+'</div>'+
+    '<div class="ov-diagram-cap" style="margin-top:8px">FY2025 revenue by reportable segment. <span class="ave-subh-note">Σ = $63.9B total net revenue — reconciles to the geography view. Source: AVGO FY2025 10-K.</span></div></div>';
+  h+='<div id="bcMMgeo" hidden>'+mbars(BC_GEO)+
+    '<div class="ov-diagram-cap" style="margin-top:8px">FY2025 revenue by <b>ship-to location</b> (where product is delivered), <b>not</b> end-customer demand — chips ship to contract manufacturers concentrated in Asia, so China / Singapore / Taiwan overstate the true end-market. The 10-K names only the US, China (incl. HK), Singapore &amp; Taiwan; all other countries are aggregated as “other foreign”. <span class="ave-subh-note">Σ = $63.9B — reconciles to the segment view. Source: AVGO FY2025 10-K.</span></div></div>';
   return h;
 }
 function bcProducts(){
-  return '<div class="stdp">'+BC_PRODUCTS.map(function(p){
-    return '<div class="stdp-card ov-clickable" data-detail="uprod:'+esc(p.k)+'"><div class="stdp-ic">'+p.ic+'</div>'+
-      '<div class="stdp-n">'+p.n+'</div><div class="stdp-d">'+p.d+'</div><div class="stdp-more">More ›</div></div>';
-  }).join('')+'</div>';
+  return BC_PROD_GROUPS.map(function(g,gi){
+    return '<div class="stdp-group"><div class="stdp-seg">'+esc(g.seg)+'</div><div class="stdp">'+
+      g.families.map(function(f,fi){
+        return '<div class="stdp-card ov-clickable" data-detail="fam:'+gi+'-'+fi+'"><div class="stdp-ic">'+f.ic+'</div>'+
+          '<div class="stdp-n">'+f.fam+'</div><div class="stdp-d">'+f.d+'</div><div class="stdp-more">See products ›</div></div>';
+      }).join('')+'</div></div>';
+  }).join('');
 }
 function bcPeerScatter(){
   var h='<style>.mg-tog-row{display:flex;flex-wrap:wrap;gap:14px;margin:2px 0 8px}'+
@@ -119,7 +193,7 @@ function bcPeerScatter(){
         '<circle class="mg-dot" r="'+r.toFixed(1)+'" fill="'+(p.hl?'#C4122F':'#3A7BD5')+'"'+(p.hl?' stroke="#fff" stroke-width="2"':' opacity="0.82"')+' style="cursor:pointer"></circle>'+
         '<text font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?'#C4122F':'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>'; }).join('')+
   '</svg></div>';
-  h+='<div class="ov-diagram-cap" style="margin-top:4px">Only <b>listed</b> peers with a public multiple appear; a name drops out of the P/E view when it has no meaningful P/E. <span class="ave-subh-note">Multiples, growth &amp; market caps are approximate, web-sourced (mid-2026), pending the Fiscal.ai feed.</span></div>';
+  h+='<div class="ov-diagram-cap" style="margin-top:4px">Only <b>listed</b> peers with a public multiple appear. <span class="ave-subh-note">Multiples, growth &amp; market caps are approximate, web-sourced (mid-2026), pending a data feed.</span></div>';
   h+='<div id="bcMgTip" class="mg-tip" hidden></div>';
   return h;
 }
@@ -139,13 +213,23 @@ function stdOverviewBody(){
     '.stdq-v{font-size:12px;color:var(--navy);line-height:1.5}.stdq-v b{font-weight:800}'+
     '.mm-tog{display:inline-flex;gap:4px;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:3px;margin-bottom:10px}'+
     '.mm-pill{border:none;background:transparent;font:inherit;font-size:11.5px;font-weight:700;color:var(--mu);padding:5px 14px;border-radius:999px;cursor:pointer}.mm-pill.active{background:var(--navy);color:#fff}'+
+    '.mm-defs{display:flex;flex-direction:column;gap:5px;margin:10px 0 2px}'+
+    '.mm-def{font-size:11.5px;color:var(--navy);line-height:1.5}.mm-def b{color:#C4122F}'+
+    '.stdp-group{margin:2px 0 8px}'+
+    '.stdp-seg{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:10px 0 7px}'+
     '.stdp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}'+
     '.stdp-card{border:1px solid var(--bdr);border-radius:11px;padding:13px 14px;background:var(--w);cursor:pointer;transition:.14s}'+
     '.stdp-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-2px);border-color:#C4122F}'+
     '.stdp-ic{font-size:26px;line-height:1}.stdp-n{font-size:13px;font-weight:800;color:var(--navy);margin:7px 0 3px}'+
-    '.stdp-d{font-size:11px;color:var(--mu);line-height:1.45}.stdp-more{font-size:10px;font-weight:700;color:#C4122F;margin-top:6px}</style>';
+    '.stdp-d{font-size:11px;color:var(--mu);line-height:1.45}.stdp-more{font-size:10px;font-weight:700;color:#C4122F;margin-top:6px}'+
+    '.famd{font-size:12.5px;color:var(--navy);line-height:1.55;margin-bottom:10px}'+
+    '.acc-list{display:flex;flex-direction:column;gap:6px}'+
+    '.acc{border:1px solid var(--bdr);border-radius:9px;overflow:hidden}'+
+    '.acc-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12px;font-weight:700;color:var(--navy);padding:9px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px}'+
+    '.acc-h.acc-open{background:#EEF2F6}.acc-x{color:#C4122F;font-weight:800;font-size:14px;flex:none}'+
+    '.acc-b{font-size:11.5px;color:var(--mu);line-height:1.5;padding:8px 12px 10px;background:var(--w)}</style>';
   h+=bcKeyFacts();
-  h+='<p class="ov-lede">'+esc(DESC)+'</p>';
+  h+='<p class="ov-lede" style="margin-top:18px">'+esc(DESC)+'</p>';
   h+=sec('The business at a glance', bcFourQuad());
   h+=sec('How it makes money', bcMoneyMap());
   h+=sec('What it makes — the products', bcProducts());
@@ -155,7 +239,8 @@ function stdOverviewBody(){
   return h;
 }
 function deepDiveScaffold(){
-  return '<div class="ov-callout" style="margin-top:4px">The <b>Deep Dive</b> for Broadcom has not been built yet. Its standard structure is still being defined; sections (e.g. Segments, Financials, Management, History) will be added by hand. The standardized <b>Overview</b> tab is complete and auto-fillable.</div>';
+  return '<div class="ov-callout" style="margin-top:4px">The <b>Deep Dive</b> for Broadcom has not been built yet. Its standard structure is still being defined; sections (e.g. Segments, Financials, Management, History) will be added by hand. The standardized <b>Overview</b> tab is complete and auto-fillable.</div>'+
+    '<div class="ov-foot" style="margin-top:14px">Deep Dive — sources will be cited per section as it is built.</div>';
 }
 
 function html(c){
@@ -198,13 +283,19 @@ function showOvt(root,key){
 }
 function wireModal(root){
   var back=root.querySelector('#bcModalBack'), mT=root.querySelector('#bcModalT'), mB=root.querySelector('#bcModalB'); if(!back) return;
-  function openM(t,b){ mT.innerHTML=t; mB.innerHTML=b; back.hidden=false; requestAnimationFrame(function(){ back.classList.add('on'); }); document.addEventListener('keydown', onEsc); }
+  function wireAcc(){ mB.querySelectorAll('.acc-h').forEach(function(hh){ hh.onclick=function(){ var b=hh.nextElementSibling; var open=!b.hidden; b.hidden=open; var x=hh.querySelector('.acc-x'); if(x) x.textContent=open?'+':'–'; hh.classList.toggle('acc-open',!open); }; }); }
+  function openM(t,b){ mT.innerHTML=t; mB.innerHTML=b; wireAcc(); back.hidden=false; requestAnimationFrame(function(){ back.classList.add('on'); }); document.addEventListener('keydown', onEsc); }
   function closeM(){ back.classList.remove('on'); document.removeEventListener('keydown', onEsc); setTimeout(function(){ back.hidden=true; }, 180); }
   function onEsc(e){ if(e.key==='Escape') closeM(); }
   root.querySelector('#bcModalX').onclick=closeM; back.onclick=function(e){ if(e.target===back) closeM(); };
   function resolve(key){
     var p=key.split(':'), kind=p[0], id=p.slice(1).join(':');
-    if(kind==='uprod'){ var pr=BC_PRODUCTS.filter(function(x){return x.k===id;})[0]; return pr?{t:pr.ic+' '+pr.n,h:pr.detail}:null; }
+    if(kind==='fam'){ var ix=id.split('-'); var g=BC_PROD_GROUPS[+ix[0]]; var f=g&&g.families[+ix[1]]; if(!f) return null;
+      var body='<div class="famd">'+esc(f.d)+'</div><div class="acc-list">'+f.items.map(function(it){
+        return '<div class="acc"><button type="button" class="acc-h">'+esc(it[0])+'<span class="acc-x">+</span></button><div class="acc-b" hidden>'+esc(it[1])+'</div></div>';
+      }).join('')+'</div>';
+      return { t:f.ic+' '+esc(f.fam), h:body };
+    }
     if(kind==='hist'){ var t=BC_TL[+id]; return t&&t.d?{t:t.y,h:t.d}:null; }
     return null;
   }
@@ -234,6 +325,8 @@ function init(c){
   renderLive(root);
   root.querySelectorAll('.ovt-tab').forEach(function(btn){ btn.onclick=function(){ showOvt(root, btn.getAttribute('data-ovt')); }; });
   wireModal(root);
+  // Segment definitions: collapsible per-segment accordions
+  root.querySelectorAll('.mm-defs .acc-h').forEach(function(hh){ hh.onclick=function(){ var b=hh.nextElementSibling; var open=!b.hidden; b.hidden=open; var x=hh.querySelector('.acc-x'); if(x) x.textContent=open?'+':'–'; hh.classList.toggle('acc-open',!open); }; });
   // Peer scatter: tooltip + toggles
   var mgtip=root.querySelector('#bcMgTip');
   if(mgtip){ root.querySelectorAll('.mg-node').forEach(function(g){

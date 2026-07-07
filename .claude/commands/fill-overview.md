@@ -32,11 +32,29 @@ authoritative source.**
 
 ## Step 4 — Fill the 7 Overview blocks
 Produce `js/overviews/<name>.js` exporting `{ html(company), init(company) }`, rendering the
-7 blocks in order per §4 of the conventions: Key Facts, Description, 4-quadrant, How it makes
-money (Segments ⇄ Geography toggle, ≥2-slice rule), Products (photo or icon fallback; long
-copy in pop-ups), Competitors scatter (Multiple × Growth; trailing/forward toggles; bubble =
-USD market cap; legend; detail in pop-up), Timeline. Respect **no walls of text**, **pop-ups
-over inline detail**, and **no fake precision**.
+7 blocks in order per §4 of the conventions:
+- **Key Facts** — exactly 10 cells (5×2), missing ones substituted not blank.
+- **Description** — tight and **NON-redundant**: the high-level "what it is", NOT a re-run of the
+  segments/mix/moat shown below. No hype words.
+- **4-quadrant** — each cell ≤ ~30 words.
+- **How it makes money** — Segments ⇄ Geography toggle (≥2-slice rule); **define what each
+  segment IS from the 10-K, not just its size**; **cross-check** that segment total == geography
+  total == reported total net revenue before shipping.
+- **Products** — **two tiers**: Tier-1 family cards (photo or icon fallback) → pop-up → Tier-2
+  expandable list of the *specific* products, each ≤3 lines. Never dump all products at once.
+- **Competitors scatter** — Multiple × Growth; EV/EBITDA⇄P/E (never P/S) + Trailing⇄Forward
+  toggles (default Forward); bubble = USD market cap; legend; detail in pop-up; no-multiple/
+  unlisted peers drop out (say where they appear instead).
+- **Timeline** — follow the §4.7 **relevance rubric**: establish the company's genesis/lineage
+  (spin-off / merger / SPAC / reverse-merger / OTC uplisting / roll-up) with **no loose ends**;
+  include only genuinely relevant events (first-ever dividend, material/failed M&A, spin-offs,
+  trillion-$ milestones, current-CEO & founder-CEO transitions, ≤1 defining litigation, Ch.11/7,
+  material redomicile, structural name changes); **exclude** splits, sub-$T milestones, board
+  noise, neutral stock dividends and non-dilutive raises. Depth goes in **Read Mores with
+  sequential bullets**.
+
+Respect **no walls of text**, **pop-ups over inline detail**, and **no fake precision**. The
+**Overview** and **Deep Dive** each carry their own **source** footer (no author byline).
 
 If the company is new, register its ticker in `js/overviews/index.js`.
 

@@ -1258,6 +1258,9 @@ var VAL_EPS     = [6.82, 11.59, 19.23, 25.72, 34.12];          // $  · Adjusted
 var VAL_FCF     = [26914, 50805, 90257, 117766, 158184];       // $M · Free cash flow
 var VAL_NETDEBT = 50283;   // $M · FY25A net debt (BBG) — EV fallback if the live quote omits EV
 var VAL_SHARES_FALLBACK = 4943e6;  // FY25A diluted shares (BBG) — fallback if the quote omits it
+// Fallback price (rough recent close, post-2024 10:1 split) so the multiples still compute
+// off the BBG fundamentals when the live Massive feed is unavailable (e.g. CORS on :8001).
+var VAL_PRICE_FALLBACK = 350;
 
 var _valQuote = null;  // cached live AVGO quote for this render
 
@@ -1331,16 +1334,16 @@ function buildValFwdChart(q){
 }
 
 function applyValLive(pane, q){
-  var ev = valEV(q), mc = valMC(q);
+  var ev = valEV(q), mc = valMC(q), fb = q._fallback;
   var lv = pane.querySelector('#avgoValLive');
   if(lv){
     var up=(q.changePct||0)>=0;
     lv.hidden=false;
     lv.innerHTML='<span class="ov-live-dot"></span><span class="ov-live-tk">AVGO</span> '+
       '<span class="ov-live-px">$'+q.price.toFixed(2)+'</span> '+
-      '<span class="ov-live-ch '+(up?'up':'down')+'">'+(up?'+':'')+(q.changePct!=null?q.changePct.toFixed(2):'0.00')+'%</span> '+
+      (fb ? '' : '<span class="ov-live-ch '+(up?'up':'down')+'">'+(up?'+':'')+(q.changePct!=null?q.changePct.toFixed(2):'0.00')+'%</span> ')+
       '<span class="ov-live-mc">Mkt cap '+valUsd(mc)+' · EV '+valUsd(ev)+'</span>'+
-      '<span class="ov-live-ts">live · Massive</span>';
+      '<span class="ov-live-ts">'+(fb?'≈ fallback price · live feed unavailable':'live · Massive')+'</span>';
   }
   valSetTxt(pane,'val-pe25', (q.price/VAL_EPS[0]).toFixed(1)+'×');
   valSetTxt(pane,'val-pe26', (q.price/VAL_EPS[1]).toFixed(1)+'×');
@@ -1352,14 +1355,14 @@ function applyValLive(pane, q){
 }
 
 function initValuation(pane){
-  // Render the fundamentals-only view first (works without a session), then overlay the live quote.
-  renderValTable(pane, null);
-  buildValFwdChart(null);
+  // Render at the fallback price first — so the multiples always compute off the BBG
+  // fundamentals even with no live feed — then upgrade to the live quote when it arrives.
+  applyValLive(pane, { price: VAL_PRICE_FALLBACK, changePct: null, _fallback: true });
   if(pane._valLoaded){ if(_valQuote) applyValLive(pane, _valQuote); return; }
   pane._valLoaded = true;
   liveQuote('AVGO').then(function(res){
     var q = res && res.data;
-    if(!q || q.price==null) return;   // leave the fundamentals-only view in place
+    if(!q || q.price==null) return;   // keep the fallback view
     _valQuote = q;
     applyValLive(pane, q);
   }).catch(function(){});
@@ -1395,7 +1398,7 @@ var OV_MULT = {
   trailing: { eps:6.82,  epsGr:36, ebitda:43004, ebGr:41 },   // FY2025A
   forward:  { eps:11.59, epsGr:70, ebitda:71964, ebGr:67 },   // FY2026E (BBG)
 };
-var _ovMultMode = 'trailing', _ovMultPrice = null, _ovMultEv = null;
+var _ovMultMode = 'trailing', _ovMultPrice = null, _ovMultEv = null, _ovLive = false;
 function ovFmtBig(v){ if(v==null) return '—'; if(v>=1e12) return '$'+(v/1e12).toFixed(2)+'T'; if(v>=1e9) return '$'+(v/1e9).toFixed(0)+'B'; return '$'+(v/1e6).toFixed(0)+'M'; }
 function ovHeroMultiples(){
   var tiles=[['P/E','avgoOvPE'],['Earnings growth','avgoOvEG'],['PEG','avgoOvPEG'],['EV / EBITDA','avgoOvEV'],['EBITDA growth','avgoOvEBG'],['PEG (EBITDA)','avgoOvPEGE']];
@@ -1426,7 +1429,7 @@ function ovMultFill(pane){
   else { set('avgoOvEV','—'); set('avgoOvPEGE','—'); }
   var note=pane.querySelector('#avgoOvMultNote');
   if(note) note.innerHTML=(_ovMultMode==='trailing'?'<b>Trailing</b> — FY2025A (Bloomberg).':'<b>Forward</b> — FY2026E (Bloomberg consensus).')+
-    ' P/E &amp; EV/EBITDA use the live price &amp; EV; growth &amp; PEG from consensus. PEG = multiple ÷ growth-%.';
+    ' P/E &amp; EV/EBITDA use the '+(_ovLive?'live':'~$'+VAL_PRICE_FALLBACK+' fallback')+' price &amp; EV; growth &amp; PEG from consensus. PEG = multiple ÷ growth-%.';
 }
 function ovDescBox(){
   return '<div class="ovlr-desc" data-desc><p class="ovlr-desc-txt">'+OV_DESC+'</p>'+
@@ -1768,10 +1771,14 @@ function initOverview(){
       ovMultFill(pane);
     };
   });
+  // Seed with the fallback price so the multiples compute off BBG even with no live feed.
+  _ovMultPrice = VAL_PRICE_FALLBACK; _ovMultEv = valEV({ price: VAL_PRICE_FALLBACK });
+  var mc0 = pane.querySelector('#avgoOvMc'); if(mc0) mc0.textContent = ovFmtBig(valMC({ price: VAL_PRICE_FALLBACK }));
+  var ev0 = pane.querySelector('#avgoOvEv'); if(ev0) ev0.textContent = ovFmtBig(_ovMultEv);
   ovMultFill(pane);
   liveQuote('AVGO').then(function(res){
     var q = res && res.data; if(!q || q.price == null) return;
-    _ovMultPrice = q.price; _ovMultEv = valEV(q);
+    _ovLive = true; _ovMultPrice = q.price; _ovMultEv = valEV(q);
     var mc = pane.querySelector('#avgoOvMc'); if(mc) mc.textContent = ovFmtBig(valMC(q));
     var evEl = pane.querySelector('#avgoOvEv'); if(evEl) evEl.textContent = ovFmtBig(_ovMultEv);
     ovMultFill(pane);
@@ -1956,7 +1963,34 @@ function initTopline(pane){
 // ════════════════════════════════════════════════════════════════════════════════
 //  DEEP DIVE  (the company's "Deep Dive" tab — flat sub-tabs; Customers nests 5)
 // ════════════════════════════════════════════════════════════════════════════════
-// Customers groups the four customer views as nested sub-tabs (.ovt-subtab / .ovt-subpane).
+// Generic nested sub-tabs (used by Customers and Valuation). Each deep pane owns its own
+// .ovt-subtabs/.ovt-subpane, so all queries are scoped to `pane` and never cross panes.
+function buildSubtabs(defs){
+  return '<div class="ovt-subtabs">'+defs.map(function(t,i){
+    return '<button type="button" class="ovt-subtab'+(i===0?' active':'')+'" data-ovst="'+t.key+'">'+esc(t.label)+'</button>';
+  }).join('')+'</div>'+
+  defs.map(function(t,i){
+    return '<div class="ovt-subpane" data-ovst="'+t.key+'"'+(i===0?'':' hidden')+'>'+t.body()+'</div>';
+  }).join('');
+}
+function showSub(pane, defs, key){
+  pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovst')===key); });
+  pane.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovst')!==key); });
+  var t=null; for(var i=0;i<defs.length;i++){ if(defs[i].key===key){ t=defs[i]; break; } }
+  var sub = pane.querySelector('.ovt-subpane[data-ovst="'+key+'"]');
+  if(t && t.init && sub) requestAnimationFrame(function(){ t.init(sub); });
+}
+function wireSubtabs(pane, defs){
+  if(!pane._subWired){ pane._subWired = true;
+    pane.querySelectorAll('.ovt-subtab').forEach(function(btn){
+      btn.onclick = function(){ showSub(pane, defs, btn.getAttribute('data-ovst')); };
+    });
+  }
+  var active = pane.querySelector('.ovt-subtab.active');
+  showSub(pane, defs, active ? active.getAttribute('data-ovst') : defs[0].key);
+}
+
+// Customers groups the customer views as nested sub-tabs.
 var CUST_SUBTABS = [
   { key:'concentration', label:'Customer Concentration', body:concentrationBody, init:initConcentration },
   { key:'valuechain',    label:'Value Chain',            body:valueChainBody,    init:initValueChain },
@@ -1964,29 +1998,140 @@ var CUST_SUBTABS = [
   { key:'commitments',   label:'Customer Commitments',   body:commitmentsBody,   init:initCommitments },
   { key:'topline',       label:'Top-Line Model',         body:toplineBody,       init:initTopline },
 ];
-function customersBody(){
-  return '<div class="ovt-subtabs">'+CUST_SUBTABS.map(function(t,i){
-    return '<button type="button" class="ovt-subtab'+(i===0?' active':'')+'" data-ovst="'+t.key+'">'+esc(t.label)+'</button>';
-  }).join('')+'</div>'+
-  CUST_SUBTABS.map(function(t,i){
-    return '<div class="ovt-subpane" data-ovst="'+t.key+'"'+(i===0?'':' hidden')+'>'+t.body()+'</div>';
-  }).join('');
+function customersBody(){ return buildSubtabs(CUST_SUBTABS); }
+function initCustomers(pane){ wireSubtabs(pane, CUST_SUBTABS); }
+
+// Valuation splits into the existing multiples view + an interactive Sensitivity model.
+var VAL_SUBTABS = [
+  { key:'valuation',   label:'Valuation',            body:valuationBody, init:initValuation },
+  { key:'sensitivity', label:'Sensitivity Analysis', body:sensBody,      init:initSens },
+];
+function valuationTabBody(){ return buildSubtabs(VAL_SUBTABS); }
+function initValuationTab(pane){ wireSubtabs(pane, VAL_SUBTABS); }
+
+// ── Sensitivity Analysis — commitments → top line → implied valuation ─────────────
+// Two methods (EV/EBITDA or P/E), an FY toggle, and the BBG-expected margin ladder that
+// shows exactly which gross/op/EBITDA/net margins produce the number.
+// BBG consensus margins (%) by year (avgo-context/AVGO_BBG.xlsx), idx 0=FY25 … 4=FY29:
+var SENS_GROSS  = [78.6, 75.6, 73.0, 72.3, 71.0];   // adjusted gross margin
+var SENS_OP     = [65.7, 66.9, 66.9, 67.0, 67.1];   // adjusted operating margin
+var SENS_EBITDA = [67.3, 67.7, 67.5, 67.2, 67.0];   // adjusted EBITDA margin
+var SENS_NET    = [52.8, 54.0, 54.7, 54.8, 54.5];   // adjusted net income margin
+var SENS_NETDEBT = 50.283, SENS_SHARES = 4.943;     // $B, B shares (BBG FY25A)
+function sensTile(label,val,sub,cls){
+  return '<div class="stat-card '+cls+'"><div class="stat-label">'+label+'</div><div class="stat-value">'+val+'</div><div class="stat-sub">'+sub+'</div></div>';
 }
-function custSubDef(key){ for(var i=0;i<CUST_SUBTABS.length;i++){ if(CUST_SUBTABS[i].key===key) return CUST_SUBTABS[i]; } return null; }
-function showCustSub(custPane, key){
-  custPane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovst')===key); });
-  custPane.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovst')!==key); });
-  var t = custSubDef(key), sub = custPane.querySelector('.ovt-subpane[data-ovst="'+key+'"]');
-  if(t && t.init && sub) requestAnimationFrame(function(){ t.init(sub); });
+function sensDynSlider(id,min,max,step,val){
+  return '<div class="tl-sl"><label for="'+id+'"><span id="'+id+'L"></span> <b id="'+id+'v"></b></label>'+
+    '<input type="range" id="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'"></div>';
 }
-function initCustomers(pane){
-  if(!pane._subWired){ pane._subWired = true;
-    pane.querySelectorAll('.ovt-subtab').forEach(function(btn){
-      btn.onclick = function(){ showCustSub(pane, btn.getAttribute('data-ovst')); };
-    });
+function sensBody(){
+  return ''+
+  card('Sensitivity — from the commitments to the valuation','move the deal inputs → implied value per share · value on EV/EBITDA or earnings, FY26–FY29',
+    '<div class="card-body"><div class="prose" style="margin-bottom:2px"><p>This runs the <strong>bottom-up top line</strong> from the announced commitments (AI = GW × content/GW, plus the software keel) through a <strong>margin</strong> and a <strong>multiple</strong> to an <strong>implied value per share</strong>. Value it two ways — <strong>EV/EBITDA</strong> or <strong>P/E (earnings)</strong> — pick the fiscal year, and the <strong>margin ladder</strong> below shows exactly which gross / operating / EBITDA / net margins (from Bloomberg consensus) are being used to get there.</p></div></div>','')+
+  '<div class="card"><div class="card-header"><span class="card-title">Inputs</span><span class="card-subtitle">method · fiscal year · commitment &amp; valuation levers</span></div>'+
+    '<div class="card-body">'+
+      '<div class="sens-toggles">'+
+        '<div class="tl-fy" id="sensMethod"><button type="button" class="tl-fy-b active" data-m="eve">EV / EBITDA</button><button type="button" class="tl-fy-b" data-m="pe">P/E · earnings</button></div>'+
+        '<div class="tl-fy" id="sensFy">'+['FY26','FY27','FY28','FY29'].map(function(f,i){ return '<button type="button" class="tl-fy-b'+(i===1?' active':'')+'" data-fy="'+(i+1)+'">'+f+'</button>'; }).join('')+'</div>'+
+      '</div>'+
+      '<div class="tl-ctl" style="margin-top:12px">'+
+        tlSlider('sDpg','Content per GW','$','B',8,16,0.2,11.2)+
+        tlSlider('sGw29','GW deployed by FY29','','GW',12,28,1,20)+
+        sensDynSlider('sMarg',60,72,0.5,67.5)+
+        sensDynSlider('sMult',12,30,0.5,22)+
+      '</div>'+
+    '</div>'+
+    '<div class="source">AI revenue = GW × content/GW (FY26 locked to the ~$56B guide, FY27 anchored at ~10 GW); + non-AI semi (~2%/yr) + software (~8%/yr). <b>EV/EBITDA</b>: EV = revenue × EBITDA margin × multiple; equity = EV − net debt ($50.3B). <b>P/E</b>: EPS = revenue × net margin ÷ 4.94B shares; price = EPS × P/E. The margin defaults to Bloomberg\'s expectation for the chosen year (adjustable). Upside vs the live price (or the ~$'+VAL_PRICE_FALLBACK+' fallback).</div></div>'+
+  '<div class="card"><div class="card-header"><span class="card-title">Margins used — what the market expects</span><span class="card-subtitle" id="sensMargSub">Bloomberg consensus</span></div>'+
+    '<div class="card-body"><div class="sens-ladder" id="sensLadder"></div><div class="ovlr-money-note" id="sensMargNote"></div></div></div>'+
+  '<div class="stats-row c5" id="sensKpis"></div>'+
+  '<div class="card"><div class="card-header"><span class="card-title">Implied value per share by fiscal year</span><span class="card-subtitle">how the valuation grows into the committed ramp</span></div>'+
+    '<div class="card-body"><div class="chart-c" style="height:260px"><canvas id="sensChart"></canvas></div></div>'+
+    '<div class="card-body" id="sensNote"></div></div>';
+}
+function sensSyncControls(pane, snap){
+  var isPe = pane.querySelector('#sensMethod .tl-fy-b.active').getAttribute('data-m')==='pe';
+  var idx = parseInt(pane.querySelector('#sensFy .tl-fy-b.active').getAttribute('data-fy'),10);
+  var mEl=pane.querySelector('#sMarg'), mL=pane.querySelector('#sMargL'), mV=pane.querySelector('#sMargv');
+  var uEl=pane.querySelector('#sMult'), uL=pane.querySelector('#sMultL'), uV=pane.querySelector('#sMultv');
+  mL.textContent = isPe ? 'Net margin' : 'Adj. EBITDA margin';
+  mEl.min = isPe?45:60; mEl.max = isPe?60:72; mEl.step = 0.5;
+  if(snap==='method' || snap==='fy' || snap==='init') mEl.value = (isPe?SENS_NET[idx]:SENS_EBITDA[idx]);
+  mV.textContent = parseFloat(mEl.value).toFixed(1)+'%';
+  uL.textContent = isPe ? 'P/E multiple' : 'EV / EBITDA multiple';
+  uEl.min = isPe?15:12; uEl.max = isPe?40:30; uEl.step = 0.5;
+  if(snap==='method' || snap==='init') uEl.value = isPe?25:22;
+  uV.textContent = parseFloat(uEl.value).toFixed(1)+'×';
+}
+function sensRender(pane){
+  var isPe = pane.querySelector('#sensMethod .tl-fy-b.active').getAttribute('data-m')==='pe';
+  var idx = parseInt(pane.querySelector('#sensFy .tl-fy-b.active').getAttribute('data-fy'),10);
+  var dpg=parseFloat(pane.querySelector('#sDpg').value), gw29=parseFloat(pane.querySelector('#sGw29').value);
+  var marg=parseFloat(pane.querySelector('#sMarg').value), mult=parseFloat(pane.querySelector('#sMult').value);
+  var r=tlCompute(dpg,gw29,8);
+  var price0=(_valQuote && _valQuote.price) || VAL_PRICE_FALLBACK;
+  // implied per-share for year i; uses the slider margin for the selected year, else BBG margin.
+  function implied(i){
+    var m = (i===idx) ? marg : (isPe?SENS_NET[i]:SENS_EBITDA[i]);
+    var rev=r.total[i];
+    if(isPe){ var ni=rev*m/100, eps=ni/SENS_SHARES; return {rev:rev,prof:ni,eps:eps,px:eps*mult}; }
+    var eb=rev*m/100, ev=eb*mult, eq=ev-SENS_NETDEBT; return {rev:rev,prof:eb,ev:ev,eq:eq,px:eq/SENS_SHARES};
   }
-  var active = pane.querySelector('.ovt-subtab.active');
-  showCustSub(pane, active ? active.getAttribute('data-ovst') : CUST_SUBTABS[0].key);
+  var s=implied(idx), up=s.px/price0-1, bbg=TL_BBG_TOTAL[idx];
+  // margin ladder (BBG expectation for the selected FY; active margin highlighted)
+  var lad=pane.querySelector('#sensLadder');
+  var items=[['Gross',SENS_GROSS[idx],false],['Operating',SENS_OP[idx],false],['EBITDA',SENS_EBITDA[idx],!isPe],['Net',SENS_NET[idx],isPe]];
+  if(lad) lad.innerHTML = items.map(function(it,i){
+    return '<div class="sens-lad-i'+(it[2]?' on':'')+'"><div class="sens-lad-v">'+it[1].toFixed(1)+'%</div><div class="sens-lad-l">'+it[0]+(it[2]?' ·used':'')+'</div></div>'+
+      (i<items.length-1?'<span class="sens-lad-ar">›</span>':'');
+  }).join('');
+  var msub=pane.querySelector('#sensMargSub'); if(msub) msub.textContent='Bloomberg consensus · '+TL_FY[idx];
+  var mn=pane.querySelector('#sensMargNote');
+  if(mn) mn.innerHTML='The valuation uses the <strong>'+(isPe?'net':'EBITDA')+' margin</strong> ('+marg.toFixed(1)+'% — Bloomberg expects '+((isPe?SENS_NET[idx]:SENS_EBITDA[idx])).toFixed(1)+'% for '+TL_FY[idx]+'). Note <strong>gross margin steps down</strong> ('+SENS_GROSS[0].toFixed(0)+'%→'+SENS_GROSS[4].toFixed(0)+'% FY25→FY29) as the lower-margin AI/XPU mix grows, yet <strong>operating &amp; EBITDA margins hold ~67%</strong> on opex leverage — the reason Broadcom\'s profitability is resilient even as chip mix dilutes gross margin.';
+  // KPIs
+  var kp=pane.querySelector('#sensKpis');
+  if(kp) kp.innerHTML = isPe ?
+    (sensTile('Revenue · '+TL_FY[idx],'$'+s.rev.toFixed(0)+'B',(s.rev-bbg>=0?'+':'')+(s.rev-bbg).toFixed(0)+'B vs BBG','t-ai')+
+     sensTile('Net income','$'+s.prof.toFixed(0)+'B',marg.toFixed(1)+'% margin','t-accent')+
+     sensTile('Adj. EPS','$'+s.eps.toFixed(2),TL_FY[idx]+' basis','t-neutral')+
+     sensTile('Implied price','$'+s.px.toFixed(0),mult.toFixed(1)+'× P/E','t-accent')+
+     sensTile('Upside vs $'+price0.toFixed(0),(up>=0?'+':'')+(up*100).toFixed(0)+'%',(_valQuote?'live price':'fallback price'),up>=0?'t-pos':'t-warn')) :
+    (sensTile('Revenue · '+TL_FY[idx],'$'+s.rev.toFixed(0)+'B',(s.rev-bbg>=0?'+':'')+(s.rev-bbg).toFixed(0)+'B vs BBG','t-ai')+
+     sensTile('Adj EBITDA','$'+s.prof.toFixed(0)+'B',marg.toFixed(1)+'% margin','t-accent')+
+     sensTile('Implied EV','$'+(s.ev/1000).toFixed(2)+'T',mult.toFixed(1)+'× EBITDA','t-neutral')+
+     sensTile('Implied price','$'+s.px.toFixed(0),TL_FY[idx]+' basis','t-accent')+
+     sensTile('Upside vs $'+price0.toFixed(0),(up>=0?'+':'')+(up*100).toFixed(0)+'%',(_valQuote?'live price':'fallback price'),up>=0?'t-pos':'t-warn'));
+  // chart: implied price by FY (selected year at slider margin, others at BBG margin) + current price
+  var pxs=[implied(1).px,implied(2).px,implied(3).px,implied(4).px];
+  freshChart('sensChart',{type:'bar',data:{labels:['FY26','FY27','FY28','FY29'],datasets:[
+    {label:'Implied price / share',data:pxs,backgroundColor:pxs.map(function(p,i){return (i+1)===idx?'#CC092F':'#EBA9B4';}),borderRadius:3,order:2},
+    {type:'line',label:'Current price ($'+price0.toFixed(0)+')',data:[price0,price0,price0,price0],borderColor:'#141C2B',borderWidth:2,borderDash:[5,4],pointRadius:0,order:1}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{position:'bottom',labels:{font:{family:'Figtree',size:10.5},color:'#6B7A8D',usePointStyle:true,pointStyleWidth:12,boxHeight:8,padding:9}},
+      tooltip:{backgroundColor:'#141C2B',titleFont:{family:'Figtree',size:11},bodyFont:{family:'Figtree',size:12},padding:9,cornerRadius:7,callbacks:{label:function(c){return c.dataset.label+': $'+Math.round(c.raw);}}}},
+    scales:{x:{grid:{display:false},border:{display:false},ticks:{font:{family:'Figtree',size:11,weight:'600'},color:'#6B7A8D'}},
+      y:{grid:{color:'#EDF0F5',drawTicks:false},border:{display:false},ticks:{font:{family:'Figtree',size:10},color:'#9AACBE',callback:function(v){return '$'+v;}}}}}});
+  var nn=pane.querySelector('#sensNote');
+  if(nn) nn.innerHTML='<div class="insight">On <strong>'+(isPe?mult.toFixed(1)+'× P/E':mult.toFixed(1)+'× EV/EBITDA')+'</strong> at a <strong>'+marg.toFixed(1)+'% '+(isPe?'net':'EBITDA')+' margin</strong>, valuing Broadcom on <strong>'+TL_FY[idx]+'</strong> ($'+dpg.toFixed(1)+'B/GW, '+gw29+' GW by FY29) implies <strong>$'+s.px.toFixed(0)+'/share</strong> ('+(up>=0?'+':'')+(up*100).toFixed(0)+'% vs $'+price0.toFixed(0)+'). Your '+TL_FY[idx]+' revenue of $'+s.rev.toFixed(0)+'B is '+(Math.abs(s.rev-bbg)<3?'in line with':(s.rev>bbg?'above':'below'))+' Bloomberg consensus ($'+bbg.toFixed(0)+'B).</div>';
+}
+function initSens(pane){
+  if(!pane._sWired){ pane._sWired=true;
+    pane.querySelectorAll('#sensMethod .tl-fy-b').forEach(function(b){
+      b.onclick=function(){ pane.querySelectorAll('#sensMethod .tl-fy-b').forEach(function(x){ x.classList.toggle('active', x===b); }); sensSyncControls(pane,'method'); sensRender(pane); };
+    });
+    pane.querySelectorAll('#sensFy .tl-fy-b').forEach(function(b){
+      b.onclick=function(){ pane.querySelectorAll('#sensFy .tl-fy-b').forEach(function(x){ x.classList.toggle('active', x===b); }); sensSyncControls(pane,'fy'); sensRender(pane); };
+    });
+    ['sDpg','sGw29'].forEach(function(id){
+      var el=pane.querySelector('#'+id); if(!el) return;
+      el.addEventListener('input', function(){ var lbl=pane.querySelector('#'+id+'v'); if(lbl) lbl.textContent=(el.getAttribute('data-pre')||'')+el.value+(el.getAttribute('data-suf')||''); sensRender(pane); });
+    });
+    pane.querySelector('#sMarg').addEventListener('input', function(){ pane.querySelector('#sMargv').textContent=parseFloat(this.value).toFixed(1)+'%'; sensRender(pane); });
+    pane.querySelector('#sMult').addEventListener('input', function(){ pane.querySelector('#sMultv').textContent=parseFloat(this.value).toFixed(1)+'×'; sensRender(pane); });
+  }
+  sensSyncControls(pane,'init');
+  sensRender(pane);
 }
 
 var DEEP_TABS = [
@@ -1996,7 +2141,7 @@ var DEEP_TABS = [
   { key:'customers',  label:'Customers',           body:customersBody,  init:initCustomers },
   { key:'management', label:'Management',          body:managementBody, init:initManagement },
   { key:'madeep',     label:'PE Strategy',         body:maDeepBody,     init:initMaDeep },
-  { key:'valuation',  label:'Valuation',           body:valuationBody,  init:initValuation },
+  { key:'valuation',  label:'Valuation',           body:valuationTabBody, init:initValuationTab },
   { key:'industry',   label:'Industry Analysis',   body:industryBody,   init:initIndustry },
 ];
 function deepTabDef(key){ for(var i=0;i<DEEP_TABS.length;i++){ if(DEEP_TABS[i].key===key) return DEEP_TABS[i]; } return null; }

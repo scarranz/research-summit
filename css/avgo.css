@@ -441,6 +441,23 @@
 .ov-avgo .tl-sl label b { font-size:12.5px; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; }
 .ov-avgo .tl-sl input[type=range] { width:100%; accent-color:var(--accent); cursor:pointer; }
 @media (max-width:720px){ .ov-avgo .tl-ctl { grid-template-columns:1fr; } }
+
+/* Sensitivity — fiscal-year pill toggle. */
+.ov-avgo .tl-fy { display:inline-flex; gap:3px; background:var(--main-bg); border:1px solid var(--border); border-radius:9px; padding:4px; }
+.ov-avgo .tl-fy-b { background:none; border:none; font-family:'Figtree',sans-serif; font-size:12px; font-weight:600; color:var(--text-secondary); padding:6px 16px; border-radius:6px; cursor:pointer; transition:all .15s; font-variant-numeric:tabular-nums; }
+.ov-avgo .tl-fy-b:hover { color:var(--text-primary); }
+.ov-avgo .tl-fy-b.active { background:var(--accent); color:#fff; }
+.ov-avgo .sens-toggles { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+
+/* Sensitivity — margin ladder (gross → op → EBITDA → net). */
+.ov-avgo .sens-ladder { display:flex; align-items:stretch; gap:6px; flex-wrap:wrap; }
+.ov-avgo .sens-lad-i { flex:1 1 0; min-width:92px; border:1px solid var(--border); border-radius:var(--radius-sm); padding:9px 11px; text-align:center; background:var(--card-bg); }
+.ov-avgo .sens-lad-i.on { border-color:var(--accent); background:var(--accent-light); }
+.ov-avgo .sens-lad-v { font-size:17px; font-weight:700; letter-spacing:-0.5px; font-variant-numeric:tabular-nums; }
+.ov-avgo .sens-lad-i.on .sens-lad-v { color:var(--accent); }
+.ov-avgo .sens-lad-l { font-size:10px; font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.04em; margin-top:2px; }
+.ov-avgo .sens-lad-ar { display:flex; align-items:center; color:var(--text-tertiary); font-size:16px; font-weight:700; }
+@media (max-width:640px){ .ov-avgo .sens-lad-ar { display:none; } }
 /* Drill-down modal sits above the app shell. */
 .ov-avgo .dd-overlay { z-index:1000; }
 /* Management sub-view (All Management / Hock Tan) toggle panes. */

@@ -1454,6 +1454,14 @@ export async function loadCompaniesPage() {
   if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px"><div class="loading-spinner" style="margin:0 auto 12px;width:28px;height:28px"></div><div style="color:var(--mu);font-size:13px">Loading companies...</div></div>';
   try {
     await loadCompaniesFromDb();
+    // Local-dev only: surface the in-development QCOM overview in the Companies grid
+    // without a DB write (so we can preview it inside the real portal chrome). Gated
+    // to localhost, so it never affects production. Remove once QCOM is added for real.
+    if (location.hostname === 'localhost' && !_companies.find(function(c){ return c.ticker === 'QCOM'; })) {
+      _companies.push({ id: 'qcom-local', ticker: 'QCOM', name: 'QUALCOMM Incorporated',
+        group_name: 'Semiconductors', sector: 'Technology', logo_domain: 'qualcomm.com',
+        mono: 'QC', status: 'active', price: null });
+    }
     initCoControls();
     renderCoGrid();
     initAddModal();

@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/shared.css">
@@ -16,6 +17,7 @@
 <link rel="stylesheet" href="css/hedge-funds.css">
 <link rel="stylesheet" href="css/companies.css">
 <link rel="stylesheet" href="css/overview.css">
+<link rel="stylesheet" href="css/avgo.css">
 <link rel="stylesheet" href="css/semi-map.css">
 <link rel="stylesheet" href="css/team.css">
 <link rel="stylesheet" href="css/fund-returns.css">
@@ -107,11 +109,14 @@
     </div>
     <div class="cotabs">
       <button class="cotab active" data-pane="overview" onclick="coTab('overview')">Overview</button>
+      <button class="cotab" data-pane="deepdive" id="co-tab-deepdive" onclick="coTab('deepdive')" style="display:none">Deep Dive</button>
       <button class="cotab" data-pane="pillars" onclick="coTab('pillars')">Pillars</button>
       <button class="cotab" data-pane="resources" onclick="coTab('resources')">Resources</button>
     </div>
 
     <div class="copane active" data-pane="overview" style="min-height:240px"></div>
+
+    <div class="copane" data-pane="deepdive" style="min-height:240px"></div>
 
     <div class="copane" data-pane="pillars">
       <div class="pillar-filter" id="pillar-filter"></div>
@@ -539,6 +544,7 @@
 </div><!-- /shell -->
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 <script src="env.js"></script>
 <script>
 // Global error handler — logs unhandled errors to console with context

@@ -969,8 +969,6 @@ function updateLiveHeader(c){
     if(sub){
       var bits=[];
       if(q.changePct!=null){ var up=q.changePct>=0; bits.push('<span class="co-px-ch '+(up?'up':'down')+'">'+(up?'▲ +':'▼ −')+Math.abs(q.changePct).toFixed(2)+'%</span>'); }
-      if(q.marketCap!=null) bits.push('<span class="co-px-mc">'+coFmtBig(q.marketCap)+' mkt cap</span>');
-      bits.push('<span class="co-px-live">live · Massive</span>');
       sub.innerHTML=bits.join('');
     }
   }).catch(function(){ /* keep static price */ });
@@ -985,13 +983,17 @@ function closeCo(){
 function coTab(pane){
   document.querySelectorAll('.cotab').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-pane')===pane);});
   document.querySelectorAll('.copane').forEach(function(p){p.classList.toggle('active',p.getAttribute('data-pane')===pane);});
-  // Charts need a laid-out (visible) canvas to size correctly — (re)init when Overview becomes active.
+  // Charts need a laid-out (visible) canvas to size correctly — (re)init when a pane becomes active.
   if (pane === 'overview' && _currentOverview && _currentOverview.init) {
     requestAnimationFrame(function(){ _currentOverview.init(); });
+  }
+  if (pane === 'deepdive' && _currentDeepDive && _currentDeepDive.init) {
+    requestAnimationFrame(function(){ _currentDeepDive.init(); });
   }
 }
 
 var _currentOverview = null;
+var _currentDeepDive = null;
 
 // Renders the per-company Overview pane. Each company can look different (see overviews/).
 function renderOverview(c){
@@ -1005,6 +1007,18 @@ function renderOverview(c){
   pane.innerHTML = html;
   loadSegmentData(c.id, c.ticker);
   if (_currentOverview && _currentOverview.init) requestAnimationFrame(function(){ _currentOverview.init(); });
+  renderDeepDive(c);
+}
+
+// Renders the optional "Deep Dive" tab. Only overviews that expose a `deepDive`
+// module (e.g. NVDA) get the tab; for every other company it stays hidden.
+function renderDeepDive(c){
+  _currentDeepDive = (_currentOverview && _currentOverview.deepDive) || null;
+  var tabBtn = document.getElementById('co-tab-deepdive');
+  var pane = document.querySelector('.copane[data-pane="deepdive"]');
+  if (tabBtn) tabBtn.style.display = _currentDeepDive ? '' : 'none';
+  // Render the markup now; charts init lazily when the tab is first shown (coTab).
+  if (pane) pane.innerHTML = _currentDeepDive ? _currentDeepDive.html(c) : '';
 }
 
 // ─── Segment Data (Fiscal.ai) ─────────────────────────────────

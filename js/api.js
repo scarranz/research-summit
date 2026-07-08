@@ -167,6 +167,24 @@ export async function liveQuote(ticker) {
   return ok({ price: price, changePct: tk ? num(tk.todaysChangePerc) : null, marketCap: marketCap, ev: ev, netDebt: netDebt, shares: shares });
 }
 
+// Historical margins for a ticker via the `get-margins` edge function (which pulls
+// Massive's income + cash-flow statements server-side and computes the ratios).
+// Returns { success, data } where data is an ascending-by-year array of
+// { fy, _y, gross, oper, net, ebitda, cfo, fcf } (margins as %, one decimal) — or a
+// failure envelope if there's no data (caller keeps its fallback). Deploy-gated on the
+// get-margins function existing.
+export async function fetchMargins(ticker) {
+  var { data, error } = await supabase.functions.invoke('get-margins', { body: { ticker: ticker, limit: 20 } });
+  if (error) return fail(error.message);
+  var results = (data && Array.isArray(data.results)) ? data.results : [];
+  if (!results.length) return fail('no margin data');
+  var rows = results.map(function (r) {
+    return { fy: r.fy, _y: r.fiscal_year, gross: r.gross, oper: r.oper, net: r.net, ebitda: r.ebitda, cfo: r.cfo, fcf: r.fcf };
+  });
+  if (rows.length > 12) rows = rows.slice(rows.length - 12);   // cap the history we surface
+  return ok(rows);
+}
+
 // ─── Company Resources ──────────────────────────────────────
 
 export async function fetchResources(companyId) {

@@ -15,6 +15,7 @@ import { uberOverview } from './uber.js';
 import { nvidiaOverview } from './nvidia.js';
 import { instacartOverview } from './instacart.js';
 import { spotOverview } from './spot.js';
+import { avgoOverview } from './avgo.js';
 
 var OVERVIEWS = {
   RELY: remitlyOverview,
@@ -30,6 +31,7 @@ var OVERVIEWS = {
   NVDA: nvidiaOverview,
   CART: instacartOverview,
   SPOT: spotOverview,
+  AVGO: avgoOverview,
 };
 
 // Returns the overview module for a ticker, or null if none is built yet.

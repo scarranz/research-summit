@@ -1407,35 +1407,23 @@ function stdOverviewBody(c){
   h+='<div class="ov-foot">'+esc(IC_OV_SOURCES)+'</div>';
   return h;
 }
-// Reveal a top-level tab. Overview → (re)draw the peer scatter; Deep Dive → rebuild
-// the currently-active sub-tab's lazy charts (fin/advertising/valuation/mgmt).
-function showOvt(root,key){
-  root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt')===key); });
-  root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovt')!==key); });
-  if(key==='overview'){ requestAnimationFrame(function(){ icScRender(root); }); }
-  else if(key==='deepdive'){
-    var b=root.querySelector('.ov-subtab.active'), tab=b?b.getAttribute('data-catab'):null;
-    requestAnimationFrame(function(){
-      if(tab==='fin'){ renderFin(); buildCartGuide(); }
-      else if(tab==='advertising') buildAdChart();
-      else if(tab==='valuation') CART_VAL.init(root);
-      else if(tab==='mgmt') CART_MGMT.init(root);
-    });
-  }
-}
 
 function html(c){
   var h = '<div class="ov ov-cart" data-brand="CART">';
-
-  // ── Top-level tabs: Overview (standardized) + Deep Dive (the full legacy profile) ──
-  h += '<div class="ovt-tabs">'+
-    '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="deepdive">Deep Dive</button>'+
-  '</div>';
-  h += '<div class="ovt-pane" data-ovt="overview">'+stdOverviewBody(c)+'</div>';
-
-  // ══ DEEP DIVE — the entire prior Overview, preserved verbatim (Golden Rule #1) ══
-  h += '<div class="ovt-pane" data-ovt="deepdive" hidden>';
+  h += stdOverviewBody(c);
+  // Shared modal (overview.css). Overview triggers use it directly; init() hoists it
+  // to #co-detailview so the Deep Dive triggers reach it on the sibling tab too.
+  h += '<div class="ov-modal-back" id="ovModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
+    '<button class="ov-modal-x" id="ovModalX" aria-label="Close">×</button>'+
+    '<div class="ov-modal-t" id="ovModalT"></div><div class="ov-modal-b" id="ovModalB"></div></div></div>';
+  h += '</div>';
+  return h;
+}
+// ══ Deep Dive: SIBLING profile tab (rendered into the Deep Dive copane), no longer
+//    nested inside the Overview. The entire prior Overview, preserved verbatim
+//    (Golden Rule #1). Own root class (.ov-cart-dd) scopes it. ══
+function deepDiveHtml(c){
+  var h = '<div class="ov ov-cart ov-cart-dd" data-brand="CART">';
   h += '<div class="ov-subtabs">'+
     '<button class="ov-subtab active" data-catab="overview">Deep Overview</button>'+
     '<button class="ov-subtab" data-catab="marketplace">Marketplace</button>'+
@@ -1569,11 +1557,7 @@ function html(c){
   h += '</div>'; // end calls pane
 
   h += '<div class="ov-foot">'+esc(SOURCES)+'</div>';
-  h += '</div>'; // end deepdive .ovt-pane
-  h += '<div class="ov-modal-back" id="ovModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
-    '<button class="ov-modal-x" id="ovModalX" aria-label="Close">×</button>'+
-    '<div class="ov-modal-t" id="ovModalT"></div><div class="ov-modal-b" id="ovModalB"></div></div></div>';
-  h += '</div>';
+  h += '</div>'; // end deepdive root (.ov-cart-dd)
   return h;
 }
 
@@ -1627,16 +1611,16 @@ function buildCartGuide(){
 function switchCartGuide(root,k){ if(!CGUIDE[k])return; _cgMetric=k; root.querySelectorAll('.cg-pill').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-cgm')===k); }); buildCartGuide(); }
 
 function init(c){
-  var root = document.querySelector('.ov-cart'); if (!root) return;
+  // Root spans BOTH profile panes (Overview + Deep Dive copanes under #co-detailview),
+  // so this single pass wires the Overview scatter, the Deep Dive sub-tabs and the
+  // shared modal — the element set matches the old single .ov-cart root.
+  var root = document.getElementById('co-detailview'); if (!root) return;
   (function(){ var tip=root.querySelector('#cartPeerTip'); if(!tip) return;
     root.querySelectorAll('.cpm-dot').forEach(function(dot){
       dot.addEventListener('mouseenter',function(){ var w=dot.getAttribute('data-why'); if(!w) return; tip.innerHTML='<span class="pt-n">'+dot.getAttribute('data-name')+'</span>'+w; tip.hidden=false; });
       dot.addEventListener('mousemove',function(e){ tip.style.left=Math.min(e.clientX+16, window.innerWidth-270)+'px'; tip.style.top=(e.clientY+16)+'px'; });
       dot.addEventListener('mouseleave',function(){ tip.hidden=true; });
     }); })();
-
-  // Top-level tabs (Overview ⇄ Deep Dive)
-  root.querySelectorAll('.ovt-tab').forEach(function(btn){ btn.onclick=function(){ showOvt(root, btn.getAttribute('data-ovt')); }; });
 
   // Deep-Dive sub-tab switching (unchanged — still drives the legacy panes)
   root.querySelectorAll('.ov-subtab').forEach(function(b){
@@ -1751,9 +1735,23 @@ function init(c){
   // Live market cap (Key Facts cell + peer bubbles) — Massive via api.liveQuote; degrades gracefully in preview
   function icLiveOne(tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(q){ if(!q||q.marketCap==null) return; var mcB=q.marketCap/1e9; IC_SC.peers.forEach(function(p){ if(p.tk===tk) p.mc=mcB; }); if(tk==='CART'){ var el=root.querySelector('#icMc'); if(el) el.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':Math.round(mcB)+'B')+' · live'; } scRefresh(); }).catch(function(){}); }
   IC_SC.peers.forEach(function(p){ if(p.tk) icLiveOne(p.tk); });
-
-  // Reveal the active top-level tab (Overview by default)
-  var activeOvt=root.querySelector('.ovt-tab.active'); showOvt(root, activeOvt?activeOvt.getAttribute('data-ovt'):'overview');
+  icScRender(root); // first paint of the standardized Overview scatter (no ovt-tab gate anymore)
+  // Hoist the modal to #co-detailview so it stays visible from either profile tab
+  // (an inactive .copane is display:none, which would hide a modal nested inside it).
+  root.querySelectorAll(':scope > .ov-modal-back').forEach(function(m){ if(m.id!=='ovModalBack') m.remove(); });
+  var md=root.querySelector('#ovModalBack'); if(md && md.parentNode!==root) root.appendChild(md);
+}
+// Deep Dive charts build lazily: init() already wired the sub-tabs (root spans both
+// panes), so here we only paint the active sub-pane's charts now that it is visible.
+function deepDiveInit(c){
+  var root = document.getElementById('co-detailview'); if(!root) return;
+  var b=root.querySelector('.ov-subtab.active'), tab=b?b.getAttribute('data-catab'):null;
+  requestAnimationFrame(function(){
+    if(tab==='fin'){ renderFin(); buildCartGuide(); }
+    else if(tab==='advertising') buildAdChart();
+    else if(tab==='valuation') CART_VAL.init(root);
+    else if(tab==='mgmt') CART_MGMT.init(root);
+  });
 }
 
-export var instacartOverview = { html: html, init: init };
+export var instacartOverview = { html: html, init: init, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

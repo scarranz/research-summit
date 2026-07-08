@@ -41,8 +41,9 @@ authoritative source.**
 - Normalize market cap / absolute figures to **USD**; note native currency + FX date.
 
 ## Step 4 — Fill the 7 Overview blocks
-Produce `js/overviews/<name>.js` exporting `{ html(company), init(company) }`, rendering the
-7 blocks in order per §4 of the conventions:
+Produce `js/overviews/<name>.js` exporting `{ html(company), init(company) }` for the Overview
+pane (add a `deepDive: { html, init }` sub-module only if there is deeper content — see §1 and
+Step 5), rendering the 7 blocks in order per §4 of the conventions:
 - **Key Facts** — exactly 10 cells (5×2), missing ones substituted not blank; a **3px top
   accent line in the company's palette color** (`border-top:3px solid var(--brand-2, var(--brand))`),
   matching the Deep Overview KPI strip.
@@ -87,14 +88,19 @@ yet); **no margins block**.
 
 If the company is new, register its ticker in `js/overviews/index.js`.
 
-## Step 5 — Two-tab structure & migration (never delete)
-Set up the two top-level tabs: **Overview** (this standardized output) and **Deep Dive**.
-- **Existing company (e.g. UBER):** move its current tabs/content into **Deep Dive**. Any
-  existing Overview content that does **not** fit the new Overview conventions is **relocated
-  to the most relevant Deep Dive section — never deleted.** Leave a code note where content
-  moved from.
-- **New company:** create Deep Dive as an empty scaffold (its standard is not defined yet —
-  do not auto-fill it).
+## Step 5 — Two SIBLING tabs & migration (never delete)
+Overview and Deep Dive are **sibling profile tabs** (§1), not an Overview containing a Deep
+Dive. The Overview module exports `{ html, init }`; deeper content goes in a separate
+`deepDive: { html, init }` sub-module that `companies.js` renders into the Deep Dive copane
+(the tab shows only when `deepDive` exists, and `deepDive.init()` runs lazily on first open).
+Give the Deep Dive its own root class (e.g. `.ov-<brand>-dd`) and **hoist any modal to
+`#co-detailview`** so it stays visible from either tab (an inactive `.copane` is `display:none`).
+- **Existing company (e.g. UBER):** move its current tabs/content into the **`deepDive`
+  sub-module**. Any existing Overview content that does **not** fit the new Overview conventions
+  is **relocated to the most relevant Deep Dive section — never deleted.** Leave a code note
+  where content moved from.
+- **New company:** omit `deepDive` (the tab stays hidden) or add an empty scaffold — its
+  standard is not defined yet, so do not auto-fill it.
 
 ## Step 6 — Self-audit (double-check) & report
 Run the **self-audit checklist** (§9 of the conventions). Print a **PASS/FAIL line per item**

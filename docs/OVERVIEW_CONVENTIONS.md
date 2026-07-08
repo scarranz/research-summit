@@ -26,9 +26,13 @@ If you were invoked via `/fill-overview <TICKER>`, this file is your contract.
 
 ---
 
-## 1. Macro structure — two tabs
+## 1. Macro structure — two SIBLING profile tabs
 
-Every company profile has exactly two top-level tabs:
+Every company profile has exactly two top-level tabs that sit **side by side** —
+**Overview · Deep Dive** — rendered by `companies.js` as sibling profile panes (the Deep
+Dive tab appears immediately to the right of Overview, before Pillars / Resources). They are
+**NOT** an Overview that contains a Deep Dive inside it: avoid the "overview within an
+overview." The standardized Overview is one tab; the Deep Dive is the *next* tab beside it.
 
 - **Overview** — the standardized hook. Its structure is fixed (see §4). This is what
   `/fill-overview` produces automatically.
@@ -36,6 +40,24 @@ Every company profile has exactly two top-level tabs:
   it is a **container**. For an existing company (e.g. UBER) it holds the migrated tabs
   (Company Offer, Financials, Management, History). For a brand-new company it starts as an
   empty scaffold that Summit fills later by hand.
+
+**How it's wired (module contract).** A company's Overview module exports
+`{ html(c), init(c) }` for the Overview pane and, **when it has deeper content**, a
+`deepDive: { html(c), init(c) }` sub-module for the Deep Dive pane (this is San's pattern on
+NVDA/AVGO; UBER/LYFT/CART follow it). `companies.js` renders `html` into the Overview copane
+and `deepDive.html` into the Deep Dive copane, **shows the Deep Dive tab only when `deepDive`
+exists**, and calls `deepDive.init()` lazily the first time that tab is opened (Chart.js needs
+a laid-out canvas). A company with **no** deeper content simply omits `deepDive` and the Deep
+Dive tab stays hidden.
+
+- **Company with nothing deeper yet:** the Deep Dive lives **beside** the Overview (a hidden
+  sibling tab), never nested inside it — add a `deepDive` scaffold when there is content.
+- **Company being migrated (has content):** restructure so the old nested tabs move into the
+  `deepDive` sub-module (see §6), not under the Overview.
+- **Shared ancestor:** both panes live under `#co-detailview`, so an Overview `init` that must
+  reach Deep Dive markup can query that shared ancestor. Any **modal/overlay must be hoisted to
+  `#co-detailview`** — an inactive `.copane` is `display:none`, which would hide a modal nested
+  inside a pane the reader isn't currently on.
 
 ---
 
@@ -357,8 +379,14 @@ Keep each *visible* entry to a short line; push depth into a Read More with sequ
 
 ## 6. Deep Dive (container, for now)
 
+The Deep Dive is a **sibling profile tab** (see §1), exposed by the module as a
+`deepDive: { html(c), init(c) }` sub-module — **not** a tab nested inside the Overview.
+Its own render root should carry a distinct class (e.g. `.ov-uber-dd`) for scoping, while
+still keeping the shared `.ov`/`.ov-<brand>` classes for styling. Charts build lazily in
+`deepDive.init()` when the tab is first opened.
+
 Do **not** auto-fill Deep Dive content for new companies — its standard is undefined.
-For migrations, create the Deep Dive tab and **move any non-conforming existing Overview
+For migrations, create the Deep Dive sub-module and **move any non-conforming existing Overview
 content into the most relevant Deep Dive section** (Golden Rule #1). Leave a short note in
 the code where content was relocated from.
 
@@ -387,7 +415,9 @@ the code where content was relocated from.
 
 ## 8. Registration (making the company appear)
 
-1. Create `js/overviews/<name>.js` exporting `{ html(company), init(company) }`.
+1. Create `js/overviews/<name>.js` exporting `{ html(company), init(company) }` — and, when
+   the company has deeper content, add a `deepDive: { html(company), init(company) }`
+   sub-module (see §1). Omit `deepDive` entirely if there is nothing deeper yet.
 2. Register its ticker in `js/overviews/index.js` (`OVERVIEWS` map).
 3. The company must have a row in the `companies` table (via the portal "Add Company"
    flow) for the profile to open. New/auto-filled content should be treated as a **draft

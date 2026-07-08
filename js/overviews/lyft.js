@@ -1524,15 +1524,20 @@ function stdOverviewBody(c){
 // ─── Top-level shell ──────────────────────────────────────────────────────────
 function html(c){
   var h = '<div class="ov ov-lyft" data-brand="LYFT">';
-  // Two top-level tabs: the standardized Overview hook + the Deep Dive container.
-  h += '<div class="ovt-tabs">'+
-    '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="deepdive">Deep Dive</button>'+
-  '</div>';
-  h += '<div class="ovt-pane" data-ovt="overview">'+stdOverviewBody(c)+'</div>';
-  // ── Deep Dive: everything deeper. Holds all 10 prior tabs (the old "Overview" becomes
-  //    "Deep Overview"). Nothing deleted (Golden Rule #1). ──
-  h += '<div class="ovt-pane" data-ovt="deepdive" hidden>'+
+  h += stdOverviewBody(c);
+  // Shared modal (overview.css). Overview triggers use it directly; init() hoists it
+  // to #co-detailview so the Deep Dive triggers reach it on the sibling tab too.
+  h += '<div class="ov-modal-back" id="lyModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
+    '<button class="ov-modal-x" id="lyModalX" aria-label="Close">×</button>'+
+    '<div class="ov-modal-t" id="lyModalT"></div><div class="ov-modal-b" id="lyModalB"></div></div></div>';
+  h += '</div>';
+  return h;
+}
+// ── Deep Dive: SIBLING profile tab (rendered into the Deep Dive copane), no longer
+//    nested inside the Overview. Holds all prior tabs (the old "Overview" becomes
+//    "Deep Overview"). Nothing deleted (Golden Rule #1). Own root class (.ov-lyft-dd). ──
+function deepDiveHtml(c){
+  var h = '<div class="ov ov-lyft ov-lyft-dd" data-brand="LYFT">'+
     '<div class="dd-tabs">'+
       '<button type="button" class="dd-tab active" data-dd="overview">Deep Overview</button>'+
       '<button type="button" class="dd-tab" data-dd="strategy">Strategy</button>'+
@@ -1556,11 +1561,6 @@ function html(c){
     '<div class="dd-pane" data-dd="mgmt" hidden>'+LYFT_MGMT.body()+'</div>'+
     '<div class="dd-pane" data-dd="calls" hidden>'+callsBody()+'</div>'+
   '</div>';
-  // Modal scaffold (shared overview.css). Hidden until a milestone is tapped.
-  h += '<div class="ov-modal-back" id="lyModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
-    '<button class="ov-modal-x" id="lyModalX" aria-label="Close">×</button>'+
-    '<div class="ov-modal-t" id="lyModalT"></div><div class="ov-modal-b" id="lyModalB"></div></div></div>';
-  h += '</div>';
   return h;
 }
 
@@ -2000,13 +2000,6 @@ function showDD(root, key){
   requestAnimationFrame(function(){ buildDD(root, key); });
 }
 function wireDD(root){ root.querySelectorAll('.dd-tab').forEach(function(btn){ btn.onclick=function(){ showDD(root, btn.getAttribute('data-dd')); }; }); }
-// ── Top-level: Overview (standardized scatter) ⇄ Deep Dive ──
-function showOvt(root, key){
-  root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt')===key); });
-  root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt')!==key); });
-  if (key==='overview') requestAnimationFrame(function(){ lyScRender(root); });
-  else if (key==='deepdive'){ var d=activeDD(root); requestAnimationFrame(function(){ buildDD(root, d); }); }
-}
 
 // ─── Modal (milestone detail) ─────────────────────────────────────────────────
 function wireModal(root){
@@ -2072,12 +2065,12 @@ function renderLive(root){
   }).catch(function(){ el.hidden=true; el.innerHTML=''; }); // hide cleanly until the get-quote edge fn is deployed
 }
 function init(c){
-  var root = document.querySelector('.ov-lyft');
+  // Root spans BOTH profile panes (Overview + Deep Dive copanes under #co-detailview),
+  // so this single pass wires the Overview scatter, the Deep Dive tabs and the shared
+  // modal — the element set matches the old single .ov-lyft root.
+  var root = document.getElementById('co-detailview');
   if (!root) return;
   renderLive(root); // Deep Dive ▸ Deep Overview keeps its #lyLive banner; the standardized Overview has no price strip.
-  root.querySelectorAll('.ovt-tab').forEach(function(btn){
-    btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };
-  });
   wireDD(root);
   root.querySelectorAll('.ave-pill').forEach(function(btn){
     btn.onclick = function(){ switchAveMetric(root, btn.getAttribute('data-ave')); };
@@ -2136,8 +2129,17 @@ function init(c){
   // Live market cap (Key Facts #lyMc + peer bubbles) \u2014 Massive via api.liveQuote; degrades gracefully in preview
   function lyLiveOne(tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(q){ if(!q||q.marketCap==null) return; var mcB=q.marketCap/1e9; LY_SC.peers.forEach(function(p){ if(p.tk===tk) p.mc=mcB; }); if(tk==='LYFT'){ var el=root.querySelector('#lyMc'); if(el) el.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':(mcB>=10?Math.round(mcB):mcB.toFixed(1))+'B')+' \u00b7 live'; } scRefresh(); }).catch(function(){}); }
   LY_SC.peers.forEach(function(p){ if(p.tk) lyLiveOne(p.tk); });
-  var active = root.querySelector('.ovt-tab.active');
-  showOvt(root, active ? active.getAttribute('data-ovt') : 'overview');
+  lyScRender(root); // first paint of the standardized Overview scatter (no ovt-tab gate anymore)
+  // Hoist the modal to #co-detailview so it stays visible from either profile tab
+  // (an inactive .copane is display:none, which would hide a modal nested inside it).
+  root.querySelectorAll(':scope > .ov-modal-back').forEach(function(m){ if(m.id!=='lyModalBack') m.remove(); });
+  var md=root.querySelector('#lyModalBack'); if(md && md.parentNode!==root) root.appendChild(md);
+}
+// Deep Dive charts build lazily: init() already wired the dd-tabs (root spans both
+// panes), so here we only paint the active dd-pane's charts now that it is visible.
+function deepDiveInit(c){
+  var root = document.getElementById('co-detailview'); if(!root) return;
+  var d = activeDD(root); requestAnimationFrame(function(){ buildDD(root, d); });
 }
 
-export var lyftOverview = { html: html, init: init };
+export var lyftOverview = { html: html, init: init, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

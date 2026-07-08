@@ -1487,14 +1487,23 @@ function stdOverviewBody(c){
 }
 function html(c){
   var h='<div class="ov ov-uber" data-brand="UBER">';
-  h+='<div class="ovt-tabs">'+
-    '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="deepdive">Deep Dive</button>'+
-  '</div>';
-  h+='<div class="ovt-pane" data-ovt="overview">'+stdOverviewBody(c)+'</div>';
-  // ── Deep Dive: everything deeper. Holds the prior tabs + Extras (the old Overview), nothing deleted. ──
-  h+='<div class="ovt-pane" data-ovt="deepdive" hidden>'+
-    '<div class="dd-tabs">'+
+  h+=stdOverviewBody(c);
+  // Shared modal (used by Overview data-detail triggers AND, once hoisted to
+  // #co-detailview in init, by the Deep Dive triggers too). Kept in the Overview
+  // pane's markup; init() moves it up so it stays visible on either profile tab.
+  h+='<div class="ov-modal-back" id="ubModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
+    '<button class="ov-modal-x" id="ubModalX" aria-label="Close">×</button>'+
+    '<div class="ov-modal-t" id="ubModalT"></div><div class="ov-modal-b" id="ubModalB"></div></div></div>';
+  h+='</div>';
+  return h;
+}
+// ── Deep Dive: everything deeper. Now a SIBLING profile tab (rendered into the
+// Deep Dive copane by companies.js), no longer nested inside the Overview. Holds
+// the prior tabs + Deep Overview (the old bespoke Overview) — nothing deleted
+// (Golden Rule #1). Its own root class (.ov-uber-dd) scopes it. ──
+function deepDiveHtml(c){
+  var h='<div class="ov ov-uber ov-uber-dd" data-brand="UBER">';
+  h+='<div class="dd-tabs">'+
       '<button type="button" class="dd-tab active" data-dd="extras">Deep Overview</button>'+
       '<button type="button" class="dd-tab" data-dd="offer">Company Offer</button>'+
       '<button type="button" class="dd-tab" data-dd="financials">Financials</button>'+
@@ -1535,10 +1544,6 @@ function html(c){
       '<div class="ovt-subpane" data-ovst="story">'+historyStoryBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="calls" hidden>'+callsBody()+'</div>'+
     '</div>';
-  h+='</div>';
-  h+='<div class="ov-modal-back" id="ubModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
-    '<button class="ov-modal-x" id="ubModalX" aria-label="Close">×</button>'+
-    '<div class="ov-modal-t" id="ubModalT"></div><div class="ov-modal-b" id="ubModalB"></div></div></div>';
   h+='</div>';
   return h;
 }
@@ -1842,12 +1847,6 @@ function positionMG(root){
   });
   var xl=root.querySelector('#ubMgXlab'); if(xl) xl.textContent=(type==='ev'?'EV/EBITDA':'P/E')+' · '+(basis==='f'?'forward':'trailing');
 }
-function showOvt(root,key){
-  root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt')===key); });
-  root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovt')!==key); });
-  if(key==='overview') requestAnimationFrame(function(){ ubScRender(root); });
-  else if(key==='deepdive'){ var d=activeDD(root); requestAnimationFrame(function(){ buildDD(root,d); }); }
-}
 function wireModal(root){
   var back=root.querySelector('#ubModalBack'), mT=root.querySelector('#ubModalT'), mB=root.querySelector('#ubModalB'); if(!back) return;
   var galIdx=-1;
@@ -1905,9 +1904,12 @@ function renderLive(root){
   }).catch(function(){ el.hidden=true; el.innerHTML=''; }); // hide cleanly until the get-quote edge fn is deployed
 }
 function init(c){
-  var root=document.querySelector('.ov-uber'); if(!root) return;
+  // Root spans BOTH profile panes (Overview + Deep Dive copanes live under
+  // #co-detailview), so this single pass wires the Overview scatter, the Deep
+  // Dive tabs/subtabs, and the shared modal exactly as before the split — the
+  // element set is identical to the old single .ov-uber root.
+  var root=document.getElementById('co-detailview'); if(!root) return;
   renderLive(root); // Deep Dive ▸ Deep Overview keeps its live-price banner (#ubLive lives only there now); the standardized Overview has no price strip.
-  root.querySelectorAll('.ovt-tab').forEach(function(btn){ btn.onclick=function(){ showOvt(root, btn.getAttribute('data-ovt')); }; });
   wireDD(root);
   wireSubtabs(root,'offer'); wireSubtabs(root,'financials'); wireSubtabs(root,'history');
   root.querySelectorAll('.ave-pill').forEach(function(btn){ btn.onclick=function(){ switchAveMetric(root, btn.getAttribute('data-ave')); }; });
@@ -1978,6 +1980,21 @@ function init(c){
   // Live market cap (Key Facts cell + peer bubbles) — Massive via api.liveQuote; degrades gracefully in preview
   function ubLiveOne(tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(q){ if(!q||q.marketCap==null) return; var mcB=q.marketCap/1e9; UB_SC.peers.forEach(function(p){ if(p.tk===tk) p.mc=mcB; }); if(tk==='UBER'){ var el=root.querySelector('#ubMc'); if(el) el.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':Math.round(mcB)+'B')+' · live'; } scRefresh(); }).catch(function(){}); }
   UB_SC.peers.forEach(function(p){ if(p.tk) ubLiveOne(p.tk); });
-  var active=root.querySelector('.ovt-tab.active'); showOvt(root, active?active.getAttribute('data-ovt'):'overview');
+  ubScRender(root); // first paint of the standardized Overview scatter (no ovt-tab gate anymore)
+  // Hoist the modal to #co-detailview so it stays visible from either profile tab
+  // (an inactive .copane is display:none, which would hide a modal nested inside it).
+  var detail=document.getElementById('co-detailview');
+  if(detail){
+    // drop a stale modal left by a previously-opened company
+    detail.querySelectorAll(':scope > .ov-modal-back').forEach(function(m){ if(m.id!=='ubModalBack') m.remove(); });
+    var md=root.querySelector('#ubModalBack'); if(md && md.parentNode!==detail) detail.appendChild(md);
+  }
 }
-export var uberOverview = { html: html, init: init };
+// Deep Dive charts build lazily: the Overview init() already wired the dd-tabs
+// (root spans both panes), so here we only paint the charts of the active dd-pane
+// now that the Deep Dive copane is visible (Chart.js needs a laid-out canvas).
+function deepDiveInit(c){
+  var root=document.getElementById('co-detailview'); if(!root) return;
+  var d=activeDD(root); requestAnimationFrame(function(){ buildDD(root, d); });
+}
+export var uberOverview = { html: html, init: init, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

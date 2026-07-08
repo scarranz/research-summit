@@ -828,15 +828,33 @@ function peerDot(x,y,r,color,name,sub,hl,why){
     '<text x="'+x+'" y="'+(y-r-6)+'" font-family="Inter,sans-serif" font-size="'+(hl?12.5:11)+'" font-weight="'+(hl?800:700)+'" fill="'+(hl?color:'#3A4552')+'" text-anchor="middle" style="pointer-events:none">'+esc(name)+'</text>'+
     '<text x="'+x+'" y="'+(y+r+13)+'" font-family="Inter,sans-serif" font-size="9.5" fill="#8A93A0" text-anchor="middle" style="pointer-events:none">'+esc(sub)+'</text>';
 }
-function peerPositioning(){
-  var h='<style>.lpr-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}'+
+// Top Line ▸ Industry Analysis — the QUALITATIVE competitive landscape (rival cards +
+// adjacent fronts), carved from the old Deep Overview's competitive map (Golden Rule #1).
+function lyIndustryBody(c){
+  var cards=[
+    ['Uber','The only true rival — same ~30% take, ~70% US share. So the gap isn\'t price, it\'s <b>scale + a Delivery business that funds rider CAC</b> Lyft can\'t match.'],
+    ['Didi','Went <b>global instead of broad</b> (China, Brazil, Mexico). No US overlap — the "what if Lyft had expanded" counterfactual.'],
+    ['Grab','SE Asia\'s <b>everything-app</b> (rides + food + payments). The super-app path Lyft <b>rejected</b> to stay focused.'],
+    ['Bolt','Europe/Africa mobility + scooters. The <b>one place Lyft now competes head-to-head</b> — via FreeNow, as a sub-scale entrant against an incumbent.'],
+  ];
+  var h='<style>.lpr-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px}'+
     '.lpr-c{border:1px solid var(--bdr);border-left:3px solid var(--brand-2);border-radius:8px;padding:10px 13px;background:var(--w)}'+
     '.lpr-n{font-size:12.5px;font-weight:800;color:var(--navy);margin-bottom:3px}.lpr-d{font-size:11.5px;color:var(--mu);line-height:1.5}'+
     '.lpr-adj{font-size:11.5px;color:var(--mu);line-height:1.55;margin-top:10px;background:var(--brand-soft);border-radius:8px;padding:9px 12px}'+
-    '.peer-tip{position:fixed;z-index:60;max-width:250px;background:var(--navy);color:#fff;border-radius:9px;padding:9px 12px;font-size:11.5px;line-height:1.5;box-shadow:0 8px 22px rgba(16,20,26,0.28);pointer-events:none;border-top:3px solid var(--brand)}'+
-    '.peer-tip .pt-n{display:block;font-weight:800;font-size:12.5px;color:var(--brand);margin-bottom:3px}'+
-    '.peer-dot{transition:r .1s}.peer-dot:hover{stroke:var(--brand);stroke-width:2}'+
     '@media(max-width:720px){.lpr-grid{grid-template-columns:1fr}}</style>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 8px">'+PEER_NOTE+'</div>';
+  h+='<div class="lpr-grid">'+cards.map(function(p){ return '<div class="lpr-c"><div class="lpr-n">'+esc(p[0])+'</div><div class="lpr-d">'+p[1]+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="lpr-adj"><b>Adjacent fronts</b> (not ride-hailing rivals, but in Lyft\'s orbit): <b>Waymo</b> — AV, a threat <i>and</i> a partner (its robotaxis run on the Lyft network) · <b>DoorDash</b> — delivery, now a <b>partner</b> sending high-frequency riders Lyft\'s way.</div>';
+  return sec('Competitive Landscape — rivals & adjacent fronts', h)+
+    '<div class="ov-callout" style="margin:10px 0"><b>Where Lyft sits on the map</b> (breadth &times; geography, incl. private players) is plotted under <b>Valuation &rsaquo; Competitors</b>.</div>'+
+    '<div class="ov-foot">'+esc(SOURCES)+'</div>';
+}
+// Valuation ▸ Competitors — rivals plotted by business traits (breadth × geography),
+// carved from the old Deep Overview's competitive map. #lyPeerTip hover wired in init.
+function lyCompetitorsBody(c){
+  var h='<style>.peer-tip{position:fixed;z-index:60;max-width:250px;background:var(--navy);color:#fff;border-radius:9px;padding:9px 12px;font-size:11.5px;line-height:1.5;box-shadow:0 8px 22px rgba(16,20,26,0.28);pointer-events:none;border-top:3px solid var(--brand)}'+
+    '.peer-tip .pt-n{display:block;font-weight:800;font-size:12.5px;color:var(--brand);margin-bottom:3px}'+
+    '.peer-dot{transition:r .1s}.peer-dot:hover{stroke:var(--brand);stroke-width:2}</style>';
   h+='<div class="ov-diagram-cap" style="margin:0 0 8px">The world\'s <b>ride-hailing platforms</b>, mapped by how far each has <b>diversified beyond rides</b> (x — Lyft is ~7% non-rideshare vs Uber ~50%+ via Delivery, Freight &amp; Ads) and its <b>geographic reach</b> (y). Lyft is the deliberate outlier: <b>narrow and domestic</b> while everyone else went broad, global, or both. <span style="opacity:.75">Hover any dot for the reasoning behind its spot.</span></div>';
   h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" role="img" aria-label="Ride-hailing positioning map">'+
     '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
@@ -854,15 +872,9 @@ function peerPositioning(){
   h+='<div id="lyPeerTip" class="peer-tip" hidden></div>';
   h+='<div class="ov-diagram-cap" style="margin-top:6px">'+PEER_NOTE+'</div>';
   h+='<div class="ov-diagram-cap" style="margin:6px 0 0;font-size:11px;color:var(--mu)"><b>Why more names than the Overview scatter?</b> This map places rivals by <b>business traits</b>, so it includes <b>unlisted / private</b> players (Didi, Bolt) with <b>no public market multiple</b> — they can’t appear on the Overview’s valuation×growth scatter, which is limited to <b>listed</b> peers. Positions here are qualitative <b>approximations</b>, not market data.</div>';
-  var cards=[
-    ['Uber','The only true rival — same ~30% take, ~70% US share. So the gap isn\'t price, it\'s <b>scale + a Delivery business that funds rider CAC</b> Lyft can\'t match.'],
-    ['Didi','Went <b>global instead of broad</b> (China, Brazil, Mexico). No US overlap — the "what if Lyft had expanded" counterfactual.'],
-    ['Grab','SE Asia\'s <b>everything-app</b> (rides + food + payments). The super-app path Lyft <b>rejected</b> to stay focused.'],
-    ['Bolt','Europe/Africa mobility + scooters. The <b>one place Lyft now competes head-to-head</b> — via FreeNow, as a sub-scale entrant against an incumbent.'],
-  ];
-  h+='<div class="lpr-grid">'+cards.map(function(p){ return '<div class="lpr-c"><div class="lpr-n">'+esc(p[0])+'</div><div class="lpr-d">'+p[1]+'</div></div>'; }).join('')+'</div>';
-  h+='<div class="lpr-adj"><b>Adjacent fronts</b> (not ride-hailing rivals, but in Lyft\'s orbit): <b>Waymo</b> — AV, a threat <i>and</i> a partner (its robotaxis run on the Lyft network) · <b>DoorDash</b> — delivery, now a <b>partner</b> sending high-frequency riders Lyft\'s way.</div>';
-  return h;
+  return sec('Competitive map — rivals plotted by business traits', h)+
+    '<div class="ov-callout" style="margin:10px 0"><b>The live valuation&times;growth peer scatter</b> (listed peers, editable) is on the standardized <b>Overview</b> tab; the qualitative rival breakdown is under <b>Top Line &rsaquo; Industry Analysis</b>.</div>'+
+    '<div class="ov-foot">'+esc(SOURCES)+'</div>';
 }
 // ─── Pane: Overview ───────────────────────────────────────────────────────────
 function lyKnockout(){
@@ -893,35 +905,254 @@ function lyKnockout(){
   '</div>';
   return h;
 }
-function overviewBody(c){
-  var h = '';
-  h += '<div class="ov-snap">' + SNAPSHOT.map(function(p){
-    return '<div class="ov-snap-cell"><div class="ov-snap-k">'+esc(p[0])+'</div><div class="ov-snap-v">'+esc(p[1])+'</div></div>';
-  }).join('') + '</div>';
-  h += '<div class="ov-live" id="lyLive" hidden></div>';
-  h += '<p class="ov-lede">'+esc(DESC)+'</p>';
-  h += '<div class="ov-kpis">' + KPIS.map(function(k){
-    return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d '+(k.dir||'muted')+'">'+esc(k.d)+'</div></div>';
-  }).join('') + '</div>';
-  h += '<div class="ov-asof">'+esc(AS_OF)+'</div>';
-  h += '<div class="ov-fynote">'+esc(FY_NOTE)+'</div>';
-  h += lyKnockout();
-  h += '<div class="ov-charts" style="grid-template-columns:1fr 1fr">'+
+// ── The old "Deep Overview" subtab is DISMANTLED (Golden Rule #1 — content MOVED, not
+// deleted). Its pieces are recomposed into the new 5-tab spine:
+//   • intro (snapshot/KPIs/lede/as-of) + segment/revenue overview → Top Line ▸ Segments (lySegmentsBody)
+//   • the turnaround knockout (lyKnockout)                        → Evolution ▸ Strategy (with the Playbook)
+//   • the qualitative rival cards / adjacent fronts               → Top Line ▸ Industry Analysis (lyIndustryBody)
+//   • the peer breadth×geography scatter                          → Valuation ▸ Competitors (lyCompetitorsBody)
+// (There were no explicit multi-year targets in the old Deep Overview — the 2027 targets
+//  already live in the Playbook/strategyBody, and Model vs. Reality is Evolution ▸ Guidance.)
+function lyIntro(){
+  var h='';
+  h+='<div class="ov-snap">'+SNAPSHOT.map(function(p){ return '<div class="ov-snap-cell"><div class="ov-snap-k">'+esc(p[0])+'</div><div class="ov-snap-v">'+esc(p[1])+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="ov-live" id="lyLive" hidden></div>';
+  h+='<p class="ov-lede">'+esc(DESC)+'</p>';
+  h+='<div class="ov-kpis">'+KPIS.map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d '+(k.dir||'muted')+'">'+esc(k.d)+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="ov-asof">'+esc(AS_OF)+'</div>';
+  h+='<div class="ov-fynote">'+esc(FY_NOTE)+'</div>';
+  return h;
+}
+// Top Line ▸ Segments — company intro, the segment/revenue overview, then each engine in
+// depth via an inner Rideshare / Media & Growth toggle (mirrors uber's ubSegmentsBody).
+function lySegmentsBody(c){
+  var h=lyIntro();
+  h+='<div class="ov-charts" style="grid-template-columns:1fr 1fr">'+
     '<div class="ov-chart-card"><div class="ov-chart-t">Gross Bookings <span>($B, FY · light = estimate)</span></div><div class="ov-chart-wrap"><canvas id="lyChartGB"></canvas></div></div>'+
     '<div class="ov-chart-card"><div class="ov-chart-t">Adj. EBITDA <span>($M, FY · light = estimate)</span></div><div class="ov-chart-wrap"><canvas id="lyChartEbitda"></canvas></div></div>'+
   '</div>';
-  h += sec('How Lyft Makes Money — follow a single ride',
+  h+=sec('How Lyft Makes Money — follow a single ride',
     '<style>.ov-gal-cap{font-size:12.5px;color:var(--navy);line-height:1.6;margin:12px 0}.ov-gal-nav{display:flex;align-items:center;justify-content:space-between;gap:12px}.ov-gal-btn{font-size:22px;font-weight:800;line-height:1;border:1px solid var(--bdr);background:#fff;border-radius:8px;min-width:46px;height:40px;cursor:pointer;color:var(--navy)}.ov-gal-btn:hover{background:#E6007A;color:#fff;border-color:#E6007A}.ov-gal-count{font-size:11px;color:var(--mu);font-weight:700}</style><p class="ov-lede" style="margin:0 0 14px">A rideshare trip, end to end — <b>tap any step for a photo + detail</b>, then use ‹ › to move through the ride.</p>'+
     chain(RIDE_FLOW,'ride')+
     '<div class="ov-sec-h ovt-store-h" style="margin-top:20px">Where each $ of a ride goes <span class="ave-subh-note">(Q1 2026, per ride ≈ $20.88)</span></div>'+
     mbars(RIDE_SPLIT)+
     '<div class="ov-fynote">Revenue is reported <b>net of driver pay</b>, so the marketplace split is driver pay (~67%) + cost of revenue (~17%, mostly insurance) + Lyft gross profit (~16%). The margin story is the middle slice shrinking.</div>');
-  h += sec('Where the Revenue Actually Comes From', revComposition());
-  // History & Milestones moved to Evolution ▸ Company History & M&A (see historyStoryBody)
-  // to keep the company story in one place and avoid repeating it here.
-  h += sec('Where Lyft Sits — the competitive map', peerPositioning());
-  h += '<div class="ov-foot">'+esc(SOURCES)+'</div>';
+  h+=sec('Where the Revenue Actually Comes From', revComposition());
+  // Each engine in depth, switched by an inner toggle (the "sub-tabs de los segmentos").
+  h+='<div class="ov-sec-h ovt-store-h" style="margin-top:8px">Each engine in depth</div>';
+  h+='<style>.seg-pill{border:1px solid var(--bdr);background:#fff;font:inherit;font-size:11px;font-weight:700;color:var(--mu);padding:5px 13px;border-radius:999px;cursor:pointer}.seg-pill.active{background:var(--navy);color:#fff;border-color:var(--navy)}.seg-pill:hover{color:var(--navy)}.seg-pill.active:hover{color:#fff}</style>';
+  h+='<div class="seg-pills" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px">'+
+      '<button type="button" class="seg-pill active" data-seg="rides">Rideshare</button>'+
+      '<button type="button" class="seg-pill" data-seg="media">Media &amp; Growth</button>'+
+    '</div>';
+  h+='<div class="seg-body" data-seg="rides">'+growthBody(c)+'</div>';
+  h+='<div class="seg-body" data-seg="media" hidden>'+mediaBody(c)+'</div>';
   return h;
+}
+// ── Labeled placeholder (user-approved): create the tab now, fill it later with sourced
+// figures — never invent data. Marked "To build" so it's obviously incomplete. ──
+function placeholder(title, note){
+  return '<div style="border:1px dashed var(--bdr);border-radius:12px;padding:16px 18px;margin:10px 0;background:linear-gradient(180deg,rgba(232,160,12,0.045),transparent)">'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#B7791F;background:rgba(232,160,12,0.14);border-radius:10px;padding:2px 9px">To build</span><span style="font-size:13.5px;font-weight:800;color:var(--navy)">'+esc(title)+'</span></div>'+
+    '<div style="font-size:12px;color:var(--mu);line-height:1.55">'+note+'</div></div>';
+}
+// Top Line ▸ Customers — riders + the loyalty stack. Built from in-repo vetted data (A_RIDERS,
+// Q1 2026 KPIs, partnership share). Pink member counts are NOT disclosed by Lyft → kept qualitative.
+function lyCustomersBody(c){
+  var R=A_RIDERS.slice(-6), mx=Math.max.apply(null,R);
+  var bars='<div style="display:flex;align-items:flex-end;gap:6px;height:96px;margin:6px 0 2px">'+R.map(function(v){var hp=Math.max(4,Math.round(v/mx*76));return '<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center"><div style="width:68%;background:#E6007A;border-radius:3px 3px 0 0;height:'+hp+'px"></div><div style="font-size:9.5px;color:var(--mu);margin-top:3px">'+v.toFixed(0)+'</div></div>';}).join('')+'</div>';
+  var h='<p class="ov-lede">Lyft’s customers are its <b>riders</b> — a base that keeps growing while getting <b>more loyal</b> through membership (Lyft Pink, Price Lock) and a fast-growing <b>partnership channel</b>. Lyft does <b>not disclose Pink member counts</b>, so the membership view stays qualitative.</p>';
+  h+='<div class="ov-kpis">'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Active riders</div><div class="ov-kpi-v">28.3M</div><div class="ov-kpi-d muted">Q1 2026 · +17% YoY</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Rides</div><div class="ov-kpi-v">236.9M</div><div class="ov-kpi-d muted">Q1 2026 · +8.5% YoY</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Partnership rides</div><div class="ov-kpi-v">~27%</div><div class="ov-kpi-d muted">record share of total</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Membership</div><div class="ov-kpi-v">Pink + Price Lock</div><div class="ov-kpi-d muted">counts not disclosed</div></div>'+
+  '</div>';
+  h+=sec('Active riders — steady growth', '<div class="ov-diagram-cap" style="margin:0 0 2px">Active riders (M), recent periods.</div>'+bars);
+  h+=sec('The loyalty stack', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6"><b>Lyft Pink</b> (paid membership) and <b>Price Lock</b> (a surge-hedge subscription) drive frequency and retention; a third layer is <b>borrowed loyalty</b> from partners — <b>DoorDash</b> (DashPass), <b>Chase Sapphire</b> (extended to 2027) and <b>United</b> — which pushed <b>partnership rides to a record ~27% of total</b>, a low-CAC channel that also skews mix toward higher-value trips. Full membership mechanics are in <b>Top Line ▸ Segments ▸ Media &amp; Growth</b>.</div>');
+  h+='<div class="ov-foot">Active riders &amp; rides: Lyft Q1 2026 results (headline KPIs FY2025 where noted). Membership counts are not disclosed by Lyft.</div>';
+  return h;
+}
+// Top Line ▸ TAM — Lyft's OWN stated market, framed in personal-vehicle TRIPS (not dollars).
+// >300B trips/yr post-FREENOW (Lyft IR, Aug 2025 close; Apr 2025 deal 8-K). Rides from FY2025
+// results. Lyft publishes no clean $ TAM for Media/micromobility → that piece stays a placeholder.
+function lyTamBody(c){
+  var modes=[
+    ['Rideshare — US &amp; Canada', 'core', 'The original ~150B+ N. American personal-vehicle-trip pool'],
+    ['Europe via FREENOW', 'new · closed Aug 2025', '9 countries, 150+ cities — the deal that ~doubled the TAM'],
+    ['Bikes &amp; scooters', 'active (in-app)', 'Short rides + first- &amp; last-mile multimodal legs'],
+    ['Lyft Teen', 'launched Feb 2026', '~15B annual trips of US 13–17-year-olds'],
+    ['Lyft Media', 'scaling', 'Ad monetization of the app &amp; in-car screens — no $ TAM disclosed']
+  ];
+  var h='<p class="ov-lede">Lyft frames its opportunity in <b>personal-vehicle trips per year</b>, not dollars. Its own stated TAM is <b>more than 300 billion trips a year</b> — the <b>FREENOW</b> acquisition (closed Aug 2025) <b>nearly doubled</b> it by stacking Europe on top of the US/Canada base. Against that, Lyft did <b>945.5M rides in FY2025</b>, so penetration is still <b>well under 1%</b>.</p>';
+  h+='<div class="ov-kpis">'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Stated TAM</div><div class="ov-kpi-v">&gt;300B</div><div class="ov-kpi-d muted">personal-vehicle trips / yr (post-FREENOW)</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Pre-FREENOW TAM</div><div class="ov-kpi-v">~150B+</div><div class="ov-kpi-d muted">US &amp; Canada trips / yr</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">FY2025 rides</div><div class="ov-kpi-v">945.5M</div><div class="ov-kpi-d muted">all-time high</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Penetration</div><div class="ov-kpi-v">~0.3%</div><div class="ov-kpi-d muted">FY25 rides ÷ &gt;300B TAM</div></div>'+
+  '</div>';
+  h+='<div class="ov-chart-card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:7px 10px">Mode / market</th><th style="text-align:left;padding:7px 10px">Status</th><th style="text-align:left;padding:7px 10px">What it adds to the TAM</th></tr></thead><tbody>'+
+    modes.map(function(r){ return '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px;font-weight:700">'+r[0]+'</td><td style="padding:7px 10px;color:var(--mu)">'+r[1]+'</td><td style="padding:7px 10px">'+r[2]+'</td></tr>'; }).join('')+
+  '</tbody></table></div>';
+  h+=sec('How the market is defined', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">Lyft’s TAM is a <b>trip-count, not a spend figure</b>: it counts annual personal-vehicle trips across its operating geographies (US, Canada and — since Aug 2025 — nine European countries via FREENOW) as the pool it can convert into app-based rides. There is no dollar sizing, so penetration is best read as <b>rides &divide; trips</b>. The FREENOW deal (~$197M) also added roughly <b>$1.17B of annualized gross bookings</b>, but Lyft did not restate the TAM in dollars.</div>');
+  h+=placeholder('Lyft Media & micromobility $ TAM — to build', 'Because Lyft quantifies its market in trips, it publishes <b>no clean dollar TAM</b> for Lyft Media (its advertising arm) or for the bikes/scooters business. A dollar-denominated ad / micromobility TAM is left here rather than invented — confirm from an investor-day deck or 10-K if Lyft later discloses one.');
+  h+='<div class="ov-callout" style="margin-top:10px">The AV angle: management frames autonomous vehicles as a <b>TAM expander</b>, arguing rideshare demand grows fastest in markets where AVs already operate. The AV partner strategy lives in <b>Evolution &rsaquo; Strategy</b> (Playbook).</div>';
+  h+='<div class="ov-foot">Source: Lyft IR — “Lyft Goes Global: FREENOW Acquisition Complete” (Aug 1, 2025) and the Apr 16, 2025 deal press release / 8-K (&gt;300B trips, ~doubled TAM, ~$1.17B annualized GB); rides &amp; the ~15B-trip Lyft Teen figure from Lyft Q4 &amp; FY2025 results (Feb 10, 2026, SEC EDGAR CIK 0001759509).</div>';
+  return h;
+}
+// Bottom Line ▸ Suppliers — the real "Who Powers Lyft" ecosystem (moved here from the Playbook).
+// Lyft is a pure B2C marketplace with a sparse SPLC — the story is drivers + AV partners, not vendors.
+function lySuppliersBody(c){
+  return '<p class="ov-lede">Lyft is an <b>asset-light B2C marketplace</b> — its real &ldquo;supply&rdquo; is drivers it does not employ, and its disclosed supplier base is sparse (a single disclosed dollar value in the entire SPLC). The strategic supply question is <b>autonomous-vehicle partners</b>.</p>'+
+    sec('Who Powers Lyft — the supplier & customer ecosystem', supplySection());
+}
+// Valuation ▸ Capital Allocation — DATA-BACKED from the Summit model snapshot (FY actuals, $M):
+// FCF and shares outstanding. The model does not carry buyback/SBC lines for Lyft, so those are
+// framed qualitatively and flagged to-confirm (never invented).
+function lyCapAllocBody(c){
+  var R=[
+    {fy:'FY22', fcf:-352, sh:355},
+    {fy:'FY23', fcf:-248, sh:385},
+    {fy:'FY24', fcf:766,  sh:414},
+    {fy:'FY25', fcf:1116, sh:418}
+  ];
+  var bb=function(m){ if(m==null) return '—'; var a=Math.abs(m), s=m<0?'−':''; return a>=1000? s+'$'+(a/1000).toFixed(2)+'B' : s+'$'+a+'M'; };
+  var last=R[3], prev=R[2];
+  var shChg=(last.sh/prev.sh-1)*100;
+  var h='<p class="ov-lede">How Lyft handles capital as the turnaround takes hold: <b>no dividend</b>, FCF only recently turned durably positive, and capital returns are <b>just beginning</b> — the share count is still rising as SBC dilution has not yet been offset.</p>';
+  h+='<div class="ov-kpis">'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Dividend</div><div class="ov-kpi-v">None</div><div class="ov-kpi-d muted">never paid</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">FY25 FCF</div><div class="ov-kpi-v">$1.12B</div><div class="ov-kpi-d muted">first $1B+ year</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Shares out</div><div class="ov-kpi-v">418M</div><div class="ov-kpi-d muted">▲ '+shChg.toFixed(1)+'% YoY (still diluting)</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Buyback</div><div class="ov-kpi-v">Authorized</div><div class="ov-kpi-d muted">first-ever program</div></div>'+
+  '</div>';
+  h+='<div class="ov-chart-card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:7px 10px">Fiscal year</th><th style="text-align:right;padding:7px 10px">Free cash flow</th><th style="text-align:right;padding:7px 10px">Shares out (M)</th></tr></thead><tbody>'+
+    R.map(function(r){ return '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px;font-weight:700">'+r.fy+'</td><td style="text-align:right;padding:7px 10px">'+bb(r.fcf)+'</td><td style="text-align:right;padding:7px 10px">'+r.sh.toLocaleString()+'</td></tr>'; }).join('')+
+  '</tbody></table></div>';
+  h+=sec('Dividend policy', '<div class="ov-callout">Lyft has <b>never paid a dividend</b>. With FCF only recently durable, cash is retained for reinvestment and the newly authorized buyback.</div>');
+  h+=sec('Repurchase policy & dilution', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">FCF inflected from <b>negative</b> (FY22–23) to <b>+$0.77B (FY24) → +$1.12B (FY25)</b>, funding a <b>first-ever</b> repurchase authorization. But share count is <b>still rising</b> (355M → 418M since FY22) — SBC dilution has not yet been offset, unlike Uber. <span class="ave-subh-note">Buyback authorization size &amp; repurchase/SBC actuals: not in the Summit model — confirm from the latest 10-Q/8-K.</span></div>');
+  h+='<div class="ov-foot">Source: Summit model snapshot — FY actuals (FCF, shares outstanding). Buyback/SBC specifics flagged to-confirm.</div>';
+  return h;
+}
+// Valuation ▸ Balance Sheet — downside/solidity view from Lyft's Q1 2026 10-Q (Mar 31 2026,
+// SEC EDGAR CIK 0001759509). Asset-light, positive net cash; the defining feature is a large
+// self-insurance reserve that is substantially matched by segregated restricted assets.
+function lyBalanceBody(c){
+  var rows=[
+    ['Cash &amp; cash equivalents', '$1,034.9M', 'unrestricted'],
+    ['Short-term investments', '$686.1M', 'unrestricted'],
+    ['Restricted cash &amp; restricted investments', '$1,998.3M', 'segregated to back insurance claims'],
+    ['Insurance reserves (current)', '−$2,245.0M', 'largest single liability'],
+    ['Total debt (converts + vehicle financing)', '−$1,042.7M', '0.625% notes ’29 + 0% notes ’30'],
+    ['Total stockholders’ equity', '$3,025.9M', 'book value'],
+    ['Total assets', '$8,889.9M', 'total liabilities $5,864.0M']
+  ];
+  var h='<p class="ov-lede">Lyft runs an <b>asset-light</b> balance sheet with <b>positive net cash</b>: as of <b>March 31, 2026</b> it held <b>$1.72B</b> of unrestricted cash &amp; short-term investments against just <b>$1.04B</b> of debt. The distinctive feature is a large <b>insurance reserve (~$2.25B)</b> — but it is substantially matched by <b>~$2.0B of restricted cash &amp; investments</b> plus a loss-portfolio-transfer reinsurance deal, so it is not the leverage risk its size implies.</p>';
+  h+='<div class="ov-kpis">'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Net cash</div><div class="ov-kpi-v">+$0.68B</div><div class="ov-kpi-d muted">cash + ST inv. less all debt</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Unrestricted liquidity</div><div class="ov-kpi-v">$1.72B</div><div class="ov-kpi-d muted">$1.03B cash + $0.69B ST inv.</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Insurance reserve</div><div class="ov-kpi-v">$2.25B</div><div class="ov-kpi-d muted">~$2.0B restricted-asset backed</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Total debt</div><div class="ov-kpi-v">$1.04B</div><div class="ov-kpi-d muted">convertible notes ’29 / ’30</div></div>'+
+  '</div>';
+  h+='<div class="ov-chart-card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:7px 10px">Line item · Q1 2026 (Mar 31, 2026)</th><th style="text-align:right;padding:7px 10px">Amount</th><th style="text-align:left;padding:7px 10px">Note</th></tr></thead><tbody>'+
+    rows.map(function(r){ return '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px;font-weight:700">'+r[0]+'</td><td style="text-align:right;padding:7px 10px;font-variant-numeric:tabular-nums">'+r[1]+'</td><td style="padding:7px 10px;color:var(--mu)">'+r[2]+'</td></tr>'; }).join('')+
+  '</tbody></table></div>';
+  h+=sec('Cash & the insurance reserve', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">Lyft self-insures a portion of auto claims, so it carries a <b>~$2.25B insurance reserve</b> — huge relative to a company its size. Read it against the asset side: <b>~$0.79B restricted cash + ~$1.21B restricted investments (≈$2.0B)</b> are segregated specifically to pay those claims, and a <b>loss-portfolio-transfer reinsurance agreement</b> caps legacy exposure. The reserve is a genuine risk — adverse actuarial revisions flow straight through earnings — but it is <b>not</b> borrowed leverage.</div>');
+  h+=sec('Debt & dilution', '<div class="ov-callout">Debt is <b>$1.04B</b>, essentially two convertible notes — <b>$460M of 0.625% notes due 2029</b> and <b>$500M of 0% notes due 2030</b> — plus small vehicle-financing facilities. The coupons are cheap, but converts are a <b>dilution</b> risk (not just repayment) if the stock re-rates; the share count is already rising (see <b>Valuation &rsaquo; Capital Allocation</b>).</div>');
+  h+='<div class="ov-callout" style="margin-top:10px"><b>Solidity read:</b> Positive net cash (+$0.68B), $3.0B of book equity, and an insurance reserve that is ~90% matched by restricted assets. Downside protection here is <b>financial flexibility, not hard assets</b> — Lyft is asset-light with little tangible collateral, so the key balance-sheet risk is <b>insurance-reserve adequacy</b>, not refinancing.</div>';
+  h+='<div class="ov-foot">Source: Lyft Q1 2026 Form 10-Q, condensed consolidated balance sheet as of March 31, 2026 (SEC EDGAR, CIK 0001759509). Net cash = cash &amp; equivalents + short-term investments − total debt; restricted cash/investments excluded as they back insurance claims.</div>';
+  return h;
+}
+// Valuation ▸ Sensitivity — implied price on an EV/EBITDA × forward-EBITDA grid. Anchors: Summit
+// Adj. EBITDA (FY25 $0.53B) + shares 418M + net cash ~$0.9B. Cells shaded vs the LIVE price.
+function lySensBody(c){
+  var EB=[0.4,0.6,0.9,1.2,1.6], MU=[8,10,12,15,18], SH=418, NC=0.9;
+  var head='<tr><th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--mu);font-weight:700">EV/EBITDA ↓&nbsp;&nbsp;EBITDA →</th>'+EB.map(function(e){return '<th style="padding:6px 8px;text-align:right;font-size:10.5px;color:var(--mu)">$'+e.toFixed(1)+'B</th>';}).join('')+'</tr>';
+  var rows=MU.map(function(m){
+    var tds=EB.map(function(e){ var px=(e*1000*m+NC*1000)/SH; return '<td class="sens-cell" data-px="'+px.toFixed(2)+'" style="padding:7px 8px;text-align:right;font-variant-numeric:tabular-nums">$'+px.toFixed(0)+'</td>'; }).join('');
+    return '<tr><td style="padding:7px 8px;font-weight:700">'+m+'×</td>'+tds+'</tr>';
+  }).join('');
+  var h='<p class="ov-lede">Implied share price on an <b>EV/EBITDA</b> grid — pick a forward Adj. EBITDA (columns) and an exit multiple (rows). Cells shade <b>green above / red below the live price</b> once it loads.</p>';
+  h+='<div class="ov-live" id="lySensLive" style="margin:0 0 8px">Fetching live price…</div>';
+  h+='<div class="ov-chart-card" id="lySensTbl" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>';
+  h+='<div class="ov-foot">Implied price = (EBITDA × multiple + net cash) ÷ shares. Anchors: Summit Adj. EBITDA (FY25 $0.53B; columns span growth). Shares 418M (FY25). Net cash ≈ $0.9B (cash + ST investments less convertible notes). Not a price target.</div>';
+  return h;
+}
+function buildLySens(){
+  var root=document.getElementById('co-detailview'); if(!root) return;
+  var live=root.querySelector('#lySensLive'); if(!live) return;
+  import('../api.js').then(function(api){ return api.liveQuote?api.liveQuote('LYFT'):null; }).then(function(res){
+    var q=(res&&res.success)?res.data:res; var p=(q&&q.price!=null)?q.price:null;
+    if(p==null){ live.style.display='none'; return; }
+    live.innerHTML='<span class="ov-live-dot"></span><span class="ov-live-tk">LYFT</span> <span class="ov-live-px">$'+p.toFixed(2)+'</span> <span class="ov-live-ts">live — grid shaded vs this price</span>';
+    root.querySelectorAll('#lySensTbl .sens-cell').forEach(function(td){ var px=parseFloat(td.getAttribute('data-px')); var up=px>=p; var d=Math.min(0.6,Math.abs(px/p-1)); var a=(0.06+d*0.38).toFixed(2); td.style.background=(up?'rgba(6,193,103,'+a+')':'rgba(192,57,43,'+a+')'); td.style.color=(up?'#06965A':'#B23A2E'); td.style.fontWeight='600'; td.title=((px/p-1)*100).toFixed(0)+'% vs live'; });
+  }).catch(function(){ live.style.display='none'; });
+}
+// Management ▸ Governance & SBC — vetted governance facts from the in-repo config; SBC $ not in the
+// Summit model for Lyft, so framed via dilution (Cap Allocation) and flagged to-confirm.
+function lyGovBody(c){
+  var k=[
+    ['Share & voting','1 vote / share','Dual-class collapsed Aug 2025 (founders 30% → <2%)'],
+    ['Board','7 of 8 independent','Independent chair · classified board'],
+    ['CEO pay · FY25','$2.8M','$0 new equity · ~18:1 ratio'],
+    ['CEO equity','1 grant (2023)','One performance-RSU; none since']
+  ];
+  var h='<p class="ov-lede">Lyft’s governance took a big step in <b>August 2025</b>: the <b>dual-class structure collapsed to one-share-one-vote</b> as co-founders Logan Green &amp; John Zimmer left the board and their super-voting stock converted — their vote fell from ~30% to &lt;2%. The board is <b>7 of 8 independent</b> with a separate independent chair.</p>';
+  h+='<div class="ov-kpis">'+k.map(function(f){return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(f[0])+'</div><div class="ov-kpi-v">'+esc(f[1])+'</div><div class="ov-kpi-d muted">'+esc(f[2])+'</div></div>';}).join('')+'</div>';
+  h+=sec('Stock-based compensation & alignment', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">CEO David Risher took a single large <b>performance-RSU in 2023</b> and <b>$0 new equity</b> since (~$2.8M total FY25 pay, ~18:1 ratio) — an unusually low alignment cost. Company-wide SBC still dilutes: diluted shares are <b>rising</b> (see <b>Valuation ▸ Capital Allocation</b>). <span class="ave-subh-note">The SBC dollar series is not in the Summit model — confirm from the 10-K.</span></div>');
+  h+='<div class="ov-callout">Full board, committees and independence tags are in <b>Management ▸ Executives &amp; Board</b>.</div>';
+  return h;
+}
+function lyTrackBody(c){
+  var wins=[
+    ['Free cash flow','−$0.35B → +$1.12B (FY22→FY25) — first $1B+ year'],
+    ['Profitability','turned Adjusted EBITDA and FCF durably positive'],
+    ['Operating focus','price parity with Uber, reliability, driver-earnings commitments'],
+    ['Founder transition','co-founders exited the board Aug 2025 → clean one-share-one-vote'],
+    ['Still open','share count keeps rising — dilution not yet offset by buybacks']
+  ];
+  var h='<p class="ov-lede"><b>David Risher</b> has been CEO since <b>April 2023</b> (ex-Amazon, ex-Microsoft), taking over from the founders and refocusing Lyft on <b>profitable growth</b>.</p>';
+  h+='<div>'+wins.map(function(w){return '<div class="ov-row"><div class="ov-row-k">'+esc(w[0])+'</div><div class="ov-row-v">'+w[1]+'</div></div>';}).join('')+'</div>';
+  h+='<div class="ov-callout" style="margin-top:12px">Guidance-vs-delivery is in <b>Evolution ▸ Guidance</b>; the full history is in <b>Evolution ▸ Timeline</b>.</div>';
+  h+='<div class="ov-foot">Financial trajectory: Summit model (FY actuals). Leadership milestones: company filings.</div>';
+  return h;
+}
+// ── Bottom Line ▸ Margins — profitability & cash margins pulled LIVE from Massive
+// (get-margins), the same feed San wired for NVDA. No hardcoded history invented.
+// Mirrors uber's ubMarginsBody/buildUbMargins/ubLoadMargins with ticker LYFT + a unique canvas. ──
+var LY_MRG_METRICS=[
+  {key:'gross',label:'Gross',color:'#E6007A'},
+  {key:'oper',label:'Operating',color:'#6B2BD9'},
+  {key:'net',label:'Net',color:'#7A5AF8'},
+  {key:'ebitda',label:'EBITDA',color:'#12B5A5'},
+  {key:'cfo',label:'CFO',color:'#F2A73B'},
+  {key:'fcf',label:'FCF',color:'#EB5757'}
+];
+var _lyMrgRows=null;
+function lyMarginsBody(c){
+  return '<p class="ov-lede">Profitability &amp; cash margins as a % of revenue, pulled <b>live from Massive</b> (income + cash-flow statements) — gross, operating and net, plus EBITDA, CFO and FCF. Same feed San wired for NVDA.</p>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Margins (% of revenue) <span>· fiscal years · live via Massive</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="lyChartMargins"></canvas></div></div>'+
+    '<div class="ave-subh-note" id="lyMrgNote" style="margin-top:8px">Fetching margins from Massive… if the chart stays empty, the data feed isn’t reachable in this session. Known anchors: Q1 2026 gross margin ~<b>47.6%</b> (+710 bps YoY on falling insurance cost/ride), Adj. EBITDA <b>$529M</b> (FY2025) and free cash flow <b>$1.12B</b>.</div>';
+}
+function buildLyMargins(){
+  var cv=document.getElementById('lyChartMargins'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
+  if(!_lyMrgRows||!_lyMrgRows.length){ lyLoadMargins(); return; }
+  destroy('lyChartMargins');
+  var labels=_lyMrgRows.map(function(r){ return r.fy; });
+  var ds=LY_MRG_METRICS.map(function(m){ return { label:m.label, data:_lyMrgRows.map(function(r){ return r[m.key]; }), borderColor:m.color, backgroundColor:m.color, borderWidth:2, tension:.25, pointRadius:2, spanGaps:true, fill:false }; });
+  _charts['lyChartMargins']=new Chart(cv.getContext('2d'),{ type:'line', data:{ labels:labels, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}}, tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label+': '+(ctx.parsed.y==null?'—':ctx.parsed.y.toFixed(1)+'%'); } } } },
+      scales:{ y:{ ticks:{ callback:function(v){ return v+'%'; }, font:{size:10} }, grid:{color:'#EEF2F7'} }, x:{ grid:{display:false}, ticks:{font:{size:10.5}} } } }
+  });
+}
+function lyLoadMargins(){
+  import('../api.js').then(function(api){ return api.fetchMargins?api.fetchMargins('LYFT'):null; }).then(function(res){
+    if(!res||!res.success||!res.data||!res.data.length) return; // keep the note; chart stays empty
+    _lyMrgRows=res.data;
+    var note=document.getElementById('lyMrgNote'); if(note) note.innerHTML='Historical margins computed <b>live from Massive</b> (income &amp; cash-flow statements): gross/op/net = line ÷ revenue; EBITDA = (op income + D&amp;A) ÷ revenue; CFO &amp; FCF ÷ revenue.';
+    buildLyMargins();
+  }).catch(function(){ /* keep the note */ });
 }
 
 // ─── Pane: Strategy ───────────────────────────────────────────────────────────
@@ -1075,8 +1306,9 @@ function strategyBody(c){
   h+=sec('The AV bet — be the network, not the carmaker',
     '<div class="lst-av">Lyft’s contrarian bet: <b>don’t build the self-driving car — be the network every AV plugs into.</b> The <b>hybrid network</b> treats AVs as baseline supply and human drivers as the flex, kept asset-light via <b>Flexdrive</b> (a claimed <b>&gt;20% per-mile cost edge</b>). Risher’s yardstick: ~<b>10% AV by 2030</b> would be &ldquo;an enormous success.&rdquo;</div>'+
     '<div class="lst-chips" style="margin-top:9px"><span class="lst-chip">May Mobility · Atlanta</span><span class="lst-chip">Mobileye · Dallas</span><span class="lst-chip">Baidu Apollo Go · Europe</span><span class="lst-chip">Waymo · Nashville — paid no matter what</span></div>');
-  // 6 - membership + ecosystem
-  h+=sec('Who Powers Lyft — the supplier & customer ecosystem', supplySection());
+  // 6 - membership + ecosystem — MOVED to Bottom Line ▸ Suppliers.
+  h+=sec('Supplier & customer ecosystem',
+    '<div class="ov-callout">The full &ldquo;Who Powers Lyft&rdquo; breakdown — the AV supply web, the commodity plumbing, and the B2B customers — now lives in <b>Bottom Line &rsaquo; Suppliers</b>.</div>');
   return h;
 }
 
@@ -1559,55 +1791,92 @@ function html(c){
 // ── Deep Dive: SIBLING profile tab (rendered into the Deep Dive copane), no longer
 //    nested inside the Overview. Holds all prior tabs (the old "Overview" becomes
 //    "Deep Overview"). Nothing deleted (Golden Rule #1). Own root class (.ov-lyft-dd). ──
+// ── Deep Dive reorganized into the proposed 5-tab spine: Top Line · Bottom Line ·
+// Evolution · Valuation · Management. NOTHING deleted (Golden Rule #1) — every prior
+// body is re-slotted, and the two live panels from the old Pillars tab are absorbed here
+// (Valuation ▸ Analyst Ratings, Management ▸ Ownership & Insiders) via #dd-val-slot /
+// #dd-mgmt-slot filled by companies.js. ──
 function deepDiveHtml(c){
   var h = '<div class="ov ov-lyft ov-lyft-dd" data-brand="LYFT">'+
     '<div class="dd-tabs">'+
-      '<button type="button" class="dd-tab active" data-dd="overview">Deep Overview</button>'+
-      '<button type="button" class="dd-tab" data-dd="strategy">Strategy</button>'+
-      '<button type="button" class="dd-tab" data-dd="unitecon">Unit Economics</button>'+
-      '<button type="button" class="dd-tab" data-dd="financials">Financials</button>'+
-      '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
+      '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
+      '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
       '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
+      '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
+      '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
     '</div>'+
-    '<div class="dd-pane" data-dd="overview">'+overviewBody(c)+'</div>'+
-    // Strategy: Playbook + Media & Growth
-    '<div class="dd-pane" data-dd="strategy" hidden>'+
+    // ── TOP LINE — Segments (with an inner Rideshare / Media & Growth toggle) · Customers ·
+    // TAM · Industry Analysis. The old "Deep Overview" is dismantled into these (Golden Rule #1). ──
+    '<div class="dd-pane" data-dd="topline">'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="playbook">Playbook</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="media">Media &amp; Growth</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="segments">Segments</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="customers">Customers</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="tam">TAM</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="industry">Industry Analysis</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="playbook">'+strategyBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="media" hidden>'+mediaBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segments">'+lySegmentsBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="customers" hidden>'+lyCustomersBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="tam" hidden>'+lyTamBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="industry" hidden>'+lyIndustryBody(c)+'</div>'+
     '</div>'+
-    // Unit Economics: Rides & Riders + Unit Economics + Insurance
-    '<div class="dd-pane" data-dd="unitecon" hidden>'+
+    // ── BOTTOM LINE — Unit Economics · Suppliers · Insurance · Margins (live via Massive). ──
+    '<div class="dd-pane" data-dd="bottomline" hidden>'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="rides">Rides &amp; Riders</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="unit">Unit Economics</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="unit">Unit Economics</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="suppliers">Suppliers</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="insurance">Insurance</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="margins">Margins</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="rides">'+growthBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="unit" hidden>'+unitBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="unit">'+unitBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="suppliers" hidden>'+lySuppliersBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="insurance" hidden>'+insuranceBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="margins" hidden>'+lyMarginsBody(c)+'</div>'+
     '</div>'+
-    // Financials: Model vs. Reality + Valuation
-    '<div class="dd-pane" data-dd="financials" hidden>'+
-      '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="model">Model vs. Reality</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="valuation">Valuation</button>'+
-      '</div>'+
-      '<div class="ovt-subpane" data-ovst="model">'+modelBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="valuation" hidden>'+LYFT_VAL.body()+'</div>'+
-    '</div>'+
-    '<div class="dd-pane" data-dd="mgmt" hidden>'+LYFT_MGMT.body()+'</div>'+
-    // Evolution: Company History & M&A + Earnings Narrative (moved here — single home)
+    // ── EVOLUTION — Earnings History · Guidance (Model vs. Reality) · Strategy (turnaround +
+    // Playbook) · Timeline (company history & M&A). ──
     '<div class="dd-pane" data-dd="evolution" hidden>'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="story">Company History &amp; M&amp;A</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="calls">Earnings Narrative</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings History</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="story">'+historyStoryBody()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="calls" hidden>'+callsBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="earnings">'+callsBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="guidance" hidden>'+modelBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="strategy" hidden>'+lyKnockout()+strategyBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="timeline" hidden>'+historyStoryBody()+'</div>'+
+    '</div>'+
+    // ── VALUATION — Multiples & Targets · Sensitivity · Competitors · Analyst Ratings (Massive,
+    // absorbed) · Capital Allocation · Balance Sheet. ──
+    '<div class="dd-pane" data-dd="valuation" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="multiples">Multiples &amp; Targets</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="sensitivity">Sensitivity</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="competitors">Competitors</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="ratings">Analyst Ratings</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="capital">Capital Allocation</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="balance">Balance Sheet</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="multiples">'+LYFT_VAL.body()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="sensitivity" hidden>'+lySensBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="competitors" hidden>'+lyCompetitorsBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="ratings" hidden><div id="dd-val-slot"></div></div>'+
+      '<div class="ovt-subpane" data-ovst="capital" hidden>'+lyCapAllocBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="balance" hidden>'+lyBalanceBody(c)+'</div>'+
+    '</div>'+
+    // ── MANAGEMENT — Executives & Board · Ownership (Fiscal.ai, absorbed) · Governance & SBC ·
+    // Track Record. ──
+    '<div class="dd-pane" data-dd="mgmt" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="team">Executives &amp; Board</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="ownership">Ownership</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="governance">Governance &amp; SBC</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="track">Track Record</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="team">'+LYFT_MGMT.body()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="ownership" hidden><div id="dd-mgmt-slot"></div></div>'+
+      '<div class="ovt-subpane" data-ovst="governance" hidden>'+lyGovBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="track" hidden>'+lyTrackBody(c)+'</div>'+
     '</div>'+
   '</div>';
   return h;
@@ -2041,26 +2310,39 @@ function buildUnitTab(){ buildDecompChart(); buildTakeChart(); }
 
 // ── Deep Dive layer: build the charts for a given dd pane when it becomes visible ──
 function buildDD(root, key){
-  if (key==='overview')  buildOverviewCharts();
-  else if (key==='mgmt') LYFT_MGMT.init(root);
-  else if (key==='strategy'||key==='unitecon'||key==='financials'||key==='evolution'){
-    var s=activeSubKey(root,key); if(s) buildSub(root,key,s);
-  }
+  // Every top-level tab now holds sub-panes; paint the active sub-pane's charts.
+  var s=activeSubKey(root,key); if(s) buildSub(root,key,s);
 }
 // Build the lazy charts inside a nested sub-pane, by (group, sub-key).
 function buildSub(root, group, key){
-  if(group==='unitecon'){
-    if(key==='rides'){
-      buildGrowthTab();
-      var ds=root.querySelector('#lyDecompSlider'); if(ds) renderDecomp(+ds.value);
-      if(root.querySelector('.sf-pill')){ var a=root.querySelector('.sf-pill.active'); renderStmtFlow(a?a.getAttribute('data-sf'):'before'); }
-    } else if(key==='unit') buildUnitTab();
-    // insurance: static, no charts
-  } else if(group==='financials'){
-    if(key==='model') buildModelTab();
-    else if(key==='valuation') LYFT_VAL.init(root);
+  if(group==='topline'){
+    if(key==='segments'){ buildOverviewCharts(); buildActiveSeg(root); }  // GB + EBITDA + active segment
+    // customers, tam, industry: no charts
+  } else if(group==='bottomline'){
+    if(key==='unit')          buildUnitTab();
+    else if(key==='margins')  buildLyMargins();   // live Massive margins
+    // suppliers, insurance: no charts (insurance's sf-pill is wired globally in init)
+  } else if(group==='evolution'){
+    if(key==='guidance')      buildModelTab();      // Model vs. Reality lives under Guidance
+    // earnings (calls), strategy, timeline: no lazy charts
+  } else if(group==='valuation'){
+    if(key==='multiples')     LYFT_VAL.init(root);
+    else if(key==='sensitivity') buildLySens();
+    // sensitivity, competitors (tip wired in init), ratings, capital, balance: no charts
+  } else if(group==='mgmt'){
+    if(key==='team')          LYFT_MGMT.init(root);
+    // ownership, governance, track: no charts
   }
-  // strategy (playbook/media) & evolution (story/calls): no lazy charts
+}
+// Segments ▸ inner Rideshare / Media & Growth toggle → build the active segment's charts.
+function buildActiveSeg(root){
+  var pane=root.querySelector('.dd-pane[data-dd="topline"]'); if(!pane) return;
+  var b=pane.querySelector('.seg-pill.active'); var seg=b?b.getAttribute('data-seg'):'rides';
+  if(seg==='rides'){
+    buildGrowthTab();
+    var ds=root.querySelector('#lyDecompSlider'); if(ds) renderDecomp(+ds.value);
+  }
+  // media: no lazy chart
 }
 function activeSubKey(root, group){
   var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return null;
@@ -2075,7 +2357,7 @@ function wireSubtabs(root, group){
   var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return;
   pane.querySelectorAll('.ovt-subtab').forEach(function(btn){ btn.onclick=function(){ showSub(root, pane, group, btn.getAttribute('data-ovst')); }; });
 }
-function activeDD(root){ var b=root.querySelector('.dd-tab.active'); return b?b.getAttribute('data-dd'):'overview'; }
+function activeDD(root){ var b=root.querySelector('.dd-tab.active'); return b?b.getAttribute('data-dd'):'topline'; }
 function showDD(root, key){
   root.querySelectorAll('.dd-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-dd')===key); });
   root.querySelectorAll('.dd-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-dd')!==key); });
@@ -2154,7 +2436,14 @@ function init(c){
   if (!root) return;
   renderLive(root); // Deep Dive ▸ Deep Overview keeps its #lyLive banner; the standardized Overview has no price strip.
   wireDD(root);
-  wireSubtabs(root,'strategy'); wireSubtabs(root,'unitecon'); wireSubtabs(root,'financials'); wireSubtabs(root,'evolution');
+  wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt');
+  // Segments ▸ inner Rideshare / Media & Growth toggle (the "sub-tabs de los segmentos").
+  root.querySelectorAll('.seg-pill').forEach(function(btn){ btn.onclick=function(){
+    var seg=btn.getAttribute('data-seg');
+    root.querySelectorAll('.seg-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    root.querySelectorAll('.seg-body').forEach(function(p){ p.hidden=(p.getAttribute('data-seg')!==seg); });
+    requestAnimationFrame(function(){ buildActiveSeg(root); });
+  }; });
   root.querySelectorAll('.ave-pill').forEach(function(btn){
     btn.onclick = function(){ switchAveMetric(root, btn.getAttribute('data-ave')); };
   });
@@ -2233,4 +2522,4 @@ function deepDiveInit(c){
   var d = activeDD(root); requestAnimationFrame(function(){ buildDD(root, d); });
 }
 
-export var lyftOverview = { html: html, init: init, deepDive: { html: deepDiveHtml, init: deepDiveInit } };
+export var lyftOverview = { html: html, init: init, absorbsPillars: true, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

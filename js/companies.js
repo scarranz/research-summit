@@ -70,6 +70,13 @@ var _currentPillar = 'qb';
 var _currentCompanyId = null;
 var _currentTicker = null;
 
+// Where the live Pillars panels render. Default = the Pillars pane slots. For overviews
+// that ABSORB Pillars (absorbsPillars:true — UBER/LYFT/CART), the standalone Pillars tab is
+// hidden and these point at the Deep Dive slots so the same live data (Fiscal.ai management +
+// Massive analyst ratings) shows inside the Deep Dive's Management / Valuation subtabs.
+var _mgmtSlotId = 'mgmt-data-slot';
+var _valSlotId = 'valuation-data-slot';
+
 // Cache threshold — don't re-sync if data is younger than this (in hours)
 var SYNC_CACHE_HOURS = 24;
 
@@ -194,7 +201,7 @@ async function renderPillarContent() {
 }
 
 async function loadManagementData(companyId) {
-  var slot = document.getElementById('mgmt-data-slot');
+  var slot = document.getElementById(_mgmtSlotId);
   if (!slot) return;
   if (companyId !== _currentCompanyId) return;
 
@@ -302,7 +309,7 @@ async function handleMgmtSync() {
 // ─── Valuation Pillar: Analyst Ratings ────────────────────────
 
 async function loadValuationData(companyId) {
-  var slot = document.getElementById('valuation-data-slot');
+  var slot = document.getElementById(_valSlotId);
   if (!slot) return;
   if (companyId !== _currentCompanyId) return;
 
@@ -415,6 +422,28 @@ function renderCoAnalysis(companyId, ticker) {
   _currentPillar = 'qb';
   _currentCompanyId = companyId;
   _currentTicker = ticker;
+
+  // Overviews that ABSORB Pillars hide the standalone tab and route the two live Pillars
+  // panels into the Deep Dive (Management → dd-mgmt-slot, Analyst Ratings → dd-val-slot).
+  // The Deep Dive HTML (with those slots) is already rendered by renderDeepDive() above.
+  var absorbs = _currentOverview && _currentOverview.absorbsPillars;
+  var pillarsTab = document.querySelector('.cotab[data-pane="pillars"]');
+  if (pillarsTab) pillarsTab.style.display = absorbs ? 'none' : '';
+
+  if (absorbs) {
+    _mgmtSlotId = 'dd-mgmt-slot';
+    _valSlotId = 'dd-val-slot';
+    var box = document.getElementById('co-analysis');
+    if (box) box.innerHTML = '';
+    var pf = document.getElementById('pillar-filter');
+    if (pf) pf.innerHTML = '';
+    if (document.getElementById(_mgmtSlotId)) loadManagementData(companyId);
+    if (document.getElementById(_valSlotId)) loadValuationData(companyId);
+    return;
+  }
+
+  _mgmtSlotId = 'mgmt-data-slot';
+  _valSlotId = 'valuation-data-slot';
   renderPillarFilter();
   renderPillarContent();
 }

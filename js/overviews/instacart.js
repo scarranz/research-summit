@@ -1350,7 +1350,7 @@ function stdPeerScatter(){
     '<g id="icScNodes"></g>'+
   '</svg></div>';
   h+='<div class="icsc-chips" id="icScChips"></div>';
-  h+='<div class="ov-diagram-cap" style="margin-top:4px">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only <b>listed</b> peers with a public multiple plot here; a name drops out of the P/E view when it has no meaningful P/E. <b>Amazon</b> (Amazon Fresh / Whole Foods) and <b>Walmart</b> are Instacart’s biggest structural rivals but are diversified giants, not clean pure-play comps; private rivals (Gopuff, Shipt) have no public multiple — all of them sit on the qualitative competitive map in <b>Deep Dive ▸ Deep Overview</b>, not this scatter. <span class="ave-subh-note">Multiples & growth are approximate, web-sourced (mid-2026); market caps are live. Directional, not exact.</span></div>';
+  h+='<div class="ov-diagram-cap" style="margin-top:4px">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only <b>listed</b> peers with a public multiple plot here; a name drops out of the P/E view when it has no meaningful P/E. <b>Amazon</b> (Amazon Fresh / Whole Foods) and <b>Walmart</b> are Instacart’s biggest structural rivals but are diversified giants, not clean pure-play comps; private rivals (Gopuff, Shipt) have no public multiple — all of them sit on the qualitative competitive map in <b>Deep Dive ▸ Top Line ▸ Industry Analysis</b>, not this scatter. <span class="ave-subh-note">Multiples & growth are approximate, web-sourced (mid-2026); market caps are live. Directional, not exact.</span></div>';
   h+='<div id="icScTip" class="mg-tip" hidden></div>';
   return h;
 }
@@ -1457,25 +1457,24 @@ function historyStoryBody(){
   return sec('History & Milestones', tl)+
     sec('M&A — the tuck-ins that built today’s high-margin mix', cartMnaTimeline());
 }
-function deepDiveHtml(c){
-  var h = '<div class="ov ov-cart ov-cart-dd" data-brand="CART">';
-  // .dd-tabs styling (wraps — no horizontal scroll, unlike the old .ov-subtabs bar).
-  h += '<style>.dd-tabs{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 14px;border-bottom:1px solid var(--bdr)}'+
-    '.dd-tab{border:none;background:transparent;font:inherit;font-size:12.5px;font-weight:700;color:var(--mu);padding:8px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}'+
-    '.dd-tab:hover{color:var(--navy)}.dd-tab.active{color:var(--navy);border-bottom-color:var(--navy)}</style>';
-  // Top-level Deep Dive tabs (.dd-tabs wrap — no horizontal scroll); the multi-front
-  // panes are grouped under Business and Financials via nested .ovt-subtabs.
-  h += '<div class="dd-tabs">'+
-    '<button type="button" class="dd-tab active" data-dd="overview">Deep Overview</button>'+
-    '<button type="button" class="dd-tab" data-dd="business">Business</button>'+
-    '<button type="button" class="dd-tab" data-dd="supply">Supply Chain</button>'+
-    '<button type="button" class="dd-tab" data-dd="financials">Financials</button>'+
-    '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
-    '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
-  '</div>';
 
-  // ══ Deep Overview ══
-  h += '<div class="dd-pane" data-dd="overview">';
+// ── Labeled placeholder (identical to uber.js): create the tab now, fill later with
+// sourced figures — never invent data. Marked "To build" so it's obviously incomplete. ──
+function placeholder(title, note){
+  return '<div style="border:1px dashed var(--bdr);border-radius:12px;padding:16px 18px;margin:10px 0;background:linear-gradient(180deg,rgba(232,160,12,0.045),transparent)">'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#B7791F;background:rgba(232,160,12,0.14);border-radius:10px;padding:2px 9px">To build</span><span style="font-size:13.5px;font-weight:800;color:var(--navy)">'+esc(title)+'</span></div>'+
+    '<div style="font-size:12px;color:var(--mu);line-height:1.55">'+note+'</div></div>';
+}
+
+// ── The old "Deep Overview" subtab is DISMANTLED (Golden Rule #1 — content MOVED, not
+// deleted). Its pieces are composed into the new spine:
+//   • snapshot/KPIs/lede/driverHero + "the arc"  → Top Line ▸ Segments (cartSegIntro)
+//   • "How Instacart Makes Money" + "Revenue Structure" → Top Line ▸ Segments (overview above toggle)
+//   • "Competitive Landscape" (cartPeerMap + peersHtml) → Top Line ▸ Industry Analysis (cartIndustryBody)
+//   • "Strategy — the flywheel" (stratFlywheel)   → Evolution ▸ Strategy (cartStrategyBody)
+// Top Line ▸ Segments — company intro (from the old Deep Overview) + each motion in depth.
+function cartSegIntro(){
+  var h='';
   h += snap(SNAPSHOT);
   h += '<p class="ov-lede">'+DESC+'</p>';
   h += kpis(KPIS);
@@ -1494,6 +1493,12 @@ function deepDiveHtml(c){
     '<div class="icj-ar">→</div>'+
     '<div class="icj-step"><div class="icj-t">Next</div><div class="icj-d">Arming retailers everywhere (<b>Carrot, Caper</b>) and exporting the tech abroad (<b>Instaleap</b>) — asset-light.</div></div>'+
   '</div>';
+  return h;
+}
+// Top Line ▸ Segments — intro + the segment overview (moved from Deep Overview) + the inner
+// Marketplace/Advertising/Enterprise toggle (mirrors uber's ubSegmentsBody).
+function cartSegmentsBody(c){
+  var h=cartSegIntro();
   h += sec('How Instacart Makes Money',
     bullets(HOW_MONEY)+
     '<div class="ov-diagram-cap" style="margin:4px 0 10px"><b>The multi-sided network.</b> Tap any party for its role.</div>'+hubHtml()+flowHtml());
@@ -1504,38 +1509,35 @@ function deepDiveHtml(c){
         '<div class="ov-segpanel-h"><div class="ov-segpanel-n">'+esc(seg.n)+'</div><div class="ov-segpanel-m">'+esc(seg.rev)+' · '+esc(seg.margin)+'</div></div>'+
         '<div class="ov-segnodes">'+seg.subs.map(function(s){ return '<div class="ov-segnode ov-clickable" data-detail="sub:'+esc(s.k)+'"><span class="ov-segnode-n">'+esc(s.n)+'</span><span class="ov-segnode-r">'+esc(s.rev)+'</span></div>'; }).join('')+'</div></div>';
     }).join('')+'</div>');
-  h += sec('Competitive Landscape',
-    cartPeerMap()+
-    '<div class="ov-diagram-cap" style="margin:16px 0 12px">Its three fronts: marketplace delivery (DoorDash, Uber), full-vertical grocery (Amazon, Walmart), and enterprise tech. <b>Tap any competitor</b> for its edge and gap vs Instacart.</div>'+
-    peersHtml());
-  h += sec('Strategy — the flywheel',
-    '<div class="ov-diagram-cap" style="margin:0 0 12px">Not a list of projects — a <b>self-reinforcing loop</b>: advertising profit funds the pivot from delivery app to grocery-industry tech platform, and each stage feeds the next. <b>Tap any stage.</b></div>'+
-    stratFlywheel());
-  // History & Milestones moved to Evolution ▸ Company History & M&A (historyStoryBody)
-  // — single home for the company story, no repetition here.
-  h += '</div>'; // end overview
-
-  // ══ Business — Marketplace · Advertising · Enterprise (nested subtabs) ══
-  h += '<div class="dd-pane" data-dd="business" hidden>';
-  h += '<div class="ovt-subtabs">'+
-    '<button type="button" class="ovt-subtab active" data-ovst="marketplace">Marketplace</button>'+
-    '<button type="button" class="ovt-subtab" data-ovst="advertising">Advertising</button>'+
-    '<button type="button" class="ovt-subtab" data-ovst="enterprise">Enterprise</button>'+
-  '</div>';
-  h += '<div class="ovt-subpane" data-ovst="marketplace">';
+  // Each motion in depth, switched by an inner toggle (the "sub-tabs de los segmentos").
+  h += '<div class="ov-sec-h ovt-store-h" style="margin-top:8px">Each motion in depth</div>';
+  h += '<style>.seg-pill{border:1px solid var(--bdr);background:#fff;font:inherit;font-size:11px;font-weight:700;color:var(--mu);padding:5px 13px;border-radius:999px;cursor:pointer}.seg-pill.active{background:var(--navy);color:#fff;border-color:var(--navy)}.seg-pill:hover{color:var(--navy)}.seg-pill.active:hover{color:#fff}</style>';
+  h += '<div class="seg-pills" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px">'+
+      '<button type="button" class="seg-pill active" data-seg="marketplace">Marketplace</button>'+
+      '<button type="button" class="seg-pill" data-seg="advertising">Advertising</button>'+
+      '<button type="button" class="seg-pill" data-seg="enterprise">Enterprise</button>'+
+    '</div>';
+  h += '<div class="seg-body" data-seg="marketplace">'+cartMarketplaceBody(c)+'</div>';
+  h += '<div class="seg-body" data-seg="advertising" hidden>'+cartAdvertisingBody(c)+'</div>';
+  h += '<div class="seg-body" data-seg="enterprise" hidden>'+cartEnterpriseBody(c)+'</div>';
+  return h;
+}
+// Segments ▸ Marketplace — membership MOVED to Customers, order economics MOVED to Unit
+// Economics (Golden Rule #1); pointers left where the content was removed.
+function cartMarketplaceBody(c){
+  var h='';
   h += '<p class="ov-lede">The <b>Marketplace</b> is the <b>demand + data engine</b> — Instacart owns the customer here, and that ownership is exactly what powers advertising and enterprise. It earns a take of <b>GTV</b> plus the <b>Instacart+</b> membership.</p>';
-  h += sec('Instacart+ — the membership', membershipViz());
-  h += sec('Anatomy of an order',
-    '<div class="ov-corr-stats">'+UE_STATS.map(function(s){ return '<div class="ov-corr-stat"><div class="ov-corr-v">'+esc(s.v)+'</div><div class="ov-corr-l">'+esc(s.l)+'<br><span style="font-weight:400">'+esc(s.s)+'</span></div></div>'; }).join('')+'</div>'+
-    '<div style="margin-top:14px">'+orderAnatomy()+'</div>');
+  h += '<div class="ov-callout" style="margin:10px 0"><b>Instacart+ membership moved.</b> The membership deep-dive now lives in <b>Top Line ▸ Customers</b>.</div>';
+  h += '<div class="ov-callout" style="margin:10px 0"><b>Order economics moved.</b> The "anatomy of an order" walkthrough now lives in <b>Bottom Line ▸ Unit Economics</b>.</div>';
   h += sec('The Density Moat — why affordability is a weapon here', densityMoat());
   h += sec('Who pays Instacart', whoPays());
-  h += '</div>'; // end marketplace
-
-  // ── Advertising ──
-  h += '<div class="ovt-subpane" data-ovst="advertising" hidden>';
+  return h;
+}
+// Segments ▸ Advertising — the profit engine (buildAdChart paints when this segment is active).
+function cartAdvertisingBody(c){
+  var h='';
   h += '<p class="ov-lede"><b>Advertising is the reason Instacart is profitable.</b> CPG brands pay to be discovered at the <b>point of purchase</b> — ~100% gross margin, and, as the Overview showed, roughly the size of the entire company\'s profit. Below: how big it has grown, why it converts, whether it is durable, and who it competes with.</p>';
-  h += sec('Instacart\u2019s role in the ad value chain', cartAdRole());
+  h += sec('Instacart’s role in the ad value chain', cartAdRole());
   h += sec('Follow the ad dollar — where it enters & who keeps it', cartAdFlow());
   h += sec('The mix shift that made Instacart profitable',
     '<div class="ov-diagram-cap" style="margin:0 0 10px">Quarterly <b>advertising revenue</b> (orange bars) and <b>ads as a share of total revenue</b> (navy line). The share, not just the dollars, is the story.</div>'+
@@ -1546,35 +1548,111 @@ function deepDiveHtml(c){
   h += sec('The advertising flywheel',
     '<div class="ov-fly">'+AD_FLY.map(function(f){ return '<div class="ov-fly-item"><div class="ov-fly-num" style="background:#FF70091A;color:#FF7009">'+esc(f[0])+'</div><div class="ov-fly-h">'+esc(f[1])+'</div><div class="ov-fly-p">'+esc(f[2])+'</div></div>'; }).join('')+'</div>');
   h += sec('The ad products', pillarCards('ads'));
-  h += '</div>'; // end advertising
-
-  // ── Enterprise ──
-  h += '<div class="ovt-subpane" data-ovst="enterprise" hidden>';
+  return h;
+}
+// Segments ▸ Enterprise — the competitor→customer flip + the Carrot platform.
+function cartEnterpriseBody(c){
+  var h='';
   h += '<p class="ov-lede"><b>Instacart Platform (Enterprise)</b> is the pivot from a delivery app to <b>the grocery industry’s tech vendor</b>. Instacart sells the same technology that runs its own app to retailers, to power <b>their</b> e-commerce, fulfillment, ads and in-store tech — the retailer keeps the customer. Lower take than the Marketplace, but it is how Instacart makes itself indispensable.</p>';
   h += sec('The flip — turning a competitor into a customer', entFlip());
-  // M&A ("every deal became a product") moved to Evolution ▸ Company History & M&A (historyStoryBody).
   h += sec('Carrot — the platform management frames as five pillars', carrotPillars());
   h += sec('Where Instacart sits — its role at every stage', cartRoleMap());
   h += sec('From online to the aisle — Connected Stores',
     '<div class="ov-callout"><b>Caper smart carts</b> reached meaningful in-store penetration in <b>months, not years</b>. With electronic shelf labels and scan-and-pay, Instacart reaches into the <b>physical aisle</b> — not just delivery — and the store itself becomes new <b>ad inventory</b>. This is how the addressable market extends far beyond online grocery, where penetration is still only low-teens %.</div>');
   h += sec('The international arm — Instaleap',
-    '<div class="ov-callout" style="border-left:3px solid #3A7BD5"><b>Enterprise, exported.</b> Instacart’s consumer Marketplace is US/Canada-only and brutally expensive to rebuild abroad. The Apr-2026 <b>Instaleap</b> acquisition gives it an instant base of ~100 retailers across ~30 countries to sell the enterprise tech into — <b>no marketplace, shopper network or brand to build</b>. Asset-light land-and-expand. (See the Strategy flywheel on the Overview.)</div>');
+    '<div class="ov-callout" style="border-left:3px solid #3A7BD5"><b>Enterprise, exported.</b> Instacart’s consumer Marketplace is US/Canada-only and brutally expensive to rebuild abroad. The Apr-2026 <b>Instaleap</b> acquisition gives it an instant base of ~100 retailers across ~30 countries to sell the enterprise tech into — <b>no marketplace, shopper network or brand to build</b>. Asset-light land-and-expand. (See the Strategy flywheel in Evolution ▸ Strategy.)</div>');
   h += '<div class="ov-fynote">Marketplace vs Enterprise, in one line: in the <b>Marketplace</b> Instacart owns the consumer and earns a full take + ads; in <b>Enterprise</b> the retailer owns the consumer and Instacart earns a smaller tech fee — <b>trading take rate for reach and stickiness.</b></div>';
-  h += '</div>'; // end enterprise subpane
-  h += '</div>'; // end business group
-
-  // ══ Supply Chain (Bloomberg SPLC) ══
-  h += '<div class="dd-pane" data-dd="supply" hidden>';
-  h += supplyBody();
-  h += '</div>'; // end supply pane
-
-  // ══ Financials — Financials · Valuation (nested subtabs) ══
-  h += '<div class="dd-pane" data-dd="financials" hidden>';
-  h += '<div class="ovt-subtabs">'+
-    '<button type="button" class="ovt-subtab active" data-ovst="fin">Financials</button>'+
-    '<button type="button" class="ovt-subtab" data-ovst="valuation">Valuation</button>'+
-  '</div>';
-  h += '<div class="ovt-subpane" data-ovst="fin">';
+  return h;
+}
+// Top Line ▸ Customers — Instacart+ membership, MOVED out of the Marketplace segment.
+function cartCustomersBody(c){
+  return sec('Instacart+ — the membership', membershipViz());
+}
+// Top Line ▸ TAM — Instacart's OWN stated market opportunity, from its Form S-1 ("Our Market
+// Opportunity" + the CEO letter): US grocery $1.1T @ ~12% online, and the ~$200B CPG ad pool.
+function cartTamBody(c){
+  var K=[
+    ['US grocery','$1.1T','largest US retail category'],
+    ['Online today','~12%','of grocery bought online — low-teens'],
+    ['CPG ad spend','~$200B','the brand-advertising pool'],
+    ['…of it online','~25%','of that CPG spend online (2022)']
+  ];
+  var h='<p class="ov-lede">Instacart frames its opportunity as digitizing the <b>largest retail category in the US</b>. In its S-1 it sizes US grocery at <b>$1.1 trillion</b> a year, of which <b>only ~12% is bought online</b> — a low-teens penetration it argues <i>"could double or more over time."</i> Stacked on top is a second market: the <b>~$200 billion</b> that CPG brands spend to advertise, migrating into retail media — the ~100%-margin layer that makes Instacart profitable.</p>';
+  h+='<div class="ov-kpis">'+K.map(function(f){return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(f[0])+'</div><div class="ov-kpi-v">'+esc(f[1])+'</div><div class="ov-kpi-d muted">'+esc(f[2])+'</div></div>';}).join('')+'</div>';
+  h+='<div class="ov-chart-card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:7px 10px">Market (Instacart-stated)</th><th style="text-align:right;padding:7px 10px">Size</th><th style="text-align:left;padding:7px 10px">The angle</th></tr></thead><tbody>'+
+    '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px;font-weight:700">Total US grocery</td><td style="text-align:right;padding:7px 10px">$1.1T / yr</td><td style="padding:7px 10px">the whole category, every channel</td></tr>'+
+    '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px;font-weight:700">Online grocery (today)</td><td style="text-align:right;padding:7px 10px">~12% &asymp; $130B+</td><td style="padding:7px 10px">penetration &ldquo;could double or more&rdquo;</td></tr>'+
+    '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px;font-weight:700">CPG advertising</td><td style="text-align:right;padding:7px 10px">~$200B / yr</td><td style="padding:7px 10px">~25% online (2022) &mdash; retail-media wedge</td></tr>'+
+  '</tbody></table></div>';
+  h+=sec('The thesis — penetration, not share', '<div class="ov-callout">The bet is <b>not</b> taking share of a fixed online pie — it is the <b>online % of a $1.1T category climbing off a low-teens base</b>. Even a move from ~12% toward 20%+ roughly doubles the online-grocery pool, and each incremental order also pulls in high-margin advertising and (via Enterprise) grocery-tech fees. That is why Instacart argues its runway is long despite already being the online-grocery leader.</div>');
+  h+='<div class="ave-subh-note" style="margin:8px 2px 4px"><b>Methodology:</b> Instacart sizes its TAM as <b>total US grocery spend across all channels</b>, not just today&rsquo;s online slice; the advertising market is the CPG ad/promo budget shifting into retail media. Online-grocery $ shown = 12% &times; $1.1T (Instacart also cited a ~$132B online-grocery market for 2022).</div>';
+  h+=placeholder('Enterprise / grocery-tech TAM', 'Instacart does not put a clean single dollar figure on the grocery-enterprise-software (Carrot / Connected Stores) market in the S-1, so it is not sized here. Confirm from a later 10-K / IR deck before adding a hard number.');
+  h+='<div class="ov-foot">Source: Instacart (Maplebear Inc.) Form S-1, filed Aug 25, 2023 (SEC EDGAR, CIK 0001579091) — CEO letter &amp; &ldquo;Our Market Opportunity&rdquo;: US grocery $1.1T with only ~12% online (2022) and &ldquo;could double or more over time&rdquo;; ~$200B CPG advertising spend, ~25% through online channels as of 2022. Online-grocery $ ≈ 12% &times; $1.1T.</div>';
+  return h;
+}
+// Top Line ▸ Industry Analysis — the qualitative Competitive Landscape, MOVED from the Deep Overview.
+function cartIndustryBody(c){
+  return sec('Competitive Landscape',
+    cartPeerMap()+
+    '<div class="ov-diagram-cap" style="margin:16px 0 12px">Its three fronts: marketplace delivery (DoorDash, Uber), full-vertical grocery (Amazon, Walmart), and enterprise tech. <b>Tap any competitor</b> for its edge and gap vs Instacart.</div>'+
+    peersHtml())+
+    '<div class="ov-foot">'+esc(SOURCES)+'</div>';
+}
+// Valuation ▸ Competitors — pointer (the peer scatter is on the Overview; the qualitative map is in Industry Analysis). No duplication.
+function cartCompetitorsBody(c){
+  return '<p class="ov-lede">Listed peers by valuation multiple and revenue growth.</p>'+
+    '<div class="ov-callout"><b>The peer valuation scatter lives on the Overview tab</b> (Competitors — valuation vs growth), and the qualitative competitive map (positioning + each rival\'s edge &amp; gap) is in <b>Top Line ▸ Industry Analysis</b> — kept there to avoid duplication.</div>'+
+    placeholder('Competitors — deeper valuation build', 'A dedicated Deep-Dive peer-multiples table (EV/EBITDA and P/E vs growth, forward &amp; trailing) is not yet built here; use the Overview scatter and Industry Analysis in the meantime.');
+}
+// Bottom Line ▸ Unit Economics — "Anatomy of an order", MOVED from the Marketplace segment.
+function cartUnitEconBody(c){
+  var h='';
+  h += '<p class="ov-lede">The economics of one Marketplace order — where Instacart’s cut sits, and why the high-margin ad layer is what turns a thin delivery into a profitable order.</p>';
+  h += sec('Anatomy of an order',
+    '<div class="ov-corr-stats">'+UE_STATS.map(function(s){ return '<div class="ov-corr-stat"><div class="ov-corr-v">'+esc(s.v)+'</div><div class="ov-corr-l">'+esc(s.l)+'<br><span style="font-weight:400">'+esc(s.s)+'</span></div></div>'; }).join('')+'</div>'+
+    '<div style="margin-top:14px">'+orderAnatomy()+'</div>');
+  return h;
+}
+// ── Bottom Line ▸ Margins — profitability & cash margins pulled LIVE from Massive (get-margins),
+// the same feed San wired for NVDA (api.fetchMargins). Mirrors uber's ubMarginsBody. No invented history. ──
+var CART_MRG_METRICS=[
+  {key:'gross',label:'Gross',color:'#0AAD0A'},
+  {key:'oper',label:'Operating',color:'#3A7BD5'},
+  {key:'net',label:'Net',color:'#7A5AF8'},
+  {key:'ebitda',label:'EBITDA',color:'#12B5A5'},
+  {key:'cfo',label:'CFO',color:'#F2A73B'},
+  {key:'fcf',label:'FCF',color:'#EB5757'}
+];
+var _cartMrgRows=null;
+function cartMarginsBody(c){
+  return '<p class="ov-lede">Profitability &amp; cash margins as a % of revenue, pulled <b>live from Massive</b> (income + cash-flow statements) — gross, operating and net, plus EBITDA, CFO and FCF. Same feed San wired for NVDA.</p>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Margins (% of revenue) <span>· fiscal years · live via Massive</span></div><div class="ov-chart-wrap ovt-vs-wrap"><canvas id="cartChartMargins"></canvas></div></div>'+
+    '<div class="ave-subh-note" id="cartMrgNote" style="margin-top:8px">Fetching margins from Massive… if the chart stays empty, the data feed isn’t reachable in this session. Known anchor: FY2025 Adjusted EBITDA <b>$1.09B</b> (~29% margin) — Instacart’s first GAAP-profitable years.</div>';
+}
+function buildCartMargins(){
+  var cv=document.getElementById('cartChartMargins'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
+  if(!_cartMrgRows||!_cartMrgRows.length){ cartLoadMargins(); return; }
+  var _ex=Chart.getChart?Chart.getChart(cv):null; if(_ex){ _ex.destroy(); }
+  var labels=_cartMrgRows.map(function(r){ return r.fy; });
+  var ds=CART_MRG_METRICS.map(function(m){ return { label:m.label, data:_cartMrgRows.map(function(r){ return r[m.key]; }), borderColor:m.color, backgroundColor:m.color, borderWidth:2, tension:.25, pointRadius:2, spanGaps:true, fill:false }; });
+  _finCharts.cartMrg=new Chart(cv.getContext('2d'),{ type:'line', data:{ labels:labels, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}}, tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label+': '+(ctx.parsed.y==null?'—':ctx.parsed.y.toFixed(1)+'%'); } } } },
+      scales:{ y:{ ticks:{ callback:function(v){ return v+'%'; }, font:{size:10} }, grid:{color:C_GRID} }, x:{ grid:{display:false}, ticks:{font:{size:10.5}} } } }
+  });
+}
+function cartLoadMargins(){
+  import('../api.js').then(function(api){ return api.fetchMargins?api.fetchMargins('CART'):null; }).then(function(res){
+    if(!res||!res.success||!res.data||!res.data.length) return; // keep the note; chart stays empty
+    _cartMrgRows=res.data;
+    var note=document.getElementById('cartMrgNote'); if(note) note.innerHTML='Historical margins computed <b>live from Massive</b> (income &amp; cash-flow statements): gross/op/net = line ÷ revenue; EBITDA = (op income + D&amp;A) ÷ revenue; CFO &amp; FCF ÷ revenue.';
+    buildCartMargins();
+  }).catch(function(){ /* keep the note */ });
+}
+// Evolution ▸ Guidance — the financials block + Guidance-vs-Reality (renderFin + buildCartGuide),
+// MOVED from the old Evolution ▸ Financials & Guidance subpane (content unchanged).
+function cartGuidanceBody(c){
+  var h='';
   h += '<p class="ov-lede">'+FIN_INTRO+'</p>';
   h += '<div class="ov-fintog" id="ovFinTog"><button class="on" data-period="annual">Annual</button><button data-period="quarterly">Quarterly</button></div>';
   h += '<div class="ov-charts ov-charts-2">'+
@@ -1592,21 +1670,223 @@ function deepDiveHtml(c){
   h += '<div class="ave-subh-note" id="cgNote" style="margin:8px 2px 12px"></div>';
   h += '<div class="guid-tbl-wrap" id="cgTbl"></div>';
   h += '<div class="ov-foot">Guidance = the range issued for the upcoming quarter on the prior earnings call (Instacart shareholder letters / 8-K); reported = Summit actuals. The series <b>starts at Q4 2023</b> because that was Instacart’s first guidance as a public company — it <b>IPO’d in Sept 2023</b>, so no public guidance exists for 1Q–3Q23 (this is why it cannot reach back to 1Q23 like Uber/Lyft, public since 2019). That first Q4 2023 GTV was given as a <b>growth %</b>, not a $ range. 2Q26 is the current outstanding guide.</div>';
-  h += '</div>'; // end fin subpane
-  h += '<div class="ovt-subpane" data-ovst="valuation" hidden>'+CART_VAL.body()+'</div>';
-  h += '</div>'; // end financials group
-
-  h += '<div class="dd-pane" data-dd="mgmt" hidden>'+CART_MGMT.body()+'</div>';
-
-  // ══ Evolution — Company History & M&A + Earnings Narrative (moved here, single home) ══
-  h += '<div class="dd-pane" data-dd="evolution" hidden>';
-  h += '<div class="ovt-subtabs">'+
-    '<button type="button" class="ovt-subtab active" data-ovst="story">Company History &amp; M&amp;A</button>'+
-    '<button type="button" class="ovt-subtab" data-ovst="calls">Earnings Narrative</button>'+
+  return h;
+}
+// Evolution ▸ Strategy — the flywheel, MOVED from the old Deep Overview.
+function cartStrategyBody(c){
+  return sec('Strategy — the flywheel',
+    '<div class="ov-diagram-cap" style="margin:0 0 12px">Not a list of projects — a <b>self-reinforcing loop</b>: advertising profit funds the pivot from delivery app to grocery-industry tech platform, and each stage feeds the next. <b>Tap any stage.</b></div>'+
+    stratFlywheel())+
+    '<div class="ov-foot">'+esc(SOURCES)+'</div>';
+}
+// Valuation ▸ Capital Allocation — DATA-BACKED from the Summit model snapshot (FY actuals, $M):
+// FCF, SBC and shares outstanding. Buyback $ not carried in the model → flagged to-confirm.
+function cartCapAllocBody(c){
+  var R=[
+    {fy:'FY22', fcf:253, sbc:20,   sh:101},
+    {fy:'FY23', fcf:532, sbc:2756, sh:131},
+    {fy:'FY24', fcf:623, sbc:300,  sh:289},
+    {fy:'FY25', fcf:910, sbc:351,  sh:280}
+  ];
+  var bb=function(m){ if(m==null) return '—'; var a=Math.abs(m), s=m<0?'−':''; return a>=1000? s+'$'+(a/1000).toFixed(2)+'B' : s+'$'+a+'M'; };
+  var last=R[3], prev=R[2];
+  var shChg=(last.sh/prev.sh-1)*100;
+  var h='<p class="ov-lede">How Instacart deploys the cash it generates: <b>no dividend</b>, <b>FCF-positive since before its 2023 IPO</b>, SBC normalized after the IPO RSU catch-up, and <b>buybacks now shrinking the share count</b>.</p>';
+  h+='<div class="ov-kpis">'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Dividend</div><div class="ov-kpi-v">None</div><div class="ov-kpi-d muted">never paid</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">FY25 FCF</div><div class="ov-kpi-v">$0.91B</div><div class="ov-kpi-d muted">up from $0.25B in FY22</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">FY25 SBC</div><div class="ov-kpi-v">$0.35B</div><div class="ov-kpi-d muted">normalized post-IPO</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Shares out</div><div class="ov-kpi-v">280M</div><div class="ov-kpi-d muted">▼ '+Math.abs(shChg).toFixed(1)+'% YoY (buybacks)</div></div>'+
   '</div>';
-  h += '<div class="ovt-subpane" data-ovst="story">'+historyStoryBody()+'</div>';
-  h += '<div class="ovt-subpane" data-ovst="calls" hidden>'+callsBody()+'</div>';
-  h += '</div>'; // end evolution group
+  h+='<div class="ov-chart-card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:7px 10px">Fiscal year</th><th style="text-align:right;padding:7px 10px">Free cash flow</th><th style="text-align:right;padding:7px 10px">SBC</th><th style="text-align:right;padding:7px 10px">Shares out (M)</th></tr></thead><tbody>'+
+    R.map(function(r){ return '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px;font-weight:700">'+r.fy+'</td><td style="text-align:right;padding:7px 10px">'+bb(r.fcf)+'</td><td style="text-align:right;padding:7px 10px">'+bb(-r.sbc)+'</td><td style="text-align:right;padding:7px 10px">'+r.sh.toLocaleString()+'</td></tr>'; }).join('')+
+  '</tbody></table></div>';
+  h+=sec('Dividend policy', '<div class="ov-callout">Instacart has <b>never paid a dividend</b>. Cash funds <b>buybacks</b> and a net-cash balance sheet.</div>');
+  h+=sec('Repurchase policy & dilution', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">The FY23 SBC spike (<b>~$2.8B</b>) was the one-time <b>RSU catch-up</b> at the Sept-2023 IPO; SBC then normalized to <b>~$0.3–0.35B/yr</b>. Share count peaked in FY24 (~289M) and <b>fell in FY25 (~280M)</b> as repurchases began to outrun dilution — the same inflection Uber hit. <span class="ave-subh-note">Buyback authorization size &amp; repurchase $ actuals: not in the Summit model — confirm from the latest 10-Q/8-K.</span></div>');
+  h+='<div class="ov-foot">Source: Summit model snapshot — FY actuals (FCF, SBC, shares outstanding). Buyback $ flagged to-confirm.</div>';
+  return h;
+}
+// Valuation ▸ Balance Sheet — company-specific solidity/downside view, from the latest 10-Q
+// (quarter ended 3/31/2026). Instacart carries NO funded debt → net cash ≈ cash + investments.
+function cartBalanceBody(c){
+  var CASH=631, STI=59, LTI=63, DEBT=0, EQ=2395, LIAB=941, ASSETS=3535, SH=280;
+  var NETCASH=CASH+STI+LTI; // 753
+  var bn=function(m){ if(m===0) return '$0'; var a=Math.abs(m); return a>=1000? '$'+(a/1000).toFixed(2)+'B' : '$'+a+'M'; };
+  var K=[
+    ['Net cash','$0.75B','cash + investments, zero debt'],
+    ['Cash & equivalents',bn(CASH),'as of 3/31/2026'],
+    ['Marketable securities',bn(STI+LTI),bn(STI)+' ST + '+bn(LTI)+' LT'],
+    ['Total debt','$0','no borrowings — leases only']
+  ];
+  var R=[
+    ['Cash &amp; cash equivalents',CASH,false],
+    ['Short-term marketable securities',STI,false],
+    ['Long-term marketable securities',LTI,false],
+    ['Total cash &amp; investments',NETCASH,true],
+    ['Total debt (funded borrowings)',DEBT,false],
+    ['Total liabilities',LIAB,false],
+    ['Total stockholders&rsquo; equity',EQ,true],
+    ['Total assets',ASSETS,false]
+  ];
+  var h='<p class="ov-lede">Instacart runs a <b>net-cash, capital-light</b> balance sheet. As of its latest 10-Q (quarter ended <b>March 31, 2026</b>) it held <b>'+bn(CASH)+'</b> of cash plus <b>'+bn(STI+LTI)+'</b> of marketable securities and carried <b>no funded debt</b> — a <b>net-cash position of ~$0.75B</b>. Everything is equity-funded; there is no leverage or refinancing risk.</p>';
+  h+='<div class="ov-kpis">'+K.map(function(f){return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(f[0])+'</div><div class="ov-kpi-v">'+esc(f[1])+'</div><div class="ov-kpi-d muted">'+esc(f[2])+'</div></div>';}).join('')+'</div>';
+  h+='<div class="ov-chart-card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:7px 10px">Line item (3/31/2026)</th><th style="text-align:right;padding:7px 10px">$</th></tr></thead><tbody>'+
+    R.map(function(r){ return '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px'+(r[2]?';font-weight:700':'')+'">'+r[0]+'</td><td style="text-align:right;padding:7px 10px'+(r[2]?';font-weight:700':'')+'">'+bn(r[1])+'</td></tr>'; }).join('')+
+  '</tbody></table></div>';
+  h+=sec('Net cash & downside read', '<div class="ov-callout"><b>The floor is cash, not leverage.</b> Net cash of ~<b>$0.75B</b> is roughly <b>$2.7 / share</b> on ~280M shares. There is no funded debt (the ~'+bn(LIAB)+' of liabilities is operating leases, accrued expenses and deferred items), so a downturn cannot trigger a covenant or refinancing squeeze. Assets are dominated by cash plus goodwill/intangibles from acquisitions rather than heavy PP&amp;E — Instacart owns no stores, trucks or inventory, so the business is <b>asset-light</b> and its book value is not a hard-asset liquidation figure.</div>');
+  h+='<div class="ov-tl-body" style="font-size:12px;line-height:1.6;margin-top:4px">Cash fell from ~$1.69B (Q3 2025) to ~$0.63B as <b>$1.4B of buybacks</b> were executed — a deliberate return of capital, not distress. Combined with FCF that keeps compounding (see <b>Valuation ▸ Capital Allocation</b>), the net-cash cushion is self-refilling. <b>Solidity takeaway: among the strongest balance sheets in its peer set — debt-free, net-cash, and cash-generative.</b></div>';
+  h+='<div class="ov-foot">Source: Maplebear Inc. (Instacart) Form 10-Q for the quarter ended March 31, 2026, filed May 7, 2026 (SEC EDGAR, CIK 0001579091) — condensed consolidated balance sheet: cash &amp; equivalents $631M; marketable securities $59M ST + $63M LT; no funded debt (total liabilities $941M are leases/accrued/deferred); stockholders&rsquo; equity $2,395M; total assets $3,535M. Net cash ≈ $753M refreshes the ~$0.73B carried in the Valuation model. Shares ~280M (FY25).</div>';
+  return h;
+}
+// Valuation ▸ Sensitivity — implied price on an EV/EBITDA × forward-EBITDA grid. Anchors: Summit
+// Adj. EBITDA (FY25 $1.09B) + shares 280M + net cash ~$0.73B. Cells shaded vs the LIVE price.
+function cartSensBody(c){
+  var EB=[1.1,1.4,1.8,2.2,2.7], MU=[8,11,14,17,20], SH=280, NC=0.73;
+  var head='<tr><th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--mu);font-weight:700">EV/EBITDA ↓&nbsp;&nbsp;EBITDA →</th>'+EB.map(function(e){return '<th style="padding:6px 8px;text-align:right;font-size:10.5px;color:var(--mu)">$'+e.toFixed(1)+'B</th>';}).join('')+'</tr>';
+  var rows=MU.map(function(m){
+    var tds=EB.map(function(e){ var px=(e*1000*m+NC*1000)/SH; return '<td class="sens-cell" data-px="'+px.toFixed(2)+'" style="padding:7px 8px;text-align:right;font-variant-numeric:tabular-nums">$'+px.toFixed(0)+'</td>'; }).join('');
+    return '<tr><td style="padding:7px 8px;font-weight:700">'+m+'×</td>'+tds+'</tr>';
+  }).join('');
+  var h='<p class="ov-lede">Implied share price on an <b>EV/EBITDA</b> grid — pick a forward Adj. EBITDA (columns) and an exit multiple (rows). Cells shade <b>green above / red below the live price</b> once it loads.</p>';
+  h+='<div class="ov-live" id="cartSensLive" style="margin:0 0 8px">Fetching live price…</div>';
+  h+='<div class="ov-chart-card" id="cartSensTbl" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>';
+  h+='<div class="ov-foot">Implied price = (EBITDA × multiple + net cash) ÷ shares. Anchors: Summit Adj. EBITDA (FY25 $1.09B; columns span growth). Shares 280M (FY25). Net cash ≈ $0.73B (per the Valuation model). Not a price target.</div>';
+  return h;
+}
+function buildCartSens(){
+  var root=document.getElementById('co-detailview'); if(!root) return;
+  var live=root.querySelector('#cartSensLive'); if(!live) return;
+  import('../api.js').then(function(api){ return api.liveQuote?api.liveQuote('CART'):null; }).then(function(res){
+    var q=(res&&res.success)?res.data:res; var p=(q&&q.price!=null)?q.price:null;
+    if(p==null){ live.style.display='none'; return; }
+    live.innerHTML='<span class="ov-live-dot"></span><span class="ov-live-tk">CART</span> <span class="ov-live-px">$'+p.toFixed(2)+'</span> <span class="ov-live-ts">live — grid shaded vs this price</span>';
+    root.querySelectorAll('#cartSensTbl .sens-cell').forEach(function(td){ var px=parseFloat(td.getAttribute('data-px')); var up=px>=p; var d=Math.min(0.6,Math.abs(px/p-1)); var a=(0.06+d*0.38).toFixed(2); td.style.background=(up?'rgba(6,193,103,'+a+')':'rgba(192,57,43,'+a+')'); td.style.color=(up?'#06965A':'#B23A2E'); td.style.fontWeight='600'; td.title=((px/p-1)*100).toFixed(0)+'% vs live'; });
+  }).catch(function(){ live.style.display='none'; });
+}
+// Management ▸ Governance & SBC — vetted governance facts (config) + SBC from the Summit model.
+function cartGovBody(c){
+  var k=[
+    ['Share & voting','1 vote / share','Sequoia ~12% · D1 ~11% · Mehta ~9% (economic only)'],
+    ['Board','8 of 9 independent','CEO = Chair · Gupta lead director · classified'],
+    ['CEO pay · FY25','$29.8M','Say-on-pay 55% → 79% · Simo forfeited equity'],
+    ['SBC','$0.35B (FY25)','Normalized after the FY23 IPO RSU catch-up (~$2.8B)']
+  ];
+  var h='<p class="ov-lede">Instacart runs <b>one share, one vote</b> (no super-voting founder stock), though large holders — Sequoia (~12%), D1 (~11%) and founder Apoorva Mehta (~9%) — carry weight <b>economically</b>. The board is <b>8 of 9 independent</b>; the CEO is also Chair, offset by a <b>Lead Independent Director</b> (Ravi Gupta).</p>';
+  h+='<div class="ov-kpis">'+k.map(function(f){return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(f[0])+'</div><div class="ov-kpi-v">'+esc(f[1])+'</div><div class="ov-kpi-d muted">'+esc(f[2])+'</div></div>';}).join('')+'</div>';
+  h+=sec('Stock-based compensation & alignment', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">The FY23 SBC spike (<b>~$2.8B</b>) was the one-time <b>RSU catch-up at the IPO</b>; SBC then normalized to <b>~$0.35B/yr</b>, and the share count has started to <b>fall</b> as buybacks began (see <b>Valuation ▸ Capital Allocation</b>). Say-on-pay was weak in the first vote (<b>55%</b>) and recovered (<b>79%</b>) after Simo forfeited equity on her departure.</div>');
+  h+='<div class="ov-callout">Full board, committees and the Lead Independent Director are in <b>Management ▸ Executives &amp; Board</b>.</div>';
+  return h;
+}
+function cartTrackBody(c){
+  var wins=[
+    ['Strategic pivot','Simo (CEO 2021–25) drove the shift from delivery to high-margin advertising + enterprise'],
+    ['Free cash flow','$0.25B → $0.91B (FY22→FY25) — FCF-positive since before the 2023 IPO'],
+    ['SBC normalized','IPO RSU catch-up (~$2.8B, FY23) → ~$0.35B/yr'],
+    ['Share count','began falling in FY25 as buybacks started'],
+    ['Leadership','Chris Rogers (ex-CBO, ~11 yrs at Apple) CEO since Aug 2025, Chair since Nov 2025; Simo left to run applications at OpenAI']
+  ];
+  var h='<p class="ov-lede">Instacart’s management delivered the pivot that defines it — from a thin-margin delivery app to a <b>profitable, ad-funded grocery-tech platform</b> — across the Simo→Rogers handoff.</p>';
+  h+='<div>'+wins.map(function(w){return '<div class="ov-row"><div class="ov-row-k">'+esc(w[0])+'</div><div class="ov-row-v">'+w[1]+'</div></div>';}).join('')+'</div>';
+  h+='<div class="ov-callout" style="margin-top:12px">Guidance-vs-delivery is in <b>Evolution ▸ Guidance</b>; the full company history is in <b>Evolution ▸ Timeline</b>.</div>';
+  h+='<div class="ov-foot">Financial trajectory: Summit model (FY actuals). Leadership/governance: 2026 proxy &amp; company filings.</div>';
+  return h;
+}
+function deepDiveHtml(c){
+  var h = '<div class="ov ov-cart ov-cart-dd" data-brand="CART">';
+  // .dd-tabs styling (wraps — no horizontal scroll, unlike the old .ov-subtabs bar).
+  h += '<style>.dd-tabs{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 14px;border-bottom:1px solid var(--bdr)}'+
+    '.dd-tab{border:none;background:transparent;font:inherit;font-size:12.5px;font-weight:700;color:var(--mu);padding:8px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}'+
+    '.dd-tab:hover{color:var(--navy)}.dd-tab.active{color:var(--navy);border-bottom-color:var(--navy)}</style>';
+  // Deep Dive reorganized into the proposed 5-tab spine: Top Line · Bottom Line · Evolution ·
+  // Valuation · Management (.dd-tabs wrap — no horizontal scroll). NOTHING deleted (Golden
+  // Rule #1): every prior pane is re-slotted, and the two live panels from the old Pillars tab
+  // are absorbed here (Valuation ▸ Analyst Ratings, Management ▸ Ownership & Insiders) via
+  // #dd-val-slot / #dd-mgmt-slot filled by companies.js.
+  h += '<div class="dd-tabs">'+
+    '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
+    '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
+    '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
+    '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
+    '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
+  '</div>';
+
+  // ══ TOP LINE — Segments (inner Marketplace/Advertising/Enterprise toggle) · Customers ·
+  // TAM · Industry Analysis. The old "Deep Overview" subtab is dismantled into these
+  // (Golden Rule #1 — see cartSegIntro/cartIndustryBody; Strategy moved to Evolution). ══
+  h += '<div class="dd-pane" data-dd="topline">';
+  h += '<div class="ovt-subtabs">'+
+    '<button type="button" class="ovt-subtab active" data-ovst="segments">Segments</button>'+
+    '<button type="button" class="ovt-subtab" data-ovst="customers">Customers</button>'+
+    '<button type="button" class="ovt-subtab" data-ovst="tam">TAM</button>'+
+    '<button type="button" class="ovt-subtab" data-ovst="industry">Industry Analysis</button>'+
+  '</div>';
+  h += '<div class="ovt-subpane" data-ovst="segments">'+cartSegmentsBody(c)+'</div>';
+  h += '<div class="ovt-subpane" data-ovst="customers" hidden>'+cartCustomersBody(c)+'</div>';
+  h += '<div class="ovt-subpane" data-ovst="tam" hidden>'+cartTamBody(c)+'</div>';
+  h += '<div class="ovt-subpane" data-ovst="industry" hidden>'+cartIndustryBody(c)+'</div>';
+  h += '</div>'; // end topline group
+
+  // ══ BOTTOM LINE — Unit Economics (order economics, MOVED here) · Suppliers (supplyBody) ·
+  // Margins (live via Massive). ══
+  h += '<div class="dd-pane" data-dd="bottomline" hidden>'+
+    '<div class="ovt-subtabs">'+
+      '<button type="button" class="ovt-subtab active" data-ovst="unit">Unit Economics</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="suppliers">Suppliers</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="margins">Margins</button>'+
+    '</div>'+
+    '<div class="ovt-subpane" data-ovst="unit">'+cartUnitEconBody(c)+'</div>'+
+    '<div class="ovt-subpane" data-ovst="suppliers" hidden>'+supplyBody()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="margins" hidden>'+cartMarginsBody(c)+'</div>'+
+  '</div>';
+
+  // ══ EVOLUTION — Earnings History (callsBody) · Guidance (financials + Guidance-vs-Reality) ·
+  // Strategy (the flywheel, MOVED from Deep Overview) · Timeline (historyStoryBody). ══
+  h += '<div class="dd-pane" data-dd="evolution" hidden>'+
+    '<div class="ovt-subtabs">'+
+      '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings History</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
+    '</div>'+
+    '<div class="ovt-subpane" data-ovst="earnings">'+callsBody()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="guidance" hidden>'+cartGuidanceBody(c)+'</div>'+
+    '<div class="ovt-subpane" data-ovst="strategy" hidden>'+cartStrategyBody(c)+'</div>'+
+    '<div class="ovt-subpane" data-ovst="timeline" hidden>'+historyStoryBody()+'</div>'+
+  '</div>';
+
+  // ══ VALUATION — Multiples & Targets (CART_VAL) · Sensitivity · Competitors (pointer) ·
+  // Analyst Ratings (Massive, #dd-val-slot) · Capital Allocation · Balance Sheet. ══
+  h += '<div class="dd-pane" data-dd="valuation" hidden>'+
+    '<div class="ovt-subtabs">'+
+      '<button type="button" class="ovt-subtab active" data-ovst="multiples">Multiples &amp; Targets</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="sensitivity">Sensitivity</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="competitors">Competitors</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="ratings">Analyst Ratings</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="capital">Capital Allocation</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="balance">Balance Sheet</button>'+
+    '</div>'+
+    '<div class="ovt-subpane" data-ovst="multiples">'+CART_VAL.body()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="sensitivity" hidden>'+cartSensBody(c)+'</div>'+
+    '<div class="ovt-subpane" data-ovst="competitors" hidden>'+cartCompetitorsBody(c)+'</div>'+
+    '<div class="ovt-subpane" data-ovst="ratings" hidden><div id="dd-val-slot"></div></div>'+
+    '<div class="ovt-subpane" data-ovst="capital" hidden>'+cartCapAllocBody(c)+'</div>'+
+    '<div class="ovt-subpane" data-ovst="balance" hidden>'+cartBalanceBody(c)+'</div>'+
+  '</div>';
+
+  // ══ MANAGEMENT — Executives & Board (CART_MGMT) · Ownership (Fiscal.ai, #dd-mgmt-slot) ·
+  // Governance & SBC · Track Record. ══
+  h += '<div class="dd-pane" data-dd="mgmt" hidden>'+
+    '<div class="ovt-subtabs">'+
+      '<button type="button" class="ovt-subtab active" data-ovst="team">Executives &amp; Board</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="ownership">Ownership</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="governance">Governance &amp; SBC</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="track">Track Record</button>'+
+    '</div>'+
+    '<div class="ovt-subpane" data-ovst="team">'+CART_MGMT.body()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="ownership" hidden><div id="dd-mgmt-slot"></div></div>'+
+    '<div class="ovt-subpane" data-ovst="governance" hidden>'+cartGovBody(c)+'</div>'+
+    '<div class="ovt-subpane" data-ovst="track" hidden>'+cartTrackBody(c)+'</div>'+
+  '</div>';
 
   h += '<div class="ov-foot">'+esc(SOURCES)+'</div>';
   h += '</div>'; // end deepdive root (.ov-cart-dd)
@@ -1664,21 +1944,35 @@ function switchCartGuide(root,k){ if(!CGUIDE[k])return; _cgMetric=k; root.queryS
 
 // ── Deep Dive tab machinery (top-level .dd-tab + nested .ovt-subtab, like UBER/LYFT) ──
 function buildDD(root, key){
-  if(key==='mgmt') CART_MGMT.init(root);
-  else if(key==='business'||key==='financials'||key==='evolution'){ var s=activeSubKey(root,key); if(s) buildSub(root,key,s); }
-  // overview / supply: no lazy Chart.js (inline SVG/HTML only)
+  // Every top-level tab now holds sub-panes; paint the active sub-pane's charts.
+  var s=activeSubKey(root,key); if(s) buildSub(root,key,s);
 }
 function buildSub(root, group, key){
-  if(group==='business'){
-    if(key==='advertising') buildAdChart();
-    // marketplace, enterprise: no lazy charts
-  } else if(group==='financials'){
-    if(key==='fin'){ renderFin(); buildCartGuide(); }
-    else if(key==='valuation') CART_VAL.init(root);
+  if(group==='topline'){
+    if(key==='segments') buildActiveSeg(root);   // Advertising segment → buildAdChart
+    // customers, tam, industry: no lazy charts (inline SVG/HTML only)
+  } else if(group==='bottomline'){
+    if(key==='margins') buildCartMargins();       // live Massive margins
+    // unit, suppliers: no charts
+  } else if(group==='evolution'){
+    if(key==='guidance'){ renderFin(); buildCartGuide(); }  // financials + Guidance-vs-Reality
+    // earnings (calls), strategy, timeline: no charts
+  } else if(group==='valuation'){
+    if(key==='multiples') CART_VAL.init(root);
+    else if(key==='sensitivity') buildCartSens();
+    // sensitivity, competitors, ratings, capital, balance: no charts
+  } else if(group==='mgmt'){
+    if(key==='team') CART_MGMT.init(root);
+    // ownership, governance, track: no charts
   }
-  // evolution (story/calls): no charts
 }
-function activeDD(root){ var b=root.querySelector('.dd-tab.active'); return b?b.getAttribute('data-dd'):'overview'; }
+// Segments ▸ inner Marketplace/Advertising/Enterprise toggle → build the active segment's chart.
+function buildActiveSeg(root){
+  var pane=root.querySelector('.dd-pane[data-dd="topline"]'); if(!pane) return;
+  var b=pane.querySelector('.seg-pill.active'); var seg=b?b.getAttribute('data-seg'):'marketplace';
+  if(seg==='advertising') buildAdChart();  // marketplace & enterprise have no lazy chart
+}
+function activeDD(root){ var b=root.querySelector('.dd-tab.active'); return b?b.getAttribute('data-dd'):'topline'; }
 function showDD(root, key){
   root.querySelectorAll('.dd-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-dd')===key); });
   root.querySelectorAll('.dd-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-dd')!==key); });
@@ -1713,7 +2007,14 @@ function init(c){
   // Deep Dive: top-level tabs (.dd-tab) + nested subtabs (.ovt-subtab) under
   // Business / Financials / Evolution. Charts build lazily when a pane is shown.
   wireDD(root);
-  wireSubtabs(root,'business'); wireSubtabs(root,'financials'); wireSubtabs(root,'evolution');
+  wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt');
+  // Segments ▸ inner Marketplace/Advertising/Enterprise toggle (mirror uber's seg-pill wiring).
+  root.querySelectorAll('.seg-pill').forEach(function(btn){ btn.onclick=function(){
+    var seg=btn.getAttribute('data-seg');
+    root.querySelectorAll('.seg-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    root.querySelectorAll('.seg-body').forEach(function(p){ p.hidden=(p.getAttribute('data-seg')!==seg); });
+    requestAnimationFrame(function(){ buildActiveSeg(root); });
+  }; });
 
   // Financials period toggle (Annual / Quarterly)
   var tog = root.querySelector('#ovFinTog');
@@ -1836,4 +2137,4 @@ function deepDiveInit(c){
   var d=activeDD(root); requestAnimationFrame(function(){ buildDD(root, d); });
 }
 
-export var instacartOverview = { html: html, init: init, deepDive: { html: deepDiveHtml, init: deepDiveInit } };
+export var instacartOverview = { html: html, init: init, absorbsPillars: true, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

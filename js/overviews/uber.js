@@ -742,7 +742,14 @@ function uberRivalScatter(){
   h+='<div id="ubPeerTip" class="peer-tip" hidden></div>';
   return h;
 }
-function overviewBody(c){
+// ── The old "Deep Overview" is DISMANTLED (Golden Rule #1 — content MOVED, not deleted).
+// Its pieces are composed into the new spine:
+//   • intro (snapshot/KPIs/lede) + segment split → Top Line ▸ Segments  (ubSegmentsBody)
+//   • arena-by-arena landscape                   → Top Line ▸ Industry Analysis (ubIndustryBody)
+//   • turnaround + key drivers                   → Evolution ▸ Strategy (ubStrategyBody)
+//   • 3-year Investor-Day targets                → Evolution ▸ Guidance (ub3yrTargets)
+//   • rival positioning scatter                  → Valuation ▸ Competitors (ubCompetitorsBody)
+function ubIntro(){
   var h='';
   h+='<div class="ov-snap">'+SNAPSHOT.map(function(p){ return '<div class="ov-snap-cell"><div class="ov-snap-k">'+esc(p[0])+'</div><div class="ov-snap-v">'+esc(p[1])+'</div></div>'; }).join('')+'</div>';
   h+='<div class="ov-live" id="ubLive" hidden></div>';
@@ -750,6 +757,42 @@ function overviewBody(c){
   h+='<div class="ov-kpis">'+KPIS.map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d '+(k.dir||'muted')+'">'+esc(k.d)+'</div></div>'; }).join('')+'</div>';
   h+='<div class="ov-asof">'+esc(AS_OF)+'</div>';
   h+='<div class="ov-fynote">'+FY_NOTE+'</div>';
+  return h;
+}
+// Top Line ▸ Segments — company intro, the segment split, and each engine in depth (inner toggle).
+function ubSegmentsBody(c){
+  var h=ubIntro();
+  h+='<div class="tech-leg"><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+MOB+'"></span>Mobility</span><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+DEL+'"></span>Delivery</span><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+FRT+'"></span>Freight</span></div>';
+  h+='<div class="ov-charts" style="grid-template-columns:1fr 1fr">'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Gross Bookings by segment <span>($B, FY · light = estimate)</span></div><div class="ov-chart-wrap"><canvas id="ubChartGB"></canvas></div></div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Adj. EBITDA <span>($B, FY · light = estimate)</span></div><div class="ov-chart-wrap"><canvas id="ubChartEbitda"></canvas></div></div>'+
+  '</div>';
+  h+=sec('The Business in Three Parts', segParts());
+  // Each engine in depth, switched by an inner toggle (the "sub-tabs de los segmentos").
+  h+='<div class="ov-sec-h ovt-store-h" style="margin-top:8px">Each engine in depth</div>';
+  h+='<style>.seg-pill{border:1px solid var(--bdr);background:#fff;font:inherit;font-size:11px;font-weight:700;color:var(--mu);padding:5px 13px;border-radius:999px;cursor:pointer}.seg-pill.active{background:var(--navy);color:#fff;border-color:var(--navy)}.seg-pill:hover{color:var(--navy)}.seg-pill.active:hover{color:#fff}</style>';
+  h+='<div class="seg-pills" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px">'+
+      '<button type="button" class="seg-pill active" data-seg="mobility">Mobility</button>'+
+      '<button type="button" class="seg-pill" data-seg="delivery">Delivery</button>'+
+      '<button type="button" class="seg-pill" data-seg="freight">Freight</button>'+
+    '</div>';
+  h+='<div class="seg-body" data-seg="mobility">'+mobilityBody(c)+'</div>';
+  h+='<div class="seg-body" data-seg="delivery" hidden>'+deliveryBody(c)+'</div>';
+  h+='<div class="seg-body" data-seg="freight" hidden>'+freightBody(c)+'</div>';
+  return h;
+}
+// Top Line ▸ Industry Analysis — the qualitative arena-by-arena competitive landscape.
+function ubIndustryBody(c){
+  return sec('Competitive Landscape — arena by arena',
+    '<div class="ov-diagram-cap" style="margin:0 0 10px">Uber is #1 or #2 almost everywhere, so the question is not "who is the peer" but <b>where it leads, contests, or is only placing a bet</b>. Tap any arena for the state of play. (Rival <b>multiples</b> live in Valuation ▸ Competitors.)</div>'+
+    uberArenaMap())+
+    '<div class="ov-foot">'+esc(SOURCES)+'</div>';
+}
+// Top Line ▸ Customers — Uber One membership, the platform's monetization/retention engine.
+function ubCustomersBody(c){ return uberOneBody(c); }
+// Evolution ▸ Strategy — the turnaround narrative + the five levers that drive the business.
+function ubStrategyBody(c){
+  var h='';
   h+='<style>.utn{border:1px solid var(--bdr);border-radius:14px;padding:16px 18px;margin:8px 0 4px;background:linear-gradient(180deg,rgba(6,193,103,0.05),transparent)}'+
     '.utn-big{font-size:16px;font-weight:900;color:var(--navy);letter-spacing:-.2px}'+
     '.utn-prog{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}'+
@@ -771,22 +814,21 @@ function overviewBody(c){
   h+=sec('What Truly Drives Uber — the things that matter most',
     '<div class="ov-diagram-cap" style="margin:0 0 12px">If you read nothing else: these five levers explain the business. <b>Tap any card.</b></div>'+
     '<div class="ov-drivers">'+KEY_DRIVERS.map(function(d){ return '<div class="ov-driver ov-clickable" data-detail="key:'+esc(d.k)+'"><div class="ov-driver-t">'+esc(d.t)+'</div><div class="ov-driver-d">'+esc(d.teaser)+'</div><div class="ov-more">More ›</div></div>'; }).join('')+'</div>');
-  h+='<div class="tech-leg"><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+MOB+'"></span>Mobility</span><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+DEL+'"></span>Delivery</span><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+FRT+'"></span>Freight</span></div>';
-  h+='<div class="ov-charts" style="grid-template-columns:1fr 1fr">'+
-    '<div class="ov-chart-card"><div class="ov-chart-t">Gross Bookings by segment <span>($B, FY · light = estimate)</span></div><div class="ov-chart-wrap"><canvas id="ubChartGB"></canvas></div></div>'+
-    '<div class="ov-chart-card"><div class="ov-chart-t">Adj. EBITDA <span>($B, FY · light = estimate)</span></div><div class="ov-chart-wrap"><canvas id="ubChartEbitda"></canvas></div></div>'+
-  '</div>';
-  h+=sec('The Business in Three Parts', segParts());
-  h+=sec('3-Year Targets — Investor Day (Feb 2024)',
-    '<div class="ov-targets ov-targets-3">'+TARGETS.map(function(b){ return '<div class="ov-target"><div class="ov-target-v">'+esc(b.v)+'</div><div class="ov-target-l">'+esc(b.l)+'</div><div class="ov-target-s">'+esc(b.s)+'</div></div>'; }).join('')+'</div>'+
-    '<div class="ov-fynote" style="margin-top:14px">Uber is <b>running ahead of all three</b> — bookings ~+20%/yr while free cash flow compounds far faster.</div>');
-  // History & Milestones + M&A moved to the History tab → see historyStoryBody().
-  h+=sec('Competitive Landscape — the rivals, mapped',
-    uberRivalScatter()+
-    collapsible('Arena by arena — where Uber leads, contests, or is only placing a bet', uberArenaMap(), false)+
-    '<div class="ov-diagram-cap" style="margin-top:12px">'+PEER_NOTE+'</div>');
   h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
   return h;
+}
+// Evolution ▸ Guidance — the 3-year Investor-Day targets (Model vs. Reality precedes this in the pane).
+function ub3yrTargets(){
+  return sec('3-Year Targets — Investor Day (Feb 2024)',
+    '<div class="ov-targets ov-targets-3">'+TARGETS.map(function(b){ return '<div class="ov-target"><div class="ov-target-v">'+esc(b.v)+'</div><div class="ov-target-l">'+esc(b.l)+'</div><div class="ov-target-s">'+esc(b.s)+'</div></div>'; }).join('')+'</div>'+
+    '<div class="ov-fynote" style="margin-top:14px">Uber is <b>running ahead of all three</b> — bookings ~+20%/yr while free cash flow compounds far faster.</div>');
+}
+// Valuation ▸ Competitors — rivals plotted by business traits (breadth × geographic reach).
+function ubCompetitorsBody(c){
+  return sec('Competitive map — rivals plotted by business traits',
+    uberRivalScatter()+
+    '<div class="ov-diagram-cap" style="margin-top:12px">'+PEER_NOTE+'</div>')+
+    '<div class="ov-foot">'+esc(SOURCES)+'</div>';
 }
 // ─── Pane: Mobility (the rides business) ─────────────────────────────────────
 function mobilityBody(c){
@@ -819,15 +861,9 @@ function mobilityBody(c){
   '</style>';
   h+='<p class="ov-lede"><b>Mobility</b> — ridesharing in ~70 countries, Uber’s profit engine (~<b>$97B</b> gross bookings FY2025). <b>Where it came from:</b> the post-COVID recovery doubled trips from the 2020 trough. <b>Where it’s going:</b> the barbell (low-cost + premium), insurance savings, and AV as hybrid supply. <b>Why believe:</b> the Model vs. Reality tab shows Uber consistently beating its own Mobility-GB estimates, take rate holding ~30%, and US trip growth <i>accelerating</i> as insurance costs fall.</p>';
   h+=sec('The Barbell — grow both ends, lean away from the middle', barbellDiagram());
-  h+=sec('How a Trip Makes Money — one $10 ride',
-    '<style>.ov-gal-cap{font-size:12.5px;color:var(--navy);line-height:1.6;margin:12px 0}.ov-gal-nav{display:flex;align-items:center;justify-content:space-between;gap:12px}.ov-gal-btn{font-size:22px;font-weight:800;line-height:1;border:1px solid var(--bdr);background:#fff;border-radius:8px;min-width:46px;height:40px;cursor:pointer;color:var(--navy)}.ov-gal-btn:hover{background:#10141A;color:#fff;border-color:#10141A}.ov-gal-count{font-size:11px;color:var(--mu);font-weight:700}</style><p class="ov-lede" style="margin:0 0 12px">Six steps of a Mobility trip — <b>tap any step for a photo + the detail</b>, then use ‹ › to move through the trip. Below: where the $10 lands.</p>'+
-    chain(TRIP_FLOW,'trip',true)+
-    '<div class="ov-grid2" style="margin-top:18px"><div><div class="ov-subh">Where every $10 goes</div>'+mbars(TRIP_SPLIT)+'</div><div><div class="ov-subh">…and Uber’s ~$3.00 take</div>'+mbars(TRIP_TAKE)+'</div></div>'+
-    '<div class="ov-fynote" style="margin-top:12px"><b>~$0.75 of every $10 trip converts to cash</b> (incl. the ~$0.35 Aleka insurance float). <span class="ave-subh-note">Illustrative — Summit deck, Dec 2024.</span></div>');
-  h+=sec('Take Rate',
-    '<div class="tech-leg"><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+MOB+'"></span>Mobility</span><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+DEL+'"></span>Delivery</span></div>'+
-    '<div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartTake"></canvas></div>'+
-    '<div class="ov-fynote" style="margin-top:10px">Mobility take held ~30% until the 1Q26 dip to ~25.8% — a <span class="ov-clickable" data-detail="note:take" style="color:#06C167;font-weight:600;cursor:pointer">UK accounting artifact ›</span>, not real compression.</div>');
+  // Trip economics ("How a Trip Makes Money") + Take Rate MOVED to Bottom Line ▸ Unit Economics
+  // (unitEconBody). A pointer is kept here; the content is not duplicated.
+  h+='<div class="ov-callout" style="margin:10px 0"><b>Per-trip economics moved.</b> The $10-ride walkthrough (where every dollar lands, Uber’s ~$3 take, and the take-rate trend) now lives in <b>Bottom Line ▸ Unit Economics</b>.</div>';
   h+=sec('Autonomous Vehicles — Partner or Threat?',
     '<style>'+
       '.av-vs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 4px}'+
@@ -856,13 +892,228 @@ function mobilityBody(c){
       '</div>'+
     '</div>'+
     '<div class="ov-fynote" style="margin-top:12px"><b>Evidence it’s working:</b> AV mobility trips <b>>10× YoY</b> (Q1 2026), 30+ partners, 15+ cities targeted by end-2026, ~30% higher trips/vehicle on Uber-managed AV vs AV-only — and management reports <b>"no effect of the Waymo launches on our overall business."</b></div>');
+  // Supplier ecosystem MOVED to Bottom Line ▸ Suppliers (suppliersBody); the insurance cost/float
+  // to its own Bottom Line ▸ Insurance & FCF subtab. Pointers kept here; content not duplicated.
+  h+='<div class="ov-callout" style="margin:10px 0"><b>Who powers Mobility + the insurance cost/float</b> now live in <b>Bottom Line</b> — see the <b>Suppliers</b> and <b>Insurance &amp; FCF</b> subtabs.</div>';
+  h+=sec('Regulation & Driver Classification', '<div class="ir-diagram-cap" style="font-size:12px;color:var(--mu);margin:0 0 8px">The core question — <b>do drivers stay contractors?</b> — is largely settled in Uber\u2019s favor. Tap any card for the detail.</div><div class="ir-reg">'+REGV.map(function(r,i){return regCard(r,i);}).join('')+'</div>');
+  h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
+  return h;
+}
+// ── Labeled placeholder (user-approved): create the tab now, fill it later with sourced
+// figures — never invent data. Marked "To build" so it's obviously incomplete. ──
+function placeholder(title, note){
+  return '<div style="border:1px dashed var(--bdr);border-radius:12px;padding:16px 18px;margin:10px 0;background:linear-gradient(180deg,rgba(232,160,12,0.045),transparent)">'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#B7791F;background:rgba(232,160,12,0.14);border-radius:10px;padding:2px 9px">To build</span><span style="font-size:13.5px;font-weight:800;color:var(--navy)">'+esc(title)+'</span></div>'+
+    '<div style="font-size:12px;color:var(--mu);line-height:1.55">'+note+'</div></div>';
+}
+// ── Bottom Line ▸ Unit Economics — the $10-trip walkthrough + take rate. MOVED here from the
+// Mobility segment (Golden Rule #1). Chart id ubChartTake still built by buildMobilityCharts. ──
+function unitEconBody(c){
+  var h='';
+  h+='<p class="ov-lede">Per-trip economics for the core Mobility ride — where each $10 lands, Uber’s ~$3 take, and how the take rate has trended.</p>';
+  h+=sec('How a Trip Makes Money — one $10 ride',
+    '<style>.ov-gal-cap{font-size:12.5px;color:var(--navy);line-height:1.6;margin:12px 0}.ov-gal-nav{display:flex;align-items:center;justify-content:space-between;gap:12px}.ov-gal-btn{font-size:22px;font-weight:800;line-height:1;border:1px solid var(--bdr);background:#fff;border-radius:8px;min-width:46px;height:40px;cursor:pointer;color:var(--navy)}.ov-gal-btn:hover{background:#10141A;color:#fff;border-color:#10141A}.ov-gal-count{font-size:11px;color:var(--mu);font-weight:700}</style><p class="ov-lede" style="margin:0 0 12px">Six steps of a Mobility trip — <b>tap any step for a photo + the detail</b>, then use ‹ › to move through the trip. Below: where the $10 lands.</p>'+
+    chain(TRIP_FLOW,'trip',true)+
+    '<div class="ov-grid2" style="margin-top:18px"><div><div class="ov-subh">Where every $10 goes</div>'+mbars(TRIP_SPLIT)+'</div><div><div class="ov-subh">…and Uber’s ~$3.00 take</div>'+mbars(TRIP_TAKE)+'</div></div>'+
+    '<div class="ov-fynote" style="margin-top:12px"><b>~$0.75 of every $10 trip converts to cash</b> (incl. the ~$0.35 Aleka insurance float). <span class="ave-subh-note">Illustrative — Summit deck, Dec 2024.</span></div>');
+  h+=sec('Take Rate',
+    '<div class="tech-leg"><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+MOB+'"></span>Mobility</span><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+DEL+'"></span>Delivery</span></div>'+
+    '<div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartTake"></canvas></div>'+
+    '<div class="ov-fynote" style="margin-top:10px">Mobility take held ~30% until the 1Q26 dip to ~25.8% — a <span class="ov-clickable" data-detail="note:take" style="color:#06C167;font-weight:600;cursor:pointer">UK accounting artifact ›</span>, not real compression.</div>');
+  h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
+  return h;
+}
+// ── Bottom Line ▸ Suppliers — the vendor ecosystem. MOVED from the Mobility segment. ──
+function suppliersBody(c){
+  var h='';
   h+=sec('Who Powers Mobility — the supplier ecosystem',
     '<style>.alp{display:flex;align-items:center;gap:16px;background:rgba(6,193,103,0.07);border:1px solid rgba(6,193,103,0.25);border-radius:12px;padding:14px 18px;margin:0 0 12px}.alp-big{font-size:34px;font-weight:800;color:#06965A;line-height:1;flex:none}.alp-txt{font-size:12.5px;color:var(--navy);line-height:1.5}.alp-txt b{font-weight:800}@media(max-width:560px){.alp{flex-direction:column;align-items:flex-start;gap:6px}}</style><div class="alp"><div class="alp-big">0.11%</div><div class="alp-txt">of Uber’s ~<b>$193B</b> gross bookings is <b>disclosed supplier spend</b> — ~<b>$210M</b> across 138 suppliers, and only three carry any dollar value (HCL $127M, Oracle $55M, Alexandria $28M). <b>Uber does not run a supply chain; it aggregates one.</b></div></div>'+'<div class="ov-diagram-cap" style="margin:0 0 10px">Uber’s supplier base sorted by <b>what they do</b> for the platform. Most are strategic ties, not traditional vendor contracts — which is itself the asset-light thesis in data form.</div>'+
     '<div class="usc-grid">'+SC_SUPPLIERS.map(scCard).join('')+'</div>'+
     '<div class="ov-fynote" style="margin-top:12px"><b>The asset-light proof in the data:</b> of 138 identified suppliers, only <b>three carry disclosed dollar values</b> — HCL ($127M, engineering), Oracle ($55M, cloud), Alexandria RE ($28M, offices). Total ~<b>$210M</b> against ~<b>$193B</b> of gross bookings — a ratio that screams platform, not operator. (Of the 30+ AV partners, only ~<b>5–7</b> have real money committed; the rest are MOUs.) <span class="ave-subh-note">Bloomberg SPLC, 29-Jun-2026.</span></div>');
-  h+=sec('Insurance', '<div class="ov-callout">Insurance is central to Uber&rsquo;s cash story — <b>Aleka</b> (Uber&rsquo;s captive), the <b>~$12.9B reserve float</b>, and the crutch → tailwind turnaround now live in the dedicated <b>Insurance & FCF</b> tab. On a Mobility trip it is the largest single cost — and its <b>float</b> is a real contributor to cash. See the <b>Insurance &amp; FCF</b> tab for the full mechanism.</div>');
-  h+=sec('Regulation & Driver Classification', '<div class="ir-diagram-cap" style="font-size:12px;color:var(--mu);margin:0 0 8px">The core question — <b>do drivers stay contractors?</b> — is largely settled in Uber\u2019s favor. Tap any card for the detail.</div><div class="ir-reg">'+REGV.map(function(r,i){return regCard(r,i);}).join('')+'</div>');
   h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
+  return h;
+}
+// ── Top Line ▸ Segments ▸ Freight (inner toggle). Freight is optionality; brief + placeholder. ──
+function freightBody(c){
+  return '<p class="ov-lede"><b>Freight</b> — Uber’s logistics brokerage (matching shippers with carriers), reported <b>gross</b> with no take rate. ~<b>$5B</b> bookings, near-breakeven, hit by the freight recession; built via <b>Transplace</b> (2021) but subscale vs incumbents. Kept for <b>optionality</b>, a candidate to divest if it never turns.</p>'+
+    placeholder('Freight — deeper build', 'A fuller Freight breakdown (brokerage economics, Transplace integration, the case to keep vs divest) is not yet developed. The one-line summary is in "The Business in Three Parts" above.');
+}
+// ── Bottom Line ▸ Margins — profitability & cash margins pulled LIVE from Massive (get-margins),
+// the same feed San wired for NVDA (api.fetchMargins). No hardcoded history invented. ──
+var UB_MRG_METRICS=[
+  {key:'gross',label:'Gross',color:'#10141A'},
+  {key:'oper',label:'Operating',color:MOB},
+  {key:'net',label:'Net',color:'#7A5AF8'},
+  {key:'ebitda',label:'EBITDA',color:'#12B5A5'},
+  {key:'cfo',label:'CFO',color:'#F2A73B'},
+  {key:'fcf',label:'FCF',color:'#EB5757'}
+];
+var _ubMrgRows=null;
+function ubMarginsBody(c){
+  return '<p class="ov-lede">Profitability &amp; cash margins as a % of revenue, pulled <b>live from Massive</b> (income + cash-flow statements) — gross, operating and net, plus EBITDA, CFO and FCF. Same feed San wired for NVDA.</p>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Margins (% of revenue) <span>· fiscal years · live via Massive</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartMargins"></canvas></div></div>'+
+    '<div class="ave-subh-note" id="ubMrgNote" style="margin-top:8px">Fetching margins from Massive… if the chart stays empty, the data feed isn’t reachable in this session. Known anchors: FY2025 GAAP operating income <b>+$5.6B</b>, free cash flow <b>$9.8B</b> (+42%).</div>';
+}
+function buildUbMargins(){
+  var cv=document.getElementById('ubChartMargins'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
+  if(!_ubMrgRows||!_ubMrgRows.length){ ubLoadMargins(); return; }
+  destroy('ubChartMargins');
+  var labels=_ubMrgRows.map(function(r){ return r.fy; });
+  var ds=UB_MRG_METRICS.map(function(m){ return { label:m.label, data:_ubMrgRows.map(function(r){ return r[m.key]; }), borderColor:m.color, backgroundColor:m.color, borderWidth:2, tension:.25, pointRadius:2, spanGaps:true, fill:false }; });
+  _charts['ubChartMargins']=new Chart(cv.getContext('2d'),{ type:'line', data:{ labels:labels, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}}, tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label+': '+(ctx.parsed.y==null?'—':ctx.parsed.y.toFixed(1)+'%'); } } } },
+      scales:{ y:{ ticks:{ callback:function(v){ return v+'%'; }, font:{size:10} }, grid:{color:'#EEF2F7'} }, x:{ grid:{display:false}, ticks:{font:{size:10.5}} } } }
+  });
+}
+function ubLoadMargins(){
+  import('../api.js').then(function(api){ return api.fetchMargins?api.fetchMargins('UBER'):null; }).then(function(res){
+    if(!res||!res.success||!res.data||!res.data.length) return; // keep the note; chart stays empty
+    _ubMrgRows=res.data;
+    var note=document.getElementById('ubMrgNote'); if(note) note.innerHTML='Historical margins computed <b>live from Massive</b> (income &amp; cash-flow statements): gross/op/net = line ÷ revenue; EBITDA = (op income + D&amp;A) ÷ revenue; CFO &amp; FCF ÷ revenue.';
+    buildUbMargins();
+  }).catch(function(){ /* keep the note */ });
+}
+// ── Valuation ▸ Capital Allocation — DATA-BACKED from the Summit model snapshot (FY actuals,
+// $M): FCF, share repurchases, SBC and shares outstanding. Dividend/buyback framing verified. ──
+function ubCapAllocBody(c){
+  var R=[
+    {fy:'FY22', fcf:390,  bb:0,    sbc:1793, sh:2061},
+    {fy:'FY23', fcf:3362, bb:0,    sbc:1935, sh:2122},
+    {fy:'FY24', fcf:6895, bb:1252, sbc:1796, sh:2141},
+    {fy:'FY25', fcf:9763, bb:6523, sbc:1826, sh:2106}
+  ];
+  var bb=function(m){ if(m==null) return '—'; var a=Math.abs(m), s=m<0?'−':''; return a>=1000? s+'$'+(a/1000).toFixed(1)+'B' : s+'$'+a+'M'; };
+  var last=R[3], prev=R[2];
+  var payout=Math.round(last.bb/last.fcf*100);
+  var shChg=(last.sh/prev.sh-1)*100;
+  var h='<p class="ov-lede">How Uber deploys the cash the turnaround now throws off: <b>no dividend</b>, with <b>share repurchases</b> the priority — funded by a fast-growing FCF base on a now investment-grade balance sheet.</p>';
+  h+='<div class="ov-kpis">'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Dividend</div><div class="ov-kpi-v">None</div><div class="ov-kpi-d muted">never paid</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">FY25 buybacks</div><div class="ov-kpi-v">$6.5B</div><div class="ov-kpi-d muted">~'+payout+'% of FCF</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">FY25 SBC</div><div class="ov-kpi-v">$1.8B</div><div class="ov-kpi-d muted">~flat since FY22</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Shares out</div><div class="ov-kpi-v">2.11B</div><div class="ov-kpi-d muted">▼ '+Math.abs(shChg).toFixed(1)+'% YoY</div></div>'+
+  '</div>';
+  h+='<div class="ov-chart-card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:7px 10px">Fiscal year</th><th style="text-align:right;padding:7px 10px">Free cash flow</th><th style="text-align:right;padding:7px 10px">Buybacks</th><th style="text-align:right;padding:7px 10px">SBC</th><th style="text-align:right;padding:7px 10px">Shares out (M)</th></tr></thead><tbody>'+
+    R.map(function(r){ return '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px;font-weight:700">'+r.fy+'</td><td style="text-align:right;padding:7px 10px">'+bb(r.fcf)+'</td><td style="text-align:right;padding:7px 10px">'+(r.bb?bb(-r.bb):'—')+'</td><td style="text-align:right;padding:7px 10px">'+bb(-r.sbc)+'</td><td style="text-align:right;padding:7px 10px">'+r.sh.toLocaleString()+'</td></tr>'; }).join('')+
+  '</tbody></table></div>';
+  h+=sec('Dividend policy', '<div class="ov-callout">Uber has <b>never paid a dividend</b> and has not signaled one. Cash is directed to <b>buybacks</b> and maintaining the newly investment-grade balance sheet.</div>');
+  h+=sec('Repurchase policy', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">First repurchases came in <b>FY24 (~$1.3B)</b> and scaled to <b>~$6.5B in FY25</b> — about <b>'+payout+'% of free cash flow</b>. The first sustained return of capital in company history, enabled by the FCF ramp ($0.4B → $9.8B in three years). <span class="ave-subh-note">Authorization size / forward payout framework: confirm from the latest 8-K.</span></div>');
+  h+=sec('SBC & dilution', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">Stock-based comp has held <b>~$1.8B/yr</b> even as revenue and FCF compounded, so it shrinks as a share of the P&amp;L. <b>FY25 was the inflection</b>: buybacks (&gt;$6B) exceeded SBC, and diluted shares outstanding <b>fell for the first time</b> ('+prev.sh.toLocaleString()+'M → '+last.sh.toLocaleString()+'M). Returns now more than offset dilution.</div>');
+  h+='<div class="ov-foot">Source: Summit model snapshot — FY actuals (FCF, share repurchases, SBC, shares outstanding).</div>';
+  return h;
+}
+// ── Valuation ▸ Balance Sheet — downside/solidity view, sourced from Uber's Q1 2026 10-Q
+// (SEC EDGAR, condensed consolidated balance sheet as of March 31, 2026; $M). ──
+function ubBalanceBody(c){
+  var cash=5558, sti=533, inv=8109, eqm=268, debt=10514, insST=3467, insLT=9437,
+      restrCash=2552, restrInv=9026, equity=24751, shares=2036.4;
+  var stakes=inv+eqm;                       // 8,377 — marked equity-investment portfolio
+  var insTot=insST+insLT;                   // 12,904 — total insurance reserve
+  var netDebt=cash+sti-debt;                // −4,423 — core net cash/(debt)
+  var netWithStakes=cash+sti+stakes-debt;   // 3,954 — including the stakes
+  var bvps=equity/shares;                   // ~12.15 book value / share
+  var B=function(m){ var a=Math.abs(m),s=m<0?'−':''; return s+'$'+(a/1000).toFixed(a/1000>=100?0:1)+'B'; };
+  var cell=function(m){ var a=Math.abs(m).toLocaleString(); return m<0?'('+a+')':a; };
+  var LI=[
+    ['Cash &amp; cash equivalents', cash],
+    ['Short-term investments', sti],
+    ['Long-term investment portfolio <span class="muted">(Didi, Grab, Aurora + other)</span>', inv],
+    ['Equity-method investments', eqm],
+    ['Total debt <span class="muted">(senior + convertible notes)</span>', -debt],
+    ['Insurance reserves <span class="muted">(short + long-term)</span>', -insTot],
+    ['Total stockholders&rsquo; equity', equity]
+  ];
+  var STK=[['Didi',2337],['Grab',1961],['Aurora',1343],['Other non-marketable',1800],['Other marketable',569],['Related-party note',99],['Equity-method',eqm]];
+  var h='<p class="ov-lede">How much value protects the equity on the way down. Uber runs a modest <b>net-debt</b> position on the core balance sheet, but a <b>marked ~'+B(stakes)+' equity-stake portfolio</b> more than covers it — while the big <b>~'+B(insTot)+' insurance reserve</b> is separately funded and is not a free-cash claim.</p>';
+  h+='<div class="ov-kpis">'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Net cash / (debt)</div><div class="ov-kpi-v">'+B(netDebt)+'</div><div class="ov-kpi-d muted">cash + ST inv '+B(cash+sti)+' − debt '+B(debt)+'</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Equity stakes (marked)</div><div class="ov-kpi-v">'+B(stakes)+'</div><div class="ov-kpi-d muted">Didi, Grab, Aurora + other</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Insurance reserve</div><div class="ov-kpi-v">'+B(insTot)+'</div><div class="ov-kpi-d muted">funded by ~'+B(restrCash+restrInv)+' restricted assets</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Stockholders&rsquo; equity</div><div class="ov-kpi-v">'+B(equity)+'</div><div class="ov-kpi-d muted">~$'+bvps.toFixed(0)+'/sh book · '+shares.toFixed(0)+'M sh</div></div>'+
+  '</div>';
+  h+='<div class="ov-chart-card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:7px 10px">Key line item — as of Mar 31, 2026</th><th style="text-align:right;padding:7px 10px">$M</th></tr></thead><tbody>'+
+    LI.map(function(r){ return '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px">'+r[0]+'</td><td style="text-align:right;padding:7px 10px;font-variant-numeric:tabular-nums;font-weight:700">'+cell(r[1])+'</td></tr>'; }).join('')+
+    '<tr style="border-top:2px solid var(--bdr)"><td style="padding:7px 10px;font-weight:800">Core net cash / (debt)</td><td style="text-align:right;padding:7px 10px;font-weight:800;color:#B23A2E">'+cell(netDebt)+'</td></tr>'+
+    '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px;font-weight:800">Net cash incl. equity stakes</td><td style="text-align:right;padding:7px 10px;font-weight:800;color:#06965A">'+cell(netWithStakes)+'</td></tr>'+
+  '</tbody></table></div>';
+  h+=sec('The equity-stake portfolio', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">The legacy of exiting cash-burning markets into shares: a <b>'+B(stakes)+'</b> portfolio carried at marked value. The largest positions (Mar 31, 2026): '+STK.slice(0,3).map(function(s){return '<b>'+s[0]+' '+B(s[1])+'</b>';}).join(' · ')+'. Grab and Aurora are <b>marketable</b> (mark-to-market each quarter — a major source of GAAP net-income swings), while Didi is <b>non-marketable</b>. These stakes are non-core assets that could be monetized, and they flip Uber from ~'+B(netDebt)+' core net debt to <b>~'+B(netWithStakes)+' net-positive</b>.</div>');
+  h+=sec('Why the insurance reserve is not a free claim', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">The ~'+B(insTot)+' insurance reserve (short-term '+B(insST)+' + long-term '+B(insLT)+') is a real liability, but it is <b>separately funded</b> by ~'+B(restrCash+restrInv)+' of <b>restricted cash and investments</b> set aside to pay claims (the Aleka float — see Insurance). So it does not compete with the ~$9.8B free-cash-flow engine for capital.</div>');
+  h+='<div class="ov-callout"><b>Solidity read:</b> the equity is protected less by hard asset value than by cash generation — Uber sits at only ~'+B(netDebt)+' core net debt, holds ~'+B(stakes)+' of monetizable stakes on top, carries an <b>investment-grade</b> rating, and converts ~100%+ of Adj. EBITDA to free cash flow (~$9.8B TTM). The main balance-sheet caveat is that <b>~'+B(equity)+' of book equity leans on ~$8.9B of goodwill and ~$10.8B of deferred-tax assets</b>, so tangible book is thin — the story is the cash flow, not the salvage value.</div>';
+  h+='<div class="ov-foot">Source: Uber Q1 2026 Form 10-Q (SEC EDGAR), condensed consolidated balance sheet and investments note, as of March 31, 2026. Net-cash figures computed from reported line items. Free-cash-flow / rating context from FY2025 results.</div>';
+  return h;
+}
+// ── Valuation ▸ Sensitivity — implied share price on an EV/EBITDA × forward-EBITDA grid.
+// Anchors: Summit EBITDA (FY25 $8.7B; FY26E $11.5B, FY27E $14.8B) + shares 2,106M. Cells colored
+// vs the LIVE price (api.liveQuote). Net cash ≈ $0 simplification (equity stakes ≈ offset debt). ──
+function ubSensBody(c){
+  var EB=[8.7,11.5,14.8,18.0,22.0], MU=[12,15,18,21,24], SH=2106, NC=0;
+  var head='<tr><th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--mu);font-weight:700">EV/EBITDA ↓&nbsp;&nbsp;EBITDA →</th>'+EB.map(function(e){return '<th style="padding:6px 8px;text-align:right;font-size:10.5px;color:var(--mu)">$'+e.toFixed(1)+'B</th>';}).join('')+'</tr>';
+  var rows=MU.map(function(m){
+    var tds=EB.map(function(e){ var px=(e*1000*m+NC*1000)/SH; return '<td class="sens-cell" data-px="'+px.toFixed(2)+'" style="padding:7px 8px;text-align:right;font-variant-numeric:tabular-nums">$'+px.toFixed(0)+'</td>'; }).join('');
+    return '<tr><td style="padding:7px 8px;font-weight:700">'+m+'×</td>'+tds+'</tr>';
+  }).join('');
+  var h='<p class="ov-lede">Implied share price on an <b>EV/EBITDA</b> grid — pick a forward Adj. EBITDA (columns) and an exit multiple (rows). Cells shade <b>green above / red below the live price</b> once it loads.</p>';
+  h+='<div class="ov-live" id="ubSensLive" style="margin:0 0 8px">Fetching live price…</div>';
+  h+='<div class="ov-chart-card" id="ubSensTbl" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>';
+  h+='<div class="ov-foot">Implied price = (EBITDA × multiple + net cash) ÷ shares. EBITDA anchors: Summit (FY25 $8.7B; FY26E $11.5B; FY27E $14.8B). Shares 2,106M (FY25). Net cash ≈ $0 (equity stakes roughly offset debt) — a simplification to refine on the Balance Sheet tab. Not a price target.</div>';
+  return h;
+}
+function buildUbSens(){
+  var root=document.getElementById('co-detailview'); if(!root) return;
+  var live=root.querySelector('#ubSensLive'); if(!live) return;
+  import('../api.js').then(function(api){ return api.liveQuote?api.liveQuote('UBER'):null; }).then(function(res){
+    var q=(res&&res.success)?res.data:res; var p=(q&&q.price!=null)?q.price:null;
+    if(p==null){ live.style.display='none'; return; }
+    live.innerHTML='<span class="ov-live-dot"></span><span class="ov-live-tk">UBER</span> <span class="ov-live-px">$'+p.toFixed(2)+'</span> <span class="ov-live-ts">live — grid shaded vs this price</span>';
+    root.querySelectorAll('#ubSensTbl .sens-cell').forEach(function(td){ var px=parseFloat(td.getAttribute('data-px')); var up=px>=p; var d=Math.min(0.6,Math.abs(px/p-1)); var a=(0.06+d*0.38).toFixed(2); td.style.background=(up?'rgba(6,193,103,'+a+')':'rgba(192,57,43,'+a+')'); td.style.color=(up?'#06965A':'#B23A2E'); td.style.fontWeight='600'; td.title=((px/p-1)*100).toFixed(0)+'% vs live'; });
+  }).catch(function(){ live.style.display='none'; });
+}
+// ── Top Line ▸ TAM — Uber's OWN market framing from its Feb 14, 2024 Investor Update
+// (Investor Day): "multiple multi-trillion-dollar markets" at low-single-digit penetration. ──
+function ubTamBody(c){
+  var k=[
+    ['Addressable market','Multi-$T','Uber&rsquo;s own framing: &ldquo;multiple multi-trillion-dollar markets&rdquo; across Mobility, Delivery &amp; Logistics'],
+    ['Overall penetration','&lt;5%','of the 18+ population in Uber&rsquo;s ~70 countries are monthly Mobility/Delivery users'],
+    ['Mobility penetration','&lt;20%','of adults, even in Uber&rsquo;s most saturated countries'],
+    ['Delivery penetration','~15%','annual consumers as a % of Delivery TAM in the top-10 countries']
+  ];
+  var h='<p class="ov-lede">Uber deliberately does <b>not</b> pin one headline TAM dollar. Instead it frames itself as operating in <b>&ldquo;multiple multi-trillion-dollar markets&rdquo;</b> (Mobility, Delivery and Logistics) and stresses how little of them it has captured: <b>fewer than 5%</b> of adults in its countries are monthly users. The thesis is penetration, not a new market.</p>';
+  h+='<div class="ov-kpis">'+k.map(function(f){return '<div class="ov-kpi"><div class="ov-kpi-l">'+f[0]+'</div><div class="ov-kpi-v">'+f[1]+'</div><div class="ov-kpi-d muted">'+f[2]+'</div></div>';}).join('')+'</div>';
+  h+=sec('How Uber sizes the opportunity', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">Rather than a single market-research number, Uber anchors TAM to <b>population × usage</b>: the adult population of the ~70 countries it operates in, times the trips and orders those people could shift onto the platform. On that basis it exited 2023 with 150M monthly consumers — <b>&lt;5% of the 18+ population</b> in its markets — using the platform <b>just under 6 times a month</b>, with <b>~half</b> of monthly users taking only one or two trips. Management&rsquo;s stated competitor for Mobility is <b>personal car ownership</b>, not other apps.</div>');
+  h+=sec('Where the runway is', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6"><b>Mobility:</b> under 20% of adults even in saturated countries; emerging markets Uber barely operated in five years ago <b>spend close to $1 trillion/yr on transportation</b>. <b>Delivery:</b> annual consumers are only ~15% of the top-10-country TAM, with ~20% of available restaurants and grocers on the platform. <b>Adjacencies:</b> advertising targeted at ~2% of Delivery gross bookings, plus grocery, Uber Direct and travel. Uber also argues autonomous vehicles will <b>lower cost-per-mile and expand the shared-Mobility TAM</b> itself.</div>');
+  h+='<div class="ov-callout"><b>Methodology note:</b> these are Uber&rsquo;s own penetration figures from its Feb 2024 Investor Update — its most recent comprehensive market-sizing — not an independent third-party TAM estimate. Uber frames the opportunity as low-single-digit penetration of very large markets rather than a precise dollar TAM.</div>';
+  h+='<div class="ov-foot">Source: Uber Investor Update (Investor Day), Feb 14, 2024 — remarks by CEO Dara Khosrowshahi, CFO Prashanth Mahendra-Rajah, and segment heads. Penetration/scale figures as of that date (FY2023 exit).</div>';
+  return h;
+}
+// ── Management ▸ Governance & SBC — vetted governance facts (share class, board, pay) from the
+// in-repo management config + SBC from the Summit model. Board detail lives in Executives & Board. ──
+function ubGovBody(c){
+  var k=[
+    ['Share & voting','1 vote / share','No dual-class or founder control'],
+    ['Board','9 of 10 independent','Chair ≠ CEO · annual elections'],
+    ['CEO pay · FY25','$35.6M','96% at-risk · say-on-pay ~94%'],
+    ['SBC','~$1.8B / yr','~flat FY22–25; now offset by buybacks']
+  ];
+  var h='<p class="ov-lede">Uber’s governance is unusually clean for a founder-era tech company: <b>one share, one vote</b> (Travis Kalanick’s super-voting stock collapsed after the 2019 IPO), a <b>separate independent chair</b>, and a board that is <b>9 of 10 independent</b>.</p>';
+  h+='<div class="ov-kpis">'+k.map(function(f){return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(f[0])+'</div><div class="ov-kpi-v">'+esc(f[1])+'</div><div class="ov-kpi-d muted">'+esc(f[2])+'</div></div>';}).join('')+'</div>';
+  h+=sec('Stock-based compensation & alignment', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">SBC has held <b>~$1.8B/yr</b> since FY22 while revenue and FCF compounded, so it shrinks as a share of the P&amp;L. CEO pay is <b>96% at-risk</b> (base ~$1.08M) with say-on-pay support ~<b>94%</b>. Crucially, <b>buybacks now more than offset SBC dilution</b> — diluted shares fell in FY25 (see <b>Valuation ▸ Capital Allocation</b>).</div>');
+  h+='<div class="ov-callout">Full board, committees and independence tags are in <b>Management ▸ Executives &amp; Board</b>.</div>';
+  return h;
+}
+// ── Management ▸ Track Record — a concise delivery scorecard (Summit financials + vetted milestones).
+function ubTrackBody(c){
+  var wins=[
+    ['First GAAP operating profit','Q2 2023 — after ~14 years of losses'],
+    ['Investment-grade rating','a first for the company'],
+    ['Free cash flow','$0.4B → $9.8B (FY22→FY25)'],
+    ['Share count','began falling in FY25 as buybacks outran SBC'],
+    ['Portfolio discipline','exited China / SE-Asia / Russia into equity stakes; sold ATG (self-driving) to Aurora']
+  ];
+  var h='<p class="ov-lede"><b>Dara Khosrowshahi</b> has been CEO since <b>August 2017</b>, hired to reset the culture after the founder era — and he engineered one of tech’s great turnarounds.</p>';
+  h+='<div>'+wins.map(function(w){return '<div class="ov-row"><div class="ov-row-k">'+esc(w[0])+'</div><div class="ov-row-v">'+w[1]+'</div></div>';}).join('')+'</div>';
+  h+='<div class="ov-callout" style="margin-top:12px">Quarter-by-quarter <b>guidance-vs-delivery</b> is in <b>Evolution ▸ Guidance</b>; the full company history is in <b>Evolution ▸ Timeline</b>.</div>';
+  h+='<div class="ov-foot">Financial trajectory: Summit model (FY actuals). Milestones: company filings / timeline.</div>';
   return h;
 }
 // ─── Pane: Insurance & Regulation (the two genuinely-unique deep topics) ─────
@@ -1502,48 +1753,92 @@ function html(c){
 // Deep Dive copane by companies.js), no longer nested inside the Overview. Holds
 // the prior tabs + Deep Overview (the old bespoke Overview) — nothing deleted
 // (Golden Rule #1). Its own root class (.ov-uber-dd) scopes it. ──
+// ── Deep Dive reorganized into the proposed 5-tab spine: Top Line · Bottom Line ·
+// Evolution · Valuation · Management. NOTHING deleted (Golden Rule #1) — every prior
+// body is re-slotted into the most relevant tab, and the two live panels from the old
+// Pillars tab are absorbed here (Valuation ▸ Analyst Ratings, Management ▸ Ownership &
+// Insiders) via #dd-val-slot / #dd-mgmt-slot filled by companies.js. ──
 function deepDiveHtml(c){
   var h='<div class="ov ov-uber ov-uber-dd" data-brand="UBER">';
   h+='<div class="dd-tabs">'+
-      '<button type="button" class="dd-tab active" data-dd="extras">Deep Overview</button>'+
-      '<button type="button" class="dd-tab" data-dd="offer">Company Offer</button>'+
-      '<button type="button" class="dd-tab" data-dd="financials">Financials</button>'+
+      '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
+      '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
+      '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
+      '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
       '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
-      '<button type="button" class="dd-tab" data-dd="history">Evolution</button>'+
     '</div>';
-  // Extras — the previous bespoke Overview (turnaround, drivers, 3-yr targets, arena map, breadth×geo scatter). MOVED here per Golden Rule #1, not deleted.
-  h+='<div class="dd-pane" data-dd="extras">'+overviewBody(c)+'</div>';
-  // Company Offer
-  h+='<div class="dd-pane" data-dd="offer" hidden>'+
+  // ── TOP LINE — Segments (with an inner Mobility/Delivery/Freight toggle) · Customers · TAM ·
+  // Industry Analysis. The old "Deep Overview" is dismantled into these (Golden Rule #1). ──
+  h+='<div class="dd-pane" data-dd="topline">'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="mobility">Mobility</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="delivery">Delivery</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="uberone">Uber One</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="segments">Segments</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="customers">Customers</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="tam">TAM</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="industry">Industry Analysis</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="mobility">'+mobilityBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="delivery" hidden>'+deliveryBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="uberone" hidden>'+uberOneBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segments">'+ubSegmentsBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="customers" hidden>'+ubCustomersBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="tam" hidden>'+ubTamBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="industry" hidden>'+ubIndustryBody(c)+'</div>'+
     '</div>';
-  // Financials
-  h+='<div class="dd-pane" data-dd="financials" hidden>'+
+  // ── BOTTOM LINE — Unit Economics · Suppliers · Insurance & FCF · Margins (live via Massive). ──
+  h+='<div class="dd-pane" data-dd="bottomline" hidden>'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="model">Model vs. Reality</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="valuation">Valuation</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="unit">Unit Economics</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="suppliers">Suppliers</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="insurance">Insurance &amp; FCF</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="margins">Margins</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="model">'+modelBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="valuation" hidden>'+UBER_VAL.body()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="unit">'+unitEconBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="suppliers" hidden>'+suppliersBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="insurance" hidden>'+insuranceBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="margins" hidden>'+ubMarginsBody(c)+'</div>'+
     '</div>';
-  h+='<div class="dd-pane" data-dd="mgmt" hidden>'+UBER_MGMT.body()+'</div>';
-  // History
-  h+='<div class="dd-pane" data-dd="history" hidden>'+
+  // ── EVOLUTION — Earnings History (narrative) · Guidance (Model vs. Reality + 3-yr targets) ·
+  // Strategy (turnaround + drivers) · Timeline (company history & M&A). ──
+  h+='<div class="dd-pane" data-dd="evolution" hidden>'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="story">Company History &amp; M&amp;A</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="calls">Earnings Narrative</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings History</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="story">'+historyStoryBody()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="calls" hidden>'+callsBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="earnings">'+callsBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="guidance" hidden>'+modelBody(c)+ub3yrTargets()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="strategy" hidden>'+ubStrategyBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="timeline" hidden>'+historyStoryBody()+'</div>'+
+    '</div>';
+  // ── VALUATION — Multiples & Targets · Sensitivity · Competitors · Analyst Ratings (Massive,
+  // absorbed) · Capital Allocation · Balance Sheet. ──
+  h+='<div class="dd-pane" data-dd="valuation" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="multiples">Multiples &amp; Targets</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="sensitivity">Sensitivity</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="competitors">Competitors</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="ratings">Analyst Ratings</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="capital">Capital Allocation</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="balance">Balance Sheet</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="multiples">'+UBER_VAL.body()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="sensitivity" hidden>'+ubSensBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="competitors" hidden>'+ubCompetitorsBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="ratings" hidden><div id="dd-val-slot"></div></div>'+
+      '<div class="ovt-subpane" data-ovst="capital" hidden>'+ubCapAllocBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="balance" hidden>'+ubBalanceBody(c)+'</div>'+
+    '</div>';
+  // ── MANAGEMENT — Executives & Board · Ownership (Fiscal.ai, absorbed) · Governance & SBC ·
+  // Track Record. ──
+  h+='<div class="dd-pane" data-dd="mgmt" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="team">Executives &amp; Board</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="ownership">Ownership</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="governance">Governance &amp; SBC</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="track">Track Record</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="team">'+UBER_MGMT.body()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="ownership" hidden><div id="dd-mgmt-slot"></div></div>'+
+      '<div class="ovt-subpane" data-ovst="governance" hidden>'+ubGovBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="track" hidden>'+ubTrackBody(c)+'</div>'+
     '</div>';
   h+='</div>';
   return h;
@@ -1792,16 +2087,31 @@ function buildDeliveryCharts(){ buildLines('ubChartMargin', Q13.slice(0,12), { l
 function buildUberOneCharts(){ buildLines('ubChartMembers', UBERONE_GROWTH.labels, { label:'Members', data:UBERONE_GROWTH.data, color:BRAND2 }, null, function(v){ return v+'M'; }); }
 // Build the lazy charts that live inside a sub-pane, by (group, sub-key).
 function buildSub(root, group, key){
-  if(group==='offer'){
-    if(key==='mobility')      buildMobilityCharts();
-    else if(key==='delivery') buildDeliveryCharts();
-    else if(key==='uberone')  buildUberOneCharts();
-  } else if(group==='financials'){
-    if(key==='model')          buildModelTab();
-    else if(key==='valuation') UBER_VAL.init(root);
-    // insurance: static, no charts
+  if(group==='topline'){
+    if(key==='segments'){ buildOverviewCharts(); buildActiveSeg(root); }  // GB + EBITDA + active segment
+    else if(key==='customers') buildUberOneCharts();
+    // tam, industry: no charts
+  } else if(group==='bottomline'){
+    if(key==='unit')          buildMobilityCharts();  // ubChartTake (take rate) — moved here
+    else if(key==='margins')  buildUbMargins();        // live Massive margins
+    // suppliers, insurance: no charts
+  } else if(group==='evolution'){
+    if(key==='guidance')      buildModelTab();          // Model vs. Reality lives under Guidance
+    // earnings (calls), strategy, timeline: no charts
+  } else if(group==='valuation'){
+    if(key==='multiples')     UBER_VAL.init(root);
+    else if(key==='sensitivity') buildUbSens();
+    // competitors (SVG wired in init), ratings, capital, balance: no charts
+  } else if(group==='mgmt'){
+    if(key==='team')          UBER_MGMT.init(root);
+    // ownership, governance, track: no charts
   }
-  // history sub-panes: no charts
+}
+// Segments ▸ inner Mobility/Delivery/Freight toggle → build the active segment's chart.
+function buildActiveSeg(root){
+  var pane=root.querySelector('.dd-pane[data-dd="topline"]'); if(!pane) return;
+  var b=pane.querySelector('.seg-pill.active'); var seg=b?b.getAttribute('data-seg'):'mobility';
+  if(seg==='delivery') buildDeliveryCharts();  // mobility & freight have no lazy chart now
 }
 function activeSubKey(root, group){
   var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return null;
@@ -1818,12 +2128,11 @@ function wireSubtabs(root, group){
 }
 // ── Deep Dive layer (dd-tabs inside the Deep Dive pane) ──
 function buildDD(root, key){
-  if(key==='extras') buildOverviewCharts();
-  else if(key==='mgmt') UBER_MGMT.init(root);
-  else if(key==='offer'||key==='financials'){ var s=activeSubKey(root,key); if(s) buildSub(root,key,s); }
-  // history: no charts
+  // All top-level tabs now hold sub-panes (except Bottom Line's single static pane);
+  // paint the active sub-pane's charts. activeSubKey→null for Bottom Line → no-op.
+  var s=activeSubKey(root,key); if(s) buildSub(root,key,s);
 }
-function activeDD(root){ var b=root.querySelector('.dd-tab.active'); return b?b.getAttribute('data-dd'):'extras'; }
+function activeDD(root){ var b=root.querySelector('.dd-tab.active'); return b?b.getAttribute('data-dd'):'topline'; }
 function showDD(root, key){
   root.querySelectorAll('.dd-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-dd')===key); });
   root.querySelectorAll('.dd-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-dd')!==key); });
@@ -1912,7 +2221,14 @@ function init(c){
   var root=document.getElementById('co-detailview'); if(!root) return;
   renderLive(root); // Deep Dive ▸ Deep Overview keeps its live-price banner (#ubLive lives only there now); the standardized Overview has no price strip.
   wireDD(root);
-  wireSubtabs(root,'offer'); wireSubtabs(root,'financials'); wireSubtabs(root,'history');
+  wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt');
+  // Segments ▸ inner Mobility/Delivery/Freight toggle (the "sub-tabs de los segmentos").
+  root.querySelectorAll('.seg-pill').forEach(function(btn){ btn.onclick=function(){
+    var seg=btn.getAttribute('data-seg');
+    root.querySelectorAll('.seg-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    root.querySelectorAll('.seg-body').forEach(function(p){ p.hidden=(p.getAttribute('data-seg')!==seg); });
+    requestAnimationFrame(function(){ buildActiveSeg(root); });
+  }; });
   root.querySelectorAll('.ave-pill').forEach(function(btn){ btn.onclick=function(){ switchAveMetric(root, btn.getAttribute('data-ave')); }; });
   root.querySelectorAll('.guid-pill').forEach(function(btn){ btn.onclick=function(){ switchGuideMetric(root, btn.getAttribute('data-guidm')); }; });
   wireModal(root);
@@ -1998,4 +2314,4 @@ function deepDiveInit(c){
   var root=document.getElementById('co-detailview'); if(!root) return;
   var d=activeDD(root); requestAnimationFrame(function(){ buildDD(root, d); });
 }
-export var uberOverview = { html: html, init: init, deepDive: { html: deepDiveHtml, init: deepDiveInit } };
+export var uberOverview = { html: html, init: init, absorbsPillars: true, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

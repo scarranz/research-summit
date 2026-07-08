@@ -700,11 +700,11 @@ function uberRivalScatter(){
     ['Uber',552,60,10,AC.uber,'',
       'The broad-and-global corner. Rides + Delivery (~half of bookings) + Freight + Ads across ~70 countries. Its moat isn’t price — peers all take ~30% — it’s <b>scale + a cross-sell bundle</b> no single-service rival can match.',true],
     ['DiDi',255,100,8,AC.mob,'',
-      '<b>Broad geography, mobility-led.</b> Rides + some delivery &amp; fintech across China, Brazil and Mexico. Uber exited these markets and <b>holds equity stakes</b> rather than competing head-on.'],
+      '<b>Broad geography, mobility-led.</b> Rides + some delivery & fintech across China, Brazil and Mexico. Uber exited these markets and <b>holds equity stakes</b> rather than competing head-on.'],
     ['Grab',505,165,8,AC.mob,'',
       '<b>Single-region super-app.</b> Rides + food + GrabPay finance — but only ~8 SE-Asian countries. High breadth, one region; Uber sold its SE-Asia arm to Grab for a stake.'],
     ['Bolt',360,148,7,AC.mob,'',
-      '<b>Regional multi-service.</b> Rides + scooters + Bolt Food + grocery across ~45 European &amp; African countries. Mid-breadth, regional — where Uber competes locally.'],
+      '<b>Regional multi-service.</b> Rides + scooters + Bolt Food + grocery across ~45 European & African countries. Mid-breadth, regional — where Uber competes locally.'],
     ['DoorDash',305,172,9,AC.del,'',
       '<b>Delivery-first, broadening.</b> ~60% of US food delivery (vs Eats ~22–25%), now adding grocery, ads and DashPass. Out-scales Uber in US food, but far smaller abroad and no mobility.'],
     ['Lyft',205,196,8,AC.mob,'',
@@ -728,6 +728,7 @@ function uberRivalScatter(){
     '.urs-leg-i{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--navy)}'+
     '.urs-leg-dot{width:10px;height:10px;border-radius:50%;flex:none}</style>';
   h+='<div class="ov-diagram-cap" style="margin:0 0 6px">The rivals mapped by two business traits: <b>breadth</b> (single-service specialist → multi-service platform) and <b>geographic reach</b> (one region → global). Uber sits alone in the broad-and-global corner; everyone else is either <b>narrow</b> (Lyft, Instacart, DoorDash, Waymo) or <b>regional</b> (Grab, Bolt, DiDi). <span style="opacity:.75">Hover or tap any dot for the detail.</span></div>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 8px;font-size:11px;color:var(--mu)"><b>Why more names than the Overview scatter?</b> This map plots rivals by <b>business traits</b>, so it includes <b>unlisted</b> players (DiDi, Grab, Bolt, Waymo) that have <b>no public market multiple</b> — they can’t appear on the Overview’s valuation×growth scatter, which is limited to <b>listed</b> peers. Their positions here are qualitative <b>approximations</b>, not market data.</div>';
   h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" role="img" aria-label="Uber competitive positioning map">'+
     '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
     '<line x1="80" y1="252" x2="80" y2="44" stroke="#C7CED6" stroke-width="1.5"/>'+
@@ -1508,7 +1509,7 @@ function deepDiveHtml(c){
       '<button type="button" class="dd-tab" data-dd="offer">Company Offer</button>'+
       '<button type="button" class="dd-tab" data-dd="financials">Financials</button>'+
       '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
-      '<button type="button" class="dd-tab" data-dd="history">History</button>'+
+      '<button type="button" class="dd-tab" data-dd="history">Evolution</button>'+
     '</div>';
   // Extras — the previous bespoke Overview (turnaround, drivers, 3-yr targets, arena map, breadth×geo scatter). MOVED here per Golden Rule #1, not deleted.
   h+='<div class="dd-pane" data-dd="extras">'+overviewBody(c)+'</div>';

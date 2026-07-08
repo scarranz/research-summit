@@ -687,9 +687,23 @@ var LY_THEMES = [
     ]},
 ];
 
+// Pivot the theme-organized calls into a by-quarter view (mirrors UBER's callsByQuarter).
+function callsByQuarter(){
+  var map={}, order=[];
+  LY_THEMES.forEach(function(ct){ ct.updates.forEach(function(u){ if(!map[u.q]){ map[u.q]=[]; order.push(u.q); } map[u.q].push({ theme:ct.theme, items:u.items }); }); });
+  function qval(q){ var m=String(q).match(/Q(\d)\s+(\d{4})/); return m?(+m[2])*10+(+m[1]):0; }
+  order.sort(function(a,b){ return qval(b)-qval(a); });
+  return { order:order, map:map };
+}
 function callsBody(){
-  var h='<p class="ov-lede">The key narrative threads from <b>10 earnings calls</b> (Q4 2023 \u2192 Q1 2026) \u2014 organized by <b>theme</b> so you can trace how each story evolved.</p>';
-  h+='<div class="lpb-acc" id="lyCallsAcc">';
+  var h='<style>.calls-tog{display:inline-flex;gap:4px;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:3px;margin-bottom:14px}'+
+    '.calls-pill{border:none;background:transparent;font:inherit;font-size:12px;font-weight:700;color:var(--mu);padding:5px 15px;border-radius:999px;cursor:pointer;transition:.12s}'+
+    '.calls-pill:hover{color:var(--navy)}.calls-pill.active{background:var(--navy);color:#fff}'+
+    '.calls-tl{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--navy);margin:0 0 4px}</style>';
+  h+='<p class="ov-lede">The key narrative threads from <b>10 earnings calls</b> (Q4 2023 \u2192 Q1 2026). Switch lens: <b>By theme</b> traces how each story evolved; <b>By quarter</b> shows what mattered in a given call. Tap any row to expand.</p>';
+  h+='<div class="calls-tog" role="tablist"><button type="button" class="calls-pill active" data-callsv="theme">By theme</button><button type="button" class="calls-pill" data-callsv="quarter">By quarter</button></div>';
+  // \u2500\u2500 By theme (default) \u2500\u2500
+  h+='<div class="lpb-acc" id="lyCallsTheme">';
   LY_THEMES.forEach(function(ct){
     h+='<div class="lpb-acc-item">';
     h+='<button type="button" class="lpb-acc-h"><span>'+esc(ct.theme)+'</span><span class="lpb-acc-ic">+</span></button>';
@@ -702,7 +716,21 @@ function callsBody(){
     h+='</div></div>';
   });
   h+='</div>';
-  h+='<div class="ov-fynote" style="margin-top:12px">Sources: Lyft Q4 2023\u2013Q1 2026 earnings calls and prepared remarks via Quartr. Highlights are qualitative and contemporaneous.</div>';
+  // \u2500\u2500 By quarter \u2500\u2500
+  var byQ=callsByQuarter();
+  h+='<div class="lpb-acc" id="lyCallsQuarter" style="display:none">';
+  byQ.order.forEach(function(q){
+    h+='<div class="lpb-acc-item">';
+    h+='<button type="button" class="lpb-acc-h"><span>'+esc(q)+'</span><span class="lpb-acc-ic">+</span></button>';
+    h+='<div class="lpb-acc-body">';
+    byQ.map[q].forEach(function(row){
+      h+='<div style="margin-bottom:12px"><div class="calls-tl">'+esc(row.theme)+'</div>';
+      h+='<ul class="ov-bullets" style="margin-top:2px">'+row.items.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ul></div>';
+    });
+    h+='</div></div>';
+  });
+  h+='</div>';
+  h+='<div class="ov-fynote" style="margin-top:12px">Sources: Lyft Q4 2023\u2013Q1 2026 earnings calls and prepared remarks via Quartr. Highlights are qualitative and contemporaneous \u2014 written from the perspective of each call, not with hindsight.</div>';
   return h;
 }
 
@@ -825,6 +853,7 @@ function peerPositioning(){
   '</svg></div>';
   h+='<div id="lyPeerTip" class="peer-tip" hidden></div>';
   h+='<div class="ov-diagram-cap" style="margin-top:6px">'+PEER_NOTE+'</div>';
+  h+='<div class="ov-diagram-cap" style="margin:6px 0 0;font-size:11px;color:var(--mu)"><b>Why more names than the Overview scatter?</b> This map places rivals by <b>business traits</b>, so it includes <b>unlisted / private</b> players (Didi, Bolt) with <b>no public market multiple</b> — they can’t appear on the Overview’s valuation×growth scatter, which is limited to <b>listed</b> peers. Positions here are qualitative <b>approximations</b>, not market data.</div>';
   var cards=[
     ['Uber','The only true rival — same ~30% take, ~70% US share. So the gap isn\'t price, it\'s <b>scale + a Delivery business that funds rider CAC</b> Lyft can\'t match.'],
     ['Didi','Went <b>global instead of broad</b> (China, Brazil, Mexico). No US overlap — the "what if Lyft had expanded" counterfactual.'],
@@ -888,13 +917,8 @@ function overviewBody(c){
     mbars(RIDE_SPLIT)+
     '<div class="ov-fynote">Revenue is reported <b>net of driver pay</b>, so the marketplace split is driver pay (~67%) + cost of revenue (~17%, mostly insurance) + Lyft gross profit (~16%). The margin story is the middle slice shrinking.</div>');
   h += sec('Where the Revenue Actually Comes From', revComposition());
-  // History with modal detail on milestones.
-  h += sec('History & Milestones', '<div class="ov-timeline">'+TIMELINE.map(function(t, i){
-    var more = t.d ? '<div class="ov-tl-more">Read more →</div>' : '';
-    var cls = t.d ? ' ov-clickable' : '';
-    var attr = t.d ? ' data-detail="hist:'+i+'"' : '';
-    return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>';
-  }).join('')+'</div>');
+  // History & Milestones moved to Evolution ▸ Company History & M&A (see historyStoryBody)
+  // to keep the company story in one place and avoid repeating it here.
   h += sec('Where Lyft Sits — the competitive map', peerPositioning());
   h += '<div class="ov-foot">'+esc(SOURCES)+'</div>';
   return h;
@@ -1040,8 +1064,7 @@ function strategyBody(c){
     '<div class="lst-cap">Real — but it lives in <b>cash flow and riders, not the multiple yet</b>: the stock still sits far below its $72 IPO, and FY2025’s headline <b>$2.8B is mostly a one-time tax benefit</b>, not operating profit.</div>');
   // 2 - the playbook
   h+=sec('The playbook — the flywheel that compounds', lyFlywheel());
-  // 3 - M&A through-line (single home; clickable cards reused)
-  h+=sec('M&A — what each deal changed in the financials', mnaTimeline());
+  // M&A moved to Evolution ▸ Company History & M&A (single home) — see historyStoryBody().
   // 4 - targets with the how
   h+=sec('The 2027 targets — and HOW Lyft gets there',
     TGT.map(function(t){ return '<div class="lst-tg"><div class="lst-tg-top"><span class="lst-tg-t">'+t.t+'</span><span class="lst-tg-st '+(t.ok?'lst-ok':'lst-hard')+'">'+esc(t.st)+'</span></div>'+
@@ -1541,27 +1564,60 @@ function deepDiveHtml(c){
     '<div class="dd-tabs">'+
       '<button type="button" class="dd-tab active" data-dd="overview">Deep Overview</button>'+
       '<button type="button" class="dd-tab" data-dd="strategy">Strategy</button>'+
-      '<button type="button" class="dd-tab" data-dd="media">Media &amp; Growth</button>'+
-      '<button type="button" class="dd-tab" data-dd="growth">Rides &amp; Riders</button>'+
-      '<button type="button" class="dd-tab" data-dd="unit">Unit Economics</button>'+
-      '<button type="button" class="dd-tab" data-dd="insurance">Insurance</button>'+
-      '<button type="button" class="dd-tab" data-dd="model">Model vs. Reality</button>'+
-      '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
+      '<button type="button" class="dd-tab" data-dd="unitecon">Unit Economics</button>'+
+      '<button type="button" class="dd-tab" data-dd="financials">Financials</button>'+
       '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
-      '<button type="button" class="dd-tab" data-dd="calls">Earnings Narrative</button>'+
+      '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
     '</div>'+
     '<div class="dd-pane" data-dd="overview">'+overviewBody(c)+'</div>'+
-    '<div class="dd-pane" data-dd="strategy" hidden>'+strategyBody(c)+'</div>'+
-    '<div class="dd-pane" data-dd="media" hidden>'+mediaBody(c)+'</div>'+
-    '<div class="dd-pane" data-dd="growth" hidden>'+growthBody(c)+'</div>'+
-    '<div class="dd-pane" data-dd="unit" hidden>'+unitBody(c)+'</div>'+
-    '<div class="dd-pane" data-dd="insurance" hidden>'+insuranceBody(c)+'</div>'+
-    '<div class="dd-pane" data-dd="model" hidden>'+modelBody(c)+'</div>'+
-    '<div class="dd-pane" data-dd="valuation" hidden>'+LYFT_VAL.body()+'</div>'+
+    // Strategy: Playbook + Media & Growth
+    '<div class="dd-pane" data-dd="strategy" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="playbook">Playbook</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="media">Media &amp; Growth</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="playbook">'+strategyBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="media" hidden>'+mediaBody(c)+'</div>'+
+    '</div>'+
+    // Unit Economics: Rides & Riders + Unit Economics + Insurance
+    '<div class="dd-pane" data-dd="unitecon" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="rides">Rides &amp; Riders</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="unit">Unit Economics</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="insurance">Insurance</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="rides">'+growthBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="unit" hidden>'+unitBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="insurance" hidden>'+insuranceBody(c)+'</div>'+
+    '</div>'+
+    // Financials: Model vs. Reality + Valuation
+    '<div class="dd-pane" data-dd="financials" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="model">Model vs. Reality</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="valuation">Valuation</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="model">'+modelBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="valuation" hidden>'+LYFT_VAL.body()+'</div>'+
+    '</div>'+
     '<div class="dd-pane" data-dd="mgmt" hidden>'+LYFT_MGMT.body()+'</div>'+
-    '<div class="dd-pane" data-dd="calls" hidden>'+callsBody()+'</div>'+
+    // Evolution: Company History & M&A + Earnings Narrative (moved here — single home)
+    '<div class="dd-pane" data-dd="evolution" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="story">Company History &amp; M&amp;A</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="calls">Earnings Narrative</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="story">'+historyStoryBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="calls" hidden>'+callsBody()+'</div>'+
+    '</div>'+
   '</div>';
   return h;
+}
+// Evolution ▸ Company History & M&A — the single home for the company story and the
+// deal-by-deal financial impact (moved out of the Deep Overview and Strategy to avoid
+// repeating the same history/M&A in several places).
+function historyStoryBody(){
+  var tl='<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>';
+  return sec('History & Milestones', tl)+sec('M&A — what each deal changed in the financials', mnaTimeline());
 }
 
 // ═══ Charts ═══════════════════════════════════════════════════════════════════
@@ -1985,13 +2041,39 @@ function buildUnitTab(){ buildDecompChart(); buildTakeChart(); }
 
 // ── Deep Dive layer: build the charts for a given dd pane when it becomes visible ──
 function buildDD(root, key){
-  if (key==='overview')       buildOverviewCharts();
-  else if (key==='growth')    buildGrowthTab();
-  else if (key==='unit')      buildUnitTab();
-  else if (key==='model')     buildModelTab();
-  else if (key==='valuation') LYFT_VAL.init(root);
-  else if (key==='mgmt')      LYFT_MGMT.init(root);
-  // strategy / media / insurance / calls: no lazy charts
+  if (key==='overview')  buildOverviewCharts();
+  else if (key==='mgmt') LYFT_MGMT.init(root);
+  else if (key==='strategy'||key==='unitecon'||key==='financials'||key==='evolution'){
+    var s=activeSubKey(root,key); if(s) buildSub(root,key,s);
+  }
+}
+// Build the lazy charts inside a nested sub-pane, by (group, sub-key).
+function buildSub(root, group, key){
+  if(group==='unitecon'){
+    if(key==='rides'){
+      buildGrowthTab();
+      var ds=root.querySelector('#lyDecompSlider'); if(ds) renderDecomp(+ds.value);
+      if(root.querySelector('.sf-pill')){ var a=root.querySelector('.sf-pill.active'); renderStmtFlow(a?a.getAttribute('data-sf'):'before'); }
+    } else if(key==='unit') buildUnitTab();
+    // insurance: static, no charts
+  } else if(group==='financials'){
+    if(key==='model') buildModelTab();
+    else if(key==='valuation') LYFT_VAL.init(root);
+  }
+  // strategy (playbook/media) & evolution (story/calls): no lazy charts
+}
+function activeSubKey(root, group){
+  var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return null;
+  var b=pane.querySelector('.ovt-subtab.active'); return b?b.getAttribute('data-ovst'):null;
+}
+function showSub(root, pane, group, key){
+  pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovst')===key); });
+  pane.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovst')!==key); });
+  requestAnimationFrame(function(){ buildSub(root, group, key); });
+}
+function wireSubtabs(root, group){
+  var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return;
+  pane.querySelectorAll('.ovt-subtab').forEach(function(btn){ btn.onclick=function(){ showSub(root, pane, group, btn.getAttribute('data-ovst')); }; });
 }
 function activeDD(root){ var b=root.querySelector('.dd-tab.active'); return b?b.getAttribute('data-dd'):'overview'; }
 function showDD(root, key){
@@ -2072,6 +2154,7 @@ function init(c){
   if (!root) return;
   renderLive(root); // Deep Dive ▸ Deep Overview keeps its #lyLive banner; the standardized Overview has no price strip.
   wireDD(root);
+  wireSubtabs(root,'strategy'); wireSubtabs(root,'unitecon'); wireSubtabs(root,'financials'); wireSubtabs(root,'evolution');
   root.querySelectorAll('.ave-pill').forEach(function(btn){
     btn.onclick = function(){ switchAveMetric(root, btn.getAttribute('data-ave')); };
   });
@@ -2091,7 +2174,15 @@ function init(c){
     });
   })();
   // Earnings calls accordion
-  root.querySelectorAll('#lyCallsAcc .lpb-acc-h').forEach(function(btn){ btn.onclick=function(){ var item=btn.parentElement; var open=item.classList.toggle('open'); var ic=btn.querySelector('.lpb-acc-ic'); if(ic) ic.textContent=open?'\u2013':'+'; }; });
+  root.querySelectorAll('.lpb-acc-h').forEach(function(btn){ btn.onclick=function(){ var item=btn.parentElement; var open=item.classList.toggle('open'); var ic=btn.querySelector('.lpb-acc-ic'); if(ic) ic.textContent=open?'\u2013':'+'; }; });
+  // Earnings Narrative lens toggle (By theme \u21c4 By quarter)
+  root.querySelectorAll('.calls-pill').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-callsv');
+    root.querySelectorAll('.calls-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    var t=root.querySelector('#lyCallsTheme'), q=root.querySelector('#lyCallsQuarter');
+    if(t) t.style.display=(v==='theme')?'':'none';
+    if(q) q.style.display=(v==='quarter')?'':'none';
+  }; });
   // \u2500\u2500 Standardized Overview wiring: dynamic peer scatter, segment accordions, live market cap \u2500\u2500
   lyScReset(); lyScRender(root); lyScChips(root);
   var sctip=root.querySelector('#lyScTip');

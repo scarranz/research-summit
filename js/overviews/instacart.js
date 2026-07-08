@@ -477,6 +477,7 @@ function cartPeerMap(){
   '</svg></div>';
   h+='<div id="cartPeerTip" class="cpm-tip" hidden></div>';
   h+='<div class="ov-diagram-cap" style="margin-top:6px"><b>The whitespace is the moat:</b> the delivery players (DoorDash, Uber Eats) are asset-light but <b>not grocery-native</b>; the retail giants (Amazon, Walmart) own the full stack but <b>own the stores too</b> — so they compete with grocers. Instacart is the only <b>asset-light, full grocery-tech platform that arms retailers instead of competing with them.</b></div>';
+  h+='<div class="ov-diagram-cap" style="margin:6px 0 0;font-size:11px;color:var(--mu)"><b>Why a different peer set than the Overview scatter?</b> This map places rivals by <b>business model</b>, so it can include the <b>diversified giants</b> (Amazon, Walmart) that aren’t clean valuation comps, plus <b>private</b> players (Gopuff, Shipt) with <b>no public multiple</b>. Those can’t appear on the Overview’s valuation×growth scatter, which is limited to <b>listed pure-play</b> peers — so the two intentionally show different names. Positions here are qualitative <b>approximations</b>.</div>';
   return h;
 }
 function peersHtml(){
@@ -682,10 +683,24 @@ function cartLogo(name, ticker, domain){
   return '<div class="csc-logo" title="'+esc(name)+'"><img src="'+primary+'" alt="'+esc(name)+'" loading="lazy" onerror="'+onerr+'"></div>';
 }
 
+// Pivot the theme-organized calls into a by-quarter view (mirrors UBER/LYFT).
+function callsByQuarter(){
+  var map={}, order=[];
+  CART_THEMES.forEach(function(ct){ ct.updates.forEach(function(u){ if(!map[u.q]){ map[u.q]=[]; order.push(u.q); } map[u.q].push({ theme:ct.theme, items:u.items }); }); });
+  function qval(q){ var m=String(q).match(/Q(\d)\s+(\d{4})/); return m?(+m[2])*10+(+m[1]):0; }
+  order.sort(function(a,b){ return qval(b)-qval(a); });
+  return { order:order, map:map };
+}
 function callsBody(){
-  var h='<p class="ov-lede">The narrative threads across <b>10 earnings calls</b> (Q3 2023 → Q1 2026) — organized by <b>theme</b>, chronological within each, so you can trace how each story evolved. Tap any theme.</p>';
-  h+='<div class="lpb-acc" id="caCallsAcc">';
-  CART_THEMES.forEach(function(ct,i){
+  var h='<style>.calls-tog{display:inline-flex;gap:4px;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:3px;margin-bottom:14px}'+
+    '.calls-pill{border:none;background:transparent;font:inherit;font-size:12px;font-weight:700;color:var(--mu);padding:5px 15px;border-radius:999px;cursor:pointer;transition:.12s}'+
+    '.calls-pill:hover{color:var(--navy)}.calls-pill.active{background:var(--navy);color:#fff}'+
+    '.calls-tl{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--navy);margin:0 0 4px}</style>';
+  h+='<p class="ov-lede">The narrative threads across <b>10 earnings calls</b> (Q3 2023 → Q1 2026). Switch lens: <b>By theme</b> traces how each story evolved; <b>By quarter</b> shows what mattered in a given call. Tap any row to expand.</p>';
+  h+='<div class="calls-tog" role="tablist"><button type="button" class="calls-pill active" data-callsv="theme">By theme</button><button type="button" class="calls-pill" data-callsv="quarter">By quarter</button></div>';
+  // ── By theme (default) ──
+  h+='<div class="lpb-acc" id="caCallsTheme">';
+  CART_THEMES.forEach(function(ct){
     h+='<div class="lpb-acc-item">'+
       '<button type="button" class="lpb-acc-h"><span>'+esc(ct.theme)+'</span><span class="lpb-acc-ic">+</span></button>'+
       '<div class="lpb-acc-body"><p style="font-size:12px;color:var(--mu);margin:0 0 10px;font-style:italic">'+esc(ct.why)+'</p>'+
@@ -693,7 +708,18 @@ function callsBody(){
       '</div></div>';
   });
   h+='</div>';
-  h+='<div class="ov-fynote" style="margin-top:12px">Sources: Instacart Q3 2023–Q1 2026 earnings calls & shareholder letters via Quartr. Highlights are qualitative and contemporaneous.</div>';
+  // ── By quarter ──
+  var byQ=callsByQuarter();
+  h+='<div class="lpb-acc" id="caCallsQuarter" style="display:none">';
+  byQ.order.forEach(function(q){
+    h+='<div class="lpb-acc-item">'+
+      '<button type="button" class="lpb-acc-h"><span>'+esc(q)+'</span><span class="lpb-acc-ic">+</span></button>'+
+      '<div class="lpb-acc-body">'+
+      byQ.map[q].map(function(row){ return '<div style="margin-bottom:12px"><div class="calls-tl">'+esc(row.theme)+'</div><ul class="ov-bullets" style="margin-top:2px">'+row.items.map(function(it){return '<li>'+it+'</li>';}).join('')+'</ul></div>'; }).join('')+
+      '</div></div>';
+  });
+  h+='</div>';
+  h+='<div class="ov-fynote" style="margin-top:12px">Sources: Instacart Q3 2023–Q1 2026 earnings calls & shareholder letters via Quartr. Highlights are qualitative and contemporaneous — written from the perspective of each call, not with hindsight.</div>';
   return h;
 }
 
@@ -1422,22 +1448,34 @@ function html(c){
 // ══ Deep Dive: SIBLING profile tab (rendered into the Deep Dive copane), no longer
 //    nested inside the Overview. The entire prior Overview, preserved verbatim
 //    (Golden Rule #1). Own root class (.ov-cart-dd) scopes it. ══
+// Evolution ▸ Company History & M&A — single home for the company story and the deal
+// history (moved out of the Deep Overview and Enterprise panes to avoid repetition).
+function historyStoryBody(){
+  var tl='<div class="ov-diagram-cap" style="margin:0 0 12px">From a 2012 grocery-delivery app to a multi-sided platform with advertising and enterprise software. <b>Tap any milestone</b> with "Read more" for detail.</div>'+
+    '<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more ›</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>'+
+    '<div class="ov-fynote" style="margin-top:6px">'+esc(TL_NOTE)+'</div>';
+  return sec('History & Milestones', tl)+
+    sec('M&A — the tuck-ins that built today’s high-margin mix', cartMnaTimeline());
+}
 function deepDiveHtml(c){
   var h = '<div class="ov ov-cart ov-cart-dd" data-brand="CART">';
-  h += '<div class="ov-subtabs">'+
-    '<button class="ov-subtab active" data-catab="overview">Deep Overview</button>'+
-    '<button class="ov-subtab" data-catab="marketplace">Marketplace</button>'+
-    '<button class="ov-subtab" data-catab="advertising">Advertising</button>'+
-    '<button class="ov-subtab" data-catab="enterprise">Enterprise</button>'+
-    '<button class="ov-subtab" data-catab="supply">Supply Chain</button>'+
-    '<button class="ov-subtab" data-catab="fin">Financials</button>'+
-    '<button class="ov-subtab" data-catab="valuation">Valuation</button>'+
-    '<button class="ov-subtab" data-catab="mgmt">Management</button>'+
-    '<button class="ov-subtab" data-catab="calls">Earnings Calls</button>'+
+  // .dd-tabs styling (wraps — no horizontal scroll, unlike the old .ov-subtabs bar).
+  h += '<style>.dd-tabs{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 14px;border-bottom:1px solid var(--bdr)}'+
+    '.dd-tab{border:none;background:transparent;font:inherit;font-size:12.5px;font-weight:700;color:var(--mu);padding:8px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}'+
+    '.dd-tab:hover{color:var(--navy)}.dd-tab.active{color:var(--navy);border-bottom-color:var(--navy)}</style>';
+  // Top-level Deep Dive tabs (.dd-tabs wrap — no horizontal scroll); the multi-front
+  // panes are grouped under Business and Financials via nested .ovt-subtabs.
+  h += '<div class="dd-tabs">'+
+    '<button type="button" class="dd-tab active" data-dd="overview">Deep Overview</button>'+
+    '<button type="button" class="dd-tab" data-dd="business">Business</button>'+
+    '<button type="button" class="dd-tab" data-dd="supply">Supply Chain</button>'+
+    '<button type="button" class="dd-tab" data-dd="financials">Financials</button>'+
+    '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
+    '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
   '</div>';
 
-  // ══ PANE 1 — Overview ══
-  h += '<div class="ov-pane active" data-capane="overview">';
+  // ══ Deep Overview ══
+  h += '<div class="dd-pane" data-dd="overview">';
   h += snap(SNAPSHOT);
   h += '<p class="ov-lede">'+DESC+'</p>';
   h += kpis(KPIS);
@@ -1473,17 +1511,18 @@ function deepDiveHtml(c){
   h += sec('Strategy — the flywheel',
     '<div class="ov-diagram-cap" style="margin:0 0 12px">Not a list of projects — a <b>self-reinforcing loop</b>: advertising profit funds the pivot from delivery app to grocery-industry tech platform, and each stage feeds the next. <b>Tap any stage.</b></div>'+
     stratFlywheel());
-  h += sec('History & Milestones',
-    '<div class="ov-diagram-cap" style="margin:0 0 12px">From a 2012 grocery-delivery app to a multi-sided platform with advertising and enterprise software. <b>Tap any milestone</b> with "Read more" for detail.</div>'+
-    '<div class="ov-timeline">'+TIMELINE.map(function(t,i){
-      var more=t.d?'<div class="ov-tl-more">Read more ›</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':'';
-      return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>';
-    }).join('')+'</div>'+
-    '<div class="ov-fynote" style="margin-top:6px">'+esc(TL_NOTE)+'</div>');
+  // History & Milestones moved to Evolution ▸ Company History & M&A (historyStoryBody)
+  // — single home for the company story, no repetition here.
   h += '</div>'; // end overview
 
-  // ══ PANE 2 — Marketplace ══
-  h += '<div class="ov-pane" data-capane="marketplace">';
+  // ══ Business — Marketplace · Advertising · Enterprise (nested subtabs) ══
+  h += '<div class="dd-pane" data-dd="business" hidden>';
+  h += '<div class="ovt-subtabs">'+
+    '<button type="button" class="ovt-subtab active" data-ovst="marketplace">Marketplace</button>'+
+    '<button type="button" class="ovt-subtab" data-ovst="advertising">Advertising</button>'+
+    '<button type="button" class="ovt-subtab" data-ovst="enterprise">Enterprise</button>'+
+  '</div>';
+  h += '<div class="ovt-subpane" data-ovst="marketplace">';
   h += '<p class="ov-lede">The <b>Marketplace</b> is the <b>demand + data engine</b> — Instacart owns the customer here, and that ownership is exactly what powers advertising and enterprise. It earns a take of <b>GTV</b> plus the <b>Instacart+</b> membership.</p>';
   h += sec('Instacart+ — the membership', membershipViz());
   h += sec('Anatomy of an order',
@@ -1493,8 +1532,8 @@ function deepDiveHtml(c){
   h += sec('Who pays Instacart', whoPays());
   h += '</div>'; // end marketplace
 
-  // ══ PANE 3 — Advertising ══
-  h += '<div class="ov-pane" data-capane="advertising">';
+  // ── Advertising ──
+  h += '<div class="ovt-subpane" data-ovst="advertising" hidden>';
   h += '<p class="ov-lede"><b>Advertising is the reason Instacart is profitable.</b> CPG brands pay to be discovered at the <b>point of purchase</b> — ~100% gross margin, and, as the Overview showed, roughly the size of the entire company\'s profit. Below: how big it has grown, why it converts, whether it is durable, and who it competes with.</p>';
   h += sec('Instacart\u2019s role in the ad value chain', cartAdRole());
   h += sec('Follow the ad dollar — where it enters & who keeps it', cartAdFlow());
@@ -1509,11 +1548,11 @@ function deepDiveHtml(c){
   h += sec('The ad products', pillarCards('ads'));
   h += '</div>'; // end advertising
 
-  // ══ PANE 4 — Enterprise ══
-  h += '<div class="ov-pane" data-capane="enterprise">';
+  // ── Enterprise ──
+  h += '<div class="ovt-subpane" data-ovst="enterprise" hidden>';
   h += '<p class="ov-lede"><b>Instacart Platform (Enterprise)</b> is the pivot from a delivery app to <b>the grocery industry’s tech vendor</b>. Instacart sells the same technology that runs its own app to retailers, to power <b>their</b> e-commerce, fulfillment, ads and in-store tech — the retailer keeps the customer. Lower take than the Marketplace, but it is how Instacart makes itself indispensable.</p>';
   h += sec('The flip — turning a competitor into a customer', entFlip());
-  h += sec('How Instacart built the platform — every deal became a product', cartMnaTimeline());
+  // M&A ("every deal became a product") moved to Evolution ▸ Company History & M&A (historyStoryBody).
   h += sec('Carrot — the platform management frames as five pillars', carrotPillars());
   h += sec('Where Instacart sits — its role at every stage', cartRoleMap());
   h += sec('From online to the aisle — Connected Stores',
@@ -1521,15 +1560,21 @@ function deepDiveHtml(c){
   h += sec('The international arm — Instaleap',
     '<div class="ov-callout" style="border-left:3px solid #3A7BD5"><b>Enterprise, exported.</b> Instacart’s consumer Marketplace is US/Canada-only and brutally expensive to rebuild abroad. The Apr-2026 <b>Instaleap</b> acquisition gives it an instant base of ~100 retailers across ~30 countries to sell the enterprise tech into — <b>no marketplace, shopper network or brand to build</b>. Asset-light land-and-expand. (See the Strategy flywheel on the Overview.)</div>');
   h += '<div class="ov-fynote">Marketplace vs Enterprise, in one line: in the <b>Marketplace</b> Instacart owns the consumer and earns a full take + ads; in <b>Enterprise</b> the retailer owns the consumer and Instacart earns a smaller tech fee — <b>trading take rate for reach and stickiness.</b></div>';
-  h += '</div>'; // end enterprise
+  h += '</div>'; // end enterprise subpane
+  h += '</div>'; // end business group
 
-  // ══ PANE 5 — Supply Chain (Bloomberg SPLC) ══
-  h += '<div class="ov-pane" data-capane="supply">';
+  // ══ Supply Chain (Bloomberg SPLC) ══
+  h += '<div class="dd-pane" data-dd="supply" hidden>';
   h += supplyBody();
   h += '</div>'; // end supply pane
 
-  // ══ PANE 6 — Financials (historical KPIs from the DCF) ══
-  h += '<div class="ov-pane" data-capane="fin">';
+  // ══ Financials — Financials · Valuation (nested subtabs) ══
+  h += '<div class="dd-pane" data-dd="financials" hidden>';
+  h += '<div class="ovt-subtabs">'+
+    '<button type="button" class="ovt-subtab active" data-ovst="fin">Financials</button>'+
+    '<button type="button" class="ovt-subtab" data-ovst="valuation">Valuation</button>'+
+  '</div>';
+  h += '<div class="ovt-subpane" data-ovst="fin">';
   h += '<p class="ov-lede">'+FIN_INTRO+'</p>';
   h += '<div class="ov-fintog" id="ovFinTog"><button class="on" data-period="annual">Annual</button><button data-period="quarterly">Quarterly</button></div>';
   h += '<div class="ov-charts ov-charts-2">'+
@@ -1547,14 +1592,21 @@ function deepDiveHtml(c){
   h += '<div class="ave-subh-note" id="cgNote" style="margin:8px 2px 12px"></div>';
   h += '<div class="guid-tbl-wrap" id="cgTbl"></div>';
   h += '<div class="ov-foot">Guidance = the range issued for the upcoming quarter on the prior earnings call (Instacart shareholder letters / 8-K); reported = Summit actuals. The series <b>starts at Q4 2023</b> because that was Instacart’s first guidance as a public company — it <b>IPO’d in Sept 2023</b>, so no public guidance exists for 1Q–3Q23 (this is why it cannot reach back to 1Q23 like Uber/Lyft, public since 2019). That first Q4 2023 GTV was given as a <b>growth %</b>, not a $ range. 2Q26 is the current outstanding guide.</div>';
-  h += '</div>'; // end fin pane
+  h += '</div>'; // end fin subpane
+  h += '<div class="ovt-subpane" data-ovst="valuation" hidden>'+CART_VAL.body()+'</div>';
+  h += '</div>'; // end financials group
 
-  // ══ PANE 6 — Earnings Calls ══
-  h += '<div class="ov-pane" data-capane="valuation">'+CART_VAL.body()+'</div>';
-  h += '<div class="ov-pane" data-capane="mgmt">'+CART_MGMT.body()+'</div>';
-  h += '<div class="ov-pane" data-capane="calls">';
-  h += callsBody();
-  h += '</div>'; // end calls pane
+  h += '<div class="dd-pane" data-dd="mgmt" hidden>'+CART_MGMT.body()+'</div>';
+
+  // ══ Evolution — Company History & M&A + Earnings Narrative (moved here, single home) ══
+  h += '<div class="dd-pane" data-dd="evolution" hidden>';
+  h += '<div class="ovt-subtabs">'+
+    '<button type="button" class="ovt-subtab active" data-ovst="story">Company History &amp; M&amp;A</button>'+
+    '<button type="button" class="ovt-subtab" data-ovst="calls">Earnings Narrative</button>'+
+  '</div>';
+  h += '<div class="ovt-subpane" data-ovst="story">'+historyStoryBody()+'</div>';
+  h += '<div class="ovt-subpane" data-ovst="calls" hidden>'+callsBody()+'</div>';
+  h += '</div>'; // end evolution group
 
   h += '<div class="ov-foot">'+esc(SOURCES)+'</div>';
   h += '</div>'; // end deepdive root (.ov-cart-dd)
@@ -1610,6 +1662,42 @@ function buildCartGuide(){
 }
 function switchCartGuide(root,k){ if(!CGUIDE[k])return; _cgMetric=k; root.querySelectorAll('.cg-pill').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-cgm')===k); }); buildCartGuide(); }
 
+// ── Deep Dive tab machinery (top-level .dd-tab + nested .ovt-subtab, like UBER/LYFT) ──
+function buildDD(root, key){
+  if(key==='mgmt') CART_MGMT.init(root);
+  else if(key==='business'||key==='financials'||key==='evolution'){ var s=activeSubKey(root,key); if(s) buildSub(root,key,s); }
+  // overview / supply: no lazy Chart.js (inline SVG/HTML only)
+}
+function buildSub(root, group, key){
+  if(group==='business'){
+    if(key==='advertising') buildAdChart();
+    // marketplace, enterprise: no lazy charts
+  } else if(group==='financials'){
+    if(key==='fin'){ renderFin(); buildCartGuide(); }
+    else if(key==='valuation') CART_VAL.init(root);
+  }
+  // evolution (story/calls): no charts
+}
+function activeDD(root){ var b=root.querySelector('.dd-tab.active'); return b?b.getAttribute('data-dd'):'overview'; }
+function showDD(root, key){
+  root.querySelectorAll('.dd-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-dd')===key); });
+  root.querySelectorAll('.dd-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-dd')!==key); });
+  requestAnimationFrame(function(){ buildDD(root, key); });
+}
+function wireDD(root){ root.querySelectorAll('.dd-tab').forEach(function(btn){ btn.onclick=function(){ showDD(root, btn.getAttribute('data-dd')); }; }); }
+function activeSubKey(root, group){
+  var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return null;
+  var b=pane.querySelector('.ovt-subtab.active'); return b?b.getAttribute('data-ovst'):null;
+}
+function showSub(root, pane, group, key){
+  pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovst')===key); });
+  pane.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovst')!==key); });
+  requestAnimationFrame(function(){ buildSub(root, group, key); });
+}
+function wireSubtabs(root, group){
+  var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return;
+  pane.querySelectorAll('.ovt-subtab').forEach(function(btn){ btn.onclick=function(){ showSub(root, pane, group, btn.getAttribute('data-ovst')); }; });
+}
 function init(c){
   // Root spans BOTH profile panes (Overview + Deep Dive copanes under #co-detailview),
   // so this single pass wires the Overview scatter, the Deep Dive sub-tabs and the
@@ -1622,18 +1710,10 @@ function init(c){
       dot.addEventListener('mouseleave',function(){ tip.hidden=true; });
     }); })();
 
-  // Deep-Dive sub-tab switching (unchanged — still drives the legacy panes)
-  root.querySelectorAll('.ov-subtab').forEach(function(b){
-    b.onclick = function(){
-      root.querySelectorAll('.ov-subtab').forEach(function(x){ x.classList.toggle('active', x===b); });
-      var tab = b.getAttribute('data-catab');
-      root.querySelectorAll('.ov-pane').forEach(function(p){ p.classList.toggle('active', p.getAttribute('data-capane')===tab); });
-      if (tab==='fin') requestAnimationFrame(function(){ renderFin(); buildCartGuide(); }); // charts need a visible (sized) canvas
-      if (tab==='advertising') requestAnimationFrame(buildAdChart);
-      if (tab==='valuation') requestAnimationFrame(function(){ CART_VAL.init(root); });
-      if (tab==='mgmt') requestAnimationFrame(function(){ CART_MGMT.init(root); });
-    };
-  });
+  // Deep Dive: top-level tabs (.dd-tab) + nested subtabs (.ovt-subtab) under
+  // Business / Financials / Evolution. Charts build lazily when a pane is shown.
+  wireDD(root);
+  wireSubtabs(root,'business'); wireSubtabs(root,'financials'); wireSubtabs(root,'evolution');
 
   // Financials period toggle (Annual / Quarterly)
   var tog = root.querySelector('#ovFinTog');
@@ -1672,7 +1752,15 @@ function init(c){
   });
 
   // Earnings calls accordion
-  root.querySelectorAll('#caCallsAcc .lpb-acc-h').forEach(function(btn){ btn.onclick=function(){ var item=btn.parentElement; var open=item.classList.toggle('open'); var ic=btn.querySelector('.lpb-acc-ic'); if(ic) ic.textContent=open?'\u2013':'+'; }; });
+  root.querySelectorAll('.lpb-acc-h').forEach(function(btn){ btn.onclick=function(){ var item=btn.parentElement; var open=item.classList.toggle('open'); var ic=btn.querySelector('.lpb-acc-ic'); if(ic) ic.textContent=open?'\u2013':'+'; }; });
+  // Earnings Narrative lens toggle (By theme \u21c4 By quarter)
+  root.querySelectorAll('.calls-pill').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-callsv');
+    root.querySelectorAll('.calls-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    var t=root.querySelector('#caCallsTheme'), q=root.querySelector('#caCallsQuarter');
+    if(t) t.style.display=(v==='theme')?'':'none';
+    if(q) q.style.display=(v==='quarter')?'':'none';
+  }; });
 
   // Flow animation
   var flow = root.querySelector('#ovFlow');
@@ -1741,17 +1829,11 @@ function init(c){
   root.querySelectorAll(':scope > .ov-modal-back').forEach(function(m){ if(m.id!=='ovModalBack') m.remove(); });
   var md=root.querySelector('#ovModalBack'); if(md && md.parentNode!==root) root.appendChild(md);
 }
-// Deep Dive charts build lazily: init() already wired the sub-tabs (root spans both
-// panes), so here we only paint the active sub-pane's charts now that it is visible.
+// Deep Dive charts build lazily: init() already wired the tabs (root spans both panes),
+// so here we only paint the active dd-pane's charts now that the Deep Dive tab is visible.
 function deepDiveInit(c){
   var root = document.getElementById('co-detailview'); if(!root) return;
-  var b=root.querySelector('.ov-subtab.active'), tab=b?b.getAttribute('data-catab'):null;
-  requestAnimationFrame(function(){
-    if(tab==='fin'){ renderFin(); buildCartGuide(); }
-    else if(tab==='advertising') buildAdChart();
-    else if(tab==='valuation') CART_VAL.init(root);
-    else if(tab==='mgmt') CART_MGMT.init(root);
-  });
+  var d=activeDD(root); requestAnimationFrame(function(){ buildDD(root, d); });
 }
 
 export var instacartOverview = { html: html, init: init, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

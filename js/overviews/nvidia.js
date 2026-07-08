@@ -2018,50 +2018,129 @@ function init(){
 }
 
 // ─── Deep Dive shell (the "Deep Dive" company tab) ───────────────────────────────
-// Same tab machinery as before, just without the Overview pane. The shell keeps the
-// .ov-nvda class (brand color + tab styling live there) plus .ov-nvda-dd as a unique
+// Two-level structure: five umbrella GROUPS (the analytical flow of the business),
+// each holding several content tabs. This taxonomy is the shared "umbrella" every
+// company Deep Dive slots into:
+//   Top Line    → how revenue is generated (what they sell, to whom, how big)
+//   Bottom Line → what's left after the cost structure
+//   Evolution   → understanding the company over time
+//   Valuation   → what feeds the valuation directly
+//   Management  → who runs the ship
+// Level-1 (groups) reuses the underline .ovt-tab bar; level-2 (content tabs) reuses
+// the pill .ovt-subtab bar. Content builds lazily when its pane first becomes visible
+// (Chart.js needs a laid-out, non-null offsetParent). Tabs not yet built render a
+// wipNote placeholder that documents what belongs there.
+// The shell keeps .ov-nvda (brand color + tab styling) plus .ov-nvda-dd as a unique
 // hook so its init can scope to it even though the Overview shell is also .ov-nvda.
-var DEEP_TABS = [
-  { key:'segments',   label:'Segments',          body:segmentsBody },
-  { key:'technology', label:'Technology',        body:technologyBody },
-  { key:'management', label:'Management',         body:managementBody },
-  { key:'consensus',  label:'Consensus',         body:consensusBody },
-  { key:'valuation',  label:'Valuation',         body:valuationBody },
-  { key:'industry',   label:'Industry Analysis', body:industryBody },
+
+// Placeholder body for a not-yet-built content tab — documents the taxonomy in-UI.
+function ddPlaceholder(lead, items){
+  return function(){ return wipNote({ lead: lead, items: items }); };
+}
+
+var DEEP_GROUPS = [
+  { key:'topline', label:'Top Line', tabs:[
+    { key:'segments',  label:'Segments',              body:segmentsBody,   init:buildSegChart },
+    { key:'products',  label:'Products & Technology', body:technologyBody, init:initTech },
+    { key:'customers', label:'Customers',             body:ddPlaceholder('Who buys NVIDIA silicon and how concentrated that demand is.', ['Top hyperscaler / OEM customers and % of revenue','Customer concentration &amp; multi-year commitments','Hyperscaler capex → NVDA revenue linkage']) },
+    { key:'tam',       label:'TAM',                   body:ddPlaceholder('The addressable market and NVIDIA’s runway inside it.', ['Data-center / AI accelerator TAM sizing &amp; CAGR','Gaming, pro-viz, automotive &amp; robotics TAMs','Share vs the addressable opportunity over time']) },
+    { key:'industry',  label:'Industry Analysis',     body:industryBody,   init:function(){ semiIndustry.init(); } },
+  ]},
+  { key:'bottomline', label:'Bottom Line', tabs:[
+    { key:'unitecon',    label:'Unit Economics',        body:ddPlaceholder('Per-unit / per-platform economics beneath the reported margins.', ['ASP and gross profit per GPU / system','Rack-scale (GB200 NVL72) economics','Volume × price × cost bridge']) },
+    { key:'margins',     label:'Margin Analysis',       body:ddPlaceholder('Profitability &amp; cash margins over time.', ['Gross / operating / net / EBITDA / FCF margin trends','Drivers of margin expansion &amp; mix shift','Currently lives in Overview → Margins box; will migrate here']) },
+    { key:'opex',        label:'Operating Expenses',    body:ddPlaceholder('Where the operating spend goes.', ['R&amp;D vs SG&amp;A trend and as % of revenue','Headcount &amp; stock-based compensation','Operating leverage as revenue scales']) },
+    { key:'suppliers',   label:'Suppliers',             body:ddPlaceholder('The vendors NVIDIA depends on to build its products.', ['TSMC (foundry); SK Hynix / Micron / Samsung (HBM)','CoWoS advanced-packaging capacity','Supplier concentration &amp; pricing leverage']) },
+    { key:'supplychain', label:'Supply Chain Analysis', body:ddPlaceholder('Input → NVIDIA → output flow and dependency risk.', ['Wafer → HBM → packaging → board → system flow','Lead times, bottlenecks &amp; capacity constraints','Geographic / geopolitical exposure']) },
+  ]},
+  { key:'evolution', label:'Evolution', tabs:[
+    { key:'earnings',  label:'Earnings Call History', body:ddPlaceholder('What management said, quarter by quarter.', ['Key quotes &amp; themes per earnings call','Tone / sentiment shifts over time','Recurring topics (supply, China, sovereign AI)']) },
+    { key:'guidance',  label:'Guidance',              body:ddPlaceholder('Track record of guiding vs delivering.', ['Guided vs actual revenue &amp; margin each quarter','Beat / miss history and magnitude','Guidance philosophy (conservative vs stretch)']) },
+    { key:'strategy',  label:'Strategy',              body:ddPlaceholder('The arc of NVIDIA’s strategic bets.', ['CUDA moat &amp; full-stack platform strategy','From gaming → data center → AI factories','Software / networking / systems expansion']) },
+    { key:'timeline',  label:'Timeline',              body:ddPlaceholder('Milestones across NVIDIA’s history.', ['Product generations (Fermi → Blackwell → Rubin)','Acquisitions, launches &amp; inflection points','Key financial milestones']) },
+  ]},
+  { key:'valuation', label:'Valuation', tabs:[
+    { key:'multiples',    label:'Multiples',          body:valuationBody, init:initValuation },
+    { key:'sensitivity',  label:'Sensitivity',        body:ddPlaceholder('How value flexes with the key drivers.', ['Implied price across revenue growth × margin','Multiple × EPS scenario grid','Bull / base / bear framing']) },
+    { key:'competitors',  label:'Competitors',        body:ddPlaceholder('Relative valuation vs peers.', ['Multiples / growth / margins vs AMD, AVGO &amp; peers','Where NVDA sits on the growth-vs-multiple map','A version lives in Overview → Competitors box']) },
+    { key:'pricetargets', label:'Price Targets',      body:consensusBody, init:initConsensus },
+    { key:'capital',      label:'Capital Allocation', body:ddPlaceholder('What NVIDIA does with the cash it generates.', ['Buybacks &amp; dividends (shareholder-return yield)','R&amp;D &amp; strategic investments','Cash / net-cash position over time']) },
+    { key:'balancesheet', label:'Balance Sheet',      body:ddPlaceholder('Financial position feeding the EV → equity bridge.', ['Cash, investments &amp; debt','Net cash and its per-share value','Working capital &amp; inventory trends']) },
+  ]},
+  { key:'management', label:'Management', tabs:[
+    { key:'executives', label:'Executives',           body:managementBody, init:initManagement },
+    { key:'ownership',  label:'Ownership',            body:ddPlaceholder('Who owns NVIDIA.', ['Insider vs institutional ownership','Jensen Huang &amp; insider holdings','Ownership changes over time']) },
+    { key:'board',      label:'Board',                body:ddPlaceholder('The board that oversees management.', ['Board composition &amp; independence','Relevant experience &amp; tenure','Key committees']) },
+    { key:'governance', label:'Corporate Governance', body:ddPlaceholder('Governance quality &amp; alignment signals.', ['Stock-based compensation &amp; dilution','Independence &amp; board alignment','Insider track record &amp; incentive design']) },
+  ]},
 ];
+
+// Flat lookups derived from DEEP_GROUPS.
+var DD_INIT = {};       // content key → init fn (absent for placeholder tabs)
+DEEP_GROUPS.forEach(function(g){ g.tabs.forEach(function(t){ if(t.init) DD_INIT[t.key]=t.init; }); });
 
 function deepDiveHtml(){
   var h = '<div class="ov ov-nvda ov-nvda-dd" data-brand="NVDA">';
-  h += '<div class="ovt-tabs">'+DEEP_TABS.map(function(t,i){
-    return '<button type="button" class="ovt-tab'+(i===0?' active':'')+'" data-ovt="'+t.key+'">'+esc(t.label)+'</button>';
+  // Level 1 — group bar (underline style).
+  h += '<div class="ovt-tabs">'+DEEP_GROUPS.map(function(g,i){
+    return '<button type="button" class="ovt-tab'+(i===0?' active':'')+'" data-ovt="'+g.key+'">'+esc(g.label)+'</button>';
   }).join('')+'</div>';
-  h += DEEP_TABS.map(function(t,i){
-    return '<div class="ovt-pane" data-ovt="'+t.key+'"'+(i===0?'':' hidden')+'>'+t.body()+'</div>';
+  // One group pane each, holding a level-2 pill bar + its content subpanes.
+  h += DEEP_GROUPS.map(function(g,gi){
+    var sub = '<div class="ovt-subtabs">'+g.tabs.map(function(t,ti){
+      return '<button type="button" class="ovt-subtab'+(ti===0?' active':'')+'" data-ovst="'+t.key+'">'+esc(t.label)+'</button>';
+    }).join('')+'</div>';
+    var panes = g.tabs.map(function(t,ti){
+      return '<div class="ovt-subpane" data-ovst="'+t.key+'"'+(ti===0?'':' hidden')+'>'+t.body()+'</div>';
+    }).join('');
+    return '<div class="ovt-pane" data-ovt="'+g.key+'"'+(gi===0?'':' hidden')+'>'+sub+panes+'</div>';
   }).join('');
   h += '</div>';
   return h;
 }
 
-function showOvt(root, key){
-  root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt') === key); });
-  root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt') !== key); });
-  if (key !== 'technology') stopTech();
-  if (key === 'industry') requestAnimationFrame(function(){ semiIndustry.init(); });
-  if (key === 'segments') requestAnimationFrame(function(){ buildSegChart(); });
-  if (key === 'technology') initTech();
-  if (key === 'management') requestAnimationFrame(function(){ initManagement(); });
-  if (key === 'consensus') requestAnimationFrame(function(){ initConsensus(); });
-  if (key === 'valuation') requestAnimationFrame(function(){ initValuation(); });
+// Build (or rebuild) content tab `ckey` now that its pane has layout.
+function ddBuild(ckey){
+  if (ckey !== 'products') stopTech();
+  var fn = DD_INIT[ckey];
+  if (fn) requestAnimationFrame(function(){ fn(); });
 }
 
-// Idempotent: called every time the Deep Dive tab becomes visible. Wires the sub-tab
-// bar + segment toggles, then (re)builds whichever sub-tab is currently active now
-// that the pane has layout (Chart.js needs a non-null offsetParent).
+// Show content tab `ckey` inside its group pane (level-2 switch).
+function ddShowSub(root, gkey, ckey){
+  var groupPane = root.querySelector('.ovt-pane[data-ovt="'+gkey+'"]');
+  if (!groupPane) return;
+  groupPane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovst')===ckey); });
+  groupPane.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovst')!==ckey); });
+  ddBuild(ckey);
+}
+
+// Show group `gkey` (level-1 switch), then build its active content tab.
+function ddShowGroup(root, gkey){
+  root.querySelectorAll('.ovt-tabs > .ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt')===gkey); });
+  root.querySelectorAll('.ovt-pane[data-ovt]').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt')!==gkey); });
+  var groupPane = root.querySelector('.ovt-pane[data-ovt="'+gkey+'"]');
+  if (!groupPane) return;
+  var activeSub = groupPane.querySelector('.ovt-subtab.active') || groupPane.querySelector('.ovt-subtab');
+  if (activeSub) ddShowSub(root, gkey, activeSub.getAttribute('data-ovst'));
+}
+
+// Idempotent: called every time the Deep Dive tab becomes visible. Wires both tab
+// levels + the segment toggles, then (re)builds the active content tab now that the
+// pane has layout (Chart.js needs a non-null offsetParent).
 function deepDiveInit(){
   var root = document.querySelector('.ov-nvda-dd');
   if (!root) return;
-  root.querySelectorAll('.ovt-tab').forEach(function(btn){
-    btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };
+  // Level 1 — group switches.
+  root.querySelectorAll('.ovt-tabs > .ovt-tab').forEach(function(btn){
+    btn.onclick = function(){ ddShowGroup(root, btn.getAttribute('data-ovt')); };
+  });
+  // Level 2 — content switches, scoped to their own group pane.
+  root.querySelectorAll('.ovt-pane[data-ovt]').forEach(function(groupPane){
+    var gkey = groupPane.getAttribute('data-ovt');
+    groupPane.querySelectorAll('.ovt-subtab').forEach(function(btn){
+      btn.onclick = function(){ ddShowSub(root, gkey, btn.getAttribute('data-ovst')); };
+    });
   });
   // Segments tab: segment / view / forecast-source toggles on the revenue chart.
   // Each .nv-seg-toggle is its own group; active state and state var are scoped to the group.
@@ -2077,9 +2156,10 @@ function deepDiveInit(){
       };
     });
   });
-  var active = root.querySelector('.ovt-tab.active');
-  var key = active ? active.getAttribute('data-ovt') : 'segments';
-  requestAnimationFrame(function(){ showOvt(root, key); });
+  // Build the active group's active content tab.
+  var activeGroup = root.querySelector('.ovt-tabs > .ovt-tab.active');
+  var gkey = activeGroup ? activeGroup.getAttribute('data-ovt') : DEEP_GROUPS[0].key;
+  requestAnimationFrame(function(){ ddShowGroup(root, gkey); });
 }
 
 export var nvidiaOverview = {

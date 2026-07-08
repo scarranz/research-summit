@@ -9,6 +9,10 @@
 // All figures USD. Fiscal year ends the last Sunday of September (FY2025 = Sep 28, 2025).
 // Sources: FY2025 10-K, Q1–Q2 FY2026 results, June 2026 Investor Day.
 
+// Shared semiconductor supply-chain map (same module NVIDIA & Broadcom use for their
+// Industry Analysis tab). Pre-drilled to QCOM's place in the chain.
+import { semiIndustry } from './semi-industry.js';
+
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function bullets(arr){ return '<ul class="ov-bullets">'+arr.map(function(b){return '<li>'+b+'</li>';}).join('')+'</ul>'; }
 function fmtBig(v){ if(v==null) return '—'; if(v>=1e12) return '$'+(v/1e12).toFixed(2)+'T'; if(v>=1e9) return '$'+(v/1e9).toFixed(0)+'B'; return '$'+(v/1e6).toFixed(0)+'M'; }
@@ -1435,7 +1439,58 @@ function dcNewTechBody(){
     '<p class="nt-lead" style="margin:12px 0 0">Why it matters: Microsoft is already Qualcomm’s <b>Windows-on-Snapdragon</b> partner in PCs. Extending that to the data center gives Qualcomm a credible cloud reference customer in a market NVIDIA overwhelmingly controls — though, so far, Nadella’s endorsement was <b>high-level</b>, without disclosed volumes or a binding commitment.</p>'+
   '</div>';
 
-  h += '<div class="ovlr-money-note">Source: Qualcomm Investor Day, June 24 2026 (coverage: ServeTheHome, Futurum, CNBC). HBC efficiency figures are Qualcomm-stated; the Azure/HBC deployment is an endorsement with timing but no disclosed volume — treat as directional, not contracted revenue.</div>';
+  h += dcModularStack();
+
+  h += '<div class="ovlr-money-note">Source: Qualcomm Investor Day, June 24 2026 — Data Center (Tim Pialis) &amp; Modular sessions (coverage: ServeTheHome, Futurum, CNBC). HBC efficiency figures are Qualcomm-stated; the Azure/HBC deployment is an endorsement with timing but no disclosed volume — treat as directional, not contracted revenue. The "up to 50% faster" claim is attributed on the slide to Artificial Analysis.</div>';
+  return h;
+}
+
+// Data Center · New Tech — Modular vs NVIDIA software-stack comparison (Investor Day slide).
+// Layer-aligned: Cloud↔Dynamo · MAX↔Triton/TRT-LLM · Mojo↔CUDA · any-silicon↔NV GPU only.
+function dcModularStack(){
+  var modLayers = [
+    { t:'Cloud ☁', s:'deploy & orchestrate across a cluster' },
+    { t:'MAX 🧑‍🚀', s:'inference serving engine' },
+    { t:'Mojo 🔥', s:'open kernel language (the CUDA alternative)' },
+  ];
+  var nvLayers = [
+    { t:'Dynamo', s:'distributed inference orchestration' },
+    { t:'Triton / TRT-LLM', s:'inference server & optimized runtime' },
+    { t:'CUDA', s:'proprietary kernel layer — the moat' },
+  ];
+  var rows = [
+    { k:'Orchestration', v:'<b>Modular Cloud</b> vs <b>NVIDIA Dynamo</b> — spread a model across many chips / nodes and route requests.' },
+    { k:'Serving engine', v:'<b>MAX</b> vs <b>Triton / TRT-LLM</b> — the server + optimized runtime that actually executes the model for inference.' },
+    { k:'Kernel layer', v:'<b>Mojo</b> vs <b>CUDA</b> — the low-level language that talks to the silicon. CUDA only targets NVIDIA GPUs and is NVIDIA’s real moat; <b>Mojo is open and portable</b>, the crux of the whole thesis.' },
+    { k:'Hardware', v:'The Modular stack runs on <b>CPU, GPU, NPU and custom ASIC</b> — including Qualcomm’s own accelerators and third-party silicon. NVIDIA’s stack runs on <b>NVIDIA GPUs only</b>.' },
+  ];
+  var h = '<div class="nt-block">'+
+    '<div class="nt-head"><span class="nt-ic">🧱</span>'+
+      '<span class="nt-title">Modular vs NVIDIA — the open software stack</span>'+
+      '<span class="nt-tag">Breaking the CUDA moat</span></div>'+
+    '<p class="nt-lead">NVIDIA’s durable advantage isn’t only its GPUs — it’s <b>CUDA</b>, the software layer developers are locked into. Qualcomm’s <b>$3.9B Modular acquisition</b> buys the counter: a full inference stack that mirrors NVIDIA’s layer-for-layer but is <b>open and hardware-agnostic</b>, running on any accelerator instead of only NVIDIA GPUs. On the Investor Day, Qualcomm showed the two stacks side by side and claimed <b>up to 50% faster AI inference on third-party hardware</b>.</p>';
+  // The two stacks, replicating the Investor-Day slide.
+  h += '<div class="mx-cmp">'+
+    '<div class="mx-col mod">'+
+      '<div class="mx-col-h"><span class="mx-dot"></span>Modular</div>'+
+      '<div class="mx-stack mod">'+modLayers.map(function(l){ return '<div class="mx-layer">'+l.t+'<small>'+esc(l.s)+'</small></div>'; }).join('')+'</div>'+
+      '<div class="mx-arrows">▽ ▽ ▽ ▽</div>'+
+      '<div class="mx-hw"><span class="mx-hw-box">CPU</span><span class="mx-hw-box">GPU</span><span class="mx-hw-box">NPU</span><span class="mx-hw-box">custom ASIC</span></div>'+
+      '<div class="mx-cap">runs on any silicon</div>'+
+    '</div>'+
+    '<div class="mx-col nv">'+
+      '<div class="mx-col-h"><span class="mx-dot"></span>NVIDIA</div>'+
+      '<div class="mx-stack nv">'+nvLayers.map(function(l){ return '<div class="mx-layer">'+l.t+'<small>'+esc(l.s)+'</small></div>'; }).join('')+'</div>'+
+      '<div class="mx-arrows">▽</div>'+
+      '<div class="mx-hw"><span class="mx-hw-box wide">NV GPU</span></div>'+
+      '<div class="mx-cap">NVIDIA GPUs only</div>'+
+    '</div>'+
+  '</div>';
+  // Layer-by-layer explanation.
+  h += '<div class="mx-map">'+rows.map(function(r){
+    return '<div class="mx-row"><div class="mx-row-k">'+esc(r.k)+'</div><div class="mx-row-v">'+r.v+'</div></div>';
+  }).join('')+'</div>';
+  h += '</div>';   // close .nt-block
   return h;
 }
 
@@ -1605,6 +1660,53 @@ function qtlBody(){
   '<div class="hs-pane" data-hs="money" hidden>'+qtlMoneyBody()+'</div>'+
   '<div class="hs-pane" data-hs="numbers" hidden>'+numbersBody(QTL_NUMSEG)+'</div>';
 }
+// ═══════════════════════════════════════════════════════════════════════════
+// Investor Day 2026 — slides from the CFO (Akash Palkhiwala) Business Update deck.
+// Images live in img/qcom/investor-day/ (rendered from the source PDF). Sub-tab
+// "Targets 2029". Click a slide to open it full-screen (lightbox).
+// ═══════════════════════════════════════════════════════════════════════════
+var ID_DIR = 'img/qcom/investor-day/';
+var ID_TARGET_SLIDES = [
+  { img:'id-transformation-journey.png', title:'Qualcomm transformation journey',
+    note:'Connectivity → processors → all edge devices → leader in edge & cloud (2026+), positioned for the agentic-AI inflection.' },
+  { img:'id-fy29-revenue-targets.png', title:'Updated FY29 revenue targets',
+    note:'Non-handset target raised ~2× to $40B: Automotive $10B, IoT $14B+, Data Center $15B+ (~40% FY25–FY29 CAGR).' },
+  { img:'id-iot-revenue-growth.png', title:'IoT revenue growth',
+    note:'IoT $7B (FY25) → $14B+ (FY29), ~20% CAGR — Personal AI & Compute ($6B) + Industrial, Networking & Robotics ($8B).' },
+  { img:'id-fiscal-2029-model.png', title:'Fiscal 2029 financial model',
+    note:'$40B non-handsets, Android handsets ~5% CAGR, licensing scales with 4G/5G units; QCT 30% / QTL 70% operating margin.' },
+  { img:'id-semiconductor-diversification.png', title:'Accelerating semiconductor diversification',
+    note:'Handsets fall to ~one third of QCT revenue by FY29 as Automotive & IoT and Data Center scale.' },
+];
+function idSlideCard(s, i){
+  return '<figure class="id-slide">'+
+    '<button type="button" class="id-slide-btn" data-idimg="'+esc(ID_DIR+s.img)+'" aria-label="Enlarge: '+esc(s.title)+'">'+
+      '<img src="'+esc(ID_DIR+s.img)+'" alt="'+esc(s.title)+'" loading="lazy">'+
+    '</button>'+
+    '<figcaption><span class="id-cap-n">'+(i+1)+'</span>'+esc(s.title)+
+      '<span class="id-cap-note">'+esc(s.note)+'</span>'+
+      '<span class="id-zoom-hint">click to enlarge ⤢</span></figcaption>'+
+  '</figure>';
+}
+function idTargetsBody(){
+  return '<p class="ids-lead">Selected slides from the <b>Business Update</b> presented by CFO <b>Akash Palkhiwala</b> at Qualcomm’s Investor Day (June 24, 2026) — the FY2029 financial framework and the diversification story behind it. Click any slide to enlarge.</p>'+
+    ID_TARGET_SLIDES.map(idSlideCard).join('')+
+    '<div class="ovlr-money-note">Source: Qualcomm Investor Day 2026 — Business Update (Akash Palkhiwala, CFO), June 24, 2026. Slides reproduced from the official deck for internal research.</div>';
+}
+function investorDayBody(){
+  var h = '<div class="ovt-subtabs">'+
+    '<button type="button" class="ovt-subtab active" data-idst="targets">Targets 2029</button>'+
+  '</div>';
+  h += '<div class="ovt-subpane" data-idst="targets">'+idTargetsBody()+'</div>';
+  return h;
+}
+
+// Industry Analysis — the shared semiconductor supply-chain map, pre-drilled to QCOM.
+function industryBody(){
+  return '<div class="ov-sec-h" style="margin-bottom:10px">Semiconductor Supply-Chain Map</div>'+
+    semiIndustry.html({ highlight: 'QCOM', focus: true });
+}
+
 // Deep Dive body — QCT / QTL sub-tabs.
 function deepDiveBody(){
   var h = '<div class="ovt-subtabs">'+
@@ -1638,10 +1740,16 @@ function html(c){
   h += '<div class="ovt-tabs">'+
     '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
     '<button type="button" class="ovt-tab" data-ovt="deep">Deep Dive</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="investorday">Investor Day 2026</button>'+
+    '<button type="button" class="ovt-tab" data-ovt="industry">Industry Analysis</button>'+
   '</div>';
   h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody()+'</div>';
   h += '<div class="ovt-pane" data-ovt="deep" hidden>'+deepDiveBody()+'</div>';
+  h += '<div class="ovt-pane" data-ovt="investorday" hidden>'+investorDayBody()+'</div>';
+  h += '<div class="ovt-pane" data-ovt="industry" hidden>'+industryBody()+'</div>';
   h += '</div>';
+  // Slide lightbox (shared; appended to the overview root).
+  h += '<div class="id-lightbox" id="qcIdLightbox" hidden><button type="button" class="id-lightbox-x" id="qcIdLightboxX" aria-label="close">×</button><img id="qcIdLightboxImg" src="" alt="slide"></div>';
   return h;
 }
 
@@ -1649,12 +1757,14 @@ function html(c){
 function init(c){
   var pane = document.querySelector('.ov-qcom'); if (!pane) return;
 
-  // Top-level tabs (Overview | Deep Dive).
+  // Top-level tabs (Overview | Deep Dive | Investor Day 2026 | Industry Analysis).
   pane.querySelectorAll(':scope > .ovt-tabs > .ovt-tab').forEach(function(btn){
     btn.onclick = function(){
       var key = btn.getAttribute('data-ovt');
       pane.querySelectorAll(':scope > .ovt-tabs > .ovt-tab').forEach(function(b){ b.classList.toggle('active', b===btn); });
       pane.querySelectorAll(':scope > .ovt-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt') !== key); });
+      // The industry map needs a visible container to lay out — (re)build it on show.
+      if (key === 'industry') requestAnimationFrame(function(){ semiIndustry.init(); });
     };
   });
   // Deep Dive — QCT / QTL sub-tabs.
@@ -1781,6 +1891,26 @@ function init(c){
       b.classList.toggle('on'); buildNumbersChart(qseg);
     };
     wireNumSlider(qtl, qseg);
+  }
+
+  // Investor Day 2026 — sub-tab switching + slide lightbox.
+  var idPane = pane.querySelector('.ovt-pane[data-ovt="investorday"]');
+  if (idPane) idPane.querySelectorAll('.ovt-subtab').forEach(function(btn){
+    btn.onclick = function(){
+      var key = btn.getAttribute('data-idst');
+      idPane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b===btn); });
+      idPane.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden = (p.getAttribute('data-idst') !== key); });
+    };
+  });
+  // Slide lightbox (the overlay is a sibling of .ov-qcom, so query from document).
+  var lb = document.getElementById('qcIdLightbox'), lbImg = document.getElementById('qcIdLightboxImg');
+  if (lb && lbImg && idPane){
+    var closeLb = function(){ lb.hidden = true; lbImg.src = ''; };
+    idPane.querySelectorAll('.id-slide-btn').forEach(function(btn){
+      btn.onclick = function(){ lbImg.src = btn.getAttribute('data-idimg'); lb.hidden = false; };
+    });
+    lb.onclick = function(e){ if (e.target === lb || e.target.id === 'qcIdLightboxX' || e.target === lbImg) closeLb(); };
+    if (!lb._esc){ lb._esc = 1; document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !lb.hidden) closeLb(); }); }
   }
 
   // 2 — multiples: trailing/forward toggle + live price/EV fill.

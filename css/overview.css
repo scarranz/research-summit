@@ -2876,3 +2876,51 @@ img.org-photo { object-fit: cover; }
 .ov-qcom .nt-spec-v { font-size: 15px; font-weight: 800; color: var(--navy); letter-spacing: -.01em; }
 .ov-qcom .nt-spec-k { font-size: 10.5px; font-weight: 600; color: var(--mu); }
 @media (max-width: 520px) { .ov-qcom .nt-cmp { grid-template-columns: 1fr; } }
+
+/* ═══ Investor Day 2026 — CFO Business Update slides ════════════════════════ */
+.ov-qcom .ids-lead { font-size: 13.5px; color: var(--mu); line-height: 1.6; margin: 2px 0 18px; }
+.ov-qcom .ids-lead b { color: var(--navy); font-weight: 600; }
+.ov-qcom .id-slide { border: 1px solid var(--bdr); border-radius: 14px; overflow: hidden; background: var(--w); margin-bottom: 18px; box-shadow: 0 2px 14px rgba(16,24,40,.05); transition: box-shadow .15s, border-color .15s; }
+.ov-qcom .id-slide:hover { border-color: var(--brand); box-shadow: 0 6px 20px rgba(16,24,40,.12); }
+.ov-qcom .id-slide-btn { display: block; width: 100%; padding: 0; border: none; background: #fff; cursor: zoom-in; }
+.ov-qcom .id-slide-btn img { display: block; width: 100%; height: auto; }
+.ov-qcom .id-slide figcaption { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; padding: 11px 16px; font-size: 12.5px; font-weight: 700; color: var(--navy); border-top: 1px solid var(--bdr); background: var(--surface); }
+.ov-qcom .id-slide figcaption .id-cap-n { font-size: 10.5px; font-weight: 800; color: var(--brand); background: var(--brand-soft); border-radius: 20px; padding: 2px 9px; }
+.ov-qcom .id-slide figcaption .id-cap-note { font-weight: 400; color: var(--mu); font-size: 12px; }
+.ov-qcom .id-zoom-hint { font-size: 11px; color: var(--mu); font-weight: 400; margin-left: auto; }
+
+/* Lightbox overlay */
+.id-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(16,24,40,.86); display: flex; align-items: center; justify-content: center; padding: 24px; cursor: zoom-out; }
+.id-lightbox[hidden] { display: none; }
+.id-lightbox img { max-width: 96vw; max-height: 92vh; border-radius: 8px; box-shadow: 0 12px 48px rgba(0,0,0,.5); }
+.id-lightbox-x { position: absolute; top: 16px; right: 22px; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,.14); color: #fff; font-size: 22px; cursor: pointer; line-height: 1; }
+.id-lightbox-x:hover { background: rgba(255,255,255,.28); }
+
+/* Data Center · New Tech — Modular vs NVIDIA software-stack comparison */
+.ov-qcom .mx-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 2px 0 4px; }
+.ov-qcom .mx-badge { font-size: 12px; font-weight: 800; color: #fff; background: var(--brand); border-radius: 6px; padding: 3px 9px; }
+.ov-qcom .mx-cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 16px 0 6px; }
+.ov-qcom .mx-col-h { display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 15px; font-weight: 800; color: var(--navy); margin-bottom: 10px; }
+.ov-qcom .mx-col-h .mx-dot { width: 11px; height: 11px; border-radius: 50%; }
+.ov-qcom .mx-col.mod .mx-dot { background: #3253DC; }
+.ov-qcom .mx-col.nv .mx-dot { background: #76B900; }
+.ov-qcom .mx-stack { border-radius: 14px; overflow: hidden; }
+.ov-qcom .mx-stack.mod { background: linear-gradient(180deg,#3a5bdf,#2f47c9); box-shadow: 0 6px 18px rgba(50,83,220,.28); }
+.ov-qcom .mx-stack.nv { background: #141b26; border: 1px solid #2a3542; }
+.ov-qcom .mx-layer { text-align: center; padding: 14px 10px; color: #fff; font-weight: 700; font-size: 14.5px; border-bottom: 1px solid rgba(255,255,255,.14); }
+.ov-qcom .mx-layer:last-child { border-bottom: none; }
+.ov-qcom .mx-layer small { display: block; font-size: 10.5px; font-weight: 500; opacity: .72; margin-top: 2px; }
+.ov-qcom .mx-arrows { text-align: center; color: var(--mu); font-size: 15px; line-height: 1; margin: 7px 0 9px; }
+.ov-qcom .mx-hw { display: flex; gap: 7px; justify-content: center; flex-wrap: wrap; }
+.ov-qcom .mx-hw-box { font-size: 11.5px; font-weight: 800; padding: 9px 12px; border-radius: 9px; letter-spacing: .01em; }
+.ov-qcom .mx-col.mod .mx-hw-box { background: #eaeeff; color: #2f47c9; border: 1px solid #c7d2ff; }
+.ov-qcom .mx-col.nv .mx-hw-box { background: #1b2430; color: #9fb26a; border: 1px solid #2a3542; }
+.ov-qcom .mx-hw-box.wide { flex: 1; text-align: center; max-width: 320px; }
+.ov-qcom .mx-cap { font-size: 11px; color: var(--mu); text-align: center; margin-top: 8px; }
+.ov-qcom .mx-map { margin: 16px 0 2px; border: 1px solid var(--bdr); border-radius: 12px; overflow: hidden; }
+.ov-qcom .mx-row { display: grid; grid-template-columns: 132px 1fr; gap: 0; border-top: 1px solid var(--bdr); }
+.ov-qcom .mx-row:first-child { border-top: none; }
+.ov-qcom .mx-row-k { background: var(--surface); padding: 11px 14px; font-size: 11.5px; font-weight: 800; color: var(--navy); display: flex; align-items: center; }
+.ov-qcom .mx-row-v { padding: 11px 14px; font-size: 12.5px; color: var(--mu); line-height: 1.5; }
+.ov-qcom .mx-row-v b { color: var(--navy); font-weight: 600; }
+@media (max-width: 560px) { .ov-qcom .mx-cmp { grid-template-columns: 1fr; } .ov-qcom .mx-row { grid-template-columns: 1fr; } }

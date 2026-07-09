@@ -2924,3 +2924,31 @@ img.org-photo { object-fit: cover; }
 .ov-qcom .mx-row-v { padding: 11px 14px; font-size: 12.5px; color: var(--mu); line-height: 1.5; }
 .ov-qcom .mx-row-v b { color: var(--navy); font-weight: 600; }
 @media (max-width: 560px) { .ov-qcom .mx-cmp { grid-template-columns: 1fr; } .ov-qcom .mx-row { grid-template-columns: 1fr; } }
+
+/* ─── Financials sub-tab — Bloomberg model table (income statement + segments) ─── */
+.ov-qcom .qfin-h { margin: 20px 0 8px; }
+.ov-qcom .qfin-h span { font-weight: 600; color: var(--mu); font-size: 12px; }
+.ov-qcom .qfin-legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 2px 0 8px; }
+.ov-qcom .qfin-lg { display: inline-flex; align-items: center; gap: 6px; font: 600 11px Inter, sans-serif; color: var(--mu); }
+.ov-qcom .qfin-lg::before { content: ''; width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+.ov-qcom .qfin-lg-a::before { background: #fff; border: 1px solid var(--bdr); }
+.ov-qcom .qfin-lg-e::before { background: var(--brand-soft, #EEF2FE); border: 1px solid var(--brand, #3253DC); }
+.ov-qcom .qfin-scroll { overflow-x: auto; border: 1px solid var(--bdr); border-radius: 12px; -webkit-overflow-scrolling: touch; }
+.ov-qcom .qfin-tbl { border-collapse: collapse; width: 100%; min-width: 900px; font: 500 12px Inter, sans-serif; }
+.ov-qcom .qfin-tbl th, .ov-qcom .qfin-tbl td { padding: 7px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--bdr); }
+.ov-qcom .qfin-tbl tbody tr:last-child td { border-bottom: none; }
+.ov-qcom .qfin-tbl thead th { position: sticky; top: 0; background: var(--surface); font: 700 11px Inter, sans-serif; color: var(--mu); text-transform: uppercase; letter-spacing: .03em; border-bottom: 2px solid var(--bdr); }
+.ov-qcom .qfin-cagr-h span { display: block; font-weight: 600; opacity: .75; letter-spacing: 0; }
+.ov-qcom .qfin-lbl-h, .ov-qcom .qfin-lbl { text-align: left; position: sticky; left: 0; z-index: 2; background: #fff; }
+.ov-qcom .qfin-tbl thead .qfin-lbl-h { z-index: 3; background: var(--surface); }
+.ov-qcom .qfin-lbl { font-weight: 700; color: var(--navy); }
+.ov-qcom .qfin-est { background: rgba(50, 83, 220, .05); }
+.ov-qcom .qfin-div { border-left: 2px solid var(--brand, #3253DC); }
+.ov-qcom .qfin-r.qfin-main td { color: var(--navy); font-weight: 600; }
+.ov-qcom .qfin-r.qfin-sub td, .ov-qcom .qfin-r.qfin-segsub td { color: var(--mu); font-weight: 500; }
+.ov-qcom .qfin-r.qfin-sub .qfin-lbl, .ov-qcom .qfin-r.qfin-segsub .qfin-lbl { font-weight: 500; color: var(--mu); padding-left: 24px; }
+.ov-qcom .qfin-cagr-c { font-weight: 700; color: var(--brand, #3253DC); background: rgba(50, 83, 220, .05); border-left: 2px solid var(--bdr); }
+.ov-qcom .qfin-g { font-weight: 700; font-size: 11.5px; }
+.ov-qcom .qfin-g.up { color: #1E9E62; }
+.ov-qcom .qfin-g.down { color: #C0392B; }
+.ov-qcom .qfin-na { color: #B4BBC4; }

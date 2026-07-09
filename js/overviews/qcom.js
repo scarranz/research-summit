@@ -1662,8 +1662,8 @@ function qtlBody(){
 }
 // ═══════════════════════════════════════════════════════════════════════════
 // Investor Day 2026 — slides from the CFO (Akash Palkhiwala) Business Update deck.
-// Images live in img/qcom/investor-day/ (rendered from the source PDF). Sub-tab
-// "Targets 2029". Click a slide to open it full-screen (lightbox).
+// Images live in img/qcom/investor-day/ (rendered from the source PDF). Rendered as
+// a sub-tab inside Deep Dive. Click a slide to open it full-screen (lightbox).
 // ═══════════════════════════════════════════════════════════════════════════
 var ID_DIR = 'img/qcom/investor-day/';
 var ID_TARGET_SLIDES = [
@@ -1693,28 +1693,110 @@ function idTargetsBody(){
     ID_TARGET_SLIDES.map(idSlideCard).join('')+
     '<div class="ovlr-money-note">Source: Qualcomm Investor Day 2026 — Business Update (Akash Palkhiwala, CFO), June 24, 2026. Slides reproduced from the official deck for internal research.</div>';
 }
-function investorDayBody(){
-  var h = '<div class="ovt-subtabs">'+
-    '<button type="button" class="ovt-subtab active" data-idst="targets">Targets 2029</button>'+
-  '</div>';
-  h += '<div class="ovt-subpane" data-idst="targets">'+idTargetsBody()+'</div>';
-  return h;
-}
-
 // Industry Analysis — the shared semiconductor supply-chain map, pre-drilled to QCOM.
 function industryBody(){
   return '<div class="ov-sec-h" style="margin-bottom:10px">Semiconductor Supply-Chain Map</div>'+
     semiIndustry.html({ highlight: 'QCOM', focus: true });
 }
 
-// Deep Dive body — QCT / QTL sub-tabs.
+// ═══════════════════════════════════════════════════════════════════════════
+// Financials — consolidated model from Bloomberg (FA — Company Financials, estimate
+// source BST). FY2020–FY2025 reported (non-GAAP / adjusted); FY2026–FY2029 Bloomberg
+// consensus estimates. Rendered as a static sub-tab inside Deep Dive: income statement
+// + segment revenue, with margins and growth. Automotive FY2029 is dropped (corrupt
+// source cell — Investor Day FY29 Auto target is ~$10B). All values US$ in millions
+// except EPS ($). No interactivity, so no init() wiring is needed.
+// ═══════════════════════════════════════════════════════════════════════════
+var FIN_YEARS = ['FY20','FY21','FY22','FY23','FY24','FY25','FY26E','FY27E','FY28E','FY29E'];
+var FIN_EST0 = 6; // index of the first estimate column (FY26E)
+var FIN_PL = [
+  { k:'Revenue',            t:'money', kind:'main', v:[21654,33467,44169,35832,38944,44141,42554,44033,49899,60780] },
+  { k:'Revenue growth',     t:'yoy',   kind:'sub',  from:'Revenue' },
+  { k:'Gross profit',       t:'money', kind:'main', v:[12748,19487,25805,20183,22114,24670,23478,23266,26699,32377] },
+  { k:'Gross margin',       t:'pct',   kind:'sub',  v:[58.9,58.2,58.4,56.3,56.8,55.9,55.0,55.0,55.0,53.8] },
+  { k:'Operating income',   t:'money', kind:'main', v:[5932,11772,17067,11460,13320,15453,13388,12948,15110,20619] },
+  { k:'Operating margin',   t:'pct',   kind:'sub',  v:[25.2,35.1,38.6,32.0,34.2,34.9,31.5,30.4,31.5,32.9] },
+  { k:'EBITDA',             t:'money', kind:'main', v:[7325,13354,18829,13269,15026,17055,14390,14144,16199,18564] },
+  { k:'EBITDA margin',      t:'pct',   kind:'sub',  from:'ebitdaMgn' },
+  { k:'Net income',         t:'money', kind:'main', v:[4816,9811,14254,9486,11545,13298,11522,11406,13368,17704] },
+  { k:'Net margin',         t:'pct',   kind:'sub',  v:[20.5,29.2,32.3,26.5,29.6,30.0,27.1,26.0,26.8,27.5] },
+  { k:'Diluted EPS (adj.)', t:'eps',   kind:'main', v:[4.19,8.54,12.53,8.43,10.22,12.03,10.74,10.92,13.06,17.48] },
+  { k:'EPS growth',         t:'yoy',   kind:'sub',  from:'Diluted EPS (adj.)' },
+  { k:'Free cash flow',     t:'money', kind:'main', v:[4407,8648,6834,9849,11161,12820,12075,10468,12646,17555] },
+  { k:'FCF margin',         t:'pct',   kind:'sub',  v:[18.7,25.8,15.5,27.5,28.7,29.0,37.7,34.2,31.7,29.2] },
+];
+var FIN_SEG = [
+  { k:'QCT — chip revenue',      t:'money', kind:'main',   v:[16493,27019,37677,30382,33196,38367,36571,36974,39706,48905] },
+  { k:'Handsets',                t:'money', kind:'segsub', v:[10461,16830,25027,22570,24863,27793,23343,20495,20280,21433] },
+  { k:'IoT',                     t:'money', kind:'segsub', v:[3026,5056,6948,5940,5423,6617,7065,8510,10080,13305] },
+  { k:'Automotive',              t:'money', kind:'segsub', v:[644,975,1372,1872,2910,3957,5308,7067,8514,null] },
+  { k:'QTL — licensing revenue', t:'money', kind:'main',   v:[5028,6320,6358,5306,5572,5582,5513,5271,5417,5833] },
+];
+function finByKey(k){ return FIN_PL.filter(function(r){ return r.k===k; })[0] || FIN_SEG.filter(function(r){ return r.k===k; })[0]; }
+function finRowValues(row){
+  if (row.v) return row.v;
+  if (row.from === 'ebitdaMgn'){ var eb = finByKey('EBITDA').v, rv = finByKey('Revenue').v;
+    return eb.map(function(x,j){ return rv[j] ? x/rv[j]*100 : null; }); }
+  var src = finByKey(row.from).v;   // year-over-year growth
+  return src.map(function(x,j){ return (j===0 || src[j-1]==null || x==null) ? null : (x/src[j-1]-1)*100; });
+}
+function finCagr(v){ var a=v[5], b=v[9]; if (a==null || b==null) return null; return (Math.pow(b/a, 1/4)-1)*100; }
+function finFmt(val, t){
+  if (val == null || isNaN(val)) return '<span class="qfin-na">—</span>';
+  if (t === 'eps') return '$'+val.toFixed(2);
+  if (t === 'pct') return val.toFixed(1)+'%';
+  if (t === 'yoy'){ var up = val >= 0; return '<span class="qfin-g '+(up?'up':'down')+'">'+(up?'▲':'▼')+' '+Math.abs(val).toFixed(0)+'%</span>'; }
+  return Math.round(val).toLocaleString('en-US');   // money ($M)
+}
+function finTable(rows, unit){
+  var head = '<th class="qfin-lbl-h">'+esc(unit)+'</th>';
+  FIN_YEARS.forEach(function(y,i){
+    head += '<th class="qfin-yh'+(i>=FIN_EST0?' qfin-est':'')+(i===FIN_EST0?' qfin-div':'')+'">'+esc(y)+'</th>';
+  });
+  head += '<th class="qfin-cagr-h">CAGR<br><span>’25–’29</span></th>';
+  var body = rows.map(function(row){
+    var vals = finRowValues(row);
+    var isCagr = (row.t==='money' || row.t==='eps');
+    var cagr = isCagr ? finCagr(row.v || vals) : null;
+    var cells = vals.map(function(x,i){
+      return '<td class="qfin-c'+(i>=FIN_EST0?' qfin-est':'')+(i===FIN_EST0?' qfin-div':'')+'">'+finFmt(x, row.t)+'</td>';
+    }).join('');
+    var cagrCell = '<td class="qfin-cagr-c">'+(cagr!=null ? '<b>'+(cagr>=0?'+':'')+cagr.toFixed(1)+'%</b>' : '')+'</td>';
+    return '<tr class="qfin-r qfin-'+row.kind+'"><td class="qfin-lbl">'+esc(row.k)+'</td>'+cells+cagrCell+'</tr>';
+  }).join('');
+  return '<div class="qfin-scroll"><table class="qfin-tbl"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>';
+}
+function financialsBody(){
+  var chip = function(label, v){ return v==null ? '' :
+    '<span class="num-cagr-item"><b>'+(v>=0?'+':'')+v.toFixed(1)+'%</b> '+esc(label)+'</span>'; };
+  var chips = '<div class="num-cagr">'+
+    chip('Revenue CAGR ’25–’29', finCagr(finByKey('Revenue').v))+
+    chip('Adj. EPS CAGR', finCagr(finByKey('Diluted EPS (adj.)').v))+
+    chip('FCF CAGR', finCagr(finByKey('Free cash flow').v))+
+    chip('Op. income CAGR', finCagr(finByKey('Operating income').v))+
+  '</div>';
+  return '<p class="ovlr-money-p">Qualcomm’s consolidated model on a <b>non-GAAP (adjusted)</b> basis. <b>FY2020–FY2025</b> are reported; <b>FY2026–FY2029</b> are <b>Bloomberg consensus estimates</b>. Margins and growth are computed from the same model.</p>'+
+    chips+
+    '<div class="qfin-legend"><span class="qfin-lg qfin-lg-a">FY20–FY25 · reported</span><span class="qfin-lg qfin-lg-e">FY26–FY29 · estimates</span></div>'+
+    '<div class="ov-sec-h qfin-h">Income statement <span>· non-GAAP</span></div>'+
+    finTable(FIN_PL, 'US$ in millions')+
+    '<div class="ov-sec-h qfin-h">Revenue by segment</div>'+
+    finTable(FIN_SEG, 'US$ in millions')+
+    '<div class="ovlr-money-note">Source: <b>Bloomberg</b> (FA — Company Financials, estimate source BST), pulled Jul 2026. Non-GAAP (adjusted) figures exclude stock-based compensation and other items. <b>FY2026–FY2029 are consensus estimates</b>, not company guidance. <b>Automotive FY2029</b> is omitted (corrupt source cell); Qualcomm’s Investor Day FY2029 Automotive target is ~$10B. CAGR is FY2025 → FY2029 (4-year).</div>';
+}
+
+// Deep Dive body — QCT / QTL / Financials / Investor Day 2026 sub-tabs.
 function deepDiveBody(){
   var h = '<div class="ovt-subtabs">'+
     '<button type="button" class="ovt-subtab active" data-ovst="qct">QCT — Chips</button>'+
     '<button type="button" class="ovt-subtab" data-ovst="qtl">QTL — Licensing</button>'+
+    '<button type="button" class="ovt-subtab" data-ovst="financials">Financials</button>'+
+    '<button type="button" class="ovt-subtab" data-ovst="investorday">Investor Day 2026</button>'+
   '</div>';
   h += '<div class="ovt-subpane" data-ovst="qct">'+qctBody()+'</div>';
   h += '<div class="ovt-subpane" data-ovst="qtl" hidden>'+qtlBody()+'</div>';
+  h += '<div class="ovt-subpane" data-ovst="financials" hidden>'+financialsBody()+'</div>';
+  h += '<div class="ovt-subpane" data-ovst="investorday" hidden>'+idTargetsBody()+'</div>';
   return h;
 }
 
@@ -1740,12 +1822,10 @@ function html(c){
   h += '<div class="ovt-tabs">'+
     '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
     '<button type="button" class="ovt-tab" data-ovt="deep">Deep Dive</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="investorday">Investor Day 2026</button>'+
     '<button type="button" class="ovt-tab" data-ovt="industry">Industry Analysis</button>'+
   '</div>';
   h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody()+'</div>';
   h += '<div class="ovt-pane" data-ovt="deep" hidden>'+deepDiveBody()+'</div>';
-  h += '<div class="ovt-pane" data-ovt="investorday" hidden>'+investorDayBody()+'</div>';
   h += '<div class="ovt-pane" data-ovt="industry" hidden>'+industryBody()+'</div>';
   h += '</div>';
   // Slide lightbox (shared; appended to the overview root).
@@ -1893,15 +1973,8 @@ function init(c){
     wireNumSlider(qtl, qseg);
   }
 
-  // Investor Day 2026 — sub-tab switching + slide lightbox.
-  var idPane = pane.querySelector('.ovt-pane[data-ovt="investorday"]');
-  if (idPane) idPane.querySelectorAll('.ovt-subtab').forEach(function(btn){
-    btn.onclick = function(){
-      var key = btn.getAttribute('data-idst');
-      idPane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b===btn); });
-      idPane.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden = (p.getAttribute('data-idst') !== key); });
-    };
-  });
+  // Investor Day 2026 — slide lightbox (now a sub-tab inside Deep Dive).
+  var idPane = pane.querySelector('.ovt-subpane[data-ovst="investorday"]');
   // Slide lightbox (the overlay is a sibling of .ov-qcom, so query from document).
   var lb = document.getElementById('qcIdLightbox'), lbImg = document.getElementById('qcIdLightboxImg');
   if (lb && lbImg && idPane){

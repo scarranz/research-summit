@@ -1619,8 +1619,8 @@ function cartIndustryBody(c){
   return sec('Competitive Landscape',
     cartPeerMap()+
     '<div class="ov-diagram-cap" style="margin:16px 0 12px">Its three fronts: marketplace delivery (DoorDash, Uber), full-vertical grocery (Amazon, Walmart), and enterprise tech. <b>Tap any competitor</b> for its edge and gap vs Instacart.</div>'+
-    peersHtml())+
-    '<div class="ov-foot">'+esc(SOURCES)+'</div>';
+    peersHtml());
+  // No per-pane SOURCES footer — the Deep Dive renders one global ov-foot (SOURCES) at its end.
 }
 // Valuation ▸ Peers — multiples for the LISTED comparables only (Instacart, DoorDash, Uber). The
 // qualitative competitive map (positioning + each rival's edge & gap) lives in Industry Analysis.
@@ -1733,8 +1733,8 @@ function cartGuidanceBody(c){
 function cartStrategyBody(c){
   return sec('Strategy — the flywheel',
     '<div class="ov-diagram-cap" style="margin:0 0 12px">Not a list of projects — a <b>self-reinforcing loop</b>: advertising profit funds the pivot from delivery app to grocery-industry tech platform, and each stage feeds the next. <b>Tap any stage.</b></div>'+
-    stratFlywheel())+
-    '<div class="ov-foot">'+esc(SOURCES)+'</div>';
+    stratFlywheel());
+  // No per-pane SOURCES footer — the Deep Dive renders one global ov-foot (SOURCES) at its end.
 }
 // Valuation ▸ Capital Allocation — DATA-BACKED from the Summit model snapshot (FY actuals, $M):
 // FCF, SBC and shares outstanding. Buyback $ not carried in the model → flagged to-confirm.
@@ -1871,26 +1871,41 @@ var CART_TRACK=[
     co:['<b>Chief Business Officer 2019–2025</b> — ran retailer partnerships, expansion, M&A, R&D','Built the <b>~$1B+ advertising / retail-media</b> engine — the company’s profit driver','Promoted from within as the continuity CEO'],
     ext:['~11 yrs at <b>Apple Canada</b> — consumer retail + carrier channels (iPhone strategy)','Started at <b>Procter & Gamble</b> on Canadian grocery-retail accounts','Board seats: Spins, the Ad Council'],
     note:'Value creator — built the profit engine. Only caveat: under a year as CEO, unproven at the helm.'},
-  {id:'reuter', n:'Emily Reuter', r:'CFO', t:'Joined Jan 2024 · CFO since May 2024', rate:'green',
+  {id:'reuter', n:'Emily Reuter', r:'CFO & Treasurer', t:'Joined Jan 2024 · CFO since May 2024', rate:'green',
     one:'Uber-IPO finance pedigree; steering Instacart through its first profitable, capital-returning years.',
     co:['VP Finance → <b>CFO in ~4 months</b> (May 2024)','Steering the first GAAP-profitable, buyback-returning years','External validation: joined <b>Pinterest’s board</b> (2025)'],
     ext:['~10 yrs at <b>Uber</b> — ended as Head of Corporate Finance','<b>CFO of Uber Mobility</b> (its most profitable segment); helped lead the Uber IPO','Earlier: Asurion, 3i, <b>Bain & Company</b>'],
     note:'Strong capital-markets + profitability pedigree; fast promotion; externally validated.'},
+  {id:'fong', n:'Morgan Fong', r:'Chief Legal & Global Affairs Officer', t:'General Counsel & Secretary', rate:'amber',
+    one:'Competent GC through the IPO and gig-economy/regulatory exposure; limited standalone value-creation signal.',
+    co:['Guided the company through its <b>IPO</b>','Manages <b>gig-economy / antitrust</b> exposure (incl. Mar-2026 House Oversight inquiry)','Leads legal, governance & policy'],
+    ext:['Counsel at <b>Trulia</b>; private practice at <b>Wilson Sonsini</b> and <b>Fenwick & West</b>'],
+    note:'No red flags, competent under heavy regulatory load — but a GC carries limited value-creation signal.'},
   {id:'kundu', n:'Anirban Kundu', r:'CTO', t:'CTO since Oct 2024', rate:'amber',
     one:'Deep delivery/marketplace engineering resume, but short tenure and a mixed prior outcome (Evernote).',
     co:['Leads engineering for <b>AI personalization, Caper smart carts, fulfillment & ads infra</b>'],
     ext:['VP / Head of Engineering, <b>Uber Delivery</b> (Uber Eats, ads)','Led product & engineering at <b>Postmates</b>','<b>CTO of Evernote</b> — a mixed outcome','Earlier: GoDaddy, Shazam, Yahoo'],
     note:'Relevant resume, but short tenure and Evernote is a mixed signal — leaning green, unproven at Instacart scale.'},
+  {id:'mcintosh', n:'David McIntosh', r:'Chief Connected Stores Officer', t:'Joined 2021 (via the Caper AI acquisition)', rate:'green',
+    one:'Serial founder now running the in-store enterprise bet — the tech Instacart acquired him to build.',
+    co:['Founder/CEO of <b>Caper AI</b>, acquired by Instacart in 2021 — now runs it from inside','Leads <b>Connected Stores</b> (Caper Carts + in-store tech) — the core of the enterprise push','The person who built the product is the one scaling it — rare founder-operator alignment'],
+    ext:['Co-founded <b>Caper AI</b> — AI-powered smart shopping carts','Earlier co-founded <b>Tenor</b>, the GIF search engine, <b>acquired by Google (2018)</b>','Two startup exits before running Instacart’s in-store bet'],
+    note:'Serial founder with two exits, running the strategic in-store bet he built — green; caveat: Connected Stores monetization is still early.'},
   {id:'hamburger', n:'Ryan Hamburger', r:'Chief Commercial Officer', t:'Joined 2015 · CCO since early 2026', rate:'green',
     one:'Decade-long insider who scaled the commercial org; newly elevated so CCO execution is early.',
     co:['Insider since <b>2015</b> — scaled BD, New Verticals, retail partnerships','Now owns marketplace + enterprise partnerships (inherited Rogers’ mandate)'],
     ext:['<b>Bain & Company</b> — retail & CPG consulting','Michigan Ross BBA + MBA'],
     note:'Long internal track record; green but early — newly elevated, execution as CCO unproven.'},
-  {id:'fong', n:'Morgan Fong', r:'Chief Legal & Global Affairs Officer', t:'General Counsel & Secretary', rate:'amber',
-    one:'Competent GC through the IPO and gig-economy/regulatory exposure; limited standalone value-creation signal.',
-    co:['Guided the company through its <b>IPO</b>','Manages <b>gig-economy / antitrust</b> exposure (incl. Mar-2026 House Oversight inquiry)','Leads legal, governance & policy'],
-    ext:['Senior tech / corporate legal roles before Instacart'],
-    note:'No red flags, competent under heavy regulatory load — but a GC carries limited value-creation signal.'},
+  {id:'miller', n:'Ali Miller', r:'GM of Advertising', t:'Joined 2021', rate:'green',
+    one:'Runs the advertising business — the ~$1B high-margin engine that drives Instacart’s profitability.',
+    co:['GM of the <b>~$1B+ advertising / retail-media</b> business — the profit engine','Scaled ad formats (sponsored products, displays) on Instacart’s owned demand','Ads ≈ 29% of revenue on ~3% of GTV — the margin story runs through her org'],
+    ext:['<b>10+ years at Google</b> — senior product leadership on <b>Google Ads and YouTube Ads</b>','Deep ad-products pedigree — exactly the discipline Instacart monetizes'],
+    note:'Runs the measurable profit engine with a strong ad-products pedigree — green, directly tied to the margin ramp.'},
+  {id:'jones', n:'Laura Jones', r:'Chief Marketing Officer', t:'CMO', rate:'amber',
+    one:'Blue-chip consumer-marketing pedigree (ex-Uber Rides CMO); brand value creation is real but diffuse to attribute.',
+    co:['Leads <b>consumer marketing & brand</b> across the marketplace','Externally validated — sits on <b>Match Group’s board</b>'],
+    ext:['<b>6 years at Uber</b> — Global Head of Marketing, Rides','Senior roles at <b>Google</b> and <b>Visa</b>','Stanford MBA'],
+    note:'Blue-chip marketing pedigree and externally validated — amber, because CMO value creation is harder to attribute than the ad or finance orgs.'},
   {id:'simo', n:'Fidji Simo', r:'former CEO (2021–2025) — left for OpenAI', t:'CEO Aug 2021 – Aug 2025 · now OpenAI', rate:'green',
     one:'Executed the turnaround + 2023 IPO and built the profitable ad business — then exited relatively early.',
     co:['CEO Aug 2021 – Aug 2025 — led the <b>turnaround and the Sep-2023 IPO</b>','Pivoted the story from delivery to <b>high-margin advertising + enterprise</b>','Drove the company to <b>GAAP profitability</b>'],
@@ -1923,8 +1938,10 @@ function cartTrackBody(c){
   h+='<div style="display:flex;gap:12px;flex-wrap:wrap;margin:0 0 10px;font-size:10.5px;color:var(--mu)">'+Object.keys(CART_TRACK_RATE).map(function(k){ var rt=CART_TRACK_RATE[k]; return '<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:3px;background:'+rt.c+'"></span>'+rt.l+'</span>'; }).join('')+'</div>';
   h+='<div class="ov-sec-h ovt-store-h">Current management</div>';
   h+='<div class="ctk-grid">'+cur.map(card).join('')+'</div>';
-  h+='<div class="ov-sec-h ovt-store-h" style="margin-top:14px">Historically pivotal — now departed</div>';
-  h+='<div class="ctk-grid">'+former.map(card).join('')+'</div>';
+  if(former.length){
+    h+='<div class="ov-sec-h ovt-store-h" style="margin-top:14px">Historically pivotal — now departed</div>';
+    h+='<div class="ctk-grid">'+former.map(card).join('')+'</div>';
+  }
   h+='<div class="ov-callout" style="margin-top:12px">There is currently <b>no Chief Product Officer</b> — the product org is led by a VP-level Head of Product after Daniel Danker left for Walmart (Jul 2025). Guidance-vs-delivery is in <b>Evolution ▸ Guidance</b>; the full company history is in <b>Evolution ▸ Timeline</b>.</div>';
   h+='<div class="ov-foot">Leadership roster & bios: Instacart official leadership page + company updates; CEO transition: CNBC/Bloomberg/Fortune (May 2025). Ratings are analytical reads, not company statements. Executive officers only — Board excluded by design.</div>';
   return h;

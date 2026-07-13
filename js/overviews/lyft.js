@@ -1161,7 +1161,43 @@ var LY_TRACK=[
     prior:'Associate at <b>Winston & Strawn</b> (2008–14); earlier a jury consultant. No prior C-suite/external-outcome record to grade.',
     detail:'<p><b>At Lyft (since 2014; CLO since Apr 2026).</b> Joined as Lyft’s first in-house litigator and rose over ~12 years managing the litigation and regulatory docket that <i>is</i> Lyft’s core risk — driver classification (Prop 22 and the state-by-state deals), TNC regulation and safety litigation — before being elevated to the top legal seat from within.</p>'+
       '<p><b>Before Lyft.</b> Associate at <b>Winston & Strawn</b> (2008–14); earlier a jury consultant. Limited external executive history.</p>'+
-      '<p><b>Net read — solid but newly elevated (amber, leaning green).</b> The long internal tenure and successful defense of the contractor model are positives; the "unproven" tag is only that she stepped into the CLO role in April 2026.</p>' }
+      '<p><b>Net read — solid but newly elevated (amber, leaning green).</b> The long internal tenure and successful defense of the contractor model are positives; the "unproven" tag is only that she stepped into the CLO role in April 2026.</p>' },
+  { id:'rasmussen', n:'Dana Rasmussen', role:'Chief People Officer', since:'2025', rate:'amber',
+    uber:'Joined mid-2025 to run People as Lyft scales its leaner, post-turnaround org — too new to have a Lyft value-creation record yet.',
+    prior:'Chief People & Culture Officer at <b>Stitch Fix</b>; HR leadership at Honor, Flywheel, <b>Yahoo</b> and <b>Oracle</b>.',
+    detail:'<p><b>At Lyft (CPO since Jul 2025).</b> Owns talent, culture and the People function for the leaner organization Lyft became after the 2023 restructuring. Too recent to have delivered a measurable Lyft outcome yet.</p>'+
+      '<p><b>Before Lyft.</b> Chief People & Culture Officer at <b>Stitch Fix</b>; earlier HR leadership at Honor, Flywheel, <b>Yahoo</b> and <b>Oracle</b>.</p>'+
+      '<p><b>Net read — capable but unproven here (amber).</b> Solid HR pedigree; a People seat carries limited direct value-creation signal, and her tenure is barely a year old.</p>' },
+  { id:'golden', n:'Jerry Golden', role:'Chief Policy Officer', since:'2024', rate:'amber',
+    uber:'Runs the policy and regulatory fight that <i>is</i> Lyft’s core risk — driver classification and TNC rules — a defensive, hard-to-quantify value role.',
+    prior:'Policy leadership at <b>Eventbrite</b>, the <b>Internet Association</b>, Vanguard and the U.S. Chamber of Commerce.',
+    detail:'<p><b>At Lyft (Chief Policy Officer since Aug 2024).</b> Leads the policy and regulatory agenda on the existential questions for the model — driver classification (Prop 22 and the state deals), TNC regulation, insurance rules. A defensive function: success looks like risk that never materializes.</p>'+
+      '<p><b>Before Lyft.</b> Policy leadership at <b>Eventbrite</b>, the <b>Internet Association</b>, Vanguard and the U.S. Chamber of Commerce. Based in Washington, D.C.</p>'+
+      '<p><b>Net read — competent, defensive (amber).</b> Relevant background for Lyft’s biggest risk; value creation is real but negative-space and hard to attribute.</p>' },
+  { id:'smith', n:'Kevin S. Smith', role:'Chief Information Officer', since:'~2023', rate:'amber',
+    uber:'Lyft’s top technology executive (there is no C-level CTO) — owns the tech and IT backbone; an execution seat more than a value-creation one.',
+    prior:'30+ years in IT; <b>CIO at Cloudera</b>; senior IT roles at Aurora, <b>Stripe</b> and <b>Twitch</b>.',
+    detail:'<p><b>At Lyft (CIO since ~2023).</b> Lyft’s senior-most technology leader, filling the role of a CTO the company does not currently have at C-level. Responsible for the engineering and IT backbone that keeps the marketplace running.</p>'+
+      '<p><b>Before Lyft.</b> 30+ years in IT; <b>CIO at Cloudera</b>; senior IT roles at Aurora, <b>Stripe</b> and <b>Twitch</b>.</p>'+
+      '<p><b>Net read — solid operator (amber).</b> Deep enterprise-technology pedigree; the seat is largely execution/reliability, so direct value creation is harder to isolate.</p>' },
+  { id:'bird', n:'Jeremy Bird', role:'EVP, Global Growth', since:'Long-tenured', rate:'green',
+    uber:'Drove Lyft’s <b>April 2026 London launch</b> (its first international market) and long ran growth and driver experience — a direct top-line lever.',
+    prior:'National field director for the <b>Obama 2012 campaign</b>; earlier Chief Policy Officer at Lyft.',
+    detail:'<p><b>At Lyft (long-tenured; EVP, Global Growth).</b> Leads global growth and drove Lyft’s <b>first international expansion</b> — the April 2026 London black-cab launch. Previously served as Chief Policy Officer and led Driver Experience, so he owns levers on both supply and demand.</p>'+
+      '<p><b>Before Lyft.</b> National field director for the <b>Obama 2012 campaign</b> — large-scale voter mobilization, a growth/operations discipline he carried into Lyft.</p>'+
+      '<p><b>Net read — value creator (green).</b> Owns a real top-line lever and executed the international launch; the "green" carries a caveat that the international payoff is still early.</p>' },
+  { id:'kelman', n:'Jody Kelman', role:'Head of Lyft Autonomous', since:'Long-tenured', rate:'amber',
+    uber:'Leads <b>Lyft Autonomous</b> — the AV partner strategy (May Mobility, Mobileye, Baidu) central to the 2026 robotaxi push but commercially unproven.',
+    prior:'Long-tenured Lyft leader; previously led Lyft’s rider/customer product organization.',
+    detail:'<p><b>At Lyft (long-tenured; Head of Lyft Autonomous).</b> Runs the autonomous-vehicle strategy that anchors the "be the network, not the carmaker" thesis — the May Mobility, Mobileye and Baidu partnerships and the 2026 robotaxi push. Strategically central, but the revenue is future optionality, not today’s P&L.</p>'+
+      '<p><b>Before Lyft.</b> Previously led Lyft’s rider/customer product organization — a core-product background before moving to AV.</p>'+
+      '<p><b>Net read — central but unproven (amber).</b> Owns the most important strategic bet; the grade stays amber until the AV network converts to real, paying supply.</p>' },
+  { id:'patil', n:'Siddharth Patil', role:'EVP, Data Science', since:'Long-tenured', rate:'green',
+    uber:'Owns <b>data science and marketplace efficiency</b> — matching, pricing and incentives — the machinery behind the unit-economics turn.',
+    prior:'Long-tenured technical leader; career in data science and marketplace optimization.',
+    detail:'<p><b>At Lyft (long-tenured; EVP, Data Science).</b> Leads data science and marketplace efficiency — the matching, pricing and incentive systems that determine take rate and driver-incentive spend. The incentive-efficiency gains that helped drive the turn to profitability run through this org.</p>'+
+      '<p><b>Before Lyft.</b> A long-tenured technical leader whose career centers on data science and marketplace optimization.</p>'+
+      '<p><b>Net read — quietly value-creating (green).</b> Less visible than the C-suite, but the marketplace-efficiency work shows up directly in Lyft’s unit economics.</p>' }
 ];
 function lyTrackBody(c){
   var legend=Object.keys(LY_TRACK_RATE).map(function(kk){ var r=LY_TRACK_RATE[kk]; return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--navy)"><span style="width:10px;height:10px;border-radius:50%;background:'+r.c+'"></span>'+r.l+'</span>'; }).join('');
@@ -1173,7 +1209,7 @@ function lyTrackBody(c){
       '<div style="font-size:11.5px;color:var(--navy);line-height:1.5"><b style="color:var(--mu)">Before:</b> '+m.prior+'</div>'+
       '<div class="ov-more" style="margin-top:7px">Full track record ›</div></div>';
   }).join('');
-  var h='<p class="ov-lede">The people running Lyft today, rated on <b>what they have actually built</b> — an <b>Lyft</b> record and a <b>prior-roles</b> record for each. Lyft runs a <b>lean C-suite</b> (three named officers; no President/COO). Color = the net read; <b>tap a card</b> for the full history.</p>';
+  var h='<p class="ov-lede">The people running Lyft today, rated on <b>what they have actually built</b> — a <b>Lyft</b> record and a <b>prior-roles</b> record for each. Lyft publishes only <b>three statutory officers</b> (Risher, Brewer, Llewellyn), but the operating bench is deeper — this is the <b>wider leadership team</b> from Executives & Board. Color = the net read; <b>tap a card</b> for the full history.</p>';
   h+='<div style="display:flex;gap:14px;flex-wrap:wrap;margin:0 0 12px">'+legend+'</div>';
   h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">'+cards+'</div>';
   h+='<style>.trk-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.08)}</style>';
@@ -1389,9 +1425,8 @@ function strategyBody(c){
   h+=sec('The AV bet — be the network, not the carmaker',
     '<div class="lst-av">Lyft’s contrarian bet: <b>don’t build the self-driving car — be the network every AV plugs into.</b> The <b>hybrid network</b> treats AVs as baseline supply and human drivers as the flex, kept asset-light via <b>Flexdrive</b> (a claimed <b>&gt;20% per-mile cost edge</b>). Risher’s yardstick: ~<b>10% AV by 2030</b> would be &ldquo;an enormous success.&rdquo;</div>'+
     '<div class="lst-chips" style="margin-top:9px"><span class="lst-chip">May Mobility · Atlanta</span><span class="lst-chip">Mobileye · Dallas</span><span class="lst-chip">Baidu Apollo Go · Europe</span><span class="lst-chip">Waymo · Nashville — paid no matter what</span></div>');
-  // 6 - membership + ecosystem — MOVED to Bottom Line ▸ Suppliers.
-  h+=sec('Supplier & customer ecosystem',
-    '');
+  // 6 - membership + ecosystem lived here once; it was MOVED whole to Bottom Line ▸ Suppliers
+  // (lySuppliersBody → supplySection()). No orphan header here — the content has a single home.
   return h;
 }
 

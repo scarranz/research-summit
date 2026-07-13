@@ -13,7 +13,15 @@
 const INDUSTRIES = [
   { id: 'semiconductors', label: 'Semiconductors', ready: true },
   { id: 'payments',       label: 'Payments',       ready: true },
+  { id: 'robotics',       label: 'Robotics',        ready: true },
 ];
+
+// iframe-isolated industries → their standalone host page. Payments renders
+// in-document instead (see showIndustry).
+const IFRAME_SRC = {
+  semiconductors: 'industry-embed.html?industry=semiconductors',
+  robotics: 'robotics-industry.html',
+};
 
 let _wired = false;
 let _payLoaded = false;
@@ -70,8 +78,14 @@ async function showIndustry(id) {
         requestAnimationFrame(() => m.paymentsIndustry.init());
       }
     }
-  } else {
-    if (pay) pay.hidden = true;
-    if (frame) frame.hidden = false;
+    return;
+  }
+  // iframe-isolated industries (semiconductors, robotics) share one <iframe>;
+  // swap its src lazily, only when the selection actually changes.
+  if (pay) pay.hidden = true;
+  if (frame) {
+    const src = IFRAME_SRC[id];
+    if (src && !frame.getAttribute('src').includes(src)) frame.setAttribute('src', src);
+    frame.hidden = false;
   }
 }

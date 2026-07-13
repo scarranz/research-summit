@@ -1,0 +1,1869 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Robotics Technology Stack — Deep-Dive Framework</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1E2733; --blue:#2C3E54; --steel:#3E5A82; --mid:#7C8694;
+  --ice:#EEF1F5; --pale:#F4F6F9; --surface:#F6F7F9; --w:#FFFFFF;
+  --text:#1E2733; --mu:#8A93A0; --bdr:#E7EAEE;
+  --pos:#16A34A; --neg:#DC2626; --accent:#2563EB;
+  --posbg:#E6F3EC; --negbg:#FAEEEE; --accbg:#EAF0FE;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',-apple-system,system-ui,sans-serif;
+  background:var(--surface); color:var(--text);
+  font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased;
+  letter-spacing:-0.005em; line-height:1.55;
+}
+
+/* ── Top bar ── */
+.topbar{
+  position:sticky; top:0; z-index:40;
+  background:rgba(255,255,255,.85); backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--bdr);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 26px;
+}
+.brand{display:flex; align-items:center; gap:11px}
+.brand-mk{
+  width:30px; height:30px; border-radius:8px; background:var(--navy);
+  display:flex; align-items:center; justify-content:center; font-size:16px;
+}
+.brand-t{font-size:14px; font-weight:600; letter-spacing:-0.01em}
+.brand-s{font-size:11px; color:var(--mu)}
+.badge-local{
+  font-size:10px; letter-spacing:.5px; text-transform:uppercase; font-weight:600;
+  color:var(--steel); background:var(--ice); padding:4px 10px; border-radius:20px;
+}
+
+.wrap{max-width:1120px; margin:0 auto; padding:26px 26px 60px}
+
+/* ── Banner ── */
+.bnr{
+  background:var(--navy); border-radius:16px; padding:26px 32px; margin-bottom:22px;
+  position:relative; overflow:hidden;
+}
+.bnr::before{content:''; position:absolute; right:-60px; top:-60px; width:260px; height:260px;
+  border-radius:50%; background:rgba(46,95,147,.25)}
+.bnr::after{content:''; position:absolute; right:80px; bottom:-90px; width:200px; height:200px;
+  border-radius:50%; background:rgba(37,99,235,.14)}
+.bnr-in{position:relative; z-index:1}
+.bnt{font-size:22px; font-weight:600; color:#fff; margin-bottom:9px; letter-spacing:-0.01em}
+.bnb{font-size:13px; color:var(--ice); line-height:1.7; max-width:760px}
+.bnb strong{color:#fff; font-weight:500}
+.bnr-meta{display:flex; gap:22px; margin-top:16px; flex-wrap:wrap}
+.bnr-meta div{font-size:11px; color:var(--mid)}
+.bnr-meta b{display:block; color:#fff; font-size:13px; font-weight:600; margin-top:2px}
+
+/* ── Tab bar ── */
+.tabs{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px}
+.tab{
+  display:flex; align-items:center; gap:8px; padding:9px 15px;
+  border:1.5px solid var(--bdr); border-radius:22px; background:var(--w);
+  cursor:pointer; font-size:12.5px; color:var(--mid); font-weight:500;
+  transition:all .15s; user-select:none;
+}
+.tab:hover{border-color:var(--mid); color:var(--blue)}
+.tab.active{background:var(--navy); color:#fff; border-color:var(--navy)}
+.tab .tn{font-size:11px; opacity:.6; font-weight:700}
+.tab.active .tn{opacity:.85}
+
+.pane{display:none; animation:fade .25s ease}
+.pane.active{display:block}
+@keyframes fade{from{opacity:0; transform:translateY(6px)}to{opacity:1; transform:translateY(0)}}
+
+/* ── Section primitives ── */
+.sec{margin-bottom:24px}
+.sechdr{display:flex; align-items:baseline; justify-content:space-between;
+  margin-bottom:13px; padding-bottom:8px; border-bottom:1px solid var(--bdr)}
+.sect{font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--steel); font-weight:600}
+.secn{font-size:11px; color:var(--mu)}
+.card{background:var(--w); border:1px solid var(--bdr); border-radius:14px; padding:20px}
+
+/* ── Pane header ── */
+.ph{display:flex; gap:18px; align-items:flex-start; margin-bottom:20px}
+.ph-num{
+  flex:none; width:54px; height:54px; border-radius:14px; background:var(--navy);
+  display:flex; align-items:center; justify-content:center; font-size:26px;
+}
+.ph-txt h2{font-size:21px; font-weight:600; letter-spacing:-0.02em; margin-bottom:4px}
+.ph-txt .ph-sub{font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--steel); font-weight:600; margin-bottom:7px}
+.ph-txt p{font-size:13.5px; color:var(--blue); max-width:780px; line-height:1.65}
+
+/* ── Maturity meter ── */
+.meters{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px}
+.meter{background:var(--w); border:1px solid var(--bdr); border-radius:12px; padding:14px 16px}
+.meter-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:9px}
+.meter-l{font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:var(--mu); font-weight:600}
+.meter-v{font-size:12px; font-weight:600; color:var(--navy)}
+.meter-track{height:7px; background:var(--ice); border-radius:5px; overflow:hidden}
+.meter-fill{height:100%; border-radius:5px; background:linear-gradient(90deg,var(--steel),var(--accent))}
+.meter-fill.warm{background:linear-gradient(90deg,#D97706,#DC2626)}
+.meter-fill.cool{background:linear-gradient(90deg,var(--mid),var(--steel))}
+
+/* ── Stat tiles ── */
+.srow{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:22px}
+.sc{background:var(--w); border:1px solid var(--bdr); border-radius:12px; padding:15px 16px}
+.sl{font-size:10px; letter-spacing:.05em; color:var(--mu); text-transform:uppercase; margin-bottom:6px; font-weight:500}
+.sv{font-size:23px; font-weight:600; line-height:1.05; letter-spacing:-0.02em}
+.ss{font-size:11px; color:var(--mu); margin-top:4px; line-height:1.4}
+
+/* ── Sub-tech cards ── */
+.grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px}
+.tech{background:var(--w); border:1px solid var(--bdr); border-radius:14px; padding:18px; display:flex; flex-direction:column}
+.tech-vis{height:84px; background:var(--pale); border:1px solid var(--bdr); border-radius:10px; margin:2px 0 13px; display:flex; align-items:center; justify-content:center; overflow:hidden}
+.tech-vis svg{width:118px; height:70px}
+
+/* ── Robot Types (machines) ── */
+.mgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+.mach{background:var(--w); border:1px solid var(--bdr); border-radius:14px; overflow:hidden; display:flex; flex-direction:column}
+.mach-vis{height:132px; background:var(--pale); border-bottom:1px solid var(--bdr); display:flex; align-items:center; justify-content:center; overflow:hidden}
+.mach-vis img{width:100%; height:100%; object-fit:cover; display:block}
+.mach-fallback{width:100%; height:100%; display:flex; align-items:center; justify-content:center}
+.mach-fallback svg{width:150px; height:90px}
+.mach-body{padding:14px 16px; display:flex; flex-direction:column; flex:1}
+.mach-tag{font-size:9px; letter-spacing:.5px; text-transform:uppercase; font-weight:700; color:var(--steel); background:var(--ice); padding:3px 9px; border-radius:20px; align-self:flex-start; margin-bottom:8px}
+.mach-n{font-size:15px; font-weight:600; letter-spacing:-0.01em; margin-bottom:4px}
+.mach-d{font-size:12px; color:var(--mid); line-height:1.5; margin-bottom:11px}
+.mach-best{margin-top:auto; font-size:11.5px; color:var(--blue)}
+.mach-best b{color:var(--steel); text-transform:uppercase; font-size:9.5px; letter-spacing:.06em}
+@media(max-width:820px){ .mgrid{grid-template-columns:1fr 1fr} }
+@media(max-width:560px){ .mgrid{grid-template-columns:1fr} }
+
+/* ── Photos in component tiles ── */
+.tech-vis{padding:0}
+.tech-vis img{width:100%; height:100%; object-fit:cover; display:block}
+.zoomable{cursor:zoom-in; transition:opacity .15s}
+.zoomable:hover{opacity:.9}
+.tech, .mach{transition:box-shadow .15s, border-color .15s}
+.tech:hover, .mach:hover{border-color:var(--steel); box-shadow:0 6px 18px rgba(30,39,51,.08)}
+
+/* ── Expand: button + detail panel + companies ── */
+.more-btn{margin-top:12px; align-self:flex-start; font-size:11px; font-weight:600; color:var(--steel);
+  background:var(--surface); border:1px solid var(--bdr); border-radius:8px; padding:6px 12px; cursor:pointer;
+  transition:all .14s; display:inline-flex; align-items:center; gap:7px}
+.more-btn:hover{background:var(--ice); color:var(--navy)}
+.more-btn .caret{transition:transform .2s; font-size:9px}
+.more-btn.open .caret{transform:rotate(180deg)}
+.detail{display:none; margin-top:13px; padding-top:13px; border-top:1px dashed var(--bdr)}
+.detail.open{display:block; animation:fade .2s ease}
+.detail h6{font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--steel); font-weight:700; margin:0 0 6px}
+.detail p{font-size:12px; color:var(--blue); line-height:1.6; margin:0 0 13px}
+.co{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:.5px solid #F0F4F8}
+.co:last-of-type{border-bottom:none}
+.co-n{font-size:12.5px; color:var(--navy); font-weight:500}
+.co-r{color:var(--mu); font-size:10.5px; font-weight:400}
+.co-t{flex:none; font-size:9px; font-weight:700; letter-spacing:.3px; padding:2px 8px; border-radius:20px}
+.co-t.dm{background:var(--posbg); color:var(--pos)}
+.co-t.d{background:var(--accbg); color:var(--accent)}
+.co-t.m{background:#Fef1e6; color:#C2410C}
+.co-legend{font-size:10px; color:var(--mu); margin-top:10px; font-style:italic}
+
+/* ── Lightbox ── */
+.lyt{position:fixed; inset:0; z-index:200; background:rgba(20,26,34,.88); backdrop-filter:blur(6px);
+  display:none; align-items:center; justify-content:center; padding:34px; cursor:zoom-out}
+.lyt.open{display:flex}
+.lyt img{max-width:92%; max-height:86%; border-radius:12px; box-shadow:0 16px 60px rgba(0,0,0,.55); background:#fff}
+.lyt-cap{position:absolute; bottom:22px; left:0; right:0; text-align:center; color:#cbd5e1; font-size:12px; letter-spacing:.02em}
+.lyt-x{position:absolute; top:18px; right:22px; width:40px; height:40px; border:none; background:rgba(255,255,255,.14);
+  color:#fff; border-radius:10px; font-size:22px; cursor:pointer; line-height:1}
+.lyt-x:hover{background:rgba(255,255,255,.26)}
+
+/* ── Card pop-up modal ── */
+.rmodal{position:fixed; inset:0; z-index:150; background:rgba(20,26,34,.55); backdrop-filter:blur(5px);
+  display:none; align-items:center; justify-content:center; padding:24px}
+.rmodal.open{display:flex; animation:fade .2s ease}
+.rmodal-card{background:var(--w); border-radius:18px; width:100%; max-width:560px; max-height:90vh;
+  overflow:auto; box-shadow:0 24px 80px rgba(0,0,0,.4); position:relative}
+.rmodal-x{position:absolute; top:14px; right:14px; z-index:2; width:34px; height:34px; border:none;
+  background:rgba(255,255,255,.92); border-radius:9px; font-size:20px; color:var(--navy); cursor:pointer;
+  box-shadow:0 2px 10px rgba(0,0,0,.18); line-height:1}
+.rmodal-x:hover{background:#fff}
+.rmodal-hero{height:300px; background:var(--pale); display:flex; align-items:center; justify-content:center; overflow:hidden; border-bottom:1px solid var(--bdr)}
+.rmodal-hero img{width:100%; height:100%; object-fit:cover; cursor:zoom-in}
+.rmodal-hero .rm-diagram{display:flex; align-items:center; justify-content:center; width:100%; height:100%}
+.rmodal-hero .rm-diagram svg{width:66%; height:66%}
+.rmodal-body{padding:22px 24px 26px}
+.rm-tag{font-size:9px; letter-spacing:.5px; text-transform:uppercase; font-weight:700; color:var(--steel);
+  background:var(--ice); padding:3px 9px; border-radius:20px; display:inline-block; margin-bottom:11px}
+.rm-title{font-size:21px; font-weight:600; letter-spacing:-0.02em; margin-bottom:9px}
+.rm-desc{font-size:13.5px; color:var(--blue); line-height:1.6; margin-bottom:18px}
+.rm-sec-t{font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--steel); font-weight:700; margin:0 0 7px}
+.rm-more{font-size:13px; color:var(--blue); line-height:1.65; margin-bottom:18px}
+.rm-best{font-size:12.5px; color:var(--blue); background:var(--surface); border:1px solid var(--bdr);
+  border-radius:10px; padding:11px 13px; margin-bottom:18px}
+.rm-best b{color:var(--steel); text-transform:uppercase; font-size:9.5px; letter-spacing:.06em}
+.more-btn .caret{font-size:11px}
+.tech-h{display:flex; align-items:center; gap:9px; margin-bottom:5px}
+.tech-ic{font-size:18px}
+.tech-n{font-size:15px; font-weight:600; letter-spacing:-0.01em}
+.tech-how{font-size:12px; color:var(--mid); margin-bottom:12px; line-height:1.55}
+.pc{display:flex; gap:8px; margin-bottom:6px; font-size:12px; line-height:1.5}
+.pc-i{flex:none; font-weight:700; width:14px}
+.pc.p .pc-i{color:var(--pos)}
+.pc.c .pc-i{color:var(--neg)}
+.tech-best{margin-top:auto; padding-top:11px; border-top:1px solid var(--bdr); font-size:11.5px; color:var(--blue)}
+.tech-best b{color:var(--steel); text-transform:uppercase; font-size:10px; letter-spacing:.06em}
+
+/* ── Metric chips ── */
+.chips{display:flex; flex-wrap:wrap; gap:7px}
+.chip{background:var(--surface); border:1px solid var(--bdr); border-radius:8px; padding:6px 11px; font-size:11.5px; color:var(--blue)}
+.chip b{color:var(--navy)}
+
+/* ── Comparison table ── */
+.twrap{overflow-x:auto; border-radius:10px; border:1px solid var(--bdr)}
+table.cmp{width:100%; border-collapse:collapse; font-size:12px; min-width:640px}
+.cmp th{font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--mu);
+  padding:10px 12px; background:#F7FAFD; border-bottom:1px solid var(--bdr); text-align:left; font-weight:600}
+.cmp td{padding:9px 12px; border-bottom:.5px solid #F0F4F8; vertical-align:top}
+.cmp tr:last-child td{border-bottom:none}
+.cmp tr:hover td{background:#FafBfD}
+.cmp td.name{font-weight:600; color:var(--navy); white-space:nowrap}
+
+/* ── Debate callout ── */
+.debate{background:linear-gradient(180deg,#FdfBf7,#fff); border:1px solid #F0E2CE;
+  border-left:4px solid #D97706; border-radius:12px; padding:18px 20px}
+.debate .dh{display:flex; align-items:center; gap:8px; font-size:11px; letter-spacing:1.5px;
+  text-transform:uppercase; color:#B45309; font-weight:700; margin-bottom:9px}
+.debate p{font-size:13px; color:var(--blue); line-height:1.65; margin-bottom:8px}
+.debate p:last-child{margin-bottom:0}
+.debate .vs{display:grid; grid-template-columns:1fr auto 1fr; gap:12px; align-items:stretch; margin:12px 0}
+.debate .side{background:#fff; border:1px solid var(--bdr); border-radius:10px; padding:12px 14px}
+.debate .side h5{font-size:12px; font-weight:600; color:var(--navy); margin-bottom:5px}
+.debate .side p{font-size:11.5px; color:var(--mid); margin:0}
+.debate .vsmid{display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--mu)}
+
+/* ── Players ── */
+.players{display:flex; flex-wrap:wrap; gap:8px}
+.player{display:flex; flex-direction:column; gap:1px; background:var(--w); border:1px solid var(--bdr);
+  border-radius:10px; padding:9px 13px; min-width:130px}
+.player .pn{font-size:12.5px; font-weight:600; color:var(--navy)}
+.player .pr{font-size:10.5px; color:var(--mu)}
+.player.hi{border-color:#C7D7F5; background:var(--accbg)}
+
+/* ── Invest box ── */
+.invest{background:var(--navy); border-radius:14px; padding:20px 22px; color:#fff}
+.invest .ih{font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:#8FA6C4; font-weight:700; margin-bottom:11px; display:flex; align-items:center; gap:8px}
+.invest ul{list-style:none; display:flex; flex-direction:column; gap:10px}
+.invest li{display:flex; gap:10px; font-size:13px; color:var(--ice); line-height:1.6}
+.invest li::before{content:'→'; color:var(--accent); font-weight:700; flex:none}
+.invest li b{color:#fff; font-weight:600}
+
+/* ── Stack overview diagram ── */
+.stack{display:flex; flex-direction:column; gap:10px; margin-bottom:24px}
+.layer{border-radius:12px; padding:2px; background:var(--bdr)}
+.layer-in{display:grid; gap:10px}
+.slab{background:var(--w); border:1px solid var(--bdr); border-radius:11px; padding:16px 18px; cursor:pointer; transition:all .16s; position:relative; overflow:hidden}
+.slab:hover{border-color:var(--steel); box-shadow:0 6px 18px rgba(30,39,51,.08); transform:translateY(-2px)}
+.slab .si{font-size:22px; margin-bottom:8px; display:block}
+.slab .sn{font-size:15px; font-weight:600; letter-spacing:-0.01em; margin-bottom:3px}
+.slab .sd{font-size:11.5px; color:var(--mid); line-height:1.5}
+.slab .stag{position:absolute; top:12px; right:14px; font-size:9px; letter-spacing:.5px; text-transform:uppercase;
+  font-weight:700; padding:3px 8px; border-radius:20px}
+.stag.brain{background:var(--accbg); color:var(--accent)}
+.stag.sense{background:var(--posbg); color:var(--pos)}
+.stag.act{background:#Fef1e6; color:#C2410C}
+.stag.pow{background:var(--ice); color:var(--steel)}
+.layer-lbl{font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--mu); font-weight:700; padding:0 4px 6px}
+
+.two{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+.tmpl{display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--bdr)}
+.tmpl:last-child{border-bottom:none}
+.tmpl .tnum{flex:none; width:26px; height:26px; border-radius:8px; background:var(--ice); color:var(--steel);
+  font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center}
+.tmpl .ttx b{font-size:13px; color:var(--navy); display:block; margin-bottom:1px}
+.tmpl .ttx span{font-size:12px; color:var(--mid)}
+
+.thesis{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+.thes{border:1px solid var(--bdr); border-radius:12px; padding:16px; background:var(--w)}
+.thes .tt{font-size:13px; font-weight:600; color:var(--navy); margin-bottom:6px}
+.thes .tl{font-size:10px; letter-spacing:.5px; text-transform:uppercase; font-weight:700; padding:2px 8px; border-radius:20px; display:inline-block; margin-bottom:9px}
+.thes.low .tl{background:var(--posbg); color:var(--pos)}
+.thes.mid .tl{background:var(--accbg); color:var(--accent)}
+.thes.high .tl{background:var(--negbg); color:var(--neg)}
+.thes p{font-size:12px; color:var(--mid); line-height:1.55}
+
+/* ── Footer ── */
+.foot{border-top:1px solid var(--bdr); margin-top:34px; padding-top:20px}
+.foot .fh{font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--steel); font-weight:600; margin-bottom:10px}
+.foot ol{margin-left:18px; display:flex; flex-direction:column; gap:5px}
+.foot li{font-size:11.5px; color:var(--mid); line-height:1.5}
+.foot a{color:var(--accent); text-decoration:none}
+.foot a:hover{text-decoration:underline}
+.foot .disc{margin-top:16px; font-size:11px; color:var(--mu); font-style:italic; line-height:1.6}
+
+.note{font-size:11px; color:var(--mu); font-style:italic; margin-top:10px}
+
+/* ── Value chain (Phase 2) ── */
+.vflow{display:flex; align-items:stretch; gap:14px; overflow-x:auto; padding:2px 2px 8px; margin-bottom:22px}
+.vf{flex:1; min-width:132px; background:var(--w); border:1px solid var(--bdr); border-radius:11px; padding:12px 13px; position:relative}
+.vf::after{content:'▸'; position:absolute; right:-11px; top:34px; color:var(--mu); font-size:13px; z-index:1}
+.vf:last-child::after{display:none}
+.vf-k{font-size:9px; letter-spacing:.5px; text-transform:uppercase; color:var(--mu); font-weight:700; margin-bottom:5px}
+.vf-n{font-size:12.5px; font-weight:600; color:var(--navy); line-height:1.3; margin-bottom:10px; min-height:32px}
+.vf-lbl{font-size:9px; letter-spacing:.03em; text-transform:uppercase; color:var(--mu); font-weight:600; margin-bottom:3px}
+.vf-bar{height:6px; border-radius:4px; background:var(--ice); overflow:hidden; margin-bottom:8px}
+.vf-fill{height:100%; border-radius:4px; background:linear-gradient(90deg,var(--mid),var(--steel))}
+.vf-fill.hi{background:linear-gradient(90deg,#16A34A,#0F9488)}
+.vf-fill.lo{background:linear-gradient(90deg,#E5A44D,#DC7A4D)}
+.vf-cap{font-size:9.5px; color:var(--blue); line-height:1.35}
+
+.pill{font-size:9px; font-weight:700; letter-spacing:.3px; padding:2px 8px; border-radius:20px; text-transform:uppercase; white-space:nowrap}
+.pill.hi{background:var(--posbg); color:var(--pos)}
+.pill.md{background:var(--accbg); color:var(--accent)}
+.pill.lo{background:var(--negbg); color:var(--neg)}
+
+.smile{background:var(--w); border:1px solid var(--bdr); border-radius:12px; padding:18px 20px; margin-bottom:22px}
+.smile-h{font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--steel); font-weight:700; margin-bottom:4px}
+.smile-s{font-size:12px; color:var(--mid); line-height:1.55; margin-bottom:14px; max-width:760px}
+.smile-svg{width:100%; height:auto; display:block}
+
+/* ── Companies map ── */
+.costage{margin-bottom:20px}
+.costage-h{display:flex; align-items:center; gap:10px; margin-bottom:10px}
+.costage-n{font-size:14px; font-weight:600; color:var(--navy)}
+.costage-tag{font-size:9px; letter-spacing:.4px; text-transform:uppercase; font-weight:700; padding:2px 8px; border-radius:20px}
+.costage-tag.hi{background:var(--posbg); color:var(--pos)}
+.costage-tag.md{background:var(--accbg); color:var(--accent)}
+.costage-tag.lo{background:var(--negbg); color:var(--neg)}
+.costage-ct{font-size:11px; color:var(--mu); margin-left:auto}
+.costage-sub{font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--steel); font-weight:700; margin:12px 0 7px}
+.coset{display:flex; flex-wrap:wrap; gap:8px}
+.co2{background:var(--w); border:1px solid var(--bdr); border-left:3px solid var(--mu); border-radius:9px; padding:8px 12px; min-width:118px}
+.co2.pub{border-left-color:var(--pos)}
+.co2.priv{border-left-color:var(--mu)}
+.co2 .c2n{font-size:12.5px; font-weight:600; color:var(--navy)}
+.co2 .c2m{font-size:10px; color:var(--mu); margin-top:2px}
+.co2 .c2m b{color:var(--steel); font-weight:600}
+.colegend{display:flex; gap:16px; flex-wrap:wrap; font-size:11px; color:var(--mu); margin-top:6px}
+.colegend span{display:flex; align-items:center; gap:6px}
+.colegend i{width:10px; height:10px; border-radius:3px; display:inline-block}
+
+/* ── Evidence source tags ── */
+.evsrc{font-size:8.5px; font-weight:700; letter-spacing:.3px; text-transform:uppercase; padding:2px 7px; border-radius:20px; background:var(--ice); color:var(--steel); vertical-align:middle; margin-left:4px}
+.evsrc.splc{background:var(--posbg); color:var(--pos)}
+.evsrc.ifr{background:var(--accbg); color:var(--accent)}
+.evsrc.pend{background:var(--negbg); color:var(--neg)}
+
+@media(max-width:820px){
+  .srow{grid-template-columns:1fr 1fr}
+  .grid,.meters,.two,.thesis,.layer-in.l2,.layer-in.l3{grid-template-columns:1fr!important}
+  .debate .vs{grid-template-columns:1fr}
+  .debate .vsmid{padding:2px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mk">🤖</div>
+    <div>
+      <div class="brand-t">Summit Research — Robotics</div>
+      <div class="brand-s">Technology Deep-Dive Framework</div>
+    </div>
+  </div>
+  <div class="badge-local">Industry Analysis · v1.2</div>
+</div>
+
+<div class="wrap">
+
+  <!-- Banner -->
+  <div class="bnr"><div class="bnr-in">
+    <div class="bnt">The Robotics Technology Stack</div>
+    <div class="bnb">Every robot — from a factory arm to a humanoid — is built from the same five technology layers. This framework maps each one at an <strong>investment-analyst depth</strong>: how it works, its trade-offs, the metric that matters, who supplies it, and the open debate that will decide winners. Use it as the shared technical foundation <strong>before</strong> the industry-structure and company-level analysis.</div>
+    <div class="bnr-meta">
+      <div>Framework<b>5 technology layers</b></div>
+      <div>Taxonomy anchor<b>ISO 8373 · IFR World Robotics</b></div>
+      <div>Depth<b>Investment analyst</b></div>
+      <div>Status<b>Summit portal · Industry Analysis</b></div>
+    </div>
+  </div></div>
+
+  <!-- Tabs -->
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-p="overview"><span class="tn">◆</span> The Stack</div>
+    <div class="tab" data-p="types"><span class="tn">◇</span> Robot Types</div>
+    <div class="tab" data-p="perception"><span class="tn">1</span> Perception</div>
+    <div class="tab" data-p="actuation"><span class="tn">2</span> Actuation</div>
+    <div class="tab" data-p="intelligence"><span class="tn">3</span> Intelligence</div>
+    <div class="tab" data-p="manipulation"><span class="tn">4</span> Manipulation</div>
+    <div class="tab" data-p="power"><span class="tn">5</span> Power</div>
+    <div class="tab" data-p="market"><span class="tn">▦</span> Market (IFR)</div>
+    <div class="tab" data-p="valuechain"><span class="tn">$</span> Value Chain</div>
+    <div class="tab" data-p="companies"><span class="tn">◈</span> Companies</div>
+  </div>
+
+  <!-- ══════════ OVERVIEW ══════════ -->
+  <div class="pane active" data-pane="overview">
+
+    <div class="sec">
+      <div class="sechdr"><span class="sect">The five-layer stack</span><span class="secn">Click any layer to open its deep-dive</span></div>
+      <div class="stack">
+        <div class="layer-lbl">Cognitive layer — the brain</div>
+        <div class="slab" data-goto="intelligence">
+          <span class="stag brain">Software</span>
+          <span class="si">🧠</span>
+          <div class="sn">3 · Intelligence (Physical AI)</div>
+          <div class="sd">Turns sensor data into motion decisions. The layer being rewritten in 2025–26 — from hand-coded programs to learned behavior and robotics foundation models.</div>
+        </div>
+
+        <div class="layer-lbl">Interface layer — senses &amp; hands</div>
+        <div class="layer-in l2" style="grid-template-columns:1fr 1fr">
+          <div class="slab" data-goto="perception">
+            <span class="stag sense">Sensors</span>
+            <span class="si">👁️</span>
+            <div class="sn">1 · Perception</div>
+            <div class="sd">How robots see &amp; sense — cameras, stereo, depth, LiDAR, radar, touch. Fused into a model of the world.</div>
+          </div>
+          <div class="slab" data-goto="manipulation">
+            <span class="stag sense">Grippers</span>
+            <span class="si">🦾</span>
+            <div class="sn">4 · Manipulation</div>
+            <div class="sd">How robots touch &amp; grasp — grippers, suction, dexterous hands, tactile skin. The humanoid bottleneck.</div>
+          </div>
+        </div>
+
+        <div class="layer-lbl">Motion layer — the muscles</div>
+        <div class="slab" data-goto="actuation">
+          <span class="stag act">Hardware</span>
+          <span class="si">⚙️</span>
+          <div class="sn">2 · Actuation (Mechatronics)</div>
+          <div class="sd">How robots move — motors, precision reducers, hydraulics. The most concentrated, defensible layer, with real supply bottlenecks.</div>
+        </div>
+
+        <div class="layer-lbl">Foundation layer — endurance</div>
+        <div class="slab" data-goto="power">
+          <span class="stag pow">Energy</span>
+          <span class="si">🔋</span>
+          <div class="sn">5 · Power</div>
+          <div class="sd">The silent constraint — batteries, power electronics, thermal. Caps runtime, payload and how "mobile" a robot really is.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="two">
+      <div class="card">
+        <div class="sechdr" style="border:0;padding:0;margin-bottom:10px"><span class="sect">How to read each module</span></div>
+        <div class="tmpl"><div class="tnum">1</div><div class="ttx"><b>Technical foundation</b><span>How it actually works — the physics, no hand-waving.</span></div></div>
+        <div class="tmpl"><div class="tnum">2</div><div class="ttx"><b>Metrics that matter</b><span>How performance is measured, so real products compare.</span></div></div>
+        <div class="tmpl"><div class="tnum">3</div><div class="ttx"><b>Trade-offs &amp; maturity</b><span>What's improving with AI vs. what stays stuck.</span></div></div>
+        <div class="tmpl"><div class="tnum">4</div><div class="ttx"><b>Cost &amp; bottlenecks</b><span>Where the margin and pricing power sit.</span></div></div>
+        <div class="tmpl"><div class="tnum">5</div><div class="ttx"><b>Competitive landscape</b><span>Who supplies what; vertical vs. horizontal.</span></div></div>
+        <div class="tmpl"><div class="tnum">6</div><div class="ttx"><b>The open debate</b><span>The unresolved question that moves the money.</span></div></div>
+        <div class="tmpl"><div class="tnum">7</div><div class="ttx"><b>Investment implications</b><span>What to watch; inflection signals.</span></div></div>
+      </div>
+
+      <div class="card">
+        <div class="sechdr" style="border:0;padding:0;margin-bottom:10px"><span class="sect">Three postures to test next phase</span></div>
+        <div class="thesis" style="grid-template-columns:1fr">
+          <div class="thes low"><span class="tl">Lower risk</span><div class="tt">Picks &amp; shovels — the component layer</div><p>Reducers, motors, sensors and compute (NVIDIA). Sell to <b>everyone</b>; real bottlenecks confer pricing power regardless of which robot brand wins.</p></div>
+          <div class="thes mid"><span class="tl">Cash flow today</span><div class="tt">Established integrators</div><p>FANUC, ABB, Yaskawa, KUKA, Kawasaki — profitable industrial franchises with humanoid optionality on top.</p></div>
+          <div class="thes high"><span class="tl">High risk / reward</span><div class="tt">The humanoid frontier</div><p>Western AI-premium (Figure, Tesla, Agility) vs. Chinese cost-scale (Unitree, UBTECH). Winner-take-most, unproven economics.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="note">Taxonomy anchored to ISO 8373:2021 (robotics vocabulary) and IFR World Robotics 2025. See the companion doc <b>robotics-technology-landscape.md</b> for the full robot-type classification. Figures are directional, drawn from industry sources cited in the footer.</p>
+  </div>
+
+  <!-- ══════════ ROBOT TYPES (machines) ══════════ -->
+  <div class="pane" data-pane="types">
+    <div class="ph">
+      <div class="ph-num">◇</div>
+      <div class="ph-txt">
+        <div class="ph-sub">Cross-cutting · the machines</div>
+        <h2>Robot Types — the actual machines</h2>
+        <p>The other five tabs are the <b>technology layers inside</b> a robot. This tab is the complementary axis: the <b>physical robot forms</b> you actually buy — classified by mechanical structure (the six IFR industrial types) and by mobility. A Cartesian/XYZ gantry, a SCARA, a delta, a humanoid… each combines the five layers differently. Photos load from Wikimedia Commons; a diagram shows if a photo can't load.</p>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><span class="sect">Industrial robots — by mechanical structure (the IFR six)</span></div>
+      <div class="mgrid">
+
+        <div class="mach">
+          <div class="mach-vis">
+            <img src="img/robotics/KUKA_Industrial_Robots_IR.jpg" alt="Articulated industrial robot arms" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="mach-fallback" style="display:none"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="30" y="54" width="34" height="10" rx="2" fill="#EAF0FE" stroke="#3E5A82"/><path d="M47 54V38l24-8" stroke="#2563EB" stroke-width="3"/><path d="M71 30l13 7" stroke="#2563EB" stroke-width="3"/><circle cx="47" cy="38" r="3.5" fill="#fff"/><circle cx="71" cy="30" r="3.5" fill="#fff"/><path d="M84 37l4-3M84 37l4 3" stroke="#3E5A82"/></svg></div>
+          </div>
+          <div class="mach-body">
+            <span class="mach-tag">6-axis · articulated</span>
+            <div class="mach-n">Articulated arm</div>
+            <div class="mach-d">The classic robot arm with rotary joints — the most common industrial robot. Largest reach and flexibility per footprint.</div>
+            <div class="mach-best"><b>Best for</b> Welding, assembly, painting, machine tending — automotive &amp; general mfg.</div>
+          </div>
+        </div>
+
+        <div class="mach">
+          <div class="mach-vis">
+            <img src="img/robotics/KUKA_Industrial_Robot_KR10_SCARA.jpg" alt="SCARA robot" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="mach-fallback" style="display:none"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="30" y="20" width="10" height="44" rx="2" fill="#EAF0FE" stroke="#3E5A82"/><path d="M40 28h26" stroke="#2563EB" stroke-width="3"/><path d="M66 28h18" stroke="#2563EB" stroke-width="3"/><circle cx="40" cy="28" r="3" fill="#fff"/><circle cx="66" cy="28" r="3" fill="#fff"/><path d="M84 26v18" stroke="#3E5A82" stroke-width="3"/><circle cx="84" cy="28" r="3" fill="#fff"/></svg></div>
+          </div>
+          <div class="mach-body">
+            <span class="mach-tag">4-axis · planar</span>
+            <div class="mach-n">SCARA</div>
+            <div class="mach-d">Rigid vertically, compliant horizontally. Very fast and repeatable for flat pick-and-place and vertical insertion.</div>
+            <div class="mach-best"><b>Best for</b> Electronics assembly, small-parts pick-and-place, packaging.</div>
+          </div>
+        </div>
+
+        <div class="mach">
+          <div class="mach-vis">
+            <img src="img/robotics/Robot_Portico_tecno-840.jpg" alt="Cartesian gantry robot" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="mach-fallback" style="display:none"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="26" y="18" width="68" height="44" rx="2" fill="none" stroke="#3E5A82"/><path d="M26 30h68" stroke="#2563EB" stroke-width="3"/><path d="M60 30v16" stroke="#2563EB" stroke-width="3"/><rect x="55" y="44" width="10" height="8" rx="1" fill="#EAF0FE" stroke="#3E5A82"/></svg></div>
+          </div>
+          <div class="mach-body">
+            <span class="mach-tag">3-axis · linear (XYZ)</span>
+            <div class="mach-n">Cartesian / gantry</div>
+            <div class="mach-d">Linear motion on three perpendicular axes (X-Y-Z); large ones are "gantry" robots. Very high precision and stiffness over a rectangular volume.</div>
+            <div class="mach-best"><b>Best for</b> Large-part handling, palletizing, CNC / 3D-printing, deep-reach tasks.</div>
+          </div>
+        </div>
+
+        <div class="mach">
+          <div class="mach-vis">
+            <img src="img/robotics/Robot_delta_FlexPicker_d_ABB.png" alt="Delta parallel robot (ABB FlexPicker)" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="mach-fallback" style="display:none"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M30 22h60" stroke="#3E5A82" stroke-width="3"/><path d="M36 22l16 26M60 22v26M84 22l-16 26" stroke="#2563EB"/><path d="M52 48h16" stroke="#3E5A82" stroke-width="3"/><path d="M60 48v6" stroke="#3E5A82"/></svg></div>
+          </div>
+          <div class="mach-body">
+            <span class="mach-tag">3–4 axis · parallel</span>
+            <div class="mach-n">Delta / parallel</div>
+            <div class="mach-d">Overhead "spider" with arms on a shared platform. The fastest cycle times of any type, for light objects.</div>
+            <div class="mach-best"><b>Best for</b> High-speed sorting &amp; packaging — food, pharma, consumer goods.</div>
+          </div>
+        </div>
+
+        <div class="mach">
+          <div class="mach-vis">
+            <div class="mach-fallback" style="display:flex"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M44 20a12 4 0 0 1 24 0" stroke="#3E5A82" stroke-dasharray="2 2"/><rect x="40" y="52" width="24" height="10" rx="2" fill="#EAF0FE" stroke="#3E5A82"/><rect x="47" y="24" width="10" height="30" rx="2" fill="#fff" stroke="#3E5A82"/><path d="M57 34h26" stroke="#2563EB" stroke-width="3"/><rect x="80" y="30" width="6" height="8" rx="1" fill="#EAF0FE" stroke="#3E5A82"/></svg></div>
+          </div>
+          <div class="mach-body">
+            <span class="mach-tag">rotary + linear</span>
+            <div class="mach-n">Cylindrical</div>
+            <div class="mach-d">An arm working within a cylindrical envelope (rotary base + vertical + reach). Compact but limited; a declining legacy niche.</div>
+            <div class="mach-best"><b>Best for</b> Machine tending, simple vertical assembly in tight spaces.</div>
+          </div>
+        </div>
+
+        <div class="mach">
+          <div class="mach-vis">
+            <img src="img/robotics/UR16e_robot_arm.png" alt="Universal Robots collaborative robot (cobot)" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="mach-fallback" style="display:none"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="42" y="54" width="24" height="8" rx="3" fill="#EAF0FE" stroke="#3E5A82"/><path d="M54 54V40" stroke="#2563EB" stroke-width="5"/><path d="M54 40q0-10 12-10 12 0 12 10" stroke="#2563EB" stroke-width="5" fill="none"/><path d="M78 40v8" stroke="#2563EB" stroke-width="5"/><circle cx="54" cy="40" r="2.5" fill="#fff"/><circle cx="78" cy="40" r="2.5" fill="#fff"/></svg></div>
+          </div>
+          <div class="mach-body">
+            <span class="mach-tag">functional class</span>
+            <div class="mach-n">Collaborative (cobot)</div>
+            <div class="mach-d">A safety class, not a shape (usually articulated): force-limited to work beside humans without cages. Fast to deploy, lower payload/speed.</div>
+            <div class="mach-best"><b>Best for</b> High-mix / low-volume SMEs, machine tending, labs.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><span class="sect">Mobile &amp; service robots — by locomotion &amp; form</span></div>
+      <div class="mgrid">
+
+        <div class="mach">
+          <div class="mach-vis">
+            <img src="img/robotics/AGV_-_Automated_Guided_Vehicle.jpg" alt="Automated guided vehicle" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="mach-fallback" style="display:none"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="30" y="34" width="60" height="16" rx="3" fill="#EAF0FE" stroke="#3E5A82"/><rect x="44" y="20" width="32" height="14" rx="2" fill="#fff" stroke="#3E5A82"/><circle cx="42" cy="54" r="6" fill="#fff" stroke="#3E5A82"/><circle cx="78" cy="54" r="6" fill="#fff" stroke="#3E5A82"/></svg></div>
+          </div>
+          <div class="mach-body">
+            <span class="mach-tag">wheeled · mobile</span>
+            <div class="mach-n">AGV / AMR</div>
+            <div class="mach-d">Wheeled transport robots. AGVs follow fixed guides; AMRs navigate freely with onboard sensing + SLAM. Efficient on flat floors, can't climb.</div>
+            <div class="mach-best"><b>Best for</b> Warehousing, e-commerce fulfillment, intralogistics, hospitals.</div>
+          </div>
+        </div>
+
+        <div class="mach">
+          <div class="mach-vis">
+            <img src="img/robotics/Ameca_Generation_1.jpg" alt="Humanoid robot (Ameca)" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="mach-fallback" style="display:none"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="60" cy="20" r="7" fill="#EAF0FE" stroke="#3E5A82"/><path d="M60 27v20" stroke="#2563EB" stroke-width="3"/><path d="M60 32l-12 8M60 32l12 8" stroke="#2563EB" stroke-width="3"/><path d="M60 47l-8 15M60 47l8 15" stroke="#2563EB" stroke-width="3"/></svg></div>
+          </div>
+          <div class="mach-body">
+            <span class="mach-tag">bipedal · human form</span>
+            <div class="mach-n">Humanoid</div>
+            <div class="mach-d">Two legs, human shape — built to work in environments and with tools made for humans. Max versatility, but the hardest balance/cost problem.</div>
+            <div class="mach-best"><b>Best for</b> Human-built spaces; logistics/mfg pilots today (emerging).</div>
+          </div>
+        </div>
+
+        <div class="mach">
+          <div class="mach-vis">
+            <img src="img/robotics/Svan_M2-_A_quadruped_robot.jpg" alt="Quadruped robot" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="mach-fallback" style="display:none"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="40" y="30" width="40" height="14" rx="4" fill="#EAF0FE" stroke="#3E5A82"/><path d="M46 44v10l-5 6M56 44v12M64 44v12M74 44v10l5 6" stroke="#2563EB"/><path d="M80 32l8-4" stroke="#3E5A82"/><circle cx="88" cy="28" r="2" fill="#3E5A82" stroke="none"/></svg></div>
+          </div>
+          <div class="mach-body">
+            <span class="mach-tag">four-legged</span>
+            <div class="mach-n">Quadruped</div>
+            <div class="mach-d">Robot "dogs" — stable on rough, uneven terrain and stairs where wheels fail. Expensive, energy-hungry, limited payload.</div>
+            <div class="mach-best"><b>Best for</b> Industrial inspection, security patrol, hazardous-site mapping.</div>
+          </div>
+        </div>
+
+        <div class="mach">
+          <div class="mach-vis">
+            <div class="mach-fallback" style="display:flex"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="52" y="34" width="16" height="10" rx="2" fill="#EAF0FE" stroke="#3E5A82"/><path d="M52 39l-20-8M68 39l20-8M52 41l-20 8M68 41l20 8" stroke="#3E5A82" stroke-width="2"/><g stroke="#2563EB"><ellipse cx="30" cy="30" rx="8" ry="2.5"/><ellipse cx="90" cy="30" rx="8" ry="2.5"/><ellipse cx="30" cy="50" rx="8" ry="2.5"/><ellipse cx="90" cy="50" rx="8" ry="2.5"/></g></svg></div>
+          </div>
+          <div class="mach-body">
+            <span class="mach-tag">aerial · UAV</span>
+            <div class="mach-n">Drone (UAV)</div>
+            <div class="mach-d">Aerial robots — access from above, cover large areas fast, cheap per area. Limited flight time/payload; weather- and airspace-constrained.</div>
+            <div class="mach-best"><b>Best for</b> Inspection, agriculture, surveying, delivery, defense.</div>
+          </div>
+        </div>
+
+        <div class="mach">
+          <div class="mach-vis">
+            <img src="img/robotics/Laproscopic_Surgery_Robot.jpg" alt="Surgical robot (da Vinci)" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="mach-fallback" style="display:none"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="34" y="52" width="52" height="6" rx="2" fill="#EAF0FE" stroke="#3E5A82"/><path d="M50 20v14l-6 14M60 20v28M70 20v14l6 12" stroke="#2563EB"/><path d="M40 20h40" stroke="#3E5A82" stroke-width="3"/></svg></div>
+          </div>
+          <div class="mach-body">
+            <span class="mach-tag">medical · teleoperated</span>
+            <div class="mach-n">Surgical robot</div>
+            <div class="mach-d">Teleoperated precision manipulators (e.g. da Vinci) for minimally-invasive surgery. Sub-mm precision; very high cost; long regulatory cycles.</div>
+            <div class="mach-best"><b>Best for</b> Precision-critical, minimally-invasive healthcare procedures.</div>
+          </div>
+        </div>
+
+      </div>
+      <p class="note">Photos: Wikimedia Commons (freely licensed). Robot structures per IFR / ISO 8373. See the companion <b>robotics-technology-landscape.md</b> for the full classification and pros/cons.</p>
+    </div>
+  </div>
+
+  <!-- ══════════ 1 · PERCEPTION ══════════ -->
+  <div class="pane" data-pane="perception">
+    <div class="ph">
+      <div class="ph-num">👁️</div>
+      <div class="ph-txt">
+        <div class="ph-sub">Layer 1 · The senses</div>
+        <h2>Perception — how robots see &amp; sense</h2>
+        <p>Sensing the environment and interpreting it into a usable model of the world. The central truth: <b>no single sensor is enough</b> — modern robots run <b>sensor fusion</b>, and AI is increasingly the layer that makes cheap sensors "see" as well as expensive ones.</p>
+      </div>
+    </div>
+
+    <div class="meters">
+      <div class="meter"><div class="meter-top"><span class="meter-l">Technical maturity</span><span class="meter-v">High</span></div><div class="meter-track"><div class="meter-fill cool" style="width:82%"></div></div></div>
+      <div class="meter"><div class="meter-top"><span class="meter-l">Pace of AI disruption</span><span class="meter-v">Very high</span></div><div class="meter-track"><div class="meter-fill warm" style="width:88%"></div></div></div>
+    </div>
+
+    <div class="srow">
+      <div class="sc"><div class="sl">3D sensor market</div><div class="sv">~$9.4B</div><div class="ss">by 2026, mostly B2B</div></div>
+      <div class="sc"><div class="sl">Image sensors</div><div class="sv">Sony</div><div class="ss">dominant supplier of the chips inside cameras</div></div>
+      <div class="sc"><div class="sl">LiDAR</div><div class="sv">Consolidating</div><div class="ss">Ouster+Velodyne; Luminar bankruptcy</div></div>
+      <div class="sc"><div class="sl">Direction</div><div class="sv">Camera + AI</div><div class="ss">rising, pressuring sensor cost</div></div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><span class="sect">The sensing technologies</span><span class="secn">how each works · pros · cons · best fit</span></div>
+      <div class="grid">
+        <div class="tech"><div class="tech-h"><span class="tech-ic">📷</span><span class="tech-n">RGB camera (2D vision)</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="36" y="26" width="48" height="30" rx="5" fill="#fff"/><path d="M50 26l3-6h14l3 6" fill="#fff"/><circle cx="60" cy="42" r="10" fill="#EAF0FE" stroke="#2563EB"/><circle cx="60" cy="42" r="4" stroke="#2563EB"/><path d="M22 24v-4h4M98 24v-4h-4M22 58v4h4M98 58v4h-4" stroke="#2563EB"/></svg></div>
+          <div class="tech-how">A normal image sensor + AI (neural nets) to recognize what's in the frame.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Cheap, information-rich (color, text, texture); most mature AI stack.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>No native distance; struggles in low light and glare.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Object recognition, inspection, reading labels.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">👓</span><span class="tech-n">Stereo camera</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="26" y="32" width="68" height="20" rx="5" fill="#fff"/><circle cx="42" cy="42" r="6" fill="#EAF0FE" stroke="#2563EB"/><circle cx="78" cy="42" r="6" fill="#EAF0FE" stroke="#2563EB"/><path d="M42 42l18-22 18 22" stroke="#2563EB" stroke-dasharray="3 3"/><circle cx="60" cy="20" r="2.5" fill="#2563EB" stroke="none"/></svg></div>
+          <div class="tech-how">Two lenses a known distance apart; depth from the disparity between images — like human eyes.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Depth + color, fully passive (emits nothing).</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Fails on textureless surfaces and in darkness.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Legged-robot navigation, general depth (e.g. Spot).</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">🌀</span><span class="tech-n">Depth camera (RGB-D)</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="20" y="30" width="28" height="24" rx="5" fill="#fff"/><circle cx="34" cy="42" r="6" fill="#EAF0FE" stroke="#2563EB"/><path d="M48 36l14-6M48 42h14M48 48l14 6" stroke="#3E5A82" opacity=".5"/><g fill="#2563EB" stroke="none"><circle cx="70" cy="28" r="1.6"/><circle cx="84" cy="28" r="1.6"/><circle cx="98" cy="28" r="1.6"/><circle cx="70" cy="42" r="1.6"/><circle cx="84" cy="42" r="1.6"/><circle cx="98" cy="42" r="1.6"/><circle cx="70" cy="56" r="1.6"/><circle cx="84" cy="56" r="1.6"/><circle cx="98" cy="56" r="1.6"/></g></svg></div>
+          <div class="tech-how">RGB plus an active emitter — structured light or time-of-flight — measuring distance per pixel.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Accurate short-range depth <em>and</em> recognition together.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Short range (metres); degrades in direct sunlight.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Grasping, pick-and-place, indoor robots.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">📡</span><span class="tech-n">LiDAR</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="60" cy="32" rx="15" ry="4" fill="#3E5A82" stroke="#1E2733"/><path d="M45 32v10a15 4 0 0 0 30 0V32" fill="#1E2733" stroke="#1E2733"/><g stroke="#2563EB"><path d="M76 38l22-6M76 44h24M76 50l22 6M44 38l-22-6M44 44H20M44 50l-22 6"/></g></svg></div>
+          <div class="tech-how">Fires laser pulses and times the reflection → a precise 3D point cloud of the scene.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Very accurate 3D maps; works in darkness; long range.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Costly; degrades in fog/rain; no color.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Autonomous navigation, mapping (SLAM), AVs.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">〰️</span><span class="tech-n">Radar</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="28" y="30" width="22" height="24" rx="4" fill="#fff"/><path d="M56 22a22 22 0 0 1 0 40" stroke="#2563EB"/><path d="M56 30a14 14 0 0 1 0 24" stroke="#2563EB"/><path d="M56 38a7 7 0 0 1 0 10" stroke="#2563EB"/><circle cx="90" cy="42" r="5" fill="#EAF0FE" stroke="#3E5A82"/></svg></div>
+          <div class="tech-how">Radio waves instead of light; measures range and velocity directly.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Works through fog/rain/dust; measures speed.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Low resolution — can't resolve fine shapes.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Outdoor, adverse weather, high-speed detection.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">✋</span><span class="tech-n">Tactile / force sensing</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M50 58V36a10 10 0 0 1 20 0v22" fill="#fff"/><path d="M52 30q8-8 16 0" stroke="#2563EB"/><path d="M48 24q12-9 24 0" stroke="#2563EB" opacity=".55"/><g fill="#2563EB" stroke="none"><circle cx="56" cy="46" r="1.6"/><circle cx="64" cy="46" r="1.6"/><circle cx="60" cy="52" r="1.6"/></g></svg></div>
+          <div class="tech-how">"Skin" on fingers and grippers measuring pressure and force.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Enables grasping without crushing; feel texture/slip.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Immature, expensive; sits between sensing &amp; manipulation.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Fine manipulation, fragile objects.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><span class="sect">Metrics that matter</span></div>
+      <div class="chips">
+        <span class="chip"><b>Range</b> — cm to 200m+</span>
+        <span class="chip"><b>Resolution</b> — pixels / points-per-second</span>
+        <span class="chip"><b>Accuracy</b> — depth error in mm</span>
+        <span class="chip"><b>Field of view</b> — degrees</span>
+        <span class="chip"><b>Frame rate</b> — Hz / latency</span>
+        <span class="chip"><b>Cost / unit</b> — $ at volume</span>
+        <span class="chip"><b>Power draw</b> — W</span>
+        <span class="chip"><b>Robustness</b> — light / weather</span>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><span class="sect">Head-to-head</span></div>
+      <div class="twrap"><table class="cmp">
+        <tr><th>Sensor</th><th>Gives distance?</th><th>Range</th><th>Low light</th><th>Rel. cost</th><th>Best fit</th></tr>
+        <tr><td class="name">RGB camera</td><td>No (AI-inferred)</td><td>—</td><td>Poor</td><td>$</td><td>Recognition</td></tr>
+        <tr><td class="name">Stereo</td><td>Yes (passive)</td><td>Short–med</td><td>Poor</td><td>$$</td><td>Navigation</td></tr>
+        <tr><td class="name">Depth (RGB-D)</td><td>Yes (active)</td><td>Short</td><td>Good</td><td>$$</td><td>Grasping</td></tr>
+        <tr><td class="name">LiDAR</td><td>Yes (precise)</td><td>Long</td><td>Excellent</td><td>$$$$</td><td>Mapping / AV</td></tr>
+        <tr><td class="name">Radar</td><td>Yes (coarse)</td><td>Long</td><td>Excellent</td><td>$$</td><td>Bad weather</td></tr>
+      </table></div>
+    </div>
+
+    <div class="sec">
+      <div class="debate">
+        <div class="dh">⚑ The debate that decides winners</div>
+        <p><b>Rich sensor suite (LiDAR-led) vs. vision-only (cameras + AI).</b> As AI gets better at inferring depth from plain images, the case for expensive LiDAR weakens — yet unit demand for sensors from humanoids and AVs keeps rising even as the LiDAR industry consolidates.</p>
+        <div class="vs">
+          <div class="side"><h5>Vision-only camp</h5><p>Cameras are cheap and scale; the intelligence moves to software. Bet: AI closes the gap (Tesla's approach).</p></div>
+          <div class="vsmid">vs</div>
+          <div class="side"><h5>Sensor-fusion camp</h5><p>Redundancy = safety; LiDAR gives ground-truth 3D that AI can't yet guarantee. Bet: hardware reliability wins (Waymo).</p></div>
+        </div>
+        <p>Whoever's right reshapes a multi-billion-dollar sensor market and decides whether LiDAR is a growth industry or a squeezed one.</p>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><span class="sect">Key players</span><span class="secn">blue = strongest structural position</span></div>
+      <div class="players">
+        <div class="player hi"><span class="pn">Sony / OmniVision</span><span class="pr">Image sensors — the silicon in every camera</span></div>
+        <div class="player"><span class="pn">Ouster</span><span class="pr">LiDAR (absorbed Velodyne)</span></div>
+        <div class="player"><span class="pn">Hesai / RoboSense</span><span class="pr">LiDAR — China scale leaders</span></div>
+        <div class="player"><span class="pn">Orbbec</span><span class="pr">Depth cameras (took RealSense's void)</span></div>
+        <div class="player"><span class="pn">Stereolabs (ZED)</span><span class="pr">Stereo depth + AI</span></div>
+        <div class="player hi"><span class="pn">Mobileye</span><span class="pr">Vision chips + software</span></div>
+        <div class="player"><span class="pn">Tesla</span><span class="pr">Vision-only strategy</span></div>
+      </div>
+    </div>
+
+    <div class="invest">
+      <div class="ih">◆ Investment implications</div>
+      <ul>
+        <li><b>Image-sensor oligopoly</b> — Sony/OmniVision sell to every camera-based robot regardless of who wins; a classic toll on the vision layer.</li>
+        <li><b>LiDAR is consolidating</b> — treat pure-play LiDAR names as high-variance; the vision-only thesis is the tail risk to underwrite.</li>
+        <li><b>Watch the camera-only inflection</b> — each step-change in AI depth estimation is bearish for premium sensors and bullish for compute/software.</li>
+        <li><b>Tactile sensing is an emerging category</b> — early, but a prerequisite for humanoid dexterity (bridges into Layer 4).</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══════════ 2 · ACTUATION ══════════ -->
+  <div class="pane" data-pane="actuation">
+    <div class="ph">
+      <div class="ph-num">⚙️</div>
+      <div class="ph-txt">
+        <div class="ph-sub">Layer 2 · The muscles</div>
+        <h2>Actuation — how robots move</h2>
+        <p>Converting energy into precise, controllable motion. This is the <b>most concentrated and defensible layer</b> in the whole stack — a handful of suppliers own the critical components, and demand from humanoids is running into real capacity limits.</p>
+      </div>
+    </div>
+
+    <div class="meters">
+      <div class="meter"><div class="meter-top"><span class="meter-l">Technical maturity</span><span class="meter-v">Very high</span></div><div class="meter-track"><div class="meter-fill cool" style="width:90%"></div></div></div>
+      <div class="meter"><div class="meter-top"><span class="meter-l">Pace of AI disruption</span><span class="meter-v">Low (hardware-bound)</span></div><div class="meter-track"><div class="meter-fill" style="width:35%"></div></div></div>
+    </div>
+
+    <div class="srow">
+      <div class="sc"><div class="sl">Harmonic reducers</div><div class="sv">~85%</div><div class="ss">Harmonic Drive global share</div></div>
+      <div class="sc"><div class="sl">RV reducers</div><div class="sv">~60%</div><div class="ss">Nabtesco, medium/large joints</div></div>
+      <div class="sc"><div class="sl">Precision motors</div><div class="sv">&gt;70%</div><div class="ss">Maxon+Faulhaber+Portescap</div></div>
+      <div class="sc"><div class="sl">Per humanoid</div><div class="sv">~14+14</div><div class="ss">harmonic + planetary reducers</div></div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><span class="sect">The actuation technologies</span></div>
+      <div class="grid">
+        <div class="tech"><div class="tech-h"><span class="tech-ic">🔩</span><span class="tech-n">Precision reducers / gearboxes</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><g stroke="#3E5A82"><circle cx="48" cy="40" r="15" fill="#fff"/><path d="M48 21v5M48 54v5M29 40h5M62 40h5M35 27l3 3M58 50l3 3M61 27l-3 3M38 50l-3 3"/><circle cx="48" cy="40" r="5" fill="#EAF0FE"/></g><g stroke="#2563EB"><circle cx="82" cy="46" r="10" fill="#fff"/><path d="M82 34v4M82 54v4M70 46h4M90 46h4"/><circle cx="82" cy="46" r="3" fill="#EAF0FE"/></g></svg></div>
+          <div class="tech-how">Gearing that trades motor speed for joint torque. Harmonic &amp; RV (cycloidal) are the high-precision types; the single most critical component.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Enable precise, high-torque, near-zero-backlash joints.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Capacity-constrained; long lead times; a genuine bottleneck.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Every articulated joint — the choke point of the whole industry.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">🧲</span><span class="tech-n">Electric motors (BLDC / servo)</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="32" y="30" width="42" height="22" rx="4" fill="#fff"/><path d="M40 30v22M48 30v22M56 30v22M64 30v22" opacity=".45"/><rect x="74" y="38" width="16" height="6" rx="2" fill="#1E2733" stroke="#1E2733"/><rect x="28" y="34" width="4" height="14" rx="1" fill="#3E5A82" stroke="#3E5A82"/></svg></div>
+          <div class="tech-how">Brushless motors with encoders and controllers; the default "muscle" of modern robots.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Precise, clean, software-controllable, reliable.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Lower peak force-per-size than hydraulics.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Almost all robots today, including humanoids.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">📦</span><span class="tech-n">Integrated actuators</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="34" y="24" width="52" height="34" rx="6" fill="#fff"/><circle cx="50" cy="41" r="8" fill="#EAF0FE" stroke="#3E5A82"/><circle cx="50" cy="41" r="2.5" stroke="#3E5A82"/><rect x="64" y="30" width="15" height="11" rx="2" fill="#fff" stroke="#2563EB"/><path d="M67 45h9M67 50h9" stroke="#2563EB"/></svg></div>
+          <div class="tech-how">Motor + reducer + controller + sensor packaged as one "joint module."</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Faster development; compact; popular with humanoid startups.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Less optimization freedom; still depends on reducer supply.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Rapid humanoid prototyping and volume scaling.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">💧</span><span class="tech-n">Hydraulic</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="28" y="32" width="46" height="18" rx="3" fill="#EAF0FE" stroke="#3E5A82"/><rect x="32" y="35" width="12" height="12" fill="#2563EB" stroke="none" opacity=".25"/><path d="M44 32v18" stroke="#3E5A82"/><rect x="74" y="37" width="20" height="8" rx="1" fill="#1E2733" stroke="#1E2733"/></svg></div>
+          <div class="tech-how">Pressurized fluid drives pistons — brute force and explosive motion.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Highest force density; fast, powerful movements.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Heavy, leaky, hard to control, costly.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Heavy machinery, legacy high-power robots (old Atlas).</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">💨</span><span class="tech-n">Pneumatic</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M28 34l7 14 7-14 7 14 7-14" fill="none" stroke="#3E5A82"/><rect x="60" y="34" width="26" height="14" rx="3" fill="#EAF0FE" stroke="#3E5A82"/><path d="M90 34c4 2 4 6 0 8" stroke="#2563EB"/></svg></div>
+          <div class="tech-how">Compressed air actuators — light and compliant.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Cheap, lightweight, inherently "soft"/safe.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Imprecise; needs a compressor.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Simple grippers, soft robotics.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">🧬</span><span class="tech-n">Soft / novel actuators</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M34 54c0-24 4-30 24-30 8 0 14-4 14-12" stroke="#2563EB" stroke-width="6" fill="none" opacity=".85"/><path d="M42 40h9M40 46h9" stroke="#fff"/></svg></div>
+          <div class="tech-how">Shape-memory alloys, electroactive polymers, artificial-muscle concepts.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Light, human-safe, compliant.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Experimental; limited force/durability today.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Next-gen soft/wearable robotics (watch-list).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><span class="sect">Metrics that matter</span></div>
+      <div class="chips">
+        <span class="chip"><b>Torque density</b> — Nm per kg</span>
+        <span class="chip"><b>Backlash</b> — arc-min (lower = tighter)</span>
+        <span class="chip"><b>Efficiency</b> — % energy to motion</span>
+        <span class="chip"><b>Repeatability</b> — ±mm</span>
+        <span class="chip"><b>Backdrivability</b> — force sensitivity</span>
+        <span class="chip"><b>Peak vs. continuous</b> — torque</span>
+        <span class="chip"><b>Cost / joint</b> — $</span>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="debate">
+        <div class="dh">⚑ The debate that decides winners</div>
+        <p><b>Does the Japanese reducer duopoly hold, or does China/vertical integration break it?</b> Harmonic Drive (~85%) and Nabtesco (~60%) own the precision-reducer choke point, and their capacity is a live constraint as humanoids scale — a textbook pricing-power position.</p>
+        <div class="vs">
+          <div class="side"><h5>Moat holds</h5><p>Precision reducers are decades of metallurgy &amp; process know-how; hard to replicate. Incumbents capture the humanoid boom.</p></div>
+          <div class="vsmid">vs</div>
+          <div class="side"><h5>Moat erodes</h5><p>China (Leader Drive, Sanhua) localizes cheaper reducers; humanoid makers integrate actuators in-house to escape the bottleneck.</p></div>
+        </div>
+        <p>The answer sets margins across the entire humanoid supply chain — this is the clearest single lever in the stack.</p>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><span class="sect">Key players</span><span class="secn">blue = bottleneck / pricing power</span></div>
+      <div class="players">
+        <div class="player hi"><span class="pn">Harmonic Drive</span><span class="pr">Harmonic reducers ~85%</span></div>
+        <div class="player hi"><span class="pn">Nabtesco</span><span class="pr">RV reducers ~60%</span></div>
+        <div class="player"><span class="pn">Leader Drive / Sanhua</span><span class="pr">China reducer challengers</span></div>
+        <div class="player"><span class="pn">Maxon / Faulhaber / Portescap</span><span class="pr">Precision motors &gt;70%</span></div>
+        <div class="player"><span class="pn">Nidec</span><span class="pr">Motors at scale</span></div>
+        <div class="player"><span class="pn">CubeMars / T-Motor</span><span class="pr">Integrated servo actuators</span></div>
+      </div>
+    </div>
+
+    <div class="invest">
+      <div class="ih">◆ Investment implications</div>
+      <ul>
+        <li><b>The clearest "picks &amp; shovels"</b> — reducers and precision motors sell to every robot maker, humanoid or industrial; a supply constraint is pricing power.</li>
+        <li><b>Watch China localization</b> — the key swing factor; erosion of the Japanese reducer moat is the main downside to the incumbent thesis.</li>
+        <li><b>Integrated-actuator makers</b> — a faster-growing, more competitive niche; benefit from humanoid volume but with thinner differentiation.</li>
+        <li><b>Low AI-disruption risk</b> — this is hardware/metallurgy; value accrues to whoever can physically build precision at volume.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══════════ 3 · INTELLIGENCE ══════════ -->
+  <div class="pane" data-pane="intelligence">
+    <div class="ph">
+      <div class="ph-num">🧠</div>
+      <div class="ph-txt">
+        <div class="ph-sub">Layer 3 · The brain</div>
+        <h2>Intelligence — physical AI</h2>
+        <p>The software that turns perception into action. Historically every motion was <b>hand-programmed</b>; the shift now underway — toward <b>learned behavior and robotics foundation models</b> — is the single biggest reason robots are moving from lab to deployment in 2025–26.</p>
+      </div>
+    </div>
+
+    <div class="meters">
+      <div class="meter"><div class="meter-top"><span class="meter-l">Technical maturity</span><span class="meter-v">Emerging</span></div><div class="meter-track"><div class="meter-fill cool" style="width:45%"></div></div></div>
+      <div class="meter"><div class="meter-top"><span class="meter-l">Pace of AI disruption</span><span class="meter-v">Maximum</span></div><div class="meter-track"><div class="meter-fill warm" style="width:97%"></div></div></div>
+    </div>
+
+    <div class="srow">
+      <div class="sc"><div class="sl">Training platform</div><div class="sv">NVIDIA</div><div class="ss">Isaac / Omniverse — near-universal</div></div>
+      <div class="sc"><div class="sl">Locomotion</div><div class="sv">RL-learned</div><div class="ss">robots learn to walk, not coded</div></div>
+      <div class="sc"><div class="sl">New model class</div><div class="sv">VLA</div><div class="ss">vision-language-action models</div></div>
+      <div class="sc"><div class="sl">Key scarce input</div><div class="sv">Real data</div><div class="ss">robot interaction data is the moat</div></div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><span class="sect">The intelligence sub-layers</span></div>
+      <div class="grid">
+        <div class="tech"><div class="tech-h"><span class="tech-ic">🔎</span><span class="tech-n">Perception AI</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M26 42q13-13 28 0-13 13-28 0Z" fill="#fff" stroke="#3E5A82"/><circle cx="40" cy="42" r="5" fill="#EAF0FE" stroke="#2563EB"/><g stroke="#2563EB"><path d="M62 34l16-6M62 42h16M62 50l16 6M78 28l14 14M78 42h14M78 56L92 42"/></g><g fill="#2563EB" stroke="none"><circle cx="78" cy="28" r="2.5"/><circle cx="78" cy="42" r="2.5"/><circle cx="78" cy="56" r="2.5"/><circle cx="92" cy="42" r="2.5"/></g></svg></div>
+          <div class="tech-how">Computer-vision models that turn raw sensor data into recognized objects, poses and scenes.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Very mature; can substitute for expensive sensors.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Edge cases &amp; safety guarantees still hard.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Making cheap cameras "see" — links back to Layer 1.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">🎮</span><span class="tech-n">Control &amp; learning (RL / imitation)</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="38" y="30" width="26" height="22" rx="5" fill="#fff"/><circle cx="46" cy="41" r="2.5" fill="#3E5A82" stroke="none"/><circle cx="56" cy="41" r="2.5" fill="#3E5A82" stroke="none"/><path d="M51 30v-6"/><circle cx="51" cy="22" r="2" fill="#EAF0FE"/><path d="M72 32a18 18 0 1 1-5-6" stroke="#2563EB"/><path d="M67 22l5 4-1 6" stroke="#2563EB"/><path d="M84 44v9M79 48h10" stroke="#2563EB"/></svg></div>
+          <div class="tech-how">Reinforcement &amp; imitation learning teach balance, walking and manipulation instead of hand-coding them.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Handles dynamic tasks (walking, recovery) impossible to script.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Data-hungry; sim-to-real gap; hard to certify.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Legged locomotion, dexterous manipulation.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">🌐</span><span class="tech-n">Foundation models (VLA)</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="42" y="24" width="36" height="34" rx="8" fill="#fff" stroke="#2563EB"/><path d="M50 41q5-9 10 0 5 9 10 0" stroke="#2563EB"/><g stroke="#3E5A82"><path d="M42 32h-8M42 41h-8M42 50h-8M78 32h8M78 41h8M78 50h8M50 24v-6M60 24v-6M70 24v-6M50 58v6M60 58v6M70 58v6"/></g></svg></div>
+          <div class="tech-how">Large vision-language-action models aiming to be a "GPT for robots" — one model, many tasks.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Generalization; a single brain across tasks/robots.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Early; reliability &amp; data scarcity unresolved.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;The long-term general-purpose robot bet.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">🕹️</span><span class="tech-n">Simulation &amp; sim-to-real</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="32" y="22" width="56" height="36" rx="4" fill="#fff"/><path d="M32 48h56" stroke="#3E5A82" opacity=".5"/><path d="M42 48l6-6M56 48l6-6M70 48l6-6" stroke="#3E5A82" opacity=".35"/><rect x="54" y="36" width="10" height="12" rx="1" fill="#EAF0FE" stroke="#2563EB"/><path d="M50 58h20M60 58v5" stroke="#3E5A82"/></svg></div>
+          <div class="tech-how">Virtual worlds where robots train millions of times faster than reality, then transfer to hardware.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Cheap, safe, massively parallel training.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>The "reality gap" — sim ≠ real physics.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Training locomotion/manipulation at scale (NVIDIA Isaac).</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">💽</span><span class="tech-n">Edge compute</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="44" y="26" width="32" height="32" rx="4" fill="#EAF0FE" stroke="#2563EB"/><rect x="52" y="34" width="16" height="16" rx="2" fill="#fff" stroke="#2563EB"/><g stroke="#3E5A82"><path d="M50 26v-6M58 26v-6M66 26v-6M50 58v6M58 58v6M66 58v6M44 34h-6M44 42h-6M44 50h-6M76 34h6M76 42h6M76 50h6"/></g></svg></div>
+          <div class="tech-how">On-board chips running inference in real time within the robot's power budget.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Low latency; no cloud dependency.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Compute vs. power/heat trade-off (ties to Layer 5).</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Real-time autonomy on mobile robots.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">🧭</span><span class="tech-n">Navigation &amp; SLAM</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="28" y="20" width="64" height="40" rx="4" fill="#fff"/><rect x="50" y="30" width="10" height="9" fill="#EEF1F5" stroke="#3E5A82"/><path d="M38 54q8-16 22-10 12 5 20-14" stroke="#2563EB" stroke-dasharray="4 3"/><circle cx="38" cy="54" r="3" fill="#2563EB" stroke="none"/><circle cx="80" cy="30" r="3.5" fill="#EAF0FE" stroke="#3E5A82"/></svg></div>
+          <div class="tech-how">Simultaneous localization and mapping — build a map while tracking position in it.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Mature; enables autonomous mobile robots (AMRs).</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Dynamic, crowded environments still challenge it.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Warehouse AMRs, autonomous navigation.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><span class="sect">Metrics that matter</span></div>
+      <div class="chips">
+        <span class="chip"><b>Generalization</b> — tasks per model</span>
+        <span class="chip"><b>Data efficiency</b> — demos to learn a task</span>
+        <span class="chip"><b>Sim-to-real gap</b> — transfer success %</span>
+        <span class="chip"><b>Inference latency</b> — ms</span>
+        <span class="chip"><b>Success rate</b> — % task completion</span>
+        <span class="chip"><b>Compute per action</b> — TOPS / joules</span>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="debate">
+        <div class="dh">⚑ The debate that decides winners</div>
+        <p><b>Who owns the "robot brain" layer — vertical hardware makers or horizontal model providers?</b> This is the highest-uncertainty, highest-upside question in the entire stack, and the one most analogous to the LLM platform wars.</p>
+        <div class="vs">
+          <div class="side"><h5>Vertical / integrated</h5><p>Tesla, Figure own hardware <em>and</em> brain — data flywheel from their own fleet; tight hardware-software co-design.</p></div>
+          <div class="vsmid">vs</div>
+          <div class="side"><h5>Horizontal / model layer</h5><p>Physical Intelligence, Google DeepMind sell a foundation model to <em>all</em> robot makers — the "Android for robots" play.</p></div>
+        </div>
+        <p>And underneath both: <b>NVIDIA</b> collects a toll on training/simulation regardless of who wins the application layer.</p>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><span class="sect">Key players</span><span class="secn">blue = structural toll position</span></div>
+      <div class="players">
+        <div class="player hi"><span class="pn">NVIDIA</span><span class="pr">Compute + Isaac/Omniverse — universal</span></div>
+        <div class="player"><span class="pn">Google DeepMind</span><span class="pr">Gemini Robotics (VLA models)</span></div>
+        <div class="player"><span class="pn">Physical Intelligence</span><span class="pr">Robot foundation models</span></div>
+        <div class="player"><span class="pn">Skild AI</span><span class="pr">General robot "brain" startup</span></div>
+        <div class="player"><span class="pn">Tesla / Figure</span><span class="pr">Vertical: own hardware + AI</span></div>
+      </div>
+    </div>
+
+    <div class="invest">
+      <div class="ih">◆ Investment implications</div>
+      <ul>
+        <li><b>NVIDIA is the toll booth</b> — nearly everyone trains and simulates on its stack; the lowest-variance way to own the AI layer.</li>
+        <li><b>The foundation-model layer is the wild card</b> — highest upside, highest uncertainty; watch whether a horizontal "robot GPT" or vertical stacks win.</li>
+        <li><b>Data is the real moat</b> — real-world robot interaction data is scarce; fleets in the field (Tesla, Figure, Amazon) compound an advantage.</li>
+        <li><b>This layer re-prices the others</b> — better AI commoditizes sensors (Layer 1) and raises the value of data &amp; compute.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══════════ 4 · MANIPULATION ══════════ -->
+  <div class="pane" data-pane="manipulation">
+    <div class="ph">
+      <div class="ph-num">🦾</div>
+      <div class="ph-txt">
+        <div class="ph-sub">Layer 4 · The hands</div>
+        <h2>Manipulation — how robots touch &amp; grasp</h2>
+        <p>The physical interface with the world: the tool at the end of the arm. Grippers for fixed tasks are mature — but the <b>general-purpose dexterous hand is the single biggest bottleneck</b> standing between humanoids and real utility.</p>
+      </div>
+    </div>
+
+    <div class="meters">
+      <div class="meter"><div class="meter-top"><span class="meter-l">Technical maturity</span><span class="meter-v">Split: grippers high, hands low</span></div><div class="meter-track"><div class="meter-fill cool" style="width:52%"></div></div></div>
+      <div class="meter"><div class="meter-top"><span class="meter-l">Pace of AI disruption</span><span class="meter-v">High</span></div><div class="meter-track"><div class="meter-fill warm" style="width:78%"></div></div></div>
+    </div>
+
+    <div class="srow">
+      <div class="sc"><div class="sl">Industrial grippers</div><div class="sv">Mature</div><div class="ss">2-finger &amp; suction, well-solved</div></div>
+      <div class="sc"><div class="sl">Dexterous hands</div><div class="sv">Bottleneck</div><div class="ss">costly, fragile, unreliable at scale</div></div>
+      <div class="sc"><div class="sl">Human hand DoF</div><div class="sv">~27</div><div class="ss">the target robots chase</div></div>
+      <div class="sc"><div class="sl">Enabler</div><div class="sv">Tactile</div><div class="ss">touch sensing unlocks fine grasping</div></div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><span class="sect">The end-effector technologies</span></div>
+      <div class="grid">
+        <div class="tech"><div class="tech-h"><span class="tech-ic">🤏</span><span class="tech-n">2-finger / parallel grippers</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M60 20v10" stroke="#3E5A82"/><rect x="46" y="30" width="28" height="6" rx="2" fill="#fff"/><path d="M50 36v16h5V42" fill="#fff"/><path d="M70 36v16h-5V42" fill="#fff"/><rect x="55" y="42" width="10" height="14" rx="1" fill="#EAF0FE" stroke="#3E5A82"/></svg></div>
+          <div class="tech-how">Two jaws that open and close — the workhorse of industrial automation.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Cheap, reliable, simple to control.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Limited to objects that fit the jaw; no dexterity.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Pick-and-place of known, uniform parts.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">🌬️</span><span class="tech-n">Suction / vacuum</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M60 22v10" stroke="#3E5A82"/><path d="M46 32h28l-7 13H53Z" fill="#EAF0FE" stroke="#2563EB"/><path d="M38 52h44" stroke="#3E5A82"/></svg></div>
+          <div class="tech-how">A vacuum cup grips flat or smooth surfaces.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Fast, gentle, great for boxes/sheets/glass.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Needs a flat, non-porous, sealable surface.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Logistics, packaging, warehouse picking.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">🫧</span><span class="tech-n">Soft grippers</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="50" y="22" width="20" height="7" rx="2" fill="#fff" stroke="#3E5A82"/><circle cx="60" cy="47" r="12" fill="#EAF0FE" stroke="#3E5A82"/><path d="M50 29q-6 12 2 20" stroke="#2563EB" stroke-width="4" fill="none"/><path d="M70 29q6 12-2 20" stroke="#2563EB" stroke-width="4" fill="none"/></svg></div>
+          <div class="tech-how">Compliant, often air-driven fingers that conform to the object.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Handle irregular, delicate, variable items safely.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Lower precision &amp; force; slower.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Food handling, fragile/mixed goods.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">🖐️</span><span class="tech-n">Multi-finger dexterous hands</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="48" y="40" width="24" height="16" rx="3" fill="#fff"/><rect x="49" y="24" width="4" height="18" rx="2" fill="#fff"/><rect x="55" y="20" width="4" height="22" rx="2" fill="#fff"/><rect x="61" y="20" width="4" height="22" rx="2" fill="#fff"/><rect x="67" y="24" width="4" height="18" rx="2" fill="#fff"/><path d="M72 48l10-6" stroke="#3E5A82" stroke-width="4" stroke-linecap="round"/></svg></div>
+          <div class="tech-how">Human-like hands with many actuated joints — the humanoid end-goal.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Can (in principle) use human tools and do any manual task.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Very expensive, fragile, hard to control — the bottleneck.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;General-purpose humanoids (still maturing).</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">👆</span><span class="tech-n">Tactile skin / sensing</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M48 58V34a12 12 0 0 1 24 0v24" fill="#fff"/><g fill="#2563EB" stroke="none"><circle cx="55" cy="34" r="1.5"/><circle cx="60" cy="34" r="1.5"/><circle cx="65" cy="34" r="1.5"/><circle cx="55" cy="41" r="1.5"/><circle cx="60" cy="41" r="1.5"/><circle cx="65" cy="41" r="1.5"/><circle cx="55" cy="48" r="1.5"/><circle cx="60" cy="48" r="1.5"/><circle cx="65" cy="48" r="1.5"/></g></svg></div>
+          <div class="tech-how">Pressure/force sensors on fingertips giving a sense of touch and slip.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Enables grasping fragile items without crushing.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Immature; durability and cost unproven.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Fine, feedback-driven manipulation (bridges Layer 1).</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">🔧</span><span class="tech-n">Task-specific tools</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="44" y="22" width="12" height="7" rx="2" fill="#fff"/><path d="M50 29v8l-6 14" stroke="#3E5A82" stroke-width="3"/><path d="M44 51l-3 6" stroke="#2563EB" stroke-width="3"/><g stroke="#2563EB"><path d="M40 60l-3 4M45 60v5M37 58l-4 2"/></g></svg></div>
+          <div class="tech-how">Welders, screwdrivers, dispensers bolted to the arm for one job.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Optimal performance and cost for a fixed task.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Zero flexibility — one tool, one job.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;High-volume industrial lines.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><span class="sect">Metrics that matter</span></div>
+      <div class="chips">
+        <span class="chip"><b>Degrees of freedom</b> — actuated joints</span>
+        <span class="chip"><b>Payload</b> — kg grasped</span>
+        <span class="chip"><b>Grip force</b> — N, and control range</span>
+        <span class="chip"><b>Cycle time</b> — grasps/min</span>
+        <span class="chip"><b>Tactile resolution</b> — sensing points</span>
+        <span class="chip"><b>Object generality</b> — variety handled</span>
+        <span class="chip"><b>Cost &amp; durability</b> — $ / cycles</span>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="debate">
+        <div class="dh">⚑ The debate that decides winners</div>
+        <p><b>Is a general-purpose 5-finger hand necessary — or is it over-engineering?</b> Dexterous hands are where humanoid cost, fragility and unreliability concentrate. The answer shapes the humanoid bill-of-materials and timeline.</p>
+        <div class="vs">
+          <div class="side"><h5>Dexterity is essential</h5><p>To do human jobs in human spaces with human tools, robots need human-like hands + touch. Solve it and the market unlocks.</p></div>
+          <div class="vsmid">vs</div>
+          <div class="side"><h5>Simpler wins first</h5><p>Most valuable tasks need only 2–3 fingers or swappable tools. Chasing full dexterity delays useful, cheaper robots.</p></div>
+        </div>
+        <p>Whichever proves true determines whether humanoids are near-term products or a longer-dated dream.</p>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><span class="sect">Key players</span></div>
+      <div class="players">
+        <div class="player"><span class="pn">OnRobot / Schunk</span><span class="pr">Industrial grippers &amp; tooling</span></div>
+        <div class="player"><span class="pn">Soft Robotics</span><span class="pr">Compliant grippers</span></div>
+        <div class="player"><span class="pn">Shadow Robot</span><span class="pr">Dexterous research hands</span></div>
+        <div class="player hi"><span class="pn">Tesla / Figure / Sanctuary</span><span class="pr">Building humanoid hands in-house</span></div>
+        <div class="player"><span class="pn">Tactile-sensing startups</span><span class="pr">Emerging touch category</span></div>
+      </div>
+    </div>
+
+    <div class="invest">
+      <div class="ih">◆ Investment implications</div>
+      <ul>
+        <li><b>The gating factor for humanoid utility</b> — progress (or lack of it) on dexterous hands is a leading indicator for the whole humanoid thesis.</li>
+        <li><b>Industrial grippers are a stable niche</b> — mature, profitable, but not where the exponential upside is.</li>
+        <li><b>Tactile sensing is an emerging pick-and-shovel</b> — a prerequisite for dexterity; a small category that could inflect.</li>
+        <li><b>Much value is being captured in-house</b> — leading humanoid makers build their own hands, limiting the merchant-supplier opportunity.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══════════ 5 · POWER ══════════ -->
+  <div class="pane" data-pane="power">
+    <div class="ph">
+      <div class="ph-num">🔋</div>
+      <div class="ph-txt">
+        <div class="ph-sub">Layer 5 · The foundation</div>
+        <h2>Power — the endurance constraint</h2>
+        <p>The most overlooked layer, and often the binding one. Energy storage and delivery cap <b>runtime, payload, force and how autonomous a mobile robot can really be</b> — a humanoid that runs a couple of hours per charge isn't yet an all-day worker.</p>
+      </div>
+    </div>
+
+    <div class="meters">
+      <div class="meter"><div class="meter-top"><span class="meter-l">Technical maturity</span><span class="meter-v">Medium (EV-derived)</span></div><div class="meter-track"><div class="meter-fill cool" style="width:65%"></div></div></div>
+      <div class="meter"><div class="meter-top"><span class="meter-l">Pace of improvement</span><span class="meter-v">Steady, not exponential</span></div><div class="meter-track"><div class="meter-fill" style="width:48%"></div></div></div>
+    </div>
+
+    <div class="srow">
+      <div class="sc"><div class="sl">Humanoid runtime</div><div class="sv">~2–5h</div><div class="ss">typical per charge today</div></div>
+      <div class="sc"><div class="sl">Supply chain</div><div class="sv">Shared</div><div class="ss">rides the EV battery ecosystem</div></div>
+      <div class="sc"><div class="sl">Binding metric</div><div class="sv">Wh/kg</div><div class="ss">energy density gates endurance</div></div>
+      <div class="sc"><div class="sl">Frontier</div><div class="sv">Solid-state</div><div class="ss">higher density, still pre-scale</div></div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><span class="sect">The power technologies</span></div>
+      <div class="grid">
+        <div class="tech"><div class="tech-h"><span class="tech-ic">🔋</span><span class="tech-n">Li-ion battery packs</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="34" y="28" width="50" height="26" rx="4" fill="#fff"/><path d="M44 28v26M54 28v26M64 28v26M74 28v26" opacity=".4"/><rect x="84" y="36" width="4" height="10" rx="1" fill="#1E2733" stroke="#1E2733"/><path d="M58 33l-5 9h7l-5 9" stroke="#2563EB" fill="none"/></svg></div>
+          <div class="tech-how">The default energy store, largely borrowed from the EV and electronics supply chain.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Mature, scalable, falling $/kWh from EV volumes.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Energy density caps runtime; adds weight &amp; heat.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Virtually all mobile robots today.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">🧮</span><span class="tech-n">Battery management (BMS)</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="28" y="30" width="30" height="22" rx="3" fill="#fff"/><path d="M38 30v22M48 30v22" opacity=".4"/><path d="M58 36h10M58 46h10" stroke="#2563EB"/><rect x="68" y="32" width="18" height="18" rx="2" fill="#EAF0FE" stroke="#2563EB"/><g stroke="#3E5A82"><path d="M73 32v-4M81 32v-4M73 50v4M81 50v4"/></g></svg></div>
+          <div class="tech-how">Electronics that balance cells, manage charge/heat and protect the pack.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Extends life &amp; safety; enables fast/safe charging.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Adds complexity; a safety-critical component.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Any serious battery-powered robot.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">⚡</span><span class="tech-n">Power electronics</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="30" y="24" width="60" height="34" rx="4" fill="#fff"/><path d="M38 40h5v-8h6v8h5" stroke="#3E5A82"/><path d="M56 41h5" stroke="#3E5A82"/><path d="M63 41q4-9 8 0 4 9 8 0" stroke="#2563EB"/></svg></div>
+          <div class="tech-how">Converters/inverters that feed motors and compute at the right voltage — increasingly SiC/GaN.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Higher efficiency = more runtime from the same pack.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Thermal management under peak actuator loads.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;High-power actuation and on-board compute.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">🔌</span><span class="tech-n">Tethered / hot-swap / docking</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="30" y="30" width="26" height="22" rx="3" fill="#fff"/><path d="M46 35l-5 9h7l-5 9" stroke="#2563EB" fill="none"/><path d="M56 41h10" stroke="#3E5A82"/><path d="M66 36v10M66 41h8" stroke="#3E5A82"/><rect x="78" y="34" width="10" height="14" rx="2" fill="#EAF0FE" stroke="#3E5A82"/></svg></div>
+          <div class="tech-how">Cable power, swappable packs, or auto-charging docks to sidestep runtime limits.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Effectively unlimited uptime in fixed settings.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Constrains mobility or needs infrastructure/logistics.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Warehouses, fixed-route operations.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">🧊</span><span class="tech-n">Solid-state &amp; next-gen cells</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="40" y="28" width="40" height="26" rx="4" fill="#fff"/><path d="M40 37h40M40 45h40" stroke="#3E5A82" opacity=".55"/><rect x="80" y="36" width="4" height="10" rx="1" fill="#1E2733" stroke="#1E2733"/><path d="M60 24v-9M56 19l4-4 4 4" stroke="#2563EB"/></svg></div>
+          <div class="tech-how">New chemistries promising higher energy density and safety.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Could materially extend runtime and cut weight.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Not yet at scale/cost; timeline uncertain.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;A watch-list unlock for humanoid endurance.</div>
+        </div>
+        <div class="tech"><div class="tech-h"><span class="tech-ic">🌡️</span><span class="tech-n">Thermal management</span></div>
+          <div class="tech-vis"><svg viewBox="0 0 120 72" fill="none" stroke="#3E5A82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="40" y="44" width="42" height="10" rx="2" fill="#EAF0FE" stroke="#3E5A82"/><path d="M46 44v-9M53 44v-9M60 44v-9M67 44v-9M74 44v-9" stroke="#3E5A82"/><path d="M50 30c4-5 0-9 0-14M62 30c4-5 0-9 0-14M74 30c4-5 0-9 0-14" stroke="#2563EB"/></svg></div>
+          <div class="tech-how">Cooling for actuators, batteries and compute working near their limits.</div>
+          <div class="pc p"><span class="pc-i">+</span><span>Sustains peak performance; protects components.</span></div>
+          <div class="pc c"><span class="pc-i">–</span><span>Adds weight/space; a design constraint everywhere.</span></div>
+          <div class="tech-best"><b>Best for</b> &nbsp;Dense humanoids under continuous load.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><span class="sect">Metrics that matter</span></div>
+      <div class="chips">
+        <span class="chip"><b>Energy density</b> — Wh/kg</span>
+        <span class="chip"><b>Power density</b> — W/kg (peak draw)</span>
+        <span class="chip"><b>Runtime</b> — hours per charge</span>
+        <span class="chip"><b>Charge time</b> — to 80%</span>
+        <span class="chip"><b>Cycle life</b> — charges before decay</span>
+        <span class="chip"><b>Efficiency</b> — % delivered to work</span>
+        <span class="chip"><b>Thermal envelope</b> — °C sustained</span>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="debate">
+        <div class="dh">⚑ The debate that decides winners</div>
+        <p><b>Is power a solved problem or the real ceiling on humanoids?</b> Batteries improve steadily — not exponentially like AI — so energy can quietly gate adoption even when the "brain" is ready.</p>
+        <div class="vs">
+          <div class="side"><h5>Not a blocker</h5><p>EV-driven cost/density gains + hot-swap and docking make runtime a manageable operations problem, not a wall.</p></div>
+          <div class="vsmid">vs</div>
+          <div class="side"><h5>The binding constraint</h5><p>All-day humanoid work needs a step-change in Wh/kg; until then, robots are tethered, part-time, or logistics-heavy.</p></div>
+        </div>
+        <p>This layer sets the realistic <em>duty cycle</em> — and therefore the labor economics — of every mobile robot.</p>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><span class="sect">Key players</span><span class="secn">largely the EV battery complex</span></div>
+      <div class="players">
+        <div class="player"><span class="pn">CATL / BYD</span><span class="pr">Battery cells at scale</span></div>
+        <div class="player"><span class="pn">LG / Samsung SDI / Panasonic</span><span class="pr">Cells &amp; packs</span></div>
+        <div class="player"><span class="pn">Power-semi (Infineon, onsemi)</span><span class="pr">SiC/GaN power electronics</span></div>
+        <div class="player"><span class="pn">Solid-state startups</span><span class="pr">Next-gen density (watch-list)</span></div>
+      </div>
+    </div>
+
+    <div class="invest">
+      <div class="ih">◆ Investment implications</div>
+      <ul>
+        <li><b>Mostly a shared EV supply chain</b> — robotics is an incremental demand source on top of autos, not a standalone battery thesis (yet).</li>
+        <li><b>Power density is the silent gate</b> — track Wh/kg and runtime as a reality-check on aggressive humanoid-deployment forecasts.</li>
+        <li><b>Power electronics is a quieter pick-and-shovel</b> — efficiency gains (SiC/GaN) directly extend runtime; benefits from both EV and robot demand.</li>
+        <li><b>Solid-state is the optional unlock</b> — a genuine step-change here would re-rate humanoid timelines; keep on the watch-list.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══════════ MARKET — IFR SEGMENTATION (Phase 2 · demand axis) ══════════ -->
+  <div class="pane" data-pane="market">
+    <div class="ph">
+      <div class="ph-num">▦</div>
+      <div class="ph-txt">
+        <div class="ph-sub">Phase 2 · The demand axis</div>
+        <h2>The Market — IFR's official segmentation</h2>
+        <p>Before sizing anything, anchor to a source with <b>verifiable, standards-based data</b> rather than an invented split. The <b>IFR World Robotics</b> yearbooks are that anchor: they segment the market into three ISO-aligned categories and report <b>units and market value</b>. This is <b>Axis A — the demand side</b> (<i>what</i> robots, for <i>what</i> task, in <i>what</i> industry, <i>where</i>). The companion <b>$ Value Chain</b> tab is Axis B — the supply side (<i>who captures the margin</i>).</p>
+      </div>
+    </div>
+
+    <div class="srow">
+      <div class="sc"><div class="sl">Industrial market value '24</div><div class="sv">$16.5B</div><div class="ss">installations (IFR World Robotics 2025)</div></div>
+      <div class="sc"><div class="sl">Industrial units '24</div><div class="sv">542k</div><div class="ss">4th straight year above 500k</div></div>
+      <div class="sc"><div class="sl">Professional service '24</div><div class="sv">~200k</div><div class="ss">units, +9% (logistics ~103k)</div></div>
+      <div class="sc"><div class="sl">Consumer service '24</div><div class="sv">~20M</div><div class="ss">units, +11% (domestic dominates)</div></div>
+    </div>
+
+    <!-- Three ISO/IFR categories -->
+    <div class="sec">
+      <div class="sechdr"><span class="sect">Three categories (ISO 8373 / IFR)</span><span class="secn">medical split out as its own category in 2025</span></div>
+      <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="tech">
+          <div class="tech-h"><span class="tech-ic">🏭</span><span class="tech-n">Industrial</span></div>
+          <div class="tech-how">Multipurpose manipulators in industrial automation. Segmented four ways + value.</div>
+          <div class="pc p"><span class="pc-i">•</span><span>542k units · $16.5B · &gt;4M operational (record)</span></div>
+          <div class="tech-best"><b>Reporting</b> &nbsp;Units <b>and</b> value (top-5 markets → world)</div>
+        </div>
+        <div class="tech">
+          <div class="tech-h"><span class="tech-ic">🧹</span><span class="tech-n">Service</span></div>
+          <div class="tech-how">Useful tasks outside industrial automation — professional (AP) and consumer (AC).</div>
+          <div class="pc p"><span class="pc-i">•</span><span>~200k professional · ~20M consumer</span></div>
+          <div class="tech-best"><b>Reporting</b> &nbsp;Mostly units, not value</div>
+        </div>
+        <div class="tech">
+          <div class="tech-h"><span class="tech-ic">🩺</span><span class="tech-n">Medical</span></div>
+          <div class="tech-how">Surgical, rehab, diagnostics, lab. Upgraded from a service sub-group to its own category.</div>
+          <div class="pc p"><span class="pc-i">•</span><span>~16.7k units in 2024, +91%</span></div>
+          <div class="tech-best"><b>Reporting</b> &nbsp;Units; regulated as medical devices</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Industrial: four segmentation axes -->
+    <div class="sec">
+      <div class="sechdr"><span class="sect">Industrial robots — IFR's four segmentation axes</span></div>
+      <div class="twrap">
+        <table class="cmp">
+          <thead><tr><th>Axis</th><th>Official IFR categories</th></tr></thead>
+          <tbody>
+            <tr><td class="name">By type<br><span style="font-weight:400;color:var(--mu);font-size:10.5px">(mechanical structure, since 2004)</span></td><td>Articulated · Cartesian / linear / gantry · Cylindrical · Parallel / delta · SCARA · Others</td></tr>
+            <tr><td class="name">By application<br><span style="font-weight:400;color:var(--mu);font-size:10.5px">(3-digit classes)</span></td><td>Handling &amp; machine tending (110/120) · Welding &amp; soldering (160) · Dispensing / painting (170) · Processing — cutting / grinding (190) · Assembling &amp; disassembling (200) · Cleanroom FPD / semi (901/902)</td></tr>
+            <tr><td class="name">By customer industry<br><span style="font-weight:400;color:var(--mu);font-size:10.5px">(derived from ISIC)</span></td><td>Automotive (29) · Electrical / electronics (26-27) · Metal · Industrial machinery (28) · Rubber &amp; plastics (22) · Food, etc.</td></tr>
+            <tr><td class="name">By geography</td><td>76 survey units → territory group → region → continent → world. In 2024: Asia 74% of installs · Europe 16% · Americas 9%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Value caveat: IFR computes value &amp; average unit price only for the top-5 markets (China, US, Japan, Germany, Korea) and deduces the world total. The figure is the <b>robot unit</b> — peripherals, software and system-integration value sit on top (see the Value Chain tab).</p>
+    </div>
+
+    <!-- Service & medical: by application -->
+    <div class="sec">
+      <div class="sechdr"><span class="sect">Service &amp; medical — by application &amp; by movement</span></div>
+      <div class="two">
+        <div class="card">
+          <div class="sechdr" style="border:0;padding:0;margin-bottom:9px"><span class="sect">Professional (AP) &amp; consumer (AC)</span></div>
+          <div class="chips">
+            <span class="chip"><b>AP1</b> Agriculture</span>
+            <span class="chip"><b>AP2</b> Professional cleaning</span>
+            <span class="chip"><b>AP3</b> Inspection &amp; maintenance</span>
+            <span class="chip"><b>AP4</b> Construction &amp; demolition</span>
+            <span class="chip"><b>AP5</b> Transportation &amp; logistics</span>
+            <span class="chip"><b>AP7</b> Search &amp; rescue / security</span>
+            <span class="chip"><b>AP8</b> Hospitality</span>
+            <span class="chip"><b>AP9</b> Other professional</span>
+            <span class="chip"><b>AC1</b> Domestic tasks</span>
+            <span class="chip"><b>AC2</b> Social &amp; education</span>
+            <span class="chip"><b>AC3</b> Care at home</span>
+            <span class="chip"><b>AP6</b> Medical <i>(now separate)</i></span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="sechdr" style="border:0;padding:0;margin-bottom:9px"><span class="sect">By type of movement</span></div>
+          <div class="chips">
+            <span class="chip"><b>A</b> Ground — rolling · walking · fixed</span>
+            <span class="chip"><b>B</b> Water — swim · dive</span>
+            <span class="chip"><b>C</b> Aerial — fly · hover</span>
+            <span class="chip"><b>D</b> Wearable — exoskeleton</span>
+            <span class="chip"><b>E</b> Other</span>
+          </div>
+          <p class="note" style="margin-top:12px">The Service Robots report (Ch. 5) also publishes <b>a list of every service &amp; medical robot producer known to IFR</b> — a direct feeder for the company map.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="invest">
+      <div class="ih">◆ Why this matters for sizing</div>
+      <ul>
+        <li><b>This is the verifiable anchor</b> — units + value by type, application, industry and geography, collected from nearly all robot suppliers worldwide via national associations.</li>
+        <li><b>It measures demand, not the value chain</b> — IFR counts <em>installations</em>, not the split between components, OEMs and integration. That supply-side economics is Axis B.</li>
+        <li><b>Value is robot-only</b> — the integrated-system market (peripherals + software + engineering) is a multiple on top and is where integrators live.</li>
+        <li><b>Next:</b> map each IFR segment to the value-chain stages, then attach real company margins to turn the smile from an index into dollars.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══════════ VALUE CHAIN (Phase 2 · industry structure) ══════════ -->
+  <div class="pane" data-pane="valuechain">
+    <div class="ph">
+      <div class="ph-num">$</div>
+      <div class="ph-txt">
+        <div class="ph-sub">Phase 2 · Industry structure — a living evidence board</div>
+        <h2>Value Chain — who captures the value</h2>
+        <p>The layer-tabs answer <b>how a robot works</b>; this tab asks <b>who captures the value</b>. Rather than assert a made-up ranking, it is built to <b>accumulate evidence over time</b> — every claim carries its source, and what isn't proven yet is flagged as a <b>hypothesis</b>, not a number. Today it rests on three anchors: IFR's player taxonomy, sourced concentration data, and Bloomberg SPLC supply-chain links.</p>
+      </div>
+    </div>
+
+    <div class="colegend" style="margin-bottom:18px">
+      <span><i style="background:var(--accent)"></i> IFR World Robotics</span>
+      <span><i style="background:var(--pos)"></i> Bloomberg SPLC</span>
+      <span><i style="background:var(--steel)"></i> Market-share research</span>
+      <span><i style="background:var(--neg)"></i> Hypothesis — not yet evidenced</span>
+    </div>
+
+    <!-- Anchor 1: IFR players -->
+    <div class="card" style="margin-bottom:20px;border-left:4px solid var(--accent)">
+      <div class="sechdr" style="border:0;padding:0;margin-bottom:8px"><span class="sect">Anchor · IFR defines the players<span class="evsrc ifr">IFR §1.13</span></span></div>
+      <p style="font-size:12.5px;color:var(--blue);line-height:1.6;margin:0">World Robotics 2025 defines the industrial chain as <b>component suppliers → robot producers → distributors → system integrators → end users</b> — so the staging isn't ad-hoc. What IFR does <b>not</b> do is split the margin; it counts installations (demand). Everything below is the attempt to ground that missing economics, piece by piece.</p>
+    </div>
+
+    <!-- Anchor 2: concentration (sourced) -->
+    <div class="sec">
+      <div class="sechdr"><span class="sect">Evidenced · supply concentration<span class="evsrc">market-share research</span></span></div>
+      <div class="srow">
+        <div class="sc"><div class="sl">Harmonic reducers</div><div class="sv">~85%</div><div class="ss">Harmonic Drive share</div></div>
+        <div class="sc"><div class="sl">RV reducers</div><div class="sv">~60%</div><div class="ss">Nabtesco (medium/large joints)</div></div>
+        <div class="sc"><div class="sl">Precision motors</div><div class="sv">&gt;70%</div><div class="ss">Maxon + Faulhaber + Portescap</div></div>
+        <div class="sc"><div class="sl">Compute &amp; sim</div><div class="sv">NVIDIA</div><div class="ss">near-universal, brand-agnostic</div></div>
+      </div>
+      <p class="note">Reducer &amp; motor shares per Jamestown Foundation. The concentrated upstream is where pricing power should sit — the question the SPLC data below starts to answer.</p>
+    </div>
+
+    <!-- Anchor 3: SPLC validated links — the star -->
+    <div class="sec">
+      <div class="sechdr"><span class="sect">Evidenced · the bottleneck sells to every OEM<span class="evsrc splc">BBG SPLC</span></span><span class="secn">Nabtesco's disclosed customers · FY2025</span></div>
+      <div class="twrap">
+        <table class="cmp">
+          <thead><tr><th>Nabtesco customer</th><th>Segment</th><th>% of Nabtesco revenue</th><th>Relationship $ (BBG)</th></tr></thead>
+          <tbody>
+            <tr><td class="name">Boeing</td><td>Aerospace</td><td>4.73%</td><td>$28.5M</td></tr>
+            <tr style="background:var(--posbg)"><td class="name">FANUC</td><td><b>Robot OEM</b></td><td>2.35%</td><td>$14.1M</td></tr>
+            <tr><td class="name">Mercedes-Benz</td><td>Auto</td><td>2.15%</td><td>$12.5M</td></tr>
+            <tr style="background:var(--posbg)"><td class="name">ABB</td><td><b>Robot OEM</b></td><td>1.47%</td><td>$8.9M</td></tr>
+            <tr style="background:var(--posbg)"><td class="name">Kawasaki</td><td><b>Robot OEM</b></td><td>1.35%</td><td>$8.1M</td></tr>
+            <tr style="background:var(--posbg)"><td class="name">KUKA</td><td><b>Robot OEM</b></td><td>1.31%</td><td>$7.9M</td></tr>
+            <tr style="background:var(--posbg)"><td class="name">Yaskawa</td><td><b>Robot OEM</b></td><td>0.88%</td><td>$5.3M</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note"><b>Why this matters:</b> the reducer maker literally invoices <b>FANUC, ABB, Kawasaki, KUKA and Yaskawa</b> — the whole Big Four/Five — with real dollars. The FANUC←Nabtesco edge shows up from both sides ($14.1M), confirming the data. This is the first <b>hard evidence</b> under the picks-and-shovels thesis. Caveat: Nabtesco is itself diversified — aerospace/auto/rail lines are larger than robotics.</p>
+    </div>
+
+    <!-- Purity lens -->
+    <div class="sec">
+      <div class="sechdr"><span class="sect">Evidenced · a purity check<span class="evsrc splc">BBG SPLC</span></span><span class="secn">where a "robotics" name is really something else</span></div>
+      <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="tech"><div class="tech-h"><span class="tech-n">Moog</span></div><div class="tech-how">Disclosed customers: US Gov (~37%), Boeing (10%), Lockheed (7%).</div><div class="tech-best"><b>Really</b> &nbsp;Aerospace &amp; defense — robotics immaterial</div></div>
+        <div class="tech"><div class="tech-h"><span class="tech-n">Timken</span></div><div class="tech-how">Customers: Caterpillar, Deere, Ford, Boeing, Airbus.</div><div class="tech-best"><b>Really</b> &nbsp;Broad industrial / auto bearings</div></div>
+        <div class="tech"><div class="tech-h"><span class="tech-n">Tesla</span></div><div class="tech-how">Suppliers: CATL, LG, Panasonic, NVIDIA — the car BOM.</div><div class="tech-best"><b>Really</b> &nbsp;Auto supply chain; Optimus invisible</div></div>
+      </div>
+      <p class="note">A useful screen: several "picks-and-shovels" names carry only immaterial robotics exposure. The pure-play reducer / compute names read cleaner.</p>
+    </div>
+
+    <!-- The chain structure (grounded, no invented bars) -->
+    <div class="sec">
+      <div class="sechdr"><span class="sect">The chain, mapped to IFR players</span><span class="secn">concentration + what we've evidenced so far</span></div>
+      <div class="twrap">
+        <table class="cmp">
+          <thead><tr><th>Stage</th><th>What it is</th><th>Concentration</th><th>Evidence so far</th></tr></thead>
+          <tbody>
+            <tr><td class="name">Core components</td><td>Reducers, motors, bearings, sensor chips — the bottleneck.</td><td><span class="pill hi">High</span></td><td>Shares 60–85%<span class="evsrc">research</span> · sells to all OEMs<span class="evsrc splc">SPLC</span></td></tr>
+            <tr><td class="name">Subsystems</td><td>Actuator modules, end-effectors, LiDAR units, battery packs.</td><td><span class="pill md">Medium</span></td><td>Thin so far — batteries ride the EV chain</td></tr>
+            <tr><td class="name">Compute &amp; AI</td><td>Edge compute, simulation, foundation models.</td><td><span class="pill hi">High</span></td><td>NVIDIA near-universal<span class="evsrc">research</span> · $ pending</td></tr>
+            <tr><td class="name">Robot OEMs</td><td>Arm &amp; platform builders (= IFR "robot producers").</td><td><span class="pill md">Med → Low</span></td><td>Buy from Nabtesco / Harmonic<span class="evsrc splc">SPLC</span></td></tr>
+            <tr><td class="name">System integration</td><td>Engineering robots into a real line / warehouse.</td><td><span class="pill lo">Low</span></td><td>Fragmented<span class="evsrc ifr">IFR</span> · margin unproven</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Working hypothesis (explicitly flagged) -->
+    <div class="sec">
+      <div class="debate">
+        <div class="dh">⚑ Working hypothesis — not yet fully evidenced</div>
+        <p><b>Value pools at the two IP-rich ends</b> (components, compute) and thins through assembly and integration. So far the evidence supports the <b>components end</b> (SPLC: the reducer maker invoices every OEM). The <b>compute end</b> and the <b>integration trough</b> still need grounding in real margins — that's the next data pull, not a number to assert today.</p>
+        <div class="vs">
+          <div class="side"><h5>Bottlenecks win</h5><p>Supply-constrained components + compute sell to everyone; the humanoid brand is a crowded, capital-hungry race. <b>Partly evidenced.</b></p></div>
+          <div class="vsmid">vs</div>
+          <div class="side"><h5>The platform wins</h5><p>As with phones / cars, the integrator that nails AI + brand captures the economics and commoditizes suppliers. <b>Unproven until a humanoid ships.</b></p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Investment implications -->
+    <div class="invest">
+      <div class="ih">◆ What the evidence says today</div>
+      <ul>
+        <li><b>The reducer bottleneck is proven, not asserted</b> — Bloomberg SPLC shows Nabtesco invoicing FANUC, ABB, Kawasaki, KUKA and Yaskawa. The cleanest pricing-power node — but a Japanese-duopoly exposure to monitor vs. Chinese entrants.</li>
+        <li><b>NVIDIA is the brand-agnostic toll</b> — concentration is clear; the dollar linkage into robot OEMs is the next thing to evidence.</li>
+        <li><b>Watch the purity trap</b> — Moog, Timken and Tesla screen as robotics but their disclosed business is aerospace, industrial and autos. Pure-plays read cleaner.</li>
+        <li><b>Still open:</b> pool sizing and the humanoid economics — SPLC can't see Optimus-class BOMs yet. To be grounded when the data arrives.</li>
+      </ul>
+    </div>
+  </div>
+  <!-- ══════════ COMPANIES (Phase 2 · the map we were building toward) ══════════ -->
+  <div class="pane" data-pane="companies">
+    <div class="ph">
+      <div class="ph-num">◈</div>
+      <div class="ph-txt">
+        <div class="ph-sub">Phase 2 · The company map</div>
+        <h2>Companies — the universe, hung on the value chain</h2>
+        <p>This is where the framework pays off: every notable player mapped to <b>where it sits in the value chain</b>, tagged public vs. private and by geography. It is the <b>candidate universe for company-level deep-dives</b> — not yet financials, just the map. Stages inherit the value-capture posture from the smile, so you can read pricing power at a glance.</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;border-left:4px solid var(--steel)">
+      <div class="sechdr" style="border:0;padding:0;margin-bottom:8px"><span class="sect">Crosswalk · how this ties back to IFR</span></div>
+      <p style="font-size:12.5px;color:var(--blue);line-height:1.6;margin:0">Stages 1–3 (<b>components, subsystems, compute/AI</b>) sit <b>upstream of IFR's count</b> — IFR names "component suppliers" but doesn't size them. Stage 4 (<b>robot OEMs</b>) = IFR's <b>"robot producers"</b>, sub-grouped here by IFR-style segment (industrial · mobile · humanoid · consumer · medical). Stage 5 = IFR's <b>"system integrators"</b>. So the roster below is anchored to IFR §1.13 players, with the economics IFR doesn't provide.</p>
+    </div>
+
+    <div class="srow">
+      <div class="sc"><div class="sl">Companies mapped</div><div class="sv">~85</div><div class="ss">across 5 value-chain stages</div></div>
+      <div class="sc"><div class="sl">Public names</div><div class="sv">50+</div><div class="ss">listed; rest private / venture</div></div>
+      <div class="sc"><div class="sl">Geography clusters</div><div class="sv">JP·US·CN</div><div class="ss">+ Europe (components), Korea (batteries)</div></div>
+      <div class="sc"><div class="sl">Humanoid frontier</div><div class="sv">Mostly priv.</div><div class="ss">public exposure via suppliers</div></div>
+    </div>
+
+    <div class="colegend" style="margin-bottom:18px">
+      <span><i style="background:var(--pos)"></i> Public (ticker shown)</span>
+      <span><i style="background:var(--mu)"></i> Private / venture</span>
+      <span style="color:var(--mu);font-style:italic">Tickers illustrative of primary listing — verify before use, not recommendations.</span>
+    </div>
+
+    <!-- STAGE 1 -->
+    <div class="costage">
+      <div class="costage-h"><span class="costage-n">1 · Core components</span><span class="costage-tag hi">High capture</span><span class="costage-ct">upstream of IFR's count</span></div>
+      <div class="costage-sub">Precision reducers / gearboxes — the bottleneck</div>
+      <div class="coset">
+        <div class="co2 pub"><div class="c2n">Harmonic Drive</div><div class="c2m"><b>TSE 6324</b> · Japan</div></div>
+        <div class="co2 pub"><div class="c2n">Nabtesco</div><div class="c2m"><b>TSE 6268</b> · Japan</div></div>
+        <div class="co2 pub"><div class="c2n">Sumitomo Heavy</div><div class="c2m"><b>TSE 6302</b> · Japan</div></div>
+        <div class="co2 pub"><div class="c2n">Leaderdrive</div><div class="c2m"><b>SHE 688017</b> · China</div></div>
+      </div>
+      <div class="costage-sub">Precision motors &amp; servos</div>
+      <div class="coset">
+        <div class="co2 pub"><div class="c2n">Nidec</div><div class="c2m"><b>TSE 6594</b> · Japan</div></div>
+        <div class="co2 priv"><div class="c2n">Maxon</div><div class="c2m">Private · Switzerland</div></div>
+        <div class="co2 priv"><div class="c2n">Faulhaber</div><div class="c2m">Private · Germany</div></div>
+        <div class="co2 priv"><div class="c2n">Portescap</div><div class="c2m">Regal Rexnord (RRX) · US</div></div>
+      </div>
+      <div class="costage-sub">Sensors &amp; sensor chips</div>
+      <div class="coset">
+        <div class="co2 pub"><div class="c2n">Sony</div><div class="c2m"><b>TSE 6758</b> · Japan</div></div>
+        <div class="co2 pub"><div class="c2n">OmniVision (Will)</div><div class="c2m"><b>SHA 603501</b> · China</div></div>
+        <div class="co2 pub"><div class="c2n">Ouster</div><div class="c2m"><b>Nasdaq OUST</b> · US</div></div>
+        <div class="co2 pub"><div class="c2n">Hesai</div><div class="c2m"><b>Nasdaq HSAI</b> · China</div></div>
+        <div class="co2 pub"><div class="c2n">RoboSense</div><div class="c2m"><b>HKEX 2498</b> · China</div></div>
+        <div class="co2 pub"><div class="c2n">Aeva</div><div class="c2m"><b>Nasdaq AEVA</b> · US</div></div>
+        <div class="co2 pub"><div class="c2n">Orbbec</div><div class="c2m"><b>SHA 688322</b> · China</div></div>
+        <div class="co2 pub"><div class="c2n">Teledyne FLIR</div><div class="c2m"><b>NYSE TDY</b> · US</div></div>
+        <div class="co2 pub"><div class="c2n">Basler</div><div class="c2m"><b>XETRA BSL</b> · Germany</div></div>
+      </div>
+      <div class="costage-sub">Bearings, motion control &amp; actuation</div>
+      <div class="coset">
+        <div class="co2 pub"><div class="c2n">Timken</div><div class="c2m"><b>NYSE TKR</b> · US</div></div>
+        <div class="co2 pub"><div class="c2n">Moog</div><div class="c2m"><b>NYSE MOG.A</b> · US</div></div>
+        <div class="co2 pub"><div class="c2n">Novanta</div><div class="c2m"><b>Nasdaq NOVT</b> · US</div></div>
+      </div>
+    </div>
+
+    <!-- STAGE 2 -->
+    <div class="costage">
+      <div class="costage-h"><span class="costage-n">2 · Subsystems &amp; modules</span><span class="costage-tag md">Medium capture</span><span class="costage-ct">integrated joints, hands, packs</span></div>
+      <div class="costage-sub">End-effectors &amp; grippers</div>
+      <div class="coset">
+        <div class="co2 priv"><div class="c2n">Schunk</div><div class="c2m">Private · Germany</div></div>
+        <div class="co2 priv"><div class="c2n">OnRobot</div><div class="c2m">Private · Denmark</div></div>
+        <div class="co2 priv"><div class="c2n">Robotiq</div><div class="c2m">Private · Canada</div></div>
+        <div class="co2 priv"><div class="c2n">Piab</div><div class="c2m">Private · Sweden</div></div>
+        <div class="co2 priv"><div class="c2n">Shadow Robot</div><div class="c2m">Private · UK</div></div>
+      </div>
+      <div class="costage-sub">Integrated actuator modules</div>
+      <div class="coset">
+        <div class="co2 priv"><div class="c2n">CubeMars / T-Motor</div><div class="c2m">Private · China</div></div>
+        <div class="co2 priv"><div class="c2n">Unitree (in-house)</div><div class="c2m">Private · China</div></div>
+      </div>
+      <div class="costage-sub">Batteries &amp; power (shared EV supply chain)</div>
+      <div class="coset">
+        <div class="co2 pub"><div class="c2n">CATL</div><div class="c2m"><b>SHE 300750</b> · China</div></div>
+        <div class="co2 pub"><div class="c2n">BYD</div><div class="c2m"><b>HKEX 1211</b> · China</div></div>
+        <div class="co2 pub"><div class="c2n">LG Energy Solution</div><div class="c2m"><b>KRX 373220</b> · Korea</div></div>
+        <div class="co2 pub"><div class="c2n">Panasonic</div><div class="c2m"><b>TSE 6752</b> · Japan</div></div>
+        <div class="co2 pub"><div class="c2n">Samsung SDI</div><div class="c2m"><b>KRX 006400</b> · Korea</div></div>
+      </div>
+    </div>
+
+    <!-- STAGE 3 -->
+    <div class="costage">
+      <div class="costage-h"><span class="costage-n">3 · Compute &amp; Physical AI</span><span class="costage-tag hi">High capture</span><span class="costage-ct">the near-universal toll</span></div>
+      <div class="coset">
+        <div class="co2 pub"><div class="c2n">NVIDIA</div><div class="c2m"><b>Nasdaq NVDA</b> · US</div></div>
+        <div class="co2 pub"><div class="c2n">Qualcomm</div><div class="c2m"><b>Nasdaq QCOM</b> · US</div></div>
+        <div class="co2 pub"><div class="c2n">Mobileye</div><div class="c2m"><b>Nasdaq MBLY</b> · Israel</div></div>
+        <div class="co2 pub"><div class="c2n">Alphabet (DeepMind)</div><div class="c2m"><b>Nasdaq GOOGL</b> · US</div></div>
+        <div class="co2 priv"><div class="c2n">Physical Intelligence</div><div class="c2m">Private · US</div></div>
+        <div class="co2 priv"><div class="c2n">Skild AI</div><div class="c2m">Private · US</div></div>
+        <div class="co2 priv"><div class="c2n">Hailo</div><div class="c2m">Private · Israel</div></div>
+        <div class="co2 priv"><div class="c2n">Slamcore</div><div class="c2m">Private · UK</div></div>
+      </div>
+    </div>
+
+    <!-- STAGE 4 -->
+    <div class="costage">
+      <div class="costage-h"><span class="costage-n">4 · Robot OEMs</span><span class="costage-tag lo">Med → Low capture</span><span class="costage-ct">= IFR "robot producers"</span></div>
+      <div class="costage-sub">Industrial arms &amp; cobots (the "Big Four/Five")</div>
+      <div class="coset">
+        <div class="co2 pub"><div class="c2n">FANUC</div><div class="c2m"><b>TSE 6954</b> · Japan</div></div>
+        <div class="co2 pub"><div class="c2n">ABB</div><div class="c2m"><b>SIX ABBN</b> · Switzerland</div></div>
+        <div class="co2 pub"><div class="c2n">Yaskawa</div><div class="c2m"><b>TSE 6506</b> · Japan</div></div>
+        <div class="co2 priv"><div class="c2n">KUKA</div><div class="c2m">Midea-owned · Germany</div></div>
+        <div class="co2 pub"><div class="c2n">Kawasaki Heavy</div><div class="c2m"><b>TSE 7012</b> · Japan</div></div>
+        <div class="co2 pub"><div class="c2n">Seiko Epson</div><div class="c2m"><b>TSE 6724</b> · Japan</div></div>
+        <div class="co2 pub"><div class="c2n">Denso</div><div class="c2m"><b>TSE 6902</b> · Japan</div></div>
+        <div class="co2 priv"><div class="c2n">Staubli</div><div class="c2m">Private · Switzerland</div></div>
+        <div class="co2 pub"><div class="c2n">Omron</div><div class="c2m"><b>TSE 6645</b> · Japan</div></div>
+        <div class="co2 pub"><div class="c2n">Estun</div><div class="c2m"><b>SHE 002747</b> · China</div></div>
+        <div class="co2 pub"><div class="c2n">Teradyne (UR/MiR)</div><div class="c2m"><b>Nasdaq TER</b> · US</div></div>
+        <div class="co2 pub"><div class="c2n">Doosan Robotics</div><div class="c2m"><b>KRX 454910</b> · Korea</div></div>
+        <div class="co2 pub"><div class="c2n">Techman Robot</div><div class="c2m"><b>TWSE 4585</b> · Taiwan</div></div>
+      </div>
+      <div class="costage-sub">Mobile — AGV / AMR (IFR: transportation &amp; logistics)</div>
+      <div class="coset">
+        <div class="co2 pub"><div class="c2n">Amazon Robotics</div><div class="c2m"><b>Nasdaq AMZN</b> · US (in-house)</div></div>
+        <div class="co2 pub"><div class="c2n">Zebra (Fetch)</div><div class="c2m"><b>Nasdaq ZBRA</b> · US</div></div>
+        <div class="co2 pub"><div class="c2n">Geek+</div><div class="c2m"><b>HKEX 2590</b> · China</div></div>
+        <div class="co2 priv"><div class="c2n">Locus Robotics</div><div class="c2m">Private · US</div></div>
+      </div>
+      <div class="costage-sub">Humanoid frontier</div>
+      <div class="coset">
+        <div class="co2 pub"><div class="c2n">Tesla (Optimus)</div><div class="c2m"><b>Nasdaq TSLA</b> · US</div></div>
+        <div class="co2 pub"><div class="c2n">UBTECH</div><div class="c2m"><b>HKEX 9880</b> · China</div></div>
+        <div class="co2 priv"><div class="c2n">Figure AI</div><div class="c2m">Private · US</div></div>
+        <div class="co2 priv"><div class="c2n">Agility Robotics</div><div class="c2m">Private · US</div></div>
+        <div class="co2 priv"><div class="c2n">Boston Dynamics</div><div class="c2m">Hyundai · US/Korea</div></div>
+        <div class="co2 priv"><div class="c2n">Unitree</div><div class="c2m">Private · China</div></div>
+        <div class="co2 priv"><div class="c2n">Apptronik</div><div class="c2m">Private · US</div></div>
+        <div class="co2 priv"><div class="c2n">1X Technologies</div><div class="c2m">Private · Norway/US</div></div>
+      </div>
+      <div class="costage-sub">Quadruped · drones · consumer · medical</div>
+      <div class="coset">
+        <div class="co2 priv"><div class="c2n">ANYbotics</div><div class="c2m">Private · Switzerland</div></div>
+        <div class="co2 priv"><div class="c2n">DEEP Robotics</div><div class="c2m">Private · China</div></div>
+        <div class="co2 priv"><div class="c2n">DJI</div><div class="c2m">Private · China</div></div>
+        <div class="co2 priv"><div class="c2n">Skydio</div><div class="c2m">Private · US</div></div>
+        <div class="co2 pub"><div class="c2n">Parrot</div><div class="c2m"><b>EPA PARRO</b> · France</div></div>
+        <div class="co2 pub"><div class="c2n">iRobot</div><div class="c2m"><b>Nasdaq IRBT</b> · US</div></div>
+        <div class="co2 pub"><div class="c2n">Ecovacs</div><div class="c2m"><b>SHA 603486</b> · China</div></div>
+        <div class="co2 pub"><div class="c2n">Roborock</div><div class="c2m"><b>SHA 688169</b> · China</div></div>
+        <div class="co2 pub"><div class="c2n">Intuitive Surgical</div><div class="c2m"><b>Nasdaq ISRG</b> · US</div></div>
+        <div class="co2 pub"><div class="c2n">Medtronic</div><div class="c2m"><b>NYSE MDT</b> · US/Ireland</div></div>
+        <div class="co2 pub"><div class="c2n">Stryker</div><div class="c2m"><b>NYSE SYK</b> · US</div></div>
+        <div class="co2 priv"><div class="c2n">CMR Surgical</div><div class="c2m">Private · UK</div></div>
+      </div>
+    </div>
+
+    <!-- STAGE 5 -->
+    <div class="costage">
+      <div class="costage-h"><span class="costage-n">5 · System integration</span><span class="costage-tag lo">Low capture</span><span class="costage-ct">= IFR "system integrators"</span></div>
+      <div class="coset">
+        <div class="co2 pub"><div class="c2n">Rockwell Automation</div><div class="c2m"><b>NYSE ROK</b> · US</div></div>
+        <div class="co2 pub"><div class="c2n">Daifuku</div><div class="c2m"><b>TSE 6383</b> · Japan</div></div>
+        <div class="co2 pub"><div class="c2n">Dürr</div><div class="c2m"><b>XETRA DUE</b> · Germany</div></div>
+        <div class="co2 pub"><div class="c2n">ATS Corporation</div><div class="c2m"><b>TSX ATS</b> · Canada</div></div>
+        <div class="co2 priv"><div class="c2n">Regional integrators</div><div class="c2m">Fragmented · thousands, global</div></div>
+      </div>
+      <p class="note">The most fragmented, services-like stage — mostly private, regional engineering shops. Public exposure is via diversified automation names, not pure-plays.</p>
+    </div>
+
+    <div class="invest">
+      <div class="ih">◆ How to use this list</div>
+      <ul>
+        <li><b>The public "picks &amp; shovels" cluster is the cleanest entry</b> — reducers (Japan), compute (NVIDIA), sensors — where concentration meets a listing.</li>
+        <li><b>The humanoid frontier is a private-market map</b> — Tesla and UBTECH are the main listed pure-ish plays; the rest is venture. Watch for IPOs (Unitree, Figure).</li>
+        <li><b>Geography is a real axis</b> — Japan/Europe own components &amp; arms, the US owns compute/AI, China is scaling both low-cost components and humanoids.</li>
+        <li><b>Next step:</b> pick a shortlist from here and open company-level deep-dives — pulling real financials (revenue, gross/op margin, growth) to put dollars on the smile.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="foot">
+    <div class="fh">Sources &amp; taxonomy</div>
+    <ol>
+      <li>ISO 8373:2021 — <em>Robotics — Vocabulary</em> (ISO/TC 299). Governing definitions of robot / industrial / service / medical robot. <a href="https://www.iso.org/standard/75539.html">iso.org/standard/75539</a></li>
+      <li>International Federation of Robotics (IFR) — <em>World Robotics 2025</em>. <a href="https://ifr.org/">ifr.org</a></li>
+      <li>IFR — <em>World Robotics 2025, Sources &amp; Methods</em> (Industrial: classifications by type/application/industry/geography, §1.13 market players; Service: AP/AC application classes, Ch. 5 producer list). <a href="https://ifr.org/img/worldrobotics/Sources___Methods_WR_2025_Industrial_Robots.pdf">Industrial</a> · <a href="https://ifr.org/img/worldrobotics/Sources___Methods_WR_2025_Service_Robots.pdf">Service</a></li>
+      <li>IFR press — <em>Global robot demand doubles over 10 years</em> (US$16.5 bn / 542k units, 2024). <a href="https://ifr.org/ifr-press-releases/news/global-robot-demand-in-factories-doubles-over-10-years">ifr.org</a></li>
+      <li>Jamestown Foundation — reducer &amp; motor market shares (Harmonic Drive, Nabtesco, Maxon). <a href="https://jamestown.org/new-gains-in-prc-robotics-software-hardware/">jamestown.org</a></li>
+      <li>TechCrunch — LiDAR consolidation (Ouster color LiDAR / Velodyne). <a href="https://techcrunch.com/2026/05/04/ousters-new-color-lidar-is-coming-to-replace-cameras/">techcrunch.com</a></li>
+      <li>Robotics 24/7 — Orbbec &amp; the RealSense void (depth cameras). <a href="https://www.robotics247.com/article/7_questions_orbbec_set_sights_void_left_intel_realsense/intel-corporation">robotics247.com</a></li>
+      <li>EVS Intelligence — top humanoid companies 2026. <a href="https://www.evsint.com/top-8-humanoid-robot-companies-2026/">evsint.com</a></li>
+    </ol>
+    <div class="disc">Companion to <b>robotics-technology-landscape.md</b>. Part of the Summit portal · Industry Analysis. Figures are directional, for orientation ahead of detailed technology and company analysis. v1.0 · July 2026.</div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var tabs = document.querySelectorAll('#tabs .tab');
+  var panes = document.querySelectorAll('.pane');
+  function show(p){
+    tabs.forEach(function(t){ t.classList.toggle('active', t.dataset.p===p); });
+    panes.forEach(function(pn){ pn.classList.toggle('active', pn.dataset.pane===p); });
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+  tabs.forEach(function(t){ t.addEventListener('click', function(){ show(t.dataset.p); }); });
+  document.querySelectorAll('[data-goto]').forEach(function(el){
+    el.addEventListener('click', function(){ show(el.dataset.goto); });
+  });
+})();
+</script>
+
+<div class="lyt" id="lyt"><button class="lyt-x" id="lytX" aria-label="Close">×</button><img id="lytImg" alt=""><div class="lyt-cap" id="lytCap"></div></div>
+
+<div class="rmodal" id="rmodal"><div class="rmodal-card"><button class="rmodal-x" id="rmodalX" aria-label="Close">×</button><div class="rmodal-hero" id="rmHero"></div><div class="rmodal-body" id="rmBody"></div></div></div>
+<script>window.DATA_URI={"18650_and_21700_lithium_ion_battery_cell.jpg": "img/robotics/18650_and_21700_lithium_ion_battery_cell.jpg", "3D_Sick_Lidar.jpg": "img/robotics/3D_Sick_Lidar.jpg", "6600GT_GPU.jpg": "img/robotics/6600GT_GPU.jpg", "AGV_-_Automated_Guided_Vehicle.jpg": "img/robotics/AGV_-_Automated_Guided_Vehicle.jpg", "AXIS_D2123-VE_Radar.jpg": "img/robotics/AXIS_D2123-VE_Radar.jpg", "Ameca_Generation_1.jpg": "img/robotics/Ameca_Generation_1.jpg", "Atlas_frontview_2013.jpg": "img/robotics/Atlas_frontview_2013.jpg", "Datacenter_Server_Racks_(22370909788).jpg": "img/robotics/Datacenter_Server_Racks__22370909788_.jpg", "Drone_landing_at_sunset_(11562758945).jpg": "img/robotics/Drone_landing_at_sunset__11562758945_.jpg", "GTX_1650_Mobile.jpg": "img/robotics/GTX_1650_Mobile.jpg", "Gears-686316.jpg": "img/robotics/Gears-686316.jpg", "Geos3-pcb.jpg": "img/robotics/Geos3-pcb.jpg", "Heat_sink.jpg": "img/robotics/Heat_sink.jpg", "Hydraulic_cylinder.JPG": "img/robotics/Hydraulic_cylinder.JPG", "IC_circuit_chip_board.JPG": "img/robotics/IC_circuit_chip_board.JPG", "Inflatable_Robotic_Arm.jpg": "img/robotics/Inflatable_Robotic_Arm.jpg", "KUKA_Industrial_Robot_KR10_SCARA.jpg": "img/robotics/KUKA_Industrial_Robot_KR10_SCARA.jpg", "KUKA_Industrial_Robots_IR.jpg": "img/robotics/KUKA_Industrial_Robots_IR.jpg", "Laproscopic_Surgery_Robot.jpg": "img/robotics/Laproscopic_Surgery_Robot.jpg", "Machine_Vision_System.jpg": "img/robotics/Machine_Vision_System.jpg", "Monmouth_castle_point_cloud,_created_with_Photosynth_01.jpg": "img/robotics/Monmouth_castle_point_cloud__created_with_Photosynth_01.jpg", "ObjectDetectionExample.png": "img/robotics/ObjectDetectionExample.png", "Pneumatic_cylinder_2172.jpg": "img/robotics/Pneumatic_cylinder_2172.jpg", "Robot_Portico_tecno-840.jpg": "img/robotics/Robot_Portico_tecno-840.jpg", "Robot_arm_handles_an_assay_plate.jpg": "img/robotics/Robot_arm_handles_an_assay_plate.jpg", "Robot_delta_FlexPicker_d'ABB.png": "img/robotics/Robot_delta_FlexPicker_d_ABB.png", "Servo_Motor.jpg": "img/robotics/Servo_Motor.jpg", "Shadow_Hand_Bulb_large.jpg": "img/robotics/Shadow_Hand_Bulb_large.jpg", "Simulation_of_a_Robotis_DARwIn-OP_in_Webots.png": "img/robotics/Simulation_of_a_Robotis_DARwIn-OP_in_Webots.png", "Soft_Robotics_1.jpg": "img/robotics/Soft_Robotics_1.jpg", "Stereo_camera.JPG": "img/robotics/Stereo_camera.JPG", "Suction_cup.jpg": "img/robotics/Suction_cup.jpg", "Svan_M2-_A_quadruped_robot.jpg": "img/robotics/Svan_M2-_A_quadruped_robot.jpg", "UR16e_robot_arm.png": "img/robotics/UR16e_robot_arm.png", "Uniline.jpg": "img/robotics/Uniline.jpg", "Welding_Robot.jpg": "img/robotics/Welding_Robot.jpg", "Xbox-360-Kinect-Standalone.png": "img/robotics/Xbox-360-Kinect-Standalone.png"};</script>
+
+<script>
+(function(){
+  function FP(f,w){ return (window.DATA_URI && DATA_URI[f]) || ('img/robotics/'+encodeURIComponent(f)); }
+
+  var EXTRA = {
+   /* ── MACHINES ── */
+   "Articulated arm":{more:"Six rotary joints give the widest reach and approach angles per footprint; the default whenever a task needs dexterity around a part.",companies:[{n:"FANUC",r:"Japan",t:"D+M"},{n:"ABB",r:"Switzerland",t:"D+M"},{n:"KUKA",r:"Germany",t:"D+M"},{n:"Yaskawa",r:"Japan",t:"D+M"},{n:"Kawasaki",r:"Japan",t:"D+M"}]},
+   "SCARA":{more:"Rigid in Z, compliant in the horizontal plane — optimised for very fast, repeatable planar pick-and-place and vertical insertion.",companies:[{n:"FANUC",r:"Japan",t:"D+M"},{n:"Epson",r:"Japan",t:"D+M"},{n:"Yamaha",r:"Japan",t:"D+M"},{n:"Staubli",r:"Switzerland",t:"D+M"},{n:"Denso",r:"Japan",t:"D+M"}]},
+   "Cartesian / gantry":{more:"Linear travel on X-Y-Z rails; large gantries scale to huge work areas and heavy payloads with high stiffness. Often assembled by integrators from linear-motion modules.",companies:[{n:"Gudel",r:"Switzerland",t:"D+M"},{n:"Bosch Rexroth",r:"Germany",t:"D+M"},{n:"IAI",r:"Japan",t:"D+M"},{n:"Sepro",r:"France",t:"D+M"}]},
+   "Delta / parallel":{more:"A light end-effector driven by three arms off a fixed overhead base — the lowest moving mass and the fastest cycle times of any structure.",companies:[{n:"ABB (FlexPicker)",r:"Switzerland",t:"D+M"},{n:"FANUC",r:"Japan",t:"D+M"},{n:"Omron",r:"Japan",t:"D+M"},{n:"Codian Robotics",r:"Netherlands",t:"D+M"}]},
+   "Cylindrical":{more:"Rotary base plus vertical and radial linear motion in a cylindrical envelope; compact and simple, now a shrinking legacy niche displaced by SCARA and articulated arms.",companies:[{n:"ST Robotics",r:"UK",t:"D+M"},{n:"Yamaha",r:"Japan",t:"D+M"},{n:"Seiko/Epson (legacy)",r:"Japan",t:"D+M"}]},
+   "Collaborative (cobot)":{more:"Force/torque-limited arms certified to work beside people without cages; fastest to deploy for high-mix, lower-volume work, at the cost of speed and payload.",companies:[{n:"Universal Robots (Teradyne)",r:"Denmark",t:"D+M"},{n:"FANUC",r:"Japan",t:"D+M"},{n:"Techman Robot",r:"Taiwan",t:"D+M"},{n:"Doosan Robotics",r:"Korea",t:"D+M"}]},
+   "AGV / AMR":{more:"Wheeled transport robots; AGVs follow fixed guides, AMRs free-navigate with SLAM. Efficient on flat floors and the workhorse of modern warehouses.",companies:[{n:"Amazon Robotics",r:"US, in-house fleet",t:"D+M"},{n:"MiR (Teradyne)",r:"Denmark",t:"D+M"},{n:"Geek+",r:"China",t:"D+M"},{n:"Locus Robotics",r:"US",t:"D+M"}]},
+   "Humanoid":{more:"Bipedal, human-shaped robots meant to use human spaces and tools. Most developers build the whole stack in-house to co-design hardware and AI.",companies:[{n:"Figure AI",r:"US",t:"D+M"},{n:"Tesla (Optimus)",r:"US",t:"D+M"},{n:"Agility Robotics",r:"US",t:"D+M"},{n:"Boston Dynamics",r:"US (Hyundai)",t:"D+M"},{n:"Unitree",r:"China",t:"D+M"},{n:"UBTECH",r:"China",t:"D+M"}]},
+   "Quadruped":{more:"Four-legged robots stay stable on rough terrain and stairs where wheels fail; used mostly as mobile sensor platforms for inspection.",companies:[{n:"Boston Dynamics (Spot)",r:"US",t:"D+M"},{n:"Unitree",r:"China",t:"D+M"},{n:"ANYbotics",r:"Switzerland",t:"D+M"},{n:"DEEP Robotics",r:"China",t:"D+M"}]},
+   "Drone (UAV)":{more:"Aerial robots for sensing and transport; multirotors dominate short-range inspection while fixed-wing covers long range. Limited by battery and airspace rules.",img:"Drone_landing_at_sunset_(11562758945).jpg",companies:[{n:"DJI",r:"China",t:"D+M"},{n:"Skydio",r:"US",t:"D+M"},{n:"Parrot",r:"France",t:"D+M"},{n:"Autel Robotics",r:"China",t:"D+M"}]},
+   "Surgical robot":{more:"Teleoperated precision manipulators for minimally-invasive surgery; sub-millimetre motion scaling, regulated as medical devices with long approval cycles.",companies:[{n:"Intuitive Surgical",r:"US (da Vinci)",t:"D+M"},{n:"Medtronic",r:"US (Hugo)",t:"D+M"},{n:"Stryker",r:"US (Mako)",t:"D+M"},{n:"CMR Surgical",r:"UK (Versius)",t:"D+M"}]},
+
+   /* ── PERCEPTION ── */
+   "RGB camera (2D vision)":{more:"A standard image sensor whose value now comes from the AI reading it; the cheapest, most scalable way to perceive and the basis of the vision-only bet.",companies:[{n:"Sony",r:"image sensors",t:"D+M"},{n:"OmniVision",r:"image sensors",t:"D"},{n:"Basler",r:"machine-vision cameras",t:"D+M"},{n:"Teledyne FLIR",r:"industrial/thermal",t:"D+M"}]},
+   "Stereo camera":{more:"Two calibrated lenses infer depth from disparity, passively (no emitter) — robust outdoors where active depth sensors wash out.",companies:[{n:"Stereolabs (ZED)",r:"US/France",t:"D+M"},{n:"Luxonis (OAK)",r:"US",t:"D+M"},{n:"Intel RealSense",r:"US, wound down",t:"D+M"},{n:"Framos",r:"Germany",t:"D+M"}]},
+   "Depth camera (RGB-D)":{more:"Adds an active emitter (structured light or time-of-flight) for accurate per-pixel distance at short range — the standard for bin-picking and manipulation.",img:"Xbox-360-Kinect-Standalone.png",companies:[{n:"Orbbec",r:"China",t:"D+M"},{n:"Microsoft",r:"Azure Kinect",t:"D"},{n:"Intel RealSense",r:"US",t:"D+M"},{n:"Occipital",r:"US",t:"D+M"}]},
+   "LiDAR":{more:"Laser time-of-flight builds a precise 3D point cloud in any lighting; the ground-truth depth sensor for autonomous navigation, now consolidating.",img:"Velodyne_HDL-64E.jpg",companies:[{n:"Ouster",r:"US (+Velodyne)",t:"D+M"},{n:"Hesai",r:"China",t:"D+M"},{n:"RoboSense",r:"China",t:"D+M"}]},
+   "Radar":{more:"Radio waves measure range and velocity through fog, rain and dust; low resolution but uniquely robust in bad weather and at speed.",companies:[{n:"Bosch",r:"Germany",t:"D+M"},{n:"Continental",r:"Germany",t:"D+M"},{n:"NXP",r:"radar chips",t:"D"},{n:"Texas Instruments",r:"radar chips",t:"D+M"}]},
+   "Tactile / force sensing":{more:"Pressure/force 'skin' that lets a gripper feel contact and slip — an immature but essential ingredient for dexterous manipulation.",companies:[{n:"GelSight",r:"US",t:"D+M"},{n:"SynTouch",r:"US",t:"D+M"},{n:"Contactile",r:"Australia",t:"D+M"}]},
+
+   /* ── ACTUATION ── */
+   "Precision reducers / gearboxes":{more:"Strain-wave (harmonic) and RV (cycloidal) gears deliver high torque with near-zero backlash in a compact joint — the industry's key bottleneck.",companies:[{n:"Harmonic Drive",r:"~85% harmonic",t:"D+M"},{n:"Nabtesco",r:"~60% RV",t:"D+M"},{n:"Sumitomo",r:"Japan",t:"D+M"},{n:"Leader Drive",r:"China",t:"D+M"}]},
+   "Electric motors (BLDC / servo)":{more:"Brushless motors with encoders and closed-loop control — precise, clean and software-controllable; the default muscle of modern robots.",img:"Servo_Motor.jpg",companies:[{n:"Maxon",r:"Switzerland",t:"D+M"},{n:"Faulhaber",r:"Germany",t:"D+M"},{n:"Portescap",r:"US",t:"D+M"},{n:"Nidec",r:"Japan, scale",t:"D+M"}]},
+   "Integrated actuators":{more:"Motor + reducer + controller + sensor packaged as one joint module — speeds humanoid development but still depends on the reducer supply chain.",companies:[{n:"CubeMars / T-Motor",r:"China",t:"D+M"},{n:"Harmonic Drive",r:"actuator modules",t:"D+M"},{n:"Unitree",r:"in-house",t:"D+M"}]},
+   "Hydraulic":{more:"Pressurised fluid gives the highest force density and explosive motion, at the cost of weight, leaks and control difficulty; now niche in robotics.",img:"Hydraulic_cylinder.JPG",companies:[{n:"Bosch Rexroth",r:"Germany",t:"D+M"},{n:"Parker Hannifin",r:"US",t:"D+M"},{n:"Moog",r:"US",t:"D+M"}]},
+   "Pneumatic":{more:"Compressed-air actuators are cheap, light and inherently compliant, but imprecise and need a compressor; common in simple grippers and soft robotics.",companies:[{n:"Festo",r:"Germany",t:"D+M"},{n:"SMC",r:"Japan",t:"D+M"},{n:"Parker Hannifin",r:"US",t:"D+M"}]},
+   "Soft / novel actuators":{more:"Shape-memory alloys, electroactive polymers and artificial muscles promise light, safe, compliant motion — still largely experimental.",companies:[{n:"Festo (bionics)",r:"Germany",t:"D+M"},{n:"Artimus Robotics",r:"US",t:"D+M"},{n:"Research labs",r:"pre-commercial",t:"D"}]},
+
+   /* ── INTELLIGENCE ── */
+   "Perception AI":{more:"Computer-vision models turn raw pixels and points into objects, poses and scenes; increasingly good enough to substitute for expensive sensors.",companies:[{n:"NVIDIA",r:"chips + software",t:"D"},{n:"Mobileye",r:"vision chips",t:"D"},{n:"Open-source",r:"YOLO, etc.",t:"D"}]},
+   "Control & learning (RL / imitation)":{more:"Reinforcement and imitation learning produce dynamic skills — walking, balancing, manipulation — that are impractical to hand-code.",companies:[{n:"Boston Dynamics",r:"in-house",t:"D"},{n:"Google DeepMind",r:"research",t:"D"},{n:"NVIDIA (Isaac)",r:"tooling",t:"D"}]},
+   "Foundation models (VLA)":{more:"Vision-language-action models aim to generalise one 'brain' across many tasks and robots — the highest-uncertainty, highest-upside layer.",companies:[{n:"Google DeepMind",r:"Gemini Robotics",t:"D"},{n:"Physical Intelligence",r:"US",t:"D"},{n:"Skild AI",r:"US",t:"D"},{n:"Figure / Tesla",r:"in-house",t:"D"}]},
+   "Simulation & sim-to-real":{more:"Massively parallel virtual worlds train policies far faster than reality; the challenge is closing the physics 'reality gap'.",companies:[{n:"NVIDIA",r:"Omniverse / Isaac",t:"D"},{n:"Google",r:"MuJoCo (open-source)",t:"D"}]},
+   "Edge compute":{more:"On-board accelerators run perception and control in real time inside the robot's tight power and thermal budget.",img:"6600GT_GPU.jpg",companies:[{n:"NVIDIA",r:"Jetson/Orin, fabless",t:"D"},{n:"Qualcomm",r:"fabless",t:"D"},{n:"Hailo",r:"edge AI",t:"D"}]},
+   "Navigation & SLAM":{more:"Simultaneous localisation and mapping lets a robot build a map while tracking itself in it — mature enough to power warehouse AMRs.",companies:[{n:"Open-source",r:"ROS / Nav2",t:"D"},{n:"Slamcore",r:"UK",t:"D"},{n:"Robot OEMs",r:"in-house",t:"D"}]},
+
+   /* ── MANIPULATION ── */
+   "2-finger / parallel grippers":{more:"Two jaws that open and close — cheap, reliable and the industrial default for handling known, uniform parts.",companies:[{n:"Schunk",r:"Germany",t:"D+M"},{n:"OnRobot",r:"Denmark",t:"D+M"},{n:"Robotiq",r:"Canada",t:"D+M"},{n:"Zimmer",r:"Germany",t:"D+M"}]},
+   "Suction / vacuum":{more:"A vacuum cup grips flat, smooth, sealable surfaces fast and gently — the backbone of logistics and packaging picking.",companies:[{n:"Piab",r:"Sweden",t:"D+M"},{n:"Schmalz",r:"Germany",t:"D+M"},{n:"OnRobot",r:"Denmark",t:"D+M"}]},
+   "Soft grippers":{more:"Compliant, often air-driven fingers conform to irregular or delicate items that rigid jaws can't safely hold.",companies:[{n:"Soft Robotics Inc.",r:"US",t:"D+M"},{n:"Festo",r:"Germany",t:"D+M"},{n:"OnRobot",r:"Soft Gripper",t:"D+M"}]},
+   "Multi-finger dexterous hands":{more:"Human-like hands with many actuated joints — the humanoid end-goal, and where cost, fragility and unreliability concentrate.",img:"Shadow_Hand_Bulb_large.jpg",companies:[{n:"Shadow Robot",r:"UK",t:"D+M"},{n:"Schunk (SVH)",r:"Germany",t:"D+M"},{n:"Wonik (Allegro)",r:"Korea",t:"D+M"},{n:"Humanoid makers",r:"in-house",t:"D+M"}]},
+   "Tactile skin / sensing":{more:"Fingertip pressure/force arrays give a sense of touch and slip, enabling delicate, feedback-driven grasping.",companies:[{n:"GelSight",r:"US",t:"D+M"},{n:"Contactile",r:"Australia",t:"D+M"},{n:"SynTouch",r:"US",t:"D+M"}]},
+   "Task-specific tools":{more:"Welders, screwdrivers, dispensers and cutters bolted to the arm for one job — optimal performance and cost where flexibility isn't needed.",img:"Welding_Robot.jpg",companies:[{n:"Fronius",r:"welding",t:"D+M"},{n:"Lincoln Electric",r:"welding",t:"D+M"},{n:"Atlas Copco",r:"fastening",t:"D+M"}]},
+
+   /* ── POWER ── */
+   "Li-ion battery packs":{more:"The default energy store, riding the EV cost curve; energy density directly caps a mobile robot's runtime and payload.",img:"18650_and_21700_lithium_ion_battery_cell.jpg",companies:[{n:"CATL",r:"China",t:"D+M"},{n:"BYD",r:"China",t:"D+M"},{n:"LG Energy Solution",r:"Korea",t:"D+M"},{n:"Panasonic",r:"Japan",t:"D+M"}]},
+   "Battery management (BMS)":{more:"Electronics that balance cells, manage charge and heat and protect the pack — safety-critical and a source of runtime and lifetime gains.",companies:[{n:"Analog Devices",r:"BMS ICs",t:"D"},{n:"Texas Instruments",r:"BMS ICs",t:"D+M"},{n:"Infineon",r:"Germany",t:"D+M"},{n:"NXP",r:"Netherlands",t:"D"}]},
+   "Power electronics":{more:"Converters and inverters feed motors and compute efficiently; SiC/GaN devices cut losses and extend runtime from the same pack.",companies:[{n:"Infineon",r:"Germany",t:"D+M"},{n:"onsemi",r:"US",t:"D+M"},{n:"STMicroelectronics",r:"Europe",t:"D+M"},{n:"Wolfspeed",r:"SiC, US",t:"D+M"}]},
+   "Tethered / hot-swap / docking":{more:"Cable power, swappable packs and auto-charging docks sidestep runtime limits — trading mobility or logistics for uptime.",companies:[{n:"Robot OEMs",r:"in-house designs",t:"D+M"},{n:"WiBotic",r:"wireless charging",t:"D+M"}]},
+   "Solid-state & next-gen cells":{more:"New chemistries promise higher energy density and safety; a step-change here would re-rate humanoid endurance — but it is not yet at scale.",companies:[{n:"Toyota",r:"Japan",t:"D+M"},{n:"QuantumScape",r:"US",t:"D"},{n:"Samsung SDI",r:"Korea",t:"D+M"},{n:"Solid Power",r:"US",t:"D"}]},
+   "Thermal management":{more:"Cooling for actuators, batteries and compute working near their limits; a design constraint that scales with dense, continuous-duty humanoids.",img:"Heat_sink.jpg",companies:[{n:"Heat-sink / fan makers",r:"Aavid, Delta, etc.",t:"D+M"},{n:"Robot OEMs",r:"in-house",t:"D+M"}]}
+  };
+
+  var IMGS = {
+    "RGB camera (2D vision)":"Machine_Vision_System.jpg",
+    "Stereo camera":"Stereo_camera.JPG",
+    "LiDAR":"3D_Sick_Lidar.jpg",
+    "Radar":"AXIS_D2123-VE_Radar.jpg",
+    "Pneumatic":"Pneumatic_cylinder_2172.jpg",
+    "Precision reducers / gearboxes":"Gears-686316.jpg",
+    "Integrated actuators":"Uniline.jpg",
+    "Soft / novel actuators":"Inflatable_Robotic_Arm.jpg",
+    "Suction / vacuum":"Suction_cup.jpg",
+    "2-finger / parallel grippers":"Robot_arm_handles_an_assay_plate.jpg",
+    "Soft grippers":"Soft_Robotics_1.jpg",
+    "Perception AI":"ObjectDetectionExample.png",
+    "Control & learning (RL / imitation)":"Atlas_frontview_2013.jpg",
+    "Foundation models (VLA)":"Datacenter_Server_Racks_(22370909788).jpg",
+    "Edge compute":"GTX_1650_Mobile.jpg",
+    "Navigation & SLAM":"Monmouth_castle_point_cloud,_created_with_Photosynth_01.jpg",
+    "Simulation & sim-to-real":"Simulation_of_a_Robotis_DARwIn-OP_in_Webots.png",
+    "Power electronics":"IC_circuit_chip_board.JPG",
+    "Battery management (BMS)":"Geos3-pcb.jpg"
+  };
+  Object.keys(IMGS).forEach(function(k){ if(EXTRA[k]) EXTRA[k].img = IMGS[k]; });
+
+  function tcls(t){ return t==='D+M'?'dm':(t==='D'?'d':'m'); }
+
+  var rmodal = document.getElementById('rmodal');
+  var rmHero = document.getElementById('rmHero');
+  var rmBody = document.getElementById('rmBody');
+  var lyt = document.getElementById('lyt'), lytImg = document.getElementById('lytImg'), lytCap = document.getElementById('lytCap');
+
+  function openModal(card, isMach, name, ex){
+    var descEl = card.querySelector(isMach ? '.mach-d' : '.tech-how');
+    var tagEl  = card.querySelector('.mach-tag');
+    var bestEl = card.querySelector(isMach ? '.mach-best' : '.tech-best');
+    var img = card.querySelector('img');
+    var hero;
+    if(img && img.offsetParent !== null){
+      hero = '<img class="rm-hero-img" src="' + img.src.replace(/width=\d+/, 'width=1000') + '" alt="' + name + '">';
+    } else {
+      var svg = card.querySelector('svg');
+      hero = '<div class="rm-diagram">' + (svg ? svg.outerHTML : '') + '</div>';
+    }
+    rmHero.innerHTML = hero;
+    var b = '';
+    if(tagEl) b += '<span class="rm-tag">' + tagEl.textContent + '</span>';
+    b += '<div class="rm-title">' + name + '</div>';
+    if(descEl) b += '<div class="rm-desc">' + descEl.innerHTML + '</div>';
+    if(ex.more) b += '<div class="rm-sec-t">Functionality</div><div class="rm-more">' + ex.more + '</div>';
+    if(bestEl) b += '<div class="rm-best">' + bestEl.innerHTML + '</div>';
+    if(ex.companies){
+      b += '<div class="rm-sec-t">Who designs / makes it</div>';
+      ex.companies.forEach(function(c){
+        b += '<div class="co"><span class="co-n">' + c.n + (c.r ? ' <span class="co-r">' + c.r + '</span>' : '') + '</span><span class="co-t ' + tcls(c.t) + '">' + c.t + '</span></div>';
+      });
+      b += '<div class="co-legend">D = designs (outsources production) &nbsp;·&nbsp; M = manufactures &nbsp;·&nbsp; D+M = both</div>';
+    }
+    rmBody.innerHTML = b;
+    rmodal.querySelector('.rmodal-card').scrollTop = 0;
+    rmodal.classList.add('open');
+  }
+
+  document.querySelectorAll('.mach, .tech').forEach(function(card){
+    var isMach = card.classList.contains('mach');
+    var nameEl = card.querySelector(isMach ? '.mach-n' : '.tech-n');
+    if(!nameEl) return;
+    var name = nameEl.textContent.trim();
+    var ex = EXTRA[name] || {};
+    var vis = card.querySelector(isMach ? '.mach-vis' : '.tech-vis');
+
+    /* photo thumbnail (with diagram fallback) */
+    if(vis){
+      var cur = vis.querySelector('img');
+      if(cur){
+        var seg = (cur.getAttribute('src') || '').split('Special:FilePath/')[1];
+        if(seg){ var fn = decodeURIComponent(seg.split('?')[0]); if(window.DATA_URI && DATA_URI[fn]) cur.src = DATA_URI[fn]; }
+      } else if(ex.img){
+        var fb = isMach ? vis.querySelector('.mach-fallback') : vis.querySelector('svg');
+        var im = document.createElement('img');
+        im.loading = 'lazy'; im.alt = name; im.src = FP(ex.img, 480);
+        im.onerror = function(){ this.remove(); if(fb) fb.style.display = isMach ? 'flex' : ''; };
+        if(fb) fb.style.display = 'none';
+        vis.insertBefore(im, vis.firstChild);
+      }
+    }
+
+    /* whole card → pop-up */
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', function(){ openModal(card, isMach, name, ex); });
+
+    /* affordance button (bubbles to the card handler) */
+    if(ex.more || ex.companies){
+      var body = isMach ? card.querySelector('.mach-body') : card;
+      var btn = document.createElement('button');
+      btn.className = 'more-btn';
+      btn.innerHTML = 'View details &amp; companies <span class="caret">↗</span>';
+      body.appendChild(btn);
+    }
+  });
+
+  /* modal close */
+  function closeRm(){ rmodal.classList.remove('open'); }
+  rmodal.addEventListener('click', function(e){ if(e.target === rmodal) closeRm(); });
+  document.getElementById('rmodalX').addEventListener('click', closeRm);
+
+  /* lightbox — zoom the modal hero photo even bigger */
+  function closeLyt(){ lyt.classList.remove('open'); lytImg.src = ''; }
+  document.addEventListener('click', function(e){
+    var img = e.target.closest && e.target.closest('img.rm-hero-img');
+    if(img){ lytImg.src = img.src.replace(/width=\d+/, 'width=1600'); lytCap.textContent = img.alt || ''; lyt.classList.add('open'); }
+  });
+  lyt.addEventListener('click', function(e){ if(e.target !== lytImg) closeLyt(); });
+  document.getElementById('lytX').addEventListener('click', closeLyt);
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ closeLyt(); closeRm(); } });
+})();
+</script>
+
+</body>
+</html>

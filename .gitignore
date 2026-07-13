@@ -22,3 +22,7 @@ nvidia-map-reference/
 
 # Payment-networks industry dashboard + extracted data — local only, do not commit
 payments-industry-reference/
+
+# Robotics working docs + Bloomberg SPLC data — local only (the portal-facing
+# dashboard is robotics-industry.html + img/robotics/, which ARE committed)
+robotics-research/

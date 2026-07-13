@@ -1963,6 +1963,23 @@ img.mgmt-av { border: 1px solid var(--bdr); }
   --brand-soft: #E8F7E8;
   --brand-2: #FF7009;
 }
+/* Instacart uses the SoFi-style filled segmented top tabs (green) — matches Uber/Lyft. */
+.ov-cart .ovt-tabs {
+  display: inline-flex; flex-wrap: wrap; gap: 4px; border-bottom: none;
+  background: var(--surface); border: 1px solid var(--bdr);
+  border-radius: 11px; padding: 4px; margin: 0 0 22px;
+}
+.ov-cart .ovt-tab {
+  border: none; border-radius: 8px; text-transform: none; letter-spacing: 0;
+  font-size: 13px; font-weight: 600; color: var(--mu);
+  padding: 8px 16px; margin-bottom: 0; transition: background .15s, color .15s;
+}
+.ov-cart .ovt-tab:hover { color: var(--navy); background: rgba(10,173,10,0.06); }
+.ov-cart .ovt-tab.active {
+  color: #fff; background: var(--brand); border-bottom: none;
+  box-shadow: 0 1px 3px rgba(10,173,10,0.28);
+}
+.ov-cart .ovt-tab.active:hover { color: #fff; }
 .ov-cart .ov-flow-node.on { box-shadow: 0 4px 14px rgba(10,173,10,.16); }
 .ov-cart .ov-flow-node[data-node="ic"].on { border-color: var(--brand-2); box-shadow: 0 4px 14px rgba(255,112,9,.30); }
 .ov-cart .ov-flow-earn.earn-ic    { background: #E8F7E8; color: #0A7A0A; border: 1px solid var(--brand); }

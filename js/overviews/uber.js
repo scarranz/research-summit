@@ -91,7 +91,7 @@ var UBER_MGMT = makeManagement({
   foot:"Executives per Uber’s leadership page; board, committees and governance per the 2026 proxy (DEF 14A / corrected DEFR14A). Headshots from Uber’s newsroom CDN. Ownership and insider trades live in the Pillars → Management tab.",
 });
 
-function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ─── Formatting ──────────────────────────────────────────────────────────────
 function money(m){ if (m==null) return '—'; var neg=m<0,a=Math.abs(m),s;
@@ -307,43 +307,53 @@ function mbars(arr){ return '<div class="ov-mbars">'+arr.map(function(r){
     '<div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:'+r[1]+'%;background:'+r[3]+';">'+esc(r[2])+'</div></div>'+
     '<div class="ov-mbar-v">'+r[1]+'%</div></div>';
 }).join('')+'</div>'; }
-// M&A cards (reuses shared .ov-cards-mna).
+// M&A grouped by WHAT CHANGED IN THE FINANCIALS — short by default, full terms on tap.
 function mnaTimeline(){
+  var byName={}; MNA.forEach(function(m){ byName[m.n]=m; });
   var DIV=[
     {y:'2016', n:'China → Didi', fp:'Exited a cash-furnace market for a <b>Didi equity stake</b>.'},
     {y:'2018', n:'SE Asia → Grab', fp:'Swapped mounting losses for a <b>Grab stake</b>.'},
-    {y:'2020', n:'Self-driving (ATG) → Aurora', fp:'Shed heavy <b>AV R&D burn</b> — a major step toward the 2023 profit; kept a ~26% stake.', big:true},
+    {y:'2020', n:'Self-driving (ATG) → Aurora', fp:'Shed heavy <b>AV R&D burn</b> — a major step toward the 2023 profit; kept a ~26% stake.'},
     {y:'2021', n:'Russia → Yandex', fp:'Sold the JV stake for cash on the way out.'}
   ];
-  var acq=MNA.slice().sort(function(a,b){ return (+String(a.y).replace(/\D/g,''))-(+String(b.y).replace(/\D/g,'')); });
+  // impact → which deals, the color, and a one-line "so what"
+  var GROUPS=[
+    { label:'Created a whole segment', color:'#06965A', note:'Added a brand-new reporting line to the P&L.', click:true, items:[byName['Postmates'], byName['Transplace']] },
+    { label:'Opened grocery', color:'#1E9E62', note:'The on-ramp to today’s ~$12B grocery run-rate.', click:true, items:[byName['Cornershop']] },
+    { label:'Added new regions', color:'#2E6BE6', note:'Bought the local leader where Uber doesn’t operate itself.', click:true, items:[byName['Careem'], byName['Trendyol Go']] },
+    { label:'Turned losses into equity stakes', color:'#7A5AF8', note:'Exited cash-burning markets for shares — a key step to the 2023 profit (and why GAAP net income now swings).', click:false, items:DIV },
+    { label:'Misses & write-offs', color:'#C0392B', note:'The rare M&A that didn’t work.', click:true, items:[byName['Drizly'], byName['Foodpanda Taiwan']] }
+  ];
   var h='<style>'+
-    '.mnt-h2{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin:14px 0 8px}.mnt-h2.acq{color:#049a4f}.mnt-h2.dv{color:#2E6BE6}'+
-    '.mnt-rail{display:flex;flex-wrap:wrap;gap:9px}'+
-    '.mnt-chip{flex:1;min-width:158px;max-width:250px;border:1px solid var(--bdr);border-radius:11px;padding:10px 12px;background:#fff}'+
-    '.mnt-chip.acq{border-top:3px solid #06C167}.mnt-chip.dv{border-top:3px solid #2E6BE6}.mnt-chip.miss{border-top-color:#C0392B}'+
-    '.mnt-chip.acq.ov-clickable{cursor:pointer;transition:.15s}.mnt-chip.acq.ov-clickable:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-2px)}'+
-    '.mnt-chip.big{box-shadow:0 0 0 2px rgba(46,107,230,.16)}'+
-    '.mnt-top{display:flex;justify-content:space-between;align-items:center;gap:6px}'+
-    '.mnt-yr{font-size:11px;font-weight:800;color:var(--navy)}.mnt-cat{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--mu);background:#eef2f7;border-radius:10px;padding:1px 7px}'+
-    '.mnt-n{font-size:12.5px;font-weight:800;color:var(--navy);margin:5px 0 4px}.mnt-x{font-size:9px;color:#C0392B;font-weight:800;text-transform:uppercase}'+
-    '.mnt-fp{font-size:11px;color:var(--navy);line-height:1.45}.mnt-fp b{font-weight:800}'+
-    '.mnt-more{font-size:10px;color:#049a4f;font-weight:700;margin-top:6px}'+
-    '.mnt-axis{text-align:center;font-size:11.5px;color:var(--navy);background:linear-gradient(90deg,transparent,rgba(6,193,103,.10),transparent);border-top:1px dashed var(--bdr);border-bottom:1px dashed var(--bdr);padding:9px;margin:14px 0}.mnt-axis b{font-weight:800}.mnt-star{color:#E8A00C}'+
-    '.mnt-punch{font-size:11.5px;color:var(--navy);line-height:1.6;background:#f6f8fa;border-left:3px solid #10141A;border-radius:8px;padding:11px 14px;margin-top:14px}.mnt-punch b{font-weight:800}'+
+    '.mng-grp{border:1px solid var(--bdr);border-left:4px solid #ccc;border-radius:10px;padding:11px 13px;margin-bottom:9px}'+
+    '.mng-h{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:9px}'+
+    '.mng-t{font-size:12.5px;font-weight:800;color:var(--navy)}.mng-note{font-size:11px;color:var(--mu);line-height:1.4}'+
+    '.mng-rail{display:flex;flex-wrap:wrap;gap:8px}'+
+    '.mng-chip{flex:1;min-width:150px;max-width:230px;border:1px solid var(--bdr);border-radius:9px;padding:9px 11px;background:#fff}'+
+    '.mng-chip.click{cursor:pointer;transition:.14s}.mng-chip.click:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-2px)}'+
+    '.mng-chip.miss{border-color:#E7B7B0}'+
+    '.mng-top{display:flex;justify-content:space-between;align-items:center;gap:6px}'+
+    '.mng-yr{font-size:10.5px;font-weight:800;color:var(--navy)}.mng-deal{font-size:9.5px;font-weight:700;color:var(--mu);background:#eef2f7;border-radius:9px;padding:1px 7px}'+
+    '.mng-n{font-size:12px;font-weight:800;color:var(--navy);margin:4px 0 3px}.mng-x{font-size:8.5px;color:#C0392B;font-weight:800;text-transform:uppercase}'+
+    '.mng-fp{font-size:10.5px;color:var(--navy);line-height:1.4}.mng-fp b{font-weight:800}.mng-more{font-size:9.5px;font-weight:700;margin-top:5px}'+
   '</style>';
-  h+='<div class="ov-diagram-cap" style="margin:0 0 4px">Uber’s M&A runs on <b>two tracks</b>: acquisitions <b>add</b> bookings and whole segments; divestitures <b>shed</b> losses and turn them into equity stakes. Read together, they explain how the P&L reached profit. <b>Tap any acquisition</b> for terms.</div>';
-  h+='<div class="mnt-h2 acq">↑ Acquisitions — what they <b>added</b> (offense)</div>';
-  h+='<div class="mnt-rail">'+acq.map(function(m){ var mc=m.miss?' miss':'';
-    return '<div class="mnt-chip acq'+mc+' ov-clickable" data-detail="mna:'+esc(m.n)+'">'+
-      '<div class="mnt-top"><span class="mnt-yr">'+esc(m.y)+'</span><span class="mnt-cat">'+esc(m.cat)+'</span></div>'+
-      '<div class="mnt-n">'+esc(m.n)+(m.miss?' <span class="mnt-x">miss</span>':'')+'</div>'+
-      '<div class="mnt-fp">'+(m.fp||'')+'</div><div class="mnt-more">terms ›</div></div>'; }).join('')+'</div>';
-  h+='<div class="mnt-axis"><span class="mnt-star">★</span> Q2 2023 — Uber’s <b>first-ever GAAP operating profit</b>, where both tracks converge</div>';
-  h+='<div class="mnt-h2 dv">↓ Divestitures — what they <b>shed</b> → the path to profit (defense)</div>';
-  h+='<div class="mnt-rail">'+DIV.map(function(d){
-    return '<div class="mnt-chip dv'+(d.big?' big':'')+'"><div class="mnt-top"><span class="mnt-yr">'+esc(d.y)+'</span></div>'+
-      '<div class="mnt-n">'+d.n+'</div><div class="mnt-fp">'+d.fp+'</div></div>'; }).join('')+'</div>';
-  h+='<div class="mnt-punch"><b>What actually changed in the financials:</b> Postmates made <b>Delivery a co-equal segment</b>, Transplace <b>created Freight</b>, Cornershop opened <b>grocery</b>, Careem/Trendyol added <b>regions</b>. Meanwhile exiting China, SE Asia, Russia and self-driving turned cash-burning operations into <b>equity stakes</b> — which is exactly why <b>GAAP net income swings</b> quarter to quarter (and why Uber guides on <b>Non-GAAP EPS</b>). Recent AV “deals” are capital commitments, not acquisitions.</div>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 10px">Uber’s deals, grouped by <b>what each changed in the financials</b> — not by date. Acquisitions <b>added</b> segments, grocery and regions; divestitures <b>turned losses into equity stakes</b> (the quiet engine of the 2023 profit). <b>Tap any acquisition</b> for terms & outcome.</div>';
+  function chip(m, click, accent){
+    if(!m) return '';
+    var cls='mng-chip'+(click?' click ov-clickable':'')+(m.miss?' miss':'');
+    var attr=click?' data-detail="mna:'+esc(m.n)+'"':'';
+    return '<div class="'+cls+'"'+attr+' style="border-top:3px solid '+accent+'">'+
+      '<div class="mng-top"><span class="mng-yr">'+esc(m.y)+'</span>'+(m.deal?'<span class="mng-deal">'+esc(m.deal)+'</span>':'')+'</div>'+
+      '<div class="mng-n">'+esc(m.n)+(m.miss?' <span class="mng-x">miss</span>':'')+'</div>'+
+      '<div class="mng-fp">'+(m.fp||'')+'</div>'+
+      (click?'<div class="mng-more" style="color:'+accent+'">terms ›</div>':'')+'</div>';
+  }
+  h+=GROUPS.map(function(g){
+    return '<div class="mng-grp" style="border-left-color:'+g.color+'">'+
+      '<div class="mng-h"><span class="mng-t">'+esc(g.label)+'</span><span class="mng-note">'+g.note+'</span></div>'+
+      '<div class="mng-rail">'+g.items.map(function(m){ return chip(m, g.click, g.color); }).join('')+'</div></div>';
+  }).join('');
+  h+=collapsible('Why this matters for the financials', '<div style="font-size:11.5px;color:var(--navy);line-height:1.6">Postmates made <b>Delivery a co-equal segment</b>, Transplace <b>created Freight</b>, Cornershop opened <b>grocery</b>, Careem/Trendyol added <b>regions</b>. Meanwhile exiting China, SE Asia, Russia and self-driving turned cash-burning operations into <b>equity stakes</b> — which is exactly why <b>GAAP net income swings</b> quarter to quarter (and why Uber guides on <b>Non-GAAP EPS</b>). Recent AV “deals” are capital commitments, not acquisitions.</div>', false);
   return h;
 }
 function rangeSlider(key,maxI,a,b){
@@ -496,10 +506,24 @@ var UB_THEMES = [
     ]},
 ];
 
+// Regroup the theme-tagged updates by quarter (newest first) \u2014 same data, different lens.
+function callsByQuarter(){
+  var map={}, order=[];
+  UB_THEMES.forEach(function(ct){ ct.updates.forEach(function(u){ if(!map[u.q]){ map[u.q]=[]; order.push(u.q); } map[u.q].push({ theme:ct.theme, items:u.items }); }); });
+  function qval(q){ var m=String(q).match(/Q(\d)\s+(\d{4})/); return m?(+m[2])*10+(+m[1]):0; }
+  order.sort(function(a,b){ return qval(b)-qval(a); });
+  return { order:order, map:map };
+}
 function callsBody(){
-  var h='<p class="ov-lede">The key narrative threads from <b>10 earnings calls</b> (Q4 2023 \u2192 Q1 2026) \u2014 organized by <b>theme</b> so you can trace how each story evolved. Tap any theme to expand.</p>';
-  h+='<div class="lpb-acc" id="ubCallsAcc">';
-  UB_THEMES.forEach(function(ct,i){
+  var h='<style>.calls-tog{display:inline-flex;gap:4px;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:3px;margin-bottom:14px}'+
+    '.calls-pill{border:none;background:transparent;font:inherit;font-size:12px;font-weight:700;color:var(--mu);padding:5px 15px;border-radius:999px;cursor:pointer;transition:.12s}'+
+    '.calls-pill:hover{color:var(--navy)}.calls-pill.active{background:var(--navy);color:#fff}'+
+    '.calls-tl{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--navy);margin:0 0 4px}</style>';
+  h+='<p class="ov-lede">The key narrative threads from <b>10 earnings calls</b> (Q4 2023 \u2192 Q1 2026). Switch lens: <b>By theme</b> traces how each story evolved; <b>By quarter</b> shows what mattered in a given call. Tap any row to expand.</p>';
+  h+='<div class="calls-tog" role="tablist"><button type="button" class="calls-pill active" data-callsv="theme">By theme</button><button type="button" class="calls-pill" data-callsv="quarter">By quarter</button></div>';
+  // \u2500\u2500 By theme (default) \u2500\u2500
+  h+='<div class="lpb-acc" id="ubCallsTheme">';
+  UB_THEMES.forEach(function(ct){
     h+='<div class="lpb-acc-item">';
     h+='<button type="button" class="lpb-acc-h"><span>'+esc(ct.theme)+'</span><span class="lpb-acc-ic">+</span></button>';
     h+='<div class="lpb-acc-body">';
@@ -507,6 +531,20 @@ function callsBody(){
     ct.updates.forEach(function(u){
       h+='<div style="margin-bottom:10px"><span class="ov-chip" style="margin-right:6px">'+esc(u.q)+'</span>';
       h+='<ul class="ov-bullets" style="margin-top:4px">'+u.items.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ul></div>';
+    });
+    h+='</div></div>';
+  });
+  h+='</div>';
+  // \u2500\u2500 By quarter \u2500\u2500
+  var byQ=callsByQuarter();
+  h+='<div class="lpb-acc" id="ubCallsQuarter" style="display:none">';
+  byQ.order.forEach(function(q){
+    h+='<div class="lpb-acc-item">';
+    h+='<button type="button" class="lpb-acc-h"><span>'+esc(q)+'</span><span class="lpb-acc-ic">+</span></button>';
+    h+='<div class="lpb-acc-body">';
+    byQ.map[q].forEach(function(row){
+      h+='<div style="margin-bottom:12px"><div class="calls-tl">'+esc(row.theme)+'</div>';
+      h+='<ul class="ov-bullets" style="margin-top:2px">'+row.items.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ul></div>';
     });
     h+='</div></div>';
   });
@@ -622,16 +660,16 @@ function segParts(){
 var AR_DETAIL={
   mob:{t:'Mobility — Uber leads', h:'Uber holds <b>~70%+ of US rideshare</b>; Lyft is the only real US rival, and it is a <b>US/Canada-only #2</b>. Take rates cluster ~<b>30%</b> across every player, so <b>price is not the battle</b> &mdash; <b>density, cross-sell</b> (Eats &harr; rides via Uber One) and <b>global scale</b> are. Regionally, Uber competes locally (Bolt in Europe, inDrive in emerging markets) or holds <b>equity stakes</b> from markets it exited (Didi/China, Grab/SE&nbsp;Asia, Yandex/Russia). <b>Why it leads:</b> the only platform that is global AND multi-product.'},
   del:{t:'Delivery — Uber contests (US #2)', h:'The one arena where a rival <b>out-scales Uber</b>: <b>DoorDash ~60%</b> of US food delivery vs Uber Eats ~<b>22&ndash;25%</b>. But Eats is <b>far bigger internationally</b>, and Uber counters US share with <b>Mobility cross-sell, Uber One, grocery and a &gt;$2B ad layer</b> DoorDash cannot match at the same scale. Margin has <b>doubled</b> (~1.9% &rarr; ~4% of GB) on ads + scale, converging toward Mobility&rsquo;s ~8%.'},
-  groc:{t:'Grocery & retail — Uber is a challenger', h:'Grocery is an <b>Eats cross-sell</b>, not a standalone win yet: ~<b>$12B run-rate</b>, 5 of the top-10 US grocers on platform, bigger baskets &amp; higher frequency. It fights <b>Instacart</b> (the grocery-native leader), <b>Amazon</b> (Whole Foods + Fresh) and <b>DoorDash</b>. Uber&rsquo;s edge is the <b>existing delivery network + membership</b>; its gap is grocery-specific tech &amp; retailer relationships, where Instacart is ahead.'},
+  groc:{t:'Grocery & retail — Uber is a challenger', h:'Grocery is an <b>Eats cross-sell</b>, not a standalone win yet: ~<b>$12B run-rate</b>, 5 of the top-10 US grocers on platform, bigger baskets & higher frequency. It fights <b>Instacart</b> (the grocery-native leader), <b>Amazon</b> (Whole Foods + Fresh) and <b>DoorDash</b>. Uber&rsquo;s edge is the <b>existing delivery network + membership</b>; its gap is grocery-specific tech & retailer relationships, where Instacart is ahead.'},
   ads:{t:'Advertising — rising fast', h:'The clearest <b>structural margin lever</b>: <b>&gt;$2B run-rate, +50%/yr, ~100% incremental margin</b>, sitting mostly inside Delivery (sponsored listings, in-app). It competes for CPG / retail-media budgets with Amazon, Instacart and the retail-media field. <b>Why it is rising:</b> Uber has the <b>audience + purchase intent + closed loop</b>, and the ad dollar lifts Delivery&rsquo;s take <i>without</i> touching the marketplace split.'},
   av:{t:'Autonomous — the hybrid bet', h:'The <b>defining open question</b>. Uber is <b>both partner and rival</b> to Waymo: Waymo rides are dispatched on the Uber app in Austin/Atlanta, but Waymo runs its own app in SF/Phoenix/LA. Uber&rsquo;s bet: be the <b>demand + fleet-management layer</b> every AV plugs into (30+ partners; &ldquo;no effect of the Waymo launches on our overall business&rdquo;), while Tesla threatens a closed network. <b>Contested</b> &mdash; see the AV tab for the hybrid-network case.'},
   freight:{t:'Freight — optionality only', h:'Logistics brokerage, reported <b>gross</b> (no take rate). ~<b>$5B</b> bookings, <b>near-breakeven</b>, hit by the freight recession. Uber built it via <b>Transplace</b> (2021) but it is <b>subscale</b> vs incumbents. Kept for <b>optionality</b> (a data + network option on logistics), not a battle Uber must win &mdash; and a candidate to divest if it never turns.'}
 };
 function uberArenaMap(){
   var A=[
-    {k:'mob', a:'Mobility (rideshare)', r:'vs Lyft &middot; Grab &middot; Bolt &middot; Didi', pos:'Leads', pc:'#1E9E62', pb:'rgba(30,158,98,0.12)', read:'~<b>70%+</b> of US rides and the only global, multi-product player. Peers sit at the same ~30% take &mdash; scale &amp; the bundle are the moat, not price.'},
+    {k:'mob', a:'Mobility (rideshare)', r:'vs Lyft &middot; Grab &middot; Bolt &middot; Didi', pos:'Leads', pc:'#1E9E62', pb:'rgba(30,158,98,0.12)', read:'~<b>70%+</b> of US rides and the only global, multi-product player. Peers sit at the same ~30% take &mdash; scale & the bundle are the moat, not price.'},
     {k:'del', a:'Delivery (food)', r:'vs DoorDash', pos:'Contests', pc:'#B8860B', pb:'rgba(184,134,11,0.14)', read:'<b>#2 in the US</b> (Eats ~22&ndash;25% vs DoorDash ~60%) &mdash; but <b>bigger internationally</b>, and margin is converging up on ads + scale.'},
-    {k:'groc', a:'Grocery &amp; retail', r:'vs Instacart &middot; Amazon &middot; DoorDash', pos:'Challenger', pc:'#3A7BD5', pb:'rgba(58,123,213,0.12)', read:'~<b>$12B</b> run-rate and growing fast &mdash; an Eats cross-sell, not the category leader yet.'},
+    {k:'groc', a:'Grocery & retail', r:'vs Instacart &middot; Amazon &middot; DoorDash', pos:'Challenger', pc:'#3A7BD5', pb:'rgba(58,123,213,0.12)', read:'~<b>$12B</b> run-rate and growing fast &mdash; an Eats cross-sell, not the category leader yet.'},
     {k:'ads', a:'Advertising', r:'vs the retail-media field', pos:'Rising', pc:'#3A7BD5', pb:'rgba(58,123,213,0.12)', read:'<b>&gt;$2B</b> run-rate, ~100% margin, +50%/yr &mdash; a fast-emerging profit pool hiding inside Delivery.'},
     {k:'av', a:'Autonomous (AV)', r:'vs Waymo &middot; Tesla', pos:'Hybrid bet', pc:'#6b7684', pb:'#eef2f7', read:'<b>Partner AND rival</b> &mdash; Waymo rides on the Uber app in some cities, on its own in others. The defining open question (see AV tab).'},
     {k:'freight', a:'Freight', r:'vs digital brokerages', pos:'Optionality', pc:'#6b7684', pb:'#eef2f7', read:'Subscale, near-breakeven &mdash; kept for optionality, not a battle Uber must win.'}
@@ -647,7 +685,71 @@ function uberArenaMap(){
   h+=A.map(function(x){ return '<div class="uam-row ov-clickable" data-detail="arena:'+x.k+'" style="border-left-color:'+x.pc+'"><div class="uam-a">'+x.a+'<span class="uam-r">'+x.r+'</span></div><div class="uam-pos" style="color:'+x.pc+';background:'+x.pb+'">'+x.pos+'</div><div class="uam-read">'+x.read+' <span style="color:#10141A;font-weight:800;white-space:nowrap">detail ›</span></div></div>'; }).join('');
   return h;
 }
-function overviewBody(c){
+// Reusable collapsible section — main content stays; deeper detail folds away (reader's choice).
+function collapsible(title, inner, open){
+  return '<div class="ov-collap'+(open?' open':'')+'">'+
+    '<button type="button" class="ov-collap-h"><span class="ov-collap-ic">'+(open?'▾':'▸')+'</span>'+esc(title)+'</button>'+
+    '<div class="ov-collap-b"'+(open?'':' hidden')+'>'+inner+'</div></div>';
+}
+// Competitive map — rivals plotted by two business characteristics (not by "similarity to Uber").
+// x = business breadth (single-service specialist → multi-service platform); y = geographic reach (1 region → global).
+function uberRivalScatter(){
+  // Arena of competition with Uber → dot color (see legend). Uber itself = black (spans all arenas).
+  var AC={ mob:'#3A7BD5', del:'#E8830C', groc:'#1E9E62', av:'#7A5AF8', uber:'#10141A' };
+  var D=[
+    ['Uber',552,60,10,AC.uber,'',
+      'The broad-and-global corner. Rides + Delivery (~half of bookings) + Freight + Ads across ~70 countries. Its moat isn’t price — peers all take ~30% — it’s <b>scale + a cross-sell bundle</b> no single-service rival can match.',true],
+    ['DiDi',255,100,8,AC.mob,'',
+      '<b>Broad geography, mobility-led.</b> Rides + some delivery & fintech across China, Brazil and Mexico. Uber exited these markets and <b>holds equity stakes</b> rather than competing head-on.'],
+    ['Grab',505,165,8,AC.mob,'',
+      '<b>Single-region super-app.</b> Rides + food + GrabPay finance — but only ~8 SE-Asian countries. High breadth, one region; Uber sold its SE-Asia arm to Grab for a stake.'],
+    ['Bolt',360,148,7,AC.mob,'',
+      '<b>Regional multi-service.</b> Rides + scooters + Bolt Food + grocery across ~45 European & African countries. Mid-breadth, regional — where Uber competes locally.'],
+    ['DoorDash',305,172,9,AC.del,'',
+      '<b>Delivery-first, broadening.</b> ~60% of US food delivery (vs Eats ~22–25%), now adding grocery, ads and DashPass. Out-scales Uber in US food, but far smaller abroad and no mobility.'],
+    ['Lyft',205,196,8,AC.mob,'',
+      '<b>Pure rideshare, domestic.</b> ~7% of revenue is non-rideshare vs Uber’s ~50%. Same ~30% take and US #2 — so the gap is scale + a Delivery business funding rider CAC, not price.'],
+    ['Instacart',158,216,8,AC.groc,'',
+      '<b>Grocery specialist, US-only.</b> The category-native leader Uber’s grocery push fights — deep retailer integrations and 22M+ items. Narrow but deep; no mobility, no international.'],
+    ['Waymo',110,232,7,AC.av,'',
+      '<b>AV specialist, a few cities.</b> Robotaxis on its own app (SF/Phoenix/LA) and on Uber’s (Austin/Atlanta) — <b>partner and rival</b> at once. The defining open question for Mobility.']
+  ];
+  var LEG=[['Mobility',AC.mob],['Delivery',AC.del],['Grocery',AC.groc],['Autonomous',AC.av],['Uber — all arenas',AC.uber]];
+  function dot(d){ var name=d[0],x=d[1],y=d[2],r=d[3],col=d[4],why=d[6],hl=d[7];
+    return '<circle class="peer-dot" cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+col+'"'+(hl?' stroke="#fff" stroke-width="2"':'')+' style="cursor:pointer" data-name="'+esc(name)+'" data-why="'+esc(why)+'"></circle>'+
+      '<text x="'+x+'" y="'+(y-r-5)+'" font-family="Inter,sans-serif" font-size="'+(hl?12.5:11)+'" font-weight="'+(hl?800:700)+'" fill="'+(hl?col:'#3A4552')+'" text-anchor="middle" style="pointer-events:none">'+esc(name)+'</text>'; }
+  var h='<style>.peer-tip{position:fixed;z-index:60;max-width:250px;background:#10141A;color:#fff;border-radius:9px;padding:9px 12px;font-size:11.5px;line-height:1.5;box-shadow:0 8px 22px rgba(16,20,26,0.28);pointer-events:none;border-top:3px solid #06C167}'+
+    '.peer-tip .pt-n{display:block;font-weight:800;font-size:12.5px;color:#06C167;margin-bottom:3px}'+
+    '.peer-dot{transition:r .1s}.peer-dot:hover{stroke:#06C167;stroke-width:2}'+
+    '.ov-collap{border:1px solid var(--bdr);border-radius:10px;margin:14px 0 0;overflow:hidden}'+
+    '.ov-collap-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12px;font-weight:800;color:var(--navy);padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:8px}'+
+    '.ov-collap-h:hover{background:#EEF2F6}.ov-collap-ic{font-size:10px;color:var(--mu)}.ov-collap-b{padding:12px 14px 4px}'+
+    '.urs-leg{display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:center;margin:2px 0 4px}'+
+    '.urs-leg-i{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--navy)}'+
+    '.urs-leg-dot{width:10px;height:10px;border-radius:50%;flex:none}</style>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 6px">The rivals mapped by two business traits: <b>breadth</b> (single-service specialist → multi-service platform) and <b>geographic reach</b> (one region → global). Uber sits alone in the broad-and-global corner; everyone else is either <b>narrow</b> (Lyft, Instacart, DoorDash, Waymo) or <b>regional</b> (Grab, Bolt, DiDi). <span style="opacity:.75">Hover or tap any dot for the detail.</span></div>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 8px;font-size:11px;color:var(--mu)"><b>Why more names than the Overview scatter?</b> This map plots rivals by <b>business traits</b>, so it includes <b>unlisted</b> players (DiDi, Grab, Bolt, Waymo) that have <b>no public market multiple</b> — they can’t appear on the Overview’s valuation×growth scatter, which is limited to <b>listed</b> peers. Their positions here are qualitative <b>approximations</b>, not market data.</div>';
+  h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" role="img" aria-label="Uber competitive positioning map">'+
+    '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<line x1="80" y1="252" x2="80" y2="44" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<text x="88" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0">← single-service specialist</text>'+
+    '<text x="610" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">multi-service platform →</text>'+
+    '<text x="74" y="250" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">1 region</text>'+
+    '<text x="74" y="52" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">global</text>'+
+    D.map(dot).join('')+
+  '</svg></div>';
+  h+='<div class="urs-leg">'+LEG.map(function(l){ return '<span class="urs-leg-i"><span class="urs-leg-dot" style="background:'+l[1]+'"></span>'+esc(l[0])+'</span>'; }).join('')+'</div>';
+  h+='<div id="ubPeerTip" class="peer-tip" hidden></div>';
+  return h;
+}
+// ── The old "Deep Overview" is DISMANTLED (Golden Rule #1 — content MOVED, not deleted).
+// Its pieces are composed into the new spine:
+//   • intro (snapshot/KPIs/lede) + segment split → Top Line ▸ Segments  (ubSegmentsBody)
+//   • arena-by-arena landscape                   → Top Line ▸ Industry Analysis (ubIndustryBody)
+//   • turnaround + key drivers                   → Evolution ▸ Strategy (ubStrategyBody)
+//   • 3-year Investor-Day targets                → Evolution ▸ Guidance (ub3yrTargets)
+//   • rival positioning scatter                  → Top Line ▸ Industry Analysis (uberRivalScatter)
+function ubIntro(){
   var h='';
   h+='<div class="ov-snap">'+SNAPSHOT.map(function(p){ return '<div class="ov-snap-cell"><div class="ov-snap-k">'+esc(p[0])+'</div><div class="ov-snap-v">'+esc(p[1])+'</div></div>'; }).join('')+'</div>';
   h+='<div class="ov-live" id="ubLive" hidden></div>';
@@ -655,6 +757,48 @@ function overviewBody(c){
   h+='<div class="ov-kpis">'+KPIS.map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d '+(k.dir||'muted')+'">'+esc(k.d)+'</div></div>'; }).join('')+'</div>';
   h+='<div class="ov-asof">'+esc(AS_OF)+'</div>';
   h+='<div class="ov-fynote">'+FY_NOTE+'</div>';
+  return h;
+}
+// Top Line ▸ Segments — the segment split and each engine in depth (inner toggle). Company-level
+// snapshot/description/KPIs live in the Overview tab; this tab is about the segments themselves.
+function ubSegmentsBody(c){
+  var h='<div class="ov-live" id="ubLive" hidden></div>';
+  h+='<p class="ov-lede">Uber is really <b>three businesses of very different size and economics</b>. <b>Mobility</b> (~$97B FY2025 gross bookings) is the profit engine; <b>Delivery</b> (~$91B) is the scale story whose margins are still converging upward; <b>Freight</b> (~$5B) is a near-breakeven logistics option kept for optionality. Below: how the three split, then each engine in depth.</p>';
+  h+='<div class="tech-leg"><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+MOB+'"></span>Mobility</span><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+DEL+'"></span>Delivery</span><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+FRT+'"></span>Freight</span></div>';
+  h+='<div class="ov-charts" style="grid-template-columns:1fr 1fr">'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Gross Bookings by segment <span>($B, FY · light = estimate)</span></div><div class="ov-chart-wrap"><canvas id="ubChartGB"></canvas></div></div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Adj. EBITDA <span>($B, FY · light = estimate)</span></div><div class="ov-chart-wrap"><canvas id="ubChartEbitda"></canvas></div></div>'+
+  '</div>';
+  h+=sec('The Business in Three Parts', segParts());
+  // Each engine in depth, switched by an inner toggle (the "sub-tabs de los segmentos").
+  h+='<div class="ov-sec-h ovt-store-h" style="margin-top:8px">Each engine in depth</div>';
+  h+='<style>.seg-pill{border:1px solid var(--bdr);background:#fff;font:inherit;font-size:11px;font-weight:700;color:var(--mu);padding:5px 13px;border-radius:999px;cursor:pointer}.seg-pill.active{background:var(--navy);color:#fff;border-color:var(--navy)}.seg-pill:hover{color:var(--navy)}.seg-pill.active:hover{color:#fff}</style>';
+  h+='<div class="seg-pills" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px">'+
+      '<button type="button" class="seg-pill active" data-seg="mobility">Mobility</button>'+
+      '<button type="button" class="seg-pill" data-seg="delivery">Delivery</button>'+
+      '<button type="button" class="seg-pill" data-seg="freight">Freight</button>'+
+    '</div>';
+  h+='<div class="seg-body" data-seg="mobility">'+mobilityBody(c)+'</div>';
+  h+='<div class="seg-body" data-seg="delivery" hidden>'+deliveryBody(c)+'</div>';
+  h+='<div class="seg-body" data-seg="freight" hidden>'+freightBody(c)+'</div>';
+  return h;
+}
+// Top Line ▸ Industry Analysis — the qualitative competitive landscape: arena-by-arena positioning
+// PLUS the competitive map (rivals by business traits). Peer valuation MULTIPLES live in Valuation ▸ Peers.
+function ubIndustryBody(c){
+  return sec('Competitive Landscape — arena by arena',
+    '<div class="ov-diagram-cap" style="margin:0 0 10px">Uber is #1 or #2 almost everywhere, so the useful question is not "who is the peer" but <b>where it leads, contests, or is only placing a bet</b>. Tap any arena for the state of play.</div>'+
+    uberArenaMap())+
+    sec('Competitive map — rivals by business traits',
+      uberRivalScatter()+
+      '<div class="ov-diagram-cap" style="margin-top:12px">'+PEER_NOTE+'</div>')+
+    '<div class="ov-foot">'+esc(SOURCES)+'</div>';
+}
+// Top Line ▸ Customers — Uber One membership, the platform's monetization/retention engine.
+function ubCustomersBody(c){ return uberOneBody(c); }
+// Evolution ▸ Strategy — the turnaround narrative + the five levers that drive the business.
+function ubStrategyBody(c){
+  var h='';
   h+='<style>.utn{border:1px solid var(--bdr);border-radius:14px;padding:16px 18px;margin:8px 0 4px;background:linear-gradient(180deg,rgba(6,193,103,0.05),transparent)}'+
     '.utn-big{font-size:16px;font-weight:900;color:var(--navy);letter-spacing:-.2px}'+
     '.utn-prog{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}'+
@@ -672,28 +816,49 @@ function overviewBody(c){
       '<div class="utn-step"><div class="utn-sv" style="color:#06965A">$9.8B</div><div class="utn-sl">free cash flow · 2025 (+42%)</div></div>'+
     '</div>'+
     '<div class="utn-row"><span class="utn-chip">Q2 2023: first-ever GAAP operating profit</span><span class="utn-chip">Investment-grade rated</span><span class="utn-chip">$20B buyback</span><span class="utn-chip">~$10B cumulative FCF</span></div>'+
-    '<div class="utn-note">After ~14 years of losses, Uber flipped — and cash now compounds far faster than bookings. (The engine behind it, and the debate over the insurance float, live in the <b>Insurance &amp; FCF</b> tab.)</div></div>';
+    '<div class="utn-note">After ~14 years of losses, Uber flipped — and cash now compounds far faster than bookings.</div></div>';
   h+=sec('What Truly Drives Uber — the things that matter most',
     '<div class="ov-diagram-cap" style="margin:0 0 12px">If you read nothing else: these five levers explain the business. <b>Tap any card.</b></div>'+
     '<div class="ov-drivers">'+KEY_DRIVERS.map(function(d){ return '<div class="ov-driver ov-clickable" data-detail="key:'+esc(d.k)+'"><div class="ov-driver-t">'+esc(d.t)+'</div><div class="ov-driver-d">'+esc(d.teaser)+'</div><div class="ov-more">More ›</div></div>'; }).join('')+'</div>');
-  h+='<div class="tech-leg"><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+MOB+'"></span>Mobility</span><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+DEL+'"></span>Delivery</span><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+FRT+'"></span>Freight</span></div>';
-  h+='<div class="ov-charts" style="grid-template-columns:1fr 1fr">'+
-    '<div class="ov-chart-card"><div class="ov-chart-t">Gross Bookings by segment <span>($B, FY · light = estimate)</span></div><div class="ov-chart-wrap"><canvas id="ubChartGB"></canvas></div></div>'+
-    '<div class="ov-chart-card"><div class="ov-chart-t">Adj. EBITDA <span>($B, FY · light = estimate)</span></div><div class="ov-chart-wrap"><canvas id="ubChartEbitda"></canvas></div></div>'+
-  '</div>';
-  h+=sec('The Business in Three Parts', segParts());
-  h+=sec('3-Year Targets — Investor Day (Feb 2024)',
+  h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
+  return h;
+}
+// Evolution ▸ Guidance — the 3-year Investor-Day targets (Model vs. Reality precedes this in the pane).
+function ub3yrTargets(){
+  return sec('3-Year Targets — Investor Day (Feb 2024)',
     '<div class="ov-targets ov-targets-3">'+TARGETS.map(function(b){ return '<div class="ov-target"><div class="ov-target-v">'+esc(b.v)+'</div><div class="ov-target-l">'+esc(b.l)+'</div><div class="ov-target-s">'+esc(b.s)+'</div></div>'; }).join('')+'</div>'+
     '<div class="ov-fynote" style="margin-top:14px">Uber is <b>running ahead of all three</b> — bookings ~+20%/yr while free cash flow compounds far faster.</div>');
-  h+=sec('History & Milestones', '<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>');
-  h+=sec('M&A — what each deal changed in the financials', mnaTimeline());
-  h+=sec('Competitive Landscape — the arena battle map',
-    uberArenaMap()+
-    '<div class="ov-subh" style="margin-top:18px">The rivals up close</div>'+
-    '<style>.ucomp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:2px 0 6px}.ucomp-card{border:1px solid var(--bdr);border-radius:10px;padding:14px 16px;background:var(--w)}.ucomp-top{display:flex;align-items:center;gap:11px;margin-bottom:9px}.ucomp-logo{width:34px;height:34px;border-radius:8px;border:1px solid var(--bdr);background:#fff;object-fit:contain;padding:5px;flex:none}.ucomp-n{font-size:14px;font-weight:800;color:var(--navy);line-height:1.2}.ucomp-arena{font-size:11px;color:var(--mu);font-weight:600;margin-top:2px}.ucomp-edge{font-size:12px;color:var(--mu);line-height:1.5}.ucomp-edge b{color:var(--navy)}@media(max-width:720px){.ucomp-grid{grid-template-columns:1fr}}</style>'+
-    '<div class="ucomp-grid">'+PEERS.map(function(p){ return '<div class="ucomp-card"><div class="ucomp-top"><img class="ucomp-logo" src="https://logo.clearbit.com/'+p.dom+'" alt="'+esc(p.n)+'" loading="lazy" onerror="this.onerror=null;this.src=\'https://www.google.com/s2/favicons?domain='+p.dom+'&sz=64\'"><div><div class="ucomp-n">'+esc(p.n)+'</div><div class="ucomp-arena">'+esc(p.arena)+'</div></div></div><div class="ucomp-edge"><b>Uber’s edge —</b> '+p.edge+'</div></div>'; }).join('')+'</div>'+
-    '<div class="ov-diagram-cap" style="margin-top:10px">'+PEER_NOTE+'</div>');
-  h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
+}
+// Valuation ▸ Peers — how the LISTED peers trade (multiples). The qualitative competitive map lives
+// in Top Line ▸ Industry Analysis; unlisted rivals (Waymo, Bolt, DiDi) have no public market multiple.
+var UB_PEER_MULT=[
+  { tk:'UBER', n:'Uber',      mc:'$149B', ev:'~15–16×', pe:'~20×', g:'+20%', self:true, read:'The scaled, profitable, multi-product leader — a premium to Lyft, a discount to the faster growers.' },
+  { tk:'DASH', n:'DoorDash',  mc:'$78B',  ev:'~22×',    pe:'~28×', g:'+38%', read:'US delivery leader; the fastest grower here and richly valued on it. No mobility leg.' },
+  { tk:'GRAB', n:'Grab',      mc:'$16B',  ev:'~13×',    pe:'n/m',  g:'+24%', read:'SE-Asia super-app; only recently GAAP-profitable, so read it on EV/EBITDA rather than P/E.' },
+  { tk:'CART', n:'Instacart', mc:'$11B',  ev:'~15×',    pe:'~18×', g:'+14%', read:'US grocery-delivery specialist; profitable and ad-driven — the value name of the set.' },
+  { tk:'LYFT', n:'Lyft',      mc:'$5.8B', ev:'~8×',     pe:'~9×',  g:'+14%', read:'US/Canada #2 ride-hailing; cheapest of the group — the market prices its lack of scale.' }
+];
+function ubPeerMultBody(c){
+  var rowsHtml=UB_PEER_MULT.map(function(p){
+    var bg=p.self?'background:rgba(6,193,103,0.06);':'';
+    return '<tr style="border-top:1px solid var(--bdr);'+bg+'">'+
+      '<td style="padding:8px 10px;font-weight:'+(p.self?'800':'700')+'">'+esc(p.n)+' <span class="muted" style="font-weight:600">'+esc(p.tk)+'</span></td>'+
+      '<td style="text-align:right;padding:8px 10px;font-variant-numeric:tabular-nums">'+esc(p.mc)+'</td>'+
+      '<td style="text-align:right;padding:8px 10px;font-variant-numeric:tabular-nums">'+esc(p.ev)+'</td>'+
+      '<td style="text-align:right;padding:8px 10px;font-variant-numeric:tabular-nums">'+esc(p.pe)+'</td>'+
+      '<td style="text-align:right;padding:8px 10px;font-variant-numeric:tabular-nums">'+esc(p.g)+'</td>'+
+      '<td style="padding:8px 10px;color:var(--mu);font-size:11px;line-height:1.45">'+esc(p.read)+'</td></tr>';
+  }).join('');
+  var h='<p class="ov-lede">How the <b>listed</b> peers trade — the point is where Uber sits on the value/growth spectrum, not who competes with whom (that map is in <b>Industry Analysis</b>). Uber prices at a <b>premium to Lyft</b> (scale, profitability, diversification) but a <b>discount to the faster growers</b> DoorDash and Grab.</p>';
+  h+='<div class="ov-chart-card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:var(--mu)">'+
+    '<th style="text-align:left;padding:7px 10px">Company</th>'+
+    '<th style="text-align:right;padding:7px 10px">Mkt cap</th>'+
+    '<th style="text-align:right;padding:7px 10px">EV/EBITDA <span style="font-weight:600">(fwd)</span></th>'+
+    '<th style="text-align:right;padding:7px 10px">P/E <span style="font-weight:600">(fwd)</span></th>'+
+    '<th style="text-align:right;padding:7px 10px">Rev growth</th>'+
+    '<th style="text-align:left;padding:7px 10px">The read</th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div>';
+  h+='<div class="ov-callout" style="margin-top:12px"><b>Only listed peers with a public multiple belong here.</b> Unlisted rivals (Waymo, Bolt, DiDi) and captive subsidiaries have no market multiple — they sit on the competitive map in <b>Industry Analysis</b>. "n/m" = no meaningful P/E (earnings too small to annualize). Grab and GoTo are newly profitable, so read them on EV/EBITDA.</div>';
+  h+='<div class="ov-foot">Multiples as of ~Jul 2026, forward where available (secondary/terminal sources); growth is latest reported YoY. Market caps live via Massive on the Overview scatter. Directional, not exact — confirm against a terminal before quoting.</div>';
   return h;
 }
 // ─── Pane: Mobility (the rides business) ─────────────────────────────────────
@@ -727,15 +892,7 @@ function mobilityBody(c){
   '</style>';
   h+='<p class="ov-lede"><b>Mobility</b> — ridesharing in ~70 countries, Uber’s profit engine (~<b>$97B</b> gross bookings FY2025). <b>Where it came from:</b> the post-COVID recovery doubled trips from the 2020 trough. <b>Where it’s going:</b> the barbell (low-cost + premium), insurance savings, and AV as hybrid supply. <b>Why believe:</b> the Model vs. Reality tab shows Uber consistently beating its own Mobility-GB estimates, take rate holding ~30%, and US trip growth <i>accelerating</i> as insurance costs fall.</p>';
   h+=sec('The Barbell — grow both ends, lean away from the middle', barbellDiagram());
-  h+=sec('How a Trip Makes Money — one $10 ride',
-    '<style>.ov-gal-cap{font-size:12.5px;color:var(--navy);line-height:1.6;margin:12px 0}.ov-gal-nav{display:flex;align-items:center;justify-content:space-between;gap:12px}.ov-gal-btn{font-size:22px;font-weight:800;line-height:1;border:1px solid var(--bdr);background:#fff;border-radius:8px;min-width:46px;height:40px;cursor:pointer;color:var(--navy)}.ov-gal-btn:hover{background:#10141A;color:#fff;border-color:#10141A}.ov-gal-count{font-size:11px;color:var(--mu);font-weight:700}</style><p class="ov-lede" style="margin:0 0 12px">Six steps of a Mobility trip — <b>tap any step for a photo + the detail</b>, then use ‹ › to move through the trip. Below: where the $10 lands.</p>'+
-    chain(TRIP_FLOW,'trip',true)+
-    '<div class="ov-grid2" style="margin-top:18px"><div><div class="ov-subh">Where every $10 goes</div>'+mbars(TRIP_SPLIT)+'</div><div><div class="ov-subh">…and Uber’s ~$3.00 take</div>'+mbars(TRIP_TAKE)+'</div></div>'+
-    '<div class="ov-fynote" style="margin-top:12px"><b>~$0.75 of every $10 trip converts to cash</b> (incl. the ~$0.35 Aleka insurance float). <span class="ave-subh-note">Illustrative — Summit deck, Dec 2024.</span></div>');
-  h+=sec('Take Rate',
-    '<div class="tech-leg"><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+MOB+'"></span>Mobility</span><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+DEL+'"></span>Delivery</span></div>'+
-    '<div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartTake"></canvas></div>'+
-    '<div class="ov-fynote" style="margin-top:10px">Mobility take held ~30% until the 1Q26 dip to ~25.8% — a <span class="ov-clickable" data-detail="note:take" style="color:#06C167;font-weight:600;cursor:pointer">UK accounting artifact ›</span>, not real compression.</div>');
+  // Per-trip economics and take rate are covered under Bottom Line ▸ Unit Economics (not duplicated here).
   h+=sec('Autonomous Vehicles — Partner or Threat?',
     '<style>'+
       '.av-vs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 4px}'+
@@ -764,13 +921,347 @@ function mobilityBody(c){
       '</div>'+
     '</div>'+
     '<div class="ov-fynote" style="margin-top:12px"><b>Evidence it’s working:</b> AV mobility trips <b>>10× YoY</b> (Q1 2026), 30+ partners, 15+ cities targeted by end-2026, ~30% higher trips/vehicle on Uber-managed AV vs AV-only — and management reports <b>"no effect of the Waymo launches on our overall business."</b></div>');
-  h+=sec('Who Powers Mobility — the supplier ecosystem',
+  // Supplier ecosystem is covered under Bottom Line ▸ Suppliers; insurance cost/float under Insurance & FCF.
+  h+=sec('Regulation & Driver Classification', '<div class="ir-diagram-cap" style="font-size:12px;color:var(--mu);margin:0 0 8px">The core question — <b>do drivers stay contractors?</b> — is largely settled in Uber\u2019s favor. Tap any card for the detail.</div><div class="ir-reg">'+REGV.map(function(r,i){return regCard(r,i);}).join('')+'</div>');
+  h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
+  return h;
+}
+// ── Labeled placeholder (user-approved): create the tab now, fill it later with sourced
+// figures — never invent data. Marked "To build" so it's obviously incomplete. ──
+function placeholder(title, note){
+  return '<div style="border:1px dashed var(--bdr);border-radius:12px;padding:16px 18px;margin:10px 0;background:linear-gradient(180deg,rgba(232,160,12,0.045),transparent)">'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#B7791F;background:rgba(232,160,12,0.14);border-radius:10px;padding:2px 9px">To build</span><span style="font-size:13.5px;font-weight:800;color:var(--navy)">'+esc(title)+'</span></div>'+
+    '<div style="font-size:12px;color:var(--mu);line-height:1.55">'+note+'</div></div>';
+}
+// ── Bottom Line ▸ Unit Economics — the $10-trip walkthrough + take rate. MOVED here from the
+// Mobility segment (Golden Rule #1). Chart id ubChartTake still built by buildMobilityCharts. ──
+function unitEconBody(c){
+  var h='';
+  h+='<p class="ov-lede">Per-transaction economics for <b>both engines</b>: the core <b>Mobility</b> ride (where each $10 lands and Uber’s ~$3 take) and the <b>Delivery</b> order (a lower take and margin, same structure). Then how the take rate has trended.</p>';
+  h+=sec('How a Trip Makes Money — one $10 ride',
+    '<style>.ov-gal-cap{font-size:12.5px;color:var(--navy);line-height:1.6;margin:12px 0}.ov-gal-nav{display:flex;align-items:center;justify-content:space-between;gap:12px}.ov-gal-btn{font-size:22px;font-weight:800;line-height:1;border:1px solid var(--bdr);background:#fff;border-radius:8px;min-width:46px;height:40px;cursor:pointer;color:var(--navy)}.ov-gal-btn:hover{background:#10141A;color:#fff;border-color:#10141A}.ov-gal-count{font-size:11px;color:var(--mu);font-weight:700}</style><p class="ov-lede" style="margin:0 0 12px">Six steps of a Mobility trip — <b>tap any step for a photo + the detail</b>, then use ‹ › to move through the trip. Below: where the $10 lands.</p>'+
+    chain(TRIP_FLOW,'trip',true)+
+    '<div class="ov-grid2" style="margin-top:18px"><div><div class="ov-subh">Where every $10 goes</div>'+mbars(TRIP_SPLIT)+'</div><div><div class="ov-subh">…and Uber’s ~$3.00 take</div>'+mbars(TRIP_TAKE)+'</div></div>'+
+    '<div class="ov-fynote" style="margin-top:12px"><b>~$0.75 of every $10 trip converts to cash</b> (incl. the ~$0.35 Aleka insurance float). <span class="ave-subh-note">Illustrative — Summit deck, Dec 2024.</span></div>');
+  var dbar=function(l,pct,col){ return '<div style="margin:7px 0"><div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:3px"><span style="color:var(--navy);font-weight:600">'+l+'</span><span style="font-weight:800;color:'+col+'">'+pct+'%</span></div><div style="height:16px;background:#EEF2F7;border-radius:5px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:5px"></div></div></div>'; };
+  h+=sec('How a Delivery order makes money — the other half of the platform',
+    '<div class="ov-diagram-cap" style="margin:0 0 10px">Delivery runs on a <b>lower take and a lower margin</b> than a ride — but the same structure. On a typical order the consumer pays for food + fees; the money splits between the <b>restaurant</b>, the <b>courier</b> and <b>Uber</b>. Shares below are illustrative of the disclosed structure.</div>'+
+    dbar('Restaurant — food cost', 60, '#9AA4B0')+
+    dbar('Courier pay', 20, DEL)+
+    dbar('Uber take — commission + consumer fees', 19, '#10141A')+
+    dbar('Payment & other', 1, '#C4CCD6')+
+    '<div class="ov-kpis" style="margin-top:14px">'+
+      '<div class="ov-kpi"><div class="ov-kpi-l">Delivery take rate</div><div class="ov-kpi-v">~19%</div><div class="ov-kpi-d muted">revenue ÷ GB (FY25) · vs Mobility ~30%</div></div>'+
+      '<div class="ov-kpi"><div class="ov-kpi-l">Falls to Adj. EBITDA</div><div class="ov-kpi-v">~3.9%</div><div class="ov-kpi-d muted">of GB · vs Mobility ~8% — the convergence gap</div></div>'+
+    '</div>'+
+    '<div class="ov-fynote" style="margin-top:10px">Per $100 of Delivery gross bookings Uber keeps ~<b>$19</b> of revenue and ~<b>$3.90</b> of Adjusted EBITDA today — roughly half Mobility’s ~$8. Closing that gap via ~100%-margin <b>advertising</b> and scale, <b>without touching the merchant/courier split</b>, is the Delivery margin-convergence thesis. <span class="ave-subh-note">Take rate & EBITDA margin: Uber FY2025 segment results. The order-split shares are illustrative of the disclosed structure, not a reported per-order breakdown.</span></div>');
+  h+=sec('Take Rate',
+    '<div class="tech-leg"><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+MOB+'"></span>Mobility</span><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+DEL+'"></span>Delivery</span></div>'+
+    '<div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartTake"></canvas></div>'+
+    '<div class="ov-fynote" style="margin-top:10px">Mobility take held ~30% until the 1Q26 dip to ~25.8% — a <span class="ov-clickable" data-detail="note:take" style="color:#06C167;font-weight:600;cursor:pointer">UK accounting artifact ›</span>, not real compression.</div>');
+  h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
+  return h;
+}
+// ── Bottom Line ▸ Suppliers — the vendor ecosystem. MOVED from the Mobility segment. ──
+function suppliersBody(c){
+  var h='';
+  h+='<p class="ov-lede"><b>Uber’s most important supplier is its ~8M drivers and couriers</b> — the people who bring the cars and do the work. They are the real supply constraint and the real cost base; the software, cloud and real-estate vendors below are a rounding error next to them. <b>Autonomous vehicles are a <i>future</i> supply source, not today’s</b>: AV trips are growing fast (&gt;10× YoY) but off a tiny base, and human drivers still supply the <b>overwhelming majority of trips right now</b>. AV stays on the map for where it is going — not for the weight it carries today.</p>';
+  h+=sec('The driver & courier base — the supply that actually matters',
+    '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">The platform lives or dies on <b>liquidity</b>: enough drivers online that wait times stay low and prices stay competitive. That labor supply — recruited, incentivized and retained, but <b>owned by no one</b> — is Uber’s core input and, via driver pay + insurance, its largest cost. It is also the moat: the marketplace with the most drivers gives the best service at the lowest price, which attracts more riders, which attracts more drivers. Everything else here is procurement.</div>');
+  h+=sec('The vendor layer — asset-light by design',
     '<style>.alp{display:flex;align-items:center;gap:16px;background:rgba(6,193,103,0.07);border:1px solid rgba(6,193,103,0.25);border-radius:12px;padding:14px 18px;margin:0 0 12px}.alp-big{font-size:34px;font-weight:800;color:#06965A;line-height:1;flex:none}.alp-txt{font-size:12.5px;color:var(--navy);line-height:1.5}.alp-txt b{font-weight:800}@media(max-width:560px){.alp{flex-direction:column;align-items:flex-start;gap:6px}}</style><div class="alp"><div class="alp-big">0.11%</div><div class="alp-txt">of Uber’s ~<b>$193B</b> gross bookings is <b>disclosed supplier spend</b> — ~<b>$210M</b> across 138 suppliers, and only three carry any dollar value (HCL $127M, Oracle $55M, Alexandria $28M). <b>Uber does not run a supply chain; it aggregates one.</b></div></div>'+'<div class="ov-diagram-cap" style="margin:0 0 10px">Uber’s supplier base sorted by <b>what they do</b> for the platform. Most are strategic ties, not traditional vendor contracts — which is itself the asset-light thesis in data form.</div>'+
     '<div class="usc-grid">'+SC_SUPPLIERS.map(scCard).join('')+'</div>'+
     '<div class="ov-fynote" style="margin-top:12px"><b>The asset-light proof in the data:</b> of 138 identified suppliers, only <b>three carry disclosed dollar values</b> — HCL ($127M, engineering), Oracle ($55M, cloud), Alexandria RE ($28M, offices). Total ~<b>$210M</b> against ~<b>$193B</b> of gross bookings — a ratio that screams platform, not operator. (Of the 30+ AV partners, only ~<b>5–7</b> have real money committed; the rest are MOUs.) <span class="ave-subh-note">Bloomberg SPLC, 29-Jun-2026.</span></div>');
-  h+=sec('Insurance', '<div class="ov-callout">Insurance is central to Uber&rsquo;s cash story — <b>Aleka</b> (Uber&rsquo;s captive), the <b>~$12.9B reserve float</b>, and the crutch → tailwind turnaround now live in the dedicated <b>Insurance & FCF</b> tab. On a Mobility trip it is the largest cost — and the float adds ~<b>$0.35 of every $10</b> to cash (shown above).</div>');
-  h+=sec('Regulation & Driver Classification', '<div class="ir-diagram-cap" style="font-size:12px;color:var(--mu);margin:0 0 8px">The core question — <b>do drivers stay contractors?</b> — is largely settled in Uber\u2019s favor. Tap any card for the detail.</div><div class="ir-reg">'+REGV.map(function(r,i){return regCard(r,i);}).join('')+'</div>');
   h+='<div class="ov-foot">'+esc(SOURCES)+'</div>';
+  return h;
+}
+// ── Top Line ▸ Segments ▸ Freight (inner toggle). Freight is the small, near-breakeven third leg —
+// immaterial to the thesis, so it is intentionally covered lightly vs Mobility & Delivery. ──
+function freightBody(c){
+  var h='<p class="ov-lede"><b>Freight is the small, near-breakeven third leg</b> — a digital logistics brokerage matching shippers with carriers, reported <b>gross</b> (revenue ≈ gross bookings, no marketplace take rate). At ~<b>$5.1B</b> revenue it is only <b>~2–3% of platform bookings</b> and, unlike Mobility and Delivery, it does <b>not yet make money</b> at the segment level. It is covered lightly here on purpose: it neither moves the thesis nor drags on it.</p>';
+  h+='<div class="ov-kpis">'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">FY25 revenue</div><div class="ov-kpi-v">$5.1B</div><div class="ov-kpi-d muted">~flat YoY · ~2–3% of GB</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Segment Adj. EBITDA</div><div class="ov-kpi-v" style="color:#C0392B">−$33M</div><div class="ov-kpi-d muted">FY25 · −$74M FY24</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">First breakeven qtr</div><div class="ov-kpi-v">Q4 2025</div><div class="ov-kpi-d muted">first in 3+ years</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Status</div><div class="ov-kpi-v">Kept</div><div class="ov-kpi-d muted">no divestiture announced</div></div>'+
+  '</div>';
+  h+='<div class="ov-callout" style="margin-top:12px">Built up via the <b>Transplace</b> acquisition (2021), Freight has been squeezed by a multi-year <b>trucking-freight recession</b> — revenue slid from ~$6.9B (2022) to ~$5.1B — and it reached its <b>first breakeven Adjusted-EBITDA quarter in over three years in Q4 2025</b>. Management keeps running it as part of the logistics platform with no announced plan to divest, framing the work around efficiency and profitability rather than growth.</div>';
+  h+='<div class="ov-foot">Segment revenue, gross bookings and Adjusted EBITDA: Uber FY2025 results / Summit model. Freight is reported gross, with no take rate.</div>';
+  return h;
+}
+// ── Bottom Line ▸ Margins — profitability & cash margins as a % of revenue. Renders from a sourced
+// fallback history so the chart is never empty; the live Massive feed (api.fetchMargins) overrides
+// the fallback when it is reachable in the session. ──
+var UB_MRG_METRICS=[
+  {key:'gross',label:'Gross',color:'#10141A'},
+  {key:'oper',label:'Operating',color:MOB},
+  {key:'net',label:'Net',color:'#7A5AF8'},
+  {key:'ebitda',label:'EBITDA',color:'#12B5A5'},
+  {key:'cfo',label:'CFO',color:'#F2A73B'},
+  {key:'fcf',label:'FCF',color:'#EB5757'}
+];
+// Sourced fallback (% of revenue): gross/op/net = GAAP; EBITDA = Adjusted EBITDA %; CFO & FCF ÷ revenue.
+// FY2021–FY2025 actuals (Summit / Uber filings); FY2026E = consensus + model. Overridden by live Massive.
+var UB_MRG_FALLBACK=[
+  {fy:'FY21', gross:46.4, oper:-20.2, net:-2.8,  ebitda:-4.4, cfo:-2.5, fcf:-4.3},
+  {fy:'FY22', gross:38.3, oper:-5.6,  net:-28.7, ebitda:5.4,  cfo:2.0,  fcf:1.2},
+  {fy:'FY23', gross:39.8, oper:2.7,   net:5.1,   ebitda:10.9, cfo:9.6,  fcf:9.0},
+  {fy:'FY24', gross:39.4, oper:6.4,   net:22.4,  ebitda:14.7, cfo:16.2, fcf:15.7},
+  {fy:'FY25', gross:39.8, oper:10.8,  net:19.3,  ebitda:16.8, cfo:19.4, fcf:18.8},
+  {fy:'FY26E',gross:40.0, oper:12.0,  net:11.9,  ebitda:18.6, cfo:18.7, fcf:18.0, proj:true}
+];
+var UB_MRG_NOTE_FB='Gross / operating / net = <b>GAAP</b>; EBITDA = <b>Adjusted EBITDA</b> %; CFO & FCF ÷ revenue. <b>FY26E</b> = consensus + model. Note: <b>GAAP net margin in FY24–25 is inflated by one-off tax & equity-stake gains</b> (and dips in FY26E as those don’t recur) — read <b>operating</b> and <b>EBITDA</b> margin as the clean, steadily-rising trend. <span style="color:#B7791F">Directional fallback; the live Massive feed overrides it when reachable.</span>';
+var UB_MRG_NOTE_LIVE='Historical margins computed <b>live from Massive</b> (income & cash-flow statements): gross/op/net = line ÷ revenue; EBITDA = (op income + D&A) ÷ revenue; CFO & FCF ÷ revenue. Operating and EBITDA margin are the clean trend; GAAP net is skewed by equity-stake & tax one-offs.';
+var _ubMrgRows=UB_MRG_FALLBACK.slice();
+var _ubMrgSrc='fallback';
+function ubMarginsBody(c){
+  return '<p class="ov-lede">Profitability & cash margins as a % of revenue — gross, operating and net, plus Adjusted EBITDA, CFO and FCF. The turnaround reads cleanest in <b>operating</b> and <b>EBITDA</b> margin, which climb every year from deeply negative (FY21) into the high-teens.</p>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Margins (% of revenue) <span>· fiscal years · FY26E = estimate</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartMargins"></canvas></div></div>'+
+    '<div class="ave-subh-note" id="ubMrgNote" style="margin-top:8px">'+UB_MRG_NOTE_FB+'</div>';
+}
+function buildUbMargins(){
+  var cv=document.getElementById('ubChartMargins'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
+  destroy('ubChartMargins');
+  var labels=_ubMrgRows.map(function(r){ return r.fy; });
+  var projIdx=_ubMrgRows.reduce(function(a,r,i){ return r.proj?i:a; }, -1);
+  var ds=UB_MRG_METRICS.map(function(m){ return { label:m.label, data:_ubMrgRows.map(function(r){ return r[m.key]; }), borderColor:m.color, backgroundColor:m.color, borderWidth:2, tension:.25, spanGaps:true, fill:false,
+    pointRadius:_ubMrgRows.map(function(r){ return r.proj?4:2; }), pointStyle:_ubMrgRows.map(function(r){ return r.proj?'rectRot':'circle'; }),
+    segment:{ borderDash:function(ctx){ return ctx.p1DataIndex===projIdx?[5,4]:undefined; } } }; });
+  _charts['ubChartMargins']=new Chart(cv.getContext('2d'),{ type:'line', data:{ labels:labels, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}}, tooltip:{ callbacks:{ title:function(it){ var l=it[0].label; return l==='FY26E'?'FY26E · estimate':l; }, label:function(ctx){ return ctx.dataset.label+': '+(ctx.parsed.y==null?'—':ctx.parsed.y.toFixed(1)+'%'); } } } },
+      scales:{ y:{ ticks:{ callback:function(v){ return v+'%'; }, font:{size:10} }, grid:{color:'#EEF2F7'} }, x:{ grid:{display:false}, ticks:{font:{size:10.5}} } } }
+  });
+  ubLoadMargins();
+}
+function ubLoadMargins(){
+  if(_ubMrgSrc==='massive') return; // already replaced with live data
+  import('../api.js').then(function(api){ return api.fetchMargins?api.fetchMargins('UBER'):null; }).then(function(res){
+    if(!res||!res.success||!res.data||res.data.length<3) return; // keep the fallback chart
+    var proj=UB_MRG_FALLBACK[UB_MRG_FALLBACK.length-1];
+    _ubMrgRows=res.data.concat(proj&&proj.proj?[proj]:[]);
+    _ubMrgSrc='massive';
+    var note=document.getElementById('ubMrgNote'); if(note) note.innerHTML=UB_MRG_NOTE_LIVE;
+    buildUbMargins();
+  }).catch(function(){ /* keep the fallback */ });
+}
+// ── Valuation ▸ Capital Allocation — DATA-BACKED from the Summit model snapshot (FY actuals,
+// $M): FCF, share repurchases, SBC and shares outstanding. Dividend/buyback framing verified. ──
+function ubCapAllocBody(c){
+  var R=[
+    {fy:'FY22', fcf:390,  bb:0,    sbc:1793, sh:2061},
+    {fy:'FY23', fcf:3362, bb:0,    sbc:1935, sh:2122},
+    {fy:'FY24', fcf:6895, bb:1252, sbc:1796, sh:2141},
+    {fy:'FY25', fcf:9763, bb:6523, sbc:1826, sh:2106}
+  ];
+  var bb=function(m){ if(m==null) return '—'; var a=Math.abs(m), s=m<0?'−':''; return a>=1000? s+'$'+(a/1000).toFixed(1)+'B' : s+'$'+a+'M'; };
+  var last=R[3], prev=R[2];
+  var payout=Math.round(last.bb/last.fcf*100);
+  var shChg=(last.sh/prev.sh-1)*100;
+  var h='<p class="ov-lede">How Uber deploys the cash the turnaround now throws off: <b>no dividend</b>, with <b>share repurchases</b> the priority — funded by a fast-growing FCF base on a now investment-grade balance sheet.</p>';
+  h+='<div class="ov-kpis">'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Dividend</div><div class="ov-kpi-v">None</div><div class="ov-kpi-d muted">never paid</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">FY25 buybacks</div><div class="ov-kpi-v">$6.5B</div><div class="ov-kpi-d muted">~'+payout+'% of FCF</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">FY25 SBC</div><div class="ov-kpi-v">$1.8B</div><div class="ov-kpi-d muted">~flat since FY22</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Shares out</div><div class="ov-kpi-v">2.11B</div><div class="ov-kpi-d muted">▼ '+Math.abs(shChg).toFixed(1)+'% YoY</div></div>'+
+  '</div>';
+  h+='<div class="ov-chart-card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:7px 10px">Fiscal year</th><th style="text-align:right;padding:7px 10px">Free cash flow</th><th style="text-align:right;padding:7px 10px">Buybacks</th><th style="text-align:right;padding:7px 10px">SBC</th><th style="text-align:right;padding:7px 10px">Shares out (M)</th></tr></thead><tbody>'+
+    R.map(function(r){ return '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px;font-weight:700">'+r.fy+'</td><td style="text-align:right;padding:7px 10px">'+bb(r.fcf)+'</td><td style="text-align:right;padding:7px 10px">'+(r.bb?bb(-r.bb):'—')+'</td><td style="text-align:right;padding:7px 10px">'+bb(-r.sbc)+'</td><td style="text-align:right;padding:7px 10px">'+r.sh.toLocaleString()+'</td></tr>'; }).join('')+
+  '</tbody></table></div>';
+  h+=sec('How management frames it — the capital-allocation hierarchy', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">Management lays out an explicit <b>priority stack</b> (Q4 2025 remarks): <b>(1)</b> reinvest in growth where LTV/CAC works · <b>(2)</b> fund the <b>AV</b> strategy (asset-light, partner-financed) · <b>(3)</b> selective <b>bolt-on M&A</b> at a "high bar" · <b>(4)</b> <b>return excess capital</b> via buybacks · <b>(5)</b> hold a <b>solid investment-grade</b> rating. The intent has <b>hardened over time</b>: at the Feb 2024 launch buybacks were meant to "partially offset stock-based compensation," but by 2025 the language is "<b>steadily reduce our share count</b>… opportunistic and aggressive buyers during dislocations."</div>');
+  h+=sec('Repurchase program & how much room', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">Authorizations: <b>$7B</b> inaugural (Feb 2024, now exhausted "faster than expected"), a <b>$1.5B</b> accelerated repurchase (Jan 2025), then an added <b>$20B</b> (Aug 2025) — roughly <b>~$19B still authorized</b>. Actual buybacks scaled <b>$0 → $1.3B (FY24) → $6.5B (FY25)</b>, about <b>'+payout+'% of FCF</b>. The tap can stay open: FY25 FCF was <b>$9.8B (+42%)</b>, and Uber holds ~<b>$9.2B of mostly-listed equity stakes</b> (Aurora, Didi, Grab) it plans to monetize opportunistically as <b>extra firepower</b> — so the constraint is willingness, not capacity. Signaled direction: <b>steady-to-more</b>, targeting ongoing share-count reduction.</div>');
+  h+=sec('Dividend policy', '<div class="ov-callout">Uber has <b>never paid a dividend</b> and has not signaled one. All shareholder return runs through <b>buybacks</b>, alongside maintaining the newly investment-grade balance sheet.</div>');
+  h+=sec('SBC & dilution — the honest history', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">SBC has <b>plateaued around ~$1.8B/yr</b> since FY22 while revenue nearly doubled, so as a share of revenue it <b>fell from ~7.4% (2020) to ~3.5% (2025)</b> — a shrinking drag. But dilution was <b>not</b> offset for most of Uber’s life: with <b>$0 of buybacks until 2024</b>, the diluted share count <b>rose every year from 2020 to 2024</b> (~1,753M → ~2,151M). <b>FY25 is the first year it actually fell</b> ('+prev.sh.toLocaleString()+'M → '+last.sh.toLocaleString()+'M, ≈ −1.4%) as $6.5B of repurchases finally out-ran SBC. So the accurate read is not "buybacks always offset SBC" — it is that they <b>failed to for years</b> and have only <b>just begun to more-than-offset</b> it. The full historical picture is charted under <b>Governance & SBC</b>.</div>');
+  h+='<div class="ov-foot">Buyback authorizations and framework: Uber 8-Ks / Q4 2025 earnings materials. FY actuals (FCF, repurchases, SBC, shares): Summit model. Remaining authorization ~$19B is an estimate ($20B less ~$0.8B drawn beyond the exhausted $7B program).</div>';
+  return h;
+}
+// ── Valuation ▸ Balance Sheet — downside/solidity view, sourced from Uber's Q1 2026 10-Q
+// (SEC EDGAR, condensed consolidated balance sheet as of March 31, 2026; $M). WORK IN PROGRESS. ──
+var UB_STAKES=[['Didi',2337],['Grab',1961],['Aurora',1343],['Other non-marketable',1800],['Other marketable',569],['Related-party note',99],['Equity-method',268]];
+function buildUbBal(){
+  var cv=document.getElementById('ubChartBal'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
+  destroy('ubChartBal');
+  var cols=['#10141A','#06C167','#7A5AF8','#3A7BD5','#F2A73B','#9AA4B0','#C0392B'];
+  _charts['ubChartBal']=new Chart(cv.getContext('2d'),{ type:'bar',
+    data:{ labels:UB_STAKES.map(function(s){return s[0];}), datasets:[{ label:'Carrying value ($M)', data:UB_STAKES.map(function(s){return s[1];}), backgroundColor:UB_STAKES.map(function(s,i){return cols[i%cols.length];}), borderWidth:0 }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, animation:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:function(ctx){ return ' $'+(ctx.parsed.x/1000).toFixed(2)+'B'; } } } },
+      scales:{ x:{ ticks:{ callback:function(v){ return '$'+(v/1000).toFixed(1)+'B'; }, font:{size:9} }, grid:{color:'#EEF2F7'} }, y:{ grid:{display:false}, ticks:{font:{size:10}} } } }
+  });
+}
+function ubBalanceBody(c){
+  var cash=5558, sti=533, inv=8109, eqm=268, debt=10514, insST=3467, insLT=9437,
+      restrCash=2552, restrInv=9026, equity=24751, shares=2036.4;
+  var stakes=inv+eqm;                       // 8,377 — marked equity-investment portfolio
+  var insTot=insST+insLT;                   // 12,904 — total insurance reserve
+  var netDebt=cash+sti-debt;                // −4,423 — core net cash/(debt)
+  var netWithStakes=cash+sti+stakes-debt;   // 3,954 — including the stakes
+  var bvps=equity/shares;                   // ~12.15 book value / share
+  var B=function(m){ var a=Math.abs(m),s=m<0?'−':''; return s+'$'+(a/1000).toFixed(a/1000>=100?0:1)+'B'; };
+  var cell=function(m){ var a=Math.abs(m).toLocaleString(); return m<0?'('+a+')':a; };
+  var LI=[
+    ['Cash & cash equivalents', cash],
+    ['Short-term investments', sti],
+    ['Long-term investment portfolio <span class="muted">(Didi, Grab, Aurora + other)</span>', inv],
+    ['Equity-method investments', eqm],
+    ['Total debt <span class="muted">(senior + convertible notes)</span>', -debt],
+    ['Insurance reserves <span class="muted">(short + long-term)</span>', -insTot],
+    ['Total stockholders&rsquo; equity', equity]
+  ];
+  var STK=UB_STAKES;
+  var h='<div style="border:1px solid rgba(232,160,12,0.45);background:linear-gradient(180deg,rgba(232,160,12,0.10),rgba(232,160,12,0.03));border-radius:12px;padding:12px 15px;margin:0 0 14px;display:flex;align-items:flex-start;gap:10px">'+
+    '<span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#B7791F;background:rgba(232,160,12,0.18);border-radius:10px;padding:3px 10px;flex:none">Work in progress</span>'+
+    '<span style="font-size:11.5px;color:var(--navy);line-height:1.5">This Balance Sheet section is <b>still being developed.</b> The line items and net-cash math below are pulled from Uber’s Q1 2026 10-Q, but the deeper analysis (stake-by-stake marks, downside stress, tangible-book bridge) is <b>not yet complete</b> — treat it as a draft.</span></div>';
+  h+='<p class="ov-lede">How much value protects the equity on the way down. Uber runs a modest <b>net-debt</b> position on the core balance sheet, but a <b>marked ~'+B(stakes)+' equity-stake portfolio</b> more than covers it — while the big <b>~'+B(insTot)+' insurance reserve</b> is separately funded and is not a free-cash claim.</p>';
+  h+='<div class="ov-kpis">'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Net cash / (debt)</div><div class="ov-kpi-v">'+B(netDebt)+'</div><div class="ov-kpi-d muted">cash + ST inv '+B(cash+sti)+' − debt '+B(debt)+'</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Equity stakes (marked)</div><div class="ov-kpi-v">'+B(stakes)+'</div><div class="ov-kpi-d muted">Didi, Grab, Aurora + other</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Insurance reserve</div><div class="ov-kpi-v">'+B(insTot)+'</div><div class="ov-kpi-d muted">funded by ~'+B(restrCash+restrInv)+' restricted assets</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Stockholders&rsquo; equity</div><div class="ov-kpi-v">'+B(equity)+'</div><div class="ov-kpi-d muted">~$'+bvps.toFixed(0)+'/sh book · '+shares.toFixed(0)+'M sh</div></div>'+
+  '</div>';
+  h+='<div class="ov-chart-card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:7px 10px">Key line item — as of Mar 31, 2026</th><th style="text-align:right;padding:7px 10px">$M</th></tr></thead><tbody>'+
+    LI.map(function(r){ return '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px">'+r[0]+'</td><td style="text-align:right;padding:7px 10px;font-variant-numeric:tabular-nums;font-weight:700">'+cell(r[1])+'</td></tr>'; }).join('')+
+    '<tr style="border-top:2px solid var(--bdr)"><td style="padding:7px 10px;font-weight:800">Core net cash / (debt)</td><td style="text-align:right;padding:7px 10px;font-weight:800;color:#B23A2E">'+cell(netDebt)+'</td></tr>'+
+    '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px;font-weight:800">Net cash incl. equity stakes</td><td style="text-align:right;padding:7px 10px;font-weight:800;color:#06965A">'+cell(netWithStakes)+'</td></tr>'+
+  '</tbody></table></div>';
+  h+=sec('The equity-stake portfolio', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">The legacy of exiting cash-burning markets into shares: a <b>'+B(stakes)+'</b> portfolio carried at marked value. The largest positions (Mar 31, 2026): '+STK.slice(0,3).map(function(s){return '<b>'+s[0]+' '+B(s[1])+'</b>';}).join(' · ')+'. Grab and Aurora are <b>marketable</b> (mark-to-market each quarter — a major source of GAAP net-income swings), while Didi is <b>non-marketable</b>. These stakes are non-core assets that could be monetized, and they flip Uber from ~'+B(netDebt)+' core net debt to <b>~'+B(netWithStakes)+' net-positive</b>.</div>'+
+    '<div class="ov-chart-card" style="margin-top:10px"><div class="ov-chart-t">Equity-stake portfolio <span>· carrying value $M · Mar 31, 2026</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartBal"></canvas></div></div>'+
+    '<div class="ave-subh-note" style="margin-top:6px">Per-stake carrying values are approximate — Uber discloses the ~$9.2B aggregate but does not itemize each holding every quarter, so the split is directional.</div>');
+  h+=sec('Why the insurance reserve is not a free claim', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">The ~'+B(insTot)+' insurance reserve (short-term '+B(insST)+' + long-term '+B(insLT)+') is a real liability, but it is <b>separately funded</b> by ~'+B(restrCash+restrInv)+' of <b>restricted cash and investments</b> set aside to pay claims (the Aleka float — see Insurance). So it does not compete with the ~$9.8B free-cash-flow engine for capital.</div>');
+  h+='<div class="ov-callout"><b>Solidity read:</b> the equity is protected less by hard asset value than by cash generation — Uber sits at only ~'+B(netDebt)+' core net debt, holds ~'+B(stakes)+' of monetizable stakes on top, carries an <b>investment-grade</b> rating, and converts ~100%+ of Adj. EBITDA to free cash flow (~$9.8B TTM). The main balance-sheet caveat is that <b>~'+B(equity)+' of book equity leans on ~$8.9B of goodwill and ~$10.8B of deferred-tax assets</b>, so tangible book is thin — the story is the cash flow, not the salvage value.</div>';
+  h+='<div class="ov-foot">Source: Uber Q1 2026 Form 10-Q (SEC EDGAR), condensed consolidated balance sheet and investments note, as of March 31, 2026. Net-cash figures computed from reported line items. Free-cash-flow / rating context from FY2025 results.</div>';
+  return h;
+}
+// ── Top Line ▸ TAM — Uber's OWN market framing from its Feb 14, 2024 Investor Update
+// (Investor Day): "multiple multi-trillion-dollar markets" at low-single-digit penetration. ──
+function ubTamBody(c){
+  function tamTile(l,v,s){ return '<div class="ov-kpi"><div class="ov-kpi-l">'+l+'</div><div class="ov-kpi-v">'+v+'</div><div class="ov-kpi-d muted">'+s+'</div></div>'; }
+  function penBar(label,num,den,sub,col){ var pct=num/den*100; return '<div style="margin:10px 0 14px">'+
+    '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px"><span style="font-size:12.5px;font-weight:800;color:var(--navy)">'+label+' &mdash; ~$'+num+'B today</span><span style="font-size:13px;font-weight:900;color:'+col+'">'+pct.toFixed(1)+'%</span></div>'+
+    '<div style="height:22px;background:#EEF2F7;border-radius:6px;overflow:hidden"><div style="height:100%;width:'+Math.max(pct,0.8).toFixed(1)+'%;background:'+col+';border-radius:6px"></div></div>'+
+    '<div style="font-size:11px;color:var(--mu);margin-top:4px">'+sub+'</div></div>'; }
+  var h='<p class="ov-lede">Uber deliberately does <b>not</b> pin one headline TAM dollar — it frames itself as operating in <b>&ldquo;multiple multi-trillion-dollar markets&rdquo;</b> at <b>low-single-digit penetration</b>. And the runway is genuinely quantifiable: today ride-hailing and delivery are each only a <b>couple of percent</b> of the everyday spend they are replacing.</p>';
+  // Big-number TAM tiles — Uber's own S-1 sizing + today's market sizes
+  h+='<div class="ov-kpis">'+
+    tamTile('Personal Mobility TAM','$5.7T','Uber S-1 (2019), global · &lt;30-mi SAM ~$2.5T')+
+    tamTile('Delivery / local-commerce TAM','$2.8T','Uber S-1 (2019) — Eats opportunity')+
+    tamTile('US ride-hailing today','~$28.5B','2024 market · Uber ~76% / Lyft ~24%')+
+    tamTile('US food delivery today','~$53B','2024 market · restaurant meals')+
+  '</div>';
+  // The runway, in two pictures
+  h+=sec('The runway, in two pictures — how little of the everyday spend Uber has taken',
+    '<div class="ov-diagram-cap" style="margin:0 0 8px">The bars are almost empty on purpose: that emptiness <b>is</b> the opportunity.</div>'+
+    penBar('Ride-hailing', 28.5, 1800, 'of the ~$1.8T Americans spend on <b>personal transportation</b> each year', MOB)+
+    penBar('Delivery', 53, 2000, 'of the ~$2.0T Americans spend at <b>restaurants + grocery</b> each year', DEL)+
+    '<div class="ov-fynote" style="margin-top:6px">On a trips basis it is starker: US ride-hailing is on the order of <b>~3.5–4B trips/yr</b> — <b>well under 1%</b> of the ~450–500B personal trips Americans take. The overwhelming majority of travel is still the self-driven personal car, which management names as its <b>real competitor</b>. (Lyft, US + Canada only, alone did <b>828M rides in 2024</b>, +17%.)</div>');
+  // Uber's own penetration framing
+  h+=sec('How Uber sizes it — population × usage', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">Rather than a single market-research number, Uber anchors TAM to <b>population × usage</b>: the adult population of the ~70 countries it operates in, times the trips and orders those people could shift onto the platform. On that basis <b>fewer than 5%</b> of the 18+ population in its markets are monthly users, using the platform <b>just under 6 times a month</b>, with <b>~half</b> taking only one or two trips. Under 20% of adults use it even in Uber’s most saturated countries.</div>');
+  // Delivery TAM quantified
+  h+=sec('Delivery TAM — how to actually quantify it', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">Size it in <b>three nested layers</b>: <b>(1) restaurant meals</b> — US ~$53B / global ~$289B (2024); <b>(2) + grocery</b>; <b>(3) all local commerce</b> — restaurants + grocery + retail + convenience. Uber Delivery gross bookings are already ~<b>$74B</b> (2024, global) and it now frames the segment as <b>"local commerce,"</b> where grocery/retail is the fastest-growing slice. The clean denominator: ~<b>$2T</b> of US restaurant + grocery spend, only ~<b>2–3% delivered online</b> today — plus a high-margin <b>advertising</b> layer stacked on top.</div>');
+  h+='<div class="ov-callout"><b>Sourcing note:</b> the trillion-dollar TAMs are <b>Uber’s own S-1 (2019)</b> sizing; the <b>&lt;5% penetration</b> framing is Uber’s Feb 2024 Investor Update. US market sizes and denominators are third-party (GMInsights, Grand View, National Restaurant Association, Census, BLS, 2024). Trip-penetration figures are estimates — neither Uber nor Lyft publishes clean US-only trip counts.</div>';
+  h+='<div class="ov-foot">Sources: Uber S-1 (2019) and Feb 14, 2024 Investor Update (TAM & penetration); US ride-hailing/food-delivery market sizes and denominators from GMInsights, Grand View Research, National Restaurant Association, US Census and BLS (2024). Lyft rides from Lyft FY2024 results. Trip counts are estimates.</div>';
+  return h;
+}
+// ── Management ▸ Governance & SBC — vetted governance facts (share class, board, pay) from the
+// in-repo management config + SBC from the Summit model. Board detail lives in Executives & Board. ──
+var UB_SBC_HIST={ yrs:['FY20','FY21','FY22','FY23','FY24','FY25'], sbcPct:[7.4,6.7,5.6,5.2,4.1,3.5], shares:[1793,2006,2061,2122,2141,2106] };
+function buildUbSbc(){
+  var cv=document.getElementById('ubChartSbc'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
+  destroy('ubChartSbc');
+  _charts['ubChartSbc']=new Chart(cv.getContext('2d'),{
+    data:{ labels:UB_SBC_HIST.yrs, datasets:[
+      { type:'bar', label:'Shares out (M)', data:UB_SBC_HIST.shares, backgroundColor:'rgba(58,123,213,0.26)', borderColor:'#3A7BD5', borderWidth:1, yAxisID:'y', order:2 },
+      { type:'line', label:'SBC % of revenue', data:UB_SBC_HIST.sbcPct, borderColor:'#7A5AF8', backgroundColor:'#7A5AF8', borderWidth:2.5, tension:.3, pointRadius:3, yAxisID:'y1', order:1 }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}}, tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.yAxisID==='y1'? ' '+ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+'%' : ' '+ctx.dataset.label+': '+ctx.parsed.y.toLocaleString()+'M'; } } } },
+      scales:{ y:{ position:'left', title:{display:true,text:'Shares out (M)',font:{size:9}}, ticks:{font:{size:9}}, grid:{color:'#EEF2F7'}, suggestedMin:1600 },
+        y1:{ position:'right', title:{display:true,text:'SBC % of revenue',font:{size:9}}, ticks:{callback:function(v){return v+'%';},font:{size:9}}, grid:{display:false}, min:0 },
+        x:{ grid:{display:false}, ticks:{font:{size:10}} } } }
+  });
+}
+function ubGovBody(c){
+  var k=[
+    ['Share & voting','1 vote / share','No dual-class or founder control'],
+    ['Board','9 of 10 independent','Chair ≠ CEO · annual elections'],
+    ['CEO pay · FY25','$35.6M','96% at-risk · say-on-pay ~94%'],
+    ['SBC · % of revenue','7.4% → 3.5%','FY20→FY25 · a shrinking drag']
+  ];
+  var h='<p class="ov-lede">Uber’s governance is unusually clean for a founder-era tech company: <b>one share, one vote</b> (Travis Kalanick’s super-voting stock collapsed after the 2019 IPO), a <b>separate independent chair</b>, and a board that is <b>9 of 10 independent</b>.</p>';
+  h+='<div class="ov-kpis">'+k.map(function(f){return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(f[0])+'</div><div class="ov-kpi-v">'+esc(f[1])+'</div><div class="ov-kpi-d muted">'+esc(f[2])+'</div></div>';}).join('')+'</div>';
+  h+=sec('Stock-based compensation & alignment — did buybacks offset it?',
+    '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">The honest answer is <b>not until recently</b>. SBC has run a <b>flat ~$1.8B/yr</b> since FY22 while revenue nearly doubled — so as a share of revenue it <b>fell from ~7.4% (FY20) to ~3.5% (FY25)</b>, a genuinely shrinking drag. But SBC still <b>dilutes</b>, and with <b>no buybacks before 2024</b> the share count <b>rose every year from FY20 to FY24</b> (~1,793M → ~2,141M). Only in <b>FY25</b>, once repurchases hit $6.5B, did the count finally <b>tick down</b> (~2,106M) — the first time buybacks more-than-offset dilution. CEO pay is <b>96% at-risk</b> (base ~$1.08M), say-on-pay support ~<b>94%</b>.</div>'+
+    '<div class="ov-chart-card" style="margin-top:10px"><div class="ov-chart-t">SBC as % of revenue vs shares outstanding <span>· FY2020–FY2025</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartSbc"></canvas></div></div>'+
+    '<div class="ave-subh-note" style="margin-top:8px">Bars = period-end shares outstanding (left); line = SBC ÷ revenue (right). The bar peaks in FY24 and turns down in FY25 — the inflection where buybacks first out-ran SBC. <span style="color:#B7791F">SBC % of revenue and shares from Uber filings / Summit; directional.</span></div>');
+  return h;
+}
+// ── Management ▸ Track Record — per-person scorecard (management only, not the board). Each exec is
+// color-rated (green = value creator · amber = mixed/unproven · red = value destroyer) with an Uber
+// record and a prior-roles record; tap a card for the full read. Roster per Uber's leadership page,
+// Jul 2026 (C-suite turned over materially in 2025–26). ──
+var TRACK_RATE={ green:{c:'#06965A',bg:'rgba(6,193,103,0.09)',bd:'rgba(6,193,103,0.34)',l:'Value creator'},
+  amber:{c:'#B7791F',bg:'rgba(232,160,12,0.10)',bd:'rgba(232,160,12,0.34)',l:'Mixed / unproven'},
+  red:{c:'#C0392B',bg:'rgba(192,57,43,0.09)',bd:'rgba(192,57,43,0.34)',l:'Value destroyer'} };
+var TRACK_MGMT=[
+  { id:'dara', n:'Dara Khosrowshahi', role:'Chief Executive Officer', since:'2017', rate:'green',
+    uber:'Inherited a company in crisis (culture, Waymo suit, bans) and engineered one of tech’s great turnarounds — first full-year GAAP profit (2023), S&P 500 inclusion, ~$10B FCF, buybacks. Refocused the portfolio (exited ATG self-driving, unprofitable geos).',
+    prior:'CEO of <b>Expedia (2005–17)</b>: grew revenue ~$2.1B → ~$10B+ via acquisitions and international expansion. Earlier: IAC/Barry Diller lieutenant; began at Allen & Company (1991).',
+    detail:'<p><b>At Uber (CEO since Sep 2017).</b> Hired to reset the post-founder culture (Holder report, harassment scandal, regulatory bans, the Waymo litigation). Delivered: the <b>May 2019 IPO</b>; the <b>first full-year GAAP operating profit (2023)</b>; <b>S&P 500 inclusion (Dec 2023)</b>; ~<b>$10B</b> annual FCF and the first-ever buyback by 2025; and portfolio discipline — exited money-losing bets (ATG self-driving sold to Aurora; Uber Eats out of unprofitable geographies), converting several into equity stakes.</p>'+
+      '<p><b>Before Uber.</b> CEO of <b>Expedia (2005–2017)</b> — grew revenue from ~$2.1B to ~$10B+ over 12 years via acquisitions (Hotels.com, Hotwire, Trivago, HomeAway/Orbitz) and international expansion, a strong shareholder-value record. Was briefly the highest-paid US CEO (~$94.6M, 2015). Earlier a Barry Diller/IAC lieutenant; began his career at Allen & Company (1991).</p>'+
+      '<p><b>Net read — value creator (green).</b> One of the more successful "professional CEO into a crisis" cases in tech. Caveats, not disqualifying: very high pay (a ~$200M package recruited him), a tone-deaf 2021 Uber Eats "moonlighting" PR stunt, and years of cash burn before the profit inflection.</p>' },
+  { id:'balaji', n:'Balaji Krishnamurthy', role:'Chief Financial Officer', since:'2019 · CFO 2026', rate:'amber',
+    uber:'Internal promotion to CFO (effective Feb 2026). Ran Investor Relations, then Strategic Finance, then was divisional CFO for Mobility & Delivery — deep ownership of the core P&L he now runs.',
+    prior:'~8 years at <b>Goldman Sachs</b> (VP, equity research); earlier Info Edge India, iTrust, Irevna. CFA; MBA (MDI Gurgaon).',
+    detail:'<p><b>At Uber (since 2019; CFO effective Feb 16, 2026).</b> Head of Investor Relations (2020–23), VP Strategic Finance (2023–26), and previously <b>divisional CFO for Mobility and Delivery</b> — Uber’s two largest units. Strong internal knowledge and continuity into the seat.</p>'+
+      '<p><b>Before Uber.</b> ~8 years at <b>Goldman Sachs</b> as a VP in equity research; earlier roles at Info Edge India, iTrust and Irevna. CFA charterholder; MBA from MDI Gurgaon.</p>'+
+      '<p><b>Net read — mixed / unproven (amber).</b> Credible insider with direct ownership of the core-segment finances (continuity is a plus), but he is <b>Uber’s third CFO in ~3 years</b>, and a career largely in IR/equity research rather than a sitting public-company CFO means his standalone record as a top finance chief is not yet established.</p>' },
+  { id:'macdonald', n:'Andrew Macdonald', role:'President & Chief Operating Officer', since:'2012', rate:'green',
+    uber:'14-year veteran (Uber’s first Toronto GM). Rose to run global Mobility, Delivery and Autonomous plus membership/support/safety. Promoted to President & COO (Jun 2025) — Uber’s first COO since 2019.',
+    prior:'Career built essentially at Uber — limited external executive history, so his record <i>is</i> the Uber operating record.',
+    detail:'<p><b>At Uber (since 2012).</b> Joined as the first GM for Toronto and rose through the operating ranks to SVP, Mobility & Business Operations (2019). Promoted to <b>President & COO on Jun 2, 2025</b> (with a $5M performance RSU award), consolidating operational leadership; now runs global <b>Mobility, Delivery and Autonomous</b> plus cross-platform functions (Uber One, support, safety).</p>'+
+      '<p><b>Before Uber.</b> Little notable external executive history — his career is essentially Uber.</p>'+
+      '<p><b>Net read — value creator, lightly caveated (green).</b> A proven internal operator who scaled Uber’s largest businesses; the only caveat is that his résumé is almost entirely Uber, so there is little independent benchmark.</p>' },
+  { id:'west', n:'Tony West', role:'SVP, Chief Legal Officer', since:'2017', rate:'green',
+    uber:'Central architect of the post-scandal governance turnaround: guided the IPO through legal/regulatory risk, ended mandatory arbitration/NDAs for assault victims, published a first-of-its-kind US safety transparency report.',
+    prior:'EVP & GC at <b>PepsiCo</b>; <b>US DOJ #3 (Associate Attorney General, 2012–14)</b> — secured ~$37B in financial-crisis penalties incl. the record BofA ($16.65B) and JPMorgan ($13B) settlements.',
+    detail:'<p><b>At Uber (GC since late 2017).</b> Alongside Dara, a central architect of the cultural and governance recovery — steered the IPO through legal and regulatory risk, ended mandatory arbitration and NDAs for sexual-assault victims, published a first-of-its-kind US safety transparency report, and built governance programs.</p>'+
+      '<p><b>Before Uber.</b> EVP Public Policy & GC at <b>PepsiCo</b>; <b>17th Associate Attorney General of the US (2012–14)</b>, the DOJ’s #3 — secured ~$37B in financial-crisis penalties including the record <b>Bank of America ($16.65B)</b> and <b>JPMorgan ($13B)</b> settlements; earlier a MoFo litigation partner and Assistant US Attorney.</p>'+
+      '<p><b>Net read — value creator (green).</b> Rare blend of top-tier government-litigation credibility and big-company GC experience; directly tied to Uber’s reputational recovery.</p>' },
+  { id:'kansal', n:'Sachin Kansal', role:'Chief Product Officer', since:'2017', rate:'green',
+    uber:'Uber’s first safety-tech product leader; elevated to CPO in 2024. Owns Mobility & Delivery product and product/tech strategy for new bets (AV, taxis, Uber for Teens).',
+    prior:'VP Product at <b>Lookout</b> (mobile security, scaled to 120M+ users); CPO at Flywheel (taxi-hailing); Director of Product at <b>Palm</b> (webOS).',
+    detail:'<p><b>At Uber (since 2017).</b> Joined as its first product leader focused on safety tech; <b>CPO since 2024</b>. Owns Mobility & Delivery product (PM, design, product ops) and product/tech strategy for new bets — autonomous, taxis, sustainability, Uber for Teens.</p>'+
+      '<p><b>Before Uber.</b> VP Product at <b>Lookout</b> (mobile security; scaled the consumer line to 120M+ users); CPO at <b>Flywheel Software</b> (taxi-hailing); Director of Product at <b>Palm</b> (webOS, later acquired by HP).</p>'+
+      '<p><b>Net read — solid, green-leaning.</b> Credible marketplace and safety product operator; Palm/webOS was a commercial failure but that was an org-level outcome, not a personal red flag.</p>' },
+  { id:'naga', n:'Praveen Neppalli Naga', role:'Chief Technology Officer', since:'2015', rate:'green',
+    uber:'Leads engineering & science; oversees ~4,000 engineers/scientists building the core marketplace and data infrastructure; a public voice on Uber’s AI strategy.',
+    prior:'~7 years in engineering leadership at <b>LinkedIn</b>, building early products and data infrastructure through its high-growth era.',
+    detail:'<p><b>At Uber (since 2015).</b> Leads engineering and science strategy; oversees ~4,000 engineers and scientists on the core marketplace and data infrastructure; a public voice on Uber’s AI strategy.</p>'+
+      '<p><b>Before Uber.</b> ~7 years of engineering leadership at <b>LinkedIn</b>, building early products and data infrastructure during its high-growth era. MS CS, University of Nebraska.</p>'+
+      '<p><b>Net read — solid, green-leaning.</b> Long tenure plus a strong LinkedIn scaling pedigree; no red flags surfaced.</p>' },
+  { id:'kannan', n:'Madhu Kannan', role:'Chief Business Officer', since:'2017 · rejoined 2023', rate:'green',
+    uber:'Oversees global business development, corporate development and investments (M&A, partnerships, strategic capital).',
+    prior:'CEO of the <b>Bombay Stock Exchange</b>; Group Head of BD at <b>Tata Sons</b>; senior roles at BofA Securities / Merrill Lynch and NYSE Euronext.',
+    detail:'<p><b>At Uber (first 2017 as CBO Asia-Pacific; rejoined 2023 as global CBO).</b> Runs global business development, corporate development and investments — M&A, partnerships, strategic capital.</p>'+
+      '<p><b>Before Uber.</b> EVC Global Corporate & Investment Banking at <b>Bank of America Securities</b>; Group Head of BD at <b>Tata Sons</b>; <b>CEO of the Bombay Stock Exchange</b>; MD at BofA-Merrill Lynch; SVP at NYSE Euronext.</p>'+
+      '<p><b>Net read — green-leaning.</b> A senior dealmaker with capital-markets and BD depth; the main caveat is a somewhat itinerant career (multiple exits/re-entries).</p>' }
+];
+function ubTrackBody(c){
+  var legend=Object.keys(TRACK_RATE).map(function(k){ var r=TRACK_RATE[k]; return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--navy)"><span style="width:10px;height:10px;border-radius:50%;background:'+r.c+'"></span>'+r.l+'</span>'; }).join('');
+  var cards=TRACK_MGMT.map(function(m){ var r=TRACK_RATE[m.rate];
+    return '<div class="trk-card ov-clickable" data-detail="exec:'+m.id+'" style="border:1px solid '+r.bd+';border-left:4px solid '+r.c+';background:'+r.bg+';border-radius:11px;padding:13px 15px;cursor:pointer;transition:.14s">'+
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><div style="font-size:13.5px;font-weight:800;color:var(--navy)">'+esc(m.n)+'</div><div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:'+r.c+'">'+r.l+'</div></div>'+
+      '<div style="font-size:11px;color:var(--mu);font-weight:600;margin:1px 0 8px">'+m.role+' · at Uber since '+esc(m.since)+'</div>'+
+      '<div style="font-size:11.5px;color:var(--navy);line-height:1.5;margin-bottom:6px"><b style="color:'+r.c+'">At Uber:</b> '+m.uber+'</div>'+
+      '<div style="font-size:11.5px;color:var(--navy);line-height:1.5"><b style="color:var(--mu)">Before:</b> '+m.prior+'</div>'+
+      '<div class="ov-more" style="margin-top:7px">Full track record ›</div></div>';
+  }).join('');
+  var h='<p class="ov-lede">The people running Uber today, rated on <b>what they have actually built</b> — an <b>Uber</b> record and a <b>prior-roles</b> record for each. Color = the net read; <b>tap a card</b> for the full history. (Management only — board and ownership are separate tabs.)</p>';
+  h+='<div style="display:flex;gap:14px;flex-wrap:wrap;margin:0 0 12px">'+legend+'</div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">'+cards+'</div>';
+  h+='<style>@media(max-width:640px){.trk-card{}.trk-card{}} .trk-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.08)}</style>';
+  h+='<div class="ov-callout" style="margin-top:14px"><b>CEO turnaround, in one line:</b> first GAAP operating profit Q2 2023 (after ~14 years of losses) · investment-grade rating · free cash flow $0.4B → $9.8B (FY22→FY25) · share count began falling in FY25 as buybacks outran SBC · exited China / SE-Asia / Russia into equity stakes.</div>';
+  h+='<div class="ov-foot">Roster and titles per Uber’s leadership page (Jul 2026); prior-role outcomes from company/press sources. The C-suite turned over materially in 2025–26 (new CFO Feb 2026; new President & COO Jun 2025). Ratings are an editorial read, not a Summit output.</div>';
   return h;
 }
 // ─── Pane: Insurance & Regulation (the two genuinely-unique deep topics) ─────
@@ -921,6 +1412,7 @@ function uberOneEconomics(){
 }
 function uberOneBody(c){
   var h='';
+  h+='<p class="ov-lede"><b>Uber has three kinds of paying customer — not just members.</b> <b>(1) Members</b> (Uber One) are the highest-LTV core and get the deepest treatment here. <b>(2) Non-members</b> are the <b>~three-quarters of ~199M monthly consumers</b> who pay no subscription yet still generate most trips and a large share of gross bookings. <b>(3) Advertisers</b> — restaurants, grocers and brands — pay Uber directly, a &gt;$2B, ~100%-margin business. All three are covered below.</p>';
   h+='<p class="ov-lede"><b>Uber One is the monetization engine of the whole platform</b> — the mechanism that turns &ldquo;go anywhere, get anything&rdquo; into <b>recurring, higher-LTV</b> revenue. <b>50M+ members</b> (Q1 2026, ~+50% YoY) drive <b>&gt;50% of combined Mobility+Delivery bookings</b> and spend <b>~3×</b> non-members; at ~199M monthly consumers, roughly <b>a quarter</b> are members — and in the US, <b>&gt;35% of Mobility bookings</b> already run through them.</p>';
   h+='<div class="ov-kpis">'+UBERONE_STAT.map(function(k){ return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(k.l)+'</div><div class="ov-kpi-v">'+esc(k.v)+'</div><div class="ov-kpi-d muted">'+esc(k.s)+'</div></div>'; }).join('')+'</div>';
   h+=sec('Explosive Member Growth — 19M → 50M+ in ~2 years',
@@ -929,6 +1421,10 @@ function uberOneBody(c){
   h+=sec('Priced to the Planet — one membership, many prices', uberOnePricing());
   h+=sec('The member economics — why one member is worth many', uberOneEconomics());
   h+=sec('The Cross-Sell Flywheel', '<div class="ov-callout"><div class="ov-tl-body"><b>"Go anywhere, get anything."</b> One demand graph cross-sells rides ⇄ eats ⇄ grocery. ~<b>40%</b> of users use multiple products; ~⅓ of Eats customers arrived through the Rides app (near-zero CAC). Each product the member adds <b>raises the cost of leaving</b> — not through lock-in (cancellation is easy, $9.99/mo) but because no competitor offers rides + food + grocery + hotels in one membership. That breadth-as-switching-cost is the structural moat.</div></div>');
+  h+=sec('Non-members — still most of the customers',
+    '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">Because Uber One is only ~<b>25%</b> of ~199M monthly consumers, <b>~three-quarters are non-members</b> — and they are not an afterthought. They pay no subscription but still generate the majority of trips and a large share of gross bookings, and every one is already <b>profitable on the marketplace take</b> the moment they ride or order. Non-members are also the <b>conversion funnel</b>: Uber One’s job is not to make an unprofitable customer profitable, it is to <b>deepen and lock in</b> spend that is already there. Roughly <b>half</b> of monthly users still take only one or two trips a month — that frequency headroom is the prize.</div>');
+  h+=sec('Advertisers — when the merchant is the customer',
+    '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">Uber’s customer base is <b>two-sided</b>: consumers pay for trips and orders, and the <b>restaurants, grocers and brands</b> on the platform pay Uber for <b>sponsored placement and search ads</b>. Advertising is a ~<b>$2B+ run-rate</b> business growing ~<b>50%/yr</b> at close to <b>100% incremental margin</b>, because it stacks on the existing marketplace without touching the driver or merchant split. These advertisers are among Uber’s most valuable customers precisely because what they buy costs Uber almost nothing to deliver.</div>');
   h+=sec('Platform Expansion',
     '<div class="ov-row"><div class="ov-row-k">Uber for Business</div><div class="ov-row-v">B2B corporate rides, meals & travel — >$5B of bookings, growing >2× faster than Mobility.</div></div>'+
     '<div class="ov-row"><div class="ov-row-k">Travel</div><div class="ov-row-v">"Hotels on Uber" (Expedia, 700k+ properties) + Vrbo + Travel Mode — feeding membership engagement, not meant as a core business.</div></div>');
@@ -990,11 +1486,10 @@ function insMoneyFlow(){
   h+='<text x="462" y="80" text-anchor="middle" font-size="9.5" font-weight="800" fill="#2E6BE6">invest</text>';
   h+='<text x="460" y="228" text-anchor="middle" font-size="9.5" font-weight="800" fill="#C77A11">pay LATER</text>';
   // source node -> aleka:0 (rider funds premium)
-  h+='<g class="mf-node ov-clickable" data-detail="aleka:0">'+
+  h+='<g class="mf-node ov-clickable" data-detail="ins:why">'+
     '<rect x="14" y="116" width="136" height="68" rx="10" fill="#fff" stroke="#C7CED6" stroke-width="1.5"/>'+
-    '<text x="82" y="140" text-anchor="middle" font-size="12" font-weight="800" fill="#10141A">Every $10 fare</text>'+
-    '<text x="82" y="159" text-anchor="middle" font-size="10.5" fill="#3A4552">insurance premium</text>'+
-    '<text x="82" y="177" text-anchor="middle" font-size="12.5" font-weight="800" fill="#06965A">~$0.50</text></g>';
+    '<text x="82" y="145" text-anchor="middle" font-size="12.5" font-weight="800" fill="#10141A">Every trip</text>'+
+    '<text x="82" y="164" text-anchor="middle" font-size="10.5" fill="#3A4552">funds the premium</text></g>';
   // reservoir (the float) -> aleka:2 (books provision & invests)
   h+='<g class="mf-node ov-clickable" data-detail="aleka:2">'+
     '<rect x="222" y="60" width="194" height="180" rx="13" fill="rgba(6,193,103,0.07)" stroke="#06965A" stroke-width="2"/>'+
@@ -1011,19 +1506,19 @@ function insMoneyFlow(){
   h+='<g class="mf-node ov-clickable" data-detail="aleka:3">'+
     '<rect x="500" y="178" width="206" height="66" rx="10" fill="#fff" stroke="#C77A11" stroke-width="1.5"/>'+
     '<text x="603" y="204" text-anchor="middle" font-size="11.5" font-weight="800" fill="#C77A11">Claims paid out</text>'+
-    '<text x="603" y="224" text-anchor="middle" font-size="10" fill="#3A4552">months &amp; years later</text></g>';
+    '<text x="603" y="224" text-anchor="middle" font-size="10" fill="#3A4552">months & years later</text></g>';
   h+='</svg>';
-  h+='<div class="mf-cap"><b>Collect now, pay later.</b> Riders fund the premium; it lands in the Aleka <b>$12.9B</b> reserve and is <b>invested</b> while Uber waits — sometimes years — to pay claims. That timing gap <i>is</i> the <b>float</b>: the reserve build threw <b>+$251M &#8594; +$399M &#8594; +$658M</b> into operating cash (2023&#8594;25), and ~<b>$0.35 of every $10 fare</b> becomes Uber cash. <span class="ave-subh-note">Tap any node for the accounting step. The bear case (below) argues drawing the reserve down flatters that cash.</span></div>';
+  h+='<div class="mf-cap"><b>Collect now, pay later.</b> Riders fund the premium; it lands in Uber&rsquo;s <b>$12.9B</b> insurance reserve (Q1 2026, reported) and is <b>invested</b> while Uber waits — sometimes years — to pay claims. That timing gap is the <b>&ldquo;float&rdquo;</b> — an analytical framing, not a disclosed line. As the reserve <b>grows</b>, the increase adds to operating cash: a real, directional tailwind. <span class="ave-subh-note">Tap any node to learn the concept. The reserve balance is reported; dollar flows <i>through</i> the captive, per-fare cent breakdowns and float investment income are <b>not disclosed by Uber</b> — treat any such figure as an estimate.</span></div>';
   h+='</div>';
   return h;
 }
 function insModelCompare(){
   var R=[
     ['Captive insurer','<b>Aleka</b> (Hawaii)','<b>PVIC</b> &mdash; Pacific Valley (Hawaii)'],
-    ['How much risk it keeps','~<b>95% self-insured</b> &mdash; retains almost all of it','<b>Partial</b> &mdash; reinsures a slice back; still buys from 3rd-party carriers'],
-    ['Reserves / float','~<b>$12.9B</b> (large)','~<b>$2.18B</b> (smaller)'],
-    ['What the float is <i>for</i>','a <b>cash engine</b> &mdash; collect now, invest, pay claims years later','smaller; the story is <b>cost per ride falling</b>, not the float'],
-    ['The old &ldquo;tail&rdquo;','<b>kept</b> on the books and invested','<b>sold off</b> via Loss Portfolio Transfers (Enstar &rarr; DARAG &rarr; RiverStone) &mdash; off the balance sheet'],
+    ['How much risk it keeps','<b>Large self-insured retention</b> via Aleka + third-party reinsurance above limits <span style="color:var(--mu)">(exact split not disclosed)</span>','<b>Partial</b> &mdash; reinsures a slice back; still buys from 3rd-party carriers'],
+    ['Reserves','~<b>$12.9B</b> (Q1 2026, reported)','~<b>$2.18B</b> (Dec 2025, reported)'],
+    ['How each frames it','a <b>cash engine</b> &mdash; collect now, invest, pay claims years later','the story is <b>cost per ride falling</b>, not the float'],
+    ['The old &ldquo;tail&rdquo;','<b>kept</b> on the books and invested','<b>sold off</b> via Loss Portfolio Transfers &mdash; e.g. the <b>Feb 2025 Riverstone</b> deal ($120.5M limit for an $85.1M premium, funds-withheld)'],
     ['The market&rsquo;s read','&ldquo;float-fed cash&rdquo; (bull) vs &ldquo;an unregulated insurer&rdquo; (bear)','&ldquo;bending the cost curve&rdquo; via SB&nbsp;371 + the captive']
   ];
   var h='<style>'+
@@ -1042,6 +1537,17 @@ function insModelCompare(){
   h+='<div class="imc-so"><b>In one line:</b> Uber&rsquo;s insurance is a <b>cash-flow story</b> (the float it invests); Lyft&rsquo;s is a <b>cost-reduction story</b> (SB&nbsp;371 + offloading the tail). Same plumbing, opposite emphasis.</div>';
   return h;
 }
+// Beginner-friendly pop-ups for the insurance tab (assume the reader knows nothing about insurance).
+var INS_POP={
+  why:{ t:'Why does an Uber ride need insurance?', h:'Every time you take an Uber, the law in most places requires <b>commercial auto insurance</b> covering that specific trip — well beyond a normal personal car policy. If there is a crash, injuries and damage to the rider, driver and others have to be paid for. So insurance is not optional overhead for Uber; it is a <b>legal cost baked into every single trip</b>.' },
+  captive:{ t:'What is a “captive insurer”? (Aleka)', h:'Instead of <b>buying</b> insurance from an outside company (and paying their profit margin), Uber built <b>its own insurance company</b> — a wholly-owned subsidiary called <b>Aleka</b>, based in Hawaii. That is a <b>captive insurer</b>: it exists only to insure its parent. By keeping insurance in-house, Uber captures the economics (and the investment income on reserves) instead of handing them to a third party.' },
+  float:{ t:'What is the “float”?', h:'Uber collects insurance money from fares <b>today</b> but pays out most accident claims <b>months or years later</b>. In between, it sits on a large pile of cash. That pile is the <b>float</b>. Uber <b>invests</b> it and earns income while it waits to pay claims — using money it owes but has not paid yet. It is the same engine Warren Buffett’s insurers are famous for: <b>collect now, pay later, invest the gap.</b>' },
+  selfins:{ t:'Self-insurance via the Aleka captive', h:'<b>Self-insured</b> means Uber <b>keeps a large share of the risk itself</b> instead of paying an outside insurer to take all of it. Its 10-K describes a <b>combination</b>: it retains risk in its wholly-owned Hawaii captive, <b>Aleka Insurance, Inc.</b>, and <b>transfers a significant portion</b> to third-party insurers/reinsurers above certain limits. Uber does <b>not disclose the exact retained percentage</b>. More risk kept = more reserves it controls (and can invest) — but also more exposure if claims run worse than expected.' },
+  reserves:{ t:'Reserves = money set aside for future claims', h:'After a crash, the final bill can take <b>years</b> to settle (medical, legal). Uber has to <b>estimate</b> what it will eventually owe — including claims that already happened but have not been reported yet — and set that money aside now as a <b>reserve</b> (a liability on the balance sheet). It is an expense booked today, paid in cash later. That “booked now, paid later” gap is what creates the float.' },
+  invest:{ t:'Investing the float', h:'The reserved cash is not idle — Uber <b>invests it</b> until claims come due, earning income on money it does not yet owe. This is why, through the turnaround, Uber’s <b>cash flow ran ahead of its accounting profit</b>: the reserve build and float added real cash while the P&L was still catching up.' },
+  bull:{ t:'Bull — the cash is real', h:'FY2025 free cash flow of <b>$9.8B (+42%)</b>, ~112% of Adjusted EBITDA. An <b>investment-grade credit rating</b>, the first-ever buyback (<b>$20B</b> authorized, ~$3B/quarter), and ~$10B cumulative FCF. The case: asset-light growth converts almost fully to cash, and the rating agencies and balance sheet back it up.' },
+  bear:{ t:'Bear — a float-fed mirage', h:'Cedar Street argues that stripping out stock-comp and the reserve build cuts “real” FCF from ~$8.6B to <b>~$4.1B</b>, calling Uber <b>“an unregulated, under-capitalized insurance company.”</b> Uber also <b>pulled ~$4.1B out of reserves into cash in 2024–25</b>; Consumer Watchdog’s 2026 “License to Kill” report alleges it is trimming accident liability to help fund robotaxis. <i>These are contested activist/analyst framings, not Uber’s position.</i>' }
+};
 function insuranceBody(){
   var RES=[['2021',3.99],['2022',4.72],['2023',6.74],['2024',9.80],['2025',12.46],['Q1 26',12.9]];
   var OI=[['2021',-3.53],['2022',-1.78],['2023',0.99],['2024',2.83],['2025',5.60]];
@@ -1055,6 +1561,13 @@ function insuranceBody(){
     '.uins-mc{border:1px solid var(--bdr);border-radius:10px;padding:12px 14px}'+
     '.uins-mc-h{font-size:12.5px;font-weight:800;color:#049a4f;margin-bottom:5px}'+
     '.uins-mc-d{font-size:11.5px;color:var(--navy);line-height:1.5}.uins-mc-d b{font-weight:800}'+
+    '.uins-mc.ov-clickable{cursor:pointer;transition:.14s}.uins-mc.ov-clickable:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);border-color:#06965A}'+
+    '.uins-primer{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:0 0 11px}'+
+    '.uins-primer-l{font-size:11.5px;font-weight:700;color:var(--mu)}'+
+    '.uins-chip{font:inherit;font-size:11px;font-weight:700;color:#049a4f;background:rgba(6,193,103,0.07);border:1px solid rgba(6,193,103,0.3);border-radius:999px;padding:4px 12px;cursor:pointer;transition:.14s}'+
+    '.uins-chip:hover{background:rgba(6,193,103,0.14)}'+
+    '.uins-more{display:inline-block;margin-top:5px;font-size:10.5px;font-weight:800;color:#049a4f;cursor:pointer}'+
+    '.uins-side .uins-more{margin-top:0}'+
     '.uins-bar{display:grid;grid-template-columns:56px 1fr 60px;gap:9px;align-items:center;margin:5px 0}'+
     '.uins-bar-y{font-size:11px;font-weight:700;color:var(--mu);text-align:right}'+
     '.uins-bar-t{height:20px;background:rgba(138,147,160,0.10);border-radius:5px;overflow:hidden}'+
@@ -1080,19 +1593,23 @@ function insuranceBody(){
     '<div class="uins-hero-t">Uber quietly runs one of the largest in-house insurers you have never heard of — a <b>~$12.9B</b> book of claims reserves (Q1 2026). Its <b>float</b> helped power the cash-flow turnaround; and as Gross Bookings compound ~20% a year, insurance is finally becoming a <b>smaller slice</b> of the model.</div></div>';
   // machine
   h+='<div class="uins-h">The self-insurance machine</div>';
+  h+='<div class="uins-primer"><span class="uins-primer-l">New to this? Start here:</span>'+
+    '<button type="button" class="uins-chip ov-clickable" data-detail="ins:why">Why a ride needs insurance</button>'+
+    '<button type="button" class="uins-chip ov-clickable" data-detail="ins:captive">What’s a captive insurer?</button>'+
+    '<button type="button" class="uins-chip ov-clickable" data-detail="ins:float">What’s the “float”?</button></div>';
   h+='<div class="uins-m">'+
-    '<div class="uins-mc"><div class="uins-mc-h">~95% self-insured</div><div class="uins-mc-d">Uber must carry commercial auto insurance on every trip. Instead of buying it all, it <b>retains most of the risk</b> and reinsures it into its own captive, <b>Aleka Insurance</b> (a wholly-owned Hawaii subsidiary) — effectively running its own insurer.</div></div>'+
-    '<div class="uins-mc"><div class="uins-mc-h">Reserves = future claims</div><div class="uins-mc-d">It books an actuarial liability for <b>unpaid claims</b> (reported + incurred-but-not-reported) — an expense accrued now, paid in cash over years. That timing gap is the <b>float</b>.</div></div>'+
-    '<div class="uins-mc"><div class="uins-mc-h">It invests the float</div><div class="uins-mc-d">Uber holds and invests the reserved cash until claims settle — interest-free capital, Buffett-style. This is why <b>cash flow ran ahead of accounting profit</b> through the turnaround.</div></div>'+
+    '<div class="uins-mc ov-clickable" data-detail="ins:selfins"><div class="uins-mc-h">Self-insured via Aleka</div><div class="uins-mc-d">Uber must carry commercial insurance on every trip. Rather than buy it all outside, it <b>retains a large share of the risk</b> in its own Hawaii captive, <b>Aleka Insurance, Inc.</b>, and transfers a significant portion to third-party reinsurers above set limits. <span class="uins-more">what this means ›</span></div></div>'+
+    '<div class="uins-mc ov-clickable" data-detail="ins:reserves"><div class="uins-mc-h">Reserves = future claims</div><div class="uins-mc-d">It sets aside money now for <b>claims it will pay years later</b> — an expense booked today, cash out later. That timing gap is the <b>float</b>. <span class="uins-more">how reserves work ›</span></div></div>'+
+    '<div class="uins-mc ov-clickable" data-detail="ins:invest"><div class="uins-mc-h">It invests the float</div><div class="uins-mc-d">Uber invests the reserved cash until claims settle — Buffett-style. This is why <b>cash flow ran ahead of accounting profit</b> through the turnaround. <span class="uins-more">the float, explained ›</span></div></div>'+
   '</div>';
   // reserves
-  h+='<div class="uins-h">Follow the money — where the float comes from &amp; where it goes</div>';
+  h+='<div class="uins-h">Follow the money — where the float comes from & where it goes</div>';
   h+=insMoneyFlow();
   h+='<div class="uins-h">How its role flipped — crutch → tailwind</div>';
   h+='<div class="ir-phases">'+irPhase(INS_TL[0],'crutch','Crutch')+irPhase(INS_TL[1],'head','Headwind')+irPhase(INS_TL[2],'tail','Tailwind')+'</div>';
   h+='<div class="uins-h">The reserve build — nearly tripled in two years</div>';
   h+=RES.map(function(r){ var w=Math.max(3,r[1]/resMax*100); return '<div class="uins-bar"><div class="uins-bar-y">'+r[0]+'</div><div class="uins-bar-t"><div class="uins-bar-f" style="width:'+w.toFixed(1)+'%"></div></div><div class="uins-bar-v">$'+r[1].toFixed(1)+'B</div></div>'; }).join('');
-  h+='<div class="uins-cfo">The reserve <b>build</b> (claims accrued &gt; claims paid) flows straight into operating cash flow: <b>+$251M (2023) · +$399M (2024) · +$658M (2025)</b> — a recurring tailwind to reported cash generation, and the mechanism the bear case attacks.</div>';
+  h+='<div class="uins-cfo">The reserve <b>build</b> (claims accrued &gt; claims paid) adds to operating cash flow — a recurring, directional tailwind, and the mechanism the bear case attacks. Uber&rsquo;s reserve grew from a disclosed <b>~$9.8B (Dec 2024)</b> to <b>~$12.9B (Q1 2026)</b>; the precise year-by-year cash contribution is <b>not broken out by Uber</b>, so any single-year figure is Summit-derived/estimated.</div>';
   // turnaround
   h+='<div class="uins-h">From cash-burner to cash-compounder</div>';
   h+='<div class="uins-tr">'+OI.map(function(o){ var v=o[1], neg=v<0, w=Math.abs(v)/oiMax*50, col=neg?'#C0392B':'#049a4f';
@@ -1102,8 +1619,8 @@ function insuranceBody(){
   // debate
   h+='<div class="uins-h">Is the cash real? The debate</div>';
   h+='<div class="uins-two">'+
-    '<div class="uins-side bull"><div class="uins-side-h">Bull — the cash is real</div><div class="uins-side-d">FY2025 free cash flow of <b>$9.8B (+42%)</b>, ~112% of Adj. EBITDA. An <b>investment-grade rating</b>, the first-ever buyback ($20B authorized, ~$3B/quarter), and ~$10B cumulative FCF. Asset-light growth converts almost fully to cash.</div></div>'+
-    '<div class="uins-side bear"><div class="uins-side-h">Bear — a float-fed mirage</div><div class="uins-side-d">Cedar Street argues that stripping stock-comp and the reserve build cuts &ldquo;real&rdquo; FCF from ~$8.6B to <b>~$4.1B</b>, calling Uber <b>&ldquo;an unregulated, under-capitalized insurance company.&rdquo;</b> Uber also <b>pulled ~$4.1B out of reserves into cash in 2024–25</b>; Consumer Watchdog&rsquo;s 2026 &ldquo;License to Kill&rdquo; report alleges it is trimming accident liability to help fund robotaxis. <i>Contested activist/analyst framings, not Uber&rsquo;s position.</i></div></div>'+
+    '<div class="uins-side bull"><div class="uins-side-h">Bull — the cash is real</div><div class="uins-side-d">FCF <b>$9.8B (+42%)</b>, ~112% of Adj. EBITDA; investment-grade; a $20B buyback. <span class="uins-more ov-clickable" data-detail="ins:bull">read the full case ›</span></div></div>'+
+    '<div class="uins-side bear"><div class="uins-side-h">Bear — a float-fed mirage</div><div class="uins-side-d">Activists argue “real” FCF is closer to <b>~$4.1B</b> once stock-comp & the reserve build are stripped out. <span class="uins-more ov-clickable" data-detail="ins:bear">read the full case ›</span></div></div>'+
   '</div>';
   // smaller slice
   h+='<div class="uins-h">Why it is becoming a smaller slice</div>';
@@ -1113,31 +1630,367 @@ function insuranceBody(){
   h+='<div class="ov-foot" style="margin-top:14px">Reserves and operating results from Uber 10-Ks / Q1 2026 10-Q; the reserve&rarr;cash-flow contribution is from the Summit dataset. Uber does <b>not</b> disclose a clean standalone &ldquo;insurance % of Gross Bookings,&rdquo; so that trend is directional/inferred from cost-of-revenue commentary. The &ldquo;FCF mirage&rdquo; and reserve-raid narratives are <b>attributed</b> analyst/activist framings (Cedar Street; Consumer Watchdog), not Uber&rsquo;s own accounting characterization.</div>';
   return h;
 }
+// ─── History tab body: company story (timeline) + M&A (reused from Overview) ───
+function historyStoryBody(){
+  var tl='<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>';
+  return sec('History & Milestones', tl)+sec('M&A — what each deal changed in the financials', mnaTimeline());
+}
+// ══════════════════════════════════════════════════════════════════════════════
+// STANDARDIZED OVERVIEW  (per docs/OVERVIEW_CONVENTIONS.md — the 7 fixed blocks)
+// Everything that does NOT fit these blocks is preserved in the Deep Dive tab,
+// never deleted (Golden Rule #1). The old bespoke Overview lives in Deep Dive ▸ Extras.
+// ══════════════════════════════════════════════════════════════════════════════
+// Block 1 — Key Facts. Canonical set; missing cells are omitted (never blank).
+// Sources: Uber FY2025 10-K (EDGAR CIK 0001543151, filed as a DOMESTIC 10-K), IR.
+// Exactly 10 cells (5 columns × 2 rows). CEO carries tenure; Market cap carries an as-of.
+var STD_FACTS=[
+  ['Listing','NYSE: UBER'],
+  ['HQ','San Francisco, CA, USA'],
+  ['Incorporation','Delaware, USA'],
+  ['SEC filer','Domestic (10-K/10-Q/8-K)'],
+  ['Founded','2009'],
+  ['IPO','May 2019'],
+  ['CEO','Dara Khosrowshahi · since 2017'],
+  ['Employees','~34,000 (Dec 2025)'],
+  ['Dividend','Non-payer ($7B buyback ’24)'],
+  ['Market cap','~$150B · Jul 2026'],
+];
+function stdKeyFacts(){
+  return '<div class="stdkf">'+STD_FACTS.slice(0,10).map(function(p){
+    var v=p[0]==='Market cap' ? '<span id="ubMc">'+esc(p[1])+'</span>' : esc(p[1]);
+    return '<div class="stdkf-cell"><div class="stdkf-k">'+esc(p[0])+'</div><div class="stdkf-v">'+v+'</div></div>'; }).join('')+'</div>';
+}
+// Block 3 — the 4-quadrant, rendered as a 2×2 TABLE. Each cell ≤ ~30 words.
+var STD_BIZ=[
+  ['What it sells','Rides, food / grocery / retail delivery and freight brokerage — plus Uber One membership and advertising — on one app across ~70 countries.'],
+  ['Who buys it','Consumers (riders and eaters) on one side; drivers, couriers, merchants and advertisers on the other side of the marketplace.'],
+  ['How it earns','It keeps a share (a “take rate”) of gross bookings. Mobility is the profit engine; Delivery is scaling; advertising is a high-margin add-on.'],
+  ['The edge','Global scale plus a cross-sell bundle — rides ⇄ eats ⇄ membership — that no single-service rival matches; asset-light and cash-generative.'],
+];
+function stdFourQuad(){
+  return '<div class="q2">'+STD_BIZ.map(function(b){ return '<div class="q2-cell"><div class="q2-k">'+esc(b[0])+'</div><div class="q2-v">'+b[1]+'</div></div>'; }).join('')+'</div>';
+}
+// Block 4 — How it makes money. By SEGMENT, toggled Revenue ⇄ Gross Bookings (both verified &
+// reconcile). Geography IS disclosed in the 10-K, but the FY2025 regional split could not be
+// verified, so it is NOT shown here (a fabricated geo view is worse than none).
+var STD_REV=[['Mobility',57.0,'$29.7B',MOB],['Delivery',33.2,'$17.3B',DEL],['Freight',9.8,'$5.1B',FRT]];
+var STD_GB=[['Mobility',50.4,'$97.5B',MOB],['Delivery',47.0,'$90.9B',DEL],['Freight',2.6,'$5.1B',FRT]];
+// "What is X?" is qualitative (no numbers — the chart has them); the nested "Segment economics"
+// adds the take rate & segment Adjusted EBITDA, which are NOT in the chart above.
+var STD_SEG_DEF=[
+  { seg:'Mobility',
+    desc:'Uber’s ridesharing business and its profit engine: an app that connects riders with nearby independent drivers for on-demand trips of every kind. Uber owns no cars — it runs the marketplace (matching, pricing, payments) and keeps a service fee, its <b>take rate</b>, on each fare, plus rider fees, in-app advertising and Uber One membership.',
+    econ:[['Gross Bookings','$97.5B'],['Revenue (take rate)','$29.7B (~30%)'],['Adjusted EBITDA','~$7.9B']] },
+  { seg:'Delivery',
+    desc:'Uber Eats and the wider delivery marketplace: connects consumers with restaurants, grocers and retailers, and the couriers who fulfill orders. Uber earns fees from merchants and consumers on each order, and increasingly from a <b>high-margin advertising</b> business built on the same app.',
+    econ:[['Gross Bookings','$90.9B'],['Revenue (take rate)','$17.3B (~19%)'],['Adjusted EBITDA','~$3.6B']] },
+  { seg:'Freight',
+    desc:'A digital freight brokerage connecting shippers with truck carriers. Unlike the two consumer segments it is recognized on a <b>gross basis</b> (revenue ≈ bookings) and runs near breakeven — kept for optionality rather than as a core profit driver.',
+    econ:[['Gross Bookings','$5.1B'],['Revenue','$5.1B (gross basis)'],['Adjusted EBITDA','~breakeven']] },
+];
+function stdMoneyMap(){
+  var h='<div class="mm-tog"><button type="button" class="mm-pill active" data-mm="rev">By revenue</button><button type="button" class="mm-pill" data-mm="gb">By gross bookings</button></div>';
+  h+='<div id="ubMMrev">'+mbars(STD_REV)+'</div>';
+  h+='<div id="ubMMgb" hidden>'+mbars(STD_GB)+'</div>';
+  h+='<div class="mm-defs acc-list" style="margin-top:12px">'+STD_SEG_DEF.map(function(s){
+    var econ='<div class="acc" style="margin-top:8px"><button type="button" class="acc-h">Segment economics (FY2025) <span class="acc-x">+</span></button><div class="acc-b" hidden>'+s.econ.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join('')+'</div></div>';
+    return '<div class="acc"><button type="button" class="acc-h">What is “'+esc(s.seg)+'”?<span class="acc-x">+</span></button><div class="acc-b" hidden><div class="famd">'+s.desc+'</div>'+econ+'</div></div>';
+  }).join('')+'</div>';
+  h+='<div class="ov-diagram-cap" style="margin-top:10px">FY2025 by segment. Mobility is ~57% of <b>revenue</b> but ~50% of <b>gross bookings</b> — because Uber keeps a higher take rate on rides than on delivery. <span class="ave-subh-note">Σ revenue $52.0B · Σ bookings $193.5B (both reconcile). No geography view — FY2025 regional split not verified. Source: Uber FY2025 results; Summit model corroborates.</span></div>';
+  return h;
+}
+// Block 5 — Products (TWO TIERS): Tier-1 family cards → pop-up → Tier-2 the specific products.
+// No photos on file → emoji stands in (icon fallback). Grouped by segment.
+var UB_PROD_GROUPS=[
+  { seg:'Mobility', families:[
+    { ic:'🚗', fam:'Everyday rides', d:'The mass-market core.', items:[
+      ['UberX','Standard, affordable rides in everyday cars — the volume core of Mobility.'],
+      ['UberX Share','A shared ride with someone heading the same way, at a lower price.'],
+      ['Comfort','Newer, roomier cars with top-rated drivers, for a small premium.'],
+    ]},
+    { ic:'🏙️', fam:'Premium', d:'Higher-end & scheduled rides.', items:[
+      ['Uber Black','Professional, licensed black-car service in premium vehicles.'],
+      ['Uber Reserve','Book a ride in advance for a set pickup time.'],
+    ]},
+    { ic:'🛺', fam:'Two/three-wheelers & taxi', d:'Low-cost, local formats (international).', items:[
+      ['Moto / Auto','Motorbike and auto-rickshaw rides — big in India and other emerging markets.'],
+      ['Taxi','Hail a licensed local taxi through the Uber app.'],
+    ]},
+    { ic:'💼', fam:'Business & Health', d:'Rides for organizations.', items:[
+      ['Uber for Business','Managed ride and meal programs with expensing for companies.'],
+      ['Uber Health','HIPAA-compliant non-emergency medical rides booked by healthcare providers.'],
+    ]},
+  ]},
+  { seg:'Delivery', families:[
+    { ic:'🍔', fam:'Uber Eats', d:'Prepared-food delivery — the Delivery core.', items:[
+      ['Restaurant delivery & pickup','On-demand meals from local restaurants — the original Eats business.'],
+    ]},
+    { ic:'🛒', fam:'Grocery & retail', d:'Everyday essentials beyond food.', items:[
+      ['Grocery & convenience','Same-day grocery and convenience-store delivery.'],
+      ['Retail','Delivery from pharmacies, electronics and other retailers.'],
+    ]},
+    { ic:'📦', fam:'Uber Direct', d:'Delivery-as-a-service.', items:[
+      ['White-label last-mile','Uber’s courier network powering merchants’ own sites and apps — not the Uber app.'],
+    ]},
+    { ic:'📣', fam:'Advertising', d:'High-margin ads on the platform.', items:[
+      ['Sponsored listings & in-app ads','Merchants pay to promote inside Eats and Mobility — a fast-growing, ~100%-incremental-margin business (>$2B run-rate).'],
+    ]},
+  ]},
+  { seg:'Freight & platform', families:[
+    { ic:'🚚', fam:'Uber Freight', d:'Logistics marketplace.', items:[
+      ['Freight brokerage','Matches shippers with truck carriers on demand.'],
+      ['Managed transportation','Logistics-management services (from the Transplace acquisition).'],
+    ]},
+    { ic:'⭐', fam:'Uber One', d:'The membership tying it together.', items:[
+      ['Uber One','~$9.99/mo membership: fee waivers and discounts across rides and eats. Members spend materially more and drive over half of combined bookings.'],
+    ]},
+    { ic:'🤖', fam:'Autonomous (partnerships)', d:'Asset-light AV strategy.', items:[
+      ['AV partnerships','Uber lists partner robotaxis (Waymo and others) in its marketplace rather than building its own; it sold its ATG self-driving unit to Aurora in 2020.'],
+    ]},
+  ]},
+];
+function stdProducts(){
+  return UB_PROD_GROUPS.map(function(g,gi){
+    return '<div class="stdp-group"><div class="stdp-seg">'+esc(g.seg)+'</div><div class="stdp">'+
+      g.families.map(function(f,fi){
+        return '<div class="stdp-card ov-clickable" data-detail="fam:'+gi+'-'+fi+'"><div class="stdp-ic">'+f.ic+'</div>'+
+          '<div class="stdp-n">'+esc(f.fam)+'</div><div class="stdp-d">'+esc(f.d)+'</div><div class="stdp-more">See products ›</div></div>';
+      }).join('')+'</div></div>';
+  }).join('');
+}
+// Block 6 — Competitors scatter (DYNAMIC). X = valuation multiple, Y = revenue growth, bubble =
+// LIVE market cap in USD (api.liveQuote per ticker). Multiple toggle: EV/EBITDA ⇄ P/E (never P/S).
+// Basis: Trailing ⇄ Forward (default Forward). Peers add/removable by ticker; a peer with no
+// meaningful multiple (unprofitable → n/m P/E; or no data) drops out of that view.
+// ⚠ Multiples & growth are web-sourced APPROXIMATIONS pending the Fiscal.ai feed (flagged in audit).
+var UB_PEERS=[
+  { tk:'UBER', n:'Uber',      evT:28, evF:22, peT:35,   peF:28,   gt:14, gf:16, mc:150,  hl:true, why:'The scaled, global, multi-product leader. Profitable and cash-generative — a premium to pure ride-hailing but a discount to the faster growers.' },
+  { tk:'DASH', n:'DoorDash',  evT:40, evF:30, peT:70,   peF:52,   gt:22, gf:18, mc:90,   why:'US delivery leader (~60% food share), growing faster than Uber and richly valued on it. No mobility; smaller internationally.' },
+  { tk:'GRAB', n:'Grab',      evT:45, evF:28, peT:null, peF:null, gt:24, gf:20, mc:18,   why:'SE-Asia super-app (rides + food + GrabPay). Fastest growth of the group; only recently profitable, so P/E is not yet meaningful.' },
+  { tk:'CART', n:'Instacart', evT:18, evF:14, peT:28,   peF:22,   gt:14, gf:13, mc:13,   why:'US grocery-delivery specialist (Maplebear). Mid-teens growth, profitable and ad-driven — the value name of the group.' },
+  { tk:'LYFT', n:'Lyft',      evT:14, evF:10, peT:30,   peF:18,   gt:13, gf:11, mc:5.4,  why:'US/Canada #2 ride-hailing. Growing again but the cheapest of the group — the market prices its lack of scale & diversification.' },
+];
+// Live, mutable working set (cloned at init; .on toggles inclusion, .mc updated live).
+var UB_SC={ type:'ev', basis:'f', peers:null };
+function ubScReset(){ UB_SC.peers=UB_PEERS.map(function(p){ var o={}; for(var k in p) o[k]=p[k]; o.on=true; return o; }); }
+function ubScMult(p){ if(UB_SC.type==='ev') return UB_SC.basis==='f'?p.evF:p.evT; return UB_SC.basis==='f'?p.peF:p.peT; }
+function stdPeerScatter(){
+  var h='<style>.mg-tog-row{display:flex;flex-wrap:wrap;gap:14px;margin:2px 0 8px}'+
+    '.mg-tog{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--mu)}'+
+    '.mg-seg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+
+    '.mg-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
+    '.mg-pill.active{background:var(--navy);color:#fff}'+
+    '.mg-dot{transition:.15s}.mg-node text{pointer-events:none}'+
+    '.ubsc-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 2px}'+
+    '.ubsc-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;border:1px solid var(--bdr);border-radius:999px;padding:3px 9px;background:var(--w);cursor:pointer;color:var(--navy)}'+
+    '.ubsc-chip.off{opacity:.4;text-decoration:line-through}.ubsc-chip .x{color:var(--mu);font-weight:800}'+
+    '.ubsc-add{display:inline-flex;gap:5px;align-items:center}'+
+    '.ubsc-add input{width:74px;font:inherit;font-size:11px;border:1px solid var(--bdr);border-radius:7px;padding:3px 7px;text-transform:uppercase}'+
+    '.ubsc-add button{font:inherit;font-size:11px;font-weight:700;border:1px solid var(--bdr);border-radius:7px;padding:3px 9px;background:#F2F5F8;cursor:pointer}'+
+    '.mg-tip{position:fixed;z-index:60;max-width:250px;background:#10141A;color:#fff;border-radius:9px;padding:9px 12px;font-size:11.5px;line-height:1.5;box-shadow:0 8px 22px rgba(16,20,26,.28);pointer-events:none;border-top:3px solid #06C167}'+
+    '.mg-tip .mgt-n{display:block;font-weight:800;font-size:12.5px;color:#06C167;margin-bottom:3px}</style>';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 6px">Listed peers mapped by <b>valuation multiple</b> (x) and <b>revenue growth</b> (y). <b>Bubble size = live market cap in USD</b> (so a ~$150B Uber dwarfs a ~$5B Lyft, and currencies never distort the comparison). <span style="opacity:.75">Hover or tap a bubble for the read.</span></div>';
+  h+='<div class="mg-tog-row"><span class="mg-tog">Multiple: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgtype="ev">EV/EBITDA</button><button type="button" class="mg-pill" data-mgtype="pe">P/E</button></span></span>'+
+     '<span class="mg-tog">Basis: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgbasis="f">Forward</button><button type="button" class="mg-pill" data-mgbasis="t">Trailing</button></span></span></div>';
+  h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" id="ubScSvg" role="img" aria-label="Peer valuation vs growth map">'+
+    '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<line x1="80" y1="252" x2="80" y2="44" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<text x="88" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0">← cheaper</text>'+
+    '<text x="610" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">more expensive →</text>'+
+    '<text x="346" y="288" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#6b7684" text-anchor="middle" id="ubScXlab">EV/EBITDA · forward</text>'+
+    '<text x="74" y="250" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">slow</text>'+
+    '<text x="74" y="52" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">fast growth</text>'+
+    '<g id="ubScNodes"></g>'+
+  '</svg></div>';
+  h+='<div class="ubsc-chips" id="ubScChips"></div>';
+  h+='<div class="ov-diagram-cap" style="margin-top:4px">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only <b>listed</b> peers with a public multiple plot here; a name drops out of the P/E view when it has no meaningful P/E, and an added ticker with no multiple on file shows its live bubble only once it has one. Unlisted rivals (Waymo, Bolt, DiDi) have no market multiple — they sit on the competitive map in <b>Deep Dive ▸ Deep Overview</b>. <span class="ave-subh-note">Multiples & growth are approximate, web-sourced (mid-2026), pending the Fiscal.ai feed; market caps are live. Directional, not exact.</span></div>';
+  h+='<div id="ubScTip" class="mg-tip" hidden></div>';
+  return h;
+}
+// Draw the current working set into #ubScNodes given the active type/basis.
+function ubScRender(root){
+  var g=root.querySelector('#ubScNodes'); if(!g||!UB_SC.peers) return;
+  var maxMult=UB_SC.type==='ev'?52:80, X0=80, X1=612, Y0=252, Y1=44;
+  var lab=root.querySelector('#ubScXlab'); if(lab) lab.textContent=(UB_SC.type==='ev'?'EV/EBITDA':'P/E')+' · '+(UB_SC.basis==='f'?'forward':'trailing');
+  var svgns='http://www.w3.org/2000/svg', frag='';
+  UB_SC.peers.forEach(function(p){
+    if(!p.on) return; var m=ubScMult(p); if(m==null||isNaN(m)) return; // drops out of this view
+    var growth=UB_SC.basis==='f'?p.gf:p.gt; if(growth==null) growth=p.gf!=null?p.gf:p.gt;
+    var x=X0+Math.max(0,Math.min(1,m/maxMult))*(X1-X0);
+    var y=Y0-Math.max(0,Math.min(1,(growth||0)/30))*(Y0-Y1);
+    var r=Math.max(6,Math.min(22,5+Math.sqrt(Math.max(1,p.mc))*0.9));
+    frag+='<g class="mg-node" data-name="'+esc(p.n)+'" data-why="'+esc(p.why||'')+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
+      '<circle class="mg-dot" r="'+r.toFixed(1)+'" fill="'+(p.hl?'#10141A':'#3A7BD5')+'"'+(p.hl?' stroke="#fff" stroke-width="2"':' opacity="0.82"')+' style="cursor:pointer"></circle>'+
+      '<text y="'+(r+11).toFixed(1)+'" font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?'#10141A':'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>';
+  });
+  g.innerHTML=frag;
+}
+function ubScChips(root){
+  var box=root.querySelector('#ubScChips'); if(!box||!UB_SC.peers) return;
+  var h=UB_SC.peers.map(function(p,i){ return '<span class="ubsc-chip" data-sci="'+i+'" title="Remove '+esc(p.n)+'">'+esc(p.n)+' <span class="x">×</span></span>'; }).join('');
+  h+='<span class="ubsc-add"><input id="ubScAddTk" placeholder="+ TICKER" maxlength="6"><button type="button" id="ubScAddBtn">Add</button></span>';
+  box.innerHTML=h;
+}
+// Block 7 — Timeline (compact; full history + M&A live in Deep Dive ▸ History).
+function stdTimeline(){
+  return '<div class="ov-timeline">'+TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>';
+}
+// Overview description — high-level "what it is" only; NON-redundant with the quadrant/segments below.
+var UB_LEDE='Uber runs the world’s largest mobility and delivery marketplace, connecting consumers with drivers, couriers and merchants across ~70 countries through a single app. It owns almost none of the cars, kitchens or trucks — it matches supply with demand and takes a cut. After years of losses it is now GAAP-profitable and strongly cash-generative.';
+var UB_OV_SOURCES='Sources — Uber FY2025 Form 10-K and Q4 2025 results (segment revenue, gross bookings, Adjusted EBITDA); Summit DCF model (snapshot 2026-05-07) corroborating the segment series; company IR for product taxonomy and the Feb 2024 Investor Day. Market cap and peer bubbles are live via Massive; peer multiples & growth are web-sourced approximations (mid-2026) pending the Fiscal.ai feed. FY2025 geography split not shown (could not be verified). Forward figures are estimates, not company guidance.';
+// The standardized Overview body — the 7 blocks in fixed order. Hook (Key Facts + Description +
+// 2×2 quadrant table) stays visible; every section below defaults collapsed (progressive disclosure).
+function stdOverviewBody(c){
+  var h='<style>.stdkf{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--bdr);border-top:3px solid var(--brand-2, var(--brand));border-radius:12px;overflow:hidden;background:var(--w);margin:2px 0}'+
+    '.stdkf-cell{padding:11px 13px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
+    '.stdkf-cell:nth-child(5n){border-right:none}.stdkf-cell:nth-child(n+6){border-bottom:none}'+
+    '.stdkf-k{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:3px}'+
+    '.stdkf-v{font-size:12px;font-weight:700;color:var(--navy);line-height:1.3}'+
+    '@media(max-width:720px){.stdkf{grid-template-columns:repeat(2,1fr)}.stdkf-cell{border-right:none}}'+
+    '.ov-lede{margin:16px 0 6px;font-size:13px;line-height:1.6;color:var(--navy)}'+
+    /* 4-quadrant as a shared-border 2×2 TABLE */
+    '.q2{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--bdr);border-radius:12px;overflow:hidden;background:var(--w);margin:4px 0}'+
+    '.q2-cell{padding:13px 15px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
+    '.q2-cell:nth-child(2n){border-right:none}.q2-cell:nth-child(n+3){border-bottom:none}'+
+    '.q2-k{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#06965A;margin-bottom:5px}'+
+    '.q2-v{font-size:12px;color:var(--navy);line-height:1.5}.q2-v b{font-weight:800}'+
+    '@media(max-width:600px){.q2{grid-template-columns:1fr}.q2-cell{border-right:none}.q2-cell:nth-child(n+2){border-bottom:1px solid var(--bdr)}.q2-cell:last-child{border-bottom:none}}'+
+    '.mm-tog{display:inline-flex;gap:4px;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:3px;margin-bottom:10px}'+
+    '.mm-pill{border:none;background:transparent;font:inherit;font-size:11.5px;font-weight:700;color:var(--mu);padding:5px 14px;border-radius:999px;cursor:pointer}.mm-pill.active{background:var(--navy);color:#fff}'+
+    /* segment "What is X?" accordions */
+    '.acc-list .acc{border:1px solid var(--bdr);border-radius:9px;margin-top:6px;overflow:hidden;background:var(--w)}'+
+    '.acc-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12px;font-weight:700;color:var(--navy);padding:9px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}'+
+    '.acc-h:hover{background:#EEF2F6}.acc-x{color:var(--mu);font-weight:800}.acc-b{padding:10px 12px}'+
+    '.famd{font-size:12px;color:var(--navy);line-height:1.55}.famd b{font-weight:800}'+
+    '.ov-row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:11.5px}.ov-row:last-child{border-bottom:none}.ov-row-k{color:var(--mu);font-weight:600}.ov-row-v{color:var(--navy);font-weight:800}'+
+    /* products (two-tier) */
+    '.stdp-seg{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:12px 0 7px}.stdp-group:first-child .stdp-seg{margin-top:2px}'+
+    '.stdp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}'+
+    '.stdp-card{border:1px solid var(--bdr);border-radius:11px;padding:13px 14px;background:var(--w);cursor:pointer;transition:.14s}'+
+    '.stdp-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-2px);border-color:#06965A}'+
+    '.stdp-ic{font-size:26px;line-height:1}.stdp-n{font-size:13px;font-weight:800;color:var(--navy);margin:7px 0 3px}'+
+    '.stdp-d{font-size:11px;color:var(--mu);line-height:1.45}.stdp-more{font-size:10px;font-weight:700;color:#06965A;margin-top:6px}'+
+    /* collapsible sections (shared with Deep Dive; duplicated so the Overview is self-contained) */
+    '.ov-collap{border:1px solid var(--bdr);border-radius:10px;margin:12px 0 0;overflow:hidden}'+
+    '.ov-collap-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12.5px;font-weight:800;color:var(--navy);padding:11px 14px;cursor:pointer;display:flex;align-items:center;gap:8px}'+
+    '.ov-collap-h:hover{background:#EEF2F6}.ov-collap-ic{font-size:10px;color:var(--mu)}.ov-collap-b{padding:12px 14px 6px}'+
+    '.dd-tabs{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 14px;border-bottom:1px solid var(--bdr)}'+
+    '.dd-tab{border:none;background:transparent;font:inherit;font-size:12.5px;font-weight:700;color:var(--mu);padding:8px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}'+
+    '.dd-tab:hover{color:var(--navy)}.dd-tab.active{color:var(--navy);border-bottom-color:var(--navy)}'+
+    '.dd-pane[hidden]{display:none}</style>';
+  // ── Hook (always visible): Key Facts, Description, 2×2 quadrant table ──
+  h+=stdKeyFacts();
+  h+='<p class="ov-lede">'+esc(UB_LEDE)+'</p>';
+  h+=stdFourQuad();
+  // ── Progressive disclosure: everything below defaults collapsed ──
+  h+=collapsible('How it makes money', stdMoneyMap());
+  h+=collapsible('What it makes — the products', stdProducts());
+  h+=collapsible('Competitors — valuation vs growth', stdPeerScatter());
+  h+=collapsible('Timeline', stdTimeline());
+  h+='<div class="ov-foot">'+esc(UB_OV_SOURCES)+'</div>';
+  return h;
+}
 function html(c){
   var h='<div class="ov ov-uber" data-brand="UBER">';
-  h+='<div class="ovt-tabs">'+
-    '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="mobility">Mobility</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="delivery">Delivery</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="uberone">Uber One</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="insurance">Insurance &amp; FCF</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="model">Model vs. Reality</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="valuation">Valuation</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="mgmt">Management</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="calls">Earnings Narrative</button>'+
-  '</div>';
-  h+='<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
-  h+='<div class="ovt-pane" data-ovt="mobility" hidden>'+mobilityBody(c)+'</div>';
-  h+='<div class="ovt-pane" data-ovt="delivery" hidden>'+deliveryBody(c)+'</div>';
-  h+='<div class="ovt-pane" data-ovt="uberone" hidden>'+uberOneBody(c)+'</div>';
-  h+='<div class="ovt-pane" data-ovt="insurance" hidden>'+insuranceBody()+'</div>';
-  h+='<div class="ovt-pane" data-ovt="model" hidden>'+modelBody(c)+'</div>';
-  h+='<div class="ovt-pane" data-ovt="valuation" hidden>'+UBER_VAL.body()+'</div>';
-  h+='<div class="ovt-pane" data-ovt="mgmt" hidden>'+UBER_MGMT.body()+'</div>';
-  h+='<div class="ovt-pane" data-ovt="calls" hidden>'+callsBody()+'</div>';
+  h+=stdOverviewBody(c);
+  // Shared modal (used by Overview data-detail triggers AND, once hoisted to
+  // #co-detailview in init, by the Deep Dive triggers too). Kept in the Overview
+  // pane's markup; init() moves it up so it stays visible on either profile tab.
   h+='<div class="ov-modal-back" id="ubModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
     '<button class="ov-modal-x" id="ubModalX" aria-label="Close">×</button>'+
     '<div class="ov-modal-t" id="ubModalT"></div><div class="ov-modal-b" id="ubModalB"></div></div></div>';
+  h+='</div>';
+  return h;
+}
+// ── Deep Dive: everything deeper. Now a SIBLING profile tab (rendered into the
+// Deep Dive copane by companies.js), no longer nested inside the Overview. Holds
+// the prior tabs + Deep Overview (the old bespoke Overview) — nothing deleted
+// (Golden Rule #1). Its own root class (.ov-uber-dd) scopes it. ──
+// ── Deep Dive reorganized into the proposed 5-tab spine: Top Line · Bottom Line ·
+// Evolution · Valuation · Management. NOTHING deleted (Golden Rule #1) — every prior
+// body is re-slotted into the most relevant tab, and the two live panels from the old
+// Pillars tab are absorbed here (Valuation ▸ Analyst Ratings, Management ▸ Ownership &
+// Insiders) via #dd-val-slot / #dd-mgmt-slot filled by companies.js. ──
+function deepDiveHtml(c){
+  var h='<div class="ov ov-uber ov-uber-dd" data-brand="UBER">';
+  h+='<div class="dd-tabs">'+
+      '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
+      '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
+      '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
+      '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
+      '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
+    '</div>';
+  // ── TOP LINE — Segments (with an inner Mobility/Delivery/Freight toggle) · Customers · TAM ·
+  // Industry Analysis. The old "Deep Overview" is dismantled into these (Golden Rule #1). ──
+  h+='<div class="dd-pane" data-dd="topline">'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="segments">Segments</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="customers">Customers</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="tam">TAM</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="industry">Industry Analysis</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="segments">'+ubSegmentsBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="customers" hidden>'+ubCustomersBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="tam" hidden>'+ubTamBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="industry" hidden>'+ubIndustryBody(c)+'</div>'+
+    '</div>';
+  // ── BOTTOM LINE — Unit Economics · Suppliers · Insurance & FCF · Margins (live via Massive). ──
+  h+='<div class="dd-pane" data-dd="bottomline" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="unit">Unit Economics</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="suppliers">Suppliers</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="insurance">Insurance & FCF</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="margins">Margins</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="unit">'+unitEconBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="suppliers" hidden>'+suppliersBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="insurance" hidden>'+insuranceBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="margins" hidden>'+ubMarginsBody(c)+'</div>'+
+    '</div>';
+  // ── EVOLUTION — Earnings History (narrative) · Guidance (Model vs. Reality + 3-yr targets) ·
+  // Strategy (turnaround + drivers) · Timeline (company history & M&A). ──
+  h+='<div class="dd-pane" data-dd="evolution" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings History</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="earnings">'+callsBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="guidance" hidden>'+modelBody(c)+ub3yrTargets()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="strategy" hidden>'+ubStrategyBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="timeline" hidden>'+historyStoryBody()+'</div>'+
+    '</div>';
+  // ── VALUATION — Multiples · Peers (listed-peer multiples) · Analyst Ratings (Massive, absorbed) ·
+  // Capital Allocation · Balance Sheet. (Sensitivity grid removed; competitive map moved to Industry.) ──
+  h+='<div class="dd-pane" data-dd="valuation" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="multiples">Multiples</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="peers">Peers</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="ratings">Analyst Ratings</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="capital">Capital Allocation</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="balance">Balance Sheet</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="multiples">'+UBER_VAL.body()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="peers" hidden>'+ubPeerMultBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="ratings" hidden><div id="dd-val-slot"></div></div>'+
+      '<div class="ovt-subpane" data-ovst="capital" hidden>'+ubCapAllocBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="balance" hidden>'+ubBalanceBody(c)+'</div>'+
+    '</div>';
+  // ── MANAGEMENT — Executives & Board · Ownership (Fiscal.ai, absorbed) · Governance & SBC ·
+  // Track Record. ──
+  h+='<div class="dd-pane" data-dd="mgmt" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="team">Executives & Board</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="ownership">Ownership</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="governance">Governance & SBC</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="track">Track Record</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="team">'+UBER_MGMT.body()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="ownership" hidden><div id="dd-mgmt-slot"></div></div>'+
+      '<div class="ovt-subpane" data-ovst="governance" hidden>'+ubGovBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="track" hidden>'+ubTrackBody(c)+'</div>'+
+    '</div>';
   h+='</div>';
   return h;
 }
@@ -1147,8 +2000,8 @@ var _charts={};
 function destroy(id){ if(_charts[id]){ _charts[id].destroy(); _charts[id]=null; } }
 
 // Stacked segment GB (Overview + Segments). estIdx → lighter fills.
-function stackLabels(){ return { id:'sl', afterDatasetsDraw:function(chart){
-  var top=chart.getDatasetMeta(2).data, ctx=chart.ctx, tot=chart.$tot||[];
+function stackLabels(totals){ return { id:'sl', afterDatasetsDraw:function(chart){
+  var top=chart.getDatasetMeta(2).data, ctx=chart.ctx, tot=totals||chart.$tot||[];
   top.forEach(function(bar,i){ ctx.save(); ctx.textAlign='center'; ctx.font='700 10.5px Inter, sans-serif'; ctx.fillStyle='#1E2733';
     ctx.fillText(moneyB(tot[i]), bar.x, bar.y-6); ctx.restore(); });
 } }; }
@@ -1167,7 +2020,7 @@ function buildSegStack(id, a, b){
     options:{ responsive:true, maintainAspectRatio:false, animation:false, layout:{ padding:{ top:22, bottom:2 } },
       plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label+': '+moneyB(ctx.parsed.y); } } } },
       scales:{ x:{ stacked:true, grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:11 } } }, y:{ stacked:true, display:false, grace:'12%' } } },
-    plugins:[ stackLabels() ] });
+    plugins:[ stackLabels(tot) ] });
   _charts[id].$tot=tot;
 }
 
@@ -1383,16 +2236,78 @@ function buildOverviewCharts(){
 function buildMobilityCharts(){ buildLines('ubChartTake', Q13, { label:'Mobility', data:MOB_TAKE, color:MOB }, { label:'Delivery', data:DEL_TAKE, color:DEL }, pf); }
 function buildDeliveryCharts(){ buildLines('ubChartMargin', Q13.slice(0,12), { label:'Mobility', data:MOB_MARGIN, color:MOB }, { label:'Delivery', data:DEL_MARGIN, color:DEL }, pf); }
 function buildUberOneCharts(){ buildLines('ubChartMembers', UBERONE_GROWTH.labels, { label:'Members', data:UBERONE_GROWTH.data, color:BRAND2 }, null, function(v){ return v+'M'; }); }
-function showOvt(root,key){
-  root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt')===key); });
-  root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovt')!==key); });
-  if(key==='overview') requestAnimationFrame(buildOverviewCharts);
-  if(key==='mobility') requestAnimationFrame(buildMobilityCharts);
-  if(key==='delivery') requestAnimationFrame(buildDeliveryCharts);
-  if(key==='uberone') requestAnimationFrame(buildUberOneCharts);
-  if(key==='model')    requestAnimationFrame(buildModelTab);
-  if(key==='valuation') requestAnimationFrame(function(){ UBER_VAL.init(root); });
-  if(key==='mgmt') requestAnimationFrame(function(){ UBER_MGMT.init(root); });
+// Build the lazy charts that live inside a sub-pane, by (group, sub-key).
+function buildSub(root, group, key){
+  if(group==='topline'){
+    if(key==='segments'){ buildOverviewCharts(); buildActiveSeg(root); }  // GB + EBITDA + active segment
+    else if(key==='customers') buildUberOneCharts();
+    // tam, industry: no charts
+  } else if(group==='bottomline'){
+    if(key==='unit')          buildMobilityCharts();  // ubChartTake (take rate) — moved here
+    else if(key==='margins')  buildUbMargins();        // live Massive margins
+    // suppliers, insurance: no charts
+  } else if(group==='evolution'){
+    if(key==='guidance')      buildModelTab();          // Model vs. Reality lives under Guidance
+    // earnings (calls), strategy, timeline: no charts
+  } else if(group==='valuation'){
+    if(key==='multiples')     UBER_VAL.init(root);
+    else if(key==='balance')  buildUbBal();     // equity-stake portfolio bar
+    // peers (static table), ratings, capital: no charts
+  } else if(group==='mgmt'){
+    if(key==='team')          UBER_MGMT.init(root);
+    else if(key==='governance') buildUbSbc();   // SBC % vs share-count history
+    // ownership, track: no charts
+  }
+}
+// Segments ▸ inner Mobility/Delivery/Freight toggle → build the active segment's chart.
+function buildActiveSeg(root){
+  var pane=root.querySelector('.dd-pane[data-dd="topline"]'); if(!pane) return;
+  var b=pane.querySelector('.seg-pill.active'); var seg=b?b.getAttribute('data-seg'):'mobility';
+  if(seg==='delivery') buildDeliveryCharts();  // mobility & freight have no lazy chart now
+}
+function activeSubKey(root, group){
+  var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return null;
+  var b=pane.querySelector('.ovt-subtab.active'); return b?b.getAttribute('data-ovst'):null;
+}
+function showSub(root, pane, group, key){
+  pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovst')===key); });
+  pane.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovst')!==key); });
+  requestAnimationFrame(function(){ buildSub(root, group, key); });
+}
+function wireSubtabs(root, group){
+  var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return;
+  pane.querySelectorAll('.ovt-subtab').forEach(function(btn){ btn.onclick=function(){ showSub(root, pane, group, btn.getAttribute('data-ovst')); }; });
+}
+// ── Deep Dive layer (dd-tabs inside the Deep Dive pane) ──
+function buildDD(root, key){
+  // All top-level tabs now hold sub-panes (except Bottom Line's single static pane);
+  // paint the active sub-pane's charts. activeSubKey→null for Bottom Line → no-op.
+  var s=activeSubKey(root,key); if(s) buildSub(root,key,s);
+}
+function activeDD(root){ var b=root.querySelector('.dd-tab.active'); return b?b.getAttribute('data-dd'):'topline'; }
+function showDD(root, key){
+  root.querySelectorAll('.dd-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-dd')===key); });
+  root.querySelectorAll('.dd-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-dd')!==key); });
+  requestAnimationFrame(function(){ buildDD(root, key); });
+}
+function wireDD(root){ root.querySelectorAll('.dd-tab').forEach(function(btn){ btn.onclick=function(){ showDD(root, btn.getAttribute('data-dd')); }; }); }
+// ── Standardized peer scatter: place bubbles from the active trailing/forward toggles ──
+function positionMG(root){
+  var svg=root.querySelector('#ubMgSvg'); if(!svg) return;
+  var tp=root.querySelector('.mg-pill[data-mgtype].active'), bp=root.querySelector('.mg-pill[data-mgbasis].active');
+  var type=(tp?tp.getAttribute('data-mgtype'):'ev'), basis=(bp?bp.getAttribute('data-mgbasis'):'f');
+  var XMAX=(type==='ev'?45:70);
+  svg.querySelectorAll('.mg-node').forEach(function(g){
+    var multAttr = type==='ev' ? (basis==='f'?'data-evf':'data-evt') : (basis==='f'?'data-pef':'data-pet');
+    var raw=g.getAttribute(multAttr), c=g.querySelector('circle'), t=g.querySelector('text');
+    if(raw===''||raw==null||isNaN(parseFloat(raw))){ if(c) c.style.display='none'; if(t) t.style.display='none'; return; }
+    if(c) c.style.display=''; if(t) t.style.display='';
+    var mult=parseFloat(raw), grow=parseFloat(g.getAttribute(basis==='f'?'data-gf':'data-gt')), r=parseFloat(g.getAttribute('data-r'));
+    var x=80+Math.min(1,mult/XMAX)*(612-80), y=252-Math.min(1,grow/30)*(252-44);
+    if(c){ c.setAttribute('cx',x.toFixed(1)); c.setAttribute('cy',y.toFixed(1)); }
+    if(t){ t.setAttribute('x',x.toFixed(1)); t.setAttribute('y',(y-r-5).toFixed(1)); }
+  });
+  var xl=root.querySelector('#ubMgXlab'); if(xl) xl.textContent=(type==='ev'?'EV/EBITDA':'P/E')+' · '+(basis==='f'?'forward':'trailing');
 }
 function wireModal(root){
   var back=root.querySelector('#ubModalBack'), mT=root.querySelector('#ubModalT'), mB=root.querySelector('#ubModalB'); if(!back) return;
@@ -1420,6 +2335,11 @@ function wireModal(root){
     if(kind==='reg'){ var rg=REGV[+id]; return rg?{t:rg.h,h:rg.d}:null; }
     if(kind==='mna'){ var m=MNA.filter(function(x){return x.n===id;})[0]; return m?{t:m.n+' <span class="ov-modal-sub">'+esc(m.y)+' · '+esc(m.deal)+'</span>',h:m.detail}:null; }
     if(kind==='arena'){ var ar=AR_DETAIL[id]; return ar?{t:ar.t,h:ar.h}:null; }
+    if(kind==='ins'){ var ip=INS_POP[id]; return ip?{t:ip.t,h:ip.h}:null; }
+    if(kind==='exec'){ var ex=TRACK_MGMT.filter(function(x){return x.id===id;})[0]; return ex?{t:ex.n+' <span class="ov-modal-sub">'+ex.role+' · at Uber since '+esc(ex.since)+'</span>',h:ex.detail}:null; }
+    if(kind==='fam'){ var gp=id.split('-'), gg=UB_PROD_GROUPS[+gp[0]]; var f=gg&&gg.families[+gp[1]]; if(!f) return null;
+      var body=f.items.map(function(it){ return '<div style="margin:0 0 10px"><div style="font-size:12.5px;font-weight:800;color:var(--navy)">'+esc(it[0])+'</div><div class="famd">'+esc(it[1])+'</div></div>'; }).join('');
+      return {t:f.ic+' '+esc(f.fam),h:'<div class="famd" style="margin-bottom:10px;color:var(--mu)">'+esc(f.d)+'</div>'+body}; }
     return null;
   }
   root.querySelectorAll('[data-detail]').forEach(function(el){ el.style.cursor='pointer';
@@ -1447,14 +2367,104 @@ function renderLive(root){
   }).catch(function(){ el.hidden=true; el.innerHTML=''; }); // hide cleanly until the get-quote edge fn is deployed
 }
 function init(c){
-  var root=document.querySelector('.ov-uber'); if(!root) return;
-  renderLive(root);
-  root.querySelectorAll('.ovt-tab').forEach(function(btn){ btn.onclick=function(){ showOvt(root, btn.getAttribute('data-ovt')); }; });
+  // Root spans BOTH profile panes (Overview + Deep Dive copanes live under
+  // #co-detailview), so this single pass wires the Overview scatter, the Deep
+  // Dive tabs/subtabs, and the shared modal exactly as before the split — the
+  // element set is identical to the old single .ov-uber root.
+  var root=document.getElementById('co-detailview'); if(!root) return;
+  renderLive(root); // Deep Dive ▸ Deep Overview keeps its live-price banner (#ubLive lives only there now); the standardized Overview has no price strip.
+  wireDD(root);
+  wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt');
+  // Segments ▸ inner Mobility/Delivery/Freight toggle (the "sub-tabs de los segmentos").
+  root.querySelectorAll('.seg-pill').forEach(function(btn){ btn.onclick=function(){
+    var seg=btn.getAttribute('data-seg');
+    root.querySelectorAll('.seg-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    root.querySelectorAll('.seg-body').forEach(function(p){ p.hidden=(p.getAttribute('data-seg')!==seg); });
+    requestAnimationFrame(function(){ buildActiveSeg(root); });
+  }; });
   root.querySelectorAll('.ave-pill').forEach(function(btn){ btn.onclick=function(){ switchAveMetric(root, btn.getAttribute('data-ave')); }; });
   root.querySelectorAll('.guid-pill').forEach(function(btn){ btn.onclick=function(){ switchGuideMetric(root, btn.getAttribute('data-guidm')); }; });
   wireModal(root);
-  // Earnings calls accordion
-  root.querySelectorAll('#ubCallsAcc .lpb-acc-h').forEach(function(btn){ btn.onclick=function(){ var item=btn.parentElement; var open=item.classList.toggle('open'); var ic=btn.querySelector('.lpb-acc-ic'); if(ic) ic.textContent=open?'\u2013':'+'; }; });
-  var active=root.querySelector('.ovt-tab.active'); showOvt(root, active?active.getAttribute('data-ovt'):'overview');
+  // Collapsible sections (reader chooses what to expand)
+  root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var c=btn.parentElement; var open=c.classList.toggle('open'); var b=c.querySelector('.ov-collap-b'); if(b) b.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.textContent=open?'▾':'▸'; }; });
+  // Competitive-map scatter: hover/tap a dot → floating detail tip
+  var ptip=root.querySelector('#ubPeerTip');
+  if(ptip){ root.querySelectorAll('.peer-dot').forEach(function(d){
+    function show(){ ptip.innerHTML='<span class="pt-n">'+d.getAttribute('data-name')+'</span>'+d.getAttribute('data-why'); ptip.hidden=false; }
+    function move(e){ ptip.style.left=Math.min(e.clientX+16, window.innerWidth-270)+'px'; ptip.style.top=(e.clientY+16)+'px'; }
+    d.addEventListener('mouseenter', show);
+    d.addEventListener('mousemove', move);
+    d.addEventListener('mouseleave', function(){ ptip.hidden=true; });
+    d.addEventListener('click', function(e){ show(); move(e); });
+  }); }
+  // Earnings calls accordion (covers both the theme and quarter lenses)
+  root.querySelectorAll('.lpb-acc-h').forEach(function(btn){ btn.onclick=function(){ var item=btn.parentElement; var open=item.classList.toggle('open'); var ic=btn.querySelector('.lpb-acc-ic'); if(ic) ic.textContent=open?'\u2013':'+'; }; });
+  // Earnings narrative lens toggle (theme \u2194 quarter)
+  root.querySelectorAll('.calls-pill').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-callsv');
+    root.querySelectorAll('.calls-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    var t=root.querySelector('#ubCallsTheme'), q=root.querySelector('#ubCallsQuarter');
+    if(t) t.style.display=(v==='theme')?'':'none';
+    if(q) q.style.display=(v==='quarter')?'':'none';
+  }; });
+  // ── Standardized Overview wiring: dynamic peer scatter, money toggle, segment accordions, live mcap ──
+  ubScReset(); ubScRender(root); ubScChips(root);
+  var sctip=root.querySelector('#ubScTip');
+  function wireScNodes(){ if(!sctip) return; root.querySelectorAll('#ubScNodes .mg-node').forEach(function(g){
+    function show(){ sctip.innerHTML='<span class="mgt-n">'+g.getAttribute('data-name')+'</span>'+g.getAttribute('data-why'); sctip.hidden=false; }
+    function move(e){ sctip.style.left=Math.min(e.clientX+16, window.innerWidth-270)+'px'; sctip.style.top=(e.clientY+16)+'px'; }
+    g.addEventListener('mouseenter', show); g.addEventListener('mousemove', move);
+    g.addEventListener('mouseleave', function(){ sctip.hidden=true; });
+    g.addEventListener('click', function(e){ show(); move(e); });
+  }); }
+  function scRefresh(){ ubScRender(root); wireScNodes(); }
+  wireScNodes();
+  root.querySelectorAll('.mg-pill').forEach(function(btn){ btn.onclick=function(){
+    if(btn.hasAttribute('data-mgtype')){ UB_SC.type=btn.getAttribute('data-mgtype'); root.querySelectorAll('.mg-pill[data-mgtype]').forEach(function(b){ b.classList.toggle('active', b===btn); }); }
+    else { UB_SC.basis=btn.getAttribute('data-mgbasis'); root.querySelectorAll('.mg-pill[data-mgbasis]').forEach(function(b){ b.classList.toggle('active', b===btn); }); }
+    scRefresh();
+  }; });
+  // peer chips: toggle inclusion / add a peer by ticker
+  function wireChips(){
+    // Clicking the × on a chip DELETES that peer immediately (no toggle/strikethrough).
+    root.querySelectorAll('#ubScChips .ubsc-chip[data-sci]').forEach(function(ch){ ch.onclick=function(){ var i=+ch.getAttribute('data-sci'); if(UB_SC.peers[i]){ UB_SC.peers.splice(i,1); ubScChips(root); wireChips(); scRefresh(); } }; });
+    var addBtn=root.querySelector('#ubScAddBtn'), addIn=root.querySelector('#ubScAddTk');
+    if(addBtn&&addIn){ addBtn.onclick=function(){ var tk=(addIn.value||'').trim().toUpperCase(); if(!tk) return;
+      if(!UB_SC.peers.some(function(p){ return p.tk===tk; })){
+        var seed=UB_PEERS.filter(function(p){ return p.tk===tk; })[0];
+        if(seed){ var o={}; for(var k in seed) o[k]=seed[k]; o.on=true; UB_SC.peers.push(o); } // restore a known peer's multiples
+        else UB_SC.peers.push({ tk:tk, n:tk, on:true, mc:10, evT:null,evF:null,peT:null,peF:null,gt:null,gf:null, why:'Added by ticker — live market cap only; no multiple on file, so it plots once one is available.' });
+      }
+      addIn.value=''; ubScChips(root); wireChips(); scRefresh(); ubLiveOne(tk); }; }
+  }
+  wireChips();
+  // How-it-makes-money toggle (revenue ⇄ gross bookings)
+  root.querySelectorAll('.mm-pill').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-mm');
+    root.querySelectorAll('.mm-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    var rv=root.querySelector('#ubMMrev'), gb=root.querySelector('#ubMMgb');
+    if(rv) rv.hidden=(v!=='rev'); if(gb) gb.hidden=(v!=='gb');
+  }; });
+  // Segment "What is X?" + economics accordions
+  root.querySelectorAll('.acc-h').forEach(function(btn){ btn.onclick=function(){ var b=btn.nextElementSibling; if(!b) return; var open=b.hidden; b.hidden=!open; var x=btn.querySelector('.acc-x'); if(x) x.textContent=open?'–':'+'; }; });
+  // Live market cap (Key Facts cell + peer bubbles) — Massive via api.liveQuote; degrades gracefully in preview
+  function ubLiveOne(tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(q){ if(!q||q.marketCap==null) return; var mcB=q.marketCap/1e9; UB_SC.peers.forEach(function(p){ if(p.tk===tk) p.mc=mcB; }); if(tk==='UBER'){ var el=root.querySelector('#ubMc'); if(el) el.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':Math.round(mcB)+'B')+' · live'; } scRefresh(); }).catch(function(){}); }
+  UB_SC.peers.forEach(function(p){ if(p.tk) ubLiveOne(p.tk); });
+  ubScRender(root); // first paint of the standardized Overview scatter (no ovt-tab gate anymore)
+  // Hoist the modal to #co-detailview so it stays visible from either profile tab
+  // (an inactive .copane is display:none, which would hide a modal nested inside it).
+  var detail=document.getElementById('co-detailview');
+  if(detail){
+    // drop a stale modal left by a previously-opened company
+    detail.querySelectorAll(':scope > .ov-modal-back').forEach(function(m){ if(m.id!=='ubModalBack') m.remove(); });
+    var md=root.querySelector('#ubModalBack'); if(md && md.parentNode!==detail) detail.appendChild(md);
+  }
 }
-export var uberOverview = { html: html, init: init };
+// Deep Dive charts build lazily: the Overview init() already wired the dd-tabs
+// (root spans both panes), so here we only paint the charts of the active dd-pane
+// now that the Deep Dive copane is visible (Chart.js needs a laid-out canvas).
+function deepDiveInit(c){
+  var root=document.getElementById('co-detailview'); if(!root) return;
+  var d=activeDD(root); requestAnimationFrame(function(){ buildDD(root, d); });
+}
+export var uberOverview = { html: html, init: init, absorbsPillars: true, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

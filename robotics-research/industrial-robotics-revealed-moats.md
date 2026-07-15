@@ -89,6 +89,32 @@ They agree. The picks-and-shovels play SAB was looking for is **validated from b
 
 ---
 
+## 4b. The deeper map — second-order moats (integrator-lens deep-dive)
+
+A second, deeper pass traced the **full supplier web** of all four integrators (ABB as the anchor), going below the canonical 10 layers into tier-2 sub-components and merchant categories the first pass missed. It reveals the moats **stack in tiers**, and the deepest, most defensible ones are upstream, cross-cutting, and **mostly private or geopolitical.**
+
+| Second-order moat | Names | Confirmed by | Listed handle? |
+|---|---|---|---|
+| **Rare-earth NdFeB magnets** — even the servo houses that make their own motors cannot make the magnet | Shin-Etsu · Proterial · TDK (JP refiners); ~90% China; heavy-RE (Dy/Tb) China-gated (Apr-2025 export controls hit Japan to zero) | **All 4** | Shin-Etsu, TDK; miners MP/USAR/Lynas/JL Mag |
+| **Precision gear-grinding machines** — the chokepoint *behind* the reducer | **Reishauer** (>50%) · Kapp-Niles · Gleason | **All 4** | mostly **private** |
+| **Encoder sensing element / ASIC** — merchant even under an "in-house" board | Heidenhain · Tamagawa (LTN folded into Heidenhain Apr-2026) · iC-Haus · Broadcom | 3 of 4 (not FANUC) | **private** (Heidenhain/Tamagawa) |
+| **IGBT power modules** — inside the "in-house" drives | Infineon · Mitsubishi · Fuji | **All 4** | IFX, 6503, 6504 — diluted |
+| **Joint holding brakes** — fail-safe, safety-critical niche | Kendrion · Ogura | **All 4** | Kendrion, Ogura |
+| **Functional safety** — a *regulatory* moat (SIL/PLe + TÜV) | SICK · Pilz · Keyence | **All 4** | SICK, Keyence |
+| **Grippers / EOAT** | Schunk (leader) | **All 4** | private |
+| **Dress-packs / torsion cabling** | igus · BizLink · LEONI | **All 4** | igus private; BizLink 3665 TW |
+| **Image sensors** (behind machine vision) | Sony · onsemi | 2 of 4 | Sony, ON |
+| **Bearing steel** (under every bearing & gear) | Sanyo Special Steel · Daido | FANUC | listed JP |
+| **NEW — physical-AI simulation stack** | **NVIDIA Omniverse / Isaac** | All 4 standardizing | NVDA |
+
+**Two structural insights the deep pass added:**
+1. **The integrators are themselves arms dealers.** Yaskawa (and FANUC) sell their servos/drives *merchant* into other people's machines — Yaskawa's Motion Control segment (servos into semiconductor & datacenter component-mounting equipment) is a picks-and-shovels position **independent of its own robots**, guided +19% FY2026.
+2. **Midea is eroding the moats from inside KUKA.** Its subsidiary Jiya's harmonic reducer passed KUKA's 10,000-hr life test; Leaderdrive/Zhongda now supply >35%/>30% of Chinese-assembled-robot units; Midea Industrial Tech (Welling) makes motors/drives/chips in-house. The Chinese-erosion bear case, now with a concrete mechanism — **but the deepest layers (grinders, encoder elements, magnet refining, brakes) are NOT localized.**
+
+> **The triple convergence (the headline).** Two of these second-order moats — **rare-earth magnets and precision grinders** — are the *same two upstream chokepoints* the humanoid analysis independently found. They now stand as the deepest moats in **both** the mature industrial-robot economy **and** the future humanoid one. The picks-and-shovels that ride physical AI regardless of who wins are, at the deepest level, **the magnet and the grinder** — and both are largely private or geopolitical, not clean liquid equities. The cleanest **listed** expressions stay one tier up: **reducers (Nabtesco 6268 · Harmonic Drive 6324) and machine vision (Keyence 6861).**
+
+---
+
 ## 5. The bear case (state it honestly)
 
 - **The base is mature and cyclical.** Industrial-robot reducer demand grows GDP-ish and swings with the auto/electronics capex cycle. The *growth* kicker is entirely physical AI — which is exactly the unproven part.

@@ -265,7 +265,7 @@ This is the section the handoff's provenance discipline exists for.
 | Zhaowei: robotics revenue | **RMB 23.87M = 1.4% of sales** | FY2025 | `[D]` |
 | **Timken ← Spinea** (NOT Nabtesco — see §9) | **$151.2M**, completed 31 May 2022 | — | `[D]` |
 | **Schaeffler ← Ewellix** (SKF *sold* it) | €582M + €120M net debt ≈ €702M EV | Jan 2023 | `[D]` |
-| **Bloomberg SPLC: UBTECH's disclosed suppliers** | **BYD (12.2% of cost)**, Orbbec (3D vision), Awinic — **100% Chinese** | 2025–26 | `[D]` |
+| **Bloomberg SPLC: UBTECH's disclosed suppliers** | **BYD**, Orbbec (3D vision), Awinic — **100% Chinese**. ⚠️ *Magnitude corrected 14 Jul 2026: an earlier draft carried "BYD = 12.2% of cost". The cell reads 0.1215 in a column whose other values are percent units (CATL = 14.5% of Tesla's cost), i.e. **0.12%** — 100x smaller. The `Cost Percentage` field definition is unresolved and **no SPLC magnitude should be quoted until it is checked in the terminal (FLDS)**. The structural claim — suppliers are 100% Chinese — is unaffected. See `humanoid-company-map.md` §1.1.* | 2025–26 | `[D]` |
 | **Bloomberg SPLC: Harmonic Drive sells to Moog** | — | 2024 | `[D]` — *in actuation, Moog is a **customer** of the chokepoint, not its owner* |
 
 ### ❌ DENIED OR REFUTED **BY THE ALLEGED SUPPLIER ITSELF**

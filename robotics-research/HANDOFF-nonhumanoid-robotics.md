@@ -52,12 +52,25 @@ Mature/cyclical base demand; Chinese eroding the low end (backlash parity, Harmo
 3. To view the humanoid interactive map: `cd robotics-research && py -m http.server 8010` → open `http://127.0.0.1:8010/humanoid-company-map.html`.
 4. Research method that worked: **parallel research agents, one per company/topic, provenance-graded [D]/[I]/[C]/[INF], anchored on the SPLC edges.** Reuse it.
 
-## 7. Next steps — pick one (this is the open decision)
+## 7. Next steps — DIRECTION CHOSEN (17 Jul 2026)
 
-1. **Deep-dive Nabtesco (6268) + Harmonic Drive (6324)** — the two names it all lands on. Business quality, share, the Chinese-erosion bear case, the physical-AI kicker, valuation. *(Turns the thesis into an investment decision.)*
-2. **Port to an interactive page** — the build-vs-buy matrix (10 layers × 4 OEMs) + the tiered moat map, in the humanoid-map design. *(Best for presenting to the analysts.)*
-3. **Quantify the physical-AI TAM overlay** — size the reducer/vision/magnet TAM uplift from humanoids on top of the mature industrial base. *(The "proven moat → growth" bridge, with numbers.)*
-4. **The NVIDIA-Omniverse angle** — the new software chokepoint above the arm; the cleanest physical-AI platform play, and the SoftBank/ABB thesis. *(Emerged from the deep pass; not yet explored.)*
+**SAB's pick: the per-company deep-dive comparison of the OEMs themselves.** Not the component names — the *incumbents*. Lens per company: **(A) where the competitive advantage comes from, (B) how the supply chain is structured, (C) who the key suppliers are** — so they can be compared side by side. This complements the existing `industrial-robotics-revealed-moats.md` (which looked at the Big 4 *from outside*, via the build-vs-buy matrix); the new work profiles them *as companies*.
+
+**Peer set chosen: Big 4 + Kawasaki + Estun (6).**
+- **FANUC** (6954) — most integrated; Nabtesco's #1 customer (2.35%).
+- **ABB** (ABBN → SoftBank) — integrator not servo-house; exited power semis; Robotics being sold to SoftBank (~$5.375bn, Oct 2025).
+- **Yaskawa** (6506) — most electronically integrated + servo arms-dealer; Nabtesco's smallest OEM customer (0.88%).
+- **KUKA** (Midea-owned) — most integrator-like; the live Chinese-erosion case study.
+- **Kawasaki** (7012) — robotics is a tiny segment of a heavy-industry conglomerate; semiconductor-transfer-robot niche.
+- **Estun** (002747 CH) — the Chinese challenger integrating UPWARD by design + M&A (Trio, Cloos); the contrast company. No SPLC edge — researched fresh.
+
+**Method:** 6 parallel research agents (one per company), provenance-graded [D]/[I]/[C]/[INF], each anchored on its SPLC Nabtesco-% where available. Fired 17 Jul. **Next after they return:** synthesize into a per-company deep-dive memo + a cross-company comparison table (advantage-source × integration depth × supplier map), then decide on interactive page / component deep-dive.
+
+### Deferred options (were the earlier open decision):
+1. Deep-dive Nabtesco (6268) + Harmonic Drive (6324) — the two component names it all lands on.
+2. Port to an interactive page — the build-vs-buy matrix + tiered moat map, in the humanoid-map design.
+3. Quantify the physical-AI TAM overlay.
+4. The NVIDIA-Omniverse software-chokepoint angle.
 
 ## 8. Reminders
 

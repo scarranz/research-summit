@@ -64,7 +64,9 @@ Mature/cyclical base demand; Chinese eroding the low end (backlash parity, Harmo
 - **Kawasaki** (7012) — robotics is a tiny segment of a heavy-industry conglomerate; semiconductor-transfer-robot niche.
 - **Estun** (002747 CH) — the Chinese challenger integrating UPWARD by design + M&A (Trio, Cloos); the contrast company. No SPLC edge — researched fresh.
 
-**Method:** 6 parallel research agents (one per company), provenance-graded [D]/[I]/[C]/[INF], each anchored on its SPLC Nabtesco-% where available. Fired 17 Jul. **Next after they return:** synthesize into a per-company deep-dive memo + a cross-company comparison table (advantage-source × integration depth × supplier map), then decide on interactive page / component deep-dive.
+**Method:** 6 parallel research agents (one per company), provenance-graded [D]/[I]/[C]/[INF], each anchored on its SPLC Nabtesco-% where available. Fired 17 Jul. **DONE:** the 6 profiles are in `oem-deepdives/*.md`; the synthesis is `oem-comparison.md` (the deliverable — organizing insight = the vertical-integration spectrum, all six sort onto it and every one still buys the reducer).
+
+**Phase 2b DONE (17 Jul) — interactive page built:** `oem-comparison.html` (LOCAL-ONLY, like the humanoid map). Reuses the portal design system. 4 tabs: (1) **integration spectrum** — 6 clickable nodes ordered FANUC→Yaskawa→Estun→ABB→Kawasaki→KUKA, each opens a full profile panel (advantage / supply-chain / suppliers table / hooks / bear); (2) **master comparison** matrix; (3) **supplier map** — Nabtesco-% bars + build-vs-buy grid; (4) **fault lines & thesis**. Verified in-browser (no console errors). View: `cd robotics-research && py -m http.server 8010` → `http://127.0.0.1:8010/oem-comparison.html`. **Next options:** FANUC single-name deep-dive (quality end) · component deep-dive Nabtesco/Harmonic (moat end) · Estun/erosion quantification.
 
 ### Deferred options (were the earlier open decision):
 1. Deep-dive Nabtesco (6268) + Harmonic Drive (6324) — the two component names it all lands on.

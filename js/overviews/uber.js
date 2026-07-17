@@ -281,8 +281,8 @@ var MNA=[
     detail:'<b>Terms:</b> ~$2.25B (up to $750M stock + cash; $550M external co-investment); closed Nov 2021, bought from TPG.<br><br><b>What it added:</b> managed-transportation / logistics network for Uber Freight.<br><br><b>Status:</b> integrated into Uber Freight — the segment that has since struggled in the freight recession.' },
   { n:'Trendyol Go', fp:'New-region Delivery — Turkey (~$2B bookings).', y:'2025', deal:'$700M', terms:'85% stake, cash', own:'Controlling', cat:'Delivery',
     detail:'<b>Terms:</b> $700M for an 85% controlling stake (announced May 2025).<br><br><b>What it added:</b> Turkey\'s leading food/grocery courier (~$2B bookings, 200M+ orders/yr) — brings Uber Eats to Turkey.<br><br><b>Status:</b> closing/operating as an independent app with Uber Eats features layered in.' },
-  { n:'Foodpanda Taiwan', fp:'<b>Blocked</b> — a ~$250M break fee: a cost, not an asset.', y:'2024', deal:'$950M', terms:'cash — BLOCKED', own:'Terminated', cat:'Delivery', miss:true,
-    detail:'<b>Terms:</b> ~$950M cash for Delivery Hero\'s Foodpanda Taiwan (May 2024).<br><br><b>Outcome:</b> <b>blocked by Taiwan\'s FTC (Dec 2024)</b> — it would have given Uber >90% local delivery share. Deal terminated March 2025; Uber paid a ~<b>$250M break fee</b> (and separately bought $300M of new Delivery Hero shares).' },
+  { n:'Foodpanda Taiwan', fp:'<b>Blocked</b> — a €211.9M break fee: a cost, not an asset.', y:'2024', deal:'$950M', terms:'cash — BLOCKED', own:'Terminated', cat:'Delivery', miss:true,
+    detail:'<b>Terms:</b> ~$950M cash for Delivery Hero\'s Foodpanda Taiwan (May 2024).<br><br><b>Outcome:</b> <b>blocked by Taiwan\'s FTC (Dec 2024)</b> — it would have given Uber >90% local delivery share. Share Purchase Agreement terminated March 10, 2025, upon Uber\'s decision not to proceed with the appeal; Uber paid Delivery Hero a <b>€211.9M break fee</b> in April 2025 (and separately bought $300M of new Delivery Hero shares). Source: Delivery Hero Annual Report 2025.<br><br><b>Aftermath:</b> in March 2026, Delivery Hero signed a new agreement to sell 100% of Foodpanda Taiwan to <b>Grab Holdings</b> instead, for $600M cash — expected to close H2 2026, subject to Taiwan FTC clearance. This is why Taiwan doesn\'t appear anywhere on the Delivery Hero Acquisition map below: by the time the Uber-DH deal was announced (Jul 2026), Taiwan was already under a separate, unrelated sale process to a different buyer.' },
 ];
 
 // ─── Delivery Hero acquisition (announced 16-Jul-2026) ─────────────────────────
@@ -296,13 +296,19 @@ var MNA=[
 // breaks the pattern, since that one alone is leaving the Uber/Delivery Hero group entirely.
 // "Delivery Hero Today" (the standalone DH view) stays red — that view is deliberately NOT
 // framed as "Uber's," so it keeps its own brand-red identity.
+// Within the SSW carve-out itself there are two distinct outcomes, so it gets two shades of red:
+// a handful of the 14 markets (e.g. Spain, Portugal, Poland, Chile) already have their own Uber
+// Mobility and/or Delivery operations today — that business is unaffected and stays with Uber even
+// though the Delivery Hero brand there (Glovo, PedidosYa, ...) goes to SSW. The rest of the 14 have
+// no separate Uber presence at all, so the market leaves the Uber/Delivery Hero group entirely.
 var DHCROSS='#AACC33';  // lightest, yellow-green — new cross-platform (Mobility existed, Delivery just added)
 var DHNEW='#5CA83E';    // medium green — brand-new Delivery-only market for Uber
 var DHBOTH='#2E7D42';   // darker green — Mobility + Delivery, unaffected
 var DHMOB='#0F4C2E';    // darkest green — Mobility only, unaffected
 var DHDEL='#88B04B';    // Greenery — Delivery only, unaffected (Uber Today view)
 var DHRED='#E5342A';    // Delivery Hero's own brand red — "Delivery Hero Today" view only
-var DHSSW='#A93226';    // sold to SSW Partners — unchanged
+var DHSSW='#A93226';    // sold to SSW Partners, no other Uber presence in the market
+var DHSSWX='#D98880';   // sold to SSW Partners, but Uber's own Mobility/Delivery here is unaffected
 var DH_GLANCE=[
   { l:'MAPCs', v:'49M', d:'monthly active platform consumers · FY25' },
   { l:'Merchants', v:'1.1M', d:'FY25' },
@@ -347,7 +353,7 @@ var DH_ADVISORS=[
   ['Evercore', 'Financial advisor to SSW Partners'],
   ['Paul Weiss · Hengeler Mueller · Baker Botts · Gibson Dunn', 'Legal counsel to SSW Partners'],
 ];
-var DH_SOURCES='Source: Uber–Delivery Hero joint investor presentation ("Announcement of Uber’s Acquisition of Delivery Hero") and press release, both dated July 16, 2026 (Uber Investor Relations). Delivery Hero market/brand data (the 50 markets retained by Uber and 14 sold to SSW Partners) is exact, as disclosed. Uber’s pre-deal country footprint is not broken out in the deal documents — the map’s "existing Uber markets" layer is a best-effort approximation from public reporting (city/market lists, ~72 countries) and should be treated as directional, not official. All terms are subject to change before the Offer Document is published — the deal has not yet closed.';
+var DH_SOURCES='Source: Uber Form 8-K, Exhibits 99.1 (press release, "Uber Announces Acquisition Offer for Delivery Hero") and 99.2 (investor presentation, "Announcement of Uber’s Acquisition of Delivery Hero"), both filed with the SEC July 16, 2026. Delivery Hero market/brand data (the 50 markets retained by Uber and 14 sold to SSW Partners) is exact, as disclosed. Uber’s pre-deal country footprint is not broken out in the deal documents — the map’s "existing Uber markets" layer is a best-effort approximation from public reporting (city/market lists, ~72 countries) and should be treated as directional, not official. All terms are subject to change before the Offer Document is published — the deal has not yet closed.';
 
 // Deal-snapshot parameters, made clickable so a reader can tap any figure for the full explanation.
 var DH_PARAMS=[
@@ -406,58 +412,40 @@ var DH_KPI_GLOSSARY=[
 // are computed live against DH_SETS.mobSet (Uber's existing Mobility footprint), not hardcoded,
 // so they always match the map/list above.
 var DH_UBERONE_REGIONS=[
-  { k:'me', region:'Middle East', brands:'talabat · Hungerstation',
+  { k:'me', region:'MENA', sub:'Middle East & North Africa', brands:'talabat · Hungerstation', gmvKey:'mena',
     countries:['Bahrain','Egypt','Iraq','Jordan','Kuwait','Oman','Qatar','United Arab Emirates','Saudi Arabia'],
-    rank:'Part of the combined 20 of 27 EMEA markets where a Delivery Hero brand holds #1 category position — Delivery Hero doesn’t break this out separately for the Middle East vs. the rest of EMEA.',
+    rank:'#1 category position in 20 of the combined 27 MENA + Europe/Africa/CA markets (Delivery Hero doesn’t split this further).',
     read:'Every market here already has Uber Mobility — this is a pure cross-sell into an existing rider base, in some of the highest-income, highest-smartphone-penetration markets in Delivery Hero’s portfolio.',
     caseStudy:'<b>The deal deck’s own template case study.</b> Uber and talabat are both strong standalone brands in the region: ~8M MAUs each, ~7% Adj. EBITDA margin each, +34%/+28% YoY Gross Bookings growth. Combined, cross-platform coverage here can reach ~28% of users vs. a ~20% global average, and Uber’s top cross-platform markets run 3–4x larger than the #2 player across Mobility and Delivery combined — management flags this as the template for what the rest of the integration could look like.' },
-  { k:'latam', region:'Latin America', brands:'PedidosYa',
+  { k:'latam', region:'Latin America', brands:'PedidosYa', gmvKey:'americas',
     countries:['Argentina','Bolivia','Costa Rica','Dominican Republic','El Salvador','Guatemala','Honduras','Nicaragua','Panama','Paraguay','Peru','Uruguay','Venezuela'],
-    rank:'PedidosYa holds #1 category position in 11 of these 13 markets.',
+    rank:'#1 category position in 11 of these 13 markets.',
     read:'Uber Mobility already operates in 12 of these 13 markets (all but Venezuela) — a large, already-trusted rider base and payment rails. Lower average incomes than the Gulf likely mean smaller average tickets, but the addressable population is large.' },
-  { k:'apac', region:'Asia-Pacific', brands:'foodpanda · Baedal Minjok',
+  { k:'apac', region:'Asia-Pacific', brands:'foodpanda · Baemin', gmvKey:'asia',
     countries:['Bangladesh','Cambodia','Hong Kong','Laos','Malaysia','Myanmar','Pakistan','Philippines','Singapore','South Korea'],
-    rank:'foodpanda / Baedal Minjok hold #1 category position in 7 of these 10 markets.',
+    rank:'#1 category position in 7 of these 10 markets.',
     read:'Split down the middle. South Korea, Bangladesh, Pakistan and Hong Kong already have Uber Mobility. Cambodia, Laos, Malaysia, Myanmar, the Philippines and Singapore do not — Uber sold its Southeast Asia rides business to Grab in March 2018 and hasn’t returned. With no existing rider base, there’s no one to convert into Uber One yet in those six markets — they start as Delivery-only.' },
-  { k:'emea2', region:'Europe, Africa & Central Asia', brands:'Glovo · foodora',
+  { k:'emea2', region:'Europe, Africa & Central Asia', brands:'Glovo · foodora', gmvKey:'europe',
     countries:['Armenia','Bosnia and Herzegovina','Bulgaria','Ivory Coast','Croatia','Georgia','Hungary','Italy','Kazakhstan','Kenya','Kyrgyzstan','Montenegro','Morocco','Nigeria','Republic of Serbia','Tunisia','Uganda','Ukraine'],
-    rank:'Part of the combined 20 of 27 EMEA markets where a Delivery Hero brand holds #1 category position — Delivery Hero doesn’t break this out separately for the Middle East vs. the rest of EMEA.',
-    read:'The most fragmented group. Italy, Croatia, Kenya, Nigeria and Morocco already have Uber Mobility. But most of the Balkans, the Caucasus, Central Asia and Sub-Saharan Africa on this list have no existing Uber presence at all — Hungary because Uber rides exited the market in 2016, several others inherited from Uber’s 2018 exit of Russia/Armenia/Georgia/Kazakhstan/Azerbaijan/Belarus into the Yandex Taxi joint venture. Real long-term growth markets, but converting them into Uber One is a multi-year build, not a day-one unlock.' },
+    rank:'#1 category position in 20 of the combined 27 MENA + Europe/Africa/CA markets (Delivery Hero doesn’t split this further).',
+    read:'The most fragmented group. Italy, Croatia, Kenya, Nigeria, Morocco, Hungary, Uganda and Ukraine already have Uber Mobility — Hungary rejoined in Apr 2024 (Uber exited in 2016, then returned via a licensed-operator deal with Főtaxi), and Uber has kept expanding rides in Ukraine even through the war. The rest — Armenia, Bosnia and Herzegovina, Bulgaria, Georgia, Kazakhstan, Kyrgyzstan, Montenegro, Republic of Serbia and Tunisia — have no existing Uber presence: several inherited from Uber’s 2018 exit of Russia/Armenia/Georgia/Kazakhstan/Azerbaijan/Belarus into the Yandex Taxi joint venture, the rest blocked by local taxi-licensing regulation. Real long-term growth markets, but converting them into Uber One is a multi-year build, not a day-one unlock.' },
 ];
-// Per-country market-size context. Population = rounded public estimates (UN/World Bank-style,
-// current-year), used ONLY as an addressable-market-size proxy. Tier = a simplified income
-// bracket, used ONLY as a directional proxy for likely average-ticket size. Delivery Hero does
-// NOT disclose GMV, orders, or ticket size by country — none of this is company-reported data.
-var DH_COUNTRY_STATS={
-  'South Korea':{pop:51.7,tier:'High'}, 'Hungary':{pop:9.6,tier:'Upper-middle'},
-  'Bangladesh':{pop:173,tier:'Lower-middle'}, 'Cambodia':{pop:17,tier:'Lower-middle'},
-  'Hong Kong':{pop:7.4,tier:'High'}, 'Laos':{pop:7.7,tier:'Lower-middle'},
-  'Malaysia':{pop:34,tier:'Upper-middle'}, 'Myanmar':{pop:54,tier:'Lower-middle'},
-  'Pakistan':{pop:240,tier:'Lower-middle'}, 'Philippines':{pop:117,tier:'Lower-middle'},
-  'Singapore':{pop:6.0,tier:'High'},
-  'Armenia':{pop:2.8,tier:'Upper-middle'}, 'Bosnia and Herzegovina':{pop:3.2,tier:'Upper-middle'},
-  'Bulgaria':{pop:6.4,tier:'Upper-middle'}, 'Ivory Coast':{pop:30,tier:'Lower-middle'},
-  'Croatia':{pop:3.8,tier:'High'}, 'Georgia':{pop:3.7,tier:'Upper-middle'},
-  'Italy':{pop:59,tier:'High'}, 'Kazakhstan':{pop:20,tier:'Upper-middle'},
-  'Kenya':{pop:55,tier:'Lower-middle'}, 'Kyrgyzstan':{pop:7,tier:'Lower-middle'},
-  'Montenegro':{pop:0.62,tier:'Upper-middle'}, 'Morocco':{pop:38,tier:'Lower-middle'},
-  'Nigeria':{pop:227,tier:'Lower-middle'}, 'Republic of Serbia':{pop:6.6,tier:'Upper-middle'},
-  'Tunisia':{pop:12,tier:'Lower-middle'}, 'Uganda':{pop:48,tier:'Low'},
-  'Ukraine':{pop:36,tier:'Lower-middle'},
-  'Saudi Arabia':{pop:36,tier:'High'},
-  'Argentina':{pop:46,tier:'Upper-middle'}, 'Bolivia':{pop:12,tier:'Lower-middle'},
-  'Costa Rica':{pop:5.2,tier:'Upper-middle'}, 'Dominican Republic':{pop:11.3,tier:'Upper-middle'},
-  'El Salvador':{pop:6.3,tier:'Lower-middle'}, 'Guatemala':{pop:18,tier:'Upper-middle'},
-  'Honduras':{pop:10.6,tier:'Lower-middle'}, 'Nicaragua':{pop:6.9,tier:'Lower-middle'},
-  'Panama':{pop:4.4,tier:'High'}, 'Paraguay':{pop:6.9,tier:'Upper-middle'},
-  'Peru':{pop:34,tier:'Upper-middle'}, 'Uruguay':{pop:3.4,tier:'High'},
-  'Venezuela':{pop:28,tier:'Lower-middle'},
-  'Bahrain':{pop:1.6,tier:'High'}, 'Egypt':{pop:112,tier:'Lower-middle'},
-  'Iraq':{pop:45,tier:'Upper-middle'}, 'Jordan':{pop:11.3,tier:'Upper-middle'},
-  'Kuwait':{pop:4.3,tier:'High'}, 'Oman':{pop:4.6,tier:'High'},
-  'Qatar':{pop:2.7,tier:'High'}, 'United Arab Emirates':{pop:9.4,tier:'High'},
+// Delivery Hero's own FY2025 segment reporting — Annual Report 2025, "Key Figures" table and
+// "Segment share of Group GMV" chart (both give the same 42/30/20/8 split). This is Delivery Hero's
+// full company footprint (~65 countries, including Taiwan and the 14 SSW-bound markets) — NOT
+// limited to the 50 markets Uber is acquiring, so the Europe and Americas shares below are diluted
+// by markets Uber isn't getting (Europe includes the 11 SSW markets Poland/Portugal/Spain/etc. on
+// top of the 18 Uber keeps; Americas includes SSW's Chile and Ecuador on top of the 13 Uber keeps).
+// Asia and MENA have no such dilution — every Asia/MENA market in Delivery Hero's footprint goes to
+// Uber, none to SSW. Integrated Verticals (Dmarts/quick-commerce) is excluded — it's not a geography.
+// Keyed by gmvKey so each DH_UBERONE_REGIONS entry can look up its own GMV share directly.
+var DH_SEGMENT_GMV={
+  asia:     { eurB:20.8, usdB:23.3, share:42, clean:true },
+  mena:     { eurB:14.6, usdB:16.4, share:30, clean:true },
+  europe:   { eurB:9.7,  usdB:10.9, share:20, clean:false },
+  americas: { eurB:4.1,  usdB:4.6,  share:8,  clean:false },
 };
-var DH_TIER_COLOR={ 'High':'#046A38', 'Upper-middle':'#5CA83E', 'Lower-middle':'#D68A1C', 'Low':'#A93226' };
+var DH_SEGMENT_SOURCE='Delivery Hero Annual Report 2025 ("Key Figures" and "Segment share of Group GMV"), FY2025. Total Group GMV €49,196.8M, translated to USD at the ~1.12 average rate Uber’s own investor presentation uses. Integrated Verticals (quick-commerce/Dmarts, 7% of Group GMV) excluded — it isn’t a geography.';
 // Multi-year Adjusted EBITDA — both companies\' own turnaround-to-profitability trend.
 // Uber: US GAAP Adj. EBITDA, in-scope Summit DCF series (matches A_EBITDA 2022-2025 above).
 // Delivery Hero: reported EBITDA per public company filings, FULL GROUP (all ~64 current
@@ -494,11 +482,19 @@ var DH_SSW_MARKETS=[
 // they were launched independently market by market and a country can have one, both, or neither.
 // NOT sourced from the deal documents (Uber does not publish one official country list); this is a
 // best-effort approximation from public market trackers, cross-checked against Uber's own confirmed
-// divestment history. See DH_MAP_SOURCES below for exact citations.
+// divestment history. See DH_MAP_SOURCES below for exact citations. Verified/refreshed Jul 2026 —
+// Mobility corrections found and applied: Uber RE-ENTERED Hungary (Apr 2024, licensed via Főtaxi,
+// after exiting in 2016 — the old "exited Hungary" note was stale); and Uber Mobility is confirmed
+// live (not previously listed) in Norway, Sweden, Austria, Czech Republic, Romania, Greece, Ukraine
+// (expanded to 18 cities since the 2022 invasion) and Uganda. Confirmed still absent: Bulgaria
+// (banned), Serbia, Bosnia and Herzegovina, Montenegro, Cyprus, Armenia, Georgia (only a niche "Uber
+// Black" launched 2024, not standard Mobility), Kazakhstan/Kyrgyzstan (Yandex Go territory), Turkey
+// (UberX suspended since 2019; only taxi-partnership tiers), Tunisia, and Ivory Coast (Uber operated
+// 2019–Sep 2025, then exited — so its absence here is now correct, just for a newer reason).
 var UBER_MOBILITY_MARKETS=[
   'USA','Canada','Mexico','Brazil','Chile','Colombia','Argentina','Peru','Uruguay','Paraguay','Bolivia','Costa Rica','Panama','Dominican Republic','Guatemala','Honduras','El Salvador','Nicaragua',
-  'England','France','Germany','Italy','Spain','Portugal','Netherlands','Belgium','Switzerland','Ireland','Poland','Croatia',
-  'Egypt','Ghana','Kenya','Nigeria','South Africa','Morocco','Pakistan','Jordan','Iraq','Kuwait','Oman','Bahrain','Qatar','Saudi Arabia','United Arab Emirates',
+  'England','France','Germany','Italy','Spain','Portugal','Netherlands','Belgium','Switzerland','Ireland','Poland','Croatia','Hungary','Austria','Czech Republic','Norway','Sweden','Romania','Greece','Ukraine',
+  'Egypt','Ghana','Kenya','Nigeria','South Africa','Morocco','Uganda','Pakistan','Jordan','Iraq','Kuwait','Oman','Bahrain','Qatar','Saudi Arabia','United Arab Emirates',
   'Bangladesh','Hong Kong','India','Japan','South Korea','Sri Lanka','Taiwan','Australia','New Zealand',
 ];
 var UBER_DELIVERY_MARKETS=[
@@ -518,7 +514,25 @@ var DH_SETS=(function(){
   UBER_DELIVERY_MARKETS.forEach(function(n){ delSet[n]=true; });
   return { uberSet:uberSet, sswSet:sswSet, mobSet:mobSet, delSet:delSet };
 })();
-var DH_MAP_SOURCES='Delivery Hero markets (which 50 go to Uber, which 14 go to SSW Partners): exact, from the Jul-16-2026 transaction documents. Uber\'s own Mobility (rides) and Delivery (Uber Eats) footprint is approximated from public market trackers (Uber Eats country list, Feb 2026; Uber rides country map, 2026) since Uber does not publish one official country-by-country list — cross-checked against confirmed divestment history: Southeast Asia sold to Grab (Mar 2018), Russia/Armenia/Georgia/Kazakhstan/Azerbaijan/Belarus combined into the Yandex Taxi joint venture (Feb 2018), China sold to Didi (Aug 2016), India Uber Eats sold to Zomato (Jan 2020), and Uber rides exited Hungary (2016). Treat the Uber-footprint layers (navy/blue/purple) as directional best-effort, not an official Uber disclosure — the Delivery Hero layers (red/amber/gray) are exact.';
+// Geographic region for every country appearing across the four sets above — used only by the
+// List view's "By Region" grouping (an alternative to grouping by deal category). Central Asia is
+// folded into "Europe & Central Asia" rather than given its own bucket, matching the convention
+// Delivery Hero's own investor materials use elsewhere in this file (see DH_UBERONE_REGIONS' emea2).
+var DH_REGION_ORDER=['North America','Latin America','Europe & Central Asia','Middle East','Africa','Asia-Pacific'];
+var DH_REGION_OF=(function(){
+  var m={};
+  var groups={
+    'North America':['USA','Canada','Mexico'],
+    'Latin America':['Brazil','Chile','Colombia','Argentina','Peru','Uruguay','Paraguay','Bolivia','Costa Rica','Panama','Dominican Republic','Guatemala','Honduras','El Salvador','Nicaragua','Venezuela','Ecuador'],
+    'Europe & Central Asia':['England','France','Germany','Italy','Spain','Portugal','Netherlands','Belgium','Switzerland','Ireland','Poland','Croatia','Sweden','Norway','Austria','Czech Republic','Greece','Cyprus','Moldova','Romania','Hungary','Bosnia and Herzegovina','Bulgaria','Montenegro','Republic of Serbia','Ukraine','Armenia','Georgia','Kazakhstan','Kyrgyzstan'],
+    'Middle East':['Jordan','Iraq','Kuwait','Oman','Bahrain','Qatar','Saudi Arabia','United Arab Emirates','Turkey'],
+    'Africa':['Egypt','Ghana','Kenya','Nigeria','South Africa','Morocco','Ivory Coast','Tunisia','Uganda'],
+    'Asia-Pacific':['Bangladesh','Hong Kong','India','Japan','South Korea','Sri Lanka','Taiwan','Australia','New Zealand','Cambodia','Laos','Malaysia','Myanmar','Philippines','Singapore','Pakistan'],
+  };
+  DH_REGION_ORDER.forEach(function(r){ groups[r].forEach(function(n){ m[n]=r; }); });
+  return m;
+})();
+var DH_MAP_SOURCES='Delivery Hero markets (which 50 go to Uber, which 14 go to SSW Partners): exact, transcribed from Uber\'s SEC Form 8-K, Exhibits 99.1 (press release) and 99.2 (investor presentation), both filed Jul 16, 2026. Uber\'s own Mobility (rides) and Delivery (Uber Eats) footprint is approximated from public market trackers (Uber Eats country list, Feb 2026; Uber rides country map, 2026) since Uber does not publish one official country-by-country list — cross-checked against confirmed divestment (and re-entry) history: Southeast Asia sold to Grab (Mar 2018), Russia/Armenia/Georgia/Kazakhstan/Azerbaijan/Belarus combined into the Yandex Taxi joint venture (Feb 2018), China sold to Didi (Aug 2016), India Uber Eats sold to Zomato (Jan 2020), Uber rides exited Hungary in 2016 but **returned in Apr 2024** (licensed operator model via Főtaxi), and Uber Mobility exited Ivory Coast in Sep 2025 after operating there since 2019. Re-verified Jul 2026: Uber Mobility is live in Norway, Sweden, Austria, Czech Republic, Romania, Greece and Ukraine (updated since the last pass); still absent from Bulgaria, Serbia, Bosnia and Herzegovina, Montenegro, Cyprus, Armenia, Georgia (Uber Black only), Kazakhstan, Kyrgyzstan, Turkey (UberX suspended, taxi-partnership only) and Tunisia. Treat the Uber-footprint layers (navy/blue/purple) as directional best-effort, not an official Uber disclosure — the Delivery Hero layers (red/amber/gray) are exact. Taiwan (foodpanda) is deliberately absent — it\'s under a separate, unrelated sale to Grab Holdings (signed Mar 2026, $600M) and isn\'t part of either the Uber or SSW scope (see M&A ▸ Foodpanda Taiwan). Finland (foodora) is also absent: Delivery Hero\'s Annual Report 2025 lists it as an active Europe-segment market as of Dec 31, 2025, but it doesn\'t appear in either the 50-market or 14-market list in the Jul-16-2026 deal documents — an unresolved discrepancy between the two filings, not a data-entry gap on our end.';
 
 // ─── Summit thesis ──────────────────────────────────────────────────────────────────────────────
 // Uber thesis intentionally removed \u2014 this overview carries NO Summit thesis.
@@ -1892,7 +1906,12 @@ function dhClassify(name, view){
     return { cat:'none', color:null };
   }
   // post-acquisition
-  if(inSSW) return { cat:'ssw', color:DHSSW };
+  if(inSSW){
+    // Uber's own Mobility/Delivery in this market is unaffected by the SSW carve-out — only the
+    // Delivery Hero brand here (Glovo, PedidosYa, ...) is leaving the group.
+    if(inMob||inDel) return { cat:'sswuber', color:DHSSWX };
+    return { cat:'ssw', color:DHSSW };
+  }
   if(inUber&&inMob) return { cat:'cross', color:DHCROSS };
   if(inUber) return { cat:'new', color:DHNEW };
   if(inMob&&inDel) return { cat:'both', color:DHBOTH };
@@ -1902,35 +1921,69 @@ function dhClassify(name, view){
 var DH_VIEWS=['uber','dh','post'];
 function dhLegendRow(color,label){ return '<div class="dhm-leg-row"><span class="dhm-leg-sw" style="background:'+color+'"></span>'+esc(label)+'</div>'; }
 function dhChip(name,brand){ return '<span class="dhm-chip ov-clickable" data-detail="dhc:'+esc(name)+'">'+esc(name)+(brand?' <i>· '+esc(brand)+'</i>':'')+'</span>'; }
+// Same chip, but carrying its own color swatch — used by the "By Region" list, where a single
+// region mixes several deal categories, so each chip needs to show its category individually
+// rather than inheriting one color from a group header (as dhGroup/dhChip do for "By Category").
+function dhChipC(name,color,brand){ return '<span class="dhm-chip ov-clickable" data-detail="dhc:'+esc(name)+'"><span class="dhm-chip-sw" style="background:'+color+'"></span>'+esc(name)+(brand?' <i>· '+esc(brand)+'</i>':'')+'</span>'; }
 function dhGroup(title,color,items,note){
   if(!items.length) return '';
   return '<div class="dhm-grp"><div class="dhm-grp-h"><span class="dhm-leg-sw" style="background:'+color+'"></span>'+esc(title)+'<span class="dhm-grp-n">'+items.length+'</span></div>'+
     (note?'<div class="ov-fynote" style="margin:2px 0 8px">'+note+'</div>':'')+
     '<div class="dhm-chips">'+items.map(function(it){ return dhChip(it.n, it.brand); }).join('')+'</div></div>';
 }
+// "By Region" grouping for the list view — the same countries and colors as dhClassify(view)
+// produces for the map, just bucketed by geography instead of by deal category.
+function dhRegionGroupsHTML(view){
+  var byRegion={};
+  Object.keys(DH_REGION_OF).forEach(function(name){
+    var cl=dhClassify(name,view);
+    if(cl.cat==='none') return;
+    var region=DH_REGION_OF[name];
+    (byRegion[region]||(byRegion[region]=[])).push({ n:name, color:cl.color, brand:DH_SETS.uberSet[name]||DH_SETS.sswSet[name] });
+  });
+  return DH_REGION_ORDER.map(function(r){
+    var items=byRegion[r];
+    if(!items||!items.length) return '';
+    return '<div class="dhm-grp"><div class="dhm-grp-h"><span class="dhm-grp-region">'+esc(r)+'</span><span class="dhm-grp-n">'+items.length+'</span></div>'+
+      '<div class="dhm-chips">'+items.map(function(it){ return dhChipC(it.n, it.color, it.brand); }).join('')+'</div></div>';
+  }).join('');
+}
 function dhMarketsListHTML(){
   function toItems(arr){ return arr.map(function(n){ return {n:n}; }); }
   var both=toItems(UBER_MOBILITY_MARKETS.filter(function(n){ return DH_SETS.delSet.hasOwnProperty(n); }));
   var mobOnly=toItems(UBER_MOBILITY_MARKETS.filter(function(n){ return !DH_SETS.delSet.hasOwnProperty(n); }));
   var delOnly=toItems(UBER_DELIVERY_MARKETS.filter(function(n){ return !DH_SETS.mobSet.hasOwnProperty(n); }));
-  var uberList=dhGroup('Mobility + Delivery today', DHBOTH, both)+
+  var uberListCat=dhGroup('Mobility + Delivery today', DHBOTH, both)+
     dhGroup('Mobility only today', DHMOB, mobOnly)+
     dhGroup('Delivery only today', DHDEL, delOnly);
-  var dhList=dhGroup('Delivery Hero — all current markets', DHRED, DH_UBER_MARKETS.concat(DH_SSW_MARKETS),
+  var dhListCat=dhGroup('Delivery Hero — all current markets', DHRED, DH_UBER_MARKETS.concat(DH_SSW_MARKETS),
     'All ~64 markets Delivery Hero operates today, before the split between Uber and SSW Partners.');
   var crossList=DH_UBER_MARKETS.filter(function(m){ return DH_SETS.mobSet.hasOwnProperty(m.n); });
   var newList=DH_UBER_MARKETS.filter(function(m){ return !DH_SETS.mobSet.hasOwnProperty(m.n); });
   var bothUnaffected=toItems(UBER_MOBILITY_MARKETS.filter(function(n){ return DH_SETS.delSet.hasOwnProperty(n)&&!DH_SETS.uberSet.hasOwnProperty(n)&&!DH_SETS.sswSet.hasOwnProperty(n); }));
   var mobOnlyUnaffected=toItems(UBER_MOBILITY_MARKETS.filter(function(n){ return !DH_SETS.delSet.hasOwnProperty(n)&&!DH_SETS.uberSet.hasOwnProperty(n)&&!DH_SETS.sswSet.hasOwnProperty(n); }));
-  var postList=dhGroup('New cross-platform — Mobility existed, Delivery added', DHCROSS, crossList)+
+  // Split the 14 SSW markets: some already have their own Uber Mobility/Delivery (unaffected by
+  // the carve-out), the rest have no other Uber presence and leave the group entirely.
+  var sswKept=DH_SSW_MARKETS.filter(function(m){ return DH_SETS.mobSet.hasOwnProperty(m.n)||DH_SETS.delSet.hasOwnProperty(m.n); });
+  var sswGone=DH_SSW_MARKETS.filter(function(m){ return !DH_SETS.mobSet.hasOwnProperty(m.n)&&!DH_SETS.delSet.hasOwnProperty(m.n); });
+  var postListCat=dhGroup('New cross-platform — Mobility existed, Delivery added', DHCROSS, crossList)+
     dhGroup('New Delivery-only markets for Uber', DHNEW, newList)+
-    dhGroup('Sold to SSW Partners — leaves the Uber/DH group', DHSSW, DH_SSW_MARKETS, 'Conditional on the Uber offer closing; Uber is not acquiring control of these businesses.')+
+    dhGroup('Sold to SSW Partners — Uber keeps its own operations here', DHSSWX, sswKept, 'Only the Delivery Hero brand (Glovo, PedidosYa, ...) leaves the group in these markets — Uber’s own existing Mobility/Delivery here is unaffected.')+
+    dhGroup('Sold to SSW Partners — leaves the Uber/DH group entirely', DHSSW, sswGone, 'Conditional on the Uber offer closing; Uber has no other presence in these markets.')+
     dhGroup('Mobility + Delivery — unaffected', DHBOTH, bothUnaffected)+
     dhGroup('Mobility only — unaffected', DHMOB, mobOnlyUnaffected);
+  function listBlock(view,catHTML){
+    return '<div class="dhm-list" id="dhList-'+view+'"'+(view!=='uber'?' hidden':'')+'>'+
+        '<div class="dhm-listcols">'+
+          '<div class="dhm-listcol"><div class="dhm-listcol-h">By Category</div>'+catHTML+'</div>'+
+          '<div class="dhm-listcol"><div class="dhm-listcol-h">By Region</div>'+dhRegionGroupsHTML(view)+'</div>'+
+        '</div>'+
+      '</div>';
+  }
   return '<div class="dhm-listwrap" id="dhListWrap" hidden>'+
-      '<div class="dhm-list" id="dhList-uber">'+uberList+'</div>'+
-      '<div class="dhm-list" id="dhList-dh" hidden>'+dhList+'</div>'+
-      '<div class="dhm-list" id="dhList-post" hidden>'+postList+'</div>'+
+      listBlock('uber', uberListCat)+
+      listBlock('dh', dhListCat)+
+      listBlock('post', postListCat)+
     '</div>';
 }
 function dhMarketsSection(){
@@ -1979,7 +2032,7 @@ function dhMarketsSection(){
           dhLegendRow(DHRED,'Delivery Hero market (all ~64, before the SSW split)')+
         '</div>'+
         '<div class="dhm-legend" id="dhLegend-post" hidden>'+
-          dhLegendRow(DHCROSS,'New cross-platform — Mobility existed, Delivery added')+dhLegendRow(DHNEW,'New Delivery-only market for Uber')+dhLegendRow(DHSSW,'Sold to SSW Partners')+dhLegendRow(DHBOTH,'Mobility + Delivery — unaffected')+dhLegendRow(DHMOB,'Mobility only — unaffected')+
+          dhLegendRow(DHCROSS,'New cross-platform — Mobility existed, Delivery added')+dhLegendRow(DHNEW,'New Delivery-only market for Uber')+dhLegendRow(DHSSWX,'Sold to SSW — Uber’s own operations here unaffected')+dhLegendRow(DHSSW,'Sold to SSW Partners — no other Uber presence')+dhLegendRow(DHBOTH,'Mobility + Delivery — unaffected')+dhLegendRow(DHMOB,'Mobility only — unaffected')+
         '</div>'+
       '</div>'+
       dhMarketsListHTML()+
@@ -2052,36 +2105,29 @@ function dhRationaleBanner(){
 }
 function dhUberOneRegionCard(r){
   var cross=r.countries.filter(function(c){ return DH_SETS.mobSet.hasOwnProperty(c); });
-  var pct=Math.round(cross.length/r.countries.length*100);
-  var color=pct>=70?'#06965A':(pct>=35?'#D68A1C':DHSSW);
-  return '<div class="dhu-region ov-clickable" data-detail="dhu:'+esc(r.k)+'">'+
-    '<div class="dhu-region-h"><div class="dhu-region-t">'+esc(r.region)+'</div><div class="dhu-region-brand">'+esc(r.brands)+' · '+r.countries.length+' markets</div></div>'+
-    '<div class="dhu-bar"><div class="dhu-bar-track"><div class="dhu-bar-fill" style="width:'+pct+'%;background:'+color+'"></div></div><div class="dhu-bar-v" style="color:'+color+'">'+pct+'%</div></div>'+
-    '<div class="ov-fynote">already have Uber Mobility ('+cross.length+' of '+r.countries.length+') — tap for the market-by-market read</div>'+
+  var crossPct=Math.round(cross.length/r.countries.length*100);
+  var crossColor=crossPct>=70?'#06965A':(crossPct>=35?'#D68A1C':DHSSW);
+  var seg=DH_SEGMENT_GMV[r.gmvKey];
+  return '<div class="dhreg-card ov-clickable" data-detail="dhu:'+esc(r.k)+'">'+
+    '<div class="dhu-region-h"><div class="dhu-region-t">'+esc(r.region)+'</div></div>'+
+    (r.sub?'<div class="ov-fynote" style="margin-top:1px">'+esc(r.sub)+'</div>':'')+
+    '<div class="ov-fynote" style="margin:1px 0 10px">'+esc(r.brands)+' · '+r.countries.length+' markets</div>'+
+    '<div class="dhreg-stat"><div class="dhreg-stat-l">Share of Delivery Hero’s GMV</div><div class="dhreg-stat-v" style="color:#046A38">'+(seg?seg.share:'—')+'%</div>'+
+      '<div class="dhreg-stat-d">'+(seg?'$'+seg.usdB+'B of Delivery Hero’s ~$55B group total':'')+'</div></div>'+
+    '<div class="dhreg-stat"><div class="dhreg-stat-l">Already cross-platform</div><div class="dhreg-stat-v" style="color:'+crossColor+'">'+crossPct+'%</div>'+
+      '<div class="dhreg-stat-d">'+cross.length+' of '+r.countries.length+' markets already have Uber Mobility</div></div>'+
+    '<div class="ov-fynote" style="margin-top:8px">Tap for the market-by-market read ›</div>'+
   '</div>';
 }
 function dhUberOneDetail(id){
   var r=DH_UBERONE_REGIONS.filter(function(x){ return x.k===id; })[0]; if(!r) return null;
-  var totalPop=0, crossCount=0;
-  var rows=r.countries.map(function(c){
-    var st=DH_COUNTRY_STATS[c]||{pop:null,tier:null};
-    if(st.pop) totalPop+=st.pop;
-    var cross=DH_SETS.mobSet.hasOwnProperty(c); if(cross) crossCount++;
-    var tierColor=st.tier?(DH_TIER_COLOR[st.tier]||'var(--mu)'):'var(--mu)';
-    return '<tr><td>'+esc(c)+'</td>'+
-      '<td style="color:'+(cross?'#046A38':'#5CA83E')+';font-weight:700;white-space:nowrap">'+(cross?'Cross-platform':'New')+'</td>'+
-      '<td>'+(st.pop?st.pop+'M':'—')+'</td>'+
-      '<td style="color:'+tierColor+';font-weight:700">'+(st.tier?esc(st.tier):'—')+'</td></tr>';
-  }).join('');
+  var cross=r.countries.filter(function(c){ return DH_SETS.mobSet.hasOwnProperty(c); }).map(function(n){ return {n:n}; });
+  var neu=r.countries.filter(function(c){ return !DH_SETS.mobSet.hasOwnProperty(c); }).map(function(n){ return {n:n}; });
   var h='<div style="margin-bottom:10px;font-size:12.5px;line-height:1.6;color:var(--blue)">'+r.read+'</div>';
   if(r.caseStudy) h+='<div style="margin-bottom:10px;font-size:12.5px;line-height:1.6;color:var(--blue)">'+r.caseStudy+'</div>';
-  h+='<div class="ov-kpis" style="margin-bottom:10px">'+
-      '<div class="ov-kpi"><div class="ov-kpi-l">Markets</div><div class="ov-kpi-v">'+r.countries.length+'</div><div class="ov-kpi-d muted">'+crossCount+' already cross-platform</div></div>'+
-      '<div class="ov-kpi"><div class="ov-kpi-l">Combined population</div><div class="ov-kpi-v">~'+Math.round(totalPop)+'M</div><div class="ov-kpi-d muted">addressable market-size proxy</div></div>'+
-    '</div>'+
-    '<div class="ov-fynote" style="margin-bottom:10px"><b>Market share:</b> '+esc(r.rank)+'</div>'+
-    '<div style="overflow-x:auto"><table class="dhu-tbl"><thead><tr><th>Market</th><th>Uber status</th><th>Population</th><th>Income tier</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
-    '<div class="ov-fynote" style="margin-top:8px">Population and income tier are directional market-size / average-ticket-size proxies from public estimates — Delivery Hero does not disclose GMV, orders, or ticket size by country. The portfolio-wide blended average ticket is <b>~$14.48/order</b> (see KPIs above); High-tier markets likely sit above that, Lower-middle/Low-tier markets likely sit below it.</div>';
+  h+='<div class="ov-fynote" style="margin-bottom:10px"><b>Market share:</b> '+esc(r.rank)+'</div>'+
+    dhGroup('Already cross-platform', '#046A38', cross)+
+    dhGroup('New market', '#5CA83E', neu);
   return { t:r.region+' <span class="ov-modal-sub">'+esc(r.brands)+'</span>', h:h };
 }
 function dhUberOneSection(){
@@ -2093,13 +2139,14 @@ function dhUberOneSection(){
       '<span class="utn-ar">+</span>'+
       '<div class="utn-step"><div class="utn-sv">15M+</div><div class="utn-sl">Uber Mobility users in new cross-platform markets</div></div>'+
       '<span class="utn-ar">→</span>'+
-      '<div class="utn-step"><div class="utn-sv" style="color:#06965A">3x</div><div class="utn-sl">more Gross Bookings per cross-platform user</div></div>'+
+      '<div class="utn-step"><div class="utn-sv" style="color:#06965A">3x</div><div class="utn-sl">higher spend once they become cross-platform</div></div>'+
     '</div>'+
-    '<div class="utn-note">Cross-platform users are Uber’s highest-value cohort — turning Delivery Hero riders into Uber One members (and vice versa) is the core economic logic of this deal, arguably worth more than the acquired assets themselves.</div>'+
+    '<div class="utn-note">Uber’s own methodology (investor presentation, slide 8): the 50M+ is the <b>sum of Delivery Hero’s monthly active customers and Uber’s Mobility MAPCs</b> in the new cross-platform markets, <b>assuming zero existing overlap</b> between the two user bases. The <b>3x is the actual prize</b>: a cross-platform user — someone using both Mobility and Delivery, the profile Uber One membership is built to create — spends roughly <b>3x more</b> than someone using just one service. The deal’s entire economic logic is converting these 50M into that higher-spending habit. <span style="opacity:.75">Source: Uber Form 8-K, Exhibit 99.2, slides 8–9 (Jul 16, 2026).</span></div>'+
+    '<div class="ov-diagram-cap" style="margin:16px 0 4px">Where the 50M breaks down by region</div>'+
+    '<div class="ov-fynote" style="margin-bottom:10px">Uber doesn’t publish this split itself — each card blends two separately-sourced numbers: <b>share of Delivery Hero’s GMV</b> (FY2025 segment reporting) and <b>already cross-platform</b> (how many of the region’s markets already have Uber Mobility, computed live from the map above). <b>Tap a card</b> for the market-by-market detail.</div>'+
+    '<div class="dhreg-grid">'+DH_UBERONE_REGIONS.map(dhUberOneRegionCard).join('')+'</div>'+
+    '<div class="ov-fynote" style="margin-top:10px">'+esc(DH_SEGMENT_SOURCE)+' Europe and Americas include the SSW-bound markets too, so Uber’s true retained share there is smaller than shown.</div>'+
   '</div>';
-  h+='<div class="ov-diagram-cap" style="margin:16px 0 10px">Where does the 50M come from? Not evenly — Delivery Hero’s 50 acquired markets break into four regions with very different starting points. <b>Tap a region</b> for the market-by-market breakdown.</div>';
-  h+=DH_UBERONE_REGIONS.map(dhUberOneRegionCard).join('');
-  h+='<div class="ov-fynote" style="margin-top:12px">Average ticket size is a useful cross-check here: Delivery Hero’s blended FY2025 average is <b>~$14.48</b> per order (see KPIs above) — but that blends the Gulf’s higher-income baskets with lower-ticket markets across LatAm, the Balkans and Sub-Saharan Africa. Delivery Hero does not break out GMV or ticket size by country in the deal documents, so region-by-region ticket differences are a reasoned estimate, not a disclosed figure.</div>';
   return h;
 }
 function dhKpiSection(){
@@ -2435,18 +2482,27 @@ function stdOverviewBody(c){
     '.dhu-bar-track{flex:1;height:8px;background:var(--surface);border-radius:5px;overflow:hidden}'+
     '.dhu-bar-fill{height:100%;border-radius:5px}'+
     '.dhu-bar-v{font-size:12px;font-weight:800;width:40px;text-align:right;flex-shrink:0}'+
-    '.dhu-tbl{width:100%;border-collapse:collapse;font-size:11.5px}'+
-    '.dhu-tbl th{text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);font-weight:800;padding:6px 8px;border-bottom:2px solid var(--bdr);white-space:nowrap}'+
-    '.dhu-tbl td{padding:6px 8px;border-bottom:1px solid var(--bdr);color:var(--navy)}'+
-    '.dhu-tbl tr:last-child td{border-bottom:none}'+
+    /* Uber One "where does the 50M come from" — 4 region cards side by side, each with two labeled stats */
+    '.dhreg-grid{display:flex;gap:12px;flex-wrap:wrap;margin:0 0 4px}'+
+    '.dhreg-card{flex:1;min-width:200px;border:1px solid var(--bdr);border-radius:10px;padding:14px 16px;background:#fff;cursor:pointer;transition:.14s}'+
+    '.dhreg-card:hover{border-color:var(--brand-2)}'+
+    '.dhreg-stat{margin-top:9px}'+
+    '.dhreg-stat-l{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu)}'+
+    '.dhreg-stat-v{font-size:19px;font-weight:900;color:var(--navy);letter-spacing:-.01em}'+
+    '.dhreg-stat-d{font-size:10.5px;color:var(--mu);line-height:1.4;margin-top:1px}'+
     '.dhm-pillrow{display:flex;align-items:center;gap:16px;flex-wrap:wrap}'+
     '.dhm-mapblock[hidden],.dhm-listwrap[hidden]{display:none}'+
     '.dhm-chips{display:flex;flex-wrap:wrap;gap:6px}'+
     '.dhm-chip{font-size:11px;font-weight:600;padding:5px 11px;border-radius:16px;background:#fff;border:1px solid var(--bdr);color:var(--navy);cursor:pointer;transition:.12s}'+
     '.dhm-chip:hover{border-color:var(--brand);background:var(--surface)}'+
     '.dhm-chip i{font-style:normal;color:var(--mu);font-weight:500}'+
+    '.dhm-chip-sw{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}'+
+    '.dhm-listcols{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}'+
+    '.dhm-listcol{flex:1;min-width:260px}'+
+    '.dhm-listcol-h{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bdr)}'+
     '.dhm-list{margin-top:4px}.dhm-grp{margin-bottom:16px}.dhm-grp:last-child{margin-bottom:0}'+
     '.dhm-grp-h{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:800;color:var(--navy);margin-bottom:8px}'+
+    '.dhm-grp-region{font-size:12.5px;font-weight:800;color:var(--navy)}'+
     '.dhm-grp-n{color:var(--mu);font-weight:600;font-size:11px;margin-left:2px}'+
     /* Big green highlight card (Overview "What Truly Drives Uber" pattern) — duplicated here so this tab is self-contained */
     '.utn{border:1px solid var(--bdr);border-radius:14px;padding:16px 18px;margin:8px 0 4px;background:linear-gradient(180deg,rgba(6,193,103,0.05),transparent)}'+

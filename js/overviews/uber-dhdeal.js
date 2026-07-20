@@ -183,7 +183,7 @@ function dhdBody(c){
   var h = '<div class="ov-uber-dhd">'+styleBlock();
   h += '<div class="dhv-wrap">'+
     '<div class="dhv-tabs">'+
-      '<button type="button" class="dhv-tab active" data-dhv="ov">Overview</button>'+
+      '<button type="button" class="dhv-tab active" data-dhv="ov">GB vs GMV</button>'+
       '<button type="button" class="dhv-tab" data-dhv="cost">Cost Breakdown</button>'+
       '<button type="button" class="dhv-tab" data-dhv="seg">Segments &amp; Divestiture</button>'+
       '<button type="button" class="dhv-tab" data-dhv="syn">Synergy</button>'+
@@ -207,6 +207,18 @@ function dhdBody(c){
         '</div><div class="dhd-note">…yet earns less than half the margin.</div></div>'+
       '</div>'+
       '<div class="dhd-call"><b>Why?</b> Two drivers: (1) <b>accounting</b> — a portion of DH\'s higher take rate is grocery / quick-commerce recognized <b>gross</b> (as principal), i.e. thin-margin retail revenue; (2) <b>operating</b> — sub-scale costs, principally <b>technology</b>. Meanwhile Uber Eats\' margin is <b>expanding</b> (3.3%→3.9% in one year): the gap is widening. <span style="color:var(--mu)">Full detail under Cost Breakdown.</span></div>'+
+    '</div>'+
+    '<div class="dhd-card">'+
+      '<div class="dhd-eye">The root cause</div>'+
+      '<div class="dhd-t">Why DH\'s take rate is higher: it owns part of the stores</div>'+
+      '<p class="dhd-lede">DH\'s 28.6% take rate is not richer economics than Uber\'s ~19% — it reflects a different <b>revenue-recognition model</b> on part of the business. Under IFRS 15, whether you book gross or net turns on <b>who owns the goods</b>.</p>'+
+      '<div class="dhd-pa">'+
+        '<div class="dhd-pabox p"><div class="dhd-pah">Principal → books GROSS</div><div class="dhd-pasub">Dmarts grocery + own delivery · ~13% of GMV</div>'+
+          '<p>DH <b>owns and operates its own grocery dark-stores ("Dmarts")</b> — it buys, stocks and holds the inventory, bears the inventory risk, then sells directly to the consumer, exactly like a retailer. Being primarily responsible for the goods makes DH the <b>principal</b>, so it recognizes the <b>full sale value (GMV ex-VAT)</b> as revenue, with the merchandise in cost of sales.</p></div>'+
+        '<div class="dhd-pabox a"><div class="dhd-pah">Agent → books NET</div><div class="dhd-pasub">Restaurant marketplace · commission only</div>'+
+          '<p>When a customer orders from a <b>third-party restaurant</b>, DH merely arranges the transaction — it never owns the food or bears inventory risk. That makes DH an <b>agent</b>, so it books only its <b>commission</b> (net), not the value of the meal. This is how Uber Eats recognizes almost all of its revenue.</p></div>'+
+      '</div>'+
+      '<div class="dhd-call warn"><b>Net effect:</b> the owned-store model grosses up DH\'s reported revenue and lifts the take rate to 28.6% vs Uber\'s mostly-net ~19% — but it is <b>thin-margin retail revenue</b> (Dmarts converts just 0.1% of GMV into EBITDA), not a structurally better take. This is precisely why revenue and take rate are not comparable across the two, and why every margin comparison here uses <b>Adj. EBITDA / GMV</b> instead.</div>'+
     '</div></div>';
 
   // ── COST BREAKDOWN ──
@@ -306,16 +318,6 @@ function dhdBody(c){
             '</tbody></table></div>'+
           '<p class="dhd-tnote">Uber does not disclose a numeric split of its $31.3bn cost of revenue. FY2025 <b>incremental</b> drivers: +$1.6bn courier pay, +$1.6bn driver pay, +$0.9bn insurance.</p></div>'+
       '</div>'+
-      // principal/agent explainer
-      '<div class="dhd-subh"><span class="tg">The root cause</span>Why DH\'s take rate is higher: it owns part of the stores</div>'+
-      '<p class="dhd-lede" style="margin-bottom:12px">DH\'s 28.6% take rate is not richer economics than Uber\'s ~19% — it reflects a different <b>revenue-recognition model</b> on part of the business. Under IFRS 15, whether you book gross or net turns on <b>who owns the goods</b>.</p>'+
-      '<div class="dhd-pa">'+
-        '<div class="dhd-pabox p"><div class="dhd-pah">Principal → books GROSS</div><div class="dhd-pasub">Dmarts grocery + own delivery · ~13% of GMV</div>'+
-          '<p>DH <b>owns and operates its own grocery dark-stores ("Dmarts")</b> — it buys, stocks and holds the inventory, bears the inventory risk, then sells directly to the consumer, exactly like a retailer. Being primarily responsible for the goods makes DH the <b>principal</b>, so it recognizes the <b>full sale value (GMV ex-VAT)</b> as revenue, with the merchandise in cost of sales.</p></div>'+
-        '<div class="dhd-pabox a"><div class="dhd-pah">Agent → books NET</div><div class="dhd-pasub">Restaurant marketplace · commission only</div>'+
-          '<p>When a customer orders from a <b>third-party restaurant</b>, DH merely arranges the transaction — it never owns the food or bears inventory risk. That makes DH an <b>agent</b>, so it books only its <b>commission</b> (net), not the value of the meal. This is how Uber Eats recognizes almost all of its revenue.</p></div>'+
-      '</div>'+
-      '<div class="dhd-call warn"><b>Net effect:</b> the owned-store model grosses up DH\'s reported revenue and lifts the take rate to 28.6% vs Uber\'s mostly-net ~19% — but it is <b>thin-margin retail revenue</b> (Dmarts converts just 0.1% of GMV into EBITDA), not a structurally better take. This is precisely why revenue and take rate are not comparable across the two, and why every margin comparison here uses <b>Adj. EBITDA / GMV</b> instead.</div>'+
       // synergy sits
       '<div class="dhd-subh"><span class="tg">Where the synergy sits</span>Mapping the gap to the $1.2bn target</div>'+
       '<div class="dhd-tscroll"><table class="dhd-tbl">'+

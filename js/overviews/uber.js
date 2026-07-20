@@ -9,6 +9,7 @@
 import { makeValuation } from './valuation.js';
 import { makeManagement } from './management.js';
 import { WORLD_PATHS, WORLD_VB } from './world-paths.js';
+import { uberDhDeepDive } from './uber-dhdeal.js';
 
 // Interactive "Scenario → price target" calculator (Valuation tab). Fundamentals from
 // the Summit DCF (FY2025 actuals; FY2026E estimate). Net cash & price are editable
@@ -2454,6 +2455,11 @@ function stdOverviewBody(c){
     '.dd-tab{border:none;background:transparent;font:inherit;font-size:12.5px;font-weight:700;color:var(--mu);padding:8px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}'+
     '.dd-tab:hover{color:var(--navy)}.dd-tab.active{color:var(--navy);border-bottom-color:var(--navy)}'+
     '.dd-pane[hidden]{display:none}'+
+    /* Delivery Hero Acquisition inner split: Deal Snapshot | Deep Dive */
+    '.dha-tabs{display:inline-flex;gap:4px;background:var(--pale);border:1px solid var(--bdr);border-radius:10px;padding:4px;margin:0 0 16px}'+
+    '.dha-tab{border:none;background:transparent;font:700 12.5px Inter,sans-serif;color:var(--mu);padding:8px 18px;border-radius:7px;cursor:pointer}'+
+    '.dha-tab:hover{color:var(--navy)}.dha-tab.active{background:var(--navy);color:#fff}'+
+    '.dha-pane[hidden]{display:none}'+
     /* Delivery Hero acquisition tab — world map, quotes */
     '.dhm-wrap{margin:0}'+
     '.dhm-toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:12px}'+
@@ -2610,7 +2616,14 @@ function deepDiveHtml(c){
       '<div class="ovt-subpane" data-ovst="guidance" hidden>'+modelBody(c)+ub3yrTargets()+'</div>'+
       '<div class="ovt-subpane" data-ovst="strategy" hidden>'+ubStrategyBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="timeline" hidden>'+historyStoryBody()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="dhacq" hidden>'+deliveryHeroBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="dhacq" hidden><div class="dha-wrap">'+
+        '<div class="dha-tabs">'+
+          '<button type="button" class="dha-tab active" data-dha="snapshot">Deal Snapshot</button>'+
+          '<button type="button" class="dha-tab" data-dha="deepdive">Deep Dive</button>'+
+        '</div>'+
+        '<div class="dha-pane" data-dha="snapshot">'+deliveryHeroBody()+'</div>'+
+        '<div class="dha-pane" data-dha="deepdive" hidden>'+uberDhDeepDive.body(c)+'</div>'+
+      '</div></div>'+
     '</div>';
   // ── VALUATION — Multiples · Peers (listed-peer multiples) · Analyst Ratings (Massive, absorbed) ·
   // Capital Allocation · Balance Sheet. (Sensitivity grid removed; competitive map moved to Industry.) ──
@@ -3032,6 +3045,19 @@ function init(c){
   renderLive(root); // Deep Dive ▸ Deep Overview keeps its live-price banner (#ubLive lives only there now); the standardized Overview has no price strip.
   wireDD(root);
   wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt');
+  // Delivery Hero Acquisition ▸ inner split (Deal Snapshot | Deep Dive) and the Deep
+  // Dive's own 5-tab spine. Own classes (not .ovt-subtab/.ovt-subpane) so the Evolution
+  // subtab scanner never grabs them; closest()-scoped so nesting is safe.
+  root.querySelectorAll('.dha-tab').forEach(function(btn){ btn.onclick=function(){
+    var wrap=btn.closest('.dha-wrap'); if(!wrap) return; var key=btn.getAttribute('data-dha');
+    wrap.querySelectorAll('.dha-tab').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    wrap.querySelectorAll('.dha-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-dha')!==key); });
+  }; });
+  root.querySelectorAll('.dhv-tab').forEach(function(btn){ btn.onclick=function(){
+    var wrap=btn.closest('.dhv-wrap'); if(!wrap) return; var key=btn.getAttribute('data-dhv');
+    wrap.querySelectorAll('.dhv-tab').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    wrap.querySelectorAll('.dhv-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-dhv')!==key); });
+  }; });
   // Segments ▸ inner Mobility/Delivery/Freight toggle (the "sub-tabs de los segmentos").
   root.querySelectorAll('.seg-pill').forEach(function(btn){ btn.onclick=function(){
     var seg=btn.getAttribute('data-seg');

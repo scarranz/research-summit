@@ -1150,112 +1150,144 @@ function trackBody(c){
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // DEEP DIVE — CALL PREP  (6th spine tab · append-only per quarter · portable to MA/UBER/LYFT/CART)
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-// A decision tool, not an archive. The whole object is APPEND-ONLY by quarter: an upcoming quarter's
-// pre-call `watchList`/`setup` is FROZEN and never overwritten — after the print it sits next to that
-// same quarter's `postCall` so we build a running record of how well we read the company (calibration).
-// Workflow: pre-call → attend → pull transcript → fill postCall + author next quarter's watchList
-// (newQuestions feeds it). The render (cp*Body) is generic — copy it to another ticker, swap content.
+// A decision tool, not an archive. Three phases per quarter: ① Pre-Call (setup + watchList, FROZEN
+// once the quarter opens) → ② Post-Results (the numbers scorecard vs consensus) → ③ Post-Call (what
+// management said + the meeting conclusion). APPEND-ONLY: prior quarters are never overwritten, so we
+// build a running record of how well we read the company. Workflow: pre-call → results land → fill
+// `results` → attend call → fill `call` (conclusion + newQuestions, which seed the next watchList).
+// The render (cp*Body) is generic — copy it to another ticker, swap content. Consensus is HARDCODED
+// from Bloomberg (only the values that render), see docs/CALL_PREP_CONVENTIONS.md.
 var CALL_PREP = {
   ticker:'IBKR',
   quarters:[
     { q:'Q2 2026', status:'upcoming', date:'Tue Jul 21, 2026 · after close (call 4:30pm ET)',
+      // Consensus below is HARDCODED and only the values that render in the portal (Bloomberg-sourced).
       setup:{
-        consensus:{ rev:'~$1.8B (+22% YoY)', eps:'$0.64 (+26% YoY)', darts:'5.27M/day (Jun, +53%)*', netNewAccts:'accounts +34% YoY*' },
-        pricedIn:'IBKR trades ~30× forward — a premium to Schwab (~20×), a discount to Robinhood (~45×). At that multiple the market is paying for <b>continued ~30%+ account growth</b> and <b>NII that holds up through Fed cuts</b>. The single biggest debate embedded in the price is rate sensitivity: bears assume NII rolls over as the Fed eases; the multiple says the balance-growth offset keeps working. Also embedded: a <b>hot bar</b> — IBKR has <b>faded on the print in 3 of the last 4 quarters even while beating</b>, so a plain beat may not be enough.',
-        priorReactions:[
-          { q:'Q2 2025', move:'▲ ~+8%', why:'Large beat (EPS $0.51 vs ~$0.46), record results.' },
-          { q:'Q3 2025', move:'▼ ~2.6%', why:'Beat (adj $0.57 vs $0.50) but "sell the news" after a strong run.' },
-          { q:'Q4 2025', move:'▼ ~2.5%', why:'Big beat (adj $0.65 vs $0.52), record 1M+ net-new accounts — still faded.' },
-          { q:'Q1 2026', move:'▼ ~3%', why:'Rare headline MISS: rev $1.67B vs ~$1.74B, EPS $0.59 vs ~$0.61.' },
-        ],
-        oneLiner:'<b>Our variant view:</b> the Street models NII flattening as the Fed cuts, but client credit balances (+35% YoY) and margin loans (+35%) are growing faster than any plausible rate drag — so if balances hold, FY27 EPS prints <b>above</b> consensus and 30× is not expensive. The trade is to <b>fade the rate-cut fear</b> — and, given the beat-but-fade pattern, to <b>fade any post-print dip</b> if the operating metrics (balances, DARTs, margin) stay strong. What kills it is <b>balances stalling</b>, not the Fed.'
+        source:'Bloomberg (BST consensus)', asOf:'2026-07-21',
+        consensus:{
+          adjEps:{v:0.63,yoy:24,unit:'$'}, adjNetRevUsdM:{v:1787,yoy:21,unit:'$M'},
+          niiUsdM:{v:980,yoy:14,unit:'$M'}, dartsM:{v:4.72,yoy:33,unit:'M/day'},
+          accountsM:{v:5.15,yoy:33,unit:'M', note:{ t:'⚠ First quarter after the PDT-rule change', h:'<p>The <b>Pattern-Day-Trader rule was eliminated on June 4, 2026</b> — the $25k minimum for small active accounts is gone. Q2 2026 is the <b>first quarter to reflect it</b>, so a bump in US account adds is expected and partly <b>structural, not organic</b>.</p><p>Read the number with that caveat: the durable signal is the <b>international mix</b>, not the headline.</p>' }},
+          custEquityBn:{v:903.7,yoy:36,unit:'$B'},
+          creditBalAvgBn:{v:170.1,yoy:31,unit:'$B'}, preTaxMarginPct:{v:76.8,yoy:null,unit:'%'}
+        },
+        debate:{
+          fear:'NII rolls over as the Fed cuts rates.',
+          real:'Consensus has NII <b>rising anyway</b> — $904M → est. $980M — because balances outgrow the rate drag.',
+          mech:[ {k:'NIM', v:'1.88% → 1.85%', dir:'down'}, {k:'Balances', v:'credit +31% · margin +56%', dir:'up'}, {k:'⇒ NII', v:'still +14% YoY', dir:'up'} ],
+          synth:'So the real question isn\'t the Fed — it\'s whether that balance growth is <b>organic and sticky</b>, or a rate-driven pull-forward that reverses. That\'s the one thing to disprove.'
+        },
+        detail:'<p>IBKR carries a <b>rate-cut discount</b> in its multiple — the bear assumes net interest income, its biggest revenue line, rolls over as the Fed eases.</p><p>But Bloomberg consensus itself already prices the opposite: NII <b>keeps growing</b> ($904M → $980M → $1,037M over the next three quarters) even as net interest margin compresses (1.88% → 1.85%), because <b>earning assets grow faster than the rate drag</b> — est. margin loans +56% YoY, credit balances +31%. The offset is the whole ballgame.</p>'
       },
       watchList:[
-        { rank:1, metric:'Pre-tax margin (adjusted)', expect:'≈ 76–77%, flat-to-up', breaks:'Below 74% for two straight quarters',
-          question:'Which cost line, if any, is finally starting to scale with volume — and at what account-growth rate does margin expansion stop?',
-          why:'The entire thesis is "automation → operating leverage." Margin is the one number that directly proves it. A sustained slip below 74% means volume is no longer free — the moat narrative breaks before revenue ever shows it.' },
-        { rank:2, metric:'Net interest income vs. rate path', expect:'NII flat-to-up YoY despite Fed cuts', breaks:'NII falls YoY while credit balances still grow',
-          question:'If the Fed cuts another 50bps from here, at what rate of balance growth does NII still grow year-over-year? Give us the crossover.',
-          why:'This is the crux of the whole valuation debate (see the variant view). NII growing WHILE rates fall = the balance-offset works and the bears are wrong. NII falling while balances still climb = the offset has broken and the multiple is too high.' },
-        { rank:3, metric:'Net-new accounts / account growth', expect:'Record adds; accounts +~30% YoY', breaks:'Account growth decelerates below ~20% YoY',
-          question:'How much of this quarter\'s adds are pulled forward by the PDT-rule change (eff. June 4) vs. underlying organic demand — and is the Asia/Europe mix still accelerating?',
-          why:'Organic account growth is the top of the flywheel; everything downstream (balances, DARTs) depends on it. A drop below ~20% would signal the organic engine is maturing — and a PDT-driven spike that fades would be a false positive.' },
-        { rank:4, metric:'Commission per cleared trade (blended)', expect:'Commissions grow roughly with DARTs', breaks:'DARTs up but commission revenue lags / pricing concessions',
-          question:'Is competitive pricing from Schwab or Robinhood forcing any concession in commission per cleared trade, or a mix-shift toward zero-commission Lite?',
-          why:'DARTs can rise while revenue stalls if pricing erodes or mix shifts to Lite. This isolates real monetization from raw activity — and directly tests the "no one can match our prices AND our margin" claim.' },
-        { rank:5, metric:'ForecastEx / new-product monetization', expect:'Contract volume keeps compounding', breaks:'ForecastEx volume plateaus or a CFTC/sports ruling forces a pullback',
-          question:'What is the revenue path for ForecastEx, and does the Kalshi/sports litigation change your self-certification strategy or your decision to avoid sports?',
-          why:'This is the free optionality in the stock — cheap to watch, potentially large. A plateau means the "broadening the box" story is slower than hoped; an adverse CFTC ruling would cap the whole prediction-market opportunity.' },
+        { rank:1, metric:'Net interest income & the NIM crossover', bbg:'Consensus $980M (+14% YoY); NIM 1.85% (from 1.88%)', breaks:'NII falls YoY while credit balances still grow',
+          pista:'Consensus already has NII <i>rising</i> ($904M→$980M) while NIM slips 1.88%→1.85% — i.e. the Street is not betting on rates, it\'s betting on balances. So the tell is simple: does NII grow YoY? If it does while the Fed eases, the rate-cut discount on the stock is the mispricing.',
+          why:'NII is IBKR\'s largest revenue line and the entire valuation debate. NII up while rates fall = the offset works; NII down while balances still climb = the offset broke and the multiple is too high.',
+          src:'A Bloomberg "Highlight" line + rate-sensitivity is the #1 recurring theme across the last 10 calls (management discloses the −25bps sensitivity every quarter).' },
+        { rank:2, metric:'The earning-asset engine: credit balances · margin loans · customer equity', bbg:'Consensus credit bal $170B (+31%), margin loans $95B avg (+56%), equity $904B (+36%)', breaks:'Any of the three decelerates sharply or goes flat QoQ',
+          pista:'These three lines ARE the NII engine — they are what make NII grow while NIM compresses. The one genuinely answerable question worth asking: how much of the growth is organic vs. rate/market-driven. If they dodge it, assume some is market-driven and therefore fragile.',
+          why:'The offset in #1 is literally these three lines. That is why Bloomberg highlights all three. If they stall, NII rolls over next.',
+          src:'Three separate Bloomberg "Highlight" lines (avg margin loans, avg credit balances, customer equity) — the vendor treats them as core drivers, not color.' },
+        { rank:3, metric:'Customer account growth', bbg:'Consensus 5.15M accounts (+33% YoY)', breaks:'Growth decelerates below ~25% YoY, or a PDT-driven spike that looks one-off',
+          pista:'Q2 is the first quarter after the PDT-rule change (eff. Jun 4), so a spike in small active accounts is expected. Don\'t be fooled by the headline number — the durable tell is the international mix; a US-only PDT bump that fades is a false positive.',
+          why:'Accounts are the top of the flywheel — every downstream line depends on it, and management leads every call with it. A sharp decel is the earliest crack.',
+          src:'A Bloomberg "Highlight" line + management\'s lead metric on every call; PDT (eff. Jun 4) makes Q2 the first read on the tailwind.' },
+        { rank:4, metric:'DARTs → commissions (and commission per DART)', bbg:'Consensus DARTs 4.72M (+33%), commissions $672M (+30%); comm/DART ~$2.69', breaks:'DARTs up but commission-per-DART drops materially',
+          pista:'Commission per cleared trade has held ~$2.65–2.83 for <b>two straight years</b> — that stability IS the pricing-power proof. So ignore the DART headline (it\'ll be up); the only thing that changes the story is commission-PER-DART cracking. If it finally slips, the "nobody can match our prices AND our margin" moat is weakening.',
+          why:'DARTs are the activity engine; commissions lever to them. The clean test of pricing power is per-DART, not raw DARTs.',
+          src:'Bloomberg tracks Avg Commission per DART explicitly; its two-year stability is the actual evidence on the "pricing pressure" worry (which analysts press LESS than expected).' },
+        { rank:5, metric:'New-product optionality: ForecastEx · crypto · overnight', bbg:'No clean consensus line — qualitative', breaks:'ForecastEx volume plateaus, or a CFTC/sports ruling forces a pullback',
+          pista:'This won\'t move the quarter — it is option value, ranked last on purpose. The only things that actually change the story are a first ForecastEx <i>revenue</i> disclosure (they\'ve never given one) or a CFTC/sports ruling. Until then, note it, don\'t trade on it.',
+          why:'Cheap to monitor and asymmetric, but not a needle-mover yet.',
+          src:'Recurring "new products" theme across the calls; no dedicated Bloomberg line, so explicitly the qualitative, lower-weight item.' },
       ],
-      postCall:null
+      results:null, call:null
     },
     { q:'Q1 2026', status:'reported', date:'Apr 21, 2026',
       setup:{
-        consensus:{ rev:'~$1.74B', eps:'~$0.61', darts:'up double digits', netNewAccts:'record adds, +~30% YoY' },
-        pricedIn:'The debate going in was whether NII could stay near record as the Fed eased; the stock had run into the print on strong account and equity growth, so the bar was high.',
-        priorReactions:[],
+        source:'Bloomberg (BST consensus)', asOf:'2026-04-21',
+        consensus:{ adjEps:{v:0.61,yoy:null,unit:'$'}, adjNetRevUsdM:{v:1740,yoy:null,unit:'$M'} },
+        pricedIn:'The debate going in was whether NII could stay near record as the Fed eased; the stock had run into the print, so the bar was high.',
         oneLiner:'Pre-call view: balance growth would keep NII resilient and DARTs would carry commissions — the risk was that a hot bar punishes anything short of a clean beat.'
       },
       watchList:[
-        { rank:1, metric:'Net interest income', expect:'Hold near record despite cuts', breaks:'NII down YoY with balances still growing', question:'Where is the NII crossover if the Fed keeps cutting?', why:'The rate-sensitivity crux.' },
-        { rank:2, metric:'DARTs / commissions', expect:'DARTs up double digits, commissions follow', breaks:'DARTs up but commissions flat', question:'Any pricing concession vs. Schwab/HOOD?', why:'Monetization vs. raw activity.' },
-        { rank:3, metric:'Net-new accounts', expect:'Record adds, +~30% YoY', breaks:'Sub-20% YoY', question:'Is the international mix still accelerating?', why:'Top of the flywheel.' },
+        { rank:1, metric:'Net interest income', bbg:'hold near record', breaks:'NII down YoY with balances still growing', pista:'The rate-sensitivity crux — watch YoY direction.', why:'The rate-sensitivity crux.' },
+        { rank:2, metric:'DARTs / commissions', bbg:'DARTs up double digits', breaks:'DARTs up but commission-per-DART drops', pista:'Watch per-DART, not raw DARTs.', why:'Monetization vs. raw activity.' },
+        { rank:3, metric:'Net-new accounts', bbg:'record adds, +~30% YoY', breaks:'Sub-25% YoY', pista:'International mix is the durable part.', why:'Top of the flywheel.' },
       ],
-      postCall:{
-        delta:[
-          { metric:'Net revenues (headline)', expected:'~$1.74B', actual:'$1,669M', verdict:'MISS — headline light vs. Street' },
-          { metric:'Diluted EPS', expected:'~$0.61', actual:'$0.59 rep / $0.60 adj', verdict:'miss vs. consensus' },
-          { metric:'Net interest income', expected:'≈ hold record', actual:'$904M, +17% YoY', verdict:'beat — balance offset winning' },
-          { metric:'Commissions', expected:'follow DARTs', actual:'$613M, +19% (first >$600M quarter)', verdict:'beat' },
-          { metric:'DARTs', expected:'up double digits', actual:'4.4M/day, +24% YoY', verdict:'beat' },
-          { metric:'Client equity', expected:'keep compounding', actual:'$789.4B, +38% YoY', verdict:'beat' },
-          { metric:'Credit balances', expected:'keep growing', actual:'$168.8B, +35% YoY', verdict:'beat — powers NII' },
-          { metric:'Total accounts', expected:'+~30% YoY', actual:'4.75M, +31% YoY', verdict:'in line' },
+      // Post-Results = the numbers (available first, ~before the call). Actuals: Bloomberg (reported).
+      results:{
+        headline:'Beat the business, missed the print — every operating line was strong, yet the stock fell because the two headline numbers (revenue, EPS) came in light.',
+        scorecard:[
+          { metric:'Net revenue', cons:'~$1.74B', actual:'$1,669M', result:'miss' },
+          { metric:'Adj EPS', cons:'~$0.61', actual:'$0.60', result:'miss' },
+          { metric:'Net interest income', cons:'hold record', actual:'$904M · +17% YoY', result:'beat' },
+          { metric:'Commissions', cons:'follow DARTs', actual:'$613M · +19% (1st >$600M)', result:'beat' },
+          { metric:'DARTs', cons:'up dbl digits', actual:'4.37M · +24% YoY', result:'beat' },
+          { metric:'Client equity', cons:'compounding', actual:'$789.4B · +38% YoY', result:'beat' },
+          { metric:'Pre-tax margin', cons:'high-70s', actual:'77.2%', result:'inline' },
+          { metric:'Customer accounts', cons:'+~30% YoY', actual:'4.75M · +31% YoY', result:'inline' },
         ],
-        contradictions:[],
-        toneShifts:['Peterffy assertive on prediction markets ("potentially the biggest development in the business in a century") and on ForecastEx institutional inquiries picking up.'],
-        priceReaction:{ move:'▼ ~2–4%', read:'The tell of the quarter: <b>every operating metric was strong (NII, commissions, DARTs, +38% equity, 77% margin) yet the stock fell</b>, because the two headline numbers the Street anchors on — revenue ($1.67B vs ~$1.74B) and EPS ($0.59 vs ~$0.61) — missed. Classic beat-the-business, miss-the-print; the bar is hot.' },
-        redFlags:['Revenue missed even though NII and commissions beat — the shortfall was in other lines. Worth isolating which.','The +35% credit-balance growth is the load-bearing assumption for the whole NII-offset thesis; if it is rate-driven pull-forward, the thesis is fragile.'],
-        newQuestions:['If the Fed cuts again, give the explicit balance-growth rate at which NII still grows YoY.','Which revenue line came in below the Street despite record NII and commissions — other fees / other income / mark-to-market?','How much of account growth is PDT-rule pull-forward vs. organic?']
+        thesisCheck:[
+          { line:'NII falls YoY while balances grow', tripped:false, note:'NII +17% — the balance-offset is working.' },
+          { line:'Commission-per-DART drops materially', tripped:false, note:'Held ~$2.69 — pricing power intact.' },
+          { line:'Account growth below ~25% YoY', tripped:false, note:'+31% — flywheel intact.' },
+        ],
+        priceReaction:'Fell on the print (exact move to fill from a trusted source, not web).'
+      },
+      // Post-Call = insight-first highlights (theme by theme, depth in pop-ups) + the meeting take.
+      call:{
+        take:'Quietly strong quarter the tape hated for the <b>wrong reason</b>: the core thesis got confirmed (NII grew <b>+17% straight through the rate cuts</b>) while the headline missed on a non-core line. No red-line tripped — the dip is noise.',
+        highlights:[
+          { tag:'thesis', head:'The rate-cut fear is empirically wrong — NII grew <b>+17%</b> <i>through</i> the cuts',
+            detail:'<p>NIM fell 2.02% → 1.88%, yet NII <b>rose</b> to $904M (+17% YoY) because credit balances (+35%) and margin loans (+35%) more than offset the rate drag.</p><p><b>Why it matters:</b> this is the single most important confirmation for the thesis. The whole valuation debate is "does NII survive the cuts?" — this quarter answered yes, and showed <i>how</i> (balances, not rates).</p>' },
+          { tag:'curious', head:'Overnight trading quietly <b>tripled</b> — a detail mentioned almost in passing',
+            detail:'<p>Overnight (24/5) volume went ~2.8M → 8.1M, nearly 3×. It barely got airtime on the call.</p><p><b>Connect the dots:</b> it lines up with Peterffy calling 24/5 a <b>"10–20 year secular trend"</b> — a slow-burn expansion of <i>when</i> and <i>what</i> a single account can trade. Not material to this quarter, but exactly the kind of one-mention detail that later becomes the story.</p>' },
+          { tag:'dots', head:'The revenue "miss" was <b>optics, not the business</b>',
+            detail:'<p>Headline net revenue came in light vs. the Street — but NII <b>and</b> commissions both <b>beat</b>. So the shortfall sat in a non-core line (other income / mark-to-market), not the engine.</p><p><b>The dot to connect:</b> the business beat, the print missed, and the stock fell on the wrong number. That gap between "operations" and "headline" is the whole reason to have read the call rather than the tape.</p>' },
+          { tag:'watch', head:'Prediction markets got a notable <b>tonal upgrade</b> from Peterffy',
+            detail:'<p>Peterffy called ForecastEx "potentially the biggest development in the business in a century" and flagged institutions now inquiring about membership.</p><p><b>Why watch:</b> still tiny financially, but the founder is leaning in hard. The tell for next quarter is whether those inquiries convert to actual members / disclosed revenue.</p>' },
+          { tag:'watch', head:'The OCC trust-bank charter went <b>unmentioned</b> despite conditional approval',
+            detail:'<p>A real, filed project (custody for mutual funds / ETFs) that had just cleared a conditional OCC hurdle — and it didn\'t come up on the call.</p><p><b>Silence is the tell:</b> a live project quietly dropping off the script is the cheapest signal nobody tracks. Put it on the list to ask directly next quarter.</p>' },
+        ],
+        dots:'<b>The story, in one thread:</b> NII grew through the cuts → the core thesis is intact; the "miss" was a non-core line, not the engine; and two slow-burn options (overnight trading, prediction markets) are quietly building under the surface. Net: nothing broke — the pullback is a gift <i>if</i> you believe the balances are durable.',
+        newQuestions:['Which non-core revenue line came in below the Street despite record NII and commissions?','How much of account growth is PDT-rule pull-forward vs. organic?','Did the OCC charter and ForecastEx-institutional inquiries progress — or go quiet?']
       }
     }
   ],
-  // Promise Tracker — what management SAID it would do, and whether it happened. Silence is a signal.
+  // Promise Tracker — separating what management is genuinely DOING from what it merely floated.
+  // kind: 'project' = a committed, funded, active initiative · 'pipeline' = a stated expectation
+  // (numbers management put out there) · 'musing' = "open to the possibility" only, NOT a commitment.
+  // Only the first two are held to account; musings are shown to keep the distinction honest.
   promises:[
-    { item:'OCC National Trust Bank charter', origin:'Q4 2024', status:'pending', lastMentioned:'not on the Q1 2026 call',
-      note:'Applied Dec 2025; received OCC preliminary conditional approval (~May 2026, in a batch of five). Final approval pending conditions. NOT discussed on the Q1 2026 call — watch tonight for a go-live update or a first custody asset, or flag the silence.' },
-    { item:'ForecastEx / prediction markets', origin:'Q3 2024', status:'delivered', lastMentioned:'Q1 2026',
-      note:'Live Aug 2024; 286M contract pairs in Q4 2025 (from 15M). Now a scaling line, not a promise — watch the revenue disclosure.' },
-    { item:'Crypto expansion (Coinbase derivatives, EEA)', origin:'2024–2025', status:'delivered', lastMentioned:'Q1 2026',
-      note:'Coinbase-derivatives nano BTC/ETH perpetual-style futures (Feb 2026); EEA spot live.' },
-    { item:'Prime brokerage / High-Touch Prime', origin:'Q1 2024', status:'delivered', lastMentioned:'~Q3 2025 (quiet since)',
-      note:'Launched 2024; ranked Preqin #4 prime broker. No fresh traction data on the Q1 2026 call — ask for updated fund count / balances, or treat the quiet as a soft signal.' },
-    { item:'Introducing-broker pipeline ("~two dozen firms")', origin:'Q2 2024', status:'pending', lastMentioned:'~Q2 2025',
-      note:'HSBC WorldTrader is live; management cited ~two dozen more in progress + a UAE ~10k-account migration. How many actually converted? This is a good silence-check.' },
-    { item:'European bank license (Ireland)', origin:'Q4 2024', status:'silent', lastMentioned:'~Q4 2024',
-      note:'Mentioned once alongside the OCC charter, little since. Classic cheap silence signal — ask if it is still being pursued.' },
-    { item:'PDT-rule elimination benefit', origin:'Q1 2026', status:'pending', lastMentioned:'Q1 2026',
-      note:'Effective June 4, 2026. Peterffy welcomed it; Q2 2026 is the first quarter to show any early impact on small active accounts.' },
-    { item:'Dividend policy (~0.5–1% of stock price)', origin:'2011 / Q1 2025', status:'delivered', lastMentioned:'Q1 2026',
-      note:'$0.10/qtr (2011) → $0.25/qtr (Q1 2025) → 4-for-1 split (Jun 2025) → $0.35/yr (Q1 2026).' },
-  ],
-  // Analyst Map — who covers it and what they press. Confirmed from recent Q&A; evasion is judged
-  // across quarters (none flagged yet — set true only with transcript evidence).
-  analysts:[
-    { name:'Patrick Moley', firm:'Piper Sandler', recurringQ:'Retail account growth and the PDT-rule tailwind for small active accounts.', mgmtResponse:'', evasive:false },
-    { name:'Craig Siegenthaler', firm:'BofA Securities', recurringQ:'Total account growth and rate/NII sensitivity (keeps a Buy).', mgmtResponse:'', evasive:false },
-    { name:'Kyle Voigt', firm:'KBW', recurringQ:'Client credit-balance growth and cash sorting / rate sensitivity.', mgmtResponse:'', evasive:false },
-    { name:'Benjamin Budish', firm:'Barclays', recurringQ:'Margin balances and ForecastEx / prediction-market institutional adoption.', mgmtResponse:'', evasive:false },
-    { name:'Chris Allen', firm:'Citi', recurringQ:'Crypto expansion and the staking roadmap.', mgmtResponse:'', evasive:false },
-    { name:'Dan Fannon', firm:'Jefferies', recurringQ:'Expense/margin discipline and rate sensitivity.', mgmtResponse:'', evasive:false },
-    { name:'James Yaro', firm:'Goldman Sachs', recurringQ:'Marketing spend and AI / cash-optimization tools.', mgmtResponse:'', evasive:false },
-    { name:'Brennan Hawken', firm:'BMO Capital', recurringQ:'Non-USD rate sensitivity and currency mix.', mgmtResponse:'', evasive:false },
+    { item:'OCC National Trust Bank charter', kind:'project', origin:'Q4 2024', status:'pending', lastMentioned:'not on the Q1 2026 call',
+      note:'A real, filed initiative: applied Dec 2025; OCC preliminary conditional approval (~May 2026, batch of five); final approval pending conditions. NOT raised on the Q1 2026 call — watch for a go-live/first-custody update, or flag the quiet.' },
+    { item:'ForecastEx / prediction markets', kind:'project', origin:'Q3 2024', status:'delivered', lastMentioned:'Q1 2026',
+      note:'Live Aug 2024; 286M contract pairs in Q4 2025 (from 15M). Delivered and scaling — track the (still-undisclosed) revenue contribution.' },
+    { item:'Crypto expansion (Coinbase derivatives, EEA)', kind:'project', origin:'2024–2025', status:'delivered', lastMentioned:'Q1 2026',
+      note:'Coinbase-derivatives nano BTC/ETH perpetual-style futures (Feb 2026); EEA spot live; Zero Hash staking in progress.' },
+    { item:'Prime brokerage / High-Touch Prime', kind:'project', origin:'Q1 2024', status:'delivered', lastMentioned:'~Q3 2025 (quiet since)',
+      note:'Launched 2024; Preqin #4 prime broker. No fresh traction data on the Q1 2026 call — a soft silence; worth asking for updated fund count / balances.' },
+    { item:'Introducing-broker pipeline ("~two dozen firms")', kind:'pipeline', origin:'Q2 2024', status:'pending', lastMentioned:'~Q2 2025',
+      note:'A stated expectation, not a signed book: HSBC WorldTrader is live; management cited ~two dozen more "in progress" + a UAE ~10k-account migration. It has never been reconciled to actual conversions — the cleanest accountability check on the list.' },
+    { item:'Dividend policy (~0.5–1% of the stock price)', kind:'project', origin:'2011 / Q1 2025', status:'delivered', lastMentioned:'Q1 2026',
+      note:'A standing commitment, delivered: $0.10/qtr (2011) → $0.25/qtr (Q1 2025) → 4-for-1 split (Jun 2025) → $0.35/yr (Q1 2026).' },
+    { item:'European bank license (Ireland)', kind:'musing', origin:'~Q4 2024', status:'silent', lastMentioned:'~Q4 2024',
+      note:'IMPORTANT: this was a passing mention alongside the OCC charter, NOT a confirmed application or funded project. Included only to keep the distinction honest — do not treat it as a live promise unless management re-commits.' },
   ]
 };
 function cpUpcoming(){ return CALL_PREP.quarters.filter(function(q){ return q.status==='upcoming'; })[0]||null; }
 function cpReported(){ return CALL_PREP.quarters.filter(function(q){ return q.status==='reported'; }); }
 function cpFill(x, muted){ return (x!=null && String(x).trim()!=='') ? x : '<span class="cp-empty">'+(muted||'— to fill')+'</span>'; }
 var CP_STAT={ delivered:{c:'#0a8f4c',l:'Delivered'}, pending:{c:'#2E6BE6',l:'Pending'}, silent:{c:'#B7791F',l:'Silent'}, abandoned:{c:'#C0392B',l:'Abandoned'} };
+var CP_KIND={ project:{c:'#0a8f4c',l:'Project'}, pipeline:{c:'#2E6BE6',l:'Pipeline'}, musing:{c:'#B7791F',l:'Musing only'} };
+// Pop-up registry: keeps the on-screen cards terse and pushes the depth into a modal (wired by
+// wireModal via data-detail="cp:<id>"). cpReg() registers content at render time and returns the id.
+var CP_POP={};
+function cpReg(id, t, h){ CP_POP[id]={t:t, h:h}; return id; }
+// A small "?" info badge that opens a pop-up — for numbers that need context (structural changes,
+// one-offs that distort the financials, etc.).
+function cpQ(id, t, h){ return '<span class="cp-info ov-clickable" data-detail="cp:'+cpReg(id,t,h)+'" title="'+esc(String(t).replace(/<[^>]+>/g,''))+'">?</span>'; }
 
 // Shared style for the Call Prep panes.
 function cpStyle(){
@@ -1282,7 +1314,51 @@ function cpStyle(){
     '.cp-w-lab{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:2px}'+
     '.cp-w-e .cp-w-lab{color:#0a8f4c}.cp-w-b .cp-w-lab{color:'+BRAND+'}'+
     '.cp-w-q{display:flex;gap:8px;align-items:flex-start;background:#10141A;color:#fff;border-radius:9px;padding:9px 12px;font-size:11.5px;line-height:1.5;margin-top:8px}.cp-w-q .mic{flex:none}'+
+    '.cp-w-src{font-size:10.5px;color:var(--navy);line-height:1.5;background:rgba(46,107,230,0.07);border-left:3px solid '+BLUE+';border-radius:7px;padding:7px 10px;margin-bottom:8px}'+
     '.cp-w-why{font-size:11px;color:var(--mu);line-height:1.5;margin-top:7px}'+
+    '.cp-kind{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:2px 8px;white-space:nowrap;border:1px solid}'+
+    '.cp-phase{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;border-radius:20px;padding:3px 10px;margin-bottom:8px}'+
+    /* "?" info badge */
+    '.cp-info{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:'+AMBER+';color:#fff;font-size:10px;font-weight:800;cursor:pointer;margin-left:5px;vertical-align:middle;flex:none}'+
+    '.cp-info:hover{filter:brightness(1.1)}'+
+    /* the debate — visual contrast */
+    '.cp-debate{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:4px 0}@media(max-width:600px){.cp-debate{grid-template-columns:1fr}}'+
+    '.cp-dc{border:1px solid var(--bdr);border-radius:12px;padding:13px 15px;background:var(--w)}'+
+    '.cp-dc.fear{border-top:4px solid '+BRAND+';background:linear-gradient(180deg,rgba(214,0,28,0.04),transparent)}'+
+    '.cp-dc.real{border-top:4px solid '+BRAND2+';background:linear-gradient(180deg,rgba(10,143,76,0.05),transparent)}'+
+    '.cp-dc-h{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}'+
+    '.cp-dc.fear .cp-dc-h{color:'+BRAND+'}.cp-dc.real .cp-dc-h{color:'+BRAND2+'}'+
+    '.cp-dc-b{font-size:12.5px;font-weight:700;color:var(--navy);line-height:1.4}'+
+    '.cp-mech{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}'+
+    '.cp-mech-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;border:1px solid var(--bdr);border-radius:9px;padding:7px 12px;background:var(--w);color:var(--navy)}'+
+    '.cp-mech-ar{font-size:15px;color:var(--mu)}'+
+    '.cp-synth{border-left:4px solid var(--navy);background:#10141A;color:#fff;border-radius:11px;padding:13px 16px;font-size:13px;font-weight:700;line-height:1.5;margin:6px 0}.cp-synth b{color:#FFD9DE}'+
+    /* watch card — terser */
+    '.cp-why-btn{display:inline-block;font-size:10px;font-weight:800;color:'+BLUE+';cursor:pointer;margin-top:8px}'+
+    '.cp-w-chips{display:flex;gap:7px;flex-wrap:wrap;margin:6px 0 0}'+
+    '.cp-w-chip{font-size:10px;font-weight:700;border-radius:7px;padding:4px 9px;line-height:1.3}'+
+    '.cp-w-chip.cons{background:rgba(46,107,230,0.08);border:1px solid rgba(46,107,230,0.28);color:var(--navy)}'+
+    '.cp-w-chip.red{background:rgba(214,0,28,0.06);border:1px solid rgba(214,0,28,0.28);color:var(--navy)}'+
+    '.cp-w-chip b{font-weight:800}'+
+    /* post-call highlights */
+    '.cp-take{border-left:4px solid '+BRAND+';background:#10141A;color:#fff;border-radius:11px;padding:13px 16px;font-size:13px;font-weight:700;line-height:1.5;margin:2px 0 14px}.cp-take b{color:#FFD9DE}'+
+    '.cp-hl{display:flex;flex-direction:column;gap:8px}'+
+    '.cp-hl-row{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center;border:1px solid var(--bdr);border-left:4px solid var(--hc);border-radius:10px;padding:10px 13px;background:var(--w);cursor:pointer;transition:.12s}'+
+    '.cp-hl-row:hover{box-shadow:0 3px 10px rgba(0,0,0,.08)}'+
+    '.cp-hl-tag{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;background:var(--hc);border-radius:20px;padding:3px 9px;white-space:nowrap}'+
+    '.cp-hl-head{font-size:12.5px;font-weight:700;color:var(--navy);line-height:1.4}'+
+    '.cp-hl-more{font-size:15px;color:var(--hc);font-weight:800}'+
+    '@media(max-width:560px){.cp-hl-row{grid-template-columns:auto 1fr}.cp-hl-more{display:none}}'+
+    '.cp-dots{border:1px dashed '+BRAND+';border-radius:11px;padding:12px 15px;margin-top:14px;background:rgba(214,0,28,0.03);font-size:12px;line-height:1.6;color:var(--navy)}.cp-dots b{color:'+BRAND+'}'+
+    /* post-results scorecard */
+    '.cp-sc{display:flex;flex-direction:column;gap:6px}'+
+    '.cp-sc-row{display:grid;grid-template-columns:1.1fr 1fr 1.2fr auto;gap:10px;align-items:center;border:1px solid var(--bdr);border-left:4px solid var(--sc);border-radius:9px;padding:8px 12px}'+
+    '.cp-sc-m{font-size:12px;font-weight:800;color:var(--navy)}.cp-sc-c{font-size:11px;color:var(--mu)}.cp-sc-a{font-size:11.5px;font-weight:700;color:var(--navy)}'+
+    '.cp-sc-v{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 10px;background:var(--sc);white-space:nowrap}'+
+    '@media(max-width:600px){.cp-sc-row{grid-template-columns:1fr auto}.cp-sc-c,.cp-sc-a{display:none}}'+
+    '.cp-tc{display:flex;flex-direction:column;gap:6px}'+
+    '.cp-tc-row{display:flex;gap:9px;align-items:flex-start;font-size:11.5px;color:var(--navy);line-height:1.45;border:1px solid var(--bdr);border-radius:9px;padding:8px 11px}'+
+    '.cp-concl{border:1px solid var(--bdr);border-top:4px solid '+BRAND+';border-radius:12px;padding:14px 16px;background:linear-gradient(180deg,rgba(214,0,28,0.04),transparent);font-size:12.5px;line-height:1.65;color:var(--navy)}'+
     /* tables */
     '.cp-tbl{width:100%;border-collapse:collapse;font-size:11.5px}'+
     '.cp-tbl th{text-align:left;color:var(--mu);font-weight:700;padding:7px 10px;border-bottom:1px solid var(--bdr);font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}'+
@@ -1294,113 +1370,131 @@ function cpStyle(){
     '.cp-an-q{font-size:11px;color:var(--navy);line-height:1.5;margin-top:6px}.cp-an-flag{font-size:9.5px;font-weight:800;color:'+AMBER+';margin-top:5px}</style>';
 }
 // A · The Setup ──────────────────────────────────────────────────────────────────────────────────
+function cpFmtC(o){ if(!o||o.v==null) return '<span class="cp-empty">—</span>';
+  var un=o.unit||'', v=o.v, s;
+  if(un==='$') s='$'+v; else if(un==='$M') s='$'+v+'M'; else if(un==='$B') s='$'+v+'B';
+  else if(un==='M') s=v+'M'; else if(un==='M/day') s=v+'M/day'; else if(un==='%') s=v+'%'; else s=String(v);
+  return s+(o.yoy!=null?'<span style="font-size:10px;color:#0a8f4c;font-weight:800;margin-left:5px">+'+o.yoy+'%</span>':''); }
 function cpSetupBody(c){
   var u=cpUpcoming(); var h=cpStyle();
   if(!u){ return h+'<div class="cp-note">No upcoming quarter staged.</div>'; }
-  h+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup.</b> What the Street expects, what the price already assumes, and where our view differs. '+(u.date?('Reports <b>'+esc(u.date)+'</b>.'):'<span class="cp-empty">report date — to confirm</span>')+'</p>';
-  var cs=u.setup.consensus||{};
-  h+='<div class="ov-diagram-cap" style="margin:6px 0 4px"><b>The numbers going in</b> — Street consensus, plus IBKR\'s disclosed monthly metrics (*)</div>';
-  h+='<div class="cp-grid4">'+
-    '<div class="cp-cell"><div class="cp-cell-k">Revenue</div><div class="cp-cell-v">'+cpFill(cs.rev)+'</div></div>'+
-    '<div class="cp-cell"><div class="cp-cell-k">EPS</div><div class="cp-cell-v">'+cpFill(cs.eps)+'</div></div>'+
-    '<div class="cp-cell"><div class="cp-cell-k">DARTs</div><div class="cp-cell-v">'+cpFill(cs.darts)+'</div></div>'+
-    '<div class="cp-cell"><div class="cp-cell-k">Accounts</div><div class="cp-cell-v">'+cpFill(cs.netNewAccts)+'</div></div>'+
-  '</div>';
-  h+='<div class="ave-subh-note" style="margin-top:4px">* DARTs and account growth are IBKR\'s own disclosed monthly metrics (June 2026), not Street estimates; no public Street consensus exists for the quarterly operating metrics.</div>';
-  h+=sec('What is priced in', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">'+cpFill(u.setup.pricedIn)+'</div>');
-  // prior reactions
-  var pr=u.setup.priorReactions||[];
-  h+='<div class="ov-diagram-cap" style="margin:12px 0 4px"><b>How the stock moved on the last prints</b></div>';
-  if(pr.length){
-    h+='<div class="cp-react">'+pr.map(function(r){
-      var raw=String(r.move||''); var down=/-|−|▼|down/i.test(raw); var col=down?BRAND:'#0a8f4c';
-      return '<div class="cp-react-row"><div class="cp-react-q">'+esc(r.q)+'</div>'+
-        '<div><div class="cp-react-bar"><span class="cp-react-chip" style="background:'+col+';color:#fff">'+esc(r.move||'—')+'</span><span class="cp-react-why">'+esc(r.why||'')+'</span></div></div></div>';
-    }).join('')+'</div>';
-  } else { h+='<div class="cp-note">Fill the last 4 print-day moves (% + one-line why) before the call.</div>'; }
-  h+='<div class="cp-banner">'+cpFill(u.setup.oneLiner)+'</div>';
-  h+='<div class="ov-foot">The Setup freezes at call time and is compared against Post-Call Delta afterward.</div>';
+  h+='<div class="cp-phase" style="background:'+BLUE+'">① Pre-Call</div>';
+  h+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup.</b> The numbers going in, and the <b>one debate</b> the print will settle. '+(u.date?('Reports <b>'+esc(u.date)+'</b>.'):'<span class="cp-empty">report date — to confirm</span>')+'</p>';
+  var st=u.setup||{}, cons=st.consensus||{};
+  function cCell(key,k,o){ var q=(o&&o.note)?cpQ('setnote-'+key, o.note.t, o.note.h):''; return '<div class="cp-cell"><div class="cp-cell-k">'+esc(k)+q+'</div><div class="cp-cell-v">'+cpFmtC(o)+'</div></div>'; }
+  h+='<div class="ov-diagram-cap" style="margin:6px 0 4px"><b>Bloomberg consensus (BST)</b>'+(st.source?' · <span style="color:var(--mu);font-weight:600;font-size:10px">'+esc(st.source)+(st.asOf?' · as of '+esc(st.asOf):'')+'</span>':'')+'</div>';
+  h+='<div class="cp-grid4">'+cCell('eps','Adj EPS',cons.adjEps)+cCell('rev','Adj net revenue',cons.adjNetRevUsdM)+cCell('nii','Net interest income',cons.niiUsdM)+cCell('darts','DARTs',cons.dartsM)+'</div>';
+  h+='<div class="cp-grid4" style="margin-top:10px">'+cCell('acct','Customer accounts',cons.accountsM)+cCell('eq','Customer equity',cons.custEquityBn)+cCell('cb','Credit balances (avg)',cons.creditBalAvgBn)+cCell('ptm','Pre-tax margin',cons.preTaxMarginPct)+'</div>';
+  h+='<div class="ave-subh-note" style="margin-top:4px">Green = YoY. Bloomberg (BST) consensus, hardcoded from the team\'s export. <b>?</b> = a number with a caveat worth knowing.</div>';
+  // ── The one debate — as a picture, not paragraphs ──
+  var d=st.debate;
+  if(d){
+    var det=st.detail?cpReg('setdetail', 'The one debate — in full', st.detail):null;
+    h+='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The one debate this print will settle</b>'+(det?' <span class="cp-why-btn ov-clickable" data-detail="cp:'+det+'">the full read ›</span>':'')+'</div>';
+    h+='<div class="cp-debate">'+
+      '<div class="cp-dc fear"><div class="cp-dc-h">What the tape fears</div><div class="cp-dc-b">'+d.fear+'</div></div>'+
+      '<div class="cp-dc real"><div class="cp-dc-h">What consensus actually models</div><div class="cp-dc-b">'+d.real+'</div></div>'+
+    '</div>';
+    if(d.mech&&d.mech.length){
+      h+='<div class="cp-mech">'+d.mech.map(function(m,i){ var ar=m.dir==='up'?'<span style="color:#0a8f4c">▲</span>':(m.dir==='down'?'<span style="color:'+BRAND+'">▼</span>':''); return (i>0?'<span class="cp-mech-ar">→</span>':'')+'<span class="cp-mech-chip">'+ar+' '+esc(m.k)+' <span style="color:var(--mu);font-weight:700">'+esc(m.v)+'</span></span>'; }).join('')+'</div>';
+    }
+    if(d.synth) h+='<div class="cp-synth">'+d.synth+'</div>';
+  }
+  h+='<div class="ov-foot">Frozen at call time; scored against Post-Results / Post-Call.</div>';
   return h;
 }
 // B · Watch List ─────────────────────────────────────────────────────────────────────────────────
 function cpWatchBody(c){
   var u=cpUpcoming(); var h=cpStyle();
   if(!u){ return h+'<div class="cp-note">No upcoming quarter staged.</div>'; }
-  h+='<p class="ov-lede"><b>Five things, ranked — '+esc(u.q)+'.</b> This is the page you print and take to the call. Each has the exact metric, the number we expect, the number that <b>breaks the thesis</b>, and the question we\'d ask if we had the mic.</p>';
+  h+='<div class="cp-phase" style="background:'+BLUE+'">① Pre-Call</div>';
+  h+='<p class="ov-lede"><b>Five things to hunt — '+esc(u.q)+'</b>, ranked by <b>how much they move the stock × how debated they are</b>. Each = a metric, its consensus, the red-line that breaks the thesis, and <b>the tell</b> (🔎) — a standing read for what to watch. Tap <b>why ›</b> for the grounding.</p>';
   h+='<div class="cp-watch">'+(u.watchList||[]).map(function(w){
-    return '<div class="cp-w"><div class="cp-w-top"><div class="cp-w-rank">'+(w.rank||'')+'</div><div class="cp-w-metric">'+esc(w.metric)+'</div></div>'+
-      '<div class="cp-w-eb">'+
-        '<div class="cp-w-e"><span class="cp-w-lab">Expect</span>'+cpFill(w.expect)+'</div>'+
-        '<div class="cp-w-b"><span class="cp-w-lab">Breaks the thesis if</span>'+cpFill(w.breaks)+'</div>'+
+    var why=(w.src||w.why)?cpReg('watchwhy-'+(w.rank||0), esc(w.metric), (w.src?'<p><b>Why it\'s on the list:</b> '+w.src+'</p>':'')+(w.why?'<p><b>Why it matters:</b> '+w.why+'</p>':'')):null;
+    return '<div class="cp-w"><div class="cp-w-top"><div class="cp-w-rank">'+(w.rank||'')+'</div><div class="cp-w-metric">'+esc(w.metric)+'</div>'+(why?'<span class="cp-why-btn ov-clickable" data-detail="cp:'+why+'" style="margin:0">why ›</span>':'')+'</div>'+
+      '<div class="cp-w-q"><span class="mic">🔎</span><span>'+cpFill(w.pista||w.question)+'</span></div>'+
+      '<div class="cp-w-chips">'+
+        (w.bbg?'<span class="cp-w-chip cons"><b>Cons:</b> '+esc(w.bbg)+'</span>':'')+
+        (w.breaks?'<span class="cp-w-chip red"><b>Breaks if:</b> '+esc(w.breaks)+'</span>':'')+
       '</div>'+
-      '<div class="cp-w-q"><span class="mic">🎙️</span><span><b>If we had the mic:</b> '+cpFill(w.question)+'</span></div>'+
-      (w.why?'<div class="cp-w-why">'+w.why+'</div>':'')+
     '</div>';
   }).join('')+'</div>';
-  h+='<div class="ov-foot">This block is frozen once the quarter opens and never overwritten — it is scored against the Post-Call Delta.</div>';
+  h+='<div class="ov-foot">Frozen once the quarter opens; scored against Post-Results / Post-Call.</div>';
   return h;
 }
 // C · Promise Tracker ────────────────────────────────────────────────────────────────────────────
 function cpPromisesBody(c){
   var h=cpStyle();
-  h+='<p class="ov-lede"><b>What management said it would do</b> — and whether it happened. <b>Silence is the cheapest signal to detect and almost no one tracks it</b>: a promise that quietly stops being mentioned (amber) is often the tell.</p>';
-  h+='<div style="overflow-x:auto"><table class="cp-tbl"><thead><tr><th>Promise</th><th>Since</th><th>Status</th><th>Last mentioned</th><th>Note</th></tr></thead><tbody>'+
-    (CALL_PREP.promises||[]).map(function(p){ var s=CP_STAT[p.status]||{c:'#6b7684',l:p.status};
-      return '<tr><td style="font-weight:700">'+esc(p.item)+'</td><td>'+esc(p.origin||'')+'</td>'+
+  h+='<div class="cp-phase" style="background:'+BLUE+'">① Pre-Call</div>';
+  h+='<p class="ov-lede"><b>What management is genuinely doing — vs. what it merely floated.</b> The discipline here is separating a <b>real, committed project</b> from a passing <i>"we\'re open to it."</i> Only the first is held to account. And <b>silence is the cheapest signal to detect</b>: a real project that quietly stops being mentioned is often the tell.</p>';
+  h+='<div style="display:flex;gap:12px;flex-wrap:wrap;margin:0 0 12px">'+Object.keys(CP_KIND).map(function(k){ var kk=CP_KIND[k]; return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--navy)"><span class="cp-kind" style="color:'+kk.c+';border-color:'+kk.c+'">'+kk.l+'</span></span>'; }).join('')+'<span style="font-size:10.5px;color:var(--mu)">Project = committed/funded · Pipeline = stated expectation · Musing = open-to-possibility, not a promise</span></div>';
+  h+='<div style="overflow-x:auto"><table class="cp-tbl"><thead><tr><th>Item</th><th>Type</th><th>Status</th><th>Last mentioned</th><th>Note</th></tr></thead><tbody>'+
+    (CALL_PREP.promises||[]).map(function(p){ var s=CP_STAT[p.status]||{c:'#6b7684',l:p.status}; var k=CP_KIND[p.kind]||{c:'#6b7684',l:p.kind||''};
+      return '<tr><td style="font-weight:700">'+esc(p.item)+' <span style="font-weight:600;color:var(--mu);font-size:10px">· since '+esc(p.origin||'')+'</span></td>'+
+        '<td><span class="cp-kind" style="color:'+k.c+';border-color:'+k.c+'">'+esc(k.l)+'</span></td>'+
         '<td><span class="cp-pill" style="background:'+s.c+'">'+esc(s.l)+'</span></td>'+
         '<td>'+cpFill(p.lastMentioned,'—')+'</td><td style="color:var(--mu)">'+esc(p.note||'')+'</td></tr>';
     }).join('')+'</tbody></table></div>';
-  h+='<div class="ov-callout" style="margin-top:12px"><b>Flag right now:</b> the <b>European bank license (Ireland)</b> has gone quiet since ~Q4 2024, and the <b>"~two dozen" introducing-broker pipeline</b> has never been reconciled to actual conversions. Both are worth a direct question.</div>';
-  h+='<div class="ov-foot">Status is an editorial read of the earnings-call record; update each quarter.</div>';
+  h+='<div class="ov-callout" style="margin-top:12px"><b>Two things to press tonight:</b> (1) the <b>introducing-broker pipeline</b> ("~two dozen firms") has never been reconciled to actual signed conversions — ask for the count. (2) The <b>OCC trust-bank charter</b> (a real, filed project) went unmentioned on the last call despite conditional approval — ask for a go-live. The <b>European bank license</b> is flagged a <i>musing</i>, not a promise, on purpose — don\'t hold them to it unless they re-commit.</div>';
+  h+='<div class="ov-foot">Type & status are an editorial read of the earnings-call/filing record; updated each quarter.</div>';
   return h;
 }
-// D · Analyst Map ────────────────────────────────────────────────────────────────────────────────
-function cpAnalystsBody(c){
+var CP_RES={ beat:{c:'#0a8f4c',l:'Beat'}, miss:{c:BRAND,l:'Miss'}, inline:{c:'#6b7684',l:'In line'} };
+var CP_HLTAG={ thesis:{c:'#0a8f4c',l:'Thesis'}, curious:{c:'#7A5AF8',l:'Curious'}, dots:{c:'#2E6BE6',l:'Connects dots'}, watch:{c:'#B7791F',l:'Watch'}, tone:{c:'#B7791F',l:'Tone'} };
+// D · Post-Results ── the numbers (available first, before/without the call): a beat/miss scorecard.
+function cpResultsBody(c){
   var h=cpStyle();
-  h+='<p class="ov-lede"><b>Who covers the name, what they press, and where management has evaded.</b> If three analysts in a row ask the same thing and get the same non-answer, that is a flag.</p>';
-  h+='<div class="ov-callout" style="margin:0 0 12px"><b>Board dynamic to keep in mind:</b> <b>Richard Repetto</b> — a long-time brokerage/e-broker analyst at Piper Sandler — now sits on IBKR\'s board. His old seat/successor and his framing shape how the sell-side approaches the name.</div>';
-  var a=CALL_PREP.analysts||[];
-  if(a.length){
-    h+='<div class="cp-an">'+a.map(function(x){
-      return '<div class="cp-an-c"><div class="cp-an-n">'+esc(x.name)+'</div><div class="cp-an-f">'+esc(x.firm||'')+'</div>'+
-        '<div class="cp-an-q"><b>Presses on:</b> '+cpFill(x.recurringQ)+'</div>'+
-        (x.mgmtResponse?'<div class="cp-an-q" style="color:var(--mu)"><b>Mgmt line:</b> '+esc(x.mgmtResponse)+'</div>':'')+
-        (x.evasive?'<div class="cp-an-flag">⚑ Management has been evasive here</div>':'')+
-      '</div>';
-    }).join('')+'</div>';
-  } else {
-    h+='<div class="cp-note">Coverage list to fill: name · firm · the question they recurrently press · management\'s stock answer · whether it\'s been evasive. (Typical IBKR coverage spans Jefferies, BofA, Citi, Barclays, KBW, Goldman, Piper Sandler, Morgan Stanley — confirm the current roster and each analyst\'s pet theme.)</div>';
-  }
-  h+='<div class="ov-foot">Populate from the last several Q&A transcripts; evasion is judged across quarters, not one call.</div>';
-  return h;
-}
-// E · Post-Call Delta ────────────────────────────────────────────────────────────────────────────
-function cpPostCallBody(c){
-  var h=cpStyle();
-  h+='<p class="ov-lede"><b>Expectation vs. reality — per quarter, frozen.</b> Empty until the transcript is in. Over several quarters this becomes the record of how well we read the company (calibration), because each quarter\'s pre-call Watch List sits next to what actually happened.</p>';
-  var rep=cpReported().filter(function(q){ return q.postCall; });
-  if(!rep.length){ h+='<div class="cp-note">No reported quarter with a filled Post-Call Delta yet. After the next print, fill <code>postCall</code> for that quarter.</div>'; return h; }
-  rep.forEach(function(q){ var pc=q.postCall;
+  h+='<div class="cp-phase" style="background:'+BRAND2+'">② Post-Results</div>';
+  h+='<p class="ov-lede"><b>The numbers vs. Bloomberg consensus.</b> Results land first (release ~4pm, call comes later) — so this is the read on the <b>print itself</b>, before management says a word: what beat, what missed, and whether any thesis red-line tripped.</p>';
+  var rep=cpReported().filter(function(q){ return q.results; });
+  if(!rep.length){ h+='<div class="cp-note">Empty until the print lands. After results, fill <code>results.scorecard</code> and <code>results.thesisCheck</code> for the quarter.</div>'; return h; }
+  rep.forEach(function(q){ var r=q.results;
     h+='<div style="border:1px solid var(--bdr);border-radius:12px;padding:14px 16px;margin-bottom:14px;background:var(--w)">';
     h+='<div style="font-size:13.5px;font-weight:800;color:var(--navy);margin-bottom:8px">'+esc(q.q)+' <span style="font-weight:600;color:var(--mu);font-size:11px">· reported '+esc(q.date||'')+'</span></div>';
-    // delta table
-    if(pc.delta&&pc.delta.length){
-      h+='<div style="overflow-x:auto"><table class="cp-tbl"><thead><tr><th>Metric</th><th>We expected</th><th>Actual</th><th>Verdict</th></tr></thead><tbody>'+
-        pc.delta.map(function(d){ var beat=/beat/i.test(d.verdict||''), miss=/miss|below|weak/i.test(d.verdict||''); var col=beat?'#0a8f4c':(miss?BRAND:'var(--mu)');
-          return '<tr><td style="font-weight:700">'+esc(d.metric)+'</td><td style="color:var(--mu)">'+cpFill(d.expected)+'</td><td>'+esc(d.actual||'')+'</td><td style="font-weight:800;color:'+col+'">'+esc(d.verdict||'')+'</td></tr>';
-        }).join('')+'</tbody></table></div>';
+    if(r.headline) h+='<div class="cp-take" style="border-left-color:'+BRAND2+'">🎯 '+r.headline+'</div>';
+    if(r.scorecard&&r.scorecard.length){
+      var qkey=(q.q||'').replace(/\s/g,'');
+      h+='<div class="cp-sc">'+r.scorecard.map(function(d,i){ var rr=CP_RES[d.result]||CP_RES.inline;
+        var qb=d.note?cpQ('resnote-'+qkey+'-'+i, d.note.t||'Context', d.note.h||d.note):'';
+        return '<div class="cp-sc-row" style="--sc:'+rr.c+'"><div class="cp-sc-m">'+esc(d.metric)+qb+'</div><div class="cp-sc-c">cons: '+cpFill(d.cons,'—')+'</div><div class="cp-sc-a">'+esc(d.actual||'')+'</div><div class="cp-sc-v">'+rr.l+'</div></div>';
+      }).join('')+'</div>';
     }
-    function lst(title,arr,em){ if(!arr||!arr.length) return ''; return '<div style="margin-top:10px"><div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin-bottom:4px">'+em+' '+title+'</div><ul class="ov-bullets" style="margin-top:2px">'+arr.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join('')+'</ul></div>'; }
-    if(pc.priceReaction && (pc.priceReaction.move||pc.priceReaction.read)){
-      h+='<div style="margin-top:10px;font-size:12px;color:var(--navy)"><b>Price reaction:</b> '+cpFill(pc.priceReaction.move,'—')+' — '+cpFill(pc.priceReaction.read,'read to fill')+'</div>';
-    } else { h+='<div style="margin-top:10px;font-size:11.5px"><span class="cp-empty">Print-day price reaction — to fill</span></div>'; }
-    h+=lst('Contradictions vs. prior quarters',pc.contradictions,'⟂');
-    h+=lst('Tone shifts',pc.toneShifts,'🔀');
-    h+=lst('Red flags',pc.redFlags,'⚑');
-    h+=lst('New questions → next quarter\'s Watch List',pc.newQuestions,'➡');
+    if(r.thesisCheck&&r.thesisCheck.length){
+      h+='<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin:14px 0 6px">Thesis red-line check</div>';
+      h+='<div class="cp-tc">'+r.thesisCheck.map(function(t){ var col=t.tripped?BRAND:'#0a8f4c'; var ic=t.tripped?'⚑ TRIPPED':'✓ held';
+        return '<div class="cp-tc-row" style="border-left:3px solid '+col+'"><span style="font-weight:800;color:'+col+';white-space:nowrap">'+ic+'</span><span><b>'+esc(t.line)+'</b> — '+esc(t.note||'')+'</span></div>';
+      }).join('')+'</div>';
+    }
+    h+='<div style="margin-top:10px;font-size:11.5px;color:var(--navy)"><b>Price reaction:</b> '+cpFill(r.priceReaction,'to fill from a trusted source')+'</div>';
     h+='</div>';
   });
-  h+='<div class="ov-foot">Each quarter\'s Watch List is never overwritten — it is archived and scored against this block. <code>newQuestions</code> feeds the next quarter\'s Watch List.</div>';
+  h+='<div class="ov-foot">Scored against the frozen Watch List. Consensus = Bloomberg export; actuals = reported (Bloomberg).</div>';
+  return h;
+}
+// E · Post-Call ── insight-first highlights (theme by theme, depth in pop-ups) + the meeting take.
+function cpCallBody(c){
+  var h=cpStyle();
+  h+='<div class="cp-phase" style="background:'+BRAND+'">③ Post-Call</div>';
+  h+='<p class="ov-lede"><b>Not a restatement of the numbers — the story behind them.</b> Theme by theme: what the print/call <i>implied</i> for the thesis, the curious one-mention details, and the dots that connect. Tap any highlight for the depth.</p>';
+  var rep=cpReported().filter(function(q){ return q.call; });
+  if(!rep.length){ h+='<div class="cp-note">Empty until the call/transcript is in. After the call, fill <code>call.take</code> (the one-line meeting take), <code>call.highlights</code> (theme-by-theme, each with a pop-up detail) and <code>call.dots</code> (connect the story).</div>'; return h; }
+  rep.forEach(function(q){ var cc=q.call;
+    h+='<div style="margin-bottom:18px">';
+    h+='<div style="font-size:13.5px;font-weight:800;color:var(--navy);margin-bottom:8px">'+esc(q.q)+' <span style="font-weight:600;color:var(--mu);font-size:11px">· call '+esc(q.date||'')+'</span></div>';
+    if(cc.take) h+='<div class="cp-take">🎯 '+cc.take+'</div>';
+    if(cc.highlights&&cc.highlights.length){
+      h+='<div class="cp-hl">'+cc.highlights.map(function(x,i){ var tg=CP_HLTAG[x.tag]||{c:'#6b7684',l:x.tag||''};
+        var id=x.detail?cpReg('hl-'+(q.q||'').replace(/\s/g,'')+'-'+i, tg.l+' — '+String(x.head).replace(/<[^>]+>/g,''), x.detail):null;
+        return '<div class="cp-hl-row" style="--hc:'+tg.c+'"'+(id?' data-detail="cp:'+id+'"':'')+'><span class="cp-hl-tag">'+esc(tg.l)+'</span><span class="cp-hl-head">'+x.head+'</span>'+(id?'<span class="cp-hl-more">＋</span>':'<span></span>')+'</div>';
+      }).join('')+'</div>';
+    }
+    if(cc.dots) h+='<div class="cp-dots">🧩 '+cc.dots+'</div>';
+    if(cc.newQuestions&&cc.newQuestions.length){
+      h+='<div style="margin-top:12px"><div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin-bottom:4px">➡ Seeds next quarter\'s Watch List</div><ul class="ov-bullets" style="margin-top:2px">'+cc.newQuestions.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join('')+'</ul></div>';
+    }
+    h+='</div>';
+  });
+  h+='<div class="ov-foot">Insight-first, not fact-first. Append-only — prior quarters are never overwritten; <code>newQuestions</code> feeds the next Watch List.</div>';
   return h;
 }
 
@@ -1490,19 +1584,19 @@ function deepDiveHtml(c){
       '<div class="ovt-subpane" data-ovst="track" hidden>'+trackBody(c)+'</div>'+
     '</div>';
   h+='<div class="dd-pane" data-dd="callprep" hidden>'+
-      '<div class="cp-note" style="margin-bottom:12px">🎯 <b>Call Prep</b> — the decision layer. Everything else describes the company; this tab is what you take to the next earnings call. Append-only per quarter, so it becomes a record of how well we read IBKR.</div>'+
+      '<div class="cp-note" style="margin-bottom:12px">🎯 <b>Call Prep</b> — the decision layer, in three phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List · Promises) → <b>② Post-Results</b> (react to the numbers, which land before the call) → <b>③ Post-Call</b> (what management said + the meeting take). Append-only per quarter, so it becomes a record of how well we read IBKR.</div>'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="setup">The Setup</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="setup">Setup</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="watch">Watch List</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="promises">Promise Tracker</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="analysts">Analyst Map</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="postcall">Post-Call Delta</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="results">Post-Results</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="postcall">Post-Call</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="setup">'+cpSetupBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="watch" hidden>'+cpWatchBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="promises" hidden>'+cpPromisesBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="analysts" hidden>'+cpAnalystsBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="postcall" hidden>'+cpPostCallBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="results" hidden>'+cpResultsBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="postcall" hidden>'+cpCallBody(c)+'</div>'+
     '</div>';
   h+='</div>';
   return h;
@@ -1600,6 +1694,7 @@ function wireModal(root){
     if(kind==='seg'){ var s=CLIENT_SEGMENTS.filter(function(x){return x.id===id;})[0]; return s?{t:s.ic+' '+esc(s.n),h:s.detail}:null; }
     if(kind==='arena'){ var ar=ARENA[id]; return ar?{t:ar.t,h:ar.h}:null; }
     if(kind==='upc'){ var u=UPC[id]; return u?{t:u.t,h:u.h}:null; }
+    if(kind==='cp'){ return CP_POP[id]||null; }
     if(kind==='guide'){ var gd=IBKR_GUIDE.filter(function(x){return x.id===id;})[0]; return gd?{t:gd.ic+' '+esc(gd.k),h:gd.d}:null; }
     if(kind==='reg'){ var rg=IBKR_REG.filter(function(x){return x.id===id;})[0]; return rg?{t:rg.ic+' '+esc(rg.t),h:rg.d}:null; }
     if(kind==='exec'){ var ex=TRACK.filter(function(x){return x.id===id;})[0]; return ex?{t:esc(ex.n)+' <span class="ov-modal-sub">'+esc(ex.role)+' · at IBKR since '+esc(ex.since)+'</span>',h:ex.detail}:null; }

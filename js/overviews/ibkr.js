@@ -33,13 +33,16 @@ var IBKR_MGMT = makeManagement({
       bio:"CEO since October 2019 and President since 2014 (age 59). Joined the firm in 1990 as a software developer and rose through engineering into the top job — a rare, clean founder-to-insider succession. MS in electrical engineering, Technical University of Budapest. Highest-paid named officer ($19.7M total in 2025). Oversaw the run from ~$250B to ~$789B client equity, record account growth, S&P 500 inclusion, and relentless automation of the brokerage stack." },
     { id:'brody', name:'Paul J. Brody', title:'CFO, Treasurer & Secretary', since:'at IBKR since 1987',
       line:"Disciplined capital allocation; fortress balance sheet, no debt, the rate-sensitivity playbook.",
-      bio:"CFO, Treasurer & Secretary since 2006; joined the firm in 1987 (age 65). BA economics, Cornell; former director of The Options Clearing Corporation (2005–2012). Architect of IBKR's conservative, cash-rich posture: no long-term debt, ~$6–7B of excess regulatory capital, a short-duration (<30-day) treasury strategy on segregated customer cash, and the disclosed net-interest-income rate-sensitivity framework the Street watches each quarter." },
+      bio:"CFO, Treasurer & Secretary since 2006; joined the firm in 1987 (age 65). BA economics, Cornell; former director of The Options Clearing Corporation (2005–2012). Architect of IBKR's conservative, cash-rich posture: no long-term debt, ~$10B of excess regulatory capital, a short-duration (<30-day) treasury strategy on segregated customer cash, and the disclosed net-interest-income rate-sensitivity framework the Street watches each quarter." },
     { id:'nemser', name:'Earl H. Nemser', title:'Vice Chairman', since:'at IBG LLC since 1988',
       line:"Longtime legal counsel & Vice Chairman; chairs IBKR's UK entity.",
       bio:"Vice Chairman (age 79); with IBG LLC since 1988. A longtime lawyer (Special Counsel / Independent Advisor to Dechert LLP, 2005–2018; JD magna cum laude, Boston University) who serves as the firm's senior legal counsel, heads IBG LLC's Internal Audit Committee, sits on the Steering Committee, and since 2023 chairs Interactive Brokers (U.K.) Limited. Also chairs the board's Nominating & Corporate Governance committee." },
     { id:'frank', name:'Dr. Thomas A. Frank', title:'Executive Vice President', since:'at IBKR since 1985',
-      line:"Long-tenured EVP; PhD physicist; sits on the OCC board. (CIO until Apr 2024.)",
-      bio:"Executive Vice President of Interactive Brokers LLC (age 70). PhD in physics, MIT (1985); with the firm since 1985 and EVP since 1999. Served as Chief Information Officer from 1999 until stepping down from that role in April 2024 (he remains EVP). Director of The Options Clearing Corporation since 2015 — part of IBKR's deep engineering-led leadership." },
+      line:"Long-tenured EVP; PhD physicist; was CIO 2006–2024, now strategic/advisory.",
+      bio:"Executive Vice President of Interactive Brokers LLC (age 70). PhD in physics, MIT; with the firm since 1985 and instrumental in its early automated market-making systems. Served as Chief Information Officer from 2006 until 2024, and now sits on the Market Risk Committee in a strategic/advisory role. Was on the board of The Options Clearing Corporation (2015–2024) — part of IBKR's deep engineering-led leadership." },
+    { id:'sanders', name:'Steve Sanders', title:'EVP, Marketing & Product Development', since:'at IBKR since 2001',
+      line:"Runs marketing & much of the product roadmap; the firm's most visible public voice.",
+      bio:"Executive Vice President, Marketing & Product Development; joined IBKR in 2001 after 15 years at Citi. A senior managing partner who helped build IBKR from a nascent global broker into a >$1B-net-income firm, with a knack for turning technical concepts into practical, revenue-building products. Oversees marketing and much of the product roadmap and is the firm's most visible external voice (frequent markets/fintech commentator). A senior executive, though not a Section 16 named officer — which is why he does not appear in the proxy's officer table." },
   ],
   board:[
     { name:'Thomas Peterffy', chair:true, independent:false, role:'Chairman · controls ~73.7% of the vote (Class B) · Compensation (Chair), Nominating/Gov · director since 2006.' },
@@ -58,9 +61,9 @@ var IBKR_MGMT = makeManagement({
     { k:'Control', v:'Founder-controlled', d:'Peterffy ~73.7% of the vote via Class B — see Ownership (up-C).' },
     { k:'Public economics', v:'26.3%', d:'IBKR Group Inc (public co) owns 26.3% of the operating co IBG LLC; IBG Holdings 73.7%.' },
     { k:'Board', v:'10 directors · 5 indep.', d:'Lead Independent Director: Lawrence Harris.' },
-    { k:'Balance sheet', v:'No long-term debt', d:'~$6–7B excess capital · fortress by design.' },
+    { k:'Balance sheet', v:'No long-term debt', d:'~$10B excess capital · fortress by design.' },
   ],
-  foot:"Roster, titles and committees verified against IBKR's 2026 proxy statement (DEF 14A, filed 2026-03-11) and FY2025 Form 10-K, Part III. Ownership economics and insider activity live in the Ownership subtab and the Pillars → Management tab.",
+  foot:"Roster, titles and committees verified against IBKR's 2026 proxy statement (DEF 14A, filed 2026-03-11), the FY2025 Form 10-K, Part III, and IBKR's IR Executive Profiles. Steve Sanders is a senior EVP (not a Section 16 named officer, so absent from the proxy officer table). Ownership economics and insider activity live in the Ownership subtab and the Pillars → Management tab.",
 });
 
 // ─── Formatting helpers ─────────────────────────────────────────────────────────────────────────
@@ -201,7 +204,7 @@ var TIMELINE=[
   { y:'Jun 2025', t:'<b>4-for-1 stock split.</b>' },
   { y:'Q3 2025', t:'Added to the <b>S&P 500</b>; welcomes its <b>4-millionth customer</b>.',
     d:'Interactive Brokers is added to the <b>S&P 500</b> in Q3 2025 and passes <b>4 million customer accounts</b>. 2025 becomes the first year client equity tops $750B, with a record <b>>1 million net-new accounts</b> added.' },
-  { y:'Feb 2026', t:'Quarterly <b>dividend raised to $0.35/yr</b> (split-adjusted).' },
+  { y:'2024–26', t:'<b>First dividend raises since 2011</b> — now <b>$0.35/yr</b> ($0.0875/qtr, raised Jul 2026).' },
 ];
 
 // ─── Peers scatter (Valuation-vs-growth). MULTIPLE AXIS = P/E (forward), NEVER EV/EBITDA — IBKR and
@@ -300,14 +303,20 @@ function wireScatters(root){
     var g=wrap.querySelector('.ibkr-sc-nodes'), tip=wrap.querySelector('.ibkr-sc-tip');
     // basis toggle (per instance, drives shared state → re-render all)
     wrap.querySelectorAll('.mg-pill[data-mgbasis]').forEach(function(btn){ btn.onclick=function(){ IBKR_SC.basis=btn.getAttribute('data-mgbasis'); ibkrScRenderAll(root); }; });
-    // node tooltips (delegated on the stable nodes container)
+    // node tooltips (delegated on the stable nodes container). NOTE: do NOT reparent the node on
+    // hover — moving it in the DOM mid-pointerover breaks the enter/leave stream and the tooltip
+    // never hides. Instead: hide on move-to-empty, on node→non-node pointerout, and on svg leave.
     if(g&&tip){
+      var svg=wrap.querySelector('.ibkr-sc-svg');
+      function nodeOf(e){ return (e.target&&e.target.closest)?e.target.closest('.mg-node'):null; }
       function show(node){ tip.innerHTML='<div class="mgt-h"><img src="'+node.getAttribute('data-logo')+'" alt="" onerror="this.style.display=\'none\'"><span class="mgt-n">'+node.getAttribute('data-name')+'</span></div>'+node.getAttribute('data-why'); tip.hidden=false; }
       function move(e){ tip.style.left=Math.min(e.clientX+16, window.innerWidth-270)+'px'; tip.style.top=(e.clientY+16)+'px'; }
-      g.addEventListener('pointerover', function(e){ var n=e.target.closest?e.target.closest('.mg-node'):null; if(!n) return; n.parentNode.appendChild(n); show(n); move(e); });
-      g.addEventListener('pointermove', function(e){ var n=e.target.closest?e.target.closest('.mg-node'):null; if(n) move(e); });
-      g.addEventListener('pointerout', function(e){ var n=e.target.closest?e.target.closest('.mg-node'):null; if(!n) return; if(e.relatedTarget&&n.contains(e.relatedTarget)) return; tip.hidden=true; });
-      g.addEventListener('click', function(e){ var n=e.target.closest?e.target.closest('.mg-node'):null; if(!n) return; show(n); move(e); });
+      function hide(){ tip.hidden=true; }
+      g.addEventListener('pointerover', function(e){ var n=nodeOf(e); if(n){ show(n); move(e); } });
+      g.addEventListener('pointermove', function(e){ var n=nodeOf(e); if(n){ show(n); move(e); } else hide(); });
+      g.addEventListener('pointerout', function(e){ if(!nodeOf(e)) return; var rt=e.relatedTarget; if(rt&&rt.closest&&rt.closest('.mg-node')) return; hide(); });
+      if(svg) svg.addEventListener('pointerleave', hide);
+      g.addEventListener('click', function(e){ var n=nodeOf(e); if(n){ show(n); move(e); } });
     }
   });
   ibkrScRenderAll(root); ibkrScChipsAll(root); ibkrScFetchCaps(root);
@@ -564,31 +573,32 @@ function rateSensBody(c){
   h+='<div class="ov-foot">Rate-sensitivity figures and quarterly NII: IBKR Q3 2025–Q1 2026 earnings materials. This is separate from the P/E valuation in the Valuation tab.</div>';
   return h;
 }
-// Margins ▸ the 77% pre-tax margin + financial series
+// Margins ▸ the 77% pre-tax margin + financial series. Full FY2019–FY2025 from IBKR 10-Ks / Q4
+// earnings-release 8-Ks (SEC EDGAR, CIK 1381197). GAAP net revenues; GAAP pre-tax margin.
 var FIN_SERIES={
-  years:['FY22','FY23','FY24','FY25'],
-  netRev:[2.9,4.3,5.2,6.0],
-  nii:[null,2.8,3.1,3.6],
-  comm:[null,1.4,1.7,2.1],
-  ptMargin:[null,71,71,77],
-  clientEq:[null,426,568,780],
+  years:['FY19','FY20','FY21','FY22','FY23','FY24','FY25'],
+  netRev:[1.9,2.2,2.7,3.1,4.3,5.2,6.2],
+  nii:[1.1,0.9,1.1,1.7,2.8,3.1,3.6],
+  comm:[0.7,1.1,1.4,1.3,1.4,1.7,2.1],
+  ptMargin:[60,57,66,65,71,71,77],
+  clientEq:[174,289,374,307,426,568,780],
 };
 function marginsBody(c){
-  var h='<p class="ov-lede">IBKR runs the <b>highest margins in the brokerage industry</b> — a direct output of automation. Pre-tax margin climbed from <b>71% to a record 77%</b>, on a fortress balance sheet with <b>no long-term debt</b> and ~$6–7B of excess capital.</p>';
+  var h='<p class="ov-lede">IBKR runs the <b>highest margins in the brokerage industry</b> — a direct output of automation. Pre-tax margin climbed from <b>~57% (FY20) to a record 77% (FY25)</b>, on a fortress balance sheet with <b>no long-term debt</b> and ~$10B of excess capital.</p>';
   h+='<div class="ov-kpis">'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">Pre-tax margin</div><div class="ov-kpi-v">~77%</div><div class="ov-kpi-d up">FY25 · from 71% (FY23–24)</div></div>'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">Net revenues</div><div class="ov-kpi-v">~$6.0B</div><div class="ov-kpi-d up">FY25 · >$4B FY23 → >$6B FY25</div></div>'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">Adj. pre-tax income</div><div class="ov-kpi-v">>$1B</div><div class="ov-kpi-d up">5+ straight quarters</div></div>'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">Long-term debt</div><div class="ov-kpi-v">None</div><div class="ov-kpi-d muted">~$6–7B excess capital</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Pre-tax margin</div><div class="ov-kpi-v">77%</div><div class="ov-kpi-d up">FY25 · from 57% in FY20</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Net revenues</div><div class="ov-kpi-v">$6.2B</div><div class="ov-kpi-d up">FY25 · ~$1.9B in FY19</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Pre-tax income</div><div class="ov-kpi-v">$4.8B</div><div class="ov-kpi-d up">FY25 · from $1.2B FY19</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Long-term debt</div><div class="ov-kpi-v">None</div><div class="ov-kpi-d muted">~$10B excess capital</div></div>'+
   '</div>';
   h+='<div class="ov-charts" style="grid-template-columns:1fr 1fr">'+
     '<div class="ov-chart-card"><div class="ov-chart-t">Pre-tax margin <span>(%, fiscal year)</span></div><div class="ov-chart-wrap"><canvas id="ibkrChartMargin"></canvas></div></div>'+
     '<div class="ov-chart-card"><div class="ov-chart-t">Net revenues <span>($B, fiscal year)</span></div><div class="ov-chart-wrap"><canvas id="ibkrChartRev"></canvas></div></div>'+
   '</div>';
   h+=sec('Why the margin keeps rising',
-    '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">Automation is operating leverage: net revenues scaled <b>~$4.3B → ~$6.0B (FY23→FY25)</b> while headcount stayed roughly flat (~3,182). Costs barely move as volume grows, so almost every extra dollar of revenue drops through — which is why <b>pre-tax margin climbed 71% → 71% → a record 77%</b>, the highest in the brokerage industry.</div>');
-  h+='<div class="ave-subh-note" style="margin-top:8px">Pre-tax margin (%): FY23 71, FY24 71, FY25 77. Net revenues ($B): FY22 2.9, FY23 4.3, FY24 5.2, FY25 6.0.</div>';
-  h+='<div class="ov-foot">Source: IBKR FY2022–FY2025 reported results.</div>';
+    '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">Automation is operating leverage: net revenues scaled <b>~$1.9B → $6.2B (FY19→FY25)</b>, more than 3×, while headcount barely doubled (1,643 → 3,182). Costs move far slower than revenue, so almost every extra dollar drops through — which is why <b>pre-tax margin climbed from ~57% to a record 77%</b>, the highest in the brokerage industry. (The dip to 57% in FY20 was rate-driven — NII fell as the Fed cut to zero — not a cost problem; margin recovered as rates and balances rose.)</div>');
+  h+='<div class="ave-subh-note" style="margin-top:8px">GAAP pre-tax margin (%): 60/57/66/65/71/71/77 (FY19→FY25). Net revenues ($B): 1.9/2.2/2.7/3.1/4.3/5.2/6.2.</div>';
+  h+='<div class="ov-foot">Source: IBKR FY2019–FY2025 10-Ks & Q4 earnings releases (SEC EDGAR).</div>';
   return h;
 }
 // Regulation & Safety ▸ how a broker like IBKR is regulated + the IBKR-specific items. Clickable
@@ -711,10 +721,10 @@ var IBKR_THEMES=[
     why:'The 77% margin, a fortress balance sheet, and a growing capital return — disciplined by design.',
     updates:[
       { q:'Q4 2023', items:['Pre-tax margin 70%+; no long-term debt; dividend $0.10/qtr (since 2011).'] },
-      { q:'Q1 2025', items:['Dividend raised to <b>$0.25/qtr</b>.'] },
+      { q:'Q1 2025', items:['Dividend raised to <b>$0.32/qtr</b> (pre-split); <b>4-for-1 split announced</b>.'] },
       { q:'Q2 2025', items:['<b>4-for-1 stock split</b> (June 2025); equity $16.6B → $21.3B; ~$6–7B excess capital.'] },
       { q:'Q4 2025', items:['Pre-tax margin a record <b>77%</b>; 6+ straight 70%+ quarters. M&A discipline: "couldn\'t agree on price" on two targets; won\'t buy sports-betting.'] },
-      { q:'Q1 2026', items:['Dividend raised to <b>$0.35/yr</b> (split-adjusted); policy ~0.5–1% of the stock price.'] },
+      { q:'Q1 2026', items:['Dividend at <b>$0.32/yr</b> ($0.08/qtr, split-adjusted); policy ~0.5–1% of the stock price.'] },
     ]},
   { theme:'Regulation & structure',
     why:'The tailwinds and risks a broker lives with — charters, fee changes, and rule reform.',
@@ -791,11 +801,11 @@ var IBKR_GUIDE=[
     teaser:'No sign-up bonuses. Every account earned on price and product.',
     d:'<p>IBKR runs <b>no sign-up bonuses, no paid referrals, no gimmicks</b>. Management is proud that all <b>>1M net-new accounts in 2025</b> were won on cost, breadth and tools alone — growth that is cheaper to acquire and stickier once won.</p><p>The tell: growth is skewed <b>international</b> (Asia & Europe fastest), where IBKR rarely advertises — word-of-mouth among serious traders.</p>' },
   { id:'fortress', ic:'🏰', col:BLUE, k:'Fortress balance sheet', v:'$0 long-term debt',
-    teaser:'No debt, ~$6–7B excess capital — a deliberate trust signal.',
-    d:'<p><b>No long-term debt</b> and <b>~$6–7B of excess regulatory capital</b> above the minimums. This is a choice, not an accident: after prior prime-broker blowups, a fortress balance sheet is the single biggest trust signal IBKR can show hedge-fund and institutional clients.</p><p>It also self-funds the up-market push into prime brokerage without ever needing to raise money.</p>' },
+    teaser:'No debt, ~$10B excess capital — a deliberate trust signal.',
+    d:'<p><b>No long-term debt</b> and <b>~$10B of excess regulatory capital</b> above the minimums. This is a choice, not an accident: after prior prime-broker blowups, a fortress balance sheet is the single biggest trust signal IBKR can show hedge-fund and institutional clients.</p><p>It also self-funds the up-market push into prime brokerage without ever needing to raise money.</p>' },
   { id:'return', ic:'💵', col:AMBER, k:'Return the excess', v:'$0.35/yr dividend',
-    teaser:'A rising dividend pegged to ~0.5–1% of the stock price.',
-    d:'<p>Capital return is deliberate, not aggressive. The dividend policy is pegged to <b>~0.5–1% of the stock price</b> and has climbed steadily: <b>$0.10/qtr (2011) → $0.25/qtr (Q1 2025) → 4-for-1 split (Jun 2025) → $0.35/yr (Q1 2026)</b>.</p><p>No large buybacks are needed — growth is self-funded and organic, so excess capital is simply handed back.</p>' },
+    teaser:'A rising dividend pegged to ~0.5–1% of the stock price — and zero buybacks.',
+    d:'<p>Capital return is deliberate, not aggressive. The dividend was held flat for <b>13 years</b> (2011–2024), then raised three times: it now runs at <b>$0.35/yr</b> ($0.0875/qtr split-adjusted, raised Jul 2026), pegged to ~0.5–1% of the stock price.</p><p><b>IBKR runs no buyback at all</b> — the public share count actually rises as IBG Holdings converts up-C units into Class A stock. Growth is self-funded, so the dividend is the only public capital return.</p>' },
   { id:'mna', ic:'🧊', col:PURPLE, k:'Stay disciplined on M&A', v:'walks away',
     teaser:'"Couldn\'t agree on price" on two targets. Won\'t buy sports-betting.',
     d:'<p>IBKR does not manufacture growth with acquisitions. Management disclosed it <b>"couldn\'t agree on price"</b> on two targets and simply walked, and it has explicitly said it <b>will not buy sports-betting</b>.</p><p>The bar is high because the core business compounds on its own — any deal has to clear the flywheel, not just add revenue.</p>' },
@@ -955,29 +965,60 @@ function peersBody(c){
   h+='<div class="ov-foot">Multiples as of ~Jul 2026, forward where available; market caps live on the Overview scatter.</div>';
   return h;
 }
-// Capital Allocation ▸ dividend/buyback/split
+// Capital Allocation ▸ dividend + the (rising) share count + no-buyback. Split-adjusted, from filings.
+var CAPALLOC={
+  years:['FY19','FY20','FY21','FY22','FY23','FY24','FY25','FY26e'],
+  dps:[0.10,0.10,0.10,0.10,0.10,0.21,0.30,0.34],   // annual DPS, split-adjusted ($); FY26 = $0.08 + $0.0875×3
+  shares:[307,323,380,405,423,436,444,450],         // diluted Class A shares, split-adj (M) — RISES (Q2'26 450M)
+};
+function buildCapAlloc(){
+  var cv=document.getElementById('ibkrChartDps'); if(cv&&typeof Chart!=='undefined'&&cv.offsetParent){
+    destroy('ibkrChartDps');
+    _charts['ibkrChartDps']=new Chart(cv.getContext('2d'),{ type:'bar',
+      data:{ labels:CAPALLOC.years, datasets:[{ label:'Dividend per share ($, split-adj)', data:CAPALLOC.dps, backgroundColor:AMBER, maxBarThickness:34 }] },
+      options:{ responsive:true, maintainAspectRatio:false, animation:false,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:function(ctx){ return ' $'+ctx.parsed.y.toFixed(2)+'/yr'; } } } },
+        scales:{ x:{ grid:{display:false}, ticks:{font:{size:10.5}} }, y:{ ticks:{ callback:function(v){ return '$'+v.toFixed(2); }, font:{size:9} }, grid:{color:'#EEF2F7'} } } }
+    });
+  }
+  var cv2=document.getElementById('ibkrChartShares'); if(cv2&&typeof Chart!=='undefined'&&cv2.offsetParent){
+    destroy('ibkrChartShares');
+    _charts['ibkrChartShares']=new Chart(cv2.getContext('2d'),{ type:'line',
+      data:{ labels:CAPALLOC.years, datasets:[{ label:'Diluted Class A shares (M)', data:CAPALLOC.shares, borderColor:BLUE, backgroundColor:'rgba(46,107,230,0.10)', borderWidth:2.5, tension:.25, fill:true, pointRadius:3 }] },
+      options:{ responsive:true, maintainAspectRatio:false, animation:false,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:function(ctx){ return ' '+ctx.parsed.y+'M shares'; } } } },
+        scales:{ x:{ grid:{display:false}, ticks:{font:{size:10.5}} }, y:{ ticks:{ callback:function(v){ return v+'M'; }, font:{size:9} }, grid:{color:'#EEF2F7'} } } }
+    });
+  }
+}
 function capallocBody(c){
-  var h='<p class="ov-lede">IBKR returns capital through a <b>rising dividend</b>, tied to ~0.5–1% of the stock price, on a balance sheet with <b>no long-term debt</b> and ~$6–7B of excess capital. Growth is self-funded and organic, so capital return is disciplined rather than aggressive.</p>';
+  var h='<p class="ov-lede">IBKR returns capital through a <b>rising dividend</b> — and, unusually, <b>runs no share buyback at all</b>. The public share count actually <b>grows</b> over time as IBG Holdings converts up-C units into Class A stock. Balance sheet: <b>no long-term debt</b>, ~$10B of excess capital.</p>';
   h+='<div class="ov-kpis">'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">Dividend (annual)</div><div class="ov-kpi-v">$0.35</div><div class="ov-kpi-d up">raised Q1 2026 (split-adj)</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Dividend (annual)</div><div class="ov-kpi-v">$0.35</div><div class="ov-kpi-d up">$0.0875/qtr — raised Jul 2026</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Share buybacks</div><div class="ov-kpi-v">None</div><div class="ov-kpi-d muted">no program, ever</div></div>'+
     '<div class="ov-kpi"><div class="ov-kpi-l">Stock split</div><div class="ov-kpi-v">4-for-1</div><div class="ov-kpi-d muted">June 2025</div></div>'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">Long-term debt</div><div class="ov-kpi-v">None</div><div class="ov-kpi-d muted">fortress balance sheet</div></div>'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">Excess capital</div><div class="ov-kpi-v">~$6–7B</div><div class="ov-kpi-d muted">above regulatory minimums</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Long-term debt</div><div class="ov-kpi-v">None</div><div class="ov-kpi-d muted">~$10B excess capital</div></div>'+
   '</div>';
-  h+=sec('The dividend path', bullets([
-    '<b>$0.10/qtr</b> — held since 2011.',
-    '<b>$0.25/qtr</b> — raised Q1 2025.',
-    '<b>4-for-1 split</b> — June 2025 → $0.32 split-adjusted.',
-    '<b>$0.35/yr</b> — raised Q1 2026. Policy: ~0.5–1% of the stock price.',
+  h+='<div class="ov-charts" style="grid-template-columns:1fr 1fr;margin-top:6px">'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Dividend per share <span>($/yr, split-adj)</span></div><div class="ov-chart-wrap"><canvas id="ibkrChartDps"></canvas></div></div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-t">Diluted shares <span>(M) — rises, no buyback</span></div><div class="ov-chart-wrap"><canvas id="ibkrChartShares"></canvas></div></div>'+
+  '</div>';
+  h+=sec('The dividend path (split-adjusted)', bullets([
+    '<b>$0.025/qtr</b> — held flat for 13 years (2011 → early 2024).',
+    '<b>$0.0625/qtr</b> — first raise, April 2024.',
+    '<b>$0.08/qtr</b> — raised April 2025, alongside the 4-for-1 split announcement.',
+    '<b>$0.0875/qtr</b> — raised July 2026 (with the 2Q print) → <b>$0.35/yr</b>, the first post-split raise. Policy: ~0.5–1% of the stock price.',
   ]));
+  h+=sec('Why the share count rises — no buyback, up-C conversions instead',
+    '<div class="ov-callout"><b>Unlike almost every large-cap, IBKR never buys back stock.</b> Its public float <b>grows</b> (~307M → 444M diluted Class A shares, FY19→FY25) because IBG Holdings redeems up-C units and IBKR settles them partly in <b>newly issued Class A shares</b>. Cash used to buy out those private holders (not a public buyback): ~$229M (FY23), $39M (FY24), $254M (FY25). Net: the only capital return to <i>public</i> holders is the dividend.</div>');
   h+=sec('M&A discipline', '<div class="ov-callout">Management is explicit: disciplined on price ("couldn\'t agree on price" on two targets) and will <b>not buy sports-betting</b>. Growth is organic; capital is not spent to manufacture it.</div>');
-  h+='<div class="ov-foot">Dividend and capital figures per IBKR FY2023–Q1 2026 earnings materials. Directional.</div>';
+  h+='<div class="ov-foot">Dividend, share-count and redemption figures from IBKR 10-Ks & earnings releases (SEC EDGAR). Per-share split-adjusted (4-for-1, Jun 2025).</div>';
   return h;
 }
 // Financials ▸ hardcoded reported series (IBKR not in Summit DCF)
 function financialsBody(c){
   function row(label,arr,fmt){ return '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px;font-weight:700">'+esc(label)+'</td>'+FIN_SERIES.years.map(function(y,i){ var v=arr[i]; return '<td style="text-align:right;padding:7px 10px;font-variant-numeric:tabular-nums">'+(v==null?'—':fmt(v))+'</td>'; }).join('')+'</tr>'; }
-  var h='<p class="ov-lede">IBKR\'s <b>reported financials</b> (directional). The story is consistent: revenues and client equity compounding, margins rising.</p>';
+  var h='<p class="ov-lede">IBKR\'s <b>reported financials, FY2019–FY2025</b> (GAAP, from the 10-Ks). The story is consistent: revenues and client equity compounding, margins rising.</p>';
   h+='<div class="ov-chart-card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:7px 10px">($B unless noted)</th>'+FIN_SERIES.years.map(function(y){ return '<th style="text-align:right;padding:7px 10px">'+esc(y)+'</th>'; }).join('')+'</tr></thead><tbody>'+
     row('Net revenues',FIN_SERIES.netRev,function(v){return '$'+v.toFixed(1)+'B';})+
     row('Net interest income',FIN_SERIES.nii,function(v){return '$'+v.toFixed(1)+'B';})+
@@ -985,8 +1026,8 @@ function financialsBody(c){
     row('Pre-tax margin',FIN_SERIES.ptMargin,function(v){return v+'%';})+
     row('Client equity (year-end)',FIN_SERIES.clientEq,function(v){return '$'+v+'B';})+
   '</tbody></table></div>';
-  h+='<div class="ave-subh-note" style="margin-top:8px">All approximate/directional. Net revenues: FY22 ~2.9, FY23 ~4.3, FY24 ~5.2, FY25 ~6.0. NII: FY23 2.8, FY24 3.1, FY25 3.6. Commissions: FY23 1.4, FY24 1.7, FY25 2.1. Pre-tax margin: FY23 71, FY24 71, FY25 77. Client equity: 2023 426, 2024 568, 2025 780.</div>';
-  h+='<div class="ov-foot">Source: IBKR FY2022–FY2025 reported results.</div>';
+  h+='<div class="ave-subh-note" style="margin-top:8px">GAAP figures from IBKR 10-Ks / Q4 earnings releases (SEC EDGAR, CIK 1381197). Net revenues = total revenues net of interest expense. Adjusted figures differ ~1–2%.</div>';
+  h+='<div class="ov-foot">Source: IBKR FY2019–FY2025 10-Ks & earnings releases.</div>';
   return h;
 }
 
@@ -1066,7 +1107,7 @@ function govBody(c){
   h+='<div class="ov-kpis">'+
     '<div class="ov-kpi"><div class="ov-kpi-l">Control</div><div class="ov-kpi-v">Founder</div><div class="ov-kpi-d muted">Peterffy ~73.7% of the vote</div></div>'+
     '<div class="ov-kpi"><div class="ov-kpi-l">Public ownership</div><div class="ov-kpi-v">26.3%</div><div class="ov-kpi-d muted">of IBG LLC (up-C)</div></div>'+
-    '<div class="ov-kpi"><div class="ov-kpi-l">Long-term debt</div><div class="ov-kpi-v">None</div><div class="ov-kpi-d muted">~$6–7B excess capital</div></div>'+
+    '<div class="ov-kpi"><div class="ov-kpi-l">Long-term debt</div><div class="ov-kpi-v">None</div><div class="ov-kpi-d muted">~$10B excess capital</div></div>'+
     '<div class="ov-kpi"><div class="ov-kpi-l">Board</div><div class="ov-kpi-v">10 · 5 indep.</div><div class="ov-kpi-d muted">Lead Independent: L. Harris</div></div>'+
   '</div>';
   h+=sec('The read', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">The pros of founder control: <b>long-term thinking</b> (Peterffy\'s "as long as I shall live" durability, big multi-year bets like ForecastEx), <b>capital discipline</b>, and deep alignment (the founder\'s wealth <i>is</i> the stock). The cons: as a Nasdaq <b>"controlled company"</b> the board need not be majority-independent — public holders own a minority and have limited say, and succession beyond Galik is a long-term question. Offsetting it, the <b>independent bench is genuinely strong</b>: Lead Independent Director <b>Lawrence Harris</b> (ex-SEC Chief Economist) chairs Audit, alongside <b>Richard Repetto</b> (ex-Piper Sandler broker analyst) and <b>Nicole Yuen</b> (ex-Credit Suisse). Full roster & committees in the Executives & Board subtab.</div>');
@@ -1091,9 +1132,9 @@ var TRACK=[
       '<p><b>Before / outside.</b> Essentially none outside IBKR — his career is the firm.</p>'+
       '<p><b>The read — value creator (green).</b> A proven operator executing the founder\'s playbook flawlessly; the only caveat is the lack of an independent, external benchmark for his record.</p>' },
   { id:'brody', n:'Paul J. Brody', role:'CFO, Treasurer & Secretary', since:'1987', rate:'green',
-    at:'Built the fortress: no debt, ~$6–7B excess capital, the <30-day treasury book and the rate-sensitivity playbook the Street relies on.',
+    at:'Built the fortress: no debt, ~$10B excess capital, the <30-day treasury book and the rate-sensitivity playbook the Street relies on.',
     before:'Long finance tenure at IBKR; ex-director of The Options Clearing Corporation (2005–2012).',
-    detail:'<p><b>At IBKR.</b> CFO since 2006 (joined 1987). Responsible for IBKR\'s conservative, cash-rich posture: no long-term debt, ~$6–7B excess capital, a &lt;30-day-duration treasury book on customer cash (which bounds rate risk), and the disclosed NII rate-sensitivity framework the Street relies on. Steered the dividend path and the 4-for-1 split.</p>'+
+    detail:'<p><b>At IBKR.</b> CFO since 2006 (joined 1987). Responsible for IBKR\'s conservative, cash-rich posture: no long-term debt, ~$10B excess capital, a &lt;30-day-duration treasury book on customer cash (which bounds rate risk), and the disclosed NII rate-sensitivity framework the Street relies on. Steered the dividend path and the 4-for-1 split.</p>'+
       '<p><b>Before / outside.</b> BA economics, Cornell; former director of The Options Clearing Corporation.</p>'+
       '<p><b>The read — value creator (green).</b> The financial discipline is a genuine asset and a competitive signal to institutional clients; low-key and consistent.</p>' },
   { id:'nemser', n:'Earl H. Nemser', role:'Vice Chairman', since:'1988', rate:'green',
@@ -1103,11 +1144,17 @@ var TRACK=[
       '<p><b>Before / outside.</b> JD magna cum laude, Boston University; Special Counsel / Independent Advisor to Dechert LLP.</p>'+
       '<p><b>The read — value creator (green).</b> Quietly central to how the up-C structure, regulatory footprint and governance are run — a stabilizing, low-profile insider.</p>' },
   { id:'frank', n:'Dr. Thomas A. Frank', role:'Executive Vice President', since:'1985', rate:'green',
-    at:'PhD-physicist engineer behind decades of the automation platform; CIO from 1999 until 2024, now EVP.',
-    before:'PhD physics, MIT (1985); director of The Options Clearing Corporation since 2015.',
-    detail:'<p><b>At IBKR.</b> EVP of Interactive Brokers LLC; with the firm since 1985. Served as Chief Information Officer from 1999 until stepping down from that role in April 2024 (remains EVP). A core architect of the technology that lets ~3,182 staff run a ~$6B broker.</p>'+
-      '<p><b>Before / outside.</b> PhD in physics, MIT (1985); director of The Options Clearing Corporation since 2015.</p>'+
+    at:'PhD-physicist engineer behind decades of the automation platform; CIO 2006–2024, now strategic/advisory.',
+    before:'PhD physics, MIT; helped build the early market-making systems from 1985.',
+    detail:'<p><b>At IBKR.</b> EVP of Interactive Brokers LLC; with the firm since 1985 and instrumental in its early automated market-making systems. Served as Chief Information Officer from 2006 until 2024; now on the Market Risk Committee in a strategic/advisory role. A core architect of the technology that lets ~3,182 staff run a ~$6B broker.</p>'+
+      '<p><b>Before / outside.</b> PhD in physics, MIT; on the board of The Options Clearing Corporation (2015–2024).</p>'+
       '<p><b>The read — value creator (green).</b> Emblematic of IBKR\'s engineering-led DNA; the automation moat is partly his. Watch the CIO succession now that he has handed off that title.</p>' },
+  { id:'sanders', n:'Steve Sanders', role:'EVP, Marketing & Product Development', since:'2001', rate:'green',
+    at:'Built the marketing & product engine and turned IBKR\'s technology into products — the firm\'s public face and demand-side builder.',
+    before:'15 years at Citi across brokerage/banking before joining in 2001.',
+    detail:'<p><b>At IBKR (since 2001).</b> EVP, Marketing & Product Development; a senior managing partner who helped grow IBKR from a nascent global broker into a >$1B-net-income firm. Runs marketing and much of the product roadmap, with a knack for turning technical concepts into practical, revenue-building products — and is the firm\'s most visible external voice (markets/fintech media).</p>'+
+      '<p><b>Before / outside.</b> 15 years at Citi across marketing, product, finance, risk and technology in brokerage/banking.</p>'+
+      '<p><b>The read — value creator (green).</b> A rare non-engineering builder on a heavily engineering-led bench; owns the demand side (brand, product, distribution) that complements the automation story. Not a Section 16 officer, but core to how IBKR grows.</p>' },
 ];
 // Independent directors — outside credibility (overseers, not operators; shown as a compact strip).
 var TRACK_BOARD=[
@@ -1201,7 +1248,66 @@ var CALL_PREP = {
           why:'Cheap to monitor and asymmetric, but not a needle-mover yet.',
           src:'Recurring "new products" theme across the calls; no dedicated Bloomberg line, so explicitly the qualitative, lower-weight item.' },
       ],
-      results:null, call:null
+      // Post-Results filled from the 2Q2026 earnings release (Jul 21, 2026). Call is tonight → call:null.
+      results:{
+        headline:'A <b>clean beat across the board</b> — the opposite of Q1. Revenue, EPS and every operating metric came in ahead of Bloomberg consensus, and <b>no thesis red-line tripped</b>. The one number that demands a question on the call: <b>margin loans exploded +67% YoY</b>.',
+        scorecard:[
+          { metric:'Adj EPS', cons:'$0.63', actual:'$0.69', result:'beat' },
+          { metric:'Adj net revenue', cons:'$1,787M', actual:'$1,883M · +27% YoY', result:'beat' },
+          { metric:'Net interest income', cons:'$980M', actual:'$1,057M · +23%', result:'beat',
+            note:{ t:'NII: two figures in the release', h:'<p>The income statement shows total net interest income of <b>$1,057M</b>; the NIM table shows <b>$1,100M</b> (it folds in interest-like income booked in "other fees" and "other income"). Both are up ~23–28% YoY.</p><p><b>NIM came in 1.93%</b> — actually <i>above</i> the ~1.85% consensus, i.e. the spread compressed less than modeled even as balances surged.</p>' } },
+          { metric:'Commissions', cons:'$672M', actual:'$673M · +30%', result:'inline' },
+          { metric:'Comm / cleared order', cons:'~$2.69', actual:'$2.64', result:'inline',
+            note:{ t:'The pricing-power tell — held', h:'<p>Commission per cleared commissionable order was <b>$2.64</b> — essentially <b>flat</b> (−0% YoY, −2% QoQ). Exactly what watch item #4 predicted: DARTs surge, but the per-order economics don\'t crack. <b>No pricing erosion → moat intact.</b></p>' } },
+          { metric:'DARTs', cons:'4.72M', actual:'4.82M · +36%', result:'beat' },
+          { metric:'Customer accounts', cons:'5.15M', actual:'5.19M · +34%', result:'beat' },
+          { metric:'Customer equity', cons:'$903.7B', actual:'$930.3B · +40%', result:'beat' },
+          { metric:'Margin loans', cons:'$95.2B avg', actual:'$96.6B avg · $108.5B EOP · +67%', result:'beat',
+            note:{ t:'The standout — and the thing to probe', h:'<p>Average customer margin loans hit <b>$96.6B (+58% YoY)</b> and <b>$108.5B at period-end (+67%)</b> — a sharp acceleration from Q1\'s +35%. Credit balances grew "only" +27%.</p><p>This is the single biggest question the numbers raise: <b>is that leverage organic and broad, or concentrated in a few large/levered clients?</b> It powers NII, but if it\'s a handful of accounts it\'s more fragile and higher-risk (see the bad-debt uptick).</p>' } },
+          { metric:'Pre-tax margin', cons:'76.8%', actual:'77%', result:'inline' },
+        ],
+        thesisCheck:[
+          { line:'NII falls YoY while credit balances grow', tripped:false, note:'NII +23% ($1.06B); NIM 1.93% even beat 1.85% consensus. The balance-offset is firmly working.' },
+          { line:'The earning-asset engine decelerates / goes flat', tripped:false, note:'Credit +27%, equity +40%, margin loans +67% — accelerated, not stalled.' },
+          { line:'Account growth below ~25% YoY', tripped:false, note:'+34% YoY (5.19M). PDT tailwind showed up, but growth stayed well above the line.' },
+          { line:'Commission-per-DART drops materially', tripped:false, note:'$2.64 — flat (−0% YoY). Pricing power intact, exactly as the tell called.' },
+        ],
+        intoCall:[
+          '🔥 <b>Margin loans +67% YoY</b> ($108.5B EOP) — the standout. Why the surge vs. credit +27%? Organic demand or concentrated/levered clients, and is it durable? (This is the #1 thing to hunt.)',
+          '⚖️ <b>SEC Section 31 distortion</b> — execution/clearing fees jumped +22% to $142M, driven by +$19M of regulatory fees as the Section 31 rate rose Apr 4. It\'s a pass-through: it grosses up both revenue and expense but washed out (margin held 77%). Don\'t misread it as cost creep.',
+          '⚑ <b>Customer bad debt jumped to $10M</b> (from $1M a year ago) — small, but a 10×. A single margin event / name? Connects to the margin-loan surge.',
+          '📉 <b>NIM 1.93%</b> beat, but is still compressing YoY (2.07% → 1.93%). How much more as the Fed eases — does balance growth keep out-running it?',
+          '💵 <b>Dividend raised to $0.0875/qtr ($0.35/yr)</b> — the first post-split raise; confirms the ~0.5–1%-of-price policy.',
+          '🗳️ <b>No ForecastEx / overnight / crypto numbers</b> in the release — the qualitative color and any revenue tease come on the call (watch item #5).',
+        ],
+        priceReaction:'To fill after the print from a trusted source (not web).',
+      },
+      // Post-Call filled from the 2Q2026 call transcript (Jul 21, 2026). Insight-first, not restatement.
+      call:{
+        take:'The print was a clean beat; the <b>call was about the pivots underneath it.</b> The thesis got hard confirmation — <b>NII +23% through a −70bps Fed move</b>, on balances — while IBKR quietly reshaped three bets: prediction markets (now a multi-venue aggregator, really a weather/insurance play), AI (agentic-trading roadmap), and new markets (Korea, SpaceX, EU crypto). One yellow flag: <b>margin loans +67% earned only a "we\'re comfortable."</b>',
+        highlights:[
+          { tag:'thesis', head:'The rate-cut fear is now empirically dead — NII grew +23% <i>through</i> a −70bps Fed move',
+            detail:'<p>NII rose +23% (NIM-basis +28%) even as average US Fed funds fell ~70bps (−16%) YoY — margin-loan interest +39%, seg-cash interest +7%, all driven by <b>balances, not rates.</b> The variant view, confirmed.</p><p><b>Updated rate sensitivity:</b> ±$81M annual NII per 25bps USD move (symmetric); ±$38M per 25bps non-USD (~1/3 of sensitive balances are non-USD); fully rate-sensitive balances $28.4B. And <b>balance growth increases the impact</b> in both directions. Subtle shift: duration stayed &lt;30 days but they pushed it out "a bit" as the short-to-medium curve turned positive.</p>' },
+          { tag:'watch', head:'Margin loans +67% got only a "we\'re comfortable" — the one guarded answer of the call',
+            detail:'<p>Chubak pressed: is the extraordinary margin growth durable/healthy or outsized risk-taking (Peterffy has historically disliked fast margin growth)? <b>Peterffy: "very cognizant of client risk… continuously monitoring… comfortable with current levels."</b> Brody: a "risk-on environment."</p><p><b>Read:</b> comfortable, but <b>no concentration granularity</b> (broad vs. a few large levered accounts), and <b>customer bad debt ticked $1M → $10M.</b> Keep interrogating it.</p>' },
+          { tag:'dots', head:'Prediction markets pivoted to a multi-venue <i>aggregator</i> — and it\'s really a weather/insurance play',
+            detail:'<p>Launched <b>IBKR Prediction Markets</b>: routes across <b>ForecastEx + CME + Kalshi</b> to best net price. Milan: "no reason to limit clients to only ForecastEx… increase liquidity… easier to attract institutions." The pivot: from running an exchange to being the router across all venues. <b>Firmly reaffirmed: NO sports/entertainment.</b></p><p><b>The tell (Budish):</b> ForecastEx volume is concentrated in a couple of <b>temperature contracts</b>; Peterffy wants to expand into <b>hurricane landfalls, "which implies insurance risk."</b> So the grand "prediction markets" story is, in practice, becoming a <b>weather / insurance-hedging venue</b> — not elections.</p>' },
+          { tag:'curious', head:'Agentic AI: clients are connecting ChatGPT/Claude/Grok to their accounts <i>organically</i> — autonomous trading is on the roadmap',
+            detail:'<p><b>IBKR Connector</b> = enterprise integration with OpenAI, Anthropic, xAI. Milan: clients connected chatbots <b>before any public announcement</b> (IBKR appears in the chatbots\' drop-downs). Today: <b>"human-in-the-loop"</b> — the AI drafts an order → the client approves → it executes.</p><p><b>Roadmap: fully autonomous agentic trading</b>, gated behind a client test. The concrete version of Peterffy\'s "AI raises trading velocity" thesis — a potential future <b>volume driver</b>, not just cost.</p>' },
+          { tag:'dots', head:'IBKR is a quiet beneficiary of the China (Tiger/Futu) clampdown — assets are moving over',
+            detail:'<p>After the May Chinese-regulator clampdown on <b>Tiger and Futu</b>, Milan: "a clear uptick in broker transfers… the number of accounts, and especially <b>assets</b>, has increased" — much of it existing IBKR clients shifting assets off Tiger/Futu onto IBKR. A non-obvious tailwind to the +40% equity / +27% credit-balance growth. IBKR stays compliant (no mainland advertising; verifies non-mainland residence).</p>' },
+          { tag:'curious', head:'Korea launched into semis, and overnight trading nearly <i>tripled</i> — last quarter\'s buried detail, confirmed',
+            detail:'<p>First e-broker in Korea (Korea Exchange + <b>Nextrade</b> overnight ATS); "a line that goes straight up," semiconductor names most sought. <b>Overnight trading nearly tripled YoY to 10.9M trades (from 3.8M)</b> — the Q1 one-mention detail is now a confirmed secular trend, driven by international investors trading in "their waking hours."</p><p><b>Connect:</b> semis-as-market-drivers + Korea\'s overnight ATS + overnight tripling = one 24-5 international story.</p>' },
+          { tag:'curious', head:'One-third of crypto trading is already <i>perpetuals</i> — a recently-added product',
+            detail:'<p>Milan: perpetual futures solve crypto\'s short-sell and leverage problems; IBKR offers <b>Coinbase</b> perps; <b>"roughly one-third of the trading we see [in crypto] is now coming from these perpetuals."</b> Fast adoption; more venues to be added.</p>' },
+          { tag:'watch', head:'Capital ballooned to $10.3B — and management admitted the growth isn\'t getting cheaper',
+            detail:'<p><b>Excess capital ~$10.3B</b> after buffers (+$1.1B QoQ; was ~$8B a few months ago). No buyback → capital-return pressure builds. M&A: banks pitching "dramatically" more targets, nothing worth buying — discipline intact.</p><p><b>Two candid, thesis-tempering admissions:</b> Peterffy said <b>marketing yield is NOT higher</b> — "roughly the same," proportional to spend; and Milan said the "no dilution" in DARTs/account is <b>partly the strong environment</b>, not proven structural durability. So &gt;30% growth continues, but not because acquisition got more efficient.</p>' },
+          { tag:'watch', head:'Promise updates: OCC charter operational by year-end; IB pipeline reconciled',
+            detail:'<p><b>OCC national trust bank charter:</b> preliminary conditional approval received, <b>"operational by year-end"</b> — the Q1 silence resolved with a concrete timeline (enables direct custody of mutual-fund/ETF assets).</p><p><b>Introducing brokers:</b> 4th–5th straight quarter of double-digit integrations going online; more in progress than last quarter; significant committed. The <b>type shifted</b> from startups to established firms broadening their offering (crypto/CFD providers adding listed stocks, retail brokers adding asset classes/regions).</p>' },
+        ],
+        dots:'<b>The print confirmed the thesis; the call reframed the optionality.</b> NII proved the balance-offset works even as the Fed eases. Underneath, IBKR is turning "broaden the box" into something bigger — prediction markets as a weather/insurance-hedging aggregator, AI as a path to autonomous trading, new venues (Korea/overnight) tied to a 24-5 international story — while a regulatory clampdown hands it Chinese-diaspora assets. Keep honest: margin loans +67% earned just a "comfortable," and growth isn\'t getting cheaper to buy.',
+        newQuestions:['Margin loans +67%: concentration — a few large levered accounts vs. broad? (bad debt $1M→$10M)','Prediction markets: any revenue, and how big can the weather/insurance-hedging vertical get?','Agentic AI: incremental trading volume from chatbot-connected accounts, and the timeline to fully autonomous trading?','Excess capital $10.3B and rising, no buyback — when does capital return step up?'],
+      }
     },
     { q:'Q1 2026', status:'reported', date:'Apr 21, 2026',
       setup:{
@@ -1270,8 +1376,8 @@ var CALL_PREP = {
       note:'Launched 2024; Preqin #4 prime broker. No fresh traction data on the Q1 2026 call — a soft silence; worth asking for updated fund count / balances.' },
     { item:'Introducing-broker pipeline ("~two dozen firms")', kind:'pipeline', origin:'Q2 2024', status:'pending', lastMentioned:'~Q2 2025',
       note:'A stated expectation, not a signed book: HSBC WorldTrader is live; management cited ~two dozen more "in progress" + a UAE ~10k-account migration. It has never been reconciled to actual conversions — the cleanest accountability check on the list.' },
-    { item:'Dividend policy (~0.5–1% of the stock price)', kind:'project', origin:'2011 / Q1 2025', status:'delivered', lastMentioned:'Q1 2026',
-      note:'A standing commitment, delivered: $0.10/qtr (2011) → $0.25/qtr (Q1 2025) → 4-for-1 split (Jun 2025) → $0.35/yr (Q1 2026).' },
+    { item:'Dividend policy (~0.5–1% of the stock price)', kind:'project', origin:'2011 / 2024', status:'delivered', lastMentioned:'Q1 2026',
+      note:'A standing commitment, delivered: flat for 13 yrs → raised 2024, 2025, and again to $0.0875/qtr in Jul 2026 = $0.35/yr today. No buyback.' },
     { item:'European bank license (Ireland)', kind:'musing', origin:'~Q4 2024', status:'silent', lastMentioned:'~Q4 2024',
       note:'IMPORTANT: this was a passing mention alongside the OCC charter, NOT a confirmed application or funded project. Included only to keep the distinction honest — do not treat it as a live promise unless management re-commits.' },
   ]
@@ -1446,11 +1552,11 @@ function cpResultsBody(c){
   var h=cpStyle();
   h+='<div class="cp-phase" style="background:'+BRAND2+'">② Post-Results</div>';
   h+='<p class="ov-lede"><b>The numbers vs. Bloomberg consensus.</b> Results land first (release ~4pm, call comes later) — so this is the read on the <b>print itself</b>, before management says a word: what beat, what missed, and whether any thesis red-line tripped.</p>';
-  var rep=cpReported().filter(function(q){ return q.results; });
+  var rep=CALL_PREP.quarters.filter(function(q){ return q.results; });
   if(!rep.length){ h+='<div class="cp-note">Empty until the print lands. After results, fill <code>results.scorecard</code> and <code>results.thesisCheck</code> for the quarter.</div>'; return h; }
-  rep.forEach(function(q){ var r=q.results;
+  rep.forEach(function(q){ var r=q.results; var pending=(q.status==='upcoming');
     h+='<div style="border:1px solid var(--bdr);border-radius:12px;padding:14px 16px;margin-bottom:14px;background:var(--w)">';
-    h+='<div style="font-size:13.5px;font-weight:800;color:var(--navy);margin-bottom:8px">'+esc(q.q)+' <span style="font-weight:600;color:var(--mu);font-size:11px">· reported '+esc(q.date||'')+'</span></div>';
+    h+='<div style="font-size:13.5px;font-weight:800;color:var(--navy);margin-bottom:8px">'+esc(q.q)+' <span style="font-weight:600;color:var(--mu);font-size:11px">· reported '+esc(q.date?q.date.replace(/ · .*/,''):'')+(pending?' · call still ahead':'')+'</span></div>';
     if(r.headline) h+='<div class="cp-take" style="border-left-color:'+BRAND2+'">🎯 '+r.headline+'</div>';
     if(r.scorecard&&r.scorecard.length){
       var qkey=(q.q||'').replace(/\s/g,'');
@@ -1465,6 +1571,10 @@ function cpResultsBody(c){
         return '<div class="cp-tc-row" style="border-left:3px solid '+col+'"><span style="font-weight:800;color:'+col+';white-space:nowrap">'+ic+'</span><span><b>'+esc(t.line)+'</b> — '+esc(t.note||'')+'</span></div>';
       }).join('')+'</div>';
     }
+    if(r.intoCall&&r.intoCall.length){
+      h+='<div class="cp-dots" style="margin-top:14px">🎯 <b>What the numbers tee up for the call</b> — go in hunting these:'+
+        '<ul class="ov-bullets" style="margin-top:6px">'+r.intoCall.map(function(x){ return '<li>'+x+'</li>'; }).join('')+'</ul></div>';
+    }
     h+='<div style="margin-top:10px;font-size:11.5px;color:var(--navy)"><b>Price reaction:</b> '+cpFill(r.priceReaction,'to fill from a trusted source')+'</div>';
     h+='</div>';
   });
@@ -1476,7 +1586,7 @@ function cpCallBody(c){
   var h=cpStyle();
   h+='<div class="cp-phase" style="background:'+BRAND+'">③ Post-Call</div>';
   h+='<p class="ov-lede"><b>Not a restatement of the numbers — the story behind them.</b> Theme by theme: what the print/call <i>implied</i> for the thesis, the curious one-mention details, and the dots that connect. Tap any highlight for the depth.</p>';
-  var rep=cpReported().filter(function(q){ return q.call; });
+  var rep=CALL_PREP.quarters.filter(function(q){ return q.call; });
   if(!rep.length){ h+='<div class="cp-note">Empty until the call/transcript is in. After the call, fill <code>call.take</code> (the one-line meeting take), <code>call.highlights</code> (theme-by-theme, each with a pop-up detail) and <code>call.dots</code> (connect the story).</div>'; return h; }
   rep.forEach(function(q){ var cc=q.call;
     h+='<div style="margin-bottom:18px">';
@@ -1627,7 +1737,7 @@ function buildMargin(){
     data:{ labels:FIN_SERIES.years, datasets:[{ label:'Pre-tax margin (%)', data:FIN_SERIES.ptMargin, borderColor:BRAND, backgroundColor:'rgba(214,0,28,0.10)', borderWidth:2.5, tension:.25, fill:true, pointRadius:4, pointBackgroundColor:BRAND, spanGaps:true }] },
     options:{ responsive:true, maintainAspectRatio:false, animation:false,
       plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:function(ctx){ return ' '+ctx.parsed.y+'% pre-tax margin'; } } } },
-      scales:{ x:{ grid:{display:false}, ticks:{font:{size:10.5}} }, y:{ suggestedMin:60, suggestedMax:80, ticks:{ callback:function(v){ return v+'%'; }, font:{size:9} }, grid:{color:'#EEF2F7'} } } }
+      scales:{ x:{ grid:{display:false}, ticks:{font:{size:10.5}} }, y:{ suggestedMin:50, suggestedMax:80, ticks:{ callback:function(v){ return v+'%'; }, font:{size:9} }, grid:{color:'#EEF2F7'} } } }
   });
 }
 
@@ -1640,6 +1750,7 @@ function buildSub(root, group, key){
     if(key==='margins'){ buildMargin(); buildFinancials(); }
   } else if(group==='valuation'){
     if(key==='sensitivity') renderSens(root);
+    else if(key==='capital') buildCapAlloc();
   } else if(group==='mgmt'){
     if(key==='team') IBKR_MGMT.init(root);
   }

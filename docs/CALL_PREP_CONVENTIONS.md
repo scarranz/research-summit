@@ -140,12 +140,48 @@ management promises — they belong in the Watch List, not here.
 - A **thesis red-line check**: for each Watch-List `breaks` condition, did it **trip** or **hold**?
 - The print-day price reaction (from a trusted source, not web) — leave to fill if unavailable.
 
-**Post-Call (what management said + the meeting take):**
-- **Tone shifts**, **contradictions vs. prior quarters**, **promise updates** (bullets).
-- **Conclusion** — the money block. Written to answer the meeting question: *"what did you make of the
-  call? what stood out? what did you see / hear?"* One tight paragraph a PM can read aloud: did any
-  red-line trip, is the thesis intact, what's the one honest loose end.
-- **newQuestions** — 1-3 items that seed next quarter's Watch List.
+**Post-Call — insight-first, NOT a restatement of the numbers.** This is the most important discipline
+in the whole tool. Everyone at the meeting already has the metrics (they're in the DCF / the data).
+Restating "commissions crossed $600M" is **useless** — it adds nothing. The job of Post-Call is to
+surface **what a number can't tell you on its own**: *why* it came out that way, what it *implies for
+the thesis*, and the non-obvious details that — connected — tell the story.
+
+Structure (each rendered as a scannable list, depth in a pop-up — never a wall of text):
+- **`take`** — a one-line meeting take (the punch: is the thesis intact, what's the one thing that matters).
+- **`highlights[]`** — theme-by-theme insight bullets (see the taxonomy below). Each: a `tag`, a short
+  insight `head` (the takeaway, *not* the fact), and a `detail` pop-up with the depth + why.
+- **`dots`** — the connect-the-dots line: how the highlights, together, tell one story.
+- **`newQuestions`** — 1-3 items that seed next quarter's Watch List.
+
+### What counts as a highlight — the taxonomy (company-agnostic)
+
+A bullet earns a spot only if it is one of these. If it just restates a metric, **cut it.**
+
+| `tag` | What it captures | The test |
+|---|---|---|
+| **`thesis`** | A result that *confirms or threatens the core thesis* — the **why**, not the number. | "Does this make the bull/bear case stronger or weaker, and why?" |
+| **`curious`** | A **buried, low-emphasis detail** — mentioned once, in passing — that hints at a bigger/structural shift. | "Was this said almost off-hand, and could it be the story in 2 years?" (e.g. a product volume quietly tripling) |
+| **`dots`** | Two+ individually-unremarkable facts that **only mean something together.** | "Do these connect into a narrative the standalone numbers hide?" (e.g. headline miss + strong operating lines = 'the business beat, the print missed') |
+| **`tone`** | Management gets **notably more/less confident or hedged** on a topic vs. prior quarters. | "Did the *language* change even if the facts didn't?" |
+| **`watch`** | A **silence / omission** (something expected that wasn't said) or a new risk to track next quarter. | "What *didn't* they mention that they used to?" |
+
+### How to actually find them (the method — use this for any company)
+
+1. **Read the full transcript, not the press release.** The insights live in the unscripted Q&A, not the
+   prepared remarks. Weight what management says when *pushed* over what they volunteer.
+2. **Compare against prior quarters.** A highlight is usually a *change* — in a trajectory, in emphasis,
+   or in tone. Diff this call against the last two or three.
+3. **Apply the "already-in-the-DCF" filter.** For every candidate bullet ask: *"would someone who already
+   has the numbers learn anything from this?"* If no → it's a restatement → cut it.
+4. **Hunt the one-mention details.** Scan for things said briefly, once, with no follow-up — a new venue,
+   a product volume, a regulatory nuance, a customer type. Then ask whether it connects to a longer arc.
+5. **Connect the dots.** Look for 2-3 facts that are boring alone but tell a story together. That synthesis
+   is the `dots` line — and often the single most valuable thing in the whole tab.
+6. **Note the silences.** A project/topic that dropped off the script is a signal (cross-check the Promise
+   Tracker). What management *stopped* saying can matter as much as what they said.
+
+The bar: a PM reads the `take` + skims the highlight heads in 30 seconds and knows *what to say in the
+meeting*; taps a pop-up only when they want the depth. Punchy, synthesized, visual — never paragraphs.
 
 ---
 

@@ -946,9 +946,11 @@ function cpEvCell(key, m, isCustom){
 // release, webcast, transcripts, straight from the company. Deliberately loud; convention for
 // every company (CALL_PREP_CONVENTIONS §6). GOOGL → https://abc.xyz/investor/
 var CP_IR_URL='https://abc.xyz/investor/';
+var CP_EDGAR_URL='https://www.sec.gov/edgar/browse/?CIK=1652044&owner=exclude';
 function cpIRButton(){
   return '<style>'+
-    '.cp-ir{display:flex;align-items:center;gap:14px;text-decoration:none;border-radius:14px;padding:15px 18px;margin:0 0 14px;position:relative;overflow:hidden;'+
+    '.cp-srcrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}@media(max-width:760px){.cp-srcrow{grid-template-columns:1fr}}'+
+    '.cp-ir{display:flex;align-items:center;gap:14px;text-decoration:none;border-radius:14px;padding:15px 18px;position:relative;overflow:hidden;'+
       'background:linear-gradient(100deg,#0B1220 0%,#101C3A 55%,#0B1220 100%);border:1px solid rgba(66,133,244,0.45);box-shadow:0 6px 22px rgba(16,20,26,.22);transition:.16s}'+
     '.cp-ir:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,'+BRAND+','+RED+','+YELLOW+','+BRAND2+');height:3px;top:0}'+
     '.cp-ir:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(26,115,232,.35);border-color:'+BRAND+'}'+
@@ -962,7 +964,16 @@ function cpIRButton(){
     '.cp-ir-go{font-size:12px;font-weight:800;color:#fff;background:'+BRAND+';border-radius:999px;padding:9px 17px;white-space:nowrap;flex:none;display:flex;align-items:center;gap:7px;transition:.14s}'+
     '.cp-ir:hover .cp-ir-go{background:'+BRAND2+';gap:11px}'+
     '@media(max-width:560px){.cp-ir{flex-wrap:wrap}.cp-ir-go{width:100%;justify-content:center}}'+
+    /* EDGAR variant — the regulator's lens: steel/green identity, same weight as IR */
+    '.cp-ir.edgar{background:linear-gradient(100deg,#0B1A14 0%,#12291F 55%,#0B1A14 100%);border-color:rgba(52,168,83,0.45)}'+
+    '.cp-ir.edgar:before{background:linear-gradient(90deg,'+BRAND2+',#188038)}'+
+    '.cp-ir.edgar:hover{box-shadow:0 10px 28px rgba(52,168,83,.32);border-color:'+BRAND2+'}'+
+    '.cp-ir.edgar .cp-ir-ic{background:linear-gradient(135deg,'+BRAND2+',#188038);box-shadow:0 3px 10px rgba(52,168,83,.4)}'+
+    '.cp-ir.edgar .cp-ir-k{color:#81C995}'+
+    '.cp-ir.edgar .cp-ir-go{background:'+BRAND2+'}'+
+    '.cp-ir.edgar:hover .cp-ir-go{background:'+BRAND+'}'+
   '</style>'+
+  '<div class="cp-srcrow">'+
   '<a class="cp-ir" href="'+CP_IR_URL+'" target="_blank" rel="noopener">'+
     '<span class="cp-ir-ic">📡</span>'+
     '<span class="cp-ir-body">'+
@@ -971,7 +982,17 @@ function cpIRButton(){
       '<span class="cp-ir-s" style="display:block">Release · webcast · slides · transcripts — straight from abc.xyz. Skip the search, go direct.</span>'+
     '</span>'+
     '<span class="cp-ir-go">OPEN IR <span>↗</span></span>'+
-  '</a>';
+  '</a>'+
+  '<a class="cp-ir edgar" href="'+CP_EDGAR_URL+'" target="_blank" rel="noopener">'+
+    '<span class="cp-ir-ic">🏛️</span>'+
+    '<span class="cp-ir-body">'+
+      '<span class="cp-ir-k"><span class="cp-ir-dot"></span>THE RECORD · SEC FILINGS</span>'+
+      '<span class="cp-ir-t" style="display:block">Alphabet on EDGAR</span>'+
+      '<span class="cp-ir-s" style="display:block">10-K · 10-Q · 8-K · DEF 14A — the regulator\'s copy, as filed. What IR curates, EDGAR certifies.</span>'+
+    '</span>'+
+    '<span class="cp-ir-go">OPEN EDGAR <span>↗</span></span>'+
+  '</a>'+
+  '</div>';
 }
 function cpQkey(q){ return String(q||'').replace(/\s/g,''); }
 // Renders the quarter-pill selector (shared across the four phase panes via .cp-qblock filtering).

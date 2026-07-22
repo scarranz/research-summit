@@ -247,12 +247,16 @@ Evolution's sub-tab row: `Earnings Calls · Guidance · Strategy · Timeline · 
 
 **Call Prep pane** = **THE IR BUTTON (mandatory, first element)** + intro note + **QUARTER SELECTOR**
 
-**The IR button:** every company's Call Prep opens with a deliberately loud, banner-style button
-(`cpIRButton()` in the reference implementation — dark gradient, brand accent bar, pulse dot,
-"OPEN IR ↗" pill) linking straight to the company's Investor Relations page (`CP_IR_URL`; GOOGL →
-`https://abc.xyz/investor/`), `target="_blank"`. Purpose: on earnings day the release/webcast/
-transcripts must be ONE tap away — the button must out-compete "go google the IR page yourself."
-Swap only the URL and the company name per ticker. (pill per quarter, newest/upcoming first,
+**The source buttons (IR + EDGAR):** every company's Call Prep opens with TWO deliberately loud,
+banner-style buttons side by side (`cpIRButton()` in the reference implementation), both
+`target="_blank"`:
+- **OPEN IR** (`CP_IR_URL`; GOOGL → `https://abc.xyz/investor/`) — the company's curated lens:
+  release, webcast, slides, transcripts.
+- **OPEN EDGAR** (`CP_EDGAR_URL`; GOOGL → `https://www.sec.gov/edgar/browse/?CIK=1652044&owner=exclude`) —
+  the regulator's lens: 10-K/10-Q/8-K/DEF 14A as filed. Per company, swap the CIK in the EDGAR
+  browse URL.
+Purpose: on earnings day both optics must be ONE tap away — what IR curates, EDGAR certifies. The
+buttons must out-compete "go google it yourself." Swap only URLs and the company name per ticker. (pill per quarter, newest/upcoming first,
 active by default) + **four phase tabs**: Setup · Watch List · Post-Results · Post-Call. Every
 phase renders **per-quarter blocks** (`.cp-qblock[data-cpq]`) and the quarter pills toggle them —
 one quarter visible at a time, so the page stays light as quarters accumulate. Each quarter keeps

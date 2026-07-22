@@ -487,9 +487,15 @@ var CALL_PREP = {
     // closed; results/call filled after the print/call. Append-only.
     { q:'Q1 2026', status:'reported', date:'Tue Apr 29, 2026 · after close',
       setup:{
-        source:'Frozen pre-call view (Apr 2026) — Bloomberg consensus of record in the archive',
+        source:'Frozen pre-call view (Apr 2026) — Bloomberg consensus of record in the archive (historical BBG export pending to restore the full grid)',
         pricedIn:'Post-Q4 euphoria: Gemini 3 shipping, Cloud +48%, and a ~2x FY26 capex guide already (mostly) digested. The bar was "accelerate again, or else" — with the tape most nervous about a capex raise ON TOP of $175–185B.',
-        oneLiner:'Pre-call view: backlog conversion ($240B, +55% QoQ) should keep Cloud accelerating and Search holding high-teens; the risk was a print already bought, where any incremental capex surprise gets punished harder than the beat gets paid.'
+        oneLiner:'Pre-call view: backlog conversion ($240B, +55% QoQ) should keep Cloud accelerating and Search holding high-teens; the risk was a print already bought, where any incremental capex surprise gets punished harder than the beat gets paid.',
+        marketDebate:{
+          fear:'A capex raise on top of $175–185B — the tape digested the ~2x guide only on the promise that demand keeps proving it, and FCF math was already tightening.',
+          real:'The proof was accumulating going in: backlog $240B (+55% QoQ), three straight Cloud accelerations, and Gemini 3 entering its first full quarter inside Search and Cloud.',
+          mech:[ {k:'Gemini 3', v:'first full quarter in the engine', dir:'up'}, {k:'Backlog', v:'$240B (+55% QoQ)', dir:'up'}, {k:'Capex', v:'FY26 $175–185B guided', dir:'up'}, {k:'⇒ FCF / deprec', v:'pressure building', dir:'down'} ],
+          synth:'The question going in wasn\'t the beat — it was whether Q1 delivers demand proof (backlog conversion, another Cloud acceleration) FASTER than the bill grows. Anything less than acceleration turns the capex story from offense to defense.'
+        }
       },
       watchList:[
         { rank:1, metric:'FY26 capex — does $175–185B hold?', since:'Q4 2024',
@@ -576,9 +582,15 @@ var CALL_PREP = {
     // ─── Q4 2025 — REPORTED (Feb 4, 2026). Frozen pre-call blocks + post-print/post-call.
     { q:'Q4 2025', status:'reported', date:'Wed Feb 4, 2026 · after close',
       setup:{
-        source:'Frozen pre-call view (Feb 2026)',
+        source:'Frozen pre-call view (Feb 2026) — historical BBG export pending to restore the full grid',
         pricedIn:'Gemini 3 landed in December to the best reception of any Google model and the stock ran into the print. Two live questions: how big is the FY26 capex number (Q3 promised "a significant increase — details on the Q4 call"), and does Cloud accelerate past +34% with backlog $155B.',
-        oneLiner:'Pre-call view: expect acceleration AND a scary capex number — the print decides which one the tape prices first. Known headwind: YouTube brand lapping record 2024 US-election spend.'
+        oneLiner:'Pre-call view: expect acceleration AND a scary capex number — the print decides which one the tape prices first. Known headwind: YouTube brand lapping record 2024 US-election spend.',
+        marketDebate:{
+          fear:'THE FY26 capex number — Q3 promised "a significant increase," and the memory of the $75B guide selloff (Feb 2025) had the tape braced for sticker shock.',
+          real:'Consensus modeled the acceleration continuing anyway: Gemini 3\'s December reception, backlog $155B (+46% QoQ) and three straight Cloud accelerations argued the number would arrive with cover.',
+          mech:[ {k:'Gemini 3', v:'shipped Dec, best-received model yet', dir:'up'}, {k:'Backlog', v:'$155B (+46% QoQ)', dir:'up'}, {k:'Cloud', v:'3 straight accelerations', dir:'up'}, {k:'FY26 capex', v:'the unknown number', dir:'down'} ],
+          synth:'The one thing to resolve: does the FY26 number arrive WITH its demand cover in the same print? A big number + acceleration = funded ambition; a big number + in-line = a replay of the 2025 guide selloff.'
+        }
       },
       watchList:[
         { rank:1, metric:'THE FY2026 capex number', since:'Q4 2024',
@@ -779,6 +791,21 @@ function cpEvCell(key, m, isCustom){
     '</div></div>';
 }
 function cpQkey(q){ return String(q||'').replace(/\s/g,''); }
+// The previa — the one-picture read going into a print (fear/real cards + mechanism chips +
+// the dark synth box). Qualitative by design: needs NO Summit numbers; mandatory per quarter.
+function cpMD(md){
+  if(!md) return '';
+  var b='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The setup, in one picture — what the print will settle</b></div>';
+  b+='<div class="cp-debate">'+
+    '<div class="cp-dc fear"><div class="cp-dc-h">What the tape fears</div><div class="cp-dc-b">'+md.fear+'</div></div>'+
+    '<div class="cp-dc real"><div class="cp-dc-h">What consensus actually models</div><div class="cp-dc-b">'+md.real+'</div></div>'+
+  '</div>';
+  if(md.mech&&md.mech.length){
+    b+='<div class="cp-mech">'+md.mech.map(function(m,i){ var ar=m.dir==='up'?'<span style="color:#0a8f4c">▲</span>':(m.dir==='down'?'<span style="color:'+RED+'">▼</span>':''); return (i>0?'<span class="cp-mech-ar">→</span>':'')+'<span class="cp-mech-chip">'+ar+' '+esc(m.k)+' <span style="color:var(--mu);font-weight:700">'+esc(m.v)+'</span></span>'; }).join('')+'</div>';
+  }
+  if(md.synth) b+='<div class="cp-synth">'+md.synth+'</div>';
+  return b;
+}
 // Renders the quarter-pill selector (shared across the four phase panes via .cp-qblock filtering).
 function cpQPills(){
   return '<div class="cp-qpills">'+CALL_PREP.quarters.map(function(q,i){
@@ -810,19 +837,7 @@ function cpSetupBody(c){
       b+='<div class="cp-grid4">'+cu.map(function(m,i){ return cpEvCell('cu-'+qk+'-'+i, m, true); }).join('')+'</div>';
       b+='</div>';
       b+='<div class="ave-subh-note" style="margin-top:6px">Green = YoY. <b>Street</b> = Bloomberg (BST) consensus, hardcoded from the team\'s export only. <b>Summit</b> = our own expectation (Summit model / analyst). <b>?</b> = a number with a caveat worth knowing.</div>';
-      // ── The previa — the one-picture read going in (market's own tension; no Summit needed) ──
-      var md=st.marketDebate;
-      if(md){
-        b+='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The setup, in one picture — what the print will settle</b></div>';
-        b+='<div class="cp-debate">'+
-          '<div class="cp-dc fear"><div class="cp-dc-h">What the tape fears</div><div class="cp-dc-b">'+md.fear+'</div></div>'+
-          '<div class="cp-dc real"><div class="cp-dc-h">What consensus actually models</div><div class="cp-dc-b">'+md.real+'</div></div>'+
-        '</div>';
-        if(md.mech&&md.mech.length){
-          b+='<div class="cp-mech">'+md.mech.map(function(m,i){ var ar=m.dir==='up'?'<span style="color:#0a8f4c">▲</span>':(m.dir==='down'?'<span style="color:'+RED+'">▼</span>':''); return (i>0?'<span class="cp-mech-ar">→</span>':'')+'<span class="cp-mech-chip">'+ar+' '+esc(m.k)+' <span style="color:var(--mu);font-weight:700">'+esc(m.v)+'</span></span>'; }).join('')+'</div>';
-        }
-        if(md.synth) b+='<div class="cp-synth">'+md.synth+'</div>';
-      }
+      b+=cpMD(st.marketDebate);
       var d=st.debate;
       b+='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The debate — where Summit differs from the Street, and why</b></div>';
       if(d){
@@ -842,7 +857,8 @@ function cpSetupBody(c){
       if(st.source) b+='<div class="ave-subh-note" style="margin:0 0 8px">'+esc(st.source)+'</div>';
       if(st.pricedIn) b+='<div class="cp-banner"><b>What was priced in:</b> '+st.pricedIn+'</div>';
       if(st.oneLiner) b+='<div class="cp-synth">'+st.oneLiner+'</div>';
-      b+='<div class="ov-foot">Frozen — scored in Post-Results / Post-Call for this quarter.</div>';
+      b+=cpMD(st.marketDebate);
+      b+='<div class="ov-foot">Frozen — scored in Post-Results / Post-Call for this quarter. The full Bloomberg estimate grid for this quarter restores once the historical consensus export is handed over (consensus is never backfilled from the web).</div>';
     }
     b+='</div>';
     return b;

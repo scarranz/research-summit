@@ -519,7 +519,50 @@ var CALL_PREP = {
             { q:'Q4 2025', n:'TPU accelerators serving frontier labs, capital-markets firms, governments' },
             { q:'Q1 2026', n:'8th-gen TPU 8t/8i unveiled · first hardware sales into customer data centers · "small % of revenue later this year, vast majority 2027"' } ] },
       ],
-      results:null, call:null
+      // Post-Results filled from the 2Q2026 earnings release (Jul 22, 2026, ~4pm ET). Call tonight
+      // 4:30pm ET → call:null until the transcript lands.
+      results:{
+        headline:'The print resolved the previa\'s one question — <b>and flipped the funding model in the same breath.</b> Demand kept outrunning the bill: revenue +24% (23% cc, FX now just +1pp), <b>Cloud +82%</b> (a 6th straight acceleration), US +32% with zero FX help. But the bill is no longer paid from cash flow: <b>FCF went NEGATIVE (−$5.9B) for the first time on record</b>, buybacks stopped at $0, and Alphabet raised <b>$49.6B of equity</b> (incl. 6.25% mandatory convertible preferred) plus $20.3B of notes. Growth is compounding; so is the capital structure.',
+        scorecard:[
+          { metric:'Google Cloud', cons:'$22.5B (+65%) — the contracted ramp shows', actual:'$24.8B · +82% · margin 35.6%', result:'beat', surprise:90, watchRank:1,
+            note:{ t:'The 6th acceleration — and a new revenue TYPE', h:'<p>+28→32→34→48→63→<b>82%</b>. Margin 20.7% → <b>35.6%</b> YoY. And the segment definition quietly changed: Google Cloud now "generates <b>product revenues</b> primarily from the sale of <b>TPU systems</b>" — the hardware line is live in the reporting structure. Backlog number expected on the call.</p>' } },
+          { metric:'The funding flip: equity raise · notes · buybacks $0', cons:'nobody modeled an equity raise', actual:'$49.6B equity (incl. $18.0B 6.25% mand-conv preferred) + $40B ATM shelf + $20.3B notes · buybacks HALTED ($0 vs $13.2B LY)', result:'nocons', surprise:100, watchRank:2,
+            note:{ t:'⚠ The capital structure pivoted in one quarter', h:'<p>LT debt $46.5B (Dec) → <b>$98.2B</b> (Jun). First common-equity issuance era of the modern company — plus a preferred layer paying 6.25% and an ATM program (earmarked for employee-tax obligations). Cash & securities ballooned to <b>$242.5B</b>: the war chest is parked, pointed at capex ("to scale AI infrastructure and global compute").</p><p><b>Read:</b> management chose dilution + leverage over slowing the build — the strongest possible statement that they believe the demand curve. The Street now has to price it.</p>' } },
+          { metric:'Free cash flow', cons:'~$2.3B (the squeeze was modeled)', actual:'−$5.9B — first NEGATIVE quarter on record · TTM $53.3B', result:'miss', surprise:75, watchRank:2,
+            note:{ t:'The red-line line-item', h:'<p>Capex $44.9B in the quarter (vs $22.4B LY) swallowed $39.1B of operating cash flow. Also inside OCF: a <b>$6.7B inventory build</b> (see the TPU row) that is really growth working capital, not deterioration.</p>' } },
+          { metric:'EPS (diluted)', cons:'$2.90 (+26%)', actual:'$9.11 headline (+294%) · ~$2.85 ex-marks', result:'inline', surprise:85,
+            note:{ t:'⚠ Read it ex-marks — the release does the math for you', h:'<p><b>$99.0B gain on equity securities</b> (mostly unrealized, largely the non-marketable book, which jumped $68.7B → $131.5B) added <b>+$6.26 to EPS</b> and +$21.9B of tax provision, per the release\'s own footnote.</p><p>Ex-marks EPS ≈ <b>$2.85 — a hair BELOW the $2.90 consensus</b>: the honest operating read is in-line, not a blowout. Same lesson as Q1, an order of magnitude louder.</p>' } },
+          { metric:'Revenue', cons:'$117.0B (+21%)', actual:'$119.8B · +24% (23% cc)', result:'beat', surprise:45,
+            note:{ t:'The FX caveat resolved — growth accelerated anyway', h:'<p>Q1\'s flagged tailwind faded exactly as guided (FX just +1pp this quarter) — and constant-currency growth STILL accelerated 19% → <b>23%</b>. The starkest line: <b>US +32%</b> with zero FX. This is organic acceleration, not currency.</p>' } },
+          { metric:'Gemini app MAU', cons:'the skipped rung — a number, or a second silence?', actual:'DISCLOSED: 950M MAU (from 750M)', result:'beat', surprise:55, watchRank:4,
+            note:{ t:'The silence resolved after one quarter', h:'<p>750M → <b>950M</b> — the disclosure ladder resumed with the biggest step yet. Also: tokens 16B → <b>22B/min</b>; Gemini Enterprise now in <b>~90% of the Fortune 100</b>. The monetization stance ("not rushing"?) is tonight\'s question.</p>' } },
+          { metric:'TPU systems (watch #5)', cons:'no consensus line — "small % late 2026"', actual:'Segment definition now includes TPU product revenue · inventory $2.4B → $10.0B', result:'nocons', surprise:65, watchRank:5,
+            note:{ t:'The silicon business is being staged in plain sight', h:'<p>Two release tells: (1) Cloud\'s official description now reads "product revenues primarily from the sale of <b>TPU systems</b>"; (2) inventory <b>quadrupled to $10.0B</b> (a $6.7B build in the quarter) — hardware being manufactured for delivery. Revenue-recognition cadence + margins = call questions.</p>' } },
+          { metric:'Operating income', cons:'$40.5B (+30%) · margin 34.8%', actual:'$40.8B · +30% · margin 34.0%', result:'inline', surprise:15,
+            note:{ t:'Margin +2pp YoY, a touch under consensus', h:'<p>34.0% vs 34.8% modeled — the gap sits largely in <b>Alphabet-level activities</b> (shared AI R&D), whose loss widened to $5.8B (from $3.4B). Services margin 41.8%; Cloud 35.6%.</p>' } },
+          { metric:'Search & other', cons:'$63.3B (+17%)', actual:'$63.27B · +17% — dead on consensus', result:'inline', surprise:5, watchRank:3,
+            note:{ t:'The number held; the PHRASE is scored tonight', h:'<p>Revenue exactly on the Bloomberg line. The watch item\'s real tell — the standing "monetization at approximately the same rate" language and the coverage-above-20% follow-through — can only be scored on the call.</p>' } },
+          { metric:'YouTube ads', cons:'$10.8B (+10%)', actual:'$11.1B · +13%', result:'beat', surprise:15,
+            note:{ t:'World Cup quarter', h:'<p>1.7B unique viewers watched FIFA World Cup 2026 content — engagement disclosed in the release; the monetization color belongs to the call. Network ads nearly FLAT (−0.7%) — the least-bad print for the declining line in two years.</p>' } },
+        ],
+        thesisCheck:[
+          { line:'Cloud growth decelerates materially with backlog stalling', tripped:false, note:'+82% — the sharpest acceleration of the entire cycle, with margin at 35.6%. Backlog lands on the call.' },
+          { line:'Another raise without proof — or FCF negative while debt keeps rising', tripped:true, note:'FCF −$5.9B (first negative quarter) with LT debt to $98.2B, buybacks at $0, and a $49.6B equity raise. The demand cover is real (Cloud +82%) — but the red-line as written FIRED: the build is now funded by paper, not cash flow.' },
+          { line:'Search decelerates toward single digits / monetization language downgrades', tripped:false, note:'+17%, exactly on consensus; US +32% ex-FX argues monetization is fine. The language itself is scored tonight.' },
+          { line:'Direct Offers drops off the script / "not rushing" a 4th verbatim time', tripped:false, note:'Release-silent, as always for ad formats — scored on the call.' },
+          { line:'TPU 2027 revenue timing gets vaguer', tripped:false, note:'The opposite: TPU systems entered the official segment definition and inventory 4x\'d to $10.0B. The ladder advanced ahead of schedule.' },
+        ],
+        intoCall:[
+          '🔥 <b>Cloud +82%</b> — how much is TPU product revenue vs services? And the backlog number after $462B (conversion pace vs the 24-month claim — watch #1).',
+          '💸 <b>The funding flip</b> — why issue equity (with a 6.25% preferred layer) while sitting on $242B? Is buybacks-at-$0 the new normal, and what does 2027 capex look like now: a number, or another adjective?',
+          '🧮 <b>The $99B mark</b> — non-marketable securities jumped +$63B and Alphabet BOUGHT $21.1B of new private stakes in the quarter. Which positions? (Nobody models this book; it just moved EPS by $6.26.)',
+          '🇺🇸 <b>US +32% with zero FX</b> — what is driving domestic acceleration: AI Mode monetization, the coverage-above-20% claim landing, or verticals? (Watch #3 follow-through.)',
+          '📱 <b>950M Gemini MAU</b> — the silence resolved; now the stance: app monetization still "not rushing" (4th time), or does the ladder finally get a rung? (Watch #4.)',
+          '🏭 <b>$10B of inventory</b> — TPU shipment cadence, revenue recognition start, and the first margin hint on hardware (watch #5).',
+        ],
+        priceReaction:'To fill after the close from a trusted source (not web).',
+      },
+      call:null
     },
     // ─── Q1 2026 — REPORTED (Apr 29, 2026). Pre-call blocks FROZEN as they stood when Q4 2025
     // closed; results/call filled after the print/call. Append-only.

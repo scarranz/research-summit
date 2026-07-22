@@ -114,6 +114,7 @@ supabase functions deploy <function-name> --project-ref bvflqjndivouhgwqfbrq
 | `sync-management` | Fiscal.ai `/v1/company/ownership/insider/*` | Pull executives + insider transactions |
 | `sync-ratings` | Massive `/benzinga/v1/ratings` | Pull analyst ratings + price targets |
 | `get-margins` | Massive `/stocks/financials/v1/income-statements` + `/cash-flow-statements` | Historical profitability & cash margins (gross/op/net/EBITDA/CFO/FCF) for the Overview Margins box — computed server-side, no DB write |
+| `get-transcript` | Fiscal.ai `/v1/company/ir-events` + `/ir-events/transcript/{eventKey}` | Earnings-call events list + structured transcripts for Call Prep — generic for any ticker on our Fiscal.ai tier, no DB write. `unavailable: true` = company not on current plan |
 
 **Security:** All edge functions restrict CORS to `research-summit.netlify.app` and `localhost:8000`. Ticker and companyId inputs are validated.
 

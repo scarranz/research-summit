@@ -107,6 +107,26 @@ export async function syncManagement(ticker, companyId) {
   return ok(data);
 }
 
+// ─── Earnings Call Transcripts (Fiscal.ai) ──────────────────
+// Generic for any ticker the Fiscal.ai plan covers. A response with
+// data.unavailable === true means the company is not on our current tier.
+
+export async function listIrEvents(ticker) {
+  var { data, error } = await supabase.functions.invoke('get-transcript', {
+    body: { ticker: ticker },
+  });
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+export async function fetchTranscript(ticker, eventKey) {
+  var { data, error } = await supabase.functions.invoke('get-transcript', {
+    body: { ticker: ticker, eventKey: eventKey },
+  });
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
 // ─── Company Search (Fiscal.ai) ──────────────────────────────
 
 export async function searchCompany(query) {

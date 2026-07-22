@@ -170,12 +170,20 @@
       <div class="ivtitle"><div class="iv-eyebrow">Investment Profile</div><h2 id="iv-name">Company</h2><div class="sub" id="iv-sub">TICKER &middot; Sector</div></div>
       <button class="iv-editbtn" id="iv-edit-btn">Edit</button>
     </div>
-    <div class="ivtabs">
-      <button class="ivtab active" data-pane="overview" onclick="ivTab('overview')">Overview</button>
-      <button class="ivtab" data-pane="opportunity" onclick="ivTab('opportunity')">Opportunity</button>
+    <div class="iv-body">
+      <div class="iv-section">
+        <div class="iv-section-label">What it does</div>
+        <div class="iv-prose" id="iv-overview-body"></div>
+      </div>
+      <div class="iv-section">
+        <div class="iv-section-label">The moat</div>
+        <div class="iv-prose" id="iv-moat-body"></div>
+      </div>
+      <div class="iv-section">
+        <div class="iv-section-label">Why we invest</div>
+        <div class="iv-prose" id="iv-opportunity-body"></div>
+      </div>
     </div>
-    <div class="ivpane active" data-pane="overview"><div class="iv-prose" id="iv-overview-body"></div></div>
-    <div class="ivpane" data-pane="opportunity"><div class="iv-prose" id="iv-opportunity-body"></div></div>
   </div>
 </div>
 
@@ -541,8 +549,15 @@
         <input class="modal-input" id="addInv-newsector" placeholder="e.g. Industrials">
       </div>
       <div class="modal-field">
+        <button type="button" class="modal-btn" id="addInv-research-btn" style="background:var(--surface);color:var(--navy);width:100%">&#10024; Research &amp; write with AI</button>
+      </div>
+      <div class="modal-field">
         <label class="modal-label">Overview <span style="color:var(--mu);text-transform:none;font-weight:400;letter-spacing:0">(what it does, segments &mdash; optional, can add later)</span></label>
         <textarea class="modal-input" id="addInv-overview" style="height:80px;padding:10px 12px;resize:vertical"></textarea>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">The Moat <span style="color:var(--mu);text-transform:none;font-weight:400;letter-spacing:0">(3&ndash;4 sentences on its competitive edge &mdash; optional)</span></label>
+        <textarea class="modal-input" id="addInv-moat" style="height:60px;padding:10px 12px;resize:vertical"></textarea>
       </div>
       <div class="modal-field">
         <label class="modal-label">Opportunity <span style="color:var(--mu);text-transform:none;font-weight:400;letter-spacing:0">(why we invest &mdash; optional, can add later)</span></label>

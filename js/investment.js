@@ -1,6 +1,7 @@
 // investment.js — Investment tab: sectors → companies → Overview/Opportunity dossier
 // All data is loaded from Supabase (investment_sectors, investment_companies).
-import { fetchInvestmentSectors, fetchInvestmentCompanies, insertInvestmentSector, insertInvestmentCompany, updateInvestmentCompany } from './api.js';
+import { fetchInvestmentSectors, fetchInvestmentCompanies, insertInvestmentSector, insertInvestmentCompany, updateInvestmentCompany, generateInvestmentWriteup } from './api.js';
+import { LOCAL_SECTORS, LOCAL_COMPANIES } from './investment-local-seed.js';
 
 let _sectors = [];      // investment_sectors rows
 let _investments = [];  // investment_companies rows
@@ -81,11 +82,17 @@ function ivCloseSector() {
   window.scrollTo(0, 0);
 }
 
-// ─── Company detail: Overview / Opportunity ─────────────────────
+// ─── Company detail: one merged, readable page ──────────────────
+
+// Renders **bold** markdown as <strong> — applied after esc() so the markup
+// itself can never be injected via company text.
+function mdBold(escapedText) {
+  return escapedText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+}
 
 function renderProse(text) {
   if (!text) return '<div class="iv-prose-empty">Not written up yet.</div>';
-  return text.trim().split(/\n\s*\n/).map(function(p) { return '<p>' + esc(p.trim()) + '</p>'; }).join('');
+  return text.trim().split(/\n\s*\n/).map(function(p) { return '<p>' + mdBold(esc(p.trim())) + '</p>'; }).join('');
 }
 
 function ivOpenCompany(ticker) {
@@ -98,8 +105,8 @@ function ivOpenCompany(ticker) {
   document.getElementById('iv-sub').innerHTML = esc(c.ticker) + ' &middot; ' + esc(s ? s.name : '—');
   document.getElementById('iv-back-sector').textContent = s ? s.name : 'sector';
   document.getElementById('iv-overview-body').innerHTML = renderProse(c.overview);
+  document.getElementById('iv-moat-body').innerHTML = renderProse(c.moat);
   document.getElementById('iv-opportunity-body').innerHTML = renderProse(c.opportunity);
-  ivTab('overview');
   document.getElementById('invt-sectordetail').style.display = 'none';
   document.getElementById('invt-companydetail').style.display = 'block';
   window.scrollTo(0, 0);
@@ -109,11 +116,6 @@ function ivCloseCompany() {
   document.getElementById('invt-companydetail').style.display = 'none';
   document.getElementById('invt-sectordetail').style.display = 'block';
   window.scrollTo(0, 0);
-}
-
-function ivTab(pane) {
-  document.querySelectorAll('.ivtab').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-pane') === pane); });
-  document.querySelectorAll('.ivpane').forEach(function(p) { p.classList.toggle('active', p.getAttribute('data-pane') === pane); });
 }
 
 // ─── Add / Edit modal ────────────────────────────────────────
@@ -170,6 +172,7 @@ function openEditModal(ticker) {
   document.getElementById('addInv-ticker').readOnly = true;
   document.getElementById('addInv-name').value = c.name;
   document.getElementById('addInv-overview').value = c.overview || '';
+  document.getElementById('addInv-moat').value = c.moat || '';
   document.getElementById('addInv-opportunity').value = c.opportunity || '';
   populateSectorSelect(c.sector_id);
   showModalMsg('', '');
@@ -188,6 +191,7 @@ async function handleAddSubmit(e) {
   var ticker = document.getElementById('addInv-ticker').value.trim().toUpperCase();
   var name = document.getElementById('addInv-name').value.trim();
   var overview = document.getElementById('addInv-overview').value.trim();
+  var moat = document.getElementById('addInv-moat').value.trim();
   var opportunity = document.getElementById('addInv-opportunity').value.trim();
   var sel = document.getElementById('addInv-sector');
   var sectorId = sel.value;
@@ -219,13 +223,13 @@ async function handleAddSubmit(e) {
 
   var result;
   if (_editingId) {
-    result = await updateInvestmentCompany(_editingId, { name: name, sector_id: sectorId, overview: overview || null, opportunity: opportunity || null });
+    result = await updateInvestmentCompany(_editingId, { name: name, sector_id: sectorId, overview: overview || null, moat: moat || null, opportunity: opportunity || null });
   } else {
     var mono = ticker.slice(0, 2).toUpperCase();
     result = await insertInvestmentCompany({
       ticker: ticker, name: name, sector_id: sectorId,
       logo_domain: guessDomain(name), mono: mono,
-      overview: overview || null, opportunity: opportunity || null,
+      overview: overview || null, moat: moat || null, opportunity: opportunity || null,
       sort_order: companiesInSector(sectorId).length,
       status: 'active',
     });
@@ -252,9 +256,48 @@ async function handleAddSubmit(e) {
   closeAddModal();
 }
 
+async function handleResearchClick() {
+  var btn = document.getElementById('addInv-research-btn');
+  var ticker = document.getElementById('addInv-ticker').value.trim().toUpperCase();
+  var name = document.getElementById('addInv-name').value.trim();
+  if (!ticker || !name) { showModalMsg('Enter a ticker and company name first.', 'error'); return; }
+
+  var sel = document.getElementById('addInv-sector');
+  var sectorName;
+  if (sel.value === NEW_SECTOR_VALUE) {
+    sectorName = document.getElementById('addInv-newsector').value.trim();
+  } else {
+    var s = _sectors.find(function(x) { return x.id === sel.value; });
+    sectorName = s ? s.name : '';
+  }
+
+  btn.disabled = true;
+  var originalLabel = btn.textContent;
+  btn.textContent = 'Researching… (this can take a minute)';
+  showModalMsg('', '');
+
+  var result = await generateInvestmentWriteup(ticker, name, sectorName);
+
+  btn.disabled = false;
+  btn.textContent = originalLabel;
+
+  if (!result.success) {
+    showModalMsg('Research failed: ' + result.error.message + ' — you can still write it manually.', 'error');
+    return;
+  }
+
+  document.getElementById('addInv-overview').value = result.data.overview || '';
+  document.getElementById('addInv-moat').value = result.data.moat || '';
+  document.getElementById('addInv-opportunity').value = result.data.opportunity || '';
+  showModalMsg('Draft written — review and edit before saving.', 'success');
+}
+
 function initAddModal() {
   var addBtn = document.getElementById('invt-add-btn');
   if (addBtn) addBtn.addEventListener('click', openAddModal);
+
+  var researchBtn = document.getElementById('addInv-research-btn');
+  if (researchBtn) researchBtn.addEventListener('click', handleResearchClick);
 
   var editBtn = document.getElementById('iv-edit-btn');
   if (editBtn) editBtn.addEventListener('click', function() { if (_openTicker) openEditModal(_openTicker); });
@@ -283,10 +326,23 @@ function initAddModal() {
 
 async function loadInvestmentFromDb() {
   var [sectorsResult, companiesResult] = await Promise.all([fetchInvestmentSectors(), fetchInvestmentCompanies()]);
-  if (!sectorsResult.success) { console.warn('Could not load investment sectors:', sectorsResult.error.message); return; }
-  if (!companiesResult.success) { console.warn('Could not load investment companies:', companiesResult.error.message); return; }
-  _sectors = sectorsResult.data;
-  _investments = companiesResult.data;
+  var sectorsOk = sectorsResult.success && sectorsResult.data.length;
+  var companiesOk = companiesResult.success && companiesResult.data.length;
+  if (!sectorsResult.success) console.warn('Could not load investment sectors:', sectorsResult.error.message);
+  if (!companiesResult.success) console.warn('Could not load investment companies:', companiesResult.error.message);
+
+  // Local-dev only: preview the seeded sectors/companies before San/Oscar have run
+  // sql/009_investment_positions.sql in Supabase. Gated to localhost, so it never
+  // affects production. Remove once the migration has run and tables have real data.
+  if (location.hostname === 'localhost' && (!sectorsOk || !companiesOk)) {
+    _sectors = LOCAL_SECTORS;
+    _investments = LOCAL_COMPANIES;
+    console.info('[Investment] Using local preview seed — sql/009_investment_positions.sql has not been run in Supabase yet.');
+    return;
+  }
+
+  _sectors = sectorsOk ? sectorsResult.data : [];
+  _investments = companiesOk ? companiesResult.data : [];
 }
 
 // Expose for inline onclick handlers
@@ -294,7 +350,6 @@ window.ivOpenSector = ivOpenSector;
 window.ivCloseSector = ivCloseSector;
 window.ivOpenCompany = ivOpenCompany;
 window.ivCloseCompany = ivCloseCompany;
-window.ivTab = ivTab;
 
 export async function loadInvestmentPage() {
   var grid = document.getElementById('iv-secgrid');

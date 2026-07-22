@@ -1,6 +1,6 @@
-# GOOGL - Latest earnings call - Q2 2026 (July 22, 2026)
+# GOOGL — Latest earnings call · Q2 2026 (July 22, 2026)
 
-**The rotation rule (docs/CALL_PREP_CONVENTIONS.md 3):** this file always holds ONLY the most
+**The rotation rule (docs/CALL_PREP_CONVENTIONS.md §3):** this file always holds ONLY the most
 recent call + its analysis. When the next call lands, this call is appended to the top of the
 historical compendium (`GOOGL.md`) and the new transcript takes its place here.
 

@@ -18,6 +18,7 @@ import { spotOverview } from './spot.js';
 import { avgoOverview } from './avgo.js';
 import { qcomOverview } from './qcom.js';
 import { ibkrOverview } from './ibkr.js';
+import { googlOverview } from './googl.js';
 
 var OVERVIEWS = {
   RELY: remitlyOverview,
@@ -36,6 +37,8 @@ var OVERVIEWS = {
   AVGO: avgoOverview,
   QCOM: qcomOverview,
   IBKR: ibkrOverview,
+  GOOGL: googlOverview,
+  GOOG: googlOverview,
 };
 
 // Returns the overview module for a ticker, or null if none is built yet.

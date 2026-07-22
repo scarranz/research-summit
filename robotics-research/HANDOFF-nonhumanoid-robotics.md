@@ -79,3 +79,16 @@ Mature/cyclical base demand; Chinese eroding the low end (backlash parity, Harmo
 - **Never `git push` or open a PR without SAB's explicit go** — commit + tell him, that's it (`ask-before-opening-pr`).
 - `.md` files are force-tracked (`git add -f`); `.html` and Bloomberg data stay local.
 - Cross-links: the humanoid workstream (`humanoid-supply-chain.md`, `humanoid-company-map.md`, `humanoid-tollbooth-screen.md`) is the forward-looking twin of this backward-looking analysis — they converge on magnets + grinders.
+
+## 9. Phase 4 (Jul 2026) — the REDUCER deep-dive (SAB's piece)
+
+Team split agreed 21-jul-2026: **SAB owns the reducer TECHNOLOGY overview + LIGHT overviews of both companies; Deborah and Daniel each own the DETAILED deep-dive of one name** (Nabtesco 6268 / Harmonic Drive 6324). Built on Daniel's base docs (`dossier_maestro_reductores.md`, `industry_primer (1).html`) — build on them, do not duplicate.
+
+**Memo:** `reducer-deepdive.md` (this phase's deliverable of record).
+**Pages (LOCAL-ONLY, `.html` gitignored):**
+- `reducer-technology-overview.html` — 5 tabs: chokepoint - two mechanisms (live animated SVGs) - where each goes (clickable body map) - the moat decoded - to the companies. Built 21-jul.
+- `reducer-companies-overview.html` — 4 tabs: both side by side - Nabtesco 6268 - Harmonic Drive 6324 - head-to-head & how to own it. Built 22-jul.
+
+View: `cd robotics-research && py -m http.server 8010` then `http://127.0.0.1:8010/<file>`.
+
+**Language of record for this workstream is technical ENGLISH** (dashboards and memos) from 21-jul-2026 onward.

@@ -36,7 +36,7 @@ phase-tab row** (its own classes, wired independently of the pane-scoped sub-tab
 
 | Phase | Sub-tab | What it holds |
 |---|---|---|
-| **① Pre-Call** | **Setup** | Bloomberg consensus grid + "the one debate that matters" + the variant view (where we differ from the tape) |
+| **① Pre-Call** | **Setup** | v2 (Jul 2026): **4 headline metrics** (mandatory, every company: Revenue · Operating income · EPS · EBITDA) + **4 custom KPIs** (per-company), each carrying a **Street** (Bloomberg) and a **Summit** (our own) estimate with a **Consensus ⇄ Summit ⇄ Both** toggle; plus **the debate** = the explained disparity between the two sets (spec: `EARNINGS_CALLS_CONTEXT.md` §3) |
 | **① Pre-Call** | **Watch List** | 5 ranked things to hunt — each with its consensus number, red-line, provenance, and *tell* |
 | **① Pre-Call** | **Promise Tracker** | what management is genuinely doing vs. what it merely floated |
 | **② Post-Results** | **Post-Results** | the numbers scorecard vs. consensus (beat/miss) + thesis red-line check — filled when the print lands, *before* the call |
@@ -173,7 +173,7 @@ transcript (quantified claims NOT in the release tables; multiplier words — tr
 record/first; new proper nouns; Q&A-only facts; diff vs prior 2-3 calls; guarded answers), with
 judgment forbidden. Only then filter and rank. Applying the already-in-the-DCF filter *during*
 extraction is how buried datos get lost (see the overnight-trading regression test in
-`IBKR_Q2_2026_CALL_CONTEXT.md` §3). Zero analyst follow-up never demotes an item; two consecutive
+`EARNINGS_CALLS_CONTEXT.md` §5). Zero analyst follow-up never demotes an item; two consecutive
 quarters of mention auto-promotes it to trend.
 
 ### What counts as a highlight — the taxonomy (company-agnostic)

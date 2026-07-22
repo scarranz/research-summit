@@ -377,13 +377,28 @@ function gddEmpty(){ return '<div class="gdd-empty">🚧 In progress — this se
 // Staged for the Q2 2026 cycle: Alphabet reports Tue Jul 22, 2026 after close. Consensus is
 // Bloomberg-only (golden rule) — cells render "—" until the analyst export lands. The Watch List
 // and Promise Tracker fill from the earnings-call compendium when it lands.
+// Setup v2 (see docs/EARNINGS_CALLS_CONTEXT.md §3): 4 HEADLINE metrics (mandatory, every
+// company: Revenue · Operating income · EPS · EBITDA) + 4 CUSTOM KPIs (company-specific).
+// Each metric carries up to two estimates — cons (Street: Bloomberg BST only) and us (Summit:
+// our own expectation) — and the grid toggles Consensus ⇄ Summit ⇄ Both. The debate explains
+// the DISPARITY between the two sets (which lines diverge and why we see it differently).
 var CALL_PREP = {
   ticker:'GOOGL',
   quarters:[
     { q:'Q2 2026', status:'upcoming', date:'Tue Jul 22, 2026 · after close (call 4:30pm ET)',
       setup:{
-        source:'Bloomberg (BST consensus) — export pending', asOf:null,
-        consensus:{}
+        source:'Bloomberg (BST) — export pending · Summit — expectations pending', asOf:null,
+        headline:[
+          { k:'Revenue', cons:null, us:null },
+          { k:'Operating income', cons:null, us:null },
+          { k:'EPS (diluted)', cons:null, us:null },
+          { k:'EBITDA', cons:null, us:null },
+        ],
+        custom:[
+          { k:null }, { k:null }, { k:null }, { k:null }
+        ],
+        // debate:{ rows:[{k, street, us, why}], synth } — fills once both estimate sets exist.
+        debate:null
       },
       watchList:[],
       results:null, call:null
@@ -409,6 +424,20 @@ function cpStyle(){
     '.cp-grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0}@media(max-width:640px){.cp-grid4{grid-template-columns:1fr 1fr}}'+
     '.cp-cell{border:1px solid var(--bdr);border-top:3px solid '+BLUE+';border-radius:10px;padding:11px 13px;background:var(--w)}'+
     '.cp-cell-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}.cp-cell-v{font-size:15px;font-weight:800;color:var(--navy);margin-top:3px;line-height:1.2}'+
+    /* Setup v2 — estimates toggle (Consensus ⇄ Summit ⇄ Both) */
+    '.cp-ev-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
+    '.cp-ev-pill.active{background:var(--navy);color:#fff}'+
+    '.cp-cell-custom{border-top-color:'+YELLOW+'}'+
+    '.cp-row-cap{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:2px 0 4px}'+
+    '.cp-val{display:flex;align-items:baseline;gap:7px}'+
+    '.cp-val-lab{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:1px 7px;flex:none}'+
+    '.cp-val-cons .cp-val-lab{background:rgba(26,115,232,0.10);color:'+BLUE+'}'+
+    '.cp-val-us .cp-val-lab{background:rgba(52,168,83,0.12);color:'+BRAND2+'}'+
+    '.cp-evwrap[data-ev="cons"] .cp-val-us{display:none}'+
+    '.cp-evwrap[data-ev="us"] .cp-val-cons{display:none}'+
+    '.cp-evwrap:not([data-ev="both"]) .cp-val-lab{display:none}'+
+    '.cp-evwrap[data-ev="both"] .cp-cell-v{font-size:13px}'+
+    '.cp-evwrap[data-ev="both"] .cp-val{margin-top:3px}'+
     '.cp-banner{border:1px solid var(--bdr);border-left:4px solid '+BRAND+';border-radius:11px;padding:13px 15px;background:linear-gradient(180deg,rgba(66,133,244,0.05),transparent);font-size:12.5px;line-height:1.6;color:var(--navy);margin:12px 0}'+
     '.cp-watch{display:flex;flex-direction:column;gap:11px}'+
     '.cp-w{border:1px solid var(--bdr);border-radius:12px;padding:13px 15px;background:var(--w);position:relative}'+
@@ -458,37 +487,59 @@ function cpStyle(){
     '.cp-tbl td{padding:9px 10px;border-bottom:1px solid var(--bdr);color:var(--navy);line-height:1.45;vertical-align:top}'+
     '.cp-pill{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 9px;white-space:nowrap}</style>';
 }
-// A · The Setup — Bloomberg consensus grid (GOOGL metric set) + the one debate (when staged).
+// A · The Setup — 4 headline + 4 custom KPIs, each with Street (Bloomberg) AND Summit (our own)
+// estimates, switchable Consensus ⇄ Summit ⇄ Both. The debate explains the disparity between the
+// two sets. (Spec: docs/EARNINGS_CALLS_CONTEXT.md §3.)
 function cpFmtC(o){ if(!o||o.v==null) return '<span class="cp-empty">—</span>';
   var un=o.unit||'', v=o.v, s;
   if(un==='$') s='$'+v; else if(un==='$M') s='$'+v+'M'; else if(un==='$B') s='$'+v+'B';
   else if(un==='%') s=v+'%'; else s=String(v);
   return s+(o.yoy!=null?'<span style="font-size:10px;color:#0a8f4c;font-weight:800;margin-left:5px">+'+o.yoy+'%</span>':''); }
+function cpEvCell(key, m, isCustom){
+  var name=m&&m.k?m.k:null;
+  var q=(m&&m.note)?cpQ('setnote-'+key, m.note.t, m.note.h):'';
+  var kHtml=name?esc(name):'<span class="cp-empty">Custom KPI — to define</span>';
+  return '<div class="cp-cell'+(isCustom?' cp-cell-custom':'')+'"><div class="cp-cell-k">'+kHtml+q+'</div>'+
+    '<div class="cp-cell-v">'+
+      '<div class="cp-val cp-val-cons"><span class="cp-val-lab">Street</span>'+cpFmtC(m&&m.cons)+'</div>'+
+      '<div class="cp-val cp-val-us"><span class="cp-val-lab">Summit</span>'+cpFmtC(m&&m.us)+'</div>'+
+    '</div></div>';
+}
 function cpSetupBody(c){
   var u=cpUpcoming(); var h=cpStyle();
   if(!u){ return h+'<div class="cp-note">No upcoming quarter staged.</div>'; }
   h+='<div class="cp-phase" style="background:'+BLUE+'">① Pre-Call</div>';
-  h+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup.</b> The numbers going in, and the <b>one debate</b> the print will settle. '+(u.date?('Reports <b>'+esc(u.date)+'</b>.'):'<span class="cp-empty">report date — to confirm</span>')+'</p>';
-  var st=u.setup||{}, cons=st.consensus||{};
-  function cCell(key,k,o){ var q=(o&&o.note)?cpQ('setnote-'+key, o.note.t, o.note.h):''; return '<div class="cp-cell"><div class="cp-cell-k">'+esc(k)+q+'</div><div class="cp-cell-v">'+cpFmtC(o)+'</div></div>'; }
-  h+='<div class="ov-diagram-cap" style="margin:6px 0 4px"><b>Bloomberg consensus (BST)</b>'+(st.source?' · <span style="color:var(--mu);font-weight:600;font-size:10px">'+esc(st.source)+(st.asOf?' · as of '+esc(st.asOf):'')+'</span>':'')+'</div>';
-  h+='<div class="cp-grid4">'+cCell('eps','EPS (diluted)',cons.eps)+cCell('rev','Total revenue',cons.revUsdB)+cCell('search','Search & other',cons.searchUsdB)+cCell('yt','YouTube ads',cons.youtubeUsdB)+'</div>';
-  h+='<div class="cp-grid4" style="margin-top:10px">'+cCell('cloud','Google Cloud',cons.cloudUsdB)+cCell('opm','Operating margin',cons.opMarginPct)+cCell('capex','Capex',cons.capexUsdB)+cCell('ni','Net income',cons.netIncomeUsdB)+'</div>';
-  h+='<div class="ave-subh-note" style="margin-top:4px">Green = YoY. Cells fill from the team\'s Bloomberg (BST) export — only the values that render are hardcoded. <b>?</b> = a number with a caveat worth knowing.</div>';
+  h+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup.</b> The numbers going in — what the <b>Street</b> expects, what <b>Summit</b> expects, and where the two disagree. '+(u.date?('Reports <b>'+esc(u.date)+'</b>.'):'<span class="cp-empty">report date — to confirm</span>')+'</p>';
+  var st=u.setup||{}, hl=st.headline||[], cu=st.custom||[];
+  h+='<div class="ov-diagram-cap" style="margin:6px 0 6px;display:flex;flex-wrap:wrap;align-items:center;gap:12px"><b>Estimates</b>'+
+    '<span class="mg-seg" style="display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px">'+
+      '<button type="button" class="cp-ev-pill active" data-cpev="cons">Consensus</button>'+
+      '<button type="button" class="cp-ev-pill" data-cpev="us">Summit</button>'+
+      '<button type="button" class="cp-ev-pill" data-cpev="both">Both</button>'+
+    '</span>'+
+    (st.source?'<span style="color:var(--mu);font-weight:600;font-size:10px">'+esc(st.source)+(st.asOf?' · as of '+esc(st.asOf):'')+'</span>':'')+
+  '</div>';
+  h+='<div class="cp-evwrap" data-ev="cons">';
+  h+='<div class="cp-row-cap">Headline — every company, always</div>';
+  h+='<div class="cp-grid4">'+hl.map(function(m,i){ return cpEvCell('hl'+i, m, false); }).join('')+'</div>';
+  h+='<div class="cp-row-cap" style="margin-top:12px">Custom KPIs — GOOGL</div>';
+  h+='<div class="cp-grid4">'+cu.map(function(m,i){ return cpEvCell('cu'+i, m, true); }).join('')+'</div>';
+  h+='</div>';
+  h+='<div class="ave-subh-note" style="margin-top:6px">Green = YoY. <b>Street</b> = Bloomberg (BST) consensus, hardcoded from the team\'s export only. <b>Summit</b> = our own expectation (Summit model / analyst). <b>?</b> = a number with a caveat worth knowing.</div>';
+  // ── The debate — the DISPARITY between Summit and the Street, explained ──
   var d=st.debate;
+  h+='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The debate — where Summit differs from the Street, and why</b></div>';
   if(d){
-    var det=st.detail?cpReg('setdetail', 'The one debate — in full', st.detail):null;
-    h+='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The one debate this print will settle</b>'+(det?' <span class="cp-why-btn ov-clickable" data-detail="cp:'+det+'">the full read ›</span>':'')+'</div>';
-    h+='<div class="cp-debate">'+
-      '<div class="cp-dc fear"><div class="cp-dc-h">What the tape fears</div><div class="cp-dc-b">'+d.fear+'</div></div>'+
-      '<div class="cp-dc real"><div class="cp-dc-h">What consensus actually models</div><div class="cp-dc-b">'+d.real+'</div></div>'+
-    '</div>';
-    if(d.mech&&d.mech.length){
-      h+='<div class="cp-mech">'+d.mech.map(function(m,i){ var ar=m.dir==='up'?'<span style="color:#0a8f4c">▲</span>':(m.dir==='down'?'<span style="color:'+RED+'">▼</span>':''); return (i>0?'<span class="cp-mech-ar">→</span>':'')+'<span class="cp-mech-chip">'+ar+' '+esc(m.k)+' <span style="color:var(--mu);font-weight:700">'+esc(m.v)+'</span></span>'; }).join('')+'</div>';
+    if(d.rows&&d.rows.length){
+      h+='<div class="cp-tc">'+d.rows.map(function(r){
+        return '<div class="cp-tc-row" style="border-left:3px solid '+BRAND+'"><span style="font-weight:800;color:var(--navy);white-space:nowrap">'+esc(r.k)+'</span><span><b>Street:</b> '+esc(r.street||'—')+' · <b>Summit:</b> '+esc(r.us||'—')+'<br><span style="color:var(--mu)">'+ (r.why||'') +'</span></span></div>';
+      }).join('')+'</div>';
     }
     if(d.synth) h+='<div class="cp-synth">'+d.synth+'</div>';
+  } else {
+    h+='<div class="cp-note">Fills once both estimate sets are in (Bloomberg export + Summit expectations): line-by-line disparities and the mechanism behind why we see it differently.</div>';
   }
-  h+='<div class="ov-foot">Frozen at call time; scored against Post-Results / Post-Call.</div>';
+  h+='<div class="ov-foot">Frozen at call time; Post-Results scores actuals against BOTH columns.</div>';
   return h;
 }
 // B · Watch List ─────────────────────────────────────────────────────────────────────────────────
@@ -712,6 +763,12 @@ function wireCallPrep(root){
     var key=btn.getAttribute('data-cpp');
     pane.querySelectorAll('.cp-phtab').forEach(function(b){ b.classList.toggle('active', b===btn); });
     pane.querySelectorAll('.cp-phpane').forEach(function(p){ p.hidden=(p.getAttribute('data-cpp')!==key); });
+  }; });
+  // Setup estimates toggle: Consensus ⇄ Summit ⇄ Both (CSS-driven via data-ev on the wrap)
+  pane.querySelectorAll('.cp-ev-pill').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-cpev');
+    pane.querySelectorAll('.cp-ev-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    pane.querySelectorAll('.cp-evwrap').forEach(function(w){ w.setAttribute('data-ev', v); });
   }; });
 }
 function buildDD(root, key){ var s=activeSubKey(root,key); if(s) buildSub(root,key,s); }

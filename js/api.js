@@ -179,6 +179,14 @@ export async function updateInvestmentCompany(id, updates) {
   return ok(data);
 }
 
+export async function generateInvestmentWriteup(ticker, name, sector) {
+  var { data, error } = await supabase.functions.invoke('generate-investment-writeup', {
+    body: { ticker: ticker, name: name, sector: sector },
+  });
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
 // ─── Covered Calls (Massive option chain proxy) ──────────────
 // Forwards one allowlisted resource to Massive via the covered-calls-massive
 // edge function (key injected server-side). Returns the raw Massive JSON.

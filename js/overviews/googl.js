@@ -418,7 +418,94 @@ function gddEmpty(){ return '<div class="gdd-empty">🚧 In progress — this se
 var CALL_PREP = {
   ticker:'GOOGL',
   quarters:[
-    { q:'Q2 2026', status:'upcoming', date:'Tue Jul 22, 2026 · after close (call 4:30pm ET)',
+    // ─── Q3 2026 — UPCOMING. Rolled 2026-07-22 after the Q2 call; Watch List seeded from Q2's
+    // newQuestions. Consensus cells fill when the next Bloomberg export lands.
+    { q:'Q3 2026', status:'upcoming', date:'late October 2026 (date TBC)',
+      setup:{
+        source:'Bloomberg (BST) — export pending · Summit — to fill', asOf:null,
+        headline:[
+          { k:'Revenue', cons:null, us:null },
+          { k:'Operating income', cons:null, us:null },
+          { k:'EPS (diluted)', cons:null, us:null },
+          { k:'EBITDA', cons:null, us:null },
+        ],
+        custom:[
+          { k:'Google Cloud', cons:null, us:null },
+          { k:'Search & other', cons:null, us:null },
+          { k:'YouTube ads', cons:null, us:null },
+          { k:'Capex', cons:null, us:null },
+        ],
+        marketDebate:{
+          fear:'The optics quarter: Q3 laps the Search acceleration that began in 3Q25, FX flips to a slight headwind, and bridge capacity dents Cloud margin — the tape could read a manufactured deceleration as the story breaking.',
+          real:'Management pre-flagged all three, unprompted (the comp lap, the FX flip, the "modest" bridge-margin cost) — and the demand engine is contracted, not cyclical: backlog $514B with >50% converting in 24 months, TPU ramp "as we exit 2026."',
+          mech:[ {k:'Comp lap', v:'Search accel began 3Q25', dir:'down'}, {k:'Bridge capacity', v:'"modest" Cloud-margin cost', dir:'down'}, {k:'Backlog', v:'$514B contracted', dir:'up'}, {k:'TPU ramp', v:'exiting 2026 → 2027', dir:'up'} ],
+          synth:'The one thing to resolve: separate optics from engine. If constant-currency Search holds double-digits through the lap and the Cloud-margin dip stays "modest" as promised, the deceleration is arithmetic, not thesis. The number that cannot wobble: backlog conversion.'
+        },
+        debate:null
+      },
+      watchList:[
+        { rank:1, metric:'The capex ladder — and now, the funding doctrine', since:'Q4 2024',
+          tags:['capex'],
+          seededBy:{ q:'Q2 2026', n:'2027 capex: a number or a framework? (third ask)' },
+          bbg:'FY26 $195–205B (3rd raise of 2026) · 2027 "significantly" — still no number',
+          breaks:'A fourth raise without conversion proof — or TTM FCF keeps sliding with buybacks still $0',
+          pista:'Three raises in five months (175–185 → 180–190 → 195–205), each delivered with cover. The tell is no longer the guide — it is 2027: a NUMBER converts the debate into a model; a third adjective keeps the discount. Secondary tell: the funding doctrine ("not going back to equity" ex-ATM) — hold them to it.',
+          why:'The bear case is now explicitly policy-funded (ops cash → $100B debt → equity done); every raise re-tests the doctrine.',
+          src:'Ladder tracked since Q4 2024; the 2027 question has been asked and adjectived twice (Q1, Q2).',
+          thread:[
+            { q:'Q4 2025', n:'FY26 guided $175–185B (~2x FY25)' },
+            { q:'Q1 2026', n:'Raised to $180–190B (Intersect) · 2027 "significantly increase" · debt $46.5→$77.5B · FCF $10.1B' },
+            { q:'Q2 2026', n:'Raised AGAIN to $195–205B · FCF −$5.9B (first negative) · $49.6B equity + debt to $98.2B · buybacks $0 · doctrine stated: "not planning to go back to the equity markets" (ex-ATM) · FCF "will remain under pressure"' } ] },
+        { rank:2, metric:'Cloud: the services engine × the TPU ramp × the bridge margin', since:'Q2 2024',
+          tags:['cloud','tpu','capex'],
+          seededBy:{ q:'Q2 2026', n:'TPU-sale margins + share of backlog — dodged twice' },
+          bbg:'+82% last Q (ex-TPU too) · backlog $514B · margin 35.6% · "modest" bridge pressure guided',
+          breaks:'Cloud margin drops materially beyond "modest" — or the TPU exit-2026 ramp slips',
+          pista:'Anat pre-committed two words: bridge costs = "MODEST" margin pressure, TPU ramp = "as we EXIT 2026." Score both literally. The margin question was dodged twice (Sheridan, Nathanson) — a third dodge while hardware scales is itself the answer (hardware < services margin).',
+          why:'The acceleration is proven organic ("accelerated meaningfully even excluding TPU sales"); the open economics are the hardware line and the bridge dent.',
+          src:'The #1 theme six calls running; TPU rev-rec began in Q2 (first deliveries into customer DCs, incl. the Blackstone project).',
+          thread:[
+            { q:'Q4 2025', n:'+48% · backlog $240B' },
+            { q:'Q1 2026', n:'+63% · backlog $462B (incl. first TPU deals) · "revenue would have been higher"' },
+            { q:'Q2 2026', n:'+82% — "accelerated meaningfully even AFTER excluding TPU system sales" · backlog $514B (+$52B while converting $24.8B) · margin 35.6% · rev-rec began; small → ramp exiting 2026 → majority 2027 · commitments exceeded by >50% (accel)' } ] },
+        { rank:3, metric:'Search through the comp lap — scoring the NEW language', since:'Q2 2024',
+          tags:['search','monetization'],
+          seededBy:{ q:'Q2 2026', n:'Does the retired phrase\'s replacement survive a decel-optics quarter?' },
+          bbg:'+17% last Q · Q3 laps the 3Q25 acceleration + slight FX headwind (both pre-flagged)',
+          breaks:'Constant-currency Search decelerates through single digits — or the language hedges back',
+          pista:'The six-call frozen phrase ("monetization at approximately the same rate") was RETIRED in Q2 — replaced by "continue to be ENCOURAGED… even as we\'ve EXPANDED AI Overviews to more commercial queries." The language changed in the expansion direction. New tell: does "encouraged" survive a quarter of ugly reported comps? Watch cc growth, not reported.',
+          why:'~53% of revenue; the language IS the thesis (our own rule) — and it just upgraded for the first time in the AI transition.',
+          src:'Phrase tracked verbatim across six calls; retirement caught by the Pass-1.5 recurrence scan on this call.',
+          thread:[
+            { q:'Q4 2025', n:'+17% · Gemini 3 into Search · phrase intact' },
+            { q:'Q1 2026', n:'+19% · coverage-above-20% "upside" claim · phrase intact' },
+            { q:'Q2 2026', n:'+17% · PHRASE RETIRED → "encouraged… even as expanded to more commercial queries" · AI Mode >1B MAU · "billions of clicks to websites every week" · AI-Mode response cost at lowest since launch · Q3 comp-lap warning volunteered' } ] },
+        { rank:4, metric:'The monetization ladder: Highlighted Answers · Universal Cart · the app silence', since:'Q3 2025',
+          tags:['monetization','promises','ai-consumer'],
+          seededBy:{ q:'Q2 2026', n:'App monetization: "not rushing" retired too — or just unasked?' },
+          bbg:'No clean consensus line — promise thread',
+          breaks:'The new formats stay "early traction" for a third quarter with no revenue signal — or the app silence repeats',
+          pista:'Three rungs added in ONE call: Highlighted Answers (sponsored links inside AI answers), Universal Cart (cross-retailer checkout), UCP live at Target/Steve Madden, Direct Offers → IHG, AI Max out of beta at 500K advertisers. And a NEW silence: first call since Q3\'25 without "not rushing" on app ads — nobody asked, nobody volunteered. One direct question next call.',
+          why:'The bridge from AI engagement to ads revenue is now BUILT in production; volume is the question. The app remains the un-modeled option.',
+          src:'Promise-ladder discipline (ex-Promise-Tracker); the "not rushing" phrase had run three consecutive calls.',
+          thread:[
+            { q:'Q4 2025', n:'Direct Offers pilot · UCP launched · "not rushing" (2nd)' },
+            { q:'Q1 2026', n:'Direct Offers traction (Gap/L\'Oréal/Chewy) · UCP +Amazon/Meta/Microsoft/Salesforce/Stripe · "not rushing" (3rd) · app-MAU silence' },
+            { q:'Q2 2026', n:'Highlighted Answers debut · Universal Cart · Target & Steve Madden live on UCP · IHG on Direct Offers · AI Max 500K advertisers · app-ads stance: total silence (no question, no phrase)' } ] },
+        { rank:5, metric:'The frontier race: Gemini 4 & the monthly cadence', since:'Q2 2026',
+          tags:['frontier','ai-consumer'],
+          seededBy:{ q:'Q2 2026', n:'Gemini 4 ship window + does the near-monthly cadence materialize?' },
+          bbg:'No consensus line — qualitative',
+          breaks:'Gemini 4 slips past the implied window — or the cadence promise quietly dies',
+          pista:'Two verifiable promises made under analyst pressure: model releases "almost at a monthly cadence," and a Gemini 4 ("most ambitious pre-training run yet") built to compete "where the frontier WILL BE when it comes out." Both are datable — score shipments, not benchmarks. The candor anchor: they admitted the coding gap openly (3.6 Flash +10 DeepSuite pts in six weeks is the catch-up evidence).',
+          why:'Model leadership is the input to every other thesis line — and for the first time management put a cadence on record.',
+          src:'New theme opened this quarter: Doug Anmuth and Ross Sandler both pressed the frontier question; answers carried commitments.',
+          thread:[
+            { q:'Q2 2026', n:'Coding/agentic-coding gap ADMITTED ("areas where we\'ve acknowledged we need to improve") · 3.6 Flash +10pts DeepSuite in 6 weeks · Gemini 4 pre-training started, "most ambitious yet" · "releasing models almost at a monthly cadence is part of our roadmap" · tokens 22B/min (from 16B)' } ] },
+      ],
+      results:null, call:null
+    },
+    { q:'Q2 2026', status:'reported', date:'Tue Jul 22, 2026 · after close (call 4:30pm ET)',
       setup:{
         source:'Bloomberg (BST consensus) · Summit expectations — to fill', asOf:'2026-07-22',
         headline:[
@@ -562,7 +649,57 @@ var CALL_PREP = {
         ],
         priceReaction:'To fill after the close from a trusted source (not web).',
       },
-      call:null
+      // Post-Call filled from the 2Q2026 call transcript (Jul 22, 2026, 4:30pm ET).
+      call:{
+        take:'The call answered our two biggest questions in one line each: <b>the +82% is NOT the TPUs</b> ("accelerated meaningfully even after excluding TPU system sales") and <b>the funding flip now has a doctrine</b> (ops cash → $100B of debt → equity done, "not planning to go back"). The system catch: <b>the six-call standing phrase was RETIRED</b> — replaced by expansion language. And the ladder climbed a third time: capex to <b>$195–205B</b>.',
+        highlights:[
+          { tag:'thesis', band:'lead', open:'TPU margins dodged twice; hardware share of the $514B backlog still undisclosed',
+            head:'Cloud +82% is the SERVICES engine — Anat: "accelerated meaningfully even after excluding TPU system sales"',
+            detail:'<p>The quarter\'s single most important sentence — it upgrades the QUALITY of the +82%: organic consumption demand, not lumpy hardware. TPU revenue recognition <b>began</b> in Q2 (first deliveries into customer data centers, incl. the <b>Blackstone</b> third-party-DC project): small this year, "ramping as we exit 2026," vast majority 2027.</p><p>The engine behind it: existing customers exceeding commitments by <b>>50%</b> (accelerating from 45%), acquisition velocity 2x, Marketplace transactions 7x, ~500 customers past 1T tokens.</p><p><b>Open:</b> Sheridan and Nathanson both asked hardware margins — "we don\'t break out margins," framed as TAM expansion. Third dodge next quarter is itself the answer.</p>' },
+          { tag:'watch', band:'lead', open:'2027 remains an adjective — asked and deflected for the third consecutive call',
+            head:'The ladder\'s THIRD raise of 2026: $195–205B — now with a stated funding doctrine',
+            detail:'<p>$175–185B (Feb) → $180–190B (Apr) → <b>$195–205B (Jul)</b> — "acceleration in the delivery of capacity to meet growing demand." 2027: still "increase significantly… details at a later date."</p><p><b>The doctrine (Anat, pressed by Anmuth):</b> funding order = operating cash flow → debt (expanded $16B → ~$100B in 12 months, multi-currency) → equity (the $49.6B raise, for balance-sheet "resilience"; <b>"not planning to go back to the equity markets"</b> ex-ATM-for-SBC-taxes). FCF "will remain under pressure" — said plainly.</p><p><b>Also pre-flagged:</b> Q3 bridge capacity (renting third-party compute) with "modest" Cloud-margin pressure — a six-month cost for multi-year contracted upside, per Sundar.</p>' },
+          { tag:'tone', band:'lead', open:'Does the new language survive the Q3 comp lap it was announced alongside?',
+            head:'THE STANDING PHRASE RETIRED — "approximately the same rate" became "encouraged… even as we\'ve EXPANDED AIO to more commercial queries"',
+            detail:'<p>Six consecutive calls carried the frozen sentence "monetization at approximately the same rate." This call replaced it: <b>"We continue to be encouraged with monetization performance on queries that show AI Overviews, even as we\'ve expanded AI Overviews to more commercial queries."</b></p><p>Per our own rule — the language IS the thesis — this is the first language change of the AI transition, and it moved in the <b>expansion</b> direction: more commercial queries covered, monetization still holding. Paired with the disclosure cluster: AI Mode <b>>1B MAU</b>, "billions of clicks to websites every week" (the web-ecosystem defense, quantified for the first time), and AI-Mode response cost at its <b>lowest since launch</b>.</p><p><b>So what:</b> the monetization story moved from parity-defense to expansion-offense — one quarter before the optics get ugly (comp lap + FX flip, both pre-flagged).</p>' },
+          { tag:'tone', band:'context',
+            head:'The candor cluster: coding gap admitted, Q3 optics pre-managed',
+            detail:'<p>Sundar, unprompted qualifier: "there are areas where <b>we\'ve acknowledged we need to improve — coding and agentic coding</b> is an example." Anat volunteered all three Q3 headwinds before anyone asked: the Search comp lap (accel began 3Q25), the FX flip to slight headwind, the bridge-capacity margin cost.</p><p><b>So what:</b> per the candor rule this auto-promotes — and it tells you how to read Q3: a reported-growth deceleration is pre-explained arithmetic unless CONSTANT-CURRENCY breaks too.</p>' },
+          { tag:'curious', band:'context', open:'Both promises are datable — score shipments, not benchmarks',
+            head:'Gemini 4 pre-training started ("most ambitious run yet") + a promised near-monthly release cadence',
+            detail:'<p>Pressed on frontier credibility (Anmuth, Sandler), management made two verifiable commitments: <b>"releasing models almost at a monthly cadence is part of our roadmap"</b>, and Gemini 4 built to compete "where the frontier WILL BE when it comes out." Evidence of pace offered: 3.6 Flash gained <b>+10 DeepSuite points in six weeks</b> over 3.5 while getting more token-efficient.</p>' },
+          { tag:'dots', band:'context',
+            head:'The agentic-commerce rails carried their first paying traffic — formats, cart and merchants all live in one quarter',
+            detail:'<p>Connect the rungs: <b>Highlighted Answers</b> (clearly-marked sponsored links inside AI list responses — a NEW native format) · <b>Universal Cart</b> (cross-retailer single checkout) · UCP live at <b>Target and Steve Madden</b> · Direct Offers extending to <b>IHG</b> (travel — beyond retail) · AI Max out of beta at <b>500K advertisers</b>, +15% conversions at similar ROAS.</p><p><b>So what:</b> the bridge from AI engagement to ads revenue is no longer a roadmap — it is in production end-to-end. Volume is now the only question, and it is a 2027 question.</p>' },
+          { tag:'curious', band:'logged',
+            head:'The internal flywheel got its most concrete number yet: a Chrome team compressing a 2-year timeline into 3 months (8x)',
+            detail:'<p>Plus: support agents autonomously resolving <b>75%</b> of ads-customer queries; <b>83%</b> of the sales team on Gemini tools weekly (+20% win rate with customized pitches); Antigravity at 2.4M WAU. <b>So what:</b> this is the opex math that lets margins expand while capex triples — the quiet answer to "who pays for the build."</p>' },
+          { tag:'curious', band:'logged',
+            head:'Virgo Network — a million accelerators as one supercomputer — and the agent-optimized Axion CPU',
+            detail:'<p>Two new infra proper nouns: <b>Virgo</b> (unifying 1M+ accelerators across data-center sites into one trainable fabric) and agent-optimized <b>Axion</b> (+30% perf/$ vs peers). The full-stack moat keeps acquiring named layers.</p>' },
+          { tag:'watch', band:'logged',
+            head:'The app-ads silence: first call since Q3\'25 without "not rushing" — nobody asked, nobody volunteered',
+            detail:'<p>Three straight calls carried the verbatim stance; this one carried nothing — no analyst question, no volunteered line, while the app hit 950M MAU with DAU tripled YoY. Could be nothing; per the silence rule it earns exactly one direct question next call.</p>' },
+        ],
+        threeMinutes:[
+          '<b>The +82% is demand, not hardware.</b> Anat said it flat: Cloud accelerated meaningfully even excluding TPU sales — which only began recognizing this quarter (small; ramp exits 2026; majority 2027). Backlog $514B, replenishing faster than it converts. The quality of the acceleration just went up.',
+          '<b>The bill is now policy-funded.</b> Third capex raise in five months ($195–205B); FCF negative and "will remain under pressure"; the doctrine on record: ops cash → $100B debt → equity done, "not going back" (ex-ATM). Score next quarter on two words they chose: bridge-margin "modest," TPU ramp "exiting 2026."',
+          '<b>The six-quarter phrase died — upward.</b> "Approximately the same rate" → "encouraged even as we\'ve EXPANDED AIO to more commercial queries," with AI Mode >1B MAU and billions of weekly clicks to the web disclosed for the first time. First monetization-language upgrade of the AI era — announced alongside a pre-flagged ugly-optics Q3 (comp lap + FX). Read Q3 in constant currency.',
+          '<b>Frontier posture: honest and dated.</b> Coding gap admitted; Gemini 4 "most ambitious run yet"; near-monthly cadence promised. Both datable — shipments, not benchmarks, are the scorecard.',
+        ],
+        notBringing:[
+          { item:'World Cup records (1.7B viewers, 550M on TV, most-watched WC in YouTube history)', why:'Spectacular color, already in the release, and the ads lift is inside the +13% — nothing left to argue.' },
+          { item:'Waymo Oasis vehicle · Wing 1M deliveries · Isomorphic $2B raise', why:'Real SOTP progress, logged in the themes — moves lines nobody underwrites quarterly. The Waymo external-structure question (Gawrelski) was deflected; noted, not news.' },
+          { item:'Security stats (90% of F100 on Google Cloud security; Wiz AI adoption ~90%)', why:'Impressive adoption metrics with zero new economics attached — context for the Cloud mix, not meeting material.' },
+        ],
+        newQuestions:[
+          { n:'2027 capex: a number or a framework? (third ask)', landed:{ q:'Q3 2026', rank:1 } },
+          { n:'TPU-sale margins + share of backlog — dodged twice', landed:{ q:'Q3 2026', rank:2 } },
+          { n:'Does the retired phrase\'s replacement survive a decel-optics quarter?', landed:{ q:'Q3 2026', rank:3 } },
+          { n:'App monetization: "not rushing" retired too — or just unasked?', landed:{ q:'Q3 2026', rank:4 } },
+          { n:'Gemini 4 ship window + does the near-monthly cadence materialize?', landed:{ q:'Q3 2026', rank:5 } },
+        ],
+      }
     },
     // ─── Q1 2026 — REPORTED (Apr 29, 2026). Pre-call blocks FROZEN as they stood when Q4 2025
     // closed; results/call filled after the print/call. Append-only.
@@ -1313,6 +1450,7 @@ var GOOGL_THEMES=[
       { q:'Q3 2025', items:['+34% to $15.2B; backlog <b>$155B (+46% QoQ)</b>; $1B+ deals in 9 months > prior 2 years combined; margin 23.7%.'] },
       { q:'Q4 2025', items:['<b>+48% to $17.7B</b>; backlog <b>$240B (+55% QoQ)</b>; run-rate >$70B; margin 30.1%; <b>8M Gemini Enterprise paid seats</b> in 4 months.'] },
       { q:'Q1 2026', items:['<b>+63% to $20B</b>; backlog <b>$462B (~2x QoQ)</b>; GenAI-product revenue +~800% YoY; margin 32.9% (17.8% LY); "revenue <b>would have been higher</b> if we could meet demand."'] },
+      { q:'Q2 2026', items:['<b>+82% to $24.8B — "accelerated meaningfully even after excluding TPU system sales"</b> (the quality-of-growth sentence); backlog <b>$514B</b> (+$52B while converting $24.8B); margin <b>35.6%</b>; commitments exceeded by >50% (accel from 45%); Marketplace 7x; ~90% of Fortune 100 on Gemini Enterprise; Q3 bridge capacity flagged ("modest" margin cost).'] },
     ]},
   { theme:'The capex ladder & the depreciation drumbeat', st:{ k:'watch', since:'Q4 2023', last:'Q1 2026' },
     why:'Five consecutive raises, never a step down; management flags accelerating depreciation unprompted every quarter — candor against interest, and the core bear debate (FCF).',
@@ -1324,6 +1462,7 @@ var GOOGL_THEMES=[
       { q:'Q3 2025', items:['Raised to <b>$91–93B</b>; depreciation +41% YoY.'] },
       { q:'Q4 2025', items:['FY26 guided <b>$175–185B (~2x FY25\'s $91.4B)</b>; FY25 depreciation +38% ($15.3B→$21.1B).'] },
       { q:'Q1 2026', items:['Raised to <b>$180–190B</b> (Intersect); <b>2027 "significantly increase"</b>; LT debt <b>$46.5B→$77.5B</b> in one quarter; quarterly FCF $10.1B.'] },
+      { q:'Q2 2026', items:['<b>THIRD raise of 2026: $195–205B</b>; FCF <b>−$5.9B (first negative quarter)</b> and "will remain under pressure"; buybacks $0; <b>funding doctrine stated</b>: ops cash → debt ($16B→~$100B in 12 months) → equity ($49.6B done, "not planning to go back" ex-ATM); 2027 still an adjective — third consecutive deflection.'] },
     ]},
   { theme:'Search through the AI transition — & the standing phrase', st:{ k:'trend', since:'Q4 2023', last:'Q1 2026' },
     why:'The existential question settling empirically: Search ACCELERATED 10→12→12→15→17→19% while AIO/AI Mode rolled in. The monetization language has been frozen verbatim for 6+ calls: "at approximately the same rate" — the moment it changes, the story changes.',
@@ -1336,6 +1475,7 @@ var GOOGL_THEMES=[
       { q:'Q3 2025', items:['+15% · AI Mode <b>75M DAU</b>, global in 40 languages · paid clicks +7% / CPC +7% · the phrase again, verbatim.'] },
       { q:'Q4 2025', items:['+17% · <b>Gemini 3 integrated into AI Mode & AIO</b> · AI Mode queries/user doubled; 1-in-6 queries non-text.'] },
       { q:'Q1 2026', items:['<b>+19%</b> · queries all-time high · NEW claim: ads coverage above the historical <b>~20% of queries has "upside"</b> (Philipp) · AI-response cost −30% since Gemini 3.'] },
+      { q:'Q2 2026', items:['<b>THE PHRASE RETIRED</b> after six calls: "approximately the same rate" → <b>"continue to be encouraged… even as we\'ve EXPANDED AI Overviews to more commercial queries"</b> — the first language upgrade of the AI transition · +17% · AI Mode <b>>1B MAU</b> · <b>"billions of clicks to websites every week"</b> (web-defense, first quantification) · AI-Mode cost at lowest since launch · Q3 comp-lap + FX-flip warnings volunteered.'] },
     ]},
   { theme:'New-surface monetization: AI Mode ads · Direct Offers · Gemini app', st:{ k:'promise', since:'Q3 2025', last:'Q1 2026' },
     why:'The promise ladder to reconcile every quarter (ex-Promise-Tracker thread). AI-Mode ads climbed test → pilot → traction; Gemini-app ads remain a MUSING — "not rushing," three calls verbatim.',
@@ -1344,6 +1484,7 @@ var GOOGL_THEMES=[
       { q:'Q3 2025', items:['<b>"Testing ads in AI Mode…</b> will continue to test and learn before we expand."'] },
       { q:'Q4 2025', items:['<b>Direct Offers pilot announced</b> (exclusive offers in AI Mode) · UCP agentic-commerce protocol launched with retail founding partners · app ads: <b>"not rushing."</b>'] },
       { q:'Q1 2026', items:['Direct Offers <b>"resonating"</b> — Gap, L\'Oréal, Chewy signed · new retailer ad format in test · <b>UCP adds Amazon, Meta, Microsoft, Salesforce, Stripe</b>; Ulta live in AI Mode/Gemini checkout · app ads still "not rushing" (3rd time).'] },
+      { q:'Q2 2026', items:['Three rungs in one call: <b>Highlighted Answers</b> debut (sponsored links inside AI answers) · <b>Universal Cart</b> (cross-retailer checkout) · UCP live at <b>Target & Steve Madden</b> · Direct Offers → <b>IHG</b> (travel) · AI Max out of beta, <b>500K advertisers</b>, +15% conversions · app-ads stance: <b>total silence</b> — first call without "not rushing" since the thread began.'] },
     ]},
   { theme:'Gemini consumer scale — users, subscriptions… and one silence', st:{ k:'watch', since:'Q1 2026', last:'Q1 2026', silent:true },
     why:'The disclosure ladder ran hot for a year — then Q1 2026 skipped the app-MAU number. Silence after a streak of disclosure is a flag.',
@@ -1353,6 +1494,7 @@ var GOOGL_THEMES=[
       { q:'Q3 2025', items:['<b>650M MAU</b>; queries 3x QoQ · <b>300M paid subs</b> crossed.'] },
       { q:'Q4 2025', items:['<b>750M MAU</b>; engagement/user sharply up post-Gemini 3 · <b>325M paid subs</b>.'] },
       { q:'Q1 2026', items:['<b>NO MAU update</b> (engagement color only — watch) · <b>350M paid subs</b>; strongest consumer-AI-plan quarter ever.'] },
+      { q:'Q2 2026', items:['Silence resolved: <b>950M MAU</b> + a NEW metric — <b>DAU tripled in the last year</b> · Omni video creation +40% DAU since I/O · Gemini Spark rolling out internationally · YouTube subs growing faster than ads; Google One AI-plan-led.'] },
     ]},
   { theme:'Full stack & TPUs: from internal edge to external silicon business', st:{ k:'promise', since:'Q1 2026', last:'Q1 2026' },
     why:'A decade of TPUs became a commercial weapon — frontier labs on TPUs, then the first hardware SALES into customer data centers, with explicit revenue timing to hold them to.',
@@ -1362,6 +1504,7 @@ var GOOGL_THEMES=[
       { q:'Q3 2025', items:['<b>Anthropic plans up to 1M TPUs</b>; GB300 first to ship.'] },
       { q:'Q4 2025', items:['Gemini serving unit cost <b>−78% over 2025</b>; accelerators serving frontier labs, capital-markets firms, governments.'] },
       { q:'Q1 2026', items:['<b>8th-gen TPU (8t/8i)</b> · <b>FIRST hardware sales into customers\' own data centers</b> · revenue "small % late 2026, <b>vast majority 2027</b>," lumpy by design · already inside the $462B backlog.'] },
+      { q:'Q2 2026', items:['<b>Revenue recognition BEGAN</b> — first TPU systems delivered into customer DCs · "small this year, ramping as we exit 2026, vast majority 2027" · inventory-cost flag in CoR · <b>Blackstone</b> third-party-DC project named · margins asked twice, not broken out ("expansion of our TAM") · <b>Virgo Network</b> unveiled (1M accelerators as one supercomputer) · allocation priority stated: frontier AGI development first.'] },
     ]},
   { theme:'Partnership validation: Apple, OpenAI, Reliance, NVIDIA', st:{ k:'trend', since:'Q2 2025', last:'Q1 2026' },
     why:'The quiet external proof of the stack — rivals and giants keep choosing Google infrastructure.',
@@ -1370,6 +1513,7 @@ var GOOGL_THEMES=[
       { q:'Q3 2025', items:['<b>9 of the top-10 AI labs</b> on Google Cloud; NVIDIA GB300 first to ship.'] },
       { q:'Q4 2025', items:['<b>Apple: Google as preferred cloud provider + next-gen Apple foundation models built on Gemini</b> · Reliance Jio: Gemini to 500M consumers.'] },
       { q:'Q1 2026', items:['American Express, Vodafone agentic-data wins · <b>Wiz closed (Mar)</b> — "performance exceeded expectations"; low-single-digit pp Cloud-margin headwind for 2026.'] },
+      { q:'Q2 2026', items:['<b>Booking Holdings</b> multi-year expansion (agentic dining on OpenTable) · infra wins: Ineffable Intelligence, Kakao, Deutsche Börse, <b>Pfizer & Roche</b>, World Labs · <b>SpaceX third-party compute deal</b> (analyst-cited on the call) · PepsiCo, Intel, HSBC, Bell Canada, Macy\'s on Gemini Enterprise.'] },
     ]},
   { theme:'Other Bets: pruning + Waymo\'s ramp', st:{ k:'trend', since:'Q4 2024', last:'Q1 2026' },
     why:'A portfolio quietly rationalized around Waymo, whose weekly rides double roughly every two quarters.',
@@ -1380,6 +1524,7 @@ var GOOGL_THEMES=[
       { q:'Q3 2025', items:['London (2026) + Tokyo announced; Dallas/Nashville/Denver/Seattle; airports + freeways.'] },
       { q:'Q4 2025', items:['<b>$16B round — largest ever</b> (Alphabet funded a significant portion → $2.1B SBC charge); 20M trips; 400K rides/week.'] },
       { q:'Q1 2026', items:['<b>500K rides/week (2x in <1yr)</b>; 11 US cities · <b>Verily deconsolidated</b>; GFiber→Astound (deconsolidates Q4) — the pruning is explicit.'] },
+      { q:'Q2 2026', items:['Waymo <b>Oasis</b> vehicle debuts (first on the 6th-gen Driver) · Wing passes <b>1M deliveries</b> (+Papa John\'s) · <b>Isomorphic Labs raises $2B+</b> for AI drug design · external-structure question (Gawrelski) deflected: "focused on scaling."'] },
     ]},
   { theme:'Quiet decliners & headline distorters', st:{ k:'watch', since:'Q3 2025', last:'Q1 2026' },
     why:'The lines nobody asks about, and the one-offs that distort a print — read every headline through these.',
@@ -1387,6 +1532,7 @@ var GOOGL_THEMES=[
       { q:'Q3 2025', items:['<b>EC fine $3.5B</b> (G&A) — op margin 30.5% reported vs 33.9% ex-fine. Network −3% (structurally negative every quarter).'] },
       { q:'Q4 2025', items:['<b>Waymo $2.1B SBC charge</b> (R&D) — op income +16% reported, cleaner underlying +~22%. YouTube +9% on election lapping. Network −2%.'] },
       { q:'Q1 2026', items:['<b>Other income $37.7B</b> (unrealized gains) → EPS $5.11 "+82%" — optics, not operations · <b>FX +3pp tailwind to Services</b>, fading to ~1pp in Q2 (management volunteered the caveat) · Network −4%.'] },
+      { q:'Q2 2026', items:['<b>OI&E +$98.0B</b> (equity marks; +$6.26 of EPS — the release quantifies it; $87.1B of marketable equity securities now disclosed) · FX +1pp → <b>slight Q3 headwind</b> · <b>Q3 Search comp-lap pre-flagged</b> (accel began 3Q25) · Network nearly flat (−1%) — best print in 2 years.'] },
     ]},
 ];
 function callsByQuarter(){
@@ -1407,7 +1553,7 @@ function callsBody(){
     '.lpb-acc-body{padding:12px 14px;display:none}.lpb-acc-item.open .lpb-acc-body{display:block}'+
     '.ov-chip{display:inline-block;font-size:10px;font-weight:800;color:'+BRAND+';background:rgba(66,133,244,0.10);border-radius:20px;padding:2px 9px}'+
     '.calls-st{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:2px 8px;white-space:nowrap;border:1px solid;flex:none}</style>';
-  h+='<p class="ov-lede">The key narrative threads from <b>10 earnings calls</b> (Q4 2023 → Q1 2026). Switch lens: <b>By theme</b> traces how each story evolved; <b>By quarter</b> shows what mattered in a given call. Each theme carries a status — <b>trend</b> (confirmed), <b>promise</b> (a commitment to reconcile next call) or <b>watch</b> — <b>with its age</b>: a promise open one quarter and one open four quarters are not the same thing, and a silence that has run two quarters is louder than a fresh one. Tap any row to expand.</p>';
+  h+='<p class="ov-lede">The key narrative threads from <b>11 earnings calls</b> (Q4 2023 → Q2 2026). Switch lens: <b>By theme</b> traces how each story evolved; <b>By quarter</b> shows what mattered in a given call. Each theme carries a status — <b>trend</b> (confirmed), <b>promise</b> (a commitment to reconcile next call) or <b>watch</b> — <b>with its age</b>: a promise open one quarter and one open four quarters are not the same thing, and a silence that has run two quarters is louder than a fresh one. Tap any row to expand.</p>';
   h+='<div class="calls-tog" role="tablist"><button type="button" class="calls-pill active" data-callsv="theme">By theme</button><button type="button" class="calls-pill" data-callsv="quarter">By quarter</button></div>';
   h+='<div class="lpb-acc" id="googlCallsTheme">';
   GOOGL_THEMES.forEach(function(ct){

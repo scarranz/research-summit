@@ -1398,6 +1398,11 @@ function cpQ(id, t, h){ return '<span class="cp-info ov-clickable" data-detail="
 // Shared style for the Call Prep panes.
 function cpStyle(){
   return '<style>.cp-note{font-size:11px;color:var(--mu);line-height:1.5;background:#F7F9FB;border:1px solid var(--bdr);border-radius:9px;padding:9px 12px;margin:0 0 12px}'+
+    /* inner phase tabs (Call Prep lives inside Evolution — its own row, independent of .ovt-subtab wiring) */
+    '.cp-phtabs{display:inline-flex;gap:3px;background:var(--brand-soft);border:1px solid var(--bdr);border-radius:9px;padding:4px;margin:0 0 20px}'+
+    '.cp-phtab{background:none;border:none;color:var(--mu);font-family:\'Inter\',sans-serif;font-size:12px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;padding:7px 16px;border-radius:6px;cursor:pointer;transition:all .15s}'+
+    '.cp-phtab:hover{color:var(--navy)}.cp-phtab.active{background:var(--brand);color:#fff}'+
+    '.cp-phpane[hidden]{display:none}'+
     '.cp-empty{color:var(--mu);font-style:italic;opacity:.7}'+
     '.cp-grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0}@media(max-width:640px){.cp-grid4{grid-template-columns:1fr 1fr}}'+
     '.cp-cell{border:1px solid var(--bdr);border-top:3px solid '+BLUE+';border-radius:10px;padding:11px 13px;background:var(--w)}'+
@@ -1629,7 +1634,6 @@ function deepDiveHtml(c){
       '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
       '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
       '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
-      '<button type="button" class="dd-tab" data-dd="callprep">Call Prep</button>'+
     '</div>';
   h+='<div class="dd-pane" data-dd="topline">'+
       '<div class="ovt-subtabs">'+
@@ -1661,11 +1665,27 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="callprep">Call Prep</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="earnings">'+callsBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="guidance" hidden>'+guidanceBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="strategy" hidden>'+strategyBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="timeline" hidden>'+timelineBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="callprep" hidden>'+
+        '<div class="cp-note" style="margin-bottom:12px">🎯 <b>Call Prep</b> — the decision layer, in three phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List · Promises) → <b>② Post-Results</b> (react to the numbers, which land before the call) → <b>③ Post-Call</b> (what management said + the meeting take). Append-only per quarter, so it becomes a record of how well we read IBKR.</div>'+
+        '<div class="cp-phtabs">'+
+          '<button type="button" class="cp-phtab active" data-cpp="setup">Setup</button>'+
+          '<button type="button" class="cp-phtab" data-cpp="watch">Watch List</button>'+
+          '<button type="button" class="cp-phtab" data-cpp="promises">Promise Tracker</button>'+
+          '<button type="button" class="cp-phtab" data-cpp="results">Post-Results</button>'+
+          '<button type="button" class="cp-phtab" data-cpp="postcall">Post-Call</button>'+
+        '</div>'+
+        '<div class="cp-phpane" data-cpp="setup">'+cpSetupBody(c)+'</div>'+
+        '<div class="cp-phpane" data-cpp="watch" hidden>'+cpWatchBody(c)+'</div>'+
+        '<div class="cp-phpane" data-cpp="promises" hidden>'+cpPromisesBody(c)+'</div>'+
+        '<div class="cp-phpane" data-cpp="results" hidden>'+cpResultsBody(c)+'</div>'+
+        '<div class="cp-phpane" data-cpp="postcall" hidden>'+cpCallBody(c)+'</div>'+
+      '</div>'+
     '</div>';
   h+='<div class="dd-pane" data-dd="valuation" hidden>'+
       '<div class="ovt-subtabs">'+
@@ -1692,21 +1712,6 @@ function deepDiveHtml(c){
       '<div class="ovt-subpane" data-ovst="ownership" hidden>'+ownershipBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="governance" hidden>'+govBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="track" hidden>'+trackBody(c)+'</div>'+
-    '</div>';
-  h+='<div class="dd-pane" data-dd="callprep" hidden>'+
-      '<div class="cp-note" style="margin-bottom:12px">🎯 <b>Call Prep</b> — the decision layer, in three phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List · Promises) → <b>② Post-Results</b> (react to the numbers, which land before the call) → <b>③ Post-Call</b> (what management said + the meeting take). Append-only per quarter, so it becomes a record of how well we read IBKR.</div>'+
-      '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="setup">Setup</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="watch">Watch List</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="promises">Promise Tracker</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="results">Post-Results</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="postcall">Post-Call</button>'+
-      '</div>'+
-      '<div class="ovt-subpane" data-ovst="setup">'+cpSetupBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="watch" hidden>'+cpWatchBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="promises" hidden>'+cpPromisesBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="results" hidden>'+cpResultsBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="postcall" hidden>'+cpCallBody(c)+'</div>'+
     '</div>';
   h+='</div>';
   return h;
@@ -1767,6 +1772,15 @@ function showSub(root, pane, group, key){
 function wireSubtabs(root, group){
   var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return;
   pane.querySelectorAll('.ovt-subtab').forEach(function(btn){ btn.onclick=function(){ showSub(root, pane, group, btn.getAttribute('data-ovst')); }; });
+}
+// Call Prep phase tabs — nested inside Evolution's callprep subpane, wired independently (no charts).
+function wireCallPrep(root){
+  var pane=root.querySelector('.ovt-subpane[data-ovst="callprep"]'); if(!pane) return;
+  pane.querySelectorAll('.cp-phtab').forEach(function(btn){ btn.onclick=function(){
+    var key=btn.getAttribute('data-cpp');
+    pane.querySelectorAll('.cp-phtab').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    pane.querySelectorAll('.cp-phpane').forEach(function(p){ p.hidden=(p.getAttribute('data-cpp')!==key); });
+  }; });
 }
 function buildDD(root, key){ var s=activeSubKey(root,key); if(s) buildSub(root,key,s); }
 function activeDD(root){ var b=root.querySelector('.dd-tab.active'); return b?b.getAttribute('data-dd'):'topline'; }
@@ -1847,7 +1861,7 @@ function init(c){
   var root=document.getElementById('co-detailview'); if(!root) return;
   renderLive(root);
   wireDD(root);
-  wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt'); wireSubtabs(root,'callprep');
+  wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt'); wireCallPrep(root);
   wireModal(root);
   // Collapsible sections
   root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var cc=btn.parentElement; var open=cc.classList.toggle('open'); var b=cc.querySelector('.ov-collap-b'); if(b) b.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.textContent=open?'▾':'▸'; }; });

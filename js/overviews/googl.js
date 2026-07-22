@@ -1616,6 +1616,70 @@ function unitEconBody(c){
   '</div>';
   return h;
 }
+// ─── Bottom Line ▸ Supply Chain — Bloomberg SPLC, as of 22-Jul-2026 ─────────────────────────────
+// 728 suppliers / 1,166 customers tracked. The twist for GOOGL: the "supply chain" is really an
+// AI-infrastructure procurement machine (capex vendors) + a content ecosystem (labels/studios paid
+// via revenue share) — while the true demand side (millions of advertisers) is invisible to SPLC.
+var SPLC_INFRA=[
+  { n:'NVIDIA', rel:'$13.3B', cost:'11.9% of capex costs', dep:'4.9% of NVDA rev', bar:100, col:BRAND2,
+    d:'<p>The single biggest supplier relationship ($13.3B est.) — the GPU fleet (Blackwell, Hopper, upcoming Vera Rubin) that Alphabet both uses and rents out via Cloud. Note the asymmetry: Google is a huge buyer, yet only ~4.9% of NVIDIA\'s revenue — neither side is captive.</p>' },
+  { n:'Broadcom', rel:'$9.2B', cost:'9.6% of capex costs', dep:'12.8% of AVGO rev', bar:69, col:BRAND,
+    d:'<p>The <b>TPU relationship</b>: Broadcom co-designs/supplies the custom-silicon program at the heart of the full-stack thesis. ~12.8% of Broadcom\'s revenue traces to Google — a deep mutual dependency.</p><p><b>The map\'s most important absence:</b> TSMC does not appear among top direct suppliers — the foundry exposure is INTERMEDIATED through Broadcom. Alphabet\'s most critical single dependency is second-order and invisible in the first-order map.</p>' },
+  { n:'Hon Hai (Foxconn)', rel:'$6.0B', cost:'6.7% of capex costs', dep:'2.6% of Hon Hai rev', bar:45, col:GRAY,
+    d:'<p>Server/rack assembly at hyperscale. Taiwan-headquartered with a global footprint — part of why supplier facilities concentrate in Asia even where domiciles don\'t.</p>' },
+  { n:'SK hynix', rel:'$5.2B', cost:'4.4% of capex costs', dep:'7.3% of hynix rev', bar:39, col:PURPLE,
+    d:'<p>HBM memory — the scarcest input of the AI build-out. 7.3% of hynix\'s revenue from one buyer makes Google a priority customer in the tightest part of the chain.</p>' },
+  { n:'Celestica', rel:'$3.8B', cost:'4.0% of capex costs', dep:'30.1% of Celestica rev', bar:29, col:RED,
+    d:'<p><b>The hidden pure-play:</b> ~30% of Celestica\'s entire revenue is Google (networking/ODM hardware). For the map\'s purposes: Celestica is quasi-captive capacity — and its results are a public read-through on Google\'s data-center buildout cadence.</p>' },
+  { n:'Optics & networking cluster', rel:'Zhongji · Lumentum · Ciena · Arista · Marvell', cost:'~2.5% of capex combined', dep:'Zhongji 22% · Lumentum 21% of their rev', bar:20, col:AMBER,
+    d:'<p>The 800G-optics and switching layer (Zhongji Innolight 22.4% and Lumentum 21.0% of their revenues from Google; plus Ciena, Arista 4.6%, Marvell 3.6%, Jabil, MediaTek). Individually small for Google; existentially large for several of them — the buildout\'s breadth shows here.</p>' },
+];
+var SPLC_CONTENT=[
+  ['Warner Music','12.0% of WMG revenue','SGA — YouTube licensing'],
+  ['Universal Music','5.6% of UMG revenue','COGS — YouTube licensing'],
+  ['Take-Two','22.9% of TTWO revenue','COGS — Play/ads revenue share'],
+  ['GREE','21.8% of its revenue','COGS — Play ecosystem'],
+  ['GungHo','17.6% of its revenue','COGS — Play ecosystem'],
+  ['Koei Tecmo','10.1% of its revenue','COGS — Play ecosystem'],
+];
+var SPLC_DEP=[
+  ['System1', 67, 'ad-tech riding Google demand'],
+  ['Mobirix', 53, 'mobile games — Play'],
+  ['Drecom', 35, 'games — Play'],
+  ['Celestica', 30, 'ODM hardware'],
+  ['Duolingo', 23, 'Play + ads'],
+  ['Take-Two', 23, 'Play revenue share'],
+  ['Zhongji Innolight', 22, '800G optics'],
+  ['Lumentum', 21, 'optics'],
+];
+function splcBody(c){
+  var h='<p class="ov-lede"><b>Two supply chains in one company.</b> Upstream, Alphabet runs one of the largest <b>AI-infrastructure procurement machines</b> on earth (the capex vendors). Sideways, it operates a <b>content ecosystem</b> where "suppliers" are labels and studios paid through revenue share. And the honest caveat: the true demand side — millions of advertisers — is <b>invisible to SPLC</b>; the traceable customers are telcos and IT resellers.</p>';
+  h+=ddStat([['728','suppliers tracked'],['1,166','customers tracked'],['7,353','supplier facilities'],['27.8% / 11.8%','supplier facs US / China'],['22 + 67','distressed supp. + cust.'],['5','sanctioned suppliers']]);
+  h+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>The AI capex chain — where the $180–190B goes</b> (relationship size, Bloomberg est.; bar = relative size)</div>';
+  h+='<div class="cp-watch">'+SPLC_INFRA.map(function(s,i){
+    return '<div class="cp-w ov-clickable" data-detail="splc:'+i+'" style="border-left:4px solid '+s.col+'">'+
+      '<div class="cp-w-top"><div class="cp-w-metric">'+esc(s.n)+'</div><span class="gdd-tag">'+esc(s.rel)+'</span><span class="cp-why-btn" style="margin:0">the read ›</span></div>'+
+      '<div class="ov-mbar" style="margin:4px 0 6px"><div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:'+s.bar+'%;background:'+s.col+'"></div></div></div>'+
+      '<div class="cp-w-chips"><span class="cp-w-chip cons">'+esc(s.cost)+'</span><span class="cp-w-chip red"><b>Their dependency:</b> '+esc(s.dep)+'</span></div>'+
+    '</div>';
+  }).join('')+'</div>';
+  h+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>The content ecosystem — "suppliers" Alphabet pays via revenue share</b></div>';
+  h+='<div style="overflow-x:auto"><table class="cp-tbl"><thead><tr><th>Partner</th><th>Their exposure to Google</th><th>Category</th></tr></thead><tbody>'+
+    SPLC_CONTENT.map(function(r){ return '<tr><td style="font-weight:700">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td style="color:var(--mu)">'+esc(r[2])+'</td></tr>'; }).join('')+
+  '</tbody></table></div>';
+  h+='<div class="ave-subh-note" style="margin:6px 0 0">YouTube licensing (labels) and Play-store revenue shares (studios) appear in SPLC as supplier costs — a reminder that a big slice of "COGS" is really ecosystem payouts, not parts.</div>';
+  h+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>Who needs whom — revenue dependency ON Google</b> (% of the counterpart\'s revenue)</div>';
+  h+='<div class="ov-mbars">'+SPLC_DEP.map(function(r){
+    return '<div class="ov-mbar"><div class="ov-mbar-l">'+esc(r[0])+' <span class="gdd-sub">'+esc(r[2])+'</span></div><div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:'+r[1]+'%;background:'+BRAND+'">'+r[1]+'%</div></div><div class="ov-mbar-v">'+r[1]+'%</div></div>';
+  }).join('')+'</div>';
+  h+='<div class="ov-callout" style="margin:10px 0 0"><b>The asymmetry in one line:</b> nobody Alphabet buys from holds it captive (NVIDIA is ~12% of its capex costs but Google is only ~5% of NVIDIA) — while a whole tier of vendors lives or dies by Google\'s orders. Purchasing power sits almost entirely on Alphabet\'s side; the exceptions are the true scarcities (HBM, foundry-via-Broadcom).</div>';
+  h+='<div class="gdd-cards" style="margin-top:16px">'+
+    '<div class="gdd-card" style="border-top:3px solid '+BRAND2+'"><div class="gdd-card-h"><span class="gdd-ic">📶</span><span class="gdd-card-n">The traceable customers</span><span class="gdd-tag">telcos + IT channel</span></div><div class="gdd-card-t">Verizon ($1.5B est., 2.7% of its costs), TD SYNNEX, AT&T, T-Mobile, Computacenter, Insight — and Equifax at <b>7.8% of its cost base</b> (a heavy Cloud commit). This is the Cloud/enterprise distribution book; the ads demand (SMB millions) never shows in SPLC. 67 tracked customers screen as distressed — churn-watch, not thesis risk.</div></div>'+
+    '<div class="gdd-card" style="border-top:3px solid '+AMBER+'"><div class="gdd-card-h"><span class="gdd-ic">🗺️</span><span class="gdd-card-n">Geography & risk surface</span><span class="gdd-tag">facilities view</span></div><div class="gdd-card-t">Supplier facilities: <b>27.8% US · 11.8% China</b> · 6.0% Germany · Asia-heavy manufacturing (Japan 67, Korea 49, Taiwan 42 suppliers domiciled). 69 suppliers domiciled in China (9.5%) = the tariff/geopolitics surface. Risk flags: 5 sanctioned suppliers, 22 distressed suppliers — none among the top-tier infra names. Customer side skews global: Japan alone is 12.2% of traceable customers.</div></div>'+
+  '</div>';
+  h+='<div class="ov-foot">Source: Bloomberg Supply Chain Analysis (SPLC), GOOGL US Equity, as of 22-Jul-2026. Relationship sizes are Bloomberg estimates (supplier/customer filings where reported); directional, not audited disclosures. Top-tier names shown; full universe 728 suppliers / 1,166 customers.</div>';
+  return h;
+}
 function marginsBody(c){
   var h='<p class="ov-lede"><b>Two margin stories in one company:</b> the group line expanding through the largest capex ramp in corporate history — and the Cloud ladder, the fastest large-scale margin build the sector has seen.</p>';
   h+='<div class="ov-diagram-cap"><b>Group & Services operating margin</b> (FY2019 → FY2025)</div>';
@@ -1890,9 +1954,11 @@ function deepDiveHtml(c){
   h+='<div class="dd-pane" data-dd="bottomline" hidden>'+
       '<div class="ovt-subtabs">'+
         '<button type="button" class="ovt-subtab active" data-ovst="unit">Unit Economics</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="splc">Supply Chain</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="margins">Margins</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="unit">'+unitEconBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="splc" hidden>'+splcBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="margins" hidden>'+marginsBody(c)+'</div>'+
     '</div>';
   h+='<div class="dd-pane" data-dd="evolution" hidden>'+
@@ -2096,6 +2162,7 @@ function wireModal(root){
     if(kind==='ddc'){ var cu=DD_CUST[+id]; return cu?{t:cu.ic+' '+esc(cu.n)+' <span class="ov-modal-sub">'+esc(cu.tag)+'</span>',h:cu.detail}:null; }
     if(kind==='arena'){ var ar=DD_ARENA[+id]; return ar?{t:ar.ic+' '+esc(ar.n)+' <span class="ov-modal-sub">'+esc(ar.tag)+'</span>',h:ar.detail}:null; }
     if(kind==='guide'){ var gd=G_GUIDE[+id]; return gd?{t:gd.ic+' '+esc(gd.k),h:gd.d}:null; }
+    if(kind==='splc'){ var sp=SPLC_INFRA[+id]; return sp?{t:esc(sp.n)+' <span class="ov-modal-sub">'+esc(sp.rel)+' relationship · '+esc(sp.cost)+'</span>',h:sp.d}:null; }
     if(kind==='gexec'){ var ex=G_TRACK[+id]; return ex?{t:esc(ex.n)+' <span class="ov-modal-sub">'+esc(ex.role)+' · '+esc(ex.since)+'</span>',h:ex.detail}:null; }
     return null;
   }

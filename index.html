@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="css/market-analysis.css">
 <link rel="stylesheet" href="css/hedge-funds.css">
 <link rel="stylesheet" href="css/companies.css">
+<link rel="stylesheet" href="css/investment.css">
 <link rel="stylesheet" href="css/overview.css">
 <link rel="stylesheet" href="css/avgo.css">
 <link rel="stylesheet" href="css/semi-map.css">
@@ -48,6 +49,7 @@
   <div class="snav-lbl">Research</div>
   <nav class="snav snav-research">
     <button class="ntb nav-item active" data-tab="co" data-page="companies" onclick="switchTab('co')"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Companies</button>
+    <button class="ntb nav-item" data-tab="invt" data-page="investment" onclick="switchTab('invt')"><svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V10l5-3 5 3v11"/><path d="M15 21v-7l4-2v9"/></svg>Investment</button>
     <button class="ntb nav-item" data-tab="spc" data-page="spectrum" onclick="switchTab('spc')"><svg viewBox="0 0 24 24"><path d="M3 12h2M6 8h2M6 16h2M11 5h2M11 19h2M16 8h2M16 16h2M19 12h2"/></svg>Spectrum</button>
     <button class="ntb nav-item" data-tab="ind" data-page="industry-analysis" onclick="switchTab('ind')"><svg viewBox="0 0 24 24"><circle cx="5" cy="6" r="2.4"/><circle cx="19" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M6.8 7.4 10.6 16M17.2 7.4 13.4 16M7 6h10"/></svg>Industries</button>
   </nav>
@@ -134,6 +136,46 @@
       </div>
       <div id="co-links"></div>
     </div>
+  </div>
+</div>
+
+<!-- INVESTMENT TAB -->
+<div id="tp-invt" class="tp">
+  <!-- SECTOR GRID VIEW -->
+  <div id="invt-sectorview">
+    <h1 class="iv-h1">Investment Portfolio</h1>
+    <p class="iv-sub">Companies Summit Management Technologies is currently invested in, organized by sector.</p>
+    <div class="iv-controls">
+      <button class="co-add-btn" id="invt-add-btn" title="Add investment">+</button>
+    </div>
+    <div class="iv-secgrid" id="iv-secgrid"></div>
+    <p class="iv-disclaim">Reflects Summit Management Technologies&rsquo; actual invested positions as of the date shown on each write-up. Not investment advice. <a href="#" onclick="return false">Full disclosure</a></p>
+  </div>
+
+  <!-- SECTOR DETAIL VIEW -->
+  <div id="invt-sectordetail" style="display:none">
+    <div class="coback" onclick="ivCloseSector()">&#x2190; All sectors</div>
+    <h1 class="iv-h1" id="iv-sector-name">Sector</h1>
+    <p class="iv-sub" id="iv-sector-count"></p>
+    <div class="card" style="padding:30px 24px">
+      <div class="iv-tilegrid" id="iv-tilegrid"></div>
+    </div>
+  </div>
+
+  <!-- COMPANY DETAIL VIEW -->
+  <div id="invt-companydetail" style="display:none">
+    <div class="coback" onclick="ivCloseCompany()">&#x2190; Back to <span id="iv-back-sector">sector</span></div>
+    <div class="ivhead">
+      <div id="iv-logo"></div>
+      <div class="ivtitle"><div class="iv-eyebrow">Investment Profile</div><h2 id="iv-name">Company</h2><div class="sub" id="iv-sub">TICKER &middot; Sector</div></div>
+      <button class="iv-editbtn" id="iv-edit-btn">Edit</button>
+    </div>
+    <div class="ivtabs">
+      <button class="ivtab active" data-pane="overview" onclick="ivTab('overview')">Overview</button>
+      <button class="ivtab" data-pane="opportunity" onclick="ivTab('opportunity')">Opportunity</button>
+    </div>
+    <div class="ivpane active" data-pane="overview"><div class="iv-prose" id="iv-overview-body"></div></div>
+    <div class="ivpane" data-pane="opportunity"><div class="iv-prose" id="iv-opportunity-body"></div></div>
   </div>
 </div>
 
@@ -472,6 +514,49 @@
   </div>
 </div>
 
+<!-- ADD/EDIT INVESTMENT MODAL -->
+<div class="modal-overlay" id="addInvModal">
+  <div class="modal-card" style="max-width:560px">
+    <div class="modal-header">
+      <h2 class="modal-title" id="addInv-title">Add Investment</h2>
+      <button class="modal-close" id="addInvClose">&times;</button>
+    </div>
+    <form id="addInvForm" autocomplete="off" style="padding:20px 26px 24px">
+      <div class="modal-row">
+        <div class="modal-field">
+          <label class="modal-label">Ticker <span class="modal-req">*</span></label>
+          <input class="modal-input" id="addInv-ticker" placeholder="AAPL" style="text-transform:uppercase" required>
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">Company name <span class="modal-req">*</span></label>
+          <input class="modal-input" id="addInv-name" placeholder="Apple Inc." required>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Sector <span class="modal-req">*</span></label>
+        <select class="modal-select" id="addInv-sector"></select>
+      </div>
+      <div class="modal-field" id="addInv-newsector-wrap" style="display:none">
+        <label class="modal-label">New sector name</label>
+        <input class="modal-input" id="addInv-newsector" placeholder="e.g. Industrials">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Overview <span style="color:var(--mu);text-transform:none;font-weight:400;letter-spacing:0">(what it does, segments &mdash; optional, can add later)</span></label>
+        <textarea class="modal-input" id="addInv-overview" style="height:80px;padding:10px 12px;resize:vertical"></textarea>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Opportunity <span style="color:var(--mu);text-transform:none;font-weight:400;letter-spacing:0">(why we invest &mdash; optional, can add later)</span></label>
+        <textarea class="modal-input" id="addInv-opportunity" style="height:80px;padding:10px 12px;resize:vertical"></textarea>
+      </div>
+      <div class="modal-msg" id="addInv-msg"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn modal-btn--cancel" id="addInvCancel">Cancel</button>
+        <button type="submit" class="modal-btn modal-btn--save" id="addInvSave">Add Investment</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- ADD RESOURCE MODAL -->
 <div class="modal-overlay" id="addResModal">
   <div class="modal-card">
@@ -572,6 +657,7 @@ window.addEventListener('unhandledrejection', function(e) {
 import { initAuth, getCurrentUser, signOut } from './js/auth.js';
 import { initNav, registerPageLoader } from './js/nav.js';
 import { loadCompaniesPage } from './js/companies.js';
+import { loadInvestmentPage } from './js/investment.js';
 import { loadMarketAnalysisPage } from './js/market-analysis.js';
 import { loadHedgeFundsPage } from './js/hedge-funds.js';
 import { loadTeamPage } from './js/team.js';
@@ -597,6 +683,7 @@ async function boot() {
 
       // Register page loaders
       registerPageLoader('companies', loadCompaniesPage);
+      registerPageLoader('investment', loadInvestmentPage);
       registerPageLoader('market-analysis', loadMarketAnalysisPage);
       registerPageLoader('hedge-funds', loadHedgeFundsPage);
       registerPageLoader('team', loadTeamPage);

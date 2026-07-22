@@ -1,219 +1,173 @@
-# Call Prep — conventions
+# Call Prep — the build runbook (v2 · Jul 2026)
 
-How to build the **Call Prep** tab for any company. This is the earnings-season decision layer:
-walk into the call already knowing what to hunt, and walk out ready to tell the fund meeting what
-mattered. It is portable — the render code is written once and copied; only the content changes.
+**This document is the complete, self-executing spec for building the Call Prep section for ANY
+company.** The contract: Dani hands over **(a) a ticker, (b) its earnings-call transcripts,
+(c) the Bloomberg numbers export, and optionally (d) SPLC / Summit expectations** — and a fresh
+session, with no other context, builds the whole thing from the prompt
+**"arma el Call Prep de \<TICKER\>"** (or refreshes it with "integra el nuevo call de \<TICKER\>").
+If a step here is ambiguous, fix THIS doc — never rely on session memory.
 
-When asked to **"arma el Call Prep para \<TICKER\>"**, follow this document. It assumes the company
-already has an Overview/Deep Dive profile (see `docs/OVERVIEW_CONVENTIONS.md`).
-
----
-
-## 0. The golden rule on data — provenance
-
-- **Consensus comes from Bloomberg only** (BST estimates), handed over by the analyst as an export.
-  **Never** scrape Street consensus from Zacks / Barchart / Motley Fool / StockTitan / etc. — those
-  are directional color, not a source of record.
-- **Hardcode only the values that actually render in the portal.** Do not commit the full Bloomberg
-  workbook or a long hidden series — only the specific numbers shown on screen. (Confirm it is
-  compliant to surface Bloomberg figures before publishing.)
-- Every number carries an implicit **`source` + `asOf`** stamp shown in the UI, so the dashboard never
-  presents a stale figure as current.
-- **Actuals** (reported quarters) also come from Bloomberg (or the company release), not the web.
-- If a figure isn't from one of those trusted sources, leave the field empty (it renders as "to fill")
-  rather than inventing it.
+Companion docs (both required reading before building):
+- `docs/EARNINGS_CALLS_CONTEXT.md` — the ANALYSIS rules: Rule 0 (fact → why → so-what), the
+  3-pass detection protocol, relevance criteria, regression tests, calls-repo rotation.
+- **Reference implementation: `js/overviews/googl.js`** (v2 — canonical). `ibkr.js` is v1
+  (legacy: still has Promise Tracker + single-estimate setup) pending migration — do NOT copy
+  from it for new companies.
 
 ---
 
-## 1. Structure
+## 0. Inputs — what Dani hands over, and where it lives
 
-A **"Call Prep" sub-tab inside the Evolution tab** (team decision Jul 2026 — it is part of the
-company's evolution record, not a standalone spine tab; the spine keeps its five tabs: Top Line /
-Bottom Line / Evolution / Valuation / Management). Evolution's sub-tab row becomes
-`Earnings Calls · Guidance · Strategy · Timeline · Call Prep`; inside Call Prep, an **inner
-phase-tab row** (its own classes, wired independently of the pane-scoped sub-tab machinery — see
-`wireCallPrep` in `ibkr.js`) holds five panes, grouped into **three phases**:
-
-| Phase | Sub-tab | What it holds |
+| Input | Form | Where |
 |---|---|---|
-| **① Pre-Call** | **Setup** | v2 (Jul 2026): **4 headline metrics** (mandatory, every company: Revenue · Operating income · EPS · EBITDA) + **4 custom KPIs** (per-company), each carrying a **Street** (Bloomberg) and a **Summit** (our own) estimate with a **Consensus ⇄ Summit ⇄ Both** toggle; plus **the debate** = the explained disparity between the two sets (spec: `EARNINGS_CALLS_CONTEXT.md` §3) |
-| **① Pre-Call** | **Watch List** | v2 (Jul 2026): 5 ranked **THEMES tracked over time** — each with `since` + a quarter-by-quarter `thread` (from the calls repository), its consensus number, red-line, provenance, and *tell*. Promise-type items live here (project/pipeline/musing discipline; silence is a signal) |
-| **① Pre-Call** | ~~Promise Tracker~~ | **DISSOLVED (Jul 2026)** — its content migrated into the Watch-List threads and Evolution ▸ Earnings Calls (themes view). Do not build it as a standalone tab for new companies |
-| **② Post-Results** | **Post-Results** | the numbers scorecard vs. consensus (beat/miss) + thesis red-line check — filled when the print lands, *before* the call |
-| **③ Post-Call** | **Post-Call** | tone / contradictions / promise updates + the **Conclusion** (the meeting take) |
+| **Ticker / company** | named in the prompt | — |
+| **Earnings calls** | transcript paste or files (typically ~10 quarters) | → stored by YOU in `docs/calls/` (see §2) |
+| **Numbers / consensus** | Bloomberg export, e.g. `FA_<TICKER>_US_*.xlsx` (sheet "Multiple Periods": rows = line items, columns = quarters, last column(s) = `(Fwd)` estimates) and/or `BBG_CONSENSUS.xlsx` | Dani's **Downloads** folder |
+| **Summit expectations** | Summit DCF/MCP (`search_ticker` first) or analyst hand figures | MCP / Dani |
+| **SPLC** (suppliers/customers) | Bloomberg SPLC export | Downloads — feeds the DEEP DIVE (Top/Bottom Line), not Call Prep itself |
 
-Why the results/call split: results are released first (~4pm), the call is later (30 min → next day).
-Post-Results reacts to the **numbers**; Post-Call reacts to what **management said**.
-
-**Append-only:** a quarter's Pre-Call blocks freeze when the quarter opens and are never overwritten —
-they sit beside that quarter's Post-Results/Post-Call so, over time, the tab is a record of how well we
-read the company (calibration). `call.newQuestions` seeds the *next* quarter's Watch List.
+**Golden data rules (never break):**
+1. **Consensus = Bloomberg ONLY.** Never web-scraped estimates (Zacks/etc. are directional
+   color, never a source of record). Web consensus may inform *framing*, never a hardcoded cell.
+2. **Hardcode only the values that render.** No hidden full series committed.
+3. **Summit estimates are never invented.** Absent → cells render "to fill".
+4. **Append-only per quarter.** A quarter's Pre-Call blocks freeze when it opens; prior quarters
+   are never overwritten (the tab is a calibration record).
 
 ---
 
-## 2. Data model (`CALL_PREP`, hardcoded in the company's overview JS)
+## 1. The build — nine steps, in order
+
+1. **Calls repository** (spec in `EARNINGS_CALLS_CONTEXT.md` §4): create
+   `docs/calls/<TICKER>-latest.md` (most recent call + its analysis) and `docs/calls/<TICKER>.md`
+   (historical compendium, newest first). On a refresh: ROTATE (latest → top of compendium; new
+   call → latest).
+2. **Analyze** the latest call with the 3-pass protocol AND diff across the full record —
+   Pass 1.5 recurrence is what discovers the THEMES (step 5) and the promise ladders.
+3. **Extract consensus** from the Bloomberg export: open the xlsx (python/openpyxl,
+   `data_only=True`), find the last `(Fwd)` column, pull the 4 headline lines + the agreed custom
+   KPIs, compute YoY vs the same quarter's reported column. Round sensibly ($B one decimal).
+4. **Build the `CALL_PREP` object** (data model in §3): one `upcoming` quarter with `setup`
+   (headline + custom, `cons`/`us` per metric, `debate:null` until both estimate sets exist),
+   `watchList` (step 5), `results:null`, `call:null`.
+5. **Watch List — 5 themes** (criteria in §4): each with `since`, `thread` (quarter-by-quarter
+   evolution from the calls repo), `bbg`, `breaks`, `pista`, `why`, `src`. Promise-type items go
+   here (no separate tab).
+6. **Evolution ▸ Earnings Calls — the themes view**: a `<TICKER>_THEMES` array (~8–10 themes,
+   each: icon, title, status `trend`/`promise`/`watch`, one-line read, rows of `[quarter, note]`)
+   rendered as accordions. This is where the full cross-call record lives in the UI, and where
+   dissolved Promise-Tracker threads are held to account.
+7. **Port the render machinery from `googl.js`** — copy verbatim, swap only data + brand colors:
+   `cpStyle`, `cpFmtC`, `cpEvCell`, `cpSetupBody`, `cpWatchBody`, `cpResultsBody`, `cpCallBody`,
+   `callsBody`, `cpUpcoming`, `cpFill`, `CP_RES`, `CP_HLTAG`, `CP_THST`, `CP_POP`/`cpReg`/`cpQ`,
+   `wireCallPrep` (incl. the `.cp-ev-pill` estimates toggle). The functions are generic by design.
+8. **Wire into the profile**: Call Prep is a **sub-tab of Evolution** (never a spine tab), with an
+   inner `.cp-phtabs` row of **FOUR phases**: Setup · Watch List · Post-Results · Post-Call.
+   Earnings Calls is a sibling Evolution sub-tab using `callsBody()`. `wireCallPrep(root)` is
+   called from `init` alongside `wireSubtabs`.
+9. **After the print / after the call**: fill `results` (scorecard vs BOTH estimate columns +
+   thesis red-line check + `intoCall` bullets), then `call` (take + highlights + dots +
+   `newQuestions`) applying Rule 0 to every bullet. Then ROLL: new `upcoming` quarter, update
+   every theme's `thread`, re-rank, rotate the calls repo.
+
+---
+
+## 2. Structure (the UI contract)
+
+Evolution's sub-tab row: `Earnings Calls · Guidance · Strategy · Timeline · Call Prep` (order may
+put Call Prep first in earnings season). Inside Call Prep, three phases across four panes:
+
+| Phase | Pane | What it holds |
+|---|---|---|
+| **① Pre-Call** | **Setup** | 4 **headline** metrics (mandatory, every company: **Revenue · Operating income · EPS · EBITDA**) + 4 **custom KPIs** (per-company, agreed with Dani), each with **Street** (Bloomberg) and **Summit** estimates behind a **Consensus ⇄ Summit ⇄ Both** toggle; caveat pop-ups (`cpQ`) on numbers with a trap; **the debate** = the explained Street-vs-Summit disparity (rows + synth), enabled with a to-fill state until both sets exist |
+| **① Pre-Call** | **Watch List** | 5 ranked **THEMES tracked over time** — `since` chip + quarter-by-quarter `thread` pop-up, consensus, red-line, tell. Promise items live here (project/pipeline/musing discipline; silence is a signal) |
+| **② Post-Results** | **Post-Results** | numbers scorecard (beat/miss vs both columns) + thesis red-line check + "what the numbers tee up for the call" — filled when the print lands, BEFORE the call |
+| **③ Post-Call** | **Post-Call** | take + insight-first highlights (Rule 0; taxonomy `thesis`/`curious`/`dots`/`tone`/`watch`) + dots + `newQuestions` |
+
+**Dissolved:** the standalone Promise Tracker tab (Jul 2026) — never build it for new companies.
+**Kept for now:** the Post-Results/Post-Call format (a more meeting-prep presentation is an open
+design question — improve it only with Dani's sign-off).
+
+---
+
+## 3. Data model (`CALL_PREP`, hardcoded in the company's overview JS)
 
 ```js
 var CALL_PREP = {
-  ticker: 'IBKR',
-  quarters: [
-    { q:'Q2 2026', status:'upcoming', date:'…',
+  ticker:'XXXX',
+  quarters:[
+    { q:'Qx 20xx', status:'upcoming', date:'Day Mon DD, 20xx · after close (call H:MMpm ET)',
       setup:{
-        source:'Bloomberg (BST consensus)', asOf:'YYYY-MM-DD',
-        consensus:{ adjEps:{v,yoy,unit:'$'}, adjNetRevUsdM:{v,yoy,unit:'$M'}, /* …only visible lines */ },
-        pricedIn:'…the one debate…', oneLiner:'…where we differ from the tape…'
+        source:'Bloomberg (BST consensus) · Summit expectations — to fill', asOf:'YYYY-MM-DD',
+        headline:[   // EXACTLY these four, in this order
+          { k:'Revenue',          cons:{v,yoy,unit:'$B'}, us:null, note:{t,h}? },
+          { k:'Operating income', cons:{...}, us:null },
+          { k:'EPS (diluted)',    cons:{...}, us:null },
+          { k:'EBITDA',           cons:{...}, us:null },
+        ],
+        custom:[ /* 4 per-company KPIs, same shape; k:null renders "to define" */ ],
+        debate:null // or { rows:[{k, street, us, why}], synth } once Summit numbers exist
       },
-      watchList:[ /* 5 items — see §3 */ ],
-      results:null, call:null            // filled after the print / after the call
-    },
-    { q:'Q1 2026', status:'reported', date:'…',
-      setup:{…}, watchList:[…],          // FROZEN
-      results:{ headline:'…', scorecard:[{metric,cons,actual,result:'beat|miss|inline'}], thesisCheck:[{line,tripped,note}], priceReaction:'…' },
-      call:{ toneShifts:[], contradictions:[], promiseUpdates:[], newQuestions:[], conclusion:'…the meeting take…' }
+      watchList:[
+        { rank:1, metric:'THEME name', since:'Qx 20xx',
+          bbg:'consensus line', breaks:'falsifiable red-line',
+          pista:'the standing tell (a read, not a question)',
+          why:'thesis relevance', src:'grounding (why it earned the rank)',
+          thread:[ { q:'Qx 20xx', n:'what happened that quarter' }, ... ] },
+        // exactly 5, ranked by stock-impact × debate
+      ],
+      results:null,  // → { headline, scorecard:[{metric,cons,actual,result,note?}],
+                     //     thesisCheck:[{line,tripped,note}], intoCall:[...], priceReaction }
+      call:null      // → { take, highlights:[{tag,head,detail}], dots, newQuestions:[...] }
     }
-  ],
-  promises:[ { item, kind:'project|pipeline|musing', origin, status:'delivered|pending|silent|abandoned', lastMentioned, note } ]
+  ]
 };
 ```
 
-The render functions (`cpSetupBody`, `cpWatchBody`, `cpPromisesBody`, `cpResultsBody`, `cpCallBody`)
-plus `cpStyle`, `CP_STAT`, `CP_KIND`, `CP_RES` are generic — copy them verbatim, change only `CALL_PREP`.
+---
+
+## 4. Watch List — the criteria (the heart of the tab)
+
+**Exactly 5 items, ranked** by **stock impact × how debated**. Each item is a **theme with a
+history**, not a one-quarter metric. It earns its place through the calls record:
+
+- **Recurrence**: quantified by management in ≥2 consecutive quarters (auto-promote), or a
+  Bloomberg-tracked "Highlight" line, or the recurring analyst question.
+- **A promise ladder**: a commitment climbing (test → pilot → traction) or going quiet — the
+  dissolved Promise-Tracker discipline (project/pipeline/musing; a musing repeated verbatim
+  across calls is itself the signal; silence on a live project = flag).
+- **A standing phrase**: management language repeated verbatim across calls is trackable — the
+  moment it changes, the story changes (e.g. GOOGL's "monetization at approximately the same
+  rate").
+- **breaks** — every item carries a falsifiable red-line (what would break the thesis).
+- **pista (🔎)** — a standing READ, not a wish-list question no exec answers.
+- If you can't state why a theme is on the list in one grounded sentence, it doesn't belong.
 
 ---
 
-## 3. Watch List — the criteria (the heart of the tab)
+## 5. Post-Call highlights — the bar
 
-**Exactly 5 items, ranked.** Not 20. The rank is not gut feel — it is:
-
-> **how much the line moves the stock  ×  how debated / uncertain it is.**
-
-Each item must be **grounded**, and the grounding is shown in the UI (📌). A metric earns a spot only if
-it is one or more of:
-
-- a **Bloomberg "Highlight"** line (the vendor's own pick of what matters for this company), and/or
-- a **recurring theme** across the last several earnings calls (management leads with it, or analysts
-  keep pressing it), and/or
-- repeatedly emphasized in **filings / press releases**.
-
-Do **not** include a metric just because it sounds fundamental. Example: for IBKR, *pre-tax margin* was
-dropped from the Watch List — Bloomberg highlights pre-tax **income**, not the margin ratio, and the
-margin is a lagging *output/proof* of the automation thesis, not a debated variable. If you can't state
-*why* a metric is on the list in one grounded sentence, it doesn't belong.
-
-Each item carries:
-
-- **metric** — the exact line, precise (e.g. "commission **per DART**", not "commissions").
-- **bbg** — the Bloomberg consensus number for it.
-- **breaks** — the falsifiable **red-line**: the specific number/condition that would break the thesis
-  (e.g. "NII falls YoY while credit balances still grow"). Every item must have one — this is what makes
-  the tool testable.
-- **src (📌)** — the one-sentence grounding (why it earned its rank).
-- **pista (🔎)** — **the tell**, *not a question.* A standing read that holds regardless of what the call
-  says, telling you what to hunt for. Example: *"commission per cleared trade has held ~$2.65–2.83 for
-  two years — that stability IS the pricing-power proof; the only thing that changes the story is that
-  number cracking."* Avoid improbable questions no exec answers on a call ("at what balance-growth rate
-  does NII still grow?"). A genuinely answerable question can be embedded in a tell, but frame it as a
-  read, not a Q&A wish-list.
-- **why** — a short line on why it matters to the thesis.
+Insight-first, never restatement. **Every bullet passes Rule 0: FACT → WHY → SO WHAT** (the full
+rule, source hierarchy, taxonomy and regression tests live in `EARNINGS_CALLS_CONTEXT.md` §1–§2,
+§5 — run the three passes there BEFORE writing any highlight). A PM reads the take + skims the
+heads in 30 seconds and knows what to say in the meeting; depth lives in pop-ups.
 
 ---
 
-## 4. Promise Tracker — the discipline
+## 6. Self-audit checklist (run before finishing; report PASS/FAIL)
 
-Separate **what management is genuinely doing** from **what it merely floated.** Tag every item:
-
-- **`project`** — a committed, funded, active initiative (e.g. a filed charter application). Held to account.
-- **`pipeline`** — a stated expectation / number management put out there (e.g. "~two dozen firms in
-  progress"). Held to account, and reconcile it to actuals.
-- **`musing`** — "we're open to the possibility." **Not a promise.** Show it, but explicitly flag that it
-  is not to be held against management unless they re-commit.
-
-`status`: `delivered` / `pending` / `silent` / `abandoned`. **Silence is a signal** — a real project that
-quietly stops being mentioned (→ `silent`, amber) is often the cheapest tell nobody tracks.
-
-Do **not** promote a musing into a promise. (E.g. "eventual European bank license" mentioned once = a
-musing, not a project.) Regulatory changes that help the company (e.g. a rule elimination) are **not**
-management promises — they belong in the Watch List, not here.
-
----
-
-## 5. Post-Results & Post-Call
-
-**Post-Results (numbers, before the call):**
-- A **scorecard**: each Watch-List line — consensus vs. actual → **beat / miss / in line** chip.
-- A **thesis red-line check**: for each Watch-List `breaks` condition, did it **trip** or **hold**?
-- The print-day price reaction (from a trusted source, not web) — leave to fill if unavailable.
-
-**Post-Call — insight-first, NOT a restatement of the numbers.** This is the most important discipline
-in the whole tool. Everyone at the meeting already has the metrics (they're in the DCF / the data).
-Restating "commissions crossed $600M" is **useless** — it adds nothing. The job of Post-Call is to
-surface **what a number can't tell you on its own**: *why* it came out that way, what it *implies for
-the thesis*, and the non-obvious details that — connected — tell the story.
-
-Structure (each rendered as a scannable list, depth in a pop-up — never a wall of text):
-- **`take`** — a one-line meeting take (the punch: is the thesis intact, what's the one thing that matters).
-- **`highlights[]`** — theme-by-theme insight bullets (see the taxonomy below). Each: a `tag`, a short
-  insight `head` (the takeaway, *not* the fact), and a `detail` pop-up with the depth + why.
-- **`dots`** — the connect-the-dots line: how the highlights, together, tell one story.
-- **`newQuestions`** — 1-3 items that seed next quarter's Watch List.
-
-### Rule 0 — the So-What rule (overrides everything)
-
-**A number is never a highlight; a growth rate is never a highlight.** Every highlight is a
-mandatory three-part chain: **FACT** (what the number did) → **WHY** (the qualitative driver —
-why it grew, fell, or held, sourced from management's words, weighted highest when said under
-analyst pressure; inference allowed but labeled) → **SO WHAT** (what it implies for the thesis /
-model). "DARTs grew 35%" is banned; "DARTs +35% because accounts +34% (per-account activity flat)
-and management credits the environment → intensity not proven structural" is the standard. If no
-WHY exists in the transcript, the item becomes a next-quarter question — **a big move management
-didn't explain is a flag, not a gap.**
-
-**Detection ≠ selection — two passes.** First an exhaustive mechanical extraction over the full
-transcript (quantified claims NOT in the release tables; multiplier words — tripled/doubled/
-record/first; new proper nouns; Q&A-only facts; diff vs prior 2-3 calls; guarded answers), with
-judgment forbidden. Only then filter and rank. Applying the already-in-the-DCF filter *during*
-extraction is how buried datos get lost (see the overnight-trading regression test in
-`EARNINGS_CALLS_CONTEXT.md` §5). Zero analyst follow-up never demotes an item; two consecutive
-quarters of mention auto-promotes it to trend.
-
-### What counts as a highlight — the taxonomy (company-agnostic)
-
-A bullet earns a spot only if it is one of these. If it just restates a metric, **cut it.**
-
-| `tag` | What it captures | The test |
-|---|---|---|
-| **`thesis`** | A result that *confirms or threatens the core thesis* — the **why**, not the number. | "Does this make the bull/bear case stronger or weaker, and why?" |
-| **`curious`** | A **buried, low-emphasis detail** — mentioned once, in passing — that hints at a bigger/structural shift. | "Was this said almost off-hand, and could it be the story in 2 years?" (e.g. a product volume quietly tripling) |
-| **`dots`** | Two+ individually-unremarkable facts that **only mean something together.** | "Do these connect into a narrative the standalone numbers hide?" (e.g. headline miss + strong operating lines = 'the business beat, the print missed') |
-| **`tone`** | Management gets **notably more/less confident or hedged** on a topic vs. prior quarters. | "Did the *language* change even if the facts didn't?" |
-| **`watch`** | A **silence / omission** (something expected that wasn't said) or a new risk to track next quarter. | "What *didn't* they mention that they used to?" |
-
-### How to actually find them (the method — use this for any company)
-
-1. **Read the full transcript, not the press release.** The insights live in the unscripted Q&A, not the
-   prepared remarks. Weight what management says when *pushed* over what they volunteer.
-2. **Compare against prior quarters.** A highlight is usually a *change* — in a trajectory, in emphasis,
-   or in tone. Diff this call against the last two or three.
-3. **Apply the "already-in-the-DCF" filter.** For every candidate bullet ask: *"would someone who already
-   has the numbers learn anything from this?"* If no → it's a restatement → cut it.
-4. **Hunt the one-mention details.** Scan for things said briefly, once, with no follow-up — a new venue,
-   a product volume, a regulatory nuance, a customer type. Then ask whether it connects to a longer arc.
-5. **Connect the dots.** Look for 2-3 facts that are boring alone but tell a story together. That synthesis
-   is the `dots` line — and often the single most valuable thing in the whole tab.
-6. **Note the silences.** A project/topic that dropped off the script is a signal (cross-check the Promise
-   Tracker). What management *stopped* saying can matter as much as what they said.
-
-The bar: a PM reads the `take` + skims the highlight heads in 30 seconds and knows *what to say in the
-meeting*; taps a pop-up only when they want the depth. Punchy, synthesized, visual — never paragraphs.
-
----
-
-## 6. The refresh workflow
-
-1. Analyst exports the Bloomberg workbook (one tab per company) and hands over the ticker's tab.
-2. "Reintegra el consensus" → regenerate `setup.consensus` (visible values only) + bump `asOf`.
-3. After the print → fill `results`. After the call (paste the transcript) → fill `call` (+ `newQuestions`).
-4. Roll the quarter: set the reported quarter `status:'reported'`, add the next `upcoming` quarter with a
-   fresh (frozen) Watch List — do **not** edit the prior quarter's frozen blocks.
-
-All changes go through a PR (per the repo git workflow); only San/Oscar merge.
+- [ ] Calls repo: `<TICKER>-latest.md` + `<TICKER>.md` exist; rotation respected; append-only.
+- [ ] Setup: exactly 4 headline (Revenue/Op income/EPS/EBITDA) + 4 customs; every value traced to
+      the Bloomberg export (`asOf` set); YoY computed vs the same reported quarter; Summit column
+      renders (values or "to fill"); toggle works (Consensus/Summit/Both); caveat pop-ups on any
+      number with a known trap; debate enabled (filled or to-fill state).
+- [ ] Watch List: exactly 5 themes; each has `since` + `thread` + falsifiable `breaks` + a tell
+      that is a read (not a question) + one-sentence grounding; promise items embedded (no
+      standalone Promise tab anywhere).
+- [ ] Earnings Calls themes view built (`<TICKER>_THEMES`) and wired as an Evolution sub-tab.
+- [ ] Placement: Call Prep = Evolution sub-tab; 4 phase tabs; `wireCallPrep` wired; render fns
+      ported from `googl.js` unmodified except data/brand.
+- [ ] Rule 0 respected everywhere (no bare numbers as highlights); regression tests of
+      `EARNINGS_CALLS_CONTEXT.md` §5 pass against the analysis.
+- [ ] `node --check` clean · `&amp;` count = 0 · no orphan identifiers · localhost renders.
+- [ ] Committed on a feature branch; Dani opens PRs; San/Oscar merge. Flag anything unsourced.

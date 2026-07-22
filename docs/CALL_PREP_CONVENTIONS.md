@@ -153,6 +153,25 @@ Structure (each rendered as a scannable list, depth in a pop-up — never a wall
 - **`dots`** — the connect-the-dots line: how the highlights, together, tell one story.
 - **`newQuestions`** — 1-3 items that seed next quarter's Watch List.
 
+### Rule 0 — the So-What rule (overrides everything)
+
+**A number is never a highlight; a growth rate is never a highlight.** Every highlight is a
+mandatory three-part chain: **FACT** (what the number did) → **WHY** (the qualitative driver —
+why it grew, fell, or held, sourced from management's words, weighted highest when said under
+analyst pressure; inference allowed but labeled) → **SO WHAT** (what it implies for the thesis /
+model). "DARTs grew 35%" is banned; "DARTs +35% because accounts +34% (per-account activity flat)
+and management credits the environment → intensity not proven structural" is the standard. If no
+WHY exists in the transcript, the item becomes a next-quarter question — **a big move management
+didn't explain is a flag, not a gap.**
+
+**Detection ≠ selection — two passes.** First an exhaustive mechanical extraction over the full
+transcript (quantified claims NOT in the release tables; multiplier words — tripled/doubled/
+record/first; new proper nouns; Q&A-only facts; diff vs prior 2-3 calls; guarded answers), with
+judgment forbidden. Only then filter and rank. Applying the already-in-the-DCF filter *during*
+extraction is how buried datos get lost (see the overnight-trading regression test in
+`IBKR_Q2_2026_CALL_CONTEXT.md` §3). Zero analyst follow-up never demotes an item; two consecutive
+quarters of mention auto-promotes it to trend.
+
 ### What counts as a highlight — the taxonomy (company-agnostic)
 
 A bullet earns a spot only if it is one of these. If it just restates a metric, **cut it.**

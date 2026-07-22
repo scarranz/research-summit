@@ -127,6 +127,58 @@ export async function lookupTicker(ticker) {
   return ok(data);
 }
 
+// ─── Investment tab ───────────────────────────────────────────
+
+export async function fetchInvestmentSectors() {
+  var { data, error } = await supabase
+    .from('investment_sectors')
+    .select('*')
+    .order('sort_order');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function insertInvestmentSector(row) {
+  var { data, error } = await supabase
+    .from('investment_sectors')
+    .insert([row])
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+export async function fetchInvestmentCompanies() {
+  var { data, error } = await supabase
+    .from('investment_companies')
+    .select('*')
+    .eq('status', 'active')
+    .order('sort_order');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function insertInvestmentCompany(row) {
+  var { data, error } = await supabase
+    .from('investment_companies')
+    .insert([row])
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+export async function updateInvestmentCompany(id, updates) {
+  var { data, error } = await supabase
+    .from('investment_companies')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
 // ─── Covered Calls (Massive option chain proxy) ──────────────
 // Forwards one allowlisted resource to Massive via the covered-calls-massive
 // edge function (key injected server-side). Returns the raw Massive JSON.

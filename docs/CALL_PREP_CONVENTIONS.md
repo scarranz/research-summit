@@ -158,8 +158,8 @@ its frozen pre-call blocks NEXT TO its post-mortem (the calibration record).
 
 | Phase | Content per quarter |
 |---|---|
-| **Setup** | *Upcoming quarter:* 4 **headline** metrics (mandatory, every company: **Revenue · Operating income · EPS · EBITDA**) + 4 **custom KPIs** (per-company, agreed with Dani), each with **Street** (Bloomberg) and **Summit** estimates behind a **Consensus ⇄ Summit ⇄ Both** toggle; caveat pop-ups (`cpQ`) on numbers with a trap; **the debate** = the explained Street-vs-Summit disparity (enabled, to-fill until both sets exist). *Reported quarters:* the FROZEN pre-call view (what was priced in + the one-liner). |
-| **Watch List** | 5 ranked items **per quarter** — the hunting list for THAT quarter, seeded when the prior quarter closed. The upcoming quarter's items are **themes with time**: `since` + `thread` (quarter-by-quarter evolution from the calls repo). Reported quarters keep their contemporaneous lists, frozen. Promise-type items live here (project/pipeline/musing; silence is a signal). |
+| **Setup** | *Upcoming quarter:* 4 **headline** metrics (mandatory, every company: **Revenue · Operating income · EPS · EBITDA**) + 4 **custom KPIs** (per-company, agreed with Dani), each with **Street** (Bloomberg) and **Summit** estimates behind a **Consensus ⇄ Summit ⇄ Both** toggle; caveat pop-ups (`cpQ`) on numbers with a trap; **the PREVIA — MANDATORY** (`marketDebate`): the one-picture read going into the print — *what the tape fears* vs *what consensus actually models* cards + mechanism chips + the **dark synth box** with "the one thing to resolve" (IBKR-style; it does NOT need Summit numbers — it frames the market's own tension); plus **the debate** = the Street-vs-Summit disparity (enabled, to-fill until Summit numbers exist). *Reported quarters:* the FROZEN pre-call view (what was priced in + the one-liner). |
+| **Watch List** | 5 ranked items **per quarter** (hunting list seeded when the prior quarter closed; upcoming = themes with `since`+`thread`; reported = frozen contemporaneous). **Every item carries `tags`** (kebab-case themes: capex, cloud, search, monetization, promises, …). A **tag bar** at the top filters **ACROSS quarters**: selecting tags switches to a flat cross-quarter view (each card shows its quarter chip) — how the same hunt evolved print to print; clearing tags (or picking a quarter) returns to the per-quarter view. An **"+ Add theme"** control appends a new item in the same card format to the active quarter (session-only — persisting it = committing it into `CALL_PREP`). Promise-type items live here (silence is a signal). |
 | **Post-Results** | scorecard vs the frozen expectations (beat/miss/in-line, notes via `cpQ`) + **thesis red-line check vs that quarter's frozen Watch List** + "what the numbers tee up for the call" + price reaction. |
 | **Post-Call** | take + insight-first highlights (Rule 0 + the §2 taxonomy, depth in pop-ups) + the connect-the-dots line + `newQuestions` (which seed the NEXT quarter's Watch List — the chain must be visible). |
 
@@ -182,8 +182,9 @@ var CALL_PREP = { ticker:'XXXX', quarters:[
       headline:[ {k:'Revenue',cons:{v,yoy,unit},us,note?}, {k:'Operating income',…},
                  {k:'EPS (diluted)',…}, {k:'EBITDA',…} ],
       custom:[ /* 4 per-company; k:null renders "to define" */ ],
-      debate:null | { rows:[{k,street,us,why}], synth } },
-    watchList:[ { rank, metric, since, bbg, breaks, pista, why, src,
+      marketDebate:{ fear, real, mech:[{k,v,dir}], synth },  // the PREVIA — mandatory
+      debate:null | { rows:[{k,street,us,why}], synth } },   // Summit-vs-Street, when it exists
+    watchList:[ { rank, metric, since, tags:['capex','cloud',…], bbg, breaks, pista, why, src,
                   thread:[{q,n},…] } /* ×5 */ ],
     results:null, call:null },
   { q:'Q(x−1)', status:'reported', date:'…',
@@ -229,9 +230,12 @@ Render machinery to port verbatim from `googl.js` (swap data + brand only): `cpS
 - [ ] Calls repo: `-latest` + compendium; rotation respected; append-only.
 - [ ] Setup: exactly 4 headline + 4 customs; every rendered value traced to the Bloomberg export
       (`asOf`); YoY correct; Summit column renders (values or "to fill"); toggle works; caveat
-      pop-ups on trap numbers; debate enabled.
-- [ ] Watch List: per quarter; upcoming = 5 themes with `since`+`thread`+falsifiable `breaks`+a
-      tell-that-is-a-read; reported quarters frozen contemporaneous; promises embedded (no
+      pop-ups on trap numbers; **the previa (`marketDebate`) rendered — fear/real cards, mech
+      chips, dark synth box with the one-thing-to-resolve**; Summit debate enabled.
+- [ ] Watch List: per quarter; upcoming = 5 themes with `since`+`tags`+`thread`+falsifiable
+      `breaks`+a tell-that-is-a-read; reported quarters frozen contemporaneous; **tag bar filters
+      across quarters** (flat view w/ quarter chips; clear/quarter-pick returns to per-quarter);
+      **"+ Add theme" appends in the same format** (session-only); promises embedded (no
       standalone tab).
 - [ ] ≥2 reported quarters backfilled end-to-end; `newQuestions → next watchList` chain visible;
       quarter pills toggle all four phases.

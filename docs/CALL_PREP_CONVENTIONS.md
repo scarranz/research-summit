@@ -27,8 +27,12 @@ already has an Overview/Deep Dive profile (see `docs/OVERVIEW_CONVENTIONS.md`).
 
 ## 1. Structure
 
-A **6th Deep Dive spine tab** ("Call Prep"), leaving the five existing tabs (Top Line / Bottom Line /
-Evolution / Valuation / Management) untouched. Five sub-tabs, grouped into **three phases**:
+A **"Call Prep" sub-tab inside the Evolution tab** (team decision Jul 2026 — it is part of the
+company's evolution record, not a standalone spine tab; the spine keeps its five tabs: Top Line /
+Bottom Line / Evolution / Valuation / Management). Evolution's sub-tab row becomes
+`Earnings Calls · Guidance · Strategy · Timeline · Call Prep`; inside Call Prep, an **inner
+phase-tab row** (its own classes, wired independently of the pane-scoped sub-tab machinery — see
+`wireCallPrep` in `ibkr.js`) holds five panes, grouped into **three phases**:
 
 | Phase | Sub-tab | What it holds |
 |---|---|---|

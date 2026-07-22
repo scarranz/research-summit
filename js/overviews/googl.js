@@ -387,29 +387,93 @@ var CALL_PREP = {
   quarters:[
     { q:'Q2 2026', status:'upcoming', date:'Tue Jul 22, 2026 · after close (call 4:30pm ET)',
       setup:{
-        source:'Bloomberg (BST) — export pending · Summit — expectations pending', asOf:null,
+        source:'Bloomberg (BST consensus) · Summit expectations — to fill', asOf:'2026-07-22',
         headline:[
-          { k:'Revenue', cons:null, us:null },
-          { k:'Operating income', cons:null, us:null },
-          { k:'EPS (diluted)', cons:null, us:null },
-          { k:'EBITDA', cons:null, us:null },
+          { k:'Revenue', cons:{v:117.0,yoy:21,unit:'$B'}, us:null },
+          { k:'Operating income', cons:{v:40.5,yoy:30,unit:'$B'}, us:null,
+            note:{ t:'Margin bar', h:'<p>Consensus implies a <b>34.8% operating margin</b> vs 32.4% a year ago — the Street is paying for margin expansion <i>while</i> capex roughly doubles. Q1 delivered 36.1%, but it carried a ~3pp FX tailwind on Services that fades to ~1pp in Q2 (management flagged it, unprompted).</p>' } },
+          { k:'EPS (diluted)', cons:{v:2.90,yoy:26,unit:'$'}, us:null,
+            note:{ t:'⚠ EPS optics after Q1', h:'<p>Q1 EPS printed <b>$5.11 (+82%)</b> — but <b>$37.7B of Other income</b> (mostly unrealized gains on non-marketable securities) drove it. Strip that and the operating line grew 30%.</p><p><b>Read Q2 the same way:</b> headline EPS can swing wildly on marks in either direction; operating income is the honest line.</p>' } },
+          { k:'EBITDA', cons:{v:55.5,yoy:31,unit:'$B'}, us:null },
         ],
         custom:[
-          { k:null }, { k:null }, { k:null }, { k:null }
+          { k:'Google Cloud', cons:{v:22.5,yoy:65,unit:'$B'},
+            note:{ t:'The backlog math', h:'<p>Backlog hit <b>$462B in Q1 (~2x QoQ)</b>, including the first TPU-hardware agreements. Anat: <b>just over 50% converts to revenue within 24 months</b> — that implies a very steep revenue ramp already contracted. Hold them to that conversion math, not just the growth rate.</p>' } },
+          { k:'Search & other', cons:{v:63.3,yoy:17,unit:'$B'} },
+          { k:'YouTube ads', cons:{v:10.8,yoy:10,unit:'$B'} },
+          { k:'Capex', cons:{v:44.2,yoy:97,unit:'$B'},
+            note:{ t:'⚠ The FCF squeeze', h:'<p>At this capex, <b>consensus quarterly FCF is ~$2.3B</b> (FCF margin ~2%… vs a ~$35B net-income quarter). LT debt already jumped <b>$46.5B → $77.5B</b> in Q1 to fund the build.</p><p>FY2026 capex guide: $180–190B (raised in Q1); <b>2027 guided to "significantly increase"</b> — any 2027 number tonight resets the debate.</p>' } },
         ],
-        // debate:{ rows:[{k, street, us, why}], synth } — fills once both estimate sets exist.
+        // debate rows fill once Summit expectations land (GOOGL not yet in the Summit MCP).
         debate:null
       },
-      watchList:[],
+      // Watch List v2 — THEMES tracked over time, not one-quarter metrics. Each item carries
+      // `since` (the quarter the theme emerged) and `thread` (its quarter-by-quarter evolution,
+      // built from docs/calls/GOOGL.md). Promise-type items live here now (Promise Tracker
+      // dissolved per team decision Jul 2026) and in Evolution ▸ Earnings Calls.
+      watchList:[
+        { rank:1, metric:'Google Cloud — growth × backlog × capacity', since:'Q2 2024',
+          bbg:'$22.5B (+65%) · backlog est ~$491B',
+          breaks:'Growth decelerates materially with backlog stalling — or "capacity-constrained" stops converting into acceleration',
+          pista:'For six straight quarters the pattern repeats: management says supply-constrained… and growth ACCELERATES anyway (32→34→48→63%). So ignore the excuse, watch the conversion: >50% of the $462B backlog converts within 24 months (Anat, Q1). That contracted ramp — not the quarterly beat — is the story.',
+          why:'Cloud is the acceleration story of the whole company and the justification for the capex; its op margin went 9% → 33% in eight quarters while growth sped up.',
+          src:'The #1 recurring theme of the last 6 calls; backlog/RPO is a tracked Bloomberg line; management leads with it every quarter.',
+          thread:[
+            { q:'Q2 2025', n:'+32% · backlog $106B · first warning: "tight demand-supply into 2026"' },
+            { q:'Q3 2025', n:'+34% · backlog $155B (+46% QoQ) · Anthropic plans up to 1M TPUs' },
+            { q:'Q4 2025', n:'+48% · backlog $240B (+55% QoQ) · Apple names Google its preferred cloud provider' },
+            { q:'Q1 2026', n:'+63% to $20B · backlog $462B (~2x QoQ, incl. first TPU hardware deals) · "revenue would have been higher if we could meet demand"' } ] },
+        { rank:2, metric:'The capex ladder → depreciation → free-cash-flow squeeze', since:'Q4 2024',
+          bbg:'Capex $44.2B (+97%) · FY26 guide $180–190B · FCF cons ~$2.3B',
+          breaks:'Another guide raise without a matching backlog/revenue proof point — or FCF goes negative while debt keeps rising',
+          pista:'The ladder has never stepped down: $75B → $85B → $91–93B (FY25 actual $91.4B) → FY26 $175–185B → $180–190B → 2027 "significantly increase." Meanwhile LT debt +$31B in one quarter and FCF fell to $10B. The tell tonight is the 2027 framing: a number, or another adjective?',
+          why:'This is the bear case in one line: AI capex swallowing the cash machine. Consensus already models a near-zero-FCF quarter — the print will show whether the offsets (efficiency, revenue) keep pace.',
+          src:'Management flags accelerating depreciation EVERY call, unprompted (candor against interest); the Street asks about it every call.',
+          thread:[
+            { q:'Q4 2024', n:'FY25 guide $75B — "notably larger than 2023"' },
+            { q:'Q2 2025', n:'Raised to ~$85B; "further increase in 2026"' },
+            { q:'Q3 2025', n:'Raised to $91–93B; depreciation +41% YoY' },
+            { q:'Q4 2025', n:'FY26 guided $175–185B (~2x); depreciation +38% in FY25; Waymo $16B round' },
+            { q:'Q1 2026', n:'Raised to $180–190B (Intersect); 2027 "significantly increase"; LT debt $46.5B→$77.5B; FCF $10.1B' } ] },
+        { rank:3, metric:'Search through the AI transition — and the standing phrase', since:'Q2 2024',
+          bbg:'Search & other $63.3B (+17%)',
+          breaks:'Search decelerates toward single digits — or the monetization language downgrades',
+          pista:'For 6+ calls the exact phrase has been: monetization "at approximately the same rate." That phrase IS the thesis — the moment it changes, in either direction, the story changes. Bonus tell: Q1 added a NEW claim — ads coverage above the historical ~20% of queries has "upside" (Philipp). Listen for follow-through, not repetition.',
+          why:'~56% of revenue, and the existential AI question is settling empirically: Search ACCELERATED 10→12→12→15→17→19% while AI Overviews and AI Mode rolled into the core product.',
+          src:'The recurring analyst question on every call since SGE launched; the standing phrase repeats verbatim across calls, which makes it trackable.',
+          thread:[
+            { q:'Q1 2025', n:'+10% · AI Overviews 1.5B users/mo · "monetization at approximately the same rate"' },
+            { q:'Q2 2025', n:'+12% · AI Mode 100M MAU (US+India) · Lens queries +70%' },
+            { q:'Q3 2025', n:'+15% · AI Mode 75M DAU, ads-in-AI-Mode testing begins · paid clicks +7%, CPC +7%' },
+            { q:'Q4 2025', n:'+17% · Gemini 3 integrated into AI Mode & AI Overviews · queries at all-time high' },
+            { q:'Q1 2026', n:'+19% (retail/finance; FX aid flagged) · NEW: coverage-above-20% upside claim · AI-response cost −30% since Gemini 3' } ] },
+        { rank:4, metric:'New-surface monetization promises: AI Mode ads · Direct Offers · Gemini app', since:'Q3 2025',
+          bbg:'No clean consensus line — qualitative (promise thread)',
+          breaks:'Direct Offers quietly drops off the script — or "not rushing" repeats a 4th time with zero new specifics',
+          pista:'A promise ladder to reconcile every quarter: ads in AI Mode "testing" (Q3\'25) → Direct Offers pilot announced (Q4\'25) → "resonating; Gap, L\'Oréal, Chewy signed" + new retail formats + UCP scaling (Q1\'26). Gemini-app ads remain a MUSING — "not rushing," repeated verbatim three calls. And note the silence: Q1 gave NO Gemini app MAU update (last number: 750M in Q4) — worth exactly one question.',
+          why:'This is where the next leg of ads growth comes from as the surface shifts — and app monetization is entirely un-modeled by the Street.',
+          src:'Direct on-call commitments tracked quarter-over-quarter (Promise-Tracker discipline, now embedded here); silence is a signal.',
+          thread:[
+            { q:'Q3 2025', n:'"Testing ads in AI Mode… will continue to test before expanding"' },
+            { q:'Q4 2025', n:'Direct Offers pilot announced · UCP protocol launched with retail partners · Gemini-app ads: "not rushing"' },
+            { q:'Q1 2026', n:'Direct Offers "resonating" (Gap, L\'Oréal, Chewy) · new retail ad format in test · UCP adds Amazon/Meta/Microsoft/Salesforce/Stripe; Ulta live · app ads still "not rushing" · no app-MAU update (silence)' } ] },
+        { rank:5, metric:'TPUs go external — silicon becomes a business', since:'Q3 2025',
+          bbg:'No consensus line · revenue "small % later this year, vast majority in 2027"',
+          breaks:'The 2027 revenue timing gets vaguer — or margin questions get dodged twice',
+          pista:'The escalation: Anthropic up to 1M TPUs (Q3\'25) → TPU hardware SOLD into customers\' own data centers (Q1\'26 — Google selling silicon for the first time, already inside the backlog). Tonight\'s tell: any revenue-recognition start or a first margin hint. It is lumpy by design ("will fluctuate… depending on when TPUs are shipped") — don\'t over-read one quarter.',
+          why:'A genuine business-model extension (hardware vendor economics) and the hardest proof of the full-stack differentiation claim — 8th-gen TPUs shipping while rivals buy GPUs.',
+          src:'New disclosure in Q1 2026 with explicit forward guidance to reconcile; multiple analysts pressed it (Nowak, Post) and got partial answers.',
+          thread:[
+            { q:'Q3 2025', n:'Anthropic plans access to up to 1M TPUs · Ironwood (7th gen) GA soon' },
+            { q:'Q4 2025', n:'TPU accelerators serving frontier labs, capital-markets firms, governments' },
+            { q:'Q1 2026', n:'8th-gen TPU 8t/8i unveiled · first hardware sales into customer data centers · "small % of revenue later this year, vast majority 2027"' } ] },
+      ],
       results:null, call:null
     }
-  ],
-  promises:[]
+  ]
 };
 function cpUpcoming(){ return CALL_PREP.quarters.filter(function(q){ return q.status==='upcoming'; })[0]||null; }
 function cpFill(x, muted){ return (x!=null && String(x).trim()!=='') ? x : '<span class="cp-empty">'+(muted||'— to fill')+'</span>'; }
-var CP_STAT={ delivered:{c:'#0a8f4c',l:'Delivered'}, pending:{c:'#2E6BE6',l:'Pending'}, silent:{c:'#B7791F',l:'Silent'}, abandoned:{c:'#C0392B',l:'Abandoned'} };
-var CP_KIND={ project:{c:'#0a8f4c',l:'Project'}, pipeline:{c:'#2E6BE6',l:'Pipeline'}, musing:{c:'#B7791F',l:'Musing only'} };
 var CP_POP={};
 function cpReg(id, t, h){ CP_POP[id]={t:t, h:h}; return id; }
 function cpQ(id, t, h){ return '<span class="cp-info ov-clickable" data-detail="cp:'+cpReg(id,t,h)+'" title="'+esc(String(t).replace(/<[^>]+>/g,''))+'">?</span>'; }
@@ -551,36 +615,28 @@ function cpWatchBody(c){
   var wl=u.watchList||[];
   if(!wl.length){ h+='<div class="cp-note">Watch List builds from the earnings-call record + the Bloomberg export — 5 ranked, grounded, falsifiable items per the conventions.</div>'; h+='<div class="ov-foot">Frozen once the quarter opens; scored against Post-Results / Post-Call.</div>'; return h; }
   h+='<div class="cp-watch">'+wl.map(function(w){
-    var why=(w.src||w.why)?cpReg('watchwhy-'+(w.rank||0), esc(w.metric), (w.src?'<p><b>Why it\'s on the list:</b> '+w.src+'</p>':'')+(w.why?'<p><b>Why it matters:</b> '+w.why+'</p>':'')):null;
-    return '<div class="cp-w"><div class="cp-w-top"><div class="cp-w-rank">'+(w.rank||'')+'</div><div class="cp-w-metric">'+esc(w.metric)+'</div>'+(why?'<span class="cp-why-btn ov-clickable" data-detail="cp:'+why+'" style="margin:0">why ›</span>':'')+'</div>'+
+    var deep='';
+    if(w.src) deep+='<p><b>Why it\'s on the list:</b> '+w.src+'</p>';
+    if(w.why) deep+='<p><b>Why it matters:</b> '+w.why+'</p>';
+    if(w.thread&&w.thread.length){
+      deep+='<p style="margin-bottom:4px"><b>The thread — how this theme has evolved:</b></p>'+
+        w.thread.map(function(t){ return '<div style="display:flex;gap:9px;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:12px;line-height:1.5"><b style="white-space:nowrap;color:'+BRAND+'">'+esc(t.q)+'</b><span>'+t.n+'</span></div>'; }).join('');
+    }
+    var why=deep?cpReg('watchwhy-'+(w.rank||0), esc(w.metric), deep):null;
+    return '<div class="cp-w"><div class="cp-w-top"><div class="cp-w-rank">'+(w.rank||'')+'</div><div class="cp-w-metric">'+esc(w.metric)+'</div>'+(why?'<span class="cp-why-btn ov-clickable" data-detail="cp:'+why+'" style="margin:0">why + the thread ›</span>':'')+'</div>'+
       '<div class="cp-w-q"><span class="mic">🔎</span><span>'+cpFill(w.pista||w.question)+'</span></div>'+
       '<div class="cp-w-chips">'+
+        (w.since?'<span class="cp-w-chip" style="background:rgba(251,188,5,0.12);border:1px solid rgba(183,121,31,0.35);color:var(--navy)"><b>Tracking since:</b> '+esc(w.since)+'</span>':'')+
         (w.bbg?'<span class="cp-w-chip cons"><b>Cons:</b> '+esc(w.bbg)+'</span>':'')+
         (w.breaks?'<span class="cp-w-chip red"><b>Breaks if:</b> '+esc(w.breaks)+'</span>':'')+
       '</div>'+
     '</div>';
   }).join('')+'</div>';
-  h+='<div class="ov-foot">Frozen once the quarter opens; scored against Post-Results / Post-Call.</div>';
+  h+='<div class="ov-foot">Frozen once the quarter opens; scored against Post-Results / Post-Call. Themes carry their quarter-by-quarter thread (source: docs/calls/GOOGL) — promise-type items are tracked here and in Evolution ▸ Earnings Calls.</div>';
   return h;
 }
-// C · Promise Tracker ────────────────────────────────────────────────────────────────────────────
-function cpPromisesBody(c){
-  var h=cpStyle();
-  h+='<div class="cp-phase" style="background:'+BLUE+'">① Pre-Call</div>';
-  h+='<p class="ov-lede"><b>What management is genuinely doing — vs. what it merely floated.</b> The discipline here is separating a <b>real, committed project</b> from a passing <i>"we\'re open to it."</i> Only the first is held to account. And <b>silence is the cheapest signal to detect</b>: a real project that quietly stops being mentioned is often the tell.</p>';
-  var pr=CALL_PREP.promises||[];
-  if(!pr.length){ h+='<div class="cp-note">Promise Tracker builds from the earnings-call record — each item tagged project / pipeline / musing, with a delivered / pending / silent / abandoned status.</div>'; return h; }
-  h+='<div style="display:flex;gap:12px;flex-wrap:wrap;margin:0 0 12px">'+Object.keys(CP_KIND).map(function(k){ var kk=CP_KIND[k]; return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--navy)"><span class="cp-kind" style="color:'+kk.c+';border-color:'+kk.c+'">'+kk.l+'</span></span>'; }).join('')+'<span style="font-size:10.5px;color:var(--mu)">Project = committed/funded · Pipeline = stated expectation · Musing = open-to-possibility, not a promise</span></div>';
-  h+='<div style="overflow-x:auto"><table class="cp-tbl"><thead><tr><th>Item</th><th>Type</th><th>Status</th><th>Last mentioned</th><th>Note</th></tr></thead><tbody>'+
-    pr.map(function(p){ var s=CP_STAT[p.status]||{c:'#6b7684',l:p.status}; var k=CP_KIND[p.kind]||{c:'#6b7684',l:p.kind||''};
-      return '<tr><td style="font-weight:700">'+esc(p.item)+' <span style="font-weight:600;color:var(--mu);font-size:10px">· since '+esc(p.origin||'')+'</span></td>'+
-        '<td><span class="cp-kind" style="color:'+k.c+';border-color:'+k.c+'">'+esc(k.l)+'</span></td>'+
-        '<td><span class="cp-pill" style="background:'+s.c+'">'+esc(s.l)+'</span></td>'+
-        '<td>'+cpFill(p.lastMentioned,'—')+'</td><td style="color:var(--mu)">'+esc(p.note||'')+'</td></tr>';
-    }).join('')+'</tbody></table></div>';
-  h+='<div class="ov-foot">Type & status are an editorial read of the earnings-call/filing record; updated each quarter.</div>';
-  return h;
-}
+// (Promise Tracker dissolved Jul 2026 — promise-type items now live as tracked themes inside the
+// Watch List `thread`s and in Evolution ▸ Earnings Calls.)
 var CP_RES={ beat:{c:'#0a8f4c',l:'Beat'}, miss:{c:RED,l:'Miss'}, inline:{c:'#6b7684',l:'In line'} };
 var CP_HLTAG={ thesis:{c:'#0a8f4c',l:'Thesis'}, curious:{c:'#7A5AF8',l:'Curious'}, dots:{c:'#2E6BE6',l:'Connects dots'}, watch:{c:'#B7791F',l:'Watch'}, tone:{c:'#B7791F',l:'Tone'} };
 // D · Post-Results ── the numbers (available first, before/without the call): a beat/miss scorecard.
@@ -645,6 +701,96 @@ function cpCallBody(c){
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
+// EVOLUTION ▸ EARNINGS CALLS — themes threaded across the last 10 calls (Q4 2023 → Q1 2026).
+// Source: docs/calls/GOOGL.md + GOOGL-latest.md. Promise-type threads live here (and in the
+// Watch List) since the Promise Tracker was dissolved. Status: trend / promise / watch.
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+var GOOGL_THEMES=[
+  { ic:'☁️', t:'Google Cloud: acceleration + the backlog machine', st:'trend',
+    d:'From 26% growth to 63% in six quarters, with backlog compounding faster than revenue. Supply-constrained every single quarter — and it accelerated anyway.',
+    rows:[
+      ['Q1 2025','+28% · "tight demand-supply; capacity ramps late 2025"'],
+      ['Q2 2025','+32% · backlog $106B · $1B+ deals in H1 = all of 2024'],
+      ['Q3 2025','+34% · backlog $155B · billion-dollar deals in 9 months > prior 2 years combined'],
+      ['Q4 2025','+48% · backlog $240B · 8M Gemini Enterprise paid seats · Apple = preferred cloud provider'],
+      ['Q1 2026','+63% to $20B · backlog $462B (~2x QoQ) · GenAI-product revenue +~800% YoY · margin 32.9% (vs 17.8% LY)'] ] },
+  { ic:'🏗️', t:'The capex ladder (and the depreciation drumbeat)', st:'watch',
+    d:'Five consecutive raises, never a step down; management flags accelerating depreciation unprompted every quarter — candor against interest, and the core bear debate.',
+    rows:[
+      ['Q4 2024','FY25 guide $75B ("notably larger")'],
+      ['Q2 2025','Raised ~$85B; 2026 "further increase"'],
+      ['Q3 2025','Raised $91–93B; depreciation +41% YoY'],
+      ['Q4 2025','FY26 $175–185B (~2x FY25); FY25 depreciation +38%'],
+      ['Q1 2026','FY26 raised $180–190B (Intersect) · 2027 "significantly increase" · LT debt $46.5B→$77.5B · quarterly FCF $10.1B'] ] },
+  { ic:'🔍', t:'Search through the AI transition — the standing phrase', st:'trend',
+    d:'The existential question settled empirically so far: Search accelerated 10→12→12→15→17→19% while AIO/AI Mode rolled in. The monetization language has been frozen verbatim for 6+ calls: "at approximately the same rate."',
+    rows:[
+      ['Q4 2024','AIO in 100+ countries; "monetization at approximately the same rate" (the phrase is born)'],
+      ['Q1 2025','+10% · AIO 1.5B users/mo · AI Mode launches in Labs'],
+      ['Q2 2025','+12% · AI Mode 100M MAU · Lens +70% · "2x longer queries"'],
+      ['Q3 2025','+15% · AI Mode 75M DAU · first ads-in-AI-Mode tests · paid clicks +7% / CPC +7%'],
+      ['Q4 2025','+17% · Gemini 3 into Search · queries all-time high'],
+      ['Q1 2026','+19% · NEW claim: ads coverage above the ~20%-of-queries historical level has "upside"'] ] },
+  { ic:'💰', t:'New-surface monetization: AI Mode ads · Direct Offers · Gemini app', st:'promise',
+    d:'The promise ladder to reconcile each quarter. Gemini-app ads remain a musing ("not rushing" — 3 calls verbatim); AI-Mode ads are climbing from test → pilot → traction.',
+    rows:[
+      ['Q3 2025','"Testing ads in AI Mode… will continue to test before we expand"'],
+      ['Q4 2025','Direct Offers pilot announced · UCP (agentic commerce protocol) launched · app ads: "not rushing"'],
+      ['Q1 2026','Direct Offers "resonating" (Gap, L\'Oréal, Chewy) · new retail format in test · UCP adds Amazon/Meta/Microsoft/Salesforce/Stripe; Ulta live in AI Mode · app ads still "not rushing" · NO app-MAU update (silence)'] ] },
+  { ic:'🤖', t:'Gemini consumer scale — users, subscriptions, and one silence', st:'watch',
+    d:'The disclosure ladder ran hot for a year… then Q1 2026 skipped the app-MAU number. Subscriptions kept climbing.',
+    rows:[
+      ['Q1 2025','Gemini app ~35M DAU (trial disclosure) · 270M paid subs'],
+      ['Q2 2025','450M MAU · daily requests +50% QoQ · 300M paid subs (@Q3)'],
+      ['Q3 2025','650M MAU · queries 3x QoQ'],
+      ['Q4 2025','750M MAU · engagement/user sharply up post-Gemini 3 · 325M paid subs'],
+      ['Q1 2026','No MAU update (watch) · 350M paid subs — strongest consumer-AI-plan quarter ever · Google One >100M since 2024'] ] },
+  { ic:'🔌', t:'Full stack & TPUs: from internal edge to external silicon business', st:'promise',
+    d:'A decade of TPUs became a commercial weapon: frontier labs on TPUs, then the first hardware sales into customer data centers — with explicit revenue timing to hold them to.',
+    rows:[
+      ['Q3 2024','Trillium (6th gen) · "cloud customers consume 8x the compute vs 18 months ago"'],
+      ['Q3 2025','Anthropic plans up to 1M TPUs · Ironwood (7th gen) GA'],
+      ['Q4 2025','Accelerators serving frontier labs, capital-markets firms, governments'],
+      ['Q1 2026','8th-gen TPU (8t/8i) · FIRST hardware sales into customers\' own data centers · "small % of revenue late 2026, vast majority 2027" · already inside the $462B backlog'] ] },
+  { ic:'🤝', t:'Partnership validation: Apple, OpenAI, Reliance, NVIDIA', st:'trend',
+    d:'The quiet external proof of the stack: rivals and giants keep choosing Google infrastructure.',
+    rows:[
+      ['Q2 2025','OpenAI begins using Google Cloud infrastructure'],
+      ['Q3 2025','NVIDIA GB300 instances first to ship · 9 of top-10 AI labs on Google Cloud'],
+      ['Q4 2025','Apple: Google as preferred cloud provider + next-gen Apple foundation models built on Gemini · Reliance Jio: 500M-consumer Gemini distribution'],
+      ['Q1 2026','American Express, Vodafone data-cloud wins · Wiz closed (Mar) — "performance exceeded expectations"'] ] },
+  { ic:'🧹', t:'Other Bets: pruning + Waymo\'s ramp', st:'trend',
+    d:'A portfolio quietly being rationalized around Waymo, whose ride count doubles roughly every two quarters.',
+    rows:[
+      ['Q1 2025','Waymo 250K paid rides/week (5x YoY)'],
+      ['Q3 2025','London/Tokyo announced · 400K rides/week (@Q4)'],
+      ['Q4 2025','$16B round (largest ever; Alphabet funded a significant portion → $2.1B SBC charge) · 20M trips'],
+      ['Q1 2026','500K fully-autonomous rides/week (2x in <1yr) · 11 US cities · Verily deconsolidated · GFiber→Astound (deconsolidates Q4)'] ] },
+  { ic:'📉', t:'Quiet structural decliners & one-off distorters', st:'watch',
+    d:'The lines nobody asks about — and the items that distort a headline print.',
+    rows:[
+      ['Network ads','Structurally negative every quarter: −1 → −2 → −3 → −2 → −4% — the old ad-network is melting; nobody presses it'],
+      ['Q3 2025','EC fine $3.5B charge (G&A) — op margin 30.5% reported vs 33.9% ex-fine'],
+      ['Q4 2025','Waymo $2.1B SBC charge (R&D) — op income +16% reported, cleaner underlying'],
+      ['Q1 2026','Other income $37.7B (unrealized gains) → EPS $5.11 "+82%" — headline optics, not operations · FX: +3pp tailwind to Services (fades to ~1pp in Q2, per management)'] ] },
+];
+var CP_THST={ trend:{c:'#0a8f4c',l:'Confirmed trend'}, promise:{c:'#2E6BE6',l:'Promise — reconcile'}, watch:{c:'#B7791F',l:'Watch'} };
+function callsBody(){
+  var h=cpStyle();
+  h+='<p class="ov-lede"><b>The last 10 calls (Q4 2023 → Q1 2026), read as THEMES, not quarters.</b> Each theme carries its quarter-by-quarter thread — the recurrence logic the Watch List ranks from. Full transcripts + per-quarter analyses live in the calls repository (docs/calls/GOOGL).</p>';
+  h+='<div style="display:flex;gap:12px;flex-wrap:wrap;margin:0 0 12px">'+Object.keys(CP_THST).map(function(k){ var s=CP_THST[k]; return '<span class="cp-kind" style="color:'+s.c+';border-color:'+s.c+'">'+s.l+'</span>'; }).join('')+'</div>';
+  h+='<div class="acc-list">'+GOOGL_THEMES.map(function(t){
+    var st=CP_THST[t.st]||CP_THST.watch;
+    return '<div class="acc"><button type="button" class="acc-h"><span>'+t.ic+' '+esc(t.t)+' <span class="cp-kind" style="color:'+st.c+';border-color:'+st.c+';margin-left:7px">'+st.l+'</span></span><span class="acc-x">+</span></button>'+
+      '<div class="acc-b" hidden><div class="famd" style="color:var(--mu);margin-bottom:8px">'+t.d+'</div>'+
+      t.rows.map(function(r){ return '<div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:12px;line-height:1.5"><b style="white-space:nowrap;color:'+BRAND+';min-width:64px">'+esc(r[0])+'</b><span>'+r[1]+'</span></div>'; }).join('')+
+      '</div></div>';
+  }).join('')+'</div>';
+  h+='<div class="ov-foot">Built from the Q4 2023 → Q1 2026 earnings-call transcripts (docs/calls/GOOGL). Promise-type threads are held to account here and in the Watch List; the Promise Tracker tab was dissolved into these two surfaces (Jul 2026).</div>';
+  return h;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 // ASSEMBLY — html / deepDiveHtml
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 function html(c){
@@ -694,21 +840,19 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="callprep">'+
-        '<div class="cp-note" style="margin-bottom:12px">🎯 <b>Call Prep</b> — the decision layer, in three phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List · Promises) → <b>② Post-Results</b> (react to the numbers, which land before the call) → <b>③ Post-Call</b> (what management said + the meeting take). Append-only per quarter, so it becomes a record of how well we read Alphabet.</div>'+
+        '<div class="cp-note" style="margin-bottom:12px">🎯 <b>Call Prep</b> — the decision layer, in three phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (react to the numbers, which land before the call) → <b>③ Post-Call</b> (what management said + the meeting take). Append-only per quarter, so it becomes a record of how well we read Alphabet.</div>'+
         '<div class="cp-phtabs">'+
           '<button type="button" class="cp-phtab active" data-cpp="setup">Setup</button>'+
           '<button type="button" class="cp-phtab" data-cpp="watch">Watch List</button>'+
-          '<button type="button" class="cp-phtab" data-cpp="promises">Promise Tracker</button>'+
           '<button type="button" class="cp-phtab" data-cpp="results">Post-Results</button>'+
           '<button type="button" class="cp-phtab" data-cpp="postcall">Post-Call</button>'+
         '</div>'+
         '<div class="cp-phpane" data-cpp="setup">'+cpSetupBody(c)+'</div>'+
         '<div class="cp-phpane" data-cpp="watch" hidden>'+cpWatchBody(c)+'</div>'+
-        '<div class="cp-phpane" data-cpp="promises" hidden>'+cpPromisesBody(c)+'</div>'+
         '<div class="cp-phpane" data-cpp="results" hidden>'+cpResultsBody(c)+'</div>'+
         '<div class="cp-phpane" data-cpp="postcall" hidden>'+cpCallBody(c)+'</div>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="earnings" hidden>'+gddEmpty()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="earnings" hidden>'+callsBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="guidance" hidden>'+gddEmpty()+'</div>'+
       '<div class="ovt-subpane" data-ovst="strategy" hidden>'+gddEmpty()+'</div>'+
       '<div class="ovt-subpane" data-ovst="timeline" hidden>'+gddEmpty()+'</div>'+

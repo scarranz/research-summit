@@ -119,24 +119,42 @@ The Setup consensus grid is standardized across companies (v2, Jul 2026):
 Post-Results scores actuals against **both** columns: beating the Street but missing our number
 (or vice versa) is exactly the kind of read this exists to catch.
 
+**Watch List v2 — themes tracked over time (Jul 2026).** Watch items are no longer one-quarter
+metrics: each is a **THEME** carrying `since` (the quarter it emerged) and a `thread` — its
+quarter-by-quarter evolution (which quarter, what happened, why it mattered), built from the
+calls repository. The rank still = stock impact × debate, but the grounding is the thread: a
+theme quantified in consecutive quarters, a promise ladder climbing (test → pilot → traction), a
+disclosure that went silent. **The Promise Tracker is dissolved** (team decision Jul 2026): its
+discipline (project/pipeline/musing, silence-is-a-signal) now lives INSIDE the Watch-List threads
+and in Evolution ▸ Earnings Calls (themes view). Post-Results / Post-Call keep their current
+format for now — a more meeting-prep-oriented presentation is an open design question.
+
 ---
 
-## 4. The calls repository — `docs/calls/<TICKER>.md`
+## 4. The calls repository — historicals + THE LATEST, with rotation
 
-The persistent, in-repo record of every company's earnings calls — so any session, any day, has
-the full call history without Dani re-pasting transcripts (until Fiscal.ai full access lands and
-this can be automated via the `get-transcript` edge function, PR #54).
+Two files per company — the persistent, in-repo record so any session, any day, has the full
+call history without Dani re-pasting transcripts (until Fiscal.ai full access lands and this
+automates via the `get-transcript` edge function, PR #54):
 
-**Workflow, each quarter:**
-1. Dani hands the **newest call** (transcript paste or file).
-2. Update `docs/calls/<TICKER>.md`: append the new call (structured: date, speakers, prepared
-   remarks + Q&A, kept faithful) **and** the analysis produced by §1–§2 for that quarter.
-3. The file is **append-only per quarter** (like the Call Prep tab) — prior quarters are never
-   rewritten, so the recurrence scan (Pass 1.5) always has its baseline.
-4. The same file feeds the Call Prep `watchList` grounding and the Promise Tracker statuses.
+- **`docs/calls/<TICKER>-latest.md`** — ONLY the most recent call: full transcript + its §1–§2
+  analysis. This is the working file for the current cycle.
+- **`docs/calls/<TICKER>.md`** — the historical compendium: every prior call, newest first.
+  Append-only; prior quarters are never rewritten (Pass 1.5 recurrence needs its baseline).
 
-Format per company file: a header (ticker, coverage span), then one `## Qx YYYY` section per
-call, newest first, each with `### Transcript` and `### Analysis` subsections.
+**The rotation, when a new call lands:**
+1. Take the current contents of `<TICKER>-latest.md` and **append that call to the TOP of the
+   compendium** (`<TICKER>.md`).
+2. Put the **new** transcript into `<TICKER>-latest.md` and produce its analysis there
+   (three passes, fact → why → so-what).
+3. Refresh the Call Prep: roll the quarter, update each Watch-List theme's `thread` with the new
+   quarter's entry, and re-rank.
+
+**The single-prompt goal.** Like `/fill-overview`, the whole cycle must be runnable from ONE
+prompt — *"arma el Call Prep de <TICKER>"* (or *"integra el nuevo call de <TICKER>"*) — because
+these two files + this doc + `CALL_PREP_CONVENTIONS.md` contain everything needed: the history,
+the rules, the spec, and the Bloomberg export lives in Dani's Downloads. No session-specific
+context should be required.
 
 ---
 
@@ -198,11 +216,14 @@ conclusion below is fact → why → so-what (full analysis in `docs/calls/IBKR.
 insurance vertical's size · agentic-AI volume + autonomy timeline · capital return trigger ·
 overnight/Korea trend + Tiger/Futu persistence.
 
-### GOOGL — Q2 2026 (reports Jul 22, 2026) — staged
+### GOOGL — Q2 2026 (reports Jul 22, 2026) — READY
 
-Call Prep staged on the profile (Setup v2: 4 headline + 4 custom KPIs + Consensus⇄Summit⇄Both).
-Pending: Bloomberg export · Summit expectations · the custom-KPI definition · the calls
-compendium for `docs/calls/GOOGL.md`.
+Call Prep live: Setup filled from the Bloomberg export (Rev $117.0B +21% · Op inc $40.5B +30% ·
+EPS $2.90 +26% · EBITDA $55.5B +31%; customs: Cloud $22.5B +65% · Search & other $63.3B +17% ·
+YouTube ads $10.8B +10% · Capex $44.2B +97%, w/ FCF cons ~$2.3B). Watch List = 5 themes with
+threads (Cloud×backlog · capex→FCF squeeze · Search + the standing phrase · monetization
+promises · TPU externalization). Calls repo populated: `GOOGL-latest.md` (Q1 2026 + analysis) +
+`GOOGL.md` (Q4 2023 → Q4 2025). Pending: Summit expectations (not in MCP yet) → debate rows.
 
 ---
 

@@ -37,8 +37,8 @@ phase-tab row** (its own classes, wired independently of the pane-scoped sub-tab
 | Phase | Sub-tab | What it holds |
 |---|---|---|
 | **① Pre-Call** | **Setup** | v2 (Jul 2026): **4 headline metrics** (mandatory, every company: Revenue · Operating income · EPS · EBITDA) + **4 custom KPIs** (per-company), each carrying a **Street** (Bloomberg) and a **Summit** (our own) estimate with a **Consensus ⇄ Summit ⇄ Both** toggle; plus **the debate** = the explained disparity between the two sets (spec: `EARNINGS_CALLS_CONTEXT.md` §3) |
-| **① Pre-Call** | **Watch List** | 5 ranked things to hunt — each with its consensus number, red-line, provenance, and *tell* |
-| **① Pre-Call** | **Promise Tracker** | what management is genuinely doing vs. what it merely floated |
+| **① Pre-Call** | **Watch List** | v2 (Jul 2026): 5 ranked **THEMES tracked over time** — each with `since` + a quarter-by-quarter `thread` (from the calls repository), its consensus number, red-line, provenance, and *tell*. Promise-type items live here (project/pipeline/musing discipline; silence is a signal) |
+| **① Pre-Call** | ~~Promise Tracker~~ | **DISSOLVED (Jul 2026)** — its content migrated into the Watch-List threads and Evolution ▸ Earnings Calls (themes view). Do not build it as a standalone tab for new companies |
 | **② Post-Results** | **Post-Results** | the numbers scorecard vs. consensus (beat/miss) + thesis red-line check — filled when the print lands, *before* the call |
 | **③ Post-Call** | **Post-Call** | tone / contradictions / promise updates + the **Conclusion** (the meeting take) |
 

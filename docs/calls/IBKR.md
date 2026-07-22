@@ -1,6 +1,6 @@
 # IBKR — Earnings Calls repository
 
-Persistent call record per docs/EARNINGS_CALLS_CONTEXT.md §4. Append-only per quarter,
+Persistent call record per docs/CALL_PREP_CONVENTIONS.md §3. Append-only per quarter,
 newest first. Coverage: Q4 2023 → Q2 2026.
 
 ---

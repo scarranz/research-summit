@@ -1,6 +1,6 @@
 # GOOGL — Earnings Calls · historical compendium
 
-Persistent call record per `docs/EARNINGS_CALLS_CONTEXT.md` §4. **This file holds every call
+Persistent call record per `docs/CALL_PREP_CONVENTIONS.md` §4. **This file holds every call
 EXCEPT the most recent one** (which lives in `GOOGL-latest.md` with its analysis). Rotation rule:
 when a new call lands, the current "latest" is appended to the TOP of this file and the new
 transcript replaces it in `GOOGL-latest.md`. Append-only — prior quarters are never rewritten.

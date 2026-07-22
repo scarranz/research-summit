@@ -1,12 +1,12 @@
 # GOOGL — Latest earnings call · Q1 2026 (April 29, 2026)
 
-**The rotation rule (docs/EARNINGS_CALLS_CONTEXT.md §4):** this file always holds ONLY the most
+**The rotation rule (docs/CALL_PREP_CONVENTIONS.md §3):** this file always holds ONLY the most
 recent call + its analysis. When the next call lands, this call is appended to the top of the
 historical compendium (`GOOGL.md`) and the new transcript takes its place here.
 
 ---
 
-## Analysis (per the §1–§2 rules — fact → why → so-what)
+## Analysis (per the CALL_PREP_CONVENTIONS Part I rules — fact → why → so-what)
 
 **The take:** the growth machine is accelerating on every cylinder — and the bill is arriving at
 the same time. Cloud +63% with backlog ~2x QoQ *while claiming unmet demand*; capex guide raised

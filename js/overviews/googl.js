@@ -899,6 +899,37 @@ function cpEvCell(key, m, isCustom){
       '<div class="cp-val cp-val-us"><span class="cp-val-lab">Summit</span>'+cpFmtC(m&&m.us)+'</div>'+
     '</div></div>';
 }
+// ─── The IR button — every Call Prep opens with it. On earnings day the source is ONE tap away:
+// release, webcast, transcripts, straight from the company. Deliberately loud; convention for
+// every company (CALL_PREP_CONVENTIONS §6). GOOGL → https://abc.xyz/investor/
+var CP_IR_URL='https://abc.xyz/investor/';
+function cpIRButton(){
+  return '<style>'+
+    '.cp-ir{display:flex;align-items:center;gap:14px;text-decoration:none;border-radius:14px;padding:15px 18px;margin:0 0 14px;position:relative;overflow:hidden;'+
+      'background:linear-gradient(100deg,#0B1220 0%,#101C3A 55%,#0B1220 100%);border:1px solid rgba(66,133,244,0.45);box-shadow:0 6px 22px rgba(16,20,26,.22);transition:.16s}'+
+    '.cp-ir:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,'+BRAND+','+RED+','+YELLOW+','+BRAND2+');height:3px;top:0}'+
+    '.cp-ir:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(26,115,232,.35);border-color:'+BRAND+'}'+
+    '.cp-ir-ic{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,'+BRAND+','+PURPLE+');display:flex;align-items:center;justify-content:center;font-size:22px;flex:none;box-shadow:0 3px 10px rgba(26,115,232,.4)}'+
+    '.cp-ir-body{flex:1;min-width:0}'+
+    '.cp-ir-k{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:#8AB4F8;display:flex;align-items:center;gap:7px}'+
+    '.cp-ir-dot{width:7px;height:7px;border-radius:50%;background:'+BRAND2+';box-shadow:0 0 0 0 rgba(52,168,83,.7);animation:cpirp 1.6s infinite}'+
+    '@keyframes cpirp{0%{box-shadow:0 0 0 0 rgba(52,168,83,.6)}70%{box-shadow:0 0 0 8px rgba(52,168,83,0)}100%{box-shadow:0 0 0 0 rgba(52,168,83,0)}}'+
+    '.cp-ir-t{font-size:16px;font-weight:800;color:#fff;letter-spacing:.01em;margin-top:2px}'+
+    '.cp-ir-s{font-size:10.5px;color:#B9C4D8;font-weight:600;margin-top:1px}'+
+    '.cp-ir-go{font-size:12px;font-weight:800;color:#fff;background:'+BRAND+';border-radius:999px;padding:9px 17px;white-space:nowrap;flex:none;display:flex;align-items:center;gap:7px;transition:.14s}'+
+    '.cp-ir:hover .cp-ir-go{background:'+BRAND2+';gap:11px}'+
+    '@media(max-width:560px){.cp-ir{flex-wrap:wrap}.cp-ir-go{width:100%;justify-content:center}}'+
+  '</style>'+
+  '<a class="cp-ir" href="'+CP_IR_URL+'" target="_blank" rel="noopener">'+
+    '<span class="cp-ir-ic">📡</span>'+
+    '<span class="cp-ir-body">'+
+      '<span class="cp-ir-k"><span class="cp-ir-dot"></span>THE SOURCE · EARNINGS HQ</span>'+
+      '<span class="cp-ir-t" style="display:block">Alphabet Investor Relations</span>'+
+      '<span class="cp-ir-s" style="display:block">Release · webcast · slides · transcripts — straight from abc.xyz. Skip the search, go direct.</span>'+
+    '</span>'+
+    '<span class="cp-ir-go">OPEN IR <span>↗</span></span>'+
+  '</a>';
+}
 function cpQkey(q){ return String(q||'').replace(/\s/g,''); }
 // Renders the quarter-pill selector (shared across the four phase panes via .cp-qblock filtering).
 function cpQPills(){
@@ -1809,6 +1840,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="callprep">'+
+        cpIRButton()+
         '<div class="cp-note" style="margin-bottom:12px">🎯 <b>Call Prep</b> — the decision layer, in three phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (react to the numbers, which land before the call) → <b>③ Post-Call</b> (what management said + the meeting take). Append-only per quarter — pick a quarter below; each quarter keeps its frozen pre-call blocks next to its post-mortem, so the tab is a record of how well we read Alphabet.</div>'+
         cpQPills()+
         '<div class="cp-phtabs">'+

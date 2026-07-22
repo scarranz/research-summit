@@ -245,7 +245,14 @@ implies gaps in work rather than in disclosure.
 Evolution's sub-tab row: `Earnings Calls · Guidance · Strategy · Timeline · Call Prep`
 (Call Prep is a **sub-tab of Evolution**, never a spine tab).
 
-**Call Prep pane** = intro note + **QUARTER SELECTOR** (pill per quarter, newest/upcoming first,
+**Call Prep pane** = **THE IR BUTTON (mandatory, first element)** + intro note + **QUARTER SELECTOR**
+
+**The IR button:** every company's Call Prep opens with a deliberately loud, banner-style button
+(`cpIRButton()` in the reference implementation — dark gradient, brand accent bar, pulse dot,
+"OPEN IR ↗" pill) linking straight to the company's Investor Relations page (`CP_IR_URL`; GOOGL →
+`https://abc.xyz/investor/`), `target="_blank"`. Purpose: on earnings day the release/webcast/
+transcripts must be ONE tap away — the button must out-compete "go google the IR page yourself."
+Swap only the URL and the company name per ticker. (pill per quarter, newest/upcoming first,
 active by default) + **four phase tabs**: Setup · Watch List · Post-Results · Post-Call. Every
 phase renders **per-quarter blocks** (`.cp-qblock[data-cpq]`) and the quarter pills toggle them —
 one quarter visible at a time, so the page stays light as quarters accumulate. Each quarter keeps

@@ -256,7 +256,16 @@ banner-style buttons side by side (`cpIRButton()` in the reference implementatio
   the regulator's lens: 10-K/10-Q/8-K/DEF 14A as filed. Per company, swap the CIK in the EDGAR
   browse URL.
 Purpose: on earnings day both optics must be ONE tap away — what IR curates, EDGAR certifies. The
-buttons must out-compete "go google it yourself." Swap only URLs and the company name per ticker. (pill per quarter, newest/upcoming first,
+buttons must out-compete "go google it yourself." Swap only URLs and the company name per ticker.
+**Identity, not decoration (mandatory):** no emoji/generic icons on these cards. The IR card
+carries the **company's real mark, transparent-background version** (GOOGL → the official Google
+"G" from gstatic, CSP-allowed; per ticker prefer an official transparent mark, else
+`https://assets.parqet.com/logos/symbol/<TICKER>`); the EDGAR card carries the **official SEC
+eagle seal** (`img/sec-seal.png`, public domain, served locally). Both marks get the SAME
+treatment: transparent emblem inside a glowing ring (no white tiles), plus the same mark repeated
+as a giant low-opacity watermark bleeding off the bottom-right corner. Big banners (≥120px tall,
+72px emblem). Near-black backgrounds; the EDGAR card uses the seal's federal gold (accent bar,
+glow, CTA), the IR card uses the company's brand accent. Per ticker, swap only the mark and URLs. (pill per quarter, newest/upcoming first,
 active by default) + **four phase tabs**: Setup · Watch List · Post-Results · Post-Call. Every
 phase renders **per-quarter blocks** (`.cp-qblock[data-cpq]`) and the quarter pills toggle them —
 one quarter visible at a time, so the page stays light as quarters accumulate. Each quarter keeps

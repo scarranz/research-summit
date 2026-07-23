@@ -1084,35 +1084,54 @@ function cpEvCell(key, m, isCustom){
 // every company (CALL_PREP_CONVENTIONS §6). GOOGL → https://abc.xyz/investor/
 var CP_IR_URL='https://abc.xyz/investor/';
 var CP_EDGAR_URL='https://www.sec.gov/edgar/browse/?CIK=1652044&owner=exclude';
+// Identity, not decoration: the company's real logo on the IR card, the SEC eagle seal on the
+// EDGAR card — both oversized, on near-black, with a giant watermark of the same mark behind.
+// Logo comes from the portal's standard logo CDN (parqet, CSP-allowed); the SEC seal is the
+// official public-domain seal served locally (img/sec-seal.png).
+// Official Google "G" (transparent bg, gstatic — already CSP-allowed) so both marks get the same
+// treatment: transparent emblem in a glowing ring + giant watermark. No white tiles.
+var CP_LOGO_URL='https://www.gstatic.com/images/branding/googleg/2x/googleg_standard_color_128dp.png';
+var CP_SEC_SEAL='img/sec-seal.png';
 function cpIRButton(){
   return '<style>'+
-    '.cp-srcrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}@media(max-width:760px){.cp-srcrow{grid-template-columns:1fr}}'+
-    '.cp-ir{display:flex;align-items:center;gap:14px;text-decoration:none;border-radius:14px;padding:15px 18px;position:relative;overflow:hidden;'+
-      'background:linear-gradient(100deg,#0B1220 0%,#101C3A 55%,#0B1220 100%);border:1px solid rgba(66,133,244,0.45);box-shadow:0 6px 22px rgba(16,20,26,.22);transition:.16s}'+
-    '.cp-ir:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,'+BRAND+','+RED+','+YELLOW+','+BRAND2+');height:3px;top:0}'+
-    '.cp-ir:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(26,115,232,.35);border-color:'+BRAND+'}'+
-    '.cp-ir-ic{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,'+BRAND+','+PURPLE+');display:flex;align-items:center;justify-content:center;font-size:22px;flex:none;box-shadow:0 3px 10px rgba(26,115,232,.4)}'+
-    '.cp-ir-body{flex:1;min-width:0}'+
-    '.cp-ir-k{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:#8AB4F8;display:flex;align-items:center;gap:7px}'+
+    '.cp-srcrow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 16px}@media(max-width:760px){.cp-srcrow{grid-template-columns:1fr}}'+
+    '.cp-ir{display:flex;align-items:center;gap:20px;text-decoration:none;border-radius:18px;padding:26px 26px;min-height:120px;position:relative;overflow:hidden;'+
+      'background:linear-gradient(115deg,#04060B 0%,#0A1224 60%,#04060B 100%);border:1px solid rgba(66,133,244,.3);box-shadow:0 10px 32px rgba(0,0,0,.4);transition:.18s}'+
+    '.cp-ir:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,'+BRAND+','+RED+','+YELLOW+','+BRAND2+');height:4px;top:0}'+
+    '.cp-ir:hover{transform:translateY(-2px);box-shadow:0 16px 42px rgba(26,115,232,.4);border-color:rgba(66,133,244,.75)}'+
+    /* the giant watermark — the mark itself, monumental, bleeding off the card */
+    '.cp-ir-wm{position:absolute;right:-40px;bottom:-60px;width:230px;height:230px;object-fit:contain;opacity:.09;pointer-events:none;transition:.25s}'+
+    '.cp-ir:hover .cp-ir-wm{opacity:.16;transform:scale(1.04) rotate(-2deg)}'+
+    /* the emblem — transparent mark in a glowing ring, same treatment both cards */
+    '.cp-ir-ic{width:72px;height:72px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;flex:none;position:relative;z-index:1;'+
+      'box-shadow:0 0 0 1px rgba(138,180,248,.3),0 0 32px rgba(66,133,244,.55)}'+
+    '.cp-ir-ic img{width:52px;height:52px;object-fit:contain;display:block;filter:drop-shadow(0 2px 10px rgba(0,0,0,.55))}'+
+    '.cp-ir-body{flex:1;min-width:0;position:relative;z-index:1}'+
+    '.cp-ir-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.16em;color:#8AB4F8;display:flex;align-items:center;gap:7px}'+
     '.cp-ir-dot{width:7px;height:7px;border-radius:50%;background:'+BRAND2+';box-shadow:0 0 0 0 rgba(52,168,83,.7);animation:cpirp 1.6s infinite}'+
     '@keyframes cpirp{0%{box-shadow:0 0 0 0 rgba(52,168,83,.6)}70%{box-shadow:0 0 0 8px rgba(52,168,83,0)}100%{box-shadow:0 0 0 0 rgba(52,168,83,0)}}'+
-    '.cp-ir-t{font-size:16px;font-weight:800;color:#fff;letter-spacing:.01em;margin-top:2px}'+
-    '.cp-ir-s{font-size:10.5px;color:#B9C4D8;font-weight:600;margin-top:1px}'+
-    '.cp-ir-go{font-size:12px;font-weight:800;color:#fff;background:'+BRAND+';border-radius:999px;padding:9px 17px;white-space:nowrap;flex:none;display:flex;align-items:center;gap:7px;transition:.14s}'+
-    '.cp-ir:hover .cp-ir-go{background:'+BRAND2+';gap:11px}'+
+    '.cp-ir-t{font-size:19px;font-weight:900;color:#fff;letter-spacing:.05em;text-transform:uppercase;margin-top:4px}'+
+    '.cp-ir-s{font-size:11.5px;color:#9FB0C8;font-weight:600;margin-top:3px;letter-spacing:.01em}'+
+    '.cp-ir-go{font-size:13px;font-weight:900;color:#fff;background:'+BLUE+';border-radius:999px;padding:12px 22px;white-space:nowrap;flex:none;display:flex;align-items:center;gap:8px;position:relative;z-index:1;letter-spacing:.04em;transition:.14s}'+
+    '.cp-ir:hover .cp-ir-go{gap:12px;box-shadow:0 4px 18px rgba(26,115,232,.55)}'+
     '@media(max-width:560px){.cp-ir{flex-wrap:wrap}.cp-ir-go{width:100%;justify-content:center}}'+
-    /* EDGAR variant — the regulator's lens: steel/green identity, same weight as IR */
-    '.cp-ir.edgar{background:linear-gradient(100deg,#0B1A14 0%,#12291F 55%,#0B1A14 100%);border-color:rgba(52,168,83,0.45)}'+
-    '.cp-ir.edgar:before{background:linear-gradient(90deg,'+BRAND2+',#188038)}'+
-    '.cp-ir.edgar:hover{box-shadow:0 10px 28px rgba(52,168,83,.32);border-color:'+BRAND2+'}'+
-    '.cp-ir.edgar .cp-ir-ic{background:linear-gradient(135deg,'+BRAND2+',#188038);box-shadow:0 3px 10px rgba(52,168,83,.4)}'+
-    '.cp-ir.edgar .cp-ir-k{color:#81C995}'+
-    '.cp-ir.edgar .cp-ir-go{background:'+BRAND2+'}'+
-    '.cp-ir.edgar:hover .cp-ir-go{background:'+BRAND+'}'+
+    /* EDGAR variant — federal weight: near-black + the gold of the seal, eagle front and center */
+    '.cp-ir.edgar{background:linear-gradient(115deg,#070502 0%,#171106 60%,#070502 100%);border-color:rgba(197,164,90,.35)}'+
+    '.cp-ir.edgar:before{background:linear-gradient(90deg,#8C6D2F,#E3C878,#8C6D2F)}'+
+    '.cp-ir.edgar:hover{box-shadow:0 16px 42px rgba(197,164,90,.32);border-color:rgba(227,200,120,.75)}'+
+    '.cp-ir.edgar .cp-ir-ic{box-shadow:0 0 0 1px rgba(227,200,120,.28),0 0 32px rgba(197,164,90,.55)}'+
+    '.cp-ir.edgar .cp-ir-ic img{width:72px;height:72px}'+
+    '.cp-ir.edgar .cp-ir-k{color:#E3C878}'+
+    '.cp-ir.edgar .cp-ir-dot{background:#E3C878;animation:none;box-shadow:0 0 8px rgba(227,200,120,.8)}'+
+    '.cp-ir.edgar .cp-ir-go{background:linear-gradient(135deg,#E3C878,#B8933F);color:#1A1305}'+
+    '.cp-ir.edgar:hover .cp-ir-go{box-shadow:0 4px 18px rgba(197,164,90,.6)}'+
+    '.cp-ir.edgar .cp-ir-wm{opacity:.1}'+
+    '.cp-ir.edgar:hover .cp-ir-wm{opacity:.17}'+
   '</style>'+
   '<div class="cp-srcrow">'+
   '<a class="cp-ir" href="'+CP_IR_URL+'" target="_blank" rel="noopener">'+
-    '<span class="cp-ir-ic">📡</span>'+
+    '<img class="cp-ir-wm" src="'+CP_LOGO_URL+'" alt="" aria-hidden="true">'+
+    '<span class="cp-ir-ic"><img src="'+CP_LOGO_URL+'" alt="Alphabet logo" onerror="this.parentNode.style.display=\'none\'"></span>'+
     '<span class="cp-ir-body">'+
       '<span class="cp-ir-k"><span class="cp-ir-dot"></span>THE SOURCE · EARNINGS HQ</span>'+
       '<span class="cp-ir-t" style="display:block">Alphabet Investor Relations</span>'+
@@ -1121,9 +1140,10 @@ function cpIRButton(){
     '<span class="cp-ir-go">OPEN IR <span>↗</span></span>'+
   '</a>'+
   '<a class="cp-ir edgar" href="'+CP_EDGAR_URL+'" target="_blank" rel="noopener">'+
-    '<span class="cp-ir-ic">🏛️</span>'+
+    '<img class="cp-ir-wm" src="'+CP_SEC_SEAL+'" alt="" aria-hidden="true">'+
+    '<span class="cp-ir-ic"><img src="'+CP_SEC_SEAL+'" alt="SEC seal" onerror="this.parentNode.style.display=\'none\'"></span>'+
     '<span class="cp-ir-body">'+
-      '<span class="cp-ir-k"><span class="cp-ir-dot"></span>THE RECORD · SEC FILINGS</span>'+
+      '<span class="cp-ir-k"><span class="cp-ir-dot"></span>THE RECORD · U.S. SECURITIES AND EXCHANGE COMMISSION</span>'+
       '<span class="cp-ir-t" style="display:block">Alphabet on EDGAR</span>'+
       '<span class="cp-ir-s" style="display:block">10-K · 10-Q · 8-K · DEF 14A — the regulator\'s copy, as filed. What IR curates, EDGAR certifies.</span>'+
     '</span>'+

@@ -107,6 +107,26 @@ export async function syncManagement(ticker, companyId) {
   return ok(data);
 }
 
+// ─── Earnings Call Transcripts (Fiscal.ai) ──────────────────
+// Generic for any ticker the Fiscal.ai plan covers. A response with
+// data.unavailable === true means the company is not on our current tier.
+
+export async function listIrEvents(ticker) {
+  var { data, error } = await supabase.functions.invoke('get-transcript', {
+    body: { ticker: ticker },
+  });
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+export async function fetchTranscript(ticker, eventKey) {
+  var { data, error } = await supabase.functions.invoke('get-transcript', {
+    body: { ticker: ticker, eventKey: eventKey },
+  });
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
 // ─── Company Search (Fiscal.ai) ──────────────────────────────
 
 export async function searchCompany(query) {
@@ -122,6 +142,66 @@ export async function searchCompany(query) {
 export async function lookupTicker(ticker) {
   var { data, error } = await supabase.functions.invoke('lookup-ticker', {
     body: { ticker: ticker },
+  });
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+// ─── Investment tab ───────────────────────────────────────────
+
+export async function fetchInvestmentSectors() {
+  var { data, error } = await supabase
+    .from('investment_sectors')
+    .select('*')
+    .order('sort_order');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function insertInvestmentSector(row) {
+  var { data, error } = await supabase
+    .from('investment_sectors')
+    .insert([row])
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+export async function fetchInvestmentCompanies() {
+  var { data, error } = await supabase
+    .from('investment_companies')
+    .select('*')
+    .eq('status', 'active')
+    .order('sort_order');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function insertInvestmentCompany(row) {
+  var { data, error } = await supabase
+    .from('investment_companies')
+    .insert([row])
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+export async function updateInvestmentCompany(id, updates) {
+  var { data, error } = await supabase
+    .from('investment_companies')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+export async function generateInvestmentWriteup(ticker, name, sector) {
+  var { data, error } = await supabase.functions.invoke('generate-investment-writeup', {
+    body: { ticker: ticker, name: name, sector: sector },
   });
   if (error) return fail(error.message);
   return ok(data);

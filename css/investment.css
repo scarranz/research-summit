@@ -1,0 +1,261 @@
+/* ─── Investment: sector grid, sector detail, company detail ─── */
+
+.iv-h1 {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.iv-sub {
+  font-size: 14px;
+  color: var(--mu);
+  margin: 6px 0 20px;
+}
+
+.iv-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 18px;
+}
+
+/* ─── Sector grid ─── */
+
+.iv-secgrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.ivsec-card {
+  background: var(--w);
+  border: 1px solid var(--bdr);
+  border-radius: 14px;
+  padding: 22px;
+  cursor: pointer;
+  transition: all .16s;
+}
+
+.ivsec-card:hover {
+  border-color: var(--steel);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .06);
+  transform: translateY(-1px);
+}
+
+.ivsec-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--navy);
+  letter-spacing: -0.01em;
+}
+
+.ivsec-count {
+  font-size: 12px;
+  color: var(--mu);
+  margin: 4px 0 16px;
+}
+
+.ivsec-logos {
+  display: flex;
+}
+
+.ivsec-logos .ivlogo {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  margin-left: -8px;
+  border: 2px solid var(--w);
+}
+
+.ivsec-logos .ivlogo:first-child { margin-left: 0; }
+
+.ivsec-logos .ivlogo img { padding: 6px; }
+
+.iv-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--mu);
+  padding: 34px;
+  font-size: 13px;
+}
+
+/* ─── Sector detail: company tile grid ─── */
+
+.iv-tilegrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.ivtile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 22px 14px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background .12s;
+}
+
+.ivtile:hover { background: var(--surface); }
+
+.ivtile-nm {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.ivtile-meta {
+  font-size: 12.5px;
+  color: var(--mu);
+  margin-top: 5px;
+}
+
+/* ─── Logo (mirrors .cologo fallback chain) ─── */
+
+.ivlogo {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--bdr);
+  background: var(--w);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--mu);
+}
+
+.ivlogo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 6px;
+}
+
+.ivlogo.mono { background: var(--surface); }
+
+.ivlogo.circ {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  font-size: 17px;
+  margin-bottom: 14px;
+}
+
+.ivlogo.circ img { padding: 9px; }
+
+.ivlogo.lg {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 18px;
+}
+
+.ivlogo.lg img { padding: 10px; }
+
+/* ─── Company detail ─── */
+
+.ivhead {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+
+.ivtitle .iv-eyebrow {
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mu);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.ivtitle h2 {
+  font-family: 'Inter', serif;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--navy);
+  line-height: 1.1;
+}
+
+.ivtitle .sub {
+  font-size: 12px;
+  color: var(--mu);
+  margin-top: 2px;
+}
+
+.iv-editbtn {
+  margin-left: auto;
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1px solid var(--bdr);
+  background: var(--w);
+  color: var(--mu);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .12s;
+}
+
+.iv-editbtn:hover { border-color: var(--steel); color: var(--steel); }
+
+.iv-body {
+  margin-top: 22px;
+  max-width: 760px;
+}
+
+.iv-section { margin-bottom: 26px; }
+.iv-section:last-child { margin-bottom: 0; }
+
+.iv-section-label {
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--mu);
+  font-weight: 700;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--bdr);
+}
+
+.iv-prose {
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--text);
+}
+
+.iv-prose p {
+  margin-bottom: 14px;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
+}
+.iv-prose p:last-child { margin-bottom: 0; }
+.iv-prose strong { color: var(--navy); font-weight: 700; }
+
+.iv-prose-empty {
+  color: var(--mu);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.iv-disclaim {
+  text-align: center;
+  font-size: 12px;
+  color: var(--mu);
+  line-height: 1.6;
+  max-width: 680px;
+  margin: 22px auto 0;
+}

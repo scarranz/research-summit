@@ -1284,7 +1284,7 @@ function cpWatchBody(c){
     var wl=u.watchList||[];
     if(!wl.length){ b+='<div class="cp-note">Watch List builds from the earnings-call record + the Bloomberg export — 5 ranked, grounded, falsifiable items per the conventions.</div>'; }
     else{ b+='<div class="cp-watch">'+wl.map(function(w){ return cpWatchItem(w, qk, '', null); }).join('')+'</div>'; }
-    b+='<div class="ov-foot">'+(frozen?'Frozen — this list was scored against '+esc(u.q)+'\'s Post-Results/Post-Call; its <code>newQuestions</code> seeded the next quarter.':'Frozen once the quarter opens; scored against Post-Results / Post-Call. Themes carry their quarter-by-quarter thread (source: docs/calls/GOOGL) — promise-type items are tracked here and in Evolution ▸ Earnings Calls.')+'</div>';
+    b+='<div class="ov-foot">'+(frozen?'Frozen — this list was scored against '+esc(u.q)+'\'s Post-Results/Post-Call; its <code>newQuestions</code> seeded the next quarter.':'Frozen once the quarter opens; scored against Post-Results / Post-Call. Themes carry their quarter-by-quarter thread (source: docs/calls/GOOGL) — promise-type items are tracked here and in the theme record below.')+'</div>';
     b+='</div>';
     return b;
   }).join('');
@@ -1296,6 +1296,12 @@ function cpWatchBody(c){
     var qk=cpQkey(u.q);
     return (u.watchList||[]).map(function(w){ return cpWatchItem(w, qk, '-f', u.q); }).join('');
   }).join('')+'</div>';
+  h+='</div>';
+  // ── FUSED: the full multi-year theme record (was the standalone Evolution ▸ Earnings Calls tab,
+  // dissolved Jul 2026 — no two tabs on the same call highlights). Lives here, under the Watch List. ──
+  h+='<div style="margin-top:26px;border-top:2px solid var(--bdr);padding-top:16px">';
+  h+='<div class="cp-band" style="--bc:'+BRAND+'"><span class="cp-band-i">▤</span><span class="cp-band-t">The theme record — every thread, across all calls</span><span class="cp-band-s">the multi-year backbone behind the hunt above (the former "Earnings Calls" tab, folded in)</span><span class="cp-band-l"></span></div>';
+  h+=callsBody();
   h+='</div>';
   return h;
 }
@@ -1954,41 +1960,42 @@ var GOOGL_MGMT = makeManagement({
   brand:BRAND,
   lede:'Alphabet is <b>founder-controlled but operator-run</b>: Larry Page and Sergey Brin hold voting control (Class B) and board seats but stepped out of operations in 2019, leaving a deep professional bench under <b>Sundar Pichai</b> — with the divisional CEOs (Cloud, DeepMind, YouTube) running their own P&Ls at unusual autonomy.',
   execs:[
-    { id:'pichai', lead:true, name:'Sundar Pichai', title:'CEO, Alphabet & Google', since:'at Google since 2004 · Google CEO 2015 · Alphabet CEO 2019',
+    { id:'pichai', img:'img/leadership/googl-pichai.jpg', lead:true, name:'Sundar Pichai', title:'CEO, Alphabet & Google', since:'at Google since 2004 · Google CEO 2015 · Alphabet CEO 2019',
       line:'From Chrome PM to the AI-era CEO; architect of the full-stack response.',
       bio:'Joined in 2004; ran Chrome and Android before becoming Google CEO in the 2015 Alphabet restructuring and Alphabet CEO in 2019 when the founders stepped back. Declared the company "AI-first" in 2016 (the TPU/DeepMind groundwork), absorbed the 2023 "code red," and delivered the Gemini-era turnaround — reorganizing research (DeepMind merge), shipping Gemini 1→3 in 24 months, and committing the largest capital program in corporate history.' },
     { id:'anat', name:'Anat Ashkenazi', title:'SVP & CFO', since:'since Jul 2024 · ex-Eli Lilly CFO',
       line:'Owns the capex-ladder narrative: raises with proof attached, depreciation flagged unprompted.',
       bio:'CFO since July 2024, after two decades at Eli Lilly (CFO 2021-24). Brought pharma-style capital discipline to the AI build-out: ROIC framing on every allocation question, per-call depreciation candor, the backlog-conversion disclosure, and the first material debt issuance — executed while group margins expanded.' },
-    { id:'schindler', name:'Philipp Schindler', title:'SVP & Chief Business Officer', since:'at Google since 2005',
+    { id:'schindler', img:'img/leadership/googl-schindler.jpg', name:'Philipp Schindler', title:'SVP & Chief Business Officer', since:'at Google since 2005',
       line:'Runs the ads franchise — carried it through the AI transition accelerating, not shrinking.',
       bio:'Chief Business Officer since 2015; two decades at Google across European and global sales. Owns the advertiser relationship end-to-end — the AI-campaign migration (AI Max, PMax, Demand Gen), the new-surface monetization ladder (AIO ads, Direct Offers, UCP), and the vertical franchises (retail, finance). Notably candid on his own numbers (the volunteered FX caveat, Q1 2026).' },
-    { id:'porat', name:'Ruth Porat', title:'President & Chief Investment Officer', since:'at Alphabet since 2015 · CFO 2015-2024',
+    { id:'porat', img:'img/leadership/googl-porat.jpg', name:'Ruth Porat', title:'President & Chief Investment Officer', since:'at Alphabet since 2015 · CFO 2015-2024',
       line:'The discipline era\'s CFO, now running Other Bets investment and the capital relationships.',
       bio:'CFO 2015-2024 (ex-Morgan Stanley CFO) — brought the cost discipline that made "Other Bets" a reported, bounded number and built the buyback program. As President & CIO since 2024, oversees Alphabet\'s investment portfolio and the Bets\' external-capital strategy (Waymo\'s $16B round, Verily/GFiber deconsolidations bear her signature).' },
-    { id:'kurian', name:'Thomas Kurian', title:'CEO, Google Cloud', since:'since 2019 · ex-Oracle (22 yrs)',
+    { id:'kurian', img:'img/leadership/googl-kurian.jpg', name:'Thomas Kurian', title:'CEO, Google Cloud', since:'since 2019 · ex-Oracle (22 yrs)',
       line:'2.6% → 32.9% segment margin in three years, while growth accelerated to +63%.',
       bio:'Left Oracle\'s product organization to run Google Cloud in 2019, inheriting a loss-making #3. Systematized enterprise sales, priced the AI portfolio (Vertex, Gemini Enterprise — 8M paid seats in four months), and delivered the sector\'s fastest large-scale margin build alongside its fastest growth. The $462B backlog is his book.' },
-    { id:'hassabis', name:'Demis Hassabis', title:'CEO, Google DeepMind', since:'DeepMind founder 2010 · acquired 2014 · merged 2023',
+    { id:'hassabis', img:'img/leadership/googl-hassabis.jpg', name:'Demis Hassabis', title:'CEO, Google DeepMind', since:'DeepMind founder 2010 · acquired 2014 · merged 2023',
       line:'Nobel laureate; turned the research jewel into the revenue engine\'s core input.',
       bio:'Chess prodigy, neuroscientist, DeepMind founder. AlphaFold won him the 2024 Nobel Prize in Chemistry; the 2023 Brain-DeepMind merger under his leadership produced Gemini — now the fastest-adopted model family in company history, powering Search, Cloud and the app. The clearest research-to-product transmission in the industry.' },
-    { id:'mohan', name:'Neal Mohan', title:'CEO, YouTube', since:'since 2023 · at Google since 2008',
+    { id:'mohan', img:'img/leadership/googl-mohan.jpg', name:'Neal Mohan', title:'CEO, YouTube', since:'since 2023 · at Google since 2008',
       line:'#1 US streamer three straight years; the Shorts defense turned profitable.',
       bio:'Ad-tech veteran (DoubleClick) who became YouTube\'s product chief and then CEO in 2023. Record: US streaming watch-time leadership three consecutive years, Shorts monetization parity with in-stream (US), the subscriptions twin-engine (>$60B/yr combined), NFL Sunday Ticket and the living-room pivot.' },
   ],
   board:[
-    { name:'John L. Hennessy', chair:true, independent:true, role:'Chair since 2018 · former Stanford president · Turing Award winner.' },
-    { name:'Larry Page', independent:false, role:'Co-founder · Class B holder · stepped back from operations 2019.' },
-    { name:'Sergey Brin', independent:false, role:'Co-founder · Class B holder · returned hands-on for the Gemini effort.' },
+    { name:'John L. Hennessy', chair:true, independent:true, role:'Independent Chair since 2018 (Lead Independent Director 2007–2018) · ex-Stanford president · Turing Award winner · director since 2004.' },
+    { name:'Larry Page', independent:false, role:'Co-founder · Class B holder · stepped back from operations 2019 · director since 2015 (Google 1998).' },
+    { name:'Sergey Brin', independent:false, role:'Co-founder · Class B holder · returned hands-on for the Gemini effort · director since 2015 (Google 1998).' },
     { name:'Sundar Pichai', dual:true, independent:false, role:'CEO · director since 2017.' },
-    { name:'Frances Arnold', independent:true, role:'Nobel laureate (Chemistry) · Caltech professor.' },
-    { name:'R. Martin Chávez', independent:true, role:'ex-Goldman Sachs CFO/CIO · Sixth Street vice chairman.' },
-    { name:'John Doerr', independent:true, role:'Kleiner Perkins chairman · investor since the 1999 round.' },
-    { name:'Roger W. Ferguson Jr.', independent:true, role:'ex-Federal Reserve vice chairman · ex-TIAA CEO.' },
-    { name:'Robin L. Washington', independent:true, role:'ex-Gilead CFO · audit expertise.' },
+    { name:'Frances H. Arnold', independent:true, role:'Nobel laureate (Chemistry) · Caltech professor · director since 2019.' },
+    { name:'R. Martin "Marty" Chávez', independent:true, role:'ex-Goldman Sachs CFO/CIO · Sixth Street vice chairman · director since 2022.' },
+    { name:'L. John Doerr', independent:true, role:'Kleiner Perkins chairman · early investor (1999 round) · director since 2016.' },
+    { name:'Roger W. Ferguson Jr.', independent:true, role:'ex-Federal Reserve vice chairman · ex-TIAA CEO · now CIO, Red Cell Partners · director since 2016.' },
+    { name:'K. Ram Shriram', independent:true, role:'Managing Partner, Sherpalo Ventures · founding board member & one of Google\'s earliest investors · longest-tenured director, since 1998.' },
+    { name:'Robin L. Washington', independent:true, role:'President & COO/CFO of Salesforce · ex-Gilead CFO · audit expertise · director since 2019.' },
   ],
-  boardNote:'Principal directors shown; committee assignments and the full roster to be verified against the latest DEF 14A before publishing. Founders\' Class B control means board power ultimately traces to Page & Brin.',
-  foot:'Roster from company announcements and the most recent proxy on record — flag: verify titles/committees against the 2026 DEF 14A before this ships to production.',
+  boardNote:'The full 10-member board (verified vs the 2026 DEF 14A, filed 2026-04-24, and abc.xyz/investor). 7 independent; key committees (Audit, Talent & Comp, Leadership Dev & Comp, Nominating & Gov) are 100% independent. Founders\' Class B control means board power ultimately traces to Page & Brin.',
+  foot:'Roster & titles per Alphabet\'s 2026 DEF 14A (filed 2026-04-24) and abc.xyz/investor board page.',
 });
 function ownershipBody(c){
   var h='<p class="ov-lede"><b>Three share classes, one asymmetry:</b> the public owns most of the economics; the founders keep control. All figures approximate per the last proxy on record — <span class="ave-subh-note">verify against the 2026 DEF 14A before publishing.</span></p>';
@@ -2026,6 +2033,22 @@ function trackBody(c){
       '<div class="ave-subh-note" style="margin:2px 0 6px">'+esc(t.role)+' · '+esc(t.since)+'</div>'+
       '<div class="gdd-card-t">'+esc(t.line)+'</div><div class="gdd-more">The record ›</div></div>';
   }).join('')+'</div>';
+  // Independent board — outside credibility strip (parity with the operators grid; the full 10-member
+  // board incl. K. Ram Shriram is in Executives & Board). Surfaces the outside oversight in Track Record.
+  var GBOARD=[
+    ['John L. Hennessy','Independent Chair · ex-Stanford president · Turing Award winner.'],
+    ['K. Ram Shriram','Sherpalo Ventures · founding director & earliest Google investor (since 1998).'],
+    ['Frances H. Arnold','Nobel laureate (Chemistry) · Caltech professor.'],
+    ['L. John Doerr','Kleiner Perkins chairman · early investor (1999).'],
+    ['Roger W. Ferguson Jr.','ex-Federal Reserve vice chairman · ex-TIAA CEO.'],
+    ['Robin L. Washington','President & COO/CFO of Salesforce · ex-Gilead CFO.'],
+    ['R. Martin "Marty" Chávez','ex-Goldman Sachs CFO/CIO · Sixth Street vice chairman.'],
+  ];
+  h+='<div style="margin-top:20px"><div class="ov-sec-h" style="margin-bottom:10px">Independent board — the outside credibility</div>'+
+    '<div class="ave-subh-note" style="margin:0 0 8px">The operators above are rated on their record; the independent directors (7 of 10) bring <b>outside oversight</b> — a Nobel laureate, an ex-Fed vice chairman, sitting/former public-company CFOs, and Google\'s longest-tenured director.</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px">'+GBOARD.map(function(b){
+      return '<div style="border:1px solid var(--bdr);border-left:3px solid '+BRAND+';border-radius:9px;padding:9px 12px"><div style="font-size:12px;font-weight:800;color:var(--navy)">'+esc(b[0])+'</div><div style="font-size:10.5px;color:var(--mu);line-height:1.45;margin-top:2px">'+esc(b[1])+'</div></div>';
+    }).join('')+'</div></div>';
   h+='<div class="ov-callout" style="margin-top:12px"><b>The caveat:</b> nearly every rating above rides the same wave — the AI cycle. The bench has not been tested by a down-cycle in this configuration, and founder control means accountability ultimately runs to two people who no longer operate. The counterweight: divisional CEOs with real P&L records (Kurian\'s ladder, Mohan\'s streaming lead) that stand on their own.</div>';
   return h;
 }
@@ -2130,14 +2153,13 @@ function deepDiveHtml(c){
   h+='<div class="dd-pane" data-dd="evolution" hidden>'+
       '<div class="ovt-subtabs">'+
         '<button type="button" class="ovt-subtab active" data-ovst="callprep">Call Prep</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="earnings">Earnings Calls</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="callprep">'+
         cpIRButton()+
-        '<div class="cp-note" style="margin-bottom:12px">🎯 <b>Call Prep</b> — the decision layer, in three phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (react to the numbers, which land before the call) → <b>③ Post-Call</b> (what management said + the meeting take). Append-only per quarter — pick a quarter below; each quarter keeps its frozen pre-call blocks next to its post-mortem, so the tab is a record of how well we read Alphabet.</div>'+
+        '<div class="cp-note" style="margin-bottom:12px">🎯 <b>Call Prep</b> — the decision layer, in three phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (react to the numbers, which land before the call) → <b>③ Post-Call</b> (what management said + the meeting take). Append-only per quarter — pick a quarter below; each quarter keeps its frozen pre-call blocks next to its post-mortem, so the tab is a record of how well we read Alphabet. The <b>Watch List</b> is now the single home for theme-tracking — the old standalone <i>Earnings Calls</i> tab was folded into it (no two tabs on the same call highlights).</div>'+
         cpQPills()+
         '<div class="cp-phtabs">'+
           '<button type="button" class="cp-phtab active" data-cpp="setup">Setup</button>'+
@@ -2150,7 +2172,6 @@ function deepDiveHtml(c){
         '<div class="cp-phpane" data-cpp="results" hidden>'+cpResultsBody(c)+'</div>'+
         '<div class="cp-phpane" data-cpp="postcall" hidden>'+cpCallBody(c)+'</div>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="earnings" hidden>'+callsBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="guidance" hidden>'+guidanceBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="strategy" hidden>'+strategyBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="timeline" hidden>'+timelineBody()+'</div>'+

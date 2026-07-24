@@ -15,6 +15,9 @@ function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').repla
 
 // ─── Brand: Interactive Brokers red + a supporting palette ──────────────────────────────────────
 var BRAND='#D6001C', BRAND2='#0A8F4C', BLUE='#2E6BE6', GRAY='#9AA4B0', PURPLE='#7A5AF8', AMBER='#B7791F';
+// RED = a distinct alert red (miss / fear / Post-Call band) kept separate from IBKR brand red;
+// YELLOW = the custom-KPI accent. Mirrors googl.js's palette so the ported Call Prep CSS reads coherently.
+var RED='#EA4335', YELLOW='#F9AB00';
 
 // ─── Management roster (Management ▸ Executives & Board). Public-source bios; no ownership/trades. ──
 // Verified against IBKR's 2026 proxy (DEF 14A, filed 2026-03-11) and FY2025 10-K, Part III:
@@ -25,7 +28,7 @@ var IBKR_MGMT = makeManagement({
   brand:BRAND,
   lede:"Interactive Brokers is a <b>founder-controlled</b> company run by a deep, long-tenured insider bench. <b>Thomas Peterffy</b> — the market-making pioneer who built it — is Chairman and controls <b>~73.7% of the vote</b> (via Class B). Day-to-day sits with CEO <b>Milan Galik</b>, CFO <b>Paul Brody</b> and Vice Chairman <b>Earl Nemser</b> — several with 30+ years at the firm. The whole company is engineered around one idea: <b>automate everything, minimize what we charge</b>.",
   execs:[
-    { id:'peterffy', lead:true, name:'Thomas Peterffy', title:'Founder & Chairman', since:'Founder · Chairman since 2006 · CEO until 2019',
+    { id:'peterffy', img:'img/leadership/ibkr-peterffy.jpg', lead:true, name:'Thomas Peterffy', title:'Founder & Chairman', since:'Founder · Chairman since 2006 · CEO until 2019',
       line:"Market-making pioneer; controls ~73.7% of the vote. Ran the firm as CEO until 2019.",
       bio:"Founder and Chairman (age 81); controls ~73.7% of IBKR's voting power via Class B stock. A Hungarian-born programmer who bought an AMEX seat in 1977 and pioneered computerized market-making (Timber Hill) — widely credited with automating options trading. Founded Interactive Brokers in 1993, took it public in 2007, and served as CEO until stepping up to Chairman in 2019. His salary is capped at 0.2% of IBG LLC net income ($591,500 in 2025) — no bonus, no equity. Still the firm's macro voice and strategic anchor." },
     { id:'galik', name:'Milan Galik', title:'Chief Executive Officer & President', since:'CEO since 2019 · at IBKR since 1990',
@@ -660,7 +663,7 @@ function regBody(c){
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // Earnings Calls ▸ IBKR_THEMES with By theme ⇄ By quarter toggle + accordion (9 threads across 10 calls)
 var IBKR_THEMES=[
-  { theme:'Account & client-asset growth',
+  { theme:'Account & client-asset growth', st:{ k:'trend', since:'Q4 2023', last:'Q2 2026' },
     why:'The compounding engine — organic, international, no incentives. As long as accounts and equity grow, so does everything else.',
     updates:[
       { q:'Q4 2023', items:['+470k accounts in FY23; client equity <b>+39% to $426B</b>.'] },
@@ -673,8 +676,9 @@ var IBKR_THEMES=[
       { q:'Q3 2025', items:['<b>4-millionth customer</b>; equity tops $750B (+40% vs +16% for the S&P).'] },
       { q:'Q4 2025', items:['<b>>1M net-new accounts in FY25 (record)</b>; equity $780B (+37%, +$200B).'] },
       { q:'Q1 2026', items:['Record accounts; equity <b>$789B (+38%)</b>; credit balances $169B (+35%).','Peterffy on durability: "as long as I shall live."'] },
+      { q:'Q2 2026', items:['Equity <b>$930B (+40%)</b>; 5.19M accounts (+34%); Tiger/Futu clampdown shifting diaspora <b>assets</b> onto IBKR.'] },
     ]},
-  { theme:'Net interest income & rate sensitivity',
+  { theme:'Net interest income & rate sensitivity', st:{ k:'trend', since:'Q4 2023', last:'Q2 2026' },
     why:'The biggest revenue line — and the bear case (rate cuts). The recurring answer: growing balances keep offsetting the cuts.',
     updates:[
       { q:'Q4 2023', items:['NII $730M; FY23 $2.8B. Short (&lt;30-day) duration; pays customers Fed funds − 50bps.'] },
@@ -683,8 +687,9 @@ var IBKR_THEMES=[
       { q:'Q3 2025', items:['NII <b>$967M</b>; −25bps = −$77M, full 1% = −$417M; securities-lending net $314M (~2×).'] },
       { q:'Q4 2025', items:['NII $966M; FY25 <b>$3.6B</b>; NIM-adjusted NII tops $1B in a quarter for the first time.'] },
       { q:'Q1 2026', items:['NII <b>$904M (+17%)</b>; −25bps = −$82M; margin loans $86.6B.'] },
+      { q:'Q2 2026', items:['NII <b>$1,057M (+23%)</b> <i>through</i> a −70bps Fed move; sensitivity ±$81M/25bps USD, ±$38M non-USD; NIM 1.93%.'] },
     ]},
-  { theme:'New products & asset classes',
+  { theme:'New products & asset classes', st:{ k:'trend', since:'Q3 2024', last:'Q2 2026' },
     why:'Broadening the box — crypto, overnight trading and prediction markets keep expanding what a single account can do.',
     updates:[
       { q:'Q3 2024', items:['<b>ForecastEx launched</b> (CFTC-regulated forecast contracts).'] },
@@ -694,30 +699,33 @@ var IBKR_THEMES=[
       { q:'Q3 2025', items:['Crypto volume +87% QoQ / 5× YoY.'] },
       { q:'Q4 2025', items:['ForecastX: <b>286M contract pairs</b> (from 15M), 10,000+ instruments, 24/7.'] },
       { q:'Q1 2026', items:['Crypto EEA launch + <b>Coinbase Derivatives perpetuals</b> + transfer-in. Overnight nearly tripled (2.8M → 8.1M). ForecastEx <b>Election Board</b> for the midterms.'] },
+      { q:'Q2 2026', items:['<b>IBKR Prediction Markets</b> aggregator (ForecastEx+CME+Kalshi; weather/insurance vision, no sports); overnight <b>10.9M</b> (from 3.8M); ~⅓ of crypto is perpetuals; Korea/Nextrade launched.'] },
     ]},
-  { theme:'AI across the firm',
+  { theme:'AI across the firm', st:{ k:'watch', since:'Q4 2024', last:'Q2 2026' },
     why:'Efficiency today, a trading-velocity thesis tomorrow. Headcount ~flat while accounts grew ~30%+.',
     updates:[
       { q:'Q4 2024', items:['<b>Ask IBKR</b>, Investment Themes, Connections; AI news summaries (FINRA-approved).'] },
       { q:'Q2 2025', items:['Multilingual chatbot; automated onboarding, compliance and surveillance.'] },
       { q:'Q4 2025', items:['Headcount ~flat (2,900 → 3,182) while accounts grew ~30%+; customer-service costs down.'] },
       { q:'Q1 2026', items:['Peterffy/Galik: AI should <b>raise trading velocity</b> long-term — a future revenue lever, not just cost.'] },
+      { q:'Q2 2026', items:['<b>IBKR Connector</b> (OpenAI/Anthropic/xAI) — clients wired chatbots to accounts organically; human-in-the-loop today, <b>autonomous trading on the roadmap</b>.'] },
     ]},
-  { theme:'Prime brokerage & hedge funds',
+  { theme:'Prime brokerage & hedge funds', st:{ k:'watch', since:'Q1 2024', last:'Q3 2025', silent:true },
     why:'Moving up-market against the bulge brackets — a fortress balance sheet is the trust signal.',
     updates:[
       { q:'Q1 2024', items:['Launched <b>High-Touch Prime</b> + a global outsourced trading desk.'] },
       { q:'Q3 2024', items:['34 funds onboarded, avg ~$160M each.'] },
       { q:'Q3 2025', items:['<b>Preqin #4 prime broker</b> (behind GS/MS/JPM); cap-intro revamp (120 → 240 participants). Fortress balance sheet as a trust signal.'] },
     ]},
-  { theme:'Introducing brokers',
+  { theme:'Introducing brokers', st:{ k:'promise', since:'Q2 2024', last:'Q2 2026' },
     why:'Distribution through other firms — banks and brokers run their brokerage on IBKR rails.',
     updates:[
       { q:'Q2 2024', items:['<b>HSBC WorldTrader</b> launched, powered by IBKR. ~two-dozen firms in the pipeline.'] },
       { q:'Q4 2024', items:['UAE ~10k-account migration; Asian virtual banks; omnibus vs disclosed models.'] },
       { q:'Q2 2025', items:['Firms that once declined are returning, drawn by breadth and cost.'] },
+      { q:'Q2 2026', items:['Pipeline reconciled: <b>4th–5th straight quarter</b> of double-digit integrations online; type shifted from startups to <b>established firms</b> broadening their offering.'] },
     ]},
-  { theme:'Margins, capital & dividend',
+  { theme:'Margins, capital & dividend', st:{ k:'trend', since:'Q4 2023', last:'Q2 2026' },
     why:'The 77% margin, a fortress balance sheet, and a growing capital return — disciplined by design.',
     updates:[
       { q:'Q4 2023', items:['Pre-tax margin 70%+; no long-term debt; dividend $0.10/qtr (since 2011).'] },
@@ -725,22 +733,25 @@ var IBKR_THEMES=[
       { q:'Q2 2025', items:['<b>4-for-1 stock split</b> (June 2025); equity $16.6B → $21.3B; ~$6–7B excess capital.'] },
       { q:'Q4 2025', items:['Pre-tax margin a record <b>77%</b>; 6+ straight 70%+ quarters. M&A discipline: "couldn\'t agree on price" on two targets; won\'t buy sports-betting.'] },
       { q:'Q1 2026', items:['Dividend at <b>$0.32/yr</b> ($0.08/qtr, split-adjusted); policy ~0.5–1% of the stock price.'] },
+      { q:'Q2 2026', items:['Excess capital <b>~$10.3B</b> (+$1.1B QoQ), still no buyback; dividend raised to <b>$0.35/yr</b>; pre-tax margin 77%; M&A discipline intact.'] },
     ]},
-  { theme:'Regulation & structure',
+  { theme:'Regulation & structure', st:{ k:'watch', since:'Q3 2024', last:'Q2 2026' },
     why:'The tailwinds and risks a broker lives with — charters, fee changes, and rule reform.',
     updates:[
       { q:'Q3 2024', items:['IB Central Europe + Ireland merger (~$7M/yr savings); Dubai office.'] },
       { q:'Q4 2024', items:['Applied for an <b>OCC National Trust Bank charter</b> (to custody fund/ETF assets); eventual European bank license (Ireland).'] },
       { q:'Q3 2025', items:['Added to the <b>S&P 500</b>. SEC fee moves ($27.80 → $0 → $20.60, pass-through). Crypto rules easing (SAB-121 rescinded; Coinbase suit dropped).'] },
       { q:'Q1 2026', items:['<b>Pattern-day-trader rule elimination</b> — a tailwind for small active accounts. Prediction-market fights (Kalshi/sports) in court — IBKR avoids sports.'] },
+      { q:'Q2 2026', items:['<b>OCC trust-bank charter "operational by year-end"</b> (Q1 silence resolved); Section 31 fee a pure pass-through (+$19M, no profit impact).'] },
     ]},
-  { theme:"Peterffy's macro & the founder view",
+  { theme:"Peterffy's macro & the founder view", st:{ k:'trend', since:'Q4 2023', last:'Q2 2026' },
     why:'The founder still shapes the thesis — his macro read and the clean founder-to-CEO handoff.',
     updates:[
       { q:'Q4 2023', items:['<b>Rates-higher-for-longer</b> thesis (de-globalization, demographics, deficits, green spend).'] },
       { q:'Q2 2024', items:['Multi-year market bullishness; margin-loans-as-a-warning ("nervous Nelly").'] },
       { q:'Q4 2025', items:['Overnight trading a secular <b>10–20 year</b> trend.'] },
       { q:'Q1 2026', items:['Clean founder-to-CEO handoff (Galik since 2019); Peterffy engaged as Chairman and majority owner.'] },
+      { q:'Q2 2026', items:['Candid: marketing yield is <b>NOT higher</b> ("roughly the same"), and the "no dilution" in DARTs/account is <b>partly the strong environment</b>, not proven structural.'] },
     ]},
 ];
 function callsByQuarter(){
@@ -759,13 +770,14 @@ function callsBody(){
     '.lpb-acc-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12.5px;font-weight:800;color:var(--navy);padding:11px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}'+
     '.lpb-acc-h:hover{background:#EEF2F6}.lpb-acc-ic{color:var(--mu);font-weight:800}'+
     '.lpb-acc-body{padding:12px 14px;display:none}.lpb-acc-item.open .lpb-acc-body{display:block}'+
-    '.ov-chip{display:inline-block;font-size:10px;font-weight:800;color:'+BRAND+';background:rgba(214,0,28,0.08);border-radius:20px;padding:2px 9px}</style>';
-  h+='<p class="ov-lede">The key narrative threads from <b>10 earnings calls</b> (Q4 2023 → Q1 2026). Switch lens: <b>By theme</b> traces how each story evolved; <b>By quarter</b> shows what mattered in a given call. Tap any row to expand.</p>';
+    '.ov-chip{display:inline-block;font-size:10px;font-weight:800;color:'+BRAND+';background:rgba(214,0,28,0.08);border-radius:20px;padding:2px 9px}'+
+    '.calls-st{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:2px 8px;white-space:nowrap;border:1px solid;flex:none}</style>';
   h+='<div class="calls-tog" role="tablist"><button type="button" class="calls-pill active" data-callsv="theme">By theme</button><button type="button" class="calls-pill" data-callsv="quarter">By quarter</button></div>';
   h+='<div class="lpb-acc" id="ibkrCallsTheme">';
   IBKR_THEMES.forEach(function(ct){
+    var sk=(ct.st&&ct.st.k)?ct.st.k:ct.st; var stc=CP_THST[sk]||CP_THST.watch;
     h+='<div class="lpb-acc-item">';
-    h+='<button type="button" class="lpb-acc-h"><span>'+esc(ct.theme)+'</span><span class="lpb-acc-ic">+</span></button>';
+    h+='<button type="button" class="lpb-acc-h"><span style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap">'+esc(ct.theme)+' <span class="calls-st" style="color:'+stc.c+';border-color:'+stc.c+'">'+stc.l+cpStAge(ct.st)+'</span></span><span class="lpb-acc-ic">+</span></button>';
     h+='<div class="lpb-acc-body">';
     h+='<p style="font-size:12px;color:var(--mu);margin:0 0 10px;font-style:italic">'+esc(ct.why)+'</p>';
     ct.updates.forEach(function(u){
@@ -788,7 +800,7 @@ function callsBody(){
     h+='</div></div>';
   });
   h+='</div>';
-  h+='<div class="ov-fynote" style="margin-top:12px">Sources: IBKR Q4 2023–Q1 2026 earnings calls and prepared remarks. Highlights are qualitative and contemporaneous — written from the perspective of each call.</div>';
+  h+='<div class="ov-fynote" style="margin-top:12px">Sources: IBKR Q4 2023–Q2 2026 earnings calls and prepared remarks (docs/calls/IBKR + IBKR-latest). Highlights are qualitative and contemporaneous — written from the perspective of each call. The status chip (trend / promise / watch, with its age) absorbs the dissolved Promise Tracker.</div>';
   return h;
 }
 // Guidance ▸ IBKR gives no revenue/EPS targets — it commits to a philosophy. Five colorful,
@@ -1174,7 +1186,12 @@ function trackBody(c){
       '<div class="ov-more" style="margin-top:6px;color:'+r.c+'">Full track record ›</div></div>';
   }).join('');
   var h='<p class="ov-lede">The people who <b>built and run</b> IBKR, rated on what they\'ve actually delivered. It is a rare bench: several with <b>30+ years</b> at the firm, engineering-led, and a clean founder-to-CEO handoff. <b>Tap a card</b> for the full history.</p>';
-  h+='<style>.trk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:11px}'+
+  // Fixed 3-column grid (was auto-fill): 6 operator cards → 2 even rows, so there are no empty
+  // trailing cells beside the last card before the "Independent board" section (the gap Dani flagged).
+  h+='<style>.trk-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}'+
+    '@media(max-width:820px){.trk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}'+
+    '@media(max-width:520px){.trk-grid{grid-template-columns:1fr}}'+
+    '.trk-ibd{margin-top:20px}'+
     '.trk-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.09);transform:translateY(-2px)}'+
     '.trk-top{display:flex;align-items:center;gap:7px}.trk-dot{width:9px;height:9px;border-radius:50%;flex:none}'+
     '.trk-nm{font-size:13.5px;font-weight:800;color:var(--navy);flex:1}'+
@@ -1186,9 +1203,9 @@ function trackBody(c){
     '.trkb-n{font-size:12px;font-weight:800;color:var(--navy)}.trkb-c-r{font-size:10.5px;color:var(--mu);line-height:1.45;margin-top:2px}</style>';
   h+='<div style="display:flex;gap:14px;flex-wrap:wrap;margin:0 0 12px">'+legend+'</div>';
   h+='<div class="trk-grid">'+cards+'</div>';
-  h+=sec('Independent board — the outside credibility',
+  h+='<div class="trk-ibd">'+sec('Independent board — the outside credibility',
     '<div class="ov-diagram-cap" style="margin:0 0 8px">The operators above are rated on their record; the independent directors bring <b>outside oversight</b> — and they are notably credible for a controlled company.</div>'+
-    '<div class="trkb">'+TRACK_BOARD.map(function(b){ return '<div class="trkb-c"><div class="trkb-n">'+esc(b.n)+'</div><div class="trkb-c-r">'+esc(b.cred)+'</div></div>'; }).join('')+'</div>');
+    '<div class="trkb">'+TRACK_BOARD.map(function(b){ return '<div class="trkb-c"><div class="trkb-n">'+esc(b.n)+'</div><div class="trkb-c-r">'+esc(b.cred)+'</div></div>'; }).join('')+'</div>')+'</div>';
   h+='<div class="ov-callout" style="margin-top:14px"><b>The one caveat:</b> almost every operator\'s record <i>is</i> the IBKR record — there is little external, independent benchmark for the bench, and the firm is deeply tied to Peterffy. Long-term succession beyond Galik is the open question. Offsetting it: a genuinely strong independent board (Harris, Repetto, Yuen).</div>';
   h+='<div class="ov-foot">Roster per IBKR\'s 2026 proxy & FY2025 10-K.</div>';
   return h;
@@ -1204,254 +1221,375 @@ function trackBody(c){
 // `results` → attend call → fill `call` (conclusion + newQuestions, which seed the next watchList).
 // The render (cp*Body) is generic — copy it to another ticker, swap content. Consensus is HARDCODED
 // from Bloomberg (only the values that render), see docs/CALL_PREP_CONVENTIONS.md.
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// EVOLUTION ▸ CALL PREP — the decision layer (v2.2, per docs/CALL_PREP_CONVENTIONS.md).
+// One Call Prep, many quarters (quarter selector). Four phases: Setup · Watch List · Post-Results ·
+// Post-Call. The Watch List is now the SINGLE home for theme-tracking — the old standalone
+// "Earnings Calls" (By theme ⇄ By quarter) compendium was fused in below it (team decision Jul 2026;
+// no more two tabs on the same highlights). Machinery ported from js/overviews/googl.js (the v2.2
+// reference), data swapped. Consensus is Bloomberg-only; upcoming-quarter cells read "—" until the
+// export lands. IBKR is a broker → P/E, never EV/EBITDA (see the headline caveats).
 var CALL_PREP = {
   ticker:'IBKR',
   quarters:[
-    { q:'Q2 2026', status:'upcoming', date:'Tue Jul 21, 2026 · after close (call 4:30pm ET)',
-      // Consensus below is HARDCODED and only the values that render in the portal (Bloomberg-sourced).
+    // ─── Q3 2026 — UPCOMING. Rolled 2026-07-24 after the Q2 call; Watch List seeded from Q2's
+    // newQuestions (§6d). Setup consensus fills when the Bloomberg Q3 export lands.
+    { q:'Q3 2026', status:'upcoming', date:'~mid-Oct 2026 · after close',
       setup:{
-        source:'Bloomberg (BST consensus)', asOf:'2026-07-21',
-        consensus:{
-          adjEps:{v:0.63,yoy:24,unit:'$'}, adjNetRevUsdM:{v:1787,yoy:21,unit:'$M'},
-          niiUsdM:{v:980,yoy:14,unit:'$M'}, dartsM:{v:4.72,yoy:33,unit:'M/day'},
-          accountsM:{v:5.15,yoy:33,unit:'M', note:{ t:'⚠ First quarter after the PDT-rule change', h:'<p>The <b>Pattern-Day-Trader rule was eliminated on June 4, 2026</b> — the $25k minimum for small active accounts is gone. Q2 2026 is the <b>first quarter to reflect it</b>, so a bump in US account adds is expected and partly <b>structural, not organic</b>.</p><p>Read the number with that caveat: the durable signal is the <b>international mix</b>, not the headline.</p>' }},
-          custEquityBn:{v:903.7,yoy:36,unit:'$B'},
-          creditBalAvgBn:{v:170.1,yoy:31,unit:'$B'}, preTaxMarginPct:{v:76.8,yoy:null,unit:'%'}
+        source:'Bloomberg (BST consensus) — Q3 export pending', asOf:null,
+        headline:[
+          { k:'Adj. net revenue', cons:null, us:null },
+          { k:'Pre-tax income', cons:null, us:null,
+            note:{ t:'Why "Pre-tax income", not "Operating income"', h:'<p>IBKR is a <b>broker/financial</b> — no COGS or D&A stack, so "operating income" is not the frame the Street uses. The bottom-line anchor is <b>pre-tax income</b> and its <b>pre-tax margin</b> (~77%). The four headline slots keep the convention\'s shape; for a broker they read Revenue · Pre-tax income · EPS · (EBITDA ≈ n/a).</p>' } },
+          { k:'Adj. EPS', cons:null, us:null },
+          { k:'EBITDA', cons:null, us:null,
+            note:{ t:'EBITDA is ~n/a for a broker', h:'<p>Kept only to preserve the convention\'s four-headline shape. IBKR\'s meaningful profitability frame is <b>pre-tax income / pre-tax margin</b> and <b>net income</b>, valued on <b>P/E — never EV/EBITDA</b>. Do not model IBKR on EBITDA.</p>' } },
+        ],
+        custom:[
+          { k:'Net interest income', cons:null, us:null },
+          { k:'DARTs', cons:null, us:null },
+          { k:'Customer accounts', cons:null, us:null },
+          { k:'Margin loans (avg / EOP)', cons:null, us:null,
+            note:{ t:'The Q2 standout — now Watch item #1', h:'<p>Margin loans hit <b>$96.6B avg / $108.5B EOP (+67% YoY)</b> in Q2 — a sharp acceleration from Q1\'s +35%, and the single biggest question the print raised. Q3 reads whether it is durable/broad or concentrated (customer bad debt ticked $1M → $10M).</p>' } },
+        ],
+        // The PREVIA — the one-picture read going in (frames the market's own tension; no Summit needed).
+        marketDebate:{
+          fear:'The margin-loan surge (+67%) is concentrated and pro-cyclical — a risk-on bubble that unwinds (bad debt already went $1M → $10M), and NII finally rolls as the Fed keeps cutting.',
+          real:'Balances have out-run the rate drag for six straight quarters; the Q2 sensitivity update (±$81M per 25bps) says even a deeper cut is a manageable dent against +40% equity / +67% margin-loan growth.',
+          mech:[ {k:'Fed', v:'more cuts', dir:'down'}, {k:'Balances', v:'equity +40% · margin +67%', dir:'up'}, {k:'⇒ NII', v:'the offset, again?', dir:'up'} ],
+          synth:'The Q2 print already settled "does NII survive the cuts" (yes). Q3\'s one thing to resolve is <b>the quality of the margin-loan growth</b> — broad and organic, or a few large levered accounts that make the whole NII engine more fragile than the headline looks.'
         },
-        debate:{
-          fear:'NII rolls over as the Fed cuts rates.',
-          real:'Consensus has NII <b>rising anyway</b> — $904M → est. $980M — because balances outgrow the rate drag.',
-          mech:[ {k:'NIM', v:'1.88% → 1.85%', dir:'down'}, {k:'Balances', v:'credit +31% · margin +56%', dir:'up'}, {k:'⇒ NII', v:'still +14% YoY', dir:'up'} ],
-          synth:'So the real question isn\'t the Fed — it\'s whether that balance growth is <b>organic and sticky</b>, or a rate-driven pull-forward that reverses. That\'s the one thing to disprove.'
-        },
-        detail:'<p>IBKR carries a <b>rate-cut discount</b> in its multiple — the bear assumes net interest income, its biggest revenue line, rolls over as the Fed eases.</p><p>But Bloomberg consensus itself already prices the opposite: NII <b>keeps growing</b> ($904M → $980M → $1,037M over the next three quarters) even as net interest margin compresses (1.88% → 1.85%), because <b>earning assets grow faster than the rate drag</b> — est. margin loans +56% YoY, credit balances +31%. The offset is the whole ballgame.</p>'
+        debate:null   // Summit-vs-Street disparity — fills when both estimate sets exist.
       },
       watchList:[
-        { rank:1, metric:'Net interest income & the NIM crossover', bbg:'Consensus $980M (+14% YoY); NIM 1.85% (from 1.88%)', breaks:'NII falls YoY while credit balances still grow',
-          pista:'Consensus already has NII <i>rising</i> ($904M→$980M) while NIM slips 1.88%→1.85% — i.e. the Street is not betting on rates, it\'s betting on balances. So the tell is simple: does NII grow YoY? If it does while the Fed eases, the rate-cut discount on the stock is the mispricing.',
-          why:'NII is IBKR\'s largest revenue line and the entire valuation debate. NII up while rates fall = the offset works; NII down while balances still climb = the offset broke and the multiple is too high.',
-          src:'A Bloomberg "Highlight" line + rate-sensitivity is the #1 recurring theme across the last 10 calls (management discloses the −25bps sensitivity every quarter).' },
-        { rank:2, metric:'The earning-asset engine: credit balances · margin loans · customer equity', bbg:'Consensus credit bal $170B (+31%), margin loans $95B avg (+56%), equity $904B (+36%)', breaks:'Any of the three decelerates sharply or goes flat QoQ',
-          pista:'These three lines ARE the NII engine — they are what make NII grow while NIM compresses. The one genuinely answerable question worth asking: how much of the growth is organic vs. rate/market-driven. If they dodge it, assume some is market-driven and therefore fragile.',
-          why:'The offset in #1 is literally these three lines. That is why Bloomberg highlights all three. If they stall, NII rolls over next.',
-          src:'Three separate Bloomberg "Highlight" lines (avg margin loans, avg credit balances, customer equity) — the vendor treats them as core drivers, not color.' },
-        { rank:3, metric:'Customer account growth', bbg:'Consensus 5.15M accounts (+33% YoY)', breaks:'Growth decelerates below ~25% YoY, or a PDT-driven spike that looks one-off',
-          pista:'Q2 is the first quarter after the PDT-rule change (eff. Jun 4), so a spike in small active accounts is expected. Don\'t be fooled by the headline number — the durable tell is the international mix; a US-only PDT bump that fades is a false positive.',
-          why:'Accounts are the top of the flywheel — every downstream line depends on it, and management leads every call with it. A sharp decel is the earliest crack.',
-          src:'A Bloomberg "Highlight" line + management\'s lead metric on every call; PDT (eff. Jun 4) makes Q2 the first read on the tailwind.' },
-        { rank:4, metric:'DARTs → commissions (and commission per DART)', bbg:'Consensus DARTs 4.72M (+33%), commissions $672M (+30%); comm/DART ~$2.69', breaks:'DARTs up but commission-per-DART drops materially',
-          pista:'Commission per cleared trade has held ~$2.65–2.83 for <b>two straight years</b> — that stability IS the pricing-power proof. So ignore the DART headline (it\'ll be up); the only thing that changes the story is commission-PER-DART cracking. If it finally slips, the "nobody can match our prices AND our margin" moat is weakening.',
-          why:'DARTs are the activity engine; commissions lever to them. The clean test of pricing power is per-DART, not raw DARTs.',
-          src:'Bloomberg tracks Avg Commission per DART explicitly; its two-year stability is the actual evidence on the "pricing pressure" worry (which analysts press LESS than expected).' },
-        { rank:5, metric:'New-product optionality: ForecastEx · crypto · overnight', bbg:'No clean consensus line — qualitative', breaks:'ForecastEx volume plateaus, or a CFTC/sports ruling forces a pullback',
-          pista:'This won\'t move the quarter — it is option value, ranked last on purpose. The only things that actually change the story are a first ForecastEx <i>revenue</i> disclosure (they\'ve never given one) or a CFTC/sports ruling. Until then, note it, don\'t trade on it.',
-          why:'Cheap to monitor and asymmetric, but not a needle-mover yet.',
-          src:'Recurring "new products" theme across the calls; no dedicated Bloomberg line, so explicitly the qualitative, lower-weight item.' },
+        { rank:1, metric:'Margin loans +67% — durability & concentration', since:'Q2 2026', tags:['margin-loans','credit-risk','nii'],
+          bbg:null, breaks:'Balances keep surging while customer bad debt climbs again, or management confirms concentration in a few large levered accounts',
+          pista:'The +67% powers NII, but Peterffy has historically DISLIKED fast margin growth and gave only "we\'re comfortable." The tell: any concentration granularity + the bad-debt line ($10M in Q2). Broad & organic = the engine got bigger; concentrated = the engine got riskier.',
+          why:'Margin-loan interest was the single biggest driver of the +23% NII beat. If the growth is a few levered accounts, the NII quality — and the multiple — is worse than the headline.',
+          src:'The #1 newQuestion out of the Q2 call; Chubak pressed it and got a guarded answer (regression Test #2). Bad debt $1M → $10M is the corroborating flag.',
+          seededBy:{ q:'Q2 2026', n:'Margin loans +67%: concentration — a few large levered accounts vs. broad? (bad debt $1M→$10M)' },
+          thread:[ {q:'Q2 2025', n:'Margin loans a record ~$55B.'}, {q:'Q1 2026', n:'Margin loans $86.6B (+35%).'}, {q:'Q2 2026', n:'$96.6B avg / <b>$108.5B EOP (+67%)</b> — accelerated; only "we\'re comfortable."'} ] },
+        { rank:2, metric:'NII through deeper Fed cuts — the balance-offset', since:'Q4 2023', tags:['nii','rates','balances'],
+          bbg:null, breaks:'NII falls YoY while credit balances still grow — the offset breaks',
+          pista:'Q2 gave the number the Street wanted: ±$81M per 25bps USD, ±$38M non-USD, and balance growth increases the impact both ways. The tell stays simple — does NII grow YoY as the Fed eases? Six straight quarters say yes; a break is the whole thesis.',
+          why:'NII is IBKR\'s largest revenue line and the entire rate-cut-discount debate. NII up while rates fall = the offset works and the discount is a mispricing.',
+          src:'The recurring #1 theme across 11 calls; management discloses rate sensitivity every quarter (now ±$81M/25bps).',
+          seededBy:{ q:'Q2 2026', n:'NIM 1.93% still compressing YoY — how much more as the Fed eases, and does balance growth keep out-running it?' },
+          thread:[ {q:'Q3 2025', n:'NII $967M; −25bps = −$77M.'}, {q:'Q1 2026', n:'NII $904M (+17%); −25bps = −$82M.'}, {q:'Q2 2026', n:'NII $1,057M (+23%) <i>through</i> a −70bps move; sensitivity ±$81M/25bps.'} ] },
+        { rank:3, metric:'Capital return — $10.3B excess and rising, still no buyback', since:'Q4 2025', tags:['capital','buyback','dividend'],
+          bbg:null, breaks:'Excess capital climbs again with no buyback and no M&A — capital just piles up',
+          pista:'Excess capital ~$10.3B (+$1.1B QoQ), up from ~$8B a few months ago; dividend raised to $0.35/yr but no buyback. The tell: any language shift on a buyback, or M&A discipline breaking. Peterffy admitted marketing yield is NOT improving — so capital can\'t all be redeployed into cheap growth.',
+          why:'A ballooning capital base at ~77% margins is a good problem, but un-returned capital drags ROE and is the clearest un-pulled lever on the stock.',
+          src:'Q2 call: Galik put excess capital at ~$10.3B; banks pitching "dramatically" more M&A, nothing worth buying; still no buyback.',
+          seededBy:{ q:'Q2 2026', n:'Excess capital $10.3B and rising, no buyback — when does capital return step up?' },
+          thread:[ {q:'Q2 2025', n:'~$6–7B excess after the 4-for-1 split.'}, {q:'Q1 2026', n:'Dividend policy ~0.5–1% of price; no buyback.'}, {q:'Q2 2026', n:'~$10.3B excess (+$1.1B QoQ); dividend → $0.35/yr; still no buyback.'} ] },
+        { rank:4, metric:'Prediction markets → the weather/insurance vertical', since:'Q3 2024', tags:['prediction-markets','optionality','new-products'],
+          bbg:null, breaks:'ForecastEx/aggregator volume plateaus, or a CFTC ruling forces a pullback',
+          pista:'Q2 reframed it: IBKR Prediction Markets now ROUTES across ForecastEx + CME + Kalshi, and the real vision is hurricane/temperature contracts — "which implies insurance risk." Option value, ranked mid on purpose. The tell: a first revenue disclosure (never given) or how big the weather/insurance vertical gets. NO sports, reaffirmed.',
+          why:'Cheap to monitor and asymmetric; not a needle-mover yet, but the aggregator + insurance-hedging framing is a genuinely new TAM if it converts.',
+          src:'Recurring "new products" theme; Q2 pivot from exchange to router. No dedicated Bloomberg line — the qualitative, lower-weight item.',
+          seededBy:{ q:'Q2 2026', n:'Prediction markets: any revenue, and how big can the weather/insurance-hedging vertical get?' },
+          thread:[ {q:'Q4 2025', n:'ForecastX 286M contract pairs (from 15M).'}, {q:'Q1 2026', n:'Election Board for the midterms.'}, {q:'Q2 2026', n:'<b>IBKR Prediction Markets</b> aggregator (ForecastEx+CME+Kalshi); weather/insurance vision.'} ] },
+        { rank:5, metric:'Agentic AI + the 24-5 international engine (Korea · overnight · Tiger/Futu)', since:'Q4 2024', tags:['ai','volume','international'],
+          bbg:null, breaks:'Overnight/international volume decelerates, or the Tiger/Futu transfer tailwind reverses',
+          pista:'Two threads that are really one "when & where a single account trades" story: (a) IBKR Connector — clients wired ChatGPT/Claude/Grok to accounts organically; autonomous trading on the roadmap = a future volume lever; (b) overnight nearly tripled to 10.9M, Korea "a line straight up," and the Tiger/Futu clampdown is shifting diaspora assets to IBKR. Tell: incremental volume from AI accounts + whether overnight keeps compounding.',
+          why:'Both are slow-burn volume drivers, not this-quarter needle-movers — but 24-5 trading + agentic AI is the clearest path to Peterffy\'s "AI raises trading velocity" thesis becoming revenue.',
+          src:'Q2 call: IBKR Connector (OpenAI/Anthropic/xAI); overnight 10.9M (from 3.8M); Korea/Nextrade; Tiger/Futu asset transfers.',
+          seededBy:{ q:'Q2 2026', n:'Agentic AI incremental volume + timeline to autonomous trading; is the 24-5 / Tiger-Futu tailwind persisting?' },
+          thread:[ {q:'Q1 2026', n:'Overnight nearly tripled (2.8M → 8.1M); AI should raise trading velocity long-term.'}, {q:'Q2 2026', n:'Overnight 10.9M; IBKR Connector; Korea; Tiger/Futu transfers.'} ] },
       ],
-      // Post-Results filled from the 2Q2026 earnings release (Jul 21, 2026). Call is tonight → call:null.
+      results:null, call:null },
+    // ─── Q2 2026 — REPORTED (Jul 21, 2026). Frozen pre-call view + contemporaneous watch list +
+    // Post-Results + Post-Call. Its newQuestions seeded the Q3 list above (the chain, §6d).
+    { q:'Q2 2026', status:'reported', date:'Jul 21, 2026 · after close (call 4:30pm ET)',
+      setup:{
+        source:'Bloomberg (BST consensus) · as of 2026-07-21',
+        pricedIn:'IBKR carried a <b>rate-cut discount</b> — the bear assumed NII, its biggest line, rolls over as the Fed eases. But Bloomberg itself modeled NII <i>rising</i> ($904M → est. $980M) as balances (credit +31%, est. margin loans +56%) out-grow the margin drag (NIM 1.88% → 1.85%). Q2 was also the first quarter after the PDT-rule change (eff. Jun 4), so a US-account bump was expected and partly structural.',
+        oneLiner:'The one thing to disprove going in: whether the balance growth was <b>organic and sticky</b> or a rate-driven pull-forward that reverses. The durable tell was the international mix, not the PDT-driven headline.'
+      },
+      // FROZEN contemporaneous list — the five things we went in hunting, seeded off the Q1 call.
+      watchList:[
+        { rank:1, metric:'Net interest income & the NIM crossover', since:'Q4 2023', tags:['nii','rates','balances'],
+          bbg:'Consensus $980M (+14% YoY); NIM 1.85% (from 1.88%)', breaks:'NII falls YoY while credit balances still grow',
+          pista:'Consensus already had NII <i>rising</i> ($904M→$980M) while NIM slips 1.88%→1.85% — the Street is not betting on rates, it\'s betting on balances. The tell: does NII grow YoY? If it does while the Fed eases, the rate-cut discount is the mispricing.',
+          why:'NII is IBKR\'s largest revenue line and the entire valuation debate. NII up while rates fall = the offset works; NII down while balances still climb = the offset broke.',
+          src:'A Bloomberg "Highlight" line + rate-sensitivity is the #1 recurring theme across the last 11 calls.',
+          seededBy:{ q:'Q1 2026', n:'Does NII stay resilient as the Fed keeps easing — is it balances, not rates?' },
+          thread:[ {q:'Q1 2026', n:'NII $904M (+17%); −25bps = −$82M.'}, {q:'Q2 2026', n:'NII $1,057M (+23%); NIM 1.93% BEAT the 1.85% cons.'} ] },
+        { rank:2, metric:'The earning-asset engine: credit balances · margin loans · customer equity', since:'Q4 2023', tags:['balances','margin-loans','nii'],
+          bbg:'Cons credit $170B (+31%), margin loans $95B avg (+56%), equity $904B (+36%)', breaks:'Any of the three decelerates sharply or goes flat QoQ',
+          pista:'These three ARE the NII engine — what makes NII grow while NIM compresses. The answerable question: how much growth is organic vs. rate/market-driven. If they dodge it, assume some is fragile.',
+          why:'The offset in #1 is literally these three lines. If they stall, NII rolls over next.',
+          src:'Three separate Bloomberg "Highlight" lines — the vendor treats them as core drivers.',
+          seededBy:{ q:'Q1 2026', n:'Do credit balances / margin loans / equity keep compounding above +30%?' },
+          thread:[ {q:'Q1 2026', n:'Credit $169B (+35%), margin $86.6B (+35%), equity $789B (+38%).'}, {q:'Q2 2026', n:'Credit +27%, margin <b>+67%</b>, equity +40% — accelerated.'} ] },
+        { rank:3, metric:'Customer account growth', since:'Q4 2023', tags:['accounts','pdt-rule','international'],
+          bbg:'Consensus 5.15M accounts (+33% YoY)', breaks:'Growth decelerates below ~25% YoY, or a PDT-driven spike that looks one-off',
+          pista:'Q2 is the first quarter after the PDT-rule change (eff. Jun 4), so a spike in small active accounts is expected. Don\'t be fooled by the headline — the durable tell is the international mix; a US-only PDT bump that fades is a false positive.',
+          why:'Accounts are the top of the flywheel — every downstream line depends on it. A sharp decel is the earliest crack.',
+          src:'A Bloomberg "Highlight" line + management\'s lead metric on every call; PDT (eff. Jun 4) makes Q2 the first read.',
+          seededBy:{ q:'Q1 2026', n:'How much of account growth is PDT-rule pull-forward vs. organic?' },
+          thread:[ {q:'Q1 2026', n:'4.75M accounts (+31%).'}, {q:'Q2 2026', n:'5.19M (+34%) — PDT tailwind showed, growth stayed above the line.'} ] },
+        { rank:4, metric:'DARTs → commissions (and commission per cleared order)', since:'Q4 2023', tags:['darts','commissions','pricing-power'],
+          bbg:'Cons DARTs 4.72M (+33%), commissions $672M (+30%); comm/order ~$2.69', breaks:'DARTs up but commission-per-order drops materially',
+          pista:'Commission per cleared order has held ~$2.65–2.83 for two straight years — that stability IS the pricing-power proof. Ignore the DART headline (it\'ll be up); only commission-PER-order cracking changes the story.',
+          why:'DARTs are the activity engine; commissions lever to them. The clean test of pricing power is per-order, not raw DARTs.',
+          src:'Bloomberg tracks Avg Commission per DART explicitly; two-year stability is the actual evidence on the "pricing pressure" worry.',
+          seededBy:{ q:'Q1 2026', n:'Does commission-per-order hold as DARTs surge (pricing power intact)?' },
+          thread:[ {q:'Q1 2026', n:'DARTs 4.37M (+24%); per-order held ~$2.69.'}, {q:'Q2 2026', n:'DARTs 4.82M (+36%); per-order $2.64 — flat, moat intact.'} ] },
+        { rank:5, metric:'New-product optionality: ForecastEx · crypto · overnight', since:'Q3 2024', tags:['new-products','prediction-markets','optionality'],
+          bbg:'No clean consensus line — qualitative', breaks:'ForecastEx volume plateaus, or a CFTC/sports ruling forces a pullback',
+          pista:'This won\'t move the quarter — it is option value, ranked last on purpose. The only things that change the story: a first ForecastEx <i>revenue</i> disclosure (never given) or a CFTC/sports ruling. Note it, don\'t trade on it.',
+          why:'Cheap to monitor and asymmetric, but not a needle-mover yet.',
+          src:'Recurring "new products" theme; no dedicated Bloomberg line, so the qualitative lower-weight item.',
+          seededBy:{ q:'Q1 2026', n:'Did ForecastEx-institutional inquiries convert; any revenue tease?' },
+          thread:[ {q:'Q1 2026', n:'Overnight tripled (2.8M→8.1M); ForecastEx "biggest in a century" (Peterffy).'}, {q:'Q2 2026', n:'Prediction-markets aggregator; overnight 10.9M; crypto ⅓ perps.'} ] },
+      ],
       results:{
         headline:'A <b>clean beat across the board</b> — the opposite of Q1. Revenue, EPS and every operating metric came in ahead of Bloomberg consensus, and <b>no thesis red-line tripped</b>. The one number that demands a question on the call: <b>margin loans exploded +67% YoY</b>.',
         scorecard:[
-          { metric:'Adj EPS', cons:'$0.63', actual:'$0.69', result:'beat' },
-          { metric:'Adj net revenue', cons:'$1,787M', actual:'$1,883M · +27% YoY', result:'beat' },
-          { metric:'Net interest income', cons:'$980M', actual:'$1,057M · +23%', result:'beat',
-            note:{ t:'NII: two figures in the release', h:'<p>The income statement shows total net interest income of <b>$1,057M</b>; the NIM table shows <b>$1,100M</b> (it folds in interest-like income booked in "other fees" and "other income"). Both are up ~23–28% YoY.</p><p><b>NIM came in 1.93%</b> — actually <i>above</i> the ~1.85% consensus, i.e. the spread compressed less than modeled even as balances surged.</p>' } },
-          { metric:'Commissions', cons:'$672M', actual:'$673M · +30%', result:'inline' },
-          { metric:'Comm / cleared order', cons:'~$2.69', actual:'$2.64', result:'inline',
-            note:{ t:'The pricing-power tell — held', h:'<p>Commission per cleared commissionable order was <b>$2.64</b> — essentially <b>flat</b> (−0% YoY, −2% QoQ). Exactly what watch item #4 predicted: DARTs surge, but the per-order economics don\'t crack. <b>No pricing erosion → moat intact.</b></p>' } },
-          { metric:'DARTs', cons:'4.72M', actual:'4.82M · +36%', result:'beat' },
-          { metric:'Customer accounts', cons:'5.15M', actual:'5.19M · +34%', result:'beat' },
-          { metric:'Customer equity', cons:'$903.7B', actual:'$930.3B · +40%', result:'beat' },
-          { metric:'Margin loans', cons:'$95.2B avg', actual:'$96.6B avg · $108.5B EOP · +67%', result:'beat',
-            note:{ t:'The standout — and the thing to probe', h:'<p>Average customer margin loans hit <b>$96.6B (+58% YoY)</b> and <b>$108.5B at period-end (+67%)</b> — a sharp acceleration from Q1\'s +35%. Credit balances grew "only" +27%.</p><p>This is the single biggest question the numbers raise: <b>is that leverage organic and broad, or concentrated in a few large/levered clients?</b> It powers NII, but if it\'s a handful of accounts it\'s more fragile and higher-risk (see the bad-debt uptick).</p>' } },
-          { metric:'Pre-tax margin', cons:'76.8%', actual:'77%', result:'inline' },
+          { metric:'Margin loans', cons:'$95.2B avg', actual:'$96.6B avg · $108.5B EOP · +67%', result:'beat', surprise:92, watchRank:2,
+            note:{ t:'The standout — and the thing to probe', h:'<p>Average customer margin loans hit <b>$96.6B (+58% YoY)</b> and <b>$108.5B at period-end (+67%)</b> — a sharp acceleration from Q1\'s +35%. Credit balances grew "only" +27%.</p><p>The single biggest question the numbers raise: <b>is that leverage organic and broad, or concentrated in a few large/levered clients?</b> It powers NII, but if it\'s a handful of accounts it\'s more fragile (see the bad-debt uptick).</p>' } },
+          { metric:'Net interest income', cons:'$980M', actual:'$1,057M · +23%', result:'beat', surprise:72, watchRank:1,
+            note:{ t:'NII: two figures in the release', h:'<p>The income statement shows total NII of <b>$1,057M</b>; the NIM table shows <b>$1,100M</b> (folds in interest-like income). Both up ~23–28% YoY.</p><p><b>NIM came in 1.93%</b> — <i>above</i> the ~1.85% consensus, i.e. the spread compressed less than modeled even as balances surged.</p>' } },
+          { metric:'Customer bad debt', cons:null, actual:'$10M (from $1M a year ago)', result:'nocons', surprise:66,
+            note:{ t:'A 10× — small but worth flagging', h:'<p>Customer bad-debt expense jumped from ~$1M to <b>$10M</b>. Tiny in absolute terms, but a 10× move that connects directly to the +67% margin-loan surge — a single large margin event / name, or the first sign of broader stretch? Nobody models this line, so it is a <b>no-consensus</b> read, not a miss.</p>' } },
+          { metric:'Adj net revenue', cons:'$1,787M', actual:'$1,883M · +27% YoY', result:'beat', surprise:60 },
+          { metric:'Adj EPS', cons:'$0.63', actual:'$0.69', result:'beat', surprise:55 },
+          { metric:'Customer equity', cons:'$903.7B', actual:'$930.3B · +40% YoY', result:'beat', surprise:45, watchRank:2 },
+          { metric:'Customer accounts', cons:'5.15M', actual:'5.19M · +34%', result:'beat', surprise:40, watchRank:3 },
+          { metric:'DARTs', cons:'4.72M', actual:'4.82M · +36%', result:'beat', surprise:35, watchRank:4 },
+          { metric:'Comm / cleared order', cons:'~$2.69', actual:'$2.64', result:'inline', surprise:22, watchRank:4,
+            note:{ t:'The pricing-power tell — held', h:'<p>Commission per cleared commissionable order was <b>$2.64</b> — essentially <b>flat</b> (−0% YoY, −2% QoQ). Exactly what watch item #4 predicted: DARTs surge, per-order economics don\'t crack. <b>No pricing erosion → moat intact.</b></p>' } },
+          { metric:'Commissions', cons:'$672M', actual:'$673M · +30%', result:'inline', surprise:15, watchRank:4 },
+          { metric:'Pre-tax margin', cons:'76.8%', actual:'77%', result:'inline', surprise:10 },
         ],
         thesisCheck:[
           { line:'NII falls YoY while credit balances grow', tripped:false, note:'NII +23% ($1.06B); NIM 1.93% even beat 1.85% consensus. The balance-offset is firmly working.' },
           { line:'The earning-asset engine decelerates / goes flat', tripped:false, note:'Credit +27%, equity +40%, margin loans +67% — accelerated, not stalled.' },
           { line:'Account growth below ~25% YoY', tripped:false, note:'+34% YoY (5.19M). PDT tailwind showed up, but growth stayed well above the line.' },
-          { line:'Commission-per-DART drops materially', tripped:false, note:'$2.64 — flat (−0% YoY). Pricing power intact, exactly as the tell called.' },
+          { line:'Commission-per-order drops materially', tripped:false, note:'$2.64 — flat (−0% YoY). Pricing power intact, exactly as the tell called.' },
         ],
         intoCall:[
-          '🔥 <b>Margin loans +67% YoY</b> ($108.5B EOP) — the standout. Why the surge vs. credit +27%? Organic demand or concentrated/levered clients, and is it durable? (This is the #1 thing to hunt.)',
-          '⚖️ <b>SEC Section 31 distortion</b> — execution/clearing fees jumped +22% to $142M, driven by +$19M of regulatory fees as the Section 31 rate rose Apr 4. It\'s a pass-through: it grosses up both revenue and expense but washed out (margin held 77%). Don\'t misread it as cost creep.',
+          '🔥 <b>Margin loans +67% YoY</b> ($108.5B EOP) — the standout. Why the surge vs. credit +27%? Organic demand or concentrated/levered clients, and is it durable? (The #1 thing to hunt.)',
+          '⚖️ <b>SEC Section 31 distortion</b> — execution/clearing fees jumped +22% to $142M on +$19M of regulatory fees as the Section 31 rate rose Apr 4. A pass-through: grosses up both revenue and expense, washed out (margin held 77%). Don\'t misread it as cost creep.',
           '⚑ <b>Customer bad debt jumped to $10M</b> (from $1M a year ago) — small, but a 10×. A single margin event / name? Connects to the margin-loan surge.',
-          '📉 <b>NIM 1.93%</b> beat, but is still compressing YoY (2.07% → 1.93%). How much more as the Fed eases — does balance growth keep out-running it?',
+          '📉 <b>NIM 1.93%</b> beat, but still compressing YoY (2.07% → 1.93%). How much more as the Fed eases — does balance growth keep out-running it?',
           '💵 <b>Dividend raised to $0.0875/qtr ($0.35/yr)</b> — the first post-split raise; confirms the ~0.5–1%-of-price policy.',
           '🗳️ <b>No ForecastEx / overnight / crypto numbers</b> in the release — the qualitative color and any revenue tease come on the call (watch item #5).',
         ],
         priceReaction:'To fill after the print from a trusted source (not web).',
       },
-      // Post-Call filled from the 2Q2026 call transcript (Jul 21, 2026). Insight-first, not restatement.
       call:{
         take:'The print was a clean beat; the <b>call was about the pivots underneath it.</b> The thesis got hard confirmation — <b>NII +23% through a −70bps Fed move</b>, on balances — while IBKR quietly reshaped three bets: prediction markets (now a multi-venue aggregator, really a weather/insurance play), AI (agentic-trading roadmap), and new markets (Korea, SpaceX, EU crypto). One yellow flag: <b>margin loans +67% earned only a "we\'re comfortable."</b>',
         highlights:[
-          { tag:'thesis', head:'The rate-cut fear is now empirically dead — NII grew +23% <i>through</i> a −70bps Fed move',
-            detail:'<p>NII rose +23% (NIM-basis +28%) even as average US Fed funds fell ~70bps (−16%) YoY — margin-loan interest +39%, seg-cash interest +7%, all driven by <b>balances, not rates.</b> The variant view, confirmed.</p><p><b>Updated rate sensitivity:</b> ±$81M annual NII per 25bps USD move (symmetric); ±$38M per 25bps non-USD (~1/3 of sensitive balances are non-USD); fully rate-sensitive balances $28.4B. And <b>balance growth increases the impact</b> in both directions. Subtle shift: duration stayed &lt;30 days but they pushed it out "a bit" as the short-to-medium curve turned positive.</p>' },
-          { tag:'watch', head:'Margin loans +67% got only a "we\'re comfortable" — the one guarded answer of the call',
-            detail:'<p>Chubak pressed: is the extraordinary margin growth durable/healthy or outsized risk-taking (Peterffy has historically disliked fast margin growth)? <b>Peterffy: "very cognizant of client risk… continuously monitoring… comfortable with current levels."</b> Brody: a "risk-on environment."</p><p><b>Read:</b> comfortable, but <b>no concentration granularity</b> (broad vs. a few large levered accounts), and <b>customer bad debt ticked $1M → $10M.</b> Keep interrogating it.</p>' },
-          { tag:'dots', head:'Prediction markets pivoted to a multi-venue <i>aggregator</i> — and it\'s really a weather/insurance play',
-            detail:'<p>Launched <b>IBKR Prediction Markets</b>: routes across <b>ForecastEx + CME + Kalshi</b> to best net price. Milan: "no reason to limit clients to only ForecastEx… increase liquidity… easier to attract institutions." The pivot: from running an exchange to being the router across all venues. <b>Firmly reaffirmed: NO sports/entertainment.</b></p><p><b>The tell (Budish):</b> ForecastEx volume is concentrated in a couple of <b>temperature contracts</b>; Peterffy wants to expand into <b>hurricane landfalls, "which implies insurance risk."</b> So the grand "prediction markets" story is, in practice, becoming a <b>weather / insurance-hedging venue</b> — not elections.</p>' },
-          { tag:'curious', head:'Agentic AI: clients are connecting ChatGPT/Claude/Grok to their accounts <i>organically</i> — autonomous trading is on the roadmap',
-            detail:'<p><b>IBKR Connector</b> = enterprise integration with OpenAI, Anthropic, xAI. Milan: clients connected chatbots <b>before any public announcement</b> (IBKR appears in the chatbots\' drop-downs). Today: <b>"human-in-the-loop"</b> — the AI drafts an order → the client approves → it executes.</p><p><b>Roadmap: fully autonomous agentic trading</b>, gated behind a client test. The concrete version of Peterffy\'s "AI raises trading velocity" thesis — a potential future <b>volume driver</b>, not just cost.</p>' },
-          { tag:'dots', head:'IBKR is a quiet beneficiary of the China (Tiger/Futu) clampdown — assets are moving over',
-            detail:'<p>After the May Chinese-regulator clampdown on <b>Tiger and Futu</b>, Milan: "a clear uptick in broker transfers… the number of accounts, and especially <b>assets</b>, has increased" — much of it existing IBKR clients shifting assets off Tiger/Futu onto IBKR. A non-obvious tailwind to the +40% equity / +27% credit-balance growth. IBKR stays compliant (no mainland advertising; verifies non-mainland residence).</p>' },
-          { tag:'curious', head:'Korea launched into semis, and overnight trading nearly <i>tripled</i> — last quarter\'s buried detail, confirmed',
-            detail:'<p>First e-broker in Korea (Korea Exchange + <b>Nextrade</b> overnight ATS); "a line that goes straight up," semiconductor names most sought. <b>Overnight trading nearly tripled YoY to 10.9M trades (from 3.8M)</b> — the Q1 one-mention detail is now a confirmed secular trend, driven by international investors trading in "their waking hours."</p><p><b>Connect:</b> semis-as-market-drivers + Korea\'s overnight ATS + overnight tripling = one 24-5 international story.</p>' },
-          { tag:'curious', head:'One-third of crypto trading is already <i>perpetuals</i> — a recently-added product',
-            detail:'<p>Milan: perpetual futures solve crypto\'s short-sell and leverage problems; IBKR offers <b>Coinbase</b> perps; <b>"roughly one-third of the trading we see [in crypto] is now coming from these perpetuals."</b> Fast adoption; more venues to be added.</p>' },
-          { tag:'watch', head:'Capital ballooned to $10.3B — and management admitted the growth isn\'t getting cheaper',
+          { tag:'thesis', band:'context', head:'The rate-cut fear is now empirically dead — NII grew +23% <i>through</i> a −70bps Fed move',
+            detail:'<p>NII rose +23% (NIM-basis +28%) even as average US Fed funds fell ~70bps (−16%) YoY — margin-loan interest +39%, seg-cash interest +7%, all driven by <b>balances, not rates.</b> The variant view, confirmed.</p><p><b>Updated rate sensitivity:</b> ±$81M annual NII per 25bps USD move (symmetric); ±$38M per 25bps non-USD (~1/3 of sensitive balances is non-USD); fully rate-sensitive balances $28.4B. And <b>balance growth increases the impact</b> in both directions. Subtle shift: duration stayed &lt;30 days but they pushed it out "a bit" as the short-to-medium curve turned positive.</p>' },
+          { tag:'watch', band:'lead', open:'Concentration unanswered — Peterffy gave only "we\'re comfortable," no granularity; bad debt $1M→$10M',
+            head:'Margin loans +67% got only a "we\'re comfortable" — the one guarded answer of the call',
+            detail:'<p>Chubak pressed: is the extraordinary margin growth durable/healthy or outsized risk-taking (Peterffy has historically disliked fast margin growth)? <b>Peterffy: "very cognizant of client risk… continuously monitoring… comfortable with current levels."</b> Brody: a "risk-on environment."</p><p><b>Read:</b> comfortable, but <b>no concentration granularity</b> (broad vs. a few large levered accounts), and <b>customer bad debt ticked $1M → $10M.</b> Keep interrogating it — it became Q3 Watch item #1.</p>' },
+          { tag:'dots', band:'lead', open:'No revenue disclosure, and how big the weather/insurance vertical can get is unknown',
+            head:'Prediction markets pivoted to a multi-venue <i>aggregator</i> — and it\'s really a weather/insurance play',
+            detail:'<p>Launched <b>IBKR Prediction Markets</b>: routes across <b>ForecastEx + CME + Kalshi</b> to best net price. Milan: "no reason to limit clients to only ForecastEx… increase liquidity… easier to attract institutions." From running an exchange to being the router across all venues. <b>Firmly reaffirmed: NO sports/entertainment.</b></p><p><b>The tell (Budish):</b> ForecastEx volume is concentrated in a couple of <b>temperature contracts</b>; Peterffy wants <b>hurricane landfalls, "which implies insurance risk."</b> So the "prediction markets" story is becoming a <b>weather / insurance-hedging venue</b> — not elections.</p>' },
+          { tag:'watch', band:'lead', open:'When does capital return step up? $10.3B excess, rising, no buyback — and growth admittedly not cheaper',
+            head:'Capital ballooned to $10.3B — and management admitted the growth isn\'t getting cheaper',
             detail:'<p><b>Excess capital ~$10.3B</b> after buffers (+$1.1B QoQ; was ~$8B a few months ago). No buyback → capital-return pressure builds. M&A: banks pitching "dramatically" more targets, nothing worth buying — discipline intact.</p><p><b>Two candid, thesis-tempering admissions:</b> Peterffy said <b>marketing yield is NOT higher</b> — "roughly the same," proportional to spend; and Milan said the "no dilution" in DARTs/account is <b>partly the strong environment</b>, not proven structural durability. So &gt;30% growth continues, but not because acquisition got more efficient.</p>' },
-          { tag:'watch', head:'Promise updates: OCC charter operational by year-end; IB pipeline reconciled',
-            detail:'<p><b>OCC national trust bank charter:</b> preliminary conditional approval received, <b>"operational by year-end"</b> — the Q1 silence resolved with a concrete timeline (enables direct custody of mutual-fund/ETF assets).</p><p><b>Introducing brokers:</b> 4th–5th straight quarter of double-digit integrations going online; more in progress than last quarter; significant committed. The <b>type shifted</b> from startups to established firms broadening their offering (crypto/CFD providers adding listed stocks, retail brokers adding asset classes/regions).</p>' },
+          { tag:'curious', band:'context', head:'Agentic AI: clients are connecting ChatGPT/Claude/Grok to their accounts <i>organically</i> — autonomous trading is on the roadmap',
+            detail:'<p><b>IBKR Connector</b> = enterprise integration with OpenAI, Anthropic, xAI. Milan: clients connected chatbots <b>before any public announcement</b> (IBKR appears in the chatbots\' drop-downs). Today: <b>"human-in-the-loop"</b> — the AI drafts an order → the client approves → it executes.</p><p><b>Roadmap: fully autonomous agentic trading</b>, gated behind a client test. The concrete version of Peterffy\'s "AI raises trading velocity" thesis — a potential future <b>volume driver</b>, not just cost.</p>' },
+          { tag:'dots', band:'context', head:'IBKR is a quiet beneficiary of the China (Tiger/Futu) clampdown — assets are moving over',
+            detail:'<p>After the May Chinese-regulator clampdown on <b>Tiger and Futu</b>, Milan: "a clear uptick in broker transfers… the number of accounts, and especially <b>assets</b>, has increased" — much of it existing IBKR clients shifting assets off Tiger/Futu onto IBKR. A non-obvious tailwind to the +40% equity / +27% credit-balance growth. IBKR stays compliant (no mainland advertising; verifies non-mainland residence).</p>' },
+          { tag:'curious', band:'context', head:'Korea launched into semis, and overnight trading nearly <i>tripled</i> — last quarter\'s buried detail, confirmed',
+            detail:'<p>First e-broker in Korea (Korea Exchange + <b>Nextrade</b> overnight ATS); "a line that goes straight up," semiconductor names most sought. <b>Overnight trading nearly tripled YoY to 10.9M trades (from 3.8M)</b> — the Q1 one-mention detail is now a confirmed secular trend, driven by international investors trading in "their waking hours."</p><p><b>Connect:</b> semis-as-market-drivers + Korea\'s overnight ATS + overnight tripling = one 24-5 international story.</p>' },
+          { tag:'curious', band:'logged', head:'One-third of crypto trading is already <i>perpetuals</i> — a recently-added product',
+            detail:'<p>Milan: perpetual futures solve crypto\'s short-sell and leverage problems; IBKR offers <b>Coinbase</b> perps; <b>"roughly one-third of the trading we see [in crypto] is now coming from these perpetuals."</b> Fast adoption; more venues to be added.</p>' },
+          { tag:'watch', band:'context', head:'Promise updates: OCC charter operational by year-end; IB pipeline reconciled',
+            detail:'<p><b>OCC national trust bank charter:</b> preliminary conditional approval received, <b>"operational by year-end"</b> — the Q1 silence resolved with a concrete timeline (enables direct custody of mutual-fund/ETF assets).</p><p><b>Introducing brokers:</b> 4th–5th straight quarter of double-digit integrations going online; more in progress than last quarter. The <b>type shifted</b> from startups to established firms broadening their offering (crypto/CFD providers adding listed stocks, retail brokers adding asset classes/regions).</p>' },
         ],
         dots:'<b>The print confirmed the thesis; the call reframed the optionality.</b> NII proved the balance-offset works even as the Fed eases. Underneath, IBKR is turning "broaden the box" into something bigger — prediction markets as a weather/insurance-hedging aggregator, AI as a path to autonomous trading, new venues (Korea/overnight) tied to a 24-5 international story — while a regulatory clampdown hands it Chinese-diaspora assets. Keep honest: margin loans +67% earned just a "comfortable," and growth isn\'t getting cheaper to buy.',
-        newQuestions:['Margin loans +67%: concentration — a few large levered accounts vs. broad? (bad debt $1M→$10M)','Prediction markets: any revenue, and how big can the weather/insurance-hedging vertical get?','Agentic AI: incremental trading volume from chatbot-connected accounts, and the timeline to fully autonomous trading?','Excess capital $10.3B and rising, no buyback — when does capital return step up?'],
+        threeMinutes:[
+          '<b>The rate-cut discount is dead.</b> NII grew +23% straight through a −70bps Fed move — on balances, not rates — and management finally put a number on the sensitivity (±$81M per 25bps). The bear case on IBKR\'s single biggest revenue line just lost its evidence; the discount in the multiple is the mispricing.',
+          '<b>The one thing I\'d flag: margin loans +67%, and we don\'t know its quality.</b> That surge is what powered the NII beat, but Peterffy — who historically dislikes fast margin growth — gave only "we\'re comfortable," no concentration detail, and customer bad debt went from $1M to $10M. Broad and organic, or a few levered accounts? That is the whole risk read into Q3.',
+          '<b>The optionality quietly re-based.</b> "Prediction markets" is becoming a weather/insurance-hedging <i>aggregator</i> (routing ForecastEx + CME + Kalshi, no sports), and clients are wiring ChatGPT/Claude into their accounts on their own with autonomous trading on the roadmap. Both are future volume levers — neither is a number yet, so I\'m tracking, not modeling them.',
+          '<b>Capital is the un-pulled lever.</b> Excess capital is $10.3B and rising, still no buyback, and management admits growth isn\'t getting cheaper to buy (marketing yield flat). At ~77% margins that\'s a good problem — but it\'s the clearest catalyst nobody is pricing.',
+        ],
+        notBringing:[
+          { item:'Korea / overnight tripling to 10.9M', why:'Real and secular, but it confirms a known trend rather than opening a new debate — logged, not a lead. Mention only if the international engine comes up.' },
+          { item:'Crypto perpetuals now ⅓ of crypto volume', why:'An interesting product detail, but immaterial to the quarter and to the thesis.' },
+          { item:'Section 31 fee gross-up (+$19M)', why:'A pass-through optical distortion that washed out at 77% margin — bring it up only to defuse a "costs jumped" question on the execution/clearing line.' },
+        ],
+        newQuestions:[
+          { n:'Margin loans +67%: concentration — a few large levered accounts vs. broad? (bad debt $1M→$10M)', landed:{ q:'Q3 2026', rank:1 } },
+          { n:'NIM still compressing YoY — how much more as the Fed eases; does balance growth keep out-running it?', landed:{ q:'Q3 2026', rank:2 } },
+          { n:'Excess capital $10.3B and rising, no buyback — when does capital return step up?', landed:{ q:'Q3 2026', rank:3 } },
+          { n:'Prediction markets: any revenue, and how big can the weather/insurance-hedging vertical get?', landed:{ q:'Q3 2026', rank:4 } },
+          { n:'Agentic AI incremental volume + autonomous-trading timeline; does the 24-5 / Tiger-Futu tailwind persist?', landed:{ q:'Q3 2026', rank:5 } },
+        ],
       }
     },
+    // ─── Q1 2026 — REPORTED (Apr 21, 2026). The "beat the business, missed the print" quarter —
+    // backfilled end-to-end so the accumulate-over-time picture and the chain into Q2 are real.
     { q:'Q1 2026', status:'reported', date:'Apr 21, 2026',
       setup:{
-        source:'Bloomberg (BST consensus)', asOf:'2026-04-21',
-        consensus:{ adjEps:{v:0.61,yoy:null,unit:'$'}, adjNetRevUsdM:{v:1740,yoy:null,unit:'$M'} },
-        pricedIn:'The debate going in was whether NII could stay near record as the Fed eased; the stock had run into the print, so the bar was high.',
+        source:'Bloomberg (BST consensus) · as of 2026-04-21',
+        pricedIn:'The debate was whether NII could stay near record as the Fed eased; the stock had run into the print, so the bar was high.',
         oneLiner:'Pre-call view: balance growth would keep NII resilient and DARTs would carry commissions — the risk was that a hot bar punishes anything short of a clean beat.'
       },
       watchList:[
-        { rank:1, metric:'Net interest income', bbg:'hold near record', breaks:'NII down YoY with balances still growing', pista:'The rate-sensitivity crux — watch YoY direction.', why:'The rate-sensitivity crux.' },
-        { rank:2, metric:'DARTs / commissions', bbg:'DARTs up double digits', breaks:'DARTs up but commission-per-DART drops', pista:'Watch per-DART, not raw DARTs.', why:'Monetization vs. raw activity.' },
-        { rank:3, metric:'Net-new accounts', bbg:'record adds, +~30% YoY', breaks:'Sub-25% YoY', pista:'International mix is the durable part.', why:'Top of the flywheel.' },
+        { rank:1, metric:'Net interest income', since:'Q4 2023', tags:['nii','rates','balances'],
+          bbg:'hold near record', breaks:'NII down YoY with balances still growing',
+          pista:'The rate-sensitivity crux — watch YoY direction, not the level.', why:'The rate-sensitivity crux; the whole valuation debate.',
+          src:'The #1 recurring theme; management discloses rate sensitivity each quarter.',
+          seededBy:{ q:'Q4 2025', n:'Can NII hold record as the first Fed cuts land?' },
+          thread:[ {q:'Q4 2025', n:'NII $966M; FY25 $3.6B.'}, {q:'Q1 2026', n:'NII $904M (+17%) — offset working.'} ] },
+        { rank:2, metric:'DARTs / commissions', since:'Q4 2023', tags:['darts','commissions','pricing-power'],
+          bbg:'DARTs up double digits', breaks:'DARTs up but commission-per-order drops',
+          pista:'Watch per-order economics, not raw DARTs — stability there is the pricing-power proof.', why:'Monetization vs. raw activity.',
+          src:'Bloomberg tracks Avg Commission per DART; its stability is the evidence.',
+          seededBy:{ q:'Q4 2025', n:'Does per-order pricing hold as volumes rise?' },
+          thread:[ {q:'Q4 2025', n:'Commissions record; per-order stable.'}, {q:'Q1 2026', n:'Commissions $613M (+19%); per-order ~$2.69.'} ] },
+        { rank:3, metric:'Net-new accounts', since:'Q4 2023', tags:['accounts','international','pdt-rule'],
+          bbg:'record adds, +~30% YoY', breaks:'Sub-25% YoY',
+          pista:'International mix is the durable part; watch for PDT-rule pull-forward starting next quarter.', why:'Top of the flywheel.',
+          src:'Management\'s lead metric on every call.',
+          seededBy:{ q:'Q4 2025', n:'Does record account growth continue above +30%?' },
+          thread:[ {q:'Q4 2025', n:'>1M net-new accounts in FY25 (record).'}, {q:'Q1 2026', n:'4.75M accounts (+31%).'} ] },
       ],
-      // Post-Results = the numbers (available first, ~before the call). Actuals: Bloomberg (reported).
       results:{
         headline:'Beat the business, missed the print — every operating line was strong, yet the stock fell because the two headline numbers (revenue, EPS) came in light.',
         scorecard:[
-          { metric:'Net revenue', cons:'~$1.74B', actual:'$1,669M', result:'miss' },
-          { metric:'Adj EPS', cons:'~$0.61', actual:'$0.60', result:'miss' },
-          { metric:'Net interest income', cons:'hold record', actual:'$904M · +17% YoY', result:'beat' },
-          { metric:'Commissions', cons:'follow DARTs', actual:'$613M · +19% (1st >$600M)', result:'beat' },
-          { metric:'DARTs', cons:'up dbl digits', actual:'4.37M · +24% YoY', result:'beat' },
-          { metric:'Client equity', cons:'compounding', actual:'$789.4B · +38% YoY', result:'beat' },
-          { metric:'Pre-tax margin', cons:'high-70s', actual:'77.2%', result:'inline' },
-          { metric:'Customer accounts', cons:'+~30% YoY', actual:'4.75M · +31% YoY', result:'inline' },
+          { metric:'Net revenue', cons:'~$1.74B', actual:'$1,669M', result:'miss', surprise:78,
+            note:{ t:'The "miss" was a non-core line', h:'<p>Headline net revenue came in light vs. the Street — but NII <b>and</b> commissions both <b>beat</b>. The shortfall sat in a non-core line (other income / mark-to-market), not the engine. The stock fell on the wrong number.</p>' } },
+          { metric:'Adj EPS', cons:'~$0.61', actual:'$0.60', result:'miss', surprise:58 },
+          { metric:'Net interest income', cons:'hold record', actual:'$904M · +17% YoY', result:'beat', surprise:55, watchRank:1 },
+          { metric:'Client equity', cons:'compounding', actual:'$789.4B · +38% YoY', result:'beat', surprise:42 },
+          { metric:'DARTs', cons:'up dbl digits', actual:'4.37M · +24% YoY', result:'beat', surprise:38, watchRank:2 },
+          { metric:'Commissions', cons:'follow DARTs', actual:'$613M · +19% (1st >$600M)', result:'beat', surprise:30, watchRank:2 },
+          { metric:'Customer accounts', cons:'+~30% YoY', actual:'4.75M · +31% YoY', result:'inline', surprise:18, watchRank:3 },
+          { metric:'Pre-tax margin', cons:'high-70s', actual:'77.2%', result:'inline', surprise:10 },
         ],
         thesisCheck:[
           { line:'NII falls YoY while balances grow', tripped:false, note:'NII +17% — the balance-offset is working.' },
-          { line:'Commission-per-DART drops materially', tripped:false, note:'Held ~$2.69 — pricing power intact.' },
+          { line:'Commission-per-order drops materially', tripped:false, note:'Held ~$2.69 — pricing power intact.' },
           { line:'Account growth below ~25% YoY', tripped:false, note:'+31% — flywheel intact.' },
+        ],
+        intoCall:[
+          '❓ Which <b>non-core revenue line</b> came in below the Street despite record NII and commissions? (other income / mark-to-market.)',
+          '📉 How much of account growth is <b>PDT-rule pull-forward</b> vs. organic — and when does it start showing?',
+          '🕓 <b>Overnight trading tripled</b> (2.8M→8.1M) almost in passing — is 24-5 a real secular line?',
         ],
         priceReaction:'Fell on the print (exact move to fill from a trusted source, not web).'
       },
-      // Post-Call = insight-first highlights (theme by theme, depth in pop-ups) + the meeting take.
       call:{
         take:'Quietly strong quarter the tape hated for the <b>wrong reason</b>: the core thesis got confirmed (NII grew <b>+17% straight through the rate cuts</b>) while the headline missed on a non-core line. No red-line tripped — the dip is noise.',
         highlights:[
-          { tag:'thesis', head:'The rate-cut fear is empirically wrong — NII grew <b>+17%</b> <i>through</i> the cuts',
-            detail:'<p>NIM fell 2.02% → 1.88%, yet NII <b>rose</b> to $904M (+17% YoY) because credit balances (+35%) and margin loans (+35%) more than offset the rate drag.</p><p><b>Why it matters:</b> this is the single most important confirmation for the thesis. The whole valuation debate is "does NII survive the cuts?" — this quarter answered yes, and showed <i>how</i> (balances, not rates).</p>' },
-          { tag:'curious', head:'Overnight trading quietly <b>tripled</b> — a detail mentioned almost in passing',
-            detail:'<p>Overnight (24/5) volume went ~2.8M → 8.1M, nearly 3×. It barely got airtime on the call.</p><p><b>Connect the dots:</b> it lines up with Peterffy calling 24/5 a <b>"10–20 year secular trend"</b> — a slow-burn expansion of <i>when</i> and <i>what</i> a single account can trade. Not material to this quarter, but exactly the kind of one-mention detail that later becomes the story.</p>' },
-          { tag:'dots', head:'The revenue "miss" was <b>optics, not the business</b>',
-            detail:'<p>Headline net revenue came in light vs. the Street — but NII <b>and</b> commissions both <b>beat</b>. So the shortfall sat in a non-core line (other income / mark-to-market), not the engine.</p><p><b>The dot to connect:</b> the business beat, the print missed, and the stock fell on the wrong number. That gap between "operations" and "headline" is the whole reason to have read the call rather than the tape.</p>' },
-          { tag:'watch', head:'Prediction markets got a notable <b>tonal upgrade</b> from Peterffy',
-            detail:'<p>Peterffy called ForecastEx "potentially the biggest development in the business in a century" and flagged institutions now inquiring about membership.</p><p><b>Why watch:</b> still tiny financially, but the founder is leaning in hard. The tell for next quarter is whether those inquiries convert to actual members / disclosed revenue.</p>' },
-          { tag:'watch', head:'The OCC trust-bank charter went <b>unmentioned</b> despite conditional approval',
-            detail:'<p>A real, filed project (custody for mutual funds / ETFs) that had just cleared a conditional OCC hurdle — and it didn\'t come up on the call.</p><p><b>Silence is the tell:</b> a live project quietly dropping off the script is the cheapest signal nobody tracks. Put it on the list to ask directly next quarter.</p>' },
+          { tag:'thesis', band:'context', head:'The rate-cut fear is empirically wrong — NII grew <b>+17%</b> <i>through</i> the cuts',
+            detail:'<p>NIM fell 2.02% → 1.88%, yet NII <b>rose</b> to $904M (+17% YoY) because credit balances (+35%) and margin loans (+35%) more than offset the rate drag.</p><p><b>Why it matters:</b> the whole valuation debate is "does NII survive the cuts?" — this quarter answered yes, and showed <i>how</i> (balances, not rates).</p>' },
+          { tag:'dots', band:'context', head:'The revenue "miss" was <b>optics, not the business</b>',
+            detail:'<p>Headline net revenue came in light vs. the Street — but NII <b>and</b> commissions both <b>beat</b>. The shortfall sat in a non-core line (other income / mark-to-market). The business beat, the print missed, and the stock fell on the wrong number.</p>' },
+          { tag:'curious', band:'context', head:'Overnight trading quietly <b>tripled</b> — a detail mentioned almost in passing',
+            detail:'<p>Overnight (24/5) volume went ~2.8M → 8.1M, nearly 3×, and barely got airtime. Lines up with Peterffy calling 24/5 a <b>"10–20 year secular trend"</b> — a slow-burn expansion of <i>when</i> a single account can trade. Exactly the one-mention detail that later becomes the story (it did — Q2 confirmed 10.9M).</p>' },
+          { tag:'watch', band:'lead', open:'A live, filed project dropped off the script — ask for a go-live (resolved Q2: "operational by year-end")',
+            head:'The OCC trust-bank charter went <b>unmentioned</b> despite conditional approval',
+            detail:'<p>A real, filed project (custody for mutual funds / ETFs) that had just cleared a conditional OCC hurdle — and it didn\'t come up. <b>Silence is the tell:</b> a live project quietly dropping off the script is the cheapest signal nobody tracks. Put it on the list to ask directly next quarter.</p>' },
+          { tag:'watch', band:'context', head:'Prediction markets got a notable <b>tonal upgrade</b> from Peterffy',
+            detail:'<p>Peterffy called ForecastEx "potentially the biggest development in the business in a century" and flagged institutions now inquiring about membership. Still tiny financially, but the founder is leaning in hard — the tell is whether inquiries convert to members / disclosed revenue.</p>' },
         ],
-        dots:'<b>The story, in one thread:</b> NII grew through the cuts → the core thesis is intact; the "miss" was a non-core line, not the engine; and two slow-burn options (overnight trading, prediction markets) are quietly building under the surface. Net: nothing broke — the pullback is a gift <i>if</i> you believe the balances are durable.',
-        newQuestions:['Which non-core revenue line came in below the Street despite record NII and commissions?','How much of account growth is PDT-rule pull-forward vs. organic?','Did the OCC charter and ForecastEx-institutional inquiries progress — or go quiet?']
+        dots:'<b>The story, in one thread:</b> NII grew through the cuts → the core thesis is intact; the "miss" was a non-core line, not the engine; and two slow-burn options (overnight trading, prediction markets) are quietly building. Net: nothing broke — the pullback is a gift <i>if</i> you believe the balances are durable.',
+        threeMinutes:[
+          '<b>The pullback is on the wrong number.</b> NII grew +17% through the Fed cuts and commissions beat — the business engine beat across the board. The headline "miss" was a non-core mark-to-market line. Fade the tape reaction if you believe the balances are durable.',
+          '<b>Watch the OCC silence.</b> A filed trust-bank charter that just cleared conditional approval went unmentioned — a live project dropping off the script is the cheapest signal nobody tracks. Ask for a go-live next quarter.',
+          '<b>Overnight tripled almost in passing.</b> 2.8M → 8.1M trades, framed by Peterffy as a 10–20-year secular trend. Not material this quarter, but the kind of one-mention detail that becomes the story.',
+        ],
+        notBringing:[
+          { item:'Exact revenue-miss magnitude', why:'The point is that it was a non-core line, not the size — leading with the number would validate the tape\'s wrong read.' },
+          { item:'ForecastEx contract-pair counts', why:'Still pre-revenue optionality; the tonal upgrade matters more than the volume until a revenue line exists.' },
+        ],
+        newQuestions:[
+          { n:'Which non-core revenue line came in below the Street despite record NII and commissions?', landed:null },
+          { n:'How much of account growth is PDT-rule pull-forward vs. organic?', landed:{ q:'Q2 2026', rank:3 } },
+          { n:'Did the OCC charter and ForecastEx-institutional inquiries progress — or go quiet?', landed:{ q:'Q2 2026', rank:5 } },
+        ]
       }
     }
-  ],
-  // Promise Tracker — separating what management is genuinely DOING from what it merely floated.
-  // kind: 'project' = a committed, funded, active initiative · 'pipeline' = a stated expectation
-  // (numbers management put out there) · 'musing' = "open to the possibility" only, NOT a commitment.
-  // Only the first two are held to account; musings are shown to keep the distinction honest.
-  promises:[
-    { item:'OCC National Trust Bank charter', kind:'project', origin:'Q4 2024', status:'pending', lastMentioned:'not on the Q1 2026 call',
-      note:'A real, filed initiative: applied Dec 2025; OCC preliminary conditional approval (~May 2026, batch of five); final approval pending conditions. NOT raised on the Q1 2026 call — watch for a go-live/first-custody update, or flag the quiet.' },
-    { item:'ForecastEx / prediction markets', kind:'project', origin:'Q3 2024', status:'delivered', lastMentioned:'Q1 2026',
-      note:'Live Aug 2024; 286M contract pairs in Q4 2025 (from 15M). Delivered and scaling — track the (still-undisclosed) revenue contribution.' },
-    { item:'Crypto expansion (Coinbase derivatives, EEA)', kind:'project', origin:'2024–2025', status:'delivered', lastMentioned:'Q1 2026',
-      note:'Coinbase-derivatives nano BTC/ETH perpetual-style futures (Feb 2026); EEA spot live; Zero Hash staking in progress.' },
-    { item:'Prime brokerage / High-Touch Prime', kind:'project', origin:'Q1 2024', status:'delivered', lastMentioned:'~Q3 2025 (quiet since)',
-      note:'Launched 2024; Preqin #4 prime broker. No fresh traction data on the Q1 2026 call — a soft silence; worth asking for updated fund count / balances.' },
-    { item:'Introducing-broker pipeline ("~two dozen firms")', kind:'pipeline', origin:'Q2 2024', status:'pending', lastMentioned:'~Q2 2025',
-      note:'A stated expectation, not a signed book: HSBC WorldTrader is live; management cited ~two dozen more "in progress" + a UAE ~10k-account migration. It has never been reconciled to actual conversions — the cleanest accountability check on the list.' },
-    { item:'Dividend policy (~0.5–1% of the stock price)', kind:'project', origin:'2011 / 2024', status:'delivered', lastMentioned:'Q1 2026',
-      note:'A standing commitment, delivered: flat for 13 yrs → raised 2024, 2025, and again to $0.0875/qtr in Jul 2026 = $0.35/yr today. No buyback.' },
-    { item:'European bank license (Ireland)', kind:'musing', origin:'~Q4 2024', status:'silent', lastMentioned:'~Q4 2024',
-      note:'IMPORTANT: this was a passing mention alongside the OCC charter, NOT a confirmed application or funded project. Included only to keep the distinction honest — do not treat it as a live promise unless management re-commits.' },
   ]
 };
 function cpUpcoming(){ return CALL_PREP.quarters.filter(function(q){ return q.status==='upcoming'; })[0]||null; }
-function cpReported(){ return CALL_PREP.quarters.filter(function(q){ return q.status==='reported'; }); }
 function cpFill(x, muted){ return (x!=null && String(x).trim()!=='') ? x : '<span class="cp-empty">'+(muted||'— to fill')+'</span>'; }
-var CP_STAT={ delivered:{c:'#0a8f4c',l:'Delivered'}, pending:{c:'#2E6BE6',l:'Pending'}, silent:{c:'#B7791F',l:'Silent'}, abandoned:{c:'#C0392B',l:'Abandoned'} };
-var CP_KIND={ project:{c:'#0a8f4c',l:'Project'}, pipeline:{c:'#2E6BE6',l:'Pipeline'}, musing:{c:'#B7791F',l:'Musing only'} };
-// Pop-up registry: keeps the on-screen cards terse and pushes the depth into a modal (wired by
-// wireModal via data-detail="cp:<id>"). cpReg() registers content at render time and returns the id.
+// Pop-up registry — keeps on-screen cards terse, pushes depth into the shared modal (data-detail="cp:<id>").
 var CP_POP={};
 function cpReg(id, t, h){ CP_POP[id]={t:t, h:h}; return id; }
-// A small "?" info badge that opens a pop-up — for numbers that need context (structural changes,
-// one-offs that distort the financials, etc.).
 function cpQ(id, t, h){ return '<span class="cp-info ov-clickable" data-detail="cp:'+cpReg(id,t,h)+'" title="'+esc(String(t).replace(/<[^>]+>/g,''))+'">?</span>'; }
 
-// Shared style for the Call Prep panes.
+// Shared style for the Call Prep panes (ported from googl.js v2.2; brand-red-tinted).
 function cpStyle(){
   return '<style>.cp-note{font-size:11px;color:var(--mu);line-height:1.5;background:#F7F9FB;border:1px solid var(--bdr);border-radius:9px;padding:9px 12px;margin:0 0 12px}'+
-    /* inner phase tabs (Call Prep lives inside Evolution — its own row, independent of .ovt-subtab wiring) */
-    '.cp-phtabs{display:inline-flex;gap:3px;background:var(--brand-soft);border:1px solid var(--bdr);border-radius:9px;padding:4px;margin:0 0 20px}'+
+    '.cp-phtabs{display:inline-flex;gap:3px;background:rgba(214,0,28,0.08);border:1px solid var(--bdr);border-radius:9px;padding:4px;margin:0 0 20px}'+
     '.cp-phtab{background:none;border:none;color:var(--mu);font-family:\'Inter\',sans-serif;font-size:12px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;padding:7px 16px;border-radius:6px;cursor:pointer;transition:all .15s}'+
-    '.cp-phtab:hover{color:var(--navy)}.cp-phtab.active{background:var(--brand);color:#fff}'+
+    '.cp-phtab:hover{color:var(--navy)}.cp-phtab.active{background:'+BRAND+';color:#fff}'+
     '.cp-phpane[hidden]{display:none}'+
+    /* quarter selector — one Call Prep, many quarters; only the selected quarter renders (page stays light) */
+    '.cp-qpills{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}'+
+    '.cp-qpill{border:1px solid var(--bdr);background:var(--w);font:inherit;font-size:11px;font-weight:800;color:var(--mu);padding:5px 13px;border-radius:999px;cursor:pointer;transition:.12s}'+
+    '.cp-qpill:hover{color:var(--navy)}.cp-qpill.active{background:var(--navy);color:#fff;border-color:var(--navy)}'+
+    '.cp-qpill .cp-qtag{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-left:6px;opacity:.75}'+
+    '.cp-qblock[hidden]{display:none}'+
+    '.cp-frozen{display:inline-block;font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;background:'+GRAY+';border-radius:20px;padding:2px 8px;margin-left:7px;vertical-align:middle}'+
+    /* watch-list theme tags (cross-quarter filter) + add-theme form */
+    '.cp-wl-tagbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 12px;padding:9px 12px;background:#F7F9FB;border:1px solid var(--bdr);border-radius:10px}'+
+    '.cp-wl-tag{border:1px solid rgba(122,90,248,0.35);background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:'+PURPLE+';padding:3px 10px;border-radius:999px;cursor:pointer;transition:.12s}'+
+    '.cp-wl-tag:hover{background:rgba(122,90,248,0.08)}.cp-wl-tag.active{background:'+PURPLE+';color:#fff;border-color:'+PURPLE+'}'+
+    '.cp-wl-clear{border-color:var(--bdr);color:var(--mu)}'+
+    '.cp-wl-add-btn{margin-left:auto;border:1px dashed '+BRAND+';background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:'+BRAND+';padding:3px 10px;border-radius:999px;cursor:pointer}'+
+    '.cp-wl-addform{display:flex;flex-direction:column;gap:7px;border:1px dashed '+BRAND+';border-radius:10px;padding:12px;margin:0 0 12px;background:rgba(214,0,28,0.03)}'+
+    '.cp-wl-addform[hidden]{display:none}'+
+    '.cp-wl-in{font:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:7px 10px;background:var(--w);color:var(--navy)}'+
+    '.cp-wl-add-go{font:inherit;font-size:11px;font-weight:800;border:none;border-radius:8px;padding:6px 13px;background:'+BRAND+';color:#fff;cursor:pointer}'+
+    '.cp-wl-all[hidden]{display:none}.cp-w[data-wlhide]{display:none}'+
     '.cp-empty{color:var(--mu);font-style:italic;opacity:.7}'+
     '.cp-grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0}@media(max-width:640px){.cp-grid4{grid-template-columns:1fr 1fr}}'+
     '.cp-cell{border:1px solid var(--bdr);border-top:3px solid '+BLUE+';border-radius:10px;padding:11px 13px;background:var(--w)}'+
     '.cp-cell-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}.cp-cell-v{font-size:15px;font-weight:800;color:var(--navy);margin-top:3px;line-height:1.2}'+
+    /* Setup v2 — estimates toggle (Consensus ⇄ Summit ⇄ Both) */
+    '.cp-ev-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
+    '.cp-ev-pill.active{background:var(--navy);color:#fff}'+
+    '.cp-cell-custom{border-top-color:'+YELLOW+'}'+
+    '.cp-row-cap{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:2px 0 4px}'+
+    '.cp-val{display:flex;align-items:baseline;gap:7px}'+
+    '.cp-val-lab{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:1px 7px;flex:none}'+
+    '.cp-val-cons .cp-val-lab{background:rgba(46,107,230,0.10);color:'+BLUE+'}'+
+    '.cp-val-us .cp-val-lab{background:rgba(10,143,76,0.12);color:'+BRAND2+'}'+
+    '.cp-evwrap[data-ev="cons"] .cp-val-us{display:none}'+
+    '.cp-evwrap[data-ev="us"] .cp-val-cons{display:none}'+
+    '.cp-evwrap:not([data-ev="both"]) .cp-val-lab{display:none}'+
+    '.cp-evwrap[data-ev="both"] .cp-cell-v{font-size:13px}'+
+    '.cp-evwrap[data-ev="both"] .cp-val{margin-top:3px}'+
     '.cp-banner{border:1px solid var(--bdr);border-left:4px solid '+BRAND+';border-radius:11px;padding:13px 15px;background:linear-gradient(180deg,rgba(214,0,28,0.05),transparent);font-size:12.5px;line-height:1.6;color:var(--navy);margin:12px 0}'+
-    '.cp-react{display:flex;flex-direction:column;gap:7px}'+
-    '.cp-react-row{display:grid;grid-template-columns:70px 1fr;gap:10px;align-items:center}'+
-    '.cp-react-q{font-size:11px;font-weight:800;color:var(--navy)}'+
-    '.cp-react-bar{display:flex;align-items:center;gap:8px}.cp-react-chip{font-size:10.5px;font-weight:800;border-radius:20px;padding:2px 9px;white-space:nowrap}'+
-    '.cp-react-why{font-size:11px;color:var(--mu);line-height:1.4}'+
-    /* watch list */
     '.cp-watch{display:flex;flex-direction:column;gap:11px}'+
     '.cp-w{border:1px solid var(--bdr);border-radius:12px;padding:13px 15px;background:var(--w);position:relative}'+
-    '.cp-w-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}'+
+    '.cp-w-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}'+
     '.cp-w-rank{width:26px;height:26px;border-radius:50%;background:'+BRAND+';color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}'+
     '.cp-w-metric{font-size:13.5px;font-weight:800;color:var(--navy)}'+
-    '.cp-w-eb{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:8px 0}@media(max-width:520px){.cp-w-eb{grid-template-columns:1fr}}'+
-    '.cp-w-e,.cp-w-b{border-radius:9px;padding:8px 11px;font-size:11.5px;line-height:1.4}'+
-    '.cp-w-e{background:rgba(10,143,76,0.08);border:1px solid rgba(10,143,76,0.28)}.cp-w-b{background:rgba(214,0,28,0.06);border:1px solid rgba(214,0,28,0.28)}'+
-    '.cp-w-lab{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:2px}'+
-    '.cp-w-e .cp-w-lab{color:#0a8f4c}.cp-w-b .cp-w-lab{color:'+BRAND+'}'+
     '.cp-w-q{display:flex;gap:8px;align-items:flex-start;background:#10141A;color:#fff;border-radius:9px;padding:9px 12px;font-size:11.5px;line-height:1.5;margin-top:8px}.cp-w-q .mic{flex:none}'+
-    '.cp-w-src{font-size:10.5px;color:var(--navy);line-height:1.5;background:rgba(46,107,230,0.07);border-left:3px solid '+BLUE+';border-radius:7px;padding:7px 10px;margin-bottom:8px}'+
-    '.cp-w-why{font-size:11px;color:var(--mu);line-height:1.5;margin-top:7px}'+
-    '.cp-kind{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:2px 8px;white-space:nowrap;border:1px solid}'+
     '.cp-phase{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;border-radius:20px;padding:3px 10px;margin-bottom:8px}'+
-    /* "?" info badge */
     '.cp-info{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:'+AMBER+';color:#fff;font-size:10px;font-weight:800;cursor:pointer;margin-left:5px;vertical-align:middle;flex:none}'+
     '.cp-info:hover{filter:brightness(1.1)}'+
-    /* the debate — visual contrast */
     '.cp-debate{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:4px 0}@media(max-width:600px){.cp-debate{grid-template-columns:1fr}}'+
     '.cp-dc{border:1px solid var(--bdr);border-radius:12px;padding:13px 15px;background:var(--w)}'+
-    '.cp-dc.fear{border-top:4px solid '+BRAND+';background:linear-gradient(180deg,rgba(214,0,28,0.04),transparent)}'+
+    '.cp-dc.fear{border-top:4px solid '+RED+';background:linear-gradient(180deg,rgba(234,67,53,0.04),transparent)}'+
     '.cp-dc.real{border-top:4px solid '+BRAND2+';background:linear-gradient(180deg,rgba(10,143,76,0.05),transparent)}'+
     '.cp-dc-h{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}'+
-    '.cp-dc.fear .cp-dc-h{color:'+BRAND+'}.cp-dc.real .cp-dc-h{color:'+BRAND2+'}'+
+    '.cp-dc.fear .cp-dc-h{color:'+RED+'}.cp-dc.real .cp-dc-h{color:'+BRAND2+'}'+
     '.cp-dc-b{font-size:12.5px;font-weight:700;color:var(--navy);line-height:1.4}'+
     '.cp-mech{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}'+
     '.cp-mech-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;border:1px solid var(--bdr);border-radius:9px;padding:7px 12px;background:var(--w);color:var(--navy)}'+
     '.cp-mech-ar{font-size:15px;color:var(--mu)}'+
     '.cp-synth{border-left:4px solid var(--navy);background:#10141A;color:#fff;border-radius:11px;padding:13px 16px;font-size:13px;font-weight:700;line-height:1.5;margin:6px 0}.cp-synth b{color:#FFD9DE}'+
-    /* watch card — terser */
     '.cp-why-btn{display:inline-block;font-size:10px;font-weight:800;color:'+BLUE+';cursor:pointer;margin-top:8px}'+
     '.cp-w-chips{display:flex;gap:7px;flex-wrap:wrap;margin:6px 0 0}'+
     '.cp-w-chip{font-size:10px;font-weight:700;border-radius:7px;padding:4px 9px;line-height:1.3}'+
     '.cp-w-chip.cons{background:rgba(46,107,230,0.08);border:1px solid rgba(46,107,230,0.28);color:var(--navy)}'+
     '.cp-w-chip.red{background:rgba(214,0,28,0.06);border:1px solid rgba(214,0,28,0.28);color:var(--navy)}'+
     '.cp-w-chip b{font-weight:800}'+
-    /* post-call highlights */
     '.cp-take{border-left:4px solid '+BRAND+';background:#10141A;color:#fff;border-radius:11px;padding:13px 16px;font-size:13px;font-weight:700;line-height:1.5;margin:2px 0 14px}.cp-take b{color:#FFD9DE}'+
     '.cp-hl{display:flex;flex-direction:column;gap:8px}'+
     '.cp-hl-row{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center;border:1px solid var(--bdr);border-left:4px solid var(--hc);border-radius:10px;padding:10px 13px;background:var(--w);cursor:pointer;transition:.12s}'+
@@ -1461,155 +1599,417 @@ function cpStyle(){
     '.cp-hl-more{font-size:15px;color:var(--hc);font-weight:800}'+
     '@media(max-width:560px){.cp-hl-row{grid-template-columns:auto 1fr}.cp-hl-more{display:none}}'+
     '.cp-dots{border:1px dashed '+BRAND+';border-radius:11px;padding:12px 15px;margin-top:14px;background:rgba(214,0,28,0.03);font-size:12px;line-height:1.6;color:var(--navy)}.cp-dots b{color:'+BRAND+'}'+
-    /* post-results scorecard */
     '.cp-sc{display:flex;flex-direction:column;gap:6px}'+
-    '.cp-sc-row{display:grid;grid-template-columns:1.1fr 1fr 1.2fr auto;gap:10px;align-items:center;border:1px solid var(--bdr);border-left:4px solid var(--sc);border-radius:9px;padding:8px 12px}'+
+    '.cp-sc-row{display:grid;grid-template-columns:78px 1.1fr 1fr 1.2fr 92px auto;gap:10px;align-items:center;border:1px solid var(--bdr);border-left:4px solid var(--sc);border-radius:9px;padding:8px 12px}'+
     '.cp-sc-m{font-size:12px;font-weight:800;color:var(--navy)}.cp-sc-c{font-size:11px;color:var(--mu)}.cp-sc-a{font-size:11.5px;font-weight:700;color:var(--navy)}'+
     '.cp-sc-v{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 10px;background:var(--sc);white-space:nowrap}'+
-    '@media(max-width:600px){.cp-sc-row{grid-template-columns:1fr auto}.cp-sc-c,.cp-sc-a{display:none}}'+
+    '.cp-sc-rk{font-size:9px;font-weight:800;color:'+BRAND+';background:rgba(214,0,28,0.10);border:1px solid rgba(214,0,28,0.3);border-radius:20px;padding:2px 8px;white-space:nowrap;text-align:center}'+
+    '.cp-sc-rk.blank{background:transparent;border:none}'+
+    '.cp-sc-surp{font-size:9.5px;font-weight:800;text-align:center;letter-spacing:.02em;border-radius:20px;padding:2px 8px;white-space:nowrap}'+
+    '.cp-sc-surp.hi{color:'+RED+';background:rgba(234,67,53,0.09);border:1px solid rgba(234,67,53,0.3)}'+
+    '.cp-sc-surp.md{color:'+AMBER+';background:rgba(183,121,31,0.09);border:1px solid rgba(183,121,31,0.3)}'+
+    '.cp-sc-surp.lo{color:var(--mu);background:transparent;border:1px solid var(--bdr)}'+
+    '.cp-legend{display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:#F7F9FB;border:1px solid var(--bdr);border-radius:10px;padding:10px 13px;margin:0 0 10px}'+
+    '.cp-legend-i{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--navy);line-height:1.4}'+
+    '.cp-legend-i b{font-weight:800}'+
+    '@media(max-width:600px){.cp-sc-row{grid-template-columns:1fr auto}.cp-sc-c,.cp-sc-a,.cp-sc-bw,.cp-sc-rk{display:none}}'+
     '.cp-tc{display:flex;flex-direction:column;gap:6px}'+
     '.cp-tc-row{display:flex;gap:9px;align-items:flex-start;font-size:11.5px;color:var(--navy);line-height:1.45;border:1px solid var(--bdr);border-radius:9px;padding:8px 11px}'+
-    '.cp-concl{border:1px solid var(--bdr);border-top:4px solid '+BRAND+';border-radius:12px;padding:14px 16px;background:linear-gradient(180deg,rgba(214,0,28,0.04),transparent);font-size:12.5px;line-height:1.65;color:var(--navy)}'+
-    /* tables */
-    '.cp-tbl{width:100%;border-collapse:collapse;font-size:11.5px}'+
-    '.cp-tbl th{text-align:left;color:var(--mu);font-weight:700;padding:7px 10px;border-bottom:1px solid var(--bdr);font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}'+
-    '.cp-tbl td{padding:9px 10px;border-bottom:1px solid var(--bdr);color:var(--navy);line-height:1.45;vertical-align:top}'+
-    '.cp-pill{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 9px;white-space:nowrap}'+
-    '.cp-an{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}'+
-    '.cp-an-c{border:1px solid var(--bdr);border-radius:11px;padding:12px 14px;background:var(--w)}'+
-    '.cp-an-n{font-size:12.5px;font-weight:800;color:var(--navy)}.cp-an-f{font-size:10.5px;color:var(--mu);font-weight:700}'+
-    '.cp-an-q{font-size:11px;color:var(--navy);line-height:1.5;margin-top:6px}.cp-an-flag{font-size:9.5px;font-weight:800;color:'+AMBER+';margin-top:5px}</style>';
+    /* the chain: seededBy chip on watch items, landing chip on newQuestions */
+    '.cp-seed{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:800;color:'+PURPLE+';background:rgba(122,90,248,0.08);border:1px solid rgba(122,90,248,0.3);border-radius:20px;padding:2px 9px;white-space:nowrap;flex:none}'+
+    '.cp-nq{display:flex;flex-direction:column;gap:5px}'+
+    '.cp-nq-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border:1px solid var(--bdr);border-left:3px solid '+PURPLE+';border-radius:9px;padding:7px 11px;font-size:11.5px;color:var(--navy);line-height:1.45}'+
+    '.cp-nq-land{font-size:9.5px;font-weight:800;color:'+PURPLE+';white-space:nowrap}'+
+    '.cp-nq-land.open{color:var(--mu)}'+
+    '@media(max-width:560px){.cp-nq-row{grid-template-columns:1fr}.cp-nq-land{margin-top:3px}}'+
+    /* post-call highlight bands */
+    '.cp-band{margin:16px 0 8px;display:flex;align-items:center;gap:9px}'+
+    '.cp-band-i{font-size:13px;font-weight:800;color:var(--bc);line-height:1}'+
+    '.cp-band-t{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--bc)}'+
+    '.cp-band-s{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
+    '.cp-band-l{flex:1;height:1px;background:var(--bdr)}'+
+    '@media(max-width:560px){.cp-band-s{display:none}}'+
+    '.cp-hl-open{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:'+AMBER+';border:1px solid '+AMBER+';border-radius:20px;padding:2px 7px;white-space:nowrap;margin-left:7px;vertical-align:middle}'+
+    /* the deliverable: three minutes + what we are not bringing */
+    '.cp-3m{border:1px solid var(--bdr);border-top:4px solid '+BRAND+';border-radius:12px;padding:15px 17px;margin:16px 0 0;background:linear-gradient(180deg,rgba(214,0,28,0.05),transparent)}'+
+    '.cp-3m-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:10px}'+
+    '.cp-3m-t{font-size:12.5px;font-weight:800;color:var(--navy)}'+
+    '.cp-3m-sub{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
+    '.cp-3m-copy{margin-left:auto;border:1px solid '+BRAND+';background:var(--w);font:inherit;font-size:10px;font-weight:800;color:'+BRAND+';padding:3px 11px;border-radius:999px;cursor:pointer;transition:.12s}'+
+    '.cp-3m-copy:hover{background:'+BRAND+';color:#fff}'+
+    '.cp-3m-l{display:flex;flex-direction:column;gap:8px;counter-reset:m3}'+
+    '.cp-3m-i{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;font-size:12.5px;line-height:1.55;color:var(--navy)}'+
+    '.cp-3m-i::before{counter-increment:m3;content:counter(m3);width:20px;height:20px;border-radius:50%;background:'+BRAND+';color:#fff;font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px}'+
+    '.cp-nb{margin-top:13px;border-top:1px dashed var(--bdr);padding-top:11px}'+
+    '.cp-nb-h{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:6px}'+
+    '.cp-nb-r{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;font-size:11px;line-height:1.5;color:var(--mu);padding:2px 0}'+
+    '.cp-nb-r b{color:var(--navy);font-weight:800}'+
+    '.cp-nb-x{color:'+GRAY+';font-weight:800;flex:none}'+
+    /* earnings-call theme status with age (the fused theme record) */
+    '.calls-st-age{font-size:8.5px;font-weight:700;opacity:.8;margin-left:4px}</style>';
 }
-// A · The Setup ──────────────────────────────────────────────────────────────────────────────────
+// A · The Setup — 4 headline + 4 custom KPIs, each with Street (Bloomberg) AND Summit estimates.
 function cpFmtC(o){ if(!o||o.v==null) return '<span class="cp-empty">—</span>';
   var un=o.unit||'', v=o.v, s;
   if(un==='$') s='$'+v; else if(un==='$M') s='$'+v+'M'; else if(un==='$B') s='$'+v+'B';
   else if(un==='M') s=v+'M'; else if(un==='M/day') s=v+'M/day'; else if(un==='%') s=v+'%'; else s=String(v);
   return s+(o.yoy!=null?'<span style="font-size:10px;color:#0a8f4c;font-weight:800;margin-left:5px">+'+o.yoy+'%</span>':''); }
-function cpSetupBody(c){
-  var u=cpUpcoming(); var h=cpStyle();
-  if(!u){ return h+'<div class="cp-note">No upcoming quarter staged.</div>'; }
-  h+='<div class="cp-phase" style="background:'+BLUE+'">① Pre-Call</div>';
-  h+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup.</b> The numbers going in, and the <b>one debate</b> the print will settle. '+(u.date?('Reports <b>'+esc(u.date)+'</b>.'):'<span class="cp-empty">report date — to confirm</span>')+'</p>';
-  var st=u.setup||{}, cons=st.consensus||{};
-  function cCell(key,k,o){ var q=(o&&o.note)?cpQ('setnote-'+key, o.note.t, o.note.h):''; return '<div class="cp-cell"><div class="cp-cell-k">'+esc(k)+q+'</div><div class="cp-cell-v">'+cpFmtC(o)+'</div></div>'; }
-  h+='<div class="ov-diagram-cap" style="margin:6px 0 4px"><b>Bloomberg consensus (BST)</b>'+(st.source?' · <span style="color:var(--mu);font-weight:600;font-size:10px">'+esc(st.source)+(st.asOf?' · as of '+esc(st.asOf):'')+'</span>':'')+'</div>';
-  h+='<div class="cp-grid4">'+cCell('eps','Adj EPS',cons.adjEps)+cCell('rev','Adj net revenue',cons.adjNetRevUsdM)+cCell('nii','Net interest income',cons.niiUsdM)+cCell('darts','DARTs',cons.dartsM)+'</div>';
-  h+='<div class="cp-grid4" style="margin-top:10px">'+cCell('acct','Customer accounts',cons.accountsM)+cCell('eq','Customer equity',cons.custEquityBn)+cCell('cb','Credit balances (avg)',cons.creditBalAvgBn)+cCell('ptm','Pre-tax margin',cons.preTaxMarginPct)+'</div>';
-  h+='<div class="ave-subh-note" style="margin-top:4px">Green = YoY. Bloomberg (BST) consensus, hardcoded from the team\'s export. <b>?</b> = a number with a caveat worth knowing.</div>';
-  // ── The one debate — as a picture, not paragraphs ──
-  var d=st.debate;
-  if(d){
-    var det=st.detail?cpReg('setdetail', 'The one debate — in full', st.detail):null;
-    h+='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The one debate this print will settle</b>'+(det?' <span class="cp-why-btn ov-clickable" data-detail="cp:'+det+'">the full read ›</span>':'')+'</div>';
-    h+='<div class="cp-debate">'+
-      '<div class="cp-dc fear"><div class="cp-dc-h">What the tape fears</div><div class="cp-dc-b">'+d.fear+'</div></div>'+
-      '<div class="cp-dc real"><div class="cp-dc-h">What consensus actually models</div><div class="cp-dc-b">'+d.real+'</div></div>'+
-    '</div>';
-    if(d.mech&&d.mech.length){
-      h+='<div class="cp-mech">'+d.mech.map(function(m,i){ var ar=m.dir==='up'?'<span style="color:#0a8f4c">▲</span>':(m.dir==='down'?'<span style="color:'+BRAND+'">▼</span>':''); return (i>0?'<span class="cp-mech-ar">→</span>':'')+'<span class="cp-mech-chip">'+ar+' '+esc(m.k)+' <span style="color:var(--mu);font-weight:700">'+esc(m.v)+'</span></span>'; }).join('')+'</div>';
-    }
-    if(d.synth) h+='<div class="cp-synth">'+d.synth+'</div>';
-  }
-  h+='<div class="ov-foot">Frozen at call time; scored against Post-Results / Post-Call.</div>';
-  return h;
+function cpEvCell(key, m, isCustom){
+  var name=m&&m.k?m.k:null;
+  var q=(m&&m.note)?cpQ('setnote-'+key, m.note.t, m.note.h):'';
+  var kHtml=name?esc(name):'<span class="cp-empty">Custom KPI — to define</span>';
+  return '<div class="cp-cell'+(isCustom?' cp-cell-custom':'')+'"><div class="cp-cell-k">'+kHtml+q+'</div>'+
+    '<div class="cp-cell-v">'+
+      '<div class="cp-val cp-val-cons"><span class="cp-val-lab">Street</span>'+cpFmtC(m&&m.cons)+'</div>'+
+      '<div class="cp-val cp-val-us"><span class="cp-val-lab">Summit</span>'+cpFmtC(m&&m.us)+'</div>'+
+    '</div></div>';
 }
-// B · Watch List ─────────────────────────────────────────────────────────────────────────────────
-function cpWatchBody(c){
-  var u=cpUpcoming(); var h=cpStyle();
-  if(!u){ return h+'<div class="cp-note">No upcoming quarter staged.</div>'; }
-  h+='<div class="cp-phase" style="background:'+BLUE+'">① Pre-Call</div>';
-  h+='<p class="ov-lede"><b>Five things to hunt — '+esc(u.q)+'</b>, ranked by <b>how much they move the stock × how debated they are</b>. Each = a metric, its consensus, the red-line that breaks the thesis, and <b>the tell</b> (🔎) — a standing read for what to watch. Tap <b>why ›</b> for the grounding.</p>';
-  h+='<div class="cp-watch">'+(u.watchList||[]).map(function(w){
-    var why=(w.src||w.why)?cpReg('watchwhy-'+(w.rank||0), esc(w.metric), (w.src?'<p><b>Why it\'s on the list:</b> '+w.src+'</p>':'')+(w.why?'<p><b>Why it matters:</b> '+w.why+'</p>':'')):null;
-    return '<div class="cp-w"><div class="cp-w-top"><div class="cp-w-rank">'+(w.rank||'')+'</div><div class="cp-w-metric">'+esc(w.metric)+'</div>'+(why?'<span class="cp-why-btn ov-clickable" data-detail="cp:'+why+'" style="margin:0">why ›</span>':'')+'</div>'+
-      '<div class="cp-w-q"><span class="mic">🔎</span><span>'+cpFill(w.pista||w.question)+'</span></div>'+
-      '<div class="cp-w-chips">'+
-        (w.bbg?'<span class="cp-w-chip cons"><b>Cons:</b> '+esc(w.bbg)+'</span>':'')+
-        (w.breaks?'<span class="cp-w-chip red"><b>Breaks if:</b> '+esc(w.breaks)+'</span>':'')+
-      '</div>'+
-    '</div>';
+// ─── The source buttons — every Call Prep opens with them: what IR curates, EDGAR certifies.
+// IBKR IR (quarterly earnings) + IBKR on EDGAR (CIK 1381197). IR card carries IBKR's real mark
+// (parqet logo CDN, CSP-allowed); EDGAR carries the public-domain SEC seal (served locally).
+var CP_IR_URL='https://investors.interactivebrokers.com/en/general/about/quarterly-earnings.php';
+var CP_EDGAR_URL='https://www.sec.gov/edgar/browse/?CIK=1381197&owner=exclude';
+var CP_LOGO_URL='https://assets.parqet.com/logos/symbol/IBKR';
+var CP_SEC_SEAL='img/sec-seal.png';
+function cpIRButton(){
+  return '<style>'+
+    '.cp-srcrow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 16px}@media(max-width:760px){.cp-srcrow{grid-template-columns:1fr}}'+
+    '.cp-ir{display:flex;align-items:center;gap:20px;text-decoration:none;border-radius:18px;padding:26px 26px;min-height:120px;position:relative;overflow:hidden;'+
+      'background:linear-gradient(115deg,#0B0405 0%,#240A0F 60%,#0B0405 100%);border:1px solid rgba(214,0,28,.35);box-shadow:0 10px 32px rgba(0,0,0,.4);transition:.18s}'+
+    '.cp-ir:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,'+BRAND+','+RED+','+YELLOW+','+BRAND2+');height:4px;top:0}'+
+    '.cp-ir:hover{transform:translateY(-2px);box-shadow:0 16px 42px rgba(214,0,28,.4);border-color:rgba(214,0,28,.75)}'+
+    '.cp-ir-wm{position:absolute;right:-40px;bottom:-60px;width:230px;height:230px;object-fit:contain;opacity:.09;pointer-events:none;transition:.25s}'+
+    '.cp-ir:hover .cp-ir-wm{opacity:.16;transform:scale(1.04) rotate(-2deg)}'+
+    '.cp-ir-ic{width:72px;height:72px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;flex:none;position:relative;z-index:1;'+
+      'box-shadow:0 0 0 1px rgba(255,120,130,.3),0 0 32px rgba(214,0,28,.55)}'+
+    '.cp-ir-ic img{width:52px;height:52px;object-fit:contain;display:block;border-radius:12px;filter:drop-shadow(0 2px 10px rgba(0,0,0,.55))}'+
+    '.cp-ir-body{flex:1;min-width:0;position:relative;z-index:1}'+
+    '.cp-ir-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.16em;color:#F19AA3;display:flex;align-items:center;gap:7px}'+
+    '.cp-ir-dot{width:7px;height:7px;border-radius:50%;background:'+BRAND2+';box-shadow:0 0 0 0 rgba(52,168,83,.7);animation:cpirp 1.6s infinite}'+
+    '@keyframes cpirp{0%{box-shadow:0 0 0 0 rgba(52,168,83,.6)}70%{box-shadow:0 0 0 8px rgba(52,168,83,0)}100%{box-shadow:0 0 0 0 rgba(52,168,83,0)}}'+
+    '.cp-ir-t{font-size:19px;font-weight:900;color:#fff;letter-spacing:.05em;text-transform:uppercase;margin-top:4px}'+
+    '.cp-ir-s{font-size:11.5px;color:#C9B4B7;font-weight:600;margin-top:3px;letter-spacing:.01em}'+
+    '.cp-ir-go{font-size:13px;font-weight:900;color:#fff;background:'+BRAND+';border-radius:999px;padding:12px 22px;white-space:nowrap;flex:none;display:flex;align-items:center;gap:8px;position:relative;z-index:1;letter-spacing:.04em;transition:.14s}'+
+    '.cp-ir:hover .cp-ir-go{gap:12px;box-shadow:0 4px 18px rgba(214,0,28,.55)}'+
+    '@media(max-width:560px){.cp-ir{flex-wrap:wrap}.cp-ir-go{width:100%;justify-content:center}}'+
+    '.cp-ir.edgar{background:linear-gradient(115deg,#070502 0%,#171106 60%,#070502 100%);border-color:rgba(197,164,90,.35)}'+
+    '.cp-ir.edgar:before{background:linear-gradient(90deg,#8C6D2F,#E3C878,#8C6D2F)}'+
+    '.cp-ir.edgar:hover{box-shadow:0 16px 42px rgba(197,164,90,.32);border-color:rgba(227,200,120,.75)}'+
+    '.cp-ir.edgar .cp-ir-ic{box-shadow:0 0 0 1px rgba(227,200,120,.28),0 0 32px rgba(197,164,90,.55)}'+
+    '.cp-ir.edgar .cp-ir-ic img{width:72px;height:72px;border-radius:0}'+
+    '.cp-ir.edgar .cp-ir-k{color:#E3C878}'+
+    '.cp-ir.edgar .cp-ir-dot{background:#E3C878;animation:none;box-shadow:0 0 8px rgba(227,200,120,.8)}'+
+    '.cp-ir.edgar .cp-ir-go{background:linear-gradient(135deg,#E3C878,#B8933F);color:#1A1305}'+
+    '.cp-ir.edgar:hover .cp-ir-go{box-shadow:0 4px 18px rgba(197,164,90,.6)}'+
+    '.cp-ir.edgar .cp-ir-wm{opacity:.1}'+
+    '.cp-ir.edgar:hover .cp-ir-wm{opacity:.17}'+
+  '</style>'+
+  '<div class="cp-srcrow">'+
+  '<a class="cp-ir" href="'+CP_IR_URL+'" target="_blank" rel="noopener">'+
+    '<img class="cp-ir-wm" src="'+CP_LOGO_URL+'" alt="" aria-hidden="true">'+
+    '<span class="cp-ir-ic"><img src="'+CP_LOGO_URL+'" alt="Interactive Brokers logo" onerror="this.parentNode.style.display=\'none\'"></span>'+
+    '<span class="cp-ir-body">'+
+      '<span class="cp-ir-k"><span class="cp-ir-dot"></span>THE SOURCE · QUARTERLY EARNINGS</span>'+
+      '<span class="cp-ir-t" style="display:block">Interactive Brokers IR</span>'+
+      '<span class="cp-ir-s" style="display:block">Release · webcast · slides · transcripts — straight from investors.interactivebrokers.com. Skip the search, go direct.</span>'+
+    '</span>'+
+    '<span class="cp-ir-go">OPEN IR <span>↗</span></span>'+
+  '</a>'+
+  '<a class="cp-ir edgar" href="'+CP_EDGAR_URL+'" target="_blank" rel="noopener">'+
+    '<img class="cp-ir-wm" src="'+CP_SEC_SEAL+'" alt="" aria-hidden="true">'+
+    '<span class="cp-ir-ic"><img src="'+CP_SEC_SEAL+'" alt="SEC seal" onerror="this.parentNode.style.display=\'none\'"></span>'+
+    '<span class="cp-ir-body">'+
+      '<span class="cp-ir-k"><span class="cp-ir-dot"></span>THE RECORD · U.S. SECURITIES AND EXCHANGE COMMISSION</span>'+
+      '<span class="cp-ir-t" style="display:block">Interactive Brokers on EDGAR</span>'+
+      '<span class="cp-ir-s" style="display:block">10-K · 10-Q · 8-K · DEF 14A — the regulator\'s copy, as filed. What IR curates, EDGAR certifies.</span>'+
+    '</span>'+
+    '<span class="cp-ir-go">OPEN EDGAR <span>↗</span></span>'+
+  '</a>'+
+  '</div>';
+}
+function cpQkey(q){ return String(q||'').replace(/\s/g,''); }
+function cpQPills(){
+  return '<div class="cp-qpills">'+CALL_PREP.quarters.map(function(q,i){
+    return '<button type="button" class="cp-qpill'+(i===0?' active':'')+'" data-cpqsel="'+esc(cpQkey(q.q))+'">'+esc(q.q)+(q.status==='upcoming'?'<span class="cp-qtag">upcoming</span>':'')+'</button>';
   }).join('')+'</div>';
-  h+='<div class="ov-foot">Frozen once the quarter opens; scored against Post-Results / Post-Call.</div>';
-  return h;
 }
-// C · Promise Tracker ────────────────────────────────────────────────────────────────────────────
-function cpPromisesBody(c){
+function cpSetupBody(c){
   var h=cpStyle();
-  h+='<div class="cp-phase" style="background:'+BLUE+'">① Pre-Call</div>';
-  h+='<p class="ov-lede"><b>What management is genuinely doing — vs. what it merely floated.</b> The discipline here is separating a <b>real, committed project</b> from a passing <i>"we\'re open to it."</i> Only the first is held to account. And <b>silence is the cheapest signal to detect</b>: a real project that quietly stops being mentioned is often the tell.</p>';
-  h+='<div style="display:flex;gap:12px;flex-wrap:wrap;margin:0 0 12px">'+Object.keys(CP_KIND).map(function(k){ var kk=CP_KIND[k]; return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--navy)"><span class="cp-kind" style="color:'+kk.c+';border-color:'+kk.c+'">'+kk.l+'</span></span>'; }).join('')+'<span style="font-size:10.5px;color:var(--mu)">Project = committed/funded · Pipeline = stated expectation · Musing = open-to-possibility, not a promise</span></div>';
-  h+='<div style="overflow-x:auto"><table class="cp-tbl"><thead><tr><th>Item</th><th>Type</th><th>Status</th><th>Last mentioned</th><th>Note</th></tr></thead><tbody>'+
-    (CALL_PREP.promises||[]).map(function(p){ var s=CP_STAT[p.status]||{c:'#6b7684',l:p.status}; var k=CP_KIND[p.kind]||{c:'#6b7684',l:p.kind||''};
-      return '<tr><td style="font-weight:700">'+esc(p.item)+' <span style="font-weight:600;color:var(--mu);font-size:10px">· since '+esc(p.origin||'')+'</span></td>'+
-        '<td><span class="cp-kind" style="color:'+k.c+';border-color:'+k.c+'">'+esc(k.l)+'</span></td>'+
-        '<td><span class="cp-pill" style="background:'+s.c+'">'+esc(s.l)+'</span></td>'+
-        '<td>'+cpFill(p.lastMentioned,'—')+'</td><td style="color:var(--mu)">'+esc(p.note||'')+'</td></tr>';
-    }).join('')+'</tbody></table></div>';
-  h+='<div class="ov-callout" style="margin-top:12px"><b>Two things to press tonight:</b> (1) the <b>introducing-broker pipeline</b> ("~two dozen firms") has never been reconciled to actual signed conversions — ask for the count. (2) The <b>OCC trust-bank charter</b> (a real, filed project) went unmentioned on the last call despite conditional approval — ask for a go-live. The <b>European bank license</b> is flagged a <i>musing</i>, not a promise, on purpose — don\'t hold them to it unless they re-commit.</div>';
-  h+='<div class="ov-foot">Type & status are an editorial read of the earnings-call/filing record; updated each quarter.</div>';
+  h+=CALL_PREP.quarters.map(function(u,qi){
+    var qk=cpQkey(u.q), frozen=(u.status!=='upcoming');
+    var b='<div class="cp-qblock" data-cpq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
+    b+='<div class="cp-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="cp-frozen">frozen</span>':'')+'</div>';
+    var st=u.setup||{};
+    if(st.headline){
+      b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup.</b> The numbers going in — what the <b>Street</b> expects, what <b>Summit</b> expects, and where the two disagree. '+(u.date?('Reports <b>'+esc(u.date)+'</b>.'):'')+'</p>';
+      var hl=st.headline||[], cu=st.custom||[];
+      b+='<div class="ov-diagram-cap" style="margin:6px 0 6px;display:flex;flex-wrap:wrap;align-items:center;gap:12px"><b>Estimates</b>'+
+        '<span class="mg-seg" style="display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px">'+
+          '<button type="button" class="cp-ev-pill active" data-cpev="cons">Consensus</button>'+
+          '<button type="button" class="cp-ev-pill" data-cpev="us">Summit</button>'+
+          '<button type="button" class="cp-ev-pill" data-cpev="both">Both</button>'+
+        '</span>'+
+        (st.source?'<span style="color:var(--mu);font-weight:600;font-size:10px">'+esc(st.source)+(st.asOf?' · as of '+esc(st.asOf):'')+'</span>':'')+
+      '</div>';
+      b+='<div class="cp-evwrap" data-ev="cons">';
+      b+='<div class="cp-row-cap">Headline — every company, always</div>';
+      b+='<div class="cp-grid4">'+hl.map(function(m,i){ return cpEvCell('hl-'+qk+'-'+i, m, false); }).join('')+'</div>';
+      b+='<div class="cp-row-cap" style="margin-top:12px">Custom KPIs — IBKR</div>';
+      b+='<div class="cp-grid4">'+cu.map(function(m,i){ return cpEvCell('cu-'+qk+'-'+i, m, true); }).join('')+'</div>';
+      b+='</div>';
+      b+='<div class="ave-subh-note" style="margin-top:6px">Green = YoY. <b>Street</b> = Bloomberg (BST) consensus, hardcoded from the team\'s export only. <b>Summit</b> = our own expectation (no Summit DCF for IBKR → analyst hand figures). <b>?</b> = a number with a caveat worth knowing.</div>';
+      var md=st.marketDebate;
+      if(md){
+        b+='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The setup, in one picture — what the print will settle</b></div>';
+        b+='<div class="cp-debate">'+
+          '<div class="cp-dc fear"><div class="cp-dc-h">What the tape fears</div><div class="cp-dc-b">'+md.fear+'</div></div>'+
+          '<div class="cp-dc real"><div class="cp-dc-h">What consensus actually models</div><div class="cp-dc-b">'+md.real+'</div></div>'+
+        '</div>';
+        if(md.mech&&md.mech.length){
+          b+='<div class="cp-mech">'+md.mech.map(function(m,i){ var ar=m.dir==='up'?'<span style="color:#0a8f4c">▲</span>':(m.dir==='down'?'<span style="color:'+RED+'">▼</span>':''); return (i>0?'<span class="cp-mech-ar">→</span>':'')+'<span class="cp-mech-chip">'+ar+' '+esc(m.k)+' <span style="color:var(--mu);font-weight:700">'+esc(m.v)+'</span></span>'; }).join('')+'</div>';
+        }
+        if(md.synth) b+='<div class="cp-synth">'+md.synth+'</div>';
+      }
+      var d=st.debate;
+      b+='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The debate — where Summit differs from the Street, and why</b></div>';
+      if(d){
+        if(d.rows&&d.rows.length){
+          b+='<div class="cp-tc">'+d.rows.map(function(r){
+            return '<div class="cp-tc-row" style="border-left:3px solid '+BRAND+'"><span style="font-weight:800;color:var(--navy);white-space:nowrap">'+esc(r.k)+'</span><span><b>Street:</b> '+esc(r.street||'—')+' · <b>Summit:</b> '+esc(r.us||'—')+'<br><span style="color:var(--mu)">'+ (r.why||'') +'</span></span></div>';
+          }).join('')+'</div>';
+        }
+        if(d.synth) b+='<div class="cp-synth">'+d.synth+'</div>';
+      } else {
+        b+='<div class="cp-note">Fills once both estimate sets are in (Bloomberg export + Summit expectations): line-by-line disparities and the mechanism behind why we see it differently.</div>';
+      }
+      b+='<div class="ov-foot">Frozen at call time; Post-Results scores actuals against BOTH columns.</div>';
+    } else {
+      b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup, as it stood going in.</b> '+(u.date?('Reported <b>'+esc(u.date)+'</b>.'):'')+'</p>';
+      if(st.source) b+='<div class="ave-subh-note" style="margin:0 0 8px">'+esc(st.source)+'</div>';
+      if(st.pricedIn) b+='<div class="cp-banner"><b>What was priced in:</b> '+st.pricedIn+'</div>';
+      if(st.oneLiner) b+='<div class="cp-synth">'+st.oneLiner+'</div>';
+      b+='<div class="ov-foot">Frozen — scored in Post-Results / Post-Call for this quarter.</div>';
+    }
+    b+='</div>';
+    return b;
+  }).join('');
   return h;
 }
-var CP_RES={ beat:{c:'#0a8f4c',l:'Beat'}, miss:{c:BRAND,l:'Miss'}, inline:{c:'#6b7684',l:'In line'} };
+// B · Watch List — one card. idSfx keeps pop-up ids unique between per-quarter and cross-quarter renders.
+function cpWatchItem(w, qk, idSfx, qLabel){
+  var deep='';
+  if(w.seededBy) deep+='<p style="border-left:3px solid '+PURPLE+';padding-left:9px;margin-bottom:10px"><b>'+(w.seededBy.tripped?'Seeded by a TRIPPED red-line':'Seeded by')+' '+esc(w.seededBy.q)+':</b> "'+esc(w.seededBy.n)+'"</p>';
+  if(w.src) deep+='<p><b>Why it\'s on the list:</b> '+w.src+'</p>';
+  if(w.why) deep+='<p><b>Why it matters:</b> '+w.why+'</p>';
+  if(w.thread&&w.thread.length){
+    deep+='<p style="margin-bottom:4px"><b>The thread — how this theme has evolved:</b></p>'+
+      w.thread.map(function(t){ return '<div style="display:flex;gap:9px;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:12px;line-height:1.5"><b style="white-space:nowrap;color:'+BRAND+'">'+esc(t.q)+'</b><span>'+t.n+'</span></div>'; }).join('');
+  }
+  var why=deep?cpReg('watchwhy-'+qk+'-'+(w.rank||0)+idSfx, esc(w.metric), deep):null;
+  var tagsAttr=(w.tags&&w.tags.length)?w.tags.join(' '):'';
+  var seed=w.seededBy?'<span class="cp-seed" title="'+esc(w.seededBy.n)+'">'+(w.seededBy.tripped?'⚑ red-line tripped in '+esc(w.seededBy.q):'left open by '+esc(w.seededBy.q))+'</span>':'';
+  return '<div class="cp-w" data-wltags="'+esc(tagsAttr)+'"><div class="cp-w-top"><div class="cp-w-rank">'+(w.rank||'•')+'</div><div class="cp-w-metric">'+esc(w.metric)+'</div>'+seed+
+    (qLabel?'<span class="ov-chip" style="font-size:9.5px;background:rgba(214,0,28,0.10);color:'+BRAND+';border-radius:20px;padding:2px 9px;font-weight:800;flex:none">'+esc(qLabel)+'</span>':'')+
+    (why?'<span class="cp-why-btn ov-clickable" data-detail="cp:'+why+'" style="margin:0">why'+(w.thread?' + the thread':'')+' ›</span>':'')+'</div>'+
+    '<div class="cp-w-q"><span class="mic">🔎</span><span>'+cpFill(w.pista||w.question)+'</span></div>'+
+    '<div class="cp-w-chips">'+
+      (w.tags&&w.tags.length?w.tags.map(function(t){ return '<span class="cp-w-chip" style="background:rgba(122,90,248,0.08);border:1px solid rgba(122,90,248,0.3);color:var(--navy)">#'+esc(t)+'</span>'; }).join(''):'')+
+      (w.since?'<span class="cp-w-chip" style="background:rgba(251,188,5,0.12);border:1px solid rgba(183,121,31,0.35);color:var(--navy)"><b>Tracking since:</b> '+esc(w.since)+'</span>':'')+
+      (w.bbg?'<span class="cp-w-chip cons"><b>Cons:</b> '+esc(w.bbg)+'</span>':'')+
+      (w.breaks?'<span class="cp-w-chip red"><b>Breaks if:</b> '+esc(w.breaks)+'</span>':'')+
+    '</div>'+
+  '</div>';
+}
+function cpWatchTags(){
+  var set=[], seen={};
+  CALL_PREP.quarters.forEach(function(u){ (u.watchList||[]).forEach(function(w){ (w.tags||[]).forEach(function(t){ if(!seen[t]){ seen[t]=1; set.push(t); } }); }); });
+  return set;
+}
+function cpWatchBody(c){
+  var h=cpStyle();
+  h+='<div class="cp-wl-tagbar"><span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu)">Filter by theme (across quarters):</span>'+
+    cpWatchTags().map(function(t){ return '<button type="button" class="cp-wl-tag" data-wltag="'+esc(t)+'">#'+esc(t)+'</button>'; }).join('')+
+    '<button type="button" class="cp-wl-tag cp-wl-clear" data-wltag="">clear</button>'+
+    '<button type="button" class="cp-wl-add-btn">+ Add theme</button>'+
+  '</div>';
+  h+='<div class="cp-wl-addform" hidden>'+
+    '<input class="cp-wl-in" data-wlf="metric" placeholder="Theme (e.g. Regulatory: prediction-market rulings)">'+
+    '<input class="cp-wl-in" data-wlf="tags" placeholder="tags, comma-separated (e.g. regulatory, prediction-markets)">'+
+    '<input class="cp-wl-in" data-wlf="pista" placeholder="The tell 🔎 — a standing read, not a question">'+
+    '<input class="cp-wl-in" data-wlf="breaks" placeholder="Breaks if… (the falsifiable red-line)">'+
+    '<div><button type="button" class="cp-wl-add-go">Add to this quarter\'s list</button><span class="ave-subh-note" style="margin-left:8px">Lives for this session — to persist it, it gets committed into CALL_PREP.</span></div>'+
+  '</div>';
+  h+=CALL_PREP.quarters.map(function(u,qi){
+    var qk=cpQkey(u.q), frozen=(u.status!=='upcoming');
+    var b='<div class="cp-qblock" data-cpq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
+    b+='<div class="cp-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="cp-frozen">frozen</span>':'')+'</div>';
+    b+='<p class="ov-lede"><b>Five things to hunt — '+esc(u.q)+'</b>'+(frozen?' <span style="color:var(--mu);font-weight:600">(the list as it was frozen before this call — scored afterwards in Post-Results)</span>':'')+', numbered 1–5 by <b>how much they move the stock × how debated they are</b>. Each card carries: the <b>tell</b> (🔎) — what to actually watch for; what the <b>Street expects</b>; and the <b>red-line</b> that would break the thesis. Tap <b>why ›</b> for the grounding and the quarter-by-quarter thread.</p>';
+    b+='<div class="cp-legend"><span class="cp-legend-i"><b>How to read the cards:</b></span>'+
+      '<span class="cp-legend-i"><span class="cp-seed">left open by Q1 2026</span> it is on the list because last quarter\'s call did not settle it</span>'+
+      '<span class="cp-legend-i"><span class="cp-seed">⚑ red-line tripped in Q1 2026</span> stronger — a thesis line actually broke last quarter</span>'+
+    '</div>';
+    var wl=u.watchList||[];
+    if(!wl.length){ b+='<div class="cp-note">Watch List builds from the earnings-call record + the Bloomberg export — 5 ranked, grounded, falsifiable items per the conventions.</div>'; }
+    else{ b+='<div class="cp-watch">'+wl.map(function(w){ return cpWatchItem(w, qk, '', null); }).join('')+'</div>'; }
+    b+='<div class="ov-foot">'+(frozen?'Frozen — this list was scored against '+esc(u.q)+'\'s Post-Results/Post-Call; its <code>newQuestions</code> seeded the next quarter.':'Frozen once the quarter opens; scored against Post-Results / Post-Call. Themes carry their quarter-by-quarter thread (source: docs/calls/IBKR) — promise-type items are tracked here and in the theme record below.')+'</div>';
+    b+='</div>';
+    return b;
+  }).join('');
+  h+='<div class="cp-wl-all" hidden>';
+  h+='<div class="cp-phase" style="background:'+PURPLE+'">Themes across quarters</div>';
+  h+='<p class="ov-lede">Every watch item matching the selected theme(s), <b>across all quarters</b> — how the same hunt evolved print to print. Clear the tags (or pick a quarter) to return to the per-quarter view.</p>';
+  h+='<div class="cp-watch">'+CALL_PREP.quarters.map(function(u){
+    var qk=cpQkey(u.q);
+    return (u.watchList||[]).map(function(w){ return cpWatchItem(w, qk, '-f', u.q); }).join('');
+  }).join('')+'</div>';
+  h+='</div>';
+  // ── FUSED: the full multi-year theme record (was the standalone Evolution ▸ Earnings Calls tab,
+  // dissolved Jul 2026 — no two tabs on the same highlights). Lives here, under the Watch List. ──
+  h+='<div style="margin-top:26px;border-top:2px solid var(--bdr);padding-top:16px">';
+  h+='<div class="cp-band" style="--bc:'+BRAND+'"><span class="cp-band-i">▤</span><span class="cp-band-t">The theme record — every thread, across all calls</span><span class="cp-band-s">the multi-year backbone behind the hunt above (the former "Earnings Calls" tab, folded in)</span><span class="cp-band-l"></span></div>';
+  h+='<p class="ov-lede" style="margin-top:0">The 9 narrative threads across <b>11 calls</b> (Q4 2023 → Q2 2026), each with a status — <b>trend</b> / <b>promise</b> / <b>watch</b>, with its age. <b>By theme</b> traces how each story evolved; <b>By quarter</b> shows what mattered in a given call.</p>';
+  h+=callsBody();
+  h+='</div>';
+  return h;
+}
+// C · Scorecard verdicts (5, §7b) + highlight tags.
+var CP_RES={ beat:{c:'#0a8f4c',l:'Beat'}, miss:{c:RED,l:'Miss'}, inline:{c:'#6b7684',l:'In line'},
+             nodisc:{c:AMBER,l:'Not disclosed'}, nocons:{c:PURPLE,l:'No consensus'} };
 var CP_HLTAG={ thesis:{c:'#0a8f4c',l:'Thesis'}, curious:{c:'#7A5AF8',l:'Curious'}, dots:{c:'#2E6BE6',l:'Connects dots'}, watch:{c:'#B7791F',l:'Watch'}, tone:{c:'#B7791F',l:'Tone'} };
-// D · Post-Results ── the numbers (available first, before/without the call): a beat/miss scorecard.
+// D · Post-Results ── beat/miss scorecard, ranked biggest-surprise first + the red-line check.
 function cpResultsBody(c){
   var h=cpStyle();
-  h+='<div class="cp-phase" style="background:'+BRAND2+'">② Post-Results</div>';
-  h+='<p class="ov-lede"><b>The numbers vs. Bloomberg consensus.</b> Results land first (release ~4pm, call comes later) — so this is the read on the <b>print itself</b>, before management says a word: what beat, what missed, and whether any thesis red-line tripped.</p>';
-  var rep=CALL_PREP.quarters.filter(function(q){ return q.results; });
-  if(!rep.length){ h+='<div class="cp-note">Empty until the print lands. After results, fill <code>results.scorecard</code> and <code>results.thesisCheck</code> for the quarter.</div>'; return h; }
-  rep.forEach(function(q){ var r=q.results; var pending=(q.status==='upcoming');
-    h+='<div style="border:1px solid var(--bdr);border-radius:12px;padding:14px 16px;margin-bottom:14px;background:var(--w)">';
-    h+='<div style="font-size:13.5px;font-weight:800;color:var(--navy);margin-bottom:8px">'+esc(q.q)+' <span style="font-weight:600;color:var(--mu);font-size:11px">· reported '+esc(q.date?q.date.replace(/ · .*/,''):'')+(pending?' · call still ahead':'')+'</span></div>';
-    if(r.headline) h+='<div class="cp-take" style="border-left-color:'+BRAND2+'">🎯 '+r.headline+'</div>';
-    if(r.scorecard&&r.scorecard.length){
-      var qkey=(q.q||'').replace(/\s/g,'');
-      h+='<div class="cp-sc">'+r.scorecard.map(function(d,i){ var rr=CP_RES[d.result]||CP_RES.inline;
-        var qb=d.note?cpQ('resnote-'+qkey+'-'+i, d.note.t||'Context', d.note.h||d.note):'';
-        return '<div class="cp-sc-row" style="--sc:'+rr.c+'"><div class="cp-sc-m">'+esc(d.metric)+qb+'</div><div class="cp-sc-c">cons: '+cpFill(d.cons,'—')+'</div><div class="cp-sc-a">'+esc(d.actual||'')+'</div><div class="cp-sc-v">'+rr.l+'</div></div>';
-      }).join('')+'</div>';
-    }
+  h+=CALL_PREP.quarters.map(function(q,qi){
+    var qk=cpQkey(q.q);
+    var b='<div class="cp-qblock" data-cpq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
+    b+='<div class="cp-phase" style="background:'+BRAND2+'">② Post-Results</div>';
+    b+='<p class="ov-lede"><b>'+esc(q.q)+' — the numbers vs. the frozen expectations.</b> Results land first (release ~4pm, call comes later) — the read on the <b>print itself</b>, before management says a word.</p>';
+    var r=q.results;
+    if(!r){ b+='<div class="cp-note">Empty until the print lands. Then the scorecard and thesis red-line check fill here.</div></div>'; return b; }
+    b+='<div style="border:1px solid var(--bdr);border-radius:12px;padding:14px 16px;margin-bottom:14px;background:var(--w)">';
+    b+='<div style="font-size:13.5px;font-weight:800;color:var(--navy);margin-bottom:8px">'+esc(q.q)+' <span style="font-weight:600;color:var(--mu);font-size:11px">· reported '+esc(q.date?q.date.replace(/ · .*/,''):'')+'</span></div>';
+    if(r.headline) b+='<div class="cp-take" style="border-left-color:'+BRAND2+'">🎯 '+r.headline+'</div>';
     if(r.thesisCheck&&r.thesisCheck.length){
-      h+='<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin:14px 0 6px">Thesis red-line check</div>';
-      h+='<div class="cp-tc">'+r.thesisCheck.map(function(t){ var col=t.tripped?BRAND:'#0a8f4c'; var ic=t.tripped?'⚑ TRIPPED':'✓ held';
+      var tc=r.thesisCheck.slice().sort(function(a,z){ return (z.tripped?1:0)-(a.tripped?1:0); });
+      var nTrip=tc.filter(function(t){ return t.tripped; }).length;
+      b+='<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin:2px 0 6px">Thesis red-line check — vs this quarter\'s frozen Watch List'+
+        (nTrip?'<span style="color:'+RED+';margin-left:7px">⚑ '+nTrip+' tripped</span>':'<span style="color:#0a8f4c;margin-left:7px">✓ all held</span>')+'</div>';
+      b+='<div class="cp-tc">'+tc.map(function(t){ var col=t.tripped?RED:'#0a8f4c'; var ic=t.tripped?'⚑ TRIPPED':'✓ held';
         return '<div class="cp-tc-row" style="border-left:3px solid '+col+'"><span style="font-weight:800;color:'+col+';white-space:nowrap">'+ic+'</span><span><b>'+esc(t.line)+'</b> — '+esc(t.note||'')+'</span></div>';
       }).join('')+'</div>';
     }
+    if(r.scorecard&&r.scorecard.length){
+      var sc=r.scorecard.slice().sort(function(a,z){ return (z.surprise||0)-(a.surprise||0); });
+      b+='<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin:15px 0 6px">The print — ranked by surprise</div>';
+      b+='<div class="cp-legend">'+
+        '<span class="cp-legend-i"><b>How to read this table:</b></span>'+
+        '<span class="cp-legend-i"><span class="cp-sc-rk">WATCH #1</span> flagged before the call as one of the five most contested items (its rank on that list)</span>'+
+        '<span class="cp-legend-i">A blank here just means the line was not one of those five — every line below is covered.</span>'+
+        '<span class="cp-legend-i"><span class="cp-sc-surp hi">big surprise</span> the number landed far from expectations — our judgement, not a calculation</span>'+
+      '</div>';
+      b+='<div class="cp-sc">'+sc.map(function(d,i){ var rr=CP_RES[d.result]||CP_RES.inline;
+        var qb=d.note?cpQ('resnote-'+qk+'-'+i, d.note.t||'Context', d.note.h||d.note):'';
+        var rk=d.watchRank?'<div class="cp-sc-rk" title="This was item #'+esc(String(d.watchRank))+' on the Watch List we froze before the call">WATCH #'+esc(String(d.watchRank))+'</div>'
+                          :'<div class="cp-sc-rk blank"></div>';
+        var sv=d.surprise;
+        var sl=(sv==null)?'<div class="cp-sc-bw"></div>'
+          :'<div class="cp-sc-bw"><div class="cp-sc-surp '+(sv>=70?'hi':(sv>=30?'md':'lo'))+'">'+(sv>=70?'big surprise':(sv>=30?'some surprise':'as expected'))+'</div></div>';
+        return '<div class="cp-sc-row" style="--sc:'+rr.c+'">'+rk+'<div class="cp-sc-m">'+esc(d.metric)+qb+'</div><div class="cp-sc-c">expected: '+cpFill(d.cons,'—')+'</div><div class="cp-sc-a">'+esc(d.actual||'')+'</div>'+sl+'<div class="cp-sc-v">'+rr.l+'</div></div>';
+      }).join('')+'</div>';
+      b+='<div class="ave-subh-note" style="margin-top:6px">Rows are ordered biggest-surprise first, not in release order. <b>Not disclosed</b> = management stopped reporting a number it used to give. <b>No consensus</b> = nobody had an estimate for it. Neither is a miss.</div>';
+    }
     if(r.intoCall&&r.intoCall.length){
-      h+='<div class="cp-dots" style="margin-top:14px">🎯 <b>What the numbers tee up for the call</b> — go in hunting these:'+
+      b+='<div class="cp-dots" style="margin-top:14px">🎯 <b>What the numbers tee up for the call</b> — go in hunting these:'+
         '<ul class="ov-bullets" style="margin-top:6px">'+r.intoCall.map(function(x){ return '<li>'+x+'</li>'; }).join('')+'</ul></div>';
     }
-    h+='<div style="margin-top:10px;font-size:11.5px;color:var(--navy)"><b>Price reaction:</b> '+cpFill(r.priceReaction,'to fill from a trusted source')+'</div>';
-    h+='</div>';
-  });
-  h+='<div class="ov-foot">Scored against the frozen Watch List. Consensus = Bloomberg export; actuals = reported (Bloomberg).</div>';
+    b+='<div style="margin-top:10px;font-size:11.5px;color:var(--navy)"><b>Price reaction:</b> '+cpFill(r.priceReaction,'to fill from a trusted source')+'</div>';
+    b+='</div>';
+    b+='<div class="ov-foot">Scored against the frozen Watch List. Consensus = Bloomberg export; actuals = reported (Bloomberg / release).</div>';
+    b+='</div>';
+    return b;
+  }).join('');
   return h;
 }
-// E · Post-Call ── insight-first highlights (theme by theme, depth in pop-ups) + the meeting take.
+// E · Post-Call ── insight-first highlights in three action bands + threeMinutes deliverable.
+var CP_THST={ trend:{c:'#0a8f4c',l:'Confirmed trend'}, promise:{c:'#2E6BE6',l:'Promise — reconcile'}, watch:{c:'#B7791F',l:'Watch'} };
+function cpQnum(q){ var m=String(q||'').match(/Q(\d)\s+(\d{4})/); return m?((+m[2])*4+(+m[1])):null; }
+function cpStAge(st){
+  if(!st||typeof st!=='object'||!st.since) return '';
+  var newest=CALL_PREP.quarters.filter(function(q){ return q.status!=='upcoming'; })[0];
+  var a=cpQnum(st.since), b=cpQnum(newest?newest.q:null);
+  if(a==null||b==null) return '';
+  var n=Math.max(1, b-a+1), k=(st.k||'');
+  var lbl = (k==='promise') ? ('unreconciled '+n+' quarter'+(n>1?'s':''))
+          : (st.silent)     ? ('silent '+n+' quarter'+(n>1?'s':''))
+          : (k==='watch')   ? ('tracked '+n+' quarter'+(n>1?'s':''))
+          :                   ('running '+n+' quarter'+(n>1?'s':''));
+  return '<span class="calls-st-age"> · '+lbl+'</span>';
+}
 function cpCallBody(c){
   var h=cpStyle();
-  h+='<div class="cp-phase" style="background:'+BRAND+'">③ Post-Call</div>';
-  h+='<p class="ov-lede"><b>Not a restatement of the numbers — the story behind them.</b> Theme by theme: what the print/call <i>implied</i> for the thesis, the curious one-mention details, and the dots that connect. Tap any highlight for the depth.</p>';
-  var rep=CALL_PREP.quarters.filter(function(q){ return q.call; });
-  if(!rep.length){ h+='<div class="cp-note">Empty until the call/transcript is in. After the call, fill <code>call.take</code> (the one-line meeting take), <code>call.highlights</code> (theme-by-theme, each with a pop-up detail) and <code>call.dots</code> (connect the story).</div>'; return h; }
-  rep.forEach(function(q){ var cc=q.call;
-    h+='<div style="margin-bottom:18px">';
-    h+='<div style="font-size:13.5px;font-weight:800;color:var(--navy);margin-bottom:8px">'+esc(q.q)+' <span style="font-weight:600;color:var(--mu);font-size:11px">· call '+esc(q.date||'')+'</span></div>';
-    if(cc.take) h+='<div class="cp-take">🎯 '+cc.take+'</div>';
+  h+=CALL_PREP.quarters.map(function(q,qi){
+    var qk=cpQkey(q.q);
+    var b='<div class="cp-qblock" data-cpq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
+    b+='<div class="cp-phase" style="background:'+RED+'">③ Post-Call</div>';
+    b+='<p class="ov-lede"><b>'+esc(q.q)+' — not a restatement of the numbers; the story behind them.</b> What the call <i>implied</i> for the thesis, the curious one-mention details, and the dots that connect. Tap any highlight for the depth.</p>';
+    b+='<div class="cp-legend"><span class="cp-legend-i"><b>Highlights are grouped by what you DO with them in the meeting:</b></span>'+
+      '<span class="cp-legend-i"><span style="color:'+RED+';font-weight:800">▲ Lead with this</span> — open with it: it moves the thesis and something is still unanswered</span>'+
+      '<span class="cp-legend-i"><span style="color:'+BLUE+';font-weight:800">● Context</span> — worth saying, but settled; there is nothing to argue</span>'+
+      '<span class="cp-legend-i"><span style="color:'+GRAY+';font-weight:800">○ Logged</span> — recorded for later, not meeting material</span>'+
+      '<span class="cp-legend-i"><span class="cp-hl-open">open</span> flags the specific thing management left unanswered</span>'+
+    '</div>';
+    var cc=q.call;
+    if(!cc){ b+='<div class="cp-note">Empty until the call/transcript is in. Then the meeting take, theme-by-theme highlights and the connect-the-dots line fill here.</div></div>'; return b; }
+    b+='<div style="margin-bottom:18px">';
+    b+='<div style="font-size:13.5px;font-weight:800;color:var(--navy);margin-bottom:8px">'+esc(q.q)+' <span style="font-weight:600;color:var(--mu);font-size:11px">· call '+esc(q.date||'')+'</span></div>';
+    if(cc.take) b+='<div class="cp-take">🎯 '+cc.take+'</div>';
     if(cc.highlights&&cc.highlights.length){
-      h+='<div class="cp-hl">'+cc.highlights.map(function(x,i){ var tg=CP_HLTAG[x.tag]||{c:'#6b7684',l:x.tag||''};
-        var id=x.detail?cpReg('hl-'+(q.q||'').replace(/\s/g,'')+'-'+i, tg.l+' — '+String(x.head).replace(/<[^>]+>/g,''), x.detail):null;
-        return '<div class="cp-hl-row" style="--hc:'+tg.c+'"'+(id?' data-detail="cp:'+id+'"':'')+'><span class="cp-hl-tag">'+esc(tg.l)+'</span><span class="cp-hl-head">'+x.head+'</span>'+(id?'<span class="cp-hl-more">＋</span>':'<span></span>')+'</div>';
-      }).join('')+'</div>';
+      var bands=[
+        { k:'lead',    i:'▲', c:RED,     t:'Lead with this', s:'moves the thesis — and something is still unresolved' },
+        { k:'context', i:'●', c:BLUE,    t:'Context',        s:'matters, but it is settled — mention, don\'t debate' },
+        { k:'logged',  i:'○', c:GRAY,    t:'Logged',         s:'on the record for later; not meeting material' },
+      ];
+      var hi=0;
+      bands.forEach(function(bd){
+        var items=cc.highlights.filter(function(x){ return (x.band||'context')===bd.k; });
+        if(!items.length) return;
+        b+='<div class="cp-band" style="--bc:'+bd.c+'"><span class="cp-band-i">'+bd.i+'</span><span class="cp-band-t">'+bd.t+'</span><span class="cp-band-s">'+bd.s+'</span><span class="cp-band-l"></span></div>';
+        b+='<div class="cp-hl">'+items.map(function(x){ var tg=CP_HLTAG[x.tag]||{c:'#6b7684',l:x.tag||''};
+          var det=x.detail||'';
+          if(x.open) det+='<p style="border-left:3px solid '+AMBER+';padding-left:9px;margin-top:10px"><b>Still open:</b> '+x.open+'</p>';
+          var id=det?cpReg('hl-'+qk+'-'+(hi++), tg.l+' — '+String(x.head).replace(/<[^>]+>/g,''), det):null;
+          var op=x.open?' <span class="cp-hl-open" title="'+esc(x.open)+'">open</span>':'';
+          return '<div class="cp-hl-row" style="--hc:'+tg.c+'"'+(id?' data-detail="cp:'+id+'"':'')+'><span class="cp-hl-tag">'+esc(tg.l)+'</span><span class="cp-hl-head">'+x.head+op+'</span>'+(id?'<span class="cp-hl-more">＋</span>':'<span></span>')+'</div>';
+        }).join('')+'</div>';
+      });
     }
-    if(cc.dots) h+='<div class="cp-dots">🧩 '+cc.dots+'</div>';
+    if(cc.dots) b+='<div class="cp-dots">🧩 '+cc.dots+'</div>';
+    if(cc.threeMinutes&&cc.threeMinutes.length){
+      b+='<div class="cp-3m"><div class="cp-3m-h"><span class="cp-3m-t">🎤 Three minutes</span>'+
+        '<span class="cp-3m-sub">the spoken version — if you get one slot, this is it</span>'+
+        '<button type="button" class="cp-3m-copy" data-cp3m="'+esc(qk)+'">copy</button></div>';
+      b+='<div class="cp-3m-l" data-cp3mlist="'+esc(qk)+'">'+cc.threeMinutes.map(function(t){ return '<div class="cp-3m-i"><span>'+t+'</span></div>'; }).join('')+'</div>';
+      if(cc.notBringing&&cc.notBringing.length){
+        b+='<div class="cp-nb"><div class="cp-nb-h">✕ Deliberately not bringing — and why, if asked</div>'+
+          cc.notBringing.map(function(x){ return '<div class="cp-nb-r"><span class="cp-nb-x">✕</span><span><b>'+esc(x.item)+'</b> — '+esc(x.why)+'</span></div>'; }).join('')+'</div>';
+      }
+      b+='</div>';
+    }
     if(cc.newQuestions&&cc.newQuestions.length){
-      h+='<div style="margin-top:12px"><div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin-bottom:4px">➡ Seeds next quarter\'s Watch List</div><ul class="ov-bullets" style="margin-top:2px">'+cc.newQuestions.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join('')+'</ul></div>';
+      b+='<div style="margin-top:12px"><div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin-bottom:5px">➡ What this call left unanswered — and where each question went next</div>';
+      b+='<div class="cp-nq">'+cc.newQuestions.map(function(x){
+        var n=(typeof x==='string')?x:x.n, land=(typeof x==='string')?null:x.landed;
+        var trip=(typeof x!=='string'&&x.tripped)?'<span style="color:'+RED+';font-weight:800;margin-right:5px" title="A thesis red-line actually broke on this one">⚑</span>':'';
+        var chip=land?'<span class="cp-nq-land">became '+esc(land.q)+' Watch item #'+esc(String(land.rank))+'</span>'
+                     :'<span class="cp-nq-land open">still open — not yet on a list</span>';
+        return '<div class="cp-nq-row"><span>'+trip+esc(n)+'</span>'+chip+'</div>';
+      }).join('')+'</div></div>';
     }
-    h+='</div>';
-  });
-  h+='<div class="ov-foot">Insight-first, not fact-first. Append-only — prior quarters are never overwritten; <code>newQuestions</code> feeds the next Watch List.</div>';
+    b+='</div>';
+    b+='<div class="ov-foot">Insight-first, not fact-first. Append-only — prior quarters are never overwritten; <code>newQuestions</code> feeds the next Watch List.</div>';
+    b+='</div>';
+    return b;
+  }).join('');
   return h;
 }
 
@@ -1661,31 +2061,29 @@ function deepDiveHtml(c){
     '</div>';
   h+='<div class="dd-pane" data-dd="evolution" hidden>'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings Calls</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="callprep">Call Prep</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="callprep">Call Prep</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="earnings">'+callsBody()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="guidance" hidden>'+guidanceBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="strategy" hidden>'+strategyBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="timeline" hidden>'+timelineBody()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="callprep" hidden>'+
-        '<div class="cp-note" style="margin-bottom:12px">🎯 <b>Call Prep</b> — the decision layer, in three phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List · Promises) → <b>② Post-Results</b> (react to the numbers, which land before the call) → <b>③ Post-Call</b> (what management said + the meeting take). Append-only per quarter, so it becomes a record of how well we read IBKR.</div>'+
+      '<div class="ovt-subpane" data-ovst="callprep">'+
+        cpIRButton()+
+        '<div class="cp-note" style="margin-bottom:12px">🎯 <b>Call Prep</b> — the decision layer, in phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (react to the numbers, which land before the call) → <b>③ Post-Call</b> (what management said + the meeting take). Append-only per quarter — pick a quarter below; each keeps its frozen pre-call blocks next to its post-mortem, so the tab is a record of how well we read IBKR. The <b>Watch List</b> is now the single home for theme-tracking — the old standalone <i>Earnings Calls</i> tab was folded into it (no two tabs on the same call highlights).</div>'+
+        cpQPills()+
         '<div class="cp-phtabs">'+
           '<button type="button" class="cp-phtab active" data-cpp="setup">Setup</button>'+
           '<button type="button" class="cp-phtab" data-cpp="watch">Watch List</button>'+
-          '<button type="button" class="cp-phtab" data-cpp="promises">Promise Tracker</button>'+
           '<button type="button" class="cp-phtab" data-cpp="results">Post-Results</button>'+
           '<button type="button" class="cp-phtab" data-cpp="postcall">Post-Call</button>'+
         '</div>'+
         '<div class="cp-phpane" data-cpp="setup">'+cpSetupBody(c)+'</div>'+
         '<div class="cp-phpane" data-cpp="watch" hidden>'+cpWatchBody(c)+'</div>'+
-        '<div class="cp-phpane" data-cpp="promises" hidden>'+cpPromisesBody(c)+'</div>'+
         '<div class="cp-phpane" data-cpp="results" hidden>'+cpResultsBody(c)+'</div>'+
         '<div class="cp-phpane" data-cpp="postcall" hidden>'+cpCallBody(c)+'</div>'+
       '</div>'+
+      '<div class="ovt-subpane" data-ovst="guidance" hidden>'+guidanceBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="strategy" hidden>'+strategyBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="timeline" hidden>'+timelineBody()+'</div>'+
     '</div>';
   h+='<div class="dd-pane" data-dd="valuation" hidden>'+
       '<div class="ovt-subtabs">'+
@@ -1774,6 +2172,8 @@ function wireSubtabs(root, group){
   pane.querySelectorAll('.ovt-subtab').forEach(function(btn){ btn.onclick=function(){ showSub(root, pane, group, btn.getAttribute('data-ovst')); }; });
 }
 // Call Prep phase tabs — nested inside Evolution's callprep subpane, wired independently (no charts).
+// Ported from googl.js: phase tabs + estimates toggle + quarter pills + three-minutes copy +
+// cross-quarter theme-tag filter + session-only add-theme.
 function wireCallPrep(root){
   var pane=root.querySelector('.ovt-subpane[data-ovst="callprep"]'); if(!pane) return;
   pane.querySelectorAll('.cp-phtab').forEach(function(btn){ btn.onclick=function(){
@@ -1781,6 +2181,83 @@ function wireCallPrep(root){
     pane.querySelectorAll('.cp-phtab').forEach(function(b){ b.classList.toggle('active', b===btn); });
     pane.querySelectorAll('.cp-phpane').forEach(function(p){ p.hidden=(p.getAttribute('data-cpp')!==key); });
   }; });
+  // Setup estimates toggle: Consensus ⇄ Summit ⇄ Both (CSS-driven via data-ev on the wrap)
+  pane.querySelectorAll('.cp-ev-pill').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-cpev');
+    pane.querySelectorAll('.cp-ev-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    pane.querySelectorAll('.cp-evwrap').forEach(function(w){ w.setAttribute('data-ev', v); });
+  }; });
+  // Quarter selector: one Call Prep, many quarters — only the selected quarter's blocks render.
+  pane.querySelectorAll('.cp-qpill').forEach(function(btn){ btn.onclick=function(){
+    var qk=btn.getAttribute('data-cpqsel');
+    pane.querySelectorAll('.cp-qpill').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    pane.querySelectorAll('.cp-qblock').forEach(function(blk){ blk.hidden=(blk.getAttribute('data-cpq')!==qk); });
+    pane.querySelectorAll('.cp-wl-tag').forEach(function(b){ b.classList.remove('active'); });
+    var flat=pane.querySelector('.cp-wl-all'); if(flat) flat.hidden=true;
+  }; });
+  // Three minutes: copy the spoken version out of the dashboard (the one thing that leaves)
+  pane.querySelectorAll('.cp-3m-copy').forEach(function(btn){ btn.onclick=function(){
+    var qk=btn.getAttribute('data-cp3m');
+    var list=pane.querySelector('.cp-3m-l[data-cp3mlist="'+qk+'"]'); if(!list) return;
+    var txt=Array.prototype.map.call(list.querySelectorAll('.cp-3m-i'), function(el,i){
+      return (i+1)+'. '+el.textContent.trim();
+    }).join('\n\n');
+    var done=function(){ var o=btn.textContent; btn.textContent='copied ✓'; setTimeout(function(){ btn.textContent=o; }, 1400); };
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done, done); }
+    else { var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
+           try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta); done(); }
+  }; });
+  // Watch List: theme-tag filter (cross-quarter) + add-theme (session-only)
+  var wpane=pane.querySelector('.cp-phpane[data-cpp="watch"]');
+  if(wpane){
+    var flat=wpane.querySelector('.cp-wl-all');
+    function activeTags(){ return Array.prototype.map.call(wpane.querySelectorAll('.cp-wl-tag.active'), function(b){ return b.getAttribute('data-wltag'); }).filter(Boolean); }
+    function applyTags(){
+      var tags=activeTags();
+      var on=tags.length>0;
+      wpane.querySelectorAll('.cp-qblock').forEach(function(blk){ if(on) blk.hidden=true; });
+      if(!on){
+        var act=pane.querySelector('.cp-qpill.active'); var qk=act?act.getAttribute('data-cpqsel'):null;
+        wpane.querySelectorAll('.cp-qblock').forEach(function(blk){ blk.hidden=(qk!=null && blk.getAttribute('data-cpq')!==qk); });
+      }
+      if(flat){ flat.hidden=!on;
+        if(on) flat.querySelectorAll('.cp-w').forEach(function(card){
+          var ct=(card.getAttribute('data-wltags')||'').split(/\s+/);
+          var hit=tags.some(function(t){ return ct.indexOf(t)>=0; });
+          if(hit) card.removeAttribute('data-wlhide'); else card.setAttribute('data-wlhide','1');
+        });
+      }
+    }
+    function wireTag(btn){ btn.onclick=function(){
+      if(btn.classList.contains('cp-wl-clear')){ wpane.querySelectorAll('.cp-wl-tag').forEach(function(b){ b.classList.remove('active'); }); }
+      else btn.classList.toggle('active');
+      applyTags();
+    }; }
+    wpane.querySelectorAll('.cp-wl-tag').forEach(wireTag);
+    var addBtn=wpane.querySelector('.cp-wl-add-btn'), form=wpane.querySelector('.cp-wl-addform');
+    if(addBtn&&form){ addBtn.onclick=function(){ form.hidden=!form.hidden; }; }
+    var go=wpane.querySelector('.cp-wl-add-go');
+    if(go&&form){ go.onclick=function(){
+      function val(k){ var el=form.querySelector('[data-wlf="'+k+'"]'); return el?el.value.trim():''; }
+      var metric=val('metric'); if(!metric) return;
+      var tags=val('tags').split(',').map(function(t){ return t.trim().toLowerCase().replace(/\s+/g,'-'); }).filter(Boolean);
+      var act=pane.querySelector('.cp-qpill.active'); var qk=act?act.getAttribute('data-cpqsel'):cpQkey(CALL_PREP.quarters[0].q);
+      var qLbl=act?act.textContent.replace(/upcoming/i,'').trim():CALL_PREP.quarters[0].q;
+      var w={ rank:'+', metric:metric, tags:tags, pista:val('pista')||null, breaks:val('breaks')||null, since:qLbl };
+      var target=wpane.querySelector('.cp-qblock[data-cpq="'+qk+'"] .cp-watch');
+      if(target) target.insertAdjacentHTML('beforeend', cpWatchItem(w, qk, '-add'+Date.now()%100000, null));
+      var flatList=flat?flat.querySelector('.cp-watch'):null;
+      if(flatList) flatList.insertAdjacentHTML('beforeend', cpWatchItem(w, qk, '-addf'+Date.now()%100000, qLbl));
+      tags.forEach(function(t){
+        if(!wpane.querySelector('.cp-wl-tag[data-wltag="'+t+'"]')){
+          var b=document.createElement('button'); b.type='button'; b.className='cp-wl-tag'; b.setAttribute('data-wltag',t); b.textContent='#'+t;
+          var clear=wpane.querySelector('.cp-wl-clear'); clear.parentNode.insertBefore(b, clear); wireTag(b);
+        }
+      });
+      form.querySelectorAll('.cp-wl-in').forEach(function(i){ i.value=''; }); form.hidden=true;
+      applyTags();
+    }; }
+  }
 }
 function buildDD(root, key){ var s=activeSubKey(root,key); if(s) buildSub(root,key,s); }
 function activeDD(root){ var b=root.querySelector('.dd-tab.active'); return b?b.getAttribute('data-dd'):'topline'; }

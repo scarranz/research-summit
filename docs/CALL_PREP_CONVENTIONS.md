@@ -1,4 +1,4 @@
-# Call Prep — THE complete convention (build + call interpretation, v2.2 · Jul 2026)
+# Call Prep — THE complete convention (build + call interpretation, v2.3 · Jul 2026)
 
 **This is the single source of truth for everything earnings-call related**: how calls are
 ANALYZED (the rules, the detection protocol, the regression tests), how they are STORED (the
@@ -11,9 +11,20 @@ Bloomberg numbers export, and optionally (d) SPLC / Summit expectations** — an
 with no other context, builds everything from ONE prompt: **"arma el Call Prep de \<TICKER\>"**
 (or refreshes with "integra el nuevo call de \<TICKER\>"). If a step is ambiguous, fix THIS doc.
 
-**Reference implementation: `js/overviews/googl.js`** (v2.2 — canonical). `ibkr.js` is v1 (legacy:
-standalone Promise Tracker, single-estimate setup, no quarter selector) pending migration — do
-NOT copy from it for new companies.
+**Reference implementations: `js/overviews/googl.js` AND `js/overviews/ibkr.js`** (both v2.3 —
+canonical). `ibkr.js` was migrated from v1 (standalone Promise Tracker, single-estimate setup, no
+quarter selector) to the full v2.2 machinery **and** the v2.3 fusion on 2026-07-24; copy from either.
+
+**What v2.3 added, and why — THE FUSION (read this before building any company):** the tab had TWO
+places talking about the same call highlights — the standalone **Evolution ▸ Earnings Calls** tab
+(the `<TICKER>_THEMES` "By theme ⇄ By quarter" compendium) and the **Call Prep Watch List** (which
+already tracks themes across quarters via its tag bar). That redundancy is now gone. **The Watch
+List is the single home for theme-tracking.** The `<TICKER>_THEMES` compendium is not deleted —
+nothing is lost — it is **folded in below the Watch List** ("The theme record") inside the Call Prep
+pane. The standalone **Earnings Calls sub-tab is removed** from the Evolution sub-tab row. This is
+the go-forward standard: it applies to **every new company**, and to **every existing company that
+already had an Earnings Calls tab** (GOOGL and IBKR were retrofitted on 2026-07-24 — same removal +
+fold-in). See §6 for exactly where it renders.
 
 **What v2.2 added, and why (read §4b and §6b–§6d before building):** the tab produced a good
 record but not a usable brief. Four gaps were closed — the `newQuestions → seededBy` chain was
@@ -242,8 +253,10 @@ implies gaps in work rather than in disclosure.
 
 ## 6. UI structure
 
-Evolution's sub-tab row: `Earnings Calls · Guidance · Strategy · Timeline · Call Prep`
-(Call Prep is a **sub-tab of Evolution**, never a spine tab).
+Evolution's sub-tab row (v2.3): `Call Prep · Guidance · Strategy · Timeline`
+(Call Prep is a **sub-tab of Evolution**, never a spine tab; it is the **first/active** sub-tab).
+**There is NO standalone "Earnings Calls" sub-tab** — it was dissolved in v2.3 and its theme
+compendium folded into the Call Prep Watch List (see "the theme record" below).
 
 **Call Prep pane** = **THE IR BUTTON (mandatory, first element)** + intro note + **QUARTER SELECTOR**
 
@@ -255,6 +268,17 @@ banner-style buttons side by side (`cpIRButton()` in the reference implementatio
 - **OPEN EDGAR** (`CP_EDGAR_URL`; GOOGL → `https://www.sec.gov/edgar/browse/?CIK=1652044&owner=exclude`) —
   the regulator's lens: 10-K/10-Q/8-K/DEF 14A as filed. Per company, swap the CIK in the EDGAR
   browse URL.
+
+**Per-company URLs on file (swap these two constants per ticker):**
+
+| Ticker | `CP_IR_URL` | `CP_EDGAR_URL` (CIK) |
+|---|---|---|
+| GOOGL | `https://abc.xyz/investor/` | `…?CIK=1652044&owner=exclude` |
+| IBKR | `https://investors.interactivebrokers.com/en/general/about/quarterly-earnings.php` | `…?CIK=1381197&owner=exclude` |
+
+IBKR's IR card carries IBKR's real mark from the portal logo CDN (`https://assets.parqet.com/logos/symbol/IBKR`,
+CSP-allowed) and uses IBKR brand red as its accent; the EDGAR card carries the SEC seal (federal gold),
+same as every company.
 Purpose: on earnings day both optics must be ONE tap away — what IR curates, EDGAR certifies. The
 buttons must out-compete "go google it yourself." Swap only URLs and the company name per ticker.
 **Identity, not decoration (mandatory):** no emoji/generic icons on these cards. The IR card
@@ -274,23 +298,29 @@ its frozen pre-call blocks NEXT TO its post-mortem (the calibration record).
 | Phase | Content per quarter |
 |---|---|
 | **Setup** | *Upcoming quarter:* 4 **headline** metrics (mandatory, every company: **Revenue · Operating income · EPS · EBITDA**) + 4 **custom KPIs** (per-company, agreed with Dani), each with **Street** (Bloomberg) and **Summit** estimates behind a **Consensus ⇄ Summit ⇄ Both** toggle; caveat pop-ups (`cpQ`) on numbers with a trap; **the PREVIA — MANDATORY** (`marketDebate`): the one-picture read going into the print — *what the tape fears* vs *what consensus actually models* cards + mechanism chips + the **dark synth box** with "the one thing to resolve" (IBKR-style; it does NOT need Summit numbers — it frames the market's own tension); plus **the debate** = the Street-vs-Summit disparity (enabled, to-fill until Summit numbers exist). *Reported quarters:* the FROZEN pre-call view (what was priced in + the one-liner). |
-| **Watch List** | 5 ranked items **per quarter** (hunting list seeded when the prior quarter closed; upcoming = themes with `since`+`thread`; reported = frozen contemporaneous). **Every item carries `tags`** (kebab-case themes: capex, cloud, search, monetization, promises, …). A **tag bar** at the top filters **ACROSS quarters**: selecting tags switches to a flat cross-quarter view (each card shows its quarter chip) — how the same hunt evolved print to print; clearing tags (or picking a quarter) returns to the per-quarter view. An **"+ Add theme"** control appends a new item in the same card format to the active quarter (session-only — persisting it = committing it into `CALL_PREP`). Promise-type items live here (silence is a signal). **Every item that exists because the prior call left it open carries `seededBy`**, rendered as `left open by Q1 2026` — or `⚑ red-line tripped in Q1 2026` when it descends from a broken thesis line. |
+| **Watch List** | 5 ranked items **per quarter** (hunting list seeded when the prior quarter closed; upcoming = themes with `since`+`thread`; reported = frozen contemporaneous). **Every item carries `tags`** (kebab-case themes: capex, cloud, search, monetization, promises, …). A **tag bar** at the top filters **ACROSS quarters**: selecting tags switches to a flat cross-quarter view (each card shows its quarter chip) — how the same hunt evolved print to print; clearing tags (or picking a quarter) returns to the per-quarter view. An **"+ Add theme"** control appends a new item in the same card format to the active quarter (session-only — persisting it = committing it into `CALL_PREP`). Promise-type items live here (silence is a signal). **Every item that exists because the prior call left it open carries `seededBy`**, rendered as `left open by Q1 2026` — or `⚑ red-line tripped in Q1 2026` when it descends from a broken thesis line. **v2.3 — the fused theme record:** below the per-quarter/cross-quarter watch content, the Watch List phase now renders **"The theme record"** — the full `<TICKER>_THEMES` compendium (By theme ⇄ By quarter, status chips with age), under a labelled divider. This is the former standalone *Earnings Calls* tab, folded in here so there is ONE home for theme-tracking (nothing lost). |
 | **Post-Results** | **the red-line check FIRST** (it is the most falsifiable thing in the tab — tripped lines sort to the top, with a `⚑ n tripped` / `✓ all held` counter in the header) + **the scorecard**, ordered **biggest-surprise first, never release order**, each row carrying a `WATCH #n` badge when it was on the frozen list (blank otherwise — Rule D) and a **word-chip** for surprise (Rule H) + a `.cp-legend` above it (Rule L) + "what the numbers tee up for the call" + price reaction. |
 | **Post-Call** | take + insight-first highlights **grouped into three action bands** (§6b) with an `open` chip on anything management left unanswered + the connect-the-dots line + **`threeMinutes` — the spoken deliverable** (§6c) with `notBringing` + `newQuestions` rendered with **where each one landed** (`became Q2 2026 Watch item #4`), closing the chain. |
 
-**Dissolved:** the standalone Promise Tracker tab — its discipline lives inside the Watch-List
-threads and the Earnings Calls themes' status chips. Never build it for new companies.
+**Dissolved (never build these as standalone tabs for any company):**
+- the **Promise Tracker** tab — its discipline lives inside the Watch-List threads and the theme
+  record's status chips.
+- **(v2.3)** the **Earnings Calls** tab — its theme compendium is folded into the Watch List (below).
+  Two tabs on the same call highlights is the redundancy v2.3 removed. Existing companies that had
+  the tab (GOOGL, IBKR) were retrofitted; new companies never get it.
 
-**Evolution ▸ Earnings Calls** — the standard multi-company contract (ibkr/uber/lyft/cart/ma/
-rely/v): a `<TICKER>_THEMES` array (`{theme, why, updates:[{q, items:[...]}]}`) rendered with the
-**By theme ⇄ By quarter** pill toggle and `lpb-acc` accordions — themes trace how each story
-evolved; quarters show what mattered in a given call; entries are contemporaneous HIGHLIGHTS
-(bold the key figures). **v2 enhancement:** each theme carries a status chip — `trend` (confirmed)
-/ `promise` (a commitment to reconcile next call) / `watch` — absorbing the Promise Tracker.
-**v2.2:** the status is an object carrying its **age**, rendered in words — `Promise — reconcile ·
-unreconciled 3 quarters`, `Watch · silent 1 quarter`. A promise open one quarter and one open four
-are not the same fact, and a silence that has run two quarters is louder than a fresh one; the
-flat string could not carry that, so it was replaced.
+**The theme record** (was **Evolution ▸ Earnings Calls**; now rendered INSIDE the Call Prep Watch
+List phase, §6 above) — the standard multi-company contract (ibkr/uber/lyft/cart/ma/rely/v/googl):
+a `<TICKER>_THEMES` array (`{theme, st:{k,since,last,silent?}, why, updates:[{q, items:[...]}]}`)
+rendered with the **By theme ⇄ By quarter** pill toggle and `lpb-acc` accordions — themes trace how
+each story evolved; quarters show what mattered in a given call; entries are contemporaneous
+HIGHLIGHTS (bold the key figures). **v2 enhancement:** each theme carries a status chip — `trend`
+(confirmed) / `promise` (a commitment to reconcile next call) / `watch` — absorbing the Promise
+Tracker. **v2.2:** the status is an object carrying its **age**, rendered in words — `Promise —
+reconcile · unreconciled 3 quarters`, `Watch · silent 1 quarter`. A promise open one quarter and
+one open four are not the same fact, and a silence that has run two quarters is louder than a fresh
+one; the flat string could not carry that, so it was replaced. **v2.3:** the array is unchanged —
+only its render location moved (from a standalone tab to under the Watch List).
 
 ## 6b. The three action bands — how highlights are grouped
 
@@ -406,7 +436,7 @@ var CALL_PREP = { ticker:'XXXX', quarters:[
   // …older quarters, same shape, append-only
 ]};
 
-// Evolution ▸ Earnings Calls — status now carries its age (§6, v2.2):
+// The theme record (rendered inside the Call Prep Watch List, v2.3) — status carries its age (§6):
 var <TICKER>_THEMES=[ { theme, why, st:{ k:'promise'|'trend'|'watch', since, last, silent? },
                         updates:[{q, items:[…]}] } ];
 ```
@@ -456,9 +486,12 @@ CSS classes that carry meaning (port with the functions): `.cp-legend`/`.cp-lege
    `newQuestions → next watchList` chain is real. Frozen consensus for old quarters may be
    qualitative ("hold high-teens") where the archived Bloomberg number isn't at hand — never
    invent precise figures.
-6. **Earnings Calls themes view** (`<TICKER>_THEMES`, §6 format).
-7. **Port the render machinery** from `googl.js` (§7).
-8. **Wire it** (§6 placement; `wireCallPrep` + calls-pill/lpb-acc in `init`).
+6. **The theme record** (`<TICKER>_THEMES`, §6 format) — rendered INSIDE the Call Prep Watch List
+   phase (fold it in below the watch content via `callsBody()`); do NOT build a standalone Earnings
+   Calls sub-tab (v2.3).
+7. **Port the render machinery** from `googl.js` or `ibkr.js` (§7).
+8. **Wire it** (§6 placement — Call Prep is the first Evolution sub-tab, no Earnings Calls tab;
+   `wireCallPrep` + calls-pill/lpb-acc in `init`).
 9. **After each print/call**: fill `results` then `call` (Rule 0), including **`band`+`open` on
    every highlight** (§6b), **`threeMinutes`+`notBringing`** (§6c), and `surprise`/`watchRank` on
    every scorecard row (§7b). Then ROLL: build the new upcoming quarter, and **close the chain** —
@@ -491,8 +524,9 @@ CSS classes that carry meaning (port with the functions): `.cp-legend`/`.cp-lege
 - [ ] ≥2 reported quarters backfilled end-to-end; **the chain closes in BOTH directions** — every
       `newQuestion` shows where it landed or reads *still open*, and its counterpart watch item
       names it; quarter pills toggle all four phases.
-- [ ] Earnings Calls: By theme ⇄ By quarter toggle, `lpb-acc` accordions, status chips **with age
-      in words**, contemporaneous highlights.
+- [ ] **The theme record** renders **inside the Call Prep Watch List** (not a standalone tab): By
+      theme ⇄ By quarter toggle, `lpb-acc` accordions, status chips **with age in words**,
+      contemporaneous highlights. **No "Earnings Calls" sub-tab exists** in the Evolution row (v2.3).
 - [ ] Rule 0 everywhere; §4 regression tests pass.
 - [ ] **Rule L — the cold-open test:** re-read every rendered chip, badge and abbreviation as
       someone seeing the tab for the first time with no explanation. Any bare symbol, any

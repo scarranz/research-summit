@@ -45,10 +45,14 @@
     <div class="lnm">Summit</div>
     <span class="collapse" title="Collapse"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg></span>
   </div>
-  <nav class="snav">
+  <div class="snav-lbl">Research</div>
+  <nav class="snav snav-research">
     <button class="ntb nav-item active" data-tab="co" data-page="companies" onclick="switchTab('co')"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Companies</button>
+    <button class="ntb nav-item" data-tab="spc" data-page="spectrum" onclick="switchTab('spc')"><svg viewBox="0 0 24 24"><path d="M3 12h2M6 8h2M6 16h2M11 5h2M11 19h2M16 8h2M16 16h2M19 12h2"/></svg>Spectrum</button>
+    <button class="ntb nav-item" data-tab="ind" data-page="industry-analysis" onclick="switchTab('ind')"><svg viewBox="0 0 24 24"><circle cx="5" cy="6" r="2.4"/><circle cx="19" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M6.8 7.4 10.6 16M17.2 7.4 13.4 16M7 6h10"/></svg>Industries</button>
+  </nav>
+  <nav class="snav">
     <button class="ntb nav-item" data-tab="rot" data-page="market-analysis" onclick="switchTab('rot')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>Market Analysis</button>
-    <button class="ntb nav-item" data-tab="ind" data-page="industry-analysis" onclick="switchTab('ind')"><svg viewBox="0 0 24 24"><circle cx="5" cy="6" r="2.4"/><circle cx="19" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M6.8 7.4 10.6 16M17.2 7.4 13.4 16M7 6h10"/></svg>Industry Analysis</button>
     <button class="ntb nav-item" data-tab="inv" data-page="hedge-funds" onclick="switchTab('inv')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20v-1.5a4.5 4.5 0 0 1 7-3.7"/><circle cx="17" cy="10" r="2.6"/><path d="M14 20v-1a3.6 3.6 0 0 1 6.5-2.1"/></svg>Hedge Funds</button>
     <button class="ntb nav-item" data-tab="team" data-page="team" onclick="switchTab('team')"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Team</button>
     <button class="ntb nav-item" data-tab="ret" data-page="fund-returns" onclick="switchTab('ret')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M19 9l-5 5-4-4-3 3"/></svg>Return Analysis</button>
@@ -526,6 +530,15 @@
 </div>
 
 <!-- INDUSTRY ANALYSIS TAB -->
+<div id="tp-spc" class="tp">
+  <div class="ind-wrap">
+    <div class="ind-head">
+      <h2 class="ind-title">Spectrum</h2>
+      <p class="ind-sub">Coming soon.</p>
+    </div>
+  </div>
+</div>
+
 <div id="tp-ind" class="tp">
   <div id="ind-root"></div>
 </div>
@@ -565,6 +578,7 @@ import { loadTeamPage } from './js/team.js';
 import { loadFundReturnsPage } from './js/fund-returns.js';
 import { loadCoveredCallsPage } from './js/covered-calls.js';
 import { loadIndustryPage } from './js/industry.js';
+import { loadSpectrumPage } from './js/spectrum.js';
 
 const statusEl = document.getElementById('status');
 
@@ -589,6 +603,7 @@ async function boot() {
       registerPageLoader('fund-returns', loadFundReturnsPage);
       registerPageLoader('covered-calls', loadCoveredCallsPage);
       registerPageLoader('industry-analysis', loadIndustryPage);
+      registerPageLoader('spectrum', loadSpectrumPage);
 
       // Update user display
       const user = getCurrentUser();

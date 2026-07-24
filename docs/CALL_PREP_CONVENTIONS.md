@@ -1,4 +1,4 @@
-# Call Prep — THE complete convention (build + call interpretation, v2.3 · Jul 2026)
+# Call Prep — THE complete convention (build + call interpretation, v2.4 · Jul 2026)
 
 **This is the single source of truth for everything earnings-call related**: how calls are
 ANALYZED (the rules, the detection protocol, the regression tests), how they are STORED (the
@@ -14,6 +14,11 @@ with no other context, builds everything from ONE prompt: **"arma el Call Prep d
 **Reference implementations: `js/overviews/googl.js` AND `js/overviews/ibkr.js`** (both v2.3 —
 canonical). `ibkr.js` was migrated from v1 (standalone Promise Tracker, single-estimate setup, no
 quarter selector) to the full v2.2 machinery **and** the v2.3 fusion on 2026-07-24; copy from either.
+
+**What v2.4 added:** IR / Investor-Day events as a first-class entry type (§6e) — a non-earnings,
+guidance-based block that gets the same Call Prep treatment as a call (Watch List = themes,
+Post-Results = the published materials/slides, Post-Call = the transcript), except Setup has no
+Consensus/Summit toggle (nothing to forecast) and shows a disclaimer instead.
 
 **What v2.3 added, and why — THE FUSION (read this before building any company):** the tab had TWO
 places talking about the same call highlights — the standalone **Evolution ▸ Earnings Calls** tab
@@ -400,13 +405,39 @@ management's.
 A tripped red-line is the strongest possible seed: it did not merely go unanswered, it *broke*.
 It carries `tripped:true` at both ends and should rank in the top half of the next Watch List.
 
+## 6e. Investor Days & IR events — a non-earnings entry, same relevance as a call
+
+Some companies hold **Investor Days / strategic IR events** that are not quarterly earnings calls.
+When one appears in the calls record, **treat it with the same relevance and structure as a call**:
+it gets its own block in the quarter selector, labelled by the event (e.g. `Investor Day 2026`, not
+`Qx`). The difference is that it is **guidance-based, not a quarter close** — there is usually no
+"print" to beat; instead there are long-term targets, capital-allocation frameworks and strategic
+announcements. The four phases **adapt, they do not change**:
+
+| Phase | For an IR / Investor-Day event |
+|---|---|
+| **Setup** | The **Consensus ⇄ Summit ⇄ Both toggle does NOT apply** — we are not forecasting a print, so there is nothing to estimate and no previa. Render the Setup body **empty except a short disclaimer** that points the reader to the other phases — e.g. *"No print to forecast — this is a strategic/guidance event. See the Watch List for the themes, Post-Results for the materials the company published, and Post-Call for the transcript."* Keep it simple; do not force estimates. |
+| **Watch List** | The **themes** going in — what to listen for (new targets, segment disclosures, capital-return shifts, product/strategy pivots). Same theme cards as a call. |
+| **Post-Results** | Covers **the materials the company uploaded** for the event — the slide deck / presentation / press materials — NOT a beat/miss scorecard (there is no consensus to score against). The "results" here are *what the company put out*: the headline targets and framework changes, each with its so-what. |
+| **Post-Call** | The **transcript** (presentations + Q&A), analysed insight-first exactly like an earnings call — bands, `threeMinutes`, `newQuestions`. |
+
+**Data model:** mark the block `kind:'ir'` (default is `kind:'earnings'`) and give it a `label`
+(e.g. `'Investor Day 2026'`) that the quarter pill shows instead of `Qx`. In Setup, `kind:'ir'`
+suppresses the estimate toggle/headline/custom/previa and renders the disclaimer; `results` is not a
+scorecard but a **materials list**. Everything else — Watch List, Post-Call, and the chain
+(`newQuestions → seededBy`) — works unchanged, so an IR event still seeds the next event's/quarter's
+Watch List. **Do not over-engineer it:** if a company never holds one, nothing changes; the rule only
+exists so an IR event slots into the same tab with the same discipline when it does appear.
+
 ---
 
 ## 7. Data model (essentials)
 
 ```js
 var CALL_PREP = { ticker:'XXXX', quarters:[
-  { q:'Qx 20xx', status:'upcoming', date:'…',
+  // kind defaults to 'earnings'; an Investor Day / IR event is kind:'ir' + label (§6e) —
+  // Setup shows only a disclaimer (no estimate toggle), Post-Results is a materials list.
+  { q:'Qx 20xx', status:'upcoming', date:'…', /* kind:'ir', label:'Investor Day 2026', */
     setup:{ source, asOf,
       headline:[ {k:'Revenue',cons:{v,yoy,unit},us,note?}, {k:'Operating income',…},
                  {k:'EPS (diluted)',…}, {k:'EBITDA',…} ],

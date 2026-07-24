@@ -1966,7 +1966,7 @@ var GOOGL_MGMT = makeManagement({
     { id:'pichai', img:'img/leadership/googl-pichai.jpg', lead:true, name:'Sundar Pichai', title:'CEO, Alphabet & Google', since:'at Google since 2004 · Google CEO 2015 · Alphabet CEO 2019',
       line:'From Chrome PM to the AI-era CEO; architect of the full-stack response.',
       bio:'Joined in 2004; ran Chrome and Android before becoming Google CEO in the 2015 Alphabet restructuring and Alphabet CEO in 2019 when the founders stepped back. Declared the company "AI-first" in 2016 (the TPU/DeepMind groundwork), absorbed the 2023 "code red," and delivered the Gemini-era turnaround — reorganizing research (DeepMind merge), shipping Gemini 1→3 in 24 months, and committing the largest capital program in corporate history.' },
-    { id:'anat', name:'Anat Ashkenazi', title:'SVP & CFO', since:'since Jul 2024 · ex-Eli Lilly CFO',
+    { id:'anat', img:'img/leadership/googl-ashkenazi.jpg', name:'Anat Ashkenazi', title:'SVP & CFO', since:'since Jul 2024 · ex-Eli Lilly CFO',
       line:'Owns the capex-ladder narrative: raises with proof attached, depreciation flagged unprompted.',
       bio:'CFO since July 2024, after two decades at Eli Lilly (CFO 2021-24). Brought pharma-style capital discipline to the AI build-out: ROIC framing on every allocation question, per-call depreciation candor, the backlog-conversion disclosure, and the first material debt issuance — executed while group margins expanded.' },
     { id:'schindler', img:'img/leadership/googl-schindler.jpg', name:'Philipp Schindler', title:'SVP & Chief Business Officer', since:'at Google since 2005',

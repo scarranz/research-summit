@@ -1,3 +1,24 @@
+/* ─── Research hub sub-nav (segmented control) ─── */
+.res-subnav {
+  display: inline-flex;
+  background: var(--surface, #f3f5f7);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+  margin-bottom: 20px;
+}
+.res-pill {
+  border: none; background: transparent; border-radius: 7px;
+  font: 600 13px 'Inter', sans-serif; color: var(--mu, #8a93a0);
+  padding: 6px 16px; cursor: pointer;
+  transition: background .15s, color .15s, box-shadow .15s;
+}
+.res-pill:hover { color: var(--text, #1E2733); }
+.res-pill.active { background: #fff; color: var(--text, #1E2733); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
+.res-sub { display: none; }
+.res-sub.active { display: block; }
+
 /* Industry Analysis tab — hub header + isolated map frame. */
 .ind-wrap { display: flex; flex-direction: column; gap: 14px; }
 

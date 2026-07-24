@@ -46,12 +46,8 @@
     <div class="lnm">Summit</div>
     <span class="collapse" title="Collapse"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg></span>
   </div>
-  <div class="snav-lbl">Research</div>
-  <nav class="snav snav-research">
-    <button class="ntb nav-item active" data-tab="co" data-page="companies" onclick="switchTab('co')"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Companies</button>
-    <button class="ntb nav-item" data-tab="invt" data-page="investment" onclick="switchTab('invt')"><svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V10l5-3 5 3v11"/><path d="M15 21v-7l4-2v9"/></svg>Investment</button>
-    <button class="ntb nav-item" data-tab="spc" data-page="spectrum" onclick="switchTab('spc')"><svg viewBox="0 0 24 24"><path d="M3 12h2M6 8h2M6 16h2M11 5h2M11 19h2M16 8h2M16 16h2M19 12h2"/></svg>Spectrum</button>
-    <button class="ntb nav-item" data-tab="ind" data-page="industry-analysis" onclick="switchTab('ind')"><svg viewBox="0 0 24 24"><circle cx="5" cy="6" r="2.4"/><circle cx="19" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M6.8 7.4 10.6 16M17.2 7.4 13.4 16M7 6h10"/></svg>Industries</button>
+  <nav class="snav">
+    <button class="ntb nav-item active" data-tab="res" data-page="research" onclick="switchTab('res')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>Research</button>
   </nav>
   <nav class="snav">
     <button class="ntb nav-item" data-tab="rot" data-page="market-analysis" onclick="switchTab('rot')"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>Market Analysis</button>
@@ -85,103 +81,117 @@
     </div>
   </div>
   <main class="main">
-<!-- COMPANIES TAB -->
-<div id="tp-co" class="tp active">
-  <!-- GRID VIEW -->
-  <div id="co-gridview">
-    <h1 class="co-h1">Portfolio Companies</h1>
-    <p class="co-sub">Companies Summit Management Technologies actively researches and covers.</p>
-    <div class="co-controls">
-      <div class="srw" style="margin-bottom:0;flex:1;max-width:440px">
-        <span class="sric">&#9906;</span>
-        <input class="sri" id="co-search" placeholder="Search by name or ticker&hellip;" oninput="renderCoGrid()" autocomplete="off">
+<!-- RESEARCH HUB TAB -->
+<div id="tp-res" class="tp active">
+  <div class="res-subnav">
+    <button class="res-pill active" data-sub="companies" onclick="switchResearchTab('companies')">Companies</button>
+    <button class="res-pill" data-sub="industries" onclick="switchResearchTab('industries')">Industries</button>
+    <button class="res-pill" data-sub="summit" onclick="switchResearchTab('summit')">Summit</button>
+  </div>
+
+  <!-- COMPANIES SUB-TAB -->
+  <div id="res-companies" class="res-sub active">
+    <!-- GRID VIEW -->
+    <div id="co-gridview">
+      <h1 class="co-h1">Portfolio Companies</h1>
+      <p class="co-sub">Companies Summit Management Technologies actively researches and covers.</p>
+      <div class="co-controls">
+        <div class="srw" style="margin-bottom:0;flex:1;max-width:440px">
+          <span class="sric">&#9906;</span>
+          <input class="sri" id="co-search" placeholder="Search by name or ticker&hellip;" oninput="renderCoGrid()" autocomplete="off">
+        </div>
+        <select class="fsel" id="co-groupfilter" onchange="renderCoGrid()"></select>
+        <button class="co-add-btn" id="co-add-btn" title="Add company">+</button>
       </div>
-      <select class="fsel" id="co-groupfilter" onchange="renderCoGrid()"></select>
-      <button class="co-add-btn" id="co-add-btn" title="Add company">+</button>
-    </div>
-    <div class="card co-coverage">
-      <div class="co-grid" id="co-grid"></div>
-    </div>
-    <p class="co-disclaim">Coverage only &mdash; not a current portfolio disclosure. Summit Management Technologies may hold positions in some, all, or none of the companies listed. <a href="#" onclick="return false">Full disclosure</a></p>
-  </div>
-
-  <!-- DETAIL VIEW -->
-  <div id="co-detailview" style="display:none">
-    <div class="coback" onclick="closeCo()">&#x2190; All companies</div>
-    <div class="cohead">
-      <div id="co-logo"></div>
-      <div class="cotitle"><div class="co-eyebrow">Company Profile</div><h2 id="co-name">Uber Technologies</h2><div class="sub" id="co-sub">NYSE: UBER &middot; Transport</div></div>
-      <div class="copx"><div class="big" id="co-px">$82.40</div><div class="co-pxsub" id="co-pxsub"></div></div>
-    </div>
-    <div class="cotabs">
-      <button class="cotab active" data-pane="overview" onclick="coTab('overview')">Overview</button>
-      <button class="cotab" data-pane="deepdive" id="co-tab-deepdive" onclick="coTab('deepdive')" style="display:none">Deep Dive</button>
-      <button class="cotab" data-pane="pillars" onclick="coTab('pillars')">Pillars</button>
-      <button class="cotab" data-pane="resources" onclick="coTab('resources')">Resources</button>
-    </div>
-
-    <div class="copane active" data-pane="overview" style="min-height:240px"></div>
-
-    <div class="copane" data-pane="deepdive" style="min-height:240px"></div>
-
-    <div class="copane" data-pane="pillars">
-      <div class="pillar-filter" id="pillar-filter"></div>
-      <div id="co-analysis"></div>
-    </div>
-
-    <div class="copane" data-pane="resources">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;max-width:760px">
-        <div class="res-filter" id="res-filter"></div>
-        <button class="co-add-btn" id="co-add-resource" title="Add resource" style="flex-shrink:0;margin-left:12px">+</button>
+      <div class="card co-coverage">
+        <div class="co-grid" id="co-grid"></div>
       </div>
-      <div id="co-links"></div>
+      <p class="co-disclaim">Coverage only &mdash; not a current portfolio disclosure. Summit Management Technologies may hold positions in some, all, or none of the companies listed. <a href="#" onclick="return false">Full disclosure</a></p>
     </div>
-  </div>
-</div>
 
-<!-- INVESTMENT TAB -->
-<div id="tp-invt" class="tp">
-  <!-- SECTOR GRID VIEW -->
-  <div id="invt-sectorview">
-    <h1 class="iv-h1">Investment Portfolio</h1>
-    <p class="iv-sub">Companies Summit Management Technologies is currently invested in, organized by sector.</p>
-    <div class="iv-controls">
-      <button class="co-add-btn" id="invt-add-btn" title="Add investment">+</button>
-    </div>
-    <div class="iv-secgrid" id="iv-secgrid"></div>
-    <p class="iv-disclaim">Reflects Summit Management Technologies&rsquo; actual invested positions as of the date shown on each write-up. Not investment advice. <a href="#" onclick="return false">Full disclosure</a></p>
-  </div>
+    <!-- DETAIL VIEW -->
+    <div id="co-detailview" style="display:none">
+      <div class="coback" onclick="closeCo()">&#x2190; All companies</div>
+      <div class="cohead">
+        <div id="co-logo"></div>
+        <div class="cotitle"><div class="co-eyebrow">Company Profile</div><h2 id="co-name">Uber Technologies</h2><div class="sub" id="co-sub">NYSE: UBER &middot; Transport</div></div>
+        <div class="copx"><div class="big" id="co-px">$82.40</div><div class="co-pxsub" id="co-pxsub"></div></div>
+      </div>
+      <div class="cotabs">
+        <button class="cotab active" data-pane="overview" onclick="coTab('overview')">Overview</button>
+        <button class="cotab" data-pane="deepdive" id="co-tab-deepdive" onclick="coTab('deepdive')" style="display:none">Deep Dive</button>
+        <button class="cotab" data-pane="pillars" onclick="coTab('pillars')">Pillars</button>
+        <button class="cotab" data-pane="resources" onclick="coTab('resources')">Resources</button>
+      </div>
 
-  <!-- SECTOR DETAIL VIEW -->
-  <div id="invt-sectordetail" style="display:none">
-    <div class="coback" onclick="ivCloseSector()">&#x2190; All sectors</div>
-    <h1 class="iv-h1" id="iv-sector-name">Sector</h1>
-    <p class="iv-sub" id="iv-sector-count"></p>
-    <div class="card" style="padding:30px 24px">
-      <div class="iv-tilegrid" id="iv-tilegrid"></div>
+      <div class="copane active" data-pane="overview" style="min-height:240px"></div>
+
+      <div class="copane" data-pane="deepdive" style="min-height:240px"></div>
+
+      <div class="copane" data-pane="pillars">
+        <div class="pillar-filter" id="pillar-filter"></div>
+        <div id="co-analysis"></div>
+      </div>
+
+      <div class="copane" data-pane="resources">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;max-width:760px">
+          <div class="res-filter" id="res-filter"></div>
+          <button class="co-add-btn" id="co-add-resource" title="Add resource" style="flex-shrink:0;margin-left:12px">+</button>
+        </div>
+        <div id="co-links"></div>
+      </div>
     </div>
   </div>
 
-  <!-- COMPANY DETAIL VIEW -->
-  <div id="invt-companydetail" style="display:none">
-    <div class="coback" onclick="ivCloseCompany()">&#x2190; Back to <span id="iv-back-sector">sector</span></div>
-    <div class="ivhead">
-      <div id="iv-logo"></div>
-      <div class="ivtitle"><div class="iv-eyebrow">Investment Profile</div><h2 id="iv-name">Company</h2><div class="sub" id="iv-sub">TICKER &middot; Sector</div></div>
-      <button class="iv-editbtn" id="iv-edit-btn">Edit</button>
+  <!-- INDUSTRIES SUB-TAB -->
+  <div id="res-industries" class="res-sub">
+    <div id="ind-root"></div>
+  </div>
+
+  <!-- SUMMIT SUB-TAB -->
+  <div id="res-summit" class="res-sub">
+    <!-- SECTOR GRID VIEW -->
+    <div id="invt-sectorview">
+      <h1 class="iv-h1">Investment Portfolio</h1>
+      <p class="iv-sub">Companies Summit Management Technologies is currently invested in, organized by sector.</p>
+      <div class="iv-controls">
+        <button class="co-add-btn" id="invt-add-btn" title="Add investment">+</button>
+      </div>
+      <div class="iv-secgrid" id="iv-secgrid"></div>
+      <p class="iv-disclaim">Reflects Summit Management Technologies&rsquo; actual invested positions as of the date shown on each write-up. Not investment advice. <a href="#" onclick="return false">Full disclosure</a></p>
     </div>
-    <div class="iv-body">
-      <div class="iv-section">
-        <div class="iv-section-label">What it does</div>
-        <div class="iv-prose" id="iv-overview-body"></div>
+
+    <!-- SECTOR DETAIL VIEW -->
+    <div id="invt-sectordetail" style="display:none">
+      <div class="coback" onclick="ivCloseSector()">&#x2190; All sectors</div>
+      <h1 class="iv-h1" id="iv-sector-name">Sector</h1>
+      <p class="iv-sub" id="iv-sector-count"></p>
+      <div class="card" style="padding:30px 24px">
+        <div class="iv-tilegrid" id="iv-tilegrid"></div>
       </div>
-      <div class="iv-section">
-        <div class="iv-section-label">The moat</div>
-        <div class="iv-prose" id="iv-moat-body"></div>
+    </div>
+
+    <!-- COMPANY DETAIL VIEW -->
+    <div id="invt-companydetail" style="display:none">
+      <div class="coback" onclick="ivCloseCompany()">&#x2190; Back to <span id="iv-back-sector">sector</span></div>
+      <div class="ivhead">
+        <div id="iv-logo"></div>
+        <div class="ivtitle"><div class="iv-eyebrow">Investment Profile</div><h2 id="iv-name">Company</h2><div class="sub" id="iv-sub">TICKER &middot; Sector</div></div>
+        <button class="iv-editbtn" id="iv-edit-btn">Edit</button>
       </div>
-      <div class="iv-section">
-        <div class="iv-section-label">Why we invest</div>
-        <div class="iv-prose" id="iv-opportunity-body"></div>
+      <div class="iv-body">
+        <div class="iv-section">
+          <div class="iv-section-label">What it does</div>
+          <div class="iv-prose" id="iv-overview-body"></div>
+        </div>
+        <div class="iv-section">
+          <div class="iv-section-label">The moat</div>
+          <div class="iv-prose" id="iv-moat-body"></div>
+        </div>
+        <div class="iv-section">
+          <div class="iv-section-label">Why we invest</div>
+          <div class="iv-prose" id="iv-opportunity-body"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -629,20 +639,6 @@
   <div id="fr-root"></div>
 </div>
 
-<!-- INDUSTRY ANALYSIS TAB -->
-<div id="tp-spc" class="tp">
-  <div class="ind-wrap">
-    <div class="ind-head">
-      <h2 class="ind-title">Spectrum</h2>
-      <p class="ind-sub">Coming soon.</p>
-    </div>
-  </div>
-</div>
-
-<div id="tp-ind" class="tp">
-  <div id="ind-root"></div>
-</div>
-
 <!-- COVERED CALLS TAB -->
 <div id="tp-cc" class="tp">
   <div id="cc-root"></div>
@@ -679,7 +675,6 @@ import { loadTeamPage } from './js/team.js';
 import { loadFundReturnsPage } from './js/fund-returns.js';
 import { loadCoveredCallsPage } from './js/covered-calls.js';
 import { loadIndustryPage } from './js/industry.js';
-import { loadSpectrumPage } from './js/spectrum.js';
 
 const statusEl = document.getElementById('status');
 
@@ -696,16 +691,28 @@ async function boot() {
     case 'authenticated': {
       statusEl.textContent = 'Loading...';
 
+      // Research sub-tab lazy loaders
+      const _resLoaded = {};
+      window.switchResearchTab = function(sub) {
+        document.querySelectorAll('.res-pill').forEach(p => p.classList.toggle('active', p.dataset.sub === sub));
+        document.querySelectorAll('.res-sub').forEach(s => s.classList.remove('active'));
+        const panel = document.getElementById('res-' + sub);
+        if (panel) panel.classList.add('active');
+        if (!_resLoaded[sub]) {
+          _resLoaded[sub] = true;
+          if (sub === 'companies') loadCompaniesPage();
+          if (sub === 'industries') loadIndustryPage();
+          if (sub === 'summit') loadInvestmentPage();
+        }
+      };
+
       // Register page loaders
-      registerPageLoader('companies', loadCompaniesPage);
-      registerPageLoader('investment', loadInvestmentPage);
+      registerPageLoader('research', () => switchResearchTab('companies'));
       registerPageLoader('market-analysis', loadMarketAnalysisPage);
       registerPageLoader('hedge-funds', loadHedgeFundsPage);
       registerPageLoader('team', loadTeamPage);
       registerPageLoader('fund-returns', loadFundReturnsPage);
       registerPageLoader('covered-calls', loadCoveredCallsPage);
-      registerPageLoader('industry-analysis', loadIndustryPage);
-      registerPageLoader('spectrum', loadSpectrumPage);
 
       // Update user display
       const user = getCurrentUser();

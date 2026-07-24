@@ -6,10 +6,7 @@ const _loaded = new Set();
 
 // Map page names to tab panel IDs
 const TAB_MAP = {
-  'companies': 'co',
-  'investment': 'invt',
-  'spectrum': 'spc',
-  'industry-analysis': 'ind',
+  'research': 'res',
   'market-analysis': 'rot',
   'hedge-funds': 'inv',
   'team': 'team',
@@ -18,10 +15,7 @@ const TAB_MAP = {
 };
 
 const TAB_TITLES = {
-  'co': 'Companies',
-  'invt': 'Investment',
-  'spc': 'Spectrum',
-  'ind': 'Industries',
+  'res': 'Research',
   'rot': 'Market Analysis',
   'inv': 'Hedge Funds',
   'team': 'Team',

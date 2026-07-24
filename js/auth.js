@@ -10,7 +10,7 @@ const ROLE_CONFIG = {
   // 'fund-returns' is restricted to the investment committee / internal team.
   // For now only 'admin' exists, so it lives here; when more roles are added,
   // simply omit 'fund-returns' from any role that should not see it.
-  admin: { name: 'Admin', label: 'Admin', allowedPages: ['companies', 'investment', 'spectrum', 'industry-analysis', 'market-analysis', 'hedge-funds', 'team', 'fund-returns', 'covered-calls'], defaultPage: 'companies' },
+  admin: { name: 'Admin', label: 'Admin', allowedPages: ['research', 'market-analysis', 'hedge-funds', 'team', 'fund-returns', 'covered-calls'], defaultPage: 'research' },
 };
 
 let _currentRole = null;

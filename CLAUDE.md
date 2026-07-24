@@ -115,6 +115,7 @@ supabase functions deploy <function-name> --project-ref bvflqjndivouhgwqfbrq
 | `sync-ratings` | Massive `/benzinga/v1/ratings` | Pull analyst ratings + price targets |
 | `get-margins` | Massive `/stocks/financials/v1/income-statements` + `/cash-flow-statements` | Historical profitability & cash margins (gross/op/net/EBITDA/CFO/FCF) for the Overview Margins box — computed server-side, no DB write |
 | `get-transcript` | Fiscal.ai `/v1/company/ir-events` + `/ir-events/transcript/{eventKey}` | Earnings-call events list + structured transcripts for Call Prep — generic for any ticker on our Fiscal.ai tier, no DB write. `unavailable: true` = company not on current plan |
+| `generate-investment-writeup` | Anthropic Messages API (`claude-opus-4-8` + `web_search` tool) | "Research & write with AI" button in the Investment tab's Add modal — researches a company via web search and drafts its Overview/Moat/Opportunity text in Summit's house tone. Requires a separate `ANTHROPIC_API_KEY` secret. |
 
 **Security:** All edge functions restrict CORS to `research-summit.netlify.app` and `localhost:8000`. Ticker and companyId inputs are validated.
 

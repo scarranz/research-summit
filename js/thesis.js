@@ -38,8 +38,9 @@ export async function loadThesisPage() {
 
   var html = '<div class="thesis-doc">';
   html += '<div class="thesis-hd">';
+  html += '<p class="thesis-lettermark">Summit Management Technologies</p>';
   html += '<h1 class="thesis-title">Investment Thesis</h1>';
-  html += '<p class="thesis-meta">Summit Management Technologies &mdash; ' + date + '</p>';
+  html += '<p class="thesis-meta">' + date + '</p>';
   html += '</div>';
 
   for (var i = 0; i < sectors.length; i++) {

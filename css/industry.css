@@ -1,23 +1,66 @@
-/* ─── Research hub sub-nav (segmented control) ─── */
+/* ─── Research hub sub-nav (underline tabs) ─── */
 .res-subnav {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--bdr, #dfe4ea);
+  margin-bottom: 24px;
+  background: none;
+  border-radius: 0;
+  padding: 0;
+}
+.res-pill {
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  border-radius: 0;
+  font: 500 13.5px 'Inter', sans-serif;
+  color: var(--mu, #8a93a0);
+  padding: 0 2px 10px;
+  margin-right: 28px;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+  box-shadow: none;
+}
+.res-pill:hover { color: var(--text, #1E2733); }
+.res-pill.active {
+  color: var(--navy, #1E2733);
+  font-weight: 600;
+  border-bottom-color: var(--navy, #1E2733);
+  background: transparent;
+  box-shadow: none;
+}
+
+.res-sub { display: none; }
+.res-sub.active { display: block; }
+
+/* Secondary nav (segmented control) — used inside Summit */
+.res-subnav--seg {
   display: inline-flex;
+  border-bottom: none;
   background: var(--surface, #f3f5f7);
   border-radius: 10px;
   padding: 3px;
   gap: 2px;
   margin-bottom: 20px;
 }
-.res-pill {
-  border: none; background: transparent; border-radius: 7px;
-  font: 600 13px 'Inter', sans-serif; color: var(--mu, #8a93a0);
-  padding: 6px 16px; cursor: pointer;
-  transition: background .15s, color .15s, box-shadow .15s;
+.res-subnav--seg .res-pill {
+  border-bottom: none;
+  border-radius: 7px;
+  padding: 6px 16px;
+  margin-right: 0;
+  margin-bottom: 0;
+  font-weight: 600;
+  font-size: 13px;
 }
-.res-pill:hover { color: var(--text, #1E2733); }
-.res-pill.active { background: #fff; color: var(--text, #1E2733); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
-
-.res-sub { display: none; }
-.res-sub.active { display: block; }
+.res-subnav--seg .res-pill:hover { color: var(--text, #1E2733); }
+.res-subnav--seg .res-pill.active {
+  background: #fff;
+  color: var(--text, #1E2733);
+  border-bottom-color: transparent;
+  box-shadow: 0 1px 3px rgba(0,0,0,.12);
+  font-weight: 600;
+}
 .summit-sub { display: none; }
 .summit-sub.active { display: block; }
 

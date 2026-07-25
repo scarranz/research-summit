@@ -2,6 +2,16 @@
 
 Internal research dashboard portal for the Summit team.
 
+## Team — GitHub contributors
+
+| GitHub login | Name | Email | Notes |
+|---|---|---|---|
+| `scarranz` | Santiago Carranza | scarranza@summit-mgmtx.com | Owner / PM |
+| `DOAA351` | Daniel Alvarez | dalvarez@summit-mgmtx.com | Research analyst |
+| `posterdeb` | Deborah Posternak | dposternak@summit-mgmtx.com | Research analyst |
+| `pvalles96` | Pablo Valles | pvalles@summit-mgmtx.com | Research analyst |
+| `salvarez-summit` | Santiago Alvarez (SAB) | salvarez@summit-mgmtx.com | Research analyst |
+
 ## Tech stack
 
 - **Vanilla JavaScript** (ES modules, no framework, no build step)

@@ -1,3 +1,74 @@
+/* ─── Thesis: long-form investment document ─── */
+
+.thesis-doc {
+  max-width: 720px;
+  padding: 4px 0 56px;
+}
+
+.thesis-hd {
+  margin-bottom: 36px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--bdr, #dfe4ea);
+}
+
+.thesis-title {
+  font: 700 24px/1.1 'Inter', sans-serif;
+  letter-spacing: -0.02em;
+  color: var(--navy, #1E2733);
+  margin: 0 0 6px;
+}
+
+.thesis-meta {
+  font: 400 13px 'Inter', sans-serif;
+  color: var(--mu, #8a93a0);
+  margin: 0;
+}
+
+.thesis-sector {
+  margin-bottom: 44px;
+}
+
+.thesis-sector-name {
+  font: 700 11px 'Inter', sans-serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mu, #8a93a0);
+  margin: 0 0 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--bdr, #dfe4ea);
+}
+
+.thesis-co {
+  margin-bottom: 32px;
+}
+
+.thesis-co-hd {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.thesis-ticker {
+  font: 700 14px 'Inter', sans-serif;
+  color: var(--navy, #1E2733);
+  letter-spacing: 0.03em;
+}
+
+.thesis-co-name {
+  font: 400 13.5px 'Inter', sans-serif;
+  color: var(--mu, #8a93a0);
+}
+
+.thesis-prose .thesis-p {
+  font: 400 14px/1.75 'Inter', sans-serif;
+  color: var(--text, #1a1f26);
+  margin: 0 0 12px;
+}
+
+.thesis-prose .thesis-p strong { font-weight: 600; }
+.thesis-loading, .thesis-empty { font: 400 14px 'Inter', sans-serif; color: var(--mu); }
+
 /* ─── Investment: sector grid, sector detail, company detail ─── */
 
 .iv-h1 {

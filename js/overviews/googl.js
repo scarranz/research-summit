@@ -419,21 +419,39 @@ var CALL_PREP = {
   ticker:'GOOGL',
   quarters:[
     // ─── Q3 2026 — UPCOMING. Rolled 2026-07-22 after the Q2 call; Watch List seeded from Q2's
-    // newQuestions. Consensus cells fill when the next Bloomberg export lands.
+    // newQuestions.
+    //
+    // CONSENSUS PROVENANCE — filled 2026-07-27 from the team's Bloomberg export:
+    //   G:\My Drive\Summit\Docs\0\Consensus_Portal.xlsm · sheet BBG_CONSENSUS · row 216
+    //   (GOOGL US EQUITY) · snapshot 2026-07-27 14:13:21 · after_quarter = "2026 Q2 (Rep)",
+    //   so the sheet's `fq+1` column IS this quarter ("2026 Q3 (Fwd)").
+    // All figures are USD, scale M in the sheet → divided by 1,000 for $B here. YoY is NOT filled:
+    // the sheet carries forward estimates only (no prior-year actuals), and Q3 2025 absolutes are
+    // not in the repo — deriving them from rounded transcript prose ("our first-ever $100 billion
+    // quarter") would be fake precision. Fill YoY when an actuals column exists.
+    // The four customs follow the sheet's own KPI set (kpi1–kpi4), which tracks
+    // Cloud · backlog · Search · capex — backlog REPLACED YouTube ads vs the earlier draft.
     { q:'Q3 2026', status:'upcoming', date:'late October 2026 (date TBC)',
       setup:{
-        source:'Bloomberg (BST) — export pending · Summit — to fill', asOf:null,
+        source:'Bloomberg (BST) — Consensus_Portal.xlsm · BBG_CONSENSUS · Summit — to fill', asOf:'2026-07-27',
         headline:[
-          { k:'Revenue', cons:null, us:null },
-          { k:'Operating income', cons:null, us:null },
-          { k:'EPS (diluted)', cons:null, us:null },
-          { k:'EBITDA', cons:null, us:null },
+          { k:'Revenue', cons:{v:110.0,unit:'$B'}, us:null,
+            note:{ t:'⚠ This line does not reconcile with its own segment estimates', h:'<p>The Bloomberg mean is <b>$110.0B</b> (29 contributors) — but the same export row puts <b>Search & other at $64.8B</b> and <b>Cloud at $27.8B</b>. That is $92.6B, leaving only <b>$17.4B</b> for YouTube ads + Network + subscriptions/devices + Other Bets.</p><p>That residual is not possible: YouTube ads alone printed <b>$11.1B</b> in Q2 2026 with Network ~$7.4B on top, and non-Search Services was ~$31B in Q3 2025. It also implies a <b>−8.2% sequential decline</b> from Q2 2026\'s $119.8B and a <b>38.8% operating margin</b> (vs 34.0% actual), both out of line with every other number in the export.</p><p><b>Treat the revenue cell as unverified</b> until the Bloomberg pull is re-checked — the profit lines, EPS and the four KPIs are internally consistent; this one is the outlier.</p>' } },
+          { k:'Operating income', cons:{v:42.7,unit:'$B'}, us:null },
+          { k:'EPS (diluted)', cons:{v:3.01,unit:'$'}, us:null,
+            note:{ t:'Which EPS this is', h:'<p>Bloomberg field <code>IS_COMP_EPS_GAAP</code> — comparable GAAP EPS, 50 contributors.</p><p><b>Context worth carrying:</b> the same export shows FY2026 at <b>$19.28</b> and FY2027 <i>lower</i>, at <b>$14.97</b>. That is not a forecast of decline — FY26 is inflated by Q2 2026\'s <b>$99.0B of one-off securities gains</b> (+$6.26 to EPS). FY27 is the clean base. Same lesson as the Q2 print: read the operating line.</p>' } },
+          { k:'EBITDA', cons:{v:58.6,unit:'$B'}, us:null },
         ],
+        // Customs = the sheet's kpi1–kpi4 for GOOGL (segment codes: SEG0000344781 = Google Cloud,
+        // SEG0000344782 = Google Search). Both segment mappings cross-check against reported
+        // actuals: Cloud $27.8B vs $24.8B in Q2 2026, Search $64.8B vs $63.27B — both plausible.
         custom:[
-          { k:'Google Cloud', cons:null, us:null },
-          { k:'Search & other', cons:null, us:null },
-          { k:'YouTube ads', cons:null, us:null },
-          { k:'Capex', cons:null, us:null },
+          { k:'Google Cloud', cons:{v:27.8,unit:'$B'}, us:null },
+          { k:'Search & other', cons:{v:64.8,unit:'$B'}, us:null },
+          { k:'Cloud backlog (RPO)', cons:{v:532.4,unit:'$B'}, us:null,
+            note:{ t:'A balance, not a flow — and the export disagrees with itself', h:'<p>Bloomberg field <code>BS_REMAINING_PERFORMANCE_OBLIG</code>, a <b>balance-sheet</b> line: total remaining performance obligations, not quarterly revenue. Against Q2 2026\'s reported <b>$514B</b>, consensus has it reaching <b>$532.4B</b> — another +$18B of net book-building.</p><p><b>Caveat:</b> the export\'s FY2026 figure ($517.7B) is <i>lower</i> than this Q3 figure, which cannot be true of a compounding balance. Only one contributor stands behind the quarterly line. Directional, not precise.</p>' } },
+          { k:'Capex', cons:{v:54.5,unit:'$B'}, us:null,
+            note:{ t:'Sign flipped from the source field', h:'<p>Bloomberg field <code>CF_PURCHASE_OF_FIXED_PROD_ASSETS</code> is a cash <b>outflow</b>, so the export carries it negative (−$54,507M). Shown here as a positive magnitude, matching how the guide and every prior quarter are quoted.</p><p><b>The read:</b> $54.5B in one quarter against Q2 2026\'s $44.9B — consensus already has the ladder stepping up again, consistent with the FY26 $195–205B guide.</p>' } },
         ],
         // The debate — what it establishes going in. (The fear/consensus split and the mechanism
         // chips were retired Jul 2026; the box below now carries the debate itself.)

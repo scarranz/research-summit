@@ -357,6 +357,47 @@ one open four are not the same fact, and a silence that has run two quarters is 
 one; the flat string could not carry that, so it was replaced. **v2.3:** the array is unchanged —
 only its render location moved (from a standalone tab to under the Watch List).
 
+## 6a. Where the consensus comes from — `Consensus_Portal.xlsm`
+
+The Bloomberg numbers are **not** pulled per-company by hand. The team maintains one workbook,
+**`G:\My Drive\Summit\Docs\0\Consensus_Portal.xlsm`**, sheet **`BBG_CONSENSUS`** — ~500 tickers,
+one row each, refreshed from a BBG terminal. Read it with `openpyxl` (`data_only=True`, cached
+values — no MCP needed). Column layout:
+
+| columns | contents |
+|---|---|
+| `A` | `ticker` — Bloomberg form, e.g. `GOOGL US EQUITY` |
+| `B`–`U` | the **4 headline** metric *definitions*: `metricN` · `codeN` (the BBG field) · `segmentN` · `unitN` · `scaleN` |
+| `V`–`AO` | the **4 custom KPI** definitions, same 5-column shape (`metric_kpiN` …) |
+| `AP`–`AX` | the period **labels**: `fq+1`…`fq+4`, `fy+1`…`fy+5` (e.g. `2026 Q3 (Fwd)`, `2026 A (Fwd)`) |
+| `AY`–`CH` | the **values** for revenue / opinc / ebitda / eps, each × the 9 periods |
+| `CI`–`DR` | the **values** for `kpi1`…`kpi4`, same 9-period grid |
+| `DS`–`DU` | `snapshot date` · `time` · **`after_quarter`** — the last REPORTED quarter |
+
+**Read `after_quarter` first.** It tells you which quarter `fq+1` refers to. If `after_quarter` is
+`2026 Q2 (Rep)` then `fq+1` is `2026 Q3 (Fwd)` — the upcoming quarter, which is the Setup's column.
+Never assume `fq+1` is the quarter you happen to be working on; check.
+
+**Rules when filling from it:**
+- **`scaleN` is authoritative.** Values are usually USD `M`; divide by 1,000 for the `$B` cells.
+- **Cash-flow fields come through negative.** `CF_PURCHASE_OF_FIXED_PROD_ASSETS` (capex) is an
+  outflow, so the sheet carries it as a negative. Show the positive magnitude — that is how the
+  guide is quoted — and note the flip.
+- **The customs come from the sheet's own `kpi1`–`kpi4`**, not from a previous draft. If the sheet's
+  KPI set changed, the Setup's custom set changes with it.
+- **Segment KPIs carry an opaque code** (`SEG0000344781 Segment`). Cross-check the value against a
+  reported actual before trusting the mapping — a segment code silently pointing at the wrong line
+  is the easiest error to ship here.
+- **YoY is NOT in this sheet.** It carries forward estimates only, no prior-year actuals. Leave
+  `yoy` out rather than deriving it from rounded prose in a transcript (that is fake precision, §4b).
+  `cpFmtC` renders the cell fine without it.
+- **Reconcile the row against itself before shipping it.** Sum the segment KPIs and check the
+  residual against known actuals; check the sequential step against last quarter's print; check the
+  implied margins. A mean-of-N-analysts line can disagree with the other means in its own row. When
+  one does, still hardcode what the export says (golden rule: Bloomberg only, never our own number
+  dressed as consensus) — but attach a **caveat pop-up** (`note`) saying exactly what does not tie,
+  so nobody presents it as verified. That is what the `?` affordance is for.
+
 ## 6b. The three action bands — how highlights are grouped
 
 The `tag` taxonomy (§2, Pass 3) says **what kind of signal** an item is. It does not say **what you

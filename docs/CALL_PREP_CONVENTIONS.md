@@ -1,4 +1,4 @@
-# Call Prep — THE complete convention (build + call interpretation, v2.4 · Jul 2026)
+# Call Prep — THE complete convention (build + call interpretation, v2.5 · Jul 2026)
 
 **This is the single source of truth for everything earnings-call related**: how calls are
 ANALYZED (the rules, the detection protocol, the regression tests), how they are STORED (the
@@ -11,9 +11,26 @@ Bloomberg numbers export, and optionally (d) SPLC / Summit expectations** — an
 with no other context, builds everything from ONE prompt: **"arma el Call Prep de \<TICKER\>"**
 (or refreshes with "integra el nuevo call de \<TICKER\>"). If a step is ambiguous, fix THIS doc.
 
-**Reference implementations: `js/overviews/googl.js` AND `js/overviews/ibkr.js`** (both v2.3 —
-canonical). `ibkr.js` was migrated from v1 (standalone Promise Tracker, single-estimate setup, no
-quarter selector) to the full v2.2 machinery **and** the v2.3 fusion on 2026-07-24; copy from either.
+**Reference implementations:** `js/overviews/googl.js` is canonical for **v2.5** (the `WL_ROWS`
+Watch-List table, §6f, and the stripped Setup); `js/overviews/ibkr.js` is canonical for **v2.4** and
+still carries the nested `watchList` shape. Copy the Setup / Post-Results / Post-Call machinery from
+either — they are identical there — but take the **Watch List from `googl.js`**. `ibkr.js` was
+migrated from v1 (standalone Promise Tracker, single-estimate setup, no quarter selector) to the full
+v2.2 machinery **and** the v2.3 fusion on 2026-07-24. Each overview file owns its own copy of the
+Call Prep renderers, so v2.5 landing on GOOGL changed nothing for the other companies.
+
+**What v2.5 changed, and why (read §6f before touching a Watch List):** the Watch List had drifted
+into being **an LLM output**, and it is the one place in the tab that must not be. Post-Results and
+Post-Call are extraction — the model is good at that and keeps free rein. The hunt list is
+*judgement*, and it has to be able to say **"the model missed this"** and **"that isn't actually
+relevant."** So the Watch List became **our table** (§6f): a flat `WL_ROWS` array with explicit
+columns, authored from the portal (add / edit / delete, tag dropdown + inline tag creation), with
+`trigger` replacing "Breaks if…" as an *optional* validate/invalidate condition and a
+`trackSince` / `trackUntil` hook window that defines the live list (open hooks only). Durable
+persistence needs Supabase — **pending assignment**; today the loop is portal → table → COPY →
+hardcode. Also retired in the **Setup**: the "in one picture" fear/consensus pair, the mechanism
+chips, and the gray placeholder — the debate box alone carries what the print has to resolve.
+Live on **GOOGL**; the other companies keep the v2.4 shape until their next cycle.
 
 **What v2.4 added:** IR / Investor-Day events as a first-class entry type (§6e) — a non-earnings,
 guidance-based block that gets the same Call Prep treatment as a call (Watch List = themes,
@@ -302,8 +319,8 @@ its frozen pre-call blocks NEXT TO its post-mortem (the calibration record).
 
 | Phase | Content per quarter |
 |---|---|
-| **Setup** | *Upcoming quarter:* 4 **headline** metrics (mandatory, every company: **Revenue · Operating income · EPS · EBITDA**) + 4 **custom KPIs** (per-company, agreed with Dani), each with **Street** (Bloomberg) and **Summit** estimates behind a **Consensus ⇄ Summit ⇄ Both** toggle; caveat pop-ups (`cpQ`) on numbers with a trap; **the PREVIA — MANDATORY** (`marketDebate`): the one-picture read going into the print — *what the tape fears* vs *what consensus actually models* cards + mechanism chips + the **dark synth box** with "the one thing to resolve" (IBKR-style; it does NOT need Summit numbers — it frames the market's own tension); plus **the debate** = the Street-vs-Summit disparity (enabled, to-fill until Summit numbers exist). *Reported quarters:* the FROZEN pre-call view (what was priced in + the one-liner). |
-| **Watch List** | 5 ranked items **per quarter** (hunting list seeded when the prior quarter closed; upcoming = themes with `since`+`thread`; reported = frozen contemporaneous). **Every item carries `tags`** (kebab-case themes: capex, cloud, search, monetization, promises, …). A **tag bar** at the top filters **ACROSS quarters**: selecting tags switches to a flat cross-quarter view (each card shows its quarter chip) — how the same hunt evolved print to print; clearing tags (or picking a quarter) returns to the per-quarter view. An **"+ Add theme"** control appends a new item in the same card format to the active quarter (session-only — persisting it = committing it into `CALL_PREP`). Promise-type items live here (silence is a signal). **Every item that exists because the prior call left it open carries `seededBy`**, rendered as `left open by Q1 2026` — or `⚑ red-line tripped in Q1 2026` when it descends from a broken thesis line. **v2.3 — the fused theme record:** below the per-quarter/cross-quarter watch content, the Watch List phase now renders **"The theme record"** — the full `<TICKER>_THEMES` compendium (By theme ⇄ By quarter, status chips with age), under a labelled divider. This is the former standalone *Earnings Calls* tab, folded in here so there is ONE home for theme-tracking (nothing lost). |
+| **Setup** | *Upcoming quarter:* 4 **headline** metrics (mandatory, every company: **Revenue · Operating income · EPS · EBITDA**) + 4 **custom KPIs** (per-company, agreed with Dani), each with **Street** (Bloomberg) and **Summit** estimates behind a **Consensus ⇄ Summit ⇄ Both** toggle; caveat pop-ups (`cpQ`) on numbers with a trap; then **the debate** — what it establishes going in: the Street-vs-Summit disparity rows when both estimate sets exist, and the **dark synth box** carrying *the one thing to resolve*. **(v2.5 — retired)** the "setup, in one picture" pair (*what the tape fears* / *what consensus actually models*), the mechanism chips, and the gray to-fill placeholder under the debate heading are **gone**. The previa is no longer a separate block: the debate box IS the going-in read. *Reported quarters:* the FROZEN pre-call view (what was priced in + the one-liner). |
+| **Watch List** | **v2.5 — the list is OURS, and it is a table (§6f).** Post-Results and Post-Call let the model run; the Watch List does not. We decide what earns a slot and what the model failed to detect. Rows live in a flat **`WL_ROWS`** table, not nested per quarter, and each carries: `theme` · `tags[]` · `why` (required, in our words) · `tell` 🔎 (optional) · **`trigger`** (optional — the metric/event that validates or invalidates the thesis; **empty ⇒ no chip is rendered**) · **`trackSince` / `trackUntil`** (the hook window — *empty `trackUntil` means still open*). The **live quarter's list is exactly the open hooks**; we open and close them by hand. A **tag bar** filters **ACROSS quarters** (flat view, quarter chip per card); a **tracking-window segment** (All · Open hooks · Closed) filters by hook state. **"+ Add theme"** opens a form that picks tags from the existing vocabulary **and creates new ones inline** — a new tag is appended to the filter bar, available to every theme from then on. Cards on the live quarter carry **✎ edit / ✕ delete** (edit is how a hook gets closed: fill *Tracking until*); frozen quarters are read-only history. Promise-type items live here (silence is a signal). **`seededBy`** still renders as `left open by Q2 2026` — or `⚑ trigger fired in Q2 2026` (was "red-line tripped"). **v2.3 — the fused theme record:** below everything, the Watch List phase renders **"The theme record"** — the full `<TICKER>_THEMES` compendium (By theme ⇄ By quarter, status chips with age), under a labelled divider. This is the former standalone *Earnings Calls* tab, folded in so there is ONE home for theme-tracking (nothing lost). |
 | **Post-Results** | **the red-line check FIRST** (it is the most falsifiable thing in the tab — tripped lines sort to the top, with a `⚑ n tripped` / `✓ all held` counter in the header) + **the scorecard**, ordered **biggest-surprise first, never release order**, each row carrying a `WATCH #n` badge when it was on the frozen list (blank otherwise — Rule D) and a **word-chip** for surprise (Rule H) + a `.cp-legend` above it (Rule L) + "what the numbers tee up for the call" + price reaction. |
 | **Post-Call** | take + insight-first highlights **grouped into three action bands** (§6b) with an `open` chip on anything management left unanswered + the connect-the-dots line + **`threeMinutes` — the spoken deliverable** (§6c) with `notBringing` + `newQuestions` rendered with **where each one landed** (`became Q2 2026 Watch item #4`), closing the chain. |
 
@@ -431,6 +448,63 @@ exists so an IR event slots into the same tab with the same discipline when it d
 
 ---
 
+## 6f. The Watch List is a TABLE, and it is ours (v2.5 · Jul 2026)
+
+The problem v2.5 fixes: the Watch List had become **too AI-dependent**. Post-Results and Post-Call
+*should* give the model free rein — extracting what a print and a transcript actually said is
+mechanical work with a right answer. **The hunt list is different.** It is a judgement about what
+matters to *us*, and it has to be able to say *the model missed this* and *the model over-weighted
+that*. So the Watch List stopped being a model output and became **our table**.
+
+**Storage.** One flat array — `WL_ROWS` — not prose nested inside each quarter. Columns:
+
+| column | req | meaning |
+|---|---|---|
+| `id` | ✓ | stable row key (the future primary key) |
+| `q` | ✓ | the quarter list this row belongs to — the frozen record |
+| `rank` | ✓ | 1..n inside the quarter (`'+'` for rows added in-session) |
+| `theme` | ✓ | the thing to hunt |
+| `tags[]` | ✓ | kebab-case theme tags; they ARE the cross-quarter filter vocabulary |
+| `why` | ✓ | why it is relevant — **ours, in our words** |
+| `tell` | | the standing read 🔎 — what to actually watch for |
+| `trigger` | | the metric/event that would validate or invalidate the thesis (ex-`breaks` / "Breaks if…"). **Empty ⇒ no chip is rendered at all.** |
+| `trackSince` | | the quarter the hook opened |
+| `trackUntil` | | the quarter the hook closed. **EMPTY MEANS STILL OPEN.** |
+| `cons` | | the Street line, when there is one (Bloomberg only) |
+| `seededBy` | | `{q,n,tripped}` — the prior call's open question that put it here |
+| `src` | | grounding: why it earned a slot |
+| `thread[]` | | `[{q,n}]` the quarter-by-quarter evolution |
+
+**The hook window is the filtering system.** The Watch List is pre-call, so **the live quarter's
+list is exactly the rows with a `trackSince` and no `trackUntil`**. Nothing derives it automatically
+— we open and close hooks by hand, and closing one (fill `trackUntil` via ✎) drops it out of the
+live list while keeping it in the record. `trackSince` / `trackUntil` are real columns, so they
+filter and sort like any other.
+
+**Tags are a growing vocabulary, not a fixed enum.** The Add/Edit form picks from the tags already
+in use (multi-select chips) *and* lets a new one be created while writing the theme. A new tag is
+appended to the "Filter by theme" bar immediately — from that moment it is available to every theme,
+for everyone.
+
+**The round-trip, and the pending assignment.** Editing from the portal is **session-only**: add /
+edit / delete mutate `WL_ROWS` in memory, the cards and the table re-render, and a refresh discards
+it. Making it durable requires **Supabase — that is a PENDING ASSIGNMENT, not built.** Until then
+the loop that works is:
+
+> edit in the portal → the table at the bottom of the Watch List updates live → **COPY** (TSV, drops
+> into a sheet) or **copy JSON** (exact) → paste it back to Claude → it gets hardcoded into
+> `WL_ROWS` in a commit.
+
+Not the most efficient loop, but it lets us author and *see* the list now instead of waiting on the
+database. When the Supabase work is picked up, the shape is already right: the columns above map 1:1
+to a `call_prep_watchlist` table (one row per theme per quarter, `id` as PK, `tags` as `text[]`,
+`track_since` / `track_until` nullable), reachable through `js/api.js` like every other table — no
+render changes required, only the data source.
+
+**Scope.** v2.5 is live on **GOOGL** (`js/overviews/googl.js`). IBKR / V / MA / RELY / META still
+carry the v2.4 nested `watchList` shape and keep working unchanged — each overview file owns its own
+copy of the Call Prep renderers. Retrofit them when their next cycle is built; do not do it blind.
+
 ## 7. Data model (essentials)
 
 ```js
@@ -442,15 +516,12 @@ var CALL_PREP = { ticker:'XXXX', quarters:[
       headline:[ {k:'Revenue',cons:{v,yoy,unit},us,note?}, {k:'Operating income',…},
                  {k:'EPS (diluted)',…}, {k:'EBITDA',…} ],
       custom:[ /* 4 per-company; k:null renders "to define" */ ],
-      marketDebate:{ fear, real, mech:[{k,v,dir}], synth },  // the PREVIA — mandatory
-      debate:null | { rows:[{k,street,us,why}], synth } },   // Summit-vs-Street, when it exists
-    watchList:[ { rank, metric, since, tags:['capex','cloud',…], bbg, breaks, pista, why, src,
-                  seededBy:{ q, n, tripped? },      // WHY this item is on the list (§6d)
-                  thread:[{q,n},…] } /* ×5 */ ],
+      // v2.5: marketDebate (fear/real/mech) is RETIRED. The debate box alone carries the going-in
+      // read — `synth` is what the print has to resolve; `rows` fill when Summit numbers exist.
+      debate:{ rows:null | [{k,street,us,why}], synth } },
     results:null, call:null },
   { q:'Q(x−1)', status:'reported', date:'…',
     setup:{ source, pricedIn, oneLiner },          // FROZEN contemporaneous view
-    watchList:[ /* the list as seeded at prior close — FROZEN */ ],
     results:{ headline,
               scorecard:[{ metric, cons, actual,
                            result,        // beat | miss | inline | nodisc | nocons  (§7b)
@@ -462,10 +533,29 @@ var CALL_PREP = { ticker:'XXXX', quarters:[
            highlights:[{ tag, band, open?, head, detail }],   // band: lead|context|logged (§6b)
            dots,
            threeMinutes:[ '…', '…', '…' ],                    // the spoken deliverable (§6c)
-           notBringing:[{ item, why }],
+           notBringing:[{ item, why }],   // (see below for WL_ROWS — the Watch List no longer
+                                         //  lives inside `quarters`, §6f)
            newQuestions:[{ n, landed:{q,rank}, tripped? }] } },  // closes the chain (§6d)
   // …older quarters, same shape, append-only
 ]};
+
+// v2.5 — the Watch List: ONE flat table, not nested per quarter (§6f). Ours to author, editable
+// from the portal in-session, copy-able back out for hardcoding. Supabase = pending assignment.
+var WL_ROWS=[
+  { id:'wl001', q:'Qx 20xx', rank:1,
+    theme:'…',                    // what we are hunting
+    tags:['capex','cloud'],       // vocabulary of the filter bar; new tags can be created inline
+    why:'…',                      // REQUIRED — why it is relevant, in OUR words
+    tell:'…',                     // optional — the standing read 🔎
+    trigger:'…',                  // optional — validates/invalidates the thesis; empty ⇒ no chip
+    trackSince:'Qx 20xx',         // hook opened
+    trackUntil:null,              // hook closed; NULL = STILL OPEN ⇒ it is on the live list
+    cons:'…',                     // optional — the Street line (Bloomberg only)
+    seededBy:{ q, n, tripped? },  // optional — WHY it is on the list (§6d)
+    src:'…',                      // optional — why it earned a slot
+    thread:[{q,n},…] },           // optional — the quarter-by-quarter evolution
+];
+function wlFor(qLabel, openOnly){ /* rows for a quarter; live quarter passes openOnly=true */ }
 
 // The theme record (rendered inside the Call Prep Watch List, v2.3) — status carries its age (§6):
 var <TICKER>_THEMES=[ { theme, why, st:{ k:'promise'|'trend'|'watch', since, last, silent? },
@@ -536,13 +626,21 @@ CSS classes that carry meaning (port with the functions): `.cp-legend`/`.cp-lege
 - [ ] Calls repo: `-latest` + compendium; rotation respected; append-only.
 - [ ] Setup: exactly 4 headline + 4 customs; every rendered value traced to the Bloomberg export
       (`asOf`); YoY correct; Summit column renders (values or "to fill"); toggle works; caveat
-      pop-ups on trap numbers; **the previa (`marketDebate`) rendered — fear/real cards, mech
-      chips, dark synth box with the one-thing-to-resolve**; Summit debate enabled.
-- [ ] Watch List: per quarter; upcoming = 5 themes with `since`+`tags`+`thread`+falsifiable
-      `breaks`+a tell-that-is-a-read; reported quarters frozen contemporaneous; **tag bar filters
-      across quarters** (flat view w/ quarter chips; clear/quarter-pick returns to per-quarter);
-      **"+ Add theme" appends in the same format** (session-only); promises embedded (no
-      standalone tab).
+      pop-ups on trap numbers; **the debate box renders the one-thing-to-resolve** (`debate.synth`);
+      **NO fear/consensus pair, NO mechanism chips, NO gray placeholder** (all retired in v2.5).
+- [ ] Watch List stored as the flat **`WL_ROWS`** table (§6f) — not nested inside `quarters`; every
+      row has `id`+`q`+`rank`+`theme`+`tags`+`why`; `trigger` present where there is a real
+      validate/invalidate condition and **absent (no chip) where there is not**; every row has a
+      `trackSince`, and **the live quarter renders open hooks only** (no `trackUntil`).
+- [ ] Watch List authoring works from the portal: **"+ Add theme"** with a tag picker **and inline
+      tag creation** (new tag appears in the filter bar); **✎ edit / ✕ delete on the live quarter
+      only**; frozen quarters read-only; tracking-window filter (All · Open · Closed) works.
+- [ ] **The table at the bottom renders every row and its COPY / copy-JSON buttons work** — that is
+      the only persistence path until the Supabase assignment lands (§6f).
+- [ ] Tag bar still filters **across quarters** (flat view w/ quarter chips; clear/quarter-pick
+      returns to per-quarter); promises embedded (no standalone tab).
+- [ ] **No black slabs inside the watch cards** — the tell 🔎 box is the friendly brand-tinted
+      panel, not `#10141A` (the dark box survives only as the Setup debate box and the Post-Call take).
 - [ ] Watch List items that descend from a prior call carry **`seededBy`**, rendered in words.
 - [ ] **Post-Results:** red-line check renders **above** the scorecard with its tripped counter;
       scorecard sorted **biggest-surprise first**; every row has `surprise`; `watchRank` present

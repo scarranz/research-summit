@@ -2,8 +2,36 @@
 
 .rs-wrap { max-width: 980px; --brand: var(--navy); }
 
-/* Quarterly / Annual view toggle */
-.rs-toprow { display: flex; align-items: center; gap: 14px; margin: 2px 0 14px; }
+/* Quarterly / Annual view toggle + section tabs */
+.rs-toprow { display: flex; align-items: center; gap: 14px; margin: 2px 0 14px; flex-wrap: wrap; }
+/* Stacked section blocks */
+.rs-block { margin-top: 6px; }
+.rs-block + .rs-block { margin-top: 30px; padding-top: 22px; border-top: 1px solid var(--bdr); }
+.rs-block-top { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
+.rs-block-h {
+  font-size: 14px; font-weight: 800; color: var(--navy);
+  padding-left: 10px; border-left: 4px solid var(--accent);
+}
+/* Grouped metric dropdown */
+.rs-msel {
+  appearance: none; -webkit-appearance: none;
+  font: 600 12.5px 'Inter', sans-serif; color: var(--navy);
+  background: var(--w) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238A93A0' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+  border: 1px solid var(--bdr); border-radius: 9px; padding: 8px 32px 8px 12px;
+  cursor: pointer; min-width: 240px; max-width: 100%;
+}
+.rs-msel:hover { border-color: var(--accent); }
+.rs-msel:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
+/* Period ticks along the slider track */
+.rs-ticks { position: absolute; left: 0; right: 0; top: 0; height: 32px; pointer-events: none; }
+.rs-tick {
+  position: absolute; top: 16px; width: 7px; height: 7px; border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--w); border: 1.5px solid #C7CED6;
+}
+.rs-tick.on { background: var(--navy); border-color: var(--navy); }
+.rs-tick.on.est { background: var(--accent); border-color: var(--accent); opacity: 0.55; }
+.rs-tick.est:not(.on) { border-style: dashed; }
 .rs-views { display: inline-flex; border: 1px solid var(--bdr); border-radius: 8px; overflow: hidden; }
 .rs-view {
   appearance: none; border: 0; background: var(--w); color: var(--mu);
@@ -14,16 +42,75 @@
 .rs-view:hover { color: var(--navy); }
 .rs-view.active { background: var(--navy); color: #fff; }
 
-/* Detail table */
-.rs-tablewrap { overflow-x: auto; margin: 18px 0 10px; }
-.rs-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-.rs-table th {
-  text-align: right; font-size: 10.5px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.04em; color: var(--mu); padding: 7px 10px; border-bottom: 1px solid var(--bdr);
+/* Clickable legend chips (hide/show a series) */
+.rs-leg {
+  appearance: none; border: 1px solid transparent; background: transparent; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  font: 600 12px 'Inter', sans-serif; color: var(--mu); padding: 3px 8px; border-radius: 999px;
 }
-.rs-table th:first-child { text-align: left; }
-.rs-table td { padding: 7px 10px; border-bottom: 1px solid var(--ice); white-space: nowrap; }
-.rs-table td:first-child { font-weight: 600; color: var(--navy); }
-.rs-num { text-align: right; font-variant-numeric: tabular-nums; }
-.rs-act { font-weight: 600; color: var(--navy); }
-.rs-table tbody tr:hover { background: var(--pale); }
+.rs-leg:hover { border-color: var(--bdr); color: var(--navy); }
+.rs-leg.off { opacity: 0.45; text-decoration: line-through; }
+.rs-leg-line { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+#rsLegend { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+
+/* Period-window slider under the chart */
+#rsSliderBox { margin: 10px 2px 18px; }
+
+/* Detail table — Fiscal.ai-style spreadsheet: airy, bare numbers, shaded
+   estimate columns, sticky header + first column, row/column crosshair. */
+.rs-tablewrap { margin: 20px 0 10px; }
+.rs-ft-cap { font-size: 10.5px; font-weight: 600; color: var(--mu); margin-bottom: 8px; }
+.rs-ft-scroll {
+  overflow-x: auto; border: 1px solid var(--bdr); border-radius: 12px; background: var(--w);
+  max-height: 420px; overflow-y: auto;
+}
+.rs-ft { border-collapse: separate; border-spacing: 0; font-size: 12.5px; width: 100%; }
+.rs-ft th {
+  position: sticky; top: 0; z-index: 2; background: var(--w);
+  font-size: 11px; font-weight: 600; color: var(--mu); text-align: right;
+  padding: 11px 16px 9px; border-bottom: 1px solid var(--bdr); white-space: nowrap;
+}
+.rs-ft td {
+  padding: 9px 16px; text-align: right; font-variant-numeric: tabular-nums;
+  white-space: nowrap; color: var(--navy); background: var(--w);
+}
+.rs-ft .rs-ft-h {
+  position: sticky; left: 0; z-index: 1; text-align: left;
+  font-weight: 600; color: var(--navy); min-width: 130px;
+  border-right: 1px solid var(--ice);
+}
+.rs-ft thead .rs-ft-h { z-index: 3; }
+/* main value rows carry the divider; a main row followed by its sub-row hands
+   the divider down to the sub-row instead (rs-ft-nb) */
+.rs-ft tr.rs-ft-main td { border-bottom: 1px solid #F0F2F5; }
+.rs-ft tr.rs-ft-nb td { border-bottom: none; padding-bottom: 2px; }
+.rs-ft tr.rs-ft-sub td {
+  border-bottom: 1px solid #F0F2F5; padding-top: 0; padding-bottom: 9px;
+  font-size: 10.5px; font-weight: 600;
+}
+.rs-ft tr.rs-ft-sub .rs-ft-h { font-weight: 500; color: var(--mu); padding-left: 28px; }
+.rs-ft tr:last-child td { border-bottom: none; }
+.rs-ft-nil { color: #C7CED6; }
+.rs-ft-dim { color: var(--mu); font-weight: 500; }
+/* estimate (forward) columns — shaded like Fiscal's estimate years */
+.rs-ft th.rs-ft-este, .rs-ft td.rs-ft-este { background: #F7F9FC; }
+.rs-ft-e {
+  display: inline-block; font-size: 8.5px; font-weight: 700; color: var(--accent);
+  border: 1px solid var(--accent); border-radius: 4px; padding: 0 3px; line-height: 1.4;
+  vertical-align: 1px;
+}
+/* the sticky right-hand "Range record" summary column */
+.rs-ft th.rs-ft-s, .rs-ft td.rs-ft-s {
+  position: sticky; right: 0; z-index: 1; text-align: right;
+  background: #FBFCFE; border-left: 1px solid var(--bdr);
+  font-size: 11px; font-weight: 700; color: var(--navy);
+  min-width: 150px; white-space: nowrap; line-height: 1.5;
+}
+.rs-ft thead th.rs-ft-s { z-index: 3; font-size: 10.5px; color: var(--mu); }
+.rs-ft tr.rs-ft-sub td.rs-ft-s { font-weight: 600; }
+
+/* crosshair: row hover + column hover */
+.rs-ft tbody tr:hover td { background: #F6F8FA; }
+.rs-ft td.colhl, .rs-ft th.colhl { background: #EFF4FA; }
+.rs-ft tbody tr:hover td.colhl { background: #E7EEF7; }
+.rs-ft tbody tr:hover td.rs-ft-s { background: #F2F6FB; }

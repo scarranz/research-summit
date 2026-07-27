@@ -3,7 +3,6 @@
 import { FRAMEWORK, ALL_STOCKS } from './portal-data.js';
 import { fetchCompanies, insertCompany, lookupTicker, searchCompany, fetchResources, insertResource, updateResource, deleteResource, uploadFile, getFileUrl, fetchExecutives, fetchInsiderTransactions, syncManagement, fetchAnalystRatings, syncRatings, fetchSegments, syncSegments, liveQuote } from './api.js';
 import { getOverview } from './overviews/index.js';
-import { renderResultsTab, initResults } from './results.js';
 
 let _companies = []; // companies loaded from Supabase
 let _pendingLookup = null; // data from ticker lookup
@@ -1020,9 +1019,6 @@ function coTab(pane){
   if (pane === 'deepdive' && _currentDeepDive && _currentDeepDive.init) {
     requestAnimationFrame(function(){ _currentDeepDive.init(); });
   }
-  if (pane === 'results') {
-    requestAnimationFrame(function(){ initResults(); });
-  }
 }
 
 var _currentOverview = null;
@@ -1041,7 +1037,6 @@ function renderOverview(c){
   loadSegmentData(c.id, c.ticker);
   if (_currentOverview && _currentOverview.init) requestAnimationFrame(function(){ _currentOverview.init(); });
   renderDeepDive(c);
-  renderResultsTab(c);
 }
 
 // Renders the optional "Deep Dive" tab. Only overviews that expose a `deepDive`

@@ -391,12 +391,22 @@ Never assume `fq+1` is the quarter you happen to be working on; check.
 - **YoY is NOT in this sheet.** It carries forward estimates only, no prior-year actuals. Leave
   `yoy` out rather than deriving it from rounded prose in a transcript (that is fake precision, §4b).
   `cpFmtC` renders the cell fine without it.
-- **Reconcile the row against itself before shipping it.** Sum the segment KPIs and check the
-  residual against known actuals; check the sequential step against last quarter's print; check the
-  implied margins. A mean-of-N-analysts line can disagree with the other means in its own row. When
-  one does, still hardcode what the export says (golden rule: Bloomberg only, never our own number
-  dressed as consensus) — but attach a **caveat pop-up** (`note`) saying exactly what does not tie,
-  so nobody presents it as verified. That is what the `?` affordance is for.
+- **NEVER do arithmetic across the lines of a row. This is the trap.** Every cell is a mean over a
+  **different set of contributors** — some analysts submit only a total, others break the quarter out
+  by segment — so the lines do not share a denominator. Consequences, all of them counter-intuitive
+  the first time:
+  - the total is **not** the sum of the parts (Search + Cloud need not fit inside revenue);
+  - a margin computed by dividing one cell into another is **not a number anybody forecast**;
+  - a quarterly line and an annual line for the same metric come from different samples too, so a
+    "compounding balance that goes down" is a sampling artifact, not an error.
+
+  None of that means the data is broken. **Dani's ruling, verbatim:** *"no se supone realmente que
+  debas sumar o restar esos valores, no te dirá nada realmente."* Read each line against **its own**
+  history and its own reported actual — revenue vs the revenue print, Cloud vs the Cloud print — and
+  never against its siblings. A thin sample (a KPI with one or two contributors) is worth a
+  **caveat pop-up** saying so; a failure to cross-foot is not, because it was never supposed to foot.
+  This paragraph exists because the first build of this section got it backwards and shipped a
+  scary "this does not reconcile" warning on a perfectly good revenue cell.
 
 ## 6b. The three action bands — how highlights are grouped
 

@@ -1,0 +1,29 @@
+/* results.css — standardized "Results" tab (actuals vs Summit / consensus / guidance) */
+
+.rs-wrap { max-width: 980px; }
+
+/* Quarterly / Annual view toggle */
+.rs-toprow { display: flex; align-items: center; gap: 14px; margin: 2px 0 14px; }
+.rs-views { display: inline-flex; border: 1px solid var(--bdr); border-radius: 8px; overflow: hidden; }
+.rs-view {
+  appearance: none; border: 0; background: var(--w); color: var(--mu);
+  font: 600 12px 'Inter', sans-serif; padding: 7px 16px; cursor: pointer;
+  border-right: 1px solid var(--bdr);
+}
+.rs-view:last-child { border-right: 0; }
+.rs-view:hover { color: var(--navy); }
+.rs-view.active { background: var(--navy); color: #fff; }
+
+/* Detail table */
+.rs-tablewrap { overflow-x: auto; margin: 18px 0 10px; }
+.rs-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.rs-table th {
+  text-align: right; font-size: 10.5px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--mu); padding: 7px 10px; border-bottom: 1px solid var(--bdr);
+}
+.rs-table th:first-child { text-align: left; }
+.rs-table td { padding: 7px 10px; border-bottom: 1px solid var(--ice); white-space: nowrap; }
+.rs-table td:first-child { font-weight: 600; color: var(--navy); }
+.rs-num { text-align: right; font-variant-numeric: tabular-nums; }
+.rs-act { font-weight: 600; color: var(--navy); }
+.rs-table tbody tr:hover { background: var(--pale); }

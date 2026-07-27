@@ -1,4 +1,4 @@
-# Call Prep — THE complete convention (build + call interpretation, v2.5 · Jul 2026)
+# Call Prep — THE complete convention (build + call interpretation, v2.6 · Jul 2026)
 
 **This is the single source of truth for everything earnings-call related**: how calls are
 ANALYZED (the rules, the detection protocol, the regression tests), how they are STORED (the
@@ -11,13 +11,26 @@ Bloomberg numbers export, and optionally (d) SPLC / Summit expectations** — an
 with no other context, builds everything from ONE prompt: **"arma el Call Prep de \<TICKER\>"**
 (or refreshes with "integra el nuevo call de \<TICKER\>"). If a step is ambiguous, fix THIS doc.
 
-**Reference implementations:** `js/overviews/googl.js` is canonical for **v2.5** (the `WL_ROWS`
+**Reference implementations:** `js/overviews/googl.js` is canonical for **v2.6** (the `WL_ROWS`
 Watch-List table, §6f, and the stripped Setup); `js/overviews/ibkr.js` is canonical for **v2.4** and
 still carries the nested `watchList` shape. Copy the Setup / Post-Results / Post-Call machinery from
 either — they are identical there — but take the **Watch List from `googl.js`**. `ibkr.js` was
 migrated from v1 (standalone Promise Tracker, single-estimate setup, no quarter selector) to the full
 v2.2 machinery **and** the v2.3 fusion on 2026-07-24. Each overview file owns its own copy of the
-Call Prep renderers, so v2.5 landing on GOOGL changed nothing for the other companies.
+Call Prep renderers, so v2.5/v2.6 landing on GOOGL changed nothing for the other companies.
+
+**What v2.6 changed:** the Watch List got cut back to the four things that are actually ours.
+`why` is renamed **`definition`** — what the theme *means*, in our words — and it now renders on the
+card instead of hiding in a pop-up. Three columns were **dropped entirely**: `tell` (the 🔎 standing
+read), `trigger` (the validate/invalidate condition) and `cons` (the Street line). They were the
+model's voice wearing our clothes; the text survives in git history and in `docs/calls/<TICKER>.md`,
+which is where it came from. The cards also **stopped being numbered** — a visible 1–5 goes stale the
+instant a theme is removed, and renumbering the survivors implies a re-ranking nobody did. `rank`
+lives on as a pure sort key. And the table's **"refresh" button is gone**: it could never do anything
+(the table already rebuilds on every edit), so it only ever read as broken. In its place is a live
+counter — `20 rows · 5 open hooks · live` — which *does* move, and is the actual proof the table
+tracked the edit. Knock-on: the Post-Results scorecard badge went from `WATCH #4` to `ON THE LIST`,
+because the number it pointed at no longer exists on any card; which theme it was is now the tooltip.
 
 **What v2.5 changed, and why (read §6f before touching a Watch List):** the Watch List had drifted
 into being **an LLM output**, and it is the one place in the tab that must not be. Post-Results and
@@ -202,7 +215,7 @@ failed — you will not be standing next to the person reading it.
 Concretely, this bans:
 
 - **Bare symbols.** A circled `①`, a `↩`, a `→`, a lone `⚑` communicates nothing on arrival. Write
-  the words: `WATCH #1`, `left open by Q1 2026`, `became Q2 2026 Watch item #4`.
+  the words: `ON THE LIST`, `left open by Q1 2026`, `became a Q2 2026 Watch item`.
 - **Compressed jargon.** `3q open` is not a label; `unreconciled 3 quarters` is.
 - **Legends buried at the bottom.** If a section uses any chip or badge, a `.cp-legend` block sits
   ABOVE the content, not in the footnote. The first time a mark appears, its meaning is already on
@@ -241,7 +254,7 @@ just means the line was not one of those five — every line below is covered."*
 
 **The rule, generalised — the asymmetric-badge principle:**
 
-> A badge may assert a **positive** fact about our work (`WATCH #1` = we flagged this as contested
+> A badge may assert a **positive** fact about our work (`ON THE LIST` = we flagged this as contested
 > before the print). Its **absence must never assert a negative** one. If a reader could construe
 > the empty state as "the desk missed this," "nobody covered it," or "we had no view," the empty
 > state renders blank and the legend defuses it in words.
@@ -320,8 +333,8 @@ its frozen pre-call blocks NEXT TO its post-mortem (the calibration record).
 | Phase | Content per quarter |
 |---|---|
 | **Setup** | *Upcoming quarter:* 4 **headline** metrics (mandatory, every company: **Revenue · Operating income · EPS · EBITDA**) + 4 **custom KPIs** (per-company, agreed with Dani), each with **Street** (Bloomberg) and **Summit** estimates behind a **Consensus ⇄ Summit ⇄ Both** toggle; caveat pop-ups (`cpQ`) on numbers with a trap; then **the debate** — what it establishes going in: the Street-vs-Summit disparity rows when both estimate sets exist, and the **dark synth box** carrying *the one thing to resolve*. **(v2.5 — retired)** the "setup, in one picture" pair (*what the tape fears* / *what consensus actually models*), the mechanism chips, and the gray to-fill placeholder under the debate heading are **gone**. The previa is no longer a separate block: the debate box IS the going-in read. *Reported quarters:* the FROZEN pre-call view (what was priced in + the one-liner). |
-| **Watch List** | **v2.5 — the list is OURS, and it is a table (§6f).** Post-Results and Post-Call let the model run; the Watch List does not. We decide what earns a slot and what the model failed to detect. Rows live in a flat **`WL_ROWS`** table, not nested per quarter, and each carries: `theme` · `tags[]` · `why` (required, in our words) · `tell` 🔎 (optional) · **`trigger`** (optional — the metric/event that validates or invalidates the thesis; **empty ⇒ no chip is rendered**) · **`trackSince` / `trackUntil`** (the hook window — *empty `trackUntil` means still open*). The **live quarter's list is exactly the open hooks**; we open and close them by hand. A **tag bar** filters **ACROSS quarters** (flat view, quarter chip per card); a **tracking-window segment** (All · Open hooks · Closed) filters by hook state. **"+ Add theme"** opens a form that picks tags from the existing vocabulary **and creates new ones inline** — a new tag is appended to the filter bar, available to every theme from then on. Cards on the live quarter carry **✎ edit / ✕ delete** (edit is how a hook gets closed: fill *Tracking until*); frozen quarters are read-only history. Promise-type items live here (silence is a signal). **`seededBy`** still renders as `left open by Q2 2026` — or `⚑ trigger fired in Q2 2026` (was "red-line tripped"). **v2.3 — the fused theme record:** below everything, the Watch List phase renders **"The theme record"** — the full `<TICKER>_THEMES` compendium (By theme ⇄ By quarter, status chips with age), under a labelled divider. This is the former standalone *Earnings Calls* tab, folded in so there is ONE home for theme-tracking (nothing lost). |
-| **Post-Results** | **the red-line check FIRST** (it is the most falsifiable thing in the tab — tripped lines sort to the top, with a `⚑ n tripped` / `✓ all held` counter in the header) + **the scorecard**, ordered **biggest-surprise first, never release order**, each row carrying a `WATCH #n` badge when it was on the frozen list (blank otherwise — Rule D) and a **word-chip** for surprise (Rule H) + a `.cp-legend` above it (Rule L) + "what the numbers tee up for the call" + price reaction. |
+| **Watch List** | **v2.6 — the list is OURS, and it is a table (§6f).** Post-Results and Post-Call let the model run; the Watch List does not. We decide what earns a slot and what the model failed to detect. Rows live in a flat **`WL_ROWS`** table, not nested per quarter, and each carries only what is ours: `theme` · `tags[]` · **`definition`** (required — what the theme *means*, in our words; renders on the card) · **`trackSince` / `trackUntil`** (the hook window — *empty `trackUntil` means still open*). The **live quarter's list is exactly the open hooks**; we open and close them by hand. **Cards are NOT numbered** — `rank` is sort order only, so removing a theme never leaves a stale 1–5. A **tag bar** filters **ACROSS quarters** (flat view, quarter chip per card); a **tracking-window segment** (All · Open hooks · Closed) filters by hook state. **"+ Add theme"** opens a form that picks tags from the existing vocabulary **and creates new ones inline** — a new tag is appended to the filter bar, available to every theme from then on. Cards on the live quarter carry **✎ edit / ✕ delete** (edit is how a hook gets closed: fill *Tracking until*); frozen quarters are read-only history. Below the cards sits **the table** — the storage view, with a live counter and COPY / copy-JSON (§6f). Promise-type items live here (silence is a signal). **`seededBy`** renders as `left open by Q2 2026` — or `⚑ thesis line broke in Q2 2026`. **v2.3 — the fused theme record:** below everything, the Watch List phase renders **"The theme record"** — the full `<TICKER>_THEMES` compendium (By theme ⇄ By quarter, status chips with age), under a labelled divider. This is the former standalone *Earnings Calls* tab, folded in so there is ONE home for theme-tracking (nothing lost). |
+| **Post-Results** | **the red-line check FIRST** (it is the most falsifiable thing in the tab — tripped lines sort to the top, with a `⚑ n tripped` / `✓ all held` counter in the header) + **the scorecard**, ordered **biggest-surprise first, never release order**, each row carrying an `ON THE LIST` badge when it was on the frozen Watch List, with the theme named in its tooltip (blank otherwise — Rule D; v2.6 dropped the `#n`, which pointed at a rank the cards no longer show) and a **word-chip** for surprise (Rule H) + a `.cp-legend` above it (Rule L) + "what the numbers tee up for the call" + price reaction. |
 | **Post-Call** | take + insight-first highlights **grouped into three action bands** (§6b) with an `open` chip on anything management left unanswered + the connect-the-dots line + **`threeMinutes` — the spoken deliverable** (§6c) with `notBringing` + `newQuestions` rendered with **where each one landed** (`became Q2 2026 Watch item #4`), closing the chain. |
 
 **Dissolved (never build these as standalone tabs for any company):**
@@ -448,7 +461,7 @@ exists so an IR event slots into the same tab with the same discipline when it d
 
 ---
 
-## 6f. The Watch List is a TABLE, and it is ours (v2.5 · Jul 2026)
+## 6f. The Watch List is a TABLE, and it is ours (v2.5–v2.6 · Jul 2026)
 
 The problem v2.5 fixes: the Watch List had become **too AI-dependent**. Post-Results and Post-Call
 *should* give the model free rein — extracting what a print and a transcript actually said is
@@ -462,18 +475,21 @@ that*. So the Watch List stopped being a model output and became **our table**.
 |---|---|---|
 | `id` | ✓ | stable row key (the future primary key) |
 | `q` | ✓ | the quarter list this row belongs to — the frozen record |
-| `rank` | ✓ | 1..n inside the quarter (`'+'` for rows added in-session) |
+| `rank` | ✓ | **sort order only — NEVER rendered.** The cards carry no numbers, so deleting a theme cannot leave a stale 1–5 behind or imply a re-ranking nobody did. New rows take the next free slot; survivors are never renumbered. |
 | `theme` | ✓ | the thing to hunt |
 | `tags[]` | ✓ | kebab-case theme tags; they ARE the cross-quarter filter vocabulary |
-| `why` | ✓ | why it is relevant — **ours, in our words** |
-| `tell` | | the standing read 🔎 — what to actually watch for |
-| `trigger` | | the metric/event that would validate or invalidate the thesis (ex-`breaks` / "Breaks if…"). **Empty ⇒ no chip is rendered at all.** |
+| `definition` | ✓ | what the theme **means** — ours, in our words. Renders on the card. (Was `why`.) |
 | `trackSince` | | the quarter the hook opened |
 | `trackUntil` | | the quarter the hook closed. **EMPTY MEANS STILL OPEN.** |
-| `cons` | | the Street line, when there is one (Bloomberg only) |
 | `seededBy` | | `{q,n,tripped}` — the prior call's open question that put it here |
-| `src` | | grounding: why it earned a slot |
-| `thread[]` | | `[{q,n}]` the quarter-by-quarter evolution |
+| `src` | | grounding: why it earned a slot (pop-up) |
+| `thread[]` | | `[{q,n}]` the quarter-by-quarter evolution (pop-up) |
+
+**Dropped in v2.6 — do not reintroduce them:** `tell` (the 🔎 standing read), `trigger` (the
+validate/invalidate condition, itself the v2.5 rename of `breaks` / "Breaks if…") and `cons` (the
+Street line). Each was the model's judgement dressed as ours. What a print or a transcript actually
+said belongs in **Post-Results / Post-Call**, where the model is supposed to run; the Watch List
+carries only what we decided. The removed text is in git history and in `docs/calls/<TICKER>.md`.
 
 **The hook window is the filtering system.** The Watch List is pre-call, so **the live quarter's
 list is exactly the rows with a `trackSince` and no `trackUntil`**. Nothing derives it automatically
@@ -495,13 +511,18 @@ the loop that works is:
 > into a sheet) or **copy JSON** (exact) → paste it back to Claude → it gets hardcoded into
 > `WL_ROWS` in a commit.
 
+There is deliberately **no "refresh" button**. The table rebuilds on every add / edit / delete, so a
+refresh could never change anything — it existed only to look reassuring, and read as broken instead.
+The header carries a live counter (`20 rows · 5 open hooks · live`) which actually moves; that is the
+honest signal that the table tracked the edit (Rule H — never render nothing as if it were something).
+
 Not the most efficient loop, but it lets us author and *see* the list now instead of waiting on the
 database. When the Supabase work is picked up, the shape is already right: the columns above map 1:1
 to a `call_prep_watchlist` table (one row per theme per quarter, `id` as PK, `tags` as `text[]`,
-`track_since` / `track_until` nullable), reachable through `js/api.js` like every other table — no
+`definition` as `text not null`, `rank` as `int` (sort only), `track_since` / `track_until` nullable), reachable through `js/api.js` like every other table — no
 render changes required, only the data source.
 
-**Scope.** v2.5 is live on **GOOGL** (`js/overviews/googl.js`). IBKR / V / MA / RELY / META still
+**Scope.** v2.6 is live on **GOOGL** (`js/overviews/googl.js`). IBKR / V / MA / RELY / META still
 carry the v2.4 nested `watchList` shape and keep working unchanged — each overview file owns its own
 copy of the Call Prep renderers. Retrofit them when their next cycle is built; do not do it blind.
 
@@ -542,19 +563,18 @@ var CALL_PREP = { ticker:'XXXX', quarters:[
 // v2.5 — the Watch List: ONE flat table, not nested per quarter (§6f). Ours to author, editable
 // from the portal in-session, copy-able back out for hardcoding. Supabase = pending assignment.
 var WL_ROWS=[
-  { id:'wl001', q:'Qx 20xx', rank:1,
+  { id:'wl001', q:'Qx 20xx',
+    rank:1,                       // SORT ONLY — never rendered (no numbers on the cards)
     theme:'…',                    // what we are hunting
     tags:['capex','cloud'],       // vocabulary of the filter bar; new tags can be created inline
-    why:'…',                      // REQUIRED — why it is relevant, in OUR words
-    tell:'…',                     // optional — the standing read 🔎
-    trigger:'…',                  // optional — validates/invalidates the thesis; empty ⇒ no chip
+    definition:'…',               // REQUIRED — what the theme means, in OUR words; shows on the card
     trackSince:'Qx 20xx',         // hook opened
     trackUntil:null,              // hook closed; NULL = STILL OPEN ⇒ it is on the live list
-    cons:'…',                     // optional — the Street line (Bloomberg only)
     seededBy:{ q, n, tripped? },  // optional — WHY it is on the list (§6d)
-    src:'…',                      // optional — why it earned a slot
-    thread:[{q,n},…] },           // optional — the quarter-by-quarter evolution
+    src:'…',                      // optional — why it earned a slot (pop-up)
+    thread:[{q,n},…] },           // optional — the quarter-by-quarter evolution (pop-up)
 ];
+// v2.6 removed `tell`, `trigger` and `cons` — see §6f. Do not reintroduce them.
 function wlFor(qLabel, openOnly){ /* rows for a quarter; live quarter passes openOnly=true */ }
 
 // The theme record (rendered inside the Call Prep Watch List, v2.3) — status carries its age (§6):
@@ -629,18 +649,24 @@ CSS classes that carry meaning (port with the functions): `.cp-legend`/`.cp-lege
       pop-ups on trap numbers; **the debate box renders the one-thing-to-resolve** (`debate.synth`);
       **NO fear/consensus pair, NO mechanism chips, NO gray placeholder** (all retired in v2.5).
 - [ ] Watch List stored as the flat **`WL_ROWS`** table (§6f) — not nested inside `quarters`; every
-      row has `id`+`q`+`rank`+`theme`+`tags`+`why`; `trigger` present where there is a real
-      validate/invalidate condition and **absent (no chip) where there is not**; every row has a
-      `trackSince`, and **the live quarter renders open hooks only** (no `trackUntil`).
+      row has `id`+`q`+`rank`+`theme`+`tags`+`definition`; **no row carries `tell` / `trigger` /
+      `cons`** (dropped in v2.6); every row has a `trackSince`, and **the live quarter renders open
+      hooks only** (no `trackUntil`).
+- [ ] **Cards carry NO numbers** — no rank badge anywhere; `rank` is sort order only, and a new row
+      takes the next free slot without renumbering the survivors. The Post-Results badge reads
+      **`ON THE LIST`**, never `WATCH #n` (the number would point at nothing).
+- [ ] `definition` renders **on the card** and is NOT repeated inside the pop-up; the pop-up carries
+      `seededBy` + `src` + `thread` only.
 - [ ] Watch List authoring works from the portal: **"+ Add theme"** with a tag picker **and inline
       tag creation** (new tag appears in the filter bar); **✎ edit / ✕ delete on the live quarter
       only**; frozen quarters read-only; tracking-window filter (All · Open · Closed) works.
-- [ ] **The table at the bottom renders every row and its COPY / copy-JSON buttons work** — that is
-      the only persistence path until the Supabase assignment lands (§6f).
+- [ ] **The table at the bottom renders every row, its live counter moves on every edit, and COPY /
+      copy-JSON work** — that is the only persistence path until the Supabase assignment lands (§6f).
+      **No "refresh" button** (it could only ever be a no-op).
 - [ ] Tag bar still filters **across quarters** (flat view w/ quarter chips; clear/quarter-pick
       returns to per-quarter); promises embedded (no standalone tab).
-- [ ] **No black slabs inside the watch cards** — the tell 🔎 box is the friendly brand-tinted
-      panel, not `#10141A` (the dark box survives only as the Setup debate box and the Post-Call take).
+- [ ] **No black slabs inside the watch cards** — no `.cp-w*` rule uses `#10141A`. The dark box
+      survives only as the Setup debate box (`.cp-synth`) and the Post-Call take (`.cp-take`).
 - [ ] Watch List items that descend from a prior call carry **`seededBy`**, rendered in words.
 - [ ] **Post-Results:** red-line check renders **above** the scorecard with its tripped counter;
       scorecard sorted **biggest-surprise first**; every row has `surprise`; `watchRank` present

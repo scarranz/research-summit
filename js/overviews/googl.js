@@ -425,32 +425,40 @@ var CALL_PREP = {
     //   G:\My Drive\Summit\Docs\0\Consensus_Portal.xlsm · sheet BBG_CONSENSUS · row 216
     //   (GOOGL US EQUITY) · snapshot 2026-07-27 14:13:21 · after_quarter = "2026 Q2 (Rep)",
     //   so the sheet's `fq+1` column IS this quarter ("2026 Q3 (Fwd)").
-    // All figures are USD, scale M in the sheet → divided by 1,000 for $B here. YoY is NOT filled:
-    // the sheet carries forward estimates only (no prior-year actuals), and Q3 2025 absolutes are
-    // not in the repo — deriving them from rounded transcript prose ("our first-ever $100 billion
-    // quarter") would be fake precision. Fill YoY when an actuals column exists.
+    // All figures are USD, scale M in the sheet → divided by 1,000 for $B here.
+    //
+    // YoY comes from the SNAPSHOT export, G:\My Drive\Summit\Docs\0\BBG_CONSENSUS.txt — 12
+    // historical consensus snapshots of THIS SAME quarter, one per `data_as_of` date. Each row
+    // holds the target period fixed at 2026 Q3 and moves the vantage point, so the file is a
+    // revision series, not 12 quarters. Its `fq-3` column lands exactly 4 fiscal quarters before
+    // `fq+1` — i.e. Q3 2025 (Rep) — which is the YoY base used below; `fq0` (Q2 2026 Rep) is the
+    // QoQ base. Cross-check: the latest snapshot's `rev_fq0` is $119.8B, matching the Q2 2026
+    // revenue actual already hardcoded in this file.
+    //
+    // NOT filled: QoQ. On EPS it would read −67%, because Q2 2026 printed $9.11 carrying $99B of
+    // one-off securities gains. A comparison that broken is worse than no comparison.
     // The four customs follow the sheet's own KPI set (kpi1–kpi4), which tracks
     // Cloud · backlog · Search · capex — backlog REPLACED YouTube ads vs the earlier draft.
     { q:'Q3 2026', status:'upcoming', date:'late October 2026 (date TBC)',
       setup:{
-        source:'Bloomberg (BST) — Consensus_Portal.xlsm · BBG_CONSENSUS · Summit — to fill', asOf:'2026-07-27',
+        source:'Bloomberg (BST) — Consensus_Portal.xlsm · YoY from the BBG_CONSENSUS.txt snapshot series · Summit — to fill', asOf:'2026-07-27',
         headline:[
-          { k:'Revenue', cons:{v:110.0,unit:'$B'}, us:null,
+          { k:'Revenue', cons:{v:110.0,yoy:7,unit:'$B'}, us:null,
             note:{ t:'Do not reconcile this against the segment lines', h:'<p>Every cell here is a <b>mean over a different set of analysts</b>. Some contributors submit only a total-revenue estimate; others break the quarter out by segment. So the lines in this grid do not share a denominator: revenue is a mean of <b>29</b> estimates, operating income <b>49</b>, EBITDA <b>36</b>, EPS <b>50</b>.</p><p><b>What follows from that:</b> the total is <i>not</i> the sum of the parts, and a margin computed by dividing one cell into another is not a number anybody actually forecast. Search $64.8B + Cloud $27.8B does not have to fit inside revenue $110B, and it does not mean either figure is wrong.</p><p><b>The right way to read the grid:</b> each line against <i>its own</i> history and its own actual — revenue vs the revenue print, Cloud vs the Cloud print. Never across lines.</p>' } },
-          { k:'Operating income', cons:{v:42.7,unit:'$B'}, us:null },
-          { k:'EPS (diluted)', cons:{v:3.01,unit:'$'}, us:null,
+          { k:'Operating income', cons:{v:42.7,yoy:37,unit:'$B'}, us:null },
+          { k:'EPS (diluted)', cons:{v:3.01,yoy:5,unit:'$'}, us:null,
             note:{ t:'Which EPS this is', h:'<p>Bloomberg field <code>IS_COMP_EPS_GAAP</code> — comparable GAAP EPS, 50 contributors.</p><p><b>Context worth carrying:</b> the same export shows FY2026 at <b>$19.28</b> and FY2027 <i>lower</i>, at <b>$14.97</b>. That is not a forecast of decline — FY26 is inflated by Q2 2026\'s <b>$99.0B of one-off securities gains</b> (+$6.26 to EPS). FY27 is the clean base. Same lesson as the Q2 print: read the operating line.</p>' } },
-          { k:'EBITDA', cons:{v:58.6,unit:'$B'}, us:null },
+          { k:'EBITDA', cons:{v:58.6,yoy:36,unit:'$B'}, us:null },
         ],
         // Customs = the sheet's kpi1–kpi4 for GOOGL (segment codes: SEG0000344781 = Google Cloud,
         // SEG0000344782 = Google Search). Both segment mappings cross-check against reported
         // actuals: Cloud $27.8B vs $24.8B in Q2 2026, Search $64.8B vs $63.27B — both plausible.
         custom:[
-          { k:'Google Cloud', cons:{v:27.8,unit:'$B'}, us:null },
-          { k:'Search & other', cons:{v:64.8,unit:'$B'}, us:null },
-          { k:'Cloud backlog (RPO)', cons:{v:532.4,unit:'$B'}, us:null,
+          { k:'Google Cloud', cons:{v:27.8,yoy:83,unit:'$B'}, us:null },
+          { k:'Search & other', cons:{v:64.8,yoy:15,unit:'$B'}, us:null },
+          { k:'Cloud backlog (RPO)', cons:{v:532.4,yoy:238,unit:'$B'}, us:null,
             note:{ t:'A balance, not a flow — and a very thin sample', h:'<p>Bloomberg field <code>BS_REMAINING_PERFORMANCE_OBLIG</code>, a <b>balance-sheet</b> line: total remaining performance obligations, not quarterly revenue. Against Q2 2026\'s reported <b>$514B</b>, consensus has it reaching <b>$532.4B</b> — another +$18B of net book-building while the quarter converts revenue out of the book.</p><p><b>Read it as directional only:</b> a <b>single contributor</b> stands behind this quarterly figure. The export\'s annual backlog line comes from a different (and also thin) set of analysts, so the two are not comparable to each other — only to the reported balance.</p>' } },
-          { k:'Capex', cons:{v:54.5,unit:'$B'}, us:null,
+          { k:'Capex', cons:{v:54.5,yoy:128,unit:'$B'}, us:null,
             note:{ t:'Sign flipped from the source field', h:'<p>Bloomberg field <code>CF_PURCHASE_OF_FIXED_PROD_ASSETS</code> is a cash <b>outflow</b>, so the export carries it negative (−$54,507M). Shown here as a positive magnitude, matching how the guide and every prior quarter are quoted.</p><p><b>The read:</b> $54.5B in one quarter against Q2 2026\'s $44.9B — consensus already has the ladder stepping up again, consistent with the FY26 $195–205B guide.</p>' } },
         ],
         // The debate — what it establishes going in. (The fear/consensus split and the mechanism

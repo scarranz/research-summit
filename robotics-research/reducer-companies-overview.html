@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nabtesco &amp; Harmonic Drive — The Two Owners of the Chokepoint — Summit Research</title>
+<style>
+:root{
+  --navy:#1E2733; --blue:#2C3E54; --steel:#3E5A82; --mid:#7C8694;
+  --ice:#EEF1F5; --pale:#F4F6F9; --surface:#F6F7F9; --w:#FFFFFF;
+  --text:#1E2733; --mu:#8A93A0; --bdr:#E7EAEE;
+  --pos:#16A34A; --neg:#DC2626; --accent:#2563EB;
+  --posbg:#E6F3EC; --negbg:#FAEEEE; --accbg:#EAF0FE;
+  --warn:#C2410C; --warnbg:#FEF1E6;
+  --hd:#2563EB; --nb:#0E7490; --tkr:#B91C1C; --cn:#C2410C;
+}
+*,*::before,*::after{box-sizing:border-box; margin:0; padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',-apple-system,system-ui,sans-serif; background:var(--surface); color:var(--text);
+  font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased; letter-spacing:-0.005em; line-height:1.55}
+
+.topbar{position:sticky; top:0; z-index:40; background:rgba(255,255,255,.85); backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--bdr); display:flex; align-items:center; justify-content:space-between; padding:12px 26px}
+.brand{display:flex; align-items:center; gap:11px}
+.brand-mk{width:30px; height:30px; border-radius:8px; background:var(--navy); display:flex; align-items:center; justify-content:center; font-size:16px}
+.brand-t{font-size:14px; font-weight:600; letter-spacing:-.01em}
+.brand-s{font-size:11px; color:var(--mu)}
+.badge-local{font-size:10px; letter-spacing:.5px; text-transform:uppercase; font-weight:600; color:var(--steel); background:var(--ice); padding:4px 10px; border-radius:20px}
+.wrap{max-width:1180px; margin:0 auto; padding:26px 26px 70px}
+
+.bnr{background:var(--navy); border-radius:16px; padding:26px 32px; margin-bottom:22px; position:relative; overflow:hidden}
+.bnr::before{content:''; position:absolute; right:-60px; top:-60px; width:260px; height:260px; border-radius:50%; background:rgba(46,95,147,.25)}
+.bnr::after{content:''; position:absolute; right:90px; bottom:-90px; width:200px; height:200px; border-radius:50%; background:rgba(37,99,235,.14)}
+.bnr-in{position:relative; z-index:1}
+.bnt{font-size:22px; font-weight:600; color:#fff; margin-bottom:9px; letter-spacing:-.01em}
+.bnb{font-size:13px; color:var(--ice); line-height:1.7; max-width:880px}
+.bnb strong{color:#fff; font-weight:500}
+.bnr-meta{display:flex; gap:26px; margin-top:16px; flex-wrap:wrap}
+.bnr-meta div{font-size:11px; color:var(--mid)}
+.bnr-meta b{display:block; color:#fff; font-size:15px; font-weight:600; margin-top:2px}
+
+.tabs{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px}
+.tab{display:flex; align-items:center; gap:8px; padding:9px 15px; border:1.5px solid var(--bdr); border-radius:22px;
+  background:var(--w); cursor:pointer; font-size:12.5px; color:var(--blue); font-weight:500; font-family:inherit; transition:all .16s}
+.tab:hover{border-color:var(--steel)}
+.tab.on{background:var(--navy); border-color:var(--navy); color:#fff}
+.pane{display:none} .pane.on{display:block}
+
+.sec{margin-bottom:26px}
+.sechdr{display:flex; align-items:baseline; justify-content:space-between; gap:14px; margin-bottom:13px; padding-bottom:8px; border-bottom:1px solid var(--bdr); flex-wrap:wrap}
+.sect{font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--steel); font-weight:600}
+.secn{font-size:11px; color:var(--mu)}
+.card{background:var(--w); border:1px solid var(--bdr); border-radius:14px; padding:20px}
+.lede{font-size:13px; color:var(--mid); max-width:94ch; margin-bottom:16px; line-height:1.7}
+.lede strong{color:var(--navy); font-weight:600}
+
+.ev{font-size:8.5px; font-weight:700; letter-spacing:.3px; text-transform:uppercase; padding:2px 7px; border-radius:20px; background:var(--ice); color:var(--steel); white-space:nowrap}
+.ev.d{background:var(--posbg); color:var(--pos)} .ev.i{background:var(--accbg); color:var(--accent)}
+.ev.c{background:var(--warnbg); color:var(--warn)} .ev.x{background:var(--negbg); color:var(--neg)}
+
+.g2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+.g3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+.g4{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
+.kick{font-size:9.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--steel); font-weight:700; margin-bottom:9px}
+.stat{background:var(--w); border:1px solid var(--bdr); border-radius:14px; padding:16px 18px}
+.stat .big{font-size:26px; font-weight:700; color:var(--navy); letter-spacing:-.02em; line-height:1}
+.stat .lab{font-size:11px; color:var(--mu); margin-top:5px; line-height:1.4}
+.stat p{font-size:11.5px; color:var(--mid); line-height:1.5; margin-top:8px}
+.stat.hd .big{color:var(--hd)} .stat.nb .big{color:var(--nb)}
+.sub{font-size:14px; font-weight:700; color:var(--navy); letter-spacing:-.01em; margin-bottom:5px}
+.p{font-size:12px; color:var(--mid); line-height:1.6}
+.p strong{color:var(--navy); font-weight:600}
+
+.stage{background:var(--w); border:1px solid var(--bdr); border-radius:14px; padding:16px; box-shadow:0 1px 2px rgba(30,39,51,.04)}
+.stage svg{width:100%; height:auto; display:block}
+.stage-t{font-size:13px; font-weight:700; color:var(--navy); margin-bottom:2px}
+.stage-s{font-size:11px; color:var(--mu); margin-bottom:10px}
+
+.callout{background:var(--navy); border-radius:14px; padding:20px 24px; margin:14px 0}
+.callout .kick{color:#93C5FD}
+.callout p{font-size:13px; color:#fff; line-height:1.7}
+.callout p strong{color:#fff; font-weight:700}
+.note{border-radius:12px; padding:14px 16px; border:1px solid; margin:12px 0}
+.note h5{font-size:12.5px; font-weight:700; margin-bottom:4px}
+.note p{font-size:12px; line-height:1.6}
+.note.pos{background:var(--posbg); border-color:#BBE3CB; color:#166534} .note.pos p{color:#1a5c37}
+.note.neg{background:var(--negbg); border-color:#F2C9C6; color:#991B1B} .note.neg p{color:#7f1d1d}
+.note.acc{background:var(--accbg); border-color:#C9DAFB; color:#1d4ed8} .note.acc p{color:#1e40af}
+.note.warn{background:var(--warnbg); border-color:#F5D5B0; color:#9A3412} .note.warn p{color:#7c2d12}
+
+/* vs table */
+.vs{display:grid; grid-template-columns:158px 1fr 1fr 74px; border:1px solid var(--bdr); border-radius:14px; overflow:hidden; background:var(--w)}
+.vs>div{padding:11px 14px; border-top:1px solid var(--pale); font-size:12px; line-height:1.5}
+.vs>.vh{border-top:none; font-weight:700; font-size:13.5px; color:#fff; padding:12px 14px}
+.vs .vk{font-size:9.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--mu); font-weight:700; background:var(--pale)}
+.vs .vw{text-align:center; font-size:10px; font-weight:800; letter-spacing:.03em}
+.vs .win{font-weight:600}
+
+/* firm cards */
+.firm{border:1px solid var(--bdr); border-radius:14px; overflow:hidden; background:var(--w)}
+.firm-h{padding:13px 16px; color:#fff; display:flex; align-items:center; gap:9px; flex-wrap:wrap}
+.firm-h .fn{font-size:15px; font-weight:700; letter-spacing:-.01em}
+.firm-h .ft{font-size:10px; opacity:.9; background:rgba(255,255,255,.18); padding:2px 7px; border-radius:5px; font-family:ui-monospace,Consolas,monospace}
+.firm-b{padding:6px 16px 14px}
+.frow{display:grid; grid-template-columns:96px 1fr; gap:12px; padding:9px 0; border-top:1px solid var(--pale); align-items:baseline}
+.frow:first-child{border-top:none}
+.fk{font-size:9.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--mu); font-weight:700}
+.fv{font-size:12px; color:var(--mid); line-height:1.5} .fv b{color:var(--navy); font-weight:600}
+.beta{display:inline-flex; gap:5px; align-items:center; font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px}
+.beta.hi{background:var(--negbg); color:var(--neg)} .beta.mid{background:var(--warnbg); color:var(--warn)} .beta.lo{background:var(--posbg); color:var(--pos)}
+
+/* ladder */
+.ladder{border:1px solid var(--bdr); border-radius:14px; overflow:hidden}
+.rung{display:grid; grid-template-columns:132px 1fr 190px; border-top:1px solid var(--pale); background:var(--w)}
+.rung:first-child{border-top:none}
+.rung-l{padding:15px 14px; color:#fff; display:flex; flex-direction:column; justify-content:center; gap:3px}
+.rt{font-size:13px; font-weight:800; letter-spacing:-.02em} .rp{font-size:9.5px; opacity:.85}
+.rung-r{padding:13px 16px}
+.rq{font-size:12px; color:var(--mid); line-height:1.55} .rq b{color:var(--navy)}
+.rung-x{padding:13px 14px; border-left:1px solid var(--pale); display:flex; flex-direction:column; gap:5px; justify-content:center}
+.mini{display:flex; align-items:center; gap:7px; font-size:10px; color:var(--mu)}
+.mini b{color:var(--navy); font-weight:700; font-size:10.5px}
+.dots{display:flex; gap:3px}
+.dot{width:9px; height:9px; border-radius:50%; background:var(--ice)}
+
+/* bar rows */
+.scw{display:grid; gap:9px}
+.scr{display:grid; grid-template-columns:196px 1fr 92px; gap:14px; align-items:center}
+.scl{font-size:12px; font-weight:600; color:var(--navy)} .scl small{display:block; font-weight:400; color:var(--mu); font-size:10px}
+.sct{height:20px; background:var(--ice); border-radius:6px; overflow:hidden}
+.scf{height:100%; border-radius:6px}
+.scv{font-size:11px; font-weight:700; text-align:right}
+
+/* link test */
+.lt{border:1px solid var(--bdr); border-radius:14px; overflow:hidden; background:var(--w)}
+.ltr{display:grid; grid-template-columns:34px 1fr 1.15fr; border-top:1px solid var(--pale); align-items:stretch}
+.ltr:first-child{border-top:none}
+.ltm{display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:800}
+.ltm.ok{background:var(--posbg); color:var(--pos)} .ltm.no{background:var(--negbg); color:var(--neg)}
+.ltc{padding:11px 14px; font-size:12px; font-weight:600; color:var(--navy); display:flex; align-items:center}
+.ltw{padding:11px 14px; font-size:11.5px; color:var(--mid); line-height:1.5; border-left:1px solid var(--pale); display:flex; align-items:center}
+.ltw b{color:var(--navy); font-weight:600}
+
+/* simple table */
+.tbl{width:100%; border-collapse:collapse; background:var(--w); border:1px solid var(--bdr); border-radius:14px; overflow:hidden}
+.tbl th{font-size:9.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--mu); font-weight:700; text-align:left; padding:10px 14px; background:var(--pale); border-bottom:1px solid var(--bdr)}
+.tbl td{font-size:12px; color:var(--mid); padding:10px 14px; border-top:1px solid var(--pale); line-height:1.5}
+.tbl td b{color:var(--navy); font-weight:600}
+.tbl td.num{text-align:right; font-variant-numeric:tabular-nums}
+
+.foot{font-size:10.5px; color:var(--mu); line-height:1.7; margin-top:22px; padding-top:14px; border-top:1px solid var(--bdr)}
+.foot b{color:var(--steel)}
+
+@media(max-width:1000px){
+  .g2,.g3,.g4{grid-template-columns:1fr} .g4{grid-template-columns:1fr 1fr}
+  .vs{grid-template-columns:1fr} .vs .vh:first-child{display:none}
+  .rung{grid-template-columns:1fr} .rung-x{border-left:none; border-top:1px solid var(--pale)}
+  .ltr{grid-template-columns:34px 1fr} .ltw{grid-column:2; border-left:none; border-top:1px solid var(--pale)}
+  .scr{grid-template-columns:130px 1fr 60px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mk">🏭</div>
+    <div>
+      <div class="brand-t">Nabtesco &amp; Harmonic Drive — The Two Owners of the Chokepoint</div>
+      <div class="brand-s">Summit Research · Robotics · Reducer Deep-Dive · Light company overviews</div>
+    </div>
+  </div>
+  <div class="badge-local">Local working document</div>
+</div>
+
+<div class="wrap">
+
+  <div class="bnr"><div class="bnr-in">
+    <div class="bnt">Two companies own the toll booth. Buying them is not the same trade twice.</div>
+    <div class="bnb">
+      The technology overview ended at a single conclusion: <strong>no robot OEM makes its own reducer</strong>, and the
+      two mechanisms that matter are owned by two Japanese firms that <strong>split the robot's body rather than compete
+      for it</strong>. This is the high-level read on both — what each company actually <em>is</em> underneath the
+      component, where the earnings really come from, and what you are exposed to when you own it.
+      <strong>Same moat, two completely different risk profiles.</strong>
+    </div>
+    <div class="bnr-meta">
+      <div>Nabtesco — global RV share<b>~60% · 7M+ units</b></div>
+      <div>Harmonic — strain-wave share, 2015 → now<b>~70% → ~24%</b></div>
+      <div>Big-4 OEMs designed-in<b>NB 4 of 4 · HD 1 of 4</b></div>
+      <div>Relative scale (revenue)<b>NB ≈ 5× HD</b></div>
+    </div>
+  </div></div>
+
+  <div class="tabs">
+    <button class="tab on" data-p="both">⚖️ Both, side by side</button>
+    <button class="tab" data-p="nb">🟦 Nabtesco · 6268</button>
+    <button class="tab" data-p="hd">🔵 Harmonic Drive · 6324</button>
+    <button class="tab" data-p="own">🎯 Head-to-head &amp; how to own it</button>
+  </div>
+
+  <!-- ═══════ 1 · BOTH ═══════ -->
+  <section class="pane on" data-p="both">
+    <div class="sec">
+      <div class="sechdr"><div class="sect">The duopoly, in one screen</div><div class="secn">complementary, not rivals</div></div>
+      <div class="lede">They mostly do not bid for the same slot: <strong>Nabtesco owns the heavy proximal joints</strong>
+        (base, shoulder, elbow) with cycloidal RV; <strong>Harmonic owns the fine distal joints</strong> (wrists, fingers,
+        hands) with strain-wave. A robot arm contains both. But as <em>securities</em> they are opposites —
+        <strong>Nabtesco is a diversified industrial that happens to own the toll booth; Harmonic is the toll booth with
+        nothing else attached.</strong></div>
+      <div class="g2">
+        <div class="firm">
+          <div class="firm-h" style="background:var(--nb)"><span class="fn">Nabtesco</span><span class="ft">TSE 6268 · NCTKY</span></div>
+          <div class="firm-b">
+            <div class="frow"><div class="fk">Is</div><div class="fv"><b>RV cycloidal, ~60% global share</b>, 7M+ units shipped, designed-in with <b>all four</b> Big-Four OEMs — inside a four-segment conglomerate.</div></div>
+            <div class="frow"><div class="fk">Earnings</div><div class="fv">Robotics is only <b>~26% of sales</b>; rail brakes, aircraft actuators and automatic doors carry most of the profit.</div></div>
+            <div class="frow"><div class="fk">Cycle</div><div class="fv">Anchor legs damp it — segment op. profit <b>¥24.0B → ¥30.3B</b> across FY22–FY25 through a robotics trough.</div></div>
+            <div class="frow"><div class="fk">Access</div><div class="fv"><b>Real sponsored ADR (NCTKY)</b> — ownable at size from the US.</div></div>
+            <div class="frow"><div class="fk">Humanoid beta</div><div class="fv"><span class="beta mid">MODERATE</span> — diluted by the anchor legs</div></div>
+          </div>
+        </div>
+        <div class="firm">
+          <div class="firm-h" style="background:var(--hd)"><span class="fn">Harmonic Drive Systems</span><span class="ft">TSE 6324 · HSYDF</span></div>
+          <div class="firm-b">
+            <div class="frow"><div class="fk">Is</div><div class="fv"><b>A pure-play on strain-wave.</b> Owns the fine-joint bottleneck. <b>No second line to cushion it.</b></div></div>
+            <div class="frow"><div class="fk">Earnings</div><div class="fv">One business, reported <b>by geography, not product line</b> — so the actuator-vs-component mix cannot be verified from filings.</div></div>
+            <div class="frow"><div class="fk">Cycle</div><div class="fv"><b>Violently cyclical</b> — operating profit ¥13.2B → <b>¥6M</b> → ¥2.57B in four years. Peak-to-trough <b>−99.95%</b>.</div></div>
+            <div class="frow"><div class="fk">Access</div><div class="fv"><b>No ADR.</b> HSYDF is an unsponsored foreign ordinary (~100 shares on a recent day) → the real route is <b>6324 in Tokyo</b>.</div></div>
+            <div class="frow"><div class="fk">Humanoid beta</div><div class="fv"><span class="beta hi">HIGH</span> — and the highest China exposure</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="callout">
+        <div class="kick">The one-line difference</div>
+        <p>Nabtesco gives you the <strong>widest, most designed-in tollbooth in the industry — wrapped in trains and
+        doors that dilute it.</strong> Harmonic gives you <strong>undiluted exposure to the fine joint — and an income
+        statement that went to essentially zero operating profit one year ago.</strong> The ballast you want in a
+        drawdown is the same ballast that caps the upside you're buying the theme for.</p>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><div class="sect">Scale &amp; safety — the gap is larger than the narrative suggests</div><div class="secn">FY25 / FY3-26 basis</div></div>
+      <div class="g4">
+        <div class="stat nb"><div class="big">≈ 5×</div><div class="lab">Nabtesco revenue vs Harmonic</div><p>¥307.9B vs ¥59.6B. The "duopoly" is between very unequal companies.</p></div>
+        <div class="stat nb"><div class="big">4 of 4</div><div class="lab">Big-Four OEMs Nabtesco is designed into</div><p>FANUC, ABB, KUKA, Yaskawa. Harmonic's disclosed OEM customer list reaches <b>FANUC</b>.</p></div>
+        <div class="stat hd"><div class="big">10.3%</div><div class="lab">of Harmonic revenue = Nissan</div><p>vs Harmonic being <b>0.05%</b> of Nissan's COGS. Nabtesco: 74 customers, none above ~5%.</p></div>
+        <div class="stat"><div class="big">IG6 / IG7</div><div class="lab">default grade — NB vs HD</div><p>0.046% vs 0.076%. One notch safer, consistent with the diversification.</p></div>
+      </div>
+      <div class="note acc"><h5>How to read these two together</h5><p>They are not substitutes in a portfolio. <b>Nabtesco is the quality-and-breadth expression</b> of the reducer thesis (own the toll, accept dilution); <b>Harmonic is the high-beta expression</b> (own the theme purely, accept a ~100% earnings swing and a single-country listing). The technology says both are necessary; the financials say they are two different decisions.</p></div>
+    </div>
+  </section>
+
+  <!-- ═══════ 2 · NABTESCO ═══════ -->
+  <section class="pane" data-p="nb">
+    <div class="sec">
+      <div class="sechdr"><div class="sect">Nabtesco — the widest toll booth, inside a conglomerate</div><div class="secn">TSE 6268 · sponsored ADR NCTKY</div></div>
+      <div class="lede">Heir to the <strong>Teijin Seiki</strong> cycloidal lineage, Nabtesco makes the RV reducer that
+        carries the heavy joints of essentially every industrial robot on earth — <strong>~60% global share, 7M+ units,
+        designed-in with all four Big-Four OEMs.</strong> The complication is everything else it owns: three other
+        segments that produce most of the profit.</div>
+      <div class="g4">
+        <div class="stat nb"><div class="big">~60%</div><div class="lab">global share of RV cycloidal reducers</div><p>The de-facto standard for heavy joints — a quasi-tollbooth on industrial-robot growth.</p></div>
+        <div class="stat nb"><div class="big">7M+</div><div class="lab">RV units shipped</div><p>The field-life dataset nobody can buy or shortcut — the real form of the moat.</p></div>
+        <div class="stat"><div class="big">~26%</div><div class="lab">of sales that is actually robotics</div><p>Component Solutions ¥79.3B. <b>The rest is trains, aircraft and doors.</b></p></div>
+        <div class="stat"><div class="big">~50 / 14 / 8%</div><div class="lab">revenue: Japan / China / USA</div><p>42 owned facilities; Germany ~4%.</p></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><div class="sect">The four segments — and the tell</div><div class="secn">share of sales vs share of profit</div></div>
+      <div class="card">
+        <div class="kick">Share of sales</div>
+        <div class="scw" id="nbSales"></div>
+        <div class="kick" style="margin-top:20px">Segment operating profit (¥B)</div>
+        <div class="scw" id="nbProfit"></div>
+      </div>
+      <div class="note warn"><h5>🔑 The tell</h5><p>Robotics is ~26% of revenue, but <b>the anchors carry most of the earnings</b> — Accessibility ¥13.6B + Transport ¥9.1B versus Component Solutions ¥5.4B. <b>When you buy Nabtesco you are buying trains and doors as much as robots.</b> That is the single most important thing to say out loud in the memo, because the pitch is always made on the reducer.</p></div>
+      <table class="tbl">
+        <tr><th>Segment</th><th>What it is</th><th class="num">% sales</th><th class="num">Op. profit</th></tr>
+        <tr><td><b>Component Solutions</b></td><td><b>RV cycloidal reducers</b> — the heavy-joint standard. Rebounded hard off the inventory trough (+103% op. profit)</td><td class="num">~26%</td><td class="num">¥5.4B</td></tr>
+        <tr><td><b>Transport Solutions</b></td><td>Train brakes (Shinkansen N700) + flight-control actuators (Boeing/Airbus) + marine. Certification moats, recurring aftermarket</td><td class="num">~36%</td><td class="num">¥9.1B</td></tr>
+        <tr><td><b>Accessibility</b></td><td>Automatic doors + platform screen doors. A service-annuity business, barely cyclical</td><td class="num">~28%</td><td class="num"><b>¥13.6B</b></td></tr>
+        <tr><td><b>Manufacturing</b></td><td>Food-packaging machinery and niche solutions</td><td class="num">~6%</td><td class="num">¥2.2B</td></tr>
+      </table>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><div class="sect">Financials — the ballast doing its job</div><div class="secn">¥B · FY22–FY25</div></div>
+      <div class="g2">
+        <div class="stage">
+          <div class="stage-t">Segment operating profit through the robotics trough</div>
+          <div class="stage-s">the robotics leg cycled; group profit did not</div>
+          <svg viewBox="0 0 520 230" id="nbChart"></svg>
+        </div>
+        <div>
+          <table class="tbl">
+            <tr><th>Period</th><th class="num">Revenue</th><th class="num">Seg. op. profit</th></tr>
+            <tr><td>FY22</td><td class="num">308.7</td><td class="num">24.0</td></tr>
+            <tr><td>FY23</td><td class="num">333.6</td><td class="num">26.5</td></tr>
+            <tr><td>FY24</td><td class="num">280.5*</td><td class="num">18.9</td></tr>
+            <tr><td><b>FY25</b></td><td class="num"><b>307.9</b></td><td class="num"><b>30.3</b></td></tr>
+          </table>
+          <div class="note acc"><h5>* Why FY24 looks like a break</h5><p>It reflects the <b>restatement to continuing operations</b> after the hydraulic-equipment business was sold to <b>Comer</b> ("focus &amp; selection", echoing the earlier DeepSea deal, Jul-2023). <b>Nabtesco reshapes itself by portfolio surgery, not by roll-up</b> — and the anchor legs hold segment profit steady while the robotics leg cycles, which is exactly why it can fund <b>doubling RV capacity</b> without balance-sheet stress.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><div class="sect">Supply chain &amp; customers — the chain maps the segments</div><div class="secn">SPLC</div></div>
+      <div class="g2">
+        <div class="card">
+          <div class="kick">Suppliers</div>
+          <table class="tbl" style="border:none">
+            <tr><td><b>Wabtec</b></td><td>train brakes → Transport</td></tr>
+            <tr><td><b>RTX · Woodward</b></td><td>aerospace actuation → Transport</td></tr>
+            <tr><td><b>JTEKT · Nippon Thompson</b></td><td>bearings for the RV units → Component</td></tr>
+            <tr><td><b>Daedong</b> (Korea)</td><td>metals — <span class="ev x">in distress</span></td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <div class="kick">Customers — spread, not concentrated</div>
+          <p class="p">Boeing <b>4.73%</b>, all four Big-Four robot OEMs, Mercedes, Traton, the JR rail operators,
+          Cat / Komatsu / Sany. Spread across <b>74 disclosed customers with none above ~5%</b> — the mirror image of
+          Harmonic's Nissan problem, and the reason the credit grade is a notch better (<b>IG6, 0.046% default</b>).</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><div class="sect">The moat — what protects it, where it ends</div><div class="secn">stated honestly in both directions</div></div>
+      <div class="g2">
+        <div class="note pos"><h5>✓ What protects it</h5><p><b>~60% share</b> + the Teijin Seiki cycloidal heritage + 7M+ units of field history · <b>designed-in with all four</b> Big-Four OEMs (a quasi-tollbooth on industrial-robot growth) · <b>anchor legs</b> (rail / aero / doors) with certification barriers and recurring service · scale, qualification and integrated bearing design.</p></div>
+        <div class="note neg"><h5>✕ Where it ends</h5><p>The robotics segment is <b>cyclical</b>, with soft Chinese demand · <b>RV may not travel outside industrial robots</b> — it is heavy for humanoids, and Optimus uses roller screws for heavy leg joints · Chinese makers press on price and are expanding into cycloidal · the aero leg is exposed to <b>Boeing 737 MAX production rates</b>.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════ 3 · HARMONIC ═══════ -->
+  <section class="pane" data-p="hd">
+    <div class="sec">
+      <div class="sechdr"><div class="sect">Harmonic Drive — the pure-play, with everything that implies</div><div class="secn">TSE 6324 · HSYDF (foreign ordinary, not an ADR)</div></div>
+      <div class="lede">Harmonic owns the fine-joint bottleneck outright — and nothing else. That makes it the cleanest
+        expression of the thesis and <strong>the most exposed name in it</strong>: the share it once held has gone from
+        ~70% to ~22–25%, the operating profit went to <strong>¥6 million</strong> two years ago, and the single largest
+        customer is a <strong>struggling automaker</strong>.</div>
+      <div class="g4">
+        <div class="stat hd"><div class="big">¥633B</div><div class="lab">market cap (~$4.3B) · 1,420 employees</div><p>A small, single-product company carrying a global-thesis narrative.</p></div>
+        <div class="stat"><div class="big">−99.95%</div><div class="lab">peak-to-trough operating profit</div><p>¥13.2B (FY3/23) → <b>¥6M</b> (FY3/25). Revenue only fell 22% over the same span.</p></div>
+        <div class="stat"><div class="big">+141%</div><div class="lab">FY3/27 guided op. profit growth</div><p>To ¥6.2B on ¥68B revenue. Drivers cited: <b>automation and advanced semis — not humanoids.</b></p></div>
+        <div class="stat hd"><div class="big">6.79%</div><div class="lab">of revenue from China</div><p>The revealing number: the world's largest robot market is almost absent from its P&amp;L.</p></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><div class="sect">The cycle — this is the structural signature you underwrite</div><div class="secn">operating profit, ¥B, FY3/22 → FY3/27e</div></div>
+      <div class="stage">
+        <div class="stage-t">Operating profit collapsed to essentially zero and is now recovering</div>
+        <div class="stage-s">FY3/25 = ¥0.006B — six million yen — on ¥55.6B of revenue</div>
+        <svg viewBox="0 0 620 250" id="hdChart"></svg>
+      </div>
+      <div class="note warn"><h5>Where the inflection actually shows</h5><p>Q4 FY3/26 ordinary profit <b>¥1.28B (+5.6× YoY)</b>, operating margin <b>2.2% → 7.9%</b>. On the balance sheet, <b>receivables +21.2%</b> while liabilities fell 10.6% — volume returning before the P&amp;L reflects it. But note the market's read: on the FY3/26 print the stock fell <b>−7.75%</b> the next day before rebounding, and the payout ratio is <b>117.7%</b> — it is paying out more than it earns.</p></div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><div class="sect">The product ladder — the strategic answer to China</div><div class="secn">the higher the rung, the harder to price-compare</div></div>
+      <div class="lede">Climbing the ladder is the whole China defence: <strong>a bare component can be compared datasheet
+        against datasheet; a calibrated joint cannot.</strong></div>
+      <div class="ladder" id="hdLadder"></div>
+      <div class="g2" style="margin-top:14px">
+        <div class="note acc"><h5>Why rung 3 is the strategic core</h5><p>Switching supplier on a <b>rotary actuator</b> means re-engineering the motor-gear coupling, thermal behaviour, control tuning and mounting. <b>This is where humanoid orders concentrate</b> — because the developers are software companies, not precision-mechanics companies, and they want a finished joint.</p></div>
+        <div class="note warn"><h5>Why rung 2 matters technically</h5><p>Strain-wave units are <b>assembly-sensitive</b>: a misalignment degrades exactly the backlash you paid for. Selling a pre-mounted gear unit lets Harmonic guarantee the spec <b>in the field</b>, not in the lab.</p></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><div class="sect">The two concentration problems</div><div class="secn">customer, and owner</div></div>
+      <div class="g2">
+        <div class="note neg"><h5>🔴 Nissan — an asymmetric dependency</h5><p><b>10.30%</b> of Harmonic's revenue comes from Nissan; Harmonic is <b>0.05%</b> of Nissan's COGS. If Nissan cuts capex or reprices, <b>Harmonic absorbs it with no leverage to resist</b> — and it is <b>automotive</b> revenue sitting inside a robotics narrative. Only 12 customers and 10 suppliers are disclosed at all, and two counterparties (<b>Nachi-Fujikoshi</b>, Nanyo) are <b>both supplier and customer</b> — so "10 / 12" overstates the real breadth. Nachi-Fujikoshi <b>also supplies Nabtesco</b>: a shared node of the Japanese complex, where one disruption touches both incumbents.</p></div>
+        <div class="note warn"><h5>⚠️ Koden Holdings is the PARENT — not a supplier</h5><p>SPLC lists Koden as a supplier (Commercial Support Services). It is in fact the <b>parent, holding 34.77%</b>. Free float is <b>57.68%</b> — reasonable, not a suffocating cross-shareholding — but Koden has <b>effective control</b>, and Koden + HDS acted <b>jointly</b> in the Hataken acquisition (Oct-2024), another name that appears as a "supplier". <b>Lesson: SPLC classifies by commercial flow, not by control — always verify ownership separately.</b> T. Rowe (4.3%), Capital Research (3.2%) and FIL are already holders, so there is precedent for building size.</p></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><div class="sect">Humanoid exposure — tested link by link</div><div class="secn">the first three hold; the three that convert joints into Harmonic revenue fail</div></div>
+      <div class="lt" id="hdLinks"></div>
+      <div class="callout">
+        <div class="kick">The correct framing</div>
+        <p>✕ <em>"Harmonic wins if humanoids scale."</em><br>
+        ✓ <strong>"Harmonic wins if humanoids scale AND Western platforms choose qualified Japanese supply over Chinese
+        cost."</strong> Today Tesla's Optimus uses <strong>Green Harmonic (China)</strong>, and Leaderdrive is in at Tesla,
+        UBTECH and Figure AI — so the second condition is currently failing, not passing.</p>
+      </div>
+      <div class="note acc"><h5>The barbell to remember</h5><p>One end is <b>protected but slow</b> — semiconductors, aerospace/defence (Moog, BAE), medical, where field history decides and failure is catastrophic. The other end is <b>fast but under siege</b> — industrial robots and humanoids, exactly where China attacks hardest and where no incumbency protects. <b>The question is whether the growth arrives in the tier Harmonic still dominates.</b> The screen is unsentimental about it: over the last 3M, <b>Estun +57.8% outran Harmonic +49.8% — the market is not pricing the Chinese as losers.</b></p></div>
+    </div>
+  </section>
+
+  <!-- ═══════ 4 · HEAD TO HEAD ═══════ -->
+  <section class="pane" data-p="own">
+    <div class="sec">
+      <div class="sechdr"><div class="sect">Head to head — with the reason behind each verdict</div><div class="secn">"tie" means they simply do different jobs</div></div>
+      <div class="vs" id="vsGrid"></div>
+      <p class="foot" style="margin-top:14px"><b>Read the column of verdicts, not the rows:</b> Nabtesco wins nearly everything that is about
+      <b>durability and ownability</b> — breadth of design-ins, customer spread, cyclical protection, scale, credit, US access.
+      Harmonic wins the one thing the theme is actually about: <b>undiluted exposure to the joint count.</b></p>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><div class="sect">⚠️ Access — the difference that decides whether you can own it at all</div><div class="secn">a real execution constraint, not a technicality</div></div>
+      <div class="vs" style="grid-template-columns:158px 1fr 1fr">
+        <div class="vh" style="background:var(--pale); color:var(--navy)"></div>
+        <div class="vh" style="background:var(--hd)">Harmonic · HSYDF</div>
+        <div class="vh" style="background:var(--nb)">Nabtesco · NCTKY</div>
+        <div class="vk">Instrument</div><div><b>Unsponsored foreign ordinary</b></div><div class="win" style="color:var(--pos)"><b>Real sponsored ADR</b></div>
+        <div class="vk">Structure</div><div>No depositary bank, no company support</div><div class="win" style="color:var(--pos)">Bank-sponsored, US-listed</div>
+        <div class="vk">Liquidity</div><div style="color:var(--neg)"><b>Episodic — ~100 shares on a recent day</b></div><div class="win" style="color:var(--pos)">Real</div>
+        <div class="vk">Spread</div><div>Wide, market-maker driven</div><div class="win" style="color:var(--pos)">Manageable</div>
+        <div class="vk">Usable at size</div><div style="color:var(--neg)"><b>✕ Impractical</b></div><div class="win" style="color:var(--pos)"><b>✓ Viable</b></div>
+        <div class="vk">Real route</div><div><b>6324 on TSE Prime</b> — needs Japanese market access</div><div>NCTKY, or 6268 in Tokyo</div>
+      </div>
+      <div class="note warn"><h5>Accounting note to carry into any comparison</h5><p>Both report under <b>J-GAAP</b>. Japanese operating profit is <b>systematically understated</b> versus IFRS, and net income is <b>inflated in extraordinary years</b> — Harmonic's FY3/25 is the direct trap (a <b>¥5.78B gain</b> from selling its <b>Nabtesco</b> stake sits below the operating line). <b>Use operating profit, and adjust before any cross-border multiple.</b> Also note "ordinary profit" (経常利益) has no equivalent outside Japan.</p></div>
+      <div class="note neg"><h5>Facts that are commonly stated wrong — do not repeat them</h5><p>✕ "Nabtesco bought Harmonic in 2020" — <b>false.</b> The opposite happened: <b>Harmonic sold its Nabtesco stake</b> (¥5.78B gain, FY3/25). · ✕ "Koden is a supplier" — it is the <b>parent, 34.77%.</b> · ✕ "HSYDF is the ADR" — there <b>is no ADR</b>; it is an unsponsored foreign ordinary.</p></div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><div class="sect">The distilled question</div><div class="secn">what the detailed deep-dives have to answer</div></div>
+      <div class="callout">
+        <div class="kick">Not "do you believe in humanoids"</div>
+        <p>It is: <strong>who captures the value — the Japanese moat owner or the Chinese low-cost challenger — and how
+        much of that is already priced.</strong> The tension is uncomfortable and should stay on the page: the moat is
+        real, but already penetrated in mid-tier; growth is in mid-tier; premium grows slowly; humanoids carry no
+        incumbency to protect; and Tesla, UBTECH and Figure have already chosen Chinese supply.
+        <strong>The moat is strongest where field history matters (slow markets) and weakest where the product is new
+        (the market that supposedly explodes).</strong></p>
+      </div>
+      <div class="g3">
+        <div class="stat"><div class="big">NB</div><div class="lab">the quality / breadth expression</div><p>Own the toll booth with all four OEMs designed in — and accept that trains and doors dilute the theme.</p></div>
+        <div class="stat"><div class="big">HD</div><div class="lab">the high-beta expression</div><p>Own the fine joint purely — and accept a ~100% earnings swing, one automotive customer at 10.3%, and Tokyo-only access.</p></div>
+        <div class="stat"><div class="big">Both</div><div class="lab">what the technology says</div><p>A single arm needs both mechanisms. Any thesis that owns only one is a view on <i>which joints</i> grow, not on robotics.</p></div>
+      </div>
+      <p class="foot"><b>Scope of this document:</b> high-level overviews only — the two <b>detailed company deep-dives are owned by Deborah and Daniel</b>,
+      one name each. This page and the <b>technology overview</b> are the shared frame they plug into: the technology explains <i>why</i> the moat exists,
+      this explains <i>what you are buying when you buy it.</i> Base material: Daniel's <b>dossier maestro</b> (reducers sector + Timken / Harmonic / Nabtesco)
+      and the SPLC supplier/customer graphs (Harmonic 21-Jul-2026). <b>Open gaps:</b> Harmonic's actuator-vs-component revenue split is
+      <b>not verifiable from filings</b> (geographic segments only) — any mix estimate is inference and must be labelled as such.</p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ── tabs ── */
+document.querySelectorAll('.tab').forEach(function(t){
+  t.addEventListener('click', function(){
+    document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('on'); });
+    document.querySelectorAll('.pane').forEach(function(x){ x.classList.remove('on'); });
+    t.classList.add('on');
+    document.querySelector('.pane[data-p="'+t.dataset.p+'"]').classList.add('on');
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+});
+
+/* ── Nabtesco segment bars ── */
+var NB_SEG = [
+  {n:'Component Solutions', s:'RV cycloidal reducers — the robot leg', sales:26, prof:5.4, c:'var(--nb)'},
+  {n:'Transport Solutions', s:'train brakes · aircraft actuators · marine', sales:36, prof:9.1, c:'var(--steel)'},
+  {n:'Accessibility', s:'automatic doors · platform screen doors', sales:28, prof:13.6, c:'var(--accent)'},
+  {n:'Manufacturing', s:'food-packaging machinery', sales:6, prof:2.2, c:'var(--mid)'}
+];
+function bars(el, rows, max, fmt){
+  document.getElementById(el).innerHTML = rows.map(function(r){
+    return '<div class="scr"><div class="scl">'+r.n+'<small>'+r.s+'</small></div>'+
+      '<div class="sct"><div class="scf" style="width:'+(r.v/max*100).toFixed(1)+'%; background:'+r.c+'"></div></div>'+
+      '<div class="scv" style="color:'+r.c+'">'+fmt(r.v)+'</div></div>';
+  }).join('');
+}
+bars('nbSales', NB_SEG.map(function(d){ return {n:d.n, s:d.s, v:d.sales, c:d.c}; }), 40, function(v){ return '~'+v+'%'; });
+bars('nbProfit', NB_SEG.map(function(d){ return {n:d.n, s:d.s, v:d.prof, c:d.c}; }), 14, function(v){ return '¥'+v.toFixed(1)+'B'; });
+
+/* ── Nabtesco op-profit chart ── */
+(function(){
+  var d = [{k:'FY22', v:24.0}, {k:'FY23', v:26.5}, {k:'FY24', v:18.9}, {k:'FY25', v:30.3}];
+  var W=520, H=230, pl=44, pb=34, pt=18, max=34;
+  var bw = (W-pl-16)/d.length, s='';
+  [0,10,20,30].forEach(function(g){
+    var y = pt + (1-g/max)*(H-pt-pb);
+    s += '<line x1="'+pl+'" y1="'+y.toFixed(1)+'" x2="'+(W-8)+'" y2="'+y.toFixed(1)+'" stroke="#E7EAEE" stroke-width="1"/>'+
+         '<text x="'+(pl-8)+'" y="'+(y+3.5).toFixed(1)+'" text-anchor="end" font-family="ui-monospace" font-size="9" fill="#8A93A0">'+g+'</text>';
+  });
+  d.forEach(function(p,i){
+    var h = p.v/max*(H-pt-pb), x = pl + i*bw + bw*0.20, w = bw*0.60, y = H-pb-h;
+    var c = p.v>=30 ? 'var(--pos)' : (p.v<20 ? 'var(--warn)' : 'var(--nb)');
+    s += '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="4" fill="'+c+'"/>'+
+         '<text x="'+(x+w/2).toFixed(1)+'" y="'+(y-6).toFixed(1)+'" text-anchor="middle" font-family="Inter" font-weight="700" font-size="11" fill="#1E2733">'+p.v.toFixed(1)+'</text>'+
+         '<text x="'+(x+w/2).toFixed(1)+'" y="'+(H-pb+15)+'" text-anchor="middle" font-family="ui-monospace" font-size="9.5" fill="#8A93A0">'+p.k+'</text>';
+  });
+  s += '<text x="'+pl+'" y="12" font-family="ui-monospace" font-size="9" fill="#8A93A0">¥B · segment operating profit</text>';
+  s += '<text x="'+(W-8)+'" y="'+(H-4)+'" text-anchor="end" font-family="ui-monospace" font-size="8.5" fill="#8A93A0">FY24 restated to continuing ops (hydraulics → Comer)</text>';
+  document.getElementById('nbChart').innerHTML = s;
+})();
+
+/* ── Harmonic op-profit chart ── */
+(function(){
+  var d = [
+    {k:'FY3/22', v:9.5,   lbl:'9.5'},
+    {k:'FY3/23', v:13.2,  lbl:'13.2', tag:'peak'},
+    {k:'FY3/24', v:3.6,   lbl:'3.6'},
+    {k:'FY3/25', v:0.006, lbl:'¥6M',  tag:'trough'},
+    {k:'FY3/26', v:2.57,  lbl:'2.57'},
+    {k:'FY3/27e',v:6.2,   lbl:'6.2',  tag:'guided'}
+  ];
+  var W=620, H=250, pl=46, pb=42, pt=26, max=15;
+  var bw = (W-pl-16)/d.length, s='';
+  [0,5,10,15].forEach(function(g){
+    var y = pt + (1-g/max)*(H-pt-pb);
+    s += '<line x1="'+pl+'" y1="'+y.toFixed(1)+'" x2="'+(W-8)+'" y2="'+y.toFixed(1)+'" stroke="#E7EAEE" stroke-width="1"/>'+
+         '<text x="'+(pl-8)+'" y="'+(y+3.5).toFixed(1)+'" text-anchor="end" font-family="ui-monospace" font-size="9" fill="#8A93A0">'+g+'</text>';
+  });
+  d.forEach(function(p,i){
+    var h = Math.max(p.v/max*(H-pt-pb), 1.5), x = pl + i*bw + bw*0.20, w = bw*0.60, y = H-pb-h;
+    var c = p.tag==='trough' ? 'var(--neg)' : (p.tag==='guided' ? 'var(--mid)' : 'var(--hd)');
+    s += '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="4" fill="'+c+'"'+(p.tag==='guided'?' opacity=".55"':'')+'/>'+
+         '<text x="'+(x+w/2).toFixed(1)+'" y="'+(y-7).toFixed(1)+'" text-anchor="middle" font-family="Inter" font-weight="700" font-size="11" fill="'+(p.tag==='trough'?'#DC2626':'#1E2733')+'">'+p.lbl+'</text>'+
+         '<text x="'+(x+w/2).toFixed(1)+'" y="'+(H-pb+15)+'" text-anchor="middle" font-family="ui-monospace" font-size="9" fill="#8A93A0">'+p.k+'</text>';
+    if(p.tag) s += '<text x="'+(x+w/2).toFixed(1)+'" y="'+(H-pb+27)+'" text-anchor="middle" font-family="ui-monospace" font-size="8" fill="'+(p.tag==='trough'?'#DC2626':'#8A93A0')+'">'+p.tag+'</text>';
+  });
+  var x1 = pl + 1*bw + bw*0.5, x2 = pl + 3*bw + bw*0.5;
+  s += '<line x1="'+x1.toFixed(1)+'" y1="14" x2="'+x2.toFixed(1)+'" y2="14" stroke="#DC2626" stroke-width="1.2" stroke-dasharray="3 3"/>'+
+       '<text x="'+((x1+x2)/2).toFixed(1)+'" y="10" text-anchor="middle" font-family="Inter" font-weight="700" font-size="10" fill="#DC2626">peak → trough: operating profit −99.95% (revenue only −22%)</text>';
+  s += '<text x="'+pl+'" y="'+(H-4)+'" font-family="ui-monospace" font-size="8.5" fill="#8A93A0">¥B · operating profit · FY3/27 = company guidance</text>';
+  document.getElementById('hdChart').innerHTML = s;
+})();
+
+/* ── Harmonic product ladder ── */
+var LADDER = [
+  {n:'5', t:'Motors &amp; Drives', d:'Direct-drive and <b>hollow-shaft</b> motors + servo drives. A hollow shaft lets cabling, air lines or a laser beam pass <b>through</b> the joint instead of around it — critical in compact arms.', cap:'Medium-high', moat:3, cmp:'—', c:'linear-gradient(150deg,#0D1526,#1E4F9C)'},
+  {n:'4', t:'Harmonic Planetary', d:'Precision planetary gearing — a <b>different mechanism</b> (rigid gears, no flexspline). <b>The weakest line in the book.</b>', cap:'Medium', moat:1, cmp:'Very contested', c:'linear-gradient(150deg,#5A4210,#C2410C)'},
+  {n:'3', t:'Rotary Actuators <span style="opacity:.85">FHA/RSF/SHA</span>', d:'<b>The complete joint</b>: gearing + motor + encoder + brake + drive, factory-calibrated. <b>Where humanoid orders concentrate.</b>', cap:'Maximum', moat:4, cmp:'✕ No', c:'linear-gradient(150deg,#14532D,#16A34A)'},
+  {n:'2', t:'Gear Units <span style="opacity:.85">SHF/SHG</span>', d:'Pre-assembled in a housing with cross-roller bearing and flange — lets Harmonic guarantee the spec <b>in the field.</b>', cap:'Higher', moat:4, cmp:'Less', c:'linear-gradient(150deg,#1E3A5F,#2563EB)'},
+  {n:'1', t:'Component Sets <span style="opacity:.85">CSF/CSG/CSD</span>', d:'The three bare parts. Ratios 30:1–320:1, ⌀25–140 mm. <b>Maximum technical moat, minimum value capture</b> — and fully price-comparable.', cap:'Minimal', moat:5, cmp:'✓ Datasheet vs datasheet', c:'linear-gradient(150deg,#3E5A82,#7C8694)'}
+];
+document.getElementById('hdLadder').innerHTML = LADDER.map(function(r){
+  var dots = '';
+  for(var i=0;i<5;i++) dots += '<span class="dot" style="background:'+(i<r.moat?'var(--hd)':'var(--ice)')+'"></span>';
+  return '<div class="rung"><div class="rung-l" style="background:'+r.c+'"><div class="rt">Rung '+r.n+'</div><div class="rp">'+r.t+'</div></div>'+
+    '<div class="rung-r"><div class="rq">'+r.d+'</div></div>'+
+    '<div class="rung-x"><div class="mini">value capture&nbsp;<b>'+r.cap+'</b></div>'+
+    '<div class="mini">moat&nbsp;<span class="dots">'+dots+'</span></div>'+
+    '<div class="mini">price-comparable&nbsp;<b>'+r.cmp+'</b></div></div></div>';
+}).join('');
+
+/* ── Harmonic humanoid link test ── */
+var LINKS = [
+  {ok:true,  c:'Joint count multiplies',                    w:'20–30 joints vs ~6 on an industrial arm. <b>But</b> legs may use roller screws instead.'},
+  {ok:true,  c:'The mix favours fine joints',               w:'More wrists and hands than heavy joints — structurally Harmonic’s half of the body.'},
+  {ok:true,  c:'Demand routes to actuators',                w:'Buyers are software firms; they want a finished joint, which is <b>rung 3</b> — the high-capture product.'},
+  {ok:false, c:'Incumbency protects the position',          w:'New platforms have <b>no installed base to requalify</b> — the field-history moat has nothing to bite on.'},
+  {ok:false, c:'The West chooses Japanese supply',          w:'<b>Tesla’s Optimus uses Green Harmonic (China).</b> Leaderdrive is in at Tesla, UBTECH and Figure AI.'},
+  {ok:false, c:'It is visible in the P&amp;L today',            w:'FY3/27 guidance cites <b>semiconductors and automation — not humanoids.</b>'}
+];
+document.getElementById('hdLinks').innerHTML = LINKS.map(function(l){
+  return '<div class="ltr"><div class="ltm '+(l.ok?'ok':'no')+'">'+(l.ok?'✓':'✕')+'</div>'+
+    '<div class="ltc">'+l.c+'</div><div class="ltw">'+l.w+'</div></div>';
+}).join('');
+
+/* ── head-to-head grid ── */
+var VS = [
+  ['Reducer type',        'Strain-wave — precision',                       'Cycloidal RV — force',                                  'tie',  'They do different jobs'],
+  ['Joint served',        'Fine — wrists, fingers, hands',                 'Heavy — base, shoulder, elbow',                         'tie',  'They split the body'],
+  ['Global share',        '#1 in strain-wave (~22–25%, was ~70%)',         '~60% in RV, 7M+ units',                                 'tie',  'Each dominates its half'],
+  ['Big-Four design-ins', 'FANUC',                                         '<b>All four</b>',                                        'NB',   'Quasi-tollbooth'],
+  ['Humanoid beta',       '<b>High</b> — pure exposure',                    'Moderate — diluted',                                    'HD',   'More fine joints per humanoid'],
+  ['Cyclical protection', 'None',                                          'Rail, aero, doors',                                     'NB',   'HD hit ¥6M of OP in FY3/25'],
+  ['Customer concentration','<b>Nissan ~10.3%</b> — and weak',              'Diversified, none above ~5%',                           'NB',   ''],
+  ['Scale',               '¥59.6B revenue',                                '¥307.9B — <b>~5×</b>',                                   'NB',   ''],
+  ['Default grade',       'IG7 (0.076%)',                                  'IG6 (0.046%)',                                          'NB',   ''],
+  ['US access',           'Foreign ordinary (HSYDF)',                      '<b>Sponsored ADR (NCTKY)</b>',                           'NB',   'Real execution edge'],
+  ['China threat',        'Leaderdrive, head-on',                          'Pressure, but RV is harder to copy',                    'HD*',  '*harder to copy — but HD faces the more immediate assault']
+];
+document.getElementById('vsGrid').innerHTML =
+  '<div class="vh" style="background:var(--pale); color:var(--navy)"></div>'+
+  '<div class="vh" style="background:var(--hd)">Harmonic · 6324</div>'+
+  '<div class="vh" style="background:var(--nb)">Nabtesco · 6268</div>'+
+  '<div class="vh" style="background:var(--navy)">Edge</div>'+
+  VS.map(function(r){
+    var col = r[3]==='NB' ? 'var(--nb)' : (r[3].indexOf('HD')===0 ? 'var(--hd)' : 'var(--mu)');
+    var hint = r[4] ? '<div style="font-size:10px; color:var(--mu); margin-top:3px">'+r[4]+'</div>' : '';
+    return '<div class="vk">'+r[0]+'</div><div>'+r[1]+'</div><div>'+r[2]+hint+'</div>'+
+           '<div class="vw" style="color:'+col+'">'+r[3]+'</div>';
+  }).join('');
+</script>
+</body>
+</html>

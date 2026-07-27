@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Precision Reducers — The Technology, and Where the Moat Lives — Summit Research</title>
+<style>
+:root{
+  --navy:#1E2733; --blue:#2C3E54; --steel:#3E5A82; --mid:#7C8694;
+  --ice:#EEF1F5; --pale:#F4F6F9; --surface:#F6F7F9; --w:#FFFFFF;
+  --text:#1E2733; --mu:#8A93A0; --bdr:#E7EAEE;
+  --pos:#16A34A; --neg:#DC2626; --accent:#2563EB;
+  --posbg:#E6F3EC; --negbg:#FAEEEE; --accbg:#EAF0FE;
+  --warn:#C2410C; --warnbg:#FEF1E6;
+  --hd:#2563EB; --nb:#0E7490; --tkr:#B91C1C; --cn:#C2410C;
+}
+*,*::before,*::after{box-sizing:border-box; margin:0; padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',-apple-system,system-ui,sans-serif; background:var(--surface); color:var(--text);
+  font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased; letter-spacing:-0.005em; line-height:1.55}
+
+/* top bar */
+.topbar{position:sticky; top:0; z-index:40; background:rgba(255,255,255,.85); backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--bdr); display:flex; align-items:center; justify-content:space-between; padding:12px 26px}
+.brand{display:flex; align-items:center; gap:11px}
+.brand-mk{width:30px; height:30px; border-radius:8px; background:var(--navy); display:flex; align-items:center; justify-content:center; font-size:16px}
+.brand-t{font-size:14px; font-weight:600; letter-spacing:-.01em}
+.brand-s{font-size:11px; color:var(--mu)}
+.badge-local{font-size:10px; letter-spacing:.5px; text-transform:uppercase; font-weight:600; color:var(--steel); background:var(--ice); padding:4px 10px; border-radius:20px}
+.wrap{max-width:1180px; margin:0 auto; padding:26px 26px 70px}
+
+/* banner */
+.bnr{background:var(--navy); border-radius:16px; padding:26px 32px; margin-bottom:22px; position:relative; overflow:hidden}
+.bnr::before{content:''; position:absolute; right:-60px; top:-60px; width:260px; height:260px; border-radius:50%; background:rgba(46,95,147,.25)}
+.bnr::after{content:''; position:absolute; right:90px; bottom:-90px; width:200px; height:200px; border-radius:50%; background:rgba(37,99,235,.14)}
+.bnr-in{position:relative; z-index:1}
+.bnt{font-size:22px; font-weight:600; color:#fff; margin-bottom:9px; letter-spacing:-.01em}
+.bnb{font-size:13px; color:var(--ice); line-height:1.7; max-width:880px}
+.bnb strong{color:#fff; font-weight:500}
+.bnr-meta{display:flex; gap:26px; margin-top:16px; flex-wrap:wrap}
+.bnr-meta div{font-size:11px; color:var(--mid)}
+.bnr-meta b{display:block; color:#fff; font-size:15px; font-weight:600; margin-top:2px}
+
+/* tabs */
+.tabs{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px}
+.tab{display:flex; align-items:center; gap:8px; padding:9px 15px; border:1.5px solid var(--bdr); border-radius:22px;
+  background:var(--w); cursor:pointer; font-size:12.5px; color:var(--blue); font-weight:500; font-family:inherit; transition:all .16s}
+.tab:hover{border-color:var(--steel)}
+.tab.on{background:var(--navy); border-color:var(--navy); color:#fff}
+.pane{display:none} .pane.on{display:block}
+
+/* sections */
+.sec{margin-bottom:26px}
+.sechdr{display:flex; align-items:baseline; justify-content:space-between; gap:14px; margin-bottom:13px; padding-bottom:8px; border-bottom:1px solid var(--bdr); flex-wrap:wrap}
+.sect{font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--steel); font-weight:600}
+.secn{font-size:11px; color:var(--mu)}
+.card{background:var(--w); border:1px solid var(--bdr); border-radius:14px; padding:20px}
+.lede{font-size:13px; color:var(--mid); max-width:94ch; margin-bottom:16px; line-height:1.7}
+.lede strong{color:var(--navy); font-weight:600}
+
+/* provenance */
+.ev{font-size:8.5px; font-weight:700; letter-spacing:.3px; text-transform:uppercase; padding:2px 7px; border-radius:20px; background:var(--ice); color:var(--steel); white-space:nowrap}
+.ev.d{background:var(--posbg); color:var(--pos)} .ev.i{background:var(--accbg); color:var(--accent)}
+.ev.c{background:var(--warnbg); color:var(--warn)} .ev.x{background:var(--negbg); color:var(--neg)}
+
+/* grid + stat cards */
+.g2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+.g3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+.g4{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
+.kick{font-size:9.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--steel); font-weight:700; margin-bottom:9px}
+.stat{background:var(--w); border:1px solid var(--bdr); border-radius:14px; padding:16px 18px}
+.stat .big{font-size:26px; font-weight:700; color:var(--navy); letter-spacing:-.02em; line-height:1}
+.stat .lab{font-size:11px; color:var(--mu); margin-top:5px; line-height:1.4}
+.stat p{font-size:11.5px; color:var(--mid); line-height:1.5; margin-top:8px}
+.sub{font-size:14px; font-weight:700; color:var(--navy); letter-spacing:-.01em; margin-bottom:5px}
+.p{font-size:12px; color:var(--mid); line-height:1.6}
+.p strong{color:var(--navy); font-weight:600}
+
+/* stage (svg diagrams) */
+.stage{background:var(--w); border:1px solid var(--bdr); border-radius:14px; padding:16px; box-shadow:0 1px 2px rgba(30,39,51,.04)}
+.stage svg{width:100%; height:auto; display:block; max-height:340px}
+.stage-t{font-size:13px; font-weight:700; color:var(--navy); margin-bottom:2px}
+.stage-s{font-size:11px; color:var(--mu); margin-bottom:10px}
+.mctl{display:flex; align-items:center; gap:10px; margin-top:12px; padding-top:12px; border-top:1px solid var(--pale)}
+.mbtn{border:1px solid var(--bdr); background:var(--pale); color:var(--blue); font-family:inherit; font-size:11px; font-weight:600; padding:6px 12px; border-radius:8px; cursor:pointer}
+.mbtn:hover{border-color:var(--steel)}
+.readout{font-size:11px; color:var(--steel); font-weight:600; margin-left:auto}
+
+/* part legend */
+.pleg{display:grid; gap:8px; margin-top:14px}
+.pl{display:grid; grid-template-columns:22px 1fr; gap:11px; align-items:start; padding:9px 11px; border:1px solid var(--bdr); border-radius:10px; background:var(--pale)}
+.pl-n{width:20px; height:20px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff}
+.pl-t{font-size:12.5px; font-weight:700; color:var(--navy); display:flex; gap:7px; align-items:center; flex-wrap:wrap}
+.pl-t span{font-size:9.5px; color:var(--mu); font-weight:500}
+.pl-d{font-size:11.5px; color:var(--mid); line-height:1.5; margin-top:2px}
+.pl-d b{color:var(--navy); font-weight:600}
+
+/* callouts */
+.callout{background:var(--navy); border-radius:14px; padding:20px 24px; margin:14px 0}
+.callout .kick{color:#93C5FD}
+.callout p{font-size:13px; color:#fff; line-height:1.7}
+.callout p strong{color:#fff; font-weight:700}
+.note{border-radius:12px; padding:14px 16px; border:1px solid; margin:12px 0}
+.note h5{font-size:12.5px; font-weight:700; margin-bottom:4px}
+.note p{font-size:12px; line-height:1.6}
+.note.pos{background:var(--posbg); border-color:#BBE3CB; color:#166534} .note.pos p{color:#1a5c37}
+.note.neg{background:var(--negbg); border-color:#F2C9C6; color:#991B1B} .note.neg p{color:#7f1d1d}
+.note.acc{background:var(--accbg); border-color:#C9DAFB; color:#1d4ed8} .note.acc p{color:#1e40af}
+.note.warn{background:var(--warnbg); border-color:#F5D5B0; color:#9A3412} .note.warn p{color:#7c2d12}
+
+/* vs table */
+.vs{display:grid; grid-template-columns:150px 1fr 1fr; border:1px solid var(--bdr); border-radius:14px; overflow:hidden; background:var(--w)}
+.vs>div{padding:11px 14px; border-top:1px solid var(--pale); font-size:12px; line-height:1.5}
+.vs>.vh{border-top:none; font-weight:700; font-size:13.5px; color:#fff; padding:12px 14px}
+.vs .vk{font-size:9.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--mu); font-weight:700; background:var(--pale)}
+.vs .win{font-weight:600}
+
+/* body map */
+.bodymap{display:grid; grid-template-columns:260px 1fr; gap:20px; align-items:start}
+.bodysvg{background:var(--w); border:1px solid var(--bdr); border-radius:14px; padding:14px}
+.bodysvg svg{width:100%; height:auto; max-height:420px}
+.jhot{cursor:pointer}
+.jcard{border:1px solid var(--bdr); border-radius:12px; padding:16px 18px; background:var(--w); display:none}
+.jcard.on{display:block}
+.jcard h4{font-size:16px; font-weight:700; color:var(--navy); letter-spacing:-.01em}
+.jcard .jsub{font-size:11.5px; color:var(--mu); margin-bottom:11px}
+.jspec{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:11px 0}
+.js{background:var(--pale); border:1px solid var(--bdr); border-radius:8px; padding:8px 10px}
+.js-k{font-size:8.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--mu); font-weight:700}
+.js-v{font-size:13px; font-weight:700; color:var(--navy); margin-top:2px}
+.jwin{border-radius:9px; padding:10px 13px; font-size:12px; line-height:1.5; margin-top:10px; font-weight:500}
+
+/* tier ladder */
+.ladder{border:1px solid var(--bdr); border-radius:14px; overflow:hidden}
+.rung{display:grid; grid-template-columns:120px 1fr; border-top:1px solid var(--pale); background:var(--w)}
+.rung:first-child{border-top:none}
+.rung-l{padding:15px 14px; color:#fff; display:flex; flex-direction:column; justify-content:center; gap:3px}
+.rt{font-size:13.5px; font-weight:800; letter-spacing:-.02em} .rp{font-size:9.5px; opacity:.85}
+.rung-r{padding:13px 16px}
+.rq{font-size:12px; color:var(--mid); line-height:1.55; margin-bottom:7px} .rq b{color:var(--navy)}
+.who{display:flex; gap:6px; flex-wrap:wrap}
+.wchip{font-size:10px; font-weight:600; padding:3px 9px; border-radius:20px; border:1px solid}
+
+/* china scorecard */
+.scw{display:grid; gap:9px}
+.scr{display:grid; grid-template-columns:190px 1fr 92px; gap:14px; align-items:center}
+.scl{font-size:12px; font-weight:600; color:var(--navy)} .scl small{display:block; font-weight:400; color:var(--mu); font-size:10px}
+.sct{height:20px; background:var(--ice); border-radius:6px; overflow:hidden}
+.scf{height:100%; border-radius:6px}
+.scv{font-size:11px; font-weight:700; text-align:right}
+
+/* firm cards */
+.firm{border:1px solid var(--bdr); border-radius:14px; overflow:hidden; background:var(--w)}
+.firm-h{padding:13px 16px; color:#fff; display:flex; align-items:center; gap:9px; flex-wrap:wrap}
+.firm-h .fn{font-size:15px; font-weight:700; letter-spacing:-.01em}
+.firm-h .ft{font-size:10px; opacity:.9; background:rgba(255,255,255,.18); padding:2px 7px; border-radius:5px; font-family:ui-monospace,Consolas,monospace}
+.firm-b{padding:6px 16px 14px}
+.frow{display:grid; grid-template-columns:96px 1fr; gap:12px; padding:9px 0; border-top:1px solid var(--pale); align-items:baseline}
+.frow:first-child{border-top:none}
+.fk{font-size:9.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--mu); font-weight:700}
+.fv{font-size:12px; color:var(--mid); line-height:1.5} .fv b{color:var(--navy); font-weight:600}
+.beta{display:inline-flex; gap:5px; align-items:center; font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px}
+.beta.hi{background:var(--negbg); color:var(--neg)} .beta.mid{background:var(--warnbg); color:var(--warn)} .beta.lo{background:var(--posbg); color:var(--pos)}
+
+.foot{font-size:10.5px; color:var(--mu); line-height:1.7; margin-top:22px; padding-top:14px; border-top:1px solid var(--bdr)}
+.foot b{color:var(--steel)}
+
+@media(max-width:1000px){
+  .g2,.g3,.g4{grid-template-columns:1fr} .g4{grid-template-columns:1fr 1fr}
+  .vs{grid-template-columns:1fr} .vs .vh:first-child{display:none}
+  .bodymap{grid-template-columns:1fr}
+  .scr{grid-template-columns:120px 1fr 60px}
+  .mech-grid{grid-template-columns:1fr!important}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mk">⚙️</div>
+    <div>
+      <div class="brand-t">Precision Reducers — The Technology, and Where the Moat Lives</div>
+      <div class="brand-s">Summit Research · Robotics · Reducer Deep-Dive · Technology Overview</div>
+    </div>
+  </div>
+  <div class="badge-local">Local working document</div>
+</div>
+
+<div class="wrap">
+
+  <div class="bnr"><div class="bnr-in">
+    <div class="bnt">The whole analysis lands on one component. This is why — from the physics up.</div>
+    <div class="bnb">
+      Every robot converts a fast, weak motor into a slow, strong joint. The part that does it — the
+      <strong>reducer</strong> — is the one piece of the bill of materials that <strong>not one of the six biggest
+      OEMs makes in-house</strong>, after 40–110 years of trying. This overview reads the technology as the source of
+      that moat: what the two mechanisms are, why they split the robot's body between two firms, and — crucially —
+      <strong>where the moat actually holds versus where China has already broken through.</strong> The engineering
+      earns the investment conclusion.
+    </div>
+    <div class="bnr-meta">
+      <div>Reducer share of robot BOM<b>~30%</b></div>
+      <div>Big-6 OEMs that make it<b>0 of 6</b></div>
+      <div>Joints: industrial arm → humanoid<b>~6 → 20–30</b></div>
+      <div>Harmonic global share, 2015 → now<b>~70% → ~24%</b></div>
+    </div>
+  </div></div>
+
+  <div class="tabs">
+    <button class="tab on" data-p="choke">🎯 The chokepoint</button>
+    <button class="tab" data-p="mech">⚙️ The two mechanisms</button>
+    <button class="tab" data-p="body">🦾 Where each goes</button>
+    <button class="tab" data-p="moat">🏰 The moat, decoded</button>
+    <button class="tab" data-p="bridge">🧭 To the companies</button>
+  </div>
+
+  <!-- ═══════ 1 · CHOKEPOINT ═══════ -->
+  <section class="pane on" data-p="choke">
+    <div class="sec">
+      <div class="sechdr"><div class="sect">Why the reducer — not the motor</div><div class="secn">the physical bottleneck</div></div>
+      <div class="lede">An electric motor spins <strong>fast and weak</strong> (~3,000 rpm, almost no torque). A robot
+        joint needs the opposite — <strong>slow and strong</strong>. The reducer performs that conversion, and it is
+        the hard, concentrated link in the chain. The motor is a near-commodity; the joint is the output; <strong>the
+        reducer is where the value and the difficulty sit.</strong></div>
+      <div class="stage">
+        <div class="stage-t">Motor → Reducer → Joint</div>
+        <div class="stage-s">The conversion is the entire industry</div>
+        <svg viewBox="0 0 720 190">
+          <defs><marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9z" fill="var(--mid)"/></marker></defs>
+          <g transform="translate(78,95)">
+            <circle r="44" fill="var(--pale)" stroke="var(--bdr)" stroke-width="1.5"/>
+            <path d="M0 -30 A30 30 0 0 1 26 15" stroke="var(--neg)" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <text y="66" text-anchor="middle" font-family="Inter" font-weight="700" font-size="13" fill="var(--navy)">MOTOR</text>
+            <text y="82" text-anchor="middle" font-family="ui-monospace" font-size="9.5" fill="var(--neg)">fast · weak</text>
+          </g>
+          <line x1="140" y1="95" x2="258" y2="95" stroke="var(--mid)" stroke-width="1.5" marker-end="url(#ar)"/>
+          <g transform="translate(360,95)">
+            <rect x="-104" y="-54" width="208" height="108" rx="14" fill="var(--accbg)" stroke="var(--accent)" stroke-width="2.5"/>
+            <text y="-20" text-anchor="middle" font-family="Inter" font-weight="700" font-size="15" fill="var(--accent)">REDUCER</text>
+            <text y="0" text-anchor="middle" font-family="Inter" font-size="11" fill="var(--blue)">trades speed for torque · ratio ~100:1</text>
+            <text y="20" text-anchor="middle" font-family="Inter" font-size="10.5" fill="var(--navy)" font-weight="600">~30% of robot cost</text>
+            <text y="40" text-anchor="middle" font-family="ui-monospace" font-size="8.5" fill="var(--mu)">THE HARD, CONCENTRATED PART</text>
+          </g>
+          <line x1="466" y1="95" x2="584" y2="95" stroke="var(--mid)" stroke-width="1.5" marker-end="url(#ar)"/>
+          <g transform="translate(646,95)">
+            <circle r="44" fill="var(--pale)" stroke="var(--bdr)" stroke-width="1.5"/>
+            <path d="M0 -30 A30 30 0 0 1 26 15" stroke="var(--pos)" stroke-width="7" fill="none" stroke-linecap="round"/>
+            <text y="66" text-anchor="middle" font-family="Inter" font-weight="700" font-size="13" fill="var(--navy)">JOINT</text>
+            <text y="82" text-anchor="middle" font-family="ui-monospace" font-size="9.5" fill="var(--pos)">slow · strong</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><div class="sect">Three facts that make it the thesis</div><div class="secn"></div></div>
+      <div class="g3">
+        <div class="stat"><div class="big">0 / 6</div><div class="lab">of the biggest OEMs make their own reducer</div>
+          <p>FANUC, ABB, Yaskawa, KUKA, Kawasaki, Estun all buy it — even FANUC, the most vertically integrated maker on earth, which builds its own servos, drives, encoders, CNC and vision. <span class="ev x">revealed moat</span></p></div>
+        <div class="stat"><div class="big">~30%</div><div class="lab">of a robot's bill of materials</div>
+          <p>The single largest hardware line — so the incentive to integrate it was maximal, for four decades. Nobody did.</p></div>
+        <div class="stat"><div class="big">6 → 25</div><div class="lab">joints per robot: industrial arm → humanoid</div>
+          <p>A joint = motor + <b>reducer</b> + encoder + bearing + brake. A humanoid packs 20–30 of them. <b>That 4–5× multiplier is the demand thesis.</b></p></div>
+      </div>
+      <div class="callout">
+        <div class="kick">The tollbooth, stated plainly</div>
+        <p>You don't have to pick which robot wins. If <strong>every</strong> robot — industrial or humanoid — must convert
+        a motor into a joint, and <strong>no OEM makes the converter</strong>, then the reducer is a toll booth every unit
+        rolls through. The rest of this overview asks the only question that matters next: <strong>is that toll durable, or
+        is it eroding — and the answer is written in the manufacturing physics.</strong></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════ 2 · MECHANISMS ═══════ -->
+  <section class="pane" data-p="mech">
+    <div class="sec">
+      <div class="sechdr"><div class="sect">The four demands no single design wins</div><div class="secn">why there are two mechanisms, not one</div></div>
+      <div class="lede">Any cheap gearbox can slow a motor down. Robot reducers are a specialist industry because they must
+        satisfy <strong>four demands at once</strong> — and each mechanism trades one off against another. Note the
+        distinction that trips people up: <strong>backlash is empty play (exists with no load); stiffness is material
+        deflection (only appears under load).</strong></div>
+      <div class="g4">
+        <div class="card"><div class="kick">Demand 1</div><div class="sub">Zero backlash</div><p class="p">Dead play before teeth re-engage on reversal. In a wrist it becomes millimetres of error at the fingertip.</p></div>
+        <div class="card"><div class="kick">Demand 2</div><div class="sub">Compact &amp; light</div><p class="p">The reducer rides inside the joint; a gram in the wrist is carried by the elbow and shoulder — weight compounds up the lever.</p></div>
+        <div class="card"><div class="kick">Demand 3</div><div class="sub">Torsional stiffness</div><p class="p">Grab a heavy load and a soft joint twists — the pose goes wrong. Distinct from backlash: this grows <i>with</i> load.</p></div>
+        <div class="card"><div class="kick">Demand 4</div><div class="sub">Shock survival</div><p class="p">E-stops and collisions spike load far beyond rated. A cracked reducer stops the whole line.</p></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><div class="sect">The two mechanisms, side by side</div><div class="secn">watch the counting trick — one-fewer tooth/lobe makes the reduction</div></div>
+      <div class="mech-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start">
+        <div class="stage">
+          <div class="stage-t" style="color:var(--hd)">Strain-wave · Harmonic Drive</div>
+          <div class="stage-s">bends thin steel elastically into an oval</div>
+          <svg viewBox="0 0 360 300" id="swSvg">
+            <g id="csTeeth"></g>
+            <circle cx="180" cy="150" r="120" fill="none" stroke="var(--hd)" stroke-width="2.5"/>
+            <path id="fsPath" fill="none" stroke="var(--pos)" stroke-width="3.5"/>
+            <g id="fsTeeth"></g>
+            <ellipse id="wgEll" cx="180" cy="150" rx="94" ry="64" fill="var(--accbg)" stroke="var(--accent)" stroke-width="2.5"/>
+            <circle cx="180" cy="150" r="15" fill="var(--accent)"/>
+            <text x="180" y="154" text-anchor="middle" font-family="ui-monospace" font-size="8.5" fill="#fff" font-weight="600">IN</text>
+            <circle id="swm1" r="8" fill="none" stroke="var(--neg)" stroke-width="3"/>
+            <circle id="swm2" r="8" fill="none" stroke="var(--neg)" stroke-width="3"/>
+          </svg>
+          <div class="mctl"><button class="mbtn" id="swBtn">⏸ Pause</button><span class="readout" id="swRead">output: −2 teeth / input rev</span></div>
+          <div class="pleg" id="swLegend"></div>
+        </div>
+        <div class="stage">
+          <div class="stage-t" style="color:var(--nb)">Cycloidal / RV · Nabtesco</div>
+          <div class="stage-s">wobbles a rigid disc — nothing flexes</div>
+          <svg viewBox="0 0 360 300" id="cySvg">
+            <circle cx="180" cy="150" r="126" fill="none" stroke="var(--nb)" stroke-width="2.5"/>
+            <g id="ringPins"></g>
+            <path id="discPath" fill="var(--accbg)" stroke="var(--nb)" stroke-width="3"/>
+            <g id="outPins"></g>
+            <circle id="camDot" r="13" fill="var(--accent)"/>
+            <circle cx="180" cy="150" r="5" fill="var(--navy)"/>
+          </svg>
+          <div class="mctl"><button class="mbtn" id="cyBtn">⏸ Pause</button><span class="readout" id="cyRead">disc: −1 lobe / input rev</span></div>
+          <div class="pleg" id="cyLegend"></div>
+        </div>
+      </div>
+      <div class="g2" style="margin-top:14px">
+        <div class="note pos"><h5>Strain-wave — what it wins / costs</h5><p><b>Wins:</b> near-zero backlash (many teeth engaged + cup preloaded outward), light, compact, high ratio in one flat stage. <b>Costs:</b> the flexspline is a fatigue part <i>by design</i> — poor shock tolerance, wears faster under brutal continuous duty.</p></div>
+        <div class="note acc"><h5>Cycloidal / RV — what it wins / costs</h5><p><b>Wins:</b> rolling contact shared over ~12 pins → survives ~5× rated torque, very stiff, long life under continuous load. <b>Costs:</b> heavier, bulkier; backlash grows as pins and lobes wear.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════ 3 · WHERE EACH GOES ═══════ -->
+  <section class="pane" data-p="body">
+    <div class="sec">
+      <div class="sechdr"><div class="sect">One robot needs both — click a joint</div><div class="secn">why Harmonic &amp; Nabtesco are complementary, not rivals</div></div>
+      <div class="lede">Your own body works this way: a <strong>shoulder</strong> is a load-bearing hinge that must not fail;
+        a <strong>fingertip</strong> is a precision positioner. Nobody builds both with the same hardware — and neither do
+        robot designers. The heavy proximal joints go cycloidal (Nabtesco); the fine distal joints go strain-wave
+        (Harmonic). <strong>They split the body — which is exactly why the analysis needs both names.</strong></div>
+      <div class="bodymap">
+        <div class="bodysvg">
+          <svg viewBox="0 0 220 380">
+            <g stroke="var(--bdr)" stroke-width="2.5" fill="none" stroke-linecap="round">
+              <circle cx="110" cy="38" r="21" fill="var(--pale)"/>
+              <line x1="110" y1="59" x2="110" y2="180"/>
+              <line x1="110" y1="82" x2="62" y2="120"/><line x1="62" y1="120" x2="52" y2="176"/><line x1="52" y1="176" x2="46" y2="206"/>
+              <line x1="110" y1="82" x2="158" y2="120"/><line x1="158" y1="120" x2="168" y2="176"/><line x1="168" y1="176" x2="174" y2="206"/>
+              <line x1="110" y1="180" x2="84" y2="266"/><line x1="84" y1="266" x2="80" y2="344"/>
+              <line x1="110" y1="180" x2="136" y2="266"/><line x1="136" y1="266" x2="140" y2="344"/>
+            </g>
+            <g id="jhots">
+              <g class="jhot" data-j="shoulder"><circle cx="158" cy="120" r="9" fill="var(--nb)"/><circle cx="62" cy="120" r="9" fill="var(--nb)" opacity=".45"/></g>
+              <g class="jhot" data-j="elbow"><circle cx="168" cy="176" r="8" fill="var(--nb)"/><circle cx="52" cy="176" r="8" fill="var(--nb)" opacity=".45"/></g>
+              <g class="jhot" data-j="wrist"><circle cx="174" cy="206" r="8" fill="var(--hd)"/><circle cx="46" cy="206" r="8" fill="var(--hd)" opacity=".45"/></g>
+              <g class="jhot" data-j="hand"><circle cx="180" cy="228" r="9" fill="var(--hd)"/><circle cx="40" cy="228" r="9" fill="var(--hd)" opacity=".45"/></g>
+              <g class="jhot" data-j="hip"><circle cx="136" cy="266" r="9" fill="var(--warn)"/><circle cx="84" cy="266" r="9" fill="var(--warn)" opacity=".45"/></g>
+            </g>
+            <g font-family="ui-monospace" font-size="8.5" fill="var(--mu)">
+              <text x="192" y="120">shoulder</text><text x="192" y="178">elbow</text>
+              <text x="192" y="206">wrist</text><text x="192" y="232">hand</text><text x="152" y="266">hip/leg</text>
+            </g>
+            <g font-family="ui-monospace" font-size="8.5">
+              <circle cx="22" cy="300" r="5" fill="var(--nb)"/><text x="32" y="303" fill="var(--mu)">RV / cycloidal</text>
+              <circle cx="22" cy="318" r="5" fill="var(--hd)"/><text x="32" y="321" fill="var(--mu)">strain-wave</text>
+              <circle cx="22" cy="336" r="5" fill="var(--warn)"/><text x="32" y="339" fill="var(--mu)">contested</text>
+            </g>
+          </svg>
+        </div>
+        <div id="jdetail"></div>
+      </div>
+      <div class="note warn" style="margin-top:14px"><h5>The caveat that dents the simple story</h5><p>Heavy legs are <i>contested</i>: Tesla's Optimus uses <b>roller screws</b> (a linear mechanism) for heavy leg joints, not RV cycloidal. So "humanoids scale ⇒ Nabtesco wins the legs" is not guaranteed — a real crack to keep in view.</p></div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><div class="sect">Head to head — the only comparison that matters</div><div class="secn"></div></div>
+      <div class="vs">
+        <div class="vh" style="background:var(--pale); color:var(--navy)"></div>
+        <div class="vh" style="background:var(--hd)">Strain-wave · Harmonic Drive</div>
+        <div class="vh" style="background:var(--nb)">Cycloidal RV · Nabtesco</div>
+        <div class="vk">How it works</div><div>Thin steel cup <b>elastically bends</b> to an oval; teeth mesh at 2 points</div><div>Thick disc <b>orbits/wobbles</b>; lobes roll on many pins</div>
+        <div class="vk">Weight &amp; size</div><div class="win" style="color:var(--pos)"><b>Lighter, thinner</b> — 3 parts, 1 stage</div><div>Heavier, bulkier — 2 stages</div>
+        <div class="vk">Precision</div><div class="win" style="color:var(--pos)"><b>Best-in-class</b> zero backlash</div><div>Very good; backlash grows with wear</div>
+        <div class="vk">Shock survival</div><div>Weaker — flexing cup is the fatigue point</div><div class="win" style="color:var(--pos)"><b>Excellent</b> — ~5× rated, load shared</div>
+        <div class="vk">Stiffness</div><div>Good</div><div class="win" style="color:var(--pos)"><b>Very high</b> — rigid, multi-point</div>
+        <div class="vk">Natural home</div><div class="win" style="color:var(--hd)"><b>Wrists, fingers, hands</b>, semiconductor tools</div><div class="win" style="color:var(--nb)"><b>Shoulder, elbow, base</b></div>
+      </div>
+      <p class="foot"><b>This table is why the two Japanese firms are a duopoly, not rivals</b> — they mostly don't bid for the same slot, and a robot arm contains both.</p>
+    </div>
+  </section>
+
+  <!-- ═══════ 4 · THE MOAT ═══════ -->
+  <section class="pane" data-p="moat">
+    <div class="sec">
+      <div class="sechdr"><div class="sect">The moat, with numbers</div><div class="secn">the flexspline is the hardest part in the machine</div></div>
+      <div class="g4">
+        <div class="stat"><div class="big">5 µm</div><div class="lab">max flexspline eccentricity</div><p>A human hair is ~70 µm — fourteen times coarser.</p></div>
+        <div class="stat"><div class="big">12</div><div class="lab">manufacturing steps</div><p>Soft-machine, hob, heat-treat, hard-turn, oil-bath temper, hone, fine shot-peen…</p></div>
+        <div class="stat"><div class="big">&gt;90%</div><div class="lab">of the steel becomes swarf</div><p>SNCM439 Cr-Ni-Mo, 38–42 HRC, ISO 1328 Class 4.</p></div>
+        <div class="stat"><div class="big">radial ⟂ torsional</div><div class="lab">the built-in contradiction</div><p>The cup must be radially <i>flexible</i> yet torsionally <i>rigid</i> — opposite demands in one part.</p></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><div class="sect">⚠️ What the moat IS — and is NOT</div><div class="secn">the single most important nuance</div></div>
+      <div class="g3">
+        <div class="note neg"><h5>✕ NOT an ASML</h5><p>The machines that make flexsplines (EMAG, Gleason, Kapp-Niles, Reishauer) are sold in open catalogues. <b>China buys them freely.</b> No single supplier, no embargo — which is exactly why China reached spec parity so fast.</p></div>
+        <div class="note neg"><h5>✕ NOT nanotech</h5><p>Parts are 25–140 mm; a 3 nm transistor is ~1,600× finer. This is classic precision mechanics — no exotic science, and not even more complex than a LiDAR or an encoder.</p></div>
+        <div class="note pos"><h5>✓ IS statistical process control</h5><p>Anyone can make <i>one</i> good flexspline. Making <b>a million</b>, all within 5 µm after 12 thermal steps that each distort the part, is the game.</p></div>
+      </div>
+      <div class="callout">
+        <div class="kick">The one line to remember</div>
+        <p>"The advantage is not knowing how to make it — it's knowing <strong>why it came out wrong.</strong>" This is a
+        <strong>manufacturing-statistics and field-history moat, not an engineering moat</strong> — which makes it
+        <strong>structurally weaker than a chip moat.</strong> It erodes with volume and time; no invention is needed to break it.</p>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><div class="sect">The tiers — and why it's a measurement filter, not a factory</div><div class="secn">grade = tolerance to failure risk</div></div>
+      <div class="ladder">
+        <div class="rung"><div class="rung-l" style="background:linear-gradient(150deg,#0D1526,#1E4F9C)"><div class="rt">PREMIUM</div><div class="rp">tightest specs</div></div>
+          <div class="rung-r"><div class="rq"><b>Lives here:</b> semiconductor wafer-handling, medical/surgical, aerospace, defense, high-end machine tools. Failure is catastrophic — a wafer robot dropping a batch costs more than the robot. <b>Nobody buys on price.</b></div>
+            <div class="who"><span class="wchip" style="border-color:var(--hd); color:var(--hd)">Harmonic</span><span class="wchip" style="border-color:var(--nb); color:var(--nb)">Nabtesco</span><span class="wchip" style="border-color:var(--bdr); color:var(--mu)">Wittenstein (EU niche)</span></div></div></div>
+        <div class="rung"><div class="rung-l" style="background:linear-gradient(150deg,#3E5A82,#2563EB)"><div class="rt">MID ← the war</div><div class="rp">the volume battle</div></div>
+          <div class="rung-r"><div class="rq"><b>Lives here:</b> standard industrial arms, cobots, automation, packaging, solar trackers. Solid specs, predictable life — and above all <b>price.</b> <b>This is where China reached parity.</b></div>
+            <div class="who"><span class="wchip" style="border-color:var(--hd); color:var(--hd)">Harmonic (defending)</span><span class="wchip" style="border-color:var(--nb); color:var(--nb)">Nabtesco (defending)</span><span class="wchip" style="border-color:var(--cn); color:var(--cn)">Leaderdrive ▲</span><span class="wchip" style="border-color:var(--cn); color:var(--cn)">Estun ▲</span><span class="wchip" style="border-color:var(--tkr); color:var(--tkr)">Cone Drive · Spinea</span></div></div></div>
+        <div class="rung"><div class="rung-l" style="background:linear-gradient(150deg,#5A4210,#C2410C)"><div class="rt">LOW</div><div class="rp">price-led</div></div>
+          <div class="rung-r"><div class="rq"><b>Lives here:</b> education, hobby, light service robots, cost-first domestic machines. Lowest cost that functions.</div>
+            <div class="who"><span class="wchip" style="border-color:var(--cn); color:var(--cn)">Chinese suppliers (dominant)</span></div></div></div>
+      </div>
+      <div class="g2" style="margin-top:14px">
+        <div class="note acc"><h5>Tier ≠ a separate production line — it's a yield filter</h5><p>All production has dispersion. You make 1,000 parts, measure them, and bin: tight window → premium; middle → mid; rest → low or scrap. <b>China <i>can</i> make premium parts — the question is what <i>proportion</i> comes out premium.</b> If a Japanese maker yields 90/100 into the tight window and a Chinese one 40/100, both can sell premium — but the Chinese maker scraps 60 and loses its price edge.</p></div>
+        <div class="note warn"><h5>The barrier volume can't erase</h5><p>You can measure 5-µm conformance <i>today</i>. You <b>cannot</b> measure whether a part still holds it at <b>30,000 hours</b> — only time proves field life. Japan has decades of that data; China started ~7 years ago. <b>No shortcut — time isn't for sale.</b></p></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechdr"><div class="sect">The China parity scorecard — where the moat holds vs breaks</div><div class="secn">how far China has closed each gap (2026)</div></div>
+      <div class="card"><div class="scw" id="chinaBars"></div>
+        <p class="foot" style="margin-top:14px"><b>The pattern:</b> China dominates what's decided by <b>spec and price</b>; Japan retains what's decided by <b>demonstrated field history.</b> Red = China has won it; green = still Japanese.</p></div>
+      <div class="note neg" style="margin-top:14px"><h5>The uncomfortable structural point (the bear thesis)</h5><p>The moat <i>is</i> reliability demonstrated over time. Demonstrating it requires units running under load for years — <b>which is exactly what China accumulates by shipping volume now.</b> The deficit that protects the Japanese today is closing with the volume China ships today. And growth is in the <b>wrong tier</b>: demand grows fastest in MID (mass robots, cobots) where China wins; the PREMIUM Japan retains grows slowly. <b>Counter-point:</b> the market may not care — if a reducer costs 40% and lasts 80%, semi-disposable cobots still favour the cheaper part.</p></div>
+    </div>
+  </section>
+
+  <!-- ═══════ 5 · TO THE COMPANIES ═══════ -->
+  <section class="pane" data-p="bridge">
+    <div class="sec">
+      <div class="sechdr"><div class="sect">From the technology to the three names</div><div class="secn">the bridge into the company overviews</div></div>
+      <div class="lede">The physics maps cleanly onto three listed ways to own it — each a different bet. <strong>Humanoid beta</strong> =
+        how hard the stock moves on humanoid news, a direct function of how pure-play the reducer exposure is.</div>
+      <div class="g3">
+        <div class="firm">
+          <div class="firm-h" style="background:var(--hd)"><span class="fn">Harmonic Drive</span><span class="ft">TSE 6324 · HSYDF</span></div>
+          <div class="firm-b">
+            <div class="frow"><div class="fk">Is</div><div class="fv"><b>Pure-play strain-wave.</b> Owns the fine-joint bottleneck. No other line to cushion it.</div></div>
+            <div class="frow"><div class="fk">In the robot</div><div class="fv">Wrists, fingers, hands · semiconductor &amp; aerospace tools</div></div>
+            <div class="frow"><div class="fk">Watch</div><div class="fv">Violently cyclical (OP ¥13.2B → <b>¥6M</b> → ¥2.57B); Nissan = 10.3% of revenue; <b>no ADR</b> → needs Tokyo</div></div>
+            <div class="frow"><div class="fk">Humanoid beta</div><div class="fv"><span class="beta hi">HIGH</span> — and the highest China exposure</div></div>
+          </div>
+        </div>
+        <div class="firm">
+          <div class="firm-h" style="background:var(--nb)"><span class="fn">Nabtesco</span><span class="ft">TSE 6268 · NCTKY</span></div>
+          <div class="firm-b">
+            <div class="frow"><div class="fk">Is</div><div class="fv"><b>RV cycloidal, ~60% global</b>, 7M+ units, designed-in with all four Big-Four OEMs — but a conglomerate.</div></div>
+            <div class="frow"><div class="fk">In the robot</div><div class="fv">Base, shoulder, elbow (heavy joints)</div></div>
+            <div class="frow"><div class="fk">Watch</div><div class="fv">Robotics only ~26% of sales; rail brakes + aircraft actuators + auto doors carry most of the profit; <b>real ADR</b></div></div>
+            <div class="frow"><div class="fk">Humanoid beta</div><div class="fv"><span class="beta mid">MODERATE</span> — diluted by the anchor legs</div></div>
+          </div>
+        </div>
+        <div class="firm">
+          <div class="firm-h" style="background:var(--tkr)"><span class="fn">Timken</span><span class="ft">NYSE: TKR</span></div>
+          <div class="firm-b">
+            <div class="frow"><div class="fk">Is</div><div class="fv"><b>A bearings company</b> reaching robotics by adjacency — bought Cone Drive (harmonic) + Spinea (cycloidal).</div></div>
+            <div class="frow"><div class="fk">In the robot</div><div class="fv">Mid-tier reducers (via M&amp;A) — exactly where China reached parity</div></div>
+            <div class="frow"><div class="fk">Watch</div><div class="fv">The only liquid US-listed name; defence is systems + qualified bearings, not component specs</div></div>
+            <div class="frow"><div class="fk">Humanoid beta</div><div class="fv"><span class="beta lo">LOW</span> — the low-risk way to play the theme</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="callout">
+        <div class="kick">The distilled question the overviews must answer</div>
+        <p>Not "do you believe in humanoids." It's <strong>who captures the value — the Japanese moat owner or the Chinese
+        low-cost challenger — and how much is already priced.</strong> The tension: the moat is real, but already penetrated
+        in mid-tier; growth is in mid-tier; premium grows slow; humanoids have no incumbency to protect; and Tesla, UBTECH
+        and Figure already chose Chinese. <strong>The moat is strongest where field history matters (slow markets) and
+        weakest where the product is new (the market that supposedly explodes).</strong></p>
+      </div>
+      <p class="foot"><b>Next:</b> the light company overviews for Nabtesco &amp; Harmonic Drive build directly off these cards
+      (Deborah &amp; Daniel own the detailed deep-dives). <b>Accounting note to carry over:</b> Japanese J-GAAP operating
+      profit is systematically understated vs IFRS, and net income is inflated in extraordinary years — use operating profit,
+      adjust before any cross-border comparison.</p>
+    </div>
+
+    <div class="foot">
+      <b>Technology overview — structural &amp; qualitative, no valuation.</b> Built on Daniel's master dossier
+      (<b>dossier_maestro_reductores.md</b>) and technical primer, plus manufacturer technical documentation (Harmonic Drive,
+      Sumitomo Drive), engineering references and the Bloomberg SPLC anchor data. Mechanism animations are schematic, not to
+      scale. Prepared for SAB · Summit Research · Robotics · Reducer Deep-Dive.
+    </div>
+  </section>
+
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+
+/* ---- tabs ---- */
+let cur='choke';
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  cur = t.dataset.p;
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x===t));
+  document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.dataset.p===cur));
+});
+
+/* ---- part legends ---- */
+const SW_PARTS=[
+ ['var(--accent)','1','Wave generator','input · from the motor','An <b>elliptical steel plug</b> with a thin flex bearing around it. Bolts to the motor shaft and spins inside the cup, pushing a travelling bulge around.'],
+ ['var(--pos)','2','Flexspline','output · the flexible cup','A <b>thin-wall steel cup with external teeth</b> that flexes into an oval. The single hardest part to manufacture — the core of the moat.'],
+ ['var(--hd)','3','Circular spline','fixed · the rigid ring','A <b>rigid ring with internal teeth</b>, fixed to the housing, with <b>2 more teeth</b> than the flexspline. The oval only lets teeth mesh at its two far ends.']
+];
+const CY_PARTS=[
+ ['var(--accent)','1','Eccentric cam','input · from the motor','A shaft whose bearing seat is offset 1–3 mm from centre — like a bicycle pedal crank, it pushes the disc in an off-centre orbit.'],
+ ['var(--nb)','2','Cycloidal disc','the wobbling plate','A thick, <b>rigid</b> lobed steel disc. It orbits (doesn’t spin fast), pressing its lobes against the pins. Nothing flexes — that’s why it survives impacts.'],
+ ['var(--hd)','3','Ring pins','fixed · the outer race','A circle of hardened pins in the housing, with <b>1 more pin than there are lobes</b>. Many lobes roll on many pins at once — the load-sharing that gives shock resistance.'],
+ ['var(--pos)','4','Output pins','output · takes the slow spin','Pins through oversized holes in the disc. They <b>filter out the wobble</b> and pass on only the slow rotation to the output shaft.']
+];
+function legend(parts){return parts.map(p=>`<div class="pl"><span class="pl-n" style="background:${p[0]}">${p[1]}</span>
+  <div><div class="pl-t">${p[2]}<span>${p[3]}</span></div><div class="pl-d">${p[4]}</div></div></div>`).join('');}
+$('#swLegend').innerHTML = legend(SW_PARTS);
+$('#cyLegend').innerHTML = legend(CY_PARTS);
+
+/* ---- strain-wave build + animate ---- */
+(function(){
+  const cx=180,cy=150,R=120,N=40;
+  let h='';for(let i=0;i<N;i++){const a=i/N*Math.PI*2,r1=R-7,r2=R-13;
+    h+=`<line x1="${cx+r1*Math.cos(a)}" y1="${cy+r1*Math.sin(a)}" x2="${cx+r2*Math.cos(a)}" y2="${cy+r2*Math.sin(a)}" stroke="var(--hd)" stroke-width="2.4" stroke-linecap="round"/>`;}
+  $('#csTeeth').innerHTML=h;
+})();
+function animSW(t){
+  const cx=180,cy=150,a=t*0.9,rx=104,ry=76,deg=a*180/Math.PI;
+  const wg=$('#wgEll'); wg.setAttribute('transform',`rotate(${deg} ${cx} ${cy})`);
+  let d='';for(let i=0;i<=90;i++){const th=i/90*Math.PI*2,ex=rx*Math.cos(th),ey=ry*Math.sin(th);
+    const X=cx+ex*Math.cos(a)-ey*Math.sin(a),Y=cy+ex*Math.sin(a)+ey*Math.cos(a); d+=(i?'L':'M')+X.toFixed(1)+' '+Y.toFixed(1);}
+  d+='Z'; $('#fsPath').setAttribute('d',d);
+  const out=-a/50; let ht='';const NT=38;
+  for(let i=0;i<NT;i++){const th=i/NT*Math.PI*2+out,ex=rx*Math.cos(th),ey=ry*Math.sin(th);
+    const X=cx+ex*Math.cos(a)-ey*Math.sin(a),Y=cy+ex*Math.sin(a)+ey*Math.cos(a);
+    const nx=Math.cos(th)/rx,ny=Math.sin(th)/ry,nl=Math.hypot(nx,ny);
+    const ux=(nx/nl)*Math.cos(a)-(ny/nl)*Math.sin(a),uy=(nx/nl)*Math.sin(a)+(ny/nl)*Math.cos(a);
+    ht+=`<line x1="${X.toFixed(1)}" y1="${Y.toFixed(1)}" x2="${(X+ux*8).toFixed(1)}" y2="${(Y+uy*8).toFixed(1)}" stroke="var(--pos)" stroke-width="2.2" stroke-linecap="round"/>`;}
+  $('#fsTeeth').innerHTML=ht;
+  $('#swm1').setAttribute('cx',cx+rx*Math.cos(a));$('#swm1').setAttribute('cy',cy+rx*Math.sin(a));
+  $('#swm2').setAttribute('cx',cx-rx*Math.cos(a));$('#swm2').setAttribute('cy',cy-rx*Math.sin(a));
+}
+
+/* ---- cycloidal build + animate ---- */
+(function(){
+  const cx=180,cy=150,Rp=110,NP=13; let h='';
+  for(let i=0;i<NP;i++){const a=i/NP*Math.PI*2;
+    h+=`<circle cx="${(cx+Rp*Math.cos(a)).toFixed(1)}" cy="${(cy+Rp*Math.sin(a)).toFixed(1)}" r="8" fill="var(--pale)" stroke="var(--nb)" stroke-width="2.4"/>`;}
+  $('#ringPins').innerHTML=h;
+})();
+function animCY(t){
+  const cx=180,cy=150,NL=12,e=15,Rp=110,a=t*0.9,ox=e*Math.cos(a),oy=e*Math.sin(a);
+  $('#camDot').setAttribute('cx',cx+ox);$('#camDot').setAttribute('cy',cy+oy);
+  const spin=-a/NL; let d='';const base=Rp-8;
+  for(let i=0;i<=160;i++){const th=i/160*Math.PI*2,r=base-6*Math.cos(NL*(th-spin));
+    d+=(i?'L':'M')+(cx+ox+r*Math.cos(th)).toFixed(1)+' '+(cy+oy+r*Math.sin(th)).toFixed(1);}
+  d+='Z'; $('#discPath').setAttribute('d',d);
+  let op='';const NO=6,Ro=46;
+  for(let i=0;i<NO;i++){const ang=i/NO*Math.PI*2+spin;
+    op+=`<circle cx="${(cx+Ro*Math.cos(ang)).toFixed(1)}" cy="${(cy+Ro*Math.sin(ang)).toFixed(1)}" r="6" fill="none" stroke="var(--pos)" stroke-width="2.4"/>`;}
+  $('#outPins').innerHTML=op;
+}
+let swRun=true, cyRun=true, T=0;
+$('#swBtn').onclick=()=>{swRun=!swRun;$('#swBtn').textContent=swRun?'⏸ Pause':'▶ Play';};
+$('#cyBtn').onclick=()=>{cyRun=!cyRun;$('#cyBtn').textContent=cyRun?'⏸ Pause':'▶ Play';};
+function loop(){ if(swRun)animSW(T); if(cyRun)animCY(T); if(swRun||cyRun)T+=0.016; requestAnimationFrame(loop); }
+animSW(0); animCY(0); loop();
+
+/* ---- joint body map ---- */
+const JOINTS={
+ shoulder:{n:'Shoulder',sub:'Carries the entire arm — the most loaded joint',load:'Very high',prec:'Medium',speed:'Slow',win:'nb',
+   why:'Holds up everything below it plus payload; the bending moment is enormous through the leverage, and it takes the impact if the arm hits something.',
+   need:'Needs <b>rigidity and shock survival</b> far more than micron precision.',
+   txt:'<b>Cycloidal / RV territory (Nabtesco).</b> Rigid, multi-point rolling contact, ~5× rated torque in shock. Weight matters less — it sits close to the body, not out on a lever.'},
+ elbow:{n:'Elbow',sub:'High load, moderate precision',load:'High',prec:'Medium',speed:'Slow',win:'nb',
+   why:'Carries the forearm and hand plus payload; less leverage than the shoulder but still substantial, and it absorbs shock on abrupt stops.',
+   need:'<b>Stiffness and durability first</b>, precision second.',
+   txt:'<b>Mostly cycloidal / RV.</b> Some designs use a large strain-wave unit here to save weight — the one place the two technologies genuinely compete.'},
+ wrist:{n:'Wrist',sub:'Where precision becomes everything',load:'Low–med',prec:'Very high',speed:'Fast',win:'hd',
+   why:'Orients the hand; any angular error is amplified by the hand’s length into millimetres at the fingertip. And it sits at the end of the arm — every gram is carried by the elbow and shoulder.',
+   need:'<b>Zero backlash, light, compact.</b> Shock tolerance matters less.',
+   txt:'<b>Strain-wave territory (Harmonic Drive).</b> Exactly what the flexing-cup design is best at: no play, flat and light, high ratio in a small can.'},
+ hand:{n:'Hand & fingers',sub:'Many tiny joints — the humanoid multiplier',load:'Low',prec:'Very high',speed:'Fast',win:'hd',
+   why:'A dexterous hand holds a dozen small actuated joints; each carries little load but must position accurately inside a finger-sized space.',
+   need:'<b>Miniaturized precision.</b> Size and weight dominate; loads are small.',
+   txt:'<b>Strain-wave (or small planetary) territory.</b> Why humanoids matter so much for Harmonic: a humanoid has far more fine joints than heavy ones, so per-robot content skews to the strain-wave supplier.'},
+ hip:{n:'Hip & legs',sub:'The heaviest loads in a walking humanoid',load:'Extreme',prec:'Medium',speed:'Medium',win:'other',
+   why:'Legs carry the whole body and absorb the repeated impact of every footstep — walking is a controlled series of collisions with the ground.',
+   need:'<b>Maximum load capacity and shock tolerance.</b> The most brutal duty in the machine.',
+   txt:'<b>Contested — a real dent in the simple story.</b> RV is the classic answer, but Tesla’s Optimus uses <b>roller screws</b> for heavy leg joints, not RV cycloidal.'}
+};
+function jcolor(w){return w==='hd'?'var(--hd)':w==='nb'?'var(--nb)':'var(--warn)';}
+$('#jdetail').innerHTML = Object.entries(JOINTS).map(([k,j])=>`<div class="jcard" id="jc-${k}">
+  <h4>${j.n}</h4><div class="jsub">${j.sub}</div>
+  <p class="p">${j.why}</p>
+  <div class="jspec"><div class="js"><div class="js-k">Load</div><div class="js-v">${j.load}</div></div>
+   <div class="js"><div class="js-k">Precision</div><div class="js-v">${j.prec}</div></div>
+   <div class="js"><div class="js-k">Speed</div><div class="js-v">${j.speed}</div></div></div>
+  <p class="p">${j.need}</p>
+  <div class="jwin" style="background:color-mix(in srgb,${jcolor(j.win)} 11%,transparent); color:${jcolor(j.win)}">${j.txt}</div>
+</div>`).join('');
+function showJoint(k){document.querySelectorAll('.jcard').forEach(c=>c.classList.remove('on'));const t=$('#jc-'+k);if(t)t.classList.add('on');}
+document.querySelectorAll('.jhot').forEach(h=>h.onclick=()=>showJoint(h.dataset.j));
+showJoint('shoulder');
+
+/* ---- china scorecard ---- */
+const CHINA=[
+ ['Price','35–60% of Japanese price',100,'neg','China wins'],
+ ['Backlash spec','parity for standard duty',100,'neg','parity'],
+ ['Chinese domestic market','Harmonic gets 6.8% of rev from China',92,'neg','~92% lost'],
+ ['New humanoid platforms','Leaderdrive → Tesla, UBTECH, Figure',75,'neg','~75%'],
+ ['Torque density / life','Chinese at 70–85% of benchmark',78,'warn','78% closed'],
+ ['Process consistency @5µm','still Japanese',30,'pos','30% closed'],
+ ['Qualified semis / aero','decided by documented history',22,'pos','22% closed'],
+ ['System-level (actuator)','integration barrier holds',25,'pos','25% closed']
+];
+const CFILL={neg:'linear-gradient(90deg,#F87171,#DC2626)',warn:'linear-gradient(90deg,#FBBF24,#C2410C)',pos:'linear-gradient(90deg,#86EFAC,#16A34A)'};
+const CVAL={neg:'var(--neg)',warn:'var(--warn)',pos:'var(--pos)'};
+$('#chinaBars').innerHTML = CHINA.map(c=>`<div class="scr">
+  <div class="scl">${c[0]}<small>${c[1]}</small></div>
+  <div class="sct"><div class="scf" style="width:${c[2]}%; background:${CFILL[c[3]]}"></div></div>
+  <div class="scv" style="color:${CVAL[c[3]]}">${c[4]}</div></div>`).join('');
+</script>
+</body>
+</html>

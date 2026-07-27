@@ -1,6 +1,6 @@
 /* results.css — standardized "Results" tab (actuals vs Summit / consensus / guidance) */
 
-.rs-wrap { max-width: 980px; }
+.rs-wrap { max-width: 980px; --brand: var(--navy); }
 
 /* Quarterly / Annual view toggle */
 .rs-toprow { display: flex; align-items: center; gap: 14px; margin: 2px 0 14px; }

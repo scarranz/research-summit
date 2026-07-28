@@ -93,8 +93,9 @@ evolution: {
    tooltip per period listing every visible series — guidance range, actual, each estimate
    with its surprise, margin lines.
 4. **Range controls** (added drag/presets Jul 28 per SAB — three equivalent ways to window):
-   (a) **quick-range preset pills** between chart and slider (Quarterly: Last 4Q · Last 8Q ·
-   Reported · Forward · All; Annual: Last 3Y · Last 5Y · …) — anchored to the last reported
+   (a) **quick-range preset pills** in the block header row beside the metric select — no
+   how-to hint text on the page (SAB) — (Quarterly: Last 4Q · Last 8Q · Reported · Forward ·
+   All; Annual: Last 3Y · Last 5Y · …), anchored to the last reported
    period; (b) **drag across the chart** to zoom to a stretch, and **drag starting on the
    y-axis strip** to set the y-range (a translucent brush box tracks either drag; double-click
    resets both — on the Estimates charts, with only 3 x-points, ANY drag adjusts the y-axis;

@@ -86,8 +86,9 @@ function rsPctHtml(s, dec){
   return '<span style="color:' + (up ? RS_GREEN : RS_RED) + '">' + (up ? '+' : '−') + Math.abs(s).toFixed(dec == null ? 1 : dec) + '%</span>';
 }
 function rsGuideMid(m, i){ return (m.guideLo[i] == null || m.guideHi[i] == null) ? null : (m.guideLo[i] + m.guideHi[i]) / 2; }
-// Axis tick: negatives as −$50B, not $-50B.
-function rsTick(v, unit){ var s = v < 0 ? '−' : '', a = Math.abs(v); return unit === 'eps' ? s + '$' + a : s + '$' + a + 'B'; }
+// Axis tick: negatives as −$50B, not $-50B; whole dollars only (zoomed bounds
+// arrive fractional — $135.13111B would eat the chart's left margin).
+function rsTick(v, unit){ var s = v < 0 ? '−' : '', a = Math.abs(v); return unit === 'eps' ? s + '$' + (+a.toFixed(2)) : s + '$' + Math.round(a) + 'B'; }
 function rsWin(k, m){
   var st = rsSt(k), n = m.periods.length;
   if (!st.win || st.win[1] >= n || st.win[0] < 0){ st.win = [0, n - 1]; }
@@ -189,20 +190,20 @@ function rsBody(){
 function rsBlocksHtml(){
   return rsView().sections.map(function(cfg){
     var k = cfg.key, m = rsMetric(k);
+    var pres = _rs.view === 'q'
+      ? [['l4', 'Last 4Q'], ['l8', 'Last 8Q'], ['rep', 'Reported'], ['fwd', 'Forward'], ['all', 'All']]
+      : [['l3', 'Last 3Y'], ['l5', 'Last 5Y'], ['rep', 'Reported'], ['fwd', 'Forward'], ['all', 'All']];
     var h = '<div class="rs-block" data-rsblock="' + k + '">';
     h += '<div class="rs-block-top"><div class="rs-block-h">' + esc(cfg.label) + '</div>' +
-      '<select class="rs-msel" aria-label="Metric">' + rsSelectHtml(k) + '</select></div>';
+      '<select class="rs-msel" aria-label="Metric">' + rsSelectHtml(k) + '</select>' +
+      '<div class="rs-quick"><span class="rs-quick-l">Range</span>' +
+        pres.map(function(p){ return '<button type="button" class="rs-preset" data-rsrange="' + p[0] + '">' + p[1] + '</button>'; }).join('') +
+      '</div></div>';
     h += '<div class="ave-leg" id="rsLegend-' + k + '">' + rsLegendHtml(k, m) + '</div>';
     h += '<div class="ov-chart-card">' +
       '<div class="ov-chart-t" id="rsChartT-' + k + '"></div>' +
       '<div class="ov-chart-wrap ovs-tall"><canvas id="rsChart-' + k + '"></canvas></div>' +
     '</div>';
-    var pres = _rs.view === 'q'
-      ? [['l4', 'Last 4Q'], ['l8', 'Last 8Q'], ['rep', 'Reported'], ['fwd', 'Forward'], ['all', 'All']]
-      : [['l3', 'Last 3Y'], ['l5', 'Last 5Y'], ['rep', 'Reported'], ['fwd', 'Forward'], ['all', 'All']];
-    h += '<div class="rs-quick"><span class="rs-quick-l">Range</span>' +
-      pres.map(function(p){ return '<button type="button" class="rs-preset" data-rsrange="' + p[0] + '">' + p[1] + '</button>'; }).join('') +
-      '<span class="tech-leg-i" style="margin-left:auto">drag across the chart to zoom · drag on the y-axis to set its range · double-click resets</span></div>';
     h += '<div class="sg-controls">' +
       '<div class="sg-slider">' +
         '<div class="sg-track"><div class="sg-fill" id="rsFill-' + k + '"></div></div>' +
@@ -726,7 +727,7 @@ function rsEvoLegendHtml(k, m){
     h += '<button type="button" class="rs-leg' + (st.hidden.cons ? ' off' : '') + '" data-rsevleg="cons" title="Show / hide">' +
       '<span class="rs-leg-dash" style="color:var(--navy)"></span>Consensus (dashed)</button>';
   }
-  h += '<span class="tech-leg-i" style="margin-left:auto">one line per fiscal year · click a chip to hide it · drag on the chart to zoom the y-axis · double-click resets</span>';
+  h += '<span class="tech-leg-i" style="margin-left:auto">one line per fiscal year · click a chip to hide it</span>';
   return h;
 }
 
@@ -807,7 +808,7 @@ function rsBuildEvo(k){
       scales: {
         x: { grid: { display: false }, ticks: { font: { size: 11 } } },
         y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
-          callback: function(v){ return pct ? v + '%' : rsTick(v, m.unit); } },
+          callback: function(v){ return pct ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit); } },
           min: st.yr ? st.yr[0] : undefined, max: st.yr ? st.yr[1] : undefined }
       }
     }

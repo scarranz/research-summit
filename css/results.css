@@ -61,8 +61,8 @@
 /* Period-window slider under the chart */
 #rsSliderBox { margin: 10px 2px 18px; }
 
-/* Quick-range preset pills (between chart and slider) */
-.rs-quick { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 10px 2px 2px; }
+/* Quick-range preset pills (in the block header row, beside the metric select) */
+.rs-quick { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-left: auto; }
 .rs-quick-l { font-size: 11px; font-weight: 700; color: var(--mu); margin-right: 2px; }
 .rs-preset {
   appearance: none; border: 1px solid var(--bdr); background: var(--w); color: var(--mu);

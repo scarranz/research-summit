@@ -81,7 +81,10 @@ var ENGINE = [
   'More members and deposits → more lending and fee revenue → reinvestment in product and brand → more members. SoFi calls this the <b>Financial Services Productivity Loop</b>.',
 ];
 
-var PEERS = [
+// NOTE (Jul 2026 restructure): renamed from PEERS — a later `var PEERS` (the quantitative
+// peer table used by the Peers tab) was shadowing this narrative array at module-eval time,
+// so the Overview's "Peers & Competitive Landscape" table had been rendering empty rows.
+var PEER_NARRATIVE = [
   ['Traditional banks (JPMorgan, BofA, Wells Fargo)', 'Full-service national banks with large branch networks and deposit bases.', 'SoFi is digital-native with no branches — structurally lower cost to serve, one integrated app, and faster product velocity.'],
   ['Chime', 'Digital banking / neobank focused on spending and checking for everyday consumers.', 'SoFi offers a far broader suite — lending, investing, credit card — plus its own national bank charter and deposit base.'],
   ['Robinhood', 'Investing-first app expanding into cash management and lending.', 'SoFi leads in lending and deposits and holds a bank charter; investing is one of many products inside its loop.'],
@@ -281,7 +284,7 @@ function overviewBody(c){
   // 8 — Peers
   h += sec('Peers & Competitive Landscape',
     '<table class="ov-table"><thead><tr><th>Peer</th><th>What they offer</th><th>How SoFi differs</th></tr></thead><tbody>'+
-    PEERS.map(function(p){return '<tr><td class="ov-td-name">'+esc(p[0])+'</td><td>'+esc(p[1])+'</td><td>'+esc(p[2])+'</td></tr>';}).join('')+
+    PEER_NARRATIVE.map(function(p){return '<tr><td class="ov-td-name">'+esc(p[0])+'</td><td>'+esc(p[1])+'</td><td>'+esc(p[2])+'</td></tr>';}).join('')+
     '</tbody></table>'
   );
 
@@ -2513,11 +2516,351 @@ function managementBody(c){
   return h;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// STANDARDIZED OVERVIEW (Jul 2026 restructure) — per docs/OVERVIEW_CONVENTIONS.md, mirroring
+// googl.js/amzn.js. The bespoke profile that used to BE the Overview moved intact into the
+// Deep Dive sub-module below (its old Overview tab is now "Deep Overview" — nothing deleted).
+//
+// Sources: SoFi FY2025 10-K (SEC EDGAR, acc. 0001818874-26-000013, filed 2026-02-17) and the
+// Q4/FY2025 earnings release (8-K acc. 0001818874-26-000008) for all FY2025 figures; 2026
+// DEF 14A for CEO tenure; the Jun-2021 "Super 8-K" for the SPAC mechanics. Segment figures are
+// the OFFICIAL ones that tie to total net revenue ($3,613.4M): Lending $1,848.9M + Financial
+// Services $1,542.0M + Technology Platform $450.2M − $227.8M corporate/eliminations.
+// ⚠ Known definitional conflict, flagged on purpose: the legacy Deep Dive blocks carry
+// Technology Platform FY2025 ≈ $361M (Summit-model basis, ex-intersegment) vs the 10-K's
+// $450.2M segment figure (includes intersegment revenue eliminated in Corporate/Other).
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+var STD_FACTS=[
+  ['Listing','NASDAQ: SOFI'],
+  ['HQ','San Francisco, CA, USA'],
+  ['Incorporated','Delaware, USA'],
+  ['SEC filer','Domestic (10-K/10-Q/8-K)'],
+  ['Founded','2011 (as Social Finance)'],
+  ['Listed','Jun 2021 · via SPAC'],
+  ['CEO','Anthony Noto · since Feb 2018'],
+  ['Employees','~6,100 · Dec 2025'],
+  ['Dividend','Non-payer'],
+  ['Market cap','live'],
+];
+
+var STD_LEDE='SoFi is a one-stop shop for digital financial services — borrow, save, spend, invest — built around "members" rather than customers and delivered through a single app, with no branches. Founded in 2011 as a student-loan refinancer, since 2022 it operates its own nationally chartered bank, SoFi Bank, N.A., whose deposits fund most of its lending; it also sells the banking technology it runs on to other institutions.';
+
+// 2x2 quadrant (each cell ≤ ~30 words)
+var STD_BIZ=[
+  ['What it sells','Consumer finance in one app — personal, student and home loans, checking & savings, invest, credit card, crypto — plus B2B banking infrastructure (Galileo, the Cyberbank core).'],
+  ['Who buys it','Its ~13.7M members: digitally-native, high-FICO, high-income consumers; banks, fintechs and enterprises licensing the Technology Platform; third parties buying the loans it originates.'],
+  ['How it earns','FY2025: ~51% Lending · ~43% Financial Services · ~12% Technology Platform (a ~−6% corporate/eliminations line reconciles) — ~61% net interest income, ~39% fees.'],
+  ['The edge','The bank charter: ~$37.5B of deposits give fintech economics with bank funding costs. One member, many products — cross-buy makes each extra product nearly free to sell.'],
+];
+
+// How it makes money — FY2025 total net revenue $3,613.4M (+35%), per the Q4/FY2025 release.
+// Geography view intentionally absent (≥2-slice rule): revenue is essentially all-US per the
+// 10-K — stated in the caption instead of a one-bar chart.
+var GMM_SEG=[
+  ['Lending', 51, '$1,849M', '51%', '#0E7CC0'],
+  ['Financial Services', 43, '$1,542M', '43%', '#1E9E62'],
+  ['Technology Platform', 12, '$450M', '12%', '#7A5AF8'],
+];
+var REV_DEFS=[
+  { seg:'Lending',
+    desc:'Personal, student (including refinancing) and home loans, originated fully in-app by SoFi Bank and mostly held on the balance sheet. Earns <b>net interest income</b> on the loan book — funded by member deposits — plus fee income from origination, loan sales, securitization and servicing.',
+    econ:[['FY2025 net revenue','$1,848.9M (+24%)'],['Net interest income','$1,606.0M'],['Noninterest income','$242.9M']],
+    econNote:'Q4/FY2025 earnings release (SEC). Adjusted net revenue — Lending: $1,827.0M (excludes servicing-rights / residual-interest fair-value inputs).' },
+  { seg:'Financial Services',
+    desc:'The everyday-money layer: <b>SoFi Money</b> (checking & savings at SoFi Bank), <b>Invest</b>, <b>Credit Card</b>, <b>Relay</b> (free financial tracking), <b>SoFi Crypto</b> (relaunched 2025), At Work and Lantern. Earns interest on deposits and card balances, interchange and brokerage fees — plus the <b>Loan Platform Business</b>, which originates loans on behalf of third parties for a capital-light fee.',
+    econ:[['FY2025 net revenue','$1,542.0M (+88%)'],['Loan Platform fees within it','$575.9M (vs $141.6M FY2024)'],['Total deposits (Dec 2025)','$37.5B (+44%)']] },
+  { seg:'Technology Platform',
+    desc:'The B2B segment: <b>Galileo</b>, an API-based payments processing and account platform serving financial and non-financial institutions, and the <b>cloud-native core-banking platform</b> (Technisys heritage) that banks license instead of building their own. Earns platform usage fees and license/maintenance fees.',
+    econ:[['FY2025 net revenue','$450.2M (+14%)'],['Clients','primarily North America & Latin America']],
+    econNote:'Segment figures include intersegment revenue (services to SoFi itself) eliminated in the Corporate/Other line — the Summit model tracks this segment ex-intersegment (~$361M FY2025), a definitional gap, not an error.' },
+  { seg:'Corporate / Other (reconciling)',
+    desc:'Not a business: corporate net interest expense and intercompany eliminations. FY2025 −$227.8M — the three segments minus this line tie exactly to the reported $3,613.4M total.',
+    econ:[['FY2025','−$227.8M']] },
+];
+
+// Products — two tiers: family card → pop-up with the specific products (key = prod:i).
+var STD_PRODUCTS=[
+  { ic:'🏦', fam:'Borrow', d:'The original business — loans, all in-app.', items:[
+    ['Personal loans','The volume engine — unsecured loans to prime borrowers (avg FICO ~746, avg income ~$158K), originated by SoFi Bank.'],
+    ['Student loan refinancing','Where SoFi started in 2011 — refinancing federal/private student debt at lower rates.'],
+    ['In-school loans','Private student loans for current students.'],
+    ['Home loans','Purchase and refi mortgages (scaled via the 2023 Wyndham Capital acquisition).'] ]},
+  { ic:'💳', fam:'Save & spend', d:'The deposit engine.', items:[
+    ['SoFi Money — Checking & Savings','High-yield accounts at SoFi Bank — the source of the ~$37.5B deposit base that funds the lending.'],
+    ['SoFi Credit Card','Cash-back rewards card.'],
+    ['SoFi Relay','Free budgeting / credit-score tracking — an engagement product that feeds cross-buy, not a revenue line.'] ]},
+  { ic:'📈', fam:'Invest', d:'Brokerage inside the app.', items:[
+    ['SoFi Invest','Self-directed stocks & ETFs plus automated investing; options and margin for active members.'],
+    ['SoFi Crypto','Wound down in 2023–24 under bank-charter conformance, relaunched Q4 2025 — with stablecoin and tokenized-deposit ambitions at SoFi Bank.'],
+    ['Alternatives & IPO access','Alt funds and IPO allocations — differentiated shelf for retail.'] ]},
+  { ic:'🤝', fam:'Loan Platform Business', d:'Lending without the balance sheet.', items:[
+    ['Originate-to-order','SoFi originates personal loans on behalf of third-party buyers (Blue Owl, Fortress and others) and earns a fee — capital-light, no credit risk retained.'],
+    ['Referrals','Demand SoFi cannot or chooses not to fund is routed to partners for a referral fee.'],
+    ['Servicing','SoFi keeps the member relationship and servicing on loans it placed.'] ]},
+  { ic:'⚙️', fam:'Technology Platform', d:'Selling the rails (B2B).', items:[
+    ['Galileo','API-based payment processing, accounts and cards infrastructure powering other fintechs, enterprises and government programs.'],
+    ['Cyberbank core (Technisys)','Cloud-native core-banking system banks license to modernize — acquired 2022.'],
+    ['AI add-ons','Conversational banking engine and real-time payment-risk platform layered on top.'] ]},
+];
+
+// Timeline — corporate lineage per the conventions rubric. Depth in Read More pop-ups (hist:i).
+var STD_TIMELINE=[
+  { y:'2011', t:'<b>Genesis:</b> founded as <b>Social Finance, Inc.</b> — a student-loan refinancing lender.',
+    d:'<ul class="ov-bullets"><li>Started in student-loan refinancing for high-earning graduates — the credit-quality DNA (prime borrowers) persists across every later product.</li><li>Organically the same company today — no spin-off or reverse merger; it went public via SPAC in 2021 (below).</li><li>Founder-CEO Mike Cagney departed in late 2017; the modern strategy dates from the CEO change that followed.</li></ul>' },
+  { y:'Feb 2018', t:'<b>Anthony Noto becomes CEO</b> — the pivot from lender to one-stop financial-services company.',
+    d:'<ul class="ov-bullets"><li>Ex-Goldman TMT co-head, ex-NFL CFO, ex-Twitter COO/CFO.</li><li>Under Noto: SoFi Money and Invest launch (2019–20), then the acquisitions and the bank charter that define today\'s model.</li></ul>' },
+  { y:'May 2020', t:'<b>Galileo acquired (~$1.2B)</b> — the foundation of the B2B Technology Platform segment.' },
+  { y:'2020–23', t:'<b>External shock:</b> the federal student-loan payment moratorium freezes the original core business.',
+    d:'<ul class="ov-bullets"><li>The CARES-era moratorium (Mar 2020) collapsed demand for student-loan refinancing — SoFi\'s founding product.</li><li>It forced the diversification the company was already attempting: personal loans, deposits and financial services carried the growth.</li><li>Payments resumed Oct 2023 — by then the refi business was one product among many, not the company.</li></ul>' },
+  { y:'Jun 2021', t:'<b>Public via SPAC</b> — merger with Chamath Palihapitiya\'s <b>Social Capital Hedosophia V</b>; Nasdaq as SOFI on Jun 1, 2021.',
+    d:'<ul class="ov-bullets"><li>Merger agreement Jan 7, 2021; business combination closed May 28, 2021 (with a Delaware domestication).</li><li>SCH (NYSE: IPOE) shares ceased trading; SOFI began trading on Nasdaq Jun 1, 2021.</li><li>No traditional IPO — the SPAC route is the going-public mechanism.</li></ul>' },
+  { y:'Feb 2022', t:'<b>The defining inflection: a national bank charter.</b> Golden Pacific Bancorp acquired → <b>SoFi Bank, N.A.</b>',
+    d:'<ul class="ov-bullets"><li>Acquired Golden Pacific Bancorp (Feb 2, 2022) and renamed it SoFi Bank, National Association; SoFi became a bank holding company.</li><li>Before: loans funded with warehouse lines and securitizations. After: funded with member deposits — structurally cheaper and more stable.</li><li>Deposits grew from zero to <b>$37.5B</b> by Dec 2025 — the funding engine of the whole model.</li></ul>' },
+  { y:'Mar 2022', t:'<b>Technisys acquired (~$1.1B, all-stock)</b> — cloud-native core banking joins Galileo in the Technology Platform.' },
+  { y:'2023–24', t:'<b>Profitability arrives:</b> first GAAP-profitable quarter (Q4 2023) → first full GAAP-profitable year (2024).',
+    d:'<ul class="ov-bullets"><li>Q4 2023: net income $47.9M — the first positive GAAP quarter as a public company.</li><li>FY2024: net income $498.7M — the first full profitable year (helped by a one-time ~$266M deferred-tax valuation-allowance release; adjusted net income $227.2M).</li><li>FY2025: $481.3M of net income with no such benefit — adjusted net income more than doubled.</li></ul>' },
+  { y:'2024–25', t:'<b>The Loan Platform Business scales</b> — originating for third parties turns lending capital-light.',
+    d:'<ul class="ov-bullets"><li>Loan Platform fees: $141.6M (FY2024) → <b>$575.9M</b> (FY2025).</li><li>Forward-flow partners include Blue Owl ($5.0B), Fortress and others — SoFi earns fees on demand it would otherwise turn away.</li><li>A business-model inflection inside Lending: same origination machine, without the balance sheet.</li></ul>' },
+  { y:'2025', t:'<b>$3.2B of common equity raised</b> in two offerings (Jul @ $20.85 · Dec @ $27.50) — dilutive, funding balance-sheet growth.' },
+  { y:'Q4 2025', t:'<b>Crypto returns:</b> SoFi Crypto relaunches (after the 2023–24 charter-conformance exit), with stablecoin & tokenized-deposit plans at SoFi Bank.' },
+];
+
+// ─── Peers scatter — fintech/neobank map. Toggles: metric (P/E ⇄ EV/EBITDA) × basis (Forward ⇄
+// Trailing, default Forward). EV/EBITDA is NOT meaningful for deposit-funded financials — all
+// seeds are null there, so that view is empty by design and the caption says why. Bubble = LIVE
+// market cap (Massive). Multiples/growth are seeded approximations (mid-2026), labeled. ─────────
+var STD_PEERS=[
+  { tk:'SOFI', n:'SoFi', peT:45, peF:29, evT:null, evF:null, gt:35, gf:29, mc:20, hl:true,
+    why:'The one-stop-shop thesis: fastest product velocity of the group and a bank charter funding it. Priced as a growth fintech, not a bank.' },
+  { tk:'HOOD', n:'Robinhood', peT:44, peF:43, evT:null, evF:null, gt:52, gf:20, mc:83,
+    why:'The other consumer-fintech super-app — investing-first where SoFi is lending-first. Faster 2025 growth, richer multiple, no bank charter.' },
+  { tk:'IBKR', n:'Interactive Brokers', peT:40, peF:37, evT:null, evF:null, gt:20, gf:10, mc:78,
+    why:'The profitability benchmark: slower growth, pristine margins. What a mature, automated financial platform earns.' },
+  { tk:'NU', n:'Nubank', peT:20, peF:14, evT:null, evF:null, gt:37, gf:30, mc:60,
+    why:'The global benchmark for branchless banking at scale (LatAm, >100M customers) — similar model, different geography, cheapest multiple of the set.' },
+];
+var STD_SC={ metric:'pe', basis:'f', peers:null, _capsFetched:false };
+function sfScReset(){ if(!STD_SC.peers) STD_SC.peers=STD_PEERS.map(function(p){ var o={}; for(var k in p) o[k]=p[k]; o.on=true; return o; }); }
+function sfScMult(p){ var key=(STD_SC.metric==='pe'?'pe':'ev')+(STD_SC.basis==='f'?'F':'T'); return p[key]; }
+function sfScMax(){ return STD_SC.metric==='pe'?60:30; }
+function sfScLogo(p){ return p.logo || ('https://assets.parqet.com/logos/symbol/'+p.tk); }
+
+function stdPeerScatter(){
+  var h='<style>.sf-tog-row{display:flex;flex-wrap:wrap;gap:14px;margin:2px 0 8px}'+
+    '.sf-tog{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--mu)}'+
+    '.sf-seg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+
+    '.sf-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
+    '.sf-pill.active{background:var(--navy);color:#fff}'+
+    '.sf-node{cursor:pointer}.sf-node text{pointer-events:none}'+
+    '.sfsc-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 2px}'+
+    '.sfsc-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;border:1px solid var(--bdr);border-radius:999px;padding:3px 9px;background:var(--w);cursor:pointer;color:var(--navy)}'+
+    '.sfsc-chip .x{color:var(--mu);font-weight:800}'+
+    '.sfsc-add{display:inline-flex;gap:5px;align-items:center}'+
+    '.sfsc-add input{width:74px;font:inherit;font-size:11px;border:1px solid var(--bdr);border-radius:7px;padding:3px 7px;text-transform:uppercase}'+
+    '.sfsc-add button{font:inherit;font-size:11px;font-weight:700;border:1px solid var(--bdr);border-radius:7px;padding:3px 9px;background:#F2F5F8;cursor:pointer}'+
+    '.sf-tip{position:fixed;z-index:60;max-width:250px;background:#10141A;color:#fff;border-radius:9px;padding:9px 12px;font-size:11.5px;line-height:1.5;box-shadow:0 8px 22px rgba(16,20,26,.28);pointer-events:none;border-top:3px solid '+BRAND+'}'+
+    '.sf-tip .sft-h{display:flex;align-items:center;gap:7px;margin-bottom:4px}.sf-tip .sft-h img{width:18px;height:18px;border-radius:4px;background:#fff;object-fit:contain}'+
+    '.sf-tip .sft-n{font-weight:800;font-size:12.5px;color:#7FC3EF}</style>';
+  h+='<div class="sofi-sc">';
+  h+='<div class="ov-diagram-cap" style="margin:0 0 6px">Consumer-fintech peers mapped by <b>valuation multiple</b> (x) and <b>revenue growth</b> (y). <b>Bubble size = live market cap in USD.</b> <span style="opacity:.75">Hover or tap a bubble for the read.</span></div>';
+  h+='<div class="sf-tog-row">'+
+    '<span class="sf-tog">Multiple: <span class="sf-seg"><button type="button" class="sf-pill active" data-sfmetric="pe">P/E</button><button type="button" class="sf-pill" data-sfmetric="ev">EV/EBITDA</button></span></span>'+
+    '<span class="sf-tog">Basis: <span class="sf-seg"><button type="button" class="sf-pill active" data-sfbasis="f">Forward</button><button type="button" class="sf-pill" data-sfbasis="t">Trailing</button></span></span>'+
+  '</div>';
+  h+='<div class="ov-diagram"><svg viewBox="0 0 640 300" class="sofi-sc-svg" role="img" aria-label="Peer valuation vs growth map">'+
+    '<line x1="80" y1="252" x2="612" y2="252" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<line x1="80" y1="252" x2="80" y2="44" stroke="#C7CED6" stroke-width="1.5"/>'+
+    '<text x="88" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0">← cheaper (lower multiple)</text>'+
+    '<text x="610" y="270" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">more expensive →</text>'+
+    '<text x="346" y="288" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#6b7684" text-anchor="middle" class="sofi-sc-xlab">P/E · forward</text>'+
+    '<text x="74" y="250" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">slow</text>'+
+    '<text x="74" y="52" font-family="Inter,sans-serif" font-size="10" fill="#8A93A0" text-anchor="end">fast growth</text>'+
+    '<g class="sofi-sc-nodes"></g>'+
+  '</svg></div>';
+  h+='<div class="sfsc-chips sofi-sc-chips"></div>';
+  h+='<div class="ov-diagram-cap" style="margin-top:4px">Remove a peer with the <b>×</b> on its chip, or add one by ticker (LC, ALLY, AFRM, XYZ… — live market cap fills in; it plots once a multiple is on file). <b>EV/EBITDA is not meaningful for deposit-funded financials</b> — every peer drops out of that view by design; judge these names on P/E. Unlisted rivals (Chime) have no multiple and appear in the Deep Overview\'s competitive map instead. <span class="ave-subh-note">Multiples & growth are seeded approximations (mid-2026); market caps are live.</span></div>';
+  h+='<div class="sf-tip sofi-sc-tip" hidden></div>';
+  h+='</div>';
+  return h;
+}
+function sfScRenderOne(wrap){
+  var g=wrap.querySelector('.sofi-sc-nodes'); if(!g||!STD_SC.peers) return;
+  var maxMult=sfScMax(), X0=80, X1=612, Y0=252, Y1=44;
+  var lab=wrap.querySelector('.sofi-sc-xlab'); if(lab) lab.textContent=(STD_SC.metric==='pe'?'P/E':'EV/EBITDA')+' · '+(STD_SC.basis==='f'?'forward':'trailing');
+  wrap.querySelectorAll('.sf-pill[data-sfbasis]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-sfbasis')===STD_SC.basis); });
+  wrap.querySelectorAll('.sf-pill[data-sfmetric]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-sfmetric')===STD_SC.metric); });
+  var frag='';
+  STD_SC.peers.forEach(function(p){
+    if(!p.on) return; var m=sfScMult(p); if(m==null||isNaN(m)) return;
+    var growth=STD_SC.basis==='f'?p.gf:p.gt; if(growth==null) growth=p.gf!=null?p.gf:p.gt;
+    var x=X0+Math.max(0,Math.min(1,m/maxMult))*(X1-X0);
+    var y=Y0-Math.max(0,Math.min(1,(growth||0)/55))*(Y0-Y1);
+    var r=Math.max(11,Math.min(27,9+Math.sqrt(Math.max(1,p.mc))*0.9));
+    var logo=sfScLogo(p);
+    frag+='<g class="sf-node" data-name="'+esc(p.n)+'" data-tk="'+esc(p.tk)+'" data-logo="'+esc(logo)+'" data-why="'+esc(p.why||'')+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
+      '<circle r="'+r.toFixed(1)+'" fill="#fff" stroke="'+(p.hl?BRAND:'#C7CED6')+'" stroke-width="'+(p.hl?3:1.5)+'"></circle>'+
+      '<image href="'+esc(logo)+'" x="'+(-r*0.72).toFixed(1)+'" y="'+(-r*0.72).toFixed(1)+'" width="'+(r*1.44).toFixed(1)+'" height="'+(r*1.44).toFixed(1)+'" preserveAspectRatio="xMidYMid meet" style="pointer-events:none"></image>'+
+      '<text y="'+(r+12).toFixed(1)+'" font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?BRAND:'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>';
+  });
+  g.innerHTML=frag;
+}
+function sfScChipsOne(wrap){
+  var box=wrap.querySelector('.sofi-sc-chips'); if(!box||!STD_SC.peers) return;
+  var h=STD_SC.peers.map(function(p,i){ return '<span class="sfsc-chip" data-sci="'+i+'" title="Remove '+esc(p.n)+'">'+esc(p.n)+' <span class="x">×</span></span>'; }).join('');
+  h+='<span class="sfsc-add"><input class="sofi-sc-addtk" placeholder="+ TICKER" maxlength="6"><button type="button" class="sofi-sc-addbtn">Add</button></span>';
+  box.innerHTML=h;
+}
+function sfScRenderAll(root){ root.querySelectorAll('.sofi-sc').forEach(sfScRenderOne); }
+function sfScChipsAll(root){ root.querySelectorAll('.sofi-sc').forEach(function(w){ sfScChipsOne(w); sfWireScChips(root, w); }); }
+function sfWireScatters(root){
+  sfScReset();
+  root.querySelectorAll('.sofi-sc').forEach(function(wrap){
+    if(wrap._scWired) return; wrap._scWired=true;
+    var g=wrap.querySelector('.sofi-sc-nodes'), tip=wrap.querySelector('.sofi-sc-tip');
+    wrap.querySelectorAll('.sf-pill[data-sfbasis]').forEach(function(btn){ btn.onclick=function(){ STD_SC.basis=btn.getAttribute('data-sfbasis'); sfScRenderAll(root); }; });
+    wrap.querySelectorAll('.sf-pill[data-sfmetric]').forEach(function(btn){ btn.onclick=function(){ STD_SC.metric=btn.getAttribute('data-sfmetric'); sfScRenderAll(root); }; });
+    if(g&&tip){
+      var svg=wrap.querySelector('.sofi-sc-svg');
+      function nodeOf(e){ return (e.target&&e.target.closest)?e.target.closest('.sf-node'):null; }
+      function show(node){ tip.innerHTML='<div class="sft-h"><img src="'+node.getAttribute('data-logo')+'" alt="" onerror="this.style.display=\'none\'"><span class="sft-n">'+node.getAttribute('data-name')+'</span></div>'+node.getAttribute('data-why'); tip.hidden=false; }
+      function move(e){ tip.style.left=Math.min(e.clientX+16, window.innerWidth-270)+'px'; tip.style.top=(e.clientY+16)+'px'; }
+      function hide(){ tip.hidden=true; }
+      g.addEventListener('pointerover', function(e){ var n=nodeOf(e); if(n){ show(n); move(e); } });
+      g.addEventListener('pointermove', function(e){ var n=nodeOf(e); if(n){ show(n); move(e); } else hide(); });
+      g.addEventListener('pointerout', function(e){ if(!nodeOf(e)) return; var rt=e.relatedTarget; if(rt&&rt.closest&&rt.closest('.sf-node')) return; hide(); });
+      if(svg) svg.addEventListener('pointerleave', hide);
+      g.addEventListener('click', function(e){ var n=nodeOf(e); if(n){ show(n); move(e); } });
+    }
+  });
+  sfScRenderAll(root); sfScChipsAll(root); sfScFetchCaps(root);
+}
+function sfWireScChips(root, wrap){
+  wrap.querySelectorAll('.sofi-sc-chips .sfsc-chip[data-sci]').forEach(function(ch){ ch.onclick=function(){ var i=+ch.getAttribute('data-sci'); if(STD_SC.peers[i]){ STD_SC.peers.splice(i,1); sfScRenderAll(root); sfScChipsAll(root); } }; });
+  var addBtn=wrap.querySelector('.sofi-sc-addbtn'), addIn=wrap.querySelector('.sofi-sc-addtk');
+  if(addBtn&&addIn){ addBtn.onclick=function(){ var tk=(addIn.value||'').trim().toUpperCase(); if(!tk) return;
+    if(!STD_SC.peers.some(function(p){ return p.tk===tk; })){
+      var seed=STD_PEERS.filter(function(p){ return p.tk===tk; })[0];
+      if(seed){ var o={}; for(var k in seed) o[k]=seed[k]; o.on=true; STD_SC.peers.push(o); }
+      else STD_SC.peers.push({ tk:tk, n:tk, on:true, mc:20, peT:null,peF:null,evT:null,evF:null,gt:null,gf:null, why:'Added by ticker — live market cap only; no multiple on file, so it plots once one is available.' });
+    }
+    addIn.value=''; sfScRenderAll(root); sfScChipsAll(root); sfLiveOne(root, tk); }; }
+}
+// Live market cap (Key Facts cell + peer bubbles) via Massive (api.liveQuote). Degrades gracefully.
+// (Distinct from the legacy get-quote edge-function price used by the Deep Dive Sensitivity tab.)
+function sfLiveOne(root, tk){ import('../api.js').then(function(m){ if(!m||!m.liveQuote) return null; return m.liveQuote(tk); }).then(function(res){ var q=res&&res.data?res.data:res; if(!q||q.marketCap==null) return; var mcB=q.marketCap/1e9; STD_SC.peers.forEach(function(p){ if(p.tk===tk) p.mc=mcB; }); if(tk==='SOFI'){ var el=root.querySelector('#sofiStdMc'); if(el) el.textContent='$'+(mcB>=1000?(mcB/1000).toFixed(2)+'T':Math.round(mcB)+'B')+' · live'; } sfScRenderAll(root); }).catch(function(){}); }
+function sfScFetchCaps(root){ if(STD_SC._capsFetched||!STD_SC.peers) return; STD_SC._capsFetched=true; STD_SC.peers.forEach(function(p){ if(p.tk) sfLiveOne(root, p.tk); }); }
+
+function stdCollapsible(title, inner, open){
+  return '<div class="ov-collap'+(open?' open':'')+'">'+
+    '<button type="button" class="ov-collap-h"><span class="ov-collap-ic">'+(open?'▾':'▸')+'</span>'+esc(title)+'</button>'+
+    '<div class="ov-collap-b"'+(open?'':' hidden')+'>'+inner+'</div></div>';
+}
+function stdKeyFacts(){
+  return '<div class="stdkf">'+STD_FACTS.slice(0,10).map(function(p){
+    var v;
+    if(p[0]==='Market cap'){ v='<span id="sofiStdMc">'+esc(p[1])+'</span>'; }
+    else v=esc(p[1]);
+    return '<div class="stdkf-cell"><div class="stdkf-k">'+esc(p[0])+'</div><div class="stdkf-v">'+v+'</div></div>'; }).join('')+'</div>';
+}
+function stdFourQuad(){
+  return '<div class="q2">'+STD_BIZ.map(function(b){ return '<div class="q2-cell"><div class="q2-k">'+esc(b[0])+'</div><div class="q2-v">'+b[1]+'</div></div>'; }).join('')+'</div>';
+}
+function stdGmmBars(arr){
+  return '<div class="ov-mbars">'+arr.map(function(r){
+    return '<div class="ov-mbar"><div class="ov-mbar-l">'+esc(r[0])+'</div>'+
+      '<div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:'+Math.max(r[1],1.2)+'%;background:'+r[4]+';">'+esc(r[2])+'</div></div>'+
+      '<div class="ov-mbar-v">'+esc(r[3])+'</div></div>';
+  }).join('')+'</div>';
+}
+function stdMoneyMap(){
+  var h='<div class="ov-diagram-cap" style="margin:0 0 8px">FY2025 total net revenue <b>$3,613.4M (+35%)</b> across three segments, plus a <b>−$227.8M corporate/eliminations</b> line — the segments minus that line tie exactly to the reported total. No geography view: revenue is <b>essentially all-US</b> per the 10-K (Technology Platform clients are primarily North America & Latin America).</div>';
+  h+='<div class="gmm-view">'+stdGmmBars(GMM_SEG)+'</div>';
+  h+='<div class="mm-defs acc-list" style="margin-top:12px">'+REV_DEFS.map(function(s){
+    var econ='<div class="acc" style="margin-top:8px"><button type="button" class="acc-h">The numbers <span class="acc-x">+</span></button><div class="acc-b" hidden>'+s.econ.map(function(r){ return '<div class="ov-row"><div class="ov-row-k">'+esc(r[0])+'</div><div class="ov-row-v">'+esc(r[1])+'</div></div>'; }).join('')+(s.econNote?'<div class="ave-subh-note" style="margin-top:6px">'+esc(s.econNote)+'</div>':'')+'</div></div>';
+    return '<div class="acc"><button type="button" class="acc-h">'+esc(s.seg)+'<span class="acc-x">+</span></button><div class="acc-b" hidden><div class="famd">'+s.desc+'</div>'+econ+'</div></div>';
+  }).join('')+'</div>';
+  h+='<div class="ov-diagram-cap" style="margin-top:10px">FY2025: net income <b>$481.3M</b> · diluted EPS <b>$0.39</b> · adjusted EBITDA <b>$1,053.9M (29% margin)</b> · members <b>13.65M (+35%)</b> · deposits <b>$37.5B (+44%)</b>. <span class="ave-subh-note">Source: Q4/FY2025 earnings release + FY2025 10-K (SEC).</span></div>';
+  return h;
+}
+function stdProducts(){
+  return '<div class="ov-diagram-cap" style="margin:0 0 8px"><b>Tap any family</b> for the specific products inside it.</div>'+
+    '<div class="stdp">'+STD_PRODUCTS.map(function(f,i){
+      return '<div class="stdp-card ov-clickable" data-detail="prod:'+i+'"><div class="stdp-ic">'+f.ic+'</div>'+
+        '<div class="stdp-n">'+esc(f.fam)+'</div><div class="stdp-d">'+esc(f.d)+'</div><div class="stdp-more">See products ›</div></div>';
+    }).join('')+'</div>';
+}
+function stdTimelineHtml(){
+  return '<div class="ov-timeline">'+STD_TIMELINE.map(function(t,i){ var more=t.d?'<div class="ov-tl-more">Read more →</div>':''; var cls=t.d?' ov-clickable':''; var attr=t.d?' data-detail="hist:'+i+'"':''; return '<div class="ov-tl-item'+cls+'"'+attr+'><div class="ov-tl-dot"></div><div class="ov-tl-yr">'+esc(t.y)+'</div><div class="ov-tl-body">'+t.t+more+'</div></div>'; }).join('')+'</div>';
+}
+var STD_OV_SOURCES='Sources — SoFi FY2025 10-K (SEC EDGAR, acc. 0001818874-26-000013) and Q4/FY2025 earnings release (8-K Ex. 99.1) for all FY2025 figures, segments, members, deposits and headcount; 2026 DEF 14A for CEO tenure; the Jun-2021 Super 8-K for the SPAC mechanics. Market cap and peer bubbles are live (Massive); peer multiples & growth are seeded approximations (mid-2026), directional. EV/EBITDA is not meaningful for deposit-funded financials, so peers drop out of that view by design.';
+function stdOverviewBody(c){
+  var h='<style>.stdkf{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--bdr);border-top:3px solid '+BRAND+';border-radius:12px;overflow:hidden;background:var(--w);margin:2px 0}'+
+    '.stdkf-cell{padding:11px 13px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
+    '.stdkf-cell:nth-child(5n){border-right:none}.stdkf-cell:nth-child(n+6){border-bottom:none}'+
+    '.stdkf-k{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:3px}'+
+    '.stdkf-v{font-size:12px;font-weight:700;color:var(--navy);line-height:1.3}'+
+    '@media(max-width:720px){.stdkf{grid-template-columns:repeat(2,1fr)}.stdkf-cell{border-right:none}}'+
+    '.q2{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--bdr);border-radius:12px;overflow:hidden;background:var(--w);margin:4px 0}'+
+    '.q2-cell{padding:13px 15px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
+    '.q2-cell:nth-child(2n){border-right:none}.q2-cell:nth-child(n+3){border-bottom:none}'+
+    '.q2-k{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:'+BRAND+';margin-bottom:5px}'+
+    '.q2-v{font-size:12px;color:var(--navy);line-height:1.5}.q2-v b{font-weight:800}'+
+    '@media(max-width:600px){.q2{grid-template-columns:1fr}.q2-cell{border-right:none}.q2-cell:nth-child(n+2){border-bottom:1px solid var(--bdr)}.q2-cell:last-child{border-bottom:none}}'+
+    '.acc-list .acc{border:1px solid var(--bdr);border-radius:9px;margin-top:6px;overflow:hidden;background:var(--w)}'+
+    '.acc-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12px;font-weight:700;color:var(--navy);padding:9px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}'+
+    '.acc-h:hover{background:#EEF2F6}.acc-x{color:var(--mu);font-weight:800}.acc-b{padding:10px 12px}'+
+    '.famd{font-size:12px;color:var(--navy);line-height:1.55}.famd b{font-weight:800}'+
+    '.ov-mbars{display:flex;flex-direction:column;gap:8px}'+
+    '.ov-mbar{display:grid;grid-template-columns:150px 1fr 56px;gap:10px;align-items:center}'+
+    '.ov-mbar-l{font-size:11.5px;font-weight:700;color:var(--navy)}'+
+    '.ov-mbar-track{background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;overflow:hidden;height:22px}'+
+    '.ov-mbar-fill{height:100%;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;padding:0 9px;white-space:nowrap;min-width:fit-content}'+
+    '.ov-mbar-v{font-size:11px;font-weight:800;color:var(--mu);text-align:right}'+
+    '@media(max-width:560px){.ov-mbar{grid-template-columns:1fr}.ov-mbar-v{text-align:left}}'+
+    '.stdp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}'+
+    '.stdp-card{border:1px solid var(--bdr);border-radius:11px;padding:13px 14px;background:var(--w);cursor:pointer;transition:.14s}'+
+    '.stdp-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-2px);border-color:'+BRAND+'}'+
+    '.stdp-ic{font-size:26px;line-height:1}.stdp-n{font-size:13px;font-weight:800;color:var(--navy);margin:7px 0 3px}'+
+    '.stdp-d{font-size:11px;color:var(--mu);line-height:1.45}.stdp-more{font-size:10px;font-weight:700;color:'+BRAND+';margin-top:6px}'+
+    '.ov-collap{border:1px solid var(--bdr);border-radius:10px;margin:12px 0 0;overflow:hidden}'+
+    '.ov-collap-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12.5px;font-weight:800;color:var(--navy);padding:11px 14px;cursor:pointer;display:flex;align-items:center;gap:8px}'+
+    '.ov-collap-h:hover{background:#EEF2F6}.ov-collap-ic{font-size:10px;color:var(--mu)}.ov-collap-b{padding:12px 14px 6px}'+
+    '.ov-diagram-cap{font-size:11px;color:var(--mu);line-height:1.5}'+
+    '.ov-tl-more{font-size:10px;font-weight:700;color:'+BRAND+';margin-top:3px}'+
+    '</style>';
+  // The hook — always visible: Key Facts, description, 2x2 quadrant.
+  h+=stdKeyFacts();
+  h+='<p class="ov-lede">'+STD_LEDE+'</p>';
+  h+=stdFourQuad();
+  // Everything below the hook defaults collapsed (progressive disclosure).
+  h+=stdCollapsible('How SoFi makes money', stdMoneyMap(), false);
+  h+=stdCollapsible('Products & platforms', stdProducts(), false);
+  h+=stdCollapsible('Competitors — the peer map', stdPeerScatter(), false);
+  h+=stdCollapsible('Timeline — how it became today\'s SoFi', stdTimelineHtml(), false);
+  h+='<div class="ov-foot">'+esc(STD_OV_SOURCES)+'</div>';
+  return h;
+}
+
+// ═══ Overview pane — the standardized hook (the bespoke profile lives in the Deep Dive) ════════
 function html(c){
   var h = '<div class="ov ov-sofi" data-brand="SOFI">';
+  h += stdOverviewBody(c);
+  h += '<div class="ov-modal-back" id="sofiOvModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
+    '<button class="ov-modal-x" id="sofiOvModalX" aria-label="Close">×</button>'+
+    '<div class="ov-modal-t" id="sofiOvModalT"></div><div class="ov-modal-b" id="sofiOvModalB"></div></div></div>';
+  h += '</div>';
+  return h;
+}
+
+// ═══ Deep Dive pane — the ENTIRE pre-restructure profile, preserved intact (Jul 2026). The old
+// Overview tab is relabeled "Deep Overview" per OVERVIEW_CONVENTIONS §6; keys/IDs unchanged so
+// every chart builder and wiring path keeps working. ═══════════════════════════════════════════
+function deepDiveHtml(c){
+  var h = '<div class="ov ov-sofi ov-sofi-dd" data-brand="SOFI">';
   // Sub-tab bar
   h += '<div class="ovt-tabs">'+
-    '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
+    '<button type="button" class="ovt-tab active" data-ovt="overview">Deep Overview</button>'+
     '<button type="button" class="ovt-tab" data-ovt="members">General</button>'+
     '<button type="button" class="ovt-tab" data-ovt="interest">Interest Income</button>'+
     '<button type="button" class="ovt-tab" data-ovt="fees">Fee Income</button>'+
@@ -3652,8 +3995,41 @@ function showOvt(root, key){
   if (key === 'peers') requestAnimationFrame(buildPeersTab);
 }
 
+// ═══ Overview init — wires the standardized hook (collapsibles, money-map accordions, peer
+// scatter with live caps, pop-up modal). The bespoke profile's wiring lives in deepDiveInit. ═══
 function init(c){
-  var root = document.querySelector('.ov-sofi');
+  var root = document.getElementById('co-detailview');
+  if (!root) return;
+  // Collapsible sections
+  root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var cc=btn.parentElement; var open=cc.classList.toggle('open'); var b=cc.querySelector('.ov-collap-b'); if(b) b.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.textContent=open?'▾':'▸'; }; });
+  // Money-map accordions (the std overview's .acc-h; the Deep Dive's accordions use .lpb-acc-h)
+  root.querySelectorAll('.acc-list .acc-h').forEach(function(btn){ btn.onclick=function(){ var b=btn.nextElementSibling; if(!b) return; var open=b.hidden; b.hidden=!open; var x=btn.querySelector('.acc-x'); if(x) x.textContent=open?'–':'+'; }; });
+  // Peer scatter (pure SVG — builds fine inside the collapsed section) + live market caps
+  sfWireScatters(root);
+  sfLiveOne(root, 'SOFI');
+  // Pop-up modal (timeline Read Mores + product families)
+  var back=root.querySelector('#sofiOvModalBack'), mT=root.querySelector('#sofiOvModalT'), mB=root.querySelector('#sofiOvModalB');
+  if(back){
+    var onEsc=function(e){ if(e.key==='Escape') closeM(); };
+    var openM=function(t,b){ mT.innerHTML=t; mB.innerHTML=b; back.hidden=false; requestAnimationFrame(function(){ back.classList.add('on'); }); document.addEventListener('keydown', onEsc); };
+    var closeM=function(){ back.classList.remove('on'); document.removeEventListener('keydown', onEsc); setTimeout(function(){ back.hidden=true; }, 180); };
+    root.querySelector('#sofiOvModalX').onclick=closeM; back.onclick=function(e){ if(e.target===back) closeM(); };
+    var resolveStd=function(key){
+      var p=key.split(':'), kind=p[0], id=p.slice(1).join(':');
+      if(kind==='hist'){ var t=STD_TIMELINE[+id]; return t&&t.d?{t:t.y,h:t.d}:null; }
+      if(kind==='prod'){ var f=STD_PRODUCTS[+id]; if(!f) return null;
+        var body=f.items.map(function(it){ return '<div style="margin:0 0 10px"><div style="font-size:12.5px;font-weight:800;color:var(--navy)">'+esc(it[0])+'</div><div class="famd">'+it[1]+'</div></div>'; }).join('');
+        return {t:f.ic+' '+esc(f.fam),h:'<div class="famd" style="margin-bottom:10px;color:var(--mu)">'+esc(f.d)+'</div>'+body}; }
+      return null;
+    };
+    root.querySelectorAll('.ov-sofi:not(.ov-sofi-dd) [data-detail]').forEach(function(el){ el.style.cursor='pointer';
+      el.onclick=function(){ var d=resolveStd(el.getAttribute('data-detail')); if(d) openM(d.t,d.h); }; });
+  }
+}
+
+// ═══ Deep Dive init — the ENTIRE pre-restructure init(), preserved; scoped to .ov-sofi-dd ═══════
+function deepDiveInit(c){
+  var root = document.querySelector('.ov-sofi-dd');
   if (!root) return;
   // Idempotent wiring (init may run again when the Overview pane is re-activated).
   root.querySelectorAll('.ovt-tab').forEach(function(btn){
@@ -3800,4 +4176,4 @@ function init(c){
   if (activeKey === 'fees') requestAnimationFrame(buildFeeTab);
 }
 
-export var sofiOverview = { html: html, init: init };
+export var sofiOverview = { html: html, init: init, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

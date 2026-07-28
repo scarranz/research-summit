@@ -99,13 +99,19 @@ evolution: {
    the vintage data is annual by nature): one line per fiscal year across the model's saved
    snapshots, in TWO stacked blocks mirroring Results — **Top Line** (revenue + segments) and
    **Profitability** (capex/FCF/EBITDA/earnings + segment op income).
-   **PROVENANCE RULE (SAB, Jul 28): this tab is fed EXCLUSIVELY by the DCF export's
-   Projection History sheet** — the only place vintages are referenced. Nothing from 8-Ks,
-   actuals history, CNBC or any other source goes in. That includes: the BBG consensus (only
-   because it is stored inside the same vintage blocks; null where the export holds none),
-   derived totals (sums of the export's own segment rows), and `prior` for implied growth
-   (the prior-year value stored in the same vintage block — for segment lines that is the
-   model's frozen projection, NOT the reported actual). Colors are an ordered
+   **PROVENANCE RULE (SAB, Jul 28): this tab is fed EXCLUSIVELY by the Summit Research
+   database** — which itself is populated from the DCF's Projection History tab, the only
+   place vintages are referenced. Nothing from 8-Ks, actuals history, CNBC or any other
+   source goes in. That includes: the BBG consensus (only because it is stored inside the
+   same vintage blocks; null where Summit holds none), derived totals (sums of Summit's own
+   segment rows), and `prior` for implied growth (the prior-year value stored in the same
+   vintage block — for segment lines that is the model's frozen projection, NOT the reported
+   actual).
+   *Current state (stopgap):* the AMZN dataset was hand-parsed from the model export
+   ("AMZN Summit Projections.xlsm" — a direct copy of the same Projection History) so we
+   could design the representation. *Target state:* the per-ticker `evolution` dataset is
+   fetched through the Summit connection (Summit DB → API/edge function), replacing the
+   hand-built arrays; the dataset shape in §2 is the contract that connection must fill. Colors are an ordered
    one-hue ramp of the portal blue (`EVO_RAMP` in results.js, darkest = nearest year; validated
    with the dataviz palette checker). Solid = Summit, dashed = the BBG consensus stored in the
    model at the same snapshot (so both columns are as-of the same date). Each block has a
@@ -180,6 +186,11 @@ trusting rounded output (the BBG margin rows carry full precision).
 
 - ~~Estimate-EVOLUTION view across vintages~~ — SHIPPED Jul 28 as the *Estimate evolution*
   block (§3.6a): annual forecasts per vintage, Summit + stored-BBG, revision table.
+- **Wire Estimate Evolution to the Summit connection**: the tab's data should come from the
+  Summit Research DB (fed from the DCF's Projection History) instead of the hand-parsed
+  export arrays in `results-data/<ticker>.js` — likely an edge function against the Summit
+  API once the portal has that connection (today the Summit DB is reachable only via the
+  Claude MCP, not from the portal).
 - Quarterly estimate evolution (each vintage's live forward quarters differ for SEGM metrics)
   — data exists in the export, not yet surfaced.
 - MCP-vs-file EBITDA / 2028-revenue reconciliation (ask San/Oscar which is current).

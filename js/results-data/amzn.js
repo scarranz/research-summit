@@ -238,11 +238,15 @@ export var amznResults = {
     }
   },
   // Estimate EVOLUTION across model snapshots (vintages) — how the ANNUAL
-  // forecast for each fiscal year moved as prints landed. Values read straight
-  // from the model export's "Projection History" sheet (one block per vintage;
-  // capex flipped to positive spend). `cons` is the Bloomberg BEst consensus
-  // STORED INSIDE the model at each snapshot — so both columns are as-of the
-  // same date. BBG is stored for revenue / EBITDA / earnings only.
+  // forecast for each fiscal year moved as prints landed. Source of record:
+  // the SUMMIT RESEARCH DATABASE (populated from the DCF's Projection History
+  // tab, where the vintages live). These arrays were hand-parsed from the
+  // model export (same Projection History, one block per vintage; capex
+  // flipped to positive spend) as a stopgap until the portal can pull this
+  // through the Summit connection — see RESULTS_CONVENTIONS §3.6a/§7.
+  // `cons` is the Bloomberg BEst consensus STORED INSIDE the model at each
+  // snapshot — so both columns are as-of the same date. BBG is stored for
+  // revenue / EBITDA / earnings only.
   // Arrays: one row per fiscal year (parallel to `years`), one value per vintage.
   evolution: {
     intro: 'How the forecast itself has moved. Each line tracks one fiscal year’s estimate across the model’s saved snapshots — solid is the Summit model, dashed is the Bloomberg consensus stored alongside it at the same date. Two blocks, mirroring Results: Top Line (revenue and segments, with the growth each snapshot implies) and Profitability (spend and earnings power, with margins). The story of the year: the Feb 2026 snapshot, taken right after the 4Q25 print, re-rated FY26 capex from $151B to $205B and flipped the FY26 free-cash-flow forecast negative.',
@@ -316,7 +320,7 @@ export var amznResults = {
         cons: null,
         note: 'AWS profitability followed the revenue re-rate with a lag: modest bumps in Feb, then the big move in May after the 1Q26 AWS margin beat — FY26 $54.2B → $59.4B (+10%) and FY27 $67.5B → $77.3B (+14%) in one snapshot. In the margin view the May snapshot lifted the assumed AWS operating margin from ~34% to ~36% both years.' }
     },
-    note: 'Single source: every number on this tab comes from the Summit DCF export’s Projection History sheet — the model’s saved snapshots (vintages): Dec 18, 2025 (before the 4Q25 print), Feb 10, 2026 (after it) and May 5, 2026 (after the 1Q26 print). Consensus = the BBG estimates stored inside those same blocks (null where the export holds none). Implied growth chains entirely within the export: each fiscal year against the prior year’s value stored in the same vintage block — for segment lines that base is the model’s own frozen FY25 projection, not the reported actual.'
+    note: 'Single source: every number on this tab comes from the Summit Research database — the model’s saved snapshots (vintages) as recorded in the DCF’s Projection History: Dec 18, 2025 (before the 4Q25 print), Feb 10, 2026 (after it) and May 5, 2026 (after the 1Q26 print). Consensus = the BBG estimates stored inside those same snapshot blocks (null where Summit holds none). Implied growth chains entirely within Summit’s data: each fiscal year against the prior year’s value stored in the same vintage — for segment lines that base is the model’s own frozen FY25 projection, not the reported actual.'
   },
   source: 'Sources: Amazon 8-K press releases on SEC EDGAR (guidance ranges and reported actuals, exact figures); CNBC earnings-day coverage for pre-print consensus (Refinitiv through 2Q23, LSEG after; AWS per StreetAccount); Bloomberg BEst consensus export from the company model (FA_AMZN_US.xlsx, Jul 2026) for forward quarterly consensus, revenue lines and capex; Summit model export "AMZN Summit Projections.xlsm" — Projection History vintages 2025-12-18 / 2026-02-10 (pre-print Summit estimates) and 2026-05-05 (annual forward estimates) — cross-checked with the Summit MCP snapshots (quarterly forward from the 2026-05-13 snapshot). Values in US$ millions except EPS.'
 };

@@ -206,8 +206,6 @@ function rsBlocksHtml(){
       '</div>' +
       '<div class="sg-ends"><span id="rsEnd0-' + k + '"></span><span id="rsEnd1-' + k + '"></span></div>' +
     '</div>';
-    h += '<div class="ov-subh">Range analytics <span class="ave-subh-note" id="rsScope-' + k + '"></span></div>';
-    h += '<div class="ov-kpis" id="rsStats-' + k + '"></div>';
     h += '<div class="rs-tablewrap" id="rsTable-' + k + '"></div>';
     h += '<div class="ov-foot" id="rsNote-' + k + '"></div>';
     h += '</div>';
@@ -348,7 +346,6 @@ function rsBuildChart(k){
   });
 
   rsSyncSlider(k, m);
-  rsRenderStats(k, m);
   rsRenderTable(k, m);
   var n1 = document.getElementById('rsNote-' + k); if (n1) n1.textContent = m.note || '';
   var leg = document.getElementById('rsLegend-' + k); if (leg) leg.innerHTML = rsLegendHtml(k, m);
@@ -379,100 +376,10 @@ function rsSyncSlider(k, m){
   }
 }
 
-// ─── Range analytics — avg deviation in % AND dollars, per reference ──────────
-
-function rsRenderStats(k, m){
-  var el = document.getElementById('rsStats-' + k);
-  if (!el) return;
-  var w = rsWin(k, m), lo = w[0], hi = w[1];
-  var tiles = '', covered = 0;
-  function avg(a){ return a.reduce(function(x, y){ return x + y; }, 0) / a.length; }
-
-  // Read from the ACTUAL's point of view: the actual came in X above/below what
-  // each reference had estimated (▲ = beat the estimate, green).
-  [{ key:'summit', label:'Actual vs Summit', arr:m.summit },
-   { key:'cons',   label:'Actual vs consensus', arr:m.cons }].forEach(function(r){
-    var pcts = [], dols = [], above = 0, below = 0;
-    for (var i = lo; i <= hi; i++){
-      if (!r.arr || r.arr[i] == null || m.act[i] == null || !r.arr[i]) continue;
-      var dv = m.act[i] - r.arr[i];
-      pcts.push(dv / Math.abs(r.arr[i]) * 100); dols.push(dv);
-      if (dv >= 0) above++; else below++;
-    }
-    if (!pcts.length) return;
-    covered = Math.max(covered, pcts.length);
-    var ap = avg(pcts), ad = avg(dols);
-    var aap = avg(pcts.map(Math.abs)), aad = avg(dols.map(Math.abs));
-    tiles += '<div class="ov-kpi"><div class="ov-kpi-l">' + esc(r.label) + '</div>' +
-      '<div class="ov-kpi-v">' + above + ' above · ' + below + ' below</div>' +
-      '<div class="ov-kpi-d ' + (ap >= 0 ? 'up' : 'down') + '">actual avg ' + (ap >= 0 ? '+' : '−') + Math.abs(ap).toFixed(1) + '% · ' + rsFmtD(m, ad) + ' vs estimate</div>' +
-      '<div class="ov-kpi-d muted">avg magnitude ±' + aap.toFixed(1) + '% · ±' + rsFmtD(m, aad).replace('+','').replace('−','') + '</div></div>';
-  });
-
-  var ab = 0, wi = 0, be = 0, midsP = [], midsD = [];
-  for (var i = lo; i <= hi; i++){
-    if (m.guideLo[i] == null || m.act[i] == null) continue;
-    if (m.act[i] > m.guideHi[i]) ab++; else if (m.act[i] < m.guideLo[i]) be++; else wi++;
-    var mid = rsGuideMid(m, i);
-    if (mid){ midsP.push((m.act[i] - mid) / Math.abs(mid) * 100); midsD.push(m.act[i] - mid); }
-  }
-  if (ab + wi + be > 0){
-    covered = Math.max(covered, ab + wi + be);
-    var amp = avg(midsP), amd = avg(midsD);
-    tiles += '<div class="ov-kpi"><div class="ov-kpi-l">Actual vs guidance range</div>' +
-      '<div class="ov-kpi-v">' + ab + ' above · ' + wi + ' within · ' + be + ' below</div>' +
-      '<div class="ov-kpi-d ' + (amp >= 0 ? 'up' : 'down') + '">avg vs midpoint ' + (amp >= 0 ? '+' : '−') + Math.abs(amp).toFixed(1) + '% · ' + rsFmtD(m, amd) + '</div></div>';
-  }
-
-  // Growth tile (Top Line): avg YoY, avg $ added, plus the Fiscal-style range
-  // headline — REPORTED observations only (estimates never count as growth).
-  if (k === 'top'){
-    var gp = [], gd = [];
-    for (var i = lo; i <= hi; i++){
-      var g1 = rsActGrowthPct(m, i), g2 = rsActGrowthDollar(m, i);
-      if (g1 != null){ gp.push(g1); gd.push(g2); }
-    }
-    var first = null, last = null, fi = null, li = null;
-    for (var i = lo; i <= hi; i++){ var v = m.act[i]; if (v != null){ if (first == null){ first = v; fi = i; } last = v; li = i; } }
-    if (gp.length || (first != null && li > fi)){
-      var extra = '';
-      if (first != null && li > fi && first > 0){
-        var tot = (last - first) / Math.abs(first) * 100;
-        var years = (li - fi) / rsLook() / (_rs.view === 'q' ? 1 : 1);
-        years = (li - fi) / (rsLook() === 4 ? 4 : 1);
-        var cagr = years > 0 ? (Math.pow(last / first, 1 / years) - 1) * 100 : null;
-        extra = '<div class="ov-kpi-d muted">range: total change ' + (tot >= 0 ? '+' : '−') + Math.abs(tot).toFixed(1) + '%' + (cagr != null ? ' · CAGR ' + (cagr >= 0 ? '+' : '−') + Math.abs(cagr).toFixed(1) + '%' : '') + '</div>';
-      }
-      tiles += '<div class="ov-kpi"><div class="ov-kpi-l">Growth in range</div>' +
-        '<div class="ov-kpi-v">' + (gp.length ? ((avg(gp) >= 0 ? '+' : '−') + Math.abs(avg(gp)).toFixed(1) + '% YoY avg') : '—') + '</div>' +
-        (gp.length ? '<div class="ov-kpi-d muted">avg ' + rsFmtD(m, avg(gd)) + ' added per period YoY</div>' : '') +
-        extra + '</div>';
-    }
-  } else if (m.marginOf && m.unit !== 'eps'){
-    var ma = rsMarginArr(m, 'act') || [], ms = rsMarginArr(m, 'summit') || [], mc = rsMarginArr(m, 'cons') || [];
-    var mma = [], mms = [], mmc = [];
-    for (var i = lo; i <= hi; i++){
-      if (ma[i] != null) mma.push(ma[i]);
-      if (ms[i] != null) mms.push(ms[i]);
-      if (mc[i] != null) mmc.push(mc[i]);
-    }
-    if (mma.length || mms.length || mmc.length){
-      var bits = [];
-      if (mms.length) bits.push(avg(mms).toFixed(1) + '% Summit');
-      if (mmc.length) bits.push(avg(mmc).toFixed(1) + '% consensus');
-      tiles += '<div class="ov-kpi"><div class="ov-kpi-l">' + esc(m.marginLabel || 'Margin') + ' in range</div>' +
-        '<div class="ov-kpi-v">' + (mma.length ? avg(mma).toFixed(1) + '% actual' : '—') + '</div>' +
-        (bits.length ? '<div class="ov-kpi-d muted">' + bits.join(' · ') + '</div>' : '') + '</div>';
-    }
-  }
-
-  if (!tiles) tiles = '<div class="ov-kpi"><div class="ov-kpi-l">No comparable periods in this window</div><div class="ov-kpi-d muted">Widen the range or pick another metric</div></div>';
-  el.innerHTML = tiles;
-  var scope = document.getElementById('rsScope-' + k);
-  if (scope) scope.textContent = covered ? '(' + covered + ' reported periods in the selected range)' : '';
-}
-
 // ─── Detail table — TRANSPOSED, Fiscal.ai-style spreadsheet ───────────────────
+// (The "Range analytics" KPI tiles that used to sit above the table were
+// removed Jul 28 per SAB — the table's sticky "Range record" column carries
+// the same read.)
 
 function rsRenderTable(k, m){
   var el = document.getElementById('rsTable-' + k);

@@ -90,11 +90,10 @@ evolution: {
 4. **Dual-handle period slider** below the chart with **one tick dot per period** (filled navy =
    reported in window; light blue = estimate in window; hollow dashed = outside window).
    Everything below recomputes for the window.
-5. **Range analytics tiles** — ALWAYS read from the ACTUAL's point of view ("Actual vs Summit:
-   8 above · 5 below · actual avg +0.5% · +$0.9B vs estimate"; ▲/green = actual above estimate =
-   beat). Guidance tile: above/within/below the range + avg vs midpoint. Top Line adds a growth
-   tile (avg YoY + Fiscal-style range headline: total change + CAGR — **reported observations
-   only**). Margins adds avg margin (actual vs Summit vs consensus).
+5. ~~Range analytics tiles~~ — REMOVED (SAB, Jul 28): the KPI tiles that sat between the
+   slider and the table duplicated what the table's sticky **"Range record"** column already
+   says. Their reading conventions (actual's point of view, ▲/green = beat, reported
+   observations only) live on in that column — see item 7.
 6a. **Estimate Evolution** — its OWN sub-tab beside Results (no Quarterly/Annual toggle —
    the vintage data is annual by nature): one line per fiscal year across the model's saved
    snapshots, in TWO stacked blocks mirroring Results — **Top Line** (revenue + segments) and

@@ -616,15 +616,47 @@ function rsRenderTable(k, m){
 // results-data/<ticker>.js.
 
 function rsEvo(){ return _rs.data ? _rs.data.evolution : null; }
-function rsEvoSt(){
-  if (!_rs.evo) _rs.evo = { metric: null, chart: null, hidden: {} };
-  return _rs.evo;
+function rsEvoSecCfg(k){ return rsEvo().sections.filter(function(s){ return s.key === k; })[0]; }
+function rsEvoKeys(cfg){ return (cfg.groups || []).reduce(function(a, g){ return a.concat(g.keys); }, []); }
+function rsEvoSt(k){
+  if (!_rs.evo) _rs.evo = { sec: {} };
+  if (!_rs.evo.sec[k]) _rs.evo.sec[k] = { metric: null, mode: 'usd', chart: null, hidden: {} };
+  return _rs.evo.sec[k];
 }
-function rsEvoMetric(){
-  var ev = rsEvo(), st = rsEvoSt();
-  if (!st.metric || !ev.metrics[st.metric]) st.metric = ev.defaultMetric;
-  return ev.metrics[st.metric];
+function rsEvoMetric(k){
+  var cfg = rsEvoSecCfg(k), st = rsEvoSt(k);
+  if (!st.metric || rsEvoKeys(cfg).indexOf(st.metric) < 0) st.metric = cfg.defaultMetric;
+  return rsEvo().metrics[st.metric];
 }
+// The % view of a metric for one source & fiscal year, across vintages.
+// Top Line → IMPLIED YoY GROWTH: what growth each snapshot's estimate implies
+// vs the prior fiscal year AS KNOWN AT THAT SNAPSHOT (chained within the
+// vintage; the first year chains to `prior` — the vintage's own estimate while
+// the year was open, the reported actual once closed). Profitability → MARGIN
+// over the `marginOf` metric, same source and same vintage (a margin built
+// from one snapshot's numerator and another's denominator would be fiction).
+function rsEvoPct(k, m, src, yi){
+  var arr = m[src] ? m[src][yi] : null;
+  if (!arr) return null;
+  if (k === 'top'){
+    return arr.map(function(cur, vi){
+      var base = yi === 0
+        ? (m.prior && m.prior[src] ? m.prior[src][vi] : null)
+        : (m[src][yi - 1] ? m[src][yi - 1][vi] : null);
+      if (cur == null || base == null || !base) return null;
+      return (cur - base) / Math.abs(base) * 100;
+    });
+  }
+  if (!m.marginOf) return null;
+  var d = rsEvo().metrics[m.marginOf];
+  var den = d && d[src] ? d[src][yi] : null;
+  if (!den) return null;
+  return arr.map(function(v, vi){
+    if (v == null || den[vi] == null || !den[vi]) return null;
+    return v / den[vi] * 100;
+  });
+}
+function rsEvoPctLabel(k, m){ return k === 'top' ? 'implied YoY growth' : (m.marginLabel || 'margin'); }
 // Revision between two snapshot values, read left → right. Dollars always;
 // percent only when the base is non-zero and the sign holds (an FCF forecast
 // flipping negative has no meaningful percent change).
@@ -637,39 +669,63 @@ function rsRevHtml(m, prev, cur){
   }
   return h;
 }
+// Revision of a % series, in percentage points.
+function rsRevPp(prev, cur){
+  if (prev == null || cur == null) return '<span class="rs-ft-nil">—</span>';
+  var d = cur - prev;
+  return '<span style="color:' + (d >= 0 ? RS_GREEN : RS_RED) + '">' + (d >= 0 ? '+' : '−') + Math.abs(d).toFixed(1) + ' pp</span>';
+}
 
 // Embeddable pane html for the Estimate Evolution sub-tab ('' if the ticker's
-// dataset has no `evolution` block).
+// dataset has no `evolution` block). Mirrors the Results layout: stacked
+// section blocks (Top Line — growth-focused · Profitability — with margins),
+// each with its own metric select, US$/% display toggle, legend, chart, table.
 export function resultsEvoHtml(ticker){
   var data = getResultsData(ticker);
   if (!data || !data.evolution) return '';
   _rs.data = data;
   _rs.evo = null;
-  return '<div class="rs-wrap" id="rsEvoWrap">' + rsEvoBlockHtml() + '</div>';
-}
-
-function rsEvoBlockHtml(){
-  var ev = rsEvo();
-  var h = '<div class="rs-block" data-rsevo>';
+  var ev = data.evolution;
+  var h = '<div class="rs-wrap" id="rsEvoWrap">';
   h += '<p class="ov-lede">' + esc(ev.intro || '') + '</p>';
-  h += '<div class="rs-block-top"><div class="rs-block-h">Forecast by vintage</div>' +
-    '<select class="rs-msel rs-esel" aria-label="Evolution metric">' + rsEvoSelectHtml() + '</select></div>';
-  h += '<div class="ave-leg" id="rsEvoLegend">' + rsEvoLegendHtml() + '</div>';
-  h += '<div class="ov-chart-card">' +
-    '<div class="ov-chart-t" id="rsEvoChartT"></div>' +
-    '<div class="ov-chart-wrap ovs-tall"><canvas id="rsEvoChart"></canvas></div>' +
-  '</div>';
-  h += '<div class="rs-tablewrap" id="rsEvoTable"></div>';
-  h += '<div class="ov-foot" id="rsEvoNote"></div>';
+  h += ev.sections.map(function(cfg){ return rsEvoBlockHtml(cfg.key); }).join('');
   h += '<div class="ov-foot">' + esc(ev.note || '') + '</div>';
   h += '</div>';
   return h;
 }
 
-function rsEvoSelectHtml(){
-  var ev = rsEvo(), st = rsEvoSt();
-  rsEvoMetric();                                       // ensure st.metric is valid
-  return ev.groups.map(function(g){
+function rsEvoBlockHtml(k){
+  var cfg = rsEvoSecCfg(k), m = rsEvoMetric(k);
+  var h = '<div class="rs-block" data-rsevo="' + k + '">';
+  h += '<div class="rs-block-top"><div class="rs-block-h">' + esc(cfg.label) + '</div>' +
+    '<select class="rs-msel rs-esel" aria-label="Metric">' + rsEvoSelectHtml(k) + '</select>' +
+    '<div class="rs-views" id="rsEvoMode-' + k + '">' + rsEvoModeHtml(k, m) + '</div></div>';
+  h += '<div class="ave-leg" id="rsEvoLegend-' + k + '">' + rsEvoLegendHtml(k, m) + '</div>';
+  h += '<div class="ov-chart-card">' +
+    '<div class="ov-chart-t" id="rsEvoChartT-' + k + '"></div>' +
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="rsEvoChart-' + k + '"></canvas></div>' +
+  '</div>';
+  h += '<div class="rs-tablewrap" id="rsEvoTable-' + k + '"></div>';
+  h += '<div class="ov-foot" id="rsEvoNote-' + k + '"></div>';
+  h += '</div>';
+  return h;
+}
+
+// US$ / % display toggle (reuses the .rs-views pill styling). Top Line's %
+// is the implied-YoY-growth view; Profitability's is the margin view (hidden
+// when the metric declares no marginOf).
+function rsEvoModeHtml(k, m){
+  var st = rsEvoSt(k);
+  if (k !== 'top' && !m.marginOf){ st.mode = 'usd'; return ''; }
+  return '<button type="button" class="rs-view' + (st.mode === 'usd' ? ' active' : '') + '" data-rsevmode="usd">US$B</button>' +
+    '<button type="button" class="rs-view' + (st.mode === 'pct' ? ' active' : '') + '" data-rsevmode="pct">' +
+    (k === 'top' ? 'YoY growth %' : 'Margin %') + '</button>';
+}
+
+function rsEvoSelectHtml(k){
+  var ev = rsEvo(), cfg = rsEvoSecCfg(k), st = rsEvoSt(k);
+  rsEvoMetric(k);                                      // ensure st.metric is valid
+  return cfg.groups.map(function(g){
     var opts = g.keys.map(function(mk){
       return '<option value="' + mk + '"' + (mk === st.metric ? ' selected' : '') + '>' + esc(ev.metrics[mk].label) + '</option>';
     }).join('');
@@ -677,8 +733,8 @@ function rsEvoSelectHtml(){
   }).join('');
 }
 
-function rsEvoLegendHtml(){
-  var ev = rsEvo(), st = rsEvoSt(), m = rsEvoMetric();
+function rsEvoLegendHtml(k, m){
+  var ev = rsEvo(), st = rsEvoSt(k);
   var h = ev.years.map(function(y, i){
     var off = st.hidden['y' + y];
     return '<button type="button" class="rs-leg' + (off ? ' off' : '') + '" data-rsevleg="y' + y + '" title="Show / hide">' +
@@ -694,33 +750,44 @@ function rsEvoLegendHtml(){
   return h;
 }
 
-function rsBuildEvo(){
+function rsBuildEvo(k){
   var ev = rsEvo();
   if (!ev) return;
-  var st = rsEvoSt(), m = rsEvoMetric();
-  var el = document.getElementById('rsEvoChart');
+  var st = rsEvoSt(k), m = rsEvoMetric(k);
+  var el = document.getElementById('rsEvoChart-' + k);
   if (!el || !el.offsetParent) return;                 // pane not visible yet
   if (st.chart){ st.chart.destroy(); st.chart = null; }
 
+  var pct = st.mode === 'pct';
   var scale = function(v){ return v == null ? null : v / 1000; };
+  function series(src, yi){
+    if (pct) return rsEvoPct(k, m, src, yi);
+    var a = m[src] ? m[src][yi] : null;
+    return a ? a.map(scale) : null;
+  }
+
   var datasets = [];
   ev.years.forEach(function(y, yi){
     if (st.hidden['y' + y]) return;
     var color = EVO_RAMP[yi % EVO_RAMP.length];
-    if (!st.hidden.summit && m.summit && m.summit[yi]){
-      datasets.push({ label: 'FY' + y + ' · Summit', data: m.summit[yi].map(scale),
+    var s = !st.hidden.summit ? series('summit', yi) : null;
+    if (s && s.some(function(v){ return v != null; })){
+      datasets.push({ label: 'FY' + y + ' · Summit', data: s,
         borderColor: color, backgroundColor: color, borderWidth: 2.5,
         pointRadius: 3.5, pointBackgroundColor: color, tension: 0, spanGaps: true, _src: 'summit', _yi: yi });
     }
-    if (!st.hidden.cons && m.cons && m.cons[yi]){
-      datasets.push({ label: 'FY' + y + ' · Consensus', data: m.cons[yi].map(scale),
+    var c = !st.hidden.cons ? series('cons', yi) : null;
+    if (c && c.some(function(v){ return v != null; })){
+      datasets.push({ label: 'FY' + y + ' · Consensus', data: c,
         borderColor: color, backgroundColor: color, borderWidth: 2, borderDash: [6, 4],
         pointRadius: 2.5, pointBackgroundColor: color, tension: 0, spanGaps: true, _src: 'cons', _yi: yi });
     }
   });
 
-  var tEl = document.getElementById('rsEvoChartT');
-  if (tEl) tEl.innerHTML = esc(m.label) + ' — forecast by model snapshot <span>($B per fiscal year · solid = Summit model, dashed = stored BBG consensus · hover for the revision)</span>';
+  var tEl = document.getElementById('rsEvoChartT-' + k);
+  if (tEl) tEl.innerHTML = esc(m.label) + ' — ' +
+    (pct ? esc(rsEvoPctLabel(k, m)) + ' by model snapshot <span>(% per fiscal year, each snapshot against its own numbers · solid = Summit model, dashed = stored BBG consensus)</span>'
+         : 'forecast by model snapshot <span>($B per fiscal year · solid = Summit model, dashed = stored BBG consensus · hover for the revision)</span>');
 
   st.chart = new Chart(el.getContext('2d'), {
     type: 'line',
@@ -736,13 +803,23 @@ function rsBuildEvo(){
               return v.label + ' · ' + v.event;
             },
             label: function(ctx){
-              var arr = m[ctx.dataset._src][ctx.dataset._yi];
-              var i = ctx.dataIndex, cur = arr[i];
-              var line = ctx.dataset.label + ': ' + rsFmt(m, cur);
-              if (i > 0 && arr[i - 1] != null && cur != null){
-                line += '  (' + rsFmtD(m, cur - arr[i - 1]) + ' vs prior snapshot)';
+              var i = ctx.dataIndex;
+              if (pct){
+                var p = rsEvoPct(k, m, ctx.dataset._src, ctx.dataset._yi) || [];
+                var line = ctx.dataset.label + ': ' + (p[i] == null ? '—' : p[i].toFixed(1) + '%');
+                if (i > 0 && p[i] != null && p[i - 1] != null){
+                  var d = p[i] - p[i - 1];
+                  line += '  (' + (d >= 0 ? '+' : '−') + Math.abs(d).toFixed(1) + ' pp vs prior snapshot)';
+                }
+                return line;
               }
-              return line;
+              var arr = m[ctx.dataset._src][ctx.dataset._yi];
+              var cur = arr[i];
+              var line2 = ctx.dataset.label + ': ' + rsFmt(m, cur);
+              if (i > 0 && arr[i - 1] != null && cur != null){
+                line2 += '  (' + rsFmtD(m, cur - arr[i - 1]) + ' vs prior snapshot)';
+              }
+              return line2;
             }
           }
         }
@@ -750,19 +827,20 @@ function rsBuildEvo(){
       scales: {
         x: { grid: { display: false }, ticks: { font: { size: 11 } } },
         y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
-          callback: function(v){ return rsTick(v, m.unit); } } }
+          callback: function(v){ return pct ? v + '%' : rsTick(v, m.unit); } } }
       }
     }
   });
 
-  rsRenderEvoTable();
-  var n1 = document.getElementById('rsEvoNote'); if (n1) n1.textContent = m.note || '';
-  var leg = document.getElementById('rsEvoLegend'); if (leg) leg.innerHTML = rsEvoLegendHtml();
+  rsRenderEvoTable(k, m);
+  var n1 = document.getElementById('rsEvoNote-' + k); if (n1) n1.textContent = m.note || '';
+  var leg = document.getElementById('rsEvoLegend-' + k); if (leg) leg.innerHTML = rsEvoLegendHtml(k, m);
+  var md = document.getElementById('rsEvoMode-' + k); if (md) md.innerHTML = rsEvoModeHtml(k, m);
 }
 
-function rsRenderEvoTable(){
-  var ev = rsEvo(), m = rsEvoMetric();
-  var el = document.getElementById('rsEvoTable');
+function rsRenderEvoTable(k, m){
+  var ev = rsEvo();
+  var el = document.getElementById('rsEvoTable-' + k);
   if (!el) return;
   var nv = ev.vintages.length;
 
@@ -771,27 +849,36 @@ function rsRenderEvoTable(){
     return (v / 1000).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   }
 
-  var h = '<div class="rs-ft-cap">US$ billions · columns are the model’s saved snapshots · “revision” = change vs the prior snapshot · the right column is the cumulative move from the first snapshot to the latest</div>';
+  var pctCap = k === 'top'
+    ? ' · “implied YoY growth” = the growth that snapshot’s estimate implies vs the prior fiscal year as known at that date'
+    : ' · margins are computed within each snapshot (numerator and denominator from the same vintage)';
+  var h = '<div class="rs-ft-cap">US$ billions · columns are the model’s saved snapshots · “revision” = change vs the prior snapshot · the right column is the cumulative move from the first snapshot to the latest' + pctCap + '</div>';
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   ev.vintages.forEach(function(v){
     h += '<th>' + esc(v.label) + '<br><span class="rs-ft-dim">' + esc(v.event) + '</span></th>';
   });
   h += '<th class="rs-ft-s">Cumulative revision</th></tr></thead><tbody>';
 
-  function rows(label, arr){
+  function rows(label, arr, pcts){
     if (!arr) return '';
+    var hasPct = pcts && pcts.some(function(v){ return v != null; });
     var r = '<tr class="rs-ft-main rs-ft-nb"><td class="rs-ft-h">' + label + '</td>';
     arr.forEach(function(v){ r += '<td><b>' + num(v) + '</b></td>'; });
     r += '<td class="rs-ft-s">' + rsRevHtml(m, arr[0], arr[nv - 1]) + '</td></tr>';
-    r += '<tr class="rs-ft-sub"><td class="rs-ft-h">revision</td>';
+    r += '<tr class="rs-ft-sub' + (hasPct ? ' rs-ft-nb' : '') + '"><td class="rs-ft-h">revision</td>';
     arr.forEach(function(v, i){ r += '<td>' + (i === 0 ? '<span class="rs-ft-nil">—</span>' : rsRevHtml(m, arr[i - 1], v)) + '</td>'; });
     r += '<td class="rs-ft-s"></td></tr>';
+    if (hasPct){
+      r += '<tr class="rs-ft-sub"><td class="rs-ft-h">' + esc(rsEvoPctLabel(k, m)) + '</td>';
+      pcts.forEach(function(v){ r += '<td>' + (v == null ? '<span class="rs-ft-nil">—</span>' : v.toFixed(1) + '%') + '</td>'; });
+      r += '<td class="rs-ft-s">' + rsRevPp(pcts[0], pcts[nv - 1]) + '</td></tr>';
+    }
     return r;
   }
 
   ev.years.forEach(function(y, yi){
-    h += rows('FY' + esc(y) + ' · Summit', m.summit ? m.summit[yi] : null);
-    if (m.cons) h += rows('FY' + esc(y) + ' · Consensus', m.cons[yi]);
+    h += rows('FY' + esc(y) + ' · Summit', m.summit ? m.summit[yi] : null, rsEvoPct(k, m, 'summit', yi));
+    if (m.cons) h += rows('FY' + esc(y) + ' · Consensus', m.cons[yi], rsEvoPct(k, m, 'cons', yi));
   });
 
   h += '</tbody></table></div>';
@@ -868,18 +955,34 @@ export function initResultsEvo(){
   if (!_rs.data || !_rs.data.evolution) return;
   var wrap = document.getElementById('rsEvoWrap');
   if (!wrap) return;
+  function secOf(el){
+    var block = el.closest('[data-rsevo]');
+    return block ? block.getAttribute('data-rsevo') : null;
+  }
   wrap.onclick = function(e){
+    var k;
+    var md = e.target.closest('[data-rsevmode]');
+    if (md && (k = secOf(md))){
+      rsEvoSt(k).mode = md.getAttribute('data-rsevmode');
+      rsBuildEvo(k);
+      return;
+    }
     var evl = e.target.closest('[data-rsevleg]');
-    if (!evl) return;
-    var st = rsEvoSt();
-    var key = evl.getAttribute('data-rsevleg');
-    st.hidden[key] = !st.hidden[key];
-    rsBuildEvo();
+    if (evl && (k = secOf(evl))){
+      var st = rsEvoSt(k);
+      var key = evl.getAttribute('data-rsevleg');
+      st.hidden[key] = !st.hidden[key];
+      rsBuildEvo(k);
+    }
   };
   wrap.onchange = function(e){
     if (!e.target.classList.contains('rs-esel')) return;
-    rsEvoSt().metric = e.target.value;
-    rsBuildEvo();
+    var k = secOf(e.target);
+    if (!k) return;
+    var st = rsEvoSt(k);
+    st.metric = e.target.value;
+    st.mode = 'usd';                                   // reset — % meaning may change per metric
+    rsBuildEvo(k);
   };
-  rsBuildEvo();
+  rsEvo().sections.forEach(function(s){ rsBuildEvo(s.key); });
 }

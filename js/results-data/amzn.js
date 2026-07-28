@@ -245,57 +245,66 @@ export var amznResults = {
   // same date. BBG is stored for revenue / EBITDA / earnings only.
   // Arrays: one row per fiscal year (parallel to `years`), one value per vintage.
   evolution: {
-    intro: 'How the forecast itself has moved. Each line tracks one fiscal year’s estimate across the model’s saved snapshots — solid is the Summit model, dashed is the Bloomberg consensus stored alongside it at the same date. The story of the year: the Feb 2026 snapshot, taken right after the 4Q25 print, re-rated FY26 capex from $151B to $205B and flipped the FY26 free-cash-flow forecast negative.',
+    intro: 'How the forecast itself has moved. Each line tracks one fiscal year’s estimate across the model’s saved snapshots — solid is the Summit model, dashed is the Bloomberg consensus stored alongside it at the same date. Two blocks, mirroring Results: Top Line (revenue and segments, with the growth each snapshot implies) and Profitability (spend and earnings power, with margins). The story of the year: the Feb 2026 snapshot, taken right after the 4Q25 print, re-rated FY26 capex from $151B to $205B and flipped the FY26 free-cash-flow forecast negative.',
     vintages: [
       { label: 'Dec 18, 2025', event: 'pre-4Q25 print' },
       { label: 'Feb 10, 2026', event: 'post-4Q25 print' },
       { label: 'May 5, 2026',  event: 'post-1Q26 print' }
     ],
     years: ['2026', '2027', '2028', '2029'],
-    defaultMetric: 'capex',
-    groups: [
-      { label: 'Company', keys: ['capex', 'fcf', 'rev', 'ebitda', 'earnings'] },
-      { label: 'Segments (Summit only)', keys: ['aws', 'usrev', 'intrev', 'awsopinc'] }
+    sections: [
+      { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
+        { label: 'Totals', keys: ['rev'] },
+        { label: 'Segments (Summit only)', keys: ['aws', 'usrev', 'intrev'] }
+      ] },
+      { key: 'prof', label: 'Profitability', defaultMetric: 'capex', groups: [
+        { label: 'Company', keys: ['capex', 'fcf', 'ebitda', 'earnings'] },
+        { label: 'Segments (Summit only)', keys: ['awsopinc'] }
+      ] }
     ],
     metrics: {
-      capex: { label: 'Capital Expenditure', unit: 'usdM',
+      capex: { label: 'Capital Expenditure', unit: 'usdM', marginOf: 'rev', marginLabel: 'capex % of revenue',
         summit: [[150662, 204504, 205759], [163765, 227206, 230780], [123878, 148320, 150795], [146559, 175615, 178721]],
         cons: null,
-        note: 'The re-rate of the cycle: the Feb-2026 snapshot — taken days after the 4Q25 print and its capex guidance — took FY26 from $150.7B to $204.5B (+36%) and FY27 from $163.8B to $227.2B (+39%); May barely moved either. The model projects capex annually only, and no BBG capex consensus is stored per snapshot. Note FY28 still drops to ~$151B — the internal-consistency flag raised with the model owner.' },
-      fcf: { label: 'Free Cash Flow', unit: 'usdM',
+        note: 'The re-rate of the cycle: the Feb-2026 snapshot — taken days after the 4Q25 print and its capex guidance — took FY26 from $150.7B to $204.5B (+36%) and FY27 from $163.8B to $227.2B (+39%); May barely moved either. In the margin view: capex intensity jumped from ~19% to ~25% of revenue for FY26–27, easing to ~13% by FY28-29. The model projects capex annually only, and no BBG capex consensus is stored per snapshot. Note FY28 still drops to ~$151B — the internal-consistency flag raised with the model owner.' },
+      fcf: { label: 'Free Cash Flow', unit: 'usdM', marginOf: 'rev', marginLabel: 'FCF margin',
         summit: [[27805, -26794, -16854], [89940, 11357, 14180], [119640, 151974, 163189], [144879, 144469, 155780]],
         cons: null,
         note: 'The mirror of the capex re-rate: FY26 FCF flipped from +$27.8B (Dec) to −$26.8B (Feb), recovering to −$16.9B in May on a higher CFO forecast. FY27 collapsed from $89.9B to ~$14B; the payoff moved out to FY28–29, which were revised UP ($119.6B → $163.2B in FY28). Where a year flips sign, the revision is shown in dollars only — a percent is meaningless across zero.' },
       rev: { label: 'Net Sales (Total)', unit: 'usdM',
         summit: [[805681, 818015, 823035], [909803, 927372, 941960], [1075129, 1096753, 1115060], [1271972, 1298590, 1321558]],
         cons:   [[795333, 800775, 819963], [884622, 893670, 925181], [978633, 994200, 1023818], [1078472, 1092553, 1152886]],
-        note: 'Both the model and the Street revised revenue UP at every snapshot, every year. The gap is the story: Summit sits above consensus in all four years, and in FY28–29 the distance widens to ~$90B and ~$170B — the model’s AWS conviction compounding.' },
-      ebitda: { label: 'EBITDA', unit: 'usdM',
+        prior:  { summit: [716890, 716924, 716924], cons: [714539, 716924, 716924] },
+        note: 'Both the model and the Street revised revenue UP at every snapshot, every year. The gap is the story: Summit sits above consensus in all four years, and in FY28–29 the distance widens to ~$90B and ~$170B — the model’s AWS conviction compounding. In the growth view: implied FY26 growth went 12.4% → 14.8% across the three snapshots.' },
+      ebitda: { label: 'EBITDA', unit: 'usdM', marginOf: 'rev', marginLabel: 'EBITDA margin',
         summit: [[198533, 199877, 208443], [237442, 259787, 261050], [258487, 278013, 291994], [308643, 338397, 353793]],
         cons:   [[202938, 205916, 210933], [245458, 254062, 266809], [290514, 308603, 328908], [330854, 340575, 377472]],
-        note: 'Steady upward revisions on both columns — but the Street has re-rated the OUT years harder: consensus FY28 rose $38B across the three snapshots vs Summit’s $34B, and consensus now sits ABOVE the model in every year (most visibly FY28–29). The model is the conservative one on profitability.' },
-      earnings: { label: 'Earnings (model definition)', unit: 'usdM',
+        note: 'Steady upward revisions on both columns — but the Street has re-rated the OUT years harder: consensus FY28 rose $38B across the three snapshots vs Summit’s $34B, and consensus now sits ABOVE the model in every year (most visibly FY28–29). The model is the conservative one on profitability — clearest in the margin view: by FY28 consensus holds ~32% EBITDA margin vs Summit’s ~26%.' },
+      earnings: { label: 'Earnings (model definition)', unit: 'usdM', marginOf: 'rev', marginLabel: 'net margin (model def.)',
         summit: [[77850, 79983, 85902], [99503, 98612, 108304], [109171, 109377, 114955], [138145, 140137, 147510]],
         cons:   [[86277, 84854, 92868], [106350, 104485, 107942], [127261, 128498, 135110], [151474, 153778, 159931]],
         note: 'Earnings as the model defines them (adjusted — not GAAP net income), against the matching BBG estimate stored at each snapshot. Both revised up after each print; consensus stays above Summit in every year, with the widest gap in FY28 ($135B vs $115B).' },
       aws: { label: 'AWS Net Sales', unit: 'usdM',
         summit: [[153918, 158917, 163805], [189319, 198646, 214584], [236649, 248308, 268230], [295811, 310385, 335287]],
         cons: null,
+        prior: { summit: [128265, 128725, 128725] },
         note: 'AWS is where the model’s upward revisions concentrate: every year raised at BOTH snapshots, and the out-years hardest — FY27 went $189.3B → $214.6B (+13%) and FY29 $295.8B → $335.3B (+13%) in five months. Segment forecasts are Summit-only; BBG segment consensus is not stored per snapshot (see the Quarterly view for the Street’s AWS line).' },
       usrev: { label: 'North America Net Sales', unit: 'usdM',
         summit: [[474550, 473199, 475282], [522005, 520518, 520434], [600306, 598596, 598499], [690352, 688386, 688274]],
         cons: null,
+        prior: { summit: [427522, 426305, 426305] },
         note: 'The control group: North America barely moved — every revision within ±0.4%. The re-rates of early 2026 were an AWS story (and its capex bill), not a retail one.' },
       intrev: { label: 'International Net Sales', unit: 'usdM',
         summit: [[177213, 185900, 183949], [198479, 208208, 206943], [238175, 249849, 248331], [285810, 299819, 297997]],
         cons: null,
+        prior: { summit: [161103, 161894, 161894] },
         note: 'Raised ~5% across the board at the Feb snapshot after the strong 4Q25 international print, then trimmed ~1% in May — one step up, holding.' },
-      awsopinc: { label: 'AWS Op. Income (GAAP)', unit: 'usdM',
+      awsopinc: { label: 'AWS Op. Income (GAAP)', unit: 'usdM', marginOf: 'aws', marginLabel: 'AWS operating margin',
         summit: [[52332, 54215, 59400], [66262, 67540, 77250], [80461, 84425, 91198], [103534, 108635, 117351]],
         cons: null,
-        note: 'AWS profitability followed the revenue re-rate with a lag: modest bumps in Feb, then the big move in May after the 1Q26 AWS margin beat — FY26 $54.2B → $59.4B (+10%) and FY27 $67.5B → $77.3B (+14%) in one snapshot.' }
+        note: 'AWS profitability followed the revenue re-rate with a lag: modest bumps in Feb, then the big move in May after the 1Q26 AWS margin beat — FY26 $54.2B → $59.4B (+10%) and FY27 $67.5B → $77.3B (+14%) in one snapshot. In the margin view the May snapshot lifted the assumed AWS operating margin from ~34% to ~36% both years.' }
     },
-    note: 'Vintages are the model’s saved snapshots (Projection History blocks in the export): Dec 18, 2025 (before the 4Q25 print), Feb 10, 2026 (after it) and May 5, 2026 (after the 1Q26 print). Consensus = BBG estimates stored inside the model at each snapshot date.'
+    note: 'Vintages are the model’s saved snapshots (Projection History blocks in the export): Dec 18, 2025 (before the 4Q25 print), Feb 10, 2026 (after it) and May 5, 2026 (after the 1Q26 print). Consensus = BBG estimates stored inside the model at each snapshot date. Implied FY2026 growth chains to FY2025 as known at each snapshot: each source’s own FY25 estimate at the Dec vintage (the year was still open), the reported FY25 actual at the Feb and May vintages; later years chain within the same snapshot.'
   },
   source: 'Sources: Amazon 8-K press releases on SEC EDGAR (guidance ranges and reported actuals, exact figures); CNBC earnings-day coverage for pre-print consensus (Refinitiv through 2Q23, LSEG after; AWS per StreetAccount); Bloomberg BEst consensus export from the company model (FA_AMZN_US.xlsx, Jul 2026) for forward quarterly consensus, revenue lines and capex; Summit model export "AMZN Summit Projections.xlsm" — Projection History vintages 2025-12-18 / 2026-02-10 (pre-print Summit estimates) and 2026-05-05 (annual forward estimates) — cross-checked with the Summit MCP snapshots (quarterly forward from the 2026-05-13 snapshot). Values in US$ millions except EPS.'
 };

@@ -62,10 +62,17 @@ evolution: {
   intro, note,                                // strings
   vintages: [{ label:'Dec 18, 2025', event:'pre-4Q25 print' }, ...],
   years: ['2026','2027','2028','2029'],
-  defaultMetric, groups: [{label, keys}],     // same grouped-select pattern
+  sections: [                                 // stacked blocks, mirroring Results
+    { key:'top',  label:'Top Line',      defaultMetric, groups:[{label, keys}] },
+    { key:'prof', label:'Profitability', defaultMetric, groups:[{label, keys}] }
+  ],
   metrics: { <key>: { label, unit:'usdM',
     summit: [[v per vintage] per year],       // rows parallel to years
     cons:   [[...]] | null,                   // BBG stored IN the model at each snapshot
+    prior:  { summit:[...], cons:[...] },     // Top Line only: the fiscal year BEFORE
+                                              // years[0], per vintage, for implied-growth
+                                              // (own estimate while open, actual once closed)
+    marginOf, marginLabel,                    // Profitability only: margin denominator key
     note } }
 }
 ```
@@ -88,13 +95,19 @@ evolution: {
    only**). Margins adds avg margin (actual vs Summit vs consensus).
 6a. **Estimate Evolution** — its OWN sub-tab beside Results (no Quarterly/Annual toggle —
    the vintage data is annual by nature): one line per fiscal year across the model's saved
-   snapshots. Colors are an ordered one-hue ramp of the portal blue (`EVO_RAMP` in results.js,
-   darkest = nearest year; validated with the dataviz palette checker). Solid = Summit, dashed =
-   the BBG consensus stored in the model at the same snapshot (so both columns are as-of the
-   same date). Legend chips toggle per-year and per-source. Table: columns = vintages, rows =
-   FY × source with a "revision" sub-row (change vs prior snapshot) and a sticky "Cumulative
-   revision" right column. **Sign-flip rule:** a revision across zero (FCF flipping negative)
-   shows dollars only — no percent.
+   snapshots, in TWO stacked blocks mirroring Results — **Top Line** (revenue + segments) and
+   **Profitability** (capex/FCF/EBITDA/earnings + segment op income). Colors are an ordered
+   one-hue ramp of the portal blue (`EVO_RAMP` in results.js, darkest = nearest year; validated
+   with the dataviz palette checker). Solid = Summit, dashed = the BBG consensus stored in the
+   model at the same snapshot (so both columns are as-of the same date). Each block has a
+   **US$B / % display toggle**: Top Line's % = the IMPLIED YoY GROWTH each snapshot carries
+   (first year chains to `prior` — own estimate while the year was open, reported actual once
+   closed; later years chain within the same snapshot); Profitability's % = the margin over
+   `marginOf`, numerator and denominator ALWAYS from the same vintage and source. Legend chips
+   toggle per-year and per-source. Table: columns = vintages, rows = FY × source with
+   "revision" (change vs prior snapshot) and growth/margin sub-rows, plus a sticky "Cumulative
+   revision" right column (pp for the % rows). **Sign-flip rule:** a revision across zero (FCF
+   flipping negative) shows dollars only — no percent.
 7. **Fiscal.ai-style transposed table**: periods as columns (oldest → newest), bare numbers
    (unit stated once in the caption), shaded **E** columns, sticky header + sticky metric column
    + sticky right **"Range record"** column, row+column hover crosshair. Row structure per

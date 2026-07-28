@@ -33,6 +33,7 @@
 .rs-tick.on.est { background: var(--accent); border-color: var(--accent); opacity: 0.55; }
 .rs-tick.est:not(.on) { border-style: dashed; }
 .rs-views { display: inline-flex; border: 1px solid var(--bdr); border-radius: 8px; overflow: hidden; }
+.rs-views[hidden] { display: none; }   /* explicit display beats the UA [hidden] rule */
 .rs-view {
   appearance: none; border: 0; background: var(--w); color: var(--mu);
   font: 600 12px 'Inter', sans-serif; padding: 7px 16px; cursor: pointer;

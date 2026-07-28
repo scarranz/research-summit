@@ -105,6 +105,15 @@ evolution: {
    resets both — on the Estimates charts, with only 3 x-points, ANY drag adjusts the y-axis;
    y-ranges reset on metric/mode change since the units change); (c) the **dual-handle period
    slider** below, with
+6b. **Actuals vs Estimates — generic surprise history** (bottom of the Estimates pane, any
+   ticker; added Jul 28 per SAB): fed ONLY from the Results dataset — every quarterly metric
+   with at least one actual + frozen-Summit-estimate pair (revenue, segments, op income,
+   EBITDA…). Diverging surprise bars over the reported range (▲ green = beat, ▼ red = miss;
+   value printed on each bar), a **Surprise % ⇄ $ amount** toggle, the tick-dot slider, and
+   the transposed table (Actual → YoY growth → Summit estimate → YoY growth → surprise +
+   Range record). Growth here is always YoY — independent of the Results pane's toggle. A
+   dataset opts out with **`surprise: false`** (SoFi does: its bespoke block in sofi.js is
+   richer — KPIs, expense lines with flipped favorability).
    **one tick dot per period** (filled navy = reported in window; light blue = estimate in
    window; hollow dashed = outside window). Everything below recomputes for the window.
 5. ~~Range analytics tiles~~ — REMOVED (SAB, Jul 28): the KPI tiles that sat between the

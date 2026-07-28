@@ -25,6 +25,10 @@
 
 export var sofiResults = {
   updated: 'Jul 2026',
+  // Opt out of the engine's generic Actuals-vs-Estimates surprise block: SoFi's
+  // Estimates pane carries its own richer version (17 metrics incl. KPIs and
+  // expense lines, favorability-aware) rebuilt inside overviews/sofi.js.
+  surprise: false,
   intro: 'How SoFi’s reported results have stacked up against what our Summit model projected, what the Street expected, and what the company itself guided. SoFi’s model keeps sixteen quarters of frozen pre-print estimates — the deepest Summit history of any name — and SoFi guides four lines (adjusted net revenue, adjusted EBITDA, net income, EPS) and has beaten its own revenue guide every quarter it gave one. Periods marked “E” are forward: the model’s live projection, no actual yet.',
   views: {
     q: {

@@ -70,8 +70,10 @@ evolution: {
     summit: [[v per vintage] per year],       // rows parallel to years
     cons:   [[...]] | null,                   // BBG stored IN the model at each snapshot
     prior:  { summit:[...], cons:[...] },     // Top Line only: the fiscal year BEFORE
-                                              // years[0], per vintage, for implied-growth
-                                              // (own estimate while open, actual once closed)
+                                              // years[0], per vintage, for implied-growth —
+                                              // ALWAYS the value stored in that vintage block
+                                              // (frozen projection for segments), never the
+                                              // reported actual (provenance rule, §3.6a)
     marginOf, marginLabel,                    // Profitability only: margin denominator key
     note } }
 }
@@ -96,7 +98,14 @@ evolution: {
 6a. **Estimate Evolution** — its OWN sub-tab beside Results (no Quarterly/Annual toggle —
    the vintage data is annual by nature): one line per fiscal year across the model's saved
    snapshots, in TWO stacked blocks mirroring Results — **Top Line** (revenue + segments) and
-   **Profitability** (capex/FCF/EBITDA/earnings + segment op income). Colors are an ordered
+   **Profitability** (capex/FCF/EBITDA/earnings + segment op income).
+   **PROVENANCE RULE (SAB, Jul 28): this tab is fed EXCLUSIVELY by the DCF export's
+   Projection History sheet** — the only place vintages are referenced. Nothing from 8-Ks,
+   actuals history, CNBC or any other source goes in. That includes: the BBG consensus (only
+   because it is stored inside the same vintage blocks; null where the export holds none),
+   derived totals (sums of the export's own segment rows), and `prior` for implied growth
+   (the prior-year value stored in the same vintage block — for segment lines that is the
+   model's frozen projection, NOT the reported actual). Colors are an ordered
    one-hue ramp of the portal blue (`EVO_RAMP` in results.js, darkest = nearest year; validated
    with the dataviz palette checker). Solid = Summit, dashed = the BBG consensus stored in the
    model at the same snapshot (so both columns are as-of the same date). Each block has a

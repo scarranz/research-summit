@@ -274,7 +274,7 @@ export var amznResults = {
       rev: { label: 'Net Sales (Total)', unit: 'usdM',
         summit: [[805681, 818015, 823035], [909803, 927372, 941960], [1075129, 1096753, 1115060], [1271972, 1298590, 1321558]],
         cons:   [[795333, 800775, 819963], [884622, 893670, 925181], [978633, 994200, 1023818], [1078472, 1092553, 1152886]],
-        prior:  { summit: [716890, 716924, 716924], cons: [714539, 716924, 716924] },
+        prior:  { summit: [716890, 716924, 716924], cons: [714539, null, null] },
         note: 'Both the model and the Street revised revenue UP at every snapshot, every year. The gap is the story: Summit sits above consensus in all four years, and in FY28–29 the distance widens to ~$90B and ~$170B — the model’s AWS conviction compounding. In the growth view: implied FY26 growth went 12.4% → 14.8% across the three snapshots.' },
       ebitda: { label: 'EBITDA', unit: 'usdM', marginOf: 'rev', marginLabel: 'EBITDA margin',
         summit: [[198533, 199877, 208443], [237442, 259787, 261050], [258487, 278013, 291994], [308643, 338397, 353793]],
@@ -287,17 +287,17 @@ export var amznResults = {
       aws: { label: 'AWS Net Sales', unit: 'usdM',
         summit: [[153918, 158917, 163805], [189319, 198646, 214584], [236649, 248308, 268230], [295811, 310385, 335287]],
         cons: null,
-        prior: { summit: [128265, 128725, 128725] },
+        prior: { summit: [128265, 127053, 127053] },
         note: 'AWS is where the model’s upward revisions concentrate: every year raised at BOTH snapshots, and the out-years hardest — FY27 went $189.3B → $214.6B (+13%) and FY29 $295.8B → $335.3B (+13%) in five months. Segment forecasts are Summit-only; BBG segment consensus is not stored per snapshot (see the Quarterly view for the Street’s AWS line).' },
       usrev: { label: 'North America Net Sales', unit: 'usdM',
         summit: [[474550, 473199, 475282], [522005, 520518, 520434], [600306, 598596, 598499], [690352, 688386, 688274]],
         cons: null,
-        prior: { summit: [427522, 426305, 426305] },
+        prior: { summit: [427522, 423912, 423912] },
         note: 'The control group: North America barely moved — every revision within ±0.4%. The re-rates of early 2026 were an AWS story (and its capex bill), not a retail one.' },
       intrev: { label: 'International Net Sales', unit: 'usdM',
         summit: [[177213, 185900, 183949], [198479, 208208, 206943], [238175, 249849, 248331], [285810, 299819, 297997]],
         cons: null,
-        prior: { summit: [161103, 161894, 161894] },
+        prior: { summit: [161103, 158890, 158890] },
         note: 'Raised ~5% across the board at the Feb snapshot after the strong 4Q25 international print, then trimmed ~1% in May — one step up, holding.' },
       opinc: { label: 'Operating Income (Total, derived)', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin',
         summit: [[95835, 99181, 101886], [122541, 122194, 127577], [132009, 136321, 143026], [164720, 170314, 178940]],
@@ -316,7 +316,7 @@ export var amznResults = {
         cons: null,
         note: 'AWS profitability followed the revenue re-rate with a lag: modest bumps in Feb, then the big move in May after the 1Q26 AWS margin beat — FY26 $54.2B → $59.4B (+10%) and FY27 $67.5B → $77.3B (+14%) in one snapshot. In the margin view the May snapshot lifted the assumed AWS operating margin from ~34% to ~36% both years.' }
     },
-    note: 'Vintages are the model’s saved snapshots (Projection History blocks in the export): Dec 18, 2025 (before the 4Q25 print), Feb 10, 2026 (after it) and May 5, 2026 (after the 1Q26 print). Consensus = BBG estimates stored inside the model at each snapshot date. Implied FY2026 growth chains to FY2025 as known at each snapshot: each source’s own FY25 estimate at the Dec vintage (the year was still open), the reported FY25 actual at the Feb and May vintages; later years chain within the same snapshot.'
+    note: 'Single source: every number on this tab comes from the Summit DCF export’s Projection History sheet — the model’s saved snapshots (vintages): Dec 18, 2025 (before the 4Q25 print), Feb 10, 2026 (after it) and May 5, 2026 (after the 1Q26 print). Consensus = the BBG estimates stored inside those same blocks (null where the export holds none). Implied growth chains entirely within the export: each fiscal year against the prior year’s value stored in the same vintage block — for segment lines that base is the model’s own frozen FY25 projection, not the reported actual.'
   },
   source: 'Sources: Amazon 8-K press releases on SEC EDGAR (guidance ranges and reported actuals, exact figures); CNBC earnings-day coverage for pre-print consensus (Refinitiv through 2Q23, LSEG after; AWS per StreetAccount); Bloomberg BEst consensus export from the company model (FA_AMZN_US.xlsx, Jul 2026) for forward quarterly consensus, revenue lines and capex; Summit model export "AMZN Summit Projections.xlsm" — Projection History vintages 2025-12-18 / 2026-02-10 (pre-print Summit estimates) and 2026-05-05 (annual forward estimates) — cross-checked with the Summit MCP snapshots (quarterly forward from the 2026-05-13 snapshot). Values in US$ millions except EPS.'
 };

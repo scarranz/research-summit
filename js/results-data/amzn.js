@@ -258,8 +258,8 @@ export var amznResults = {
         { label: 'Segments (Summit only)', keys: ['aws', 'usrev', 'intrev'] }
       ] },
       { key: 'prof', label: 'Profitability', defaultMetric: 'capex', groups: [
-        { label: 'Company', keys: ['capex', 'fcf', 'ebitda', 'earnings'] },
-        { label: 'Segments (Summit only)', keys: ['awsopinc'] }
+        { label: 'Company', keys: ['capex', 'fcf', 'opinc', 'ebitda', 'earnings'] },
+        { label: 'Segments (GAAP op. income, Summit only)', keys: ['naopinc', 'intopinc', 'awsopinc'] }
       ] }
     ],
     metrics: {
@@ -299,6 +299,18 @@ export var amznResults = {
         cons: null,
         prior: { summit: [161103, 161894, 161894] },
         note: 'Raised ~5% across the board at the Feb snapshot after the strong 4Q25 international print, then trimmed ~1% in May — one step up, holding.' },
+      opinc: { label: 'Operating Income (Total, derived)', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin',
+        summit: [[95835, 99181, 101886], [122541, 122194, 127577], [132009, 136321, 143026], [164720, 170314, 178940]],
+        cons: null,
+        note: 'Total operating income DERIVED as the sum of the model’s three segment projections per vintage (the model zeroes its own total-op-income line forward; the segment revenue sum ties to total revenue to the dollar, so the margin is consistent). Revised up at every snapshot — FY26 $95.8B → $101.9B — and in the margin view the consolidated operating margin creeps from 11.9% to 12.4% for FY26, reaching ~13.5% by FY29. No BBG op-income consensus is stored per snapshot (the Street’s forward op income lives in the Results quarterly view).' },
+      naopinc: { label: 'North America Op. Income (GAAP)', unit: 'usdM', marginOf: 'usrev', marginLabel: 'NA operating margin',
+        summit: [[34642, 37530, 35770], [44370, 44244, 41635], [42021, 41902, 41895], [48325, 48187, 48179]],
+        cons: null,
+        note: 'The Feb snapshot raised FY26 after the 4Q25 beat ($34.6B → $37.5B); May gave half of it back. The out-years barely move at $42–48B — in the margin view the model runs North America at ~7.5–8.5% through FY27, then steps down to a flat ~7.0% in FY28–29 even as revenue keeps compounding.' },
+      intopinc: { label: 'International Op. Income (GAAP)', unit: 'usdM', marginOf: 'intrev', marginLabel: 'Intl operating margin',
+        summit: [[8861, 7436, 6716], [11909, 10410, 8692], [9527, 9994, 9933], [12861, 13492, 13410]],
+        cons: null,
+        note: 'The one line consistently revised DOWN: FY26 went $8.9B → $6.7B (−24%) and FY27 $11.9B → $8.7B (−27%) across the three snapshots, even as International revenue was revised up — in the margin view the assumed margin fades from 5.0% to 3.7% for FY26. The model pushed International profitability out, the mirror image of its AWS re-rate.' },
       awsopinc: { label: 'AWS Op. Income (GAAP)', unit: 'usdM', marginOf: 'aws', marginLabel: 'AWS operating margin',
         summit: [[52332, 54215, 59400], [66262, 67540, 77250], [80461, 84425, 91198], [103534, 108635, 117351]],
         cons: null,

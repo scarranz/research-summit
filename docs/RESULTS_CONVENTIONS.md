@@ -81,12 +81,16 @@ evolution: {
 
 ## 3. UI contract (what the engine renders, per section block — sections are STACKED, not toggled)
 
-1. **Two blocks**: *Top Line* (revenue + segments + revenue lines; amber **YoY-growth line** on
-   right axis) and *Margins & Profitability* (op income / EPS / capex / segment op income;
-   **margin % lines** on right axis: actual solid, Summit dashed, consensus dotted).
+1. **Two blocks**: *Top Line* (revenue + segments + revenue lines — growth lives in the
+   TABLE's YoY rows; the chart's amber growth line was removed Jul 28 per SAB) and *Margins &
+   Profitability* (op income / EPS / capex / segment op income; **margin % lines** on right
+   axis: actual solid, Summit dashed, consensus dotted).
 2. **Metric picker** = grouped `<select>` (optgroups from `sections[].groups`) — NOT pill walls.
 3. **Legend chips** are clickable — each toggles its series (Actual / Summit / Consensus /
-   Guidance range / growth-or-margin line). Guidance renders as a translucent floating band.
+   Guidance range / margin line). Guidance renders as a translucent floating band.
+   **Hover is period-wise** (Chart.js `interaction: {mode:'index', intersect:false}`): one
+   tooltip per period listing every visible series — guidance range, actual, each estimate
+   with its surprise, margin lines.
 4. **Dual-handle period slider** below the chart with **one tick dot per period** (filled navy =
    reported in window; light blue = estimate in window; hollow dashed = outside window).
    Everything below recomputes for the window.

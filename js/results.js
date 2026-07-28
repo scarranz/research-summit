@@ -34,7 +34,6 @@ var RS_ACT    = 'rgba(30,39,51,0.92)';    // navy — actual
 var RS_SUMMIT = 'rgba(37,99,235,0.85)';   // accent blue — Summit model
 var RS_CONS   = 'rgba(124,134,148,0.85)'; // mid gray — Street consensus
 var RS_GUIDE  = 'rgba(62,90,130,0.18)';   // steel, translucent — guidance range
-var RS_GROWTH = '#B7791F';                // amber — YoY growth line
 var RS_GREEN  = '#1E9E62', RS_RED = '#C0392B';
 // Evolution block: one line per fiscal year — an ordered (ordinal) ramp of the
 // portal blue, darkest = nearest year. Validated with the dataviz palette
@@ -55,7 +54,7 @@ function rsSecGroups(cfg){ return cfg.groups || [{ label: '', keys: cfg.keys || 
 function rsSecKeys(cfg){ return rsSecGroups(cfg).reduce(function(a, g){ return a.concat(g.keys); }, []); }
 function rsSt(k){
   if (!_rs.sec[k]) _rs.sec[k] = { metric: null, win: null, chart: null,
-    hidden: { act:false, summit:false, cons:false, guide:false, growth:false, margin:false } };
+    hidden: { act:false, summit:false, cons:false, guide:false, margin:false } };
   return _rs.sec[k];
 }
 function rsMetric(k){
@@ -100,22 +99,7 @@ function rsRefsFor(m){
 }
 
 // ─── Growth & margin series ───────────────────────────────────────────────────
-// "Best available" per period: the actual when reported, else Summit, else
-// consensus — so growth chains cleanly from history into the forward estimates.
-function rsBest(m, i){ return m.act[i] != null ? m.act[i] : (m.summit[i] != null ? m.summit[i] : m.cons[i]); }
 function rsLook(){ return _rs.view === 'q' ? 4 : 1; }
-function rsGrowthPct(m, i){
-  var k = rsLook(); if (i - k < 0) return null;
-  var a = rsBest(m, i), b = rsBest(m, i - k);
-  if (a == null || b == null || !b) return null;
-  return (a - b) / Math.abs(b) * 100;
-}
-function rsGrowthDollar(m, i){
-  var k = rsLook(); if (i - k < 0) return null;
-  var a = rsBest(m, i), b = rsBest(m, i - k);
-  if (a == null || b == null) return null;
-  return a - b;
-}
 // Actual-only growth: both endpoints must be REPORTED. The Actual row never
 // shows growth into estimate periods — there is no observation there.
 function rsActGrowthPct(m, i){
@@ -238,8 +222,7 @@ function rsLegendHtml(k, m){
   if (has.summit) h += chip('summit', RS_SUMMIT, 'Summit model');
   if (has.cons)   h += chip('cons', RS_CONS, 'Consensus');
   if (has.guide)  h += chip('guide', 'rgba(62,90,130,0.3)', 'Guidance range');
-  if (isTop)      h += chip('growth', RS_GROWTH, 'YoY growth %', true);
-  else if (m.marginOf && m.unit !== 'eps') h += chip('margin', RS_ACT, esc(m.marginLabel || 'margin') + ' %', true);
+  if (!isTop && m.marginOf && m.unit !== 'eps') h += chip('margin', RS_ACT, esc(m.marginLabel || 'margin') + ' %', true);
   h += '<span class="tech-leg-i" style="margin-left:auto">▲ beat · ▼ miss · click a chip to hide it</span>';
   return h;
 }
@@ -271,15 +254,6 @@ function rsBuildChart(k){
   if (has.summit && !st.hidden.summit) datasets.push({ label: 'Summit model', data: sl(m.summit.map(scale)), backgroundColor: RS_SUMMIT, borderRadius: 3, maxBarThickness: 26, order: 4 });
   if (has.cons && !st.hidden.cons)     datasets.push({ label: 'Consensus', data: sl(m.cons.map(scale)), backgroundColor: RS_CONS, borderRadius: 3, maxBarThickness: 26, order: 5 });
 
-  if (isTop && !st.hidden.growth){
-    var g = m.periods.map(function(_, i){ return rsGrowthPct(m, i); });
-    if (g.some(function(v){ return v != null; })){
-      needY2 = true;
-      datasets.push({ label: 'YoY growth %', type: 'line', yAxisID: 'y2', data: sl(g),
-        borderColor: RS_GROWTH, backgroundColor: RS_GROWTH, borderWidth: 2, pointRadius: 2.5,
-        pointBackgroundColor: RS_GROWTH, tension: 0.25, spanGaps: true, order: 1 });
-    }
-  }
   if (!isTop && !st.hidden.margin && m.marginOf && m.unit !== 'eps'){
     var ma = rsMarginArr(m, 'act'), ms = rsMarginArr(m, 'summit'), mc = rsMarginArr(m, 'cons');
     if (ma && ma.some(function(v){ return v != null; })){
@@ -303,7 +277,7 @@ function rsBuildChart(k){
   }
 
   var tEl = document.getElementById('rsChartT-' + k);
-  if (tEl) tEl.innerHTML = esc(m.label) + ' — actual vs expectations <span>(' + unitLbl + ' per period · ' + (isTop ? 'growth' : 'margin') + ' lines on the right axis · hover for detail)</span>';
+  if (tEl) tEl.innerHTML = esc(m.label) + ' — actual vs expectations <span>(' + unitLbl + ' per period · ' + (isTop ? '' : 'margin lines on the right axis · ') + 'hover a period for every series)</span>';
 
   var scales = {
     x: { grid: { display: false }, ticks: { font: { size: 11 } } },
@@ -318,6 +292,9 @@ function rsBuildChart(k){
     data: { labels: sl(m.periods), datasets: datasets },
     options: {
       responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
+      // Period-wise hover: one tooltip listing EVERY series at that period
+      // (guidance range, actual, both estimates with their surprise, margins).
+      interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
         tooltip: {

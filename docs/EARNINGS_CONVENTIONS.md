@@ -1,14 +1,14 @@
-# Call Prep — THE complete convention (build + call interpretation, v2.6 · Jul 2026)
+# Earnings — THE complete convention (build + call interpretation, v2.6 · Jul 2026)
 
 **This is the single source of truth for everything earnings-call related**: how calls are
 ANALYZED (the rules, the detection protocol, the regression tests), how they are STORED (the
-calls repository + rotation), and how the Call Prep section is BUILT (inputs, steps, data model,
+calls repository + rotation), and how the Earnings section is BUILT (inputs, steps, data model,
 UI contract, checklist). There is no other context document — if a rule about calls exists, it
 lives here.
 
 **The contract:** Dani hands over **(a) a ticker, (b) its earnings-call transcripts, (c) the
 Bloomberg numbers export, and optionally (d) SPLC / Summit expectations** — and a fresh session,
-with no other context, builds everything from ONE prompt: **"arma el Call Prep de \<TICKER\>"**
+with no other context, builds everything from ONE prompt: **"arma el Earnings de \<TICKER\>"**
 (or refreshes with "integra el nuevo call de \<TICKER\>"). If a step is ambiguous, fix THIS doc.
 
 **Reference implementations:** `js/overviews/googl.js` is canonical for **v2.6** (the `WL_ROWS`
@@ -17,7 +17,7 @@ still carries the nested `watchList` shape. Copy the Setup / Post-Results / Post
 either — they are identical there — but take the **Watch List from `googl.js`**. `ibkr.js` was
 migrated from v1 (standalone Promise Tracker, single-estimate setup, no quarter selector) to the full
 v2.2 machinery **and** the v2.3 fusion on 2026-07-24. Each overview file owns its own copy of the
-Call Prep renderers, so v2.5/v2.6 landing on GOOGL changed nothing for the other companies.
+Earnings renderers, so v2.5/v2.6 landing on GOOGL changed nothing for the other companies.
 
 **What v2.6 changed:** the Watch List got cut back to the four things that are actually ours.
 `why` is renamed **`definition`** — what the theme *means*, in our words — and it now renders on the
@@ -46,16 +46,16 @@ chips, and the gray placeholder — the debate box alone carries what the print 
 Live on **GOOGL**; the other companies keep the v2.4 shape until their next cycle.
 
 **What v2.4 added:** IR / Investor-Day events as a first-class entry type (§6e) — a non-earnings,
-guidance-based block that gets the same Call Prep treatment as a call (Watch List = themes,
+guidance-based block that gets the same Earnings treatment as a call (Watch List = themes,
 Post-Results = the published materials/slides, Post-Call = the transcript), except Setup has no
 Consensus/Summit toggle (nothing to forecast) and shows a disclaimer instead.
 
 **What v2.3 added, and why — THE FUSION (read this before building any company):** the tab had TWO
 places talking about the same call highlights — the standalone **Evolution ▸ Earnings Calls** tab
-(the `<TICKER>_THEMES` "By theme ⇄ By quarter" compendium) and the **Call Prep Watch List** (which
+(the `<TICKER>_THEMES` "By theme ⇄ By quarter" compendium) and the **Earnings Watch List** (which
 already tracks themes across quarters via its tag bar). That redundancy is now gone. **The Watch
 List is the single home for theme-tracking.** The `<TICKER>_THEMES` compendium is not deleted —
-nothing is lost — it is **folded in below the Watch List** ("The theme record") inside the Call Prep
+nothing is lost — it is **folded in below the Watch List** ("The theme record") inside the Earnings
 pane. The standalone **Earnings Calls sub-tab is removed** from the Evolution sub-tab row. This is
 the go-forward standard: it applies to **every new company**, and to **every existing company that
 already had an Earnings Calls tab** (GOOGL and IBKR were retrofitted on 2026-07-24 — same removal +
@@ -198,7 +198,7 @@ move anything settled to `context`.
 
 ---
 
-# PART II — HOW THE CALL PREP IS BUILT
+# PART II — HOW THE EARNINGS IS BUILT
 
 ## 4b. Three rules that outrank layout taste
 
@@ -217,7 +217,7 @@ Concretely, this bans:
 - **Bare symbols.** A circled `①`, a `↩`, a `→`, a lone `⚑` communicates nothing on arrival. Write
   the words: `ON THE LIST`, `left open by Q1 2026`, `became a Q2 2026 Watch item`.
 - **Compressed jargon.** `3q open` is not a label; `unreconciled 3 quarters` is.
-- **Legends buried at the bottom.** If a section uses any chip or badge, a `.cp-legend` block sits
+- **Legends buried at the bottom.** If a section uses any chip or badge, a `.ce-legend` block sits
   ABOVE the content, not in the footnote. The first time a mark appears, its meaning is already on
   screen.
 - **Precision the number does not have** — see Rule H.
@@ -248,7 +248,7 @@ career-ending in a meeting: those lines are always covered — they simply are n
 most *contested* items, which is what the Watch List ranks. Dani's verdict: *"es peligrosísimo
 llevar y entregar eso, nos despiden mañana mismo."*
 
-**The fix, and the general form:** the cell renders **blank** (`.cp-sc-rk.blank` — no chip, no
+**The fix, and the general form:** the cell renders **blank** (`.ce-sc-rk.blank` — no chip, no
 dashed border, no tooltip), and the legend states the neutral reading explicitly: *"A blank here
 just means the line was not one of those five — every line below is covered."*
 
@@ -278,7 +278,7 @@ implies gaps in work rather than in disclosure.
 | Earnings calls | transcripts (~10 quarters) | → stored by YOU per §3 |
 | Numbers / consensus | Bloomberg export, e.g. `FA_<TICKER>_US_*.xlsx` — sheet "Multiple Periods": rows = line items, columns = quarters, last column(s) = `(Fwd)` estimates | Dani's **Downloads** |
 | Summit expectations | Summit DCF/MCP (`search_ticker` first) or analyst hand figures | MCP / Dani |
-| SPLC | Bloomberg SPLC export — feeds the DEEP DIVE, not Call Prep | Downloads |
+| SPLC | Bloomberg SPLC export — feeds the DEEP DIVE, not Earnings | Downloads |
 
 1. **Consensus = Bloomberg ONLY** (web estimates are color, never a source of record; never
    hardcoded).
@@ -288,25 +288,25 @@ implies gaps in work rather than in disclosure.
 
 ## 6. UI structure
 
-Evolution's sub-tab row (v2.3): `Call Prep · Guidance · Strategy · Timeline`
-(Call Prep is a **sub-tab of Evolution**, never a spine tab; it is the **first/active** sub-tab).
+Evolution's sub-tab row (v2.3): `Earnings · Guidance · Strategy · Timeline`
+(Earnings is a **sub-tab of Evolution**, never a spine tab; it is the **first/active** sub-tab).
 **There is NO standalone "Earnings Calls" sub-tab** — it was dissolved in v2.3 and its theme
-compendium folded into the Call Prep Watch List (see "the theme record" below).
+compendium folded into the Earnings Watch List (see "the theme record" below).
 
-**Call Prep pane** = **THE IR BUTTON (mandatory, first element)** + intro note + **QUARTER SELECTOR**
+**Earnings pane** = **THE IR BUTTON (mandatory, first element)** + intro note + **QUARTER SELECTOR**
 
-**The source buttons (IR + EDGAR):** every company's Call Prep opens with TWO deliberately loud,
-banner-style buttons side by side (`cpIRButton()` in the reference implementation), both
+**The source buttons (IR + EDGAR):** every company's Earnings opens with TWO deliberately loud,
+banner-style buttons side by side (`ceIRButton()` in the reference implementation), both
 `target="_blank"`:
-- **OPEN IR** (`CP_IR_URL`; GOOGL → `https://abc.xyz/investor/`) — the company's curated lens:
+- **OPEN IR** (`CE_IR_URL`; GOOGL → `https://abc.xyz/investor/`) — the company's curated lens:
   release, webcast, slides, transcripts.
-- **OPEN EDGAR** (`CP_EDGAR_URL`; GOOGL → `https://www.sec.gov/edgar/browse/?CIK=1652044&owner=exclude`) —
+- **OPEN EDGAR** (`CE_EDGAR_URL`; GOOGL → `https://www.sec.gov/edgar/browse/?CIK=1652044&owner=exclude`) —
   the regulator's lens: 10-K/10-Q/8-K/DEF 14A as filed. Per company, swap the CIK in the EDGAR
   browse URL.
 
 **Per-company URLs on file (swap these two constants per ticker):**
 
-| Ticker | `CP_IR_URL` | `CP_EDGAR_URL` (CIK) |
+| Ticker | `CE_IR_URL` | `CE_EDGAR_URL` (CIK) |
 |---|---|---|
 | GOOGL | `https://abc.xyz/investor/` | `…?CIK=1652044&owner=exclude` |
 | IBKR | `https://investors.interactivebrokers.com/en/general/about/quarterly-earnings.php` | `…?CIK=1381197&owner=exclude` |
@@ -326,15 +326,15 @@ as a giant low-opacity watermark bleeding off the bottom-right corner. Big banne
 72px emblem). Near-black backgrounds; the EDGAR card uses the seal's federal gold (accent bar,
 glow, CTA), the IR card uses the company's brand accent. Per ticker, swap only the mark and URLs. (pill per quarter, newest/upcoming first,
 active by default) + **four phase tabs**: Setup · Watch List · Post-Results · Post-Call. Every
-phase renders **per-quarter blocks** (`.cp-qblock[data-cpq]`) and the quarter pills toggle them —
+phase renders **per-quarter blocks** (`.ce-qblock[data-ceq]`) and the quarter pills toggle them —
 one quarter visible at a time, so the page stays light as quarters accumulate. Each quarter keeps
 its frozen pre-call blocks NEXT TO its post-mortem (the calibration record).
 
 | Phase | Content per quarter |
 |---|---|
-| **Setup** | *Upcoming quarter:* 4 **headline** metrics (mandatory, every company: **Revenue · Operating income · EPS · EBITDA**) + 4 **custom KPIs** (per-company, agreed with Dani), each with **Street** (Bloomberg) and **Summit** estimates behind a **Consensus ⇄ Summit ⇄ Both** toggle; caveat pop-ups (`cpQ`) on numbers with a trap; then **the debate** — what it establishes going in: the Street-vs-Summit disparity rows when both estimate sets exist, and the **dark synth box** carrying *the one thing to resolve*. **(v2.5 — retired)** the "setup, in one picture" pair (*what the tape fears* / *what consensus actually models*), the mechanism chips, and the gray to-fill placeholder under the debate heading are **gone**. The previa is no longer a separate block: the debate box IS the going-in read. *Reported quarters:* the FROZEN pre-call view (what was priced in + the one-liner). |
+| **Setup** | *Upcoming quarter:* 4 **headline** metrics (mandatory, every company: **Revenue · Operating income · EPS · EBITDA**) + 4 **custom KPIs** (per-company, agreed with Dani), each with **Street** (Bloomberg) and **Summit** estimates behind a **Consensus ⇄ Summit ⇄ Both** toggle; caveat pop-ups (`ceQ`) on numbers with a trap; then **the debate** — what it establishes going in: the Street-vs-Summit disparity rows when both estimate sets exist, and the **dark synth box** carrying *the one thing to resolve*. **(v2.5 — retired)** the "setup, in one picture" pair (*what the tape fears* / *what consensus actually models*), the mechanism chips, and the gray to-fill placeholder under the debate heading are **gone**. The previa is no longer a separate block: the debate box IS the going-in read. *Reported quarters:* the FROZEN pre-call view (what was priced in + the one-liner). |
 | **Watch List** | **v2.6 — the list is OURS, and it is a table (§6f).** Post-Results and Post-Call let the model run; the Watch List does not. We decide what earns a slot and what the model failed to detect. Rows live in a flat **`WL_ROWS`** table, not nested per quarter, and each carries only what is ours: `theme` · `tags[]` · **`definition`** (required — what the theme *means*, in our words; renders on the card) · **`trackSince` / `trackUntil`** (the hook window — *empty `trackUntil` means still open*). The **live quarter's list is exactly the open hooks**; we open and close them by hand. **Cards are NOT numbered** — `rank` is sort order only, so removing a theme never leaves a stale 1–5. A **tag bar** filters **ACROSS quarters** (flat view, quarter chip per card); a **tracking-window segment** (All · Open hooks · Closed) filters by hook state. **"+ Add theme"** opens a form that picks tags from the existing vocabulary **and creates new ones inline** — a new tag is appended to the filter bar, available to every theme from then on. Cards on the live quarter carry **✎ edit / ✕ delete** (edit is how a hook gets closed: fill *Tracking until*); frozen quarters are read-only history. Below the cards sits **the table** — the storage view, with a live counter and COPY / copy-JSON (§6f). Promise-type items live here (silence is a signal). **`seededBy`** renders as `left open by Q2 2026` — or `⚑ thesis line broke in Q2 2026`. **v2.3 — the fused theme record:** below everything, the Watch List phase renders **"The theme record"** — the full `<TICKER>_THEMES` compendium (By theme ⇄ By quarter, status chips with age), under a labelled divider. This is the former standalone *Earnings Calls* tab, folded in so there is ONE home for theme-tracking (nothing lost). |
-| **Post-Results** | **the red-line check FIRST** (it is the most falsifiable thing in the tab — tripped lines sort to the top, with a `⚑ n tripped` / `✓ all held` counter in the header) + **the scorecard**, ordered **biggest-surprise first, never release order**, each row carrying an `ON THE LIST` badge when it was on the frozen Watch List, with the theme named in its tooltip (blank otherwise — Rule D; v2.6 dropped the `#n`, which pointed at a rank the cards no longer show) and a **word-chip** for surprise (Rule H) + a `.cp-legend` above it (Rule L) + "what the numbers tee up for the call" + price reaction. |
+| **Post-Results** | **the red-line check FIRST** (it is the most falsifiable thing in the tab — tripped lines sort to the top, with a `⚑ n tripped` / `✓ all held` counter in the header) + **the scorecard**, ordered **biggest-surprise first, never release order**, each row carrying an `ON THE LIST` badge when it was on the frozen Watch List, with the theme named in its tooltip (blank otherwise — Rule D; v2.6 dropped the `#n`, which pointed at a rank the cards no longer show) and a **word-chip** for surprise (Rule H) + a `.ce-legend` above it (Rule L) + "what the numbers tee up for the call" + price reaction. |
 | **Post-Call** | take + insight-first highlights **grouped into three action bands** (§6b) with an `open` chip on anything management left unanswered + the connect-the-dots line + **`threeMinutes` — the spoken deliverable** (§6c) with `notBringing` + `newQuestions` rendered with **where each one landed** (`became Q2 2026 Watch item #4`), closing the chain. |
 
 **Dissolved (never build these as standalone tabs for any company):**
@@ -344,7 +344,7 @@ its frozen pre-call blocks NEXT TO its post-mortem (the calibration record).
   Two tabs on the same call highlights is the redundancy v2.3 removed. Existing companies that had
   the tab (GOOGL, IBKR) were retrofitted; new companies never get it.
 
-**The theme record** (was **Evolution ▸ Earnings Calls**; now rendered INSIDE the Call Prep Watch
+**The theme record** (was **Evolution ▸ Earnings Calls**; now rendered INSIDE the Earnings Watch
 List phase, §6 above) — the standard multi-company contract (ibkr/uber/lyft/cart/ma/rely/v/googl):
 a `<TICKER>_THEMES` array (`{theme, st:{k,since,last,silent?}, why, updates:[{q, items:[...]}]}`)
 rendered with the **By theme ⇄ By quarter** pill toggle and `lpb-acc` accordions — themes trace how
@@ -357,40 +357,116 @@ one open four are not the same fact, and a silence that has run two quarters is 
 one; the flat string could not carry that, so it was replaced. **v2.3:** the array is unchanged —
 only its render location moved (from a standalone tab to under the Watch List).
 
-## 6a. Where the consensus comes from — `Consensus_Portal.xlsm`
+## 6a. Where the consensus comes from — `BBG_CONSENSUS.txt`
 
-The Bloomberg numbers are **not** pulled per-company by hand. The team maintains one workbook,
-**`G:\My Drive\Summit\Docs\0\Consensus_Portal.xlsm`**, sheet **`BBG_CONSENSUS`** — ~500 tickers,
-one row each, refreshed from a BBG terminal. Read it with `openpyxl` (`data_only=True`, cached
-values — no MCP needed). Column layout:
+**`G:\My Drive\Summit\Docs\0\BBG_CONSENSUS.txt`** is the single consensus source for Earnings.
+It is never committed to the repo — we read it, hardcode what we need, and cite the snapshot date.
+
+A tab-separated file, **152 columns**, **one row per (ticker, `data_as_of`)**. It is an **archive
+that accumulates**: each export appends snapshots, so over time it holds many securities seen from
+many points in time. Read it directly — it is a flat TSV of a few dozen KB, no library needed.
+
+**It is a ROLLING consensus.** Every row is that security as it looked on one date:
+
+- `fq0` = the most recent **reported** quarter at that date. `fy0` = the most recent reported FY.
+- `fq-3`, `fq0`, `fy0` are **always historical actuals**. Everything else is estimate.
+- `fq+1` = the next quarter, `fq+2` the one after, and so on. `fy+1`… likewise.
+- Every period column carries its own label (`2026 Q3 (Fwd)`), and the labels roll with the row.
+
+So a single snapshot never holds a company's full history — but **the same security across its
+snapshots does**. Walk `fq0` down the rows and you have the actuals series; walk `fq+1` and you have
+what the Street expected going into each of those quarters.
+
+**Sanity-check the labels on load.** Assert `fq+N == fq0 + N quarters` and `fq-3 == fq0 − 3` for
+every row before using the file. It is a two-line check and it is the difference between reading a
+quarter and mis-reading one. (The GOOGL load passes: 12 snapshots × 5 period columns, 0 mismatches.)
 
 | columns | contents |
 |---|---|
-| `A` | `ticker` — Bloomberg form, e.g. `GOOGL US EQUITY` |
-| `B`–`U` | the **4 headline** metric *definitions*: `metricN` · `codeN` (the BBG field) · `segmentN` · `unitN` · `scaleN` |
-| `V`–`AO` | the **4 custom KPI** definitions, same 5-column shape (`metric_kpiN` …) |
-| `AP`–`AX` | the period **labels**: `fq+1`…`fq+4`, `fy+1`…`fy+5` (e.g. `2026 Q3 (Fwd)`, `2026 A (Fwd)`) |
-| `AY`–`CH` | the **values** for revenue / opinc / ebitda / eps, each × the 9 periods |
-| `CI`–`DR` | the **values** for `kpi1`…`kpi4`, same 9-period grid |
-| `DS`–`DU` | `snapshot date` · `time` · **`after_quarter`** — the last REPORTED quarter |
+| `ticker` | Bloomberg form, e.g. `GOOGL US EQUITY` |
+| `metric1`…`metric4` | the **4 headline** definitions, 5 fields each: `metricN` · `codeN` (the BBG field) · `segmentN` · `unitN` · `scaleN` |
+| `metric_kpi1`…`metric_kpi4` | the **4 custom KPI** definitions, same 5-field shape |
+| `fq-3`…`fy+5` | the period **labels** for the 12 period columns |
+| `rev_*` · `opinc_*` · `ebitda_*` · `eps_*` | the values for the 4 headline metrics × 12 periods |
+| `kpi1_*`…`kpi4_*` | the values for the 4 custom KPIs × 12 periods |
+| `data_as_of` · `time` · `submit` | the snapshot's vantage date, export timestamp, submit flag |
 
-**Read `after_quarter` first.** It tells you which quarter `fq+1` refers to. If `after_quarter` is
-`2026 Q2 (Rep)` then `fq+1` is `2026 Q3 (Fwd)` — the upcoming quarter, which is the Setup's column.
-Never assume `fq+1` is the quarter you happen to be working on; check.
+**Read `metricN` / `metric_kpiN` — the NAME — to know what a column is.** `segmentN` is a Bloomberg
+lookup code (`SEG0000344781 Segment`); it is what the terminal needs to fetch the line, not
+something you need to decode. The name already tells you.
+
+**`scaleN` is authoritative**, and it is per-metric: `M` means millions (divide by 1,000 for `$B`
+cells), **empty means units** — which today is EPS, and tomorrow could be a percentage or a count.
+Never assume the scale from the metric name.
+
+**`close_*` is not a metric — it is the period's END DATE.** The file carries a 14th value block
+with no `metricN` definition: `close_fq0`, `close_fq+1`, … hold the calendar close of each period
+(`close_fq+1` = `9/30/2026` when `fq+1` = `2026 Q3`). Two uses:
+
+- **A second, independent integrity check.** Assert every `close_fqN` equals the quarter-end of the
+  period `fqN` names. The GOOGL load passes: 12 snapshots × 6 quarter columns, 0 mismatches. Run it
+  alongside the `fq+N == fq0 + N` check — they can fail independently.
+- Real dates for an axis, where a chart needs them instead of `Q3 2026`.
+
+Because dates are legitimate *here*, a date is only a missing-value marker in a **metric value**
+column. Do not blanket-reject dates file-wide.
+
+**Missing values are normal and expected — and the file says "missing" in FOUR different ways.**
+All four mean the same thing: *there is no number here.* None is an error, none needs chasing, and
+**none should be reported as a data problem.**
+
+| what you see | what it is |
+|---|---|
+| blank | no value |
+| `Error 2042` / `#N/A` | the terminal returned nothing |
+| **a date** in a metric value column (`6/1/1834`, `2/17/1924`) | Excel rendered a missing number as a serial date |
+| **a near-zero placeholder** (`3.3e-06`) | the metric has no forward estimate at all |
+
+Parse all four to `null`. Concretely: in a **metric value** column reject anything containing `/`
+or `:`, and — where `scaleN` is `M` — reject any magnitude below `0.001` (a line scaled in millions
+cannot legitimately be a fraction of a dollar). Then **leave the cell empty**. Do not interpolate,
+do not substitute a nearby period, do not flag it as corruption.
+
+**⚠ THE CORRUPTION MOVES BETWEEN EXPORTS. Never hardcode where it is.** In the first Jul-2026 load
+it sat on `capex_fq-3` in all 12 rows; in the next load capex was clean and it had moved to
+`kpi4_fq-3` **and** `kpi4_fq0` — the *actuals* columns, which silently took Cloud operating income
+from scoreable to unscoreable. Derive the flags on every reload; never carry them forward by hand.
+
+A metric can therefore be missing in two distinct directions, and they mean different things:
+
+| flag | condition | consequence |
+|---|---|---|
+| `nocons` | no forward estimate anywhere | actuals only — renders "—" and a **no est.** badge, no growth chip. Kept because the actual can still be the story (GOOGL Q2 2026: OCF $39.1B against $44.9B capex is the negative-FCF quarter) |
+| `noact` | forward estimates exist, actuals do not | nothing to score against yet; no verdict in Post-Results until the actual returns |
+
+**THE METRIC SET IS THE FILE'S, NOT OURS.** When the export changes shape, the Setup grid and
+`CE_CONS` change with it — never the reverse. The Jul-2026 load went from 4 headline metrics to
+**9 headline + 4 custom**, and three things moved that a careless reload would have silently broken:
+
+- **capex left the KPI slots and became a headline under a DIFFERENT Bloomberg field** —
+  `HEADLINE_CAPEX`, not `CF_PURCHASE_OF_FIXED_PROD_ASSETS`. The two do not agree (Q3 2026 went
+  $54.6B → $54.3B; the historical mean gap vs actuals moved +4.7% → +10.2%). **A field swap is a
+  break in the series, not a revision** — say so in the cell's pop-up rather than letting the
+  history look continuous.
+- **`kpi4` changed meaning entirely** (capex → Cloud operating income). Custom KPIs are positional;
+  never assume slot N still holds what it held last quarter.
+- **units are no longer uniform.** `shares outstanding` carries `unitN` = *empty* with `scaleN` = `M`
+  — a **count**, not money. It must never render with a dollar sign. Read `unitN` and `scaleN`
+  together, per metric, every time.
 
 **Rules when filling from it:**
-- **`scaleN` is authoritative.** Values are usually USD `M`; divide by 1,000 for the `$B` cells.
 - **Cash-flow fields come through negative.** `CF_PURCHASE_OF_FIXED_PROD_ASSETS` (capex) is an
-  outflow, so the sheet carries it as a negative. Show the positive magnitude — that is how the
+  outflow, so the archive carries it as a negative. Show the positive magnitude — that is how the
   guide is quoted — and note the flip.
-- **The customs come from the sheet's own `kpi1`–`kpi4`**, not from a previous draft. If the sheet's
-  KPI set changed, the Setup's custom set changes with it.
-- **Segment KPIs carry an opaque code** (`SEG0000344781 Segment`). Cross-check the value against a
-  reported actual before trusting the mapping — a segment code silently pointing at the wrong line
-  is the easiest error to ship here.
-- **YoY is NOT in this sheet.** It carries forward estimates only, no prior-year actuals. Leave
-  `yoy` out rather than deriving it from rounded prose in a transcript (that is fake precision, §4b).
-  `cpFmtC` renders the cell fine without it.
+- **The customs come from the archive's own `kpi1`–`kpi4`**, not from a previous draft. If the KPI
+  set changed, the Setup's custom set changes with it.
+- **Cross-check a segment KPI against a reported actual** before trusting it. A `segmentN` code
+  silently pointing at the wrong line is the easiest error to ship here, and the name alone will not
+  catch it.
+- **YoY comes from `fq-3`, never from a forward column.** `fq-3` is the quarter three before `fq0`,
+  i.e. exactly four before `fq+1`, and it is a **reported actual**. Never derive a YoY from rounded
+  prose in a transcript ("our first-ever $100 billion quarter") — that is fake precision (§4b), and
+  it is wrong: the actual was $102.3B.
 - **NEVER do arithmetic across the lines of a row. This is the trap.** Every cell is a mean over a
   **different set of contributors** — some analysts submit only a total, others break the quarter out
   by segment — so the lines do not share a denominator. Consequences, all of them counter-intuitive
@@ -408,8 +484,372 @@ Never assume `fq+1` is the quarter you happen to be working on; check.
   This paragraph exists because the first build of this section got it backwards and shipped a
   scary "this does not reconcile" warning on a perfectly good revenue cell.
 
-## 6b. The three action bands — how highlights are grouped
+> **Naming (Jul 2026):** the tab is **Earnings** (was "Call Prep"). Internally the data const is
+> `CALL_EARNINGS`, functions are `ce*`, CSS classes `ce-*`, the subpane `data-ovst="earnings"`.
+> The former name must not appear anywhere else — label, identifier, class, or doc.
 
+### 6a-i. What the archive is FOR — the rolling read
+
+**USE EVERY OBSERVATION. Never sample the archive down.** The whole reason the file accumulates is
+that a single pull cannot show a track record. If a chart is crowded, give the reader a **range
+control** that narrows the visible window — never quietly plot a subset. A GOOGL load of 12
+snapshots yields **19 quarters** (Q4 2022 → Q2 2027, of which 15 have actuals and 12 have a
+1-quarter-out consensus) and **9 fiscal years** (FY2022 → FY2030). Anything less is throwing away
+the evidence.
+
+**The archive has two axes, and both are usable.**
+
+| lens | actuals from | consensus from | what it answers |
+|---|---|---|---|
+| **Quarterly** | `fq0` / `fq-3` | `fq+1`…`fq+4` | how well is the next quarter modelled, and how does the estimate move as it approaches |
+| **Annual** | `fy0` | `fy+1`…`fy+5` | how has the Street revised a full year over time — the long-horizon picture |
+
+The annual view is **not** a rollup of the quarterly one. Bloomberg's FY consensus is its own mean
+over its own contributor set, so four quarters do not sum to the year. Never cross-foot between
+them (same rule as across the lines of a row).
+
+**Scoring is simple: `actual / consensus − 1`.** For each quarter take the last consensus before
+the print (`fq+1`) and the reported actual (a later snapshot's `fq0`), and that is the surprise.
+Every metric that has both sides is scored — including revenue. There is **no basis test, no
+standard-deviation gate, no "is this line allowed"** step. The snapshots already hold both numbers;
+extracting the percentage is the whole job.
+
+**Revenue runs ~20% above the forward line — and that is fine, we show it.** Across eleven quarters
+the print landed persistently above the forward consensus. That is an **FX + gross-vs-net**
+difference between how the Street quotes the forward line and how Alphabet reports — a level offset,
+not a run of huge beats. We surface it as a real surprise (it is what the file says) with a note
+explaining the offset. We do **not** suppress it, colour it amber, or withhold its growth chips. An
+earlier build gated revenue out on a standard-deviation argument; that was over-engineering — the
+reader is better served by the number plus one sentence of context.
+
+**What the record actually says** — worth carrying into any GOOGL earnings prep: once a number is
+**guided**, the Street converges hard on it (capex, once guided, prints within ~3%); Search is
+modelled tightly; but **Cloud has been under-modelled ~10–14% for three straight quarters**, and
+backlog swings wide. That asymmetry is the setup — the argument is never the guided line.
+
+### 6a-ii. What this renders as — the Setup tab
+
+The archive feeds **Pre-Call ▸ Setup** (the grid and the charts) and **Post-Results** (the frozen
+Street number, §6a-iii). Two layers, in this order:
+
+**1 · The per-quarter grid — BUILT FROM THE ARCHIVE, not hand-authored.** The consensus, the YoY and
+the QoQ all come from `CE_CONS`, so the cells can never drift out of sync with the file. What stays
+hand-authored per quarter is only `setup.us` (Summit's own number) and `setup.notes` (the caveat
+pop-ups), **both keyed by metric name** — so a metric-set change never orphans a note silently.
+
+- The grid renders **all of them**: 9 headline + 4 custom in the Jul-2026 shape. Headline and custom
+  keep separate rows; the split comes from `CE_CONS.nHead`, not from a hardcoded count.
+- Every quarter's `source` must name the archive and its snapshot date: *"Bloomberg (BST) —
+  BBG_CONSENSUS.txt snapshot archive"* + `asOf`. No other consensus source appears in Earnings.
+- A reported quarter keeps **both** its reconstructed grid *and* its frozen pre-call prose
+  (`pricedIn` / `oneLiner`), under *"written before the print, never rewritten."*
+- A line that fails the basis test renders **no growth chip at all**, dims, and carries a pop-up.
+- A `nocons` line renders "—" plus a small **no est.** badge.
+
+**The growth lens: YoY ⇄ QoQ ⇄ Off.** This is what `fq-3` is *for*. Both `fq-3` and `fq0` are
+reported actuals, so the same consensus cell can be read against either base:
+
+| lens | base | column |
+|---|---|---|
+| **YoY** | the actual four quarters earlier | `fq-3` |
+| **QoQ** | the actual one quarter earlier | `fq0` |
+| **Off** | — | for reading levels without the noise |
+
+**Margins (headline EXCEPTION).** Gross profit, Operating income and EBITDA also carry a **margin**
+= the metric ÷ revenue, behind a **Margin** toggle in the estimates bar (default off). No other
+metric gets one.
+
+**Layout: the margin is its OWN row inside the cell — never appended inline.** An inline chip
+overflowed the box and was cut off. Instead, on Margin-on, a dedicated row shows a small **`margin`**
+label and the value with the base-period margin in parentheses:
+
+> `margin  61.5% (prev 60.1%)`
+
+The value is the **Street (consensus) margin** (the line the growth chips are about). The `(prev …%)`
+is the margin of the period the growth chip compares against, and **swaps with the lens**: YoY → the
+same quarter a year ago, QoQ → the prior quarter, Off → no parens. Base margin = base-period metric
+÷ base-period revenue, both reported actuals (`m.qy`/`m.qq` ÷ revenue's `qy`/`qq`). It must **fit
+the box** — a compact row, tabular figures, one line.
+
+Where a QoQ is arithmetically true but analytically useless, say so in the pop-up rather than
+suppressing it: GOOGL Q3 2026 EPS reads −67% QoQ purely because Q2 carried $99B of one-off
+securities gains.
+
+**2 · The track-record chart was REMOVED (Jul 2026) — do not re-add it.** The "Street's track
+record — what the archive can show" surprise chart is gone; the Setup now carries only the grid
+and the annual chart (§6a-viii). `CE_CONS` stays — it is the data spine of the Post-Results print
+block (§6a-iii), and still holds **every observation**:
+
+| field | shape | contents |
+|---|---|---|
+| `q` | labels | 19 quarters, Q4 2022 → Q2 2027 |
+| `qr` | quarter × 4 | the consensus at 4q / 3q / 2q / 1q out |
+| `qa` | quarter | the print |
+| `qy` / `qq` | quarter | the YoY base · the QoQ base (both actuals) |
+| `nHead` | int | how many of `m[]` are headline metrics |
+| `t` | flag | `ok` · `noact` · `nocons` (no `basis`/`noisy` — a scoreable line is just scored) |
+
+| `t` | meaning (drives the Post-Results verdict) |
+|---|---|
+| `ok` | forward estimate + a reported actual → scored beat/miss/in-line |
+| `nocons` | no forward estimate anywhere → shown as a print, no verdict |
+| `noact` | forward estimate but no reported actual (came through as dates) → no verdict yet; scoreable again once the actual returns (the corruption moves between exports) |
+
+**Flags are assigned by data availability on reload — not by hand, and not by a std-dev test.**
+Charts that ever tried to gate on standard deviation, plot a revision trend, or show a convergence
+table were all removed — every line with both sides is simply scored (§6a-iii).
+
+### 6a-iii. "Frozen" — what it means, and where the archive replaces prose
+
+**Frozen** means the expectation is the one that actually stood **going in**, and is **never
+rewritten** once the print lands. That is the entire point of the three-phase split: ① Pre-Call is
+sealed at call time, ② Post-Results scores against it, ③ Post-Call adds what management said. A
+frozen block edited after the fact destroys the only thing the tab is for — a record of how well we
+read the company.
+
+The weak spot was *what* got frozen. `scorecard[].cons` was hand-written prose — *"high-teens growth
+modeled"* — which is a **recollection**, not a record, and it drifts. The archive fixes this:
+
+> **Post-Results is ONE block — `cePrintBlock`, the archive spine + hand-authored notes.** There is
+> no longer a separate "frozen strip" and a separate hand-authored "scorecard" saying the same
+> thing twice. The archive gives every number and every surprise (consensus `fq+1` → print `fq0`);
+> the hand-authored layer contributes only what a number cannot — a per-metric note
+> (`results.notes[metric]`) and the frozen-Watch-List rank (`results.watch[metric]`). Tiles are
+> **ranked by |surprise|**, carry a verdict chip, and show growth under the shared YoY/QoQ lens.
+
+- **Margin, where available (GP / Op income / EBITDA).** Each of those tiles carries a `margin`
+  line = the **print's realized margin** (actual metric ÷ actual revenue) — a **same-basis** ratio,
+  shown only when the print and revenue's print both exist. Do **not** add a consensus-implied margin
+  next to it: it would divide by the archive's forward revenue (a different, ~20%-lower basis) and
+  overstate the margin by ~8pts, reading as a collapse when nothing collapsed. The realized margin
+  is the honest one; leave it to stand alone.
+- **Every scoreable metric shows a real surprise**, revenue included (its ~20% offset is FX /
+  gross-vs-net, explained in the tile's note — not suppressed). Each tile carries a verdict chip
+  (beat / miss / in-line), and a **beat / miss / in-line filter** narrows the grid.
+- **Only the standardized metrics are scored.** A bespoke row that is not one of the archive metrics
+  — an old "funding flip" card, a disclosure with no consensus like an app-MAU rung — is **not** a
+  scored line. It belongs in Post-Call highlights, sourced from the transcript. `result:'beat'`
+  still requires a consensus to beat (§6a-vii).
+- The strip renders only for quarters the archive covers; it is silently absent otherwise.
+
+### 6a-iv. Density — the anti-wall rules for every phase
+
+Post-Results and Post-Call were rebuilt twice (Jul 2026) because they kept becoming walls of text.
+These rules apply to **every** company, and to pop-ups everywhere in the profile:
+
+**Structure**
+- **Boxes and grids, not stacked prose.** The scorecard and the call highlights render as **cards in
+  a 2-column grid** — metric / expected / printed / verdict, or tag / one line. Depth goes in the
+  pop-up behind a `＋ detail` affordance.
+- **Progressive disclosure by default.** Secondary blocks (thesis red-line check, "what this tees
+  up", price reaction, connect-the-dots, new questions, "not bringing") are **folded**, each with a
+  one-line summary in its header so the reader knows whether to open it.
+- **Open a fold only when it earns it.** The thesis red-line check opens by itself **only if
+  something tripped**.
+- **Only the `lead` band renders open.** `context` and `logged` collapse behind *"Show the N …"*,
+  with a count in the band header so a closed band is still informative.
+- Keep the lede to **one sentence**. If a table needs a legend, the table is wrong — delete both.
+- **A tab switch must not scroll the page.** Hiding a tall pane and showing a shorter one makes the
+  browser clamp `scrollTop`, so the page appears to jump to the top. Wrap every tab / sub-tab /
+  phase-tab switch in `ceKeepPos(clickedEl, fn)`: measure the control's viewport position, run the
+  change, then `scrollBy` the delta so the control stays put.
+
+**Pop-ups — enforced in the renderer, not by asking authors nicely**
+> `ceReg()` runs every pop-up body through **`ceProse()`** at registration time. First sentence
+> becomes a set-apart **lead**; every remaining sentence becomes a **bullet**; a paragraph opening
+> `<b>Label:</b>` keeps its label as a labelled row. Bodies that already carry `<ul>`/`<li>` are
+> left exactly as authored.
+
+This was retrofitted because an audit found **81 of 81** authored bodies were flowing `<p>` prose
+with zero bullets, the worst at 136 words. After the transform: 83 of 94 carry bullets and the
+longest surviving paragraph is 45 words. Doing it at registration means the next author cannot
+forget the rule, and old content is fixed too. It is text-preserving — no words are dropped.
+
+**Three minutes — the deliverable, and the part people actually read out loud**
+- It renders **directly under the take, above the highlight bands**. A reader who stops after one
+  screen still leaves with the thing they say.
+- **Boxes, one per theme — TITLE ONLY by default.** Each item is a numbered card whose whole face
+  is the claim (`<b>…</b>`, ≤12 words). The evidence lives behind a native `<details>` **“＋ ver
+  más”** and is revealed on demand — never shown up front. A three-minutes list you can scan in
+  three seconds; the argument is there if someone challenges a line. Copy still exports claim +
+  evidence (it reads the spans, not the summary).
+- Punch means the *consequence*, not the datapoint: "They chose dilution over slowing down" beats
+  "Third capex raise in five months, FCF negative, $49.6B equity, buybacks zero" — which is the
+  evidence line underneath it, not the claim.
+
+### 6a-v. Controls, defaults and inputs
+
+**Defaults must be both APPLIED and VISIBLY SELECTED.** A control whose default state is only in the
+markup drifts the moment anything re-renders, and a highlighted-but-not-applied toggle reads as
+broken. Set defaults in the markup *and* re-assert them when wiring:
+
+| control | default | shows |
+|---|---|---|
+| Consensus ⇄ Summit ⇄ Both | **Consensus** | the Street column |
+| YoY ⇄ QoQ ⇄ Off | **YoY** | growth against `fq-3` |
+
+YoY is the default everywhere the lens appears — Setup grid *and* the Post-Results print block —
+and one control drives both, so moving between phases never re-orients the reader.
+
+**Pop-ups must be cross-checked after ANY rename or refactor — a broken pop-up is silent.** Every
+expander (`＋ detail`, `why ＋`, `the ask`, the thread/background link, the Setup `?` note) works by
+a `data-detail="KIND:id"` attribute that a single `resolve()` switch reads by `KIND`. Two ways
+this breaks, both silent (the click just does nothing):
+- **Prefix ≠ resolver kind.** A rename that rewrites the registration prefix (`ce:`) must rewrite
+  the resolver's `kind===` check too — AND catch **both quote forms**: `'ce:` *and* `"ce:` (an
+  attribute built inside a single-quoted string is `"ce:`). The Jul-2026 rename missed the
+  double-quote form and every pop-up died; the fix was six `data-detail="cp:` → `"ce:`.
+- **id not registered.** `ceReg(id,…)` must run for every id a `data-detail` points at.
+
+Verify by rendering the profile and asserting **every** `data-detail` value resolves to a non-null
+pop-up (replicate `resolve()` over the exported maps). Do this on every change that touches the
+pop-up plumbing — it is a two-line test and the alternative is a dead expander nobody notices.
+
+**One language, cross-checked.** The UI is **English**. No mixed-language strings — a Spanish
+`ver más` next to English `＋ detail` is a bug. After any edit, grep the rendered output for stray
+non-English UI words (`ver más`, `más`, `atrás`, `cerrar`, …) and for the pattern that let it in
+(a copy-pasted label, a translated placeholder). Keep it to one language everywhere the reader looks.
+
+**Cross-check every toggle handler against the OTHER toggles that share its styling.** Segmented
+controls reuse the `.ce-gseg` pill class, so a handler that does `querySelectorAll('.ce-gseg
+button')` will silently clear the active state of a *different* toggle in the same box. Scope by
+the toggle's own data attribute (`.ce-gseg button[data-ceg]`, `[data-cemm]`, …), and assert each
+toggle's default at wire time independently. This shipped once as a margin toggle that rendered
+deselected because the growth-lens init cleared it.
+
+**The annual chart's metric selector offers Revenue / Operating income / EBITDA only** (§6a-viii) —
+the three lines wired on both the BBG and Summit sides. The Setup grid still carries all 13.
+
+**Any field whose value is one of a known short list is a `<select>`, never free text.** The Watch
+List's *Tracking since* / *Tracking until* were text inputs, so `Q3 26` / `3Q2026` / `Q3-2026` all
+silently broke the open/closed filter and the cross-quarter sort. Both are now dropdowns generated
+from **Q1 2024 through the quarter Earnings is currently on**, derived from `CALL_EARNINGS` so the range
+advances by itself.
+
+**A table is a VIEW of the data, never the storage.** The Watch List table is **hidden by default**
+(the storage view is not what a reader wants first) and expands on *show table*. COPY works whether
+it is shown or not — because COPY serialises `WL_ROWS`, not the rendered rows. Any export that reads
+the DOM is a bug waiting for someone to collapse a section.
+
+### 6a-vi. Post-Results and Post-Call — what each block must look like
+
+**Thesis red-lines.** One-word verdict (`TRIPPED` / `HELD`), then the red-line **itself** in plain
+language, then the reasoning behind a *why ＋*. The scannable column is the verdict; the line must be
+self-explanatory on its own. **No metaphors, no in-jokes** — "Another raise without proof, or FCF
+negative while debt keeps rising" is a red-line; "the bill comes due" is not. If a reader needs the
+pop-up to know what the line *means*, the line is written wrong.
+
+**What this tees up for the call.** Short boxes, **visible** — never folded. Folding it was hiding
+the thing you walk into the call with; the fix is to shorten it, not to bury it. Hook on the card,
+the argument behind *＋ the ask*.
+
+**Highlights: one triage strip, all three bands visible.** `Lead with this` / `Context` / `Logged`
+render as three colour-coded buttons carrying a count and a one-line meaning, above a single card
+grid where every card wears its band colour. Clicking a band filters its cards out. All three start
+**on** — the reader triages by looking, and the filter is for narrowing, not for hiding by default.
+Do not give each band its own collapsed section; that made the reader hunt.
+
+**Connect-the-dots is not a section.** Anything that connects across themes becomes a Watch item via
+`newQuestions` → the next quarter's list. Saying it twice made the phase longer without making it
+more useful. The field stays in the data as authoring notes.
+
+**Never number the same list twice.** Three-minutes items are ordered by the list itself; a numbered
+badge next to them was the same information rendered again.
+
+**One-line headline and take.** `results.headline` and `call.take` are a single sentence each. The
+evidence lives in the tiles above and the cards below; restating it at the top was the largest text
+block in either phase.
+
+### 6a-vii. Sourcing a scorecard row — and what "beat" is allowed to mean
+
+Every number in `results.scorecard[]` comes from the release, the transcript in `docs/calls/`, or
+the archive. **The open web is not a source for a financial metric** (§6a golden rule), and neither
+is inference.
+
+**`result:'beat'` requires a consensus to beat.** If `cons` is a question rather than a number —
+*"the skipped rung: a number, or a second silence?"* — the row is `nocons`, not `beat`. This shipped
+wrong once: GOOGL Q2 2026's Gemini app MAU was scored `beat` when the watch had never been a level,
+only whether the company would disclose at all. The 950M itself was correctly sourced from the
+transcript; the **verdict** was the error.
+
+| `result` | means |
+|---|---|
+| `beat` / `miss` / `inline` | there WAS a Street number, and the print landed above / below / on it |
+| `nocons` | nobody modelled it — the news is the disclosure, not the level |
+| `nodisc` | management stopped giving a number it used to give |
+
+`nocons` and `nodisc` are not soft misses. They are their own findings, and mislabelling either as a
+beat inflates the scorecard.
+
+### 6a-viii. The annual picture — a second Setup chart
+
+Below the grid, Setup carries an **annual** chart (`ceAnnualBody` / `gBuildCeAnnual`, data in
+`CE_ANNUAL`): how the full fiscal year has looked, and what the Street vs Summit expect for the
+years still open. Three series per metric:
+
+- **Reported** — FY actuals from the archive (`fy0`), the history bars/line.
+- **Street (BBG)** — the consensus for the open FYs, from our `BBG_CONSENSUS.txt` (`fy+N`). We do
+  **not** read the BBG row inside the DCF — the archive is our Street source.
+- **Summit** — our own forecast, from the DCF (see §6a-x), plotted only on the forward years.
+
+Rules:
+- **Metrics: Revenue, Operating income, EBITDA** for now (the three wired both sides). Add a metric
+  only once both its BBG and Summit numbers exist; if either is missing, leave it out.
+- **Guidance is a third series when the company gives it.** If the company issues numeric FY
+  guidance, add it; if not, **show the “no company guidance” disclaimer** and plot only two. GOOGL
+  gives none, so the chart is Reported + BBG + Summit.
+- **Bars ⇄ Lines** toggle; metric selector.
+- **Annual only for now.** The quarter matters — the intended toggle is “show only the quarter being
+  forecasted across prior years” (Q3 2026 → Q3 2023/24/25), to cut noise. It is **deferred**: the
+  Summit quarterly forecast is not wired (it needs a big re-cabling), so today only the annual
+  forecast exists. Build the quarter view only once Summit quarterly is available.
+
+### 6a-ix. The quarter belongs to the section, not the other way round
+
+The four phase tabs sit **above** the quarter pills (the section is chosen first, then the
+quarter within it). Each phase decides which quarters it offers — not a single global selector:
+
+| phase | quarters offered |
+|---|---|
+| Setup · Watch List | every quarter, incl. the upcoming one |
+| Post-Results | only quarters with a `results` block |
+| Post-Call | only quarters with a `call` block |
+
+The upcoming quarter has no results and no call, so **it does not exist in Post-Results or
+Post-Call** — that data does not exist yet. Each pill carries `data-ceqhas` (the phases it is
+valid for); switching phase hides the invalid pills and, if the active quarter just became
+invalid, snaps to the most-recent valid one.
+
+The Watch List carries a one-line hint of this cadence above the theme filter, so the rule is
+visible where the prep happens.
+
+**Adding the upcoming quarter is gated.** A new upcoming quarter is added to `CALL_EARNINGS.quarters`
+**only once the PRIOR quarter's Post-Call is filled** — the cycle is: fill Q(n) Post-Call → then
+Q(n+1) may appear as upcoming in Setup / Watch List. Never seed an upcoming quarter before the
+one before it is closed out.
+
+### 6a-x. Consulting a company profile when there is no MCP
+
+Some data (Summit's own forecast) lives in the analyst's DCF, not in an API. **Eventually the team
+will specify how to consult a company profile** (an MCP, most likely); until then, read the DCF
+workbook directly. For GOOGL:
+
+`G:\My Drive\Summit\Docs\Research\DCF\Technology - SAB\GOOGL\DCF GOOGL - New.xlsm`, tab
+**`Projection History`** (openpyxl, `data_only=True`).
+
+- **A1 is empty.** The header row (`Code · metric · segment · unit · scale · source · … · years …`)
+  is at the top; the SAME headers **repeat lower down** (row ~70–71), and the blocks **below that
+  second header are the historical snapshots** — that is what matters.
+- **Read Summit's forecast from the most-recent annual snapshot** (the first block below the second
+  header). Ignore its `… (BBG)` rows — the Street comes from our `.txt`. Columns are fiscal years;
+  take the forward FY you are charting.
+- **If a value does not exist, ignore it** — do not invent, do not substitute. GOOGL currently has
+  **Revenue, EBITDA and Operating income** wired on both sides; those three are what the annual
+  chart shows.
+- **The quarter matters and is not wired yet.** Summit quarterly columns are empty today; when they
+  are cabled, extract the quarterly forecast the same way and enable the quarter view (§6a-viii).
+
+## 6b. The three action bands — how highlights are grouped
 The `tag` taxonomy (§2, Pass 3) says **what kind of signal** an item is. It does not say **what you
 do with it in the meeting** — and that is the only question the reader has thirty seconds before
 walking in. So `call.highlights[]` also carries `band`:
@@ -459,8 +899,8 @@ one slot in the meeting.
 - **`notBringing` is mandatory when anything notable was excluded** — `{item, why}`. It answers the
   question that actually gets asked in the room ("what about Waymo?") and proves the omission was
   a decision, not an oversight. Two to three entries.
-- A **copy button** (`.cp-3m-copy`) lifts the numbered text out of the dashboard — the one thing in
-  Call Prep designed to leave it.
+- A **copy button** (`.ce-3m-copy`) lifts the numbered text out of the dashboard — the one thing in
+  Earnings designed to leave it.
 
 **How to source it:** write it from the `lead` band plus the tripped red-lines, then check it
 against `notBringing` — anything a reader would expect to hear and does not appear in the three
@@ -468,7 +908,7 @@ minutes belongs in one list or the other. Nothing notable may be silently absent
 
 ## 6d. The chain — `newQuestions → seededBy`, visible from both ends
 
-The claim that Call Prep is a **calibration record** is only true if the reader can trace it. Two
+The claim that Earnings is a **calibration record** is only true if the reader can trace it. Two
 fields make it navigable, and both are mandatory once ≥2 quarters exist:
 
 - On the **watch item**: `seededBy:{q, n, tripped?}` → renders `left open by Q1 2026`, or
@@ -569,18 +1009,18 @@ honest signal that the table tracked the edit (Rule H — never render nothing a
 
 Not the most efficient loop, but it lets us author and *see* the list now instead of waiting on the
 database. When the Supabase work is picked up, the shape is already right: the columns above map 1:1
-to a `call_prep_watchlist` table (one row per theme per quarter, `id` as PK, `tags` as `text[]`,
+to a `earnings_watchlist` table (one row per theme per quarter, `id` as PK, `tags` as `text[]`,
 `definition` as `text not null`, `rank` as `int` (sort only), `track_since` / `track_until` nullable), reachable through `js/api.js` like every other table — no
 render changes required, only the data source.
 
 **Scope.** v2.6 is live on **GOOGL** (`js/overviews/googl.js`). IBKR / V / MA / RELY / META still
 carry the v2.4 nested `watchList` shape and keep working unchanged — each overview file owns its own
-copy of the Call Prep renderers. Retrofit them when their next cycle is built; do not do it blind.
+copy of the Earnings renderers. Retrofit them when their next cycle is built; do not do it blind.
 
 ## 7. Data model (essentials)
 
 ```js
-var CALL_PREP = { ticker:'XXXX', quarters:[
+var CALL_EARNINGS = { ticker:'XXXX', quarters:[
   // kind defaults to 'earnings'; an Investor Day / IR event is kind:'ir' + label (§6e) —
   // Setup shows only a disclaimer (no estimate toggle), Post-Results is a materials list.
   { q:'Qx 20xx', status:'upcoming', date:'…', /* kind:'ir', label:'Investor Day 2026', */
@@ -628,7 +1068,7 @@ var WL_ROWS=[
 // v2.6 removed `tell`, `trigger` and `cons` — see §6f. Do not reintroduce them.
 function wlFor(qLabel, openOnly){ /* rows for a quarter; live quarter passes openOnly=true */ }
 
-// The theme record (rendered inside the Call Prep Watch List, v2.3) — status carries its age (§6):
+// The theme record (rendered inside the Earnings Watch List, v2.3) — status carries its age (§6):
 var <TICKER>_THEMES=[ { theme, why, st:{ k:'promise'|'trend'|'watch', since, last, silent? },
                         updates:[{q, items:[…]}] } ];
 ```
@@ -652,38 +1092,43 @@ capex guide that was **raised** did not "miss" a number — it reset the framewo
 `big surprise` / `some surprise` / `as expected`. It never renders as a bar, a gauge or a
 percentage (Rule H), and the legend says so on screen.
 
-Render machinery to port verbatim from `googl.js` (swap data + brand only): `cpStyle`, `cpFmtC`,
-`cpEvCell`, `cpQPills`/`cpQkey`, `cpSetupBody`, `cpWatchBody`, `cpWatchItem`, `cpResultsBody`,
-`cpCallBody`, `callsBody`/`callsByQuarter`, `cpUpcoming`, `cpFill`, `cpQnum`/`cpStAge` (status
-age, §6), `CP_RES` (five verdicts, §7b), `CP_HLTAG`, `CP_THST`, `CP_POP`/`cpReg`/`cpQ`,
-`wireCallPrep` (phase tabs + estimates toggle + quarter pills + the `threeMinutes` copy button,
+Render machinery to port verbatim from `googl.js` (swap data + brand only): `ceStyle`, `ceFmtC`,
+`ceEvCell`, `ceQPills`/`ceQkey`, `ceSetupBody`, `ceWatchBody`, `ceWatchItem`, `ceResultsBody`,
+`ceCallBody`, `callsBody`/`callsByQuarter`, `ceUpcoming`, `ceFill`, `ceQnum`/`ceStAge` (status
+age, §6), `CE_RES` (five verdicts, §7b), `CE_HLTAG`, `CE_THST`, `CE_POP`/`ceReg`/`ceQ`,
+`wireCallEarnings` (phase tabs + estimates toggle + quarter pills + the `threeMinutes` copy button,
 clipboard API with a `textarea`+`execCommand` fallback) and the `lpb-acc`/`calls-pill` wiring in
-`init`. Note `wireCallPrep` is called from **`init`**, not `deepDiveInit`.
+`init`. Note `wireCallEarnings` is called from **`init`**, not `deepDiveInit`.
 
-CSS classes that carry meaning (port with the functions): `.cp-legend`/`.cp-legend-i` (Rule L),
-`.cp-sc-rk` + `.cp-sc-rk.blank` (Rule D), `.cp-sc-surp.hi/.md/.lo` (Rule H), `.cp-band*`,
-`.cp-hl-open`, `.cp-3m*`/`.cp-nb*`, `.cp-seed`, `.cp-nq*`, `.calls-st-age`.
+CSS classes that carry meaning (port with the functions): `.ce-legend`/`.ce-legend-i` (Rule L),
+`.ce-sc-rk` + `.ce-sc-rk.blank` (Rule D), `.ce-sc-surp.hi/.md/.lo` (Rule H), `.ce-band*`,
+`.ce-hl-open`, `.ce-3m*`/`.ce-nb*`, `.ce-seed`, `.ce-nq*`, `.calls-st-age`.
 
 ## 8. The build — nine steps, in order
 
 1. **Calls repository** (§3): create/rotate `-latest.md` + compendium.
 2. **Analyze** the latest call (Part I) AND diff the full record — Pass 1.5 discovers the themes
    and promise ladders.
-3. **Extract consensus** from the Bloomberg export (python/openpyxl, `data_only=True`; last
-   `(Fwd)` column; YoY vs the same reported quarter).
-4. **Build `CALL_PREP`**: the upcoming quarter (Setup v2, per-quarter watch list of THEMES).
+3. **Extract consensus** from `BBG_CONSENSUS.txt` (§6a): check the label integrity, take the newest
+   snapshot's `fq+1`, YoY from that same row's `fq-3`, and run the **basis test** before trusting
+   any line for a YoY or a surprise.
+4. **Build `CALL_EARNINGS`**: the upcoming quarter (Setup v2, per-quarter watch list of THEMES).
 5. **Backfill reported quarters as worked examples** — when call history exists, build at least
    the TWO most recent reported quarters end-to-end (frozen setup + contemporaneous watch list +
    results + call), so the accumulate-over-time picture is visible and the
-   `newQuestions → next watchList` chain is real. Frozen consensus for old quarters may be
-   qualitative ("hold high-teens") where the archived Bloomberg number isn't at hand — never
-   invent precise figures.
-6. **The theme record** (`<TICKER>_THEMES`, §6 format) — rendered INSIDE the Call Prep Watch List
+   `newQuestions → next watchList` chain is real. **Reconstruct their consensus grids from the
+   archive** — the last snapshot before each print carries exactly the number that stood going in
+   (§6a-ii). Fall back to a qualitative frozen setup ("hold high-teens") only where no snapshot
+   covers the quarter; never invent precise figures.
+   **Adding a grid must not delete that quarter's frozen pre-call prose** — both render.
+5b. **Build the annual chart** (§6a-viii) once BBG + Summit exist for a metric: `CE_ANNUAL`
+   + the two Setup charts, with the trust flags set by the basis test.
+6. **The theme record** (`<TICKER>_THEMES`, §6 format) — rendered INSIDE the Earnings Watch List
    phase (fold it in below the watch content via `callsBody()`); do NOT build a standalone Earnings
    Calls sub-tab (v2.3).
 7. **Port the render machinery** from `googl.js` or `ibkr.js` (§7).
-8. **Wire it** (§6 placement — Call Prep is the first Evolution sub-tab, no Earnings Calls tab;
-   `wireCallPrep` + calls-pill/lpb-acc in `init`).
+8. **Wire it** (§6 placement — Earnings is the first Evolution sub-tab, no Earnings Calls tab;
+   `wireCallEarnings` + calls-pill/lpb-acc in `init`).
 9. **After each print/call**: fill `results` then `call` (Rule 0), including **`band`+`open` on
    every highlight** (§6b), **`threeMinutes`+`notBringing`** (§6c), and `surprise`/`watchRank` on
    every scorecard row (§7b). Then ROLL: build the new upcoming quarter, and **close the chain** —
@@ -716,8 +1161,8 @@ CSS classes that carry meaning (port with the functions): `.cp-legend`/`.cp-lege
       **No "refresh" button** (it could only ever be a no-op).
 - [ ] Tag bar still filters **across quarters** (flat view w/ quarter chips; clear/quarter-pick
       returns to per-quarter); promises embedded (no standalone tab).
-- [ ] **No black slabs inside the watch cards** — no `.cp-w*` rule uses `#10141A`. The dark box
-      survives only as the Setup debate box (`.cp-synth`) and the Post-Call take (`.cp-take`).
+- [ ] **No black slabs inside the watch cards** — no `.ce-w*` rule uses `#10141A`. The dark box
+      survives only as the Setup debate box (`.ce-synth`) and the Post-Call take (`.ce-take`).
 - [ ] Watch List items that descend from a prior call carry **`seededBy`**, rendered in words.
 - [ ] **Post-Results:** red-line check renders **above** the scorecard with its tripped counter;
       scorecard sorted **biggest-surprise first**; every row has `surprise`; `watchRank` present
@@ -730,7 +1175,7 @@ CSS classes that carry meaning (port with the functions): `.cp-legend`/`.cp-lege
 - [ ] ≥2 reported quarters backfilled end-to-end; **the chain closes in BOTH directions** — every
       `newQuestion` shows where it landed or reads *still open*, and its counterpart watch item
       names it; quarter pills toggle all four phases.
-- [ ] **The theme record** renders **inside the Call Prep Watch List** (not a standalone tab): By
+- [ ] **The theme record** renders **inside the Earnings Watch List** (not a standalone tab): By
       theme ⇄ By quarter toggle, `lpb-acc` accordions, status chips **with age in words**,
       contemporaneous highlights. **No "Earnings Calls" sub-tab exists** in the Evolution row (v2.3).
 - [ ] Rule 0 everywhere; §4 regression tests pass.

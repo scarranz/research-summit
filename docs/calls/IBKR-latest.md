@@ -1,6 +1,6 @@
 # IBKR — Latest earnings call · Q2 2026 (July 21, 2026)
 
-The working file for the current cycle per docs/CALL_PREP_CONVENTIONS.md §3 — ONLY the most recent
+The working file for the current cycle per docs/EARNINGS_CONVENTIONS.md §3 — ONLY the most recent
 call: its analysis (fact → why → so-what). When the Q3 2026 call lands, this analysis rotates to
 the TOP of the compendium (`IBKR.md`) and Q3 2026 takes its place here.
 
@@ -10,7 +10,7 @@ the TOP of the compendium (`IBKR.md`) and Q3 2026 takes its place here.
 
 ---
 
-## Analysis (per the CALL_PREP_CONVENTIONS Part I rules — fact → why → so-what)
+## Analysis (per the EARNINGS_CONVENTIONS Part I rules — fact → why → so-what)
 
 **Call date:** July 21, 2026 (4:30pm ET) · Founder/Chairman Thomas Peterffy, CEO Milan Galik, CFO Paul Brody (Nancy Stuebe presenting Milan's remarks).
 **Purpose of this doc:** not a restatement of the numbers (those are in the release) — the *story behind them*, the buried details, and the dots that connect. Insight-first.
@@ -87,4 +87,4 @@ the TOP of the compendium (`IBKR.md`) and Q3 2026 takes its place here.
 
 ---
 
-*Source: IBKR 2Q2026 earnings call transcript (July 21, 2026) + 2Q2026 earnings release. Analysis is insight-first per the Call Prep conventions (thesis / curious / connects-dots / tone / watch).*
+*Source: IBKR 2Q2026 earnings call transcript (July 21, 2026) + 2Q2026 earnings release. Analysis is insight-first per the Earnings conventions (thesis / curious / connects-dots / tone / watch).*

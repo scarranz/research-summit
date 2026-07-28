@@ -6,9 +6,10 @@ metric, quarterly and annual, with growth and margins. Built with SAB through ~1
 iterations on AMZN; this doc is the contract to replicate it for any ticker.
 
 **Where it lives:** Deep Dive ▸ Evolution ▸ **Results** (a sub-tab BESIDE Call Prep — same row:
-`Call Prep · Results · Guidance · Strategy · Timeline`). It is NOT a top-level profile tab
-(it was one briefly; SAB moved it here). See `js/overviews/amzn.js` → `deepDiveHtml()` +
-`wireDD()` for the embedding pattern.
+`Call Prep · Results · Estimate Evolution · Guidance · Strategy · Timeline`). It is NOT a
+top-level profile tab (it was one briefly; SAB moved it here). **Estimate Evolution** is its own
+sub-tab at the same level (it was briefly a stacked block inside Results; SAB split it out,
+Jul 28). See `js/overviews/amzn.js` → `deepDiveHtml()` + `wireDD()` for the embedding pattern.
 
 ---
 
@@ -16,16 +17,19 @@ iterations on AMZN; this doc is the contract to replicate it for any ticker.
 
 | File | Role |
 |---|---|
-| `js/results.js` | Generic engine. Exports `resultsHtml(ticker)` (embed string; `''` if no dataset) and `initResults()` (wire + lazy chart build — call via `requestAnimationFrame` when the pane becomes visible). Registry `RESULTS_DATA` at the top maps ticker → dataset. |
+| `js/results.js` | Generic engine. Exports `resultsHtml(ticker)` / `initResults()` (the Results pane) and `resultsEvoHtml(ticker)` / `initResultsEvo()` (the Estimate Evolution pane) — embed strings return `''` when the dataset (or its `evolution` block) is missing; call each init via `requestAnimationFrame` when its pane becomes visible. Registry `RESULTS_DATA` at the top maps ticker → dataset. |
 | `js/results-data/<ticker>.js` | Hand-built per-ticker dataset (see §2). AMZN: `js/results-data/amzn.js`. |
 | `css/results.css` | Styles. Note `.rs-wrap { --brand: var(--navy) }` (the AVE pill styles need it outside overview scope). |
 | `docs/references/fiscal-ai/` | Source documents dropped by the team: Fiscal.ai UI screenshots, `FA_AMZN_US.xlsx` (BBG consensus export), `AMZN Summit Projections.xlsm` (model export). |
 
 **Embedding (per company deep-dive module):**
 ```js
-import { resultsHtml, initResults } from '../results.js';
-// Evolution pane: '<div class="ovt-subpane" data-ovst="results" hidden>' + resultsHtml('AMZN') + '</div>'
-// on sub-tab switch to results: requestAnimationFrame(initResults)
+import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
+// Evolution pane:
+//   '<div class="ovt-subpane" data-ovst="results" hidden>' + resultsHtml('AMZN') + '</div>'
+//   '<div class="ovt-subpane" data-ovst="estevo" hidden>' + resultsEvoHtml('AMZN') + '</div>'
+// on sub-tab switch: results → requestAnimationFrame(initResults)
+//                    estevo  → requestAnimationFrame(initResultsEvo)
 ```
 
 ## 2. Dataset shape (`js/results-data/<ticker>.js`)
@@ -82,7 +86,7 @@ evolution: {
    beat). Guidance tile: above/within/below the range + avg vs midpoint. Top Line adds a growth
    tile (avg YoY + Fiscal-style range headline: total change + CAGR — **reported observations
    only**). Margins adds avg margin (actual vs Summit vs consensus).
-6a. **Estimate evolution block** (below the two sections, OUTSIDE the Quarterly/Annual toggle —
+6a. **Estimate Evolution** — its OWN sub-tab beside Results (no Quarterly/Annual toggle —
    the vintage data is annual by nature): one line per fiscal year across the model's saved
    snapshots. Colors are an ordered one-hue ramp of the portal blue (`EVO_RAMP` in results.js,
    darkest = nearest year; validated with the dataviz palette checker). Solid = Summit, dashed =
@@ -144,8 +148,9 @@ trusting rounded output (the BBG margin rows carry full precision).
 4. Build `js/results-data/<ticker>.js` (shape §2): quarterly + annual views, sections/groups
    tailored to the company (e.g. UBER: Totals / Mobility / Delivery / Freight), `marginOf` links.
 5. Register the ticker in `RESULTS_DATA` (`js/results.js`).
-6. In the company's deep-dive module, add the Evolution sub-tab row with **Results beside Call
-   Prep** and wire `initResults` on visibility (copy from `amzn.js`).
+6. In the company's deep-dive module, add the Evolution sub-tab row with **Results and Estimate
+   Evolution beside Call Prep** and wire `initResults` / `initResultsEvo` on visibility (copy
+   from `amzn.js`).
 7. Verify: segment sums tie; every note states its source; beat/miss coloring is actual-centric;
    sliders/ticks/dropdown/legend chips work; no console errors.
 

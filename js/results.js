@@ -178,7 +178,6 @@ function rsBody(){
     return '<button type="button" class="rs-view' + (k === _rs.view ? ' active' : '') + '" data-rsview="' + k + '">' + esc(d.views[k].label) + '</button>';
   }).join('') + '</div></div>';
   h += '<div id="rsBlocks">' + rsBlocksHtml() + '</div>';
-  if (d.evolution) h += rsEvoBlockHtml();
   h += '<div class="ov-foot" id="rsViewNote">' + esc(rsView().note || '') + '</div>';
   h += '<div class="ov-foot">' + esc(d.source) + '</div>';
   h += '</div>';
@@ -609,11 +608,12 @@ function rsRenderTable(k, m){
 }
 
 // ─── Estimate evolution — the annual forecast ACROSS model snapshots ──────────
-// A separate stacked block below the per-period sections, independent of the
-// Quarterly/Annual toggle (the vintage data is annual by nature). One line per
-// fiscal year across the saved snapshots: solid = Summit, dashed = the BBG
-// consensus stored inside the model at the same date. Dataset shape: see
-// `evolution` in results-data/<ticker>.js.
+// Its OWN sub-tab beside Results (same row: Call Prep · Results · Estimate
+// Evolution · …), embedded via resultsEvoHtml(ticker) + initResultsEvo().
+// One line per fiscal year across the saved snapshots: solid = Summit, dashed =
+// the BBG consensus stored inside the model at the same date. Annual by nature
+// (no Quarterly/Annual toggle). Dataset shape: `evolution` in
+// results-data/<ticker>.js.
 
 function rsEvo(){ return _rs.data ? _rs.data.evolution : null; }
 function rsEvoSt(){
@@ -638,12 +638,22 @@ function rsRevHtml(m, prev, cur){
   return h;
 }
 
+// Embeddable pane html for the Estimate Evolution sub-tab ('' if the ticker's
+// dataset has no `evolution` block).
+export function resultsEvoHtml(ticker){
+  var data = getResultsData(ticker);
+  if (!data || !data.evolution) return '';
+  _rs.data = data;
+  _rs.evo = null;
+  return '<div class="rs-wrap" id="rsEvoWrap">' + rsEvoBlockHtml() + '</div>';
+}
+
 function rsEvoBlockHtml(){
   var ev = rsEvo();
   var h = '<div class="rs-block" data-rsevo>';
-  h += '<div class="rs-block-top"><div class="rs-block-h">Estimate evolution</div>' +
-    '<select class="rs-msel rs-esel" aria-label="Evolution metric">' + rsEvoSelectHtml() + '</select></div>';
   h += '<p class="ov-lede">' + esc(ev.intro || '') + '</p>';
+  h += '<div class="rs-block-top"><div class="rs-block-h">Forecast by vintage</div>' +
+    '<select class="rs-msel rs-esel" aria-label="Evolution metric">' + rsEvoSelectHtml() + '</select></div>';
   h += '<div class="ave-leg" id="rsEvoLegend">' + rsEvoLegendHtml() + '</div>';
   h += '<div class="ov-chart-card">' +
     '<div class="ov-chart-t" id="rsEvoChartT"></div>' +
@@ -806,14 +816,6 @@ function wireResults(pane){
       rsBuildAll();
       return;
     }
-    var evl = e.target.closest('[data-rsevleg]');
-    if (evl){
-      var est = rsEvoSt();
-      var ekey = evl.getAttribute('data-rsevleg');
-      est.hidden[ekey] = !est.hidden[ekey];
-      rsBuildEvo();
-      return;
-    }
     var block = e.target.closest('.rs-block');
     var k = block ? block.getAttribute('data-rsblock') : null;
     if (!k) return;
@@ -825,15 +827,9 @@ function wireResults(pane){
       rsBuildChart(k);
     }
   });
-  // Metric dropdown (grouped select) per section block. The evolution block's
-  // select carries rs-esel (rs-msel is styling only there) — handle it first.
+  // Metric dropdown (grouped select) per section block.
   pane.onchange = (function(e){
     if (!e.target.classList.contains('rs-msel')) return;
-    if (e.target.classList.contains('rs-esel')){
-      rsEvoSt().metric = e.target.value;
-      rsBuildEvo();
-      return;
-    }
     var block = e.target.closest('.rs-block');
     var k = block ? block.getAttribute('data-rsblock') : null;
     if (!k) return;
@@ -862,8 +858,28 @@ function wireSliders(pane){
 // Called when the embedding pane becomes visible (Chart.js needs layout).
 export function initResults(){
   if (!_rs.data) return;
-  var wrap = document.querySelector('.rs-wrap');
+  var wrap = document.querySelector('.rs-wrap:not(#rsEvoWrap)');
   if (wrap) wireResults(wrap);
   rsBuildAll();
+}
+
+// Called when the Estimate Evolution pane becomes visible.
+export function initResultsEvo(){
+  if (!_rs.data || !_rs.data.evolution) return;
+  var wrap = document.getElementById('rsEvoWrap');
+  if (!wrap) return;
+  wrap.onclick = function(e){
+    var evl = e.target.closest('[data-rsevleg]');
+    if (!evl) return;
+    var st = rsEvoSt();
+    var key = evl.getAttribute('data-rsevleg');
+    st.hidden[key] = !st.hidden[key];
+    rsBuildEvo();
+  };
+  wrap.onchange = function(e){
+    if (!e.target.classList.contains('rs-esel')) return;
+    rsEvoSt().metric = e.target.value;
+    rsBuildEvo();
+  };
   rsBuildEvo();
 }

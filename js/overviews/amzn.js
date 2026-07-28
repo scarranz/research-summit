@@ -12,7 +12,7 @@
 // cross-checked for segment revenue. Live market cap via api.liveQuote (Massive). Peer
 // multiples are seeded approximations (mid-2026), labeled — never presented as live.
 
-import { resultsHtml, initResults } from '../results.js';
+import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 
 // ─── esc: escapes <>" but deliberately leaves & literal (per contract; never double-encode) ──
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -489,12 +489,14 @@ function deepDiveHtml(c){
       '<div class="ovt-subtabs">'+
         '<button type="button" class="ovt-subtab active" data-ovst="callprep">Call Prep</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="results">Results</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimate Evolution</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="callprep">'+cpPaneBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="results" hidden>'+resultsHtml('AMZN')+'</div>'+
+      '<div class="ovt-subpane" data-ovst="estevo" hidden>'+resultsEvoHtml('AMZN')+'</div>'+
       '<div class="ovt-subpane" data-ovst="guidance" hidden>'+addEmpty()+'</div>'+
       '<div class="ovt-subpane" data-ovst="strategy" hidden>'+addEmpty()+'</div>'+
       '<div class="ovt-subpane" data-ovst="timeline" hidden>'+addEmpty()+'</div>'+
@@ -538,6 +540,7 @@ function wireDD(root){
       evo.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b===btn); });
       evo.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovst')!==key); });
       if(key==='results') requestAnimationFrame(maybeInitResults);
+      if(key==='estevo') requestAnimationFrame(initResultsEvo);
     }; });
     // Call Prep phase tabs (Setup · Watch List · Post-Results · Post-Call — staged).
     evo.querySelectorAll('.cp-phtab').forEach(function(btn){ btn.onclick=function(){

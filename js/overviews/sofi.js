@@ -2853,31 +2853,82 @@ function html(c){
   return h;
 }
 
-// ═══ Deep Dive pane — the ENTIRE pre-restructure profile, preserved intact (Jul 2026). The old
-// Overview tab is relabeled "Deep Overview" per OVERVIEW_CONVENTIONS §6; keys/IDs unchanged so
-// every chart builder and wiring path keeps working. ═══════════════════════════════════════════
+// ═══ Deep Dive pane — the standard 5-tab spine (Top Line · Bottom Line · Evolution · Valuation ·
+// Management), same as amzn.js/googl.js, holding the ENTIRE pre-restructure profile (Jul 2026;
+// mapping per SAB): ALL of the old General lives under Top Line FOR NOW (Members / Rule of 40 /
+// Capital Raises / Milestones — redistribute later); the old Valuation's Actuals-vs-Estimates and
+// Guidance live under Evolution (beside the Call Prep / Results / Estimates scaffolds they will
+// join in later steps); Sensitivity + Peers live under Valuation; Management is unchanged.
+// The old "Deep Overview" TAB was removed per SAB — overviewBody() and all its data remain in
+// this file (dormant) so its blocks can be redistributed into sections later; nothing deleted.
+// Body functions and every chart/slider/modal ID are untouched so all wiring keeps working.
+function sofiDdEmpty(){ return '<div class="sdd-empty">🚧 In progress — this section is being built.</div>'; }
 function deepDiveHtml(c){
   var h = '<div class="ov ov-sofi ov-sofi-dd" data-brand="SOFI">';
-  // Sub-tab bar
-  h += '<div class="ovt-tabs">'+
-    '<button type="button" class="ovt-tab active" data-ovt="overview">Deep Overview</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="members">General</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="interest">Interest Income</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="fees">Fee Income</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="management">Management</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="valuation">Valuation</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="sensitivity">Sensitivity</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="peers">Peers</button>'+
+  h += '<style>.ov-sofi-dd .dd-tabs{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 14px;border-bottom:1px solid var(--bdr)}'+
+    '.ov-sofi-dd .dd-tab{border:none;background:transparent;font:inherit;font-size:12.5px;font-weight:700;color:var(--mu);padding:9px 14px;cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px}'+
+    '.ov-sofi-dd .dd-tab:hover{color:var(--navy)}.ov-sofi-dd .dd-tab.active{color:#0E7CC0;border-bottom-color:#0E7CC0}'+
+    '.ov-sofi-dd .dd-pane[hidden]{display:none}'+
+    '.sdd-empty{border:1px dashed var(--bdr);border-radius:12px;padding:34px 20px;text-align:center;color:var(--mu);font-size:12.5px;background:var(--w)}</style>';
+  h += '<div class="dd-tabs">'+
+    '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
+    '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
+    '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
+    '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
+    '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
   '</div>';
-  // Panes
-  h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="members" hidden>'+generalBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="interest" hidden>'+interestBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="fees" hidden>'+feeBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="management" hidden>'+managementBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="valuation" hidden>'+valuationBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="sensitivity" hidden>'+sensBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="peers" hidden>'+peersBody(c)+'</div>';
+  // Top Line — Interest + Fee Income + most of the old General (temporary home, per SAB;
+  // Rule of 40 moved to Bottom Line and Milestones to Evolution ▸ Timeline, Jul 2026).
+  h += '<div class="dd-pane" data-dd="topline">'+
+    '<div class="ovt-subtabs">'+
+      '<button type="button" class="ovt-subtab active" data-ovst="interest">Interest Income</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="fees">Fee Income</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="members">Members</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="capraises">Capital Raises</button>'+
+    '</div>'+
+    '<div class="ovt-subpane" data-ovst="interest">'+interestBody(c)+'</div>'+
+    '<div class="ovt-subpane" data-ovst="fees" hidden>'+feeBody(c)+'</div>'+
+    '<div class="ovt-subpane" data-ovst="members" hidden>'+membersBody(c)+'</div>'+
+    '<div class="ovt-subpane" data-ovst="capraises" hidden>'+capRaisesBody()+'</div>'+
+  '</div>';
+  // Bottom Line — Rule of 40 (growth + margin trajectory); Results margins land here later.
+  h += '<div class="dd-pane" data-dd="bottomline" hidden>'+
+    '<div class="ovt-subtabs">'+
+      '<button type="button" class="ovt-subtab active" data-ovst="rule40">Rule of 40</button>'+
+    '</div>'+
+    '<div class="ovt-subpane" data-ovst="rule40">'+rule40Body()+'</div>'+
+  '</div>';
+  // Evolution — the standard row; Actuals vs Estimates + Guidance are LIVE (migrated from the
+  // old Valuation tab), the rest are staged (Call Prep = step 3; Results/Estimates = step 4).
+  h += '<div class="dd-pane" data-dd="evolution" hidden>'+
+    '<div class="ovt-subtabs">'+
+      '<button type="button" class="ovt-subtab active" data-ovst="callprep">Call Prep</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="results">Results</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="ave">Actuals vs Estimates</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
+    '</div>'+
+    '<div class="ovt-subpane" data-ovst="callprep">'+sofiDdEmpty()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="results" hidden>'+sofiDdEmpty()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="estevo" hidden>'+sofiDdEmpty()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="ave" hidden>'+aveBody(c)+'</div>'+
+    '<div class="ovt-subpane" data-ovst="guidance" hidden>'+guidanceBody(c)+'</div>'+
+    '<div class="ovt-subpane" data-ovst="strategy" hidden>'+sofiDdEmpty()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="timeline" hidden>'+milestonesBody()+'</div>'+
+  '</div>';
+  // Valuation — Sensitivity (with SOTP) + Peers.
+  h += '<div class="dd-pane" data-dd="valuation" hidden>'+
+    '<div class="ovt-subtabs">'+
+      '<button type="button" class="ovt-subtab active" data-ovst="sens">Sensitivity</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="peers">Peers</button>'+
+    '</div>'+
+    '<div class="ovt-subpane" data-ovst="sens">'+sensBody(c)+'</div>'+
+    '<div class="ovt-subpane" data-ovst="peers" hidden>'+peersBody(c)+'</div>'+
+  '</div>';
+  // Management — unchanged (its own Corporate/Insiders nested tabs).
+  h += '<div class="dd-pane" data-dd="mgmt" hidden>'+managementBody(c)+'</div>';
   h += '</div>';
   return h;
 }
@@ -3335,7 +3386,7 @@ function buildTechChart(){
 }
 
 function buildFeeTab(){
-  var root = document.querySelector('.ov-sofi');
+  var root = document.querySelector('.ov-sofi-dd');   // scope to the Deep Dive root (two .ov-sofi roots exist since the Jul 2026 restructure)
   if (!root) return;
   var act = root.querySelector('.ovf-tab.active');
   var k = act ? act.getAttribute('data-ovf') : '';
@@ -4031,9 +4082,39 @@ function init(c){
 function deepDiveInit(c){
   var root = document.querySelector('.ov-sofi-dd');
   if (!root) return;
-  // Idempotent wiring (init may run again when the Overview pane is re-activated).
-  root.querySelectorAll('.ovt-tab').forEach(function(btn){
-    btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };
+  // Chart dispatch per sub-tab key — every builder self-guards on a visible canvas.
+  function ddBuild(key){
+    var b = { interest: buildInterestTab, fees: buildFeeTab, members: buildMembersTab,
+      rule40: buildRule40Chart, capraises: buildCapRaiseChart, ave: buildAveTab,
+      guidance: buildGuidanceTab, sens: buildSensTab, peers: buildPeersTab }[key];
+    if (b) requestAnimationFrame(b);
+  }
+  function ddActiveSub(pane){
+    var a = pane.querySelector('.ovt-subtab.active');
+    return a ? a.getAttribute('data-ovst') : null;
+  }
+  // Top-level spine tabs (Top Line · Bottom Line · Evolution · Valuation · Management).
+  root.querySelectorAll('.dd-tab').forEach(function(btn){
+    btn.onclick = function(){
+      var key = btn.getAttribute('data-dd');
+      root.querySelectorAll('.dd-tab').forEach(function(b){ b.classList.toggle('active', b === btn); });
+      root.querySelectorAll('.dd-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-dd') !== key); });
+      var pane = root.querySelector('.dd-pane[data-dd="' + key + '"]');
+      var sub = pane ? ddActiveSub(pane) : null;
+      if (sub) ddBuild(sub);
+      else if (key === 'mgmt'){ /* static */ }
+    };
+  });
+  // Sub-tabs, pane-scoped so rows in different panes don't collide.
+  root.querySelectorAll('.dd-pane').forEach(function(pane){
+    pane.querySelectorAll(':scope > .ovt-subtabs .ovt-subtab').forEach(function(btn){
+      btn.onclick = function(){
+        var key = btn.getAttribute('data-ovst');
+        pane.querySelectorAll(':scope > .ovt-subtabs .ovt-subtab').forEach(function(b){ b.classList.toggle('active', b === btn); });
+        pane.querySelectorAll(':scope > .ovt-subpane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovst') !== key); });
+        ddBuild(key);
+      };
+    });
   });
   root.querySelectorAll('.ovf-tab').forEach(function(btn){
     btn.onclick = function(){ showOvf(root, btn.getAttribute('data-ovf')); };
@@ -4169,11 +4250,10 @@ function deepDiveInit(c){
       if (open) requestAnimationFrame(buildLpbPie);
     };
   });
-  var active = root.querySelector('.ovt-tab.active');
-  var activeKey = active ? active.getAttribute('data-ovt') : '';
-  if (activeKey === 'members') requestAnimationFrame(buildMembersTab);
-  if (activeKey === 'interest') requestAnimationFrame(buildInterestTab);
-  if (activeKey === 'fees') requestAnimationFrame(buildFeeTab);
+  // Build the default view: the active sub-tab of the active spine tab (Top Line ▸ Interest).
+  var activePane = root.querySelector('.dd-pane:not([hidden])');
+  var activeSub = activePane ? ddActiveSub(activePane) : null;
+  if (activeSub) ddBuild(activeSub);
 }
 
 export var sofiOverview = { html: html, init: init, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

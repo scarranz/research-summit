@@ -97,6 +97,22 @@ function rsRefsFor(m){
   function any(a){ return !!a && a.some(function(v){ return v != null; }); }
   return { summit: any(m.summit), cons: any(m.cons), guide: any(m.guideLo) };
 }
+// Quick-range presets: windows anchored to the LAST REPORTED period (lr) —
+// "Last 4Q" = the four most recent prints, "Forward" = last print + estimates.
+function rsPresetWin(m, key){
+  var n = m.periods.length, lr = -1;
+  for (var i = 0; i < n; i++) if (m.act[i] != null) lr = i;
+  if (lr < 0) lr = n - 1;
+  switch (key){
+    case 'l4':  return [Math.max(0, lr - 3), lr];
+    case 'l8':  return [Math.max(0, lr - 7), lr];
+    case 'l3':  return [Math.max(0, lr - 2), lr];
+    case 'l5':  return [Math.max(0, lr - 4), lr];
+    case 'rep': return [0, lr];
+    case 'fwd': return [Math.max(0, lr), n - 1];
+    default:    return [0, n - 1];                     // 'all'
+  }
+}
 
 // ─── Growth & margin series ───────────────────────────────────────────────────
 function rsLook(){ return _rs.view === 'q' ? 4 : 1; }
@@ -181,6 +197,12 @@ function rsBlocksHtml(){
       '<div class="ov-chart-t" id="rsChartT-' + k + '"></div>' +
       '<div class="ov-chart-wrap ovs-tall"><canvas id="rsChart-' + k + '"></canvas></div>' +
     '</div>';
+    var pres = _rs.view === 'q'
+      ? [['l4', 'Last 4Q'], ['l8', 'Last 8Q'], ['rep', 'Reported'], ['fwd', 'Forward'], ['all', 'All']]
+      : [['l3', 'Last 3Y'], ['l5', 'Last 5Y'], ['rep', 'Reported'], ['fwd', 'Forward'], ['all', 'All']];
+    h += '<div class="rs-quick"><span class="rs-quick-l">Range</span>' +
+      pres.map(function(p){ return '<button type="button" class="rs-preset" data-rsrange="' + p[0] + '">' + p[1] + '</button>'; }).join('') +
+      '<span class="tech-leg-i" style="margin-left:auto">drag across the chart to zoom · double-click resets</span></div>';
     h += '<div class="sg-controls">' +
       '<div class="sg-slider">' +
         '<div class="sg-track"><div class="sg-fill" id="rsFill-' + k + '"></div></div>' +
@@ -324,8 +346,57 @@ function rsBuildChart(k){
 
   rsSyncSlider(k, m);
   rsRenderTable(k, m);
+  rsWireBrush(k, el, st.chart, lo);
   var n1 = document.getElementById('rsNote-' + k); if (n1) n1.textContent = m.note || '';
   var leg = document.getElementById('rsLegend-' + k); if (leg) leg.innerHTML = rsLegendHtml(k, m);
+}
+
+// ─── Drag-to-zoom brush ───────────────────────────────────────────────────────
+// Drag horizontally across the chart to window that stretch (a translucent
+// selection box tracks the drag); double-click resets to the full range. The
+// window indexes are chart-relative, so they are offset by `lo` back into the
+// metric's full period list.
+function rsWireBrush(k, el, chart, lo){
+  var wrap = el.parentElement;
+  if (wrap && getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
+  el.style.cursor = 'crosshair';
+  function idxAt(clientX){
+    var r = el.getBoundingClientRect();
+    var v = chart.scales.x.getValueForPixel(clientX - r.left);
+    return Math.max(0, Math.min(chart.data.labels.length - 1, Math.round(v)));
+  }
+  el.onmousedown = function(ev){
+    if (ev.button !== 0) return;
+    var startPx = ev.clientX, startIdx = idxAt(ev.clientX);
+    var r0 = el.getBoundingClientRect(), w0 = wrap.getBoundingClientRect();
+    var box = document.createElement('div');
+    box.className = 'rs-brush';
+    box.style.top = (r0.top - w0.top) + 'px';
+    box.style.height = r0.height + 'px';
+    wrap.appendChild(box);
+    function place(x){
+      var a = Math.min(startPx, x), b = Math.max(startPx, x);
+      box.style.left = (a - w0.left) + 'px';
+      box.style.width = (b - a) + 'px';
+    }
+    place(ev.clientX);
+    function onMove(e2){ place(e2.clientX); }
+    function onUp(e2){
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      box.remove();
+      if (Math.abs(e2.clientX - startPx) < 8) return;  // a click, not a drag
+      var a = startIdx, b = idxAt(e2.clientX);
+      var w = [lo + Math.min(a, b), lo + Math.max(a, b)];
+      if (w[0] === w[1]) return;
+      rsSt(k).win = w;
+      rsBuildChart(k);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    ev.preventDefault();
+  };
+  el.ondblclick = function(){ rsSt(k).win = null; rsBuildChart(k); };
 }
 
 // ─── Period-window slider ─────────────────────────────────────────────────────
@@ -790,6 +861,12 @@ function wireResults(pane){
     var block = e.target.closest('.rs-block');
     var k = block ? block.getAttribute('data-rsblock') : null;
     if (!k) return;
+    var pr = e.target.closest('[data-rsrange]');
+    if (pr){
+      rsSt(k).win = rsPresetWin(rsMetric(k), pr.getAttribute('data-rsrange'));
+      rsBuildChart(k);
+      return;
+    }
     var l = e.target.closest('[data-rsleg]');
     if (l){
       var st2 = rsSt(k);

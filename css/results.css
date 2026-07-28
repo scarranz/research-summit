@@ -61,6 +61,22 @@
 /* Period-window slider under the chart */
 #rsSliderBox { margin: 10px 2px 18px; }
 
+/* Quick-range preset pills (between chart and slider) */
+.rs-quick { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 10px 2px 2px; }
+.rs-quick-l { font-size: 11px; font-weight: 700; color: var(--mu); margin-right: 2px; }
+.rs-preset {
+  appearance: none; border: 1px solid var(--bdr); background: var(--w); color: var(--mu);
+  font: 600 11px 'Inter', sans-serif; padding: 4px 10px; border-radius: 999px; cursor: pointer;
+}
+.rs-preset:hover { color: var(--navy); border-color: var(--accent); }
+
+/* Drag-to-zoom selection box over the chart canvas */
+.rs-brush {
+  position: absolute; background: rgba(37,99,235,0.10);
+  border: 1px solid rgba(37,99,235,0.35); border-radius: 4px;
+  pointer-events: none; z-index: 2;
+}
+
 /* Detail table — Fiscal.ai-style spreadsheet: airy, bare numbers, shaded
    estimate columns, sticky header + first column, row/column crosshair. */
 .rs-tablewrap { margin: 20px 0 10px; }

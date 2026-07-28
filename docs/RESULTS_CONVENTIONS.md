@@ -91,9 +91,13 @@ evolution: {
    **Hover is period-wise** (Chart.js `interaction: {mode:'index', intersect:false}`): one
    tooltip per period listing every visible series — guidance range, actual, each estimate
    with its surprise, margin lines.
-4. **Dual-handle period slider** below the chart with **one tick dot per period** (filled navy =
-   reported in window; light blue = estimate in window; hollow dashed = outside window).
-   Everything below recomputes for the window.
+4. **Range controls** (added drag/presets Jul 28 per SAB — three equivalent ways to window):
+   (a) **quick-range preset pills** between chart and slider (Quarterly: Last 4Q · Last 8Q ·
+   Reported · Forward · All; Annual: Last 3Y · Last 5Y · …) — anchored to the last reported
+   period; (b) **drag across the chart** to zoom to a stretch (translucent brush box tracks
+   the drag; double-click resets to All); (c) the **dual-handle period slider** below, with
+   **one tick dot per period** (filled navy = reported in window; light blue = estimate in
+   window; hollow dashed = outside window). Everything below recomputes for the window.
 5. ~~Range analytics tiles~~ — REMOVED (SAB, Jul 28): the KPI tiles that sat between the
    slider and the table duplicated what the table's sticky **"Range record"** column already
    says. Their reading conventions (actual's point of view, ▲/green = beat, reported

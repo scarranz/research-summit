@@ -79,7 +79,7 @@ function rsFmtD(m, v, dec){
   var sign = v >= 0 ? '+' : '−', a = Math.abs(v);
   if (m.unit === 'eps') return sign + '$' + a.toFixed(2);
   if (a >= 10000) return sign + '$' + (a/1000).toFixed(dec == null ? 1 : dec) + 'B';
-  return sign + '$' + Math.round(a) + 'M';
+  return sign + '$' + Math.round(a).toLocaleString() + 'M';
 }
 // Display scale for a metric: $B for AMZN-sized series, $M for SoFi-sized ones.
 // Decided per metric (max |value| across every series) so a metric is always

@@ -44,7 +44,7 @@ var EVO_RAMP = ['#1B3F94', '#2563EB', '#5E8BEC', '#93B1F0'];
 // hidden series, chart instance. `evo` is the vintage-evolution block's state.
 // `growth` (quarterly only): 'yoy' = vs the same quarter last year; 'qoq' = vs
 // the previous reported quarter.
-var _rs = { data: null, view: 'q', growth: 'yoy', sec: {}, evo: null };
+var _rs = { data: null, view: 'q', growth: 'yoy', sec: {}, evo: null, surp: null };
 
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); }
 
@@ -706,11 +706,15 @@ export function resultsEvoHtml(ticker){
   if (!data || !data.evolution) return '';
   _rs.data = data;
   _rs.evo = null;
+  _rs.surp = null;
   var ev = data.evolution;
   var h = '<div class="rs-wrap" id="rsEvoWrap">';
   h += '<p class="ov-lede">' + esc(ev.intro || '') + '</p>';
   h += ev.sections.map(function(cfg){ return rsEvoBlockHtml(cfg.key); }).join('');
   h += '<div class="ov-foot">' + esc(ev.note || '') + '</div>';
+  // Generic Actuals-vs-Estimates surprise history at the bottom (opt-out via
+  // dataset `surprise: false` — SoFi keeps its richer bespoke block).
+  if (data.surprise !== false && rsSurpGroups().length) h += rsSurpBlockHtml();
   h += '</div>';
   return h;
 }
@@ -914,6 +918,270 @@ function rsRenderEvoTable(k, m){
   el.innerHTML = h;
 }
 
+// ─── Actuals vs Estimates — generic surprise history (bottom of the Estimates
+// pane, any ticker). Fed ONLY from the Results dataset: every quarterly metric
+// that has at least one reported actual + frozen Summit-estimate pair. Diverging
+// surprise bars (green = beat, red = miss — Results datasets carry no expense
+// lines), a Surprise % ⇄ $ toggle, the tick-dot slider, and the transposed
+// table. A dataset opts out with `surprise: false` (SoFi keeps its richer
+// bespoke block instead). ─────────────────────────────────────────────────────
+function rsSurpGroups(){
+  var v = _rs.data.views.q, out = [];
+  v.sections.forEach(function(cfg){
+    rsSecGroups(cfg).forEach(function(g){
+      var keys = g.keys.filter(function(k){
+        var m = v.metrics[k];
+        return m && m.act && m.summit && m.periods.some(function(_, i){ return m.act[i] != null && m.summit[i] != null; });
+      });
+      if (keys.length) out.push({ label: g.label, keys: keys });
+    });
+  });
+  return out;
+}
+function rsSurpSt(){
+  if (!_rs.surp) _rs.surp = { metric: null, win: null, mode: 'pct', chart: null };
+  return _rs.surp;
+}
+function rsSurpM(){
+  var st = rsSurpSt();
+  var all = rsSurpGroups().reduce(function(a, g){ return a.concat(g.keys); }, []);
+  if (!st.metric || all.indexOf(st.metric) < 0) st.metric = all[0];
+  return _rs.data.views.q.metrics[st.metric];
+}
+// Last period with a reported actual — the surprise story ends there.
+function rsSurpLr(m){
+  var lr = 0;
+  for (var i = 0; i < m.periods.length; i++) if (m.act[i] != null) lr = i;
+  return lr;
+}
+function rsSurpWin(m){
+  var st = rsSurpSt(), lr = rsSurpLr(m);
+  if (!st.win || st.win[1] > lr || st.win[0] < 0) st.win = [0, lr];
+  return st.win;
+}
+// Bar-label plugin: zero baseline + the surprise printed on each diverging bar.
+var rsSurpLabels = {
+  id: 'rsSurpLabels',
+  afterDatasetsDraw: function(chart){
+    var surp = chart.$surp || [];
+    var bars = chart.getDatasetMeta(0).data;
+    var ctx = chart.ctx, area = chart.chartArea;
+    if (area){
+      var y0 = chart.scales.y.getPixelForValue(0);
+      ctx.save();
+      ctx.strokeStyle = '#D7DDE4'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(area.left, y0); ctx.lineTo(area.right, y0); ctx.stroke();
+      ctx.restore();
+    }
+    for (var i = 0; i < surp.length; i++){
+      var bar = bars[i]; if (!bar || surp[i] == null) continue;
+      var up = surp[i] >= 0;
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.font = '700 11px Inter, sans-serif';
+      ctx.fillStyle = up ? RS_GREEN : RS_RED;
+      ctx.fillText((up ? '▲ ' : '▼ ') + (chart.$fmt ? chart.$fmt(surp[i]) : ((up ? '+' : '−') + Math.abs(surp[i]).toFixed(1) + '%')), bar.x, up ? bar.y - 7 : bar.y + 15);
+      ctx.restore();
+    }
+  }
+};
+function rsSurpBlockHtml(){
+  var m = rsSurpM(), st = rsSurpSt();
+  var h = '<div class="rs-block" data-rssurp>';
+  h += '<div class="rs-block-top"><div class="rs-block-h">Actuals vs Estimates</div>' +
+    '<select class="rs-msel rs-ssel" aria-label="Metric">' + rsSurpGroups().map(function(g){
+      return '<optgroup label="' + esc(g.label) + '">' + g.keys.map(function(k){
+        return '<option value="' + k + '"' + (k === st.metric ? ' selected' : '') + '>' + esc(_rs.data.views.q.metrics[k].label) + '</option>';
+      }).join('') + '</optgroup>';
+    }).join('') + '</select>' +
+    '<div class="rs-views" id="rsSurpMode"></div></div>';
+  h += '<div class="ave-leg"><span class="tech-leg-i"><span class="ave-leg-act" style="background:' + RS_GREEN + '"></span>Beat (actual above estimate)</span>' +
+    '<span class="tech-leg-i"><span class="ave-leg-act" style="background:' + RS_RED + '"></span>Miss (actual below)</span>' +
+    '<span class="tech-leg-i" style="margin-left:auto">the model’s frozen pre-print estimate vs what was reported</span></div>';
+  h += '<div class="ov-chart-card">' +
+    '<div class="ov-chart-t" id="rsSurpChartT"></div>' +
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="rsSurpChart"></canvas></div>' +
+  '</div>';
+  h += '<div class="sg-controls">' +
+    '<div class="sg-slider">' +
+      '<div class="sg-track"><div class="sg-fill" id="rsSurpFill"></div></div>' +
+      '<div class="rs-ticks" id="rsSurpTicks"></div>' +
+      '<input type="range" id="rsSurpMin" min="0" max="1" value="0" step="1" aria-label="Start period">' +
+      '<input type="range" id="rsSurpMax" min="0" max="1" value="1" step="1" aria-label="End period">' +
+    '</div>' +
+    '<div class="sg-ends"><span id="rsSurpEnd0"></span><span id="rsSurpEnd1"></span></div>' +
+  '</div>';
+  h += '<div class="rs-tablewrap" id="rsSurpTable"></div>';
+  h += '<div class="ov-foot" id="rsSurpNote"></div>';
+  h += '</div>';
+  return h;
+}
+function rsBuildSurp(){
+  if (!_rs.data || _rs.data.surprise === false) return;
+  var st = rsSurpSt(), m = rsSurpM();
+  if (!m) return;
+  var el = document.getElementById('rsSurpChart');
+  if (!el || !el.offsetParent) return;
+  if (st.chart){ st.chart.destroy(); st.chart = null; }
+
+  var w = rsSurpWin(m), lo = w[0], hi = w[1];
+  var div = rsScaleOf(m);
+  var pctMode = st.mode !== 'usd';
+  var pcts = [], dols = [];
+  for (var i = lo; i <= hi; i++){
+    var ok = (m.act[i] != null && m.summit[i] != null && m.summit[i]);
+    pcts.push(ok ? rsSurp(m.act[i], m.summit[i]) : null);
+    dols.push(ok ? (m.act[i] - m.summit[i]) : null);
+  }
+  var bars = pctMode ? pcts : dols.map(function(v){ return v == null ? null : (m.unit === 'eps' ? v : v / div); });
+
+  var md = document.getElementById('rsSurpMode');
+  if (md) md.innerHTML = '<button type="button" class="rs-view' + (pctMode ? ' active' : '') + '" data-rssurpmode="pct">Surprise %</button>' +
+    '<button type="button" class="rs-view' + (!pctMode ? ' active' : '') + '" data-rssurpmode="usd">$ amount</button>';
+  var unitLbl = m.unit === 'eps' ? '$' : (div === 1000 ? 'US$ billions' : 'US$ millions');
+  var tEl = document.getElementById('rsSurpChartT');
+  if (tEl) tEl.innerHTML = esc(m.label) + ' — surprise vs the Summit estimate <span>(' + (pctMode ? '%' : esc(unitLbl)) + ' per period · hover for both values)</span>';
+
+  st.chart = new Chart(el.getContext('2d'), {
+    type: 'bar',
+    data: { labels: m.periods.slice(lo, hi + 1), datasets: [
+      { label: 'Surprise', data: bars,
+        backgroundColor: pcts.map(function(s){ return s == null ? '#C7CED6' : (s >= 0 ? RS_GREEN : RS_RED); }),
+        borderRadius: 3, maxBarThickness: 56 }
+    ] },
+    plugins: [rsSurpLabels],
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: {
+          label: function(ctx){
+            var i = ctx.dataIndex + lo;
+            var s = pcts[ctx.dataIndex], d = dols[ctx.dataIndex];
+            return [
+              'Actual: ' + rsFmt(m, m.act[i]),
+              'Summit estimate: ' + rsFmt(m, m.summit[i]),
+              s == null ? 'Surprise: —' : 'Surprise: ' + (s >= 0 ? '+' : '−') + Math.abs(s).toFixed(1) + '% · ' + rsFmtD(m, d)
+            ];
+          }
+        } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
+          callback: function(v){
+            if (pctMode) return (v < 0 ? '−' : '') + Math.abs(v).toFixed(0) + '%';
+            return rsTick(v, m.unit, div);
+          } } }
+      }
+    }
+  });
+  st.chart.$surp = pctMode ? pcts : dols;
+  st.chart.$fmt = pctMode ? null : function(v){ return rsFmtD(m, v); };
+  st.chart.update();
+
+  // Slider + tick dots over the reported range.
+  var lr = rsSurpLr(m), n = lr + 1;
+  var mn = document.getElementById('rsSurpMin'), mx = document.getElementById('rsSurpMax');
+  var fill = document.getElementById('rsSurpFill'), e0 = document.getElementById('rsSurpEnd0'), e1 = document.getElementById('rsSurpEnd1');
+  if (mn && mx){ mn.max = n - 1; mx.max = n - 1; mn.value = lo; mx.value = hi; }
+  if (fill){ fill.style.left = (lo / (n - 1) * 100) + '%'; fill.style.width = ((hi - lo) / (n - 1) * 100) + '%'; }
+  if (e0) e0.textContent = m.periods[lo];
+  if (e1) e1.textContent = m.periods[hi];
+  var ticks = document.getElementById('rsSurpTicks');
+  if (ticks){
+    var th = '';
+    for (var t = 0; t < n; t++){
+      th += '<span class="rs-tick' + (t >= lo && t <= hi ? ' on' : '') + '" style="left:' + (t / (n - 1) * 100) + '%" title="' + esc(m.periods[t]) + '"></span>';
+    }
+    ticks.innerHTML = th;
+  }
+
+  rsSurpTableRender(m, lo, hi, div);
+  var note = document.getElementById('rsSurpNote'); if (note) note.textContent = m.note || '';
+}
+function rsSurpTableRender(m, lo, hi, div){
+  var el = document.getElementById('rsSurpTable');
+  if (!el) return;
+  var idx = []; for (var i = lo; i <= hi; i++) idx.push(i);
+  var dec = m.unit === 'eps' ? 2 : 1;
+  function avg(a){ return a.reduce(function(x, y){ return x + y; }, 0) / a.length; }
+  function sgn(v){ return (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '%'; }
+  function num(v){
+    if (v == null) return '<span class="rs-ft-nil">—</span>';
+    if (m.unit === 'eps') return Number(v).toFixed(2);
+    return (v / div).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  }
+  // Growth is always YoY here (lag 4, quarterly data) — independent of the
+  // Results pane's YoY/QoQ toggle, which belongs to that pane's state.
+  function g(arr, base, i){ if (i - 4 < 0) return null; var a = arr[i], b = base[i - 4]; if (a == null || b == null || !b) return null; return (a - b) / Math.abs(b) * 100; }
+  function gd(arr, base, i){ if (i - 4 < 0) return null; var a = arr[i], b = base[i - 4]; if (a == null || b == null) return null; return a - b; }
+  function pctDollar(p, d){
+    if (p == null) return '<span class="rs-ft-nil">—</span>';
+    return rsPctHtml(p, dec) + ' <span class="rs-ft-dim">· ' + rsFmtD(m, d) + '</span>';
+  }
+  function sumGrowth(fn){ var a = []; idx.forEach(function(i){ var v = fn(i); if (v != null) a.push(v); }); return a.length ? 'avg ' + sgn(avg(a)) : ''; }
+  function sumCagr(){
+    var first = null, last = null, fi = null, li = null;
+    idx.forEach(function(i){ var v = m.act[i]; if (v != null){ if (first == null){ first = v; fi = i; } last = v; li = i; } });
+    if (first == null || li === fi || first <= 0 || last <= 0) return '';
+    var years = (li - fi) / 4;
+    return years > 0 ? 'CAGR ' + sgn((Math.pow(last / first, 1 / years) - 1) * 100) : '';
+  }
+  function sumSurprise(){
+    var pcts = [], dols2 = [], above = 0, below = 0;
+    idx.forEach(function(i){
+      if (m.summit[i] == null || m.act[i] == null || !m.summit[i]) return;
+      var dv = m.act[i] - m.summit[i];
+      pcts.push(dv / Math.abs(m.summit[i]) * 100); dols2.push(dv);
+      if (dv >= 0) above++; else below++;
+    });
+    if (!pcts.length) return '';
+    var ap = avg(pcts);
+    return above + '▲ · ' + below + '▼<br><span class="rs-ft-dim">actual avg <span style="color:' + (ap >= 0 ? RS_GREEN : RS_RED) + '">' + sgn(ap) + '</span> · ' + rsFmtD(m, avg(dols2)) + '</span>';
+  }
+
+  var h = '<div class="rs-ft-cap">' + (m.unit === 'eps' ? 'US$ per share' : (div === 1000 ? 'US$ billions' : 'US$ millions')) + ' · surprise = (actual − estimate) ÷ |estimate| · ▲/green = the actual beat the frozen estimate · the right column summarizes the selected range</div>';
+  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
+  idx.forEach(function(i){ h += '<th>' + esc(m.periods[i]) + '</th>'; });
+  h += '<th class="rs-ft-s">Range record</th></tr></thead><tbody>';
+
+  function row(label, cellFn, cls, sum){
+    var classes = cls.split(' ').map(function(c){ return 'rs-ft-' + c; }).join(' ');
+    var r = '<tr class="' + classes + '"><td class="rs-ft-h">' + label + '</td>';
+    idx.forEach(function(i){ r += '<td>' + cellFn(i) + '</td>'; });
+    r += '<td class="rs-ft-s">' + (sum || '') + '</td>';
+    return r + '</tr>';
+  }
+
+  h += row('Actual', function(i){ return m.act[i] == null ? '<span class="rs-ft-nil">—</span>' : '<b>' + num(m.act[i]) + '</b>'; }, 'main nb', sumCagr());
+  h += row('YoY growth', function(i){ return pctDollar(g(m.act, m.act, i), gd(m.act, m.act, i)); }, 'sub',
+    sumGrowth(function(i){ return g(m.act, m.act, i); }));
+  h += row('Summit estimate', function(i){ return num(m.summit[i]); }, 'main nb', '');
+  h += row('YoY growth', function(i){ return pctDollar(g(m.summit, m.act, i), gd(m.summit, m.act, i)); }, 'sub nb',
+    sumGrowth(function(i){ return g(m.summit, m.act, i); }));
+  h += row('surprise', function(i){
+    if (m.act[i] == null || m.summit[i] == null || !m.summit[i]) return '<span class="rs-ft-nil">—</span>';
+    return pctDollar(rsSurp(m.act[i], m.summit[i]), m.act[i] - m.summit[i]);
+  }, 'sub', sumSurprise());
+
+  h += '</tbody></table></div>';
+  el.innerHTML = h;
+
+  var tb = el.querySelector('table'), lastCol = -1;
+  function colCells(ci){ return tb.querySelectorAll('tr > *:nth-child(' + (ci + 1) + ')'); }
+  tb.onmouseover = function(e){
+    var c = e.target.closest('td,th'); if (!c || c.cellIndex === lastCol) return;
+    if (lastCol > 0) colCells(lastCol).forEach(function(x){ x.classList.remove('colhl'); });
+    lastCol = c.cellIndex;
+    if (lastCol > 0) colCells(lastCol).forEach(function(x){ x.classList.add('colhl'); });
+  };
+  tb.onmouseleave = function(){
+    if (lastCol > 0) colCells(lastCol).forEach(function(x){ x.classList.remove('colhl'); });
+    lastCol = -1;
+  };
+}
+
 // ─── Wiring ───────────────────────────────────────────────────────────────────
 
 function rsBuildAll(){ rsView().sections.forEach(function(s){ rsBuildChart(s.key); }); }
@@ -1005,6 +1273,12 @@ export function initResultsEvo(){
   }
   wrap.onclick = function(e){
     var k;
+    var sm = e.target.closest('[data-rssurpmode]');
+    if (sm){
+      rsSurpSt().mode = sm.getAttribute('data-rssurpmode');
+      rsBuildSurp();
+      return;
+    }
     var md = e.target.closest('[data-rsevmode]');
     if (md && (k = secOf(md))){
       var mst = rsEvoSt(k);
@@ -1022,6 +1296,13 @@ export function initResultsEvo(){
     }
   };
   wrap.onchange = function(e){
+    if (e.target.classList.contains('rs-ssel')){
+      var sst = rsSurpSt();
+      sst.metric = e.target.value;
+      sst.win = null;
+      rsBuildSurp();
+      return;
+    }
     if (!e.target.classList.contains('rs-esel')) return;
     var k = secOf(e.target);
     if (!k) return;
@@ -1031,5 +1312,15 @@ export function initResultsEvo(){
     st.yr = null;
     rsBuildEvo(k);
   };
+  // Surprise-block slider (ids are unique; wire once).
+  var smn = document.getElementById('rsSurpMin'), smx = document.getElementById('rsSurpMax');
+  function onSurpSlide(){
+    var a = +smn.value, b = +smx.value;
+    rsSurpSt().win = [Math.min(a, b), Math.max(a, b)];
+    rsBuildSurp();
+  }
+  if (smn) smn.oninput = onSurpSlide;
+  if (smx) smx.oninput = onSurpSlide;
   rsEvo().sections.forEach(function(s){ rsBuildEvo(s.key); });
+  rsBuildSurp();
 }

@@ -51,6 +51,11 @@
 .rs-leg:hover { border-color: var(--bdr); color: var(--navy); }
 .rs-leg.off { opacity: 0.45; text-decoration: line-through; }
 .rs-leg-line { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+/* dashed swatch (consensus lines in the Estimate-evolution block) — colored via `color:` */
+.rs-leg-dash {
+  width: 14px; height: 3px; display: inline-block; border-radius: 2px;
+  background: repeating-linear-gradient(90deg, currentColor 0 4px, transparent 4px 7px);
+}
 #rsLegend { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 
 /* Period-window slider under the chart */

@@ -49,6 +49,23 @@ export var <tk>Results = {
 
 AMZN quarterly periods run `1Q23 … 2Q28` (13 reported + 9 forward); annual `2020 … 2028`.
 
+**Optional `evolution` block** (top level, beside `views`) — feeds the *Estimate evolution*
+section (added Jul 28): how the ANNUAL forecast for each fiscal year moved across the model's
+saved snapshots (vintages).
+
+```js
+evolution: {
+  intro, note,                                // strings
+  vintages: [{ label:'Dec 18, 2025', event:'pre-4Q25 print' }, ...],
+  years: ['2026','2027','2028','2029'],
+  defaultMetric, groups: [{label, keys}],     // same grouped-select pattern
+  metrics: { <key>: { label, unit:'usdM',
+    summit: [[v per vintage] per year],       // rows parallel to years
+    cons:   [[...]] | null,                   // BBG stored IN the model at each snapshot
+    note } }
+}
+```
+
 ## 3. UI contract (what the engine renders, per section block — sections are STACKED, not toggled)
 
 1. **Two blocks**: *Top Line* (revenue + segments + revenue lines; amber **YoY-growth line** on
@@ -65,7 +82,16 @@ AMZN quarterly periods run `1Q23 … 2Q28` (13 reported + 9 forward); annual `20
    beat). Guidance tile: above/within/below the range + avg vs midpoint. Top Line adds a growth
    tile (avg YoY + Fiscal-style range headline: total change + CAGR — **reported observations
    only**). Margins adds avg margin (actual vs Summit vs consensus).
-6. **Fiscal.ai-style transposed table**: periods as columns (oldest → newest), bare numbers
+6a. **Estimate evolution block** (below the two sections, OUTSIDE the Quarterly/Annual toggle —
+   the vintage data is annual by nature): one line per fiscal year across the model's saved
+   snapshots. Colors are an ordered one-hue ramp of the portal blue (`EVO_RAMP` in results.js,
+   darkest = nearest year; validated with the dataviz palette checker). Solid = Summit, dashed =
+   the BBG consensus stored in the model at the same snapshot (so both columns are as-of the
+   same date). Legend chips toggle per-year and per-source. Table: columns = vintages, rows =
+   FY × source with a "revision" sub-row (change vs prior snapshot) and a sticky "Cumulative
+   revision" right column. **Sign-flip rule:** a revision across zero (FCF flipping negative)
+   shows dollars only — no percent.
+7. **Fiscal.ai-style transposed table**: periods as columns (oldest → newest), bare numbers
    (unit stated once in the caption), shaded **E** columns, sticky header + sticky metric column
    + sticky right **"Range record"** column, row+column hover crosshair. Row structure per
    reference: **value → YoY growth → surprise (→ margin)**. Actual's YoY-growth row computes
@@ -123,10 +149,12 @@ trusting rounded output (the BBG margin rows carry full precision).
 7. Verify: segment sums tie; every note states its source; beat/miss coloring is actual-centric;
    sliders/ticks/dropdown/legend chips work; no console errors.
 
-## 7. Open items / next iterations (as of Jul 27, 2026)
+## 7. Open items / next iterations (as of Jul 28, 2026)
 
-- Estimate-EVOLUTION view across vintages (dic → feb → may): e.g. FY26 capex was re-rated
-  **$151B → $205B** after the 4Q25 print — the vintage data is already parsed, chart not built.
+- ~~Estimate-EVOLUTION view across vintages~~ — SHIPPED Jul 28 as the *Estimate evolution*
+  block (§3.6a): annual forecasts per vintage, Summit + stored-BBG, revision table.
+- Quarterly estimate evolution (each vintage's live forward quarters differ for SEGM metrics)
+  — data exists in the export, not yet surfaced.
 - MCP-vs-file EBITDA / 2028-revenue reconciliation (ask San/Oscar which is current).
 - Model flag to raise: 2028 total capex ($150.8B) vs the model's own segment capex sum (~$245B).
 - Fiscal look-and-feel: density toggle (hide sub-rows), value labels on bars (needs the

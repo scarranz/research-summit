@@ -36,10 +36,14 @@ var RS_CONS   = 'rgba(124,134,148,0.85)'; // mid gray — Street consensus
 var RS_GUIDE  = 'rgba(62,90,130,0.18)';   // steel, translucent — guidance range
 var RS_GROWTH = '#B7791F';                // amber — YoY growth line
 var RS_GREEN  = '#1E9E62', RS_RED = '#C0392B';
+// Evolution block: one line per fiscal year — an ordered (ordinal) ramp of the
+// portal blue, darkest = nearest year. Validated with the dataviz palette
+// checker (monotone L, visible step gaps, light end ≥2:1 on white).
+var EVO_RAMP = ['#1B3F94', '#2563EB', '#5E8BEC', '#93B1F0'];
 
 // Global: dataset + view. Per-section (keyed by section key): metric, window,
-// hidden series, chart instance.
-var _rs = { data: null, view: 'q', sec: {} };
+// hidden series, chart instance. `evo` is the vintage-evolution block's state.
+var _rs = { data: null, view: 'q', sec: {}, evo: null };
 
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); }
 
@@ -62,10 +66,10 @@ function rsMetric(k){
 
 function rsFmt(m, v){
   if (v == null) return '—';
-  if (m.unit === 'eps') return '$' + Number(v).toFixed(2);
-  var a = Math.abs(v);
-  if (a >= 10000) return '$' + (v/1000).toFixed(1) + 'B';
-  return '$' + Math.round(v).toLocaleString() + 'M';
+  var neg = v < 0 ? '−' : '', a = Math.abs(v);
+  if (m.unit === 'eps') return neg + '$' + a.toFixed(2);
+  if (a >= 10000) return neg + '$' + (a/1000).toFixed(1) + 'B';
+  return neg + '$' + Math.round(a).toLocaleString() + 'M';
 }
 function rsFmtD(m, v, dec){
   if (v == null) return '—';
@@ -83,6 +87,8 @@ function rsPctHtml(s, dec){
   return '<span style="color:' + (up ? RS_GREEN : RS_RED) + '">' + (up ? '+' : '−') + Math.abs(s).toFixed(dec == null ? 1 : dec) + '%</span>';
 }
 function rsGuideMid(m, i){ return (m.guideLo[i] == null || m.guideHi[i] == null) ? null : (m.guideLo[i] + m.guideHi[i]) / 2; }
+// Axis tick: negatives as −$50B, not $-50B.
+function rsTick(v, unit){ var s = v < 0 ? '−' : '', a = Math.abs(v); return unit === 'eps' ? s + '$' + a : s + '$' + a + 'B'; }
 function rsWin(k, m){
   var st = rsSt(k), n = m.periods.length;
   if (!st.win || st.win[1] >= n || st.win[0] < 0){ st.win = [0, n - 1]; }
@@ -160,6 +166,7 @@ export function resultsHtml(ticker){
   if (!data) return '';
   _rs.view = 'q';
   _rs.sec = {};
+  _rs.evo = null;
   return rsBody();
 }
 
@@ -171,6 +178,7 @@ function rsBody(){
     return '<button type="button" class="rs-view' + (k === _rs.view ? ' active' : '') + '" data-rsview="' + k + '">' + esc(d.views[k].label) + '</button>';
   }).join('') + '</div></div>';
   h += '<div id="rsBlocks">' + rsBlocksHtml() + '</div>';
+  if (d.evolution) h += rsEvoBlockHtml();
   h += '<div class="ov-foot" id="rsViewNote">' + esc(rsView().note || '') + '</div>';
   h += '<div class="ov-foot">' + esc(d.source) + '</div>';
   h += '</div>';
@@ -303,7 +311,7 @@ function rsBuildChart(k){
   var scales = {
     x: { grid: { display: false }, ticks: { font: { size: 11 } } },
     y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
-      callback: function(v){ return m.unit === 'eps' ? '$' + v : '$' + v + 'B'; } } }
+      callback: function(v){ return rsTick(v, m.unit); } } }
   };
   if (needY2) scales.y2 = { position: 'right', grid: { display: false },
     ticks: { font: { size: 11 }, callback: function(v){ return v + '%'; } } };
@@ -600,6 +608,186 @@ function rsRenderTable(k, m){
   };
 }
 
+// ─── Estimate evolution — the annual forecast ACROSS model snapshots ──────────
+// A separate stacked block below the per-period sections, independent of the
+// Quarterly/Annual toggle (the vintage data is annual by nature). One line per
+// fiscal year across the saved snapshots: solid = Summit, dashed = the BBG
+// consensus stored inside the model at the same date. Dataset shape: see
+// `evolution` in results-data/<ticker>.js.
+
+function rsEvo(){ return _rs.data ? _rs.data.evolution : null; }
+function rsEvoSt(){
+  if (!_rs.evo) _rs.evo = { metric: null, chart: null, hidden: {} };
+  return _rs.evo;
+}
+function rsEvoMetric(){
+  var ev = rsEvo(), st = rsEvoSt();
+  if (!st.metric || !ev.metrics[st.metric]) st.metric = ev.defaultMetric;
+  return ev.metrics[st.metric];
+}
+// Revision between two snapshot values, read left → right. Dollars always;
+// percent only when the base is non-zero and the sign holds (an FCF forecast
+// flipping negative has no meaningful percent change).
+function rsRevHtml(m, prev, cur){
+  if (prev == null || cur == null) return '<span class="rs-ft-nil">—</span>';
+  var d = cur - prev;
+  var h = '<span style="color:' + (d >= 0 ? RS_GREEN : RS_RED) + '">' + rsFmtD(m, d) + '</span>';
+  if (prev !== 0 && (prev > 0) === (cur > 0)){
+    h += ' <span class="rs-ft-dim">· ' + (d >= 0 ? '+' : '−') + Math.abs(d / Math.abs(prev) * 100).toFixed(1) + '%</span>';
+  }
+  return h;
+}
+
+function rsEvoBlockHtml(){
+  var ev = rsEvo();
+  var h = '<div class="rs-block" data-rsevo>';
+  h += '<div class="rs-block-top"><div class="rs-block-h">Estimate evolution</div>' +
+    '<select class="rs-msel rs-esel" aria-label="Evolution metric">' + rsEvoSelectHtml() + '</select></div>';
+  h += '<p class="ov-lede">' + esc(ev.intro || '') + '</p>';
+  h += '<div class="ave-leg" id="rsEvoLegend">' + rsEvoLegendHtml() + '</div>';
+  h += '<div class="ov-chart-card">' +
+    '<div class="ov-chart-t" id="rsEvoChartT"></div>' +
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="rsEvoChart"></canvas></div>' +
+  '</div>';
+  h += '<div class="rs-tablewrap" id="rsEvoTable"></div>';
+  h += '<div class="ov-foot" id="rsEvoNote"></div>';
+  h += '<div class="ov-foot">' + esc(ev.note || '') + '</div>';
+  h += '</div>';
+  return h;
+}
+
+function rsEvoSelectHtml(){
+  var ev = rsEvo(), st = rsEvoSt();
+  rsEvoMetric();                                       // ensure st.metric is valid
+  return ev.groups.map(function(g){
+    var opts = g.keys.map(function(mk){
+      return '<option value="' + mk + '"' + (mk === st.metric ? ' selected' : '') + '>' + esc(ev.metrics[mk].label) + '</option>';
+    }).join('');
+    return '<optgroup label="' + esc(g.label) + '">' + opts + '</optgroup>';
+  }).join('');
+}
+
+function rsEvoLegendHtml(){
+  var ev = rsEvo(), st = rsEvoSt(), m = rsEvoMetric();
+  var h = ev.years.map(function(y, i){
+    var off = st.hidden['y' + y];
+    return '<button type="button" class="rs-leg' + (off ? ' off' : '') + '" data-rsevleg="y' + y + '" title="Show / hide">' +
+      '<span class="ave-leg-act" style="background:' + EVO_RAMP[i % EVO_RAMP.length] + '"></span>FY' + esc(y) + '</button>';
+  }).join('');
+  h += '<button type="button" class="rs-leg' + (st.hidden.summit ? ' off' : '') + '" data-rsevleg="summit" title="Show / hide">' +
+    '<span class="rs-leg-line" style="background:var(--navy)"></span>Summit (solid)</button>';
+  if (m.cons){
+    h += '<button type="button" class="rs-leg' + (st.hidden.cons ? ' off' : '') + '" data-rsevleg="cons" title="Show / hide">' +
+      '<span class="rs-leg-dash" style="color:var(--navy)"></span>Consensus (dashed)</button>';
+  }
+  h += '<span class="tech-leg-i" style="margin-left:auto">one line per fiscal year · click a chip to hide it</span>';
+  return h;
+}
+
+function rsBuildEvo(){
+  var ev = rsEvo();
+  if (!ev) return;
+  var st = rsEvoSt(), m = rsEvoMetric();
+  var el = document.getElementById('rsEvoChart');
+  if (!el || !el.offsetParent) return;                 // pane not visible yet
+  if (st.chart){ st.chart.destroy(); st.chart = null; }
+
+  var scale = function(v){ return v == null ? null : v / 1000; };
+  var datasets = [];
+  ev.years.forEach(function(y, yi){
+    if (st.hidden['y' + y]) return;
+    var color = EVO_RAMP[yi % EVO_RAMP.length];
+    if (!st.hidden.summit && m.summit && m.summit[yi]){
+      datasets.push({ label: 'FY' + y + ' · Summit', data: m.summit[yi].map(scale),
+        borderColor: color, backgroundColor: color, borderWidth: 2.5,
+        pointRadius: 3.5, pointBackgroundColor: color, tension: 0, spanGaps: true, _src: 'summit', _yi: yi });
+    }
+    if (!st.hidden.cons && m.cons && m.cons[yi]){
+      datasets.push({ label: 'FY' + y + ' · Consensus', data: m.cons[yi].map(scale),
+        borderColor: color, backgroundColor: color, borderWidth: 2, borderDash: [6, 4],
+        pointRadius: 2.5, pointBackgroundColor: color, tension: 0, spanGaps: true, _src: 'cons', _yi: yi });
+    }
+  });
+
+  var tEl = document.getElementById('rsEvoChartT');
+  if (tEl) tEl.innerHTML = esc(m.label) + ' — forecast by model snapshot <span>($B per fiscal year · solid = Summit model, dashed = stored BBG consensus · hover for the revision)</span>';
+
+  st.chart = new Chart(el.getContext('2d'), {
+    type: 'line',
+    data: { labels: ev.vintages.map(function(v){ return [v.label, v.event]; }), datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: function(items){
+              var v = ev.vintages[items[0].dataIndex];
+              return v.label + ' · ' + v.event;
+            },
+            label: function(ctx){
+              var arr = m[ctx.dataset._src][ctx.dataset._yi];
+              var i = ctx.dataIndex, cur = arr[i];
+              var line = ctx.dataset.label + ': ' + rsFmt(m, cur);
+              if (i > 0 && arr[i - 1] != null && cur != null){
+                line += '  (' + rsFmtD(m, cur - arr[i - 1]) + ' vs prior snapshot)';
+              }
+              return line;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
+          callback: function(v){ return rsTick(v, m.unit); } } }
+      }
+    }
+  });
+
+  rsRenderEvoTable();
+  var n1 = document.getElementById('rsEvoNote'); if (n1) n1.textContent = m.note || '';
+  var leg = document.getElementById('rsEvoLegend'); if (leg) leg.innerHTML = rsEvoLegendHtml();
+}
+
+function rsRenderEvoTable(){
+  var ev = rsEvo(), m = rsEvoMetric();
+  var el = document.getElementById('rsEvoTable');
+  if (!el) return;
+  var nv = ev.vintages.length;
+
+  function num(v){
+    if (v == null) return '<span class="rs-ft-nil">—</span>';
+    return (v / 1000).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  }
+
+  var h = '<div class="rs-ft-cap">US$ billions · columns are the model’s saved snapshots · “revision” = change vs the prior snapshot · the right column is the cumulative move from the first snapshot to the latest</div>';
+  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
+  ev.vintages.forEach(function(v){
+    h += '<th>' + esc(v.label) + '<br><span class="rs-ft-dim">' + esc(v.event) + '</span></th>';
+  });
+  h += '<th class="rs-ft-s">Cumulative revision</th></tr></thead><tbody>';
+
+  function rows(label, arr){
+    if (!arr) return '';
+    var r = '<tr class="rs-ft-main rs-ft-nb"><td class="rs-ft-h">' + label + '</td>';
+    arr.forEach(function(v){ r += '<td><b>' + num(v) + '</b></td>'; });
+    r += '<td class="rs-ft-s">' + rsRevHtml(m, arr[0], arr[nv - 1]) + '</td></tr>';
+    r += '<tr class="rs-ft-sub"><td class="rs-ft-h">revision</td>';
+    arr.forEach(function(v, i){ r += '<td>' + (i === 0 ? '<span class="rs-ft-nil">—</span>' : rsRevHtml(m, arr[i - 1], v)) + '</td>'; });
+    r += '<td class="rs-ft-s"></td></tr>';
+    return r;
+  }
+
+  ev.years.forEach(function(y, yi){
+    h += rows('FY' + esc(y) + ' · Summit', m.summit ? m.summit[yi] : null);
+    if (m.cons) h += rows('FY' + esc(y) + ' · Consensus', m.cons[yi]);
+  });
+
+  h += '</tbody></table></div>';
+  el.innerHTML = h;
+}
+
 // ─── Wiring ───────────────────────────────────────────────────────────────────
 
 function rsBuildAll(){ rsView().sections.forEach(function(s){ rsBuildChart(s.key); }); }
@@ -618,6 +806,14 @@ function wireResults(pane){
       rsBuildAll();
       return;
     }
+    var evl = e.target.closest('[data-rsevleg]');
+    if (evl){
+      var est = rsEvoSt();
+      var ekey = evl.getAttribute('data-rsevleg');
+      est.hidden[ekey] = !est.hidden[ekey];
+      rsBuildEvo();
+      return;
+    }
     var block = e.target.closest('.rs-block');
     var k = block ? block.getAttribute('data-rsblock') : null;
     if (!k) return;
@@ -629,9 +825,15 @@ function wireResults(pane){
       rsBuildChart(k);
     }
   });
-  // Metric dropdown (grouped select) per section block.
+  // Metric dropdown (grouped select) per section block. The evolution block's
+  // select carries rs-esel (rs-msel is styling only there) — handle it first.
   pane.onchange = (function(e){
     if (!e.target.classList.contains('rs-msel')) return;
+    if (e.target.classList.contains('rs-esel')){
+      rsEvoSt().metric = e.target.value;
+      rsBuildEvo();
+      return;
+    }
     var block = e.target.closest('.rs-block');
     var k = block ? block.getAttribute('data-rsblock') : null;
     if (!k) return;
@@ -663,4 +865,5 @@ export function initResults(){
   var wrap = document.querySelector('.rs-wrap');
   if (wrap) wireResults(wrap);
   rsBuildAll();
+  rsBuildEvo();
 }

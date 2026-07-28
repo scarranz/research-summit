@@ -6,10 +6,11 @@ metric, quarterly and annual, with growth and margins. Built with SAB through ~1
 iterations on AMZN; this doc is the contract to replicate it for any ticker.
 
 **Where it lives:** Deep Dive ▸ Evolution ▸ **Results** (a sub-tab BESIDE Call Prep — same row:
-`Call Prep · Results · Estimate Evolution · Guidance · Strategy · Timeline`). It is NOT a
-top-level profile tab (it was one briefly; SAB moved it here). **Estimate Evolution** is its own
-sub-tab at the same level (it was briefly a stacked block inside Results; SAB split it out,
-Jul 28). See `js/overviews/amzn.js` → `deepDiveHtml()` + `wireDD()` for the embedding pattern.
+`Call Prep · Results · Estimates · Guidance · Strategy · Timeline`). It is NOT a top-level
+profile tab (it was one briefly; SAB moved it here). **Estimates** (pill label; internally the
+estimate-evolution pane, `data-ovst="estevo"`) is its own sub-tab at the same level (it was
+briefly a stacked block inside Results; SAB split it out and later shortened the label, Jul 28).
+See `js/overviews/amzn.js` → `deepDiveHtml()` + `wireDD()` for the embedding pattern.
 
 ---
 
@@ -94,8 +95,11 @@ evolution: {
 4. **Range controls** (added drag/presets Jul 28 per SAB — three equivalent ways to window):
    (a) **quick-range preset pills** between chart and slider (Quarterly: Last 4Q · Last 8Q ·
    Reported · Forward · All; Annual: Last 3Y · Last 5Y · …) — anchored to the last reported
-   period; (b) **drag across the chart** to zoom to a stretch (translucent brush box tracks
-   the drag; double-click resets to All); (c) the **dual-handle period slider** below, with
+   period; (b) **drag across the chart** to zoom to a stretch, and **drag starting on the
+   y-axis strip** to set the y-range (a translucent brush box tracks either drag; double-click
+   resets both — on the Estimates charts, with only 3 x-points, ANY drag adjusts the y-axis;
+   y-ranges reset on metric/mode change since the units change); (c) the **dual-handle period
+   slider** below, with
    **one tick dot per period** (filled navy = reported in window; light blue = estimate in
    window; hollow dashed = outside window). Everything below recomputes for the window.
 5. ~~Range analytics tiles~~ — REMOVED (SAB, Jul 28): the KPI tiles that sat between the

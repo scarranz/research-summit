@@ -53,7 +53,7 @@ function rsSecCfg(k){ return rsView().sections.filter(function(s){ return s.key 
 function rsSecGroups(cfg){ return cfg.groups || [{ label: '', keys: cfg.keys || [] }]; }
 function rsSecKeys(cfg){ return rsSecGroups(cfg).reduce(function(a, g){ return a.concat(g.keys); }, []); }
 function rsSt(k){
-  if (!_rs.sec[k]) _rs.sec[k] = { metric: null, win: null, chart: null,
+  if (!_rs.sec[k]) _rs.sec[k] = { metric: null, win: null, yr: null, chart: null,
     hidden: { act:false, summit:false, cons:false, guide:false, margin:false } };
   return _rs.sec[k];
 }
@@ -202,7 +202,7 @@ function rsBlocksHtml(){
       : [['l3', 'Last 3Y'], ['l5', 'Last 5Y'], ['rep', 'Reported'], ['fwd', 'Forward'], ['all', 'All']];
     h += '<div class="rs-quick"><span class="rs-quick-l">Range</span>' +
       pres.map(function(p){ return '<button type="button" class="rs-preset" data-rsrange="' + p[0] + '">' + p[1] + '</button>'; }).join('') +
-      '<span class="tech-leg-i" style="margin-left:auto">drag across the chart to zoom · double-click resets</span></div>';
+      '<span class="tech-leg-i" style="margin-left:auto">drag across the chart to zoom · drag on the y-axis to set its range · double-click resets</span></div>';
     h += '<div class="sg-controls">' +
       '<div class="sg-slider">' +
         '<div class="sg-track"><div class="sg-fill" id="rsFill-' + k + '"></div></div>' +
@@ -306,6 +306,7 @@ function rsBuildChart(k){
     y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
       callback: function(v){ return rsTick(v, m.unit); } } }
   };
+  if (st.yr){ scales.y.min = st.yr[0]; scales.y.max = st.yr[1]; }
   if (needY2) scales.y2 = { position: 'right', grid: { display: false },
     ticks: { font: { size: 11 }, callback: function(v){ return v + '%'; } } };
 
@@ -351,52 +352,76 @@ function rsBuildChart(k){
   var leg = document.getElementById('rsLegend-' + k); if (leg) leg.innerHTML = rsLegendHtml(k, m);
 }
 
-// ─── Drag-to-zoom brush ───────────────────────────────────────────────────────
-// Drag horizontally across the chart to window that stretch (a translucent
-// selection box tracks the drag); double-click resets to the full range. The
-// window indexes are chart-relative, so they are offset by `lo` back into the
-// metric's full period list.
-function rsWireBrush(k, el, chart, lo){
+// ─── Drag-to-zoom brush (both axes) ───────────────────────────────────────────
+// Drag horizontally across the chart area to window that stretch of periods;
+// drag vertically starting ON THE Y-AXIS STRIP (left of the plot) to set the
+// y-axis range — a translucent selection box tracks either drag. Double-click
+// resets both. `onX(i1, i2)` receives chart-relative period indexes; `onY(lo,
+// hi)` receives axis values; pass onX = null for charts with no x-windowing.
+function rsAttachBrush(el, chart, onX, onY, onReset){
   var wrap = el.parentElement;
   if (wrap && getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
   el.style.cursor = 'crosshair';
-  function idxAt(clientX){
-    var r = el.getBoundingClientRect();
-    var v = chart.scales.x.getValueForPixel(clientX - r.left);
-    return Math.max(0, Math.min(chart.data.labels.length - 1, Math.round(v)));
-  }
   el.onmousedown = function(ev){
     if (ev.button !== 0) return;
-    var startPx = ev.clientX, startIdx = idxAt(ev.clientX);
     var r0 = el.getBoundingClientRect(), w0 = wrap.getBoundingClientRect();
+    var area = chart.chartArea;
+    var vertical = (ev.clientX - r0.left) < area.left || !onX;
+    var startX = ev.clientX, startY = ev.clientY;
     var box = document.createElement('div');
     box.className = 'rs-brush';
-    box.style.top = (r0.top - w0.top) + 'px';
-    box.style.height = r0.height + 'px';
-    wrap.appendChild(box);
-    function place(x){
-      var a = Math.min(startPx, x), b = Math.max(startPx, x);
-      box.style.left = (a - w0.left) + 'px';
-      box.style.width = (b - a) + 'px';
+    if (vertical){
+      box.style.left = (r0.left - w0.left + area.left) + 'px';
+      box.style.width = (area.right - area.left) + 'px';
+    } else {
+      box.style.top = (r0.top - w0.top) + 'px';
+      box.style.height = r0.height + 'px';
     }
-    place(ev.clientX);
-    function onMove(e2){ place(e2.clientX); }
+    wrap.appendChild(box);
+    function place(cx, cy){
+      if (vertical){
+        var a = Math.min(startY, cy), b = Math.max(startY, cy);
+        box.style.top = (a - w0.top) + 'px';
+        box.style.height = (b - a) + 'px';
+      } else {
+        var a2 = Math.min(startX, cx), b2 = Math.max(startX, cx);
+        box.style.left = (a2 - w0.left) + 'px';
+        box.style.width = (b2 - a2) + 'px';
+      }
+    }
+    place(ev.clientX, ev.clientY);
+    function onMove(e2){ place(e2.clientX, e2.clientY); }
     function onUp(e2){
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
       box.remove();
-      if (Math.abs(e2.clientX - startPx) < 8) return;  // a click, not a drag
-      var a = startIdx, b = idxAt(e2.clientX);
-      var w = [lo + Math.min(a, b), lo + Math.max(a, b)];
-      if (w[0] === w[1]) return;
-      rsSt(k).win = w;
-      rsBuildChart(k);
+      if (vertical){
+        if (Math.abs(e2.clientY - startY) < 8) return;   // a click, not a drag
+        var v1 = chart.scales.y.getValueForPixel(Math.min(startY, e2.clientY) - r0.top);
+        var v2 = chart.scales.y.getValueForPixel(Math.max(startY, e2.clientY) - r0.top);
+        onY(Math.min(v1, v2), Math.max(v1, v2));
+      } else {
+        if (Math.abs(e2.clientX - startX) < 8) return;
+        function idxAt(clientX){
+          var v = chart.scales.x.getValueForPixel(clientX - r0.left);
+          return Math.max(0, Math.min(chart.data.labels.length - 1, Math.round(v)));
+        }
+        var a = idxAt(startX), b = idxAt(e2.clientX);
+        if (a !== b) onX(Math.min(a, b), Math.max(a, b));
+      }
     }
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
     ev.preventDefault();
   };
-  el.ondblclick = function(){ rsSt(k).win = null; rsBuildChart(k); };
+  el.ondblclick = onReset;
+}
+
+function rsWireBrush(k, el, chart, lo){
+  rsAttachBrush(el, chart,
+    function(a, b){ rsSt(k).win = [lo + a, lo + b]; rsBuildChart(k); },
+    function(v1, v2){ rsSt(k).yr = [v1, v2]; rsBuildChart(k); },
+    function(){ var st = rsSt(k); st.win = null; st.yr = null; rsBuildChart(k); });
 }
 
 // ─── Period-window slider ─────────────────────────────────────────────────────
@@ -575,7 +600,7 @@ function rsEvoSecCfg(k){ return rsEvo().sections.filter(function(s){ return s.ke
 function rsEvoKeys(cfg){ return (cfg.groups || []).reduce(function(a, g){ return a.concat(g.keys); }, []); }
 function rsEvoSt(k){
   if (!_rs.evo) _rs.evo = { sec: {} };
-  if (!_rs.evo.sec[k]) _rs.evo.sec[k] = { metric: null, mode: 'usd', chart: null, hidden: {} };
+  if (!_rs.evo.sec[k]) _rs.evo.sec[k] = { metric: null, mode: 'usd', yr: null, chart: null, hidden: {} };
   return _rs.evo.sec[k];
 }
 function rsEvoMetric(k){
@@ -701,7 +726,7 @@ function rsEvoLegendHtml(k, m){
     h += '<button type="button" class="rs-leg' + (st.hidden.cons ? ' off' : '') + '" data-rsevleg="cons" title="Show / hide">' +
       '<span class="rs-leg-dash" style="color:var(--navy)"></span>Consensus (dashed)</button>';
   }
-  h += '<span class="tech-leg-i" style="margin-left:auto">one line per fiscal year · click a chip to hide it</span>';
+  h += '<span class="tech-leg-i" style="margin-left:auto">one line per fiscal year · click a chip to hide it · drag on the chart to zoom the y-axis · double-click resets</span>';
   return h;
 }
 
@@ -782,10 +807,16 @@ function rsBuildEvo(k){
       scales: {
         x: { grid: { display: false }, ticks: { font: { size: 11 } } },
         y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
-          callback: function(v){ return pct ? v + '%' : rsTick(v, m.unit); } } }
+          callback: function(v){ return pct ? v + '%' : rsTick(v, m.unit); } },
+          min: st.yr ? st.yr[0] : undefined, max: st.yr ? st.yr[1] : undefined }
       }
     }
   });
+
+  // Vertical-only brush: only 3 x-points, so any drag adjusts the y-range.
+  rsAttachBrush(el, st.chart, null,
+    function(v1, v2){ rsEvoSt(k).yr = [v1, v2]; rsBuildEvo(k); },
+    function(){ rsEvoSt(k).yr = null; rsBuildEvo(k); });
 
   rsRenderEvoTable(k, m);
   var n1 = document.getElementById('rsEvoNote-' + k); if (n1) n1.textContent = m.note || '';
@@ -884,6 +915,7 @@ function wireResults(pane){
     var st = rsSt(k);
     st.metric = e.target.value;
     st.win = null;
+    st.yr = null;
     rsBuildChart(k);
   });
   wireSliders(pane);
@@ -924,7 +956,9 @@ export function initResultsEvo(){
     var k;
     var md = e.target.closest('[data-rsevmode]');
     if (md && (k = secOf(md))){
-      rsEvoSt(k).mode = md.getAttribute('data-rsevmode');
+      var mst = rsEvoSt(k);
+      mst.mode = md.getAttribute('data-rsevmode');
+      mst.yr = null;                                   // units change $B ↔ %
       rsBuildEvo(k);
       return;
     }
@@ -943,6 +977,7 @@ export function initResultsEvo(){
     var st = rsEvoSt(k);
     st.metric = e.target.value;
     st.mode = 'usd';                                   // reset — % meaning may change per metric
+    st.yr = null;
     rsBuildEvo(k);
   };
   rsEvo().sections.forEach(function(s){ rsBuildEvo(s.key); });

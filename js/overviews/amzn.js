@@ -489,7 +489,7 @@ function deepDiveHtml(c){
       '<div class="ovt-subtabs">'+
         '<button type="button" class="ovt-subtab active" data-ovst="callprep">Call Prep</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="results">Results</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimate Evolution</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+

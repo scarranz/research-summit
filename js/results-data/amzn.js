@@ -172,11 +172,11 @@ export var amznResults = {
         rev: { label: 'Net Sales (Total)', short: 'Total revenue', group: 'Revenue', unit: 'usdM',
           periods: ['2020','2021','2022','2023','2024','2025','2026','2027','2028'],
           act:    [386064, 469822, 513983, 574785, 637959, 716924, null, null, null],
-          summit: [null, null, null, null, null, null, 823035, 941960, 1115060],
+          summit: [null, null, 508794, 570547, 640014, 709855, 823035, 941960, 1115060],
           cons:   [379571, 470209, 512444, 570829, 637832, 714794, 819963, 925181, 1023818],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null],
-          note: 'Full-year net sales vs Bloomberg consensus. Summit (model export, 2026-05-05 vintage) sits above the Street every forward year — modestly in 2026–27 and a striking +9% in 2028 ($1,115B vs $1,024B). The model overwrites its past annual TOTAL revenue projections with actuals — but the segment lines below keep their frozen history.' },
+          note: 'Full-year net sales vs Bloomberg consensus. Historical Summit = sum of the model’s three FROZEN segment projections per closed year (same construct as the Quarterly view; the model’s own total-revenue row is overwritten with the actual once reported, and the frozen segment history — identical across every vintage — starts 2022). The actual landed slightly above the frozen estimate in 3 of 4 closed years (+0.7–1.0%; 2024 the exception at −0.3%). Forward (2026-05-05 vintage): Summit sits above the Street every year — modestly in 2026–27 and a striking +9% in 2028 ($1,115B vs $1,024B).' },
         usrev: { label: 'North America Net Sales', short: 'North America', group: 'Revenue', unit: 'usdM',
           periods: ['2020','2021','2022','2023','2024','2025','2026','2027','2028'],
           act:    [236282, 279833, 315880, 352828, 387497, 426305, null, null, null],
@@ -220,11 +220,11 @@ export var amznResults = {
         capex: { label: 'Capital Expenditure', short: 'CapEx', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'capex % of revenue',
           periods: ['2022','2023','2024','2025','2026','2027','2028'],
           act:    [63645, 52729, 82999, 131819, null, null, null],
-          summit: [null, null, null, null, 205759, 230780, 150795],
+          summit: [null, null, null, 125455, 205759, 230780, 150795],
           cons:   [null, null, null, null, 202352, 239000, null],
           guideLo:[null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null],
-          note: 'Capital expenditure, positive spend (actuals = sum of reported quarters). The Summit model projects capex ANNUALLY only — 2026 $205.8B and 2027 $230.8B, right on top of the Street ($202.4B blended / $239.0B). Note the vintage history: the Dec-2025 model carried only $150.7B for 2026 — the model re-rated capex +36% after the 4Q25 print. ⚠ Model flag: the 2028 total capex line drops to $150.8B while the model’s own segment capex sum is ~$245B — an internal inconsistency worth reviewing with the model owner.' }
+          note: 'Capital expenditure, positive spend (actuals = sum of reported quarters). 2025 Summit = the estimate held on the last snapshot before the year closed (Dec 18, 2025): $125.5B vs the $131.8B print — the model under-called the final capex ramp by ~5%. Earlier years show no Summit estimate: capex is a total-only line the model overwrites with the actual once reported, and no pre-Dec-2025 snapshot survives. Forward — 2026 $205.8B and 2027 $230.8B, right on top of the Street ($202.4B blended / $239.0B); the Dec-2025 model carried only $150.7B for 2026 before re-rating +36% after the 4Q25 print (see Estimate Evolution). ⚠ Model flag: the 2028 total capex line drops to $150.8B while the model’s own segment capex sum is ~$245B — an internal inconsistency worth reviewing with the model owner.' }
       },
       sections: [
         { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [

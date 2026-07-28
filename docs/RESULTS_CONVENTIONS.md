@@ -87,6 +87,10 @@ evolution: {
    Profitability* (op income / EPS / capex / segment op income; **margin % lines** on right
    axis: actual solid, Summit dashed, consensus dotted).
 2. **Metric picker** = grouped `<select>` (optgroups from `sections[].groups`) — NOT pill walls.
+2b. **Growth-basis toggle** (SAB, Jul 28) — beside the Quarterly/Annual toggle, VISIBLE ONLY in
+   Quarterly: **YoY** (vs the same quarter last year, default) ⇄ **QoQ** (vs the previous
+   reported quarter). Flips every growth row/summary label and lag; CAGR annualization always
+   uses the view's periods-per-year, never the growth lag. Annual is always YoY.
 3. **Legend chips** are clickable — each toggles its series (Actual / Summit / Consensus /
    Guidance range / margin line). Guidance renders as a translucent floating band.
    **Hover is period-wise** (Chart.js `interaction: {mode:'index', intersect:false}`): one

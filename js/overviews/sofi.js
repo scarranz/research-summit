@@ -1,4 +1,5 @@
 // overviews/sofi.js — custom Overview for SoFi Technologies, Inc. (Nasdaq: SOFI)
+import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 // Built individually per the portal's per-company Overview model (see CLAUDE.md).
 //
 // This module renders the company profile (one-stop digital bank: three segments on a
@@ -1012,61 +1013,41 @@ function valuationBody(c){
 }
 
 // Actuals vs. Estimates view — our Summit DCF model's estimate vs SoFi's reported actual.
+// REBUILT (Jul 2026, per SAB) with the Results-tab look & feel: grouped <select> metric
+// picker, clickable legend chips, actual-vs-estimate bars with period-wise hover, the
+// dual-handle slider with per-quarter tick dots, and the Fiscal-style transposed table
+// with a "Range record" column. The old pill-wall/tiles renderer and the in-pane
+// "How our estimates have evolved across snapshots" vintage section were REMOVED per SAB
+// (the standardized Estimates view above replaces the latter); EVO_* data stays dormant.
+var _ave2 = { win: null, mode: 'pct', chart: null };   // mode: 'pct' (surprise %) | 'usd' (surprise in units)
 function aveBody(c){
-  var def = AVE_METRICS.rev;
-  var maxI = def.quarters.length - 1;
-  var h = '';
-
-  // Grouped metric selector (KPIs · Revenue · Profitability).
-  h += '<div class="ave-groups">'+AVE_GROUPS.map(function(g){
-    return '<div class="ave-group"><div class="ave-group-l">'+esc(g.label)+'</div>'+
-      '<div class="ave-pills">'+g.keys.map(function(k){
-        return '<button type="button" class="ave-pill'+(k===_aveMetric?' active':'')+'" data-ave="'+k+'">'+esc(AVE_METRICS[k].short)+'</button>';
-      }).join('')+'</div></div>';
-  }).join('')+'</div>';
-
-  // Dual-handle quarter-window slider (rebuilt when the metric changes).
+  var h = '<div class="ave2" style="max-width:980px">';
+  h += '<p class="ov-lede">'+esc(AVE_INTRO)+'</p>';
+  h += '<div class="rs-block-top"><div class="rs-block-h">Model track record</div>'+
+    '<select class="rs-msel" id="ave2Sel" aria-label="Metric">'+AVE_GROUPS.map(function(g){
+      return '<optgroup label="'+esc(g.label)+'">'+g.keys.map(function(k){
+        return '<option value="'+k+'"'+(k===_aveMetric?' selected':'')+'>'+esc(AVE_METRICS[k].label)+'</option>';
+      }).join('')+'</optgroup>';
+    }).join('')+'</select>'+
+    '<div class="rs-views" id="ave2Mode"></div></div>';
+  h += '<div class="ave-leg" id="ave2Leg"></div>';
+  h += '<div class="ov-chart-card">'+
+    '<div class="ov-chart-t" id="aveChartT"></div>'+
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="sofiAveChart"></canvas></div>'+
+  '</div>';
   h += '<div class="sg-controls">'+
     '<div class="sg-slider">'+
       '<div class="sg-track"><div class="sg-fill" id="aveFill"></div></div>'+
-      '<input type="range" id="aveMin" min="0" max="'+maxI+'" value="0" step="1" aria-label="Start quarter">'+
-      '<input type="range" id="aveMax" min="0" max="'+maxI+'" value="'+maxI+'" step="1" aria-label="End quarter">'+
+      '<div class="rs-ticks" id="ave2Ticks"></div>'+
+      '<input type="range" id="aveMin" min="0" max="1" value="0" step="1" aria-label="Start quarter">'+
+      '<input type="range" id="aveMax" min="0" max="1" value="1" step="1" aria-label="End quarter">'+
     '</div>'+
-    '<div class="sg-ends"><span id="aveEnd0">'+esc(def.quarters[0])+'</span><span id="aveEnd1">'+esc(def.quarters[maxI])+'</span></div>'+
-    '<div class="sg-readout" id="aveReadout"></div>'+
+    '<div class="sg-ends"><span id="aveEnd0"></span><span id="aveEnd1"></span></div>'+
   '</div>';
-
-  // Chart (grouped bars: estimate vs actual, surprise % above each pair).
-  h += '<div class="ave-leg">'+
-    '<span class="tech-leg-i"><span class="ave-leg-act" style="background:#1E9E62"></span>Favorable (beat / under-budget)</span>'+
-    '<span class="tech-leg-i"><span class="ave-leg-act" style="background:#C0392B"></span>Unfavorable (miss / over-budget)</span>'+
-    '<span class="tech-leg-i">▲ above · ▼ below estimate</span>'+
-  '</div>';
-  h += '<div class="ov-chart-card">'+
-    '<div class="ov-chart-t" id="aveChartT">Net Revenue — surprise vs estimate <span>(%, per quarter · hover for $)</span></div>'+
-    '<div class="ov-chart-wrap ovs-tall"><canvas id="sofiAveChart"></canvas></div>'+
-  '</div>';
-
-  // Analytics tiles — recomputed live for the selected window.
-  h += '<div class="ov-subh">Track record <span class="ave-subh-note" id="aveStatScope"></span></div>';
-  h += '<div class="ov-kpis" id="aveStats"></div>';
-
-  h += '<div class="ov-foot" id="aveNote">'+esc(def.note)+'</div>';
+  h += '<div class="rs-tablewrap" id="ave2Table"></div>';
+  h += '<div class="ov-foot" id="aveNote"></div>';
   h += '<div class="ov-foot">'+esc(AVE_SOURCE)+'</div>';
-
-  // ── Estimate revisions across snapshots (vintage chart) ──
-  h += '<div class="ov-sec-h evo-sec-h">How our estimates have evolved across snapshots</div>';
-  h += '<p class="ov-lede">'+esc(EVO_INTRO)+'</p>';
-  h += '<div class="evo-pills">'+['rev','ebitda','ani'].map(function(k){
-    return '<button type="button" class="evo-pill'+(k===_evoMetric?' active':'')+'" data-evo="'+k+'">'+esc(EVO_METRICS[k].short)+'</button>';
-  }).join('')+'</div>';
-  h += '<div class="ov-chart-card"><div class="ov-chart-t" id="evoChartT"></div>'+
-    '<div class="ov-chart-wrap ovs-tall"><canvas id="sofiEvoChart"></canvas></div></div>';
-  h += '<div class="ov-subh">Net revision since first snapshot <span class="ave-subh-note" id="evoScope"></span></div>';
-  h += '<div class="ov-kpis" id="evoStats"></div>';
-  h += '<div class="ov-foot" id="evoNote"></div>';
-  h += '<div class="ov-foot">'+esc(EVO_SOURCE)+'</div>';
-
+  h += '</div>';
   return h;
 }
 
@@ -2905,15 +2886,21 @@ function deepDiveHtml(c){
       '<button type="button" class="ovt-subtab active" data-ovst="callprep">Call Prep</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="results">Results</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>'+
-      '<button type="button" class="ovt-subtab" data-ovst="ave">Actuals vs Estimates</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
     '</div>'+
     '<div class="ovt-subpane" data-ovst="callprep">'+sofiDdEmpty()+'</div>'+
-    '<div class="ovt-subpane" data-ovst="results" hidden>'+sofiDdEmpty()+'</div>'+
-    '<div class="ovt-subpane" data-ovst="estevo" hidden>'+sofiDdEmpty()+'</div>'+
-    '<div class="ovt-subpane" data-ovst="ave" hidden>'+aveBody(c)+'</div>'+
+    '<div class="ovt-subpane" data-ovst="results" hidden>'+resultsHtml('SOFI')+'</div>'+
+    // Estimates = the standardized vintage-evolution pane, with the FULL legacy
+    // "Actuals vs Estimates" engine (17 metrics + its own vintage section) stacked
+    // BELOW it — moved here complete from its own sub-tab per SAB (Jul 2026).
+    '<div class="ovt-subpane" data-ovst="estevo" hidden>'+resultsEvoHtml('SOFI')+
+      '<div style="margin-top:30px;padding-top:22px;border-top:1px solid var(--bdr)">'+
+        '<div style="font-size:14px;font-weight:800;color:var(--navy);padding-left:10px;border-left:4px solid var(--brand,#0E7CC0);margin-bottom:10px">Actuals vs Estimates — full model history</div>'+
+        aveBody(c)+
+      '</div>'+
+    '</div>'+
     '<div class="ovt-subpane" data-ovst="guidance" hidden>'+guidanceBody(c)+'</div>'+
     '<div class="ovt-subpane" data-ovst="strategy" hidden>'+sofiDdEmpty()+'</div>'+
     '<div class="ovt-subpane" data-ovst="timeline" hidden>'+milestonesBody()+'</div>'+
@@ -3420,14 +3407,14 @@ var aveLabels = {
       ctx.restore();
     }
     for (var i = 0; i < surp.length; i++){
-      var bar = bars[i]; if (!bar) continue;
+      var bar = bars[i]; if (!bar || surp[i] == null) continue;
       var above = surp[i] >= 0;                          // actual vs estimate (direction)
       var fav = (chart.$exp ? -surp[i] : surp[i]) >= 0;  // favorable outcome? (expenses flip)
       ctx.save();
       ctx.textAlign = 'center';
       ctx.font = '700 11px Inter, sans-serif';
       ctx.fillStyle = fav ? AVE_GREEN : AVE_RED;
-      ctx.fillText((above ? '▲ ' : '▼ ') + avePct(surp[i]), bar.x, above ? bar.y - 7 : bar.y + 15);
+      ctx.fillText((above ? '▲ ' : '▼ ') + (chart.$fmt ? chart.$fmt(surp[i]) : avePct(surp[i])), bar.x, above ? bar.y - 7 : bar.y + 15);
       ctx.restore();
     }
   }
@@ -3576,10 +3563,244 @@ function setupAveSlider(){
   apply();
 }
 
+// ═══ AVE v2 — Results-tab look & feel (Jul 2026, per SAB) ═══════════════════════
+// Grouped select + legend chips + actual-vs-estimate bars (period-wise hover) +
+// slider with per-quarter tick dots + the Fiscal-style transposed table with a
+// "Range record" column. Favorability is expense-aware (m.exp flips it): colors
+// mean favorable/unfavorable, ▲/▼ stay literal (above/below the estimate).
+// The old pill/tile renderer (buildAveChart/renderAve/renderAveStats/
+// setupAveSlider/switchAveMetric) and the in-pane vintage section (buildEvoTab)
+// are dormant — superseded by this and by the standardized Estimates view.
+function ave2M(){ return AVE_METRICS[_aveMetric] || AVE_METRICS.rev; }
+function ave2Win(m){
+  var n = m.quarters.length;
+  if (!_ave2.win || _ave2.win[1] >= n || _ave2.win[0] < 0) _ave2.win = [0, n - 1];
+  return _ave2.win;
+}
+function ave2Unit(m){ return m.fmt === 'cnt' ? 'millions' : m.fmt === 'vol' ? 'US$ billions' : 'US$ millions'; }
+function ave2Div(m){ return m.fmt === 'usd' ? 1 : 1000; }
+function ave2FmtD(m, v){
+  if (v == null) return '—';
+  return (v >= 0 ? '+' : '−') + aveFmt(m, Math.abs(v));
+}
+// Growth vs 4 quarters back: value from `arr`, base from `baseArr` (the reported
+// actual when comparing an estimate — same convention as the Results tab).
+function ave2Growth(arr, baseArr, i){
+  if (i - 4 < 0) return null;
+  var a = arr[i], b = baseArr[i - 4];
+  if (a == null || b == null || !b) return null;
+  return (a - b) / Math.abs(b) * 100;
+}
+function ave2GrowthD(arr, baseArr, i){
+  if (i - 4 < 0) return null;
+  var a = arr[i], b = baseArr[i - 4];
+  if (a == null || b == null) return null;
+  return a - b;
+}
+function ave2PctHtml(p, fav){
+  if (p == null) return '<span class="rs-ft-nil">—</span>';
+  var col = fav == null ? 'var(--navy)' : (fav ? AVE_GREEN : AVE_RED);
+  return '<span style="color:' + col + '">' + avePct(p) + '</span>';
+}
+// The chart plots the SURPRISE itself (per SAB: the whole point is how we came in
+// above or below the actual), so the legend explains favorability, not series.
+function ave2LegHtml(m){
+  return '<span class="tech-leg-i"><span class="ave-leg-act" style="background:' + AVE_GREEN + '"></span>Favorable (beat / under-budget)</span>' +
+    '<span class="tech-leg-i"><span class="ave-leg-act" style="background:' + AVE_RED + '"></span>Unfavorable (miss / over-budget)</span>' +
+    '<span class="tech-leg-i" style="margin-left:auto">▲ above · ▼ below estimate' + (m.exp ? ' · expense line: favorable = below' : '') + '</span>';
+}
+function ave2Wire(){
+  var sel = document.getElementById('ave2Sel');
+  if (sel && !sel._w){ sel._w = true; sel.onchange = function(){ _aveMetric = sel.value; _ave2.win = null; ave2Build(); }; }
+  var mn = document.getElementById('aveMin'), mx = document.getElementById('aveMax');
+  function onSlide(){ var a = +mn.value, b = +mx.value; _ave2.win = [Math.min(a, b), Math.max(a, b)]; ave2Build(); }
+  if (mn && !mn._w){ mn._w = true; mn.oninput = onSlide; }
+  if (mx && !mx._w){ mx._w = true; mx.oninput = onSlide; }
+  var md = document.getElementById('ave2Mode');
+  if (md && !md._w){ md._w = true; md.onclick = function(e){
+    var b = e.target.closest('[data-ave2mode]'); if (!b) return;
+    _ave2.mode = b.getAttribute('data-ave2mode');
+    ave2Build();
+  }; }
+}
+function ave2Build(){
+  var m = ave2M();
+  var cv = document.getElementById('sofiAveChart');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  var w = ave2Win(m), lo = w[0], hi = w[1];
+  var div = ave2Div(m);
+  var f = m.exp ? -1 : 1;                               // favorability sign
+  function sl(a){ return a.slice(lo, hi + 1); }
+  var scale = function(v){ return v == null ? null : v / div; };
+
+  if (_ave2.chart){ _ave2.chart.destroy(); _ave2.chart = null; }
+  // The chart plots the SURPRISE per quarter (diverging bars, favorability-
+  // colored, value printed on each bar) — the focus is how the actual came in
+  // above or below the estimate. Toggle: % of the estimate ⇄ absolute amount
+  // ($ for money lines, count for KPI lines). Both values live in the tooltip
+  // and the table regardless of the mode.
+  var pctMode = _ave2.mode !== 'usd';
+  var pcts = [], dols = [];
+  for (var si = lo; si <= hi; si++){
+    var ok = (m.act[si] != null && m.est[si] != null && m.est[si]);
+    pcts.push(ok ? aveSurprise(m, si) : null);
+    dols.push(ok ? (m.act[si] - m.est[si]) : null);
+  }
+  var bars = pctMode ? pcts : dols.map(function(v){ return v == null ? null : v / div; });
+  var md = document.getElementById('ave2Mode');
+  if (md) md.innerHTML = '<button type="button" class="rs-view' + (pctMode ? ' active' : '') + '" data-ave2mode="pct">Surprise %</button>' +
+    '<button type="button" class="rs-view' + (!pctMode ? ' active' : '') + '" data-ave2mode="usd">' + (m.fmt === 'cnt' ? 'Amount' : '$ amount') + '</button>';
+  var tEl = document.getElementById('aveChartT');
+  if (tEl) tEl.innerHTML = esc(m.label) + ' — surprise vs estimate <span>(' + (pctMode ? '%' : esc(ave2Unit(m))) + ' per quarter · hover for both values)</span>';
+
+  _ave2.chart = new Chart(cv.getContext('2d'), {
+    type: 'bar',
+    data: { labels: sl(m.quarters), datasets: [
+      { label: 'Surprise', data: bars,
+        backgroundColor: pcts.map(function(s){ return s == null ? AVE_GRAY : ((s * f >= 0) ? AVE_GREEN : AVE_RED); }),
+        borderRadius: 3, maxBarThickness: 56 }
+    ] },
+    plugins: [aveLabels],
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: {
+          label: function(ctx){
+            var i = ctx.dataIndex + lo;
+            var s = pcts[ctx.dataIndex], d = dols[ctx.dataIndex];
+            return [
+              'Actual: ' + (m.act[i] == null ? '—' : aveFmt(m, m.act[i])),
+              'Summit estimate: ' + (m.est[i] == null ? '—' : aveFmt(m, m.est[i])),
+              s == null ? 'Surprise: —' : 'Surprise: ' + avePct(s) + ' · ' + ave2FmtD(m, d) + ' · ' + (s * f >= 0 ? 'favorable' : 'unfavorable')
+            ];
+          }
+        } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
+          callback: function(v){
+            if (pctMode) return (v < 0 ? '−' : '') + Math.abs(v).toFixed(0) + '%';
+            var s = v < 0 ? '−' : '', a = Math.abs(v);
+            if (m.fmt === 'cnt') return s + (+a.toFixed(1)) + 'M';
+            if (m.fmt === 'vol') return s + '$' + (+a.toFixed(2)) + 'B';
+            return s + '$' + Math.round(a) + 'M';
+          } } }
+      }
+    }
+  });
+  // Bar labels: % in pct mode, the formatted delta in amount mode (shared plugin
+  // reads $fmt when present). Favorability coloring always follows the % sign.
+  _ave2.chart.$surp = pctMode ? pcts : dols;
+  _ave2.chart.$fmt = pctMode ? null : function(v){ return ave2FmtD(m, v); };
+  _ave2.chart.$exp = !!m.exp;
+  _ave2.chart.update();
+
+  // Slider + per-quarter tick dots (all reported — filled when inside the window).
+  var n = m.quarters.length;
+  var mn = document.getElementById('aveMin'), mx = document.getElementById('aveMax');
+  var fill = document.getElementById('aveFill'), e0 = document.getElementById('aveEnd0'), e1 = document.getElementById('aveEnd1');
+  if (mn && mx){ mn.max = n - 1; mx.max = n - 1; mn.value = lo; mx.value = hi; }
+  if (fill){ fill.style.left = (lo / (n - 1) * 100) + '%'; fill.style.width = ((hi - lo) / (n - 1) * 100) + '%'; }
+  if (e0) e0.textContent = m.quarters[lo];
+  if (e1) e1.textContent = m.quarters[hi];
+  var ticks = document.getElementById('ave2Ticks');
+  if (ticks){
+    var th = '';
+    for (var i = 0; i < n; i++){
+      th += '<span class="rs-tick' + (i >= lo && i <= hi ? ' on' : '') + '" style="left:' + (i / (n - 1) * 100) + '%" title="' + esc(m.quarters[i]) + '"></span>';
+    }
+    ticks.innerHTML = th;
+  }
+
+  ave2Table(m, lo, hi, f, div);
+  var leg = document.getElementById('ave2Leg'); if (leg) leg.innerHTML = ave2LegHtml(m);
+  var note = document.getElementById('aveNote'); if (note) note.textContent = m.note || '';
+}
+function ave2Table(m, lo, hi, f, div){
+  var el = document.getElementById('ave2Table');
+  if (!el) return;
+  var idx = []; for (var i = lo; i <= hi; i++) idx.push(i);
+  function avg(a){ return a.reduce(function(x, y){ return x + y; }, 0) / a.length; }
+  function sgn(v){ return (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '%'; }
+  function num(v){
+    if (v == null) return '<span class="rs-ft-nil">—</span>';
+    return (v / div).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  }
+  function pctDollar(p, d, fav){
+    if (p == null) return '<span class="rs-ft-nil">—</span>';
+    return ave2PctHtml(p, fav) + ' <span class="rs-ft-dim">· ' + ave2FmtD(m, d) + '</span>';
+  }
+  function sumGrowth(fn){
+    var g = []; idx.forEach(function(i){ var v = fn(i); if (v != null) g.push(v); });
+    return g.length ? 'avg ' + sgn(avg(g)) : '';
+  }
+  function sumCagr(){
+    var first = null, last = null, fi = null, li = null;
+    idx.forEach(function(i){ var v = m.act[i]; if (v != null){ if (first == null){ first = v; fi = i; } last = v; li = i; } });
+    if (first == null || li === fi || first <= 0 || last <= 0) return '';
+    var years = (li - fi) / 4;
+    return years > 0 ? 'CAGR ' + sgn((Math.pow(last / first, 1 / years) - 1) * 100) : '';
+  }
+  function sumSurprise(){
+    var pcts = [], above = 0, below = 0, favN = 0;
+    idx.forEach(function(i){
+      if (m.est[i] == null || m.act[i] == null || !m.est[i]) return;
+      var s = aveSurprise(m, i);
+      pcts.push(s);
+      if (s >= 0) above++; else below++;
+      if (s * f >= 0) favN++;
+    });
+    if (!pcts.length) return '';
+    var ap = avg(pcts);
+    return above + '▲ · ' + below + '▼<br><span class="rs-ft-dim">' + favN + '/' + pcts.length + ' favorable · avg <span style="color:' + (ap * f >= 0 ? AVE_GREEN : AVE_RED) + '">' + sgn(ap) + '</span></span>';
+  }
+
+  var h = '<div class="rs-ft-cap">' + esc(ave2Unit(m)) + ' · surprise = (actual − estimate) ÷ |estimate| · green = favorable' + (m.exp ? ' — expense line, so favorable = actual BELOW the estimate' : '') + ' · the right column summarizes the selected range</div>';
+  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
+  idx.forEach(function(i){ h += '<th>' + esc(m.quarters[i]) + '</th>'; });
+  h += '<th class="rs-ft-s">Range record</th></tr></thead><tbody>';
+
+  function row(label, cellFn, cls, sum){
+    var classes = cls.split(' ').map(function(c){ return 'rs-ft-' + c; }).join(' ');
+    var r = '<tr class="' + classes + '"><td class="rs-ft-h">' + label + '</td>';
+    idx.forEach(function(i){ r += '<td>' + cellFn(i) + '</td>'; });
+    r += '<td class="rs-ft-s">' + (sum || '') + '</td>';
+    return r + '</tr>';
+  }
+
+  h += row('Actual', function(i){ return m.act[i] == null ? '<span class="rs-ft-nil">—</span>' : '<b>' + num(m.act[i]) + '</b>'; }, 'main nb', sumCagr());
+  h += row('YoY growth', function(i){ return pctDollar(ave2Growth(m.act, m.act, i), ave2GrowthD(m.act, m.act, i), null); }, 'sub',
+    sumGrowth(function(i){ return ave2Growth(m.act, m.act, i); }));
+  h += row('Summit estimate', function(i){ return num(m.est[i]); }, 'main nb', '');
+  h += row('YoY growth', function(i){ return pctDollar(ave2Growth(m.est, m.act, i), ave2GrowthD(m.est, m.act, i), null); }, 'sub nb',
+    sumGrowth(function(i){ return ave2Growth(m.est, m.act, i); }));
+  h += row('surprise', function(i){
+    if (m.act[i] == null || m.est[i] == null || !m.est[i]) return '<span class="rs-ft-nil">—</span>';
+    var s = aveSurprise(m, i);
+    return pctDollar(s, m.act[i] - m.est[i], s * f >= 0);
+  }, 'sub', sumSurprise());
+
+  h += '</tbody></table></div>';
+  el.innerHTML = h;
+
+  var tb = el.querySelector('table'), lastCol = -1;
+  function colCells(ci){ return tb.querySelectorAll('tr > *:nth-child(' + (ci + 1) + ')'); }
+  tb.onmouseover = function(e){
+    var c = e.target.closest('td,th'); if (!c || c.cellIndex === lastCol) return;
+    if (lastCol > 0) colCells(lastCol).forEach(function(x){ x.classList.remove('colhl'); });
+    lastCol = c.cellIndex;
+    if (lastCol > 0) colCells(lastCol).forEach(function(x){ x.classList.add('colhl'); });
+  };
+  tb.onmouseleave = function(){
+    if (lastCol > 0) colCells(lastCol).forEach(function(x){ x.classList.remove('colhl'); });
+    lastCol = -1;
+  };
+}
 function buildAveTab(){
-  buildAveChart();
-  setupAveSlider();
-  requestAnimationFrame(buildEvoTab);
+  ave2Wire();
+  ave2Build();
 }
 
 // Switch the metric (Revenue / Adj. EBITDA / Adj. Net Income).
@@ -4085,8 +4306,11 @@ function deepDiveInit(c){
   // Chart dispatch per sub-tab key — every builder self-guards on a visible canvas.
   function ddBuild(key){
     var b = { interest: buildInterestTab, fees: buildFeeTab, members: buildMembersTab,
-      rule40: buildRule40Chart, capraises: buildCapRaiseChart, ave: buildAveTab,
-      guidance: buildGuidanceTab, sens: buildSensTab, peers: buildPeersTab }[key];
+      rule40: buildRule40Chart, capraises: buildCapRaiseChart,
+      guidance: buildGuidanceTab, sens: buildSensTab, peers: buildPeersTab,
+      results: initResults,
+      // Estimates pane = the standardized vintage engine + the full legacy AVE below it.
+      estevo: function(){ initResultsEvo(); buildAveTab(); } }[key];
     if (b) requestAnimationFrame(b);
   }
   function ddActiveSub(pane){

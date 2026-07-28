@@ -20,9 +20,11 @@
 //   ... when the pane becomes visible: requestAnimationFrame(initResults)
 
 import { amznResults } from './results-data/amzn.js';
+import { sofiResults } from './results-data/sofi.js';
 
 var RESULTS_DATA = {
-  AMZN: amznResults
+  AMZN: amznResults,
+  SOFI: sofiResults
 };
 
 export function getResultsData(ticker){
@@ -42,7 +44,9 @@ var EVO_RAMP = ['#1B3F94', '#2563EB', '#5E8BEC', '#93B1F0'];
 
 // Global: dataset + view. Per-section (keyed by section key): metric, window,
 // hidden series, chart instance. `evo` is the vintage-evolution block's state.
-var _rs = { data: null, view: 'q', sec: {}, evo: null };
+// `growth` (quarterly only): 'yoy' = vs the same quarter last year; 'qoq' = vs
+// the previous reported quarter.
+var _rs = { data: null, view: 'q', growth: 'yoy', sec: {}, evo: null };
 
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); }
 
@@ -74,7 +78,18 @@ function rsFmtD(m, v, dec){
   if (v == null) return '—';
   var sign = v >= 0 ? '+' : '−', a = Math.abs(v);
   if (m.unit === 'eps') return sign + '$' + a.toFixed(2);
-  return sign + '$' + (a/1000).toFixed(dec == null ? 1 : dec) + 'B';
+  if (a >= 10000) return sign + '$' + (a/1000).toFixed(dec == null ? 1 : dec) + 'B';
+  return sign + '$' + Math.round(a) + 'M';
+}
+// Display scale for a metric: $B for AMZN-sized series, $M for SoFi-sized ones.
+// Decided per metric (max |value| across every series) so a metric is always
+// consistent with itself.
+function rsScaleOf(m){
+  var mx = 0;
+  ['act', 'summit', 'cons', 'guideLo', 'guideHi'].forEach(function(k){
+    (m[k] || []).forEach(function(v){ if (v != null) mx = Math.max(mx, Math.abs(v)); });
+  });
+  return mx >= 10000 ? 1000 : 1;
 }
 function rsSurp(act, ref){
   if (act == null || ref == null || !ref) return null;
@@ -87,8 +102,13 @@ function rsPctHtml(s, dec){
 }
 function rsGuideMid(m, i){ return (m.guideLo[i] == null || m.guideHi[i] == null) ? null : (m.guideLo[i] + m.guideHi[i]) / 2; }
 // Axis tick: negatives as −$50B, not $-50B; whole dollars only (zoomed bounds
-// arrive fractional — $135.13111B would eat the chart's left margin).
-function rsTick(v, unit){ var s = v < 0 ? '−' : '', a = Math.abs(v); return unit === 'eps' ? s + '$' + (+a.toFixed(2)) : s + '$' + Math.round(a) + 'B'; }
+// arrive fractional — $135.13111B would eat the chart's left margin). `div` is
+// the metric's display scale from rsScaleOf (1000 → $B axis, 1 → $M axis).
+function rsTick(v, unit, div){
+  var s = v < 0 ? '−' : '', a = Math.abs(v);
+  if (unit === 'eps') return s + '$' + (+a.toFixed(2));
+  return s + '$' + Math.round(a) + (div === 1000 ? 'B' : 'M');
+}
 function rsWin(k, m){
   var st = rsSt(k), n = m.periods.length;
   if (!st.win || st.win[1] >= n || st.win[0] < 0){ st.win = [0, n - 1]; }
@@ -116,7 +136,10 @@ function rsPresetWin(m, key){
 }
 
 // ─── Growth & margin series ───────────────────────────────────────────────────
-function rsLook(){ return _rs.view === 'q' ? 4 : 1; }
+// Lag for growth math: quarterly YoY = 4 quarters back, quarterly QoQ = 1 back,
+// annual always 1 year back.
+function rsLook(){ return _rs.view === 'q' ? (_rs.growth === 'qoq' ? 1 : 4) : 1; }
+function rsGrowLabel(){ return (_rs.view === 'q' && _rs.growth === 'qoq') ? 'QoQ growth' : 'YoY growth'; }
 // Actual-only growth: both endpoints must be REPORTED. The Actual row never
 // shows growth into estimate periods — there is no observation there.
 function rsActGrowthPct(m, i){
@@ -166,6 +189,7 @@ export function resultsHtml(ticker){
   _rs.data = data;
   if (!data) return '';
   _rs.view = 'q';
+  _rs.growth = 'yoy';
   _rs.sec = {};
   _rs.evo = null;
   return rsBody();
@@ -177,7 +201,12 @@ function rsBody(){
   h += '<p class="ov-lede">' + esc(d.intro) + '</p>';
   h += '<div class="rs-toprow"><div class="rs-views">' + Object.keys(d.views).map(function(k){
     return '<button type="button" class="rs-view' + (k === _rs.view ? ' active' : '') + '" data-rsview="' + k + '">' + esc(d.views[k].label) + '</button>';
-  }).join('') + '</div></div>';
+  }).join('') + '</div>' +
+  // Growth-basis toggle — quarterly only (annual growth is always year over year).
+  '<div class="rs-views" id="rsGrowMode"' + (_rs.view === 'q' ? '' : ' hidden') + '>' +
+    '<button type="button" class="rs-view' + (_rs.growth === 'yoy' ? ' active' : '') + '" data-rsgrow="yoy" title="vs the same quarter last year">YoY</button>' +
+    '<button type="button" class="rs-view' + (_rs.growth === 'qoq' ? ' active' : '') + '" data-rsgrow="qoq" title="vs the previous reported quarter">QoQ</button>' +
+  '</div></div>';
   h += '<div id="rsBlocks">' + rsBlocksHtml() + '</div>';
   h += '<div class="ov-foot" id="rsViewNote">' + esc(rsView().note || '') + '</div>';
   h += '<div class="ov-foot">' + esc(d.source) + '</div>';
@@ -262,8 +291,9 @@ function rsBuildChart(k){
   var isTop = k === 'top';
   var w = rsWin(k, m), lo = w[0], hi = w[1];
   var dec = m.unit === 'eps' ? 2 : 1;
-  var scale = function(v){ return v == null ? null : (m.unit === 'eps' ? v : v/1000); };
-  var unitLbl = m.unit === 'eps' ? '$' : '$B';
+  var div = rsScaleOf(m);
+  var scale = function(v){ return v == null ? null : (m.unit === 'eps' ? v : v/div); };
+  var unitLbl = m.unit === 'eps' ? '$' : (div === 1000 ? '$B' : '$M');
   function sl(a){ return a.slice(lo, hi + 1); }
 
   var datasets = [], needY2 = false;
@@ -305,7 +335,7 @@ function rsBuildChart(k){
   var scales = {
     x: { grid: { display: false }, ticks: { font: { size: 11 } } },
     y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
-      callback: function(v){ return rsTick(v, m.unit); } } }
+      callback: function(v){ return rsTick(v, m.unit, div); } } }
   };
   if (st.yr){ scales.y.min = st.yr[0]; scales.y.max = st.yr[1]; }
   if (needY2) scales.y2 = { position: 'right', grid: { display: false },
@@ -462,13 +492,14 @@ function rsRenderTable(k, m){
   var isTop = k === 'top';
   var w = rsWin(k, m), lo = w[0], hi = w[1];
   var dec = m.unit === 'eps' ? 2 : 1;
+  var div = rsScaleOf(m);
   var idx = [], est = [];
   for (var i = lo; i <= hi; i++){ idx.push(i); est.push(m.act[i] == null); }
 
   function num(v){
     if (v == null) return '<span class="rs-ft-nil">—</span>';
     if (m.unit === 'eps') return Number(v).toFixed(2);
-    return (v/1000).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    return (v/div).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   }
   function pctDollar(p, d){
     if (p == null) return '<span class="rs-ft-nil">—</span>';
@@ -502,11 +533,13 @@ function rsRenderTable(k, m){
     return v.length ? 'avg ' + avg(v).toFixed(1) + '%' : '';
   }
   // CAGR of the REPORTED series only — an estimate is not an observation.
+  // Annualization depends on the VIEW (4 periods/yr in quarterly), never on the
+  // YoY/QoQ growth lag.
   function sumCagr(){
     var first = null, last = null, fi = null, li = null;
     idx.forEach(function(i){ var v = m.act[i]; if (v != null){ if (first == null){ first = v; fi = i; } last = v; li = i; } });
     if (first == null || li === fi || first <= 0 || last <= 0) return '';
-    var years = (li - fi) / (rsLook() === 4 ? 4 : 1);
+    var years = (li - fi) / (_rs.view === 'q' ? 4 : 1);
     return years > 0 ? 'CAGR ' + sgn((Math.pow(last / first, 1 / years) - 1) * 100) : '';
   }
   function sumGuide(){
@@ -520,7 +553,7 @@ function rsRenderTable(k, m){
     return ab + '▲ · ' + wi + '⊙ · ' + be + '▼<br><span class="rs-ft-dim">avg vs mid ' + sgn(avg(mids)) + '</span>';
   }
 
-  var h = '<div class="rs-ft-cap">' + (m.unit === 'eps' ? 'US$ per share' : 'US$ billions') + ' · <span class="rs-ft-e">E</span> = estimate, no actual reported yet · the right column summarizes the selected range: how the actual has come in vs each estimate (▲ = beat)</div>';
+  var h = '<div class="rs-ft-cap">' + (m.unit === 'eps' ? 'US$ per share' : (div === 1000 ? 'US$ billions' : 'US$ millions')) + ' · <span class="rs-ft-e">E</span> = estimate, no actual reported yet · the right column summarizes the selected range: how the actual has come in vs each estimate (▲ = beat)</div>';
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   idx.forEach(function(i, c){
     h += '<th class="' + (est[c] ? 'rs-ft-este' : '') + '">' + esc(m.periods[i]) + (est[c] ? ' <span class="rs-ft-e">E</span>' : '') + '</th>';
@@ -538,10 +571,11 @@ function rsRenderTable(k, m){
 
   var showMargin = m.marginOf && m.unit !== 'eps' && !isTop;
 
-  // Actual: value → YoY growth (→ margin).
+  // Actual: value → YoY/QoQ growth (→ margin).
+  var growLbl = rsGrowLabel();
   var maA = showMargin ? rsMarginArr(m, 'act') : null;
   h += row('Actual', function(i){ return m.act[i] == null ? '<span class="rs-ft-nil">—</span>' : '<b>' + num(m.act[i]) + '</b>'; }, 'main nb', sumCagr());
-  h += row('YoY growth', function(i){ return pctDollar(rsActGrowthPct(m, i), rsActGrowthDollar(m, i)); }, showMargin ? 'sub nb' : 'sub', sumGrowth(rsActGrowthPct.bind(null, m)));
+  h += row(growLbl, function(i){ return pctDollar(rsActGrowthPct(m, i), rsActGrowthDollar(m, i)); }, showMargin ? 'sub nb' : 'sub', sumGrowth(rsActGrowthPct.bind(null, m)));
   if (showMargin) h += row(esc(m.marginLabel || 'margin'), function(i){ return maA && maA[i] != null ? maA[i].toFixed(1) + '%' : '<span class="rs-ft-nil">—</span>'; }, 'sub', sumMargin(maA));
 
   // Reference series (Summit / Consensus): value → YoY growth → surprise (→ margin).
@@ -551,7 +585,7 @@ function rsRenderTable(k, m){
     var s = r.series;
     var mm = showMargin ? rsMarginArr(m, s) : null;
     h += row(r.label, function(i){ return num(m[s][i]); }, 'main nb', '');
-    h += row('YoY growth', function(i){ return pctDollar(rsRefGrowthPct(m, s, i), rsRefGrowthDollar(m, s, i)); }, 'sub nb',
+    h += row(growLbl, function(i){ return pctDollar(rsRefGrowthPct(m, s, i), rsRefGrowthDollar(m, s, i)); }, 'sub nb',
       sumGrowth(function(i){ return rsRefGrowthPct(m, s, i); }));
     h += row('surprise', function(i){ return (m.act[i] == null || m[s][i] == null) ? '<span class="rs-ft-nil">—</span>' : pctDollar(rsSurp(m.act[i], m[s][i]), m.act[i] - m[s][i]); },
       mm ? 'sub nb' : 'sub', sumSurprise(m[s]));
@@ -638,6 +672,14 @@ function rsEvoPct(k, m, src, yi){
   });
 }
 function rsEvoPctLabel(k, m){ return k === 'top' ? 'implied YoY growth' : (m.marginLabel || 'margin'); }
+// Display scale for an evolution metric (nested per-year arrays): $B or $M.
+function rsEvoScaleOf(m){
+  var mx = 0;
+  ['summit', 'cons'].forEach(function(k){
+    (m[k] || []).forEach(function(row){ (row || []).forEach(function(v){ if (v != null) mx = Math.max(mx, Math.abs(v)); }); });
+  });
+  return mx >= 10000 ? 1000 : 1;
+}
 // Revision between two snapshot values, read left → right. Dollars always;
 // percent only when the base is non-zero and the sign holds (an FCF forecast
 // flipping negative has no meaningful percent change).
@@ -740,7 +782,8 @@ function rsBuildEvo(k){
   if (st.chart){ st.chart.destroy(); st.chart = null; }
 
   var pct = st.mode === 'pct';
-  var scale = function(v){ return v == null ? null : v / 1000; };
+  var div = rsEvoScaleOf(m);
+  var scale = function(v){ return v == null ? null : v / div; };
   function series(src, yi){
     if (pct) return rsEvoPct(k, m, src, yi);
     var a = m[src] ? m[src][yi] : null;
@@ -768,7 +811,7 @@ function rsBuildEvo(k){
   var tEl = document.getElementById('rsEvoChartT-' + k);
   if (tEl) tEl.innerHTML = esc(m.label) + ' — ' +
     (pct ? esc(rsEvoPctLabel(k, m)) + ' by model snapshot <span>(% per fiscal year, each snapshot against its own numbers · solid = Summit model, dashed = stored BBG consensus)</span>'
-         : 'forecast by model snapshot <span>($B per fiscal year · solid = Summit model, dashed = stored BBG consensus · hover for the revision)</span>');
+         : 'forecast by model snapshot <span>($' + (div === 1000 ? 'B' : 'M') + ' per fiscal year · solid = Summit model, dashed = stored BBG consensus · hover for the revision)</span>');
 
   st.chart = new Chart(el.getContext('2d'), {
     type: 'line',
@@ -808,7 +851,7 @@ function rsBuildEvo(k){
       scales: {
         x: { grid: { display: false }, ticks: { font: { size: 11 } } },
         y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
-          callback: function(v){ return pct ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit); } },
+          callback: function(v){ return pct ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div); } },
           min: st.yr ? st.yr[0] : undefined, max: st.yr ? st.yr[1] : undefined }
       }
     }
@@ -830,16 +873,17 @@ function rsRenderEvoTable(k, m){
   var el = document.getElementById('rsEvoTable-' + k);
   if (!el) return;
   var nv = ev.vintages.length;
+  var div = rsEvoScaleOf(m);
 
   function num(v){
     if (v == null) return '<span class="rs-ft-nil">—</span>';
-    return (v / 1000).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    return (v / div).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   }
 
   var pctCap = k === 'top'
     ? ' · “implied YoY growth” = the growth that snapshot’s estimate implies vs the prior fiscal year as known at that date'
     : ' · margins are computed within each snapshot (numerator and denominator from the same vintage)';
-  var h = '<div class="rs-ft-cap">US$ billions · columns are the model’s saved snapshots · “revision” = change vs the prior snapshot · the right column is the cumulative move from the first snapshot to the latest' + pctCap + '</div>';
+  var h = '<div class="rs-ft-cap">US$ ' + (div === 1000 ? 'billions' : 'millions') + ' · columns are the model’s saved snapshots · “revision” = change vs the prior snapshot · the right column is the cumulative move from the first snapshot to the latest' + pctCap + '</div>';
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   ev.vintages.forEach(function(v){
     h += '<th>' + esc(v.label) + '<br><span class="rs-ft-dim">' + esc(v.event) + '</span></th>';
@@ -882,12 +926,20 @@ function wireResults(pane){
     if (v){
       _rs.view = v.getAttribute('data-rsview');
       _rs.sec = {};                                    // reset per-section state
-      pane.querySelectorAll('.rs-view').forEach(function(b){ b.classList.toggle('active', b === v); });
+      pane.querySelectorAll('.rs-views [data-rsview]').forEach(function(b){ b.classList.toggle('active', b === v); });
+      var gm = document.getElementById('rsGrowMode'); if (gm) gm.hidden = (_rs.view !== 'q');
       var blocks = document.getElementById('rsBlocks');
       if (blocks) blocks.innerHTML = rsBlocksHtml();
       var vn = document.getElementById('rsViewNote'); if (vn) vn.textContent = rsView().note || '';
       wireSliders(pane);
       rsBuildAll();
+      return;
+    }
+    var gw = e.target.closest('[data-rsgrow]');
+    if (gw){
+      _rs.growth = gw.getAttribute('data-rsgrow');
+      pane.querySelectorAll('[data-rsgrow]').forEach(function(b){ b.classList.toggle('active', b === gw); });
+      rsBuildAll();                                    // growth rows + summaries recompute
       return;
     }
     var block = e.target.closest('.rs-block');

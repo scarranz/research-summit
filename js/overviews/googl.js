@@ -12,6 +12,7 @@
 // are seeded approximations (mid-2026), labeled — never presented as live.
 
 import { makeManagement } from './management.js';
+import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 
 // ─── esc: escapes <>" but deliberately leaves & literal (per contract; never double-encode it) ──
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -2902,6 +2903,8 @@ function deepDiveHtml(c){
   h+='<div class="dd-pane" data-dd="evolution" hidden>'+
       '<div class="ovt-subtabs">'+
         '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="results">Results</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
@@ -2921,6 +2924,8 @@ function deepDiveHtml(c){
         '<div class="ce-phpane" data-cep="watch" hidden>'+ceWatchBody(c)+'</div>'+
         '<div class="ce-phpane" data-cep="results" hidden>'+ceResultsBody(c)+'</div>'+
       '</div>'+
+      '<div class="ovt-subpane" data-ovst="results" hidden>'+(resultsHtml('GOOGL')||ceResultsPending('Results'))+'</div>'+
+      '<div class="ovt-subpane" data-ovst="estevo" hidden>'+(resultsEvoHtml('GOOGL')||ceResultsPending('Estimates'))+'</div>'+
       '<div class="ovt-subpane" data-ovst="guidance" hidden>'+guidanceBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="strategy" hidden>'+strategyBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="timeline" hidden>'+timelineBody()+'</div>'+
@@ -2953,6 +2958,15 @@ function deepDiveHtml(c){
   return h;
 }
 
+// Results / Estimates panes come from the shared engine (js/results.js), driven by a per-ticker
+// dataset in RESULTS_DATA. Until GOOGL's dataset (built from CE_CONS + the Summit projection export,
+// per docs/RESULTS_CONVENTIONS.md §6) is registered, the engine returns '' and we show this note.
+function ceResultsPending(label){
+  return '<div class="ce-note" style="margin:8px 0">📊 <b>'+esc(label)+'</b> — the Amazon-style actuals-vs-estimates chart + table. '+
+    'This pane is wired to the shared Results engine (<code>js/results.js</code>); it will populate once GOOGL\'s '+
+    'dataset is registered in <code>RESULTS_DATA</code> (built from the CE_CONS archive + the Summit projection export, '+
+    'per <code>docs/RESULTS_CONVENTIONS.md</code> §6).</div>';
+}
 // ═══ Sub-tab + Deep Dive tab machinery (standardized contract) ══════════════════════════════════
 function buildSub(root, group, key){
   if(group==='topline'){
@@ -2976,6 +2990,10 @@ function buildSub(root, group, key){
         gBuildCeAnnual(oa?+oa.getAttribute('data-ceann'):0);
       }
     }
+    // Amazon-style Results / Estimates engine — build lazily when the pane is visible (Chart.js
+    // needs a non-null offsetParent). No-ops gracefully when GOOGL has no dataset yet.
+    else if(key==='results') requestAnimationFrame(initResults);
+    else if(key==='estevo') requestAnimationFrame(initResultsEvo);
   }
 }
 // Tab switches hide a tall pane and show a shorter one, so the browser clamps scrollTop and the

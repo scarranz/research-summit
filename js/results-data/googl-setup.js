@@ -29,25 +29,26 @@ function sliceMetrics(view, idx){
   return out;
 }
 
-// Quarterly SEASONAL indices: the same fiscal quarter across years, up to the forecast quarter.
-// Forecast quarter = the first quarter with no reported actual (on the revenue line).
-function seasonalIdx(view){
-  var rev = view.metrics.rev, qn = null, i;
-  for (i = 0; i < rev.periods.length; i++){
-    if (rev.act[i] == null){ var mm = /^(\d)Q/.exec(rev.periods[i]); qn = mm ? mm[1] : null; break; }
-  }
-  if (qn == null){ var lm = /^(\d)Q/.exec(rev.periods[rev.periods.length - 1]); qn = lm ? lm[1] : '3'; }
-  var re = new RegExp('^' + qn + 'Q'), idx = [];
-  rev.periods.forEach(function(p, j){ if (re.test(p)) idx.push(j); });
+// Quarterly ROLLING window: the last 8 reported quarters + the ONE next (forecast) quarter.
+// Forecast quarter = the first quarter with no reported actual (on the revenue line). As new prints
+// land the window rolls forward on its own (the forecast index advances, so the 8-back window follows).
+var Q_BACK = 8;   // reported quarters shown; +1 forecast quarter => 9 columns
+function quarterlyIdx(view){
+  var rev = view.metrics.rev, fc = -1, i;
+  for (i = 0; i < rev.periods.length; i++){ if (rev.act[i] == null){ fc = i; break; } }
+  if (fc < 0) fc = rev.periods.length - 1;                 // no forecast column? anchor on the last
+  var start = Math.max(0, fc - Q_BACK), idx = [];
+  for (i = start; i <= fc; i++) idx.push(i);               // 8 back + the one forecast
   return idx;
 }
 
-// Annual indices: the reported history + only the NEXT 2 fiscal years (drop the far-forward run).
+// Annual ROLLING window: the last 4 fiscal years + the next 2 forward years. Rolls with each new FY.
+var Y_BACK = 3, Y_FWD = 2;   // last 4 years (lastActual-3 … lastActual) + 2 forward
 function annualIdx(view){
   var rev = view.metrics.rev, lastA = -1;
   rev.act.forEach(function(v, i){ if (v != null) lastA = i; });
-  var end = Math.min(lastA + 2, rev.periods.length - 1), idx = [];
-  for (var i = 0; i <= end; i++) idx.push(i);
+  var start = Math.max(0, lastA - Y_BACK), end = Math.min(lastA + Y_FWD, rev.periods.length - 1), idx = [];
+  for (var i = start; i <= end; i++) idx.push(i);
   return idx;
 }
 
@@ -57,17 +58,17 @@ function mergedSection(view){
   return [{ key: 'setup', label: 'All tracked lines', defaultMetric: 'rev', groups: groups }];
 }
 
-var qIdx = seasonalIdx(googlResults.views.q);
+var qIdx = quarterlyIdx(googlResults.views.q);
 var yIdx = annualIdx(googlResults.views.y);
 
 export var googlSetup = {
   updated: googlResults.updated,
-  intro: 'The Setup chart — the same actuals-vs-estimates chart+table as Results, MERGED into one: every tracked line in a single grouped picker, with the period lever, the legend chips, and margin lines for the profit lines (only profit lines carry a margin — a backlog, a KPI or a revenue line does not). Quarterly is SEASONAL (the forecast quarter across prior years + the next quarter); annual shows the history + next 2 fiscal years. Street from the Bloomberg archive; Summit is empty for now (pending the estimate-visibility work).',
+  intro: 'The Setup chart — the same actuals-vs-estimates chart+table as Results, MERGED into one: every tracked line in a single grouped picker, with the period lever, the legend chips, and margin lines for the profit lines (only profit lines carry a margin — a backlog, a KPI or a revenue line does not). The window is rolling: quarterly shows the last 8 reported quarters + the one next (forecast) quarter; annual shows the last 4 fiscal years + the next 2. Street from the Bloomberg archive; Summit is empty for now (pending the estimate-visibility work).',
   source: googlResults.source,
   views: {
-    q: { label: 'Quarterly (seasonal)', note: 'Seasonal — the same fiscal quarter across years (forecast quarter + prior years) plus the one next quarter, so column-to-column is year-over-year. ' + googlResults.views.q.note,
+    q: { label: 'Quarterly', note: 'Rolling — the last 8 reported quarters plus the one next (forecast) quarter; it advances by itself as new prints land. ' + googlResults.views.q.note,
          metrics: sliceMetrics(googlResults.views.q, qIdx), sections: mergedSection(googlResults.views.q) },
-    y: { label: 'Annual', note: 'Reported history + the next 2 fiscal years only. ' + googlResults.views.y.note,
+    y: { label: 'Annual', note: 'Rolling — the last 4 fiscal years plus the next 2 forward years. ' + googlResults.views.y.note,
          metrics: sliceMetrics(googlResults.views.y, yIdx), sections: mergedSection(googlResults.views.y) }
   }
 };

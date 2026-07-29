@@ -43,9 +43,10 @@ Earnings renderers, so v2.5/v2.6 landing on GOOGL changed nothing for the other 
    axis as `$B`/`$M` is a flat invisible line at zero — the engine already puts margins on `y2`, but the
    GOOGL dataset had `marginOf` pointing at a group name instead of the revenue key, so no margin was ever
    computed. **Only PROFIT lines carry a margin** — revenue, a segment-revenue line, a backlog or a plain
-   KPI have none, and the engine draws none for them (do not force one). (b) The Setup windows are now the
-   agreed narrow ones: **quarterly SEASONAL** (forecast quarter across prior years + the one next quarter)
-   and **annual = history + next 2 FY** — enforced in `googl-setup.js` by slicing the periods.
+   KPI have none, and the engine draws none for them (do not force one). (b) The Setup windows are ROLLING
+   (v2.10.1): **quarterly = last 8 reported quarters + the one next (forecast) quarter**; **annual = last 4
+   fiscal years + next 2 forward** — anchored so they advance by themselves as new prints land, enforced in
+   `googl-setup.js` by slicing the periods (§6a-viii-bis).
 
 **What v2.9 changed — the Post-Results aside becomes a list, and Evolution adopts the Results engine:**
 
@@ -1028,13 +1029,18 @@ and wire the right wrap. Amazon's no-arg `initResults()` is unchanged. `googl.js
 `ceAnnualBody` (returns `resultsHtml('GOOGL_SETUP')`) / `gBuildCeAnnual` (calls `initResults(setupWrap,
 'GOOGL_SETUP')`) as the Setup entry points.
 
-**Period windows — DONE (v2.10), enforced in the dataset.** `googl-setup.js` slices every metric's
-parallel arrays to the agreed windows, so the engine plots exactly those periods:
-- **Quarterly is SEASONAL** — the forecast quarter across prior years + the ONE next quarter
-  (`seasonalIdx`: forecast quarter = first period with no revenue actual; keep every period with the same
-  quarter number, e.g. `3Q23 · 3Q24 · 3Q25 · 3Q26`). Column-to-column is therefore year-over-year.
-- **Annual = reported history + the next 2 FY only** (`annualIdx`: through `lastActual + 2`). Not the whole
-  forward run.
+**Period windows — ROLLING (v2.10.1), enforced in the dataset.** `googl-setup.js` slices every metric's
+parallel arrays to a fixed-size window anchored on the forecast quarter / last reported FY, so the window
+**advances by itself as new prints land** (the anchor moves, the window follows). This rolling rule is
+general — bake the sizes into any company's Setup dataset:
+- **Quarterly = the last 8 reported quarters + the ONE next (forecast) quarter** (`quarterlyIdx`, `Q_BACK
+  = 8`): forecast quarter = first period with no revenue actual; window = `[forecast − 8 … forecast]`,
+  i.e. 9 columns. Still only **one** forecast quarter (never two).
+- **Annual = the last 4 fiscal years + the next 2 forward years** (`annualIdx`, `Y_BACK = 3`, `Y_FWD = 2`):
+  window = `[lastActual − 3 … lastActual + 2]`, i.e. 6 columns.
+
+(Superseded the brief SEASONAL cut — the desk wanted a proper multi-quarter trend, not the same fiscal
+quarter across years.)
 
 **Margins — RIGHT axis, PROFIT lines only (v2.10).** A `%` margin on the same axis as `$B`/`$M` is an
 invisible flat line — margins must render on a **second (right) `y2` axis**, which the engine does whenever

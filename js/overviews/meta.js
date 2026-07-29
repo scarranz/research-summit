@@ -2522,8 +2522,8 @@ function deepDiveHtml(c){
       '<div class="cp-phpane" data-cpp="postcall" hidden>'+cpCallBody(c)+'</div>' },
     { k:'results', l:'Results', body:resultsHtml('META') },
     { k:'estevo', l:'Estimates', body:resultsEvoHtml('META') },
-    { k:'model', l:'Model vs Reality', body:modelBody() },
-    { k:'guidance', l:'Guidance', body:guideBody() },
+    // Model vs Reality + Guidance retired from the bar (SAB, Jul 2026) — superseded
+    // by Results/Estimates; modelBody()/guideBody() kept below for salvage.
     { k:'strategy', l:'Strategy', body:strategyBody() },
     { k:'timeline', l:'Timeline', body:timelineBody() },
   ]);
@@ -2588,7 +2588,6 @@ function buildSub(root, group, key){
   if(group==='bottomline' && key==='margins'){ buildMargins(); loadMargins(); }
   if(group==='evolution' && key==='results') initResults();
   if(group==='evolution' && key==='estevo') initResultsEvo();
-  if(group==='evolution' && key==='model') buildModelTab();
   if(group==='valuation' && key==='sensitivity') sensInit(root);
   if(group==='valuation' && key==='capalloc') buildCapital();
   if(group==='valuation' && key==='balance') renderFin();

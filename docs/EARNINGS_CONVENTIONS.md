@@ -983,8 +983,13 @@ is populated **only where a forecast exists** (the lines we actually model) — 
 sparse, never invent it (§5 golden rules; consensus = Bloomberg only). The chart is fed from the
 `CE_CONS` archive (Street + actuals) and the Summit projection export (Summit forward).
 
-**Status:** convention agreed and recorded here (v2.9). Implementation is a bespoke Setup chart (or a
-merged-section reuse of `js/results.js`); until it lands, §6a-viii's annual bars stand in.
+**Status: BUILT (v2.9).** Implemented as a **bespoke** Setup chart in `googl.js` (`ceAnnualBody` /
+`gBuildCeAnnual` / `ceSetupSeries` / `ceSetupTable` / `wireCeAnnual`) — NOT a reuse of `js/results.js`,
+because that engine is single-instance (`_rs.data`) and cannot coexist with the Results tab on the same
+page, and because Setup needs the seasonal period logic the engine does not have. Fed directly from
+`CE_CONS` (quarterly Street + actuals) and `CE_ANNUAL` (annual Street + Summit), with `setup.us` for the
+sparse quarterly Summit. `CE_SETUP_STATE = {view, m, margin, chart}`. The Margin toggle greys out for
+non-profit lines (`data-mgn` on the pill drives `syncMargin`). Replaces the old annual-only bars.
 
 ### 6a-ix. The quarter belongs to the section, not the other way round
 

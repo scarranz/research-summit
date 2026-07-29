@@ -1545,81 +1545,190 @@ function ceSetupBody(c){
 // Bloomberg consensus (our txt) and Summit (the DCF, most-recent annual snapshot). If the company
 // gave numeric FY guidance we would add a third; GOOGL does not, so we say so. (§6a-viii.)
 // Quarterly is deliberately NOT wired yet — see the rules; the annual forecast is what exists today.
-var CE_ANN_STATE = { m:0, chart:'bar' };
-function ceAnnualBody(){
+// ── The Setup chart — Amazon Results-style chart+table, MERGED into ONE (§6a-viii-bis, v2.9). ──
+// One chart with a metric picker over ALL tracked indicators, a Quarterly(SEASONAL)⇄Annual toggle,
+// a Margin toggle (disabled where it does not apply, e.g. revenue), and the transposed table beneath.
+// Quarterly is SEASONAL: the same fiscal quarter across prior years (forecasting Q3 2026 → Q3
+// 2025/24/23) + only the ONE next quarter. Annual = FY history + next 2 FY. Street = CE_CONS/CE_ANNUAL
+// (Bloomberg archive); Summit = the DCF (annual) / setup.us (quarterly, sparse — empty for most lines).
+var CE_SETUP_STATE = { view:'q', m:'Revenue', margin:false, chart:'bar' };
+function ceSetupUsMap(){
+  var map={};
+  CALL_EARNINGS.quarters.forEach(function(u){
+    var us=(u.setup&&u.setup.us)||{}, mm={};
+    Object.keys(us).forEach(function(k){ if(us[k]&&us[k].v!=null) mm[k]=us[k].v; });
+    map[u.q]=mm;
+  });
+  return map;
+}
+function ceForecastQnum(){
+  var rev=CE_CONS.m.filter(function(x){ return x.k==='Revenue'; })[0]; if(!rev) return 3;
+  for(var i=0;i<CE_CONS.q.length;i++){ if(rev.qa[i]==null){ var mm=/Q([1-4])/.exec(CE_CONS.q[i]); return mm?+mm[1]:3; } }
+  return 3;
+}
+function ceSetupMetricList(view){
+  return (view==='y'?CE_ANNUAL.m:CE_CONS.m).map(function(m){ return { name:m.k, unit:m.u, mgn:!!CE_MARGIN_ON[m.k] }; });
+}
+function ceSetupSeries(view, name){
+  if(view==='y'){
+    var m=CE_ANNUAL.m.filter(function(x){ return x.k===name; })[0]; if(!m) return null;
+    var rv=CE_ANNUAL.m.filter(function(x){ return x.k==='Revenue'; })[0];
+    return { periods:CE_ANNUAL.years.map(function(y){ return 'FY'+y; }), unit:m.u, mgn:!!CE_MARGIN_ON[name],
+      act:m.actual.slice(), street:m.bbg.slice(), summit:m.summit.slice(),
+      revAct:rv?rv.actual:null, revStreet:rv?rv.bbg:null, revSummit:rv?rv.summit:null };
+  }
+  var cm=CE_CONS.m.filter(function(x){ return x.k===name; })[0]; if(!cm) return null;
+  var rev=CE_CONS.m.filter(function(x){ return x.k==='Revenue'; })[0];
+  var qn=ceForecastQnum(), usMap=ceSetupUsMap(), idxs=[];
+  CE_CONS.q.forEach(function(q,i){ var mm=/Q([1-4])/.exec(q); if(mm&&+mm[1]===qn) idxs.push(i); });
+  var st=function(m,i){ return m&&m.qr[i]?m.qr[i][3]:null; };
+  var su=function(nm,i){ var q=CE_CONS.q[i]; return (usMap[q]&&usMap[q][nm]!=null)?usMap[q][nm]:null; };
+  return { periods:idxs.map(function(i){ return CE_CONS.q[i]; }), unit:cm.u, mgn:!!CE_MARGIN_ON[name],
+    act:idxs.map(function(i){ return cm.qa[i]; }),
+    street:idxs.map(function(i){ return st(cm,i); }),
+    summit:idxs.map(function(i){ return su(name,i); }),
+    revAct:idxs.map(function(i){ return rev?rev.qa[i]:null; }),
+    revStreet:idxs.map(function(i){ return st(rev,i); }),
+    revSummit:idxs.map(function(i){ return su('Revenue',i); }) };
+}
+function ceSetupFmt(v,unit,mgn){
+  if(v==null) return '—';
+  if(mgn) return (+v).toFixed(1)+'%';
+  if(unit==='$') return '$'+(+v).toFixed(2);
+  return '$'+(+v).toFixed(1)+'B';
+}
+function ceSetupMgn(val,rev){ return (val==null||rev==null||!rev)?null:(val/rev*100); }
+function ceAnnualBody(){   // (kept name: rendered where the Setup chart lives)
+  var mlist=ceSetupMetricList(CE_SETUP_STATE.view);
+  if(!mlist.filter(function(x){ return x.name===CE_SETUP_STATE.m; }).length) CE_SETUP_STATE.m=mlist[0].name;
   var b='<div class="ce-ann"><style>'+
     '.ce-ann{margin:20px 0 4px;padding:16px 0 0;border-top:2px solid var(--bdr)}'+
     '.ce-ann-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 10px}'+
     '.ce-ann-pill{font-size:10.5px;font-weight:700;padding:5px 11px;border-radius:999px;border:1px solid var(--bdr);background:#fff;color:var(--mu);cursor:pointer;transition:.14s}'+
     '.ce-ann-pill:hover{border-color:'+BRAND+';color:var(--navy)}.ce-ann-pill.active{background:'+BLUE+';border-color:'+BLUE+';color:#fff}'+
-    '.ce-ann-seg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px;margin-left:auto}'+
+    '.ce-ann-seg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+
     '.ce-ann-seg button{font-size:10px;font-weight:800;padding:3px 12px;border:0;border-radius:999px;background:transparent;color:var(--mu);cursor:pointer}'+
-    '.ce-ann-seg button.active{background:var(--navy);color:#fff}'+
+    '.ce-ann-seg button.active{background:var(--navy);color:#fff}'+'.ce-ann-seg button:disabled{opacity:.35;cursor:not-allowed}'+
     '.ce-ann-cv{position:relative;height:300px}'+
     '.ce-ann-note{font-size:10px;color:var(--mu);font-weight:600;margin-top:8px;line-height:1.5}'+
     '.ce-ann-dis{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#B7791F;background:rgba(183,121,31,.1);border:1px solid rgba(183,121,31,.32);border-radius:999px;padding:2px 9px;margin-left:6px}'+
+    '.ce-stbl-w{overflow-x:auto;margin-top:12px}'+
+    '.ce-stbl{border-collapse:collapse;font-size:10px;min-width:100%}'+
+    '.ce-stbl th,.ce-stbl td{border:1px solid var(--bdr);padding:4px 8px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}'+
+    '.ce-stbl th:first-child,.ce-stbl td:first-child{text-align:left;position:sticky;left:0;background:#fff;font-weight:800;color:var(--mu)}'+
+    '.ce-stbl thead th{background:#F6F8FA;color:var(--navy);font-weight:800}'+
+    '.ce-stbl thead th.est{background:rgba(66,133,244,.10)}'+
+    '.ce-stbl .r-lab{color:var(--mu);font-weight:700}'+'.ce-stbl .up{color:#0a8f4c}.ce-stbl .dn{color:'+RED+'}'+
   '</style>';
-  b+='<div class="ov-sec-h">The annual picture — reported FYs, then Street vs Summit for the open years'+
-     (CE_ANNUAL.guidance?'':'<span class="ce-ann-dis" title="Alphabet does not issue numeric full-year guidance">no company guidance</span>')+'</div>';
-  b+='<div class="ce-ann-bar"><div class="ce-ann-pills">'+CE_ANNUAL.m.map(function(m,i){
-      return '<button type="button" class="ce-ann-pill'+(i===0?' active':'')+'" data-ceann="'+i+'">'+esc(m.k)+'</button>';
-    }).join('')+'</div>'+
-    '<span class="ce-ann-seg"><button type="button" class="active" data-ceannc="bar">Bars</button>'+
-      '<button type="button" data-ceannc="line">Lines</button></span></div>';
+  b+='<div class="ov-sec-h">The Setup picture — '+(CE_SETUP_STATE.view==='y'?'reported FYs + the next 2 FY':'the forecast quarter across prior years + the next quarter')+', Street vs Summit'+
+     (CE_ANNUAL.guidance?'':'<span class="ce-ann-dis" title="Alphabet does not issue numeric guidance">no company guidance</span>')+'</div>';
+  // Row 1: view toggle (Quarterly seasonal / Annual) + Margin toggle + Bars/Lines
+  b+='<div class="ce-ann-bar">'+
+    '<span class="ce-ann-seg"><button type="button" class="'+(CE_SETUP_STATE.view==='q'?'active':'')+'" data-cesv="q">Quarterly</button>'+
+      '<button type="button" class="'+(CE_SETUP_STATE.view==='y'?'active':'')+'" data-cesv="y">Annual</button></span>'+
+    '<span class="ce-ann-seg" style="margin-left:auto"><button type="button" class="'+(CE_SETUP_STATE.margin?'active':'')+'" data-cesm="on">Margin</button>'+
+      '<button type="button" class="'+(CE_SETUP_STATE.margin?'':'active')+'" data-cesm="off">$</button></span>'+
+    '<span class="ce-ann-seg"><button type="button" class="'+(CE_SETUP_STATE.chart==='bar'?'active':'')+'" data-ceannc="bar">Bars</button>'+
+      '<button type="button" class="'+(CE_SETUP_STATE.chart==='line'?'active':'')+'" data-ceannc="line">Lines</button></span>'+
+  '</div>';
+  // Row 2: the metric picker over ALL tracked indicators (one merged chart)
+  b+='<div class="ce-ann-bar"><div class="ce-ann-pills" style="display:flex;flex-wrap:wrap;gap:6px">'+mlist.map(function(m){
+      return '<button type="button" class="ce-ann-pill'+(m.name===CE_SETUP_STATE.m?' active':'')+'" data-ceann="'+esc(m.name)+'"'+(m.mgn?' data-mgn="1"':'')+'>'+esc(m.name)+'</button>';
+    }).join('')+'</div></div>';
   b+='<div class="ce-ann-cv"><canvas id="ceAnnCv"></canvas></div>';
-  b+='<div class="ce-ann-note">Reported FY actuals from the Bloomberg archive; <b>Street</b> = BBG consensus for the open years (our <code>BBG_CONSENSUS.txt</code>); '+
-     '<b>Summit</b> = our DCF (annual, most-recent snapshot). '+(CE_ANNUAL.guidance?'':'Alphabet gives no numeric FY guidance, so there is no guidance series. ')+
-     'Quarterly is not wired yet — this is the annual forecast.</div>';
+  b+='<div id="ceStblHost"></div>';
+  b+='<div class="ce-ann-note">Reported from the Bloomberg archive; <b>Street</b> = BBG consensus (<code>BBG_CONSENSUS.txt</code>); '+
+     '<b>Summit</b> = our forecast (annual DCF; quarterly is sparse — empty for lines we do not yet model). '+
+     'Quarterly is <b>seasonal</b> — the same fiscal quarter across years, so column-to-column IS year-over-year. Margin applies to profit lines only.</div>';
   b+='</div>';
   return b;
 }
-function gBuildCeAnnual(idx,chart){
+function ceSetupTable(s){
+  var mgn=CE_SETUP_STATE.margin&&s.mgn;
+  var P=s.periods, n=P.length, lastA=-1;
+  for(var i=0;i<n;i++) if(s.act[i]!=null) lastA=i;
+  function cell(v){ return ceSetupFmt(v,s.unit,mgn); }
+  function mv(val,rev,i){ return mgn?ceSetupMgn(val,rev):val; }
+  var actR=s.act.map(function(v,i){ return mv(v,s.revAct[i],i); });
+  var stR =s.street.map(function(v,i){ return mv(v,s.revStreet[i],i); });
+  var suR =s.summit.map(function(v,i){ return mv(v,s.revSummit[i],i); });
+  var head='<tr><th>Period</th>'+P.map(function(p,i){ return '<th'+(i>lastA?' class="est"':'')+'>'+esc(p)+(i>lastA?' <span style="font-weight:700;color:'+BLUE+'">E</span>':'')+'</th>'; }).join('')+'</tr>';
+  function row(lab,arr,cls){ return '<tr><td>'+lab+'</td>'+arr.map(function(v){ return '<td'+(cls?' class="'+cls+'"':'')+'>'+cell(v)+'</td>'; }).join('')+'</tr>'; }
+  var body=row('Actual',actR)+row('Street',stR)+row('Summit',suR);
+  // Surprise (actual vs Street), where both exist — reported periods only
+  var surp=s.act.map(function(a,i){ var c=s.street[i]; return (a!=null&&c!=null&&c)?((a/c-1)*100):null; });
+  body+='<tr><td class="r-lab">Surprise vs St</td>'+surp.map(function(v){ return '<td class="'+(v==null?'':(v>=0?'up':'dn'))+'">'+(v==null?'—':((v>=0?'+':'−')+Math.abs(v).toFixed(1)+'%')) +'</td>'; }).join('')+'</tr>';
+  // YoY of the actual — seasonal columns are one year apart, so it is a true YoY (annual too)
+  var yoy=s.act.map(function(a,i){ var b=(i>0)?s.act[i-1]:null; return (a!=null&&b!=null&&b)?((a/b-1)*100):null; });
+  body+='<tr><td class="r-lab">YoY (actual)</td>'+yoy.map(function(v){ return '<td class="'+(v==null?'':(v>=0?'up':'dn'))+'">'+(v==null?'—':((v>=0?'+':'−')+Math.abs(v).toFixed(1)+'%'))+'</td>'; }).join('')+'</tr>';
+  return '<div class="ce-stbl-w"><table class="ce-stbl"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
+}
+function gBuildCeAnnual(name,chart){   // (kept name: called from buildSub / wiring)
+  if(typeof name==='string'&&name) CE_SETUP_STATE.m=name;
+  if(chart) CE_SETUP_STATE.chart=chart;
+  var host=document.getElementById('ceStblHost');
+  var s=ceSetupSeries(CE_SETUP_STATE.view, CE_SETUP_STATE.m); if(!s) return;
+  if(host) host.innerHTML=ceSetupTable(s);
   if(typeof Chart==='undefined') return;
-  if(idx!=null) CE_ANN_STATE.m=idx;
-  if(chart) CE_ANN_STATE.chart=chart;
-  var m=CE_ANNUAL.m[CE_ANN_STATE.m]; if(!m) return;
   var cv=gChartReady('ceAnnCv'); if(!cv) return;
   gDestroy('ceAnnCv');
-  var labels=CE_ANNUAL.years.map(function(y){ return 'FY'+y; });
-  var isBar=(CE_ANN_STATE.chart==='bar');
-  var fmt=function(v){ return v==null?'':'$'+(+v).toFixed(0)+'B'; };
-  // The forward lines are a CONTINUATION of the reported path: they anchor on the last reported FY
-  // so the two forecasts visibly fork from the same point, instead of floating in mid-air. In BAR
-  // mode there is no line to connect, so the forward series stay forward-only (no duplicate bar).
-  var lastA=-1; for(var li=0;li<m.actual.length;li++) if(m.actual[li]!=null) lastA=li;
+  var mgn=CE_SETUP_STATE.margin&&s.mgn;
+  var proj=function(arr,rev){ return arr.map(function(v,i){ return mgn?ceSetupMgn(v,rev[i]):v; }); };
+  var act=proj(s.act,s.revAct), street=proj(s.street,s.revStreet), summit=proj(s.summit,s.revSummit);
+  var isBar=(CE_SETUP_STATE.chart==='bar');
+  var lastA=-1; for(var li=0;li<act.length;li++) if(act[li]!=null) lastA=li;
   var fwd=function(series){ return series.map(function(v,i){
-    if(!isBar && i===lastA) return m.actual[i];   // anchor at the last reported FY (line mode only)
-    if(m.actual[i]!=null) return null;             // no forward point on an already-reported year
-    return v;                                      // the forward estimate
-  }); };
+    if(!isBar && i===lastA) return act[i];        // anchor forward lines at the last reported point
+    if(act[i]!=null) return null; return v; }); };
+  var fmt=function(v){ return v==null?'':ceSetupFmt(v,s.unit,mgn); };
   var ds=[
-    { label:'Reported', data:m.actual, backgroundColor:'#C7D0DC', borderColor:'#9AA4B0',
-      borderWidth:isBar?1:2, type:isBar?'bar':'line', tension:.2, pointRadius:isBar?0:4, spanGaps:false, maxBarThickness:40 },
-    { label:'Street (BBG)', data:fwd(m.bbg), backgroundColor:BRAND, borderColor:BRAND,
+    { label:'Reported', data:act, backgroundColor:'#C7D0DC', borderColor:'#9AA4B0',
+      borderWidth:isBar?1:2, type:isBar?'bar':'line', tension:.2, pointRadius:isBar?0:4, spanGaps:false, maxBarThickness:38 },
+    { label:'Street (BBG)', data:fwd(street), backgroundColor:BRAND, borderColor:BRAND,
       borderWidth:isBar?1:2.5, type:isBar?'bar':'line', tension:.2, pointRadius:isBar?0:5, spanGaps:false,
-      pointStyle:'rectRot', borderDash:isBar?undefined:[5,3], maxBarThickness:40 },
-    { label:'Summit', data:fwd(m.summit), backgroundColor:BRAND2, borderColor:BRAND2,
+      pointStyle:'rectRot', borderDash:isBar?undefined:[5,3], maxBarThickness:38 },
+    { label:'Summit', data:fwd(summit), backgroundColor:BRAND2, borderColor:BRAND2,
       borderWidth:isBar?1:2.5, type:isBar?'bar':'line', tension:.2, pointRadius:isBar?0:5, spanGaps:false,
-      pointStyle:'triangle', maxBarThickness:40 }
+      pointStyle:'triangle', maxBarThickness:38 }
   ];
   _gCharts['ceAnnCv']=new Chart(cv.getContext('2d'),{ type:isBar?'bar':'line',
-    data:{ labels:labels, datasets:ds },
+    data:{ labels:s.periods, datasets:ds },
     options:{ responsive:true, maintainAspectRatio:false, animation:false,
       plugins:{ legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}},
         tooltip:{ callbacks:{ label:function(x){ return x.parsed.y==null?null:(' '+x.dataset.label+': '+fmt(x.parsed.y)); } } } },
       scales:{ x:{ grid:{display:false}, ticks:{font:{size:10}} },
-        y:{ ticks:{ callback:function(v){ return '$'+v+'B'; }, font:{size:9} }, grid:{color:'#EEF2F7'} } } } });
+        y:{ ticks:{ callback:function(v){ return mgn?(v+'%'):('$'+v+(s.unit==='$'?'':'B')); }, font:{size:9} }, grid:{color:'#EEF2F7'} } } } });
 }
 function wireCeAnnual(root){
   var pane=root.querySelector('.ovt-subpane[data-ovst="earnings"]'); if(!pane) return;
+  function rerenderSetup(){
+    var host=pane.querySelector('.ce-phpane[data-cep="setup"]'); if(!host) return;
+    // re-render the whole Setup chart block (pills change with the view) then rebuild the chart
+    var blk=host.querySelector('.ce-ann'); if(blk){ blk.outerHTML=ceAnnualBody(); }
+    wireCeAnnual(root); requestAnimationFrame(function(){ gBuildCeAnnual(null,null); });
+  }
+  pane.querySelectorAll('.ce-ann [data-cesv]').forEach(function(btn){ btn.onclick=function(){
+    CE_SETUP_STATE.view=btn.getAttribute('data-cesv'); rerenderSetup();
+  }; });
+  pane.querySelectorAll('.ce-ann [data-cesm]').forEach(function(btn){ btn.onclick=function(){
+    CE_SETUP_STATE.margin=(btn.getAttribute('data-cesm')==='on'); rerenderSetup();
+  }; });
+  // Margin applies only to profit lines — grey the Margin toggle out when the active metric has none.
+  function syncMargin(){
+    var act=pane.querySelector('.ce-ann-pill.active');
+    var can=!!(act&&act.getAttribute('data-mgn')==='1');
+    pane.querySelectorAll('.ce-ann [data-cesm]').forEach(function(b){ b.disabled=!can; });
+  }
   pane.querySelectorAll('.ce-ann-pill').forEach(function(btn){ btn.onclick=function(){
     pane.querySelectorAll('.ce-ann-pill').forEach(function(x){ x.classList.toggle('active', x===btn); });
-    gBuildCeAnnual(+btn.getAttribute('data-ceann'), null);
+    syncMargin();
+    gBuildCeAnnual(btn.getAttribute('data-ceann'), null);
   }; });
-  pane.querySelectorAll('.ce-ann-seg button').forEach(function(btn){ btn.onclick=function(){
-    pane.querySelectorAll('.ce-ann-seg button').forEach(function(x){ x.classList.toggle('active', x===btn); });
+  pane.querySelectorAll('.ce-ann-seg [data-ceannc]').forEach(function(btn){ btn.onclick=function(){
+    btn.parentNode.querySelectorAll('button').forEach(function(x){ x.classList.toggle('active', x===btn); });
     gBuildCeAnnual(null, btn.getAttribute('data-ceannc'));
   }; });
+  syncMargin();
 }
 
 // B · Watch List ─────────────────────────────────────────────────────────────────────────────────
@@ -2987,7 +3096,7 @@ function buildSub(root, group, key){
       var ph=root.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phtab.active');
       if(!ph || ph.getAttribute('data-cep')==='setup'){
         var oa=root.querySelector('.ce-ann-pill.active');
-        gBuildCeAnnual(oa?+oa.getAttribute('data-ceann'):0);
+        gBuildCeAnnual(oa?oa.getAttribute("data-ceann"):null, null);
       }
     }
     // Amazon-style Results / Estimates engine — build lazily when the pane is visible (Chart.js
@@ -3054,7 +3163,7 @@ function wireCallEarnings(root){
     // build produced a zero-size chart).
     if(key==='setup') requestAnimationFrame(function(){
       var oa=pane.querySelector('.ce-ann-pill.active');
-      gBuildCeAnnual(oa?+oa.getAttribute('data-ceann'):0);
+      gBuildCeAnnual(oa?oa.getAttribute("data-ceann"):null, null);
     });
   }; });
   // Setup estimates toggle: Consensus ⇄ Summit ⇄ Both (CSS-driven via data-ev on the wrap)

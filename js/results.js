@@ -334,8 +334,13 @@ function rsBuildChart(k){
   var tEl = document.getElementById('rsChartT-' + k);
   if (tEl) tEl.innerHTML = esc(m.label) + ' — actual vs expectations <span>(' + unitLbl + ' per period · ' + (isTop ? '' : 'margin lines on the right axis · ') + 'hover a period for every series)</span>';
 
+  // Forward (estimate) periods get a highlighted axis label — accent blue + bold — vs the muted
+  // reported ones, so "old vs forward" reads at a glance (a period is forward when it has no actual).
+  var fwdTick = function(ctx){ return m.act[lo + ctx.index] == null; };
   var scales = {
-    x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+    x: { grid: { display: false }, ticks: {
+        color: function(ctx){ return fwdTick(ctx) ? RS_SUMMIT : 'rgba(80,90,104,0.9)'; },
+        font:  function(ctx){ return { size: 11, weight: fwdTick(ctx) ? '700' : '400' }; } } },
     y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
       callback: function(v){ return rsTick(v, m.unit, div); } } }
   };

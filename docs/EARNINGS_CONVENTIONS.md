@@ -1042,6 +1042,11 @@ general — bake the sizes into any company's Setup dataset:
 (Superseded the brief SEASONAL cut — the desk wanted a proper multi-quarter trend, not the same fiscal
 quarter across years.)
 
+**Forward periods are highlighted on the axis (v2.10.1).** In the chart, the x-axis label of a **forward
+(estimate) period** — one with no reported actual — renders in **accent blue + bold**, vs the muted grey
+of the reported ones, so "old vs forward" reads at a glance (this is in the shared engine's `rsBuildChart`,
+so it applies to the Results tab and Setup alike; the table already shades its `E` columns).
+
 **Margins — RIGHT axis, PROFIT lines only (v2.10).** A `%` margin on the same axis as `$B`/`$M` is an
 invisible flat line — margins must render on a **second (right) `y2` axis**, which the engine does whenever
 a metric has a `marginOf`. **Only profit lines carry a margin** (gross profit / operating income / EBITDA →

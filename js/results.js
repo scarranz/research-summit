@@ -21,10 +21,12 @@
 
 import { amznResults } from './results-data/amzn.js';
 import { googlResults } from './results-data/googl.js';
+import { googlSetup } from './results-data/googl-setup.js';
 
 var RESULTS_DATA = {
   AMZN: amznResults,
-  GOOGL: googlResults
+  GOOGL: googlResults,
+  GOOGL_SETUP: googlSetup
 };
 
 export function getResultsData(ticker){
@@ -1195,10 +1197,12 @@ function wireResults(pane){
       _rs.view = v.getAttribute('data-rsview');
       _rs.sec = {};                                    // reset per-section state
       pane.querySelectorAll('.rs-views [data-rsview]').forEach(function(b){ b.classList.toggle('active', b === v); });
-      var gm = document.getElementById('rsGrowMode'); if (gm) gm.hidden = (_rs.view !== 'q');
-      var blocks = document.getElementById('rsBlocks');
+      // Scope these to the wrap (`pane`) so a SECOND engine instance on the page (e.g. the Setup
+      // chart alongside the Results tab) updates its OWN blocks, not the first #rsBlocks in the DOM.
+      var gm = pane.querySelector('#rsGrowMode'); if (gm) gm.hidden = (_rs.view !== 'q');
+      var blocks = pane.querySelector('#rsBlocks');
       if (blocks) blocks.innerHTML = rsBlocksHtml();
-      var vn = document.getElementById('rsViewNote'); if (vn) vn.textContent = rsView().note || '';
+      var vn = pane.querySelector('#rsViewNote'); if (vn) vn.textContent = rsView().note || '';
       wireSliders(pane);
       rsBuildAll();
       return;
@@ -1257,9 +1261,18 @@ function wireSliders(pane){
 }
 
 // Called when the embedding pane becomes visible (Chart.js needs layout).
-export function initResults(){
+// Optional args enable a SECOND instance on the same page (the Setup chart beside the Results tab):
+//   wrap   — the specific .rs-wrap element to wire (defaults to the first one, Amazon's behaviour);
+//   ticker — re-establish _rs.data for this instance before building (each instance uses a dataset
+//            whose section keys are unique, so their canvases/tables/sliders never collide).
+export function initResults(wrap, ticker){
+  if (ticker){
+    var d = getResultsData(ticker); if (!d) return;
+    if (_rs._active !== ticker){ _rs.view = 'q'; _rs.growth = 'yoy'; _rs.sec = {}; }
+    _rs.data = d; _rs._active = ticker;
+  }
   if (!_rs.data) return;
-  var wrap = document.querySelector('.rs-wrap:not(#rsEvoWrap)');
+  wrap = wrap || document.querySelector('.rs-wrap:not(#rsEvoWrap)');
   if (wrap) wireResults(wrap);
   rsBuildAll();
 }

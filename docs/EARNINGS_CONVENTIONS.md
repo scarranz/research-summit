@@ -983,13 +983,28 @@ is populated **only where a forecast exists** (the lines we actually model) — 
 sparse, never invent it (§5 golden rules; consensus = Bloomberg only). The chart is fed from the
 `CE_CONS` archive (Street + actuals) and the Summit projection export (Summit forward).
 
-**Status: BUILT (v2.9).** Implemented as a **bespoke** Setup chart in `googl.js` (`ceAnnualBody` /
-`gBuildCeAnnual` / `ceSetupSeries` / `ceSetupTable` / `wireCeAnnual`) — NOT a reuse of `js/results.js`,
-because that engine is single-instance (`_rs.data`) and cannot coexist with the Results tab on the same
-page, and because Setup needs the seasonal period logic the engine does not have. Fed directly from
-`CE_CONS` (quarterly Street + actuals) and `CE_ANNUAL` (annual Street + Summit), with `setup.us` for the
-sparse quarterly Summit. `CE_SETUP_STATE = {view, m, margin, chart}`. The Margin toggle greys out for
-non-profit lines (`data-mgn` on the pill drives `syncMargin`). Replaces the old annual-only bars.
+**Status: BUILT (v2.9) — it REUSES the Results engine.** The first cut was bespoke and fell short (no
+period lever, no sticky Fiscal.ai table, margins as a value-swap not lines). It was replaced with the
+**actual `js/results.js` engine**, rendered inside Earnings ▸ Setup via a dedicated **`GOOGL_SETUP`**
+dataset (`js/results-data/googl-setup.js`) that clubs Top Line + Margins into **ONE merged section**
+(section key `setup`). So the Setup chart is now IDENTICAL to the Results tab in look and behaviour —
+grouped picker over every line, clickable legend chips, period-wise hover, the range **lever** (preset
+pills + drag + dual-handle slider), and **margin lines** for the profit lines (revenue/segment lines
+have no `marginOf`, so the engine shows none — "disabled where it does not apply") — just merged into
+one chart+table instead of two.
+
+**Multi-instance:** the engine was single-instance (`_rs`); it was made to coexist with the Results tab
+by (a) a **unique section key** per instance (Setup=`setup`, Results=`top`/`margins`) so their
+canvases/tables/sliders never collide, (b) scoping `wireResults`'s `#rsBlocks`/`#rsGrowMode`/`#rsViewNote`
+lookups to the wrap, and (c) `initResults(wrap, ticker)` optional args to re-establish the right dataset
+and wire the right wrap. Amazon's no-arg `initResults()` is unchanged. `googl.js` keeps the names
+`ceAnnualBody` (returns `resultsHtml('GOOGL_SETUP')`) / `gBuildCeAnnual` (calls `initResults(setupWrap,
+'GOOGL_SETUP')`) as the Setup entry points.
+
+**Open (seasonal default):** the engine renders the FULL sequential timeline with the lever (the user
+can window to the seasonal quarters by hand). A true **seasonal quarterly default** (same fiscal quarter
+across years, auto-windowed) is a follow-up — either a range preset or a seasonal periods variant of the
+dataset. Annual already shows history + forward years.
 
 ### 6a-ix. The quarter belongs to the section, not the other way round
 

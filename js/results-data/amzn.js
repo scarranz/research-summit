@@ -1,0 +1,326 @@
+// results-data/amzn.js — Amazon (AMZN) dataset for the standardized "Results" tab.
+//
+// Compares REPORTED actuals against three references, per period:
+//   summit  — Summit DCF model estimate (from archived model snapshots; the estimate
+//             held on the last snapshot BEFORE the print: 4Q25 ← 2025-12-18, 1Q26 ← 2026-02-10.
+//             Snapshot history starts Dec-2025, so quarterly Summit estimates exist
+//             only from 4Q25 onward and the series grows each print. 2Q26 carries the
+//             model's LIVE estimate (2026-05-13 snapshot) for the upcoming print.)
+//   cons    — Street consensus right before the print. Quarterly: Refinitiv (1Q–2Q23)
+//             / LSEG (3Q23 on) via CNBC earnings-day coverage; AWS per StreetAccount.
+//             Annual: Bloomberg estimates stored inside the Summit model.
+//   guideLo / guideHi — Amazon's own guidance range for that quarter, from the prior
+//             quarter's press release (8-K Ex. 99.1 on SEC EDGAR). Amazon guides net
+//             sales + GAAP operating income only; null for metrics it does not guide.
+//
+// All monetary values in US$ millions; EPS in dollars. null = not available.
+// Arrays are parallel to `periods`. A period with act:null is an upcoming print.
+
+export var amznResults = {
+  updated: 'Jul 2026',
+  intro: 'How Amazon’s reported results have stacked up against what our Summit model projected, what the Street expected, and what the company itself guided. Pick a period view and a metric — each print shows the actual against every reference we have for it, with the surprise in percent. Periods marked “est.” are forward: the model’s live projection (and consensus where available), no actual yet. Use the slider under the chart to window the range, and click the legend chips to hide series.',
+  views: {
+    q: {
+      label: 'Quarterly',
+      note: 'Quarterly Summit estimates are the model’s FROZEN per-quarter projections (Projection History in the model export — each quarter’s estimate as held going into that print), available from 1Q23; forward quarters carry the live vintage. Total revenue = sum of the three segment projections. Guidance and actuals from Amazon’s 8-K press releases on SEC EDGAR; consensus as cited by CNBC earnings-day coverage (Refinitiv through 2Q23, LSEG after; AWS per StreetAccount).',
+      metrics: {
+        rev: { label: 'Net Sales (Total)', short: 'Total revenue', group: 'Revenue', unit: 'usdM',
+          periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
+          act:    [127358, 134383, 143083, 169961, 143313, 147977, 158877, 187792, 155667, 167702, 180169, 213386, 181519, null, null, null, null, null, null, null, null, null],
+          summit: [128957, 134480, 141593, 165516, 143728, 150126, 157992, 188167, 154960, 162872, 178671, 213352, 179234, 199783, 201672, 240061, 214495, 235903, 238364, 283308, 244226, 267843],
+          cons:   [124500, 131500, 141400, 166200, 142500, 148560, 157200, 187300, 155040, 162090, 177800, 211330, 177300, 196960, 203946, 242951, 205994, 223074, 231771, 273829, null, null],
+          guideLo:[121000, 127000, 138000, 160000, 138000, 144000, 154000, 181500, 151000, 159000, 174000, 206000, 173500, 194000, null, null, null, null, null, null, null, null],
+          guideHi:[126000, 133000, 143000, 167000, 143500, 149000, 158500, 188500, 155500, 164000, 179500, 213000, 178500, 199000, null, null, null, null, null, null, null, null],
+          note: 'Consolidated net sales. Actuals have landed at or above the TOP of guidance in 10 of the last 13 prints. Summit estimate = sum of the model’s three frozen segment projections per quarter (full history from 1Q23; 4Q25 was called within 0.02%); forward from the live vintage. Forward consensus from the BBG export (through 4Q27).' },
+        aws: { label: 'AWS Net Sales', short: 'AWS', group: 'Revenue', unit: 'usdM',
+          periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
+          act:    [21354, 22140, 23059, 24204, 25037, 26281, 27452, 28786, 29267, 30873, 33006, 35579, 37587, null, null, null, null, null, null, null, null, null],
+          summit: [21207, 22700, 22797, 23730, 24130, 25240, 26287, 27835, 29043, 30223, 32668, 35119, 36584, 39826, 41918, 44474, 46984, 49783, 52397, 55592, 58730, 62228],
+          cons:   [21220, 21800, 23200, 24200, 24500, 26000, 27500, 28800, 29420, 30800, 32420, 34930, 36640, 40538, 43323, 46811, 49323, 52806, 56191, 60459, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: 'AWS segment net sales — the print the market cares most about. AWS has beaten the Street every print since 2Q25. Forward, Summit models ~27–29% YoY growth vs the Street\'s ~31% — directionally aligned, with the Street slightly more bullish each quarter.' },
+        usrev: { label: 'North America Net Sales', short: 'North America', group: 'Revenue', unit: 'usdM',
+          periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
+          act:    [76881, 82546, 87887, 105514, 86341, 90033, 95537, 115586, 92887, 100068, 106267, 127083, 104143, null, null, null, null, null, null, null, null, null],
+          summit: [77553, 83362, 88304, 104567, 86107, 91626, 96676, 116065, 92385, 98136, 105091, 128300, 103105, 116579, 114768, 139791, 119764, 134066, 131984, 160760, 132515, 147968],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, 113951, 115254, 139445, 112906, 123628, 124626, 150909, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: 'North America segment net sales. Forward: Summit live projection vs BBG consensus (from the Bloomberg export).' },
+        intrev: { label: 'International Net Sales', short: 'International', group: 'Revenue', unit: 'usdM',
+          periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
+          act:    [29123, 29697, 32137, 40243, 31935, 31663, 35888, 43420, 33513, 36761, 40896, 50724, 39789, null, null, null, null, null, null, null, null, null],
+          summit: [30197, 28418, 30492, 37220, 33491, 33261, 35029, 44267, 33532, 34513, 40912, 49933, 39545, 43378, 44986, 55796, 47747, 52054, 53983, 66956, 52981, 57647],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, 42711, 45055, 56577, 43623, 47666, 50468, 62728, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: 'International segment net sales. Forward: Summit live projection vs BBG consensus (from the Bloomberg export).' },
+        online: { label: 'Online Stores Revenue', short: 'Online stores', group: 'Revenue', unit: 'usdM',
+          periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
+          act:    [51096, 52966, 57267, 70543, 54670, 55392, 61411, 75556, 57407, 61485, 67407, 82988, 64254, null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, 69800, 71487, 89476, 68684, 75174, 77217, 96808, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: 'First-party online store revenue (the original retail business). Actuals + BBG consensus forward from the Bloomberg export; the Summit model does not carry this line separately.' },
+        p3: { label: 'Third-Party Seller Services', short: '3P services', group: 'Revenue', unit: 'usdM',
+          periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
+          act:    [29820, 32332, 34342, 43559, 34596, 36201, 37864, 47485, 36512, 40348, 42486, 52816, 41578, null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, 46147, 46446, 58681, 45600, 50714, 51084, 64126, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: 'Commissions, FBA and shipping fees from marketplace sellers — the platform take. Actuals + BBG consensus forward.' },
+        ads: { label: 'Advertising Services', short: 'Advertising', group: 'Revenue', unit: 'usdM',
+          periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
+          act:    [9509, 10683, 12060, 14654, 11824, 12771, 14331, 17288, 13921, 15694, 17703, 21317, 17243, null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, 19307, 21019, 25422, 20284, 22744, 24717, 29885, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: 'The third profit engine — sponsored placement, DSP and Prime Video ads. The Street models ~18–19% growth through 2027 (BBG consensus).' },
+        subs: { label: 'Subscription Services', short: 'Subscriptions', group: 'Revenue', unit: 'usdM',
+          periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
+          act:    [9657, 9894, 10170, 10488, 10722, 10866, 11278, 11508, 11715, 12208, 12574, 13122, 13427, null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, 13752, 13954, 14518, 14619, 15001, 15230, 15893, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: 'Prime memberships plus content subscriptions. Actuals + BBG consensus forward.' },
+        phys: { label: 'Physical Stores Revenue', short: 'Physical stores', group: 'Revenue', unit: 'usdM',
+          periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
+          act:    [4895, 5024, 4959, 5152, 5202, 5206, 5228, 5579, 5533, 5595, 5578, 5855, 5785, null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, 5868, 5850, 6177, 6059, 6136, 6103, 6421, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: 'Whole Foods, Amazon Fresh and Go. Actuals + BBG consensus forward.' },
+        other: { label: 'Other Revenue', short: 'Other', group: 'Revenue', unit: 'usdM',
+          periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
+          act:    [1027, 1344, 1226, 1361, 1262, 1260, 1313, 1590, 1312, 1499, 1415, 1709, 1645, null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, 1658, 1548, 1779, 1964, 2064, 1775, 1808, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: 'Everything not in the six named lines (health services, Leo, licensing…). Actuals + BBG consensus forward.' },
+        opinc: { label: 'Operating Income (GAAP)', short: 'Op. income', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin',
+          periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
+          act:    [4774, 7681, 11188, 13209, 15307, 14672, 17411, 21203, 18405, 19171, 17422, 24977, 23852, null, null, null, null, null, null, null, null, null],
+          summit: [2029, 3420, 8180, 9162, 12070, 15409, 14956, 19312, 17612, 17178, 20823, 25445, 21420, 23817, 24259, 29957, 23668, 25582, 26337, 29672, 28219, 30429],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, 23742, 24996, 31444, 29647, 30531, 32080, 39111, null, null],
+          guideLo:[0,    2000, 5500, 7000, 8000, 10000, 11500, 16000, 14000, 13000, 15500, 21000, 16500, 20000, null, null, null, null, null, null, null, null],
+          guideHi:[4000, 5500, 8500, 11000, 12000, 14000, 15000, 20000, 18000, 17500, 20500, 26000, 21500, 24000, null, null, null, null, null, null, null, null],
+          note: 'GAAP operating income — the second line Amazon guides every quarter. Actuals beat the TOP of guidance in 11 of the last 13 prints. Summit = sum of the model’s three frozen segment op-income projections (full history from 1Q23; 4Q25 was called within 2%). Watch the charges: 3Q25 includes the $2.5B FTC settlement + $1.8B severance ($21.7B ex-charges); 4Q25 includes $2.4B of charges. Forward consensus from the BBG export — note 2Q26: the Street models $23.7B vs guidance of $20–24B.' },
+        eps: { label: 'Diluted EPS (GAAP)', short: 'EPS', group: 'Profitability', unit: 'eps',
+          periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
+          act:    [0.31, 0.65, 0.94, 1.00, 0.98, 1.26, 1.43, 1.86, 1.59, 1.68, 1.95, 1.95, 2.78, null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          cons:   [0.21, 0.35, 0.58, 0.80, 0.83, 1.03, 1.14, 1.49, 1.36, 1.33, 1.57, 1.97, 1.64, 1.82, 1.94, 2.40, 2.30, 2.42, 2.56, 3.09, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: 'GAAP diluted EPS vs the Street: pre-print estimates (Refinitiv/LSEG) for reported quarters, BBG BEst consensus forward. Amazon does not guide EPS. 12 beats in 13 prints — but mind mark-to-market noise: 1Q26’s $2.78 vs $1.64 expected was inflated by ~$16.8B of pre-tax Anthropic gains.' },
+        capex: { label: 'Capital Expenditure', short: 'CapEx', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'capex % of revenue',
+          periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
+          act:    [14207, 11455, 12479, 14588, 14925, 17620, 22620, 27834, 25019, 32183, 35095, 39522, 44203, null, null, null, null, null, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, 48715, 52189, 57245, 52902, 58181, 61128, 66789, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: 'Capital expenditure shown as positive spend (reported as negative cash flow). The AI build-out: from ~$14B/qtr in 2023 to $44B in 1Q26; the Street models it reaching ~$67B/qtr by 4Q27. The Summit model projects capex ANNUALLY only — switch to the Annual view for Summit vs Street on capex.' },
+        naopinc: { label: 'North America Op. Income (GAAP)', short: 'NA op. income', group: 'Profitability', unit: 'usdM', marginOf: 'usrev', marginLabel: 'NA operating margin',
+          periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
+          act:    [898, 3211, 4307, 6461, 4983, 5065, 5663, 9256, 5841, 7517, 4789, 11472, 8267, null, null, null, null, null, null, null, null, null],
+          summit: [-1551, -834, 3091, 3974, 5166, 5498, 5317, 6964, 6005, 5888, 8407, 10906, 7217, 8161, 7460, 11882, 7186, 8044, 7919, 9646, 7951, 8878],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, 8519, 8371, 13340, 10461, 10311, 10927, 15908, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: 'North America segment operating income (GAAP), actual vs the model’s frozen per-quarter projection. 3Q25 actual ($4.8B) carries the $2.5B FTC settlement — the one big miss vs the model. Forward consensus derived from the BBG export (consensus NA operating margin × consensus NA revenue).' },
+        intopinc: { label: 'International Op. Income (GAAP)', short: 'Intl op. income', group: 'Profitability', unit: 'usdM', marginOf: 'intrev', marginLabel: 'Intl operating margin',
+          periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
+          act:    [-1247, -895, -95, -419, 903, 273, 1301, 1315, 1017, 1494, 1199, 1040, 1424, null, null, null, null, null, null, null, null, null],
+          summit: [-1510, -1421, -610, -744, -335, 1330, 701, 1771, 1006, 863, 1636, 2247, 1582, 1518, 1709, 2064, 2387, 2603, 2699, 3348, 2649, 2882],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, 1607, 1566, 1994, 1284, 2179, 1960, 2618, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: 'International segment operating income (GAAP), actual vs the model’s frozen per-quarter projection. The segment turned profitable in 2024; the model has recently run ~$0.5–1.2B above the printed number. Forward consensus derived from the BBG export (margin × revenue).' },
+        awsopinc: { label: 'AWS Op. Income (GAAP)', short: 'AWS op. income', group: 'Profitability', unit: 'usdM', marginOf: 'aws', marginLabel: 'AWS operating margin',
+          periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27','4Q27','1Q28','2Q28'],
+          act:    [5123, 5365, 6976, 7167, 9421, 9334, 10447, 10632, 11547, 10160, 11434, 12465, 14161, null, null, null, null, null, null, null, null, null],
+          summit: [5090, 5675, 5699, 5932, 7239, 8581, 8938, 10577, 10601, 10427, 10780, 12292, 12621, 14138, 15090, 16011, 14095, 14935, 15719, 16678, 17619, 18669],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, 13616, 15059, 16110, 17902, 18041, 19193, 20584, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          note: 'AWS segment operating income (GAAP), actual vs the model’s frozen per-quarter projection — the actual has beaten the model in 11 of 13 prints, often by $1–2B: the model has persistently under-called AWS profitability. Forward consensus DERIVED as total consensus op income minus NA and International (BBG has no direct AWS line) — it implies the Street holds AWS margin at ~34% while Summit fades it to ~30% by 2027, the divergence to watch.' }
+      },
+      sections: [
+        { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
+          { label: 'Totals', keys: ['rev'] },
+          { label: 'Segments', keys: ['usrev', 'intrev', 'aws'] },
+          { label: 'Revenue lines', keys: ['online', 'p3', 'ads', 'subs', 'phys', 'other'] }
+        ] },
+        { key: 'margins', label: 'Margins & Profitability', defaultMetric: 'opinc', groups: [
+          { label: 'Company', keys: ['opinc', 'eps', 'capex'] },
+          { label: 'Segments (GAAP op. income)', keys: ['naopinc', 'intopinc', 'awsopinc'] }
+        ] }
+      ],
+    },
+    y: {
+      label: 'Annual',
+      note: 'Annual consensus is the Bloomberg estimate stored inside the Summit model alongside each year’s actual. The Summit column is the model’s own stored projection for that fiscal year.',
+      metrics: {
+        rev: { label: 'Net Sales (Total)', short: 'Total revenue', group: 'Revenue', unit: 'usdM',
+          periods: ['2020','2021','2022','2023','2024','2025','2026','2027','2028'],
+          act:    [386064, 469822, 513983, 574785, 637959, 716924, null, null, null],
+          summit: [null, null, 508794, 570547, 640014, 709855, 823035, 941960, 1115060],
+          cons:   [379571, 470209, 512444, 570829, 637832, 714794, 819963, 925181, 1023818],
+          guideLo:[null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null],
+          note: 'Full-year net sales vs Bloomberg consensus. Historical Summit = sum of the model’s three FROZEN segment projections per closed year (same construct as the Quarterly view; the model’s own total-revenue row is overwritten with the actual once reported, and the frozen segment history — identical across every vintage — starts 2022). The actual landed slightly above the frozen estimate in 3 of 4 closed years (+0.7–1.0%; 2024 the exception at −0.3%). Forward (2026-05-05 vintage): Summit sits above the Street every year — modestly in 2026–27 and a striking +9% in 2028 ($1,115B vs $1,024B).' },
+        usrev: { label: 'North America Net Sales', short: 'North America', group: 'Revenue', unit: 'usdM',
+          periods: ['2020','2021','2022','2023','2024','2025','2026','2027','2028'],
+          act:    [236282, 279833, 315880, 352828, 387497, 426305, null, null, null],
+          summit: [null, null, 307465, 353786, 390474, 423912, 475282, 520434, 598499],
+          cons:   [null, null, null, null, null, null, 472793, 512068, null],
+          guideLo:[null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null],
+          note: 'North America segment, full year. The Summit column keeps its frozen projections for closed years — the actual came in above them in 3 of 4 (2023 the exception). Forward: 2026-05-05 vintage vs BBG consensus (2026 blended: 1 reported quarter + 3 estimates).' },
+        intrev: { label: 'International Net Sales', short: 'International', group: 'Revenue', unit: 'usdM',
+          periods: ['2020','2021','2022','2023','2024','2025','2026','2027','2028'],
+          act:    [104412, 127787, 118007, 131200, 142906, 161894, null, null, null],
+          summit: [null, null, 121933, 126327, 146049, 158890, 183949, 206943, 248331],
+          cons:   [null, null, null, null, null, null, 184132, 204484, null],
+          guideLo:[null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null],
+          note: 'International segment, full year. Frozen Summit projections for closed years; forward from the 2026-05-05 vintage vs BBG consensus (2026 blended).' },
+        aws: { label: 'AWS Net Sales', short: 'AWS', group: 'Revenue', unit: 'usdM',
+          periods: ['2020','2021','2022','2023','2024','2025','2026','2027','2028'],
+          act:    [45370, 62202, 80096, 90757, 107556, 128725, null, null, null],
+          summit: [null, null, 79396, 90434, 103491, 127053, 163805, 214584, 268230],
+          cons:   [null, null, null, null, null, null, 168259, 218779, null],
+          guideLo:[null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null],
+          note: 'AWS, full year. The frozen Summit projections ran slightly UNDER the actual all four closed years — a consistent, small conservative bias. Forward: Summit models ~27–31% growth, just a touch under the Street ($163.8B vs $168.3B blended in 2026; $214.6B vs $218.8B in 2027).' },
+        ebitda: { label: 'EBITDA', short: 'EBITDA', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'EBITDA margin',
+          periods: ['2020','2021','2022','2023','2024','2025','2026','2027','2028'],
+          act:    [57287, 72069, 73790, 109538, 143399, 165198, null, null, null],
+          summit: [null, null, 82724, 114063, 155229, 185600, 208443, 261050, 291994],
+          cons:   [54004, 69216, 71134, 105558, 141591, 167197, 210933, 266809, 328908],
+          guideLo:[null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null],
+          note: 'Consolidated EBITDA. The frozen Summit column over-projected every closed year on record (≈10% high); the forward years (model export, 2026-05-05 vintage) now sit BELOW the Street in all three years — most notably 2028 ($292B vs $329B). ⚠ Reconciliation flag: the MCP snapshot dated 2026-05-13 carries materially higher EBITDA projections ($238B/2026) than the model export — confirm with the model owner which is current.' },
+        earnings: { label: 'Earnings (model definition)', short: 'Earnings', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'net margin (model def.)',
+          periods: ['2020','2021','2022','2023','2024','2025','2026','2027','2028'],
+          act:    [21331, 33360, 14087, 29499, 61599, 62995, null, null, null],
+          summit: [null, null, 11318, 29377, 54773, 64969, 85902, 108304, 114955],
+          cons:   [17746, 21217, 7220, 28282, 54832, 76976, 92868, 107942, 135110],
+          guideLo:[null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null],
+          note: 'Earnings as defined in the Summit model (adjusted — not equal to GAAP net income in every year), against the matching Bloomberg estimate. 2025: the Street ended up too optimistic; Summit was close. Forward (model export, 2026-05-05 vintage): Summit under the Street in 2026 and sharply under in 2028 ($115B vs $135B), roughly in line 2027.' },
+        capex: { label: 'Capital Expenditure', short: 'CapEx', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'capex % of revenue',
+          periods: ['2022','2023','2024','2025','2026','2027','2028'],
+          act:    [63645, 52729, 82999, 131819, null, null, null],
+          summit: [null, null, null, 125455, 205759, 230780, 150795],
+          cons:   [null, null, null, null, 202352, 239000, null],
+          guideLo:[null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null],
+          note: 'Capital expenditure, positive spend (actuals = sum of reported quarters). 2025 Summit = the estimate held on the last snapshot before the year closed (Dec 18, 2025): $125.5B vs the $131.8B print — the model under-called the final capex ramp by ~5%. Earlier years show no Summit estimate: capex is a total-only line the model overwrites with the actual once reported, and no pre-Dec-2025 snapshot survives. Forward — 2026 $205.8B and 2027 $230.8B, right on top of the Street ($202.4B blended / $239.0B); the Dec-2025 model carried only $150.7B for 2026 before re-rating +36% after the 4Q25 print (see Estimate Evolution). ⚠ Model flag: the 2028 total capex line drops to $150.8B while the model’s own segment capex sum is ~$245B — an internal inconsistency worth reviewing with the model owner.' }
+      },
+      sections: [
+        { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
+          { label: 'Totals', keys: ['rev'] },
+          { label: 'Segments', keys: ['usrev', 'intrev', 'aws'] }
+        ] },
+        { key: 'margins', label: 'Margins & Profitability', defaultMetric: 'ebitda', groups: [
+          { label: 'Company', keys: ['ebitda', 'earnings', 'capex'] }
+        ] }
+      ],
+    }
+  },
+  // Estimate EVOLUTION across model snapshots (vintages) — how the ANNUAL
+  // forecast for each fiscal year moved as prints landed. Source of record:
+  // the SUMMIT RESEARCH DATABASE (populated from the DCF's Projection History
+  // tab, where the vintages live). These arrays were hand-parsed from the
+  // model export (same Projection History, one block per vintage; capex
+  // flipped to positive spend) as a stopgap until the portal can pull this
+  // through the Summit connection — see RESULTS_CONVENTIONS §3.6a/§7.
+  // `cons` is the Bloomberg BEst consensus STORED INSIDE the model at each
+  // snapshot — so both columns are as-of the same date. BBG is stored for
+  // revenue / EBITDA / earnings only.
+  // Arrays: one row per fiscal year (parallel to `years`), one value per vintage.
+  evolution: {
+    intro: 'How the forecast itself has moved. Each line tracks one fiscal year’s estimate across the model’s saved snapshots — solid is the Summit model, dashed is the Bloomberg consensus stored alongside it at the same date. Two blocks, mirroring Results: Top Line (revenue and segments, with the growth each snapshot implies) and Profitability (spend and earnings power, with margins). The story of the year: the Feb 2026 snapshot, taken right after the 4Q25 print, re-rated FY26 capex from $151B to $205B and flipped the FY26 free-cash-flow forecast negative.',
+    vintages: [
+      { label: 'Dec 18, 2025', event: 'pre-4Q25 print' },
+      { label: 'Feb 10, 2026', event: 'post-4Q25 print' },
+      { label: 'May 5, 2026',  event: 'post-1Q26 print' }
+    ],
+    years: ['2026', '2027', '2028', '2029'],
+    sections: [
+      { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
+        { label: 'Totals', keys: ['rev'] },
+        { label: 'Segments (Summit only)', keys: ['aws', 'usrev', 'intrev'] }
+      ] },
+      { key: 'prof', label: 'Profitability', defaultMetric: 'capex', groups: [
+        { label: 'Company', keys: ['capex', 'fcf', 'opinc', 'ebitda', 'earnings'] },
+        { label: 'Segments (GAAP op. income, Summit only)', keys: ['naopinc', 'intopinc', 'awsopinc'] }
+      ] }
+    ],
+    metrics: {
+      capex: { label: 'Capital Expenditure', unit: 'usdM', marginOf: 'rev', marginLabel: 'capex % of revenue',
+        summit: [[150662, 204504, 205759], [163765, 227206, 230780], [123878, 148320, 150795], [146559, 175615, 178721]],
+        cons: null,
+        note: 'The re-rate of the cycle: the Feb-2026 snapshot — taken days after the 4Q25 print and its capex guidance — took FY26 from $150.7B to $204.5B (+36%) and FY27 from $163.8B to $227.2B (+39%); May barely moved either. In the margin view: capex intensity jumped from ~19% to ~25% of revenue for FY26–27, easing to ~13% by FY28-29. The model projects capex annually only, and no BBG capex consensus is stored per snapshot. Note FY28 still drops to ~$151B — the internal-consistency flag raised with the model owner.' },
+      fcf: { label: 'Free Cash Flow', unit: 'usdM', marginOf: 'rev', marginLabel: 'FCF margin',
+        summit: [[27805, -26794, -16854], [89940, 11357, 14180], [119640, 151974, 163189], [144879, 144469, 155780]],
+        cons: null,
+        note: 'The mirror of the capex re-rate: FY26 FCF flipped from +$27.8B (Dec) to −$26.8B (Feb), recovering to −$16.9B in May on a higher CFO forecast. FY27 collapsed from $89.9B to ~$14B; the payoff moved out to FY28–29, which were revised UP ($119.6B → $163.2B in FY28). Where a year flips sign, the revision is shown in dollars only — a percent is meaningless across zero.' },
+      rev: { label: 'Net Sales (Total)', unit: 'usdM',
+        summit: [[805681, 818015, 823035], [909803, 927372, 941960], [1075129, 1096753, 1115060], [1271972, 1298590, 1321558]],
+        cons:   [[795333, 800775, 819963], [884622, 893670, 925181], [978633, 994200, 1023818], [1078472, 1092553, 1152886]],
+        prior:  { summit: [716890, 716924, 716924], cons: [714539, null, null] },
+        note: 'Both the model and the Street revised revenue UP at every snapshot, every year. The gap is the story: Summit sits above consensus in all four years, and in FY28–29 the distance widens to ~$90B and ~$170B — the model’s AWS conviction compounding. In the growth view: implied FY26 growth went 12.4% → 14.8% across the three snapshots.' },
+      ebitda: { label: 'EBITDA', unit: 'usdM', marginOf: 'rev', marginLabel: 'EBITDA margin',
+        summit: [[198533, 199877, 208443], [237442, 259787, 261050], [258487, 278013, 291994], [308643, 338397, 353793]],
+        cons:   [[202938, 205916, 210933], [245458, 254062, 266809], [290514, 308603, 328908], [330854, 340575, 377472]],
+        note: 'Steady upward revisions on both columns — but the Street has re-rated the OUT years harder: consensus FY28 rose $38B across the three snapshots vs Summit’s $34B, and consensus now sits ABOVE the model in every year (most visibly FY28–29). The model is the conservative one on profitability — clearest in the margin view: by FY28 consensus holds ~32% EBITDA margin vs Summit’s ~26%.' },
+      earnings: { label: 'Earnings (model definition)', unit: 'usdM', marginOf: 'rev', marginLabel: 'net margin (model def.)',
+        summit: [[77850, 79983, 85902], [99503, 98612, 108304], [109171, 109377, 114955], [138145, 140137, 147510]],
+        cons:   [[86277, 84854, 92868], [106350, 104485, 107942], [127261, 128498, 135110], [151474, 153778, 159931]],
+        note: 'Earnings as the model defines them (adjusted — not GAAP net income), against the matching BBG estimate stored at each snapshot. Both revised up after each print; consensus stays above Summit in every year, with the widest gap in FY28 ($135B vs $115B).' },
+      aws: { label: 'AWS Net Sales', unit: 'usdM',
+        summit: [[153918, 158917, 163805], [189319, 198646, 214584], [236649, 248308, 268230], [295811, 310385, 335287]],
+        cons: null,
+        prior: { summit: [128265, 127053, 127053] },
+        note: 'AWS is where the model’s upward revisions concentrate: every year raised at BOTH snapshots, and the out-years hardest — FY27 went $189.3B → $214.6B (+13%) and FY29 $295.8B → $335.3B (+13%) in five months. Segment forecasts are Summit-only; BBG segment consensus is not stored per snapshot (see the Quarterly view for the Street’s AWS line).' },
+      usrev: { label: 'North America Net Sales', unit: 'usdM',
+        summit: [[474550, 473199, 475282], [522005, 520518, 520434], [600306, 598596, 598499], [690352, 688386, 688274]],
+        cons: null,
+        prior: { summit: [427522, 423912, 423912] },
+        note: 'The control group: North America barely moved — every revision within ±0.4%. The re-rates of early 2026 were an AWS story (and its capex bill), not a retail one.' },
+      intrev: { label: 'International Net Sales', unit: 'usdM',
+        summit: [[177213, 185900, 183949], [198479, 208208, 206943], [238175, 249849, 248331], [285810, 299819, 297997]],
+        cons: null,
+        prior: { summit: [161103, 158890, 158890] },
+        note: 'Raised ~5% across the board at the Feb snapshot after the strong 4Q25 international print, then trimmed ~1% in May — one step up, holding.' },
+      opinc: { label: 'Operating Income (Total, derived)', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin',
+        summit: [[95835, 99181, 101886], [122541, 122194, 127577], [132009, 136321, 143026], [164720, 170314, 178940]],
+        cons: null,
+        note: 'Total operating income DERIVED as the sum of the model’s three segment projections per vintage (the model zeroes its own total-op-income line forward; the segment revenue sum ties to total revenue to the dollar, so the margin is consistent). Revised up at every snapshot — FY26 $95.8B → $101.9B — and in the margin view the consolidated operating margin creeps from 11.9% to 12.4% for FY26, reaching ~13.5% by FY29. No BBG op-income consensus is stored per snapshot (the Street’s forward op income lives in the Results quarterly view).' },
+      naopinc: { label: 'North America Op. Income (GAAP)', unit: 'usdM', marginOf: 'usrev', marginLabel: 'NA operating margin',
+        summit: [[34642, 37530, 35770], [44370, 44244, 41635], [42021, 41902, 41895], [48325, 48187, 48179]],
+        cons: null,
+        note: 'The Feb snapshot raised FY26 after the 4Q25 beat ($34.6B → $37.5B); May gave half of it back. The out-years barely move at $42–48B — in the margin view the model runs North America at ~7.5–8.5% through FY27, then steps down to a flat ~7.0% in FY28–29 even as revenue keeps compounding.' },
+      intopinc: { label: 'International Op. Income (GAAP)', unit: 'usdM', marginOf: 'intrev', marginLabel: 'Intl operating margin',
+        summit: [[8861, 7436, 6716], [11909, 10410, 8692], [9527, 9994, 9933], [12861, 13492, 13410]],
+        cons: null,
+        note: 'The one line consistently revised DOWN: FY26 went $8.9B → $6.7B (−24%) and FY27 $11.9B → $8.7B (−27%) across the three snapshots, even as International revenue was revised up — in the margin view the assumed margin fades from 5.0% to 3.7% for FY26. The model pushed International profitability out, the mirror image of its AWS re-rate.' },
+      awsopinc: { label: 'AWS Op. Income (GAAP)', unit: 'usdM', marginOf: 'aws', marginLabel: 'AWS operating margin',
+        summit: [[52332, 54215, 59400], [66262, 67540, 77250], [80461, 84425, 91198], [103534, 108635, 117351]],
+        cons: null,
+        note: 'AWS profitability followed the revenue re-rate with a lag: modest bumps in Feb, then the big move in May after the 1Q26 AWS margin beat — FY26 $54.2B → $59.4B (+10%) and FY27 $67.5B → $77.3B (+14%) in one snapshot. In the margin view the May snapshot lifted the assumed AWS operating margin from ~34% to ~36% both years.' }
+    },
+    note: 'Single source: every number on this tab comes from the Summit Research database — the model’s saved snapshots (vintages) as recorded in the DCF’s Projection History: Dec 18, 2025 (before the 4Q25 print), Feb 10, 2026 (after it) and May 5, 2026 (after the 1Q26 print). Consensus = the BBG estimates stored inside those same snapshot blocks (null where Summit holds none). Implied growth chains entirely within Summit’s data: each fiscal year against the prior year’s value stored in the same vintage — for segment lines that base is the model’s own frozen FY25 projection, not the reported actual.'
+  },
+  source: 'Sources: Amazon 8-K press releases on SEC EDGAR (guidance ranges and reported actuals, exact figures); CNBC earnings-day coverage for pre-print consensus (Refinitiv through 2Q23, LSEG after; AWS per StreetAccount); Bloomberg BEst consensus export from the company model (FA_AMZN_US.xlsx, Jul 2026) for forward quarterly consensus, revenue lines and capex; Summit model export "AMZN Summit Projections.xlsm" — Projection History vintages 2025-12-18 / 2026-02-10 (pre-print Summit estimates) and 2026-05-05 (annual forward estimates) — cross-checked with the Summit MCP snapshots (quarterly forward from the 2026-05-13 snapshot). Values in US$ millions except EPS.'
+};

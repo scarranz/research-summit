@@ -188,6 +188,13 @@ trusting rounded output (the BBG margin rows carry full precision).
 - **No mixed bases**: never compare an op-income projection to an EBITDA actual (see §4); when a
   consensus line is on a different basis (BBG "comparable" EPS vs GAAP), note it.
 - Derived/blended figures are labeled as such in the metric `note`.
+- **Guidance is a third basis you must GO SOURCE (per metric, per period).** `guideLo`/`guideHi` come
+  from the company's OWN guide, given in the PRIOR quarter's release / 8-K, for the metrics it actually
+  guides — score the actual against it (below / meets / above), and render the translucent band. **Not
+  every company or metric has guidance** (Amazon: net sales + GAAP op income only; Alphabet: none). A
+  `null` must mean *checked, none given*, never *did not look*; where none exists, **say so** (a `note`
+  / the "no company guidance" disclaimer) — never fabricate a guide. (Full rule: `EARNINGS_CONVENTIONS.md`
+  §5.5.)
 
 ## 6. Replicating for a new ticker — checklist
 

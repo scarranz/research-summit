@@ -421,6 +421,7 @@ implies gaps in work rather than in disclosure.
 | Earnings calls | transcripts (~10 quarters) | → stored by YOU per §3 |
 | Numbers / consensus | Bloomberg export, e.g. `FA_<TICKER>_US_*.xlsx` — sheet "Multiple Periods": rows = line items, columns = quarters, last column(s) = `(Fwd)` estimates | Dani's **Downloads** |
 | Summit expectations | Summit DCF/MCP (`search_ticker` first) or analyst hand figures | MCP / Dani |
+| Company guidance | the company's OWN numeric guide, from the PRIOR quarter's release / 8-K (per metric, per period) | SEC EDGAR / IR |
 | SPLC | Bloomberg SPLC export — feeds the DEEP DIVE, not Earnings | Downloads |
 
 1. **Consensus = Bloomberg ONLY** (web estimates are color, never a source of record; never
@@ -428,6 +429,22 @@ implies gaps in work rather than in disclosure.
 2. **Hardcode only the values that render.** No hidden series committed.
 3. **Summit estimates are never invented** — absent → "to fill".
 4. **Append-only per quarter** — pre-call blocks freeze when the quarter opens.
+5. **Guidance is a THIRD comparison basis — run the SAME analysis against it, and YOU MUST GO SOURCE
+   IT (v2.10.2).** Beyond Street consensus and Summit, the print is also scored against the **company's
+   own guidance** where it exists — the same actuals-vs-expectations treatment (beat / meets / below the
+   guide), rendered as the `guideLo`/`guideHi` translucent band on the chart and available in the
+   Post-Results scoring.
+   - **It is NOT universal.** Not every company issues numeric guidance, and among those that do, **not
+     every metric is guided** (e.g. Amazon guides only net sales + GAAP operating income; Alphabet issues
+     no numeric FY/quarter guidance at all).
+   - **You have to GO LOOK for it, per metric and per period.** Guidance for a quarter is the guide the
+     company gave *going into* it — found in the **PRIOR quarter's press release / 8-K** (SEC EDGAR / IR).
+     Fill `guideLo`/`guideHi` for the corresponding periods from that source. A `null` must mean **"checked,
+     none given,"** never "did not look" — do not leave it null by default without checking.
+   - **When guidance does not exist, SAY SO explicitly.** If the company issues none — or none for a given
+     metric or period — state it (the chart's **"no company guidance"** disclaimer; a metric `note` that
+     the line is unguided). The absence is a documented finding, not a silent gap. **Never fabricate a
+     guide** (same rule as Summit / consensus).
 
 ## 6. UI structure
 

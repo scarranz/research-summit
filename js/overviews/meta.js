@@ -18,6 +18,7 @@
 // Live data: price / market cap / EV via Massive (api.liveQuote), logged-in only; graceful fallback.
 
 import { makeManagement } from './management.js';
+import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -2519,6 +2520,8 @@ function deepDiveHtml(c){
       '<div class="cp-phpane" data-cpp="watch" hidden>'+cpWatchBody(c)+'</div>'+
       '<div class="cp-phpane" data-cpp="results" hidden>'+cpResultsBody(c)+'</div>'+
       '<div class="cp-phpane" data-cpp="postcall" hidden>'+cpCallBody(c)+'</div>' },
+    { k:'results', l:'Results', body:resultsHtml('META') },
+    { k:'estevo', l:'Estimates', body:resultsEvoHtml('META') },
     { k:'model', l:'Model vs Reality', body:modelBody() },
     { k:'guidance', l:'Guidance', body:guideBody() },
     { k:'strategy', l:'Strategy', body:strategyBody() },
@@ -2583,6 +2586,8 @@ function buildSub(root, group, key){
   if(group==='bottomline' && key==='spend') buildSpend();
   if(group==='bottomline' && key==='suppliers') scRenderSuppliers();
   if(group==='bottomline' && key==='margins'){ buildMargins(); loadMargins(); }
+  if(group==='evolution' && key==='results') initResults();
+  if(group==='evolution' && key==='estevo') initResultsEvo();
   if(group==='evolution' && key==='model') buildModelTab();
   if(group==='valuation' && key==='sensitivity') sensInit(root);
   if(group==='valuation' && key==='capalloc') buildCapital();

@@ -20,9 +20,11 @@
 //   ... when the pane becomes visible: requestAnimationFrame(initResults)
 
 import { amznResults } from './results-data/amzn.js';
+import { metaResults } from './results-data/meta.js';
 
 var RESULTS_DATA = {
-  AMZN: amznResults
+  AMZN: amznResults,
+  META: metaResults
 };
 
 export function getResultsData(ticker){

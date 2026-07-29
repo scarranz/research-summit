@@ -1143,28 +1143,38 @@ itself ("Margin profile unanswered — Post pressed, got ROIC framing instead"),
 ## 6c-ii. `results.summary` — the AI call summary ("the minute", v2.10)
 
 The Post-Results black one-line take is gone; in its place a **collapsible AI-generated summary of the
-call**, rendered by `ceSummaryBlock` / `ceSumNodes` from:
+call**. **The summary IS THE PROSE** — several always-visible PARAGRAPHS, each landing a punch on a
+specific theme — and EACH paragraph carries its own "＋ more" to go deeper. It is **NOT** one generalist
+paragraph followed by a list of collapsed titles. Rendered by `ceSummaryBlock` / `ceSumMore` / `ceSumNodes`
+from:
 
 ```js
 results.summary = {
-  intro: 'always-visible lede prose (HTML) — may contain glossary spans',
-  nodes: [
-    { t: 'Top line — what mattered', body: 'prose (HTML)', nodes: [
-        { t: 'Drivers', body: '…', nodes: [ … ] },   // dropdowns WITHIN dropdowns, arbitrary depth
-        { t: 'Segments', body: '…' }
-    ]},
+  paras: [
+    { p: 'always-visible paragraph (HTML) — a PUNCH on one theme (top line / the bill / EPS / …)',
+      moreLabel: '＋ more — …',                 // optional; default '＋ more — the detail behind this'
+      more: {                                    // optional deeper detail behind the ＋more dropdown
+        body: 'deeper prose (HTML)',
+        nodes: [                                 // optional context-guide dropdowns WITHIN the ＋more
+          { t: 'Cloud — the engine', body: '…', nodes: [ { t:'Backlog', body:'…' } ] }  // nesting ok
+        ]
+      } },
+    { p: '…next punch paragraph…', more: '…' },  // `more` may also be a plain HTML string
     …
   ]
 }
 ```
 
 **Rules:**
+- **The summary is written as PROSE, several paragraphs.** Each `p` is a real paragraph that makes a point
+  and stands on its own — the reader gets the whole story by *reading the paragraphs*, top to bottom. The
+  "＋ more" is only for the reader who wants to go deeper on that specific point.
 - **The box is collapsible from outside, but its TITLE is always visible** — "🧠 Call summary — the
-  minute" + an `AI-generated` tag. Default open (the lede should be readable at a glance).
-- **The lede (`intro`) is ALWAYS visible** — Expand-all / Collapse-all toggles only the inner `nodes`,
-  never the lede.
-- **Nodes are nested `<details>` dropdowns, NOT pop-ups.** The reader opens a category to get the *why* /
-  what happened in the call for that category, and can drill deeper (dropdowns within dropdowns). Depth is
+  minute" + an `AI-generated` tag. Default open.
+- **The paragraphs (`p`) are ALWAYS visible** — Expand-all / Collapse-all toggles only the `＋ more`
+  dropdowns, never the paragraphs.
+- **`more` / `nodes` are nested `<details>`, NOT pop-ups.** The reader opens `＋ more` for the detail behind
+  a paragraph, and can drill deeper (dropdowns within dropdowns — drivers → segments → backlog). Depth is
   colour-cued (`data-d` 0/1/2) but unlimited.
 - **Glossary terms** — wrap a technical concept `<span class="ce-gl" data-def="the definition">term</span>`.
   It renders with a dashed underline and shows the definition on **hover** in a styled tooltip (CSS-only,

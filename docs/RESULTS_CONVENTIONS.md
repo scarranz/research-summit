@@ -209,6 +209,14 @@ trusting rounded output (the BBG margin rows carry full precision).
 
 ## 7. Open items / next iterations (as of Jul 28, 2026)
 
+- **GOOGL (Jul 29):** the Evolution **Results + Estimates sub-tabs are wired** in `js/overviews/googl.js`
+  (row: `Earnings · Results · Estimates · Guidance · Strategy · Timeline`; `resultsHtml('GOOGL')` /
+  `resultsEvoHtml('GOOGL')` init'd on visibility). **Pending: the `js/results-data/googl.js` dataset**
+  — build it from GOOGL's `CE_CONS` archive (Street + actuals, already in `googl.js`) + the Summit
+  projection export (Summit forward, sparse), then register `GOOGL` in `RESULTS_DATA`. Until then the
+  panes show a pending note. GOOGL's Setup chart is also being rebuilt in this format, merged into ONE
+  chart — see `docs/EARNINGS_CONVENTIONS.md` §6a-viii-bis.
+
 - ~~Estimate-EVOLUTION view across vintages~~ — SHIPPED Jul 28 as the *Estimate evolution*
   block (§3.6a): annual forecasts per vintage, Summit + stored-BBG, revision table.
 - **Wire Estimate Evolution to the Summit connection**: the tab's data should come from the

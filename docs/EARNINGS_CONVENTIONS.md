@@ -1,4 +1,4 @@
-# Earnings — THE complete convention (build + call interpretation, v2.8 · Jul 2026)
+# Earnings — THE complete convention (build + call interpretation, v2.9 · Jul 2026)
 
 **This is the single source of truth for everything earnings-call related**: how calls are
 ANALYZED (the rules, the detection protocol, the regression tests), how they are STORED (the
@@ -19,6 +19,35 @@ either — they are identical there — but take the **Watch List from `googl.js
 migrated from v1 (standalone Promise Tracker, single-estimate setup, no quarter selector) to the full
 v2.2 machinery **and** the v2.3 fusion on 2026-07-24. Each overview file owns its own copy of the
 Earnings renderers, so v2.5/v2.6 landing on GOOGL changed nothing for the other companies.
+
+**What v2.9 changed — the Post-Results aside becomes a list, and Evolution adopts the Results engine:**
+
+1. **"Also on the call" is now a single LIST box, not cards.** The supplemental aside was disliked as
+   a set of banded cards. It is now **one box holding a plain list**, each point a native `<details>`
+   dropdown (headline on the row, evidence behind the caret). The **`context` / `logged` band
+   classification is REMOVED entirely** — no triage strip, no band colours. A thesis-mover (`lead`)
+   still routes to the Watch List and is not rendered here. Renderer: `ceHighlightsBlock` → `.ce-alsobox`.
+
+2. **Evolution adopts the shared Results engine (from `main`, PR #63 · AMZN pilot).** GOOGL's Evolution
+   row is now **`Earnings · Results · Estimates · Guidance · Strategy · Timeline`** (matching Amazon,
+   whose "Call Prep" = our "Earnings"). **Results** and **Estimates** are the generic engine
+   `js/results.js` (see `docs/RESULTS_CONVENTIONS.md`), embedded via `resultsHtml('GOOGL')` /
+   `resultsEvoHtml('GOOGL')` and init'd lazily on visibility. They render **once GOOGL's dataset is
+   registered in `RESULTS_DATA`** (built from the CE_CONS archive + the Summit projection export, per
+   RESULTS_CONVENTIONS §6); until then the pane shows a pending note. **This is the go-forward Evolution
+   row for every standardized company.**
+
+3. **The Setup chart adopts the Amazon chart+table FORMAT — merged into ONE chart (§6a-viii-bis).**
+   The Setup's own chart replicates Amazon's Results chart-with-integrated-table (the good one in Top
+   Line): grouped metric picker, clickable legend chips, period-wise hover, range controls, and the
+   Fiscal.ai-style transposed table beneath. **Amazon splits it into TWO charts (Top Line vs Margins &
+   Profitability); Setup keeps ONE** — the two formats are CLUBBED so every tracked indicator lives in
+   a single chart+table, with margin-type controls **disabled for lines they do not apply to** (e.g.
+   revenue has no margin). Period selection is deliberately narrow (§6a-viii-bis): **quarterly is
+   SEASONAL** — the same fiscal quarter across prior years (forecasting Q3 2026 → Q3 2025, Q3 2024, …)
+   **plus only the ONE next quarter** (never two quarters out — only the immediately-next is
+   statistically meaningful); **annual shows the next 2 FY** forward. Both Street (Bloomberg) and
+   Summit series (Summit is empty for many lines, populated only where a forecast exists).
 
 **What v2.8 changed — Post-Results grows two toggles, the aside is demoted, and the fill is ONE step:**
 
@@ -908,9 +937,52 @@ Rules:
   gives none, so the chart is Reported + BBG + Summit.
 - **Bars ⇄ Lines** toggle; metric selector.
 - **Annual only for now.** The quarter matters — the intended toggle is “show only the quarter being
-  forecasted across prior years” (Q3 2026 → Q3 2023/24/25), to cut noise. It is **deferred**: the
-  Summit quarterly forecast is not wired (it needs a big re-cabling), so today only the annual
-  forecast exists. Build the quarter view only once Summit quarterly is available.
+  forecasted across prior years” (Q3 2026 → Q3 2023/24/25), to cut noise. **This is now the target
+  design — see §6a-viii-bis, which supersedes this note:** the Setup chart is being rebuilt in
+  Amazon's chart+table format with exactly that seasonal quarterly view.
+
+### 6a-viii-bis. The Setup chart — replicate Amazon's chart+table, MERGED into ONE (v2.9)
+
+**Target (superseding §6a-viii's two-series bars):** the Setup chart replicates the **Amazon Results
+chart-with-integrated-table** — the good one in Deep Dive ▸ Evolution ▸ Results, Top Line block
+(engine `js/results.js`, spec `docs/RESULTS_CONVENTIONS.md` §3). Same look-and-feel and the same
+**conventions worked out on the Amazon tables** — they are the standard; do not reinvent them:
+
+- **Grouped metric `<select>`** (optgroups Totals / Segments / …), **clickable legend chips** (each
+  toggles its series: Actual/Reported · Summit · Consensus · Guidance band · margin line),
+  **period-wise hover** (one tooltip per period, every visible series with its surprise), **range
+  controls** (preset pills + drag-to-zoom + the dual-handle slider), and the **Fiscal.ai-style
+  transposed table** beneath (periods as columns oldest→newest, shaded **E** columns, sticky header +
+  metric column + a sticky right **"Range record"** column; row structure value → growth → surprise →
+  margin). Reading is **actual-centric** (▲/green = the print beat the estimate).
+
+**The ONE-CHART rule (the Setup-specific divergence).** Amazon splits the view into **TWO** charts —
+*Top Line* (revenue, sales, segment revenues, other KPIs) and *Margins & Profitability* (op income,
+EBITDA, EPS, capex, segment op income; margin % lines on a right axis). **In Setup we keep ONE
+chart+table.** Club the two formats so **every tracked indicator coexists in a single chart+table**:
+
+- One merged metric picker lists them all (Totals · Segments · Profitability · …).
+- **Margin-type controls are per-metric and DISABLE where they do not apply** — a revenue/segment-
+  revenue line has no margin, so the margin toggle/right-axis is greyed for it; a profit line (op
+  income/EBITDA) enables the margin-over-revenue line. (This mirrors the existing per-metric
+  `CE_MARGIN_ON` idea and the Post-Results margin toggle, §6a-iii.)
+- Units that differ (a $B revenue line vs an EPS line vs a % margin) never share one axis silently —
+  switch the axis with the metric, exactly as the Amazon engine does per block.
+
+**Period selection — deliberately NARROW (this is the point).** Do NOT plot the whole timeline.
+
+| lens | what shows |
+|---|---|
+| **Quarterly (SEASONAL)** | the **same fiscal quarter across prior years** — forecasting **Q3 2026** → **Q3 2025, Q3 2024, Q3 2023, …** (reported actuals) **plus only the ONE next quarter** being forecast (Q3 2026, Street + Summit). **Never two quarters out** (no Q3 2027 as well) — only the immediately-next quarter is statistically meaningful. |
+| **Annual** | FY history **plus the next 2 FY** forward (Street + Summit). |
+
+**Both estimate series, always: Street (Bloomberg) + Summit.** Summit is **empty for many lines** and
+is populated **only where a forecast exists** (the lines we actually model) — render the Summit series
+sparse, never invent it (§5 golden rules; consensus = Bloomberg only). The chart is fed from the
+`CE_CONS` archive (Street + actuals) and the Summit projection export (Summit forward).
+
+**Status:** convention agreed and recorded here (v2.9). Implementation is a bespoke Setup chart (or a
+merged-section reuse of `js/results.js`); until it lands, §6a-viii's annual bars stand in.
 
 ### 6a-ix. The quarter belongs to the section, not the other way round
 

@@ -1709,9 +1709,31 @@ function segmentsBody(){
   '</div>';
   h+='<div class="ov-fynote">The <b>~$19B RL loss is the entire gap</b> between the FoA segment margin (~50%+) and the consolidated company margin (~41%). Segment splits are charted as actuals only — the model\'s segment projections are unreliable.</div>';
   h+=kpis(KPIS);
-  h+='<div class="ov-diagram-cap" style="margin-top:8px">Deep dives: the ad engine is in <b>Family of Apps</b>; the bet is in <b>Reality Labs</b>; the cost of the AI build is in <b>Bottom Line ▸ Spend Engine</b>.</div>';
+  h+='<div class="ov-diagram-cap" style="margin-top:8px">Deep dives: pick a segment below — the cost of the AI build is in <b>Bottom Line ▸ Spend Engine</b>.</div>';
   h+='<div class="ov-foot">'+SRC_FIN+'</div>';
+  // Segment Deep Dive — the former Family of Apps / Reality Labs sub-tabs,
+  // folded in here behind a toggle (SAB, Jul 2026). Bodies unchanged.
+  h+='<style>.mseg-tabs{display:inline-flex;gap:3px;background:rgba(8,102,255,0.06);border:1px solid var(--bdr);border-radius:9px;padding:4px;margin:0 0 14px}'+
+    '.mseg-tab{border:0;background:transparent;font:inherit;font-size:12px;font-weight:800;color:var(--mu);padding:6px 16px;border-radius:7px;cursor:pointer}'+
+    '.mseg-tab.active{background:'+BRAND+';color:#fff}'+
+    '.mseg-tab[data-mseg="rl"].active{background:'+RL+'}</style>';
+  h+=sec('Segment Deep Dive',
+    '<div class="mseg-tabs">'+
+      '<button type="button" class="mseg-tab active" data-mseg="foa">Family of Apps</button>'+
+      '<button type="button" class="mseg-tab" data-mseg="rl">Reality Labs</button>'+
+    '</div>'+
+    '<div class="mseg-pane" data-mseg="foa">'+foaBody()+'</div>'+
+    '<div class="mseg-pane" data-mseg="rl" hidden>'+rlBody()+'</div>');
   return h;
+}
+// Toggle wiring for the Segment Deep Dive (FoA chart builds lazily when its pane shows).
+function wireSegDD(root){
+  var pane=root.querySelector('.dd-pane[data-dd="topline"] .ovt-subpane[data-ovst="segments"]'); if(!pane) return;
+  pane.querySelectorAll('.mseg-tab').forEach(function(b){ b.onclick=function(){
+    pane.querySelectorAll('.mseg-tab').forEach(function(x){ x.classList.toggle('active', x===b); });
+    pane.querySelectorAll('.mseg-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-mseg')!==b.getAttribute('data-mseg')); });
+    if(b.getAttribute('data-mseg')==='foa') requestAnimationFrame(buildFoa);
+  }; });
 }
 // Top Line ▸ Family of Apps — the ad engine (visual, distilled).
 function foaBody(){
@@ -2197,7 +2219,7 @@ function moneyMapBody(){
   ]);
   h+='<div class="ov-diagram-cap" style="margin:10px 0 6px">The revenue engine, step by step — <b>tap any step</b> for detail:</div>';
   h+=chain(AD_FLOW,'ad');
-  h+='<div class="ov-diagram-cap" style="margin-top:8px">The full economics (why Meta keeps ~the whole ad dollar) are in <b>Deep Dive ▸ Bottom Line ▸ Unit Economics</b>; the ad engine in <b>Top Line ▸ Family of Apps</b>.</div>';
+  h+='<div class="ov-diagram-cap" style="margin-top:8px">The full economics (why Meta keeps ~the whole ad dollar) are in <b>Deep Dive ▸ Bottom Line ▸ Unit Economics</b>; the ad engine in <b>Top Line ▸ Segments ▸ Segment Deep Dive</b>.</div>';
   return h;
 }
 function productsBody(){
@@ -2493,8 +2515,7 @@ function deepDiveHtml(c){
   '</div>';
   h+=subtabs('topline',[
     { k:'segments', l:'Segments', body:segmentsBody() },
-    { k:'foa', l:'Family of Apps', body:foaBody() },
-    { k:'rl', l:'Reality Labs', body:rlBody() },
+    // Family of Apps + Reality Labs folded into Segments ▸ Segment Deep Dive (SAB, Jul 2026).
     { k:'customers', l:'Customers', body:customersBody() },
     { k:'tam', l:'TAM', body:tamBody() },
     { k:'industry', l:'Industry Analysis', body:industryBody() },
@@ -2581,8 +2602,7 @@ function metaLiveOne(root,tk){
 function activeDD(root){ var t=root.querySelector('.dd-tab.active'); return t?t.getAttribute('data-dd'):'topline'; }
 function activeSubKey(root, group){ var p=root.querySelector('.dd-pane[data-dd="'+group+'"] .ovt-subtab.active'); return p?p.getAttribute('data-ovst'):null; }
 function buildSub(root, group, key){
-  if(group==='topline' && key==='segments') buildSegments();
-  if(group==='topline' && key==='foa') buildFoa();
+  if(group==='topline' && key==='segments'){ buildSegments(); buildFoa(); wireSegDD(root); }
   if(group==='bottomline' && key==='spend') buildSpend();
   if(group==='bottomline' && key==='suppliers') scRenderSuppliers();
   if(group==='bottomline' && key==='margins'){ buildMargins(); loadMargins(); }

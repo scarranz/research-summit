@@ -32,10 +32,12 @@ Earnings renderers, so v2.5/v2.6 landing on GOOGL changed nothing for the other 
    row is now **`Earnings · Results · Estimates · Guidance · Strategy · Timeline`** (matching Amazon,
    whose "Call Prep" = our "Earnings"). **Results** and **Estimates** are the generic engine
    `js/results.js` (see `docs/RESULTS_CONVENTIONS.md`), embedded via `resultsHtml('GOOGL')` /
-   `resultsEvoHtml('GOOGL')` and init'd lazily on visibility. They render **once GOOGL's dataset is
-   registered in `RESULTS_DATA`** (built from the CE_CONS archive + the Summit projection export, per
-   RESULTS_CONVENTIONS §6); until then the pane shows a pending note. **This is the go-forward Evolution
-   row for every standardized company.**
+   `resultsEvoHtml('GOOGL')` and init'd lazily on visibility. **`GOOGL` is registered in `RESULTS_DATA`**
+   with `js/results-data/googl.js` **reconstructed from the rolling `BBG_CONSENSUS.txt` archive** (Street
+   `cons` + reported `act`; **`summit` null everywhere for now — pending the Summit estimate-visibility
+   work**; no guidance). So GOOGL's **Results** tab renders the full Amazon-style chart+table today;
+   **Estimates** shows a pending note until a vintage/Summit block exists. **This is the go-forward
+   Evolution row for every standardized company.**
 
 3. **The Setup chart adopts the Amazon chart+table FORMAT — merged into ONE chart (§6a-viii-bis).**
    The Setup's own chart replicates Amazon's Results chart-with-integrated-table (the good one in Top

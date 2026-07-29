@@ -1986,13 +1986,22 @@ function cePhaseStyle(){
     '.ce-chip.hi{background:rgba(234,67,53,.12);color:'+RED+'}'+
     '.ce-chip.md{background:rgba(251,188,5,.18);color:#7A5B02}'+
     '.ce-chip.lo{background:#EEF1F5;color:var(--mu)}'+
-    /* supplemental "Also on the call" aside — deliberately de-emphasized vs the scorecard */
-    '.ce-suppl{margin-top:18px;padding:11px 13px 13px;border:1px dashed #C7D0DA;border-radius:12px;background:#F6F8FA}'+
-    '.ce-suppl-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px}'+
-    '.ce-suppl-tag{font-size:8px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);background:#E7ECF2;border:1px solid var(--bdr);border-radius:999px;padding:2px 8px}'+
-    '.ce-suppl-h>b{font-size:12px;color:var(--navy);font-weight:800}'+
-    '.ce-suppl-sub{font-size:9.5px;color:var(--mu);font-weight:600;line-height:1.4;flex:1 1 100%}'+
-    '.ce-suppl .ce-hcard{border-top-width:2px;background:#fff}'+
+    /* "Also on the call" — one box, a plain list, each point a native <details> dropdown (v2.9) */
+    '.ce-alsobox{margin-top:18px;border:1px solid var(--bdr);border-radius:12px;background:#fff;overflow:hidden}'+
+    '.ce-alsobox-h{padding:10px 13px;background:#F6F8FA;border-bottom:1px solid var(--bdr);display:flex;flex-direction:column;gap:2px}'+
+    '.ce-alsobox-h>b{font-size:12px;color:var(--navy);font-weight:800}'+
+    '.ce-alsobox-sub{font-size:9.5px;color:var(--mu);font-weight:600;line-height:1.4}'+
+    '.ce-alsolist{display:flex;flex-direction:column}'+
+    '.ce-also-i{border-bottom:1px solid var(--bdr)}'+'.ce-also-i:last-child{border-bottom:0}'+
+    '.ce-also-s{display:flex;align-items:center;gap:8px;padding:9px 13px;cursor:pointer;list-style:none;font-size:11.5px;font-weight:600;color:var(--navy);line-height:1.45}'+
+    '.ce-also-s::-webkit-details-marker{display:none}'+
+    '.ce-also-s:hover{background:#FAFBFD}'+
+    '.ce-also-tag{font-size:8px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--tc,#6b7684);border:1px solid currentColor;border-radius:999px;padding:1px 7px;flex:none;opacity:.85}'+
+    '.ce-also-hd{flex:1;min-width:0}'+
+    '.ce-also-ar{margin-left:auto;color:var(--mu);font-size:10px;transition:transform .15s;flex:none}'+
+    '.ce-also-i[open] .ce-also-ar{transform:rotate(180deg)}'+
+    '.ce-also-body{padding:0 13px 12px 13px;font-size:10.5px;font-weight:500;color:var(--navy);line-height:1.55;background:#FBFCFE}'+
+    '.ce-also-body p{margin:6px 0}'+
     /* highlights, as cards */
     '.ce-hcards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}'+
     '@media(max-width:760px){.ce-hcards{grid-template-columns:1fr}}'+
@@ -2100,53 +2109,34 @@ function ceResultsBody(c){
   }).join('');
   return h;
 }
-// E · "Also on the call" ── the SUPPLEMENTAL colour, rendered inside Post-Results as a de-emphasized
-// aside (the Post-Call tab was dissolved Jul 2026). Renamed away from "highlights" so it is never
-// mistaken for the things to raise at the meeting — those are the scorecard and the Watch List. This
-// is NOT the tracking layer (Watch List) and NOT meeting-critical (scorecard): it deliberately keeps
-// non-trackable call colour (a backlog figure, a capex number, a user count) that would never earn a
-// Watch slot. Two bands only (context + logged); `lead` is filtered out and routed to the Watch List.
-// `take`, `threeMinutes`, `notBringing`, `newQuestions` survive as data (newQuestions still seeds the
-// next Watch List) but are not rendered. Styled via .ce-suppl to read clearly as secondary.
+// E · "Also on the call" ── the supplemental colour from the call, rendered inside Post-Results as a
+// SINGLE BOX holding a plain LIST, each point with its own native <details> dropdown (v2.9). The
+// Context/Logged band classification and the triage strip are GONE (Dani did not want them). Still
+// not the meeting-critical read (that is the scorecard + the Watch List): a thesis-mover (band:'lead')
+// is tracked on the Watch List and stays filtered out here. `take`/`threeMinutes`/`notBringing`/
+// `newQuestions` survive as data (newQuestions still seeds the next Watch List) but are not rendered.
 function ceHighlightsBlock(cc, qk){
   if(!cc||!cc.highlights||!cc.highlights.length) return '';
-  // Only Context + Logged — the talking points. `lead` (moves-the-thesis) items are EXCLUDED on
-  // purpose: a thesis-mover is tracked, and the tracking layer is the Watch List, not here.
-  var bands=[
-    { k:'context', i:'●', c:BLUE, t:'Context', s:'settled — mention, do not debate' },
-    { k:'logged',  i:'○', c:GRAY, t:'Logged',  s:'call colour — on the record, not tracked' },
-  ];
+  // A thesis-mover (band:'lead') is tracked on the Watch List, never here — keep filtering it out.
   var hls=cc.highlights.filter(function(x){ return (x.band||'context')!=='lead'; });
   if(!hls.length) return '';
-  // Wrapped in .ce-suppl — deliberately styled as a SECONDARY aside (dashed, muted, a "supplemental"
-  // pill), NOT like the scorecard above, so it never reads as equally important. Renamed away from
-  // "highlights" (which implied these were the things to raise at the meeting — they are not; the
-  // meeting-critical items are the scorecard and the Watch List).
-  var b='<div class="ce-suppl"><div class="ce-suppl-h">'+
-    '<span class="ce-suppl-tag">supplemental</span><b>Also on the call</b>'+
-    '<span class="ce-suppl-sub">colour worth a mention — <b>not</b> the things to raise at the meeting. Those are the scorecard above and the Watch List; thesis-movers are tracked there, never here.</span></div>';
-  var counts={}; bands.forEach(function(bd){
-    counts[bd.k]=hls.filter(function(x){ return (x.band||'context')===bd.k; }).length; });
-  b+='<div class="ce-tri">'+bands.map(function(bd){
-    return '<button type="button" class="ce-tri-b active" data-ceband="'+bd.k+'" data-cebq="'+esc(qk)+'" style="--bc:'+bd.c+'">'+
-      '<span class="ce-tri-i">'+bd.i+'</span><span class="ce-tri-t">'+bd.t+'</span>'+
-      '<span class="ce-tri-n">'+(counts[bd.k]||0)+'</span>'+
-      '<span class="ce-tri-s">'+bd.s+'</span></button>';
-  }).join('')+'</div>';
-  var hi=0;
-  b+='<div class="ce-hcards" data-cehl="'+esc(qk)+'">'+hls.map(function(x){
-    var bd=bands.filter(function(z){ return z.k===(x.band||'context'); })[0]||bands[0];
-    var tg=CE_HLTAG[x.tag]||{c:'#6b7684',l:x.tag||''};
+  var b='<div class="ce-alsobox"><div class="ce-alsobox-h"><b>Also on the call</b>'+
+    '<span class="ce-alsobox-sub">supplemental colour — the meeting-critical items are the scorecard above and the Watch List</span></div>'+
+    '<div class="ce-alsolist">';
+  b+=hls.map(function(x){
+    var tg=CE_HLTAG[x.tag]||null;
     var det=x.detail||'';
     if(x.open) det+='<p><b>Still open:</b> '+x.open+'</p>';
-    var id=det?ceReg('hl-'+qk+'-'+(hi++), tg.l+' — '+String(x.head).replace(/<[^>]+>/g,''), det):null;
-    return '<div class="ce-hcard" data-band="'+bd.k+'" style="--hc:'+bd.c+'"'+(id?' data-detail="ce:'+id+'"':'')+'>'+
-      '<div class="ce-hcard-t"><span class="ce-hcard-b">'+bd.i+'</span>'+esc(tg.l)+'</div>'+
-      '<div class="ce-hcard-h">'+x.head+'</div>'+
-      '<div class="ce-hcard-f">'+(x.open?'<span class="ce-hl-open" title="'+esc(x.open)+'">open</span>':'')+
-      (id?'<span class="ce-hcard-more">＋ detail</span>':'')+'</div></div>';
-  }).join('')+'</div>';
-  b+='</div>';   // close .ce-suppl
+    return '<details class="ce-also-i">'+
+      '<summary class="ce-also-s">'+
+        (tg&&tg.l?'<span class="ce-also-tag" style="--tc:'+tg.c+'">'+esc(tg.l)+'</span>':'')+
+        '<span class="ce-also-hd">'+x.head+'</span>'+
+        (det?'<span class="ce-also-ar">▾</span>':'')+
+      '</summary>'+
+      (det?'<div class="ce-also-body">'+det+'</div>':'')+
+    '</details>';
+  }).join('');
+  b+='</div></div>';
   return b;
 }
 

@@ -441,10 +441,13 @@ implies gaps in work rather than in disclosure.
      company gave *going into* it — found in the **PRIOR quarter's press release / 8-K** (SEC EDGAR / IR).
      Fill `guideLo`/`guideHi` for the corresponding periods from that source. A `null` must mean **"checked,
      none given,"** never "did not look" — do not leave it null by default without checking.
-   - **When guidance does not exist, SAY SO explicitly.** If the company issues none — or none for a given
-     metric or period — state it (the chart's **"no company guidance"** disclaimer; a metric `note` that
-     the line is unguided). The absence is a documented finding, not a silent gap. **Never fabricate a
-     guide** (same rule as Summit / consensus).
+   - **When guidance does not exist, SAY SO — LOUDLY.** The absence must be an explicit, attention-drawing
+     statement, not a silent gap. In the chart legend the engine renders a **bold amber `⚑ No company
+     guidance` badge** (`.rs-noguide`) whenever the current line/period has no guide — so no reader is left
+     wondering why there is no guidance band; it also carries a tooltip explaining the print is scored
+     against Street and Summit only. (Alphabet shows this on every line; Amazon shows it only on the lines
+     it does not guide.) A metric `note` may add detail. **Never fabricate a guide** (same rule as Summit /
+     consensus).
 
 ## 6. UI structure
 
@@ -1059,10 +1062,14 @@ general — bake the sizes into any company's Setup dataset:
 (Superseded the brief SEASONAL cut — the desk wanted a proper multi-quarter trend, not the same fiscal
 quarter across years.)
 
-**Forward periods are highlighted on the axis (v2.10.1).** In the chart, the x-axis label of a **forward
-(estimate) period** — one with no reported actual — renders in **accent blue + bold**, vs the muted grey
-of the reported ones, so "old vs forward" reads at a glance (this is in the shared engine's `rsBuildChart`,
-so it applies to the Results tab and Setup alike; the table already shades its `E` columns).
+**Forward periods are highlighted LOUDLY on the chart (v2.10.1 → v2.10.3).** A muted blue label is not
+enough. The forward (estimate) periods — those with no reported actual — get, via the shared engine's
+`rsFwdZone` Chart.js plugin (so Results tab + Setup both): (a) a **translucent shaded "FORECAST" zone**
+covering the forward columns, with a **dashed boundary** and a **`FORECAST` pill**; and (b) a **rounded
+highlight BUBBLE behind each forward x-axis label** (the reported labels stay muted grey; the forward
+labels are hidden by the scale and redrawn by the plugin, in accent blue, on their bubble). The table
+also shades its `E` columns. The point: old-vs-forward must be **unmistakable and attractive**, not a
+subtle tint.
 
 **Margins — RIGHT axis, PROFIT lines only (v2.10).** A `%` margin on the same axis as `$B`/`$M` is an
 invisible flat line — margins must render on a **second (right) `y2` axis**, which the engine does whenever

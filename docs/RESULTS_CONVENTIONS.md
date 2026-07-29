@@ -157,6 +157,15 @@ evolution: {
    "Range record" column answers "how close has each source tracked the reported numbers":
    nAbove▲ · nBelow▼ + actual avg dev in % and $, avg margins, CAGR, guidance hit-rate.
 
+8. **Forward horizon (SAB, Jul 29, 2026)** — estimates render only as far as the DCF
+   actually models them, derived IN THE ENGINE per dataset from its own last reported
+   period (no per-company config; fiscal-aligned since period labels are fiscal):
+   **Quarterly** — forward quarters only within the CURRENT fiscal year (the FY of the
+   next print). **Annual** — forward years capped at current FY + 2. **Estimate
+   Evolution** — same annual cap. Datasets stay complete on disk (keep building the
+   full arrays — nothing is deleted); `getResultsData()` serves a trimmed copy, and the
+   window re-derives automatically as each print's actuals are filled in.
+
 ## 4. Data sources — where every column comes from (AMZN recipe)
 
 | Column | Source | Notes |

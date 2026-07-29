@@ -1,4 +1,4 @@
-# Earnings — THE complete convention (build + call interpretation, v2.9 · Jul 2026)
+# Earnings — THE complete convention (build + call interpretation, v2.10 · Jul 2026)
 
 **This is the single source of truth for everything earnings-call related**: how calls are
 ANALYZED (the rules, the detection protocol, the regression tests), how they are STORED (the
@@ -19,6 +19,33 @@ either — they are identical there — but take the **Watch List from `googl.js
 migrated from v1 (standalone Promise Tracker, single-estimate setup, no quarter selector) to the full
 v2.2 machinery **and** the v2.3 fusion on 2026-07-24. Each overview file owns its own copy of the
 Earnings renderers, so v2.5/v2.6 landing on GOOGL changed nothing for the other companies.
+
+**What v2.10 changed — the AI call summary, the tag-less aside, and the Setup chart's margins + windows:**
+
+1. **Post-Results: the black one-line "take" is replaced by an AI-generated CALL SUMMARY ("the minute").**
+   `results.headline` (the dark `.ce-take` box) is gone. In its place, `results.summary` renders a
+   **collapsible box whose title is always shown** ("🧠 Call summary — the minute", AI-generated tag).
+   Its body is an **always-visible lede** (prose) + **nested dropdowns (dropdowns within dropdowns)** that
+   let the reader open the *whys* per category (top line → drivers → segments → backlog …) — inline
+   `<details>`, **not** pop-ups. An **Expand-all / Collapse-all** control toggles only the inner nodes
+   (never the lede). Technical terms are wrapped `<span class="ce-gl" data-def="…">term</span>` and show
+   their definition on **hover** (a styled CSS tooltip, not a pop-up). **It is a SUMMARY, not a re-run of
+   the whole call** — no roll-call of every exec; no min/max length, but it summarises, it does not
+   transcribe. It may restate the red-line themes (tripped/held) in prose. Renderer: `ceSummaryBlock` /
+   `ceSumNodes`, data model `results.summary = { intro, nodes:[{t, body, nodes:[…]}] }` (see §6c-ii).
+
+2. **"Also on the call" drops the tag chips.** No more `tone` / `curious` / `connects-dots` / … labels on
+   each point — a point is just **the theme and its dropdown** (§6b). The `tag` still exists in the data
+   for authoring, it just does not render.
+
+3. **The Setup chart's margins and period windows are fixed (§6a-viii-bis).** Two corrections after
+   review: (a) **margin lines now render on a RIGHT (second) axis.** A `%` margin plotted on the same
+   axis as `$B`/`$M` is a flat invisible line at zero — the engine already puts margins on `y2`, but the
+   GOOGL dataset had `marginOf` pointing at a group name instead of the revenue key, so no margin was ever
+   computed. **Only PROFIT lines carry a margin** — revenue, a segment-revenue line, a backlog or a plain
+   KPI have none, and the engine draws none for them (do not force one). (b) The Setup windows are now the
+   agreed narrow ones: **quarterly SEASONAL** (forecast quarter across prior years + the one next quarter)
+   and **annual = history + next 2 FY** — enforced in `googl-setup.js` by slicing the periods.
 
 **What v2.9 changed — the Post-Results aside becomes a list, and Evolution adopts the Results engine:**
 
@@ -1001,10 +1028,21 @@ and wire the right wrap. Amazon's no-arg `initResults()` is unchanged. `googl.js
 `ceAnnualBody` (returns `resultsHtml('GOOGL_SETUP')`) / `gBuildCeAnnual` (calls `initResults(setupWrap,
 'GOOGL_SETUP')`) as the Setup entry points.
 
-**Open (seasonal default):** the engine renders the FULL sequential timeline with the lever (the user
-can window to the seasonal quarters by hand). A true **seasonal quarterly default** (same fiscal quarter
-across years, auto-windowed) is a follow-up — either a range preset or a seasonal periods variant of the
-dataset. Annual already shows history + forward years.
+**Period windows — DONE (v2.10), enforced in the dataset.** `googl-setup.js` slices every metric's
+parallel arrays to the agreed windows, so the engine plots exactly those periods:
+- **Quarterly is SEASONAL** — the forecast quarter across prior years + the ONE next quarter
+  (`seasonalIdx`: forecast quarter = first period with no revenue actual; keep every period with the same
+  quarter number, e.g. `3Q23 · 3Q24 · 3Q25 · 3Q26`). Column-to-column is therefore year-over-year.
+- **Annual = reported history + the next 2 FY only** (`annualIdx`: through `lastActual + 2`). Not the whole
+  forward run.
+
+**Margins — RIGHT axis, PROFIT lines only (v2.10).** A `%` margin on the same axis as `$B`/`$M` is an
+invisible flat line — margins must render on a **second (right) `y2` axis**, which the engine does whenever
+a metric has a `marginOf`. **Only profit lines carry a margin** (gross profit / operating income / EBITDA →
+`marginOf:'rev'`; segment op income → `marginOf:'cloud'`). **Revenue, segment-revenue, a backlog, a plain
+KPI carry NO margin** — leave `marginOf` unset so the engine draws none. (The first GOOGL dataset shipped a
+generator off-by-one that set `marginOf` to the *group name*, so no margin ever computed and the double
+axis never appeared — the fix was pointing `marginOf` at the revenue key.)
 
 ### 6a-ix. The quarter belongs to the section, not the other way round
 
@@ -1101,6 +1139,41 @@ simply absent — that is fine, it means everything worth saying was a thesis-mo
 
 `open` is not decoration — it is the sentence you would say next. Write the unresolved thing
 itself ("Margin profile unanswered — Post pressed, got ROIC framing instead"), not a category.
+
+## 6c-ii. `results.summary` — the AI call summary ("the minute", v2.10)
+
+The Post-Results black one-line take is gone; in its place a **collapsible AI-generated summary of the
+call**, rendered by `ceSummaryBlock` / `ceSumNodes` from:
+
+```js
+results.summary = {
+  intro: 'always-visible lede prose (HTML) — may contain glossary spans',
+  nodes: [
+    { t: 'Top line — what mattered', body: 'prose (HTML)', nodes: [
+        { t: 'Drivers', body: '…', nodes: [ … ] },   // dropdowns WITHIN dropdowns, arbitrary depth
+        { t: 'Segments', body: '…' }
+    ]},
+    …
+  ]
+}
+```
+
+**Rules:**
+- **The box is collapsible from outside, but its TITLE is always visible** — "🧠 Call summary — the
+  minute" + an `AI-generated` tag. Default open (the lede should be readable at a glance).
+- **The lede (`intro`) is ALWAYS visible** — Expand-all / Collapse-all toggles only the inner `nodes`,
+  never the lede.
+- **Nodes are nested `<details>` dropdowns, NOT pop-ups.** The reader opens a category to get the *why* /
+  what happened in the call for that category, and can drill deeper (dropdowns within dropdowns). Depth is
+  colour-cued (`data-d` 0/1/2) but unlimited.
+- **Glossary terms** — wrap a technical concept `<span class="ce-gl" data-def="the definition">term</span>`.
+  It renders with a dashed underline and shows the definition on **hover** in a styled tooltip (CSS-only,
+  not a pop-up). Use it wherever a term deserves context ("constant-currency", "RPO / backlog", "free cash
+  flow", "TPU systems", "marks", …).
+- **It is a SUMMARY, not a transcript.** No minimum or maximum length — but it distils; it does **not**
+  re-run the whole call, and it does **not** hand out dedications to each member of management. It may
+  restate the tripped/held red-line themes in prose (that overlap is fine — it is the narrative version).
+- Rule 0 still applies inside it: every claim carries its *why* / *so-what*, not bare numbers.
 
 ## 6c. `threeMinutes` — the spoken deliverable (v2.7: DATA-ONLY, no longer rendered)
 
@@ -1404,14 +1477,17 @@ CSS classes that carry meaning (port with the functions): `.ce-legend`/`.ce-lege
       view reads `no est.` where `setup.us` has no number. `Margin` toggle shows GP/OpInc/EBITDA
       **expected-implied → realized** with a Δ in pts and **no YoY/QoQ**, and the `?` pop-up discloses
       the forward-revenue basis caveat. Defaults: `data-ev="cons"`, `data-mm="off"`.
-- [ ] **Post-Results ▸ "Also on the call" (v2.8 rename, supplemental):** renders **below the
-      scorecard** in a **de-emphasized `.ce-suppl` aside** (dashed/muted + a `supplemental` pill — NOT
-      the scorecard's formatting) under an *"Also on the call"* header; **the word "highlights" does
-      not appear**. **Only `context` + `logged` render — `lead` items filtered out and routed to the
-      Watch List** (recount: no `lead` card in Post-Results). Both bands start visible; band legend
-      above. **`logged` may carry non-trackable call colour** (a backlog/capex/user-count) — colour,
-      not tracking (§2, Pass 3). **No Post-Call phase tab exists**; if a quarter has no
-      `context`/`logged` items, the aside is simply absent.
+- [ ] **Post-Results ▸ AI call summary (v2.10):** `results.summary` renders a **collapsible box, title
+      always visible** ("🧠 Call summary — the minute" + `AI-generated`), an **always-visible lede** +
+      **nested `<details>` dropdowns** (dropdowns within dropdowns), **Expand-all / Collapse-all** that
+      toggles only the inner nodes, and **hover-definition glossary** terms (`.ce-gl[data-def]`, CSS
+      tooltip, not a pop-up). It is a **summary, not a transcript** (no exec roll-call). **The old black
+      one-line `.ce-take` take is gone.**
+- [ ] **Post-Results ▸ "Also on the call" (v2.9 list, v2.10 tag-less):** renders **below the scorecard**
+      as **one box holding a plain list** (`.ce-alsobox`), each point a native `<details>` dropdown —
+      **NO band classification (context/logged) and NO tag chips** (tone/curious/…); just the theme +
+      its dropdown. **`lead` items are filtered out and routed to the Watch List**. If a quarter has no
+      non-`lead` items, the box is simply absent.
 - [ ] **`threeMinutes` / `take` / `notBringing` / `newQuestions` are DATA-ONLY (v2.7)** — composed as
       authoring notes if useful, `newQuestions` still seeds the next Watch List, but **not rendered**;
       there is no three-minutes copy button.

@@ -615,6 +615,22 @@ var CALL_EARNINGS = {
         // One line. The evidence is in the tiles above and the cards below — repeating it here
         // was the single largest block of text in the phase (§6a-iv).
         headline:'Demand kept outrunning the bill — but the bill stopped being paid out of cash flow.',
+        summary:{
+          intro:'Q2 2026 was a <b>beat with an asterisk</b>. The operating engine is firing — <span class="ce-gl" data-def="Growth stripped of currency swings: last year is re-priced at this year\'s exchange rates, so the number reflects real volume and price, not the dollar.">constant-currency</span> revenue <b>accelerated to +23%</b> (from +19%) even as the Q1 currency tailwind faded, and Google Cloud posted its <b>fifth straight acceleration, to +82%</b>. But the print also tripped a line the desk had drawn: capex was <b>raised again</b> and, for the first time in years, the quarter\'s <span class="ce-gl" data-def="Operating cash flow minus capital expenditure — the cash a business actually keeps after paying for its own growth.">free cash flow</span> went <b>negative</b>. The business beat; the bill got bigger, and it stopped being paid out of cash flow.',
+          nodes:[
+            { t:'Top line — acceleration, not currency', body:'<p>Revenue grew <b>+23% cc</b>, up from +19%, and did it as the FX help disappeared (currency added ~1pp). The cleanest proof it is organic: <b>US revenue +32%</b> with zero FX.</p>', nodes:[
+                { t:'What drove it', body:'<p>Search held <i>exactly</i> on the Street line; the acceleration came from <b>Cloud</b> and continued strength across the ad complex. Management framed it as demand, not price.</p>' },
+                { t:'Segments — Cloud is the story', body:'<p><b>Google Cloud +82%</b> (28→32→34→48→63→82 over six quarters), margin <b>20.7% → 35.6%</b>. The segment definition quietly changed: Cloud now books product revenue from selling <span class="ce-gl" data-def="Google\'s custom AI chips (Tensor Processing Units). Selling them as hardware — not just renting the compute — is a new, lower-margin revenue type for Cloud.">TPU systems</span> — hardware is now inside the reporting structure.</p>', nodes:[
+                    { t:'Backlog — the forward book', body:'<p><span class="ce-gl" data-def="Remaining Performance Obligations: contracted revenue not yet recognized — a proxy for demand already signed but not yet delivered.">RPO / backlog</span> reached <b>~$514B</b>, up +$52B QoQ <i>while</i> recognizing $24.8B — gross bookings were ~$75B+. The book replenishes faster than it converts; the 24-month conversion-pace watch item now has its cleanest data point.</p>' }
+                ]}
+            ]},
+            { t:'The bill — capex, cash flow, and the red-line that tripped', body:'<p>Here is where the asterisk lives. <b>Capex was $44.9B</b> in the quarter (vs $22.4B a year ago) and <b>swallowed the $39.1B of operating cash flow</b> → free cash flow negative. Inside OCF there is also a <b>$6.7B inventory build</b> (the TPU hardware) that is really growth working capital, not deterioration.</p>', nodes:[
+                { t:'Why it is a red-line, not just a big number', body:'<p>The desk\'s line was: <i>another raise without proof, or FCF negative while the build keeps rising</i>. Both conditions hit. It does not break the thesis by itself, but it shifts the burden of proof onto the <span class="ce-gl" data-def="Return on invested capital — the profit generated per dollar of capital put to work. The question a capex surge always raises.">return</span> on all this spend.</p>' }
+            ]},
+            { t:'EPS — read it ex-marks', body:'<p>Reported EPS jumped <b>+82%</b>, but a <b>$99.0B gain on equity securities</b> (mostly unrealized, largely the non-marketable book) added <b>+$6.26</b> to it. Strip the <span class="ce-gl" data-def="Gains/losses from re-valuing investments that have not been sold — an accounting mark, not cash from the operating business.">marks</span> and <b>EPS ≈ $2.85 — a hair BELOW the $2.90 consensus</b>. The honest operating read is in-line, not a blowout.</p>' },
+            { t:'New: Google started selling silicon', body:'<p>The most structural disclosure: Google is now <b>selling TPU hardware into customers\' own data centers</b> — a genuine business-model extension with NVIDIA-adjacent economics. Revenue is small in late 2026, "vast majority in 2027," and lumpy. The <b>margin profile went unanswered when pressed</b> on the call — the one thing to keep hunting.</p>' }
+          ]
+        },
         notes:{"Google Cloud":{"t":"The 6th acceleration — and a new revenue TYPE","h":"\u003cp>+28→32→34→48→63→\u003cb>82%\u003c/b>. Margin 20.7% → \u003cb>35.6%\u003c/b> YoY. And the segment definition quietly changed: Google Cloud now \"generates \u003cb>product revenues\u003c/b> primarily from the sale of \u003cb>TPU systems\u003c/b>\" — the hardware line is live in the reporting structure.\u003c/p>\u003cp>\u003cb>Backlog $514B (slides)\u003c/b> — up another +$52B QoQ \u003ci>while\u003c/i> recognizing $24.8B of revenue: gross bookings in the quarter were roughly $75B+. The book replenishes faster than it converts — the conversion-pace watch item (24-month claim) now has its cleanest data point yet.\u003c/p>"},"Operating cash flow":{"t":"The red-line line-item","h":"\u003cp>Capex $44.9B in the quarter (vs $22.4B LY) swallowed $39.1B of operating cash flow. Also inside OCF: a \u003cb>$6.7B inventory build\u003c/b> (see the TPU row) that is really growth working capital, not deterioration.\u003c/p>"},"EPS (diluted)":{"t":"⚠ Read it ex-marks — the release does the math for you","h":"\u003cp>\u003cb>$99.0B gain on equity securities\u003c/b> (mostly unrealized, largely the non-marketable book, which jumped $68.7B → $131.5B) added \u003cb>+$6.26 to EPS\u003c/b> and +$21.9B of tax provision, per the release's own footnote.\u003c/p>\u003cp>Ex-marks EPS ≈ \u003cb>$2.85 — a hair BELOW the $2.90 consensus\u003c/b>: the honest operating read is in-line, not a blowout. Same lesson as Q1, an order of magnitude louder.\u003c/p>"},"Revenue":{"t":"The FX caveat resolved — growth accelerated anyway","h":"\u003cp>Q1's flagged tailwind faded exactly as guided (FX just +1pp this quarter) — and constant-currency growth STILL accelerated 19% → \u003cb>23%\u003c/b>. The starkest line: \u003cb>US +32%\u003c/b> with zero FX. This is organic acceleration, not currency.\u003c/p>"},"Operating income":{"t":"Margin +2pp YoY, a touch under consensus","h":"\u003cp>34.0% vs 34.8% modeled — the gap sits largely in \u003cb>Alphabet-level activities\u003c/b> (shared AI R&D), whose loss widened to $5.8B (from $3.4B). Services margin 41.8%; Cloud 35.6%.\u003c/p>"},"Search & other":{"t":"The number held; the PHRASE is scored tonight","h":"\u003cp>Revenue exactly on the Bloomberg line. The watch item's real tell — the standing \"monetization at approximately the same rate\" language and the coverage-above-20% follow-through — can only be scored on the call.\u003c/p>"}}, watch:{"Google Cloud":1,"Operating cash flow":2,"Search & other":3},
         thesisCheck:[
           { line:'Cloud growth decelerates materially with backlog stalling', tripped:false, note:'+82% — the sharpest acceleration of the entire cycle, margin 35.6% — and backlog STILL grew to $514B (+$52B QoQ) while converting $24.8B into revenue. Both engines of the watch item held at once.' },
@@ -1939,6 +1955,33 @@ function cePhaseStyle(){
     '.ce-also-i[open] .ce-also-ar{transform:rotate(180deg)}'+
     '.ce-also-body{padding:0 13px 12px 13px;font-size:10.5px;font-weight:500;color:var(--navy);line-height:1.55;background:#FBFCFE}'+
     '.ce-also-body p{margin:6px 0}'+
+    /* AI call summary — collapsible outer box + always-visible lede + nested dropdowns + glossary */
+    '.ce-sum{border:1px solid var(--bdr);border-radius:12px;background:#fff;margin:2px 0 14px}'+
+    '.ce-sum>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:12px;background:linear-gradient(180deg,rgba(122,90,248,.06),transparent)}'+
+    '.ce-sum>summary::-webkit-details-marker{display:none}'+
+    '.ce-sum-ic{font-size:15px}'+'.ce-sum-h b{font-size:13px;color:var(--navy)}'+
+    '.ce-sum-tag{font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:'+PURPLE+';background:rgba(122,90,248,.12);border:1px solid rgba(122,90,248,.25);border-radius:999px;padding:2px 8px;margin-left:auto}'+
+    '.ce-sum[open]>summary{border-bottom:1px solid var(--bdr);border-radius:12px 12px 0 0}'+
+    '.ce-sum-body{padding:12px 15px 15px}'+
+    '.ce-sum-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:11px}'+
+    '.ce-sum-tt{font-size:10px;color:var(--mu);font-weight:600;margin-right:auto}'+
+    '.ce-sum-btn{font-size:9.5px;font-weight:800;color:'+BLUE+';border:1px solid var(--bdr);background:#fff;border-radius:999px;padding:3px 10px;cursor:pointer;transition:.12s}'+
+    '.ce-sum-btn:hover{border-color:'+BLUE+';background:rgba(26,115,232,.06)}'+
+    '.ce-sum-lede{font-size:12.5px;line-height:1.65;color:var(--navy);font-weight:500;margin-bottom:11px}'+
+    '.ce-sum-nodes{display:flex;flex-direction:column;gap:6px}'+
+    '.ce-sum-n{border:1px solid var(--bdr);border-left:3px solid '+BLUE+';border-radius:9px;background:#FBFCFE}'+
+    '.ce-sum-n[data-d="1"]{border-left-color:'+BRAND2+';background:#fff}'+
+    '.ce-sum-n[data-d="2"]{border-left-color:'+AMBER+'}'+
+    '.ce-sum-nt{list-style:none;cursor:pointer;display:flex;align-items:center;gap:7px;padding:8px 11px;font-size:11.5px;font-weight:700;color:var(--navy)}'+
+    '.ce-sum-nt::-webkit-details-marker{display:none}'+
+    '.ce-sum-caret{font-size:9px;color:var(--mu);transition:transform .15s;flex:none}'+
+    '.ce-sum-n[open]>.ce-sum-nt .ce-sum-caret{transform:rotate(90deg)}'+
+    '.ce-sum-nb{padding:0 12px 11px 21px;font-size:11px;line-height:1.65;color:var(--navy);font-weight:500}'+
+    '.ce-sum-nb .ce-sum-nodes{margin-top:9px}'+
+    /* glossary term — dashed underline, attractive hover tooltip (CSS-only, no pop-up) */
+    '.ce-gl{border-bottom:1px dashed '+BLUE+';cursor:help;position:relative}'+
+    '.ce-gl:hover::after{content:attr(data-def);position:absolute;left:0;bottom:calc(100% + 8px);width:min(300px,74vw);white-space:normal;text-align:left;background:#10141A;color:#fff;font-size:10.5px;font-weight:500;line-height:1.55;padding:9px 12px;border-radius:9px;box-shadow:0 10px 28px rgba(16,24,40,.28);z-index:60}'+
+    '.ce-gl:hover::before{content:"";position:absolute;left:16px;bottom:calc(100% + 3px);border:5px solid transparent;border-top-color:#10141A;z-index:61}'+
     /* highlights, as cards */
     '.ce-hcards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}'+
     '@media(max-width:760px){.ce-hcards{grid-template-columns:1fr}}'+
@@ -2001,8 +2044,8 @@ function ceResultsBody(c){
     // Pass the quarter's FROZEN Summit expectations (setup.us) so the print can be scored against
     // Street OR Summit via the vs-Street ⇄ vs-Summit toggle (§6a-iii).
     b+=cePrintBlock(q.q, r, (q.setup&&q.setup.us)||{});
-    // 2 · the one-paragraph take
-    if(r.headline) b+='<div class="ce-take" style="border-left-color:'+BRAND2+'">🎯 '+r.headline+'</div>';
+    // 2 · the AI-generated call summary — replaces the old one-line "take" black box (v2.10).
+    b+=ceSummaryBlock(q.q, r.summary);
     // 3 · thesis red-line check — folded unless something tripped
     if(r.thesisCheck&&r.thesisCheck.length){
       // One word for the verdict, then the red-line ITSELF in plain language. The reasoning goes
@@ -2061,12 +2104,11 @@ function ceHighlightsBlock(cc, qk){
     '<span class="ce-alsobox-sub">supplemental colour — the meeting-critical items are the scorecard above and the Watch List</span></div>'+
     '<div class="ce-alsolist">';
   b+=hls.map(function(x){
-    var tg=CE_HLTAG[x.tag]||null;
+    // No tag chips (tone/curious/connects-dots/…) — just the theme and its dropdown (v2.10).
     var det=x.detail||'';
     if(x.open) det+='<p><b>Still open:</b> '+x.open+'</p>';
     return '<details class="ce-also-i">'+
       '<summary class="ce-also-s">'+
-        (tg&&tg.l?'<span class="ce-also-tag" style="--tc:'+tg.c+'">'+esc(tg.l)+'</span>':'')+
         '<span class="ce-also-hd">'+x.head+'</span>'+
         (det?'<span class="ce-also-ar">▾</span>':'')+
       '</summary>'+
@@ -2075,6 +2117,37 @@ function ceHighlightsBlock(cc, qk){
   }).join('');
   b+='</div></div>';
   return b;
+}
+
+// F · The AI-generated CALL SUMMARY — the "minute" (v2.10). Replaces the old one-line black "take".
+// A collapsible OUTER box (title always visible: "Call summary — the minute") whose body is an
+// always-visible lede + NESTED dropdowns (dropdowns within dropdowns) that let the reader open the
+// whys per category (top line → drivers → segments …). Not a pop-up — inline <details>. Technical
+// terms are wrapped `<span class="ce-gl" data-def="…">term</span>` and show their definition on hover.
+// Expand-all / Collapse-all toggle only the inner nodes, never the always-visible lede. It is a
+// SUMMARY, not a re-run of the whole call — no roll-call of every exec.
+function ceSumNodes(nodes, depth){
+  if(!nodes||!nodes.length) return '';
+  return '<div class="ce-sum-nodes">'+nodes.map(function(n){
+    return '<details class="ce-sum-n" data-d="'+(depth>2?2:depth)+'">'+
+      '<summary class="ce-sum-nt"><span class="ce-sum-caret">▸</span><span>'+n.t+'</span></summary>'+
+      '<div class="ce-sum-nb">'+(n.body||'')+ceSumNodes(n.nodes, depth+1)+'</div>'+
+    '</details>';
+  }).join('')+'</div>';
+}
+function ceSummaryBlock(qLabel, s){
+  if(!s) return '';
+  return '<details class="ce-sum" open>'+
+    '<summary class="ce-sum-h"><span class="ce-sum-ic">🧠</span><b>Call summary — the minute</b>'+
+      '<span class="ce-sum-tag">AI-generated</span></summary>'+
+    '<div class="ce-sum-body">'+
+      '<div class="ce-sum-tools"><span class="ce-sum-tt">The whys sit in dropdowns — open what you need · hover a <span class="ce-gl" data-def="A term with a dashed underline. Hover it to read its definition here.">dashed term</span> for its definition</span>'+
+        '<button type="button" class="ce-sum-btn" data-sum="exp">⊕ Expand all</button>'+
+        '<button type="button" class="ce-sum-btn" data-sum="col">⊖ Collapse all</button></div>'+
+      '<div class="ce-sum-lede">'+(s.intro||'')+'</div>'+
+      ceSumNodes(s.nodes, 0)+
+    '</div>'+
+  '</details>';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -2980,6 +3053,14 @@ function ceApplyPhaseQuarters(pane, phase){
 }
 function wireCallEarnings(root){
   var pane=root.querySelector('.ovt-subpane[data-ovst="earnings"]'); if(!pane) return;
+  // Call-summary Expand-all / Collapse-all — toggles only the inner dropdown nodes of THIS summary
+  // box, never the always-visible lede or the outer box itself.
+  pane.querySelectorAll('.ce-sum-btn').forEach(function(btn){ btn.onclick=function(e){
+    e.preventDefault();
+    var box=btn.closest('.ce-sum'); if(!box) return;
+    var open=(btn.getAttribute('data-sum')==='exp');
+    box.querySelectorAll('details.ce-sum-n').forEach(function(d){ d.open=open; });
+  }; });
   pane.querySelectorAll('.ce-phtab').forEach(function(btn){ btn.onclick=function(){
     var key=btn.getAttribute('data-cep');
     ceKeepPos(btn, function(){

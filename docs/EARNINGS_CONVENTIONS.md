@@ -1,4 +1,4 @@
-# Earnings — THE complete convention (build + call interpretation, v2.6 · Jul 2026)
+# Earnings — THE complete convention (build + call interpretation, v2.8 · Jul 2026)
 
 **This is the single source of truth for everything earnings-call related**: how calls are
 ANALYZED (the rules, the detection protocol, the regression tests), how they are STORED (the
@@ -11,13 +11,71 @@ Bloomberg numbers export, and optionally (d) SPLC / Summit expectations** — an
 with no other context, builds everything from ONE prompt: **"arma el Earnings de \<TICKER\>"**
 (or refreshes with "integra el nuevo call de \<TICKER\>"). If a step is ambiguous, fix THIS doc.
 
-**Reference implementations:** `js/overviews/googl.js` is canonical for **v2.6** (the `WL_ROWS`
-Watch-List table, §6f, and the stripped Setup); `js/overviews/ibkr.js` is canonical for **v2.4** and
+**Reference implementations:** `js/overviews/googl.js` is canonical for **v2.7** (the three-phase
+tab — Post-Call dissolved, call highlights folded into Post-Results — the `WL_ROWS` Watch-List
+table, §6f, and the stripped Setup); `js/overviews/ibkr.js` is canonical for **v2.4** and
 still carries the nested `watchList` shape. Copy the Setup / Post-Results / Post-Call machinery from
 either — they are identical there — but take the **Watch List from `googl.js`**. `ibkr.js` was
 migrated from v1 (standalone Promise Tracker, single-estimate setup, no quarter selector) to the full
 v2.2 machinery **and** the v2.3 fusion on 2026-07-24. Each overview file owns its own copy of the
 Earnings renderers, so v2.5/v2.6 landing on GOOGL changed nothing for the other companies.
+
+**What v2.8 changed — Post-Results grows two toggles, the aside is demoted, and the fill is ONE step:**
+
+1. **The supplemental aside is renamed and visually demoted.** The Post-Results "Call highlights"
+   block is now **"Also on the call"**, wrapped in a de-emphasized `.ce-suppl` aside (dashed border,
+   muted background, a `supplemental` pill). Same formatting as the scorecard implied the same
+   importance — it is not: the meeting-critical read is the **scorecard** and the **Watch List**; this
+   is just colour worth a mention. The name dropped "highlights" for the same reason (it read as *the
+   things to raise at the meeting*, which it is not).
+
+2. **Post-Results gains a `vs Street ⇄ vs Summit` toggle (no "Both").** The print can now be scored
+   against **either** frozen expectation — Bloomberg consensus **or** Summit's own — swapping the
+   expected value, the surprise, the verdict and the verdict-filter. One basis at a time (unlike the
+   Setup's three-way, Post-Results has no "Both" — you are reading an outcome, not surveying
+   estimates). Summit's frozen numbers come from the quarter's `setup.us`; where Summit had none, the
+   line reads `no est.` in Summit view.
+
+3. **Post-Results gains a `Margin` toggle — expected-implied → realized (NOT YoY/QoQ).** GP / Operating
+   income / EBITDA carry a margin row that is **expectation vs outcome for the quarter**: the
+   **estimate-implied** margin (the estimate's metric ÷ its own revenue — Street or Summit, following
+   the ev toggle) → the **realized** margin (actual ÷ actual), with the Δ in pts. Margin is the ONE
+   place with no YoY/QoQ, because there is nothing to compare across time — you are comparing what was
+   expected for the quarter to what the quarter did. **This REVERSES the v2.x "never show a
+   consensus-implied margin" rule (§6a-iii)** — we now show it, with the basis caveat as a *disclosure*
+   (a `?` pop-up) rather than a suppression, the same way we surface revenue's ~20% offset instead of
+   hiding it.
+
+4. **ONE fill per quarter, and the next quarter opens for prep but NOT for Post-Results.** The old
+   two-step (fill Post-Results when the numbers land, then fill Post-Call after the transcript) is
+   collapsed: there is a **single fill** that lands the **results + the call together**. The moment a
+   quarter is filled, **Setup and the Watch List advance to the following quarter** (so prep can
+   begin), but **Post-Results does NOT** — it only ever shows quarters that have actually been filled
+   (§6a-ix). See the workflow (§8) and the gating (§6a-ix).
+
+**What v2.7 changed — the Post-Call tab is dissolved, and highlights become talking points:** the
+tab had FOUR phases (Setup · Watch List · Post-Results · Post-Call); it now has **three**. The
+standalone **Post-Call phase is gone**, and the one piece of it that readers actually wanted — the
+**call highlights** — moved **into Post-Results**, below the scorecard, under a *"Call highlights"*
+header. Post-Results' scorecard format is **unchanged** (the reader liked it); the highlights are
+simply appended to the same phase, so a reported quarter is now read in one place: the print, then
+what management said. **Why kill the tab:** everything else Post-Call carried was redundant with the
+Watch List — `take`, `threeMinutes` (the spoken deliverable), `notBringing` and `newQuestions` are
+**no longer rendered** (they survive in the data as authoring notes; `newQuestions` still seeds the
+next Watch List). The Watch List is the tracking layer; the highlights are talking points, and there
+is no longer a second post-mortem tab competing with it. **The knock-on rule change (§2, Pass 3):**
+because the highlights are now *talking points* and not the tracking layer, they are allowed to be
+**broader** — a highlight no longer has to be the most thesis-relevant or the most trackable to earn
+a slot. Some deliberately-non-trackable **call colour** (a backlog figure, a capex number, a user
+count) belongs here precisely because it is worth *saying* even though it would never earn a Watch
+slot. It still obeys Rule 0 — but its "so-what" may be *"worth mentioning"* rather than *"moves the
+thesis."* **The flip side (v2.7.1):** the highlights render **only the `context` and `logged`
+bands** — the `lead` "moves-the-thesis" band is **dropped from Post-Results entirely**. A
+thesis-mover is a *tracked* item, and the tracking layer is the Watch List; showing it in Post-Results
+too was the redundancy we cut. So `ceHighlightsBlock` filters `lead` out and the two surviving bands
+are both non-thesis by design. Live on **GOOGL** (canonical for v2.7); other companies keep the four-phase shape until
+their next cycle. `ceCallBody` is replaced by `ceHighlightsBlock(cc, qk)`, called from
+`ceResultsBody`.
 
 **What v2.6 changed:** the Watch List got cut back to the four things that are actually ours.
 `why` is renamed **`definition`** — what the theme *means*, in our words — and it now renders on the
@@ -151,6 +209,30 @@ source hierarchy. No WHY → the item proceeds as a **question/flag**, not a hig
 | **`tone`** | Management notably more/less confident vs prior quarters | "Did the LANGUAGE change even if the facts didn't?" |
 | **`watch`** | A silence/omission, or a new risk to track | "What didn't they mention that they used to?" |
 
+**Two destinations — the tracking layer vs. the talking points (v2.7).** Selection now feeds **two
+different lists**, and they are not the same bar:
+
+1. **The Watch List — the tracking layer.** The trackable, thesis-weight themes, curated by us and
+   followed across quarters (§6f). This is where the *`cut without mercy`* discipline bites hardest:
+   only what is worth *tracking* earns a slot. **Every thesis-mover goes HERE** — an item that
+   moves the thesis and is still unresolved (a `lead`-class highlight) is a Watch List hook, full
+   stop; it is **not** shown in the Post-Results highlights.
+2. **Post-Results ▸ "Also on the call" — the supplemental colour.** What is worth *taking into the
+   conversation* but is **not** a thesis-mover and **not** meeting-critical (a demoted `.ce-suppl`
+   aside, v2.8). Only the **`context`** (settled, worth mentioning)
+   and **`logged`** (call colour, on the record) bands render here — **never `lead`** (that is
+   tracking, → destination 1). This list is deliberately **broader** than the Watch List: a highlight
+   here does **not** have to be trackable. Some **non-trackable call colour** — a backlog figure, a
+   capex number, a user count management called out — belongs here *precisely because it is worth
+   saying out loud*, even though it would never earn a Watch slot. It lands in **`logged`** (§6b).
+
+**What does NOT relax: Rule 0.** A talking-point highlight still obeys the So-What chain
+(fact → why → so-what) — the only thing that loosens is *what the "so-what" is allowed to be*: here
+it may be **"worth mentioning"** rather than **"moves the thesis."** A bare restatement with no
+driver ("DARTs +35%") is still cut everywhere — the relaxation is about thesis-weight and
+trackability, **never** about skipping the WHY. The `cut without mercy` list above (boilerplate,
+congratulatory chatter, "everyone already has it") still applies to both destinations.
+
 ## 3. The calls repository — historicals + THE LATEST, with rotation
 
 Two files per company in `docs/calls/`:
@@ -192,9 +274,11 @@ it got right.
 as a filled progress bar labelled `HIGH`. Any bar, gauge or percentage sitting on a value no
 formula produced fails — render the word and disclose the editorialism in the legend.
 
-**Test #6 — the crowded `lead` band (§6b).** 5 of 8 highlights tagged `lead`, including two
-theses the print had *confirmed*. A band holding most of the list is not a ranking: recount, and
-move anything settled to `context`.
+**Test #6 — over-classifying `lead` (§6b).** 5 of 8 highlights tagged `lead`, including two theses
+the print had *confirmed*. A confirmed thesis is settled → `context`, not `lead`. **Under v2.7 this
+matters more, not less:** `lead` items are no longer rendered in Post-Results — they are **routed to
+the Watch List** — so mis-tagging a settled item `lead` deletes it from the highlights AND wrongly
+opens a Watch hook. Recount, and move anything settled to `context` (a rendered talking point).
 
 ---
 
@@ -325,7 +409,8 @@ treatment: transparent emblem inside a glowing ring (no white tiles), plus the s
 as a giant low-opacity watermark bleeding off the bottom-right corner. Big banners (≥120px tall,
 72px emblem). Near-black backgrounds; the EDGAR card uses the seal's federal gold (accent bar,
 glow, CTA), the IR card uses the company's brand accent. Per ticker, swap only the mark and URLs. (pill per quarter, newest/upcoming first,
-active by default) + **four phase tabs**: Setup · Watch List · Post-Results · Post-Call. Every
+active by default) + **three phase tabs** (v2.7): Setup · Watch List · Post-Results. (Post-Call was
+dissolved into Post-Results — see the changelog and the Post-Results row below.) Every
 phase renders **per-quarter blocks** (`.ce-qblock[data-ceq]`) and the quarter pills toggle them —
 one quarter visible at a time, so the page stays light as quarters accumulate. Each quarter keeps
 its frozen pre-call blocks NEXT TO its post-mortem (the calibration record).
@@ -334,8 +419,7 @@ its frozen pre-call blocks NEXT TO its post-mortem (the calibration record).
 |---|---|
 | **Setup** | *Upcoming quarter:* 4 **headline** metrics (mandatory, every company: **Revenue · Operating income · EPS · EBITDA**) + 4 **custom KPIs** (per-company, agreed with Dani), each with **Street** (Bloomberg) and **Summit** estimates behind a **Consensus ⇄ Summit ⇄ Both** toggle; caveat pop-ups (`ceQ`) on numbers with a trap; then **the debate** — what it establishes going in: the Street-vs-Summit disparity rows when both estimate sets exist, and the **dark synth box** carrying *the one thing to resolve*. **(v2.5 — retired)** the "setup, in one picture" pair (*what the tape fears* / *what consensus actually models*), the mechanism chips, and the gray to-fill placeholder under the debate heading are **gone**. The previa is no longer a separate block: the debate box IS the going-in read. *Reported quarters:* the FROZEN pre-call view (what was priced in + the one-liner). |
 | **Watch List** | **v2.6 — the list is OURS, and it is a table (§6f).** Post-Results and Post-Call let the model run; the Watch List does not. We decide what earns a slot and what the model failed to detect. Rows live in a flat **`WL_ROWS`** table, not nested per quarter, and each carries only what is ours: `theme` · `tags[]` · **`definition`** (required — what the theme *means*, in our words; renders on the card) · **`trackSince` / `trackUntil`** (the hook window — *empty `trackUntil` means still open*). The **live quarter's list is exactly the open hooks**; we open and close them by hand. **Cards are NOT numbered** — `rank` is sort order only, so removing a theme never leaves a stale 1–5. A **tag bar** filters **ACROSS quarters** (flat view, quarter chip per card); a **tracking-window segment** (All · Open hooks · Closed) filters by hook state. **"+ Add theme"** opens a form that picks tags from the existing vocabulary **and creates new ones inline** — a new tag is appended to the filter bar, available to every theme from then on. Cards on the live quarter carry **✎ edit / ✕ delete** (edit is how a hook gets closed: fill *Tracking until*); frozen quarters are read-only history. Below the cards sits **the table** — the storage view, with a live counter and COPY / copy-JSON (§6f). Promise-type items live here (silence is a signal). **`seededBy`** renders as `left open by Q2 2026` — or `⚑ thesis line broke in Q2 2026`. **v2.3 — the fused theme record:** below everything, the Watch List phase renders **"The theme record"** — the full `<TICKER>_THEMES` compendium (By theme ⇄ By quarter, status chips with age), under a labelled divider. This is the former standalone *Earnings Calls* tab, folded in so there is ONE home for theme-tracking (nothing lost). |
-| **Post-Results** | **the red-line check FIRST** (it is the most falsifiable thing in the tab — tripped lines sort to the top, with a `⚑ n tripped` / `✓ all held` counter in the header) + **the scorecard**, ordered **biggest-surprise first, never release order**, each row carrying an `ON THE LIST` badge when it was on the frozen Watch List, with the theme named in its tooltip (blank otherwise — Rule D; v2.6 dropped the `#n`, which pointed at a rank the cards no longer show) and a **word-chip** for surprise (Rule H) + a `.ce-legend` above it (Rule L) + "what the numbers tee up for the call" + price reaction. |
-| **Post-Call** | take + insight-first highlights **grouped into three action bands** (§6b) with an `open` chip on anything management left unanswered + the connect-the-dots line + **`threeMinutes` — the spoken deliverable** (§6c) with `notBringing` + `newQuestions` rendered with **where each one landed** (`became Q2 2026 Watch item #4`), closing the chain. |
+| **Post-Results** | **The print, then what management said — one phase (v2.7).** Numbers first: **the red-line check FIRST** (it is the most falsifiable thing in the tab — tripped lines sort to the top, with a `⚑ n tripped` / `✓ all held` counter in the header) + **the scorecard**, ordered **biggest-surprise first, never release order**, each row carrying an `ON THE LIST` badge when it was on the frozen Watch List, with the theme named in its tooltip (blank otherwise — Rule D; v2.6 dropped the `#n`, which pointed at a rank the cards no longer show) and a **word-chip** for surprise (Rule H) + a `.ce-legend` above it (Rule L) + "what the numbers tee up for the call". **Two toggles on the scorecard (v2.8):** `vs Street ⇄ vs Summit` re-scores the print against either frozen expectation (no "Both"); `Margin` shows the GP/OpInc/EBITDA expected-implied → realized margin (no YoY/QoQ) — see §6a-iii. **Then, below the scorecard, the *"Also on the call"* aside (v2.8 rename; was the Post-Call tab dissolved into "Call highlights" in v2.7):** a **de-emphasized `.ce-suppl` block** (dashed, muted, a `supplemental` pill — deliberately NOT the scorecard's formatting, so it never reads as equally important), holding insight-first colour in **two bands only — `context` + `logged`** (§6b), with an optional `open` chip on anything left unanswered. **The `lead` (thesis-mover) band is NOT rendered here** — a thesis-mover is tracked, and the tracking layer is the Watch List, so `lead` items are filtered out and routed there instead. This is deliberately **not** the tracking layer, so the net is **broader**: it keeps non-trackable **call colour** (a backlog figure, a capex number, a user count) that would never earn a Watch slot but is still worth saying (§2, Pass 3). Rendered by `ceHighlightsBlock(cc, qk)` — only `context` + `logged`. **Dropped from the UI (survive only as authoring data):** `take`, `threeMinutes`, `notBringing`, and `newQuestions` — `newQuestions` still seeds the next Watch List; the rest were redundant with the Watch List. |
 
 **Dissolved (never build these as standalone tabs for any company):**
 - the **Promise Tracker** tab — its discipline lives inside the Watch-List threads and the theme
@@ -343,6 +427,10 @@ its frozen pre-call blocks NEXT TO its post-mortem (the calibration record).
 - **(v2.3)** the **Earnings Calls** tab — its theme compendium is folded into the Watch List (below).
   Two tabs on the same call highlights is the redundancy v2.3 removed. Existing companies that had
   the tab (GOOGL, IBKR) were retrofitted; new companies never get it.
+- **(v2.7)** the **Post-Call** phase — its **call highlights** folded into **Post-Results** (below
+  the scorecard, as *talking points*). `take` / `threeMinutes` / `notBringing` / `newQuestions` are
+  no longer rendered (data-only; `newQuestions` still seeds the next Watch List). GOOGL is canonical;
+  other companies keep the four-phase shape until their next cycle.
 
 **The theme record** (was **Evolution ▸ Earnings Calls**; now rendered INSIDE the Earnings Watch
 List phase, §6 above) — the standard multi-company contract (ibkr/uber/lyft/cart/ma/rely/v/googl):
@@ -617,18 +705,36 @@ modeled"* — which is a **recollection**, not a record, and it drifts. The arch
 > (`results.notes[metric]`) and the frozen-Watch-List rank (`results.watch[metric]`). Tiles are
 > **ranked by |surprise|**, carry a verdict chip, and show growth under the shared YoY/QoQ lens.
 
-- **Margin, where available (GP / Op income / EBITDA).** Each of those tiles carries a `margin`
-  line = the **print's realized margin** (actual metric ÷ actual revenue) — a **same-basis** ratio,
-  shown only when the print and revenue's print both exist. Do **not** add a consensus-implied margin
-  next to it: it would divide by the archive's forward revenue (a different, ~20%-lower basis) and
-  overstate the margin by ~8pts, reading as a collapse when nothing collapsed. The realized margin
-  is the honest one; leave it to stand alone.
+- **`vs Street ⇄ vs Summit` — score the print against either frozen expectation (v2.8).** The default
+  is Street (Bloomberg). Toggling to Summit re-scores every tile against **Summit's own frozen
+  number** (`setup.us[metric]`), swapping the expected value, the surprise, the verdict **and** the
+  verdict-filter (the tile carries both verdicts as `data-vdc` / `data-vdu`, and the filter is
+  estimate-view-aware in pure CSS). **No "Both"** — Post-Results reads one outcome at a time, unlike
+  the Setup's three-way survey. Where Summit had no number for a line, Summit view reads `no est.`
+  (the frozen `setup.us` map is authored per metric; many custom KPIs legitimately have none).
+- **Margin, where available (GP / Op income / EBITDA) — a toggle, expected → realized (v2.8).**
+  GP / Operating income / EBITDA tiles carry a **Margin** toggle (off by default). On, each shows a
+  margin row that is **expectation vs outcome for the quarter**, NOT a time comparison:
+  - **Expected** = the margin *implied by the estimate* — the estimate's metric ÷ the estimate's
+    **own** revenue (Street = BBG ÷ BBG, Summit = ours ÷ ours; it follows the `vs Street ⇄ vs Summit`
+    toggle). Same-estimate on both sides, so it is internally consistent.
+  - **Realized** = the print's own margin (actual ÷ actual). Same-basis, the honest outcome.
+  - We show the two and the **Δ in pts**. **There is NO YoY/QoQ on the margin** — there is nothing to
+    compare across time; you are comparing what was expected *for this quarter* against what it did.
+
+  **This REVERSES the pre-v2.8 rule** ("never show a consensus-implied margin; realized must stand
+  alone"). We now show the expected-implied margin — but the old concern is real and becomes a
+  **disclosure, not a suppression**: the Street's forward revenue runs materially *below* the print
+  (FX + gross-vs-net), so the Street-implied margin sits **above** realized by construction. A
+  negative Δ is therefore *partly a revenue-basis offset, not a pure margin miss* — say exactly that
+  in the tile's `?` pop-up (the same way we surface, never hide, revenue's ~20% offset). The Summit
+  side does not have this offset when Summit's own revenue is used as the denominator.
 - **Every scoreable metric shows a real surprise**, revenue included (its ~20% offset is FX /
   gross-vs-net, explained in the tile's note — not suppressed). Each tile carries a verdict chip
   (beat / miss / in-line), and a **beat / miss / in-line filter** narrows the grid.
 - **Only the standardized metrics are scored.** A bespoke row that is not one of the archive metrics
   — an old "funding flip" card, a disclosure with no consensus like an app-MAU rung — is **not** a
-  scored line. It belongs in Post-Call highlights, sourced from the transcript. `result:'beat'`
+  scored line. It belongs in the "Also on the call" aside, sourced from the transcript. `result:'beat'`
   still requires a consensus to beat (§6a-vii).
 - The strip renders only for quarters the archive covers; it is silently absent otherwise.
 
@@ -646,8 +752,9 @@ These rules apply to **every** company, and to pop-ups everywhere in the profile
   one-line summary in its header so the reader knows whether to open it.
 - **Open a fold only when it earns it.** The thesis red-line check opens by itself **only if
   something tripped**.
-- **Only the `lead` band renders open.** `context` and `logged` collapse behind *"Show the N …"*,
-  with a count in the band header so a closed band is still informative.
+- **Both highlight bands render visible (v2.7).** `context` and `logged` both start on under the
+  triage strip, each with a count in its band button; the filter narrows, it does not hide by default.
+  (There is no `lead` band in Post-Results — thesis-movers are routed to the Watch List; §6b.)
 - Keep the lede to **one sentence**. If a table needs a legend, the table is wrong — delete both.
 - **A tab switch must not scroll the page.** Hiding a tall pane and showing a shorter one makes the
   browser clamp `scrollTop`, so the page appears to jump to the top. Wrap every tab / sub-tab /
@@ -731,7 +838,7 @@ advances by itself.
 it is shown or not — because COPY serialises `WL_ROWS`, not the rendered rows. Any export that reads
 the DOM is a bug waiting for someone to collapse a section.
 
-### 6a-vi. Post-Results and Post-Call — what each block must look like
+### 6a-vi. Post-Results — what each block must look like (numbers + call highlights; v2.7)
 
 **Thesis red-lines.** One-word verdict (`TRIPPED` / `HELD`), then the red-line **itself** in plain
 language, then the reasoning behind a *why ＋*. The scannable column is the verdict; the line must be
@@ -743,11 +850,12 @@ pop-up to know what the line *means*, the line is written wrong.
 the thing you walk into the call with; the fix is to shorten it, not to bury it. Hook on the card,
 the argument behind *＋ the ask*.
 
-**Highlights: one triage strip, all three bands visible.** `Lead with this` / `Context` / `Logged`
-render as three colour-coded buttons carrying a count and a one-line meaning, above a single card
-grid where every card wears its band colour. Clicking a band filters its cards out. All three start
-**on** — the reader triages by looking, and the filter is for narrowing, not for hiding by default.
-Do not give each band its own collapsed section; that made the reader hunt.
+**Highlights: one triage strip, both bands visible (v2.7).** `Context` / `Logged` render as two
+colour-coded buttons carrying a count and a one-line meaning, above a single card grid where every
+card wears its band colour. Clicking a band filters its cards out. Both start **on** — the reader
+triages by looking, and the filter is for narrowing, not for hiding by default. Do not give each band
+its own collapsed section; that made the reader hunt. (There is **no `Lead with this` band** — a
+thesis-mover is tracked, so it is routed to the Watch List, not rendered here; §6b.)
 
 **Connect-the-dots is not a section.** Anything that connects across themes becomes a Watch item via
 `newQuestions` → the next quarter's list. Saying it twice made the phase longer without making it
@@ -806,27 +914,35 @@ Rules:
 
 ### 6a-ix. The quarter belongs to the section, not the other way round
 
-The four phase tabs sit **above** the quarter pills (the section is chosen first, then the
-quarter within it). Each phase decides which quarters it offers — not a single global selector:
+The **three** phase tabs (v2.7) sit **above** the quarter pills (the section is chosen first, then
+the quarter within it). Each phase decides which quarters it offers — not a single global selector:
 
 | phase | quarters offered |
 |---|---|
 | Setup · Watch List | every quarter, incl. the upcoming one |
 | Post-Results | only quarters with a `results` block |
-| Post-Call | only quarters with a `call` block |
 
-The upcoming quarter has no results and no call, so **it does not exist in Post-Results or
-Post-Call** — that data does not exist yet. Each pill carries `data-ceqhas` (the phases it is
-valid for); switching phase hides the invalid pills and, if the active quarter just became
-invalid, snaps to the most-recent valid one.
+The upcoming quarter has no results, so **it does not exist in Post-Results** — that data does not
+exist yet. Each pill carries `data-ceqhas` (the phases it is valid for); switching phase hides the
+invalid pills and, if the active quarter just became invalid, snaps to the most-recent valid one.
+(v2.7: there is no longer a `postcall` phase — `ceQPhases` returns `['setup','watch','results']`;
+the call highlights render inside the Post-Results pane, so they need no phase of their own.)
 
 The Watch List carries a one-line hint of this cadence above the theme filter, so the rule is
 visible where the prep happens.
 
-**Adding the upcoming quarter is gated.** A new upcoming quarter is added to `CALL_EARNINGS.quarters`
-**only once the PRIOR quarter's Post-Call is filled** — the cycle is: fill Q(n) Post-Call → then
-Q(n+1) may appear as upcoming in Setup / Watch List. Never seed an upcoming quarter before the
-one before it is closed out.
+**Adding the upcoming quarter is gated — and it is ONE fill now (v2.8).** There is a **single fill**
+per quarter: the **results and the call land together** (no separate "score the numbers now, add the
+transcript later" step — that two-step died with the Post-Call tab). The moment Q(n) is filled:
+
+- **Setup and the Watch List advance to Q(n+1)** — the upcoming quarter is added to
+  `CALL_EARNINGS.quarters` (status `upcoming`, no `results` block) so prep can begin.
+- **Post-Results does NOT advance** — Q(n+1) has no `results`, so `ceQPhases` keeps it out of
+  Post-Results. Post-Results only ever shows quarters that have actually been filled.
+
+So the cycle is: **fill Q(n) once (results + call) → Q(n+1) opens in Setup / Watch List only.** Never
+seed an upcoming quarter before the one before it is filled, and never expect a quarter in
+Post-Results before its single fill has landed.
 
 ### 6a-x. Consulting a company profile when there is no MCP
 
@@ -849,43 +965,58 @@ workbook directly. For GOOGL:
 - **The quarter matters and is not wired yet.** Summit quarterly columns are empty today; when they
   are cabled, extract the quarterly forecast the same way and enable the quarter view (§6a-viii).
 
-## 6b. The three action bands — how highlights are grouped
+## 6b. The action bands — how highlights are grouped (v2.7: two rendered, one routed away)
 The `tag` taxonomy (§2, Pass 3) says **what kind of signal** an item is. It does not say **what you
 do with it in the meeting** — and that is the only question the reader has thirty seconds before
 walking in. So `call.highlights[]` also carries `band`:
 
 | `band` | Renders as | Means | Also carries |
 |---|---|---|---|
-| `lead` | ▲ Lead with this | Open with it: it moves the thesis **and** something is still unanswered | `open` — the specific unanswered thing |
-| `context` | ● Context | Worth saying, but settled; there is nothing to argue | — |
-| `logged` | ○ Logged | On the record for later; not meeting material | — |
+| `lead` | **NOT rendered in Post-Results (v2.7)** — routed to the Watch List | It moves the thesis **and** something is still unanswered → it is a thesis-mover, so it is *tracked*, and the tracking layer is the Watch List, not the highlights | `open` — the unanswered thing (carry it onto the Watch item) |
+| `context` | ● Context | Worth saying, but settled; there is nothing to argue | `open` (optional) |
+| `logged` | ○ Logged | On the record; call colour, not meeting-critical | `open` (optional) |
+
+**Why `lead` leaves the highlights (v2.7).** Post-Results ▸ Call highlights are **talking points**,
+not the tracking layer. A `lead` item is by definition a thesis-mover that is still unresolved — that
+is *exactly* what the Watch List exists to track across quarters. Rendering it a second time in
+Post-Results is the redundancy we removed. So `ceHighlightsBlock` renders **only `context` and
+`logged`**; a highlight classified `lead` is **filtered out** and must instead be opened (or updated)
+as a **Watch List hook**. The two surviving bands are both non-thesis by construction — settled colour
+worth mentioning, and call colour on the record.
 
 **The assignment criterion — two independent axes, not one:**
 
 > **impact on the thesis** (high / low) × **resolution** (answered / unanswered)
 
-`lead` is the intersection of **high impact AND unanswered**. That conjunction is the whole point:
-a confirmed thesis, however good the number, is *reportable, not debatable* — it goes to `context`.
-An unanswered detail with no thesis consequence goes to `logged`.
+`lead` is the intersection of **high impact AND unanswered** → route to the Watch List. A confirmed
+thesis, however good the number, is *reportable, not debatable* → `context`. An unanswered detail
+with no thesis consequence → `logged`. Non-trackable call colour (a backlog figure, a capex number, a
+user count) → `logged`, precisely the kind of talking point the Watch List would never carry.
 
-**The scarcity rule — enforced, not advisory.** A band holding most of the items is not a ranking.
-Target roughly **2–3 `lead` out of 8–9 highlights**; if `lead` exceeds ~⅓ of the list, the
-assignment is wrong and must be redone.
+**The one-line test:** *would a senior analyst interrupt to argue about this?* If yes, it is a
+thesis-mover — it belongs on the **Watch List**, not in the highlights. If "no, they'd just nod," it
+is `context` (settled) or `logged` (colour).
 
-**The regression case (v2.1, caught in review):** the first pass put 5 of 8 Q1'26 highlights in
-`lead`, including *"Cloud's acceleration is contracted"* (+63%, backlog 2×) and *"Search +19% and
-a new coverage claim."* Both were **confirmed by the print** — there is nothing to debate about a
-thesis line that held — so both moved to `context`, leaving 3/4/1. The surviving `lead` items were
-the ones where **management's answer did not match the size of the number**: TPU-sale margins
-dodged, 2027 capex given as an adjective, a consumer KPI gone silent.
-
-**The one-line test for `lead`:** *would a senior analyst interrupt to argue about this?* If the
-answer is "no, they'd just nod," it is `context`.
+**The regression lesson (v2.1) still holds, now as a routing rule:** a first pass once put 5 of 8
+Q1'26 highlights in `lead`, including *"Cloud's acceleration is contracted"* and *"Search +19%"* —
+both **confirmed by the print**, so both are `context` (nothing to debate), not `lead`. Under v2.7
+the genuine `lead` items (answer not matching the size of the number: TPU-sale margins dodged, 2027
+capex given as an adjective, a consumer KPI gone silent) would be **Watch List hooks**, not rendered
+highlights. If a quarter produces zero `context`/`logged` items, the Call highlights section is
+simply absent — that is fine, it means everything worth saying was a thesis-mover already tracked.
 
 `open` is not decoration — it is the sentence you would say next. Write the unresolved thing
 itself ("Margin profile unanswered — Post pressed, got ROIC framing instead"), not a category.
 
-## 6c. `threeMinutes` — the deliverable the whole tab exists to produce
+## 6c. `threeMinutes` — the spoken deliverable (v2.7: DATA-ONLY, no longer rendered)
+
+> **v2.7 status:** the Post-Call tab was dissolved and `threeMinutes` (with `take`, `notBringing`,
+> `newQuestions`) is **no longer rendered** in the UI — Post-Results now shows the scorecard + the
+> **call highlights** (the talking points) and nothing else. The field and the guidance below survive
+> as **authoring notes**: still worth composing while you work the call, still the discipline behind a
+> good `lead` band, but it does not paint to the screen. If a future cycle wants the spoken version
+> back, it renders inside Post-Results, not in a phase of its own. The rest of this section is kept
+> for that authoring discipline.
 
 Everything upstream is input. This is the output: **what you actually say out loud** if you get
 one slot in the meeting.
@@ -1129,10 +1260,15 @@ CSS classes that carry meaning (port with the functions): `.ce-legend`/`.ce-lege
 7. **Port the render machinery** from `googl.js` or `ibkr.js` (§7).
 8. **Wire it** (§6 placement — Earnings is the first Evolution sub-tab, no Earnings Calls tab;
    `wireCallEarnings` + calls-pill/lpb-acc in `init`).
-9. **After each print/call**: fill `results` then `call` (Rule 0), including **`band`+`open` on
-   every highlight** (§6b), **`threeMinutes`+`notBringing`** (§6c), and `surprise`/`watchRank` on
-   every scorecard row (§7b). Then ROLL: build the new upcoming quarter, and **close the chain** —
-   every `newQuestion` of the quarter just filed gets a `landed:{q,rank}` or is explicitly left
+9. **After each print/call — ONE fill (v2.8):** fill `results` **and** `call` together in a single
+   step (the print and the transcript land at once; there is no separate "score now, transcript
+   later"). Rule 0 throughout. Include `surprise`/`watchRank` on every scorecard row (§7b) and, on
+   every `call.highlights` item, **`band` + optional `open`** (§6b) — remember the aside is only
+   `context` + `logged`; a `lead` (thesis-mover) is filtered out of the render and belongs on the
+   **Watch List** instead. `take` / `threeMinutes` / `notBringing` / `newQuestions` are **data-only**
+   (compose if useful; not rendered — §6c). Then ROLL: **add the new upcoming quarter (it opens in
+   Setup + Watch List only, never Post-Results — §6a-ix)**, and **close the chain** — every
+   `newQuestion` of the quarter just filed gets a `landed:{q,rank}` or is explicitly left
    `still open`, and every new watch item gets its `seededBy` (§6d). Rotate the calls repo; update
    the themes view and bump each theme's `st.last` (and `st.since` if a status changed).
 
@@ -1162,19 +1298,32 @@ CSS classes that carry meaning (port with the functions): `.ce-legend`/`.ce-lege
 - [ ] Tag bar still filters **across quarters** (flat view w/ quarter chips; clear/quarter-pick
       returns to per-quarter); promises embedded (no standalone tab).
 - [ ] **No black slabs inside the watch cards** — no `.ce-w*` rule uses `#10141A`. The dark box
-      survives only as the Setup debate box (`.ce-synth`) and the Post-Call take (`.ce-take`).
+      survives only as the Setup debate box (`.ce-synth`) and the Post-Results headline take
+      (`.ce-take`, `results.headline`).
 - [ ] Watch List items that descend from a prior call carry **`seededBy`**, rendered in words.
-- [ ] **Post-Results:** red-line check renders **above** the scorecard with its tripped counter;
-      scorecard sorted **biggest-surprise first**; every row has `surprise`; `watchRank` present
-      where true and **blank (never a label) where not**; `nodisc`/`nocons` used instead of forcing
-      a `miss`; legend above the table.
-- [ ] **Post-Call:** every highlight has a `band`; **`lead` ≤ ~⅓ of the list** (recount if not);
-      every `lead` item has an `open` that names the unresolved thing; band legend above.
-- [ ] **`threeMinutes` written** (3–4 spoken bullets, Rule 0, synthesised not copied) +
-      **`notBringing`** for anything notable excluded; copy button wired.
+- [ ] **Post-Results (numbers):** red-line check renders **above** the scorecard with its tripped
+      counter; scorecard sorted **biggest-surprise first**; every row has `surprise`; `watchRank`
+      present where true and **blank (never a label) where not**; `nodisc`/`nocons` used instead of
+      forcing a `miss`; legend above the table.
+- [ ] **Post-Results toggles (v2.8):** `vs Street ⇄ vs Summit` swaps the expected value, surprise,
+      verdict **and** the verdict-filter (tiles carry `data-vdc`/`data-vdu`); **no "Both"**; Summit
+      view reads `no est.` where `setup.us` has no number. `Margin` toggle shows GP/OpInc/EBITDA
+      **expected-implied → realized** with a Δ in pts and **no YoY/QoQ**, and the `?` pop-up discloses
+      the forward-revenue basis caveat. Defaults: `data-ev="cons"`, `data-mm="off"`.
+- [ ] **Post-Results ▸ "Also on the call" (v2.8 rename, supplemental):** renders **below the
+      scorecard** in a **de-emphasized `.ce-suppl` aside** (dashed/muted + a `supplemental` pill — NOT
+      the scorecard's formatting) under an *"Also on the call"* header; **the word "highlights" does
+      not appear**. **Only `context` + `logged` render — `lead` items filtered out and routed to the
+      Watch List** (recount: no `lead` card in Post-Results). Both bands start visible; band legend
+      above. **`logged` may carry non-trackable call colour** (a backlog/capex/user-count) — colour,
+      not tracking (§2, Pass 3). **No Post-Call phase tab exists**; if a quarter has no
+      `context`/`logged` items, the aside is simply absent.
+- [ ] **`threeMinutes` / `take` / `notBringing` / `newQuestions` are DATA-ONLY (v2.7)** — composed as
+      authoring notes if useful, `newQuestions` still seeds the next Watch List, but **not rendered**;
+      there is no three-minutes copy button.
 - [ ] ≥2 reported quarters backfilled end-to-end; **the chain closes in BOTH directions** — every
       `newQuestion` shows where it landed or reads *still open*, and its counterpart watch item
-      names it; quarter pills toggle all four phases.
+      names it; quarter pills toggle all three phases (Setup · Watch List · Post-Results).
 - [ ] **The theme record** renders **inside the Earnings Watch List** (not a standalone tab): By
       theme ⇄ By quarter toggle, `lpb-acc` accordions, status chips **with age in words**,
       contemporaneous highlights. **No "Earnings Calls" sub-tab exists** in the Evolution row (v2.3).

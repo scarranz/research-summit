@@ -847,8 +847,8 @@ var CALL_EARNINGS = {
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // WATCH LIST — THE TABLE (v2.6 · Jul 2026)
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-// The Watch List is not a model output. Post-Results and Post-Call still give the model free rein
-// over what a print and a transcript said; the HUNT LIST is ours — we decide what matters and what
+// The Watch List is not a model output. Post-Results still gives the model free rein over what a
+// print and a transcript said (numbers + call highlights); the HUNT LIST is ours — we decide what matters and what
 // the model failed to detect. So it is stored as a TABLE, not as prose nested inside each quarter:
 // one flat array of rows with explicit columns, shaped 1:1 against the Supabase table it becomes.
 //
@@ -1333,16 +1333,15 @@ function ceIRButton(){
   '</div>';
 }
 function ceQkey(q){ return String(q||'').replace(/\s/g,''); }
-// Renders the quarter-pill selector (shared across the four phase panes via .ce-qblock filtering).
+// Renders the quarter-pill selector (shared across the three phase panes via .ce-qblock filtering).
 // The quarter selector is PHASE-AWARE: Setup & Watch List offer every quarter, but Post-Results
-// only offers quarters that have a `results` block and Post-Call only those with a `call` block —
-// the upcoming quarter has neither, so it does not exist in those two sections (its data does not
-// exist yet). The upcoming quarter is added to CALL_EARNINGS.quarters only once the PRIOR quarter's
-// Post-Call is filled (§6a-ix). data-ceqhas lists the phases each quarter is valid for.
+// only offers quarters that have a `results` block — the upcoming quarter has none, so it does not
+// exist in that section (its data does not exist yet). The upcoming quarter is added to
+// CALL_EARNINGS.quarters only once the PRIOR quarter's Post-Results (print + call highlights) is
+// filled. data-ceqhas lists the phases each quarter is valid for.
 function ceQPhases(q){
   var ph=['setup','watch'];
   if(q.results) ph.push('results');
-  if(q.call) ph.push('postcall');
   return ph;
 }
 function ceQPills(){
@@ -1440,7 +1439,8 @@ function ceGridStyle(){
     '.ce-evwrap[data-g="off"] .ce-gy,.ce-evwrap[data-g="off"] .ce-gq{display:none}'+
     '.ce-gseg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+
     '.ce-gseg button{font-size:10px;font-weight:800;padding:3px 11px;border:0;border-radius:999px;background:transparent;color:var(--mu);cursor:pointer;transition:.14s}'+
-    '.ce-gseg button.active{background:var(--navy);color:#fff}'+'.ce-vdf{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+'.ce-vdf button{font-size:10px;font-weight:800;padding:3px 11px;border:0;border-radius:999px;background:transparent;color:var(--mu);cursor:pointer;transition:.14s}'+'.ce-vdf button.active{background:var(--navy);color:#fff}'+'.ce-fz-g[data-f="beat"] .ce-fz-t:not([data-vd="beat"]),'+'.ce-fz-g[data-f="miss"] .ce-fz-t:not([data-vd="miss"]),'+'.ce-fz-g[data-f="inline"] .ce-fz-t:not([data-vd="inline"]){display:none}'+
+    '.ce-gseg button.active{background:var(--navy);color:#fff}'+'.ce-vdf{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+'.ce-vdf button{font-size:10px;font-weight:800;padding:3px 11px;border:0;border-radius:999px;background:transparent;color:var(--mu);cursor:pointer;transition:.14s}'+'.ce-vdf button.active{background:var(--navy);color:#fff}'+
+    '.ce-fz[data-ev="cons"] .ce-fz-g[data-f="beat"] .ce-fz-t:not([data-vdc="beat"]),'+'.ce-fz[data-ev="cons"] .ce-fz-g[data-f="miss"] .ce-fz-t:not([data-vdc="miss"]),'+'.ce-fz[data-ev="cons"] .ce-fz-g[data-f="inline"] .ce-fz-t:not([data-vdc="inline"]),'+'.ce-fz[data-ev="us"] .ce-fz-g[data-f="beat"] .ce-fz-t:not([data-vdu="beat"]),'+'.ce-fz[data-ev="us"] .ce-fz-g[data-f="miss"] .ce-fz-t:not([data-vdu="miss"]),'+'.ce-fz[data-ev="us"] .ce-fz-g[data-f="inline"] .ce-fz-t:not([data-vdu="inline"]){display:none}'+
     '.ce-dbt{display:flex;flex-direction:column;gap:5px}'+
     '.ce-dbt-r{display:grid;grid-template-columns:1.3fr 1fr 1fr 70px;gap:10px;align-items:center;'+
       'border:1px solid var(--bdr);border-left:4px solid var(--mu);border-radius:9px;padding:7px 12px;background:#fff}'+
@@ -1531,7 +1531,7 @@ function ceSetupBody(c){
       }
       if(st.pricedIn) b+='<div class="ce-banner"><b>What was priced in:</b> '+st.pricedIn+'</div>';
       if(st.oneLiner) b+='<div class="ce-synth">'+st.oneLiner+'</div>';
-      b+='<div class="ov-foot">Frozen — scored in Post-Results / Post-Call for this quarter.</div>';
+      b+='<div class="ov-foot">Frozen — scored in Post-Results for this quarter.</div>';
     }
     b+='</div>';
     return b;
@@ -1749,7 +1749,7 @@ function ceWlTable(){
 function ceWatchBody(c){
   var h=ceStyle();
   // A one-line reminder of the append-only cadence, above the theme filter.
-  h+='<div class="ce-wl-hint">🔁 <b>How quarters advance:</b> a new <i>upcoming</i> quarter appears in Setup & Watch List <b>only once the prior quarter\'s Post-Call is filled</b>. Fill Q(n) Post-Call → then Q(n+1) opens for prep.</div>';
+  h+='<div class="ce-wl-hint">🔁 <b>How quarters advance:</b> a new <i>upcoming</i> quarter appears in Setup & Watch List <b>only once the prior quarter\'s Post-Results (print + call highlights) is filled</b>. Fill Q(n) Post-Results → then Q(n+1) opens for prep.</div>';
   // ── Tag bar: select themes ACROSS quarters (multi-select). Empty selection = per-quarter view. ──
   h+='<div class="ce-wl-tagbar"><span class="ce-wl-bar-k">Filter by theme (across quarters):</span>'+
     wlTags().map(function(t){ return '<button type="button" class="ce-wl-tag" data-wltag="'+esc(t)+'">#'+esc(t)+'</button>'; }).join('')+
@@ -1773,7 +1773,7 @@ function ceWatchBody(c){
     b+='<div class="ce-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="ce-frozen">frozen</span>':'')+'</div>';
     var wl=wlFor(u.q, !frozen);
     b+='<p class="ov-lede"><b>'+(frozen?'The list as it was frozen — ':'Things to hunt — ')+esc(u.q)+'</b>'+
-      (frozen?' <span style="color:var(--mu);font-weight:600">(scored afterwards in Post-Results / Post-Call)</span>':' <span style="color:var(--mu);font-weight:600">(the open hooks — a <i>Tracking since</i> with no <i>Tracking until</i>)</span>')+
+      (frozen?' <span style="color:var(--mu);font-weight:600">(scored afterwards in Post-Results)</span>':' <span style="color:var(--mu);font-weight:600">(the open hooks — a <i>Tracking since</i> with no <i>Tracking until</i>)</span>')+
       '. Each card carries its <b>definition</b> — what the theme means in our words — its <b>tags</b>, and its <b>tracking window</b>. Tap <b>the thread ›</b> for the grounding and the quarter-by-quarter evolution. Ordered by weight, deliberately <b>not numbered</b>: a visible 1–5 goes stale the moment a theme is removed.</p>';
     b+='<div class="ce-legend"><span class="ce-legend-i"><b>How to read the cards:</b></span>'+
       '<span class="ce-legend-i"><span class="ce-seed">left open by Q2 2026</span> it is on the list because last quarter\'s call did not settle it</span>'+
@@ -1782,7 +1782,7 @@ function ceWatchBody(c){
     '</div>';
     if(!wl.length){ b+='<div class="ce-note">No open hooks for '+esc(u.q)+' yet — add themes with <b>+ Add theme</b> above.</div>'; }
     else{ b+='<div class="ce-watch">'+wl.map(function(w){ return ceWatchItem(w, qk, '', null, !frozen); }).join('')+'</div>'; }
-    b+='<div class="ov-foot">'+(frozen?'Frozen — this list was scored against '+esc(u.q)+'\'s Post-Results/Post-Call; its <code>newQuestions</code> seeded the next quarter.':'Ours to curate: Post-Results and Post-Call let the model run, but what earns a slot here is our call. Frozen once the quarter opens.')+'</div>';
+    b+='<div class="ov-foot">'+(frozen?'Frozen — this list was scored against '+esc(u.q)+'\'s Post-Results; its <code>newQuestions</code> seeded the next quarter.':'Ours to curate: Post-Results lets the model run (numbers + call highlights), but what earns a slot here is our call. Frozen once the quarter opens.')+'</div>';
     b+='</div>';
     return b;
   }).join('');
@@ -1833,72 +1833,97 @@ function ceVerdict(m, c, a, surp){
   if(Math.abs(surp)<2) return {l:CE_RES.inline.l, c:CE_RES.inline.c, k:'inline'};
   return surp>0 ? {l:CE_RES.beat.l, c:CE_RES.beat.c, k:'beat'} : {l:CE_RES.miss.l, c:CE_RES.miss.c, k:'miss'};
 }
-function cePrintBlock(qLabel, r){
+function cePrintBlock(qLabel, r, us){
   var qi=CE_CONS.q.indexOf(qLabel); if(qi<0) return '';
-  r=r||{};
+  r=r||{}; us=us||{};
   var notes=r.notes||{}, watch=r.watch||{};
-  // Revenue for the quarter — the margin denominator (§6a-vi). Consensus and the print.
+  // Revenue for the quarter — the margin denominator (§6a-vi). Street, Summit, and the print.
   var revM=CE_CONS.m.filter(function(x){ return x.k==='Revenue'; })[0];
   var revC=(revM&&revM.qr[qi])?revM.qr[qi][3]:null, revA=revM?revM.qa[qi]:null;
+  var revS=(us['Revenue']&&us['Revenue'].v!=null)?us['Revenue'].v:revC;   // Summit revenue, else BBG
   var tiles=CE_CONS.m.map(function(m){
     var c=m.qr[qi]?m.qr[qi][3]:null, a=m.qa[qi];
-    if(c==null&&a==null) return null;
-    var surp=(c!=null&&a!=null&&c)?((a/c-1)*100):null;
-    var v=ceVerdict(m,c,a,surp);
-    // growth against the print, both bases — the shared YoY/QoQ lens
+    var uexp=(us[m.k]&&us[m.k].v!=null)?us[m.k].v:null;   // Summit's FROZEN expectation for this line
+    if(c==null&&a==null&&uexp==null) return null;
+    // Surprise = actual / expected − 1, computed for BOTH bases. The estimate-view toggle (vs Street
+    // ⇄ vs Summit) swaps which one drives the expected value, the surprise and the verdict.
+    var cSurp=(c!=null&&a!=null&&c)?((a/c-1)*100):null;
+    var uSurp=(uexp!=null&&a!=null&&uexp)?((a/uexp-1)*100):null;
+    var cV=ceVerdict(m,c,a,cSurp), uV=ceVerdict(m,uexp,a,uSurp);
+    // growth against the print, both bases — the shared YoY/QoQ lens (independent of the estimate view)
     var g=function(base){
       var bv=(base==='qoq')?m.qq[qi]:m.qy[qi];
       if(a==null||bv==null||!bv) return '<span class="ce-fz-g-e">—</span>';
       var gv=Math.round((a/bv-1)*100);
       return '<span style="color:'+(gv>=0?'#0a8f4c':'#C5221F')+'">'+(gv>=0?'+':'−')+Math.abs(gv)+'%</span>';
     };
-    var surpHtml = (surp==null) ? ''
-      : '<span class="ce-fz-d '+(surp>=0?'up':'dn')+'">'+(surp>=0?'+':'−')+(Math.round(Math.abs(surp)*10)/10)+'%</span>';
-    // Margin line, GP/OpInc/EBITDA only: the PRINT's REALIZED margin (actual metric ÷ actual
-    // revenue) — a same-basis ratio, the honest one. We do NOT show a consensus-implied margin: it
-    // would divide by the archive's forward revenue (a different, ~20%-lower basis) and overstate
-    // the margin by ~8pts, reading as collapse when nothing collapsed (§6a-vi).
-    var pMgn=CE_MARGIN_ON[m.k]?ceMarginPct(a,revA):null;
-    var mLine=(pMgn!=null)
-      ? '<div class="ce-fz-mgn"><span class="ce-fz-gl">margin</span><b>'+pMgn+'%</b></div>'
-      : '';
+    var surpTag=function(s){ return (s==null)?'':'<span class="ce-fz-d '+(s>=0?'up':'dn')+'">'+(s>=0?'+':'−')+(Math.round(Math.abs(s)*10)/10)+'%</span>'; };
+    // MARGIN (GP/OpInc/EBITDA only) — toggled, and it is EXPECTED-vs-REALIZED, not YoY/QoQ. Expected
+    // = the margin IMPLIED by the estimate (estimate's metric ÷ estimate's revenue, same estimate on
+    // both sides): Street = c/revC, Summit = uexp/revS. Realized = the print's own (a/revA). We show
+    // the gap in pts. Basis caveat (see the ? pop-up): the Street's forward revenue runs below the
+    // print, so the Street-implied margin sits above realized by construction — the Δ is partly that.
+    var mgnOn=CE_MARGIN_ON[m.k], mReal=mgnOn?ceMarginPct(a,revA):null;
+    var mExpC=mgnOn?ceMarginPct(c,revC):null, mExpU=mgnOn?ceMarginPct(uexp,revS):null;
+    var dPts=function(exp){ if(mReal==null||exp==null) return ''; var d=Math.round((mReal-exp)*10)/10;
+      return '<span class="ce-fz-mdl '+(d>=0?'up':'dn')+'">'+(d>=0?'+':'−')+Math.abs(d)+' pts</span>'; };
+    var mRow='';
+    if(mgnOn&&mReal!=null){
+      mRow='<div class="ce-fz-mrow"><span class="ce-fz-gl">margin</span>'+
+        '<span class="ce-fz-mexp ce-exp-cons">exp '+(mExpC!=null?mExpC+'%':'—')+dPts(mExpC)+'</span>'+
+        '<span class="ce-fz-mexp ce-exp-us">exp '+(mExpU!=null?mExpU+'%':'—')+dPts(mExpU)+'</span>'+
+        '<span class="ce-fz-ar">→</span><span class="ce-fz-mreal">'+mReal+'% realized</span>'+
+        ceQ('mgn-'+ceQkey(qLabel)+'-'+ceQkey(m.k),'Margin — expected vs realized',
+          '<p><b>Expected</b> is the margin <i>implied by the estimate</i>: the estimate\'s metric ÷ the estimate\'s own revenue (Street = BBG ÷ BBG, Summit = ours ÷ ours). <b>Realized</b> is the print\'s own margin (actual ÷ actual). This is expectation vs outcome for the quarter — <b>there is no YoY/QoQ on the margin</b>.</p>'+
+          '<p><b>Basis caveat:</b> the Street\'s forward revenue runs materially <i>below</i> the print (FX + gross-vs-net), so the Street-implied margin sits above the realized one by construction. Read the Δ with that offset in mind — part of a negative gap is the revenue basis, not a margin miss.</p>')+
+        '</div>';
+    }
     var note=notes[m.k];
     var qb=note?ceReg('resnote-'+ceQkey(qLabel)+'-'+ceQkey(m.k), note.t||m.k, note.h||note):null;
     // watch[m.k] is the frozen Watch-List RANK; resolve it to the theme text for the chip.
     var wrRank=watch[m.k], wrTheme=null;
     if(wrRank){ var wrow=wlFor(qLabel,false).filter(function(x){ return x.rank===wrRank; })[0]; wrTheme=wrow?wrow.theme:null; }
     var wr=wrTheme||(wrRank?('Watch #'+wrRank):null);
-    return { sort:(surp==null?-1:Math.abs(surp)), html:
-      '<div class="ce-fz-t" data-vd="'+v.k+'"'+(qb?' data-detail="ce:'+qb+'"':'')+'>'+
+    // data-vdc / data-vdu carry BOTH verdicts so the verdict filter is estimate-view-aware in pure CSS.
+    return { sort:(cSurp==null?-1:Math.abs(cSurp)), html:
+      '<div class="ce-fz-t" data-vdc="'+cV.k+'" data-vdu="'+uV.k+'"'+(qb?' data-detail="ce:'+qb+'"':'')+'>'+
         '<div class="ce-fz-k">'+esc(m.k)+
-          '<span class="ce-fz-vd" style="color:'+v.c+'">'+v.l+'</span></div>'+
-        '<div class="ce-fz-r"><span class="ce-fz-c">'+(c==null?'—':ceTkFmt(m.u,c))+'</span>'+
-          '<span class="ce-fz-ar">→</span><span class="ce-fz-a">'+(a==null?'—':ceTkFmt(m.u,a))+'</span>'+surpHtml+'</div>'+
+          '<span class="ce-fz-vd ce-vd-cons" style="color:'+cV.c+'">'+cV.l+'</span>'+
+          '<span class="ce-fz-vd ce-vd-us" style="color:'+uV.c+'">'+uV.l+'</span></div>'+
+        '<div class="ce-fz-r"><span class="ce-fz-c ce-exp-cons">'+(c==null?'—':ceTkFmt(m.u,c))+'</span>'+
+          '<span class="ce-fz-c ce-exp-us">'+(uexp==null?'—':ceTkFmt(m.u,uexp))+'</span>'+
+          '<span class="ce-fz-ar">→</span><span class="ce-fz-a">'+(a==null?'—':ceTkFmt(m.u,a))+'</span>'+
+          '<span class="ce-fz-dw ce-exp-cons">'+surpTag(cSurp)+'</span><span class="ce-fz-dw ce-exp-us">'+surpTag(uSurp)+'</span></div>'+
         '<div class="ce-fz-gr"><span class="ce-fz-gl">growth</span>'+
           '<span class="ce-gy">'+g('yoy')+'</span><span class="ce-gq">'+g('qoq')+'</span></div>'+
-        mLine+
+        mRow+
         (wr?'<div class="ce-fz-wl" title="On the frozen Watch List: '+esc(wr)+'">on the list</div>':'')+
         (qb?'<div class="ce-fz-more">＋ detail</div>':'')+
       '</div>' };
   }).filter(Boolean);
   if(!tiles.length) return '';
-  tiles.sort(function(x,z){ return z.sort-x.sort; });   // biggest surprise first
-  return '<div class="ce-fz" data-g="yoy"><div class="ce-fz-h">The print — ranked by surprise vs the Street'+
+  tiles.sort(function(x,z){ return z.sort-x.sort; });   // biggest surprise first (Street basis)
+  return '<div class="ce-fz" data-g="yoy" data-ev="cons" data-mm="off"><div class="ce-fz-h">The print — ranked by surprise'+
     ceQ('fz-'+ceQkey(qLabel),'How this is built',
       '<p>One block, archive-driven. Every number and surprise is computed from <code>BBG_CONSENSUS.txt</code>: the last snapshot before the print carries the consensus (<code>fq+1</code>), a later snapshot carries the print (<code>fq0</code>). Reconstructed from data, so it cannot drift.</p>'+
-      '<ul><li><b>Verdict</b> — beat / miss / in-line off the computed surprise; <b>n/a</b> on a different-basis line (revenue); <b>no est.</b> where the Street had no number</li>'+
-      '<li><b>on the list</b> — this line was on the Watch List we froze before the call</li>'+
-      '<li><b>＋ detail</b> — the one thing a number cannot say</li></ul>'+
-      '<p>Lines the archive does not track are not shown here — a disclosure with no consensus (e.g. an app-MAU rung) is a Post-Call highlight, not a scored line.</p>')+
+      '<ul><li><b>vs Street ⇄ vs Summit</b> — swaps which frozen expectation the print is scored against (Street = Bloomberg, Summit = ours). No "Both" — one basis at a time. Where Summit had no number, Summit view reads <b>no est.</b></li>'+
+      '<li><b>Margin</b> — GP / Operating income / EBITDA carry an expected-vs-realized margin (the estimate-implied margin → the print\'s own), Δ in pts. No YoY/QoQ on the margin.</li>'+
+      '<li><b>Verdict</b> — beat / miss / in-line off the computed surprise; <b>no est.</b> where that basis had no number</li>'+
+      '<li><b>on the list</b> — this line was on the Watch List we froze before the call</li></ul>'+
+      '<p>Lines the archive does not track are not shown here — a disclosure with no consensus (e.g. an app-MAU rung) is a supplemental call note (below the scorecard), not a scored line.</p>')+
     '<span class="ce-vdf"><button type="button" class="active" data-vdf="all">All</button>'+
       '<button type="button" data-vdf="beat">Beats</button>'+
       '<button type="button" data-vdf="miss">Misses</button>'+
       '<button type="button" data-vdf="inline">In line</button></span>'+
-    '<span class="ce-gseg" style="margin-left:auto"><button type="button" class="active" data-ceg="yoy">YoY</button>'+
+    '<span class="ce-gseg" style="margin-left:auto"><button type="button" class="active" data-fzev="cons">vs Street</button>'+
+      '<button type="button" data-fzev="us">vs Summit</button></span>'+
+    '<span class="ce-gseg"><button type="button" data-fzmm="on">Margin</button>'+
+      '<button type="button" class="active" data-fzmm="off">Hide mgn</button></span>'+
+    '<span class="ce-gseg"><button type="button" class="active" data-ceg="yoy">YoY</button>'+
       '<button type="button" data-ceg="qoq">QoQ</button>'+
       '<button type="button" data-ceg="off">Off</button></span>'+
     '</div><div class="ce-fz-g" data-vdf-host>'+tiles.map(function(t){ return t.html; }).join('')+'</div>'+
-    '<div class="ce-fz-f">Street (1 quarter out) → the print → the print\'s own growth. Ranked by |surprise|. Source: <code>BBG_CONSENSUS.txt</code>.</div></div>';
+    '<div class="ce-fz-f">Expectation (frozen, 1 quarter out) → the print → the print\'s own growth. Toggle <b>vs Street ⇄ vs Summit</b> and <b>Margin</b> above. Ranked by |surprise vs Street|. Source: <code>BBG_CONSENSUS.txt</code> + Summit.</div></div>';
 }
 // A collapsible block — secondary depth is folded away by default so the phase reads as a page,
 // not a wall. Wired by the generic `.ov-collap-h` handler already in init().
@@ -1925,6 +1950,17 @@ function cePhaseStyle(){
     '.ce-fz-d{font-size:9.5px;font-weight:800;margin-left:auto}'+
     '.ce-fz-d.up{color:#0a8f4c}.ce-fz-d.dn{color:'+RED+'}.ce-fz-d.na{color:var(--mu);font-weight:700}'+
     '.ce-fz-f{font-size:9.5px;color:var(--mu);margin-top:8px}'+'.ce-fz-t{position:relative;transition:.14s}'+'.ce-fz-t[data-detail]{cursor:pointer}'+'.ce-fz-t[data-detail]:hover{box-shadow:0 4px 14px rgba(16,24,40,.10);transform:translateY(-1px)}'+'.ce-fz-vd{margin-left:auto;font-size:8.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase}'+'.ce-fz-k{display:flex;align-items:center;gap:5px}'+'.ce-fz-wl{font-size:8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:'+BLUE+';margin-top:5px}'+'.ce-fz-more{position:absolute;right:9px;bottom:7px;font-size:8.5px;font-weight:800;color:'+BLUE+'}'+'.ce-fz-h{display:flex;align-items:center;gap:6px}'+'.ce-fz-gr{display:flex;align-items:baseline;gap:5px;margin-top:3px;font-size:9.5px;font-weight:800}'+'.ce-fz-gl{font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}'+'.ce-fz-mgn{display:flex;align-items:baseline;gap:5px;margin-top:3px;font-size:11px;font-weight:900;color:'+PURPLE+'}'+'.ce-fz-mexp{font-size:9px;font-weight:700;color:var(--mu)}'+'.ce-fz-g-e{color:var(--mu);font-weight:600}'+'.ce-fz[data-g="yoy"] .ce-gq,.ce-fz[data-g="qoq"] .ce-gy,'+'.ce-fz[data-g="off"] .ce-fz-gr{display:none}'+
+    /* estimate view (vs Street ⇄ vs Summit) — pure-CSS swap of expected value, surprise & verdict */
+    '.ce-fz-h{flex-wrap:wrap}'+
+    '.ce-vd-us,.ce-exp-us{display:none}'+
+    '.ce-fz[data-ev="us"] .ce-vd-cons,.ce-fz[data-ev="us"] .ce-exp-cons{display:none}'+
+    '.ce-fz[data-ev="us"] .ce-vd-us,.ce-fz[data-ev="us"] .ce-exp-us{display:inline}'+
+    '.ce-fz-dw{margin-left:auto}'+
+    /* margin row — expected(estimate-implied) → realized, toggled by data-mm; NO YoY/QoQ here */
+    '.ce-fz-mrow{display:none;align-items:baseline;gap:5px;margin-top:4px;padding-top:4px;border-top:1px dashed var(--bdr);font-size:9.5px;font-weight:800}'+
+    '.ce-fz[data-mm="on"] .ce-fz-mrow{display:flex;flex-wrap:wrap}'+
+    '.ce-fz-mreal{font-size:11px;font-weight:900;color:'+PURPLE+'}'+
+    '.ce-fz-mdl{font-weight:800;margin-left:3px}.ce-fz-mdl.up{color:#0a8f4c}.ce-fz-mdl.dn{color:'+RED+'}'+
     /* folds — secondary depth, closed by default */
     '.ce-fold{border:1px solid var(--bdr);border-radius:11px;margin:0 0 10px;overflow:hidden;background:#fff}'+
     '.ce-fold .ov-collap-h{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:#FAFBFD;'+
@@ -1950,6 +1986,13 @@ function cePhaseStyle(){
     '.ce-chip.hi{background:rgba(234,67,53,.12);color:'+RED+'}'+
     '.ce-chip.md{background:rgba(251,188,5,.18);color:#7A5B02}'+
     '.ce-chip.lo{background:#EEF1F5;color:var(--mu)}'+
+    /* supplemental "Also on the call" aside — deliberately de-emphasized vs the scorecard */
+    '.ce-suppl{margin-top:18px;padding:11px 13px 13px;border:1px dashed #C7D0DA;border-radius:12px;background:#F6F8FA}'+
+    '.ce-suppl-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px}'+
+    '.ce-suppl-tag{font-size:8px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);background:#E7ECF2;border:1px solid var(--bdr);border-radius:999px;padding:2px 8px}'+
+    '.ce-suppl-h>b{font-size:12px;color:var(--navy);font-weight:800}'+
+    '.ce-suppl-sub{font-size:9.5px;color:var(--mu);font-weight:600;line-height:1.4;flex:1 1 100%}'+
+    '.ce-suppl .ce-hcard{border-top-width:2px;background:#fff}'+
     /* highlights, as cards */
     '.ce-hcards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}'+
     '@media(max-width:760px){.ce-hcards{grid-template-columns:1fr}}'+
@@ -2007,9 +2050,11 @@ function ceResultsBody(c){
     if(!r){ b+='<p class="ov-lede"><b>'+esc(q.q)+' — the numbers vs. the frozen expectations.</b></p>'+
       '<div class="ce-note">Empty until the print lands.</div></div>'; return b; }
     b+='<p class="ov-lede"><b>'+esc(q.q)+' — the print, scored against what was frozen going in.</b> '+
-       'Numbers land before the call, so this is the read on the <b>print itself</b>, before management says a word.</p>';
-    // 1 · THE print — archive spine + hand-authored notes, ranked by surprise (one block now)
-    b+=cePrintBlock(q.q, r);
+       'Toggle <b>vs Street ⇄ vs Summit</b> to score the print against either expectation, and <b>Margin</b> for the expected-implied → realized margin. Below the scorecard, a supplemental <i>“Also on the call”</i> aside carries the colour — not the meeting-critical items.</p>';
+    // 1 · THE print — archive spine + hand-authored notes, ranked by surprise (one block now).
+    // Pass the quarter's FROZEN Summit expectations (setup.us) so the print can be scored against
+    // Street OR Summit via the vs-Street ⇄ vs-Summit toggle (§6a-iii).
+    b+=cePrintBlock(q.q, r, (q.setup&&q.setup.us)||{});
     // 2 · the one-paragraph take
     if(r.headline) b+='<div class="ce-take" style="border-left-color:'+BRAND2+'">🎯 '+r.headline+'</div>';
     // 3 · thesis red-line check — folded unless something tripped
@@ -2045,99 +2090,64 @@ function ceResultsBody(c){
           (id?'<div class="ce-tee-m">＋ the ask</div>':'')+'</div>';
       }).join('')+'</div>';
     }
-    b+='<div class="ov-foot">Scored against the frozen Watch List and the frozen Street number. Consensus = <code>BBG_CONSENSUS.txt</code>; actuals = reported.</div>';
+    // 6 · "Also on the call" — the supplemental colour (was the Post-Call tab, dissolved Jul 2026).
+    // Deliberately styled as a secondary aside; NOT the tracking layer (that is the Watch List) and
+    // NOT the meeting-critical read (that is the scorecard). Includes non-trackable call colour.
+    b+=ceHighlightsBlock(q.call, qk);
+    b+='<div class="ov-foot">Numbers scored against the frozen expectation — <b>Street</b> (<code>BBG_CONSENSUS.txt</code>) or <b>Summit</b> via the toggle; actuals = reported. The <i>Also on the call</i> aside is supplemental colour — the tracking layer is the Watch List.</div>';
     b+='</div>';
     return b;
   }).join('');
   return h;
 }
-// E · Post-Call ── insight-first highlights (theme by theme, depth in pop-ups) + the meeting take.
-function ceCallBody(c){
-  var h=ceStyle()+cePhaseStyle();
-  h+=CALL_EARNINGS.quarters.map(function(q,qi){
-    var qk=ceQkey(q.q);
-    var b='<div class="ce-qblock" data-ceq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="ce-phase" style="background:'+RED+'">③ Post-Call</div>';
-    var cc=q.call;
-    if(!cc){ b+='<p class="ov-lede"><b>'+esc(q.q)+' — the story behind the numbers.</b></p>'+
-      '<div class="ce-note">Empty until the call/transcript is in.</div></div>'; return b; }
-    b+='<p class="ov-lede"><b>'+esc(q.q)+' — not a restatement of the numbers; the story behind them.</b> '+
-       'Tap any card for the depth.</p>';
-    if(cc.take) b+='<div class="ce-take">🎯 '+cc.take+'</div>';
-    // ── the deliverable comes FIRST now. Everything below it is the evidence. ──
-    if(cc.threeMinutes&&cc.threeMinutes.length){
-      b+='<div class="ce-3m"><div class="ce-3m-h"><span class="ce-3m-t">🎤 Three minutes</span>'+
-        '<span class="ce-3m-sub">the spoken version — if you get one slot, this is it</span>'+
-        '<button type="button" class="ce-3m-copy" data-ce3m="'+esc(qk)+'">copy</button></div>';
-      // Boxes, one per theme (not a running list): the claim is the box title, the evidence its
-      // TITLE ONLY by default — the claim is the whole card; the evidence hides behind a native
-      // <details> "more" (no JS). Reads like a scannable checklist, detail on demand (§6a-iv).
-      b+='<div class="ce-3m-l" data-ce3mlist="'+esc(qk)+'">'+cc.threeMinutes.map(function(t,i){
-        var mm=String(t).match(/^\s*<b>([\s\S]*?)<\/b>\s*([\s\S]*)$/);
-        var lead=mm?mm[1]:t, rest=mm?mm[2]:'';
-        return '<div class="ce-3m-i"><div class="ce-3m-n">'+(i+1)+'</div>'+
-          '<div class="ce-3m-bd"><span class="ce-3m-lead">'+lead+'</span>'+
-          (rest?'<details class="ce-3m-more"><summary>＋ more</summary><span class="ce-3m-ev">'+rest+'</span></details>':'')+
-          '</div></div>';
-      }).join('')+'</div></div>';
-      if(cc.notBringing&&cc.notBringing.length){
-        b+=ceFold('Deliberately not bringing — and why, if asked', cc.notBringing.length+' items',
-          cc.notBringing.map(function(x){ return '<div class="ce-nb-r"><span class="ce-nb-x">✕</span><span><b>'+esc(x.item)+'</b> — '+esc(x.why)+'</span></div>'; }).join(''), false);
-      }
-    }
-    // ── highlights: ONE strip, three colours, all of it visible ──────────────────────────────
-    // Previously each band was its own section and two of the three were folded away, which made
-    // the reader hunt. Now the triage is a single legend + a filter, and every card carries its
-    // band colour, so "what do I do with this" is answered by looking, not by expanding (§6a-iv).
-    if(cc.highlights&&cc.highlights.length){
-      var bands=[
-        { k:'lead',    i:'▲', c:RED,  t:'Lead with this', s:'moves the thesis, still unresolved' },
-        { k:'context', i:'●', c:BLUE, t:'Context',        s:'settled — mention, do not debate' },
-        { k:'logged',  i:'○', c:GRAY, t:'Logged',         s:'on the record for later' },
-      ];
-      var counts={}; bands.forEach(function(bd){
-        counts[bd.k]=cc.highlights.filter(function(x){ return (x.band||'context')===bd.k; }).length; });
-      b+='<div class="ce-tri">'+bands.map(function(bd){
-        return '<button type="button" class="ce-tri-b active" data-ceband="'+bd.k+'" data-cebq="'+esc(qk)+'" style="--bc:'+bd.c+'">'+
-          '<span class="ce-tri-i">'+bd.i+'</span><span class="ce-tri-t">'+bd.t+'</span>'+
-          '<span class="ce-tri-n">'+(counts[bd.k]||0)+'</span>'+
-          '<span class="ce-tri-s">'+bd.s+'</span></button>';
-      }).join('')+'</div>';
-      var hi=0;
-      b+='<div class="ce-hcards" data-cehl="'+esc(qk)+'">'+cc.highlights.map(function(x){
-        var bd=bands.filter(function(z){ return z.k===(x.band||'context'); })[0]||bands[1];
-        var tg=CE_HLTAG[x.tag]||{c:'#6b7684',l:x.tag||''};
-        var det=x.detail||'';
-        if(x.open) det+='<p><b>Still open:</b> '+x.open+'</p>';
-        var id=det?ceReg('hl-'+qk+'-'+(hi++), tg.l+' — '+String(x.head).replace(/<[^>]+>/g,''), det):null;
-        return '<div class="ce-hcard" data-band="'+bd.k+'" style="--hc:'+bd.c+'"'+(id?' data-detail="ce:'+id+'"':'')+'>'+
-          '<div class="ce-hcard-t"><span class="ce-hcard-b">'+bd.i+'</span>'+esc(tg.l)+'</div>'+
-          '<div class="ce-hcard-h">'+x.head+'</div>'+
-          '<div class="ce-hcard-f">'+(x.open?'<span class="ce-hl-open" title="'+esc(x.open)+'">open</span>':'')+
-          (id?'<span class="ce-hcard-more">＋ detail</span>':'')+'</div></div>';
-      }).join('')+'</div>';
-    }
-    // ── the connective tissue + the chain forward, folded ──
-    // `dots` is deliberately NOT rendered. Anything that connects across themes becomes a Watch
-    // item via `newQuestions` -> the next quarter's list; saying it twice made this phase longer
-    // without making it more useful. The field stays in the data as authoring notes.
-    var tail='';
-    if(cc.newQuestions&&cc.newQuestions.length){
-      tail+='<div class="ce-nq">'+cc.newQuestions.map(function(x){
-        var n=(typeof x==='string')?x:x.n, land=(typeof x==='string')?null:x.landed;
-        var trip=(typeof x!=='string'&&x.tripped)?'<span style="color:'+RED+';font-weight:800;margin-right:5px" title="A thesis red-line actually broke on this one">⚑</span>':'';
-        var chip=land?'<span class="ce-nq-land">became '+esc(land.q)+' Watch item #'+esc(String(land.rank))+'</span>'
-                     :'<span class="ce-nq-land open">still open — not yet on a list</span>';
-        return '<div class="ce-nq-row"><span>'+trip+esc(n)+'</span>'+chip+'</div>';
-      }).join('')+'</div>';
-    }
-    if(tail) b+=ceFold('Connect the dots, and what this call left unanswered',
-      cc.newQuestions?(cc.newQuestions.length+' questions forward'):'', tail, false);
-    b+='<div class="ov-foot">Insight-first, not fact-first. Append-only — prior quarters are never overwritten; <code>newQuestions</code> feeds the next Watch List.</div>';
-    b+='</div>';
-    return b;
-  }).join('');
-  return h;
+// E · "Also on the call" ── the SUPPLEMENTAL colour, rendered inside Post-Results as a de-emphasized
+// aside (the Post-Call tab was dissolved Jul 2026). Renamed away from "highlights" so it is never
+// mistaken for the things to raise at the meeting — those are the scorecard and the Watch List. This
+// is NOT the tracking layer (Watch List) and NOT meeting-critical (scorecard): it deliberately keeps
+// non-trackable call colour (a backlog figure, a capex number, a user count) that would never earn a
+// Watch slot. Two bands only (context + logged); `lead` is filtered out and routed to the Watch List.
+// `take`, `threeMinutes`, `notBringing`, `newQuestions` survive as data (newQuestions still seeds the
+// next Watch List) but are not rendered. Styled via .ce-suppl to read clearly as secondary.
+function ceHighlightsBlock(cc, qk){
+  if(!cc||!cc.highlights||!cc.highlights.length) return '';
+  // Only Context + Logged — the talking points. `lead` (moves-the-thesis) items are EXCLUDED on
+  // purpose: a thesis-mover is tracked, and the tracking layer is the Watch List, not here.
+  var bands=[
+    { k:'context', i:'●', c:BLUE, t:'Context', s:'settled — mention, do not debate' },
+    { k:'logged',  i:'○', c:GRAY, t:'Logged',  s:'call colour — on the record, not tracked' },
+  ];
+  var hls=cc.highlights.filter(function(x){ return (x.band||'context')!=='lead'; });
+  if(!hls.length) return '';
+  // Wrapped in .ce-suppl — deliberately styled as a SECONDARY aside (dashed, muted, a "supplemental"
+  // pill), NOT like the scorecard above, so it never reads as equally important. Renamed away from
+  // "highlights" (which implied these were the things to raise at the meeting — they are not; the
+  // meeting-critical items are the scorecard and the Watch List).
+  var b='<div class="ce-suppl"><div class="ce-suppl-h">'+
+    '<span class="ce-suppl-tag">supplemental</span><b>Also on the call</b>'+
+    '<span class="ce-suppl-sub">colour worth a mention — <b>not</b> the things to raise at the meeting. Those are the scorecard above and the Watch List; thesis-movers are tracked there, never here.</span></div>';
+  var counts={}; bands.forEach(function(bd){
+    counts[bd.k]=hls.filter(function(x){ return (x.band||'context')===bd.k; }).length; });
+  b+='<div class="ce-tri">'+bands.map(function(bd){
+    return '<button type="button" class="ce-tri-b active" data-ceband="'+bd.k+'" data-cebq="'+esc(qk)+'" style="--bc:'+bd.c+'">'+
+      '<span class="ce-tri-i">'+bd.i+'</span><span class="ce-tri-t">'+bd.t+'</span>'+
+      '<span class="ce-tri-n">'+(counts[bd.k]||0)+'</span>'+
+      '<span class="ce-tri-s">'+bd.s+'</span></button>';
+  }).join('')+'</div>';
+  var hi=0;
+  b+='<div class="ce-hcards" data-cehl="'+esc(qk)+'">'+hls.map(function(x){
+    var bd=bands.filter(function(z){ return z.k===(x.band||'context'); })[0]||bands[0];
+    var tg=CE_HLTAG[x.tag]||{c:'#6b7684',l:x.tag||''};
+    var det=x.detail||'';
+    if(x.open) det+='<p><b>Still open:</b> '+x.open+'</p>';
+    var id=det?ceReg('hl-'+qk+'-'+(hi++), tg.l+' — '+String(x.head).replace(/<[^>]+>/g,''), det):null;
+    return '<div class="ce-hcard" data-band="'+bd.k+'" style="--hc:'+bd.c+'"'+(id?' data-detail="ce:'+id+'"':'')+'>'+
+      '<div class="ce-hcard-t"><span class="ce-hcard-b">'+bd.i+'</span>'+esc(tg.l)+'</div>'+
+      '<div class="ce-hcard-h">'+x.head+'</div>'+
+      '<div class="ce-hcard-f">'+(x.open?'<span class="ce-hl-open" title="'+esc(x.open)+'">open</span>':'')+
+      (id?'<span class="ce-hcard-more">＋ detail</span>':'')+'</div></div>';
+  }).join('')+'</div>';
+  b+='</div>';   // close .ce-suppl
+  return b;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -2787,6 +2797,20 @@ function wireCeTrack(root){
     btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
     pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-mm', v); });
   }; });
+  // Post-Results print-block toggles — scoped to their own .ce-fz so each quarter's print block is
+  // independent. These are SEPARATE from the Setup's Consensus/Summit/Both (which does not apply
+  // here: Post-Results has no "Both"). `vs Street ⇄ vs Summit` sets data-ev (swaps the frozen
+  // expectation the print is scored against); `Margin` sets data-mm (expected-implied → realized).
+  pane.querySelectorAll('.ce-gseg button[data-fzev]').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-fzev'), fz=btn.closest('.ce-fz');
+    btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    if(fz) fz.setAttribute('data-ev', v);
+  }; });
+  pane.querySelectorAll('.ce-gseg button[data-fzmm]').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-fzmm'), fz=btn.closest('.ce-fz');
+    btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    if(fz) fz.setAttribute('data-mm', v);
+  }; });
 }
 // ═══ Deep-dive charts (Chart.js, lazy per pane) ═════════════════════════════════════════════════
 var _gCharts={};
@@ -2894,20 +2918,18 @@ function deepDiveHtml(c){
       '</div>'+
       '<div class="ovt-subpane" data-ovst="earnings">'+
         ceIRButton()+
-        '<div class="ce-note" style="margin-bottom:12px">🎯 <b>Earnings</b> — the decision layer, in three phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (react to the numbers, which land before the call) → <b>③ Post-Call</b> (what management said + the meeting take). Append-only per quarter — pick a quarter below; each quarter keeps its frozen pre-call blocks next to its post-mortem, so the tab is a record of how well we read Alphabet. The <b>Watch List</b> is now the single home for theme-tracking — the old standalone <i>Earnings Calls</i> tab was folded into it (no two tabs on the same call highlights).</div>'+
+        '<div class="ce-note" style="margin-bottom:12px">🎯 <b>Earnings</b> — the decision layer, in two phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (the print scored against what was frozen, <i>plus</i> the call highlights — the things worth taking into the conversation). Append-only per quarter — pick a quarter below; each quarter keeps its frozen pre-call blocks next to its post-mortem, so the tab is a record of how well we read Alphabet. The <b>Watch List</b> is the single home for what we <i>track over time</i>; the Post-Results highlights are <i>talking points</i>, not tracking — so they can include non-trackable call colour (a backlog figure, a capex number, a user count) that would never earn a Watch slot.</div>'+
         // Phase tabs ABOVE the quarter pills: the section decides which quarters exist, so it comes
         // first; the quarter selector below reflects the active section (§6a-ix).
         '<div class="ce-phtabs">'+
           '<button type="button" class="ce-phtab active" data-cep="setup">Setup</button>'+
           '<button type="button" class="ce-phtab" data-cep="watch">Watch List</button>'+
           '<button type="button" class="ce-phtab" data-cep="results">Post-Results</button>'+
-          '<button type="button" class="ce-phtab" data-cep="postcall">Post-Call</button>'+
         '</div>'+
         ceQPills()+
         '<div class="ce-phpane" data-cep="setup">'+ceSetupBody(c)+'</div>'+
         '<div class="ce-phpane" data-cep="watch" hidden>'+ceWatchBody(c)+'</div>'+
         '<div class="ce-phpane" data-cep="results" hidden>'+ceResultsBody(c)+'</div>'+
-        '<div class="ce-phpane" data-cep="postcall" hidden>'+ceCallBody(c)+'</div>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="guidance" hidden>'+guidanceBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="strategy" hidden>'+strategyBody(c)+'</div>'+
@@ -3050,25 +3072,13 @@ function wireCallEarnings(root){
   }; });
   // Band triage filter: each button shows/hides its own cards. All three start on, so the
   // reader sees the whole call and uses colour to triage; the filter is for narrowing, not for
-  // hiding by default (§6a-iv).
+  // hiding by default (§6a-iv). The highlight cards now live inside the Post-Results pane (the
+  // Post-Call tab was dissolved Jul 2026), but the filter is pane-scoped so it still finds them.
   pane.querySelectorAll('.ce-tri-b').forEach(function(btn){ btn.onclick=function(){
     var on=btn.classList.toggle('active');
     var qk=btn.getAttribute('data-cebq'), band=btn.getAttribute('data-ceband');
     var host=pane.querySelector('.ce-hcards[data-cehl="'+qk+'"]'); if(!host) return;
     host.querySelectorAll('.ce-hcard[data-band="'+band+'"]').forEach(function(c){ c.hidden=!on; });
-  }; });
-  // ── Three minutes: copy the spoken version out of the dashboard (the one thing that leaves) ──
-  pane.querySelectorAll('.ce-3m-copy').forEach(function(btn){ btn.onclick=function(){
-    var qk=btn.getAttribute('data-ce3m');
-    var list=pane.querySelector('.ce-3m-l[data-ce3mlist="'+qk+'"]'); if(!list) return;
-    var txt=Array.prototype.map.call(list.querySelectorAll('.ce-3m-i'), function(el,i){
-      var lead=el.querySelector('.ce-3m-lead'), ev=el.querySelector('.ce-3m-ev');
-      return (i+1)+'. '+((lead?lead.textContent.trim():'')+(ev?(' '+ev.textContent.trim()):'')).trim();
-    }).join('\n\n');
-    var done=function(){ var o=btn.textContent; btn.textContent='copied ✓'; setTimeout(function(){ btn.textContent=o; }, 1400); };
-    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done, done); }
-    else { var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
-           try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta); done(); }
   }; });
   // ── Watch List v3: theme-tag filter (cross-quarter) · tracking-window filter · add/edit/delete
   // against WL_ROWS · and the table + COPY that carries the edits back into the code. ──────────

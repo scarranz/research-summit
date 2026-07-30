@@ -1679,7 +1679,45 @@ var CALL_EARNINGS = { ticker:'MA', quarters:[
         'Does the Venezuela cross-border surge persist or fade — now that USD availability is in the base?'
       ],
       priceReaction:'to fill from a trusted source' },
-    call:null },
+    // call block KEPT as data — only call.highlights (non-'lead') renders as "Also on the call".
+    call:{
+      take:'A beat-and-raise on Sachin Mehra\'s last call as CFO: the Q1 fears (Middle East, cross-border) resolved better than the base case, an idiosyncratic Venezuela surge added upside, and VAS held +18%. The forward story escalated (Agent Pay for Machines, OpenUSD) while BVNK slipped to a Q3 close; the one genuinely new variable is leadership — Ling Hai takes the CFO seat Aug 3.',
+      highlights:[
+        { tag:'dots', band:'context', head:'The cross-border acceleration was <b>Middle-East recovery + a Venezuela surge</b> — not (clearly) the World Cup.',
+          detail:'<p>Sanjay Sakhrani asked what drove cross-border from April → June → July. Sachin: better <b>outbound spend from the impacted GCC countries</b> (tied to returning flight capacity), plus <b>Venezuela</b> — increased U.S.-dollar availability there let consumers spend USD cross-border, mostly in <b>card-not-present ex-travel</b> (a debit market where Mastercard is the market leader). World Cup impact was "hard to identify."</p><p>The tell: two of the three drivers (Middle-East relief, Venezuela) are idiosyncratic — watch whether they persist into the run-rate.</p>' },
+        { tag:'thesis', band:'context', head:'"Run anything, anywhere" — switching flexes beyond the UAE.',
+          detail:'<p>Andrew Jeffrey asked which other markets get the UAE treatment (and whether Europe is ripe). Michael tied it to the <b>2022 technology strategy</b> that made the network modular: the UAE / Al Etihad Payments / Jaywan switch is incremental volume; South Africa runs a real-time switch that carries <b>any ISO 20022 or card transaction</b>. Europe is competitive (digital euro, local giros, co-badge, wallets like Swish/Bizum) — Mastercard is card-first there for now but "has the flexibility."</p>' },
+        { tag:'thesis', band:'context', head:'Cyber is moving to the <b>center</b> of the VAS story.',
+          detail:'<p>Dan Dolev asked about the cyber-demand inflection. Michael: the portfolio spans <b>fraud → identity → cyber</b> (strengthened by Recorded Future); cybersecurity now occupies CEOs and boards, and frontier models are "both a threat and a tool." Mastercard Threat Intelligence has flagged <b>7M+ card-testing transactions across 192 countries</b>, preventing an estimated <b>$172M</b> in fraud — and it is attached to the transaction growth (the flywheel).</p>' },
+        { tag:'watch', band:'context', head:'Europe deceleration is <b>deliberate</b> — lapping the 2024 win wave + walking from unprofitable deals.',
+          detail:'<p>Harshita Rawat asked why European purchase-volume growth decelerated from the mid-teens. Sachin: Europe grew <b>16% in Q2 2024</b> on the Santander / NatWest / UniCredit win wave; that is now lapping. Mastercard also <b>passed on Lloyds Credit</b> once the economics stopped making sense — "profitable volume, not volume for the sake of volume." A discipline signal, not a share problem — but watch the optics of a decelerating flagship region.</p>' },
+        { tag:'thesis', band:'logged', head:'U.S. strength is broad-based; the affluent still outgrows mass.',
+          detail:'<p>Tien-tsin Huang probed the 10% ex-Cap-One U.S. switched growth. Sachin: a <b>fuel</b> tailwind plus some (unquantifiable) <b>World Cup</b> lift; broad across credit/debit and consumer/commercial; <b>mass and affluent both healthy, affluent structurally higher</b> — "not a new phenomenon."</p>' },
+        { tag:'dots', band:'context', head:'VAS is deliberately <b>network-agnostic</b> — and pushing into account-to-account fraud.',
+          detail:'<p>Tim Chiodo asked about the agnostic nature of the security suite. Michael: fraud/identity/cyber cut across card networks <i>and</i> non-payment use cases, and now into <b>account-to-account scams</b> (built on VocaLink real-time expertise, via a UK bank consortium). Sachin: ~<b>60% of VAS is network-linked</b>; the other ~40% (marketing/consulting) grows at a healthy clip, so the balance is deliberate.</p>' },
+        { tag:'curious', band:'logged', head:'Machine-to-machine: Agent Pay for Machines is "the only network protocol" for M2M.',
+          detail:'<p>On agentic (Ramsey El-Assal), Michael separated three lanes: consumer agentic (cards prevail, via Verifiable Intent), B2B agentic (cards again), and a genuinely new one — <b>machine-to-machine</b>, low-value/high-velocity payments where settlement runs over "different rails" (stablecoins <i>or</i> others). Agent Pay for Machines launched with <b>30+ partners</b> (Adyen, Ant, BVNK, Cloudflare, Coinbase, OKX). Early; a TAM expansion, no volumes yet.</p>' },
+        { tag:'tone', band:'logged', head:'Housekeeping: rebates roughly flat, BVNK closes Q3, OpenUSD via a 140-company consortium.',
+          detail:'<p>Matthew O\'Neill on rebates & incentives: in line in Q2, expected <b>slightly higher</b> as a % of payment-network assessments in Q3 (deal timing); the pipeline is rich. <b>BVNK closes in Q3</b> — minimal net-revenue impact, some opex, already in the recs. James Faucette on the open standard: <b>OpenUSD</b> runs through a <b>140+ company consortium</b> (a neutral market utility, payments-focused, distributed economics), one coin among many (USDC, USDG).</p>' }
+      ],
+      dots:'Every line that worried the Street in Q1 broke the right way, and two of the three beat drivers (Middle-East relief, Venezuela) were idiosyncratic — so the tell is the underlying run-rate, not the headline. The durable engine (VAS +18%, switching to 72%) carried; the forward optionality (M2M, OpenUSD, BVNK) escalated in narrative but not yet in numbers. The one new variable is the CFO handoff.',
+      threeMinutes:[
+        '<b>Beat-and-raise on Sachin\'s last call: net revenue +12%, EPS $5.04 (+19%), FY guide nudged higher within range.</b> The Q1 Middle-East fear resolved lighter than the base case, an idiosyncratic Venezuela cross-border surge (USD availability, Mastercard the market leader) added upside, and VAS held +18%. Two of three drivers are non-repeatable — watch the run-rate.',
+        '<b>The forward bets escalated but stayed narrative: Agent Pay for Machines (machine-to-machine, "the only network" doing it) and OpenUSD (a 140-company consortium).</b> BVNK slips to a Q3 close. Treat all three as new-flows optionality — the first real volume/take-rate disclosure is the catalyst.',
+        '<b>Leadership is the genuinely new variable: Sachin Mehra → Chief Business Officer, Ling Hai → CFO effective Aug 3.</b> Next quarter is the first guide under a new CFO — watch for any change in framing or disclosure; continuity was messaged heavily.'
+      ],
+      notBringing:[
+        {item:'Individual deal wins (JPMorgan/Chase Freedom Flex, Banamex, Revolut, Eurobank)', why:'Confirm momentum but everyone has the release — not a debate.'},
+        {item:'World Cup lift', why:'Management explicitly could not quantify it; directional only.'},
+        {item:'SessionM / disposition benefit', why:'The 1 ppt opex benefit is mechanical and already disclosed; not thesis-moving.'}
+      ],
+      newQuestions:[
+        {n:'First guide under new CFO Ling Hai — any change in framing or disclosure?', landed:{q:'Q3 2026', rank:1}},
+        {n:'Does BVNK close in Q3, and what are the day-one economics / integration notes?', landed:{q:'Q3 2026', rank:2}},
+        {n:'Does the Venezuela cross-border surge persist or fade (idiosyncratic USD-availability driver)?', landed:{q:'Q3 2026', rank:3}},
+        {n:'Does the Middle East stay moderated at the end-of-Q2 level?', landed:{q:'Q3 2026', rank:4}},
+        {n:'Does VAS hold ~18% organically?', landed:{q:'Q3 2026', rank:5}}
+      ] } },
 
   // ── REPORTED: Q1 2026 (quarter ended Mar 2026; reported Apr 30 2026) ──
   { q:'Q1 2026', status:'reported', date:'April 30, 2026',

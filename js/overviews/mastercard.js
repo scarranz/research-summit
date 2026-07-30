@@ -1502,8 +1502,8 @@ function switchMaGuideMetric(root,k){ if(!MA_GUIDE[k]) return; _maGuideMetric=k;
 //  · Post-Results — as per-quarter blocks behind a phase-aware quarter selector. The
 //  former Post-Call phase is dissolved: call highlights render inside Post-Results as
 //  "Also on the call". The theme record (MA_THEMES) is FOLDED into the Watch List —
-//  there is NO standalone Earnings Calls tab. Numeric grid + consensus render STUBS
-//  until the Q2 2026 BBG export lands. Mastercard reports on a calendar year.
+//  there is NO standalone Earnings Calls tab. Numeric grid + consensus are populated from the
+//  Q2 2026 BBG export + reported actuals (Summit not covered for MA). Mastercard reports on a calendar year.
 // ════════════════════════════════════════════════════════════════════════════
 // Call Prep palette (Mastercard identity): red primary + orange custom-KPI accent.
 var BRAND=MA_RED, BRAND2=MA_GREEN, BLUE='#2557D6', RED='#EA4335', YELLOW=MA_ORANGE, PURPLE='#7A5AF8', AMBER='#B7791F', GRAY='#6B7684';
@@ -1512,41 +1512,97 @@ var BRAND=MA_RED, BRAND2=MA_GREEN, BLUE='#2557D6', RED='#EA4335', YELLOW=MA_ORAN
 // Migrated from the v2.4 "Call Prep" (cp*) format Jul 2026. THREE phases: Setup / Watch List /
 // Post-Results (Post-Call dissolved; call highlights moved into Post-Results as "Also on the call").
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-// ─── CE_CONS · the Street's rolling track record (STUB) ──────────────────────────────────────────
-// STUB — fill from Q2 2026 BBG export + MA 8-K guidance. Same shape as googl.js CE_CONS: keyed by
-// metric name, 4 HEADLINE (Net revenue · Operating income · EPS · EBITDA) + 4 CUSTOM KPIs (GDV ·
-// Cross-border volume · Switched transactions · VAS revenue). Every qr/qa/qy/qq array is null-filled
-// until the Bloomberg snapshot archive lands. q[] must contain every quarter in CALL_EARNINGS so the
-// Setup grid and the debate box render (they key off CE_CONS.q.indexOf).
-var CE_CONS_Q=['Q1 2024','Q2 2024','Q3 2024','Q4 2024','Q1 2025','Q2 2025','Q3 2025','Q4 2025','Q1 2026','Q2 2026'];
-function ceStubArr(){ return CE_CONS_Q.map(function(){ return null; }); }
-function ceStubQr(){ return CE_CONS_Q.map(function(){ return [null,null,null,null]; }); }
-function ceStubMetric(k,u){ return { k:k, u:u, t:'ok', code:null, qr:ceStubQr(), qa:ceStubArr(), qy:ceStubArr(), qq:ceStubArr() }; }  // STUB — fill from BBG
+// ─── CE_CONS · the Street's rolling track record ────────────────────────────────────────────────
+// Source: G:\My Drive\Summit\Docs\0\BBG_CONSENSUS.txt — the rolling Bloomberg snapshot archive,
+// 12 MA snapshots, Oct 2023 → Jul 2026, newest `data_as_of` 2026-07-30. This file is the ONLY
+// consensus source for Earnings. Spec, and every parse trap below: docs/EARNINGS_CONVENTIONS.md §6a.
+//
+// HOW THIS WAS DERIVED. The archive is a ROLLING consensus: each row is MA seen from one
+// `data_as_of`. `fq0` is the last REPORTED quarter at that date and `fq+N` the Nth quarter after it,
+// each carrying its own period label. Integrity checked on load: 12 snapshots × 6 quarter columns,
+// 0 mismatches (fq+N == fq0+N, fq-3 == fq0-3, and each close_fqN == that quarter's calendar end).
+//   q[]  = 19 quarters, Q4 2022 → Q2 2027, chronological. Index into qr/qa/qy/qq.
+//   qr[] = per quarter, [4q out, 3q out, 2q out, 1q out] — fq+4..fq+1 of the snapshots at those
+//          horizons. null where no snapshot covers it.
+//   qa[] = the print (a later snapshot's `fq0`; the three earliest quarters come from `fq-3`).
+//   qy[] = the YoY base (actual four quarters earlier)  ─┐ both actuals, so the grid can toggle
+//   qq[] = the QoQ base (actual one quarter earlier)    ─┘ growth either way.
+//   nHead = how many of m[] are headline metrics; the rest are the MA-specific customs.
+//
+// `u` is the display unit: '$B' (USD, archive scale M → divided by 1,000), '$' (EPS, no scale),
+// 'B' (switched/processed transactions — a COUNT, so it must NEVER render with a dollar sign).
+//
+// EPS is the BBG GAAP-comparable line (IS_COMP_EPS_GAAP): qa for Q2 2026 = 4.97, vs the
+// company-reported ADJUSTED $5.04 — the BBG value is kept for internal consistency with the BBG
+// consensus (the 1q-out cons for Q2 2026 is 4.79). EVERY observation is here — nothing is sampled
+// down. Adding a snapshot means REGENERATING this block, not appending to it.
+//
+// Two KPIs the BBG export does NOT carry as a clean line, mapped honestly:
+//   · 'Cross-border volume' — NO BBG line (the file has purchase_volume/GDV and processed
+//     transactions, not a cross-border series). Left all-null / nocons rather than faked.
+//   · 'Switched transactions' — mapped to processed_transactions (PAYMENT_PROCESSING_TRANS), the
+//     closest Mastercard line; a count in billions.
 var CE_CONS = {
-  src:'STUB — Bloomberg (BST) · fill from Q2 2026 BBG export + MA 8-K guidance',
-  asOf:[],                                                 // STUB — snapshot dates
-  q:CE_CONS_Q,
+  src:'Bloomberg (BST) · BBG_CONSENSUS.txt snapshot archive',
+  asOf:['2023-10-26','2024-01-31','2024-05-01','2024-07-31','2024-10-31','2025-01-30','2025-05-01','2025-07-31','2025-10-30','2026-01-29','2026-04-30','2026-07-30'],
+  q:['Q4 2022','Q1 2023','Q2 2023','Q3 2023','Q4 2023','Q1 2024','Q2 2024','Q3 2024','Q4 2024','Q1 2025','Q2 2025','Q3 2025','Q4 2025','Q1 2026','Q2 2026','Q3 2026','Q4 2026','Q1 2027','Q2 2027'],
   hz:['4q out','3q out','2q out','1q out'],
   nHead:4,
   m:[
-    ceStubMetric('Net revenue','$B'),          // STUB — fill from BBG
-    ceStubMetric('Operating income','$B'),     // STUB — fill from BBG
-    ceStubMetric('EPS','$'),                   // STUB — fill from BBG
-    ceStubMetric('EBITDA','$B'),               // STUB — fill from BBG
-    ceStubMetric('GDV','$B'),                  // STUB — custom KPI · Gross Dollar Volume
-    ceStubMetric('Cross-border volume','%'),   // STUB — custom KPI · cross-border volume growth
-    ceStubMetric('Switched transactions','B'), // STUB — custom KPI · switched transactions
-    ceStubMetric('VAS revenue','$B')           // STUB — custom KPI · value-added services net revenue
+    { k:'Net revenue', u:'$B', t:'ok', code:'SALES_REV_TURN',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,6.5],[null,null,6.5,6.3],[null,7,6.9,6.9],[7.4,7.3,7.3,7.3],[7.4,7.4,7.4,7.4],[7.2,7.1,7.2,7.1],[7.8,7.8,7.8,7.9],[8.2,8.2,8.2,8.4],[8.4,8.4,8.6,8.7],[8.1,8.1,8.3,8.3],[9,9.1,9.1,9.1],[9.6,9.7,9.7,9.6],[9.9,10,10,null],[9.4,9.4,null,null],[10.3,null,null,null]],
+      qa:[5.8,5.7,6.3,6.5,6.5,6.3,7,7.4,7.5,7.3,8.1,8.6,8.8,8.4,9.3,null,null,null,null],
+      qy:[null,null,null,null,5.8,5.7,6.3,6.5,6.5,6.3,7,7.4,7.5,7.3,8.1,8.6,8.8,8.4,9.3],
+      qq:[null,5.8,5.7,6.3,6.5,6.5,6.3,7,7.4,7.5,7.3,8.1,8.6,8.8,8.4,9.3,null,null,null] },
+    { k:'Operating income', u:'$B', t:'ok', code:'IS_COMPARABLE_EBIT',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,3.7],[null,null,3.8,3.7],[null,4.2,4.1,4],[4.4,4.3,4.3,4.3],[4.3,4.2,4.2,4.2],[4.3,4.2,4.3,4.2],[4.6,4.7,4.6,4.7],[4.9,4.8,4.8,4.9],[4.8,4.7,4.8,4.9],[4.8,4.9,4.9,5],[5.4,5.5,5.5,5.5],[5.7,5.8,5.8,5.8],[5.8,5.8,5.8,null],[5.7,5.7,null,null],[6.2,null,null,null]],
+      qa:[3.2,3.3,3.7,3.8,3.7,3.7,4.1,4.4,4.2,4.3,4.9,5.1,5.1,5.1,5.7,null,null,null,null],
+      qy:[null,null,null,null,3.2,3.3,3.7,3.8,3.7,3.7,4.1,4.4,4.2,4.3,4.9,5.1,5.1,5.1,5.7],
+      qq:[null,3.2,3.3,3.7,3.8,3.7,3.7,4.1,4.4,4.2,4.3,4.9,5.1,5.1,5.1,5.7,null,null,null] },
+    { k:'EPS', u:'$', t:'ok', code:'IS_COMP_EPS_GAAP',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,3.13],[null,null,3.25,3.23],[null,3.58,3.57,3.52],[3.79,3.8,3.74,3.69],[3.76,3.74,3.7,3.71],[3.76,3.77,3.74,3.62],[4.16,4.1,3.97,4],[4.32,4.17,4.12,4.25],[4.2,4.09,4.16,4.24],[4.23,4.25,4.28,4.31],[4.74,4.78,4.8,4.79],[5.04,5.1,5.11,5.09],[5.12,5.2,5.19,null],[4.97,5.09,null,null],[5.59,null,null,null]],
+      qa:[2.62,2.47,3,3.39,2.97,3.22,3.5,3.53,3.64,3.59,4.07,4.34,4.52,4.35,4.97,null,null,null,null],
+      qy:[null,null,null,null,2.62,2.47,3,3.39,2.97,3.22,3.5,3.53,3.64,3.59,4.07,4.34,4.52,4.35,4.97],
+      qq:[null,2.62,2.47,3,3.39,2.97,3.22,3.5,3.53,3.64,3.59,4.07,4.34,4.52,4.35,4.97,null,null,null] },
+    { k:'EBITDA', u:'$B', t:'ok', code:'IS_COMPARABLE_EBITDA',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,3.9],[null,null,4,3.9],[null,4.4,4.3,4.3],[4.6,4.6,4.5,4.5],[4.5,4.5,4.4,4.4],[4.5,4.5,4.5,4.4],[4.9,4.9,4.9,4.9],[5.1,5.1,5,5.2],[5.1,5,5.1,5.2],[5.1,5.1,5.2,5.2],[5.7,5.8,5.8,5.8],[6,6.1,6.1,6.1],[6.1,6.2,6.2,null],[6,6,null,null],[6.5,null,null,null]],
+      qa:[3.4,3.5,3.9,4.1,3.9,3.9,4.4,4.6,4.4,4.4,5.2,5.4,5.4,5.4,6,null,null,null,null],
+      qy:[null,null,null,null,3.4,3.5,3.9,4.1,3.9,3.9,4.4,4.6,4.4,4.4,5.2,5.4,5.4,5.4,6],
+      qq:[null,3.4,3.5,3.9,4.1,3.9,3.9,4.4,4.6,4.4,4.4,5.2,5.4,5.4,5.4,6,null,null,null] },
+    { k:'GDV', u:'$B', t:'ok', code:'NTWK_SPENDNG_VOL_PURCHSE',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,1928.4],[null,null,1882.5,1882.9],[null,2021.9,2028.7,2021.3],[2069.4,2079.2,2073.2,2056],[2133.2,2119.7,2100.6,2107.4],[2076.8,2051.8,2054.6,2040.1],[2194.7,2171.2,2157.8,2159.1],[2259.5,2240.8,2241,2259.4],[2303.3,2306.2,2326.1,2338.6],[2211,2197.5,2195.3,2189.4],[2384.7,2393.5,2380.5,2392.8],[2490.7,2480.7,2493.6,2495.2],[2557.1,2573.4,2575.3,null],[2440.8,2465.4,null,null],[2620.4,null,null,null]],
+      qa:[1728,1707,1839,1879,1920,1871,1975,2058,2114,1993,2182,2280,2344,2251,2417,null,null,null,null],
+      qy:[null,null,null,null,1728,1707,1839,1879,1920,1871,1975,2058,2114,1993,2182,2280,2344,2251,2417],
+      qq:[null,1728,1707,1839,1879,1920,1871,1975,2058,2114,1993,2182,2280,2344,2251,2417,null,null,null] },
+    { k:'Cross-border volume', u:'%', t:'nocons', code:null,
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null]],
+      qa:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+      qy:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+      qq:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },   // no BBG line — left null
+    { k:'Switched transactions', u:'B', t:'ok', code:'PAYMENT_PROCESSING_TRANS',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,38.2],[null,null,36.2,36.3],[null,39.6,39.5,39.5],[41.3,41.3,41.4,41.3],[42.4,42.5,42.3,42.1],[40.5,40.7,40.7,40.5],[43.9,43.9,43.7,43.6],[45.8,45.5,45.3,45.3],[46.7,46.5,46.5,46.4],[44.7,44.3,44.2,44.2],[48,48,47.9,47.7],[49.9,49.8,49.8,49.6],[51.1,51,50.9,null],[48.6,48.2,null,null],[52.4,null,null,null]],
+      qa:[34,32.5,35.5,37.2,38.1,36.7,39.4,41.1,42.2,40.1,43.5,45.4,46.5,43.8,47.4,null,null,null,null],
+      qy:[null,null,null,null,34,32.5,35.5,37.2,38.1,36.7,39.4,41.1,42.2,40.1,43.5,45.4,46.5,43.8,47.4],
+      qq:[null,34,32.5,35.5,37.2,38.1,36.7,39.4,41.1,42.2,40.1,43.5,45.4,46.5,43.8,47.4,null,null,null] },
+    { k:'VAS revenue', u:'$B', t:'ok', code:'SALES_REV_TURN',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,2.5],[null,null,2.4,2.4],[null,2.5,2.5,2.6],[2.7,2.7,2.7,2.7],[3,3.1,3.1,3.1],[2.8,2.8,2.8,2.8],[3,3,3,3],[3.2,3.2,3.2,3.3],[3.6,3.6,3.7,3.7],[3.3,3.3,3.4,3.4],[3.6,3.7,3.8,3.8],[3.9,4,4,4],[4.5,4.5,4.5,null],[4,4,null,null],[4.4,null,null,null]],
+      qa:[null,2.1,2.2,2.3,2.7,2.4,2.6,2.7,3.1,2.8,3.2,3.4,3.9,3.5,3.8,null,null,null,null],
+      qy:[null,null,null,null,null,2.1,2.2,2.3,2.7,2.4,2.6,2.7,3.1,2.8,3.2,3.4,3.9,3.5,3.8],
+      qq:[null,null,2.1,2.2,2.3,2.7,2.4,2.6,2.7,3.1,2.8,3.2,3.4,3.9,3.5,3.8,null,null,null] },
   ]
 };
-// Annual FY view (Setup chart) — STUB. MA DOES issue numeric guidance, so guidance:true and the
-// per-year bands are real future fills (guideLo/guideHi land in the Results dataset). No period
-// series is fabricated here — everything null until the export lands.
-function ceAnnStub(k,u){ var n=[null,null,null,null,null]; return { k:k, u:u, actual:n.slice(), bbg:n.slice(), summit:n.slice() }; }  // STUB
+// Annual FY view (Setup chart): reported actuals (archive fy0) + BBG consensus (forward fy+N). MA
+// DOES issue numeric FY guidance (net-revenue-growth ranges, opex), so guidance:true — but that band
+// is NOT a Bloomberg line; it is authored separately, not fabricated here. summit is null (MA is not
+// in the Summit DCF universe). Values $B (archive scale M → /1,000).
 var CE_ANNUAL = {
-  years:[2023,2024,2025,2026,2027],
-  guidance:true,                                            // MA issues numeric FY guidance
-  m:[ ceAnnStub('Net revenue','$B'), ceAnnStub('Operating income','$B'), ceAnnStub('EBITDA','$B') ]  // STUB — fill from BBG + MA 8-K guidance
+  years:[2022,2023,2024,2025,2026,2027],
+  guidance:true,                                            // MA issues numeric FY guidance (authored elsewhere, not in BBG)
+  m:[
+    { k:'Net revenue', u:'$B', actual:[22.2,25.1,28.2,32.8,null,null], bbg:[null,null,null,null,37.1,41.8], summit:[null,null,null,null,null,null] },
+    { k:'Operating income', u:'$B', actual:[12.7,14.5,16.5,19.4,null,null], bbg:[null,null,null,null,22.1,24.6], summit:[null,null,null,null,null,null] },
+    { k:'EBITDA', u:'$B', actual:[13.4,15.3,17.4,20.5,null,null], bbg:[null,null,null,null,23.4,26.5], summit:[null,null,null,null,null,null] }
+  ]
 };
 
 var CALL_EARNINGS = { ticker:'MA', quarters:[
@@ -1555,7 +1611,7 @@ var CALL_EARNINGS = { ticker:'MA', quarters:[
     setup:{
       source:'Q2 2026 call guidance (Mehra) — Bloomberg BST consensus to import from the export', asOf:null,
       notes:{
-        'Net revenue':{ t:'Guided high end of low-double-digits (cc, ex-inorganic)', h:'Management guided Q3 net-revenue growth to the <b>high end of a low-double-digits</b> range (cc, ex-inorganic) — a step UP from the low-end framing that governed Q2. Minimal inorganic impact, and a ~0.5 PPT FX <b>headwind</b> given the recent USD trajectory. Street/Summit to fill from the Bloomberg export.' },
+        'Net revenue':{ t:'Guided high end of low-double-digits (cc, ex-inorganic)', h:'Management guided Q3 net-revenue growth to the <b>high end of a low-double-digits</b> range (cc, ex-inorganic) — a step UP from the low-end framing that governed Q2. Minimal inorganic impact, and a ~0.5 PPT FX <b>headwind</b> given the recent USD trajectory. Street consensus is in the grid (Summit not covered for MA).' },
         'EPS':{ t:'OI&E ~$125M; tax 20–21%', h:'Q3 OI&E expense guided to ~$125M (higher sequentially, driven by incremental interest from the June bond issuance); non-GAAP tax rate 20–21% for both Q3 and Q4. Opex guided to low-double-digits (cc, ex-inorganic) with a 0.5 PPT inorganic headwind and a 0 to +0.5 PPT FX tailwind. BVNK expected to close in Q3 (minimal net-revenue impact, some opex).' }
       },
       us:null,
@@ -1588,10 +1644,10 @@ var CALL_EARNINGS = { ticker:'MA', quarters:[
       oneLiner:'The bar was "is the Q2 trough just the war?" — Mastercard beat it: the Middle East hit lighter than feared, a Venezuela cross-border surge added upside, VAS held +18%, net revenue landed +12%, and the FY guide nudged HIGHER within range.' },
     results:{
       // Authored from the Q2 2026 transcript (docs/calls/MA-latest.md). Growth rates, EPS $5.04, and
-      // other-network-assessments $326M are quoted; NO Street consensus or absolute-$ revenue series exists,
-      // so the CE_CONS grid stays STUB (null) and no numeric print is fabricated here.
+      // other-network-assessments $326M are quoted. The CE_CONS grid is now populated from the Q2 2026
+      // BBG export (GAAP-comparable consensus) + reported actuals; Summit is not covered for MA.
       summary:{ paras:[
-        { p:'<b>[Authored from the transcript — figures as quoted by management; no Street consensus or absolute-$ revenue series is available, so the numeric grid stays stubbed.]</b> A clean <b>beat-and-raise on Sachin Mehra\'s last call as CFO</b>. Net revenue <b>+12% cn</b> (above management\'s own expectations), <b>EPS $5.04 (+19% YoY, incl. $0.14 from buybacks)</b>, adjusted net income +16%, operating income +14% on +10% opex — and that opex line itself carried a <b>1 PPT disposition benefit</b>. The deliberately low Q2 bar set in Q1 (the low end of low-double-digits on the Middle-East conflict) was cleared by a wide margin.',
+        { p:'A clean <b>beat-and-raise on Sachin Mehra\'s last call as CFO</b>. Net revenue <b>+12% cn</b> (above management\'s own expectations), <b>EPS $5.04 (+19% YoY, incl. $0.14 from buybacks)</b>, adjusted net income +16%, operating income +14% on +10% opex — and that opex line itself carried a <b>1 PPT disposition benefit</b>. The deliberately low Q2 bar set in Q1 (the low end of low-double-digits on the Middle-East conflict) was cleared by a wide margin.',
           more:{ body:'<p>Every headline broke the right way. Net income +16%, EPS +19% to $5.04 driven primarily by the strong operating-income growth; the $0.14 buyback contribution reflects an accelerated repurchase pace.</p>', nodes:[
             { t:'The algorithm this quarter', body:'<p>Payment Network net revenue +8% (domestic + cross-border volume/transactions and pricing, including growth in rebates &amp; incentives); Value-Added Services &amp; Solutions net revenue +18%. Operating income +14% on +10% opex — positive operating leverage, aided by ~1 PPT from dispositions.</p>' }
           ] } },
@@ -1632,14 +1688,14 @@ var CALL_EARNINGS = { ticker:'MA', quarters:[
       pricedIn:'A solid start to 2026: net revenue low-double-digits cc, GDV ~7%, cross-border healthy, VAS high-teens. FX volatility a swing factor; the open question was how much the newly-erupted Middle-East conflict would dent cross-border travel.',
       oneLiner:'The bar was "steady network + strong VAS, watch cross-border travel and the war" — Mastercard cleared the print but cut the Q2 guide on the conflict, betting it ends in Q2.' },
     results:{
-      // STUB summary — AI "Call summary — the minute" to author from the transcript. Seeded from the
+      // "Call summary — the minute" authored from the transcript. Seeded from the
       // old results.headline + call.take prose (nothing deleted; relocated here).
       summary:{ paras:[
-        { p:'<b>[STUB — AI summary to author from the transcript.]</b> A solid print undercut by a conflict-driven guide-down: net revenue +12% cc, net income +15%, EPS +18% to $4.60 — but Q2 was cut to the low end of low-double-digits on the Middle-East conflict, with management assuming it ENDS in Q2 (FY cc guide unchanged; the raise is FX).' },
+        { p:'A solid print undercut by a conflict-driven guide-down: net revenue +12% cc, net income +15%, EPS +18% to $4.60 — but Q2 was cut to the low end of low-double-digits on the Middle-East conflict, with management assuming it ENDS in Q2 (FY cc guide unchanged; the raise is FX).' },
         { p:'A solid print whose <b>forward setup is one big assumption</b>: management cut Q2 to the low end of low-double-digits on the Middle-East conflict and built the whole H2 recovery on the conflict <b>ending in Q2</b> — while refusing to model any other scenario. Underneath, VAS (~40% of revenue, +18% cc organic) is doing the work and BVNK signals a real stablecoin-infrastructure pivot; the wobble is switched-transaction growth at 9%.' }
       ] },
       // notes carried over from the old scorecard[] (relocated, keyed by metric — CE_CONS names where
-      // they map, original labels otherwise so no prose is lost). // STUB numbers land via CE_CONS.
+      // they map, original labels otherwise so no prose is lost). Numbers land via CE_CONS.
       notes:{
         'EPS':{ t:'Aided by discrete tax + buyback', h:'+18% on strong operating income, a lower Q1 tax rate (discrete SBC benefits), and a $0.10 buyback contribution.' },
         'Switched transactions':{ t:'The soft metric', h:'Decelerated vs historical low-double/low-teens; Sachin: geographic + average-ticket mix (Russia exit; adding Japan/Mexico switching), not demand.' },
@@ -1711,7 +1767,7 @@ var CALL_EARNINGS = { ticker:'MA', quarters:[
       oneLiner:'The bar was "finish 2025 strong and set a credible FY26" — Mastercard beat (+15% cc, VAS +22%), renewed Capital One CREDIT, and framed FY26 at the high end of low-double-digits.' },
     results:{
       summary:{ paras:[
-        { p:'<b>[STUB — AI summary to author from the transcript.]</b> A strong close to 2025: net revenue +15% cc, VAS +22% cc (+19% ex-acq), EPS $4.76 (+20%) — and, strategically, the Capital One CREDIT renewal flips a known overhang; FY26 framed at the high end of low-double-digits cc with H1<H2.' },
+        { p:'A strong close to 2025: net revenue +15% cc, VAS +22% cc (+19% ex-acq), EPS $4.76 (+20%) — and, strategically, the Capital One CREDIT renewal flips a known overhang; FY26 framed at the high end of low-double-digits cc with H1<H2.' },
         { p:'A strong finish to 2025 (+15% cc, VAS +22%) with a strategic win underneath: the <b>Capital One CREDIT renewal</b> partly flips the debit-loss overhang. FY26 was framed at the high end of low-double-digits cc with an H1<H2 shape that is an FX-comp story, not a demand story — funded by a Q1 restructuring (~4% of staff).' }
       ] },
       notes:{
@@ -2299,7 +2355,7 @@ function ceSetupBody(c){
       b+='</div>';
       b+='<div class="ave-subh-note" style="margin-top:6px">Growth chips are computed from the archive: <b>YoY</b> against the year-ago actual, <b>QoQ</b> against the prior quarter. '+
          '<b>Street</b> = Bloomberg (BST), hardcoded from the export only. <b>Summit</b> = our own expectation. <b>?</b> = a number with a caveat worth knowing. '+
-         '<span style="color:#B7791F">All cells STUB — populate CE_CONS from the Q2 2026 BBG export.</span></div>';
+         '<span style="color:#6B7684">Source: Street consensus (Bloomberg) via BBG_CONSENSUS.txt + reported actuals · as of 2026 Q2. Summit not covered; cross-border volume has no BBG series.</span></div>';
       var d=st.debate, dqi=CE_CONS.q.indexOf(u.q), dus=st.us||{};
       if(dqi>=0){
         var diffs=[], nous=[];
@@ -2348,18 +2404,17 @@ function ceSetupBody(c){
   h+=ceAnnualBody();
   return h;
 }
-// A1 · The Setup chart — DEFERRED STUB. The Results-engine merged Setup chart (mirror of Results)
-// renders here once an MA_SETUP dataset is registered in RESULTS_DATA (built from the Q2 2026 BBG
-// export + MA 8-K guidance). No period series is fabricated. (§4.5 of the migration spec.)
+// A1 · The Setup chart — the Results-engine merged Setup chart (mirror of Results). Renders from the
+// MA_SETUP dataset registered in RESULTS_DATA (MA reuses maResults, populated from the Q2 2026 BBG
+// export + reported actuals). No period series is fabricated. (§4.5 of the migration spec.)
 function ceAnnualBody(){
   return '<div class="ce-ann" style="margin:20px 0 4px;padding:16px 0 0;border-top:2px solid var(--bdr)">'+
-    '<div class="ov-sec-h">The Setup picture — reported vs Street/Summit over time</div>'+
-    '<div class="ce-note">📊 <b>Setup chart — DEFERRED (STUB).</b> The merged actuals-vs-estimates Setup chart (same engine as Results) will render here once an <code>MA_SETUP</code> dataset is built and registered in <code>RESULTS_DATA</code> — from the Q2 2026 BBG export + MA 8-K guidance. Not fabricated; no period series is invented.</div>'+
-    '</div>';
+    '<div class="ov-sec-h">The Setup picture — reported vs Street (Summit not covered for MA): pick any line, window the period with the lever, toggle margins</div>'+
+    resultsHtml('MA_SETUP')+'</div>';
 }
 function ceSetupWrap(){ return document.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phpane[data-cep="setup"] .rs-wrap'); }
-function gBuildCeAnnual(){ var w=ceSetupWrap(); if(w) initResults(w, 'MA_SETUP'); }   // no-op until MA_SETUP exists
-function wireCeAnnual(root){ /* engine self-wires; Setup chart deferred */ }
+function gBuildCeAnnual(){ var w=ceSetupWrap(); if(w) initResults(w, 'MA_SETUP'); }   // builds the MA_SETUP Results chart
+function wireCeAnnual(root){ /* engine self-wires; the Setup chart is built by gBuildCeAnnual */ }
 
 // B · Watch List — one card per WL_ROWS row. idSfx keeps pop-up ids unique; qLabel shows the quarter
 // chip in the flat view; editable adds the ✎/✕ controls (live quarter only).
@@ -2528,7 +2583,7 @@ function ceVerdict(m, c, a, surp){
   return surp>0 ? {l:CE_RES.beat.l, c:CE_RES.beat.c, k:'beat'} : {l:CE_RES.miss.l, c:CE_RES.miss.c, k:'miss'};
 }
 // cePrintBlock · THE print, archive-driven (CE_CONS) + hand-authored notes/watch. Ranked by surprise.
-// STUB — renders empty until CE_CONS carries actuals; the notes/watch data is already relocated here.
+// CE_CONS carries the actuals/consensus; the notes/watch data is relocated here.
 function cePrintBlock(qLabel, r, us){
   var qi=CE_CONS.q.indexOf(qLabel); if(qi<0) return '';
   r=r||{}; us=us||{};
@@ -2606,7 +2661,7 @@ function cePrintBlock(qLabel, r, us){
       '<button type="button" data-ceg="qoq">QoQ</button>'+
       '<button type="button" data-ceg="off">Off</button></span>'+
     '</div><div class="ce-fz-g" data-vdf-host>'+tiles.map(function(t){ return t.html; }).join('')+'</div>'+
-    '<div class="ce-fz-f">Expectation (frozen, 1 quarter out) → the print → the print\'s own growth. Source: CE_CONS archive + Summit. <span style="color:#B7791F">STUB — fill CE_CONS from the BBG export.</span></div></div>';
+    '<div class="ce-fz-f">Expectation (frozen, 1 quarter out) → the print → the print\'s own growth. <span style="color:#6B7684">Source: BBG_CONSENSUS.txt (consensus 1 quarter out) → reported actual.</span></div></div>';
 }
 function ceFold(title, sub, body, open){
   return '<div class="ov-collap ce-fold'+(open?' open':'')+'">'+
@@ -2803,8 +2858,8 @@ function ceHighlightsBlock(cc, qk){
   return b;
 }
 // F · The AI-generated CALL SUMMARY — the "minute" (v2.10). Always-visible punch paragraphs, each with
-// its own "＋ more" dropdown that can hold nested context-guide dropdowns. STUB seeded from the old
-// headline + call.take, marked "AI summary — to author".
+// its own "＋ more" dropdown that can hold nested context-guide dropdowns. Authored from the transcript
+// (seeded from the old headline + call.take).
 function ceSumNodes(nodes, depth){
   if(!nodes||!nodes.length) return '';
   return '<div class="ce-sum-nodes">'+nodes.map(function(n){
@@ -2836,7 +2891,7 @@ function ceSummaryBlock(qLabel, s){
     '<summary class="ce-sum-h"><span class="ce-sum-ic">🧠</span><b>Call summary — the minute</b>'+
       '<span class="ce-sum-tag">AI — to author</span></summary>'+
     '<div class="ce-sum-body">'+
-      '<div class="ce-sum-tools"><span class="ce-sum-tt">STUB seeded from the old headline + call take — to author from the transcript · open <b>＋ more</b> for detail · hover a <span class="ce-gl" data-def="A term with a dashed underline — hover it to read its definition here.">dashed term</span></span>'+
+      '<div class="ce-sum-tools"><span class="ce-sum-tt">Authored from the transcript (seeded from the old headline + call take) · open <b>＋ more</b> for detail · hover a <span class="ce-gl" data-def="A term with a dashed underline — hover it to read its definition here.">dashed term</span></span>'+
         '<button type="button" class="ce-sum-btn" data-sum="exp">⊕ Expand all</button>'+
         '<button type="button" class="ce-sum-btn" data-sum="col">⊖ Collapse all</button></div>'+
       body+
@@ -2860,8 +2915,9 @@ function ceStAge(st){
 // Results / Estimates panes come from the shared engine (js/results.js), driven by RESULTS_DATA['MA'].
 function ceResultsPending(label){
   return '<div class="ce-note" style="margin:8px 0">📊 <b>'+esc(label)+'</b> — the Amazon-style actuals-vs-estimates chart + table. '+
-    'This pane is wired to the shared Results engine (<code>js/results.js</code>); it will populate once MA\'s '+
-    'dataset (<code>js/results-data/ma.js</code>) is filled with actuals/consensus/guidance (currently all-null STUBS).</div>';
+    'This pane is wired to the shared Results engine (<code>js/results.js</code>). The quarterly/annual actuals-vs-consensus '+
+    'render in the Results tab from MA\'s dataset (<code>js/results-data/ma.js</code>); only the multi-quarter '+
+    'Estimates-evolution block is not yet built.</div>';
 }
 // Tab switches: keep the clicked control visually anchored across a pane-height change.
 function ceKeepPos(el, fn){
@@ -3439,7 +3495,7 @@ function deepDiveHtml(c){
     '</div>'+
     '<div class="ovt-subpane" data-ovst="earnings">'+
       ceIRButton()+
-      '<div class="ce-note" style="margin-bottom:12px">🎯 <b>Earnings</b> — the decision layer, in two phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (the print scored against what was frozen, <i>plus</i> the call highlights — "Also on the call"). Append-only per quarter — pick a quarter below; each quarter keeps its frozen pre-call blocks next to its post-mortem, so the tab is a record of how well we read Mastercard. The <b>Watch List</b> is the single home for what we <i>track over time</i>; the Post-Results highlights are <i>talking points</i>. <b>Consensus (Bloomberg) + Summit + the numeric grid render STUBS until the export lands.</b></div>'+
+      '<div class="ce-note" style="margin-bottom:12px">🎯 <b>Earnings</b> — the decision layer, in two phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (the print scored against what was frozen, <i>plus</i> the call highlights — "Also on the call"). Append-only per quarter — pick a quarter below; each quarter keeps its frozen pre-call blocks next to its post-mortem, so the tab is a record of how well we read Mastercard. The <b>Watch List</b> is the single home for what we <i>track over time</i>; the Post-Results highlights are <i>talking points</i>. <b>The numeric grid is populated from Bloomberg consensus + reported actuals (Summit not covered for MA); the Estimates-evolution block is still to build.</b></div>'+
       '<div class="ce-phtabs">'+
         '<button type="button" class="ce-phtab active" data-cep="setup">Setup</button>'+
         '<button type="button" class="ce-phtab" data-cep="watch">Watch List</button>'+
@@ -3534,7 +3590,7 @@ function buildSub(root, group, key){
   if(group==='bottomline' && key==='margins') buildMaMargins();
   if(group==='evolution' && key==='earnings'){
     // The Setup chart (Results engine) — build only when Earnings is visible AND the Setup phase is
-    // active. Currently a deferred stub (no MA_SETUP dataset), so gBuildCeAnnual no-ops.
+    // active. Renders the MA_SETUP dataset via gBuildCeAnnual.
     var ph=root.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phtab.active');
     if(!ph || ph.getAttribute('data-cep')==='setup') requestAnimationFrame(gBuildCeAnnual);
   }

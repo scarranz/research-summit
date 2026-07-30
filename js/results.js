@@ -28,7 +28,8 @@ var RESULTS_DATA = {
   AMZN: amznResults,
   GOOGL: googlResults,
   GOOGL_SETUP: googlSetup,
-  MA: maResults
+  MA: maResults,
+  MA_SETUP: maResults   // Setup chart reuses the same MA dataset (unlike GOOGL, which has a separate GOOGL_SETUP)
 };
 
 export function getResultsData(ticker){

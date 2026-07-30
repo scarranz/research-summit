@@ -1422,17 +1422,17 @@ function ddMultiplesBody(c){
 //  currency-neutral, ex-acquisitions); it does NOT guide EPS. Bands are indicative
 //  mappings of MA's qualitative language ("low-teens" → 12–14%); delivered = reported
 //  cn ex-acq growth. Sourced from the quarterly calls (Q4-23 → Q1-26 provided). ──
-var MA_GQ=['Q1 24','Q2 24','Q3 24','Q4 24','Q1 25','Q2 25','Q3 25','Q4 25','Q1 26','Q2 26'];
+var MA_GQ=['Q1 24','Q2 24','Q3 24','Q4 24','Q1 25','Q2 25','Q3 25','Q4 25','Q1 26','Q2 26','Q3 26'];
 var MA_GUIDE={
   netrev:{ label:'Net-revenue growth', axis:'net-revenue growth (cn, ex-acq)',
-    glo:[10,11,12,12,12,12,12,12,10,10], ghi:[12,13,13,13,14,14,14,13,11,11],
-    words:['low double-digits','low double-digits','high end low-dd','low double-digits (FY: low-teens)','low-teens','low-teens','high end low-dd','high end low-dd','low end low-dd','low end low-dd (ME conflict)'],
-    act:[11,13,14,16,14,13,15,15,12,null],
-    note:'The engine Mastercard keeps clearing: delivered net-revenue growth has landed <b>in the upper half of — or above — the guided band nearly every quarter</b>. The one deliberate step-<i>down</i> is the front of 2026: Q1 guided "low end of low-double-digits" (still beaten at +12%), and Q2-26 guided the same on the <b>Middle East conflict</b> hitting cross-border travel (no actual yet).' },
+    glo:[10,11,12,12,12,12,12,12,10,10,12], ghi:[12,13,13,13,14,14,14,13,11,11,14],
+    words:['low double-digits','low double-digits','high end low-dd','low double-digits (FY: low-teens)','low-teens','low-teens','high end low-dd','high end low-dd','low end low-dd','low end low-dd (ME conflict)','high end low-dd'],
+    act:[11,13,14,16,14,13,15,15,12,12,null],
+    note:'The engine Mastercard keeps clearing: delivered net-revenue growth has landed <b>in the upper half of — or above — the guided band nearly every quarter</b>. The one deliberate step-<i>down</i> was the front of 2026: Q1 guided "low end of low-double-digits" (beaten at +12%), and Q2-26 was guided the same on the <b>Middle East conflict</b> — but the conflict hit lighter than feared and Q2 <b>landed +12%, above its low-end guide</b>, prompting management to nudge the FY guide <b>higher within</b> the range. Q3-26 is guided to the high end of low-double-digits (no actual yet).' },
   opex:{ label:'Operating-expense growth', axis:'operating-expense growth (cn, ex-acq)',
-    glo:[9,9,10,10,10,10,10,10,8,9], ghi:[11,11,12,12,12,12,12,12,10,11],
-    act:[9,10,10,11,11,10,10,10,9,null],
-    words:['low double-digits','low double-digits','low double-digits','low double-digits','low double-digits','low double-digits','low double-digits','low double-digits','high-single-digit','low double-digits'],
+    glo:[9,9,10,10,10,10,10,10,8,9,10], ghi:[11,11,12,12,12,12,12,12,10,11,12],
+    act:[9,10,10,11,11,10,10,10,9,10,null],
+    words:['low double-digits','low double-digits','low double-digits','low double-digits','low double-digits','low double-digits','low double-digits','low double-digits','high-single-digit','low double-digits','low double-digits'],
     note:'The other half of the algorithm. Mastercard guides opex growth <b>ex-acquisitions</b> and generally lands <b>inside</b> the band — spending to a plan while it invests in the secular opportunity and services. Acquisitions (Recorded Future, Minna) are called out separately and add a few points to <i>reported</i> opex on top of this.' },
 };
 var _maGuideMetric='netrev';
@@ -1550,8 +1550,31 @@ var CE_ANNUAL = {
 };
 
 var CALL_EARNINGS = { ticker:'MA', quarters:[
-  // ── UPCOMING: Q2 2026 (quarter ending Jun 2026; reports ~late Jul 2026) ──
-  { q:'Q2 2026', status:'upcoming', date:'reports ~late July 2026',
+  // ── UPCOMING: Q3 2026 (quarter ending Sep 2026; reports ~late Oct 2026) — Setup grounded in the Q2 call guidance ──
+  { q:'Q3 2026', status:'upcoming', date:'reports ~late October 2026',
+    setup:{
+      source:'Q2 2026 call guidance (Mehra) — Bloomberg BST consensus to import from the export', asOf:null,
+      notes:{
+        'Net revenue':{ t:'Guided high end of low-double-digits (cc, ex-inorganic)', h:'Management guided Q3 net-revenue growth to the <b>high end of a low-double-digits</b> range (cc, ex-inorganic) — a step UP from the low-end framing that governed Q2. Minimal inorganic impact, and a ~0.5 PPT FX <b>headwind</b> given the recent USD trajectory. Street/Summit to fill from the Bloomberg export.' },
+        'EPS':{ t:'OI&E ~$125M; tax 20–21%', h:'Q3 OI&E expense guided to ~$125M (higher sequentially, driven by incremental interest from the June bond issuance); non-GAAP tax rate 20–21% for both Q3 and Q4. Opex guided to low-double-digits (cc, ex-inorganic) with a 0.5 PPT inorganic headwind and a 0 to +0.5 PPT FX tailwind. BVNK expected to close in Q3 (minimal net-revenue impact, some opex).' }
+      },
+      us:null,
+      // v2.10: marketDebate retired — fear/real prose relocated INTO debate.synth so nothing is lost; mech dropped.
+      debate:{ rows:null, synth:'The one thing to resolve: <b>can the beat travel without its two idiosyncratic helpers?</b> Q2 was flattered by a lighter-than-feared Middle East and a Venezuela cross-border surge (USD availability, where Mastercard is market leader) — neither is a run-rate driver. <b>What to watch:</b> the first guide under new CFO Ling Hai (effective Aug 3), whether BVNK actually closes in Q3 and its day-one economics, whether Venezuela persists or fades, whether the Middle East stays moderated at end-of-Q2 levels, and whether VAS holds ~18%. <b>What management guided:</b> net-revenue growth at the <b>high end</b> of low-double-digits (cc, ex-inorganic) with a ~0.5 PPT FX headwind; opex at low-double-digits (cc, ex-inorganic) with a 0.5 PPT inorganic headwind and a 0 to +0.5 PPT FX tailwind; OI&E ~$125M; tax 20–21%.' },
+      pricedIn:'A beat-and-raise just cleared: Q2 net revenue +12% cn, EPS $5.04 (+19%), and the FY guide nudged higher within the low-double-digits range. Into Q3 the bar rises — management itself guided the high end of low-double-digits — but two of Q2\'s upside sources (Middle East relief, Venezuela) are idiosyncratic, and it is the first quarter under a new CFO.',
+      oneLiner:'The bar is "prove the beat travels" — can Q3 hold the high end of low-double-digits under new CFO Ling Hai once the Middle East and Venezuela tailwinds are in the base, with BVNK closing and VAS still ~18%?' },
+    // Q3 seeds (from the Q2 call) — data-only record; the LIVE tracking is the Q3 Watch List rows (wl016–020).
+    newQuestions:[
+      {n:'First quarter/guide under new CFO Ling Hai — any change in tone or disclosure?', landed:{q:'Q3 2026', rank:1}},
+      {n:'Does BVNK actually close in Q3, and what are the day-one economics / integration notes?', landed:{q:'Q3 2026', rank:2}},
+      {n:'Does the Venezuela cross-border surge persist or fade (idiosyncratic USD-availability driver)?', landed:{q:'Q3 2026', rank:3}},
+      {n:'Does the Middle East stay moderated at the end-of-Q2 level?', landed:{q:'Q3 2026', rank:4}},
+      {n:'Does VAS hold ~18% organically?', landed:{q:'Q3 2026', rank:5}}
+    ],
+    results:null, call:null },
+
+  // ── REPORTED: Q2 2026 (quarter ended Jun 2026; reported Jul 30 2026) — Sachin Mehra's last call as CFO ──
+  { q:'Q2 2026', status:'reported', date:'July 30, 2026',
     setup:{
       source:'Bloomberg BST consensus — to import from the export', asOf:null,
       notes:{
@@ -1560,9 +1583,47 @@ var CALL_EARNINGS = { ticker:'MA', quarters:[
       },
       us:null,
       // v2.10: marketDebate retired — fear/real prose relocated INTO debate.synth so nothing is lost; mech dropped.
-      debate:{ rows:null, synth:'The one thing to resolve: is the guided Q2 trough <b>the war and only the war</b> (recovering progressively H2 as management assumes) — or is some of it <b>structural</b> (switched-transaction mix, cross-border normalization) that outlasts a ceasefire? <b>What the tape fears:</b> that the Q2 guide-down is not just the war — that cross-border travel (8%→2% into April) and switched-transaction growth (9%) mark a real deceleration, and the "conflict ends in Q2" base case is a hope the print can\'t back. <b>What consensus actually models:</b> the cut as almost entirely the conflict (GCC+Israel ≈ 6% of cross-border), with the FY currency-neutral guide UNCHANGED (the raise is FX) and VAS ~40% of revenue still compounding high-teens — i.e. a Q2 trough by assumption, recovering H2 as guided.' }
-    },
-    results:null, call:null },
+      debate:{ rows:null, synth:'The one thing to resolve: is the guided Q2 trough <b>the war and only the war</b> (recovering progressively H2 as management assumes) — or is some of it <b>structural</b> (switched-transaction mix, cross-border normalization) that outlasts a ceasefire? <b>What the tape fears:</b> that the Q2 guide-down is not just the war — that cross-border travel (8%→2% into April) and switched-transaction growth (9%) mark a real deceleration, and the "conflict ends in Q2" base case is a hope the print can\'t back. <b>What consensus actually models:</b> the cut as almost entirely the conflict (GCC+Israel ≈ 6% of cross-border), with the FY currency-neutral guide UNCHANGED (the raise is FX) and VAS ~40% of revenue still compounding high-teens — i.e. a Q2 trough by assumption, recovering H2 as guided.' },
+      pricedIn:'Guided to the low end of low-double-digits (cc) on the Middle-East conflict — the war was the whole debate. The FY currency-neutral guide was unchanged (the nominal raise was FX); the open question was whether the Q2 trough was the war and only the war, recovering through H2 as management assumed.',
+      oneLiner:'The bar was "is the Q2 trough just the war?" — Mastercard beat it: the Middle East hit lighter than feared, a Venezuela cross-border surge added upside, VAS held +18%, net revenue landed +12%, and the FY guide nudged HIGHER within range.' },
+    results:{
+      // Authored from the Q2 2026 transcript (docs/calls/MA-latest.md). Growth rates, EPS $5.04, and
+      // other-network-assessments $326M are quoted; NO Street consensus or absolute-$ revenue series exists,
+      // so the CE_CONS grid stays STUB (null) and no numeric print is fabricated here.
+      summary:{ paras:[
+        { p:'<b>[Authored from the transcript — figures as quoted by management; no Street consensus or absolute-$ revenue series is available, so the numeric grid stays stubbed.]</b> A clean <b>beat-and-raise on Sachin Mehra\'s last call as CFO</b>. Net revenue <b>+12% cn</b> (above management\'s own expectations), <b>EPS $5.04 (+19% YoY, incl. $0.14 from buybacks)</b>, adjusted net income +16%, operating income +14% on +10% opex — and that opex line itself carried a <b>1 PPT disposition benefit</b>. The deliberately low Q2 bar set in Q1 (the low end of low-double-digits on the Middle-East conflict) was cleared by a wide margin.',
+          more:{ body:'<p>Every headline broke the right way. Net income +16%, EPS +19% to $5.04 driven primarily by the strong operating-income growth; the $0.14 buyback contribution reflects an accelerated repurchase pace.</p>', nodes:[
+            { t:'The algorithm this quarter', body:'<p>Payment Network net revenue +8% (domestic + cross-border volume/transactions and pricing, including growth in rebates &amp; incentives); Value-Added Services &amp; Solutions net revenue +18%. Operating income +14% on +10% opex — positive operating leverage, aided by ~1 PPT from dispositions.</p>' }
+          ] } },
+        { p:'The <b>full-year guide moved HIGHER within</b> the low-double-digits range (cc, ex-inorganic) on the stronger first half — the same range as before, but management now expects to land higher in it, with a ~1 PPT FX <b>tailwind</b>. The Q1 posture ("cn range unchanged, the raise is FX") flips to a genuine raise.' },
+        { p:'The beat was broad but <b>three-sourced</b>: a <b>lighter-than-feared Middle East</b> (impacts moderated through Q2 and were less severe than assumed; management now expects them to stay near end-of-Q2 levels), an <b>uptick in cross-border spend out of Venezuela</b> (increased USD availability, where Mastercard is the market leader — it shows up in card-not-present ex-travel debit), and <b>strong VAS demand</b> (+18% cn). Two of the three — Middle-East relief and Venezuela — are idiosyncratic and non-repeatable, so watch the underlying run-rate, not the headline.' },
+        { p:'<b>Cross-border volume +12%</b>; <b>card-not-present ex-travel +20%</b> (Venezuela plus the timing of large retail promotional events); travel improved sequentially versus the April run-rate on lower Middle-East impact. The virtuous-cycle numerators kept climbing: <b>switching penetration 72%</b> (from 70% in Q1), <b>tokens &gt;40%</b> of switched transactions, <b>contactless 80%</b> of in-person (+5 PPT YoY). Switched transactions +9% overall; ex-Capital One debit, US switched volume +10% (+2 PPT sequentially) on higher fuel spend.',
+          more:{ body:'<p>Other network assessments were $326M in the quarter. Cross-border assessments +20% (vs +12% volume) on international pricing and mix; transaction-processing assessments +12% (vs +9% switched) on mix and pricing; domestic assessments +10% (vs +8% GDV) on pricing.</p>' } },
+        { p:'<b>Capital return accelerated again</b>: $4.9B repurchased in-quarter plus ~$700M through July 27 — above the Q1 pace. And the one genuinely new variable is <b>leadership</b>: Sachin Mehra moves to Chief Business Officer and <b>Ling Hai becomes CFO effective August 3</b>, so Q3 is the first guide under a new CFO (continuity was messaged heavily, "from a position of strength").' },
+        { p:'The <b>forward narrative escalated</b>. <b>Agent Pay for Machines</b> extends the network into machine-to-machine payments (on-chain permissioning / off-chain settlement, 30+ launch partners) — management calls it "the only network" enabling M2M. On stablecoins, <b>OpenUSD</b> (a 140-company open-standard consortium) goes live later this year, crypto co-brand volume has more than tripled in two years, and <b>BVNK is now expected to close in Q3</b> (was Q1\'s "planned"); the model is bps on volume in a market MA doesn\'t touch today. Europe\'s purchase-volume deceleration is deliberate — lapping the 2024 win wave and passing on unprofitable deals (e.g. Lloyds Credit): "profitable volume, not volume for its own sake."' }
+      ] },
+      notes:{
+        'Net revenue':{ t:'+12% cn — above expectations', h:'Payment Network +8% and VAS +18%, with minimal disposition impact. Above management\'s own Q2 expectations; the beat was broad but partly idiosyncratic (lighter Middle East, Venezuela).' },
+        'EPS':{ t:'$5.04, +19%', h:'Driven primarily by strong operating-income growth (+14%); includes a $0.14 contribution from share repurchases. Net income +16%. Buybacks: $4.9B in-quarter + ~$700M through Jul 27.' },
+        'Cross-border volume':{ t:'+12%; CNP ex-travel +20%', h:'Both travel and non-travel grew; CNP ex-travel +20% on Venezuela USD availability (MA is market leader) and the timing of large retail promotional events. Cross-border assessments +20% on international pricing and mix.' },
+        'Switched transactions':{ t:'+9%; ex-CapOne US +10%', h:'Generally in line with Q1. Ex-Capital One debit, US switched volume +10% (+2 PPT sequentially) on higher fuel spend. Tokens >40% of switched, contactless 80% of in-person, switching penetration 72%.' },
+        'VAS revenue':{ t:'+18% cn', h:'~60% network-linked; strong security demand. Threat Intelligence identified 7M+ card-testing transactions across 192 countries in its first three quarters, preventing an estimated $172M in fraud.' }
+      },
+      watch:{ 'Cross-border volume':1, 'Switched transactions':3, 'VAS revenue':4 },
+      thesisCheck:[
+        {line:'Middle-East conflict vs the "ends in Q2" base case', tripped:false, note:'RESOLVED — impacts moderated through Q2 and were less severe than anticipated; management now expects the Middle-East impact to stay near end-of-Q2 levels for the rest of the year. Net revenue beat at +12% cn. The Q1 guide-down risk did not materialize.'},
+        {line:'BVNK / stablecoin take-rate economics', tripped:false, note:'CARRY — still open. BVNK now expected to close in Q3 (slipped from the Q1 "planned"); economics still framed as bps on volume in a market MA doesn\'t touch today. No day-one take-rate / margin numbers yet.'},
+        {line:'Switched-transaction growth (9% transitory vs structural)', tripped:false, note:'Leaning transitory — switched +9%, generally in line with Q1; ex-Capital One US switched volume +10% (+2 PPT sequentially) on higher fuel spend. Mix-driven, not a demand problem.'},
+        {line:'Organic VAS holds high-teens', tripped:false, note:'CONFIRMED — VAS +18% cn, ~60% network-linked; strong security demand (Threat Intelligence: 7M+ card-testing txns across 192 countries, ~$172M fraud prevented).'},
+        {line:'Rebates & incentives contained, net yield rising', tripped:false, note:'HELD — R&I came in essentially in line with expectations in Q2; guided slightly higher as a % of payment-network assessments into Q3 on deal timing. Cross-border and domestic pricing still lifting yield.'}
+      ],
+      intoCall:[
+        'First guide under new CFO Ling Hai — any change in framing or disclosure vs Sachin\'s cadence, effective Aug 3?',
+        'Does BVNK close in Q3 — and what are the day-one economics (bps on volume) as it consolidates?',
+        'Does the Venezuela cross-border surge persist or fade — now that USD availability is in the base?'
+      ],
+      priceReaction:'to fill from a trusted source' },
+    call:null },
 
   // ── REPORTED: Q1 2026 (quarter ended Mar 2026; reported Apr 30 2026) ──
   { q:'Q1 2026', status:'reported', date:'April 30, 2026',
@@ -1719,37 +1780,68 @@ var CALL_EARNINGS = { ticker:'MA', quarters:[
 // (upcoming) quarter shows only OPEN hooks (trackSince, no trackUntil). `rank` orders, never labels.
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 var WL_ROWS=[
-  // ── Q2 2026 · UPCOMING — the live list. Open hooks only. ──
+  // ── Q3 2026 · UPCOMING — the live list. Open hooks only (seeded by the Q2 2026 call). ──
+  { id:'wl016', q:'Q3 2026', rank:1, theme:'First guide/quarter under new CFO Ling Hai',
+    tags:['cfo','guidance','tone'], trackSince:'Q2 2026', trackUntil:null,
+    definition:'The one genuinely new variable is leadership — Q3 is the first guide under a new CFO, and continuity vs a change of framing is the tell. <b>Tell:</b> does Ling Hai keep Sachin\'s disclosure cadence and guidance construct, or shift tone/detail? <b>Red-line:</b> a framing or disclosure change that reduces comparability or signals a strategy shift.',
+    seededBy:{ q:'Q2 2026', n:'Sachin Mehra\'s last call as CFO; he moves to Chief Business Officer and Ling Hai becomes CFO effective Aug 3, 2026. Continuity messaged heavily "from a position of strength."' },
+    src:'Q2 2026: CFO transition announced (part of the June 2 C-suite reshuffle); Ling Hai to lead the next earnings call.',
+    thread:[ {q:'Q2 2026',n:'Mehra to Chief Business Officer; Ling Hai to CFO effective Aug 3.'} ] },
+  { id:'wl017', q:'Q3 2026', rank:2, theme:'BVNK close + day-one stablecoin economics',
+    tags:['stablecoin','bvnk','new-flows'], trackSince:'Q2 2026', trackUntil:null,
+    definition:'The strategic pivot into owning stablecoin infrastructure — the size of the accretion is still unproven and the close keeps slipping. <b>Tell:</b> does BVNK actually close in Q3, and is there any day-one take-rate / volume / margin disclosure beyond "bps on volume"? <b>Red-line:</b> the close slips again, or the disclosed bps economics prove immaterial vs card/network economics.',
+    seededBy:{ q:'Q2 2026', n:'Management said BVNK is now expected to close in Q3 (was Q1\'s "planned"); economics still framed as bps on volume in a market MA doesn\'t touch today.' },
+    src:'Q2 2026: BVNK close moved to Q3; minimal net-revenue impact, some opex, contemplated in the reconciliations. OpenUSD (140-co consortium) to go live later this year; crypto co-brand volume >3x in two years.',
+    thread:[ {q:'Q1 2026',n:'BVNK announced; economics = bps on volume; CLARITY Act "doesn\'t hold us back."'},{q:'Q2 2026',n:'Close slips to Q3; Agent Pay for Machines (M2M) launched with 30+ partners.'} ] },
+  { id:'wl018', q:'Q3 2026', rank:3, theme:'Venezuela cross-border surge — persist or fade?',
+    tags:['cross-border','venezuela','mix'], trackSince:'Q2 2026', trackUntil:null,
+    definition:'An idiosyncratic, non-repeatable driver flattered the Q2 CNP ex-travel line — the tell is whether it is durable or a one-off now in the base. <b>Tell:</b> does the Venezuela-driven CNP ex-travel strength persist as USD availability normalizes, or fade into a tougher comp? <b>Red-line:</b> the surge reverses sharply, exposing a weaker underlying cross-border run-rate.',
+    seededBy:{ q:'Q2 2026', n:'Increased USD availability in Venezuela drove a cross-border CNP ex-travel uptick where MA is market leader (primarily a debit market); Sachin flagged it as holding up "pretty well" but idiosyncratic.' },
+    src:'Q2 2026: cross-border volume +12%; CNP ex-travel +20% on Venezuela USD availability + retail-promo timing; MA deconsolidated Venezuela in 2018.',
+    thread:[ {q:'Q2 2026',n:'Venezuela USD availability surged into Q2; MA is market leader; shows up in CNP ex-travel debit.'} ] },
+  { id:'wl019', q:'Q3 2026', rank:4, theme:'Middle East — does it stay moderated?',
+    tags:['cross-border','travel','geopolitics'], trackSince:'Q2 2026', trackUntil:null,
+    definition:'The Q1 fear resolved better than the base case, but the region is dynamic — the tell is whether the moderation holds at the assumed level. <b>Tell:</b> do Middle-East cross-border impacts stay near the end-of-Q2 level management now assumes for H2, or re-escalate? <b>Red-line:</b> the conflict re-escalates and cross-border travel weakens again.',
+    seededBy:{ q:'Q2 2026', n:'Impacts moderated through Q2 and were less severe than anticipated; management estimates H2 impacts stay at similar levels to the end of Q2, noting the environment "remains dynamic."' },
+    src:'Q2 2026: better outbound spend from impacted GCC countries; cross-border travel improved sequentially vs April on lower Middle-East impact and holiday timing.',
+    thread:[ {q:'Q1 2026',n:'Conflict cut Q2 travel to 2%; "ends in Q2" assumed; ~6% of cross-border exposed.'},{q:'Q2 2026',n:'Hit lighter than feared; assumed to stay at end-of-Q2 levels through H2.'} ] },
+  { id:'wl020', q:'Q3 2026', rank:5, theme:'VAS durability (holds ~18%?)',
+    tags:['vas','services'], trackSince:'Q2 2026', trackUntil:null,
+    definition:'VAS is the differentiator and the multiple support — the durable engine that carries the model when the macro/idiosyncratic helpers fade. <b>Tell:</b> does organic VAS hold ~18% cn with ~60% network-linked, led by security demand? <b>Red-line:</b> organic VAS decelerates below mid-teens with no offsetting network acceleration.',
+    seededBy:{ q:'Q2 2026', n:'VAS +18% cn again, ~60% network-linked; strong security demand (Threat Intelligence, Recorded Future). The standing question is whether the ~18% engine holds.' },
+    src:'Q2 2026: VAS +18% cn; Threat Intelligence 7M+ card-testing txns across 192 countries, ~$172M fraud prevented; Partner Advantage Program 200+ partners.',
+    thread:[ {q:'Q1 2026',n:'VAS +18% cc organic; Recorded Future lapped.'},{q:'Q2 2026',n:'VAS +18% cn; ~60% network-linked; security demand strong.'} ] },
+  // ── Q2 2026 · REPORTED — frozen record (closed by the Q2 2026 call). ──
   { id:'wl001', q:'Q2 2026', rank:1, theme:'Middle-East conflict vs the "ends in Q2" base case',
-    tags:['cross-border','travel','geopolitics'], trackSince:'Q1 2026', trackUntil:null,
-    definition:'The entire Q2 and H2 guide is predicated on one uncontrollable assumption; if it breaks, the reset is not in numbers yet. <b>Tell:</b> does cross-border travel recover progressively through H2 as guided — or does the conflict persist and break the central assumption behind the Q2/FY guide? <b>Red-line:</b> the conflict extends past Q2 and cross-border travel stays depressed, invalidating the guide\'s core assumption.',
+    tags:['cross-border','travel','geopolitics'], trackSince:'Q1 2026', trackUntil:'Q2 2026',
+    definition:'The entire Q2 and H2 guide was predicated on one uncontrollable assumption. <b>Resolved in Q2:</b> the conflict moderated through the quarter and hit less severely than anticipated — net revenue beat at +12% cn, and management now assumes Middle-East impacts stay near the end-of-Q2 level through H2. The Q1 guide-down risk did not materialize. <b>Red-line (was):</b> the conflict extends past Q2 and cross-border travel stays depressed.',
     seededBy:{ q:'Q1 2026', n:'Sachin explicitly built guidance on the conflict ENDING in Q2 and refused (to Adam Frisch) to model any alternative scenario; sized GCC+Israel at ~6% of cross-border volume.' },
     src:'Q1 2026: cross-border travel growth fell from 8% (Q1) to 2% (first 4 weeks of April) on conflict + portfolio shifts + Ramadan/Easter timing; Q2 guided to the low end of low-double-digits.',
-    thread:[ {q:'Q4 2025',n:'Consumer healthy; no conflict in the guide; FY26 set at high-end of low-double-digits cc.'},{q:'Q1 2026',n:'Conflict from late Feb; Q2 cut; "ends in Q2" assumed; ~6% of cross-border exposed.'} ] },
+    thread:[ {q:'Q4 2025',n:'Consumer healthy; no conflict in the guide; FY26 set at high-end of low-double-digits cc.'},{q:'Q1 2026',n:'Conflict from late Feb; Q2 cut; "ends in Q2" assumed; ~6% of cross-border exposed.'},{q:'Q2 2026',n:'Moderated / less severe than feared; net rev beat +12%; H2 assumed at end-of-Q2 level.'} ] },
   { id:'wl002', q:'Q2 2026', rank:2, theme:'BVNK / stablecoin economics',
-    tags:['stablecoin','bvnk','new-flows'], trackSince:'Q1 2026', trackUntil:null,
-    definition:'This is the strategic pivot from crypto co-brands (card economics) into owning stablecoin infrastructure — the size of the accretion is unproven. <b>Tell:</b> first real disclosure — take rate, volume, or margin — on stablecoin infrastructure vs the current "basis points on volume, accretive" framing; plus the deal close. <b>Red-line:</b> the disclosed bps economics prove immaterial or dilutive vs card/network economics.',
+    tags:['stablecoin','bvnk','new-flows'], trackSince:'Q1 2026', trackUntil:'Q2 2026',
+    definition:'The strategic pivot from crypto co-brands (card economics) into owning stablecoin infrastructure — the size of the accretion is unproven. <b>Carried into Q3:</b> BVNK is now expected to close in Q3 (slipped from the Q1 "planned"); the model is still framed as bps on volume in a market MA doesn\'t touch today, with no day-one take-rate/margin numbers yet. <b>Red-line (was):</b> the disclosed bps economics prove immaterial or dilutive.',
     seededBy:{ q:'Q1 2026', n:'Matt O\'Neill pushed on stablecoin economics; Sachin said BVNK\'s model is "basis points on volume" in "an addressable market we don\'t participate in today" — accretive, but no numbers.' },
     src:'Q1 2026: planned BVNK acquisition (interoperability/licensing/compliance layer for send/receive/convert/hold stablecoins); use cases payouts, remittances, me-to-me, B2B cross-border.',
-    thread:[ {q:'Q4 2025',n:'Stablecoins framed as "another currency" on the network; MetaMask/Gemini co-brands; Ripple settlement.'},{q:'Q1 2026',n:'BVNK announced; economics = bps on volume; CLARITY Act "doesn\'t hold us back."'} ] },
+    thread:[ {q:'Q4 2025',n:'Stablecoins framed as "another currency" on the network; MetaMask/Gemini co-brands; Ripple settlement.'},{q:'Q1 2026',n:'BVNK announced; economics = bps on volume; CLARITY Act "doesn\'t hold us back."'},{q:'Q2 2026',n:'Close moved to Q3; OpenUSD (140-co) live later this year; Agent Pay for Machines launched.'} ] },
   { id:'wl003', q:'Q2 2026', rank:3, theme:'Switched-transaction growth trajectory',
-    tags:['switched-transactions','mix'], trackSince:'Q1 2026', trackUntil:null,
-    definition:'Switched transactions are the data engine that feeds VAS — a persistent decel would quietly cap the whole virtuous-cycle algorithm. <b>Tell:</b> does ex-Capital-One switched growth re-accelerate above ~10% as geographic/ticket mix normalizes, or keep drifting down from the historical low-teens? <b>Red-line:</b> switched-transaction growth decelerates further, signaling a structural mix drag rather than a Cap-One/timing effect.',
+    tags:['switched-transactions','mix'], trackSince:'Q1 2026', trackUntil:'Q2 2026',
+    definition:'Switched transactions are the data engine that feeds VAS — a persistent decel would quietly cap the whole virtuous-cycle algorithm. <b>Resolved (leaning transitory):</b> switched +9%, generally in line with Q1; ex-Capital One US switched volume +10% (+2 PPT sequentially) on higher fuel spend — mix-driven, not a demand problem. <b>Red-line (was):</b> switched growth decelerates further on a structural mix drag.',
     seededBy:{ q:'Q1 2026', n:'Harshita Rawat pushed on switched growth decelerating to 9% (10% ex-Cap One) vs historical low-double/low-teens; Sachin attributed it to geographic/average-ticket mix (Russia exit, adding Japan/Mexico).' },
     src:'Q1 2026: switched transactions +9% (+10% ex-Capital One debit migration); >70% of Mastercard transactions now switched (vs 60% in 2020).',
-    thread:[ {q:'Q4 2025',n:'Switched +10%; contactless 77%; Cap One debit migration a drag.'},{q:'Q1 2026',n:'Switched +9% (+10% ex-Cap One); mix explanation; migration "basically complete."'} ] },
+    thread:[ {q:'Q4 2025',n:'Switched +10%; contactless 77%; Cap One debit migration a drag.'},{q:'Q1 2026',n:'Switched +9% (+10% ex-Cap One); mix explanation; migration "basically complete."'},{q:'Q2 2026',n:'Switched +9%; ex-CapOne US +10% (+2 PPT seq) on fuel; tokens >40%, contactless 80%.'} ] },
   { id:'wl004', q:'Q2 2026', rank:4, theme:'VAS durability at ~40% of revenue',
-    tags:['vas','services'], trackSince:'Q1 2026', trackUntil:null,
-    definition:'VAS is the differentiator and the multiple support — the virtuous cycle only works if it keeps compounding faster than the network. <b>Tell:</b> does organic VAS hold high-teens as Recorded Future laps, and how much stays network-linked (~60%)? <b>Red-line:</b> organic VAS decelerates below mid-teens with no offsetting network acceleration.',
+    tags:['vas','services'], trackSince:'Q1 2026', trackUntil:'Q2 2026',
+    definition:'VAS is the differentiator and the multiple support — the virtuous cycle only works if it keeps compounding faster than the network. <b>Confirmed in Q2:</b> VAS +18% cn again, ~60% network-linked, led by strong security demand (Threat Intelligence 7M+ card-testing txns across 192 countries, ~$172M fraud prevented). <b>Red-line (was):</b> organic VAS decelerates below mid-teens with no offsetting network acceleration.',
     seededBy:{ q:'Q1 2026', n:'Jason Kupferberg clarified the 18% VAS growth was organic (Recorded Future lapped); the durability of the ~40%-of-revenue engine is the standing question.' },
     src:'Q1 2026: VAS +18% cc (no acquisition impact); ~40% of company revenue; broad-based (security, digital/authentication, insights, consumer engagement).',
-    thread:[ {q:'Q4 2025',n:'VAS +22% cc (+19% ex-acq); FY25 +21%/+18% ex-acq; ~60% network-linked.'},{q:'Q1 2026',n:'VAS +18% cc organic; Recorded Future/Threat Intelligence 500+ customers; Ethoca +25%.'} ] },
+    thread:[ {q:'Q4 2025',n:'VAS +22% cc (+19% ex-acq); FY25 +21%/+18% ex-acq; ~60% network-linked.'},{q:'Q1 2026',n:'VAS +18% cc organic; Recorded Future/Threat Intelligence 500+ customers; Ethoca +25%.'},{q:'Q2 2026',n:'VAS +18% cn; ~60% network-linked; security demand strong.'} ] },
   { id:'wl005', q:'Q2 2026', rank:5, theme:'Rebates & incentives / net revenue yield',
-    tags:['incentives','pricing','renewals'], trackSince:'Q1 2026', trackUntil:null,
-    definition:'R&I is the contra-revenue competitive renewals drive — the tell on whether Mastercard is buying volume or being paid for value. <b>Tell:</b> do rebates & incentives as a % of payment-network assessments stay contained (guided slightly lower into Q2), keeping net revenue yield rising? <b>Red-line:</b> renewal competition forces R&I up as a % of assessments, compressing net yield.',
+    tags:['incentives','pricing','renewals'], trackSince:'Q1 2026', trackUntil:'Q2 2026',
+    definition:'R&I is the contra-revenue competitive renewals drive — the tell on whether Mastercard is buying volume or being paid for value. <b>Held in Q2:</b> R&I came in essentially in line with expectations; management guided it slightly higher as a % of payment-network assessments into Q3 on deal timing, with cross-border and domestic pricing still lifting net yield. <b>Red-line (was):</b> renewal competition forces R&I up, compressing net yield.',
     seededBy:{ q:'Q1 2026', n:'Andrew Schmidt asked on R&I trending; Sachin guided R&I as a % of payment-network assessments slightly lower sequentially into Q2, and noted net revenue yield is rising.' },
     src:'Q1 2026: net revenue yield increasing; R&I guided slightly lower sequentially into Q2.',
-    thread:[ {q:'Q4 2025',n:'R&I flat-to-slightly-down sequentially; disciplined "win the right deals."'},{q:'Q1 2026',n:'R&I guided slightly lower into Q2; net yield rising.'} ] },
+    thread:[ {q:'Q4 2025',n:'R&I flat-to-slightly-down sequentially; disciplined "win the right deals."'},{q:'Q1 2026',n:'R&I guided slightly lower into Q2; net yield rising.'},{q:'Q2 2026',n:'R&I in line in Q2; guided slightly higher into Q3 on deal timing.'} ] },
   // ── Q1 2026 · REPORTED — frozen record. ──
   { id:'wl006', q:'Q1 2026', rank:1, theme:'VAS durability (can high-teens hold as acq laps?)',
     tags:['vas'], trackSince:'Q4 2025', trackUntil:'Q1 2026',

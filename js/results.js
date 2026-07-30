@@ -23,13 +23,14 @@ import { amznResults } from './results-data/amzn.js';
 import { googlResults } from './results-data/googl.js';
 import { googlSetup } from './results-data/googl-setup.js';
 import { maResults } from './results-data/ma.js';   // NOTE: shared engine file — reviewers, see MA migration
+import { maSetup } from './results-data/ma-setup.js';
 
 var RESULTS_DATA = {
   AMZN: amznResults,
   GOOGL: googlResults,
   GOOGL_SETUP: googlSetup,
   MA: maResults,
-  MA_SETUP: maResults   // Setup chart reuses the same MA dataset (unlike GOOGL, which has a separate GOOGL_SETUP)
+  MA_SETUP: maSetup   // Setup chart: rolling-window, single merged 'setup' section (EARNINGS_CONVENTIONS §6a-viii-bis)
 };
 
 export function getResultsData(ticker){

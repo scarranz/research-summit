@@ -12,6 +12,7 @@
 // Financials seeded from the Summit DCF (snapshot 2026-06-25); forward years labeled estimate.
 
 import { makeManagement } from './management.js';
+import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -1496,126 +1497,112 @@ function switchMaGuideMetric(root,k){ if(!MA_GUIDE[k]) return; _maGuideMetric=k;
 
 // ════════════════════════════════════════════════════════════════════════════
 // ════════════════════════════════════════════════════════════════════════════
-//  Evolution ▸ CALL PREP — the decision layer (docs/CALL_PREP_CONVENTIONS.md v2.4)
-//  Ported from googl.js / ibkr.js (canonical) via the Visa build. Four phases —
-//  Setup · Watch List · Post-Results · Post-Call — as per-quarter blocks behind a
-//  quarter selector. The theme record (MA_THEMES) is FOLDED into the Watch List
-//  (v2.3 fusion) — there is NO standalone Earnings Calls tab. Consensus (Bloomberg
-//  BST) + Summit + the 4 custom KPIs render 'to fill'/'to define' until the export
-//  lands. Mastercard reports on a calendar year.
+//  Evolution ▸ EARNINGS — the decision layer (docs/EARNINGS_CONVENTIONS.md v2.10)
+//  Ported from googl.js (canonical ce* machinery). THREE phases — Setup · Watch List
+//  · Post-Results — as per-quarter blocks behind a phase-aware quarter selector. The
+//  former Post-Call phase is dissolved: call highlights render inside Post-Results as
+//  "Also on the call". The theme record (MA_THEMES) is FOLDED into the Watch List —
+//  there is NO standalone Earnings Calls tab. Numeric grid + consensus render STUBS
+//  until the Q2 2026 BBG export lands. Mastercard reports on a calendar year.
 // ════════════════════════════════════════════════════════════════════════════
 // Call Prep palette (Mastercard identity): red primary + orange custom-KPI accent.
 var BRAND=MA_RED, BRAND2=MA_GREEN, BLUE='#2557D6', RED='#EA4335', YELLOW=MA_ORANGE, PURPLE='#7A5AF8', AMBER='#B7791F', GRAY='#6B7684';
-var CALL_PREP = { ticker:'MA', quarters:[
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// EVOLUTION ▸ EARNINGS — v2.10 (ce* machinery, ported from googl.js). See docs/EARNINGS_CONVENTIONS.
+// Migrated from the v2.4 "Call Prep" (cp*) format Jul 2026. THREE phases: Setup / Watch List /
+// Post-Results (Post-Call dissolved; call highlights moved into Post-Results as "Also on the call").
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// ─── CE_CONS · the Street's rolling track record (STUB) ──────────────────────────────────────────
+// STUB — fill from Q2 2026 BBG export + MA 8-K guidance. Same shape as googl.js CE_CONS: keyed by
+// metric name, 4 HEADLINE (Net revenue · Operating income · EPS · EBITDA) + 4 CUSTOM KPIs (GDV ·
+// Cross-border volume · Switched transactions · VAS revenue). Every qr/qa/qy/qq array is null-filled
+// until the Bloomberg snapshot archive lands. q[] must contain every quarter in CALL_EARNINGS so the
+// Setup grid and the debate box render (they key off CE_CONS.q.indexOf).
+var CE_CONS_Q=['Q1 2024','Q2 2024','Q3 2024','Q4 2024','Q1 2025','Q2 2025','Q3 2025','Q4 2025','Q1 2026','Q2 2026'];
+function ceStubArr(){ return CE_CONS_Q.map(function(){ return null; }); }
+function ceStubQr(){ return CE_CONS_Q.map(function(){ return [null,null,null,null]; }); }
+function ceStubMetric(k,u){ return { k:k, u:u, t:'ok', code:null, qr:ceStubQr(), qa:ceStubArr(), qy:ceStubArr(), qq:ceStubArr() }; }  // STUB — fill from BBG
+var CE_CONS = {
+  src:'STUB — Bloomberg (BST) · fill from Q2 2026 BBG export + MA 8-K guidance',
+  asOf:[],                                                 // STUB — snapshot dates
+  q:CE_CONS_Q,
+  hz:['4q out','3q out','2q out','1q out'],
+  nHead:4,
+  m:[
+    ceStubMetric('Net revenue','$B'),          // STUB — fill from BBG
+    ceStubMetric('Operating income','$B'),     // STUB — fill from BBG
+    ceStubMetric('EPS','$'),                   // STUB — fill from BBG
+    ceStubMetric('EBITDA','$B'),               // STUB — fill from BBG
+    ceStubMetric('GDV','$B'),                  // STUB — custom KPI · Gross Dollar Volume
+    ceStubMetric('Cross-border volume','%'),   // STUB — custom KPI · cross-border volume growth
+    ceStubMetric('Switched transactions','B'), // STUB — custom KPI · switched transactions
+    ceStubMetric('VAS revenue','$B')           // STUB — custom KPI · value-added services net revenue
+  ]
+};
+// Annual FY view (Setup chart) — STUB. MA DOES issue numeric guidance, so guidance:true and the
+// per-year bands are real future fills (guideLo/guideHi land in the Results dataset). No period
+// series is fabricated here — everything null until the export lands.
+function ceAnnStub(k,u){ var n=[null,null,null,null,null]; return { k:k, u:u, actual:n.slice(), bbg:n.slice(), summit:n.slice() }; }  // STUB
+var CE_ANNUAL = {
+  years:[2023,2024,2025,2026,2027],
+  guidance:true,                                            // MA issues numeric FY guidance
+  m:[ ceAnnStub('Net revenue','$B'), ceAnnStub('Operating income','$B'), ceAnnStub('EBITDA','$B') ]  // STUB — fill from BBG + MA 8-K guidance
+};
+
+var CALL_EARNINGS = { ticker:'MA', quarters:[
   // ── UPCOMING: Q2 2026 (quarter ending Jun 2026; reports ~late Jul 2026) ──
   { q:'Q2 2026', status:'upcoming', date:'reports ~late July 2026',
-    setup:{ source:'Bloomberg BST consensus — to import from the export', asOf:null,
-      headline:[
-        {k:'Net revenue', cons:null, us:null, note:{t:'Guided low end of low-double-digits (cc)',h:'Management guided Q2 net-revenue growth to the <b>low end of a low-double-digits</b> range (cc, ex-inorganic) — the Middle-East conflict is the reason; without it, Q2 would have been "generally in line with Q1." A ~1–2 PPT FX tailwind on the nominal number. Street/Summit fill from the Bloomberg export.'}},
-        {k:'Operating income', cons:null, us:null},
-        {k:'EPS', cons:null, us:null, note:{t:'OI&E steps up in Q2',h:'Q2 OI&E expense guided to ~$150M (vs a Q1 aided by one-time items + government grants that do not repeat), plus lower cash / higher debt from the accelerated buyback and a one-time disposition drag. Tax rate 20–21%.'}},
-        {k:'EBITDA', cons:null, us:null},
-      ],
-      custom:[ {k:null},{k:null},{k:null},{k:null} ], // 4 custom KPIs — to define with Dani (candidates: GDV · cross-border volume · switched transactions · VAS revenue)
-      marketDebate:{
-        fear:'That the Q2 guide-down is not just the war — that cross-border travel (8%→2% into April) and switched-transaction growth (9%) mark a real deceleration, and the "conflict ends in Q2" base case is a hope the print can\'t back.',
-        real:'Consensus reads the cut as almost entirely the conflict (GCC+Israel ≈ 6% of cross-border), with the FY currency-neutral guide UNCHANGED (the raise is FX) and VAS ~40% of revenue still compounding high-teens — i.e. a Q2 trough by assumption, recovering H2 as guided.',
-        mech:[ {k:'Middle-East conflict',v:'largest drag in Q2',dir:'down'}, {k:'Cross-border travel',v:'8%→2% into April',dir:'down'}, {k:'FX (nominal)',v:'+1–2 PPT tailwind',dir:'up'}, {k:'VAS ~40% of rev',v:'high-teens, steady',dir:'up'} ],
-        synth:'The one thing to resolve: is the guided Q2 trough <b>the war and only the war</b> (recovering progressively H2 as management assumes) — or is some of it <b>structural</b> (switched-transaction mix, cross-border normalization) that outlasts a ceasefire?'
+    setup:{
+      source:'Bloomberg BST consensus — to import from the export', asOf:null,
+      notes:{
+        'Net revenue':{ t:'Guided low end of low-double-digits (cc)', h:'Management guided Q2 net-revenue growth to the <b>low end of a low-double-digits</b> range (cc, ex-inorganic) — the Middle-East conflict is the reason; without it, Q2 would have been "generally in line with Q1." A ~1–2 PPT FX tailwind on the nominal number. Street/Summit fill from the Bloomberg export.' },
+        'EPS':{ t:'OI&E steps up in Q2', h:'Q2 OI&E expense guided to ~$150M (vs a Q1 aided by one-time items + government grants that do not repeat), plus lower cash / higher debt from the accelerated buyback and a one-time disposition drag. Tax rate 20–21%.' }
       },
-      debate:null },
-    watchList:[
-      { rank:1, metric:'Middle-East conflict vs the "ends in Q2" base case', since:'Q1 2026', tags:['cross-border','travel','geopolitics'],
-        pista:'Does cross-border travel recover progressively through H2 as guided — or does the conflict persist and break the central assumption behind the Q2/FY guide?',
-        breaks:'The conflict extends past Q2 and cross-border travel stays depressed, invalidating the guide\'s core assumption.',
-        seededBy:{ q:'Q1 2026', n:'Sachin explicitly built guidance on the conflict ENDING in Q2 and refused (to Adam Frisch) to model any alternative scenario; sized GCC+Israel at ~6% of cross-border volume.' },
-        src:'Q1 2026: cross-border travel growth fell from 8% (Q1) to 2% (first 4 weeks of April) on conflict + portfolio shifts + Ramadan/Easter timing; Q2 guided to the low end of low-double-digits.',
-        why:'The entire Q2 and H2 guide is predicated on one uncontrollable assumption; if it breaks, the reset is not in numbers yet.',
-        thread:[ {q:'Q4 2025',n:'Consumer healthy; no conflict in the guide; FY26 set at high-end of low-double-digits cc.'},{q:'Q1 2026',n:'Conflict from late Feb; Q2 cut; "ends in Q2" assumed; ~6% of cross-border exposed.'} ] },
-      { rank:2, metric:'BVNK / stablecoin economics', since:'Q1 2026', tags:['stablecoin','bvnk','new-flows'],
-        pista:'First real disclosure — take rate, volume, or margin — on stablecoin infrastructure vs the current "basis points on volume, accretive" framing; plus the deal close.',
-        breaks:'The disclosed bps economics prove immaterial or dilutive vs card/network economics.',
-        seededBy:{ q:'Q1 2026', n:'Matt O\'Neill pushed on stablecoin economics; Sachin said BVNK\'s model is "basis points on volume" in "an addressable market we don\'t participate in today" — accretive, but no numbers.' },
-        src:'Q1 2026: planned BVNK acquisition (interoperability/licensing/compliance layer for send/receive/convert/hold stablecoins); use cases payouts, remittances, me-to-me, B2B cross-border.',
-        why:'This is the strategic pivot from crypto co-brands (card economics) into owning stablecoin infrastructure — the size of the accretion is unproven.',
-        thread:[ {q:'Q4 2025',n:'Stablecoins framed as "another currency" on the network; MetaMask/Gemini co-brands; Ripple settlement.'},{q:'Q1 2026',n:'BVNK announced; economics = bps on volume; CLARITY Act "doesn\'t hold us back."'} ] },
-      { rank:3, metric:'Switched-transaction growth trajectory', since:'Q1 2026', tags:['switched-transactions','mix'],
-        pista:'Does ex-Capital-One switched growth re-accelerate above ~10% as geographic/ticket mix normalizes, or keep drifting down from the historical low-teens?',
-        breaks:'Switched-transaction growth decelerates further, signaling a structural mix drag rather than a Cap-One/timing effect.',
-        seededBy:{ q:'Q1 2026', n:'Harshita Rawat pushed on switched growth decelerating to 9% (10% ex-Cap One) vs historical low-double/low-teens; Sachin attributed it to geographic/average-ticket mix (Russia exit, adding Japan/Mexico).' },
-        src:'Q1 2026: switched transactions +9% (+10% ex-Capital One debit migration); >70% of Mastercard transactions now switched (vs 60% in 2020).',
-        why:'Switched transactions are the data engine that feeds VAS — a persistent decel would quietly cap the whole virtuous-cycle algorithm.',
-        thread:[ {q:'Q4 2025',n:'Switched +10%; contactless 77%; Cap One debit migration a drag.'},{q:'Q1 2026',n:'Switched +9% (+10% ex-Cap One); mix explanation; migration "basically complete."'} ] },
-      { rank:4, metric:'VAS durability at ~40% of revenue', since:'Q1 2026', tags:['vas','services'],
-        pista:'Does organic VAS hold high-teens as Recorded Future laps, and how much stays network-linked (~60%)?',
-        breaks:'Organic VAS decelerates below mid-teens with no offsetting network acceleration.',
-        seededBy:{ q:'Q1 2026', n:'Jason Kupferberg clarified the 18% VAS growth was organic (Recorded Future lapped); the durability of the ~40%-of-revenue engine is the standing question.' },
-        src:'Q1 2026: VAS +18% cc (no acquisition impact); ~40% of company revenue; broad-based (security, digital/authentication, insights, consumer engagement).',
-        why:'VAS is the differentiator and the multiple support — the virtuous cycle only works if it keeps compounding faster than the network.',
-        thread:[ {q:'Q4 2025',n:'VAS +22% cc (+19% ex-acq); FY25 +21%/+18% ex-acq; ~60% network-linked.'},{q:'Q1 2026',n:'VAS +18% cc organic; Recorded Future/Threat Intelligence 500+ customers; Ethoca +25%.'} ] },
-      { rank:5, metric:'Rebates & incentives / net revenue yield', since:'Q1 2026', tags:['incentives','pricing','renewals'],
-        pista:'Do rebates & incentives as a % of payment-network assessments stay contained (guided slightly lower into Q2), keeping net revenue yield rising?',
-        breaks:'Renewal competition forces R&I up as a % of assessments, compressing net yield.',
-        seededBy:{ q:'Q1 2026', n:'Andrew Schmidt asked on R&I trending; Sachin guided R&I as a % of payment-network assessments slightly lower sequentially into Q2, and noted net revenue yield is rising.' },
-        src:'Q1 2026: net revenue yield increasing; R&I guided slightly lower sequentially into Q2.',
-        why:'R&I is the contra-revenue competitive renewals drive — the tell on whether Mastercard is buying volume or being paid for value.',
-        thread:[ {q:'Q4 2025',n:'R&I flat-to-slightly-down sequentially; disciplined "win the right deals."'},{q:'Q1 2026',n:'R&I guided slightly lower into Q2; net yield rising.'} ] },
-    ],
+      us:null,
+      // v2.10: marketDebate retired — fear/real prose relocated INTO debate.synth so nothing is lost; mech dropped.
+      debate:{ rows:null, synth:'The one thing to resolve: is the guided Q2 trough <b>the war and only the war</b> (recovering progressively H2 as management assumes) — or is some of it <b>structural</b> (switched-transaction mix, cross-border normalization) that outlasts a ceasefire? <b>What the tape fears:</b> that the Q2 guide-down is not just the war — that cross-border travel (8%→2% into April) and switched-transaction growth (9%) mark a real deceleration, and the "conflict ends in Q2" base case is a hope the print can\'t back. <b>What consensus actually models:</b> the cut as almost entirely the conflict (GCC+Israel ≈ 6% of cross-border), with the FY currency-neutral guide UNCHANGED (the raise is FX) and VAS ~40% of revenue still compounding high-teens — i.e. a Q2 trough by assumption, recovering H2 as guided.' }
+    },
     results:null, call:null },
 
   // ── REPORTED: Q1 2026 (quarter ended Mar 2026; reported Apr 30 2026) ──
   { q:'Q1 2026', status:'reported', date:'April 30, 2026',
-    setup:{ source:'Bloomberg BST consensus (archived) — precise figures to backfill',
+    setup:{ source:'Bloomberg BST consensus (archived) — precise figures to backfill', us:null,
+      debate:{ rows:null, synth:null },
       pricedIn:'A solid start to 2026: net revenue low-double-digits cc, GDV ~7%, cross-border healthy, VAS high-teens. FX volatility a swing factor; the open question was how much the newly-erupted Middle-East conflict would dent cross-border travel.',
       oneLiner:'The bar was "steady network + strong VAS, watch cross-border travel and the war" — Mastercard cleared the print but cut the Q2 guide on the conflict, betting it ends in Q2.' },
-    watchList:[
-      { rank:1, metric:'VAS durability (can high-teens hold as acq laps?)', since:'Q4 2025', tags:['vas'],
-        pista:'Does organic VAS hold high-teens once Recorded Future is lapped?', breaks:'Organic VAS decelerates below mid-teens.',
-        seededBy:{ q:'Q4 2025', n:'Q4 VAS was +22% cc but +19% ex-acq; the question into Q1 was the clean organic rate as acquisitions lap.' },
-        src:'Q4 2025: VAS +22% cc (+19% ex-acq); FY25 +21%/+18% ex-acq.', why:'The engine and the multiple support.' },
-      { rank:2, metric:'Consumer / cross-border resilience', since:'Q4 2025', tags:['cross-border','consumer','travel'],
-        pista:'Does the healthy consumer + cross-border hold into 2026?', breaks:'Cross-border volume growth slips below low-double-digits cc or the consumer softens.',
-        seededBy:{ q:'Q4 2025', n:'Q4 framed a "savvy, intentional" but healthy consumer; the standing question was whether it holds through 2026 macro/geopolitics.' },
-        src:'Q4 2025: cross-border +14%; consumer spend healthy and unchanged QoQ.', why:'The demand pulse and the highest-yield line.' },
-      { rank:3, metric:'Switched-transaction growth off the Cap-One drag', since:'Q4 2025', tags:['switched-transactions'],
-        pista:'Does switched growth re-accelerate as the Capital One debit migration completes?', breaks:'Switched growth stays depressed after the migration laps.',
-        seededBy:{ q:'Q4 2025', n:'Q4 switched +10% with the Cap-One debit migration a drag; the question was the underlying rate once it completes.' },
-        src:'Q4 2025: switched transactions +10%; Cap-One debit migration ongoing.', why:'The data engine feeding VAS.' },
-      { rank:4, metric:'Capital One credit volume retention', since:'Q4 2025', tags:['capital-one','renewals'],
-        pista:'How much Capital One credit volume actually stays given its Discover ownership?', breaks:'Cap-One credit volume migrates away despite the renewal.',
-        seededBy:{ q:'Q4 2025', n:'Q4 announced the Cap-One CREDIT renewal (+ new accounts); Will Nance pushed on how much volume stays given Cap-One owns Discover — management wouldn\'t quantify.' },
-        src:'Q4 2025: Capital One credit portfolio renewed; network for a large portion of newly acquired credit accounts.', why:'A known overhang the renewal partly flips.' },
-      { rank:5, metric:'FY26 guide shape (H1<H2 on FX comps)', since:'Q4 2025', tags:['guidance','fx'],
-        pista:'Does the H1<H2 cadence play out as the FX-volatility comps normalize?', breaks:'H1 undershoots even the FX-comp-adjusted framing.',
-        seededBy:{ q:'Q4 2025', n:'Q4 set FY26 at the high end of low-double-digits cc, with H1 lower than H2 on tougher FX-volatility comps; the question was whether the shape holds.' },
-        src:'Q4 2025: FY26 net revenue guide high-end of low-double-digits cc; H1<H2 on FX-volatility comps.', why:'The shape drives the quarterly setups all year.' },
-    ],
     results:{
-      headline:'A solid print undercut by a conflict-driven guide-down: net revenue +12% cc, net income +15%, EPS +18% to $4.60 — but Q2 was cut to the low end of low-double-digits on the Middle-East conflict, with management assuming it ENDS in Q2 (FY cc guide unchanged; the raise is FX).',
+      // STUB summary — AI "Call summary — the minute" to author from the transcript. Seeded from the
+      // old results.headline + call.take prose (nothing deleted; relocated here).
+      summary:{ paras:[
+        { p:'<b>[STUB — AI summary to author from the transcript.]</b> A solid print undercut by a conflict-driven guide-down: net revenue +12% cc, net income +15%, EPS +18% to $4.60 — but Q2 was cut to the low end of low-double-digits on the Middle-East conflict, with management assuming it ENDS in Q2 (FY cc guide unchanged; the raise is FX).' },
+        { p:'A solid print whose <b>forward setup is one big assumption</b>: management cut Q2 to the low end of low-double-digits on the Middle-East conflict and built the whole H2 recovery on the conflict <b>ending in Q2</b> — while refusing to model any other scenario. Underneath, VAS (~40% of revenue, +18% cc organic) is doing the work and BVNK signals a real stablecoin-infrastructure pivot; the wobble is switched-transaction growth at 9%.' }
+      ] },
+      // notes carried over from the old scorecard[] (relocated, keyed by metric — CE_CONS names where
+      // they map, original labels otherwise so no prose is lost). // STUB numbers land via CE_CONS.
+      notes:{
+        'EPS':{ t:'Aided by discrete tax + buyback', h:'+18% on strong operating income, a lower Q1 tax rate (discrete SBC benefits), and a $0.10 buyback contribution.' },
+        'Switched transactions':{ t:'The soft metric', h:'Decelerated vs historical low-double/low-teens; Sachin: geographic + average-ticket mix (Russia exit; adding Japan/Mexico switching), not demand.' },
+        'VAS revenue':{ t:'~40% of revenue', h:'No acquisition impact (Recorded Future lapped); broad-based across security, digital/authentication, insights, engagement.' },
+        'Cross-border volume':{ t:'CNP ex-travel +18%', h:'Overall cross-border healthy; the weakness is specifically travel from the conflict.' },
+        'Q2 net-revenue guide (conflict cut)':{ t:'The real news in the print', h:'Cut on the Middle-East conflict; without it, Q2 "would have been generally in line with Q1." Assumes the conflict ends in Q2. FY currency-neutral guide unchanged.' },
+        'Cross-border travel (April run-rate)':{ t:'The conflict, made visible', h:'Sachin ranked the drivers: (1) conflict, (2) portfolio shifts, (3) Ramadan/Easter timing. GCC+Israel ≈ 6% of cross-border volume.' }
+      },
+      // watch{metric:rank} carried from old scorecard[].watchRank (keyed by CE_CONS metric name).
+      watch:{ 'Cross-border volume':2, 'Switched transactions':3, 'VAS revenue':4 },
       thesisCheck:[
         {line:'VAS holds high-teens organically', tripped:false, note:'VAS +18% cc with no acquisition impact — held.'},
         {line:'Consumer / cross-border resilient', tripped:false, note:'Cross-border +13%; CNP ex-travel +18%; consumer healthy — held, but travel dented by the conflict (watch).'},
         {line:'Switched growth re-accelerates off Cap-One', tripped:true, note:'⚑ Switched +9% (+10% ex-Cap-One) — decelerated vs history on geographic/ticket mix; did not re-accelerate.'},
         {line:'Capital One credit volume retained', tripped:false, note:'Migration "basically complete"; management reaffirmed the value but wouldn\'t quantify retained volume — held, unproven.'},
-        {line:'FY26 H1<H2 shape intact', tripped:false, note:'Reaffirmed; conflict makes Q2 the trough, recovering H2 — held on the assumption the war ends in Q2.'},
-      ],
-      scorecard:[
-        {metric:'Q2 net-revenue guide (conflict cut)', cons:null, actual:'low end of low-double-digits (cc)', result:'nocons', surprise:75, watchRank:null, note:{t:'The real news in the print',h:'Cut on the Middle-East conflict; without it, Q2 "would have been generally in line with Q1." Assumes the conflict ends in Q2. FY currency-neutral guide unchanged.'}},
-        {metric:'Cross-border travel (April run-rate)', cons:null, actual:'~2% (from 8% in Q1)', result:'miss', surprise:65, watchRank:2, note:{t:'The conflict, made visible',h:'Sachin ranked the drivers: (1) conflict, (2) portfolio shifts, (3) Ramadan/Easter timing. GCC+Israel ≈ 6% of cross-border volume.'}},
-        {metric:'EPS', cons:null, actual:'$4.60 (+18%)', result:'beat', surprise:55, watchRank:null, note:{t:'Aided by discrete tax + buyback',h:'+18% on strong operating income, a lower Q1 tax rate (discrete SBC benefits), and a $0.10 buyback contribution.'}},
-        {metric:'Switched transactions', cons:null, actual:'+9% (+10% ex-Cap One)', result:'miss', surprise:50, watchRank:3, note:{t:'The soft metric',h:'Decelerated vs historical low-double/low-teens; Sachin: geographic + average-ticket mix (Russia exit; adding Japan/Mexico switching), not demand.'}},
-        {metric:'Value-added services revenue', cons:null, actual:'+18% cc (organic)', result:'beat', surprise:40, watchRank:4, note:{t:'~40% of revenue',h:'No acquisition impact (Recorded Future lapped); broad-based across security, digital/authentication, insights, engagement.'}},
-        {metric:'Net income', cons:null, actual:'+15%', result:'beat', surprise:40, watchRank:null},
-        {metric:'Cross-border volume', cons:null, actual:'+13%', result:'inline', surprise:25, watchRank:2, note:{t:'CNP ex-travel +18%',h:'Overall cross-border healthy; the weakness is specifically travel from the conflict.'}},
-        {metric:'Net revenue', cons:null, actual:'+12% cc', result:'inline', surprise:25, watchRank:null},
-        {metric:'Worldwide GDV', cons:null, actual:'+7%', result:'inline', surprise:15, watchRank:null},
+        {line:'FY26 H1<H2 shape intact', tripped:false, note:'Reaffirmed; conflict makes Q2 the trough, recovering H2 — held on the assumption the war ends in Q2.'}
       ],
       intoCall:[
         'What happens to the guide if the Middle-East conflict does NOT end in Q2?',
         'What are the real economics (take rate) of BVNK / stablecoin infrastructure?',
-        'Is the switched-transaction decel to 9% mix (transitory) or structural?',
+        'Is the switched-transaction decel to 9% mix (transitory) or structural?'
       ],
       priceReaction:'to fill from a trusted source' },
+    // call block KEPT as data — only call.highlights renders (via ceHighlightsBlock, "Also on the call").
     call:{
       take:'A solid print whose <b>forward setup is one big assumption</b>: management cut Q2 to the low end of low-double-digits on the Middle-East conflict and built the whole H2 recovery on the conflict <b>ending in Q2</b> — while refusing to model any other scenario. Underneath, VAS (~40% of revenue, +18% cc organic) is doing the work and BVNK signals a real stablecoin-infrastructure pivot; the wobble is switched-transaction growth at 9%.',
       highlights:[
@@ -1634,72 +1621,56 @@ var CALL_PREP = { ticker:'MA', quarters:[
         { tag:'watch', band:'logged', head:'Agentic: Agent Pay now on nearly all Mastercards; Verifiable Intent a <b>FIDO standard</b>; OpenAI deepened.',
           detail:'<p>Tien-Tsin Huang asked on volumes; Michael: still early, no volumes, but the trust/standards layer (Verifiable Intent, Agent Pay, Crossmint) is being set. B2B agentic (Agent Suite) framed as the bigger, later opportunity.</p>' },
         { tag:'thesis', band:'logged', head:'Deal wins: <b>Amazon US small-business co-brand → Mastercard</b>; Westpac renewal; CIB Egypt (5M cards).',
-          detail:'<p>The Amazon US SMB co-brand (issued by U.S. Bank) moves to Mastercard from another network; affluent momentum via World Legend (3x higher cross-border spend vs World Elite) and Mastercard One Credential (SoFi Smart Card).</p>' },
+          detail:'<p>The Amazon US SMB co-brand (issued by U.S. Bank) moves to Mastercard from another network; affluent momentum via World Legend (3x higher cross-border spend vs World Elite) and Mastercard One Credential (SoFi Smart Card).</p>' }
       ],
       dots:'The two loudest strategic stories — the <b>conflict-driven guide</b> and <b>BVNK</b> — are both bets on things management can\'t fully see: a ceasefire timeline and an unproven stablecoin take rate. Underneath, the durable engine (VAS ~40% of revenue) held and the one real wobble (switched transactions at 9%) was explained as mix. The print is fine; the <b>forward</b> is an assumption stack.',
       threeMinutes:[
         '<b>Solid quarter, but the Q2/H2 setup hinges on one assumption: the Middle-East conflict ends in Q2.</b> Cross-border travel already fell from 8% to 2% growth; GCC+Israel is ~6% of cross-border. Management sized it but refused to model a longer war, and the FY currency-neutral guide is unchanged (the raise is FX). The debate isn\'t the print — it\'s whether the guide\'s central assumption holds.',
         '<b>BVNK is the strategic tell: Mastercard is buying into stablecoin infrastructure, not just co-brands.</b> Economics are "bps on volume" in a market they don\'t touch today (accretive, per Sachin), aimed at payouts / remittances / B2B cross-border. Treat it as new-flows optionality and watch for the first real volume or take-rate disclosure.',
-        '<b>VAS at ~40% of revenue and +18% cc organic is carrying the model</b> — security (Recorded Future), Ethoca, the consulting flywheel. The switched-transaction decel to 9% is mix (geography, average ticket), not demand — but it\'s the metric to keep honest.',
+        '<b>VAS at ~40% of revenue and +18% cc organic is carrying the model</b> — security (Recorded Future), Ethoca, the consulting flywheel. The switched-transaction decel to 9% is mix (geography, average ticket), not demand — but it\'s the metric to keep honest.'
       ],
       notBringing:[
         {item:'CCCA / credit rate-cap regulatory', why:'Long-standing; "all but dead for now," no near-term resolution or direct model impact (Mastercard doesn\'t set rates).'},
         {item:'SessionM disposition', why:'Small, one-time (the loyalty-business sale); clarified on the call, not thesis-moving.'},
-        {item:'Individual deal wins (Amazon SMB, Westpac)', why:'Confirm momentum but everyone has the release — not a debate.'},
+        {item:'Individual deal wins (Amazon SMB, Westpac)', why:'Confirm momentum but everyone has the release — not a debate.'}
       ],
       newQuestions:[
         {n:'What happens to the guide if the Middle-East conflict does not end in Q2?', landed:{q:'Q2 2026', rank:1}, tripped:false},
         {n:'What are the real economics (take rate) of BVNK / stablecoin infrastructure?', landed:{q:'Q2 2026', rank:2}},
         {n:'Is the switched-transaction decel to 9% mix (transitory) or structural?', landed:{q:'Q2 2026', rank:3}},
         {n:'Does organic VAS hold high-teens as Recorded Future laps?', landed:{q:'Q2 2026', rank:4}},
-        {n:'Do rebates & incentives stay contained, keeping net yield rising?', landed:{q:'Q2 2026', rank:5}},
+        {n:'Do rebates & incentives stay contained, keeping net yield rising?', landed:{q:'Q2 2026', rank:5}}
       ] } },
 
   // ── REPORTED: Q4 2025 (quarter ended Dec 2025; reported Jan 29 2026) ──
   { q:'Q4 2025', status:'reported', date:'January 29, 2026',
-    setup:{ source:'Bloomberg BST consensus (archived) — precise figures to backfill',
+    setup:{ source:'Bloomberg BST consensus (archived) — precise figures to backfill', us:null,
+      debate:{ rows:null, synth:null },
       pricedIn:'A strong close to 2025: net revenue low-teens cc, VAS ~20%, cross-border healthy, switched double digits. The overhang was the Capital One debit loss to Discover; the open question was FY26 framing and the shape of the year.',
       oneLiner:'The bar was "finish 2025 strong and set a credible FY26" — Mastercard beat (+15% cc, VAS +22%), renewed Capital One CREDIT, and framed FY26 at the high end of low-double-digits.' },
-    watchList:[
-      { rank:1, metric:'VAS growth durability', since:'Q3 2025', tags:['vas'],
-        pista:'Does VAS hold ~20% cc, and what is the clean organic rate ex-acquisitions?', breaks:'Organic VAS decelerates toward mid-teens.',
-        src:'Q3 2025: VAS growth ~20%+ cc.', why:'The engine and the differentiator.' },
-      { rank:2, metric:'Capital One debit loss / network share', since:'Q3 2025', tags:['capital-one','switched-transactions'],
-        pista:'How much does the Capital One debit migration to Discover drag switched volume, and is credit at risk?', breaks:'Credit also migrates, compounding the debit loss.',
-        src:'Q3 2025: Capital One debit migration to Discover underway, a switched-volume drag.', why:'The single biggest client overhang.' },
-      { rank:3, metric:'Cross-border & consumer health', since:'Q3 2025', tags:['cross-border','consumer'],
-        pista:'Does cross-border stay double digits and the consumer stay healthy into year-end?', breaks:'Cross-border slips below low-double-digits or consumer softens.',
-        src:'Q3 2025: cross-border healthy; consumer resilient.', why:'The demand pulse.' },
-      { rank:4, metric:'FY26 guide / FX-volatility comps', since:'Q3 2025', tags:['guidance','fx'],
-        pista:'Where does FY26 land, and how do the 2025 FX-volatility comps shape the cadence?', breaks:'FY26 guide comes in below low-double-digits cc.',
-        src:'Q3 2025: elevated FX-volatility revenue in H1 2025 flagged as a future comp.', why:'Sets the whole year\'s setup.' },
-      { rank:5, metric:'Stablecoin / agentic positioning', since:'Q3 2025', tags:['stablecoin','agentic'],
-        pista:'How is Mastercard positioning in stablecoins and agentic commerce as the space accelerates?', breaks:'Mastercard is left behind on standards/economics.',
-        src:'Q3 2025: Agent Pay launched; stablecoin settlement expanding.', why:'The emerging-rails optionality.' },
-    ],
     results:{
-      headline:'A strong close to 2025: net revenue +15% cc, VAS +22% cc (+19% ex-acq), EPS $4.76 (+20%) — and, strategically, the Capital One CREDIT renewal flips a known overhang; FY26 framed at the high end of low-double-digits cc with H1<H2.',
+      summary:{ paras:[
+        { p:'<b>[STUB — AI summary to author from the transcript.]</b> A strong close to 2025: net revenue +15% cc, VAS +22% cc (+19% ex-acq), EPS $4.76 (+20%) — and, strategically, the Capital One CREDIT renewal flips a known overhang; FY26 framed at the high end of low-double-digits cc with H1<H2.' },
+        { p:'A strong finish to 2025 (+15% cc, VAS +22%) with a strategic win underneath: the <b>Capital One CREDIT renewal</b> partly flips the debit-loss overhang. FY26 was framed at the high end of low-double-digits cc with an H1<H2 shape that is an FX-comp story, not a demand story — funded by a Q1 restructuring (~4% of staff).' }
+      ] },
+      notes:{
+        'Net revenue':{ t:'Acquisitions +1 PPT', h:'Broad-based across payment network and VAS.' },
+        'EPS':{ t:'Discrete tax + grants', h:'+20% on strong operating income, a positive discrete tax item, and government grants (opex benefit ~5.5 PPT; OI&E ~$135M).' },
+        'Capital One credit renewal':{ t:'The overhang flips', h:'After losing Cap-One debit to Discover, Mastercard renewed CREDIT and won a large portion of newly acquired credit accounts — a signal the network is valued. Management wouldn\'t quantify retained volume (Will Nance pushed).' },
+        'Q1 restructuring charge':{ t:'The strategic review', h:'One-time Q1 special item; frees capacity to reinvest in strategic priorities.' },
+        'FY26 net-revenue guide':{ t:'H1 < H2', h:'H1 lower than H2 on tougher FX-volatility comps from H1 2025.' }
+      },
+      watch:{ 'VAS revenue':1, 'Switched transactions':2, 'Cross-border volume':3 },
       thesisCheck:[
         {line:'VAS holds ~20% cc', tripped:false, note:'VAS +22% cc (+19% ex-acq) — held strongly, broad-based high-teens across regions.'},
         {line:'Capital One overhang contained', tripped:false, note:'Debit still migrating, but the CREDIT renewal + new accounts flips the narrative — held/improved.'},
         {line:'Cross-border / consumer healthy', tripped:false, note:'Cross-border +14%; consumer "savvy but healthy," unchanged QoQ — held.'},
-        {line:'Switched double digits', tripped:false, note:'Switched +10% despite the Cap-One debit drag — held.'},
-      ],
-      scorecard:[
-        {metric:'Capital One credit renewal', cons:null, actual:'renewed + new-account share', result:'nocons', surprise:60, watchRank:2, note:{t:'The overhang flips',h:'After losing Cap-One debit to Discover, Mastercard renewed CREDIT and won a large portion of newly acquired credit accounts — a signal the network is valued. Management wouldn\'t quantify retained volume (Will Nance pushed).'}},
-        {metric:'Net revenue', cons:null, actual:'+15% cc', result:'beat', surprise:50, watchRank:null, note:{t:'Acquisitions +1 PPT',h:'Broad-based across payment network and VAS.'}},
-        {metric:'Value-added services revenue', cons:null, actual:'+22% cc (+19% ex-acq)', result:'beat', surprise:55, watchRank:1},
-        {metric:'EPS', cons:null, actual:'$4.76 (+20%)', result:'beat', surprise:50, watchRank:null, note:{t:'Discrete tax + grants',h:'+20% on strong operating income, a positive discrete tax item, and government grants (opex benefit ~5.5 PPT; OI&E ~$135M).'}},
-        {metric:'Q1 restructuring charge', cons:null, actual:'~$200M · ~4% of workforce', result:'nocons', surprise:50, watchRank:null, note:{t:'The strategic review',h:'One-time Q1 special item; frees capacity to reinvest in strategic priorities.'}},
-        {metric:'FY26 net-revenue guide', cons:null, actual:'high end of low-double-digits (cc)', result:'nocons', surprise:45, watchRank:4, note:{t:'H1 < H2',h:'H1 lower than H2 on tougher FX-volatility comps from H1 2025.'}},
-        {metric:'Cross-border volume', cons:null, actual:'+14%', result:'beat', surprise:30, watchRank:3},
-        {metric:'Switched transactions', cons:null, actual:'+10%', result:'inline', surprise:20, watchRank:2},
-        {metric:'Worldwide GDV', cons:null, actual:'+7%', result:'inline', surprise:15, watchRank:null},
+        {line:'Switched double digits', tripped:false, note:'Switched +10% despite the Cap-One debit drag — held.'}
       ],
       intoCall:[
         'How much Capital One credit volume actually stays given Discover ownership?',
         'What is the clean organic VAS rate as acquisitions lap?',
-        'Does the H1<H2 FX-comp cadence hold?',
+        'Does the H1<H2 FX-comp cadence hold?'
       ],
       priceReaction:'to fill from a trusted source' },
     call:{
@@ -1719,505 +1690,1073 @@ var CALL_PREP = { ticker:'MA', quarters:[
         { tag:'watch', band:'logged', head:'Regulatory: <b>CCCA "all but dead for now"</b>; credit rate-cap chatter (Frisch).',
           detail:'<p>Little progress on CCCA since 2023; united opposition. A separate credit rate-cap idea "only a tweet away" but Mastercard doesn\'t set rates — engaged as an "industry custodian."</p>' },
         { tag:'thesis', band:'logged', head:'Apple Card stays Mastercard (JPMorgan issuer in ~24 months); Mastercard Move +35%.',
-          detail:'<p>Apple Card remains on Mastercard through the issuer transition to JPMorgan (~24 months out). Mastercard Move transaction growth exceeded 35% in Q4 and FY25; ~40% of transactions tokenized.</p>' },
+          detail:'<p>Apple Card remains on Mastercard through the issuer transition to JPMorgan (~24 months out). Mastercard Move transaction growth exceeded 35% in Q4 and FY25; ~40% of transactions tokenized.</p>' }
       ],
       dots:'The Capital One credit renewal quietly de-risked the biggest client overhang, and VAS (+22%) kept the algorithm compounding — but the FY26 shape (H1<H2) planted an FX-comp tension that, combined with the switched-transaction mix drag, is exactly what set up the softer Q1 optics and the conflict-driven Q2 cut that followed.',
       threeMinutes:[
         '<b>Strong close to 2025 and a real strategic win: the Capital One CREDIT renewal flips a known overhang.</b> After losing Cap-One debit to Discover, keeping and expanding credit signals the network\'s value — the open question is how much volume actually stays given Discover ownership.',
         '<b>FY26 is framed high-end-of-low-double-digits cc with H1<H2 — an FX-volatility-comp story, not a demand story.</b> The Q1 ~$200M restructuring (4% of staff) funds reinvestment. Read the H1 softness as comps, not weakness.',
-        '<b>VAS +22% cc (+19% ex-acq) stays the engine</b>, broad-based; Recorded Future / Threat Intelligence scaling. The government grants are a flagged one-time-ish tailwind to keep in mind on opex and OI&E.',
+        '<b>VAS +22% cc (+19% ex-acq) stays the engine</b>, broad-based; Recorded Future / Threat Intelligence scaling. The government grants are a flagged one-time-ish tailwind to keep in mind on opex and OI&E.'
       ],
       notBringing:[
         {item:'Government grants', why:'Real but flagged one-time-ish; don\'t extrapolate the opex/OI&E benefit into the run-rate.'},
         {item:'CCCA', why:'"All but dead for now"; no near-term resolution.'},
-        {item:'Apple Card issuer change', why:'Mastercard stays; the JPMorgan issuer move is ~24 months out — not thesis-moving.'},
+        {item:'Apple Card issuer change', why:'Mastercard stays; the JPMorgan issuer move is ~24 months out — not thesis-moving.'}
       ],
       newQuestions:[
         {n:'Can VAS hold high-teens organically as Recorded Future laps?', landed:{q:'Q1 2026', rank:1}},
         {n:'Does the healthy consumer / cross-border hold into 2026?', landed:{q:'Q1 2026', rank:2}},
         {n:'Does switched growth re-accelerate as the Cap-One debit migration completes?', landed:{q:'Q1 2026', rank:3}},
         {n:'How much Capital One credit volume actually stays?', landed:{q:'Q1 2026', rank:4}},
-        {n:'Does the FY26 H1<H2 FX-comp shape play out?', landed:{q:'Q1 2026', rank:5}},
-      ] } },
+        {n:'Does the FY26 H1<H2 FX-comp shape play out?', landed:{q:'Q1 2026', rank:5}}
+      ] } }
 ]};
 
-function cpUpcoming(){ return CALL_PREP.quarters.filter(function(q){ return q.status==='upcoming'; })[0]||null; }
-function cpFill(x, muted){ return (x!=null && String(x).trim()!=='') ? x : '<span class="cp-empty">'+(muted||'— to fill')+'</span>'; }
-var CP_POP={};
-function cpReg(id, t, h){ CP_POP[id]={t:t, h:h}; return id; }
-function cpQ(id, t, h){ return '<span class="cp-info ov-clickable" data-detail="cp:'+cpReg(id,t,h)+'" title="'+esc(String(t).replace(/<[^>]+>/g,''))+'">?</span>'; }
-function cpStyle(){
-  return '<style>.cp-note{font-size:11px;color:var(--mu);line-height:1.5;background:#F7F9FB;border:1px solid var(--bdr);border-radius:9px;padding:9px 12px;margin:0 0 12px}'+
-    '.cp-phtabs{display:inline-flex;gap:3px;background:rgba(207,10,44,0.06);border:1px solid var(--bdr);border-radius:9px;padding:4px;margin:0 0 20px}'+
-    '.cp-phtab{background:none;border:none;color:var(--mu);font-family:\'Inter\',sans-serif;font-size:12px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;padding:7px 16px;border-radius:6px;cursor:pointer;transition:all .15s}'+
-    '.cp-phtab:hover{color:var(--navy)}.cp-phtab.active{background:'+BRAND+';color:#fff}'+
-    '.cp-phpane[hidden]{display:none}'+
-    '.cp-qpills{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}'+
-    '.cp-qpill{border:1px solid var(--bdr);background:var(--w);font:inherit;font-size:11px;font-weight:800;color:var(--mu);padding:5px 13px;border-radius:999px;cursor:pointer;transition:.12s}'+
-    '.cp-qpill:hover{color:var(--navy)}.cp-qpill.active{background:'+BRAND+';color:#fff;border-color:'+BRAND+'}'+
-    '.cp-qpill .cp-qtag{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-left:6px;opacity:.75}'+
-    '.cp-qblock[hidden]{display:none}'+
-    '.cp-frozen{display:inline-block;font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;background:'+GRAY+';border-radius:20px;padding:2px 8px;margin-left:7px;vertical-align:middle}'+
-    '.cp-wl-tagbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 12px;padding:9px 12px;background:#F7F9FB;border:1px solid var(--bdr);border-radius:10px}'+
-    '.cp-wl-tag{border:1px solid rgba(122,90,248,0.35);background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:'+PURPLE+';padding:3px 10px;border-radius:999px;cursor:pointer;transition:.12s}'+
-    '.cp-wl-tag:hover{background:rgba(122,90,248,0.08)}.cp-wl-tag.active{background:'+PURPLE+';color:#fff;border-color:'+PURPLE+'}'+
-    '.cp-wl-clear{border-color:var(--bdr);color:var(--mu)}'+
-    '.cp-wl-add-btn{margin-left:auto;border:1px dashed '+BRAND+';background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:'+BRAND+';padding:3px 10px;border-radius:999px;cursor:pointer}'+
-    '.cp-wl-addform{display:flex;flex-direction:column;gap:7px;border:1px dashed '+BRAND+';border-radius:10px;padding:12px;margin:0 0 12px;background:rgba(207,10,44,0.03)}'+
-    '.cp-wl-addform[hidden]{display:none}'+
-    '.cp-wl-in{font:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:7px 10px;background:var(--w);color:var(--navy)}'+
-    '.cp-wl-add-go{font:inherit;font-size:11px;font-weight:800;border:none;border-radius:8px;padding:6px 13px;background:'+BRAND+';color:#fff;cursor:pointer}'+
-    '.cp-wl-all[hidden]{display:none}.cp-w[data-wlhide]{display:none}'+
-    '.cp-empty{color:var(--mu);font-style:italic;opacity:.7}'+
-    '.cp-grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0}@media(max-width:640px){.cp-grid4{grid-template-columns:1fr 1fr}}'+
-    '.cp-cell{border:1px solid var(--bdr);border-top:3px solid '+BLUE+';border-radius:10px;padding:11px 13px;background:var(--w)}'+
-    '.cp-cell-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}.cp-cell-v{font-size:15px;font-weight:800;color:var(--navy);margin-top:3px;line-height:1.2}'+
-    '.cp-ev-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
-    '.cp-ev-pill.active{background:'+BRAND+';color:#fff}'+
-    '.cp-cell-custom{border-top-color:'+YELLOW+'}'+
-    '.cp-row-cap{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:2px 0 4px}'+
-    '.cp-val{display:flex;align-items:baseline;gap:7px}'+
-    '.cp-val-lab{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:1px 7px;flex:none}'+
-    '.cp-val-cons .cp-val-lab{background:rgba(37,87,214,0.10);color:'+BLUE+'}'+
-    '.cp-val-us .cp-val-lab{background:rgba(22,163,74,0.12);color:'+BRAND2+'}'+
-    '.cp-evwrap[data-ev="cons"] .cp-val-us{display:none}'+
-    '.cp-evwrap[data-ev="us"] .cp-val-cons{display:none}'+
-    '.cp-evwrap:not([data-ev="both"]) .cp-val-lab{display:none}'+
-    '.cp-evwrap[data-ev="both"] .cp-cell-v{font-size:13px}'+
-    '.cp-evwrap[data-ev="both"] .cp-val{margin-top:3px}'+
-    '.cp-banner{border:1px solid var(--bdr);border-left:4px solid '+BRAND+';border-radius:11px;padding:13px 15px;background:linear-gradient(180deg,rgba(207,10,44,0.05),transparent);font-size:12.5px;line-height:1.6;color:var(--navy);margin:12px 0}'+
-    '.cp-watch{display:flex;flex-direction:column;gap:11px}'+
-    '.cp-w{border:1px solid var(--bdr);border-radius:12px;padding:13px 15px;background:var(--w);position:relative}'+
-    '.cp-w-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}'+
-    '.cp-w-rank{width:26px;height:26px;border-radius:50%;background:'+BRAND+';color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}'+
-    '.cp-w-metric{font-size:13.5px;font-weight:800;color:var(--navy)}'+
-    '.cp-w-q{display:flex;gap:8px;align-items:flex-start;background:#10141A;color:#fff;border-radius:9px;padding:9px 12px;font-size:11.5px;line-height:1.5;margin-top:8px}.cp-w-q .mic{flex:none}'+
-    '.cp-kind{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:2px 8px;white-space:nowrap;border:1px solid}'+
-    '.cp-phase{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;border-radius:20px;padding:3px 10px;margin-bottom:8px}'+
-    '.cp-info{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:'+AMBER+';color:#fff;font-size:10px;font-weight:800;cursor:pointer;margin-left:5px;vertical-align:middle;flex:none}'+
-    '.cp-info:hover{filter:brightness(1.1)}'+
-    '.cp-debate{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:4px 0}@media(max-width:600px){.cp-debate{grid-template-columns:1fr}}'+
-    '.cp-dc{border:1px solid var(--bdr);border-radius:12px;padding:13px 15px;background:var(--w)}'+
-    '.cp-dc.fear{border-top:4px solid '+RED+';background:linear-gradient(180deg,rgba(234,67,53,0.04),transparent)}'+
-    '.cp-dc.real{border-top:4px solid '+BRAND2+';background:linear-gradient(180deg,rgba(22,163,74,0.05),transparent)}'+
-    '.cp-dc-h{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}'+
-    '.cp-dc.fear .cp-dc-h{color:'+RED+'}.cp-dc.real .cp-dc-h{color:'+BRAND2+'}'+
-    '.cp-dc-b{font-size:12.5px;font-weight:700;color:var(--navy);line-height:1.4}'+
-    '.cp-mech{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}'+
-    '.cp-mech-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;border:1px solid var(--bdr);border-radius:9px;padding:7px 12px;background:var(--w);color:var(--navy)}'+
-    '.cp-mech-ar{font-size:15px;color:var(--mu)}'+
-    '.cp-synth{border-left:4px solid var(--navy);background:#10141A;color:#fff;border-radius:11px;padding:13px 16px;font-size:13px;font-weight:700;line-height:1.5;margin:6px 0}.cp-synth b{color:#FF9F00}'+
-    '.cp-why-btn{display:inline-block;font-size:10px;font-weight:800;color:'+BLUE+';cursor:pointer;margin-top:8px}'+
-    '.cp-w-chips{display:flex;gap:7px;flex-wrap:wrap;margin:6px 0 0}'+
-    '.cp-w-chip{font-size:10px;font-weight:700;border-radius:7px;padding:4px 9px;line-height:1.3}'+
-    '.cp-w-chip.cons{background:rgba(37,87,214,0.08);border:1px solid rgba(37,87,214,0.28);color:var(--navy)}'+
-    '.cp-w-chip.red{background:rgba(234,67,53,0.06);border:1px solid rgba(234,67,53,0.28);color:var(--navy)}'+
-    '.cp-w-chip b{font-weight:800}'+
-    '.cp-take{border-left:4px solid '+BRAND+';background:#10141A;color:#fff;border-radius:11px;padding:13px 16px;font-size:13px;font-weight:700;line-height:1.5;margin:2px 0 14px}.cp-take b{color:#FF9F00}'+
-    '.cp-hl{display:flex;flex-direction:column;gap:8px}'+
-    '.cp-hl-row{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center;border:1px solid var(--bdr);border-left:4px solid var(--hc);border-radius:10px;padding:10px 13px;background:var(--w);cursor:pointer;transition:.12s}'+
-    '.cp-hl-row:hover{box-shadow:0 3px 10px rgba(0,0,0,.08)}'+
-    '.cp-hl-tag{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;background:var(--hc);border-radius:20px;padding:3px 9px;white-space:nowrap}'+
-    '.cp-hl-head{font-size:12.5px;font-weight:700;color:var(--navy);line-height:1.4}'+
-    '.cp-hl-more{font-size:15px;color:var(--hc);font-weight:800}'+
-    '@media(max-width:560px){.cp-hl-row{grid-template-columns:auto 1fr}.cp-hl-more{display:none}}'+
-    '.cp-dots{border:1px dashed '+BRAND+';border-radius:11px;padding:12px 15px;margin-top:14px;background:rgba(207,10,44,0.03);font-size:12px;line-height:1.6;color:var(--navy)}.cp-dots b{color:'+BRAND+'}'+
-    '.cp-tc{display:flex;flex-direction:column;gap:6px}'+
-    '.cp-tc-row{display:flex;gap:9px;align-items:flex-start;font-size:11.5px;color:var(--navy);line-height:1.45;border:1px solid var(--bdr);border-radius:9px;padding:8px 11px}'+
-    '.cp-tbl{width:100%;border-collapse:collapse;font-size:11.5px}'+
-    '.cp-tbl th{text-align:left;color:var(--mu);font-weight:700;padding:7px 10px;border-bottom:1px solid var(--bdr);font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}'+
-    '.cp-tbl td{padding:9px 10px;border-bottom:1px solid var(--bdr);color:var(--navy);line-height:1.45;vertical-align:top}'+
-    '.cp-pill{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 9px;white-space:nowrap}'+
-    '.cp-sc{display:flex;flex-direction:column;gap:6px}'+
-    '.cp-sc-row{display:grid;grid-template-columns:78px 1.1fr 1fr 1.2fr 92px auto;gap:10px;align-items:center;border:1px solid var(--bdr);border-left:4px solid var(--sc);border-radius:9px;padding:8px 12px}'+
-    '.cp-sc-m{font-size:12px;font-weight:800;color:var(--navy)}.cp-sc-c{font-size:11px;color:var(--mu)}.cp-sc-a{font-size:11.5px;font-weight:700;color:var(--navy)}'+
-    '.cp-sc-v{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 10px;background:var(--sc);white-space:nowrap}'+
-    '.cp-sc-rk{font-size:9px;font-weight:800;color:'+BRAND+';background:rgba(207,10,44,0.10);border:1px solid rgba(207,10,44,0.3);border-radius:20px;padding:2px 8px;white-space:nowrap;text-align:center}'+
-    '.cp-sc-rk.blank{background:transparent;border:none}'+
-    '.cp-sc-surp{font-size:9.5px;font-weight:800;text-align:center;letter-spacing:.02em;border-radius:20px;padding:2px 8px;white-space:nowrap}'+
-    '.cp-sc-surp.hi{color:'+RED+';background:rgba(234,67,53,0.09);border:1px solid rgba(234,67,53,0.3)}'+
-    '.cp-sc-surp.md{color:'+AMBER+';background:rgba(183,121,31,0.09);border:1px solid rgba(183,121,31,0.3)}'+
-    '.cp-sc-surp.lo{color:var(--mu);background:transparent;border:1px solid var(--bdr)}'+
-    '.cp-legend{display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:#F7F9FB;border:1px solid var(--bdr);border-radius:10px;padding:10px 13px;margin:0 0 10px}'+
-    '.cp-legend-i{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--navy);line-height:1.4}'+
-    '.cp-legend-i b{font-weight:800}'+
-    '@media(max-width:600px){.cp-sc-row{grid-template-columns:1fr auto}.cp-sc-c,.cp-sc-a,.cp-sc-bw,.cp-sc-rk{display:none}}'+
-    '.cp-band{margin:16px 0 8px;display:flex;align-items:center;gap:9px}'+
-    '.cp-band-i{font-size:13px;font-weight:800;color:var(--bc);line-height:1}'+
-    '.cp-band-t{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--bc)}'+
-    '.cp-band-s{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
-    '.cp-band-l{flex:1;height:1px;background:var(--bdr)}'+
-    '@media(max-width:560px){.cp-band-s{display:none}}'+
-    '.cp-hl-open{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:'+AMBER+';border:1px solid '+AMBER+';border-radius:20px;padding:2px 7px;white-space:nowrap;margin-left:7px;vertical-align:middle}'+
-    '.cp-3m{border:1px solid var(--bdr);border-top:4px solid '+BRAND+';border-radius:12px;padding:15px 17px;margin:16px 0 0;background:linear-gradient(180deg,rgba(207,10,44,0.05),transparent)}'+
-    '.cp-3m-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:10px}'+
-    '.cp-3m-t{font-size:12.5px;font-weight:800;color:var(--navy)}'+
-    '.cp-3m-sub{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
-    '.cp-3m-copy{margin-left:auto;border:1px solid '+BRAND+';background:var(--w);font:inherit;font-size:10px;font-weight:800;color:'+BRAND+';padding:3px 11px;border-radius:999px;cursor:pointer;transition:.12s}'+
-    '.cp-3m-copy:hover{background:'+BRAND+';color:#fff}'+
-    '.cp-3m-l{display:flex;flex-direction:column;gap:8px;counter-reset:m3}'+
-    '.cp-3m-i{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;font-size:12.5px;line-height:1.55;color:var(--navy)}'+
-    '.cp-3m-i::before{counter-increment:m3;content:counter(m3);width:20px;height:20px;border-radius:50%;background:'+BRAND+';color:#fff;font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px}'+
-    '.cp-nb{margin-top:13px;border-top:1px dashed var(--bdr);padding-top:11px}'+
-    '.cp-nb-h{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:6px}'+
-    '.cp-nb-r{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;font-size:11px;line-height:1.5;color:var(--mu);padding:2px 0}'+
-    '.cp-nb-r b{color:var(--navy);font-weight:800}'+
-    '.cp-nb-x{color:'+GRAY+';font-weight:800;flex:none}'+
-    '.cp-seed{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:800;color:'+PURPLE+';background:rgba(122,90,248,0.08);border:1px solid rgba(122,90,248,0.3);border-radius:20px;padding:2px 9px;white-space:nowrap;flex:none}'+
-    '.cp-nq{display:flex;flex-direction:column;gap:5px}'+
-    '.cp-nq-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border:1px solid var(--bdr);border-left:3px solid '+PURPLE+';border-radius:9px;padding:7px 11px;font-size:11.5px;color:var(--navy);line-height:1.45}'+
-    '.cp-nq-land{font-size:9.5px;font-weight:800;color:'+PURPLE+';white-space:nowrap}'+
-    '.cp-nq-land.open{color:var(--mu)}'+
-    '@media(max-width:560px){.cp-nq-row{grid-template-columns:1fr}.cp-nq-land{margin-top:3px}}'+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// WATCH LIST — THE TABLE (v2.10 · ported flat WL_ROWS). One flat array of rows across quarters.
+// Migrated from the per-quarter watchList[] arrays: metric→theme, why/pista/breaks→definition (folded,
+// not rendered separately), since→trackSince, + id/q/trackUntil/seededBy/src/thread. The LIVE
+// (upcoming) quarter shows only OPEN hooks (trackSince, no trackUntil). `rank` orders, never labels.
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+var WL_ROWS=[
+  // ── Q2 2026 · UPCOMING — the live list. Open hooks only. ──
+  { id:'wl001', q:'Q2 2026', rank:1, theme:'Middle-East conflict vs the "ends in Q2" base case',
+    tags:['cross-border','travel','geopolitics'], trackSince:'Q1 2026', trackUntil:null,
+    definition:'The entire Q2 and H2 guide is predicated on one uncontrollable assumption; if it breaks, the reset is not in numbers yet. <b>Tell:</b> does cross-border travel recover progressively through H2 as guided — or does the conflict persist and break the central assumption behind the Q2/FY guide? <b>Red-line:</b> the conflict extends past Q2 and cross-border travel stays depressed, invalidating the guide\'s core assumption.',
+    seededBy:{ q:'Q1 2026', n:'Sachin explicitly built guidance on the conflict ENDING in Q2 and refused (to Adam Frisch) to model any alternative scenario; sized GCC+Israel at ~6% of cross-border volume.' },
+    src:'Q1 2026: cross-border travel growth fell from 8% (Q1) to 2% (first 4 weeks of April) on conflict + portfolio shifts + Ramadan/Easter timing; Q2 guided to the low end of low-double-digits.',
+    thread:[ {q:'Q4 2025',n:'Consumer healthy; no conflict in the guide; FY26 set at high-end of low-double-digits cc.'},{q:'Q1 2026',n:'Conflict from late Feb; Q2 cut; "ends in Q2" assumed; ~6% of cross-border exposed.'} ] },
+  { id:'wl002', q:'Q2 2026', rank:2, theme:'BVNK / stablecoin economics',
+    tags:['stablecoin','bvnk','new-flows'], trackSince:'Q1 2026', trackUntil:null,
+    definition:'This is the strategic pivot from crypto co-brands (card economics) into owning stablecoin infrastructure — the size of the accretion is unproven. <b>Tell:</b> first real disclosure — take rate, volume, or margin — on stablecoin infrastructure vs the current "basis points on volume, accretive" framing; plus the deal close. <b>Red-line:</b> the disclosed bps economics prove immaterial or dilutive vs card/network economics.',
+    seededBy:{ q:'Q1 2026', n:'Matt O\'Neill pushed on stablecoin economics; Sachin said BVNK\'s model is "basis points on volume" in "an addressable market we don\'t participate in today" — accretive, but no numbers.' },
+    src:'Q1 2026: planned BVNK acquisition (interoperability/licensing/compliance layer for send/receive/convert/hold stablecoins); use cases payouts, remittances, me-to-me, B2B cross-border.',
+    thread:[ {q:'Q4 2025',n:'Stablecoins framed as "another currency" on the network; MetaMask/Gemini co-brands; Ripple settlement.'},{q:'Q1 2026',n:'BVNK announced; economics = bps on volume; CLARITY Act "doesn\'t hold us back."'} ] },
+  { id:'wl003', q:'Q2 2026', rank:3, theme:'Switched-transaction growth trajectory',
+    tags:['switched-transactions','mix'], trackSince:'Q1 2026', trackUntil:null,
+    definition:'Switched transactions are the data engine that feeds VAS — a persistent decel would quietly cap the whole virtuous-cycle algorithm. <b>Tell:</b> does ex-Capital-One switched growth re-accelerate above ~10% as geographic/ticket mix normalizes, or keep drifting down from the historical low-teens? <b>Red-line:</b> switched-transaction growth decelerates further, signaling a structural mix drag rather than a Cap-One/timing effect.',
+    seededBy:{ q:'Q1 2026', n:'Harshita Rawat pushed on switched growth decelerating to 9% (10% ex-Cap One) vs historical low-double/low-teens; Sachin attributed it to geographic/average-ticket mix (Russia exit, adding Japan/Mexico).' },
+    src:'Q1 2026: switched transactions +9% (+10% ex-Capital One debit migration); >70% of Mastercard transactions now switched (vs 60% in 2020).',
+    thread:[ {q:'Q4 2025',n:'Switched +10%; contactless 77%; Cap One debit migration a drag.'},{q:'Q1 2026',n:'Switched +9% (+10% ex-Cap One); mix explanation; migration "basically complete."'} ] },
+  { id:'wl004', q:'Q2 2026', rank:4, theme:'VAS durability at ~40% of revenue',
+    tags:['vas','services'], trackSince:'Q1 2026', trackUntil:null,
+    definition:'VAS is the differentiator and the multiple support — the virtuous cycle only works if it keeps compounding faster than the network. <b>Tell:</b> does organic VAS hold high-teens as Recorded Future laps, and how much stays network-linked (~60%)? <b>Red-line:</b> organic VAS decelerates below mid-teens with no offsetting network acceleration.',
+    seededBy:{ q:'Q1 2026', n:'Jason Kupferberg clarified the 18% VAS growth was organic (Recorded Future lapped); the durability of the ~40%-of-revenue engine is the standing question.' },
+    src:'Q1 2026: VAS +18% cc (no acquisition impact); ~40% of company revenue; broad-based (security, digital/authentication, insights, consumer engagement).',
+    thread:[ {q:'Q4 2025',n:'VAS +22% cc (+19% ex-acq); FY25 +21%/+18% ex-acq; ~60% network-linked.'},{q:'Q1 2026',n:'VAS +18% cc organic; Recorded Future/Threat Intelligence 500+ customers; Ethoca +25%.'} ] },
+  { id:'wl005', q:'Q2 2026', rank:5, theme:'Rebates & incentives / net revenue yield',
+    tags:['incentives','pricing','renewals'], trackSince:'Q1 2026', trackUntil:null,
+    definition:'R&I is the contra-revenue competitive renewals drive — the tell on whether Mastercard is buying volume or being paid for value. <b>Tell:</b> do rebates & incentives as a % of payment-network assessments stay contained (guided slightly lower into Q2), keeping net revenue yield rising? <b>Red-line:</b> renewal competition forces R&I up as a % of assessments, compressing net yield.',
+    seededBy:{ q:'Q1 2026', n:'Andrew Schmidt asked on R&I trending; Sachin guided R&I as a % of payment-network assessments slightly lower sequentially into Q2, and noted net revenue yield is rising.' },
+    src:'Q1 2026: net revenue yield increasing; R&I guided slightly lower sequentially into Q2.',
+    thread:[ {q:'Q4 2025',n:'R&I flat-to-slightly-down sequentially; disciplined "win the right deals."'},{q:'Q1 2026',n:'R&I guided slightly lower into Q2; net yield rising.'} ] },
+  // ── Q1 2026 · REPORTED — frozen record. ──
+  { id:'wl006', q:'Q1 2026', rank:1, theme:'VAS durability (can high-teens hold as acq laps?)',
+    tags:['vas'], trackSince:'Q4 2025', trackUntil:'Q1 2026',
+    definition:'The engine and the multiple support. <b>Tell:</b> does organic VAS hold high-teens once Recorded Future is lapped? <b>Red-line:</b> organic VAS decelerates below mid-teens.',
+    seededBy:{ q:'Q4 2025', n:'Q4 VAS was +22% cc but +19% ex-acq; the question into Q1 was the clean organic rate as acquisitions lap.' },
+    src:'Q4 2025: VAS +22% cc (+19% ex-acq); FY25 +21%/+18% ex-acq.' },
+  { id:'wl007', q:'Q1 2026', rank:2, theme:'Consumer / cross-border resilience',
+    tags:['cross-border','consumer','travel'], trackSince:'Q4 2025', trackUntil:'Q1 2026',
+    definition:'The demand pulse and the highest-yield line. <b>Tell:</b> does the healthy consumer + cross-border hold into 2026? <b>Red-line:</b> cross-border volume growth slips below low-double-digits cc or the consumer softens.',
+    seededBy:{ q:'Q4 2025', n:'Q4 framed a "savvy, intentional" but healthy consumer; the standing question was whether it holds through 2026 macro/geopolitics.' },
+    src:'Q4 2025: cross-border +14%; consumer spend healthy and unchanged QoQ.' },
+  { id:'wl008', q:'Q1 2026', rank:3, theme:'Switched-transaction growth off the Cap-One drag',
+    tags:['switched-transactions'], trackSince:'Q4 2025', trackUntil:'Q1 2026',
+    definition:'The data engine feeding VAS. <b>Tell:</b> does switched growth re-accelerate as the Capital One debit migration completes? <b>Red-line:</b> switched growth stays depressed after the migration laps.',
+    seededBy:{ q:'Q4 2025', n:'Q4 switched +10% with the Cap-One debit migration a drag; the question was the underlying rate once it completes.' },
+    src:'Q4 2025: switched transactions +10%; Cap-One debit migration ongoing.' },
+  { id:'wl009', q:'Q1 2026', rank:4, theme:'Capital One credit volume retention',
+    tags:['capital-one','renewals'], trackSince:'Q4 2025', trackUntil:'Q1 2026',
+    definition:'A known overhang the renewal partly flips. <b>Tell:</b> how much Capital One credit volume actually stays given its Discover ownership? <b>Red-line:</b> Cap-One credit volume migrates away despite the renewal.',
+    seededBy:{ q:'Q4 2025', n:'Q4 announced the Cap-One CREDIT renewal (+ new accounts); Will Nance pushed on how much volume stays given Cap-One owns Discover — management wouldn\'t quantify.' },
+    src:'Q4 2025: Capital One credit portfolio renewed; network for a large portion of newly acquired credit accounts.' },
+  { id:'wl010', q:'Q1 2026', rank:5, theme:'FY26 guide shape (H1<H2 on FX comps)',
+    tags:['guidance','fx'], trackSince:'Q4 2025', trackUntil:'Q1 2026',
+    definition:'The shape drives the quarterly setups all year. <b>Tell:</b> does the H1<H2 cadence play out as the FX-volatility comps normalize? <b>Red-line:</b> H1 undershoots even the FX-comp-adjusted framing.',
+    seededBy:{ q:'Q4 2025', n:'Q4 set FY26 at the high end of low-double-digits cc, with H1 lower than H2 on tougher FX-volatility comps; the question was whether the shape holds.' },
+    src:'Q4 2025: FY26 net revenue guide high-end of low-double-digits cc; H1<H2 on FX-volatility comps.' },
+  // ── Q4 2025 · REPORTED — frozen record. ──
+  { id:'wl011', q:'Q4 2025', rank:1, theme:'VAS growth durability',
+    tags:['vas'], trackSince:'Q3 2025', trackUntil:'Q4 2025',
+    definition:'The engine and the differentiator. <b>Tell:</b> does VAS hold ~20% cc, and what is the clean organic rate ex-acquisitions? <b>Red-line:</b> organic VAS decelerates toward mid-teens.',
+    src:'Q3 2025: VAS growth ~20%+ cc.' },
+  { id:'wl012', q:'Q4 2025', rank:2, theme:'Capital One debit loss / network share',
+    tags:['capital-one','switched-transactions'], trackSince:'Q3 2025', trackUntil:'Q4 2025',
+    definition:'The single biggest client overhang. <b>Tell:</b> how much does the Capital One debit migration to Discover drag switched volume, and is credit at risk? <b>Red-line:</b> credit also migrates, compounding the debit loss.',
+    src:'Q3 2025: Capital One debit migration to Discover underway, a switched-volume drag.' },
+  { id:'wl013', q:'Q4 2025', rank:3, theme:'Cross-border & consumer health',
+    tags:['cross-border','consumer'], trackSince:'Q3 2025', trackUntil:'Q4 2025',
+    definition:'The demand pulse. <b>Tell:</b> does cross-border stay double digits and the consumer stay healthy into year-end? <b>Red-line:</b> cross-border slips below low-double-digits or consumer softens.',
+    src:'Q3 2025: cross-border healthy; consumer resilient.' },
+  { id:'wl014', q:'Q4 2025', rank:4, theme:'FY26 guide / FX-volatility comps',
+    tags:['guidance','fx'], trackSince:'Q3 2025', trackUntil:'Q4 2025',
+    definition:'Sets the whole year\'s setup. <b>Tell:</b> where does FY26 land, and how do the 2025 FX-volatility comps shape the cadence? <b>Red-line:</b> FY26 guide comes in below low-double-digits cc.',
+    src:'Q3 2025: elevated FX-volatility revenue in H1 2025 flagged as a future comp.' },
+  { id:'wl015', q:'Q4 2025', rank:5, theme:'Stablecoin / agentic positioning',
+    tags:['stablecoin','agentic'], trackSince:'Q3 2025', trackUntil:'Q4 2025',
+    definition:'The emerging-rails optionality. <b>Tell:</b> how is Mastercard positioning in stablecoins and agentic commerce as the space accelerates? <b>Red-line:</b> Mastercard is left behind on standards/economics.',
+    src:'Q3 2025: Agent Pay launched; stablecoin settlement expanding.' }
+];
+// Rows for one quarter. The LIVE (upcoming) quarter shows only OPEN hooks. `rank` orders, never labels.
+function wlFor(qLabel, openOnly){
+  return WL_ROWS.filter(function(r){
+    if(r.q!==qLabel) return false;
+    if(openOnly && r.trackUntil) return false;
+    return true;
+  }).sort(function(a,z){
+    var ar=(typeof a.rank==='number')?a.rank:99, zr=(typeof z.rank==='number')?z.rank:99;
+    return ar-zr;
+  });
+}
+function wlOpen(r){ return !!(r.trackSince && !r.trackUntil); }
+function wlTags(){
+  var set=[], seen={};
+  WL_ROWS.forEach(function(r){ (r.tags||[]).forEach(function(t){ if(!seen[t]){ seen[t]=1; set.push(t); } }); });
+  return set.sort();
+}
+function wlById(id){ for(var i=0;i<WL_ROWS.length;i++){ if(WL_ROWS[i].id===id) return WL_ROWS[i]; } return null; }
+function wlNextId(){
+  var mx=0; WL_ROWS.forEach(function(r){ var m=/^wl(\d+)$/.exec(r.id||''); if(m && +m[1]>mx) mx=+m[1]; });
+  return 'wl'+String(mx+1).padStart(3,'0');
+}
+function wlNextRank(qLabel){
+  var mx=0; WL_ROWS.forEach(function(r){ if(r.q===qLabel && typeof r.rank==='number' && r.rank>mx) mx=r.rank; });
+  return mx+1;
+}
+
+function ceUpcoming(){ return CALL_EARNINGS.quarters.filter(function(q){ return q.status==='upcoming'; })[0]||null; }
+function ceFill(x, muted){ return (x!=null && String(x).trim()!=='') ? x : '<span class="ce-empty">'+(muted||'— to fill')+'</span>'; }
+var CE_POP={};
+function ceReg(id, t, h){ CE_POP[id]={t:t, h:ceProse(h)}; return id; }
+function ceQ(id, t, h){ return '<span class="ce-info ov-clickable" data-detail="ce:'+ceReg(id,t,h)+'" title="'+esc(String(t).replace(/<[^>]+>/g,''))+'">?</span>'; }
+// ─── ceProse · the anti-wall transform (runs at REGISTRATION time). Flowing <p> prose → a short LEAD
+// paragraph + one-sentence <li> bullets; a "<b>Label:</b> …" paragraph becomes a labelled row. Content
+// already carrying <ul>/<li> is left as authored. (§6a-iv.)
+function ceSentences(s){
+  return String(s).split(/(?<=[.!?])\s+(?=(?:<[a-z]+>)*[A-Z“"(])/).filter(function(x){ return x.trim(); });
+}
+function ceProse(h){
+  h=String(h||'');
+  if(!h || h.indexOf('<li>')>=0 || h.indexOf('<ul')>=0) return h;
+  var paras=h.match(/<p>[\s\S]*?<\/p>/g);
+  if(!paras || paras.length===0) return h;
+  var tail=h.replace(/<p>[\s\S]*?<\/p>/g,'').trim();
+  var lead='', bullets=[];
+  paras.forEach(function(p,i){
+    var inner=p.replace(/^<p>/,'').replace(/<\/p>$/,'').trim();
+    var lab=inner.match(/^<b>([^<]{1,42}[:—-])<\/b>\s*([\s\S]*)$/);
+    if(lab){ bullets.push('<b>'+lab[1]+'</b> '+lab[2]); return; }
+    var sents=ceSentences(inner);
+    if(i===0){ lead=sents.shift(); sents.forEach(function(s){ bullets.push(s); }); }
+    else { sents.forEach(function(s){ bullets.push(s); }); }
+  });
+  var out='';
+  if(lead)          out+='<p class="ce-pop-lead">'+lead+'</p>';
+  if(bullets.length) out+='<ul class="ce-pop-l">'+bullets.map(function(b){ return '<li>'+b+'</li>'; }).join('')+'</ul>';
+  return out+tail;
+}
+function ceStyle(){
+  return '<style>.ce-note{font-size:11px;color:var(--mu);line-height:1.5;background:#F7F9FB;border:1px solid var(--bdr);border-radius:9px;padding:9px 12px;margin:0 0 12px}'+
+    '.ce-phtabs{display:inline-flex;gap:3px;background:rgba(207,10,44,0.08);border:1px solid var(--bdr);border-radius:9px;padding:4px;margin:0 0 20px}'+
+    '.ce-phtab{background:none;border:none;color:var(--mu);font-family:\'Inter\',sans-serif;font-size:12px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;padding:7px 16px;border-radius:6px;cursor:pointer;transition:all .15s}'+
+    '.ce-phtab:hover{color:var(--navy)}.ce-phtab.active{background:'+BRAND+';color:#fff}'+
+    '.ce-phpane[hidden]{display:none}'+
+    '.ce-qpills{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}'+
+    '.ce-qpill{border:1px solid var(--bdr);background:var(--w);font:inherit;font-size:11px;font-weight:800;color:var(--mu);padding:5px 13px;border-radius:999px;cursor:pointer;transition:.12s}'+
+    '.ce-qpill:hover{color:var(--navy)}.ce-qpill.active{background:var(--navy);color:#fff;border-color:var(--navy)}'+
+    '.ce-qpill .ce-qtag{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-left:6px;opacity:.75}'+
+    '.ce-qblock[hidden]{display:none}'+
+    '.ce-frozen{display:inline-block;font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;background:'+GRAY+';border-radius:20px;padding:2px 8px;margin-left:7px;vertical-align:middle}'+
+    '.ce-wl-hint{font-size:10.5px;line-height:1.5;color:var(--navy);background:rgba(207,10,44,0.06);border:1px solid rgba(207,10,44,0.28);border-radius:9px;padding:8px 12px;margin:0 0 10px}'+'.ce-wl-tagbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 12px;padding:9px 12px;background:#F7F9FB;border:1px solid var(--bdr);border-radius:10px}'+
+    '.ce-wl-tag{border:1px solid rgba(122,90,248,0.35);background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:'+PURPLE+';padding:3px 10px;border-radius:999px;cursor:pointer;transition:.12s}'+
+    '.ce-wl-tag:hover{background:rgba(122,90,248,0.08)}.ce-wl-tag.active{background:'+PURPLE+';color:#fff;border-color:'+PURPLE+'}'+
+    '.ce-wl-clear{border-color:var(--bdr);color:var(--mu)}'+
+    '.ce-wl-add-btn{margin-left:auto;border:1px dashed '+BRAND+';background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:'+BRAND+';padding:3px 10px;border-radius:999px;cursor:pointer}'+
+    '.ce-wl-bar-k{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu)}'+
+    '.ce-wl-win{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 11px;border-radius:999px;cursor:pointer}'+
+    '.ce-wl-win.active{background:var(--navy);color:#fff}'+
+    '.ce-wl-addform{display:flex;flex-direction:column;gap:5px;border:1px dashed '+BRAND+';border-radius:10px;padding:14px 15px;margin:0 0 12px;background:rgba(207,10,44,0.03)}'+
+    '.ce-wl-addform[hidden]{display:none}'+
+    '.ce-wl-fh{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:4px}'+
+    '.ce-wl-fh-t{font-size:12.5px;font-weight:800;color:var(--navy)}'+
+    '.ce-wl-fh-s{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
+    '.ce-wl-lb{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--navy);margin-top:5px}'+
+    '.ce-wl-lb span{font-weight:600;text-transform:none;letter-spacing:0;color:var(--mu);font-size:10px;margin-left:5px}'+
+    '.ce-wl-in{font:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:7px 10px;background:var(--w);color:var(--navy);width:100%;box-sizing:border-box}'+
+    '.ce-wl-in:focus{outline:none;border-color:'+BRAND+'}'+
+    '.ce-wl-ta{resize:vertical;line-height:1.5}'+
+    '.ce-wl-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:600px){.ce-wl-2col{grid-template-columns:1fr}}'+
+    '.ce-wl-tagpick{display:flex;gap:6px;flex-wrap:wrap;border:1px solid var(--bdr);border-radius:8px;padding:8px 9px;background:var(--w);min-height:20px}'+
+    '.ce-wl-pick{border:1px solid rgba(122,90,248,0.35);background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:'+PURPLE+';padding:3px 10px;border-radius:999px;cursor:pointer;transition:.12s}'+
+    '.ce-wl-pick:hover{background:rgba(122,90,248,0.08)}.ce-wl-pick.on{background:'+PURPLE+';color:#fff;border-color:'+PURPLE+'}'+
+    '.ce-wl-newtag{display:flex;gap:7px;align-items:center}.ce-wl-newtag .ce-wl-in{flex:1}'+
+    '.ce-wl-newtag-go{font:inherit;font-size:10.5px;font-weight:800;border:1px dashed '+PURPLE+';background:var(--w);color:'+PURPLE+';padding:6px 12px;border-radius:999px;cursor:pointer;white-space:nowrap}'+
+    '.ce-wl-frow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:9px}'+
+    '.ce-wl-add-go{font:inherit;font-size:11px;font-weight:800;border:none;border-radius:8px;padding:7px 15px;background:'+BRAND+';color:#fff;cursor:pointer}'+
+    '.ce-wl-cancel{font:inherit;font-size:10.5px;font-weight:700;border:1px solid var(--bdr);background:var(--w);color:var(--mu);padding:6px 12px;border-radius:8px;cursor:pointer}'+
+    '.ce-wl-all[hidden]{display:none}.ce-w[data-wlhide]{display:none}'+
+    '.ce-wl-tbl-sc[hidden]{display:none}'+'.ce-wl-tbl-wrap{margin-top:22px;border:1px solid var(--bdr);border-top:3px solid '+BRAND+';border-radius:12px;padding:13px 15px;background:var(--w)}'+
+    '.ce-wl-tbl-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:9px}'+
+    '.ce-wl-tbl-t{font-size:12.5px;font-weight:800;color:var(--navy)}'+
+    '.ce-wl-tbl-s{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
+    '.ce-wl-tbl-n{margin-left:auto;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:'+BRAND2+';background:rgba(22,163,74,0.10);border:1px solid rgba(22,163,74,0.3);border-radius:999px;padding:3px 11px;white-space:nowrap}'+
+    '.ce-wl-copy{border:1px solid '+BRAND+';background:'+BRAND+';font:inherit;font-size:10px;font-weight:800;color:#fff;padding:4px 14px;border-radius:999px;cursor:pointer;letter-spacing:.03em;transition:.12s}'+
+    '.ce-wl-copy:hover{filter:brightness(1.08)}'+
+    '.ce-wl-copy.alt{background:var(--w);color:'+BRAND+'}.ce-wl-copy.alt:hover{background:rgba(207,10,44,0.08)}'+
+    '.ce-wl-tbl-sc{overflow-x:auto;border:1px solid var(--bdr);border-radius:9px}'+
+    '.ce-wl-tbl{width:100%;border-collapse:collapse;font-size:10.5px;min-width:1100px}'+
+    '.ce-wl-tbl th{text-align:left;background:#F7F9FB;color:var(--mu);font-weight:800;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;padding:7px 9px;border-bottom:1px solid var(--bdr);white-space:nowrap;position:sticky;top:0}'+
+    '.ce-wl-tbl td{padding:7px 9px;border-bottom:1px solid var(--bdr);color:var(--navy);line-height:1.45;vertical-align:top;max-width:270px}'+
+    '.ce-wl-tbl tr:last-child td{border-bottom:none}'+
+    '.ce-wl-tbl td.wl-key{white-space:nowrap;font-weight:800;color:var(--mu);font-size:10px}'+
+    '.ce-wl-tbl td.wl-th{font-weight:800;min-width:190px}'+
+    '.ce-wl-tbl tr.wl-open td.wl-key{color:'+BRAND2+'}'+
+    '.ce-wl-tbl tbody tr:hover{background:rgba(207,10,44,0.035)}'+
+    '.ce-empty{color:var(--mu);font-style:italic;opacity:.7}'+
+    '.ce-grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0}@media(max-width:640px){.ce-grid4{grid-template-columns:1fr 1fr}}'+
+    '.ce-cell{border:1px solid var(--bdr);border-top:3px solid '+BLUE+';border-radius:10px;padding:11px 13px;background:var(--w)}'+
+    '.ce-cell-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}.ce-cell-v{font-size:15px;font-weight:800;color:var(--navy);margin-top:3px;line-height:1.2}'+
+    '.ce-ev-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
+    '.ce-ev-pill.active{background:var(--navy);color:#fff}'+
+    '.ce-cell-custom{border-top-color:'+YELLOW+'}'+
+    '.ce-row-cap{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:2px 0 4px}'+
+    '.ce-val{display:flex;align-items:baseline;gap:7px}'+
+    '.ce-val-lab{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:1px 7px;flex:none}'+
+    '.ce-val-cons .ce-val-lab{background:rgba(37,87,214,0.10);color:'+BLUE+'}'+
+    '.ce-val-us .ce-val-lab{background:rgba(22,163,74,0.12);color:'+BRAND2+'}'+
+    '.ce-evwrap[data-ev="cons"] .ce-val-us{display:none}'+
+    '.ce-evwrap[data-ev="us"] .ce-val-cons{display:none}'+
+    '.ce-evwrap:not([data-ev="both"]) .ce-val-lab{display:none}'+
+    '.ce-evwrap[data-ev="both"] .ce-cell-v{font-size:13px}'+
+    '.ce-evwrap[data-ev="both"] .ce-val{margin-top:3px}'+
+    '.ce-banner{border:1px solid var(--bdr);border-left:4px solid '+BRAND+';border-radius:11px;padding:13px 15px;background:linear-gradient(180deg,rgba(207,10,44,0.05),transparent);font-size:12.5px;line-height:1.6;color:var(--navy);margin:12px 0}'+
+    '.ce-watch{display:flex;flex-direction:column;gap:11px}'+
+    '.ce-w{border:1px solid var(--bdr);border-radius:12px;padding:13px 15px;background:var(--w);position:relative}'+
+    '.ce-w-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}'+
+    '.ce-w-dot{width:8px;height:8px;border-radius:50%;background:'+BRAND+';flex:none;margin:0 2px}'+
+    '.ce-w-metric{font-size:13.5px;font-weight:800;color:var(--navy)}'+
+    '.ce-w-def{color:var(--navy);border-left:3px solid rgba(207,10,44,0.35);padding:1px 0 1px 11px;font-size:12px;line-height:1.55;margin-top:7px}'+
+    '.ce-w-def b{color:'+BLUE+'}'+
+    '.ce-w-ctl{margin-left:auto;display:inline-flex;gap:5px;flex:none}'+
+    '.ce-w-ed,.ce-w-del{border:1px solid var(--bdr);background:var(--w);font:inherit;font-size:11px;font-weight:800;color:var(--mu);width:24px;height:24px;border-radius:7px;cursor:pointer;line-height:1;transition:.12s}'+
+    '.ce-w-ed:hover{border-color:'+BRAND+';color:'+BRAND+'}.ce-w-del:hover{border-color:'+RED+';color:'+RED+'}'+
+    '.ce-w-closed{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--mu);background:#F2F5F8;border:1px solid var(--bdr);border-radius:20px;padding:2px 8px;flex:none}'+
+    '.ce-kind{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:2px 8px;white-space:nowrap;border:1px solid}'+
+    '.ce-phase{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;border-radius:20px;padding:3px 10px;margin-bottom:8px}'+
+    '.ce-info{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:'+AMBER+';color:#fff;font-size:10px;font-weight:800;cursor:pointer;margin-left:5px;vertical-align:middle;flex:none}'+
+    '.ce-info:hover{filter:brightness(1.1)}'+
+    '.ce-synth{border-left:4px solid var(--navy);background:#10141A;color:#fff;border-radius:11px;padding:13px 16px;font-size:13px;font-weight:700;line-height:1.5;margin:6px 0}.ce-synth b{color:'+YELLOW+'}'+
+    '.ce-why-btn{display:inline-block;font-size:10px;font-weight:800;color:'+BLUE+';cursor:pointer;margin-top:8px}'+
+    '.ce-w-chips{display:flex;gap:7px;flex-wrap:wrap;margin:6px 0 0}'+
+    '.ce-w-chip{font-size:10px;font-weight:700;border-radius:7px;padding:4px 9px;line-height:1.3;color:var(--navy)}'+
+    '.ce-w-chip.tag{background:rgba(122,90,248,0.08);border:1px solid rgba(122,90,248,0.3)}'+
+    '.ce-w-chip.since{background:rgba(255,159,0,0.12);border:1px solid rgba(183,121,31,0.35)}'+
+    '.ce-w-chip.until{background:#F2F5F8;border:1px solid var(--bdr);color:var(--mu)}'+
+    '.ce-w-chip.cons{background:rgba(37,87,214,0.08);border:1px solid rgba(37,87,214,0.28)}'+
+    '.ce-w-chip.red{background:rgba(234,67,53,0.06);border:1px solid rgba(234,67,53,0.28)}'+
+    '.ce-w-chip b{font-weight:800}'+
+    '.ce-take{border-left:4px solid '+BRAND+';background:#10141A;color:#fff;border-radius:11px;padding:13px 16px;font-size:13px;font-weight:700;line-height:1.5;margin:2px 0 14px}.ce-take b{color:'+YELLOW+'}'+
+    '.ce-hl{display:flex;flex-direction:column;gap:8px}'+
+    '.ce-hl-row{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center;border:1px solid var(--bdr);border-left:4px solid var(--hc);border-radius:10px;padding:10px 13px;background:var(--w);cursor:pointer;transition:.12s}'+
+    '.ce-hl-row:hover{box-shadow:0 3px 10px rgba(0,0,0,.08)}'+
+    '.ce-hl-tag{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;background:var(--hc);border-radius:20px;padding:3px 9px;white-space:nowrap}'+
+    '.ce-hl-head{font-size:12.5px;font-weight:700;color:var(--navy);line-height:1.4}'+
+    '.ce-hl-more{font-size:15px;color:var(--hc);font-weight:800}'+
+    '@media(max-width:560px){.ce-hl-row{grid-template-columns:auto 1fr}.ce-hl-more{display:none}}'+
+    '.ce-dots{border:1px dashed '+BRAND+';border-radius:11px;padding:12px 15px;margin-top:14px;background:rgba(207,10,44,0.03);font-size:12px;line-height:1.6;color:var(--navy)}.ce-dots b{color:'+BRAND+'}'+
+    '.ce-sc{display:flex;flex-direction:column;gap:6px}'+
+    '.ce-sc-row{display:grid;grid-template-columns:1.1fr 1fr 1.2fr auto;gap:10px;align-items:center;border:1px solid var(--bdr);border-left:4px solid var(--sc);border-radius:9px;padding:8px 12px}'+
+    '.ce-sc-m{font-size:12px;font-weight:800;color:var(--navy)}.ce-sc-c{font-size:11px;color:var(--mu)}.ce-sc-a{font-size:11.5px;font-weight:700;color:var(--navy)}'+
+    '.ce-sc-v{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 10px;background:var(--sc);white-space:nowrap}'+
+    '@media(max-width:600px){.ce-sc-row{grid-template-columns:1fr auto}.ce-sc-c,.ce-sc-a{display:none}}'+
+    '.ce-tc{display:flex;flex-direction:column;gap:6px}'+
+    '.ce-tc-row{display:flex;gap:9px;align-items:flex-start;font-size:11.5px;color:var(--navy);line-height:1.45;border:1px solid var(--bdr);border-radius:9px;padding:8px 11px}'+
+    '.ce-tbl{width:100%;border-collapse:collapse;font-size:11.5px}'+
+    '.ce-tbl th{text-align:left;color:var(--mu);font-weight:700;padding:7px 10px;border-bottom:1px solid var(--bdr);font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}'+
+    '.ce-tbl td{padding:9px 10px;border-bottom:1px solid var(--bdr);color:var(--navy);line-height:1.45;vertical-align:top}'+
+    '.ce-pill{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 9px;white-space:nowrap}'+
+    '.ce-seed{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:800;color:'+PURPLE+';background:rgba(122,90,248,0.08);border:1px solid rgba(122,90,248,0.3);border-radius:20px;padding:2px 9px;white-space:nowrap;flex:none}'+
+    '.ce-nq{display:flex;flex-direction:column;gap:5px}'+
+    '.ce-nq-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border:1px solid var(--bdr);border-left:3px solid '+PURPLE+';border-radius:9px;padding:7px 11px;font-size:11.5px;color:var(--navy);line-height:1.45}'+
+    '.ce-nq-land{font-size:9.5px;font-weight:800;color:'+PURPLE+';white-space:nowrap}'+
+    '.ce-nq-land.open{color:var(--mu)}'+
+    '@media(max-width:560px){.ce-nq-row{grid-template-columns:1fr}.ce-nq-land{margin-top:3px}}'+
+    '.ce-sc-row{grid-template-columns:78px 1.1fr 1fr 1.2fr 92px auto}'+
+    '.ce-sc-rk{font-size:9px;font-weight:800;color:'+BRAND+';background:rgba(207,10,44,0.10);border:1px solid rgba(207,10,44,0.3);border-radius:20px;padding:2px 8px;white-space:nowrap;text-align:center}'+
+    '.ce-sc-rk.blank{background:transparent;border:none}'+
+    '.ce-sc-surp{font-size:9.5px;font-weight:800;text-align:center;letter-spacing:.02em;border-radius:20px;padding:2px 8px;white-space:nowrap}'+
+    '.ce-sc-surp.hi{color:'+RED+';background:rgba(234,67,53,0.09);border:1px solid rgba(234,67,53,0.3)}'+
+    '.ce-sc-surp.md{color:'+AMBER+';background:rgba(183,121,31,0.09);border:1px solid rgba(183,121,31,0.3)}'+
+    '.ce-sc-surp.lo{color:var(--mu);background:transparent;border:1px solid var(--bdr)}'+
+    '.ce-legend{display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:#F7F9FB;border:1px solid var(--bdr);border-radius:10px;padding:10px 13px;margin:0 0 10px}'+
+    '.ce-legend-i{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--navy);line-height:1.4}'+
+    '.ce-legend-i b{font-weight:800}'+
+    '@media(max-width:600px){.ce-sc-row{grid-template-columns:1fr auto}.ce-sc-c,.ce-sc-a,.ce-sc-bw,.ce-sc-rk{display:none}}'+
+    '.ce-band{margin:16px 0 8px;display:flex;align-items:center;gap:9px}'+
+    '.ce-band-i{font-size:13px;font-weight:800;color:var(--bc);line-height:1}'+
+    '.ce-band-t{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--bc)}'+
+    '.ce-band-s{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
+    '.ce-band-l{flex:1;height:1px;background:var(--bdr)}'+
+    '@media(max-width:560px){.ce-band-s{display:none}}'+
+    '.ce-hl-open{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:'+AMBER+';border:1px solid '+AMBER+';border-radius:20px;padding:2px 7px;white-space:nowrap;margin-left:7px;vertical-align:middle}'+
+    '.ce-3m{border:1px solid var(--bdr);border-top:4px solid '+BRAND+';border-radius:12px;padding:15px 17px;margin:16px 0 0;background:linear-gradient(180deg,rgba(207,10,44,0.05),transparent)}'+
+    '.ce-3m-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:10px}'+
+    '.ce-3m-t{font-size:12.5px;font-weight:800;color:var(--navy)}'+
+    '.ce-3m-sub{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
+    '.ce-3m-copy{margin-left:auto;border:1px solid '+BRAND+';background:var(--w);font:inherit;font-size:10px;font-weight:800;color:'+BRAND+';padding:3px 11px;border-radius:999px;cursor:pointer;transition:.12s}'+
+    '.ce-3m-copy:hover{background:'+BRAND+';color:#fff}'+
+    '.ce-3m-l{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}'+'@media(max-width:760px){.ce-3m-l{grid-template-columns:1fr}}'+'.ce-3m-n{width:22px;height:22px;border-radius:50%;background:'+BRAND+';color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex:none}'+'.ce-3m-bd{min-width:0}'+'.ce-3m-lead{display:block;font-size:13.5px;font-weight:800;color:var(--navy);line-height:1.4}'+'.ce-3m-ev{display:block;font-size:11px;font-weight:500;color:var(--mu);line-height:1.5;margin-top:4px}'+'.ce-3m-more{margin-top:6px}'+'.ce-3m-more>summary{font-size:9.5px;font-weight:800;color:'+BLUE+';cursor:pointer;list-style:none}'+'.ce-3m-more>summary::-webkit-details-marker{display:none}'+'.ce-3m-more[open]>summary{color:var(--mu)}'+
+    '.ce-3m-i{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--bdr);border-top:3px solid '+BRAND+';border-radius:11px;padding:11px 13px;background:#fff}'+
+    '.ce-nb{margin-top:13px;border-top:1px dashed var(--bdr);padding-top:11px}'+
+    '.ce-nb-h{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:6px}'+
+    '.ce-nb-r{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;font-size:11px;line-height:1.5;color:var(--mu);padding:2px 0}'+
+    '.ce-nb-r b{color:var(--navy);font-weight:800}'+
+    '.ce-nb-x{color:'+GRAY+';font-weight:800;flex:none}'+
     '.calls-st-age{font-size:8.5px;font-weight:700;opacity:.8;margin-left:4px}</style>';
 }
-function cpFmtC(o){ if(!o||o.v==null) return '<span class="cp-empty">—</span>';
-  var un=o.unit||'', v=o.v, s;
-  if(un==='$') s='$'+v; else if(un==='$M') s='$'+v+'M'; else if(un==='$B') s='$'+v+'B';
-  else if(un==='%') s=v+'%'; else s=String(v);
-  return s+(o.yoy!=null?'<span style="font-size:10px;color:#0a8f4c;font-weight:800;margin-left:5px">+'+o.yoy+'%</span>':''); }
-function cpEvCell(key, m, isCustom){
-  var name=m&&m.k?m.k:null;
-  var q=(m&&m.note)?cpQ('setnote-'+key, m.note.t, m.note.h):'';
-  var kHtml=name?esc(name):'<span class="cp-empty">Custom KPI — to define</span>';
-  return '<div class="cp-cell'+(isCustom?' cp-cell-custom':'')+'"><div class="cp-cell-k">'+kHtml+q+'</div>'+
-    '<div class="cp-cell-v">'+
-      '<div class="cp-val cp-val-cons"><span class="cp-val-lab">Street</span>'+cpFmtC(m&&m.cons)+'</div>'+
-      '<div class="cp-val cp-val-us"><span class="cp-val-lab">Summit</span>'+cpFmtC(m&&m.us)+'</div>'+
-    '</div></div>';
-}
-// The source buttons — every Call Prep opens with IR + EDGAR (docs/CALL_PREP_CONVENTIONS §6).
-var CP_IR_URL='https://investor.mastercard.com/financials-and-sec-filings/quarterly-results/default.aspx';
-var CP_EDGAR_URL='https://www.sec.gov/edgar/browse/?CIK=1141391&owner=exclude';
-var CP_LOGO_URL='https://assets.parqet.com/logos/symbol/MA';
-var CP_SEC_SEAL='img/sec-seal.png';
-function cpIRButton(){
+// ─── The IR button — every Earnings opens with it. KEEP MA's IR/EDGAR URLs, CIK 1141391, MA logo.
+var CE_IR_URL='https://investor.mastercard.com/financials-and-sec-filings/quarterly-results/default.aspx';
+var CE_EDGAR_URL='https://www.sec.gov/edgar/browse/?CIK=1141391&owner=exclude';
+var CE_LOGO_URL='https://assets.parqet.com/logos/symbol/MA';
+var CE_SEC_SEAL='img/sec-seal.png';
+function ceIRButton(){
   return '<style>'+
-    '.cp-srcrow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 16px}@media(max-width:760px){.cp-srcrow{grid-template-columns:1fr}}'+
-    '.cp-ir{display:flex;align-items:center;gap:20px;text-decoration:none;border-radius:18px;padding:26px 26px;min-height:120px;position:relative;overflow:hidden;'+
+    '.ce-srcrow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 16px}@media(max-width:760px){.ce-srcrow{grid-template-columns:1fr}}'+
+    '.ce-ir{display:flex;align-items:center;gap:20px;text-decoration:none;border-radius:18px;padding:26px 26px;min-height:120px;position:relative;overflow:hidden;'+
       'background:linear-gradient(115deg,#04060B 0%,#0A1024 60%,#04060B 100%);border:1px solid rgba(207,10,44,.4);box-shadow:0 10px 32px rgba(0,0,0,.4);transition:.18s}'+
-    '.cp-ir:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,'+BRAND+','+BLUE+','+YELLOW+','+BRAND2+');height:4px;top:0}'+
-    '.cp-ir:hover{transform:translateY(-2px);box-shadow:0 16px 42px rgba(207,10,44,.45);border-color:rgba(207,10,44,.85)}'+
-    '.cp-ir-wm{position:absolute;right:-40px;bottom:-60px;width:230px;height:230px;object-fit:contain;opacity:.09;pointer-events:none;transition:.25s}'+
-    '.cp-ir:hover .cp-ir-wm{opacity:.16;transform:scale(1.04) rotate(-2deg)}'+
-    '.cp-ir-ic{width:72px;height:72px;border-radius:18px;background:transparent;display:flex;align-items:center;justify-content:center;flex:none;position:relative;z-index:1;'+
+    '.ce-ir:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,'+BRAND+','+BLUE+','+YELLOW+','+BRAND2+');height:4px;top:0}'+
+    '.ce-ir:hover{transform:translateY(-2px);box-shadow:0 16px 42px rgba(207,10,44,.45);border-color:rgba(207,10,44,.85)}'+
+    '.ce-ir-wm{position:absolute;right:-40px;bottom:-60px;width:230px;height:230px;object-fit:contain;opacity:.09;pointer-events:none;transition:.25s}'+
+    '.ce-ir:hover .ce-ir-wm{opacity:.16;transform:scale(1.04) rotate(-2deg)}'+
+    '.ce-ir-ic{width:72px;height:72px;border-radius:18px;background:transparent;display:flex;align-items:center;justify-content:center;flex:none;position:relative;z-index:1;'+
       'box-shadow:0 0 0 1px rgba(255,159,0,.35),0 0 32px rgba(207,10,44,.6)}'+
-    '.cp-ir-ic img{width:52px;height:52px;object-fit:contain;display:block}'+
-    '.cp-ir-body{flex:1;min-width:0;position:relative;z-index:1}'+
-    '.cp-ir-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.16em;color:#FF9F00;display:flex;align-items:center;gap:7px}'+
-    '.cp-ir-dot{width:7px;height:7px;border-radius:50%;background:'+BRAND2+';box-shadow:0 0 0 0 rgba(22,163,74,.7);animation:cpirp 1.6s infinite}'+
+    '.ce-ir-ic img{width:52px;height:52px;object-fit:contain;display:block}'+
+    '.ce-ir-body{flex:1;min-width:0;position:relative;z-index:1}'+
+    '.ce-ir-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.16em;color:#FF9F00;display:flex;align-items:center;gap:7px}'+
+    '.ce-ir-dot{width:7px;height:7px;border-radius:50%;background:'+BRAND2+';box-shadow:0 0 0 0 rgba(22,163,74,.7);animation:cpirp 1.6s infinite}'+
     '@keyframes cpirp{0%{box-shadow:0 0 0 0 rgba(22,163,74,.6)}70%{box-shadow:0 0 0 8px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}'+
-    '.cp-ir-t{font-size:19px;font-weight:900;color:#fff;letter-spacing:.05em;text-transform:uppercase;margin-top:4px}'+
-    '.cp-ir-s{font-size:11.5px;color:#9FB0C8;font-weight:600;margin-top:3px;letter-spacing:.01em}'+
-    '.cp-ir-go{font-size:13px;font-weight:900;color:#fff;background:'+BRAND+';border-radius:999px;padding:12px 22px;white-space:nowrap;flex:none;display:flex;align-items:center;gap:8px;position:relative;z-index:1;letter-spacing:.04em;transition:.14s}'+
-    '.cp-ir:hover .cp-ir-go{gap:12px;box-shadow:0 4px 18px rgba(207,10,44,.6)}'+
-    '@media(max-width:560px){.cp-ir{flex-wrap:wrap}.cp-ir-go{width:100%;justify-content:center}}'+
-    '.cp-ir.edgar{background:linear-gradient(115deg,#070502 0%,#171106 60%,#070502 100%);border-color:rgba(197,164,90,.35)}'+
-    '.cp-ir.edgar:before{background:linear-gradient(90deg,#8C6D2F,#E3C878,#8C6D2F)}'+
-    '.cp-ir.edgar:hover{box-shadow:0 16px 42px rgba(197,164,90,.32);border-color:rgba(227,200,120,.75)}'+
-    '.cp-ir.edgar .cp-ir-ic{background:transparent;box-shadow:0 0 0 1px rgba(227,200,120,.28),0 0 32px rgba(197,164,90,.55)}'+
-    '.cp-ir.edgar .cp-ir-ic img{width:72px;height:72px}'+
-    '.cp-ir.edgar .cp-ir-k{color:#E3C878}'+
-    '.cp-ir.edgar .cp-ir-dot{background:#E3C878;animation:none;box-shadow:0 0 8px rgba(227,200,120,.8)}'+
-    '.cp-ir.edgar .cp-ir-go{background:linear-gradient(135deg,#E3C878,#B8933F);color:#1A1305}'+
-    '.cp-ir.edgar:hover .cp-ir-go{box-shadow:0 4px 18px rgba(197,164,90,.6)}'+
-    '.cp-ir.edgar .cp-ir-wm{opacity:.1}'+
-    '.cp-ir.edgar:hover .cp-ir-wm{opacity:.17}'+
+    '.ce-ir-t{font-size:19px;font-weight:900;color:#fff;letter-spacing:.05em;text-transform:uppercase;margin-top:4px}'+
+    '.ce-ir-s{font-size:11.5px;color:#9FB0C8;font-weight:600;margin-top:3px;letter-spacing:.01em}'+
+    '.ce-ir-go{font-size:13px;font-weight:900;color:#fff;background:'+BRAND+';border-radius:999px;padding:12px 22px;white-space:nowrap;flex:none;display:flex;align-items:center;gap:8px;position:relative;z-index:1;letter-spacing:.04em;transition:.14s}'+
+    '.ce-ir:hover .ce-ir-go{gap:12px;box-shadow:0 4px 18px rgba(207,10,44,.6)}'+
+    '@media(max-width:560px){.ce-ir{flex-wrap:wrap}.ce-ir-go{width:100%;justify-content:center}}'+
+    '.ce-ir.edgar{background:linear-gradient(115deg,#070502 0%,#171106 60%,#070502 100%);border-color:rgba(197,164,90,.35)}'+
+    '.ce-ir.edgar:before{background:linear-gradient(90deg,#8C6D2F,#E3C878,#8C6D2F)}'+
+    '.ce-ir.edgar:hover{box-shadow:0 16px 42px rgba(197,164,90,.32);border-color:rgba(227,200,120,.75)}'+
+    '.ce-ir.edgar .ce-ir-ic{background:transparent;box-shadow:0 0 0 1px rgba(227,200,120,.28),0 0 32px rgba(197,164,90,.55)}'+
+    '.ce-ir.edgar .ce-ir-ic img{width:72px;height:72px}'+
+    '.ce-ir.edgar .ce-ir-k{color:#E3C878}'+
+    '.ce-ir.edgar .ce-ir-dot{background:#E3C878;animation:none;box-shadow:0 0 8px rgba(227,200,120,.8)}'+
+    '.ce-ir.edgar .ce-ir-go{background:linear-gradient(135deg,#E3C878,#B8933F);color:#1A1305}'+
+    '.ce-ir.edgar:hover .ce-ir-go{box-shadow:0 4px 18px rgba(197,164,90,.6)}'+
+    '.ce-ir.edgar .ce-ir-wm{opacity:.1}'+
+    '.ce-ir.edgar:hover .ce-ir-wm{opacity:.17}'+
   '</style>'+
-  '<div class="cp-srcrow">'+
-  '<a class="cp-ir" href="'+CP_IR_URL+'" target="_blank" rel="noopener">'+
-    '<img class="cp-ir-wm" src="'+CP_LOGO_URL+'" alt="" aria-hidden="true">'+
-    '<span class="cp-ir-ic"><img src="'+CP_LOGO_URL+'" alt="Mastercard logo" onerror="this.parentNode.style.display=\'none\'"></span>'+
-    '<span class="cp-ir-body">'+
-      '<span class="cp-ir-k"><span class="cp-ir-dot"></span>THE SOURCE · EARNINGS HQ</span>'+
-      '<span class="cp-ir-t" style="display:block">Mastercard Investor Relations</span>'+
-      '<span class="cp-ir-s" style="display:block">Release · webcast · slides · transcripts — straight from investor.mastercard.com. Skip the search, go direct.</span>'+
+  '<div class="ce-srcrow">'+
+  '<a class="ce-ir" href="'+CE_IR_URL+'" target="_blank" rel="noopener">'+
+    '<img class="ce-ir-wm" src="'+CE_LOGO_URL+'" alt="" aria-hidden="true">'+
+    '<span class="ce-ir-ic"><img src="'+CE_LOGO_URL+'" alt="Mastercard logo" onerror="this.parentNode.style.display=\'none\'"></span>'+
+    '<span class="ce-ir-body">'+
+      '<span class="ce-ir-k"><span class="ce-ir-dot"></span>THE SOURCE · EARNINGS HQ</span>'+
+      '<span class="ce-ir-t" style="display:block">Mastercard Investor Relations</span>'+
+      '<span class="ce-ir-s" style="display:block">Release · webcast · slides · transcripts — straight from investor.mastercard.com. Skip the search, go direct.</span>'+
     '</span>'+
-    '<span class="cp-ir-go">OPEN IR <span>↗</span></span>'+
+    '<span class="ce-ir-go">OPEN IR <span>↗</span></span>'+
   '</a>'+
-  '<a class="cp-ir edgar" href="'+CP_EDGAR_URL+'" target="_blank" rel="noopener">'+
-    '<img class="cp-ir-wm" src="'+CP_SEC_SEAL+'" alt="" aria-hidden="true">'+
-    '<span class="cp-ir-ic"><img src="'+CP_SEC_SEAL+'" alt="SEC seal" onerror="this.parentNode.style.display=\'none\'"></span>'+
-    '<span class="cp-ir-body">'+
-      '<span class="cp-ir-k"><span class="cp-ir-dot"></span>THE RECORD · U.S. SECURITIES AND EXCHANGE COMMISSION</span>'+
-      '<span class="cp-ir-t" style="display:block">Mastercard on EDGAR</span>'+
-      '<span class="cp-ir-s" style="display:block">10-K · 10-Q · 8-K · DEF 14A — the regulator\'s copy, as filed. What IR curates, EDGAR certifies.</span>'+
+  '<a class="ce-ir edgar" href="'+CE_EDGAR_URL+'" target="_blank" rel="noopener">'+
+    '<img class="ce-ir-wm" src="'+CE_SEC_SEAL+'" alt="" aria-hidden="true">'+
+    '<span class="ce-ir-ic"><img src="'+CE_SEC_SEAL+'" alt="SEC seal" onerror="this.parentNode.style.display=\'none\'"></span>'+
+    '<span class="ce-ir-body">'+
+      '<span class="ce-ir-k"><span class="ce-ir-dot"></span>THE RECORD · U.S. SECURITIES AND EXCHANGE COMMISSION</span>'+
+      '<span class="ce-ir-t" style="display:block">Mastercard on EDGAR</span>'+
+      '<span class="ce-ir-s" style="display:block">10-K · 10-Q · 8-K · DEF 14A — the regulator\'s copy, as filed. What IR curates, EDGAR certifies.</span>'+
     '</span>'+
-    '<span class="cp-ir-go">OPEN EDGAR <span>↗</span></span>'+
+    '<span class="ce-ir-go">OPEN EDGAR <span>↗</span></span>'+
   '</a>'+
   '</div>';
 }
-function cpQkey(q){ return String(q||'').replace(/\s/g,''); }
-function cpQPills(){
-  return '<div class="cp-qpills">'+CALL_PREP.quarters.map(function(q,i){
-    return '<button type="button" class="cp-qpill'+(i===0?' active':'')+'" data-cpqsel="'+esc(cpQkey(q.q))+'">'+esc(q.q)+(q.status==='upcoming'?'<span class="cp-qtag">upcoming</span>':'')+'</button>';
+
+function ceQkey(q){ return String(q||'').replace(/\s/g,''); }
+// Quarter selector is PHASE-AWARE: Post-Results only offers quarters that have a `results` block.
+function ceQPhases(q){ var ph=['setup','watch']; if(q.results) ph.push('results'); return ph; }
+function ceQPills(){
+  return '<div class="ce-qpills">'+CALL_EARNINGS.quarters.map(function(q,i){
+    return '<button type="button" class="ce-qpill'+(i===0?' active':'')+'" data-ceqsel="'+esc(ceQkey(q.q))+'" data-ceqhas="'+ceQPhases(q).join(' ')+'">'+esc(q.q)+(q.status==='upcoming'?'<span class="ce-qtag">upcoming</span>':'')+'</button>';
   }).join('')+'</div>';
 }
-function cpSetupBody(c){
-  var h=cpStyle();
-  h+=CALL_PREP.quarters.map(function(u,qi){
-    var qk=cpQkey(u.q), frozen=(u.status!=='upcoming');
-    var b='<div class="cp-qblock" data-cpq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="cp-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="cp-frozen">frozen</span>':'')+'</div>';
-    var st=u.setup||{};
-    if(st.headline){
-      b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup.</b> The numbers going in — what the <b>Street</b> expects, what <b>Summit</b> expects, and where the two disagree. '+(u.date?('Reports <b>'+esc(u.date)+'</b>.'):'')+'</p>';
-      var hl=st.headline||[], cu=st.custom||[];
+// A · The Setup — the grid is BUILT FROM THE ARCHIVE (CE_CONS), not hand-authored. Hand-authored per
+// quarter: setup.us (Summit's own number) and setup.notes (caveat pop-ups), both keyed by metric name.
+function ceFmtV(u,v){
+  if(v==null) return null;
+  if(u==='$')  return '$'+(+v).toFixed(2);
+  if(u==='$B') return '$'+(+v)+'B';
+  if(u==='B')  return (+v)+'B';
+  return String(v);
+}
+function ceGrowth(m,qi,base){
+  if(m.t==='basis') return null;
+  var c=m.qr[qi]?m.qr[qi][3]:null;
+  var b=(base==='qoq')?m.qq[qi]:m.qy[qi];
+  if(c==null||b==null||!b) return null;
+  return Math.round((c/b-1)*100);
+}
+function ceChip(g){
+  if(g==null) return '';
+  var up=g>=0;
+  return '<span class="ce-gchip" style="color:'+(up?'#0a8f4c':'#C5221F')+'">'+(up?'+':'−')+Math.abs(g)+'%</span>';
+}
+// Margin lens (headline only): Operating income / EBITDA also carry a margin = metric ÷ Net revenue.
+var CE_MARGIN_ON={'Operating income':1,'EBITDA':1};
+function ceMarginPct(v, rev){ return (v==null||rev==null||!rev)?null:Math.round((v/rev*100)*10)/10; }
+function ceMChip(p){ return p==null?'':'<span class="ce-mm">'+p+'% mgn</span>'; }
+function ceMarginRow(cur, baseYoy, baseQoq){
+  if(cur==null) return '';
+  return '<div class="ce-mrow"><span class="ce-mrow-l">margin</span>'+
+    '<span class="ce-mrow-v">'+cur+'%'+
+      (baseYoy!=null?'<span class="ce-mm-b yoy"> (prev '+baseYoy+'%)</span>':'')+
+      (baseQoq!=null?'<span class="ce-mm-b qoq"> (prev '+baseQoq+'%)</span>':'')+
+    '</span></div>';
+}
+function ceGrid(u,which){
+  var qi=CE_CONS.q.indexOf(u.q); if(qi<0) return '';
+  var st=u.setup||{}, us=st.us||{}, notes=st.notes||{};
+  var revM=CE_CONS.m.filter(function(x){ return x.k==='Net revenue'; })[0];
+  var revC=(revM&&revM.qr[qi])?revM.qr[qi][3]:null;
+  var revS=(us['Net revenue']?us['Net revenue'].v:null)||revC;
+  var revQy=revM?revM.qy[qi]:null, revQq=revM?revM.qq[qi]:null;
+  var list=CE_CONS.m.map(function(m,i){ return {m:m,i:i}; })
+    .filter(function(x,i){ return (which==='head')?(x.i<CE_CONS.nHead):(x.i>=CE_CONS.nHead); });
+  return '<div class="ce-mgrid">'+list.map(function(x){
+    var m=x.m, c=m.qr[qi]?m.qr[qi][3]:null;
+    var note=notes[m.k], q=note?ceQ('setnote-'+ceQkey(u.q)+'-'+x.i, note.t, note.h):'';
+    var uv=us[m.k];
+    var mgn=CE_MARGIN_ON[m.k];
+    var street=(c==null)
+      ? '<span class="ce-empty">—</span>'+(m.t==='nocons'?'<span class="ce-nocons" title="The archive carries no forward estimate for this line — actuals only">no est.</span>':'')
+      : ceFmtV(m.u,c)+'<span class="ce-gy">'+ceChip(ceGrowth(m,qi,'yoy'))+'</span><span class="ce-gq">'+ceChip(ceGrowth(m,qi,'qoq'))+'</span>';
+    var mRow=mgn?ceMarginRow(ceMarginPct(c,revC), ceMarginPct(m.qy[qi],revQy), ceMarginPct(m.qq[qi],revQq)):'';
+    return '<div class="ce-mcell'+(which==='cust'?' cust':'')+(m.t==='basis'?' flagged':'')+'">'+
+      '<div class="ce-mcell-k">'+esc(m.k)+q+'</div>'+
+      '<div class="ce-mcell-v">'+
+        '<div class="ce-val ce-val-cons"><span class="ce-val-lab">Street</span>'+street+'</div>'+
+        '<div class="ce-val ce-val-us"><span class="ce-val-lab">Summit</span>'+(uv?ceFmtV(m.u,uv.v):'<span class="ce-empty">—</span>')+'</div>'+
+        mRow+
+      '</div></div>';
+  }).join('')+'</div>';
+}
+function ceGridStyle(){
+  return '<style>'+
+    '.ce-mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:8px;margin:4px 0}'+
+    '.ce-mcell{border:1px solid var(--bdr);border-left:3px solid '+BRAND+';border-radius:9px;padding:8px 10px;background:#fff}'+
+    '.ce-mcell.cust{border-left-color:'+BRAND2+'}'+
+    '.ce-mcell.flagged{border-left-color:'+GRAY+';opacity:.72}'+
+    '.ce-mcell-k{font-size:10px;font-weight:700;color:var(--mu);display:flex;align-items:center;gap:4px;line-height:1.3;min-height:26px}'+
+    '.ce-mcell-v{margin-top:3px}'+
+    '.ce-mcell .ce-val{display:flex;align-items:baseline;gap:5px;font-size:14px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums}'+
+    '.ce-mcell .ce-val-lab{font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);flex:none;width:38px}'+
+    '.ce-gchip{font-size:10px;font-weight:800;margin-left:2px}'+
+    '.ce-mm{display:none}'+'.ce-mm-b{display:none;font-size:9px;font-weight:700;color:var(--mu);white-space:nowrap}'+'.ce-evwrap[data-mm="on"][data-g="yoy"] .ce-mm-b.yoy{display:inline}'+'.ce-evwrap[data-mm="on"][data-g="qoq"] .ce-mm-b.qoq{display:inline}'+'.ce-mrow{display:none;align-items:baseline;gap:5px;margin-top:5px;padding-top:5px;border-top:1px dashed var(--bdr)}'+'.ce-evwrap[data-mm="on"] .ce-mrow{display:flex}'+'.ce-mrow-l{font-size:8px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);flex:none}'+'.ce-mrow-v{font-size:11px;font-weight:900;color:'+PURPLE+';font-variant-numeric:tabular-nums}'+
+    '.ce-evwrap[data-mm="on"] .ce-mm{display:inline}'+
+    '.ce-nocons{font-size:8.5px;font-weight:800;color:var(--mu);border:1px solid var(--bdr);border-radius:999px;padding:1px 6px;margin-left:6px}'+
+    '.ce-evwrap[data-g="yoy"] .ce-gq,.ce-evwrap[data-g="qoq"] .ce-gy,'+
+    '.ce-evwrap[data-g="off"] .ce-gy,.ce-evwrap[data-g="off"] .ce-gq{display:none}'+
+    '.ce-gseg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+
+    '.ce-gseg button{font-size:10px;font-weight:800;padding:3px 11px;border:0;border-radius:999px;background:transparent;color:var(--mu);cursor:pointer;transition:.14s}'+
+    '.ce-gseg button.active{background:var(--navy);color:#fff}'+'.ce-vdf{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+'.ce-vdf button{font-size:10px;font-weight:800;padding:3px 11px;border:0;border-radius:999px;background:transparent;color:var(--mu);cursor:pointer;transition:.14s}'+'.ce-vdf button.active{background:var(--navy);color:#fff}'+
+    '.ce-fz[data-ev="cons"] .ce-fz-g[data-f="beat"] .ce-fz-t:not([data-vdc="beat"]),'+'.ce-fz[data-ev="cons"] .ce-fz-g[data-f="miss"] .ce-fz-t:not([data-vdc="miss"]),'+'.ce-fz[data-ev="cons"] .ce-fz-g[data-f="inline"] .ce-fz-t:not([data-vdc="inline"]),'+'.ce-fz[data-ev="us"] .ce-fz-g[data-f="beat"] .ce-fz-t:not([data-vdu="beat"]),'+'.ce-fz[data-ev="us"] .ce-fz-g[data-f="miss"] .ce-fz-t:not([data-vdu="miss"]),'+'.ce-fz[data-ev="us"] .ce-fz-g[data-f="inline"] .ce-fz-t:not([data-vdu="inline"]){display:none}'+
+    '.ce-dbt{display:flex;flex-direction:column;gap:5px}'+
+    '.ce-dbt-r{display:grid;grid-template-columns:1.3fr 1fr 1fr 70px;gap:10px;align-items:center;'+
+      'border:1px solid var(--bdr);border-left:4px solid var(--mu);border-radius:9px;padding:7px 12px;background:#fff}'+
+    '.ce-dbt-r.above{border-left-color:#0a8f4c}.ce-dbt-r.below{border-left-color:'+RED+'}'+
+    '.ce-dbt-k{font-size:11.5px;font-weight:800;color:var(--navy)}'+
+    '.ce-dbt-v{font-size:11px;color:var(--navy);font-variant-numeric:tabular-nums}'+
+    '.ce-dbt-v b{font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin-right:5px}'+
+    '.ce-dbt-d{font-size:12px;font-weight:900;text-align:right;font-variant-numeric:tabular-nums}'+
+    '.ce-dbt-r.above .ce-dbt-d{color:#0a8f4c}.ce-dbt-r.below .ce-dbt-d{color:'+RED+'}'+
+    '.ce-dbt-none{border:1px dashed var(--bdr);border-radius:10px;padding:10px 13px;font-size:11px;'+
+      'line-height:1.55;color:var(--mu);background:#FAFBFD}'+
+    '@media(max-width:640px){.ce-dbt-r{grid-template-columns:1fr auto}.ce-dbt-v{display:none}}'+
+  '</style>';
+}
+function ceSetupBody(c){
+  var h=ceStyle()+ceGridStyle();
+  h+=CALL_EARNINGS.quarters.map(function(u,qi){
+    var qk=ceQkey(u.q), frozen=(u.status!=='upcoming');
+    var b='<div class="ce-qblock" data-ceq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
+    b+='<div class="ce-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="ce-frozen">frozen</span>':'')+'</div>';
+    var st=u.setup||{}, hasGrid=(CE_CONS.q.indexOf(u.q)>=0);
+    if(hasGrid){
+      b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup.</b> The numbers going in — what the <b>Street</b> expects, what <b>Summit</b> expects, and where the two disagree. '+(u.date?((frozen?'Reported <b>':'Reports <b>')+esc(u.date)+'</b>.'):'')+'</p>';
       b+='<div class="ov-diagram-cap" style="margin:6px 0 6px;display:flex;flex-wrap:wrap;align-items:center;gap:12px"><b>Estimates</b>'+
         '<span class="mg-seg" style="display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px">'+
-          '<button type="button" class="cp-ev-pill active" data-cpev="cons">Consensus</button>'+
-          '<button type="button" class="cp-ev-pill" data-cpev="us">Summit</button>'+
-          '<button type="button" class="cp-ev-pill" data-cpev="both">Both</button>'+
+          '<button type="button" class="ce-ev-pill active" data-ceev="cons">Consensus</button>'+
+          '<button type="button" class="ce-ev-pill" data-ceev="us">Summit</button>'+
+          '<button type="button" class="ce-ev-pill" data-ceev="both">Both</button>'+
         '</span>'+
+        '<span class="ce-gseg"><button type="button" class="active" data-ceg="yoy">YoY</button>'+
+          '<button type="button" data-ceg="qoq">QoQ</button>'+
+          '<button type="button" data-ceg="off">Off</button></span>'+
+        '<span class="ce-gseg"><button type="button" data-cemm="on">Margin</button>'+
+          '<button type="button" class="active" data-cemm="off">Hide mgn</button></span>'+
         (st.source?'<span style="color:var(--mu);font-weight:600;font-size:10px">'+esc(st.source)+(st.asOf?' · as of '+esc(st.asOf):'')+'</span>':'')+
       '</div>';
-      b+='<div class="cp-evwrap" data-ev="cons">';
-      b+='<div class="cp-row-cap">Headline — every company, always</div>';
-      b+='<div class="cp-grid4">'+hl.map(function(m,i){ return cpEvCell('hl-'+qk+'-'+i, m, false); }).join('')+'</div>';
-      b+='<div class="cp-row-cap" style="margin-top:12px">Custom KPIs — Mastercard</div>';
-      b+='<div class="cp-grid4">'+cu.map(function(m,i){ return cpEvCell('cu-'+qk+'-'+i, m, true); }).join('')+'</div>';
+      b+='<div class="ce-evwrap" data-ev="cons" data-g="yoy">';
+      b+='<div class="ce-row-cap">Headline — every company, always</div>'+ceGrid(u,'head');
+      b+='<div class="ce-row-cap" style="margin-top:12px">Custom KPIs — Mastercard</div>'+ceGrid(u,'cust');
       b+='</div>';
-      b+='<div class="ave-subh-note" style="margin-top:6px">Green = YoY. <b>Street</b> = Bloomberg (BST) consensus, hardcoded from the team\'s export only. <b>Summit</b> = our own expectation (Mastercard is not in the Summit DCF universe → to fill). <b>?</b> = a number with a caveat worth knowing.</div>';
-      var md=st.marketDebate;
-      if(md){
-        b+='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The setup, in one picture — what the print will settle</b></div>';
-        b+='<div class="cp-debate">'+
-          '<div class="cp-dc fear"><div class="cp-dc-h">What the tape fears</div><div class="cp-dc-b">'+md.fear+'</div></div>'+
-          '<div class="cp-dc real"><div class="cp-dc-h">What consensus actually models</div><div class="cp-dc-b">'+md.real+'</div></div>'+
-        '</div>';
-        if(md.mech&&md.mech.length){
-          b+='<div class="cp-mech">'+md.mech.map(function(m,i){ var ar=m.dir==='up'?'<span style="color:#0a8f4c">▲</span>':(m.dir==='down'?'<span style="color:'+RED+'">▼</span>':''); return (i>0?'<span class="cp-mech-ar">→</span>':'')+'<span class="cp-mech-chip">'+ar+' '+esc(m.k)+' <span style="color:var(--mu);font-weight:700">'+esc(m.v)+'</span></span>'; }).join('')+'</div>';
-        }
-        if(md.synth) b+='<div class="cp-synth">'+md.synth+'</div>';
-      }
-      var d=st.debate;
-      b+='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The debate — where Summit differs from the Street, and why</b></div>';
-      if(d){
-        if(d.rows&&d.rows.length){
-          b+='<div class="cp-tc">'+d.rows.map(function(r){
-            return '<div class="cp-tc-row" style="border-left:3px solid '+BRAND+'"><span style="font-weight:800;color:var(--navy);white-space:nowrap">'+esc(r.k)+'</span><span><b>Street:</b> '+esc(r.street||'—')+' · <b>Summit:</b> '+esc(r.us||'—')+'<br><span style="color:var(--mu)">'+ (r.why||'') +'</span></span></div>';
+      b+='<div class="ave-subh-note" style="margin-top:6px">Growth chips are computed from the archive: <b>YoY</b> against the year-ago actual, <b>QoQ</b> against the prior quarter. '+
+         '<b>Street</b> = Bloomberg (BST), hardcoded from the export only. <b>Summit</b> = our own expectation. <b>?</b> = a number with a caveat worth knowing. '+
+         '<span style="color:#B7791F">All cells STUB — populate CE_CONS from the Q2 2026 BBG export.</span></div>';
+      var d=st.debate, dqi=CE_CONS.q.indexOf(u.q), dus=st.us||{};
+      if(dqi>=0){
+        var diffs=[], nous=[];
+        CE_CONS.m.forEach(function(m){
+          var c=m.qr[dqi]?m.qr[dqi][3]:null, uv=dus[m.k]?dus[m.k].v:null;
+          if(c==null) return;
+          if(uv==null){ nous.push(m.k); return; }
+          diffs.push({ k:m.k, c:c, u:uv, d:((uv/c-1)*100), t:m.t, un:m.u });
+        });
+        diffs.sort(function(x,z){ return Math.abs(z.d)-Math.abs(x.d); });
+        b+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>The debate — where Summit differs from the Street</b>'+
+           '<span style="color:var(--mu);font-weight:600;font-size:10px"> · sorted by the size of the gap</span></div>';
+        if(diffs.length){
+          b+='<div class="ce-dbt">'+diffs.map(function(x){
+            var side=(x.d>=0)?'above':'below';
+            return '<div class="ce-dbt-r '+side+'">'+
+              '<span class="ce-dbt-k">'+esc(x.k)+'</span>'+
+              '<span class="ce-dbt-v"><b>Street</b> '+ceFmtV(x.un,x.c)+'</span>'+
+              '<span class="ce-dbt-v"><b>Summit</b> '+ceFmtV(x.un,x.u)+'</span>'+
+              '<span class="ce-dbt-d">'+(x.d>=0?'+':'−')+Math.abs(x.d).toFixed(1)+'%</span></div>';
           }).join('')+'</div>';
         }
-        if(d.synth) b+='<div class="cp-synth">'+d.synth+'</div>';
-      } else {
-        b+='<div class="cp-note">Fills once both estimate sets are in (Bloomberg export + Summit expectations): line-by-line disparities and the mechanism behind why we see it differently.</div>';
+        if(nous.length){
+          b+='<div class="ce-dbt-none"><b>No Summit number yet on '+nous.length+' of '+(nous.length+diffs.length)+' lines:</b> '+
+             esc(nous.join(' · '))+'.<br>Until those are filled the debate is the Street against itself — '+
+             'the grid above still shows what it expects, and the track record below shows how often it has been wrong.</div>';
+        }
+        if(d&&d.synth) b+='<div class="ce-synth">'+d.synth+'</div>';
       }
       b+='<div class="ov-foot">Frozen at call time; Post-Results scores actuals against BOTH columns.</div>';
-    } else {
-      b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup, as it stood going in.</b> '+(u.date?('Reported <b>'+esc(u.date)+'</b>.'):'')+'</p>';
-      if(st.source) b+='<div class="ave-subh-note" style="margin:0 0 8px">'+esc(st.source)+'</div>';
-      if(st.pricedIn) b+='<div class="cp-banner"><b>What was priced in:</b> '+st.pricedIn+'</div>';
-      if(st.oneLiner) b+='<div class="cp-synth">'+st.oneLiner+'</div>';
-      b+='<div class="ov-foot">Frozen — scored in Post-Results / Post-Call for this quarter.</div>';
+    }
+    if(st.pricedIn||st.oneLiner){
+      if(!hasGrid){
+        b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup, as it stood going in.</b> '+(u.date?('Reported <b>'+esc(u.date)+'</b>.'):'')+'</p>';
+        if(st.source) b+='<div class="ave-subh-note" style="margin:0 0 8px">'+esc(st.source)+'</div>';
+      } else {
+        b+='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The contemporaneous read — written before the print, never rewritten</b></div>';
+      }
+      if(st.pricedIn) b+='<div class="ce-banner"><b>What was priced in:</b> '+st.pricedIn+'</div>';
+      if(st.oneLiner) b+='<div class="ce-synth">'+st.oneLiner+'</div>';
+      b+='<div class="ov-foot">Frozen — scored in Post-Results for this quarter.</div>';
     }
     b+='</div>';
     return b;
   }).join('');
+  h+=ceAnnualBody();
   return h;
 }
-function cpWatchItem(w, qk, idSfx, qLabel){
+// A1 · The Setup chart — DEFERRED STUB. The Results-engine merged Setup chart (mirror of Results)
+// renders here once an MA_SETUP dataset is registered in RESULTS_DATA (built from the Q2 2026 BBG
+// export + MA 8-K guidance). No period series is fabricated. (§4.5 of the migration spec.)
+function ceAnnualBody(){
+  return '<div class="ce-ann" style="margin:20px 0 4px;padding:16px 0 0;border-top:2px solid var(--bdr)">'+
+    '<div class="ov-sec-h">The Setup picture — reported vs Street/Summit over time</div>'+
+    '<div class="ce-note">📊 <b>Setup chart — DEFERRED (STUB).</b> The merged actuals-vs-estimates Setup chart (same engine as Results) will render here once an <code>MA_SETUP</code> dataset is built and registered in <code>RESULTS_DATA</code> — from the Q2 2026 BBG export + MA 8-K guidance. Not fabricated; no period series is invented.</div>'+
+    '</div>';
+}
+function ceSetupWrap(){ return document.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phpane[data-cep="setup"] .rs-wrap'); }
+function gBuildCeAnnual(){ var w=ceSetupWrap(); if(w) initResults(w, 'MA_SETUP'); }   // no-op until MA_SETUP exists
+function wireCeAnnual(root){ /* engine self-wires; Setup chart deferred */ }
+
+// B · Watch List — one card per WL_ROWS row. idSfx keeps pop-up ids unique; qLabel shows the quarter
+// chip in the flat view; editable adds the ✎/✕ controls (live quarter only).
+function ceWatchItem(w, qk, idSfx, qLabel, editable){
   var deep='';
-  if(w.seededBy) deep+='<p style="border-left:3px solid '+PURPLE+';padding-left:9px;margin-bottom:10px"><b>'+(w.seededBy.tripped?'Seeded by a TRIPPED red-line':'Seeded by')+' '+esc(w.seededBy.q)+':</b> "'+esc(w.seededBy.n)+'"</p>';
-  if(w.src) deep+='<p><b>Why it\'s on the list:</b> '+w.src+'</p>';
-  if(w.why) deep+='<p><b>Why it matters:</b> '+w.why+'</p>';
+  if(w.seededBy) deep+='<p style="border-left:3px solid '+PURPLE+';padding-left:9px;margin-bottom:10px"><b>'+(w.seededBy.tripped?'Seeded by a TRIPPED trigger':'Seeded by')+' '+esc(w.seededBy.q)+':</b> "'+esc(w.seededBy.n)+'"</p>';
+  if(w.src) deep+='<p><b>Why it earned a slot:</b> '+w.src+'</p>';
   if(w.thread&&w.thread.length){
     deep+='<p style="margin-bottom:4px"><b>The thread — how this theme has evolved:</b></p>'+
       w.thread.map(function(t){ return '<div style="display:flex;gap:9px;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:12px;line-height:1.5"><b style="white-space:nowrap;color:'+BRAND+'">'+esc(t.q)+'</b><span>'+t.n+'</span></div>'; }).join('');
   }
-  var why=deep?cpReg('watchwhy-'+qk+'-'+(w.rank||0)+idSfx, esc(w.metric), deep):null;
+  var why=deep?ceReg('watchwhy-'+(w.id||qk+'-'+(w.rank||0))+idSfx, esc(w.theme), deep):null;
   var tagsAttr=(w.tags&&w.tags.length)?w.tags.join(' '):'';
-  var seed=w.seededBy?'<span class="cp-seed" title="'+esc(w.seededBy.n)+'">'+(w.seededBy.tripped?'⚑ red-line tripped in '+esc(w.seededBy.q):'left open by '+esc(w.seededBy.q))+'</span>':'';
-  return '<div class="cp-w" data-wltags="'+esc(tagsAttr)+'"><div class="cp-w-top"><div class="cp-w-rank">'+(w.rank||'•')+'</div><div class="cp-w-metric">'+esc(w.metric)+'</div>'+seed+
+  var seed=w.seededBy?'<span class="ce-seed" title="'+esc(w.seededBy.n)+'">'+(w.seededBy.tripped?'⚑ thesis line broke in '+esc(w.seededBy.q):'left open by '+esc(w.seededBy.q))+'</span>':'';
+  var open=wlOpen(w);
+  var ctl=editable?'<span class="ce-w-ctl"><button type="button" class="ce-w-ed" data-wledit="'+esc(w.id||'')+'" title="Edit this theme (and close its hook by filling Tracking until)">✎</button>'+
+    '<button type="button" class="ce-w-del" data-wldel="'+esc(w.id||'')+'" title="Remove this theme">✕</button></span>':'';
+  return '<div class="ce-w" data-wltags="'+esc(tagsAttr)+'" data-wlid="'+esc(w.id||'')+'" data-wlopen="'+(open?'1':'0')+'">'+
+    '<div class="ce-w-top"><span class="ce-w-dot" aria-hidden="true"></span><div class="ce-w-metric">'+esc(w.theme)+'</div>'+seed+
+    (w.trackUntil?'<span class="ce-w-closed" title="Hook closed in '+esc(w.trackUntil)+'">closed</span>':'')+
     (qLabel?'<span class="ov-chip" style="font-size:9.5px;background:rgba(207,10,44,0.10);color:'+BRAND+';border-radius:20px;padding:2px 9px;font-weight:800;flex:none">'+esc(qLabel)+'</span>':'')+
-    (why?'<span class="cp-why-btn ov-clickable" data-detail="cp:'+why+'" style="margin:0">why'+(w.thread?' + the thread':'')+' ›</span>':'')+'</div>'+
-    '<div class="cp-w-q"><span class="mic">🔎</span><span>'+cpFill(w.pista||w.question)+'</span></div>'+
-    '<div class="cp-w-chips">'+
-      (w.tags&&w.tags.length?w.tags.map(function(t){ return '<span class="cp-w-chip" style="background:rgba(122,90,248,0.08);border:1px solid rgba(122,90,248,0.3);color:var(--navy)">#'+esc(t)+'</span>'; }).join(''):'')+
-      (w.since?'<span class="cp-w-chip" style="background:rgba(255,159,0,0.14);border:1px solid rgba(183,121,31,0.35);color:var(--navy)"><b>Tracking since:</b> '+esc(w.since)+'</span>':'')+
-      (w.bbg?'<span class="cp-w-chip cons"><b>Cons:</b> '+esc(w.bbg)+'</span>':'')+
-      (w.breaks?'<span class="cp-w-chip red"><b>Breaks if:</b> '+esc(w.breaks)+'</span>':'')+
+    (why?'<span class="ce-why-btn ov-clickable" data-detail="ce:'+why+'" style="margin:0">'+(w.thread?'the thread':'background')+' ›</span>':'')+ctl+'</div>'+
+    (w.definition?'<div class="ce-w-def">'+w.definition+'</div>':'')+
+    '<div class="ce-w-chips">'+
+      (w.tags&&w.tags.length?w.tags.map(function(t){ return '<span class="ce-w-chip tag">#'+esc(t)+'</span>'; }).join(''):'')+
+      (w.trackSince?'<span class="ce-w-chip since"><b>Tracking since:</b> '+esc(w.trackSince)+'</span>':'')+
+      (w.trackUntil?'<span class="ce-w-chip until"><b>Tracking until:</b> '+esc(w.trackUntil)+'</span>':'')+
     '</div>'+
   '</div>';
 }
-function cpWatchTags(){
-  var set=[], seen={};
-  CALL_PREP.quarters.forEach(function(u){ (u.watchList||[]).forEach(function(w){ (w.tags||[]).forEach(function(t){ if(!seen[t]){ seen[t]=1; set.push(t); } }); }); });
-  return set;
+function ceQuarterOpts(sel, blankLabel){
+  var latest=CALL_EARNINGS.quarters[0] ? ceQnum(CALL_EARNINGS.quarters[0].q) : null;
+  var start=2024*4+1;
+  var end=latest||(2026*4+3);
+  var out='<option value="">'+esc(blankLabel||'—')+'</option>';
+  for(var t=end; t>=start; t--){
+    var lab='Q'+(((t-1)%4)+1)+' '+Math.floor((t-1)/4);
+    out+='<option value="'+esc(lab)+'"'+(sel===lab?' selected':'')+'>'+esc(lab)+'</option>';
+  }
+  return out;
 }
-function cpWatchBody(c){
-  var h=cpStyle();
-  h+='<div class="cp-wl-tagbar"><span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu)">Filter by theme (across quarters):</span>'+
-    cpWatchTags().map(function(t){ return '<button type="button" class="cp-wl-tag" data-wltag="'+esc(t)+'">#'+esc(t)+'</button>'; }).join('')+
-    '<button type="button" class="cp-wl-tag cp-wl-clear" data-wltag="">clear</button>'+
-    '<button type="button" class="cp-wl-add-btn">+ Add theme</button>'+
+function ceWlForm(){
+  return '<div class="ce-wl-addform" hidden>'+
+    '<div class="ce-wl-fh"><b class="ce-wl-fh-t">New theme</b><span class="ce-wl-fh-s">the hunt list is ours — the model does not get a vote on this tab</span></div>'+
+    '<input type="hidden" data-wlf="id">'+
+    '<label class="ce-wl-lb">Theme <span>what we are hunting</span></label>'+
+    '<input class="ce-wl-in" data-wlf="theme" placeholder="e.g. Regulatory: CCCA routing mandate">'+
+    '<label class="ce-wl-lb">Tags <span>click to select · they drive the cross-quarter filter</span></label>'+
+    '<div class="ce-wl-tagpick" data-wlf="tagpick"></div>'+
+    '<div class="ce-wl-newtag"><input class="ce-wl-in" data-wlf="newtag" placeholder="create a new tag (e.g. regulatory)"><button type="button" class="ce-wl-newtag-go">+ add tag</button></div>'+
+    '<label class="ce-wl-lb">Definition <span>required — what the theme means, in our words</span></label>'+
+    '<textarea class="ce-wl-in ce-wl-ta" data-wlf="definition" rows="3" placeholder="What this theme is and why it moves the thesis"></textarea>'+
+    '<div class="ce-wl-2col">'+
+      '<div><label class="ce-wl-lb">Tracking since</label><select class="ce-wl-in" data-wlf="trackSince">'+ceQuarterOpts(null,'— pick a quarter —')+'</select></div>'+
+      '<div><label class="ce-wl-lb">Tracking until <span>empty = still open</span></label><select class="ce-wl-in" data-wlf="trackUntil">'+ceQuarterOpts(null,'— still open —')+'</select></div>'+
+    '</div>'+
+    '<div class="ce-wl-frow"><button type="button" class="ce-wl-add-go">Add to the live list</button>'+
+      '<button type="button" class="ce-wl-cancel">cancel</button>'+
+      '<span class="ave-subh-note">Lives for this session only. Persisting = COPY the table at the bottom and hardcode it into <code>WL_ROWS</code>.</span></div>'+
   '</div>';
-  h+='<div class="cp-wl-addform" hidden>'+
-    '<input class="cp-wl-in" data-wlf="metric" placeholder="Theme (e.g. Regulatory: CCCA routing mandate)">'+
-    '<input class="cp-wl-in" data-wlf="tags" placeholder="tags, comma-separated (e.g. regulatory, cross-border)">'+
-    '<input class="cp-wl-in" data-wlf="pista" placeholder="The tell 🔎 — a standing read, not a question">'+
-    '<input class="cp-wl-in" data-wlf="breaks" placeholder="Breaks if… (the falsifiable red-line)">'+
-    '<div><button type="button" class="cp-wl-add-go">Add to this quarter\'s list</button><span class="ave-subh-note" style="margin-left:8px">Lives for this session — to persist it, it gets committed into CALL_PREP.</span></div>'+
+}
+var WL_COLS=[
+  {k:'id',l:'id'},{k:'q',l:'quarter'},{k:'rank',l:'order'},{k:'theme',l:'theme'},
+  {k:'tags',l:'tags'},{k:'definition',l:'definition'},
+  {k:'trackSince',l:'tracking since'},{k:'trackUntil',l:'tracking until'}
+];
+function wlCellText(r, k){
+  var v=r[k];
+  if(k==='tags') return (v||[]).join(', ');
+  if(v==null) return '';
+  return String(v).replace(/<[^>]+>/g,'');
+}
+function wlCount(){
+  var open=WL_ROWS.filter(wlOpen).length;
+  return WL_ROWS.length+' rows · '+open+' open hook'+(open===1?'':'s')+' · live';
+}
+function ceWlTableRows(){
+  return WL_ROWS.map(function(r){
+    return '<tr'+(wlOpen(r)?' class="wl-open"':'')+'>'+WL_COLS.map(function(c){
+      var t=wlCellText(r,c.k);
+      var cls=(c.k==='theme')?' class="wl-th"':((c.k==='id'||c.k==='q'||c.k==='rank')?' class="wl-key"':'');
+      return '<td'+cls+'>'+(t?esc(t):'<span class="ce-empty">—</span>')+'</td>';
+    }).join('')+'</tr>';
+  }).join('');
+}
+function ceWlTable(){
+  return '<div class="ce-wl-tbl-wrap" id="maWlTable">'+
+    '<div class="ce-wl-tbl-h">'+
+      '<span class="ce-wl-tbl-t">The Watch List table — one row per theme</span>'+
+      '<span class="ce-wl-tbl-s">the storage view</span>'+
+      '<span class="ce-wl-tbl-n">'+wlCount()+'</span>'+
+      '<button type="button" class="ce-wl-copy alt" data-wltoggle="1">show table</button>'+
+      '<button type="button" class="ce-wl-copy" data-wlcopy="tsv">COPY</button>'+
+      '<button type="button" class="ce-wl-copy alt" data-wlcopy="json">copy JSON</button>'+
+    '</div>'+
+    '<div class="ce-wl-tbl-sc" data-wltblbody hidden>'+'<table class="ce-wl-tbl"><thead><tr>'+
+      WL_COLS.map(function(c){ return '<th>'+esc(c.l)+'</th>'; }).join('')+
+    '</tr></thead><tbody class="ce-wl-tbody">'+ceWlTableRows()+'</tbody></table></div>'+
+    '<div class="ave-subh-note" style="margin-top:7px"><b>The round-trip:</b> add / edit / delete themes above → this table updates → hit <b>COPY</b> (tab-separated) or <b>copy JSON</b> (exact) → paste it back and it gets hardcoded into <code>WL_ROWS</code> in a commit. Persistent editing needs Supabase — pending assignment.</div>'+
   '</div>';
-  h+=CALL_PREP.quarters.map(function(u,qi){
-    var qk=cpQkey(u.q), frozen=(u.status!=='upcoming');
-    var b='<div class="cp-qblock" data-cpq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="cp-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="cp-frozen">frozen</span>':'')+'</div>';
-    b+='<p class="ov-lede"><b>Five things to hunt — '+esc(u.q)+'</b>'+(frozen?' <span style="color:var(--mu);font-weight:600">(the list as it was frozen before this call — scored afterwards in Post-Results)</span>':'')+', numbered 1–5 by <b>how much they move the stock × how debated they are</b>. Each card carries: the <b>tell</b> (🔎) — what to actually watch for; what the <b>Street expects</b>; and the <b>red-line</b> that would break the thesis. Tap <b>why ›</b> for the grounding and the quarter-by-quarter thread.</p>';
-    b+='<div class="cp-legend"><span class="cp-legend-i"><b>How to read the cards:</b></span>'+
-      '<span class="cp-legend-i"><span class="cp-seed">left open by Q1 FY2026</span> it is on the list because last quarter\'s call did not settle it</span>'+
-      '<span class="cp-legend-i"><span class="cp-seed">⚑ red-line tripped in Q1 FY2026</span> stronger — a thesis line actually broke last quarter</span>'+
+}
+function ceWatchBody(c){
+  var h=ceStyle();
+  h+='<div class="ce-wl-hint">🔁 <b>How quarters advance:</b> a new <i>upcoming</i> quarter appears in Setup & Watch List <b>only once the prior quarter\'s Post-Results (print + call highlights) is filled</b>. Fill Q(n) Post-Results → then Q(n+1) opens for prep.</div>';
+  h+='<div class="ce-wl-tagbar"><span class="ce-wl-bar-k">Filter by theme (across quarters):</span>'+
+    wlTags().map(function(t){ return '<button type="button" class="ce-wl-tag" data-wltag="'+esc(t)+'">#'+esc(t)+'</button>'; }).join('')+
+    '<button type="button" class="ce-wl-tag ce-wl-clear" data-wltag="">clear</button>'+
+    '<button type="button" class="ce-wl-add-btn">+ Add theme</button>'+
+  '</div>';
+  h+='<div class="ce-wl-tagbar" style="margin-top:-4px"><span class="ce-wl-bar-k">Tracking window:</span>'+
+    '<span class="mg-seg" style="display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px">'+
+      '<button type="button" class="ce-wl-win active" data-wlwin="all">All</button>'+
+      '<button type="button" class="ce-wl-win" data-wlwin="open">Open hooks</button>'+
+      '<button type="button" class="ce-wl-win" data-wlwin="closed">Closed</button>'+
+    '</span>'+
+    '<span class="ave-subh-note" style="margin-left:4px">A theme is <b>open</b> while it has a <i>Tracking since</i> and no <i>Tracking until</i>. We open and close them by hand.</span>'+
+  '</div>';
+  h+=ceWlForm();
+  h+=CALL_EARNINGS.quarters.map(function(u,qi){
+    var qk=ceQkey(u.q), frozen=(u.status!=='upcoming');
+    var b='<div class="ce-qblock" data-ceq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
+    b+='<div class="ce-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="ce-frozen">frozen</span>':'')+'</div>';
+    var wl=wlFor(u.q, !frozen);
+    b+='<p class="ov-lede"><b>'+(frozen?'The list as it was frozen — ':'Things to hunt — ')+esc(u.q)+'</b>'+
+      (frozen?' <span style="color:var(--mu);font-weight:600">(scored afterwards in Post-Results)</span>':' <span style="color:var(--mu);font-weight:600">(the open hooks — a <i>Tracking since</i> with no <i>Tracking until</i>)</span>')+
+      '. Each card carries its <b>definition</b> — what the theme means in our words — its <b>tags</b>, and its <b>tracking window</b>. Tap <b>the thread ›</b> for the grounding and the quarter-by-quarter evolution. Ordered by weight, deliberately <b>not numbered</b>.</p>';
+    b+='<div class="ce-legend"><span class="ce-legend-i"><b>How to read the cards:</b></span>'+
+      '<span class="ce-legend-i"><span class="ce-seed">left open by Q1 2026</span> it is on the list because last quarter\'s call did not settle it</span>'+
+      '<span class="ce-legend-i"><span class="ce-w-chip since"><b>Tracking since:</b> Q1 2026</span> with no <i>Tracking until</i> ⇒ the hook is still open</span>'+
+      (frozen?'':'<span class="ce-legend-i"><span class="ce-w-ed" style="pointer-events:none">✎</span> edit — including closing the hook by filling <i>Tracking until</i></span>')+
     '</div>';
-    var wl=u.watchList||[];
-    if(!wl.length){ b+='<div class="cp-note">Watch List builds from the earnings-call record + the Bloomberg export — 5 ranked, grounded, falsifiable items per the conventions.</div>'; }
-    else{ b+='<div class="cp-watch">'+wl.map(function(w){ return cpWatchItem(w, qk, '', null); }).join('')+'</div>'; }
-    b+='<div class="ov-foot">'+(frozen?'Frozen — this list was scored against '+esc(u.q)+'\'s Post-Results/Post-Call; its newQuestions seeded the next quarter.':'Frozen once the quarter opens; scored against Post-Results / Post-Call. Themes carry their quarter-by-quarter thread — promise-type items are tracked here and in the theme record below.')+'</div>';
+    if(!wl.length){ b+='<div class="ce-note">No open hooks for '+esc(u.q)+' yet — add themes with <b>+ Add theme</b> above.</div>'; }
+    else{ b+='<div class="ce-watch">'+wl.map(function(w){ return ceWatchItem(w, qk, '', null, !frozen); }).join('')+'</div>'; }
+    b+='<div class="ov-foot">'+(frozen?'Frozen — this list was scored against '+esc(u.q)+'\'s Post-Results; its <code>newQuestions</code> seeded the next quarter.':'Ours to curate: Post-Results lets the model run (numbers + call highlights), but what earns a slot here is our call. Frozen once the quarter opens.')+'</div>';
     b+='</div>';
     return b;
   }).join('');
-  h+='<div class="cp-wl-all" hidden>';
-  h+='<div class="cp-phase" style="background:'+PURPLE+'">Themes across quarters</div>';
+  h+='<div class="ce-wl-all" hidden>';
+  h+='<div class="ce-phase" style="background:'+PURPLE+'">Themes across quarters</div>';
   h+='<p class="ov-lede">Every watch item matching the selected theme(s), <b>across all quarters</b> — how the same hunt evolved print to print. Clear the tags (or pick a quarter) to return to the per-quarter view.</p>';
-  h+='<div class="cp-watch">'+CALL_PREP.quarters.map(function(u){
-    var qk=cpQkey(u.q);
-    return (u.watchList||[]).map(function(w){ return cpWatchItem(w, qk, '-f', u.q); }).join('');
-  }).join('')+'</div>';
+  h+='<div class="ce-watch">'+WL_ROWS.map(function(r){ return ceWatchItem(r, ceQkey(r.q), '-f', r.q, false); }).join('')+'</div>';
   h+='</div>';
-  // ── FUSED (v2.3): the full multi-year theme record — the former standalone Earnings Calls tab. ──
+  h+=ceWlTable();
   h+='<div style="margin-top:26px;border-top:2px solid var(--bdr);padding-top:16px">';
-  h+='<div class="cp-band" style="--bc:'+BRAND+'"><span class="cp-band-i">▤</span><span class="cp-band-t">The theme record — every thread, across all calls</span><span class="cp-band-s">the multi-year backbone behind the hunt above (the former "Earnings Calls" tab, folded in)</span><span class="cp-band-l"></span></div>';
+  h+='<div class="ce-band" style="--bc:'+BRAND+'"><span class="ce-band-i">▤</span><span class="ce-band-t">The theme record — every thread, across all calls</span><span class="ce-band-s">the multi-year backbone behind the hunt above (the former "Earnings Calls" tab, folded in)</span><span class="ce-band-l"></span></div>';
   h+=maCallsBody(c);
   h+='</div>';
   return h;
 }
-var CP_RES={ beat:{c:'#0a8f4c',l:'Beat'}, miss:{c:RED,l:'Miss'}, inline:{c:'#6b7684',l:'In line'},
+
+var CE_RES={ beat:{c:'#0a8f4c',l:'Beat'}, miss:{c:RED,l:'Miss'}, inline:{c:'#6b7684',l:'In line'},
              nodisc:{c:AMBER,l:'Not disclosed'}, nocons:{c:PURPLE,l:'No consensus'} };
-var CP_HLTAG={ thesis:{c:'#0a8f4c',l:'Thesis'}, curious:{c:'#7A5AF8',l:'Curious'}, dots:{c:'#2E6BE6',l:'Connects dots'}, watch:{c:'#B7791F',l:'Watch'}, tone:{c:'#B7791F',l:'Tone'} };
-function cpResultsBody(c){
-  var h=cpStyle();
-  h+=CALL_PREP.quarters.map(function(q,qi){
-    var qk=cpQkey(q.q);
-    var b='<div class="cp-qblock" data-cpq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="cp-phase" style="background:'+BRAND2+'">② Post-Results</div>';
-    b+='<p class="ov-lede"><b>'+esc(q.q)+' — the numbers vs. the frozen expectations.</b> Results land first (release ~4pm, call comes later) — the read on the <b>print itself</b>, before management says a word.</p>';
+var CE_HLTAG={ thesis:{c:'#0a8f4c',l:'Thesis'}, curious:{c:'#7A5AF8',l:'Curious'}, dots:{c:'#2E6BE6',l:'Connects dots'}, watch:{c:'#B7791F',l:'Watch'}, tone:{c:'#B7791F',l:'Tone'} };
+function ceTkFmt(u,v){
+  if(v==null) return '';
+  if(u==='$')  return '$'+(+v).toFixed(2);
+  if(u==='$B') return '$'+(+v).toFixed(1)+'B';
+  if(u==='B')  return (+v).toFixed(2)+'B';
+  return String(v);
+}
+function ceVerdict(m, c, a, surp){
+  if(a==null) return {l:'—', c:'#9AA4B0', k:'none'};
+  if(c==null) return {l:'no est.', c:'#7A5AF8', k:'noest'};
+  if(surp==null) return {l:'—', c:'#9AA4B0', k:'none'};
+  if(Math.abs(surp)<2) return {l:CE_RES.inline.l, c:CE_RES.inline.c, k:'inline'};
+  return surp>0 ? {l:CE_RES.beat.l, c:CE_RES.beat.c, k:'beat'} : {l:CE_RES.miss.l, c:CE_RES.miss.c, k:'miss'};
+}
+// cePrintBlock · THE print, archive-driven (CE_CONS) + hand-authored notes/watch. Ranked by surprise.
+// STUB — renders empty until CE_CONS carries actuals; the notes/watch data is already relocated here.
+function cePrintBlock(qLabel, r, us){
+  var qi=CE_CONS.q.indexOf(qLabel); if(qi<0) return '';
+  r=r||{}; us=us||{};
+  var notes=r.notes||{}, watch=r.watch||{};
+  var revM=CE_CONS.m.filter(function(x){ return x.k==='Net revenue'; })[0];
+  var revC=(revM&&revM.qr[qi])?revM.qr[qi][3]:null, revA=revM?revM.qa[qi]:null;
+  var revS=(us['Net revenue']&&us['Net revenue'].v!=null)?us['Net revenue'].v:revC;
+  var tiles=CE_CONS.m.map(function(m){
+    var c=m.qr[qi]?m.qr[qi][3]:null, a=m.qa[qi];
+    var uexp=(us[m.k]&&us[m.k].v!=null)?us[m.k].v:null;
+    if(c==null&&a==null&&uexp==null) return null;
+    var cSurp=(c!=null&&a!=null&&c)?((a/c-1)*100):null;
+    var uSurp=(uexp!=null&&a!=null&&uexp)?((a/uexp-1)*100):null;
+    var cV=ceVerdict(m,c,a,cSurp), uV=ceVerdict(m,uexp,a,uSurp);
+    var g=function(base){
+      var bv=(base==='qoq')?m.qq[qi]:m.qy[qi];
+      if(a==null||bv==null||!bv) return '<span class="ce-fz-g-e">—</span>';
+      var gv=Math.round((a/bv-1)*100);
+      return '<span style="color:'+(gv>=0?'#0a8f4c':'#C5221F')+'">'+(gv>=0?'+':'−')+Math.abs(gv)+'%</span>';
+    };
+    var surpTag=function(s){ return (s==null)?'':'<span class="ce-fz-d '+(s>=0?'up':'dn')+'">'+(s>=0?'+':'−')+(Math.round(Math.abs(s)*10)/10)+'%</span>'; };
+    var mgnOn=CE_MARGIN_ON[m.k], mReal=mgnOn?ceMarginPct(a,revA):null;
+    var mExpC=mgnOn?ceMarginPct(c,revC):null, mExpU=mgnOn?ceMarginPct(uexp,revS):null;
+    var dPts=function(exp){ if(mReal==null||exp==null) return ''; var d=Math.round((mReal-exp)*10)/10;
+      return '<span class="ce-fz-mdl '+(d>=0?'up':'dn')+'">'+(d>=0?'+':'−')+Math.abs(d)+' pts</span>'; };
+    var mRow='';
+    if(mgnOn&&mReal!=null){
+      mRow='<div class="ce-fz-mrow"><span class="ce-fz-gl">margin</span>'+
+        '<span class="ce-fz-mexp ce-exp-cons">exp '+(mExpC!=null?mExpC+'%':'—')+dPts(mExpC)+'</span>'+
+        '<span class="ce-fz-mexp ce-exp-us">exp '+(mExpU!=null?mExpU+'%':'—')+dPts(mExpU)+'</span>'+
+        '<span class="ce-fz-ar">→</span><span class="ce-fz-mreal">'+mReal+'% realized</span>'+
+        ceQ('mgn-'+ceQkey(qLabel)+'-'+ceQkey(m.k),'Margin — expected vs realized',
+          '<p><b>Expected</b> is the margin <i>implied by the estimate</i>: the estimate\'s metric ÷ the estimate\'s own Net revenue (Street = BBG ÷ BBG, Summit = ours ÷ ours). <b>Realized</b> is the print\'s own margin (actual ÷ actual). This is expectation vs outcome for the quarter — <b>there is no YoY/QoQ on the margin</b>.</p>')+
+        '</div>';
+    }
+    var note=notes[m.k];
+    var qb=note?ceReg('resnote-'+ceQkey(qLabel)+'-'+ceQkey(m.k), note.t||m.k, note.h||note):null;
+    var wrRank=watch[m.k], wrTheme=null;
+    if(wrRank){ var wrow=wlFor(qLabel,false).filter(function(x){ return x.rank===wrRank; })[0]; wrTheme=wrow?wrow.theme:null; }
+    var wr=wrTheme||(wrRank?('Watch #'+wrRank):null);
+    return { sort:(cSurp==null?-1:Math.abs(cSurp)), html:
+      '<div class="ce-fz-t" data-vdc="'+cV.k+'" data-vdu="'+uV.k+'"'+(qb?' data-detail="ce:'+qb+'"':'')+'>'+
+        '<div class="ce-fz-k">'+esc(m.k)+
+          '<span class="ce-fz-vd ce-vd-cons" style="color:'+cV.c+'">'+cV.l+'</span>'+
+          '<span class="ce-fz-vd ce-vd-us" style="color:'+uV.c+'">'+uV.l+'</span></div>'+
+        '<div class="ce-fz-r"><span class="ce-fz-c ce-exp-cons">'+(c==null?'—':ceTkFmt(m.u,c))+'</span>'+
+          '<span class="ce-fz-c ce-exp-us">'+(uexp==null?'—':ceTkFmt(m.u,uexp))+'</span>'+
+          '<span class="ce-fz-ar">→</span><span class="ce-fz-a">'+(a==null?'—':ceTkFmt(m.u,a))+'</span>'+
+          '<span class="ce-fz-dw ce-exp-cons">'+surpTag(cSurp)+'</span><span class="ce-fz-dw ce-exp-us">'+surpTag(uSurp)+'</span></div>'+
+        '<div class="ce-fz-gr"><span class="ce-fz-gl">growth</span>'+
+          '<span class="ce-gy">'+g('yoy')+'</span><span class="ce-gq">'+g('qoq')+'</span></div>'+
+        mRow+
+        (wr?'<div class="ce-fz-wl" title="On the frozen Watch List: '+esc(wr)+'">on the list</div>':'')+
+        (qb?'<div class="ce-fz-more">＋ detail</div>':'')+
+      '</div>' };
+  }).filter(Boolean);
+  if(!tiles.length) return '';
+  tiles.sort(function(x,z){ return z.sort-x.sort; });
+  return '<div class="ce-fz" data-g="yoy" data-ev="cons" data-mm="off"><div class="ce-fz-h">The print — ranked by surprise'+
+    ceQ('fz-'+ceQkey(qLabel),'How this is built',
+      '<p>One block, archive-driven. Every number and surprise is computed from the CE_CONS archive: the last snapshot before the print carries the consensus, a later snapshot carries the print. Reconstructed from data, so it cannot drift.</p>'+
+      '<ul><li><b>vs Street ⇄ vs Summit</b> — swaps which frozen expectation the print is scored against.</li>'+
+      '<li><b>Margin</b> — Operating income / EBITDA carry an expected-vs-realized margin (÷ Net revenue), Δ in pts.</li>'+
+      '<li><b>Verdict</b> — beat / miss / in-line off the computed surprise.</li>'+
+      '<li><b>on the list</b> — this line was on the Watch List we froze before the call</li></ul>')+
+    '<span class="ce-vdf"><button type="button" class="active" data-vdf="all">All</button>'+
+      '<button type="button" data-vdf="beat">Beats</button>'+
+      '<button type="button" data-vdf="miss">Misses</button>'+
+      '<button type="button" data-vdf="inline">In line</button></span>'+
+    '<span class="ce-gseg" style="margin-left:auto"><button type="button" class="active" data-fzev="cons">vs Street</button>'+
+      '<button type="button" data-fzev="us">vs Summit</button></span>'+
+    '<span class="ce-gseg"><button type="button" data-fzmm="on">Margin</button>'+
+      '<button type="button" class="active" data-fzmm="off">Hide mgn</button></span>'+
+    '<span class="ce-gseg"><button type="button" class="active" data-ceg="yoy">YoY</button>'+
+      '<button type="button" data-ceg="qoq">QoQ</button>'+
+      '<button type="button" data-ceg="off">Off</button></span>'+
+    '</div><div class="ce-fz-g" data-vdf-host>'+tiles.map(function(t){ return t.html; }).join('')+'</div>'+
+    '<div class="ce-fz-f">Expectation (frozen, 1 quarter out) → the print → the print\'s own growth. Source: CE_CONS archive + Summit. <span style="color:#B7791F">STUB — fill CE_CONS from the BBG export.</span></div></div>';
+}
+function ceFold(title, sub, body, open){
+  return '<div class="ov-collap ce-fold'+(open?' open':'')+'">'+
+    '<button type="button" class="ov-collap-h"><span class="ov-collap-ic">'+(open?'▾':'▸')+'</span>'+
+    '<span class="ce-fold-t">'+title+'</span>'+(sub?'<span class="ce-fold-s">'+sub+'</span>':'')+'</button>'+
+    '<div class="ov-collap-b"'+(open?'':' hidden')+'>'+body+'</div></div>';
+}
+function cePhaseStyle(){
+  return '<style>'+
+    '.ce-fz{border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;margin-bottom:14px;background:#FBFCFE}'+
+    '.ce-fz-h{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);margin-bottom:9px}'+
+    '.ce-fz-g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}'+
+    '@media(max-width:900px){.ce-fz-g{grid-template-columns:repeat(2,1fr)}}'+
+    '@media(max-width:520px){.ce-fz-g{grid-template-columns:1fr}}'+
+    '.ce-fz-t{border:1px solid var(--bdr);border-radius:9px;padding:7px 9px;background:#fff}'+
+    '.ce-fz-t.basis{opacity:.62}'+
+    '.ce-fz-k{font-size:9.5px;font-weight:700;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'+
+    '.ce-fz-r{display:flex;align-items:baseline;gap:4px;margin-top:2px;font-variant-numeric:tabular-nums}'+
+    '.ce-fz-c{font-size:11px;color:var(--mu);font-weight:700}'+
+    '.ce-fz-ar{font-size:9px;color:var(--mu)}'+
+    '.ce-fz-a{font-size:13px;font-weight:900;color:var(--navy)}'+
+    '.ce-fz-d{font-size:9.5px;font-weight:800;margin-left:auto}'+
+    '.ce-fz-d.up{color:#0a8f4c}.ce-fz-d.dn{color:'+RED+'}.ce-fz-d.na{color:var(--mu);font-weight:700}'+
+    '.ce-fz-f{font-size:9.5px;color:var(--mu);margin-top:8px}'+'.ce-fz-t{position:relative;transition:.14s}'+'.ce-fz-t[data-detail]{cursor:pointer}'+'.ce-fz-t[data-detail]:hover{box-shadow:0 4px 14px rgba(16,24,40,.10);transform:translateY(-1px)}'+'.ce-fz-vd{margin-left:auto;font-size:8.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase}'+'.ce-fz-k{display:flex;align-items:center;gap:5px}'+'.ce-fz-wl{font-size:8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:'+BLUE+';margin-top:5px}'+'.ce-fz-more{position:absolute;right:9px;bottom:7px;font-size:8.5px;font-weight:800;color:'+BLUE+'}'+'.ce-fz-h{display:flex;align-items:center;gap:6px}'+'.ce-fz-gr{display:flex;align-items:baseline;gap:5px;margin-top:3px;font-size:9.5px;font-weight:800}'+'.ce-fz-gl{font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}'+'.ce-fz-mgn{display:flex;align-items:baseline;gap:5px;margin-top:3px;font-size:11px;font-weight:900;color:'+PURPLE+'}'+'.ce-fz-mexp{font-size:9px;font-weight:700;color:var(--mu)}'+'.ce-fz-g-e{color:var(--mu);font-weight:600}'+'.ce-fz[data-g="yoy"] .ce-gq,.ce-fz[data-g="qoq"] .ce-gy,'+'.ce-fz[data-g="off"] .ce-fz-gr{display:none}'+
+    '.ce-fz-h{flex-wrap:wrap}'+
+    '.ce-vd-us,.ce-exp-us{display:none}'+
+    '.ce-fz[data-ev="us"] .ce-vd-cons,.ce-fz[data-ev="us"] .ce-exp-cons{display:none}'+
+    '.ce-fz[data-ev="us"] .ce-vd-us,.ce-fz[data-ev="us"] .ce-exp-us{display:inline}'+
+    '.ce-fz-dw{margin-left:auto}'+
+    '.ce-fz-mrow{display:none;align-items:baseline;gap:5px;margin-top:4px;padding-top:4px;border-top:1px dashed var(--bdr);font-size:9.5px;font-weight:800}'+
+    '.ce-fz[data-mm="on"] .ce-fz-mrow{display:flex;flex-wrap:wrap}'+
+    '.ce-fz-mreal{font-size:11px;font-weight:900;color:'+PURPLE+'}'+
+    '.ce-fz-mdl{font-weight:800;margin-left:3px}.ce-fz-mdl.up{color:#0a8f4c}.ce-fz-mdl.dn{color:'+RED+'}'+
+    '.ce-fold{border:1px solid var(--bdr);border-radius:11px;margin:0 0 10px;overflow:hidden;background:#fff}'+
+    '.ce-fold .ov-collap-h{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:#FAFBFD;'+
+      'padding:9px 13px;cursor:pointer;font-family:inherit}'+
+    '.ce-fold .ov-collap-h:hover{background:#F2F6FB}'+
+    '.ce-fold .ov-collap-ic{font-size:10px;color:var(--mu)}'+
+    '.ce-fold-t{font-size:11px;font-weight:800;color:var(--navy)}'+
+    '.ce-fold-s{font-size:10px;color:var(--mu);font-weight:600;margin-left:auto;text-align:right}'+
+    '.ce-fold .ov-collap-b{padding:12px 13px}'+
+    '.ce-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}'+
+    '@media(max-width:760px){.ce-cards{grid-template-columns:1fr}}'+
+    '.ce-card{border:1px solid var(--bdr);border-left:4px solid var(--sc,#9AA4B0);border-radius:10px;padding:9px 11px;background:#fff}'+
+    '.ce-card-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap}'+
+    '.ce-card-m{font-size:11.5px;font-weight:800;color:var(--navy)}'+
+    '.ce-card-v{font-size:9px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--sc);margin-left:auto}'+
+    '.ce-card-b{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;margin-top:6px;font-size:10.5px;line-height:1.45}'+
+    '.ce-card-l{color:var(--mu);font-weight:700;white-space:nowrap}'+
+    '.ce-card-x{color:var(--navy)}'+
+    '.ce-card-f{display:flex;align-items:center;gap:6px;margin-top:7px}'+
+    '.ce-chip{font-size:8.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:999px}'+
+    '.ce-chip.list{background:rgba(37,87,214,.12);color:'+BLUE+'}'+
+    '.ce-chip.hi{background:rgba(234,67,53,.12);color:'+RED+'}'+
+    '.ce-chip.md{background:rgba(255,159,0,.18);color:#7A5B02}'+
+    '.ce-chip.lo{background:#EEF1F5;color:var(--mu)}'+
+    '.ce-alsobox{margin-top:18px;border:1px solid var(--bdr);border-radius:12px;background:#fff;overflow:hidden}'+
+    '.ce-alsobox-h{padding:10px 13px;background:#F6F8FA;border-bottom:1px solid var(--bdr);display:flex;flex-direction:column;gap:2px}'+
+    '.ce-alsobox-h>b{font-size:12px;color:var(--navy);font-weight:800}'+
+    '.ce-alsobox-sub{font-size:9.5px;color:var(--mu);font-weight:600;line-height:1.4}'+
+    '.ce-alsolist{display:flex;flex-direction:column}'+
+    '.ce-also-i{border-bottom:1px solid var(--bdr)}'+'.ce-also-i:last-child{border-bottom:0}'+
+    '.ce-also-s{display:flex;align-items:center;gap:8px;padding:9px 13px;cursor:pointer;list-style:none;font-size:11.5px;font-weight:600;color:var(--navy);line-height:1.45}'+
+    '.ce-also-s::-webkit-details-marker{display:none}'+
+    '.ce-also-s:hover{background:#FAFBFD}'+
+    '.ce-also-tag{font-size:8px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--tc,#6b7684);border:1px solid currentColor;border-radius:999px;padding:1px 7px;flex:none;opacity:.85}'+
+    '.ce-also-hd{flex:1;min-width:0}'+
+    '.ce-also-ar{margin-left:auto;color:var(--mu);font-size:10px;transition:transform .15s;flex:none}'+
+    '.ce-also-i[open] .ce-also-ar{transform:rotate(180deg)}'+
+    '.ce-also-body{padding:0 13px 12px 13px;font-size:10.5px;font-weight:500;color:var(--navy);line-height:1.55;background:#FBFCFE}'+
+    '.ce-also-body p{margin:6px 0}'+
+    '.ce-sum{border:1px solid var(--bdr);border-radius:12px;background:#fff;margin:2px 0 14px}'+
+    '.ce-sum>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:12px;background:linear-gradient(180deg,rgba(122,90,248,.06),transparent)}'+
+    '.ce-sum>summary::-webkit-details-marker{display:none}'+
+    '.ce-sum-ic{font-size:15px}'+'.ce-sum-h b{font-size:13px;color:var(--navy)}'+
+    '.ce-sum-tag{font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:'+PURPLE+';background:rgba(122,90,248,.12);border:1px solid rgba(122,90,248,.25);border-radius:999px;padding:2px 8px;margin-left:auto}'+
+    '.ce-sum[open]>summary{border-bottom:1px solid var(--bdr);border-radius:12px 12px 0 0}'+
+    '.ce-sum-body{padding:12px 15px 15px}'+
+    '.ce-sum-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:11px}'+
+    '.ce-sum-tt{font-size:10px;color:var(--mu);font-weight:600;margin-right:auto}'+
+    '.ce-sum-btn{font-size:9.5px;font-weight:800;color:'+BLUE+';border:1px solid var(--bdr);background:#fff;border-radius:999px;padding:3px 10px;cursor:pointer;transition:.12s}'+
+    '.ce-sum-btn:hover{border-color:'+BLUE+';background:rgba(37,87,214,.06)}'+
+    '.ce-sum-block{margin:0 0 13px}'+
+    '.ce-sum-para{font-size:12.5px;line-height:1.7;color:var(--navy);font-weight:500;margin:0}'+
+    '.ce-sum-more{border:0!important;background:transparent!important;border-radius:0;margin:5px 0 0}'+
+    '.ce-sum-more>.ce-sum-nt{padding:2px 0;font-size:10px;font-weight:800;color:'+BLUE+';text-transform:none}'+
+    '.ce-sum-more>.ce-sum-nt .ce-sum-caret{color:'+BLUE+'}'+
+    '.ce-sum-more>.ce-sum-nb{padding:7px 0 4px 13px;border-left:2px dashed var(--bdr);margin-top:5px;font-size:11.5px;line-height:1.65}'+
+    '.ce-sum-nodes{display:flex;flex-direction:column;gap:6px}'+
+    '.ce-sum-n{border:1px solid var(--bdr);border-left:3px solid '+BLUE+';border-radius:9px;background:#FBFCFE}'+
+    '.ce-sum-n[data-d="1"]{border-left-color:'+BRAND2+';background:#fff}'+
+    '.ce-sum-n[data-d="2"]{border-left-color:'+AMBER+'}'+
+    '.ce-sum-nt{list-style:none;cursor:pointer;display:flex;align-items:center;gap:7px;padding:8px 11px;font-size:11.5px;font-weight:700;color:var(--navy)}'+
+    '.ce-sum-nt::-webkit-details-marker{display:none}'+
+    '.ce-sum-caret{font-size:9px;color:var(--mu);transition:transform .15s;flex:none}'+
+    '.ce-sum-n[open]>.ce-sum-nt .ce-sum-caret{transform:rotate(90deg)}'+
+    '.ce-sum-nb{padding:0 12px 11px 21px;font-size:11px;line-height:1.65;color:var(--navy);font-weight:500}'+
+    '.ce-sum-nb .ce-sum-nodes{margin-top:9px}'+
+    '.ce-gl{border-bottom:1px dashed '+BLUE+';cursor:help;position:relative}'+
+    '.ce-gl:hover::after{content:attr(data-def);position:absolute;left:0;bottom:calc(100% + 8px);width:min(300px,74vw);white-space:normal;text-align:left;background:#10141A;color:#fff;font-size:10.5px;font-weight:500;line-height:1.55;padding:9px 12px;border-radius:9px;box-shadow:0 10px 28px rgba(16,24,40,.28);z-index:60}'+
+    '.ce-gl:hover::before{content:"";position:absolute;left:16px;bottom:calc(100% + 3px);border:5px solid transparent;border-top-color:#10141A;z-index:61}'+
+    '.ce-hcards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}'+
+    '@media(max-width:760px){.ce-hcards{grid-template-columns:1fr}}'+
+    '.ce-hcard{border:1px solid var(--bdr);border-top:3px solid var(--hc,#9AA4B0);border-radius:10px;padding:9px 11px;background:#fff;cursor:pointer;transition:.14s}'+
+    '.ce-hcard:hover{box-shadow:0 4px 14px rgba(16,24,40,.09);transform:translateY(-1px)}'+
+    '.ce-hcard-t{font-size:8.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--hc)}'+
+    '.ce-hcard-h{font-size:11px;color:var(--navy);line-height:1.5;margin-top:3px}'+
+    '.ce-rl{display:flex;flex-direction:column;gap:5px}'+
+    '.ce-rl-row{display:grid;grid-template-columns:74px 1fr auto;gap:10px;align-items:center;'+
+      'border:1px solid var(--bdr);border-left:4px solid #0a8f4c;border-radius:9px;padding:8px 12px;background:#fff}'+
+    '.ce-rl-row.trip{border-left-color:'+RED+';background:rgba(234,67,53,.035)}'+
+    '.ce-rl-v{font-size:9.5px;font-weight:900;letter-spacing:.06em;color:#0a8f4c}'+
+    '.ce-rl-row.trip .ce-rl-v{color:'+RED+'}'+
+    '.ce-rl-l{font-size:11.5px;font-weight:700;color:var(--navy);line-height:1.4}'+
+    '.ce-rl-w{font-size:9.5px;font-weight:800;color:'+BLUE+';white-space:nowrap;cursor:pointer}'+
+    '@media(max-width:600px){.ce-rl-row{grid-template-columns:64px 1fr}.ce-rl-w{display:none}}'+
+    '.ce-tee{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}'+
+    '.ce-tee-c{border:1px solid var(--bdr);border-top:3px solid '+AMBER+';border-radius:10px;'+
+      'padding:9px 11px;background:#fff;cursor:pointer;transition:.14s}'+
+    '.ce-tee-c:hover{box-shadow:0 4px 14px rgba(16,24,40,.09);transform:translateY(-1px)}'+
+    '.ce-tee-h{font-size:11.5px;color:var(--navy);line-height:1.45;font-weight:600}'+
+    '.ce-tee-m{font-size:9.5px;font-weight:800;color:'+BLUE+';margin-top:6px}'+
+  '</style>';
+}
+function ceResultsBody(c){
+  var h=ceStyle()+cePhaseStyle();
+  h+=CALL_EARNINGS.quarters.map(function(q,qi){
+    var qk=ceQkey(q.q);
+    var b='<div class="ce-qblock" data-ceq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
+    b+='<div class="ce-phase" style="background:'+BRAND2+'">② Post-Results</div>';
     var r=q.results;
-    if(!r){ b+='<div class="cp-note">Empty until the print lands. Then the scorecard and thesis red-line check fill here.</div></div>'; return b; }
-    b+='<div style="border:1px solid var(--bdr);border-radius:12px;padding:14px 16px;margin-bottom:14px;background:var(--w)">';
-    b+='<div style="font-size:13.5px;font-weight:800;color:var(--navy);margin-bottom:8px">'+esc(q.q)+' <span style="font-weight:600;color:var(--mu);font-size:11px">· reported '+esc(q.date?q.date.replace(/ · .*/,''):'')+'</span></div>';
-    if(r.headline) b+='<div class="cp-take" style="border-left-color:'+BRAND2+'">🎯 '+r.headline+'</div>';
+    if(!r){ b+='<p class="ov-lede"><b>'+esc(q.q)+' — the numbers vs. the frozen expectations.</b></p>'+
+      '<div class="ce-note">Empty until the print lands.</div></div>'; return b; }
+    b+='<p class="ov-lede"><b>'+esc(q.q)+' — the print, scored against what was frozen going in.</b> '+
+       'Toggle <b>vs Street ⇄ vs Summit</b> to score the print against either expectation, and <b>Margin</b> for the expected-implied → realized margin. Below the scorecard, a supplemental <i>"Also on the call"</i> aside carries the colour.</p>';
+    b+=cePrintBlock(q.q, r, (q.setup&&q.setup.us)||{});
+    b+=ceSummaryBlock(q.q, r.summary);
     if(r.thesisCheck&&r.thesisCheck.length){
       var tc=r.thesisCheck.slice().sort(function(a,z){ return (z.tripped?1:0)-(a.tripped?1:0); });
       var nTrip=tc.filter(function(t){ return t.tripped; }).length;
-      b+='<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin:2px 0 6px">Thesis red-line check — vs this quarter\'s frozen Watch List'+
-        (nTrip?'<span style="color:'+RED+';margin-left:7px">⚑ '+nTrip+' tripped</span>':'<span style="color:#0a8f4c;margin-left:7px">✓ all held</span>')+'</div>';
-      b+='<div class="cp-tc">'+tc.map(function(t){ var col=t.tripped?RED:'#0a8f4c'; var ic=t.tripped?'⚑ TRIPPED':'✓ held';
-        return '<div class="cp-tc-row" style="border-left:3px solid '+col+'"><span style="font-weight:800;color:'+col+';white-space:nowrap">'+ic+'</span><span><b>'+esc(t.line)+'</b> — '+esc(t.note||'')+'</span></div>';
+      b+='<div class="ov-diagram-cap" style="margin:14px 0 6px"><b>Thesis red-lines</b> '+
+         '<span style="color:var(--mu);font-weight:600;font-size:10px">· '+
+         (nTrip?('<b style="color:'+RED+'">'+nTrip+' tripped</b> of '+tc.length):('all '+tc.length+' held'))+'</span></div>';
+      b+='<div class="ce-rl">'+tc.map(function(t,i){
+        var id=t.note?ceReg('rl-'+qk+'-'+i, (t.tripped?'TRIPPED — ':'HELD — ')+t.line, '<p>'+t.note+'</p>'):null;
+        return '<div class="ce-rl-row'+(t.tripped?' trip':'')+'">'+
+          '<span class="ce-rl-v">'+(t.tripped?'TRIPPED':'HELD')+'</span>'+
+          '<span class="ce-rl-l">'+esc(t.line)+'</span>'+
+          (id?'<span class="ce-rl-w ov-clickable" data-detail="ce:'+id+'">why ＋</span>':'<span></span>')+
+        '</div>';
       }).join('')+'</div>';
-    }
-    if(r.scorecard&&r.scorecard.length) b+='<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin:15px 0 6px">The print — ranked by surprise</div>';
-    if(r.scorecard&&r.scorecard.length){
-      var sc=r.scorecard.slice().sort(function(a,z){ return (z.surprise||0)-(a.surprise||0); });
-      b+='<div class="cp-legend">'+
-        '<span class="cp-legend-i"><b>How to read this table:</b></span>'+
-        '<span class="cp-legend-i"><span class="cp-sc-rk">WATCH #1</span> flagged before the call as one of the five most contested items (its rank on that list)</span>'+
-        '<span class="cp-legend-i">A blank here just means the line was not one of those five — every line below is covered.</span>'+
-        '<span class="cp-legend-i"><span class="cp-sc-surp hi">big surprise</span> the number landed far from expectations — our judgement, not a calculation</span>'+
-      '</div>';
-      b+='<div class="cp-sc">'+sc.map(function(d,i){ var rr=CP_RES[d.result]||CP_RES.inline;
-        var qb=d.note?cpQ('resnote-'+qk+'-'+i, d.note.t||'Context', d.note.h||d.note):'';
-        var rk=d.watchRank?'<div class="cp-sc-rk" title="This was item #'+esc(String(d.watchRank))+' on the Watch List we froze before the call">WATCH #'+esc(String(d.watchRank))+'</div>'
-                          :'<div class="cp-sc-rk blank"></div>';
-        var sv=d.surprise;
-        var sl=(sv==null)?'<div class="cp-sc-bw"></div>'
-          :'<div class="cp-sc-bw"><div class="cp-sc-surp '+(sv>=70?'hi':(sv>=30?'md':'lo'))+'">'+(sv>=70?'big surprise':(sv>=30?'some surprise':'as expected'))+'</div></div>';
-        return '<div class="cp-sc-row" style="--sc:'+rr.c+'">'+rk+'<div class="cp-sc-m">'+esc(d.metric)+qb+'</div><div class="cp-sc-c">expected: '+cpFill(d.cons,'—')+'</div><div class="cp-sc-a">'+esc(d.actual||'')+'</div>'+sl+'<div class="cp-sc-v">'+rr.l+'</div></div>';
-      }).join('')+'</div>';
-      b+='<div class="ave-subh-note" style="margin-top:6px">Rows are ordered biggest-surprise first, not in release order. <b>Not disclosed</b> = management stopped reporting a number it used to give. <b>No consensus</b> = nobody had an estimate for it. Neither is a miss.</div>';
     }
     if(r.intoCall&&r.intoCall.length){
-      b+='<div class="cp-dots" style="margin-top:14px">🎯 <b>What the numbers tee up for the call</b> — go in hunting these:'+
-        '<ul class="ov-bullets" style="margin-top:6px">'+r.intoCall.map(function(x){ return '<li>'+x+'</li>'; }).join('')+'</ul></div>';
+      b+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>What this tees up for the call</b> '+
+         '<span style="color:var(--mu);font-weight:600;font-size:10px">· go in hunting these</span></div>';
+      b+='<div class="ce-tee">'+r.intoCall.map(function(x,i){
+        var mm=String(x).match(/^([\s\S]*?)\s+—\s+([\s\S]*)$/);
+        var head=mm?mm[1]:x, body=mm?mm[2]:'';
+        var id=body?ceReg('tee-'+qk+'-'+i, String(head).replace(/<[^>]+>/g,''), '<p>'+body+'</p>'):null;
+        return '<div class="ce-tee-c"'+(id?' data-detail="ce:'+id+'"':'')+'>'+
+          '<div class="ce-tee-h">'+head+'</div>'+
+          (id?'<div class="ce-tee-m">＋ the ask</div>':'')+'</div>';
+      }).join('')+'</div>';
     }
-    b+='<div style="margin-top:10px;font-size:11.5px;color:var(--navy)"><b>Price reaction:</b> '+cpFill(r.priceReaction,'to fill from a trusted source')+'</div>';
-    b+='</div>';
-    b+='<div class="ov-foot">Scored against the frozen Watch List. Consensus = Bloomberg export; actuals = reported (Bloomberg / release).</div>';
-    b+='</div>';
-    return b;
-  }).join('');
-  return h;
-}
-function cpCallBody(c){
-  var h=cpStyle();
-  h+=CALL_PREP.quarters.map(function(q,qi){
-    var qk=cpQkey(q.q);
-    var b='<div class="cp-qblock" data-cpq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="cp-phase" style="background:'+RED+'">③ Post-Call</div>';
-    b+='<p class="ov-lede"><b>'+esc(q.q)+' — not a restatement of the numbers; the story behind them.</b> What the call <i>implied</i> for the thesis, the curious one-mention details, and the dots that connect. Tap any highlight for the depth.</p>';
-    b+='<div class="cp-legend"><span class="cp-legend-i"><b>Highlights are grouped by what you DO with them in the meeting:</b></span>'+
-      '<span class="cp-legend-i"><span style="color:'+RED+';font-weight:800">▲ Lead with this</span> — open with it: it moves the thesis and something is still unanswered</span>'+
-      '<span class="cp-legend-i"><span style="color:'+BLUE+';font-weight:800">● Context</span> — worth saying, but settled; there is nothing to argue</span>'+
-      '<span class="cp-legend-i"><span style="color:'+GRAY+';font-weight:800">○ Logged</span> — recorded for later, not meeting material</span>'+
-      '<span class="cp-legend-i"><span class="cp-hl-open">open</span> flags the specific thing management left unanswered</span>'+
-    '</div>';
-    var cc=q.call;
-    if(!cc){ b+='<div class="cp-note">Empty until the call/transcript is in. Then the meeting take, theme-by-theme highlights and the connect-the-dots line fill here.</div></div>'; return b; }
-    b+='<div style="margin-bottom:18px">';
-    b+='<div style="font-size:13.5px;font-weight:800;color:var(--navy);margin-bottom:8px">'+esc(q.q)+' <span style="font-weight:600;color:var(--mu);font-size:11px">· call '+esc(q.date||'')+'</span></div>';
-    if(cc.take) b+='<div class="cp-take">🎯 '+cc.take+'</div>';
-    if(cc.highlights&&cc.highlights.length){
-      var bands=[
-        { k:'lead',    i:'▲', c:RED,     t:'Lead with this', s:'moves the thesis — and something is still unresolved' },
-        { k:'context', i:'●', c:BLUE,    t:'Context',        s:'matters, but it is settled — mention, don\'t debate' },
-        { k:'logged',  i:'○', c:GRAY,    t:'Logged',         s:'on the record for later; not meeting material' },
-      ];
-      var hi=0;
-      bands.forEach(function(bd){
-        var items=cc.highlights.filter(function(x){ return (x.band||'context')===bd.k; });
-        if(!items.length) return;
-        b+='<div class="cp-band" style="--bc:'+bd.c+'"><span class="cp-band-i">'+bd.i+'</span><span class="cp-band-t">'+bd.t+'</span><span class="cp-band-s">'+bd.s+'</span><span class="cp-band-l"></span></div>';
-        b+='<div class="cp-hl">'+items.map(function(x){ var tg=CP_HLTAG[x.tag]||{c:'#6b7684',l:x.tag||''};
-          var det=x.detail||'';
-          if(x.open) det+='<p style="border-left:3px solid '+AMBER+';padding-left:9px;margin-top:10px"><b>Still open:</b> '+x.open+'</p>';
-          var id=det?cpReg('hl-'+qk+'-'+(hi++), tg.l+' — '+String(x.head).replace(/<[^>]+>/g,''), det):null;
-          var op=x.open?' <span class="cp-hl-open" title="'+esc(x.open)+'">open</span>':'';
-          return '<div class="cp-hl-row" style="--hc:'+tg.c+'"'+(id?' data-detail="cp:'+id+'"':'')+'><span class="cp-hl-tag">'+esc(tg.l)+'</span><span class="cp-hl-head">'+x.head+op+'</span>'+(id?'<span class="cp-hl-more">＋</span>':'<span></span>')+'</div>';
-        }).join('')+'</div>';
-      });
-    }
-    if(cc.dots) b+='<div class="cp-dots">🧩 '+cc.dots+'</div>';
-    if(cc.threeMinutes&&cc.threeMinutes.length){
-      b+='<div class="cp-3m"><div class="cp-3m-h"><span class="cp-3m-t">🎤 Three minutes</span>'+
-        '<span class="cp-3m-sub">the spoken version — if you get one slot, this is it</span>'+
-        '<button type="button" class="cp-3m-copy" data-cp3m="'+esc(qk)+'">copy</button></div>';
-      b+='<div class="cp-3m-l" data-cp3mlist="'+esc(qk)+'">'+cc.threeMinutes.map(function(t){ return '<div class="cp-3m-i"><span>'+t+'</span></div>'; }).join('')+'</div>';
-      if(cc.notBringing&&cc.notBringing.length){
-        b+='<div class="cp-nb"><div class="cp-nb-h">✕ Deliberately not bringing — and why, if asked</div>'+
-          cc.notBringing.map(function(x){ return '<div class="cp-nb-r"><span class="cp-nb-x">✕</span><span><b>'+esc(x.item)+'</b> — '+esc(x.why)+'</span></div>'; }).join('')+'</div>';
-      }
-      b+='</div>';
-    }
-    if(cc.newQuestions&&cc.newQuestions.length){
-      b+='<div style="margin-top:12px"><div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin-bottom:5px">➡ What this call left unanswered — and where each question went next</div>';
-      b+='<div class="cp-nq">'+cc.newQuestions.map(function(x){
-        var n=(typeof x==='string')?x:x.n, land=(typeof x==='string')?null:x.landed;
-        var trip=(typeof x!=='string'&&x.tripped)?'<span style="color:'+RED+';font-weight:800;margin-right:5px" title="A thesis red-line actually broke on this one">⚑</span>':'';
-        var chip=land?'<span class="cp-nq-land">became '+esc(land.q)+' Watch item #'+esc(String(land.rank))+'</span>'
-                     :'<span class="cp-nq-land open">still open — not yet on a list</span>';
-        return '<div class="cp-nq-row"><span>'+trip+esc(n)+'</span>'+chip+'</div>';
-      }).join('')+'</div></div>';
-    }
-    b+='</div>';
-    b+='<div class="ov-foot">Insight-first, not fact-first. Append-only — prior quarters are never overwritten; newQuestions feeds the next Watch List.</div>';
+    b+=ceHighlightsBlock(q.call, qk);
+    b+='<div class="ov-foot">Numbers scored against the frozen expectation — <b>Street</b> or <b>Summit</b> via the toggle; actuals = reported. The <i>Also on the call</i> aside is supplemental colour — the tracking layer is the Watch List.</div>';
     b+='</div>';
     return b;
   }).join('');
   return h;
 }
-var CP_THST={ trend:{c:'#0a8f4c',l:'Confirmed trend'}, promise:{c:'#2E6BE6',l:'Promise — reconcile'}, watch:{c:'#B7791F',l:'Watch'} };
-function cpQnum(q){ var m=String(q||'').match(/Q(\d)\s+(?:FY)?(\d{4})/); return m?((+m[2])*4+(+m[1])):null; }
-function cpStAge(st){
+// E · "Also on the call" — supplemental colour, a single box of native <details>. band:'lead' items
+// are tracked on the Watch List and stay filtered out. call.take/threeMinutes/notBringing/newQuestions
+// survive as data (newQuestions still seeds the next Watch List) but are not rendered.
+function ceHighlightsBlock(cc, qk){
+  if(!cc||!cc.highlights||!cc.highlights.length) return '';
+  var hls=cc.highlights.filter(function(x){ return (x.band||'context')!=='lead'; });
+  if(!hls.length) return '';
+  var b='<div class="ce-alsobox"><div class="ce-alsobox-h"><b>Also on the call</b>'+
+    '<span class="ce-alsobox-sub">supplemental colour — the meeting-critical items are the scorecard above and the Watch List</span></div>'+
+    '<div class="ce-alsolist">';
+  b+=hls.map(function(x){
+    var det=x.detail||'';
+    if(x.open) det+='<p><b>Still open:</b> '+x.open+'</p>';
+    return '<details class="ce-also-i">'+
+      '<summary class="ce-also-s">'+
+        '<span class="ce-also-hd">'+x.head+'</span>'+
+        (det?'<span class="ce-also-ar">▾</span>':'')+
+      '</summary>'+
+      (det?'<div class="ce-also-body">'+det+'</div>':'')+
+    '</details>';
+  }).join('');
+  b+='</div></div>';
+  return b;
+}
+// F · The AI-generated CALL SUMMARY — the "minute" (v2.10). Always-visible punch paragraphs, each with
+// its own "＋ more" dropdown that can hold nested context-guide dropdowns. STUB seeded from the old
+// headline + call.take, marked "AI summary — to author".
+function ceSumNodes(nodes, depth){
+  if(!nodes||!nodes.length) return '';
+  return '<div class="ce-sum-nodes">'+nodes.map(function(n){
+    return '<details class="ce-sum-n" data-d="'+(depth>2?2:depth)+'">'+
+      '<summary class="ce-sum-nt"><span class="ce-sum-caret">▸</span><span>'+n.t+'</span></summary>'+
+      '<div class="ce-sum-nb">'+(n.body||'')+ceSumNodes(n.nodes, depth+1)+'</div>'+
+    '</details>';
+  }).join('')+'</div>';
+}
+function ceSumMore(more){
+  if(!more) return '';
+  if(typeof more==='string') return more;
+  return (more.body||'')+ceSumNodes(more.nodes, 1);
+}
+function ceSummaryBlock(qLabel, s){
+  if(!s||!s.paras||!s.paras.length) return '';
+  var body=s.paras.map(function(pa,i){
+    var p='<div class="ce-sum-block">'+
+      '<p class="ce-sum-para">'+(pa.p||'')+'</p>';
+    if(pa.more){
+      p+='<details class="ce-sum-n ce-sum-more" data-d="0">'+
+        '<summary class="ce-sum-nt"><span class="ce-sum-caret">▸</span><span>'+(pa.moreLabel||'＋ more — the detail behind this')+'</span></summary>'+
+        '<div class="ce-sum-nb">'+ceSumMore(pa.more)+'</div>'+
+      '</details>';
+    }
+    return p+'</div>';
+  }).join('');
+  return '<details class="ce-sum" open>'+
+    '<summary class="ce-sum-h"><span class="ce-sum-ic">🧠</span><b>Call summary — the minute</b>'+
+      '<span class="ce-sum-tag">AI — to author</span></summary>'+
+    '<div class="ce-sum-body">'+
+      '<div class="ce-sum-tools"><span class="ce-sum-tt">STUB seeded from the old headline + call take — to author from the transcript · open <b>＋ more</b> for detail · hover a <span class="ce-gl" data-def="A term with a dashed underline — hover it to read its definition here.">dashed term</span></span>'+
+        '<button type="button" class="ce-sum-btn" data-sum="exp">⊕ Expand all</button>'+
+        '<button type="button" class="ce-sum-btn" data-sum="col">⊖ Collapse all</button></div>'+
+      body+
+    '</div>'+
+  '</details>';
+}
+var CE_THST={ trend:{c:'#0a8f4c',l:'Confirmed trend'}, promise:{c:'#2E6BE6',l:'Promise — reconcile'}, watch:{c:'#B7791F',l:'Watch'} };
+function ceQnum(q){ var m=String(q||'').match(/Q(\d)\s+(?:FY)?(\d{4})/); return m?((+m[2])*4+(+m[1])):null; }
+function ceStAge(st){
   if(!st||typeof st!=='object'||!st.since) return '';
-  var newest=CALL_PREP.quarters.filter(function(q){ return q.status!=='upcoming'; })[0];
-  var a=cpQnum(st.since), b=cpQnum(newest?newest.q:null);
+  var newest=CALL_EARNINGS.quarters.filter(function(q){ return q.status!=='upcoming'; })[0];
+  var a=ceQnum(st.since), b=ceQnum(newest?newest.q:null);
   if(a==null||b==null) return '';
   var n=Math.max(1, b-a+1), k=(st.k||'');
   var lbl = (k==='promise') ? ('unreconciled '+n+' quarter'+(n>1?'s':''))
@@ -2226,86 +2765,249 @@ function cpStAge(st){
           :                   ('running '+n+' quarter'+(n>1?'s':''));
   return '<span class="calls-st-age"> · '+lbl+'</span>';
 }
-function wireCallPrep(root){
-  var pane=root.querySelector('.ovt-subpane[data-ovst="callprep"]'); if(!pane) return;
-  pane.querySelectorAll('.cp-phtab').forEach(function(btn){ btn.onclick=function(){
-    var key=btn.getAttribute('data-cpp');
-    pane.querySelectorAll('.cp-phtab').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    pane.querySelectorAll('.cp-phpane').forEach(function(p){ p.hidden=(p.getAttribute('data-cpp')!==key); });
+// Results / Estimates panes come from the shared engine (js/results.js), driven by RESULTS_DATA['MA'].
+function ceResultsPending(label){
+  return '<div class="ce-note" style="margin:8px 0">📊 <b>'+esc(label)+'</b> — the Amazon-style actuals-vs-estimates chart + table. '+
+    'This pane is wired to the shared Results engine (<code>js/results.js</code>); it will populate once MA\'s '+
+    'dataset (<code>js/results-data/ma.js</code>) is filled with actuals/consensus/guidance (currently all-null STUBS).</div>';
+}
+// Tab switches: keep the clicked control visually anchored across a pane-height change.
+function ceKeepPos(el, fn){
+  var before=el.getBoundingClientRect().top;
+  fn();
+  var after=el.getBoundingClientRect().top, d=after-before;
+  if(Math.abs(d)>1) window.scrollBy(0, d);
+}
+function ceSelectQuarter(pane, qk){
+  pane.querySelectorAll('.ce-qpill').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ceqsel')===qk); });
+  pane.querySelectorAll('.ce-qblock').forEach(function(blk){ blk.hidden=(blk.getAttribute('data-ceq')!==qk); });
+  pane.querySelectorAll('.ce-wl-tag').forEach(function(b){ b.classList.remove('active'); });
+  var flat=pane.querySelector('.ce-wl-all'); if(flat) flat.hidden=true;
+}
+function ceApplyPhaseQuarters(pane, phase){
+  var pills=Array.prototype.slice.call(pane.querySelectorAll('.ce-qpill')), lastVisible=null, activeVisible=false;
+  pills.forEach(function(b){
+    var ok=(b.getAttribute('data-ceqhas')||'').split(' ').indexOf(phase)>=0;
+    b.hidden=!ok;
+    if(ok){ lastVisible=b; if(b.classList.contains('active')) activeVisible=true; }
+  });
+  var firstVisible=pills.filter(function(b){ return !b.hidden; })[0];
+  if(!activeVisible && firstVisible) ceSelectQuarter(pane, firstVisible.getAttribute('data-ceqsel'));
+}
+function wireCallEarnings(root){
+  var pane=root.querySelector('.ovt-subpane[data-ovst="earnings"]'); if(!pane) return;
+  pane.querySelectorAll('.ce-sum-btn').forEach(function(btn){ btn.onclick=function(e){
+    e.preventDefault();
+    var box=btn.closest('.ce-sum'); if(!box) return;
+    var open=(btn.getAttribute('data-sum')==='exp');
+    box.querySelectorAll('details.ce-sum-n').forEach(function(d){ d.open=open; });
   }; });
-  pane.querySelectorAll('.cp-ev-pill').forEach(function(btn){ btn.onclick=function(){
-    var v=btn.getAttribute('data-cpev');
-    pane.querySelectorAll('.cp-ev-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    pane.querySelectorAll('.cp-evwrap').forEach(function(w){ w.setAttribute('data-ev', v); });
+  pane.querySelectorAll('.ce-phtab').forEach(function(btn){ btn.onclick=function(){
+    var key=btn.getAttribute('data-cep');
+    ceKeepPos(btn, function(){
+    pane.querySelectorAll('.ce-phtab').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    pane.querySelectorAll('.ce-phpane').forEach(function(p){ p.hidden=(p.getAttribute('data-cep')!==key); });
+    ceApplyPhaseQuarters(pane, key);
+    });
+    if(key==='setup') requestAnimationFrame(gBuildCeAnnual);
   }; });
-  pane.querySelectorAll('.cp-qpill').forEach(function(btn){ btn.onclick=function(){
-    var qk=btn.getAttribute('data-cpqsel');
-    pane.querySelectorAll('.cp-qpill').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    pane.querySelectorAll('.cp-qblock').forEach(function(blk){ blk.hidden=(blk.getAttribute('data-cpq')!==qk); });
-    pane.querySelectorAll('.cp-wl-tag').forEach(function(b){ b.classList.remove('active'); });
-    var flat=pane.querySelector('.cp-wl-all'); if(flat) flat.hidden=true;
+  pane.querySelectorAll('.ce-ev-pill').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-ceev');
+    pane.querySelectorAll('.ce-ev-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-ev', v); });
   }; });
-  pane.querySelectorAll('.cp-3m-copy').forEach(function(btn){ btn.onclick=function(){
-    var qk=btn.getAttribute('data-cp3m');
-    var list=pane.querySelector('.cp-3m-l[data-cp3mlist="'+qk+'"]'); if(!list) return;
-    var txt=Array.prototype.map.call(list.querySelectorAll('.cp-3m-i'), function(el,i){
-      return (i+1)+'. '+el.textContent.trim();
-    }).join('\n\n');
-    var done=function(){ var o=btn.textContent; btn.textContent='copied ✓'; setTimeout(function(){ btn.textContent=o; }, 1400); };
-    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done, done); }
-    else { var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
-           try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta); done(); }
+  pane.querySelectorAll('.ce-qpill').forEach(function(btn){ btn.onclick=function(){
+    ceSelectQuarter(pane, btn.getAttribute('data-ceqsel'));
   }; });
-  var wpane=pane.querySelector('.cp-phpane[data-cpp="watch"]');
+  ceApplyPhaseQuarters(pane, 'setup');
+  pane.querySelectorAll('.ce-vdf button').forEach(function(btn){ btn.onclick=function(){
+    var seg=btn.parentNode, host=seg.closest('.ce-fz'); if(!host) return;
+    seg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    var g=host.querySelector('.ce-fz-g'), v=btn.getAttribute('data-vdf');
+    if(g){ if(v==='all') g.removeAttribute('data-f'); else g.setAttribute('data-f', v); }
+  }; });
+  // (Growth-lens / margin / print-block toggles — data-ceg/data-cemm/data-fzev/data-fzmm — are wired
+  //  in wireCeTrack, called from init, faithfully to googl.js.)
+  // ── Watch List v3: theme-tag filter · tracking-window filter · add/edit/delete vs WL_ROWS · table COPY ──
+  var wpane=pane.querySelector('.ce-phpane[data-cep="watch"]');
   if(wpane){
-    var flat=wpane.querySelector('.cp-wl-all');
-    function activeTags(){ return Array.prototype.map.call(wpane.querySelectorAll('.cp-wl-tag.active'), function(b){ return b.getAttribute('data-wltag'); }).filter(Boolean); }
-    function applyTags(){
-      var tags=activeTags();
-      var on=tags.length>0;
-      wpane.querySelectorAll('.cp-qblock').forEach(function(blk){ if(on) blk.hidden=true; });
-      if(!on){
-        var act=pane.querySelector('.cp-qpill.active'); var qk=act?act.getAttribute('data-cpqsel'):null;
-        wpane.querySelectorAll('.cp-qblock').forEach(function(blk){ blk.hidden=(qk!=null && blk.getAttribute('data-cpq')!==qk); });
+    var flat=wpane.querySelector('.ce-wl-all');
+    var form=wpane.querySelector('.ce-wl-addform');
+    function activeTags(){ return Array.prototype.map.call(wpane.querySelectorAll('.ce-wl-tag.active'), function(b){ return b.getAttribute('data-wltag'); }).filter(Boolean); }
+    function activeWin(){ var b=wpane.querySelector('.ce-wl-win.active'); return b?b.getAttribute('data-wlwin'):'all'; }
+    function applyFilters(){
+      var tags=activeTags(), on=tags.length>0, win=activeWin();
+      if(on){ wpane.querySelectorAll('.ce-qblock').forEach(function(blk){ blk.hidden=true; }); }
+      else{
+        var act=pane.querySelector('.ce-qpill.active'); var qk=act?act.getAttribute('data-ceqsel'):null;
+        wpane.querySelectorAll('.ce-qblock').forEach(function(blk){ blk.hidden=(qk!=null && blk.getAttribute('data-ceq')!==qk); });
       }
-      if(flat){ flat.hidden=!on;
-        if(on) flat.querySelectorAll('.cp-w').forEach(function(card){
-          var ct=(card.getAttribute('data-wltags')||'').split(/\s+/);
-          var hit=tags.some(function(t){ return ct.indexOf(t)>=0; });
-          if(hit) card.removeAttribute('data-wlhide'); else card.setAttribute('data-wlhide','1');
-        });
-      }
+      if(flat) flat.hidden=!on;
+      wpane.querySelectorAll('.ce-w').forEach(function(card){
+        var ct=(card.getAttribute('data-wltags')||'').split(/\s+/);
+        var isOpen=card.getAttribute('data-wlopen')==='1';
+        var hitTag=!on || tags.some(function(t){ return ct.indexOf(t)>=0; });
+        var hitWin=(win==='all') || (win==='open'&&isOpen) || (win==='closed'&&!isOpen);
+        if(hitTag&&hitWin) card.removeAttribute('data-wlhide'); else card.setAttribute('data-wlhide','1');
+      });
     }
     function wireTag(btn){ btn.onclick=function(){
-      if(btn.classList.contains('cp-wl-clear')){ wpane.querySelectorAll('.cp-wl-tag').forEach(function(b){ b.classList.remove('active'); }); }
+      if(btn.classList.contains('ce-wl-clear')){ wpane.querySelectorAll('.ce-wl-tag').forEach(function(b){ b.classList.remove('active'); }); }
       else btn.classList.toggle('active');
-      applyTags();
+      applyFilters();
     }; }
-    wpane.querySelectorAll('.cp-wl-tag').forEach(wireTag);
-    var addBtn=wpane.querySelector('.cp-wl-add-btn'), form=wpane.querySelector('.cp-wl-addform');
-    if(addBtn&&form){ addBtn.onclick=function(){ form.hidden=!form.hidden; }; }
-    var go=wpane.querySelector('.cp-wl-add-go');
+    wpane.querySelectorAll('.ce-wl-tag').forEach(wireTag);
+    wpane.querySelectorAll('.ce-wl-win').forEach(function(btn){ btn.onclick=function(){
+      wpane.querySelectorAll('.ce-wl-win').forEach(function(b){ b.classList.toggle('active', b===btn); });
+      applyFilters();
+    }; });
+    function registerTag(t){
+      if(!wpane.querySelector('.ce-wl-tag[data-wltag="'+t+'"]')){
+        var b=document.createElement('button'); b.type='button'; b.className='ce-wl-tag'; b.setAttribute('data-wltag',t); b.textContent='#'+t;
+        var clear=wpane.querySelector('.ce-wl-clear'); clear.parentNode.insertBefore(b, clear); wireTag(b);
+      }
+      var pick=form?form.querySelector('.ce-wl-tagpick'):null;
+      if(pick&&!pick.querySelector('[data-pick="'+t+'"]')){
+        var p=document.createElement('button'); p.type='button'; p.className='ce-wl-pick'; p.setAttribute('data-pick',t); p.textContent='#'+t;
+        p.onclick=function(){ p.classList.toggle('on'); }; pick.appendChild(p);
+      }
+    }
+    function fld(k){ return form?form.querySelector('[data-wlf="'+k+'"]'):null; }
+    function fval(k){ var el=fld(k); return el?el.value.trim():''; }
+    function setF(k,v){ var el=fld(k); if(el) el.value=(v==null?'':v); }
+    function pickedTags(){ return Array.prototype.map.call(form.querySelectorAll('.ce-wl-pick.on'), function(b){ return b.getAttribute('data-pick'); }); }
+    function resetForm(){
+      ['id','theme','definition','trackSince','trackUntil','newtag'].forEach(function(k){ setF(k,''); });
+      form.querySelectorAll('.ce-wl-pick.on').forEach(function(b){ b.classList.remove('on'); });
+      form.querySelector('.ce-wl-fh-t').textContent='New theme';
+      form.querySelector('.ce-wl-add-go').textContent='Add to the live list';
+    }
+    if(form){
+      wlTags().forEach(registerTag);
+      var nt=form.querySelector('.ce-wl-newtag-go');
+      if(nt) nt.onclick=function(){
+        var raw=fval('newtag'); if(!raw) return;
+        raw.split(',').forEach(function(t){
+          t=t.trim().toLowerCase().replace(/\s+/g,'-'); if(!t) return;
+          registerTag(t);
+          var p=form.querySelector('.ce-wl-pick[data-pick="'+t+'"]'); if(p) p.classList.add('on');
+        });
+        setF('newtag','');
+      };
+      var cancel=form.querySelector('.ce-wl-cancel');
+      if(cancel) cancel.onclick=function(){ resetForm(); form.hidden=true; };
+    }
+    var addBtn=wpane.querySelector('.ce-wl-add-btn');
+    if(addBtn&&form){ addBtn.onclick=function(){
+      if(form.hidden){ resetForm(); form.hidden=false; } else form.hidden=true;
+    }; }
+    function rerender(){
+      var live=ceUpcoming(); if(!live) return;
+      var qk=ceQkey(live.q);
+      var host=wpane.querySelector('.ce-qblock[data-ceq="'+qk+'"] .ce-watch');
+      var rows=wlFor(live.q, true);
+      if(host) host.innerHTML=rows.map(function(w){ return ceWatchItem(w, qk, '', null, true); }).join('');
+      var flatHost=flat?flat.querySelector('.ce-watch'):null;
+      if(flatHost) flatHost.innerHTML=WL_ROWS.map(function(r){ return ceWatchItem(r, ceQkey(r.q), '-f', r.q, false); }).join('');
+      var tb=wpane.querySelector('.ce-wl-tbody');
+      if(tb) tb.innerHTML=ceWlTableRows();
+      var n=wpane.querySelector('.ce-wl-tbl-n');
+      if(n) n.textContent=wlCount();
+      wireCards(); applyFilters();
+    }
+    function wireCards(){
+      wpane.querySelectorAll('[data-wledit]').forEach(function(btn){ btn.onclick=function(){
+        var r=wlById(btn.getAttribute('data-wledit')); if(!r||!form) return;
+        resetForm(); form.hidden=false;
+        setF('id',r.id); setF('theme',r.theme); setF('definition',r.definition);
+        setF('trackSince',r.trackSince); setF('trackUntil',r.trackUntil);
+        (r.tags||[]).forEach(function(t){ registerTag(t); var p=form.querySelector('.ce-wl-pick[data-pick="'+t+'"]'); if(p) p.classList.add('on'); });
+        form.querySelector('.ce-wl-fh-t').textContent='Edit theme · '+r.id;
+        form.querySelector('.ce-wl-add-go').textContent='Save changes';
+        form.scrollIntoView({block:'nearest'});
+      }; });
+      wpane.querySelectorAll('[data-wldel]').forEach(function(btn){ btn.onclick=function(){
+        var id=btn.getAttribute('data-wldel');
+        var r=wlById(id); if(!r) return;
+        if(!window.confirm('Remove "'+r.theme+'" from the Watch List?\n\nSession-only — the hardcoded table is untouched until you COPY it back.')) return;
+        var i=WL_ROWS.indexOf(r); if(i>=0) WL_ROWS.splice(i,1);
+        rerender();
+      }; });
+    }
+    wireCards();
+    var go=wpane.querySelector('.ce-wl-add-go');
     if(go&&form){ go.onclick=function(){
-      function val(k){ var el=form.querySelector('[data-wlf="'+k+'"]'); return el?el.value.trim():''; }
-      var metric=val('metric'); if(!metric) return;
-      var tags=val('tags').split(',').map(function(t){ return t.trim().toLowerCase().replace(/\s+/g,'-'); }).filter(Boolean);
-      var act=pane.querySelector('.cp-qpill.active'); var qk=act?act.getAttribute('data-cpqsel'):cpQkey(CALL_PREP.quarters[0].q);
-      var qLbl=act?act.textContent.replace(/upcoming/i,'').trim():CALL_PREP.quarters[0].q;
-      var w={ rank:'+', metric:metric, tags:tags, pista:val('pista')||null, breaks:val('breaks')||null, since:qLbl };
-      var target=wpane.querySelector('.cp-qblock[data-cpq="'+qk+'"] .cp-watch');
-      if(target) target.insertAdjacentHTML('beforeend', cpWatchItem(w, qk, '-add'+Date.now()%100000, null));
-      var flatList=flat?flat.querySelector('.cp-watch'):null;
-      if(flatList) flatList.insertAdjacentHTML('beforeend', cpWatchItem(w, qk, '-addf'+Date.now()%100000, qLbl));
-      tags.forEach(function(t){
-        if(!wpane.querySelector('.cp-wl-tag[data-wltag="'+t+'"]')){
-          var b=document.createElement('button'); b.type='button'; b.className='cp-wl-tag'; b.setAttribute('data-wltag',t); b.textContent='#'+t;
-          var clear=wpane.querySelector('.cp-wl-clear'); clear.parentNode.insertBefore(b, clear); wireTag(b);
-        }
-      });
-      form.querySelectorAll('.cp-wl-in').forEach(function(i){ i.value=''; }); form.hidden=true;
-      applyTags();
+      var theme=fval('theme'); if(!theme){ var t=fld('theme'); if(t) t.focus(); return; }
+      var live=ceUpcoming(); if(!live) return;
+      var id=fval('id');
+      var row=id?wlById(id):null;
+      var isNew=!row;
+      if(isNew){ row={ id:wlNextId(), q:live.q, rank:wlNextRank(live.q) }; }
+      row.theme=theme;
+      row.tags=pickedTags();
+      row.definition=fval('definition')||null;
+      row.trackSince=fval('trackSince')||null;
+      row.trackUntil=fval('trackUntil')||null;
+      if(isNew) WL_ROWS.push(row);
+      (row.tags||[]).forEach(registerTag);
+      resetForm(); form.hidden=true;
+      rerender();
     }; }
+    wpane.querySelectorAll('[data-wltoggle]').forEach(function(btn){ btn.onclick=function(){
+      var body=wpane.querySelector('[data-wltblbody]'); if(!body) return;
+      var hide=!body.hasAttribute('hidden');
+      if(hide) body.setAttribute('hidden',''); else body.removeAttribute('hidden');
+      btn.textContent=hide?'show table':'hide table';
+    }; });
+    wpane.querySelectorAll('.ce-wl-copy[data-wlcopy]').forEach(function(btn){ btn.onclick=function(){
+      var kind=btn.getAttribute('data-wlcopy'), txt;
+      if(kind==='json'){ txt=JSON.stringify(WL_ROWS, null, 2); }
+      else {
+        txt=[WL_COLS.map(function(c){ return c.l; }).join('\t')].concat(
+          WL_ROWS.map(function(r){ return WL_COLS.map(function(c){
+            return wlCellText(r,c.k).replace(/[\t\n]+/g,' ');
+          }).join('\t'); })).join('\n');
+      }
+      var done=function(){ var o=btn.textContent; btn.textContent='copied ✓'; setTimeout(function(){ btn.textContent=o; }, 1500); };
+      if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done, done); }
+      else { var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
+             try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta); done(); }
+    }; });
+    applyFilters();
   }
+}
+// Growth-lens / margin / print-block toggles (data-ceg/data-cemm on the Setup grid + data-fzev/
+// data-fzmm/data-ceg on the print block). Ported from googl.js wireCeTrack. Called from init.
+function wireCeTrack(root){
+  var pane=root.querySelector('.ovt-subpane[data-ovst="earnings"]'); if(!pane) return;
+  function ceSetLens(v){
+    pane.querySelectorAll('.ce-gseg button[data-ceg]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ceg')===v); });
+    pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-g', v); });
+    pane.querySelectorAll('.ce-fz').forEach(function(f){ f.setAttribute('data-g', v); });
+  }
+  ceSetLens('yoy');
+  pane.querySelectorAll('.ce-ev-pill').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ceev')==='cons'); });
+  pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-ev','cons'); });
+  pane.querySelectorAll('.ce-gseg button[data-cemm]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-cemm')==='off'); });
+  pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-mm','off'); });
+  pane.querySelectorAll('.ce-gseg button[data-ceg]').forEach(function(btn){ btn.onclick=function(){
+    ceSetLens(btn.getAttribute('data-ceg'));
+  }; });
+  pane.querySelectorAll('.ce-gseg button[data-cemm]').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-cemm');
+    btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-mm', v); });
+  }; });
+  pane.querySelectorAll('.ce-gseg button[data-fzev]').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-fzev'), fz=btn.closest('.ce-fz');
+    btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    if(fz) fz.setAttribute('data-ev', v);
+  }; });
+  pane.querySelectorAll('.ce-gseg button[data-fzmm]').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-fzmm'), fz=btn.closest('.ce-fz');
+    btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    if(fz) fz.setAttribute('data-mm', v);
+  }; });
 }
 
 //  Evolution ▸ Earnings Calls — SAME format as UBER/LYFT/CART: narrative THREADS
@@ -2397,8 +3099,8 @@ function maCallsBody(c){
   // By theme (default)
   h+='<div class="lpb-acc" id="maCallsTheme">';
   MA_THEMES.forEach(function(ct){
-    var sk=(ct.st&&ct.st.k)?ct.st.k:'watch'; var st=CP_THST[sk]||CP_THST.watch;
-    h+='<div class="lpb-acc-item"><button type="button" class="lpb-acc-h"><span style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap">'+esc(ct.theme)+' <span class="calls-st" style="color:'+st.c+';border-color:'+st.c+'">'+st.l+cpStAge(ct.st)+'</span></span><span class="lpb-acc-ic">+</span></button>';
+    var sk=(ct.st&&ct.st.k)?ct.st.k:'watch'; var st=CE_THST[sk]||CE_THST.watch;
+    h+='<div class="lpb-acc-item"><button type="button" class="lpb-acc-h"><span style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap">'+esc(ct.theme)+' <span class="calls-st" style="color:'+st.c+';border-color:'+st.c+'">'+st.l+ceStAge(ct.st)+'</span></span><span class="lpb-acc-ic">+</span></button>';
     h+='<div class="lpb-acc-body"><p style="font-size:12px;color:var(--mu);margin:0 0 10px;font-style:italic">'+esc(ct.why)+'</p>';
     ct.updates.forEach(function(u){ h+='<div style="margin-bottom:10px"><span class="ov-chip" style="margin-right:6px">'+esc(u.q)+'</span><ul class="ov-bullets" style="margin-top:4px">'+u.items.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ul></div>'; });
     h+='</div></div>';
@@ -2636,26 +3338,28 @@ function deepDiveHtml(c){
   // Evolution
   h+='<div class="dd-pane" data-dd="evolution" hidden>'+
     '<div class="ovt-subtabs">'+
-      '<button type="button" class="ovt-subtab active" data-ovst="callprep">Call Prep</button>'+
+      '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="results">Results</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
     '</div>'+
-    '<div class="ovt-subpane" data-ovst="callprep">'+
-      cpIRButton()+
-      '<div class="cp-note" style="margin-bottom:12px">🎯 <b>Call Prep</b> — the decision layer, in three phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (react to the numbers, which land before the call) → <b>③ Post-Call</b> (what management said + the meeting take). Append-only per quarter — pick a quarter below; each quarter keeps its frozen pre-call blocks next to its post-mortem, so the tab is a record of how well we read Mastercard. The <b>Watch List</b> is the single home for theme-tracking — the old standalone <i>Earnings Calls</i> tab was folded into it (no two tabs on the same call highlights). <b>Consensus (Bloomberg) + Summit + the 4 custom KPIs render "to fill / to define" until the export lands.</b></div>'+
-      cpQPills()+
-      '<div class="cp-phtabs">'+
-        '<button type="button" class="cp-phtab active" data-cpp="setup">Setup</button>'+
-        '<button type="button" class="cp-phtab" data-cpp="watch">Watch List</button>'+
-        '<button type="button" class="cp-phtab" data-cpp="results">Post-Results</button>'+
-        '<button type="button" class="cp-phtab" data-cpp="postcall">Post-Call</button>'+
+    '<div class="ovt-subpane" data-ovst="earnings">'+
+      ceIRButton()+
+      '<div class="ce-note" style="margin-bottom:12px">🎯 <b>Earnings</b> — the decision layer, in two phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (the print scored against what was frozen, <i>plus</i> the call highlights — "Also on the call"). Append-only per quarter — pick a quarter below; each quarter keeps its frozen pre-call blocks next to its post-mortem, so the tab is a record of how well we read Mastercard. The <b>Watch List</b> is the single home for what we <i>track over time</i>; the Post-Results highlights are <i>talking points</i>. <b>Consensus (Bloomberg) + Summit + the numeric grid render STUBS until the export lands.</b></div>'+
+      '<div class="ce-phtabs">'+
+        '<button type="button" class="ce-phtab active" data-cep="setup">Setup</button>'+
+        '<button type="button" class="ce-phtab" data-cep="watch">Watch List</button>'+
+        '<button type="button" class="ce-phtab" data-cep="results">Post-Results</button>'+
       '</div>'+
-      '<div class="cp-phpane" data-cpp="setup">'+cpSetupBody(c)+'</div>'+
-      '<div class="cp-phpane" data-cpp="watch" hidden>'+cpWatchBody(c)+'</div>'+
-      '<div class="cp-phpane" data-cpp="results" hidden>'+cpResultsBody(c)+'</div>'+
-      '<div class="cp-phpane" data-cpp="postcall" hidden>'+cpCallBody(c)+'</div>'+
+      ceQPills()+
+      '<div class="ce-phpane" data-cep="setup">'+ceSetupBody(c)+'</div>'+
+      '<div class="ce-phpane" data-cep="watch" hidden>'+ceWatchBody(c)+'</div>'+
+      '<div class="ce-phpane" data-cep="results" hidden>'+ceResultsBody(c)+'</div>'+
     '</div>'+
+    '<div class="ovt-subpane" data-ovst="results" hidden>'+(resultsHtml('MA')||ceResultsPending('Results'))+'</div>'+
+    '<div class="ovt-subpane" data-ovst="estevo" hidden>'+(resultsEvoHtml('MA')||ceResultsPending('Estimates'))+'</div>'+
     '<div class="ovt-subpane" data-ovst="guidance" hidden>'+maGuideBody(c)+'</div>'+
     '<div class="ovt-subpane" data-ovst="strategy" hidden>'+ddStrategyBody(c)+'</div>'+
     '<div class="ovt-subpane" data-ovst="timeline" hidden>'+ddTimelineBody(c)+'</div>'+
@@ -2736,6 +3440,15 @@ function activeDD(root){ var b=root.querySelector('.dd-tab.active'); return b?b.
 function activeSubKey(root, group){ var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return null; var b=pane.querySelector('.ovt-subtab.active'); return b?b.getAttribute('data-ovst'):null; }
 function buildSub(root, group, key){
   if(group==='bottomline' && key==='margins') buildMaMargins();
+  if(group==='evolution' && key==='earnings'){
+    // The Setup chart (Results engine) — build only when Earnings is visible AND the Setup phase is
+    // active. Currently a deferred stub (no MA_SETUP dataset), so gBuildCeAnnual no-ops.
+    var ph=root.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phtab.active');
+    if(!ph || ph.getAttribute('data-cep')==='setup') requestAnimationFrame(gBuildCeAnnual);
+  }
+  if(group==='evolution' && key==='results') requestAnimationFrame(function(){
+    initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'MA'); });
+  if(group==='evolution' && key==='estevo') requestAnimationFrame(initResultsEvo);
   if(group==='evolution' && key==='guidance') renderMaGuide();
   if(group==='valuation' && key==='sensitivity') maSensInit(root);
   if(group==='valuation' && key==='capalloc') buildMaCapital();
@@ -2826,7 +3539,7 @@ function init(c){
   // Deep Dive tab wiring (root spans both panes)
   wireDD(root);
   wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt');
-  wireCallPrep(root);
+  wireCallEarnings(root); wireCeTrack(root); wireCeAnnual(root);
 
   // Evolution ▸ Guidance — metric toggle (net-revenue ⇄ opex)
   root.querySelectorAll('.guid-pill[data-maguidm]').forEach(function(btn){ btn.onclick=function(){ switchMaGuideMetric(root, btn.getAttribute('data-maguidm')); }; });
@@ -2868,7 +3581,7 @@ function init(c){
   if(back){ root.querySelector('#ovModalX').onclick = closeModal; back.onclick = function(e){ if (e.target===back) closeModal(); }; }
   function resolve(key){
     var parts=key.split(':'), kind=parts[0], id=parts.slice(1).join(':');
-    if (kind==='cp'){ return CP_POP[id]||null; }
+    if (kind==='ce'){ return CE_POP[id]||null; }
     if (kind==='role'){ var r=ROLE_DETAIL[id]; return r && { t:r.t, h:r.h }; }
     if (kind==='vasm'){ var vm=VAS_MOAT.filter(function(x){return x.k===id;})[0]; return vm && { t:vm.ic+' '+vm.t, h:'<div style="font-size:12.5px;line-height:1.65;color:var(--navy)">'+vm.full+'</div>' }; }
     if (kind==='vase'){ var ve=VAS_ENGINE.filter(function(x){return x.k===id;})[0]; return ve && { t:ve.ic+' '+ve.t, h:'<div style="font-size:12.5px;line-height:1.65;color:var(--navy)">'+ve.full+'</div>' }; }

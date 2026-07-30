@@ -22,11 +22,13 @@
 import { amznResults } from './results-data/amzn.js';
 import { googlResults } from './results-data/googl.js';
 import { googlSetup } from './results-data/googl-setup.js';
+import { maResults } from './results-data/ma.js';   // NOTE: shared engine file — reviewers, see MA migration
 
 var RESULTS_DATA = {
   AMZN: amznResults,
   GOOGL: googlResults,
-  GOOGL_SETUP: googlSetup
+  GOOGL_SETUP: googlSetup,
+  MA: maResults
 };
 
 export function getResultsData(ticker){

@@ -51,6 +51,13 @@
 }
 .rs-leg:hover { border-color: var(--bdr); color: var(--navy); }
 .rs-leg.off { opacity: 0.45; text-decoration: line-through; }
+/* explicit, loud "no guidance" badge — amber, so the absence of a guide is never a silent gap */
+.rs-noguide {
+  display: inline-flex; align-items: center; gap: 5px; cursor: help;
+  font: 800 10px 'Inter', sans-serif; letter-spacing: .03em; text-transform: uppercase;
+  color: #92600A; background: rgba(234,179,8,.15); border: 1px solid rgba(234,179,8,.45);
+  padding: 3px 10px; border-radius: 999px;
+}
 .rs-leg-line { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
 /* dashed swatch (consensus lines in the Estimate-evolution block) — colored via `color:` */
 .rs-leg-dash {

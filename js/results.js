@@ -115,6 +115,57 @@ var RS_ACT    = 'rgba(30,39,51,0.92)';    // navy — actual
 var RS_SUMMIT = 'rgba(37,99,235,0.85)';   // accent blue — Summit model
 var RS_CONS   = 'rgba(124,134,148,0.85)'; // mid gray — Street consensus
 var RS_GUIDE  = 'rgba(62,90,130,0.18)';   // steel, translucent — guidance range
+var RS_FWD    = '#2563EB';   // forward/estimate accent (matches the E-column highlight)
+
+// A rounded-rect path helper for the canvas plugins below.
+function rsRR(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+// Chart.js LOCAL plugin: make the FORWARD (estimate) periods unmistakable — a translucent shaded
+// zone with a dashed boundary and a "FORECAST →" pill, plus a rounded BUBBLE behind each forward
+// x-axis label (the forward labels are hidden by the scale so this draws them, crisp, on the bubble).
+// Reads its options from `options.plugins.rsFwdZone = { from: firstForwardTickIndex }`.
+var rsFwdZone = {
+  id: 'rsFwdZone',
+  beforeDatasetsDraw: function(chart, args, opts){
+    var from = opts && opts.from; if (from == null || from < 0) return;
+    var x = chart.scales.x, area = chart.chartArea, ctx = chart.ctx;
+    var left = (from > 0) ? (x.getPixelForTick(from - 1) + x.getPixelForTick(from)) / 2 : area.left;
+    ctx.save();
+    ctx.fillStyle = 'rgba(37,99,235,0.07)';
+    ctx.fillRect(left, area.top, area.right - left, area.bottom - area.top);
+    ctx.strokeStyle = 'rgba(37,99,235,0.40)'; ctx.lineWidth = 1; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(left, area.top); ctx.lineTo(left, area.bottom); ctx.stroke();
+    ctx.setLineDash([]);
+    var label = 'FORECAST', pad = 7;
+    ctx.font = '700 9px Inter, system-ui, sans-serif';
+    var w = ctx.measureText(label).width, px = left + 8, py = area.top + 5;
+    if (px + w + pad * 2 > area.right - 4) px = area.right - w - pad * 2 - 4;
+    ctx.fillStyle = 'rgba(37,99,235,0.92)'; rsRR(ctx, px, py, w + pad * 2, 15, 7); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, px + pad, py + 8);
+    ctx.restore();
+  },
+  afterDraw: function(chart, args, opts){
+    var from = opts && opts.from; if (from == null || from < 0) return;
+    var x = chart.scales.x, ctx = chart.ctx;
+    ctx.save();
+    ctx.font = '700 11px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    var y = x.top + 13, labels = chart.data.labels || [];   // forward labels are hidden by the scale
+    for (var i = from; i < x.ticks.length; i++){             // callback, so read them from data.labels
+      var px = x.getPixelForTick(i);
+      var lbl = labels[i] != null ? String(labels[i]) : '';
+      if (!lbl) continue;
+      var w = ctx.measureText(lbl).width;
+      ctx.fillStyle = 'rgba(37,99,235,0.14)'; rsRR(ctx, px - w / 2 - 7, y - 9, w + 14, 18, 9); ctx.fill();
+      ctx.fillStyle = RS_FWD; ctx.fillText(lbl, px, y);
+    }
+    ctx.restore();
+  }
+};
 var RS_GREEN  = '#1E9E62', RS_RED = '#C0392B';
 // Evolution block: one line per fiscal year — an ordered (ordinal) ramp of the
 // portal blue, darkest = nearest year. Validated with the dataviz palette
@@ -353,6 +404,9 @@ function rsLegendHtml(k, m){
   if (has.summit) h += chip('summit', RS_SUMMIT, 'Summit model');
   if (has.cons)   h += chip('cons', RS_CONS, 'Consensus');
   if (has.guide)  h += chip('guide', 'rgba(62,90,130,0.3)', 'Guidance range');
+  // Make the ABSENCE of guidance loud and explicit — a company (or a line) with no numeric guide gets
+  // an amber badge, so no reader is left guessing why there is no guidance band (§5.5).
+  else h += '<span class="rs-noguide" title="This company issued no numeric guidance for this line/period — so there is no guidance band to score against (only Street and Summit).">⚑ No company guidance</span>';
   if (!isTop && m.marginOf && m.unit !== 'eps') h += chip('margin', RS_ACT, esc(m.marginLabel || 'margin') + ' %', true);
   h += '<span class="tech-leg-i" style="margin-left:auto">▲ beat · ▼ miss · click a chip to hide it</span>';
   return h;
@@ -411,8 +465,14 @@ function rsBuildChart(k){
   var tEl = document.getElementById('rsChartT-' + k);
   if (tEl) tEl.innerHTML = esc(m.label) + ' — actual vs expectations <span>(' + unitLbl + ' per period · ' + (isTop ? '' : 'margin lines on the right axis · ') + 'hover a period for every series)</span>';
 
+  // Forward (estimate) periods: the reported labels render muted grey here; the FORWARD labels are
+  // hidden (callback → '') and the rsFwdZone plugin redraws them inside a highlighted bubble, over a
+  // shaded "FORECAST" zone — so old-vs-forward is unmistakable.
+  var fwdFrom = -1;
+  for (var fj = 0; fj <= (hi - lo); fj++){ if (m.act[lo + fj] == null){ fwdFrom = fj; break; } }
   var scales = {
-    x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+    x: { grid: { display: false }, ticks: { color: 'rgba(80,90,104,0.9)', font: { size: 11 }, autoSkip: false,
+        callback: function(v, i){ return (fwdFrom >= 0 && i >= fwdFrom) ? '' : this.getLabelForValue(v); } } },
     y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
       callback: function(v){ return rsTick(v, m.unit, div); } } }
   };
@@ -430,6 +490,7 @@ function rsBuildChart(k){
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
+        rsFwdZone: { from: fwdFrom },
         tooltip: {
           callbacks: {
             label: function(ctx){
@@ -452,7 +513,8 @@ function rsBuildChart(k){
         }
       },
       scales: scales
-    }
+    },
+    plugins: [rsFwdZone]
   });
 
   rsSyncSlider(k, m);
@@ -1274,10 +1336,12 @@ function wireResults(pane){
       _rs.view = v.getAttribute('data-rsview');
       _rs.sec = {};                                    // reset per-section state
       pane.querySelectorAll('.rs-views [data-rsview]').forEach(function(b){ b.classList.toggle('active', b === v); });
-      var gm = document.getElementById('rsGrowMode'); if (gm) gm.hidden = (_rs.view !== 'q');
-      var blocks = document.getElementById('rsBlocks');
+      // Scope these to the wrap (`pane`) so a SECOND engine instance on the page (e.g. the Setup
+      // chart alongside the Results tab) updates its OWN blocks, not the first #rsBlocks in the DOM.
+      var gm = pane.querySelector('#rsGrowMode'); if (gm) gm.hidden = (_rs.view !== 'q');
+      var blocks = pane.querySelector('#rsBlocks');
       if (blocks) blocks.innerHTML = rsBlocksHtml();
-      var vn = document.getElementById('rsViewNote'); if (vn) vn.textContent = rsView().note || '';
+      var vn = pane.querySelector('#rsViewNote'); if (vn) vn.textContent = rsView().note || '';
       wireSliders(pane);
       rsBuildAll();
       return;
@@ -1336,9 +1400,18 @@ function wireSliders(pane){
 }
 
 // Called when the embedding pane becomes visible (Chart.js needs layout).
-export function initResults(){
+// Optional args enable a SECOND instance on the same page (the Setup chart beside the Results tab):
+//   wrap   — the specific .rs-wrap element to wire (defaults to the first one, Amazon's behaviour);
+//   ticker — re-establish _rs.data for this instance before building (each instance uses a dataset
+//            whose section keys are unique, so their canvases/tables/sliders never collide).
+export function initResults(wrap, ticker){
+  if (ticker){
+    var d = getResultsData(ticker); if (!d) return;
+    if (_rs._active !== ticker){ _rs.view = 'q'; _rs.growth = 'yoy'; _rs.sec = {}; }
+    _rs.data = d; _rs._active = ticker;
+  }
   if (!_rs.data) return;
-  var wrap = document.querySelector('.rs-wrap:not(#rsEvoWrap)');
+  wrap = wrap || document.querySelector('.rs-wrap:not(#rsEvoWrap)');
   if (wrap) wireResults(wrap);
   rsBuildAll();
 }

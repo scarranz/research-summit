@@ -1220,9 +1220,9 @@ function trackBody(c){
 // build a running record of how well we read the company. Workflow: pre-call → results land → fill
 // `results` → attend call → fill `call` (conclusion + newQuestions, which seed the next watchList).
 // The render (cp*Body) is generic — copy it to another ticker, swap content. Consensus is HARDCODED
-// from Bloomberg (only the values that render), see docs/CALL_PREP_CONVENTIONS.md.
+// from Bloomberg (only the values that render), see docs/EARNINGS_CONVENTIONS.md.
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-// EVOLUTION ▸ CALL PREP — the decision layer (v2.2, per docs/CALL_PREP_CONVENTIONS.md).
+// EVOLUTION ▸ CALL PREP — the decision layer (v2.2, per docs/EARNINGS_CONVENTIONS.md).
 // One Call Prep, many quarters (quarter selector). Four phases: Setup · Watch List · Post-Results ·
 // Post-Call. The Watch List is now the SINGLE home for theme-tracking — the old standalone
 // "Earnings Calls" (By theme ⇄ By quarter) compendium was fused in below it (team decision Jul 2026;

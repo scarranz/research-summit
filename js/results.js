@@ -20,11 +20,13 @@
 //   ... when the pane becomes visible: requestAnimationFrame(initResults)
 
 import { amznResults } from './results-data/amzn.js';
+import { amznSetup } from './results-data/amzn-setup.js';
 import { metaResults } from './results-data/meta.js';
 import { metaSetup } from './results-data/meta-setup.js';
 
 var RESULTS_DATA = {
   AMZN: amznResults,
+  AMZN_SETUP: amznSetup,
   META: metaResults,
   META_SETUP: metaSetup
 };

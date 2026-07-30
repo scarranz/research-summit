@@ -1,12 +1,12 @@
 # GOOGL — Latest earnings call · Q2 2026 (July 22, 2026)
 
-**The rotation rule (docs/CALL_PREP_CONVENTIONS.md §3):** this file always holds ONLY the most
+**The rotation rule (docs/EARNINGS_CONVENTIONS.md §3):** this file always holds ONLY the most
 recent call + its analysis. When the next call lands, this call is appended to the top of the
 historical compendium (`GOOGL.md`) and the new transcript takes its place here.
 
 ---
 
-## Analysis (per the CALL_PREP_CONVENTIONS Part I rules - fact -> why -> so-what)
+## Analysis (per the EARNINGS_CONVENTIONS Part I rules - fact -> why -> so-what)
 
 **The take:** the growth re-accelerated on the cylinder the bears said couldn't - and the two
 headline lines both went unreliable at once. Cloud +82% *even after excluding TPU system sales*

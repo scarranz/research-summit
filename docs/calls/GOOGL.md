@@ -1,6 +1,6 @@
 # GOOGL — Earnings Calls · historical compendium
 
-Persistent call record per `docs/CALL_PREP_CONVENTIONS.md` §4. **This file holds every call
+Persistent call record per `docs/EARNINGS_CONVENTIONS.md` §4. **This file holds every call
 EXCEPT the most recent one** (which lives in `GOOGL-latest.md` with its analysis). Rotation rule:
 when a new call lands, the current "latest" is appended to the TOP of this file and the new
 transcript replaces it in `GOOGL-latest.md`. Append-only — prior quarters are never rewritten.
@@ -11,7 +11,7 @@ Coverage: **Q4 2023 → Q1 2026** (10 calls, newest first). Latest (Q2 2026): se
 
 ## Q1 2026 — April 29, 2026
 
-## Analysis (per the CALL_PREP_CONVENTIONS Part I rules — fact → why → so-what)
+## Analysis (per the EARNINGS_CONVENTIONS Part I rules — fact → why → so-what)
 
 **The take:** the growth machine is accelerating on every cylinder — and the bill is arriving at
 the same time. Cloud +63% with backlog ~2x QoQ *while claiming unmet demand*; capex guide raised

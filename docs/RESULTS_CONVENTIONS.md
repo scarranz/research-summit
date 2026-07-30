@@ -197,6 +197,13 @@ trusting rounded output (the BBG margin rows carry full precision).
 - **No mixed bases**: never compare an op-income projection to an EBITDA actual (see §4); when a
   consensus line is on a different basis (BBG "comparable" EPS vs GAAP), note it.
 - Derived/blended figures are labeled as such in the metric `note`.
+- **Guidance is a third basis you must GO SOURCE (per metric, per period).** `guideLo`/`guideHi` come
+  from the company's OWN guide, given in the PRIOR quarter's release / 8-K, for the metrics it actually
+  guides — score the actual against it (below / meets / above), and render the translucent band. **Not
+  every company or metric has guidance** (Amazon: net sales + GAAP op income only; Alphabet: none). A
+  `null` must mean *checked, none given*, never *did not look*; where none exists, **say so** (a `note`
+  / the "no company guidance" disclaimer) — never fabricate a guide. (Full rule: `EARNINGS_CONVENTIONS.md`
+  §5.5.)
 
 ## 6. Replicating for a new ticker — checklist
 
@@ -217,6 +224,32 @@ trusting rounded output (the BBG margin rows carry full precision).
    sliders/ticks/dropdown/legend chips work; no console errors.
 
 ## 7. Open items / next iterations (as of Jul 28, 2026)
+
+- **GOOGL (Jul 29):** the Evolution **Results + Estimates sub-tabs are wired** in `js/overviews/googl.js`
+  (row: `Earnings · Results · Estimates · Guidance · Strategy · Timeline`) and **`GOOGL` is registered
+  in `RESULTS_DATA`**. The dataset `js/results-data/googl.js` was **reconstructed from the rolling
+  `BBG_CONSENSUS.txt` archive** (`G:\My Drive\Summit\Docs\0\`) — not the two Excel exports Amazon used:
+  - `act` = reported actuals (archive `fq0`/`fq-3`/`fy0`, freshest snapshot);
+  - `cons` = the Street number that stood going in (`fq+1` before the print; forward = latest `fq+N`);
+  - `summit` = **null everywhere for now** — Summit's per-line estimates are **pending the estimate-
+    visibility work** (see below); this is expected, not a gap;
+  - `guideLo/Hi` = null (Alphabet issues no numeric guidance).
+
+  So GOOGL's **Results** tab renders the full Amazon-style chart+table today (Street vs actuals).
+  **Estimates** stays on a pending note until an `evolution` (vintage) block exists — that needs the
+  Summit projection history, which is the same blocker as the Summit column. **When Summit visibility
+  is solved, populate `summit` (and add the `evolution` block) — the dataset shape already carries the
+  null slots.** Generator used: a one-off `openpyxl`-free `csv` parser over the TSV (kept in the
+  session scratchpad; the dataset header documents the reconstruction).
+
+  GOOGL's Setup chart is also being rebuilt in this format, MERGED into ONE chart — see
+  `docs/EARNINGS_CONVENTIONS.md` §6a-viii-bis.
+
+**A NEW SOURCE PATH (add to §4):** a per-ticker Results dataset can be reconstructed **entirely from
+`BBG_CONSENSUS.txt`** when the two Excel exports are not on hand — Street consensus (`fq+1`/`fy+N`) and
+reported actuals (`fq0`/`fq-3`/`fy0`) come straight from the rolling archive; `summit`/`guide` are left
+null. This is the GOOGL recipe and is the fastest way to stand up the Results chart for any covered
+ticker, with Summit/guidance filled in later.
 
 - ~~Estimate-EVOLUTION view across vintages~~ — SHIPPED Jul 28 as the *Estimate evolution*
   block (§3.6a): annual forecasts per vintage, Summit + stored-BBG, revision table.

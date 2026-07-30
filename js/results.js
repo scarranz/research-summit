@@ -21,12 +21,16 @@
 
 import { amznResults } from './results-data/amzn.js';
 import { amznSetup } from './results-data/amzn-setup.js';
+import { googlResults } from './results-data/googl.js';
+import { googlSetup } from './results-data/googl-setup.js';
 import { metaResults } from './results-data/meta.js';
 import { metaSetup } from './results-data/meta-setup.js';
 
 var RESULTS_DATA = {
   AMZN: amznResults,
   AMZN_SETUP: amznSetup,
+  GOOGL: googlResults,
+  GOOGL_SETUP: googlSetup,
   META: metaResults,
   META_SETUP: metaSetup
 };

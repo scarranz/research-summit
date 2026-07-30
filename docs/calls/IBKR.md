@@ -1,6 +1,6 @@
 # IBKR — Earnings Calls compendium (historical)
 
-Persistent call record per docs/CALL_PREP_CONVENTIONS.md §3. Append-only per quarter,
+Persistent call record per docs/EARNINGS_CONVENTIONS.md §3. Append-only per quarter,
 newest first. **The latest call (Q2 2026) lives in `IBKR-latest.md`** — this file is the
 historical compendium. Coverage here: **Q4 2023 → Q1 2026** (raw transcripts). When the Q3 2026
 call lands, the Q2 2026 analysis rotates from `IBKR-latest.md` to the TOP of this file.

@@ -451,124 +451,167 @@ var CALLS = [
 ];
 var CALLS_NOTE='Highlights extracted from Meta Platforms earnings call transcripts. Written from the perspective of what was said AT THE TIME, not with hindsight. Stock-price changes are approximate next-trading-day moves. Source: Meta investor relations.';
 // ════════════════════════════════════════════════════════════════════════════
-//  Evolution ▸ CALL PREP — the decision layer (docs/CALL_PREP_CONVENTIONS.md v2.4)
-//  Ported from the Visa build. Setup · Watch List · Post-Results · Post-Call as
-//  per-quarter blocks behind a quarter selector. The theme record (META_THEMES) is
-//  FOLDED into the Watch List (v2.3). META holds an earnings call + a same-day
-//  Follow-Up Q&A per quarter — per §3 they are ONE call (docs/calls/META*.md).
-//  Palette: reuses META's BRAND (#0866FF) + GREEN; adds the accents the machinery
-//  needs without clobbering META's existing BRAND2/GRAY. Consensus/Summit/customs
-//  render 'to fill'/'to define' until the export lands.
+//  Evolution ▸ EARNINGS — the decision layer (docs/EARNINGS_CONVENTIONS.md v2.10)
+//  Retrofitted from the v2.4 Call Prep shape on the 2Q26 cycle (machinery ported
+//  from googl.js, the v2.10 canonical; data migrated, nothing lost — the retired
+//  v2.4 fields survive in git history). Three phases: Setup · Watch List ·
+//  Post-Results. The Watch List is the flat WL_ROWS table (§6f); the theme
+//  record (META_THEMES) stays folded in below it (v2.3). META holds an earnings
+//  call + a same-day Follow-Up Q&A per quarter — per §3 they are ONE call
+//  (docs/calls/META*.md). Consensus = CE_CONS, rebuilt from the BBG_CONSENSUS.txt
+//  snapshot archive (12 META snapshots, 2023-10-27 → 2026-07-29).
 // ════════════════════════════════════════════════════════════════════════════
-var BLUE='#2557D6', RED='#EA4335', YELLOW='#E8A00C', PURPLE='#7A5AF8', AMBER='#B7791F', CP_GRAY='#6B7684';
-var CALL_PREP = { ticker:'META', quarters:[
-  // ── UPCOMING: Q2 2026 (quarter ending Jun 2026; reports ~late July 2026) ──
-  { q:'Q2 2026', status:'upcoming', date:'reports ~late July 2026',
-    setup:{ source:'Bloomberg BST consensus — to import from the export', asOf:null,
-      headline:[
-        {k:'Revenue', cons:null, us:null, note:{t:'Guided $58–61B',h:'Management guided Q2 2026 total revenue to <b>$58–61B</b>, with FX an ~2% tailwind. Ad demand + price/ad the drivers; comps toughen vs Q2 2025. Street/Summit fill from the Bloomberg export.'}},
-        {k:'Operating income', cons:null, us:null, note:{t:'FY26 op income above FY25',h:'Management reiterated FY26 operating income above 2025 — but the swing is total-expense growth ($162–169B FY) and the capex-driven depreciation ramp.'}},
-        {k:'EPS', cons:null, us:null, note:{t:'Watch the tax line',h:'Recent EPS has been distorted by tax items (the Q3\'25 $15.93B non-cash charge partially relieved by an $8.03B Q1\'26 benefit). Guided tax rate 13–16% for the rest of 2026 — read EPS ex the discrete items.'}},
-        {k:'EBITDA', cons:null, us:null},
-      ],
-      custom:[ {k:null},{k:null},{k:null},{k:null} ], // 4 custom KPIs — to define with Dani (candidates: FoA ad revenue · ad impressions growth · price per ad · capex)
-      marketDebate:{
-        fear:'That capex keeps escalating with no ROIC framework — FY26 raised AGAIN to $125–145B, a $107B step-up in contractual commitments, and peers flagging a big 2027 step-up — while the AI payoff (Muse/MSL) is still qualitative.',
-        real:'Consensus sees the ad engine (revenue +33%, price/ad +12%, 41% op margin) comfortably funding the build; it treats the spend as the cost of a credible AI position and debates the TIMING of monetization, not solvency.',
-        mech:[ {k:'Capex FY26',v:'raised to $125–145B',dir:'up'}, {k:'Contractual commitments',v:'+$107B step-up',dir:'up'}, {k:'Depreciation / FCF',v:'pressure builds',dir:'down'}, {k:'Ad engine',v:'+33%, price +12%',dir:'up'} ],
-        synth:'The one thing to resolve: does the AI investment start showing <b>monetization / ROIC signposts</b> — or does another capex raise (plus the hinted 2027 step-up) arrive with the payoff still described in adjectives?'
+var BLUE='#2557D6', RED='#EA4335', YELLOW='#E8A00C', PURPLE='#7A5AF8', AMBER='#B7791F';
+
+// ── CE_CONS — the consensus archive spine (EARNINGS_CONVENTIONS §6a) ─────────
+// Parsed 2026-07-30 from G:\My Drive\Summit\Docs\0\BBG_CONSENSUS.txt (12 META
+// snapshots). Label integrity: 60 fq-label checks + 72 close-date checks, 0
+// mismatches. Corruption this load: OCF fq-3/fq+2 cells in the four 2023–24
+// snapshots came through as Excel dates → null (the corruption MOVES between
+// exports — derived on every reload, never carried forward by hand).
+// Values $B (file is $M, scale per metric); EPS $; shares/DAP B; the two ad
+// KPIs are ALREADY YoY-% lines (see their notes). Capex is the file's
+// CF_PURCHASE_OF_FIXED_PROD_ASSETS — purchases of PP&E, sign-flipped to the
+// positive magnitude. ⚠ Meta STATES capex incl. principal payments on finance
+// leases, ~2–4% higher (2Q26: $31.1B stated vs $30.1B on this line) — a basis
+// difference, not an error; noted on the cells where it matters.
+var CE_CONS = {
+  src:'Bloomberg (BST) · BBG_CONSENSUS.txt snapshot archive',
+  asOf:['2023-10-27','2024-02-03','2024-04-26','2024-08-02','2024-11-01','2025-01-31','2025-05-02','2025-08-01','2025-10-31','2026-01-30','2026-05-01','2026-07-29'],
+  q:['Q4 2022','Q1 2023','Q2 2023','Q3 2023','Q4 2023','Q1 2024','Q2 2024','Q3 2024','Q4 2024','Q1 2025','Q2 2025','Q3 2025','Q4 2025','Q1 2026','Q2 2026','Q3 2026','Q4 2026','Q1 2027','Q2 2027'],
+  hz:['4q out','3q out','2q out','1q out'],
+  nHead:9,
+  m:[
+    { k:'Revenue', u:'$B', t:'ok', code:'SALES_REV_TURN',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,38.7],[null,null,33.5,35.5],[null,36.2,37.7,38.1],[37.6,38.7,39,40],[44.7,45.1,45.9,46.8],[40.9,41.4,41.8,41.5],[44.4,44.8,44.9,44.5],[46.4,46.7,45.8,49],[55.1,54.3,57,58.1],[47.7,50.1,51,54.9],[54.7,56,59.2,60],[59.5,62.5,63.1,63.2],[72.7,73.2,73.4,null],[66.8,67.6,null,null],[72.1,null,null,null]],
+      qa:[32.2,28.6,32,34.1,40.1,36.5,39.1,40.6,48.4,42.3,47.5,51.2,59.9,56.3,60.8,null,null,null,null],
+      qy:[null,null,null,null,32.2,28.6,32,34.1,40.1,36.5,39.1,40.6,48.4,42.3,47.5,51.2,59.9,56.3,60.8],
+      qq:[null,32.2,28.6,32,34.1,40.1,36.5,39.1,40.6,48.4,42.3,47.5,51.2,59.9,56.3,60.8,null,null,null] },
+    { k:'Gross profit', u:'$B', t:'ok', code:'GROSS_PROFIT',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,31.2],[null,null,26.8,28.4],[null,29.1,30.4,30.9],[30.4,31.5,31.8,32.3],[36,36.4,36.9,37.8],[33.6,33.4,33.8,33.6],[35.6,36.1,36.2,35.8],[37.4,37.9,37,39.7],[44.2,43.8,46,46.9],[38.2,40.6,40.9,44.3],[44.2,44.8,47.5,47.9],[47.5,50,50,50.4],[57.4,57.8,58.3,null],[52.7,53.9,null,null],[56.4,null,null,null]],
+      qa:[23.8,22.5,26.1,27.9,32.4,29.8,31.8,33.2,39.5,34.7,39,42,49,46.1,null,null,null,null,null],
+      qy:[null,null,null,null,23.8,22.5,26.1,27.9,32.4,29.8,31.8,33.2,39.5,34.7,39,42,49,46.1,null],
+      qq:[null,23.8,22.5,26.1,27.9,32.4,29.8,31.8,33.2,39.5,34.7,39,42,49,46.1,null,null,null,null] },
+    { k:'Operating income', u:'$B', t:'ok', code:'IS_COMPARABLE_EBIT',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,15.2],[null,null,11.4,13],[null,13.1,14.2,14.4],[13.9,15.1,15.2,15.8],[18.6,18.7,19,19.8],[16.1,16.1,16.3,15.6],[18.2,18.1,17.4,17],[19.5,18.4,17.4,19.1],[23.3,21.9,23.2,23.9],[18.8,19,18.5,19.3],[21,20.7,20.8,21.3],[21.3,21,20.8,21],[25.4,25.1,25.3,null],[24.3,25,null,null],[25.2,null,null,null]],
+      qa:[6.4,7.2,9.4,13.7,16.4,13.8,14.8,17.4,23.4,17.6,20.4,20.5,24.7,22.9,18.8,null,null,null,null],
+      qy:[null,null,null,null,6.4,7.2,9.4,13.7,16.4,13.8,14.8,17.4,23.4,17.6,20.4,20.5,24.7,22.9,18.8],
+      qq:[null,6.4,7.2,9.4,13.7,16.4,13.8,14.8,17.4,23.4,17.6,20.4,20.5,24.7,22.9,18.8,null,null,null] },
+    { k:'EBITDA', u:'$B', t:'ok', code:'IS_COMPARABLE_EBITDA',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,21.9],[null,null,17.9,19.9],[null,20.4,21.2,21.4],[20.6,21.9,22,22.2],[25.5,25.8,25.5,26.3],[22.5,21.5,22.6,23.2],[23.5,24.7,25.7,23.3],[26.3,26.9,23.7,25.4],[31.8,29,30.3,30.9],[24.2,25,25.3,26.7],[28,29.3,29.4,29.7],[30.8,30.1,29.8,29.5],[35.5,34.8,34.4,null],[32.8,34,null,null],[36,null,null,null]],
+      qa:[8.8,9.8,12,16.6,19.6,17.2,18.5,21.4,27.8,21.5,24.8,25.5,30.2,28.9,null,null,null,null,null],
+      qy:[null,null,null,null,8.8,9.8,12,16.6,19.6,17.2,18.5,21.4,27.8,21.5,24.8,25.5,30.2,28.9,null],
+      qq:[null,8.8,9.8,12,16.6,19.6,17.2,18.5,21.4,27.8,21.5,24.8,25.5,30.2,28.9,null,null,null,null] },
+    { k:'EPS (diluted)', u:'$', t:'ok', code:'IS_COMP_EPS_GAAP',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,4.83],[null,null,3.56,4.15],[null,4.09,4.61,4.67],[4.41,4.83,4.83,5.14],[6,5.99,6.28,6.71],[5.11,5.22,5.46,5.3],[5.8,5.96,5.89,5.81],[6.37,6.23,5.93,6.62],[7.86,7.47,8.05,8.19],[6.4,6.63,6.49,6.56],[7.31,7.21,7.1,7.16],[7.47,7.18,7,6.96],[8.65,8.46,8.4,null],[8.24,8.39,null,null],[8.48,null,null,null]],
+      qa:[1.76,2.2,2.98,4.39,5.33,4.71,5.16,6.03,8.02,6.43,7.14,1.05,8.88,10.44,6.18,null,null,null,null],
+      qy:[null,null,null,null,1.76,2.2,2.98,4.39,5.33,4.71,5.16,6.03,8.02,6.43,7.14,1.05,8.88,10.44,6.18],
+      qq:[null,1.76,2.2,2.98,4.39,5.33,4.71,5.16,6.03,8.02,6.43,7.14,1.05,8.88,10.44,6.18,null,null,null] },
+    { k:'Operating cash flow', u:'$B', t:'ok', code:'CB_CF_NET_CASH_OPERATING_ACT',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,17.9],[null,null,null,18.4],[null,18.9,null,20.2],[18.9,20.9,null,22.1],[23.5,23.8,null,26.4],[23.1,22.6,null,22.9],[23.6,25,null,22.5],[29.8,28.1,26.5,28.4],[30.3,30,31.5,34.2],[26.5,27.7,28.2,29.2],[29.6,30.4,31.7,33.3],[30.9,32.3,35.4,34.7],[39.8,44.5,43.7,null],[39.6,38,null,null],[40.9,null,null,null]],
+      qa:[null,null,null,20.4,19.4,19.2,19.4,24.7,28,24,25.6,30,36.2,32.2,31.9,null,null,null,null],
+      qy:[null,null,null,null,null,null,null,20.4,19.4,19.2,19.4,24.7,28,24,25.6,30,36.2,32.2,31.9],
+      qq:[null,null,null,null,20.4,19.4,19.2,19.4,24.7,28,24,25.6,30,36.2,32.2,31.9,null,null,null] },
+    { k:'Capex', u:'$B', t:'ok', code:'CF_PURCHASE_OF_FIXED_PROD_ASSETS',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,8.5],[null,null,null,7.3],[null,null,7.9,8],[null,8.1,9.2,9.8],[9.2,11.2,11.6,13.4],[8.1,9.8,12.4,10.5],[11.5,13.2,11.3,15.7],[12.4,11.6,16.9,18.3],[10.8,19,20.9,21.2],[16.5,17,21.9,16.8],[16.5,25.7,19.7,25.4],[28.1,23.3,28.7,37.8],[26.2,32.7,45.5,null],[17.6,37.9,null,null],[43.7,null,null,null]],
+      qa:[9,6.8,6.2,6.5,7.7,6.4,8.2,8.3,14.4,12.9,16.5,18.8,21.4,19,30.1,null,null,null,null],
+      qy:[null,null,null,null,9,6.8,6.2,6.5,7.7,6.4,8.2,8.3,14.4,12.9,16.5,18.8,21.4,19,30.1],
+      qq:[null,9,6.8,6.2,6.5,7.7,6.4,8.2,8.3,14.4,12.9,16.5,18.8,21.4,19,30.1,null,null,null] },
+    { k:'D&A', u:'$B', t:'ok', code:'CF_DEPR_AMORT',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,3],[null,null,3.3,3.5],[null,3.4,3.6,3.6],[3.6,3.9,3.9,3.9],[4.1,4.1,4.2,4.6],[4.4,4.4,4.6,4.7],[4.6,5,5.1,4.7],[5.5,5.5,5.2,5.1],[5.9,5.8,5.7,5.7],[5.8,6.1,6.3,6.3],[6.5,6.9,7.1,7.2],[7.6,8,8.3,8.3],[9,9.7,9.6,null],[9.9,10,null,null],[11.6,null,null,null]],
+      qa:[2.4,2.5,2.6,2.9,3.2,3.4,3.6,4,4.5,3.9,4.3,5,5.4,6,6.4,null,null,null,null],
+      qy:[null,null,null,null,2.4,2.5,2.6,2.9,3.2,3.4,3.6,4,4.5,3.9,4.3,5,5.4,6,6.4],
+      qq:[null,2.4,2.5,2.6,2.9,3.2,3.4,3.6,4,4.5,3.9,4.3,5,5.4,6,6.4,null,null,null] },
+    { k:'Diluted shares', u:'B', t:'ok', code:'IS_SH_FOR_DILUTED_EPS',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,2.62],[null,null,2.62,2.62],[null,2.61,2.61,2.61],[2.6,2.61,2.6,2.59],[2.59,2.59,2.58,2.58],[2.59,2.57,2.58,2.58],[2.56,2.57,2.58,2.57],[2.56,2.57,2.57,2.56],[2.57,2.56,2.56,2.56],[2.55,2.55,2.55,2.56],[2.54,2.55,2.56,2.56],[2.54,2.56,2.56,2.57],[2.57,2.57,2.57,null],[2.57,2.57,null,null],[2.57,null,null,null]],
+      qa:[2.64,2.6,2.61,2.64,2.63,2.62,2.61,2.6,2.6,2.59,2.57,2.57,2.56,2.56,2.57,null,null,null,null],
+      qy:[null,null,null,null,2.64,2.6,2.61,2.64,2.63,2.62,2.61,2.6,2.6,2.59,2.57,2.57,2.56,2.56,2.57],
+      qq:[null,2.64,2.6,2.61,2.64,2.63,2.62,2.61,2.6,2.6,2.59,2.57,2.57,2.56,2.56,2.57,null,null,null] },
+    { k:'Family of Apps revenue', u:'$B', t:'ok', code:'SALES_REV_TURN',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,38.1],[null,null,33.3,35],[null,35.9,37.1,37.8],[37.2,38.2,38.6,39.7],[43.4,43.8,44.9,45.8],[40.4,41.1,41.4,41],[44,44.4,44.4,44.1],[46.1,46.2,45.4,48.3],[53.8,53.2,55.4,57.2],[47.2,49.2,50.5,54.4],[53.7,55.6,58.7,59.6],[59.1,61.9,62.4,62.5],[71.4,72,72.2,null],[66.4,67,null,null],[71.6,null,null,null]],
+      qa:[31.4,28.3,31.7,33.9,39,36,38.7,40.3,47.3,41.9,47.1,50.8,58.9,55.9,60.4,null,null,null,null],
+      qy:[null,null,null,null,31.4,28.3,31.7,33.9,39,36,38.7,40.3,47.3,41.9,47.1,50.8,58.9,55.9,60.4],
+      qq:[null,31.4,28.3,31.7,33.9,39,36,38.7,40.3,47.3,41.9,47.1,50.8,58.9,55.9,60.4,null,null,null] },
+    { k:'Daily Active People (DAP)', u:'B', t:'ok', code:'DAILY_ACTIVE_USERS',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,3.12],[null,null,3.16,3.19],[null,3.2,3.23,3.27],[3.24,3.26,3.31,3.32],[3.29,3.35,3.36,3.31],[3.35,3.37,3.36,3.37],[3.4,3.39,3.4,3.44],[3.41,3.42,3.46,3.48],[3.46,3.51,3.53,3.55],[3.54,3.57,3.6,3.61],[3.6,3.64,3.65,3.62],[3.69,3.69,3.68,3.67],[3.74,3.72,3.71,null],[3.71,3.7,null,null],[3.74,null,null,null]],
+      qa:[2.96,3.02,3.07,3.14,3.19,3.24,3.27,3.29,3.35,3.43,3.48,3.54,3.58,3.56,3.6,null,null,null,null],
+      qy:[null,null,null,null,2.96,3.02,3.07,3.14,3.19,3.24,3.27,3.29,3.35,3.43,3.48,3.54,3.58,3.56,3.6],
+      qq:[null,2.96,3.02,3.07,3.14,3.19,3.24,3.27,3.29,3.35,3.43,3.48,3.54,3.58,3.56,3.6,null,null,null] },
+    { k:'Ad impressions growth (YoY)', u:'%', t:'ok', code:'NUMBER_OF_ADS_DELIVERED_YOY_PCT',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,22],[null,null,14.6,17.4],[null,12,13.5,14.7],[11.2,10.8,11.7,10.3],[9.9,11.9,12.2,9.7],[10.9,11.6,9.2,7.1],[11.1,9.5,8,6.4],[9.2,7.8,6.5,10],[7.7,6.4,9.4,11.5],[5.9,8.2,10.8,15.8],[7.4,9.1,12.7,13.2],[8.5,11.2,11.8,12.9],[10.5,10.9,11.8,null],[10.3,11.1,null,null],[11,null,null,null]],
+      qa:[23,26,34,31,21,20,10,7,6,5,11,14,18,19,14,null,null,null,null],
+      qy:[null,null,null,null,23,26,34,31,21,20,10,7,6,5,11,14,18,19,14],
+      qq:[null,23,26,34,31,21,20,10,7,6,5,11,14,18,19,14,null,null,null] },
+    { k:'Avg price per ad (YoY)', u:'%', t:'ok', code:'PRICE_PER_AD_YOY_PERCENTAGE',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,-1.4],[null,null,2,5.9],[null,0.7,4.2,4.8],[-1.1,2.8,3.6,7.2],[3.7,0,3.6,7.5],[1.3,4.2,5.5,6.7],[4.6,5.1,6.7,7.2],[4.8,6.7,5.8,9.8],[6.2,5.4,8,8.9],[6.9,9.4,9.5,12.2],[8.8,8.5,10.9,11.5],[8,9.7,9.7,10],[10.4,11,11.3,null],[8.8,9,null,null],[9,null,null,null]],
+      qa:[-22,-17,-16,-6,2,6,10,11,14,10,9,10,6,12,12,null,null,null,null],
+      qy:[null,null,null,null,-22,-17,-16,-6,2,6,10,11,14,10,9,10,6,12,12],
+      qq:[null,-22,-17,-16,-6,2,6,10,11,14,10,9,10,6,12,12,null,null,null] },
+  ]
+};
+
+var CALL_EARNINGS = { ticker:'META', quarters:[
+  // ── UPCOMING: Q2 2026 (quarter ended Jun 2026; reports Jul 29, 2026 AMC) ──
+  //
+  // CONSENSUS PROVENANCE — BBG_CONSENSUS.txt, `data_as_of` 2026-05-01: the last
+  // snapshot before the print, so its `fq+1` ("2026 Q2 (Fwd)") IS this quarter.
+  // YoY = that row's `fq-3` (Q2 2025, a reported actual). Summit = the model's
+  // frozen per-quarter projections (2026-05-22 vintage, js/results-data/meta.js).
+  { q:'Q2 2026', status:'upcoming', date:'reports Jul 29, 2026 · after close',
+    setup:{
+      source:'Bloomberg (BST) — BBG_CONSENSUS.txt snapshot archive · Summit — frozen 2026-05-22 vintage', asOf:'2026-05-01',
+      notes:{
+        'Revenue':{ t:'Guided $58–61B — and the Street sits at the top of it', h:'<p>Management guided Q2 2026 total revenue to <b>$58–61B</b> with FX an ~2% tailwind; consensus ($60.0B) sits at the top of the range. Meta has landed in the top half of its guide (or above it) in nearly every print since 1Q23.</p><p>Comps toughen vs Q2 2025 (+22%); the drivers to watch are price-per-ad and impressions, both already YoY lines in the custom KPIs below.</p>' },
+        'Operating income':{ t:'Not guided directly — read it through the expense guide', h:'<p>Meta guides FY total expenses (<b>$162–169B</b> for 2026), not operating income. Management reiterated FY26 operating income <b>above 2025</b> — the swing factors are the capex-driven depreciation ramp and AI-talent comp.</p><p>⚠ The Summit number here ($29.4B) is the <b>2026-05-22 re-rated vintage</b>, which lifted FY26 op income $92→$117B with no print in between — flagged for the model owner; treat it as the model\'s live view, not a calibrated forecast.</p>' },
+        'EPS (diluted)':{ t:'Read EPS ex the tax items', h:'<p>Recent EPS is distorted by discrete tax items: 3Q25 carried a <b>−$15.93B</b> non-cash OBBBA deferred-tax charge (GAAP EPS $1.05), and 1Q26 the mirror-image <b>+$8.03B</b> benefit (GAAP $10.44, ex-benefit ~$7.31). Guided tax rate 13–16% for the rest of 2026 — read the line ex the discrete items, and expect the YoY chip to be noisy for two more quarters.</p>' },
+        'Capex':{ t:'Basis note — this line is PP&E-only', h:'<p>The archive line is <code>CF_PURCHASE_OF_FIXED_PROD_ASSETS</code> — purchases of property & equipment, sign-flipped positive. <b>Meta states capex including principal payments on finance leases</b>, ~2–4% higher; the FY26 guide (<b>$125–145B</b>, raised from $115–135B at the Q1 print) is on Meta\'s stated basis. Same basis gap in the Summit model\'s capex line.</p>' },
+        'Family of Apps revenue':{ t:'Advertising + other revenue', h:'<p>FoA = advertising (~98%) + WhatsApp Business paid messaging / Meta Verified. The custom KPI set is the file\'s own (kpi1–kpi4): FoA revenue · DAP · impressions growth · price-per-ad growth.</p>' },
+        'Daily Active People (DAP)':{ t:'Family-wide daily actives, in billions', h:'<p>Daily Active People across the Family of Apps (Facebook, Instagram, WhatsApp, Messenger, Threads), period average. ~3.6B — approaching half of humanity; the growth left is engagement depth and monetization per person, not user count.</p>' },
+        'Ad impressions growth (YoY)':{ t:'This line IS a YoY rate', h:'<p>The file carries ad impressions delivered as a <b>YoY % change</b>, not a level — so the cell shows the rate itself and the growth lens does not apply (a growth of a growth means nothing). Impressions + price-per-ad together decompose ad revenue growth.</p>' },
+        'Avg price per ad (YoY)':{ t:'This line IS a YoY rate', h:'<p>Average price per ad as a <b>YoY % change</b>. The ad engine\'s quality lever: +12% in 1Q26 (from +6% in 4Q25) on AI ranking gains (GEM, Lattice, Adaptive Ranking). The growth lens does not apply to a rate line.</p>' }
       },
-      debate:null },
-    watchList:[
-      { rank:1, metric:'Capex escalation + 2027 signposts', since:'Q1 2026', tags:['capex','commitments','roic'],
-        pista:'Does the capex guide hold at $125–145B, and does management put ANY framework on 2027 / the $107B commitment step-up and the ROIC of the AI build?',
-        breaks:'Another capex raise arrives with 2027 still unquantified and no monetization/ROIC signpost — spend running further ahead of proof.',
-        seededBy:{ q:'Q1 2026', n:'FY26 capex raised to $125–145B (from $115–135B) on memory/component costs; $107B step-up in contractual commitments; Susan declined a 2027 number ("dynamic planning"); Brian Nowak pushed on ROIC signposts and got qualitative milestones only.' },
-        src:'Q1 2026: capex guide $125–145B; $107B commitment step-up (multi-year cloud + infra); FY expenses $162–169B.',
-        why:'The capex trajectory is the whole bear case on FCF/returns — if it keeps rising without a monetization signpost, the multiple is exposed.',
-        thread:[ {q:'Q4 2025',n:'Initial FY26 capex guide $115–135B; Meta Compute announced.'},{q:'Q1 2026',n:'Raised to $125–145B; $107B commitments; no 2027 figure.'} ] },
-      { rank:2, metric:'Muse / MSL monetization', since:'Q1 2026', tags:['ai','muse','msl'],
-        pista:'Beyond engagement gains — any revenue/monetization signal from Muse Spark / Meta Superintelligence Labs products, or a clearer product-to-revenue path?',
-        breaks:'The AI products stay engagement-only with no monetization path as the second model ships.',
-        seededBy:{ q:'Q1 2026', n:'Muse Spark (first MSL model) drove double-digit Meta-AI session gains but no revenue; Mark framed ROIC as "build leading models → leading products → monetize at scale" with no financial milestones.' },
-        src:'Q1 2026: Muse Spark powering Meta AI; MSL "on track to be a leading lab"; next models in training.',
-        why:'The capex is justified by the AI product bet — the bet needs to convert engagement into revenue to underwrite the spend.',
-        thread:[ {q:'Q4 2025',n:'MSL rebuilt in 2025; first models "shipping over coming months."'},{q:'Q1 2026',n:'Muse Spark shipped; +double-digit Meta AI sessions/user; monetization TBD.'} ] },
-      { rank:3, metric:'Ad-engine durability into tougher comps', since:'Q1 2026', tags:['ads','price-per-ad','impressions'],
-        pista:'Do ad revenue / price-per-ad / impressions hold as comps toughen — is the GEM/Lattice/Adaptive-Ranking gain durable?',
-        breaks:'Ad revenue decelerates sharply below ~20% as comps toughen and price/ad normalizes.',
-        seededBy:{ q:'Q1 2026', n:'Ad rev +33%, price/ad +12%, impressions +19% on AI ranking gains (GEM, Lattice, Adaptive Ranking Model, value-optimization run-rate >$20B) — the cash engine funding the AI build.' },
-        src:'Q1 2026: FoA ad revenue $55.0B (+33%); price/ad +12%; impressions +19%; Q2 revenue guided $58–61B.',
-        why:'The ad engine funds everything; any crack in it pulls the rug from the AI-capex thesis.',
-        thread:[ {q:'Q4 2025',n:'Ad rev +24%, price/ad +6%, impressions +18%; record holiday demand.'},{q:'Q1 2026',n:'Ad rev +33%, price/ad +12% — acceleration on AI ranking.'} ] },
-      { rank:4, metric:'Reality Labs loss trajectory', since:'Q1 2026', tags:['reality-labs','glasses'],
-        pista:'Do RL losses actually peak this year and start declining, with the glasses pivot offsetting Quest weakness?',
-        breaks:'RL losses grow rather than peak, or the glasses ramp stalls.',
-        seededBy:{ q:'Q4 2025', n:'Management said RL losses would be ~flat this year and this "will likely be the peak," pivoting investment to glasses/wearables; AI glasses sales tripled.' },
-        src:'Q1 2026: RL revenue $402M (−2%) — Quest down, glasses up; losses framed as peaking.',
-        why:'RL is the persistent drag; the glasses pivot + loss peak is the turn the bulls need.',
-        thread:[ {q:'Q4 2025',n:'RL rev $955M (−12%); losses "peak" this year; glasses tripled.'},{q:'Q1 2026',n:'RL rev $402M (−2%); glasses growth offsetting Quest.'} ] },
-      { rank:5, metric:'Regulatory / legal (EU + US youth trials)', since:'Q1 2026', tags:['regulatory','legal'],
-        pista:'Any resolution or escalation on the EU headwinds and the US youth-related trials flagged as a possible material loss?',
-        breaks:'A trial or EU action lands as a material loss or forces a product/monetization change.',
-        seededBy:{ q:'Q1 2026', n:'Management flagged EU + US headwinds, scrutiny on youth issues, and "additional trials scheduled this year in the US, which may ultimately result in a material loss."' },
-        src:'Q1 2026: legal expense elevated; youth-related US trials scheduled; EU DMA/regulatory overhang.',
-        why:'A tail risk that can hit both the P&L (fines/accruals) and the ad model (consent/targeting).',
-        thread:[ {q:'Q4 2025',n:'Legal expense growth (accruals + charges); EU DMA overhang.'},{q:'Q1 2026',n:'US youth trials this year; possible material loss flagged.'} ] },
-    ],
+      us:{ 'Revenue':{v:59.5}, 'Operating income':{v:29.4}, 'Capex':{v:36.4}, 'Family of Apps revenue':{v:59.1} },
+      debate:{ rows:null, synth:'The one thing to resolve: does the AI investment start showing <b>monetization / ROIC signposts</b> — or does another capex raise (plus the hinted 2027 step-up) arrive with the payoff still described in adjectives?' }
+    },
     results:null, call:null },
 
-  // ── REPORTED: Q1 2026 (quarter ended Mar 2026; reported Apr 29 2026) ──
+  // ── REPORTED: Q1 2026 (quarter ended Mar 2026; reported Apr 29, 2026) ──
   { q:'Q1 2026', status:'reported', date:'April 29, 2026',
-    setup:{ source:'Bloomberg BST consensus (archived) — precise figures to backfill',
+    setup:{
+      // Grid RECONSTRUCTED 2026-07-30 from BBG_CONSENSUS.txt, snapshot `data_as_of`
+      // 2026-01-30 — the last pull before this quarter printed, so its `fq+1` IS the
+      // consensus that stood going in. Contemporaneous, recovered — not a retro-fit.
+      source:'Bloomberg (BST) — BBG_CONSENSUS.txt snapshot archive · reconstructed from the 2026-01-30 pull', asOf:'2026-01-30',
+      notes:{
+        'EPS (diluted)':{ t:'The tax-noise quarter', h:'<p>Consensus $6.56 against a print of <b>$10.44</b> — but the beat is the <b>+$8.03B tax benefit</b> (the partial reversal of 3Q25\'s OBBBA charge), not operations. Ex-benefit ~$7.31. Score the operating lines, not this one.</p>' },
+        'Capex':{ t:'The real capex news was the guide', h:'<p>The quarterly print ($19.8B vs $16.8B modeled) was the small news. The big news: the FY26 guide was <b>raised to $125–145B</b> (from $115–135B) on memory/component costs, plus a <b>$107B step-up in contractual commitments</b>.</p>' }
+      },
+      us:{ 'Revenue':{v:52.9}, 'Operating income':{v:25.0}, 'Capex':{v:28.5}, 'Family of Apps revenue':{v:52.3} },
+      debate:{ rows:null, synth:'Going in, the bar was "ad engine keeps humming + the first MSL model lands." The risk the tape was pricing: how much higher capex goes, and whether the AI investment shows any ROIC signpost.' },
       pricedIn:'Strong ad growth (high-20s/low-30s), 40%+ op margin, and the first model from Meta Superintelligence Labs. The open questions: how much higher does capex go, and does the AI investment show any ROIC signpost?',
       oneLiner:'The bar was "ad engine keeps humming + first AI model lands" — Meta beat on revenue but raised capex AGAIN and gave no ROIC framework, so the debate stayed spend-vs-proof.' },
-    watchList:[
-      { rank:1, metric:'Capex FY26 guide trajectory', since:'Q4 2025', tags:['capex'],
-        pista:'Does the FY26 capex guide hold at $115–135B, or get raised again?', breaks:'Capex raised materially with no monetization signpost.',
-        seededBy:{ q:'Q4 2025', n:'Q4 set the initial FY26 capex guide at $115–135B and announced Meta Compute; the question into Q1 was whether it holds.' },
-        src:'Q4 2025: FY26 capex guide $115–135B.', why:'The core FCF/returns debate.' },
-      { rank:2, metric:'AI product roadmap / first models', since:'Q4 2025', tags:['ai','msl'],
-        pista:'Do the first MSL models ship and show a credible trajectory?', breaks:'Models slip or underwhelm vs the "leading lab" claim.',
-        seededBy:{ q:'Q4 2025', n:'Q4: models "shipping over coming months"; MSL rebuilt in 2025; the question was execution.' },
-        src:'Q4 2025: first models to ship over coming months; personal-superintelligence vision.', why:'Justifies the capex.' },
-      { rank:3, metric:'Ad-engine strength into comps', since:'Q4 2025', tags:['ads'],
-        pista:'Does ad growth hold as comps toughen off a record holiday quarter?', breaks:'Ad revenue decelerates below ~20%.',
-        seededBy:{ q:'Q4 2025', n:'Q4 ad rev +24% on record holiday demand + AI ranking; the question was durability.' },
-        src:'Q4 2025: ad rev +24%; price/ad +6%; impressions +18%.', why:'Funds everything.' },
-      { rank:4, metric:'Reality Labs losses (peak?)', since:'Q4 2025', tags:['reality-labs'],
-        pista:'Do RL losses stay ~flat and confirm the peak, with glasses offsetting Quest?', breaks:'RL losses grow.',
-        seededBy:{ q:'Q4 2025', n:'Q4: RL losses ~flat this year and "likely the peak"; glasses pivot.' },
-        src:'Q4 2025: RL rev $955M (−12%); losses peaking; glasses tripled.', why:'The persistent drag turning.' },
-      { rank:5, metric:'Efficiency / headcount', since:'Q4 2025', tags:['efficiency','headcount'],
-        pista:'Does the "leaner, AI-native" operating model show up in headcount / opex discipline?', breaks:'Opex growth outruns the efficiency narrative.',
-        seededBy:{ q:'Q4 2025', n:'Q4: investing in AI-native tooling, elevating ICs, flattening teams; the question was whether it shows in the numbers.' },
-        src:'Q4 2025: 78,800 employees (+6%); AI-native operating-model framing.', why:'The offset to the capex ramp.' },
-    ],
     results:{
       headline:'A strong ad print overshadowed by the spend: revenue $56.3B (+33%), op income $22.9B (41% margin) — but capex was RAISED again to $125–145B, contractual commitments stepped up $107B, and EPS ($10.44) was flattered by an $8.03B tax benefit (ex-benefit $7.31).',
+      notes:{
+        'Revenue':{ t:'The ad engine accelerated', h:'<p>$56.3B (+33%) vs $54.9B modeled. FoA ad revenue <b>$55.0B (+33%; +29% cc)</b>; price/ad +12% (from +6% in Q4); impressions +19% — acceleration on AI ranking (GEM, Lattice, Adaptive Ranking Model; value-optimization run-rate >$20B).</p>' },
+        'Operating income':{ t:'41% margin', h:'<p>$22.9B vs $19.3B modeled (+18.6%) — the margin held at 41% while total expenses grew; the FY26 expense guide was held at $162–169B with a headcount reduction planned for May.</p>' },
+        'EPS (diluted)':{ t:'⚠ Tax-flattered', h:'<p>$10.44 vs $6.56 modeled — an <b>$8.03B tax benefit</b> (partial reversal of the 3Q25 OBBBA charge) drove the optics; tax rate −23% (14% absent the benefit), guided 13–16% for the rest of 2026. Ex-benefit ~$7.31: a real but ordinary beat.</p>' },
+        'Capex':{ t:'The guide moved, again', h:'<p>$19.8B printed vs $16.8B modeled (+18%) — and the FY26 guide went to <b>$125–145B</b> with a <b>$107B</b> contractual-commitment step-up. Susan declined a 2027 number ("dynamic planning"); Brian Nowak pushed on ROIC signposts and got qualitative milestones.</p>' },
+        'Avg price per ad (YoY)':{ t:'+12% — accelerating', h:'<p>Up from +6% in Q4 on ad-performance improvements, better macro, and FX; partially offset by lower-monetizing-region impression mix. The quality lever of the ad engine\'s acceleration.</p>' }
+      },
+      watch:{ 'Capex':1, 'Revenue':3, 'Avg price per ad (YoY)':3 },
       thesisCheck:[
         {line:'Ad engine strong into comps', tripped:false, note:'Ad rev +33%, price/ad +12%, impressions +19% — accelerated on AI ranking; held strongly.'},
         {line:'Capex FY26 guide holds ($115–135B)', tripped:true, note:'⚑ RAISED to $125–145B on memory/component costs; +$107B contractual commitments — the guide did not hold.'},
         {line:'First MSL model ships credibly', tripped:false, note:'Muse Spark shipped; double-digit Meta-AI session gains; "leading lab on track" — held (engagement, not revenue yet).'},
         {line:'RL losses peaking; glasses offset', tripped:false, note:'RL rev $402M (−2%); glasses up, Quest down — consistent with the peak framing; held.'},
       ],
-      scorecard:[
-        {metric:'Capex FY26 guide', cons:null, actual:'raised to $125–145B (from $115–135B)', result:'nocons', surprise:80, watchRank:1, note:{t:'The real news in the print',h:'Raised on higher component/memory pricing + additional data-center costs; plus a $107B step-up in contractual commitments (multi-year cloud + infra). No 2027 figure — "dynamic planning."'}},
-        {metric:'Revenue', cons:null, actual:'$56.3B (+33%)', result:'beat', surprise:60, watchRank:3, note:{t:'FX +~? tailwind',h:'FoA ad revenue $55.0B (+33%; +29% cc); price/ad +12%; impressions +19%.'}},
-        {metric:'EPS (GAAP)', cons:null, actual:'$10.44 (ex-tax-benefit $7.31)', result:'beat', surprise:55, watchRank:null, note:{t:'Tax-flattered',h:'An $8.03B tax benefit partially relieved the Q3\'25 $15.93B non-cash charge; Q1 tax rate −23% (14% absent the benefit). Read EPS ex the discrete items.'}},
-        {metric:'Operating income', cons:null, actual:'$22.9B (41% margin)', result:'beat', surprise:45, watchRank:null},
-        {metric:'Price per ad', cons:null, actual:'+12%', result:'beat', surprise:45, watchRank:3, note:{t:'Accelerating',h:'Up from +6% in Q4 on ad-performance improvements, better macro, and FX; partially offset by lower-monetizing-region impression mix.'}},
-        {metric:'Total expenses (FY26 guide)', cons:null, actual:'$162–169B (unchanged)', result:'nocons', surprise:30, watchRank:5, note:{t:'Opex guide held',h:'Unchanged from prior; the escalation is in capex, not opex. Headcount reduction planned for May.'}},
-        {metric:'Reality Labs revenue', cons:null, actual:'$402M (−2%)', result:'inline', surprise:20, watchRank:4},
-        {metric:'Q2 revenue guide', cons:null, actual:'$58–61B', result:'nocons', surprise:35, watchRank:null, note:{t:'~2% FX tailwind',h:'Comps toughen vs Q2 2025; the guide implies continued strong ad growth.'}},
-      ],
       intoCall:[
         'How much higher does capex go — any 2027 framework or ROIC signpost?',
         'Does Muse Spark / MSL have any monetization path, or is it engagement-only?',
         'How durable is the ad-engine acceleration (price/ad +12%) into tougher comps?',
       ],
-      priceReaction:'to fill from a trusted source' },
+      priceReaction:'Next trading day: −8.6% (approximate move, per the calls record).' },
     call:{
       take:'A strong ad print whose <b>story is the spend</b>: revenue +33% and a 41% op margin, but capex was raised AGAIN to $125–145B with a $107B step-up in contractual commitments — and management framed the AI payoff (Muse Spark / MSL) in <b>milestones, not dollars</b>. The ad engine is funding a bet whose ROIC is still asserted, not shown; EPS optics ($10.44) were tax-flattered.',
       highlights:[
@@ -610,51 +653,40 @@ var CALL_PREP = { ticker:'META', quarters:[
         {n:'How do the US youth trials / EU headwinds resolve?', landed:{q:'Q2 2026', rank:5}},
       ] } },
 
-  // ── REPORTED: Q4 2025 (quarter ended Dec 2025; reported Jan 28 2026) ──
+  // ── REPORTED: Q4 2025 (quarter ended Dec 2025; reported Jan 28, 2026) ──
   { q:'Q4 2025', status:'reported', date:'January 28, 2026',
-    setup:{ source:'Bloomberg BST consensus (archived) — precise figures to backfill',
+    setup:{
+      // Grid RECONSTRUCTED 2026-07-30 from BBG_CONSENSUS.txt, snapshot `data_as_of`
+      // 2025-10-31 — the last pull before this quarter printed.
+      source:'Bloomberg (BST) — BBG_CONSENSUS.txt snapshot archive · reconstructed from the 2025-10-31 pull', asOf:'2025-10-31',
+      notes:{
+        'EPS (diluted)':{ t:'A clean tax quarter between two noisy ones', h:'<p>Tax rate 10% (below the 12–15% outlook) on settlements — contrast with 3Q25\'s −$15.93B OBBBA charge and 1Q26\'s +$8.03B partial reversal. This is the cleanest EPS print in the window.</p>' }
+      },
+      us:{ 'Revenue':{v:59.3}, 'Operating income':{v:24.4}, 'Family of Apps revenue':{v:58.3} },
+      debate:{ rows:null, synth:'The bar was "finish 2025 strong and set a credible FY26 spend frame" — the open question was how big the 2026 AI-infra step-up would be, and whether the AI product roadmap was credible.' },
       pricedIn:'A record holiday quarter: mid-20s ad growth, 40%+ margin, and the initial FY26 capex/expense frame. The open question was how big the 2026 AI-infra step-up would be and whether the AI product roadmap was credible.',
       oneLiner:'The bar was "finish 2025 strong and set a credible FY26 spend frame" — Meta beat (+24%, 41% margin) and set FY26 capex at $115–135B, framing 2026 as the year AI changes how it works.' },
-    watchList:[
-      { rank:1, metric:'FY26 capex / infra step-up', since:'Q3 2025', tags:['capex'],
-        pista:'How big is the initial FY26 capex guide, and how is the AI-infra ramp framed?', breaks:'A guide so large it swamps FCF with no product payoff.',
-        src:'Q3 2025: 2026 capex flagged to step up significantly.', why:'The core spend debate.' },
-      { rank:2, metric:'AI roadmap / superintelligence', since:'Q3 2025', tags:['ai','msl'],
-        pista:'Is the rebuilt AI program (MSL) going to ship credible models in 2026?', breaks:'Roadmap slips or lacks specificity.',
-        src:'Q3 2025: MSL formed; talent war; models being rebuilt.', why:'Justifies the spend.' },
-      { rank:3, metric:'Ad-engine holiday strength', since:'Q3 2025', tags:['ads'],
-        pista:'Does the holiday quarter deliver record ad demand + AI-ranking gains?', breaks:'Ad growth decelerates below ~20%.',
-        src:'Q3 2025: ad growth strong on AI ranking (GEM/Advantage+).', why:'Funds everything.' },
-      { rank:4, metric:'Reality Labs losses', since:'Q3 2025', tags:['reality-labs'],
-        pista:'Does management frame an RL loss peak + glasses pivot?', breaks:'Losses set to grow further.',
-        src:'Q3 2025: RL losses large; glasses momentum building.', why:'The persistent drag.' },
-      { rank:5, metric:'Tax / one-time noise', since:'Q3 2025', tags:['tax'],
-        pista:'How does the Q3\'25 $15.93B non-cash tax charge flow through / reverse?', breaks:'Further large tax/legal charges distort the print.',
-        src:'Q3 2025: $15.93B non-cash tax charge (R&D capitalization).', why:'EPS optics.' },
-    ],
     results:{
       headline:'A record close to 2025: revenue $59.9B (+24%), op income $24.7B (41% margin), EPS $8.88 — with the initial FY26 capex frame ($115–135B) and "2026 is the year AI changes how we work" as the setup.',
+      notes:{
+        'Revenue':{ t:'Record holiday demand', h:'<p>$59.9B (+24%; +23% cc) vs $58.1B modeled. FoA ad revenue $58.1B (+24%); price/ad +6%; impressions +18% — record-breaking holiday demand + AI-ranking gains (Reels watch-time +30% YoY US).</p>' },
+        'Operating income':{ t:'Margin held on revenue speed', h:'<p>$24.7B (41% margin) vs $23.9B modeled. Total expenses $35.1B (<b>+40%</b>) on AI-talent comp, legal expense, and infrastructure (depreciation + cloud) — the margin held only because revenue grew +24%. The cost ramp is the dynamic to watch as growth normalizes.</p>' },
+        'EPS (diluted)':{ t:'Tax rate 10%', h:'<p>$8.88 vs $8.19 modeled — helped by a 10% tax rate (below the 12–15% outlook) on settlements. A cleaner quarter than the tax-noisy 3Q25/1Q26 on either side of it.</p>' },
+        'Capex':{ t:'The real news: the FY26 frame', h:'<p>$22.1B printed vs $21.2B modeled. The news was the guide: initial FY26 capex at <b>$115–135B</b>, <b>Meta Compute</b> announced (efficiency-as-strategy), and Dina Powell McCormick joining to lead sovereign / strategic-capital partnerships for capacity.</p>' }
+      },
+      watch:{ 'Capex':1, 'Revenue':3, 'EPS (diluted)':5 },
       thesisCheck:[
         {line:'Ad engine record holiday strength', tripped:false, note:'Ad rev +24% on record holiday demand + AI ranking; held.'},
         {line:'Credible FY26 capex frame', tripped:false, note:'Set at $115–135B with Meta Compute; framed but large — held (and later raised in Q1).'},
         {line:'AI roadmap credible', tripped:false, note:'First models "shipping over coming months"; MSL rebuilt — held (execution TBD).'},
         {line:'RL losses framed to peak', tripped:false, note:'Losses ~flat this year and "likely the peak"; glasses pivot — held.'},
       ],
-      scorecard:[
-        {metric:'FY26 capex guide (initial)', cons:null, actual:'$115–135B', result:'nocons', surprise:65, watchRank:1, note:{t:'The setup for the year',h:'Initial FY26 frame; Meta Compute announced (efficiency edge); Dina Powell McCormick joins to lead sovereign/strategic-capital partnerships for capacity.'}},
-        {metric:'Revenue', cons:null, actual:'$59.9B (+24%; +23% cc)', result:'beat', surprise:50, watchRank:3, note:{t:'Record holiday demand',h:'FoA ad revenue $58.1B (+24%); price/ad +6%; impressions +18%.'}},
-        {metric:'Operating income', cons:null, actual:'$24.7B (41% margin)', result:'beat', surprise:40, watchRank:null},
-        {metric:'EPS', cons:null, actual:'$8.88', result:'beat', surprise:40, watchRank:5, note:{t:'Tax rate 10%',h:'Tax rate 10% (below the 12–15% outlook) on settlements; a cleaner quarter than the tax-noisy Q3\'25/Q1\'26.'}},
-        {metric:'Total expenses', cons:null, actual:'$35.1B (+40%)', result:'miss', surprise:45, watchRank:null, note:{t:'The cost ramp',h:'Up 40% on employee comp (AI talent), legal expense, and infrastructure (depreciation + cloud). The margin held at 41% only because revenue grew fast.'}},
-        {metric:'Reality Labs revenue', cons:null, actual:'$955M (−12%)', result:'inline', surprise:20, watchRank:4, note:{t:'Quest lapping',h:'Down on lapping Quest 3S + Q3 channel-fill; losses framed as peaking; glasses tripled for the year.'}},
-        {metric:'Headcount', cons:null, actual:'78,800 (+6% YoY)', result:'nodisc', surprise:25, watchRank:null, note:{t:'Hiring AI + compliance',h:'Up on monetization, infrastructure, MSL, and regulation/compliance hiring — the "leaner" pivot comes in 2026.'}},
-      ],
       intoCall:[
         'How big does the 2026 capex ramp get, and is the AI roadmap specific?',
         'Does the ad engine hold as holiday comps roll off?',
         'Is the Reality Labs loss peak real, and how fast do glasses scale?',
       ],
-      priceReaction:'to fill from a trusted source' },
+      priceReaction:'Next trading day: +10.4% (approximate move, per the calls record).' },
     call:{
       take:'A record close to 2025 (revenue +24%, 41% margin, EPS $8.88) that set the frame for the year to come: FY26 capex at <b>$115–135B</b>, Meta Compute as an efficiency thesis, and "2026 is the year AI changes how we work." Strong ad engine, but the story is the setup for a very large spend year.',
       highlights:[
@@ -692,483 +724,1242 @@ var CALL_PREP = { ticker:'META', quarters:[
       ] } },
 ]};
 
-function cpUpcoming(){ return CALL_PREP.quarters.filter(function(q){ return q.status==='upcoming'; })[0]||null; }
-function cpFill(x, muted){ return (x!=null && String(x).trim()!=='') ? x : '<span class="cp-empty">'+(muted||'— to fill')+'</span>'; }
-var CP_POP={};
-function cpReg(id, t, h){ CP_POP[id]={t:t, h:h}; return id; }
-function cpQ(id, t, h){ return '<span class="cp-info ov-clickable" data-detail="cp:'+cpReg(id,t,h)+'" title="'+esc(String(t).replace(/<[^>]+>/g,''))+'">?</span>'; }
-function cpStyle(){
-  return '<style>.cp-note{font-size:11px;color:var(--mu);line-height:1.5;background:#F7F9FB;border:1px solid var(--bdr);border-radius:9px;padding:9px 12px;margin:0 0 12px}'+
-    '.cp-phtabs{display:inline-flex;gap:3px;background:rgba(8,102,255,0.06);border:1px solid var(--bdr);border-radius:9px;padding:4px;margin:0 0 20px}'+
-    '.cp-phtab{background:none;border:none;color:var(--mu);font-family:\'Inter\',sans-serif;font-size:12px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;padding:7px 16px;border-radius:6px;cursor:pointer;transition:all .15s}'+
-    '.cp-phtab:hover{color:var(--navy)}.cp-phtab.active{background:'+BRAND+';color:#fff}'+
-    '.cp-phpane[hidden]{display:none}'+
-    '.cp-qpills{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}'+
-    '.cp-qpill{border:1px solid var(--bdr);background:var(--w);font:inherit;font-size:11px;font-weight:800;color:var(--mu);padding:5px 13px;border-radius:999px;cursor:pointer;transition:.12s}'+
-    '.cp-qpill:hover{color:var(--navy)}.cp-qpill.active{background:'+BRAND+';color:#fff;border-color:'+BRAND+'}'+
-    '.cp-qpill .cp-qtag{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-left:6px;opacity:.75}'+
-    '.cp-qblock[hidden]{display:none}'+
-    '.cp-frozen{display:inline-block;font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;background:'+CP_GRAY+';border-radius:20px;padding:2px 8px;margin-left:7px;vertical-align:middle}'+
-    '.cp-wl-tagbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 12px;padding:9px 12px;background:#F7F9FB;border:1px solid var(--bdr);border-radius:10px}'+
-    '.cp-wl-tag{border:1px solid rgba(122,90,248,0.35);background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:'+PURPLE+';padding:3px 10px;border-radius:999px;cursor:pointer;transition:.12s}'+
-    '.cp-wl-tag:hover{background:rgba(122,90,248,0.08)}.cp-wl-tag.active{background:'+PURPLE+';color:#fff;border-color:'+PURPLE+'}'+
-    '.cp-wl-clear{border-color:var(--bdr);color:var(--mu)}'+
-    '.cp-wl-add-btn{margin-left:auto;border:1px dashed '+BRAND+';background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:'+BRAND+';padding:3px 10px;border-radius:999px;cursor:pointer}'+
-    '.cp-wl-addform{display:flex;flex-direction:column;gap:7px;border:1px dashed '+BRAND+';border-radius:10px;padding:12px;margin:0 0 12px;background:rgba(8,102,255,0.03)}'+
-    '.cp-wl-addform[hidden]{display:none}'+
-    '.cp-wl-in{font:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:7px 10px;background:var(--w);color:var(--navy)}'+
-    '.cp-wl-add-go{font:inherit;font-size:11px;font-weight:800;border:none;border-radius:8px;padding:6px 13px;background:'+BRAND+';color:#fff;cursor:pointer}'+
-    '.cp-wl-all[hidden]{display:none}.cp-w[data-wlhide]{display:none}'+
-    '.cp-empty{color:var(--mu);font-style:italic;opacity:.7}'+
-    '.cp-grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0}@media(max-width:640px){.cp-grid4{grid-template-columns:1fr 1fr}}'+
-    '.cp-cell{border:1px solid var(--bdr);border-top:3px solid '+BLUE+';border-radius:10px;padding:11px 13px;background:var(--w)}'+
-    '.cp-cell-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}.cp-cell-v{font-size:15px;font-weight:800;color:var(--navy);margin-top:3px;line-height:1.2}'+
-    '.cp-ev-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
-    '.cp-ev-pill.active{background:'+BRAND+';color:#fff}'+
-    '.cp-cell-custom{border-top-color:'+YELLOW+'}'+
-    '.cp-row-cap{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:2px 0 4px}'+
-    '.cp-val{display:flex;align-items:baseline;gap:7px}'+
-    '.cp-val-lab{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:1px 7px;flex:none}'+
-    '.cp-val-cons .cp-val-lab{background:rgba(37,87,214,0.10);color:'+BLUE+'}'+
-    '.cp-val-us .cp-val-lab{background:rgba(22,163,74,0.12);color:'+GREEN+'}'+
-    '.cp-evwrap[data-ev="cons"] .cp-val-us{display:none}'+
-    '.cp-evwrap[data-ev="us"] .cp-val-cons{display:none}'+
-    '.cp-evwrap:not([data-ev="both"]) .cp-val-lab{display:none}'+
-    '.cp-evwrap[data-ev="both"] .cp-cell-v{font-size:13px}'+
-    '.cp-evwrap[data-ev="both"] .cp-val{margin-top:3px}'+
-    '.cp-banner{border:1px solid var(--bdr);border-left:4px solid '+BRAND+';border-radius:11px;padding:13px 15px;background:linear-gradient(180deg,rgba(8,102,255,0.05),transparent);font-size:12.5px;line-height:1.6;color:var(--navy);margin:12px 0}'+
-    '.cp-watch{display:flex;flex-direction:column;gap:11px}'+
-    '.cp-w{border:1px solid var(--bdr);border-radius:12px;padding:13px 15px;background:var(--w);position:relative}'+
-    '.cp-w-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}'+
-    '.cp-w-rank{width:26px;height:26px;border-radius:50%;background:'+BRAND+';color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}'+
-    '.cp-w-metric{font-size:13.5px;font-weight:800;color:var(--navy)}'+
-    '.cp-w-q{display:flex;gap:8px;align-items:flex-start;background:#10141A;color:#fff;border-radius:9px;padding:9px 12px;font-size:11.5px;line-height:1.5;margin-top:8px}.cp-w-q .mic{flex:none}'+
-    '.cp-kind{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:2px 8px;white-space:nowrap;border:1px solid}'+
-    '.cp-phase{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;border-radius:20px;padding:3px 10px;margin-bottom:8px}'+
-    '.cp-info{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:'+AMBER+';color:#fff;font-size:10px;font-weight:800;cursor:pointer;margin-left:5px;vertical-align:middle;flex:none}'+
-    '.cp-info:hover{filter:brightness(1.1)}'+
-    '.cp-debate{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:4px 0}@media(max-width:600px){.cp-debate{grid-template-columns:1fr}}'+
-    '.cp-dc{border:1px solid var(--bdr);border-radius:12px;padding:13px 15px;background:var(--w)}'+
-    '.cp-dc.fear{border-top:4px solid '+RED+';background:linear-gradient(180deg,rgba(234,67,53,0.04),transparent)}'+
-    '.cp-dc.real{border-top:4px solid '+GREEN+';background:linear-gradient(180deg,rgba(22,163,74,0.05),transparent)}'+
-    '.cp-dc-h{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}'+
-    '.cp-dc.fear .cp-dc-h{color:'+RED+'}.cp-dc.real .cp-dc-h{color:'+GREEN+'}'+
-    '.cp-dc-b{font-size:12.5px;font-weight:700;color:var(--navy);line-height:1.4}'+
-    '.cp-mech{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}'+
-    '.cp-mech-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;border:1px solid var(--bdr);border-radius:9px;padding:7px 12px;background:var(--w);color:var(--navy)}'+
-    '.cp-mech-ar{font-size:15px;color:var(--mu)}'+
-    '.cp-synth{border-left:4px solid var(--navy);background:#10141A;color:#fff;border-radius:11px;padding:13px 16px;font-size:13px;font-weight:700;line-height:1.5;margin:6px 0}.cp-synth b{color:#E8A00C}'+
-    '.cp-why-btn{display:inline-block;font-size:10px;font-weight:800;color:'+BLUE+';cursor:pointer;margin-top:8px}'+
-    '.cp-w-chips{display:flex;gap:7px;flex-wrap:wrap;margin:6px 0 0}'+
-    '.cp-w-chip{font-size:10px;font-weight:700;border-radius:7px;padding:4px 9px;line-height:1.3}'+
-    '.cp-w-chip.cons{background:rgba(37,87,214,0.08);border:1px solid rgba(37,87,214,0.28);color:var(--navy)}'+
-    '.cp-w-chip.red{background:rgba(234,67,53,0.06);border:1px solid rgba(234,67,53,0.28);color:var(--navy)}'+
-    '.cp-w-chip b{font-weight:800}'+
-    '.cp-take{border-left:4px solid '+BRAND+';background:#10141A;color:#fff;border-radius:11px;padding:13px 16px;font-size:13px;font-weight:700;line-height:1.5;margin:2px 0 14px}.cp-take b{color:#E8A00C}'+
-    '.cp-hl{display:flex;flex-direction:column;gap:8px}'+
-    '.cp-hl-row{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center;border:1px solid var(--bdr);border-left:4px solid var(--hc);border-radius:10px;padding:10px 13px;background:var(--w);cursor:pointer;transition:.12s}'+
-    '.cp-hl-row:hover{box-shadow:0 3px 10px rgba(0,0,0,.08)}'+
-    '.cp-hl-tag{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;background:var(--hc);border-radius:20px;padding:3px 9px;white-space:nowrap}'+
-    '.cp-hl-head{font-size:12.5px;font-weight:700;color:var(--navy);line-height:1.4}'+
-    '.cp-hl-more{font-size:15px;color:var(--hc);font-weight:800}'+
-    '@media(max-width:560px){.cp-hl-row{grid-template-columns:auto 1fr}.cp-hl-more{display:none}}'+
-    '.cp-dots{border:1px dashed '+BRAND+';border-radius:11px;padding:12px 15px;margin-top:14px;background:rgba(8,102,255,0.03);font-size:12px;line-height:1.6;color:var(--navy)}.cp-dots b{color:'+BRAND+'}'+
-    '.cp-tc{display:flex;flex-direction:column;gap:6px}'+
-    '.cp-tc-row{display:flex;gap:9px;align-items:flex-start;font-size:11.5px;color:var(--navy);line-height:1.45;border:1px solid var(--bdr);border-radius:9px;padding:8px 11px}'+
-    '.cp-tbl{width:100%;border-collapse:collapse;font-size:11.5px}'+
-    '.cp-tbl th{text-align:left;color:var(--mu);font-weight:700;padding:7px 10px;border-bottom:1px solid var(--bdr);font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}'+
-    '.cp-tbl td{padding:9px 10px;border-bottom:1px solid var(--bdr);color:var(--navy);line-height:1.45;vertical-align:top}'+
-    '.cp-pill{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 9px;white-space:nowrap}'+
-    '.cp-sc{display:flex;flex-direction:column;gap:6px}'+
-    '.cp-sc-row{display:grid;grid-template-columns:78px 1.1fr 1fr 1.2fr 92px auto;gap:10px;align-items:center;border:1px solid var(--bdr);border-left:4px solid var(--sc);border-radius:9px;padding:8px 12px}'+
-    '.cp-sc-m{font-size:12px;font-weight:800;color:var(--navy)}.cp-sc-c{font-size:11px;color:var(--mu)}.cp-sc-a{font-size:11.5px;font-weight:700;color:var(--navy)}'+
-    '.cp-sc-v{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 10px;background:var(--sc);white-space:nowrap}'+
-    '.cp-sc-rk{font-size:9px;font-weight:800;color:'+BRAND+';background:rgba(8,102,255,0.10);border:1px solid rgba(8,102,255,0.3);border-radius:20px;padding:2px 8px;white-space:nowrap;text-align:center}'+
-    '.cp-sc-rk.blank{background:transparent;border:none}'+
-    '.cp-sc-surp{font-size:9.5px;font-weight:800;text-align:center;letter-spacing:.02em;border-radius:20px;padding:2px 8px;white-space:nowrap}'+
-    '.cp-sc-surp.hi{color:'+RED+';background:rgba(234,67,53,0.09);border:1px solid rgba(234,67,53,0.3)}'+
-    '.cp-sc-surp.md{color:'+AMBER+';background:rgba(183,121,31,0.09);border:1px solid rgba(183,121,31,0.3)}'+
-    '.cp-sc-surp.lo{color:var(--mu);background:transparent;border:1px solid var(--bdr)}'+
-    '.cp-legend{display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:#F7F9FB;border:1px solid var(--bdr);border-radius:10px;padding:10px 13px;margin:0 0 10px}'+
-    '.cp-legend-i{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--navy);line-height:1.4}'+
-    '.cp-legend-i b{font-weight:800}'+
-    '@media(max-width:600px){.cp-sc-row{grid-template-columns:1fr auto}.cp-sc-c,.cp-sc-a,.cp-sc-bw,.cp-sc-rk{display:none}}'+
-    '.cp-band{margin:16px 0 8px;display:flex;align-items:center;gap:9px}'+
-    '.cp-band-i{font-size:13px;font-weight:800;color:var(--bc);line-height:1}'+
-    '.cp-band-t{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--bc)}'+
-    '.cp-band-s{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
-    '.cp-band-l{flex:1;height:1px;background:var(--bdr)}'+
-    '@media(max-width:560px){.cp-band-s{display:none}}'+
-    '.cp-hl-open{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:'+AMBER+';border:1px solid '+AMBER+';border-radius:20px;padding:2px 7px;white-space:nowrap;margin-left:7px;vertical-align:middle}'+
-    '.cp-3m{border:1px solid var(--bdr);border-top:4px solid '+BRAND+';border-radius:12px;padding:15px 17px;margin:16px 0 0;background:linear-gradient(180deg,rgba(8,102,255,0.05),transparent)}'+
-    '.cp-3m-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:10px}'+
-    '.cp-3m-t{font-size:12.5px;font-weight:800;color:var(--navy)}'+
-    '.cp-3m-sub{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
-    '.cp-3m-copy{margin-left:auto;border:1px solid '+BRAND+';background:var(--w);font:inherit;font-size:10px;font-weight:800;color:'+BRAND+';padding:3px 11px;border-radius:999px;cursor:pointer;transition:.12s}'+
-    '.cp-3m-copy:hover{background:'+BRAND+';color:#fff}'+
-    '.cp-3m-l{display:flex;flex-direction:column;gap:8px;counter-reset:m3}'+
-    '.cp-3m-i{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;font-size:12.5px;line-height:1.55;color:var(--navy)}'+
-    '.cp-3m-i::before{counter-increment:m3;content:counter(m3);width:20px;height:20px;border-radius:50%;background:'+BRAND+';color:#fff;font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px}'+
-    '.cp-nb{margin-top:13px;border-top:1px dashed var(--bdr);padding-top:11px}'+
-    '.cp-nb-h{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:6px}'+
-    '.cp-nb-r{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;font-size:11px;line-height:1.5;color:var(--mu);padding:2px 0}'+
-    '.cp-nb-r b{color:var(--navy);font-weight:800}'+
-    '.cp-nb-x{color:'+CP_GRAY+';font-weight:800;flex:none}'+
-    '.cp-seed{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:800;color:'+PURPLE+';background:rgba(122,90,248,0.08);border:1px solid rgba(122,90,248,0.3);border-radius:20px;padding:2px 9px;white-space:nowrap;flex:none}'+
-    '.cp-nq{display:flex;flex-direction:column;gap:5px}'+
-    '.cp-nq-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border:1px solid var(--bdr);border-left:3px solid '+PURPLE+';border-radius:9px;padding:7px 11px;font-size:11.5px;color:var(--navy);line-height:1.45}'+
-    '.cp-nq-land{font-size:9.5px;font-weight:800;color:'+PURPLE+';white-space:nowrap}'+
-    '.cp-nq-land.open{color:var(--mu)}'+
-    '@media(max-width:560px){.cp-nq-row{grid-template-columns:1fr}.cp-nq-land{margin-top:3px}}'+
+// ── WL_ROWS — the Watch List: ONE flat table, ours to author (§6f) ───────────
+// Live list = rows with a trackSince and NO trackUntil. Migrated from the v2.4
+// nested watchList on the 2Q26 retrofit — `why` became `definition`; the v2.6-
+// dropped columns (tell/pista, trigger/breaks, cons) survive in git history and
+// docs/calls/META.md. `rank` is sort order ONLY, never rendered.
+var WL_ROWS=[
+  // ── Q2 2026 · UPCOMING — the live list. Open hooks only; seeded from Q1's newQuestions. ──
+  { id:'wl001', q:'Q2 2026', rank:1, theme:'Capex escalation + 2027 signposts',
+    tags:['capex','commitments','roic'], trackSince:'Q4 2025', trackUntil:null,
+    definition:'The capex trajectory is the whole bear case on FCF/returns — if it keeps rising without a monetization signpost, the multiple is exposed.',
+    seededBy:{ q:'Q1 2026', n:'How much higher does capex go — any 2027 framework or ROIC signpost?', tripped:true },
+    src:'Q1 2026: capex guide $125–145B; $107B commitment step-up (multi-year cloud + infra); FY expenses $162–169B.',
+    thread:[ {q:'Q4 2025',n:'Initial FY26 capex guide $115–135B; Meta Compute announced.'},{q:'Q1 2026',n:'Raised to $125–145B; $107B commitments; no 2027 figure.'} ] },
+  { id:'wl002', q:'Q2 2026', rank:2, theme:'Muse / MSL monetization',
+    tags:['ai','muse','msl'], trackSince:'Q4 2025', trackUntil:null,
+    definition:'The capex is justified by the AI product bet — the bet needs to convert engagement into revenue to underwrite the spend.',
+    seededBy:{ q:'Q1 2026', n:'Does Muse Spark / MSL have a monetization path, or engagement-only?' },
+    src:'Q1 2026: Muse Spark powering Meta AI; MSL "on track to be a leading lab"; next models in training.',
+    thread:[ {q:'Q4 2025',n:'MSL rebuilt in 2025; first models "shipping over coming months."'},{q:'Q1 2026',n:'Muse Spark shipped; +double-digit Meta AI sessions/user; monetization TBD.'} ] },
+  { id:'wl003', q:'Q2 2026', rank:3, theme:'Ad-engine durability into tougher comps',
+    tags:['ads','price-per-ad','impressions'], trackSince:'Q4 2025', trackUntil:null,
+    definition:'The ad engine funds everything; any crack in it pulls the rug from the AI-capex thesis.',
+    seededBy:{ q:'Q1 2026', n:'How durable is the ad-engine acceleration into tougher comps?' },
+    src:'Q1 2026: FoA ad revenue $55.0B (+33%); price/ad +12%; impressions +19%; Q2 revenue guided $58–61B.',
+    thread:[ {q:'Q4 2025',n:'Ad rev +24%, price/ad +6%, impressions +18%; record holiday demand.'},{q:'Q1 2026',n:'Ad rev +33%, price/ad +12% — acceleration on AI ranking.'} ] },
+  { id:'wl004', q:'Q2 2026', rank:4, theme:'Reality Labs loss trajectory',
+    tags:['reality-labs','glasses'], trackSince:'Q4 2025', trackUntil:null,
+    definition:'RL is the persistent drag; the glasses pivot + loss peak is the turn the bulls need.',
+    seededBy:{ q:'Q1 2026', n:'Do Reality Labs losses actually peak and start declining?' },
+    src:'Q1 2026: RL revenue $402M (−2%) — Quest down, glasses up; losses framed as peaking.',
+    thread:[ {q:'Q4 2025',n:'RL rev $955M (−12%); losses "peak" this year; glasses tripled.'},{q:'Q1 2026',n:'RL rev $402M (−2%); glasses growth offsetting Quest.'} ] },
+  { id:'wl005', q:'Q2 2026', rank:5, theme:'Regulatory / legal (EU + US youth trials)',
+    tags:['regulatory','legal'], trackSince:'Q1 2026', trackUntil:null,
+    definition:'A tail risk that can hit both the P&L (fines/accruals) and the ad model (consent/targeting).',
+    seededBy:{ q:'Q1 2026', n:'How do the US youth trials / EU headwinds resolve?' },
+    src:'Q1 2026: legal expense elevated; youth-related US trials scheduled; EU DMA/regulatory overhang.',
+    thread:[ {q:'Q4 2025',n:'Legal expense growth (accruals + charges); EU DMA overhang.'},{q:'Q1 2026',n:'US youth trials this year; possible material loss flagged.'} ] },
+  // ── Q1 2026 · REPORTED — frozen record. ──
+  { id:'wl006', q:'Q1 2026', rank:1, theme:'Capex FY26 guide trajectory',
+    tags:['capex'], trackSince:'Q4 2025', trackUntil:'Q1 2026',
+    definition:'The core FCF/returns debate.',
+    seededBy:{ q:'Q4 2025', n:'How big does the 2026 capex ramp get from the $115–135B frame?' } },
+  { id:'wl007', q:'Q1 2026', rank:2, theme:'AI product roadmap / first MSL models',
+    tags:['ai','msl'], trackSince:'Q4 2025', trackUntil:'Q1 2026',
+    definition:'Justifies the capex.',
+    seededBy:{ q:'Q4 2025', n:'Do the first MSL models ship credibly?' } },
+  { id:'wl008', q:'Q1 2026', rank:3, theme:'Ad-engine strength into comps',
+    tags:['ads'], trackSince:'Q4 2025', trackUntil:'Q1 2026',
+    definition:'Funds everything.',
+    seededBy:{ q:'Q4 2025', n:'Does the ad engine hold as holiday comps roll off?' } },
+  { id:'wl009', q:'Q1 2026', rank:4, theme:'Reality Labs losses (peak?)',
+    tags:['reality-labs'], trackSince:'Q4 2025', trackUntil:'Q1 2026',
+    definition:'The persistent drag turning.',
+    seededBy:{ q:'Q4 2025', n:'Is the Reality Labs loss peak real?' } },
+  { id:'wl010', q:'Q1 2026', rank:5, theme:'Efficiency / headcount',
+    tags:['efficiency','headcount'], trackSince:'Q4 2025', trackUntil:'Q1 2026',
+    definition:'The offset to the capex ramp.',
+    seededBy:{ q:'Q4 2025', n:'Does the "leaner, AI-native" model show up in headcount/opex?' } },
+  // ── Q4 2025 · REPORTED — frozen record. ──
+  { id:'wl011', q:'Q4 2025', rank:1, theme:'FY26 capex / infra step-up',
+    tags:['capex'], trackSince:'Q3 2025', trackUntil:'Q4 2025',
+    definition:'The core spend debate — the single number that frames 2026.' },
+  { id:'wl012', q:'Q4 2025', rank:2, theme:'AI roadmap / superintelligence',
+    tags:['ai','msl'], trackSince:'Q3 2025', trackUntil:'Q4 2025',
+    definition:'Justifies the spend.' },
+  { id:'wl013', q:'Q4 2025', rank:3, theme:'Ad-engine holiday strength',
+    tags:['ads'], trackSince:'Q3 2025', trackUntil:'Q4 2025',
+    definition:'Funds everything.' },
+  { id:'wl014', q:'Q4 2025', rank:4, theme:'Reality Labs losses',
+    tags:['reality-labs'], trackSince:'Q3 2025', trackUntil:'Q4 2025',
+    definition:'The persistent drag.' },
+  { id:'wl015', q:'Q4 2025', rank:5, theme:'Tax / one-time noise',
+    tags:['tax'], trackSince:'Q3 2025', trackUntil:'Q4 2025',
+    definition:'EPS optics — the Q3\'25 $15.93B charge flowing through.' },
+];
+
+function wlFor(qLabel, openOnly){
+  return WL_ROWS.filter(function(r){
+    if(r.q!==qLabel) return false;
+    if(openOnly && r.trackUntil) return false;
+    return true;
+  }).sort(function(a,z){
+    var ar=(typeof a.rank==='number')?a.rank:99, zr=(typeof z.rank==='number')?z.rank:99;
+    return ar-zr;
+  });
+}
+function wlOpen(r){ return !!(r.trackSince && !r.trackUntil); }
+// Every tag in use, across every quarter — the vocabulary of the filter bar. New tags created in
+// the Add-theme form are appended live so they become available to everyone.
+function wlTags(){
+  var set=[], seen={};
+  WL_ROWS.forEach(function(r){ (r.tags||[]).forEach(function(t){ if(!seen[t]){ seen[t]=1; set.push(t); } }); });
+  return set.sort();
+}
+function wlById(id){ for(var i=0;i<WL_ROWS.length;i++){ if(WL_ROWS[i].id===id) return WL_ROWS[i]; } return null; }
+function wlNextId(){
+  var mx=0; WL_ROWS.forEach(function(r){ var m=/^wl(\d+)$/.exec(r.id||''); if(m && +m[1]>mx) mx=+m[1]; });
+  return 'wl'+String(mx+1).padStart(3,'0');
+}
+// Next sort slot for a quarter — keeps new rows at the end without ever renumbering the others.
+function wlNextRank(qLabel){
+  var mx=0; WL_ROWS.forEach(function(r){ if(r.q===qLabel && typeof r.rank==='number' && r.rank>mx) mx=r.rank; });
+  return mx+1;
+}
+function ceUpcoming(){ return CALL_EARNINGS.quarters.filter(function(q){ return q.status==='upcoming'; })[0]||null; }
+function ceFill(x, muted){ return (x!=null && String(x).trim()!=='') ? x : '<span class="ce-empty">'+(muted||'— to fill')+'</span>'; }
+var CE_POP={};
+function ceReg(id, t, h){ CE_POP[id]={t:t, h:ceProse(h)}; return id; }
+function ceQ(id, t, h){ return '<span class="ce-info ov-clickable" data-detail="ce:'+ceReg(id,t,h)+'" title="'+esc(String(t).replace(/<[^>]+>/g,''))+'">?</span>'; }
+// ─── ceProse · the anti-wall transform ──────────────────────────────────────────────────────────
+// Every pop-up body in this file was authored as flowing <p> prose — 81 of 81 with no bullets —
+// and a reader who taps "＋ detail" got a paragraph block. This runs at REGISTRATION time so the
+// rule cannot be forgotten by the next author, and so it applies to old content too:
+//   · the first paragraph becomes the LEAD — one short block, set larger; if it is itself long,
+//     only its first sentence leads and the remainder joins the bullets.
+//   · any paragraph of 2+ sentences is split into <li> bullets, one sentence each.
+//   · a paragraph opening "<b>Label:</b> …" keeps its label and becomes a labelled row.
+// Content already carrying <ul>/<li> is left exactly as authored. (§6a-iv.)
+function ceSentences(s){
+  // split on sentence end followed by a capital / tag-open — never inside "$1.5B" or "vs. the"
+  return String(s).split(/(?<=[.!?])\s+(?=(?:<[a-z]+>)*[A-Z“"(])/).filter(function(x){ return x.trim(); });
+}
+function ceProse(h){
+  h=String(h||'');
+  if(!h || h.indexOf('<li>')>=0 || h.indexOf('<ul')>=0) return h;   // already structured
+  var paras=h.match(/<p>[\s\S]*?<\/p>/g);
+  if(!paras || paras.length===0) return h;
+  var tail=h.replace(/<p>[\s\S]*?<\/p>/g,'').trim();               // anything not in a <p>
+  var lead='', bullets=[];
+  paras.forEach(function(p,i){
+    var inner=p.replace(/^<p>/,'').replace(/<\/p>$/,'').trim();
+    var lab=inner.match(/^<b>([^<]{1,42}[:—-])<\/b>\s*([\s\S]*)$/);
+    if(lab){ bullets.push('<b>'+lab[1]+'</b> '+lab[2]); return; }
+    var sents=ceSentences(inner);
+    if(i===0){
+      lead=sents.shift();
+      sents.forEach(function(s){ bullets.push(s); });
+    } else {
+      sents.forEach(function(s){ bullets.push(s); });
+    }
+  });
+  var out='';
+  if(lead)          out+='<p class="ce-pop-lead">'+lead+'</p>';
+  if(bullets.length) out+='<ul class="ce-pop-l">'+bullets.map(function(b){ return '<li>'+b+'</li>'; }).join('')+'</ul>';
+  return out+tail;
+}
+function ceStyle(){
+  return '<style>.ce-note{font-size:11px;color:var(--mu);line-height:1.5;background:#F7F9FB;border:1px solid var(--bdr);border-radius:9px;padding:9px 12px;margin:0 0 12px}'+
+    '.ce-phtabs{display:inline-flex;gap:3px;background:rgba(66,133,244,0.08);border:1px solid var(--bdr);border-radius:9px;padding:4px;margin:0 0 20px}'+
+    '.ce-phtab{background:none;border:none;color:var(--mu);font-family:\'Inter\',sans-serif;font-size:12px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;padding:7px 16px;border-radius:6px;cursor:pointer;transition:all .15s}'+
+    '.ce-phtab:hover{color:var(--navy)}.ce-phtab.active{background:'+BRAND+';color:#fff}'+
+    '.ce-phpane[hidden]{display:none}'+
+    /* quarter selector — one Earnings, many quarters; only the selected quarter renders (page stays light) */
+    '.ce-qpills{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}'+
+    '.ce-qpill{border:1px solid var(--bdr);background:var(--w);font:inherit;font-size:11px;font-weight:800;color:var(--mu);padding:5px 13px;border-radius:999px;cursor:pointer;transition:.12s}'+
+    '.ce-qpill:hover{color:var(--navy)}.ce-qpill.active{background:var(--navy);color:#fff;border-color:var(--navy)}'+
+    '.ce-qpill .ce-qtag{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-left:6px;opacity:.75}'+
+    '.ce-qblock[hidden]{display:none}'+
+    '.ce-frozen{display:inline-block;font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;background:'+GRAY+';border-radius:20px;padding:2px 8px;margin-left:7px;vertical-align:middle}'+
+    /* watch-list theme tags (cross-quarter filter) + add-theme form */
+    '.ce-wl-hint{font-size:10.5px;line-height:1.5;color:var(--navy);background:rgba(66,133,244,0.06);border:1px solid rgba(66,133,244,0.28);border-radius:9px;padding:8px 12px;margin:0 0 10px}'+'.ce-wl-tagbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 12px;padding:9px 12px;background:#F7F9FB;border:1px solid var(--bdr);border-radius:10px}'+
+    '.ce-wl-tag{border:1px solid rgba(122,90,248,0.35);background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:'+PURPLE+';padding:3px 10px;border-radius:999px;cursor:pointer;transition:.12s}'+
+    '.ce-wl-tag:hover{background:rgba(122,90,248,0.08)}.ce-wl-tag.active{background:'+PURPLE+';color:#fff;border-color:'+PURPLE+'}'+
+    '.ce-wl-clear{border-color:var(--bdr);color:var(--mu)}'+
+    '.ce-wl-add-btn{margin-left:auto;border:1px dashed '+BRAND+';background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:'+BRAND+';padding:3px 10px;border-radius:999px;cursor:pointer}'+
+    '.ce-wl-bar-k{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu)}'+
+    '.ce-wl-win{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 11px;border-radius:999px;cursor:pointer}'+
+    '.ce-wl-win.active{background:var(--navy);color:#fff}'+
+    /* ── the Add / Edit theme form ── */
+    '.ce-wl-addform{display:flex;flex-direction:column;gap:5px;border:1px dashed '+BRAND+';border-radius:10px;padding:14px 15px;margin:0 0 12px;background:rgba(66,133,244,0.03)}'+
+    '.ce-wl-addform[hidden]{display:none}'+
+    '.ce-wl-fh{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:4px}'+
+    '.ce-wl-fh-t{font-size:12.5px;font-weight:800;color:var(--navy)}'+
+    '.ce-wl-fh-s{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
+    '.ce-wl-lb{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--navy);margin-top:5px}'+
+    '.ce-wl-lb span{font-weight:600;text-transform:none;letter-spacing:0;color:var(--mu);font-size:10px;margin-left:5px}'+
+    '.ce-wl-in{font:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:7px 10px;background:var(--w);color:var(--navy);width:100%;box-sizing:border-box}'+
+    '.ce-wl-in:focus{outline:none;border-color:'+BRAND+'}'+
+    '.ce-wl-ta{resize:vertical;line-height:1.5}'+
+    '.ce-wl-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:600px){.ce-wl-2col{grid-template-columns:1fr}}'+
+    '.ce-wl-tagpick{display:flex;gap:6px;flex-wrap:wrap;border:1px solid var(--bdr);border-radius:8px;padding:8px 9px;background:var(--w);min-height:20px}'+
+    '.ce-wl-pick{border:1px solid rgba(122,90,248,0.35);background:var(--w);font:inherit;font-size:10.5px;font-weight:800;color:'+PURPLE+';padding:3px 10px;border-radius:999px;cursor:pointer;transition:.12s}'+
+    '.ce-wl-pick:hover{background:rgba(122,90,248,0.08)}.ce-wl-pick.on{background:'+PURPLE+';color:#fff;border-color:'+PURPLE+'}'+
+    '.ce-wl-newtag{display:flex;gap:7px;align-items:center}.ce-wl-newtag .ce-wl-in{flex:1}'+
+    '.ce-wl-newtag-go{font:inherit;font-size:10.5px;font-weight:800;border:1px dashed '+PURPLE+';background:var(--w);color:'+PURPLE+';padding:6px 12px;border-radius:999px;cursor:pointer;white-space:nowrap}'+
+    '.ce-wl-frow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:9px}'+
+    '.ce-wl-add-go{font:inherit;font-size:11px;font-weight:800;border:none;border-radius:8px;padding:7px 15px;background:'+BRAND+';color:#fff;cursor:pointer}'+
+    '.ce-wl-cancel{font:inherit;font-size:10.5px;font-weight:700;border:1px solid var(--bdr);background:var(--w);color:var(--mu);padding:6px 12px;border-radius:8px;cursor:pointer}'+
+    '.ce-wl-all[hidden]{display:none}.ce-w[data-wlhide]{display:none}'+
+    /* ── the table: the storage view + the copy-out ── */
+    '.ce-wl-tbl-sc[hidden]{display:none}'+'.ce-wl-tbl-wrap{margin-top:22px;border:1px solid var(--bdr);border-top:3px solid '+BRAND+';border-radius:12px;padding:13px 15px;background:var(--w)}'+
+    '.ce-wl-tbl-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:9px}'+
+    '.ce-wl-tbl-t{font-size:12.5px;font-weight:800;color:var(--navy)}'+
+    '.ce-wl-tbl-s{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
+    '.ce-wl-tbl-n{margin-left:auto;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:'+BRAND2+';background:rgba(52,168,83,0.10);border:1px solid rgba(52,168,83,0.3);border-radius:999px;padding:3px 11px;white-space:nowrap}'+
+    '.ce-wl-copy{border:1px solid '+BRAND+';background:'+BRAND+';font:inherit;font-size:10px;font-weight:800;color:#fff;padding:4px 14px;border-radius:999px;cursor:pointer;letter-spacing:.03em;transition:.12s}'+
+    '.ce-wl-copy:hover{filter:brightness(1.08)}'+
+    '.ce-wl-copy.alt{background:var(--w);color:'+BRAND+'}.ce-wl-copy.alt:hover{background:rgba(66,133,244,0.08)}'+
+    '.ce-wl-tbl-sc{overflow-x:auto;border:1px solid var(--bdr);border-radius:9px}'+
+    '.ce-wl-tbl{width:100%;border-collapse:collapse;font-size:10.5px;min-width:1100px}'+
+    '.ce-wl-tbl th{text-align:left;background:#F7F9FB;color:var(--mu);font-weight:800;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;padding:7px 9px;border-bottom:1px solid var(--bdr);white-space:nowrap;position:sticky;top:0}'+
+    '.ce-wl-tbl td{padding:7px 9px;border-bottom:1px solid var(--bdr);color:var(--navy);line-height:1.45;vertical-align:top;max-width:270px}'+
+    '.ce-wl-tbl tr:last-child td{border-bottom:none}'+
+    '.ce-wl-tbl td.wl-key{white-space:nowrap;font-weight:800;color:var(--mu);font-size:10px}'+
+    '.ce-wl-tbl td.wl-th{font-weight:800;min-width:190px}'+
+    '.ce-wl-tbl tr.wl-open td.wl-key{color:'+BRAND2+'}'+
+    '.ce-wl-tbl tbody tr:hover{background:rgba(66,133,244,0.035)}'+
+    '.ce-empty{color:var(--mu);font-style:italic;opacity:.7}'+
+    '.ce-grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0}@media(max-width:640px){.ce-grid4{grid-template-columns:1fr 1fr}}'+
+    '.ce-cell{border:1px solid var(--bdr);border-top:3px solid '+BLUE+';border-radius:10px;padding:11px 13px;background:var(--w)}'+
+    '.ce-cell-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}.ce-cell-v{font-size:15px;font-weight:800;color:var(--navy);margin-top:3px;line-height:1.2}'+
+    /* Setup v2 — estimates toggle (Consensus ⇄ Summit ⇄ Both) */
+    '.ce-ev-pill{border:none;background:transparent;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
+    '.ce-ev-pill.active{background:var(--navy);color:#fff}'+
+    '.ce-cell-custom{border-top-color:'+YELLOW+'}'+
+    '.ce-row-cap{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:2px 0 4px}'+
+    '.ce-val{display:flex;align-items:baseline;gap:7px}'+
+    '.ce-val-lab{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:1px 7px;flex:none}'+
+    '.ce-val-cons .ce-val-lab{background:rgba(26,115,232,0.10);color:'+BLUE+'}'+
+    '.ce-val-us .ce-val-lab{background:rgba(52,168,83,0.12);color:'+BRAND2+'}'+
+    '.ce-evwrap[data-ev="cons"] .ce-val-us{display:none}'+
+    '.ce-evwrap[data-ev="us"] .ce-val-cons{display:none}'+
+    '.ce-evwrap:not([data-ev="both"]) .ce-val-lab{display:none}'+
+    '.ce-evwrap[data-ev="both"] .ce-cell-v{font-size:13px}'+
+    '.ce-evwrap[data-ev="both"] .ce-val{margin-top:3px}'+
+    '.ce-banner{border:1px solid var(--bdr);border-left:4px solid '+BRAND+';border-radius:11px;padding:13px 15px;background:linear-gradient(180deg,rgba(66,133,244,0.05),transparent);font-size:12.5px;line-height:1.6;color:var(--navy);margin:12px 0}'+
+    '.ce-watch{display:flex;flex-direction:column;gap:11px}'+
+    '.ce-w{border:1px solid var(--bdr);border-radius:12px;padding:13px 15px;background:var(--w);position:relative}'+
+    '.ce-w-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}'+
+    /* v2.6: the numbered rank badge is gone — a plain marker, so removing a theme never leaves a
+       stale number behind. `rank` still orders the rows, it just is not rendered. */
+    '.ce-w-dot{width:8px;height:8px;border-radius:50%;background:'+BRAND+';flex:none;margin:0 2px}'+
+    '.ce-w-metric{font-size:13.5px;font-weight:800;color:var(--navy)}'+
+    /* the definition — what the theme means, in our words. (v2.6 replaced the tell 🔎 box, which
+       had been carrying the model's voice; no black slabs left anywhere in the watch cards.) */
+    '.ce-w-def{color:var(--navy);border-left:3px solid rgba(66,133,244,0.35);padding:1px 0 1px 11px;font-size:12px;line-height:1.55;margin-top:7px}'+
+    '.ce-w-def b{color:'+BLUE+'}'+
+    /* per-card edit / delete (live quarter only) + the closed-hook badge */
+    '.ce-w-ctl{margin-left:auto;display:inline-flex;gap:5px;flex:none}'+
+    '.ce-w-ed,.ce-w-del{border:1px solid var(--bdr);background:var(--w);font:inherit;font-size:11px;font-weight:800;color:var(--mu);width:24px;height:24px;border-radius:7px;cursor:pointer;line-height:1;transition:.12s}'+
+    '.ce-w-ed:hover{border-color:'+BRAND+';color:'+BRAND+'}.ce-w-del:hover{border-color:'+RED+';color:'+RED+'}'+
+    '.ce-w-closed{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--mu);background:#F2F5F8;border:1px solid var(--bdr);border-radius:20px;padding:2px 8px;flex:none}'+
+    '.ce-kind{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:2px 8px;white-space:nowrap;border:1px solid}'+
+    '.ce-phase{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;border-radius:20px;padding:3px 10px;margin-bottom:8px}'+
+    '.ce-info{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:'+AMBER+';color:#fff;font-size:10px;font-weight:800;cursor:pointer;margin-left:5px;vertical-align:middle;flex:none}'+
+    '.ce-info:hover{filter:brightness(1.1)}'+
+    /* (retired Jul 2026: .ce-debate / .ce-dc / .ce-mech — the fear-vs-consensus pair and the
+       mechanism chips. The Setup now goes straight from the estimates grid to the debate box.) */
+    '.ce-synth{border-left:4px solid var(--navy);background:#10141A;color:#fff;border-radius:11px;padding:13px 16px;font-size:13px;font-weight:700;line-height:1.5;margin:6px 0}.ce-synth b{color:#AECBFA}'+
+    '.ce-why-btn{display:inline-block;font-size:10px;font-weight:800;color:'+BLUE+';cursor:pointer;margin-top:8px}'+
+    '.ce-w-chips{display:flex;gap:7px;flex-wrap:wrap;margin:6px 0 0}'+
+    '.ce-w-chip{font-size:10px;font-weight:700;border-radius:7px;padding:4px 9px;line-height:1.3;color:var(--navy)}'+
+    '.ce-w-chip.tag{background:rgba(122,90,248,0.08);border:1px solid rgba(122,90,248,0.3)}'+
+    '.ce-w-chip.since{background:rgba(251,188,5,0.12);border:1px solid rgba(183,121,31,0.35)}'+
+    '.ce-w-chip.until{background:#F2F5F8;border:1px solid var(--bdr);color:var(--mu)}'+
+    '.ce-w-chip.cons{background:rgba(26,115,232,0.08);border:1px solid rgba(26,115,232,0.28)}'+
+    /* .cons and .red are kept for the SPLC infra cards (Deep Dive ▸ SPLC), their only remaining user */
+    '.ce-w-chip.red{background:rgba(234,67,53,0.06);border:1px solid rgba(234,67,53,0.28)}'+
+    '.ce-w-chip b{font-weight:800}'+
+    '.ce-take{border-left:4px solid '+BRAND+';background:#10141A;color:#fff;border-radius:11px;padding:13px 16px;font-size:13px;font-weight:700;line-height:1.5;margin:2px 0 14px}.ce-take b{color:#AECBFA}'+
+    '.ce-hl{display:flex;flex-direction:column;gap:8px}'+
+    '.ce-hl-row{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center;border:1px solid var(--bdr);border-left:4px solid var(--hc);border-radius:10px;padding:10px 13px;background:var(--w);cursor:pointer;transition:.12s}'+
+    '.ce-hl-row:hover{box-shadow:0 3px 10px rgba(0,0,0,.08)}'+
+    '.ce-hl-tag{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;background:var(--hc);border-radius:20px;padding:3px 9px;white-space:nowrap}'+
+    '.ce-hl-head{font-size:12.5px;font-weight:700;color:var(--navy);line-height:1.4}'+
+    '.ce-hl-more{font-size:15px;color:var(--hc);font-weight:800}'+
+    '@media(max-width:560px){.ce-hl-row{grid-template-columns:auto 1fr}.ce-hl-more{display:none}}'+
+    '.ce-dots{border:1px dashed '+BRAND+';border-radius:11px;padding:12px 15px;margin-top:14px;background:rgba(66,133,244,0.03);font-size:12px;line-height:1.6;color:var(--navy)}.ce-dots b{color:'+BRAND+'}'+
+    '.ce-sc{display:flex;flex-direction:column;gap:6px}'+
+    '.ce-sc-row{display:grid;grid-template-columns:1.1fr 1fr 1.2fr auto;gap:10px;align-items:center;border:1px solid var(--bdr);border-left:4px solid var(--sc);border-radius:9px;padding:8px 12px}'+
+    '.ce-sc-m{font-size:12px;font-weight:800;color:var(--navy)}.ce-sc-c{font-size:11px;color:var(--mu)}.ce-sc-a{font-size:11.5px;font-weight:700;color:var(--navy)}'+
+    '.ce-sc-v{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 10px;background:var(--sc);white-space:nowrap}'+
+    '@media(max-width:600px){.ce-sc-row{grid-template-columns:1fr auto}.ce-sc-c,.ce-sc-a{display:none}}'+
+    '.ce-tc{display:flex;flex-direction:column;gap:6px}'+
+    '.ce-tc-row{display:flex;gap:9px;align-items:flex-start;font-size:11.5px;color:var(--navy);line-height:1.45;border:1px solid var(--bdr);border-radius:9px;padding:8px 11px}'+
+    '.ce-tbl{width:100%;border-collapse:collapse;font-size:11.5px}'+
+    '.ce-tbl th{text-align:left;color:var(--mu);font-weight:700;padding:7px 10px;border-bottom:1px solid var(--bdr);font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}'+
+    '.ce-tbl td{padding:9px 10px;border-bottom:1px solid var(--bdr);color:var(--navy);line-height:1.45;vertical-align:top}'+
+    '.ce-pill{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 9px;white-space:nowrap}'+
+    /* ── #1 · the chain: seededBy chip on watch items, landing chip on newQuestions ── */
+    '.ce-seed{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:800;color:'+PURPLE+';background:rgba(122,90,248,0.08);border:1px solid rgba(122,90,248,0.3);border-radius:20px;padding:2px 9px;white-space:nowrap;flex:none}'+
+    '.ce-nq{display:flex;flex-direction:column;gap:5px}'+
+    '.ce-nq-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border:1px solid var(--bdr);border-left:3px solid '+PURPLE+';border-radius:9px;padding:7px 11px;font-size:11.5px;color:var(--navy);line-height:1.45}'+
+    '.ce-nq-land{font-size:9.5px;font-weight:800;color:'+PURPLE+';white-space:nowrap}'+
+    '.ce-nq-land.open{color:var(--mu)}'+
+    '@media(max-width:560px){.ce-nq-row{grid-template-columns:1fr}.ce-nq-land{margin-top:3px}}'+
+    /* ── #2 · scorecard: surprise bars, watch-rank badges, richer result kinds ── */
+    '.ce-sc-row{grid-template-columns:78px 1.1fr 1fr 1.2fr 92px auto}'+
+    '.ce-sc-rk{font-size:9px;font-weight:800;color:'+BRAND+';background:rgba(66,133,244,0.10);border:1px solid rgba(66,133,244,0.3);border-radius:20px;padding:2px 8px;white-space:nowrap;text-align:center}'+
+    '.ce-sc-rk.blank{background:transparent;border:none}'+
+    '.ce-sc-surp{font-size:9.5px;font-weight:800;text-align:center;letter-spacing:.02em;border-radius:20px;padding:2px 8px;white-space:nowrap}'+
+    '.ce-sc-surp.hi{color:'+RED+';background:rgba(234,67,53,0.09);border:1px solid rgba(234,67,53,0.3)}'+
+    '.ce-sc-surp.md{color:'+AMBER+';background:rgba(183,121,31,0.09);border:1px solid rgba(183,121,31,0.3)}'+
+    '.ce-sc-surp.lo{color:var(--mu);background:transparent;border:1px solid var(--bdr)}'+
+    /* the legend that makes the row readable without a manual */
+    '.ce-legend{display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:#F7F9FB;border:1px solid var(--bdr);border-radius:10px;padding:10px 13px;margin:0 0 10px}'+
+    '.ce-legend-i{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--navy);line-height:1.4}'+
+    '.ce-legend-i b{font-weight:800}'+
+    '@media(max-width:600px){.ce-sc-row{grid-template-columns:1fr auto}.ce-sc-c,.ce-sc-a,.ce-sc-bw,.ce-sc-rk{display:none}}'+
+    /* ── #3 · post-call highlight bands ── */
+    '.ce-band{margin:16px 0 8px;display:flex;align-items:center;gap:9px}'+
+    '.ce-band-i{font-size:13px;font-weight:800;color:var(--bc);line-height:1}'+
+    '.ce-band-t{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--bc)}'+
+    '.ce-band-s{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
+    '.ce-band-l{flex:1;height:1px;background:var(--bdr)}'+
+    '@media(max-width:560px){.ce-band-s{display:none}}'+
+    '.ce-hl-open{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:'+AMBER+';border:1px solid '+AMBER+';border-radius:20px;padding:2px 7px;white-space:nowrap;margin-left:7px;vertical-align:middle}'+
+    /* ── #4 · the deliverable: three minutes + what we are not bringing ── */
+    '.ce-3m{border:1px solid var(--bdr);border-top:4px solid '+BRAND+';border-radius:12px;padding:15px 17px;margin:16px 0 0;background:linear-gradient(180deg,rgba(66,133,244,0.05),transparent)}'+
+    '.ce-3m-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:10px}'+
+    '.ce-3m-t{font-size:12.5px;font-weight:800;color:var(--navy)}'+
+    '.ce-3m-sub{font-size:10.5px;color:var(--mu);font-weight:600;font-style:italic}'+
+    '.ce-3m-copy{margin-left:auto;border:1px solid '+BRAND+';background:var(--w);font:inherit;font-size:10px;font-weight:800;color:'+BRAND+';padding:3px 11px;border-radius:999px;cursor:pointer;transition:.12s}'+
+    '.ce-3m-copy:hover{background:'+BRAND+';color:#fff}'+
+    '.ce-3m-l{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}'+'@media(max-width:760px){.ce-3m-l{grid-template-columns:1fr}}'+'.ce-3m-n{width:22px;height:22px;border-radius:50%;background:'+BRAND+';color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex:none}'+'.ce-3m-bd{min-width:0}'+'.ce-3m-lead{display:block;font-size:13.5px;font-weight:800;color:var(--navy);line-height:1.4}'+'.ce-3m-ev{display:block;font-size:11px;font-weight:500;color:var(--mu);line-height:1.5;margin-top:4px}'+'.ce-3m-more{margin-top:6px}'+'.ce-3m-more>summary{font-size:9.5px;font-weight:800;color:'+BLUE+';cursor:pointer;list-style:none}'+'.ce-3m-more>summary::-webkit-details-marker{display:none}'+'.ce-3m-more[open]>summary{color:var(--mu)}'+
+    '.ce-3m-i{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--bdr);border-top:3px solid '+BRAND+';border-radius:11px;padding:11px 13px;background:#fff}'+
+    
+    '.ce-nb{margin-top:13px;border-top:1px dashed var(--bdr);padding-top:11px}'+
+    '.ce-nb-h{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:6px}'+
+    '.ce-nb-r{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;font-size:11px;line-height:1.5;color:var(--mu);padding:2px 0}'+
+    '.ce-nb-r b{color:var(--navy);font-weight:800}'+
+    '.ce-nb-x{color:'+GRAY+';font-weight:800;flex:none}'+
+    /* ── #5 · earnings-call theme status with age ── */
     '.calls-st-age{font-size:8.5px;font-weight:700;opacity:.8;margin-left:4px}</style>';
 }
-function cpFmtC(o){ if(!o||o.v==null) return '<span class="cp-empty">—</span>';
-  var un=o.unit||'', v=o.v, s;
-  if(un==='$') s='$'+v; else if(un==='$M') s='$'+v+'M'; else if(un==='$B') s='$'+v+'B';
-  else if(un==='%') s=v+'%'; else s=String(v);
-  return s+(o.yoy!=null?'<span style="font-size:10px;color:#0a8f4c;font-weight:800;margin-left:5px">+'+o.yoy+'%</span>':''); }
-function cpEvCell(key, m, isCustom){
-  var name=m&&m.k?m.k:null;
-  var q=(m&&m.note)?cpQ('setnote-'+key, m.note.t, m.note.h):'';
-  var kHtml=name?esc(name):'<span class="cp-empty">Custom KPI — to define</span>';
-  return '<div class="cp-cell'+(isCustom?' cp-cell-custom':'')+'"><div class="cp-cell-k">'+kHtml+q+'</div>'+
-    '<div class="cp-cell-v">'+
-      '<div class="cp-val cp-val-cons"><span class="cp-val-lab">Street</span>'+cpFmtC(m&&m.cons)+'</div>'+
-      '<div class="cp-val cp-val-us"><span class="cp-val-lab">Summit</span>'+cpFmtC(m&&m.us)+'</div>'+
-    '</div></div>';
-}
-// The source buttons — every Call Prep opens with IR + EDGAR (docs/CALL_PREP_CONVENTIONS §6).
-var CP_IR_URL='https://investor.atmeta.com/';
-var CP_EDGAR_URL='https://www.sec.gov/edgar/browse/?CIK=1326801&owner=exclude';
-var CP_LOGO_URL='https://assets.parqet.com/logos/symbol/META';
-var CP_SEC_SEAL='img/sec-seal.png';
-function cpIRButton(){
+// ─── The IR button — every Earnings opens with it. On earnings day the source is ONE tap away:
+// release, webcast, transcripts, straight from the company. Deliberately loud; convention for
+// every company (EARNINGS_CONVENTIONS §6). META → https://investor.atmeta.com/
+var CE_IR_URL='https://investor.atmeta.com/';
+var CE_EDGAR_URL='https://www.sec.gov/edgar/browse/?CIK=1326801&owner=exclude';
+// Identity, not decoration: the company's real logo on the IR card, the SEC eagle seal on the
+// EDGAR card — both oversized, on near-black, with a giant watermark of the same mark behind.
+// Logo comes from the portal's standard logo CDN (parqet, CSP-allowed); the SEC seal is the
+// official public-domain seal served locally (img/sec-seal.png).
+// META mark from the portal logo CDN (parqet, CSP-allowed) so both marks get the same
+// treatment: transparent emblem in a glowing ring + giant watermark. No white tiles.
+var CE_LOGO_URL='https://assets.parqet.com/logos/symbol/META';
+var CE_SEC_SEAL='img/sec-seal.png';
+function ceIRButton(){
   return '<style>'+
-    '.cp-srcrow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 16px}@media(max-width:760px){.cp-srcrow{grid-template-columns:1fr}}'+
-    '.cp-ir{display:flex;align-items:center;gap:20px;text-decoration:none;border-radius:18px;padding:26px 26px;min-height:120px;position:relative;overflow:hidden;'+
-      'background:linear-gradient(115deg,#04060B 0%,#0A1024 60%,#04060B 100%);border:1px solid rgba(8,102,255,.4);box-shadow:0 10px 32px rgba(0,0,0,.4);transition:.18s}'+
-    '.cp-ir:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,'+BRAND+','+BLUE+','+YELLOW+','+GREEN+');height:4px;top:0}'+
-    '.cp-ir:hover{transform:translateY(-2px);box-shadow:0 16px 42px rgba(8,102,255,.45);border-color:rgba(8,102,255,.85)}'+
-    '.cp-ir-wm{position:absolute;right:-40px;bottom:-60px;width:230px;height:230px;object-fit:contain;opacity:.09;pointer-events:none;transition:.25s}'+
-    '.cp-ir:hover .cp-ir-wm{opacity:.16;transform:scale(1.04) rotate(-2deg)}'+
-    '.cp-ir-ic{width:72px;height:72px;border-radius:18px;background:transparent;display:flex;align-items:center;justify-content:center;flex:none;position:relative;z-index:1;'+
-      'box-shadow:0 0 0 1px rgba(232,160,12,.35),0 0 32px rgba(8,102,255,.6)}'+
-    '.cp-ir-ic img{width:52px;height:52px;object-fit:contain;display:block}'+
-    '.cp-ir-body{flex:1;min-width:0;position:relative;z-index:1}'+
-    '.cp-ir-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.16em;color:#E8A00C;display:flex;align-items:center;gap:7px}'+
-    '.cp-ir-dot{width:7px;height:7px;border-radius:50%;background:'+GREEN+';box-shadow:0 0 0 0 rgba(22,163,74,.7);animation:cpirp 1.6s infinite}'+
-    '@keyframes cpirp{0%{box-shadow:0 0 0 0 rgba(22,163,74,.6)}70%{box-shadow:0 0 0 8px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}'+
-    '.cp-ir-t{font-size:19px;font-weight:900;color:#fff;letter-spacing:.05em;text-transform:uppercase;margin-top:4px}'+
-    '.cp-ir-s{font-size:11.5px;color:#9FB0C8;font-weight:600;margin-top:3px;letter-spacing:.01em}'+
-    '.cp-ir-go{font-size:13px;font-weight:900;color:#fff;background:'+BRAND+';border-radius:999px;padding:12px 22px;white-space:nowrap;flex:none;display:flex;align-items:center;gap:8px;position:relative;z-index:1;letter-spacing:.04em;transition:.14s}'+
-    '.cp-ir:hover .cp-ir-go{gap:12px;box-shadow:0 4px 18px rgba(8,102,255,.6)}'+
-    '@media(max-width:560px){.cp-ir{flex-wrap:wrap}.cp-ir-go{width:100%;justify-content:center}}'+
-    '.cp-ir.edgar{background:linear-gradient(115deg,#070502 0%,#171106 60%,#070502 100%);border-color:rgba(197,164,90,.35)}'+
-    '.cp-ir.edgar:before{background:linear-gradient(90deg,#8C6D2F,#E3C878,#8C6D2F)}'+
-    '.cp-ir.edgar:hover{box-shadow:0 16px 42px rgba(197,164,90,.32);border-color:rgba(227,200,120,.75)}'+
-    '.cp-ir.edgar .cp-ir-ic{background:transparent;box-shadow:0 0 0 1px rgba(227,200,120,.28),0 0 32px rgba(197,164,90,.55)}'+
-    '.cp-ir.edgar .cp-ir-ic img{width:72px;height:72px}'+
-    '.cp-ir.edgar .cp-ir-k{color:#E3C878}'+
-    '.cp-ir.edgar .cp-ir-dot{background:#E3C878;animation:none;box-shadow:0 0 8px rgba(227,200,120,.8)}'+
-    '.cp-ir.edgar .cp-ir-go{background:linear-gradient(135deg,#E3C878,#B8933F);color:#1A1305}'+
-    '.cp-ir.edgar:hover .cp-ir-go{box-shadow:0 4px 18px rgba(197,164,90,.6)}'+
-    '.cp-ir.edgar .cp-ir-wm{opacity:.1}'+
-    '.cp-ir.edgar:hover .cp-ir-wm{opacity:.17}'+
+    '.ce-srcrow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 16px}@media(max-width:760px){.ce-srcrow{grid-template-columns:1fr}}'+
+    '.ce-ir{display:flex;align-items:center;gap:20px;text-decoration:none;border-radius:18px;padding:26px 26px;min-height:120px;position:relative;overflow:hidden;'+
+      'background:linear-gradient(115deg,#04060B 0%,#0A1224 60%,#04060B 100%);border:1px solid rgba(66,133,244,.3);box-shadow:0 10px 32px rgba(0,0,0,.4);transition:.18s}'+
+    '.ce-ir:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,'+BRAND+','+RED+','+YELLOW+','+BRAND2+');height:4px;top:0}'+
+    '.ce-ir:hover{transform:translateY(-2px);box-shadow:0 16px 42px rgba(26,115,232,.4);border-color:rgba(66,133,244,.75)}'+
+    /* the giant watermark — the mark itself, monumental, bleeding off the card */
+    '.ce-ir-wm{position:absolute;right:-40px;bottom:-60px;width:230px;height:230px;object-fit:contain;opacity:.09;pointer-events:none;transition:.25s}'+
+    '.ce-ir:hover .ce-ir-wm{opacity:.16;transform:scale(1.04) rotate(-2deg)}'+
+    /* the emblem — transparent mark in a glowing ring, same treatment both cards */
+    '.ce-ir-ic{width:72px;height:72px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;flex:none;position:relative;z-index:1;'+
+      'box-shadow:0 0 0 1px rgba(138,180,248,.3),0 0 32px rgba(66,133,244,.55)}'+
+    '.ce-ir-ic img{width:52px;height:52px;object-fit:contain;display:block;filter:drop-shadow(0 2px 10px rgba(0,0,0,.55))}'+
+    '.ce-ir-body{flex:1;min-width:0;position:relative;z-index:1}'+
+    '.ce-ir-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.16em;color:#8AB4F8;display:flex;align-items:center;gap:7px}'+
+    '.ce-ir-dot{width:7px;height:7px;border-radius:50%;background:'+BRAND2+';box-shadow:0 0 0 0 rgba(52,168,83,.7);animation:cpirp 1.6s infinite}'+
+    '@keyframes cpirp{0%{box-shadow:0 0 0 0 rgba(52,168,83,.6)}70%{box-shadow:0 0 0 8px rgba(52,168,83,0)}100%{box-shadow:0 0 0 0 rgba(52,168,83,0)}}'+
+    '.ce-ir-t{font-size:19px;font-weight:900;color:#fff;letter-spacing:.05em;text-transform:uppercase;margin-top:4px}'+
+    '.ce-ir-s{font-size:11.5px;color:#9FB0C8;font-weight:600;margin-top:3px;letter-spacing:.01em}'+
+    '.ce-ir-go{font-size:13px;font-weight:900;color:#fff;background:'+BLUE+';border-radius:999px;padding:12px 22px;white-space:nowrap;flex:none;display:flex;align-items:center;gap:8px;position:relative;z-index:1;letter-spacing:.04em;transition:.14s}'+
+    '.ce-ir:hover .ce-ir-go{gap:12px;box-shadow:0 4px 18px rgba(26,115,232,.55)}'+
+    '@media(max-width:560px){.ce-ir{flex-wrap:wrap}.ce-ir-go{width:100%;justify-content:center}}'+
+    /* EDGAR variant — federal weight: near-black + the gold of the seal, eagle front and center */
+    '.ce-ir.edgar{background:linear-gradient(115deg,#070502 0%,#171106 60%,#070502 100%);border-color:rgba(197,164,90,.35)}'+
+    '.ce-ir.edgar:before{background:linear-gradient(90deg,#8C6D2F,#E3C878,#8C6D2F)}'+
+    '.ce-ir.edgar:hover{box-shadow:0 16px 42px rgba(197,164,90,.32);border-color:rgba(227,200,120,.75)}'+
+    '.ce-ir.edgar .ce-ir-ic{box-shadow:0 0 0 1px rgba(227,200,120,.28),0 0 32px rgba(197,164,90,.55)}'+
+    '.ce-ir.edgar .ce-ir-ic img{width:72px;height:72px}'+
+    '.ce-ir.edgar .ce-ir-k{color:#E3C878}'+
+    '.ce-ir.edgar .ce-ir-dot{background:#E3C878;animation:none;box-shadow:0 0 8px rgba(227,200,120,.8)}'+
+    '.ce-ir.edgar .ce-ir-go{background:linear-gradient(135deg,#E3C878,#B8933F);color:#1A1305}'+
+    '.ce-ir.edgar:hover .ce-ir-go{box-shadow:0 4px 18px rgba(197,164,90,.6)}'+
+    '.ce-ir.edgar .ce-ir-wm{opacity:.1}'+
+    '.ce-ir.edgar:hover .ce-ir-wm{opacity:.17}'+
   '</style>'+
-  '<div class="cp-srcrow">'+
-  '<a class="cp-ir" href="'+CP_IR_URL+'" target="_blank" rel="noopener">'+
-    '<img class="cp-ir-wm" src="'+CP_LOGO_URL+'" alt="" aria-hidden="true">'+
-    '<span class="cp-ir-ic"><img src="'+CP_LOGO_URL+'" alt="Meta logo" onerror="this.parentNode.style.display=\'none\'"></span>'+
-    '<span class="cp-ir-body">'+
-      '<span class="cp-ir-k"><span class="cp-ir-dot"></span>THE SOURCE · EARNINGS HQ</span>'+
-      '<span class="cp-ir-t" style="display:block">Meta Investor Relations</span>'+
-      '<span class="cp-ir-s" style="display:block">Release · webcast · slides · transcripts — straight from investor.atmeta.com. Skip the search, go direct.</span>'+
+  '<div class="ce-srcrow">'+
+  '<a class="ce-ir" href="'+CE_IR_URL+'" target="_blank" rel="noopener">'+
+    '<img class="ce-ir-wm" src="'+CE_LOGO_URL+'" alt="" aria-hidden="true">'+
+    '<span class="ce-ir-ic"><img src="'+CE_LOGO_URL+'" alt="Meta logo" onerror="this.parentNode.style.display=\'none\'"></span>'+
+    '<span class="ce-ir-body">'+
+      '<span class="ce-ir-k"><span class="ce-ir-dot"></span>THE SOURCE · EARNINGS HQ</span>'+
+      '<span class="ce-ir-t" style="display:block">Meta Platforms Investor Relations</span>'+
+      '<span class="ce-ir-s" style="display:block">Release · webcast · slides · transcripts — straight from investor.atmeta.com. Skip the search, go direct.</span>'+
     '</span>'+
-    '<span class="cp-ir-go">OPEN IR <span>↗</span></span>'+
+    '<span class="ce-ir-go">OPEN IR <span>↗</span></span>'+
   '</a>'+
-  '<a class="cp-ir edgar" href="'+CP_EDGAR_URL+'" target="_blank" rel="noopener">'+
-    '<img class="cp-ir-wm" src="'+CP_SEC_SEAL+'" alt="" aria-hidden="true">'+
-    '<span class="cp-ir-ic"><img src="'+CP_SEC_SEAL+'" alt="SEC seal" onerror="this.parentNode.style.display=\'none\'"></span>'+
-    '<span class="cp-ir-body">'+
-      '<span class="cp-ir-k"><span class="cp-ir-dot"></span>THE RECORD · U.S. SECURITIES AND EXCHANGE COMMISSION</span>'+
-      '<span class="cp-ir-t" style="display:block">Meta on EDGAR</span>'+
-      '<span class="cp-ir-s" style="display:block">10-K · 10-Q · 8-K · DEF 14A — the regulator\'s copy, as filed. What IR curates, EDGAR certifies.</span>'+
+  '<a class="ce-ir edgar" href="'+CE_EDGAR_URL+'" target="_blank" rel="noopener">'+
+    '<img class="ce-ir-wm" src="'+CE_SEC_SEAL+'" alt="" aria-hidden="true">'+
+    '<span class="ce-ir-ic"><img src="'+CE_SEC_SEAL+'" alt="SEC seal" onerror="this.parentNode.style.display=\'none\'"></span>'+
+    '<span class="ce-ir-body">'+
+      '<span class="ce-ir-k"><span class="ce-ir-dot"></span>THE RECORD · U.S. SECURITIES AND EXCHANGE COMMISSION</span>'+
+      '<span class="ce-ir-t" style="display:block">Meta on EDGAR</span>'+
+      '<span class="ce-ir-s" style="display:block">10-K · 10-Q · 8-K · DEF 14A — the regulator\'s copy, as filed. What IR curates, EDGAR certifies.</span>'+
     '</span>'+
-    '<span class="cp-ir-go">OPEN EDGAR <span>↗</span></span>'+
+    '<span class="ce-ir-go">OPEN EDGAR <span>↗</span></span>'+
   '</a>'+
   '</div>';
 }
-function cpQkey(q){ return String(q||'').replace(/\s/g,''); }
-function cpQPills(){
-  return '<div class="cp-qpills">'+CALL_PREP.quarters.map(function(q,i){
-    return '<button type="button" class="cp-qpill'+(i===0?' active':'')+'" data-cpqsel="'+esc(cpQkey(q.q))+'">'+esc(q.q)+(q.status==='upcoming'?'<span class="cp-qtag">upcoming</span>':'')+'</button>';
+function ceQkey(q){ return String(q||'').replace(/\s/g,''); }
+// Renders the quarter-pill selector (shared across the three phase panes via .ce-qblock filtering).
+// The quarter selector is PHASE-AWARE: Setup & Watch List offer every quarter, but Post-Results
+// only offers quarters that have a `results` block — the upcoming quarter has none, so it does not
+// exist in that section (its data does not exist yet). The upcoming quarter is added to
+// CALL_EARNINGS.quarters only once the PRIOR quarter's Post-Results (print + call highlights) is
+// filled. data-ceqhas lists the phases each quarter is valid for.
+function ceQPhases(q){
+  var ph=['setup','watch'];
+  if(q.results) ph.push('results');
+  return ph;
+}
+function ceQPills(){
+  return '<div class="ce-qpills">'+CALL_EARNINGS.quarters.map(function(q,i){
+    return '<button type="button" class="ce-qpill'+(i===0?' active':'')+'" data-ceqsel="'+esc(ceQkey(q.q))+'" data-ceqhas="'+ceQPhases(q).join(' ')+'">'+esc(q.q)+(q.status==='upcoming'?'<span class="ce-qtag">upcoming</span>':'')+'</button>';
   }).join('')+'</div>';
 }
-function cpSetupBody(c){
-  var h=cpStyle();
-  h+=CALL_PREP.quarters.map(function(u,qi){
-    var qk=cpQkey(u.q), frozen=(u.status!=='upcoming');
-    var b='<div class="cp-qblock" data-cpq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="cp-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="cp-frozen">frozen</span>':'')+'</div>';
-    var st=u.setup||{};
-    if(st.headline){
-      b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup.</b> The numbers going in — what the <b>Street</b> expects, what <b>Summit</b> expects, and where the two disagree. '+(u.date?('Reports <b>'+esc(u.date)+'</b>.'):'')+'</p>';
-      var hl=st.headline||[], cu=st.custom||[];
+// A · The Setup — the grid is BUILT FROM THE ARCHIVE, not hand-authored. CE_CONS carries the
+// consensus and both growth bases, so the 13 cells, their YoY and their QoQ can never drift out of
+// sync with the file. What stays hand-authored per quarter: `setup.us` (Summit's own number) and
+// `setup.notes` (the caveat pop-ups), both keyed by metric name. (§6a-ii.)
+function ceFmtV(u,v){
+  if(v==null) return null;
+  if(u==='$')  return '$'+(+v).toFixed(2);
+  if(u==='$B') return '$'+(+v)+'B';
+  if(u==='B')  return (+v)+'B';
+  return String(v);
+}
+function ceGrowth(m,qi,base){
+  if(m.t==='basis') return null;                       // never a growth number off a basis mismatch
+  if(m.u==='%') return null;                           // a %-line IS a YoY rate — no growth-of-a-growth (META ad KPIs)
+  var c=m.qr[qi]?m.qr[qi][3]:null;
+  var b=(base==='qoq')?m.qq[qi]:m.qy[qi];
+  if(c==null||b==null||!b) return null;
+  return Math.round((c/b-1)*100);
+}
+function ceChip(g){
+  if(g==null) return '';
+  var up=g>=0;
+  return '<span class="ce-gchip" style="color:'+(up?'#0a8f4c':'#C5221F')+'">'+(up?'+':'−')+Math.abs(g)+'%</span>';
+}
+// Margin lens (EXCEPTION, headline only): Gross profit / Operating income / EBITDA also carry a
+// margin = the metric ÷ revenue, computed per column. Street margin = BBG metric ÷ BBG revenue;
+// Summit margin = Summit metric ÷ Summit revenue (falls back to BBG revenue if Summit has none).
+// Toggled in the estimates bar; lives in the SAME headline cell, never a new box. (§6a-ii.)
+var CE_MARGIN_ON={'Gross profit':1,'Operating income':1,'EBITDA':1};
+function ceMarginPct(v, rev){ return (v==null||rev==null||!rev)?null:Math.round((v/rev*100)*10)/10; }
+function ceMChip(p){ return p==null?'':'<span class="ce-mm">'+p+'% mgn</span>'; }
+// A dedicated margin ROW for a cell (label + value + the base-period margin in parens). Sits on
+// its own line so it always fits the box — the old inline chip overflowed (§6a-ii). The base
+// swaps with the growth lens: YoY → same quarter a year ago, QoQ → prior quarter.
+function ceMarginRow(cur, baseYoy, baseQoq){
+  if(cur==null) return '';
+  return '<div class="ce-mrow"><span class="ce-mrow-l">margin</span>'+
+    '<span class="ce-mrow-v">'+cur+'%'+
+      (baseYoy!=null?'<span class="ce-mm-b yoy"> (prev '+baseYoy+'%)</span>':'')+
+      (baseQoq!=null?'<span class="ce-mm-b qoq"> (prev '+baseQoq+'%)</span>':'')+
+    '</span></div>';
+}
+// Current margin + the margin of the period the growth chip compares against. The base swaps with
+// the lens (YoY → the same quarter a year ago; QoQ → the prior quarter), so with Margin + YoY on
+function ceGrid(u,which){
+  var qi=CE_CONS.q.indexOf(u.q); if(qi<0) return '';
+  var st=u.setup||{}, us=st.us||{}, notes=st.notes||{};
+  var revM=CE_CONS.m.filter(function(x){ return x.k==='Revenue'; })[0];
+  var revC=(revM&&revM.qr[qi])?revM.qr[qi][3]:null;      // BBG revenue for the quarter
+  var revS=(us['Revenue']?us['Revenue'].v:null)||revC;   // Summit revenue, else BBG
+  var revQy=revM?revM.qy[qi]:null, revQq=revM?revM.qq[qi]:null;   // revenue actual 1yr / 1q earlier
+  var list=CE_CONS.m.map(function(m,i){ return {m:m,i:i}; })
+    .filter(function(x,i){ return (which==='head')?(x.i<CE_CONS.nHead):(x.i>=CE_CONS.nHead); });
+  return '<div class="ce-mgrid">'+list.map(function(x){
+    var m=x.m, c=m.qr[qi]?m.qr[qi][3]:null;
+    var note=notes[m.k], q=note?ceQ('setnote-'+ceQkey(u.q)+'-'+x.i, note.t, note.h):'';
+    var uv=us[m.k];
+    var mgn=CE_MARGIN_ON[m.k];
+    var street=(c==null)
+      ? '<span class="ce-empty">—</span>'+(m.t==='nocons'?'<span class="ce-nocons" title="The archive carries no forward estimate for this line — actuals only">no est.</span>':'')
+      : ceFmtV(m.u,c)+'<span class="ce-gy">'+ceChip(ceGrowth(m,qi,'yoy'))+'</span><span class="ce-gq">'+ceChip(ceGrowth(m,qi,'qoq'))+'</span>';
+    // margin row uses the Street (consensus) margin — the line the growth chips are about.
+    var mRow=mgn?ceMarginRow(ceMarginPct(c,revC), ceMarginPct(m.qy[qi],revQy), ceMarginPct(m.qq[qi],revQq)):'';
+    return '<div class="ce-mcell'+(which==='cust'?' cust':'')+(m.t==='basis'?' flagged':'')+'">'+
+      '<div class="ce-mcell-k">'+esc(m.k)+q+'</div>'+
+      '<div class="ce-mcell-v">'+
+        '<div class="ce-val ce-val-cons"><span class="ce-val-lab">Street</span>'+street+'</div>'+
+        '<div class="ce-val ce-val-us"><span class="ce-val-lab">Summit</span>'+(uv?ceFmtV(m.u,uv.v):'<span class="ce-empty">—</span>')+'</div>'+
+        mRow+
+      '</div></div>';
+  }).join('')+'</div>';
+}
+function ceGridStyle(){
+  return '<style>'+
+    '.ce-mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:8px;margin:4px 0}'+
+    '.ce-mcell{border:1px solid var(--bdr);border-left:3px solid '+BRAND+';border-radius:9px;padding:8px 10px;background:#fff}'+
+    '.ce-mcell.cust{border-left-color:'+BRAND2+'}'+
+    '.ce-mcell.flagged{border-left-color:'+GRAY+';opacity:.72}'+
+    '.ce-mcell-k{font-size:10px;font-weight:700;color:var(--mu);display:flex;align-items:center;gap:4px;line-height:1.3;min-height:26px}'+
+    '.ce-mcell-v{margin-top:3px}'+
+    '.ce-mcell .ce-val{display:flex;align-items:baseline;gap:5px;font-size:14px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums}'+
+    '.ce-mcell .ce-val-lab{font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);flex:none;width:38px}'+
+    '.ce-gchip{font-size:10px;font-weight:800;margin-left:2px}'+
+    '.ce-mm{display:none}'+'.ce-mm-b{display:none;font-size:9px;font-weight:700;color:var(--mu);white-space:nowrap}'+'.ce-evwrap[data-mm="on"][data-g="yoy"] .ce-mm-b.yoy{display:inline}'+'.ce-evwrap[data-mm="on"][data-g="qoq"] .ce-mm-b.qoq{display:inline}'+'.ce-mrow{display:none;align-items:baseline;gap:5px;margin-top:5px;padding-top:5px;border-top:1px dashed var(--bdr)}'+'.ce-evwrap[data-mm="on"] .ce-mrow{display:flex}'+'.ce-mrow-l{font-size:8px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);flex:none}'+'.ce-mrow-v{font-size:11px;font-weight:900;color:'+PURPLE+';font-variant-numeric:tabular-nums}'+
+    '.ce-evwrap[data-mm="on"] .ce-mm{display:inline}'+
+    '.ce-nocons{font-size:8.5px;font-weight:800;color:var(--mu);border:1px solid var(--bdr);border-radius:999px;padding:1px 6px;margin-left:6px}'+
+    /* the growth lens: CSS-driven, so switching does not re-render the grid */
+    '.ce-evwrap[data-g="yoy"] .ce-gq,.ce-evwrap[data-g="qoq"] .ce-gy,'+
+    '.ce-evwrap[data-g="off"] .ce-gy,.ce-evwrap[data-g="off"] .ce-gq{display:none}'+
+    '.ce-gseg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+
+    '.ce-gseg button{font-size:10px;font-weight:800;padding:3px 11px;border:0;border-radius:999px;background:transparent;color:var(--mu);cursor:pointer;transition:.14s}'+
+    '.ce-gseg button.active{background:var(--navy);color:#fff}'+'.ce-vdf{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+'.ce-vdf button{font-size:10px;font-weight:800;padding:3px 11px;border:0;border-radius:999px;background:transparent;color:var(--mu);cursor:pointer;transition:.14s}'+'.ce-vdf button.active{background:var(--navy);color:#fff}'+
+    '.ce-fz[data-ev="cons"] .ce-fz-g[data-f="beat"] .ce-fz-t:not([data-vdc="beat"]),'+'.ce-fz[data-ev="cons"] .ce-fz-g[data-f="miss"] .ce-fz-t:not([data-vdc="miss"]),'+'.ce-fz[data-ev="cons"] .ce-fz-g[data-f="inline"] .ce-fz-t:not([data-vdc="inline"]),'+'.ce-fz[data-ev="us"] .ce-fz-g[data-f="beat"] .ce-fz-t:not([data-vdu="beat"]),'+'.ce-fz[data-ev="us"] .ce-fz-g[data-f="miss"] .ce-fz-t:not([data-vdu="miss"]),'+'.ce-fz[data-ev="us"] .ce-fz-g[data-f="inline"] .ce-fz-t:not([data-vdu="inline"]){display:none}'+
+    '.ce-dbt{display:flex;flex-direction:column;gap:5px}'+
+    '.ce-dbt-r{display:grid;grid-template-columns:1.3fr 1fr 1fr 70px;gap:10px;align-items:center;'+
+      'border:1px solid var(--bdr);border-left:4px solid var(--mu);border-radius:9px;padding:7px 12px;background:#fff}'+
+    '.ce-dbt-r.above{border-left-color:#0a8f4c}.ce-dbt-r.below{border-left-color:'+RED+'}'+
+    '.ce-dbt-k{font-size:11.5px;font-weight:800;color:var(--navy)}'+
+    '.ce-dbt-v{font-size:11px;color:var(--navy);font-variant-numeric:tabular-nums}'+
+    '.ce-dbt-v b{font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin-right:5px}'+
+    '.ce-dbt-d{font-size:12px;font-weight:900;text-align:right;font-variant-numeric:tabular-nums}'+
+    '.ce-dbt-r.above .ce-dbt-d{color:#0a8f4c}.ce-dbt-r.below .ce-dbt-d{color:'+RED+'}'+
+    '.ce-dbt-none{border:1px dashed var(--bdr);border-radius:10px;padding:10px 13px;font-size:11px;'+
+      'line-height:1.55;color:var(--mu);background:#FAFBFD}'+
+    '@media(max-width:640px){.ce-dbt-r{grid-template-columns:1fr auto}.ce-dbt-v{display:none}}'+
+  '</style>';
+}
+function ceSetupBody(c){
+  var h=ceStyle()+ceGridStyle();
+  h+=CALL_EARNINGS.quarters.map(function(u,qi){
+    var qk=ceQkey(u.q), frozen=(u.status!=='upcoming');
+    var b='<div class="ce-qblock" data-ceq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
+    b+='<div class="ce-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="ce-frozen">frozen</span>':'')+'</div>';
+    var st=u.setup||{}, hasGrid=(CE_CONS.q.indexOf(u.q)>=0);
+    if(hasGrid){
+      b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup.</b> The numbers going in — what the <b>Street</b> expects, what <b>Summit</b> expects, and where the two disagree. '+(u.date?((frozen?'Reported <b>':'Reports <b>')+esc(u.date)+'</b>.'):'')+'</p>';
       b+='<div class="ov-diagram-cap" style="margin:6px 0 6px;display:flex;flex-wrap:wrap;align-items:center;gap:12px"><b>Estimates</b>'+
         '<span class="mg-seg" style="display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px">'+
-          '<button type="button" class="cp-ev-pill active" data-cpev="cons">Consensus</button>'+
-          '<button type="button" class="cp-ev-pill" data-cpev="us">Summit</button>'+
-          '<button type="button" class="cp-ev-pill" data-cpev="both">Both</button>'+
+          '<button type="button" class="ce-ev-pill active" data-ceev="cons">Consensus</button>'+
+          '<button type="button" class="ce-ev-pill" data-ceev="us">Summit</button>'+
+          '<button type="button" class="ce-ev-pill" data-ceev="both">Both</button>'+
         '</span>'+
+        // Growth lens. `fq-3` and `fq0` are both reported actuals, so the same consensus cell can
+        // be read against either base — that is exactly why the archive carries fq-3.
+        '<span class="ce-gseg"><button type="button" class="active" data-ceg="yoy">YoY</button>'+
+          '<button type="button" data-ceg="qoq">QoQ</button>'+
+          '<button type="button" data-ceg="off">Off</button></span>'+
+        '<span class="ce-gseg"><button type="button" data-cemm="on">Margin</button>'+
+          '<button type="button" class="active" data-cemm="off">Hide mgn</button></span>'+
         (st.source?'<span style="color:var(--mu);font-weight:600;font-size:10px">'+esc(st.source)+(st.asOf?' · as of '+esc(st.asOf):'')+'</span>':'')+
       '</div>';
-      b+='<div class="cp-evwrap" data-ev="cons">';
-      b+='<div class="cp-row-cap">Headline — every company, always</div>';
-      b+='<div class="cp-grid4">'+hl.map(function(m,i){ return cpEvCell('hl-'+qk+'-'+i, m, false); }).join('')+'</div>';
-      b+='<div class="cp-row-cap" style="margin-top:12px">Custom KPIs — Meta</div>';
-      b+='<div class="cp-grid4">'+cu.map(function(m,i){ return cpEvCell('cu-'+qk+'-'+i, m, true); }).join('')+'</div>';
+      b+='<div class="ce-evwrap" data-ev="cons" data-g="yoy">';
+      b+='<div class="ce-row-cap">Headline — every company, always</div>'+ceGrid(u,'head');
+      b+='<div class="ce-row-cap" style="margin-top:12px">Custom KPIs — META</div>'+ceGrid(u,'cust');
       b+='</div>';
-      b+='<div class="ave-subh-note" style="margin-top:6px">Green = YoY. <b>Street</b> = Bloomberg (BST) consensus, hardcoded from the team\'s export only. <b>Summit</b> = our own expectation (Summit model / analyst → to fill). <b>?</b> = a number with a caveat worth knowing.</div>';
-      var md=st.marketDebate;
-      if(md){
-        b+='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The setup, in one picture — what the print will settle</b></div>';
-        b+='<div class="cp-debate">'+
-          '<div class="cp-dc fear"><div class="cp-dc-h">What the tape fears</div><div class="cp-dc-b">'+md.fear+'</div></div>'+
-          '<div class="cp-dc real"><div class="cp-dc-h">What consensus actually models</div><div class="cp-dc-b">'+md.real+'</div></div>'+
-        '</div>';
-        if(md.mech&&md.mech.length){
-          b+='<div class="cp-mech">'+md.mech.map(function(m,i){ var ar=m.dir==='up'?'<span style="color:#0a8f4c">▲</span>':(m.dir==='down'?'<span style="color:'+RED+'">▼</span>':''); return (i>0?'<span class="cp-mech-ar">→</span>':'')+'<span class="cp-mech-chip">'+ar+' '+esc(m.k)+' <span style="color:var(--mu);font-weight:700">'+esc(m.v)+'</span></span>'; }).join('')+'</div>';
-        }
-        if(md.synth) b+='<div class="cp-synth">'+md.synth+'</div>';
-      }
-      var d=st.debate;
-      b+='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The debate — where Summit differs from the Street, and why</b></div>';
-      if(d){
-        if(d.rows&&d.rows.length){
-          b+='<div class="cp-tc">'+d.rows.map(function(r){
-            return '<div class="cp-tc-row" style="border-left:3px solid '+BRAND+'"><span style="font-weight:800;color:var(--navy);white-space:nowrap">'+esc(r.k)+'</span><span><b>Street:</b> '+esc(r.street||'—')+' · <b>Summit:</b> '+esc(r.us||'—')+'<br><span style="color:var(--mu)">'+ (r.why||'') +'</span></span></div>';
+      b+='<div class="ave-subh-note" style="margin-top:6px">Growth chips are computed from the archive: <b>YoY</b> against <code>fq-3</code>, <b>QoQ</b> against <code>fq0</code> — both reported actuals. '+
+         '<b>Street</b> = Bloomberg (BST), hardcoded from the export only. <b>Summit</b> = our own expectation. <b>?</b> = a number with a caveat worth knowing. '+
+         'A line with no chip either has no like-for-like base or failed the basis test.</div>';
+      // ── The debate — a LINE-BY-LINE comparison, not a paragraph ────────────────────────────
+      // It answers one question: where does Summit differ from the Street, and by how much. Built
+      // from the same two columns the grid shows, so it cannot disagree with them. Lines where we
+      // have no number of our own are listed explicitly rather than silently dropped — an empty
+      // Summit column IS the state of the work, and hiding it would misrepresent it (§6a-ii).
+      var d=st.debate, dqi=CE_CONS.q.indexOf(u.q), dus=st.us||{};
+      if(dqi>=0){
+        var diffs=[], nous=[];
+        CE_CONS.m.forEach(function(m){
+          var c=m.qr[dqi]?m.qr[dqi][3]:null, uv=dus[m.k]?dus[m.k].v:null;
+          if(c==null) return;
+          if(uv==null){ nous.push(m.k); return; }
+          diffs.push({ k:m.k, c:c, u:uv, d:((uv/c-1)*100), t:m.t, un:m.u });
+        });
+        diffs.sort(function(x,z){ return Math.abs(z.d)-Math.abs(x.d); });
+        b+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>The debate — where Summit differs from the Street</b>'+
+           '<span style="color:var(--mu);font-weight:600;font-size:10px"> · sorted by the size of the gap</span></div>';
+        if(diffs.length){
+          b+='<div class="ce-dbt">'+diffs.map(function(x){
+            var side=(x.d>=0)?'above':'below';
+            return '<div class="ce-dbt-r '+side+'">'+
+              '<span class="ce-dbt-k">'+esc(x.k)+'</span>'+
+              '<span class="ce-dbt-v"><b>Street</b> '+ceFmtV(x.un,x.c)+'</span>'+
+              '<span class="ce-dbt-v"><b>Summit</b> '+ceFmtV(x.un,x.u)+'</span>'+
+              '<span class="ce-dbt-d">'+(x.d>=0?'+':'−')+Math.abs(x.d).toFixed(1)+'%</span></div>';
           }).join('')+'</div>';
         }
-        if(d.synth) b+='<div class="cp-synth">'+d.synth+'</div>';
-      } else {
-        b+='<div class="cp-note">Fills once both estimate sets are in (Bloomberg export + Summit expectations): line-by-line disparities and the mechanism behind why we see it differently.</div>';
+        if(nous.length){
+          b+='<div class="ce-dbt-none"><b>No Summit number yet on '+nous.length+' of '+(nous.length+diffs.length)+' lines:</b> '+
+             esc(nous.join(' · '))+'.<br>Until those are filled the debate is the Street against itself — '+
+             'the grid above still shows what it expects, and the track record below shows how often it has been wrong.</div>';
+        }
+        if(d&&d.synth) b+='<div class="ce-synth">'+d.synth+'</div>';
       }
       b+='<div class="ov-foot">Frozen at call time; Post-Results scores actuals against BOTH columns.</div>';
-    } else {
-      b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup, as it stood going in.</b> '+(u.date?('Reported <b>'+esc(u.date)+'</b>.'):'')+'</p>';
-      if(st.source) b+='<div class="ave-subh-note" style="margin:0 0 8px">'+esc(st.source)+'</div>';
-      if(st.pricedIn) b+='<div class="cp-banner"><b>What was priced in:</b> '+st.pricedIn+'</div>';
-      if(st.oneLiner) b+='<div class="cp-synth">'+st.oneLiner+'</div>';
-      b+='<div class="ov-foot">Frozen — scored in Post-Results / Post-Call for this quarter.</div>';
+    }
+    if(st.pricedIn||st.oneLiner){
+      if(!hasGrid){
+        b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup, as it stood going in.</b> '+(u.date?('Reported <b>'+esc(u.date)+'</b>.'):'')+'</p>';
+        if(st.source) b+='<div class="ave-subh-note" style="margin:0 0 8px">'+esc(st.source)+'</div>';
+      } else {
+        b+='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The contemporaneous read — written before the print, never rewritten</b></div>';
+      }
+      if(st.pricedIn) b+='<div class="ce-banner"><b>What was priced in:</b> '+st.pricedIn+'</div>';
+      if(st.oneLiner) b+='<div class="ce-synth">'+st.oneLiner+'</div>';
+      b+='<div class="ov-foot">Frozen — scored in Post-Results for this quarter.</div>';
     }
     b+='</div>';
     return b;
   }).join('');
+  h+=ceAnnualBody();
   return h;
 }
-function cpWatchItem(w, qk, idSfx, qLabel){
+// A1 · The annual picture — how the FY has looked, and what BBG vs Summit expect for the ones
+// still open. Reported FY actuals are bars/line; the forward years carry two forward points,
+// Bloomberg consensus (our txt) and Summit (the DCF, most-recent annual snapshot). If the company
+// gave numeric FY guidance we would add a third; META does not, so we say so. (§6a-viii.)
+// Quarterly is deliberately NOT wired yet — see the rules; the annual forecast is what exists today.
+// ── The Setup chart IS the Results engine (js/results.js), one MERGED section (META_SETUP dataset),
+// rendered inside Earnings > Setup — the SAME chart + integrated table + period-lever + margin lines
+// as the Results tab, clubbed into one (§6a-viii-bis, v2.9). The section key 'setup' keeps its engine
+// canvases/tables/sliders UNIQUE, so the two engine instances (Setup + Results) coexist on the page.
+function ceAnnualBody(){
+  return '<div class="ce-ann" style="margin:20px 0 4px;padding:16px 0 0;border-top:2px solid var(--bdr)">'+
+    '<div class="ov-sec-h">The Setup picture — reported vs Street (Summit pending): pick any line, window the period with the lever, toggle margins</div>'+
+    resultsHtml('META_SETUP')+'</div>';
+}
+function ceSetupWrap(){ return document.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phpane[data-cep="setup"] .rs-wrap'); }
+function gBuildCeAnnual(){ var w=ceSetupWrap(); if(w) initResults(w, 'META_SETUP'); }   // (kept name: called from buildSub / phase-tab wiring)
+function wireCeAnnual(root){ /* the engine self-wires via initResults->wireResults; the chart builds on Setup visibility (gBuildCeAnnual). */ }
+
+// B · Watch List ─────────────────────────────────────────────────────────────────────────────────
+// v3 (Jul 2026): the list is OURS, not the model's, and it is backed by the WL_ROWS table above.
+// One card per row. idSfx keeps pop-up ids unique between the per-quarter and the cross-quarter
+// (flat) renders; qLabel shows the quarter chip in the flat view; editable adds the ✎/✕ controls
+// (live quarter only — frozen quarters are the historical record and stay read-only).
+function ceWatchItem(w, qk, idSfx, qLabel, editable){
   var deep='';
-  if(w.seededBy) deep+='<p style="border-left:3px solid '+PURPLE+';padding-left:9px;margin-bottom:10px"><b>'+(w.seededBy.tripped?'Seeded by a TRIPPED red-line':'Seeded by')+' '+esc(w.seededBy.q)+':</b> "'+esc(w.seededBy.n)+'"</p>';
-  if(w.src) deep+='<p><b>Why it\'s on the list:</b> '+w.src+'</p>';
-  if(w.why) deep+='<p><b>Why it matters:</b> '+w.why+'</p>';
+  if(w.seededBy) deep+='<p style="border-left:3px solid '+PURPLE+';padding-left:9px;margin-bottom:10px"><b>'+(w.seededBy.tripped?'Seeded by a TRIPPED trigger':'Seeded by')+' '+esc(w.seededBy.q)+':</b> "'+esc(w.seededBy.n)+'"</p>';
+  // `definition` renders on the card itself now, so it is deliberately NOT repeated in here.
+  if(w.src) deep+='<p><b>Why it earned a slot:</b> '+w.src+'</p>';
   if(w.thread&&w.thread.length){
     deep+='<p style="margin-bottom:4px"><b>The thread — how this theme has evolved:</b></p>'+
       w.thread.map(function(t){ return '<div style="display:flex;gap:9px;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:12px;line-height:1.5"><b style="white-space:nowrap;color:'+BRAND+'">'+esc(t.q)+'</b><span>'+t.n+'</span></div>'; }).join('');
   }
-  var why=deep?cpReg('watchwhy-'+qk+'-'+(w.rank||0)+idSfx, esc(w.metric), deep):null;
+  var why=deep?ceReg('watchwhy-'+(w.id||qk+'-'+(w.rank||0))+idSfx, esc(w.theme), deep):null;
+  // No rank badge on the card by design (v2.6): a visible 1–5 goes stale the moment a theme is
+  // removed, and renumbering the survivors implies a re-ranking we did not do. `rank` orders only.
   var tagsAttr=(w.tags&&w.tags.length)?w.tags.join(' '):'';
-  var seed=w.seededBy?'<span class="cp-seed" title="'+esc(w.seededBy.n)+'">'+(w.seededBy.tripped?'⚑ red-line tripped in '+esc(w.seededBy.q):'left open by '+esc(w.seededBy.q))+'</span>':'';
-  return '<div class="cp-w" data-wltags="'+esc(tagsAttr)+'"><div class="cp-w-top"><div class="cp-w-rank">'+(w.rank||'•')+'</div><div class="cp-w-metric">'+esc(w.metric)+'</div>'+seed+
-    (qLabel?'<span class="ov-chip" style="font-size:9.5px;background:rgba(8,102,255,0.10);color:'+BRAND+';border-radius:20px;padding:2px 9px;font-weight:800;flex:none">'+esc(qLabel)+'</span>':'')+
-    (why?'<span class="cp-why-btn ov-clickable" data-detail="cp:'+why+'" style="margin:0">why'+(w.thread?' + the thread':'')+' ›</span>':'')+'</div>'+
-    '<div class="cp-w-q"><span class="mic">🔎</span><span>'+cpFill(w.pista||w.question)+'</span></div>'+
-    '<div class="cp-w-chips">'+
-      (w.tags&&w.tags.length?w.tags.map(function(t){ return '<span class="cp-w-chip" style="background:rgba(122,90,248,0.08);border:1px solid rgba(122,90,248,0.3);color:var(--navy)">#'+esc(t)+'</span>'; }).join(''):'')+
-      (w.since?'<span class="cp-w-chip" style="background:rgba(232,160,12,0.14);border:1px solid rgba(183,121,31,0.35);color:var(--navy)"><b>Tracking since:</b> '+esc(w.since)+'</span>':'')+
-      (w.bbg?'<span class="cp-w-chip cons"><b>Cons:</b> '+esc(w.bbg)+'</span>':'')+
-      (w.breaks?'<span class="cp-w-chip red"><b>Breaks if:</b> '+esc(w.breaks)+'</span>':'')+
+  // The chain, made visible: this item exists because the PRIOR quarter's call left it open.
+  var seed=w.seededBy?'<span class="ce-seed" title="'+esc(w.seededBy.n)+'">'+(w.seededBy.tripped?'⚑ thesis line broke in '+esc(w.seededBy.q):'left open by '+esc(w.seededBy.q))+'</span>':'';
+  var open=wlOpen(w);
+  var ctl=editable?'<span class="ce-w-ctl"><button type="button" class="ce-w-ed" data-wledit="'+esc(w.id||'')+'" title="Edit this theme (and close its hook by filling Tracking until)">✎</button>'+
+    '<button type="button" class="ce-w-del" data-wldel="'+esc(w.id||'')+'" title="Remove this theme">✕</button></span>':'';
+  return '<div class="ce-w" data-wltags="'+esc(tagsAttr)+'" data-wlid="'+esc(w.id||'')+'" data-wlopen="'+(open?'1':'0')+'">'+
+    '<div class="ce-w-top"><span class="ce-w-dot" aria-hidden="true"></span><div class="ce-w-metric">'+esc(w.theme)+'</div>'+seed+
+    (w.trackUntil?'<span class="ce-w-closed" title="Hook closed in '+esc(w.trackUntil)+'">closed</span>':'')+
+    (qLabel?'<span class="ov-chip" style="font-size:9.5px;background:rgba(66,133,244,0.10);color:'+BRAND+';border-radius:20px;padding:2px 9px;font-weight:800;flex:none">'+esc(qLabel)+'</span>':'')+
+    (why?'<span class="ce-why-btn ov-clickable" data-detail="ce:'+why+'" style="margin:0">'+(w.thread?'the thread':'background')+' ›</span>':'')+ctl+'</div>'+
+    (w.definition?'<div class="ce-w-def">'+w.definition+'</div>':'')+
+    '<div class="ce-w-chips">'+
+      (w.tags&&w.tags.length?w.tags.map(function(t){ return '<span class="ce-w-chip tag">#'+esc(t)+'</span>'; }).join(''):'')+
+      (w.trackSince?'<span class="ce-w-chip since"><b>Tracking since:</b> '+esc(w.trackSince)+'</span>':'')+
+      (w.trackUntil?'<span class="ce-w-chip until"><b>Tracking until:</b> '+esc(w.trackUntil)+'</span>':'')+
     '</div>'+
   '</div>';
 }
-function cpWatchTags(){
-  var set=[], seen={};
-  CALL_PREP.quarters.forEach(function(u){ (u.watchList||[]).forEach(function(w){ (w.tags||[]).forEach(function(t){ if(!seen[t]){ seen[t]=1; set.push(t); } }); }); });
-  return set;
+// The Add / Edit form. Tags are picked from the existing vocabulary (multi-select chips) and new
+// ones can be created inline — a new tag is appended to the filter bar, so it becomes available
+// to every theme from that moment on.
+// The tracking-since / tracking-until fields are DROPDOWNS, not free text. A hand-typed
+// "Q3 26" / "3Q2026" / "Q3-2026" breaks the open/closed filter and the cross-quarter sort
+// silently, and the value is only ever one of a known, short list. Range: Q1 2024 through the
+// quarter Earnings is currently on, derived from CALL_EARNINGS so it advances by itself (§6a-v).
+function ceQuarterOpts(sel, blankLabel){
+  var latest=CALL_EARNINGS.quarters[0] ? ceQnum(CALL_EARNINGS.quarters[0].q) : null;
+  var start=2024*4+1;                                  // Q1 2024
+  var end=latest||(2026*4+3);
+  var out='<option value="">'+esc(blankLabel||'—')+'</option>';
+  for(var t=end; t>=start; t--){
+    var lab='Q'+(((t-1)%4)+1)+' '+Math.floor((t-1)/4);
+    out+='<option value="'+esc(lab)+'"'+(sel===lab?' selected':'')+'>'+esc(lab)+'</option>';
+  }
+  return out;
 }
-function cpWatchBody(c){
-  var h=cpStyle();
-  h+='<div class="cp-wl-tagbar"><span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu)">Filter by theme (across quarters):</span>'+
-    cpWatchTags().map(function(t){ return '<button type="button" class="cp-wl-tag" data-wltag="'+esc(t)+'">#'+esc(t)+'</button>'; }).join('')+
-    '<button type="button" class="cp-wl-tag cp-wl-clear" data-wltag="">clear</button>'+
-    '<button type="button" class="cp-wl-add-btn">+ Add theme</button>'+
+function ceWlForm(){
+  return '<div class="ce-wl-addform" hidden>'+
+    '<div class="ce-wl-fh"><b class="ce-wl-fh-t">New theme</b><span class="ce-wl-fh-s">the hunt list is ours — the model does not get a vote on this tab</span></div>'+
+    '<input type="hidden" data-wlf="id">'+
+    '<label class="ce-wl-lb">Theme <span>what we are hunting</span></label>'+
+    '<input class="ce-wl-in" data-wlf="theme" placeholder="e.g. Regulatory: DOJ ad-tech remedies">'+
+    '<label class="ce-wl-lb">Tags <span>click to select · they drive the cross-quarter filter</span></label>'+
+    '<div class="ce-wl-tagpick" data-wlf="tagpick"></div>'+
+    '<div class="ce-wl-newtag"><input class="ce-wl-in" data-wlf="newtag" placeholder="create a new tag (e.g. regulatory)"><button type="button" class="ce-wl-newtag-go">+ add tag</button></div>'+
+    '<label class="ce-wl-lb">Definition <span>required — what the theme means, in our words</span></label>'+
+    '<textarea class="ce-wl-in ce-wl-ta" data-wlf="definition" rows="3" placeholder="What this theme is and why it moves the thesis"></textarea>'+
+    '<div class="ce-wl-2col">'+
+      '<div><label class="ce-wl-lb">Tracking since</label><select class="ce-wl-in" data-wlf="trackSince">'+ceQuarterOpts(null,'— pick a quarter —')+'</select></div>'+
+      '<div><label class="ce-wl-lb">Tracking until <span>empty = still open</span></label><select class="ce-wl-in" data-wlf="trackUntil">'+ceQuarterOpts(null,'— still open —')+'</select></div>'+
+    '</div>'+
+    '<div class="ce-wl-frow"><button type="button" class="ce-wl-add-go">Add to the live list</button>'+
+      '<button type="button" class="ce-wl-cancel">cancel</button>'+
+      '<span class="ave-subh-note">Lives for this session only. Persisting = COPY the table at the bottom and hardcode it into <code>WL_ROWS</code>.</span></div>'+
   '</div>';
-  h+='<div class="cp-wl-addform" hidden>'+
-    '<input class="cp-wl-in" data-wlf="metric" placeholder="Theme (e.g. Regulatory: CCCA routing mandate)">'+
-    '<input class="cp-wl-in" data-wlf="tags" placeholder="tags, comma-separated (e.g. regulatory, cross-border)">'+
-    '<input class="cp-wl-in" data-wlf="pista" placeholder="The tell 🔎 — a standing read, not a question">'+
-    '<input class="cp-wl-in" data-wlf="breaks" placeholder="Breaks if… (the falsifiable red-line)">'+
-    '<div><button type="button" class="cp-wl-add-go">Add to this quarter\'s list</button><span class="ave-subh-note" style="margin-left:8px">Lives for this session — to persist it, it gets committed into CALL_PREP.</span></div>'+
+}
+// The table itself — the storage view, and the round-trip out. Regenerated from WL_ROWS on every
+// add / edit / delete, with COPY (TSV, pasteable) and COPY JSON (exact, hardcodable).
+// `rank` is the sort key, labelled "order" — it is never rendered on a card, so removing a theme
+// cannot leave a gap in a visible numbering.
+var WL_COLS=[
+  {k:'id',l:'id'},{k:'q',l:'quarter'},{k:'rank',l:'order'},{k:'theme',l:'theme'},
+  {k:'tags',l:'tags'},{k:'definition',l:'definition'},
+  {k:'trackSince',l:'tracking since'},{k:'trackUntil',l:'tracking until'}
+];
+function wlCellText(r, k){
+  var v=r[k];
+  if(k==='tags') return (v||[]).join(', ');
+  if(v==null) return '';
+  return String(v).replace(/<[^>]+>/g,'');
+}
+// The live proof that the table tracks the cards: both numbers move as rows are added, closed or
+// deleted. It is re-rendered by the same rerender() that rebuilds the rows.
+function wlCount(){
+  var open=WL_ROWS.filter(wlOpen).length;
+  return WL_ROWS.length+' rows · '+open+' open hook'+(open===1?'':'s')+' · live';
+}
+function ceWlTableRows(){
+  return WL_ROWS.map(function(r){
+    return '<tr'+(wlOpen(r)?' class="wl-open"':'')+'>'+WL_COLS.map(function(c){
+      var t=wlCellText(r,c.k);
+      var cls=(c.k==='theme')?' class="wl-th"':((c.k==='id'||c.k==='q'||c.k==='rank')?' class="wl-key"':'');
+      return '<td'+cls+'>'+(t?esc(t):'<span class="ce-empty">—</span>')+'</td>';
+    }).join('')+'</tr>';
+  }).join('');
+}
+function ceWlTable(){
+  return '<div class="ce-wl-tbl-wrap" id="metaWlTable">'+
+    '<div class="ce-wl-tbl-h">'+
+      '<span class="ce-wl-tbl-t">The Watch List table — one row per theme</span>'+
+      '<span class="ce-wl-tbl-s">the storage view</span>'+
+      // Replaces the old "refresh" button, which was a no-op: the table already rebuilds on every
+      // add / edit / delete, so pressing it could never change anything and just read as broken.
+      // This counter DOES change (rows, and how many hooks are open), which is the actual proof.
+      '<span class="ce-wl-tbl-n">'+wlCount()+'</span>'+
+      // Hiding the table must NOT disable the round-trip: COPY builds its payload from WL_ROWS,
+      // never from the rendered rows, so it works whether or not the table is on screen (§6a-v).
+      '<button type="button" class="ce-wl-copy alt" data-wltoggle="1">show table</button>'+
+      '<button type="button" class="ce-wl-copy" data-wlcopy="tsv">COPY</button>'+
+      '<button type="button" class="ce-wl-copy alt" data-wlcopy="json">copy JSON</button>'+
+    '</div>'+
+    '<div class="ce-wl-tbl-sc" data-wltblbody hidden>'+'<table class="ce-wl-tbl"><thead><tr>'+
+      WL_COLS.map(function(c){ return '<th>'+esc(c.l)+'</th>'; }).join('')+
+    '</tr></thead><tbody class="ce-wl-tbody">'+ceWlTableRows()+'</tbody></table></div>'+
+    '<div class="ave-subh-note" style="margin-top:7px"><b>The round-trip:</b> add / edit / delete themes above → this table updates → hit <b>COPY</b> (tab-separated, drops straight into a sheet) or <b>copy JSON</b> (exact) → paste it back and it gets hardcoded into <code>WL_ROWS</code> in a commit. Editing from the portal <i>persistently</i> needs Supabase — pending assignment, see docs/EARNINGS_CONVENTIONS.md §6f.</div>'+
   '</div>';
-  h+=CALL_PREP.quarters.map(function(u,qi){
-    var qk=cpQkey(u.q), frozen=(u.status!=='upcoming');
-    var b='<div class="cp-qblock" data-cpq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="cp-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="cp-frozen">frozen</span>':'')+'</div>';
-    b+='<p class="ov-lede"><b>Five things to hunt — '+esc(u.q)+'</b>'+(frozen?' <span style="color:var(--mu);font-weight:600">(the list as it was frozen before this call — scored afterwards in Post-Results)</span>':'')+', numbered 1–5 by <b>how much they move the stock × how debated they are</b>. Each card carries: the <b>tell</b> (🔎) — what to actually watch for; what the <b>Street expects</b>; and the <b>red-line</b> that would break the thesis. Tap <b>why ›</b> for the grounding and the quarter-by-quarter thread.</p>';
-    b+='<div class="cp-legend"><span class="cp-legend-i"><b>How to read the cards:</b></span>'+
-      '<span class="cp-legend-i"><span class="cp-seed">left open by Q1 FY2026</span> it is on the list because last quarter\'s call did not settle it</span>'+
-      '<span class="cp-legend-i"><span class="cp-seed">⚑ red-line tripped in Q1 FY2026</span> stronger — a thesis line actually broke last quarter</span>'+
+}
+function ceWatchBody(c){
+  var h=ceStyle();
+  // A one-line reminder of the append-only cadence, above the theme filter.
+  h+='<div class="ce-wl-hint">🔁 <b>How quarters advance:</b> a new <i>upcoming</i> quarter appears in Setup & Watch List <b>only once the prior quarter\'s Post-Results (print + call highlights) is filled</b>. Fill Q(n) Post-Results → then Q(n+1) opens for prep.</div>';
+  // ── Tag bar: select themes ACROSS quarters (multi-select). Empty selection = per-quarter view. ──
+  h+='<div class="ce-wl-tagbar"><span class="ce-wl-bar-k">Filter by theme (across quarters):</span>'+
+    wlTags().map(function(t){ return '<button type="button" class="ce-wl-tag" data-wltag="'+esc(t)+'">#'+esc(t)+'</button>'; }).join('')+
+    '<button type="button" class="ce-wl-tag ce-wl-clear" data-wltag="">clear</button>'+
+    '<button type="button" class="ce-wl-add-btn">+ Add theme</button>'+
+  '</div>';
+  // ── Tracking-window filter: the hooks we have open vs the ones we closed. ──
+  h+='<div class="ce-wl-tagbar" style="margin-top:-4px"><span class="ce-wl-bar-k">Tracking window:</span>'+
+    '<span class="mg-seg" style="display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px">'+
+      '<button type="button" class="ce-wl-win active" data-wlwin="all">All</button>'+
+      '<button type="button" class="ce-wl-win" data-wlwin="open">Open hooks</button>'+
+      '<button type="button" class="ce-wl-win" data-wlwin="closed">Closed</button>'+
+    '</span>'+
+    '<span class="ave-subh-note" style="margin-left:4px">A theme is <b>open</b> while it has a <i>Tracking since</i> and no <i>Tracking until</i>. We open and close them by hand.</span>'+
+  '</div>';
+  h+=ceWlForm();
+  // Per-quarter blocks (default view). The live quarter renders only OPEN hooks — that IS the list.
+  h+=CALL_EARNINGS.quarters.map(function(u,qi){
+    var qk=ceQkey(u.q), frozen=(u.status!=='upcoming');
+    var b='<div class="ce-qblock" data-ceq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
+    b+='<div class="ce-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="ce-frozen">frozen</span>':'')+'</div>';
+    var wl=wlFor(u.q, !frozen);
+    b+='<p class="ov-lede"><b>'+(frozen?'The list as it was frozen — ':'Things to hunt — ')+esc(u.q)+'</b>'+
+      (frozen?' <span style="color:var(--mu);font-weight:600">(scored afterwards in Post-Results)</span>':' <span style="color:var(--mu);font-weight:600">(the open hooks — a <i>Tracking since</i> with no <i>Tracking until</i>)</span>')+
+      '. Each card carries its <b>definition</b> — what the theme means in our words — its <b>tags</b>, and its <b>tracking window</b>. Tap <b>the thread ›</b> for the grounding and the quarter-by-quarter evolution. Ordered by weight, deliberately <b>not numbered</b>: a visible 1–5 goes stale the moment a theme is removed.</p>';
+    b+='<div class="ce-legend"><span class="ce-legend-i"><b>How to read the cards:</b></span>'+
+      '<span class="ce-legend-i"><span class="ce-seed">left open by Q2 2026</span> it is on the list because last quarter\'s call did not settle it</span>'+
+      '<span class="ce-legend-i"><span class="ce-w-chip since"><b>Tracking since:</b> Q4 2024</span> with no <i>Tracking until</i> ⇒ the hook is still open</span>'+
+      (frozen?'':'<span class="ce-legend-i"><span class="ce-w-ed" style="pointer-events:none">✎</span> edit — including closing the hook by filling <i>Tracking until</i></span>')+
     '</div>';
-    var wl=u.watchList||[];
-    if(!wl.length){ b+='<div class="cp-note">Watch List builds from the earnings-call record + the Bloomberg export — 5 ranked, grounded, falsifiable items per the conventions.</div>'; }
-    else{ b+='<div class="cp-watch">'+wl.map(function(w){ return cpWatchItem(w, qk, '', null); }).join('')+'</div>'; }
-    b+='<div class="ov-foot">'+(frozen?'Frozen — this list was scored against '+esc(u.q)+'\'s Post-Results/Post-Call; its newQuestions seeded the next quarter.':'Frozen once the quarter opens; scored against Post-Results / Post-Call. Themes carry their quarter-by-quarter thread — promise-type items are tracked here and in the theme record below.')+'</div>';
+    if(!wl.length){ b+='<div class="ce-note">No open hooks for '+esc(u.q)+' yet — add themes with <b>+ Add theme</b> above.</div>'; }
+    else{ b+='<div class="ce-watch">'+wl.map(function(w){ return ceWatchItem(w, qk, '', null, !frozen); }).join('')+'</div>'; }
+    b+='<div class="ov-foot">'+(frozen?'Frozen — this list was scored against '+esc(u.q)+'\'s Post-Results; its <code>newQuestions</code> seeded the next quarter.':'Ours to curate: Post-Results lets the model run (numbers + call highlights), but what earns a slot here is our call. Frozen once the quarter opens.')+'</div>';
     b+='</div>';
     return b;
   }).join('');
-  h+='<div class="cp-wl-all" hidden>';
-  h+='<div class="cp-phase" style="background:'+PURPLE+'">Themes across quarters</div>';
+  // Flat cross-quarter container (hidden until a tag is selected)
+  h+='<div class="ce-wl-all" hidden>';
+  h+='<div class="ce-phase" style="background:'+PURPLE+'">Themes across quarters</div>';
   h+='<p class="ov-lede">Every watch item matching the selected theme(s), <b>across all quarters</b> — how the same hunt evolved print to print. Clear the tags (or pick a quarter) to return to the per-quarter view.</p>';
-  h+='<div class="cp-watch">'+CALL_PREP.quarters.map(function(u){
-    var qk=cpQkey(u.q);
-    return (u.watchList||[]).map(function(w){ return cpWatchItem(w, qk, '-f', u.q); }).join('');
-  }).join('')+'</div>';
+  h+='<div class="ce-watch">'+WL_ROWS.map(function(r){ return ceWatchItem(r, ceQkey(r.q), '-f', r.q, false); }).join('')+'</div>';
   h+='</div>';
-  // ── FUSED (v2.3): the full multi-year theme record — the former standalone Earnings Calls tab. ──
+  // ── The table: the storage view + the copy-out that closes the loop back into the code. ──
+  h+=ceWlTable();
+  // ── FUSED: the full multi-year theme record (was the standalone Evolution ▸ Earnings Calls tab,
+  // dissolved Jul 2026 — no two tabs on the same call highlights). Lives here, under the Watch List. ──
   h+='<div style="margin-top:26px;border-top:2px solid var(--bdr);padding-top:16px">';
-  h+='<div class="cp-band" style="--bc:'+BRAND+'"><span class="cp-band-i">▤</span><span class="cp-band-t">The theme record — every thread, across all calls</span><span class="cp-band-s">the multi-year backbone behind the hunt above (the former "Earnings Calls" tab, folded in)</span><span class="cp-band-l"></span></div>';
+  h+='<div class="ce-band" style="--bc:'+BRAND+'"><span class="ce-band-i">▤</span><span class="ce-band-t">The theme record — every thread, across all calls</span><span class="ce-band-s">the multi-year backbone behind the hunt above (the former "Earnings Calls" tab, folded in)</span><span class="ce-band-l"></span></div>';
   h+=callsBody();
   h+='</div>';
   return h;
 }
-var CP_RES={ beat:{c:'#0a8f4c',l:'Beat'}, miss:{c:RED,l:'Miss'}, inline:{c:'#6b7684',l:'In line'},
+// (Promise Tracker dissolved Jul 2026 — promise-type items now live as tracked themes inside the
+// Watch List `thread`s and in Evolution ▸ Earnings Calls.)
+// Scorecard result kinds. beat/miss/inline score against a consensus line; `nodisc` (a KPI
+// management STOPPED disclosing) and `nocons` (a number nobody modelled) are not beats or misses —
+// they are their own signal, and conflating them with a miss loses the point.
+var CE_RES={ beat:{c:'#0a8f4c',l:'Beat'}, miss:{c:RED,l:'Miss'}, inline:{c:'#6b7684',l:'In line'},
              nodisc:{c:AMBER,l:'Not disclosed'}, nocons:{c:PURPLE,l:'No consensus'} };
-var CP_HLTAG={ thesis:{c:'#0a8f4c',l:'Thesis'}, curious:{c:'#7A5AF8',l:'Curious'}, dots:{c:'#2E6BE6',l:'Connects dots'}, watch:{c:'#B7791F',l:'Watch'}, tone:{c:'#B7791F',l:'Tone'} };
-function cpResultsBody(c){
-  var h=cpStyle();
-  h+=CALL_PREP.quarters.map(function(q,qi){
-    var qk=cpQkey(q.q);
-    var b='<div class="cp-qblock" data-cpq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="cp-phase" style="background:'+GREEN+'">② Post-Results</div>';
-    b+='<p class="ov-lede"><b>'+esc(q.q)+' — the numbers vs. the frozen expectations.</b> Results land first (release ~4pm, call comes later) — the read on the <b>print itself</b>, before management says a word.</p>';
+var CE_HLTAG={ thesis:{c:'#0a8f4c',l:'Thesis'}, curious:{c:'#7A5AF8',l:'Curious'}, dots:{c:'#2E6BE6',l:'Connects dots'}, watch:{c:'#B7791F',l:'Watch'}, tone:{c:'#B7791F',l:'Tone'} };
+// D · Post-Results ── the numbers (available first, before/without the call): a beat/miss scorecard.
+// ─── The frozen Street number, straight from the archive ────────────────────────────────────────
+// "Frozen expectations" used to mean whatever prose someone typed into `scorecard[].cons` before
+// the print ("high-teens growth modeled"). That is a memory, not a record. The archive gives us
+// the real thing: the snapshot immediately BEFORE the print carries the consensus that actually
+// stood going in, so the comparison is reconstructed from data instead of recalled.
+// Renders as a tile strip at the top of Post-Results. Revenue shows no surprise — different basis.
+// ─── cePrintBlock · THE print, in one place ─────────────────────────────────────────────────────
+// Formerly two blocks that said the same thing twice: the archive "frozen strip" (consensus →
+// print, 13 standardized lines) and a hand-authored "scorecard — ranked by surprise". Merged.
+// The archive is the spine — every number and every surprise is computed from BBG_CONSENSUS.txt,
+// so it cannot drift. The hand-authored layer contributes only what a number cannot: a per-metric
+// note (`results.notes[metric]`) and the frozen-Watch-List rank (`results.watch[metric]`). Any
+// bespoke row that is NOT one of the standardized metrics (an old "funding flip" card, a
+// disclosure with no consensus like Gemini app MAU) is intentionally dropped — the standardized
+// view is the metrics the archive tracks, ranked by how far each landed from the Street. (§6a-ii.)
+function ceVerdict(m, c, a, surp){
+  if(a==null) return {l:'—', c:'#9AA4B0', k:'none'};
+  if(c==null) return {l:'no est.', c:'#7A5AF8', k:'noest'};       // nocons / noact: a print, nothing to score
+  if(surp==null) return {l:'—', c:'#9AA4B0', k:'none'};
+  if(Math.abs(surp)<2) return {l:CE_RES.inline.l, c:CE_RES.inline.c, k:'inline'};
+  return surp>0 ? {l:CE_RES.beat.l, c:CE_RES.beat.c, k:'beat'} : {l:CE_RES.miss.l, c:CE_RES.miss.c, k:'miss'};
+}
+function cePrintBlock(qLabel, r, us){
+  var qi=CE_CONS.q.indexOf(qLabel); if(qi<0) return '';
+  r=r||{}; us=us||{};
+  var notes=r.notes||{}, watch=r.watch||{};
+  // Revenue for the quarter — the margin denominator (§6a-vi). Street, Summit, and the print.
+  var revM=CE_CONS.m.filter(function(x){ return x.k==='Revenue'; })[0];
+  var revC=(revM&&revM.qr[qi])?revM.qr[qi][3]:null, revA=revM?revM.qa[qi]:null;
+  var revS=(us['Revenue']&&us['Revenue'].v!=null)?us['Revenue'].v:revC;   // Summit revenue, else BBG
+  var tiles=CE_CONS.m.map(function(m){
+    var c=m.qr[qi]?m.qr[qi][3]:null, a=m.qa[qi];
+    var uexp=(us[m.k]&&us[m.k].v!=null)?us[m.k].v:null;   // Summit's FROZEN expectation for this line
+    if(c==null&&a==null&&uexp==null) return null;
+    // Surprise = actual / expected − 1, computed for BOTH bases. The estimate-view toggle (vs Street
+    // ⇄ vs Summit) swaps which one drives the expected value, the surprise and the verdict.
+    var cSurp=(c!=null&&a!=null&&c)?((a/c-1)*100):null;
+    var uSurp=(uexp!=null&&a!=null&&uexp)?((a/uexp-1)*100):null;
+    var cV=ceVerdict(m,c,a,cSurp), uV=ceVerdict(m,uexp,a,uSurp);
+    // growth against the print, both bases — the shared YoY/QoQ lens (independent of the estimate view)
+    var g=function(base){
+      var bv=(base==='qoq')?m.qq[qi]:m.qy[qi];
+      if(a==null||bv==null||!bv) return '<span class="ce-fz-g-e">—</span>';
+      var gv=Math.round((a/bv-1)*100);
+      return '<span style="color:'+(gv>=0?'#0a8f4c':'#C5221F')+'">'+(gv>=0?'+':'−')+Math.abs(gv)+'%</span>';
+    };
+    var surpTag=function(s){ return (s==null)?'':'<span class="ce-fz-d '+(s>=0?'up':'dn')+'">'+(s>=0?'+':'−')+(Math.round(Math.abs(s)*10)/10)+'%</span>'; };
+    // MARGIN (GP/OpInc/EBITDA only) — toggled, and it is EXPECTED-vs-REALIZED, not YoY/QoQ. Expected
+    // = the margin IMPLIED by the estimate (estimate's metric ÷ estimate's revenue, same estimate on
+    // both sides): Street = c/revC, Summit = uexp/revS. Realized = the print's own (a/revA). We show
+    // the gap in pts. Basis caveat (see the ? pop-up): the Street's forward revenue runs below the
+    // print, so the Street-implied margin sits above realized by construction — the Δ is partly that.
+    var mgnOn=CE_MARGIN_ON[m.k], mReal=mgnOn?ceMarginPct(a,revA):null;
+    var mExpC=mgnOn?ceMarginPct(c,revC):null, mExpU=mgnOn?ceMarginPct(uexp,revS):null;
+    var dPts=function(exp){ if(mReal==null||exp==null) return ''; var d=Math.round((mReal-exp)*10)/10;
+      return '<span class="ce-fz-mdl '+(d>=0?'up':'dn')+'">'+(d>=0?'+':'−')+Math.abs(d)+' pts</span>'; };
+    var mRow='';
+    if(mgnOn&&mReal!=null){
+      mRow='<div class="ce-fz-mrow"><span class="ce-fz-gl">margin</span>'+
+        '<span class="ce-fz-mexp ce-exp-cons">exp '+(mExpC!=null?mExpC+'%':'—')+dPts(mExpC)+'</span>'+
+        '<span class="ce-fz-mexp ce-exp-us">exp '+(mExpU!=null?mExpU+'%':'—')+dPts(mExpU)+'</span>'+
+        '<span class="ce-fz-ar">→</span><span class="ce-fz-mreal">'+mReal+'% realized</span>'+
+        ceQ('mgn-'+ceQkey(qLabel)+'-'+ceQkey(m.k),'Margin — expected vs realized',
+          '<p><b>Expected</b> is the margin <i>implied by the estimate</i>: the estimate\'s metric ÷ the estimate\'s own revenue (Street = BBG ÷ BBG, Summit = ours ÷ ours). <b>Realized</b> is the print\'s own margin (actual ÷ actual). This is expectation vs outcome for the quarter — <b>there is no YoY/QoQ on the margin</b>.</p>'+
+          '<p><b>Basis caveat:</b> the Street\'s forward revenue runs materially <i>below</i> the print (FX + gross-vs-net), so the Street-implied margin sits above the realized one by construction. Read the Δ with that offset in mind — part of a negative gap is the revenue basis, not a margin miss.</p>')+
+        '</div>';
+    }
+    var note=notes[m.k];
+    var qb=note?ceReg('resnote-'+ceQkey(qLabel)+'-'+ceQkey(m.k), note.t||m.k, note.h||note):null;
+    // watch[m.k] is the frozen Watch-List RANK; resolve it to the theme text for the chip.
+    var wrRank=watch[m.k], wrTheme=null;
+    if(wrRank){ var wrow=wlFor(qLabel,false).filter(function(x){ return x.rank===wrRank; })[0]; wrTheme=wrow?wrow.theme:null; }
+    var wr=wrTheme||(wrRank?('Watch #'+wrRank):null);
+    // data-vdc / data-vdu carry BOTH verdicts so the verdict filter is estimate-view-aware in pure CSS.
+    return { sort:(cSurp==null?-1:Math.abs(cSurp)), html:
+      '<div class="ce-fz-t" data-vdc="'+cV.k+'" data-vdu="'+uV.k+'"'+(qb?' data-detail="ce:'+qb+'"':'')+'>'+
+        '<div class="ce-fz-k">'+esc(m.k)+
+          '<span class="ce-fz-vd ce-vd-cons" style="color:'+cV.c+'">'+cV.l+'</span>'+
+          '<span class="ce-fz-vd ce-vd-us" style="color:'+uV.c+'">'+uV.l+'</span></div>'+
+        '<div class="ce-fz-r"><span class="ce-fz-c ce-exp-cons">'+(c==null?'—':ceTkFmt(m.u,c))+'</span>'+
+          '<span class="ce-fz-c ce-exp-us">'+(uexp==null?'—':ceTkFmt(m.u,uexp))+'</span>'+
+          '<span class="ce-fz-ar">→</span><span class="ce-fz-a">'+(a==null?'—':ceTkFmt(m.u,a))+'</span>'+
+          '<span class="ce-fz-dw ce-exp-cons">'+surpTag(cSurp)+'</span><span class="ce-fz-dw ce-exp-us">'+surpTag(uSurp)+'</span></div>'+
+        '<div class="ce-fz-gr"><span class="ce-fz-gl">growth</span>'+
+          '<span class="ce-gy">'+g('yoy')+'</span><span class="ce-gq">'+g('qoq')+'</span></div>'+
+        mRow+
+        (wr?'<div class="ce-fz-wl" title="On the frozen Watch List: '+esc(wr)+'">on the list</div>':'')+
+        (qb?'<div class="ce-fz-more">＋ detail</div>':'')+
+      '</div>' };
+  }).filter(Boolean);
+  if(!tiles.length) return '';
+  tiles.sort(function(x,z){ return z.sort-x.sort; });   // biggest surprise first (Street basis)
+  return '<div class="ce-fz" data-g="yoy" data-ev="cons" data-mm="off"><div class="ce-fz-h">The print — ranked by surprise'+
+    ceQ('fz-'+ceQkey(qLabel),'How this is built',
+      '<p>One block, archive-driven. Every number and surprise is computed from <code>BBG_CONSENSUS.txt</code>: the last snapshot before the print carries the consensus (<code>fq+1</code>), a later snapshot carries the print (<code>fq0</code>). Reconstructed from data, so it cannot drift.</p>'+
+      '<ul><li><b>vs Street ⇄ vs Summit</b> — swaps which frozen expectation the print is scored against (Street = Bloomberg, Summit = ours). No "Both" — one basis at a time. Where Summit had no number, Summit view reads <b>no est.</b></li>'+
+      '<li><b>Margin</b> — GP / Operating income / EBITDA carry an expected-vs-realized margin (the estimate-implied margin → the print\'s own), Δ in pts. No YoY/QoQ on the margin.</li>'+
+      '<li><b>Verdict</b> — beat / miss / in-line off the computed surprise; <b>no est.</b> where that basis had no number</li>'+
+      '<li><b>on the list</b> — this line was on the Watch List we froze before the call</li></ul>'+
+      '<p>Lines the archive does not track are not shown here — a disclosure with no consensus (e.g. an app-MAU rung) is a supplemental call note (below the scorecard), not a scored line.</p>')+
+    '<span class="ce-vdf"><button type="button" class="active" data-vdf="all">All</button>'+
+      '<button type="button" data-vdf="beat">Beats</button>'+
+      '<button type="button" data-vdf="miss">Misses</button>'+
+      '<button type="button" data-vdf="inline">In line</button></span>'+
+    '<span class="ce-gseg" style="margin-left:auto"><button type="button" class="active" data-fzev="cons">vs Street</button>'+
+      '<button type="button" data-fzev="us">vs Summit</button></span>'+
+    '<span class="ce-gseg"><button type="button" data-fzmm="on">Margin</button>'+
+      '<button type="button" class="active" data-fzmm="off">Hide mgn</button></span>'+
+    '<span class="ce-gseg"><button type="button" class="active" data-ceg="yoy">YoY</button>'+
+      '<button type="button" data-ceg="qoq">QoQ</button>'+
+      '<button type="button" data-ceg="off">Off</button></span>'+
+    '</div><div class="ce-fz-g" data-vdf-host>'+tiles.map(function(t){ return t.html; }).join('')+'</div>'+
+    '<div class="ce-fz-f">Expectation (frozen, 1 quarter out) → the print → the print\'s own growth. Toggle <b>vs Street ⇄ vs Summit</b> and <b>Margin</b> above. Ranked by |surprise vs Street|. Source: <code>BBG_CONSENSUS.txt</code> + Summit.</div></div>';
+}
+// A collapsible block — secondary depth is folded away by default so the phase reads as a page,
+// not a wall. Wired by the generic `.ov-collap-h` handler already in init().
+function ceFold(title, sub, body, open){
+  return '<div class="ov-collap ce-fold'+(open?' open':'')+'">'+
+    '<button type="button" class="ov-collap-h"><span class="ov-collap-ic">'+(open?'▾':'▸')+'</span>'+
+    '<span class="ce-fold-t">'+title+'</span>'+(sub?'<span class="ce-fold-s">'+sub+'</span>':'')+'</button>'+
+    '<div class="ov-collap-b"'+(open?'':' hidden')+'>'+body+'</div></div>';
+}
+function cePhaseStyle(){
+  return '<style>'+
+    '.ce-fz{border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;margin-bottom:14px;background:#FBFCFE}'+
+    '.ce-fz-h{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);margin-bottom:9px}'+
+    '.ce-fz-g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}'+
+    '@media(max-width:900px){.ce-fz-g{grid-template-columns:repeat(2,1fr)}}'+
+    '@media(max-width:520px){.ce-fz-g{grid-template-columns:1fr}}'+
+    '.ce-fz-t{border:1px solid var(--bdr);border-radius:9px;padding:7px 9px;background:#fff}'+
+    '.ce-fz-t.basis{opacity:.62}'+
+    '.ce-fz-k{font-size:9.5px;font-weight:700;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'+
+    '.ce-fz-r{display:flex;align-items:baseline;gap:4px;margin-top:2px;font-variant-numeric:tabular-nums}'+
+    '.ce-fz-c{font-size:11px;color:var(--mu);font-weight:700}'+
+    '.ce-fz-ar{font-size:9px;color:var(--mu)}'+
+    '.ce-fz-a{font-size:13px;font-weight:900;color:var(--navy)}'+
+    '.ce-fz-d{font-size:9.5px;font-weight:800;margin-left:auto}'+
+    '.ce-fz-d.up{color:#0a8f4c}.ce-fz-d.dn{color:'+RED+'}.ce-fz-d.na{color:var(--mu);font-weight:700}'+
+    '.ce-fz-f{font-size:9.5px;color:var(--mu);margin-top:8px}'+'.ce-fz-t{position:relative;transition:.14s}'+'.ce-fz-t[data-detail]{cursor:pointer}'+'.ce-fz-t[data-detail]:hover{box-shadow:0 4px 14px rgba(16,24,40,.10);transform:translateY(-1px)}'+'.ce-fz-vd{margin-left:auto;font-size:8.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase}'+'.ce-fz-k{display:flex;align-items:center;gap:5px}'+'.ce-fz-wl{font-size:8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:'+BLUE+';margin-top:5px}'+'.ce-fz-more{position:absolute;right:9px;bottom:7px;font-size:8.5px;font-weight:800;color:'+BLUE+'}'+'.ce-fz-h{display:flex;align-items:center;gap:6px}'+'.ce-fz-gr{display:flex;align-items:baseline;gap:5px;margin-top:3px;font-size:9.5px;font-weight:800}'+'.ce-fz-gl{font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}'+'.ce-fz-mgn{display:flex;align-items:baseline;gap:5px;margin-top:3px;font-size:11px;font-weight:900;color:'+PURPLE+'}'+'.ce-fz-mexp{font-size:9px;font-weight:700;color:var(--mu)}'+'.ce-fz-g-e{color:var(--mu);font-weight:600}'+'.ce-fz[data-g="yoy"] .ce-gq,.ce-fz[data-g="qoq"] .ce-gy,'+'.ce-fz[data-g="off"] .ce-fz-gr{display:none}'+
+    /* estimate view (vs Street ⇄ vs Summit) — pure-CSS swap of expected value, surprise & verdict */
+    '.ce-fz-h{flex-wrap:wrap}'+
+    '.ce-vd-us,.ce-exp-us{display:none}'+
+    '.ce-fz[data-ev="us"] .ce-vd-cons,.ce-fz[data-ev="us"] .ce-exp-cons{display:none}'+
+    '.ce-fz[data-ev="us"] .ce-vd-us,.ce-fz[data-ev="us"] .ce-exp-us{display:inline}'+
+    '.ce-fz-dw{margin-left:auto}'+
+    /* margin row — expected(estimate-implied) → realized, toggled by data-mm; NO YoY/QoQ here */
+    '.ce-fz-mrow{display:none;align-items:baseline;gap:5px;margin-top:4px;padding-top:4px;border-top:1px dashed var(--bdr);font-size:9.5px;font-weight:800}'+
+    '.ce-fz[data-mm="on"] .ce-fz-mrow{display:flex;flex-wrap:wrap}'+
+    '.ce-fz-mreal{font-size:11px;font-weight:900;color:'+PURPLE+'}'+
+    '.ce-fz-mdl{font-weight:800;margin-left:3px}.ce-fz-mdl.up{color:#0a8f4c}.ce-fz-mdl.dn{color:'+RED+'}'+
+    /* folds — secondary depth, closed by default */
+    '.ce-fold{border:1px solid var(--bdr);border-radius:11px;margin:0 0 10px;overflow:hidden;background:#fff}'+
+    '.ce-fold .ov-collap-h{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:#FAFBFD;'+
+      'padding:9px 13px;cursor:pointer;font-family:inherit}'+
+    '.ce-fold .ov-collap-h:hover{background:#F2F6FB}'+
+    '.ce-fold .ov-collap-ic{font-size:10px;color:var(--mu)}'+
+    '.ce-fold-t{font-size:11px;font-weight:800;color:var(--navy)}'+
+    '.ce-fold-s{font-size:10px;color:var(--mu);font-weight:600;margin-left:auto;text-align:right}'+
+    '.ce-fold .ov-collap-b{padding:12px 13px}'+
+    /* the print, as cards rather than full-width rows */
+    '.ce-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}'+
+    '@media(max-width:760px){.ce-cards{grid-template-columns:1fr}}'+
+    '.ce-card{border:1px solid var(--bdr);border-left:4px solid var(--sc,#9AA4B0);border-radius:10px;padding:9px 11px;background:#fff}'+
+    '.ce-card-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap}'+
+    '.ce-card-m{font-size:11.5px;font-weight:800;color:var(--navy)}'+
+    '.ce-card-v{font-size:9px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--sc);margin-left:auto}'+
+    '.ce-card-b{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;margin-top:6px;font-size:10.5px;line-height:1.45}'+
+    '.ce-card-l{color:var(--mu);font-weight:700;white-space:nowrap}'+
+    '.ce-card-x{color:var(--navy)}'+
+    '.ce-card-f{display:flex;align-items:center;gap:6px;margin-top:7px}'+
+    '.ce-chip{font-size:8.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:999px}'+
+    '.ce-chip.list{background:rgba(26,115,232,.12);color:'+BLUE+'}'+
+    '.ce-chip.hi{background:rgba(234,67,53,.12);color:'+RED+'}'+
+    '.ce-chip.md{background:rgba(251,188,5,.18);color:#7A5B02}'+
+    '.ce-chip.lo{background:#EEF1F5;color:var(--mu)}'+
+    /* "Also on the call" — one box, a plain list, each point a native <details> dropdown (v2.9) */
+    '.ce-alsobox{margin-top:18px;border:1px solid var(--bdr);border-radius:12px;background:#fff;overflow:hidden}'+
+    '.ce-alsobox-h{padding:10px 13px;background:#F6F8FA;border-bottom:1px solid var(--bdr);display:flex;flex-direction:column;gap:2px}'+
+    '.ce-alsobox-h>b{font-size:12px;color:var(--navy);font-weight:800}'+
+    '.ce-alsobox-sub{font-size:9.5px;color:var(--mu);font-weight:600;line-height:1.4}'+
+    '.ce-alsolist{display:flex;flex-direction:column}'+
+    '.ce-also-i{border-bottom:1px solid var(--bdr)}'+'.ce-also-i:last-child{border-bottom:0}'+
+    '.ce-also-s{display:flex;align-items:center;gap:8px;padding:9px 13px;cursor:pointer;list-style:none;font-size:11.5px;font-weight:600;color:var(--navy);line-height:1.45}'+
+    '.ce-also-s::-webkit-details-marker{display:none}'+
+    '.ce-also-s:hover{background:#FAFBFD}'+
+    '.ce-also-tag{font-size:8px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--tc,#6b7684);border:1px solid currentColor;border-radius:999px;padding:1px 7px;flex:none;opacity:.85}'+
+    '.ce-also-hd{flex:1;min-width:0}'+
+    '.ce-also-ar{margin-left:auto;color:var(--mu);font-size:10px;transition:transform .15s;flex:none}'+
+    '.ce-also-i[open] .ce-also-ar{transform:rotate(180deg)}'+
+    '.ce-also-body{padding:0 13px 12px 13px;font-size:10.5px;font-weight:500;color:var(--navy);line-height:1.55;background:#FBFCFE}'+
+    '.ce-also-body p{margin:6px 0}'+
+    /* AI call summary — collapsible outer box + always-visible lede + nested dropdowns + glossary */
+    '.ce-sum{border:1px solid var(--bdr);border-radius:12px;background:#fff;margin:2px 0 14px}'+
+    '.ce-sum>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:12px;background:linear-gradient(180deg,rgba(122,90,248,.06),transparent)}'+
+    '.ce-sum>summary::-webkit-details-marker{display:none}'+
+    '.ce-sum-ic{font-size:15px}'+'.ce-sum-h b{font-size:13px;color:var(--navy)}'+
+    '.ce-sum-tag{font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:'+PURPLE+';background:rgba(122,90,248,.12);border:1px solid rgba(122,90,248,.25);border-radius:999px;padding:2px 8px;margin-left:auto}'+
+    '.ce-sum[open]>summary{border-bottom:1px solid var(--bdr);border-radius:12px 12px 0 0}'+
+    '.ce-sum-body{padding:12px 15px 15px}'+
+    '.ce-sum-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:11px}'+
+    '.ce-sum-tt{font-size:10px;color:var(--mu);font-weight:600;margin-right:auto}'+
+    '.ce-sum-btn{font-size:9.5px;font-weight:800;color:'+BLUE+';border:1px solid var(--bdr);background:#fff;border-radius:999px;padding:3px 10px;cursor:pointer;transition:.12s}'+
+    '.ce-sum-btn:hover{border-color:'+BLUE+';background:rgba(26,115,232,.06)}'+
+    /* the summary IS the prose: visible punch paragraphs, each with its own "＋ more" expander */
+    '.ce-sum-block{margin:0 0 13px}'+
+    '.ce-sum-para{font-size:12.5px;line-height:1.7;color:var(--navy);font-weight:500;margin:0}'+
+    '.ce-sum-more{border:0!important;background:transparent!important;border-radius:0;margin:5px 0 0}'+
+    '.ce-sum-more>.ce-sum-nt{padding:2px 0;font-size:10px;font-weight:800;color:'+BLUE+';text-transform:none}'+
+    '.ce-sum-more>.ce-sum-nt .ce-sum-caret{color:'+BLUE+'}'+
+    '.ce-sum-more>.ce-sum-nb{padding:7px 0 4px 13px;border-left:2px dashed var(--bdr);margin-top:5px;font-size:11.5px;line-height:1.65}'+
+    '.ce-sum-nodes{display:flex;flex-direction:column;gap:6px}'+
+    '.ce-sum-n{border:1px solid var(--bdr);border-left:3px solid '+BLUE+';border-radius:9px;background:#FBFCFE}'+
+    '.ce-sum-n[data-d="1"]{border-left-color:'+BRAND2+';background:#fff}'+
+    '.ce-sum-n[data-d="2"]{border-left-color:'+AMBER+'}'+
+    '.ce-sum-nt{list-style:none;cursor:pointer;display:flex;align-items:center;gap:7px;padding:8px 11px;font-size:11.5px;font-weight:700;color:var(--navy)}'+
+    '.ce-sum-nt::-webkit-details-marker{display:none}'+
+    '.ce-sum-caret{font-size:9px;color:var(--mu);transition:transform .15s;flex:none}'+
+    '.ce-sum-n[open]>.ce-sum-nt .ce-sum-caret{transform:rotate(90deg)}'+
+    '.ce-sum-nb{padding:0 12px 11px 21px;font-size:11px;line-height:1.65;color:var(--navy);font-weight:500}'+
+    '.ce-sum-nb .ce-sum-nodes{margin-top:9px}'+
+    /* glossary term — dashed underline, attractive hover tooltip (CSS-only, no pop-up) */
+    '.ce-gl{border-bottom:1px dashed '+BLUE+';cursor:help;position:relative}'+
+    '.ce-gl:hover::after{content:attr(data-def);position:absolute;left:0;bottom:calc(100% + 8px);width:min(300px,74vw);white-space:normal;text-align:left;background:#10141A;color:#fff;font-size:10.5px;font-weight:500;line-height:1.55;padding:9px 12px;border-radius:9px;box-shadow:0 10px 28px rgba(16,24,40,.28);z-index:60}'+
+    '.ce-gl:hover::before{content:"";position:absolute;left:16px;bottom:calc(100% + 3px);border:5px solid transparent;border-top-color:#10141A;z-index:61}'+
+    /* highlights, as cards */
+    '.ce-hcards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}'+
+    '@media(max-width:760px){.ce-hcards{grid-template-columns:1fr}}'+
+    '.ce-hcard{border:1px solid var(--bdr);border-top:3px solid var(--hc,#9AA4B0);border-radius:10px;padding:9px 11px;background:#fff;cursor:pointer;transition:.14s}'+
+    '.ce-hcard:hover{box-shadow:0 4px 14px rgba(16,24,40,.09);transform:translateY(-1px)}'+
+    '.ce-hcard-t{font-size:8.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--hc)}'+
+    '.ce-hcard-h{font-size:11px;color:var(--navy);line-height:1.5;margin-top:3px}'+
+    '.ce-hcard-f{display:flex;align-items:center;gap:6px;margin-top:6px}'+
+    '.ce-hcard-more{font-size:9.5px;font-weight:800;color:'+BLUE+';margin-left:auto}'+
+    '.ce-bandh{display:flex;align-items:center;gap:7px;margin:12px 0 7px}'+
+    '.ce-bandh-i{font-size:12px;color:var(--bc)}'+
+    '.ce-bandh-t{font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:var(--bc)}'+
+    '.ce-bandh-s{font-size:9.5px;color:var(--mu);font-weight:600}'+
+    /* thesis red-lines — verdict word, plain line, depth behind "why" */
+    '.ce-rl{display:flex;flex-direction:column;gap:5px}'+
+    '.ce-rl-row{display:grid;grid-template-columns:74px 1fr auto;gap:10px;align-items:center;'+
+      'border:1px solid var(--bdr);border-left:4px solid #0a8f4c;border-radius:9px;padding:8px 12px;background:#fff}'+
+    '.ce-rl-row.trip{border-left-color:'+RED+';background:rgba(234,67,53,.035)}'+
+    '.ce-rl-v{font-size:9.5px;font-weight:900;letter-spacing:.06em;color:#0a8f4c}'+
+    '.ce-rl-row.trip .ce-rl-v{color:'+RED+'}'+
+    '.ce-rl-l{font-size:11.5px;font-weight:700;color:var(--navy);line-height:1.4}'+
+    '.ce-rl-w{font-size:9.5px;font-weight:800;color:'+BLUE+';white-space:nowrap;cursor:pointer}'+
+    '@media(max-width:600px){.ce-rl-row{grid-template-columns:64px 1fr}.ce-rl-w{display:none}}'+
+    /* what this tees up — short boxes, always visible */
+    '.ce-tee{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}'+
+    '.ce-tee-c{border:1px solid var(--bdr);border-top:3px solid '+AMBER+';border-radius:10px;'+
+      'padding:9px 11px;background:#fff;cursor:pointer;transition:.14s}'+
+    '.ce-tee-c:hover{box-shadow:0 4px 14px rgba(16,24,40,.09);transform:translateY(-1px)}'+
+    '.ce-tee-h{font-size:11.5px;color:var(--navy);line-height:1.45;font-weight:600}'+
+    '.ce-tee-m{font-size:9.5px;font-weight:800;color:'+BLUE+';margin-top:6px}'+
+    /* the triage strip — three bands, always all three, colour is the meaning */
+    '.ce-tri{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 10px}'+
+    '@media(max-width:700px){.ce-tri{grid-template-columns:1fr}}'+
+    '.ce-tri-b{display:grid;grid-template-columns:auto auto 1fr;grid-template-areas:"i t n" "s s s";'+
+      'gap:2px 7px;align-items:center;text-align:left;border:1px solid var(--bdr);border-top:3px solid var(--bc);'+
+      'border-radius:10px;padding:8px 11px;background:#fff;font:inherit;cursor:pointer;transition:.14s;opacity:.45}'+
+    '.ce-tri-b.active{opacity:1;box-shadow:0 2px 10px rgba(16,24,40,.07)}'+
+    '.ce-tri-b:hover{border-color:var(--bc)}'+
+    '.ce-tri-i{grid-area:i;font-size:12px;color:var(--bc);line-height:1}'+
+    '.ce-tri-t{grid-area:t;font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:var(--bc)}'+
+    '.ce-tri-n{grid-area:n;justify-self:end;font-size:11px;font-weight:900;color:var(--navy)}'+
+    '.ce-tri-s{grid-area:s;font-size:9.5px;color:var(--mu);font-weight:600}'+
+    '.ce-hcard-b{margin-right:5px;color:var(--hc)}'+
+    '.ce-hcard[hidden]{display:none}'+
+    '.ce-bandh-n{margin-left:auto;font-size:9.5px;font-weight:800;color:var(--mu)}'+
+  '</style>';
+}
+function ceResultsBody(c){
+  var h=ceStyle()+cePhaseStyle();
+  h+=CALL_EARNINGS.quarters.map(function(q,qi){
+    var qk=ceQkey(q.q);
+    var b='<div class="ce-qblock" data-ceq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
+    b+='<div class="ce-phase" style="background:'+BRAND2+'">② Post-Results</div>';
     var r=q.results;
-    if(!r){ b+='<div class="cp-note">Empty until the print lands. Then the scorecard and thesis red-line check fill here.</div></div>'; return b; }
-    b+='<div style="border:1px solid var(--bdr);border-radius:12px;padding:14px 16px;margin-bottom:14px;background:var(--w)">';
-    b+='<div style="font-size:13.5px;font-weight:800;color:var(--navy);margin-bottom:8px">'+esc(q.q)+' <span style="font-weight:600;color:var(--mu);font-size:11px">· reported '+esc(q.date?q.date.replace(/ · .*/,''):'')+'</span></div>';
-    if(r.headline) b+='<div class="cp-take" style="border-left-color:'+GREEN+'">🎯 '+r.headline+'</div>';
+    if(!r){ b+='<p class="ov-lede"><b>'+esc(q.q)+' — the numbers vs. the frozen expectations.</b></p>'+
+      '<div class="ce-note">Empty until the print lands.</div></div>'; return b; }
+    b+='<p class="ov-lede"><b>'+esc(q.q)+' — the print, scored against what was frozen going in.</b> '+
+       'Toggle <b>vs Street ⇄ vs Summit</b> to score the print against either expectation, and <b>Margin</b> for the expected-implied → realized margin. Below the scorecard, a supplemental <i>“Also on the call”</i> aside carries the colour — not the meeting-critical items.</p>';
+    // 1 · THE print — archive spine + hand-authored notes, ranked by surprise (one block now).
+    // Pass the quarter's FROZEN Summit expectations (setup.us) so the print can be scored against
+    // Street OR Summit via the vs-Street ⇄ vs-Summit toggle (§6a-iii).
+    b+=cePrintBlock(q.q, r, (q.setup&&q.setup.us)||{});
+    // 2 · the AI-generated call summary — replaces the old one-line "take" black box (v2.10).
+    b+=ceSummaryBlock(q.q, r.summary);
+    // 3 · thesis red-line check — folded unless something tripped
     if(r.thesisCheck&&r.thesisCheck.length){
+      // One word for the verdict, then the red-line ITSELF in plain language. The reasoning goes
+      // behind "why" — it is the interesting part, but it is not what you scan for (§6a-iv).
       var tc=r.thesisCheck.slice().sort(function(a,z){ return (z.tripped?1:0)-(a.tripped?1:0); });
       var nTrip=tc.filter(function(t){ return t.tripped; }).length;
-      b+='<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin:2px 0 6px">Thesis red-line check — vs this quarter\'s frozen Watch List'+
-        (nTrip?'<span style="color:'+RED+';margin-left:7px">⚑ '+nTrip+' tripped</span>':'<span style="color:#0a8f4c;margin-left:7px">✓ all held</span>')+'</div>';
-      b+='<div class="cp-tc">'+tc.map(function(t){ var col=t.tripped?RED:'#0a8f4c'; var ic=t.tripped?'⚑ TRIPPED':'✓ held';
-        return '<div class="cp-tc-row" style="border-left:3px solid '+col+'"><span style="font-weight:800;color:'+col+';white-space:nowrap">'+ic+'</span><span><b>'+esc(t.line)+'</b> — '+esc(t.note||'')+'</span></div>';
+      b+='<div class="ov-diagram-cap" style="margin:14px 0 6px"><b>Thesis red-lines</b> '+
+         '<span style="color:var(--mu);font-weight:600;font-size:10px">· '+
+         (nTrip?('<b style="color:'+RED+'">'+nTrip+' tripped</b> of '+tc.length):('all '+tc.length+' held'))+'</span></div>';
+      b+='<div class="ce-rl">'+tc.map(function(t,i){
+        var id=t.note?ceReg('rl-'+qk+'-'+i, (t.tripped?'TRIPPED — ':'HELD — ')+t.line, '<p>'+t.note+'</p>'):null;
+        return '<div class="ce-rl-row'+(t.tripped?' trip':'')+'">'+
+          '<span class="ce-rl-v">'+(t.tripped?'TRIPPED':'HELD')+'</span>'+
+          '<span class="ce-rl-l">'+esc(t.line)+'</span>'+
+          (id?'<span class="ce-rl-w ov-clickable" data-detail="ce:'+id+'">why ＋</span>':'<span></span>')+
+        '</div>';
       }).join('')+'</div>';
     }
-    if(r.scorecard&&r.scorecard.length) b+='<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin:15px 0 6px">The print — ranked by surprise</div>';
-    if(r.scorecard&&r.scorecard.length){
-      var sc=r.scorecard.slice().sort(function(a,z){ return (z.surprise||0)-(a.surprise||0); });
-      b+='<div class="cp-legend">'+
-        '<span class="cp-legend-i"><b>How to read this table:</b></span>'+
-        '<span class="cp-legend-i"><span class="cp-sc-rk">WATCH #1</span> flagged before the call as one of the five most contested items (its rank on that list)</span>'+
-        '<span class="cp-legend-i">A blank here just means the line was not one of those five — every line below is covered.</span>'+
-        '<span class="cp-legend-i"><span class="cp-sc-surp hi">big surprise</span> the number landed far from expectations — our judgement, not a calculation</span>'+
-      '</div>';
-      b+='<div class="cp-sc">'+sc.map(function(d,i){ var rr=CP_RES[d.result]||CP_RES.inline;
-        var qb=d.note?cpQ('resnote-'+qk+'-'+i, d.note.t||'Context', d.note.h||d.note):'';
-        var rk=d.watchRank?'<div class="cp-sc-rk" title="This was item #'+esc(String(d.watchRank))+' on the Watch List we froze before the call">WATCH #'+esc(String(d.watchRank))+'</div>'
-                          :'<div class="cp-sc-rk blank"></div>';
-        var sv=d.surprise;
-        var sl=(sv==null)?'<div class="cp-sc-bw"></div>'
-          :'<div class="cp-sc-bw"><div class="cp-sc-surp '+(sv>=70?'hi':(sv>=30?'md':'lo'))+'">'+(sv>=70?'big surprise':(sv>=30?'some surprise':'as expected'))+'</div></div>';
-        return '<div class="cp-sc-row" style="--sc:'+rr.c+'">'+rk+'<div class="cp-sc-m">'+esc(d.metric)+qb+'</div><div class="cp-sc-c">expected: '+cpFill(d.cons,'—')+'</div><div class="cp-sc-a">'+esc(d.actual||'')+'</div>'+sl+'<div class="cp-sc-v">'+rr.l+'</div></div>';
-      }).join('')+'</div>';
-      b+='<div class="ave-subh-note" style="margin-top:6px">Rows are ordered biggest-surprise first, not in release order. <b>Not disclosed</b> = management stopped reporting a number it used to give. <b>No consensus</b> = nobody had an estimate for it. Neither is a miss.</div>';
-    }
+    // 5 · what the numbers tee up — VISIBLE, as short boxes. Folding it away was hiding the
+    // thing you walk into the call with; the fix was to shorten it, not to bury it (§6a-iv).
     if(r.intoCall&&r.intoCall.length){
-      b+='<div class="cp-dots" style="margin-top:14px">🎯 <b>What the numbers tee up for the call</b> — go in hunting these:'+
-        '<ul class="ov-bullets" style="margin-top:6px">'+r.intoCall.map(function(x){ return '<li>'+x+'</li>'; }).join('')+'</ul></div>';
+      b+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>What this tees up for the call</b> '+
+         '<span style="color:var(--mu);font-weight:600;font-size:10px">· go in hunting these</span></div>';
+      b+='<div class="ce-tee">'+r.intoCall.map(function(x,i){
+        // Everything up to the first em-dash is the hook; the rest is the argument behind it.
+        var mm=String(x).match(/^([\s\S]*?)\s+—\s+([\s\S]*)$/);
+        var head=mm?mm[1]:x, body=mm?mm[2]:'';
+        var id=body?ceReg('tee-'+qk+'-'+i, String(head).replace(/<[^>]+>/g,''), '<p>'+body+'</p>'):null;
+        return '<div class="ce-tee-c"'+(id?' data-detail="ce:'+id+'"':'')+'>'+
+          '<div class="ce-tee-h">'+head+'</div>'+
+          (id?'<div class="ce-tee-m">＋ the ask</div>':'')+'</div>';
+      }).join('')+'</div>';
     }
-    b+='<div style="margin-top:10px;font-size:11.5px;color:var(--navy)"><b>Price reaction:</b> '+cpFill(r.priceReaction,'to fill from a trusted source')+'</div>';
-    b+='</div>';
-    b+='<div class="ov-foot">Scored against the frozen Watch List. Consensus = Bloomberg export; actuals = reported (Bloomberg / release).</div>';
-    b+='</div>';
-    return b;
-  }).join('');
-  return h;
-}
-function cpCallBody(c){
-  var h=cpStyle();
-  h+=CALL_PREP.quarters.map(function(q,qi){
-    var qk=cpQkey(q.q);
-    var b='<div class="cp-qblock" data-cpq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="cp-phase" style="background:'+RED+'">③ Post-Call</div>';
-    b+='<p class="ov-lede"><b>'+esc(q.q)+' — not a restatement of the numbers; the story behind them.</b> What the call <i>implied</i> for the thesis, the curious one-mention details, and the dots that connect. Tap any highlight for the depth.</p>';
-    b+='<div class="cp-legend"><span class="cp-legend-i"><b>Highlights are grouped by what you DO with them in the meeting:</b></span>'+
-      '<span class="cp-legend-i"><span style="color:'+RED+';font-weight:800">▲ Lead with this</span> — open with it: it moves the thesis and something is still unanswered</span>'+
-      '<span class="cp-legend-i"><span style="color:'+BLUE+';font-weight:800">● Context</span> — worth saying, but settled; there is nothing to argue</span>'+
-      '<span class="cp-legend-i"><span style="color:'+CP_GRAY+';font-weight:800">○ Logged</span> — recorded for later, not meeting material</span>'+
-      '<span class="cp-legend-i"><span class="cp-hl-open">open</span> flags the specific thing management left unanswered</span>'+
-    '</div>';
-    var cc=q.call;
-    if(!cc){ b+='<div class="cp-note">Empty until the call/transcript is in. Then the meeting take, theme-by-theme highlights and the connect-the-dots line fill here.</div></div>'; return b; }
-    b+='<div style="margin-bottom:18px">';
-    b+='<div style="font-size:13.5px;font-weight:800;color:var(--navy);margin-bottom:8px">'+esc(q.q)+' <span style="font-weight:600;color:var(--mu);font-size:11px">· call '+esc(q.date||'')+'</span></div>';
-    if(cc.take) b+='<div class="cp-take">🎯 '+cc.take+'</div>';
-    if(cc.highlights&&cc.highlights.length){
-      var bands=[
-        { k:'lead',    i:'▲', c:RED,     t:'Lead with this', s:'moves the thesis — and something is still unresolved' },
-        { k:'context', i:'●', c:BLUE,    t:'Context',        s:'matters, but it is settled — mention, don\'t debate' },
-        { k:'logged',  i:'○', c:CP_GRAY,    t:'Logged',         s:'on the record for later; not meeting material' },
-      ];
-      var hi=0;
-      bands.forEach(function(bd){
-        var items=cc.highlights.filter(function(x){ return (x.band||'context')===bd.k; });
-        if(!items.length) return;
-        b+='<div class="cp-band" style="--bc:'+bd.c+'"><span class="cp-band-i">'+bd.i+'</span><span class="cp-band-t">'+bd.t+'</span><span class="cp-band-s">'+bd.s+'</span><span class="cp-band-l"></span></div>';
-        b+='<div class="cp-hl">'+items.map(function(x){ var tg=CP_HLTAG[x.tag]||{c:'#6b7684',l:x.tag||''};
-          var det=x.detail||'';
-          if(x.open) det+='<p style="border-left:3px solid '+AMBER+';padding-left:9px;margin-top:10px"><b>Still open:</b> '+x.open+'</p>';
-          var id=det?cpReg('hl-'+qk+'-'+(hi++), tg.l+' — '+String(x.head).replace(/<[^>]+>/g,''), det):null;
-          var op=x.open?' <span class="cp-hl-open" title="'+esc(x.open)+'">open</span>':'';
-          return '<div class="cp-hl-row" style="--hc:'+tg.c+'"'+(id?' data-detail="cp:'+id+'"':'')+'><span class="cp-hl-tag">'+esc(tg.l)+'</span><span class="cp-hl-head">'+x.head+op+'</span>'+(id?'<span class="cp-hl-more">＋</span>':'<span></span>')+'</div>';
-        }).join('')+'</div>';
-      });
-    }
-    if(cc.dots) b+='<div class="cp-dots">🧩 '+cc.dots+'</div>';
-    if(cc.threeMinutes&&cc.threeMinutes.length){
-      b+='<div class="cp-3m"><div class="cp-3m-h"><span class="cp-3m-t">🎤 Three minutes</span>'+
-        '<span class="cp-3m-sub">the spoken version — if you get one slot, this is it</span>'+
-        '<button type="button" class="cp-3m-copy" data-cp3m="'+esc(qk)+'">copy</button></div>';
-      b+='<div class="cp-3m-l" data-cp3mlist="'+esc(qk)+'">'+cc.threeMinutes.map(function(t){ return '<div class="cp-3m-i"><span>'+t+'</span></div>'; }).join('')+'</div>';
-      if(cc.notBringing&&cc.notBringing.length){
-        b+='<div class="cp-nb"><div class="cp-nb-h">✕ Deliberately not bringing — and why, if asked</div>'+
-          cc.notBringing.map(function(x){ return '<div class="cp-nb-r"><span class="cp-nb-x">✕</span><span><b>'+esc(x.item)+'</b> — '+esc(x.why)+'</span></div>'; }).join('')+'</div>';
-      }
-      b+='</div>';
-    }
-    if(cc.newQuestions&&cc.newQuestions.length){
-      b+='<div style="margin-top:12px"><div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin-bottom:5px">➡ What this call left unanswered — and where each question went next</div>';
-      b+='<div class="cp-nq">'+cc.newQuestions.map(function(x){
-        var n=(typeof x==='string')?x:x.n, land=(typeof x==='string')?null:x.landed;
-        var trip=(typeof x!=='string'&&x.tripped)?'<span style="color:'+RED+';font-weight:800;margin-right:5px" title="A thesis red-line actually broke on this one">⚑</span>':'';
-        var chip=land?'<span class="cp-nq-land">became '+esc(land.q)+' Watch item #'+esc(String(land.rank))+'</span>'
-                     :'<span class="cp-nq-land open">still open — not yet on a list</span>';
-        return '<div class="cp-nq-row"><span>'+trip+esc(n)+'</span>'+chip+'</div>';
-      }).join('')+'</div></div>';
-    }
-    b+='</div>';
-    b+='<div class="ov-foot">Insight-first, not fact-first. Append-only — prior quarters are never overwritten; newQuestions feeds the next Watch List.</div>';
+    // 6 · "Also on the call" — the supplemental colour (was the Post-Call tab, dissolved Jul 2026).
+    // Deliberately styled as a secondary aside; NOT the tracking layer (that is the Watch List) and
+    // NOT the meeting-critical read (that is the scorecard). Includes non-trackable call colour.
+    b+=ceHighlightsBlock(q.call, qk);
+    b+='<div class="ov-foot">Numbers scored against the frozen expectation — <b>Street</b> (<code>BBG_CONSENSUS.txt</code>) or <b>Summit</b> via the toggle; actuals = reported. The <i>Also on the call</i> aside is supplemental colour — the tracking layer is the Watch List.</div>';
     b+='</div>';
     return b;
   }).join('');
   return h;
 }
-var CP_THST={ trend:{c:'#0a8f4c',l:'Confirmed trend'}, promise:{c:'#2E6BE6',l:'Promise — reconcile'}, watch:{c:'#B7791F',l:'Watch'} };
-function cpQnum(q){ var m=String(q||'').match(/Q(\d)\s+(?:FY)?(\d{4})/); return m?((+m[2])*4+(+m[1])):null; }
-function cpStAge(st){
+// E · "Also on the call" ── the supplemental colour from the call, rendered inside Post-Results as a
+// SINGLE BOX holding a plain LIST, each point with its own native <details> dropdown (v2.9). The
+// Context/Logged band classification and the triage strip are GONE (Dani did not want them). Still
+// not the meeting-critical read (that is the scorecard + the Watch List): a thesis-mover (band:'lead')
+// is tracked on the Watch List and stays filtered out here. `take`/`threeMinutes`/`notBringing`/
+// `newQuestions` survive as data (newQuestions still seeds the next Watch List) but are not rendered.
+function ceHighlightsBlock(cc, qk){
+  if(!cc||!cc.highlights||!cc.highlights.length) return '';
+  // A thesis-mover (band:'lead') is tracked on the Watch List, never here — keep filtering it out.
+  var hls=cc.highlights.filter(function(x){ return (x.band||'context')!=='lead'; });
+  if(!hls.length) return '';
+  var b='<div class="ce-alsobox"><div class="ce-alsobox-h"><b>Also on the call</b>'+
+    '<span class="ce-alsobox-sub">supplemental colour — the meeting-critical items are the scorecard above and the Watch List</span></div>'+
+    '<div class="ce-alsolist">';
+  b+=hls.map(function(x){
+    // No tag chips (tone/curious/connects-dots/…) — just the theme and its dropdown (v2.10).
+    var det=x.detail||'';
+    if(x.open) det+='<p><b>Still open:</b> '+x.open+'</p>';
+    return '<details class="ce-also-i">'+
+      '<summary class="ce-also-s">'+
+        '<span class="ce-also-hd">'+x.head+'</span>'+
+        (det?'<span class="ce-also-ar">▾</span>':'')+
+      '</summary>'+
+      (det?'<div class="ce-also-body">'+det+'</div>':'')+
+    '</details>';
+  }).join('');
+  b+='</div></div>';
+  return b;
+}
+
+// F · The AI-generated CALL SUMMARY — the "minute" (v2.10). Replaces the old one-line black "take".
+// THE SUMMARY IS THE PROSE ITSELF: several always-visible PARAGRAPHS, each landing a punch on a
+// specific theme (top line, the bill, EPS, the structural new thing…). Each paragraph carries its own
+// "＋ more" dropdown to go DEEPER — and that deeper content can hold NESTED context-guide dropdowns
+// (dropdowns within dropdowns: drivers → segments → backlog…). It is NOT one generalist paragraph
+// followed by a list. Not pop-ups — inline <details>. Technical terms are wrapped
+// `<span class="ce-gl" data-def="…">term</span>` and show their definition on hover. Expand-all /
+// Collapse-all toggle only the "＋ more" dropdowns, never the visible paragraphs. A SUMMARY, not a
+// transcript — no roll-call of every exec.
+function ceSumNodes(nodes, depth){   // nested context-guide dropdowns inside a "＋ more"
+  if(!nodes||!nodes.length) return '';
+  return '<div class="ce-sum-nodes">'+nodes.map(function(n){
+    return '<details class="ce-sum-n" data-d="'+(depth>2?2:depth)+'">'+
+      '<summary class="ce-sum-nt"><span class="ce-sum-caret">▸</span><span>'+n.t+'</span></summary>'+
+      '<div class="ce-sum-nb">'+(n.body||'')+ceSumNodes(n.nodes, depth+1)+'</div>'+
+    '</details>';
+  }).join('')+'</div>';
+}
+function ceSumMore(more){   // a "＋ more": deeper prose (string) or { body, nodes:[…] }
+  if(!more) return '';
+  if(typeof more==='string') return more;
+  return (more.body||'')+ceSumNodes(more.nodes, 1);
+}
+function ceSummaryBlock(qLabel, s){
+  if(!s||!s.paras||!s.paras.length) return '';
+  var body=s.paras.map(function(pa,i){
+    var p='<div class="ce-sum-block">'+
+      '<p class="ce-sum-para">'+(pa.p||'')+'</p>';   // the always-visible punch paragraph
+    if(pa.more){
+      p+='<details class="ce-sum-n ce-sum-more" data-d="0">'+
+        '<summary class="ce-sum-nt"><span class="ce-sum-caret">▸</span><span>'+(pa.moreLabel||'＋ more — the detail behind this')+'</span></summary>'+
+        '<div class="ce-sum-nb">'+ceSumMore(pa.more)+'</div>'+
+      '</details>';
+    }
+    return p+'</div>';
+  }).join('');
+  return '<details class="ce-sum" open>'+
+    '<summary class="ce-sum-h"><span class="ce-sum-ic">🧠</span><b>Call summary — the minute</b>'+
+      '<span class="ce-sum-tag">AI-generated</span></summary>'+
+    '<div class="ce-sum-body">'+
+      '<div class="ce-sum-tools"><span class="ce-sum-tt">The summary is the text; each paragraph lands a point · open <b>＋ more</b> for the detail · hover a <span class="ce-gl" data-def="A term with a dashed underline — hover it to read its definition here.">dashed term</span> for its definition</span>'+
+        '<button type="button" class="ce-sum-btn" data-sum="exp">⊕ Expand all</button>'+
+        '<button type="button" class="ce-sum-btn" data-sum="col">⊖ Collapse all</button></div>'+
+      body+
+    '</div>'+
+  '</details>';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// EVOLUTION ▸ EARNINGS CALLS — META_THEMES with By theme ⇄ By quarter toggle + accordion
+// (9 threads across 10 calls, Q4 2023 → Q1 2026). Same contract as ibkr/uber/lyft/cart/ma/rely/v,
+// ENHANCED with a status chip per theme (trend / promise-to-reconcile / watch) — the essence of
+// the dissolved Promise Tracker. Source: docs/calls/META.md + META-latest.md.
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+var CE_THST={ trend:{c:'#0a8f4c',l:'Confirmed trend'}, promise:{c:'#2E6BE6',l:'Promise — reconcile'}, watch:{c:'#B7791F',l:'Watch'} };
+// A promise open for one quarter and one open for four look identical without this. Age is the
+// signal: how long has it been unreconciled, or how many quarters has the silence run?
+function ceQnum(q){ var m=String(q||'').match(/Q(\d)\s+(\d{4})/); return m?((+m[2])*4+(+m[1])):null; }
+function ceStAge(st){
   if(!st||typeof st!=='object'||!st.since) return '';
-  var newest=CALL_PREP.quarters.filter(function(q){ return q.status!=='upcoming'; })[0];
-  var a=cpQnum(st.since), b=cpQnum(newest?newest.q:null);
+  var newest=CALL_EARNINGS.quarters.filter(function(q){ return q.status!=='upcoming'; })[0];
+  var a=ceQnum(st.since), b=ceQnum(newest?newest.q:null);
   if(a==null||b==null) return '';
   var n=Math.max(1, b-a+1), k=(st.k||'');
   var lbl = (k==='promise') ? ('unreconciled '+n+' quarter'+(n>1?'s':''))
@@ -1177,85 +1968,303 @@ function cpStAge(st){
           :                   ('running '+n+' quarter'+(n>1?'s':''));
   return '<span class="calls-st-age"> · '+lbl+'</span>';
 }
-function wireCallPrep(root){
-  var pane=root.querySelector('.ovt-subpane[data-ovst="callprep"]'); if(!pane) return;
-  pane.querySelectorAll('.cp-phtab').forEach(function(btn){ btn.onclick=function(){
-    var key=btn.getAttribute('data-cpp');
-    pane.querySelectorAll('.cp-phtab').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    pane.querySelectorAll('.cp-phpane').forEach(function(p){ p.hidden=(p.getAttribute('data-cpp')!==key); });
+
+// ═══ Earnings · Setup charts (Chart.js, lazy — the pane must be visible or offsetParent is null)
+// Quarterly only. Both charts read CE_CONS and redraw on the metric pills and the range control.
+function ceTkFmt(u,v){
+  if(v==null) return '';
+  if(u==='$')  return '$'+(+v).toFixed(2);
+  if(u==='$B') return '$'+(+v).toFixed(1)+'B';
+  if(u==='B')  return (+v).toFixed(2)+'B';
+  return String(v);
+}
+function wireCeTrack(root){
+  var pane=root.querySelector('.ovt-subpane[data-ovst="earnings"]'); if(!pane) return;
+  // The lens defaults are asserted here as well as in the markup — Consensus + YoY, showing YoY.
+  // Belt and braces: a half-applied default reads as a broken control (§6a-ii).
+  function ceSetLens(v){
+    // MUST scope to [data-ceg] — a bare '.ce-gseg button' also matches the margin toggle that
+    // shares the .ce-gseg pill styling, and would clear its active state (§6a-v cross-check rule).
+    pane.querySelectorAll('.ce-gseg button[data-ceg]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ceg')===v); });
+    pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-g', v); });
+    pane.querySelectorAll('.ce-fz').forEach(function(f){ f.setAttribute('data-g', v); });
+  }
+  ceSetLens('yoy');
+  pane.querySelectorAll('.ce-ev-pill').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ceev')==='cons'); });
+  pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-ev','cons'); });
+  // Margin default: off, and its own segment's active state set independently of the growth lens.
+  pane.querySelectorAll('.ce-gseg button[data-cemm]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-cemm')==='off'); });
+  pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-mm','off'); });
+  pane.querySelectorAll('.ce-gseg button[data-ceg]').forEach(function(btn){ btn.onclick=function(){
+    ceSetLens(btn.getAttribute('data-ceg'));
   }; });
-  pane.querySelectorAll('.cp-ev-pill').forEach(function(btn){ btn.onclick=function(){
-    var v=btn.getAttribute('data-cpev');
-    pane.querySelectorAll('.cp-ev-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    pane.querySelectorAll('.cp-evwrap').forEach(function(w){ w.setAttribute('data-ev', v); });
+  // Margin lens (headline GP/OpInc/EBITDA only) — CSS-driven via data-mm on the wrap.
+  pane.querySelectorAll('.ce-gseg button[data-cemm]').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-cemm');
+    btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-mm', v); });
   }; });
-  pane.querySelectorAll('.cp-qpill').forEach(function(btn){ btn.onclick=function(){
-    var qk=btn.getAttribute('data-cpqsel');
-    pane.querySelectorAll('.cp-qpill').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    pane.querySelectorAll('.cp-qblock').forEach(function(blk){ blk.hidden=(blk.getAttribute('data-cpq')!==qk); });
-    pane.querySelectorAll('.cp-wl-tag').forEach(function(b){ b.classList.remove('active'); });
-    var flat=pane.querySelector('.cp-wl-all'); if(flat) flat.hidden=true;
+  // Post-Results print-block toggles — scoped to their own .ce-fz so each quarter's print block is
+  // independent. These are SEPARATE from the Setup's Consensus/Summit/Both (which does not apply
+  // here: Post-Results has no "Both"). `vs Street ⇄ vs Summit` sets data-ev (swaps the frozen
+  // expectation the print is scored against); `Margin` sets data-mm (expected-implied → realized).
+  pane.querySelectorAll('.ce-gseg button[data-fzev]').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-fzev'), fz=btn.closest('.ce-fz');
+    btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    if(fz) fz.setAttribute('data-ev', v);
   }; });
-  pane.querySelectorAll('.cp-3m-copy').forEach(function(btn){ btn.onclick=function(){
-    var qk=btn.getAttribute('data-cp3m');
-    var list=pane.querySelector('.cp-3m-l[data-cp3mlist="'+qk+'"]'); if(!list) return;
-    var txt=Array.prototype.map.call(list.querySelectorAll('.cp-3m-i'), function(el,i){
-      return (i+1)+'. '+el.textContent.trim();
-    }).join('\n\n');
-    var done=function(){ var o=btn.textContent; btn.textContent='copied ✓'; setTimeout(function(){ btn.textContent=o; }, 1400); };
-    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done, done); }
-    else { var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
-           try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta); done(); }
+  pane.querySelectorAll('.ce-gseg button[data-fzmm]').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-fzmm'), fz=btn.closest('.ce-fz');
+    btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    if(fz) fz.setAttribute('data-mm', v);
   }; });
-  var wpane=pane.querySelector('.cp-phpane[data-cpp="watch"]');
+}
+function ceResultsPending(label){
+  return '<div class="ce-note" style="margin:8px 0">📊 <b>'+esc(label)+'</b> — the Amazon-style actuals-vs-estimates chart + table. '+
+    'This pane is wired to the shared Results engine (<code>js/results.js</code>); it will populate once META\'s '+
+    'dataset is registered in <code>RESULTS_DATA</code> (built from the CE_CONS archive + the Summit projection export, '+
+    'per <code>docs/RESULTS_CONVENTIONS.md</code> §6).</div>';
+}
+// Tab switches hide a tall pane and show a shorter one, so the browser clamps scrollTop and the
+// page appears to jump to the top. Keep the clicked control visually anchored: measure its
+// viewport position, run the change, then scroll by the delta so it does not move. (§6a-iv.)
+function ceKeepPos(el, fn){
+  var before=el.getBoundingClientRect().top;
+  fn();
+  var after=el.getBoundingClientRect().top, d=after-before;
+  if(Math.abs(d)>1) window.scrollBy(0, d);
+}
+// Earnings phase tabs — nested inside Evolution's earnings subpane, wired independently.
+// Show only the quarter pills valid for `phase`; if the active pill just became invalid, activate
+// the most-recent valid one and drive the same block-visibility the pill click would.
+function ceSelectQuarter(pane, qk){
+  pane.querySelectorAll('.ce-qpill').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ceqsel')===qk); });
+  pane.querySelectorAll('.ce-qblock').forEach(function(blk){ blk.hidden=(blk.getAttribute('data-ceq')!==qk); });
+  pane.querySelectorAll('.ce-wl-tag').forEach(function(b){ b.classList.remove('active'); });
+  var flat=pane.querySelector('.ce-wl-all'); if(flat) flat.hidden=true;
+}
+function ceApplyPhaseQuarters(pane, phase){
+  var pills=Array.prototype.slice.call(pane.querySelectorAll('.ce-qpill')), lastVisible=null, activeVisible=false;
+  pills.forEach(function(b){
+    var ok=(b.getAttribute('data-ceqhas')||'').split(' ').indexOf(phase)>=0;
+    b.hidden=!ok;
+    if(ok){ lastVisible=b; if(b.classList.contains('active')) activeVisible=true; }
+  });
+  // pills render newest-first, so the FIRST visible is the most recent valid quarter.
+  var firstVisible=pills.filter(function(b){ return !b.hidden; })[0];
+  if(!activeVisible && firstVisible) ceSelectQuarter(pane, firstVisible.getAttribute('data-ceqsel'));
+}
+function wireCallEarnings(root){
+  var pane=root.querySelector('.ovt-subpane[data-ovst="earnings"]'); if(!pane) return;
+  // Call-summary Expand-all / Collapse-all — toggles only the inner dropdown nodes of THIS summary
+  // box, never the always-visible lede or the outer box itself.
+  pane.querySelectorAll('.ce-sum-btn').forEach(function(btn){ btn.onclick=function(e){
+    e.preventDefault();
+    var box=btn.closest('.ce-sum'); if(!box) return;
+    var open=(btn.getAttribute('data-sum')==='exp');
+    box.querySelectorAll('details.ce-sum-n').forEach(function(d){ d.open=open; });
+  }; });
+  pane.querySelectorAll('.ce-phtab').forEach(function(btn){ btn.onclick=function(){
+    var key=btn.getAttribute('data-cep');
+    ceKeepPos(btn, function(){
+    pane.querySelectorAll('.ce-phtab').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    pane.querySelectorAll('.ce-phpane').forEach(function(p){ p.hidden=(p.getAttribute('data-cep')!==key); });
+    ceApplyPhaseQuarters(pane, key);
+    });
+    // Returning to Setup re-arms the Setup chart (the Results engine; canvases were hidden, so any
+    // earlier build produced a zero-size chart).
+    if(key==='setup') requestAnimationFrame(gBuildCeAnnual);
+  }; });
+  // Setup estimates toggle: Consensus ⇄ Summit ⇄ Both (CSS-driven via data-ev on the wrap)
+  pane.querySelectorAll('.ce-ev-pill').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-ceev');
+    pane.querySelectorAll('.ce-ev-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    pane.querySelectorAll('.ce-evwrap').forEach(function(w){ w.setAttribute('data-ev', v); });
+  }; });
+  // Quarter selector: one Earnings, many quarters — only the selected quarter's blocks render.
+  // Picking a quarter also exits the cross-quarter tag view.
+  pane.querySelectorAll('.ce-qpill').forEach(function(btn){ btn.onclick=function(){
+    ceSelectQuarter(pane, btn.getAttribute('data-ceqsel'));
+  }; });
+  // initial phase is Setup — every quarter valid, nothing to hide, but keep it consistent.
+  ceApplyPhaseQuarters(pane, 'setup');
+  // Verdict filter on the print block: All / Beats / Misses / In line. Sets data-f on the tile
+  // grid; CSS hides the non-matching tiles. Scoped per quarter block so the active quarter filters.
+  pane.querySelectorAll('.ce-vdf button').forEach(function(btn){ btn.onclick=function(){
+    var seg=btn.parentNode, host=seg.closest('.ce-fz'); if(!host) return;
+    seg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    var g=host.querySelector('.ce-fz-g'), v=btn.getAttribute('data-vdf');
+    if(g){ if(v==='all') g.removeAttribute('data-f'); else g.setAttribute('data-f', v); }
+  }; });
+  // Band triage filter: each button shows/hides its own cards. All three start on, so the
+  // reader sees the whole call and uses colour to triage; the filter is for narrowing, not for
+  // hiding by default (§6a-iv). The highlight cards now live inside the Post-Results pane (the
+  // Post-Call tab was dissolved Jul 2026), but the filter is pane-scoped so it still finds them.
+  pane.querySelectorAll('.ce-tri-b').forEach(function(btn){ btn.onclick=function(){
+    var on=btn.classList.toggle('active');
+    var qk=btn.getAttribute('data-cebq'), band=btn.getAttribute('data-ceband');
+    var host=pane.querySelector('.ce-hcards[data-cehl="'+qk+'"]'); if(!host) return;
+    host.querySelectorAll('.ce-hcard[data-band="'+band+'"]').forEach(function(c){ c.hidden=!on; });
+  }; });
+  // ── Watch List v3: theme-tag filter (cross-quarter) · tracking-window filter · add/edit/delete
+  // against WL_ROWS · and the table + COPY that carries the edits back into the code. ──────────
+  var wpane=pane.querySelector('.ce-phpane[data-cep="watch"]');
   if(wpane){
-    var flat=wpane.querySelector('.cp-wl-all');
-    function activeTags(){ return Array.prototype.map.call(wpane.querySelectorAll('.cp-wl-tag.active'), function(b){ return b.getAttribute('data-wltag'); }).filter(Boolean); }
-    function applyTags(){
-      var tags=activeTags();
-      var on=tags.length>0;
-      wpane.querySelectorAll('.cp-qblock').forEach(function(blk){ if(on) blk.hidden=true; });
-      if(!on){
-        var act=pane.querySelector('.cp-qpill.active'); var qk=act?act.getAttribute('data-cpqsel'):null;
-        wpane.querySelectorAll('.cp-qblock').forEach(function(blk){ blk.hidden=(qk!=null && blk.getAttribute('data-cpq')!==qk); });
+    var flat=wpane.querySelector('.ce-wl-all');
+    var form=wpane.querySelector('.ce-wl-addform');
+    function activeTags(){ return Array.prototype.map.call(wpane.querySelectorAll('.ce-wl-tag.active'), function(b){ return b.getAttribute('data-wltag'); }).filter(Boolean); }
+    function activeWin(){ var b=wpane.querySelector('.ce-wl-win.active'); return b?b.getAttribute('data-wlwin'):'all'; }
+    function applyFilters(){
+      var tags=activeTags(), on=tags.length>0, win=activeWin();
+      // tag selection swaps the per-quarter view for the flat cross-quarter one
+      if(on){ wpane.querySelectorAll('.ce-qblock').forEach(function(blk){ blk.hidden=true; }); }
+      else{
+        var act=pane.querySelector('.ce-qpill.active'); var qk=act?act.getAttribute('data-ceqsel'):null;
+        wpane.querySelectorAll('.ce-qblock').forEach(function(blk){ blk.hidden=(qk!=null && blk.getAttribute('data-ceq')!==qk); });
       }
-      if(flat){ flat.hidden=!on;
-        if(on) flat.querySelectorAll('.cp-w').forEach(function(card){
-          var ct=(card.getAttribute('data-wltags')||'').split(/\s+/);
-          var hit=tags.some(function(t){ return ct.indexOf(t)>=0; });
-          if(hit) card.removeAttribute('data-wlhide'); else card.setAttribute('data-wlhide','1');
-        });
-      }
+      if(flat) flat.hidden=!on;
+      // both filters are card-level: tags decide WHICH themes, the window decides open vs closed
+      wpane.querySelectorAll('.ce-w').forEach(function(card){
+        var ct=(card.getAttribute('data-wltags')||'').split(/\s+/);
+        var isOpen=card.getAttribute('data-wlopen')==='1';
+        var hitTag=!on || tags.some(function(t){ return ct.indexOf(t)>=0; });
+        var hitWin=(win==='all') || (win==='open'&&isOpen) || (win==='closed'&&!isOpen);
+        if(hitTag&&hitWin) card.removeAttribute('data-wlhide'); else card.setAttribute('data-wlhide','1');
+      });
     }
     function wireTag(btn){ btn.onclick=function(){
-      if(btn.classList.contains('cp-wl-clear')){ wpane.querySelectorAll('.cp-wl-tag').forEach(function(b){ b.classList.remove('active'); }); }
+      if(btn.classList.contains('ce-wl-clear')){ wpane.querySelectorAll('.ce-wl-tag').forEach(function(b){ b.classList.remove('active'); }); }
       else btn.classList.toggle('active');
-      applyTags();
+      applyFilters();
     }; }
-    wpane.querySelectorAll('.cp-wl-tag').forEach(wireTag);
-    var addBtn=wpane.querySelector('.cp-wl-add-btn'), form=wpane.querySelector('.cp-wl-addform');
-    if(addBtn&&form){ addBtn.onclick=function(){ form.hidden=!form.hidden; }; }
-    var go=wpane.querySelector('.cp-wl-add-go');
+    wpane.querySelectorAll('.ce-wl-tag').forEach(wireTag);
+    wpane.querySelectorAll('.ce-wl-win').forEach(function(btn){ btn.onclick=function(){
+      wpane.querySelectorAll('.ce-wl-win').forEach(function(b){ b.classList.toggle('active', b===btn); });
+      applyFilters();
+    }; });
+    // Registers a tag in the filter bar (so a tag invented while writing a theme becomes available
+    // to everyone) and in the form's picker.
+    function registerTag(t){
+      if(!wpane.querySelector('.ce-wl-tag[data-wltag="'+t+'"]')){
+        var b=document.createElement('button'); b.type='button'; b.className='ce-wl-tag'; b.setAttribute('data-wltag',t); b.textContent='#'+t;
+        var clear=wpane.querySelector('.ce-wl-clear'); clear.parentNode.insertBefore(b, clear); wireTag(b);
+      }
+      var pick=form?form.querySelector('.ce-wl-tagpick'):null;
+      if(pick&&!pick.querySelector('[data-pick="'+t+'"]')){
+        var p=document.createElement('button'); p.type='button'; p.className='ce-wl-pick'; p.setAttribute('data-pick',t); p.textContent='#'+t;
+        p.onclick=function(){ p.classList.toggle('on'); }; pick.appendChild(p);
+      }
+    }
+    // ── the form: shared by add and edit (edit prefills and switches the button) ──
+    function fld(k){ return form?form.querySelector('[data-wlf="'+k+'"]'):null; }
+    function fval(k){ var el=fld(k); return el?el.value.trim():''; }
+    function setF(k,v){ var el=fld(k); if(el) el.value=(v==null?'':v); }
+    function pickedTags(){ return Array.prototype.map.call(form.querySelectorAll('.ce-wl-pick.on'), function(b){ return b.getAttribute('data-pick'); }); }
+    function resetForm(){
+      ['id','theme','definition','trackSince','trackUntil','newtag'].forEach(function(k){ setF(k,''); });
+      form.querySelectorAll('.ce-wl-pick.on').forEach(function(b){ b.classList.remove('on'); });
+      form.querySelector('.ce-wl-fh-t').textContent='New theme';
+      form.querySelector('.ce-wl-add-go').textContent='Add to the live list';
+    }
+    if(form){
+      wlTags().forEach(registerTag);
+      var nt=form.querySelector('.ce-wl-newtag-go');
+      if(nt) nt.onclick=function(){
+        var raw=fval('newtag'); if(!raw) return;
+        raw.split(',').forEach(function(t){
+          t=t.trim().toLowerCase().replace(/\s+/g,'-'); if(!t) return;
+          registerTag(t);
+          var p=form.querySelector('.ce-wl-pick[data-pick="'+t+'"]'); if(p) p.classList.add('on');
+        });
+        setF('newtag','');
+      };
+      var cancel=form.querySelector('.ce-wl-cancel');
+      if(cancel) cancel.onclick=function(){ resetForm(); form.hidden=true; };
+    }
+    var addBtn=wpane.querySelector('.ce-wl-add-btn');
+    if(addBtn&&form){ addBtn.onclick=function(){
+      if(form.hidden){ resetForm(); form.hidden=false; } else form.hidden=true;
+    }; }
+    // Re-renders the live quarter's cards, the flat view and the table from WL_ROWS. Cheap enough
+    // to do wholesale — this is a 20-row table, not a grid.
+    function rerender(){
+      var live=ceUpcoming(); if(!live) return;
+      var qk=ceQkey(live.q);
+      var host=wpane.querySelector('.ce-qblock[data-ceq="'+qk+'"] .ce-watch');
+      var rows=wlFor(live.q, true);
+      if(host) host.innerHTML=rows.map(function(w){ return ceWatchItem(w, qk, '', null, true); }).join('');
+      var flatHost=flat?flat.querySelector('.ce-watch'):null;
+      if(flatHost) flatHost.innerHTML=WL_ROWS.map(function(r){ return ceWatchItem(r, ceQkey(r.q), '-f', r.q, false); }).join('');
+      var tb=wpane.querySelector('.ce-wl-tbody');
+      if(tb) tb.innerHTML=ceWlTableRows();
+      var n=wpane.querySelector('.ce-wl-tbl-n');
+      if(n) n.textContent=wlCount();   // the visible proof the table tracked the edit
+      wireCards(); applyFilters();
+    }
+    // ✎ / ✕ on each live-quarter card.
+    function wireCards(){
+      wpane.querySelectorAll('[data-wledit]').forEach(function(btn){ btn.onclick=function(){
+        var r=wlById(btn.getAttribute('data-wledit')); if(!r||!form) return;
+        resetForm(); form.hidden=false;
+        setF('id',r.id); setF('theme',r.theme); setF('definition',r.definition);
+        setF('trackSince',r.trackSince); setF('trackUntil',r.trackUntil);
+        (r.tags||[]).forEach(function(t){ registerTag(t); var p=form.querySelector('.ce-wl-pick[data-pick="'+t+'"]'); if(p) p.classList.add('on'); });
+        form.querySelector('.ce-wl-fh-t').textContent='Edit theme · '+r.id;
+        form.querySelector('.ce-wl-add-go').textContent='Save changes';
+        form.scrollIntoView({block:'nearest'});
+      }; });
+      wpane.querySelectorAll('[data-wldel]').forEach(function(btn){ btn.onclick=function(){
+        var id=btn.getAttribute('data-wldel');
+        var r=wlById(id); if(!r) return;
+        if(!window.confirm('Remove "'+r.theme+'" from the Watch List?\n\nSession-only — the hardcoded table is untouched until you COPY it back.')) return;
+        var i=WL_ROWS.indexOf(r); if(i>=0) WL_ROWS.splice(i,1);
+        rerender();
+      }; });
+    }
+    wireCards();
+    var go=wpane.querySelector('.ce-wl-add-go');
     if(go&&form){ go.onclick=function(){
-      function val(k){ var el=form.querySelector('[data-wlf="'+k+'"]'); return el?el.value.trim():''; }
-      var metric=val('metric'); if(!metric) return;
-      var tags=val('tags').split(',').map(function(t){ return t.trim().toLowerCase().replace(/\s+/g,'-'); }).filter(Boolean);
-      var act=pane.querySelector('.cp-qpill.active'); var qk=act?act.getAttribute('data-cpqsel'):cpQkey(CALL_PREP.quarters[0].q);
-      var qLbl=act?act.textContent.replace(/upcoming/i,'').trim():CALL_PREP.quarters[0].q;
-      var w={ rank:'+', metric:metric, tags:tags, pista:val('pista')||null, breaks:val('breaks')||null, since:qLbl };
-      var target=wpane.querySelector('.cp-qblock[data-cpq="'+qk+'"] .cp-watch');
-      if(target) target.insertAdjacentHTML('beforeend', cpWatchItem(w, qk, '-add'+Date.now()%100000, null));
-      var flatList=flat?flat.querySelector('.cp-watch'):null;
-      if(flatList) flatList.insertAdjacentHTML('beforeend', cpWatchItem(w, qk, '-addf'+Date.now()%100000, qLbl));
-      tags.forEach(function(t){
-        if(!wpane.querySelector('.cp-wl-tag[data-wltag="'+t+'"]')){
-          var b=document.createElement('button'); b.type='button'; b.className='cp-wl-tag'; b.setAttribute('data-wltag',t); b.textContent='#'+t;
-          var clear=wpane.querySelector('.cp-wl-clear'); clear.parentNode.insertBefore(b, clear); wireTag(b);
-        }
-      });
-      form.querySelectorAll('.cp-wl-in').forEach(function(i){ i.value=''; }); form.hidden=true;
-      applyTags();
+      var theme=fval('theme'); if(!theme){ var t=fld('theme'); if(t) t.focus(); return; }
+      var live=ceUpcoming(); if(!live) return;
+      var id=fval('id');
+      var row=id?wlById(id):null;
+      var isNew=!row;
+      // New rows go to the end of the sort order — never renumbering the ones already there.
+      if(isNew){ row={ id:wlNextId(), q:live.q, rank:wlNextRank(live.q) }; }
+      row.theme=theme;
+      row.tags=pickedTags();
+      row.definition=fval('definition')||null;
+      row.trackSince=fval('trackSince')||null;
+      row.trackUntil=fval('trackUntil')||null;
+      if(isNew) WL_ROWS.push(row);
+      (row.tags||[]).forEach(registerTag);
+      resetForm(); form.hidden=true;
+      rerender();
     }; }
+    // ── the copy-out: TSV for a sheet / a paste-back, JSON for an exact hardcode ──
+    // Hide / show the table. COPY keeps working while hidden because it serialises WL_ROWS,
+    // not the rendered rows — the table is a VIEW of the data, never the storage.
+    wpane.querySelectorAll('[data-wltoggle]').forEach(function(btn){ btn.onclick=function(){
+      var body=wpane.querySelector('[data-wltblbody]'); if(!body) return;
+      var hide=!body.hasAttribute('hidden');
+      if(hide) body.setAttribute('hidden',''); else body.removeAttribute('hidden');
+      btn.textContent=hide?'show table':'hide table';
+    }; });
+    wpane.querySelectorAll('.ce-wl-copy[data-wlcopy]').forEach(function(btn){ btn.onclick=function(){
+      var kind=btn.getAttribute('data-wlcopy'), txt;
+      if(kind==='json'){ txt=JSON.stringify(WL_ROWS, null, 2); }
+      else {
+        txt=[WL_COLS.map(function(c){ return c.l; }).join('\t')].concat(
+          WL_ROWS.map(function(r){ return WL_COLS.map(function(c){
+            return wlCellText(r,c.k).replace(/[\t\n]+/g,' ');
+          }).join('\t'); })).join('\n');
+      }
+      var done=function(){ var o=btn.textContent; btn.textContent='copied ✓'; setTimeout(function(){ btn.textContent=o; }, 1500); };
+      if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done, done); }
+      else { var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
+             try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta); done(); }
+    }; });
+    applyFilters();
   }
 }
 
@@ -1670,8 +2679,8 @@ function callsBody(){
   h+='<div class="calls-tog" role="tablist"><button type="button" class="calls-pill active" data-callsv="theme">By theme</button><button type="button" class="calls-pill" data-callsv="quarter">By quarter</button></div>';
   h+='<div class="lpb-acc" id="meCallsTheme">';
   META_THEMES.forEach(function(ct){
-    var sk=(ct.st&&ct.st.k)?ct.st.k:'watch'; var st=CP_THST[sk]||CP_THST.watch;
-    h+='<div class="lpb-acc-item"><button type="button" class="lpb-acc-h"><span style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap">'+esc(ct.theme)+' <span class="calls-st" style="color:'+st.c+';border-color:'+st.c+'">'+st.l+cpStAge(ct.st)+'</span></span><span class="lpb-acc-ic">+</span></button>';
+    var sk=(ct.st&&ct.st.k)?ct.st.k:'watch'; var st=CE_THST[sk]||CE_THST.watch;
+    h+='<div class="lpb-acc-item"><button type="button" class="lpb-acc-h"><span style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap">'+esc(ct.theme)+' <span class="calls-st" style="color:'+st.c+';border-color:'+st.c+'">'+st.l+ceStAge(ct.st)+'</span></span><span class="lpb-acc-ic">+</span></button>';
     h+='<div class="lpb-acc-body"><p style="font-size:12px;color:var(--mu);margin:0 0 10px;font-style:italic">'+esc(ct.why)+'</p>';
     ct.updates.forEach(function(u){ h+='<div style="margin-bottom:10px"><span class="ov-chip" style="margin-right:6px">'+esc(u.q)+'</span><ul class="ov-bullets" style="margin-top:4px">'+u.items.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ul></div>'; });
     h+='</div></div>';
@@ -2527,20 +3536,20 @@ function deepDiveHtml(c){
     { k:'margins', l:'Margins', body:marginsBody() },
   ]);
   h+=subtabs('evolution',[
-    { k:'callprep', l:'Call Prep', body:
-      cpIRButton()+
-      '<div class="cp-note" style="margin-bottom:12px">🎯 <b>Call Prep</b> — the decision layer, in three phases: <b>① Pre-Call</b> (Setup · Watch List, themes tracked across quarters) → <b>② Post-Results</b> (the numbers, which land before the call) → <b>③ Post-Call</b> (what management said + the meeting take). Append-only per quarter — pick a quarter below. Each quarter combines Meta\'s earnings call + same-day Follow-Up Q&A as <b>one call</b> (docs/calls/META*.md). The <b>Watch List</b> is the single home for theme-tracking — the old <i>Earnings Calls</i> tab is folded into it. <b>Consensus (Bloomberg) + Summit + the 4 custom KPIs render "to fill / to define" until the export lands.</b></div>'+
-      cpQPills()+
-      '<div class="cp-phtabs">'+
-        '<button type="button" class="cp-phtab active" data-cpp="setup">Setup</button>'+
-        '<button type="button" class="cp-phtab" data-cpp="watch">Watch List</button>'+
-        '<button type="button" class="cp-phtab" data-cpp="results">Post-Results</button>'+
-        '<button type="button" class="cp-phtab" data-cpp="postcall">Post-Call</button>'+
+    { k:'earnings', l:'Earnings', body:
+      ceIRButton()+
+      '<div class="ce-note" style="margin-bottom:12px">🎯 <b>Earnings</b> — the decision layer, in two phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (the print scored against what was frozen, <i>plus</i> the call highlights — the things worth taking into the conversation). Append-only per quarter — pick a quarter below; each quarter keeps its frozen pre-call blocks next to its post-mortem, so the tab is a record of how well we read Meta. Each quarter combines Meta\'s earnings call + same-day Follow-Up Q&A as <b>one call</b> (docs/calls/META*.md). The <b>Watch List</b> is the single home for what we <i>track over time</i>; the Post-Results highlights are <i>talking points</i>, not tracking — so they can include non-trackable call colour (a capex number, a user count) that would never earn a Watch slot.</div>'+
+      // Phase tabs ABOVE the quarter pills: the section decides which quarters exist, so it comes
+      // first; the quarter selector below reflects the active section (§6a-ix).
+      '<div class="ce-phtabs">'+
+        '<button type="button" class="ce-phtab active" data-cep="setup">Setup</button>'+
+        '<button type="button" class="ce-phtab" data-cep="watch">Watch List</button>'+
+        '<button type="button" class="ce-phtab" data-cep="results">Post-Results</button>'+
       '</div>'+
-      '<div class="cp-phpane" data-cpp="setup">'+cpSetupBody(c)+'</div>'+
-      '<div class="cp-phpane" data-cpp="watch" hidden>'+cpWatchBody(c)+'</div>'+
-      '<div class="cp-phpane" data-cpp="results" hidden>'+cpResultsBody(c)+'</div>'+
-      '<div class="cp-phpane" data-cpp="postcall" hidden>'+cpCallBody(c)+'</div>' },
+      ceQPills()+
+      '<div class="ce-phpane" data-cep="setup">'+ceSetupBody(c)+'</div>'+
+      '<div class="ce-phpane" data-cep="watch" hidden>'+ceWatchBody(c)+'</div>'+
+      '<div class="ce-phpane" data-cep="results" hidden>'+ceResultsBody(c)+'</div>' },
     { k:'results', l:'Results', body:resultsHtml('META') },
     { k:'estevo', l:'Estimates', body:resultsEvoHtml('META') },
     // Model vs Reality + Guidance retired from the bar (SAB, Jul 2026) — superseded
@@ -2606,8 +3615,17 @@ function buildSub(root, group, key){
   if(group==='bottomline' && key==='spend') buildSpend();
   if(group==='bottomline' && key==='suppliers') scRenderSuppliers();
   if(group==='bottomline' && key==='margins'){ buildMargins(); loadMargins(); }
-  if(group==='evolution' && key==='results') initResults();
-  if(group==='evolution' && key==='estevo') initResultsEvo();
+  // Earnings ▸ Setup chart (the Results engine, META_SETUP dataset) — build only when Earnings is
+  // the visible subpane AND Setup is the active phase (Chart.js needs a non-null offsetParent).
+  if(group==='evolution' && key==='earnings'){
+    var ph=root.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phtab.active');
+    if(!ph || ph.getAttribute('data-cep')==='setup') requestAnimationFrame(gBuildCeAnnual);
+  }
+  // Results / Estimates engine — pass the pane's OWN wrap + ticker so this second engine instance
+  // (beside the Setup chart) re-establishes its dataset and wires the right wrap.
+  if(group==='evolution' && key==='results') requestAnimationFrame(function(){
+    initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'META'); });
+  if(group==='evolution' && key==='estevo') requestAnimationFrame(initResultsEvo);
   if(group==='valuation' && key==='sensitivity') sensInit(root);
   if(group==='valuation' && key==='capalloc') buildCapital();
   if(group==='valuation' && key==='balance') renderFin();
@@ -2617,8 +3635,12 @@ function buildSub(root, group, key){
 function buildDD(root, group){ var key=activeSubKey(root, group); if(key) buildSub(root, group, key); }
 function showSub(root, group, key){
   var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return;
-  pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovst')===key); });
-  pane.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovst')!==key); });
+  // Keep the clicked tab visually anchored — hiding a tall pane clamps scrollTop otherwise (§6a-iv).
+  var btn=pane.querySelector('.ovt-subtab[data-ovst="'+key+'"]');
+  ceKeepPos(btn||pane, function(){
+    pane.querySelectorAll('.ovt-subtab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovst')===key); });
+    pane.querySelectorAll('.ovt-subpane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovst')!==key); });
+  });
   requestAnimationFrame(function(){ buildSub(root, group, key); });
 }
 function wireSubtabs(root, group){
@@ -2664,7 +3686,7 @@ function wireModal(root){
   function closeM(){ back.classList.remove('on'); document.removeEventListener('keydown', onEsc); setTimeout(function(){ back.hidden=true; }, 180); }
   root.querySelector('#meModalX').onclick=closeM; back.onclick=function(e){ if(e.target===back) closeM(); };
   function resolve(key){ var p=key.split(':'), kind=p[0], id=p.slice(1).join(':');
-    if(kind==='cp'){ return CP_POP[id]||null; }
+    if(kind==='ce'){ return CE_POP[id]||null; }
     if(kind==='hist'){ var t=TIMELINE[+id]; return t&&t.d?{t:t.y,h:t.d}:null; }
     if(kind==='ad'){ var s=AD_FLOW[+id]; return s?{t:'Step '+(+id+1)+' — '+s.t,h:(s.detail||s.d)}:null; }
     if(kind==='spend'){ var w=SPEND_WAYS.filter(function(x){return x.k===id;})[0]; return w?{t:w.t,h:w.detail}:null; }
@@ -2728,7 +3750,8 @@ function init(c){
   // Deep Dive machinery
   wireDD(root);
   ['topline','bottomline','evolution','valuation','mgmt'].forEach(function(g){ wireSubtabs(root, g); });
-  wireCallPrep(root);
+  wireCallEarnings(root);
+  wireCeTrack(root);
   // AVE metric pills + Financials metric pills
   root.querySelectorAll('.ave-pill[data-ave]').forEach(function(b){ b.onclick=function(){ switchAveMetric(root, b.getAttribute('data-ave')); }; });
   root.querySelectorAll('.fin-pill').forEach(function(b){ b.onclick=function(){ switchFinMetric(root, b.getAttribute('data-finm')); }; });

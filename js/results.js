@@ -21,10 +21,12 @@
 
 import { amznResults } from './results-data/amzn.js';
 import { metaResults } from './results-data/meta.js';
+import { metaSetup } from './results-data/meta-setup.js';
 
 var RESULTS_DATA = {
   AMZN: amznResults,
-  META: metaResults
+  META: metaResults,
+  META_SETUP: metaSetup
 };
 
 export function getResultsData(ticker){

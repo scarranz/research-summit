@@ -124,11 +124,11 @@ export var spotResults = {
   // is the model against ITSELF over time, which is the point of the tab.
   // Arrays: one row per fiscal year (parallel to `years`), one value per vintage.
   evolution: {
-    intro: 'How the forecast itself has moved. Each line tracks one fiscal year’s estimate across the model’s four saved snapshots. The story is blunt and it is all in one step: the <b>February 2026 snapshot, taken right after the 4Q25 print, cut the out-years hard</b> — FY2029 revenue came down 19% and FY2029 EBITDA came down 30% in a single revision. The two snapshots since have stabilised revenue and clawed part of it back, but the earnings line has kept falling. Read this before trusting any long-dated number in the model.',
+    intro: 'How the forecast itself has moved. Each line tracks one fiscal year’s estimate across the model’s four saved snapshots. The story is blunt and it is all in one step: the <b>February 2026 snapshot cut the out-years hard</b> — FY2029 revenue came down 19% and FY2029 EBITDA came down 30% in a single revision. The two snapshots since have stabilised revenue and clawed part of it back, but the earnings line has kept falling. ⚠ Note what that February revision was NOT: an update on the 4Q25 print. Its actuals still stop at 3Q25 (4Q25 first appears in the April snapshot), so this was a re-think of the forward assumptions, not a reaction to reported numbers. Read this before trusting any long-dated figure in the model.',
     vintages: [
-      { label: 'Dec 18, 2025', event: 'pre-4Q25 print' },
-      { label: 'Feb 9, 2026',  event: 'post-4Q25 print' },
-      { label: 'Apr 28, 2026', event: 'post-1Q26 print' },
+      { label: 'Dec 18, 2025', event: 'actuals to 3Q25' },
+      { label: 'Feb 9, 2026',  event: 'actuals still to 3Q25 — a forward re-think, NOT a post-4Q25 update' },
+      { label: 'Apr 28, 2026', event: 'first to carry 4Q25 + 1Q26' },
       { label: 'May 22, 2026', event: 'post-Investor Day' }
     ],
     years: ['2026', '2027', '2028', '2029'],
@@ -145,7 +145,7 @@ export var spotResults = {
         summit: [[20802, 19581, 19737, 19775], [24836, 22198, 21963, 22958], [29112, 24858, 24854, 26605], [33788, 27447, 27701, 30489]],
         cons: null,
         prior: { summit: [17186, 17186, 17186, 17186] },
-        note: 'The December 2025 vintage was carrying FY2026 revenue at €20.8B — about +21% on the FY2025 actual of €17.2B, against a company that has since guided to roughly +10%. February corrected it to €19.6B and it has barely moved since. The out-years took the real damage: FY2029 went €33.8B → €27.4B (−19%) in one revision, and has only partly recovered to €30.5B. In the growth view, implied FY2026 growth fell from 21% to ~15%.' },
+        note: 'The December 2025 vintage was carrying FY2026 revenue at €20.8B — about +21% on the FY2025 actual of €17.2B, against a company that has since guided to roughly +10%. February corrected it to €19.6B (on judgement, not on new actuals — that snapshot still ends at 3Q25) and it has barely moved since. The out-years took the real damage: FY2029 went €33.8B → €27.4B (−19%) in one revision, and has only partly recovered to €30.5B. In the growth view, implied FY2026 growth fell from 21% to ~15%.' },
       ebitda: { label: 'EBITDA', unit: 'usdM', marginOf: 'rev', marginLabel: 'EBITDA margin',
         summit: [[3558, 3150, 3268, 3250], [5175, 4256, 3983, 4048], [6851, 5109, 5024, 5171], [8456, 5951, 5944, 6455]],
         cons: null,
@@ -163,7 +163,7 @@ export var spotResults = {
         cons: null,
         note: 'FY2026 free cash flow was cut from €4.3B to €3.4B (−22%) across the four snapshots — a steady walk down rather than one step, and the December figure looks stale against the €3.2B LTM the company actually reported at Q1 2026. The out-years follow the same shape as EBITDA.' }
     },
-    note: 'Single source: the Summit Research database — the model’s saved snapshots as recorded in the DCF’s Projection History, pulled through the Summit MCP on 31 Jul 2026 (sheet source `projection_history`, annual periods). Four vintages: Dec 18 2025 (before the 4Q25 print), Feb 9 2026 (after it), Apr 28 2026 (after the 1Q26 print) and May 22 2026 (after the Investor Day). Figures in € millions. No Bloomberg consensus is stored per snapshot for these lines, so there is no dashed comparison series — this tab is the model measured against its own past self. Implied growth chains within Summit’s own data; the FY2025 base is the reported actual of €17,186M. Data sourced from Summit DCF models.'
+    note: 'Single source: the Summit Research database — the model’s saved snapshots as recorded in the DCF’s Projection History, pulled through the Summit MCP on 31 Jul 2026 (sheet source `projection_history`, annual periods). Four vintages, dated by what each one actually CONTAINS rather than by what happened near its date: Dec 18 2025 and Feb 9 2026 both carry actuals only to 3Q25; 4Q25 and 1Q26 first appear in the Apr 28 2026 snapshot; May 22 2026 follows the Investor Day. ⚠ Two further cautions from the extraction audit: Spotify’s fixed HISTORY is restated between snapshots (FY2022 adjusted EBITDA reads differently in each), so never build one time series by mixing vintages — compare the same year across vintages, which is what this tab does; and the model’s consolidated MAU/subscriber/ARPU lines were wiped from the Feb-2026 vintage onward, which is why no user metric appears here. Figures in € millions. No Bloomberg consensus is stored per snapshot for these lines, so there is no dashed comparison series — this tab is the model measured against its own past self. Implied growth chains within Summit’s own data; the FY2025 base is the reported actual of €17,186M. Data sourced from Summit DCF models.'
   },
   source: 'Sources: Spotify quarterly shareholder decks on investors.spotify.com (actuals, and the guidance issued for the following quarter — each quarter’s figures taken from that quarter’s own deck); the Q2 2026 report date from Spotify’s IR release of June 25, 2026 (results Tuesday, August 4, 2026, before market open). Values in € millions except EPS (€ per share). The Summit and Street columns are intentionally empty — see the file header for why.'
 };

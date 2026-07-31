@@ -429,7 +429,11 @@ function rsLegendHtml(k, m){
   var h = chip('act', RS_ACT, 'Actual');
   if (has.summit) h += chip('summit', RS_SUMMIT, 'Summit model');
   if (has.cons)   h += chip('cons', RS_CONS, 'Consensus');
-  if (has.guide)  h += chip('guide', 'rgba(62,90,130,0.3)', 'Guidance range');
+  // Label the chip for what the company actually gives: a range, or a single number.
+  if (has.guide){
+    var anyRange = m.guideLo.some(function(v, i){ return v != null && m.guideHi[i] != null && v !== m.guideHi[i]; });
+    h += chip('guide', 'rgba(62,90,130,0.3)', anyRange ? 'Guidance range' : 'Guidance (single number)');
+  }
   // Make the ABSENCE of guidance loud and explicit — a company (or a line) with no numeric guide gets
   // an amber badge, so no reader is left guessing why there is no guidance band (§5.5).
   else h += '<span class="rs-noguide" title="This company issued no numeric guidance for this line/period — so there is no guidance band to score against (only Street and Summit).">⚑ No company guidance</span>';
@@ -457,10 +461,30 @@ function rsBuildChart(k){
 
   var datasets = [], needY2 = false;
   if (has.guide && !st.hidden.guide){
-    datasets.push({ label: 'Guidance range', type: 'bar',
-      data: sl(m.periods.map(function(_, i){ return (m.guideLo[i] == null || m.guideHi[i] == null) ? null : [scale(m.guideLo[i]), scale(m.guideHi[i])]; })),
-      backgroundColor: RS_GUIDE, borderColor: 'rgba(62,90,130,0.45)', borderWidth: 1, borderSkipped: false,
-      barPercentage: 0.98, categoryPercentage: 0.98, grouped: false, order: 10 });
+    // A guide can be a RANGE (Amazon, Lyft) or a single POINT (Spotify guides one
+    // number per metric, not a band). A point guide has guideLo === guideHi, which
+    // as a floating bar is zero pixels tall — i.e. invisible. So the two cases get
+    // two different marks: a translucent band for a range, and a horizontal tick
+    // for a point. Both are honest about what the company actually said.
+    var isPoint = function(i){ return m.guideLo[i] != null && m.guideHi[i] != null && m.guideLo[i] === m.guideHi[i]; };
+    var bandData = m.periods.map(function(_, i){
+      return (m.guideLo[i] == null || m.guideHi[i] == null || isPoint(i)) ? null : [scale(m.guideLo[i]), scale(m.guideHi[i])];
+    });
+    var pointData = m.periods.map(function(_, i){ return isPoint(i) ? scale(m.guideLo[i]) : null; });
+    if (bandData.some(function(v){ return v != null; })){
+      datasets.push({ label: 'Guidance range', type: 'bar',
+        data: sl(bandData),
+        backgroundColor: RS_GUIDE, borderColor: 'rgba(62,90,130,0.45)', borderWidth: 1, borderSkipped: false,
+        barPercentage: 0.98, categoryPercentage: 0.98, grouped: false, order: 10 });
+    }
+    if (pointData.some(function(v){ return v != null; })){
+      datasets.push({ label: 'Guidance', type: 'line',
+        data: sl(pointData),
+        showLine: false,               // each quarter's guide is its own number, not a trend
+        pointStyle: 'line', pointRadius: 15, pointHoverRadius: 15,
+        borderColor: 'rgba(62,90,130,0.95)', borderWidth: 2.5,
+        spanGaps: false, order: 1 });
+    }
   }
   if (!st.hidden.act) datasets.push({ label: 'Actual', data: sl(m.act.map(scale)), backgroundColor: RS_ACT, borderRadius: 3, maxBarThickness: 26, order: 3 });
   if (has.summit && !st.hidden.summit) datasets.push({ label: 'Summit model', data: sl(m.summit.map(scale)), backgroundColor: RS_SUMMIT, borderRadius: 3, maxBarThickness: 26, order: 4 });
@@ -523,6 +547,9 @@ function rsBuildChart(k){
               var i = ctx.dataIndex + lo;
               if (ctx.dataset.label === 'Guidance range'){
                 return 'Guidance: ' + rsFmt(m, m.guideLo[i]) + ' – ' + rsFmt(m, m.guideHi[i]);
+              }
+              if (ctx.dataset.label === 'Guidance'){   // a single guided number, no range
+                return 'Guidance: ' + rsFmt(m, m.guideLo[i]);
               }
               if (ctx.dataset.yAxisID === 'y2'){
                 return ctx.dataset.label + ': ' + (ctx.parsed.y == null ? '—' : ctx.parsed.y.toFixed(1) + '%');
@@ -760,15 +787,23 @@ function rsRenderTable(k, m){
   });
 
   if (has.guide){
-    h += row('Guidance', function(i){ return m.guideLo[i] == null ? '<span class="rs-ft-nil">—</span>' : num(m.guideLo[i]) + '–' + num(m.guideHi[i]); }, 'main nb', '');
-    h += row('actual vs range', function(i){
+    // A point guide prints one number, not "4800–4800".
+    h += row('Guidance', function(i){
+      if (m.guideLo[i] == null) return '<span class="rs-ft-nil">—</span>';
+      return (m.guideLo[i] === m.guideHi[i]) ? num(m.guideLo[i]) : (num(m.guideLo[i]) + '–' + num(m.guideHi[i]));
+    }, 'main nb', '');
+    // "within" only exists when there IS a range; against a single guided number the
+    // comparison is simply above or below it, and the delta is vs the guide, not vs a mid.
+    var anyRangeRow = m.guideLo.some(function(v, i){ return v != null && m.guideHi[i] != null && v !== m.guideHi[i]; });
+    h += row(anyRangeRow ? 'actual vs range' : 'actual vs guide', function(i){
       if (m.guideLo[i] == null || m.act[i] == null) return '<span class="rs-ft-nil">—</span>';
+      var point = m.guideLo[i] === m.guideHi[i];
       var mid = rsGuideMid(m, i), d = mid == null ? null : m.act[i] - mid;
       var word;
       if (m.act[i] > m.guideHi[i]) word = '<span style="color:' + RS_GREEN + '">above</span>';
       else if (m.act[i] < m.guideLo[i]) word = '<span style="color:' + RS_RED + '">below</span>';
-      else word = '<span style="color:var(--mu)">within</span>';
-      return word + (d == null ? '' : ' <span class="rs-ft-dim">· ' + rsFmtD(m, d) + ' vs mid</span>');
+      else word = '<span style="color:var(--mu)">' + (point ? 'in line' : 'within') + '</span>';
+      return word + (d == null ? '' : ' <span class="rs-ft-dim">· ' + rsFmtD(m, d) + (point ? ' vs guide' : ' vs mid') + '</span>');
     }, 'sub', sumGuide());
   }
 

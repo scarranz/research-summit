@@ -4,8 +4,8 @@
 // collapsibles) and a 5-tab Deep Dive spine.
 //
 // STATUS: Overview filled. Deep Dive: Evolution carries the full Earnings v2.10 tab
-// (docs/EARNINGS_CONVENTIONS.md — Q4 2025 / Q1 2026 backfilled, Q2 2026 Setup live for
-// the Jul 30 print) + Results/Estimates (shared engine); Top Line ▸ Segments, Bottom
+// (docs/EARNINGS_CONVENTIONS.md — Q4 2025 / Q1 2026 / Q2 2026 reported end-to-end, Q3
+// 2026 open in Setup + Watch List) + Results/Estimates (shared engine); Top Line ▸ Segments, Bottom
 // Line ▸ Margins, Valuation ▸ Peers/Financials and Management ▸ Executives are default
 // tabs built from the Results dataset (charts derive from it — no re-hardcoded numbers).
 // Guidance / Strategy / Timeline remain staged.
@@ -488,10 +488,33 @@ var CE_CONS = (function(){
 })();
 
 var CALL_EARNINGS = { ticker:'AMZN', quarters:[
-  // ── UPCOMING: Q2 2026 (quarter ended Jun 2026; REPORTS TODAY — Jul 30, 2026, call 5pm ET) ──
-  { q:'Q2 2026', status:'upcoming', date:'reports Jul 30, 2026 · after close (call 5:00pm ET)',
+  // ── UPCOMING: Q3 2026 (quarter ends Sep 2026; reports ~late October 2026) ──
+  //
+  // CONSENSUS PROVENANCE — the dataset's forward consensus is the Jul-2026 BBG BEst export, i.e.
+  // PRE-2Q26-print: the Street had Q3 revenue at $203.9B BEFORE Amazon guided $197–202B with the
+  // Prime-Day flip. Expect those cells to re-base; refresh when Dani re-exports.
+  { q:'Q3 2026', status:'upcoming', date:'reports ~late October 2026 (date TBC)',
     setup:{
-      source:'Refinitiv/LSEG + BBG BEst export (via js/results-data/amzn.js) · Summit — live 2026-05-13 vintage', asOf:'Jul 2026',
+      source:'Refinitiv/LSEG + BBG BEst export (via js/results-data/amzn.js; PRE-2Q26-print vintage) · Summit — live 2026-05-13 vintage', asOf:'Jul 2026',
+      notes:{
+        'Revenue':{ t:'Guided $197–202B — with the Prime-Day flip working AGAINST the quarter', h:'<p>Guided <b>$197–202B (+9–12%)</b>, assuming <b>~80bps unfavorable FX</b>. The optics warning is pre-loaded: Prime Day sat in Q3 last year and in Q2 this year, so reported growth runs <b>~400bps LOWER</b> than the underlying rate — Amazon said so in the release itself.</p><p>⚠ The consensus cell is the <b>pre-print</b> BBG vintage, exported before this guide existed — it sits ABOVE the guide top and will re-base on the next export.</p>' },
+        'Operating income':{ t:'Guided $22.5–26.5B — against a charges-dirty comp', h:'<p>Guided <b>$22.5–26.5B</b> vs $17.4B in Q3 2025 — but that comp carried <b>$4.3B of charges</b> (the FTC settlement + severance), so the implied clean growth is mid-teens, not +40%. New assumption language: the guide excludes <b>energy-derivative contract remeasurements</b> — the accounting line that flattered the Q2 AWS margin now carries its own disclaimer. Amazon has beaten the top of this guide in 12 of 14 prints.</p>' },
+        'EPS (diluted)':{ t:'Mind the marks — both directions now', h:'<p>Pre-print consensus $1.94. 2Q26 printed <b>$5.75 against a $1.82 bar</b> on <b>$53.4B of pre-tax other income</b> (primarily the Anthropic mark) — and a mark can swing the other way. Amazon does not guide EPS; score the operating line first, always.</p>' },
+        'Capex':{ t:'The frame is now ~$220B', h:'<p>The FY26 cash-capex frame was <b>RAISED to ~$220B</b> (from ~$200B) on the Q2 call, with memory-cost inflation named as a driver. 1H26 ran <b>$98.4B gross</b>, so the frame implies a ~$120B second half. The Street\'s pre-print line for Q3 was $52.2B — expect it to move up.</p>' },
+        'AWS net sales':{ t:'After +37%, the bar resets', h:'<p>Pre-print consensus <b>$43.3B (+31%)</b> — set before AWS printed <b>+37%</b> (fastest in 18 quarters, $169B run-rate). The demand math behind the next print: backlog <b>$496B</b> (~2.5x YoY), 2027 capacity "largely reserved", some 2028 "already spoken for". No company guidance for AWS — the consensus IS the bar, and it will re-base upward.</p>' },
+        'North America':{ t:'The Prime-Day flip lands here', h:'<p>Pre-print consensus $115.3B. The Q3/Q2 Prime-Day timing swing hits North America hardest. The segment margin (7.9% in Q2) still carries the ~$1B/quarter LEO cost ramp until capitalization begins in Q4 — with robotics as the offset.</p>' },
+        'International':{ t:'The line to sanity-check', h:'<p>Pre-print consensus $45.1B. Q2 printed $42.2B (+15%) — a touch UNDER both the Street ($42.7B) and Summit ($43.4B), the only line on the card that missed. The model\'s over-call pattern on this segment continues.</p>' },
+        'Advertising':{ t:'The accelerating profit engine', h:'<p>Pre-print consensus <b>$21.0B (+19%)</b> — set before ads printed <b>+26%</b> in Q2 (an acceleration from +22%, sponsored products the named driver). The line that audits whether agentic surfaces keep compounding into ad dollars.</p>' }
+      },
+      us:{ 'Revenue':{v:201.7}, 'Operating income':{v:24.3}, 'AWS net sales':{v:41.9}, 'North America':{v:114.8}, 'International':{v:45.0} },
+      debate:{ rows:null, synth:'The one thing to resolve: does the <b>$496B book convert</b> fast enough to hold AWS in the high-30s with 2027 capacity already reserved — or does the first <b>negative-FCF year</b> (TTM −$7.6B, frame raised to ~$220B) plus the Prime-Day growth optics re-open the bill debate the Q2 print had just closed?' }
+    },
+    results:null, call:null },
+
+  // ── REPORTED: Q2 2026 (quarter ended Jun 2026; reported Jul 30, 2026 AMC, call 5pm ET) ──
+  { q:'Q2 2026', status:'reported', date:'July 30, 2026',
+    setup:{
+      source:'Refinitiv/LSEG + BBG BEst export (via js/results-data/amzn.js) · Summit — frozen 2026-05-13 vintage', asOf:'Jul 2026',
       notes:{
         'Revenue':{ t:'Guided $194–199B — Prime Day moved INTO the quarter', h:'<p>Guided <b>$194–199B</b> (+16–19%), with <b>Prime Day in Q2 for most major geographies</b> this year (Q3 for Australia, Brazil, India, Japan) — a comp helper to remember when reading the growth rate. FX ~neutral (~10bps headwind assumed). Consensus $197.0B sits mid-range; the actual has landed at or above the TOP of guidance in 10 of the last 13 prints.</p>' },
         'Operating income':{ t:'The Street models the TOP of the guide', h:'<p>Guided <b>$20–24B</b>; consensus sits at <b>$23.7B</b> — right at the top. The guide embeds three flagged headwinds: the seasonal <b>SBC step-up</b>, <b>~$1B YoY of Amazon LEO costs</b> (satellite manufacturing + launch; capitalization only begins Q4), and fuel-inflation transport costs. Actuals beat the top of the op-income guide in 11 of the last 13 prints — the Street is betting on the pattern.</p>' },
@@ -503,9 +526,102 @@ var CALL_EARNINGS = { ticker:'AMZN', quarters:[
         'Advertising':{ t:'The third profit engine', h:'<p>Consensus <b>$19.3B (+23%)</b>. Q1 printed +22% with the Netflix/Comcast/Samsung partnerships ramping and ~20% of Rufus brand-prompt shoppers continuing the conversation. Street models ~18–19% growth through 2027.</p>' }
       },
       us:{ 'Revenue':{v:199.8}, 'Operating income':{v:23.8}, 'AWS net sales':{v:39.8}, 'North America':{v:116.6}, 'International':{v:43.4} },
-      debate:{ rows:null, synth:'The one thing to resolve: does <b>AWS accelerate again</b> (the Street\'s +31% vs Summit\'s +29%) with backlog converting — or does the quarter turn into a bill story (SBC step-up + $1B of LEO + memory-inflated capex) where the record 13.1% margin proves to be the peak, not the base?' }
-    },
-    results:null, call:null },
+      debate:{ rows:null, synth:'The one thing to resolve: does <b>AWS accelerate again</b> (the Street\'s +31% vs Summit\'s +29%) with backlog converting — or does the quarter turn into a bill story (SBC step-up + $1B of LEO + memory-inflated capex) where the record 13.1% margin proves to be the peak, not the base?' },
+      pricedIn:'The Street at the top of both guides — revenue $197.0B mid-range, operating income $23.7B right at the guide top — with AWS modelled to accelerate AGAIN to +31%. The open worry was the bill: memory inflation, the ~$1B LEO step-up and the seasonal SBC, all flagged inside the guide itself. The tape went in hot: AMZN closed +3.9% on earnings day as money rotated into AI winners.',
+      oneLiner:'The bar was "accelerate again and absorb the bill" — Amazon cleared both: AWS +37% (fastest in 18 quarters), revenue AND operating income above the tops of their guides, a new margin record. The bill grew too: the capex frame went to ~$220B and TTM free cash flow turned negative.' },
+    // ── SINGLE FILL (v2.8): results + call landed together, 2026-07-31, from the Jul 30 8-K
+    // (Ex. 99.1, accession 0001018724-26-000024) + the earnings-call record (5:00pm ET; see
+    // docs/calls/AMZN-latest.md — verbatim IR transcript still pending from Dani).
+    results:{
+      summary:{
+        paras:[
+          { p:'<b>The acceleration thesis stopped being a thesis.</b> AWS grew <b>+37% to $42.2B</b> (a $169B <span class="ce-gl" data-def="The current quarter\'s pace annualized — not trailing-twelve-month revenue.">run-rate</span>) — the fastest in 18 quarters and the THIRD straight acceleration (+24% → +28% → +37%) — while total revenue printed <b>$200.6B (+20%)</b>, $1.6B above the TOP of the guide, and operating income <b>$27.5B</b> beat its guide top by $3.5B at a <b>13.7% margin, the highest ever</b>. The demand math behind it got bigger too: <span class="ce-gl" data-def="Contracted future revenue not yet recognised — AWS reports it as remaining performance obligations.">backlog</span> reached <b>$496B</b> (roughly 2.5x a year ago), with 2027 capacity "largely reserved" and some 2028 capacity "already spoken for."',
+            more:'The reading order for this print: revenue and operating income against their GUIDES (both cleared the top), AWS against the Street\'s $40.5B (+4.2%), advertising against $19.4B (+2.6%, and an acceleration to +26%). The only line that missed anything was International revenue — $42.2B vs $42.7B modelled, −1.2% — which is noise against the rest of the card.' },
+          { p:'<b>Ignore the EPS number; it is a mark, not a quarter.</b> GAAP EPS printed <b>$5.75 against a $1.82 bar</b> — but net income carries <b>$53.4B of pre-tax other income, primarily the Anthropic investment mark</b> (that line was $1.1B a year ago). The honest read is the operating line, and even that gets a footnote management supplied itself: the AWS margin\'s +650bps YoY includes roughly <b>130bps of energy-derivative accounting gains</b> that Olsavsky stripped out on the call (+520bps clean). Doing the ex-items math before the Street asks is the credibility tell of this print.',
+            moreLabel:'＋ more — what the mark did to the rest of the statements',
+            more:{ body:'The Anthropic mark is not confined to the income statement — it shows up in three other places, and each one is plumbing rather than operations.',
+              nodes:[
+                { t:'Tax and the balance sheet', body:'The tax provision jumped to <b>$18.2B</b>, of which <b>$17.7B is deferred</b> — the mark is unrealised, so the cash tax is not. "Other assets" swelled to <b>$284B</b> carrying the revalued stake.' },
+                { t:'Why Q3\'s guide reads differently', body:'The Q3 guidance now carries new assumption language excluding <b>energy-derivative contract remeasurements</b>. The same accounting that added ~130bps to the AWS margin this quarter has been fenced out of the forward guide — a disclosure improvement worth crediting.' } ] } },
+          { p:'<b>The bill crossed its red line — and the tape paid up anyway.</b> Quarterly <span class="ce-gl" data-def="Gross purchases of property and equipment from the cash-flow statement, before proceeds from sales and incentives.">capex</span> hit <b>$54.2B</b> (1H26: $98.4B), the FY26 frame was <b>raised to ~$220B</b> from ~$200B with memory-cost inflation named again, and trailing-twelve-month <span class="ce-gl" data-def="Operating cash flow minus capital expenditure — the cash the business keeps after paying for its own growth.">free cash flow</span> went <b>NEGATIVE (−$7.6B)</b> for the first time in this build, funded by $67B of new long-term debt in six months. The desk\'s Q4-2025 red line — "the frame outruns the cash" — has now fired in the ACTUALS, not just in the model. The market\'s verdict: <b>+9% after hours</b>. With $496B of contracted backlog on the other side of the scale, negative FCF read as pre-sold rather than reckless.',
+            moreLabel:'＋ more — the funding math, and why the frame moved',
+            more:{ body:'The cash math of the half: <b>$161.4B</b> of TTM operating cash flow (+33%) against <b>$169.0B</b> of TTM net capex. The gap is being closed with debt — long-term debt went $65.6B → $128.9B in six months.',
+              nodes:[
+                { t:'Why ~$200B became ~$220B', body:'Olsavsky attributed part of the raise to the "higher cost of memory" — the same input Jassy said had "skyrocketed" in Q1, now quantified into the frame. Because allocations were locked with strategic suppliers in mid-to-late 2025, the inflation shows up in the BILL rather than in missed capacity.' },
+                { t:'The LEO wrinkle', body:'Roughly $1B a quarter of Amazon LEO cost still runs through North America operating expense until capitalization begins in Q4 2026. Commercial service starts in Q3 — the first quarter where that cost line finally has a revenue line beside it.' } ] } },
+          { p:'<b>The AI business inside AWS got its first hard sizing — and a second frontier tenant.</b> The release itself disclosed that AWS\'s <b>AI business and its chips business each exceed a $25B annualized run-rate, both growing triple-digit</b>, and the call added that <b>Anthropic AND OpenAI are each making multi-year, multi-gigawatt Trainium commitments</b>, with Graviton5 now generally available. Two quarters ago custom silicon was a $20B run-rate with a single anchor tenant; it now has both leading frontier labs committed to the same silicon. Jassy restated the destination without hedging it: AWS "can be a trillion-dollar annual revenue business."' },
+          { p:'<b>The Q3 guide is better than it looks — read it ex-Prime-Day.</b> Net sales guided <b>$197–202B (+9–12%)</b> with ~80bps of FX headwind, but Prime Day sat in Q3 last year and Q2 this year, so the release states underlying growth would be <b>~400bps higher</b>. Operating income guided <b>$22.5–26.5B</b> against a Q3-2025 comp that carried $4.3B of charges. Underneath the optics the retail engine kept compounding: paid units +17%, same-day perishables customers +50% since January, same-day orders carrying 3x the units, and roughly $600M of tariff-related refunds landing as one-off relief.' }
+        ]
+      },
+      notes:{
+        'Revenue':{ t:'Above the top of the guide — again', h:'<p><b>$200.6B (+20%; FX +$0.1B favorable)</b> vs $196.4B consensus and a $194–199B guide — above the top for the 11th time in 14 prints, with the Prime-Day-in-Q2 helper. Paid units +17%; every revenue line grew double-digit except physical stores (+4%).</p>' },
+        'Operating income':{ t:'Beat the guide top by $3.5B — new margin record', h:'<p><b>$27.5B (+43%, 13.7% margin — the highest ever)</b> vs the $20–24B guide and $23.7B modelled. The guide\'s three flagged headwinds (SBC step-up, ~$1B of LEO, fuel) were absorbed whole. AWS did the lifting: $16.6B of segment operating income (+64%, 39.4% margin); North America 7.9%; International 4.1%.</p>' },
+        'EPS (diluted)':{ t:'⚠ $5.75 is a mark, not a quarter', h:'<p>$5.75 vs $1.82 expected — but <b>$53.4B of pre-tax other income (primarily the Anthropic mark)</b> sits inside it, against $1.1B a year ago. Net income $62.6B (+245%); deferred tax $17.7B of an $18.2B provision. The honest operating read is the $27.5B. Score EPS ex-marks or be scored by them.</p>' },
+        'Capex':{ t:'$54.2B — and the frame moved to ~$220B', h:'<p><b>$54.2B gross</b> in the quarter ($53.1B net of proceeds; vs $48.7B modelled) — 1H26 $98.4B. On the call the FY26 cash-capex frame was <b>raised to ~$220B</b> from ~$200B, partly on the "higher cost of memory". TTM free cash flow <b>−$7.6B</b>, negative for the first time in the build; long-term debt +$63B in the half.</p>' },
+        'AWS net sales':{ t:'+37% — fastest in 18 quarters, third straight acceleration', h:'<p><b>$42.2B (+37%, $169B run-rate)</b> vs $40.5B consensus — after +28% and +24%. Backlog <b>$496B</b> (~2.5x YoY, growing triple-digit); 2027 capacity "largely reserved", some 2028 "spoken for". The AI business and the chips business <b>each exceed a $25B run-rate, both triple-digit</b>. Segment margin 39.4% (+650bps; ~+520bps excluding derivative gains).</p>' },
+        'Advertising':{ t:'+26% — an acceleration at $20B scale', h:'<p><b>$19.8B (+26%)</b> vs $19.4B modelled — accelerating from +22%, with sponsored products the named driver. The agentic-commerce claim (multi-turn conversations create more ad surfaces, not fewer) keeps converting into reported dollars.</p>' },
+        'North America':{ t:'In line, with the LEO drag still inside it', h:'<p>$116.2B (+16%) vs $114.0B modelled; segment operating income $9.1B at a 7.9% margin — flat with Q1 while absorbing roughly $1B of LEO cost and delivering ~$600M of tariff refunds as offset.</p>' },
+        'International':{ t:'The one line under the Street', h:'<p>$42.2B (+15%) vs $42.7B modelled and Summit\'s $43.4B — a −1.2% miss, the only one on the card. Segment operating income $1.7B (4.1% margin) landed between the Street ($1.6B) and Summit ($1.5B).</p>' }
+      },
+      watch:{ 'AWS net sales':1, 'Capex':2, 'Operating income':3, 'Advertising':4 },
+      thesisCheck:[
+        { line:'AWS growth stalls below ~25% or the backlog stops converting', tripped:false, note:'+37% — the fastest in 18 quarters and the third straight acceleration — with backlog at $496B, roughly 2.5x a year ago. The demand side is now contractual out to 2028: 2027 capacity largely reserved, some 2028 already spoken for.' },
+        { line:'The capex frame outruns the cash (the FCF red line)', tripped:true, note:'⚑ TTM free cash flow printed NEGATIVE (−$7.6B) and the frame was RAISED to ~$220B — the red line the Q4-2025 model flip predicted has now fired in reported actuals. It is demand-led (see the line above) and debt-funded ($67B of new long-term debt in 1H26) — but it fired as written.' },
+        { line:'The 13.1% margin proves the peak, not the base', tripped:false, note:'13.7% — a new record, absorbing the SBC step-up, ~$1B of LEO and fuel inflation the guide had flagged. AWS at 39.4% (+650bps, ~520bps clean) did the lifting.' },
+        { line:'Agentic commerce fails to compound into ad dollars', tripped:false, note:'Advertising accelerated to +26% (from +22%) at a $20B quarterly scale, with sponsored products named as the driver. The usage-to-dollars chain keeps converting.' },
+        { line:'Custom silicon stays an internal cost edge', tripped:false, note:'The chips business is now above a $25B run-rate growing triple-digit — and BOTH Anthropic and OpenAI have committed multi-year, multi-gigawatt to Trainium. From one anchor tenant to the two leading labs in two quarters.' },
+      ],
+      intoCall:[
+        '☁️ <b>Conversion pace</b> — $496B of backlog against capacity reserved through 2027: how fast does the book become recognised revenue? (On the list.)',
+        '💸 <b>The ~$220B frame</b> — memory inflation now quantified into the frame, TTM FCF negative, $67B of new debt: where does the funding mix go from here? (On the list.)',
+        '📊 <b>Margin quality</b> — a 39.4% AWS margin that includes ~130bps of derivative accounting: is the clean ~38% sustainable under the depreciation ramp?',
+        '🤖 <b>The merchant silicon path</b> — with OpenAI joining Anthropic on multi-gigawatt commitments, does rack/external sale move from "a possibility" to a plan?',
+      ],
+      priceReaction:'+9.1% after hours on Jul 30 (from a $235.50 close, itself +3.9% on the day) and about +12.5% in the Jul 31 pre-market (~$265) — the tape bought the AWS acceleration and looked straight through the negative free cash flow. The next-day close was still pending at fill time; confirm before quoting a settled number.' },
+      call:{
+      take:'Q1 killed the demand question; this call killed the supply question\'s optionality too — capacity is reserved into 2028, the frame is ~$220B and the cash line went negative. What is left to argue is pace and margin quality.',
+      highlights:[
+        { tag:'thesis', band:'lead', open:'Conversion pace: how fast does $496B of contracted demand become recognised revenue when capacity is the binding constraint?',
+          head:'The demand proof compounded: backlog $496B (~2.5x YoY), 2027 capacity "largely reserved", some 2028 "already spoken for" — and AWS accelerated to +37% anyway',
+          detail:'<p>Jassy: "clear line of sight to strong financial returns," with the trillion-dollar-AWS framing restated. Gawrelski (Wells Fargo) put the backlog at 2.5x the prior year; Post (BofA) pressed on 2027 capacity additions and got reservation language rather than megawatt numbers. The constraint story is unchanged since Q1 — installs bill six to twenty-four months after commitment — but the book now covers TWO build-years forward.</p>' },
+        { tag:'watch', band:'lead', open:'The funding mix under a ~$220B frame with TTM FCF negative — more debt, a partner vehicle, or does operating cash flow close the gap?',
+          head:'The frame moved to ~$220B on "higher cost of memory", TTM free cash flow printed −$7.6B, and long-term debt nearly doubled to $129B in six months',
+          detail:'<p>Olsavsky attributed part of the raise to memory-cost inflation — the input flagged as "skyrocketed" in Q1, now priced into the frame. The funding shifted visibly with $67B of long-term debt raised in the first half. Unlike Meta, Amazon has not announced a co-investment vehicle; whether it follows that route is the open question behind the next two prints.</p>' },
+        { tag:'thesis', band:'context',
+          head:'Margin quality, disclosed against interest: the 39.4% AWS margin is +650bps YoY — and Olsavsky stripped out roughly 130bps of energy-derivative accounting gains himself',
+          detail:'<p>"Margins are not random" — the ~520bps of clean expansion was attributed to disciplined efficiency gains: custom-silicon mix, power efficiency, utilisation. The candor cuts both ways. It strengthens the clean number\'s credibility, and it plants the flag that a future quarter\'s margin can swing on the derivative line — which is exactly why the Q3 guide now excludes remeasurements by assumption.</p>' },
+        { tag:'thesis', band:'context',
+          head:'The silicon ladder\'s new rung: the AI business and the chips business each above a $25B run-rate, triple-digit growth — with Anthropic and OpenAI both committed multi-year, multi-gigawatt to Trainium',
+          detail:'<p>Graviton5 reached general availability. Two quarters ago the pitch was a $20B run-rate and $225B of commitments anchored by a single tenant; now both leading frontier labs are on the same silicon. Nowak (Morgan Stanley) asked about Trainium sales into third-party data centres — the merchant question stays open, but the tenant list has stopped being a concentration argument.</p>' },
+        { tag:'curious', band:'context',
+          head:'The retail quiet compounders: same-day perishables customers +50% since January, same-day orders carrying 3x the units, paid units +17%',
+          detail:'<p>Sheridan (Goldman) probed fast-commerce adoption across geographies. Grocery and everyday essentials keep growing faster than the rest of the business — the efficiency flywheel (units outgrowing fulfillment cost) now reads as a permanent feature of the model rather than a recovery story.</p>' },
+        { tag:'logged', band:'logged',
+          head:'Call colour: about $600M of tariff-related refunds landed in Q2 · Kiro and Transform push AWS up the application layer · advertising +26% on sponsored products',
+          detail:'<p>The tariff refunds are one-off cost relief sitting inside the North America margin — most of what Amazon expected to recover. Sebastian (Baird) asked about the application-layer expansion and how the capital gets sourced; AWS moving from renting compute to selling outcomes is the same "selling intelligence" doctrine every hyperscaler now recites.</p>' },
+        { tag:'watch', band:'logged', open:'A dated marker: LEO commercial service starts in Q3 — the first quarter where the ~$1B/quarter cost line has revenue beside it.',
+          head:'LEO: capitalization begins Q4, commercial service Q3 — the cost line finally gets a revenue line',
+          detail:'<p>The disclosure set is unchanged from Q1 (250+ satellites; Delta, JetBlue, AT&T, Vodafone, NASA and Apple committed). The milestone to score next call is whether commercial revenue actually starts, and at what run-rate.</p>' },
+      ],
+      dots:'Q4 2025 planted the two tensions (the bill, and the pre-sold demand that justifies it); Q1 2026 resolved demand emphatically; Q2 resolved the MARGIN question — a 13.7% record with AWS at 39.4% and the derivative flattery disclosed — while the bill crossed its red line in the actuals (TTM FCF −$7.6B, frame ~$220B, debt nearly doubled). Every thread now converges on one variable: the PACE at which $496B of contracted demand converts against reserved capacity. At +37% with record margins, pace is the only thing standing between the bulls\' trillion-dollar AWS and the bears\' negative-FCF-forever.',
+      threeMinutes:[
+        '<b>The acceleration is structural, not a quarter.</b> +24% → +28% → +37%, a $496B backlog, and capacity reserved into 2028. The demand debate is over; the argument is conversion pace.',
+        '<b>Read the quarter ex-marks — and say so out loud.</b> EPS $5.75 is a $53.4B Anthropic mark. The real print is $27.5B of operating income beating its guide top by $3.5B at a record 13.7% margin, with management itself stripping the derivative flattery out of the AWS number.',
+        '<b>The FCF red line fired, and the market shrugged.</b> TTM free cash flow −$7.6B, the frame to ~$220B, debt nearly doubled — and the stock paid +9% for it. Contracted backlog changed what negative FCF MEANS; watch whether that grace survives the first quarter conversion slows.',
+      ],
+      notBringing:[
+        { item:'EPS $5.75 (a 216% "beat")', why:'It is the Anthropic mark. Leading with it misreads the quarter; the operating beat is the argument.' },
+        { item:'The Q3 guide "deceleration" to +9–12%', why:'About 400bps of it is Prime-Day timing, stated in the release. Quoting the headline rate without the flip is the optics trap.' },
+        { item:'Tariff refund detail (~$600M)', why:'Real one-off relief, logged in the aside — not a thesis line.' },
+      ],
+      newQuestions:[
+        { n:'Conversion pace: $496B of backlog against reserved capacity — does AWS hold the high-30s?', landed:{ q:'Q3 2026', rank:1 } },
+        { n:'The funding mix under ~$220B with TTM FCF negative — more debt, or a partner vehicle?', landed:{ q:'Q3 2026', rank:2 }, tripped:true },
+        { n:'Is the clean ~38% AWS margin sustainable under the depreciation ramp?', landed:{ q:'Q3 2026', rank:3 } },
+        { n:'Does advertising hold 25%+ through the Prime-Day flip quarter?', landed:{ q:'Q3 2026', rank:4 } },
+        { n:'Trainium merchant path: with OpenAI and Anthropic both multi-gigawatt, do rack sales move from "possibility" to plan?', landed:{ q:'Q3 2026', rank:5 } },
+      ],
+    } },
 
   // ── REPORTED: Q1 2026 (quarter ended Mar 2026; reported Apr 29, 2026) ──
   { q:'Q1 2026', status:'reported', date:'April 29, 2026',
@@ -664,33 +780,64 @@ var CALL_EARNINGS = { ticker:'AMZN', quarters:[
 
 // ── WL_ROWS — the Watch List: ONE flat table, ours to author (§6f) ───────────
 var WL_ROWS=[
-  // ── Q2 2026 · UPCOMING (reports TONIGHT) — the live list; seeded from Q1's newQuestions. ──
-  { id:'wl001', q:'Q2 2026', rank:1, theme:'AWS: the third acceleration + backlog conversion',
+  // ── Q3 2026 · UPCOMING — the live list; seeded from Q2's newQuestions (§6d). ──
+  { id:'wl016', q:'Q3 2026', rank:1, theme:'AWS: conversion pace against reserved capacity',
     tags:['aws','backlog','ai'], trackSince:'Q4 2025', trackUntil:null,
+    definition:'The demand argument is settled — $496B of backlog, capacity reserved into 2028. What is unsettled is the RATE at which that book becomes recognised revenue, because installs bill 6–24 months after commitment. The tell is whether AWS holds the high-30s once the easy comps are gone.',
+    seededBy:{ q:'Q2 2026', n:'Conversion pace: $496B of backlog against reserved capacity — does AWS hold the high-30s?' },
+    src:'Q2 2026: +37% (fastest in 18 quarters), $169B run-rate, backlog $496B (~2.5x YoY); 2027 capacity "largely reserved", some 2028 "already spoken for".',
+    thread:[ {q:'Q4 2025',n:'+24% · backlog $244B (+40%).'},{q:'Q1 2026',n:'+28% · backlog $364B + $100B Anthropic excluded.'},{q:'Q2 2026',n:'+37% · backlog $496B · AI business and chips business each >$25B run-rate.'} ] },
+  { id:'wl017', q:'Q3 2026', rank:2, theme:'The ~$220B frame and the first negative-FCF year',
+    tags:['capex','fcf','supply'], trackSince:'Q4 2025', trackUntil:null,
+    definition:'The bear case, now printed rather than modelled: TTM free cash flow went negative (−$7.6B) and the frame was raised to ~$220B on memory inflation, funded with $67B of new long-term debt in one half. The hook tracks the FUNDING MIX from here — more debt, a partner vehicle, or operating cash flow closing the gap.',
+    seededBy:{ q:'Q2 2026', n:'The funding mix under ~$220B with TTM FCF negative — more debt, or a partner vehicle?' },
+    src:'Q2 2026: capex $54.2B (1H26 $98.4B), frame raised ~$200B → ~$220B ("higher cost of memory"), TTM FCF −$7.6B, long-term debt $65.6B → $128.9B.',
+    thread:[ {q:'Q4 2025',n:'"About $200B, predominantly AWS" · TTM FCF $11.2B.'},{q:'Q1 2026',n:'Q1 capex $44.2B · memory "skyrocketed" · allocations locked mid-late 2025.'},{q:'Q2 2026',n:'⚑ Red line TRIPPED — TTM FCF −$7.6B; frame ~$220B; debt nearly doubled in six months.'} ] },
+  { id:'wl018', q:'Q3 2026', rank:3, theme:'AWS margin quality under the depreciation ramp',
+    tags:['margins','aws','accounting'], trackSince:'Q2 2026', trackUntil:null,
+    definition:'A 39.4% AWS margin sounds like a new base — but management itself said ~130bps of the +650bps YoY was energy-derivative accounting. The clean number is ~38%, and the question is whether it survives the depreciation wave from a ~$220B build year. Q3\'s guide already fences the derivative line out by assumption.',
+    seededBy:{ q:'Q2 2026', n:'Is the clean ~38% AWS margin sustainable under the depreciation ramp?' },
+    src:'Q2 2026 call: Olsavsky — margins "are not random", ~520bps of clean expansion from silicon mix, power efficiency and utilisation; Q3 guide excludes energy-derivative remeasurements.',
+    thread:[ {q:'Q1 2026',n:'Record 13.1% consolidated margin with $44B of quarterly capex.'},{q:'Q2 2026',n:'13.7% consolidated record; AWS 39.4% (+650bps, ~+520bps clean).'} ] },
+  { id:'wl019', q:'Q3 2026', rank:4, theme:'Advertising through the Prime-Day flip quarter',
+    tags:['ads','rufus','agentic'], trackSince:'Q4 2025', trackUntil:null,
+    definition:'Ads accelerated to +26% at a $20B quarterly scale — but Q3 is the quarter that LOSES the Prime-Day event to the comp. Holding 25%+ through it would say the growth is the agentic/sponsored-products engine rather than the event calendar.',
+    seededBy:{ q:'Q2 2026', n:'Does advertising hold 25%+ through the Prime-Day flip quarter?' },
+    src:'Q2 2026: ads $19.8B (+26%), accelerating from +22%, sponsored products the named driver.',
+    thread:[ {q:'Q4 2025',n:'Ads $21.3B (+22%) · Rufus 300M users, +60% completion lift.'},{q:'Q1 2026',n:'$17.2B (+22%) · Rufus MAU +115% · Netflix/Comcast/Samsung signed.'},{q:'Q2 2026',n:'$19.8B (+26%) — an acceleration at scale, into the Prime-Day-in-Q2 quarter.'} ] },
+  { id:'wl020', q:'Q3 2026', rank:5, theme:'Trainium: two frontier tenants, and the merchant question',
+    tags:['silicon','trainium','aws'], trackSince:'Q4 2025', trackUntil:null,
+    definition:'The chips business passed a $25B run-rate with BOTH Anthropic and OpenAI committing multi-year, multi-gigawatt. That kills the concentration argument — and revives the bigger one: does Amazon ever SELL the racks (NVIDIA-adjacent economics) or keep silicon as an internal cost edge?',
+    seededBy:{ q:'Q2 2026', n:'Trainium merchant path: with OpenAI and Anthropic both multi-gigawatt, do rack sales move from "possibility" to plan?' },
+    src:'Q2 2026: chips business >$25B run-rate (triple-digit growth); Anthropic AND OpenAI multi-year multi-gigawatt commitments; Graviton5 GA; Nowak asked about third-party data-centre sales.',
+    thread:[ {q:'Q4 2025',n:'$10B+ RR · Rainier 500K chips · Trainium3 supply committed to mid-2026.'},{q:'Q1 2026',n:'$20B RR (+~40% QoQ) · $225B+ commitments · rack sales "a possibility".'},{q:'Q2 2026',n:'Chips >$25B RR · OpenAI joins Anthropic on multi-GW · Graviton5 GA.'} ] },
+  // ── Q2 2026 · REPORTED — frozen record (hooks closed at the Jul 30 print). ──
+  { id:'wl001', q:'Q2 2026', rank:1, theme:'AWS: the third acceleration + backlog conversion',
+    tags:['aws','backlog','ai'], trackSince:'Q4 2025', trackUntil:'Q2 2026',
     definition:'The whole multiple rides on AWS re-acceleration being demand-led and durable; the backlog ($364B + $100B Anthropic) is the receipt — conversion pace is the test.',
     seededBy:{ q:'Q1 2026', n:'Does AWS accelerate AGAIN (Street +31%) with backlog converting?' },
     src:'Q4 2025: +24% (13-q high), backlog $244B (+40%). Q1 2026: +28% (15-q high), $150B RR, backlog $364B ex-Anthropic.',
     thread:[ {q:'Q4 2025',n:'+24% · backlog $244B (+40%) · 35% margin · >1GW added in Q4.'},{q:'Q1 2026',n:'+28% · $150B run-rate · backlog $364B + $100B Anthropic excluded · Bedrock spend +170% QoQ.'} ] },
   { id:'wl002', q:'Q2 2026', rank:2, theme:'The ~$200B bill: memory inflation, LEO, FCF',
-    tags:['capex','fcf','supply'], trackSince:'Q4 2025', trackUntil:null,
+    tags:['capex','fcf','supply'], trackSince:'Q4 2025', trackUntil:'Q2 2026',
     definition:'The bear case in one line: a ~$200B capex year against ~$11B of TTM FCF, now with memory costs "skyrocketed" and $1B/quarter of LEO — the bill side of the AI trade.',
     seededBy:{ q:'Q1 2026', n:'What does memory inflation do to the ~$200B frame / AWS margin?' },
     src:'Q4 2025 call set the frame; Q1 2026 added the memory-cost warning + supply-lock detail; Summit model FY26 FCF flipped negative at the Feb snapshot.',
     thread:[ {q:'Q4 2025',n:'"About $200B, predominantly AWS" · TTM FCF $11.2B.'},{q:'Q1 2026',n:'Q1 capex $44.2B · memory "skyrocketed" · allocations locked mid-late 2025 · LEO +$1B YoY in Q2.'} ] },
   { id:'wl003', q:'Q2 2026', rank:3, theme:'Margin: is 13.1% the peak or the base?',
-    tags:['margins','efficiency'], trackSince:'Q1 2026', trackUntil:null,
+    tags:['margins','efficiency'], trackSince:'Q1 2026', trackUntil:'Q2 2026',
     definition:'Q1 printed the highest operating margin ever WITH the capex running — the Q2 guide (SBC step-up, LEO, fuel) says management wants room; the print says whether the efficiency flywheel keeps paying for the build.',
     seededBy:{ q:'Q1 2026', n:'Is 13.1% margin the peak or the base (SBC + LEO + fuel in the guide)?' },
     src:'Q1 2026: 13.1% record; units +15% vs fulfillment cost +9%; robotics in all 2026 US large-format launches.',
     thread:[ {q:'Q4 2025',n:'NA margin 9% in the holiday peak; 1M+ robots.'},{q:'Q1 2026',n:'13.1% record consolidated margin; guide midpoint set BELOW the Q1 print.'} ] },
   { id:'wl004', q:'Q2 2026', rank:4, theme:'Agentic commerce → advertising dollars',
-    tags:['ads','rufus','agentic'], trackSince:'Q4 2025', trackUntil:null,
+    tags:['ads','rufus','agentic'], trackSince:'Q4 2025', trackUntil:'Q2 2026',
     definition:'The funnel question of the AI era: Rufus numbers keep compounding (300M users → +115% MAU) and management claims ads WIN in agentic commerce — the ads line is where the claim gets audited.',
     seededBy:{ q:'Q1 2026', n:'Agentic commerce: do Rufus numbers keep compounding into ads?' },
     src:'Q4 2025: Rufus 300M users, +60% completion. Q1 2026: MAU +115%, engagement +400%; ads $17.2B (+22%); sponsored prompts working.',
     thread:[ {q:'Q4 2025',n:'Rufus 300M · +60% completion lift · ads $21.3B (+22%).'},{q:'Q1 2026',n:'Rufus MAU +115% · "we\'re going to like this for advertising" · Netflix/Comcast/Samsung signed.'} ] },
   { id:'wl005', q:'Q2 2026', rank:5, theme:'Custom silicon: from internal edge to merchant business',
-    tags:['silicon','trainium','aws'], trackSince:'Q4 2025', trackUntil:null,
+    tags:['silicon','trainium','aws'], trackSince:'Q4 2025', trackUntil:'Q2 2026',
     definition:'A $20B run-rate growing ~40% QoQ with $225B of commitments — and a live question of whether Trainium racks get SOLD (NVIDIA-adjacent economics) or stay an internal cost edge.',
     seededBy:{ q:'Q1 2026', n:'Trainium rack sales — from "possibility" to plan?' },
     src:'Q1 2026 Q&A (Post): rack sales "very much a possibility" over the next couple of years; current supply fully allocated to training.',
@@ -735,37 +882,42 @@ var WL_ROWS=[
 ];
 
 // ── The theme record — narrative threads across the recent calls (v2.3 fold-in) ──
-var SRC_CALLS='Amazon Q4 2025–Q2 2026 earnings-call records (see docs/calls/AMZN*.md — reconstructed from earnings-day transcript coverage; verbatim IR transcripts pending). Contemporaneous highlights — written from each call, not with hindsight.';
+var SRC_CALLS='Amazon Q4 2025–Q2 2026 earnings-call records (see docs/calls/AMZN*.md — 8-K exacts from SEC EDGAR; call record reconstructed from transcript coverage, verbatim IR transcripts pending from Dani). Contemporaneous highlights — written from each call, not with hindsight.';
 var AMZN_THEMES=[
-  { theme:'The AI capex cycle — demand-led, supply-priced', st:{ k:'watch', since:'Q4 2025', last:'Q1 2026' },
+  { theme:'The AI capex cycle — demand-led, supply-priced', st:{ k:'watch', since:'Q4 2025', last:'Q2 2026' },
     why:'The number that reprices the stock: a ~$200B capex year against ~$11B of TTM FCF, defended with contracted demand.',
     updates:[
       { q:'Q4 2025', items:['"About <b>$200 billion</b> in capital expenditures… predominantly in AWS, because we have very high demand." TTM FCF $11.2B; the Summit model flipped FY26 FCF negative at its next snapshot. Olsavsky: "as fast as we install this capacity… we are monetizing it."'] },
       { q:'Q1 2026', items:['Q1 capex <b>$44.2B</b>; memory costs "<b>skyrocketed</b>" — allocations locked with strategic suppliers mid-to-late 2025; capacity installs <b>6–24 months before billing</b>; data centers 30+ year assets, chips 5–6.'] },
+      { q:'Q2 2026', items:['The frame moved: FY26 cash capex <b>~$200B → ~$220B</b>, Olsavsky attributing part of the raise to the "<b>higher cost of memory</b>". Q2 capex <b>$54.2B</b> gross (1H26 $98.4B).','⚑ The cash line broke: <b>TTM free cash flow −$7.6B</b> (from +$18.2B a year ago) against $161.4B of TTM operating cash flow — funded with <b>$67B of new long-term debt</b> in one half ($65.6B → $128.9B). The Q4-2025 red line fired in reported actuals.'] },
     ]},
-  { theme:'AWS — the re-acceleration and the backlog', st:{ k:'trend', since:'Q4 2025', last:'Q1 2026' },
+  { theme:'AWS — the re-acceleration and the backlog', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
     why:'From +24% to +28% (fastest in 15 quarters) with the forward book compounding faster than revenue converts.',
     updates:[
       { q:'Q4 2025', items:['<b>+24%</b> (13-quarter high), $142B run-rate, 35% margin (+40bps); backlog <b>$244B (+40%)</b>; >1GW added in Q4; 3.99GW of power added in 2025, doubling again by 2027.'] },
       { q:'Q1 2026', items:['<b>+28%</b> ($150B run-rate) — "very unusual for a business to grow this fast on a base this large"; backlog <b>$364B</b> EXCLUDING the <b>$100B+ Anthropic deal</b>; Bedrock spend +170% QoQ; Q1 tokens exceeded all prior years combined.'] },
+      { q:'Q2 2026', items:['<b>+37%</b> ($169B run-rate) — the <b>fastest in 18 quarters</b> and the third straight acceleration; backlog <b>$496B</b>, roughly <b>2.5x</b> a year ago and still growing triple-digit.','Capacity is the constraint, and it is pre-committed: <b>2027 "largely reserved"</b>, some <b>2028 "already spoken for."</b> Segment margin <b>39.4%</b> (+650bps YoY, ~+520bps excluding energy-derivative gains). The AI business and the chips business <b>each above a $25B run-rate</b>, both triple-digit. Jassy: AWS "can be a trillion-dollar annual revenue business."'] },
     ]},
-  { theme:'Custom silicon — Graviton, Trainium, Rainier', st:{ k:'trend', since:'Q4 2025', last:'Q1 2026' },
+  { theme:'Custom silicon — Graviton, Trainium, Rainier', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
     why:'The margin lever under the AI build — and possibly a merchant business (rack sales) with NVIDIA-adjacent economics.',
     updates:[
       { q:'Q4 2025', items:['$10B+ run-rate; Trainium at triple-digit growth; <b>Project Rainier: 500K chips</b> training the next Claude model; Trainium3 "nearly all supply committed by mid-2026"; Graviton >50% growth, >90% of top-1,000 customers.'] },
       { q:'Q1 2026', items:['Run-rate doubled to <b>$20B (+~40% QoQ)</b>; <b>$225B+ Trainium revenue commitments</b>; Trainium4 largely reserved ~18 months out; rack sales "<b>very much a possibility</b>"; Meta committed to tens of millions of Graviton cores.'] },
+      { q:'Q2 2026', items:['The chips business passed a <b>$25B annualized run-rate</b>, growing triple-digit — and the tenant list stopped being a concentration argument: <b>Anthropic AND OpenAI</b> are each making <b>multi-year, multi-gigawatt</b> Trainium commitments. <b>Graviton5</b> reached general availability.','The merchant question survives the quarter: Nowak asked about Trainium sales into third-party data centres, and the answer stayed short of a plan.'] },
     ]},
-  { theme:'Agentic commerce & the ads engine', st:{ k:'watch', since:'Q4 2025', last:'Q1 2026' },
+  { theme:'Agentic commerce & the ads engine', st:{ k:'watch', since:'Q4 2025', last:'Q2 2026' },
     why:'Whether AI compresses the shopping funnel or expands it — management argues the retailer\'s own agent wins, and that ads WIN in agentic commerce.',
     updates:[
       { q:'Q4 2025', items:['Rufus: <b>300M customers</b> in 2025, users "<b>60% more likely to complete a purchase</b>"; can shop tens of millions of items in OTHER stores; ads $21.3B (+22%), Prime Video ads 315M viewers.'] },
       { q:'Q1 2026', items:['Rufus MAU <b>+115%</b>, engagement +400%; "we\'re going to like this for advertising" — sponsored prompts working, multi-turn = more surfaces; ads $17.2B (+22%); Netflix / Comcast / Samsung signed.'] },
+      { q:'Q2 2026', items:['Advertising <b>$19.8B (+26%)</b> — an <b>acceleration</b> from +22%, at a $20B quarterly scale, with <b>sponsored products</b> named as the driver. The claim that agentic surfaces expand rather than compress the funnel keeps showing up in reported dollars.','The next audit is structural: Q3 loses the Prime-Day event to the comp, so holding 25%+ would separate the engine from the calendar.'] },
     ]},
-  { theme:'The efficiency flywheel — robotics, regionalization, 65 days', st:{ k:'trend', since:'Q4 2025', last:'Q1 2026' },
+  { theme:'The efficiency flywheel — robotics, regionalization, 65 days', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
     why:'The quiet half of the AI story: unit growth outpacing fulfillment cost growth is what pays for the build without breaking margins.',
     updates:[
       { q:'Q4 2025', items:['<b>1M+ robots</b> in the network; 8B+ items same/next-day (+30%); NA margin 9% in the holiday peak; regions extended 8 → 10.'] },
       { q:'Q1 2026', items:['Units <b>+15% vs fulfillment expense +9%</b>; record 13.1% consolidated margin; robotics in every 2026 US large-format launch; a service engine rebuilt in <b>65 days vs 40–50 person-years</b>.'] },
+      { q:'Q2 2026', items:['A <b>new consolidated margin record: 13.7%</b> — set while absorbing the seasonal SBC step-up, ~$1B of LEO cost and fuel inflation the guide had flagged. Paid units <b>+17%</b>.','Fast commerce is where the flywheel now shows: <b>same-day perishables customers +50%</b> since January, and same-day orders carrying <b>3x the units</b> per order. Roughly <b>$600M of tariff-related refunds</b> landed as one-off relief inside the North America margin.'] },
     ]},
 ];
 function amznCallsByQuarter(){

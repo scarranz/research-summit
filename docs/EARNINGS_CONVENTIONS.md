@@ -627,6 +627,27 @@ A metric can therefore be missing in two distinct directions, and they mean diff
   guide is quoted — and note the flip.
 - **The customs come from the archive's own `kpi1`–`kpi4`**, not from a previous draft. If the KPI
   set changed, the Setup's custom set changes with it.
+- **The earnings KPI set is PER-TICKER and is NOT the company's main Overview stats.** The Setup /
+  Results / chart KPIs are exactly the `metric*` (headline) and `kpi*` (custom) slots that
+  `G:\My Drive\Summit\Docs\0\BBG_CONSENSUS.txt` carries for THAT ticker — read them from the file,
+  never decide them yourself and never copy them from the Overview's headline-stats box (those are
+  qualitative colour and can legitimately differ). For **MA** the file's four customs are
+  **VAS revenue · purchase_volume · client_incentives · processed_transactions** — NOT "GDV", NOT
+  "cross-border volume" (cross-border volume is not even in the file). A count metric
+  (`processed_transactions`: `unit` empty + `scale` `M`) renders as a **count, never with a `$`**
+  (results engine `unit:'cnt'`).
+
+> **Action plan — MA earnings remediation (opened 2026-07-31).** A prior pass shipped the wrong KPIs
+> and half-authored sections. Fixed in order, each grounded in the file/transcript, never invented:
+> 1. **KPIs → the file's set** (`js/results-data/ma.js` + `ma-setup.js`): customs = VAS · purchase
+>    volume · client incentives · processed transactions. Relabel the mislabeled "GDV" → purchase
+>    volume; ADD `processed_transactions` (count, `unit:'cnt'`). — **done 2026-07-31**
+> 2. **`CE_CONS`** populated from the correct snapshot (fq0 = 2026 Q2 reported; setup quarter = Q3 2026).
+> 3. **why+ double-popup** — one `data-detail` → one `resolve()`; assert every id resolves (§6a-v).
+> 4. **"What this tees up"** — each `intoCall` completed as `hook — the ask`, from the transcript (§6a-vi).
+> 5. **Call summary** — several prose paragraphs, each with nested `＋ more`, authored from
+>    `docs/calls/MA.md` + `MA-latest.md`; fix the stub `AI — to author` tag (§6c-ii).
+> 6. **Setup grid + "Also on the call" layout** — verify rendered; correct placement/size.
 - **Cross-check a segment KPI against a reported actual** before trusting it. A `segmentN` code
   silently pointing at the wrong line is the easiest error to ship here, and the name alone will not
   catch it.

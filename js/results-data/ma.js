@@ -6,6 +6,10 @@
 //   cons   = the Street number that stood going in — a reported quarter takes the prior snapshot's
 //            fq+1 (1q out); forward quarters take the latest snapshot's fq+1..fq+4. Annual analogous.
 //   summit = null EVERYWHERE — Mastercard is NOT in the Summit DCF universe.
+//   customs = the file's OWN kpi1–kpi4 for MA (EARNINGS_CONVENTIONS §6a "the metric set is the
+//            file's, not ours"): VAS revenue (kpi1), purchase_volume (kpi2, USD/M), client_incentives
+//            (kpi3, negative), processed_transactions (kpi4 — a COUNT: unit empty + scale M, rendered
+//            with unit:'cnt', never a $). NOT GDV, NOT cross-border volume (cross-border is not in the file).
 //   guideLo/guideHi = null — MA's numeric guidance (net-revenue-growth ranges, opex) is not a BBG
 //            line; it lives separately in MA_GUIDE, not here.
 // Monetary values US$ millions; EPS in dollars. null = not available (Bloomberg "Error ####", an
@@ -36,9 +40,12 @@ var MA_Q = {
   cinc: { label:'Client incentives (contra-revenue)', short:'Client incentives', group:'Drivers', unit:'usdM',
     act:  [-3608,-3417,-3694,-3963,-4108,-4100,-4222,-4630,null,-4579,-4923,-5389,-5631,null,-5997,null,null,null,null],
     cons: [null,null,null,null,-3638,-3561,-3889,-4179,-4278,-4593,-4872,-5277,-5402,-5309,-5724,-6177,-6371,-6258,-6518] },
-  gdv: { label:'Gross Dollar Volume (purchase volume)', short:'GDV', group:'Volumes', unit:'usdM',
+  pvol: { label:'Purchase volume (network spend)', short:'Purchase vol', group:'Volumes', unit:'usdM',
     act:  [1728000,1707000,1839000,1879000,1920000,1871000,1975000,2058000,2114000,1993000,2182000,2280000,2344000,2251000,2417000,null,null,null,null],
     cons: [null,null,null,null,1928402,1882904,2021319,2055981,2107449,2040127,2159080,2259378,2338640,2189351,2392837,2495214,2575348,2465415,2620447] },
+  ptx: { label:'Processed (switched) transactions', short:'Processed txns', group:'Transactions', unit:'cnt',
+    act:  [34000,32500,35519,37155,38058,36700,39445,41102,42226,40096,43538,45373,46457,43797,47350,null,null,null,null],
+    cons: [null,null,null,null,38211,36267,39545,41265,42148,40504,43569,45270,46426,44244,47724,49642,50872,48180,52371] },
   opinc: { label:'Operating income', short:'Op. income', group:'Company', unit:'usdM', marginOf:'rev', marginLabel:'operating margin',
     act:  [3200,3347,3677,3844,3680,3731,4133,4370,4200,4300,4873,5144,5084,5109,5669,null,null,null,null],
     cons: [null,null,null,null,3675,3715,4037,4268,4212,4188,4679,4918,4927,4955,5473,5781,5841,5683,6190] },
@@ -60,9 +67,12 @@ var MA_Y = {
   cinc: { label:'Client incentives (contra-revenue)', short:'Client incentives', group:'Drivers', unit:'usdM',
     act:  [-13084,-15182,-17629,-20522,null,null,null,null,null],
     cons: [null,-10627,-16130,-20213,-24013,-26972,null,null,-39564] },   // fy+3/fy+4 (2028/2029) date-corrupt → null
-  gdv: { label:'Gross Dollar Volume (purchase volume)', short:'GDV', group:'Volumes', unit:'usdM',
+  pvol: { label:'Purchase volume (network spend)', short:'Purchase vol', group:'Volumes', unit:'usdM',
     act:  [6570000,7346000,8018000,8799000,null,null,null,null,null],
     cons: [null,7353299,8007164,8792112,9727288,10633110,11621576,12653805,13760098] },
+  ptx: { label:'Processed (switched) transactions', short:'Processed txns', group:'Transactions', unit:'cnt',
+    act:  [125700,143200,159424,175464,null,null,null,null,null],
+    cons: [null,143082,159464,175324,191899,211085,231415,257779,272107] },
   opinc: { label:'Operating income', short:'Op. income', group:'Company', unit:'usdM', marginOf:'rev', marginLabel:'operating margin',
     act:  [12687,14547,16500,19401,null,null,null,null,null],
     cons: [null,14483,16341,19125,22142,24589,28292,32278,37055] },
@@ -87,7 +97,8 @@ var maSections=[
   { key:'top', label:'Top Line', defaultMetric:'rev', groups:[
     { label:'Totals', keys:['rev'] },
     { label:'Segments', keys:['vas'] },
-    { label:'Volumes', keys:['gdv'] },
+    { label:'Volumes', keys:['pvol'] },
+    { label:'Transactions', keys:['ptx'] },
     { label:'Drivers', keys:['cinc'] }
   ] },
   { key:'margins', label:'Margins & Profitability', defaultMetric:'opinc', groups:[

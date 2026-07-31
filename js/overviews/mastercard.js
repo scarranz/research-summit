@@ -1537,11 +1537,15 @@ var BRAND=MA_RED, BRAND2=MA_GREEN, BLUE='#2557D6', RED='#EA4335', YELLOW=MA_ORAN
 // consensus (the 1q-out cons for Q2 2026 is 4.79). EVERY observation is here — nothing is sampled
 // down. Adding a snapshot means REGENERATING this block, not appending to it.
 //
-// Two KPIs the BBG export does NOT carry as a clean line, mapped honestly:
-//   · 'Cross-border volume' — NO BBG line (the file has purchase_volume/GDV and processed
-//     transactions, not a cross-border series). Left all-null / nocons rather than faked.
-//   · 'Switched transactions' — mapped to processed_transactions (PAYMENT_PROCESSING_TRANS), the
-//     closest Mastercard line; a count in billions.
+// The four customs ARE the file's OWN kpi1–kpi4 for MA (§6a "THE METRIC SET IS THE FILE'S, NOT
+// OURS" — they are NOT the Overview's headline stats):
+//   · 'VAS revenue'          — kpi1 (value_added_services-rev, SALES_REV_TURN segment)
+//   · 'Purchase volume'      — kpi2 (NTWK_SPENDNG_VOL_PURCHSE) — network purchase/GDV-scale spend, $B
+//   · 'Client incentives'    — kpi3 (CB_IS_ADJ_FROM_GROSS_TO_NET_SALES) — contra-revenue, negative, $B
+//   · 'Switched transactions'— kpi4 (processed_transactions, PAYMENT_PROCESSING_TRANS) — a COUNT in B
+// NOT "GDV" (that was a mislabel of purchase_volume) and NOT "cross-border volume" (there is NO
+// cross-border line in the file — it was previously faked as an all-null KPI and is now removed;
+// cross-border stays as qualitative colour in the Overview / call highlights, never as a BBG KPI).
 var CE_CONS = {
   src:'Bloomberg (BST) · BBG_CONSENSUS.txt snapshot archive',
   asOf:['2023-10-26','2024-01-31','2024-05-01','2024-07-31','2024-10-31','2025-01-30','2025-05-01','2025-07-31','2025-10-30','2026-01-29','2026-04-30','2026-07-30'],
@@ -1569,16 +1573,16 @@ var CE_CONS = {
       qa:[3.4,3.5,3.9,4.1,3.9,3.9,4.4,4.6,4.4,4.4,5.2,5.4,5.4,5.4,6,null,null,null,null],
       qy:[null,null,null,null,3.4,3.5,3.9,4.1,3.9,3.9,4.4,4.6,4.4,4.4,5.2,5.4,5.4,5.4,6],
       qq:[null,3.4,3.5,3.9,4.1,3.9,3.9,4.4,4.6,4.4,4.4,5.2,5.4,5.4,5.4,6,null,null,null] },
-    { k:'GDV', u:'$B', t:'ok', code:'NTWK_SPENDNG_VOL_PURCHSE',
+    { k:'Purchase volume', u:'$B', t:'ok', code:'NTWK_SPENDNG_VOL_PURCHSE',
       qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,1928.4],[null,null,1882.5,1882.9],[null,2021.9,2028.7,2021.3],[2069.4,2079.2,2073.2,2056],[2133.2,2119.7,2100.6,2107.4],[2076.8,2051.8,2054.6,2040.1],[2194.7,2171.2,2157.8,2159.1],[2259.5,2240.8,2241,2259.4],[2303.3,2306.2,2326.1,2338.6],[2211,2197.5,2195.3,2189.4],[2384.7,2393.5,2380.5,2392.8],[2490.7,2480.7,2493.6,2495.2],[2557.1,2573.4,2575.3,null],[2440.8,2465.4,null,null],[2620.4,null,null,null]],
       qa:[1728,1707,1839,1879,1920,1871,1975,2058,2114,1993,2182,2280,2344,2251,2417,null,null,null,null],
       qy:[null,null,null,null,1728,1707,1839,1879,1920,1871,1975,2058,2114,1993,2182,2280,2344,2251,2417],
       qq:[null,1728,1707,1839,1879,1920,1871,1975,2058,2114,1993,2182,2280,2344,2251,2417,null,null,null] },
-    { k:'Cross-border volume', u:'%', t:'nocons', code:null,
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null]],
-      qa:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
-      qy:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
-      qq:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null] },   // no BBG line — left null
+    { k:'Client incentives', u:'$B', t:'ok', code:'CB_IS_ADJ_FROM_GROSS_TO_NET_SALES',   // kpi3 — contra-revenue (negative)
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,-3.6],[null,null,-3.4,-3.6],[null,-3.7,-3.8,-3.9],[-4,-4.1,-4.1,-4.2],[-4.2,-4.1,-4.2,-4.3],[-4.1,-4.2,-4.2,-4.6],[-4.4,-4.4,-4.8,-4.9],[-4.8,-5.2,-5.2,-5.3],[-5.3,-5.3,-5.3,-5.4],[-5.2,-5.2,-5.2,-5.3],[-5.6,-5.6,-5.7,-5.7],[-6,-6.1,-6.1,-6.2],[-6.2,-6.3,-6.4,null],[-6.1,-6.3,null,null],[-6.5,null,null,null]],
+      qa:[-3.6,-3.4,-3.7,-4,-4.1,-4.1,-4.2,-4.6,-4.7,-4.6,-4.9,-5.4,-5.6,-5.6,-6,null,null,null,null],
+      qy:[null,null,null,null,-3.6,-3.4,-3.7,-4,-4.1,-4.1,-4.2,-4.6,-4.7,-4.6,-4.9,-5.4,-5.6,-5.6,-6],
+      qq:[null,-3.6,-3.4,-3.7,-4,-4.1,-4.1,-4.2,-4.6,-4.7,-4.6,-4.9,-5.4,-5.6,-5.6,-6,null,null,null] },
     { k:'Switched transactions', u:'B', t:'ok', code:'PAYMENT_PROCESSING_TRANS',
       qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,38.2],[null,null,36.2,36.3],[null,39.6,39.5,39.5],[41.3,41.3,41.4,41.3],[42.4,42.5,42.3,42.1],[40.5,40.7,40.7,40.5],[43.9,43.9,43.7,43.6],[45.8,45.5,45.3,45.3],[46.7,46.5,46.5,46.4],[44.7,44.3,44.2,44.2],[48,48,47.9,47.7],[49.9,49.8,49.8,49.6],[51.1,51,50.9,null],[48.6,48.2,null,null],[52.4,null,null,null]],
       qa:[34,32.5,35.5,37.2,38.1,36.7,39.4,41.1,42.2,40.1,43.5,45.4,46.5,43.8,47.4,null,null,null,null],

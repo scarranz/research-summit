@@ -128,6 +128,7 @@ function rsFmt(m, v){
   if (v == null) return '—';
   var neg = v < 0 ? '−' : '', a = Math.abs(v);
   if (m.unit === 'eps') return neg + '$' + a.toFixed(2);
+  if (m.unit === 'cnt') return neg + (a >= 10000 ? (a/1000).toFixed(1) + 'B' : Math.round(a).toLocaleString() + 'M');
   if (a >= 10000) return neg + '$' + (a/1000).toFixed(1) + 'B';
   return neg + '$' + Math.round(a).toLocaleString() + 'M';
 }
@@ -135,6 +136,7 @@ function rsFmtD(m, v, dec){
   if (v == null) return '—';
   var sign = v >= 0 ? '+' : '−', a = Math.abs(v);
   if (m.unit === 'eps') return sign + '$' + a.toFixed(2);
+  if (m.unit === 'cnt') return sign + (a >= 10000 ? (a/1000).toFixed(dec == null ? 1 : dec) + 'B' : Math.round(a).toLocaleString() + 'M');
   if (a >= 10000) return sign + '$' + (a/1000).toFixed(dec == null ? 1 : dec) + 'B';
   return sign + '$' + Math.round(a).toLocaleString() + 'M';
 }
@@ -164,6 +166,7 @@ function rsGuideMid(m, i){ return (m.guideLo[i] == null || m.guideHi[i] == null)
 function rsTick(v, unit, div){
   var s = v < 0 ? '−' : '', a = Math.abs(v);
   if (unit === 'eps') return s + '$' + (+a.toFixed(2));
+  if (unit === 'cnt') return s + Math.round(a) + (div === 1000 ? 'B' : 'M');
   return s + '$' + Math.round(a) + (div === 1000 ? 'B' : 'M');
 }
 function rsWin(k, m){
@@ -353,7 +356,7 @@ function rsBuildChart(k){
   var dec = m.unit === 'eps' ? 2 : 1;
   var div = rsScaleOf(m);
   var scale = function(v){ return v == null ? null : (m.unit === 'eps' ? v : v/div); };
-  var unitLbl = m.unit === 'eps' ? '$' : (div === 1000 ? '$B' : '$M');
+  var unitLbl = m.unit === 'eps' ? '$' : m.unit === 'cnt' ? (div === 1000 ? 'B' : 'M') : (div === 1000 ? '$B' : '$M');
   function sl(a){ return a.slice(lo, hi + 1); }
 
   var datasets = [], needY2 = false;
@@ -621,7 +624,7 @@ function rsRenderTable(k, m){
     return ab + '▲ · ' + wi + '⊙ · ' + be + '▼<br><span class="rs-ft-dim">avg vs mid ' + sgn(avg(mids)) + '</span>';
   }
 
-  var h = '<div class="rs-ft-cap">' + (m.unit === 'eps' ? 'US$ per share' : (div === 1000 ? 'US$ billions' : 'US$ millions')) + ' · <span class="rs-ft-e">E</span> = estimate, no actual reported yet · the right column summarizes the selected range: how the actual has come in vs each estimate (▲ = beat)</div>';
+  var h = '<div class="rs-ft-cap">' + (m.unit === 'eps' ? 'US$ per share' : m.unit === 'cnt' ? (div === 1000 ? 'count, billions' : 'count, millions') : (div === 1000 ? 'US$ billions' : 'US$ millions')) + ' · <span class="rs-ft-e">E</span> = estimate, no actual reported yet · the right column summarizes the selected range: how the actual has come in vs each estimate (▲ = beat)</div>';
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   idx.forEach(function(i, c){
     h += '<th class="' + (est[c] ? 'rs-ft-este' : '') + '">' + esc(m.periods[i]) + (est[c] ? ' <span class="rs-ft-e">E</span>' : '') + '</th>';

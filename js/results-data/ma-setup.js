@@ -6,7 +6,7 @@
 //      chart + table + picker (Amazon splits Top Line vs Margins; Setup keeps one). The unique
 //      section key means its engine canvases/tables/sliders never collide with the Results tab's.
 //      Margin lines come from each metric's own `marginOf` — only PROFIT lines (operating income,
-//      EBITDA) carry a margin; revenue / VAS / GDV / a plain KPI have none, so the engine draws none.
+//      EBITDA) carry a margin; revenue / VAS / purchase volume / processed transactions have none, so the engine draws none.
 //
 //   2. NARROW, ROLLING period windows — NOT the full timeline (enforced HERE by slicing every
 //      metric's parallel arrays to the chosen indices, so the engine plots exactly those periods):
@@ -64,7 +64,7 @@ var yIdx = annualIdx(maResults.views.y);
 
 export var maSetup = {
   updated: maResults.updated,
-  intro: 'The Setup chart — the same actuals-vs-estimates chart+table as Results, MERGED into one: every tracked line in a single grouped picker, with the period lever, the legend chips, and margin lines for the profit lines (only operating income / EBITDA carry a margin — revenue, VAS, GDV and other KPIs do not). The window is rolling: quarterly shows the last 8 reported quarters + the one next (forecast) quarter; annual shows the last 4 fiscal years + the next 2. Street from the Bloomberg archive; Summit is empty (Mastercard is not in the Summit DCF universe).',
+  intro: 'The Setup chart — the same actuals-vs-estimates chart+table as Results, MERGED into one: every tracked line in a single grouped picker, with the period lever, the legend chips, and margin lines for the profit lines (only operating income / EBITDA carry a margin — revenue, VAS, purchase volume, processed transactions and the other KPIs do not). The window is rolling: quarterly shows the last 8 reported quarters + the one next (forecast) quarter; annual shows the last 4 fiscal years + the next 2. Street from the Bloomberg archive; Summit is empty (Mastercard is not in the Summit DCF universe).',
   source: maResults.source,
   views: {
     q: { label: 'Quarterly', note: 'Rolling — the last 8 reported quarters plus the one next (forecast) quarter; it advances by itself as new prints land. ' + maResults.views.q.note,

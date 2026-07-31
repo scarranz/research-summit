@@ -1,4 +1,4 @@
-import { fetchThemes, insertTheme, updateTheme, deleteTheme } from '../api.js';
+import { mountWatchList } from '../watchlist.js';
 // overviews/googl.js — standardized Overview for Alphabet Inc. (NASDAQ: GOOGL / GOOG)
 // Follows docs/OVERVIEW_CONVENTIONS.md and mirrors the standardized profile contract (uber.js /
 // ibkr.js): a hooked Overview (Key Facts + lede + 2x2 quad + collapsibles) and a 5-tab Deep Dive
@@ -895,51 +895,11 @@ var CALL_EARNINGS = {
 // (the 🔎 standing read), `trigger` (the validate/invalidate condition) and `cons` (the Street
 // line). Their text is still in git history and in docs/calls/GOOGL.md, which is where it came from.
 //
-// EDITING · the portal adds / edits / closes / deletes rows LIVE against Supabase (table
-// `company_themes`, one shared table scoped by company_id — see js/api.js + sql/010_company_themes.sql).
-// A change made here is saved to the shared database and is visible to the whole team immediately —
-// no COPY / hardcode / commit needed (the "pending assignment" of §6f, now assigned). WL_ROWS below
-// is the in-memory mirror: it starts empty and is filled from the DB when the Watch List opens.
-// _co holds the company object (id + ticker) captured when the profile HTML is built, so the wiring
-// knows which company's themes to load and stamp.
+// _co holds the open company (id + ticker), captured when the profile HTML is built (html /
+// deepDiveHtml), so wireCallEarnings can hand the SHARED Watch List engine (js/watchlist.js) the
+// right company. The Watch List's data lives in Supabase now (table company_themes); the engine
+// owns all rendering + persistence + sorting, so nothing theme-related is kept in this file.
 var _co=null;
-var WL_ROWS=[];
-// snake_case DB row → the camelCase shape every wl* helper and renderer already expects.
-function themeFromDb(r){
-  return { id:r.id, q:r.q, createdQuarter:r.created_quarter, rank:r.rank, theme:r.theme,
-    tags:r.tags||[], definition:r.definition, trackSince:r.track_since, trackUntil:r.track_until,
-    seededBy:r.seeded_by||null, src:r.src||null, thread:r.thread||null };
-}
-// Rows for one quarter. The LIVE (upcoming) quarter shows only OPEN hooks — a trackSince with no
-// trackUntil. Frozen quarters show their record exactly as it stood. `rank` orders, never labels.
-function wlFor(qLabel, openOnly){
-  return WL_ROWS.filter(function(r){
-    if(r.q!==qLabel) return false;
-    if(openOnly && r.trackUntil) return false;
-    return true;
-  }).sort(function(a,z){
-    var ar=(typeof a.rank==='number')?a.rank:99, zr=(typeof z.rank==='number')?z.rank:99;
-    return ar-zr;
-  });
-}
-function wlOpen(r){ return !!(r.trackSince && !r.trackUntil); }
-// Every tag in use, across every quarter — the vocabulary of the filter bar. New tags created in
-// the Add-theme form are appended live so they become available to everyone.
-function wlTags(){
-  var set=[], seen={};
-  WL_ROWS.forEach(function(r){ (r.tags||[]).forEach(function(t){ if(!seen[t]){ seen[t]=1; set.push(t); } }); });
-  return set.sort();
-}
-function wlById(id){ for(var i=0;i<WL_ROWS.length;i++){ if(WL_ROWS[i].id===id) return WL_ROWS[i]; } return null; }
-function wlNextId(){
-  var mx=0; WL_ROWS.forEach(function(r){ var m=/^wl(\d+)$/.exec(r.id||''); if(m && +m[1]>mx) mx=+m[1]; });
-  return 'wl'+String(mx+1).padStart(3,'0');
-}
-// Next sort slot for a quarter — keeps new rows at the end without ever renumbering the others.
-function wlNextRank(qLabel){
-  var mx=0; WL_ROWS.forEach(function(r){ if(r.q===qLabel && typeof r.rank==='number' && r.rank>mx) mx=r.rank; });
-  return mx+1;
-}
 function ceUpcoming(){ return CALL_EARNINGS.quarters.filter(function(q){ return q.status==='upcoming'; })[0]||null; }
 function ceFill(x, muted){ return (x!=null && String(x).trim()!=='') ? x : '<span class="ce-empty">'+(muted||'— to fill')+'</span>'; }
 var CE_POP={};
@@ -1458,181 +1418,13 @@ function ceSetupWrap(){ return document.querySelector('.ovt-subpane[data-ovst="e
 function gBuildCeAnnual(){ var w=ceSetupWrap(); if(w) initResults(w, 'GOOGL_SETUP'); }   // (kept name: called from buildSub / phase-tab wiring)
 function wireCeAnnual(root){ /* the engine self-wires via initResults->wireResults; the chart builds on Setup visibility (gBuildCeAnnual). */ }
 
-// B · Watch List ─────────────────────────────────────────────────────────────────────────────────
-// v3 (Jul 2026): the list is OURS, not the model's, and it is backed by the WL_ROWS table above.
-// One card per row. idSfx keeps pop-up ids unique between the per-quarter and the cross-quarter
-// (flat) renders; qLabel shows the quarter chip in the flat view; editable adds the ✎/✕ controls
-// (live quarter only — frozen quarters are the historical record and stay read-only).
-function ceWatchItem(w, qk, idSfx, qLabel, editable){
-  var deep='';
-  if(w.seededBy) deep+='<p style="border-left:3px solid '+PURPLE+';padding-left:9px;margin-bottom:10px"><b>'+(w.seededBy.tripped?'Seeded by a TRIPPED trigger':'Seeded by')+' '+esc(w.seededBy.q)+':</b> "'+esc(w.seededBy.n)+'"</p>';
-  // `definition` renders on the card itself now, so it is deliberately NOT repeated in here.
-  if(w.src) deep+='<p><b>Why it earned a slot:</b> '+w.src+'</p>';
-  if(w.thread&&w.thread.length){
-    deep+='<p style="margin-bottom:4px"><b>The thread — how this theme has evolved:</b></p>'+
-      w.thread.map(function(t){ return '<div style="display:flex;gap:9px;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:12px;line-height:1.5"><b style="white-space:nowrap;color:'+BRAND+'">'+esc(t.q)+'</b><span>'+t.n+'</span></div>'; }).join('');
-  }
-  var why=deep?ceReg('watchwhy-'+(w.id||qk+'-'+(w.rank||0))+idSfx, esc(w.theme), deep):null;
-  // No rank badge on the card by design (v2.6): a visible 1–5 goes stale the moment a theme is
-  // removed, and renumbering the survivors implies a re-ranking we did not do. `rank` orders only.
-  var tagsAttr=(w.tags&&w.tags.length)?w.tags.join(' '):'';
-  // The chain, made visible: this item exists because the PRIOR quarter's call left it open.
-  var seed=w.seededBy?'<span class="ce-seed" title="'+esc(w.seededBy.n)+'">'+(w.seededBy.tripped?'⚑ thesis line broke in '+esc(w.seededBy.q):'left open by '+esc(w.seededBy.q))+'</span>':'';
-  var open=wlOpen(w);
-  var ctl=editable?'<span class="ce-w-ctl"><button type="button" class="ce-w-ed" data-wledit="'+esc(w.id||'')+'" title="Edit this theme (and close its hook by filling Tracking until)">✎</button>'+
-    '<button type="button" class="ce-w-del" data-wldel="'+esc(w.id||'')+'" title="Remove this theme">✕</button></span>':'';
-  return '<div class="ce-w" data-wltags="'+esc(tagsAttr)+'" data-wlid="'+esc(w.id||'')+'" data-wlopen="'+(open?'1':'0')+'">'+
-    '<div class="ce-w-top"><span class="ce-w-dot" aria-hidden="true"></span><div class="ce-w-metric">'+esc(w.theme)+'</div>'+seed+
-    (w.trackUntil?'<span class="ce-w-closed" title="Hook closed in '+esc(w.trackUntil)+'">closed</span>':'')+
-    (qLabel?'<span class="ov-chip" style="font-size:9.5px;background:rgba(66,133,244,0.10);color:'+BRAND+';border-radius:20px;padding:2px 9px;font-weight:800;flex:none">'+esc(qLabel)+'</span>':'')+
-    (why?'<span class="ce-why-btn ov-clickable" data-detail="ce:'+why+'" style="margin:0">'+(w.thread?'the thread':'background')+' ›</span>':'')+ctl+'</div>'+
-    (w.definition?'<div class="ce-w-def">'+w.definition+'</div>':'')+
-    '<div class="ce-w-chips">'+
-      (w.tags&&w.tags.length?w.tags.map(function(t){ return '<span class="ce-w-chip tag">#'+esc(t)+'</span>'; }).join(''):'')+
-      (w.trackSince?'<span class="ce-w-chip since"><b>Tracking since:</b> '+esc(w.trackSince)+'</span>':'')+
-      (w.trackUntil?'<span class="ce-w-chip until"><b>Tracking until:</b> '+esc(w.trackUntil)+'</span>':'')+
-    '</div>'+
-  '</div>';
-}
-// The Add / Edit form. Tags are picked from the existing vocabulary (multi-select chips) and new
-// ones can be created inline — a new tag is appended to the filter bar, so it becomes available
-// to every theme from that moment on.
-// The tracking-since / tracking-until fields are DROPDOWNS, not free text. A hand-typed
-// "Q3 26" / "3Q2026" / "Q3-2026" breaks the open/closed filter and the cross-quarter sort
-// silently, and the value is only ever one of a known, short list. Range: Q1 2024 through the
-// quarter Earnings is currently on, derived from CALL_EARNINGS so it advances by itself (§6a-v).
-function ceQuarterOpts(sel, blankLabel){
-  var latest=CALL_EARNINGS.quarters[0] ? ceQnum(CALL_EARNINGS.quarters[0].q) : null;
-  var start=2024*4+1;                                  // Q1 2024
-  var end=latest||(2026*4+3);
-  var out='<option value="">'+esc(blankLabel||'—')+'</option>';
-  for(var t=end; t>=start; t--){
-    var lab='Q'+(((t-1)%4)+1)+' '+Math.floor((t-1)/4);
-    out+='<option value="'+esc(lab)+'"'+(sel===lab?' selected':'')+'>'+esc(lab)+'</option>';
-  }
-  return out;
-}
-function ceWlForm(){
-  return '<div class="ce-wl-addform" hidden>'+
-    '<div class="ce-wl-fh"><b class="ce-wl-fh-t">New theme</b><span class="ce-wl-fh-s">the hunt list is ours — the model does not get a vote on this tab</span></div>'+
-    '<input type="hidden" data-wlf="id">'+
-    '<label class="ce-wl-lb">Theme <span>what we are hunting</span></label>'+
-    '<input class="ce-wl-in" data-wlf="theme" placeholder="e.g. Regulatory: DOJ ad-tech remedies">'+
-    '<label class="ce-wl-lb">Tags <span>click to select · they drive the cross-quarter filter</span></label>'+
-    '<div class="ce-wl-tagpick" data-wlf="tagpick"></div>'+
-    '<div class="ce-wl-newtag"><input class="ce-wl-in" data-wlf="newtag" placeholder="create a new tag (e.g. regulatory)"><button type="button" class="ce-wl-newtag-go">+ add tag</button></div>'+
-    '<label class="ce-wl-lb">Definition <span>required — what the theme means, in our words</span></label>'+
-    '<textarea class="ce-wl-in ce-wl-ta" data-wlf="definition" rows="3" placeholder="What this theme is and why it moves the thesis"></textarea>'+
-    '<div class="ce-wl-2col">'+
-      '<div><label class="ce-wl-lb">Tracking since</label><select class="ce-wl-in" data-wlf="trackSince">'+ceQuarterOpts(null,'— pick a quarter —')+'</select></div>'+
-      '<div><label class="ce-wl-lb">Tracking until <span>empty = still open</span></label><select class="ce-wl-in" data-wlf="trackUntil">'+ceQuarterOpts(null,'— still open —')+'</select></div>'+
-    '</div>'+
-    '<div class="ce-wl-frow"><button type="button" class="ce-wl-add-go">Add to the live list</button>'+
-      '<button type="button" class="ce-wl-cancel">cancel</button>'+
-      '<span class="ave-subh-note">Saved to the shared database — visible to the whole team immediately, no commit needed. The company is fixed to this profile.</span></div>'+
-  '</div>';
-}
-// The table itself — the storage view, and the round-trip out. Regenerated from WL_ROWS on every
-// add / edit / delete, with COPY (TSV, pasteable) and COPY JSON (exact, hardcodable).
-// `rank` is the sort key, labelled "order" — it is never rendered on a card, so removing a theme
-// cannot leave a gap in a visible numbering.
-var WL_COLS=[
-  {k:'id',l:'id'},{k:'q',l:'quarter'},{k:'rank',l:'order'},{k:'theme',l:'theme'},
-  {k:'tags',l:'tags'},{k:'definition',l:'definition'},
-  {k:'trackSince',l:'tracking since'},{k:'trackUntil',l:'tracking until'}
-];
-function wlCellText(r, k){
-  var v=r[k];
-  if(k==='tags') return (v||[]).join(', ');
-  if(v==null) return '';
-  return String(v).replace(/<[^>]+>/g,'');
-}
-// The live proof that the table tracks the cards: both numbers move as rows are added, closed or
-// deleted. It is re-rendered by the same rerender() that rebuilds the rows.
-function wlCount(){
-  var open=WL_ROWS.filter(wlOpen).length;
-  return WL_ROWS.length+' rows · '+open+' open hook'+(open===1?'':'s')+' · live';
-}
-function ceWlTableRows(){
-  return WL_ROWS.map(function(r){
-    return '<tr'+(wlOpen(r)?' class="wl-open"':'')+'>'+WL_COLS.map(function(c){
-      var t=wlCellText(r,c.k);
-      var cls=(c.k==='theme')?' class="wl-th"':((c.k==='id'||c.k==='q'||c.k==='rank')?' class="wl-key"':'');
-      return '<td'+cls+'>'+(t?esc(t):'<span class="ce-empty">—</span>')+'</td>';
-    }).join('')+'</tr>';
-  }).join('');
-}
-function ceWlTable(){
-  return '<div class="ce-wl-tbl-wrap" id="googlWlTable">'+
-    '<div class="ce-wl-tbl-h">'+
-      '<span class="ce-wl-tbl-t">The Watch List table — one row per theme</span>'+
-      '<span class="ce-wl-tbl-s">the storage view</span>'+
-      // Replaces the old "refresh" button, which was a no-op: the table already rebuilds on every
-      // add / edit / delete, so pressing it could never change anything and just read as broken.
-      // This counter DOES change (rows, and how many hooks are open), which is the actual proof.
-      '<span class="ce-wl-tbl-n">'+wlCount()+'</span>'+
-      // Hiding the table must NOT disable the round-trip: COPY builds its payload from WL_ROWS,
-      // never from the rendered rows, so it works whether or not the table is on screen (§6a-v).
-      '<button type="button" class="ce-wl-copy alt" data-wltoggle="1">show table</button>'+
-      '<button type="button" class="ce-wl-copy" data-wlcopy="tsv">COPY</button>'+
-      '<button type="button" class="ce-wl-copy alt" data-wlcopy="json">copy JSON</button>'+
-    '</div>'+
-    '<div class="ce-wl-tbl-sc" data-wltblbody hidden>'+'<table class="ce-wl-tbl"><thead><tr>'+
-      WL_COLS.map(function(c){ return '<th>'+esc(c.l)+'</th>'; }).join('')+
-    '</tr></thead><tbody class="ce-wl-tbody">'+ceWlTableRows()+'</tbody></table></div>'+
-    '<div class="ave-subh-note" style="margin-top:7px"><b>This is now live:</b> add / edit / close / delete themes above → the change is written straight to the shared Supabase table <code>company_themes</code> and everyone sees it — no COPY, no commit (docs/EARNINGS_CONVENTIONS.md §6f). <b>COPY</b> / <b>copy JSON</b> remain for exporting the table to a sheet.</div>'+
-  '</div>';
-}
 function ceWatchBody(c){
+  // The Watch List is now the SHARED engine (js/watchlist.js): one implementation for every
+  // company, persistent against Supabase (table company_themes) and sortable. We render a mount
+  // host here; wireCallEarnings mounts the engine into it (it needs the company id + quarter list).
+  // GOOGL's own multi-year "theme record" stays below, folded in as before.
   var h=ceStyle();
-  // A one-line reminder of the append-only cadence, above the theme filter.
-  h+='<div class="ce-wl-hint">🔁 <b>How quarters advance:</b> a new <i>upcoming</i> quarter appears in Setup & Watch List <b>only once the prior quarter\'s Post-Results (print + call highlights) is filled</b>. Fill Q(n) Post-Results → then Q(n+1) opens for prep.</div>';
-  // ── Tag bar: select themes ACROSS quarters (multi-select). Empty selection = per-quarter view. ──
-  h+='<div class="ce-wl-tagbar"><span class="ce-wl-bar-k">Filter by theme (across quarters):</span>'+
-    wlTags().map(function(t){ return '<button type="button" class="ce-wl-tag" data-wltag="'+esc(t)+'">#'+esc(t)+'</button>'; }).join('')+
-    '<button type="button" class="ce-wl-tag ce-wl-clear" data-wltag="">clear</button>'+
-    '<button type="button" class="ce-wl-add-btn">+ Add theme</button>'+
-  '</div>';
-  // ── Tracking-window filter: the hooks we have open vs the ones we closed. ──
-  h+='<div class="ce-wl-tagbar" style="margin-top:-4px"><span class="ce-wl-bar-k">Tracking window:</span>'+
-    '<span class="mg-seg" style="display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px">'+
-      '<button type="button" class="ce-wl-win active" data-wlwin="all">All</button>'+
-      '<button type="button" class="ce-wl-win" data-wlwin="open">Open hooks</button>'+
-      '<button type="button" class="ce-wl-win" data-wlwin="closed">Closed</button>'+
-    '</span>'+
-    '<span class="ave-subh-note" style="margin-left:4px">A theme is <b>open</b> while it has a <i>Tracking since</i> and no <i>Tracking until</i>. We open and close them by hand.</span>'+
-  '</div>';
-  h+=ceWlForm();
-  // Per-quarter blocks (default view). The live quarter renders only OPEN hooks — that IS the list.
-  h+=CALL_EARNINGS.quarters.map(function(u,qi){
-    var qk=ceQkey(u.q), frozen=(u.status!=='upcoming');
-    var b='<div class="ce-qblock" data-ceq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="ce-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="ce-frozen">frozen</span>':'')+'</div>';
-    // Cards are rendered by rerender() after the DB load fills WL_ROWS (see wireCallEarnings).
-    b+='<p class="ov-lede"><b>'+(frozen?'The list as it was frozen — ':'Things to hunt — ')+esc(u.q)+'</b>'+
-      (frozen?' <span style="color:var(--mu);font-weight:600">(scored afterwards in Post-Results)</span>':' <span style="color:var(--mu);font-weight:600">(the open hooks — a <i>Tracking since</i> with no <i>Tracking until</i>)</span>')+
-      '. Each card carries its <b>definition</b> — what the theme means in our words — its <b>tags</b>, and its <b>tracking window</b>. Tap <b>the thread ›</b> for the grounding and the quarter-by-quarter evolution. Ordered by weight, deliberately <b>not numbered</b>: a visible 1–5 goes stale the moment a theme is removed.</p>';
-    b+='<div class="ce-legend"><span class="ce-legend-i"><b>How to read the cards:</b></span>'+
-      '<span class="ce-legend-i"><span class="ce-seed">left open by Q2 2026</span> it is on the list because last quarter\'s call did not settle it</span>'+
-      '<span class="ce-legend-i"><span class="ce-w-chip since"><b>Tracking since:</b> Q4 2024</span> with no <i>Tracking until</i> ⇒ the hook is still open</span>'+
-      (frozen?'':'<span class="ce-legend-i"><span class="ce-w-ed" style="pointer-events:none">✎</span> edit — including closing the hook by filling <i>Tracking until</i></span>')+
-    '</div>';
-    // Stable host — rerender() fills it from WL_ROWS once the DB load resolves (or shows the empty note).
-    b+='<div class="ce-watch" data-cewq="'+esc(u.q)+'" data-cefrozen="'+(frozen?'1':'0')+'"><div class="ce-note" data-wlloading>Loading themes…</div></div>';
-    b+='<div class="ov-foot">'+(frozen?'Frozen — this list was scored against '+esc(u.q)+'\'s Post-Results; its <code>newQuestions</code> seeded the next quarter.':'Ours to curate: Post-Results lets the model run (numbers + call highlights), but what earns a slot here is our call. Frozen once the quarter opens.')+'</div>';
-    b+='</div>';
-    return b;
-  }).join('');
-  // Flat cross-quarter container (hidden until a tag is selected)
-  h+='<div class="ce-wl-all" hidden>';
-  h+='<div class="ce-phase" style="background:'+PURPLE+'">Themes across quarters</div>';
-  h+='<p class="ov-lede">Every watch item matching the selected theme(s), <b>across all quarters</b> — how the same hunt evolved print to print. Clear the tags (or pick a quarter) to return to the per-quarter view.</p>';
-  h+='<div class="ce-watch">'+WL_ROWS.map(function(r){ return ceWatchItem(r, ceQkey(r.q), '-f', r.q, false); }).join('')+'</div>';
-  h+='</div>';
-  // ── The table: the storage view + the copy-out that closes the loop back into the code. ──
-  h+=ceWlTable();
-  // ── FUSED: the full multi-year theme record (was the standalone Evolution ▸ Earnings Calls tab,
-  // dissolved Jul 2026 — no two tabs on the same call highlights). Lives here, under the Watch List. ──
+  h+='<div data-wlmount></div>';
   h+='<div style="margin-top:26px;border-top:2px solid var(--bdr);padding-top:16px">';
   h+='<div class="ce-band" style="--bc:'+BRAND+'"><span class="ce-band-i">▤</span><span class="ce-band-t">The theme record — every thread, across all calls</span><span class="ce-band-s">the multi-year backbone behind the hunt above (the former "Earnings Calls" tab, folded in)</span><span class="ce-band-l"></span></div>';
   h+=callsBody();
@@ -1717,9 +1509,10 @@ function cePrintBlock(qLabel, r, us){
     }
     var note=notes[m.k];
     var qb=note?ceReg('resnote-'+ceQkey(qLabel)+'-'+ceQkey(m.k), note.t||m.k, note.h||note):null;
-    // watch[m.k] is the frozen Watch-List RANK; resolve it to the theme text for the chip.
+    // watch[m.k] is the frozen Watch-List RANK. Theme NAMES now live in Supabase (loaded async by the
+    // shared Watch List engine), so the scorecard no longer resolves the name synchronously here — it
+    // keeps the "on the list" marker via the rank; the theme text lives on the Watch List itself.
     var wrRank=watch[m.k], wrTheme=null;
-    if(wrRank){ var wrow=wlFor(qLabel,false).filter(function(x){ return x.rank===wrRank; })[0]; wrTheme=wrow?wrow.theme:null; }
     var wr=wrTheme||(wrRank?('Watch #'+wrRank):null);
     // data-vdc / data-vdu carry BOTH verdicts so the verdict filter is estimate-view-aware in pure CSS.
     return { sort:(cSurp==null?-1:Math.abs(cSurp)), html:
@@ -3012,222 +2805,13 @@ function wireCallEarnings(root){
     var host=pane.querySelector('.ce-hcards[data-cehl="'+qk+'"]'); if(!host) return;
     host.querySelectorAll('.ce-hcard[data-band="'+band+'"]').forEach(function(c){ c.hidden=!on; });
   }; });
-  // ── Watch List v3: theme-tag filter (cross-quarter) · tracking-window filter · add/edit/delete
-  // against WL_ROWS · and the table + COPY that carries the edits back into the code. ──────────
-  var wpane=pane.querySelector('.ce-phpane[data-cep="watch"]');
-  if(wpane){
-    var flat=wpane.querySelector('.ce-wl-all');
-    var form=wpane.querySelector('.ce-wl-addform');
-    function activeTags(){ return Array.prototype.map.call(wpane.querySelectorAll('.ce-wl-tag.active'), function(b){ return b.getAttribute('data-wltag'); }).filter(Boolean); }
-    function activeWin(){ var b=wpane.querySelector('.ce-wl-win.active'); return b?b.getAttribute('data-wlwin'):'all'; }
-    function applyFilters(){
-      var tags=activeTags(), on=tags.length>0, win=activeWin();
-      // tag selection swaps the per-quarter view for the flat cross-quarter one
-      if(on){ wpane.querySelectorAll('.ce-qblock').forEach(function(blk){ blk.hidden=true; }); }
-      else{
-        var act=pane.querySelector('.ce-qpill.active'); var qk=act?act.getAttribute('data-ceqsel'):null;
-        wpane.querySelectorAll('.ce-qblock').forEach(function(blk){ blk.hidden=(qk!=null && blk.getAttribute('data-ceq')!==qk); });
-      }
-      if(flat) flat.hidden=!on;
-      // both filters are card-level: tags decide WHICH themes, the window decides open vs closed
-      wpane.querySelectorAll('.ce-w').forEach(function(card){
-        var ct=(card.getAttribute('data-wltags')||'').split(/\s+/);
-        var isOpen=card.getAttribute('data-wlopen')==='1';
-        var hitTag=!on || tags.some(function(t){ return ct.indexOf(t)>=0; });
-        var hitWin=(win==='all') || (win==='open'&&isOpen) || (win==='closed'&&!isOpen);
-        if(hitTag&&hitWin) card.removeAttribute('data-wlhide'); else card.setAttribute('data-wlhide','1');
-      });
-    }
-    function wireTag(btn){ btn.onclick=function(){
-      if(btn.classList.contains('ce-wl-clear')){ wpane.querySelectorAll('.ce-wl-tag').forEach(function(b){ b.classList.remove('active'); }); }
-      else btn.classList.toggle('active');
-      applyFilters();
-    }; }
-    wpane.querySelectorAll('.ce-wl-tag').forEach(wireTag);
-    wpane.querySelectorAll('.ce-wl-win').forEach(function(btn){ btn.onclick=function(){
-      wpane.querySelectorAll('.ce-wl-win').forEach(function(b){ b.classList.toggle('active', b===btn); });
-      applyFilters();
-    }; });
-    // Registers a tag in the filter bar (so a tag invented while writing a theme becomes available
-    // to everyone) and in the form's picker.
-    function registerTag(t){
-      if(!wpane.querySelector('.ce-wl-tag[data-wltag="'+t+'"]')){
-        var b=document.createElement('button'); b.type='button'; b.className='ce-wl-tag'; b.setAttribute('data-wltag',t); b.textContent='#'+t;
-        var clear=wpane.querySelector('.ce-wl-clear'); clear.parentNode.insertBefore(b, clear); wireTag(b);
-      }
-      var pick=form?form.querySelector('.ce-wl-tagpick'):null;
-      if(pick&&!pick.querySelector('[data-pick="'+t+'"]')){
-        var p=document.createElement('button'); p.type='button'; p.className='ce-wl-pick'; p.setAttribute('data-pick',t); p.textContent='#'+t;
-        p.onclick=function(){ p.classList.toggle('on'); }; pick.appendChild(p);
-      }
-    }
-    // ── the form: shared by add and edit (edit prefills and switches the button) ──
-    function fld(k){ return form?form.querySelector('[data-wlf="'+k+'"]'):null; }
-    function fval(k){ var el=fld(k); return el?el.value.trim():''; }
-    function setF(k,v){ var el=fld(k); if(el) el.value=(v==null?'':v); }
-    function pickedTags(){ return Array.prototype.map.call(form.querySelectorAll('.ce-wl-pick.on'), function(b){ return b.getAttribute('data-pick'); }); }
-    function resetForm(){
-      ['id','theme','definition','trackSince','trackUntil','newtag'].forEach(function(k){ setF(k,''); });
-      form.querySelectorAll('.ce-wl-pick.on').forEach(function(b){ b.classList.remove('on'); });
-      form.querySelector('.ce-wl-fh-t').textContent='New theme';
-      form.querySelector('.ce-wl-add-go').textContent='Add to the live list';
-    }
-    if(form){
-      wlTags().forEach(registerTag);
-      var nt=form.querySelector('.ce-wl-newtag-go');
-      if(nt) nt.onclick=function(){
-        var raw=fval('newtag'); if(!raw) return;
-        raw.split(',').forEach(function(t){
-          t=t.trim().toLowerCase().replace(/\s+/g,'-'); if(!t) return;
-          registerTag(t);
-          var p=form.querySelector('.ce-wl-pick[data-pick="'+t+'"]'); if(p) p.classList.add('on');
-        });
-        setF('newtag','');
-      };
-      var cancel=form.querySelector('.ce-wl-cancel');
-      if(cancel) cancel.onclick=function(){ resetForm(); form.hidden=true; };
-    }
-    var addBtn=wpane.querySelector('.ce-wl-add-btn');
-    if(addBtn&&form){ addBtn.onclick=function(){
-      if(form.hidden){ resetForm(); form.hidden=false; } else form.hidden=true;
-    }; }
-    // Re-renders every quarter block's cards, the flat view and the table from WL_ROWS. Cheap enough
-    // to do wholesale — this is a small table, not a grid. Each block has a stable .ce-watch host
-    // (data-cewq = its quarter, data-cefrozen), so the live quarter shows open hooks and each frozen
-    // quarter shows its snapshot.
-    function rerender(){
-      wpane.querySelectorAll('.ce-watch[data-cewq]').forEach(function(host){
-        var qLabel=host.getAttribute('data-cewq');
-        var frozen=host.getAttribute('data-cefrozen')==='1';
-        var rows=wlFor(qLabel, !frozen);
-        if(!rows.length){ host.innerHTML='<div class="ce-note">'+(frozen?'No themes recorded for '+esc(qLabel)+'.':'No open hooks for '+esc(qLabel)+' yet — add themes with <b>+ Add theme</b> above.')+'</div>'; }
-        else host.innerHTML=rows.map(function(w){ return ceWatchItem(w, ceQkey(qLabel), '', null, !frozen); }).join('');
-      });
-      var flatHost=flat?flat.querySelector('.ce-watch'):null;
-      if(flatHost) flatHost.innerHTML=WL_ROWS.map(function(r){ return ceWatchItem(r, ceQkey(r.q), '-f', r.q, false); }).join('');
-      var tb=wpane.querySelector('.ce-wl-tbody');
-      if(tb) tb.innerHTML=ceWlTableRows();
-      var n=wpane.querySelector('.ce-wl-tbl-n');
-      if(n) n.textContent=wlCount();   // the visible proof the table tracked the edit
-      wireCards(); applyFilters();
-    }
-    // ✎ / ✕ on each live-quarter card.
-    function wireCards(){
-      wpane.querySelectorAll('[data-wledit]').forEach(function(btn){ btn.onclick=function(){
-        var r=wlById(btn.getAttribute('data-wledit')); if(!r||!form) return;
-        resetForm(); form.hidden=false;
-        setF('id',r.id); setF('theme',r.theme); setF('definition',r.definition);
-        setF('trackSince',r.trackSince); setF('trackUntil',r.trackUntil);
-        (r.tags||[]).forEach(function(t){ registerTag(t); var p=form.querySelector('.ce-wl-pick[data-pick="'+t+'"]'); if(p) p.classList.add('on'); });
-        form.querySelector('.ce-wl-fh-t').textContent='Edit theme · '+r.id;
-        form.querySelector('.ce-wl-add-go').textContent='Save changes';
-        form.scrollIntoView({block:'nearest'});
-      }; });
-      wpane.querySelectorAll('[data-wldel]').forEach(function(btn){ btn.onclick=function(){
-        var id=btn.getAttribute('data-wldel');
-        var r=wlById(id); if(!r) return;
-        var live=ceUpcoming();
-        // THE DELETE RULE: a theme can only be DELETED from the quarter it was created in. In any
-        // later quarter it is part of the record — the only allowed change is to CLOSE it (fill
-        // Tracking until). So block the delete and point the user at closing instead.
-        if(r.createdQuarter && live && r.createdQuarter!==live.q){
-          window.alert('Can’t delete “'+r.theme+'”.\n\nIt was created in '+r.createdQuarter+', and the live quarter is now '+live.q+'. A theme can only be deleted from the quarter it was created in.\n\nThe only change allowed now is to CLOSE it (in this or an earlier quarter): use ✎ and fill “Tracking until”.');
-          return;
-        }
-        if(!window.confirm('Delete “'+r.theme+'” from the Watch List?\n\nThis removes it from the shared database for the whole team, and cannot be undone.')) return;
-        btn.disabled=true;
-        deleteTheme(id).then(function(res){
-          if(!res.success){ btn.disabled=false; window.alert('Could not delete: '+((res.error&&res.error.message)||'unknown error')); return; }
-          var i=WL_ROWS.indexOf(r); if(i>=0) WL_ROWS.splice(i,1);
-          rerender();
-        });
-      }; });
-    }
-    wireCards();
-    var go=wpane.querySelector('.ce-wl-add-go');
-    if(go&&form){ go.onclick=function(){
-      var theme=fval('theme'); if(!theme){ var t=fld('theme'); if(t) t.focus(); return; }
-      var live=ceUpcoming(); if(!live) return;
-      if(!_co||!_co.id){ window.alert('No company context — cannot save themes. Reload the profile.'); return; }
-      var id=fval('id');
-      var existing=id?wlById(id):null;
-      var isNew=!existing;
-      var tags=pickedTags();
-      var definition=fval('definition')||null;
-      var trackSince=fval('trackSince')||null;
-      var trackUntil=fval('trackUntil')||null;
-      (tags||[]).forEach(registerTag);
-      go.disabled=true;
-      if(isNew){
-        // New rows: the ticker/company is fixed from the open profile, created_quarter is stamped to
-        // the live quarter (immutable — it governs the delete rule), rank goes to the end.
-        var payload={ company_id:_co.id, ticker:(_co.ticker||'').toUpperCase(), q:live.q, created_quarter:live.q,
-          rank:wlNextRank(live.q), theme:theme, tags:tags, definition:definition,
-          track_since:trackSince, track_until:trackUntil, seeded_by:null, src:null, thread:null };
-        insertTheme(payload).then(function(res){
-          go.disabled=false;
-          if(!res.success){ window.alert('Could not save: '+((res.error&&res.error.message)||'unknown error')); return; }
-          WL_ROWS.push(themeFromDb(res.data));
-          resetForm(); form.hidden=true; rerender();
-        });
-      } else {
-        // Edit: never touch q / created_quarter / company — only the editable fields. Closing a hook
-        // is just setting track_until here.
-        var updates={ theme:theme, tags:tags, definition:definition, track_since:trackSince, track_until:trackUntil };
-        updateTheme(existing.id, updates).then(function(res){
-          go.disabled=false;
-          if(!res.success){ window.alert('Could not save: '+((res.error&&res.error.message)||'unknown error')); return; }
-          var fresh=themeFromDb(res.data);
-          Object.keys(fresh).forEach(function(k){ existing[k]=fresh[k]; });   // update in place, keep array position
-          resetForm(); form.hidden=true; rerender();
-        });
-      }
-    }; }
-    // ── the copy-out: TSV for a sheet / a paste-back, JSON for an exact hardcode ──
-    // Hide / show the table. COPY keeps working while hidden because it serialises WL_ROWS,
-    // not the rendered rows — the table is a VIEW of the data, never the storage.
-    wpane.querySelectorAll('[data-wltoggle]').forEach(function(btn){ btn.onclick=function(){
-      var body=wpane.querySelector('[data-wltblbody]'); if(!body) return;
-      var hide=!body.hasAttribute('hidden');
-      if(hide) body.setAttribute('hidden',''); else body.removeAttribute('hidden');
-      btn.textContent=hide?'show table':'hide table';
-    }; });
-    wpane.querySelectorAll('.ce-wl-copy[data-wlcopy]').forEach(function(btn){ btn.onclick=function(){
-      var kind=btn.getAttribute('data-wlcopy'), txt;
-      if(kind==='json'){ txt=JSON.stringify(WL_ROWS, null, 2); }
-      else {
-        txt=[WL_COLS.map(function(c){ return c.l; }).join('\t')].concat(
-          WL_ROWS.map(function(r){ return WL_COLS.map(function(c){
-            return wlCellText(r,c.k).replace(/[\t\n]+/g,' ');
-          }).join('\t'); })).join('\n');
-      }
-      var done=function(){ var o=btn.textContent; btn.textContent='copied ✓'; setTimeout(function(){ btn.textContent=o; }, 1500); };
-      if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done, done); }
-      else { var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
-             try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta); done(); }
-    }; });
-    // ── Load themes from Supabase (the durable store). Fills WL_ROWS, registers every tag on the
-    // filter bar, then renders. Runs each time the wiring is (re)initialised; WL_ROWS is reset first
-    // so returning to the tab never double-counts. ──
-    function loadThemes(){
-      var hosts=wpane.querySelectorAll('.ce-watch[data-cewq]');
-      if(!_co||!_co.id){
-        hosts.forEach(function(h){ h.innerHTML='<div class="ce-note">Themes load from the shared database once this company is set up (no company id in context).</div>'; });
-        return;
-      }
-      fetchThemes(_co.id).then(function(res){
-        if(!res.success){
-          hosts.forEach(function(h){ h.innerHTML='<div class="ce-note">Could not load themes: '+esc((res.error&&res.error.message)||'unknown error')+'. (Has sql/010_company_themes.sql been run in Supabase?)</div>'; });
-          return;
-        }
-        WL_ROWS.length=0;
-        (res.data||[]).forEach(function(r){ WL_ROWS.push(themeFromDb(r)); });
-        wlTags().forEach(registerTag);
-        rerender();
-      });
-    }
-    loadThemes();
-    applyFilters();
+  // ── Watch List: mount the SHARED engine (js/watchlist.js). It owns rendering + Supabase
+  // persistence + sorting; nothing company-specific leaks in beyond the id, ticker and quarters.
+  // Re-mounting on tab re-init is idempotent (it rebuilds the host). ──
+  var wmount=pane.querySelector('[data-wlmount]');
+  if(wmount && _co && _co.id){
+    mountWatchList(wmount, { companyId:_co.id, ticker:_co.ticker, quarters:CALL_EARNINGS.quarters,
+      colors:{ brand:BRAND, brand2:BRAND2, purple:PURPLE, gray:GRAY, red:RED } });
   }
 }
 function buildDD(root, key){ var s=activeSubKey(root,key); if(s) buildSub(root,key,s); }

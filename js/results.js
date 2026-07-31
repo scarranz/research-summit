@@ -27,6 +27,7 @@ import { metaResults } from './results-data/meta.js';
 import { metaSetup } from './results-data/meta-setup.js';
 import { ibkrResults } from './results-data/ibkr.js';
 import { ibkrSetup } from './results-data/ibkr-setup.js';
+import { spotResults } from './results-data/spot.js';
 
 var RESULTS_DATA = {
   AMZN: amznResults,
@@ -36,7 +37,8 @@ var RESULTS_DATA = {
   META: metaResults,
   META_SETUP: metaSetup,
   IBKR: ibkrResults,
-  IBKR_SETUP: ibkrSetup
+  IBKR_SETUP: ibkrSetup,
+  SPOT: spotResults
 };
 
 export function getResultsData(ticker){

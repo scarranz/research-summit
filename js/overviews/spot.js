@@ -11,6 +11,8 @@
 // earnings call prepared remarks, historical 20-F income statements, and the Summit
 // DCF model (snapshot 2026-05-22). Financial figures reported in EUR.
 
+import { resultsHtml, initResults } from '../results.js';
+
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function sec(title,inner){ return '<section class="ov-sec"><div class="ov-sec-h">'+esc(title)+'</div>'+inner+'</section>'; }
 
@@ -1408,7 +1410,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="id2026">Investor Day 2026</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="earnings">'+ddEmpty('the Earnings tab (docs/EARNINGS_CONVENTIONS.md v2.10)')+'</div>'+
-      '<div class="ovt-subpane" data-ovst="track" hidden>'+ddEmpty('Results (actuals vs Summit / Street / guidance)')+'</div>'+
+      '<div class="ovt-subpane" data-ovst="track" hidden>'+resultsHtml('SPOT')+'</div>'+
       '<div class="ovt-subpane" data-ovst="estevo" hidden>'+ddEmpty('Estimates (the forecast by model vintage)')+'</div>'+
       '<div class="ovt-subpane" data-ovst="id2026" hidden>'+investorDayBody(c)+'</div>'+
     '</div>'+
@@ -1667,6 +1669,13 @@ function buildSub(root, ddKey, subKey){
     else if (subKey === 'vs') { buildVsUsersChart(); buildVsArpuChart(); }
   } else if (ddKey === 'bottomline'){
     if (subKey === 'mix') buildGmChart();
+  } else if (ddKey === 'evolution'){
+    // The Results engine builds its charts on first paint of a VISIBLE pane, so it is
+    // init'd here rather than in deepDiveInit (js/results.js, RESULTS_CONVENTIONS).
+    if (subKey === 'track'){
+      var w = root.querySelector('.ovt-subpane[data-ovst="track"] .rs-wrap');
+      if (w) initResults(w, 'SPOT');
+    }
   } else if (ddKey === 'valuation'){
     // The scenario tools render from their inputs, so a re-show just recomputes.
     if (subKey === 'price' && root.querySelector('#sensOut')) sensUpdate(root);

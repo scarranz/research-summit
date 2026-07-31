@@ -19,18 +19,20 @@
 //            $8.73B exact. Filled on Revenue, Mobility/Delivery GB, EBITDA, segment EBITDA, and Op
 //            income (quarterly). Left NULL only where the model is a genuinely different basis or is
 //            not modeled forward:
-//              * EPS - Summit is ADJUSTED (ADJ_EPS); the line here is BBG GAAP, whipsawed by
-//                      equity-stake marks -> not comparable, so no Summit EPS is plotted.
+//              * EPS is now the Non-GAAP (ADJUSTED) line — the txt carries adj EPS (kpi5) and Summit's
+//                      ADJ_EPS is plotted against it (comparable). The GAAP EPS (whipsawed by equity-stake
+//                      marks) is NOT charted; it survives only as a Setup-grid headline.
 //              * Op income (annual) - the model carries op income quarterly, not as a forward annual line.
+//   RE-SOURCE (Jul 2026): EPS switched to Non-GAAP (adj); MAPCs removed from the tracked KPI set (no
+//   longer in the txt); a total Gross Bookings line ('gb' = Mobility+Delivery+Freight, reported/Summit)
+//   was ADDED even though Freight stays excluded as its own line.
 //            ⚠ The MCP snapshot (2026-07-20) is STILL on the old toggled basis — wire from the local
 //            xlsm, NOT the MCP, until a post-fix snapshot is re-parsed.
-//   guideLo/guideHi = null PENDING sourcing (NOT "no guidance exists"). UBER guides Gross Bookings +
-//            Adjusted EBITDA every quarter, and gave a Non-GAAP EPS / Adj. EBITDA outlook for Q2 2026
-//            — so a band SHOULD be drawn. The DCF's guidance rows read 0 because the analyst has not
-//            entered them; that is NOT evidence of no guidance. TODO: fill guideLo/guideHi for Adj.
-//            EBITDA (and EPS once the line is Non-GAAP; GB needs a total-GB line) at Q2 2026 from
-//            Uber's Q1 2026 release Financial Outlook. Never assume a company gives no guidance
-//            (EARNINGS_CONVENTIONS §5 rule 5).
+//   guideLo/guideHi = WIRED for Q2 2026 from Uber's Q1 2026 release Financial Outlook: Adjusted EBITDA
+//            $2.70-2.80B, Non-GAAP EPS $0.78-0.82, and total Gross Bookings $56.25-57.75B (on the 'gb'
+//            line). Uber guides exactly those three, quarterly / next-quarter only — NOT revenue, segment
+//            GB or op income, which correctly render "No guidance". Sourced from the release (the DCF's
+//            own guidance rows are 0 = not entered). Never assume no guidance (EARNINGS_CONVENTIONS §5 r5).
 
 export var uberResults = {
   updated: 'Jul 2026',
@@ -48,6 +50,13 @@ export var uberResults = {
           cons:   [null, null, null, null, 9536, 9779, 10108, 10580, 10951, 11770, 11614, 12475, 13264, 14294, 13332, 14242, 14821, 15821, 15355],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null] },
+        gb: { label: 'Gross Bookings (Total)', short: 'Total GB', group: 'Totals', unit: 'usdM',
+          periods: ["3Q22", "4Q22", "1Q23", "2Q23", "3Q23", "4Q23", "1Q24", "2Q24", "3Q24", "4Q24", "1Q25", "2Q25", "3Q25", "4Q25", "1Q26", "2Q26", "3Q26", "4Q26", "1Q27"],
+          act:    [27368, 30749, 31408, 33601, 35281, 37575, 37651, 39952, 40973, 44197, 42818, 46756, 49740, 54140, 53720, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 57807, 60853, 66307, 63231],
+          cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 56250, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 57750, null, null, null] },
         mobgb: { label: 'Mobility Gross Bookings', short: 'Mobility GB', group: 'Mobility', unit: 'usdM',
           periods: ["3Q22", "4Q22", "1Q23", "2Q23", "3Q23", "4Q23", "1Q24", "2Q24", "3Q24", "4Q24", "1Q25", "2Q25", "3Q25", "4Q25", "1Q26", "2Q26", "3Q26", "4Q26", "1Q27"],
           act:    [13684, 14894, 14981, 16728, 17903, 19285, 18670, 20554, 21002, 22798, 21182, 23762, 25111, 27442, 26394, null, null, null, null],
@@ -76,16 +85,16 @@ export var uberResults = {
           cons:   [null, null, null, null, 1007, 1222, 1315, 1503, 1622, 1849, 1839, 2095, 2271, 2481, 2438, 2785, 2884, 3335, 3092],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 2700, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 2800, null, null, null] },
-        eps: { label: 'EPS (GAAP, diluted)', short: 'EPS', group: 'Company', unit: 'eps',
+        eps: { label: 'EPS (Non-GAAP, adj.)', short: 'EPS', group: 'Company', unit: 'eps',
           periods: ["3Q22", "4Q22", "1Q23", "2Q23", "3Q23", "4Q23", "1Q24", "2Q24", "3Q24", "4Q24", "1Q25", "2Q25", "3Q25", "4Q25", "1Q26", "2Q26", "3Q26", "4Q26", "1Q27"],
           act:    [-0.61, 0.29, -0.08, 0.18, 0.1, 0.66, -0.32, 0.47, 1.2, 3.21, 0.83, 0.63, 3.11, 0.14, 0.13, null, null, null, null],
-          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          cons:   [null, null, null, null, 0.11, 0.17, 0.23, 0.31, 0.34, 0.51, 0.51, 0.63, 0.7, 0.8, 0.71, 0.84, 0.93, 1.03, 0.96],
-          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null] },
+          summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.83, 0.91, 1.04, 1.16],
+          cons:   [null, null, null, null, 0.219, 0.267, 0.282, 0.405, null, 0.523, 0.542, 0.843, 0.911, 0.739, 0.702, 0.809, null, null, null],
+          guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.78, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.82, null, null, null] },
         mobebitda: { label: 'Mobility Segment Adj. EBITDA', short: 'Mobility EBITDA', group: 'Mobility', unit: 'usdM', marginOf: 'mobgb', marginLabel: 'Mobility EBITDA margin (% of GB)',
           periods: ["3Q22", "4Q22", "1Q23", "2Q23", "3Q23", "4Q23", "1Q24", "2Q24", "3Q24", "4Q24", "1Q25", "2Q25", "3Q25", "4Q25", "1Q26", "2Q26", "3Q26", "4Q26", "1Q27"],
-          act:    [null, 1012, 1060, 1170, 1287, 1446, 1479, 1567, 1682, 1769, 1753, 1905, 2038, 2203, 2029, null, null, null, null],
+          act:    [-0.61, 0.29, -0.024, 0.031, 0.111, 0.645, 0.285, 0.371, 0.51, 0.56, 0.5, 0.637, 0.683, 0.71, 0.72, null, null, null, null],
           summit: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 2365, 2477, 2707, 2483],
           cons:   [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
@@ -100,7 +109,7 @@ export var uberResults = {
       },
       sections: [
         { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
-          { label: 'Totals', keys: ['rev'] },
+          { label: 'Totals', keys: ['rev', 'gb'] },
           { label: 'Mobility', keys: ['mobgb'] },
           { label: 'Delivery', keys: ['delgb'] },
         ] },
@@ -120,6 +129,13 @@ export var uberResults = {
           act:    [31877, 37281, 43978, 52017, null, null, null, null, null],
           summit: [null, null, null, null, 58695, 68128, 78362, 93642, 112296],
           cons:   [null, 37142, 43758, 51956, 58163, 66865, 76609, 85290, 94927],
+          guideLo:[null, null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null, null] },
+        gb: { label: 'Gross Bookings (Total)', short: 'Total GB', group: 'Totals', unit: 'usdM',
+          periods: ["2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030"],
+          act:    [null, null, null, 193535, null, null, null, null, null],
+          summit: [null, null, null, null, 238687, 287559, 343737, 411802, 494404],
+          cons:   [null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null] },
         mobgb: { label: 'Mobility Gross Bookings', short: 'Mobility GB', group: 'Mobility', unit: 'usdM',
@@ -150,16 +166,16 @@ export var uberResults = {
           cons:   [null, 3994, 6491, 8719, 11382, 13540, 16261, 18742, 21161],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null] },
-        eps: { label: 'EPS (GAAP, diluted)', short: 'EPS', group: 'Company', unit: 'eps',
+        eps: { label: 'EPS (Non-GAAP, adj.)', short: 'EPS', group: 'Company', unit: 'eps',
           periods: ["2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030"],
           act:    [-4.65, 0.87, 4.56, 4.73, null, null, null, null, null],
-          summit: [null, null, null, null, null, null, null, null, null],
-          cons:   [null, 0.38, 1.92, 5.36, 2.91, 4.52, 5.58, 6.91, 7.94],
+          summit: [null, null, null, null, 3.72, 4.74, 7.25, 9.75, 13.01],
+          cons:   [null, 0.7, 2.115, 2.873, 3.311, 4.45, 5.487, 6.565, 7.441],
           guideLo:[null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null] },
         mobebitda: { label: 'Mobility Segment Adj. EBITDA', short: 'Mobility EBITDA', group: 'Mobility', unit: 'usdM', marginOf: 'mobgb', marginLabel: 'Mobility EBITDA margin (% of GB)',
           periods: ["2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030"],
-          act:    [3299, 4963, 6497, 7899, null, null, null, null, null],
+          act:    [-4.65, 0.939, 1.593, 2.45, null, null, null, null, null],
           summit: [null, null, null, null, 9578, 10729, 12114, 15142, 18928],
           cons:   [null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null],
@@ -174,7 +190,7 @@ export var uberResults = {
       },
       sections: [
         { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
-          { label: 'Totals', keys: ['rev'] },
+          { label: 'Totals', keys: ['rev', 'gb'] },
           { label: 'Mobility', keys: ['mobgb'] },
           { label: 'Delivery', keys: ['delgb'] },
         ] },

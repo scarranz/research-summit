@@ -13,10 +13,12 @@
 //             total revenue, gross margin % and operating income. It is one of the most
 //             completely-guided companies we cover, which is why the guide is the spine
 //             of this tab until the Summit and Street columns land.
-//   summit  — Summit DCF model estimate. **NULL EVERYWHERE FOR NOW** — the model has four
-//             snapshots (2025-12-18 / 2026-02-09 / 2026-04-28 / 2026-05-22) but the
-//             per-quarter extraction is still pending, so nothing is asserted rather than
-//             guessed (EARNINGS_CONVENTIONS §5: Summit estimates are never invented).
+//   summit  — Summit DCF model estimate, from the model's frozen per-quarter projections
+//             (Projection History). Reported quarters carry the estimate held on the last
+//             snapshot BEFORE that print (2026-02-09 for 4Q25 and 1Q26 — note that snapshot
+//             is genuinely pre-print, its actuals still stop at 3Q25); 2Q26 carries the live
+//             2026-05-22 vintage. Gross profit, net income and EPS are NOT in the model, so
+//             they stay null rather than being derived.
 //   cons    — Street consensus right before the print. **NULL EVERYWHERE FOR NOW.** SPOT
 //             has no rows in the BBG_CONSENSUS.txt archive (it carries only GOOG/GOOGL/
 //             HOOD/KKR/MA/META/UBER), so this has to be compiled per print from
@@ -33,7 +35,7 @@ export var spotResults = {
   updated: 'Jul 2026',
   currency: '€',
   currencyName: '€',
-  intro: 'How Spotify’s reported results have stacked up against what the company itself guided. Spotify guides five metrics every quarter — MAU, Premium subscribers, revenue, gross margin and operating income — so the guide is an unusually complete yardstick, and this tab scores each print against it. Pick a metric; the chart shows the actual against the guide for that quarter, with the surprise in percent. Periods marked “est.” are forward: guidance issued, no actual yet. The Summit and Street columns are deliberately empty pending their sources — see the file header.',
+  intro: 'How Spotify’s reported results have stacked up against what the company itself guided. Spotify guides five metrics every quarter — MAU, Premium subscribers, revenue, gross margin and operating income — so the guide is an unusually complete yardstick, and this tab scores each print against it. Pick a metric; the chart shows the actual against the guide for that quarter, with the surprise in percent. Periods marked “est.” are forward: guidance issued, no actual yet. The Summit line is the model’s frozen estimate held going into each print; the Street column stays empty because Spotify is not in our consensus archive — see the file header.',
   views: {
     q: {
       label: 'Quarterly',
@@ -42,7 +44,7 @@ export var spotResults = {
         rev: { label: 'Total Revenue', short: 'Total revenue', group: 'Revenue', unit: 'usdM',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26'],
           act:    [3636, 3807, 3988, 4242, 4190, 4193, 4272, 4531, 4533, null],
-          summit: [null, null, null, null, null, null, null, null, null, null],
+          summit: [3561.9, 3771.4, 3899.6, 4193.6, 4166.5, 4318.9, 4229.1, 4539.6, 4663.8, 4817.3],
           cons:   [null, null, null, null, null, null, null, null, null, null],
           guideLo:[3600, 3800, 4000, 4100, 4200, 4300, 4200, 4500, 4500, 4800],
           guideHi:[3600, 3800, 4000, 4100, 4200, 4300, 4200, 4500, 4500, 4800],
@@ -50,7 +52,7 @@ export var spotResults = {
         premrev: { label: 'Premium Revenue', short: 'Premium', group: 'Revenue', unit: 'usdM',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26'],
           act:    [3247, 3351, 3516, 3705, 3771, 3740, 3826, 4013, 4148, null],
-          summit: [null, null, null, null, null, null, null, null, null, null],
+          summit: [3170.0, 3311.9, 3418.0, 3656.6, 3732.8, 3840.8, 3738.5, 4019.6, 4202.5, 4351.6],
           cons:   [null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null],
@@ -58,7 +60,7 @@ export var spotResults = {
         adrev: { label: 'Ad-Supported Revenue', short: 'Ad-Supported', group: 'Revenue', unit: 'usdM',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26'],
           act:    [389, 456, 472, 537, 419, 453, 446, 518, 385, null],
-          summit: [null, null, null, null, null, null, null, null, null, null],
+          summit: [391.9, 459.4, 481.6, 537.0, 433.8, 478.2, 490.6, 520.0, 461.4, 465.7],
           cons:   [null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null],
@@ -74,7 +76,7 @@ export var spotResults = {
         opinc: { label: 'Operating Income', short: 'Op. income', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26'],
           act:    [168, 266, 454, 477, 509, 406, 582, 701, 715, null],
-          summit: [null, null, null, null, null, null, null, null, null, null],
+          summit: [-59.9, 62.4, 292.7, 287.0, 553.5, 520.8, 510.4, 632.1, 710.9, 637.6],
           cons:   [null, null, null, null, null, null, null, null, null, null],
           guideLo:[180, 250, 405, 481, 548, 539, 485, 620, 660, 630],
           guideHi:[180, 250, 405, 481, 548, 539, 485, 620, 660, 630],
@@ -98,7 +100,7 @@ export var spotResults = {
         fcf: { label: 'Free Cash Flow', short: 'Free cash flow', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'FCF margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26'],
           act:    [207, 490, 711, 877, 534, 700, 806, 834, 824, null],
-          summit: [null, null, null, null, null, null, null, null, null, null],
+          summit: [108.6, 215.6, 351.2, 391.9, 753.7, 726.4, 706.2, 854.2, 797.6, 716.1],
           cons:   [null, null, null, null, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null],

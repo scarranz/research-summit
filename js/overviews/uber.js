@@ -2565,32 +2565,32 @@ var CE_CONS = {
   nHead:9,
   m:[
     { k:'Revenue', u:'$B', t:'ok', code:'SALES_REV_TURN',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,9.54],[null,null,10.01,9.78],[null,10.22,9.98,10.11],[10.8,10.52,10.67,10.58],[10.93,11.03,10.95,null],[11.63,11.57,null,11.77],[11.75,null,11.7,11.61],[null,12.4,12.34,12.48],[12.86,12.77,12.88,13.26],[13.65,13.78,14.08,14.29],[13.36,13.62,13.77,13.33],[14.72,14.82,14.2,14.24],[15.55,14.84,14.82,null],[15.78,15.82,null,null],[15.36,null,null,null]],
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,9.54],[null,null,10.01,9.78],[null,10.22,9.98,10.11],[10.8,10.52,10.67,10.58],[10.93,11.03,10.95,null],[11.63,11.57,null,11.77],[11.75,null,11.7,11.61],[null,12.4,12.34,12.48],[12.86,12.77,12.88,13.26],[13.65,13.78,14.08,14.29],[13.36,13.62,13.77,13.33],[14.72,14.82,14.2,14.242],[15.55,14.84,14.82,null],[15.78,15.82,null,null],[15.36,null,null,null]],
       qa:[8.34,8.61,8.82,9.23,9.29,9.94,10.13,10.7,11.19,11.96,11.53,12.65,13.47,14.37,13.2,null,null,null,null],
       qy:[null,null,null,null,8.34,8.61,8.82,9.23,9.29,9.94,10.13,10.7,11.19,11.96,11.53,12.65,13.47,14.37,13.2],
       qq:[null,8.34,8.61,8.82,9.23,9.29,9.94,10.13,10.7,11.19,11.96,11.53,12.65,13.47,14.37,13.2,null,null,null] },
     { k:'Operating income', u:'$B', t:'ok', code:'IS_COMPARABLE_EBIT',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,0.3],[null,null,0.48,0.51],[null,0.53,0.58,0.62],[null,0.73,0.78,0.79],[null,0.93,0.92,null],[null,1.11,null,1.2],[null,null,1.2,1.22],[null,1.4,1.42,1.47],[null,1.56,1.59,1.62],[null,1.83,1.86,1.9],[null,1.82,1.86,1.84],[null,2.1,2.06,2.11],[null,2.22,2.23,null],[2.46,2.5,null,null],[null,null,null,null]],
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,0.3],[null,null,0.48,0.51],[null,0.53,0.58,0.62],[null,0.73,0.78,0.79],[null,0.93,0.92,null],[null,1.11,null,1.2],[null,null,1.2,1.22],[null,1.4,1.42,1.47],[null,1.56,1.59,1.62],[null,1.83,1.86,1.9],[null,1.82,1.86,1.84],[null,2.1,2.06,2.111],[null,2.22,2.23,null],[2.46,2.5,null,null],[null,null,null,null]],
       qa:[-0.49,-0.14,-0.26,0.33,0.39,0.65,0.82,0.94,1.07,1.25,1.33,1.53,1.68,1.92,1.88,null,null,null,null],
       qy:[null,null,null,null,-0.49,-0.14,-0.26,0.33,0.39,0.65,0.82,0.94,1.07,1.25,1.33,1.53,1.68,1.92,1.88],
       qq:[null,-0.49,-0.14,-0.26,0.33,0.39,0.65,0.82,0.94,1.07,1.25,1.33,1.53,1.68,1.92,1.88,null,null,null] },
     { k:'EBITDA', u:'$B', t:'ok', code:'IS_COMPARABLE_EBITDA',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,1.01],[null,null,1.14,1.22],[null,1.19,1.25,1.32],[1.37,1.41,1.47,1.5],[1.54,1.6,1.62,null],[1.8,1.83,null,1.85],[1.88,null,1.84,1.84],[null,2.05,2.05,2.09],[2.19,2.19,2.22,2.27],[2.42,2.44,2.49,2.48],[2.42,2.45,2.45,2.44],[2.74,2.7,2.66,2.79],[2.81,2.8,2.88,null],[3.06,3.34,null,null],[3.09,null,null,null]],
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,1.01],[null,null,1.14,1.22],[null,1.19,1.25,1.32],[1.37,1.41,1.47,1.5],[1.54,1.6,1.62,null],[1.8,1.83,null,1.85],[1.88,null,1.84,1.84],[null,2.05,2.05,2.09],[2.19,2.19,2.22,2.27],[2.42,2.44,2.49,2.48],[2.42,2.45,2.45,2.44],[2.74,2.7,2.66,2.785],[2.81,2.8,2.88,null],[3.06,3.34,null,null],[3.09,null,null,null]],
       qa:[0.52,0.67,0.76,0.92,1.09,1.28,0.71,1.57,1.69,1.84,1.87,2.12,2.26,2.49,2.48,null,null,null,null],
       qy:[null,null,null,null,0.52,0.67,0.76,0.92,1.09,1.28,0.71,1.57,1.69,1.84,1.87,2.12,2.26,2.49,2.48],
       qq:[null,0.52,0.67,0.76,0.92,1.09,1.28,0.71,1.57,1.69,1.84,1.87,2.12,2.26,2.49,2.48,null,null,null] },
     { k:'EPS', u:'$', t:'ok', code:'IS_COMP_EPS_GAAP',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,0.11],[null,null,0.14,0.17],[null,0.19,0.21,0.23],[0.25,0.27,0.3,0.31],[0.33,0.35,0.34,null],[0.42,0.45,null,0.51],[0.47,null,0.45,0.51],[null,0.56,0.59,0.63],[0.63,0.65,0.67,0.7],[0.75,0.77,0.79,0.8],[0.79,0.79,0.76,0.71],[0.9,0.86,0.78,0.84],[0.91,0.85,0.93,null],[0.96,1.03,null,null],[0.96,null,null,null]],
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,0.11],[null,null,0.14,0.17],[null,0.19,0.21,0.23],[0.25,0.27,0.3,0.31],[0.33,0.35,0.34,null],[0.42,0.45,null,0.51],[0.47,null,0.45,0.51],[null,0.56,0.59,0.63],[0.63,0.65,0.67,0.7],[0.75,0.77,0.79,0.8],[0.79,0.79,0.76,0.71],[0.9,0.86,0.78,0.844],[0.91,0.85,0.93,null],[0.96,1.03,null,null],[0.96,null,null,null]],
       qa:[-0.61,0.29,-0.08,0.18,0.1,0.66,-0.32,0.47,1.2,3.21,0.83,0.63,3.11,0.14,0.13,null,null,null,null],
       qy:[null,null,null,null,-0.61,0.29,-0.08,0.18,0.1,0.66,-0.32,0.47,1.2,3.21,0.83,0.63,3.11,0.14,0.13],
       qq:[null,-0.61,0.29,-0.08,0.18,0.1,0.66,-0.32,0.47,1.2,3.21,0.83,0.63,3.11,0.14,0.13,null,null,null] },
     { k:'Shares outstanding', u:'B', t:'ok', code:'IS_SH_FOR_DILUTED_EPS',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,2.07],[null,null,2.08,2.1],[null,2.12,2.11,2.11],[2.14,2.13,2.12,2.09],[2.14,2.13,2.1,null],[2.15,2.11,null,2.14],[2.12,null,2.13,2.12],[null,2.14,2.12,2.11],[2.15,2.13,2.12,2.1],[2.13,2.12,2.1,2.11],[2.13,2.11,2.1,2.09],[2.11,2.1,2.09,2.06],[2.1,2.08,2.05,null],[2.08,2.05,null,null],[2.03,null,null,null]],
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,2.07],[null,null,2.08,2.1],[null,2.12,2.11,2.11],[2.14,2.13,2.12,2.09],[2.14,2.13,2.1,null],[2.15,2.11,null,2.14],[2.12,null,2.13,2.12],[null,2.14,2.12,2.11],[2.15,2.13,2.12,2.1],[2.13,2.12,2.1,2.11],[2.13,2.11,2.1,2.09],[2.11,2.1,2.09,2.059],[2.1,2.08,2.05,null],[2.08,2.05,null,null],[2.03,null,null,null]],
       qa:[1.98,2.06,2.01,2.08,2.11,2.12,2.08,2.15,2.15,2.14,2.12,2.13,2.12,2.11,2.07,null,null,null,null],
       qy:[null,null,null,null,1.98,2.06,2.01,2.08,2.11,2.12,2.08,2.15,2.15,2.14,2.12,2.13,2.12,2.11,2.07],
       qq:[null,1.98,2.06,2.01,2.08,2.11,2.12,2.08,2.15,2.15,2.14,2.12,2.13,2.12,2.11,2.07,null,null,null] },
     { k:'Operating cash flow', u:'$B', t:'ok', code:'CB_CF_NET_CASH_OPERATING_ACT',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,0.76],[null,null,1.13,0.95],[null,1.15,1.2,1.22],[1.36,1.41,1.47,1.21],[1.76,1.63,1.53,null],[1.83,1.75,null,1.19],[1.96,null,1.72,1.43],[null,2.09,2.04,1.77],[2.43,2.4,2.24,2.08],[2.39,2.44,2.47,2.06],[3.17,3.22,2.89,2.88],[2.63,2.4,2.45,3.33],[2.55,2.64,2.72,null],[2.53,2.74,null,null],[3.08,null,null,null]],
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,0.76],[null,null,1.13,0.95],[null,1.15,1.2,1.22],[1.36,1.41,1.47,1.21],[1.76,1.63,1.53,null],[1.83,1.75,null,1.19],[1.96,null,1.72,1.43],[null,2.09,2.04,1.77],[2.43,2.4,2.24,2.08],[2.39,2.44,2.47,2.06],[3.17,3.22,2.89,2.88],[2.63,2.4,2.45,3.329],[2.55,2.64,2.72,null],[2.53,2.74,null,null],[3.08,null,null,null]],
       qa:[0.43,-0.24,0.61,1.19,0.97,0.82,1.42,1.82,2.15,1.75,2.32,2.56,2.33,2.88,2.35,null,null,null,null],
       qy:[null,null,null,null,0.43,-0.24,0.61,1.19,0.97,0.82,1.42,1.82,2.15,1.75,2.32,2.56,2.33,2.88,2.35],
       qq:[null,0.43,-0.24,0.61,1.19,0.97,0.82,1.42,1.82,2.15,1.75,2.32,2.56,2.33,2.88,2.35,null,null,null] },
@@ -2600,7 +2600,7 @@ var CE_CONS = {
       qy:[null,null,null,null,0.07,0.06,0.06,0.05,0.06,0.06,0.06,0.1,0.04,0.04,0.07,0.09,0.1,0.07,0.07],
       qq:[null,0.07,0.06,0.06,0.05,0.06,0.06,0.06,0.1,0.04,0.04,0.07,0.09,0.1,0.07,0.07,null,null,null] },
     { k:'D&A', u:'$B', t:'ok', code:'CF_DEPR_AMORT',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,0.21],[null,null,0.21,0.21],[null,0.21,0.21,0.2],[0.21,0.21,0.21,0.2],[0.21,0.2,0.2,null],[0.21,0.2,null,0.19],[0.19,null,0.19,0.17],[null,0.19,0.17,0.17],[0.19,0.17,0.17,0.17],[0.17,0.17,0.17,0.18],[0.18,0.19,0.18,0.19],[0.18,0.19,0.19,0.18],[0.19,0.19,0.19,null],[0.2,0.19,null,null],[0.2,null,null,null]],
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,0.21],[null,null,0.21,0.21],[null,0.21,0.21,0.2],[0.21,0.21,0.21,0.2],[0.21,0.2,0.2,null],[0.21,0.2,null,0.19],[0.19,null,0.19,0.17],[null,0.19,0.17,0.17],[0.19,0.17,0.17,0.17],[0.17,0.17,0.17,0.18],[0.18,0.19,0.18,0.19],[0.18,0.19,0.19,0.182],[0.19,0.19,0.19,null],[0.2,0.19,null,null],[0.2,null,null,null]],
       qa:[0.23,0.22,0.21,0.21,0.2,0.2,0.19,0.18,0.19,0.18,0.18,0.18,0.2,0.19,0.19,null,null,null,null],
       qy:[null,null,null,null,0.23,0.22,0.21,0.21,0.2,0.2,0.19,0.18,0.19,0.18,0.18,0.18,0.2,0.19,0.19],
       qq:[null,0.23,0.22,0.21,0.21,0.2,0.2,0.19,0.18,0.19,0.18,0.18,0.18,0.2,0.19,0.19,null,null,null] },
@@ -2610,12 +2610,12 @@ var CE_CONS = {
       qy:[null,null,null,null,3.17,3.3,3.56,3.71,3.67,3.88,3.96,4.21,4.43,4.72,4.6,5.04,5.36,5.68,5.95],
       qq:[null,3.17,3.3,3.56,3.71,3.67,3.88,3.96,4.21,4.43,4.72,4.6,5.04,5.36,5.68,5.95,null,null,null] },
     { k:'Mobility Gross Bookings', u:'$B', t:'ok', code:'INTERNET_GROSS_BOOKINGS',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,17.38],[null,null,18.55,19.11],[null,18.37,18.72,19.13],[20.13,20.25,20.75,20.36],[21.48,21.77,21.54,null],[23.22,23.05,null,22.53],[22.32,null,21.73,21.47],[null,23.9,23.71,23.91],[24.58,24.3,24.54,24.85],[26.35,26.69,26.84,27.13],[24.91,25.08,25.23,25.85],[27.69,27.79,28.28,28.94],[29.02,29.47,29.87,null],[32.01,32.41,null,null],[30.68,null,null,null]],
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,17.38],[null,null,18.55,19.11],[null,18.37,18.72,19.13],[20.13,20.25,20.75,20.36],[21.48,21.77,21.54,null],[23.22,23.05,null,22.53],[22.32,null,21.73,21.47],[null,23.9,23.71,23.91],[24.58,24.3,24.54,24.85],[26.35,26.69,26.84,27.13],[24.91,25.08,25.23,25.85],[27.69,27.79,28.28,28.936],[29.02,29.47,29.87,null],[32.01,32.41,null,null],[30.68,null,null,null]],
       qa:[13.68,14.89,14.98,16.73,17.9,19.29,18.67,20.55,21.0,22.8,21.18,23.76,25.11,27.44,26.39,null,null,null,null],
       qy:[null,null,null,null,13.68,14.89,14.98,16.73,17.9,19.29,18.67,20.55,21.0,22.8,21.18,23.76,25.11,27.44,26.39],
       qq:[null,13.68,14.89,14.98,16.73,17.9,19.29,18.67,20.55,21.0,22.8,21.18,23.76,25.11,27.44,26.39,null,null,null] },
     { k:'Delivery Gross Bookings', u:'$B', t:'ok', code:'INTERNET_GROSS_BOOKINGS',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,15.8],[null,null,16.5,16.76],[null,17.26,17.11,17.52],[17.87,17.69,18.0,18.11],[18.32,18.5,18.47,null],[19.47,19.41,null,19.68],[20.23,null,20.33,20.24],[null,20.78,20.81,21.21],[21.38,21.33,21.71,22.84],[22.92,23.26,24.23,24.75],[23.63,24.5,24.82,25.76],[25.66,25.94,26.64,26.97],[27.19,27.76,28.07,null],[29.86,30.16,null,null],[30.49,null,null,null]],
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,15.8],[null,null,16.5,16.76],[null,17.26,17.11,17.52],[17.87,17.69,18.0,18.11],[18.32,18.5,18.47,null],[19.47,19.41,null,19.68],[20.23,null,20.33,20.24],[null,20.78,20.81,21.21],[21.38,21.33,21.71,22.84],[22.92,23.26,24.23,24.75],[23.63,24.5,24.82,25.76],[25.66,25.94,26.64,26.965],[27.19,27.76,28.07,null],[29.86,30.16,null,null],[30.49,null,null,null]],
       qa:[13.68,14.31,15.03,15.6,16.09,17.01,17.7,18.13,18.66,20.13,20.38,21.73,23.32,25.43,25.99,null,null,null,null],
       qy:[null,null,null,null,13.68,14.31,15.03,15.6,16.09,17.01,17.7,18.13,18.66,20.13,20.38,21.73,23.32,25.43,25.99],
       qq:[null,13.68,14.31,15.03,15.6,16.09,17.01,17.7,18.13,18.66,20.13,20.38,21.73,23.32,25.43,25.99,null,null,null] },
@@ -2630,7 +2630,7 @@ var CE_CONS = {
       qy:[null,null,null,null,20.2,20.5,20.6,19.6,18.2,18.3,18.2,18.2,18.6,18.7,18.5,18.9,19.2,19.2,19.5],
       qq:[null,20.2,20.5,20.6,19.6,18.2,18.3,18.2,18.2,18.6,18.7,18.5,18.9,19.2,19.2,19.5,null,null,null] },
     { k:'MAPCs', u:'M', t:'ok', code:'MONTHLY_ACTIVE_USERS',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,143.4],[null,null,146.1,148.2],[null,145.5,146.4,149.9],[151.5,151.9,154.8,154.7],[162.6,159.6,159.2,null],[166.0,165.8,null,168.3],[165.5,null,166.7,168.1],[null,173.6,174.5,175.9],[177.4,179.2,180.6,184.1],[187.8,189.6,193.0,196.3],[189.2,191.6,193.8,198.3],[200.6,202.6,206.6,207.1],[210.5,213.9,214.5,null],[224.0,225.3,null,null],[222.2,null,null,null]],
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,143.4],[null,null,146.1,148.2],[null,145.5,146.4,149.9],[151.5,151.9,154.8,154.7],[162.6,159.6,159.2,null],[166.0,165.8,null,168.3],[165.5,null,166.7,168.1],[null,173.6,174.5,175.9],[177.4,179.2,180.6,184.1],[187.8,189.6,193.0,196.3],[189.2,191.6,193.8,198.3],[200.6,202.6,206.6,207.103],[210.5,213.9,214.5,null],[224.0,225.3,null,null],[222.2,null,null,null]],
       qa:[124,131,130,137,142,150,149,156,161,171,170,180,189,202,199,null,null,null,null],
       qy:[null,null,null,null,124,131,130,137,142,150,149,156,161,171,170,180,189,202,199],
       qq:[null,124,131,130,137,142,150,149,156,161,171,170,180,189,202,199,null,null,null] },
@@ -2640,7 +2640,7 @@ var CE_CONS = {
       qy:[null,null,null,null,5.0,5.4,5.0,5.5,6.0,5.78,5.75,5.9,5.9,6.0,5.95,6.1,6.2,6.2,6.1],
       qq:[null,5.0,5.4,5.0,5.5,6.0,5.78,5.75,5.9,5.9,6.0,5.95,6.1,6.2,6.2,6.1,null,null,null] },
     { k:'Trips', u:'B', t:'ok', code:'NUMBER_ONLINE_TRANSACTIONS_GENL',
-      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,2.39],[null,null,2.46,2.54],[null,2.46,2.51,2.59],[2.59,2.64,2.73,2.71],[2.93,2.88,2.87,null],[3.02,3.01,null,3.02],[2.99,null,2.96,2.98],[null,3.15,3.17,3.23],[3.28,3.28,3.33,3.39],[3.48,3.54,3.59,3.66],[3.47,3.54,3.6,3.65],[3.78,3.83,3.89,3.9],[4.05,4.09,4.12,null],[4.34,4.37,null,null],[4.22,null,null,null]],
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,2.39],[null,null,2.46,2.54],[null,2.46,2.51,2.59],[2.59,2.64,2.73,2.71],[2.93,2.88,2.87,null],[3.02,3.01,null,3.02],[2.99,null,2.96,2.98],[null,3.15,3.17,3.23],[3.28,3.28,3.33,3.39],[3.48,3.54,3.59,3.66],[3.47,3.54,3.6,3.65],[3.78,3.83,3.89,3.901],[4.05,4.09,4.12,null],[4.34,4.37,null,null],[4.22,null,null,null]],
       qa:[null,null,2.12,2.28,2.44,2.6,2.57,2.77,2.87,3.07,3.04,3.27,3.51,3.75,null,null,null,null,null],
       qy:[null,null,null,null,null,null,2.12,2.28,2.44,2.6,2.57,2.77,2.87,3.07,3.04,3.27,3.51,3.75,null],
       qq:[null,null,null,2.12,2.28,2.44,2.6,2.57,2.77,2.87,3.07,3.04,3.27,3.51,3.75,null,null,null,null] },
@@ -2694,6 +2694,32 @@ var UB_Q1_2026_SUMMARY = { paras:[
   { p:'<b>Profit compounded ~2x bookings, and capital return stepped up.</b> Non-GAAP EPS grew +44% against +21% bookings on operating leverage, and Uber returned a record $3B in buybacks. Score the clean lines \u2014 income from operations and Adjusted EBITDA \u2014 because GAAP net income is distorted by mark-to-market swings on Uber\'s equity stakes (Aurora, Grab, Didi).' },
   { p:'<b>The soft spots are what management would not quantify.</b> AV economics were still described with a "$1T TAM" adjective rather than a payback number; the mid-year AI budget re-up was acknowledged but never sized; and the call itself was unusually short. Those three silences are where the next surprise most likely hides.' },
 ] };
+// Thesis red-lines FROZEN going into Q1 2026 (from the Q4 2025 setup / Watch List), checked against
+// the Q1 2026 print — the most falsifiable thing in Post-Results (§6, canonical googl.js). HELD/TRIPPED
+// per the transcript analysis (docs/calls/UBER-latest.md); every note carries fact → why (Rule 0).
+var UB_Q1_2026_THESISCHECK = [
+  { line:'US-mobility acceleration fails to show up in trips / insurance stays a cost headwind', tripped:false,
+    note:'The opposite: Mobility GB accelerated to <b>+20% with record segment margins</b>, and insurance flipped to <b>leverage for the first year since COVID</b>. L.A. — the worst insurance market — is now growing “significantly better than California and the rest of the country.” The 2026 thesis got its first hard market datapoint, in the hardest market.' },
+  { line:'AV scaling triggers a capital or margin shock to the core', tripped:false,
+    note:'Mobility posted <b>record margins</b> while AV mobility trips grew <b>&gt;10x YoY</b> and Uber returned a record <b>$3B</b> in buybacks. The new Santander / Hertz / Marsh financing doctrine is explicitly <b>capital-light</b> — Uber does not own the fleet. No capital or margin shock; the AV residual-value risk was acknowledged, not incurred.' },
+  { line:'Waymo cannibalizes Uber’s core in the live AV markets', tripped:false,
+    note:'“We don’t see any effect of the Waymo launches on our overall business” — SF/L.A. category position <b>higher</b> than six months ago, driver earnings up in Austin/Atlanta. This is management’s own read on a live competitive question, so it stays tracked, not settled (scored quarter by quarter as Waymo expands).' },
+  { line:'Profitable scaling breaks as grocery/retail mixes into Delivery', tripped:false,
+    note:'Non-GAAP EPS <b>+44%</b>, more than 2x the +21% bookings, on operating leverage; Delivery <b>+23%</b> led by grocery/retail <i>with</i> strong retention. The profitable-scaling machine held through the mix shift — though the grocery-margin mechanics were only partially addressed (Colantuoni’s question pivoted to competition).' },
+  { line:'The AI investment step-up shows up as visible margin pressure', tripped:false,
+    note:'It did not hit margins this quarter (record profitability) — but the line is now on watch: Balaji conceded the November 2026 AI budget was <b>re-upped mid-year</b> after December model releases, “traded off against incremental headcount growth,” and never sized it. Held this quarter, flagged for next.' },
+];
+// What the Q1 2026 print TEES UP for the next call — the hunt list, from the transcript’s seeds +
+// logged silences (docs/calls/UBER-latest.md). Everything before the first em-dash is the visible
+// hook; the rest opens behind “＋ the ask.”
+var UB_Q1_2026_INTOCALL = [
+  '🔥 <b>AV economics are still an adjective</b> — the direct ROI/payback question (Devnani) was deflected into the barbell framing and AV revenue was never sized beyond “another trillion-dollar TAM.” Press for a number: revenue per vehicle per day, the “premium to 1P networks” claim, and where the residual-value risk actually sits.',
+  '💸 <b>The AI budget re-up is un-sized</b> — Balaji admitted the November 2026 budget “underestimated the impact AI tools could have” and was re-upped mid-year, “traded off against incremental headcount growth.” How big is the re-up, and does the headcount offset make it net margin-neutral or a real 2026 cost?',
+  '🛵 <b>Delivery margin under a heavier grocery mix</b> — Delivery +23% is increasingly grocery/retail (lower margin), and Europe now faces “incremental competitive intensity from DoorDash and Prosus,” where Uber “held its own.” Does Delivery margin still leverage through the mix, and what does the European fight cost?',
+  '📈 <b>Does insurance leverage compound past L.A.?</b> — the L.A. datapoint is the proof of concept; the thesis needs it to broaden into national US-mobility acceleration through 2026. Watch Mobility segment margin and the breadth of US trip growth beyond the three lead markets.',
+  '👑 <b>When does 50%-a-year Uber One lap?</b> — 50M members, &gt;50% of bookings, now funding a hotels/Expedia push. Management “doesn’t see it slowing,” but 50% growth eventually laps; the deceleration point and whether spend/retention hold as the base scales is the model input.',
+  '🚚 <b>Freight returned to growth, unexplained</b> — the first growth in nearly two years was stated with no driver. Small and low-margin, so it barely moves the model, but a ~2-year recession inflecting with zero colour is worth pressing as an industrial-economy read.',
+];
 var CALL_EARNINGS = { ticker:'UBER', quarters:[
   { q:'Q2 2026', status:'upcoming', date:'early August 2026 (date TBC)',
     setup:{ source:'Bloomberg (BST) \u2014 BBG_CONSENSUS.txt snapshot archive \u00b7 Summit \u2014 Summit_Financial_Data model', asOf:'2026-07-30',
@@ -2702,23 +2728,27 @@ var CALL_EARNINGS = { ticker:'UBER', quarters:[
       // and Delivery GB are on a DIFFERENT Summit basis (grossed-up revenue+delivery, adj vs GAAP) \u2014 shown as
       // a note, NOT a fake surprise (a reconciliation item for San/Oscar; see js/results-data/uber.js header).
       notes:{
-        'Revenue':{ t:'Why Summit is blank here', h:'<p>Street/actual revenue is Uber\u2019s <b>reported net revenue</b> (Bloomberg <code>SALES_REV_TURN</code>). The Summit model\u2019s revenue line runs <b>~30% higher</b> ($67.9B vs the reported $52.0B in FY2025) \u2014 a grossed-up / managed-revenue basis, not a forecast disagreement.</p><p><b>So what:</b> we do not print a Summit number that would score as a false +30% miss. It is a data-basis reconciliation item, flagged for San/Oscar.</p>' },
-        'Delivery Gross Bookings':{ t:'Summit basis differs \u2014 omitted', h:'<p>Reported Delivery GB (Bloomberg) is ~$26B/quarter; the Summit model carries ~$42B on a different (gross) basis, <b>~+65%</b>.</p><p><b>So what:</b> Mobility GB reconciles 1:1 and is filled; Delivery GB does not, so Summit is left blank rather than shown as a spurious gap.</p>' },
+        'Revenue':{ t:'Summit reconciles (DHER toggle off)', h:'<p>The Summit revenue line used to run ~30% high ($67.9B vs reported $52.0B FY25) \u2014 that was the <b>Delivery Hero pro-forma consolidation toggle</b>, now OFF. Standalone, Summit revenue matches reported to the dollar (FY25 $52.0B), so the forward is directly comparable and is shown. Q2 2026 Summit: <b>$14.2B</b>.</p>' },
+        'Delivery Gross Bookings':{ t:'Summit reconciles (DHER toggle off)', h:'<p>The ~$42B/quarter Summit Delivery GB was the <b>Delivery Hero pro-forma</b> consolidation; with the toggle off it is <b>~$27.6B</b> (vs reported ~$26B, Street ~$27B) \u2014 same basis, so it is now filled.</p>' },
         'EBITDA':{ t:'Comparable EBITDA vs Uber Adj. EBITDA', h:'<p>Bloomberg <code>IS_COMPARABLE_EBITDA</code> and Uber\u2019s own <b>Adjusted EBITDA</b> (the Summit line) are close but not identical (~10% historical gap; they converged to the dollar in Q1 2026). Read the surprise on the archive\u2019s own basis.</p>' },
-        'EPS':{ t:'GAAP \u2014 whipsawed by equity marks', h:'<p>Consensus EPS is <b>GAAP</b> (<code>IS_COMP_EPS_GAAP</code>), which is dominated by mark-to-market swings on Uber\u2019s equity stakes (Aurora, Grab, Didi) \u2014 hence the wild history ($3.21, then $0.14, then $0.13). It is <b>not a forecastable operating line</b>; score the clean lines (income from operations, Adjusted EBITDA) instead.</p>' },
+        'EPS':{ t:'GAAP (Street) vs adjusted (Summit) \u2014 not mixed', h:'<p>Consensus/actual EPS is <b>GAAP</b> (<code>IS_COMP_EPS_GAAP</code>), dominated by mark-to-market swings on Uber\u2019s equity stakes (Aurora, Grab, Didi) \u2014 hence the wild history ($3.21, $0.14, $0.13). Summit only forecasts <b>adjusted</b> EPS (ex-marks, $0.83 for Q2 2026), so we deliberately do <b>not</b> show a Summit EPS here \u2014 scoring a GAAP actual against an adjusted estimate would be a false surprise. Score the clean lines (income from operations, Adj. EBITDA) instead.</p>' },
         'Capex':{ t:'Sign flip \u2014 and asset-light', h:'<p>Capex arrives from the archive as a cash <b>outflow</b> (negative) and is shown here as a positive magnitude. Uber is asset-light \u2014 capex is only ~$0.1B/quarter, immaterial to the model.</p>' },
         'Mobility Gross Bookings':{ t:'Like-for-like \u2014 Summit filled', h:'<p>Summit\u2019s Mobility GB matches the reported/archive figure to the dollar (ratio 1.00), so the forward Summit number is directly comparable. Summit Q2 2026: <b>$28.9B</b>.</p>' },
         'MAPCs':{ t:'A count in millions', h:'<p>Monthly Active Platform Consumers \u2014 a <b>count</b> (millions of users), never a dollar figure. Summit and the archive agree (199M in Q1 2026); Summit Q2 2026: <b>~211M</b>.</p>' },
         'Trips':{ t:'Trips \u2014 in billions', h:'<p>Total quarterly Trips, in billions. Summit and the archive agree 1:1; Summit Q2 2026: <b>~4.04B</b>. (The archive\u2019s Q1 2026 Trips actual came through corrupted as <code>Error 2042</code>, so that one cell is blank \u2014 \u00a76a.)</p>' }
       },
-      us:{ 'Mobility Gross Bookings':{v:28.87}, 'MAPCs':{v:210.6}, 'Trips':{v:4.04} },
-      debate:{ rows:null, synth:'The one thing to resolve: does the insurance-leverage acceleration broaden from L.A. to national US mobility, and does the AV/AI investment step-up show up as margin pressure before it shows up as return? The number that can\u2019t wobble: Mobility segment Adjusted-EBITDA margin.' } }, results:null, call:null },
+      us:{ 'Revenue':{v:14.223}, 'Operating income':{v:2.084}, 'EBITDA':{v:2.795}, 'Shares outstanding':{v:2.040}, 'Operating cash flow':{v:2.673}, 'Capex':{v:0.084}, 'D&A':{v:0.213}, 'Mobility Gross Bookings':{v:28.871}, 'Delivery Gross Bookings':{v:27.602}, 'Mobility take rate':{v:26.0}, 'Delivery take rate':{v:19.5}, 'MAPCs':{v:210.6}, 'Trips per MAPC':{v:6.395}, 'Trips':{v:4.041} },
+      debate:{ rows:null, diverge:[
+      { t:'Top line ~ties, but the composition differs', d:'Revenue is a near-tie — Summit <b>$14.223B</b> vs Street <b>$14.242B</b> (−0.1%) — but they build it differently. Summit models <b>more audience and trips</b> (MAPCs 210.6M vs 207.103M, Trips 4.041B vs 3.901B) and <b>more Delivery GB</b> ($27.602B vs $26.965B, +2.4%), but slightly <b>less Mobility GB</b> ($28.871B vs $28.936B) at <b>lower take rates</b> (Mobility 26.0% vs 26.5%). Summit’s revenue is more volume-led with thinner monetization; the Street leans a touch more on rate. Same destination, different path — the print settles which.' },
+      { t:'On profit they cross over — not a tie', d:'Summit models slightly <b>more EBITDA</b> ($2.795B vs $2.785B) yet slightly <b>less operating income</b> ($2.084B vs $2.111B): because Summit carries higher D&amp;A ($0.213B vs $0.182B), the two swap ranking across the D&amp;A line. Small, but a real cost-structure difference — NOT a rounding tie.' },
+      { t:'The real gap is CASH and capital return', d:'The biggest disagreement by far: Summit models operating cash flow <b>~20% below</b> the Street (<b>$2.673B vs $3.329B</b>, a ~$656M gap) — likely a working-capital / insurance-timing assumption. Yet Summit assumes <b>more buyback</b> (2.040B shares vs 2.059B). So Summit is cautious on cash generated but aggressive on cash returned — the two bets to reconcile against the print.' } ],
+      synth:'The one thing to resolve: does the insurance-leverage acceleration broaden from L.A. to national US mobility, and does the AV/AI investment step-up show up as margin pressure before it shows up as return? The number that can\u2019t wobble: Mobility segment Adjusted-EBITDA margin.' } }, results:null, call:null },
   { q:'Q1 2026', status:'reported', date:'Tue May 6, 2026 \u00b7 after close',
     setup:{ source:'Bloomberg (BST) \u2014 BBG_CONSENSUS.txt snapshot archive (going-in consensus) \u00b7 Summit \u2014 no frozen pre-print estimate in the model snapshot', asOf:'2026-01-29', notes:{}, us:null,
       pricedIn:'Coming off a Q4 that confirmed insurance flipping to leverage and US-mobility acceleration for 2026, the bar was: prove the acceleration is showing up in trips, and show AV scaling without a capital or margin shock. The risk was an in-line print on a story already bought, where any margin/AI-cost wobble gets punished harder than the beat is paid.',
       oneLiner:'Pre-call view: audience + insurance-driven elasticity should keep Mobility accelerating and Delivery in the low-20s; the debate is whether profitable-scaling holds as grocery mixes in and the AV/AI investment steps up.',
       debate:{ rows:null, synth:null } },
-    results:{ summary:UB_Q1_2026_SUMMARY },
+    results:{ summary:UB_Q1_2026_SUMMARY, thesisCheck:UB_Q1_2026_THESISCHECK, intoCall:UB_Q1_2026_INTOCALL },
     call:{ highlights:UB_Q1_2026_HIGHLIGHTS } },
 ] };
 var WL_ROWS=[
@@ -3166,6 +3196,32 @@ function ceMarginRow(cur, baseYoy, baseQoq){
       (baseQoq!=null?'<span class="ce-mm-b qoq"> (prev '+baseQoq+'%)</span>':'')+
     '</span></div>';
 }
+// Growth of ANY value (Street OR Summit) against the reported base — YoY vs fq-3, QoQ vs fq0. Same
+// base for both estimates, so the reader compares like-for-like. (Was Street-only before; there is
+// no reason Summit shouldn't carry its own growth against the same actual base.)
+function ceGrowthOf(val, m, qi, base){
+  if(m.t==='basis'||val==null) return null;
+  var b=(base==='qoq')?m.qq[qi]:m.qy[qi];
+  if(b==null||!b) return null;
+  return Math.round((val/b-1)*100);
+}
+// The margin block for a profit line: a "MARGIN" header, then the Street margin (Street colour) and
+// the Summit margin (Summit colour) SIDE BY SIDE so it is never ambiguous whose is whose, then ONE
+// shared "prev" below (the base-period actual margin — identical for both, swaps YoY/QoQ). Each
+// margin is same-vintage (Street = cons/cons-rev, Summit = summit/summit-rev) per §5 rule 7.
+function ceMarginBlock(mStreet, mSummit, prevYoy, prevQoq){
+  if(mStreet==null && mSummit==null) return '';
+  var prev='';
+  if(prevYoy!=null) prev+='<span class="ce-mm-b yoy">prev '+prevYoy+'%</span>';
+  if(prevQoq!=null) prev+='<span class="ce-mm-b qoq">prev '+prevQoq+'%</span>';
+  return '<div class="ce-mrow2"><div class="ce-mrow2-h">MARGIN</div>'+
+    '<div class="ce-mrow2-v">'+
+      '<span class="ce-mgn ce-mgn-cons">'+(mStreet!=null?mStreet+'%':'—')+'</span>'+
+      '<span class="ce-mgn ce-mgn-us">'+(mSummit!=null?mSummit+'%':'—')+'</span>'+
+    '</div>'+
+    (prev?'<div class="ce-mrow2-prev">'+prev+'</div>':'')+
+  '</div>';
+}
 // Current margin + the margin of the period the growth chip compares against. The base swaps with
 // the lens (YoY → the same quarter a year ago; QoQ → the prior quarter), so with Margin + YoY on
 function ceGrid(u,which){
@@ -3185,14 +3241,25 @@ function ceGrid(u,which){
     var street=(c==null)
       ? '<span class="ce-empty">—</span>'+(m.t==='nocons'?'<span class="ce-nocons" title="The archive carries no forward estimate for this line — actuals only">no est.</span>':'')
       : ceFmtV(m.u,c)+'<span class="ce-gy">'+ceChip(ceGrowth(m,qi,'yoy'))+'</span><span class="ce-gq">'+ceChip(ceGrowth(m,qi,'qoq'))+'</span>';
-    // margin row uses the Street (consensus) margin — the line the growth chips are about.
-    var mRow=mgn?ceMarginRow(ceMarginPct(c,revC), ceMarginPct(m.qy[qi],revQy), ceMarginPct(m.qq[qi],revQq)):'';
+    var summit=uv
+      ? ceFmtV(m.u,uv.v)+'<span class="ce-gy">'+ceChip(ceGrowthOf(uv.v,m,qi,'yoy'))+'</span><span class="ce-gq">'+ceChip(ceGrowthOf(uv.v,m,qi,'qoq'))+'</span>'
+      : '<span class="ce-empty">—</span>';
+    // Margin sits at the END of EACH estimate's OWN row (in that estimate's colour), next to its growth
+    // — so POSITION, not just colour, makes it unambiguous whose margin is whose. One "MARGIN" header
+    // above, one shared "prev" below (identical for both; swaps YoY/QoQ). Same-vintage per §5 rule 7.
+    var mStreet=mgn?ceMarginPct(c,revC):null, mSummit=mgn?ceMarginPct(uv?uv.v:null,revS):null;
+    var rmgn=function(v,cls){ return v==null?'':'<span class="ce-rmgn '+cls+'">'+v+'%</span>'; };
+    var prevYoy=mgn?ceMarginPct(m.qy[qi],revQy):null, prevQoq=mgn?ceMarginPct(m.qq[qi],revQq):null;
+    var mgnHead=(mgn&&(mStreet!=null||mSummit!=null))?'<div class="ce-mgnh">MARGIN</div>':'';
+    var prevRow=(mgn&&(prevYoy!=null||prevQoq!=null))?'<div class="ce-mgnp">'+
+        (prevYoy!=null?'<span class="ce-mm-b yoy">prev '+prevYoy+'%</span>':'')+
+        (prevQoq!=null?'<span class="ce-mm-b qoq">prev '+prevQoq+'%</span>':'')+'</div>':'';
     return '<div class="ce-mcell'+(which==='cust'?' cust':'')+(m.t==='basis'?' flagged':'')+'">'+
       '<div class="ce-mcell-k">'+esc(m.k)+q+'</div>'+
-      '<div class="ce-mcell-v">'+
-        '<div class="ce-val ce-val-cons"><span class="ce-val-lab">Street</span>'+street+'</div>'+
-        '<div class="ce-val ce-val-us"><span class="ce-val-lab">Summit</span>'+(uv?ceFmtV(m.u,uv.v):'<span class="ce-empty">—</span>')+'</div>'+
-        mRow+
+      '<div class="ce-mcell-v">'+mgnHead+
+        '<div class="ce-val ce-val-cons"><span class="ce-val-lab">Street</span>'+street+rmgn(mStreet,'cons')+'</div>'+
+        '<div class="ce-val ce-val-us"><span class="ce-val-lab">Summit</span>'+summit+rmgn(mSummit,'us')+'</div>'+
+        prevRow+
       '</div></div>';
   }).join('')+'</div>';
 }
@@ -3208,6 +3275,22 @@ function ceGridStyle(){
     '.ce-mcell .ce-val-lab{font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);flex:none;width:38px}'+
     '.ce-gchip{font-size:10px;font-weight:800;margin-left:2px}'+
     '.ce-mm{display:none}'+'.ce-mm-b{display:none;font-size:9px;font-weight:700;color:var(--mu);white-space:nowrap}'+'.ce-evwrap[data-mm="on"][data-g="yoy"] .ce-mm-b.yoy{display:inline}'+'.ce-evwrap[data-mm="on"][data-g="qoq"] .ce-mm-b.qoq{display:inline}'+'.ce-mrow{display:none;align-items:baseline;gap:5px;margin-top:5px;padding-top:5px;border-top:1px dashed var(--bdr)}'+'.ce-evwrap[data-mm="on"] .ce-mrow{display:flex}'+'.ce-mrow-l{font-size:8px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);flex:none}'+'.ce-mrow-v{font-size:11px;font-weight:900;color:'+PURPLE+';font-variant-numeric:tabular-nums}'+
+    /* margin block v2 — MARGIN header, Street & Summit margins side-by-side in their colours, shared prev below */
+    '.ce-mrow2{display:none;flex-direction:column;gap:1px;margin-top:5px;padding-top:5px;border-top:1px dashed var(--bdr)}'+
+    '.ce-evwrap[data-mm="on"] .ce-mrow2{display:flex}'+
+    '.ce-mrow2-h{font-size:8px;font-weight:800;letter-spacing:.09em;color:var(--mu)}'+
+    '.ce-mrow2-v{display:flex;gap:12px;align-items:baseline}'+
+    '.ce-mgn{font-size:11.5px;font-weight:900;font-variant-numeric:tabular-nums}'+
+    '.ce-mgn-cons{color:#6B7684}.ce-mgn-us{color:#2563EB}'+
+    '.ce-evwrap[data-ev="cons"] .ce-mgn-us{display:none}.ce-evwrap[data-ev="us"] .ce-mgn-cons{display:none}'+
+    '.ce-mrow2-prev{font-size:9px;color:var(--mu);font-weight:700;margin-top:1px}'+
+    /* per-row margin (v3): at the end of each estimate row, its colour; MARGIN header + shared prev, mm-toggled */
+    '.ce-rmgn{display:none;margin-left:auto;font-size:11px;font-weight:900;font-variant-numeric:tabular-nums;padding-left:8px}'+
+    '.ce-evwrap[data-mm="on"] .ce-rmgn{display:inline-block}'+
+    '.ce-rmgn.cons{color:#6B7684}.ce-rmgn.us{color:#2563EB}'+
+    '.ce-mgnh{display:none;text-align:right;font-size:8px;font-weight:800;letter-spacing:.09em;color:var(--mu);margin-bottom:1px}'+
+    '.ce-mgnp{display:none;text-align:right;font-size:9px;font-weight:700;color:var(--mu);margin-top:2px}'+
+    '.ce-evwrap[data-mm="on"] .ce-mgnh,.ce-evwrap[data-mm="on"] .ce-mgnp{display:block}'+
     '.ce-evwrap[data-mm="on"] .ce-mm{display:inline}'+
     '.ce-nocons{font-size:8.5px;font-weight:800;color:var(--mu);border:1px solid var(--bdr);border-radius:999px;padding:1px 6px;margin-left:6px}'+
     /* the growth lens: CSS-driven, so switching does not re-render the grid */
@@ -3229,6 +3312,11 @@ function ceGridStyle(){
     '.ce-dbt-none{border:1px dashed var(--bdr);border-radius:10px;padding:10px 13px;font-size:11px;'+
       'line-height:1.55;color:var(--mu);background:#FAFBFD}'+
     '@media(max-width:640px){.ce-dbt-r{grid-template-columns:1fr auto}.ce-dbt-v{display:none}}'+
+    /* the debate as QUALITATIVE bullets (not a table) — where Summit & the Street diverge, and why */
+    '.ce-diverge{margin:2px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}'+
+    '.ce-diverge li{position:relative;padding:9px 12px 9px 30px;border:1px solid var(--bdr);border-left:3px solid '+BLUE+';border-radius:9px;background:#fff;font-size:11.5px;line-height:1.55;color:var(--navy)}'+
+    '.ce-diverge li:before{content:"⇄";position:absolute;left:10px;top:9px;color:'+BLUE+';font-weight:900;font-size:12px}'+
+    '.ce-diverge li b{color:var(--navy)}'+
   '</style>';
 }
 function ceSetupBody(c){
@@ -3268,44 +3356,23 @@ function ceSetupBody(c){
       // from the same two columns the grid shows, so it cannot disagree with them. Lines where we
       // have no number of our own are listed explicitly rather than silently dropped — an empty
       // Summit column IS the state of the work, and hiding it would misrepresent it (§6a-ii).
-      var d=st.debate, dqi=CE_CONS.q.indexOf(u.q), dus=st.us||{};
-      if(dqi>=0){
-        var diffs=[], nous=[];
-        CE_CONS.m.forEach(function(m){
-          var c=m.qr[dqi]?m.qr[dqi][3]:null, uv=dus[m.k]?dus[m.k].v:null;
-          if(c==null) return;
-          if(uv==null){ nous.push(m.k); return; }
-          diffs.push({ k:m.k, c:c, u:uv, d:((uv/c-1)*100), t:m.t, un:m.u });
-        });
-        diffs.sort(function(x,z){ return Math.abs(z.d)-Math.abs(x.d); });
-        b+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>The debate — where Summit differs from the Street</b>'+
-           '<span style="color:var(--mu);font-weight:600;font-size:10px"> · sorted by the size of the gap</span></div>';
-        if(diffs.length){
-          b+='<div class="ce-dbt">'+diffs.map(function(x){
-            var side=(x.d>=0)?'above':'below';
-            return '<div class="ce-dbt-r '+side+'">'+
-              '<span class="ce-dbt-k">'+esc(x.k)+'</span>'+
-              '<span class="ce-dbt-v"><b>Street</b> '+ceFmtV(x.un,x.c)+'</span>'+
-              '<span class="ce-dbt-v"><b>Summit</b> '+ceFmtV(x.un,x.u)+'</span>'+
-              '<span class="ce-dbt-d">'+(x.d>=0?'+':'−')+Math.abs(x.d).toFixed(1)+'%</span></div>';
-          }).join('')+'</div>';
-        }
-        if(nous.length){
-          b+='<div class="ce-dbt-none"><b>No Summit number yet on '+nous.length+' of '+(nous.length+diffs.length)+' lines:</b> '+
-             esc(nous.join(' · '))+'.<br>Until those are filled the debate is the Street against itself — '+
-             'the grid above still shows what it expects, and the track record below shows how often it has been wrong.</div>';
-        }
-        if(d&&d.synth) b+='<div class="ce-synth">'+d.synth+'</div>';
+      // Where Summit and the Street differ is explained QUALITATIVELY (bullets), never as a numeric
+      // table — the grid cells above already carry the numbers; here we explain the STORY (e.g. both
+      // reach the same print via different paths). See EARNINGS_CONVENTIONS §5 rule 8.
+      var d=st.debate;
+      if(d&&d.diverge&&d.diverge.length){
+        b+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>Where Summit and the Street differ — and why</b>'+
+           '<span style="color:var(--mu);font-weight:600;font-size:10px"> · same print, different paths — the numbers are in the boxes above; this is the story</span></div>';
+        b+='<ul class="ce-diverge">'+d.diverge.map(function(x){ return '<li><b>'+x.t+'</b> — '+x.d+'</li>'; }).join('')+'</ul>';
       }
+      if(d&&d.synth) b+='<div class="ce-synth" style="margin-top:16px">'+d.synth+'</div>';
       b+='<div class="ov-foot">Frozen at call time; Post-Results scores actuals against BOTH columns.</div>';
     }
-    if(st.pricedIn||st.oneLiner){
-      if(!hasGrid){
-        b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup, as it stood going in.</b> '+(u.date?('Reported <b>'+esc(u.date)+'</b>.'):'')+'</p>';
-        if(st.source) b+='<div class="ave-subh-note" style="margin:0 0 8px">'+esc(st.source)+'</div>';
-      } else {
-        b+='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The contemporaneous read — written before the print, never rewritten</b></div>';
-      }
+    // Frozen pre-call prose only for a reported quarter that has NO consensus grid (fallback). For a
+    // reported quarter WITH a grid, the standalone "contemporaneous read" block was dropped per Dani.
+    if((st.pricedIn||st.oneLiner) && !hasGrid){
+      b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup, as it stood going in.</b> '+(u.date?('Reported <b>'+esc(u.date)+'</b>.'):'')+'</p>';
+      if(st.source) b+='<div class="ave-subh-note" style="margin:0 0 8px">'+esc(st.source)+'</div>';
       if(st.pricedIn) b+='<div class="ce-banner"><b>What was priced in:</b> '+st.pricedIn+'</div>';
       if(st.oneLiner) b+='<div class="ce-synth">'+st.oneLiner+'</div>';
       b+='<div class="ov-foot">Frozen — scored in Post-Results for this quarter.</div>';

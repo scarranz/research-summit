@@ -211,10 +211,13 @@ function rsActGrowthDollar(m, i){
 function rsMarginArr(m, series){
   if (!m.marginOf || m.unit === 'eps') return null;
   var d = rsView().metrics[m.marginOf]; if (!d) return null;
-  var dmap = {};
-  d.periods.forEach(function(p, j){ dmap[p] = d.act[j] != null ? d.act[j] : d.summit[j]; });
+  // Numerator and denominator MUST be the SAME series/vintage: a consensus margin is cons/cons, a
+  // Summit margin is summit/summit, an actual margin is act/act. NEVER mix bases (e.g. a consensus
+  // numerator over Summit revenue) — that is a meaningless hybrid mislabeled as one side. Consensus
+  // and Summit margins stay distinct (see EARNINGS_CONVENTIONS general rule on margins).
+  var dser = d[series] || [];
   return m.periods.map(function(p, i){
-    var num = m[series][i], den = dmap[p];
+    var num = m[series][i], den = dser[i];
     if (num == null || den == null || !den) return null;
     return num / den * 100;
   });

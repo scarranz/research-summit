@@ -209,19 +209,29 @@ function rsMetric(k){
   return rsView().metrics[st.metric];
 }
 
+// ─── Reporting currency ──────────────────────────────────────────────────────
+// A dataset is assumed to report in US dollars. A company that does not (Spotify
+// reports in EUR, and both its actuals AND its guidance are euro figures) sets
+// `currency: '€'` + `currencyName: '€'` on the dataset root. Labelling a euro
+// figure with a dollar sign is a claim about the data, not a cosmetic detail —
+// so the symbol is read per dataset rather than hardcoded. Defaults preserve the
+// existing output for every US filer exactly.
+function rsCur(){ return (_rs.data && _rs.data.currency) || '$'; }
+function rsCurName(){ return (_rs.data && _rs.data.currencyName) || 'US$'; }
+
 function rsFmt(m, v){
   if (v == null) return '—';
-  var neg = v < 0 ? '−' : '', a = Math.abs(v);
-  if (m.unit === 'eps') return neg + '$' + a.toFixed(2);
-  if (a >= 10000) return neg + '$' + (a/1000).toFixed(1) + 'B';
-  return neg + '$' + Math.round(a).toLocaleString() + 'M';
+  var neg = v < 0 ? '−' : '', a = Math.abs(v), c = rsCur();
+  if (m.unit === 'eps') return neg + c + a.toFixed(2);
+  if (a >= 10000) return neg + c + (a/1000).toFixed(1) + 'B';
+  return neg + c + Math.round(a).toLocaleString() + 'M';
 }
 function rsFmtD(m, v, dec){
   if (v == null) return '—';
-  var sign = v >= 0 ? '+' : '−', a = Math.abs(v);
-  if (m.unit === 'eps') return sign + '$' + a.toFixed(2);
-  if (a >= 10000) return sign + '$' + (a/1000).toFixed(dec == null ? 1 : dec) + 'B';
-  return sign + '$' + Math.round(a).toLocaleString() + 'M';
+  var sign = v >= 0 ? '+' : '−', a = Math.abs(v), c = rsCur();
+  if (m.unit === 'eps') return sign + c + a.toFixed(2);
+  if (a >= 10000) return sign + c + (a/1000).toFixed(dec == null ? 1 : dec) + 'B';
+  return sign + c + Math.round(a).toLocaleString() + 'M';
 }
 // Display scale for a metric: $B for AMZN-sized series, $M for SoFi-sized ones.
 // Decided per metric (max |value| across every series) so a metric is always
@@ -247,9 +257,9 @@ function rsGuideMid(m, i){ return (m.guideLo[i] == null || m.guideHi[i] == null)
 // arrive fractional — $135.13111B would eat the chart's left margin). `div` is
 // the metric's display scale from rsScaleOf (1000 → $B axis, 1 → $M axis).
 function rsTick(v, unit, div){
-  var s = v < 0 ? '−' : '', a = Math.abs(v);
-  if (unit === 'eps') return s + '$' + (+a.toFixed(2));
-  return s + '$' + Math.round(a) + (div === 1000 ? 'B' : 'M');
+  var s = v < 0 ? '−' : '', a = Math.abs(v), c = rsCur();
+  if (unit === 'eps') return s + c + (+a.toFixed(2));
+  return s + c + Math.round(a) + (div === 1000 ? 'B' : 'M');
 }
 function rsWin(k, m){
   var st = rsSt(k), n = m.periods.length;
@@ -438,7 +448,7 @@ function rsBuildChart(k){
   var dec = m.unit === 'eps' ? 2 : 1;
   var div = rsScaleOf(m);
   var scale = function(v){ return v == null ? null : (m.unit === 'eps' ? v : v/div); };
-  var unitLbl = m.unit === 'eps' ? '$' : (div === 1000 ? '$B' : '$M');
+  var unitLbl = m.unit === 'eps' ? rsCur() : (rsCur() + (div === 1000 ? 'B' : 'M'));
   function sl(a){ return a.slice(lo, hi + 1); }
 
   var datasets = [], needY2 = false;
@@ -706,7 +716,7 @@ function rsRenderTable(k, m){
     return ab + '▲ · ' + wi + '⊙ · ' + be + '▼<br><span class="rs-ft-dim">avg vs mid ' + sgn(avg(mids)) + '</span>';
   }
 
-  var h = '<div class="rs-ft-cap">' + (m.unit === 'eps' ? 'US$ per share' : (div === 1000 ? 'US$ billions' : 'US$ millions')) + ' · <span class="rs-ft-e">E</span> = estimate, no actual reported yet · the right column summarizes the selected range: how the actual has come in vs each estimate (▲ = beat)</div>';
+  var h = '<div class="rs-ft-cap">' + (m.unit === 'eps' ? rsCurName() + ' per share' : (rsCurName() + (div === 1000 ? ' billions' : ' millions'))) + ' · <span class="rs-ft-e">E</span> = estimate, no actual reported yet · the right column summarizes the selected range: how the actual has come in vs each estimate (▲ = beat)</div>';
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   idx.forEach(function(i, c){
     h += '<th class="' + (est[c] ? 'rs-ft-este' : '') + '">' + esc(m.periods[i]) + (est[c] ? ' <span class="rs-ft-e">E</span>' : '') + '</th>';
@@ -897,7 +907,7 @@ function rsEvoBlockHtml(k){
 function rsEvoModeHtml(k, m){
   var st = rsEvoSt(k);
   if (k !== 'top' && !m.marginOf){ st.mode = 'usd'; return ''; }
-  return '<button type="button" class="rs-view' + (st.mode === 'usd' ? ' active' : '') + '" data-rsevmode="usd">US$B</button>' +
+  return '<button type="button" class="rs-view' + (st.mode === 'usd' ? ' active' : '') + '" data-rsevmode="usd">' + rsCurName() + 'B</button>' +
     '<button type="button" class="rs-view' + (st.mode === 'pct' ? ' active' : '') + '" data-rsevmode="pct">' +
     (k === 'top' ? 'YoY growth %' : 'Margin %') + '</button>';
 }
@@ -1040,7 +1050,7 @@ function rsRenderEvoTable(k, m){
   var pctCap = k === 'top'
     ? ' · “implied YoY growth” = the growth that snapshot’s estimate implies vs the prior fiscal year as known at that date'
     : ' · margins are computed within each snapshot (numerator and denominator from the same vintage)';
-  var h = '<div class="rs-ft-cap">US$ ' + (div === 1000 ? 'billions' : 'millions') + ' · columns are the model’s saved snapshots · “revision” = change vs the prior snapshot · the right column is the cumulative move from the first snapshot to the latest' + pctCap + '</div>';
+  var h = '<div class="rs-ft-cap">' + rsCurName() + ' ' + (div === 1000 ? 'billions' : 'millions') + ' · columns are the model’s saved snapshots · “revision” = change vs the prior snapshot · the right column is the cumulative move from the first snapshot to the latest' + pctCap + '</div>';
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   ev.vintages.forEach(function(v){
     h += '<th>' + esc(v.label) + '<br><span class="rs-ft-dim">' + esc(v.event) + '</span></th>';
@@ -1193,7 +1203,7 @@ function rsBuildSurp(){
   var md = document.getElementById('rsSurpMode');
   if (md) md.innerHTML = '<button type="button" class="rs-view' + (pctMode ? ' active' : '') + '" data-rssurpmode="pct">Surprise %</button>' +
     '<button type="button" class="rs-view' + (!pctMode ? ' active' : '') + '" data-rssurpmode="usd">$ amount</button>';
-  var unitLbl = m.unit === 'eps' ? '$' : (div === 1000 ? 'US$ billions' : 'US$ millions');
+  var unitLbl = m.unit === 'eps' ? rsCur() : (rsCurName() + (div === 1000 ? ' billions' : ' millions'));
   var tEl = document.getElementById('rsSurpChartT');
   if (tEl) tEl.innerHTML = esc(m.label) + ' — surprise vs the Summit estimate <span>(' + (pctMode ? '%' : esc(unitLbl)) + ' per period · hover for both values)</span>';
 
@@ -1296,7 +1306,7 @@ function rsSurpTableRender(m, lo, hi, div){
     return above + '▲ · ' + below + '▼<br><span class="rs-ft-dim">actual avg <span style="color:' + (ap >= 0 ? RS_GREEN : RS_RED) + '">' + sgn(ap) + '</span> · ' + rsFmtD(m, avg(dols2)) + '</span>';
   }
 
-  var h = '<div class="rs-ft-cap">' + (m.unit === 'eps' ? 'US$ per share' : (div === 1000 ? 'US$ billions' : 'US$ millions')) + ' · surprise = (actual − estimate) ÷ |estimate| · ▲/green = the actual beat the frozen estimate · the right column summarizes the selected range</div>';
+  var h = '<div class="rs-ft-cap">' + (m.unit === 'eps' ? rsCurName() + ' per share' : (rsCurName() + (div === 1000 ? ' billions' : ' millions'))) + ' · surprise = (actual − estimate) ÷ |estimate| · ▲/green = the actual beat the frozen estimate · the right column summarizes the selected range</div>';
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   idx.forEach(function(i){ h += '<th>' + esc(m.periods[i]) + '</th>'; });
   h += '<th class="rs-ft-s">Range record</th></tr></thead><tbody>';

@@ -400,19 +400,9 @@ function arpuBody(c){
   return h;
 }
 
-// ─── General tab shell — wraps the MAU / ARPU sub-tabs ───────────────────────
-function generalBody(c){
-  return '<div class="ovg-tabs">'+
-      '<button type="button" class="ovg-tab active" data-ovg="mau">MAU</button>'+
-      '<button type="button" class="ovg-tab" data-ovg="arpu">ARPU</button>'+
-      '<button type="button" class="ovg-tab" data-ovg="vs">vs Netflix</button>'+
-      '<button type="button" class="ovg-tab" data-ovg="ads">Advertising</button>'+
-    '</div>'+
-    '<div class="ovg-pane" data-ovg="mau">'+mauBody(c)+'</div>'+
-    '<div class="ovg-pane" data-ovg="arpu" hidden>'+arpuBody(c)+'</div>'+
-    '<div class="ovg-pane" data-ovg="vs" hidden>'+vsBody(c)+'</div>'+
-    '<div class="ovg-pane" data-ovg="ads" hidden>'+advertisingBody(c)+'</div>';
-}
+// (The old "General" tab shell that wrapped MAU / ARPU / vs Netflix / Advertising is gone —
+// those four bodies are now sub-panes of Deep Dive ▸ Top Line, wired by the shared
+// `.ovt-subtab` convention. Nothing was lost; only the wrapper moved.)
 
 // ════════════════════════════════════════════════════════════════════════════
 // vs NETFLIX  (sub-tab of General) — context on the streaming/subscription space
@@ -661,20 +651,47 @@ function saxChanges(){
   return '<div class="sax-cmp">'+head+rows+'</div>';
 }
 
+function adTimeline(){
+  return '<div class="ov-timeline">'+AD_TIMELINE.map(function(t){
+    return '<div class="ov-tl-item"><div class="ov-tl-dot"></div>'+
+      '<div class="ov-tl-yr">'+esc(t[0])+'</div>'+
+      '<div class="ov-tl-body">'+esc(t[1])+'</div></div>';
+  }).join('')+'</div>';
+}
+function adQuotes(){
+  return '<div class="spot-quotes">'+AD_QUOTES.map(function(q){
+    return '<blockquote class="spot-quote">'+esc(q.q)+'<cite>'+esc(q.a)+'</cite></blockquote>';
+  }).join('')+'</div>';
+}
 function advertisingBody(c){
   var h = '';
   h += '<p class="ov-lede">'+AD_LEDE+'</p>';
+  h += kpis(AD_KPIS);
 
-  // 1 — SAX: what it is + interactive flow (click a box for the players)
-  h += sec('Spotify Ad Exchange (SAX) — the new engine', SAX_NARR + saxSchematic());
+  // 1 — WHY the rebuild happened: the margin trough and the climb out of it.
+  h += sec('The margin story — why the ad stack had to be rebuilt',
+    '<div class="ov-chart-wrap ovt-admargin-wrap"><canvas id="spotAdMarginChart"></canvas></div>'+
+    '<p class="sax-note">Ad-Supported gross margin (bars, coloured by health) against Premium (line) for contrast. The <b>2% trough in 2022</b> is the podcast-overspend era; the recovery to <b>18%</b> is cost discipline plus the shift to automated buying. Ads still earn roughly half of Premium\'s margin — which is why an 11%-of-revenue segment gets this much management attention.</p>');
 
-  // 2 — What it changes vs the old way of buying
+  // 2 — How it got here.
+  h += sec('How the ad business got here', adTimeline());
+
+  // 3 — SAX: what it is + interactive flow (click a box for the players) + who is plugged in.
+  h += sec('Spotify Ad Exchange (SAX) — the new engine',
+    '<p class="ov-lede">'+AD_SAX_INTRO+'</p>'+
+    SAX_NARR + saxSchematic()+
+    '<div style="margin-top:16px">'+adChips()+'</div>');
+
+  // 4 — What it changes vs the old way of buying
   h += sec('What SAX changes vs the old model',
     saxChanges()+
     '<p class="sax-note">'+SAX_CHANGE_NOTE+'</p>');
 
-  // 3 — Where the mix stands today
+  // 5 — Where the mix stands today
   h += sec('The pivot — biddable is now over a third of ad revenue', adBiddableBar());
+
+  // 6 — Management on the record.
+  h += sec('Management on the rebuild', adQuotes());
 
   h += '<div class="ov-foot">'+esc(AD_SOURCES)+'</div>';
   return h;
@@ -1307,34 +1324,108 @@ function idtBody(c){
 }
 
 // Sensitivity shell — wraps the two sub-tabs (Price increase · Investor Day targets).
-function sensitivityBody(c){
-  return '<div class="ovs-tabs">'+
-      '<button type="button" class="ovs-tab active" data-ovs="price">Price increase</button>'+
-      '<button type="button" class="ovs-tab" data-ovs="idt">Investor Day targets</button>'+
-    '</div>'+
-    '<div class="ovs-pane" data-ovs="price">'+sensPriceBody(c)+'</div>'+
-    '<div class="ovs-pane" data-ovs="idt" hidden>'+idtBody(c)+'</div>';
-}
+// (The old "Sensitivity" tab shell is gone — its two tools are now Deep Dive ▸ Valuation ▸
+// Price Sensitivity and ▸ 2029 Targets, wired by the shared `.ovt-subtab` convention.)
 
 // ════════════════════════════════════════════════════════════════════════════
 // SHELL + CHART + INIT
 // ════════════════════════════════════════════════════════════════════════════
 function html(c){
-  var h = '<div class="ov ov-spot" data-brand="SPOT" style="--brand:#1DB954">';
-  h += '<div class="ovt-tabs">'+
-    '<button type="button" class="ovt-tab active" data-ovt="overview">Overview</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="general">General</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="mix">Product Mix</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="id2026">Investor Day 2026</button>'+
-    '<button type="button" class="ovt-tab" data-ovt="sens">Sensitivity</button>'+
+  return '<div class="ov ov-spot" data-brand="SPOT" style="--brand:#1DB954">'+
+    overviewBody(c)+
   '</div>';
-  h += '<div class="ovt-pane" data-ovt="overview">'+overviewBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="general" hidden>'+generalBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="mix" hidden>'+productMixBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="id2026" hidden>'+investorDayBody(c)+'</div>';
-  h += '<div class="ovt-pane" data-ovt="sens" hidden>'+sensitivityBody(c)+'</div>';
-  h += '</div>';
-  return h;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// PANE 2 — DEEP DIVE (the standardized 5-tab spine)
+//
+// Restructured Jul 2026. SPOT previously nested everything INSIDE the Overview
+// as top-level `ovt` tabs (Overview · General · Product Mix · Investor Day ·
+// Sensitivity) — the "overview within an overview" the conventions forbid
+// (docs/OVERVIEW_CONVENTIONS.md §1). Overview and Deep Dive are now SIBLING
+// profile panes, and the old tabs were MOVED, never deleted (Golden Rule #1):
+//
+//   General ▸ MAU          -> Top Line ▸ Users
+//   General ▸ ARPU         -> Top Line ▸ ARPU & Pricing
+//   General ▸ Advertising  -> Top Line ▸ Advertising   (incl. the SAX deep-dive)
+//   General ▸ vs Netflix   -> Top Line ▸ vs Netflix
+//   Product Mix            -> Bottom Line ▸ Product Mix
+//   Investor Day 2026      -> Evolution ▸ Investor Day 2026
+//   Sensitivity ▸ Price    -> Valuation ▸ Price Sensitivity
+//   Sensitivity ▸ ID targets -> Valuation ▸ 2029 Targets
+//
+// The nested sub-tabs also moved from SPOT's bespoke `ovg`/`ovs` classes to the
+// SHARED convention (`.ovt-subtab` / `.ovt-subpane[data-ovst]`, pane-scoped
+// switching) so Top Line, Evolution and Valuation cannot collide.
+// ════════════════════════════════════════════════════════════════════════════
+function ddStyle(){
+  return '<style>'+
+    '.dd-tabs{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 14px;border-bottom:1px solid var(--bdr)}'+
+    '.dd-tab{border:none;background:transparent;font:inherit;font-size:12.5px;font-weight:700;color:var(--mu);padding:9px 14px;cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px}'+
+    '.dd-tab:hover{color:var(--navy)}.dd-tab.active{color:#0f7a38;border-bottom-color:#1DB954}'+
+  '</style>';
+}
+function ddEmpty(what){
+  return '<div class="add-empty">🚧 In progress — '+esc(what)+' is being built.</div>';
+}
+function deepDiveHtml(c){
+  return '<div class="ov ov-spot ov-spot-dd" data-brand="SPOT" style="--brand:#1DB954">'+
+    ddStyle()+
+    '<div class="dd-tabs">'+
+      '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
+      '<button type="button" class="dd-tab" data-dd="bottomline">Bottom Line</button>'+
+      '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
+      '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
+      '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
+    '</div>'+
+    // ── TOP LINE — who listens, what they pay, and the two other revenue surfaces. ──
+    '<div class="dd-pane" data-dd="topline">'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="users">Users</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="arpu">ARPU &amp; Pricing</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="ads">Advertising</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="vs">vs Netflix</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="users">'+mauBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="arpu" hidden>'+arpuBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="ads" hidden>'+advertisingBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="vs" hidden>'+vsBody(c)+'</div>'+
+    '</div>'+
+    // ── BOTTOM LINE — where the money actually stays: the royalty split and the margin climb. ──
+    '<div class="dd-pane" data-dd="bottomline" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="mix">Product Mix</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="mix">'+productMixBody(c)+'</div>'+
+    '</div>'+
+    // ── EVOLUTION — the print-by-print record (Earnings · Results · Estimates) plus the
+    // Investor Day that reset the long-term frame. ──
+    '<div class="dd-pane" data-dd="evolution" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="track">Results</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="id2026">Investor Day 2026</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="earnings">'+ddEmpty('the Earnings tab (docs/EARNINGS_CONVENTIONS.md v2.10)')+'</div>'+
+      '<div class="ovt-subpane" data-ovst="track" hidden>'+ddEmpty('Results (actuals vs Summit / Street / guidance)')+'</div>'+
+      '<div class="ovt-subpane" data-ovst="estevo" hidden>'+ddEmpty('Estimates (the forecast by model vintage)')+'</div>'+
+      '<div class="ovt-subpane" data-ovst="id2026" hidden>'+investorDayBody(c)+'</div>'+
+    '</div>'+
+    // ── VALUATION — the two interactive scenario tools that were the old Sensitivity tab. ──
+    '<div class="dd-pane" data-dd="valuation" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="price">Price Sensitivity</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="idt">2029 Targets</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="price">'+sensPriceBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="idt" hidden>'+idtBody(c)+'</div>'+
+    '</div>'+
+    // ── MANAGEMENT — staged. Synced ownership / insider data stays in Pillars. ──
+    '<div class="dd-pane" data-dd="mgmt" hidden>'+
+      ddEmpty('Management (executives, board and governance)')+
+    '</div>'+
+  '</div>';
 }
 
 var _charts = {};
@@ -1547,14 +1638,8 @@ function buildAdMarginChart(){
 }
 
 // Build whichever General sub-tab is active (MAU shows two charts; vs is static).
-function buildGeneral(root){
-  var act = root.querySelector('.ovg-tab.active');
-  var k = act ? act.getAttribute('data-ovg') : 'mau';
-  if (k === 'arpu') buildArpuChart();
-  else if (k === 'ads') buildAdMarginChart();
-  else if (k === 'mau') { buildUsersChart(); buildRegionChart(); }
-  else if (k === 'vs') { buildVsUsersChart(); buildVsArpuChart(); }
-}
+// (buildGeneral is gone — the per-sub-tab chart dispatch now lives in buildSub, keyed by the
+// Deep Dive pane AND its sub-tab so the same function serves every section.)
 
 // Before / After toggle inside the Product Mix pane.
 function showState(root, state){
@@ -1562,40 +1647,64 @@ function showState(root, state){
   root.querySelectorAll('.spot-state').forEach(function(p){ p.hidden = (p.getAttribute('data-state')!==state); });
 }
 
-function showOvt(root, key){
-  root.querySelectorAll('.ovt-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovt') === key); });
-  root.querySelectorAll('.ovt-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovt') !== key); });
-  if (key === 'mix') requestAnimationFrame(buildGmChart);
-  if (key === 'general') requestAnimationFrame(function(){ buildGeneral(root); });
+// ── Deep Dive tab switching (top level) + the SHARED nested sub-tab convention ──────────────
+// Nested switching is PANE-SCOPED: every Deep Dive pane owns its own `.ovt-subtab` set, so
+// Top Line, Evolution and Valuation cannot fight over the same selector (the same rule the
+// TBBB profile established). Charts build lazily on the first paint of a visible pane —
+// Chart.js needs a non-null offsetParent.
+function activeDD(root){ var b = root.querySelector('.dd-tab.active'); return b ? b.getAttribute('data-dd') : 'topline'; }
+function activeSub(root, ddKey){
+  var pane = root.querySelector('.dd-pane[data-dd="'+ddKey+'"]');
+  if (!pane) return null;
+  var b = pane.querySelector('.ovt-subtab.active');
+  return b ? b.getAttribute('data-ovst') : null;
 }
-
-// Switch the nested General sub-tab (MAU / ARPU); build its chart(s) lazily.
-function showOvg(root, key){
-  root.querySelectorAll('.ovg-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovg') === key); });
-  root.querySelectorAll('.ovg-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovg') !== key); });
-  if (key === 'arpu') requestAnimationFrame(buildArpuChart);
-  else if (key === 'ads') requestAnimationFrame(buildAdMarginChart);
-  else if (key === 'mau') requestAnimationFrame(function(){ buildUsersChart(); buildRegionChart(); });
-  else if (key === 'vs') requestAnimationFrame(function(){ buildVsUsersChart(); buildVsArpuChart(); });
+function buildSub(root, ddKey, subKey){
+  if (ddKey === 'topline'){
+    if (subKey === 'users') { buildUsersChart(); buildRegionChart(); }
+    else if (subKey === 'arpu') buildArpuChart();
+    else if (subKey === 'ads') buildAdMarginChart();
+    else if (subKey === 'vs') { buildVsUsersChart(); buildVsArpuChart(); }
+  } else if (ddKey === 'bottomline'){
+    if (subKey === 'mix') buildGmChart();
+  } else if (ddKey === 'valuation'){
+    // The scenario tools render from their inputs, so a re-show just recomputes.
+    if (subKey === 'price' && root.querySelector('#sensOut')) sensUpdate(root);
+    else if (subKey === 'idt' && root.querySelector('#idtOut')) idtUpdate(root);
+  }
 }
-
-// Switch the Sensitivity sub-tab (Price increase / Investor Day targets).
-function showOvs(root, key){
-  root.querySelectorAll('.ovs-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ovs') === key); });
-  root.querySelectorAll('.ovs-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-ovs') !== key); });
-}
-
-function init(c){
-  var root = document.querySelector('.ov-spot');
-  if (!root) return;
-  root.querySelectorAll('.ovt-tab').forEach(function(btn){
-    btn.onclick = function(){ showOvt(root, btn.getAttribute('data-ovt')); };
+function showSub(root, pane, key){
+  pane.querySelectorAll(':scope > .ovt-subtabs .ovt-subtab').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-ovst') === key);
   });
+  pane.querySelectorAll(':scope > .ovt-subpane').forEach(function(p){
+    p.hidden = (p.getAttribute('data-ovst') !== key);
+  });
+  var ddKey = pane.getAttribute('data-dd');
+  requestAnimationFrame(function(){ buildSub(root, ddKey, key); });
+}
+function showDD(root, key){
+  root.querySelectorAll('.dd-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-dd') === key); });
+  root.querySelectorAll('.dd-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-dd') !== key); });
+  var sub = activeSub(root, key);
+  requestAnimationFrame(function(){ buildSub(root, key, sub); });
+}
+function wireDD(root){
+  root.querySelectorAll('.dd-tab').forEach(function(btn){
+    btn.onclick = function(){ showDD(root, btn.getAttribute('data-dd')); };
+  });
+  root.querySelectorAll('.dd-pane').forEach(function(pane){
+    pane.querySelectorAll(':scope > .ovt-subtabs .ovt-subtab').forEach(function(btn){
+      btn.onclick = function(){ showSub(root, pane, btn.getAttribute('data-ovst')); };
+    });
+  });
+}
+
+// Wires everything that lives INSIDE the Deep Dive panes (the interactive pieces that came
+// across from the old nested tabs). Called from deepDiveInit, never from the Overview's init.
+function wireDeepDiveBody(root){
   root.querySelectorAll('.spot-tg').forEach(function(btn){
     btn.onclick = function(){ showState(root, btn.getAttribute('data-state')); };
-  });
-  root.querySelectorAll('.ovg-tab').forEach(function(btn){
-    btn.onclick = function(){ showOvg(root, btn.getAttribute('data-ovg')); };
   });
   // Interactive SAX schematic: clicking (or Enter/Space on) a box shows its detail.
   root.querySelectorAll('[data-sax]').forEach(function(el){
@@ -1636,10 +1745,6 @@ function init(c){
     sel.onchange = function(){ sensUpdate(root); };
   });
   if (root.querySelector('#sensOut')) sensUpdate(root);
-  // Sensitivity sub-tabs.
-  root.querySelectorAll('.ovs-tab').forEach(function(btn){
-    btn.onclick = function(){ showOvs(root, btn.getAttribute('data-ovs')); };
-  });
   // Investor Day targets scenario: recompute on any slider or metric change.
   root.querySelectorAll('#idtCagr, #idtGm, #idtOm, #idtFcfm, #idtTax, #idtMult').forEach(function(sl){
     sl.oninput = function(){ idtUpdate(root); };
@@ -1651,10 +1756,20 @@ function init(c){
     idtUpdate(root);
   };
   if (root.querySelector('#idtOut')) idtUpdate(root);
-  var active = root.querySelector('.ovt-tab.active');
-  var ak = active && active.getAttribute('data-ovt');
-  if (ak === 'mix') requestAnimationFrame(buildGmChart);
-  if (ak === 'general') requestAnimationFrame(function(){ buildGeneral(root); });
 }
 
-export var spotOverview = { html: html, init: init };
+// The Overview pane carries no tabs and no charts — it is the standardized hook, so its init
+// has nothing to wire today. Kept as the module contract's entry point.
+function init(c){ /* no-op: the Overview pane is static markup */ }
+
+// Deep Dive charts build lazily. companies.js calls this the first time the Deep Dive tab is
+// opened, which is exactly when the canvases finally have a layout.
+function deepDiveInit(c){
+  var root = document.querySelector('.ov-spot-dd');
+  if (!root) return;
+  wireDD(root);
+  wireDeepDiveBody(root);
+  requestAnimationFrame(function(){ buildSub(root, activeDD(root), activeSub(root, activeDD(root))); });
+}
+
+export var spotOverview = { html: html, init: init, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

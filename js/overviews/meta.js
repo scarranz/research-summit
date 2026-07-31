@@ -408,7 +408,7 @@ var SC_NOTE='Source: Bloomberg Supply Chain Analysis (SPLC) for META US Equity, 
 
 // ─── Earnings Calls — management narrative tracker ──────────────────────────
 var CALLS = [
-  { q:'Q2 2026', date:'Jul 29, 2026', chg:null,   // AH ~−9%; next-day close pending at fill time
+  { q:'Q2 2026', date:'Jul 29, 2026', chg:-7.95,   // next-day close Jul 30: $539.03 vs $585.61
     hl:[ 'Revenue +28% at the top of the guide — but EPS $6.18 "missed" on <b>$2.4B legal + $1.2B severance</b> charges; ex-items op income +9%.',
       'The monetization surfaces shipped: <b>Business Agents</b> (1M+ businesses/week) · <b>Model API</b> (Muse Spark on OpenRouter) · <b>Meta One</b>. "Higher margin on selling intelligence rather than selling compute."',
       'FY26 capex floor raised — narrowed to <b>$130–145B</b>; record $31.1B quarter; FCF $784M; <b>BlackRock 1GW JV</b>. 2027: still no number (third ask).' ]},
@@ -650,7 +650,7 @@ var CALL_EARNINGS = { ticker:'META', quarters:[
         '🤖 <b>The surfaces</b> — Business Agents / Model API / Meta One: any dollar disclosure, pricing, or adoption curve? (Watch #2.)',
         '🥽 <b>The RL turn</b> — +16% with a smaller loss: is the glasses ramp finally big enough to bend the segment? (Watch #4.)',
       ],
-      priceReaction:'≈ −9% after hours Jul 29 (from a $585.61 close; earnings-day coverage) — the tape sold the EPS optics + the higher capex floor. Confirm the next-day close before quoting a settled number.' },
+      priceReaction:'−7.95% next-day close (Jul 30: $539.03 vs $585.61) — the tape sold the EPS optics + the higher capex floor; the after-hours ~−9% move mostly held into the close.' },
     call:{
       take:'The monetization answer finally moved from adjectives to shipped products — while the bill\'s funding doctrine (debt + partners, 2027 TBD) was said out loud for the first time.',
       highlights:[

@@ -115,5 +115,55 @@ export var spotResults = {
       ]
     }
   },
+  // ── Estimate EVOLUTION across model snapshots (vintages) ────────────────────
+  // How the ANNUAL forecast for each fiscal year moved as prints landed. Source of
+  // record: the SUMMIT RESEARCH DATABASE — the model's saved snapshots, pulled
+  // through the Summit MCP (`get_fundamentals`, sheet_source `projection_history`)
+  // on 2026-07-31. Four vintages exist for SPOT. No BBG consensus is stored per
+  // snapshot for these lines, so `cons` is null throughout — the comparison here
+  // is the model against ITSELF over time, which is the point of the tab.
+  // Arrays: one row per fiscal year (parallel to `years`), one value per vintage.
+  evolution: {
+    intro: 'How the forecast itself has moved. Each line tracks one fiscal year’s estimate across the model’s four saved snapshots. The story is blunt and it is all in one step: the <b>February 2026 snapshot, taken right after the 4Q25 print, cut the out-years hard</b> — FY2029 revenue came down 19% and FY2029 EBITDA came down 30% in a single revision. The two snapshots since have stabilised revenue and clawed part of it back, but the earnings line has kept falling. Read this before trusting any long-dated number in the model.',
+    vintages: [
+      { label: 'Dec 18, 2025', event: 'pre-4Q25 print' },
+      { label: 'Feb 9, 2026',  event: 'post-4Q25 print' },
+      { label: 'Apr 28, 2026', event: 'post-1Q26 print' },
+      { label: 'May 22, 2026', event: 'post-Investor Day' }
+    ],
+    years: ['2026', '2027', '2028', '2029'],
+    sections: [
+      { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
+        { label: 'Revenue', keys: ['rev'] }
+      ] },
+      { key: 'prof', label: 'Profitability', defaultMetric: 'ebitda', groups: [
+        { label: 'Company', keys: ['ebitda', 'opinc', 'earnings', 'fcf'] }
+      ] }
+    ],
+    metrics: {
+      rev: { label: 'Total Revenue', unit: 'usdM',
+        summit: [[20802, 19581, 19737, 19775], [24836, 22198, 21963, 22958], [29112, 24858, 24854, 26605], [33788, 27447, 27701, 30489]],
+        cons: null,
+        prior: { summit: [17186, 17186, 17186, 17186] },
+        note: 'The December 2025 vintage was carrying FY2026 revenue at €20.8B — about +21% on the FY2025 actual of €17.2B, against a company that has since guided to roughly +10%. February corrected it to €19.6B and it has barely moved since. The out-years took the real damage: FY2029 went €33.8B → €27.4B (−19%) in one revision, and has only partly recovered to €30.5B. In the growth view, implied FY2026 growth fell from 21% to ~15%.' },
+      ebitda: { label: 'EBITDA', unit: 'usdM', marginOf: 'rev', marginLabel: 'EBITDA margin',
+        summit: [[3558, 3150, 3268, 3250], [5175, 4256, 3983, 4048], [6851, 5109, 5024, 5171], [8456, 5951, 5944, 6455]],
+        cons: null,
+        note: 'The hardest-cut line in the model. FY2029 EBITDA fell €8.5B → €6.0B (−30%) at the February snapshot and is still ~24% below where it started. In the margin view the model now runs a ~21% EBITDA margin by FY2029 against the ~25% it assumed in December — which is the quantitative version of the same doubt the market is expressing about the Q2 operating-income guide.' },
+      opinc: { label: 'Operating Income', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin',
+        summit: [[3205, 2853, 2923, 2900], [4802, 3978, 3659, 3714], [6473, 4859, 4771, 4907], [8084, 5741, 5729, 6229]],
+        cons: null,
+        note: 'Cut alongside EBITDA and never restored: FY2027 operating income went €4.8B → €3.7B (−23%). Worth holding next to the Investor Day target of a 20%+ operating margin by 2030 — the model’s own FY2029 margin is ~20.4%, so it now sits right AT the promise rather than comfortably through it.' },
+      earnings: { label: 'Earnings (model definition)', unit: 'usdM', marginOf: 'rev', marginLabel: 'net margin (model def.)',
+        summit: [[2884, 2568, 2685, 2760], [4322, 3580, 3336, 3076], [5825, 4373, 4658, 4080], [7276, 5167, 5634, 5182]],
+        cons: null,
+        note: '⚠ The one line still falling. Where revenue and EBITDA stabilised after February, FY2027 earnings have been cut at EVERY snapshot: €4,322M → €3,580M → €3,336M → €3,076M, a cumulative −29%. FY2028 and FY2029 also fell again at the May snapshot after recovering in April. This is the line to raise with the model owner — the pattern does not match the other four.' },
+      fcf: { label: 'Free Cash Flow', unit: 'usdM', marginOf: 'rev', marginLabel: 'FCF margin',
+        summit: [[4315, 3825, 3375, 3357], [5222, 4303, 4055, 4119], [6901, 5159, 5099, 5246], [8508, 6003, 6023, 6533]],
+        cons: null,
+        note: 'FY2026 free cash flow was cut from €4.3B to €3.4B (−22%) across the four snapshots — a steady walk down rather than one step, and the December figure looks stale against the €3.2B LTM the company actually reported at Q1 2026. The out-years follow the same shape as EBITDA.' }
+    },
+    note: 'Single source: the Summit Research database — the model’s saved snapshots as recorded in the DCF’s Projection History, pulled through the Summit MCP on 31 Jul 2026 (sheet source `projection_history`, annual periods). Four vintages: Dec 18 2025 (before the 4Q25 print), Feb 9 2026 (after it), Apr 28 2026 (after the 1Q26 print) and May 22 2026 (after the Investor Day). Figures in € millions. No Bloomberg consensus is stored per snapshot for these lines, so there is no dashed comparison series — this tab is the model measured against its own past self. Implied growth chains within Summit’s own data; the FY2025 base is the reported actual of €17,186M. Data sourced from Summit DCF models.'
+  },
   source: 'Sources: Spotify quarterly shareholder decks on investors.spotify.com (actuals, and the guidance issued for the following quarter — each quarter’s figures taken from that quarter’s own deck); the Q2 2026 report date from Spotify’s IR release of June 25, 2026 (results Tuesday, August 4, 2026, before market open). Values in € millions except EPS (€ per share). The Summit and Street columns are intentionally empty — see the file header for why.'
 };

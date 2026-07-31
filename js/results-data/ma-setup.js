@@ -14,8 +14,8 @@
 //        • Annual = the last 4 fiscal years + the next 2 forward years (6 columns).
 //      The window advances by itself as new prints land (the forecast anchor moves, the window follows).
 //
-// Street consensus comes from the BBG_CONSENSUS.txt archive (via maResults); Summit is empty for MA
-// (not in the Summit DCF universe) — rendered sparse, never invented (§5 golden rules).
+// Street consensus comes from the BBG_CONSENSUS.txt archive (via maResults); Summit is the DCF
+// model's own annual line (via maResults, annual only — blank on the quarterly window). Never invented.
 import { maResults } from './ma.js';
 
 // Slice every metric's parallel arrays (periods/act/summit/cons/guide…) to the chosen indices.
@@ -64,7 +64,7 @@ var yIdx = annualIdx(maResults.views.y);
 
 export var maSetup = {
   updated: maResults.updated,
-  intro: 'The Setup chart — the same actuals-vs-estimates chart+table as Results, MERGED into one: every tracked line in a single grouped picker, with the period lever, the legend chips, and margin lines for the profit lines (only operating income / EBITDA carry a margin — revenue, VAS, purchase volume, processed transactions and the other KPIs do not). The window is rolling: quarterly shows the last 8 reported quarters + the one next (forecast) quarter; annual shows the last 4 fiscal years + the next 2. Street from the Bloomberg archive; Summit is empty (Mastercard is not in the Summit DCF universe).',
+  intro: 'The Setup chart — the same actuals-vs-estimates chart+table as Results, MERGED into one: every tracked line in a single grouped picker, with the period lever, the legend chips, and margin lines for the profit lines (only operating income / EBITDA carry a margin — revenue, VAS, purchase volume, processed transactions and the other KPIs do not). The window is rolling: quarterly shows the last 8 reported quarters + the one next (forecast) quarter; annual shows the last 4 fiscal years + the next 2. Street from the Bloomberg archive; Summit is the DCF model’s own annual line (annual view only — the MA model has no quarterly projections).',
   source: maResults.source,
   views: {
     q: { label: 'Quarterly', note: 'Rolling — the last 8 reported quarters plus the one next (forecast) quarter; it advances by itself as new prints land. ' + maResults.views.q.note,

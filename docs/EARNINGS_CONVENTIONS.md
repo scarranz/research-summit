@@ -551,11 +551,11 @@ quarter and mis-reading one. (The GOOGL load passes: 12 snapshots × 5 period co
 | columns | contents |
 |---|---|
 | `ticker` | Bloomberg form, e.g. `GOOGL US EQUITY` |
-| `metric1`…`metric4` | the **4 headline** definitions, 5 fields each: `metricN` · `codeN` (the BBG field) · `segmentN` · `unitN` · `scaleN` |
-| `metric_kpi1`…`metric_kpi4` | the **4 custom KPI** definitions, same 5-field shape |
-| `fq-3`…`fy+5` | the period **labels** for the 12 period columns |
-| `rev_*` · `opinc_*` · `ebitda_*` · `eps_*` | the values for the 4 headline metrics × 12 periods |
-| `kpi1_*`…`kpi4_*` | the values for the 4 custom KPIs × 12 periods |
+| `metric1`…`metric9` | up to **9 headline** definitions, 5 fields each: `metricN` · `codeN` (the BBG field) · `segmentN` · `unitN` · `scaleN`. A ticker renders the SUBSET of these that carries valid values — see §6a / §6a-ii. |
+| `metric_kpi1`…`metric_kpi7` | up to **7 custom KPI** definitions, same 5-field shape (most tickers populate only the first few) |
+| `fq-3`…`fy+5` | the period **labels** for the 12 period columns; `close_*` carries each period's calendar end date |
+| `rev_*` · `opinc_*` · `ebitda_*` · `eps_*` · `nos_*` · `cfo_*` · `capex_*` · `d&a_*` · `gross_*` | the values for the 9 headline slots × 12 periods |
+| `kpi1_*`…`kpi7_*` | the values for the custom KPIs × 12 periods |
 | `data_as_of` · `time` · `submit` | the snapshot's vantage date, export timestamp, submit flag |
 
 **Read `metricN` / `metric_kpiN` — the NAME — to know what a column is.** `segmentN` is a Bloomberg
@@ -1509,7 +1509,9 @@ CSS classes that carry meaning (port with the functions): `.ce-legend`/`.ce-lege
 
 - [ ] ONE convention doc (this file) — no rules living elsewhere.
 - [ ] Calls repo: `-latest` + compendium; rotation respected; append-only.
-- [ ] Setup: exactly 4 headline + 4 customs; every rendered value traced to the Bloomberg export
+- [ ] Setup: renders the file's **valid default headline set** for this ticker (per-ticker, split by
+      `CE_CONS.nHead`, NOT a fixed count) + its customs — a slot with no valid values is dropped, not
+      shown empty (MA renders 8 headline: gross profit is excluded, no real MA series); every rendered value traced to the Bloomberg export
       (`asOf`); YoY correct; Summit column renders (values or "to fill"); toggle works; caveat
       pop-ups on trap numbers; **the debate box renders the one-thing-to-resolve** (`debate.synth`);
       **NO fear/consensus pair, NO mechanism chips, NO gray placeholder** (all retired in v2.5).

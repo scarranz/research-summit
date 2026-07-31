@@ -127,5 +127,58 @@ export var lyftResults = {
       ]
     }
   },
+  // ── Estimate EVOLUTION across model snapshots (vintages) ────────────────────
+  // Source of record: the Summit Research database — the model's saved snapshots,
+  // pulled through the Summit MCP (sheet_source `projection_history`, annual periods).
+  // ⚠ LYFT has FOUR snapshot rows but only THREE distinct model states: 2026-05-08 and
+  // 2026-05-13 are identical on every metric, so only 05-13 is shown.
+  // ⚠ Two lines are DELIBERATELY ABSENT because the audit found them unusable:
+  // `earnings` is scale-corrupted (~x378) in the 2026-02-11 vintage, and annual
+  // `op_income` projections are broken and sign-wrong (2018 reads +651 against an actual
+  // of roughly -977). Insurance reserves have actuals but no projections at all.
+  evolution: {
+    intro: 'How the forecast itself has moved. Each line tracks one fiscal year’s estimate across the model’s three distinct snapshots. This is the most aggressive downgrade in anything we cover: between December and May the model cut <b>FY2029 adjusted EBITDA almost in half</b> and FY2029 free cash flow by half. The top line held up far better than the bottom line — bookings for FY2029 came down 15% while the profit on them came down 47% — so what was revised is not how big Lyft gets, but how much of it it keeps.',
+    vintages: [
+      { label: 'Dec 15, 2025', event: 'pre-4Q25 print' },
+      { label: 'Feb 11, 2026', event: 'post-4Q25 print' },
+      { label: 'May 13, 2026', event: 'post-1Q26 print' }
+    ],
+    years: ['2026', '2027', '2028', '2029'],
+    sections: [
+      { key: 'top', label: 'Top Line', defaultMetric: 'gb', groups: [
+        { label: 'Marketplace', keys: ['gb', 'rev'] }
+      ] },
+      { key: 'prof', label: 'Profitability', defaultMetric: 'ebitda', groups: [
+        { label: 'Company', keys: ['ebitda', 'fcf', 'capex'] }
+      ] }
+    ],
+    metrics: {
+      gb: { label: 'Gross Bookings', unit: 'usdM',
+        summit: [[22069, 21609, 21785], [25268, 24861, 24823], [29153, 28808, 26769], [33575, 33179, 28604]],
+        cons: null,
+        prior: { summit: [18507, 18507, 18507] },
+        note: 'The near years barely moved — FY2026 and FY2027 are within ~2% of where they started. The damage is all in the back: FY2028 came down 8% and FY2029 down 15%, both entirely at the May snapshot. Read against Lyft’s own 2027 goal of <b>~$25B</b>: the model has FY2027 at $24.8B, so on bookings the target is still intact.' },
+      rev: { label: 'Revenue', unit: 'usdM',
+        summit: [[7729, 7552, 7373], [8807, 8629, 8219], [10112, 9953, 8845], [11596, 11418, 9435]],
+        cons: null,
+        prior: { summit: [6316, 6316, 6316] },
+        note: 'Cut at every snapshot and hardest at the end: FY2029 revenue fell from $11.6B to $9.4B, −18.6% cumulative. In the margin view this is a take-rate story — revenue was cut more than bookings in every year, so the model now assumes Lyft keeps a smaller share of what flows through the marketplace.' },
+      ebitda: { label: 'Adjusted EBITDA', unit: 'usdM', marginOf: 'gb', marginLabel: 'Adj. EBITDA % of Gross Bookings',
+        summit: [[781, 793, 691], [1109, 938, 830], [1537, 1274, 996], [1906, 1615, 1016]],
+        cons: null,
+        prior: { summit: [529, 529, 529] },
+        note: '⚠ THE LINE TO TAKE INTO THE MEETING. FY2029 adjusted EBITDA went <b>$1,906M → $1,615M → $1,016M — down 47%</b> across three snapshots, and FY2028 down 35%. Set it against Lyft’s stated <b>~$1B adjusted-EBITDA goal for 2027</b>: the model now carries <b>$830M</b>, roughly <b>17% short of the target</b>, having started at $1,109M comfortably above it. In the margin view the assumed take of gross bookings peaks around 3.5% instead of climbing past 5%.' },
+      fcf: { label: 'Free Cash Flow', unit: 'usdM', marginOf: 'gb', marginLabel: 'FCF % of Gross Bookings',
+        summit: [[1270, 1221, 1185], [1488, 1234, 1080], [1263, 1022, 783], [1580, 1314, 793]],
+        cons: null,
+        prior: { summit: [1116, 1116, 1116] },
+        note: 'Halved at the long end: FY2029 free cash flow fell from $1,580M to $793M (−50%). Lyft raised its own 2027 free-cash-flow goal from ~$900M to <b>over $1B</b>; the model has FY2027 at <b>$1,080M</b>, so that target survives — but only just, and only because FY2027 was cut less than the years around it. ⚠ The model’s capex, CFO and FCF rows carry 159 DEFAULT-vs-SEGM source disagreements (FY2024 capex −83 vs −161); these are the DEFAULT series.' },
+      capex: { label: 'Capital Expenditure', unit: 'usdM', marginOf: 'gb', marginLabel: 'capex % of Gross Bookings',
+        summit: [[97, 113, 86], [176, 173, 164], [152, 149, 133], [174, 171, 142]],
+        cons: null,
+        note: 'Shown as positive spend (the model carries it as a negative outflow). Trimmed modestly at the May snapshot across every year — a rounding error next to the EBITDA and FCF cuts, and a reminder that this is an asset-light marketplace: capex never exceeds ~0.7% of gross bookings even at the peak.' }
+    },
+    note: 'Single source: the Summit Research database — the model’s saved snapshots as recorded in the DCF’s Projection History, pulled through the Summit MCP on 31 Jul 2026 (annual periods). ⚠ The model has four snapshot rows but only THREE distinct states: 2026-05-08 and 2026-05-13 are identical on every metric sampled. No Bloomberg consensus is stored per snapshot for these lines, so there is no dashed comparison series — this tab is the model measured against its own past self. Growth chains within Summit’s own data against the FY2025 reported actuals. Two model lines are excluded on purpose: `earnings` is scale-corrupted in the Feb-2026 vintage and annual `op_income` projections are broken and sign-wrong — both flagged for the model owner. Data sourced from Summit DCF models.'
+  },
   source: 'Sources: Lyft 8-K Exhibit 99.1 press releases on SEC EDGAR (CIK 0001759509) — actuals for 1Q24–1Q26 and the guidance issued for each quarter in the prior release, including the Q2 2026 guide of $5.30–5.43B Gross Bookings and $160–180M Adjusted EBITDA given on 7 May 2026. Q2 2026 reports Thursday 6 August 2026 after close. The Summit and Street columns are intentionally empty — see the file header.'
 };

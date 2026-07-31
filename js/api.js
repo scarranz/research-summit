@@ -324,6 +324,52 @@ export async function getFileUrl(filePath) {
   return ok(data);
 }
 
+// ─── Company Themes (Earnings ▸ Watch List) ─────────────────
+// Durable persistence for the Watch List / Themes machinery (was the in-memory
+// WL_ROWS array in the overview modules). One shared table, scoped by company_id.
+// See sql/010_company_themes.sql and docs/EARNINGS_CONVENTIONS.md §6f.
+
+export async function fetchThemes(companyId) {
+  var { data, error } = await supabase
+    .from('company_themes')
+    .select('*')
+    .eq('company_id', companyId)
+    .order('q')
+    .order('rank');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function insertTheme(row) {
+  var { data, error } = await supabase
+    .from('company_themes')
+    .insert([row])
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+export async function updateTheme(id, updates) {
+  var { data, error } = await supabase
+    .from('company_themes')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+export async function deleteTheme(id) {
+  var { error } = await supabase
+    .from('company_themes')
+    .delete()
+    .eq('id', id);
+  if (error) return fail(error.message);
+  return ok(null);
+}
+
 // ─── Fund Returns ───────────────────────────────────────────
 // Daily series for the Performance Analysis dashboard. Tables are RLS-gated,
 // so only authenticated users can read them. Rows exceed PostgREST's 1000-row

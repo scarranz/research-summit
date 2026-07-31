@@ -1,3 +1,4 @@
+import { fetchThemes, insertTheme, updateTheme, deleteTheme } from '../api.js';
 // overviews/googl.js — standardized Overview for Alphabet Inc. (NASDAQ: GOOGL / GOOG)
 // Follows docs/OVERVIEW_CONVENTIONS.md and mirrors the standardized profile contract (uber.js /
 // ibkr.js): a hooked Overview (Key Facts + lede + 2x2 quad + collapsibles) and a 5-tab Deep Dive
@@ -894,145 +895,21 @@ var CALL_EARNINGS = {
 // (the 🔎 standing read), `trigger` (the validate/invalidate condition) and `cons` (the Street
 // line). Their text is still in git history and in docs/calls/GOOGL.md, which is where it came from.
 //
-// EDITING · the portal adds / edits / deletes rows in-session (the "+ Add theme" form and the
-// ✎ / ✕ controls on each card of the live quarter). Those edits are NOT persisted — dynamic
-// persistence needs Supabase and is a PENDING ASSIGNMENT (docs/EARNINGS_CONVENTIONS.md §6f).
-// The round-trip that works today: edit in the portal → the table at the bottom of the Watch List
-// updates live → hit COPY → paste it back → it gets hardcoded into WL_ROWS in a commit.
-var WL_ROWS=[
-  // ── Q3 2026 · UPCOMING — the live list. Open hooks only; seeded from Q2's newQuestions. ──
-  { id:'wl001', q:'Q3 2026', rank:1, theme:'The capex ladder — and now, the funding doctrine',
-    tags:['capex'], trackSince:'Q4 2024', trackUntil:null,
-    definition:'The bear case is now explicitly policy-funded (ops cash → $100B debt → equity done); every raise re-tests the doctrine.',
-    seededBy:{ q:'Q2 2026', n:'2027 capex: a number or a framework? (third ask)' },
-    src:'Ladder tracked since Q4 2024; the 2027 question has been asked and adjectived twice (Q1, Q2).',
-    thread:[
-      { q:'Q4 2025', n:'FY26 guided $175–185B (~2x FY25)' },
-      { q:'Q1 2026', n:'Raised to $180–190B (Intersect) · 2027 "significantly increase" · debt $46.5→$77.5B · FCF $10.1B' },
-      { q:'Q2 2026', n:'Raised AGAIN to $195–205B · FCF −$5.9B (first negative) · $49.6B equity + debt to $98.2B · buybacks $0 · doctrine stated: "not planning to go back to the equity markets" (ex-ATM) · FCF "will remain under pressure"' } ] },
-  { id:'wl002', q:'Q3 2026', rank:2, theme:'Cloud: the services engine × the TPU ramp × the bridge margin',
-    tags:['cloud','tpu','capex'], trackSince:'Q2 2024', trackUntil:null,
-    definition:'The acceleration is proven organic ("accelerated meaningfully even excluding TPU sales"); the open economics are the hardware line and the bridge dent.',
-    seededBy:{ q:'Q2 2026', n:'TPU-sale margins + share of backlog — dodged twice' },
-    src:'The #1 theme six calls running; TPU rev-rec began in Q2 (first deliveries into customer DCs, incl. the Blackstone project).',
-    thread:[
-      { q:'Q4 2025', n:'+48% · backlog $240B' },
-      { q:'Q1 2026', n:'+63% · backlog $462B (incl. first TPU deals) · "revenue would have been higher"' },
-      { q:'Q2 2026', n:'+82% — "accelerated meaningfully even AFTER excluding TPU system sales" · backlog $514B (+$52B while converting $24.8B) · margin 35.6% · rev-rec began; small → ramp exiting 2026 → majority 2027 · commitments exceeded by >50% (accel)' } ] },
-  { id:'wl003', q:'Q3 2026', rank:3, theme:'Search through the comp lap — scoring the NEW language',
-    tags:['search','monetization'], trackSince:'Q2 2024', trackUntil:null,
-    definition:'~53% of revenue; the language IS the thesis (our own rule) — and it just upgraded for the first time in the AI transition.',
-    seededBy:{ q:'Q2 2026', n:'Does the retired phrase\'s replacement survive a decel-optics quarter?' },
-    src:'Phrase tracked verbatim across six calls; retirement caught by the Pass-1.5 recurrence scan on this call.',
-    thread:[
-      { q:'Q4 2025', n:'+17% · Gemini 3 into Search · phrase intact' },
-      { q:'Q1 2026', n:'+19% · coverage-above-20% "upside" claim · phrase intact' },
-      { q:'Q2 2026', n:'+17% · PHRASE RETIRED → "encouraged… even as expanded to more commercial queries" · AI Mode >1B MAU · "billions of clicks to websites every week" · AI-Mode response cost at lowest since launch · Q3 comp-lap warning volunteered' } ] },
-  { id:'wl004', q:'Q3 2026', rank:4, theme:'The monetization ladder: Highlighted Answers · Universal Cart · the app silence',
-    tags:['monetization','promises','ai-consumer'], trackSince:'Q3 2025', trackUntil:null,
-    definition:'The bridge from AI engagement to ads revenue is now BUILT in production; volume is the question. The app remains the un-modeled option.',
-    seededBy:{ q:'Q2 2026', n:'App monetization: "not rushing" retired too — or just unasked?' },
-    src:'Promise-ladder discipline (ex-Promise-Tracker); the "not rushing" phrase had run three consecutive calls.',
-    thread:[
-      { q:'Q4 2025', n:'Direct Offers pilot · UCP launched · "not rushing" (2nd)' },
-      { q:'Q1 2026', n:'Direct Offers traction (Gap/L\'Oréal/Chewy) · UCP +Amazon/Meta/Microsoft/Salesforce/Stripe · "not rushing" (3rd) · app-MAU silence' },
-      { q:'Q2 2026', n:'Highlighted Answers debut · Universal Cart · Target & Steve Madden live on UCP · IHG on Direct Offers · AI Max 500K advertisers · app-ads stance: total silence (no question, no phrase)' } ] },
-  { id:'wl005', q:'Q3 2026', rank:5, theme:'The frontier race: Gemini 4 & the monthly cadence',
-    tags:['frontier','ai-consumer'], trackSince:'Q2 2026', trackUntil:null,
-    definition:'Model leadership is the input to every other thesis line — and for the first time management put a cadence on record.',
-    seededBy:{ q:'Q2 2026', n:'Gemini 4 ship window + does the near-monthly cadence materialize?' },
-    src:'New theme opened this quarter: Doug Anmuth and Ross Sandler both pressed the frontier question; answers carried commitments.',
-    thread:[
-      { q:'Q2 2026', n:'Coding/agentic-coding gap ADMITTED ("areas where we\'ve acknowledged we need to improve") · 3.6 Flash +10pts DeepSuite in 6 weeks · Gemini 4 pre-training started, "most ambitious yet" · "releasing models almost at a monthly cadence is part of our roadmap" · tokens 22B/min (from 16B)' } ] },
-  // ── Q2 2026 · REPORTED — frozen record, scored in Post-Results / Post-Call. ──
-  { id:'wl006', q:'Q2 2026', rank:1, theme:'Google Cloud — growth × backlog × capacity',
-    tags:['cloud','capex'], trackSince:'Q2 2024', trackUntil:'Q2 2026',
-    definition:'Cloud is the acceleration story of the whole company and the justification for the capex; its op margin went 9% → 33% in eight quarters while growth sped up.',
-    seededBy:{ q:'Q1 2026', n:'Backlog conversion pace vs the 24-month claim' },
-    src:'The #1 recurring theme of the last 6 calls; backlog/RPO is a tracked Bloomberg line; management leads with it every quarter.',
-    thread:[
-      { q:'Q2 2025', n:'+32% · backlog $106B · first warning: "tight demand-supply into 2026"' },
-      { q:'Q3 2025', n:'+34% · backlog $155B (+46% QoQ) · Anthropic plans up to 1M TPUs' },
-      { q:'Q4 2025', n:'+48% · backlog $240B (+55% QoQ) · Apple names Google its preferred cloud provider' },
-      { q:'Q1 2026', n:'+63% to $20B · backlog $462B (~2x QoQ, incl. first TPU hardware deals) · "revenue would have been higher if we could meet demand"' } ] },
-  { id:'wl007', q:'Q2 2026', rank:2, theme:'The capex ladder → depreciation → free-cash-flow squeeze',
-    tags:['capex'], trackSince:'Q4 2024', trackUntil:'Q2 2026',
-    definition:'This is the bear case in one line: AI capex swallowing the cash machine. Consensus already models a near-zero-FCF quarter — the print will show whether the offsets (efficiency, revenue) keep pace.',
-    seededBy:{ q:'Q1 2026', n:'2027 capex: a number or a framework?' },
-    src:'Management flags accelerating depreciation EVERY call, unprompted (candor against interest); the Street asks about it every call.',
-    thread:[
-      { q:'Q4 2024', n:'FY25 guide $75B — "notably larger than 2023"' },
-      { q:'Q2 2025', n:'Raised to ~$85B; "further increase in 2026"' },
-      { q:'Q3 2025', n:'Raised to $91–93B; depreciation +41% YoY' },
-      { q:'Q4 2025', n:'FY26 guided $175–185B (~2x); depreciation +38% in FY25; Waymo $16B round' },
-      { q:'Q1 2026', n:'Raised to $180–190B (Intersect); 2027 "significantly increase"; LT debt $46.5B→$77.5B; FCF $10.1B' } ] },
-  { id:'wl008', q:'Q2 2026', rank:3, theme:'Search through the AI transition — and the standing phrase',
-    tags:['search','monetization'], trackSince:'Q2 2024', trackUntil:'Q2 2026',
-    definition:'~56% of revenue, and the existential AI question is settling empirically: Search ACCELERATED 10→12→12→15→17→19% while AI Overviews and AI Mode rolled into the core product.',
-    seededBy:{ q:'Q1 2026', n:'Coverage-above-20%: follow-through evidence' },
-    src:'The recurring analyst question on every call since SGE launched; the standing phrase repeats verbatim across calls, which makes it trackable.',
-    thread:[
-      { q:'Q1 2025', n:'+10% · AI Overviews 1.5B users/mo · "monetization at approximately the same rate"' },
-      { q:'Q2 2025', n:'+12% · AI Mode 100M MAU (US+India) · Lens queries +70%' },
-      { q:'Q3 2025', n:'+15% · AI Mode 75M DAU, ads-in-AI-Mode testing begins · paid clicks +7%, CPC +7%' },
-      { q:'Q4 2025', n:'+17% · Gemini 3 integrated into AI Mode & AI Overviews · queries at all-time high' },
-      { q:'Q1 2026', n:'+19% (retail/finance; FX aid flagged) · NEW: coverage-above-20% upside claim · AI-response cost −30% since Gemini 3' } ] },
-  { id:'wl009', q:'Q2 2026', rank:4, theme:'New-surface monetization promises: AI Mode ads · Direct Offers · Gemini app',
-    tags:['monetization','promises','ai-consumer'], trackSince:'Q3 2025', trackUntil:'Q2 2026',
-    definition:'This is where the next leg of ads growth comes from as the surface shifts — and app monetization is entirely un-modeled by the Street.',
-    seededBy:{ q:'Q1 2026', n:'Gemini app MAU (or a second silence)', tripped:true },
-    src:'Direct on-call commitments tracked quarter-over-quarter (Promise-Tracker discipline, now embedded here); silence is a signal.',
-    thread:[
-      { q:'Q3 2025', n:'"Testing ads in AI Mode… will continue to test before expanding"' },
-      { q:'Q4 2025', n:'Direct Offers pilot announced · UCP protocol launched with retail partners · Gemini-app ads: "not rushing"' },
-      { q:'Q1 2026', n:'Direct Offers "resonating" (Gap, L\'Oréal, Chewy) · new retail ad format in test · UCP adds Amazon/Meta/Microsoft/Salesforce/Stripe; Ulta live · app ads still "not rushing" · no app-MAU update (silence)' } ] },
-  { id:'wl010', q:'Q2 2026', rank:5, theme:'TPUs go external — silicon becomes a business',
-    tags:['tpu','cloud'], trackSince:'Q3 2025', trackUntil:'Q2 2026',
-    definition:'A genuine business-model extension (hardware vendor economics) and the hardest proof of the full-stack differentiation claim — 8th-gen TPUs shipping while rivals buy GPUs.',
-    seededBy:{ q:'Q1 2026', n:'TPU-sale margins + share of backlog' },
-    src:'New disclosure in Q1 2026 with explicit forward guidance to reconcile; multiple analysts pressed it (Nowak, Post) and got partial answers.',
-    thread:[
-      { q:'Q3 2025', n:'Anthropic plans access to up to 1M TPUs · Ironwood (7th gen) GA soon' },
-      { q:'Q4 2025', n:'TPU accelerators serving frontier labs, capital-markets firms, governments' },
-      { q:'Q1 2026', n:'8th-gen TPU 8t/8i unveiled · first hardware sales into customer data centers · "small % of revenue later this year, vast majority 2027"' } ] },
-  // ── Q1 2026 · REPORTED — frozen record. ──
-  { id:'wl011', q:'Q1 2026', rank:1, theme:'FY26 capex — does $175–185B hold?',
-    tags:['capex'], trackSince:'Q4 2024', trackUntil:'Q1 2026',
-    definition:'The bear case is capex swallowing the cash machine; every raise re-tests it.',
-    seededBy:{ q:'Q4 2025', n:'Does FY26 $175–185B hold at Q1, and what is the 2027 shape?' } },
-  { id:'wl012', q:'Q1 2026', rank:2, theme:'Cloud — backlog conversion & a 5th acceleration',
-    tags:['cloud','capex'], trackSince:'Q2 2024', trackUntil:'Q1 2026',
-    definition:'Cloud is the acceleration story and the capex justification.',
-    seededBy:{ q:'Q4 2025', n:'Backlog conversion: does $240B start showing in revenue acceleration again?' } },
-  { id:'wl013', q:'Q1 2026', rank:3, theme:'Gemini 3 in Search — the standing phrase + monetization ladder',
-    tags:['search','monetization'], trackSince:'Q2 2024', trackUntil:'Q1 2026',
-    definition:'~56% of revenue; the existential question.',
-    seededBy:{ q:'Q4 2025', n:'Gemini 3 in Search: does the standing phrase survive the integration?' } },
-  { id:'wl014', q:'Q1 2026', rank:4, theme:'Gemini app ladder post-750M',
-    tags:['ai-consumer'], trackSince:'Q1 2025', trackUntil:'Q1 2026',
-    definition:'The consumer-AI race scoreboard, and the un-modeled ads option.',
-    seededBy:{ q:'Q4 2025', n:'Gemini app: next MAU rung after 750M?' } },
-  { id:'wl015', q:'Q1 2026', rank:5, theme:'Wiz close + UCP rollout (agentic commerce)',
-    tags:['monetization','promises','cloud'], trackSince:'Q4 2025', trackUntil:'Q1 2026',
-    definition:'Cloud security pillar + the rails for agentic-era ads.',
-    seededBy:{ q:'Q4 2025', n:'Wiz close timing + UCP: members beyond the founders?' } },
-  // ── Q4 2025 · REPORTED — frozen record. ──
-  { id:'wl016', q:'Q4 2025', rank:1, theme:'THE FY2026 capex number',
-    tags:['capex'], trackSince:'Q4 2024', trackUntil:'Q4 2025',
-    definition:'The single number that repriced the stock at every prior guide.' },
-  { id:'wl017', q:'Q4 2025', rank:2, theme:'Cloud past +34% — and the Anthropic TPU flow-through',
-    tags:['cloud','tpu'], trackSince:'Q2 2024', trackUntil:'Q4 2025',
-    definition:'The acceleration narrative IS the multiple.' },
-  { id:'wl018', q:'Q4 2025', rank:3, theme:'Gemini 3 — the "later this year" promise, delivered?',
-    tags:['search','promises'], trackSince:'Q3 2025', trackUntil:'Q4 2025',
-    definition:'Model leadership is the input to every other thesis line.' },
-  { id:'wl019', q:'Q4 2025', rank:4, theme:'Ads in AI Mode: test → product?',
-    tags:['monetization','promises'], trackSince:'Q3 2025', trackUntil:'Q4 2025',
-    definition:'The bridge from AI engagement to ads revenue.' },
-  { id:'wl020', q:'Q4 2025', rank:5, theme:'YouTube election-lap depth',
-    tags:['youtube'], trackSince:'Q4 2025', trackUntil:'Q4 2025',
-    definition:'Separates a comp effect from a YouTube-ads problem.' },
-];
+// EDITING · the portal adds / edits / closes / deletes rows LIVE against Supabase (table
+// `company_themes`, one shared table scoped by company_id — see js/api.js + sql/010_company_themes.sql).
+// A change made here is saved to the shared database and is visible to the whole team immediately —
+// no COPY / hardcode / commit needed (the "pending assignment" of §6f, now assigned). WL_ROWS below
+// is the in-memory mirror: it starts empty and is filled from the DB when the Watch List opens.
+// _co holds the company object (id + ticker) captured when the profile HTML is built, so the wiring
+// knows which company's themes to load and stamp.
+var _co=null;
+var WL_ROWS=[];
+// snake_case DB row → the camelCase shape every wl* helper and renderer already expects.
+function themeFromDb(r){
+  return { id:r.id, q:r.q, createdQuarter:r.created_quarter, rank:r.rank, theme:r.theme,
+    tags:r.tags||[], definition:r.definition, trackSince:r.track_since, trackUntil:r.track_until,
+    seededBy:r.seeded_by||null, src:r.src||null, thread:r.thread||null };
+}
 // Rows for one quarter. The LIVE (upcoming) quarter shows only OPEN hooks — a trackSince with no
 // trackUntil. Frozen quarters show their record exactly as it stood. `rank` orders, never labels.
 function wlFor(qLabel, openOnly){
@@ -1652,7 +1529,7 @@ function ceWlForm(){
     '</div>'+
     '<div class="ce-wl-frow"><button type="button" class="ce-wl-add-go">Add to the live list</button>'+
       '<button type="button" class="ce-wl-cancel">cancel</button>'+
-      '<span class="ave-subh-note">Lives for this session only. Persisting = COPY the table at the bottom and hardcode it into <code>WL_ROWS</code>.</span></div>'+
+      '<span class="ave-subh-note">Saved to the shared database — visible to the whole team immediately, no commit needed. The company is fixed to this profile.</span></div>'+
   '</div>';
 }
 // The table itself — the storage view, and the round-trip out. Regenerated from WL_ROWS on every
@@ -1703,7 +1580,7 @@ function ceWlTable(){
     '<div class="ce-wl-tbl-sc" data-wltblbody hidden>'+'<table class="ce-wl-tbl"><thead><tr>'+
       WL_COLS.map(function(c){ return '<th>'+esc(c.l)+'</th>'; }).join('')+
     '</tr></thead><tbody class="ce-wl-tbody">'+ceWlTableRows()+'</tbody></table></div>'+
-    '<div class="ave-subh-note" style="margin-top:7px"><b>The round-trip:</b> add / edit / delete themes above → this table updates → hit <b>COPY</b> (tab-separated, drops straight into a sheet) or <b>copy JSON</b> (exact) → paste it back and it gets hardcoded into <code>WL_ROWS</code> in a commit. Editing from the portal <i>persistently</i> needs Supabase — pending assignment, see docs/EARNINGS_CONVENTIONS.md §6f.</div>'+
+    '<div class="ave-subh-note" style="margin-top:7px"><b>This is now live:</b> add / edit / close / delete themes above → the change is written straight to the shared Supabase table <code>company_themes</code> and everyone sees it — no COPY, no commit (docs/EARNINGS_CONVENTIONS.md §6f). <b>COPY</b> / <b>copy JSON</b> remain for exporting the table to a sheet.</div>'+
   '</div>';
 }
 function ceWatchBody(c){
@@ -1731,7 +1608,7 @@ function ceWatchBody(c){
     var qk=ceQkey(u.q), frozen=(u.status!=='upcoming');
     var b='<div class="ce-qblock" data-ceq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
     b+='<div class="ce-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="ce-frozen">frozen</span>':'')+'</div>';
-    var wl=wlFor(u.q, !frozen);
+    // Cards are rendered by rerender() after the DB load fills WL_ROWS (see wireCallEarnings).
     b+='<p class="ov-lede"><b>'+(frozen?'The list as it was frozen — ':'Things to hunt — ')+esc(u.q)+'</b>'+
       (frozen?' <span style="color:var(--mu);font-weight:600">(scored afterwards in Post-Results)</span>':' <span style="color:var(--mu);font-weight:600">(the open hooks — a <i>Tracking since</i> with no <i>Tracking until</i>)</span>')+
       '. Each card carries its <b>definition</b> — what the theme means in our words — its <b>tags</b>, and its <b>tracking window</b>. Tap <b>the thread ›</b> for the grounding and the quarter-by-quarter evolution. Ordered by weight, deliberately <b>not numbered</b>: a visible 1–5 goes stale the moment a theme is removed.</p>';
@@ -1740,8 +1617,8 @@ function ceWatchBody(c){
       '<span class="ce-legend-i"><span class="ce-w-chip since"><b>Tracking since:</b> Q4 2024</span> with no <i>Tracking until</i> ⇒ the hook is still open</span>'+
       (frozen?'':'<span class="ce-legend-i"><span class="ce-w-ed" style="pointer-events:none">✎</span> edit — including closing the hook by filling <i>Tracking until</i></span>')+
     '</div>';
-    if(!wl.length){ b+='<div class="ce-note">No open hooks for '+esc(u.q)+' yet — add themes with <b>+ Add theme</b> above.</div>'; }
-    else{ b+='<div class="ce-watch">'+wl.map(function(w){ return ceWatchItem(w, qk, '', null, !frozen); }).join('')+'</div>'; }
+    // Stable host — rerender() fills it from WL_ROWS once the DB load resolves (or shows the empty note).
+    b+='<div class="ce-watch" data-cewq="'+esc(u.q)+'" data-cefrozen="'+(frozen?'1':'0')+'"><div class="ce-note" data-wlloading>Loading themes…</div></div>';
     b+='<div class="ov-foot">'+(frozen?'Frozen — this list was scored against '+esc(u.q)+'\'s Post-Results; its <code>newQuestions</code> seeded the next quarter.':'Ours to curate: Post-Results lets the model run (numbers + call highlights), but what earns a slot here is our call. Frozen once the quarter opens.')+'</div>';
     b+='</div>';
     return b;
@@ -2900,6 +2777,7 @@ function gBuildFin(){
 // ASSEMBLY — html / deepDiveHtml
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 function html(c){
+  _co=c;   // capture company (id + ticker) for the Watch List DB wiring
   var h='<div class="ov ov-googl" data-brand="GOOGL" style="--brand:'+BRAND+';--brand-soft:rgba(66,133,244,0.08)">';
   h+=stdOverviewBody(c);
   h+='<div class="ov-modal-back" id="googlModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
@@ -2909,6 +2787,7 @@ function html(c){
   return h;
 }
 function deepDiveHtml(c){
+  _co=c;   // capture company (id + ticker) for the Watch List DB wiring
   var h='<div class="ov ov-googl ov-googl-dd" data-brand="GOOGL" style="--brand:'+BRAND+';--brand-soft:rgba(66,133,244,0.08)">';
   h+='<div class="dd-tabs">'+
       '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
@@ -3212,14 +3091,18 @@ function wireCallEarnings(root){
     if(addBtn&&form){ addBtn.onclick=function(){
       if(form.hidden){ resetForm(); form.hidden=false; } else form.hidden=true;
     }; }
-    // Re-renders the live quarter's cards, the flat view and the table from WL_ROWS. Cheap enough
-    // to do wholesale — this is a 20-row table, not a grid.
+    // Re-renders every quarter block's cards, the flat view and the table from WL_ROWS. Cheap enough
+    // to do wholesale — this is a small table, not a grid. Each block has a stable .ce-watch host
+    // (data-cewq = its quarter, data-cefrozen), so the live quarter shows open hooks and each frozen
+    // quarter shows its snapshot.
     function rerender(){
-      var live=ceUpcoming(); if(!live) return;
-      var qk=ceQkey(live.q);
-      var host=wpane.querySelector('.ce-qblock[data-ceq="'+qk+'"] .ce-watch');
-      var rows=wlFor(live.q, true);
-      if(host) host.innerHTML=rows.map(function(w){ return ceWatchItem(w, qk, '', null, true); }).join('');
+      wpane.querySelectorAll('.ce-watch[data-cewq]').forEach(function(host){
+        var qLabel=host.getAttribute('data-cewq');
+        var frozen=host.getAttribute('data-cefrozen')==='1';
+        var rows=wlFor(qLabel, !frozen);
+        if(!rows.length){ host.innerHTML='<div class="ce-note">'+(frozen?'No themes recorded for '+esc(qLabel)+'.':'No open hooks for '+esc(qLabel)+' yet — add themes with <b>+ Add theme</b> above.')+'</div>'; }
+        else host.innerHTML=rows.map(function(w){ return ceWatchItem(w, ceQkey(qLabel), '', null, !frozen); }).join('');
+      });
       var flatHost=flat?flat.querySelector('.ce-watch'):null;
       if(flatHost) flatHost.innerHTML=WL_ROWS.map(function(r){ return ceWatchItem(r, ceQkey(r.q), '-f', r.q, false); }).join('');
       var tb=wpane.querySelector('.ce-wl-tbody');
@@ -3243,9 +3126,21 @@ function wireCallEarnings(root){
       wpane.querySelectorAll('[data-wldel]').forEach(function(btn){ btn.onclick=function(){
         var id=btn.getAttribute('data-wldel');
         var r=wlById(id); if(!r) return;
-        if(!window.confirm('Remove "'+r.theme+'" from the Watch List?\n\nSession-only — the hardcoded table is untouched until you COPY it back.')) return;
-        var i=WL_ROWS.indexOf(r); if(i>=0) WL_ROWS.splice(i,1);
-        rerender();
+        var live=ceUpcoming();
+        // THE DELETE RULE: a theme can only be DELETED from the quarter it was created in. In any
+        // later quarter it is part of the record — the only allowed change is to CLOSE it (fill
+        // Tracking until). So block the delete and point the user at closing instead.
+        if(r.createdQuarter && live && r.createdQuarter!==live.q){
+          window.alert('Can’t delete “'+r.theme+'”.\n\nIt was created in '+r.createdQuarter+', and the live quarter is now '+live.q+'. A theme can only be deleted from the quarter it was created in.\n\nThe only change allowed now is to CLOSE it (in this or an earlier quarter): use ✎ and fill “Tracking until”.');
+          return;
+        }
+        if(!window.confirm('Delete “'+r.theme+'” from the Watch List?\n\nThis removes it from the shared database for the whole team, and cannot be undone.')) return;
+        btn.disabled=true;
+        deleteTheme(id).then(function(res){
+          if(!res.success){ btn.disabled=false; window.alert('Could not delete: '+((res.error&&res.error.message)||'unknown error')); return; }
+          var i=WL_ROWS.indexOf(r); if(i>=0) WL_ROWS.splice(i,1);
+          rerender();
+        });
       }; });
     }
     wireCards();
@@ -3253,20 +3148,40 @@ function wireCallEarnings(root){
     if(go&&form){ go.onclick=function(){
       var theme=fval('theme'); if(!theme){ var t=fld('theme'); if(t) t.focus(); return; }
       var live=ceUpcoming(); if(!live) return;
+      if(!_co||!_co.id){ window.alert('No company context — cannot save themes. Reload the profile.'); return; }
       var id=fval('id');
-      var row=id?wlById(id):null;
-      var isNew=!row;
-      // New rows go to the end of the sort order — never renumbering the ones already there.
-      if(isNew){ row={ id:wlNextId(), q:live.q, rank:wlNextRank(live.q) }; }
-      row.theme=theme;
-      row.tags=pickedTags();
-      row.definition=fval('definition')||null;
-      row.trackSince=fval('trackSince')||null;
-      row.trackUntil=fval('trackUntil')||null;
-      if(isNew) WL_ROWS.push(row);
-      (row.tags||[]).forEach(registerTag);
-      resetForm(); form.hidden=true;
-      rerender();
+      var existing=id?wlById(id):null;
+      var isNew=!existing;
+      var tags=pickedTags();
+      var definition=fval('definition')||null;
+      var trackSince=fval('trackSince')||null;
+      var trackUntil=fval('trackUntil')||null;
+      (tags||[]).forEach(registerTag);
+      go.disabled=true;
+      if(isNew){
+        // New rows: the ticker/company is fixed from the open profile, created_quarter is stamped to
+        // the live quarter (immutable — it governs the delete rule), rank goes to the end.
+        var payload={ company_id:_co.id, ticker:(_co.ticker||'').toUpperCase(), q:live.q, created_quarter:live.q,
+          rank:wlNextRank(live.q), theme:theme, tags:tags, definition:definition,
+          track_since:trackSince, track_until:trackUntil, seeded_by:null, src:null, thread:null };
+        insertTheme(payload).then(function(res){
+          go.disabled=false;
+          if(!res.success){ window.alert('Could not save: '+((res.error&&res.error.message)||'unknown error')); return; }
+          WL_ROWS.push(themeFromDb(res.data));
+          resetForm(); form.hidden=true; rerender();
+        });
+      } else {
+        // Edit: never touch q / created_quarter / company — only the editable fields. Closing a hook
+        // is just setting track_until here.
+        var updates={ theme:theme, tags:tags, definition:definition, track_since:trackSince, track_until:trackUntil };
+        updateTheme(existing.id, updates).then(function(res){
+          go.disabled=false;
+          if(!res.success){ window.alert('Could not save: '+((res.error&&res.error.message)||'unknown error')); return; }
+          var fresh=themeFromDb(res.data);
+          Object.keys(fresh).forEach(function(k){ existing[k]=fresh[k]; });   // update in place, keep array position
+          resetForm(); form.hidden=true; rerender();
+        });
+      }
     }; }
     // ── the copy-out: TSV for a sheet / a paste-back, JSON for an exact hardcode ──
     // Hide / show the table. COPY keeps working while hidden because it serialises WL_ROWS,
@@ -3291,6 +3206,27 @@ function wireCallEarnings(root){
       else { var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
              try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta); done(); }
     }; });
+    // ── Load themes from Supabase (the durable store). Fills WL_ROWS, registers every tag on the
+    // filter bar, then renders. Runs each time the wiring is (re)initialised; WL_ROWS is reset first
+    // so returning to the tab never double-counts. ──
+    function loadThemes(){
+      var hosts=wpane.querySelectorAll('.ce-watch[data-cewq]');
+      if(!_co||!_co.id){
+        hosts.forEach(function(h){ h.innerHTML='<div class="ce-note">Themes load from the shared database once this company is set up (no company id in context).</div>'; });
+        return;
+      }
+      fetchThemes(_co.id).then(function(res){
+        if(!res.success){
+          hosts.forEach(function(h){ h.innerHTML='<div class="ce-note">Could not load themes: '+esc((res.error&&res.error.message)||'unknown error')+'. (Has sql/010_company_themes.sql been run in Supabase?)</div>'; });
+          return;
+        }
+        WL_ROWS.length=0;
+        (res.data||[]).forEach(function(r){ WL_ROWS.push(themeFromDb(r)); });
+        wlTags().forEach(registerTag);
+        rerender();
+      });
+    }
+    loadThemes();
     applyFilters();
   }
 }

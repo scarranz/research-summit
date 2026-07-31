@@ -22,11 +22,13 @@
 import { amznResults } from './results-data/amzn.js';
 import { googlResults } from './results-data/googl.js';
 import { googlSetup } from './results-data/googl-setup.js';
+import { spotResults } from './results-data/spot.js';
 
 var RESULTS_DATA = {
   AMZN: amznResults,
   GOOGL: googlResults,
-  GOOGL_SETUP: googlSetup
+  GOOGL_SETUP: googlSetup,
+  SPOT: spotResults
 };
 
 export function getResultsData(ticker){

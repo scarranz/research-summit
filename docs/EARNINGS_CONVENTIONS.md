@@ -18,7 +18,36 @@ still carries the nested `watchList` shape. Copy the Setup / Post-Results / Post
 either — they are identical there — but take the **Watch List from `googl.js`**. `ibkr.js` was
 migrated from v1 (standalone Promise Tracker, single-estimate setup, no quarter selector) to the full
 v2.2 machinery **and** the v2.3 fusion on 2026-07-24. Each overview file owns its own copy of the
-Earnings renderers, so v2.5/v2.6 landing on GOOGL changed nothing for the other companies.
+Earnings renderers, so v2.5/v2.6 landing on GOOGL changed nothing for the other companies — **except
+the Watch List, which as of v3.0 is a single shared engine (`js/watchlist.js`), not per-overview code.**
+
+**What v3.0 changed — the Watch List is now a SHARED, PERSISTENT, SORTABLE engine (Aug 2026):**
+
+The Watch List is no longer per-overview code backed by an in-memory `WL_ROWS` array (lost on refresh;
+the old loop was portal → COPY → hardcode). It is now **one shared engine, `js/watchlist.js`**, that
+every company mounts — exactly like the Resources tab is one implementation for all companies. Three
+things changed:
+
+1. **Persistence (the §6f "pending assignment", now done).** Themes live in Supabase, table
+   `company_themes` (ONE shared table, scoped by `company_id`; `sql/010_company_themes.sql`),
+   read/written through `js/api.js` (`fetchThemes / insertTheme / updateTheme / deleteTheme`). Any
+   add / edit / close / delete / reorder saves to the shared DB and is visible to the whole team
+   immediately — no commit, no push (RLS = any authenticated user, same pattern as `company_resources`).
+2. **Sorting is first-class.** Live-quarter cards carry **▲▼** that rerank a theme; the new order
+   persists to the `rank` column and the cards render in exactly that order.
+3. **The delete rule.** A theme can only be DELETED from the quarter it was created in
+   (`created_quarter`, immutable). In a later quarter the popup blocks the delete and directs you to
+   CLOSE it (fill *Tracking until*) instead — the record is never rewritten.
+
+**How a new company gets a working Watch List — you do NOT reimplement any of it.** In the Earnings ▸
+Evolution ▸ Watch List pane, render a host `<div data-wlmount></div>` and, in the wiring, call
+`mountWatchList(host, { companyId, ticker, quarters: CALL_EARNINGS.quarters })` (see `googl.js`, the
+canonical consumer). That is the entire integration — persistence, sorting, tags, the storage table
+and the delete rule all come for free. `WL_ROWS` and the per-file renderers (`ceWatchItem`, `ceWlForm`,
+`ceWlTable`, `wlFor` …) are gone from `googl.js`. **`googl.js` is canonical for v3.0**; other companies
+adopt the mount on their next cycle. The one downstream effect: the Post-Results scorecard's "on the
+list" chip can no longer name the theme inline (names load async from the DB), so it shows the frozen
+rank; the theme text lives on the Watch List itself.
 
 **What v2.10 changed — the AI call summary, the tag-less aside, and the Setup chart's margins + windows:**
 

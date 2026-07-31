@@ -20,20 +20,105 @@
 //   ... when the pane becomes visible: requestAnimationFrame(initResults)
 
 import { amznResults } from './results-data/amzn.js';
+import { amznSetup } from './results-data/amzn-setup.js';
 import { googlResults } from './results-data/googl.js';
 import { googlSetup } from './results-data/googl-setup.js';
 import { uberResults, uberSetup } from './results-data/uber.js';
+import { metaResults } from './results-data/meta.js';
+import { metaSetup } from './results-data/meta-setup.js';
 
 var RESULTS_DATA = {
   AMZN: amznResults,
+  AMZN_SETUP: amznSetup,
   GOOGL: googlResults,
   GOOGL_SETUP: googlSetup,
   UBER: uberResults,
-  UBER_SETUP: uberSetup
+  UBER_SETUP: uberSetup,
+  META: metaResults,
+  META_SETUP: metaSetup
 };
 
 export function getResultsData(ticker){
-  return RESULTS_DATA[ticker] || null;
+  var raw = RESULTS_DATA[ticker] || null;
+  if (!raw) return null;
+  if (!_rsTrimCache[ticker]) _rsTrimCache[ticker] = rsTrimData(raw);
+  return _rsTrimCache[ticker];
+}
+
+// ─── Forward-horizon rule (SAB, Jul 29, 2026) ─────────────────────────────────
+// Estimates are shown only as far as the DCF actually models them. Derived per
+// dataset from its OWN last reported period — no per-company configuration, and
+// fiscal-aligned because period labels are already fiscal ('nQyy' / 'yyyy'):
+//   · Quarterly view: forward quarters only within the CURRENT fiscal year
+//     (the FY of the next print). Later quarters are dropped from the view
+//     even when the dataset carries them.
+//   · Annual view: forward years capped at the current FY + 2.
+//   · Estimate Evolution: the same annual cap (current FY + 2).
+// The rule re-derives automatically as each print's actuals are filled in;
+// datasets stay complete on disk — only the rendered copy is trimmed.
+var _rsTrimCache = {};
+function rsParseQ(p){ var m = /^([1-4])Q(\d{2})$/.exec(p); return m ? { y: 2000 + +m[2], q: +m[1] } : null; }
+// Current FY = the fiscal year of the first quarter AFTER the last reported one.
+function rsCurrentFY(data){
+  var best = null, vq = data.views && data.views.q, k, m, i, pq;
+  if (vq) for (k in vq.metrics){ m = vq.metrics[k];
+    if (!m.act) continue;
+    for (i = 0; i < m.periods.length; i++){
+      if (m.act[i] == null) continue;
+      pq = rsParseQ(m.periods[i]); if (!pq) continue;
+      var o = pq.y * 4 + pq.q; if (best == null || o > best) best = o;
+    } }
+  // o = y*4+q: a 4Q rolls the division into y+1 (next print = 1Q of FY y+1),
+  // 1Q–3Q floor back to y — so the floor IS the current fiscal year.
+  if (best != null) return Math.floor(best / 4);
+  var vy = data.views && data.views.y, bestY = null;
+  if (vy) for (k in vy.metrics){ m = vy.metrics[k];
+    if (!m.act) continue;
+    for (i = 0; i < m.periods.length; i++)
+      if (m.act[i] != null && !isNaN(+m.periods[i]) && (bestY == null || +m.periods[i] > bestY)) bestY = +m.periods[i];
+  }
+  return bestY != null ? bestY + 1 : null;
+}
+function rsTrimMetric(m, keep){
+  var idx = [], i;
+  for (i = 0; i < m.periods.length; i++) if (keep(m.periods[i])) idx.push(i);
+  if (idx.length === m.periods.length) return m;
+  var t = {}, k; for (k in m) t[k] = m[k];
+  ['periods', 'act', 'summit', 'cons', 'guideLo', 'guideHi'].forEach(function(f){
+    if (Array.isArray(m[f])) t[f] = idx.map(function(j){ return m[f][j]; });
+  });
+  return t;
+}
+function rsTrimData(raw){
+  var fy = rsCurrentFY(raw);
+  if (fy == null) return raw;
+  var keepQ = function(p){ var pq = rsParseQ(p); return !pq || pq.y <= fy; };
+  var keepY = function(p){ return isNaN(+p) || +p <= fy + 2; };
+  var d = {}, k; for (k in raw) d[k] = raw[k];
+  d.views = {};
+  for (k in raw.views){
+    var v = raw.views[k], nv = {}, kk; for (kk in v) nv[kk] = v[kk];
+    nv.metrics = {};
+    for (kk in v.metrics) nv.metrics[kk] = rsTrimMetric(v.metrics[kk], k === 'q' ? keepQ : keepY);
+    d.views[k] = nv;
+  }
+  if (raw.evolution && Array.isArray(raw.evolution.years)){
+    var keepIdx = [], i;
+    for (i = 0; i < raw.evolution.years.length; i++) if (+raw.evolution.years[i] <= fy + 2) keepIdx.push(i);
+    if (keepIdx.length !== raw.evolution.years.length){
+      var evo = {}, ek; for (ek in raw.evolution) evo[ek] = raw.evolution[ek];
+      evo.years = keepIdx.map(function(j){ return raw.evolution.years[j]; });
+      evo.metrics = {};
+      for (ek in raw.evolution.metrics){
+        var em = raw.evolution.metrics[ek], t = {}, f; for (f in em) t[f] = em[f];
+        if (Array.isArray(em.summit)) t.summit = keepIdx.map(function(j){ return em.summit[j]; });
+        if (Array.isArray(em.cons))   t.cons   = keepIdx.map(function(j){ return em.cons[j]; });
+        evo.metrics[ek] = t;
+      }
+      d.evolution = evo;
+    }
+  }
+  return d;
 }
 
 // ─── Colors (match the portal/AVE conventions) ────────────────────────────────
@@ -41,7 +126,6 @@ var RS_ACT    = 'rgba(30,39,51,0.92)';    // navy — actual
 var RS_SUMMIT = 'rgba(37,99,235,0.85)';   // accent blue — Summit model
 var RS_CONS   = 'rgba(124,134,148,0.85)'; // mid gray — Street consensus
 var RS_GUIDE  = 'rgba(62,90,130,0.18)';   // steel, translucent — guidance range
-var RS_GREEN  = '#1E9E62', RS_RED = '#C0392B';
 var RS_FWD    = '#2563EB';   // forward/estimate accent (matches the E-column highlight)
 
 // A rounded-rect path helper for the canvas plugins below.
@@ -93,6 +177,7 @@ var rsFwdZone = {
     ctx.restore();
   }
 };
+var RS_GREEN  = '#1E9E62', RS_RED = '#C0392B';
 // Evolution block: one line per fiscal year — an ordered (ordinal) ramp of the
 // portal blue, darkest = nearest year. Validated with the dataviz palette
 // checker (monotone L, visible step gaps, light end ≥2:1 on white).

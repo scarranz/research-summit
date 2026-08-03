@@ -346,54 +346,72 @@ export var HS_DEP_GOOGL = {
 export var HS_MSFT_CLOUD_GM = [72, null, 71, null, 69, 68, 68, 67, 66, 65];
 
 // ── 5b · THE CLOUD SEGMENTS (CSPs) ────────────────────────────────────────────
-// All from the calls. Aligned to HS_VINTAGES (calendar quarters).
+// SOURCE: quarterly segment financials supplied by SAB (Q4'19 → Q4'25), extended
+// with the two most recent quarters where the figure was stated in dollars on
+// the call. This block does NOT use the 10-quarter call axis the rest of the
+// dashboard runs on — it has its own 27-quarter history, which is the point:
+// the cloud segments have a pre-AI past worth seeing.
 //
-// ⚠ THE THREE SEGMENTS ARE NOT THE SAME THING, and the revenue view is the one
-// place that really matters:
-//   • Google Cloud  = GCP + Workspace. Infrastructure and platform, plus a
-//     productivity suite.
-//   • AWS           = pure infrastructure and platform.
-//   • Microsoft Cloud = Azure + Microsoft 365 commercial + Dynamics 365 +
-//     LinkedIn commercial. It is roughly two-and-a-half times AWS on revenue
-//     because it carries a large SaaS book AWS simply does not have. Reading
-//     "Microsoft Cloud is bigger than AWS" off this chart is wrong.
-// Microsoft also never discloses a cloud operating income or margin — only a
-// GROSS margin — so it is absent from those two views by necessity, not choice.
-export var HS_CSP = {
-  //        Apr24  Jul24  Oct24  Jan25  Apr25  Jul25  Oct25  Jan26  Apr26  Jul26
-  rev: {
-    googl: [9.6,   null,  11.4,  12.0,  12.3,  13.6,  15.2,  17.7,  20.0,  24.8],
-    amzn:  [null,  26.3,  27.5,  28.75, 29.25, null,  33.0,  null,  null,  null],
-    msft:  [35.1,  36.8,  38.9,  40.9,  42.4,  46.7,  49.1,  51.5,  54.5,  59.3],
-  },
-  // Derived rather than stated: Amazon gives an annualised run rate, not a
-  // quarterly figure, so these are run rate ÷ 4 — Amazon's own convention.
-  revDerived: { amzn: [false, true, true, true, true, false, true, false, false, false] },
-  growth: {
-    googl: [28, null, 35, 30, 28, 32, 34, 48, 63, 82],
-    amzn:  [null, null, 19, 19, 17, 17, 20, 24, null, 36.7],
-    msft:  [23, 21, 22, 21, 20, 27, 26, 26, 29, 27],
-  },
-  growthDerived: { amzn: [false, false, false, false, false, false, true, false, false, false] },
-  opInc: {
-    googl: [0.9, null, 1.9, 2.1, 2.2, 2.8, 3.6, 5.3, 6.6, 8.8],
-    amzn:  [9.4, 9.3, 10.4, null, 11.5, 10.2, 11.4, 12.5, 14.2, 16.6],
-    msft:  [null, null, null, null, null, null, null, null, null, null],
-  },
-  opMargin: {
-    googl: [9.0, null, 17.0, 17.5, 17.8, 20.7, 23.7, 30.1, 32.9, 35.6],
-    amzn:  [null, null, 37.8, null, 39.5, 32.9, 34.5, 35.0, null, null],
-    msft:  [null, null, null, null, null, null, null, null, null, null],
-  },
-  opMarginDerived: { amzn: [false, false, true, false, false, false, true, false, false, false] },
+// ⚠ CORRECTION vs the first build of this tab: Microsoft is INTELLIGENT CLOUD,
+// the reported segment, not "Microsoft Cloud". Microsoft Cloud is a non-GAAP
+// cross-segment revenue metric (Azure + M365 commercial + Dynamics + LinkedIn
+// commercial) that carries a large SaaS book and has no segment operating
+// income. Intelligent Cloud is the reportable segment — Azure plus server
+// products and Enterprise Services — and it DOES have a disclosed operating
+// income. Microsoft's segments were restated in FY2025, so the series here is
+// on the restated ("post-FY2024") basis and starts at Q3'22.
+//
+// Still not a like-for-like across the three: Google Cloud is GCP + Workspace,
+// AWS is pure infrastructure and platform, Intelligent Cloud adds on-prem
+// server products and Enterprise Services to Azure. Closer than before, but
+// read the slopes.
+export var HS_CSP_QTRS = [
+  "Q4'19", "Q1'20", "Q2'20", "Q3'20", "Q4'20", "Q1'21", "Q2'21", "Q3'21", "Q4'21",
+  "Q1'22", "Q2'22", "Q3'22", "Q4'22", "Q1'23", "Q2'23", "Q3'23", "Q4'23",
+  "Q1'24", "Q2'24", "Q3'24", "Q4'24", "Q1'25", "Q2'25", "Q3'25", "Q4'25",
+  "Q1'26", "Q2'26",
+];
+
+// US$M. null = not reported on this basis / not yet in the dataset.
+export var HS_CSP_REV = {
+  googl: [2614, 2777, 3007, 3444, 3831, 4047, 4628, 4990, 5541, 5821, 6276, 6868, 7315,
+          7454, 8031, 8411, 9192, 9574, 10347, 11353, 11955, 12260, 13624, 15157, 17664,
+          20000, 24800],
+  amzn:  [9954, 10219, 10808, 11601, 12742, 13503, 14809, 16110, 17780, 18441, 19739, 20538, 21378,
+          21354, 22140, 23059, 24204, 25037, 26281, 27452, 28786, 29267, 30873, 33006, 35579,
+          null, 42203],
+  msft:  [null, null, null, null, null, null, null, null, null, null, null, 16885, 17926,
+          18244, 19889, 20013, 21525, 22141, 23785, 24092, 25544, 26751, 29878, 30897, 32907,
+          34700, null],
 };
 
+export var HS_CSP_OI = {
+  googl: [-1194, -1730, -1426, -1208, -1243, -974, -591, -644, -890, -706, -590, -440, -186,
+          191, 395, 266, 864, 900, 1172, 1947, 2093, 2177, 2826, 3594, 5313,
+          6600, 8800],
+  amzn:  [2596, 3075, 3357, 3535, 3564, 4163, 4193, 4883, 5293, 6518, 5715, 5403, 5205,
+          5123, 5365, 6976, 7167, 9421, 9334, 10447, 10632, 11547, 10160, 11434, 12465,
+          14200, 16600],
+  msft:  [null, null, null, null, null, null, null, null, null, null, null, 6750, 6727,
+          7017, 7917, 8908, 9555, 9515, 9835, 10503, 10851, 11095, 12140, 13391, 13873,
+          null, null],
+};
+
+// Which of the appended Q1'26 / Q2'26 points are derived rather than stated.
+// AWS Q2'26 revenue is the stated 36.7% growth applied to Q2'25; AWS gives an
+// annualised run rate, never a quarterly revenue figure, so there is no direct
+// print to use. Everything before Q1'26 comes from SAB's dataset.
+// The margin at that quarter inherits the derivation, since it divides by it.
+export var HS_CSP_DERIVED = { amzn: { rev: [26], opMargin: [26] } };
+
 export var HS_CSP_NOTES = [
-  'Alphabet is the story here. Google Cloud operating margin went from <b>9.0% to 35.6%</b> in nine quarters while revenue growth <i>accelerated</i> from 28% to 82% — margin expansion and acceleration at the same time is rare, and it is what makes the CapEx case easiest to defend at Alphabet.',
-  'AWS moved the other way first: margin peaked at a record <b>39.5% in 1Q25</b> then fell to 32.9% the next quarter, roughly half of it seasonal stock comp and the rest depreciation on the AI fleet. It has since recovered to around 35%.',
-  'AWS growth troughed at <b>17%</b> in mid-2025 and reached <b>36.7%</b> by 2Q26 — accelerating for five straight quarters, on a base that makes that unusual.',
-  'Microsoft discloses no cloud operating income or margin at all, only a gross margin. That is why it appears in revenue and growth but not in the profitability views.',
+  'Google Cloud lost money every quarter until 1Q23 — <b>$1.7B of operating loss in a single quarter in 2020</b>. It now earns $8.8B a quarter. That swing, not the revenue line, is the reason Alphabet can defend its CapEx most easily of the three.',
+  'Google Cloud operating margin went from <b>9.0% to 35.6%</b> in nine quarters while revenue growth <i>accelerated</i> from 28% to 82%. Expanding margin and accelerating growth together is rare.',
+  'AWS margin peaked at a record <b>39.5% in 1Q25</b> then fell to 32.9% the next quarter — roughly half seasonal stock comp, the rest depreciation on the AI fleet. Growth troughed at 17% in mid-2025 and reached 36.7% by 2Q26.',
+  'Intelligent Cloud is the steadiest of the three: margin has sat in a <b>39–43%</b> band for three years while revenue roughly doubled. It also carries on-prem server products and Enterprise Services, so it is not a pure cloud read.',
+  'On absolute operating dollars AWS is still ahead — but Google Cloud has closed the quarterly gap from <b>$8.5B in 1Q24 to $7.8B in 2Q26</b> while growing off a base a third the size. AWS’s Q2’26 margin looks like a jump to 39%, but it divides by a derived revenue figure and should be treated as indicative until Amazon prints the quarter.',
 ];
+
 
 // ── 6b · THE MODELLED DEPRECIATION TRAJECTORY ─────────────────────────────────
 // From the CapEx/D&A tabs inside the live DCFs (`CapEx D&A DCFs.xlsx`). PP&E

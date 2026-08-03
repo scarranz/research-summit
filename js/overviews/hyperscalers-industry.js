@@ -26,7 +26,8 @@ import {
   HS_YEARS, HS_YEAR_QTRS, HS_YEAR_DERIVED, HS_YEAR_PARTIAL, HS_YEAR_GUIDE, HS_QTR_RAMP,
   HS_NEUTRAL_RAMP, HS_GW_YEARS, HS_GW_ADDS, HS_GW_SPLIT, HS_GW_COST, HS_GPU_PRICES,
   HS_CHIP_MIX, HS_GW_BRIDGE, HS_GW_MODEL_FLAG, HS_CAPACITY_QUOTES,
-  HS_DEP_YEARS, HS_DEP_MODEL, HS_DEP_COGS, HS_LIVES, HS_CSP, HS_CSP_NOTES,
+  HS_DEP_YEARS, HS_DEP_MODEL, HS_DEP_COGS, HS_LIVES,
+  HS_CSP_QTRS, HS_CSP_REV, HS_CSP_OI, HS_CSP_DERIVED, HS_CSP_NOTES,
 } from './hyperscalers-data.js';
 
 function esc(s){ if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -647,65 +648,138 @@ function depreciationBody(){
 }
 
 // ─── Tab · CSPs — the cloud segments themselves ───────────────────────────────
-// The revenue the CapEx is meant to produce. Four views on one segmented
-// toggle; Microsoft drops out of the two profitability views because it
-// discloses no cloud operating income.
+// The revenue the CapEx is meant to produce. Runs on its OWN 27-quarter axis
+// (Q4'19 → Q2'26) rather than the 10-quarter call axis, because these segments
+// have a pre-AI history worth seeing — Google Cloud's losses especially.
+// Growth and margin are computed from revenue and operating income rather than
+// stored, so the three views can never drift out of agreement.
+var CSP_LABEL = { googl: 'Google Cloud', amzn: 'AWS', msft: 'Intelligent Cloud' };
+var CSP_IDS = ['googl', 'amzn', 'msft'];
+
+function cspSeries(view, cid){
+  var rev = HS_CSP_REV[cid], oi = HS_CSP_OI[cid];
+  if (view === 'rev') return rev.map(function(v){ return v == null ? null : v / 1000; });
+  if (view === 'opInc') return oi.map(function(v){ return v == null ? null : v / 1000; });
+  if (view === 'opMargin') return rev.map(function(v, i){
+    return (v == null || oi[i] == null || !v) ? null : oi[i] / v * 100;
+  });
+  // YoY growth — four quarters back, both endpoints required
+  return rev.map(function(v, i){
+    var base = i >= 4 ? rev[i - 4] : null;
+    return (v == null || base == null || !base) ? null : (v - base) / base * 100;
+  });
+}
+
 var CSP_VIEWS = [
-  { k: 'rev',    label: 'Segment revenue',   unit: 'usd', y: 'Quarterly revenue',
-    cap: 'Levels are NOT comparable — Microsoft Cloud bundles Microsoft 365 commercial, Dynamics and LinkedIn commercial alongside Azure, so it carries a large SaaS book AWS and Google Cloud do not. Compare the slopes, not the heights. Amazon states an annualised run rate rather than a quarterly figure, so its points are that run rate ÷ 4 — its own convention — and marked derived in the tooltip.' },
-  { k: 'growth', label: 'Revenue growth',    unit: 'pct', y: 'YoY growth',
-    cap: 'The one view where the three are genuinely comparable, because a growth rate is basis-independent. Google Cloud accelerating from 28% to 82% while AWS troughs at 17% and recovers to 37% is the whole competitive story of the period in one frame.' },
-  { k: 'opInc',  label: 'Operating income',  unit: 'usd', y: 'Quarterly operating income',
-    cap: 'Microsoft is absent: it has never disclosed a cloud operating income. AWS still earns roughly twice Google Cloud in absolute dollars, even after Alphabet tripled its margin.' },
+  { k: 'rev', label: 'Segment revenue', unit: 'usd', y: 'Quarterly revenue',
+    cap: 'Not a like-for-like: Google Cloud is GCP + Workspace, AWS is pure infrastructure and platform, Intelligent Cloud adds on-prem server products and Enterprise Services to Azure. Microsoft restated its segments in FY2025, so this series is on the restated basis and starts at Q3\'22. AWS Q2\'26 is derived — Amazon gives an annualised run rate, never a quarterly revenue figure — from its stated 36.7% growth.' },
+  { k: 'growth', label: 'Revenue growth', unit: 'pct', y: 'YoY growth',
+    cap: 'Computed from the revenue series, four quarters back. The one basis-independent view, and the cleanest read on the period: Google Cloud accelerating past 80% while AWS troughs at 17% and recovers, with Intelligent Cloud steady in the twenties and thirties.' },
+  { k: 'opInc', label: 'Operating income', unit: 'usd', y: 'Quarterly operating income',
+    cap: 'The line that makes the CapEx argument. Google Cloud was <b>losing $1.7B a quarter in 2020</b> and did not turn profitable until 1Q23; it now earns $8.8B. AWS remains the largest in absolute dollars.' },
   { k: 'opMargin', label: 'Operating margin', unit: 'pct', y: 'Segment operating margin',
-    cap: 'Microsoft is absent again — it reports only a gross margin for Microsoft Cloud, which is a different line and sits in its own chart below. Several AWS points are derived from stated operating income over derived revenue, and are marked in the tooltip.' },
+    cap: 'Computed as segment operating income over segment revenue. Google Cloud’s climb from deeply negative to 35.6% is the standout; AWS peaked at 39.5% in 1Q25 before AI depreciation began landing; Intelligent Cloud has held a 39–43% band throughout.' },
 ];
 
+// Own-axis line chart for the CSP views (the shared lineChart is pinned to the
+// 10-quarter call axis used everywhere else).
 function cspChart(id){
+  var el = document.getElementById(id);
+  if (!el || !el.offsetParent) return;
+  if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; }
   var v = CSP_VIEWS.filter(function(x){ return x.k === _view.cspView; })[0];
-  var series = ['googl', 'amzn', 'msft'].map(function(cid){ return { id: cid, data: HS_CSP[v.k][cid] }; });
-  lineChart(id, series, v.unit, v.y);
+  var pct = v.unit === 'pct';
+  var fmt = function(n){ return n == null ? '—' : (pct ? n.toFixed(1) + '%' : '$' + n.toFixed(1) + 'B'); };
+
+  var datasets = CSP_IDS.map(function(cid){
+    var data = cspSeries(v.k, cid);
+    if (!data.some(function(x){ return x != null; })) return null;
+    var c = co(cid);
+    return { label: CSP_LABEL[cid], _cid: cid, data: data,
+      borderColor: c.color, backgroundColor: c.color, borderWidth: 2, spanGaps: true, tension: 0.25,
+      pointRadius: function(ctx){ return ctx.raw == null ? 0 : 3; },
+      pointHoverRadius: 6, pointBorderColor: '#fff', pointBorderWidth: 1.5 };
+  }).filter(Boolean);
+
+  _charts[id] = new Chart(el.getContext('2d'), {
+    type: 'line',
+    data: { labels: HS_CSP_QTRS, datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      layout: { padding: { right: 92, top: 6 } },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', align: 'start',
+          labels: { boxWidth: 8, boxHeight: 8, usePointStyle: true, pointStyle: 'circle',
+                    color: '#1E2733', font: { size: 11, family: 'Inter', weight: '600' }, padding: 14 } },
+        tooltip: {
+          backgroundColor: '#1E2733', padding: 10, cornerRadius: 6,
+          displayColors: true, boxWidth: 8, boxHeight: 8, usePointStyle: true,
+          titleFont: { size: 11, family: 'Inter' }, bodyFont: { size: 11.5, family: 'Inter' },
+          callbacks: {
+            label: function(c){
+              var d = HS_CSP_DERIVED[c.dataset._cid];
+              var der = d && d[v.k] && d[v.k].indexOf(c.dataIndex) >= 0;
+              return c.dataset.label + ': ' + fmt(c.raw) + (der ? '  (derived)' : '');
+            },
+          },
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, border: { color: AXIS },
+             ticks: { color: INK_MUTED, font: { size: 9.5, family: 'Inter' },
+                      maxRotation: 0, autoSkip: true, maxTicksLimit: 14 } },
+        y: { title: { display: true, text: v.y, color: INK_MUTED, font: { size: 10.5, family: 'Inter' } },
+             grid: { color: GRID, drawTicks: false }, border: { display: false },
+             ticks: { color: INK_MUTED, font: { size: 10.5, family: 'Inter' }, padding: 8,
+                      callback: function(n){ return pct ? n + '%' : '$' + n + 'B'; } } },
+      },
+    },
+    plugins: [endLabels],
+  });
 }
 
 function cspBody(){
   var v = CSP_VIEWS.filter(function(x){ return x.k === _view.cspView; })[0];
+  var pct = v.unit === 'pct';
   var segs = CSP_VIEWS.map(function(x){
     return '<button type="button" class="hs-seg-b' + (x.k === _view.cspView ? ' active' : '') +
       '" data-csp="' + x.k + '">' + esc(x.label) + '</button>';
   }).join('');
 
-  var fmt = function(val){
-    if (val == null) return null;
-    return v.unit === 'pct' ? val.toFixed(1) + '%' : '$' + val.toFixed(1) + 'B';
-  };
-  var rows = ['googl', 'amzn', 'msft'].map(function(cid){
-    var d = HS_CSP[v.k][cid];
-    var label = cid === 'amzn' ? 'AWS' : cid === 'msft' ? 'MSFT Cloud' : 'Google Cloud';
-    return [dot(cid) + label].concat(d.map(fmt));
+  // Table shows the last twelve quarters — the full 27 would not fit legibly,
+  // and the chart carries the history.
+  var from = HS_CSP_QTRS.length - 12;
+  var rows = CSP_IDS.map(function(cid){
+    var d = cspSeries(v.k, cid).slice(from);
+    return [dot(cid) + CSP_LABEL[cid]].concat(d.map(function(n){
+      return n == null ? null : (pct ? n.toFixed(1) + '%' : '$' + n.toFixed(1) + 'B');
+    }));
   });
 
-  return '<p class="hs-lede">The businesses the CapEx is supposed to produce. Everything here is stated on the calls — ' +
-    'and the single most important thing to hold in mind is that these three segments are not the same animal.</p>' +
+  return '<p class="hs-lede">The businesses the CapEx is supposed to produce, on their own 27-quarter history back to 2019. ' +
+    'Microsoft here is <b>Intelligent Cloud</b>, the reported segment — not the non-GAAP “Microsoft Cloud” metric, which bundles M365 commercial, Dynamics and LinkedIn and has no segment operating income.</p>' +
     '<div class="hs-seg">' + segs + '</div>' +
     '<div class="hs-card">' +
       '<div class="hs-chart-head"><span class="hs-chart-t">' + esc(v.label) + '</span>' +
-        '<span class="hs-chart-u">' + (v.unit === 'pct' ? '% · calendar axis' : 'US$B · calendar axis') + '</span></div>' +
-      '<div class="hs-canvas"><canvas id="hs-csp"></canvas></div>' +
+        '<span class="hs-chart-u">' + (pct ? '%' : 'US$B') + ' · Q4’19 – Q2’26</span></div>' +
+      '<div class="hs-canvas hs-canvas--tall"><canvas id="hs-csp"></canvas></div>' +
       '<p class="hs-cap">' + v.cap + '</p>' +
     '</div>' +
-    sec('Table') +
-    '<div class="hs-card">' + table(rows, [''].concat(LABELS)) + '</div>' +
+    sec('Last twelve quarters') +
+    '<div class="hs-card">' + table(rows, [''].concat(HS_CSP_QTRS.slice(from))) + '</div>' +
     sec('What the segments say') +
     '<div class="hs-card hs-card--warn"><ul class="hs-src">' +
       HS_CSP_NOTES.map(function(n){ return '<li>' + n + '</li>'; }).join('') + '</ul></div>' +
-    sec('Microsoft Cloud gross margin — the one profitability line it does give') +
+    sec('Microsoft Cloud gross margin — a different metric, kept for the AI-cost read') +
     '<div class="hs-card">' +
       '<div class="hs-chart-head"><span class="hs-chart-t">Microsoft Cloud gross margin</span>' +
-        '<span class="hs-chart-u">% · reported actuals only</span></div>' +
+        '<span class="hs-chart-u">% · call axis, reported actuals only</span></div>' +
       '<div class="hs-canvas"><canvas id="hs-dep"></canvas></div>' +
-      '<p class="hs-cap">Seven points of margin in nine quarters, attributed by management to "scaling our AI infrastructure" each time. This is a GROSS margin, so it is not comparable with the operating margins above — but it is the clearest read available on what the AI fleet is costing Microsoft. Guides are excluded so the series is one kind of number; gaps are quarters where no absolute figure was stated. Axis does not start at zero — this is a compression, not a magnitude, chart.</p>' +
+      '<p class="hs-cap">This is the non-GAAP <b>Microsoft Cloud</b> gross margin, not Intelligent Cloud’s operating margin above — a different metric on a different basis, and shown on the 10-quarter call axis. It earns its place because management attributes the seven-point slide to “scaling our AI infrastructure” every single quarter, which is the clearest read available on what the AI fleet costs Microsoft. Axis does not start at zero.</p>' +
     '</div>';
 }
+
 
 // ─── Tab · Capacity & cost per GW ─────────────────────────────────────────────
 // The only block sourced from our own model rather than company disclosure, so

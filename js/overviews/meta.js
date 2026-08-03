@@ -19,6 +19,7 @@
 
 import { makeManagement } from './management.js';
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
+import { mountWatchList } from '../watchlist.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -29,6 +30,7 @@ function pctStr(p){ return (p>=0?'+':'−')+Math.abs(p).toFixed(0)+'%'; }
 
 // ─── Brand: Meta blue + Reality Labs violet ──────────────────────────────────
 var BRAND='#0866FF', BRAND2='#1877F2', FOA='#0866FF', AD='#0866FF', OTHER='#7AA9FF', RL='#8B5CF6', GRAY='#B8C0CA', NEG='#C0392B', GREEN='#16A34A', FC='#A8C7FF';
+var _co=null;   // open company (id + ticker), captured in html/deepDiveHtml for the shared Watch List engine
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  FINANCIAL SERIES (Summit DCF, snapshot 2026-05-22)
@@ -857,136 +859,7 @@ var CALL_EARNINGS = { ticker:'META', quarters:[
 // nested watchList on the 2Q26 retrofit — `why` became `definition`; the v2.6-
 // dropped columns (tell/pista, trigger/breaks, cons) survive in git history and
 // docs/calls/META.md. `rank` is sort order ONLY, never rendered.
-var WL_ROWS=[
-  // ── Q3 2026 · UPCOMING — the live list. Open hooks only; seeded from Q2's newQuestions. ──
-  { id:'wl016', q:'Q3 2026', rank:1, theme:'The capex ladder — the $130B floor, 2027, and the funding doctrine',
-    tags:['capex','commitments','roic'], trackSince:'Q4 2025', trackUntil:null,
-    definition:'The bear case is now explicitly doctrine-funded (cash flow → "a greater mix of debt" → partners); every floor-raise re-tests it while 2027 stays an adjective.',
-    seededBy:{ q:'Q2 2026', n:'2027 capex: a number or a fourth adjective — and does the $130B floor hold?', tripped:true },
-    src:'Ladder tracked since Q4 2025; the 2027 question has been asked and adjectived three times (Q1, Q2 ×2 analysts).',
-    thread:[ {q:'Q4 2025',n:'Initial FY26 guide $115–135B; Meta Compute announced.'},{q:'Q1 2026',n:'Raised to $125–145B; $107B commitments step-up; no 2027 figure.'},{q:'Q2 2026',n:'Floor raised — narrowed to $130–145B · record $31.1B quarter (1H $50.9B) · FCF $784M · debt $83.7B · BlackRock 1GW El Paso JV · doctrine stated: cash flow → debt mix → partners · 2027 still "highly dynamic" (third ask).'} ] },
-  { id:'wl017', q:'Q3 2026', rank:2, theme:'Monetization surfaces → dollars (API · Meta One · Business Agents · compute)',
-    tags:['ai','monetization','msl'], trackSince:'Q4 2025', trackUntil:null,
-    definition:'The surfaces shipped in Q2; the hook is now the first DISCLOSED dollar — API pricing/volume, Meta One subs, Business Agent economics, or a compute transaction.',
-    seededBy:{ q:'Q2 2026', n:'Do the monetization surfaces get dollars attached (Model API pricing/volume, Meta One subs, Business Agent economics, a compute deal)?' },
-    src:'Q2 2026: Business Agents global, 1M+ businesses/week (Movida 85% resolution); Model API on OpenRouter; Meta One launched; compute offers "at a significant premium."',
-    thread:[ {q:'Q4 2025',n:'MSL rebuilt; models "shipping over coming months."'},{q:'Q1 2026',n:'Muse Spark shipped — engagement gains, no revenue; ROIC framed in milestones.'},{q:'Q2 2026',n:'The surfaces shipped: Business Agents 1M/wk · Model API · Meta One · "higher margin on selling intelligence than selling compute" · dollars still undisclosed.'} ] },
-  { id:'wl018', q:'Q3 2026', rank:3, theme:'Ad engine through the FX flip + comp lap',
-    tags:['ads','price-per-ad','impressions'], trackSince:'Q4 2025', trackUntil:null,
-    definition:'The ad engine funds everything; Q3 is its hardest optics quarter (~1% FX headwind + the toughest comp) — constant-currency is the honest read.',
-    seededBy:{ q:'Q2 2026', n:'Does the ad engine hold mid/high-20s through the FX flip (~1% headwind) and the comp lap?' },
-    src:'Q2 2026: ad rev +27% (+26% cc); impressions +14%, price/ad +12%; Generative Recommender +8.3% clicks / +15.7% conversions; Advantage+ $75B run-rate. Q3 guided $61–64B.',
-    thread:[ {q:'Q4 2025',n:'Ad rev +24%; price/ad +6%, impressions +18%.'},{q:'Q1 2026',n:'Ad rev +33%; price/ad +12%, impressions +19% — acceleration on AI ranking.'},{q:'Q2 2026',n:'Ad rev +27% (+26% cc); price/ad held +12%, impressions +14%; first system-level AI attribution (Generative Recommender).'} ] },
-  { id:'wl019', q:'Q3 2026', rank:4, theme:'Legal / regulatory — after the $2.4B charge',
-    tags:['regulatory','legal'], trackSince:'Q1 2026', trackUntil:null,
-    definition:'The flagged tail risk became a booked charge in Q2; the hook is whether $2.4B is the extent or the first installment, with the US youth trials still live.',
-    seededBy:{ q:'Q2 2026', n:'Is $2.4B the extent of the legal exposure — or the first installment, with the youth trials still live?', tripped:true },
-    src:'Q2 2026: $2.4B legal-proceedings charges booked; FY expense floor raised to absorb them; youth-trial "material loss" language repeated verbatim.',
-    thread:[ {q:'Q4 2025',n:'Legal expense growth (accruals + charges); EU DMA overhang.'},{q:'Q1 2026',n:'US youth trials scheduled; "may ultimately result in a material loss."'},{q:'Q2 2026',n:'⚑ $2.4B charge LANDED; same forward language kept — exposure not closed.'} ] },
-  { id:'wl020', q:'Q3 2026', rank:5, theme:'The model ladder: larger Muse models + the open-source return',
-    tags:['ai','msl','promises'], trackSince:'Q3 2026', trackUntil:null,
-    definition:'Two dated promises from the Q2 call — larger models "in the process of scaling" and open-source releases "at some point soon" — both shippable, both scoreable.',
-    seededBy:{ q:'Q2 2026', n:'Do the two model promises ship: larger Muse models + the open-source return, both "soon"?' },
-    src:'Q2 2026 Q&A (Sandler, Gawrelski): mixed open/closed reaffirmed; "we expect that we will get back to releasing some open source models at some point soon"; Muse Spark 1.1 + Muse Image shipped, Meta AI interactions +60%.',
-    thread:[ {q:'Q2 2026',n:'Muse Spark 1.1 + Muse Image shipped · Meta AI daily interactions +60% · larger models scaling · open-source return promised "soon".'} ] },
-  // ── Q2 2026 · REPORTED — frozen record, scored in Post-Results. ──
-  { id:'wl001', q:'Q2 2026', rank:1, theme:'Capex escalation + 2027 signposts',
-    tags:['capex','commitments','roic'], trackSince:'Q4 2025', trackUntil:'Q2 2026',
-    definition:'The capex trajectory is the whole bear case on FCF/returns — if it keeps rising without a monetization signpost, the multiple is exposed.',
-    seededBy:{ q:'Q1 2026', n:'How much higher does capex go — any 2027 framework or ROIC signpost?', tripped:true },
-    src:'Q1 2026: capex guide $125–145B; $107B commitment step-up (multi-year cloud + infra); FY expenses $162–169B.',
-    thread:[ {q:'Q4 2025',n:'Initial FY26 capex guide $115–135B; Meta Compute announced.'},{q:'Q1 2026',n:'Raised to $125–145B; $107B commitments; no 2027 figure.'} ] },
-  { id:'wl002', q:'Q2 2026', rank:2, theme:'Muse / MSL monetization',
-    tags:['ai','muse','msl'], trackSince:'Q4 2025', trackUntil:'Q2 2026',
-    definition:'The capex is justified by the AI product bet — the bet needs to convert engagement into revenue to underwrite the spend.',
-    seededBy:{ q:'Q1 2026', n:'Does Muse Spark / MSL have a monetization path, or engagement-only?' },
-    src:'Q1 2026: Muse Spark powering Meta AI; MSL "on track to be a leading lab"; next models in training.',
-    thread:[ {q:'Q4 2025',n:'MSL rebuilt in 2025; first models "shipping over coming months."'},{q:'Q1 2026',n:'Muse Spark shipped; +double-digit Meta AI sessions/user; monetization TBD.'} ] },
-  { id:'wl003', q:'Q2 2026', rank:3, theme:'Ad-engine durability into tougher comps',
-    tags:['ads','price-per-ad','impressions'], trackSince:'Q4 2025', trackUntil:'Q2 2026',
-    definition:'The ad engine funds everything; any crack in it pulls the rug from the AI-capex thesis.',
-    seededBy:{ q:'Q1 2026', n:'How durable is the ad-engine acceleration into tougher comps?' },
-    src:'Q1 2026: FoA ad revenue $55.0B (+33%); price/ad +12%; impressions +19%; Q2 revenue guided $58–61B.',
-    thread:[ {q:'Q4 2025',n:'Ad rev +24%, price/ad +6%, impressions +18%; record holiday demand.'},{q:'Q1 2026',n:'Ad rev +33%, price/ad +12% — acceleration on AI ranking.'} ] },
-  { id:'wl004', q:'Q2 2026', rank:4, theme:'Reality Labs loss trajectory',
-    tags:['reality-labs','glasses'], trackSince:'Q4 2025', trackUntil:'Q2 2026',
-    definition:'RL is the persistent drag; the glasses pivot + loss peak is the turn the bulls need.',
-    seededBy:{ q:'Q1 2026', n:'Do Reality Labs losses actually peak and start declining?' },
-    src:'Q1 2026: RL revenue $402M (−2%) — Quest down, glasses up; losses framed as peaking.',
-    thread:[ {q:'Q4 2025',n:'RL rev $955M (−12%); losses "peak" this year; glasses tripled.'},{q:'Q1 2026',n:'RL rev $402M (−2%); glasses growth offsetting Quest.'} ] },
-  { id:'wl005', q:'Q2 2026', rank:5, theme:'Regulatory / legal (EU + US youth trials)',
-    tags:['regulatory','legal'], trackSince:'Q1 2026', trackUntil:'Q2 2026',
-    definition:'A tail risk that can hit both the P&L (fines/accruals) and the ad model (consent/targeting).',
-    seededBy:{ q:'Q1 2026', n:'How do the US youth trials / EU headwinds resolve?' },
-    src:'Q1 2026: legal expense elevated; youth-related US trials scheduled; EU DMA/regulatory overhang.',
-    thread:[ {q:'Q4 2025',n:'Legal expense growth (accruals + charges); EU DMA overhang.'},{q:'Q1 2026',n:'US youth trials this year; possible material loss flagged.'} ] },
-  // ── Q1 2026 · REPORTED — frozen record. ──
-  { id:'wl006', q:'Q1 2026', rank:1, theme:'Capex FY26 guide trajectory',
-    tags:['capex'], trackSince:'Q4 2025', trackUntil:'Q1 2026',
-    definition:'The core FCF/returns debate.',
-    seededBy:{ q:'Q4 2025', n:'How big does the 2026 capex ramp get from the $115–135B frame?' } },
-  { id:'wl007', q:'Q1 2026', rank:2, theme:'AI product roadmap / first MSL models',
-    tags:['ai','msl'], trackSince:'Q4 2025', trackUntil:'Q1 2026',
-    definition:'Justifies the capex.',
-    seededBy:{ q:'Q4 2025', n:'Do the first MSL models ship credibly?' } },
-  { id:'wl008', q:'Q1 2026', rank:3, theme:'Ad-engine strength into comps',
-    tags:['ads'], trackSince:'Q4 2025', trackUntil:'Q1 2026',
-    definition:'Funds everything.',
-    seededBy:{ q:'Q4 2025', n:'Does the ad engine hold as holiday comps roll off?' } },
-  { id:'wl009', q:'Q1 2026', rank:4, theme:'Reality Labs losses (peak?)',
-    tags:['reality-labs'], trackSince:'Q4 2025', trackUntil:'Q1 2026',
-    definition:'The persistent drag turning.',
-    seededBy:{ q:'Q4 2025', n:'Is the Reality Labs loss peak real?' } },
-  { id:'wl010', q:'Q1 2026', rank:5, theme:'Efficiency / headcount',
-    tags:['efficiency','headcount'], trackSince:'Q4 2025', trackUntil:'Q1 2026',
-    definition:'The offset to the capex ramp.',
-    seededBy:{ q:'Q4 2025', n:'Does the "leaner, AI-native" model show up in headcount/opex?' } },
-  // ── Q4 2025 · REPORTED — frozen record. ──
-  { id:'wl011', q:'Q4 2025', rank:1, theme:'FY26 capex / infra step-up',
-    tags:['capex'], trackSince:'Q3 2025', trackUntil:'Q4 2025',
-    definition:'The core spend debate — the single number that frames 2026.' },
-  { id:'wl012', q:'Q4 2025', rank:2, theme:'AI roadmap / superintelligence',
-    tags:['ai','msl'], trackSince:'Q3 2025', trackUntil:'Q4 2025',
-    definition:'Justifies the spend.' },
-  { id:'wl013', q:'Q4 2025', rank:3, theme:'Ad-engine holiday strength',
-    tags:['ads'], trackSince:'Q3 2025', trackUntil:'Q4 2025',
-    definition:'Funds everything.' },
-  { id:'wl014', q:'Q4 2025', rank:4, theme:'Reality Labs losses',
-    tags:['reality-labs'], trackSince:'Q3 2025', trackUntil:'Q4 2025',
-    definition:'The persistent drag.' },
-  { id:'wl015', q:'Q4 2025', rank:5, theme:'Tax / one-time noise',
-    tags:['tax'], trackSince:'Q3 2025', trackUntil:'Q4 2025',
-    definition:'EPS optics — the Q3\'25 $15.93B charge flowing through.' },
-];
 
-function wlFor(qLabel, openOnly){
-  return WL_ROWS.filter(function(r){
-    if(r.q!==qLabel) return false;
-    if(openOnly && r.trackUntil) return false;
-    return true;
-  }).sort(function(a,z){
-    var ar=(typeof a.rank==='number')?a.rank:99, zr=(typeof z.rank==='number')?z.rank:99;
-    return ar-zr;
-  });
-}
-function wlOpen(r){ return !!(r.trackSince && !r.trackUntil); }
-// Every tag in use, across every quarter — the vocabulary of the filter bar. New tags created in
-// the Add-theme form are appended live so they become available to everyone.
-function wlTags(){
-  var set=[], seen={};
-  WL_ROWS.forEach(function(r){ (r.tags||[]).forEach(function(t){ if(!seen[t]){ seen[t]=1; set.push(t); } }); });
-  return set.sort();
-}
-function wlById(id){ for(var i=0;i<WL_ROWS.length;i++){ if(WL_ROWS[i].id===id) return WL_ROWS[i]; } return null; }
-function wlNextId(){
-  var mx=0; WL_ROWS.forEach(function(r){ var m=/^wl(\d+)$/.exec(r.id||''); if(m && +m[1]>mx) mx=+m[1]; });
-  return 'wl'+String(mx+1).padStart(3,'0');
-}
-// Next sort slot for a quarter — keeps new rows at the end without ever renumbering the others.
-function wlNextRank(qLabel){
-  var mx=0; WL_ROWS.forEach(function(r){ if(r.q===qLabel && typeof r.rank==='number' && r.rank>mx) mx=r.rank; });
-  return mx+1;
-}
 function ceUpcoming(){ return CALL_EARNINGS.quarters.filter(function(q){ return q.status==='upcoming'; })[0]||null; }
 function ceFill(x, muted){ return (x!=null && String(x).trim()!=='') ? x : '<span class="ce-empty">'+(muted||'— to fill')+'</span>'; }
 var CE_POP={};
@@ -1511,174 +1384,9 @@ function wireCeAnnual(root){ /* the engine self-wires via initResults->wireResul
 // One card per row. idSfx keeps pop-up ids unique between the per-quarter and the cross-quarter
 // (flat) renders; qLabel shows the quarter chip in the flat view; editable adds the ✎/✕ controls
 // (live quarter only — frozen quarters are the historical record and stay read-only).
-function ceWatchItem(w, qk, idSfx, qLabel, editable){
-  var deep='';
-  if(w.seededBy) deep+='<p style="border-left:3px solid '+PURPLE+';padding-left:9px;margin-bottom:10px"><b>'+(w.seededBy.tripped?'Seeded by a TRIPPED trigger':'Seeded by')+' '+esc(w.seededBy.q)+':</b> "'+esc(w.seededBy.n)+'"</p>';
-  // `definition` renders on the card itself now, so it is deliberately NOT repeated in here.
-  if(w.src) deep+='<p><b>Why it earned a slot:</b> '+w.src+'</p>';
-  if(w.thread&&w.thread.length){
-    deep+='<p style="margin-bottom:4px"><b>The thread — how this theme has evolved:</b></p>'+
-      w.thread.map(function(t){ return '<div style="display:flex;gap:9px;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:12px;line-height:1.5"><b style="white-space:nowrap;color:'+BRAND+'">'+esc(t.q)+'</b><span>'+t.n+'</span></div>'; }).join('');
-  }
-  var why=deep?ceReg('watchwhy-'+(w.id||qk+'-'+(w.rank||0))+idSfx, esc(w.theme), deep):null;
-  // No rank badge on the card by design (v2.6): a visible 1–5 goes stale the moment a theme is
-  // removed, and renumbering the survivors implies a re-ranking we did not do. `rank` orders only.
-  var tagsAttr=(w.tags&&w.tags.length)?w.tags.join(' '):'';
-  // The chain, made visible: this item exists because the PRIOR quarter's call left it open.
-  var seed=w.seededBy?'<span class="ce-seed" title="'+esc(w.seededBy.n)+'">'+(w.seededBy.tripped?'⚑ thesis line broke in '+esc(w.seededBy.q):'left open by '+esc(w.seededBy.q))+'</span>':'';
-  var open=wlOpen(w);
-  var ctl=editable?'<span class="ce-w-ctl"><button type="button" class="ce-w-ed" data-wledit="'+esc(w.id||'')+'" title="Edit this theme (and close its hook by filling Tracking until)">✎</button>'+
-    '<button type="button" class="ce-w-del" data-wldel="'+esc(w.id||'')+'" title="Remove this theme">✕</button></span>':'';
-  return '<div class="ce-w" data-wltags="'+esc(tagsAttr)+'" data-wlid="'+esc(w.id||'')+'" data-wlopen="'+(open?'1':'0')+'">'+
-    '<div class="ce-w-top"><span class="ce-w-dot" aria-hidden="true"></span><div class="ce-w-metric">'+esc(w.theme)+'</div>'+seed+
-    (w.trackUntil?'<span class="ce-w-closed" title="Hook closed in '+esc(w.trackUntil)+'">closed</span>':'')+
-    (qLabel?'<span class="ov-chip" style="font-size:9.5px;background:rgba(66,133,244,0.10);color:'+BRAND+';border-radius:20px;padding:2px 9px;font-weight:800;flex:none">'+esc(qLabel)+'</span>':'')+
-    (why?'<span class="ce-why-btn ov-clickable" data-detail="ce:'+why+'" style="margin:0">'+(w.thread?'the thread':'background')+' ›</span>':'')+ctl+'</div>'+
-    (w.definition?'<div class="ce-w-def">'+w.definition+'</div>':'')+
-    '<div class="ce-w-chips">'+
-      (w.tags&&w.tags.length?w.tags.map(function(t){ return '<span class="ce-w-chip tag">#'+esc(t)+'</span>'; }).join(''):'')+
-      (w.trackSince?'<span class="ce-w-chip since"><b>Tracking since:</b> '+esc(w.trackSince)+'</span>':'')+
-      (w.trackUntil?'<span class="ce-w-chip until"><b>Tracking until:</b> '+esc(w.trackUntil)+'</span>':'')+
-    '</div>'+
-  '</div>';
-}
-// The Add / Edit form. Tags are picked from the existing vocabulary (multi-select chips) and new
-// ones can be created inline — a new tag is appended to the filter bar, so it becomes available
-// to every theme from that moment on.
-// The tracking-since / tracking-until fields are DROPDOWNS, not free text. A hand-typed
-// "Q3 26" / "3Q2026" / "Q3-2026" breaks the open/closed filter and the cross-quarter sort
-// silently, and the value is only ever one of a known, short list. Range: Q1 2024 through the
-// quarter Earnings is currently on, derived from CALL_EARNINGS so it advances by itself (§6a-v).
-function ceQuarterOpts(sel, blankLabel){
-  var latest=CALL_EARNINGS.quarters[0] ? ceQnum(CALL_EARNINGS.quarters[0].q) : null;
-  var start=2024*4+1;                                  // Q1 2024
-  var end=latest||(2026*4+3);
-  var out='<option value="">'+esc(blankLabel||'—')+'</option>';
-  for(var t=end; t>=start; t--){
-    var lab='Q'+(((t-1)%4)+1)+' '+Math.floor((t-1)/4);
-    out+='<option value="'+esc(lab)+'"'+(sel===lab?' selected':'')+'>'+esc(lab)+'</option>';
-  }
-  return out;
-}
-function ceWlForm(){
-  return '<div class="ce-wl-addform" hidden>'+
-    '<div class="ce-wl-fh"><b class="ce-wl-fh-t">New theme</b><span class="ce-wl-fh-s">the hunt list is ours — the model does not get a vote on this tab</span></div>'+
-    '<input type="hidden" data-wlf="id">'+
-    '<label class="ce-wl-lb">Theme <span>what we are hunting</span></label>'+
-    '<input class="ce-wl-in" data-wlf="theme" placeholder="e.g. Regulatory: DOJ ad-tech remedies">'+
-    '<label class="ce-wl-lb">Tags <span>click to select · they drive the cross-quarter filter</span></label>'+
-    '<div class="ce-wl-tagpick" data-wlf="tagpick"></div>'+
-    '<div class="ce-wl-newtag"><input class="ce-wl-in" data-wlf="newtag" placeholder="create a new tag (e.g. regulatory)"><button type="button" class="ce-wl-newtag-go">+ add tag</button></div>'+
-    '<label class="ce-wl-lb">Definition <span>required — what the theme means, in our words</span></label>'+
-    '<textarea class="ce-wl-in ce-wl-ta" data-wlf="definition" rows="3" placeholder="What this theme is and why it moves the thesis"></textarea>'+
-    '<div class="ce-wl-2col">'+
-      '<div><label class="ce-wl-lb">Tracking since</label><select class="ce-wl-in" data-wlf="trackSince">'+ceQuarterOpts(null,'— pick a quarter —')+'</select></div>'+
-      '<div><label class="ce-wl-lb">Tracking until <span>empty = still open</span></label><select class="ce-wl-in" data-wlf="trackUntil">'+ceQuarterOpts(null,'— still open —')+'</select></div>'+
-    '</div>'+
-    '<div class="ce-wl-frow"><button type="button" class="ce-wl-add-go">Add to the live list</button>'+
-      '<button type="button" class="ce-wl-cancel">cancel</button>'+
-      '<span class="ave-subh-note">Lives for this session only. Persisting = COPY the table at the bottom and hardcode it into <code>WL_ROWS</code>.</span></div>'+
-  '</div>';
-}
-// The table itself — the storage view, and the round-trip out. Regenerated from WL_ROWS on every
-// add / edit / delete, with COPY (TSV, pasteable) and COPY JSON (exact, hardcodable).
-// `rank` is the sort key, labelled "order" — it is never rendered on a card, so removing a theme
-// cannot leave a gap in a visible numbering.
-var WL_COLS=[
-  {k:'id',l:'id'},{k:'q',l:'quarter'},{k:'rank',l:'order'},{k:'theme',l:'theme'},
-  {k:'tags',l:'tags'},{k:'definition',l:'definition'},
-  {k:'trackSince',l:'tracking since'},{k:'trackUntil',l:'tracking until'}
-];
-function wlCellText(r, k){
-  var v=r[k];
-  if(k==='tags') return (v||[]).join(', ');
-  if(v==null) return '';
-  return String(v).replace(/<[^>]+>/g,'');
-}
-// The live proof that the table tracks the cards: both numbers move as rows are added, closed or
-// deleted. It is re-rendered by the same rerender() that rebuilds the rows.
-function wlCount(){
-  var open=WL_ROWS.filter(wlOpen).length;
-  return WL_ROWS.length+' rows · '+open+' open hook'+(open===1?'':'s')+' · live';
-}
-function ceWlTableRows(){
-  return WL_ROWS.map(function(r){
-    return '<tr'+(wlOpen(r)?' class="wl-open"':'')+'>'+WL_COLS.map(function(c){
-      var t=wlCellText(r,c.k);
-      var cls=(c.k==='theme')?' class="wl-th"':((c.k==='id'||c.k==='q'||c.k==='rank')?' class="wl-key"':'');
-      return '<td'+cls+'>'+(t?esc(t):'<span class="ce-empty">—</span>')+'</td>';
-    }).join('')+'</tr>';
-  }).join('');
-}
-function ceWlTable(){
-  return '<div class="ce-wl-tbl-wrap" id="metaWlTable">'+
-    '<div class="ce-wl-tbl-h">'+
-      '<span class="ce-wl-tbl-t">The Watch List table — one row per theme</span>'+
-      '<span class="ce-wl-tbl-s">the storage view</span>'+
-      // Replaces the old "refresh" button, which was a no-op: the table already rebuilds on every
-      // add / edit / delete, so pressing it could never change anything and just read as broken.
-      // This counter DOES change (rows, and how many hooks are open), which is the actual proof.
-      '<span class="ce-wl-tbl-n">'+wlCount()+'</span>'+
-      // Hiding the table must NOT disable the round-trip: COPY builds its payload from WL_ROWS,
-      // never from the rendered rows, so it works whether or not the table is on screen (§6a-v).
-      '<button type="button" class="ce-wl-copy alt" data-wltoggle="1">show table</button>'+
-      '<button type="button" class="ce-wl-copy" data-wlcopy="tsv">COPY</button>'+
-      '<button type="button" class="ce-wl-copy alt" data-wlcopy="json">copy JSON</button>'+
-    '</div>'+
-    '<div class="ce-wl-tbl-sc" data-wltblbody hidden>'+'<table class="ce-wl-tbl"><thead><tr>'+
-      WL_COLS.map(function(c){ return '<th>'+esc(c.l)+'</th>'; }).join('')+
-    '</tr></thead><tbody class="ce-wl-tbody">'+ceWlTableRows()+'</tbody></table></div>'+
-    '<div class="ave-subh-note" style="margin-top:7px"><b>The round-trip:</b> add / edit / delete themes above → this table updates → hit <b>COPY</b> (tab-separated, drops straight into a sheet) or <b>copy JSON</b> (exact) → paste it back and it gets hardcoded into <code>WL_ROWS</code> in a commit. Editing from the portal <i>persistently</i> needs Supabase — pending assignment, see docs/EARNINGS_CONVENTIONS.md §6f.</div>'+
-  '</div>';
-}
 function ceWatchBody(c){
   var h=ceStyle();
-  // A one-line reminder of the append-only cadence, above the theme filter.
-  h+='<div class="ce-wl-hint">🔁 <b>How quarters advance:</b> a new <i>upcoming</i> quarter appears in Setup & Watch List <b>only once the prior quarter\'s Post-Results (print + call highlights) is filled</b>. Fill Q(n) Post-Results → then Q(n+1) opens for prep.</div>';
-  // ── Tag bar: select themes ACROSS quarters (multi-select). Empty selection = per-quarter view. ──
-  h+='<div class="ce-wl-tagbar"><span class="ce-wl-bar-k">Filter by theme (across quarters):</span>'+
-    wlTags().map(function(t){ return '<button type="button" class="ce-wl-tag" data-wltag="'+esc(t)+'">#'+esc(t)+'</button>'; }).join('')+
-    '<button type="button" class="ce-wl-tag ce-wl-clear" data-wltag="">clear</button>'+
-    '<button type="button" class="ce-wl-add-btn">+ Add theme</button>'+
-  '</div>';
-  // ── Tracking-window filter: the hooks we have open vs the ones we closed. ──
-  h+='<div class="ce-wl-tagbar" style="margin-top:-4px"><span class="ce-wl-bar-k">Tracking window:</span>'+
-    '<span class="mg-seg" style="display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px">'+
-      '<button type="button" class="ce-wl-win active" data-wlwin="all">All</button>'+
-      '<button type="button" class="ce-wl-win" data-wlwin="open">Open hooks</button>'+
-      '<button type="button" class="ce-wl-win" data-wlwin="closed">Closed</button>'+
-    '</span>'+
-    '<span class="ave-subh-note" style="margin-left:4px">A theme is <b>open</b> while it has a <i>Tracking since</i> and no <i>Tracking until</i>. We open and close them by hand.</span>'+
-  '</div>';
-  h+=ceWlForm();
-  // Per-quarter blocks (default view). The live quarter renders only OPEN hooks — that IS the list.
-  h+=CALL_EARNINGS.quarters.map(function(u,qi){
-    var qk=ceQkey(u.q), frozen=(u.status!=='upcoming');
-    var b='<div class="ce-qblock" data-ceq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="ce-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="ce-frozen">frozen</span>':'')+'</div>';
-    var wl=wlFor(u.q, !frozen);
-    b+='<p class="ov-lede"><b>'+(frozen?'The list as it was frozen — ':'Things to hunt — ')+esc(u.q)+'</b>'+
-      (frozen?' <span style="color:var(--mu);font-weight:600">(scored afterwards in Post-Results)</span>':' <span style="color:var(--mu);font-weight:600">(the open hooks — a <i>Tracking since</i> with no <i>Tracking until</i>)</span>')+
-      '. Each card carries its <b>definition</b> — what the theme means in our words — its <b>tags</b>, and its <b>tracking window</b>. Tap <b>the thread ›</b> for the grounding and the quarter-by-quarter evolution. Ordered by weight, deliberately <b>not numbered</b>: a visible 1–5 goes stale the moment a theme is removed.</p>';
-    b+='<div class="ce-legend"><span class="ce-legend-i"><b>How to read the cards:</b></span>'+
-      '<span class="ce-legend-i"><span class="ce-seed">left open by Q2 2026</span> it is on the list because last quarter\'s call did not settle it</span>'+
-      '<span class="ce-legend-i"><span class="ce-w-chip since"><b>Tracking since:</b> Q4 2024</span> with no <i>Tracking until</i> ⇒ the hook is still open</span>'+
-      (frozen?'':'<span class="ce-legend-i"><span class="ce-w-ed" style="pointer-events:none">✎</span> edit — including closing the hook by filling <i>Tracking until</i></span>')+
-    '</div>';
-    if(!wl.length){ b+='<div class="ce-note">No open hooks for '+esc(u.q)+' yet — add themes with <b>+ Add theme</b> above.</div>'; }
-    else{ b+='<div class="ce-watch">'+wl.map(function(w){ return ceWatchItem(w, qk, '', null, !frozen); }).join('')+'</div>'; }
-    b+='<div class="ov-foot">'+(frozen?'Frozen — this list was scored against '+esc(u.q)+'\'s Post-Results; its <code>newQuestions</code> seeded the next quarter.':'Ours to curate: Post-Results lets the model run (numbers + call highlights), but what earns a slot here is our call. Frozen once the quarter opens.')+'</div>';
-    b+='</div>';
-    return b;
-  }).join('');
-  // Flat cross-quarter container (hidden until a tag is selected)
-  h+='<div class="ce-wl-all" hidden>';
-  h+='<div class="ce-phase" style="background:'+PURPLE+'">Themes across quarters</div>';
-  h+='<p class="ov-lede">Every watch item matching the selected theme(s), <b>across all quarters</b> — how the same hunt evolved print to print. Clear the tags (or pick a quarter) to return to the per-quarter view.</p>';
-  h+='<div class="ce-watch">'+WL_ROWS.map(function(r){ return ceWatchItem(r, ceQkey(r.q), '-f', r.q, false); }).join('')+'</div>';
-  h+='</div>';
-  // ── The table: the storage view + the copy-out that closes the loop back into the code. ──
-  h+=ceWlTable();
+  h+='<div data-wlmount></div>';
   // ── FUSED: the full multi-year theme record (was the standalone Evolution ▸ Earnings Calls tab,
   // dissolved Jul 2026 — no two tabs on the same call highlights). Lives here, under the Watch List. ──
   h+='<div style="margin-top:26px;border-top:2px solid var(--bdr);padding-top:16px">';
@@ -1765,10 +1473,10 @@ function cePrintBlock(qLabel, r, us){
     }
     var note=notes[m.k];
     var qb=note?ceReg('resnote-'+ceQkey(qLabel)+'-'+ceQkey(m.k), note.t||m.k, note.h||note):null;
-    // watch[m.k] is the frozen Watch-List RANK; resolve it to the theme text for the chip.
-    var wrRank=watch[m.k], wrTheme=null;
-    if(wrRank){ var wrow=wlFor(qLabel,false).filter(function(x){ return x.rank===wrRank; })[0]; wrTheme=wrow?wrow.theme:null; }
-    var wr=wrTheme||(wrRank?('Watch #'+wrRank):null);
+    // watch[m.k] is the frozen Watch-List RANK. The theme text now lives in the shared DB
+    // engine, so the chip shows the rank; the theme name is on the Watch List itself.
+    var wrRank=watch[m.k];
+    var wr=wrRank?('Watch #'+wrRank):null;
     // data-vdc / data-vdu carry BOTH verdicts so the verdict filter is estimate-view-aware in pure CSS.
     return { sort:(cSurp==null?-1:Math.abs(cSurp)), html:
       '<div class="ce-fz-t" data-vdc="'+cV.k+'" data-vdu="'+uV.k+'"'+(qb?' data-detail="ce:'+qb+'"':'')+'>'+
@@ -2265,165 +1973,12 @@ function wireCallEarnings(root){
     var host=pane.querySelector('.ce-hcards[data-cehl="'+qk+'"]'); if(!host) return;
     host.querySelectorAll('.ce-hcard[data-band="'+band+'"]').forEach(function(c){ c.hidden=!on; });
   }; });
-  // ── Watch List v3: theme-tag filter (cross-quarter) · tracking-window filter · add/edit/delete
-  // against WL_ROWS · and the table + COPY that carries the edits back into the code. ──────────
-  var wpane=pane.querySelector('.ce-phpane[data-cep="watch"]');
-  if(wpane){
-    var flat=wpane.querySelector('.ce-wl-all');
-    var form=wpane.querySelector('.ce-wl-addform');
-    function activeTags(){ return Array.prototype.map.call(wpane.querySelectorAll('.ce-wl-tag.active'), function(b){ return b.getAttribute('data-wltag'); }).filter(Boolean); }
-    function activeWin(){ var b=wpane.querySelector('.ce-wl-win.active'); return b?b.getAttribute('data-wlwin'):'all'; }
-    function applyFilters(){
-      var tags=activeTags(), on=tags.length>0, win=activeWin();
-      // tag selection swaps the per-quarter view for the flat cross-quarter one
-      if(on){ wpane.querySelectorAll('.ce-qblock').forEach(function(blk){ blk.hidden=true; }); }
-      else{
-        var act=pane.querySelector('.ce-qpill.active'); var qk=act?act.getAttribute('data-ceqsel'):null;
-        wpane.querySelectorAll('.ce-qblock').forEach(function(blk){ blk.hidden=(qk!=null && blk.getAttribute('data-ceq')!==qk); });
-      }
-      if(flat) flat.hidden=!on;
-      // both filters are card-level: tags decide WHICH themes, the window decides open vs closed
-      wpane.querySelectorAll('.ce-w').forEach(function(card){
-        var ct=(card.getAttribute('data-wltags')||'').split(/\s+/);
-        var isOpen=card.getAttribute('data-wlopen')==='1';
-        var hitTag=!on || tags.some(function(t){ return ct.indexOf(t)>=0; });
-        var hitWin=(win==='all') || (win==='open'&&isOpen) || (win==='closed'&&!isOpen);
-        if(hitTag&&hitWin) card.removeAttribute('data-wlhide'); else card.setAttribute('data-wlhide','1');
-      });
-    }
-    function wireTag(btn){ btn.onclick=function(){
-      if(btn.classList.contains('ce-wl-clear')){ wpane.querySelectorAll('.ce-wl-tag').forEach(function(b){ b.classList.remove('active'); }); }
-      else btn.classList.toggle('active');
-      applyFilters();
-    }; }
-    wpane.querySelectorAll('.ce-wl-tag').forEach(wireTag);
-    wpane.querySelectorAll('.ce-wl-win').forEach(function(btn){ btn.onclick=function(){
-      wpane.querySelectorAll('.ce-wl-win').forEach(function(b){ b.classList.toggle('active', b===btn); });
-      applyFilters();
-    }; });
-    // Registers a tag in the filter bar (so a tag invented while writing a theme becomes available
-    // to everyone) and in the form's picker.
-    function registerTag(t){
-      if(!wpane.querySelector('.ce-wl-tag[data-wltag="'+t+'"]')){
-        var b=document.createElement('button'); b.type='button'; b.className='ce-wl-tag'; b.setAttribute('data-wltag',t); b.textContent='#'+t;
-        var clear=wpane.querySelector('.ce-wl-clear'); clear.parentNode.insertBefore(b, clear); wireTag(b);
-      }
-      var pick=form?form.querySelector('.ce-wl-tagpick'):null;
-      if(pick&&!pick.querySelector('[data-pick="'+t+'"]')){
-        var p=document.createElement('button'); p.type='button'; p.className='ce-wl-pick'; p.setAttribute('data-pick',t); p.textContent='#'+t;
-        p.onclick=function(){ p.classList.toggle('on'); }; pick.appendChild(p);
-      }
-    }
-    // ── the form: shared by add and edit (edit prefills and switches the button) ──
-    function fld(k){ return form?form.querySelector('[data-wlf="'+k+'"]'):null; }
-    function fval(k){ var el=fld(k); return el?el.value.trim():''; }
-    function setF(k,v){ var el=fld(k); if(el) el.value=(v==null?'':v); }
-    function pickedTags(){ return Array.prototype.map.call(form.querySelectorAll('.ce-wl-pick.on'), function(b){ return b.getAttribute('data-pick'); }); }
-    function resetForm(){
-      ['id','theme','definition','trackSince','trackUntil','newtag'].forEach(function(k){ setF(k,''); });
-      form.querySelectorAll('.ce-wl-pick.on').forEach(function(b){ b.classList.remove('on'); });
-      form.querySelector('.ce-wl-fh-t').textContent='New theme';
-      form.querySelector('.ce-wl-add-go').textContent='Add to the live list';
-    }
-    if(form){
-      wlTags().forEach(registerTag);
-      var nt=form.querySelector('.ce-wl-newtag-go');
-      if(nt) nt.onclick=function(){
-        var raw=fval('newtag'); if(!raw) return;
-        raw.split(',').forEach(function(t){
-          t=t.trim().toLowerCase().replace(/\s+/g,'-'); if(!t) return;
-          registerTag(t);
-          var p=form.querySelector('.ce-wl-pick[data-pick="'+t+'"]'); if(p) p.classList.add('on');
-        });
-        setF('newtag','');
-      };
-      var cancel=form.querySelector('.ce-wl-cancel');
-      if(cancel) cancel.onclick=function(){ resetForm(); form.hidden=true; };
-    }
-    var addBtn=wpane.querySelector('.ce-wl-add-btn');
-    if(addBtn&&form){ addBtn.onclick=function(){
-      if(form.hidden){ resetForm(); form.hidden=false; } else form.hidden=true;
-    }; }
-    // Re-renders the live quarter's cards, the flat view and the table from WL_ROWS. Cheap enough
-    // to do wholesale — this is a 20-row table, not a grid.
-    function rerender(){
-      var live=ceUpcoming(); if(!live) return;
-      var qk=ceQkey(live.q);
-      var host=wpane.querySelector('.ce-qblock[data-ceq="'+qk+'"] .ce-watch');
-      var rows=wlFor(live.q, true);
-      if(host) host.innerHTML=rows.map(function(w){ return ceWatchItem(w, qk, '', null, true); }).join('');
-      var flatHost=flat?flat.querySelector('.ce-watch'):null;
-      if(flatHost) flatHost.innerHTML=WL_ROWS.map(function(r){ return ceWatchItem(r, ceQkey(r.q), '-f', r.q, false); }).join('');
-      var tb=wpane.querySelector('.ce-wl-tbody');
-      if(tb) tb.innerHTML=ceWlTableRows();
-      var n=wpane.querySelector('.ce-wl-tbl-n');
-      if(n) n.textContent=wlCount();   // the visible proof the table tracked the edit
-      wireCards(); applyFilters();
-    }
-    // ✎ / ✕ on each live-quarter card.
-    function wireCards(){
-      wpane.querySelectorAll('[data-wledit]').forEach(function(btn){ btn.onclick=function(){
-        var r=wlById(btn.getAttribute('data-wledit')); if(!r||!form) return;
-        resetForm(); form.hidden=false;
-        setF('id',r.id); setF('theme',r.theme); setF('definition',r.definition);
-        setF('trackSince',r.trackSince); setF('trackUntil',r.trackUntil);
-        (r.tags||[]).forEach(function(t){ registerTag(t); var p=form.querySelector('.ce-wl-pick[data-pick="'+t+'"]'); if(p) p.classList.add('on'); });
-        form.querySelector('.ce-wl-fh-t').textContent='Edit theme · '+r.id;
-        form.querySelector('.ce-wl-add-go').textContent='Save changes';
-        form.scrollIntoView({block:'nearest'});
-      }; });
-      wpane.querySelectorAll('[data-wldel]').forEach(function(btn){ btn.onclick=function(){
-        var id=btn.getAttribute('data-wldel');
-        var r=wlById(id); if(!r) return;
-        if(!window.confirm('Remove "'+r.theme+'" from the Watch List?\n\nSession-only — the hardcoded table is untouched until you COPY it back.')) return;
-        var i=WL_ROWS.indexOf(r); if(i>=0) WL_ROWS.splice(i,1);
-        rerender();
-      }; });
-    }
-    wireCards();
-    var go=wpane.querySelector('.ce-wl-add-go');
-    if(go&&form){ go.onclick=function(){
-      var theme=fval('theme'); if(!theme){ var t=fld('theme'); if(t) t.focus(); return; }
-      var live=ceUpcoming(); if(!live) return;
-      var id=fval('id');
-      var row=id?wlById(id):null;
-      var isNew=!row;
-      // New rows go to the end of the sort order — never renumbering the ones already there.
-      if(isNew){ row={ id:wlNextId(), q:live.q, rank:wlNextRank(live.q) }; }
-      row.theme=theme;
-      row.tags=pickedTags();
-      row.definition=fval('definition')||null;
-      row.trackSince=fval('trackSince')||null;
-      row.trackUntil=fval('trackUntil')||null;
-      if(isNew) WL_ROWS.push(row);
-      (row.tags||[]).forEach(registerTag);
-      resetForm(); form.hidden=true;
-      rerender();
-    }; }
-    // ── the copy-out: TSV for a sheet / a paste-back, JSON for an exact hardcode ──
-    // Hide / show the table. COPY keeps working while hidden because it serialises WL_ROWS,
-    // not the rendered rows — the table is a VIEW of the data, never the storage.
-    wpane.querySelectorAll('[data-wltoggle]').forEach(function(btn){ btn.onclick=function(){
-      var body=wpane.querySelector('[data-wltblbody]'); if(!body) return;
-      var hide=!body.hasAttribute('hidden');
-      if(hide) body.setAttribute('hidden',''); else body.removeAttribute('hidden');
-      btn.textContent=hide?'show table':'hide table';
-    }; });
-    wpane.querySelectorAll('.ce-wl-copy[data-wlcopy]').forEach(function(btn){ btn.onclick=function(){
-      var kind=btn.getAttribute('data-wlcopy'), txt;
-      if(kind==='json'){ txt=JSON.stringify(WL_ROWS, null, 2); }
-      else {
-        txt=[WL_COLS.map(function(c){ return c.l; }).join('\t')].concat(
-          WL_ROWS.map(function(r){ return WL_COLS.map(function(c){
-            return wlCellText(r,c.k).replace(/[\t\n]+/g,' ');
-          }).join('\t'); })).join('\n');
-      }
-      var done=function(){ var o=btn.textContent; btn.textContent='copied ✓'; setTimeout(function(){ btn.textContent=o; }, 1500); };
-      if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done, done); }
-      else { var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
-             try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta); done(); }
-    }; });
-    applyFilters();
+  // ── Watch List: mount the SHARED engine (js/watchlist.js). It owns rendering + Supabase
+  // persistence + sorting + the delete rule, scoped by company id/ticker; re-mount is idempotent. ──
+  var wmount=pane.querySelector('.ce-phpane[data-cep="watch"] [data-wlmount]');
+  if(wmount && _co && _co.id){
+    mountWatchList(wmount, { companyId:_co.id, ticker:_co.ticker, quarters:CALL_EARNINGS.quarters,
+      colors:{ brand:BRAND, brand2:BRAND2, purple:PURPLE, gray:GRAY, red:RED } });
   }
 }
 
@@ -3654,6 +3209,7 @@ var STD_STYLE='<style>.stdkf{display:grid;grid-template-columns:repeat(5,1fr);bo
   '.dd-tab{border:1px solid var(--bdr);background:var(--w);font:inherit;font-size:12px;font-weight:800;color:var(--mu);padding:7px 14px;border-radius:999px;cursor:pointer}'+
   '.dd-tab.active{background:'+BRAND+';color:#fff;border-color:'+BRAND+'}</style>';
 function html(c){
+  _co=c;   // capture company (id + ticker) for the Watch List DB wiring
   var h='<div class="ov ov-meta" data-brand="META">'+STD_STYLE;
   h+=metaKeyFacts();
   h+='<div class="ov-live" id="meLive" hidden></div>';
@@ -3678,6 +3234,7 @@ function subtabs(group, subs){
   return '<div class="dd-pane" data-dd="'+group+'"'+(group==='topline'?'':' hidden')+'>'+bar+panes+'</div>';
 }
 function deepDiveHtml(c){
+  _co=c;   // capture company (id + ticker) for the Watch List DB wiring
   var h='<div class="ov ov-meta ov-meta-dd" data-brand="META">'+STD_STYLE;
   h+='<div class="dd-tabs">'+
     '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+

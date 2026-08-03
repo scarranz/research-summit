@@ -25,6 +25,8 @@ import { googlResults } from './results-data/googl.js';
 import { googlSetup } from './results-data/googl-setup.js';
 import { metaResults } from './results-data/meta.js';
 import { metaSetup } from './results-data/meta-setup.js';
+import { ibkrResults } from './results-data/ibkr.js';
+import { ibkrSetup } from './results-data/ibkr-setup.js';
 
 var RESULTS_DATA = {
   AMZN: amznResults,
@@ -32,7 +34,9 @@ var RESULTS_DATA = {
   GOOGL: googlResults,
   GOOGL_SETUP: googlSetup,
   META: metaResults,
-  META_SETUP: metaSetup
+  META_SETUP: metaSetup,
+  IBKR: ibkrResults,
+  IBKR_SETUP: ibkrSetup
 };
 
 export function getResultsData(ticker){

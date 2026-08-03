@@ -576,11 +576,18 @@ function depreciationBody(){
       '<div class="hs-stat-l">FY' + y.year + ' depreciation · <b>+' + y.growth + '%</b> YoY</div></div>';
   }).join('');
 
+  var upPct = function(v){ return v == null ? null : '<span class="hs-up">+' + v + '%</span>'; };
+  var upDlr = function(v, der){
+    if (v == null) return null;
+    return '<span class="hs-up">' + cspFmt(v, false, true) + '</span>' +
+      (der ? ' <span class="hs-growthrow">der.</span>' : '');
+  };
   var qrows = HS_DEP_GOOGL.qtr.map(function(q){
-    return [q.q, q.usd == null ? null : '$' + q.usd.toFixed(1) + 'B', '<span class="hs-up">+' + q.growth + '%</span>'];
+    return [q.q, q.usd == null ? null : '$' + q.usd.toFixed(1) + 'B', upPct(q.growth), upDlr(q.dlr)];
   });
-  qrows.unshift(['FY2024', '$15.3B', '<span class="hs-up">+28%</span>']);
-  qrows.push(['FY2025', '$21.1B', '<span class="hs-up">+38%</span>']);
+  var fy24 = HS_DEP_GOOGL.fy[0], fy25 = HS_DEP_GOOGL.fy[1];
+  qrows.unshift(['FY2024', '$' + fy24.usd + 'B', upPct(fy24.growth), upDlr(fy24.dlr, fy24.dlrD)]);
+  qrows.push(['FY2025', '$' + fy25.usd + 'B', upPct(fy25.growth), upDlr(fy25.dlr)]);
 
   var srcs = HS_DEP_GOOGL.qtr.map(function(q){ return '<li><b>' + q.q + '</b> · ' + esc(q.src) + '</li>'; }).join('') +
     HS_DEP_GOOGL.fy.map(function(y){ return '<li><b>FY' + y.year + '</b> · ' + esc(y.src) + '</li>'; }).join('');
@@ -591,11 +598,26 @@ function depreciationBody(){
 
   // Modelled forward trajectory — the centrepiece now that the DCF tabs give it
   // for all three. Ties to the filings through 2025, which is what makes the
-  // forward columns readable.
-  var depRows = ['amzn', 'googl', 'meta'].map(function(cid){
-    return [dot(cid) + co(cid).ticker].concat(HS_DEP_MODEL[cid].map(function(v){
-      return '$' + (v / 1000).toFixed(1) + 'B';
-    })).concat(['<b>' + (HS_DEP_MODEL[cid][5] / HS_DEP_MODEL[cid][2]).toFixed(1) + '×</b>']);
+  // forward columns readable. Each company carries the level plus its growth in
+  // both units, same convention as the CSP tables: the percent says how fast the
+  // line is compounding, the dollar says how much cost is actually arriving.
+  var depRows = [];
+  ['amzn', 'googl', 'meta'].forEach(function(cid){
+    var s = HS_DEP_MODEL[cid];
+    depRows.push([dot(cid) + co(cid).ticker]
+      .concat(s.map(function(v){ return '$' + (v / 1000).toFixed(1) + 'B'; }))
+      .concat(['<b>' + (s[5] / s[2]).toFixed(1) + '×</b>']));
+    depRows.push(['<span class="hs-growthrow">YoY growth %</span>']
+      .concat(s.map(function(v, i){
+        if (i === 0) return null;
+        var g = (v - s[i - 1]) / s[i - 1] * 100;
+        return '<span class="hs-up">' + cspFmt(g, true) + '</span>';
+      })).concat([null]));
+    depRows.push(['<span class="hs-growthrow">YoY growth $</span>']
+      .concat(s.map(function(v, i){
+        if (i === 0) return null;
+        return '<span class="hs-up">' + cspFmt((v - s[i - 1]) / 1000, false, true) + '</span>';
+      })).concat(['<b>' + cspFmt((s[5] - s[2]) / 1000, false, true) + '</b>']));
   });
 
   var lifeRows = Object.keys(HS_LIVES).map(function(cid){
@@ -642,7 +664,7 @@ function depreciationBody(){
     '<div class="hs-card">' +
       '<div class="hs-stats">' + tiles + '</div>' +
       '<p class="hs-body" style="margin-top:12px">The growth rate accelerated every quarter it was disclosed — 31% → 35% → 41% — so the line is not just growing, it is growing faster. ' + esc(HS_DEP_GOOGL.forward) + '</p>' +
-      table(qrows, ['Period', 'Depreciation', 'YoY growth']) +
+      table(qrows, ['Period', 'Depreciation', 'YoY growth %', 'YoY growth $']) +
       '<ul class="hs-src">' + srcs + '</ul>' +
     '</div>' +
     sec('What the others disclose instead') +

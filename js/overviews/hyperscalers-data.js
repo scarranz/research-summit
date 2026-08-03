@@ -327,15 +327,18 @@ export var HS_CAPACITY_QUOTES = [
 
 // Alphabet — the only company that puts numbers on it. All stated on the calls.
 export var HS_DEP_GOOGL = {
+  // `dlr` is the year-on-year change in US$B. Stated on the call wherever
+  // possible — Alphabet usually gives the dollar increase alongside the rate,
+  // which is why this line can carry both units without deriving either.
   fy: [
-    { year: '2024', usd: 15.3, growth: 28, src: '4Q24 call: "In 2024, we saw 28% year-over-year growth in depreciation."' },
-    { year: '2025', usd: 21.1, growth: 38, src: '4Q25 call: "depreciation increased by nearly $6 billion, or 38%, from $15.3 billion in 2024 to $21.1 billion in 2025."' },
+    { year: '2024', usd: 15.3, growth: 28, dlr: 3.4, dlrD: true, src: '4Q24 call: "In 2024, we saw 28% year-over-year growth in depreciation." The $3.4B change is derived against the model’s 2023 figure of $11.9B, which itself ties to the 10-K.' },
+    { year: '2025', usd: 21.1, growth: 38, dlr: 5.8, src: '4Q25 call: "depreciation increased by nearly $6 billion, or 38%, from $15.3 billion in 2024 to $21.1 billion in 2025."' },
   ],
   // Quarterly YoY growth of the depreciation line, as stated. Note the ramp.
   qtr: [
-    { q: '1Q25', growth: 31, usd: null, src: '"about a 31% year-over-year growth in depreciation this quarter, and it will be higher as we go throughout the year."' },
-    { q: '2Q25', growth: 35, usd: 5.0,  src: '"depreciation increased $1.3 billion year-over-year to $5 billion, reflecting a growth rate of 35%."' },
-    { q: '3Q25', growth: 41, usd: 5.6,  src: '"depreciation increased $1.6 billion year-over-year to $5.6 billion, reflecting a growth rate of 41%."' },
+    { q: '1Q25', growth: 31, usd: null, dlr: null, src: '"about a 31% year-over-year growth in depreciation this quarter, and it will be higher as we go throughout the year." No level or dollar change given.' },
+    { q: '2Q25', growth: 35, usd: 5.0,  dlr: 1.3,  src: '"depreciation increased $1.3 billion year-over-year to $5 billion, reflecting a growth rate of 35%."' },
+    { q: '3Q25', growth: 41, usd: 5.6,  dlr: 1.6,  src: '"depreciation increased $1.6 billion year-over-year to $5.6 billion, reflecting a growth rate of 41%."' },
   ],
   forward: 'For 2026 Alphabet expects the growth rate to "accelerate in Q1 and meaningfully increase for the full year" — no figure given.',
 };

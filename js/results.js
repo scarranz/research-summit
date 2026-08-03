@@ -30,6 +30,7 @@ import { ibkrResults } from './results-data/ibkr.js';
 import { ibkrSetup } from './results-data/ibkr-setup.js';
 import { spotResults } from './results-data/spot.js';
 import { lyftResults } from './results-data/lyft.js';
+import { lyftSetup } from './results-data/lyft-setup.js';
 import { tbbbResults } from './results-data/tbbb.js';
 import { tbbbSetup } from './results-data/tbbb-setup.js';
 
@@ -46,6 +47,7 @@ var RESULTS_DATA = {
   IBKR_SETUP: ibkrSetup,
   SPOT: spotResults,
   LYFT: lyftResults,
+  LYFT_SETUP: lyftSetup,
   TBBB: tbbbResults,
   TBBB_SETUP: tbbbSetup
 };

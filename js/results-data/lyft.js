@@ -192,6 +192,105 @@ export var lyftResults = {
           { label: 'Balance sheet', keys: ['ins'] }
         ] }
       ]
+    },
+    // ── ANNUAL view ───────────────────────────────────────────────────────────
+    // Pulled from the Summit model (snapshot 2026-05-13) via the MCP: FY actuals from
+    // `actuals_history`, FY estimates from `projection_history`. EVERY actual was reconciled
+    // against the quarterly series above and ties exactly — FY2025 revenue 6,316.3 = the four
+    // reported quarters summed, gross bookings 18,507.1, adjusted EBITDA 528.9, free cash flow
+    // 1,115.5, rides 945.5. Active riders is a POINT (the Q4 figure), never a sum.
+    //
+    // ⚠ THE SUMMIT COLUMN IS DELIBERATELY BLANK IN THE EARLY YEARS, and this is the audit
+    // talking, not missing data. The model's stored projections for 2022–2023 are unusable:
+    // adjusted EBITDA reads −2,325.2 for 2022 against a −416.5 actual (and the identical value
+    // appears on the CFO line — a column misalignment, not a forecast), free cash flow is
+    // SIGN-WRONG for 2023 (+187.4 against a −248.1 actual), and capex is POSITIVE for 2022–2023
+    // where every actual is negative. Showing them would invent a forecasting record that never
+    // existed. Adjusted EBITDA therefore starts at 2025, free cash flow and rides/riders at 2024.
+    //
+    // ⚠ CAPEX MIXES BASES ACROSS THE DIVIDE. The actuals here are the `DEFAULT` series
+    // (FY2024 −83.5) but the model's own forward capex is struck on `SEGM` (FY2024 −161.5, the
+    // ~2x gap flagged for the model owner). The Summit line therefore starts at 2026, where only
+    // one basis exists, rather than pretending the history and the forecast are the same series.
+    y: {
+      label: 'Annual',
+      note: 'Fiscal years. Actuals from Lyft’s 10-K/8-K filings as carried in the Summit model’s actuals history (each one reconciled against the quarterly series); the Summit column is the model’s own stored projection from the 2026-05-13 snapshot. No Street consensus exists at the annual level for this name — LYFT is not in BBG_CONSENSUS.txt — and Lyft gives no annual guidance, so both of those columns are empty by construction rather than unfilled.',
+      metrics: {
+        gb: { label: 'Gross Bookings', short: 'Gross bookings', group: 'Volume', unit: 'usdM',
+          periods: ['2022','2023','2024','2025','2026','2027','2028','2029'],
+          act:    [12057.3, 13775.1, 16099.4, 18507.1, null, null, null, null],
+          summit: [null, 12372.1, 14918.2, 18474.8, 21785.1, 24822.6, 26768.6, 28604.0],
+          cons:   [null, null, null, null, null, null, null, null],
+          guideLo:[null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null],
+          note: 'The line Lyft’s 2027 plan is written in: management’s stated goal is <b>~$25B</b>, and the model carries <b>$24.8B</b> — within a percent, so on volume the target is intact. Compounding steadily: $12.1B → $18.5B over three years, +15% in FY2025. ⚠ FY2025 is the first year that is NOT organic — FREENOW entered in August and TBR Global in October, and Lyft has never published the split.' },
+        rev: { label: 'Revenue', short: 'Revenue', group: 'Volume', unit: 'usdM',
+          periods: ['2022','2023','2024','2025','2026','2027','2028','2029'],
+          act:    [4095.1, 4403.6, 5786.0, 6316.3, null, null, null, null],
+          summit: [null, null, null, 6484.3, 7372.7, 8219.3, 8844.8, 9434.9],
+          cons:   [null, null, null, null, null, null, null, null],
+          guideLo:[null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null],
+          note: 'Grew FASTER than bookings through 2024 (+31% against +17%) as take rate expanded — which is exactly why the Street kept under-modelling revenue that year. FY2025’s +9% is the slower side of that: the $168M contra-revenue charge in Q4 costs the full year about 2.7 points of growth. ⚠ The model mirrors the actual on 2022–2024, so those cells are omitted rather than shown as forecasts; FY2025’s 6,484.3 is a real estimate and came in 2.7% high.' },
+        rides: { label: 'Rides', short: 'Rides', group: 'Volume', unit: 'usdM',
+          periods: ['2022','2023','2024','2025','2026','2027','2028','2029'],
+          act:    [598.5, 709.1, 828.2, 945.5, null, null, null, null],
+          summit: [null, null, 766.4, 952.9, 1027.4, 1131.3, 1226.2, 1316.8],
+          cons:   [null, null, null, null, null, null, null, null],
+          guideLo:[null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null],
+          note: 'In MILLIONS of rides (the engine has no count unit yet, so the axis reads US$ — read it as a count). 945.5M in FY2025, which management put as “30 rides a second”. The forward line asks for <b>1.0bn+ in 2026</b> — and Q1 2026 rides fell sequentially and came in under the Street, which is the first evidence against that ramp.' },
+        riders: { label: 'Active Riders', short: 'Active riders', group: 'Volume', unit: 'usdM',
+          periods: ['2022','2023','2024','2025','2026','2027','2028','2029'],
+          act:    [20.4, 22.4, 24.7, 29.2, null, null, null, null],
+          summit: [null, null, 24.4, 29.9, 33.0, 36.3, 39.6, 42.7],
+          cons:   [null, null, null, null, null, null, null, null],
+          guideLo:[null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null],
+          note: 'In MILLIONS, and a POINT not a sum — the Q4 figure, so the annual series is the year-end level. The FY2025 jump 24.7M → 29.2M (+18%) is the largest in the record and coincides with FREENOW consolidating, so it is not a clean organic step.' },
+        ebitda: { label: 'Adjusted EBITDA', short: 'Adj. EBITDA', group: 'Profitability', unit: 'usdM', marginOf: 'gb', marginLabel: 'Adj. EBITDA % of Gross Bookings',
+          periods: ['2022','2023','2024','2025','2026','2027','2028','2029'],
+          act:    [-416.5, 222.3, 382.4, 528.9, null, null, null, null],
+          summit: [null, null, null, 554.8, 691.1, 829.8, 995.7, 1016.3],
+          cons:   [null, null, null, null, null, null, null, null],
+          guideLo:[null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null],
+          note: '⚠ THE LINE TO ARGUE ABOUT. The turnaround is real — <b>−$416.5M in 2022 to +$528.9M in 2025</b>, with margin on bookings going 0% → 2.9%. But set the forward line against management’s own <b>~$1B adjusted-EBITDA goal for 2027</b>: the model carries <b>$829.8M</b>, roughly <b>17% short</b>. In the margin view the assumed take of bookings flattens around 3.3–3.7% instead of reaching the ~4% the target implies. Bookings hit the 2027 goal; this line does not. ⚠ Summit starts at 2025 — see the header note on why 2022–2024 projections are excluded.' },
+        fcf: { label: 'Free Cash Flow', short: 'Free cash flow', group: 'Profitability', unit: 'usdM', marginOf: 'gb', marginLabel: 'FCF % of Gross Bookings',
+          periods: ['2022','2023','2024','2025','2026','2027','2028','2029'],
+          act:    [-352.3, -248.1, 766.3, 1115.6, null, null, null, null],
+          summit: [null, null, 688.3, 1088.3, 1185.0, 1080.3, 783.4, 793.5],
+          cons:   [null, null, null, null, null, null, null, null],
+          guideLo:[null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null],
+          note: 'The cleanest part of the story: from <b>−$352M in 2022 to +$1,116M in 2025</b>, which is what let management raise the 2027 goal from ~$900M to over $1B. The model has FY2027 at <b>$1,080M</b>, so that target survives — but only just, and the line then FALLS to ~$783M in 2028 before flattening. ⚠ Flattered by the insurance-reserve build, which is cash in hand until the claims land. DEFAULT series; the SEGM basis reads FY2024 at 688.3 instead of 766.3.' },
+        capex: { label: 'Capital Expenditure', short: 'Capex', group: 'Profitability', unit: 'usdM',
+          periods: ['2022','2023','2024','2025','2026','2027','2028','2029'],
+          act:    [115.0, 149.8, 83.5, 52.8, null, null, null, null],
+          summit: [null, null, null, null, 85.8, 164.4, 132.7, 141.5],
+          cons:   [null, null, null, null, null, null, null, null],
+          guideLo:[null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null],
+          note: 'Shown as POSITIVE spend (the model carries it as a negative outflow). This is the asset-light proof: capex never exceeds ~1.1% of gross bookings and has FALLEN in absolute dollars for three straight years while bookings grew 53%. ⚠ The Summit line starts at 2026 on purpose — the model’s forward capex is struck on the SEGM basis (FY2024 −161.5) while these actuals are DEFAULT (FY2024 −83.5), a ~2x gap flagged for the model owner. Splicing them would draw a step that is a basis change, not a spending decision.' },
+        ins: { label: 'Insurance Reserves', short: 'Insurance reserves', group: 'Profitability', unit: 'usdM',
+          periods: ['2022','2023','2024','2025','2026','2027','2028','2029'],
+          act:    [1417.3, 1337.9, 1701.4, 2180.4, null, null, null, null],
+          summit: [null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, null, null, null, null, null],
+          guideLo:[null, null, null, null, null, null, null, null],
+          guideHi:[null, null, null, null, null, null, null, null],
+          note: 'Year-end balance, not an expense — the single largest estimate on Lyft’s balance sheet, and it has grown faster than bookings since 2023 ($1.34B → $2.18B, +63%, against bookings +34%). The model carries NO projection for this line at all, which is why the forward years are empty.' }
+      },
+      sections: [
+        { key: 'top', label: 'Volume & Demand', defaultMetric: 'gb', groups: [
+          { label: 'Marketplace', keys: ['gb', 'rev'] },
+          { label: 'Demand (counts, in millions)', keys: ['rides', 'riders'] }
+        ] },
+        { key: 'margins', label: 'Profitability', defaultMetric: 'ebitda', groups: [
+          { label: 'Company', keys: ['ebitda', 'fcf', 'capex'] },
+          { label: 'Balance sheet', keys: ['ins'] }
+        ] }
+      ]
     }
   },
   // ── Estimate EVOLUTION across model snapshots (vintages) ────────────────────

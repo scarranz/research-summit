@@ -10,6 +10,7 @@
 import { makeValuation } from './valuation.js';
 import { makeManagement } from './management.js';
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
+import { lyftResults } from '../results-data/lyft.js';
 import { mountWatchList } from '../watchlist.js';
 
 // Interactive "Scenario → price target" calculator (Valuation tab). Fundamentals from
@@ -3651,12 +3652,14 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="ratings">Analyst Ratings</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="capital">Capital Allocation</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="balance">Balance Sheet</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="financials">Financials</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="multiples">'+LYFT_VAL.body()+'</div>'+
       '<div class="ovt-subpane" data-ovst="peers" hidden>'+lyPeerMultBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="ratings" hidden><div id="dd-val-slot"></div></div>'+
       '<div class="ovt-subpane" data-ovst="capital" hidden>'+lyCapAllocBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="balance" hidden>'+lyBalanceBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="financials" hidden>'+lyFinBody()+'</div>'+
     '</div>'+
     // ── MANAGEMENT — Executives & Board · Ownership (Fiscal.ai, absorbed) · Governance & SBC ·
     // Track Record. ──
@@ -3686,6 +3689,105 @@ function historyStoryBody(){
 // ═══ Charts ═══════════════════════════════════════════════════════════════════
 var _charts = {}; // id -> Chart instance
 function destroy(id){ if (_charts[id]) { _charts[id].destroy(); _charts[id] = null; } }
+
+// ═══ VALUATION ▸ FINANCIALS — the eight-year arc, DERIVED from the annual dataset ═══════════════
+// Same construct as amzn.js: nothing here is hand-typed. Every bar and every table cell is read
+// out of `lyftResults.views.y`, so the tab cannot drift from the Results/Estimates tabs that share
+// the dataset. Reported years render solid; model years render faded and are suffixed "E".
+var LY_FIN_YEARS = ['2022','2023','2024','2025','2026','2027','2028','2029'];
+
+function lyFinSeries(key, src){
+  var m = lyftResults.views.y.metrics[key];
+  if (!m) return LY_FIN_YEARS.map(function(){ return null; });
+  return LY_FIN_YEARS.map(function(yr){
+    var i = m.periods.indexOf(yr);
+    return (i >= 0 && m[src] && m[src][i] != null) ? m[src][i] : null;
+  });
+}
+// Actual where it exists, else the model — one continuous line with the handover marked.
+function lyFinMerged(key){
+  var a = lyFinSeries(key,'act'), s = lyFinSeries(key,'summit');
+  return LY_FIN_YEARS.map(function(_, i){ return a[i] != null ? a[i] : s[i]; });
+}
+function lyFinIsEst(key){
+  var a = lyFinSeries(key,'act');
+  return LY_FIN_YEARS.map(function(_, i){ return a[i] == null; });
+}
+function lyFinFmt(v){
+  if (v == null) return '—';
+  var b = v/1000;
+  return (v < 0 ? '−$' : '$') + Math.abs(b).toFixed(Math.abs(b) < 10 ? 2 : 1) + 'B';
+}
+
+function lyFinBody(){
+  var m = lyftResults.views.y.metrics;
+  var h = '<p class="ov-lede"><b>Eight years in one picture.</b> Gross bookings compound from <b>$12.1B to $18.5B</b> while adjusted EBITDA crosses from <b>−$416M to +$529M</b> and free cash flow from <b>−$352M to +$1.12B</b> — the whole turnaround, in three lines. Bars are <b>reported</b> through 2025 and the <b>Summit model</b> from 2026 (faded, suffixed E). Everything on this tab is read out of the same annual dataset the Results and Estimates tabs use, so the three cannot disagree.</p>';
+
+  h += '<div class="ov-sec"><div class="ov-sec-h">Gross bookings · Revenue · Adjusted EBITDA · Free cash flow ($B, fiscal year)</div>'+
+       '<div style="height:320px;position:relative"><canvas id="lyFin"></canvas></div>'+
+       '<div class="ov-foot">Reported years solid, model years faded. Adjusted EBITDA and free cash flow are small next to bookings by construction — this is a marketplace that keeps ~3% of what flows through it.</div></div>';
+
+  // The table: the five lines that matter, plus the margin they imply.
+  var rows = [
+    { k:'gb',     lab:'Gross Bookings',   read:'The 2027 plan is written here — goal ~$25B, model $24.8B.' },
+    { k:'rev',    lab:'Revenue',          read:'Outgrew bookings through 2024 on take rate; FY2025 slowed by the $168M charge.' },
+    { k:'ebitda', lab:'Adjusted EBITDA',  read:'⚠ Goal ~$1B for 2027, model $829.8M — about 17% short.' },
+    { k:'fcf',    lab:'Free Cash Flow',   read:'Goal raised to >$1B; model FY2027 $1,080M, then it falls.' },
+    { k:'capex',  lab:'Capex',            read:'Asset-light: never above ~1.1% of bookings, down three years running.' }
+  ];
+  h += '<div style="overflow-x:auto;margin-top:14px"><table class="ce-tbl"><thead><tr><th>$B</th>'+
+       LY_FIN_YEARS.map(function(y,i){ return '<th>'+(i>=4?y.slice(2)+'E':y.slice(2))+'</th>'; }).join('')+
+       '<th style="min-width:200px">read</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    var vals = lyFinMerged(r.k), est = lyFinIsEst(r.k);
+    h += '<tr><td><b>'+esc(r.lab)+'</b></td>'+
+      vals.map(function(v,i){
+        return '<td'+(est[i]?' style="color:var(--mu)"':'')+'>'+lyFinFmt(v)+'</td>';
+      }).join('')+
+      '<td style="color:var(--mu);font-size:10.5px">'+r.read+'</td></tr>';
+  });
+  // Margin row — the ratio management is judged on, computed from the same two series.
+  var gbv = lyFinMerged('gb'), ebv = lyFinMerged('ebitda');
+  h += '<tr><td><b>Adj. EBITDA % of bookings</b></td>'+
+    gbv.map(function(g,i){
+      var p = (g && ebv[i]!=null) ? (ebv[i]/g*100) : null;
+      return '<td style="color:'+PURPLE+';font-weight:700">'+(p==null?'—':p.toFixed(1)+'%')+'</td>';
+    }).join('')+
+    '<td style="color:var(--mu);font-size:10.5px">0% → 2.9% reported; the model flattens near 3.6% against the ~4% the 2027 goal implies.</td></tr>';
+  h += '</tbody></table></div>';
+
+  h += '<div class="ave-subh-note" style="margin-top:8px">Source: Summit DCF model, snapshot <b>2026-05-13</b> — FY actuals from its actuals history (each reconciled against Lyft\'s reported quarters: FY2025 revenue $6,316.3M, gross bookings $18,507.1M, adjusted EBITDA $528.9M all tie exactly), forward years from its stored projections. <b>No Street column exists</b> at the annual level — LYFT is not in <code>BBG_CONSENSUS.txt</code> — and Lyft issues no annual guidance, so neither is shown rather than left looking unfilled. ⚠ Some Summit cells are deliberately blank in the early years: the model\'s 2022–2023 projections are unusable (adjusted EBITDA reads −$2,325M against a −$416M actual, free cash flow is sign-wrong for 2023, capex is positive where every actual is negative). Capex forward starts at 2026 because the model\'s forward capex uses a different basis (SEGM) from these actuals (DEFAULT) — a ~2x gap flagged for the model owner. Full per-line notes in <code>js/results-data/lyft.js</code>.</div>';
+  return h;
+}
+
+function buildLyFin(){
+  var cv = document.getElementById('lyFin');
+  if (!cv || typeof Chart === 'undefined' || !cv.offsetParent) return;
+  destroy('lyFin');
+  var keys = [ ['Gross Bookings','gb','#1E2733'], ['Revenue','rev',BRAND],
+               ['Adjusted EBITDA','ebitda',BRAND2], ['Free cash flow','fcf','#0a8f4c'] ];
+  _charts['lyFin'] = new Chart(cv.getContext('2d'), {
+    type:'bar',
+    data:{ labels: LY_FIN_YEARS.map(function(y,i){ return i>=4 ? y+'E' : y; }),
+      datasets: keys.map(function(k){
+        var est = lyFinIsEst(k[1]);
+        return { label:k[0],
+          data: lyFinMerged(k[1]).map(function(v){ return v==null?null:v/1000; }),
+          backgroundColor: est.map(function(e){ return e ? k[2]+'55' : k[2]; }),
+          borderColor: k[2],
+          borderWidth: est.map(function(e){ return e ? 1 : 0; }) };
+      }) },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
+        tooltip:{ callbacks:{ label:function(ctx){
+          var v = ctx.parsed.y;
+          return ctx.dataset.label+': '+(v==null?'—':(v<0?'−$':'$')+Math.abs(v).toFixed(2)+'B')+
+                 (ctx.dataIndex>=4 ? '  (model estimate)' : ''); } } } },
+      scales:{ x:{ grid:{ display:false } },
+        y:{ grid:{ color:'rgba(0,0,0,0.05)' },
+            ticks:{ callback:function(v){ return (v<0?'−$':'$')+Math.abs(v)+'B'; } } } } }
+  });
+}
 
 // ── Simple annual bar (Overview): actual → estimate, signed colors ──
 function valueLabels(fmt){
@@ -4136,6 +4238,7 @@ function buildSub(root, group, key){
   } else if(group==='valuation'){
     if(key==='multiples')     LYFT_VAL.init(root);
     else if(key==='balance')  buildLyBal();     // insurance-reserve coverage bar
+    else if(key==='financials') buildLyFin();   // the eight-year arc, from the annual dataset
     // peers (static table), ratings, capital: no charts
   } else if(group==='mgmt'){
     if(key==='team')          LYFT_MGMT.init(root);

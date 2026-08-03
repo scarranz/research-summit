@@ -42,6 +42,38 @@ quarters: Q2 2025 went −5.5% AH → **+1.57%** at the close, and Q1 2025 went 
 garbled — for Q1 2026 it computed the move off the *wrong* prior close, and for Q3 2025 it labelled
 a normal regular-session move as aftermarket. Use the next-day close.
 
+## Street consensus record — COMPILED BY HAND, per print
+
+⚠ **Lyft has no rows in `BBG_CONSENSUS.txt`** (the archive carries GOOG/GOOGL/HOOD/KKR/MA/META/UBER
+only). There is no matrix to reconstruct, so every consensus figure we use is compiled from
+earnings-day coverage and recorded here. **A quarter with no defensible published number stays
+blank** — do not interpolate, and do not promote a single broker's model to "consensus".
+
+| Quarter | Revenue | Adj. EBITDA | Gross Bookings | EPS | Source |
+|---|---|---|---|---|---|
+| **Q2 2026** (upcoming) | $1.84B | $169M | $5.31B | $0.15 (adj.) | GB/EBITDA/margin are the consensus reported against the guide on 7 May 2026 (**~3 months stale**); revenue + EPS are the current aggregate (~40 contributors) |
+| Q1 2026 | $1.64B | $130.7M | — | $0.07 (GAAP) | Investing.com preview 7 May 2026 (+13.1% YoY); StockStory same day carried $1.63B and the EBITDA + GAAP EPS figures |
+| Q4 2025 | $1.76B | — | *"in line"*, no figure | $0.32 (Zacks, normalised) | Zacks consensus; corroborated by coverage noting **adjusted** revenue "matched analyst expectations of $1.76 billion" |
+
+**Three traps recorded so they are not re-learned:**
+
+1. **The Q4 2025 revenue "miss" was the charge.** $1,592.7M against $1.76B is −9.5%, and the gap is
+   *exactly* the **$168M contra-revenue charge**. Ex-charge the quarter matched consensus. The
+   $210M/$168M split was disclosed **only in Q&A** — the first wave of coverage did not have it,
+   and the stock fell 17%.
+2. **EPS bases are mixed in the wild.** Zacks' $0.32 for Q4 2025 and the ~$0.15 circulating for
+   Q2 2026 are **adjusted/normalised**; our Results row is **GAAP diluted EPS**. Only the Q1 2026
+   $0.07 is a GAAP estimate. Scoring a GAAP actual against an adjusted estimate manufactures a
+   surprise out of a definition change.
+3. **A stale preview can look current.** A finviz/StockStory page dated **Aug 4 2025** ("Q2
+   earnings: what to expect", revenue $1.61B, "$1.45B last quarter") is the **Q2 2025** preview and
+   reads as if it were 2026. Check the publication date and reconcile the prior-quarter figure
+   against the actuals table before using any preview.
+
+**Q2 2026 — where the guide sits vs the Street:** bookings guided to **$5.30–5.43B (mid $5.365B)
+against a $5.31B Street**, so Lyft guided *above* consensus; adjusted EBITDA **$160–180M (mid $170M)
+against $169M**, essentially on top of it. The margin: guided 3.0–3.3% against a 3.19% consensus.
+
 ## Market data (as of Jul 30–31, 2026)
 
 Last close **$15.55** (Jul 30, +0.71%). 52-week range **$12.46** (Mar 30, 2026) – **$25.54**

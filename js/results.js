@@ -30,6 +30,8 @@ import { ibkrResults } from './results-data/ibkr.js';
 import { ibkrSetup } from './results-data/ibkr-setup.js';
 import { spotResults } from './results-data/spot.js';
 import { lyftResults } from './results-data/lyft.js';
+import { tbbbResults } from './results-data/tbbb.js';
+import { tbbbSetup } from './results-data/tbbb-setup.js';
 
 var RESULTS_DATA = {
   AMZN: amznResults,
@@ -43,7 +45,9 @@ var RESULTS_DATA = {
   IBKR: ibkrResults,
   IBKR_SETUP: ibkrSetup,
   SPOT: spotResults,
-  LYFT: lyftResults
+  LYFT: lyftResults,
+  TBBB: tbbbResults,
+  TBBB_SETUP: tbbbSetup
 };
 
 export function getResultsData(ticker){
@@ -199,7 +203,9 @@ var _rs = { data: null, view: 'q', growth: 'yoy', sec: {}, evo: null, surp: null
 
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); }
 
-function rsView(){ return _rs.data.views[_rs.view]; }
+function rsView(){ return _rs.data.views[_rs.view] || _rs.data.views.y || _rs.data.views.q; }
+// Default view: quarterly when present, else annual (datasets like TBBB carry annual only).
+function rsDefaultView(data){ return (data && data.views && data.views.q) ? 'q' : 'y'; }
 function rsSecCfg(k){ return rsView().sections.filter(function(s){ return s.key === k; })[0]; }
 // Sections declare their metrics in labeled groups (Totals / Segments / …);
 // flatten for validation and default handling.
@@ -217,26 +223,28 @@ function rsMetric(k){
 }
 
 // ─── Reporting currency ──────────────────────────────────────────────────────
-// A dataset is assumed to report in US dollars. A company that does not (Spotify
-// reports in EUR, and both its actuals AND its guidance are euro figures) sets
-// `currency: '€'` + `currencyName: '€'` on the dataset root. Labelling a euro
-// figure with a dollar sign is a claim about the data, not a cosmetic detail —
-// so the symbol is read per dataset rather than hardcoded. Defaults preserve the
-// existing output for every US filer exactly.
-function rsCur(){ return (_rs.data && _rs.data.currency) || '$'; }
-function rsCurName(){ return (_rs.data && _rs.data.currencyName) || 'US$'; }
+// Per-metric `m.cur` takes priority (e.g. 'Ps.' for MXN in TBBB); falls back
+// to dataset-level `currency` (e.g. '€' for Spotify EUR); then '$'.
+// Non-monetary units — 'pct' (percentage) and 'count' (integer, e.g. store
+// count) — carry no currency symbol.
+function rsCur(m){ return (m && m.cur) || (_rs.data && _rs.data.currency) || '$'; }
+function rsCurName(m){ return (m && m.cur) || (_rs.data && _rs.data.currencyName) || 'US$'; }
 
 function rsFmt(m, v){
   if (v == null) return '—';
-  var neg = v < 0 ? '−' : '', a = Math.abs(v), c = rsCur();
+  var neg = v < 0 ? '−' : '', a = Math.abs(v), c = rsCur(m);
   if (m.unit === 'eps') return neg + c + a.toFixed(2);
+  if (m.unit === 'pct') return neg + a.toFixed(1) + '%';
+  if (m.unit === 'count') return neg + Math.round(a).toLocaleString();
   if (a >= 10000) return neg + c + (a/1000).toFixed(1) + 'B';
   return neg + c + Math.round(a).toLocaleString() + 'M';
 }
 function rsFmtD(m, v, dec){
   if (v == null) return '—';
-  var sign = v >= 0 ? '+' : '−', a = Math.abs(v), c = rsCur();
+  var sign = v >= 0 ? '+' : '−', a = Math.abs(v), c = rsCur(m);
   if (m.unit === 'eps') return sign + c + a.toFixed(2);
+  if (m.unit === 'pct') return sign + a.toFixed(dec == null ? 1 : dec) + ' pts';
+  if (m.unit === 'count') return sign + Math.round(a).toLocaleString();
   if (a >= 10000) return sign + c + (a/1000).toFixed(dec == null ? 1 : dec) + 'B';
   return sign + c + Math.round(a).toLocaleString() + 'M';
 }
@@ -244,6 +252,7 @@ function rsFmtD(m, v, dec){
 // Decided per metric (max |value| across every series) so a metric is always
 // consistent with itself.
 function rsScaleOf(m){
+  if (m.unit === 'pct' || m.unit === 'count' || m.unit === 'eps') return 1;
   var mx = 0;
   ['act', 'summit', 'cons', 'guideLo', 'guideHi'].forEach(function(k){
     (m[k] || []).forEach(function(v){ if (v != null) mx = Math.max(mx, Math.abs(v)); });
@@ -263,9 +272,11 @@ function rsGuideMid(m, i){ return (m.guideLo[i] == null || m.guideHi[i] == null)
 // Axis tick: negatives as −$50B, not $-50B; whole dollars only (zoomed bounds
 // arrive fractional — $135.13111B would eat the chart's left margin). `div` is
 // the metric's display scale from rsScaleOf (1000 → $B axis, 1 → $M axis).
-function rsTick(v, unit, div){
-  var s = v < 0 ? '−' : '', a = Math.abs(v), c = rsCur();
+function rsTick(v, unit, div, cur){
+  var s = v < 0 ? '−' : '', a = Math.abs(v), c = cur || '$';
   if (unit === 'eps') return s + c + (+a.toFixed(2));
+  if (unit === 'pct') return s + Math.round(a) + '%';
+  if (unit === 'count') return s + Math.round(a).toLocaleString();
   return s + c + Math.round(a) + (div === 1000 ? 'B' : 'M');
 }
 function rsWin(k, m){
@@ -350,7 +361,7 @@ export function resultsHtml(ticker){
   var data = getResultsData(ticker);
   _rs.data = data;
   if (!data) return '';
-  _rs.view = 'q';
+  _rs.view = rsDefaultView(data);
   _rs.growth = 'yoy';
   _rs.sec = {};
   _rs.evo = null;
@@ -462,7 +473,11 @@ function rsBuildChart(k){
   var dec = m.unit === 'eps' ? 2 : 1;
   var div = rsScaleOf(m);
   var scale = function(v){ return v == null ? null : (m.unit === 'eps' ? v : v/div); };
-  var unitLbl = m.unit === 'eps' ? rsCur() : (rsCur() + (div === 1000 ? 'B' : 'M'));
+  var cur = rsCur(m);
+  var unitLbl = m.unit === 'eps'   ? cur
+              : m.unit === 'pct'   ? '%'
+              : m.unit === 'count' ? (m.unitLabel || 'count')
+              : (div === 1000 ? cur + 'B' : cur + 'M');
   function sl(a){ return a.slice(lo, hi + 1); }
 
   var datasets = [], needY2 = false;
@@ -530,7 +545,7 @@ function rsBuildChart(k){
     x: { grid: { display: false }, ticks: { color: 'rgba(80,90,104,0.9)', font: { size: 11 }, autoSkip: false,
         callback: function(v, i){ return (fwdFrom >= 0 && i >= fwdFrom) ? '' : this.getLabelForValue(v); } } },
     y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
-      callback: function(v){ return rsTick(v, m.unit, div); } } }
+      callback: function(v){ return rsTick(v, m.unit, div, m.cur); } } }
   };
   if (st.yr){ scales.y.min = st.yr[0]; scales.y.max = st.yr[1]; }
   if (needY2) scales.y2 = { position: 'right', grid: { display: false },
@@ -699,6 +714,8 @@ function rsRenderTable(k, m){
   function num(v){
     if (v == null) return '<span class="rs-ft-nil">—</span>';
     if (m.unit === 'eps') return Number(v).toFixed(2);
+    if (m.unit === 'pct') return Number(v).toFixed(1) + '%';
+    if (m.unit === 'count') return Math.round(v).toLocaleString();
     return (v/div).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   }
   function pctDollar(p, d){
@@ -753,7 +770,11 @@ function rsRenderTable(k, m){
     return ab + '▲ · ' + wi + '⊙ · ' + be + '▼<br><span class="rs-ft-dim">avg vs mid ' + sgn(avg(mids)) + '</span>';
   }
 
-  var h = '<div class="rs-ft-cap">' + (m.unit === 'eps' ? rsCurName() + ' per share' : (rsCurName() + (div === 1000 ? ' billions' : ' millions'))) + ' · <span class="rs-ft-e">E</span> = estimate, no actual reported yet · the right column summarizes the selected range: how the actual has come in vs each estimate (▲ = beat)</div>';
+  var unitCap = m.unit === 'eps'   ? (rsCurName(m) + ' per share')
+              : m.unit === 'pct'   ? 'percent (%)'
+              : m.unit === 'count' ? (m.unitLabel || 'count')
+              : (rsCurName(m) + ' ' + (div === 1000 ? 'billions' : 'millions'));
+  var h = '<div class="rs-ft-cap">' + unitCap + ' · <span class="rs-ft-e">E</span> = estimate, no actual reported yet · the right column summarizes the selected range: how the actual has come in vs each estimate (▲ = beat)</div>';
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   idx.forEach(function(i, c){
     h += '<th class="' + (est[c] ? 'rs-ft-este' : '') + '">' + esc(m.periods[i]) + (est[c] ? ' <span class="rs-ft-e">E</span>' : '') + '</th>';
@@ -1023,7 +1044,7 @@ function rsBuildEvo(k){
   var tEl = document.getElementById('rsEvoChartT-' + k);
   if (tEl) tEl.innerHTML = esc(m.label) + ' — ' +
     (pct ? esc(rsEvoPctLabel(k, m)) + ' by model snapshot <span>(% per fiscal year, each snapshot against its own numbers · solid = Summit model, dashed = stored BBG consensus)</span>'
-         : 'forecast by model snapshot <span>($' + (div === 1000 ? 'B' : 'M') + ' per fiscal year · solid = Summit model, dashed = stored BBG consensus · hover for the revision)</span>');
+         : 'forecast by model snapshot <span>(' + (m.cur || '$') + (div === 1000 ? 'B' : 'M') + ' per fiscal year · solid = Summit model, dashed = stored BBG consensus · hover for the revision)</span>');
 
   st.chart = new Chart(el.getContext('2d'), {
     type: 'line',
@@ -1063,7 +1084,7 @@ function rsBuildEvo(k){
       scales: {
         x: { grid: { display: false }, ticks: { font: { size: 11 } } },
         y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
-          callback: function(v){ return pct ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div); } },
+          callback: function(v){ return pct ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div, m.cur); } },
           min: st.yr ? st.yr[0] : undefined, max: st.yr ? st.yr[1] : undefined }
       }
     }
@@ -1095,7 +1116,7 @@ function rsRenderEvoTable(k, m){
   var pctCap = k === 'top'
     ? ' · “implied YoY growth” = the growth that snapshot’s estimate implies vs the prior fiscal year as known at that date'
     : ' · margins are computed within each snapshot (numerator and denominator from the same vintage)';
-  var h = '<div class="rs-ft-cap">' + rsCurName() + ' ' + (div === 1000 ? 'billions' : 'millions') + ' · columns are the model’s saved snapshots · “revision” = change vs the prior snapshot · the right column is the cumulative move from the first snapshot to the latest' + pctCap + '</div>';
+  var h = ‘<div class=”rs-ft-cap”>’ + rsCurName(m) + ‘ ‘ + (div === 1000 ? ‘billions’ : ‘millions’) + ‘ · columns are the model’s saved snapshots · “revision” = change vs the prior snapshot · the right column is the cumulative move from the first snapshot to the latest’ + pctCap + ‘</div>’;
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   ev.vintages.forEach(function(v){
     h += '<th>' + esc(v.label) + '<br><span class="rs-ft-dim">' + esc(v.event) + '</span></th>';
@@ -1281,7 +1302,7 @@ function rsBuildSurp(){
         y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
           callback: function(v){
             if (pctMode) return (v < 0 ? '−' : '') + Math.abs(v).toFixed(0) + '%';
-            return rsTick(v, m.unit, div);
+            return rsTick(v, m.unit, div, rsCur(m));
           } } }
       }
     }
@@ -1474,7 +1495,7 @@ function wireSliders(pane){
 export function initResults(wrap, ticker){
   if (ticker){
     var d = getResultsData(ticker); if (!d) return;
-    if (_rs._active !== ticker){ _rs.view = 'q'; _rs.growth = 'yoy'; _rs.sec = {}; }
+    if (_rs._active !== ticker){ _rs.view = rsDefaultView(d); _rs.growth = 'yoy'; _rs.sec = {}; }
     _rs.data = d; _rs._active = ticker;
   }
   if (!_rs.data) return;

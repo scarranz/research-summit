@@ -9,6 +9,7 @@
 
 import { makeValuation } from './valuation.js';
 import { makeManagement } from './management.js';
+import { resultsHtml, initResults } from '../results.js';
 
 // Interactive "Scenario → price target" calculator (Valuation tab). Fundamentals from
 // the Summit DCF (FY2025 actuals; FY2026E estimate). Net cash & price are editable
@@ -1959,13 +1960,22 @@ function deepDiveHtml(c){
     // ── EVOLUTION — Earnings History · Guidance (Model vs. Reality) · Strategy (turnaround +
     // Playbook) · Timeline (company history & M&A). ──
     '<div class="dd-pane" data-dd="evolution" hidden>'+
+      // Go-forward Evolution row (EARNINGS_CONVENTIONS v2.9): Earnings · Results ·
+      // Estimates · Guidance · Strategy · Timeline. "Earnings History" keeps carrying the
+      // LY_THEMES compendium until the full Earnings v2.10 tab is built for LYFT — at
+      // which point the compendium folds in under its Watch List (§6/v2.3) and this
+      // sub-tab is retired.
       '<div class="ovt-subtabs">'+
         '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings History</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="track">Results</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="earnings">'+callsBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="track" hidden>'+resultsHtml('LYFT')+'</div>'+
+      '<div class="ovt-subpane" data-ovst="estevo" hidden><div class="add-empty">🚧 In progress — Estimates (the forecast by Summit model vintage) is being built.</div></div>'+
       '<div class="ovt-subpane" data-ovst="guidance" hidden>'+modelBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="strategy" hidden>'+lyKnockout()+strategyBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="timeline" hidden>'+historyStoryBody()+'</div>'+
@@ -2446,7 +2456,11 @@ function buildSub(root, group, key){
     // suppliers, insurance: no charts (insurance's sf-pill is wired globally in init)
   } else if(group==='evolution'){
     if(key==='guidance')      buildModelTab();      // Model vs. Reality lives under Guidance
-    // earnings (calls), strategy, timeline: no lazy charts
+    else if(key==='track'){                          // Results — the shared engine (js/results.js)
+      var w=root.querySelector('.ovt-subpane[data-ovst="track"] .rs-wrap');
+      if(w) initResults(w, 'LYFT');
+    }
+    // earnings (calls), estimates, strategy, timeline: no lazy charts
   } else if(group==='valuation'){
     if(key==='multiples')     LYFT_VAL.init(root);
     else if(key==='balance')  buildLyBal();     // insurance-reserve coverage bar

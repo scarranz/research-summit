@@ -1,0 +1,100 @@
+/* Hyperscalers industry analysis — AI CapEx & guidance across AMZN/GOOGL/META/MSFT.
+   Follows the same idioms as payments.css: portal CSS variables (base.css), a
+   .hs-head title block, an underline tab bar, .hs-sec rules, 10px cards, uppercase
+   micro-labels. Light mode only — the portal defines no dark theme.
+   Series colours live in hyperscalers-data.js (validated); never fork them here. */
+.hs { --warn: #B45309; --warn-l: #FBF3E6; --blue-l: #EAF0F7; }
+
+.hs-head { margin-bottom: 4px; }
+.hs-h-title { font: 700 21px 'Inter', sans-serif; color: var(--navy); letter-spacing: -0.01em; margin: 0; }
+.hs-h-sub { font: 500 12px 'Inter', sans-serif; color: var(--mu); margin-top: 4px; }
+
+/* Tab bar */
+.hs-tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--bdr); margin: 14px 0 18px; }
+.hs-tab {
+  border: none; background: none; cursor: pointer; padding: 9px 14px; margin-bottom: -1px;
+  font: 600 11px 'Inter', sans-serif; letter-spacing: .02em; color: var(--mu);
+  border-bottom: 2px solid transparent; transition: color .12s, border-color .12s; white-space: nowrap;
+}
+.hs-tab:hover { color: var(--navy); }
+.hs-tab.active { color: var(--navy); border-bottom-color: var(--navy); }
+.hs-tab-n { color: var(--mid); font-weight: 700; margin-right: 6px; }
+.hs-pane[hidden] { display: none; }
+
+/* Section header */
+.hs-sec { font: 700 11px 'Inter', sans-serif; letter-spacing: .04em; text-transform: uppercase; color: var(--mu);
+  display: flex; align-items: center; gap: 12px; margin: 0 0 14px; }
+.hs-sec::after { content: ''; flex: 1; height: 1px; background: var(--bdr); }
+
+/* Cards & type */
+.hs-card { background: var(--w); border: 1px solid var(--bdr); border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; }
+.hs-card--warn { border-left: 3px solid var(--warn); }
+.hs-inset { background: var(--pale); border-radius: 8px; padding: 11px 13px; }
+.hs-lbl { font: 700 10px 'Inter', sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--mu); margin-bottom: 6px; }
+.hs-body { font: 400 12px 'Inter', sans-serif; color: var(--blue); line-height: 1.65; }
+.hs-lede { font: 400 12.5px 'Inter', sans-serif; color: var(--blue); line-height: 1.65; margin: 0 0 14px; max-width: 860px; }
+.hs-note { font: 400 11.5px 'Inter', sans-serif; color: var(--mid); line-height: 1.6;
+  background: var(--pale); border-radius: 8px; padding: 10px 13px; margin: 0; }
+
+/* Chart block */
+.hs-chart-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.hs-chart-t { font: 700 13px 'Inter', sans-serif; color: var(--navy); letter-spacing: -0.01em; }
+.hs-chart-u { font: 500 10.5px 'Inter', sans-serif; letter-spacing: .02em; color: var(--mu); }
+.hs-canvas { position: relative; height: 340px; }
+.hs-cap { font: 400 11px 'Inter', sans-serif; color: var(--mu); line-height: 1.6; margin: 10px 0 0; }
+
+/* Segmented toggle (year / view switch) */
+.hs-seg { display: inline-flex; background: var(--surface); border-radius: 9px; padding: 3px; gap: 2px; margin-bottom: 14px; }
+.hs-seg-b { border: none; background: none; border-radius: 6px; cursor: pointer;
+  font: 600 11px 'Inter', sans-serif; letter-spacing: .02em; color: var(--mu); padding: 6px 14px; transition: background .12s, color .12s; }
+.hs-seg-b:hover { color: var(--navy); }
+.hs-seg-b.active { background: var(--w); color: var(--navy); box-shadow: 0 1px 2px rgba(30,39,51,.12); }
+
+/* Company dot */
+.hs-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
+
+/* Tables */
+.hs-tw { overflow-x: auto; }
+.hs-table { width: 100%; border-collapse: collapse; font: 400 11.5px 'Inter', sans-serif; }
+.hs-table th { text-align: left; font: 700 9.5px 'Inter', sans-serif; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--mu); white-space: nowrap; border-bottom: 1px solid var(--bdr); padding: 0 0 8px; }
+.hs-table th.num, .hs-table td.num { text-align: right; padding-left: 14px; }
+.hs-table td { padding: 9px 0; border-bottom: 1px solid var(--ice); color: var(--navy); white-space: nowrap; }
+.hs-table td.num { font-variant-numeric: tabular-nums; }
+.hs-table tr:last-child td { border-bottom: none; }
+.hs-na { color: #C7CED6; }
+.hs-up { color: var(--green); font-weight: 600; }
+.hs-dn { color: var(--red); font-weight: 600; }
+
+/* Accounting table wraps rather than scrolls — the impact column is prose */
+.hs-table--wrap td { white-space: normal; vertical-align: top; line-height: 1.55; }
+.hs-table--wrap .hs-w-date { color: var(--mu); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hs-table--wrap .hs-w-co { white-space: nowrap; }
+.hs-table--wrap .hs-w-imp { color: var(--blue); min-width: 240px; }
+
+/* Badges */
+.hs-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font: 600 9.5px 'Inter', sans-serif; letter-spacing: .02em; white-space: nowrap; }
+.hs-b-green { background: #E8F3EC; color: var(--green); }
+.hs-b-red { background: #FBEAEA; color: var(--red); }
+.hs-b-mut { background: var(--pale); color: var(--mid); }
+
+/* Source list */
+.hs-src { margin: 12px 0 0; padding: 0; list-style: none; }
+.hs-src li { font: 400 11.5px 'Inter', sans-serif; color: var(--blue); line-height: 1.65;
+  padding: 9px 0; border-top: 1px solid var(--ice); }
+.hs-src li:first-child { border-top: none; }
+
+/* Numbered steps (bottleneck timeline) */
+.hs-steps { margin: 0; padding: 0; list-style: none; }
+.hs-step { display: flex; gap: 13px; padding: 14px 0; border-top: 1px solid var(--ice); }
+.hs-step:first-child { border-top: none; padding-top: 0; }
+.hs-step-n { flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--pale); color: var(--mid);
+  font: 700 10px 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; }
+.hs-step-h { display: flex; align-items: baseline; gap: 10px; margin-bottom: 3px; }
+.hs-step-t { font: 700 13px 'Inter', sans-serif; color: var(--navy); letter-spacing: -0.01em; }
+.hs-step-p { font: 600 10px 'Inter', sans-serif; letter-spacing: .04em; text-transform: uppercase; color: var(--mu); }
+
+@media (max-width: 720px) {
+  .hs-canvas { height: 290px; }
+  .hs-tab { padding: 9px 10px; }
+}

@@ -21,12 +21,12 @@
 
 import {
   HS_COMPANIES, HS_VINTAGES, HS_GUIDE, HS_QUARTERLY, HS_BASIS,
-  HS_BACKLOG, HS_BACKLOG_NOTES, HS_ACCOUNTING,
+  HS_BACKLOG, HS_BACKLOG_NOTES,
   HS_DEP_GOOGL, HS_MSFT_CLOUD_GM, HS_DEP_NOTES,
   HS_YEARS, HS_YEAR_QTRS, HS_YEAR_DERIVED, HS_YEAR_PARTIAL, HS_YEAR_GUIDE, HS_QTR_RAMP,
   HS_NEUTRAL_RAMP, HS_GW_YEARS, HS_GW_ADDS, HS_GW_SPLIT, HS_GW_COST, HS_GPU_PRICES,
   HS_CHIP_MIX, HS_GW_BRIDGE, HS_GW_MODEL_FLAG, HS_CAPACITY_QUOTES,
-  HS_DEP_YEARS, HS_DEP_MODEL, HS_DEP_COGS, HS_LIVES,
+  HS_DEP_YEARS, HS_DEP_MODEL, HS_DEP_COGS, HS_LIVES, HS_CSP, HS_CSP_NOTES,
 } from './hyperscalers-data.js';
 
 function esc(s){ if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -37,7 +37,7 @@ var LABELS = HS_VINTAGES.map(function(v){ return v.label; });
 var INK_MUTED = '#8A93A0', GRID = '#EEF1F5', AXIS = '#D7DDE4';
 
 // View state that the panes own (which target year, which backlog view).
-var _view = { guideYear: '2026', backView: 'abs', yearView: 'all' };
+var _view = { guideYear: '2026', backView: 'abs', yearView: 'all', cspView: 'growth' };
 var _charts = {};
 
 // ─── Direct end-of-line labels ────────────────────────────────────────────────
@@ -562,31 +562,6 @@ function backlogBody(){
     '<div class="hs-card">' + table(rows, [''].concat(LABELS)) + '</div>';
 }
 
-// ─── Tab 4 · Accounting ───────────────────────────────────────────────────────
-function accountingBody(){
-  var rows = HS_ACCOUNTING.map(function(a){
-    return '<tr>' +
-      '<td class="hs-w-date">' + esc(a.when) + '</td>' +
-      '<td class="hs-w-co">' + dot(a.who) + '<b>' + co(a.who).ticker + '</b></td>' +
-      '<td>' + esc(a.what) + '</td>' +
-      '<td><span class="hs-badge ' + (a.effect === '+' ? 'hs-b-green' : 'hs-b-red') + '">' +
-        (a.effect === '+' ? 'favourable' : 'adverse') + '</span></td>' +
-      '<td class="hs-w-imp">' + esc(a.impact) + '</td></tr>';
-  }).join('');
-
-  return '<p class="hs-lede">Seven changes in two and a half years. Six move the reported number in the favourable direction. None is irregular — which is exactly why they should be read together.</p>' +
-    '<div class="hs-card"><div class="hs-tw"><table class="hs-table hs-table--wrap"><thead><tr>' +
-      '<th>Date</th><th></th><th>Change</th><th>Effect</th><th>Stated impact</th>' +
-      '</tr></thead><tbody>' + rows + '</tbody></table></div></div>' +
-    sec('What follows from it') +
-    '<div class="hs-card hs-card--warn">' +
-      '<p class="hs-body">Reported CapEx has stopped being comparable across the four, and across time within each of them. ' +
-      'The clearest case: Microsoft\'s CY2026 CapEx falls from ~$190B to ~$175B <b>without a dollar of investment changing</b> — ' +
-      'that is the finance-to-operating lease reclassification that the useful-life extension drags with it. ' +
-      'Any chart stacking the four series as published is measuring, in part, accounting decisions.</p>' +
-    '</div>';
-}
-
 // ─── Tab 5 · Depreciation ─────────────────────────────────────────────────────
 // Alphabet's numbers are shown as tiles + a table rather than forced into a
 // chart: two annual points and three quarterly growth rates is not a series, and
@@ -667,15 +642,69 @@ function depreciationBody(){
       table(qrows, ['Period', 'Depreciation', 'YoY growth']) +
       '<ul class="hs-src">' + srcs + '</ul>' +
     '</div>' +
-    sec('Where it shows up — Microsoft Cloud gross margin') +
+    sec('What the others disclose instead') +
+    '<div class="hs-card hs-card--warn"><ul class="hs-src">' + notes + '</ul></div>';
+}
+
+// ─── Tab · CSPs — the cloud segments themselves ───────────────────────────────
+// The revenue the CapEx is meant to produce. Four views on one segmented
+// toggle; Microsoft drops out of the two profitability views because it
+// discloses no cloud operating income.
+var CSP_VIEWS = [
+  { k: 'rev',    label: 'Segment revenue',   unit: 'usd', y: 'Quarterly revenue',
+    cap: 'Levels are NOT comparable — Microsoft Cloud bundles Microsoft 365 commercial, Dynamics and LinkedIn commercial alongside Azure, so it carries a large SaaS book AWS and Google Cloud do not. Compare the slopes, not the heights. Amazon states an annualised run rate rather than a quarterly figure, so its points are that run rate ÷ 4 — its own convention — and marked derived in the tooltip.' },
+  { k: 'growth', label: 'Revenue growth',    unit: 'pct', y: 'YoY growth',
+    cap: 'The one view where the three are genuinely comparable, because a growth rate is basis-independent. Google Cloud accelerating from 28% to 82% while AWS troughs at 17% and recovers to 37% is the whole competitive story of the period in one frame.' },
+  { k: 'opInc',  label: 'Operating income',  unit: 'usd', y: 'Quarterly operating income',
+    cap: 'Microsoft is absent: it has never disclosed a cloud operating income. AWS still earns roughly twice Google Cloud in absolute dollars, even after Alphabet tripled its margin.' },
+  { k: 'opMargin', label: 'Operating margin', unit: 'pct', y: 'Segment operating margin',
+    cap: 'Microsoft is absent again — it reports only a gross margin for Microsoft Cloud, which is a different line and sits in its own chart below. Several AWS points are derived from stated operating income over derived revenue, and are marked in the tooltip.' },
+];
+
+function cspChart(id){
+  var v = CSP_VIEWS.filter(function(x){ return x.k === _view.cspView; })[0];
+  var series = ['googl', 'amzn', 'msft'].map(function(cid){ return { id: cid, data: HS_CSP[v.k][cid] }; });
+  lineChart(id, series, v.unit, v.y);
+}
+
+function cspBody(){
+  var v = CSP_VIEWS.filter(function(x){ return x.k === _view.cspView; })[0];
+  var segs = CSP_VIEWS.map(function(x){
+    return '<button type="button" class="hs-seg-b' + (x.k === _view.cspView ? ' active' : '') +
+      '" data-csp="' + x.k + '">' + esc(x.label) + '</button>';
+  }).join('');
+
+  var fmt = function(val){
+    if (val == null) return null;
+    return v.unit === 'pct' ? val.toFixed(1) + '%' : '$' + val.toFixed(1) + 'B';
+  };
+  var rows = ['googl', 'amzn', 'msft'].map(function(cid){
+    var d = HS_CSP[v.k][cid];
+    var label = cid === 'amzn' ? 'AWS' : cid === 'msft' ? 'MSFT Cloud' : 'Google Cloud';
+    return [dot(cid) + label].concat(d.map(fmt));
+  });
+
+  return '<p class="hs-lede">The businesses the CapEx is supposed to produce. Everything here is stated on the calls — ' +
+    'and the single most important thing to hold in mind is that these three segments are not the same animal.</p>' +
+    '<div class="hs-seg">' + segs + '</div>' +
+    '<div class="hs-card">' +
+      '<div class="hs-chart-head"><span class="hs-chart-t">' + esc(v.label) + '</span>' +
+        '<span class="hs-chart-u">' + (v.unit === 'pct' ? '% · calendar axis' : 'US$B · calendar axis') + '</span></div>' +
+      '<div class="hs-canvas"><canvas id="hs-csp"></canvas></div>' +
+      '<p class="hs-cap">' + v.cap + '</p>' +
+    '</div>' +
+    sec('Table') +
+    '<div class="hs-card">' + table(rows, [''].concat(LABELS)) + '</div>' +
+    sec('What the segments say') +
+    '<div class="hs-card hs-card--warn"><ul class="hs-src">' +
+      HS_CSP_NOTES.map(function(n){ return '<li>' + n + '</li>'; }).join('') + '</ul></div>' +
+    sec('Microsoft Cloud gross margin — the one profitability line it does give') +
     '<div class="hs-card">' +
       '<div class="hs-chart-head"><span class="hs-chart-t">Microsoft Cloud gross margin</span>' +
         '<span class="hs-chart-u">% · reported actuals only</span></div>' +
       '<div class="hs-canvas"><canvas id="hs-dep"></canvas></div>' +
-      '<p class="hs-cap">Seven points of margin in nine quarters, attributed by management to "scaling our AI infrastructure" each time. Guides are excluded so the series is one kind of number; gaps are quarters where no absolute figure was stated. Axis does not start at zero — this is a compression, not a magnitude, chart.</p>' +
-    '</div>' +
-    sec('What the other two disclose instead') +
-    '<div class="hs-card hs-card--warn"><ul class="hs-src">' + notes + '</ul></div>';
+      '<p class="hs-cap">Seven points of margin in nine quarters, attributed by management to "scaling our AI infrastructure" each time. This is a GROSS margin, so it is not comparable with the operating margins above — but it is the clearest read available on what the AI fleet is costing Microsoft. Guides are excluded so the series is one kind of number; gaps are quarters where no absolute figure was stated. Axis does not start at zero — this is a compression, not a magnitude, chart.</p>' +
+    '</div>';
 }
 
 // ─── Tab · Capacity & cost per GW ─────────────────────────────────────────────
@@ -874,9 +903,9 @@ function capacityBody(){
 var TABS = [
   { key: 'ladder',  label: 'Guidance Ladder',    body: ladderBody },
   { key: 'qtr',     label: 'Quarterly CapEx',    body: quarterlyBody },
+  { key: 'csp',     label: 'CSPs',               body: cspBody },
   { key: 'cap',     label: 'Capacity & Cost/GW', body: capacityBody },
   { key: 'backlog', label: 'Backlog & Coverage', body: backlogBody },
-  { key: 'acct',    label: 'Accounting',         body: accountingBody },
   { key: 'dep',     label: 'Depreciation',       body: depreciationBody },
 ];
 
@@ -913,8 +942,10 @@ function buildFor(key){
       return { id: id, data: abs ? HS_BACKLOG[id] : coverage(id) };
     }), abs ? 'usd' : 'x', abs ? 'Contracted backlog' : 'Coverage');
   } else if (key === 'dep'){
-    lineChart('hs-dep', [{ id: 'msft', data: HS_MSFT_CLOUD_GM }], 'pct', 'Gross margin');
     depModelChart('hs-depmodel');
+  } else if (key === 'csp'){
+    cspChart('hs-csp');
+    lineChart('hs-dep', [{ id: 'msft', data: HS_MSFT_CLOUD_GM }], 'pct', 'Gross margin');
   }
   if (key === 'qtr'){
     if (_view.yearView === 'all') combinedYearChart('hs-yr-all');
@@ -951,6 +982,8 @@ function init(){
       if (yr){ _view.guideYear = yr.getAttribute('data-year'); repaint(root, 'ladder', ladderBody); return; }
       var bk = e.target.closest('[data-back]');
       if (bk){ _view.backView = bk.getAttribute('data-back'); repaint(root, 'backlog', backlogBody); return; }
+      var cv = e.target.closest('[data-csp]');
+      if (cv){ _view.cspView = cv.getAttribute('data-csp'); repaint(root, 'csp', cspBody); return; }
       var yv = e.target.closest('[data-yv]');
       if (yv){ _view.yearView = yv.getAttribute('data-yv'); repaint(root, 'qtr', quarterlyBody); return; }
     });

@@ -189,26 +189,6 @@ export var HS_BACKLOG_NOTES = [
   'Meta has no backlog because it sells no contracted capacity — all of its CapEx is justified against internal return. It has the least external proof, and says so: Susan Li put GenAI "much, much earlier on the return curve", and gives no 2027 guide.',
 ];
 
-// ── 4 · ACCOUNTING & USEFUL-LIFE CHANGES ──────────────────────────────────────
-// Every change moves reported profit or reported CapEx in the favourable
-// direction bar one. Chronological.
-export var HS_ACCOUNTING = [
-  { when: "Jan '24", who: 'amzn', what: 'Extends server useful life to 6 years',
-    effect: '+', impact: '≈ +200bps to AWS margin year over year, repeated across all four quarters of 2024.' },
-  { when: "Jan '25", who: 'meta', what: 'Extends server and networking useful life to ~5.5 years',
-    effect: '+', impact: 'Savings in annual CapEx and depreciation; already embedded in the guide.' },
-  { when: "Jan '25", who: 'amzn', what: 'Shortens a subset of servers and networking from 6 to 5 years',
-    effect: '−', impact: '−$700M to 2025 operating income, plus a $920M early-retirement charge in 4Q24 and a further −$600M in 2025.' },
-  { when: "Jan '25", who: 'amzn', what: 'Extends heavy fulfilment equipment from 10 to 13 years',
-    effect: '+', impact: '+$900M to 2025 operating income — more than offsetting the server adjustment.' },
-  { when: "Oct '25", who: 'meta', what: 'Blue Owl JV (Hyperion, Louisiana)',
-    effect: '+', impact: 'Construction leaves reported CapEx; Meta contributes 20% via other investing.' },
-  { when: "Jul '26", who: 'msft', what: 'Extends data centres and offices from 15 to 25 years (from FY27)',
-    effect: '+', impact: '"Minimal" benefit to FY27 operating income — but it drags leases from finance to operating and cuts reported CY2026 CapEx from ~$190B to ~$175B.' },
-  { when: "Jul '26", who: 'meta', what: 'BlackRock JV (El Paso, 1 GW)',
-    effect: '+', impact: 'Same structure as Blue Owl. Meta: "multiple pathways to generate returns on invested capital".' },
-];
-
 // Neutral ordinal ramp used where colour must encode the QUARTER rather than the
 // company (the single all-companies chart, and the cost-stack bars). Validated
 // with --ordinal on white: monotone L, adjacent ΔL ≥ .06, light end 2.13:1.
@@ -364,6 +344,56 @@ export var HS_DEP_GOOGL = {
 // the spend lands on every quarter. ACTUALS only (guides excluded so the series
 // stays one kind of number); null = no absolute figure stated that quarter.
 export var HS_MSFT_CLOUD_GM = [72, null, 71, null, 69, 68, 68, 67, 66, 65];
+
+// ── 5b · THE CLOUD SEGMENTS (CSPs) ────────────────────────────────────────────
+// All from the calls. Aligned to HS_VINTAGES (calendar quarters).
+//
+// ⚠ THE THREE SEGMENTS ARE NOT THE SAME THING, and the revenue view is the one
+// place that really matters:
+//   • Google Cloud  = GCP + Workspace. Infrastructure and platform, plus a
+//     productivity suite.
+//   • AWS           = pure infrastructure and platform.
+//   • Microsoft Cloud = Azure + Microsoft 365 commercial + Dynamics 365 +
+//     LinkedIn commercial. It is roughly two-and-a-half times AWS on revenue
+//     because it carries a large SaaS book AWS simply does not have. Reading
+//     "Microsoft Cloud is bigger than AWS" off this chart is wrong.
+// Microsoft also never discloses a cloud operating income or margin — only a
+// GROSS margin — so it is absent from those two views by necessity, not choice.
+export var HS_CSP = {
+  //        Apr24  Jul24  Oct24  Jan25  Apr25  Jul25  Oct25  Jan26  Apr26  Jul26
+  rev: {
+    googl: [9.6,   null,  11.4,  12.0,  12.3,  13.6,  15.2,  17.7,  20.0,  24.8],
+    amzn:  [null,  26.3,  27.5,  28.75, 29.25, null,  33.0,  null,  null,  null],
+    msft:  [35.1,  36.8,  38.9,  40.9,  42.4,  46.7,  49.1,  51.5,  54.5,  59.3],
+  },
+  // Derived rather than stated: Amazon gives an annualised run rate, not a
+  // quarterly figure, so these are run rate ÷ 4 — Amazon's own convention.
+  revDerived: { amzn: [false, true, true, true, true, false, true, false, false, false] },
+  growth: {
+    googl: [28, null, 35, 30, 28, 32, 34, 48, 63, 82],
+    amzn:  [null, null, 19, 19, 17, 17, 20, 24, null, 36.7],
+    msft:  [23, 21, 22, 21, 20, 27, 26, 26, 29, 27],
+  },
+  growthDerived: { amzn: [false, false, false, false, false, false, true, false, false, false] },
+  opInc: {
+    googl: [0.9, null, 1.9, 2.1, 2.2, 2.8, 3.6, 5.3, 6.6, 8.8],
+    amzn:  [9.4, 9.3, 10.4, null, 11.5, 10.2, 11.4, 12.5, 14.2, 16.6],
+    msft:  [null, null, null, null, null, null, null, null, null, null],
+  },
+  opMargin: {
+    googl: [9.0, null, 17.0, 17.5, 17.8, 20.7, 23.7, 30.1, 32.9, 35.6],
+    amzn:  [null, null, 37.8, null, 39.5, 32.9, 34.5, 35.0, null, null],
+    msft:  [null, null, null, null, null, null, null, null, null, null],
+  },
+  opMarginDerived: { amzn: [false, false, true, false, false, false, true, false, false, false] },
+};
+
+export var HS_CSP_NOTES = [
+  'Alphabet is the story here. Google Cloud operating margin went from <b>9.0% to 35.6%</b> in nine quarters while revenue growth <i>accelerated</i> from 28% to 82% — margin expansion and acceleration at the same time is rare, and it is what makes the CapEx case easiest to defend at Alphabet.',
+  'AWS moved the other way first: margin peaked at a record <b>39.5% in 1Q25</b> then fell to 32.9% the next quarter, roughly half of it seasonal stock comp and the rest depreciation on the AI fleet. It has since recovered to around 35%.',
+  'AWS growth troughed at <b>17%</b> in mid-2025 and reached <b>36.7%</b> by 2Q26 — accelerating for five straight quarters, on a base that makes that unusual.',
+  'Microsoft discloses no cloud operating income or margin at all, only a gross margin. That is why it appears in revenue and growth but not in the profitability views.',
+];
 
 // ── 6b · THE MODELLED DEPRECIATION TRAJECTORY ─────────────────────────────────
 // From the CapEx/D&A tabs inside the live DCFs (`CapEx D&A DCFs.xlsx`). PP&E

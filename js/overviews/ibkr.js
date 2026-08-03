@@ -9,12 +9,16 @@
 // Directional figures are labeled as such. No Summit DCF for IBKR. Live price via the get-quote edge fn.
 
 import { makeManagement } from './management.js';
+import { mountWatchList } from '../watchlist.js';
+import { resultsHtml, initResults } from '../results.js';
+import { ibkrResults } from '../results-data/ibkr.js';   // the BBG-tracked series — the print tiles use it (structured lines only)
 
 // ─── esc: escapes <>" but deliberately leaves & literal (per contract; never double-encode it) ──
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ─── Brand: Interactive Brokers red + a supporting palette ──────────────────────────────────────
 var BRAND='#D6001C', BRAND2='#0A8F4C', BLUE='#2E6BE6', GRAY='#9AA4B0', PURPLE='#7A5AF8', AMBER='#B7791F';
+var _co=null;   // open company (id + ticker), captured in html/deepDiveHtml for the shared Watch List engine
 // RED = a distinct alert red (miss / fear / Post-Call band) kept separate from IBKR brand red;
 // YELLOW = the custom-KPI accent. Mirrors googl.js's palette so the ported Call Prep CSS reads coherently.
 var RED='#EA4335', YELLOW='#F9AB00';
@@ -1236,21 +1240,25 @@ var CALL_PREP = {
     // newQuestions (§6d). Setup consensus fills when the Bloomberg Q3 export lands.
     { q:'Q3 2026', status:'upcoming', date:'~mid-Oct 2026 · after close',
       setup:{
-        source:'Bloomberg (BST consensus) — Q3 export pending', asOf:null,
+        source:'Bloomberg (BST consensus) — Q3 2026 export', asOf:'2026-08-03',
+        // Filled from the Bloomberg IBKR forward (fq+1). Summit column intentionally empty (no Summit
+        // DCF for IBKR). NA-in-BBG lines dropped rather than shown as empty cards: Pre-tax income,
+        // EBITDA (Error 2042 for a broker) and DARTs (no BBG line).
+        // Growth chips (yoy vs Q3 2025 actual, qoq vs Q2 2026 actual) computed from the reported
+        // series. Net revenue omits growth (BBG's revenue actuals are GAAP gross, not the net basis
+        // of the forward); NIM omits it (a %-line has no growth-of-a-growth).
+        // Net revenue dropped: its BBG actual is GAAP gross while the forward is net, so it can't be
+        // scored in Post-Results — the Setup and the print share the SAME 6 BBG-tracked lines.
         headline:[
-          { k:'Adj. net revenue', cons:null, us:null },
-          { k:'Pre-tax income', cons:null, us:null,
-            note:{ t:'Why "Pre-tax income", not "Operating income"', h:'<p>IBKR is a <b>broker/financial</b> — no COGS or D&A stack, so "operating income" is not the frame the Street uses. The bottom-line anchor is <b>pre-tax income</b> and its <b>pre-tax margin</b> (~77%). The four headline slots keep the convention\'s shape; for a broker they read Revenue · Pre-tax income · EPS · (EBITDA ≈ n/a).</p>' } },
-          { k:'Adj. EPS', cons:null, us:null },
-          { k:'EBITDA', cons:null, us:null,
-            note:{ t:'EBITDA is ~n/a for a broker', h:'<p>Kept only to preserve the convention\'s four-headline shape. IBKR\'s meaningful profitability frame is <b>pre-tax income / pre-tax margin</b> and <b>net income</b>, valued on <b>P/E — never EV/EBITDA</b>. Do not model IBKR on EBITDA.</p>' } },
+          { k:'Net interest income', cons:{v:'1,122', unit:'$M', yoy:16, qoq:6}, us:null },
+          { k:'Adj. EPS', cons:{v:'0.70', unit:'$', yoy:19, qoq:1}, us:null },
         ],
         custom:[
-          { k:'Net interest income', cons:null, us:null },
-          { k:'DARTs', cons:null, us:null },
-          { k:'Customer accounts', cons:null, us:null },
-          { k:'Margin loans (avg / EOP)', cons:null, us:null,
+          { k:'Customer accounts', cons:{v:'5.49', unit:'M', yoy:33, qoq:6}, us:null },
+          { k:'Margin loans (avg)', cons:{v:'108.0', unit:'$B', yoy:53, qoq:12}, us:null,
             note:{ t:'The Q2 standout — now Watch item #1', h:'<p>Margin loans hit <b>$96.6B avg / $108.5B EOP (+67% YoY)</b> in Q2 — a sharp acceleration from Q1\'s +35%, and the single biggest question the print raised. Q3 reads whether it is durable/broad or concentrated (customer bad debt ticked $1M → $10M).</p>' } },
+          { k:'Net interest margin', cons:{v:'1.92', unit:'%'}, us:null },
+          { k:'Avg credit balances', cons:{v:'181.7', unit:'$B', yoy:28, qoq:6}, us:null },
         ],
         // The PREVIA — the one-picture read going in (frames the market's own tension; no Summit needed).
         marketDebate:{
@@ -1646,14 +1654,47 @@ function cpStyle(){
     '.cp-nb-r b{color:var(--navy);font-weight:800}'+
     '.cp-nb-x{color:'+GRAY+';font-weight:800;flex:none}'+
     /* earnings-call theme status with age (the fused theme record) */
-    '.calls-st-age{font-size:8.5px;font-weight:700;opacity:.8;margin-left:4px}</style>';
+    '.calls-st-age{font-size:8.5px;font-weight:700;opacity:.8;margin-left:4px}'+
+    '.cp-gseg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+
+    '.cp-gseg button{font-size:10px;font-weight:800;padding:3px 11px;border:0;border-radius:999px;background:transparent;color:var(--mu);cursor:pointer;transition:.14s}'+
+    '.cp-gseg button.active{background:var(--navy);color:#fff}'+
+    '.cp-evwrap[data-g="yoy"] .cp-gq,.cp-evwrap[data-g="qoq"] .cp-gy,.cp-evwrap[data-g="off"] .cp-g{display:none}'+
+    // ── The print — ce-fz tiles (ported verbatim from googl.js, brand-agnostic) ──
+    '.ce-fz{border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;margin:0 0 16px;background:#FBFCFE}'+
+    '.ce-fz-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);margin-bottom:10px}'+
+    '.ce-fz-g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}'+
+    '@media(max-width:820px){.ce-fz-g{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.ce-fz-g{grid-template-columns:1fr}}'+
+    '.ce-fz-t{position:relative;border:1px solid var(--bdr);border-radius:9px;padding:8px 10px 20px;background:#fff;transition:.14s}'+
+    '.ce-fz-t[data-detail]{cursor:pointer}.ce-fz-t[data-detail]:hover{box-shadow:0 4px 14px rgba(16,24,40,.10);transform:translateY(-1px)}'+
+    '.ce-fz-k{display:flex;align-items:center;gap:5px;font-size:9.5px;font-weight:700;color:var(--mu)}'+
+    '.ce-fz-vd{margin-left:auto;font-size:8.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;flex:none}'+
+    '.ce-fz-r{display:flex;align-items:baseline;gap:4px;margin-top:3px;font-variant-numeric:tabular-nums}'+
+    '.ce-fz-c{font-size:11px;color:var(--mu);font-weight:700}.ce-fz-ar{font-size:9px;color:var(--mu)}'+
+    '.ce-fz-a{font-size:13px;font-weight:900;color:var(--navy)}'+
+    '.ce-fz-d{margin-left:auto;font-size:8px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:2px 7px;color:#fff}'+
+    '.ce-fz-wl{font-size:8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:'+BRAND+';margin-top:6px}'+
+    '.ce-fz-more{position:absolute;right:9px;bottom:7px;font-size:8.5px;font-weight:800;color:'+BLUE+'}'+
+    // ── print toggles: verdict filter · vs Street/Summit · YoY/QoQ (data-attr driven, ported from googl) ──
+    '.ce-vdf{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px;margin-left:8px}'+
+    '.ce-vdf button{font-size:10px;font-weight:800;padding:3px 11px;border:0;border-radius:999px;background:transparent;color:var(--mu);cursor:pointer;transition:.14s}'+
+    '.ce-vdf button.active{background:var(--navy);color:#fff}'+
+    '.ce-fz-gr{display:flex;align-items:baseline;gap:5px;margin-top:5px;font-size:9.5px;font-weight:800}'+
+    '.ce-fz-gl{font-size:8px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}'+
+    '.ce-fz-dw{margin-left:auto}'+
+    '.ce-fz[data-f="beat"] .ce-fz-t:not([data-vdc="beat"]),.ce-fz[data-f="miss"] .ce-fz-t:not([data-vdc="miss"]),.ce-fz[data-f="inline"] .ce-fz-t:not([data-vdc="inline"]){display:none}'+
+    '.ce-vd-us,.ce-exp-us{display:none}'+
+    '.ce-fz[data-ev="us"] .ce-vd-cons,.ce-fz[data-ev="us"] .ce-exp-cons{display:none}'+
+    '.ce-fz[data-ev="us"] .ce-vd-us{display:inline-block}.ce-fz[data-ev="us"] .ce-exp-us{display:inline}'+
+    '.ce-fz[data-g="qoq"] .ce-gy,.ce-fz[data-g="yoy"] .ce-gq,.ce-fz[data-g="off"] .ce-gy,.ce-fz[data-g="off"] .ce-gq{display:none}'+
+    '</style>';
 }
 // A · The Setup — 4 headline + 4 custom KPIs, each with Street (Bloomberg) AND Summit estimates.
 function cpFmtC(o){ if(!o||o.v==null) return '<span class="cp-empty">—</span>';
   var un=o.unit||'', v=o.v, s;
   if(un==='$') s='$'+v; else if(un==='$M') s='$'+v+'M'; else if(un==='$B') s='$'+v+'B';
   else if(un==='M') s=v+'M'; else if(un==='M/day') s=v+'M/day'; else if(un==='%') s=v+'%'; else s=String(v);
-  return s+(o.yoy!=null?'<span style="font-size:10px;color:#0a8f4c;font-weight:800;margin-left:5px">+'+o.yoy+'%</span>':''); }
+  function gchip(cls,g){ if(g==null) return ''; var pos=g>=0; return '<span class="cp-g '+cls+'" style="font-size:10px;font-weight:800;margin-left:5px;color:'+(pos?'#0a8f4c':'#C5221F')+'">'+(pos?'+':'−')+Math.abs(g)+'%</span>'; }
+  return s+gchip('cp-gy',o.yoy)+gchip('cp-gq',o.qoq); }
 function cpEvCell(key, m, isCustom){
   var name=m&&m.k?m.k:null;
   var q=(m&&m.note)?cpQ('setnote-'+key, m.note.t, m.note.h):'';
@@ -1728,146 +1769,103 @@ function cpIRButton(){
   '</div>';
 }
 function cpQkey(q){ return String(q||'').replace(/\s/g,''); }
+// PHASE-AWARE quarter selector (canonical): Setup & Watch List offer every quarter, but Post-Results
+// only offers quarters that have a `results` block — the upcoming quarter has none, so it never shows
+// in Post-Results (its data does not exist yet). data-cpqhas lists the phases each quarter is valid for.
+function cpQPhases(q){ var ph=['setup','watch']; if(q.results) ph.push('results'); return ph; }
 function cpQPills(){
   return '<div class="cp-qpills">'+CALL_PREP.quarters.map(function(q,i){
-    return '<button type="button" class="cp-qpill'+(i===0?' active':'')+'" data-cpqsel="'+esc(cpQkey(q.q))+'">'+esc(q.q)+(q.status==='upcoming'?'<span class="cp-qtag">upcoming</span>':'')+'</button>';
+    return '<button type="button" class="cp-qpill'+(i===0?' active':'')+'" data-cpqsel="'+esc(cpQkey(q.q))+'" data-cpqhas="'+cpQPhases(q).join(' ')+'">'+esc(q.q)+(q.status==='upcoming'?'<span class="cp-qtag">upcoming</span>':'')+'</button>';
   }).join('')+'</div>';
+}
+function cpSelectQuarter(pane, qk){
+  pane.querySelectorAll('.cp-qpill').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-cpqsel')===qk); });
+  pane.querySelectorAll('.cp-qblock').forEach(function(blk){ blk.hidden=(blk.getAttribute('data-cpq')!==qk); });
+}
+// On a phase switch, hide the quarter pills that phase can't offer; if the active quarter is no longer
+// valid (e.g. the upcoming quarter when entering Post-Results), fall back to the most-recent valid one.
+function cpApplyPhaseQuarters(pane, phase){
+  var pills=Array.prototype.slice.call(pane.querySelectorAll('.cp-qpill')), activeVisible=false;
+  pills.forEach(function(b){
+    var ok=(b.getAttribute('data-cpqhas')||'').split(' ').indexOf(phase)>=0;
+    b.hidden=!ok;
+    if(ok && b.classList.contains('active')) activeVisible=true;
+  });
+  var firstVisible=pills.filter(function(b){ return !b.hidden; })[0];   // newest-first, so first = latest valid
+  if(!activeVisible && firstVisible) cpSelectQuarter(pane, firstVisible.getAttribute('data-cpqsel'));
+}
+// The Setup grid is DATA-DRIVEN from the BBG series (ibkrResults) — the SAME six lines the print is
+// scored against, for EVERY quarter (upcoming = forward consensus; reported = the frozen pre-print
+// consensus). No hand-authoring per quarter. cons formatted for cpFmtC; YoY/QoQ computed from actuals.
+function cpSetupCells(qLabel){
+  var v=ibkrResults.views.q, key=cpQtoKey(qLabel), i=v.metrics.nii.periods.indexOf(key);
+  if(i<0) return null;
+  return CP_PRINT_ORDER.map(function(k){
+    var m=v.metrics[k], c=(m.cons[i]!=null)?m.cons[i]:m.act[i];
+    if(c==null) return null;
+    var yb=m.act[i-4], qb=m.act[i-1];
+    var yoy=yb?Math.round((c/yb-1)*100):null, qoq=qb?Math.round((c/qb-1)*100):null, cons;
+    if(m.unit==='eps') cons={v:(+c).toFixed(2),unit:'$'};
+    else if(m.unit==='pct') cons={v:(+c).toFixed(2),unit:'%'};
+    else if(m.unit==='count') cons={v:(+c).toFixed(2),unit:'M'};
+    else { var a=Math.abs(c); cons = a>=10000?{v:(c/1000).toFixed(1),unit:'$B'}:{v:String(Math.round(c)).replace(/\B(?=(\d{3})+(?!\d))/g,','),unit:'$M'}; }
+    if(m.unit!=='pct'){ if(yoy!=null) cons.yoy=yoy; if(qoq!=null) cons.qoq=qoq; }   // NIM (%) carries no growth chip
+    return { k:m.short||m.label, cons:cons, us:null };
+  }).filter(Boolean);
 }
 function cpSetupBody(c){
   var h=cpStyle();
   h+=CALL_PREP.quarters.map(function(u,qi){
     var qk=cpQkey(u.q), frozen=(u.status!=='upcoming');
     var b='<div class="cp-qblock" data-cpq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="cp-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="cp-frozen">frozen</span>':'')+'</div>';
-    var st=u.setup||{};
-    if(st.headline){
-      b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup.</b> The numbers going in — what the <b>Street</b> expects, what <b>Summit</b> expects, and where the two disagree. '+(u.date?('Reports <b>'+esc(u.date)+'</b>.'):'')+'</p>';
-      var hl=st.headline||[], cu=st.custom||[];
+    b+='<div class="cp-phase" style="background:'+BLUE+'">\u2460 Pre-Call'+(frozen?'<span class="cp-frozen">frozen</span>':'')+'</div>';
+    var cells=cpSetupCells(u.q);
+    if(cells&&cells.length){
+      b+='<p class="ov-lede"><b>'+esc(u.q)+' \u2014 the setup.</b> The Bloomberg consensus going in \u2014 the SAME six tracked lines the print is scored against. Summit is empty (no DCF for IBKR). '+(u.date?((frozen?'Reported <b>':'Reports <b>')+esc(u.date)+'</b>.'):'')+'</p>';
       b+='<div class="ov-diagram-cap" style="margin:6px 0 6px;display:flex;flex-wrap:wrap;align-items:center;gap:12px"><b>Estimates</b>'+
         '<span class="mg-seg" style="display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px">'+
           '<button type="button" class="cp-ev-pill active" data-cpev="cons">Consensus</button>'+
           '<button type="button" class="cp-ev-pill" data-cpev="us">Summit</button>'+
           '<button type="button" class="cp-ev-pill" data-cpev="both">Both</button>'+
         '</span>'+
-        (st.source?'<span style="color:var(--mu);font-weight:600;font-size:10px">'+esc(st.source)+(st.asOf?' · as of '+esc(st.asOf):'')+'</span>':'')+
+        '<span class="cp-gseg"><button type="button" class="active" data-cpg="yoy">YoY</button>'+
+          '<button type="button" data-cpg="qoq">QoQ</button>'+
+          '<button type="button" data-cpg="off">Off</button></span>'+
+        '<span style="color:var(--mu);font-weight:600;font-size:10px">Bloomberg (BST consensus)</span>'+
       '</div>';
-      b+='<div class="cp-evwrap" data-ev="cons">';
-      b+='<div class="cp-row-cap">Headline — every company, always</div>';
-      b+='<div class="cp-grid4">'+hl.map(function(m,i){ return cpEvCell('hl-'+qk+'-'+i, m, false); }).join('')+'</div>';
-      b+='<div class="cp-row-cap" style="margin-top:12px">Custom KPIs — IBKR</div>';
-      b+='<div class="cp-grid4">'+cu.map(function(m,i){ return cpEvCell('cu-'+qk+'-'+i, m, true); }).join('')+'</div>';
+      b+='<div class="cp-evwrap" data-ev="cons" data-g="yoy">';
+      b+='<div class="cp-grid4">'+cells.map(function(m,i){ return cpEvCell('su-'+qk+'-'+i, m, false); }).join('')+'</div>';
       b+='</div>';
-      b+='<div class="ave-subh-note" style="margin-top:6px">Green = YoY. <b>Street</b> = Bloomberg (BST) consensus, hardcoded from the team\'s export only. <b>Summit</b> = our own expectation (no Summit DCF for IBKR → analyst hand figures). <b>?</b> = a number with a caveat worth knowing.</div>';
-      var md=st.marketDebate;
-      if(md){
-        b+='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The setup, in one picture — what the print will settle</b></div>';
-        b+='<div class="cp-debate">'+
-          '<div class="cp-dc fear"><div class="cp-dc-h">What the tape fears</div><div class="cp-dc-b">'+md.fear+'</div></div>'+
-          '<div class="cp-dc real"><div class="cp-dc-h">What consensus actually models</div><div class="cp-dc-b">'+md.real+'</div></div>'+
-        '</div>';
-        if(md.mech&&md.mech.length){
-          b+='<div class="cp-mech">'+md.mech.map(function(m,i){ var ar=m.dir==='up'?'<span style="color:#0a8f4c">▲</span>':(m.dir==='down'?'<span style="color:'+RED+'">▼</span>':''); return (i>0?'<span class="cp-mech-ar">→</span>':'')+'<span class="cp-mech-chip">'+ar+' '+esc(m.k)+' <span style="color:var(--mu);font-weight:700">'+esc(m.v)+'</span></span>'; }).join('')+'</div>';
-        }
-        if(md.synth) b+='<div class="cp-synth">'+md.synth+'</div>';
-      }
-      var d=st.debate;
-      b+='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The debate — where Summit differs from the Street, and why</b></div>';
-      if(d){
-        if(d.rows&&d.rows.length){
-          b+='<div class="cp-tc">'+d.rows.map(function(r){
-            return '<div class="cp-tc-row" style="border-left:3px solid '+BRAND+'"><span style="font-weight:800;color:var(--navy);white-space:nowrap">'+esc(r.k)+'</span><span><b>Street:</b> '+esc(r.street||'—')+' · <b>Summit:</b> '+esc(r.us||'—')+'<br><span style="color:var(--mu)">'+ (r.why||'') +'</span></span></div>';
-          }).join('')+'</div>';
-        }
-        if(d.synth) b+='<div class="cp-synth">'+d.synth+'</div>';
-      } else {
-        b+='<div class="cp-note">Fills once both estimate sets are in (Bloomberg export + Summit expectations): line-by-line disparities and the mechanism behind why we see it differently.</div>';
-      }
-      b+='<div class="ov-foot">Frozen at call time; Post-Results scores actuals against BOTH columns.</div>';
+      b+='<div class="ave-subh-note" style="margin-top:6px">Growth chips toggle <b>YoY</b> (vs the year-ago quarter) \u21c4 <b>QoQ</b> (vs last quarter) \u21c4 Off, computed from the reported series. <b>Street</b> = Bloomberg (BST) consensus. <b>Summit</b> empty (no DCF for IBKR). NIM (%) carries no growth chip. Same six lines as Post-Results.</div>';
+      b+='<div class="ov-foot">'+(frozen?'Frozen \u2014 Post-Results scores the reported actuals against this consensus.':'The bar going into the print \u2014 scored in Post-Results once it lands.')+'</div>';
     } else {
-      b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup, as it stood going in.</b> '+(u.date?('Reported <b>'+esc(u.date)+'</b>.'):'')+'</p>';
-      if(st.source) b+='<div class="ave-subh-note" style="margin:0 0 8px">'+esc(st.source)+'</div>';
-      if(st.pricedIn) b+='<div class="cp-banner"><b>What was priced in:</b> '+st.pricedIn+'</div>';
-      if(st.oneLiner) b+='<div class="cp-synth">'+st.oneLiner+'</div>';
-      b+='<div class="ov-foot">Frozen — scored in Post-Results / Post-Call for this quarter.</div>';
+      b+='<div class="cp-note">No Bloomberg consensus grid for '+esc(u.q)+' yet.</div>';
     }
     b+='</div>';
     return b;
   }).join('');
+
+  h+=cpSetupChart();
   return h;
 }
-// B · Watch List — one card. idSfx keeps pop-up ids unique between per-quarter and cross-quarter renders.
-function cpWatchItem(w, qk, idSfx, qLabel){
-  var deep='';
-  if(w.seededBy) deep+='<p style="border-left:3px solid '+PURPLE+';padding-left:9px;margin-bottom:10px"><b>'+(w.seededBy.tripped?'Seeded by a TRIPPED red-line':'Seeded by')+' '+esc(w.seededBy.q)+':</b> "'+esc(w.seededBy.n)+'"</p>';
-  if(w.src) deep+='<p><b>Why it\'s on the list:</b> '+w.src+'</p>';
-  if(w.why) deep+='<p><b>Why it matters:</b> '+w.why+'</p>';
-  if(w.thread&&w.thread.length){
-    deep+='<p style="margin-bottom:4px"><b>The thread — how this theme has evolved:</b></p>'+
-      w.thread.map(function(t){ return '<div style="display:flex;gap:9px;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:12px;line-height:1.5"><b style="white-space:nowrap;color:'+BRAND+'">'+esc(t.q)+'</b><span>'+t.n+'</span></div>'; }).join('');
-  }
-  var why=deep?cpReg('watchwhy-'+qk+'-'+(w.rank||0)+idSfx, esc(w.metric), deep):null;
-  var tagsAttr=(w.tags&&w.tags.length)?w.tags.join(' '):'';
-  var seed=w.seededBy?'<span class="cp-seed" title="'+esc(w.seededBy.n)+'">'+(w.seededBy.tripped?'⚑ red-line tripped in '+esc(w.seededBy.q):'left open by '+esc(w.seededBy.q))+'</span>':'';
-  return '<div class="cp-w" data-wltags="'+esc(tagsAttr)+'"><div class="cp-w-top"><div class="cp-w-rank">'+(w.rank||'•')+'</div><div class="cp-w-metric">'+esc(w.metric)+'</div>'+seed+
-    (qLabel?'<span class="ov-chip" style="font-size:9.5px;background:rgba(214,0,28,0.10);color:'+BRAND+';border-radius:20px;padding:2px 9px;font-weight:800;flex:none">'+esc(qLabel)+'</span>':'')+
-    (why?'<span class="cp-why-btn ov-clickable" data-detail="cp:'+why+'" style="margin:0">why'+(w.thread?' + the thread':'')+' ›</span>':'')+'</div>'+
-    '<div class="cp-w-q"><span class="mic">🔎</span><span>'+cpFill(w.pista||w.question)+'</span></div>'+
-    '<div class="cp-w-chips">'+
-      (w.tags&&w.tags.length?w.tags.map(function(t){ return '<span class="cp-w-chip" style="background:rgba(122,90,248,0.08);border:1px solid rgba(122,90,248,0.3);color:var(--navy)">#'+esc(t)+'</span>'; }).join(''):'')+
-      (w.since?'<span class="cp-w-chip" style="background:rgba(251,188,5,0.12);border:1px solid rgba(183,121,31,0.35);color:var(--navy)"><b>Tracking since:</b> '+esc(w.since)+'</span>':'')+
-      (w.bbg?'<span class="cp-w-chip cons"><b>Cons:</b> '+esc(w.bbg)+'</span>':'')+
-      (w.breaks?'<span class="cp-w-chip red"><b>Breaks if:</b> '+esc(w.breaks)+'</span>':'')+
-    '</div>'+
-  '</div>';
+// The Setup chart IS the Results engine (js/results.js), IBKR_SETUP dataset — reported actuals vs.
+// Bloomberg consensus, one merged section with the period lever and legend chips. Builds lazily on
+// Setup visibility (cpBuildSetupChart), like the canonical companies.
+function cpSetupChart(){
+  return '<div class="cp-ann" style="margin:20px 0 4px;padding:16px 0 0;border-top:2px solid var(--bdr)">'+
+    '<div class="ov-sec-h">The trend — reported vs. consensus</div>'+
+    resultsHtml('IBKR_SETUP')+'</div>';
 }
-function cpWatchTags(){
-  var set=[], seen={};
-  CALL_PREP.quarters.forEach(function(u){ (u.watchList||[]).forEach(function(w){ (w.tags||[]).forEach(function(t){ if(!seen[t]){ seen[t]=1; set.push(t); } }); }); });
-  return set;
-}
+function cpSetupWrap(){ return document.querySelector('.ovt-subpane[data-ovst="earnings"] .cp-phpane[data-cpp="setup"] .rs-wrap'); }
+function cpBuildSetupChart(){ var w=cpSetupWrap(); if(w) initResults(w, 'IBKR_SETUP'); }
 function cpWatchBody(c){
   var h=cpStyle();
-  h+='<div class="cp-wl-tagbar"><span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu)">Filter by theme (across quarters):</span>'+
-    cpWatchTags().map(function(t){ return '<button type="button" class="cp-wl-tag" data-wltag="'+esc(t)+'">#'+esc(t)+'</button>'; }).join('')+
-    '<button type="button" class="cp-wl-tag cp-wl-clear" data-wltag="">clear</button>'+
-    '<button type="button" class="cp-wl-add-btn">+ Add theme</button>'+
-  '</div>';
-  h+='<div class="cp-wl-addform" hidden>'+
-    '<input class="cp-wl-in" data-wlf="metric" placeholder="Theme (e.g. Regulatory: prediction-market rulings)">'+
-    '<input class="cp-wl-in" data-wlf="tags" placeholder="tags, comma-separated (e.g. regulatory, prediction-markets)">'+
-    '<input class="cp-wl-in" data-wlf="pista" placeholder="The tell 🔎 — a standing read, not a question">'+
-    '<input class="cp-wl-in" data-wlf="breaks" placeholder="Breaks if… (the falsifiable red-line)">'+
-    '<div><button type="button" class="cp-wl-add-go">Add to this quarter\'s list</button><span class="ave-subh-note" style="margin-left:8px">Lives for this session — to persist it, it gets committed into CALL_PREP.</span></div>'+
-  '</div>';
-  h+=CALL_PREP.quarters.map(function(u,qi){
-    var qk=cpQkey(u.q), frozen=(u.status!=='upcoming');
-    var b='<div class="cp-qblock" data-cpq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="cp-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="cp-frozen">frozen</span>':'')+'</div>';
-    b+='<p class="ov-lede"><b>Five things to hunt — '+esc(u.q)+'</b>'+(frozen?' <span style="color:var(--mu);font-weight:600">(the list as it was frozen before this call — scored afterwards in Post-Results)</span>':'')+', numbered 1–5 by <b>how much they move the stock × how debated they are</b>. Each card carries: the <b>tell</b> (🔎) — what to actually watch for; what the <b>Street expects</b>; and the <b>red-line</b> that would break the thesis. Tap <b>why ›</b> for the grounding and the quarter-by-quarter thread.</p>';
-    b+='<div class="cp-legend"><span class="cp-legend-i"><b>How to read the cards:</b></span>'+
-      '<span class="cp-legend-i"><span class="cp-seed">left open by Q1 2026</span> it is on the list because last quarter\'s call did not settle it</span>'+
-      '<span class="cp-legend-i"><span class="cp-seed">⚑ red-line tripped in Q1 2026</span> stronger — a thesis line actually broke last quarter</span>'+
-    '</div>';
-    var wl=u.watchList||[];
-    if(!wl.length){ b+='<div class="cp-note">Watch List builds from the earnings-call record + the Bloomberg export — 5 ranked, grounded, falsifiable items per the conventions.</div>'; }
-    else{ b+='<div class="cp-watch">'+wl.map(function(w){ return cpWatchItem(w, qk, '', null); }).join('')+'</div>'; }
-    b+='<div class="ov-foot">'+(frozen?'Frozen — this list was scored against '+esc(u.q)+'\'s Post-Results/Post-Call; its <code>newQuestions</code> seeded the next quarter.':'Frozen once the quarter opens; scored against Post-Results / Post-Call. Themes carry their quarter-by-quarter thread (source: docs/calls/IBKR) — promise-type items are tracked here and in the theme record below.')+'</div>';
-    b+='</div>';
-    return b;
-  }).join('');
-  h+='<div class="cp-wl-all" hidden>';
-  h+='<div class="cp-phase" style="background:'+PURPLE+'">Themes across quarters</div>';
-  h+='<p class="ov-lede">Every watch item matching the selected theme(s), <b>across all quarters</b> — how the same hunt evolved print to print. Clear the tags (or pick a quarter) to return to the per-quarter view.</p>';
-  h+='<div class="cp-watch">'+CALL_PREP.quarters.map(function(u){
-    var qk=cpQkey(u.q);
-    return (u.watchList||[]).map(function(w){ return cpWatchItem(w, qk, '-f', u.q); }).join('');
-  }).join('')+'</div>';
-  h+='</div>';
-  // ── FUSED: the full multi-year theme record (was the standalone Evolution ▸ Earnings Calls tab,
-  // dissolved Jul 2026 — no two tabs on the same highlights). Lives here, under the Watch List. ──
+  h+='<div data-wlmount></div>';
+  // ── FUSED: the multi-year theme record (IBKR_THEMES), folded in below the Watch List — the
+  // narrative backbone (the former standalone "Earnings Calls" tab). ──
   h+='<div style="margin-top:26px;border-top:2px solid var(--bdr);padding-top:16px">';
-  h+='<div class="cp-band" style="--bc:'+BRAND+'"><span class="cp-band-i">▤</span><span class="cp-band-t">The theme record — every thread, across all calls</span><span class="cp-band-s">the multi-year backbone behind the hunt above (the former "Earnings Calls" tab, folded in)</span><span class="cp-band-l"></span></div>';
-  h+='<p class="ov-lede" style="margin-top:0">The 9 narrative threads across <b>11 calls</b> (Q4 2023 → Q2 2026), each with a status — <b>trend</b> / <b>promise</b> / <b>watch</b>, with its age. <b>By theme</b> traces how each story evolved; <b>By quarter</b> shows what mattered in a given call.</p>';
+  h+='<div class="cp-band" style="--bc:'+BRAND+'"><span class="cp-band-i">▤</span><span class="cp-band-t">The theme record — every thread, across all calls</span><span class="cp-band-s">the multi-year backbone behind the hunt above</span><span class="cp-band-l"></span></div>';
+  h+='<p class="ov-lede" style="margin-top:0">The 9 narrative threads across <b>11 calls</b> (Q4 2023 → Q2 2026), each with a status — <b>trend</b> / <b>promise</b> / <b>watch</b>, with its age.</p>';
   h+=callsBody();
   h+='</div>';
   return h;
@@ -1877,6 +1875,125 @@ var CP_RES={ beat:{c:'#0a8f4c',l:'Beat'}, miss:{c:RED,l:'Miss'}, inline:{c:'#6b7
              nodisc:{c:AMBER,l:'Not disclosed'}, nocons:{c:PURPLE,l:'No consensus'} };
 var CP_HLTAG={ thesis:{c:'#0a8f4c',l:'Thesis'}, curious:{c:'#7A5AF8',l:'Curious'}, dots:{c:'#2E6BE6',l:'Connects dots'}, watch:{c:'#B7791F',l:'Watch'}, tone:{c:'#B7791F',l:'Tone'} };
 // D · Post-Results ── beat/miss scorecard, ranked biggest-surprise first + the red-line check.
+// The AI-generated CALL SUMMARY — "the minute" (canonical Post-Results, ported from AMZN). Built from
+// the call's take (lead paragraph) + the thesis-moving (band:'lead') highlights, each with a ＋more
+// dropdown. Self-contained inline styles (no CSS-class dependency).
+function cpSummaryBlock(cc){
+  if(!cc) return '';
+  var paras=[];
+  if(cc.take) paras.push({ p:cc.take });
+  (cc.highlights||[]).filter(function(x){ return (x.band||'')==='lead'; }).forEach(function(x){
+    var more=x.detail||'';
+    if(x.open) more+='<p style="border-left:3px solid '+AMBER+';padding-left:9px;margin-top:8px"><b>Still open:</b> '+x.open+'</p>';
+    paras.push({ p:'<b>'+x.head+'</b>', more:more });
+  });
+  if(!paras.length) return '';
+  var body=paras.map(function(pa){
+    var p='<div style="margin:0 0 12px"><p style="font-size:12.5px;line-height:1.7;color:var(--navy);font-weight:500;margin:0">'+pa.p+'</p>';
+    if(pa.more) p+='<details style="margin-top:5px"><summary style="font-size:10px;font-weight:800;color:'+BLUE+';cursor:pointer;list-style:none">＋ more — the detail behind this</summary>'+
+      '<div style="padding:7px 0 4px 13px;border-left:2px dashed var(--bdr);margin-top:5px;font-size:11.5px;line-height:1.65;color:var(--navy)">'+pa.more+'</div></details>';
+    return p+'</div>';
+  }).join('');
+  return '<details open style="border:1px solid var(--bdr);border-radius:12px;background:#fff;margin:8px 0 14px">'+
+    '<summary style="display:flex;align-items:center;gap:8px;padding:11px 14px;cursor:pointer;list-style:none;font-size:13px;font-weight:800;color:var(--navy)"><span style="font-size:15px">🧠</span>Call summary — the minute'+
+      '<span style="font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:'+PURPLE+';background:rgba(122,90,248,.12);border:1px solid rgba(122,90,248,.25);border-radius:999px;padding:2px 8px;margin-left:auto">AI-generated</span></summary>'+
+    '<div style="padding:4px 15px 15px">'+body+'</div></details>';
+}
+// "Also on the call" — the supplemental colour, one box with a native <details> per point. The
+// thesis-movers (band:'lead') live on the Watch List / in the summary above, so they are filtered out.
+function cpHighlightsBlock(cc, qk){
+  if(!cc||!cc.highlights) return '';
+  var hls=cc.highlights.filter(function(x){ return (x.band||'context')!=='lead'; });
+  if(!hls.length) return '';
+  var rows=hls.map(function(x){
+    var det=x.detail||''; if(x.open) det+='<p style="margin-top:8px"><b>Still open:</b> '+x.open+'</p>';
+    return '<details style="border-bottom:1px solid var(--bdr)"><summary style="display:flex;align-items:center;gap:8px;padding:9px 13px;cursor:pointer;list-style:none;font-size:11.5px;font-weight:600;color:var(--navy);line-height:1.45"><span style="flex:1;min-width:0">'+x.head+'</span>'+(det?'<span style="margin-left:auto;color:var(--mu);font-size:10px;flex:none">▾</span>':'')+'</summary>'+
+      (det?'<div style="padding:0 13px 12px;font-size:10.5px;font-weight:500;color:var(--navy);line-height:1.55;background:#FBFCFE">'+det+'</div>':'')+'</details>';
+  }).join('');
+  return '<div style="margin-top:18px;border:1px solid var(--bdr);border-radius:12px;background:#fff;overflow:hidden">'+
+    '<div style="padding:10px 13px;background:#F6F8FA;border-bottom:1px solid var(--bdr)"><b style="font-size:11.5px;color:var(--navy)">Also on the call</b>'+
+      '<div style="font-size:9.5px;color:var(--mu);font-weight:600;margin-top:2px">supplemental colour — the meeting-critical items are the scorecard above and the Watch List</div></div>'+
+    rows+'</div>';
+}
+// (Legacy fold — superseded by cpSummaryBlock + cpHighlightsBlock above; kept only until verified.)
+function cpCallInner(q, qk){
+  var cc=q.call; if(!cc) return '';
+  var b='<div style="margin-top:16px;border-top:2px solid var(--bdr);padding-top:14px">';
+  b+='<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin-bottom:8px">🎤 What management said on the call <span style="font-weight:600;text-transform:none;letter-spacing:0">· '+esc(q.date||'')+'</span></div>';
+  if(cc.take) b+='<div class="cp-take">🎯 '+cc.take+'</div>';
+  if(cc.highlights&&cc.highlights.length){
+    var bands=[
+      { k:'lead',    i:'▲', c:RED,  t:'Lead with this', s:'moves the thesis — and something is still unresolved' },
+      { k:'context', i:'●', c:BLUE, t:'Context',        s:'matters, but it is settled — mention, don\'t debate' },
+      { k:'logged',  i:'○', c:GRAY, t:'Logged',         s:'on the record for later' }
+    ];
+    var hi=0;
+    bands.forEach(function(bd){
+      var items=cc.highlights.filter(function(x){ return (x.band||'context')===bd.k; });
+      if(!items.length) return;
+      b+='<div class="cp-band" style="--bc:'+bd.c+'"><span class="cp-band-i">'+bd.i+'</span><span class="cp-band-t">'+bd.t+'</span><span class="cp-band-s">'+bd.s+'</span><span class="cp-band-l"></span></div>';
+      b+='<div class="cp-hl">'+items.map(function(x){ var tg=CP_HLTAG[x.tag]||{c:'#6b7684',l:x.tag||''};
+        var det=x.detail||'';
+        if(x.open) det+='<p style="border-left:3px solid '+AMBER+';padding-left:9px;margin-top:10px"><b>Still open:</b> '+x.open+'</p>';
+        var id=det?cpReg('rhl-'+qk+'-'+(hi++), tg.l+' — '+String(x.head).replace(/<[^>]+>/g,''), det):null;
+        var op=x.open?' <span class="cp-hl-open" title="'+esc(x.open)+'">open</span>':'';
+        return '<div class="cp-hl-row" style="--hc:'+tg.c+'"'+(id?' data-detail="cp:'+id+'"':'')+'><span class="cp-hl-tag">'+esc(tg.l)+'</span><span class="cp-hl-head">'+x.head+op+'</span>'+(id?'<span class="cp-hl-more">＋</span>':'<span></span>')+'</div>';
+      }).join('')+'</div>';
+    });
+  }
+  if(cc.dots) b+='<div class="cp-dots">🧩 '+cc.dots+'</div>';
+  b+='</div>';
+  return b;
+}
+// THE print — the canonical ce-fz tile grid (ported from googl.js): one square tile per metric,
+// verdict badge, expected → actual, surprise chip, on-the-list flag, ＋detail. Ranked by surprise.
+function cpQtoKey(q){ var m=String(q).match(/Q(\d)\s+(\d{4})/); return m?(m[1]+'Q'+m[2].slice(2)):null; }
+function cpPrintFmt(u, x){
+  if(x==null) return '—';
+  if(u==='eps') return '$'+(+x).toFixed(2);
+  if(u==='pct') return (+x).toFixed(2)+'%';
+  if(u==='count') return (+x).toFixed(2)+'M';
+  var a=Math.abs(x);   // usdM — $B only at ten billions+, else $M with thousands separators
+  return a>=10000 ? '$'+(x/1000).toFixed(1)+'B' : '$'+String(Math.round(x)).replace(/\B(?=(\d{3})+(?!\d))/g,',')+'M';
+}
+// THE print — ce-fz tiles built from the SAME BBG-tracked series as the Setup (nii/eps/accts/mloans/
+// cbal/nim): consensus going in → reported actual, verdict + surprise computed. STRUCTURED lines only.
+// Call-derived color (commissions, DARTs, prediction markets, credit quality) belongs in the summary /
+// highlights / Watch List — never in these boxes.
+var CP_PRINT_ORDER=['nii','eps','accts','mloans','cbal','nim'];
+function cpPrintTiles(qLabel){
+  var v=ibkrResults.views.q, key=cpQtoKey(qLabel), i=v.metrics.nii.periods.indexOf(key);
+  if(i<0) return '';
+  var VD={beat:{c:'#0a8f4c',l:'Beat'},miss:{c:RED,l:'Miss'},inline:{c:'#6b7684',l:'In line'},nocons:{c:'#9AA4B0',l:'no est.'}};
+  var g=function(a,base){ if(a==null||base==null||!base) return '<span style="color:var(--mu)">\u2014</span>'; var gv=Math.round((a/base-1)*100); return '<span style="color:'+(gv>=0?'#0a8f4c':RED)+'">'+(gv>=0?'+':'\u2212')+Math.abs(gv)+'%</span>'; };
+  var tiles=CP_PRINT_ORDER.map(function(k){
+    var m=v.metrics[k]; if(!m) return null;
+    var c=m.cons[i], a=m.act[i];
+    if(a==null) return null;                                   // no reported actual \u2192 not a print line
+    var surp=(c!=null&&c)?((a/c-1)*100):null;
+    var vk=(surp==null)?'nocons':(surp>=1?'beat':(surp<=-1?'miss':'inline')), vd=VD[vk];
+    var dchip=(surp==null)?'':'<span class="ce-fz-d" style="background:'+(Math.abs(surp)>=5?'#0a8f4c':(Math.abs(surp)>=2?AMBER:'#9AA4B0'))+'">'+(surp>=0?'+':'\u2212')+Math.round(Math.abs(surp))+'%</span>';
+    return { sort:(surp==null?-1:Math.abs(surp)), html:'<div class="ce-fz-t" data-vdc="'+vk+'">'+
+      '<div class="ce-fz-k">'+esc(m.short||m.label)+
+        '<span class="ce-fz-vd ce-vd-cons" style="color:'+vd.c+'">'+vd.l+'</span>'+
+        '<span class="ce-fz-vd ce-vd-us" style="color:#9AA4B0">no est.</span></div>'+
+      '<div class="ce-fz-r"><span class="ce-fz-c ce-exp-cons">'+cpPrintFmt(m.unit,c)+'</span>'+
+        '<span class="ce-fz-c ce-exp-us">no est.</span>'+
+        '<span class="ce-fz-ar">\u2192</span><span class="ce-fz-a">'+cpPrintFmt(m.unit,a)+'</span>'+
+        '<span class="ce-fz-dw ce-exp-cons">'+dchip+'</span></div>'+
+      '<div class="ce-fz-gr"><span class="ce-fz-gl">growth</span><span class="ce-gy">'+g(a,m.act[i-4])+'</span><span class="ce-gq">'+g(a,m.act[i-1])+'</span></div>'+
+    '</div>' };
+  }).filter(Boolean);
+  if(!tiles.length) return '';
+  tiles.sort(function(x,z){ return z.sort-x.sort; });
+  return '<div class="ce-fz" data-g="yoy" data-ev="cons" data-f="all">'+
+    '<div class="ce-fz-h">The print \u2014 ranked by surprise'+
+      '<span class="ce-vdf"><button type="button" class="active" data-vdf="all">All</button><button type="button" data-vdf="beat">Beats</button><button type="button" data-vdf="miss">Misses</button><button type="button" data-vdf="inline">In line</button></span>'+
+      '<span class="cp-gseg" style="margin-left:auto"><button type="button" class="active" data-fzev="cons">vs Street</button><button type="button" data-fzev="us">vs Summit</button></span>'+
+      '<span class="cp-gseg"><button type="button" class="active" data-fzg="yoy">YoY</button><button type="button" data-fzg="qoq">QoQ</button><button type="button" data-fzg="off">Off</button></span>'+
+      '<span style="flex-basis:100%;font-weight:600;text-transform:none;letter-spacing:0;color:var(--mu);font-size:9.5px;line-height:1.5;margin-top:3px">Structured BBG-tracked lines only \u2014 the same six as Setup. <b>vs Summit</b> reads \u201cno est.\u201d (no Summit DCF for IBKR). <b>No Margin toggle</b>: none of these six is a profit line carrying a margin \u2014 NIM is itself the margin metric. Commissions, DARTs, prediction-market and credit-quality color live in the summary + highlights below, not here.</span>'+
+    '</div><div class="ce-fz-g">'+tiles.map(function(t){ return t.html; }).join('')+'</div></div>';
+}
 function cpResultsBody(c){
   var h=cpStyle();
   h+=CALL_PREP.quarters.map(function(q,qi){
@@ -1886,45 +2003,31 @@ function cpResultsBody(c){
     b+='<p class="ov-lede"><b>'+esc(q.q)+' — the numbers vs. the frozen expectations.</b> Results land first (release ~4pm, call comes later) — the read on the <b>print itself</b>, before management says a word.</p>';
     var r=q.results;
     if(!r){ b+='<div class="cp-note">Empty until the print lands. Then the scorecard and thesis red-line check fill here.</div></div>'; return b; }
-    b+='<div style="border:1px solid var(--bdr);border-radius:12px;padding:14px 16px;margin-bottom:14px;background:var(--w)">';
-    b+='<div style="font-size:13.5px;font-weight:800;color:var(--navy);margin-bottom:8px">'+esc(q.q)+' <span style="font-weight:600;color:var(--mu);font-size:11px">· reported '+esc(q.date?q.date.replace(/ · .*/,''):'')+'</span></div>';
-    if(r.headline) b+='<div class="cp-take" style="border-left-color:'+BRAND2+'">🎯 '+r.headline+'</div>';
-    if(r.thesisCheck&&r.thesisCheck.length){
+    b+='<div style="font-size:11px;color:var(--mu);font-weight:600;margin:-2px 0 12px">reported '+esc(q.date?q.date.replace(/ \u00b7 .*/,''):'')+'</div>';
+    if(r.headline) b+='<p class="ov-lede" style="margin:2px 0 10px"><b>\ud83c\udfaf '+r.headline+'</b></p>';
+    b+=cpPrintTiles(q.q);                                    // \u2460 THE print \u2014 ce-fz tiles (BBG-tracked lines only), at the top
+    b+=cpSummaryBlock(q.call);                               // \u2461 AI call summary \u2014 "the minute"
+    if(r.thesisCheck&&r.thesisCheck.length){                 // \u2462 thesis red-lines
       var tc=r.thesisCheck.slice().sort(function(a,z){ return (z.tripped?1:0)-(a.tripped?1:0); });
       var nTrip=tc.filter(function(t){ return t.tripped; }).length;
-      b+='<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin:2px 0 6px">Thesis red-line check — vs this quarter\'s frozen Watch List'+
-        (nTrip?'<span style="color:'+RED+';margin-left:7px">⚑ '+nTrip+' tripped</span>':'<span style="color:#0a8f4c;margin-left:7px">✓ all held</span>')+'</div>';
-      b+='<div class="cp-tc">'+tc.map(function(t){ var col=t.tripped?RED:'#0a8f4c'; var ic=t.tripped?'⚑ TRIPPED':'✓ held';
-        return '<div class="cp-tc-row" style="border-left:3px solid '+col+'"><span style="font-weight:800;color:'+col+';white-space:nowrap">'+ic+'</span><span><b>'+esc(t.line)+'</b> — '+esc(t.note||'')+'</span></div>';
+      b+='<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin:16px 0 6px">Thesis red-lines \u2014 vs the frozen Watch List'+
+        (nTrip?'<span style="color:'+RED+';margin-left:7px">\u2691 '+nTrip+' tripped</span>':'<span style="color:#0a8f4c;margin-left:7px">\u2713 all held</span>')+'</div>';
+      b+='<div class="cp-tc">'+tc.map(function(t){ var col=t.tripped?RED:'#0a8f4c'; var ic=t.tripped?'\u2691 TRIPPED':'\u2713 held';
+        return '<div class="cp-tc-row" style="border-left:3px solid '+col+'"><span style="font-weight:800;color:'+col+';white-space:nowrap">'+ic+'</span><span><b>'+esc(t.line)+'</b> \u2014 '+esc(t.note||'')+'</span></div>';
       }).join('')+'</div>';
     }
-    if(r.scorecard&&r.scorecard.length){
-      var sc=r.scorecard.slice().sort(function(a,z){ return (z.surprise||0)-(a.surprise||0); });
-      b+='<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin:15px 0 6px">The print — ranked by surprise</div>';
-      b+='<div class="cp-legend">'+
-        '<span class="cp-legend-i"><b>How to read this table:</b></span>'+
-        '<span class="cp-legend-i"><span class="cp-sc-rk">WATCH #1</span> flagged before the call as one of the five most contested items (its rank on that list)</span>'+
-        '<span class="cp-legend-i">A blank here just means the line was not one of those five — every line below is covered.</span>'+
-        '<span class="cp-legend-i"><span class="cp-sc-surp hi">big surprise</span> the number landed far from expectations — our judgement, not a calculation</span>'+
-      '</div>';
-      b+='<div class="cp-sc">'+sc.map(function(d,i){ var rr=CP_RES[d.result]||CP_RES.inline;
-        var qb=d.note?cpQ('resnote-'+qk+'-'+i, d.note.t||'Context', d.note.h||d.note):'';
-        var rk=d.watchRank?'<div class="cp-sc-rk" title="This was item #'+esc(String(d.watchRank))+' on the Watch List we froze before the call">WATCH #'+esc(String(d.watchRank))+'</div>'
-                          :'<div class="cp-sc-rk blank"></div>';
-        var sv=d.surprise;
-        var sl=(sv==null)?'<div class="cp-sc-bw"></div>'
-          :'<div class="cp-sc-bw"><div class="cp-sc-surp '+(sv>=70?'hi':(sv>=30?'md':'lo'))+'">'+(sv>=70?'big surprise':(sv>=30?'some surprise':'as expected'))+'</div></div>';
-        return '<div class="cp-sc-row" style="--sc:'+rr.c+'">'+rk+'<div class="cp-sc-m">'+esc(d.metric)+qb+'</div><div class="cp-sc-c">expected: '+cpFill(d.cons,'—')+'</div><div class="cp-sc-a">'+esc(d.actual||'')+'</div>'+sl+'<div class="cp-sc-v">'+rr.l+'</div></div>';
+    if(r.intoCall&&r.intoCall.length){                       // \u2463 what this tees up
+      b+='<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin:16px 0 6px">What this tees up for the call <span style="font-weight:600;text-transform:none;letter-spacing:0">\u00b7 go in hunting these</span></div>';
+      b+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px">'+r.intoCall.map(function(x,i){
+        var mm=String(x).match(/^([\s\S]*?)\s+\u2014\s+([\s\S]*)$/);
+        var head=mm?mm[1]:x, body=mm?mm[2]:'';
+        var id=body?cpReg('tee-'+qk+'-'+i, String(head).replace(/<[^>]+>/g,''), '<p>'+body+'</p>'):null;
+        return '<div style="border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;background:#fff'+(id?';cursor:pointer':'')+'"'+(id?' data-detail="cp:'+id+'"':'')+'><div style="font-size:11.5px;color:var(--navy);line-height:1.45;font-weight:600">'+head+'</div>'+(id?'<div style="font-size:9.5px;font-weight:800;color:'+BLUE+';margin-top:6px">\uff0b the ask</div>':'')+'</div>';
       }).join('')+'</div>';
-      b+='<div class="ave-subh-note" style="margin-top:6px">Rows are ordered biggest-surprise first, not in release order. <b>Not disclosed</b> = management stopped reporting a number it used to give. <b>No consensus</b> = nobody had an estimate for it. Neither is a miss.</div>';
     }
-    if(r.intoCall&&r.intoCall.length){
-      b+='<div class="cp-dots" style="margin-top:14px">🎯 <b>What the numbers tee up for the call</b> — go in hunting these:'+
-        '<ul class="ov-bullets" style="margin-top:6px">'+r.intoCall.map(function(x){ return '<li>'+x+'</li>'; }).join('')+'</ul></div>';
-    }
-    b+='<div style="margin-top:10px;font-size:11.5px;color:var(--navy)"><b>Price reaction:</b> '+cpFill(r.priceReaction,'to fill from a trusted source')+'</div>';
-    b+='</div>';
-    b+='<div class="ov-foot">Scored against the frozen Watch List. Consensus = Bloomberg export; actuals = reported (Bloomberg / release).</div>';
+    b+='<div style="margin-top:12px;font-size:11.5px;color:var(--navy)"><b>Price reaction:</b> '+cpFill(r.priceReaction,'to fill from a trusted source')+'</div>';
+    b+=cpHighlightsBlock(q.call, qk);                        // \u2464 also on the call
+    b+='<div class="ov-foot">Scored against the frozen Watch List. Consensus = Bloomberg export; actuals = reported.</div>';
     b+='</div>';
     return b;
   }).join('');
@@ -2017,6 +2120,7 @@ function cpCallBody(c){
 // ASSEMBLY — html / deepDiveHtml
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 function html(c){
+  _co=c;   // capture company (id + ticker) for the Watch List DB wiring
   var h='<div class="ov ov-ibkr" data-brand="IBKR">';
   h+=stdOverviewBody(c);
   // Shared modal (Overview data-detail triggers + Deep Dive triggers once hoisted in init).
@@ -2026,7 +2130,11 @@ function html(c){
   h+='</div>';
   return h;
 }
+function cpPending(label){
+  return '<div class="cp-note">📊 <b>'+esc(label)+' — pending.</b> This surfaces actuals vs. consensus (plus the estimate charts). IBKR has no consensus feed wired yet — it is not in the Summit DCF set, nor in the BBG export. Fills in once a consensus source is available.</div>';
+}
 function deepDiveHtml(c){
+  _co=c;   // capture company (id + ticker) for the Watch List DB wiring
   var h='<div class="ov ov-ibkr ov-ibkr-dd" data-brand="IBKR">';
   h+='<div class="dd-tabs">'+
       '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+
@@ -2061,26 +2169,28 @@ function deepDiveHtml(c){
     '</div>';
   h+='<div class="dd-pane" data-dd="evolution" hidden>'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="callprep">Call Prep</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="results">Results</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="callprep">'+
+      '<div class="ovt-subpane" data-ovst="earnings">'+
         cpIRButton()+
-        '<div class="cp-note" style="margin-bottom:12px">🎯 <b>Call Prep</b> — the decision layer, in phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (react to the numbers, which land before the call) → <b>③ Post-Call</b> (what management said + the meeting take). Append-only per quarter — pick a quarter below; each keeps its frozen pre-call blocks next to its post-mortem, so the tab is a record of how well we read IBKR. The <b>Watch List</b> is now the single home for theme-tracking — the old standalone <i>Earnings Calls</i> tab was folded into it (no two tabs on the same call highlights).</div>'+
+        '<div class="cp-note" style="margin-bottom:12px">🎯 <b>Earnings</b> — the decision layer, in phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, themes tracked across quarters) → <b>② Post-Results</b> (react to the numbers, and the call take). Append-only per quarter — pick a quarter below. The <b>Watch List</b> is the shared, persistent engine (add / close / reorder themes; saved for the whole team); the multi-year theme record is folded in beneath it.</div>'+
         cpQPills()+
         '<div class="cp-phtabs">'+
           '<button type="button" class="cp-phtab active" data-cpp="setup">Setup</button>'+
           '<button type="button" class="cp-phtab" data-cpp="watch">Watch List</button>'+
           '<button type="button" class="cp-phtab" data-cpp="results">Post-Results</button>'+
-          '<button type="button" class="cp-phtab" data-cpp="postcall">Post-Call</button>'+
         '</div>'+
         '<div class="cp-phpane" data-cpp="setup">'+cpSetupBody(c)+'</div>'+
         '<div class="cp-phpane" data-cpp="watch" hidden>'+cpWatchBody(c)+'</div>'+
         '<div class="cp-phpane" data-cpp="results" hidden>'+cpResultsBody(c)+'</div>'+
-        '<div class="cp-phpane" data-cpp="postcall" hidden>'+cpCallBody(c)+'</div>'+
       '</div>'+
+      '<div class="ovt-subpane" data-ovst="results" hidden>'+cpPending('Results')+'</div>'+
+      '<div class="ovt-subpane" data-ovst="estevo" hidden>'+cpPending('Estimates')+'</div>'+
       '<div class="ovt-subpane" data-ovst="guidance" hidden>'+guidanceBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="strategy" hidden>'+strategyBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="timeline" hidden>'+timelineBody()+'</div>'+
@@ -2154,6 +2264,8 @@ function buildSub(root, group, key){
   } else if(group==='valuation'){
     if(key==='sensitivity') renderSens(root);
     else if(key==='capital') buildCapAlloc();
+  } else if(group==='evolution'){
+    if(key==='earnings') requestAnimationFrame(cpBuildSetupChart);   // Setup chart = Results engine (IBKR_SETUP)
   } else if(group==='mgmt'){
     if(key==='team') IBKR_MGMT.init(root);
   }
@@ -2171,15 +2283,17 @@ function wireSubtabs(root, group){
   var pane=root.querySelector('.dd-pane[data-dd="'+group+'"]'); if(!pane) return;
   pane.querySelectorAll('.ovt-subtab').forEach(function(btn){ btn.onclick=function(){ showSub(root, pane, group, btn.getAttribute('data-ovst')); }; });
 }
-// Call Prep phase tabs — nested inside Evolution's callprep subpane, wired independently (no charts).
-// Ported from googl.js: phase tabs + estimates toggle + quarter pills + three-minutes copy +
-// cross-quarter theme-tag filter + session-only add-theme.
+// Earnings phase tabs — nested inside Evolution's earnings subpane, wired independently (no charts).
+// Phase tabs (Setup · Watch List · Post-Results) + estimates toggle + quarter pills; the Watch List
+// is the shared engine (js/watchlist.js), mounted below.
 function wireCallPrep(root){
-  var pane=root.querySelector('.ovt-subpane[data-ovst="callprep"]'); if(!pane) return;
+  var pane=root.querySelector('.ovt-subpane[data-ovst="earnings"]'); if(!pane) return;
   pane.querySelectorAll('.cp-phtab').forEach(function(btn){ btn.onclick=function(){
     var key=btn.getAttribute('data-cpp');
     pane.querySelectorAll('.cp-phtab').forEach(function(b){ b.classList.toggle('active', b===btn); });
     pane.querySelectorAll('.cp-phpane').forEach(function(p){ p.hidden=(p.getAttribute('data-cpp')!==key); });
+    cpApplyPhaseQuarters(pane, key);   // Post-Results hides the upcoming quarter + jumps to the latest reported
+    if(key==='setup') requestAnimationFrame(cpBuildSetupChart);   // rebuild the Setup chart when it becomes visible
   }; });
   // Setup estimates toggle: Consensus ⇄ Summit ⇄ Both (CSS-driven via data-ev on the wrap)
   pane.querySelectorAll('.cp-ev-pill').forEach(function(btn){ btn.onclick=function(){
@@ -2187,14 +2301,25 @@ function wireCallPrep(root){
     pane.querySelectorAll('.cp-ev-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
     pane.querySelectorAll('.cp-evwrap').forEach(function(w){ w.setAttribute('data-ev', v); });
   }; });
+  // Growth lens toggle: YoY ⇄ QoQ ⇄ Off (CSS-driven via data-g on the wrap)
+  pane.querySelectorAll('.cp-gseg [data-cpg]').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-cpg'), seg=btn.parentNode;
+    seg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    pane.querySelectorAll('.cp-evwrap').forEach(function(w){ w.setAttribute('data-g', v); });
+  }; });
+  // The print (ce-fz) toggles — verdict filter (data-f) · vs Street/Summit (data-ev) · YoY/QoQ (data-g),
+  // each scoped to its own ce-fz block so quarters are independent.
+  pane.querySelectorAll('.ce-fz').forEach(function(fz){
+    fz.querySelectorAll('[data-vdf]').forEach(function(b){ b.onclick=function(){ fz.querySelectorAll('[data-vdf]').forEach(function(x){ x.classList.toggle('active', x===b); }); fz.setAttribute('data-f', b.getAttribute('data-vdf')); }; });
+    fz.querySelectorAll('[data-fzev]').forEach(function(b){ b.onclick=function(){ fz.querySelectorAll('[data-fzev]').forEach(function(x){ x.classList.toggle('active', x===b); }); fz.setAttribute('data-ev', b.getAttribute('data-fzev')); }; });
+    fz.querySelectorAll('[data-fzg]').forEach(function(b){ b.onclick=function(){ fz.querySelectorAll('[data-fzg]').forEach(function(x){ x.classList.toggle('active', x===b); }); fz.setAttribute('data-g', b.getAttribute('data-fzg')); }; });
+  });
   // Quarter selector: one Call Prep, many quarters — only the selected quarter's blocks render.
   pane.querySelectorAll('.cp-qpill').forEach(function(btn){ btn.onclick=function(){
-    var qk=btn.getAttribute('data-cpqsel');
-    pane.querySelectorAll('.cp-qpill').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    pane.querySelectorAll('.cp-qblock').forEach(function(blk){ blk.hidden=(blk.getAttribute('data-cpq')!==qk); });
-    pane.querySelectorAll('.cp-wl-tag').forEach(function(b){ b.classList.remove('active'); });
-    var flat=pane.querySelector('.cp-wl-all'); if(flat) flat.hidden=true;
+    cpSelectQuarter(pane, btn.getAttribute('data-cpqsel'));
   }; });
+  // initial phase is Setup — apply phase-aware quarter visibility so state is consistent from the start.
+  cpApplyPhaseQuarters(pane, 'setup');
   // Three minutes: copy the spoken version out of the dashboard (the one thing that leaves)
   pane.querySelectorAll('.cp-3m-copy').forEach(function(btn){ btn.onclick=function(){
     var qk=btn.getAttribute('data-cp3m');
@@ -2207,56 +2332,12 @@ function wireCallPrep(root){
     else { var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
            try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta); done(); }
   }; });
-  // Watch List: theme-tag filter (cross-quarter) + add-theme (session-only)
-  var wpane=pane.querySelector('.cp-phpane[data-cpp="watch"]');
-  if(wpane){
-    var flat=wpane.querySelector('.cp-wl-all');
-    function activeTags(){ return Array.prototype.map.call(wpane.querySelectorAll('.cp-wl-tag.active'), function(b){ return b.getAttribute('data-wltag'); }).filter(Boolean); }
-    function applyTags(){
-      var tags=activeTags();
-      var on=tags.length>0;
-      wpane.querySelectorAll('.cp-qblock').forEach(function(blk){ if(on) blk.hidden=true; });
-      if(!on){
-        var act=pane.querySelector('.cp-qpill.active'); var qk=act?act.getAttribute('data-cpqsel'):null;
-        wpane.querySelectorAll('.cp-qblock').forEach(function(blk){ blk.hidden=(qk!=null && blk.getAttribute('data-cpq')!==qk); });
-      }
-      if(flat){ flat.hidden=!on;
-        if(on) flat.querySelectorAll('.cp-w').forEach(function(card){
-          var ct=(card.getAttribute('data-wltags')||'').split(/\s+/);
-          var hit=tags.some(function(t){ return ct.indexOf(t)>=0; });
-          if(hit) card.removeAttribute('data-wlhide'); else card.setAttribute('data-wlhide','1');
-        });
-      }
-    }
-    function wireTag(btn){ btn.onclick=function(){
-      if(btn.classList.contains('cp-wl-clear')){ wpane.querySelectorAll('.cp-wl-tag').forEach(function(b){ b.classList.remove('active'); }); }
-      else btn.classList.toggle('active');
-      applyTags();
-    }; }
-    wpane.querySelectorAll('.cp-wl-tag').forEach(wireTag);
-    var addBtn=wpane.querySelector('.cp-wl-add-btn'), form=wpane.querySelector('.cp-wl-addform');
-    if(addBtn&&form){ addBtn.onclick=function(){ form.hidden=!form.hidden; }; }
-    var go=wpane.querySelector('.cp-wl-add-go');
-    if(go&&form){ go.onclick=function(){
-      function val(k){ var el=form.querySelector('[data-wlf="'+k+'"]'); return el?el.value.trim():''; }
-      var metric=val('metric'); if(!metric) return;
-      var tags=val('tags').split(',').map(function(t){ return t.trim().toLowerCase().replace(/\s+/g,'-'); }).filter(Boolean);
-      var act=pane.querySelector('.cp-qpill.active'); var qk=act?act.getAttribute('data-cpqsel'):cpQkey(CALL_PREP.quarters[0].q);
-      var qLbl=act?act.textContent.replace(/upcoming/i,'').trim():CALL_PREP.quarters[0].q;
-      var w={ rank:'+', metric:metric, tags:tags, pista:val('pista')||null, breaks:val('breaks')||null, since:qLbl };
-      var target=wpane.querySelector('.cp-qblock[data-cpq="'+qk+'"] .cp-watch');
-      if(target) target.insertAdjacentHTML('beforeend', cpWatchItem(w, qk, '-add'+Date.now()%100000, null));
-      var flatList=flat?flat.querySelector('.cp-watch'):null;
-      if(flatList) flatList.insertAdjacentHTML('beforeend', cpWatchItem(w, qk, '-addf'+Date.now()%100000, qLbl));
-      tags.forEach(function(t){
-        if(!wpane.querySelector('.cp-wl-tag[data-wltag="'+t+'"]')){
-          var b=document.createElement('button'); b.type='button'; b.className='cp-wl-tag'; b.setAttribute('data-wltag',t); b.textContent='#'+t;
-          var clear=wpane.querySelector('.cp-wl-clear'); clear.parentNode.insertBefore(b, clear); wireTag(b);
-        }
-      });
-      form.querySelectorAll('.cp-wl-in').forEach(function(i){ i.value=''; }); form.hidden=true;
-      applyTags();
-    }; }
+  // ── Watch List: mount the SHARED engine (js/watchlist.js). Persistence + sorting + the
+  // delete rule, scoped by company id/ticker; re-mount is idempotent. ──
+  var wmount=pane.querySelector('.cp-phpane[data-cpp="watch"] [data-wlmount]');
+  if(wmount && _co && _co.id){
+    mountWatchList(wmount, { companyId:_co.id, ticker:_co.ticker, quarters:CALL_PREP.quarters,
+      colors:{ brand:BRAND, brand2:BRAND2, purple:PURPLE, gray:GRAY, red:RED } });
   }
 }
 function buildDD(root, key){ var s=activeSubKey(root,key); if(s) buildSub(root,key,s); }

@@ -94,6 +94,71 @@ export var HS_QUARTERLY = {
   msft:  [14.0, 19.0, 20.0, 22.6, 21.4, 24.2, 34.9, 37.5, 31.9, 41.0],
 };
 
+// ── 2b · CALENDAR-YEAR CAPEX, SPLIT BY QUARTER ────────────────────────────────
+// Same numbers as HS_QUARTERLY, regrouped into calendar years for the stacked
+// view, plus the derivations needed to close a year.
+//
+// 2023 IS ABSENT ON PURPOSE. The corpus has no AMZN/GOOGL/META call before
+// Apr-2024, so three of the four have zero 2023 quarters. Only Microsoft has any
+// (3Q23 $11.2B, 4Q23 $11.5B). A 2023 column would be three empty bars.
+//
+// `d` marks a DERIVED quarter — arithmetic on figures stated on the calls:
+//   AMZN 2Q24 = H1-24 CapEx $30.5B − 1Q24 $14.0B
+//   AMZN 3Q24 = YTD-3Q24 $51.9B − H1 $30.5B  (⚠ the YTD figure is on Amazon's
+//               "capital investments" basis and H1 on "CapEx" — same company,
+//               slightly different wrappers; treat the split as indicative)
+//   AMZN 4Q25 = FY25 ~$125B − YTD-3Q25 $89.9B
+//   META 1Q25 = FY25 (final $70–72B guide, midpoint 71) − stated 2Q–4Q 58.5
+// GOOGL 2Q24 is simply not in the corpus and cannot be derived — Alphabet never
+// stated an FY2024 total on any call we hold. That bar is 3 of 4 quarters and
+// is flagged in the UI rather than silently short.
+export var HS_YEARS = ['2024', '2025', '2026'];
+
+export var HS_YEAR_QTRS = {
+  googl: { '2024': [12.0, null, 13.0, 14.0], '2025': [17.2, 22.4, 24.0, 27.9], '2026': [35.7, 44.9, null, null] },
+  amzn:  { '2024': [14.0, 16.5, 21.4, 26.3], '2025': [24.3, 31.4, 34.2, 35.1], '2026': [43.2, 53.1, null, null] },
+  meta:  { '2024': [6.7,  8.5,  9.2,  14.8], '2025': [12.5, 17.0, 19.4, 22.1], '2026': [19.8, 31.1, null, null] },
+  msft:  { '2024': [14.0, 19.0, 20.0, 22.6], '2025': [21.4, 24.2, 34.9, 37.5], '2026': [31.9, 41.0, null, null] },
+};
+
+// true = that quarter is derived, not stated.
+export var HS_YEAR_DERIVED = {
+  googl: { '2024': [false, false, false, false], '2025': [false, false, false, false], '2026': [false, false, false, false] },
+  amzn:  { '2024': [false, true,  true,  false], '2025': [false, false, false, true ], '2026': [false, false, false, false] },
+  meta:  { '2024': [false, false, false, false], '2025': [true,  false, false, false], '2026': [false, false, false, false] },
+  msft:  { '2024': [false, false, false, false], '2025': [false, false, false, false], '2026': [false, false, false, false] },
+};
+
+// Company-years where a quarter is missing and underivable — the bar understates.
+export var HS_YEAR_PARTIAL = { googl: { '2024': '2Q24 never disclosed on any call in the corpus — this bar is 3 of 4 quarters.' } };
+
+// Full-year guidance range as most recently stated, [lo, hi]; lo === hi for a
+// point guide. null where the company gave no full-year number for that year.
+export var HS_YEAR_GUIDE = {
+  googl: { '2024': null,      '2025': [91, 93],   '2026': [195, 205] },
+  amzn:  { '2024': [75, 75],  '2025': [125, 125], '2026': [220, 220] },
+  meta:  { '2024': [38, 40],  '2025': [70, 72],   '2026': [130, 145] },
+  msft:  { '2024': null,      '2025': null,       '2026': [175, 175] },
+};
+
+// Quarter ramps: one ordinal lightness ramp per company hue, Q1 lightest → Q4
+// darkest. Generated in OKLCH at L = .76/.67/.58/.49 holding each base's chroma
+// and hue, then validated with the data-viz validator in --ordinal mode: all
+// four pass (monotone L, adjacent ΔL ≥ .06, light end ≥ 2:1 on white).
+//
+// WHY A RAMP PER COMPANY AND NOT ONE SHARED SET: encoding company (hue) AND
+// quarter (lightness) in a single mark was tested and FAILS — tinting the four
+// hues toward white collapses them into each other (worst normal-vision ΔE 6–14
+// against a floor of 15). So the chart is faceted: one panel per company, where
+// hue carries identity and lightness carries the quarter, and no two companies
+// ever sit adjacent in the same frame.
+export var HS_QTR_RAMP = {
+  amzn:  ['#7bb4fe', '#4996f6', '#2c79d8', '#035eb9'],
+  googl: ['#fe8e66', '#eb6834', '#cb4b0b', '#a33800'],
+  meta:  ['#48cc95', '#1caf7a', '#009163', '#04724e'],
+  msft:  ['#a7a6fe', '#8a83f7', '#7167d8', '#584cba'],
+};
+
 // Why these four series cannot be stacked without adjustment first.
 export var HS_BASIS = [
   { id: 'googl', basis: 'Reported cash CapEx',
@@ -181,14 +246,3 @@ export var HS_DEP_NOTES = [
     body: 'Microsoft Cloud gross margin has fallen every year of the build-out, and management attributes it to "scaling our AI infrastructure" each time. Reading it as the depreciation line is an inference — a real one, but the dollars are never disclosed.' },
 ];
 
-// ── 6 · THE MIGRATING BOTTLENECK ──────────────────────────────────────────────
-export var HS_BOTTLENECK = [
-  { period: '2024', label: 'Chips and the demand signal',
-    quote: 'Microsoft, Jul-24: "we can throttle that investment… if we see differences in demand signal". The framing is still that demand leads and supply adjusts.' },
-  { period: '2025 H1', label: 'Power',
-    quote: 'Jassy, Feb-25: "the world is still constrained on power". Amazon starts reporting gigawatts as a KPI: +3.8 GW over twelve months.' },
-  { period: '2025 H2', label: 'Physical capacity',
-    quote: 'All four say demand exceeds supply. Microsoft reverses its own guide: from "FY26 will grow slower than FY25" to "faster".' },
-  { period: '2026', label: 'Memory and components',
-    quote: 'The driver of the raises is no longer capacity but price: Amazon +$20B, Microsoft ~$25B of the $190B, Meta attributes it explicitly to memory. Alphabet rents third-party capacity as a bridge.' },
-];

@@ -21,8 +21,9 @@
 
 import {
   HS_COMPANIES, HS_VINTAGES, HS_GUIDE, HS_QUARTERLY, HS_BASIS,
-  HS_BACKLOG, HS_BACKLOG_NOTES, HS_ACCOUNTING, HS_BOTTLENECK,
+  HS_BACKLOG, HS_BACKLOG_NOTES, HS_ACCOUNTING,
   HS_DEP_GOOGL, HS_MSFT_CLOUD_GM, HS_DEP_NOTES,
+  HS_YEARS, HS_YEAR_QTRS, HS_YEAR_DERIVED, HS_YEAR_PARTIAL, HS_YEAR_GUIDE, HS_QTR_RAMP,
 } from './hyperscalers-data.js';
 
 function esc(s){ if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -153,6 +154,129 @@ function lineChart(canvasId, series, unit, yTitle){
   });
 }
 
+// ─── Guidance band + forward-year wash ────────────────────────────────────────
+// The equivalent of the Results tab's forward-zone shading: the in-progress year
+// gets a light wash so a part-built bar is never read as a full one, and the
+// company's own full-year guide is drawn as a translucent band across the
+// column. Neutral grey on purpose — a guidance band must never wear a series
+// colour, or it starts impersonating data.
+var guideBand = {
+  id: 'hsGuideBand',
+  beforeDatasetsDraw: function(chart, args, opts){
+    if (!opts || opts.fwdFrom == null) return;
+    var x = chart.scales.x, a = chart.chartArea, ctx = chart.ctx;
+    var left = x.getPixelForTick(opts.fwdFrom) - (x.width / x.ticks.length) / 2;
+    ctx.save();
+    ctx.fillStyle = 'rgba(124,134,148,0.06)';
+    ctx.fillRect(left, a.top, a.right - left, a.bottom - a.top);
+    ctx.restore();
+  },
+  afterDatasetsDraw: function(chart, args, opts){
+    if (!opts || !opts.bands || !opts.bands.length) return;
+    var x = chart.scales.x, y = chart.scales.y, ctx = chart.ctx;
+    var slot = x.width / x.ticks.length;
+    ctx.save();
+    opts.bands.forEach(function(b){
+      var cx = x.getPixelForTick(b.i);
+      var w = slot * 0.74;
+      var yHi = y.getPixelForValue(b.hi), yLo = y.getPixelForValue(b.lo);
+      if (b.hi === b.lo){ yHi -= 1; yLo += 1; }   // point guide → a visible rule
+      ctx.fillStyle = 'rgba(30,39,51,0.10)';
+      ctx.fillRect(cx - w / 2, yHi, w, Math.max(2, yLo - yHi));
+      ctx.strokeStyle = 'rgba(30,39,51,0.55)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(cx - w / 2, yHi + 0.5); ctx.lineTo(cx + w / 2, yHi + 0.5);
+      ctx.moveTo(cx - w / 2, yLo - 0.5); ctx.lineTo(cx + w / 2, yLo - 0.5);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    });
+    ctx.restore();
+  },
+};
+
+// ─── Small multiples: calendar-year CapEx, stacked by quarter ─────────────────
+// One panel per company. Faceted rather than grouped because company×quarter in
+// one frame cannot be coloured safely — see HS_QTR_RAMP for the tested result.
+function yearChart(id, cid){
+  var el = document.getElementById(id);
+  if (!el || !el.offsetParent) return;
+  if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; }
+
+  var ramp = HS_QTR_RAMP[cid];
+  var datasets = [0, 1, 2, 3].map(function(q){
+    return {
+      label: 'Q' + (q + 1),
+      data: HS_YEARS.map(function(y){ return HS_YEAR_QTRS[cid][y][q]; }),
+      backgroundColor: ramp[q],
+      borderColor: '#fff', borderWidth: { top: 2, right: 0, bottom: 0, left: 0 },
+      borderRadius: q === 3 ? { topLeft: 3, topRight: 3 } : 0,
+      stack: 'y',
+    };
+  });
+
+  var bands = HS_YEARS.map(function(y, i){
+    var g = HS_YEAR_GUIDE[cid][y];
+    return g ? { i: i, lo: g[0], hi: g[1] } : null;
+  }).filter(Boolean);
+
+  // The axis must clear the GUIDE, not just the bars. In 2026 the bar is two
+  // quarters tall while the guide is a full year — left to auto-scale, the band
+  // lands off-canvas and the one comparison the chart exists to make disappears.
+  var maxBar = Math.max.apply(null, HS_YEARS.map(function(y){
+    return HS_YEAR_QTRS[cid][y].reduce(function(a, v){ return a + (v || 0); }, 0);
+  }));
+  var maxGuide = bands.reduce(function(m, b){ return Math.max(m, b.hi); }, 0);
+  var headroom = Math.max(maxBar, maxGuide) * 1.08;
+
+  _charts[id] = new Chart(el.getContext('2d'), {
+    type: 'bar',
+    data: { labels: HS_YEARS, datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      layout: { padding: { top: 4 } },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        hsGuideBand: { bands: bands, fwdFrom: HS_YEARS.indexOf('2026') },
+        legend: { position: 'top', align: 'start',
+          labels: { boxWidth: 8, boxHeight: 8, color: '#7C8694',
+                    font: { size: 10, family: 'Inter', weight: '600' }, padding: 9 } },
+        tooltip: {
+          backgroundColor: '#1E2733', padding: 9, cornerRadius: 6,
+          boxWidth: 8, boxHeight: 8,
+          titleFont: { size: 11, family: 'Inter' }, bodyFont: { size: 11, family: 'Inter' },
+          callbacks: {
+            title: function(items){ return co(cid).ticker + ' · ' + items[0].label; },
+            label: function(c){
+              if (c.raw == null) return null;
+              var der = HS_YEAR_DERIVED[cid][c.label][c.datasetIndex];
+              return c.dataset.label + ': $' + c.raw.toFixed(1) + 'B' + (der ? '  (derived)' : '');
+            },
+            footer: function(items){
+              var y = items[0].label;
+              var tot = HS_YEAR_QTRS[cid][y].reduce(function(a, v){ return a + (v || 0); }, 0);
+              var g = HS_YEAR_GUIDE[cid][y];
+              var s = 'Reported to date: $' + tot.toFixed(1) + 'B';
+              if (g) s += '\nGuide: ' + (g[0] === g[1] ? '~$' + g[0] + 'B' : '$' + g[0] + '–' + g[1] + 'B');
+              return s;
+            },
+          },
+        },
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, border: { color: AXIS },
+             ticks: { color: INK_MUTED, font: { size: 10.5, family: 'Inter' } } },
+        y: { stacked: true, beginAtZero: true, suggestedMax: headroom,
+             grid: { color: GRID, drawTicks: false }, border: { display: false },
+             ticks: { color: INK_MUTED, font: { size: 10, family: 'Inter' }, padding: 6, maxTicksLimit: 5,
+                      callback: function(v){ return '$' + v + 'B'; } } },
+      },
+    },
+    plugins: [guideBand],
+  });
+}
+
 // A table view accompanies every chart — required, not decorative: it is the
 // fallback that makes the sub-3:1 series legible and the gaps explicit.
 function table(rows, head, cls){
@@ -219,7 +343,40 @@ function quarterlyBody(){
     return '<li>' + dot(b.id) + '<b>' + co(b.id).ticker + '</b> — <b>' + esc(b.basis) + '.</b> ' + esc(b.note) + '</li>';
   }).join('');
 
+  var panels = HS_COMPANIES.map(function(c){
+    var part = (HS_YEAR_PARTIAL[c.id] || {});
+    var warn = Object.keys(part).length
+      ? '<div class="hs-panel-warn">◍ ' + esc(part[Object.keys(part)[0]]) + '</div>' : '';
+    return '<div class="hs-panel">' +
+      '<div class="hs-panel-h">' + dot(c.id) + '<b>' + c.ticker + '</b>' +
+        '<span class="hs-panel-s">' + esc(c.name) + '</span></div>' +
+      '<div class="hs-panel-c"><canvas id="hs-yr-' + c.id + '"></canvas></div>' + warn +
+    '</div>';
+  }).join('');
+
+  var yrRows = HS_COMPANIES.map(function(c){
+    return [dot(c.id) + c.ticker].concat(HS_YEARS.map(function(y){
+      var qs = HS_YEAR_QTRS[c.id][y];
+      var tot = qs.reduce(function(a, v){ return a + (v || 0); }, 0);
+      var g = HS_YEAR_GUIDE[c.id][y];
+      var gs = g ? (g[0] === g[1] ? '~$' + g[0] + 'B' : '$' + g[0] + '–' + g[1] + 'B') : '—';
+      return '$' + tot.toFixed(1) + 'B <span class="hs-sub">vs ' + gs + '</span>';
+    }));
+  });
+
   return '<p class="hs-lede">What was actually spent. The break is visible: through mid-2025 the four run together and low; after that they fan out.</p>' +
+    sec('Calendar year, split by quarter') +
+    '<div class="hs-card">' +
+      '<div class="hs-chart-head"><span class="hs-chart-t">CapEx per calendar year, stacked by quarter</span>' +
+        '<span class="hs-chart-u">US$B · shaded band = full-year guide</span></div>' +
+      '<div class="hs-panels">' + panels + '</div>' +
+      '<p class="hs-cap"><b>2026 is two quarters in</b> — the washed column holds only 1Q and 2Q actuals, with the guidance range drawn as the dashed band above them. ' +
+      'For closed years the band shows where the final guide sat, so you can see the bar land inside it. ' +
+      '<b>2023 is not shown:</b> no Amazon, Alphabet or Meta call in the corpus predates April 2024, so three of the four would be empty columns. ' +
+      'Four quarters are derived rather than stated (Amazon 2Q24/3Q24/4Q25, Meta 1Q25) — marked in the tooltip and listed in the data file.</p>' +
+      table(yrRows, [''].concat(HS_YEARS)) +
+    '</div>' +
+    sec('Every reported quarter') +
     '<div class="hs-card">' +
       '<div class="hs-chart-head"><span class="hs-chart-t">Reported CapEx by quarter</span>' +
         '<span class="hs-chart-u">US$B · calendar axis</span></div>' +
@@ -343,18 +500,6 @@ function depreciationBody(){
     '<div class="hs-card hs-card--warn"><ul class="hs-src">' + notes + '</ul></div>';
 }
 
-// ─── Tab 6 · Bottleneck ───────────────────────────────────────────────────────
-function bottleneckBody(){
-  var items = HS_BOTTLENECK.map(function(b, i){
-    return '<li class="hs-step"><span class="hs-step-n">' + (i + 1) + '</span>' +
-      '<div><div class="hs-step-h"><span class="hs-step-t">' + esc(b.label) + '</span>' +
-      '<span class="hs-step-p">' + esc(b.period) + '</span></div>' +
-      '<p class="hs-body">' + esc(b.quote) + '</p></div></li>';
-  }).join('');
-  return '<p class="hs-lede">The binding constraint moved three times. It matters because each move changes who captures the margin — and in 2026 the one raising the bill is the memory supplier, not the compute vendor.</p>' +
-    '<div class="hs-card"><ol class="hs-steps">' + items + '</ol></div>';
-}
-
 // ─── Tab registry + shell ─────────────────────────────────────────────────────
 var TABS = [
   { key: 'ladder',  label: 'Guidance Ladder',    body: ladderBody },
@@ -362,7 +507,6 @@ var TABS = [
   { key: 'backlog', label: 'Backlog & Coverage', body: backlogBody },
   { key: 'acct',    label: 'Accounting',         body: accountingBody },
   { key: 'dep',     label: 'Depreciation',       body: depreciationBody },
-  { key: 'neck',    label: 'The Bottleneck',     body: bottleneckBody },
 ];
 
 function html(){
@@ -371,7 +515,7 @@ function html(){
     '<div class="hs-h-sub">Amazon · Alphabet · Meta · Microsoft — every revision dated to the call that made it, 2024–2026</div></div>';
   h += '<div class="hs-tabs">' + TABS.map(function(t, i){
     return '<button type="button" class="hs-tab' + (i === 0 ? ' active' : '') + '" data-ht="' + t.key + '">' +
-      '<span class="hs-tab-n">' + (i + 1) + '</span>' + esc(t.label) + '</button>';
+      esc(t.label) + '</button>';
   }).join('') + '</div>';
   h += '<p class="hs-note"><b>Calendar axis.</b> Sourced entirely from the companies\' own earnings calls; derived figures are labelled. ' +
     'Microsoft\'s fiscal year ends in June, so its "FY26Q2" sits in the January 2026 column — every tooltip states the equivalence.</p>';
@@ -399,6 +543,9 @@ function buildFor(key){
     }), abs ? 'usd' : 'x', abs ? 'Contracted backlog' : 'Coverage');
   } else if (key === 'dep'){
     lineChart('hs-dep', [{ id: 'msft', data: HS_MSFT_CLOUD_GM }], 'pct', 'Gross margin');
+  }
+  if (key === 'qtr'){
+    HS_COMPANIES.forEach(function(c){ yearChart('hs-yr-' + c.id, c.id); });
   }
 }
 

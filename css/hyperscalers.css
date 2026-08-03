@@ -36,6 +36,16 @@
 .hs-note { font: 400 11.5px 'Inter', sans-serif; color: var(--mid); line-height: 1.6;
   background: var(--pale); border-radius: 8px; padding: 10px 13px; margin: 0; }
 
+/* Small multiples — one panel per company */
+.hs-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.hs-panel { border: 1px solid var(--bdr); border-radius: 8px; padding: 11px 12px 8px; background: var(--w); }
+.hs-panel-h { display: flex; align-items: baseline; gap: 4px; margin-bottom: 4px; }
+.hs-panel-h b { font: 700 12px 'Inter', sans-serif; color: var(--navy); }
+.hs-panel-s { font: 400 10.5px 'Inter', sans-serif; color: var(--mu); margin-left: 4px; }
+.hs-panel-c { position: relative; height: 240px; }
+.hs-panel-warn { font: 400 10px 'Inter', sans-serif; color: var(--warn); line-height: 1.5; margin-top: 6px; }
+.hs-sub { color: var(--mu); font-size: 10.5px; }
+
 /* Stat tiles */
 .hs-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
 .hs-stat { background: var(--pale); border-radius: 8px; padding: 12px 14px; }
@@ -100,6 +110,9 @@
 .hs-step-t { font: 700 13px 'Inter', sans-serif; color: var(--navy); letter-spacing: -0.01em; }
 .hs-step-p { font: 600 10px 'Inter', sans-serif; letter-spacing: .04em; text-transform: uppercase; color: var(--mu); }
 
+@media (max-width: 860px) {
+  .hs-panels { grid-template-columns: 1fr; }
+}
 @media (max-width: 720px) {
   .hs-canvas { height: 290px; }
   .hs-tab { padding: 9px 10px; }

@@ -55,7 +55,7 @@ blank** — do not interpolate, and do not promote a single broker's model to "c
 | **Q2 2026** (upcoming) | $1.84B | $169M | $5.31B | — | GB/EBITDA/margin = consensus reported against the guide on 7 May 2026 (**~3 months stale**); revenue = current aggregate (~40 contributors). EPS ~$0.15 (adj.) |
 | Q1 2026 | $1.64B | $130.7M | $4.91B | **rides 241.5M** | Investing.com preview (+13.1% YoY); StockStory ($1.63B, EBITDA, $0.07 GAAP EPS); TIKR (GB + rides) |
 | Q4 2025 | $1.76B | — | *"in line"*, no figure | — | Zacks; corroborated by coverage noting **adjusted** revenue "matched analyst expectations of $1.76 billion". EPS $0.32 (Zacks, normalised) |
-| Q3 2025 | $1.70B | — | — | — | Zacks (−0.85% revenue surprise). EPS $0.30 adj. vs $0.26 |
+| Q3 2025 | $1.70B | **$138.7M** | *"$4.7B"* — too rounded to use | — | Zacks (revenue, −0.85%); earnings-day coverage ("beat the estimate of $138.7 million"). EPS $0.30 adj. vs $0.26 |
 | Q2 2025 | $1.61B | $124.4M | — | — | FactSet (revenue); StockStory (EBITDA, +4.1% beat; adj. EPS $0.28) |
 | Q1 2025 | $1.47B | — | $4.15B | — | LSEG (revenue); StreetAccount (bookings) |
 | Q4 2024 | $1.56B | $103.9M | $4.32B | **rides 218.65M · riders 24.41M** | StockStory (revenue + EBITDA); Zacks (bookings, rides, riders). ⚠ Zacks had revenue at $1.55B |
@@ -66,6 +66,27 @@ blank** — do not interpolate, and do not promote a single broker's model to "c
 ⚠ **The column mixes houses** — Zacks, LSEG, FactSet, StreetAccount, StockStory and TIKR all appear,
 and where two published the same line they disagree by up to ~0.6% (Q4 2024 revenue). **Read a
 surprise inside ±1.5% as noise.**
+
+### Why Gross Bookings and Adj. EBITDA stay ragged (searched Aug 3 2026)
+
+Revenue is nearly complete because every outlet covers it. **The other two are not, and no amount of
+further searching fixes it:**
+
+- **No per-metric figure was ever published** for 1Q24–3Q24 or 1Q25 adj. EBITDA, or for 1Q24–3Q24 /
+  2Q25 / 4Q25 gross bookings. Most coverage of those prints carried revenue and EPS only.
+- **3Q25 gross bookings exists only as a rounded "$4.7 billion."** Against a $4,780.4M print that
+  puts the surprise anywhere between **+0.6% and +2.8%** — straddling our own ±1.5% noise floor. A
+  point estimate here would be a fabrication dressed as data, so the cell is blank.
+- **1Q24 revenue**: same problem, a rounded "beat by 10%".
+
+**The fix is a Bloomberg or FactSet consensus export for LYFT** — it would fill every cell at once
+and on a single basis. That is a request for San, not more web research.
+
+**⚠ But note what is NOT missing.** Lyft **guides both of these lines every quarter**, so the
+guidance band is complete across all ten periods in `js/results-data/lyft.js`. The two metrics with
+the thinnest Street coverage are the two that always have a company bar — and on this name the guide
+is arguably the better bar, since the Street largely takes it (1Q26: guide midpoint $4,930M against a
+$4,910M Street, a 0.4% gap).
 
 ### The regime change the record exposes
 

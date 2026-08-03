@@ -37,13 +37,33 @@
 //               2Q26 $1,840M — current aggregate (~40 contributors). ⚠ A 31 Jul 2026 preview
 //                      framed revenue as "+14% YoY", implying ~$1,810M — a ~2% spread.
 //
-//             ADJ. EBITDA: 4Q24 $103.9M · 2Q25 $124.4M · 1Q26 $130.7M (all StockStory);
-//               2Q26 $169M (the consensus reported against the guide on 7 May 2026 — ~3 months
-//               stale, but the only published bar). No figure was found for 3Q24, 1Q25, 3Q25
-//               or 4Q25.
+//             ADJ. EBITDA: 4Q24 $103.9M · 2Q25 $124.4M · 1Q26 $130.7M (StockStory) ·
+//               3Q25 $138.7M (earnings-day coverage: the $138.9M print "beat the estimate of
+//               $138.7 million") · 2Q26 $169M (the consensus reported against the guide on
+//               7 May 2026 — ~3 months stale, but the only published bar).
 //
 //             GROSS BOOKINGS: 4Q24 $4,320M (Zacks) · 1Q25 $4,150M (StreetAccount) ·
 //               1Q26 $4,910M (TIKR) · 2Q26 $5,310M.
+//
+// ⚠ WHY THESE TWO ROWS ARE STILL RAGGED, AND WHAT WOULD FIX IT — searched Aug 3 2026 and
+// deliberately NOT filled:
+//   • 1Q24–3Q24 and 1Q25 adj. EBITDA, and 1Q24–3Q24 / 2Q25 / 4Q25 gross bookings: no house
+//     published a per-metric figure in any accessible coverage of those prints. Most outlets
+//     covered only revenue and EPS. Nothing to compile.
+//   • 3Q25 gross bookings: coverage says the $4,780.4M print came in above "the $4.7 billion
+//     the Street was expecting" — rounded to $0.1B. At that precision the true surprise sits
+//     anywhere between +0.6% and +2.8%, straddling this file's own ±1.5% noise floor, so a
+//     point estimate would be a fabrication dressed as data. LEFT NULL ON PURPOSE.
+//   • 1Q24: only a rounded "beat estimates by 10%" was ever published. Same reasoning.
+// THE FIX IS NOT MORE WEB SEARCHING — it is a Bloomberg or FactSet consensus export for LYFT,
+// which would populate every cell at once and on one basis. Until then this column is a
+// best-effort compilation and is labelled as such on screen.
+//
+// ⚠ AND NOTE WHAT IS **NOT** MISSING: Lyft GUIDES both of these lines every single quarter, so
+// `guideLo`/`guideHi` are complete for gross bookings and adjusted EBITDA across all ten periods.
+// The outside bar for exactly the two metrics with the raggedest Street coverage is therefore
+// still fully populated — and it is arguably the better bar, since the Street largely takes the
+// guide anyway (1Q26: guide midpoint $4,930M vs a $4,910M Street, a 0.4% gap).
 //
 //             RIDES / ACTIVE RIDERS: only where a house actually published a count —
 //               rides 4Q24 218.65M (Zacks) and 1Q26 241.5M (TIKR); active riders 4Q24 24.41M
@@ -96,7 +116,7 @@ export var lyftResults = {
           cons:   [null, null, null, 4320, 4150, null, null, null, 4910, 5310],
           guideLo:[3500, 4000, 4000, 4280, 4050, 4410, 4650, 5010, 4860, 5300],
           guideHi:[3600, 4100, 4100, 4350, 4200, 4570, 4800, 5130, 5000, 5430],
-          note: 'The headline volume line, and one of only two Lyft guides. It has landed inside or above the guided range in every quarter here. ⚠ From 3Q25 the series is NOT organic: FREENOW closed 31 Jul 2025 and contributed two months to 3Q25, with TBR Global added in Oct 2025 and Gett’s UK business in May 2026. Lyft has never disclosed the inorganic split, so the reported growth rate from 3Q25 onward mixes acquisition and underlying demand. The 2Q26 guide (+18–21%) is the first full quarter with both FREENOW and Gett.' },
+          note: 'ℹ THE STREET COLUMN IS SPARSE HERE ON PURPOSE — only 4Q24, 1Q25, 1Q26 and the 2Q26 estimate had a per-metric consensus published anywhere; for the rest no house printed a bookings figure, and 3Q25 exists only as a rounded "$4.7 billion", too coarse to state as a point. Use the GUIDANCE BAND instead: Lyft guides this line every quarter, so the guide is complete across all ten periods — and it is the better bar anyway, since the Street largely takes the guide (1Q26: guide midpoint $4,930M vs a $4,910M Street). The headline volume line, and one of only two Lyft guides. It has landed inside or above the guided range in every quarter here. ⚠ From 3Q25 the series is NOT organic: FREENOW closed 31 Jul 2025 and contributed two months to 3Q25, with TBR Global added in Oct 2025 and Gett’s UK business in May 2026. Lyft has never disclosed the inorganic split, so the reported growth rate from 3Q25 onward mixes acquisition and underlying demand. The 2Q26 guide (+18–21%) is the first full quarter with both FREENOW and Gett.' },
         rev: { label: 'Revenue', short: 'Revenue', group: 'Volume', unit: 'usdM',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26'],
           act:    [1277.2, 1435.8, 1522.7, 1550.3, 1450.2, 1588.2, 1685.2, 1592.7, 1650.5, null],
@@ -125,10 +145,10 @@ export var lyftResults = {
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26'],
           act:    [59.4, 102.9, 107.3, 112.8, 106.5, 129.4, 138.9, 154.1, 132.8, null],
           summit: [59.4, 102.9, 107.3, 110.2, 95.9, 134.2, 151.4, 160.8, 136.2, 173.6],
-          cons:   [null, null, null, 103.9, null, 124.4, null, null, 130.7, 169],
+          cons:   [null, null, null, 103.9, null, 124.4, 138.7, null, 130.7, 169],
           guideLo:[50, 95, 90, 100, 90, 115, 125, 135, 120, 160],
           guideHi:[55, 100, 95, 105, 95, 130, 145, 155, 140, 180],
-          note: 'THE LINE THAT CARRIES INFORMATION. Where a Street figure exists, Lyft has beaten it every time — 4Q24 +8.6%, 2Q25 +4.0%, 1Q26 +1.6% — while revenue was missing in those same quarters. That is the shape of this business as the Street models it: profitability under-modelled, revenue over-modelled. ⚠ READ THE SUMMIT LINE WITH CARE HERE: for 1Q24–3Q24 the model’s “estimate” EQUALS the reported figure to the decimal (59.4 / 102.9 / 107.3). That is the model mirroring an actual on a closed guided line, not a perfect forecast — treat a zero surprise on those quarters as no information. The second and last guided line, and the one Lyft manages to. It has printed at or above the top of the guide in almost every quarter. The margin line is the one management is judged on — % of Gross Bookings, climbing from 1.6% to ~3.0%, against a ~$1B Adjusted EBITDA goal for 2027. ⚠ 4Q25 is CLEAN despite the charge: the full $211.6M is added back, so the $154.1M and its 3.0% margin are comparable.' },
+          note: 'THE LINE THAT CARRIES INFORMATION. Where a Street figure exists, Lyft has beaten or met it every time — 4Q24 +8.6%, 2Q25 +4.0%, 3Q25 +0.1%, 1Q26 +1.6% — while revenue was missing in those same quarters. ℹ Five of ten periods carry a Street number; no house published one for 1Q24–3Q24, 1Q25 or 4Q25. The GUIDANCE BAND is complete for all ten, so use it where the Street is blank. That is the shape of this business as the Street models it: profitability under-modelled, revenue over-modelled. ⚠ READ THE SUMMIT LINE WITH CARE HERE: for 1Q24–3Q24 the model’s “estimate” EQUALS the reported figure to the decimal (59.4 / 102.9 / 107.3). That is the model mirroring an actual on a closed guided line, not a perfect forecast — treat a zero surprise on those quarters as no information. The second and last guided line, and the one Lyft manages to. It has printed at or above the top of the guide in almost every quarter. The margin line is the one management is judged on — % of Gross Bookings, climbing from 1.6% to ~3.0%, against a ~$1B Adjusted EBITDA goal for 2027. ⚠ 4Q25 is CLEAN despite the charge: the full $211.6M is added back, so the $154.1M and its 3.0% margin are comparable.' },
         ni: { label: 'Net Income (GAAP)', short: 'Net income', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'net margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26'],
           act:    [-31.5, 5.0, -12.4, 61.7, 2.6, 40.3, 46.1, 2755.1, 14.2, null],

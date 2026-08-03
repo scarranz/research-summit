@@ -2606,18 +2606,35 @@ function ceChip(g){
   var up=g>=0;
   return '<span class="ce-gchip" style="color:'+(up?'#0a8f4c':'#C5221F')+'">'+(up?'+':'−')+Math.abs(g)+'%</span>';
 }
-// Margin lens (EXCEPTION, headline only): Gross profit / Operating income / EBITDA also carry a
-// margin = the metric ÷ revenue, computed per column. Street margin = BBG metric ÷ BBG revenue;
-// Summit margin = Summit metric ÷ Summit revenue (falls back to BBG revenue if Summit has none).
-// Toggled in the estimates bar; lives in the SAME headline cell, never a new box. (§6a-ii.)
+// Margin lens: a metric that is a SHARE of another line carries an extra row = metric ÷ denominator,
+// computed per column (Street ÷ Street, Summit ÷ Summit, print ÷ print). Toggled in the estimates
+// bar; lives in the SAME cell, never a new box. (§6a-ii.)
+//
+// ⚠ THE MAP IS METRIC → DENOMINATOR, NOT A BOOLEAN, AND THE NAMES ARE PER-COMPANY. Ported from
+// googl.js it read {'Gross profit':1,'Operating income':1,'EBITDA':1} against a hardcoded revenue
+// denominator — and NONE of those keys exist on LYFT (the metric here is "Adjusted EBITDA"). Every
+// cell therefore evaluated to no-margin, so the Margin button toggled an attribute with nothing to
+// reveal and looked broken. It was.
+//
+// The denominator is also wrong for this company by default: Lyft is judged on % of GROSS BOOKINGS,
+// which is what management guides and what the 2027 target is set in. Revenue-based margins are not
+// a number Lyft ever quotes.
+var CE_MARGIN_ON={ 'Adjusted EBITDA':'Gross Bookings', 'Free cash flow':'Gross Bookings' };
 
-// Margin lens (EXCEPTION, headline only): Gross profit / Operating income / EBITDA also carry a
-// margin = the metric ÷ revenue, computed per column. Street margin = BBG metric ÷ BBG revenue;
-// Summit margin = Summit metric ÷ Summit revenue (falls back to BBG revenue if Summit has none).
-// Toggled in the estimates bar; lives in the SAME headline cell, never a new box. (§6a-ii.)
-var CE_MARGIN_ON={'Gross profit':1,'Operating income':1,'EBITDA':1};
+// The denominator's own CE_CONS row, by name.
+function ceMarginBase(name){
+  if(!name) return null;
+  return CE_CONS.m.filter(function(x){ return x.k===name; })[0]||null;
+}
 
-function ceMarginPct(v, rev){ return (v==null||rev==null||!rev)?null:Math.round((v/rev*100)*10)/10; }
+// Lyft's margins live around 2–3%, where one decimal hides everything interesting (a 14bp move
+// disappears). Use two decimals below 10% and one above it, so the same helper serves a 3% adjusted
+// EBITDA margin and a 30% gross margin without lying about either.
+function ceMarginPct(v, base){
+  if(v==null||base==null||!base) return null;
+  var p=v/base*100;
+  return Math.abs(p)<10 ? Math.round(p*100)/100 : Math.round(p*10)/10;
+}
 
 function ceMChip(p){ return p==null?'':'<span class="ce-mm">'+p+'% mgn</span>'; }
 // A dedicated margin ROW for a cell (label + value + the base-period margin in parens). Sits on
@@ -2627,9 +2644,11 @@ function ceMChip(p){ return p==null?'':'<span class="ce-mm">'+p+'% mgn</span>'; 
 // A dedicated margin ROW for a cell (label + value + the base-period margin in parens). Sits on
 // its own line so it always fits the box — the old inline chip overflowed (§6a-ii). The base
 // swaps with the growth lens: YoY → same quarter a year ago, QoQ → prior quarter.
-function ceMarginRow(cur, baseYoy, baseQoq){
+// `lab` names the denominator ("% of bookings"), because "margin" alone would let the reader assume
+// revenue — which for this company would be the wrong number entirely.
+function ceMarginRow(cur, baseYoy, baseQoq, lab){
   if(cur==null) return '';
-  return '<div class="ce-mrow"><span class="ce-mrow-l">margin</span>'+
+  return '<div class="ce-mrow"><span class="ce-mrow-l">'+esc(lab||'margin')+'</span>'+
     '<span class="ce-mrow-v">'+cur+'%'+
       (baseYoy!=null?'<span class="ce-mm-b yoy"> (prev '+baseYoy+'%)</span>':'')+
       (baseQoq!=null?'<span class="ce-mm-b qoq"> (prev '+baseQoq+'%)</span>':'')+
@@ -2643,17 +2662,16 @@ function ceMarginRow(cur, baseYoy, baseQoq){
 function ceGrid(u,which){
   var qi=CE_CONS.q.indexOf(u.q); if(qi<0) return '';
   var st=u.setup||{}, us=st.us||{}, notes=st.notes||{};
-  var revM=CE_CONS.m.filter(function(x){ return x.k==='Revenue'; })[0];
-  var revC=(revM&&revM.qr[qi])?revM.qr[qi][3]:null;      // BBG revenue for the quarter
-  var revS=(us['Revenue']?us['Revenue'].v:null)||revC;   // Summit revenue, else BBG
-  var revQy=revM?revM.qy[qi]:null, revQq=revM?revM.qq[qi]:null;   // revenue actual 1yr / 1q earlier
   var list=CE_CONS.m.map(function(m,i){ return {m:m,i:i}; })
     .filter(function(x,i){ return (which==='head')?(x.i<CE_CONS.nHead):(x.i>=CE_CONS.nHead); });
   return '<div class="ce-mgrid">'+list.map(function(x){
     var m=x.m, c=m.qr[qi]?m.qr[qi][3]:null;
     var note=notes[m.k], q=note?ceQ('setnote-'+ceQkey(u.q)+'-'+x.i, note.t, note.h):'';
     var uv=us[m.k];
-    var mgn=CE_MARGIN_ON[m.k];
+    // The denominator this metric is a share OF, resolved by name from CE_CONS itself.
+    var dName=CE_MARGIN_ON[m.k], dM=ceMarginBase(dName);
+    var dC=(dM&&dM.qr[qi])?dM.qr[qi][3]:null;                     // the outside expectation's own base
+    var dU=(dM&&us[dName]&&us[dName].v!=null)?us[dName].v:dC;     // Summit's base, else the outside one
     // THREE named expectation rows, never blended (Rule H). Lyft guides only two lines and the
     // Street covers a different four, so a single row would have to silently switch basis between
     // metrics. A row is dropped only when that expectation does not exist for this metric in ANY
@@ -2674,8 +2692,12 @@ function ceGrid(u,which){
       rows+='<div class="ce-val ce-val-cons"><span class="ce-val-lab">Outside</span>'+
         '<span class="ce-empty">—</span><span class="ce-nocons" title="Lyft does not guide this line and no published Street estimate exists for it — the Summit model is the only forward number we have">no est.</span></div>';
     rows+=row('Summit', uv?uv.v:null, 'ce-val-us');
-    // margin row uses whichever outside expectation the engine scores against (see qb).
-    var mRow=mgn?ceMarginRow(ceMarginPct(c,revC), ceMarginPct(m.qy[qi],revQy), ceMarginPct(m.qq[qi],revQq)):'';
+    // Margin row: the OUTSIDE expectation's implied share, against the same share in the base
+    // periods. Each side divides by its own denominator so the ratio is never mixed-basis.
+    var mRow=dM?ceMarginRow(ceMarginPct(c,dC),
+                            ceMarginPct(m.qy[qi], dM.qy[qi]),
+                            ceMarginPct(m.qq[qi], dM.qq[qi]),
+                            '% of '+(dName==='Gross Bookings'?'bookings':dName.toLowerCase())):'';
     return '<div class="ce-mcell'+(which==='cust'?' cust':'')+(m.t==='basis'?' flagged':'')+'">'+
       '<div class="ce-mcell-k">'+esc(m.k)+q+'</div>'+
       '<div class="ce-mcell-v">'+rows+mRow+'</div></div>';
@@ -2901,10 +2923,6 @@ function cePrintBlock(qLabel, r, us){
   var qi=CE_CONS.q.indexOf(qLabel); if(qi<0) return '';
   r=r||{}; us=us||{};
   var notes=r.notes||{}, watch=r.watch||{};
-  // Revenue for the quarter — the margin denominator (§6a-vi). Street, Summit, and the print.
-  var revM=CE_CONS.m.filter(function(x){ return x.k==='Revenue'; })[0];
-  var revC=(revM&&revM.qr[qi])?revM.qr[qi][3]:null, revA=revM?revM.qa[qi]:null;
-  var revS=(us['Revenue']&&us['Revenue'].v!=null)?us['Revenue'].v:revC;   // Summit revenue, else BBG
   var tiles=CE_CONS.m.map(function(m){
     var c=m.qr[qi]?m.qr[qi][3]:null, a=m.qa[qi];
     var uexp=(us[m.k]&&us[m.k].v!=null)?us[m.k].v:null;   // Summit's FROZEN expectation for this line
@@ -2928,24 +2946,27 @@ function cePrintBlock(qLabel, r, us){
     var surpTag=function(s){ if(s==null) return '';
       var mag=isRate ? (Math.round(Math.abs(s)*100)/100)+' pts' : (Math.round(Math.abs(s)*10)/10)+'%';
       return '<span class="ce-fz-d '+(s>=0?'up':'dn')+'">'+(s>=0?'+':'−')+mag+'</span>'; };
-    // MARGIN (GP/OpInc/EBITDA only) — toggled, and it is EXPECTED-vs-REALIZED, not YoY/QoQ. Expected
-    // = the margin IMPLIED by the estimate (estimate's metric ÷ estimate's revenue, same estimate on
-    // both sides): Street = c/revC, Summit = uexp/revS. Realized = the print's own (a/revA). We show
-    // the gap in pts. Basis caveat (see the ? pop-up): the Street's forward revenue runs below the
-    // print, so the Street-implied margin sits above realized by construction — the Δ is partly that.
-    var mgnOn=CE_MARGIN_ON[m.k], mReal=mgnOn?ceMarginPct(a,revA):null;
-    var mExpC=mgnOn?ceMarginPct(c,revC):null, mExpU=mgnOn?ceMarginPct(uexp,revS):null;
-    var dPts=function(exp){ if(mReal==null||exp==null) return ''; var d=Math.round((mReal-exp)*10)/10;
+    // MARGIN — toggled, and it is EXPECTED-vs-REALIZED, not YoY/QoQ. Expected = the share IMPLIED by
+    // the estimate (the estimate's metric ÷ THAT SAME estimate's denominator, so the ratio is never
+    // mixed-basis). Realized = the print's own. The gap is shown in points.
+    // ⚠ The denominator is per-metric (CE_MARGIN_ON) — for Lyft, Gross Bookings, not revenue.
+    var dName=CE_MARGIN_ON[m.k], dM=ceMarginBase(dName);
+    var dC=(dM&&dM.qr[qi])?dM.qr[qi][3]:null, dA=dM?dM.qa[qi]:null;
+    var dU=(dM&&us[dName]&&us[dName].v!=null)?us[dName].v:dC;
+    var mReal=dM?ceMarginPct(a,dA):null;
+    var mExpC=dM?ceMarginPct(c,dC):null, mExpU=dM?ceMarginPct(uexp,dU):null;
+    var dPts=function(exp){ if(mReal==null||exp==null) return ''; var d=Math.round((mReal-exp)*100)/100;
       return '<span class="ce-fz-mdl '+(d>=0?'up':'dn')+'">'+(d>=0?'+':'−')+Math.abs(d)+' pts</span>'; };
     var mRow='';
-    if(mgnOn&&mReal!=null){
-      mRow='<div class="ce-fz-mrow"><span class="ce-fz-gl">margin</span>'+
+    if(dM&&mReal!=null){
+      mRow='<div class="ce-fz-mrow"><span class="ce-fz-gl">% of '+esc(dName==='Gross Bookings'?'bookings':dName.toLowerCase())+'</span>'+
         '<span class="ce-fz-mexp ce-exp-cons">exp '+(mExpC!=null?mExpC+'%':'—')+dPts(mExpC)+'</span>'+
         '<span class="ce-fz-mexp ce-exp-us">exp '+(mExpU!=null?mExpU+'%':'—')+dPts(mExpU)+'</span>'+
         '<span class="ce-fz-ar">→</span><span class="ce-fz-mreal">'+mReal+'% realized</span>'+
-        ceQ('mgn-'+ceQkey(qLabel)+'-'+ceQkey(m.k),'Margin — expected vs realized',
-          '<p><b>Expected</b> is the margin <i>implied by the estimate</i>: the estimate\'s metric ÷ the estimate\'s own revenue (Street = BBG ÷ BBG, Summit = ours ÷ ours). <b>Realized</b> is the print\'s own margin (actual ÷ actual). This is expectation vs outcome for the quarter — <b>there is no YoY/QoQ on the margin</b>.</p>'+
-          '<p><b>Basis caveat:</b> the Street\'s forward revenue runs materially <i>below</i> the print (FX + gross-vs-net), so the Street-implied margin sits above the realized one by construction. Read the Δ with that offset in mind — part of a negative gap is the revenue basis, not a margin miss.</p>')+
+        ceQ('mgn-'+ceQkey(qLabel)+'-'+ceQkey(m.k),'% of Gross Bookings — expected vs realized',
+          '<p><b>The denominator is Gross Bookings, not revenue.</b> That is the ratio Lyft guides, reports and sets its 2027 target in (~$1B of adjusted EBITDA on ~$25B of bookings). A revenue-based margin would be a number the company never quotes.</p>'+
+          '<p><b>Expected</b> is the share <i>implied by the estimate</i>: that estimate\'s metric ÷ <i>that same estimate\'s</i> bookings, so the ratio is never half-Street and half-print. <b>Realized</b> is the print\'s own. This is expectation vs outcome for the quarter — <b>there is no YoY/QoQ here</b>.</p>'+
+          '<p>⚠ Read the Δ in <b>points, and small ones matter</b>: this line runs at 2–3%, so a 0.2pt gap is a ~7% move in the ratio. It is shown to two decimals for that reason.</p>')+
         '</div>';
     }
     var basis=(m.qb&&m.qb[qi])||null;
@@ -3474,6 +3495,14 @@ function ceApplyPhaseQuarters(pane, phase){
 
 function wireCallEarnings(root){
   var pane=root.querySelector('.ovt-subpane[data-ovst="earnings"]'); if(!pane) return;
+  // ⚠ wireCeTrack owns FOUR controls that nothing else wires: the growth lens (data-ceg), the
+  // Setup margin toggle (data-cemm), and the print block's vs-outside/vs-Summit and margin
+  // toggles (data-fzev / data-fzmm). It was never called — the splice from googl.js brought the
+  // function across but not its call site — so all four rendered as live pills that did nothing.
+  // Called FIRST on purpose: it and this function both touch .ce-qpill and .ce-ev-pill, and these
+  // are `onclick=` assignments, so whichever runs LAST wins. The phase-aware handlers below are
+  // the ones that must win.
+  wireCeTrack(root);
   // Call-summary Expand-all / Collapse-all — toggles only the inner dropdown nodes of THIS summary
   // box, never the always-visible lede or the outer box itself.
   pane.querySelectorAll('.ce-sum-btn').forEach(function(btn){ btn.onclick=function(e){

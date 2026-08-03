@@ -342,7 +342,7 @@ export function resultsHtml(ticker){
 function rsBody(){
   var d = _rs.data;
   var h = '<div class="rs-wrap">';
-  h += '<p class="ov-lede">' + esc(d.intro) + '</p>';
+  if (d.intro) h += '<p class="ov-lede">' + esc(d.intro) + '</p>';
   h += '<div class="rs-toprow"><div class="rs-views">' + Object.keys(d.views).map(function(k){
     return '<button type="button" class="rs-view' + (k === _rs.view ? ' active' : '') + '" data-rsview="' + k + '">' + esc(d.views[k].label) + '</button>';
   }).join('') + '</div>' +
@@ -1431,7 +1431,12 @@ export function initResults(wrap, ticker){
 }
 
 // Called when the Estimate Evolution pane becomes visible.
-export function initResultsEvo(){
+export function initResultsEvo(ticker){
+  // Re-target the shared engine state to THIS ticker's dataset. The Setup/Results charts share _rs,
+  // so _rs.data may be left pointing at a *_SETUP dataset (which has no `evolution`) → empty charts.
+  // Guard on `string` so a requestAnimationFrame timestamp arg is ignored (callers that pass no
+  // ticker keep the old behaviour). Pass the ticker to make the Estimates tab order-independent.
+  if (typeof ticker === 'string'){ var _d = getResultsData(ticker); if (_d && _d.evolution) _rs.data = _d; }
   if (!_rs.data || !_rs.data.evolution) return;
   var wrap = document.getElementById('rsEvoWrap');
   if (!wrap) return;

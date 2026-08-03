@@ -23,6 +23,7 @@ import { amznResults } from './results-data/amzn.js';
 import { amznSetup } from './results-data/amzn-setup.js';
 import { googlResults } from './results-data/googl.js';
 import { googlSetup } from './results-data/googl-setup.js';
+import { uberResults, uberSetup } from './results-data/uber.js';
 import { metaResults } from './results-data/meta.js';
 import { metaSetup } from './results-data/meta-setup.js';
 import { ibkrResults } from './results-data/ibkr.js';
@@ -35,6 +36,8 @@ var RESULTS_DATA = {
   AMZN_SETUP: amznSetup,
   GOOGL: googlResults,
   GOOGL_SETUP: googlSetup,
+  UBER: uberResults,
+  UBER_SETUP: uberSetup,
   META: metaResults,
   META_SETUP: metaSetup,
   IBKR: ibkrResults,
@@ -311,10 +314,13 @@ function rsActGrowthDollar(m, i){
 function rsMarginArr(m, series){
   if (!m.marginOf || m.unit === 'eps') return null;
   var d = rsView().metrics[m.marginOf]; if (!d) return null;
-  var dmap = {};
-  d.periods.forEach(function(p, j){ dmap[p] = d.act[j] != null ? d.act[j] : d.summit[j]; });
+  // Numerator and denominator MUST be the SAME series/vintage: a consensus margin is cons/cons, a
+  // Summit margin is summit/summit, an actual margin is act/act. NEVER mix bases (e.g. a consensus
+  // numerator over Summit revenue) — that is a meaningless hybrid mislabeled as one side. Consensus
+  // and Summit margins stay distinct (see EARNINGS_CONVENTIONS general rule on margins).
+  var dser = d[series] || [];
   return m.periods.map(function(p, i){
-    var num = m[series][i], den = dmap[p];
+    var num = m[series][i], den = dser[i];
     if (num == null || den == null || !den) return null;
     return num / den * 100;
   });
@@ -354,7 +360,7 @@ export function resultsHtml(ticker){
 function rsBody(){
   var d = _rs.data;
   var h = '<div class="rs-wrap">';
-  h += '<p class="ov-lede">' + esc(d.intro) + '</p>';
+  if (d.intro) h += '<p class="ov-lede">' + esc(d.intro) + '</p>';
   h += '<div class="rs-toprow"><div class="rs-views">' + Object.keys(d.views).map(function(k){
     return '<button type="button" class="rs-view' + (k === _rs.view ? ' active' : '') + '" data-rsview="' + k + '">' + esc(d.views[k].label) + '</button>';
   }).join('') + '</div>' +
@@ -1478,7 +1484,12 @@ export function initResults(wrap, ticker){
 }
 
 // Called when the Estimate Evolution pane becomes visible.
-export function initResultsEvo(){
+export function initResultsEvo(ticker){
+  // Re-target the shared engine state to THIS ticker's dataset. The Setup/Results charts share _rs,
+  // so _rs.data may be left pointing at a *_SETUP dataset (which has no `evolution`) → empty charts.
+  // Guard on `string` so a requestAnimationFrame timestamp arg is ignored (callers that pass no
+  // ticker keep the old behaviour). Pass the ticker to make the Estimates tab order-independent.
+  if (typeof ticker === 'string'){ var _d = getResultsData(ticker); if (_d && _d.evolution) _rs.data = _d; }
   if (!_rs.data || !_rs.data.evolution) return;
   var wrap = document.getElementById('rsEvoWrap');
   if (!wrap) return;

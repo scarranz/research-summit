@@ -209,7 +209,119 @@ export var HS_ACCOUNTING = [
     effect: '+', impact: 'Same structure as Blue Owl. Meta: "multiple pathways to generate returns on invested capital".' },
 ];
 
-// ── 5 · THE DEPRECIATION WAVE ─────────────────────────────────────────────────
+// Neutral ordinal ramp used where colour must encode the QUARTER rather than the
+// company (the single all-companies chart, and the cost-stack bars). Validated
+// with --ordinal on white: monotone L, adjacent ΔL ≥ .06, light end 2.13:1.
+// Deliberately NOT any company's hue, so a quarter step never impersonates a firm.
+//
+// WHY: putting company (hue) and quarter (lightness) in one frame was tested twice
+// and fails both ways. White-tinted company ramps collapse the four hues into each
+// other (normal-vision ΔE 6–14 vs a floor of 15); the shipped OKLCH ramps are worse
+// under CVD — AMZN blue vs MSFT violet measure ΔE 0.1–0.3 under deuteranopia at
+// EVERY step. So in the combined chart colour carries the quarter only, and company
+// identity is carried by position plus a coloured ticker label.
+export var HS_NEUTRAL_RAMP = ['#A6B3C2', '#7E8FA2', '#57697D', '#354658'];
+
+// ── 5 · CAPACITY & COST PER GIGAWATT ──────────────────────────────────────────
+// SOURCE: `hyperscalers/Hyperscalers Capex GW.xlsx` (Summit model, sheets AMZN /
+// META / UE / Appendix) — NOT the transcripts. This is the one block on the
+// dashboard that comes from our own build rather than company disclosure, so it
+// is labelled as such throughout.
+//
+// The model works backwards from reported gross PP&E additions: it splits capex
+// into the buckets a data centre actually consists of, applies an intra-year
+// timing adjustment, and divides by a cost-per-GW to infer how much capacity each
+// year of spend bought. Only Amazon and Meta are modelled.
+export var HS_GW_YEARS = ['2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026E', '2027E'];
+
+export var HS_GW_ADDS = {
+  amzn: [0.395,  0.4961, 1.181,  1.7963, 1.8726, 1.5514, 2.442,  3.8784, 6.0315, 7.5394],
+  meta: [0.4119, 0.4449, 0.4453, 0.5488, 0.926,  0.8033, 1.0977, 2.0533, 4.2721, 4.9129],
+};
+
+// The same GW split by which spend bucket funded it: the shell and everything
+// bolted to it, versus the silicon that goes inside.
+export var HS_GW_SPLIT = {
+  amzn: { infra: [0.1242, 0.156, 0.3714, 0.5648, 0.5888, 0.4878, 0.7679, 1.2196, 1.8966, 2.3708],
+          chips: [0.2708, 0.3401, 0.8097, 1.2315, 1.2837, 1.0636, 1.6741, 2.6588, 4.1349, 5.1687] },
+  meta: { infra: [0.1297, 0.1401, 0.1402, 0.1728, 0.2916, 0.253,  0.3456, 0.6466, 1.3452, 1.547 ],
+          chips: [0.2822, 0.3048, 0.3051, 0.376,  0.6344, 0.5504, 0.752,  1.4067, 2.9269, 3.3659] },
+};
+
+// What one gigawatt costs, per the model. The headline: the building is roughly
+// a third, the silicon roughly two-thirds.
+export var HS_GW_COST = {
+  perMW: [
+    { k: 'Electrical',      v: 4.50 },
+    { k: 'Mechanical',      v: 2.75 },
+    { k: 'Interior fit-out', v: 1.75 },
+    { k: 'Building shell',  v: 1.50 },
+    { k: 'Land',            v: 0.1875 },
+  ],
+  infraPerMW: 10.6875,   // US$M per MW
+  infraPerGW: 10.6875,   // US$B per GW (same number, three orders up)
+  totalPerGW: 35.0,      // US$B
+  chipsPerGW: 24.3125,   // US$B
+  gpuUnit: 40000,        // US$ per accelerator
+  chipCount: 607813,     // accelerators per GW at that unit cost
+  racks: 8442,           // 72-GPU racks per GW
+};
+
+// Reference GPU pricing behind the $40k unit assumption (Appendix sheet).
+export var HS_GPU_PRICES = [
+  { m: 'Blackwell B200', a: 'Blackwell', p: '$45–50k', s: '192GB HBM3e' },
+  { m: 'Hopper H200',    a: 'Hopper',    p: '$35–40k', s: '141GB HBM3e' },
+  { m: 'Blackwell B100', a: 'Blackwell', p: '$30–35k', s: 'Entry-level AI' },
+  { m: 'Hopper H100',    a: 'Hopper',    p: '$25–30k', s: '80GB HBM3' },
+];
+
+// Each company's assumed accelerator mix, and what it implies for power draw and
+// silicon cost per GW. Meta's mix is both hungrier per chip and dearer.
+export var HS_CHIP_MIX = {
+  amzn: { rows: [['Trainium', 0.40, 0.70, 11000], ['Inferentia2', 0.35, 0.15, 5500], ['Blackwell H200', 0.25, 0.70, 22000]],
+          wKW: 0.5075, wCost: 11825, costPerGW: 23.30, chipsPerGW: 1970443 },
+  meta: { rows: [['MTIA', 0.15, 0.10, 7000], ['AMD MI300X', 0.325, 0.75, 12500], ['Blackwell H100', 0.525, 0.70, 18000]],
+          wKW: 0.6262, wCost: 14562.5, costPerGW: 23.25, chipsPerGW: 1596806 },
+};
+
+// The bridge the model actually solves: capex ÷ cost-per-GW = GW added.
+export var HS_GW_BRIDGE = {
+  amzn: { gw26: 6.0315, gw27: 7.5394, owned: 1.00, capexPerGW: 33.99, total26: 205, total27: 256.25,
+    split: [['Servers & networking', 167.68, 0.818], ['Heavy equipment', 16.59, 0.0809],
+            ['Other equipment', 10.56, 0.0515], ['Construction in progress', 9.05, 0.0441],
+            ['Land', 1.13, 0.0055]] },
+  meta: { gw26: 4.2721, gw27: 4.9129, owned: 0.4578, capexPerGW: 33.94, total26: 145, total27: 166.75,
+    split: [['Servers & network assets', 99.34, 0.6851], ['Finance lease ROU assets', 20.70, 0.05],
+            ['Construction in progress', 11.74, 0.0809], ['Equipment & other', 8.80, 0.0607],
+            ['Leasehold improvements', 4.05, 0.028], ['Buildings', 0.33, 0.09], ['Land', 0.04, 0.0053]] },
+};
+
+// ⚠ Model QA, surfaced rather than buried: on the Meta split the dollar column
+// and the percentage column disagree on three lines. Servers, equipment,
+// leasehold and CIP all tie to % × $145B, but Land ($37M vs an implied $769M),
+// Buildings ($330M vs an implied $13.1B) and Finance-lease ROU ($20.7B vs an
+// implied $7.3B) do not. The dollars still sum to $145.0B, so the total is
+// intact and only the mix within it is affected.
+export var HS_GW_MODEL_FLAG =
+  'On Meta’s bucket split the dollar and percentage columns disagree on three lines — Land, Buildings and Finance-lease ROU assets. The dollars total $145.0B correctly, so the capex-to-GW bridge holds; only the internal mix is in question. Worth a look before this drives anything downstream.';
+
+// What the companies themselves have said about capacity, in their own words.
+// This is the transcript side of the same question — deliberately kept separate
+// from the model numbers above.
+export var HS_CAPACITY_QUOTES = [
+  { id: 'amzn', when: "Oct '25", q: 'Added more than <b>3.8 GW of power in the past 12 months</b>, more than any other cloud provider — with at least another 1 GW expected in Q4, and a plan to <b>double overall capacity by the end of 2027</b>.' },
+  { id: 'amzn', when: "Feb '26", q: '<b>3.99 GW added over the last 12 months</b> — “twice what we had in 2022, when we were an $80 billion annual run-rate business”. 1.2 GW came in Q4 alone. In 2025 AWS added more data-centre capacity than any other company in the world.' },
+  { id: 'msft', when: "Jul '25", q: 'Stood up <b>more than 2 GW of new capacity over the past 12 months</b>. Every Azure region is now AI-first and supports liquid cooling, which raises fleet fungibility.' },
+  { id: 'msft', when: "Oct '25", q: 'Will <b>increase total AI capacity by over 80% this year</b> and roughly <b>double the total data-centre footprint over the next two years</b>. Fairwater in Wisconsin alone scales to 2 GW.' },
+  { id: 'msft', when: "Jan '26", q: 'Added <b>nearly 1 GW in the quarter alone</b>. Maia 200 comes online at 10+ petaflops FP4 and 30%+ better TCO than the latest hardware already in the fleet.' },
+  { id: 'msft', when: "Jul '26", q: 'Another gigawatt added, still on track to roughly double capacity in two years — and <b>dock-to-live times for new GPUs cut by nearly 50%</b> in the largest regions.' },
+  { id: 'meta', when: "Jan '25", q: 'Expects to bring <b>almost a gigawatt online in 2025</b>, and is building a 2 GW-plus site “so big it would cover a significant part of Manhattan”.' },
+  { id: 'meta', when: "Jul '25", q: 'Prometheus (1 GW+) lands in 2026; <b>Hyperion scales to 5 GW</b> over several years, with more Titan clusters in development.' },
+  { id: 'meta', when: "Apr '26", q: 'Rolling out <b>more than 1 GW of its own custom silicon</b> developed with Broadcom, plus significant AMD volume alongside the new NVIDIA systems.' },
+  { id: 'googl', when: "Oct '24", q: 'The first corporate agreement to buy nuclear power from <b>multiple small modular reactors — up to 500 MW</b> of 24/7 carbon-free power. Google reports the most efficient PUE in the industry but does not disclose GW added.' },
+];
+
+// ── 6 · THE DEPRECIATION WAVE ─────────────────────────────────────────────────
 // Disclosure here is deliberately asymmetric, and that asymmetry IS the finding:
 // only Alphabet quantifies its depreciation line on the calls. Microsoft never
 // gives the dollars but does report the margin the depreciation lands on. Meta

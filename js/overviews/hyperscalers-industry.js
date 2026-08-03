@@ -24,6 +24,8 @@ import {
   HS_BACKLOG, HS_BACKLOG_NOTES, HS_ACCOUNTING,
   HS_DEP_GOOGL, HS_MSFT_CLOUD_GM, HS_DEP_NOTES,
   HS_YEARS, HS_YEAR_QTRS, HS_YEAR_DERIVED, HS_YEAR_PARTIAL, HS_YEAR_GUIDE, HS_QTR_RAMP,
+  HS_NEUTRAL_RAMP, HS_GW_YEARS, HS_GW_ADDS, HS_GW_SPLIT, HS_GW_COST, HS_GPU_PRICES,
+  HS_CHIP_MIX, HS_GW_BRIDGE, HS_GW_MODEL_FLAG, HS_CAPACITY_QUOTES,
 } from './hyperscalers-data.js';
 
 function esc(s){ if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -34,7 +36,7 @@ var LABELS = HS_VINTAGES.map(function(v){ return v.label; });
 var INK_MUTED = '#8A93A0', GRID = '#EEF1F5', AXIS = '#D7DDE4';
 
 // View state that the panes own (which target year, which backlog view).
-var _view = { guideYear: '2026', backView: 'abs' };
+var _view = { guideYear: '2026', backView: 'abs', yearView: 'all' };
 var _charts = {};
 
 // ─── Direct end-of-line labels ────────────────────────────────────────────────
@@ -277,6 +279,123 @@ function yearChart(id, cid){
   });
 }
 
+// ─── All companies in one frame, side by side per year ───────────────────────
+// 12 columns = 3 years × 4 companies. Colour carries the QUARTER only (neutral
+// ramp); the company is carried by position and a coloured ticker under each
+// bar. See HS_NEUTRAL_RAMP for why colour cannot carry both.
+var groupAxis = {
+  id: 'hsGroupAxis',
+  afterDraw: function(chart, args, opts){
+    if (!opts || !opts.cells) return;
+    var x = chart.scales.x, a = chart.chartArea, ctx = chart.ctx;
+    ctx.save();
+    // company ticker + dot beneath each column
+    ctx.textAlign = 'center';
+    opts.cells.forEach(function(cell, i){
+      var cx = x.getPixelForTick(i);
+      ctx.fillStyle = cell.color;
+      ctx.beginPath(); ctx.arc(cx - 15, a.bottom + 16, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#1E2733';
+      ctx.font = '600 10px Inter, sans-serif';
+      ctx.fillText(cell.ticker, cx + 3, a.bottom + 19);
+    });
+    // year band + separators under each group of four
+    var per = opts.cells.length / opts.years.length;
+    opts.years.forEach(function(y, gi){
+      var first = x.getPixelForTick(gi * per), last = x.getPixelForTick(gi * per + per - 1);
+      ctx.fillStyle = '#7C8694';
+      ctx.font = '700 11px Inter, sans-serif';
+      ctx.fillText(y, (first + last) / 2, a.bottom + 38);
+      if (gi > 0){
+        var sep = (x.getPixelForTick(gi * per - 1) + first) / 2;
+        ctx.strokeStyle = '#E7EAEE'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(sep, a.top); ctx.lineTo(sep, a.bottom + 44); ctx.stroke();
+      }
+    });
+    ctx.restore();
+  },
+};
+
+function combinedYearChart(id){
+  var el = document.getElementById(id);
+  if (!el || !el.offsetParent) return;
+  if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; }
+
+  var cells = [];
+  HS_YEARS.forEach(function(y){
+    HS_COMPANIES.forEach(function(c){ cells.push({ cid: c.id, ticker: c.ticker, color: c.color, year: y }); });
+  });
+
+  var datasets = [0, 1, 2, 3].map(function(q){
+    return {
+      label: 'Q' + (q + 1),
+      data: cells.map(function(c){ return HS_YEAR_QTRS[c.cid][c.year][q]; }),
+      backgroundColor: HS_NEUTRAL_RAMP[q],
+      borderColor: '#fff', borderWidth: { top: 1.5, right: 0, bottom: 0, left: 0 },
+      borderRadius: q === 3 ? { topLeft: 3, topRight: 3 } : 0,
+      stack: 'y',
+    };
+  });
+
+  var bands = cells.map(function(c, i){
+    var g = HS_YEAR_GUIDE[c.cid][c.year];
+    return g ? { i: i, lo: g[0], hi: g[1] } : null;
+  }).filter(Boolean);
+
+  // Same rule as the faceted view: the axis has to clear the guide, or the 2026
+  // bands (up to $220B against a two-quarter bar) fall off the top.
+  var maxBar = cells.reduce(function(m, c){
+    return Math.max(m, HS_YEAR_QTRS[c.cid][c.year].reduce(function(a, v){ return a + (v || 0); }, 0));
+  }, 0);
+  var headroom = Math.max(maxBar, bands.reduce(function(m, b){ return Math.max(m, b.hi); }, 0)) * 1.06;
+
+  _charts[id] = new Chart(el.getContext('2d'), {
+    type: 'bar',
+    data: { labels: cells.map(function(){ return ''; }), datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      layout: { padding: { bottom: 42, top: 4 } },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        hsGroupAxis: { cells: cells, years: HS_YEARS },
+        hsGuideBand: { bands: bands, fwdFrom: HS_YEARS.indexOf('2026') * HS_COMPANIES.length },
+        legend: { position: 'top', align: 'start',
+          labels: { boxWidth: 8, boxHeight: 8, color: '#7C8694',
+                    font: { size: 10.5, family: 'Inter', weight: '600' }, padding: 12 } },
+        tooltip: {
+          backgroundColor: '#1E2733', padding: 9, cornerRadius: 6, boxWidth: 8, boxHeight: 8,
+          titleFont: { size: 11, family: 'Inter' }, bodyFont: { size: 11, family: 'Inter' },
+          callbacks: {
+            title: function(items){ var c = cells[items[0].dataIndex]; return c.ticker + ' · ' + c.year; },
+            label: function(c){
+              if (c.raw == null) return null;
+              var cell = cells[c.dataIndex];
+              var der = HS_YEAR_DERIVED[cell.cid][cell.year][c.datasetIndex];
+              return c.dataset.label + ': $' + c.raw.toFixed(1) + 'B' + (der ? '  (derived)' : '');
+            },
+            footer: function(items){
+              var cell = cells[items[0].dataIndex];
+              var tot = HS_YEAR_QTRS[cell.cid][cell.year].reduce(function(a, v){ return a + (v || 0); }, 0);
+              var g = HS_YEAR_GUIDE[cell.cid][cell.year];
+              var s = 'Reported to date: $' + tot.toFixed(1) + 'B';
+              if (g) s += '\nGuide: ' + (g[0] === g[1] ? '~$' + g[0] + 'B' : '$' + g[0] + '–' + g[1] + 'B');
+              return s;
+            },
+          },
+        },
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, border: { color: AXIS }, ticks: { display: false } },
+        y: { stacked: true, beginAtZero: true, suggestedMax: headroom,
+             grid: { color: GRID, drawTicks: false }, border: { display: false },
+             ticks: { color: INK_MUTED, font: { size: 10.5, family: 'Inter' }, padding: 8,
+                      callback: function(v){ return '$' + v + 'B'; } } },
+      },
+    },
+    plugins: [guideBand, groupAxis],
+  });
+}
+
 // A table view accompanies every chart — required, not decorative: it is the
 // fallback that makes the sub-3:1 series legible and the gaps explicit.
 function table(rows, head, cls){
@@ -364,12 +483,22 @@ function quarterlyBody(){
     }));
   });
 
+  var one = _view.yearView === 'all';
+  var body = one
+    ? '<div class="hs-canvas hs-canvas--tall"><canvas id="hs-yr-all"></canvas></div>'
+    : '<div class="hs-panels">' + panels + '</div>';
+
   return '<p class="hs-lede">What was actually spent. The break is visible: through mid-2025 the four run together and low; after that they fan out.</p>' +
     sec('Calendar year, split by quarter') +
     '<div class="hs-card">' +
       '<div class="hs-chart-head"><span class="hs-chart-t">CapEx per calendar year, stacked by quarter</span>' +
         '<span class="hs-chart-u">US$B · shaded band = full-year guide</span></div>' +
-      '<div class="hs-panels">' + panels + '</div>' +
+      '<div class="hs-seg" style="margin-bottom:10px">' +
+        '<button type="button" class="hs-seg-b' + (one ? ' active' : '') + '" data-yv="all">All companies</button>' +
+        '<button type="button" class="hs-seg-b' + (!one ? ' active' : '') + '" data-yv="split">One panel each</button>' +
+      '</div>' +
+      body +
+      (one ? '<p class="hs-cap">In this view colour carries the <b>quarter</b>, not the company — the ticker under each column carries identity. Company hue and quarter shade cannot share one frame: tested both ways, AMZN blue and MSFT violet land at ΔE 0.1–0.3 under deuteranopia at every shade. Switch to “one panel each” to get the company colours back.</p>' : '') +
       '<p class="hs-cap"><b>2026 is two quarters in</b> — the washed column holds only 1Q and 2Q actuals, with the guidance range drawn as the dashed band above them. ' +
       'For closed years the band shows where the final guide sat, so you can see the bar land inside it. ' +
       '<b>2023 is not shown:</b> no Amazon, Alphabet or Meta call in the corpus predates April 2024, so three of the four would be empty columns. ' +
@@ -500,10 +629,162 @@ function depreciationBody(){
     '<div class="hs-card hs-card--warn"><ul class="hs-src">' + notes + '</ul></div>';
 }
 
+// ─── Tab · Capacity & cost per GW ─────────────────────────────────────────────
+// The only block sourced from our own model rather than company disclosure, so
+// every panel says so. Modelled companies are Amazon and Meta only.
+function gwChart(id){
+  var el = document.getElementById(id);
+  if (!el || !el.offsetParent) return;
+  if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; }
+  var fwd = HS_GW_YEARS.indexOf('2026E');
+  _charts[id] = new Chart(el.getContext('2d'), {
+    type: 'bar',
+    data: { labels: HS_GW_YEARS, datasets: ['amzn', 'meta'].map(function(cid){
+      return { label: co(cid).ticker, data: HS_GW_ADDS[cid],
+               backgroundColor: co(cid).color, borderRadius: { topLeft: 3, topRight: 3 } };
+    }) },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        hsGuideBand: { bands: [], fwdFrom: fwd },
+        legend: { position: 'top', align: 'start',
+          labels: { boxWidth: 8, boxHeight: 8, usePointStyle: true, pointStyle: 'circle',
+                    color: '#1E2733', font: { size: 11, family: 'Inter', weight: '600' }, padding: 14 } },
+        tooltip: {
+          backgroundColor: '#1E2733', padding: 9, cornerRadius: 6, boxWidth: 8, boxHeight: 8,
+          titleFont: { size: 11, family: 'Inter' }, bodyFont: { size: 11, family: 'Inter' },
+          callbacks: {
+            label: function(c){
+              var cid = c.dataset.label === 'AMZN' ? 'amzn' : 'meta';
+              var i = c.dataIndex, s = HS_GW_SPLIT[cid];
+              return c.dataset.label + ': ' + c.raw.toFixed(2) + ' GW' +
+                '  (shell ' + s.infra[i].toFixed(2) + ' / silicon ' + s.chips[i].toFixed(2) + ')';
+            },
+          },
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, border: { color: AXIS },
+             ticks: { color: INK_MUTED, font: { size: 10.5, family: 'Inter' } } },
+        y: { beginAtZero: true, grid: { color: GRID, drawTicks: false }, border: { display: false },
+             ticks: { color: INK_MUTED, font: { size: 10.5, family: 'Inter' }, padding: 8,
+                      callback: function(v){ return v + ' GW'; } } },
+      },
+    },
+    plugins: [guideBand],
+  });
+}
+
+function capacityBody(){
+  var C = HS_GW_COST;
+  var shellPct = C.infraPerGW / C.totalPerGW * 100;
+
+  // Cost stack as HTML bars (same idiom as the Payments waterfall) rather than a
+  // chart — five ordered parts of one total read better as a bar than a pie.
+  var maxV = C.perMW[0].v;
+  var stack = C.perMW.map(function(p, i){
+    return '<div class="hs-costrow">' +
+      '<span class="hs-costk">' + esc(p.k) + '</span>' +
+      '<span class="hs-costbar"><span style="width:' + (p.v / maxV * 100) + '%;background:' +
+        HS_NEUTRAL_RAMP[Math.min(i, 3)] + '"></span></span>' +
+      '<span class="hs-costv">$' + p.v.toFixed(p.v < 1 ? 4 : 2) + 'M</span></div>';
+  }).join('');
+
+  var mixRows = ['amzn', 'meta'].map(function(cid){
+    var m = HS_CHIP_MIX[cid];
+    return m.rows.map(function(r, i){
+      return '<tr>' + (i === 0 ? '<td rowspan="' + (m.rows.length + 1) + '" class="hs-w-co">' + dot(cid) + '<b>' + co(cid).ticker + '</b></td>' : '') +
+        '<td>' + esc(r[0]) + '</td><td class="num">' + (r[1] * 100).toFixed(1) + '%</td>' +
+        '<td class="num">' + r[2].toFixed(2) + ' kW</td><td class="num">$' + r[3].toLocaleString() + '</td></tr>';
+    }).join('') +
+    '<tr class="hs-tot"><td><b>Weighted</b></td><td class="num">100%</td>' +
+      '<td class="num"><b>' + m.wKW.toFixed(4) + ' kW</b></td>' +
+      '<td class="num"><b>$' + Math.round(m.wCost).toLocaleString() + '</b></td></tr>';
+  }).join('');
+
+  var bridge = ['amzn', 'meta'].map(function(cid){
+    var b = HS_GW_BRIDGE[cid];
+    var split = b.split.map(function(s){
+      return '<div class="hs-costrow"><span class="hs-costk">' + esc(s[0]) + '</span>' +
+        '<span class="hs-costbar"><span style="width:' + (s[1] / b.total26 * 100) + '%;background:' + co(cid).color + '"></span></span>' +
+        '<span class="hs-costv">$' + s[1].toFixed(1) + 'B</span></div>';
+    }).join('');
+    return '<div class="hs-panel">' +
+      '<div class="hs-panel-h">' + dot(cid) + '<b>' + co(cid).ticker + '</b>' +
+        '<span class="hs-panel-s">' + (b.owned * 100).toFixed(0) + '% owned</span></div>' +
+      '<div class="hs-bridge">' +
+        '<span><b>$' + b.total26 + 'B</b><i>2026 capex</i></span><em>÷</em>' +
+        '<span><b>$' + b.capexPerGW.toFixed(1) + 'B</b><i>per GW</i></span><em>=</em>' +
+        '<span class="hs-bridge-out"><b>' + b.gw26.toFixed(2) + ' GW</b><i>added 2026</i></span>' +
+      '</div>' + split +
+      '<p class="hs-cap">2027: $' + b.total27 + 'B → <b>' + b.gw27.toFixed(2) + ' GW</b></p>' +
+    '</div>';
+  }).join('');
+
+  var quotes = HS_CAPACITY_QUOTES.map(function(q){
+    return '<li>' + dot(q.id) + '<b>' + co(q.id).ticker + '</b> <span class="hs-when">' + esc(q.when) + '</span> · ' + q.q + '</li>';
+  }).join('');
+
+  var gpus = HS_GPU_PRICES.map(function(g){
+    return [esc(g.m), esc(g.a), esc(g.p), esc(g.s)];
+  });
+
+  return '<p class="hs-lede">How much capacity the spend actually buys, and what a gigawatt costs. ' +
+    'Everything in this tab comes from the Summit build (<code>Hyperscalers Capex GW.xlsx</code>), not from company disclosure — it works backwards from reported PP&amp;E additions to infer the GW behind them. Amazon and Meta are the two modelled.</p>' +
+
+    sec('Capacity added per year') +
+    '<div class="hs-card">' +
+      '<div class="hs-chart-head"><span class="hs-chart-t">GW of capacity added</span>' +
+        '<span class="hs-chart-u">gigawatts · 2026–27 modelled</span></div>' +
+      '<div class="hs-canvas"><canvas id="hs-gw"></canvas></div>' +
+      '<p class="hs-cap">Hover for the shell/silicon split of each year. <b>The model checks out against the tape:</b> it puts Amazon at 3.88 GW added in 2025, and on the 4Q25 call Jassy said 3.99 GW over the trailing twelve months — a 3% gap on a number derived entirely from the balance sheet.</p>' +
+    '</div>' +
+
+    sec('What a gigawatt costs') +
+    '<div class="hs-g2">' +
+      '<div class="hs-card">' +
+        '<div class="hs-lbl">Shell and everything bolted to it · per MW</div>' + stack +
+        '<div class="hs-costtot">Total infra ex-silicon <b>$' + C.infraPerMW.toFixed(2) + 'M / MW</b> · <b>$' + C.infraPerGW.toFixed(2) + 'B / GW</b></div>' +
+      '</div>' +
+      '<div class="hs-card">' +
+        '<div class="hs-lbl">The whole gigawatt</div>' +
+        '<div class="hs-splitbar">' +
+          '<span style="width:' + shellPct + '%;background:' + HS_NEUTRAL_RAMP[1] + '">Shell ' + shellPct.toFixed(0) + '%</span>' +
+          '<span style="width:' + (100 - shellPct) + '%;background:' + HS_NEUTRAL_RAMP[3] + '">Silicon ' + (100 - shellPct).toFixed(0) + '%</span>' +
+        '</div>' +
+        '<div class="hs-stats" style="margin-top:12px">' +
+          '<div class="hs-stat"><div class="hs-stat-v">$' + C.totalPerGW.toFixed(0) + 'B</div><div class="hs-stat-l">all-in per GW</div></div>' +
+          '<div class="hs-stat"><div class="hs-stat-v">$' + C.chipsPerGW.toFixed(1) + 'B</div><div class="hs-stat-l">silicon per GW</div></div>' +
+          '<div class="hs-stat"><div class="hs-stat-v">' + (C.chipCount / 1000).toFixed(0) + 'k</div><div class="hs-stat-l">accelerators at $' + (C.gpuUnit / 1000) + 'k each</div></div>' +
+          '<div class="hs-stat"><div class="hs-stat-v">' + C.racks.toLocaleString() + '</div><div class="hs-stat-l">racks of 72</div></div>' +
+        '</div>' +
+        '<p class="hs-cap">The building is roughly a third of the cheque; the silicon is the rest. That ratio is why the depreciation schedule matters so much — two-thirds of a gigawatt runs off on a five-to-six-year clock, not a forty-year one.</p>' +
+      '</div>' +
+    '</div>' +
+
+    sec('Accelerator mix behind the silicon cost') +
+    '<div class="hs-card">' +
+      '<div class="hs-tw"><table class="hs-table"><thead><tr><th></th><th>Part</th><th class="num">Share</th>' +
+        '<th class="num">Draw</th><th class="num">Unit cost</th></tr></thead><tbody>' + mixRows + '</tbody></table></div>' +
+      '<p class="hs-cap">Meta’s assumed mix is both hungrier (0.63 kW vs 0.51 kW per part) and dearer ($14.6k vs $11.8k), which is what Trainium and Inferentia buy Amazon. Both land near $23B of silicon per GW.</p>' +
+      table(gpus, ['Reference GPU', 'Architecture', '2026E price', 'Key spec']) +
+    '</div>' +
+
+    sec('Capex to gigawatts') +
+    '<div class="hs-panels">' + bridge + '</div>' +
+    '<div class="hs-card hs-card--warn"><div class="hs-lbl">Model QA</div><p class="hs-body">' + esc(HS_GW_MODEL_FLAG) + '</p></div>' +
+
+    sec('What they have said about capacity') +
+    '<div class="hs-card"><ul class="hs-src">' + quotes + '</ul>' +
+    '<p class="hs-cap">Google is the outlier: it reports PUE and power deals but has never disclosed gigawatts added, so there is nothing to model it against.</p></div>';
+}
+
 // ─── Tab registry + shell ─────────────────────────────────────────────────────
 var TABS = [
   { key: 'ladder',  label: 'Guidance Ladder',    body: ladderBody },
   { key: 'qtr',     label: 'Quarterly CapEx',    body: quarterlyBody },
+  { key: 'cap',     label: 'Capacity & Cost/GW', body: capacityBody },
   { key: 'backlog', label: 'Backlog & Coverage', body: backlogBody },
   { key: 'acct',    label: 'Accounting',         body: accountingBody },
   { key: 'dep',     label: 'Depreciation',       body: depreciationBody },
@@ -545,7 +826,11 @@ function buildFor(key){
     lineChart('hs-dep', [{ id: 'msft', data: HS_MSFT_CLOUD_GM }], 'pct', 'Gross margin');
   }
   if (key === 'qtr'){
-    HS_COMPANIES.forEach(function(c){ yearChart('hs-yr-' + c.id, c.id); });
+    if (_view.yearView === 'all') combinedYearChart('hs-yr-all');
+    else HS_COMPANIES.forEach(function(c){ yearChart('hs-yr-' + c.id, c.id); });
+  }
+  if (key === 'cap'){
+    gwChart('hs-gw');
   }
 }
 
@@ -575,6 +860,8 @@ function init(){
       if (yr){ _view.guideYear = yr.getAttribute('data-year'); repaint(root, 'ladder', ladderBody); return; }
       var bk = e.target.closest('[data-back]');
       if (bk){ _view.backView = bk.getAttribute('data-back'); repaint(root, 'backlog', backlogBody); return; }
+      var yv = e.target.closest('[data-yv]');
+      if (yv){ _view.yearView = yv.getAttribute('data-yv'); repaint(root, 'qtr', quarterlyBody); return; }
     });
   }
   var active = root.querySelector('.hs-tab.active');

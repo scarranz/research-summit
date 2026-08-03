@@ -696,39 +696,54 @@ function cspLevel(kind, cid){
 function cspLag(){ return cspAnnual() ? 1 : (_view.cspGrowth === 'qoq' ? 1 : 4); }
 function cspGrowthLabel(){ return cspAnnual() ? 'YoY growth' : (_view.cspGrowth === 'qoq' ? 'QoQ growth' : 'YoY growth'); }
 
-function cspSeries(metric, cid){
-  var rev = cspLevel('rev', cid), oi = cspLevel('oi', cid);
-  if (metric === 'rev')    return rev.map(function(v){ return v == null ? null : v / 1000; });
-  if (metric === 'opInc')  return oi.map(function(v){ return v == null ? null : v / 1000; });
-  if (metric === 'margin') return rev.map(function(v, i){
-    return (v == null || oi[i] == null || !v) ? null : oi[i] / v * 100;
-  });
-  var lag = cspLag();
-  return rev.map(function(v, i){
-    var base = i >= lag ? rev[i - lag] : null;
-    return (v == null || base == null || !base) ? null : (v - base) / base * 100;
+// Which underlying level a section is built on. Growth, in either unit, is
+// always growth OF THAT LEVEL, whichever metric the chart happens to show.
+function cspBase(sectionKey){ return sectionKey === 'bot' ? 'oi' : 'rev'; }
+
+// Percentage growth. Returns null across a sign flip — Google Cloud crosses
+// zero in Q1'23 and a percent change from negative to positive means nothing.
+// The dollar view below has no such problem, which is half the reason it exists.
+function cspGrowthPct(kind, cid){
+  var base = cspLevel(kind, cid), lag = cspLag();
+  return base.map(function(v, i){
+    var b = i >= lag ? base[i - lag] : null;
+    return (v == null || b == null || !b || (v < 0) !== (b < 0)) ? null : (v - b) / Math.abs(b) * 100;
   });
 }
 
-// Growth of whichever level a section is showing, for the table's second row.
-function cspGrowthOf(metric, cid){
-  var base = cspLevel(metric === 'opInc' ? 'oi' : 'rev', cid);
-  var lag = cspLag();
+// Dollar change over the same lag, in US$B. Always defined where both endpoints
+// exist, including across a sign flip.
+function cspGrowthDlr(kind, cid){
+  var base = cspLevel(kind, cid), lag = cspLag();
   return base.map(function(v, i){
     var b = i >= lag ? base[i - lag] : null;
-    // a sign flip makes a percentage meaningless — Google Cloud crossing zero
-    return (v == null || b == null || !b || (v < 0) !== (b < 0)) ? null : (v - b) / Math.abs(b) * 100;
+    return (v == null || b == null) ? null : (v - b) / 1000;
   });
+}
+
+function cspSeries(metric, cid, sectionKey){
+  var kind = cspBase(sectionKey);
+  var rev = cspLevel('rev', cid), oi = cspLevel('oi', cid);
+  if (metric === 'rev')     return rev.map(function(v){ return v == null ? null : v / 1000; });
+  if (metric === 'opInc')   return oi.map(function(v){ return v == null ? null : v / 1000; });
+  if (metric === 'margin')  return rev.map(function(v, i){
+    return (v == null || oi[i] == null || !v) ? null : oi[i] / v * 100;
+  });
+  if (metric === 'dgrowth') return cspGrowthDlr(kind, cid);
+  return cspGrowthPct(kind, cid);
 }
 
 // Money/percent formatting. Negatives read as −$1.19B, never $-1.19B — the same
 // convention the Results engine uses, and it matters because Google Cloud is
 // negative for the first thirteen quarters of the series.
-function cspFmt(n, pct){
+// `signed` marks a value that is a CHANGE rather than a level, so it carries an
+// explicit + the way the percentages do — otherwise a dollar delta reads like a
+// balance. Percentages are always signed.
+function cspFmt(n, pct, signed){
   if (n == null) return null;
   if (pct) return (n > 0 ? '+' : '') + n.toFixed(1) + '%';
   var s = '$' + Math.abs(n).toFixed(2) + 'B';
-  return n < 0 ? '−' + s : s;
+  return n < 0 ? '−' + s : (signed && n > 0 ? '+' + s : s);
 }
 
 function cspSt(k){
@@ -815,8 +830,19 @@ function cspBar(canvasId, metric, k){
   var pct = (metric === 'growth' || metric === 'margin');
   var labels = cspLabels().slice(w[0], w[1] + 1);
 
+  // The complementary growth unit, carried into the tooltip so a percentage is
+  // never read without its dollar magnitude and vice versa.
+  var kind = cspBase(k);
+  var alt = null;
+  if (metric === 'growth')  alt = { pct: false, by: {} };
+  if (metric === 'dgrowth') alt = { pct: true,  by: {} };
+  if (alt) CSP_IDS.forEach(function(cid){
+    alt.by[CSP_LABEL[cid]] = (metric === 'growth' ? cspGrowthDlr(kind, cid) : cspGrowthPct(kind, cid))
+      .slice(w[0], w[1] + 1);
+  });
+
   var datasets = CSP_IDS.map(function(cid){
-    var data = cspSeries(metric, cid).slice(w[0], w[1] + 1);
+    var data = cspSeries(metric, cid, k).slice(w[0], w[1] + 1);
     if (!data.some(function(x){ return x != null; })) return null;
     return { label: CSP_LABEL[cid], data: data, backgroundColor: co(cid).color,
              borderRadius: 2, borderSkipped: false, categoryPercentage: 0.78, barPercentage: 0.92 };
@@ -842,7 +868,17 @@ function cspBar(canvasId, metric, k){
           boxWidth: 8, boxHeight: 8, usePointStyle: true,
           titleFont: { size: 11, family: 'Inter' }, bodyFont: { size: 11.5, family: 'Inter' },
           callbacks: {
-            label: function(c){ return c.raw == null ? null : c.dataset.label + ': ' + cspFmt(c.raw, pct); },
+            label: function(c){
+              if (c.raw == null) return null;
+              var delta = (metric === 'growth' || metric === 'dgrowth');
+              var s = c.dataset.label + ': ' + cspFmt(c.raw, pct, delta);
+              if (alt){
+                var other = alt.by[c.dataset.label];
+                var v = other ? other[c.dataIndex] : null;
+                if (v != null) s += '  (' + cspFmt(v, alt.pct, true) + ')';
+              }
+              return s;
+            },
           },
         },
       },
@@ -875,26 +911,36 @@ function cspSection(cfg){
   var pct = (metric === 'growth' || metric === 'margin');
   var w = cspWin(cfg.k), st = cspSt(cfg.k);
   var labels = cspLabels().slice(w[0], w[1] + 1);
+  var kind = cspBase(cfg.k);
 
   var pills = cfg.metrics.map(function(x){
     return '<button type="button" class="hs-seg-b' + (x.k === metric ? ' active' : '') +
       '" data-' + cfg.attr + '="' + x.k + '">' + esc(x.label) + '</button>';
   }).join('');
 
-  // Level row + growth row per company. Growth is of the LEVEL the section
-  // shows, so it stays meaningful whichever metric pill is active.
+  // The table is a stable reference regardless of which metric the chart shows:
+  // per company, the section's base level, then that level's growth in BOTH
+  // units. A percent alone hides magnitude; a dollar alone hides the base.
+  var tint = function(n, asPct){
+    if (n == null) return null;
+    return '<span class="' + (n > 0 ? 'hs-up' : n < 0 ? 'hs-dn' : '') + '">' + cspFmt(n, asPct, true) + '</span>';
+  };
   var rows = [];
   CSP_IDS.forEach(function(cid){
-    var lvl = cspSeries(metric, cid).slice(w[0], w[1] + 1);
-    rows.push([dot(cid) + CSP_LABEL[cid]].concat(lvl.map(function(n){ return cspFmt(n, pct); })));
-    if (metric === 'rev' || metric === 'opInc'){
-      var g = cspGrowthOf(metric, cid).slice(w[0], w[1] + 1);
-      rows.push(['<span class="hs-growthrow">' + esc(cspGrowthLabel()) + '</span>'].concat(
-        g.map(function(n){
-          if (n == null) return null;
-          return '<span class="' + (n > 0 ? 'hs-up' : n < 0 ? 'hs-dn' : '') + '">' + cspFmt(n, true) + '</span>';
-        })));
+    if (metric === 'margin'){
+      var mg = cspSeries('margin', cid, cfg.k).slice(w[0], w[1] + 1);
+      rows.push([dot(cid) + CSP_LABEL[cid] + ' <span class="hs-growthrow">margin</span>']
+        .concat(mg.map(function(n){ return cspFmt(n, true); })));
     }
+    var lvl = cspSeries(kind === 'oi' ? 'opInc' : 'rev', cid, cfg.k).slice(w[0], w[1] + 1);
+    rows.push([(metric === 'margin' ? '<span class="hs-growthrow">' + esc(m.base) + '</span>' : dot(cid) + CSP_LABEL[cid])]
+      .concat(lvl.map(function(n){ return cspFmt(n, false); })));
+    var gp = cspGrowthPct(kind, cid).slice(w[0], w[1] + 1);
+    rows.push(['<span class="hs-growthrow">' + esc(cspGrowthLabel()) + ' %</span>']
+      .concat(gp.map(function(n){ return tint(n, true); })));
+    var gd = cspGrowthDlr(kind, cid).slice(w[0], w[1] + 1);
+    rows.push(['<span class="hs-growthrow">' + esc(cspGrowthLabel()) + ' $</span>']
+      .concat(gd.map(function(n){ return tint(n, false); })));
   });
 
   var zoomed = st.win || st.yr;
@@ -914,20 +960,26 @@ function cspSection(cfg){
 var CSP_TOP = {
   k: 'top', label: 'Top Line', state: 'cspTop', attr: 'csptop', canvas: 'hs-csp-top',
   metrics: [
-    { k: 'rev', label: 'Revenue', title: 'Segment revenue',
+    { k: 'rev', label: 'Revenue', title: 'Segment revenue', base: 'Revenue',
       cap: 'Not a like-for-like: Google Cloud is GCP + Workspace, AWS is pure infrastructure and platform, Intelligent Cloud adds on-prem server products and Enterprise Services to Azure. Microsoft restated its segments in FY2025, so its bars start at Q3\'22. Columns are CALENDAR periods — verified against the FY26Q3 call, which put Jan–Mar 2026 at $34.7B and +30% against the $34,681M and +29.6% here.' },
-    { k: 'growth', label: 'Growth', title: 'Revenue growth',
-      cap: 'The one basis-independent view, and the cleanest read of the period: Google Cloud accelerating past 80% while AWS troughs at 17% and recovers to 37%, with Intelligent Cloud steady in the twenties and thirties.' },
+    { k: 'growth', label: 'Growth %', title: 'Revenue growth', base: 'Revenue',
+      cap: 'The basis-independent view, and the cleanest read of the period: Google Cloud accelerating past 80% while AWS troughs at 17% and recovers to 37%, with Intelligent Cloud steady in the twenties and thirties. Hover for the dollar change behind each percentage — a rate off a small base is not the same event as the same rate off a large one.' },
+    { k: 'dgrowth', label: 'Growth $', title: 'Revenue growth in dollars', base: 'Revenue',
+      cap: 'The same growth in dollars, which reorders the picture entirely: Alphabet’s 82% is the fastest rate but AWS still adds the most absolute revenue in most periods. This is the view that says who is actually taking the market.' },
   ],
 };
 
 var CSP_BOT = {
   k: 'bot', label: 'Bottom Line', state: 'cspBot', attr: 'cspbot', canvas: 'hs-csp-bot',
   metrics: [
-    { k: 'opInc', label: 'Operating income', title: 'Segment operating income',
+    { k: 'opInc', label: 'Operating income', title: 'Segment operating income', base: 'Operating income',
       cap: 'The line that makes the CapEx argument. Google Cloud was <b>losing $1.7B a quarter in 2020</b> and did not turn profitable until Q1\'23; it now earns $8.8B. AWS is still the largest in absolute dollars, but the gap has narrowed from $8.5B a quarter to $7.8B.' },
-    { k: 'margin', label: 'Operating margin', title: 'Segment operating margin',
+    { k: 'margin', label: 'Operating margin', title: 'Segment operating margin', base: 'Operating income',
       cap: 'Segment operating income over segment revenue. Google Cloud’s climb out of deeply negative territory to 35.6% is the standout. AWS peaked at 39.5% in Q1\'25, gave back six points as AI depreciation began landing, and has recovered to 39.4%. Intelligent Cloud has held a 40–43% band throughout.' },
+    { k: 'growth', label: 'Growth %', title: 'Operating income growth', base: 'Operating income',
+      cap: 'Growth of segment operating income. Blank wherever the base crosses zero — Google Cloud goes from loss to profit in Q1\'23 and a percent change through zero means nothing. Use the dollar view for those periods; hover for the dollar change behind each percentage.' },
+    { k: 'dgrowth', label: 'Growth $', title: 'Operating income growth in dollars', base: 'Operating income',
+      cap: 'The dollar change in segment operating income, which stays defined through the sign flip the percentage view cannot handle. Google Cloud added roughly $3.5B of quarterly operating income year-on-year by Q2\'26 — from a base that was negative six years earlier.' },
   ],
 };
 

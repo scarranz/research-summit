@@ -346,25 +346,33 @@ export var HS_DEP_GOOGL = {
 export var HS_MSFT_CLOUD_GM = [72, null, 71, null, 69, 68, 68, 67, 66, 65];
 
 // ── 5b · THE CLOUD SEGMENTS (CSPs) ────────────────────────────────────────────
-// SOURCE: quarterly segment financials supplied by SAB (Q4'19 → Q4'25), extended
-// with the two most recent quarters where the figure was stated in dollars on
-// the call. This block does NOT use the 10-quarter call axis the rest of the
-// dashboard runs on — it has its own 27-quarter history, which is the point:
-// the cloud segments have a pre-AI past worth seeing.
+// SOURCE: quarterly segment financials supplied by SAB — a complete Q4'19 → Q2'26
+// run of revenue and operating income for Google Cloud, AWS and Intelligent
+// Cloud. Nothing here is derived; every cell is as reported.
 //
-// ⚠ CORRECTION vs the first build of this tab: Microsoft is INTELLIGENT CLOUD,
-// the reported segment, not "Microsoft Cloud". Microsoft Cloud is a non-GAAP
-// cross-segment revenue metric (Azure + M365 commercial + Dynamics + LinkedIn
-// commercial) that carries a large SaaS book and has no segment operating
-// income. Intelligent Cloud is the reportable segment — Azure plus server
-// products and Enterprise Services — and it DOES have a disclosed operating
-// income. Microsoft's segments were restated in FY2025, so the series here is
-// on the restated ("post-FY2024") basis and starts at Q3'22.
+// This block runs on its OWN 27-quarter axis, not the 10-quarter call axis the
+// rest of the dashboard uses, because the segments have a pre-AI history that
+// matters — Google Cloud lost money every quarter until 1Q23.
+//
+// ⚠ MICROSOFT IS INTELLIGENT CLOUD, NOT "MICROSOFT CLOUD". Microsoft Cloud is a
+// non-GAAP cross-segment revenue metric (Azure + M365 commercial + Dynamics +
+// LinkedIn commercial) with no segment operating income. Intelligent Cloud is
+// the reportable segment — Azure plus server products and Enterprise Services —
+// and it does disclose operating income. Segments were restated in FY2025, so
+// the series is on the restated basis and starts at Q3'22.
+//
+// ✓ CALENDAR ALIGNMENT VERIFIED (SAB asked). Microsoft's fiscal year ends in
+// June, so the check that matters is whether these columns are calendar or
+// fiscal. Q1'26 reads 34,681; Microsoft's FY26Q3 call — the quarter covering
+// Jan–Mar 2026, i.e. calendar Q1'26 — stated "Revenue was $34.7 billion and
+// grew 30%", and 34,681/26,751 computes to +29.6%. Level and growth both tie,
+// so the columns are CALENDAR quarters. The other two tie as well: Google Cloud
+// Q1'26 +63.4% against a stated "up 63% to $20 billion", Q2'26 +81.8% against
+// "up 82% to $24.8 billion"; AWS Q2'26 +36.8% against a stated 36.7%.
 //
 // Still not a like-for-like across the three: Google Cloud is GCP + Workspace,
 // AWS is pure infrastructure and platform, Intelligent Cloud adds on-prem
-// server products and Enterprise Services to Azure. Closer than before, but
-// read the slopes.
+// server products and Enterprise Services to Azure. Read the slopes.
 export var HS_CSP_QTRS = [
   "Q4'19", "Q1'20", "Q2'20", "Q3'20", "Q4'20", "Q1'21", "Q2'21", "Q3'21", "Q4'21",
   "Q1'22", "Q2'22", "Q3'22", "Q4'22", "Q1'23", "Q2'23", "Q3'23", "Q4'23",
@@ -372,46 +380,38 @@ export var HS_CSP_QTRS = [
   "Q1'26", "Q2'26",
 ];
 
-// US$M. null = not reported on this basis / not yet in the dataset.
+// US$M as reported. null = not reported on the restated basis.
 export var HS_CSP_REV = {
   googl: [2614, 2777, 3007, 3444, 3831, 4047, 4628, 4990, 5541, 5821, 6276, 6868, 7315,
           7454, 8031, 8411, 9192, 9574, 10347, 11353, 11955, 12260, 13624, 15157, 17664,
-          20000, 24800],
+          20028, 24768],
   amzn:  [9954, 10219, 10808, 11601, 12742, 13503, 14809, 16110, 17780, 18441, 19739, 20538, 21378,
           21354, 22140, 23059, 24204, 25037, 26281, 27452, 28786, 29267, 30873, 33006, 35579,
-          null, 42203],
+          37587, 42232],
   msft:  [null, null, null, null, null, null, null, null, null, null, null, 16885, 17926,
           18244, 19889, 20013, 21525, 22141, 23785, 24092, 25544, 26751, 29878, 30897, 32907,
-          34700, null],
+          34681, 39306],
 };
 
 export var HS_CSP_OI = {
   googl: [-1194, -1730, -1426, -1208, -1243, -974, -591, -644, -890, -706, -590, -440, -186,
           191, 395, 266, 864, 900, 1172, 1947, 2093, 2177, 2826, 3594, 5313,
-          6600, 8800],
+          6598, 8814],
   amzn:  [2596, 3075, 3357, 3535, 3564, 4163, 4193, 4883, 5293, 6518, 5715, 5403, 5205,
           5123, 5365, 6976, 7167, 9421, 9334, 10447, 10632, 11547, 10160, 11434, 12465,
-          14200, 16600],
+          14161, 16621],
   msft:  [null, null, null, null, null, null, null, null, null, null, null, 6750, 6727,
           7017, 7917, 8908, 9555, 9515, 9835, 10503, 10851, 11095, 12140, 13391, 13873,
-          null, null],
+          13753, 15955],
 };
 
-// Which of the appended Q1'26 / Q2'26 points are derived rather than stated.
-// AWS Q2'26 revenue is the stated 36.7% growth applied to Q2'25; AWS gives an
-// annualised run rate, never a quarterly revenue figure, so there is no direct
-// print to use. Everything before Q1'26 comes from SAB's dataset.
-// The margin at that quarter inherits the derivation, since it divides by it.
-export var HS_CSP_DERIVED = { amzn: { rev: [26], opMargin: [26] } };
-
 export var HS_CSP_NOTES = [
-  'Google Cloud lost money every quarter until 1Q23 — <b>$1.7B of operating loss in a single quarter in 2020</b>. It now earns $8.8B a quarter. That swing, not the revenue line, is the reason Alphabet can defend its CapEx most easily of the three.',
-  'Google Cloud operating margin went from <b>9.0% to 35.6%</b> in nine quarters while revenue growth <i>accelerated</i> from 28% to 82%. Expanding margin and accelerating growth together is rare.',
-  'AWS margin peaked at a record <b>39.5% in 1Q25</b> then fell to 32.9% the next quarter — roughly half seasonal stock comp, the rest depreciation on the AI fleet. Growth troughed at 17% in mid-2025 and reached 36.7% by 2Q26.',
-  'Intelligent Cloud is the steadiest of the three: margin has sat in a <b>39–43%</b> band for three years while revenue roughly doubled. It also carries on-prem server products and Enterprise Services, so it is not a pure cloud read.',
-  'On absolute operating dollars AWS is still ahead — but Google Cloud has closed the quarterly gap from <b>$8.5B in 1Q24 to $7.8B in 2Q26</b> while growing off a base a third the size. AWS’s Q2’26 margin looks like a jump to 39%, but it divides by a derived revenue figure and should be treated as indicative until Amazon prints the quarter.',
+  'Google Cloud lost money every quarter until 1Q23 — <b>$1.7B of operating loss in a single quarter of 2020</b>. It now earns $8.8B. That swing, not the revenue line, is the strongest CapEx defence any of the three has.',
+  'Google Cloud margin went from <b>9.4% to 35.6%</b> over nine quarters while revenue growth <i>accelerated</i> from 28% to 82%. Expanding margin and accelerating growth at once is rare.',
+  'AWS margin peaked at a record <b>39.5% in 1Q25</b>, fell to 32.9% the next quarter — roughly half seasonal stock comp, the rest depreciation on the AI fleet — and has since recovered to 39.4%. Growth troughed at 17% in mid-2025 and reached 36.8% by Q2\'26.',
+  'Intelligent Cloud is the steadiest: margin has held a <b>40–43%</b> band for three years while revenue doubled. Note Q1\'26 — revenue grew 30% but operating income <i>fell</i> sequentially, the first quarter that has happened in this dataset.',
+  'On absolute dollars AWS is still ahead, but Google Cloud has closed the quarterly operating-income gap from <b>$8.5B in Q1\'24 to $7.8B in Q2\'26</b> while growing off a base a third the size.',
 ];
-
 
 // ── 6b · THE MODELLED DEPRECIATION TRAJECTORY ─────────────────────────────────
 // From the CapEx/D&A tabs inside the live DCFs (`CapEx D&A DCFs.xlsx`). PP&E

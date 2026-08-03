@@ -2863,6 +2863,13 @@ function ceAnnualBody(){
 
 function ceSetupWrap(){ return document.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phpane[data-cep="setup"] .rs-wrap'); }
 
+// ⚠ THIS LINE WAS MISSING AND IT THREW. `gBuildCeAnnual` was CALLED (on every return to the Setup
+// phase tab) but never defined — an uncaught ReferenceError in the console, and, worse, the Setup
+// chart never built at all: resultsHtml('LYFT_SETUP') emitted the markup and nothing ever
+// initialised the engine against it. googl.js and amzn.js both carry this one-liner; the splice
+// dropped it. Chart.js needs a visible container, so it is (re)built on visibility, not once.
+function gBuildCeAnnual(){ var w=ceSetupWrap(); if(w) initResults(w, 'LYFT_SETUP'); }
+
 function wireCeAnnual(root){ /* the engine self-wires via initResults->wireResults; the chart builds on Setup visibility (gBuildCeAnnual). */ }
 
 function ceWatchBody(c){
@@ -4110,7 +4117,14 @@ function buildSub(root, group, key){
     else if(key==='margins')  buildLyMargins();   // live Massive margins
     // suppliers, insurance: no charts (insurance's sf-pill is wired globally in init)
   } else if(group==='evolution'){
-    if(key==='guidance')      buildModelTab();      // Model vs. Reality lives under Guidance
+    // Earnings ▸ Setup carries its own Results-engine instance (LYFT_SETUP). Build it when the
+    // sub-tab becomes visible AND Setup is the live phase — a build against a hidden container
+    // yields a zero-size canvas. Same guard as amzn.js/googl.js.
+    if(key==='earnings'){
+      var ph=root.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phtab.active');
+      if(!ph || ph.getAttribute('data-cep')==='setup') requestAnimationFrame(gBuildCeAnnual);
+    }
+    else if(key==='guidance') buildModelTab();      // Model vs. Reality lives under Guidance
     else if(key==='track'){                          // Results — the shared engine (js/results.js)
       var w=root.querySelector('.ovt-subpane[data-ovst="track"] .rs-wrap');
       if(w) initResults(w, 'LYFT');
@@ -4118,7 +4132,7 @@ function buildSub(root, group, key){
     else if(key==='estevo'){                         // Estimate Evolution — binds to #rsEvoWrap
       if(root.querySelector('#rsEvoWrap')) initResultsEvo();
     }
-    // earnings (calls), estimates, strategy, timeline: no lazy charts
+    // strategy, timeline: no lazy charts
   } else if(group==='valuation'){
     if(key==='multiples')     LYFT_VAL.init(root);
     else if(key==='balance')  buildLyBal();     // insurance-reserve coverage bar

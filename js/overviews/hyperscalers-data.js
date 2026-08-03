@@ -340,10 +340,11 @@ export var HS_DEP_GOOGL = {
   forward: 'For 2026 Alphabet expects the growth rate to "accelerate in Q1 and meaningfully increase for the full year" — no figure given.',
 };
 
-// Microsoft — never gives the depreciation dollars, but reports the gross margin
-// the spend lands on every quarter. ACTUALS only (guides excluded so the series
-// stays one kind of number); null = no absolute figure stated that quarter.
-export var HS_MSFT_CLOUD_GM = [72, null, 71, null, 69, 68, 68, 67, 66, 65];
+// (The Microsoft Cloud gross-margin series that used to sit here was removed per
+// SAB — it charted a non-GAAP cross-segment metric alongside the reported
+// segments below, which invited exactly the comparison it should not support.
+// Recoverable from git if the AI-cost read is wanted again: 72 → 65 over the ten
+// call quarters, which management attributed to scaling AI infrastructure.)
 
 // ── 5b · THE CLOUD SEGMENTS (CSPs) ────────────────────────────────────────────
 // SOURCE: quarterly segment financials supplied by SAB — a complete Q4'19 → Q2'26

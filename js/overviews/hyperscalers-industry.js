@@ -22,7 +22,7 @@
 import {
   HS_COMPANIES, HS_VINTAGES, HS_GUIDE, HS_QUARTERLY, HS_BASIS,
   HS_BACKLOG, HS_BACKLOG_NOTES,
-  HS_DEP_GOOGL, HS_MSFT_CLOUD_GM, HS_DEP_NOTES,
+  HS_DEP_GOOGL, HS_DEP_NOTES,
   HS_YEARS, HS_YEAR_QTRS, HS_YEAR_DERIVED, HS_YEAR_PARTIAL, HS_YEAR_GUIDE, HS_QTR_RAMP,
   HS_NEUTRAL_RAMP, HS_GW_YEARS, HS_GW_ADDS, HS_GW_SPLIT, HS_GW_COST, HS_GPU_PRICES,
   HS_CHIP_MIX, HS_GW_BRIDGE, HS_GW_MODEL_FLAG, HS_CAPACITY_QUOTES,
@@ -39,7 +39,8 @@ var INK_MUTED = '#8A93A0', GRID = '#EEF1F5', AXIS = '#D7DDE4';
 
 // View state that the panes own (which target year, which backlog view).
 var _view = { guideYear: '2026', backView: 'abs', yearView: 'all',
-              cspRange: 'all', cspTop: 'rev', cspBot: 'opInc' };
+              cspPeriod: 'q', cspGrowth: 'yoy', cspTop: 'rev', cspBot: 'opInc',
+              cspZoom: null };
 var _charts = {};
 
 // ─── Direct end-of-line labels ────────────────────────────────────────────────
@@ -649,70 +650,184 @@ function depreciationBody(){
 }
 
 // ─── Tab · CSPs — the cloud segments themselves ───────────────────────────────
-// Laid out like the Results tab: sections STACKED rather than toggled, one for
-// Top Line and one for Bottom Line, each with its own US$/% pill row, a bar
-// chart, and the transposed table underneath. Runs on its own 27-quarter axis
-// (Q4'19 → Q2'26) because these segments have a pre-AI history worth seeing.
-// Growth and margin are computed from revenue and operating income rather than
-// stored, so the views can never disagree with each other.
+// Laid out like the Results tab: sections STACKED rather than toggled — Top Line
+// and Bottom Line — each with its own metric pills, a grouped bar chart, and a
+// transposed table underneath carrying both the level and its growth.
+//
+// Controls, also mirroring Results: quarterly/annual periodicity, YoY/QoQ growth
+// basis, quick-range presets, and drag-to-zoom on BOTH axes (drag across the
+// plot to window periods, drag on the y-axis strip to set the value range,
+// double-click to reset). Growth and margin are computed from revenue and
+// operating income rather than stored, so no view can disagree with another.
 var CSP_LABEL = { googl: 'Google Cloud', amzn: 'AWS', msft: 'Intelligent Cloud' };
 var CSP_IDS = ['googl', 'amzn', 'msft'];
 
-// Quick ranges anchored to the latest quarter, same idea as the Results tab's
-// presets. The full run is 27 quarters, which is legible as bars but dense.
+// Complete calendar years only. Q4'19 stands alone and 2026 has two quarters, so
+// neither forms a year; Microsoft's restated series starts Q3'22, so its 2022 is
+// short and comes through as null rather than a misleading part-year.
+var CSP_YEARS = ['2020', '2021', '2022', '2023', '2024', '2025'];
+
 var CSP_RANGES = [
-  { k: 'all', label: 'Full history', n: 27 },
+  { k: 'all', label: 'Full history', n: 0 },
   { k: '3y',  label: '3 years',      n: 12 },
   { k: '2y',  label: '8 quarters',   n: 8 },
 ];
 
+function cspAnnual(){ return _view.cspPeriod === 'a'; }
+function cspLabels(){ return cspAnnual() ? CSP_YEARS : HS_CSP_QTRS; }
+
+// Raw level series for the active periodicity. Annual sums require all four
+// quarters — a missing one yields null for the year, never a partial total.
+function cspLevel(kind, cid){
+  var src = kind === 'rev' ? HS_CSP_REV[cid] : HS_CSP_OI[cid];
+  if (!cspAnnual()) return src.slice();
+  return CSP_YEARS.map(function(y){
+    var sum = 0;
+    for (var q = 1; q <= 4; q++){
+      var i = HS_CSP_QTRS.indexOf('Q' + q + "'" + y.slice(2));
+      if (i < 0 || src[i] == null) return null;
+      sum += src[i];
+    }
+    return sum;
+  });
+}
+
+// Growth lag: annual is YoY by construction; quarterly follows the toggle.
+function cspLag(){ return cspAnnual() ? 1 : (_view.cspGrowth === 'qoq' ? 1 : 4); }
+function cspGrowthLabel(){ return cspAnnual() ? 'YoY growth' : (_view.cspGrowth === 'qoq' ? 'QoQ growth' : 'YoY growth'); }
+
 function cspSeries(metric, cid){
-  var rev = HS_CSP_REV[cid], oi = HS_CSP_OI[cid];
+  var rev = cspLevel('rev', cid), oi = cspLevel('oi', cid);
   if (metric === 'rev')    return rev.map(function(v){ return v == null ? null : v / 1000; });
   if (metric === 'opInc')  return oi.map(function(v){ return v == null ? null : v / 1000; });
   if (metric === 'margin') return rev.map(function(v, i){
     return (v == null || oi[i] == null || !v) ? null : oi[i] / v * 100;
   });
-  return rev.map(function(v, i){          // YoY growth, four quarters back
-    var base = i >= 4 ? rev[i - 4] : null;
+  var lag = cspLag();
+  return rev.map(function(v, i){
+    var base = i >= lag ? rev[i - lag] : null;
     return (v == null || base == null || !base) ? null : (v - base) / base * 100;
   });
 }
 
-// Money/percent formatting for the CSP views. Negatives read as −$1.19B, never
-// $-1.19B — the same convention the Results engine uses. Matters here because
-// Google Cloud is negative for the first thirteen quarters of the series.
+// Growth of whichever level a section is showing, for the table's second row.
+function cspGrowthOf(metric, cid){
+  var base = cspLevel(metric === 'opInc' ? 'oi' : 'rev', cid);
+  var lag = cspLag();
+  return base.map(function(v, i){
+    var b = i >= lag ? base[i - lag] : null;
+    // a sign flip makes a percentage meaningless — Google Cloud crossing zero
+    return (v == null || b == null || !b || (v < 0) !== (b < 0)) ? null : (v - b) / Math.abs(b) * 100;
+  });
+}
+
+// Money/percent formatting. Negatives read as −$1.19B, never $-1.19B — the same
+// convention the Results engine uses, and it matters because Google Cloud is
+// negative for the first thirteen quarters of the series.
 function cspFmt(n, pct){
   if (n == null) return null;
-  if (pct) return n.toFixed(1) + '%';
+  if (pct) return (n > 0 ? '+' : '') + n.toFixed(1) + '%';
   var s = '$' + Math.abs(n).toFixed(2) + 'B';
   return n < 0 ? '−' + s : s;
 }
 
-function cspWindow(){
-  var r = CSP_RANGES.filter(function(x){ return x.k === _view.cspRange; })[0] || CSP_RANGES[0];
-  return Math.max(0, HS_CSP_QTRS.length - r.n);
+function cspSt(k){
+  if (!_view.cspZoom) _view.cspZoom = {};
+  if (!_view.cspZoom[k]) _view.cspZoom[k] = { win: null, yr: null };
+  return _view.cspZoom[k];
 }
 
-// Grouped bar chart. Three companies side by side per quarter; colour carries
-// the company, which is safe here because only three of the validated four are
-// on screen and no second dimension competes for the channel.
-function cspBar(canvasId, metric){
+// Visible index window: an explicit brush/preset window if set, else everything.
+function cspWin(k){
+  var n = cspLabels().length, st = cspSt(k);
+  if (st.win) return [Math.max(0, st.win[0]), Math.min(n - 1, st.win[1])];
+  return [0, n - 1];
+}
+
+// ─── Drag-to-zoom, both axes ──────────────────────────────────────────────────
+// Lifted from the Results engine's brush so the interaction is identical: drag
+// across the plot to window periods, drag starting on the y-axis strip to set
+// the value range, double-click to reset. A translucent box tracks the drag.
+function cspBrush(el, chart, onX, onY, onReset){
+  var wrap = el.parentElement;
+  if (wrap && getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
+  el.style.cursor = 'crosshair';
+  el.onmousedown = function(ev){
+    if (ev.button !== 0) return;
+    var r0 = el.getBoundingClientRect(), w0 = wrap.getBoundingClientRect();
+    var area = chart.chartArea;
+    var vertical = (ev.clientX - r0.left) < area.left;
+    var startX = ev.clientX, startY = ev.clientY;
+    var box = document.createElement('div');
+    box.className = 'hs-brush';
+    if (vertical){
+      box.style.left = (r0.left - w0.left + area.left) + 'px';
+      box.style.width = (area.right - area.left) + 'px';
+    } else {
+      box.style.top = (r0.top - w0.top) + 'px';
+      box.style.height = r0.height + 'px';
+    }
+    wrap.appendChild(box);
+    function place(cx, cy){
+      if (vertical){
+        var a = Math.min(startY, cy), b = Math.max(startY, cy);
+        box.style.top = (a - w0.top) + 'px';
+        box.style.height = (b - a) + 'px';
+      } else {
+        var a2 = Math.min(startX, cx), b2 = Math.max(startX, cx);
+        box.style.left = (a2 - w0.left) + 'px';
+        box.style.width = (b2 - a2) + 'px';
+      }
+    }
+    place(ev.clientX, ev.clientY);
+    function onMove(e2){ place(e2.clientX, e2.clientY); }
+    function onUp(e2){
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      box.remove();
+      if (vertical){
+        if (Math.abs(e2.clientY - startY) < 8) return;
+        var v1 = chart.scales.y.getValueForPixel(Math.min(startY, e2.clientY) - r0.top);
+        var v2 = chart.scales.y.getValueForPixel(Math.max(startY, e2.clientY) - r0.top);
+        onY(Math.min(v1, v2), Math.max(v1, v2));
+      } else {
+        if (Math.abs(e2.clientX - startX) < 8) return;
+        var idxAt = function(clientX){
+          var v = chart.scales.x.getValueForPixel(clientX - r0.left);
+          return Math.max(0, Math.min(chart.data.labels.length - 1, Math.round(v)));
+        };
+        var a = idxAt(startX), b = idxAt(e2.clientX);
+        if (a !== b) onX(Math.min(a, b), Math.max(a, b));
+      }
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    ev.preventDefault();
+  };
+  el.ondblclick = onReset;
+}
+
+function cspBar(canvasId, metric, k){
   var el = document.getElementById(canvasId);
   if (!el || !el.offsetParent) return;
   if (_charts[canvasId]) { _charts[canvasId].destroy(); delete _charts[canvasId]; }
-  var from = cspWindow();
+  var w = cspWin(k), st = cspSt(k);
   var pct = (metric === 'growth' || metric === 'margin');
-  var labels = HS_CSP_QTRS.slice(from);
+  var labels = cspLabels().slice(w[0], w[1] + 1);
 
   var datasets = CSP_IDS.map(function(cid){
-    var data = cspSeries(metric, cid).slice(from);
+    var data = cspSeries(metric, cid).slice(w[0], w[1] + 1);
     if (!data.some(function(x){ return x != null; })) return null;
     return { label: CSP_LABEL[cid], data: data, backgroundColor: co(cid).color,
              borderRadius: 2, borderSkipped: false, categoryPercentage: 0.78, barPercentage: 0.92 };
   }).filter(Boolean);
 
-  _charts[canvasId] = new Chart(el.getContext('2d'), {
+  var yOpts = { grid: { color: GRID, drawTicks: false }, border: { display: false },
+    ticks: { color: INK_MUTED, font: { size: 10.5, family: 'Inter' }, padding: 8,
+             callback: function(n){ return pct ? n + '%' : '$' + n + 'B'; } } };
+  if (st.yr){ yOpts.min = st.yr[0]; yOpts.max = st.yr[1]; }
+
+  var chart = new Chart(el.getContext('2d'), {
     type: 'bar',
     data: { labels: labels, datasets: datasets },
     options: {
@@ -727,100 +842,133 @@ function cspBar(canvasId, metric){
           boxWidth: 8, boxHeight: 8, usePointStyle: true,
           titleFont: { size: 11, family: 'Inter' }, bodyFont: { size: 11.5, family: 'Inter' },
           callbacks: {
-            label: function(c){
-              if (c.raw == null) return null;
-              return c.dataset.label + ': ' + cspFmt(c.raw, pct);
-            },
+            label: function(c){ return c.raw == null ? null : c.dataset.label + ': ' + cspFmt(c.raw, pct); },
           },
         },
       },
       scales: {
-        x: { stacked: false, grid: { display: false }, border: { color: AXIS },
+        x: { grid: { display: false }, border: { color: AXIS },
              ticks: { color: INK_MUTED, font: { size: 9.5, family: 'Inter' },
                       maxRotation: 0, autoSkip: true, maxTicksLimit: 14 } },
-        y: { grid: { color: GRID, drawTicks: false }, border: { display: false },
-             ticks: { color: INK_MUTED, font: { size: 10.5, family: 'Inter' }, padding: 8,
-                      callback: function(n){ return pct ? n + '%' : '$' + n + 'B'; } } },
+        y: yOpts,
       },
     },
   });
+  _charts[canvasId] = chart;
+
+  cspBrush(el, chart,
+    function(a, b){ st.win = [w[0] + a, w[0] + b]; repaintCsp(); },
+    function(v1, v2){ st.yr = [v1, v2]; repaintCsp(); },
+    function(){ st.win = null; st.yr = null; repaintCsp(); });
 }
 
-// One stacked section: pill row, bar chart, caption, transposed table.
+function repaintCsp(){
+  var root = document.querySelector('.hs');
+  if (root) repaint(root, 'csp', cspBody);
+}
+
+// One stacked section: metric pills, chart, caption, then a table carrying both
+// the level and its growth for each company.
 function cspSection(cfg){
   var metric = _view[cfg.state];
   var m = cfg.metrics.filter(function(x){ return x.k === metric; })[0];
   var pct = (metric === 'growth' || metric === 'margin');
-  var from = cspWindow();
+  var w = cspWin(cfg.k), st = cspSt(cfg.k);
+  var labels = cspLabels().slice(w[0], w[1] + 1);
+
   var pills = cfg.metrics.map(function(x){
     return '<button type="button" class="hs-seg-b' + (x.k === metric ? ' active' : '') +
       '" data-' + cfg.attr + '="' + x.k + '">' + esc(x.label) + '</button>';
   }).join('');
 
-  var rows = CSP_IDS.map(function(cid){
-    var d = cspSeries(metric, cid).slice(from);
-    return [dot(cid) + CSP_LABEL[cid]].concat(d.map(function(n){ return cspFmt(n, pct); }));
+  // Level row + growth row per company. Growth is of the LEVEL the section
+  // shows, so it stays meaningful whichever metric pill is active.
+  var rows = [];
+  CSP_IDS.forEach(function(cid){
+    var lvl = cspSeries(metric, cid).slice(w[0], w[1] + 1);
+    rows.push([dot(cid) + CSP_LABEL[cid]].concat(lvl.map(function(n){ return cspFmt(n, pct); })));
+    if (metric === 'rev' || metric === 'opInc'){
+      var g = cspGrowthOf(metric, cid).slice(w[0], w[1] + 1);
+      rows.push(['<span class="hs-growthrow">' + esc(cspGrowthLabel()) + '</span>'].concat(
+        g.map(function(n){
+          if (n == null) return null;
+          return '<span class="' + (n > 0 ? 'hs-up' : n < 0 ? 'hs-dn' : '') + '">' + cspFmt(n, true) + '</span>';
+        })));
+    }
   });
 
+  var zoomed = st.win || st.yr;
   return sec(cfg.label) +
     '<div class="hs-card">' +
       '<div class="hs-chart-head"><span class="hs-chart-t">' + esc(m.title) + '</span>' +
-        '<span class="hs-chart-u">' + (pct ? '%' : 'US$B') + ' · quarterly</span></div>' +
-      '<div class="hs-seg" style="margin-bottom:10px">' + pills + '</div>' +
+        '<span class="hs-chart-u">' + (pct ? '%' : 'US$B') + ' · ' + (cspAnnual() ? 'calendar year' : 'quarterly') + '</span></div>' +
+      '<div class="hs-seg" style="margin-bottom:10px">' + pills +
+        (zoomed ? '<button type="button" class="hs-seg-b hs-reset" data-cspreset="' + cfg.k + '">Reset zoom</button>' : '') +
+      '</div>' +
       '<div class="hs-canvas"><canvas id="' + cfg.canvas + '"></canvas></div>' +
-      '<p class="hs-cap">' + m.cap + '</p>' +
+      '<p class="hs-cap">' + m.cap + ' <span class="hs-hint">Drag across the plot to window periods, drag on the y-axis strip to set the value range, double-click to reset.</span></p>' +
     '</div>' +
-    '<div class="hs-card">' + table(rows, [''].concat(HS_CSP_QTRS.slice(from))) + '</div>';
+    '<div class="hs-card">' + table(rows, [''].concat(labels)) + '</div>';
 }
 
 var CSP_TOP = {
-  label: 'Top Line', state: 'cspTop', attr: 'csptop', canvas: 'hs-csp-top',
+  k: 'top', label: 'Top Line', state: 'cspTop', attr: 'csptop', canvas: 'hs-csp-top',
   metrics: [
     { k: 'rev', label: 'Revenue', title: 'Segment revenue',
-      cap: 'Not a like-for-like: Google Cloud is GCP + Workspace, AWS is pure infrastructure and platform, Intelligent Cloud adds on-prem server products and Enterprise Services to Azure. Microsoft restated its segments in FY2025, so its bars start at Q3\'22. Columns are CALENDAR quarters — verified against the FY26Q3 call, which put Jan–Mar 2026 at $34.7B and +30% against the $34,681M and +29.6% here.' },
-    { k: 'growth', label: 'YoY growth', title: 'Revenue growth',
-      cap: 'Computed from the revenue series, four quarters back. The one basis-independent view, and the cleanest read of the period: Google Cloud accelerating past 80% while AWS troughs at 17% and recovers to 37%, with Intelligent Cloud steady in the twenties and thirties.' },
+      cap: 'Not a like-for-like: Google Cloud is GCP + Workspace, AWS is pure infrastructure and platform, Intelligent Cloud adds on-prem server products and Enterprise Services to Azure. Microsoft restated its segments in FY2025, so its bars start at Q3\'22. Columns are CALENDAR periods — verified against the FY26Q3 call, which put Jan–Mar 2026 at $34.7B and +30% against the $34,681M and +29.6% here.' },
+    { k: 'growth', label: 'Growth', title: 'Revenue growth',
+      cap: 'The one basis-independent view, and the cleanest read of the period: Google Cloud accelerating past 80% while AWS troughs at 17% and recovers to 37%, with Intelligent Cloud steady in the twenties and thirties.' },
   ],
 };
 
 var CSP_BOT = {
-  label: 'Bottom Line', state: 'cspBot', attr: 'cspbot', canvas: 'hs-csp-bot',
+  k: 'bot', label: 'Bottom Line', state: 'cspBot', attr: 'cspbot', canvas: 'hs-csp-bot',
   metrics: [
     { k: 'opInc', label: 'Operating income', title: 'Segment operating income',
       cap: 'The line that makes the CapEx argument. Google Cloud was <b>losing $1.7B a quarter in 2020</b> and did not turn profitable until Q1\'23; it now earns $8.8B. AWS is still the largest in absolute dollars, but the gap has narrowed from $8.5B a quarter to $7.8B.' },
     { k: 'margin', label: 'Operating margin', title: 'Segment operating margin',
-      cap: 'Computed as segment operating income over segment revenue. Google Cloud’s climb out of deeply negative territory to 35.6% is the standout. AWS peaked at 39.5% in Q1\'25, gave back six points as AI depreciation began landing, and has recovered to 39.4%. Intelligent Cloud has held a 40–43% band throughout.' },
+      cap: 'Segment operating income over segment revenue. Google Cloud’s climb out of deeply negative territory to 35.6% is the standout. AWS peaked at 39.5% in Q1\'25, gave back six points as AI depreciation began landing, and has recovered to 39.4%. Intelligent Cloud has held a 40–43% band throughout.' },
   ],
 };
 
 function cspBody(){
-  var ranges = CSP_RANGES.map(function(r){
-    return '<button type="button" class="hs-seg-b' + (r.k === _view.cspRange ? ' active' : '') +
-      '" data-csprange="' + r.k + '">' + esc(r.label) + '</button>';
+  var annual = cspAnnual();
+  var periods = [
+    { k: 'q', label: 'Quarterly' },
+    { k: 'a', label: 'Annual' },
+  ].map(function(p){
+    return '<button type="button" class="hs-seg-b' + (p.k === _view.cspPeriod ? ' active' : '') +
+      '" data-cspperiod="' + p.k + '">' + esc(p.label) + '</button>';
   }).join('');
 
-  return '<p class="hs-lede">The businesses the CapEx is supposed to produce, on their own 27-quarter history back to 2019. ' +
+  var growth = ['yoy', 'qoq'].map(function(g){
+    return '<button type="button" class="hs-seg-b' + (g === _view.cspGrowth ? ' active' : '') +
+      '" data-cspgrowth="' + g + '">' + (g === 'yoy' ? 'YoY' : 'QoQ') + '</button>';
+  }).join('');
+
+  var ranges = CSP_RANGES.map(function(r){
+    return '<button type="button" class="hs-seg-b" data-csprange="' + r.k + '">' + esc(r.label) + '</button>';
+  }).join('');
+
+  return '<p class="hs-lede">The businesses the CapEx is supposed to produce, on their own history back to 2019. ' +
     'Microsoft here is <b>Intelligent Cloud</b>, the reported segment — not the non-GAAP “Microsoft Cloud” metric, which bundles M365 commercial, Dynamics and LinkedIn and carries no segment operating income. ' +
     'All figures as reported; growth and margin computed from them.</p>' +
-    '<div class="hs-seg">' + ranges + '</div>' +
+    '<div class="hs-controls">' +
+      '<div class="hs-seg">' + periods + '</div>' +
+      (annual ? '' : '<div class="hs-seg">' + growth + '</div>') +
+      (annual ? '' : '<div class="hs-seg">' + ranges + '</div>') +
+    '</div>' +
+    (annual ? '<p class="hs-note" style="margin-bottom:14px">Complete calendar years only. Q4’19 stands alone and 2026 has just two quarters, so neither forms a year; Microsoft’s restated series starts Q3’22, so its 2022 is short and shows as blank rather than a misleading part-year.</p>' : '') +
     cspSection(CSP_TOP) +
     cspSection(CSP_BOT) +
     sec('What the segments say') +
     '<div class="hs-card hs-card--warn"><ul class="hs-src">' +
-      HS_CSP_NOTES.map(function(n){ return '<li>' + n + '</li>'; }).join('') + '</ul></div>' +
-    sec('Microsoft Cloud gross margin — a different metric, kept for the AI-cost read') +
-    '<div class="hs-card">' +
-      '<div class="hs-chart-head"><span class="hs-chart-t">Microsoft Cloud gross margin</span>' +
-        '<span class="hs-chart-u">% · call axis, reported actuals only</span></div>' +
-      '<div class="hs-canvas"><canvas id="hs-dep"></canvas></div>' +
-      '<p class="hs-cap">This is the non-GAAP <b>Microsoft Cloud</b> gross margin, not Intelligent Cloud’s operating margin above — a different metric on a different basis, shown on the 10-quarter call axis. It earns its place because management attributes the seven-point slide to “scaling our AI infrastructure” every single quarter, which is the clearest read available on what the AI fleet costs Microsoft. Axis does not start at zero.</p>' +
-    '</div>';
+      HS_CSP_NOTES.map(function(n){ return '<li>' + n + '</li>'; }).join('') + '</ul></div>';
 }
 
 function cspCharts(){
-  cspBar(CSP_TOP.canvas, _view.cspTop);
-  cspBar(CSP_BOT.canvas, _view.cspBot);
-  lineChart('hs-dep', [{ id: 'msft', data: HS_MSFT_CLOUD_GM }], 'pct', 'Gross margin');
+  cspBar(CSP_TOP.canvas, _view.cspTop, CSP_TOP.k);
+  cspBar(CSP_BOT.canvas, _view.cspBot, CSP_BOT.k);
 }
 
 // ─── Tab · Capacity & cost per GW ─────────────────────────────────────────────
@@ -1097,8 +1245,27 @@ function init(){
       if (yr){ _view.guideYear = yr.getAttribute('data-year'); repaint(root, 'ladder', ladderBody); return; }
       var bk = e.target.closest('[data-back]');
       if (bk){ _view.backView = bk.getAttribute('data-back'); repaint(root, 'backlog', backlogBody); return; }
+      // Periodicity and growth basis both invalidate any existing zoom window,
+      // since the index space changes underneath it.
+      var cp = e.target.closest('[data-cspperiod]');
+      if (cp){ _view.cspPeriod = cp.getAttribute('data-cspperiod'); _view.cspZoom = null; repaint(root, 'csp', cspBody); return; }
+      var cg = e.target.closest('[data-cspgrowth]');
+      if (cg){ _view.cspGrowth = cg.getAttribute('data-cspgrowth'); repaint(root, 'csp', cspBody); return; }
+      var crs = e.target.closest('[data-cspreset]');
+      if (crs){ var z = _view.cspZoom && _view.cspZoom[crs.getAttribute('data-cspreset')];
+                if (z){ z.win = null; z.yr = null; } repaint(root, 'csp', cspBody); return; }
       var cr = e.target.closest('[data-csprange]');
-      if (cr){ _view.cspRange = cr.getAttribute('data-csprange'); repaint(root, 'csp', cspBody); return; }
+      if (cr){
+        var key = cr.getAttribute('data-csprange');
+        var n = CSP_RANGES.filter(function(x){ return x.k === key; })[0].n;
+        var total = cspLabels().length;
+        ['top', 'bot'].forEach(function(kk){
+          var st = cspSt(kk);
+          st.win = n ? [Math.max(0, total - n), total - 1] : null;
+          st.yr = null;
+        });
+        repaint(root, 'csp', cspBody); return;
+      }
       var ct = e.target.closest('[data-csptop]');
       if (ct){ _view.cspTop = ct.getAttribute('data-csptop'); repaint(root, 'csp', cspBody); return; }
       var cb = e.target.closest('[data-cspbot]');

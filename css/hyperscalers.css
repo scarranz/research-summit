@@ -94,6 +94,17 @@
 .hs-seg-b:hover { color: var(--navy); }
 .hs-seg-b.active { background: var(--w); color: var(--navy); box-shadow: 0 1px 2px rgba(30,39,51,.12); }
 
+/* Control row + drag-to-zoom selection box (mirrors the Results brush) */
+.hs-controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.hs-brush {
+  position: absolute; background: rgba(37,99,235,0.10);
+  border: 1px solid rgba(37,99,235,0.35); border-radius: 4px;
+  pointer-events: none; z-index: 2;
+}
+.hs-seg-b.hs-reset { color: var(--warn); }
+.hs-hint { color: var(--mu); }
+.hs-growthrow { color: var(--mu); font-size: 10.5px; padding-left: 15px; }
+
 /* Company dot */
 .hs-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
 

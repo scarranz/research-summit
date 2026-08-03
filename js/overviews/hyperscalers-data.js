@@ -232,20 +232,36 @@ export var HS_NEUTRAL_RAMP = ['#A6B3C2', '#7E8FA2', '#57697D', '#354658'];
 // into the buckets a data centre actually consists of, applies an intra-year
 // timing adjustment, and divides by a cost-per-GW to infer how much capacity each
 // year of spend bought. Only Amazon and Meta are modelled.
-export var HS_GW_YEARS = ['2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026E', '2027E'];
+// SOURCE UPGRADE: these now come from `CapEx D&A DCFs.xlsx` — the CapEx/D&A tabs
+// that sit inside the live Amazon, Alphabet and Meta DCFs — rather than the
+// standalone capacity workbook. That swap buys three things: Alphabet (absent
+// from the capacity file entirely), a 2028E column, and the current capex
+// vintage. The DCF has Amazon 2026 at $221.5B, i.e. the raised ~$220B guide;
+// the capacity workbook still carried $205B, the February number.
+//
+// ⚠ The two workbooks therefore disagree, and the DCF is the one to trust:
+//   Amazon 2026  6.52 GW (DCF) vs 6.03 GW (capacity file)
+//   Meta   2025  1.87 GW (DCF) vs 2.05 GW (capacity file)
+// The Meta gap is not a capex difference — both use $69.7B for 2025 — but a
+// different cost-per-GW/split assumption between the two builds. Worth
+// reconciling in the model before either number is quoted externally.
+export var HS_GW_YEARS = ['2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026E', '2027E', '2028E'];
 
 export var HS_GW_ADDS = {
-  amzn: [0.395,  0.4961, 1.181,  1.7963, 1.8726, 1.5514, 2.442,  3.8784, 6.0315, 7.5394],
-  meta: [0.4119, 0.4449, 0.4453, 0.5488, 0.926,  0.8033, 1.0977, 2.0533, 4.2721, 4.9129],
+  amzn:  [0.395,  0.4961, 1.181,  1.7963, 1.8726, 1.5514, 2.442,  3.8784, 6.5157, 8.1446, 10.1808],
+  googl: [0.5247, 0.4915, 0.4651, 0.5143, 0.6572, 0.6732, 1.0965, 1.9087, 4.2553, 5.4271, 6.7839],
+  meta:  [0.3749, 0.4049, 0.4053, 0.4995, 0.8428, 0.7311, 0.999,  1.8687, 3.888,  4.4712, 5.1419],
 };
 
 // The same GW split by which spend bucket funded it: the shell and everything
 // bolted to it, versus the silicon that goes inside.
 export var HS_GW_SPLIT = {
-  amzn: { infra: [0.1242, 0.156, 0.3714, 0.5648, 0.5888, 0.4878, 0.7679, 1.2196, 1.8966, 2.3708],
-          chips: [0.2708, 0.3401, 0.8097, 1.2315, 1.2837, 1.0636, 1.6741, 2.6588, 4.1349, 5.1687] },
-  meta: { infra: [0.1297, 0.1401, 0.1402, 0.1728, 0.2916, 0.253,  0.3456, 0.6466, 1.3452, 1.547 ],
-          chips: [0.2822, 0.3048, 0.3051, 0.376,  0.6344, 0.5504, 0.752,  1.4067, 2.9269, 3.3659] },
+  amzn:  { infra: [0.1242, 0.156,  0.3714, 0.5648, 0.5888, 0.4878, 0.7679, 1.2196, 2.0489, 2.5611, 3.2013],
+           chips: [0.2708, 0.3401, 0.8097, 1.2315, 1.2837, 1.0636, 1.6741, 2.6588, 4.4668, 5.5836, 6.9795] },
+  googl: { infra: [0.1171, 0.1096, 0.1037, 0.1147, 0.1466, 0.1502, 0.2446, 0.4258, 0.9492, 1.2107, 1.5133],
+           chips: [0.4077, 0.3819, 0.3613, 0.3996, 0.5106, 0.523,  0.8519, 1.4829, 3.306,  4.2165, 5.2706] },
+  meta:  { infra: [0.1074, 0.116,  0.1161, 0.1431, 0.2415, 0.2095, 0.2863, 0.5355, 1.1142, 1.2813, 1.4735],
+           chips: [0.2674, 0.2889, 0.2891, 0.3563, 0.6013, 0.5216, 0.7127, 1.3332, 2.7738, 3.1899, 3.6684] },
 };
 
 // What one gigawatt costs, per the model. The headline: the building is roughly
@@ -348,6 +364,55 @@ export var HS_DEP_GOOGL = {
 // the spend lands on every quarter. ACTUALS only (guides excluded so the series
 // stays one kind of number); null = no absolute figure stated that quarter.
 export var HS_MSFT_CLOUD_GM = [72, null, 71, null, 69, 68, 68, 67, 66, 65];
+
+// ── 6b · THE MODELLED DEPRECIATION TRAJECTORY ─────────────────────────────────
+// From the CapEx/D&A tabs inside the live DCFs (`CapEx D&A DCFs.xlsx`). PP&E
+// depreciation only — not total D&A. Microsoft has no tab in this workbook.
+//
+// The 2023-25 column ties to the filings for all three (Alphabet $21,136M for
+// 2025 is exactly the $21.1B Anat gave on the 4Q25 call; Amazon $41,900M and
+// Meta $18,000M both tie to the 10-K), which is the check that makes the
+// forward columns worth reading. Pre-2023 Alphabet diverges from its 10-K line
+// because the model tracks PP&E only while the filed figure carries more, so
+// the series starts at 2023.
+export var HS_DEP_YEARS = ['2023', '2024', '2025', '2026E', '2027E', '2028E'];
+export var HS_DEP_MODEL = {   // US$M
+  amzn:  [30200, 32100, 41900, 61943, 88085, 120771],
+  googl: [11946, 15311, 21136, 31649, 49931, 73953],
+  meta:  [11020, 15290, 18000, 28341, 42479, 58850],
+};
+
+// Alphabet is the only one where the model also carries the P&L pressure ratio.
+export var HS_DEP_COGS = { id: 'googl', years: ['2023', '2024', '2025', '2026E', '2027E', '2028E'],
+  pct: [8.96, 10.47, 13.00, 17.05, 22.27, 27.54] };
+
+// ── 6c · USEFUL-LIFE MAP ──────────────────────────────────────────────────────
+// What each company depreciates over what, and how the assumption has moved.
+// ⚠ THE BUCKETS ARE NOT COMPARABLE. Alphabet's 13-year "technical
+// infrastructure" is a BLENDED life over servers and data-centre together;
+// Amazon's 5.7 years covers servers and networking ALONE, with its buildings on
+// a separate 40-year line. Reading 13 against 5.7 as "Alphabet depreciates
+// slower" is the single easiest mistake to make with this table.
+export var HS_LIVES = {
+  amzn: [
+    { a: 'Servers & networking', now: 5.7,  hist: '4.0 (2018–19) → 4.5 (2020–21) → 5.5 (2022–23) → 6.0 (2024) → 5.7 (2025–28E)' },
+    { a: 'Heavy equipment',      now: 11.5, hist: '10.0 through 2024 → 11.5 (2025–28E)' },
+    { a: 'Other equipment',      now: 6.5,  hist: '5.0 (2018–19) → 6.5 thereafter' },
+    { a: 'Buildings',            now: 40,   hist: 'Unchanged at 40 across the whole history' },
+  ],
+  googl: [
+    { a: 'Technical infrastructure', now: 13,   hist: 'Unchanged at 13 — blended over servers AND data centre' },
+    { a: 'Office space',             now: 23.5, hist: 'Unchanged at 23.5' },
+    { a: 'Corporate & other',        now: 13.5, hist: 'Unchanged at 13.5' },
+  ],
+  meta: [
+    { a: 'Servers & network assets', now: 5.5,  hist: '4.25 (2018–19) → 4.0 (2020) → 4.5 (2021–24) → 5.5 (2025–28E)' },
+    { a: 'Buildings',                now: 27.5, hist: 'Unchanged at 27.5' },
+    { a: 'Leasehold improvements',   now: 11,   hist: 'Unchanged at 11' },
+    { a: 'Equipment & other',        now: 8,    hist: '3.0 (2018–19) → 8.0 thereafter' },
+    { a: 'Finance lease ROU',        now: 9,    hist: 'Unchanged at 9' },
+  ],
+};
 
 export var HS_DEP_NOTES = [
   { id: 'meta', head: 'Direction only, no figure',

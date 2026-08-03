@@ -110,8 +110,11 @@
 .hs-up { color: var(--green); font-weight: 600; }
 .hs-dn { color: var(--red); font-weight: 600; }
 
-/* Accounting table wraps rather than scrolls — the impact column is prose */
+/* Accounting / useful-life tables wrap rather than scroll — prose columns need
+   real horizontal padding, which the numeric-table default does not provide. */
 .hs-table--wrap td { white-space: normal; vertical-align: top; line-height: 1.55; }
+.hs-table--wrap th, .hs-table--wrap td { padding-right: 18px; }
+.hs-table--wrap th:last-child, .hs-table--wrap td:last-child { padding-right: 0; }
 .hs-table--wrap .hs-w-date { color: var(--mu); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .hs-table--wrap .hs-w-co { white-space: nowrap; }
 .hs-table--wrap .hs-w-imp { color: var(--blue); min-width: 240px; }

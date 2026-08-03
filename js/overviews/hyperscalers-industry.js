@@ -26,6 +26,7 @@ import {
   HS_YEARS, HS_YEAR_QTRS, HS_YEAR_DERIVED, HS_YEAR_PARTIAL, HS_YEAR_GUIDE, HS_QTR_RAMP,
   HS_NEUTRAL_RAMP, HS_GW_YEARS, HS_GW_ADDS, HS_GW_SPLIT, HS_GW_COST, HS_GPU_PRICES,
   HS_CHIP_MIX, HS_GW_BRIDGE, HS_GW_MODEL_FLAG, HS_CAPACITY_QUOTES,
+  HS_DEP_YEARS, HS_DEP_MODEL, HS_DEP_COGS, HS_LIVES,
 } from './hyperscalers-data.js';
 
 function esc(s){ if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -610,8 +611,56 @@ function depreciationBody(){
     return '<li>' + dot(n.id) + '<b>' + co(n.id).ticker + ' — ' + esc(n.head) + '.</b> ' + esc(n.body) + '</li>';
   }).join('');
 
-  return '<p class="hs-lede">The bill for the build-out arrives as depreciation, and it is already landing. Only one of the four puts a number on it — which is itself worth knowing.</p>' +
-    sec('Alphabet — the only quantified series') +
+  // Modelled forward trajectory — the centrepiece now that the DCF tabs give it
+  // for all three. Ties to the filings through 2025, which is what makes the
+  // forward columns readable.
+  var depRows = ['amzn', 'googl', 'meta'].map(function(cid){
+    return [dot(cid) + co(cid).ticker].concat(HS_DEP_MODEL[cid].map(function(v){
+      return '$' + (v / 1000).toFixed(1) + 'B';
+    })).concat(['<b>' + (HS_DEP_MODEL[cid][5] / HS_DEP_MODEL[cid][2]).toFixed(1) + '×</b>']);
+  });
+
+  var lifeRows = Object.keys(HS_LIVES).map(function(cid){
+    var rows = HS_LIVES[cid];
+    return rows.map(function(r, i){
+      return '<tr>' + (i === 0 ? '<td rowspan="' + rows.length + '" class="hs-w-co">' + dot(cid) + '<b>' + co(cid).ticker + '</b></td>' : '') +
+        '<td>' + esc(r.a) + '</td><td class="num"><b>' + r.now + ' yrs</b></td>' +
+        '<td class="hs-w-imp">' + esc(r.hist) + '</td></tr>';
+    }).join('');
+  }).join('');
+
+  var cogs = HS_DEP_COGS;
+  var cogsRow = [dot(cogs.id) + co(cogs.id).ticker + ' D&amp;A as % of COGS']
+    .concat(cogs.pct.map(function(p){ return p.toFixed(1) + '%'; }));
+
+  return '<p class="hs-lede">The bill for the build-out arrives as depreciation, and it is already landing. ' +
+    'Two views sit side by side here: what the companies have actually said, and what the Summit DCFs model forward.</p>' +
+
+    sec('Modelled trajectory — Amazon, Alphabet, Meta') +
+    '<div class="hs-card">' +
+      '<div class="hs-chart-head"><span class="hs-chart-t">PP&amp;E depreciation</span>' +
+        '<span class="hs-chart-u">US$B · 2026E–28E from the DCF CapEx/D&amp;A tabs</span></div>' +
+      '<div class="hs-canvas"><canvas id="hs-depmodel"></canvas></div>' +
+      '<p class="hs-cap">The 2023–25 columns tie to the filings for all three — Alphabet’s $21.1B for 2025 is exactly the figure Anat gave on the 4Q25 call — which is what makes the forward columns worth reading. ' +
+      '<b>Every one of the three roughly triples between 2025 and 2028.</b> Microsoft has no tab in this workbook and is absent.</p>' +
+      table(depRows, [''].concat(HS_DEP_YEARS).concat(['2025 → 28E'])) +
+      '<div class="hs-inset" style="margin-top:12px"><div class="hs-lbl">What it does to the P&amp;L — Alphabet</div>' +
+        table([cogsRow], [''].concat(cogs.years)) +
+        '<p class="hs-cap">The only one of the three where the model carries the ratio. Depreciation goes from an eleventh of cost of revenue to more than a quarter of it in five years — before any change in the underlying business.</p>' +
+      '</div>' +
+    '</div>' +
+
+    sec('What each company depreciates over what') +
+    '<div class="hs-card">' +
+      '<div class="hs-tw"><table class="hs-table hs-table--wrap"><thead><tr>' +
+        '<th></th><th>Asset bucket</th><th class="num">2025–28E life</th><th>How the assumption has moved</th>' +
+        '</tr></thead><tbody>' + lifeRows + '</tbody></table></div>' +
+    '</div>' +
+    '<div class="hs-card hs-card--warn"><div class="hs-lbl">Read this table carefully</div>' +
+      '<p class="hs-body"><b>The buckets are not comparable across companies.</b> Alphabet’s 13-year “technical infrastructure” is a <i>blended</i> life covering servers and data centre together; Amazon’s 5.7 years covers servers and networking alone, with buildings sitting separately on 40. Reading 13 against 5.7 as “Alphabet depreciates more slowly” is the easiest mistake to make here — the right comparison is Amazon’s 5.7 and Meta’s 5.5, which are close, and both of which have been <i>lengthened</i> over the period (Amazon 4.0 → 5.7, Meta 4.25 → 5.5). Lengthening a life lowers this year’s depreciation.</p>' +
+    '</div>' +
+
+    sec('Alphabet — the only one that quantifies it on the calls') +
     '<div class="hs-card">' +
       '<div class="hs-stats">' + tiles + '</div>' +
       '<p class="hs-body" style="margin-top:12px">The growth rate accelerated every quarter it was disclosed — 31% → 35% → 41% — so the line is not just growing, it is growing faster. ' + esc(HS_DEP_GOOGL.forward) + '</p>' +
@@ -639,7 +688,7 @@ function gwChart(id){
   var fwd = HS_GW_YEARS.indexOf('2026E');
   _charts[id] = new Chart(el.getContext('2d'), {
     type: 'bar',
-    data: { labels: HS_GW_YEARS, datasets: ['amzn', 'meta'].map(function(cid){
+    data: { labels: HS_GW_YEARS, datasets: ['amzn', 'googl', 'meta'].map(function(cid){
       return { label: co(cid).ticker, data: HS_GW_ADDS[cid],
                backgroundColor: co(cid).color, borderRadius: { topLeft: 3, topRight: 3 } };
     }) },
@@ -656,7 +705,7 @@ function gwChart(id){
           titleFont: { size: 11, family: 'Inter' }, bodyFont: { size: 11, family: 'Inter' },
           callbacks: {
             label: function(c){
-              var cid = c.dataset.label === 'AMZN' ? 'amzn' : 'meta';
+              var cid = c.dataset.label.toLowerCase();
               var i = c.dataIndex, s = HS_GW_SPLIT[cid];
               return c.dataset.label + ': ' + c.raw.toFixed(2) + ' GW' +
                 '  (shell ' + s.infra[i].toFixed(2) + ' / silicon ' + s.chips[i].toFixed(2) + ')';
@@ -670,6 +719,44 @@ function gwChart(id){
         y: { beginAtZero: true, grid: { color: GRID, drawTicks: false }, border: { display: false },
              ticks: { color: INK_MUTED, font: { size: 10.5, family: 'Inter' }, padding: 8,
                       callback: function(v){ return v + ' GW'; } } },
+      },
+    },
+    plugins: [guideBand],
+  });
+}
+
+// Modelled PP&E depreciation, three companies, $B. Forward years get the same
+// wash the other forward views use so a projection never reads as a print.
+function depModelChart(id){
+  var el = document.getElementById(id);
+  if (!el || !el.offsetParent) return;
+  if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; }
+  _charts[id] = new Chart(el.getContext('2d'), {
+    type: 'bar',
+    data: { labels: HS_DEP_YEARS, datasets: ['amzn', 'googl', 'meta'].map(function(cid){
+      return { label: co(cid).ticker, data: HS_DEP_MODEL[cid].map(function(v){ return v / 1000; }),
+               backgroundColor: co(cid).color, borderRadius: { topLeft: 3, topRight: 3 } };
+    }) },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        hsGuideBand: { bands: [], fwdFrom: HS_DEP_YEARS.indexOf('2026E') },
+        legend: { position: 'top', align: 'start',
+          labels: { boxWidth: 8, boxHeight: 8, usePointStyle: true, pointStyle: 'circle',
+                    color: '#1E2733', font: { size: 11, family: 'Inter', weight: '600' }, padding: 14 } },
+        tooltip: {
+          backgroundColor: '#1E2733', padding: 9, cornerRadius: 6, boxWidth: 8, boxHeight: 8,
+          titleFont: { size: 11, family: 'Inter' }, bodyFont: { size: 11, family: 'Inter' },
+          callbacks: { label: function(c){ return c.dataset.label + ': $' + c.raw.toFixed(1) + 'B'; } },
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, border: { color: AXIS },
+             ticks: { color: INK_MUTED, font: { size: 10.5, family: 'Inter' } } },
+        y: { beginAtZero: true, grid: { color: GRID, drawTicks: false }, border: { display: false },
+             ticks: { color: INK_MUTED, font: { size: 10.5, family: 'Inter' }, padding: 8,
+                      callback: function(v){ return '$' + v + 'B'; } } },
       },
     },
     plugins: [guideBand],
@@ -731,14 +818,17 @@ function capacityBody(){
   });
 
   return '<p class="hs-lede">How much capacity the spend actually buys, and what a gigawatt costs. ' +
-    'Everything in this tab comes from the Summit build (<code>Hyperscalers Capex GW.xlsx</code>), not from company disclosure — it works backwards from reported PP&amp;E additions to infer the GW behind them. Amazon and Meta are the two modelled.</p>' +
+    'This tab is built from the Summit model — the CapEx/D&amp;A tabs inside the live DCFs (<code>CapEx D&amp;A DCFs.xlsx</code>) plus the unit-economics workbook — not from company disclosure. It works backwards from reported PP&amp;E additions to infer the gigawatts behind them. Amazon, Alphabet and Meta are modelled; Microsoft is not.</p>' +
 
     sec('Capacity added per year') +
     '<div class="hs-card">' +
       '<div class="hs-chart-head"><span class="hs-chart-t">GW of capacity added</span>' +
-        '<span class="hs-chart-u">gigawatts · 2026–27 modelled</span></div>' +
+        '<span class="hs-chart-u">gigawatts · 2026E–28E modelled</span></div>' +
       '<div class="hs-canvas"><canvas id="hs-gw"></canvas></div>' +
-      '<p class="hs-cap">Hover for the shell/silicon split of each year. <b>The model checks out against the tape:</b> it puts Amazon at 3.88 GW added in 2025, and on the 4Q25 call Jassy said 3.99 GW over the trailing twelve months — a 3% gap on a number derived entirely from the balance sheet.</p>' +
+      '<p class="hs-cap">Hover for the shell/silicon split of each year. <b>The model checks out against the tape:</b> it puts Amazon at 3.88 GW added in 2025, and on the 4Q25 call Jassy said 3.99 GW over the trailing twelve months — a 3% gap on a number derived entirely from the balance sheet. ' +
+      'Note the shape: Alphabet was the <i>smallest</i> of the three as recently as 2020 and is modelled to add more than Meta from 2026.</p>' +
+      '<div class="hs-inset" style="margin-top:10px"><div class="hs-lbl">Two vintages, one reconciliation to do</div>' +
+      '<p class="hs-body">The DCF tabs and the standalone capacity workbook disagree: Amazon 2026 is 6.52 GW here against 6.03 GW there (the DCF carries the raised ~$220B guide, the older file still had $205B), and Meta 2025 is 1.87 GW against 2.05 GW on identical capex — a cost-per-GW difference between the two builds, not a spend one. The DCF numbers are shown because they are the current vintage and the only ones covering Alphabet.</p></div>' +
     '</div>' +
 
     sec('What a gigawatt costs') +
@@ -824,6 +914,7 @@ function buildFor(key){
     }), abs ? 'usd' : 'x', abs ? 'Contracted backlog' : 'Coverage');
   } else if (key === 'dep'){
     lineChart('hs-dep', [{ id: 'msft', data: HS_MSFT_CLOUD_GM }], 'pct', 'Gross margin');
+    depModelChart('hs-depmodel');
   }
   if (key === 'qtr'){
     if (_view.yearView === 'all') combinedYearChart('hs-yr-all');

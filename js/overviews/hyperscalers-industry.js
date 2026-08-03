@@ -28,6 +28,7 @@ import {
   HS_CHIP_MIX, HS_GW_BRIDGE, HS_GW_MODEL_FLAG, HS_CAPACITY_QUOTES,
   HS_DEP_YEARS, HS_DEP_MODEL, HS_DEP_COGS, HS_LIVES,
   HS_CSP_QTRS, HS_CSP_REV, HS_CSP_OI, HS_CSP_NOTES,
+  HS_THEME_QTRS, HS_THEMES,
 } from './hyperscalers-data.js';
 
 function esc(s){ if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -40,7 +41,7 @@ var INK_MUTED = '#8A93A0', GRID = '#EEF1F5', AXIS = '#D7DDE4';
 // View state that the panes own (which target year, which backlog view).
 var _view = { guideYear: '2026', backView: 'abs', yearView: 'all',
               cspPeriod: 'q', cspGrowth: 'yoy', cspTop: 'rev', cspBot: 'opInc',
-              cspZoom: null };
+              cspZoom: null, theme: 'guide' };
 var _charts = {};
 
 // ─── Direct end-of-line labels ────────────────────────────────────────────────
@@ -1237,6 +1238,52 @@ function capacityBody(){
     '<p class="hs-cap">Google is the outlier: it reports PUE and power deals but has never disclosed gigawatts added, so there is nothing to model it against.</p></div>';
 }
 
+// ─── Tab · What they said — the quote matrix ──────────────────────────────────
+// One row per CALENDAR quarter, one column per company, so the same question
+// reads across all four at the same moment. The fiscal offset is already
+// absorbed: Microsoft's FY26Q2 call sits in the 4Q25 row.
+//
+// No chart here on purpose — the content is language, and a chart of language is
+// a word cloud. The grid IS the visualisation: the shape of the empty cells says
+// as much as the full ones.
+function themesBody(){
+  var th = HS_THEMES.filter(function(t){ return t.k === _view.theme; })[0] || HS_THEMES[0];
+
+  var pills = HS_THEMES.map(function(t){
+    return '<button type="button" class="hs-seg-b' + (t.k === th.k ? ' active' : '') +
+      '" data-theme="' + t.k + '">' + esc(t.label) + '</button>';
+  }).join('');
+
+  var head = '<tr><th class="hs-qcol">Quarter</th>' + HS_COMPANIES.map(function(c){
+    return '<th class="hs-qco">' + dot(c.id) + c.ticker + '</th>';
+  }).join('') + '</tr>';
+
+  var body = HS_THEME_QTRS.map(function(q, i){
+    var cells = HS_COMPANIES.map(function(c){
+      var v = (th.rows[c.id] || [])[i];
+      return '<td>' + (v ? v : '<span class="hs-na">—</span>') + '</td>';
+    }).join('');
+    return '<tr><td class="hs-qcol"><b>' + esc(q) + '</b></td>' + cells + '</tr>';
+  }).join('');
+
+  // Coverage is itself a finding: a company that says nothing about depreciation
+  // for eight quarters is telling you something.
+  var counts = HS_COMPANIES.map(function(c){
+    var n = (th.rows[c.id] || []).filter(function(v){ return v; }).length;
+    return dot(c.id) + '<b>' + c.ticker + '</b> ' + n + '/' + HS_THEME_QTRS.length;
+  }).join(' &nbsp;·&nbsp; ');
+
+  return '<p class="hs-lede">' + esc(th.blurb) + '</p>' +
+    '<div class="hs-seg">' + pills + '</div>' +
+    '<div class="hs-card">' +
+      '<div class="hs-tw"><table class="hs-table hs-quotes"><thead>' + head + '</thead><tbody>' + body + '</tbody></table></div>' +
+      '<p class="hs-cap"><b>Quarters covered on this theme:</b> ' + counts + '. ' +
+      'A blank cell means the theme did not come up on that call in a way worth recording — not that the company said nothing at all. ' +
+      'Alphabet has no 2Q24 row anywhere, because that call is not in the corpus. ' +
+      'Quoted fragments are verbatim; the connective text is compression.</p>' +
+    '</div>';
+}
+
 // ─── Tab registry + shell ─────────────────────────────────────────────────────
 var TABS = [
   { key: 'ladder',  label: 'Guidance Ladder',    body: ladderBody },
@@ -1245,6 +1292,7 @@ var TABS = [
   { key: 'cap',     label: 'Capacity & Cost/GW', body: capacityBody },
   { key: 'backlog', label: 'Backlog & Coverage', body: backlogBody },
   { key: 'dep',     label: 'Depreciation',       body: depreciationBody },
+  { key: 'said',    label: 'What They Said',     body: themesBody },
 ];
 
 function html(){
@@ -1342,6 +1390,8 @@ function init(){
       }
       var ct = e.target.closest('[data-csptop]');
       if (ct){ _view.cspTop = ct.getAttribute('data-csptop'); repaint(root, 'csp', cspBody); return; }
+      var tm = e.target.closest('[data-theme]');
+      if (tm){ _view.theme = tm.getAttribute('data-theme'); repaint(root, 'said', themesBody); return; }
       var cb = e.target.closest('[data-cspbot]');
       if (cb){ _view.cspBot = cb.getAttribute('data-cspbot'); repaint(root, 'csp', cspBody); return; }
       var yv = e.target.closest('[data-yv]');

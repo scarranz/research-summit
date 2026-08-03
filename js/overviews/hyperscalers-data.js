@@ -475,3 +475,251 @@ export var HS_DEP_NOTES = [
     body: 'Microsoft Cloud gross margin has fallen every year of the build-out, and management attributes it to "scaling our AI infrastructure" each time. Reading it as the depreciation line is an inference — a real one, but the dollars are never disclosed.' },
 ];
 
+// ── 7 · WHAT THEY SAID, BY THEME AND QUARTER ──────────────────────────────────
+// A curated quote matrix: one row per calendar quarter, one column per company,
+// so the same question can be read across all four at the same moment. Every
+// cell is condensed from that company's call for that quarter; quoted fragments
+// are verbatim, the connective text is compression.
+//
+// CURATED, NOT EXHAUSTIVE. A blank cell means the theme did not come up on that
+// call in a way worth recording — not that the company was silent on everything.
+// Alphabet has no 2Q24 row anywhere because that call is not in the corpus.
+//
+// The quarter labels are CALENDAR quarters, so Microsoft's fiscal offset is
+// already absorbed: its FY26Q2 call sits in the 4Q25 row alongside everyone
+// else's 4Q25 call.
+export var HS_THEME_QTRS = ['1Q24', '2Q24', '3Q24', '4Q24', '1Q25', '2Q25', '3Q25', '4Q25', '1Q26', '2Q26'];
+
+export var HS_THEMES = [
+  {
+    k: 'guide', label: 'CapEx guidance',
+    blurb: 'The number and, more tellingly, the verb. Read down a column and you watch a company talk itself upward; read across a row and you watch them all do it in the same quarter.',
+    rows: {
+      googl: [
+        'Quarterly CapEx “roughly at or above” the $12B Q1 level; 2025 “premature to comment”.',
+        '', 'Q3 $13B, Q4 similar — and a first signal of “substantial increases in capital investment going into 2025”.',
+        'First annual guide: <b>~$75B for 2025</b>, $16–18B of it in Q1.',
+        'Reaffirmed: “we still expect to invest approximately $75 billion”.',
+        'Raised to <b>~$85B</b> on cloud demand, plus “a further increase in CapEx” flagged for 2026.',
+        'Raised to <b>$91–93B</b>; 2026 to see “a significant increase”.',
+        '2026 guided at <b>$175–185B</b>; 2025 closed at $91.4B.',
+        'Raised to <b>$180–190B</b> to fold in Intersect; 2027 “to significantly increase”.',
+        'Raised to <b>$195–205B</b> on “an acceleration in the delivery of capacity”.',
+      ],
+      amzn: [
+        '“Meaningfully increase year-over-year capital expenditures in 2024” — no number yet.',
+        'H1 CapEx $30.5B; capital investments “higher in the second half”.',
+        '<b>~$75B for 2024</b>, and “I suspect we’ll spend more than that in 2025”.',
+        'Q4 $26.3B “reasonably representative” of the 2025 quarterly rate — an annual guide by implication, ~$105B.',
+        'Q1 cash CapEx $24.3B; no annual figure given.',
+        'Q2 $31.4B “reasonably representative” for the back half.',
+        'First explicit annual number: <b>~$125B for 2025</b>, “and we expect that amount will increase in 2026”.',
+        '<b>~$200B for 2026</b>, “predominantly in AWS, because we have very high demand”.',
+        'Q1 $43.2B. “The faster AWS grows, the more short-term CapEx we’ll spend.”',
+        'Raised to <b>~$220B</b> — “the higher cost of memory pushing this number up”.',
+      ],
+      meta: [
+        'Raised to <b>$35–40B</b> from $30–37B; “CapEx will continue to increase next year”.',
+        'Raised to <b>$37–40B</b>; “significant CapEx growth in 2025”.',
+        'Narrowed to <b>$38–40B</b>; “significant acceleration in infrastructure expense growth next year”.',
+        '<b>$60–65B for 2025</b>.',
+        'Raised to <b>$64–72B</b> — more data centres plus “an increase in the expected cost of infrastructure hardware”.',
+        'Narrowed to <b>$66–72B</b>; 2026 to see “another year of similarly significant CapEx dollar growth”.',
+        'Raised to <b>$70–72B</b>; 2026 dollar growth “notably larger” than 2025.',
+        '<b>$115–135B for 2026</b>, with operating income still expected above 2025.',
+        'Raised to <b>$125–145B</b>, “mostly due to higher component costs, particularly memory pricing”.',
+        'Narrowed to <b>$130–145B</b>; no 2027 figure — “infrastructure planning remains highly dynamic”.',
+      ],
+      msft: [
+        'CapEx “to increase materially on a sequential basis”; FY25 to be higher than FY24.',
+        'Q4 $19.0B. FY25 “higher than FY2024”, managed against demand signals through the year.',
+        'CapEx “to increase on a sequential basis, given our cloud and AI demand signals”.',
+        'Q3 and Q4 “to remain at similar levels as our Q2 spend” — the first flat guide anyone gave.',
+        'FY26 “will grow at a lower rate than FY2025”, with more short-lived assets.',
+        'Reaffirmed the moderation; Q1 FY26 “to be over $30 billion”.',
+        '⚠ <b>Reversal</b>: “we now expect the FY 2026 growth rate to be higher than FY 2025”.',
+        'CapEx “to decrease on a sequential basis” on normal build-out and lease timing.',
+        'Over $40B in the quarter; <b>~$190B for calendar 2026</b>, including ~$25B of higher component pricing.',
+        'CY2026 restated to <b>~$175B</b> — the cut is the finance-to-operating lease shift, not less investment.',
+      ],
+    },
+  },
+  {
+    k: 'mix', label: 'What the CapEx buys',
+    blurb: 'The split between the shell and the silicon, and how each company frames it. Microsoft’s drift from “roughly half long-lived” to “two-thirds short-lived” is the clearest single indicator of where the industry is in the build.',
+    rows: {
+      googl: [
+        'Overwhelmingly technical infrastructure, “largest component for servers, followed by data centers”; offices under 10% of the total.',
+        '', 'Majority technical infrastructure; servers include both TPUs and GPUs.',
+        'Servers first, then data centres, supporting Services, Cloud and DeepMind.',
+        'Same shape; the emphasis shifts to “how do we make sure every dollar is used efficiently”.',
+        '<b>Two-thirds servers, one-third data centres and networking.</b>',
+        '<b>60% servers, 40% data centres and networking.</b>',
+        'Same 60/40, with long-duration assets “40 years or longer” against much shorter-lived machines.',
+        '60/40 again — “approximately 60% of our investment in technical infrastructure this quarter was in servers”.',
+        '60/40 holds even as the total nearly doubles.',
+      ],
+      amzn: [
+        'Majority to AWS infrastructure “and specifically generative AI efforts”; the rest same-day facilities and fleet.',
+        '', '', 'The vast majority “on AI for AWS”; the balance on same-day sites, rural delivery stations, robotics.',
+        'AWS first, “and increasingly in custom silicon like Trainium”.',
+        '“Chips, data centers, and power to pursue this unusually large opportunity.”',
+        'Capacity is “power, data center, and chips, primarily our custom silicon Trainium and NVIDIA”.',
+        'Servers & networking 82% of the 2026 plan; heavy equipment 8%, CIP 4%, land under 1%.',
+        '“Land, power, buildings, chips, servers, and networking gear” — laid out 6 to 24 months before billing starts.',
+        'Same structure, now against a $220B year.',
+      ],
+      meta: [
+        'Servers, data centres and network infrastructure; sites staged “at various phases of development” to flex without over-committing.',
+        'Building flexibly so capacity can move between core AI and GenAI as needed.',
+        'Q4 step-up is “increases in server spend and to a lesser extent data center CapEx”.',
+        'All three components grow; <b>servers the biggest growth driver and the largest portion of the budget</b>.',
+        'More data centre spend “to stand up capacity more quickly”, plus higher hardware cost.',
+        '<b>“A greater mix of our CapEx to be in shorter-lived assets in 2025 and 2026.”</b>',
+        'Blue Owl JV: construction cost leaves reported CapEx entirely; Meta contributes 20% via other investing.',
+        'Growth comes from MSL, core AI and non-AI alike — “the MSL AI needs are growing the most”.',
+        'Custom silicon and AMD alongside NVIDIA, explicitly to raise efficiency per dollar.',
+        'BlackRock venture for a 1 GW El Paso site; “near-term capacity is more valuable than long-term capacity”.',
+      ],
+      msft: [
+        '', '<b>“Roughly half is for infrastructure”</b> — land, builds and leases monetised “over the next 15 years and beyond”; the rest CPUs and GPUs.',
+        'Roughly half long-lived again; the remainder servers bought against demand signals.',
+        '“More than half” long-lived, the rest servers “including our customer contracted backlog”.',
+        'Roughly half long-lived, against a $315B contracted backlog.',
+        'More than half long-lived, including $6.5B of finance leases recognised in full at commencement.',
+        '<b>Flips: “roughly half of our spend was on short-lived assets, primarily GPUs and CPUs.”</b>',
+        '<b>“Roughly two-thirds of our CapEx was on short-lived assets.”</b>',
+        'Two-thirds short-lived; finance leases $4.7B for large data centre sites.',
+        'Two-thirds short-lived. “If the demand environment changes, you just slow down what is the largest component.”',
+      ],
+    },
+  },
+  {
+    k: 'da', label: 'Depreciation & useful life',
+    blurb: 'The cost of the build arriving in the P&L. Alphabet is the only one that quantifies the line on the calls; the others describe it, and every useful-life change bar one moves reported profit favourably.',
+    rows: {
+      googl: [
+        '“Very cognizant of the increasing headwind from higher depreciation and expenses associated with the higher CapEx.”',
+        '', 'Efficiency work explicitly framed as funding “substantial increases in capital investment”.',
+        '<b>2024 depreciation grew 28%</b>; the growth rate “to accelerate in 2025”.',
+        '<b>+31% YoY</b> in the quarter, “and it will be higher as we go throughout the year”.',
+        '<b>+$1.3B to $5.0B, +35%</b>; to “accelerate further in Q3”.',
+        '<b>+$1.6B to $5.6B, +41%</b>; to “accelerate slightly” in Q4.',
+        '<b>2025 depreciation +$6B, or 38%, from $15.3B to $21.1B</b>; 2026 to “meaningfully increase”.',
+        'Depreciation pressure now hits both Cloud and Services as cost is allocated on consumption.',
+        'Still flagged as the standing headwind against every efficiency programme.',
+      ],
+      amzn: [
+        '<b>Server useful life extended to 6 years</b> — worth ~200bps of AWS margin, repeated all four quarters of 2024.',
+        'Confirms the ~200bps benefit again.', 'Confirms it a third time.',
+        '⚠ <b>Reverses course</b>: a subset of servers and networking cut from 6 years to 5 (−$700M), plus $920M of early-retirement charges — while fulfilment heavy equipment goes 10→13 years (+$900M).',
+        '', '<b>“AWS margins also saw headwinds from higher depreciation expense”</b> — the first quarter it is named as a margin driver.',
+        'Depreciation on newly in-service data centres explicitly hits AWS margin.',
+        '“A headwind from the investments in AI and the depreciation on that CapEx”, offset by efficiency work.',
+        'Life framing: 30+ years for data centres, 5–6 for chips, servers and networking gear.',
+        'Servers break even in “a little less than three years”, with AI capacity contracted for five-year terms.',
+      ],
+      meta: [
+        '', '', 'Back-end-weighted 2024 CapEx means “a significant acceleration in infrastructure expense growth next year”.',
+        '<b>Useful lives extended to ~5.5 years</b> for both non-AI and AI servers — “savings in annual CapEx and resulting depreciation”.',
+        '', '<b>“A sharp acceleration in depreciation expense growth in 2026”</b>, plus a greater mix of shorter-lived assets.',
+        'Infrastructure cost growth accelerates on depreciation, data centre opex and third-party cloud.',
+        'Infrastructure is the largest driver of 2026 expense growth: cloud spend, depreciation, operating costs.',
+        '', 'Expense outlook held at $165–169B even as CapEx rises.',
+      ],
+      msft: [
+        '', '', '', '', '', '', '', '',
+        'Server life is six years against an RPO duration of 2.5 — answered with “those are sold for the entirety of the useful life of the GPU”.',
+        '⚠ <b>Data centres and offices extended from 15 to 25 years</b> from FY27. “Minimal benefit” to operating income — but it moves leases from finance to operating and cuts reported CapEx ~$15B.',
+      ],
+    },
+  },
+  {
+    k: 'silicon', label: 'Custom silicon',
+    blurb: 'All four now design their own accelerators, which changes the NVIDIA-attach assumption underneath every CapEx forecast. Alphabet has a decade of head start; Meta arrived last and is the only one still buying merchant AMD at scale.',
+    rows: {
+      googl: [
+        '<b>TPU v5</b> — “our custom TPUs, now in their fifth generation”. Gemini trained and served on them.',
+        '', '<b>Trillium, 6th gen</b>, alongside “an industry-leading portfolio of NVIDIA GPUs”.',
+        'Trillium delivers “four times better training performance and three times greater inference throughput”.',
+        '<b>Ironwood, 7th gen</b> — “the first designed specifically for inference at scale”, 10x on the prior generation.',
+        '“The industry’s widest range of TPUs and GPUs”; frontier labs including Anthropic use TPUs specifically.',
+        'Ironwood approaching general availability; “we are investing in TPU capacity”.',
+        '“Our own TPUs that we have been developing for a decade” — a 10-year track record in accelerators.',
+        '<b>TPU 8t</b>, specialised separately for training and serving, plus Axion CPUs.',
+        '<b>TPU 8t and 8i</b> alongside NVIDIA Vera Rubin; Axion CPU “30% better performance per dollar”.',
+      ],
+      amzn: [
+        'Demand for “our custom silicon, Trainium and Inferentia, is quite high, given its favorable price-performance”.',
+        'Trainium2 “coming later this year”.',
+        'Trainium2 “starting to ramp”; Graviton4 at “nearly 40% better price performance versus x86”.',
+        '<b>Trainium2 launched</b> — instances “typically 30–40% better price performance”; Anthropic building frontier models on it.',
+        'Trainium2 “laying in capacity in larger quantities with significant appeal and demand”.',
+        '', '<b>Project Rainier online</b> — ~500,000 Trainium2 chips; Anthropic to be on 1M+ by year-end. Trainium2 “fully subscribed”.',
+        'Chips business incl. Graviton and Trainium “over $10 billion annual revenue run rate, growing triple digits”.',
+        '<b>~$50B standalone run rate — “one of the top three data center chip businesses in the world”</b>; $225B of Trainium revenue commitments.',
+        'Chips run rate “over $25 billion”; multi-year, multi-gigawatt Trainium commitments from Anthropic and OpenAI.',
+      ],
+      meta: [
+        '<b>MTIA</b> “has successfully enabled us to run some of our recommendation workloads”.',
+        '', '', '<b>MTIA deployed to ranking and recommendation inference</b> for ads and organic content; further ramp expected.',
+        'Investing in “our own silicon” alongside a significant GPU ramp.',
+        '', '', 'Long-term investment in “silicon and energy”; cost per gigawatt expected to fall through optimisation.',
+        '<b>“More than 1 GW of our own custom silicon developed with Broadcom”</b>, plus significant AMD volume alongside NVIDIA.',
+        'Internal custom silicon framed as “long-term strategic flexibility and supply chain leverage”.',
+      ],
+      msft: [
+        'NVIDIA and AMD “as well as our own first-party silicon”.',
+        '<b>Azure Maia</b> and Cobalt 100 introduced.',
+        '<b>Maia 100</b> in the fleet alongside the first Blackwell systems.',
+        'First-party silicon across “Maia, Cobalt, Boost, and HSM”.',
+        '', '', '',
+        '<b>Maia 200 online</b> — “10+ petaflops at FP4 precision with over 30% improved TCO”.',
+        'Maia 200 “now scaling”; millions of servers already on first-party networking, security and virtualisation silicon.',
+        'Maia 200 continues to scale at “30% better performance per dollar than the latest generation hardware”.',
+      ],
+    },
+  },
+  {
+    k: 'capacity', label: 'Capacity & constraints',
+    blurb: 'Where the binding constraint sat each quarter. The arc runs chips → power → physical capacity → memory price, and the language shifts from “we can throttle” to “demand exceeds supply” somewhere in mid-2025.',
+    rows: {
+      googl: [
+        '', '', 'First corporate nuclear deal — “up to 500 megawatts” from small modular reactors.',
+        '<b>“We exited the year with more demand than we had available capacity”</b> — a tight supply-demand position.',
+        'Still short: “that was the case this quarter as well”.',
+        '“It’s a tight supply environment. We are investing more to expand.”',
+        'Cloud backlog $155B, up 82% — capacity, not demand, is the limit.',
+        '“We’ve been supply constrained even as we’ve been ramping up our capacity.”',
+        '“Unprecedented internal and external demand for AI compute resources.”',
+        '⚠ <b>Renting third-party capacity as “a bridging strategy”</b> while building internally — with acknowledged margin cost.',
+      ],
+      amzn: [
+        '“The more demand AWS has, the more we have to procure new data centers, power, and hardware.”',
+        '', '', '<b>“The world is still constrained on power”</b>, plus motherboard shortages; constraints to ease in H2 2025.',
+        '', '', '<b>+3.8 GW added in twelve months</b>, “more than any other cloud provider”; 1 GW more in Q4; capacity to double by end-2027.',
+        '<b>+3.99 GW over twelve months</b> — “twice what we had in 2022”. In 2025 AWS added more capacity than any company in the world.',
+        '', 'Still short: “we will still not have enough capacity to meet all the demand we have in 2026, and… 2027 too”.',
+      ],
+      meta: [
+        '', '', '', '<b>“Almost a gigawatt of capacity this year”</b>, plus a 2 GW-plus site “the size of Manhattan”.',
+        '', '<b>Hyperion “to scale up to 5 GW”</b>; Prometheus, the first 1 GW-plus cluster, lands in 2026.',
+        'Front-loading capacity: better to accelerate than “be constrained on CapEx” with profitable investments unmade.',
+        'Meta Compute formalised, with a president hired to court sovereigns and strategic capital.',
+        '', '“Near-term capacity is more valuable than long-term capacity.”',
+      ],
+      msft: [
+        '“Near-term AI demand is a bit higher than our available capacity.”',
+        '<b>“We can throttle that investment”</b> if demand signals differ — the high-water mark of supply confidence.',
+        'Demand still ahead of supply; partnerships with Oracle and CoreWeave to bridge.',
+        '“I thought we’d be in better supply-demand shape by June. Now I’m saying I hope I’m in better shape by December.”',
+        '', '<b>+2 GW stood up over twelve months</b>; every Azure region now AI-first and liquid-cooling capable.',
+        '<b>AI capacity +80% this year; total footprint to roughly double in two years.</b> Fairwater Wisconsin alone scales to 2 GW.',
+        '<b>Nearly 1 GW added in the quarter alone.</b> “Customer demand continues to exceed our supply.”',
+        'Another gigawatt; still on track to double in two years.',
+        '“Demand exceeds available supply in a sort of relatively extreme moment.” Dock-to-live times for new GPUs cut ~50%.',
+      ],
+    },
+  },
+];
+

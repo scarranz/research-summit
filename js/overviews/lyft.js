@@ -1974,9 +1974,10 @@ var CE_LOGO_URL='https://assets.parqet.com/logos/symbol/LYFT';
 //     preview instead framed revenue as "+14% YoY", which implies ~$1.81B — a ~2% spread between
 //     two published views of the same line. The higher, more recent aggregate is used.
 //   Q1 2026 (reported) — Revenue $1.64B (+13.1% YoY, Investing.com preview, 7 May 2026; StockStory
-//     carried $1.63B the same day) and Adj. EBITDA $130.7M (StockStory). No published consensus
-//     was found for Gross Bookings — TD Cowen alone modelled +18.5% (~$4.93B), which is one broker,
-//     not a consensus, so the line stays null.
+//     carried $1.63B the same day), Adj. EBITDA $130.7M (StockStory), Gross Bookings $4.91B and
+//     ⚠ RIDES 241.5M (both TIKR). The rides cell is the important one: the print of 236.9M MISSED
+//     it by 1.9%, and without a consensus that line would render unscoreable — which is exactly
+//     how the quarter got read as a clean beat at the time.
 //   Q4 2025 (reported) — Revenue $1.76B (Zacks consensus, corroborated by earnings-day coverage
 //     noting ADJUSTED revenue "matched analyst expectations of $1.76 billion"). ⚠ THIS IS THE WHOLE
 //     STORY OF THAT PRINT: the $1,592.7M reported is $1.76B less the $168M contra-revenue charge,
@@ -1997,7 +1998,7 @@ var CE_CONS = (function(){
     q:q, hz:['company guide / Street'], nHead:4,
     m:[
       line('Gross Bookings','$M','ok',
-        /*guide*/ [5365, 4930, 5070], /*street*/ [5310, null, null],
+        /*guide*/ [5365, 4930, 5070], /*street*/ [5310, 4910, null],
         /*print*/ [null, 4946.0, 5074.2], /*yr ago*/ [4490.1, 4162.4, 4278.9], /*prior q*/ [4946.0, 5074.2, 4780.4]),
       line('Revenue','$M','ok',
         [null, null, null], [1840, 1640, 1760],
@@ -2008,8 +2009,10 @@ var CE_CONS = (function(){
       line('Adj. EBITDA margin','%','ok',
         [3.15, 2.65, 2.86], [3.19, null, null],
         [null, 2.7, 3.0], [2.9, 2.6, 2.6], [2.7, 3.0, 2.9]),
-      line('Rides','M','nocons',
-        [null, null, null], [null, null, null],
+      // ⚠ Rides DOES carry a Street number in 1Q26 (241.5M) — and the print missed it. Without
+      // that cell the quarter's most important line would render as unscoreable.
+      line('Rides','M','ok',
+        [null, null, null], [null, 241.5, null],
         [null, 236.9, 243.5], [234.8, 218.4, 218.5], [236.9, 243.5, 248.8]),
       line('Active Riders','M','nocons',
         [null, null, null], [null, null, null],
@@ -2049,11 +2052,11 @@ var CALL_EARNINGS = { ticker:'LYFT', quarters:[
       source:'Lyft\'s Q1 2026 guide, issued 10 Feb 2026 with the Q4 2025 results (8-K Ex. 99.1) · Street compiled from earnings-day previews (7 May 2026) · Summit = the pre-print 2026-02-11 vintage',
       asOf:'2026-02-10 (the guide) · 2026-05-07 (Street)',
       notes:{
-        'Gross Bookings':{ t:'Guided $4.86–5.00B (+17–20%) — no published consensus', h:'<p>The grid shows the <b>midpoint, $4.93B</b>. No Street consensus for this line was published: TD Cowen alone modelled <b>+18.5%</b> (~$4.93B), which is one broker, not a consensus, so the Street row is deliberately blank rather than filled with a single desk\'s number.</p>' },
+        'Gross Bookings':{ t:'Guided $4.86–5.00B (+17–20%), Street $4.91B', h:'<p>Guide midpoint <b>$4.93B</b> against a Street of <b>$4.91B</b> — the two are effectively on top of each other, because on this name the Street largely takes the guide. The print, $4,946M, cleared both by well under a percent.</p><p>That is the point: <b>a bookings number this close to the guide carries almost no information.</b> The quarter is decided by the lines underneath it.</p>' },
         'Revenue':{ t:'Not guided — Street $1.64B', h:'<p>Lyft does not guide revenue, so this line is Street-only: <b>$1.64B, +13.1% YoY</b> (Investing.com\'s 7 May preview; StockStory carried $1.63B the same morning — a ~0.6% spread).</p><p>⚠ The YoY comparison is clean here, but the QoQ is not: 4Q25 revenue carried a <b>$168M contra-revenue charge</b>, so the sequential base is artificially low.</p>' },
         'Adjusted EBITDA':{ t:'Guided $120–140M — and the guide itself was the problem', h:'<p>Midpoint <b>$130M</b>, against a Street of <b>$130.7M</b>: the two agree almost exactly, because the Street simply took the guide.</p><p>⚠ The real story is that this guide was issued <b>below</b> where the Street stood before the Q4 print (~$139.8M) — which is a large part of why the stock fell 17% on Feb 11. Going into Q1 the bar had already been reset down.</p>' },
         'Adj. EBITDA margin':{ t:'Guided 2.5–2.8% of Gross Bookings', h:'<p>Lyft\'s own stated range; the grid shows the <b>2.65% midpoint</b>. This line IS a rate, so the growth lens does not apply to it.</p>' },
-        'Rides':{ t:'⚠ The Summit number here is MIRRORED, not a forecast', h:'<p>Not guided and not covered. The Summit line reads <b>236.9</b> — <i>exactly</i> the reported figure to the decimal. That is the model carrying the actual back into the estimate once the quarter closed, not a perfect call. Score nothing off it.</p>' },
+        'Rides':{ t:'⚠ THE LINE THE QUARTER TURNED ON — Street 241.5M', h:'<p>Not guided, but the Street DID carry a number: <b>241.5M</b>. Lyft printed <b>236.9M</b>, <b>1.9% short</b> — and down sequentially from 243.5M — in the same quarter bookings and revenue cleared.</p><p><b>The verdict chip reads "in line", and that is the engine being conservative:</b> the tolerance is a flat 2% and this landed at 1.9%. Judge it on the combination instead. A shortfall against the Street <i>plus</i> a sequential decline <i>plus</i> beats everywhere else says the same thing three ways — the quarter came from price and mix, not from more rides.</p><p>⚠ Ignore the Summit line here. It reads <b>236.9</b>, <i>exactly</i> the reported figure to the decimal — the model carrying the actual back into the estimate once the quarter closed, not a forecast. Score nothing off it.</p>' },
         'Active Riders':{ t:'The line that had to prove FREENOW was not the whole story', h:'<p>Not guided, not covered. The 3Q25 step to 28.7M coincided with FREENOW entering the base; Q1 was the quarter to see whether the level held without a fresh acquisition.</p>' },
         'Free cash flow':{ t:'One of the three 2027 targets', h:'<p>Not guided quarterly. Summit had <b>$212.8M</b> going in. Watch it against the insurance-reserve build below — the reserve flatters cash while it accrues.</p>' },
         'Insurance reserves':{ t:'No forward number exists at all', h:'<p>Neither guided, nor covered, nor modelled — the Summit line has actuals but no projection for this metric. It is here as the audit trail on the falling-cost-per-ride claim, not as a scoreable line.</p>' }
@@ -2074,7 +2077,7 @@ var CALL_EARNINGS = { ticker:'LYFT', quarters:[
       watch:{ 'Rides':1, 'Active Riders':2, 'Gross Bookings':3, 'Adjusted EBITDA':4 },
       thesisCheck:[
         { line:'Bookings acceleration is bought, not organic', tripped:true, note:'Not resolved, and now harder to resolve: bookings +19% with rides DOWN sequentially. FREENOW and TBR are in the base and Lyft still publishes no organic split. The acceleration is real; its source is not disclosed.' },
-        { line:'Demand growth stalls (rides / active riders)', tripped:true, note:'Both fell QoQ — rides 243.5M → 236.9M, riders 29.2M → 28.3M. Storm Hernando explains ~3M rides. Still +8.5% and +17% YoY, so this is a stall in the sequential, not a decline in the franchise.' },
+        { line:'Demand growth stalls (rides / active riders)', tripped:true, note:'Both fell QoQ — rides 243.5M → 236.9M, riders 29.2M → 28.3M — and rides also landed 1.9% under the Street\'s 241.5M, so this is not purely a seasonal read. Storm Hernando explains ~3M rides. Still +8.5% and +17% YoY, so it is a stall in the sequential rather than a decline in the franchise.' },
         { line:'Margin expansion stops', tripped:false, note:'Gross margin expanded YoY on a lower average insurance cost per ride; adjusted EBITDA +25% YoY on 2.7% of bookings. The 2027 bridge still needs roughly a doubling from here.' },
         { line:'AV partnerships stay slideware', tripped:false, note:'Three DATED commitments made on this call: fleet ops taken over "this summer", an 80,000 sq ft Nashville depot "this fall", and Lyft-app Waymo matching in 2H26. First time the AV story carried calendar dates.' },
       ],
@@ -2087,7 +2090,7 @@ var CALL_EARNINGS = { ticker:'LYFT', quarters:[
       ],
       priceReaction:'<b>+1.34%</b> — next-day close $14.35 on May 8 (prior close $14.23; the day-of close was $14.16). ⚠ The after-hours tape showed roughly −3% and was wrong again; LYFT\'s overnight prints are unreliable and the next-day close is the record we keep.',
       summary:{ paras:[
-        { p:'<b>Lyft beat the headline and missed the point.</b> Bookings +19% to $4.95B, adjusted EBITDA $132.8M and revenue $1.65B all cleared — and underneath them <b>rides fell sequentially</b>, 243.5M to 236.9M, with active riders down from 29.2M to 28.3M. Both counts are still up strongly year over year, so this is a stall in the sequential rather than a decline in the franchise. But it means the acceleration was carried by <b>price and mix</b>, not by more people taking more Lyfts.',
+        { p:'<b>Lyft beat the headline and missed the point.</b> Bookings +19% to $4.95B, adjusted EBITDA $132.8M and revenue $1.65B all cleared — and <b>rides came in short of the Street</b>, 236.9M against 241.5M, falling sequentially from 243.5M while active riders slipped from 29.2M to 28.3M. Both counts are still up strongly year over year, so this is a stall in the sequential rather than a decline in the franchise. But it means the acceleration was carried by <b>price and mix</b>, not by more people taking more Lyfts.',
           moreLabel:'＋ more — what carried the quarter instead of volume',
           more:'<p>Management\'s own explanation was mix: <b>high-value mode rides up 35% year over year at "margins more than double a standard ride"</b>, still a single-digit percent of rides. Roughly 3 million rides were attributed to winter storm Hernando, which covers part of the sequential gap but not the shape of it.</p><p>The other half is the take rate. Bookings grew faster than rides because the average ride got more expensive or more premium — and when Michael Morton (MoffettNathanson) asked <i>point-blank</i> what year-over-year pricing was on a standard ride, he did not get a number. That number is the missing half of this quarter.</p>' },
         { p:'<b>We still cannot tell how much of the growth was bought.</b> FREENOW, TBR Global and now Gett\'s UK business are all inside the reported base, and Lyft has never published an organic split or restated anything. That makes Q2 2026 the quarter that matters: it is the <b>first to carry both FREENOW and Gett in full</b>, against a guide of +18–21%.',
@@ -2106,8 +2109,8 @@ var CALL_EARNINGS = { ticker:'LYFT', quarters:[
       highlights:[
         { tag:'thesis', band:'context', open:'Three dated commitments — the first scoreable AV calendar Lyft has given', head:'"Nashville isn\'t where we\'re learning how to do this, it\'s where we are starting to commercialize it"',
           detail:'<p>Risher put dates on it: fleet operations, facilities and charging taken over <b>this summer</b>; an <b>80,000 sq ft depot this fall</b>; and <b>in 2H26, riders will be able to match with a Waymo vehicle in the Lyft app</b>. The framing: "The vehicle itself is just the start of the total cost of an AV fleet. The rest — charging, maintenance, cleaning, depot infrastructure, fleet orchestration — is operations. Most have to pay someone else to do that work. We don\'t."</p><p><b>So what:</b> this converts the AV story from positioning into three checkable promises with deadlines. ⚠ As of this call you could <b>not</b> yet order a Waymo in the Lyft app — Waymo went live in Nashville on Apr 7 through its own app. Coverage that says otherwise is wrong.</p>' },
-        { tag:'watch', band:'context', open:'Bookings +19% on rides that fell — what is the organic number?', head:'The demand line went backwards and the release did not explain it',
-          detail:'<p>Rides 243.5M → 236.9M and active riders 29.2M → 28.3M sequentially, with ~3 million rides attributed to winter storm Hernando. Meanwhile <b>high-value mode rides were up 35% YoY at "margins more than double a standard ride"</b> — still a single-digit percent of rides.</p><p><b>So what:</b> the quarter was carried by price and mix. With FREENOW, TBR and now Gett in the base and <b>no organic split ever published</b>, there is currently no way to tell an accelerating marketplace from an acquired one. This is the single biggest open question into Q2.</p>' },
+        { tag:'watch', band:'context', open:'Bookings +19% on rides that fell — what is the organic number?', head:'The demand line went backwards, missed the Street, and the release did not explain it',
+          detail:'<p>Rides 243.5M → 236.9M and active riders 29.2M → 28.3M sequentially, with ~3 million rides attributed to winter storm Hernando. Rides also landed <b>1.9% under the Street\'s 241.5M</b> — the only line in the quarter that came in under expectations. Meanwhile <b>high-value mode rides were up 35% YoY at "margins more than double a standard ride"</b> — still a single-digit percent of rides.</p><p><b>So what:</b> the quarter was carried by price and mix. With FREENOW, TBR and now Gett in the base and <b>no organic split ever published</b>, there is currently no way to tell an accelerating marketplace from an acquired one. This is the single biggest open question into Q2.</p>' },
         { tag:'curious', band:'context', open:'$300M in one quarter vs ~$500M for the year — the pace has to fall by two thirds', head:'A $300M buyback nobody was told about in the release, on an explicit "dislocation" call',
           detail:'<p>"We repurchased approximately $300 million in shares, <b>taking an opportunistic approach to capital return given what we viewed as a dislocation in our share price.</b> For 2026, we expect buybacks at a similar level to 2025" — and 2025 was ~$500M.</p><p><b>So what:</b> management explicitly called its own stock mispriced near the lows, which is a real signal. But $300M in Q1 against ~$500M for the year implies roughly $200M across the remaining three quarters. Either the guide is conservative or the Q1 pace was a one-off; it cannot be both.</p>' },
         { tag:'thesis', band:'context', head:'Insurance reform is showing up in the margin, and California beat its own back-half framing',
@@ -2133,7 +2136,7 @@ var CALL_EARNINGS = { ticker:'LYFT', quarters:[
       ],
       newQuestions:[
         { n:'The organic bookings split — FREENOW + Gett in full for the first time', landed:{ q:'Q2 2026', rank:1 } },
-        { n:'Do rides reinflate, or was Q1 the shape of things?', landed:{ q:'Q2 2026', rank:2 }, tripped:true },
+        { n:'Do rides reinflate, or was Q1 the shape of things? (1Q26 landed 1.9% under the Street)', landed:{ q:'Q2 2026', rank:2 }, tripped:true },
         { n:'Buyback pace: $300M/quarter or ~$200M for the rest of the year?', landed:{ q:'Q2 2026', rank:4 } },
         { n:'YoY pricing on a standard ride — the number Morton asked for', landed:{ q:'Q2 2026', rank:3 } },
         { n:'Waymo-in-the-Lyft-app: is 2H26 still on?', landed:{ q:'Q2 2026', rank:5 } },

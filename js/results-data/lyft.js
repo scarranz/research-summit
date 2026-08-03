@@ -16,26 +16,52 @@
 //             BBG_CONSENSUS.txt archive, so there is no matrix to reconstruct: every value
 //             here is COMPILED PER PRINT from earnings-day coverage, and a quarter with no
 //             defensible published number is left null rather than filled by interpolation.
-//             Only three quarters currently have one — 4Q25, 1Q26 and the 2Q26 estimate —
-//             so this column is sparse ON PURPOSE. Sources, line by line:
-//               • 4Q25 revenue $1,760M — Zacks consensus, corroborated by earnings-day
-//                 coverage noting that ADJUSTED revenue "matched analyst expectations of
-//                 $1.76 billion". ⚠ This is the key to the whole quarter: the reported
-//                 $1,592.7M is $1.76B less the $168M contra-revenue charge, so the 9.5%
-//                 "miss" that cost 17% in a day was the charge and nothing else.
-//               • 1Q26 revenue $1,640M (+13.1% YoY, Investing.com preview 7 May 2026;
-//                 StockStory carried $1.63B the same morning) and adj. EBITDA $130.7M
-//                 (StockStory). No published bookings consensus was found — TD Cowen alone
-//                 modelled +18.5% (~$4.93B), one broker, so that line stays null.
-//               • 2Q26 gross bookings $5,310M, adj. EBITDA $169M — the consensus reported
-//                 against the guide when it was issued on 7 May 2026, so ~3 months stale but
-//                 the only published bar. Revenue $1,840M is the current aggregate
-//                 (~40 contributors); ⚠ a 31 Jul 2026 preview instead framed revenue as
-//                 "+14% YoY", implying ~$1,810M — a ~2% spread between two published views.
+//             No single house covers every line, so the column is deliberately RAGGED — the
+//             source is recorded per cell below rather than claimed to be uniform.
+//
+//             ⚠ THE COLUMN MIXES HOUSES. Zacks, LSEG, FactSet, StreetAccount and StockStory
+//             all appear, and where two published a figure for the same line they disagree by
+//             up to ~0.6% (4Q24 revenue: Zacks $1.55B vs StockStory $1.56B). Read a surprise
+//             inside ±1.5% as noise, not as a beat or a miss.
+//
+//             REVENUE, per quarter:
+//               1Q24 — NULL. Only a rounded "beat estimates by 10%" was published; back-solving
+//                      it would invent precision the source does not have.
+//               2Q24 $1,386M · 3Q24 $1,420M — Zacks.
+//               4Q24 $1,560M — StockStory (paired with its EBITDA figure so the quarter stays
+//                      on one basis). ⚠ Zacks published $1.55B for the same line.
+//               1Q25 $1,470M — LSEG.      2Q25 $1,610M — FactSet.     3Q25 $1,700M — Zacks.
+//               4Q25 $1,760M — Zacks, corroborated by coverage noting ADJUSTED revenue
+//                      "matched analyst expectations of $1.76 billion".
+//               1Q26 $1,640M — Investing.com (+13.1% YoY); StockStory had $1.63B same morning.
+//               2Q26 $1,840M — current aggregate (~40 contributors). ⚠ A 31 Jul 2026 preview
+//                      framed revenue as "+14% YoY", implying ~$1,810M — a ~2% spread.
+//
+//             ADJ. EBITDA: 4Q24 $103.9M · 2Q25 $124.4M · 1Q26 $130.7M (all StockStory);
+//               2Q26 $169M (the consensus reported against the guide on 7 May 2026 — ~3 months
+//               stale, but the only published bar). No figure was found for 3Q24, 1Q25, 3Q25
+//               or 4Q25.
+//
+//             GROSS BOOKINGS: 4Q24 $4,320M (Zacks) · 1Q25 $4,150M (StreetAccount) ·
+//               1Q26 $4,910M (TIKR) · 2Q26 $5,310M.
+//
+//             RIDES / ACTIVE RIDERS: only where a house actually published a count —
+//               rides 4Q24 218.65M (Zacks) and 1Q26 241.5M (TIKR); active riders 4Q24 24.41M
+//               (Zacks). The 1Q26 rides figure matters: the print of 236.9M landed 1.9% UNDER it,
+//               which is the quarter's real tell and is invisible without a consensus.
+//
 //             ⚠ EPS carries NO consensus except 1Q26. The $0.07 there is a GAAP estimate and
-//             is comparable to this row. Aggregator EPS for 2Q26 (~$0.15) and Zacks' $0.32
-//             for 4Q25 are ADJUSTED/normalised figures, which is a different basis from this
-//             row's GAAP diluted EPS — mixing them would manufacture a fake surprise.
+//             is comparable to this row. Aggregator EPS for 2Q26 (~$0.15), Zacks' $0.32 for
+//             4Q25 and its $0.31 for 1Q26 are ADJUSTED/normalised figures — a different basis
+//             from this row's GAAP diluted EPS. Mixing them would manufacture a fake surprise.
+//
+// ⚠ THE PATTERN THE COLUMN EXPOSES — worth carrying into any read of this name.
+// Through 2024 the Street badly UNDER-modelled revenue (2Q24 +3.6%, 3Q24 +7.2% beats) because
+// it was slow to price Lyft's take-rate expansion. From 4Q24 it over-corrected and has modelled
+// revenue slightly HIGH ever since (−0.6%, −1.3%, −1.4%, −0.9%), while consistently
+// under-modelling profitability (adj. EBITDA +8.6%, +4.0%, +1.6%). So the base rate for this
+// name is a small revenue miss alongside an EBITDA beat — which means a small revenue miss is
+// close to meaningless here, and the lines that carry information are EBITDA and the counts.
 //
 // All monetary values in US$ millions; EPS in dollars; rides and riders in millions.
 // null = not available. Arrays are parallel to `periods`.
@@ -57,7 +83,7 @@
 
 export var lyftResults = {
   updated: 'Jul 2026',
-  intro: 'How Lyft’s reported results have stacked up against what the company guided. Lyft guides only two lines — Gross Bookings and Adjusted EBITDA — so those two carry a guidance band and the rest are shown as the reported record. A Street column exists for the three most recent prints only, compiled by hand from earnings-day coverage; it is blank elsewhere because Lyft is not in our Bloomberg archive and an interpolated consensus would be an invention. Pick a metric; each print shows the actual against every reference we have, with the surprise in percent. Periods marked “est.” are forward: guided, no actual yet. Read the metric notes before comparing quarters — the FREENOW acquisition and two one-off items in 4Q25 make parts of this series non-comparable, and on GUIDED lines the model mirrors the reported number once a quarter closes, so a zero surprise there is an artifact rather than a good call.',
+  intro: 'How Lyft’s reported results have stacked up against what the company guided and what the Street expected. Lyft guides only two lines — Gross Bookings and Adjusted EBITDA — so those two carry a guidance band and the rest are shown as the reported record. The Street column is <b>compiled by hand, print by print</b>, because Lyft is not in our Bloomberg archive: it covers revenue back to 2Q24 and is deliberately ragged elsewhere, since a cell with no published figure is left blank rather than interpolated. It also mixes houses (Zacks, LSEG, FactSet, StreetAccount, StockStory), which disagree by up to ~0.6% on the same line — so read a surprise inside ±1.5% as noise. The regularity worth knowing: from 4Q24 on, Lyft has <b>missed revenue slightly and beaten adjusted EBITDA</b> almost every quarter, so a small revenue miss here is the base case rather than news. Pick a metric; each print shows the actual against every reference we have, with the surprise in percent. Periods marked “est.” are forward: guided, no actual yet. Read the metric notes before comparing quarters — the FREENOW acquisition and two one-off items in 4Q25 make parts of this series non-comparable, and on GUIDED lines the model mirrors the reported number once a quarter closes, so a zero surprise there is an artifact rather than a good call.',
   views: {
     q: {
       label: 'Quarterly',
@@ -67,7 +93,7 @@ export var lyftResults = {
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26'],
           act:    [3693.2, 4018.9, 4108.4, 4278.9, 4162.4, 4490.1, 4780.4, 5074.2, 4946.0, null],
           summit: [3258.8, 3625.7, 3798.5, 4235.2, 4135.3, 4532.1, 4731.2, 5076.2, 4937.5, 5363.4],
-          cons:   [null, null, null, null, null, null, null, null, null, 5310],
+          cons:   [null, null, null, 4320, 4150, null, null, null, 4910, 5310],
           guideLo:[3500, 4000, 4000, 4280, 4050, 4410, 4650, 5010, 4860, 5300],
           guideHi:[3600, 4100, 4100, 4350, 4200, 4570, 4800, 5130, 5000, 5430],
           note: 'The headline volume line, and one of only two Lyft guides. It has landed inside or above the guided range in every quarter here. ⚠ From 3Q25 the series is NOT organic: FREENOW closed 31 Jul 2025 and contributed two months to 3Q25, with TBR Global added in Oct 2025 and Gett’s UK business in May 2026. Lyft has never disclosed the inorganic split, so the reported growth rate from 3Q25 onward mixes acquisition and underlying demand. The 2Q26 guide (+18–21%) is the first full quarter with both FREENOW and Gett.' },
@@ -75,23 +101,23 @@ export var lyftResults = {
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26'],
           act:    [1277.2, 1435.8, 1522.7, 1550.3, 1450.2, 1588.2, 1685.2, 1592.7, 1650.5, null],
           summit: [1188.5, 1348.9, 1417.1, 1579.5, 1449.0, 1632.3, 1719.8, 1799.4, 1705.4, 1815.3],
-          cons:   [null, null, null, null, null, null, null, 1760, 1640, 1840],
+          cons:   [null, 1386, 1420, 1560, 1470, 1610, 1700, 1760, 1640, 1840],
           guideLo:[null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null],
-          note: 'Not guided, so the Street line is the only outside reference here. ⚠ 4Q25 is distorted: a $168M CONTRA-REVENUE charge from legal, tax and regulatory reserve changes is inside the $1,592.7M — without it revenue would have been ~$1.8B. That single item is why 4Q25 shows revenue +3% against Gross Bookings +19%; do not read it as a collapse in take rate. ⚠ AND IT IS THE WHOLE STORY OF THE 9.5% "MISS" THIS TAB SHOWS FOR 4Q25: consensus was $1,760M, the print was $1,592.7M, and $1,760M is almost exactly what the quarter earned ex-charge. Coverage that looked at adjusted revenue said it "matched analyst expectations of $1.76 billion" — but the headline number is what cost the stock 17% the next day. Read this row\'s 4Q25 surprise as a disclosure artifact, not a demand miss.' },
+          note: 'Not guided, so the Street line is the only outside reference here. ⚠ READ THE SURPRISE COLUMN AS A REGIME, NOT AS A SCORE: through 2024 the Street under-modelled revenue badly (2Q24 +3.6%, 3Q24 +7.2%) because it was slow to price take-rate expansion; from 4Q24 it over-corrected and has modelled slightly high ever since (−0.6%, −1.3%, −1.4%, −0.9%). A sub-1.5% revenue miss on this name is the base case, not news — especially since the consensus column mixes houses that disagree by up to ~0.6% on the same line. ⚠ 4Q25 is distorted: a $168M CONTRA-REVENUE charge from legal, tax and regulatory reserve changes is inside the $1,592.7M — without it revenue would have been ~$1.8B. That single item is why 4Q25 shows revenue +3% against Gross Bookings +19%; do not read it as a collapse in take rate. ⚠ AND IT IS THE WHOLE STORY OF THE 9.5% "MISS" THIS TAB SHOWS FOR 4Q25: consensus was $1,760M, the print was $1,592.7M, and $1,760M is almost exactly what the quarter earned ex-charge. Coverage that looked at adjusted revenue said it "matched analyst expectations of $1.76 billion" — but the headline number is what cost the stock 17% the next day. Read this row\'s 4Q25 surprise as a disclosure artifact, not a demand miss.' },
         rides: { label: 'Rides', short: 'Rides', group: 'Volume', unit: 'usdM',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26'],
           act:    [187.7, 205.3, 216.7, 218.5, 218.4, 234.8, 248.8, 243.5, 236.9, null],
           summit: [166.9, 184.3, 194.0, 221.2, 211.2, 237.8, 247.4, 256.5, 236.9, 254.3],
-          cons:   [null, null, null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, 218.65, null, null, null, null, 241.5, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null],
-          note: 'In MILLIONS of rides, not dollars — the unit label reads US$ because the engine has no count unit yet; read this line as a count. Not guided. ⚠ The 1Q26 Summit figure (236.9) equals the reported number exactly; treat that single point as mirrored, not forecast. The demand tell: 1Q26 rides FELL sequentially and disappointed even as bookings and revenue beat, which means price and mix, not volume, carried that quarter.' },
+          note: 'In MILLIONS of rides, not dollars — the unit label reads US$ because the engine has no count unit yet; read this line as a count. Not guided. ⚠ The 1Q26 Summit figure (236.9) equals the reported number exactly; treat that single point as mirrored, not forecast. THE DEMAND TELL, and it is now scoreable: the Street had 1Q26 rides at 241.5M and Lyft printed 236.9M — <b>1.9% short</b>, and a sequential DECLINE from 243.5M, in the same quarter bookings and revenue beat. At 1.9% the surprise sits just inside the engine’s 2% in-line tolerance, so the chip reads “in line”; judge it on the combination instead — under the Street, down sequentially, and beats on every other line all say the same thing, that price and mix carried the quarter rather than volume. Only two quarters carry a published rides consensus (4Q24 218.65M, met to within 0.1%; 1Q26 241.5M) because most houses do not publish a ride count at all.' },
         riders: { label: 'Active Riders', short: 'Active riders', group: 'Volume', unit: 'usdM',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26'],
           act:    [21.9, 23.7, 24.4, 24.7, 24.2, 26.1, 28.7, 29.2, 28.3, null],
           summit: [19.6, 21.5, 22.4, 24.4, 23.9, 25.8, 27.0, 29.9, 28.6, 30.5],
-          cons:   [null, null, null, null, null, null, null, null, null, null],
+          cons:   [null, null, null, 24.41, null, null, null, null, null, null],
           guideLo:[null, null, null, null, null, null, null, null, null, null],
           guideHi:[null, null, null, null, null, null, null, null, null, null],
           note: 'In MILLIONS of riders (same unit caveat as Rides). Not guided. The 3Q25 step from 26.1M to 28.7M coincides with FREENOW entering the base, so it is not a clean organic acceleration.' },
@@ -99,10 +125,10 @@ export var lyftResults = {
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26'],
           act:    [59.4, 102.9, 107.3, 112.8, 106.5, 129.4, 138.9, 154.1, 132.8, null],
           summit: [59.4, 102.9, 107.3, 110.2, 95.9, 134.2, 151.4, 160.8, 136.2, 173.6],
-          cons:   [null, null, null, null, null, null, null, null, 130.7, 169],
+          cons:   [null, null, null, 103.9, null, 124.4, null, null, 130.7, 169],
           guideLo:[50, 95, 90, 100, 90, 115, 125, 135, 120, 160],
           guideHi:[55, 100, 95, 105, 95, 130, 145, 155, 140, 180],
-          note: '⚠ READ THE SUMMIT LINE WITH CARE HERE: for 1Q24–3Q24 the model’s “estimate” EQUALS the reported figure to the decimal (59.4 / 102.9 / 107.3). That is the model mirroring an actual on a closed guided line, not a perfect forecast — treat a zero surprise on those quarters as no information. The second and last guided line, and the one Lyft manages to. It has printed at or above the top of the guide in almost every quarter. The margin line is the one management is judged on — % of Gross Bookings, climbing from 1.6% to ~3.0%, against a ~$1B Adjusted EBITDA goal for 2027. ⚠ 4Q25 is CLEAN despite the charge: the full $211.6M is added back, so the $154.1M and its 3.0% margin are comparable.' },
+          note: 'THE LINE THAT CARRIES INFORMATION. Where a Street figure exists, Lyft has beaten it every time — 4Q24 +8.6%, 2Q25 +4.0%, 1Q26 +1.6% — while revenue was missing in those same quarters. That is the shape of this business as the Street models it: profitability under-modelled, revenue over-modelled. ⚠ READ THE SUMMIT LINE WITH CARE HERE: for 1Q24–3Q24 the model’s “estimate” EQUALS the reported figure to the decimal (59.4 / 102.9 / 107.3). That is the model mirroring an actual on a closed guided line, not a perfect forecast — treat a zero surprise on those quarters as no information. The second and last guided line, and the one Lyft manages to. It has printed at or above the top of the guide in almost every quarter. The margin line is the one management is judged on — % of Gross Bookings, climbing from 1.6% to ~3.0%, against a ~$1B Adjusted EBITDA goal for 2027. ⚠ 4Q25 is CLEAN despite the charge: the full $211.6M is added back, so the $154.1M and its 3.0% margin are comparable.' },
         ni: { label: 'Net Income (GAAP)', short: 'Net income', group: 'Profitability', unit: 'usdM', marginOf: 'rev', marginLabel: 'net margin',
           periods: ['1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26'],
           act:    [-31.5, 5.0, -12.4, 61.7, 2.6, 40.3, 46.1, 2755.1, 14.2, null],

@@ -144,7 +144,44 @@ export var HS_ACCOUNTING = [
     effect: '+', impact: 'Same structure as Blue Owl. Meta: "multiple pathways to generate returns on invested capital".' },
 ];
 
-// ── 5 · THE MIGRATING BOTTLENECK ──────────────────────────────────────────────
+// ── 5 · THE DEPRECIATION WAVE ─────────────────────────────────────────────────
+// Disclosure here is deliberately asymmetric, and that asymmetry IS the finding:
+// only Alphabet quantifies its depreciation line on the calls. Microsoft never
+// gives the dollars but does report the margin the depreciation lands on. Meta
+// and Amazon give neither — only direction. So this section pairs the one
+// quantified series with the one visible consequence, and quotes the rest rather
+// than inventing a fourth and fifth series.
+
+// Alphabet — the only company that puts numbers on it. All stated on the calls.
+export var HS_DEP_GOOGL = {
+  fy: [
+    { year: '2024', usd: 15.3, growth: 28, src: '4Q24 call: "In 2024, we saw 28% year-over-year growth in depreciation."' },
+    { year: '2025', usd: 21.1, growth: 38, src: '4Q25 call: "depreciation increased by nearly $6 billion, or 38%, from $15.3 billion in 2024 to $21.1 billion in 2025."' },
+  ],
+  // Quarterly YoY growth of the depreciation line, as stated. Note the ramp.
+  qtr: [
+    { q: '1Q25', growth: 31, usd: null, src: '"about a 31% year-over-year growth in depreciation this quarter, and it will be higher as we go throughout the year."' },
+    { q: '2Q25', growth: 35, usd: 5.0,  src: '"depreciation increased $1.3 billion year-over-year to $5 billion, reflecting a growth rate of 35%."' },
+    { q: '3Q25', growth: 41, usd: 5.6,  src: '"depreciation increased $1.6 billion year-over-year to $5.6 billion, reflecting a growth rate of 41%."' },
+  ],
+  forward: 'For 2026 Alphabet expects the growth rate to "accelerate in Q1 and meaningfully increase for the full year" — no figure given.',
+};
+
+// Microsoft — never gives the depreciation dollars, but reports the gross margin
+// the spend lands on every quarter. ACTUALS only (guides excluded so the series
+// stays one kind of number); null = no absolute figure stated that quarter.
+export var HS_MSFT_CLOUD_GM = [72, null, 71, null, 69, 68, 68, 67, 66, 65];
+
+export var HS_DEP_NOTES = [
+  { id: 'meta', head: 'Direction only, no figure',
+    body: 'Meta has flagged infrastructure as the single largest driver of expense growth two years running, and in 2Q25 warned of "a sharp acceleration in depreciation expense growth in 2026" from assets bought and placed in service that year. It has never put a number on the line.' },
+  { id: 'amzn', head: 'Visible only through AWS margin',
+    body: 'Amazon discloses depreciation as a margin headwind rather than a figure — "AWS margins also saw headwinds from higher depreciation expense" (2Q25). Its useful-life changes, which move this line directly, are in the Accounting tab.' },
+  { id: 'msft', head: 'The consequence, not the cause',
+    body: 'Microsoft Cloud gross margin has fallen every year of the build-out, and management attributes it to "scaling our AI infrastructure" each time. Reading it as the depreciation line is an inference — a real one, but the dollars are never disclosed.' },
+];
+
+// ── 6 · THE MIGRATING BOTTLENECK ──────────────────────────────────────────────
 export var HS_BOTTLENECK = [
   { period: '2024', label: 'Chips and the demand signal',
     quote: 'Microsoft, Jul-24: "we can throttle that investment… if we see differences in demand signal". The framing is still that demand leads and supply adjusts.' },

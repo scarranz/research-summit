@@ -22,6 +22,7 @@
 import {
   HS_COMPANIES, HS_VINTAGES, HS_GUIDE, HS_QUARTERLY, HS_BASIS,
   HS_BACKLOG, HS_BACKLOG_NOTES, HS_ACCOUNTING, HS_BOTTLENECK,
+  HS_DEP_GOOGL, HS_MSFT_CLOUD_GM, HS_DEP_NOTES,
 } from './hyperscalers-data.js';
 
 function esc(s){ if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -95,8 +96,11 @@ function lineChart(canvasId, series, unit, yTitle){
 
   var fmt = function(v){
     if (v == null) return '—';
-    return unit === 'x' ? (Math.round(v * 100) / 100) + '×' : '$' + (Math.round(v * 10) / 10) + 'B';
+    if (unit === 'x') return (Math.round(v * 100) / 100) + '×';
+    if (unit === 'pct') return (Math.round(v * 10) / 10) + '%';
+    return '$' + (Math.round(v * 10) / 10) + 'B';
   };
+  var tick = function(v){ return unit === 'x' ? v + '×' : unit === 'pct' ? v + '%' : '$' + v + 'B'; };
   var datasets = series.map(function(s){
     var c = co(s.id);
     return {
@@ -120,7 +124,8 @@ function lineChart(canvasId, series, unit, yTitle){
       layout: { padding: { right: 54, top: 6 } },
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { position: 'top', align: 'start',
+        // A single series needs no legend box — the chart title names it.
+        legend: { display: datasets.length > 1, position: 'top', align: 'start',
           labels: { boxWidth: 8, boxHeight: 8, usePointStyle: true, pointStyle: 'circle',
                     color: '#1E2733', font: { size: 11, family: 'Inter', weight: '600' }, padding: 14 } },
         tooltip: {
@@ -141,8 +146,7 @@ function lineChart(canvasId, series, unit, yTitle){
              ticks: { color: INK_MUTED, font: { size: 10.5, family: 'Inter' } } },
         y: { title: { display: !!yTitle, text: yTitle, color: INK_MUTED, font: { size: 10.5, family: 'Inter' } },
              grid: { color: GRID, drawTicks: false }, border: { display: false },
-             ticks: { color: INK_MUTED, font: { size: 10.5, family: 'Inter' }, padding: 8,
-                      callback: function(v){ return unit === 'x' ? v + '×' : '$' + v + 'B'; } } },
+             ticks: { color: INK_MUTED, font: { size: 10.5, family: 'Inter' }, padding: 8, callback: tick } },
       },
     },
     plugins: [endLabels],
@@ -296,7 +300,50 @@ function accountingBody(){
     '</div>';
 }
 
-// ─── Tab 5 · Bottleneck ───────────────────────────────────────────────────────
+// ─── Tab 5 · Depreciation ─────────────────────────────────────────────────────
+// Alphabet's numbers are shown as tiles + a table rather than forced into a
+// chart: two annual points and three quarterly growth rates is not a series, and
+// drawing it as one would imply a resolution the disclosure doesn't have. The
+// one thing that IS a series — Microsoft's cloud gross margin — gets the chart.
+function depreciationBody(){
+  var tiles = HS_DEP_GOOGL.fy.map(function(y){
+    return '<div class="hs-stat"><div class="hs-stat-v">$' + y.usd + 'B</div>' +
+      '<div class="hs-stat-l">FY' + y.year + ' depreciation · <b>+' + y.growth + '%</b> YoY</div></div>';
+  }).join('');
+
+  var qrows = HS_DEP_GOOGL.qtr.map(function(q){
+    return [q.q, q.usd == null ? null : '$' + q.usd.toFixed(1) + 'B', '<span class="hs-up">+' + q.growth + '%</span>'];
+  });
+  qrows.unshift(['FY2024', '$15.3B', '<span class="hs-up">+28%</span>']);
+  qrows.push(['FY2025', '$21.1B', '<span class="hs-up">+38%</span>']);
+
+  var srcs = HS_DEP_GOOGL.qtr.map(function(q){ return '<li><b>' + q.q + '</b> · ' + esc(q.src) + '</li>'; }).join('') +
+    HS_DEP_GOOGL.fy.map(function(y){ return '<li><b>FY' + y.year + '</b> · ' + esc(y.src) + '</li>'; }).join('');
+
+  var notes = HS_DEP_NOTES.map(function(n){
+    return '<li>' + dot(n.id) + '<b>' + co(n.id).ticker + ' — ' + esc(n.head) + '.</b> ' + esc(n.body) + '</li>';
+  }).join('');
+
+  return '<p class="hs-lede">The bill for the build-out arrives as depreciation, and it is already landing. Only one of the four puts a number on it — which is itself worth knowing.</p>' +
+    sec('Alphabet — the only quantified series') +
+    '<div class="hs-card">' +
+      '<div class="hs-stats">' + tiles + '</div>' +
+      '<p class="hs-body" style="margin-top:12px">The growth rate accelerated every quarter it was disclosed — 31% → 35% → 41% — so the line is not just growing, it is growing faster. ' + esc(HS_DEP_GOOGL.forward) + '</p>' +
+      table(qrows, ['Period', 'Depreciation', 'YoY growth']) +
+      '<ul class="hs-src">' + srcs + '</ul>' +
+    '</div>' +
+    sec('Where it shows up — Microsoft Cloud gross margin') +
+    '<div class="hs-card">' +
+      '<div class="hs-chart-head"><span class="hs-chart-t">Microsoft Cloud gross margin</span>' +
+        '<span class="hs-chart-u">% · reported actuals only</span></div>' +
+      '<div class="hs-canvas"><canvas id="hs-dep"></canvas></div>' +
+      '<p class="hs-cap">Seven points of margin in nine quarters, attributed by management to "scaling our AI infrastructure" each time. Guides are excluded so the series is one kind of number; gaps are quarters where no absolute figure was stated. Axis does not start at zero — this is a compression, not a magnitude, chart.</p>' +
+    '</div>' +
+    sec('What the other two disclose instead') +
+    '<div class="hs-card hs-card--warn"><ul class="hs-src">' + notes + '</ul></div>';
+}
+
+// ─── Tab 6 · Bottleneck ───────────────────────────────────────────────────────
 function bottleneckBody(){
   var items = HS_BOTTLENECK.map(function(b, i){
     return '<li class="hs-step"><span class="hs-step-n">' + (i + 1) + '</span>' +
@@ -314,6 +361,7 @@ var TABS = [
   { key: 'qtr',     label: 'Quarterly CapEx',    body: quarterlyBody },
   { key: 'backlog', label: 'Backlog & Coverage', body: backlogBody },
   { key: 'acct',    label: 'Accounting',         body: accountingBody },
+  { key: 'dep',     label: 'Depreciation',       body: depreciationBody },
   { key: 'neck',    label: 'The Bottleneck',     body: bottleneckBody },
 ];
 
@@ -349,6 +397,8 @@ function buildFor(key){
     lineChart('hs-back', ['googl', 'amzn', 'msft'].map(function(id){
       return { id: id, data: abs ? HS_BACKLOG[id] : coverage(id) };
     }), abs ? 'usd' : 'x', abs ? 'Contracted backlog' : 'Coverage');
+  } else if (key === 'dep'){
+    lineChart('hs-dep', [{ id: 'msft', data: HS_MSFT_CLOUD_GM }], 'pct', 'Gross margin');
   }
 }
 

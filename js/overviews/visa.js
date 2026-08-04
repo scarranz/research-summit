@@ -13,6 +13,10 @@
 // Summit DCF universe, so there is no forward model projection here — FY2021–FY2025 actuals only.
 
 import { makeManagement } from './management.js';
+import { mountWatchList } from '../watchlist.js';
+
+// Company (id + ticker) captured at render time, for the shared Watch List (Supabase) wiring.
+var _co=null;
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -695,6 +699,7 @@ function stdVasSpotlight(){
     vasPopTiles(VAS_MOAT,'vasm');
 }
 function html(c){
+  _co=c; // capture company (id + ticker) for the Watch List DB wiring
   var h='<div class="ov ov-mastercard" data-brand="MA">';
   h+=stdOverviewBody(c);
   h+='<div class="ov-modal-back" id="ovModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
@@ -1986,42 +1991,10 @@ function cpWatchTags(){
 }
 function cpWatchBody(c){
   var h=cpStyle();
-  h+='<div class="cp-wl-tagbar"><span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu)">Filter by theme (across quarters):</span>'+
-    cpWatchTags().map(function(t){ return '<button type="button" class="cp-wl-tag" data-wltag="'+esc(t)+'">#'+esc(t)+'</button>'; }).join('')+
-    '<button type="button" class="cp-wl-tag cp-wl-clear" data-wltag="">clear</button>'+
-    '<button type="button" class="cp-wl-add-btn">+ Add theme</button>'+
-  '</div>';
-  h+='<div class="cp-wl-addform" hidden>'+
-    '<input class="cp-wl-in" data-wlf="metric" placeholder="Theme (e.g. Regulatory: CCCA routing mandate)">'+
-    '<input class="cp-wl-in" data-wlf="tags" placeholder="tags, comma-separated (e.g. regulatory, cross-border)">'+
-    '<input class="cp-wl-in" data-wlf="pista" placeholder="The tell 🔎 — a standing read, not a question">'+
-    '<input class="cp-wl-in" data-wlf="breaks" placeholder="Breaks if… (the falsifiable red-line)">'+
-    '<div><button type="button" class="cp-wl-add-go">Add to this quarter\'s list</button><span class="ave-subh-note" style="margin-left:8px">Lives for this session — to persist it, it gets committed into CALL_PREP.</span></div>'+
-  '</div>';
-  h+=CALL_PREP.quarters.map(function(u,qi){
-    var qk=cpQkey(u.q), frozen=(u.status!=='upcoming');
-    var b='<div class="cp-qblock" data-cpq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="cp-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="cp-frozen">frozen</span>':'')+'</div>';
-    b+='<p class="ov-lede"><b>Five things to hunt — '+esc(u.q)+'</b>'+(frozen?' <span style="color:var(--mu);font-weight:600">(the list as it was frozen before this call — scored afterwards in Post-Results)</span>':'')+', numbered 1–5 by <b>how much they move the stock × how debated they are</b>. Each card carries: the <b>tell</b> (🔎) — what to actually watch for; what the <b>Street expects</b>; and the <b>red-line</b> that would break the thesis. Tap <b>why ›</b> for the grounding and the quarter-by-quarter thread.</p>';
-    b+='<div class="cp-legend"><span class="cp-legend-i"><b>How to read the cards:</b></span>'+
-      '<span class="cp-legend-i"><span class="cp-seed">left open by Q1 FY2026</span> it is on the list because last quarter\'s call did not settle it</span>'+
-      '<span class="cp-legend-i"><span class="cp-seed">⚑ red-line tripped in Q1 FY2026</span> stronger — a thesis line actually broke last quarter</span>'+
-    '</div>';
-    var wl=u.watchList||[];
-    if(!wl.length){ b+='<div class="cp-note">Watch List builds from the earnings-call record + the Bloomberg export — 5 ranked, grounded, falsifiable items per the conventions.</div>'; }
-    else{ b+='<div class="cp-watch">'+wl.map(function(w){ return cpWatchItem(w, qk, '', null); }).join('')+'</div>'; }
-    b+='<div class="ov-foot">'+(frozen?'Frozen — this list was scored against '+esc(u.q)+'\'s Post-Results/Post-Call; its newQuestions seeded the next quarter.':'Frozen once the quarter opens; scored against Post-Results / Post-Call. Themes carry their quarter-by-quarter thread — promise-type items are tracked here and in the theme record below.')+'</div>';
-    b+='</div>';
-    return b;
-  }).join('');
-  h+='<div class="cp-wl-all" hidden>';
-  h+='<div class="cp-phase" style="background:'+PURPLE+'">Themes across quarters</div>';
-  h+='<p class="ov-lede">Every watch item matching the selected theme(s), <b>across all quarters</b> — how the same hunt evolved print to print. Clear the tags (or pick a quarter) to return to the per-quarter view.</p>';
-  h+='<div class="cp-watch">'+CALL_PREP.quarters.map(function(u){
-    var qk=cpQkey(u.q);
-    return (u.watchList||[]).map(function(w){ return cpWatchItem(w, qk, '-f', u.q); }).join('');
-  }).join('')+'</div>';
-  h+='</div>';
+  // v3.0: the Watch List is the shared, persistent, Supabase-backed engine (js/watchlist.js).
+  // The per-quarter cards, tag filter, add-form and cross-quarter view are all owned by the engine
+  // now — we just render the mount host and wire it in wireCallPrep(). Seed: sql/014_visa_themes_seed.sql.
+  h+='<div data-wlmount></div>';
   // ── FUSED (v2.3): the full multi-year theme record — the former standalone Earnings Calls tab. ──
   h+='<div style="margin-top:26px;border-top:2px solid var(--bdr);padding-top:16px">';
   h+='<div class="cp-band" style="--bc:'+BRAND+'"><span class="cp-band-i">▤</span><span class="cp-band-t">The theme record — every thread, across all calls</span><span class="cp-band-s">the multi-year backbone behind the hunt above (the former "Earnings Calls" tab, folded in)</span><span class="cp-band-l"></span></div>';
@@ -2032,6 +2005,35 @@ function cpWatchBody(c){
 var CP_RES={ beat:{c:'#0a8f4c',l:'Beat'}, miss:{c:RED,l:'Miss'}, inline:{c:'#6b7684',l:'In line'},
              nodisc:{c:AMBER,l:'Not disclosed'}, nocons:{c:PURPLE,l:'No consensus'} };
 var CP_HLTAG={ thesis:{c:'#0a8f4c',l:'Thesis'}, curious:{c:'#7A5AF8',l:'Curious'}, dots:{c:'#2E6BE6',l:'Connects dots'}, watch:{c:'#B7791F',l:'Watch'}, tone:{c:'#B7791F',l:'Tone'} };
+// "Also on the call" — the supplemental colour (v2.8/v2.9): one box, a native <details> per point.
+// Thesis-movers (band:'lead') live on the Watch List, so they are filtered out here. Call-derived
+// figures (not in BBG) belong HERE as highlights — never in the print tiles / charts.
+function cpHighlightsBlock(cc, qk){
+  if(!cc||!cc.highlights) return '';
+  var hls=cc.highlights.filter(function(x){ return (x.band||'context')!=='lead'; });
+  if(!hls.length) return '';
+  var rows=hls.map(function(x){
+    var det=x.detail||''; if(x.open) det+='<p style="margin-top:8px"><b>Still open:</b> '+x.open+'</p>';
+    var tg=CP_HLTAG[x.tag]||{l:x.tag||'',c:GRAY};
+    return '<details style="border-bottom:1px solid var(--bdr)"><summary style="display:flex;align-items:center;gap:8px;padding:9px 13px;cursor:pointer;list-style:none;font-size:11.5px;font-weight:600;color:var(--navy);line-height:1.45">'+
+      (tg.l?'<span class="cp-hl-tag" style="background:'+(tg.c||GRAY)+';flex:none">'+esc(tg.l)+'</span>':'')+
+      '<span style="flex:1;min-width:0">'+x.head+(x.open?' <span class="cp-hl-open" title="'+esc(x.open)+'">open</span>':'')+'</span>'+
+      (det?'<span style="margin-left:auto;color:var(--mu);font-size:10px;flex:none">▾</span>':'')+'</summary>'+
+      (det?'<div style="padding:0 13px 12px;font-size:10.5px;font-weight:500;color:var(--navy);line-height:1.55;background:#FBFCFE">'+det+'</div>':'')+'</details>';
+  }).join('');
+  return '<div style="margin-top:18px;border:1px solid var(--bdr);border-radius:12px;background:#fff;overflow:hidden">'+
+    '<div style="padding:10px 13px;background:#F6F8FA;border-bottom:1px solid var(--bdr)"><b style="font-size:11.5px;color:var(--navy)">Also on the call</b>'+
+      '<div style="font-size:9.5px;color:var(--mu);font-weight:600;margin-top:2px">supplemental colour — the meeting-critical items are the print + thesis check above and the Watch List</div></div>'+
+    rows+'</div>';
+}
+// Results / Estimates sub-tabs render the shared js/results.js engine, which is data-driven from the
+// BBG snapshot archive. Until V US EQUITY is in BBG_CONSENSUS.txt (→ results-data/visa.js + visa-setup.js),
+// they show this pending note. Only BBG-tracked series go in these boxes/charts (house rule).
+function cpPending(label){
+  return '<div class="cp-note" style="margin:8px 0;line-height:1.6">📊 <b>'+esc(label)+'</b> renders from the shared <b>Results engine</b> — the Bloomberg snapshot archive tracked over time (chart + transposed table). '+
+    'It fills once <b>V US EQUITY</b> lands in the BBG export and is wired into <code>results-data/visa.js</code>. '+
+    'Per the house rule, only BBG-tracked series go in these boxes/charts; call-only figures stay in the Post-Results highlights.</div>';
+}
 function cpResultsBody(c){
   var h=cpStyle();
   h+=CALL_PREP.quarters.map(function(q,qi){
@@ -2079,79 +2081,25 @@ function cpResultsBody(c){
     }
     b+='<div style="margin-top:10px;font-size:11.5px;color:var(--navy)"><b>Price reaction:</b> '+cpFill(r.priceReaction,'to fill from a trusted source')+'</div>';
     b+='</div>';
+    // ── The call read (v2.7: the standalone Post-Call phase is dissolved into Post-Results). The
+    //    print first, then what management SAID: the take, the "Also on the call" colour, the dots. ──
+    var cc=q.call;
+    if(cc){
+      b+='<div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin:16px 0 6px">🎤 What management said on the call <span style="font-weight:600;text-transform:none;letter-spacing:0">· '+esc(q.date||'')+'</span></div>';
+      if(cc.take) b+='<div class="cp-take">🎯 '+cc.take+'</div>';
+      b+=cpHighlightsBlock(cc, qk);
+      if(cc.dots) b+='<div class="cp-dots" style="margin-top:14px">🧩 '+cc.dots+'</div>';
+    }
     b+='<div class="ov-foot">Scored against the frozen Watch List. Consensus = Bloomberg export; actuals = reported (Bloomberg / release).</div>';
     b+='</div>';
     return b;
   }).join('');
   return h;
 }
-function cpCallBody(c){
-  var h=cpStyle();
-  h+=CALL_PREP.quarters.map(function(q,qi){
-    var qk=cpQkey(q.q);
-    var b='<div class="cp-qblock" data-cpq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="cp-phase" style="background:'+RED+'">③ Post-Call</div>';
-    b+='<p class="ov-lede"><b>'+esc(q.q)+' — not a restatement of the numbers; the story behind them.</b> What the call <i>implied</i> for the thesis, the curious one-mention details, and the dots that connect. Tap any highlight for the depth.</p>';
-    b+='<div class="cp-legend"><span class="cp-legend-i"><b>Highlights are grouped by what you DO with them in the meeting:</b></span>'+
-      '<span class="cp-legend-i"><span style="color:'+RED+';font-weight:800">▲ Lead with this</span> — open with it: it moves the thesis and something is still unanswered</span>'+
-      '<span class="cp-legend-i"><span style="color:'+BLUE+';font-weight:800">● Context</span> — worth saying, but settled; there is nothing to argue</span>'+
-      '<span class="cp-legend-i"><span style="color:'+GRAY+';font-weight:800">○ Logged</span> — recorded for later, not meeting material</span>'+
-      '<span class="cp-legend-i"><span class="cp-hl-open">open</span> flags the specific thing management left unanswered</span>'+
-    '</div>';
-    var cc=q.call;
-    if(!cc){ b+='<div class="cp-note">Empty until the call/transcript is in. Then the meeting take, theme-by-theme highlights and the connect-the-dots line fill here.</div></div>'; return b; }
-    b+='<div style="margin-bottom:18px">';
-    b+='<div style="font-size:13.5px;font-weight:800;color:var(--navy);margin-bottom:8px">'+esc(q.q)+' <span style="font-weight:600;color:var(--mu);font-size:11px">· call '+esc(q.date||'')+'</span></div>';
-    if(cc.take) b+='<div class="cp-take">🎯 '+cc.take+'</div>';
-    if(cc.highlights&&cc.highlights.length){
-      var bands=[
-        { k:'lead',    i:'▲', c:RED,     t:'Lead with this', s:'moves the thesis — and something is still unresolved' },
-        { k:'context', i:'●', c:BLUE,    t:'Context',        s:'matters, but it is settled — mention, don\'t debate' },
-        { k:'logged',  i:'○', c:GRAY,    t:'Logged',         s:'on the record for later; not meeting material' },
-      ];
-      var hi=0;
-      bands.forEach(function(bd){
-        var items=cc.highlights.filter(function(x){ return (x.band||'context')===bd.k; });
-        if(!items.length) return;
-        b+='<div class="cp-band" style="--bc:'+bd.c+'"><span class="cp-band-i">'+bd.i+'</span><span class="cp-band-t">'+bd.t+'</span><span class="cp-band-s">'+bd.s+'</span><span class="cp-band-l"></span></div>';
-        b+='<div class="cp-hl">'+items.map(function(x){ var tg=CP_HLTAG[x.tag]||{c:'#6b7684',l:x.tag||''};
-          var det=x.detail||'';
-          if(x.open) det+='<p style="border-left:3px solid '+AMBER+';padding-left:9px;margin-top:10px"><b>Still open:</b> '+x.open+'</p>';
-          var id=det?cpReg('hl-'+qk+'-'+(hi++), tg.l+' — '+String(x.head).replace(/<[^>]+>/g,''), det):null;
-          var op=x.open?' <span class="cp-hl-open" title="'+esc(x.open)+'">open</span>':'';
-          return '<div class="cp-hl-row" style="--hc:'+tg.c+'"'+(id?' data-detail="cp:'+id+'"':'')+'><span class="cp-hl-tag">'+esc(tg.l)+'</span><span class="cp-hl-head">'+x.head+op+'</span>'+(id?'<span class="cp-hl-more">＋</span>':'<span></span>')+'</div>';
-        }).join('')+'</div>';
-      });
-    }
-    if(cc.dots) b+='<div class="cp-dots">🧩 '+cc.dots+'</div>';
-    if(cc.threeMinutes&&cc.threeMinutes.length){
-      b+='<div class="cp-3m"><div class="cp-3m-h"><span class="cp-3m-t">🎤 Three minutes</span>'+
-        '<span class="cp-3m-sub">the spoken version — if you get one slot, this is it</span>'+
-        '<button type="button" class="cp-3m-copy" data-cp3m="'+esc(qk)+'">copy</button></div>';
-      b+='<div class="cp-3m-l" data-cp3mlist="'+esc(qk)+'">'+cc.threeMinutes.map(function(t){ return '<div class="cp-3m-i"><span>'+t+'</span></div>'; }).join('')+'</div>';
-      if(cc.notBringing&&cc.notBringing.length){
-        b+='<div class="cp-nb"><div class="cp-nb-h">✕ Deliberately not bringing — and why, if asked</div>'+
-          cc.notBringing.map(function(x){ return '<div class="cp-nb-r"><span class="cp-nb-x">✕</span><span><b>'+esc(x.item)+'</b> — '+esc(x.why)+'</span></div>'; }).join('')+'</div>';
-      }
-      b+='</div>';
-    }
-    if(cc.newQuestions&&cc.newQuestions.length){
-      b+='<div style="margin-top:12px"><div style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--mu);margin-bottom:5px">➡ What this call left unanswered — and where each question went next</div>';
-      b+='<div class="cp-nq">'+cc.newQuestions.map(function(x){
-        var n=(typeof x==='string')?x:x.n, land=(typeof x==='string')?null:x.landed;
-        var trip=(typeof x!=='string'&&x.tripped)?'<span style="color:'+RED+';font-weight:800;margin-right:5px" title="A thesis red-line actually broke on this one">⚑</span>':'';
-        var chip=land?'<span class="cp-nq-land">became '+esc(land.q)+' Watch item #'+esc(String(land.rank))+'</span>'
-                     :'<span class="cp-nq-land open">still open — not yet on a list</span>';
-        return '<div class="cp-nq-row"><span>'+trip+esc(n)+'</span>'+chip+'</div>';
-      }).join('')+'</div></div>';
-    }
-    b+='</div>';
-    b+='<div class="ov-foot">Insight-first, not fact-first. Append-only — prior quarters are never overwritten; newQuestions feeds the next Watch List.</div>';
-    b+='</div>';
-    return b;
-  }).join('');
-  return h;
-}
+// v2.7: the standalone Post-Call phase is DISSOLVED into Post-Results (cpResultsBody folds in the
+// call read — take + "Also on the call" highlights + dots). The `take` / `highlights` / `dots` data
+// is rendered there; `threeMinutes` / `notBringing` / `newQuestions` survive in CALL_PREP as
+// authoring notes only (not rendered), and `newQuestions` seeds the next Watch List (sql/014).
 var CP_THST={ trend:{c:'#0a8f4c',l:'Confirmed trend'}, promise:{c:'#2E6BE6',l:'Promise — reconcile'}, watch:{c:'#B7791F',l:'Watch'} };
 function cpQnum(q){ var m=String(q||'').match(/Q(\d)\s+(?:FY)?(\d{4})/); return m?((+m[2])*4+(+m[1])):null; }
 function cpStAge(st){
@@ -2167,7 +2115,7 @@ function cpStAge(st){
   return '<span class="calls-st-age"> · '+lbl+'</span>';
 }
 function wireCallPrep(root){
-  var pane=root.querySelector('.ovt-subpane[data-ovst="callprep"]'); if(!pane) return;
+  var pane=root.querySelector('.ovt-subpane[data-ovst="earnings"]'); if(!pane) return;
   pane.querySelectorAll('.cp-phtab').forEach(function(btn){ btn.onclick=function(){
     var key=btn.getAttribute('data-cpp');
     pane.querySelectorAll('.cp-phtab').forEach(function(b){ b.classList.toggle('active', b===btn); });
@@ -2196,55 +2144,17 @@ function wireCallPrep(root){
     else { var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
            try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta); done(); }
   }; });
+  // v3.0: mount the shared, Supabase-backed Watch List engine (js/watchlist.js). It owns
+  // rendering, CRUD, sorting, tags, the delete rule and the cross-quarter view — no per-file
+  // list code. companyId scopes the company_themes rows; quarters marks the live/editable one.
   var wpane=pane.querySelector('.cp-phpane[data-cpp="watch"]');
   if(wpane){
-    var flat=wpane.querySelector('.cp-wl-all');
-    function activeTags(){ return Array.prototype.map.call(wpane.querySelectorAll('.cp-wl-tag.active'), function(b){ return b.getAttribute('data-wltag'); }).filter(Boolean); }
-    function applyTags(){
-      var tags=activeTags();
-      var on=tags.length>0;
-      wpane.querySelectorAll('.cp-qblock').forEach(function(blk){ if(on) blk.hidden=true; });
-      if(!on){
-        var act=pane.querySelector('.cp-qpill.active'); var qk=act?act.getAttribute('data-cpqsel'):null;
-        wpane.querySelectorAll('.cp-qblock').forEach(function(blk){ blk.hidden=(qk!=null && blk.getAttribute('data-cpq')!==qk); });
-      }
-      if(flat){ flat.hidden=!on;
-        if(on) flat.querySelectorAll('.cp-w').forEach(function(card){
-          var ct=(card.getAttribute('data-wltags')||'').split(/\s+/);
-          var hit=tags.some(function(t){ return ct.indexOf(t)>=0; });
-          if(hit) card.removeAttribute('data-wlhide'); else card.setAttribute('data-wlhide','1');
-        });
-      }
+    var wmount=wpane.querySelector('[data-wlmount]');
+    if(wmount && !wmount._wlMounted && _co && _co.id){
+      wmount._wlMounted=true;
+      mountWatchList(wmount, { companyId:_co.id, ticker:(_co.ticker||'V'), quarters:CALL_PREP.quarters,
+        colors:{ brand:BRAND, brand2:BRAND2, purple:PURPLE, gray:GRAY, red:RED } });
     }
-    function wireTag(btn){ btn.onclick=function(){
-      if(btn.classList.contains('cp-wl-clear')){ wpane.querySelectorAll('.cp-wl-tag').forEach(function(b){ b.classList.remove('active'); }); }
-      else btn.classList.toggle('active');
-      applyTags();
-    }; }
-    wpane.querySelectorAll('.cp-wl-tag').forEach(wireTag);
-    var addBtn=wpane.querySelector('.cp-wl-add-btn'), form=wpane.querySelector('.cp-wl-addform');
-    if(addBtn&&form){ addBtn.onclick=function(){ form.hidden=!form.hidden; }; }
-    var go=wpane.querySelector('.cp-wl-add-go');
-    if(go&&form){ go.onclick=function(){
-      function val(k){ var el=form.querySelector('[data-wlf="'+k+'"]'); return el?el.value.trim():''; }
-      var metric=val('metric'); if(!metric) return;
-      var tags=val('tags').split(',').map(function(t){ return t.trim().toLowerCase().replace(/\s+/g,'-'); }).filter(Boolean);
-      var act=pane.querySelector('.cp-qpill.active'); var qk=act?act.getAttribute('data-cpqsel'):cpQkey(CALL_PREP.quarters[0].q);
-      var qLbl=act?act.textContent.replace(/upcoming/i,'').trim():CALL_PREP.quarters[0].q;
-      var w={ rank:'+', metric:metric, tags:tags, pista:val('pista')||null, breaks:val('breaks')||null, since:qLbl };
-      var target=wpane.querySelector('.cp-qblock[data-cpq="'+qk+'"] .cp-watch');
-      if(target) target.insertAdjacentHTML('beforeend', cpWatchItem(w, qk, '-add'+Date.now()%100000, null));
-      var flatList=flat?flat.querySelector('.cp-watch'):null;
-      if(flatList) flatList.insertAdjacentHTML('beforeend', cpWatchItem(w, qk, '-addf'+Date.now()%100000, qLbl));
-      tags.forEach(function(t){
-        if(!wpane.querySelector('.cp-wl-tag[data-wltag="'+t+'"]')){
-          var b=document.createElement('button'); b.type='button'; b.className='cp-wl-tag'; b.setAttribute('data-wltag',t); b.textContent='#'+t;
-          var clear=wpane.querySelector('.cp-wl-clear'); clear.parentNode.insertBefore(b, clear); wireTag(b);
-        }
-      });
-      form.querySelectorAll('.cp-wl-in').forEach(function(i){ i.value=''; }); form.hidden=true;
-      applyTags();
-    }; }
   }
 }
 
@@ -2588,6 +2498,7 @@ function ddTimelineBody(c){
 }
 
 function deepDiveHtml(c){
+  _co=c; // capture company (id + ticker) for the Watch List DB wiring
   var h='<div class="ov ov-mastercard ov-visa-dd" data-brand="MA">';
   h+='<style>.dd-tabs{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 14px;border-bottom:1px solid var(--bdr)}'+
     '.dd-tab{border:none;background:transparent;font:inherit;font-size:12.5px;font-weight:700;color:var(--mu);padding:8px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}'+
@@ -2626,26 +2537,28 @@ function deepDiveHtml(c){
   // Evolution
   h+='<div class="dd-pane" data-dd="evolution" hidden>'+
     '<div class="ovt-subtabs">'+
-      '<button type="button" class="ovt-subtab active" data-ovst="callprep">Call Prep</button>'+
+      '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="results">Results</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
     '</div>'+
-    '<div class="ovt-subpane" data-ovst="callprep">'+
+    '<div class="ovt-subpane" data-ovst="earnings">'+
       cpIRButton()+
-      '<div class="cp-note" style="margin-bottom:12px">🎯 <b>Call Prep</b> — the decision layer, in three phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (react to the numbers, which land before the call) → <b>③ Post-Call</b> (what management said + the meeting take). Append-only per quarter — pick a quarter below; each quarter keeps its frozen pre-call blocks next to its post-mortem, so the tab is a record of how well we read Visa. The <b>Watch List</b> is the single home for theme-tracking — the old standalone <i>Earnings Calls</i> tab was folded into it (no two tabs on the same call highlights). <b>Consensus (Bloomberg) + Summit + the 4 custom KPIs render "to fill / to define" until the export lands.</b></div>'+
+      '<div class="cp-note" style="margin-bottom:12px">🎯 <b>Earnings</b> — the decision layer, in two phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (the print, <i>then</i> what management said — the numbers land before the call, so both are read in one place; the old standalone Post-Call phase was folded in here). Append-only per quarter — pick a quarter below; each quarter keeps its frozen pre-call blocks next to its post-mortem, so the tab is a record of how well we read Visa. The <b>Watch List</b> is now a shared, persistent engine (Supabase); the former standalone <i>Earnings Calls</i> tab is folded into it. <b>The numeric Setup grid + the Results / Estimates charts fill from the Bloomberg snapshot archive once V US EQUITY lands in the export — call-only figures live in the Post-Results highlights, never in the boxes.</b></div>'+
       cpQPills()+
       '<div class="cp-phtabs">'+
         '<button type="button" class="cp-phtab active" data-cpp="setup">Setup</button>'+
         '<button type="button" class="cp-phtab" data-cpp="watch">Watch List</button>'+
         '<button type="button" class="cp-phtab" data-cpp="results">Post-Results</button>'+
-        '<button type="button" class="cp-phtab" data-cpp="postcall">Post-Call</button>'+
       '</div>'+
       '<div class="cp-phpane" data-cpp="setup">'+cpSetupBody(c)+'</div>'+
       '<div class="cp-phpane" data-cpp="watch" hidden>'+cpWatchBody(c)+'</div>'+
       '<div class="cp-phpane" data-cpp="results" hidden>'+cpResultsBody(c)+'</div>'+
-      '<div class="cp-phpane" data-cpp="postcall" hidden>'+cpCallBody(c)+'</div>'+
     '</div>'+
+    '<div class="ovt-subpane" data-ovst="results" hidden>'+cpPending('Results')+'</div>'+
+    '<div class="ovt-subpane" data-ovst="estevo" hidden>'+cpPending('Estimates')+'</div>'+
     '<div class="ovt-subpane" data-ovst="guidance" hidden>'+vGuideBody(c)+'</div>'+
     '<div class="ovt-subpane" data-ovst="strategy" hidden>'+ddStrategyBody(c)+'</div>'+
     '<div class="ovt-subpane" data-ovst="timeline" hidden>'+ddTimelineBody(c)+'</div>'+

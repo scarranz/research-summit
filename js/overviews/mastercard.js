@@ -13,6 +13,11 @@
 
 import { makeManagement } from './management.js';
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
+import { mountWatchList } from '../watchlist.js';   // SHARED Watch List engine (Supabase-persisted, table company_themes)
+
+// The live company object (id + ticker), captured in html()/deepDiveHtml(), so the Watch List
+// can mount the shared engine against this company's Supabase rows. Same pattern as uber.js.
+var _co = null;
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -761,6 +766,7 @@ function stdVasSpotlight(){
     vasPopTiles(VAS_MOAT,'vasm');
 }
 function html(c){
+  _co = c;   // capture the live company object (id + ticker) for the Watch List DB wiring
   var h='<div class="ov ov-mastercard" data-brand="MA">';
   h+=stdOverviewBody(c);
   h+='<div class="ov-modal-back" id="ovModalBack" hidden><div class="ov-modal" role="dialog" aria-modal="true">'+
@@ -2594,47 +2600,14 @@ function ceWlTable(){
   '</div>';
 }
 function ceWatchBody(c){
+  // The Watch List is now the SHARED engine (js/watchlist.js): rendering + Supabase persistence
+  // (table company_themes, seeded by sql/014_ma_themes_seed.sql) + sorting, one implementation for
+  // every company. We render a mount host; wireCallEarnings mounts the engine with the company id +
+  // quarter list. The multi-year theme record (the former Evolution ▸ Earnings Calls tab) stays
+  // folded in below, as before. (The old in-file WL_ROWS + ce-wl-* renderers are superseded — kept
+  // only as the source for the seed; safe to prune once the seed is live.)
   var h=ceStyle();
-  h+='<div class="ce-wl-hint">🔁 <b>How quarters advance:</b> a new <i>upcoming</i> quarter appears in Setup & Watch List <b>only once the prior quarter\'s Post-Results (print + call highlights) is filled</b>. Fill Q(n) Post-Results → then Q(n+1) opens for prep.</div>';
-  h+='<div class="ce-wl-tagbar"><span class="ce-wl-bar-k">Filter by theme (across quarters):</span>'+
-    wlTags().map(function(t){ return '<button type="button" class="ce-wl-tag" data-wltag="'+esc(t)+'">#'+esc(t)+'</button>'; }).join('')+
-    '<button type="button" class="ce-wl-tag ce-wl-clear" data-wltag="">clear</button>'+
-    '<button type="button" class="ce-wl-add-btn">+ Add theme</button>'+
-  '</div>';
-  h+='<div class="ce-wl-tagbar" style="margin-top:-4px"><span class="ce-wl-bar-k">Tracking window:</span>'+
-    '<span class="mg-seg" style="display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px">'+
-      '<button type="button" class="ce-wl-win active" data-wlwin="all">All</button>'+
-      '<button type="button" class="ce-wl-win" data-wlwin="open">Open hooks</button>'+
-      '<button type="button" class="ce-wl-win" data-wlwin="closed">Closed</button>'+
-    '</span>'+
-    '<span class="ave-subh-note" style="margin-left:4px">A theme is <b>open</b> while it has a <i>Tracking since</i> and no <i>Tracking until</i>. We open and close them by hand.</span>'+
-  '</div>';
-  h+=ceWlForm();
-  h+=CALL_EARNINGS.quarters.map(function(u,qi){
-    var qk=ceQkey(u.q), frozen=(u.status!=='upcoming');
-    var b='<div class="ce-qblock" data-ceq="'+esc(qk)+'"'+(qi===0?'':' hidden')+'>';
-    b+='<div class="ce-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="ce-frozen">frozen</span>':'')+'</div>';
-    var wl=wlFor(u.q, !frozen);
-    b+='<p class="ov-lede"><b>'+(frozen?'The list as it was frozen — ':'Things to hunt — ')+esc(u.q)+'</b>'+
-      (frozen?' <span style="color:var(--mu);font-weight:600">(scored afterwards in Post-Results)</span>':' <span style="color:var(--mu);font-weight:600">(the open hooks — a <i>Tracking since</i> with no <i>Tracking until</i>)</span>')+
-      '. Each card carries its <b>definition</b> — what the theme means in our words — its <b>tags</b>, and its <b>tracking window</b>. Tap <b>the thread ›</b> for the grounding and the quarter-by-quarter evolution. Ordered by weight, deliberately <b>not numbered</b>.</p>';
-    b+='<div class="ce-legend"><span class="ce-legend-i"><b>How to read the cards:</b></span>'+
-      '<span class="ce-legend-i"><span class="ce-seed">left open by Q1 2026</span> it is on the list because last quarter\'s call did not settle it</span>'+
-      '<span class="ce-legend-i"><span class="ce-w-chip since"><b>Tracking since:</b> Q1 2026</span> with no <i>Tracking until</i> ⇒ the hook is still open</span>'+
-      (frozen?'':'<span class="ce-legend-i"><span class="ce-w-ed" style="pointer-events:none">✎</span> edit — including closing the hook by filling <i>Tracking until</i></span>')+
-    '</div>';
-    if(!wl.length){ b+='<div class="ce-note">No open hooks for '+esc(u.q)+' yet — add themes with <b>+ Add theme</b> above.</div>'; }
-    else{ b+='<div class="ce-watch">'+wl.map(function(w){ return ceWatchItem(w, qk, '', null, !frozen); }).join('')+'</div>'; }
-    b+='<div class="ov-foot">'+(frozen?'Frozen — this list was scored against '+esc(u.q)+'\'s Post-Results; its <code>newQuestions</code> seeded the next quarter.':'Ours to curate: Post-Results lets the model run (numbers + call highlights), but what earns a slot here is our call. Frozen once the quarter opens.')+'</div>';
-    b+='</div>';
-    return b;
-  }).join('');
-  h+='<div class="ce-wl-all" hidden>';
-  h+='<div class="ce-phase" style="background:'+PURPLE+'">Themes across quarters</div>';
-  h+='<p class="ov-lede">Every watch item matching the selected theme(s), <b>across all quarters</b> — how the same hunt evolved print to print. Clear the tags (or pick a quarter) to return to the per-quarter view.</p>';
-  h+='<div class="ce-watch">'+WL_ROWS.map(function(r){ return ceWatchItem(r, ceQkey(r.q), '-f', r.q, false); }).join('')+'</div>';
-  h+='</div>';
-  h+=ceWlTable();
+  h+='<div data-wlmount></div>';
   h+='<div style="margin-top:26px;border-top:2px solid var(--bdr);padding-top:16px">';
   h+='<div class="ce-band" style="--bc:'+BRAND+'"><span class="ce-band-i">▤</span><span class="ce-band-t">The theme record — every thread, across all calls</span><span class="ce-band-s">the multi-year backbone behind the hunt above (the former "Earnings Calls" tab, folded in)</span><span class="ce-band-l"></span></div>';
   h+=maCallsBody(c);
@@ -2699,9 +2672,10 @@ function cePrintBlock(qLabel, r, us){
     }
     var note=notes[m.k];
     var qb=note?ceReg('resnote-'+ceQkey(qLabel)+'-'+ceQkey(m.k), note.t||m.k, note.h||note):null;
-    var wrRank=watch[m.k], wrTheme=null;
-    if(wrRank){ var wrow=wlFor(qLabel,false).filter(function(x){ return x.rank===wrRank; })[0]; wrTheme=wrow?wrow.theme:null; }
-    var wr=wrTheme||(wrRank?('Watch #'+wrRank):null);
+    // Themes now live in Supabase (async), so the scorecard shows the frozen Watch rank (from
+    // results.watch[metric]) rather than looking the theme name up synchronously — same as uber.js.
+    var wrRank=watch[m.k];
+    var wr=wrRank?('Watch #'+wrRank):null;
     return { sort:(cSurp==null?-1:Math.abs(cSurp)), html:
       '<div class="ce-fz-t" data-vdc="'+cV.k+'" data-vdu="'+uV.k+'"'+(qb?' data-detail="ce:'+qb+'"':'')+'>'+
         '<div class="ce-fz-k">'+esc(m.k)+
@@ -3054,152 +3028,13 @@ function wireCallEarnings(root){
   }; });
   // (Growth-lens / margin / print-block toggles — data-ceg/data-cemm/data-fzev/data-fzmm — are wired
   //  in wireCeTrack, called from init, faithfully to googl.js.)
-  // ── Watch List v3: theme-tag filter · tracking-window filter · add/edit/delete vs WL_ROWS · table COPY ──
-  var wpane=pane.querySelector('.ce-phpane[data-cep="watch"]');
-  if(wpane){
-    var flat=wpane.querySelector('.ce-wl-all');
-    var form=wpane.querySelector('.ce-wl-addform');
-    function activeTags(){ return Array.prototype.map.call(wpane.querySelectorAll('.ce-wl-tag.active'), function(b){ return b.getAttribute('data-wltag'); }).filter(Boolean); }
-    function activeWin(){ var b=wpane.querySelector('.ce-wl-win.active'); return b?b.getAttribute('data-wlwin'):'all'; }
-    function applyFilters(){
-      var tags=activeTags(), on=tags.length>0, win=activeWin();
-      if(on){ wpane.querySelectorAll('.ce-qblock').forEach(function(blk){ blk.hidden=true; }); }
-      else{
-        var act=pane.querySelector('.ce-qpill.active'); var qk=act?act.getAttribute('data-ceqsel'):null;
-        wpane.querySelectorAll('.ce-qblock').forEach(function(blk){ blk.hidden=(qk!=null && blk.getAttribute('data-ceq')!==qk); });
-      }
-      if(flat) flat.hidden=!on;
-      wpane.querySelectorAll('.ce-w').forEach(function(card){
-        var ct=(card.getAttribute('data-wltags')||'').split(/\s+/);
-        var isOpen=card.getAttribute('data-wlopen')==='1';
-        var hitTag=!on || tags.some(function(t){ return ct.indexOf(t)>=0; });
-        var hitWin=(win==='all') || (win==='open'&&isOpen) || (win==='closed'&&!isOpen);
-        if(hitTag&&hitWin) card.removeAttribute('data-wlhide'); else card.setAttribute('data-wlhide','1');
-      });
-    }
-    function wireTag(btn){ btn.onclick=function(){
-      if(btn.classList.contains('ce-wl-clear')){ wpane.querySelectorAll('.ce-wl-tag').forEach(function(b){ b.classList.remove('active'); }); }
-      else btn.classList.toggle('active');
-      applyFilters();
-    }; }
-    wpane.querySelectorAll('.ce-wl-tag').forEach(wireTag);
-    wpane.querySelectorAll('.ce-wl-win').forEach(function(btn){ btn.onclick=function(){
-      wpane.querySelectorAll('.ce-wl-win').forEach(function(b){ b.classList.toggle('active', b===btn); });
-      applyFilters();
-    }; });
-    function registerTag(t){
-      if(!wpane.querySelector('.ce-wl-tag[data-wltag="'+t+'"]')){
-        var b=document.createElement('button'); b.type='button'; b.className='ce-wl-tag'; b.setAttribute('data-wltag',t); b.textContent='#'+t;
-        var clear=wpane.querySelector('.ce-wl-clear'); clear.parentNode.insertBefore(b, clear); wireTag(b);
-      }
-      var pick=form?form.querySelector('.ce-wl-tagpick'):null;
-      if(pick&&!pick.querySelector('[data-pick="'+t+'"]')){
-        var p=document.createElement('button'); p.type='button'; p.className='ce-wl-pick'; p.setAttribute('data-pick',t); p.textContent='#'+t;
-        p.onclick=function(){ p.classList.toggle('on'); }; pick.appendChild(p);
-      }
-    }
-    function fld(k){ return form?form.querySelector('[data-wlf="'+k+'"]'):null; }
-    function fval(k){ var el=fld(k); return el?el.value.trim():''; }
-    function setF(k,v){ var el=fld(k); if(el) el.value=(v==null?'':v); }
-    function pickedTags(){ return Array.prototype.map.call(form.querySelectorAll('.ce-wl-pick.on'), function(b){ return b.getAttribute('data-pick'); }); }
-    function resetForm(){
-      ['id','theme','definition','trackSince','trackUntil','newtag'].forEach(function(k){ setF(k,''); });
-      form.querySelectorAll('.ce-wl-pick.on').forEach(function(b){ b.classList.remove('on'); });
-      form.querySelector('.ce-wl-fh-t').textContent='New theme';
-      form.querySelector('.ce-wl-add-go').textContent='Add to the live list';
-    }
-    if(form){
-      wlTags().forEach(registerTag);
-      var nt=form.querySelector('.ce-wl-newtag-go');
-      if(nt) nt.onclick=function(){
-        var raw=fval('newtag'); if(!raw) return;
-        raw.split(',').forEach(function(t){
-          t=t.trim().toLowerCase().replace(/\s+/g,'-'); if(!t) return;
-          registerTag(t);
-          var p=form.querySelector('.ce-wl-pick[data-pick="'+t+'"]'); if(p) p.classList.add('on');
-        });
-        setF('newtag','');
-      };
-      var cancel=form.querySelector('.ce-wl-cancel');
-      if(cancel) cancel.onclick=function(){ resetForm(); form.hidden=true; };
-    }
-    var addBtn=wpane.querySelector('.ce-wl-add-btn');
-    if(addBtn&&form){ addBtn.onclick=function(){
-      if(form.hidden){ resetForm(); form.hidden=false; } else form.hidden=true;
-    }; }
-    function rerender(){
-      var live=ceUpcoming(); if(!live) return;
-      var qk=ceQkey(live.q);
-      var host=wpane.querySelector('.ce-qblock[data-ceq="'+qk+'"] .ce-watch');
-      var rows=wlFor(live.q, true);
-      if(host) host.innerHTML=rows.map(function(w){ return ceWatchItem(w, qk, '', null, true); }).join('');
-      var flatHost=flat?flat.querySelector('.ce-watch'):null;
-      if(flatHost) flatHost.innerHTML=WL_ROWS.map(function(r){ return ceWatchItem(r, ceQkey(r.q), '-f', r.q, false); }).join('');
-      var tb=wpane.querySelector('.ce-wl-tbody');
-      if(tb) tb.innerHTML=ceWlTableRows();
-      var n=wpane.querySelector('.ce-wl-tbl-n');
-      if(n) n.textContent=wlCount();
-      wireCards(); applyFilters();
-    }
-    function wireCards(){
-      wpane.querySelectorAll('[data-wledit]').forEach(function(btn){ btn.onclick=function(){
-        var r=wlById(btn.getAttribute('data-wledit')); if(!r||!form) return;
-        resetForm(); form.hidden=false;
-        setF('id',r.id); setF('theme',r.theme); setF('definition',r.definition);
-        setF('trackSince',r.trackSince); setF('trackUntil',r.trackUntil);
-        (r.tags||[]).forEach(function(t){ registerTag(t); var p=form.querySelector('.ce-wl-pick[data-pick="'+t+'"]'); if(p) p.classList.add('on'); });
-        form.querySelector('.ce-wl-fh-t').textContent='Edit theme · '+r.id;
-        form.querySelector('.ce-wl-add-go').textContent='Save changes';
-        form.scrollIntoView({block:'nearest'});
-      }; });
-      wpane.querySelectorAll('[data-wldel]').forEach(function(btn){ btn.onclick=function(){
-        var id=btn.getAttribute('data-wldel');
-        var r=wlById(id); if(!r) return;
-        if(!window.confirm('Remove "'+r.theme+'" from the Watch List?\n\nSession-only — the hardcoded table is untouched until you COPY it back.')) return;
-        var i=WL_ROWS.indexOf(r); if(i>=0) WL_ROWS.splice(i,1);
-        rerender();
-      }; });
-    }
-    wireCards();
-    var go=wpane.querySelector('.ce-wl-add-go');
-    if(go&&form){ go.onclick=function(){
-      var theme=fval('theme'); if(!theme){ var t=fld('theme'); if(t) t.focus(); return; }
-      var live=ceUpcoming(); if(!live) return;
-      var id=fval('id');
-      var row=id?wlById(id):null;
-      var isNew=!row;
-      if(isNew){ row={ id:wlNextId(), q:live.q, rank:wlNextRank(live.q) }; }
-      row.theme=theme;
-      row.tags=pickedTags();
-      row.definition=fval('definition')||null;
-      row.trackSince=fval('trackSince')||null;
-      row.trackUntil=fval('trackUntil')||null;
-      if(isNew) WL_ROWS.push(row);
-      (row.tags||[]).forEach(registerTag);
-      resetForm(); form.hidden=true;
-      rerender();
-    }; }
-    wpane.querySelectorAll('[data-wltoggle]').forEach(function(btn){ btn.onclick=function(){
-      var body=wpane.querySelector('[data-wltblbody]'); if(!body) return;
-      var hide=!body.hasAttribute('hidden');
-      if(hide) body.setAttribute('hidden',''); else body.removeAttribute('hidden');
-      btn.textContent=hide?'show table':'hide table';
-    }; });
-    wpane.querySelectorAll('.ce-wl-copy[data-wlcopy]').forEach(function(btn){ btn.onclick=function(){
-      var kind=btn.getAttribute('data-wlcopy'), txt;
-      if(kind==='json'){ txt=JSON.stringify(WL_ROWS, null, 2); }
-      else {
-        txt=[WL_COLS.map(function(c){ return c.l; }).join('\t')].concat(
-          WL_ROWS.map(function(r){ return WL_COLS.map(function(c){
-            return wlCellText(r,c.k).replace(/[\t\n]+/g,' ');
-          }).join('\t'); })).join('\n');
-      }
-      var done=function(){ var o=btn.textContent; btn.textContent='copied ✓'; setTimeout(function(){ btn.textContent=o; }, 1500); };
-      if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done, done); }
-      else { var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
-             try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta); done(); }
-    }; });
-    applyFilters();
+  // ── Watch List: mount the SHARED engine (js/watchlist.js). It owns rendering + Supabase
+  // persistence (table company_themes) + sorting; only the company id, ticker and quarter list
+  // are passed in. Themes seeded by sql/014_ma_themes_seed.sql. ──
+  var wmount=pane.querySelector('.ce-phpane[data-cep="watch"] [data-wlmount]');
+  if(wmount && _co && _co.id){
+    mountWatchList(wmount, { companyId:_co.id, ticker:_co.ticker, quarters:CALL_EARNINGS.quarters,
+      colors:{ brand:BRAND, brand2:BRAND2, purple:PURPLE, red:RED } });
   }
 }
 // Growth-lens / margin / print-block toggles (data-ceg/data-cemm on the Setup grid + data-fzev/
@@ -3526,6 +3361,7 @@ function ddTimelineBody(c){
 }
 
 function deepDiveHtml(c){
+  _co = c;   // capture the live company object (id + ticker) for the Watch List DB wiring
   var h='<div class="ov ov-mastercard ov-mastercard-dd" data-brand="MA">';
   h+='<style>.dd-tabs{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 14px;border-bottom:1px solid var(--bdr)}'+
     '.dd-tab{border:none;background:transparent;font:inherit;font-size:12.5px;font-weight:700;color:var(--mu);padding:8px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}'+

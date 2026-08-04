@@ -2077,23 +2077,27 @@ var WL_ROWS=[
       { q:'Q3 2026', n:'Stays open by design — so a quiet quarter is <b>recorded as quiet rather than forgotten</b>. The larger the add-on business gets, the larger the tail on an adverse ruling.' }
     ] },
 
-  // ── Q2 2026 — the frozen record. All five CLOSED and continued by a Q3 successor,
-  // which inherits the thread. Kept as written going in, plus the scoring entry.
+  // ── Q2 2026 — the frozen record, as the list stood going into the print.
+  // ⚠ ONLY ONE OF THESE IS ACTUALLY CLOSED. wl003 (pricing) was answered, so it carries
+  // `trackUntil` and renders "closed". The other four are STILL LIVE and merely handed to a
+  // Q3 successor, so they carry `continuedBy` and render "carried forward ↗" — marking them
+  // `trackUntil:'Q2 2026'` would have claimed we stopped watching four questions we are
+  // still watching. Both states drop out of the open count so a question is never counted twice.
   { id:'wl001', q:'Q2 2026', rank:1, theme:'The operating-income guide: conservatism or the end of margin expansion?',
-    tags:['margin','guidance'], trackSince:'Q2 2026', trackUntil:'Q2 2026',
-    definition:'Spotify guided Q2 operating income BELOW the quarter it had just printed and ~8% under the Street. Either conservatism explains it, or the 2025 margin story has run its course. <b>→ Continued as Q3 hook #3.</b>',
+    tags:['margin','guidance'], trackSince:'Q2 2026', trackUntil:null, continuedBy:'wl009',
+    definition:'Spotify guided Q2 operating income BELOW the quarter it had just printed and ~8% under the Street. Either conservatism explains it, or the 2025 margin story has run its course.',
     src:'Q1 2026 deck (28 Apr 2026): Q2 guide €630M vs €715M printed in Q1; Street was carrying ~€684M. The stock fell on the guide despite a clean Q1 beat.',
     thread:[
       { q:'Q2 2026', n:'<b>Conservatism won — with an asterisk.</b> €655M vs €630M, a fifth straight beat, but €9M of the €25M was a social-charges windfall from a falling share price. Strip it and the beat is ~€16M against opex growing 19% ex-FX.' },
-      { q:'Q2 2026', n:'<b>Answered, so closed:</b> it is neither conservatism nor the end of expansion — it is a <b>sized investment year</b> (~€200M incremental, personnel flat). The remaining question is whether the spend moderates, which is now <b>Q3 hook #3</b>.' }
+      { q:'Q2 2026', n:'<b>The binary is answered:</b> it is neither conservatism nor the end of expansion — it is a <b>sized investment year</b> (~€200M incremental, personnel flat). What is <i>not</i> answered is whether the spend moderates, so the hook <b>carries forward as Q3 #3</b> rather than closing.' }
     ] },
   { id:'wl002', q:'Q2 2026', rank:2, theme:'Has the SAX rebuild stopped shrinking advertising?',
-    tags:['advertising','sax'], trackSince:'Q2 2026', trackUntil:'Q2 2026',
-    definition:'Spotify traded advertising volume for advertising margin. Q2 is the first clean comp against the April 2025 SAX launch — the first honest read on whether the trade is working. <b>→ Continued as Q3 hook #2.</b>',
+    tags:['advertising','sax'], trackSince:'Q2 2026', trackUntil:null, continuedBy:'wl008',
+    definition:'Spotify traded advertising volume for advertising margin. Q2 is the first clean comp against the April 2025 SAX launch — the first honest read on whether the trade is working.',
     src:'Q1 2026: Ad-Supported revenue €385M, +3% constant-currency. FY2025: ad gross margin 18.0% (restated 17.4%) vs 11.2% in FY2024, on revenue that was flat to down.',
     thread:[
       { q:'Q2 2026', n:'<b>It stopped shrinking but did not start growing:</b> €446M, +3% cc — the SAME as Q1, in the quarter that was supposed to settle it. The transition-dip explanation failed its own test. Margin half worked (19.1%, +179bp).' },
-      { q:'Q2 2026', n:'<b>The call turned the question into a commitment</b> — “inflect towards double-digit growth in H2 2026”, migration declared finished at 99% of impressions. <b>Closed here;</b> Q3 hook #2 now tracks it as a promise to check rather than a question to ask.' }
+      { q:'Q2 2026', n:'<b>The call turned the question into a commitment</b> — “inflect towards double-digit growth in H2 2026”, migration declared finished at 99% of impressions. Still very much live: <b>carries forward as Q3 #2</b>, restated as a promise to check rather than a question to ask.' }
     ] },
   { id:'wl003', q:'Q2 2026', rank:3, theme:'Do the price increases compound, or was 2025 a one-off step?',
     tags:['pricing','arpu'], trackSince:'Q2 2026', trackUntil:'Q2 2026',
@@ -2103,19 +2107,19 @@ var WL_ROWS=[
       { q:'Q2 2026', n:'<b>✔ ANSWERED, bullishly — the most informative line of the print.</b> ARPU €4.89, <b>+7.4% cc</b>, an ACCELERATION from Q1\'s +5.7%, delivered in the very quarter the 2025 increases lapped. Pricing behaves like a cadence, not a re-rate. <b>Closed with no successor;</b> the ongoing product/market mix drag belongs with the MAU hook.' }
     ] },
   { id:'wl004', q:'Q2 2026', rank:4, theme:'Gross margin against the 35–40% promise',
-    tags:['margin','investor-day'], trackSince:'Q2 2026', trackUntil:'Q2 2026',
-    definition:'Management committed to 35–40% gross margin by 2030 against 32.0% in FY2025, then guided Q2 up only ten basis points. Tracks the gap between the guided trajectory and the required one. <b>→ Continued as Q3 hook #4.</b>',
+    tags:['margin','investor-day'], trackSince:'Q2 2026', trackUntil:null, continuedBy:'wl006',
+    definition:'Management committed to 35–40% gross margin by 2030 against 32.0% in FY2025, then guided Q2 up only ten basis points. Tracks the gap between the guided trajectory and the required one.',
     src:'Investor Day, 21 May 2026: mid-teens revenue CAGR, 35–40% gross margin, 20%+ operating margin by 2030. Q2 2026 gross-margin guide: 33.1% vs 33.0% printed in Q1.',
     thread:[
       { q:'Q2 2026', n:'<b>The print helped, the guide alarmed, the call defused it.</b> 33.4% — a record, 30bp above guide, +193bp YoY. Then Q3 guided to 32.9%, unexplained in the deck; on the call Luiga attributed it to reinvestment plus an <b>annual Q3 regulatory-fee charge</b>, still ~130bp above the prior year.' },
-      { q:'Q2 2026', n:'<b>Closed and demoted.</b> Q3 hook #4 carries it, reframed from “is the trajectory breaking?” to “verify the charge is genuinely annual against 3Q25 and 3Q24”.' }
+      { q:'Q2 2026', n:'<b>Demoted, not resolved.</b> Q3 #4 carries it, reframed from “is the trajectory breaking?” to “verify the charge is genuinely annual against 3Q25 and 3Q24”.' }
     ] },
   { id:'wl005', q:'Q2 2026', rank:5, theme:'MLC litigation — the audiobook bundle\'s royalty tail',
-    tags:['legal','royalties'], trackSince:'Q2 2026', trackUntil:'Q2 2026',
-    definition:'Bundling audiobooks lowered the mechanical royalty Spotify owes publishers. A court agreed it IS a bundle; the MLC still attacks how it was valued. A live claim against the mechanism that lifted gross margin. <b>→ Continued as Q3 hook #6.</b>',
+    tags:['legal','royalties'], trackSince:'Q4 2023', trackUntil:null, continuedBy:'wl011',
+    definition:'Bundling audiobooks lowered the mechanical royalty Spotify owes publishers. A court agreed it IS a bundle; the MLC still attacks how it was valued. A live claim against the mechanism that lifted gross margin.',
     src:'FY2025 20-F: if the MLC ultimately succeeds, ~€358M for Mar 2024–Dec 2025 plus penalties and interest. Dismissed with prejudice Jan 2025; amended complaint filed Oct 2025.',
     thread:[
-      { q:'Q2 2026', n:'<b>Quiet quarter — recorded as quiet.</b> No development disclosed, no change to the provision. Meanwhile the mechanism was <b>expanded</b> (Audiobooks+ tiers, Narrated Articles), and Premium gross margin hit a record 34.9%. <b>Closed here;</b> Q3 hook #6 carries the full thread from Q4 2023.' }
+      { q:'Q2 2026', n:'<b>Quiet quarter — recorded as quiet.</b> No development disclosed, no change to the provision. Meanwhile the mechanism was <b>expanded</b> (Audiobooks+ tiers, Narrated Articles), and Premium gross margin hit a record 34.9%. Nothing is resolved — it <b>carries forward as Q3 #6</b> with the full thread from Q4 2023.' }
     ] }
 ];
 
@@ -2348,6 +2352,9 @@ function ceStyle(){
     '.ce-w-ed,.ce-w-del{border:1px solid var(--bdr);background:var(--w);font:inherit;font-size:11px;font-weight:800;color:var(--mu);width:24px;height:24px;border-radius:7px;cursor:pointer;line-height:1;transition:.12s}'+
     '.ce-w-ed:hover{border-color:'+BRAND+';color:'+BRAND+'}.ce-w-del:hover{border-color:'+RED+';color:'+RED+'}'+
     '.ce-w-closed{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--mu);background:#F2F5F8;border:1px solid var(--bdr);border-radius:20px;padding:2px 8px;flex:none}'+
+    // "carried forward" is NOT "closed" — it gets the brand colour, because the question is alive.
+    '.ce-w-fwd{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:'+BRAND+';background:rgba(29,185,84,0.10);border:1px solid rgba(29,185,84,0.30);border-radius:20px;padding:2px 8px;flex:none}'+
+    '.ce-w-chip.fwd{color:'+BRAND+';border-color:rgba(29,185,84,0.30);background:rgba(29,185,84,0.06)}'+
     '.ce-kind{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:2px 8px;white-space:nowrap;border:1px solid}'+
     '.ce-phase{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;border-radius:20px;padding:3px 10px;margin-bottom:8px}'+
     '.ce-info{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:'+AMBER+';color:#fff;font-size:10px;font-weight:800;cursor:pointer;margin-left:5px;vertical-align:middle;flex:none}'+
@@ -2815,11 +2822,19 @@ function ceWatchItem(w, qk, idSfx, qLabel, editable){
   // The chain, made visible: this item exists because the PRIOR quarter's call left it open.
   var seed=w.seededBy?'<span class="ce-seed" title="'+esc(w.seededBy.n)+'">'+(w.seededBy.tripped?'⚑ thesis line broke in '+esc(w.seededBy.q):'left open by '+esc(w.seededBy.q))+'</span>':'';
   var open=wlOpen(w);
+  // A row can leave the open list two ways, and they must NOT look the same on screen:
+  // ANSWERED (trackUntil) reads "closed"; CARRIED FORWARD (continuedBy) reads "carried
+  // forward" and names the quarter that now owns the question. Showing "Tracking until"
+  // on a hand-off would claim we stopped watching something we are still watching.
+  var succ=wlSuccessor(w);
+  var stateChip = w.trackUntil
+    ? '<span class="ce-w-closed" title="Answered — tracking ended in '+esc(w.trackUntil)+'">closed</span>'
+    : (succ ? '<span class="ce-w-fwd" title="Still live — carried forward to '+esc(succ.q)+' as hook #'+esc(String(succ.rank||''))+'">carried forward ↗</span>' : '');
   var ctl=editable?'<span class="ce-w-ctl"><button type="button" class="ce-w-ed" data-wledit="'+esc(w.id||'')+'" title="Edit this theme (and close its hook by filling Tracking until)">✎</button>'+
     '<button type="button" class="ce-w-del" data-wldel="'+esc(w.id||'')+'" title="Remove this theme">✕</button></span>':'';
   return '<div class="ce-w" data-wltags="'+esc(tagsAttr)+'" data-wlid="'+esc(w.id||'')+'" data-wlopen="'+(open?'1':'0')+'">'+
     '<div class="ce-w-top"><span class="ce-w-dot" aria-hidden="true"></span><div class="ce-w-metric">'+esc(w.theme)+'</div>'+seed+
-    (w.trackUntil?'<span class="ce-w-closed" title="Hook closed in '+esc(w.trackUntil)+'">closed</span>':'')+
+    stateChip+
     (qLabel?'<span class="ov-chip" style="font-size:9.5px;background:rgba(66,133,244,0.10);color:'+BRAND+';border-radius:20px;padding:2px 9px;font-weight:800;flex:none">'+esc(qLabel)+'</span>':'')+
     (why?'<span class="ce-why-btn ov-clickable" data-detail="ce:'+why+'" style="margin:0">'+(w.thread?'the thread':'background')+' ›</span>':'')+ctl+'</div>'+
     (w.definition?'<div class="ce-w-def">'+w.definition+'</div>':'')+
@@ -2827,6 +2842,7 @@ function ceWatchItem(w, qk, idSfx, qLabel, editable){
       (w.tags&&w.tags.length?w.tags.map(function(t){ return '<span class="ce-w-chip tag">#'+esc(t)+'</span>'; }).join(''):'')+
       (w.trackSince?'<span class="ce-w-chip since"><b>Tracking since:</b> '+esc(w.trackSince)+'</span>':'')+
       (w.trackUntil?'<span class="ce-w-chip until"><b>Tracking until:</b> '+esc(w.trackUntil)+'</span>':'')+
+      (succ?'<span class="ce-w-chip fwd"><b>Carried forward to:</b> '+esc(succ.q)+' · hook #'+esc(String(succ.rank||''))+'</span>':'')+
     '</div>'+
   '</div>';
 }
@@ -2889,7 +2905,10 @@ function ceWlForm(){
 var WL_COLS=[
   {k:'id',l:'id'},{k:'q',l:'quarter'},{k:'rank',l:'order'},{k:'theme',l:'theme'},
   {k:'tags',l:'tags'},{k:'definition',l:'definition'},
-  {k:'trackSince',l:'tracking since'},{k:'trackUntil',l:'tracking until'}
+  {k:'trackSince',l:'tracking since'},{k:'trackUntil',l:'tracking until'},
+  // Part of the round-trip: without it, a carried-forward row exports as if it were still
+  // live and the hand-off is lost the moment the table is pasted back into the code.
+  {k:'continuedBy',l:'continued by'}
 ];
 
 function wlCellText(r, k){
@@ -2955,9 +2974,12 @@ function ceWatchBody(c){
     '<span class="mg-seg" style="display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px">'+
       '<button type="button" class="ce-wl-win active" data-wlwin="all">All</button>'+
       '<button type="button" class="ce-wl-win" data-wlwin="open">Open hooks</button>'+
-      '<button type="button" class="ce-wl-win" data-wlwin="closed">Closed</button>'+
+      '<button type="button" class="ce-wl-win" data-wlwin="closed">Closed / carried</button>'+
     '</span>'+
-    '<span class="ave-subh-note" style="margin-left:4px">A theme is <b>open</b> while it has a <i>Tracking since</i> and no <i>Tracking until</i>. We open and close them by hand.</span>'+
+    '<span class="ave-subh-note" style="margin-left:4px">A hook leaves the live list two ways, and the cards say which: '+
+      '<span class="ce-w-closed" style="vertical-align:middle">closed</span> = the question was <b>answered</b> and we stopped watching it (it has a <i>Tracking until</i>); '+
+      '<span class="ce-w-fwd" style="vertical-align:middle">carried forward ↗</span> = <b>still live</b>, but a later quarter\'s row now owns it, and that row inherits the whole thread. '+
+      'Only one row per question is ever counted as open.</span>'+
   '</div>';
   h+=ceWlForm();
   // Per-quarter blocks (default view). The live quarter renders only OPEN hooks — that IS the list.
@@ -2971,7 +2993,9 @@ function ceWatchBody(c){
       '. Each card carries its <b>definition</b> — what the theme means in our words — its <b>tags</b>, and its <b>tracking window</b>. Tap <b>the thread ›</b> for the grounding and the quarter-by-quarter evolution. Ordered by weight, deliberately <b>not numbered</b>: a visible 1–5 goes stale the moment a theme is removed.</p>';
     b+='<div class="ce-legend"><span class="ce-legend-i"><b>How to read the cards:</b></span>'+
       '<span class="ce-legend-i"><span class="ce-seed">left open by Q2 2026</span> it is on the list because last quarter\'s call did not settle it</span>'+
-      '<span class="ce-legend-i"><span class="ce-w-chip since"><b>Tracking since:</b> Q4 2024</span> with no <i>Tracking until</i> ⇒ the hook is still open</span>'+
+      '<span class="ce-legend-i"><span class="ce-w-chip since"><b>Tracking since:</b> Q4 2024</span> when we started watching — it survives the hand-off, so a hook carried across quarters keeps its ORIGINAL start</span>'+
+      '<span class="ce-legend-i"><span class="ce-w-fwd">carried forward ↗</span> still live; a later quarter\'s row now owns the question and inherits the thread</span>'+
+      '<span class="ce-legend-i"><span class="ce-w-closed">closed</span> answered, and we stopped watching — that one has a <i>Tracking until</i></span>'+
       (frozen?'':'<span class="ce-legend-i"><span class="ce-w-ed" style="pointer-events:none">✎</span> edit — including closing the hook by filling <i>Tracking until</i></span>')+
     '</div>';
     if(!wl.length){ b+='<div class="ce-note">No open hooks for '+esc(u.q)+' yet — add themes with <b>+ Add theme</b> above.</div>'; }
@@ -3015,7 +3039,20 @@ function wlFor(qLabel, openOnly){
   });
 }
 
-function wlOpen(r){ return !!(r.trackSince && !r.trackUntil); }
+// A hook stops counting as OPEN for two different reasons, and the difference matters:
+//   • trackUntil  — the question was ANSWERED and we stopped watching it. A real close.
+//   • continuedBy — the question is STILL LIVE, but this row is last quarter's frozen copy
+//                   and a successor row carries it forward. Not a close; a hand-off.
+// Both drop out of the open count (otherwise one question is counted twice), but only
+// trackUntil is allowed to render as "closed" (§ the Q2/Q3 hand-off model).
+function wlOpen(r){ return !!(r.trackSince && !r.trackUntil && !r.continuedBy); }
+
+// The successor row of a carried-forward hook, for the "carried forward to Qx" chip.
+function wlSuccessor(r){
+  if(!r || !r.continuedBy) return null;
+  for(var i=0;i<WL_ROWS.length;i++){ if(WL_ROWS[i].id===r.continuedBy) return WL_ROWS[i]; }
+  return null;
+}
 // Every tag in use, across every quarter — the vocabulary of the filter bar. New tags created in
 // the Add-theme form are appended live so they become available to everyone.
 

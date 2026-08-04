@@ -18,7 +18,36 @@ still carries the nested `watchList` shape. Copy the Setup / Post-Results / Post
 either — they are identical there — but take the **Watch List from `googl.js`**. `ibkr.js` was
 migrated from v1 (standalone Promise Tracker, single-estimate setup, no quarter selector) to the full
 v2.2 machinery **and** the v2.3 fusion on 2026-07-24. Each overview file owns its own copy of the
-Earnings renderers, so v2.5/v2.6 landing on GOOGL changed nothing for the other companies.
+Earnings renderers, so v2.5/v2.6 landing on GOOGL changed nothing for the other companies — **except
+the Watch List, which as of v3.0 is a single shared engine (`js/watchlist.js`), not per-overview code.**
+
+**What v3.0 changed — the Watch List is now a SHARED, PERSISTENT, SORTABLE engine (Aug 2026):**
+
+The Watch List is no longer per-overview code backed by an in-memory `WL_ROWS` array (lost on refresh;
+the old loop was portal → COPY → hardcode). It is now **one shared engine, `js/watchlist.js`**, that
+every company mounts — exactly like the Resources tab is one implementation for all companies. Three
+things changed:
+
+1. **Persistence (the §6f "pending assignment", now done).** Themes live in Supabase, table
+   `company_themes` (ONE shared table, scoped by `company_id`; `sql/010_company_themes.sql`),
+   read/written through `js/api.js` (`fetchThemes / insertTheme / updateTheme / deleteTheme`). Any
+   add / edit / close / delete / reorder saves to the shared DB and is visible to the whole team
+   immediately — no commit, no push (RLS = any authenticated user, same pattern as `company_resources`).
+2. **Sorting is first-class.** Live-quarter cards carry **▲▼** that rerank a theme; the new order
+   persists to the `rank` column and the cards render in exactly that order.
+3. **The delete rule.** A theme can only be DELETED from the quarter it was created in
+   (`created_quarter`, immutable). In a later quarter the popup blocks the delete and directs you to
+   CLOSE it (fill *Tracking until*) instead — the record is never rewritten.
+
+**How a new company gets a working Watch List — you do NOT reimplement any of it.** In the Earnings ▸
+Evolution ▸ Watch List pane, render a host `<div data-wlmount></div>` and, in the wiring, call
+`mountWatchList(host, { companyId, ticker, quarters: CALL_EARNINGS.quarters })` (see `googl.js`, the
+canonical consumer). That is the entire integration — persistence, sorting, tags, the storage table
+and the delete rule all come for free. `WL_ROWS` and the per-file renderers (`ceWatchItem`, `ceWlForm`,
+`ceWlTable`, `wlFor` …) are gone from `googl.js`. **`googl.js` is canonical for v3.0**; other companies
+adopt the mount on their next cycle. The one downstream effect: the Post-Results scorecard's "on the
+list" chip can no longer name the theme inline (names load async from the DB), so it shows the frozen
+rank; the theme text lives on the Watch List itself.
 
 **What v2.10 changed — the AI call summary, the tag-less aside, and the Setup chart's margins + windows:**
 
@@ -448,6 +477,49 @@ implies gaps in work rather than in disclosure.
      against Street and Summit only. (Alphabet shows this on every line; Amazon shows it only on the lines
      it does not guide.) A metric `note` may add detail. **Never fabricate a guide** (same rule as Summit /
      consensus).
+   - **The Summit DCF having zero/empty guidance rows is NOT evidence of "no guidance."** It usually just
+     means the analyst has not entered it. Whether a company guides is decided by the **company's
+     release**, not the model — e.g. **UBER guides Gross Bookings + Adjusted EBITDA every quarter** (and
+     gave a Non-GAAP EPS / Adj. EBITDA outlook for Q2 2026) even though its DCF guidance rows read 0. A
+     build must NEVER "assume guidance is never available" (the failure that shipped on the first UBER
+     pass): source it from the release per-company, per-metric, draw the band on the **charts** (not the
+     Setup boxes), and only after checking may a `null` mean "checked, none given."
+6. **KPI AUTHORIZATION — the valid set is the BBG txt's, nothing else.** The metrics and KPIs that may
+   appear in the Setup grid AND in the charts (`results-data/<ticker>.js`) are **exactly** the ones the
+   `BBG_CONSENSUS.txt` authorizes for that ticker — the 9 headline definitions (`metric1..9`) plus the
+   custom KPIs (`metric_kpi1..N`), read from the file. **A metric existing in the Summit DCF, in the
+   company's disclosure, or already drawn in the Overview does NOT make it a valid Setup/chart KPI.**
+   If it is not in the txt's authorized set for that ticker, it does not go in. (Example: UBER's
+   **Freight** GB/EBITDA lives in the Summit DCF but is *not* a txt KPI — it was removed from the charts.
+   Segment Adj. EBITDA that Uber *does* report, e.g. Mobility/Delivery, is a judgment call to raise with
+   Dani, but the default gate is the txt.) You may still show a *reported actual* the txt happens to lack
+   for an authorized line, but you may never *add a whole line* the txt did not authorize.
+7. **MARGINS ARE PER-VINTAGE AND PER-SOURCE — never mixed, never a single "the" margin (a Rule-H rule).**
+   Any margin (line on the chart, row in the table, cell in the grid) is computed with its **numerator
+   AND denominator from the SAME series and the SAME vintage**: consensus margin = consensus metric ÷
+   consensus revenue; Summit margin = Summit ÷ Summit; actual margin = actual ÷ actual. **NEVER divide
+   one source's metric by another source's denominator** (the classic bug: a consensus numerator over a
+   Summit revenue on a forward period, because no actual exists yet) — that yields a meaningless hybrid,
+   and labeling it "consensus" or "the margin" is a **Rule-H (honesty-of-encoding) violation**. When both
+   a consensus and a Summit estimate exist, **show BOTH margins, each explicitly labeled by source**;
+   never render a single unlabeled margin that reads as the only valid one. (Enforced in `results.js`
+   `rsMarginArr`, which takes numerator and denominator from the same `series`.)
+8. **The Summit-vs-Street "debate" is QUALITATIVE PROSE / BULLETS — NEVER a numeric comparison table.**
+   *Where* the two estimates differ is genuinely important and must be surfaced — but the grid cells
+   already carry the numbers, so a side-by-side table of "Summit X vs Street Y vs gap%" only repeats
+   them and was explicitly rejected. What the reader needs is the **story**: not "Delivery GB $27.6B vs
+   $27.0B," but *"both land at the same revenue, but Summit gets there volume-led (more trips/users)
+   while the Street leans on take rate — same destination, different paths."* Author **2–4 bullets** per
+   upcoming quarter in `setup.debate.diverge = [{t, d}]` (title + explanation), each naming a divergence
+   AND its mechanism (audience vs rate, cash-conversion vs P&L, buyback pace…), followed by the dark
+   `synth` box for the one thing the print must resolve. Render as a bulleted list (`.ce-diverge`),
+   **never** as a `.ce-dbt`-style row/column grid of figures.
+   - **PRECISION — never let rounding fake a tie.** Show amounts to **3 decimals** ($B, counts, EPS)
+     everywhere the Setup compares Summit vs Street — the grid cells, the `setup.us` values, AND the
+     divergence bullets. Rounding revenue to "~$14.2B" made Summit ($14.223B) and the Street ($14.242B)
+     look identical when they are not — **DEMASIADO AMBIGUO**. Take rates and margins are the ONLY
+     exception (1 decimal, they are already %). Store the estimates at full precision from the source
+     (DCF for Summit, the txt's `fq+N` for the Street), never a 1-dp hand-round.
 
 ## 6. UI structure
 

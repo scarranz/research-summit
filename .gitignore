@@ -26,3 +26,9 @@ payments-industry-reference/
 # Robotics working docs + Bloomberg SPLC data — local only (the portal-facing
 # dashboard is robotics-industry.html + img/robotics/, which ARE committed)
 robotics-research/
+_seed_*.js
+
+# Hyperscaler earnings-call transcripts (licensed source PDFs + extracted .txt) —
+# local reference only, never commit to a public repo. The portal-facing
+# dashboard and its curated data file ARE committed.
+hyperscalers/

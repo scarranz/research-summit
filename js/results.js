@@ -20,21 +20,123 @@
 //   ... when the pane becomes visible: requestAnimationFrame(initResults)
 
 import { amznResults } from './results-data/amzn.js';
+import { amznSetup } from './results-data/amzn-setup.js';
 import { googlResults } from './results-data/googl.js';
 import { googlSetup } from './results-data/googl-setup.js';
-import { maResults } from './results-data/ma.js';   // NOTE: shared engine file — reviewers, see MA migration
+import { maResults } from './results-data/ma.js';
 import { maSetup } from './results-data/ma-setup.js';
+import { uberResults, uberSetup } from './results-data/uber.js';
+import { metaResults } from './results-data/meta.js';
+import { metaSetup } from './results-data/meta-setup.js';
+import { ibkrResults } from './results-data/ibkr.js';
+import { ibkrSetup } from './results-data/ibkr-setup.js';
+import { spotResults } from './results-data/spot.js';
+import { lyftResults } from './results-data/lyft.js';
+import { lyftSetup } from './results-data/lyft-setup.js';
+import { tbbbResults } from './results-data/tbbb.js';
+import { tbbbSetup } from './results-data/tbbb-setup.js';
 
 var RESULTS_DATA = {
   AMZN: amznResults,
+  AMZN_SETUP: amznSetup,
   GOOGL: googlResults,
   GOOGL_SETUP: googlSetup,
   MA: maResults,
-  MA_SETUP: maSetup   // Setup chart: rolling-window, single merged 'setup' section (EARNINGS_CONVENTIONS §6a-viii-bis)
+  MA_SETUP: maSetup,
+  UBER: uberResults,
+  UBER_SETUP: uberSetup,
+  META: metaResults,
+  META_SETUP: metaSetup,
+  IBKR: ibkrResults,
+  IBKR_SETUP: ibkrSetup,
+  SPOT: spotResults,
+  LYFT: lyftResults,
+  LYFT_SETUP: lyftSetup,
+  TBBB: tbbbResults,
+  TBBB_SETUP: tbbbSetup
 };
 
 export function getResultsData(ticker){
-  return RESULTS_DATA[ticker] || null;
+  var raw = RESULTS_DATA[ticker] || null;
+  if (!raw) return null;
+  if (!_rsTrimCache[ticker]) _rsTrimCache[ticker] = rsTrimData(raw);
+  return _rsTrimCache[ticker];
+}
+
+// ─── Forward-horizon rule (SAB, Jul 29, 2026) ─────────────────────────────────
+// Estimates are shown only as far as the DCF actually models them. Derived per
+// dataset from its OWN last reported period — no per-company configuration, and
+// fiscal-aligned because period labels are already fiscal ('nQyy' / 'yyyy'):
+//   · Quarterly view: forward quarters only within the CURRENT fiscal year
+//     (the FY of the next print). Later quarters are dropped from the view
+//     even when the dataset carries them.
+//   · Annual view: forward years capped at the current FY + 2.
+//   · Estimate Evolution: the same annual cap (current FY + 2).
+// The rule re-derives automatically as each print's actuals are filled in;
+// datasets stay complete on disk — only the rendered copy is trimmed.
+var _rsTrimCache = {};
+function rsParseQ(p){ var m = /^([1-4])Q(\d{2})$/.exec(p); return m ? { y: 2000 + +m[2], q: +m[1] } : null; }
+// Current FY = the fiscal year of the first quarter AFTER the last reported one.
+function rsCurrentFY(data){
+  var best = null, vq = data.views && data.views.q, k, m, i, pq;
+  if (vq) for (k in vq.metrics){ m = vq.metrics[k];
+    if (!m.act) continue;
+    for (i = 0; i < m.periods.length; i++){
+      if (m.act[i] == null) continue;
+      pq = rsParseQ(m.periods[i]); if (!pq) continue;
+      var o = pq.y * 4 + pq.q; if (best == null || o > best) best = o;
+    } }
+  // o = y*4+q: a 4Q rolls the division into y+1 (next print = 1Q of FY y+1),
+  // 1Q–3Q floor back to y — so the floor IS the current fiscal year.
+  if (best != null) return Math.floor(best / 4);
+  var vy = data.views && data.views.y, bestY = null;
+  if (vy) for (k in vy.metrics){ m = vy.metrics[k];
+    if (!m.act) continue;
+    for (i = 0; i < m.periods.length; i++)
+      if (m.act[i] != null && !isNaN(+m.periods[i]) && (bestY == null || +m.periods[i] > bestY)) bestY = +m.periods[i];
+  }
+  return bestY != null ? bestY + 1 : null;
+}
+function rsTrimMetric(m, keep){
+  var idx = [], i;
+  for (i = 0; i < m.periods.length; i++) if (keep(m.periods[i])) idx.push(i);
+  if (idx.length === m.periods.length) return m;
+  var t = {}, k; for (k in m) t[k] = m[k];
+  ['periods', 'act', 'summit', 'cons', 'guideLo', 'guideHi'].forEach(function(f){
+    if (Array.isArray(m[f])) t[f] = idx.map(function(j){ return m[f][j]; });
+  });
+  return t;
+}
+function rsTrimData(raw){
+  var fy = rsCurrentFY(raw);
+  if (fy == null) return raw;
+  var keepQ = function(p){ var pq = rsParseQ(p); return !pq || pq.y <= fy; };
+  var keepY = function(p){ return isNaN(+p) || +p <= fy + 2; };
+  var d = {}, k; for (k in raw) d[k] = raw[k];
+  d.views = {};
+  for (k in raw.views){
+    var v = raw.views[k], nv = {}, kk; for (kk in v) nv[kk] = v[kk];
+    nv.metrics = {};
+    for (kk in v.metrics) nv.metrics[kk] = rsTrimMetric(v.metrics[kk], k === 'q' ? keepQ : keepY);
+    d.views[k] = nv;
+  }
+  if (raw.evolution && Array.isArray(raw.evolution.years)){
+    var keepIdx = [], i;
+    for (i = 0; i < raw.evolution.years.length; i++) if (+raw.evolution.years[i] <= fy + 2) keepIdx.push(i);
+    if (keepIdx.length !== raw.evolution.years.length){
+      var evo = {}, ek; for (ek in raw.evolution) evo[ek] = raw.evolution[ek];
+      evo.years = keepIdx.map(function(j){ return raw.evolution.years[j]; });
+      evo.metrics = {};
+      for (ek in raw.evolution.metrics){
+        var em = raw.evolution.metrics[ek], t = {}, f; for (f in em) t[f] = em[f];
+        if (Array.isArray(em.summit)) t.summit = keepIdx.map(function(j){ return em.summit[j]; });
+        if (Array.isArray(em.cons))   t.cons   = keepIdx.map(function(j){ return em.cons[j]; });
+        evo.metrics[ek] = t;
+      }
+      d.evolution = evo;
+    }
+  }
+  return d;
 }
 
 // ─── Colors (match the portal/AVE conventions) ────────────────────────────────
@@ -42,7 +144,6 @@ var RS_ACT    = 'rgba(30,39,51,0.92)';    // navy — actual
 var RS_SUMMIT = 'rgba(37,99,235,0.85)';   // accent blue — Summit model
 var RS_CONS   = 'rgba(124,134,148,0.85)'; // mid gray — Street consensus
 var RS_GUIDE  = 'rgba(62,90,130,0.18)';   // steel, translucent — guidance range
-var RS_GREEN  = '#1E9E62', RS_RED = '#C0392B';
 var RS_FWD    = '#2563EB';   // forward/estimate accent (matches the E-column highlight)
 
 // A rounded-rect path helper for the canvas plugins below.
@@ -94,6 +195,7 @@ var rsFwdZone = {
     ctx.restore();
   }
 };
+var RS_GREEN  = '#1E9E62', RS_RED = '#C0392B';
 // Evolution block: one line per fiscal year — an ordered (ordinal) ramp of the
 // portal blue, darkest = nearest year. Validated with the dataviz palette
 // checker (monotone L, visible step gaps, light end ≥2:1 on white).
@@ -107,7 +209,9 @@ var _rs = { data: null, view: 'q', growth: 'yoy', sec: {}, evo: null, surp: null
 
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); }
 
-function rsView(){ return _rs.data.views[_rs.view]; }
+function rsView(){ return _rs.data.views[_rs.view] || _rs.data.views.y || _rs.data.views.q; }
+// Default view: quarterly when present, else annual (datasets like TBBB carry annual only).
+function rsDefaultView(data){ return (data && data.views && data.views.q) ? 'q' : 'y'; }
 function rsSecCfg(k){ return rsView().sections.filter(function(s){ return s.key === k; })[0]; }
 // Sections declare their metrics in labeled groups (Totals / Segments / …);
 // flatten for validation and default handling.
@@ -124,26 +228,39 @@ function rsMetric(k){
   return rsView().metrics[st.metric];
 }
 
+// ─── Reporting currency ──────────────────────────────────────────────────────
+// Per-metric `m.cur` takes priority (e.g. 'Ps.' for MXN in TBBB); falls back
+// to dataset-level `currency` (e.g. '€' for Spotify EUR); then '$'.
+// Non-monetary units — 'pct' (percentage) and 'count' (integer, e.g. store
+// count) — carry no currency symbol.
+function rsCur(m){ return (m && m.cur) || (_rs.data && _rs.data.currency) || '$'; }
+function rsCurName(m){ return (m && m.cur) || (_rs.data && _rs.data.currencyName) || 'US$'; }
+
 function rsFmt(m, v){
   if (v == null) return '—';
-  var neg = v < 0 ? '−' : '', a = Math.abs(v);
-  if (m.unit === 'eps') return neg + '$' + a.toFixed(2);
-  if (m.unit === 'cnt') return neg + (a >= 10000 ? (a/1000).toFixed(1) + 'B' : Math.round(a).toLocaleString() + 'M');
-  if (a >= 10000) return neg + '$' + (a/1000).toFixed(1) + 'B';
-  return neg + '$' + Math.round(a).toLocaleString() + 'M';
+  var neg = v < 0 ? '−' : '', a = Math.abs(v), c = rsCur(m);
+  if (m.unit === 'eps') return neg + c + a.toFixed(2);
+  if (m.unit === 'pct') return neg + a.toFixed(1) + '%';
+  if (m.unit === 'count') return neg + Math.round(a).toLocaleString();
+  if (m.unit === 'cnt') return neg + (a >= 10000 ? (a/1000).toFixed(1) + 'B' : Math.round(a).toLocaleString() + 'M');  // count w/ B/M scaling, no $ (e.g. MA processed txns / shares)
+  if (a >= 10000) return neg + c + (a/1000).toFixed(1) + 'B';
+  return neg + c + Math.round(a).toLocaleString() + 'M';
 }
 function rsFmtD(m, v, dec){
   if (v == null) return '—';
-  var sign = v >= 0 ? '+' : '−', a = Math.abs(v);
-  if (m.unit === 'eps') return sign + '$' + a.toFixed(2);
+  var sign = v >= 0 ? '+' : '−', a = Math.abs(v), c = rsCur(m);
+  if (m.unit === 'eps') return sign + c + a.toFixed(2);
+  if (m.unit === 'pct') return sign + a.toFixed(dec == null ? 1 : dec) + ' pts';
+  if (m.unit === 'count') return sign + Math.round(a).toLocaleString();
   if (m.unit === 'cnt') return sign + (a >= 10000 ? (a/1000).toFixed(dec == null ? 1 : dec) + 'B' : Math.round(a).toLocaleString() + 'M');
-  if (a >= 10000) return sign + '$' + (a/1000).toFixed(dec == null ? 1 : dec) + 'B';
-  return sign + '$' + Math.round(a).toLocaleString() + 'M';
+  if (a >= 10000) return sign + c + (a/1000).toFixed(dec == null ? 1 : dec) + 'B';
+  return sign + c + Math.round(a).toLocaleString() + 'M';
 }
 // Display scale for a metric: $B for AMZN-sized series, $M for SoFi-sized ones.
 // Decided per metric (max |value| across every series) so a metric is always
 // consistent with itself.
 function rsScaleOf(m){
+  if (m.unit === 'pct' || m.unit === 'count' || m.unit === 'eps') return 1;
   var mx = 0;
   ['act', 'summit', 'cons', 'guideLo', 'guideHi'].forEach(function(k){
     (m[k] || []).forEach(function(v){ if (v != null) mx = Math.max(mx, Math.abs(v)); });
@@ -163,11 +280,13 @@ function rsGuideMid(m, i){ return (m.guideLo[i] == null || m.guideHi[i] == null)
 // Axis tick: negatives as −$50B, not $-50B; whole dollars only (zoomed bounds
 // arrive fractional — $135.13111B would eat the chart's left margin). `div` is
 // the metric's display scale from rsScaleOf (1000 → $B axis, 1 → $M axis).
-function rsTick(v, unit, div){
-  var s = v < 0 ? '−' : '', a = Math.abs(v);
-  if (unit === 'eps') return s + '$' + (+a.toFixed(2));
+function rsTick(v, unit, div, cur){
+  var s = v < 0 ? '−' : '', a = Math.abs(v), c = cur || '$';
+  if (unit === 'eps') return s + c + (+a.toFixed(2));
+  if (unit === 'pct') return s + Math.round(a) + '%';
+  if (unit === 'count') return s + Math.round(a).toLocaleString();
   if (unit === 'cnt') return s + Math.round(a) + (div === 1000 ? 'B' : 'M');
-  return s + '$' + Math.round(a) + (div === 1000 ? 'B' : 'M');
+  return s + c + Math.round(a) + (div === 1000 ? 'B' : 'M');
 }
 function rsWin(k, m){
   var st = rsSt(k), n = m.periods.length;
@@ -215,10 +334,13 @@ function rsActGrowthDollar(m, i){
 function rsMarginArr(m, series){
   if (!m.marginOf || m.unit === 'eps') return null;
   var d = rsView().metrics[m.marginOf]; if (!d) return null;
-  var dmap = {};
-  d.periods.forEach(function(p, j){ dmap[p] = d.act[j] != null ? d.act[j] : d.summit[j]; });
+  // Numerator and denominator MUST be the SAME series/vintage: a consensus margin is cons/cons, a
+  // Summit margin is summit/summit, an actual margin is act/act. NEVER mix bases (e.g. a consensus
+  // numerator over Summit revenue) — that is a meaningless hybrid mislabeled as one side. Consensus
+  // and Summit margins stay distinct (see EARNINGS_CONVENTIONS general rule on margins).
+  var dser = d[series] || [];
   return m.periods.map(function(p, i){
-    var num = m[series][i], den = dmap[p];
+    var num = m[series][i], den = dser[i];
     if (num == null || den == null || !den) return null;
     return num / den * 100;
   });
@@ -248,7 +370,7 @@ export function resultsHtml(ticker){
   var data = getResultsData(ticker);
   _rs.data = data;
   if (!data) return '';
-  _rs.view = 'q';
+  _rs.view = rsDefaultView(data);
   _rs.growth = 'yoy';
   _rs.sec = {};
   _rs.evo = null;
@@ -258,7 +380,7 @@ export function resultsHtml(ticker){
 function rsBody(){
   var d = _rs.data;
   var h = '<div class="rs-wrap">';
-  h += '<p class="ov-lede">' + esc(d.intro) + '</p>';
+  if (d.intro) h += '<p class="ov-lede">' + esc(d.intro) + '</p>';
   h += '<div class="rs-toprow"><div class="rs-views">' + Object.keys(d.views).map(function(k){
     return '<button type="button" class="rs-view' + (k === _rs.view ? ' active' : '') + '" data-rsview="' + k + '">' + esc(d.views[k].label) + '</button>';
   }).join('') + '</div>' +
@@ -333,7 +455,11 @@ function rsLegendHtml(k, m){
   var h = chip('act', RS_ACT, 'Actual');
   if (has.summit) h += chip('summit', RS_SUMMIT, 'Summit model');
   if (has.cons)   h += chip('cons', RS_CONS, 'Consensus');
-  if (has.guide)  h += chip('guide', 'rgba(62,90,130,0.3)', 'Guidance range');
+  // Label the chip for what the company actually gives: a range, or a single number.
+  if (has.guide){
+    var anyRange = m.guideLo.some(function(v, i){ return v != null && m.guideHi[i] != null && v !== m.guideHi[i]; });
+    h += chip('guide', 'rgba(62,90,130,0.3)', anyRange ? 'Guidance range' : 'Guidance (single number)');
+  }
   // Make the ABSENCE of guidance loud and explicit — a company (or a line) with no numeric guide gets
   // an amber badge, so no reader is left guessing why there is no guidance band (§5.5).
   else h += '<span class="rs-noguide" title="This company issued no numeric guidance for this line/period — so there is no guidance band to score against (only Street and Summit).">⚑ No company guidance</span>';
@@ -356,15 +482,40 @@ function rsBuildChart(k){
   var dec = m.unit === 'eps' ? 2 : 1;
   var div = rsScaleOf(m);
   var scale = function(v){ return v == null ? null : (m.unit === 'eps' ? v : v/div); };
-  var unitLbl = m.unit === 'eps' ? '$' : m.unit === 'cnt' ? (div === 1000 ? 'B' : 'M') : (div === 1000 ? '$B' : '$M');
+  var cur = rsCur(m);
+  var unitLbl = m.unit === 'eps'   ? cur
+              : m.unit === 'pct'   ? '%'
+              : m.unit === 'count' ? (m.unitLabel || 'count')
+              : m.unit === 'cnt'   ? (div === 1000 ? 'B' : 'M')
+              : (div === 1000 ? cur + 'B' : cur + 'M');
   function sl(a){ return a.slice(lo, hi + 1); }
 
   var datasets = [], needY2 = false;
   if (has.guide && !st.hidden.guide){
-    datasets.push({ label: 'Guidance range', type: 'bar',
-      data: sl(m.periods.map(function(_, i){ return (m.guideLo[i] == null || m.guideHi[i] == null) ? null : [scale(m.guideLo[i]), scale(m.guideHi[i])]; })),
-      backgroundColor: RS_GUIDE, borderColor: 'rgba(62,90,130,0.45)', borderWidth: 1, borderSkipped: false,
-      barPercentage: 0.98, categoryPercentage: 0.98, grouped: false, order: 10 });
+    // A guide can be a RANGE (Amazon, Lyft) or a single POINT (Spotify guides one
+    // number per metric, not a band). A point guide has guideLo === guideHi, which
+    // as a floating bar is zero pixels tall — i.e. invisible. So the two cases get
+    // two different marks: a translucent band for a range, and a horizontal tick
+    // for a point. Both are honest about what the company actually said.
+    var isPoint = function(i){ return m.guideLo[i] != null && m.guideHi[i] != null && m.guideLo[i] === m.guideHi[i]; };
+    var bandData = m.periods.map(function(_, i){
+      return (m.guideLo[i] == null || m.guideHi[i] == null || isPoint(i)) ? null : [scale(m.guideLo[i]), scale(m.guideHi[i])];
+    });
+    var pointData = m.periods.map(function(_, i){ return isPoint(i) ? scale(m.guideLo[i]) : null; });
+    if (bandData.some(function(v){ return v != null; })){
+      datasets.push({ label: 'Guidance range', type: 'bar',
+        data: sl(bandData),
+        backgroundColor: RS_GUIDE, borderColor: 'rgba(62,90,130,0.45)', borderWidth: 1, borderSkipped: false,
+        barPercentage: 0.98, categoryPercentage: 0.98, grouped: false, order: 10 });
+    }
+    if (pointData.some(function(v){ return v != null; })){
+      datasets.push({ label: 'Guidance', type: 'line',
+        data: sl(pointData),
+        showLine: false,               // each quarter's guide is its own number, not a trend
+        pointStyle: 'line', pointRadius: 15, pointHoverRadius: 15,
+        borderColor: 'rgba(62,90,130,0.95)', borderWidth: 2.5,
+        spanGaps: false, order: 1 });
+    }
   }
   if (!st.hidden.act) datasets.push({ label: 'Actual', data: sl(m.act.map(scale)), backgroundColor: RS_ACT, borderRadius: 3, maxBarThickness: 26, order: 3 });
   if (has.summit && !st.hidden.summit) datasets.push({ label: 'Summit model', data: sl(m.summit.map(scale)), backgroundColor: RS_SUMMIT, borderRadius: 3, maxBarThickness: 26, order: 4 });
@@ -404,7 +555,7 @@ function rsBuildChart(k){
     x: { grid: { display: false }, ticks: { color: 'rgba(80,90,104,0.9)', font: { size: 11 }, autoSkip: false,
         callback: function(v, i){ return (fwdFrom >= 0 && i >= fwdFrom) ? '' : this.getLabelForValue(v); } } },
     y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
-      callback: function(v){ return rsTick(v, m.unit, div); } } }
+      callback: function(v){ return rsTick(v, m.unit, div, m.cur); } } }
   };
   if (st.yr){ scales.y.min = st.yr[0]; scales.y.max = st.yr[1]; }
   if (needY2) scales.y2 = { position: 'right', grid: { display: false },
@@ -427,6 +578,9 @@ function rsBuildChart(k){
               var i = ctx.dataIndex + lo;
               if (ctx.dataset.label === 'Guidance range'){
                 return 'Guidance: ' + rsFmt(m, m.guideLo[i]) + ' – ' + rsFmt(m, m.guideHi[i]);
+              }
+              if (ctx.dataset.label === 'Guidance'){   // a single guided number, no range
+                return 'Guidance: ' + rsFmt(m, m.guideLo[i]);
               }
               if (ctx.dataset.yAxisID === 'y2'){
                 return ctx.dataset.label + ': ' + (ctx.parsed.y == null ? '—' : ctx.parsed.y.toFixed(1) + '%');
@@ -570,6 +724,8 @@ function rsRenderTable(k, m){
   function num(v){
     if (v == null) return '<span class="rs-ft-nil">—</span>';
     if (m.unit === 'eps') return Number(v).toFixed(2);
+    if (m.unit === 'pct') return Number(v).toFixed(1) + '%';
+    if (m.unit === 'count') return Math.round(v).toLocaleString();
     return (v/div).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   }
   function pctDollar(p, d){
@@ -624,7 +780,12 @@ function rsRenderTable(k, m){
     return ab + '▲ · ' + wi + '⊙ · ' + be + '▼<br><span class="rs-ft-dim">avg vs mid ' + sgn(avg(mids)) + '</span>';
   }
 
-  var h = '<div class="rs-ft-cap">' + (m.unit === 'eps' ? 'US$ per share' : m.unit === 'cnt' ? (div === 1000 ? 'count, billions' : 'count, millions') : (div === 1000 ? 'US$ billions' : 'US$ millions')) + ' · <span class="rs-ft-e">E</span> = estimate, no actual reported yet · the right column summarizes the selected range: how the actual has come in vs each estimate (▲ = beat)</div>';
+  var unitCap = m.unit === 'eps'   ? (rsCurName(m) + ' per share')
+              : m.unit === 'pct'   ? 'percent (%)'
+              : m.unit === 'count' ? (m.unitLabel || 'count')
+              : m.unit === 'cnt'   ? (div === 1000 ? 'count, billions' : 'count, millions')
+              : (rsCurName(m) + ' ' + (div === 1000 ? 'billions' : 'millions'));
+  var h = '<div class="rs-ft-cap">' + unitCap + ' · <span class="rs-ft-e">E</span> = estimate, no actual reported yet · the right column summarizes the selected range: how the actual has come in vs each estimate (▲ = beat)</div>';
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   idx.forEach(function(i, c){
     h += '<th class="' + (est[c] ? 'rs-ft-este' : '') + '">' + esc(m.periods[i]) + (est[c] ? ' <span class="rs-ft-e">E</span>' : '') + '</th>';
@@ -664,15 +825,23 @@ function rsRenderTable(k, m){
   });
 
   if (has.guide){
-    h += row('Guidance', function(i){ return m.guideLo[i] == null ? '<span class="rs-ft-nil">—</span>' : num(m.guideLo[i]) + '–' + num(m.guideHi[i]); }, 'main nb', '');
-    h += row('actual vs range', function(i){
+    // A point guide prints one number, not "4800–4800".
+    h += row('Guidance', function(i){
+      if (m.guideLo[i] == null) return '<span class="rs-ft-nil">—</span>';
+      return (m.guideLo[i] === m.guideHi[i]) ? num(m.guideLo[i]) : (num(m.guideLo[i]) + '–' + num(m.guideHi[i]));
+    }, 'main nb', '');
+    // "within" only exists when there IS a range; against a single guided number the
+    // comparison is simply above or below it, and the delta is vs the guide, not vs a mid.
+    var anyRangeRow = m.guideLo.some(function(v, i){ return v != null && m.guideHi[i] != null && v !== m.guideHi[i]; });
+    h += row(anyRangeRow ? 'actual vs range' : 'actual vs guide', function(i){
       if (m.guideLo[i] == null || m.act[i] == null) return '<span class="rs-ft-nil">—</span>';
+      var point = m.guideLo[i] === m.guideHi[i];
       var mid = rsGuideMid(m, i), d = mid == null ? null : m.act[i] - mid;
       var word;
       if (m.act[i] > m.guideHi[i]) word = '<span style="color:' + RS_GREEN + '">above</span>';
       else if (m.act[i] < m.guideLo[i]) word = '<span style="color:' + RS_RED + '">below</span>';
-      else word = '<span style="color:var(--mu)">within</span>';
-      return word + (d == null ? '' : ' <span class="rs-ft-dim">· ' + rsFmtD(m, d) + ' vs mid</span>');
+      else word = '<span style="color:var(--mu)">' + (point ? 'in line' : 'within') + '</span>';
+      return word + (d == null ? '' : ' <span class="rs-ft-dim">· ' + rsFmtD(m, d) + (point ? ' vs guide' : ' vs mid') + '</span>');
     }, 'sub', sumGuide());
   }
 
@@ -815,7 +984,7 @@ function rsEvoBlockHtml(k){
 function rsEvoModeHtml(k, m){
   var st = rsEvoSt(k);
   if (k !== 'top' && !m.marginOf){ st.mode = 'usd'; return ''; }
-  return '<button type="button" class="rs-view' + (st.mode === 'usd' ? ' active' : '') + '" data-rsevmode="usd">US$B</button>' +
+  return '<button type="button" class="rs-view' + (st.mode === 'usd' ? ' active' : '') + '" data-rsevmode="usd">' + rsCurName() + 'B</button>' +
     '<button type="button" class="rs-view' + (st.mode === 'pct' ? ' active' : '') + '" data-rsevmode="pct">' +
     (k === 'top' ? 'YoY growth %' : 'Margin %') + '</button>';
 }
@@ -886,7 +1055,7 @@ function rsBuildEvo(k){
   var tEl = document.getElementById('rsEvoChartT-' + k);
   if (tEl) tEl.innerHTML = esc(m.label) + ' — ' +
     (pct ? esc(rsEvoPctLabel(k, m)) + ' by model snapshot <span>(% per fiscal year, each snapshot against its own numbers · solid = Summit model, dashed = stored BBG consensus)</span>'
-         : 'forecast by model snapshot <span>($' + (div === 1000 ? 'B' : 'M') + ' per fiscal year · solid = Summit model, dashed = stored BBG consensus · hover for the revision)</span>');
+         : 'forecast by model snapshot <span>(' + (m.cur || '$') + (div === 1000 ? 'B' : 'M') + ' per fiscal year · solid = Summit model, dashed = stored BBG consensus · hover for the revision)</span>');
 
   st.chart = new Chart(el.getContext('2d'), {
     type: 'line',
@@ -926,7 +1095,7 @@ function rsBuildEvo(k){
       scales: {
         x: { grid: { display: false }, ticks: { font: { size: 11 } } },
         y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
-          callback: function(v){ return pct ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div); } },
+          callback: function(v){ return pct ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div, m.cur); } },
           min: st.yr ? st.yr[0] : undefined, max: st.yr ? st.yr[1] : undefined }
       }
     }
@@ -956,9 +1125,9 @@ function rsRenderEvoTable(k, m){
   }
 
   var pctCap = k === 'top'
-    ? ' · “implied YoY growth” = the growth that snapshot’s estimate implies vs the prior fiscal year as known at that date'
+    ? ' · “implied YoY growth” = the growth that snapshot\'s estimate implies vs the prior fiscal year as known at that date'
     : ' · margins are computed within each snapshot (numerator and denominator from the same vintage)';
-  var h = '<div class="rs-ft-cap">US$ ' + (div === 1000 ? 'billions' : 'millions') + ' · columns are the model’s saved snapshots · “revision” = change vs the prior snapshot · the right column is the cumulative move from the first snapshot to the latest' + pctCap + '</div>';
+  var h = '<div class=”rs-ft-cap”>' + rsCurName(m) + ' ' + (div === 1000 ? 'billions' : 'millions') + ' · columns are the model\'s saved snapshots · “revision” = change vs the prior snapshot · the right column is the cumulative move from the first snapshot to the latest' + pctCap + '</div>';
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   ev.vintages.forEach(function(v){
     h += '<th>' + esc(v.label) + '<br><span class="rs-ft-dim">' + esc(v.event) + '</span></th>';
@@ -1070,7 +1239,7 @@ function rsSurpBlockHtml(){
     '<div class="rs-views" id="rsSurpMode"></div></div>';
   h += '<div class="ave-leg"><span class="tech-leg-i"><span class="ave-leg-act" style="background:' + RS_GREEN + '"></span>Beat (actual above estimate)</span>' +
     '<span class="tech-leg-i"><span class="ave-leg-act" style="background:' + RS_RED + '"></span>Miss (actual below)</span>' +
-    '<span class="tech-leg-i" style="margin-left:auto">the model’s frozen pre-print estimate vs what was reported</span></div>';
+    '<span class="tech-leg-i" style="margin-left:auto">the model\'s frozen pre-print estimate vs what was reported</span></div>';
   h += '<div class="ov-chart-card">' +
     '<div class="ov-chart-t" id="rsSurpChartT"></div>' +
     '<div class="ov-chart-wrap ovs-tall"><canvas id="rsSurpChart"></canvas></div>' +
@@ -1111,7 +1280,7 @@ function rsBuildSurp(){
   var md = document.getElementById('rsSurpMode');
   if (md) md.innerHTML = '<button type="button" class="rs-view' + (pctMode ? ' active' : '') + '" data-rssurpmode="pct">Surprise %</button>' +
     '<button type="button" class="rs-view' + (!pctMode ? ' active' : '') + '" data-rssurpmode="usd">$ amount</button>';
-  var unitLbl = m.unit === 'eps' ? '$' : (div === 1000 ? 'US$ billions' : 'US$ millions');
+  var unitLbl = m.unit === 'eps' ? rsCur() : (rsCurName() + (div === 1000 ? ' billions' : ' millions'));
   var tEl = document.getElementById('rsSurpChartT');
   if (tEl) tEl.innerHTML = esc(m.label) + ' — surprise vs the Summit estimate <span>(' + (pctMode ? '%' : esc(unitLbl)) + ' per period · hover for both values)</span>';
 
@@ -1144,7 +1313,7 @@ function rsBuildSurp(){
         y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
           callback: function(v){
             if (pctMode) return (v < 0 ? '−' : '') + Math.abs(v).toFixed(0) + '%';
-            return rsTick(v, m.unit, div);
+            return rsTick(v, m.unit, div, rsCur(m));
           } } }
       }
     }
@@ -1214,7 +1383,7 @@ function rsSurpTableRender(m, lo, hi, div){
     return above + '▲ · ' + below + '▼<br><span class="rs-ft-dim">actual avg <span style="color:' + (ap >= 0 ? RS_GREEN : RS_RED) + '">' + sgn(ap) + '</span> · ' + rsFmtD(m, avg(dols2)) + '</span>';
   }
 
-  var h = '<div class="rs-ft-cap">' + (m.unit === 'eps' ? 'US$ per share' : (div === 1000 ? 'US$ billions' : 'US$ millions')) + ' · surprise = (actual − estimate) ÷ |estimate| · ▲/green = the actual beat the frozen estimate · the right column summarizes the selected range</div>';
+  var h = '<div class="rs-ft-cap">' + (m.unit === 'eps' ? rsCurName() + ' per share' : (rsCurName() + (div === 1000 ? ' billions' : ' millions'))) + ' · surprise = (actual − estimate) ÷ |estimate| · ▲/green = the actual beat the frozen estimate · the right column summarizes the selected range</div>';
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   idx.forEach(function(i){ h += '<th>' + esc(m.periods[i]) + '</th>'; });
   h += '<th class="rs-ft-s">Range record</th></tr></thead><tbody>';
@@ -1337,7 +1506,7 @@ function wireSliders(pane){
 export function initResults(wrap, ticker){
   if (ticker){
     var d = getResultsData(ticker); if (!d) return;
-    if (_rs._active !== ticker){ _rs.view = 'q'; _rs.growth = 'yoy'; _rs.sec = {}; }
+    if (_rs._active !== ticker){ _rs.view = rsDefaultView(d); _rs.growth = 'yoy'; _rs.sec = {}; }
     _rs.data = d; _rs._active = ticker;
   }
   if (!_rs.data) return;
@@ -1347,7 +1516,12 @@ export function initResults(wrap, ticker){
 }
 
 // Called when the Estimate Evolution pane becomes visible.
-export function initResultsEvo(){
+export function initResultsEvo(ticker){
+  // Re-target the shared engine state to THIS ticker's dataset. The Setup/Results charts share _rs,
+  // so _rs.data may be left pointing at a *_SETUP dataset (which has no `evolution`) → empty charts.
+  // Guard on `string` so a requestAnimationFrame timestamp arg is ignored (callers that pass no
+  // ticker keep the old behaviour). Pass the ticker to make the Estimates tab order-independent.
+  if (typeof ticker === 'string'){ var _d = getResultsData(ticker); if (_d && _d.evolution) _rs.data = _d; }
   if (!_rs.data || !_rs.data.evolution) return;
   var wrap = document.getElementById('rsEvoWrap');
   if (!wrap) return;

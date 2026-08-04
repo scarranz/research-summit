@@ -14,17 +14,26 @@ const INDUSTRIES = [
   { id: 'semiconductors', label: 'Semiconductors', ready: true },
   { id: 'payments',       label: 'Payments',       ready: true },
   { id: 'robotics',       label: 'Robotics',        ready: true },
+  { id: 'hyperscalers',   label: 'Hyperscalers',    ready: true },
 ];
 
-// iframe-isolated industries → their standalone host page. Payments renders
-// in-document instead (see showIndustry).
+// iframe-isolated industries → their standalone host page. Everything listed in
+// INLINE below renders in-document instead (see showIndustry).
 const IFRAME_SRC = {
   semiconductors: 'industry-embed.html?industry=semiconductors',
   robotics: 'robotics-industry.html',
 };
 
+// In-document industries: pure presentation + Chart.js, no module state that can
+// collide with a company profile, so they need no iframe. Each lazily imports its
+// module and mounts it into its own pane.
+const INLINE = {
+  payments:     { pane: 'ind-payments',     load: () => import('./overviews/payments-industry.js').then(m => m.paymentsIndustry) },
+  hyperscalers: { pane: 'ind-hyperscalers', load: () => import('./overviews/hyperscalers-industry.js').then(m => m.hyperscalersIndustry) },
+};
+
 let _wired = false;
-let _payLoaded = false;
+const _loaded = {};
 
 export function loadIndustryPage() {
   const root = document.getElementById('ind-root');
@@ -50,7 +59,7 @@ export function loadIndustryPage() {
       '<div id="ind-content">' +
         '<iframe id="ind-frame" class="ind-frame" title="Industry supply-chain map" ' +
           'src="industry-embed.html?industry=semiconductors"></iframe>' +
-        '<div id="ind-payments" hidden></div>' +
+        Object.keys(INLINE).map((k) => '<div id="' + INLINE[k].pane + '" hidden></div>').join('') +
       '</div>' +
     '</div>';
 
@@ -66,23 +75,27 @@ export function loadIndustryPage() {
 
 async function showIndustry(id) {
   const frame = document.getElementById('ind-frame');
-  const pay = document.getElementById('ind-payments');
-  if (id === 'payments') {
+  // Hide every inline pane first, then reveal the selected one (if any).
+  Object.keys(INLINE).forEach((k) => {
+    const el = document.getElementById(INLINE[k].pane);
+    if (el) el.hidden = k !== id;
+  });
+
+  if (INLINE[id]) {
     if (frame) frame.hidden = true;
-    if (pay) {
-      pay.hidden = false;
-      if (!_payLoaded) {
-        _payLoaded = true;
-        const m = await import('./overviews/payments-industry.js');
-        pay.innerHTML = m.paymentsIndustry.html();
-        requestAnimationFrame(() => m.paymentsIndustry.init());
-      }
+    const el = document.getElementById(INLINE[id].pane);
+    if (el && !_loaded[id]) {
+      _loaded[id] = true;
+      const mod = await INLINE[id].load();
+      el.innerHTML = mod.html();
+      // Charts need a laid-out, visible canvas (offsetParent non-null) before build.
+      requestAnimationFrame(() => mod.init());
     }
     return;
   }
+
   // iframe-isolated industries (semiconductors, robotics) share one <iframe>;
   // swap its src lazily, only when the selection actually changes.
-  if (pay) pay.hidden = true;
   if (frame) {
     const src = IFRAME_SRC[id];
     if (src && !frame.getAttribute('src').includes(src)) frame.setAttribute('src', src);

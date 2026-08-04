@@ -415,6 +415,56 @@ function table(rows, head, cls){
 
 function sec(t){ return '<div class="hs-sec">' + esc(t) + '</div>'; }
 
+// ─── Wide-table affordances: hover crosshair + pinned-column scroll shadow ────
+// Wired ONCE on the root and driven by delegation, because the CSP tables are
+// re-rendered on every pill, periodicity, growth-basis and zoom change — a
+// listener bound to the table itself would die on the first repaint.
+//
+// The crosshair marks the hovered ROW and the hovered COLUMN. Column highlighting
+// has no CSS-only expression that survives a scrolling container, so it is done
+// by cell index: every row's cell at that index gets the class, the header
+// included, which is what makes a number in the 19th quarter readable without
+// counting columns back to the label.
+//
+// ⚠ Applies only to `.hs-table--pin`. Tables with rowspans (the chip mix, the
+// quote matrix) would mis-index under `cellIndex` and are deliberately excluded.
+function wireTableXhair(root){
+  var ROW = 'is-hl-row', COL = 'is-hl-col';
+
+  function clearAll(){
+    root.querySelectorAll('.' + ROW).forEach(function(el){ el.classList.remove(ROW); });
+    root.querySelectorAll('.' + COL).forEach(function(el){ el.classList.remove(COL); });
+  }
+
+  root.addEventListener('mouseover', function(e){
+    var t = e.target;
+    var cell = (t && t.closest) ? t.closest('td, th') : null;
+    var tbl = cell && cell.closest('table.hs-table--pin');
+    // Moving anywhere outside a pinned table clears — otherwise the last hovered
+    // row stays lit after the cursor has left, which reads as a selection.
+    if (!tbl){ clearAll(); return; }
+    clearAll();
+    var i = cell.cellIndex;
+    if (i < 0) return;
+    var tr = cell.parentNode;
+    if (tr.parentNode && tr.parentNode.tagName === 'TBODY') tr.classList.add(ROW);
+    tbl.querySelectorAll('tr').forEach(function(r){
+      var c = r.cells && r.cells[i];
+      if (c) c.classList.add(COL);
+    });
+  });
+  root.addEventListener('mouseleave', clearAll);
+
+  // Scroll shadow on the pinned column. `scroll` does not bubble, so this has to
+  // be captured; the wrapper is replaced on every repaint, hence delegation.
+  root.addEventListener('scroll', function(e){
+    var w = e.target;
+    if (w && w.classList && w.classList.contains('hs-tw')){
+      w.classList.toggle('hs-tw--scrolled', w.scrollLeft > 0);
+    }
+  }, true);
+}
+
 // ─── Tab 1 · Guidance Ladder ──────────────────────────────────────────────────
 function ladderBody(){
   var g = HS_GUIDE.filter(function(x){ return x.year === _view.guideYear; })[0];
@@ -982,7 +1032,10 @@ function cspSection(cfg){
       '<div class="hs-canvas"><canvas id="' + cfg.canvas + '"></canvas></div>' +
       '<p class="hs-cap">' + m.cap + ' <span class="hs-hint">Drag across the plot to window periods, drag on the y-axis strip to set the value range, double-click to reset.</span></p>' +
     '</div>' +
-    '<div class="hs-card">' + table(rows, [''].concat(labels)) + '</div>';
+    // `hs-table--pin` pins the label column and turns on the hover crosshair —
+    // this axis runs to 27 quarters, so the row label scrolls out of view long
+    // before the numbers do. See wireTableXhair() and css/hyperscalers.css.
+    '<div class="hs-card">' + table(rows, [''].concat(labels), 'hs-table--pin') + '</div>';
 }
 
 var CSP_TOP = {
@@ -1372,6 +1425,7 @@ function init(){
   if (!root) return;
   if (!root._wired){
     root._wired = true;
+    wireTableXhair(root);
     root.addEventListener('click', function(e){
       var tb = e.target.closest('.hs-tab');
       if (tb){ show(root, tb.getAttribute('data-ht')); return; }

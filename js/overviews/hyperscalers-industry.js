@@ -841,6 +841,32 @@ function cspWin(k){
 // Lifted from the Results engine's brush so the interaction is identical: drag
 // across the plot to window periods, drag starting on the y-axis strip to set
 // the value range, double-click to reset. A translucent box tracks the drag.
+// ─── Zoomed-axis number hygiene ───────────────────────────────────────────────
+// Dragging on the y-axis strip converts pixels to values, so it hands back raw
+// floats (3.2847261...). Chart.js places the FIRST and LAST tick exactly on
+// min/max, which is why a zoomed axis was printing "$3.2847261B" at each end
+// while every tick between them looked fine.
+//
+// Fixed at the source rather than in the formatter: snap the band OUTWARD to
+// whole numbers, so the bounds are round and Chart.js then picks round steps
+// between them. Snapping outward can only ever widen the selection slightly, so
+// nothing the user dragged over is lost. The floor of 1 unit stops a very tight
+// drag collapsing into a degenerate axis.
+function snapYRange(v1, v2){
+  var lo = Math.floor(Math.min(v1, v2));
+  var hi = Math.ceil(Math.max(v1, v2));
+  if (hi - lo < 1) hi = lo + 1;
+  return [lo, hi];
+}
+
+// Belt and braces for the labels themselves: binary floating point still yields
+// the occasional 0.30000000000000004, and an axis label should never show it.
+// One decimal is the most this axis ever needs — $B to a tenth, % to a tenth.
+function axisNum(n){
+  var r = Math.round(n);
+  return (Math.abs(n - r) < 1e-6) ? String(r) : String(Math.round(n * 10) / 10);
+}
+
 function cspBrush(el, chart, onX, onY, onReset){
   var wrap = el.parentElement;
   if (wrap && getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
@@ -928,7 +954,12 @@ function cspBar(canvasId, metric, k){
 
   var yOpts = { grid: { color: GRID, drawTicks: false }, border: { display: false },
     ticks: { color: INK_MUTED, font: { size: 10.5, family: 'Inter' }, padding: 8,
-             callback: function(n){ return pct ? n + '%' : '$' + n + 'B'; } } };
+             // The sign belongs OUTSIDE the currency symbol — this axis goes negative
+             // (Google Cloud lost money every quarter to 1Q23) and was printing "$-2B".
+             callback: function(n){
+               if (pct) return axisNum(n) + '%';
+               return (n < 0 ? '-$' : '$') + axisNum(Math.abs(n)) + 'B';
+             } } };
   if (st.yr){ yOpts.min = st.yr[0]; yOpts.max = st.yr[1]; }
 
   var chart = new Chart(el.getContext('2d'), {
@@ -972,7 +1003,7 @@ function cspBar(canvasId, metric, k){
 
   cspBrush(el, chart,
     function(a, b){ st.win = [w[0] + a, w[0] + b]; repaintCsp(); },
-    function(v1, v2){ st.yr = [v1, v2]; repaintCsp(); },
+    function(v1, v2){ st.yr = snapYRange(v1, v2); repaintCsp(); },
     function(){ st.win = null; st.yr = null; repaintCsp(); });
 }
 

@@ -1116,9 +1116,9 @@ function rsRenderEvoTable(k, m){
   }
 
   var pctCap = k === 'top'
-    ? ' · “implied YoY growth” = the growth that snapshot’s estimate implies vs the prior fiscal year as known at that date'
-    : ' · margins are computed within each snapshot (numerator and denominator from the same vintage)';
-  var h = ‘<div class=”rs-ft-cap”>’ + rsCurName(m) + ‘ ‘ + (div === 1000 ? ‘billions’ : ‘millions’) + ‘ · columns are the model’s saved snapshots · “revision” = change vs the prior snapshot · the right column is the cumulative move from the first snapshot to the latest’ + pctCap + ‘</div>’;
+    ? ‘ · “implied YoY growth” = the growth that snapshot\’s estimate implies vs the prior fiscal year as known at that date’
+    : ‘ · margins are computed within each snapshot (numerator and denominator from the same vintage)’;
+  var h = ‘<div class=”rs-ft-cap”>’ + rsCurName(m) + ‘ ‘ + (div === 1000 ? ‘billions’ : ‘millions’) + ‘ · columns are the model\’s saved snapshots · “revision” = change vs the prior snapshot · the right column is the cumulative move from the first snapshot to the latest’ + pctCap + ‘</div>’;
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   ev.vintages.forEach(function(v){
     h += '<th>' + esc(v.label) + '<br><span class="rs-ft-dim">' + esc(v.event) + '</span></th>';

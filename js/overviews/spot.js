@@ -462,10 +462,20 @@ function wireModal(root){
     if(kind==='prod'){ var f=S_PRODUCTS[+id]; if(!f) return null;
       var body=f.items.map(function(it){ return '<div style="margin:0 0 10px"><div style="font-size:12.5px;font-weight:800;color:var(--navy)">'+esc(it[0])+'</div><div class="famd">'+it[1]+'</div></div>'; }).join('');
       return {t:f.ic+' '+esc(f.fam),h:'<div class="famd" style="margin-bottom:10px;color:var(--mu)">'+esc(f.d)+'</div>'+body}; }
+    // ⚠ THE `ce:` BRANCH WAS MISSING. `ceReg()` populates CE_POP for every Earnings pop-up —
+    // the Watch List "the thread ›" chains, the Setup grid "?" notes, "+ detail" on each print
+    // tile, "why +" on the thesis red-lines and "+ the ask" on the tee cards — and NOTHING ever
+    // read it back, so the entire depth layer of the Earnings tab was dead: the controls
+    // rendered, the cursor changed, the click did nothing. googl.js has this line (its
+    // `resolve`); the splice into spot.js and lyft.js dropped it. ⚑ lyft.js is still missing it.
+    if(kind==='ce'){ return CE_POP[id]||null; }
     return null;
   }
   root.querySelectorAll('[data-detail]').forEach(function(el){
-    if(!/^(prod|hist):/.test(el.getAttribute('data-detail')||'')) return;   // leave sax/news handlers alone
+    // `ce:` must be included here too — the old guard admitted only prod/hist, so even with a
+    // resolver the Earnings pop-ups would never have been bound. `sax`/`news` keep their own
+    // handlers elsewhere and are still deliberately excluded.
+    if(!/^(prod|hist|ce):/.test(el.getAttribute('data-detail')||'')) return;
     el.style.cursor='pointer';
     el.onclick=function(){ var d=resolve(el.getAttribute('data-detail')); if(d) openM(d.t,d.h); };
   });
@@ -1793,40 +1803,75 @@ var CE_LOGO_URL='https://assets.parqet.com/logos/symbol/SPOT';
 // the opposite of how it reads if you put the two figures side by side. The Street
 // column is therefore left empty rather than filled with a mismatched unit.
 var CE_CONS = (function(){
-  var q = ['Q2 2026'];
-  function line(k, u, guide, act1, act4){
+  // Newest quarter FIRST — the quarter pills render in this order and default to index 0.
+  var q = ['Q3 2026','Q2 2026'];
+  // `cols` is one entry per quarter in `q`, in the SAME order:
+  //   g  = the company's guided point for that quarter
+  //   a  = the reported actual (null while the quarter is still upcoming)
+  //   qq = the PRIOR quarter's actual  (drives the QoQ lens)
+  //   qy = the YEAR-AGO quarter's actual (drives the YoY lens)
+  function line(k, u, cols){
     return { k:k, u:u, t:'ok',
       // ceGrid reads the 1-quarter-out column (index 3) of the horizon matrix, so the
       // guide sits there even though Spotify has only one expectation horizon.
-      qr:[[null,null,null,guide]],
-      qa:[null],         // no actual yet — reports Aug 4, 2026
-      qy:[act4],         // the year-ago quarter (for the YoY lens)
-      qq:[act1] };       // the prior quarter (for the QoQ lens)
+      qr: cols.map(function(c){ return [null,null,null,(c.g==null?null:c.g)]; }),
+      qa: cols.map(function(c){ return (c.a==null?null:c.a); }),
+      qy: cols.map(function(c){ return (c.qy==null?null:c.qy); }),
+      qq: cols.map(function(c){ return (c.qq==null?null:c.qq); }) };
   }
   return {
-    src:'Spotify\'s OWN Q2 2026 guidance, issued 28 Apr 2026 with the Q1 2026 shareholder deck. Spotify has no rows in the BBG_CONSENSUS.txt archive, so there is no Street matrix to reconstruct; syndicated USD consensus is noted per metric but not plotted against a EUR guide.',
-    asOf:['2026-04-28 (the guide)'],
+    src:'Spotify\'s OWN guidance — Q3 2026 issued 4 Aug 2026 with the Q2 2026 shareholder deck; Q2 2026 issued 28 Apr 2026 with the Q1 deck. Spotify has no rows in the BBG_CONSENSUS.txt archive, so there is no Street matrix to reconstruct; syndicated USD consensus is noted per metric but not plotted against a EUR guide.',
+    asOf:['2026-08-04 (the guide)','2026-04-28 (the guide)'],
     q:q, hz:['company guide'], nHead:4,
     m:[
       // Revenue and operating income MUST share a unit — the margin row divides one by
       // the other, and a €B-over-€M mix silently prints a 13,125% margin.
-      line('Revenue','€M', 4800, 4533, 4193),
-      line('Operating income','€M', 630, 715, 406),
-      line('Gross margin','%', 33.1, 33.0, 31.5),
-      line('Premium subscribers','M', 299, 293, 276),
-      line('Total MAU','M', 778, 761, 696),
-      line('Premium ARPU','€', null, 4.76, 4.57),
-      line('Ad-Supported revenue','€M', null, 385, 453),
-      line('Free cash flow','€M', null, 824, 700)
+      line('Revenue','€M',            [{g:5000, qq:4777, qy:4272}, {g:4800, a:4777, qq:4533, qy:4193}]),
+      line('Operating income','€M',   [{g:670,  qq:655,  qy:582 }, {g:630,  a:655,  qq:715,  qy:406 }]),
+      line('Gross margin','%',        [{g:32.9, qq:33.4, qy:31.6}, {g:33.1, a:33.4, qq:33.0, qy:31.5}]),
+      line('Premium subscribers','M', [{g:305,  qq:300,  qy:281 }, {g:299,  a:300,  qq:293,  qy:276 }]),
+      line('Total MAU','M',           [{g:788,  qq:777,  qy:713 }, {g:778,  a:777,  qq:761,  qy:696 }]),
+      // ⚠ 3Q25 Premium ARPU is not disclosed in the Q2 2026 deck, so the Q3 YoY base is left
+      // null rather than guessed — the chip simply does not render for that cell.
+      line('Premium ARPU','€',        [{        qq:4.89, qy:null}, {        a:4.89, qq:4.76, qy:4.57}]),
+      // ⚠ RESTATED BASIS for the comparatives. The Jan 1 2026 reclassification moved revenue out
+      // of Ad-Supported and restated 2023–25, so the YoY/QoQ bases here are the deck's RESTATED
+      // figures (2Q25 €440M, 3Q25 €437M), not the €453M/€446M originally reported. Using the
+      // as-reported numbers would print a −1.5% decline where the company reports +1% growth.
+      line('Ad-Supported revenue','€M',[{       qq:446,  qy:437 }, {        a:446,  qq:385,  qy:440 }]),
+      line('Free cash flow','€M',     [{        qq:797,  qy:806 }, {        a:797,  qq:824,  qy:700 }])
     ]
   };
 })();
 
-// ─── CALL_EARNINGS — the quarters. Q2 2026 is UPCOMING (reports Tue 4 Aug 2026,
-// before market open). Reported quarters are backfilled as the calls repository
-// for SPOT gets built (docs/calls/SPOT*.md — not yet written; see the tab note).
+// ─── CALL_EARNINGS — the quarters, NEWEST FIRST. Q3 2026 is UPCOMING; Q2 2026 is
+// REPORTED (4 Aug 2026, before market open) and now carries a scored print.
+//
+// ⚠ WHAT IS AND IS NOT IN HERE FOR Q2 2026. The `results` block is built entirely from
+// PRIMARY WRITTEN SOURCES — the Q2 2026 Update filed as Exhibit 99.1 to the Form 6-K of
+// 4 Aug 2026 (accession 0001140361-26-031044). Spotify held its Q&A at 8:00am ET the same
+// morning; we do NOT have that transcript, so `call` is deliberately null and the
+// "Also on the call" aside does not render. Nothing in the summary below is attributed to
+// management speech. A per-call record (docs/calls/SPOT*.md) still has not been written.
 var CALL_EARNINGS = { ticker:'SPOT', quarters:[
-  { q:'Q2 2026', status:'upcoming', date:'reports Tue Aug 4, 2026 · BEFORE market open (Q&A 8:00am ET)',
+  { q:'Q3 2026', status:'upcoming', date:'reports late Oct / early Nov 2026 · exact date not yet announced by IR',
+    setup:{
+      source:'Spotify Q3 2026 guidance, issued 4 Aug 2026 with the Q2 2026 shareholder deck', asOf:'2026-08-04',
+      us:{ 'Revenue':{v:5035}, 'Operating income':{v:699}, 'Ad-Supported revenue':{v:496}, 'Free cash flow':{v:769} },
+      notes:{
+        'Revenue':{ t:'€5.0B guided — above consensus, and the currency has turned', h:'<p>Guided to <b>€5.0B</b>, which is <b>ahead of the ~€4.93B</b> the Street was carrying (LSEG) — the one line on this card guided above expectations. On the reported €4,272M base of 3Q25 that arithmetic is ~17% YoY, and the guide assumes a <b>~200bps FX TAILWIND</b> struck on USD:EUR 0.8756 at the June 30 close — the first tailwind after two years of headwinds (2Q26 carried ~70bps of drag, 1Q26 ~670bps).</p><p>⚠ On the call Luiga characterised the guide as “approximately €5 billion in quarter three <b>or 14% growth</b>”, without stating the basis. That does not tie to ~17% on the reported base even after backing out the FX assumption, so treat 14% as a currency-neutral or otherwise adjusted framing and <b>do not mix it with the reported number</b>. Either way the message is the same: underlying growth is flat-to-slightly-down from Q2\'s +15% cc, and the headline acceleration is currency. <b>Summit sits at €5,035M</b>, essentially on the guide.</p>' },
+        'Operating income':{ t:'⚑ €670M guided — below consensus, and Summit is above the guide', h:'<p>Guided to <b>€670M</b> against the €655M just printed — and against the ~<b>€677.8M</b> the Street was carrying (Visible Alpha). Guiding profit ~1% light while guiding revenue ahead is half of why the shares fell; the MAU line is the other half.</p><p>The guide embeds <b>€9M of social charges</b> struck on a $459.13 quarter-end share price — so if the stock rallies through the quarter this line gets mechanically squeezed, and if it falls it gets a free beat. That is exactly the mechanism that produced most of the Q2 beat, running the other way. Disclosed sensitivity: <b>±€21M for a 10% move</b> in the shares.</p><p>The cost side is now sized: Luiga put the marketing and AI investment at “approximately <b>€200 million in incremental operating expense for the full year</b>”, with personnel flat, and Söderström said the year started with investment and is now “focusing on cost and efficiency” — it is “compute and marketing… within our control, <b>not long-term CapEx</b>”. <b>Summit carries €698.9M, 4.3% ABOVE the guide</b>, the widest disagreement on the card: the model is calling the guide conservative again, as it has been for five straight quarters.</p>' },
+        'Gross margin':{ t:'32.9% — a step down from the record, but an explained one', h:'<p>Guided to <b>32.9%</b> against the <b>33.4% all-time record just printed</b> — a 50bp sequential decline. On the Q2 call Luiga explained it: the outlook “incorporates continued strengthening in our core business, reinvestments into new products, and <b>a typical charge we take in the third quarter to account for our annual exposure to regulatory fees in one of our markets</b>”.</p><p>He also reframed the comparison — <b>~130bp ABOVE the prior year</b>, which is the trend that matters. So this is a recurring Q3 item plus reinvestment, not a break in the path to <b>35–40% by 2030</b>. Summit\'s two segment lines imply ~33.6%, i.e. the model is not carrying the regulatory charge.</p><p>What to verify: that the fee really is annual and Q3-seated, by checking 3Q25 and 3Q24 margins against their own guides.</p>' },
+        'Premium subscribers':{ t:'305M guided · +5M net adds, the slowest in a year', h:'<p>Guided to <b>305M</b> from 300M — a <b>5M add against the 7M just delivered</b> and 6M guided a quarter ago. Subscriber adds have been the most reliably-hit of Spotify\'s five guided lines and Q2 beat by 1M, so the deceleration is a choice in the forecast rather than an observed trend.</p><p>Worth noting the Q2 add was flattered by a one-off: the 20th-anniversary in-app experience drove <b>Spotify\'s biggest single day of subscriber intake ever</b>. Some of the Q3 step-down is that promotion not repeating.</p>' },
+        'Total MAU':{ t:'⚑ 788M guided · +11M — deliberate, says management; below consensus, says the tape', h:'<p>Guided to <b>788M</b> from 777M, an <b>11M add against 16M delivered</b> in Q2 (itself 1M short of guidance). The Street was carrying ~<b>793.6M</b> (Visible Alpha), so the guide is ~5.6M light — the single biggest gap on the Q3 card and the main reason the shares fell ~4% pre-market.</p><p><b>Management says this is a choice.</b> Norström: “sometimes we pull the growth lever, and sometimes we pull the monetization lever. Here we\'re starting to pull the <b>monetization lever</b>.” The measures are emerging-market specific — tighter sign-up for “higher quality MAU throughput”, deprecating lower-end Android support, and “friction in both <b>ad load</b> and some limitations in our <b>free tier</b>”. Luiga: “growth rates in developed markets remain stable.”</p><p>The falsifiable claim: it “will not affect subs growth in the near term”, and Norström said he is “very confident” in long-term subscriber growth when pressed on labels reporting an industry-wide slowdown. <b>Q3 is the first test.</b> If subs land at 305M with ARPU holding, the story survives; if both slow, it does not.</p>' },
+        'Premium ARPU':{ t:'Not guided — the comp gets easier from here', h:'<p>Spotify does not guide ARPU. Q2 printed <b>€4.89, +7% (+7.4% constant-currency)</b> and, critically, held that growth THROUGH the lapping of the July/August 2025 increases — which was the test set a quarter ago, and it passed.</p><p>From here the comp includes the Jan 2026 US move to $12.99, and FX turns from a drag into a tailwind. If ARPU growth does not hold in Q3 it will be for mix reasons (Rest of World and Latin America growing fastest), not pricing.</p>' },
+        'Ad-Supported revenue':{ t:'⚑ Not guided per quarter — but H2 double-digit growth IS now a commitment', h:'<p>Q2 printed <b>€446M, +1% reported and +3% constant-currency</b> — the same +3% cc as Q1, in the quarter that was the clean comp against the April 2025 exchange launch.</p><p>On the call Luiga committed to the recovery: “we continue to expect our ads business to <b>inflect towards double-digit growth in the second half of 2026</b>.” Norström called the rebuild finished — <b>99% of impressions on Spotify\'s own stack</b>, automated channels ~40% of ad revenue (from 30%), <b>33,000 active advertisers, +60% YoY</b>. Luiga on the margin runway: from “the 20% range we have today <b>towards 40% over time</b>”.</p><p><b>Summit carries €496M</b> (~+11%), which is no longer the outlier it looked like against the deck alone — it is roughly what management is guiding. Q3 is the first of the two quarters that have to deliver it, so this is the single most checkable promise on the card.</p>' },
+        'Free cash flow':{ t:'Not guided — funding a buyback that is now running 30% hot', h:'<p>Q2 printed <b>€797M</b>, a record second quarter, taking LTM free cash flow to <b>€3.3B</b> and cash to €9.4B. Summit carries €769M for Q3.</p><p>The use of it is becoming material: <b>$662M repurchased year to date through Aug 3</b>, about 30% ahead of the same point in 2025, ~2.2M shares (≈1% of the count) since buybacks resumed. With the shares down sharply on this print, the pace of Q3 repurchase is itself a signal worth reading.</p>' }
+      },
+      debate:{ rows:null, synth:'<b>Spotify guided revenue ABOVE consensus and users and profit BELOW it</b> — €5.0B vs ~€4.93B, but 788M MAU vs ~793.6M and €670M of operating income vs ~€677.8M. That mix is why the shares fell ~4% on a quarter that beat. The call then removed two of the three worries: the <b>gross-margin step to 32.9%</b> is “a typical charge we take in the third quarter to account for our annual exposure to regulatory fees”, and is still ~130bp above the prior year; the <b>advertising line</b> got a dated commitment to “inflect towards double-digit growth in the second half of 2026”, which retroactively makes Summit\'s €496M look like guidance rather than a leap. What is left is the one that matters: <b>the 11M MAU guide</b>. Management calls it deliberate — pulling “the monetization lever” via sign-up friction, ad load and free-tier limits in emerging markets — and insists it “will not affect subs growth in the near term”. That is a coherent story and an unfalsifiable one for exactly one quarter. Summit sits <b>4.3% above the operating-income guide</b> with segment lines implying ~33.6% gross margin, i.e. it is not carrying the regulatory charge and is betting on the same conservatism that has produced five straight beats. <b>The quarter resolves to a single test:</b> do subscribers land at 305M with ARPU still compounding while MAU slows? If yes, the funnel is being optimised. If both slow, the lever framing was a description of a problem, not a decision.' }
+    },
+    results:null, call:null },
+  { q:'Q2 2026', status:'reported', date:'reported Tue Aug 4, 2026 · BEFORE market open (Q&A 8:00am ET)',
     setup:{
       source:'Spotify Q2 2026 guidance, issued 28 Apr 2026 with the Q1 2026 shareholder deck', asOf:'2026-04-28',
       notes:{
@@ -1839,66 +1884,310 @@ var CALL_EARNINGS = { ticker:'SPOT', quarters:[
         'Ad-Supported revenue':{ t:'Not guided — the SAX rebuild\'s first clean comp', h:'<p>Q1 printed <b>€385M, +3% constant-currency</b> — barely growing, against a company narrative that the pivot to its own exchange is already driving significant growth.</p><p>Q2 2025 is the first quarter fully after the <b>April 2025 SAX launch</b>, so this is the first comparison not distorted by the transition. Bull: the drag annualizes out. Bear: +3% cc IS the run-rate, and Spotify swapped a low-margin growing business for a flat one.</p>' },
         'Free cash flow':{ t:'Not guided — the quiet compounder', h:'<p>Q1 printed <b>€824M</b>, with LTM free cash flow around <b>€3.2B</b>. FCF has run consistently above operating income on favourable working capital (royalty accrual timing plus deferred subscription revenue). Not a contested line, but it is what funds the buyback.</p>' }
       },
-      us:{},
+      // Summit's FROZEN pre-print expectation for Q2 2026 — the quarterly projections held on the
+      // last snapshot BEFORE the print (vintage 2026-05-22, the post-Investor-Day model). Filled
+      // Aug 2026: this was `{}`, which made the whole "vs Summit" view read "no est." on every
+      // tile. The model carries no consolidated gross-margin, subscriber or MAU line (they were
+      // wiped from the Feb-2026 vintage onward), so those stay absent rather than derived.
+      us:{ 'Revenue':{v:4817}, 'Operating income':{v:638}, 'Ad-Supported revenue':{v:466}, 'Free cash flow':{v:716} },
       debate:{ rows:null, synth:'The one thing to resolve: is the <b>€630M operating-income guide</b> — below the €715M Spotify just printed, and ~8% under where the Street sat — conservatism plus an 80bps FX drag, or the first evidence that the 2025 margin expansion has stopped? Everything else on the card (a 33.1% gross-margin guide that adds ten basis points, an ad line growing 3% constant-currency, ARPU lapping last summer\'s price rises) either supports or undercuts that single question.' }
     },
-    results:null, call:null }
+    results:{
+      // Which frozen Watch-List hook each line speaks to (rank within Q2 2026).
+      watch:{ 'Operating income':1, 'Ad-Supported revenue':2, 'Premium ARPU':3, 'Gross margin':4 },
+      notes:{
+        'Revenue':{ t:'In line — and the constant-currency number is the one that moved', h:'<p><b>€4,777M against a €4,800M guide</b> — €23M short, half a percent, which the company itself called "in-line". FactSet consensus on the wire was €4,790M, so the print landed between the two.</p><p>The number that actually changed is underneath: <b>+14% reported but +15% constant-currency</b>, an acceleration, and the FX drag came in at ~70bps against the ~80bps assumed. The euro stopped fighting. For Q3 the assumption flips to a <b>~200bps tailwind</b>, which is why the €5.0B guide looks like a step change and mostly is not one.</p>' },
+        'Operating income':{ t:'⚑ Beat — but read the social charges before you read leverage', h:'<p><b>€655M against a €630M guide, +4%.</b> Before crediting operating leverage, note where €9M of the €25M came from: the guide embedded <b>€10M of social charges</b> struck on a $484.91 share price, the stock FELL over the quarter, and the actual charge came in at <b>€1M</b>. The prior-year quarter carried €115M of these.</p><p>That is the same mechanism that caused the misses in 1Q24, 4Q24, 1Q25 and 2Q25, running in reverse. Strip it out and the beat is ~€16M on gross-margin strength, against operating expenses that grew <b>19% YoY excluding FX and social charges</b> — marketing plus cloud and AI. This is the fifth consecutive quarter at or above the guided point, but it is not five quarters of the same thing.</p>' },
+        'Gross margin':{ t:'Beat — an all-time record, and the step down was explained on the call', h:'<p><b>33.4% against a 33.1% guide</b>, +30bp, and <b>+193bp YoY</b> — an all-time high. Both segments contributed: Premium <b>34.9%</b> (+174bp, revenue growth outpacing music costs net of marketplace programs, audiobook and video-podcast costs) and Ad-Supported <b>19.1%</b> (+179bp, on favourable podcast and tax impacts).</p><p>The deck guided Q3 to <b>32.9%</b> — a 50bp sequential decline — and offered no reason. <b>The call supplied one.</b> Christian Luiga: the outlook “incorporates continued strengthening in our core business, reinvestments into new products, and <b>a typical charge we take in the third quarter to account for our annual exposure to regulatory fees in one of our markets</b>.” He also framed it as <b>~130bp ABOVE the prior year</b>, which is the more useful comparison — the sequential step is a recurring Q3 item plus reinvestment, not a break in the trend.</p><p>That materially de-escalates this line: a seasonal charge that recurs every Q3 is not evidence against the 35–40% by 2030 path. Worth confirming the size of the fee against prior third quarters.</p>' },
+        'Premium subscribers':{ t:'Above the guide — 300M, and one day did a lot of the work', h:'<p><b>300M against 299M guided</b> — a 7M net add against 6M guided, +9% YoY, with growth in every region. The headline milestone of the quarter.</p><p>One detail worth carrying forward: the 20th-anniversary in-app experience drew ~100M users in six days and drove <b>Spotify\'s biggest single day of subscriber intake ever</b>. That is a real result, but it is a promotion, not a run rate — and Q3 is guided to a 5M add, the slowest in this dataset.</p>' },
+        'Total MAU':{ t:'⚑ Below the guide — and the call says the deceleration is deliberate', h:'<p><b>777M against 778M guided</b> — Luiga: “our net additions of 16 million were <b>one million below forecast</b>.” In percentage terms that is a rounding error and the tile scores it in line, which is why the tile is the wrong place to read this line.</p><p>The sequence is what matters: under plan this quarter, then Q3 guided to just <b>11M adds</b>. <b>The call reframed this from a miss into a choice.</b> Norström: “Gustav and I have this saying where we say sometimes we pull the growth lever, and sometimes we pull the monetization lever. <b>Here we\'re starting to pull the monetization lever</b>.” The concrete measures, all in emerging markets: “tweaking the sign-up to get a <b>higher quality MAU throughput</b>”, deprecating “lower-end Android device support”, and “carefully introduced some friction in both <b>ad load</b> and some limitations in our <b>free tier</b>”. Luiga added that “growth rates in developed markets remain stable”.</p><p>So the free base is being throttled on purpose to convert better, and management says it “will not affect subs growth in the near term”. That is a coherent story — but it is also unfalsifiable for a quarter or two, and it is being told about the exact line that just missed. The test is whether subscriber adds and ARPU hold while MAU slows.</p>' },
+        'Premium ARPU':{ t:'⚑ The pricing test passed — €4.89, +7.4% cc THROUGH the lap', h:'<p>Not guided, so it scores as "no est." — but this was the single most informative line of the print. <b>€4.89, +7% reported and +7.4% constant-currency.</b></p><p>The reason it matters: the <b>July and August 2025 price increases lapped inside this quarter</b>. Watch-List hook #3 asked whether Spotify has a pricing cadence or whether 2025 was a one-off re-rate now sitting in the base. ARPU growth held through the comp, driven by price-increase benefits partially offset by product/market mix. That is the cadence answer, and it is the bullish one.</p>' },
+        'Ad-Supported revenue':{ t:'⚑ Failed its clean comp — but management now guides an inflection', h:'<p><b>€446M, +1% reported and +3% constant-currency</b> on the restated basis. Watch-List hook #2 set this quarter up as the test: 2Q25 was the first quarter fully after the April 2025 Spotify Ad Exchange launch, so this was the first comparison not distorted by the transition. The result is <b>the same +3% cc as Q1</b> — the drag did not annualize out on its own.</p><p><b>The call put a number and a date on the recovery.</b> Luiga: “we continue to expect our ads business to <b>inflect towards double-digit growth in the second half of 2026</b>.” Norström declared the rebuild finished — “<b>99% of all the impressions</b> [are] now on our own ad stack” — and gave the supporting metrics: automated channels rose to <b>~40% of ad revenue from 30%</b>, and there are <b>33,000 active advertisers, up 60% year over year</b>, 7,000 of them using the AI audio asset-creation tool. Luiga also framed the margin runway: from “the 20% range we have today <b>towards 40% over time</b>”.</p><p>That changes the reading of Summit\'s €496M Q3 estimate. It needs ~+11% against a +3% run rate, which looked heroic against the deck alone — but it is now roughly <i>in line with what management is guiding</i>. The number to hold them to is the H2 double-digit, and Q3 is the first half of it.</p>' },
+        'Free cash flow':{ t:'A record second quarter — €797M, and the buyback is running hot', h:'<p>Not guided. <b>€797M</b>, a record for a Q2, on €816M of operating cash flow less €21M of capex, taking <b>LTM free cash flow to €3.3B</b> and cash to €9.4B. Cumulative free cash flow since 2016 is now €8.8B.</p><p>The use of it is becoming material: <b>$662M repurchased year to date through Aug 3</b>, ~30% ahead of 2025, and ~2.2M shares (≈1% of the count) since repurchases resumed last year.</p>' }
+      },
+      thesisCheck:[
+        { line:'Gross margin keeps climbing toward the 35–40% commitment', tripped:false,
+          note:'Held, and then some — 33.4% is an all-time record, +193bp YoY, and it beat the guide. But the red-line is about the TRAJECTORY, and the trajectory just pointed down: Q3 is guided to 32.9%. Held this quarter, on watch for the next.' },
+        { line:'Operating income lands at or above the guided point', tripped:false,
+          note:'Held for a fifth consecutive quarter, €655M vs €630M. Qualified: €9M of the €25M beat is a social-charges windfall from a FALLING share price, not operating performance. The underlying beat is ~€16M against opex growing 19% YoY ex-FX and social charges.' },
+        { line:'Premium ARPU growth survives the lapping of the 2025 price increases', tripped:false,
+          note:'Held, and this was the quarter that could have broken it. €4.89, +7.4% constant-currency, with the July/August 2025 increases lapping inside the quarter. Pricing looks like a cadence rather than a one-off step.' },
+        { line:'Advertising re-accelerates once the SAX transition laps', tripped:true,
+          note:'TRIPPED. Q2 2025 was the first quarter fully after the April 2025 exchange launch, making this the first clean comp — and Ad-Supported grew +3% constant-currency, identical to Q1. The transition-dip explanation has now been tested and did not hold. The margin half of the trade did work (19.1%, +179bp), so the question changes from "is the rebuild finished" to "was the volume ever coming back".' },
+        { line:'User growth delivers the guided net adds', tripped:true,
+          note:'TRIPPED, narrowly on the print and decisively on the guide. MAU added 16M against 17M guided (777M vs 778M), and Q3 is then guided to just 11M — the slowest add in this dataset. Subscribers went the other way (7M vs 6M guided), but that was helped by an anniversary promotion that drove the largest single day of intake ever, so the two lines are not independent.' }
+      ],
+      // The five questions the print raised, each now carrying what management actually said on the
+      // 4 Aug call. Four were answered; one was declined. Kept as the record of the exchange.
+      intoCall:[
+        '✔ Why does gross margin step DOWN to 32.9%? <b>ANSWERED</b> — Luiga: the outlook “incorporates continued strengthening in our core business, reinvestments into new products, and <b>a typical charge we take in the third quarter to account for our annual exposure to regulatory fees in one of our markets</b>”, and he anchored it as <b>~130bp above the prior year</b> rather than 50bp below the last quarter. A recurring Q3 item plus reinvestment — not a break in the trend. Follow-up: size the fee against prior third quarters and confirm it is genuinely annual.',
+        '✔ Is 11M MAU adds the plan or the forecast? <b>ANSWERED: the plan, explicitly</b> — Norström: “sometimes we pull the growth lever, and sometimes we pull the monetization lever. <b>Here we\'re starting to pull the monetization lever</b>.” The measures are emerging-market specific: tweaking sign-up for “higher quality MAU throughput”, deprecating lower-end Android support, and “carefully introduced some friction in both <b>ad load</b> and some limitations in our <b>free tier</b>”. Luiga: “growth rates in developed markets remain stable.” The claim to test is that it “will not affect subs growth in the near term”.',
+        '✔ What breaks the advertising line out of +3%? <b>ANSWERED, with a date</b> — Luiga: “we continue to expect our ads business to <b>inflect towards double-digit growth in the second half of 2026</b>.” Norström called the rebuild done: <b>99% of impressions on Spotify\'s own stack</b>, automated channels ~40% of ad revenue (from 30%), <b>33,000 active advertisers, +60% YoY</b>. Luiga on margin: from “the 20% range we have today towards <b>40% over time</b>”. This is now a dated, numeric commitment — Q3 is the first half of it.',
+        '✔ How much of the 19% ex-FX opex growth is permanent? <b>ANSWERED and sized</b> — Luiga: marketing and AI investments drive “approximately <b>€200 million in incremental operating expense for the full year</b>”, with personnel flat. Söderström framed the shape: “we started this year by investing… leading in this wave of using AI… now [we are] focusing on cost and efficiency”, and stressed it is “<b>compute and marketing… within our control… not long-term CapEx</b>”. Supporting datapoint: headcount flat for three years while revenue per employee is “on track to double”.',
+        '✖ Will the buyback lean into the drawdown? <b>NOT ASKED</b> — No analyst raised capital allocation, and management did not volunteer it. The written disclosure stands: $662M year to date through Aug 3, ~30% ahead of 2025, ~2.2M shares (≈1%) since repurchases resumed. With €9.4B of cash, €3.3B of LTM free cash flow and the shares down on the guide, the Q3 repurchase pace remains the cleanest unspoken read on how management values the stock here. Carry it into Q3 as Watch-List hook #5.'
+      ],
+      // ⚠ Filled the morning of the print, BEFORE the US open — the intraday and closing
+      // reaction are not in yet and are deliberately not guessed. Update after the close.
+      priceReaction:{ premarket:'≈ −4%', close:null,
+        note:'Shares fell ~4% in pre-market trading on the Q3 <b>guidance</b>, not on the quarter — which beat on operating income and gross margin and crossed 300M subscribers. The anatomy of it, against the sell-side numbers carried into the print: <b>operating income guided €670M vs ~€677.8M expected</b> (Visible Alpha) and <b>MAU guided 788M vs ~793.6M expected</b> — both short — while <b>revenue guided €5.0B vs ~€4.93B expected</b> (LSEG), i.e. ahead. Guiding the top line up and the users and profit down is precisely the mix that gets sold. Options pricing into the print implied an ~8.6% move; the stock had moved MORE than implied in five of the previous eight prints, including −19.1% on 28 Apr 2026. <b>The closing move has not been recorded yet — fill it after the close.</b>' },
+      summary:{ paras:[
+        { p:'<b>A good quarter attached to a cautious forecast, and the forecast won.</b> Spotify beat its own guide on operating income and gross margin, landed revenue in line and crossed <b>300 million Premium subscribers</b> — then guided Q3 users and profit below consensus, and the shares fell ~4%.',
+          moreLabel:'＋ more — the scorecard, line by line',
+          more:{ body:'<p>Against the five lines Spotify guides every quarter: <b>revenue in line</b> (€4,777M, −0.5%), <b>gross margin above</b> (33.4% vs 33.1%, an all-time record, +30bp), <b>operating income above</b> (€655M vs €630M, +4.0%), <b>Premium subscribers above</b> (300M vs 299M, a 7M net add against 6M guided), <b>MAU below</b> (777M vs 778M). Four of five at or above the guide.</p><p>The market did not price the print; it priced the next one. The Q3 card guides MAU adds down to 11M, guides gross margin DOWN 50bp from the record just set, and lifts operating income by only €15M on ~€223M more revenue.</p>',
+            nodes:[ { t:'Why the operating-income beat is smaller than it looks',
+              body:'<p>The Q2 guide embedded <b>€10M of social charges</b> — payroll taxes tied to the intrinsic value of share-based compensation — struck on the $484.91 share price at the Q1 close. Spotify explicitly does not forecast share-price movement. The stock fell through the quarter, so the actual charge landed at <b>€1M</b>, €9M below forecast. That is 36% of the €25M beat, and it is an artifact of the share price, not of operations. The same mechanism produced the misses in 1Q24, 4Q24, 1Q25 and 2Q25, and the prior-year quarter carried €115M of these charges. The Q3 guide embeds €9M at a $459.13 close, and the sensitivity disclosed in the appendix is ±€21M for a 10% move in the stock.</p>' },
+              { t:'What the constant-currency numbers say that the reported ones do not',
+                body:'<p>Reported revenue grew 14%; constant currency, 15%. Premium 15% reported, 16% cc. Ad-Supported 1% reported, 3% cc. Operating expenses grew 3% reported but <b>19% excluding FX and social charges</b> — that last figure is the real cost trajectory and it is the one to hold against the "temporary investments" language. FX cost ~70bps of revenue growth against the ~80bps assumed in the guide, and the Q3 guide assumes the sign flips to a <b>~200bps tailwind</b>.</p>' } ] } },
+        { p:'<b>The pricing question got its answer, and it is the bullish one.</b> Premium ARPU printed <b>€4.89, +7.4% constant-currency — through the quarter in which the July and August 2025 price increases lapped</b>. After fifteen years at $9.99, three increases in under three years now look like a policy rather than an event.',
+          moreLabel:'＋ more — why this line carried the most information',
+          more:'<p>This was the specific test set for the print: whether Spotify has a pricing cadence, or whether 2025 was a single re-rate now sitting in the base. Growth not only held through the comp, it <b>accelerated</b> from Q1\'s +5.7% cc — driven by price-increase benefits partially offset by product and market mix.</p><p>ARPU is not guided, so it scores as "no estimate" on the scorecard and is easy to skip. It should not be: it is the only line on the card that resolves a structural question rather than a quarterly one. Premium revenue of €4,331M (+15%, +16% cc) is arithmetically subscribers × ARPU, and with subscribers compounding at 9%, roughly half the segment\'s growth is now price rather than volume.</p><p>Note the offset management flags — product and market mix — which is the same force that makes MAU growth outrun revenue growth: the fastest-growing regions are Rest of World and Latin America, which monetize least.</p>' },
+        { p:'<b>The advertising thesis failed its own test — then got a deadline.</b> Ad-Supported grew <b>3% constant-currency, identical to last quarter</b>, in the quarter that was supposed to settle it. On the call management committed to “inflect towards double-digit growth in the second half of 2026”.',
+          moreLabel:'＋ more — the trade Spotify actually made, and Summit\'s number',
+          more:'<p>2Q25 was the first period fully after the April 2025 Spotify Ad Exchange launch, so this was the first comparison not distorted by the rebuild. The dip did not annualize out on its own. What <i>did</i> work is the other half of the trade — Ad-Supported gross margin reached <b>19.1%, up 179bp</b> — so Spotify has converted a low-margin growing business into a higher-margin flat one. Whether that was the intention is a fair question to put to management.</p><p>The call\'s supporting evidence for the coming inflection: <b>99% of impressions now on Spotify\'s own ad stack</b>, automated channels ~40% of ad revenue (from 30%), <b>33,000 active advertisers, +60% YoY</b>, and a margin destination of “towards 40% over time” against “the 20% range we have today”.</p><p>This changes how to read the model. Summit carries <b>€496M for Q3</b> (~+11% against a +3% run rate). Against the deck alone that was the biggest leap of faith on the quarter; against the guide it is roughly what management is promising. Q3 is the first of the two quarters that have to deliver it.</p>' },
+        { p:'<b>The cash story keeps compounding quietly underneath all of this.</b> Free cash flow of <b>€797M</b> was a record second quarter, on just €21M of capex, taking LTM free cash flow to €3.3B against €9.4B of cash.',
+          moreLabel:'＋ more — and what it is being spent on',
+          more:'<p>Spotify remains structurally capital-light at a moment when most of its large-cap peers are not — the working-capital cycle (royalty accrual timing plus deferred subscription revenue) runs free cash flow consistently above operating income. Cumulative free cash flow since 2016 is now €8.8B.</p><p>The cash is being deployed: <b>$662M of buybacks year to date through August 3, ~30% ahead of the same point in 2025</b>, roughly 1% of shares retired since repurchases resumed. With the stock down on this guide, the Q3 repurchase pace becomes a direct statement of management\'s own view of the price — and notably, no analyst asked about it on the call.</p>' },
+        { p:'<b>The call answered three of the four worries — and the one left open is the one that matters.</b> Gross margin, advertising and opex all got concrete answers. The <b>11M MAU guide</b> did not: management says the deceleration is deliberate, which is a real strategy and an unfalsifiable claim for exactly one quarter.',
+          moreLabel:'＋ more — the three answers, and why the market sold it anyway',
+          more:{ body:'<p>The market sold it because the guide split the wrong way against the sell-side: <b>revenue guided ABOVE</b> consensus (€5.0B vs ~€4.93B, LSEG) but <b>operating income BELOW</b> (€670M vs ~€677.8M) and <b>MAU well below</b> (788M vs ~793.6M, Visible Alpha). Guiding the top line up while guiding users and profit down reads as buying growth that is not arriving. The explanations below landed <i>after</i> the pre-market move and were, on the substance, largely reassuring — which is why the closing print is worth recording separately.</p>',
+            nodes:[ { t:'Gross margin — a recurring Q3 charge, not a broken trend',
+              body:'<p>Luiga: the 32.9% outlook “incorporates continued strengthening in our core business, reinvestments into new products, and <b>a typical charge we take in the third quarter to account for our annual exposure to regulatory fees in one of our markets</b>”. He anchored it as <b>~130bp ABOVE the prior year</b> rather than 50bp below the last quarter. Unverified, and worth checking against 3Q25 and 3Q24.</p>' },
+              { t:'Advertising — a dated, numeric commitment',
+                body:'<p>Luiga: “we continue to expect our ads business to <b>inflect towards double-digit growth in the second half of 2026</b>.” Norström declared the migration finished at 99% of impressions on Spotify\'s own stack, with advertiser count up 60% YoY to 33,000.</p>' },
+              { t:'Opex — sized, and framed as controllable',
+                body:'<p>Luiga put the marketing and AI programme at “approximately <b>€200 million in incremental operating expense for the full year</b>”, personnel flat. Söderström: the year started with investment and is “now focusing on cost and efficiency”; it is “compute and marketing… within our control… <b>not long-term CapEx</b>”, against headcount flat for three years while revenue per employee is “on track to double”.</p>' },
+              { t:'MAU — the claim that cannot be checked until Q3',
+                body:'<p>Norström: “sometimes we pull the growth lever, and sometimes we pull the monetization lever. <b>Here we\'re starting to pull the monetization lever</b>” — sign-up friction, deprecating lower-end Android, ad-load and free-tier limits, all in emerging markets, with “growth rates in developed markets remain stable”. The falsifiable part is that it “will not affect subs growth in the near term”.</p>' } ] } },
+        { p:'<b>What to hold onto.</b> Nothing in the reported quarter broke — margins at records, pricing compounding, 300M subscribers, cash building. <b>Q3 settles the rest:</b> subscribers at 305M with ARPU still growing while MAU decelerates confirms the funnel is being optimised on purpose; both slowing together means the “monetization lever” described a problem rather than a decision.',
+          moreLabel:'＋ more — where Summit sits on it',
+          more:'<p>Summit is <b>4.3% above the operating-income guide</b> (€698.9M vs €670M) with segment lines implying a <b>~33.6% gross margin</b> against the 32.9% guided — the same bet on conservatism that has paid for five straight quarters, now with the added detail that the model is evidently <i>not</i> carrying the Q3 regulatory charge management described.</p><p>Worth holding alongside: headcount has been flat for three years while revenue per employee is “on track to double”, which is the strongest structural argument that the current opex step-up really is a programme rather than a new baseline.</p>' }
+      ] } },
+    // ─── The Q2 2026 earnings call, 4 Aug 2026, 8:00am ET ────────────────────────────────────
+    // Bryan Goldberg (IR) · Alex Norström & Gustav Söderström (Co-CEOs) · Christian Luiga (CFO).
+    // Source: the published transcript. The meeting-critical answers (gross margin, MAU, ads,
+    // opex) live in `results.intoCall` and in the per-metric notes above, not here — this aside is
+    // the SUPPLEMENTAL colour. ⚠ `band:'lead'` items render NOWHERE (ceHighlightsBlock filters
+    // them out by design because they belong on the Watch List), so everything here is 'context'.
+    call:{ highlights:[
+      { head:'The AI answer is an <b>efficiency</b> story first, not a product story', band:'context',
+        detail:'<p>Söderström spent his opening on internal tooling rather than features: <b>“Honk”</b>, which lets engineers fix bugs from Slack, and <b>“Chirp”</b>, a model-agnostic inference engine that “seamlessly switch[es] between… paid models and a hosted open-source model”.</p><p>The number that lands: <b>“over the last three years, we have not increased headcount while revenue per employee is on track to double.”</b> Set that against the 19% ex-FX operating-expense growth — the spend is compute and marketing, not people, which is what makes management\'s “temporary” framing credible.</p>',
+        open:'Whether inference cost per user falls fast enough to fund the free tier as AI features reach beyond the ~25% of actives that touch them today.' },
+      { head:'A second AI-music licence: <b>Merlin</b>, adding ~30,000 labels', band:'context',
+        detail:'<p>Norström announced a Merlin agreement alongside the existing UMG deal, bringing “30,000 labels” into the framework, governed by what he called the <b>three Cs — consent, credit and compensation</b>.</p><p>Söderström drew the boundary hard: the products are for <b>“real artists, not fake artists”</b>. On sequencing, he said Spotify “do[es] not need a deal with all the majors” before launching, citing Spotify\'s own early history without full major-label catalogues, and described the next step as a <b>“research preview”</b> that would enable “reinforcement learning” from the 777M user base.</p>',
+        open:'Which majors are still outstanding, and whether a research preview without them is commercially meaningful or just a data-gathering exercise.' },
+      { head:'<b>Audiobooks+ has passed €100M of annual recurring revenue</b>', band:'context',
+        detail:'<p>Penetration “more than doubled this year”, and Norström used it as the template for a different kind of ARPU growth: add-ons “structurally increase ARPU in a different way… [a] price to quantity equation” rather than through headline price rises.</p><p>He <b>declined to give launch timing or ARPU guidance</b> for the new Audiobooks+ tiers, and for Family and Student.</p><p>⚠ Note the tension with Watch-List hook #5: the audiobook bundle is the same mechanism the MLC is litigating, and Spotify is expanding it.</p>',
+        open:'The size of the add-on ARPU contribution in FY2027, which management explicitly would not frame.' },
+      { head:'<b>Reserved</b>: ~100,000 tickets, US-only, Premium-only', band:'context',
+        detail:'<p>The Live Nation ticketing partnership has reserved “100,000 tickets” with some allocations selling through 100%. Currently <b>“U.S. only for premium”</b>.</p><p>Norström positioned it not as a revenue line but as <b>“increasing the value to price ratio on premium”</b> — i.e. as pricing-power infrastructure. That is the through-line of his whole call: “the more value we deliver, the more pricing power we will have.”</p>' },
+      { head:'Engagement framed on <b>active days</b>, not hours — and 211B hours vs Netflix\'s 191B', band:'context',
+        detail:'<p>Asked about time spent, Norström distinguished Spotify\'s multi-device model — “speakers… gaming consoles… cars… sleep… studying” — and said Spotify tracks <b>active days</b> as the LTV proxy rather than total hours. <b>“Over 100 million of our subscribers spend more than 20 days in a month”</b>, and active days rose overall for Premium subscribers.</p><p>On the AI features specifically, Söderström said the Large Taste Model is “moving some of the metrics that are absolutely the hardest to move, which are active days”. AI experiences now reach <b>~25% of active users</b>; Prompted Playlists have 14M of 100M actives; Song DNA has passed 100M users.</p>' },
+      { head:'On pricing: <b>“we\'re happy to be the price leader in our category”</b>', band:'context',
+        detail:'<p>Asked to read across from Apple Music\'s increase, Norström declined to comment on a competitor but treated it as ecosystem validation, then restated the doctrine: value first, price follows.</p><p>Paired with ARPU holding at +7.4% cc through the lapping of the 2025 rises, this is the strongest version of the pricing-cadence case management has put on the record.</p>' },
+      { head:'Pushback on the labels\' claim that industry premium growth slowed', band:'context',
+        detail:'<p>Bazinet put it to management that record labels had signalled industry-wide premium subscriber growth slowed in Q2. Norström: <b>“I\'m very confident”</b>, framing the strategy as “optimizing for a healthy funnel… aimed at helping our subscriber growth and <b>not slowing it down</b>”.</p><p>This is the direct rebuttal to the bear read of the 11M MAU guide, and it is worth holding as a quotable commitment — it is falsifiable within two quarters.</p>',
+        open:'Whether Q3/Q4 subscriber adds hold at ~5–7M while MAU decelerates. If both slow, the "monetization lever" framing does not survive.' }
+    ] } }
 ]};
 
-// ─── WL_ROWS — the Watch List. Seeded from the four genuinely contested questions
-// going into the Aug 4 print (§6f: this list is OURS, not the model's).
+// ─── WL_ROWS — the Watch List (§6f: this list is OURS, not the model's).
+//
+// STRUCTURE (Aug 4 2026): every Q2 2026 hook is now CLOSED and CONTINUED by a Q3 2026
+// successor that inherits its `thread`. A hook is not a per-quarter note — it is one
+// question tracked across quarters, so the Q3 row carries the whole history and the Q2
+// row stays as the frozen record of how it was asked at the time.
+//
+// WRITING RULE, and it is the one that keeps this table readable:
+//   • `theme`      — the question, in one line.
+//   • `definition` — ONE OR TWO SENTENCES on the card. Never a paragraph. If it does not
+//                    fit in two sentences it belongs in the thread.
+//   • `thread`     — the depth, behind the "the thread ›" pop-up: one entry per quarter,
+//                    each recording what that quarter actually said.
+//   • `src`        — the receipts. Figures and quotes, not argument.
+//
+// ⚠ A closed hook is NEVER deleted (Golden Rule #1) — closing only removes it from the
+// open-hook count and hands the question to its successor.
 var WL_ROWS=[
-  { id:'wl001', q:'Q2 2026', rank:1, theme:'The operating-income guide: conservatism or the end of margin expansion?',
-    tags:['margin','guidance'], trackSince:'Q2 2026', trackUntil:null,
-    definition:'Spotify guided Q2 operating income BELOW the quarter it had just printed, and ~8% under the Street. Either FX plus habitual conservatism explains it, or the 2025 margin story has run its course. Every other line on the card is evidence for one reading or the other.',
-    src:'Q1 2026 deck (28 Apr 2026): Q2 guide €630M vs €715M printed in Q1; Street was carrying ~€684M. The stock fell on the guide despite a clean Q1 beat.' },
-  { id:'wl002', q:'Q2 2026', rank:2, theme:'Has the SAX rebuild stopped shrinking advertising?',
-    tags:['advertising','sax'], trackSince:'Q2 2026', trackUntil:null,
-    definition:'Spotify tore up its ad stack and rebuilt it around programmatic auctions, trading volume for margin. Ad gross margin roughly doubled while ad revenue went nowhere. Q2 is the first quarter with a clean comp against the April 2025 SAX launch — so it is the first honest read on whether the trade is working.',
-    src:'Q1 2026: Ad-Supported revenue €385M, +3% constant-currency. FY2025: ad gross margin 18.0% (restated 17.4%) vs 11.2% in FY2024, on revenue that was flat to down.' },
-  { id:'wl003', q:'Q2 2026', rank:3, theme:'Do the price increases compound, or was 2025 a one-off step?',
-    tags:['pricing','arpu'], trackSince:'Q2 2026', trackUntil:null,
-    definition:'Spotify held $9.99 for about fifteen years, then discovered pricing power and used it three times. Q2 is when the July and August 2025 increases LAP — so it separates a genuine pricing cadence from a single re-rate that is now in the base.',
-    src:'Q1 2026: Premium ARPU €4.76, +5.7% constant-currency, on the Jan 2026 US move and increases across 150+ markets.' },
-  { id:'wl004', q:'Q2 2026', rank:4, theme:'Gross margin against the 35–40% promise',
+  // ── Q3 2026 — each one continues a Q2 thread ───────────────────────────────────────
+  { id:'wl007', q:'Q3 2026', rank:1, theme:'“Pulling the monetization lever” — does subscriber growth survive it?',
+    tags:['users','guidance','pricing'], trackSince:'Q2 2026', trackUntil:null,
+    seededBy:{ q:'Q2 2026', tripped:true, n:'MAU came in 1M light and Q3 was then guided to 11M adds — 5.6M below consensus' },
+    definition:'Spotify is deliberately slowing its free base to convert it better, and says this “will not affect subs growth in the near term”. <b>Q3 is the test:</b> 305M subs with ARPU still growing confirms it; both slowing together does not.',
+    src:'Q2 2026: 777M MAU vs 778M guided (16M adds vs 17M); subs 300M vs 299M. Q3 guide: 788M MAU (~11M adds, vs ~793.6M consensus — Visible Alpha) and 305M subs. Call: Norström — “sometimes we pull the growth lever, and sometimes we pull the monetization lever. Here we\'re starting to pull the monetization lever”; measures are “tweaking the sign-up”, deprecating “lower-end Android device support”, and “friction in both ad load and some limitations in our free tier”. Luiga: “growth rates in developed markets remain stable.”',
+    thread:[
+      { q:'Q2 2026', n:'MAU missed for the first time in this record — 777M vs 778M guided, 16M adds against 17M — while subscribers beat (300M vs 299M), helped by the 20th-anniversary promotion driving Spotify\'s <b>biggest single day of subscriber intake ever</b>. The two lines diverged, which is why the guide mattered more than the print.' },
+      { q:'Q2 2026', n:'<b>The call reframed it from a miss into a choice.</b> Norström: “here we\'re starting to pull the <b>monetization lever</b>” — sign-up friction, deprecating lower-end Android, ad-load and free-tier limits, all in emerging markets, with developed markets “stable”. Pressed on labels reporting an industry-wide premium slowdown, he said he is “very confident”, optimizing “for a healthy funnel… <b>not slowing it down</b>”.' },
+      { q:'Q3 2026', n:'<b>Now the central question on the name</b>, and the only one the call could not settle. Watch: subs landing at 305M, ARPU holding near +7% cc, and whether ad-supported MAU (494M) stalls — that last one decides whether the advertising inflection has an audience to sell.' }
+    ] },
+  { id:'wl008', q:'Q3 2026', rank:2, theme:'The advertising “inflection to double-digit growth in H2 2026”',
+    tags:['advertising','sax','guidance'], trackSince:'Q2 2025', trackUntil:null,
+    seededBy:{ q:'Q2 2026', tripped:true, n:'The clean comp produced the same +3% cc — and management then committed to double-digit H2' },
+    definition:'Two years of rebuilding have produced +3% constant-currency twice running. Management has now committed to <b>double-digit growth in H2 2026</b> — so this stops being a question and becomes <b>the most checkable promise on the name</b>.',
+    src:'Q2 2026: Ad-Supported €446M, +1% reported / +3% cc (restated basis), gross margin 19.1% (+179bp). Call: Luiga — “we continue to expect our ads business to inflect towards double-digit growth in the second half of 2026”, margin moving “from the 20% range we have today towards 40% over time”. Norström — “99% of all the impressions [are] now on our own ad stack”; automated channels ~40% of ad revenue, up from 30%; “33,000 active advertisers… 60% up from last year”. Summit carries €496M for Q3 (~+11%).',
+    thread:[
+      { q:'Q2 2025', n:'<b>Spotify Ad Exchange launched 1 Apr 2025</b> — programmatic real-time auctions replacing insertion-order selling. The deliberate trade: advertising VOLUME for advertising MARGIN.' },
+      { q:'Q4 2025', n:'The margin half works — Ad-Supported gross margin roughly <b>doubled</b> YoY (11.2% → 17.4% restated) on revenue that was flat to down.' },
+      { q:'Q1 2026', n:'€385M, <b>+3% cc</b>. Management called the dip a transition effect that would annualize out once the launch comp cleared.' },
+      { q:'Q2 2026', n:'⚑ <b>The clean comp failed.</b> €446M, +1% reported and <b>+3% cc — identical to Q1</b>, in the first quarter not distorted by the rebuild. The dip did not annualize out on its own. Margin kept improving (19.1%, +179bp), so the fair summary became: Spotify converted a low-margin growing business into a higher-margin flat one.' },
+      { q:'Q2 2026', n:'<b>On the call it became a commitment.</b> Luiga: “inflect towards <b>double-digit growth in the second half of 2026</b>.” Norström declared the migration finished — 99% of impressions on Spotify\'s own stack, automated channels ~40% of ad revenue, advertisers +60% YoY to 33,000.' },
+      { q:'Q3 2026', n:'<b>First of the two quarters that must deliver it.</b> Also resolves Summit\'s €496M (~+11%), which looked heroic against the deck and looks like guidance against the call. Watch pricing per impression — Q2 growth was impressions sold “partially offset by softness in pricing”, and volume-only growth caps where this can go.' }
+    ] },
+  { id:'wl009', q:'Q3 2026', rank:3, theme:'The €200M investment year — does opex actually moderate?',
+    tags:['costs','guidance'], trackSince:'Q2 2026', trackUntil:null,
+    seededBy:{ q:'Q2 2026', tripped:false, n:'Opex grew 3% reported but 19% excluding FX and social charges' },
+    definition:'Reported opex grew 3%; the real number is <b>+19% ex-FX and social charges</b>. Management has sized it at ~€200M for the year and calls it controllable, not capital. This tracks whether the promised moderation actually arrives.',
+    src:'Q2 2026: opex €941M (+3% reported, +4% ex-FX, +19% excluding FX AND social charges). R&D €403M, S&M €390M, G&A €148M. Call: Luiga — “approximately €200 million in incremental operating expense for the full year”, personnel flat. Söderström — “compute and marketing… within our control… not long-term CapEx”; “over the last three years, we have not increased headcount while revenue per employee is on track to double”. Q3 operating income guided €670M vs ~€677.8M consensus (Visible Alpha).',
+    thread:[
+      { q:'Q2 2026', n:'Operating income beat the guide for a fifth straight quarter (€655M vs €630M) — but <b>€9M of the €25M was a social-charges windfall from a FALLING share price</b>, not operations. Underneath, opex grew <b>19% ex-FX and social charges</b> on marketing plus cloud and AI.' },
+      { q:'Q2 2026', n:'<b>The call sized it and framed it.</b> ~<b>€200M incremental for the FULL YEAR</b> (not the quarter), personnel flat. Söderström: the year “started… by investing” and is “now focusing on <b>cost and efficiency</b>”. The structural defence: headcount flat for three years while revenue per employee is “on track to double”.' },
+      { q:'Q3 2026', n:'The original question — conservatism or the end of margin expansion — is answered: <b>neither, it is a sized investment year</b>. What is left is sequencing. Watch for the peak quarter and for Q4 moderation; Summit sits 4.3% above the €670M guide, betting the conservatism holds.' }
+    ] },
+  { id:'wl006', q:'Q3 2026', rank:4, theme:'Gross margin vs the 35–40% promise — verify the Q3 regulatory charge',
     tags:['margin','investor-day'], trackSince:'Q2 2026', trackUntil:null,
-    definition:'At the May 2026 Investor Day management committed to a 35–40% gross margin by 2030 against 32.0% in FY2025. The Q2 guide adds ten basis points sequentially. This hook tracks the gap between the trajectory being guided and the trajectory required.',
-    src:'Investor Day, 21 May 2026: mid-teens revenue CAGR, 35–40% gross margin, 20%+ operating margin by 2030. Q2 2026 gross-margin guide: 33.1% vs 33.0% printed in Q1.' },
+    seededBy:{ q:'Q2 2026', tripped:false, n:'A record 33.4% and then a guide 50bp lower — explained on the call as an annual Q3 charge' },
+    definition:'<b>Demoted by the call, not resolved by it.</b> The 32.9% guide is blamed on an annual Q3 regulatory-fee charge — a satisfying answer that is so far unverified. If it is genuinely annual it should be visible in 3Q25 and 3Q24 too.',
+    src:'Q2 2026: gross margin 33.4% vs 33.1% guided, +193bp YoY; Premium 34.9%, Ad-Supported 19.1%. Q3 guide 32.9%, described by Luiga as “approximately 130 basis points above the prior year” and as including “a typical charge we take in the third quarter to account for our annual exposure to regulatory fees in one of our markets”. Investor Day (21 May 2026): 35–40% gross margin and 20%+ operating margin by 2030, against 32.0% in FY2025. Summit\'s segment lines imply ~33.6% for Q3.',
+    thread:[
+      { q:'Q4 2025', n:'33.1%, a record at the time; FY2025 closed at <b>32.0%</b> against 30.1% in FY2024.' },
+      { q:'Q1 2026', n:'33.0%, ~+140bp YoY — but the Q2 guide added only <b>ten basis points</b>, the first quarter where the guided path looked slower than the promised one.' },
+      { q:'Q2 2026', n:'<b>33.4% — an all-time record</b>, beating the guide by 30bp, +193bp YoY, both segments contributing. Then Q3 was guided to <b>32.9%</b>, a 50bp step DOWN, unexplained in the deck. For a few hours this read as the first guided move away from the 2030 commitment.' },
+      { q:'Q2 2026', n:'<b>The call defused it.</b> Luiga: reinvestment plus “a typical charge we take in the third quarter to account for our <b>annual exposure to regulatory fees</b> in one of our markets”, and the guide is still <b>~130bp ABOVE the prior year</b>. Hook demoted from #1 to #4 and reframed from alarm to verification.' },
+      { q:'Q3 2026', n:'<b>Check the claim, do not accept it:</b> pull 3Q25 and 3Q24 gross margin against their own guides and look for the same seasonal step. Note the model is not carrying the charge (~33.6% implied), so a clean 32.9% print is a small Summit miss with a benign cause.' }
+    ] },
+  { id:'wl010', q:'Q3 2026', rank:5, theme:'Does the buyback lean into the drawdown?',
+    tags:['capital-allocation'], trackSince:'Q2 2026', trackUntil:null,
+    seededBy:{ q:'Q2 2026', tripped:false, n:'Nobody asked about capital allocation on the call, and management did not volunteer it' },
+    definition:'€9.4B of cash, €3.3B of LTM free cash flow, and a stock that fell on a guide rather than on a quarter. The Q3 repurchase pace is the one signal here that <b>needs no interpretation</b> — and it earns a slot precisely because it went unasked.',
+    src:'Q2 2026 deck: $662M repurchased year to date through Aug 3 2026, ~30% ahead of 2025; ~2.2M shares (≈1% of shares outstanding) since repurchases resumed in 2025, €232M in the quarter itself. Cash, restricted cash and short-term investments €9.4B; the €1.46B of Exchangeable Notes outstanding at Dec 31 2025 were repaid in Q1 2026. Capital allocation sits with Daniel Ek as executive chairman, not with the co-CEOs.',
+    thread:[
+      { q:'Q2 2026', n:'Record Q2 free cash flow of <b>€797M</b> on €21M of capex; LTM €3.3B, cash €9.4B. Buybacks running <b>~30% ahead of 2025</b> at $662M year to date.' },
+      { q:'Q2 2026', n:'<b>Not one of the thirteen analyst questions touched capital allocation</b> — the call went to AI products, ticketing, engagement and pricing. Plausibly because it sits with Ek as executive chairman rather than with the co-CEOs on the line.' },
+      { q:'Q3 2026', n:'The shares fell on the guide, so Q3 repurchase disclosure is a direct read on how management values the stock at this level. Cheap to check, and it either confirms conviction or it does not.' }
+    ] },
+  { id:'wl011', q:'Q3 2026', rank:6, theme:'MLC litigation — the audiobook bundle\'s royalty tail',
+    tags:['legal','royalties'], trackSince:'Q4 2023', trackUntil:null,
+    seededBy:{ q:'Q2 2026', tripped:false, n:'Quiet quarter — no development disclosed, while the bundle mechanism kept expanding' },
+    definition:'A live claim against the exact mechanism that lifted Premium gross margin to a record 34.9%. Nothing moved in Q2 — <b>and Spotify kept expanding the bundle anyway</b>.',
+    src:'FY2025 20-F: if the MLC ultimately succeeds, ~€358M for Mar 2024–Dec 2025 plus penalties and interest. Dismissed with prejudice Jan 2025 (the court held the Premium Service IS a bundle); amended complaint filed Oct 2025 attacking how the bundle\'s components were valued. No change to the provision or any mention in the Q2 2026 deck.',
+    thread:[
+      { q:'Q4 2023', n:'Audiobooks folded into Premium, reclassifying the subscription as a <b>bundle</b> and lowering the mechanical royalty owed to music publishers.' },
+      { q:'Q1 2025', n:'The MLC\'s suit <b>dismissed with prejudice</b> — the court held the Premium Service IS a bundle.' },
+      { q:'Q1 2026', n:'<b>Amended complaint</b> (filed Oct 2025) attacks how the bundle\'s components were valued. Exposure if it succeeds: <b>~€358M</b> for Mar 2024–Dec 2025 plus penalties and interest.' },
+      { q:'Q2 2026', n:'<b>No development disclosed</b> — no change to the provision, no mention in the deck. But the mechanism was <b>expanded</b>: Audiobooks+ tiers announced, Family and Student to follow, Prompted Playlist extending to audiobooks, and <b>Narrated Articles</b> launched inside the Premium audiobook allowance. On the call, Audiobooks+ was disclosed as past <b>€100M ARR</b> with penetration “more than doubled this year”.' },
+      { q:'Q3 2026', n:'Stays open by design — so a quiet quarter is <b>recorded as quiet rather than forgotten</b>. The larger the add-on business gets, the larger the tail on an adverse ruling.' }
+    ] },
+
+  // ── Q2 2026 — the frozen record, as the list stood going into the print.
+  // ⚠ ONLY ONE OF THESE IS ACTUALLY CLOSED. wl003 (pricing) was answered, so it carries
+  // `trackUntil` and renders "closed". The other four are STILL LIVE and merely handed to a
+  // Q3 successor, so they carry `continuedBy` and render "carried forward ↗" — marking them
+  // `trackUntil:'Q2 2026'` would have claimed we stopped watching four questions we are
+  // still watching. Both states drop out of the open count so a question is never counted twice.
+  { id:'wl001', q:'Q2 2026', rank:1, theme:'The operating-income guide: conservatism or the end of margin expansion?',
+    tags:['margin','guidance'], trackSince:'Q2 2026', trackUntil:null, continuedBy:'wl009',
+    definition:'Spotify guided Q2 operating income BELOW the quarter it had just printed and ~8% under the Street. Either conservatism explains it, or the 2025 margin story has run its course.',
+    src:'Q1 2026 deck (28 Apr 2026): Q2 guide €630M vs €715M printed in Q1; Street was carrying ~€684M. The stock fell on the guide despite a clean Q1 beat.',
+    thread:[
+      { q:'Q2 2026', n:'<b>Conservatism won — with an asterisk.</b> €655M vs €630M, a fifth straight beat, but €9M of the €25M was a social-charges windfall from a falling share price. Strip it and the beat is ~€16M against opex growing 19% ex-FX.' },
+      { q:'Q2 2026', n:'<b>The binary is answered:</b> it is neither conservatism nor the end of expansion — it is a <b>sized investment year</b> (~€200M incremental, personnel flat). What is <i>not</i> answered is whether the spend moderates, so the hook <b>carries forward as Q3 #3</b> rather than closing.' }
+    ] },
+  { id:'wl002', q:'Q2 2026', rank:2, theme:'Has the SAX rebuild stopped shrinking advertising?',
+    tags:['advertising','sax'], trackSince:'Q2 2026', trackUntil:null, continuedBy:'wl008',
+    definition:'Spotify traded advertising volume for advertising margin. Q2 is the first clean comp against the April 2025 SAX launch — the first honest read on whether the trade is working.',
+    src:'Q1 2026: Ad-Supported revenue €385M, +3% constant-currency. FY2025: ad gross margin 18.0% (restated 17.4%) vs 11.2% in FY2024, on revenue that was flat to down.',
+    thread:[
+      { q:'Q2 2026', n:'<b>It stopped shrinking but did not start growing:</b> €446M, +3% cc — the SAME as Q1, in the quarter that was supposed to settle it. The transition-dip explanation failed its own test. Margin half worked (19.1%, +179bp).' },
+      { q:'Q2 2026', n:'<b>The call turned the question into a commitment</b> — “inflect towards double-digit growth in H2 2026”, migration declared finished at 99% of impressions. Still very much live: <b>carries forward as Q3 #2</b>, restated as a promise to check rather than a question to ask.' }
+    ] },
+  { id:'wl003', q:'Q2 2026', rank:3, theme:'Do the price increases compound, or was 2025 a one-off step?',
+    tags:['pricing','arpu'], trackSince:'Q2 2026', trackUntil:'Q2 2026',
+    definition:'Fifteen years at $9.99, then three increases in under three years. Q2 is when the July/August 2025 rises LAP — separating a real pricing cadence from a one-off re-rate. <b>→ Resolved; no successor needed.</b>',
+    src:'Q1 2026: Premium ARPU €4.76, +5.7% constant-currency, on the Jan 2026 US move and increases across 150+ markets.',
+    thread:[
+      { q:'Q2 2026', n:'<b>✔ ANSWERED, bullishly — the most informative line of the print.</b> ARPU €4.89, <b>+7.4% cc</b>, an ACCELERATION from Q1\'s +5.7%, delivered in the very quarter the 2025 increases lapped. Pricing behaves like a cadence, not a re-rate. <b>Closed with no successor;</b> the ongoing product/market mix drag belongs with the MAU hook.' }
+    ] },
+  { id:'wl004', q:'Q2 2026', rank:4, theme:'Gross margin against the 35–40% promise',
+    tags:['margin','investor-day'], trackSince:'Q2 2026', trackUntil:null, continuedBy:'wl006',
+    definition:'Management committed to 35–40% gross margin by 2030 against 32.0% in FY2025, then guided Q2 up only ten basis points. Tracks the gap between the guided trajectory and the required one.',
+    src:'Investor Day, 21 May 2026: mid-teens revenue CAGR, 35–40% gross margin, 20%+ operating margin by 2030. Q2 2026 gross-margin guide: 33.1% vs 33.0% printed in Q1.',
+    thread:[
+      { q:'Q2 2026', n:'<b>The print helped, the guide alarmed, the call defused it.</b> 33.4% — a record, 30bp above guide, +193bp YoY. Then Q3 guided to 32.9%, unexplained in the deck; on the call Luiga attributed it to reinvestment plus an <b>annual Q3 regulatory-fee charge</b>, still ~130bp above the prior year.' },
+      { q:'Q2 2026', n:'<b>Demoted, not resolved.</b> Q3 #4 carries it, reframed from “is the trajectory breaking?” to “verify the charge is genuinely annual against 3Q25 and 3Q24”.' }
+    ] },
   { id:'wl005', q:'Q2 2026', rank:5, theme:'MLC litigation — the audiobook bundle\'s royalty tail',
-    tags:['legal','royalties'], trackSince:'Q2 2026', trackUntil:null,
-    definition:'Bundling audiobooks into Premium lowered the mechanical royalty Spotify owes publishers. A court agreed it IS a bundle; the MLC is still attacking how the bundle was valued. Not a Q2 event, but it is a live claim against the exact mechanism that lifted gross margin.',
-    src:'FY2025 20-F: if the MLC ultimately succeeds, ~€358M for Mar 2024–Dec 2025 plus penalties and interest. Dismissed with prejudice Jan 2025; amended complaint filed Oct 2025.' }
+    tags:['legal','royalties'], trackSince:'Q4 2023', trackUntil:null, continuedBy:'wl011',
+    definition:'Bundling audiobooks lowered the mechanical royalty Spotify owes publishers. A court agreed it IS a bundle; the MLC still attacks how it was valued. A live claim against the mechanism that lifted gross margin.',
+    src:'FY2025 20-F: if the MLC ultimately succeeds, ~€358M for Mar 2024–Dec 2025 plus penalties and interest. Dismissed with prejudice Jan 2025; amended complaint filed Oct 2025.',
+    thread:[
+      { q:'Q2 2026', n:'<b>Quiet quarter — recorded as quiet.</b> No development disclosed, no change to the provision. Meanwhile the mechanism was <b>expanded</b> (Audiobooks+ tiers, Narrated Articles), and Premium gross margin hit a record 34.9%. Nothing is resolved — it <b>carries forward as Q3 #6</b> with the full thread from Q4 2023.' }
+    ] }
 ];
 
 // ─── The theme record (§6, v2.3 fold-in). Threads across the recent calls.
-var SRC_CALLS='Spotify FY2025 Form 20-F, the Q1 2026 6-K and shareholder update, the May 2026 Investor Day remarks, and earnings-day coverage. ⚠ A per-call record (docs/calls/SPOT*.md) has NOT been written yet — these threads are compiled from filings and decks, not from transcripts. Building the calls repository is the next step for this tab.';
+var SRC_CALLS='Spotify FY2025 Form 20-F, the Q1 2026 and Q2 2026 6-Ks and shareholder updates (the Q2 2026 Update is Exhibit 99.1 to the Form 6-K of 4 Aug 2026), the May 2026 Investor Day remarks, the <b>Q2 2026 earnings call of 4 Aug 2026</b> (Bryan Goldberg IR; Alex Norström and Gustav Söderström, Co-CEOs; Christian Luiga, CFO), and earnings-day coverage. ⚠ A per-call record (docs/calls/SPOT*.md) has still NOT been written — the Q2 2026 call is quoted here from the published transcript, but the earlier threads are compiled from filings and decks rather than from transcripts. Building the calls repository back through 2024 is the next step.';
 var SPOT_THEMES=[
-  { theme:'The gross-margin climb — and the 2030 promise', st:{ k:'trend', since:'Q1 2025', last:'Q1 2026' },
-    why:'The entire equity story: 32.0% in FY2025 against a 35–40% commitment by 2030. Every lever is a different negotiation with a rights holder.',
+  { theme:'The gross-margin climb — and the 2030 promise', st:{ k:'promise', since:'Q1 2025', last:'Q2 2026' },
+    why:'The entire equity story: 32.0% in FY2025 against a 35–40% commitment by 2030. Every lever is a different negotiation with a rights holder — and the guided path has just pointed down for the first time.',
     updates:[
       { q:'Q4 2025', items:['Consolidated gross margin <b>33.1%</b>, a record at the time; FY2025 closed at <b>32.0%</b> against 30.1% in FY2024.'] },
       { q:'Q1 2026', items:['<b>33.0%</b>, roughly +140bps YoY. Guidance for Q2 adds only <b>ten basis points</b> (33.1%) — the first quarter where the guided trajectory looks slower than the promised one.'] },
+      { q:'Q2 2026', items:['<b>33.4% — an all-time record</b>, +193bps YoY and 30bps ABOVE the guide. Premium <b>34.9%</b> (+174bps, revenue outpacing music costs net of marketplace programs, audiobooks and video podcasts); Ad-Supported <b>19.1%</b> (+179bps, favourable podcast and tax impacts).',
+        '⚑ <b>And then the guide stepped DOWN.</b> Q3 2026 is guided to <b>32.9%</b> — 50bps below the record just set, with no explanation in the deck. Ten weeks after the Investor Day put 35–40% by 2030 on the record, this is the first guided move in the wrong direction. Summit\'s segment lines imply ~33.6%, so the model does not accept it.'] },
     ]},
-  { theme:'Advertising rebuilt around the exchange (SAX)', st:{ k:'watch', since:'Q2 2025', last:'Q1 2026' },
-    why:'Spotify deliberately traded advertising VOLUME for advertising MARGIN. The trade is visible in the margin; the growth has not come back yet.',
+  { theme:'Advertising rebuilt around the exchange (SAX)', st:{ k:'watch', since:'Q2 2025', last:'Q2 2026' },
+    why:'Spotify deliberately traded advertising VOLUME for advertising MARGIN. The trade is visible in the margin; two years in, the growth has still not come back.',
     updates:[
       { q:'Q2 2025', items:['<b>Spotify Ad Exchange launched 1 Apr 2025</b> — programmatic, real-time biddable auctions, replacing insertion-order selling.'] },
       { q:'Q4 2025', items:['Ad-Supported gross margin roughly <b>doubled</b> year over year (11.2% → 17.4% restated) while ad revenue was flat to down.'] },
       { q:'Q1 2026', items:['Ad revenue <b>€385M, +3% constant-currency</b> — automated channels described as the largest contributor to what growth there was. Q2 is the first clean comp against the launch.'] },
+      { q:'Q2 2026', items:['⚑ <b>The clean comp came and went: €446M, +1% reported and +3% constant-currency — identical to Q1.</b> 2Q25 was the first quarter fully after the SAX launch, so this was the honest read, and the transition-dip explanation did not survive it.',
+        'Management attributes what growth there is to <b>impressions sold, partially offset by pricing softness</b>, with podcast sponsorship in the Owned &amp; Licensed portfolio leading.',
+        'The margin half of the trade keeps working — <b>19.1% gross margin, +179bps</b>. Luiga put a destination on it: from “the 20% range we have today <b>towards 40% over time</b>”.',
+        '<b>On the call the migration was declared finished and a dated commitment made.</b> Norström: “<b>99% of all the impressions</b> [are] now on our own ad stack”; automated channels ~<b>40% of ad revenue, up from 30%</b>; <b>33,000 active advertisers, +60% YoY</b>, 7,000 using the AI audio asset-creation tool. Luiga: “we continue to expect our ads business to <b>inflect towards double-digit growth in the second half of 2026</b>.” Q3 is the first of the two quarters that must deliver it.'] },
     ]},
-  { theme:'Pricing power, discovered late and used repeatedly', st:{ k:'trend', since:'Q3 2023', last:'Q1 2026' },
-    why:'Fifteen years at $9.99, then three increases in under three years. Whether that is a cadence or a one-off re-rate is still unresolved.',
+  { theme:'Pricing power, discovered late and used repeatedly', st:{ k:'trend', since:'Q3 2023', last:'Q2 2026' },
+    why:'Fifteen years at $9.99, then three increases in under three years. Q2 2026 was the quarter that tested whether that is a cadence — and it passed.',
     updates:[
       { q:'Q3 2023', items:['The <b>first broad Premium price increase</b>, across 50+ markets.'] },
       { q:'Q3 2025', items:['A further multi-market increase (Aug 2025) across South Asia, the Middle East, Africa, Europe, Latin America and Asia-Pacific.'] },
       { q:'Q1 2026', items:['US individual moved to <b>$12.99</b>; ARPU <b>€4.76, +5.7% cc</b>. The July/August 2025 increases lap in Q2 — the test of whether pricing compounds.'] },
+      { q:'Q2 2026', items:['✔ <b>RESOLVED, bullishly.</b> Premium ARPU <b>€4.89, +7% reported and +7.4% constant-currency</b> — an acceleration from Q1\'s +5.7% cc, delivered in the quarter the 2025 increases lapped. Price-increase benefits partially offset by product/market mix.',
+        'Premium revenue <b>€4,331M, +15% (+16% cc)</b> on 9% subscriber growth — so roughly half the segment\'s growth is now price rather than volume.'] },
     ]},
-  { theme:'The audiobook bundle and the royalty it changed', st:{ k:'watch', since:'Q4 2023', last:'Q1 2026' },
+  { theme:'The user funnel is decelerating', st:{ k:'watch', since:'Q2 2026', last:'Q2 2026' },
+    why:'MAU feeds both the subscription business and the advertising business. Two consecutive quarters of user growth being marked lower is the leading indicator for both — and it is what the stock reacted to.',
+    updates:[
+      { q:'Q2 2026', items:['<b>777M MAU against a 778M guide</b> — 16M net adds versus 17M guided, +12% YoY, with growth in every region. Ad-Supported MAUs 494M.',
+        '<b>Premium subscribers crossed 300M</b> — 7M net adds against 6M guided, +9% YoY, growth in every region. Helped by a one-off: the 20th-anniversary in-app experience drew ~100M users in six days and drove <b>Spotify\'s biggest single day of subscriber intake ever</b>.',
+        '⚑ <b>Q3 is then guided to 788M MAU (~11M adds) and 305M subscribers (~5M adds)</b> — the slowest additions on both lines in this dataset. The MAU guide is ~<b>5.6M below the ~793.6M consensus</b> (Visible Alpha), and is the main reason the shares fell ~4% pre-market.',
+        '<b>Management says the deceleration is deliberate.</b> Norström: “sometimes we pull the growth lever, and sometimes we pull the monetization lever. <b>Here we\'re starting to pull the monetization lever</b>” — via “tweaking the sign-up to get a higher quality MAU throughput”, deprecating “lower-end Android device support”, and “friction in both <b>ad load</b> and some limitations in our <b>free tier</b>”, all in emerging markets. Luiga: “growth rates in developed markets remain stable.”',
+        'The falsifiable part: it “will not affect subs growth in the near term”. Pressed on labels reporting an industry-wide premium slowdown, Norström said he is “<b>very confident</b>”, optimizing “for a healthy funnel… <b>not slowing it down</b>”. Q3 is the first test of that.'] },
+    ]},
+  { theme:'AI as an efficiency programme, not just a product line', st:{ k:'promise', since:'Q2 2026', last:'Q2 2026' },
+    why:'The AI spend is the main reason operating expenses grew 19% ex-FX — and management\'s defence is that it is compute and marketing, controllable and temporary, against a cost base that has not added people in three years.',
+    updates:[
+      { q:'Q2 2026', items:['<b>Internal tooling led the presentation, not features.</b> <b>“Honk”</b> lets engineers fix bugs from Slack; <b>“Chirp”</b> is a model-agnostic inference engine that “seamlessly switch[es] between… paid models and a hosted open-source model”. The Large Taste Model uses “continuous pre-training” on an open-source base.',
+        '<b>The efficiency claim:</b> “over the last three years, we have <b>not increased headcount</b> while revenue per employee is <b>on track to double</b>.” Luiga sized the investment at ~<b>€200M of incremental operating expense for the full year</b>, with personnel flat.',
+        'Söderström on the shape: the year “started… by investing… leading in this wave of using AI” and is “now focusing on <b>cost and efficiency</b>”; the spend is “compute and marketing… within our control… <b>not long-term CapEx</b>”.',
+        '<b>Reach so far:</b> AI experiences touch ~<b>25% of active users</b>; Prompted Playlists 14M of 100M actives; Song DNA past 100M users. Söderström says the Large Taste Model is “moving some of the metrics that are absolutely the hardest to move, which are <b>active days</b>”.',
+        '<b>Licensing:</b> a <b>Merlin</b> agreement (~30,000 labels) joins the existing UMG deal, governed by “the three Cs” — consent, credit, compensation. Products are for “real artists, not fake artists”, and Spotify “do[es] not need a deal with all the majors” before a “research preview”.'] },
+    ]},
+  { theme:'Capital-light cash generation, now being returned', st:{ k:'trend', since:'Q1 2025', last:'Q2 2026' },
+    why:'The quiet compounder underneath the debate: royalty-accrual timing plus deferred subscription revenue give Spotify a structurally favourable working-capital cycle, and almost no capex to fund.',
+    updates:[
+      { q:'Q2 2026', items:['<b>Free cash flow €797M</b>, a record second quarter — €816M of operating cash flow less <b>€21M of capex</b>. LTM free cash flow <b>€3.3B</b>; cumulative since 2016, €8.8B.',
+        'Cash, restricted cash and short-term investments <b>€9.4B</b>. The €1.46B of Exchangeable Notes on the balance sheet at Dec 31 2025 were repaid in Q1 2026 and the line is now nil.',
+        '<b>$662M of buybacks year to date through Aug 3 2026</b>, ~30% ahead of 2025; ~2.2M shares (≈1% of the count) since repurchases resumed. €232M repurchased in the quarter itself. Capital allocation stays with Daniel Ek as executive chairman.'] },
+    ]},
+  { theme:'The audiobook bundle and the royalty it changed', st:{ k:'watch', since:'Q4 2023', last:'Q2 2026' },
     why:'The most consequential product decision in Spotify\'s history in profit terms — and the one being litigated.',
     updates:[
       { q:'Q4 2023', items:['Audiobooks folded into Premium — which reclassified the subscription as a <b>bundle</b>, lowering the mechanical royalty owed to music publishers.'] },
       { q:'Q1 2025', items:['The MLC\'s suit <b>dismissed with prejudice</b> — the court held the Premium Service IS a bundle.'] },
       { q:'Q1 2026', items:['The MLC\'s <b>amended complaint</b> (filed Oct 2025) attacks how the bundle\'s components were valued. Quantified exposure if it succeeds: <b>~€358M</b> for Mar 2024–Dec 2025, plus penalties and interest.'] },
+      { q:'Q2 2026', items:['<b>No litigation development disclosed</b> in the Q2 deck — no change to the provision, no mention in the shareholder update.',
+        'The mechanism is being <b>expanded, not wound back</b>: Audiobooks+ add-on tiers announced with higher-hour plans, Family and Student plans to follow later in 2026, Prompted Playlist extending to audiobooks, and <b>Narrated Articles</b> launched — long-form magazine stories included within Premium users\' monthly audiobook allowance.',
+        'Context for the exposure: Premium gross margin reached a record <b>34.9%</b> this quarter, driven partly by audiobook costs growing slower than revenue — the same economics the claim attacks.'] },
     ]},
   { theme:'Founder succession and the new management view', st:{ k:'watch', since:'Q3 2025', last:'Q1 2026' },
     why:'The first CEO change in twenty years — and the new leadership\'s first act was to redraw the segments.',
@@ -2063,6 +2352,9 @@ function ceStyle(){
     '.ce-w-ed,.ce-w-del{border:1px solid var(--bdr);background:var(--w);font:inherit;font-size:11px;font-weight:800;color:var(--mu);width:24px;height:24px;border-radius:7px;cursor:pointer;line-height:1;transition:.12s}'+
     '.ce-w-ed:hover{border-color:'+BRAND+';color:'+BRAND+'}.ce-w-del:hover{border-color:'+RED+';color:'+RED+'}'+
     '.ce-w-closed{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--mu);background:#F2F5F8;border:1px solid var(--bdr);border-radius:20px;padding:2px 8px;flex:none}'+
+    // "carried forward" is NOT "closed" — it gets the brand colour, because the question is alive.
+    '.ce-w-fwd{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:'+BRAND+';background:rgba(29,185,84,0.10);border:1px solid rgba(29,185,84,0.30);border-radius:20px;padding:2px 8px;flex:none}'+
+    '.ce-w-chip.fwd{color:'+BRAND+';border-color:rgba(29,185,84,0.30);background:rgba(29,185,84,0.06)}'+
     '.ce-kind{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:2px 8px;white-space:nowrap;border:1px solid}'+
     '.ce-phase{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;border-radius:20px;padding:3px 10px;margin-bottom:8px}'+
     '.ce-info{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:'+AMBER+';color:#fff;font-size:10px;font-weight:800;cursor:pointer;margin-left:5px;vertical-align:middle;flex:none}'+
@@ -2280,7 +2572,12 @@ function ceChip(g){
 // margin = the metric ÷ revenue, computed per column. Street margin = BBG metric ÷ BBG revenue;
 // Summit margin = Summit metric ÷ Summit revenue (falls back to BBG revenue if Summit has none).
 // Toggled in the estimates bar; lives in the SAME headline cell, never a new box. (§6a-ii.)
-var CE_MARGIN_ON={'Gross profit':1,'Operating income':1,'EBITDA':1};
+// ⚠ KEYED BY THIS COMPANY'S METRIC NAMES. This map was inherited from googl.js as
+// {'Gross profit','Operating income','EBITDA'} — of which only 'Operating income' exists in
+// Spotify's CE_CONS, so the margin lens had almost nothing to show even once it was wired.
+// 'Gross margin' is deliberately ABSENT: it is already a rate, and dividing it by revenue
+// would print nonsense.
+var CE_MARGIN_ON={'Operating income':1,'Free cash flow':1};
 
 function ceMarginPct(v, rev){ return (v==null||rev==null||!rev)?null:Math.round((v/rev*100)*10)/10; }
 
@@ -2399,11 +2696,15 @@ function ceSetupBody(c){
       '</div>';
       b+='<div class="ce-evwrap" data-ev="cons" data-g="yoy">';
       b+='<div class="ce-row-cap">Headline — every company, always</div>'+ceGrid(u,'head');
-      b+='<div class="ce-row-cap" style="margin-top:12px">Custom KPIs — GOOGL</div>'+ceGrid(u,'cust');
+      b+='<div class="ce-row-cap" style="margin-top:12px">Custom KPIs — Spotify</div>'+ceGrid(u,'cust');
       b+='</div>';
-      b+='<div class="ave-subh-note" style="margin-top:6px">Growth chips are computed from the archive: <b>YoY</b> against <code>fq-3</code>, <b>QoQ</b> against <code>fq0</code> — both reported actuals. '+
-         '<b>Street</b> = Bloomberg (BST), hardcoded from the export only. <b>Summit</b> = our own expectation. <b>?</b> = a number with a caveat worth knowing. '+
-         'A line with no chip either has no like-for-like base or failed the basis test.</div>';
+      // ⚠ PROVENANCE. This paragraph used to claim "Street = Bloomberg (BST), hardcoded from the
+      // export only", copied from googl.js. Spotify is NOT in BBG_CONSENSUS.txt — the expectation
+      // column here is the COMPANY'S OWN GUIDE. Saying otherwise put a false source on screen.
+      b+='<div class="ave-subh-note" style="margin-top:6px">Growth chips compare each expectation against a reported actual: <b>YoY</b> against the same quarter a year earlier, <b>QoQ</b> against the prior quarter. '+
+         '<b>Guide</b> = Spotify\'s own guided point for the quarter, from the prior quarter\'s shareholder deck — Spotify guides a single number, not a range, and it guides five lines every quarter. '+
+         'It is <i>not</i> Street consensus: Spotify has no rows in our <code>BBG_CONSENSUS.txt</code> archive. <b>Summit</b> = our own expectation, from the model\'s frozen quarterly projections. '+
+         '<b>?</b> = a number with a caveat worth knowing. A line with no chip either has no like-for-like base or failed the basis test.</div>';
       // ── The debate — a LINE-BY-LINE comparison, not a paragraph ────────────────────────────
       // It answers one question: where does Summit differ from the Street, and by how much. Built
       // from the same two columns the grid shows, so it cannot disagree with them. Lines where we
@@ -2419,22 +2720,23 @@ function ceSetupBody(c){
           diffs.push({ k:m.k, c:c, u:uv, d:((uv/c-1)*100), t:m.t, un:m.u });
         });
         diffs.sort(function(x,z){ return Math.abs(z.d)-Math.abs(x.d); });
-        b+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>The debate — where Summit differs from the Street</b>'+
+        // LABEL: for Spotify the expectation column is the COMPANY GUIDE, not Street consensus.
+        b+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>The debate — where Summit differs from the company\'s own guide</b>'+
            '<span style="color:var(--mu);font-weight:600;font-size:10px"> · sorted by the size of the gap</span></div>';
         if(diffs.length){
           b+='<div class="ce-dbt">'+diffs.map(function(x){
             var side=(x.d>=0)?'above':'below';
             return '<div class="ce-dbt-r '+side+'">'+
               '<span class="ce-dbt-k">'+esc(x.k)+'</span>'+
-              '<span class="ce-dbt-v"><b>Street</b> '+ceFmtV(x.un,x.c)+'</span>'+
+              '<span class="ce-dbt-v"><b>Guide</b> '+ceFmtV(x.un,x.c)+'</span>'+
               '<span class="ce-dbt-v"><b>Summit</b> '+ceFmtV(x.un,x.u)+'</span>'+
               '<span class="ce-dbt-d">'+(x.d>=0?'+':'−')+Math.abs(x.d).toFixed(1)+'%</span></div>';
           }).join('')+'</div>';
         }
         if(nous.length){
           b+='<div class="ce-dbt-none"><b>No Summit number yet on '+nous.length+' of '+(nous.length+diffs.length)+' lines:</b> '+
-             esc(nous.join(' · '))+'.<br>Until those are filled the debate is the Street against itself — '+
-             'the grid above still shows what it expects, and the track record below shows how often it has been wrong.</div>';
+             esc(nous.join(' · '))+'.<br>Those are the lines Spotify guides but the model does not carry — the user metrics and the gross-margin '+
+             'percentage. Until the engine has a count/percent unit they can only be read from the grid above.</div>';
         }
         if(d&&d.synth) b+='<div class="ce-synth">'+d.synth+'</div>';
       }
@@ -2478,11 +2780,18 @@ function ceSetupBody(c){
 // canvases/tables/sliders UNIQUE, so the two engine instances (Setup + Results) coexist on the page.
 function ceAnnualBody(){
   return '<div class="ce-ann" style="margin:20px 0 4px;padding:16px 0 0;border-top:2px solid var(--bdr)">'+
-    '<div class="ov-sec-h">The Setup picture — reported vs Street (Summit pending): pick any line, window the period with the lever, toggle margins</div>'+
+    '<div class="ov-sec-h">The Setup picture — reported actuals against Spotify’s own guided point and the Summit model, rolling over the last 8 quarters plus the one ahead: pick any line, window the period with the lever, toggle margins</div>'+
     resultsHtml('SPOT_SETUP')+'</div>';
 }
 
 function ceSetupWrap(){ return document.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phpane[data-cep="setup"] .rs-wrap'); }
+
+// ⚠ THIS FUNCTION WAS MISSING. `wireCallEarnings` has always called gBuildCeAnnual on every
+// Setup ⇄ Post-Results switch, but the splice from googl.js dropped the one-line definition.
+// Two symptoms, one silent: an uncaught ReferenceError on every phase switch, AND the Setup
+// chart never built at all — the markup rendered and nothing ever called initResults on it.
+// (Compounded here by SPOT_SETUP never being registered in RESULTS_DATA; both are fixed.)
+function gBuildCeAnnual(){ var w=ceSetupWrap(); if(w) initResults(w,'SPOT_SETUP'); }
 
 function wireCeAnnual(root){ /* the engine self-wires via initResults->wireResults; the chart builds on Setup visibility (gBuildCeAnnual). */ }
 
@@ -2513,11 +2822,19 @@ function ceWatchItem(w, qk, idSfx, qLabel, editable){
   // The chain, made visible: this item exists because the PRIOR quarter's call left it open.
   var seed=w.seededBy?'<span class="ce-seed" title="'+esc(w.seededBy.n)+'">'+(w.seededBy.tripped?'⚑ thesis line broke in '+esc(w.seededBy.q):'left open by '+esc(w.seededBy.q))+'</span>':'';
   var open=wlOpen(w);
+  // A row can leave the open list two ways, and they must NOT look the same on screen:
+  // ANSWERED (trackUntil) reads "closed"; CARRIED FORWARD (continuedBy) reads "carried
+  // forward" and names the quarter that now owns the question. Showing "Tracking until"
+  // on a hand-off would claim we stopped watching something we are still watching.
+  var succ=wlSuccessor(w);
+  var stateChip = w.trackUntil
+    ? '<span class="ce-w-closed" title="Answered — tracking ended in '+esc(w.trackUntil)+'">closed</span>'
+    : (succ ? '<span class="ce-w-fwd" title="Still live — carried forward to '+esc(succ.q)+' as hook #'+esc(String(succ.rank||''))+'">carried forward ↗</span>' : '');
   var ctl=editable?'<span class="ce-w-ctl"><button type="button" class="ce-w-ed" data-wledit="'+esc(w.id||'')+'" title="Edit this theme (and close its hook by filling Tracking until)">✎</button>'+
     '<button type="button" class="ce-w-del" data-wldel="'+esc(w.id||'')+'" title="Remove this theme">✕</button></span>':'';
   return '<div class="ce-w" data-wltags="'+esc(tagsAttr)+'" data-wlid="'+esc(w.id||'')+'" data-wlopen="'+(open?'1':'0')+'">'+
     '<div class="ce-w-top"><span class="ce-w-dot" aria-hidden="true"></span><div class="ce-w-metric">'+esc(w.theme)+'</div>'+seed+
-    (w.trackUntil?'<span class="ce-w-closed" title="Hook closed in '+esc(w.trackUntil)+'">closed</span>':'')+
+    stateChip+
     (qLabel?'<span class="ov-chip" style="font-size:9.5px;background:rgba(66,133,244,0.10);color:'+BRAND+';border-radius:20px;padding:2px 9px;font-weight:800;flex:none">'+esc(qLabel)+'</span>':'')+
     (why?'<span class="ce-why-btn ov-clickable" data-detail="ce:'+why+'" style="margin:0">'+(w.thread?'the thread':'background')+' ›</span>':'')+ctl+'</div>'+
     (w.definition?'<div class="ce-w-def">'+w.definition+'</div>':'')+
@@ -2525,6 +2842,7 @@ function ceWatchItem(w, qk, idSfx, qLabel, editable){
       (w.tags&&w.tags.length?w.tags.map(function(t){ return '<span class="ce-w-chip tag">#'+esc(t)+'</span>'; }).join(''):'')+
       (w.trackSince?'<span class="ce-w-chip since"><b>Tracking since:</b> '+esc(w.trackSince)+'</span>':'')+
       (w.trackUntil?'<span class="ce-w-chip until"><b>Tracking until:</b> '+esc(w.trackUntil)+'</span>':'')+
+      (succ?'<span class="ce-w-chip fwd"><b>Carried forward to:</b> '+esc(succ.q)+' · hook #'+esc(String(succ.rank||''))+'</span>':'')+
     '</div>'+
   '</div>';
 }
@@ -2587,7 +2905,10 @@ function ceWlForm(){
 var WL_COLS=[
   {k:'id',l:'id'},{k:'q',l:'quarter'},{k:'rank',l:'order'},{k:'theme',l:'theme'},
   {k:'tags',l:'tags'},{k:'definition',l:'definition'},
-  {k:'trackSince',l:'tracking since'},{k:'trackUntil',l:'tracking until'}
+  {k:'trackSince',l:'tracking since'},{k:'trackUntil',l:'tracking until'},
+  // Part of the round-trip: without it, a carried-forward row exports as if it were still
+  // live and the hand-off is lost the moment the table is pasted back into the code.
+  {k:'continuedBy',l:'continued by'}
 ];
 
 function wlCellText(r, k){
@@ -2653,9 +2974,12 @@ function ceWatchBody(c){
     '<span class="mg-seg" style="display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px">'+
       '<button type="button" class="ce-wl-win active" data-wlwin="all">All</button>'+
       '<button type="button" class="ce-wl-win" data-wlwin="open">Open hooks</button>'+
-      '<button type="button" class="ce-wl-win" data-wlwin="closed">Closed</button>'+
+      '<button type="button" class="ce-wl-win" data-wlwin="closed">Closed / carried</button>'+
     '</span>'+
-    '<span class="ave-subh-note" style="margin-left:4px">A theme is <b>open</b> while it has a <i>Tracking since</i> and no <i>Tracking until</i>. We open and close them by hand.</span>'+
+    '<span class="ave-subh-note" style="margin-left:4px">A hook leaves the live list two ways, and the cards say which: '+
+      '<span class="ce-w-closed" style="vertical-align:middle">closed</span> = the question was <b>answered</b> and we stopped watching it (it has a <i>Tracking until</i>); '+
+      '<span class="ce-w-fwd" style="vertical-align:middle">carried forward ↗</span> = <b>still live</b>, but a later quarter\'s row now owns it, and that row inherits the whole thread. '+
+      'Only one row per question is ever counted as open.</span>'+
   '</div>';
   h+=ceWlForm();
   // Per-quarter blocks (default view). The live quarter renders only OPEN hooks — that IS the list.
@@ -2669,7 +2993,9 @@ function ceWatchBody(c){
       '. Each card carries its <b>definition</b> — what the theme means in our words — its <b>tags</b>, and its <b>tracking window</b>. Tap <b>the thread ›</b> for the grounding and the quarter-by-quarter evolution. Ordered by weight, deliberately <b>not numbered</b>: a visible 1–5 goes stale the moment a theme is removed.</p>';
     b+='<div class="ce-legend"><span class="ce-legend-i"><b>How to read the cards:</b></span>'+
       '<span class="ce-legend-i"><span class="ce-seed">left open by Q2 2026</span> it is on the list because last quarter\'s call did not settle it</span>'+
-      '<span class="ce-legend-i"><span class="ce-w-chip since"><b>Tracking since:</b> Q4 2024</span> with no <i>Tracking until</i> ⇒ the hook is still open</span>'+
+      '<span class="ce-legend-i"><span class="ce-w-chip since"><b>Tracking since:</b> Q4 2024</span> when we started watching — it survives the hand-off, so a hook carried across quarters keeps its ORIGINAL start</span>'+
+      '<span class="ce-legend-i"><span class="ce-w-fwd">carried forward ↗</span> still live; a later quarter\'s row now owns the question and inherits the thread</span>'+
+      '<span class="ce-legend-i"><span class="ce-w-closed">closed</span> answered, and we stopped watching — that one has a <i>Tracking until</i></span>'+
       (frozen?'':'<span class="ce-legend-i"><span class="ce-w-ed" style="pointer-events:none">✎</span> edit — including closing the hook by filling <i>Tracking until</i></span>')+
     '</div>';
     if(!wl.length){ b+='<div class="ce-note">No open hooks for '+esc(u.q)+' yet — add themes with <b>+ Add theme</b> above.</div>'; }
@@ -2713,7 +3039,20 @@ function wlFor(qLabel, openOnly){
   });
 }
 
-function wlOpen(r){ return !!(r.trackSince && !r.trackUntil); }
+// A hook stops counting as OPEN for two different reasons, and the difference matters:
+//   • trackUntil  — the question was ANSWERED and we stopped watching it. A real close.
+//   • continuedBy — the question is STILL LIVE, but this row is last quarter's frozen copy
+//                   and a successor row carries it forward. Not a close; a hand-off.
+// Both drop out of the open count (otherwise one question is counted twice), but only
+// trackUntil is allowed to render as "closed" (§ the Q2/Q3 hand-off model).
+function wlOpen(r){ return !!(r.trackSince && !r.trackUntil && !r.continuedBy); }
+
+// The successor row of a carried-forward hook, for the "carried forward to Qx" chip.
+function wlSuccessor(r){
+  if(!r || !r.continuedBy) return null;
+  for(var i=0;i<WL_ROWS.length;i++){ if(WL_ROWS[i].id===r.continuedBy) return WL_ROWS[i]; }
+  return null;
+}
 // Every tag in use, across every quarter — the vocabulary of the filter bar. New tags created in
 // the Add-theme form are appended live so they become available to everyone.
 
@@ -2785,7 +3124,12 @@ function ceVerdict(m, c, a, surp){
   if(a==null) return {l:'—', c:'#9AA4B0', k:'none'};
   if(c==null) return {l:'no est.', c:'#7A5AF8', k:'noest'};       // nocons / noact: a print, nothing to score
   if(surp==null) return {l:'—', c:'#9AA4B0', k:'none'};
-  if(Math.abs(surp)<2) return {l:CE_RES.inline.l, c:CE_RES.inline.c, k:'inline'};
+  // A line that IS ALREADY A RATE (Spotify's gross-margin guide) is scored in POINTS, not in
+  // percent-of-a-percent. 33.4% against a 33.1% guide is +30bp; expressed the other way it reads
+  // "+0.9%", which understates a record margin beat as noise. Same reasoning as ceGrowth's
+  // u==='%' guard. Ported from lyft.js (Rule H).
+  var tol = (m.u==='%') ? 0.1 : 2;
+  if(Math.abs(surp)<tol) return {l:CE_RES.inline.l, c:CE_RES.inline.c, k:'inline'};
   return surp>0 ? {l:CE_RES.beat.l, c:CE_RES.beat.c, k:'beat'} : {l:CE_RES.miss.l, c:CE_RES.miss.c, k:'miss'};
 }
 
@@ -2803,8 +3147,12 @@ function cePrintBlock(qLabel, r, us){
     if(c==null&&a==null&&uexp==null) return null;
     // Surprise = actual / expected − 1, computed for BOTH bases. The estimate-view toggle (vs Street
     // ⇄ vs Summit) swaps which one drives the expected value, the surprise and the verdict.
-    var cSurp=(c!=null&&a!=null&&c)?((a/c-1)*100):null;
-    var uSurp=(uexp!=null&&a!=null&&uexp)?((a/uexp-1)*100):null;
+    // A RATE line (Spotify's guided gross margin) is scored as a DIFFERENCE IN POINTS; everything
+    // else as a percentage surprise. Dividing one percentage by another and calling the result a
+    // surprise turns a 30bp margin record into "+0.9%" — a measurement that misstates its own size.
+    var isRate=(m.u==='%');
+    var cSurp=(c!=null&&a!=null&&(isRate||c))?(isRate?(a-c):((a/c-1)*100)):null;
+    var uSurp=(uexp!=null&&a!=null&&(isRate||uexp))?(isRate?(a-uexp):((a/uexp-1)*100)):null;
     var cV=ceVerdict(m,c,a,cSurp), uV=ceVerdict(m,uexp,a,uSurp);
     // growth against the print, both bases — the shared YoY/QoQ lens (independent of the estimate view)
     var g=function(base){
@@ -2813,7 +3161,9 @@ function cePrintBlock(qLabel, r, us){
       var gv=Math.round((a/bv-1)*100);
       return '<span style="color:'+(gv>=0?'#0a8f4c':'#C5221F')+'">'+(gv>=0?'+':'−')+Math.abs(gv)+'%</span>';
     };
-    var surpTag=function(s){ return (s==null)?'':'<span class="ce-fz-d '+(s>=0?'up':'dn')+'">'+(s>=0?'+':'−')+(Math.round(Math.abs(s)*10)/10)+'%</span>'; };
+    var surpTag=function(s){ if(s==null) return '';
+      var mag=isRate ? (Math.round(Math.abs(s)*100)/100)+' pts' : (Math.round(Math.abs(s)*10)/10)+'%';
+      return '<span class="ce-fz-d '+(s>=0?'up':'dn')+'">'+(s>=0?'+':'−')+mag+'</span>'; };
     // MARGIN (GP/OpInc/EBITDA only) — toggled, and it is EXPECTED-vs-REALIZED, not YoY/QoQ. Expected
     // = the margin IMPLIED by the estimate (estimate's metric ÷ estimate's revenue, same estimate on
     // both sides): Street = c/revC, Summit = uexp/revS. Realized = the print's own (a/revA). We show
@@ -2861,9 +3211,10 @@ function cePrintBlock(qLabel, r, us){
   tiles.sort(function(x,z){ return z.sort-x.sort; });   // biggest surprise first (Street basis)
   return '<div class="ce-fz" data-g="yoy" data-ev="cons" data-mm="off"><div class="ce-fz-h">The print — ranked by surprise'+
     ceQ('fz-'+ceQkey(qLabel),'How this is built',
-      '<p>One block, archive-driven. Every number and surprise is computed from <code>BBG_CONSENSUS.txt</code>: the last snapshot before the print carries the consensus (<code>fq+1</code>), a later snapshot carries the print (<code>fq0</code>). Reconstructed from data, so it cannot drift.</p>'+
-      '<ul><li><b>vs Street ⇄ vs Summit</b> — swaps which frozen expectation the print is scored against (Street = Bloomberg, Summit = ours). No "Both" — one basis at a time. Where Summit had no number, Summit view reads <b>no est.</b></li>'+
-      '<li><b>Margin</b> — GP / Operating income / EBITDA carry an expected-vs-realized margin (the estimate-implied margin → the print\'s own), Δ in pts. No YoY/QoQ on the margin.</li>'+
+      '<p>One block, data-driven. Every number and surprise is computed from <code>CE_CONS</code>: the guided point Spotify issued for this quarter in the PRIOR quarter\'s shareholder deck, against the actual it then reported. ⚠ <b>This is the company\'s own guide, not Street consensus</b> — Spotify has no rows in the <code>BBG_CONSENSUS.txt</code> archive, so there is no rolling Street matrix to reconstruct. Spotify is unusually well suited to being scored this way: it guides five metrics every quarter, and it guides a single POINT rather than a range.</p>'+
+      '<ul><li><b>vs Guide ⇄ vs Summit</b> — swaps which frozen expectation the print is scored against (Guide = Spotify\'s own number, Summit = the model\'s frozen quarterly projection). No "Both" — one basis at a time. Where Summit had no number, Summit view reads <b>no est.</b></li>'+
+      '<li><b>Rate lines are scored in POINTS.</b> Gross margin of 33.4% against a 33.1% guide is +30bp, shown as <b>+0.3 pts</b>. Dividing one percentage by another would print "+0.9%", which understates a record margin beat as noise.</li>'+
+      '<li><b>Margin</b> — operating income and free cash flow carry an expected-vs-realized margin (the estimate-implied margin → the print\'s own), Δ in pts. No YoY/QoQ on the margin.</li>'+
       '<li><b>Verdict</b> — beat / miss / in-line off the computed surprise; <b>no est.</b> where that basis had no number</li>'+
       '<li><b>on the list</b> — this line was on the Watch List we froze before the call</li></ul>'+
       '<p>Lines the archive does not track are not shown here — a disclosure with no consensus (e.g. an app-MAU rung) is a supplemental call note (below the scorecard), not a scored line.</p>')+
@@ -2871,7 +3222,8 @@ function cePrintBlock(qLabel, r, us){
       '<button type="button" data-vdf="beat">Beats</button>'+
       '<button type="button" data-vdf="miss">Misses</button>'+
       '<button type="button" data-vdf="inline">In line</button></span>'+
-    '<span class="ce-gseg" style="margin-left:auto"><button type="button" class="active" data-fzev="cons">vs Street</button>'+
+    // LABEL: the frozen expectation for Spotify is the COMPANY GUIDE, not Street consensus.
+    '<span class="ce-gseg" style="margin-left:auto"><button type="button" class="active" data-fzev="cons">vs Guide</button>'+
       '<button type="button" data-fzev="us">vs Summit</button></span>'+
     '<span class="ce-gseg"><button type="button" data-fzmm="on">Margin</button>'+
       '<button type="button" class="active" data-fzmm="off">Hide mgn</button></span>'+
@@ -2879,7 +3231,7 @@ function cePrintBlock(qLabel, r, us){
       '<button type="button" data-ceg="qoq">QoQ</button>'+
       '<button type="button" data-ceg="off">Off</button></span>'+
     '</div><div class="ce-fz-g" data-vdf-host>'+tiles.map(function(t){ return t.html; }).join('')+'</div>'+
-    '<div class="ce-fz-f">Expectation (frozen, 1 quarter out) → the print → the print\'s own growth. Toggle <b>vs Street ⇄ vs Summit</b> and <b>Margin</b> above. Ranked by |surprise vs Street|. Source: <code>BBG_CONSENSUS.txt</code> + Summit.</div></div>';
+    '<div class="ce-fz-f">Expectation (frozen, issued one quarter earlier) → the print → the print\'s own growth. Toggle <b>vs Guide ⇄ vs Summit</b> and <b>Margin</b> above. Ranked by the size of the surprise against the guide. Rate lines (gross margin) are scored in <b>points</b>, not percent-of-a-percent. Source: Spotify\'s own quarterly guidance from the prior shareholder deck, plus the Summit model\'s frozen quarterly projections — <b>not</b> <code>BBG_CONSENSUS.txt</code>, which carries no Spotify rows.</div></div>';
 }
 // A collapsible block — secondary depth is folded away by default so the phase reads as a page,
 // not a wall. Wired by the generic `.ov-collap-h` handler already in init().
@@ -2895,6 +3247,13 @@ function ceFold(title, sub, body, open){
 
 function cePhaseStyle(){
   return '<style>'+
+    // Price reaction — a thin band under the scorecard, deliberately quieter than the tiles.
+    '.ce-pxr{border:1px solid var(--bdr);border-left:3px solid '+AMBER+';border-radius:10px;padding:10px 13px;margin:0 0 14px;background:#fff}'+
+    '.ce-pxr-h{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);margin-bottom:6px}'+
+    '.ce-pxr-row{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:baseline}'+
+    '.ce-pxr-c{font-size:13px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums}'+
+    '.ce-pxr-c b{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;margin-right:6px}'+
+    '.ce-pxr-n{font-size:11.5px;line-height:1.6;color:var(--mu);margin-top:7px}'+
     '.ce-fz{border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;margin-bottom:14px;background:#FBFCFE}'+
     '.ce-fz-h{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);margin-bottom:9px}'+
     '.ce-fz-g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}'+
@@ -3053,11 +3412,26 @@ function ceResultsBody(c){
     if(!r){ b+='<p class="ov-lede"><b>'+esc(q.q)+' — the numbers vs. the frozen expectations.</b></p>'+
       '<div class="ce-note">Empty until the print lands.</div></div>'; return b; }
     b+='<p class="ov-lede"><b>'+esc(q.q)+' — the print, scored against what was frozen going in.</b> '+
-       'Toggle <b>vs Street ⇄ vs Summit</b> to score the print against either expectation, and <b>Margin</b> for the expected-implied → realized margin. Below the scorecard, a supplemental <i>“Also on the call”</i> aside carries the colour — not the meeting-critical items.</p>';
+       'Toggle <b>vs Guide ⇄ vs Summit</b> to score the print against either expectation, and <b>Margin</b> for the expected-implied → realized margin. The “frozen” expectation is Spotify\'s own guided point, issued a quarter earlier — not Street consensus.</p>';
     // 1 · THE print — archive spine + hand-authored notes, ranked by surprise (one block now).
     // Pass the quarter's FROZEN Summit expectations (setup.us) so the print can be scored against
     // Street OR Summit via the vs-Street ⇄ vs-Summit toggle (§6a-iii).
     b+=cePrintBlock(q.q, r, (q.setup&&q.setup.us)||{});
+    // 1b · HOW THE MARKET TOOK IT. `results.priceReaction` was authored on other companies and
+    // rendered NOWHERE — the same gap found on LYFT. It is the one fact the scorecard cannot
+    // contain: the print can beat on every line and the stock still fall on the guide, which is
+    // exactly what happened here. `close: null` renders as an explicit "not recorded yet" rather
+    // than being silently omitted, so an unfilled reaction is visible instead of invisible.
+    if(r.priceReaction){
+      var pr=r.priceReaction;
+      b+='<div class="ce-pxr"><div class="ce-pxr-h">How the market took it</div>'+
+         '<div class="ce-pxr-row">'+
+           (pr.premarket?'<span class="ce-pxr-c"><b>Pre-market</b> '+pr.premarket+'</span>':'')+
+           '<span class="ce-pxr-c"><b>Close</b> '+(pr.close?pr.close:'<i style="color:var(--mu);font-weight:600">not recorded yet</i>')+'</span>'+
+         '</div>'+
+         (pr.note?'<div class="ce-pxr-n">'+pr.note+'</div>':'')+
+       '</div>';
+    }
     // 2 · the AI-generated call summary — replaces the old one-line "take" black box (v2.10).
     b+=ceSummaryBlock(q.q, r.summary);
     // 3 · thesis red-line check — folded unless something tripped
@@ -3081,8 +3455,13 @@ function ceResultsBody(c){
     // 5 · what the numbers tee up — VISIBLE, as short boxes. Folding it away was hiding the
     // thing you walk into the call with; the fix was to shorten it, not to bury it (§6a-iv).
     if(r.intoCall&&r.intoCall.length){
-      b+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>What this tees up for the call</b> '+
-         '<span style="color:var(--mu);font-weight:600;font-size:10px">· go in hunting these</span></div>';
+      // Once the call has happened these stop being a hunting list and become the record of the
+      // exchange — the heading has to say which one it is, or a resolved question reads as open.
+      var teeDone=!!(q.call||r.callAnswered);
+      b+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>'+
+         (teeDone?'The questions this print raised — and what management said':'What this tees up for the call')+'</b> '+
+         '<span style="color:var(--mu);font-weight:600;font-size:10px">· '+
+         (teeDone?'from the earnings call of the same morning':'go in hunting these')+'</span></div>';
       b+='<div class="ce-tee">'+r.intoCall.map(function(x,i){
         // Everything up to the first em-dash is the hook; the rest is the argument behind it.
         var mm=String(x).match(/^([\s\S]*?)\s+—\s+([\s\S]*)$/);
@@ -3283,7 +3662,7 @@ function callsBody(){
     h+='</div></div>';
   });
   h+='</div>';
-  h+='<div class="ov-fynote" style="margin-top:12px">Sources: Spotify Q4 2023–Q1 2026 earnings calls and prepared remarks (docs/calls/GOOGL). Highlights are qualitative and contemporaneous — written from the perspective of each call. Promise-status themes absorb the dissolved Promise Tracker.</div>';
+  h+='<div class="ov-fynote" style="margin-top:12px">'+SRC_CALLS+' Highlights are qualitative and contemporaneous — written from the perspective of each quarter. Promise-status themes absorb the dissolved Promise Tracker.</div>';
   return h;
 }
 
@@ -3397,6 +3776,13 @@ function ceApplyPhaseQuarters(pane, phase){
 
 function wireCallEarnings(root){
   var pane=root.querySelector('.ovt-subpane[data-ovst="earnings"]'); if(!pane) return;
+  // ⚠ wireCeTrack was DEFINED BUT NEVER CALLED — the splice from googl.js copied the function and
+  // not its call site. It exclusively owns FOUR controls that rendered as live pills doing nothing:
+  // the Setup Margin toggle (data-cemm), the YoY/QoQ/Off growth lens (data-ceg), and the print
+  // block's vs Street ⇄ vs Summit (data-fzev) and Margin (data-fzmm).
+  // It must run FIRST: both it and the handlers below assign onclick on .ce-ev-pill / .ce-gseg
+  // buttons, and the phase-aware handlers registered after this point must win.
+  wireCeTrack(root);
   // Call-summary Expand-all / Collapse-all — toggles only the inner dropdown nodes of THIS summary
   // box, never the always-visible lede or the outer box itself.
   pane.querySelectorAll('.ce-sum-btn').forEach(function(btn){ btn.onclick=function(e){
@@ -3695,7 +4081,7 @@ function deepDiveHtml(c){
       '</div>'+
       '<div class="ovt-subpane" data-ovst="earnings">'+
         ceIRButton()+
-        '<div class="ce-note" style="margin-bottom:12px">🎯 <b>Earnings</b> — the decision layer, in two phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (the print scored against what was frozen, plus what management said). Append-only per quarter. <b>Spotify reports Q2 2026 on Tuesday 4 August, before market open</b> — so the live quarter here is a print that has not happened yet, and Post-Results stays empty until it does.</div>'+
+        '<div class="ce-note" style="margin-bottom:12px">🎯 <b>Earnings</b> — the decision layer, in two phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (the print scored against what was frozen). Append-only per quarter. <b>Q2 2026 reported Tuesday 4 August 2026, before market open</b> — it is scored in Post-Results, and <b>Q3 2026 is now the live quarter</b>. ⚠ The expectation Spotify is scored against here is <b>the company\'s own guided point</b>, not Street consensus: Spotify guides five metrics every quarter and has no rows in our <code>BBG_CONSENSUS.txt</code> archive.</div>'+
         '<div class="ce-phtabs">'+
           '<button type="button" class="ce-phtab active" data-cep="setup">Setup</button>'+
           '<button type="button" class="ce-phtab" data-cep="watch">Watch List</button>'+
@@ -3974,6 +4360,13 @@ function buildSub(root, ddKey, subKey){
     } else if (subKey === 'estevo'){
       // Estimate Evolution binds to #rsEvoWrap and builds its charts on visibility.
       if (root.querySelector('#rsEvoWrap')) initResultsEvo();
+    } else if (subKey === 'earnings'){
+      // ⚠ THIS CASE WAS MISSING. The Earnings pane opens on the Setup phase, whose chart is a
+      // second Results-engine instance (SPOT_SETUP). gBuildCeAnnual only fired on a phase
+      // SWITCH back to Setup, so on first open the canvases stayed empty — you had to click
+      // Post-Results and back to see the chart at all. rAF so the pane is visible (Chart.js
+      // needs a non-null offsetParent) before the engine measures it.
+      requestAnimationFrame(gBuildCeAnnual);
     }
   } else if (ddKey === 'valuation'){
     // The scenario tools render from their inputs, so a re-show just recomputes.

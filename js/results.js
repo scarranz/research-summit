@@ -29,6 +29,7 @@ import { metaSetup } from './results-data/meta-setup.js';
 import { ibkrResults } from './results-data/ibkr.js';
 import { ibkrSetup } from './results-data/ibkr-setup.js';
 import { spotResults } from './results-data/spot.js';
+import { spotSetup } from './results-data/spot-setup.js';
 import { lyftResults } from './results-data/lyft.js';
 import { lyftSetup } from './results-data/lyft-setup.js';
 import { tbbbResults } from './results-data/tbbb.js';
@@ -46,6 +47,7 @@ var RESULTS_DATA = {
   IBKR: ibkrResults,
   IBKR_SETUP: ibkrSetup,
   SPOT: spotResults,
+  SPOT_SETUP: spotSetup,
   LYFT: lyftResults,
   LYFT_SETUP: lyftSetup,
   TBBB: tbbbResults,
@@ -1118,7 +1120,16 @@ function rsRenderEvoTable(k, m){
   var pctCap = k === 'top'
     ? ' · “implied YoY growth” = the growth that snapshot\'s estimate implies vs the prior fiscal year as known at that date'
     : ' · margins are computed within each snapshot (numerator and denominator from the same vintage)';
-  var h = '<div class=”rs-ft-cap”>' + rsCurName(m) + ' ' + (div === 1000 ? 'billions' : 'millions') + ' · columns are the model\'s saved snapshots · “revision” = change vs the prior snapshot · the right column is the cumulative move from the first snapshot to the latest' + pctCap + '</div>';
+  // ⚠ CURLY-QUOTE FIX, finished. This line originally shipped with curly quotes as its
+  // JavaScript string delimiters, which is a hard parse error — the WHOLE of js/results.js
+  // failed to load, taking Results, Estimate Evolution and every Earnings "Setup picture"
+  // chart down for EVERY company. PRs #74/#75 fixed the JS delimiters so the file parses,
+  // but left the HTML ATTRIBUTE quotes curly: `class=”rs-ft-cap”`. That is no longer a parse
+  // error (it is inside a string), so it looks fixed — but the browser then reads the class
+  // name as `”rs-ft-cap”` WITH the curly quotes, so the `.rs-ft-cap` rule never matches and
+  // the caption under the Estimates table renders unstyled. Straight quotes on both now.
+  // The typographic quotes INSIDE the prose (“revision”, the model’s) are intentional.
+  var h = '<div class="rs-ft-cap">' + rsCurName(m) + ' ' + (div === 1000 ? 'billions' : 'millions') + ' · columns are the model’s saved snapshots · “revision” = change vs the prior snapshot · the right column is the cumulative move from the first snapshot to the latest' + pctCap + '</div>';
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   ev.vintages.forEach(function(v){
     h += '<th>' + esc(v.label) + '<br><span class="rs-ft-dim">' + esc(v.event) + '</span></th>';

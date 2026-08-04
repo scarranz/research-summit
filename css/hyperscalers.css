@@ -121,6 +121,47 @@
 .hs-up { color: var(--green); font-weight: 600; }
 .hs-dn { color: var(--red); font-weight: 600; }
 
+/* ── Wide period tables: pinned label column + hover crosshair ───────────────
+   Opt-in via `.hs-table--pin`, used on the CSP tables where the axis runs to 27
+   quarters and the row label scrolls out of view long before the numbers do.
+   Turning it on elsewhere is one class on the `table()` call.
+
+   The pinned cells must be OPAQUE or the scrolling columns show through them,
+   which is why the highlight states below repaint the background rather than
+   layering a translucent tint on top. */
+.hs-table--pin th:first-child,
+.hs-table--pin td:first-child {
+  position: sticky; left: 0; z-index: 2;
+  background: var(--w);
+  padding-right: 16px;
+}
+.hs-table--pin thead th:first-child { z-index: 3; }
+
+/* Separator lives on a pseudo-element so it hugs the pinned column at every
+   scroll position; the shadow only appears once there is something underneath. */
+.hs-table--pin th:first-child::after,
+.hs-table--pin td:first-child::after {
+  content: ''; position: absolute; top: 0; right: 0; bottom: -1px; width: 1px;
+  background: var(--bdr); transition: box-shadow .18s ease;
+}
+.hs-tw--scrolled .hs-table--pin th:first-child::after,
+.hs-tw--scrolled .hs-table--pin td:first-child::after {
+  box-shadow: 7px 0 9px -7px rgba(16, 24, 40, .28);
+}
+
+/* Crosshair. Deliberately faint — this is an orientation aid while the eye
+   tracks across a wide row, not a selection state. Solid colours, not alpha,
+   so the pinned column matches the rest of its row exactly. */
+.hs-table--pin tbody tr.is-hl-row > td { background: #F7FAFE; }
+.hs-table--pin td.is-hl-col            { background: #F7FAFE; }
+.hs-table--pin th.is-hl-col            { color: var(--navy); background: #F7FAFE; }
+/* The intersection — the cell actually under the cursor — reads one step up. */
+.hs-table--pin tbody tr.is-hl-row > td.is-hl-col { background: #EDF3FD; }
+@media (prefers-reduced-motion: reduce) {
+  .hs-table--pin th:first-child::after,
+  .hs-table--pin td:first-child::after { transition: none; }
+}
+
 /* Accounting / useful-life tables wrap rather than scroll — prose columns need
    real horizontal padding, which the numeric-table default does not provide. */
 .hs-table--wrap td { white-space: normal; vertical-align: top; line-height: 1.55; }

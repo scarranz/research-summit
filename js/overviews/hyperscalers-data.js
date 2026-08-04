@@ -211,26 +211,54 @@ export var HS_NEUTRAL_RAMP = ['#A6B3C2', '#7E8FA2', '#57697D', '#354658'];
 // The model works backwards from reported gross PP&E additions: it splits capex
 // into the buckets a data centre actually consists of, applies an intra-year
 // timing adjustment, and divides by a cost-per-GW to infer how much capacity each
-// year of spend bought. Only Amazon and Meta are modelled.
-// SOURCE UPGRADE: these now come from `CapEx D&A DCFs.xlsx` — the CapEx/D&A tabs
-// that sit inside the live Amazon, Alphabet and Meta DCFs — rather than the
-// standalone capacity workbook. That swap buys three things: Alphabet (absent
-// from the capacity file entirely), a 2028E column, and the current capex
-// vintage. The DCF has Amazon 2026 at $221.5B, i.e. the raised ~$220B guide;
-// the capacity workbook still carried $205B, the February number.
+// year of spend bought.
 //
-// ⚠ The two workbooks therefore disagree, and the DCF is the one to trust:
-//   Amazon 2026  6.52 GW (DCF) vs 6.03 GW (capacity file)
-//   Meta   2025  1.87 GW (DCF) vs 2.05 GW (capacity file)
+// SOURCE: `CapEx D&A DCFs.xlsx` — the CapEx/D&A tabs that sit inside the live
+// DCFs — rather than the standalone capacity workbook. That swap buys three
+// things: Alphabet (absent from the capacity file entirely), a 2028E column, and
+// the current capex vintage. The DCF has Amazon 2026 at $221.5B, i.e. the raised
+// ~$220B guide; the capacity workbook still carried $205B, the February number.
+//
+// ── REFRESHED Aug 2026, and MICROSOFT ADDED ──────────────────────────────────
+// The workbook now carries a fourth tab, so all four names are modelled. What
+// moved in this vintage:
+//   • Alphabet 2026–28E GW nudged UP (4.2553 → 4.2947, 5.4271 → 5.4773,
+//     6.7839 → 6.8467). Amazon and Meta are unchanged.
+//   • Meta's assumed Blackwell H100 price rose $18k → $22k, which lifts its
+//     silicon cost per GW (see HS_CHIP_MIX) without changing its GW count —
+//     the GW series is solved off capex, and Meta's capex did not move.
+//
+// ⚠⚠ MICROSOFT IS ON A FISCAL YEAR AND IT BREAKS THIS AXIS. Microsoft's year
+// ends 30 June, so its FY2026 CLOSED in June 2026 and is REPORTED, while the
+// 2026 column is still an ESTIMATE for the other three. The 2026 cell for `msft`
+// below is therefore Microsoft's **reported FY2026** (3.0809 GW off $115,948M of
+// actual capex), not a forecast. We use the actual deliberately — a closed year's
+// reported figure beats the model's stale 2026 projection column (which still
+// says 3.2589 GW off $122,647M) — but it means the 2026 column mixes one actual
+// with three estimates. That is surfaced on the tab, per the fiscal-offset
+// convention already used on the CapEx and Guidance tabs. See HS_GW_MSFT_FY.
+//
+// ⚠ The two workbooks still disagree where they overlap, and the DCF is the one
+// to trust:  Amazon 2026 6.52 GW (DCF) vs 6.03 GW (capacity file);
+//            Meta 2025 1.87 GW (DCF) vs 2.05 GW (capacity file).
 // The Meta gap is not a capex difference — both use $69.7B for 2025 — but a
-// different cost-per-GW/split assumption between the two builds. Worth
-// reconciling in the model before either number is quoted externally.
+// different cost-per-GW/split assumption between the two builds.
 export var HS_GW_YEARS = ['2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026E', '2027E', '2028E'];
 
 export var HS_GW_ADDS = {
   amzn:  [0.395,  0.4961, 1.181,  1.7963, 1.8726, 1.5514, 2.442,  3.8784, 6.5157, 8.1446, 10.1808],
-  googl: [0.5247, 0.4915, 0.4651, 0.5143, 0.6572, 0.6732, 1.0965, 1.9087, 4.2553, 5.4271, 6.7839],
+  googl: [0.5247, 0.4915, 0.4651, 0.5143, 0.6572, 0.6732, 1.0965, 1.9087, 4.2947, 5.4773, 6.8467],
   meta:  [0.3749, 0.4049, 0.4053, 0.4995, 0.8428, 0.7311, 0.999,  1.8687, 3.888,  4.4712, 5.1419],
+  // Fiscal years ending 30 June. The 2026 cell is a REPORTED actual, not an estimate.
+  msft:  [0.3091, 0.37,   0.4103, 0.548,  0.6347, 0.7468, 1.1818, 1.7152, 3.0809, 5.2376, 5.7613],
+};
+
+// Which company's 2026 column is an actual rather than an estimate, and why —
+// consumed by the tab so the caveat travels with the chart instead of living
+// only in this comment.
+export var HS_GW_MSFT_FY = {
+  id: 'msft', year: '2026E',
+  note: 'Microsoft’s financial year ends 30 June, so its FY2026 is <b>closed and reported</b> while 2026 is still an estimate for the other three. The Microsoft bar in the 2026 column is the reported year — 3.08 GW off $115.9B of actual capex — not a forecast. The model’s own 2026 projection column (3.26 GW off $122.6B) was superseded by the print and is not used here.',
 };
 
 // The same GW split by which spend bucket funded it: the shell and everything
@@ -238,10 +266,12 @@ export var HS_GW_ADDS = {
 export var HS_GW_SPLIT = {
   amzn:  { infra: [0.1242, 0.156,  0.3714, 0.5648, 0.5888, 0.4878, 0.7679, 1.2196, 2.0489, 2.5611, 3.2013],
            chips: [0.2708, 0.3401, 0.8097, 1.2315, 1.2837, 1.0636, 1.6741, 2.6588, 4.4668, 5.5836, 6.9795] },
-  googl: { infra: [0.1171, 0.1096, 0.1037, 0.1147, 0.1466, 0.1502, 0.2446, 0.4258, 0.9492, 1.2107, 1.5133],
-           chips: [0.4077, 0.3819, 0.3613, 0.3996, 0.5106, 0.523,  0.8519, 1.4829, 3.306,  4.2165, 5.2706] },
+  googl: { infra: [0.1171, 0.1096, 0.1037, 0.1147, 0.1466, 0.1502, 0.2446, 0.4258, 0.958,  1.2219, 1.5273],
+           chips: [0.4077, 0.3819, 0.3613, 0.3996, 0.5106, 0.523,  0.8519, 1.4829, 3.3366, 4.2555, 5.3194] },
   meta:  { infra: [0.1074, 0.116,  0.1161, 0.1431, 0.2415, 0.2095, 0.2863, 0.5355, 1.1142, 1.2813, 1.4735],
            chips: [0.2674, 0.2889, 0.2891, 0.3563, 0.6013, 0.5216, 0.7127, 1.3332, 2.7738, 3.1899, 3.6684] },
+  msft:  { infra: [0.0878, 0.1051, 0.1165, 0.1556, 0.1802, 0.2121, 0.3356, 0.4871, 0.8749, 1.4874, 1.6361],
+           chips: [0.2213, 0.2649, 0.2938, 0.3923, 0.4544, 0.5348, 0.8462, 1.2281, 2.206,  3.7502, 4.1252] },
 };
 
 // What one gigawatt costs, per the model. The headline: the building is roughly
@@ -272,34 +302,73 @@ export var HS_GPU_PRICES = [
 ];
 
 // Each company's assumed accelerator mix, and what it implies for power draw and
-// silicon cost per GW. Meta's mix is both hungrier per chip and dearer.
+// silicon cost per GW. All four are now modelled, and the spread is the finding:
+// a gigawatt of Alphabet costs $37.2B of silicon against $23.3B of Amazon, because
+// Alphabet's assumed mix is both the most power-hungry (1.08 kW per chip, so fewer
+// chips fit in a gigawatt) and by far the dearest ($40.2k weighted vs $11.8k).
+// That single assumption is what drives Alphabet's $47.9B/GW all-in against
+// Amazon's $34.0B — worth interrogating before it is quoted, because it is an
+// input, not an observation.
+//
+// ⚠ CHANGED in the Aug 2026 vintage: Meta's Blackwell H100 is now priced at $22k,
+// up from $18k. Its weighted chip cost rises $14,562.5 → $16,662.5 and its silicon
+// cost per GW $23.25B → $26.61B. Power draw and chip count are unchanged.
 export var HS_CHIP_MIX = {
-  amzn: { rows: [['Trainium', 0.40, 0.70, 11000], ['Inferentia2', 0.35, 0.15, 5500], ['Blackwell H200', 0.25, 0.70, 22000]],
-          wKW: 0.5075, wCost: 11825, costPerGW: 23.30, chipsPerGW: 1970443 },
-  meta: { rows: [['MTIA', 0.15, 0.10, 7000], ['AMD MI300X', 0.325, 0.75, 12500], ['Blackwell H100', 0.525, 0.70, 18000]],
-          wKW: 0.6262, wCost: 14562.5, costPerGW: 23.25, chipsPerGW: 1596806 },
+  amzn:  { rows: [['Trainium', 0.40, 0.70, 11000], ['Inferentia2', 0.35, 0.15, 5500], ['Blackwell H200', 0.25, 0.70, 22000]],
+           wKW: 0.5075, wCost: 11825, costPerGW: 23.30, chipsPerGW: 1970443 },
+  googl: { rows: [['TPU', 0.60, 1.00, 27000], ['Blackwell', 0.40, 1.20, 60000]],
+           wKW: 1.08, wCost: 40200, costPerGW: 37.22, chipsPerGW: 925926 },
+  meta:  { rows: [['MTIA', 0.15, 0.10, 7000], ['AMD MI300X', 0.325, 0.75, 12500], ['Blackwell H100', 0.525, 0.70, 22000]],
+           wKW: 0.6262, wCost: 16662.5, costPerGW: 26.61, chipsPerGW: 1596806 },
+  msft:  { rows: [['Maia 200', 0.10, 0.10, 7000], ['AMD MI300X', 0.30, 0.75, 12500], ['Blackwell H100', 0.60, 0.70, 22000]],
+           wKW: 0.655, wCost: 17650, costPerGW: 26.95, chipsPerGW: 1526718 },
 };
 
 // The bridge the model actually solves: capex ÷ cost-per-GW = GW added.
+//
+// ── REBUILT Aug 2026 ─────────────────────────────────────────────────────────
+// This block was still carrying the OLD standalone capacity workbook (Amazon at
+// $205B of 2026 capex, Meta at $33.94B per GW) while everything above it had
+// already moved to the DCF. It is now rebuilt from the DCF's own summary block,
+// so the bridge and the GW series finally agree with each other, and all four
+// names are here rather than two. Every split ties to its total exactly.
+//
+// The comparison the table is really for: Alphabet buys a gigawatt for $47.9B
+// against Amazon's $34.0B — a 41% gap that is entirely a silicon-mix assumption
+// (see HS_CHIP_MIX), not an observed cost. Amazon and Alphabet are modelled 100%
+// owned; Meta and Microsoft are not, which is where the JV and lease structures
+// on the Accounting tab show up.
+//
+// ⚠ Microsoft's row is the model's 2026 PROJECTION ($122.6B), not its reported
+// FY2026 ($115.9B) — the bridge block in the workbook was not refreshed after the
+// fiscal year closed. Read the Microsoft GW figure here as the model's, and the
+// 3.08 GW on the chart above as the reported one; they are two different years.
 export var HS_GW_BRIDGE = {
-  amzn: { gw26: 6.0315, gw27: 7.5394, owned: 1.00, capexPerGW: 33.99, total26: 205, total27: 256.25,
-    split: [['Servers & networking', 167.68, 0.818], ['Heavy equipment', 16.59, 0.0809],
-            ['Other equipment', 10.56, 0.0515], ['Construction in progress', 9.05, 0.0441],
-            ['Land', 1.13, 0.0055]] },
-  meta: { gw26: 4.2721, gw27: 4.9129, owned: 0.4578, capexPerGW: 33.94, total26: 145, total27: 166.75,
-    split: [['Servers & network assets', 99.34, 0.6851], ['Finance lease ROU assets', 20.70, 0.05],
-            ['Construction in progress', 11.74, 0.0809], ['Equipment & other', 8.80, 0.0607],
-            ['Leasehold improvements', 4.05, 0.028], ['Buildings', 0.33, 0.09], ['Land', 0.04, 0.0053]] },
+  amzn:  { gw26: 6.5157, gw27: 8.1446, owned: 1.00, capexPerGW: 33.99, total26: 221.46, total27: 276.82,
+    split: [['Servers & networking equipment', 181.14, 0.818], ['Heavy equipment', 17.92, 0.0809],
+            ['Other equipment', 11.40, 0.0515], ['Construction in progress', 9.77, 0.0441],
+            ['Land', 1.22, 0.0055]] },
+  googl: { gw26: 4.2947, gw27: 5.4773, owned: 1.00, capexPerGW: 47.91, total26: 205.76, total27: 262.42,
+    split: [['Technical infrastructure', 191.36, 0.93], ['Corporate & other assets', 7.52, 0.0365],
+            ['Construction in progress', 6.44, 0.0313], ['Office space', 0.44, 0.0022]] },
+  meta:  { gw26: 3.888,  gw27: 4.4712, owned: 0.45, capexPerGW: 37.29, total26: 145.00, total27: 166.75,
+    split: [['Servers & network assets', 103.45, 0.7134], ['Finance lease ROU assets', 19.11, 0.1318],
+            ['Construction in progress', 10.50, 0.0724], ['Equipment & other', 7.87, 0.0543],
+            ['Leasehold improvements', 3.74, 0.0258], ['Buildings', 0.31, 0.0021], ['Land', 0.02, 0.0001]] },
+  msft:  { gw26: 3.2589, gw27: 5.2376, owned: 0.60, capexPerGW: 37.63, total26: 122.65, total27: 197.11,
+    split: [['Servers & network assets', 87.82, 0.7160], ['Construction in progress', 11.73, 0.0957],
+            ['Finance lease ROU assets', 11.65, 0.0950], ['Equipment & other', 8.80, 0.0717],
+            ['Leasehold improvements', 2.28, 0.0186], ['Buildings', 0.34, 0.0028], ['Land', 0.02, 0.0002]] },
 };
 
-// ⚠ Model QA, surfaced rather than buried: on the Meta split the dollar column
-// and the percentage column disagree on three lines. Servers, equipment,
-// leasehold and CIP all tie to % × $145B, but Land ($37M vs an implied $769M),
-// Buildings ($330M vs an implied $13.1B) and Finance-lease ROU ($20.7B vs an
-// implied $7.3B) do not. The dollars still sum to $145.0B, so the total is
-// intact and only the mix within it is affected.
+// ⚠ Model QA, surfaced rather than buried. The previous flag here — that Meta's
+// dollar and percentage columns disagreed on Land, Buildings and Finance-lease ROU
+// — is RESOLVED in this vintage: the percentage column was removed from the Meta
+// build and the dollars now tie to $145.0B exactly (the percentages shown above
+// are computed from the dollars, so they cannot drift again). Two smaller things
+// took its place, both on the newly added Microsoft tab.
 export var HS_GW_MODEL_FLAG =
-  'On Meta’s bucket split the dollar and percentage columns disagree on three lines — Land, Buildings and Finance-lease ROU assets. The dollars total $145.0B correctly, so the capex-to-GW bridge holds; only the internal mix is in question. Worth a look before this drives anything downstream.';
+  'Two copy-paste artifacts survive on the newly added Microsoft tab of the model, and neither affects the numbers used here — but both should be cleaned before the workbook circulates. The capex-to-GW summary row is <b>labelled “Meta”</b> although its figures are Microsoft’s own, and a second quarterly block further right still holds <b>Meta’s 2025 quarterly capex</b> ($69.7B across four quarters) rather than Microsoft’s. Separately, the Amazon and Alphabet tabs compute “total number of chips” by dividing the <b>full $35B all-in cost</b> per GW by the $40k unit price instead of the $24.3B silicon portion, which is why those two read 874,733 chips against 607,813 on the Meta and Microsoft tabs; the figure shown on this tab is the silicon-based one.';
 
 // What the companies themselves have said about capacity, in their own words.
 // This is the transcript side of the same question — deliberately kept separate
@@ -419,24 +488,56 @@ export var HS_CSP_NOTES = [
 
 // ── 6b · THE MODELLED DEPRECIATION TRAJECTORY ─────────────────────────────────
 // From the CapEx/D&A tabs inside the live DCFs (`CapEx D&A DCFs.xlsx`). PP&E
-// depreciation only — not total D&A. Microsoft has no tab in this workbook.
+// depreciation only — not total D&A.
 //
-// The 2023-25 column ties to the filings for all three (Alphabet $21,136M for
-// 2025 is exactly the $21.1B Anat gave on the 4Q25 call; Amazon $41,900M and
-// Meta $18,000M both tie to the 10-K), which is the check that makes the
-// forward columns worth reading. Pre-2023 Alphabet diverges from its 10-K line
-// because the model tracks PP&E only while the filed figure carries more, so
-// the series starts at 2023.
+// ── REFRESHED Aug 2026, and MICROSOFT ADDED ──────────────────────────────────
+// Microsoft now has a tab, so the wave can finally be read across all four. Every
+// forward column moved in this vintage, all by small amounts and all in the same
+// direction for Alphabet and against it for Meta:
+//   Amazon  2026E 61,943 → 62,012 · 2027E 88,085 → 87,962 · 2028E 120,771 → 120,616
+//   Alphabet 2026E 31,649 → 31,635 · 2027E 49,931 → 50,358 · 2028E 73,953 → 74,246
+//   Meta     2026E 28,341 → 27,627 · 2027E 42,479 → 41,905 · 2028E 58,850 → 58,383
+//
+// The 2023-25 column ties to the filings (Alphabet $21,136M for 2025 is exactly
+// the $21.1B Anat gave on the 4Q25 call; Amazon $41,900M and Meta $18,000M both
+// tie to the 10-K), which is the check that makes the forward columns worth
+// reading. Pre-2023 Alphabet diverges from its 10-K line because the model tracks
+// PP&E only while the filed figure carries more, so the series starts at 2023.
+//
+// ⚠ MICROSOFT IS FISCAL — the four cells are FY2023/24/25/26 (years ending 30
+// June), and FY2026 is a REPORTED year, not an estimate: $34,300M straight from
+// the 10-K, in a column the other three are still forecasting. The model's own
+// FY2026 figure is $33,275M, within 3% of the filed number, which is a decent
+// check on the two forward years. Same caveat as the GW chart — see HS_GW_MSFT_FY.
 export var HS_DEP_YEARS = ['2023', '2024', '2025', '2026E', '2027E', '2028E'];
 export var HS_DEP_MODEL = {   // US$M
-  amzn:  [30200, 32100, 41900, 61943, 88085, 120771],
-  googl: [11946, 15311, 21136, 31649, 49931, 73953],
-  meta:  [11020, 15290, 18000, 28341, 42479, 58850],
+  amzn:  [30200, 32100, 41900, 62012, 87962, 120616],
+  googl: [11946, 15311, 21136, 31635, 50358, 74246],
+  meta:  [11020, 15290, 18000, 27627, 41905, 58383],
+  msft:  [11000, 15200, 22000, 34300, 52122, 68879],   // fiscal years; FY2026 reported
 };
 
-// Alphabet is the only one where the model also carries the P&L pressure ratio.
-export var HS_DEP_COGS = { id: 'googl', years: ['2023', '2024', '2025', '2026E', '2027E', '2028E'],
-  pct: [8.96, 10.47, 13.00, 17.05, 22.27, 27.54] };
+// The P&L pressure ratio: PP&E depreciation as a share of cost of revenue.
+//
+// ⚠ ALPHABET AND MICROSOFT ONLY, AND NOT BECAUSE THE OTHERS WERE SKIPPED. The
+// Amazon and Meta tabs carry cost-of-revenue projections that are visibly broken
+// — Meta's 2028E COGS reads $588M against $61.7B the year before, and Amazon's
+// 2028E nearly doubles in a single step — so any ratio built on them would be
+// noise. Microsoft's 2026E COGS cell is broken the same way ($10M), but its
+// FY2026 actual is sound and is used instead.
+//
+// ⚠ THE TWO SERIES ARE NOT LIKE FOR LIKE. Alphabet's cost of revenue carries
+// traffic acquisition costs — tens of billions with no depreciation in them —
+// which mechanically depresses its ratio against Microsoft's. Read each line
+// against its own history, not across the two.
+export var HS_DEP_COGS = {
+  years: ['2023', '2024', '2025', '2026E', '2027E', '2028E'],
+  series: [
+    { id: 'googl', pct: [8.96, 10.47, 13.00, 17.04, 22.46, 27.65] },
+    { id: 'msft',  pct: [16.70, 20.51, 25.05, 32.25, 40.21, 42.82] },
+  ],
+  note: 'Microsoft’s depreciation already absorbs a quarter of cost of revenue and the model has it passing 40% by FY2028E. Alphabet’s line is lower and rising faster off a smaller base — but its cost of revenue includes traffic acquisition costs, which have no depreciation in them, so the levels are not comparable across the two companies. The shape of each line is the point.',
+};
 
 // ── 6c · USEFUL-LIFE MAP ──────────────────────────────────────────────────────
 // What each company depreciates over what, and how the assumption has moved.
@@ -464,6 +565,30 @@ export var HS_LIVES = {
     { a: 'Equipment & other',        now: 8,    hist: '3.0 (2018–19) → 8.0 thereafter' },
     { a: 'Finance lease ROU',        now: 9,    hist: 'Unchanged at 9' },
   ],
+  // Microsoft, added Aug 2026. FISCAL years ending 30 June. These are the model's
+  // effective lives; Microsoft's 10-K discloses RANGES rather than points, and the
+  // range is given alongside because the gap between the two is itself informative
+  // — the filed range for computer equipment is 2–6 years while the model runs 4.
+  msft: [
+    { a: 'Computer equipment & software', now: 4,   hist: '2.5 (FY19–20) → 3.0 (FY21–22) → 4.0 (FY23–28E) · 10-K range 2–6 yrs' },
+    { a: 'Buildings & improvements',      now: 10,  hist: 'Unchanged at 10 · 10-K range 5–15 yrs' },
+    { a: 'Leasehold improvements',        now: 9,   hist: '11.5 (FY19–24) → 9.0 (FY25–28E) · 10-K range 3–20 yrs, narrowed to 3–15 in FY25' },
+    { a: 'Furniture & equipment',         now: 5.5, hist: 'Unchanged at 5.5 · 10-K range 1–10 yrs' },
+  ],
+};
+
+// ⚠ ONE THING THE MODEL DOES NOT YET REFLECT. Microsoft told the market on the
+// FY26Q4 call that it is extending the useful life of its DATA CENTRES from 15 to
+// 25 years from FY27 — the change that pushes leases from finance to operating and
+// makes its headline CapEx guide fall from ~$190B to ~$175B without any reduction
+// in investment (it is on the Accounting tab, and in HS_GUIDE for msft). The
+// model's buildings line above still runs a flat 10 years across FY2028E, so the
+// Microsoft depreciation trajectory in this workbook does NOT carry that
+// extension. If it were applied, the FY27–28E depreciation would come in lower
+// than the $52.1B / $68.9B shown.
+export var HS_LIVES_FLAG = {
+  id: 'msft',
+  note: 'Microsoft is extending data-centre useful life from <b>15 to 25 years from FY27</b> — the change behind the optical drop in its CapEx guide. The model’s buildings assumption above is a flat 10 years throughout and does <b>not</b> reflect it, so the FY27–28E depreciation shown here is, if anything, too high.',
 };
 
 export var HS_DEP_NOTES = [

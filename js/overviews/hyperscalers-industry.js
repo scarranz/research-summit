@@ -26,7 +26,7 @@ import {
   HS_YEARS, HS_YEAR_QTRS, HS_YEAR_DERIVED, HS_YEAR_PARTIAL, HS_YEAR_GUIDE, HS_QTR_RAMP,
   HS_NEUTRAL_RAMP, HS_GW_YEARS, HS_GW_ADDS, HS_GW_SPLIT, HS_GW_COST, HS_GPU_PRICES,
   HS_CHIP_MIX, HS_GW_BRIDGE, HS_GW_MODEL_FLAG, HS_CAPACITY_QUOTES,
-  HS_DEP_YEARS, HS_DEP_MODEL, HS_DEP_COGS, HS_LIVES,
+  HS_DEP_YEARS, HS_DEP_MODEL, HS_DEP_COGS, HS_LIVES, HS_LIVES_FLAG, HS_GW_MSFT_FY,
   HS_CSP_QTRS, HS_CSP_REV, HS_CSP_OI, HS_CSP_NOTES,
   HS_THEME_QTRS, HS_THEMES,
 } from './hyperscalers-data.js';
@@ -415,6 +415,56 @@ function table(rows, head, cls){
 
 function sec(t){ return '<div class="hs-sec">' + esc(t) + '</div>'; }
 
+// ─── Wide-table affordances: hover crosshair + pinned-column scroll shadow ────
+// Wired ONCE on the root and driven by delegation, because the CSP tables are
+// re-rendered on every pill, periodicity, growth-basis and zoom change — a
+// listener bound to the table itself would die on the first repaint.
+//
+// The crosshair marks the hovered ROW and the hovered COLUMN. Column highlighting
+// has no CSS-only expression that survives a scrolling container, so it is done
+// by cell index: every row's cell at that index gets the class, the header
+// included, which is what makes a number in the 19th quarter readable without
+// counting columns back to the label.
+//
+// ⚠ Applies only to `.hs-table--pin`. Tables with rowspans (the chip mix, the
+// quote matrix) would mis-index under `cellIndex` and are deliberately excluded.
+function wireTableXhair(root){
+  var ROW = 'is-hl-row', COL = 'is-hl-col';
+
+  function clearAll(){
+    root.querySelectorAll('.' + ROW).forEach(function(el){ el.classList.remove(ROW); });
+    root.querySelectorAll('.' + COL).forEach(function(el){ el.classList.remove(COL); });
+  }
+
+  root.addEventListener('mouseover', function(e){
+    var t = e.target;
+    var cell = (t && t.closest) ? t.closest('td, th') : null;
+    var tbl = cell && cell.closest('table.hs-table--pin');
+    // Moving anywhere outside a pinned table clears — otherwise the last hovered
+    // row stays lit after the cursor has left, which reads as a selection.
+    if (!tbl){ clearAll(); return; }
+    clearAll();
+    var i = cell.cellIndex;
+    if (i < 0) return;
+    var tr = cell.parentNode;
+    if (tr.parentNode && tr.parentNode.tagName === 'TBODY') tr.classList.add(ROW);
+    tbl.querySelectorAll('tr').forEach(function(r){
+      var c = r.cells && r.cells[i];
+      if (c) c.classList.add(COL);
+    });
+  });
+  root.addEventListener('mouseleave', clearAll);
+
+  // Scroll shadow on the pinned column. `scroll` does not bubble, so this has to
+  // be captured; the wrapper is replaced on every repaint, hence delegation.
+  root.addEventListener('scroll', function(e){
+    var w = e.target;
+    if (w && w.classList && w.classList.contains('hs-tw')){
+      w.classList.toggle('hs-tw--scrolled', w.scrollLeft > 0);
+    }
+  }, true);
+}
+
 // ─── Tab 1 · Guidance Ladder ──────────────────────────────────────────────────
 function ladderBody(){
   var g = HS_GUIDE.filter(function(x){ return x.year === _view.guideYear; })[0];
@@ -598,12 +648,12 @@ function depreciationBody(){
   }).join('');
 
   // Modelled forward trajectory — the centrepiece now that the DCF tabs give it
-  // for all three. Ties to the filings through 2025, which is what makes the
+  // for all four. Ties to the filings through 2025, which is what makes the
   // forward columns readable. Each company carries the level plus its growth in
   // both units, same convention as the CSP tables: the percent says how fast the
   // line is compounding, the dollar says how much cost is actually arriving.
   var depRows = [];
-  ['amzn', 'googl', 'meta'].forEach(function(cid){
+  ['amzn', 'googl', 'meta', 'msft'].forEach(function(cid){
     var s = HS_DEP_MODEL[cid];
     depRows.push([dot(cid) + co(cid).ticker]
       .concat(s.map(function(v){ return '$' + (v / 1000).toFixed(1) + 'B'; }))
@@ -631,23 +681,28 @@ function depreciationBody(){
   }).join('');
 
   var cogs = HS_DEP_COGS;
-  var cogsRow = [dot(cogs.id) + co(cogs.id).ticker + ' D&amp;A as % of COGS']
-    .concat(cogs.pct.map(function(p){ return p.toFixed(1) + '%'; }));
+  var cogsRows = cogs.series.map(function(s){
+    return [dot(s.id) + co(s.id).ticker]
+      .concat(s.pct.map(function(p){ return p.toFixed(1) + '%'; }));
+  });
 
   return '<p class="hs-lede">The bill for the build-out arrives as depreciation, and it is already landing. ' +
     'Two views sit side by side here: what the companies have actually said, and what the Summit DCFs model forward.</p>' +
 
-    sec('Modelled trajectory — Amazon, Alphabet, Meta') +
+    sec('Modelled trajectory — all four') +
     '<div class="hs-card">' +
       '<div class="hs-chart-head"><span class="hs-chart-t">PP&amp;E depreciation</span>' +
         '<span class="hs-chart-u">US$B · 2026E–28E from the DCF CapEx/D&amp;A tabs</span></div>' +
       '<div class="hs-canvas"><canvas id="hs-depmodel"></canvas></div>' +
-      '<p class="hs-cap">The 2023–25 columns tie to the filings for all three — Alphabet’s $21.1B for 2025 is exactly the figure Anat gave on the 4Q25 call — which is what makes the forward columns worth reading. ' +
-      '<b>Every one of the three roughly triples between 2025 and 2028.</b> Microsoft has no tab in this workbook and is absent.</p>' +
+      '<p class="hs-cap">The 2023–25 columns tie to the filings — Alphabet’s $21.1B for 2025 is exactly the figure Anat gave on the 4Q25 call — which is what makes the forward columns worth reading. ' +
+      '<b>Every one of the four roughly triples between 2025 and 2028.</b> ' +
+      '<b>⚠ Microsoft is fiscal</b> (years ending 30 June) and its 2026 cell is a <b>reported</b> $34.3B from the FY26 10-K, not an estimate — the model’s own FY2026 figure of $33.3B lands within 3% of it, which is a useful check on the two forward years.</p>' +
       table(depRows, [''].concat(HS_DEP_YEARS).concat(['2025 → 28E'])) +
-      '<div class="hs-inset" style="margin-top:12px"><div class="hs-lbl">What it does to the P&amp;L — Alphabet</div>' +
-        table([cogsRow], [''].concat(cogs.years)) +
-        '<p class="hs-cap">The only one of the three where the model carries the ratio. Depreciation goes from an eleventh of cost of revenue to more than a quarter of it in five years — before any change in the underlying business.</p>' +
+      '<div class="hs-card hs-card--warn" style="margin-top:12px"><div class="hs-lbl">One thing the model does not carry</div>' +
+        '<p class="hs-body">' + HS_LIVES_FLAG.note + '</p></div>' +
+      '<div class="hs-inset" style="margin-top:12px"><div class="hs-lbl">What it does to the P&amp;L — depreciation as a share of cost of revenue</div>' +
+        table(cogsRows, [''].concat(cogs.years)) +
+        '<p class="hs-cap">' + HS_DEP_COGS.note + ' <b>Only these two are shown, and not because the others were skipped:</b> the Amazon and Meta tabs carry cost-of-revenue projections that are visibly broken — Meta’s 2028E reads $588M against $61.7B the year before — so any ratio built on them would be noise.</p>' +
       '</div>' +
     '</div>' +
 
@@ -786,6 +841,32 @@ function cspWin(k){
 // Lifted from the Results engine's brush so the interaction is identical: drag
 // across the plot to window periods, drag starting on the y-axis strip to set
 // the value range, double-click to reset. A translucent box tracks the drag.
+// ─── Zoomed-axis number hygiene ───────────────────────────────────────────────
+// Dragging on the y-axis strip converts pixels to values, so it hands back raw
+// floats (3.2847261...). Chart.js places the FIRST and LAST tick exactly on
+// min/max, which is why a zoomed axis was printing "$3.2847261B" at each end
+// while every tick between them looked fine.
+//
+// Fixed at the source rather than in the formatter: snap the band OUTWARD to
+// whole numbers, so the bounds are round and Chart.js then picks round steps
+// between them. Snapping outward can only ever widen the selection slightly, so
+// nothing the user dragged over is lost. The floor of 1 unit stops a very tight
+// drag collapsing into a degenerate axis.
+function snapYRange(v1, v2){
+  var lo = Math.floor(Math.min(v1, v2));
+  var hi = Math.ceil(Math.max(v1, v2));
+  if (hi - lo < 1) hi = lo + 1;
+  return [lo, hi];
+}
+
+// Belt and braces for the labels themselves: binary floating point still yields
+// the occasional 0.30000000000000004, and an axis label should never show it.
+// One decimal is the most this axis ever needs — $B to a tenth, % to a tenth.
+function axisNum(n){
+  var r = Math.round(n);
+  return (Math.abs(n - r) < 1e-6) ? String(r) : String(Math.round(n * 10) / 10);
+}
+
 function cspBrush(el, chart, onX, onY, onReset){
   var wrap = el.parentElement;
   if (wrap && getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
@@ -873,7 +954,12 @@ function cspBar(canvasId, metric, k){
 
   var yOpts = { grid: { color: GRID, drawTicks: false }, border: { display: false },
     ticks: { color: INK_MUTED, font: { size: 10.5, family: 'Inter' }, padding: 8,
-             callback: function(n){ return pct ? n + '%' : '$' + n + 'B'; } } };
+             // The sign belongs OUTSIDE the currency symbol — this axis goes negative
+             // (Google Cloud lost money every quarter to 1Q23) and was printing "$-2B".
+             callback: function(n){
+               if (pct) return axisNum(n) + '%';
+               return (n < 0 ? '-$' : '$') + axisNum(Math.abs(n)) + 'B';
+             } } };
   if (st.yr){ yOpts.min = st.yr[0]; yOpts.max = st.yr[1]; }
 
   var chart = new Chart(el.getContext('2d'), {
@@ -917,7 +1003,7 @@ function cspBar(canvasId, metric, k){
 
   cspBrush(el, chart,
     function(a, b){ st.win = [w[0] + a, w[0] + b]; repaintCsp(); },
-    function(v1, v2){ st.yr = [v1, v2]; repaintCsp(); },
+    function(v1, v2){ st.yr = snapYRange(v1, v2); repaintCsp(); },
     function(){ st.win = null; st.yr = null; repaintCsp(); });
 }
 
@@ -977,7 +1063,10 @@ function cspSection(cfg){
       '<div class="hs-canvas"><canvas id="' + cfg.canvas + '"></canvas></div>' +
       '<p class="hs-cap">' + m.cap + ' <span class="hs-hint">Drag across the plot to window periods, drag on the y-axis strip to set the value range, double-click to reset.</span></p>' +
     '</div>' +
-    '<div class="hs-card">' + table(rows, [''].concat(labels)) + '</div>';
+    // `hs-table--pin` pins the label column and turns on the hover crosshair —
+    // this axis runs to 27 quarters, so the row label scrolls out of view long
+    // before the numbers do. See wireTableXhair() and css/hyperscalers.css.
+    '<div class="hs-card">' + table(rows, [''].concat(labels), 'hs-table--pin') + '</div>';
 }
 
 var CSP_TOP = {
@@ -1048,7 +1137,9 @@ function cspCharts(){
 
 // ─── Tab · Capacity & cost per GW ─────────────────────────────────────────────
 // The only block sourced from our own model rather than company disclosure, so
-// every panel says so. Modelled companies are Amazon and Meta only.
+// every panel says so. All four names are now modelled (Microsoft was added to
+// the DCF workbook in Aug 2026) — but Microsoft is on a fiscal year, so its 2026
+// bar is a REPORTED year against three estimates. See HS_GW_MSFT_FY.
 function gwChart(id){
   var el = document.getElementById(id);
   if (!el || !el.offsetParent) return;
@@ -1056,7 +1147,7 @@ function gwChart(id){
   var fwd = HS_GW_YEARS.indexOf('2026E');
   _charts[id] = new Chart(el.getContext('2d'), {
     type: 'bar',
-    data: { labels: HS_GW_YEARS, datasets: ['amzn', 'googl', 'meta'].map(function(cid){
+    data: { labels: HS_GW_YEARS, datasets: ['amzn', 'googl', 'meta', 'msft'].map(function(cid){
       return { label: co(cid).ticker, data: HS_GW_ADDS[cid],
                backgroundColor: co(cid).color, borderRadius: { topLeft: 3, topRight: 3 } };
     }) },
@@ -1093,15 +1184,17 @@ function gwChart(id){
   });
 }
 
-// Modelled PP&E depreciation, three companies, $B. Forward years get the same
+// Modelled PP&E depreciation, all four companies, $B. Forward years get the same
 // wash the other forward views use so a projection never reads as a print.
+// ⚠ Microsoft's 2026 bar is a REPORTED fiscal year sitting inside that wash — the
+// caveat is carried in the caption and in HS_GW_MSFT_FY rather than in the shading.
 function depModelChart(id){
   var el = document.getElementById(id);
   if (!el || !el.offsetParent) return;
   if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; }
   _charts[id] = new Chart(el.getContext('2d'), {
     type: 'bar',
-    data: { labels: HS_DEP_YEARS, datasets: ['amzn', 'googl', 'meta'].map(function(cid){
+    data: { labels: HS_DEP_YEARS, datasets: ['amzn', 'googl', 'meta', 'msft'].map(function(cid){
       return { label: co(cid).ticker, data: HS_DEP_MODEL[cid].map(function(v){ return v / 1000; }),
                backgroundColor: co(cid).color, borderRadius: { topLeft: 3, topRight: 3 } };
     }) },
@@ -1146,7 +1239,7 @@ function capacityBody(){
       '<span class="hs-costv">$' + p.v.toFixed(p.v < 1 ? 4 : 2) + 'M</span></div>';
   }).join('');
 
-  var mixRows = ['amzn', 'meta'].map(function(cid){
+  var mixRows = ['amzn', 'googl', 'meta', 'msft'].map(function(cid){
     var m = HS_CHIP_MIX[cid];
     return m.rows.map(function(r, i){
       return '<tr>' + (i === 0 ? '<td rowspan="' + (m.rows.length + 1) + '" class="hs-w-co">' + dot(cid) + '<b>' + co(cid).ticker + '</b></td>' : '') +
@@ -1158,7 +1251,7 @@ function capacityBody(){
       '<td class="num"><b>$' + Math.round(m.wCost).toLocaleString() + '</b></td></tr>';
   }).join('');
 
-  var bridge = ['amzn', 'meta'].map(function(cid){
+  var bridge = ['amzn', 'googl', 'meta', 'msft'].map(function(cid){
     var b = HS_GW_BRIDGE[cid];
     var split = b.split.map(function(s){
       return '<div class="hs-costrow"><span class="hs-costk">' + esc(s[0]) + '</span>' +
@@ -1169,7 +1262,7 @@ function capacityBody(){
       '<div class="hs-panel-h">' + dot(cid) + '<b>' + co(cid).ticker + '</b>' +
         '<span class="hs-panel-s">' + (b.owned * 100).toFixed(0) + '% owned</span></div>' +
       '<div class="hs-bridge">' +
-        '<span><b>$' + b.total26 + 'B</b><i>2026 capex</i></span><em>÷</em>' +
+        '<span><b>$' + b.total26.toFixed(1) + 'B</b><i>2026 capex</i></span><em>÷</em>' +
         '<span><b>$' + b.capexPerGW.toFixed(1) + 'B</b><i>per GW</i></span><em>=</em>' +
         '<span class="hs-bridge-out"><b>' + b.gw26.toFixed(2) + ' GW</b><i>added 2026</i></span>' +
       '</div>' + split +
@@ -1186,7 +1279,7 @@ function capacityBody(){
   });
 
   return '<p class="hs-lede">How much capacity the spend actually buys, and what a gigawatt costs. ' +
-    'This tab is built from the Summit model — the CapEx/D&amp;A tabs inside the live DCFs (<code>CapEx D&amp;A DCFs.xlsx</code>) plus the unit-economics workbook — not from company disclosure. It works backwards from reported PP&amp;E additions to infer the gigawatts behind them. Amazon, Alphabet and Meta are modelled; Microsoft is not.</p>' +
+    'This tab is built from the Summit model — the CapEx/D&amp;A tabs inside the live DCFs (<code>CapEx D&amp;A DCFs.xlsx</code>) plus the unit-economics workbook — not from company disclosure. It works backwards from reported PP&amp;E additions to infer the gigawatts behind them. <b>All four are now modelled</b> — Microsoft was added to the workbook in August 2026, so this tab no longer has a hole in it. ⚠ Microsoft reports on a <b>June fiscal year</b>, so its 2026 column is a closed, reported year while the other three are still estimates; every panel that matters says so.</p>' +
 
     sec('Capacity added per year') +
     '<div class="hs-card">' +
@@ -1194,7 +1287,9 @@ function capacityBody(){
         '<span class="hs-chart-u">gigawatts · 2026E–28E modelled</span></div>' +
       '<div class="hs-canvas"><canvas id="hs-gw"></canvas></div>' +
       '<p class="hs-cap">Hover for the shell/silicon split of each year. <b>The model checks out against the tape:</b> it puts Amazon at 3.88 GW added in 2025, and on the 4Q25 call Jassy said 3.99 GW over the trailing twelve months — a 3% gap on a number derived entirely from the balance sheet. ' +
-      'Note the shape: Alphabet was the <i>smallest</i> of the three as recently as 2020 and is modelled to add more than Meta from 2026.</p>' +
+      'Note the shape: Alphabet was the <i>smallest</i> of the four as recently as 2020 and is modelled to add more than Meta from 2026.</p>' +
+      '<div class="hs-card hs-card--warn" style="margin-top:10px"><div class="hs-lbl">Microsoft’s 2026 bar is not like the others</div>' +
+      '<p class="hs-body">' + HS_GW_MSFT_FY.note + '</p></div>' +
       '<div class="hs-inset" style="margin-top:10px"><div class="hs-lbl">Two vintages, one reconciliation to do</div>' +
       '<p class="hs-body">The DCF tabs and the standalone capacity workbook disagree: Amazon 2026 is 6.52 GW here against 6.03 GW there (the DCF carries the raised ~$220B guide, the older file still had $205B), and Meta 2025 is 1.87 GW against 2.05 GW on identical capex — a cost-per-GW difference between the two builds, not a spend one. The DCF numbers are shown because they are the current vintage and the only ones covering Alphabet.</p></div>' +
     '</div>' +
@@ -1225,7 +1320,8 @@ function capacityBody(){
     '<div class="hs-card">' +
       '<div class="hs-tw"><table class="hs-table"><thead><tr><th></th><th>Part</th><th class="num">Share</th>' +
         '<th class="num">Draw</th><th class="num">Unit cost</th></tr></thead><tbody>' + mixRows + '</tbody></table></div>' +
-      '<p class="hs-cap">Meta’s assumed mix is both hungrier (0.63 kW vs 0.51 kW per part) and dearer ($14.6k vs $11.8k), which is what Trainium and Inferentia buy Amazon. Both land near $23B of silicon per GW.</p>' +
+      '<p class="hs-cap"><b>This one table drives the whole cost-per-GW spread.</b> Alphabet’s assumed mix is the most power-hungry (1.08 kW per part, so far fewer parts fit inside a gigawatt) and by a distance the dearest ($40.2k weighted against Amazon’s $11.8k) — which is why a gigawatt of Alphabet carries <b>$37.2B</b> of silicon against Amazon’s <b>$23.3B</b>. Trainium and Inferentia are what buy Amazon that gap. Meta and Microsoft sit between, near $27B. ' +
+      '⚠ These are <b>inputs, not observations</b>: nobody discloses their accelerator mix. Interrogate them before quoting the per-GW numbers downstream. Meta’s Blackwell H100 assumption rose $18k → $22k in this vintage, which lifted its silicon per GW from $23.3B to $26.6B without anything changing at the company.</p>' +
       table(gpus, ['Reference GPU', 'Architecture', '2026E price', 'Key spec']) +
     '</div>' +
 
@@ -1360,6 +1456,7 @@ function init(){
   if (!root) return;
   if (!root._wired){
     root._wired = true;
+    wireTableXhair(root);
     root.addEventListener('click', function(e){
       var tb = e.target.closest('.hs-tab');
       if (tb){ show(root, tb.getAttribute('data-ht')); return; }

@@ -2840,6 +2840,21 @@ var CALL_EARNINGS = { ticker:'UBER', quarters:[
     results:{ summary:UB_Q1_2026_SUMMARY, thesisCheck:UB_Q1_2026_THESISCHECK, intoCall:UB_Q1_2026_INTOCALL },
     call:{ highlights:UB_Q1_2026_HIGHLIGHTS } },
 ] };
+// Split an intoCall item into [hook, argument] at the first em-dash that is NOT inside markup.
+// Void elements are skipped so <br> / <img> do not throw the depth count off.
+var CE_VOID=/^<(br|hr|img|input|wbr)\b/i;
+function ceTeeSplit(s){
+  s=String(s); var d=0, re=/<\/?[a-zA-Z][^>]*>|\s+—\s+/g, m;
+  while((m=re.exec(s))){
+    if(m[0].charAt(0)==='<'){
+      if(CE_VOID.test(m[0]) || /\/>$/.test(m[0])) continue;
+      d += (m[0].charAt(1)==='/') ? -1 : 1;
+      continue;
+    }
+    if(d===0) return [s.slice(0, m.index), s.slice(m.index + m[0].length)];
+  }
+  return [s, ''];
+}
 function ceUpcoming(){ return CALL_EARNINGS.quarters.filter(function(q){ return q.status==='upcoming'; })[0]||null; }
 function ceFill(x, muted){ return (x!=null && String(x).trim()!=='') ? x : '<span class="ce-empty">'+(muted||'— to fill')+'</span>'; }
 var CE_POP={};
@@ -3724,13 +3739,17 @@ function ceResultsBody(c){
     }
     // 5 · what the numbers tee up — VISIBLE, as short boxes. Folding it away was hiding the
     // thing you walk into the call with; the fix was to shorten it, not to bury it (§6a-iv).
+    // NOTE: ceTeeSplit (below) splits on the first em-dash that sits OUTSIDE any markup. Splitting
+    // on the first em-dash full stop cuts a "<b>hook — with a dash</b>" in half and leaks an
+    // unclosed <b> into the page; the HTML parser then re-opens it inside every block that follows,
+    // and Chart.js — which sizes to the nearest BLOCK ancestor — collapses every chart below to its
+    // 150px default. Symptom: bars bunched at the top of an over-tall card, in Results AND Estimates.
     if(r.intoCall&&r.intoCall.length){
       b+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>What this tees up for the call</b> '+
          '<span style="color:var(--mu);font-weight:600;font-size:10px">· go in hunting these</span></div>';
       b+='<div class="ce-tee">'+r.intoCall.map(function(x,i){
         // Everything up to the first em-dash is the hook; the rest is the argument behind it.
-        var mm=String(x).match(/^([\s\S]*?)\s+—\s+([\s\S]*)$/);
-        var head=mm?mm[1]:x, body=mm?mm[2]:'';
+        var sp=ceTeeSplit(x), head=sp[0], body=sp[1];
         var id=body?ceReg('tee-'+qk+'-'+i, String(head).replace(/<[^>]+>/g,''), '<p>'+body+'</p>'):null;
         return '<div class="ce-tee-c"'+(id?' data-detail="ce:'+id+'"':'')+'>'+
           '<div class="ce-tee-h">'+head+'</div>'+

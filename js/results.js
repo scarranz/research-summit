@@ -612,11 +612,18 @@ function rsBuildChart(k){
 }
 
 // ─── Drag-to-zoom brush (both axes) ───────────────────────────────────────────
-// Drag horizontally across the chart area to window that stretch of periods;
-// drag vertically starting ON THE Y-AXIS STRIP (left of the plot) to set the
-// y-axis range — a translucent selection box tracks either drag. Double-click
-// resets both. `onX(i1, i2)` receives chart-relative period indexes; `onY(lo,
-// hi)` receives axis values; pass onX = null for charts with no x-windowing.
+// Drag across the chart to zoom: the axis follows the DIRECTION OF THE DRAG —
+// mostly-horizontal windows that stretch of periods, mostly-vertical sets the
+// y-axis range — with a translucent selection box tracking it. Starting on the
+// y-axis strip (left of the plot) always means a y-drag, as does any drag on a
+// chart with no x-windowing. Double-click resets both. `onX(i1, i2)` receives
+// chart-relative period indexes; `onY(lo, hi)` receives axis values; pass
+// onX = null for charts with no x-windowing.
+// The axis used to be chosen from the START POSITION alone, which put the whole
+// y-zoom behind a ~40px strip nobody finds and made a vertical drag anywhere in
+// the plot silently do nothing (it was read as an x-drag of zero width, then
+// discarded by the 8px threshold). There are no on-screen hints here by design,
+// so the gesture has to be the obvious one.
 function rsAttachBrush(el, chart, onX, onY, onReset){
   var wrap = el.parentElement;
   if (wrap && getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
@@ -625,19 +632,33 @@ function rsAttachBrush(el, chart, onX, onY, onReset){
     if (ev.button !== 0) return;
     var r0 = el.getBoundingClientRect(), w0 = wrap.getBoundingClientRect();
     var area = chart.chartArea;
-    var vertical = (ev.clientX - r0.left) < area.left || !onX;
+    var forcedY = ((ev.clientX - r0.left) < area.left) || !onX;
+    var vertical = forcedY ? true : null;   // null = direction not decided yet
     var startX = ev.clientX, startY = ev.clientY;
-    var box = document.createElement('div');
-    box.className = 'rs-brush';
-    if (vertical){
-      box.style.left = (r0.left - w0.left + area.left) + 'px';
-      box.style.width = (area.right - area.left) + 'px';
-    } else {
-      box.style.top = (r0.top - w0.top) + 'px';
-      box.style.height = r0.height + 'px';
+    var box = null;
+    function ensureBox(){
+      if (box) return;
+      box = document.createElement('div');
+      box.className = 'rs-brush';
+      if (vertical){
+        box.style.left = (r0.left - w0.left + area.left) + 'px';
+        box.style.width = (area.right - area.left) + 'px';
+      } else {
+        box.style.top = (r0.top - w0.top) + 'px';
+        box.style.height = r0.height + 'px';
+      }
+      wrap.appendChild(box);
     }
-    wrap.appendChild(box);
+    // Lock the axis once the pointer has moved far enough to show intent.
+    function decide(cx, cy){
+      if (vertical != null) return;
+      var dx = Math.abs(cx - startX), dy = Math.abs(cy - startY);
+      if (Math.max(dx, dy) < 8) return;
+      vertical = dy > dx;
+    }
     function place(cx, cy){
+      if (vertical == null) return;
+      ensureBox();
       if (vertical){
         var a = Math.min(startY, cy), b = Math.max(startY, cy);
         box.style.top = (a - w0.top) + 'px';
@@ -649,11 +670,13 @@ function rsAttachBrush(el, chart, onX, onY, onReset){
       }
     }
     place(ev.clientX, ev.clientY);
-    function onMove(e2){ place(e2.clientX, e2.clientY); }
+    function onMove(e2){ decide(e2.clientX, e2.clientY); place(e2.clientX, e2.clientY); }
     function onUp(e2){
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
-      box.remove();
+      decide(e2.clientX, e2.clientY);
+      if (box) box.remove();
+      if (vertical == null) return;                   // a click, not a drag
       if (vertical){
         if (Math.abs(e2.clientY - startY) < 8) return;   // a click, not a drag
         var v1 = chart.scales.y.getValueForPixel(Math.min(startY, e2.clientY) - r0.top);

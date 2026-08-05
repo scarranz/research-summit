@@ -292,11 +292,20 @@ function rsRefsFor(m){
   function any(a){ return !!a && a.some(function(v){ return v != null; }); }
   return { summit: any(m.summit), cons: any(m.cons), guide: any(m.guideLo) };
 }
+// Index of the LAST period that has a reported actual. Everything after it is forward
+// (an estimate); everything at or before it is a closed period — even where this particular
+// metric has no actual, which happens when a line only starts partway through the history
+// (e.g. UBER's Non-GAAP EPS begins at 1Q24). Using the FIRST null instead would shade a whole
+// reported history as "forecast" the moment a series has a leading gap.
+function rsLastAct(m){
+  var lastA = -1;
+  for (var i = 0; i < m.act.length; i++) if (m.act[i] != null) lastA = i;
+  return lastA;
+}
 // Quick-range presets: windows anchored to the LAST REPORTED period (lr) —
 // "Last 4Q" = the four most recent prints, "Forward" = last print + estimates.
 function rsPresetWin(m, key){
-  var n = m.periods.length, lr = -1;
-  for (var i = 0; i < n; i++) if (m.act[i] != null) lr = i;
+  var n = m.periods.length, lr = rsLastAct(m);
   if (lr < 0) lr = n - 1;
   switch (key){
     case 'l4':  return [Math.max(0, lr - 3), lr];
@@ -543,8 +552,8 @@ function rsBuildChart(k){
   // Forward (estimate) periods: the reported labels render muted grey here; the FORWARD labels are
   // hidden (callback → '') and the rsFwdZone plugin redraws them inside a highlighted bubble, over a
   // shaded "FORECAST" zone — so old-vs-forward is unmistakable.
-  var fwdFrom = -1;
-  for (var fj = 0; fj <= (hi - lo); fj++){ if (m.act[lo + fj] == null){ fwdFrom = fj; break; } }
+  var lastA = rsLastAct(m);
+  var fwdFrom = (lastA + 1 > hi) ? -1 : Math.max(0, (lastA + 1) - lo);
   var scales = {
     x: { grid: { display: false }, ticks: { color: 'rgba(80,90,104,0.9)', font: { size: 11 }, autoSkip: false,
         callback: function(v, i){ return (fwdFrom >= 0 && i >= fwdFrom) ? '' : this.getLabelForValue(v); } } },
@@ -603,11 +612,18 @@ function rsBuildChart(k){
 }
 
 // ─── Drag-to-zoom brush (both axes) ───────────────────────────────────────────
-// Drag horizontally across the chart area to window that stretch of periods;
-// drag vertically starting ON THE Y-AXIS STRIP (left of the plot) to set the
-// y-axis range — a translucent selection box tracks either drag. Double-click
-// resets both. `onX(i1, i2)` receives chart-relative period indexes; `onY(lo,
-// hi)` receives axis values; pass onX = null for charts with no x-windowing.
+// Drag across the chart to zoom: the axis follows the DIRECTION OF THE DRAG —
+// mostly-horizontal windows that stretch of periods, mostly-vertical sets the
+// y-axis range — with a translucent selection box tracking it. Starting on the
+// y-axis strip (left of the plot) always means a y-drag, as does any drag on a
+// chart with no x-windowing. Double-click resets both. `onX(i1, i2)` receives
+// chart-relative period indexes; `onY(lo, hi)` receives axis values; pass
+// onX = null for charts with no x-windowing.
+// The axis used to be chosen from the START POSITION alone, which put the whole
+// y-zoom behind a ~40px strip nobody finds and made a vertical drag anywhere in
+// the plot silently do nothing (it was read as an x-drag of zero width, then
+// discarded by the 8px threshold). There are no on-screen hints here by design,
+// so the gesture has to be the obvious one.
 function rsAttachBrush(el, chart, onX, onY, onReset){
   var wrap = el.parentElement;
   if (wrap && getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
@@ -616,19 +632,33 @@ function rsAttachBrush(el, chart, onX, onY, onReset){
     if (ev.button !== 0) return;
     var r0 = el.getBoundingClientRect(), w0 = wrap.getBoundingClientRect();
     var area = chart.chartArea;
-    var vertical = (ev.clientX - r0.left) < area.left || !onX;
+    var forcedY = ((ev.clientX - r0.left) < area.left) || !onX;
+    var vertical = forcedY ? true : null;   // null = direction not decided yet
     var startX = ev.clientX, startY = ev.clientY;
-    var box = document.createElement('div');
-    box.className = 'rs-brush';
-    if (vertical){
-      box.style.left = (r0.left - w0.left + area.left) + 'px';
-      box.style.width = (area.right - area.left) + 'px';
-    } else {
-      box.style.top = (r0.top - w0.top) + 'px';
-      box.style.height = r0.height + 'px';
+    var box = null;
+    function ensureBox(){
+      if (box) return;
+      box = document.createElement('div');
+      box.className = 'rs-brush';
+      if (vertical){
+        box.style.left = (r0.left - w0.left + area.left) + 'px';
+        box.style.width = (area.right - area.left) + 'px';
+      } else {
+        box.style.top = (r0.top - w0.top) + 'px';
+        box.style.height = r0.height + 'px';
+      }
+      wrap.appendChild(box);
     }
-    wrap.appendChild(box);
+    // Lock the axis once the pointer has moved far enough to show intent.
+    function decide(cx, cy){
+      if (vertical != null) return;
+      var dx = Math.abs(cx - startX), dy = Math.abs(cy - startY);
+      if (Math.max(dx, dy) < 8) return;
+      vertical = dy > dx;
+    }
     function place(cx, cy){
+      if (vertical == null) return;
+      ensureBox();
       if (vertical){
         var a = Math.min(startY, cy), b = Math.max(startY, cy);
         box.style.top = (a - w0.top) + 'px';
@@ -640,11 +670,13 @@ function rsAttachBrush(el, chart, onX, onY, onReset){
       }
     }
     place(ev.clientX, ev.clientY);
-    function onMove(e2){ place(e2.clientX, e2.clientY); }
+    function onMove(e2){ decide(e2.clientX, e2.clientY); place(e2.clientX, e2.clientY); }
     function onUp(e2){
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
-      box.remove();
+      decide(e2.clientX, e2.clientY);
+      if (box) box.remove();
+      if (vertical == null) return;                   // a click, not a drag
       if (vertical){
         if (Math.abs(e2.clientY - startY) < 8) return;   // a click, not a drag
         var v1 = chart.scales.y.getValueForPixel(Math.min(startY, e2.clientY) - r0.top);
@@ -690,9 +722,9 @@ function rsSyncSlider(k, m){
   // selected window, hollow-ish for forward (estimate) periods.
   var ticks = document.getElementById('rsTicks-' + k);
   if (ticks){
-    var h = '';
+    var h = '', tkLastA = rsLastAct(m);
     for (var i = 0; i < n; i++){
-      var cls = 'rs-tick' + (i >= w[0] && i <= w[1] ? ' on' : '') + (m.act[i] == null ? ' est' : '');
+      var cls = 'rs-tick' + (i >= w[0] && i <= w[1] ? ' on' : '') + (i > tkLastA ? ' est' : '');
       h += '<span class="' + cls + '" style="left:' + (i / (n - 1) * 100) + '%" title="' + esc(m.periods[i]) + '"></span>';
     }
     ticks.innerHTML = h;
@@ -712,8 +744,8 @@ function rsRenderTable(k, m){
   var w = rsWin(k, m), lo = w[0], hi = w[1];
   var dec = m.unit === 'eps' ? 2 : 1;
   var div = rsScaleOf(m);
-  var idx = [], est = [];
-  for (var i = lo; i <= hi; i++){ idx.push(i); est.push(m.act[i] == null); }
+  var idx = [], est = [], tbLastA = rsLastAct(m);
+  for (var i = lo; i <= hi; i++){ idx.push(i); est.push(i > tbLastA); }
 
   function num(v){
     if (v == null) return '<span class="rs-ft-nil">—</span>';

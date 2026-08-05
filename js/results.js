@@ -292,11 +292,20 @@ function rsRefsFor(m){
   function any(a){ return !!a && a.some(function(v){ return v != null; }); }
   return { summit: any(m.summit), cons: any(m.cons), guide: any(m.guideLo) };
 }
+// Index of the LAST period that has a reported actual. Everything after it is forward
+// (an estimate); everything at or before it is a closed period — even where this particular
+// metric has no actual, which happens when a line only starts partway through the history
+// (e.g. UBER's Non-GAAP EPS begins at 1Q24). Using the FIRST null instead would shade a whole
+// reported history as "forecast" the moment a series has a leading gap.
+function rsLastAct(m){
+  var lastA = -1;
+  for (var i = 0; i < m.act.length; i++) if (m.act[i] != null) lastA = i;
+  return lastA;
+}
 // Quick-range presets: windows anchored to the LAST REPORTED period (lr) —
 // "Last 4Q" = the four most recent prints, "Forward" = last print + estimates.
 function rsPresetWin(m, key){
-  var n = m.periods.length, lr = -1;
-  for (var i = 0; i < n; i++) if (m.act[i] != null) lr = i;
+  var n = m.periods.length, lr = rsLastAct(m);
   if (lr < 0) lr = n - 1;
   switch (key){
     case 'l4':  return [Math.max(0, lr - 3), lr];
@@ -543,8 +552,8 @@ function rsBuildChart(k){
   // Forward (estimate) periods: the reported labels render muted grey here; the FORWARD labels are
   // hidden (callback → '') and the rsFwdZone plugin redraws them inside a highlighted bubble, over a
   // shaded "FORECAST" zone — so old-vs-forward is unmistakable.
-  var fwdFrom = -1;
-  for (var fj = 0; fj <= (hi - lo); fj++){ if (m.act[lo + fj] == null){ fwdFrom = fj; break; } }
+  var lastA = rsLastAct(m);
+  var fwdFrom = (lastA + 1 > hi) ? -1 : Math.max(0, (lastA + 1) - lo);
   var scales = {
     x: { grid: { display: false }, ticks: { color: 'rgba(80,90,104,0.9)', font: { size: 11 }, autoSkip: false,
         callback: function(v, i){ return (fwdFrom >= 0 && i >= fwdFrom) ? '' : this.getLabelForValue(v); } } },
@@ -690,9 +699,9 @@ function rsSyncSlider(k, m){
   // selected window, hollow-ish for forward (estimate) periods.
   var ticks = document.getElementById('rsTicks-' + k);
   if (ticks){
-    var h = '';
+    var h = '', tkLastA = rsLastAct(m);
     for (var i = 0; i < n; i++){
-      var cls = 'rs-tick' + (i >= w[0] && i <= w[1] ? ' on' : '') + (m.act[i] == null ? ' est' : '');
+      var cls = 'rs-tick' + (i >= w[0] && i <= w[1] ? ' on' : '') + (i > tkLastA ? ' est' : '');
       h += '<span class="' + cls + '" style="left:' + (i / (n - 1) * 100) + '%" title="' + esc(m.periods[i]) + '"></span>';
     }
     ticks.innerHTML = h;
@@ -712,8 +721,8 @@ function rsRenderTable(k, m){
   var w = rsWin(k, m), lo = w[0], hi = w[1];
   var dec = m.unit === 'eps' ? 2 : 1;
   var div = rsScaleOf(m);
-  var idx = [], est = [];
-  for (var i = lo; i <= hi; i++){ idx.push(i); est.push(m.act[i] == null); }
+  var idx = [], est = [], tbLastA = rsLastAct(m);
+  for (var i = lo; i <= hi; i++){ idx.push(i); est.push(i > tbLastA); }
 
   function num(v){
     if (v == null) return '<span class="rs-ft-nil">—</span>';

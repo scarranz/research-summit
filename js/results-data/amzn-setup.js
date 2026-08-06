@@ -46,7 +46,7 @@ var yIdx = annualIdx(amznResults.views.y);
 
 export var amznSetup = {
   updated: amznResults.updated,
-  intro: 'The Setup chart — the same actuals-vs-estimates chart+table as Results, MERGED into one: every tracked line in a single grouped picker, with the period lever, the legend chips, the guidance band where Amazon guides the line (net sales + GAAP operating income only), and margin lines for the profit lines. The window is rolling: quarterly shows the last 8 reported quarters + the one next (forecast) quarter; annual shows the last 4 fiscal years + the next 2. Sources per the dataset header (js/results-data/amzn.js).',
+  intro: '',
   source: amznResults.source,
   views: {
     q: { label: 'Quarterly', note: 'Rolling — the last 8 reported quarters plus the one next (forecast) quarter; it advances by itself as new prints land. ' + amznResults.views.q.note,

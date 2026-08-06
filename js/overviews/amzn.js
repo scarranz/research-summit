@@ -19,6 +19,7 @@
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import { mountWatchList } from '../watchlist.js';
 import { amznResults } from '../results-data/amzn.js';
+import { consensusEvo } from '../consensus-evolution.js';
 
 // ─── esc: escapes <>" but deliberately leaves & literal (per contract; never double-encode) ──
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -389,59 +390,44 @@ var CE_IR_URL='https://ir.aboutamazon.com/';
 var CE_EDGAR_URL='https://www.sec.gov/edgar/browse/?CIK=1018724&owner=exclude';
 var CE_LOGO_URL='https://assets.parqet.com/logos/symbol/AMZN';
 var CE_SEC_SEAL='img/sec-seal.png';
+// Compact source chips — IR + EDGAR (EARNINGS_CONVENTIONS §6). The photo (logo/seal,
+// transparent) + title + the open button only; kept small and parked at the right of the
+// evolution tab bar. Full titles/blurbs (The Source · Earnings HQ / The Record · SEC, the
+// release·webcast·slides and 10-K·10-Q lines) were intentionally dropped for the compact form.
 function ceIRButton(){
   return '<style>'+
-    '.cp-srcrow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 16px}@media(max-width:760px){.cp-srcrow{grid-template-columns:1fr}}'+
-    '.cp-ir{display:flex;align-items:center;gap:20px;text-decoration:none;border-radius:18px;padding:26px 26px;min-height:120px;position:relative;overflow:hidden;'+
-      'background:linear-gradient(115deg,#0B0703 0%,#1C1206 60%,#0B0703 100%);border:1px solid rgba(255,153,0,.32);box-shadow:0 10px 32px rgba(0,0,0,.4);transition:.18s}'+
-    '.cp-ir:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,'+BRAND+','+BRAND2+');height:4px;top:0}'+
-    '.cp-ir:hover{transform:translateY(-2px);box-shadow:0 16px 42px rgba(255,153,0,.35);border-color:rgba(255,153,0,.75)}'+
-    '.cp-ir-wm{position:absolute;right:-40px;bottom:-60px;width:230px;height:230px;object-fit:contain;opacity:.09;pointer-events:none;transition:.25s}'+
-    '.cp-ir:hover .cp-ir-wm{opacity:.16;transform:scale(1.04) rotate(-2deg)}'+
-    '.cp-ir-ic{width:72px;height:72px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;flex:none;position:relative;z-index:1;'+
-      'box-shadow:0 0 0 1px rgba(255,184,77,.3),0 0 32px rgba(255,153,0,.5)}'+
-    '.cp-ir-ic img{width:52px;height:52px;object-fit:contain;display:block;border-radius:10px;filter:drop-shadow(0 2px 10px rgba(0,0,0,.55))}'+
-    '.cp-ir-body{flex:1;min-width:0;position:relative;z-index:1}'+
-    '.cp-ir-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.16em;color:#FFB84D;display:flex;align-items:center;gap:7px}'+
-    '.cp-ir-dot{width:7px;height:7px;border-radius:50%;background:'+BRAND+';box-shadow:0 0 0 0 rgba(255,153,0,.7);animation:cpirp 1.6s infinite}'+
-    '@keyframes cpirp{0%{box-shadow:0 0 0 0 rgba(255,153,0,.6)}70%{box-shadow:0 0 0 8px rgba(255,153,0,0)}100%{box-shadow:0 0 0 0 rgba(255,153,0,0)}}'+
-    '.cp-ir-t{font-size:19px;font-weight:900;color:#fff;letter-spacing:.05em;text-transform:uppercase;margin-top:4px}'+
-    '.cp-ir-s{font-size:11.5px;color:#C8B49A;font-weight:600;margin-top:3px;letter-spacing:.01em}'+
-    '.cp-ir-go{font-size:13px;font-weight:900;color:#1A1305;background:linear-gradient(135deg,#FFB84D,'+BRAND+');border-radius:999px;padding:12px 22px;white-space:nowrap;flex:none;display:flex;align-items:center;gap:8px;position:relative;z-index:1;letter-spacing:.04em;transition:.14s}'+
-    '.cp-ir:hover .cp-ir-go{gap:12px;box-shadow:0 4px 18px rgba(255,153,0,.55)}'+
-    '@media(max-width:560px){.cp-ir{flex-wrap:wrap}.cp-ir-go{width:100%;justify-content:center}}'+
+    '.cp-srcrow{display:inline-flex;flex-direction:column;gap:8px;align-items:stretch;position:absolute;top:0;right:0}'+
+    '.cp-ir{display:inline-flex;align-items:center;gap:11px;text-decoration:none;border-radius:12px;padding:9px 15px 9px 9px;width:248px;box-sizing:border-box;position:relative;overflow:hidden;'+
+      'background:linear-gradient(115deg,#0B0703 0%,#1C1206 60%,#0B0703 100%);border:1px solid rgba(255,153,0,.34);box-shadow:0 5px 16px rgba(0,0,0,.38);transition:.16s}'+
+    '.cp-ir:hover{transform:translateY(-1px);box-shadow:0 9px 24px rgba(255,153,0,.32);border-color:rgba(255,153,0,.75)}'+
+    '.cp-ir-wm{position:absolute;right:-16px;bottom:-20px;width:88px;height:88px;object-fit:contain;opacity:.13;pointer-events:none;transition:.25s}'+
+    '.cp-ir:hover .cp-ir-wm{opacity:.2;transform:scale(1.05) rotate(-2deg)}'+
+    '.cp-ir-ic{width:36px;height:36px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;flex:none;position:relative;z-index:1;'+
+      'box-shadow:0 0 0 1px rgba(255,184,77,.3),0 0 18px rgba(255,153,0,.45)}'+
+    '.cp-ir-ic img{width:26px;height:26px;object-fit:contain;display:block;border-radius:6px}'+
+    '.cp-ir-k{font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#FFB84D;white-space:nowrap;position:relative;z-index:1}'+
+    '.cp-ir-go{font-size:13px;font-weight:900;color:#FFB84D;flex:none;margin-left:auto;padding-left:6px;position:relative;z-index:1;transition:.14s}'+
+    '.cp-ir:hover .cp-ir-go{transform:translateX(2px)}'+
     '.cp-ir.edgar{background:linear-gradient(115deg,#070502 0%,#171106 60%,#070502 100%);border-color:rgba(197,164,90,.35)}'+
-    '.cp-ir.edgar:before{background:linear-gradient(90deg,#8C6D2F,#E3C878,#8C6D2F)}'+
-    '.cp-ir.edgar:hover{box-shadow:0 16px 42px rgba(197,164,90,.32);border-color:rgba(227,200,120,.75)}'+
-    '.cp-ir.edgar .cp-ir-ic{box-shadow:0 0 0 1px rgba(227,200,120,.28),0 0 32px rgba(197,164,90,.55)}'+
-    '.cp-ir.edgar .cp-ir-ic img{width:72px;height:72px;border-radius:0}'+
-    '.cp-ir.edgar .cp-ir-k{color:#E3C878}'+
-    '.cp-ir.edgar .cp-ir-dot{background:#E3C878;animation:none;box-shadow:0 0 8px rgba(227,200,120,.8)}'+
-    '.cp-ir.edgar .cp-ir-go{background:linear-gradient(135deg,#E3C878,#B8933F);color:#1A1305}'+
-    '.cp-ir.edgar:hover .cp-ir-go{box-shadow:0 4px 18px rgba(197,164,90,.6)}'+
-    '.cp-ir.edgar .cp-ir-wm{opacity:.1}'+
-    '.cp-ir.edgar:hover .cp-ir-wm{opacity:.17}'+
+    '.cp-ir.edgar:hover{box-shadow:0 9px 24px rgba(197,164,90,.32);border-color:rgba(227,200,120,.75)}'+
+    '.cp-ir.edgar .cp-ir-ic{box-shadow:0 0 0 1px rgba(227,200,120,.26),0 0 18px rgba(197,164,90,.45)}'+
+    '.cp-ir.edgar .cp-ir-ic img{border-radius:0}'+
+    '.cp-ir.edgar .cp-ir-k,.cp-ir.edgar .cp-ir-go{color:#E3C878}'+
+    '.cp-ir.edgar .cp-ir-wm{opacity:.12}'+
+    '.cp-ir.edgar:hover .cp-ir-wm{opacity:.19}'+
   '</style>'+
   '<div class="cp-srcrow">'+
-  '<a class="cp-ir" href="'+CE_IR_URL+'" target="_blank" rel="noopener">'+
+  '<a class="cp-ir" href="'+CE_IR_URL+'" target="_blank" rel="noopener" title="Amazon Investor Relations">'+
     '<img class="cp-ir-wm" src="'+CE_LOGO_URL+'" alt="" aria-hidden="true">'+
     '<span class="cp-ir-ic"><img src="'+CE_LOGO_URL+'" alt="Amazon logo" onerror="this.parentNode.style.display=\'none\'"></span>'+
-    '<span class="cp-ir-body">'+
-      '<span class="cp-ir-k"><span class="cp-ir-dot"></span>THE SOURCE · EARNINGS HQ</span>'+
-      '<span class="cp-ir-t" style="display:block">Amazon Investor Relations</span>'+
-      '<span class="cp-ir-s" style="display:block">Release · webcast · slides · transcripts — straight from ir.aboutamazon.com. Skip the search, go direct.</span>'+
-    '</span>'+
-    '<span class="cp-ir-go">OPEN IR <span>↗</span></span>'+
+    '<span class="cp-ir-k">Investor Relations</span>'+
+    '<span class="cp-ir-go">↗</span>'+
   '</a>'+
-  '<a class="cp-ir edgar" href="'+CE_EDGAR_URL+'" target="_blank" rel="noopener">'+
+  '<a class="cp-ir edgar" href="'+CE_EDGAR_URL+'" target="_blank" rel="noopener" title="Amazon on SEC EDGAR">'+
     '<img class="cp-ir-wm" src="'+CE_SEC_SEAL+'" alt="" aria-hidden="true">'+
     '<span class="cp-ir-ic"><img src="'+CE_SEC_SEAL+'" alt="SEC seal" onerror="this.parentNode.style.display=\'none\'"></span>'+
-    '<span class="cp-ir-body">'+
-      '<span class="cp-ir-k"><span class="cp-ir-dot"></span>THE RECORD · U.S. SECURITIES AND EXCHANGE COMMISSION</span>'+
-      '<span class="cp-ir-t" style="display:block">Amazon on EDGAR</span>'+
-      '<span class="cp-ir-s" style="display:block">10-K · 10-Q · 8-K · DEF 14A — the regulator\'s copy, as filed. What IR curates, EDGAR certifies.</span>'+
-    '</span>'+
-    '<span class="cp-ir-go">OPEN EDGAR <span>↗</span></span>'+
+    '<span class="cp-ir-k">EDGAR</span>'+
+    '<span class="cp-ir-go">↗</span>'+
   '</a>'+
   '</div>';
 }
@@ -462,34 +448,94 @@ function ceIRButton(){
 // ════════════════════════════════════════════════════════════════════════════
 var BLUE='#2557D6', RED='#EA4335', YELLOW='#E8A00C', PURPLE='#7A5AF8', AMBER='#B7791F';
 
-// ── CE_CONS — derived from the Results dataset (single source, no re-hardcode) ──
-var CE_CONS = (function(){
-  var q = amznResults.views.q.metrics, per = q.rev.periods;
-  // quarters 1Q23 … 4Q26 (drop the 2027+ tail — Earnings only reaches the guide horizon)
-  var n = per.indexOf('1Q27'); if (n < 0) n = per.length;
-  var lbl = per.slice(0, n).map(function(p){ return 'Q'+p[0]+' 20'+p.slice(2); });
-  function line(k, disp, u){
-    var m = q[k], div = (u==='$B') ? 1000 : 1;
-    function v(x){ return x==null ? null : Math.round((x/div)*100)/100; }
-    var qa = m.act.slice(0,n).map(v), c = m.cons.slice(0,n).map(v);
-    return { k:disp, u:u, t:'ok',
-      qr: lbl.map(function(_,i){ return [null,null,null,c[i]]; }),
-      qa: qa,
-      qy: lbl.map(function(_,i){ return i>=4 ? qa[i-4] : null; }),
-      qq: lbl.map(function(_,i){ return i>=1 ? qa[i-1] : null; }) };
-  }
-  return {
-    src:'Refinitiv/LSEG pre-print consensus (earnings-day coverage) + BBG BEst export (FA_AMZN_US.xlsx, Jul 2026) for forward quarters — via js/results-data/amzn.js. NOT the BBG_CONSENSUS.txt archive (no AMZN rows yet), so only the 1-quarter-out horizon exists.',
-    asOf:['Jul 2026 (dataset)'],
-    q: lbl, hz:['4q out','3q out','2q out','1q out'], nHead:4,
-    m: [
-      line('rev','Revenue','$B'), line('opinc','Operating income','$B'),
-      line('eps','EPS (diluted)','$'), line('capex','Capex','$B'),
-      line('aws','AWS net sales','$B'), line('usrev','North America','$B'),
-      line('intrev','International','$B'), line('ads','Advertising','$B')
-    ]
-  };
-})();
+// CE_CONS — BUILT FROM THE ARCHIVE (BBG_CONSENSUS.txt, `data_as_of` snapshots), GOOGL-style: each
+// metric carries its rolling revision matrix qr=[4q,3q,2q,1q-out] + actuals (qa) + YoY/QoQ bases
+// (qy/qq). 9 headline + 6 AMZN segment customs. Values $B (EPS $, shares B); capex positive.
+// Re-extract when Dani refreshes the archive (recipe: session scratchpad amzn_ce_cons builder).
+var CE_CONS = {
+  src:'Bloomberg (BST) · BBG_CONSENSUS.txt snapshot archive',
+  asOf:["2023-10-29","2024-02-04","2024-05-03","2024-08-04","2024-11-03","2025-02-09","2025-05-04","2025-08-03","2025-11-02","2026-02-08","2026-05-02","2026-08-06"],
+  q:["Q4 2022","Q1 2023","Q2 2023","Q3 2023","Q4 2023","Q1 2024","Q2 2024","Q3 2024","Q4 2024","Q1 2025","Q2 2025","Q3 2025","Q4 2025","Q1 2026","Q2 2026","Q3 2026","Q4 2026","Q1 2027","Q2 2027"],
+  hz:['4q out','3q out','2q out','1q out'],
+  nHead:9,
+  m:[
+    { k:"Revenue", u:"$B", t:'ok',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,165.5],[null,null,141.8,142.4],[null,149.5,150.1,149.1],[158.6,159.3,159.4,157.6],[188.1,187.8,186.8,187.2],[158.9,158.8,158.8,155.3],[164.8,164.3,162.6,162],[175.5,174.3,172.9,176.5],[206.2,204.1,207.2,210.7],[170.7,172.7,174.7,177],[183.3,186.2,188.3,194.7],[199.2,201.7,203.8,201.7],[237.7,241.6,244.6,null],[204.1,208.9,null,null],[229.5,null,null,null]],
+      qa:[149.2,127.4,134.4,143.1,170,143.3,148,158.9,187.8,155.7,167.7,180.2,213.4,181.5,200.6,null,null,null,null],
+      qy:[null,null,null,null,149.2,127.4,134.4,143.1,170,143.3,148,158.9,187.8,155.7,167.7,180.2,213.4,181.5,200.6],
+      qq:[null,149.2,127.4,134.4,143.1,170,143.3,148,158.9,187.8,155.7,167.7,180.2,213.4,181.5,200.6,null,null,null] },
+    { k:"Gross profit", u:"$B", t:'ok',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,74.6],[null,null,67.8,68.6],[null,73.1,73.8,73.7],[76.9,77.4,77.4,77.1],[87.3,88,87.8,90.3],[79.2,79.4,79.6,77.9],[83.4,83.8,82.8,81.8],[87.7,87.1,85.8,88.3],[99.2,97.6,99.9,102.1],[86.9,88.4,91.5,90.8],[95.8,100.5,98.7,101.9],[106.3,104.1,105.3,105.2],[117.5,120.2,122.3,null],[108.5,111.5,null,null],[123.1,null,null,null]],
+      qa:[63.6,59.6,65,68.1,77.4,70.7,74.2,77.9,88.9,78.7,86.9,91.5,103.4,94.1,104.8,null,null,null,null],
+      qy:[null,null,null,null,63.6,59.6,65,68.1,77.4,70.7,74.2,77.9,88.9,78.7,86.9,91.5,103.4,94.1,104.8],
+      qq:[null,63.6,59.6,65,68.1,77.4,70.7,74.2,77.9,88.9,78.7,86.9,91.5,103.4,94.1,104.8,null,null,null] },
+    { k:"Operating income", u:"$B", t:'ok',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,10],[null,null,9,10.8],[null,11.3,12.6,13.6],[12.9,14.2,15.5,14.9],[16.1,18.1,17.7,18.6],[17.4,17.6,17.9,17.5],[17.9,18.4,18.2,17.1],[20.2,20.5,19.4,19.7],[24.3,23.3,23.7,24.4],[21.7,21.7,21.9,20.9],[22.6,23.3,23.1,23.3],[24.7,24.6,24.5,26],[30.3,30.9,32.5,null],[28.6,30.6,null,null],[34.7,null,null,null]],
+      qa:[2.7,4.8,7.7,11.2,13.2,15.3,14.7,17.4,21.2,18.4,19.2,17.4,25,23.9,27.5,null,null,null,null],
+      qy:[null,null,null,null,2.7,4.8,7.7,11.2,13.2,15.3,14.7,17.4,21.2,18.4,19.2,17.4,25,23.9,27.5],
+      qq:[null,2.7,4.8,7.7,11.2,13.2,15.3,14.7,17.4,21.2,18.4,19.2,17.4,25,23.9,27.5,null,null,null] },
+    { k:"EBITDA", u:"$B", t:'ok',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,28.4],[null,null,26.4,28.7],[null,30.4,32,32.5],[31.8,33.6,34.3,33.4],[36.8,37.8,37.5,39.7],[35.4,36.2,37.4,37.1],[38.3,39.7,40,37.8],[41.5,42.1,40.4,41.4],[47.3,46,47.1,48.5],[43.2,43.5,44.5,44.7],[48.1,49.5,50.3,51.1],[51.3,52.4,52.4,53.2],[59.9,61.1,62.6,null],[58.7,61.3,null,null],[68.8,null,null,null]],
+      qa:[21,20.6,26.4,29.1,33.3,32,33.4,36.2,41.8,32.7,40.9,39.1,48.8,46.8,53.5,null,null,null,null],
+      qy:[null,null,null,null,21,20.6,26.4,29.1,33.3,32,33.4,36.2,41.8,32.7,40.9,39.1,48.8,46.8,53.5],
+      qq:[null,21,20.6,26.4,29.1,33.3,32,33.4,36.2,41.8,32.7,40.9,39.1,48.8,46.8,53.5,null,null,null] },
+    { k:"EPS (diluted)", u:"$", t:'ok',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,0.73],[null,null,0.69,0.8],[null,0.88,0.92,1.02],[1.01,1.05,1.16,1.14],[1.21,1.35,1.35,1.45],[1.26,1.3,1.37,1.37],[1.36,1.46,1.42,1.32],[1.58,1.6,1.51,1.53],[1.9,1.78,1.84,1.94],[1.64,1.69,1.73,1.63],[1.79,1.85,1.81,1.81],[1.96,1.94,1.96,1.96],[2.35,2.37,2.44,null],[2.25,2.4,null,null],[2.68,null,null,null]],
+      qa:[0.2,0.34,0.63,0.83,1.01,0.98,1.26,1.43,1.86,1.59,1.68,1.95,1.95,2.78,5.75,null,null,null,null],
+      qy:[null,null,null,null,0.2,0.34,0.63,0.83,1.01,0.98,1.26,1.43,1.86,1.59,1.68,1.95,1.95,2.78,5.75],
+      qq:[null,0.2,0.34,0.63,0.83,1.01,0.98,1.26,1.43,1.86,1.59,1.68,1.95,1.95,2.78,5.75,null,null,null] },
+    { k:"Operating cash flow", u:"$B", t:'ok',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,38.9],[null,null,20.1,21.2],[null,24.4,25.8,28.8],[25.3,26.7,29.9,28.9],[44.1,48,47.5,48.6],[22.9,26.4,28.6,26.3],[33.6,35.5,35.3,36.6],[35.7,33.8,33.9,36.8],[53,54.4,56.4,52.4],[30.8,31.1,35.3,30.5],[42.5,48.5,42.7,51.5],[43.9,44.9,45.9,59.4],[64,65.5,69.6,null],[41.8,41.1,null,null],[50.7,null,null,null]],
+      qa:[29.2,4.8,16.5,21.2,42.5,19,25.3,26,45.6,17,32.5,35.5,54.5,26,45.4,null,null,null,null],
+      qy:[null,null,null,null,29.2,4.8,16.5,21.2,42.5,19,25.3,26,45.6,17,32.5,35.5,54.5,26,45.4],
+      qq:[null,29.2,4.8,16.5,21.2,42.5,19,25.3,26,45.6,17,32.5,35.5,54.5,26,45.4,null,null,null] },
+    { k:"Capex", u:"$B", t:'ok',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,10.7],[null,null,11.6,13.3],[null,11,12.8,14.7],[11.9,13.4,14.8,18.8],[15.1,16.2,20.6,22.7],[14,17,18.8,25],[19.2,20.3,25.5,26.9],[22.8,26.5,26.6,30.2],[27,27.5,31,33.9],[26,30.4,33.9,41.8],[32.5,36.9,46.5,48],[38.2,50.1,51.3,57.6],[54.2,56.1,64.1,null],[49.7,63.8,null,null],[69.7,null,null,null]],
+      qa:[16.6,14.2,11.5,12.5,14.6,14.9,17.6,22.6,27.8,25,32.2,35.1,39.5,44.2,54.2,null,null,null,null],
+      qy:[null,null,null,null,16.6,14.2,11.5,12.5,14.6,14.9,17.6,22.6,27.8,25,32.2,35.1,39.5,44.2,54.2],
+      qq:[null,16.6,14.2,11.5,12.5,14.6,14.9,17.6,22.6,27.8,25,32.2,35.1,39.5,44.2,54.2,null,null,null] },
+    { k:"D&A", u:"$B", t:'ok',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,12.8],[null,null,12.3,12.6],[null,12.8,13,12.9],[13.2,13.4,13.8,13.6],[14.1,14.1,14.1,14.4],[13.3,13.3,13.9,14.5],[14.3,14.8,15.2,14.9],[15.2,16.2,15.8,16.1],[17.7,17.5,17.8,18.1],[16.6,17.2,17.9,19.2],[18.1,18.9,20.5,21],[20,21.8,22.3,22.1],[24.2,24.8,24.9,null],[24.5,24.3,null,null],[26.3,null,null,null]],
+      qa:[12.7,11.1,11.6,12.1,13.8,11.7,12,13.4,15.6,14.3,15.2,16.8,19.5,18.9,20,null,null,null,null],
+      qy:[null,null,null,null,12.7,11.1,11.6,12.1,13.8,11.7,12,13.4,15.6,14.3,15.2,16.8,19.5,18.9,20],
+      qq:[null,12.7,11.1,11.6,12.1,13.8,11.7,12,13.4,15.6,14.3,15.2,16.8,19.5,18.9,20,null,null,null] },
+    { k:"Diluted shares", u:"B", t:'ok',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,10.52],[null,null,10.08,10.59],[null,10.1,10.63,10.65],[10.13,10.66,10.67,10.67],[10.69,10.7,10.7,10.71],[10.16,10.25,10.75,10.75],[10.28,10.78,10.78,10.77],[10.81,10.82,10.81,10.81],[10.85,10.84,10.84,10.82],[10.98,10.91,10.87,10.87],[10.97,10.9,10.9,10.87],[10.93,10.93,10.9,10.91],[10.96,10.93,10.93,null],[10.99,10.98,null,null],[11.01,null,null,null]],
+      qa:[10.31,10.35,10.45,10.56,10.61,10.67,10.71,10.73,10.77,10.79,10.81,10.85,10.86,10.87,10.9,null,null,null,null],
+      qy:[null,null,null,null,10.31,10.35,10.45,10.56,10.61,10.67,10.71,10.73,10.77,10.79,10.81,10.85,10.86,10.87,10.9],
+      qq:[null,10.31,10.35,10.45,10.56,10.61,10.67,10.71,10.73,10.77,10.79,10.81,10.85,10.86,10.87,10.9,null,null,null] },
+    { k:"AWS net sales", u:"$B", t:'ok',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,24.2],[null,null,24.1,24.1],[null,25.2,25.3,25.9],[26.4,26.5,27.2,27.4],[28,28.6,28.8,28.8],[29.2,29.5,29.7,29.4],[30.9,31.1,30.9,30.8],[32.5,32.5,32.2,32.4],[34.1,33.9,34.1,34.8],[34.5,34.7,35.7,35.6],[36.6,38,37.5,39.1],[40.7,39.9,41.7,44.3],[42.5,44.9,48,null],[46.2,49.7,null,null],[54.2,null,null,null]],
+      qa:[21.4,21.4,22.1,23.1,24.2,25,26.3,27.5,28.8,29.3,30.9,33,35.6,37.6,42.2,null,null,null,null],
+      qy:[null,null,null,null,21.4,21.4,22.1,23.1,24.2,25,26.3,27.5,28.8,29.3,30.9,33,35.6,37.6,42.2],
+      qq:[null,21.4,21.4,22.1,23.1,24.2,25,26.3,27.5,28.8,29.3,30.9,33,35.6,37.6,42.2,null,null,null] },
+    { k:"North America", u:"$B", t:'ok',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,102.7],[null,null,84,84.6],[null,89.8,90.5,90],[95.5,96.1,95.7,95.3],[115.1,115.2,114.3,114.5],[94.3,93.9,94.1,92.7],[97.8,98.1,97.6,97.2],[104,103.5,102.8,104.4],[125.2,124.4,125.8,126.9],[99.6,100.5,105.9,102],[108.1,114.7,109.1,112.4],[122.3,116,115.4,112.8],[138.8,139,139.8,null],[112.6,113.3,null,null],[125.3,null,null,null]],
+      qa:[93.4,76.9,82.5,87.9,105.5,86.3,90,95.5,115.6,92.9,100.1,106.3,127.1,104.1,116.2,null,null,null,null],
+      qy:[null,null,null,null,93.4,76.9,82.5,87.9,105.5,86.3,90,95.5,115.6,92.9,100.1,106.3,127.1,104.1,116.2],
+      qq:[null,93.4,76.9,82.5,87.9,105.5,86.3,90,95.5,115.6,92.9,100.1,106.3,127.1,104.1,116.2,null,null,null] },
+    { k:"International", u:"$B", t:'ok',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,38.9],[null,null,32.9,32.9],[null,34,33.8,32.9],[36.6,36.4,35.7,34.7],[44.5,44.4,43.3,43.9],[34.9,34.6,35,33.1],[35.2,35.2,34,34.1],[39.2,38.2,37.9,39.9],[46.9,46.5,48.2,49.6],[36,37.3,40.3,38.5],[39.1,43.3,40.7,42.2],[47.2,45,45.1,43.5],[55.3,56.6,56.2,null],[43.1,43.9,null,null],[47.6,null,null,null]],
+      qa:[34.5,29.1,29.7,32.1,40.2,31.9,31.7,35.9,43.4,33.5,36.8,40.9,50.7,39.8,42.2,null,null,null,null],
+      qy:[null,null,null,null,34.5,29.1,29.7,32.1,40.2,31.9,31.7,35.9,43.4,33.5,36.8,40.9,50.7,39.8,42.2],
+      qq:[null,34.5,29.1,29.7,32.1,40.2,31.9,31.7,35.9,43.4,33.5,36.8,40.9,50.7,39.8,42.2,null,null,null] },
+    { k:"AWS operating income", u:"$B", t:'ok',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,6.6],[null,null,6.6,7.1],[null,7,7.4,8.4],[7.6,8.1,8.8,9],[8.3,9.1,9.2,10.1],[9.8,10,10.4,10.3],[10.1,10.6,10.6,10.8],[11.4,11.4,11.6,11.3],[11.9,12,11.8,11.6],[12.6,12.5,12.3,12.4],[12.2,11.7,12.1,12.5],[13,13.3,13.7,16.3],[14.4,14.8,17.8,null],[16.2,18.2,null,null],[19.9,null,null,null]],
+      qa:[5.2,5.1,5.4,7,7.2,9.4,9.3,10.4,10.6,11.5,10.2,11.4,12.5,14.2,16.6,null,null,null,null],
+      qy:[null,null,null,null,5.2,5.1,5.4,7,7.2,9.4,9.3,10.4,10.6,11.5,10.2,11.4,12.5,14.2,16.6],
+      qq:[null,5.2,5.1,5.4,7,7.2,9.4,9.3,10.4,10.6,11.5,10.2,11.4,12.5,14.2,16.6,null,null,null] },
+    { k:"North America operating income", u:"$B", t:'ok',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,4.2],[null,null,3.2,4],[null,4.3,4.9,5.1],[5.1,5.6,5.9,5.4],[7.1,7.7,7.5,7.4],[6.2,6.1,6.1,6.1],[6.7,6.5,6.5,5.6],[7.2,7.3,6.3,7.1],[10.5,9.5,10.3,10.6],[7,7.4,7.6,7.2],[8.7,9.1,8.7,8.4],[8.7,9,8.2,7.3],[13.7,13.3,12.4,null],[9.4,9.4,null,null],[10.7,null,null,null]],
+      qa:[-0.2,0.9,3.2,4.3,6.5,5,5.1,5.7,9.3,5.8,7.5,4.8,11.5,8.3,9.1,null,null,null,null],
+      qy:[null,null,null,null,-0.2,0.9,3.2,4.3,6.5,5,5.1,5.7,9.3,5.8,7.5,4.8,11.5,8.3,9.1],
+      qq:[null,-0.2,0.9,3.2,4.3,6.5,5,5.1,5.7,9.3,5.8,7.5,4.8,11.5,8.3,9.1,null,null,null] },
+    { k:"International operating income", u:"$B", t:'ok',
+      qr:[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,-1],[null,null,-0.8,-0.7],[null,-0.3,-0.2,-0.2],[-0.5,0.2,0.7,0.6],[0.3,0.7,1,1.1],[1.4,1.9,1.5,1.1],[1.4,1.3,1,0.7],[2,2,1.5,1.6],[2.2,1.8,2.1,2.3],[1.9,2,1.8,1.2],[1.7,2.1,1.8,1.9],[2,2.3,1.8,2.1],[2.3,2.4,2.2,null],[2.1,2.7,null,null],[3.4,null,null,null]],
+      qa:[-2.2,-1.2,-0.9,-0.1,-0.4,0.9,0.3,1.3,1.3,1,1.5,1.2,1,1.4,1.7,null,null,null,null],
+      qy:[null,null,null,null,-2.2,-1.2,-0.9,-0.1,-0.4,0.9,0.3,1.3,1.3,1,1.5,1.2,1,1.4,1.7],
+      qq:[null,-2.2,-1.2,-0.9,-0.1,-0.4,0.9,0.3,1.3,1.3,1,1.5,1.2,1,1.4,1.7,null,null,null] }
+  ]
+};
 
 var CALL_EARNINGS = { ticker:'AMZN', quarters:[
   // ── UPCOMING: Q3 2026 (quarter ends Sep 2026; reports ~late October 2026) ──
@@ -1212,7 +1258,6 @@ function ceSetupBody(c){
     b+='<div class="ce-phase" style="background:'+BLUE+'">① Pre-Call'+(frozen?'<span class="ce-frozen">frozen</span>':'')+'</div>';
     var st=u.setup||{}, hasGrid=(CE_CONS.q.indexOf(u.q)>=0);
     if(hasGrid){
-      b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup.</b> The numbers going in — what the <b>Street</b> expects, what <b>Summit</b> expects, and where the two disagree. '+(u.date?((frozen?'Reported <b>':'Reports <b>')+esc(u.date)+'</b>.'):'')+'</p>';
       b+='<div class="ov-diagram-cap" style="margin:6px 0 6px;display:flex;flex-wrap:wrap;align-items:center;gap:12px"><b>Estimates</b>'+
         '<span class="mg-seg" style="display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px">'+
           '<button type="button" class="ce-ev-pill active" data-ceev="cons">Consensus</button>'+
@@ -1226,49 +1271,12 @@ function ceSetupBody(c){
           '<button type="button" data-ceg="off">Off</button></span>'+
         '<span class="ce-gseg"><button type="button" data-cemm="on">Margin</button>'+
           '<button type="button" class="active" data-cemm="off">Hide mgn</button></span>'+
-        (st.source?'<span style="color:var(--mu);font-weight:600;font-size:10px">'+esc(st.source)+(st.asOf?' · as of '+esc(st.asOf):'')+'</span>':'')+
       '</div>';
       b+='<div class="ce-evwrap" data-ev="cons" data-g="yoy">';
       b+='<div class="ce-row-cap">Headline — every company, always</div>'+ceGrid(u,'head');
       b+='<div class="ce-row-cap" style="margin-top:12px">Custom KPIs — AMZN</div>'+ceGrid(u,'cust');
       b+='</div>';
-      b+='<div class="ave-subh-note" style="margin-top:6px">Growth chips are computed from the archive: <b>YoY</b> against <code>fq-3</code>, <b>QoQ</b> against <code>fq0</code> — both reported actuals. '+
-         '<b>Street</b> = Bloomberg (BST), hardcoded from the export only. <b>Summit</b> = our own expectation. <b>?</b> = a number with a caveat worth knowing. '+
-         'A line with no chip either has no like-for-like base or failed the basis test.</div>';
-      // ── The debate — a LINE-BY-LINE comparison, not a paragraph ────────────────────────────
-      // It answers one question: where does Summit differ from the Street, and by how much. Built
-      // from the same two columns the grid shows, so it cannot disagree with them. Lines where we
-      // have no number of our own are listed explicitly rather than silently dropped — an empty
-      // Summit column IS the state of the work, and hiding it would misrepresent it (§6a-ii).
-      var d=st.debate, dqi=CE_CONS.q.indexOf(u.q), dus=st.us||{};
-      if(dqi>=0){
-        var diffs=[], nous=[];
-        CE_CONS.m.forEach(function(m){
-          var c=m.qr[dqi]?m.qr[dqi][3]:null, uv=dus[m.k]?dus[m.k].v:null;
-          if(c==null) return;
-          if(uv==null){ nous.push(m.k); return; }
-          diffs.push({ k:m.k, c:c, u:uv, d:((uv/c-1)*100), t:m.t, un:m.u });
-        });
-        diffs.sort(function(x,z){ return Math.abs(z.d)-Math.abs(x.d); });
-        b+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>The debate — where Summit differs from the Street</b>'+
-           '<span style="color:var(--mu);font-weight:600;font-size:10px"> · sorted by the size of the gap</span></div>';
-        if(diffs.length){
-          b+='<div class="ce-dbt">'+diffs.map(function(x){
-            var side=(x.d>=0)?'above':'below';
-            return '<div class="ce-dbt-r '+side+'">'+
-              '<span class="ce-dbt-k">'+esc(x.k)+'</span>'+
-              '<span class="ce-dbt-v"><b>Street</b> '+ceFmtV(x.un,x.c)+'</span>'+
-              '<span class="ce-dbt-v"><b>Summit</b> '+ceFmtV(x.un,x.u)+'</span>'+
-              '<span class="ce-dbt-d">'+(x.d>=0?'+':'−')+Math.abs(x.d).toFixed(1)+'%</span></div>';
-          }).join('')+'</div>';
-        }
-        if(nous.length){
-          b+='<div class="ce-dbt-none"><b>No Summit number yet on '+nous.length+' of '+(nous.length+diffs.length)+' lines:</b> '+
-             esc(nous.join(' · '))+'.<br>Until those are filled the debate is the Street against itself — '+
-             'the grid above still shows what it expects, and the track record below shows how often it has been wrong.</div>';
-        }
-        if(d&&d.synth) b+='<div class="ce-synth">'+d.synth+'</div>';
-      }
+      // (The "debate" line-by-line block + its synth line were removed per request — Aug 2026.)
       b+='<div class="ov-foot">Frozen at call time; Post-Results scores actuals against BOTH columns.</div>';
     }
     if(st.pricedIn||st.oneLiner){
@@ -1286,8 +1294,18 @@ function ceSetupBody(c){
     return b;
   }).join('');
   h+=ceAnnualBody();
+  h+=ceConsensusEvoBody();
   return h;
 }
+// A2 · Consensus Estimate Evolution — how the Street's forward Revenue estimate has been REVISED
+// across the Bloomberg quarterly snapshots (BBG_CONSENSUS.txt). Fixed FY (one line per fiscal year,
+// the revision trend) ⇄ Rolling NTM (Σ next 4 forecast quarters). Revenue only for now; the module
+// (js/consensus-evolution.js) is ticker/metric-agnostic so more slot in with the same data shape.
+function ceConsensusEvoBody(){
+  return '<div class="ce-cev" style="margin:22px 0 4px;padding:16px 0 0;border-top:2px solid var(--bdr)">'+
+    consensusEvo.html('AMZN','rev')+'</div>';
+}
+function ceConsensusEvoRoot(){ return document.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phpane[data-cep="setup"] .ce-cev'); }
 // A1 · The annual picture — how the FY has looked, and what BBG vs Summit expect for the ones
 // still open. Reported FY actuals are bars/line; the forward years carry two forward points,
 // Bloomberg consensus (our txt) and Summit (the DCF, most-recent annual snapshot). If the company
@@ -1303,7 +1321,8 @@ function ceAnnualBody(){
     resultsHtml('AMZN_SETUP')+'</div>';
 }
 function ceSetupWrap(){ return document.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phpane[data-cep="setup"] .rs-wrap'); }
-function gBuildCeAnnual(){ var w=ceSetupWrap(); if(w) initResults(w, 'AMZN_SETUP'); }   // (kept name: called from buildSub / phase-tab wiring)
+function gBuildCeAnnual(){ var w=ceSetupWrap(); if(w) initResults(w, 'AMZN_SETUP');   // (kept name: called from buildSub / phase-tab wiring)
+  var cev=ceConsensusEvoRoot(); if(cev && !cev._cevInit){ cev._cevInit=true; consensusEvo.init(cev, 'AMZN', 'rev'); } }
 function wireCeAnnual(root){ /* the engine self-wires via initResults->wireResults; the chart builds on Setup visibility (gBuildCeAnnual). */ }
 
 // B · Watch List ─────────────────────────────────────────────────────────────────────────────────
@@ -2071,17 +2090,18 @@ function deepDiveHtml(c){
       '<div class="ovt-subpane" data-ovst="margins">'+bottomlineBody()+'</div>'+
     '</div>';
   h+='<div class="dd-pane" data-dd="evolution" hidden>'+
-      '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="results">Results</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
+      '<div class="ce-evohead" style="position:relative;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 12px">'+
+        '<div class="ovt-subtabs" style="margin:0">'+
+          '<button type="button" class="ovt-subtab active" data-ovst="earnings">Earnings</button>'+
+          '<button type="button" class="ovt-subtab" data-ovst="results">Results</button>'+
+          '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>'+
+          '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
+          '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
+          '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
+        '</div>'+
+        ceIRButton()+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="earnings">'+
-        ceIRButton()+
-        '<div class="ce-note" style="margin-bottom:12px">🎯 <b>Earnings</b> — the decision layer, in two phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (the print scored against what was frozen, <i>plus</i> the call highlights — the things worth taking into the conversation). Append-only per quarter — pick a quarter below; each quarter keeps its frozen pre-call blocks next to its post-mortem, so the tab is a record of how well we read Amazon. The <b>Watch List</b> is the single home for what we <i>track over time</i>; the Post-Results highlights are <i>talking points</i>, not tracking.</div>'+
         '<div class="ce-phtabs">'+
           '<button type="button" class="ce-phtab active" data-cep="setup">Setup</button>'+
           '<button type="button" class="ce-phtab" data-cep="watch">Watch List</button>'+
@@ -2170,10 +2190,13 @@ function wireDD(root){
   // Sub-tabs, pane-scoped, with the anti-scroll-jump anchor (§6a-iv).
   root.querySelectorAll('.ov-amzn-dd .dd-pane').forEach(function(pane){
     var dd=pane.getAttribute('data-dd');
-    pane.querySelectorAll(':scope > .ovt-subtabs .ovt-subtab').forEach(function(btn){ btn.onclick=function(){
+    // The subtab bar is a direct child of the pane — EXCEPT in Evolution, where it lives inside
+    // .ce-evohead (the flex header that parks the IR/EDGAR chips at its right). Match both.
+    var SUB=':scope > .ovt-subtabs > .ovt-subtab, :scope > .ce-evohead > .ovt-subtabs > .ovt-subtab';
+    pane.querySelectorAll(SUB).forEach(function(btn){ btn.onclick=function(){
       var key=btn.getAttribute('data-ovst');
       ceKeepPos(btn, function(){
-        pane.querySelectorAll(':scope > .ovt-subtabs .ovt-subtab').forEach(function(b){ b.classList.toggle('active', b===btn); });
+        pane.querySelectorAll(SUB).forEach(function(b){ b.classList.toggle('active', b===btn); });
         pane.querySelectorAll(':scope > .ovt-subpane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovst')!==key); });
       });
       aBuildSub(root, dd, key);

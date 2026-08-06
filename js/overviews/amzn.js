@@ -836,7 +836,6 @@ function callsBody(){
     '.calls-pill:hover{color:var(--navy)}.calls-pill.active{background:'+BRAND+';color:#fff}'+
     '.calls-tl{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--navy);margin:0 0 4px}'+
     '.calls-st{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:2px 8px;white-space:nowrap;border:1px solid;flex:none}</style>';
-  h+='<p class="ov-lede">The key narrative threads from the calls tracked so far (Q4 2025 → Q1 2026; the record deepens each cycle). Switch lens: <b>By theme</b> traces how each story evolved; <b>By quarter</b> shows what mattered on a given call. Each theme carries a status — <b>trend</b> (confirmed), <b>promise</b> (a commitment to reconcile) or <b>watch</b> — with its age. Tap any row to expand.</p>';
   h+='<div class="calls-tog" role="tablist"><button type="button" class="calls-pill active" data-callsv="theme">By theme</button><button type="button" class="calls-pill" data-callsv="quarter">By quarter</button></div>';
   h+='<div class="lpb-acc" id="aCallsTheme">';
   AMZN_THEMES.forEach(function(ct){
@@ -1313,13 +1312,13 @@ function wireCeAnnual(root){ /* the engine self-wires via initResults->wireResul
 // WL_ROWS. The multi-year theme record stays below, folded in as before.
 function ceWatchBody(c){
   var h=ceStyle();
-  h+='<div data-wlmount></div>';
   // ── FUSED: the full multi-year theme record (was the standalone Evolution ▸ Earnings Calls tab,
-  // dissolved Jul 2026 — no two tabs on the same call highlights). Lives here, under the Watch List. ──
-  h+='<div style="margin-top:26px;border-top:2px solid var(--bdr);padding-top:16px">';
-  h+='<div class="ce-band" style="--bc:'+BRAND+'"><span class="ce-band-i">▤</span><span class="ce-band-t">The theme record — every thread, across all calls</span><span class="ce-band-s">the multi-year backbone behind the hunt above (the former "Earnings Calls" tab, folded in)</span><span class="ce-band-l"></span></div>';
+  // dissolved Jul 2026 — no two tabs on the same call highlights). Moved to the TOP of this sub-tab
+  // (Aug 2026, AMZN only) — it now leads; the Watch List is folded in below it. ──
+  h+='<div class="ce-band" style="--bc:'+BRAND+'"><span class="ce-band-i">▤</span><span class="ce-band-t">The theme record — every thread, across all calls</span><span class="ce-band-s">the multi-year backbone behind the hunt below (the former "Earnings Calls" tab, folded in)</span><span class="ce-band-l"></span></div>';
   h+=callsBody();
-  h+='</div>';
+  // Watch List — the SHARED engine (js/watchlist.js) mounts into this host, now below the theme record.
+  h+='<div style="margin-top:26px;border-top:2px solid var(--bdr);padding-top:16px"><div data-wlmount></div></div>';
   return h;
 }
 // (Promise Tracker dissolved Jul 2026 — promise-type items now live as tracked themes inside the

@@ -396,8 +396,9 @@ var CE_SEC_SEAL='img/sec-seal.png';
 // release·webcast·slides and 10-K·10-Q lines) were intentionally dropped for the compact form.
 function ceIRButton(){
   return '<style>'+
-    '.cp-srcrow{display:inline-flex;flex-direction:column;gap:8px;align-items:stretch;position:absolute;top:0;right:0}'+
-    '.cp-ir{display:inline-flex;align-items:center;gap:11px;text-decoration:none;border-radius:12px;padding:9px 15px 9px 9px;width:248px;box-sizing:border-box;position:relative;overflow:hidden;'+
+    '.cp-srcrow{display:flex;flex-direction:row;gap:10px;align-items:stretch;margin:0 0 12px}'+
+    '@media(max-width:640px){.cp-srcrow{flex-direction:column}}'+
+    '.cp-ir{display:inline-flex;align-items:center;gap:11px;text-decoration:none;border-radius:12px;padding:11px 17px 11px 11px;flex:1;min-width:0;box-sizing:border-box;position:relative;overflow:hidden;'+
       'background:linear-gradient(115deg,#0B0703 0%,#1C1206 60%,#0B0703 100%);border:1px solid rgba(255,153,0,.34);box-shadow:0 5px 16px rgba(0,0,0,.38);transition:.16s}'+
     '.cp-ir:hover{transform:translateY(-1px);box-shadow:0 9px 24px rgba(255,153,0,.32);border-color:rgba(255,153,0,.75)}'+
     '.cp-ir-wm{position:absolute;right:-16px;bottom:-20px;width:88px;height:88px;object-fit:contain;opacity:.13;pointer-events:none;transition:.25s}'+
@@ -585,22 +586,22 @@ var CALL_EARNINGS = { ticker:'AMZN', quarters:[
     results:{
       summary:{
         paras:[
-          { p:'<b>The acceleration thesis stopped being a thesis.</b> AWS grew <b>+37% to $42.2B</b> (a $169B <span class="ce-gl" data-def="The current quarter\'s pace annualized — not trailing-twelve-month revenue.">run-rate</span>) — the fastest in 18 quarters and the THIRD straight acceleration (+24% → +28% → +37%) — while total revenue printed <b>$200.6B (+20%)</b>, $1.6B above the TOP of the guide, and operating income <b>$27.5B</b> beat its guide top by $3.5B at a <b>13.7% margin, the highest ever</b>. The demand math behind it got bigger too: <span class="ce-gl" data-def="Contracted future revenue not yet recognised — AWS reports it as remaining performance obligations.">backlog</span> reached <b>$496B</b> (roughly 2.5x a year ago), with 2027 capacity "largely reserved" and some 2028 capacity "already spoken for."',
-            more:'The reading order for this print: revenue and operating income against their GUIDES (both cleared the top), AWS against the Street\'s $40.5B (+4.2%), advertising against $19.4B (+2.6%, and an acceleration to +26%). The only line that missed anything was International revenue — $42.2B vs $42.7B modelled, −1.2% — which is noise against the rest of the card.' },
-          { p:'<b>Ignore the EPS number; it is a mark, not a quarter.</b> GAAP EPS printed <b>$5.75 against a $1.82 bar</b> — but net income carries <b>$53.4B of pre-tax other income, primarily the Anthropic investment mark</b> (that line was $1.1B a year ago). The honest read is the operating line, and even that gets a footnote management supplied itself: the AWS margin\'s +650bps YoY includes roughly <b>130bps of energy-derivative accounting gains</b> that Olsavsky stripped out on the call (+520bps clean). Doing the ex-items math before the Street asks is the credibility tell of this print.',
-            moreLabel:'＋ more — what the mark did to the rest of the statements',
-            more:{ body:'The Anthropic mark is not confined to the income statement — it shows up in three other places, and each one is plumbing rather than operations.',
+          { p:'<b>AWS turned from a demand question into a supply question, and that changes what the model actually hinges on.</b> For six quarters the live debate was whether AWS demand was real. This print settles it: contracted <span class="ce-gl" data-def="Contracted future revenue not yet recognised; AWS reports it as remaining performance obligations.">backlog</span> now covers roughly two build-years forward, with 2027 largely reserved and parts of 2028 already committed, so the growth ahead is booked rather than hoped. The consequence for the analysis is that the variable to underwrite is no longer the demand curve but the conversion rate: how fast Amazon can stand up reserved capacity and turn it into recognised revenue. Forward estimates now key off installation and utilisation cadence, not off whether customers show up.',
+            more:'The one soft line, International revenue, is immaterial to the thesis. What matters analytically is that the acceleration arrived while supply, not demand, was the binding constraint, which is the tell that the book is converting faster than capacity is being added.' },
+          { p:'<b>The margin record matters as evidence, not as a number: Amazon is absorbing a historic investment cycle without profitability giving way.</b> The most direct bear case was that the build would compress margins before the revenue arrived, and this quarter closes off that path. The stronger signal is behavioural. Management volunteered that part of the AWS margin gain came from an energy-derivative accounting item and pointed the Street to the clean figure instead. Disclosing a flattering item against its own interest tells you the underlying margin is the one they are willing to be judged on, which raises the credibility of the whole operating trajectory.',
+            moreLabel:'＋ more — why the EPS line is not the read',
+            more:{ body:'GAAP EPS is dominated by a non-operating Anthropic valuation mark, so it says nothing about the economics of the quarter. It matters only for two second-order reasons.',
               nodes:[
-                { t:'Tax and the balance sheet', body:'The tax provision jumped to <b>$18.2B</b>, of which <b>$17.7B is deferred</b> — the mark is unrealised, so the cash tax is not. "Other assets" swelled to <b>$284B</b> carrying the revalued stake.' },
-                { t:'Why Q3\'s guide reads differently', body:'The Q3 guidance now carries new assumption language excluding <b>energy-derivative contract remeasurements</b>. The same accounting that added ~130bps to the AWS margin this quarter has been fenced out of the forward guide — a disclosure improvement worth crediting.' } ] } },
-          { p:'<b>The bill crossed its red line — and the tape paid up anyway.</b> Quarterly <span class="ce-gl" data-def="Gross purchases of property and equipment from the cash-flow statement, before proceeds from sales and incentives.">capex</span> hit <b>$54.2B</b> (1H26: $98.4B), the FY26 frame was <b>raised to ~$220B</b> from ~$200B with memory-cost inflation named again, and trailing-twelve-month <span class="ce-gl" data-def="Operating cash flow minus capital expenditure — the cash the business keeps after paying for its own growth.">free cash flow</span> went <b>NEGATIVE (−$7.6B)</b> for the first time in this build, funded by $67B of new long-term debt in six months. The desk\'s Q4-2025 red line — "the frame outruns the cash" — has now fired in the ACTUALS, not just in the model. The market\'s verdict: <b>+9% after hours</b>. With $496B of contracted backlog on the other side of the scale, negative FCF read as pre-sold rather than reckless.',
-            moreLabel:'＋ more — the funding math, and why the frame moved',
-            more:{ body:'The cash math of the half: <b>$161.4B</b> of TTM operating cash flow (+33%) against <b>$169.0B</b> of TTM net capex. The gap is being closed with debt — long-term debt went $65.6B → $128.9B in six months.',
+                { t:'Cash tax and the balance sheet', body:'The mark is unrealised, so the large tax provision it created is mostly deferred rather than cash. Read it as an accounting entry, not a cash outflow that changes the funding picture.' },
+                { t:'Why the Q3 guide reads cleaner', body:'Management fenced energy-derivative remeasurements out of the forward guide by assumption. The item that flattered this quarter\'s AWS margin will not distort the next comparison, which makes the guide more useful to model against.' } ] } },
+          { p:'<b>Free cash flow going negative is less important than what the market decided it means.</b> The development to weigh is not the capex figure but the re-rating around it: the stock rose after the print, so investors are underwriting the spend as pre-sold against the backlog rather than as overreach. For the analysis this redirects the diligence. The question stops being whether Amazon is spending too much and becomes whether the backlog is high quality and will convert, so the work moves to cancellation terms, customer concentration and installation timelines. The capex itself only turns into a risk if conversion slips, at which point the same negative <span class="ce-gl" data-def="Operating cash flow minus capital expenditure — the cash the business keeps after paying for its own growth.">free cash flow</span> would read very differently.',
+            moreLabel:'＋ more — where the funding grace could break',
+            more:{ body:'Operating cash flow no longer covers the build, and the gap is being closed with debt. That is durable only while the backlog keeps converting on schedule.',
               nodes:[
-                { t:'Why ~$200B became ~$220B', body:'Olsavsky attributed part of the raise to the "higher cost of memory" — the same input Jassy said had "skyrocketed" in Q1, now quantified into the frame. Because allocations were locked with strategic suppliers in mid-to-late 2025, the inflation shows up in the BILL rather than in missed capacity.' },
-                { t:'The LEO wrinkle', body:'Roughly $1B a quarter of Amazon LEO cost still runs through North America operating expense until capitalization begins in Q4 2026. Commercial service starts in Q3 — the first quarter where that cost line finally has a revenue line beside it.' } ] } },
-          { p:'<b>The AI business inside AWS got its first hard sizing — and a second frontier tenant.</b> The release itself disclosed that AWS\'s <b>AI business and its chips business each exceed a $25B annualized run-rate, both growing triple-digit</b>, and the call added that <b>Anthropic AND OpenAI are each making multi-year, multi-gigawatt Trainium commitments</b>, with Graviton5 now generally available. Two quarters ago custom silicon was a $20B run-rate with a single anchor tenant; it now has both leading frontier labs committed to the same silicon. Jassy restated the destination without hedging it: AWS "can be a trillion-dollar annual revenue business."' },
-          { p:'<b>The Q3 guide is better than it looks — read it ex-Prime-Day.</b> Net sales guided <b>$197–202B (+9–12%)</b> with ~80bps of FX headwind, but Prime Day sat in Q3 last year and Q2 this year, so the release states underlying growth would be <b>~400bps higher</b>. Operating income guided <b>$22.5–26.5B</b> against a Q3-2025 comp that carried $4.3B of charges. Underneath the optics the retail engine kept compounding: paid units +17%, same-day perishables customers +50% since January, same-day orders carrying 3x the units, and roughly $600M of tariff-related refunds landing as one-off relief.' }
+                { t:'The single condition to watch', body:'If conversion pace slows for even one quarter, negative FCF funded by rising debt loses its pre-sold justification. This is the one variable that flips the print from strong to fragile, and it is the thing to monitor above the headline numbers.' },
+                { t:'Why the frame keeps rising', body:'The capex frame moved up on memory-cost inflation, not on added capacity. Cost inflation on a fixed build is a margin and funding question rather than a demand signal, so it should be tracked separately from the backlog story.' } ] } },
+          { p:'<b>Custom silicon crossed from an internal cost lever into an external competitive moat.</b> The meaningful change is validation. Both leading frontier labs have now committed to Amazon\'s chips, which undercuts the argument that AWS is merely reselling someone else\'s GPUs and puts a differentiated asset behind its capex. For the thesis this narrows the open question to monetisation. The silicon advantage is proven for internal and anchor-tenant use, but whether it ever sells beyond that, through a merchant or rack path, is unresolved. That is the next catalyst worth tracking, because it would convert a cost advantage into a new revenue line rather than a defensive one.' },
+          { p:'<b>The Q3 guide should not be read as a slowdown, and the more durable signal sits in retail.</b> The headline growth step-down is a calendar artifact from Prime Day shifting quarters, so treating the guide as deceleration misreads it. The signal that compounds is structural: retail efficiency, where units grow faster than fulfilment cost, plus fast-commerce adoption, are becoming permanent features rather than a recovery. That supports the North America margin path independently of AWS, which matters because it means the profit story is no longer carried by a single engine. The lower the reliance on any one segment, the lower the risk that a miss in that segment breaks the whole thesis.' }
         ]
       },
       notes:{
@@ -652,6 +653,38 @@ var CALL_EARNINGS = { ticker:'AMZN', quarters:[
         { tag:'watch', band:'logged', open:'A dated marker: LEO commercial service starts in Q3 — the first quarter where the ~$1B/quarter cost line has revenue beside it.',
           head:'LEO: capitalization begins Q4, commercial service Q3 — the cost line finally gets a revenue line',
           detail:'<p>The disclosure set is unchanged from Q1 (250+ satellites; Delta, JetBlue, AT&T, Vodafone, NASA and Apple committed). The milestone to score next call is whether commercial revenue actually starts, and at what run-rate.</p>' },
+      ],
+      // ③ THE CALL, CLASSIFIED — prepared remarks + Q&A, each tagged to a Watch List theme. Built from
+      // docs/calls/AMZN-latest.md (Q2 2026, Jul 30). Tone follows the AI-summary standard: objective,
+      // no em-dashes, the why behind each point. Answers are reconstructed from transcript coverage
+      // (verbatim IR transcript still pending per the doc's provenance note).
+      prepared:[
+        { topic:'Capex frame raised to ~$220B', theme:'Capex',
+          body:'Olsavsky lifted the FY2026 cash-capex frame to ~$220B from ~$200B and attributed part of the raise to the higher cost of memory, the same input Jassy called "skyrocketed" in Q1. Quarterly capex was $54.2B gross (1H26 $98.4B). The reason it lands in the bill rather than in lost capacity: supply was locked with strategic suppliers in mid-to-late 2025, so the inflation prices the spend instead of capping it.' },
+        { topic:'Backlog $496B, capacity reserved into 2028', theme:'Backlog',
+          body:'AWS backlog reached $496B and is growing triple-digit, roughly 2.5x the prior year. Management said 2027 capacity is largely reserved and some 2028 capacity is already spoken for. That reframes the +37% AWS growth as conversion of a contracted book, with supply as the binding constraint into 2027 and 2028.' },
+        { topic:'AWS margin quality, disclosed against interest', theme:'Margins',
+          body:'AWS margin was 39.4%, up ~650bps YoY, but Olsavsky volunteered that roughly 130bps came from energy-derivative accounting gains, leaving ~520bps of clean expansion. He tied the clean gain to efficiency in custom-silicon mix, power and utilisation. Disclosing the flattering item before being asked is the credibility signal, and it explains why the Q3 guide now excludes remeasurements by assumption.' },
+        { topic:'AI and chips each above a $25B run-rate', theme:'Custom silicon',
+          body:'The release sized two businesses inside AWS for the first time: the AI business and the chips business each exceed a $25B annualized run-rate, both growing triple-digit. Anthropic and OpenAI are each making multi-year, multi-gigawatt Trainium commitments, and Graviton5 reached general availability. It matters because custom silicon now has both leading frontier labs committed, so the tenant list stops being a concentration risk.' },
+        { topic:'Returns and the trillion-dollar destination', theme:'Backlog',
+          body:'Jassy said Amazon has "clear line of sight to strong financial returns" and restated that AWS can become a trillion-dollar annual revenue business. The purpose of the framing was to cast the capex as demand-led investment against a contracted book rather than open-ended spending.' },
+        { topic:'Consumer: fast commerce, tariff refunds, advertising', theme:'Robotics',
+          body:'Same-day perishables customers are up 50% since January and same-day orders carry about 3x the units, with grocery and everyday essentials growing faster than the rest of retail. Roughly $600M of tariff-related refunds landed in Q2 as one-off cost relief inside North America. Advertising grew 26% to $19.8B, with sponsored products named as the driver.' },
+      ],
+      qanda:[
+        { q:'AWS margin sustainability under heavy AI investment, and whether Amazon needs its own frontier model', analyst:'Doug Anmuth · J.P. Morgan', theme:'Margins',
+          a:'Management framed margins as the product of disciplined efficiency (silicon mix, power, utilisation) rather than a one-off, while flagging that the derivative line can swing a given quarter. On owning a frontier model, the answer stayed non-committal: the strategy is to give customers choice across models on AWS, with Anthropic and OpenAI both on Trainium, so no in-house frontier model was asserted as necessary.' },
+        { q:'AWS acceleration drivers and the shape of 2027 capacity additions', analyst:'Justin Post · Bank of America', theme:'Backlog',
+          a:'The drivers cited were backlog conversion and enterprise migration, with the AI and chips run-rates as evidence. On 2027, management used reservation language (largely reserved) rather than megawatt numbers, keeping the pace of adds qualitative.' },
+        { q:'2027 data-centre investment timelines, and Trainium sales into third-party data centres', analyst:'Brian Nowak · Morgan Stanley', theme:'Custom silicon',
+          a:'On timing, management repeated that installs bill six to twenty-four months after commitment, so 2027 and 2028 capacity is being reserved now. On selling Trainium into external data centres, the merchant question was left open: it stayed a possibility, not a stated plan.' },
+        { q:'Application-layer expansion (Kiro, Transform) and how the capital is sourced', analyst:'Colin Sebastian · Baird', theme:'Capex',
+          a:'Management positioned Kiro and Transform as moving AWS from renting compute toward selling outcomes higher up the stack. On funding, the answer pointed to operating cash flow plus debt, consistent with the $67B of long-term debt raised in the half, with no co-investment vehicle announced.' },
+        { q:'Backlog at ~2.5x YoY versus capacity planning, and AWS pricing amid cost inflation', analyst:'Ken Gawrelski · Wells Fargo', theme:'Backlog',
+          a:'Management confirmed backlog at roughly 2.5x the prior year and tied planning to that reserved book. On pricing, the message was that efficiency gains, not list-price increases, are carrying margin, so cost inflation is absorbed through silicon and utilisation rather than passed to customers.' },
+        { q:'Fast-commerce and grocery adoption across geographies', analyst:'Eric Sheridan · Goldman Sachs', theme:'Robotics',
+          a:'Management pointed to same-day perishables customers up 50% since January and same-day orders carrying 3x the units, with grocery and everyday essentials growing faster than the rest of the business and expanding across regions. The read is that fast commerce is becoming a structural feature of the model rather than a recovery story.' },
       ],
       dots:'Q4 2025 planted the two tensions (the bill, and the pre-sold demand that justifies it); Q1 2026 resolved demand emphatically; Q2 resolved the MARGIN question — a 13.7% record with AWS at 39.4% and the derivative flattery disclosed — while the bill crossed its red line in the actuals (TTM FCF −$7.6B, frame ~$220B, debt nearly doubled). Every thread now converges on one variable: the PACE at which $496B of contracted demand converts against reserved capacity. At +37% with record margins, pace is the only thing standing between the bulls\' trillion-dollar AWS and the bears\' negative-FCF-forever.',
       threeMinutes:[
@@ -730,6 +763,33 @@ var CALL_EARNINGS = { ticker:'AMZN', quarters:[
           head:'Call colour: Alexa+ 2x conversations / 3x purchase completions · OpenAI models in Bedrock (GPT-5.4 live) · grocery $150B+ gross sales',
           detail:'<p>Alexa+ expanded to Mexico/UK/Italy/Spain. Bedrock now carries the full OpenAI suite (stateful API coming) — 125K+ customers, 80% of the Fortune 100. Grocery: second-largest US grocer, perishables 40x YoY.</p>' },
       ],
+      // ③ THE CALL, CLASSIFIED — built from docs/calls/AMZN.md (Q1 2026, Apr 29). Objective tone, no em-dashes.
+      prepared:[
+        { topic:'AWS +28% and the backlog behind it', theme:'Backlog',
+          body:'Jassy: "very unusual for a business to grow this fast on a base this large." AWS ran a $150B run-rate at +28%, the fastest in 15 quarters. Backlog stood at $364B and, as he stressed, that figure excludes the $100B+ Anthropic deal. Bedrock spend was up 170% sequentially and Q1 tokens processed exceeded all prior years combined. The point was that the growth is contracted demand, not a spot spike.' },
+        { topic:'Custom silicon doubled to a $20B run-rate', theme:'Custom silicon',
+          body:'Custom-silicon run-rate reached $20B, up ~40% QoQ, with $225B+ of Trainium revenue commitments. Trainium3 runs 30-40% over Trainium2 and is nearly fully subscribed; Trainium4 is largely reserved ~18 months out. Graviton sits in 98% of the top-1,000 EC2 customers, with Meta committed to tens of millions of cores. The takeaway is that silicon demand is booked well ahead of supply.' },
+        { topic:'Retail efficiency: units +15% vs fulfillment +9%', theme:'Robotics',
+          body:'Olsavsky put store-unit growth at +15% (the highest since COVID) against fulfillment expense up only 9% FX-neutral, the gap that produced the record 13.1% consolidated margin. Robotics now deploys in every 2026 US large-format launch. Grocery passed $150B+ gross sales as the second-largest US grocer, with 1B+ same or next-day items YTD.' },
+        { topic:'Capex $44.2B and memory that "skyrocketed"', theme:'Capex',
+          body:'Q1 capex was $44.2B (the call quoted $43.2B cash), primarily AWS and generative AI. Olsavsky said memory component costs have "skyrocketed", with allocations locked with strategic suppliers in mid-to-late 2025. The framing matters because scarcity is accelerating enterprise cloud migration rather than capping Amazon\'s own build.' },
+        { topic:'LEO nears commercial service', theme:'LEO',
+          body:'Amazon LEO passed 250+ satellites with commercial service targeted for Q3 2026 and commitments from Delta, JetBlue, AT&T, Vodafone, DIRECTV LatAm, NBN, NASA and Apple. The near-term cost is ~$1B YoY landing in Q2, with capitalization beginning Q4, so the revenue line still sits ahead of the cost line.' },
+      ],
+      qanda:[
+        { q:'Capacity against the backlog: can AWS keep up with contracted demand?', analyst:'Eric Sheridan · Goldman Sachs', theme:'Backlog',
+          a:'Jassy called it a "once-in-a-lifetime opportunity" and declined to give new capex guidance, while saying he expects significant deployment. He argued that owning the chips (Graviton and Trainium) is what positions AWS to meet the inflection without being gated on third-party supply.' },
+        { q:'Backlog breadth and whether third-party agents threaten Rufus', analyst:'Brian Nowak · Morgan Stanley', theme:'Advertisement',
+          a:'Jassy said the backlog is broad rather than concentrated. On agents, he reported Rufus MAU up 115% and engagement up 400%, and argued third-party agents mis-price and lack personalization, so the retailer\'s own assistant wins the shopping surface.' },
+        { q:'OpenAI in Bedrock, and selling Trainium racks externally', analyst:'Justin Post · Bank of America', theme:'Custom silicon',
+          a:'Jassy noted GPT-5.4 is live in Bedrock with 5.5 due in a couple of weeks. On external rack sales he called it "very much a possibility" over the next couple of years, with the caveat that current supply is fully allocated to training, so it is optionality rather than a committed plan.' },
+        { q:'LEO economics and the launch cadence', analyst:'Chris Sanderson · Loop Capital', theme:'LEO',
+          a:'Jassy cited 2x downlink and 6x uplink versus incumbents, 20+ launches in 2026 and 30+ in 2027, and framed LEO as "a very large, many-billion-dollar revenue business" with an AWS-like path from heavy capex to free cash flow.' },
+        { q:'Memory inflation, and advertising inside agentic commerce', analyst:'Amit Khajuria · Wolfe Research', theme:'Advertisement',
+          a:'Jassy said allocations were locked with strategic suppliers in mid-to-late 2025, so the scarcity accelerates cloud migration rather than stalling the build. On ads he said "we are going to like this for advertising," because sponsored prompts work and multi-turn conversations create more surfaces, not fewer.' },
+        { q:'Which demand segments lead, and how internal AI changes the cost base', analyst:'Colin Sebastian · Baird', theme:'Backlog',
+          a:'Jassy split demand between labs and enterprise production, saying enterprise production may end up the largest and most durable. As proof of the internal leverage he cited a service engine rebuilt in 65 days versus 40-50 person-years, calling it "a very different world of operating."' },
+      ],
       dots:'Every thread of the quarter is the same sentence from a different angle: demand is contractually pre-sold (backlog, Anthropic, Trainium commitments), so the binding constraint moved to SUPPLY — memory, power, racks — and the costs of building it (capex, LEO, SBC). The record margin says the model absorbs it so far; the Q2 guide says management wants room in case it does not.',
       threeMinutes:[
         '<b>The demand question died this quarter.</b> AWS +28% (fastest in 15 quarters), backlog $364B excluding a $100B+ Anthropic deal, $225B of Trainium commitments. Whatever the bears say about the spend, the revenue is contracted.',
@@ -806,6 +866,35 @@ var CALL_EARNINGS = { ticker:'AMZN', quarters:[
         { tag:'logged', band:'logged',
           head:'Call colour: 1M+ robots in the network · 8B+ same/next-day items (+30%) · Prime Video ads 315M viewers · Alexa+ free for Prime',
           detail:'<p>Everyday essentials now one of three units sold; America\'s lowest-priced retailer for the 9th straight year (14% below other majors); LEO at 180 satellites with 20+ launches planned for 2026.</p>' },
+      ],
+      // ③ THE CALL, CLASSIFIED — built from docs/calls/AMZN.md (Q4 2025, Feb 5). Objective tone, no em-dashes.
+      prepared:[
+        { topic:'AWS +24% and a backlog up 40%', theme:'Backlog',
+          body:'Jassy called AWS the "fastest we have seen in thirteen quarters" at +24%, a $142B run-rate with a 35% margin. Backlog reached $244B, up 40% YoY and 22% QoQ. Amazon added more than 1GW of capacity in Q4 and 3.99GW of power across 2025 (twice 2022), with plans to double again by 2027. The read is that supply is being built directly against a contracted book.' },
+        { topic:'Custom chips and Project Rainier', theme:'Custom silicon',
+          body:'Custom chips passed a $10B+ run-rate with Trainium at triple-digit growth. Project Rainier put 500K chips to work training the next Claude model, and Jassy said "you will see that continuing to increase." Trainium3 supply is nearly all committed by mid-2026, and Graviton grew >50% across >90% of the top-1,000 customers.' },
+        { topic:'The ~$200B capex frame', theme:'Capex',
+          body:'Olsavsky set the number of the call: "about $200 billion in capital expenditures, predominantly in AWS, because we have very high demand." FY25 capex was $131.8B against $11.2B of TTM free cash flow, and the Summit model flipped FY26 FCF negative at its next snapshot. His defense: "as fast as we install this capacity, this AI capacity, we are monetizing it."' },
+        { topic:'Retail scale and Rufus', theme:'Robotics',
+          body:'Amazon was the lowest-priced US retailer for the 9th straight year (14% below other majors), with everyday essentials at one of three units and 8B+ same or next-day items (+30%). Rufus reached 300M customers in 2025, with users "60% more likely to complete a purchase" and able to shop tens of millions of items in other stores.' },
+        { topic:'Advertising at a $21B quarter', theme:'Advertisement',
+          body:'Advertising printed $21.3B (+22%), with $12B of incremental ad revenue across 2025 and Prime Video ads reaching 315M viewers. The engine keeps scaling alongside retail traffic rather than depending on it.' },
+        { topic:'The $2.4B charges and operating leverage', theme:'Robotics',
+          body:'Olsavsky walked through $2.4B of special charges: a $1.1B Italy tax settlement, $730M of severance and $610M of physical-store impairments, leaving ex-charge operating income near $27.4B. He also cited 1M+ robots in the network and perishables reaching 2,300+ cities as the efficiency base.' },
+      ],
+      qanda:[
+        { q:'ROIC and duration of the AWS investment at a 35% margin', analyst:'Mark Mahaney · Evercore ISI', theme:'Margins',
+          a:'Jassy pointed to the 35% AWS margin and said "we will see how that develops," declining to anchor a forward margin. The framing was that returns come from utilisation and silicon efficiency over the asset life rather than from a single quarter\'s print.' },
+        { q:'Project Rainier at 500K chips and where it goes next', analyst:'Doug Anmuth · J.P. Morgan', theme:'Custom silicon',
+          a:'Jassy confirmed the 500K-chip Rainier cluster training the next Claude model and said the number will keep increasing, tying the scale directly to committed Trainium demand rather than speculative capacity.' },
+        { q:'How to think about the shape of the AI market', analyst:'Ross Sandler · Barclays', theme:'Backlog',
+          a:'Jassy described the market as "barbelled" between labs and enterprise, and said enterprise production workloads "may end up being the largest and most durable" source of demand, which is the segment AWS is built to serve.' },
+        { q:'Whether AI shopping assistants compress the ad funnel', analyst:'Michael Morton · MoffettNathanson', theme:'Advertisement',
+          a:'Jassy answered with the Rufus data point that users are 60% more likely to complete a purchase, arguing that agentic surfaces expand rather than compress the funnel because they add shopping touchpoints.' },
+        { q:'Fulfillment efficiency and network structure', analyst:'Brian Nowak · Morgan Stanley', theme:'Robotics',
+          a:'Jassy cited the extension of regions from 8 to 10 and 1M+ robots in the network as the levers, framing efficiency as a structural change in cost per unit rather than a cyclical recovery.' },
+        { q:'Who actually consumes the backlog', analyst:'Eric Sheridan · Goldman Sachs', theme:'Backlog',
+          a:'Jassy said the "vast majority" of the backlog is consumed by external customers, addressing the concern that the book might be inflated by internal Amazon or Anthropic usage.' },
       ],
       dots:'The Q4 call planted 2026\'s two tensions in one breath: the ~$200B bill and the pre-sold demand that justifies it (backlog +40%, Rainier, Trainium commitments). Q1 2026 then resolved the demand side emphatically (+28%, $364B + Anthropic) — leaving the bill (memory costs, LEO, FCF) as the live wire into Q2.',
       threeMinutes:[
@@ -1279,17 +1368,8 @@ function ceSetupBody(c){
       // (The "debate" line-by-line block + its synth line were removed per request — Aug 2026.)
       b+='<div class="ov-foot">Frozen at call time; Post-Results scores actuals against BOTH columns.</div>';
     }
-    if(st.pricedIn||st.oneLiner){
-      if(!hasGrid){
-        b+='<p class="ov-lede"><b>'+esc(u.q)+' — the setup, as it stood going in.</b> '+(u.date?('Reported <b>'+esc(u.date)+'</b>.'):'')+'</p>';
-        if(st.source) b+='<div class="ave-subh-note" style="margin:0 0 8px">'+esc(st.source)+'</div>';
-      } else {
-        b+='<div class="ov-diagram-cap" style="margin:16px 0 4px"><b>The contemporaneous read — written before the print, never rewritten</b></div>';
-      }
-      if(st.pricedIn) b+='<div class="ce-banner"><b>What was priced in:</b> '+st.pricedIn+'</div>';
-      if(st.oneLiner) b+='<div class="ce-synth">'+st.oneLiner+'</div>';
-      b+='<div class="ov-foot">Frozen — scored in Post-Results for this quarter.</div>';
-    }
+    // "The contemporaneous read" block (priced-in + one-liner) removed from Setup per Dani (Aug 2026).
+    // The data (st.pricedIn / st.oneLiner) is kept in CALL_EARNINGS but no longer rendered here.
     b+='</div>';
     return b;
   }).join('');
@@ -1372,6 +1452,59 @@ function ceVerdict(m, c, a, surp){
   if(Math.abs(surp)<2) return {l:CE_RES.inline.l, c:CE_RES.inline.c, k:'inline'};
   return surp>0 ? {l:CE_RES.beat.l, c:CE_RES.beat.c, k:'beat'} : {l:CE_RES.miss.l, c:CE_RES.miss.c, k:'miss'};
 }
+// ── The print AT A GLANCE — a diverging surprise chart (Aug 2026). The cards give absolute values on
+// each metric's own scale; this normalizes EVERY metric to a single % axis (surprise = actual/expected
+// − 1), so revenue, EPS, AWS and capex line up on the same ruler. Green beats grow right, red misses
+// grow left, ranked by |Street surprise| like the cards. Both bases are baked in and toggled by the
+// same data-ev (vs Street ⇄ vs Summit) as the cards, so one control drives both views. Outliers past
+// the axis (an EPS mark) clamp to the edge with a ▸ and print their true number.
+function cePrintChartRows(qi, us){
+  us=us||{};
+  return CE_CONS.m.map(function(m){
+    var c=m.qr[qi]?m.qr[qi][3]:null, a=m.qa[qi];
+    var uexp=(us[m.k]&&us[m.k].v!=null)?us[m.k].v:null;
+    if(c==null&&a==null&&uexp==null) return null;
+    var cS=(c!=null&&a!=null&&c)?((a/c-1)*100):null;
+    var uS=(uexp!=null&&a!=null&&uexp)?((a/uexp-1)*100):null;
+    return { k:m.k, cS:cS, uS:uS };
+  }).filter(Boolean);
+}
+function cePrintChart(qi, us){
+  var rows=cePrintChartRows(qi, us);
+  var withSurp=rows.filter(function(r){ return r.cS!=null||r.uS!=null; });
+  if(withSurp.length<2) return '';
+  // Axis scale ignores outliers over 50% (e.g. an EPS mark) so one big number does not flatten the rest.
+  var mags=[];
+  withSurp.forEach(function(r){ [r.cS,r.uS].forEach(function(v){ if(v!=null && Math.abs(v)<=50) mags.push(Math.abs(v)); }); });
+  var axisMax=Math.max(8, Math.ceil(mags.length?Math.max.apply(null,mags):8));
+  rows=rows.slice().sort(function(a,z){ return Math.abs(z.cS==null?-1:z.cS) - Math.abs(a.cS==null?-1:a.cS); });
+  // Bar lives in a bounded track (no floating labels); the number sits in its own right column, so
+  // nothing overflows and every metric name gets a full column. Bar width caps at the axis.
+  function bar(v, cls){
+    if(v==null) return '<span class="ce-dv-dot '+cls+'" title="no surprise on this basis"></span>';
+    var k=(Math.abs(v)<2)?'inline':(v>0?'beat':'miss');
+    var w=Math.min(Math.abs(v),axisMax)/axisMax*50;
+    return '<span class="ce-dv-bar '+cls+' '+(v>=0?'pos':'neg')+' '+k+'" style="width:'+w.toFixed(1)+'%"></span>';
+  }
+  function val(v, cls){
+    if(v==null) return '<span class="ce-dv-v '+cls+' none">—</span>';
+    var over=Math.abs(v)>axisMax, k=(Math.abs(v)<2)?'inline':(v>0?'beat':'miss');
+    return '<span class="ce-dv-v '+cls+' '+k+'">'+(v>=0?'+':'−')+(Math.round(Math.abs(v)*10)/10)+'%'+(over?'▸':'')+'</span>';
+  }
+  var rowsHtml=rows.map(function(r){
+    return '<div class="ce-dv-row">'+
+      '<span class="ce-dv-k" title="'+esc(r.k)+'">'+esc(r.k)+'</span>'+
+      '<span class="ce-dv-track"><span class="ce-dv-zero"></span>'+bar(r.cS,'ce-exp-cons')+bar(r.uS,'ce-exp-us')+'</span>'+
+      '<span class="ce-dv-vwrap">'+val(r.cS,'ce-exp-cons')+val(r.uS,'ce-exp-us')+'</span>'+
+    '</div>';
+  }).join('');
+  return '<div class="ce-dv">'+
+    '<div class="ce-dv-cap">Every metric on one surprise axis, so different scales line up. '+
+      'Reading <b class="ce-exp-cons">vs Street</b><b class="ce-exp-us">vs Summit</b>: green beats grow right, red misses grow left. A ▸ means the surprise runs past the axis.</div>'+
+    '<div class="ce-dv-rows">'+rowsHtml+'</div>'+
+    '<div class="ce-dv-axis"><span>−'+axisMax+'%</span><span>in line</span><span>+'+axisMax+'%</span></div>'+
+  '</div>';
+}
 function cePrintBlock(qLabel, r, us){
   var qi=CE_CONS.q.indexOf(qLabel); if(qi<0) return '';
   r=r||{}; us=us||{};
@@ -1442,7 +1575,7 @@ function cePrintBlock(qLabel, r, us){
   }).filter(Boolean);
   if(!tiles.length) return '';
   tiles.sort(function(x,z){ return z.sort-x.sort; });   // biggest surprise first (Street basis)
-  return '<div class="ce-fz" data-g="yoy" data-ev="cons" data-mm="off"><div class="ce-fz-h">The print — ranked by surprise'+
+  return '<div class="ce-fz" data-g="yoy" data-ev="cons" data-mm="off" data-view="cards"><div class="ce-fz-h">The print — ranked by surprise'+
     ceQ('fz-'+ceQkey(qLabel),'How this is built',
       '<p>One block, archive-driven. Every number and surprise is computed from <code>BBG_CONSENSUS.txt</code>: the last snapshot before the print carries the consensus (<code>fq+1</code>), a later snapshot carries the print (<code>fq0</code>). Reconstructed from data, so it cannot drift.</p>'+
       '<ul><li><b>vs Street ⇄ vs Summit</b> — swaps which frozen expectation the print is scored against (Street = Bloomberg, Summit = ours). No "Both" — one basis at a time. Where Summit had no number, Summit view reads <b>no est.</b></li>'+
@@ -1454,14 +1587,16 @@ function cePrintBlock(qLabel, r, us){
       '<button type="button" data-vdf="beat">Beats</button>'+
       '<button type="button" data-vdf="miss">Misses</button>'+
       '<button type="button" data-vdf="inline">In line</button></span>'+
-    '<span class="ce-gseg" style="margin-left:auto"><button type="button" class="active" data-fzev="cons">vs Street</button>'+
+    '<span class="ce-gseg" style="margin-left:auto"><button type="button" class="active" data-fzview="cards">Cards</button>'+
+      '<button type="button" data-fzview="chart">Chart</button></span>'+
+    '<span class="ce-gseg"><button type="button" class="active" data-fzev="cons">vs Street</button>'+
       '<button type="button" data-fzev="us">vs Summit</button></span>'+
     '<span class="ce-gseg"><button type="button" data-fzmm="on">Margin</button>'+
       '<button type="button" class="active" data-fzmm="off">Hide mgn</button></span>'+
     '<span class="ce-gseg"><button type="button" class="active" data-ceg="yoy">YoY</button>'+
       '<button type="button" data-ceg="qoq">QoQ</button>'+
       '<button type="button" data-ceg="off">Off</button></span>'+
-    '</div><div class="ce-fz-g" data-vdf-host>'+tiles.map(function(t){ return t.html; }).join('')+'</div>'+
+    '</div>'+cePrintChart(qi, us)+'<div class="ce-fz-g" data-vdf-host>'+tiles.map(function(t){ return t.html; }).join('')+'</div>'+
     '<div class="ce-fz-f">Expectation (frozen, 1 quarter out) → the print → the print\'s own growth. Toggle <b>vs Street ⇄ vs Summit</b> and <b>Margin</b> above. Ranked by |surprise vs Street|. Source: <code>BBG_CONSENSUS.txt</code> + Summit.</div></div>';
 }
 // A collapsible block — secondary depth is folded away by default so the phase reads as a page,
@@ -1527,8 +1662,15 @@ function cePhaseStyle(){
     '.ce-chip.lo{background:#EEF1F5;color:var(--mu)}'+
     /* "Also on the call" — one box, a plain list, each point a native <details> dropdown (v2.9) */
     '.ce-alsobox{margin-top:18px;border:1px solid var(--bdr);border-radius:12px;background:#fff;overflow:hidden}'+
-    '.ce-alsobox-h{padding:10px 13px;background:#F6F8FA;border-bottom:1px solid var(--bdr);display:flex;flex-direction:column;gap:2px}'+
-    '.ce-alsobox-h>b{font-size:12px;color:var(--navy);font-weight:800}'+
+    '.ce-alsobox>summary.ce-alsobox-h{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:11px 13px;background:#F6F8FA}'+
+    '.ce-alsobox>summary::-webkit-details-marker{display:none}'+
+    '.ce-alsobox>summary.ce-alsobox-h:hover{background:#F0F4F8}'+
+    '.ce-alsobox[open]>summary.ce-alsobox-h{border-bottom:1px solid var(--bdr)}'+
+    '.ce-alsobox-ic{font-size:11px;color:var(--mu);transition:transform .15s;flex:none}'+
+    '.ce-alsobox[open] .ce-alsobox-ic{transform:rotate(90deg)}'+
+    '.ce-alsobox-htext{display:flex;flex-direction:column;gap:2px;min-width:0}'+
+    '.ce-alsobox-htext>b{font-size:12px;color:var(--navy);font-weight:800}'+
+    '.ce-alsobox-n{margin-left:auto;font-size:9px;font-weight:900;color:var(--mu);background:#fff;border:1px solid var(--bdr);border-radius:999px;padding:2px 9px;flex:none}'+
     '.ce-alsobox-sub{font-size:9.5px;color:var(--mu);font-weight:600;line-height:1.4}'+
     '.ce-alsolist{display:flex;flex-direction:column}'+
     '.ce-also-i{border-bottom:1px solid var(--bdr)}'+'.ce-also-i:last-child{border-bottom:0}'+
@@ -1619,6 +1761,96 @@ function cePhaseStyle(){
     '.ce-hcard-b{margin-right:5px;color:var(--hc)}'+
     '.ce-hcard[hidden]{display:none}'+
     '.ce-bandh-n{margin-left:auto;font-size:9.5px;font-weight:800;color:var(--mu)}'+
+    /* ② points for the call — merged red-lines + tee-ups, one strip */
+    '.ce-pts{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}'+
+    '.ce-pt{position:relative;border:1px solid var(--bdr);border-top:3px solid var(--pc,#9AA4B0);'+
+      'border-radius:10px;padding:9px 11px 22px;background:#fff;transition:.14s}'+
+    '.ce-pt[data-detail]{cursor:pointer}'+
+    '.ce-pt[data-detail]:hover{box-shadow:0 4px 14px rgba(16,24,40,.09);transform:translateY(-1px)}'+
+    '.ce-pt.held{--pc:#0a8f4c}'+
+    '.ce-pt.trip{--pc:'+RED+';background:rgba(234,67,53,.035)}'+
+    '.ce-pt.tee{--pc:'+AMBER+'}'+
+    '.ce-pt-top{margin-bottom:5px}'+
+    '.ce-pt-chip{font-size:8px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;'+
+      'padding:2px 7px;border-radius:999px;color:#fff;background:var(--pc)}'+
+    '.ce-pt-chip.tee{background:'+AMBER+';color:#5A4300}'+
+    '.ce-pt-h{font-size:11.5px;color:var(--navy);line-height:1.45;font-weight:600}'+
+    '.ce-pt-more{position:absolute;left:11px;bottom:7px;font-size:9px;font-weight:800;color:'+BLUE+'}'+
+    /* ③ the call, classified — Prepared Remarks ⇄ Q&A toggle */
+    '.ce-cc{margin-top:16px;border:1px solid var(--bdr);border-radius:12px;background:#fff;overflow:hidden}'+
+    '.ce-cc-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:10px 13px;background:#F6F8FA;border-bottom:1px solid var(--bdr)}'+
+    '.ce-cc-h>b{font-size:12px;color:var(--navy)}'+
+    '.ce-cc-ph{font-size:8.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--mu);border:1px dashed var(--bdr);border-radius:999px;padding:2px 8px}'+
+    '.ce-cc-seg{margin-left:auto;display:inline-flex;gap:3px;background:rgba(66,133,244,.08);border:1px solid var(--bdr);border-radius:9px;padding:3px}'+
+    '.ce-cc-seg button{background:none;border:0;font-family:inherit;font-size:10px;font-weight:800;letter-spacing:.03em;color:var(--mu);padding:5px 11px;border-radius:6px;cursor:pointer;transition:.14s}'+
+    '.ce-cc-seg button:hover{color:var(--navy)}'+
+    '.ce-cc-seg button.active{background:'+BRAND+';color:#fff}'+
+    '.ce-cc-pane{display:flex;flex-direction:column}'+
+    '.ce-cc-pane[hidden]{display:none}'+
+    '.ce-cc-row{border-bottom:1px solid var(--bdr)}'+
+    '.ce-cc-row:last-child{border-bottom:0}'+
+    '.ce-cc-row-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 13px;cursor:pointer;list-style:none}'+
+    '.ce-cc-row-h::-webkit-details-marker{display:none}'+
+    '.ce-cc-row-h:hover{background:#FAFBFD}'+
+    '.ce-cc-ar{margin-left:auto;color:var(--mu);font-size:10px;transition:transform .15s;flex:none}'+
+    '.ce-cc-row[open]>.ce-cc-row-h .ce-cc-ar{transform:rotate(180deg)}'+
+    '.ce-cc-topic,.ce-cc-q{font-size:11.5px;font-weight:700;color:var(--navy);line-height:1.45}'+
+    '.ce-cc-tag{font-size:8.5px;font-weight:800;letter-spacing:.03em;color:'+BLUE+';background:rgba(26,115,232,.10);border-radius:999px;padding:2px 8px;white-space:nowrap}'+
+    '.ce-cc-meta{font-size:9.5px;font-weight:700;color:var(--mu);margin-bottom:4px}'+
+    '.ce-cc-row-b{font-size:10.5px;color:var(--navy);line-height:1.55;padding:0 13px 11px;font-weight:500;background:#FBFCFE}'+
+    '.ce-cc-a-l{display:inline-block;font-size:8px;font-weight:900;color:#fff;background:var(--mu);border-radius:4px;padding:1px 5px;margin-right:6px;vertical-align:middle}'+
+    '.ce-cc-empty{padding:16px 14px;font-size:10.5px;color:var(--mu);font-weight:600;line-height:1.5;text-align:center;background:#FBFCFE}'+
+    /* ③b theme proposals → Watch List (client-side staging scaffold) */
+    '.ce-tp{border-top:1px solid var(--bdr);background:#FCFCFF;padding:12px 13px}'+
+    '.ce-tp-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}'+
+    '.ce-tp-ic{font-size:13px}.ce-tp-h>b{font-size:11.5px;color:var(--navy)}'+
+    '.ce-tp-refresh{font-family:inherit;font-size:9px;font-weight:800;color:'+BLUE+';border:1px solid var(--bdr);border-radius:999px;padding:3px 9px;cursor:pointer;background:#fff;transition:.12s}'+
+    '.ce-tp-refresh:hover{border-color:'+BLUE+';background:rgba(26,115,232,.06)}'+
+    '.ce-tp-refresh[hidden]{display:none}'+
+    '.ce-tp-sub{font-size:9.5px;color:var(--mu);font-weight:600;flex-basis:100%;line-height:1.4}'+
+    '.ce-tp-list{display:flex;flex-direction:column;gap:7px}'+
+    '.ce-tp-card{border:1px solid var(--bdr);border-left:3px solid '+PURPLE+';border-radius:9px;padding:8px 9px;background:#fff}'+
+    '.ce-tp-row1{display:flex;align-items:center;gap:7px;margin-bottom:6px}'+
+    '.ce-tp-rank{font-size:8.5px;font-weight:900;color:'+PURPLE+';background:rgba(122,90,248,.10);border-radius:999px;padding:2px 7px;flex:none}'+
+    '.ce-tp-theme{flex:1;min-width:0;font-family:inherit;font-size:10px;font-weight:700;color:'+BLUE+';border:1px solid var(--bdr);border-radius:6px;padding:4px 6px;background:#F7F9FC;cursor:pointer}'+
+    '.ce-tp-theme:focus{outline:none;border-color:'+BLUE+'}'+
+    '.ce-tp-acts{display:flex;gap:5px;flex:none}'+
+    '.ce-tp-ok,.ce-tp-no{font-family:inherit;font-size:9.5px;font-weight:800;border:1px solid var(--bdr);border-radius:999px;padding:4px 9px;cursor:pointer;background:#fff;transition:.12s}'+
+    '.ce-tp-ok{color:#0a8f4c}.ce-tp-ok:hover{border-color:#0a8f4c;background:rgba(10,143,76,.06)}'+
+    '.ce-tp-no{color:'+RED+'}.ce-tp-no:hover{border-color:'+RED+';background:rgba(234,67,53,.06)}'+
+    '.ce-tp-in{display:block;width:100%;box-sizing:border-box;resize:vertical;font-family:inherit;font-size:11px;font-weight:500;line-height:1.5;color:var(--navy);border:1px solid var(--bdr);border-radius:6px;padding:6px 8px;background:#FAFBFD}'+
+    '.ce-tp-in:focus{outline:none;border-color:'+BLUE+';background:#fff}'+
+    '.ce-tp-staged-h{font-size:9px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);margin:14px 0 7px;display:flex;align-items:center;gap:7px}'+
+    '.ce-tp-count{font-size:9px;font-weight:900;color:'+BLUE+';background:rgba(26,115,232,.10);border-radius:999px;padding:1px 8px}'+
+    '.ce-tp-staged{display:flex;flex-direction:column;gap:6px}'+
+    '.ce-tp-empty{font-size:10px;color:var(--mu);font-weight:600;font-style:italic}'+
+    '.ce-tp-chip{display:flex;align-items:flex-start;gap:8px;font-size:10.5px;font-weight:500;color:var(--navy);line-height:1.5;background:#fff;border:1px solid var(--bdr);border-left:3px solid #0a8f4c;border-radius:9px;padding:7px 9px}'+
+    '.ce-tp-chip-tag{font-size:8.5px;font-weight:800;color:'+BLUE+';background:rgba(26,115,232,.10);border-radius:999px;padding:2px 8px;white-space:nowrap;flex:none;margin-top:1px}'+
+    '.ce-tp-chip-t{flex:1;min-width:0}'+
+    '.ce-tp-unstage{font-family:inherit;font-size:9px;font-weight:900;color:var(--mu);border:0;background:none;cursor:pointer;line-height:1;padding:2px 3px;border-radius:50%;flex:none}'+
+    '.ce-tp-unstage:hover{color:'+RED+';background:rgba(234,67,53,.10)}'+
+    '.ce-tp-foot{font-size:9px;color:var(--mu);font-weight:600;line-height:1.45;margin-top:11px;padding-top:9px;border-top:1px dashed var(--bdr)}'+
+    /* the print at a glance — diverging surprise chart, one normalized % axis, data-ev toggle-aware */
+    '.ce-dv{margin:2px 0 4px}'+
+    '.ce-dv-cap{font-size:9.5px;color:var(--mu);font-weight:600;margin-bottom:11px;line-height:1.45}'+
+    '.ce-dv-rows{display:flex;flex-direction:column;gap:8px}'+
+    '.ce-dv-row{display:grid;grid-template-columns:148px 1fr 52px;gap:10px;align-items:center}'+
+    '@media(max-width:560px){.ce-dv-row{grid-template-columns:104px 1fr 46px}}'+
+    '.ce-dv-k{font-size:9.5px;font-weight:700;color:var(--navy);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'+
+    '.ce-dv-track{position:relative;height:15px}'+
+    '.ce-dv-zero{position:absolute;left:50%;top:-1px;bottom:-1px;width:1px;background:var(--bdr)}'+
+    '.ce-dv-bar{position:absolute;top:50%;transform:translateY(-50%);height:11px;border-radius:3px;min-width:2px;max-width:50%}'+
+    '.ce-dv-bar.pos{left:50%}.ce-dv-bar.neg{right:50%}'+
+    '.ce-dv-bar.beat{background:#0a8f4c}.ce-dv-bar.miss{background:'+RED+'}.ce-dv-bar.inline{background:#9AA4B0}'+
+    '.ce-dv-dot{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;border:1.5px solid #9AA4B0;background:#fff}'+
+    '.ce-dv-vwrap{font-variant-numeric:tabular-nums}'+
+    '.ce-dv-v{font-size:9.5px;font-weight:800}'+
+    '.ce-dv-v.beat{color:#0a8f4c}.ce-dv-v.miss{color:'+RED+'}.ce-dv-v.inline,.ce-dv-v.none{color:var(--mu)}'+
+    '.ce-dv-axis{display:flex;justify-content:space-between;margin-top:10px;padding:0 62px 0 158px;font-size:8.5px;font-weight:700;color:var(--mu)}'+
+    '@media(max-width:560px){.ce-dv-axis{padding:0 56px 0 114px}}'+
+    '.ce-fz[data-view="cards"] .ce-dv{display:none}'+
+    '.ce-fz[data-view="chart"] .ce-fz-g{display:none}'+
+    '.ce-fz[data-view="chart"] .ce-vdf{display:none}'+
   '</style>';
 }
 function ceResultsBody(c){
@@ -1630,56 +1862,158 @@ function ceResultsBody(c){
     var r=q.results;
     if(!r){ b+='<p class="ov-lede"><b>'+esc(q.q)+' — the numbers vs. the frozen expectations.</b></p>'+
       '<div class="ce-note">Empty until the print lands.</div></div>'; return b; }
-    b+='<p class="ov-lede"><b>'+esc(q.q)+' — the print, scored against what was frozen going in.</b> '+
-       'Toggle <b>vs Street ⇄ vs Summit</b> to score the print against either expectation, and <b>Margin</b> for the expected-implied → realized margin. Below the scorecard, a supplemental <i>“Also on the call”</i> aside carries the colour — not the meeting-critical items.</p>';
+    // Lede removed (Aug 2026 restructure) — the phase chip already reads "② Post-Results" and the
+    // print block leads. Below the print, three segmented sections: ① AI Summary · ② Points for the
+    // call · ③ The call, classified. "Also on the call" is kept at the very bottom.
     // 1 · THE print — archive spine + hand-authored notes, ranked by surprise (one block now).
     // Pass the quarter's FROZEN Summit expectations (setup.us) so the print can be scored against
     // Street OR Summit via the vs-Street ⇄ vs-Summit toggle (§6a-iii).
     b+=cePrintBlock(q.q, r, (q.setup&&q.setup.us)||{});
-    // 2 · the AI-generated call summary — replaces the old one-line "take" black box (v2.10).
+    // 2 · ① the AI-generated call summary — replaces the old one-line "take" black box (v2.10).
     b+=ceSummaryBlock(q.q, r.summary);
-    // 3 · thesis red-line check — folded unless something tripped
-    if(r.thesisCheck&&r.thesisCheck.length){
-      // One word for the verdict, then the red-line ITSELF in plain language. The reasoning goes
-      // behind "why" — it is the interesting part, but it is not what you scan for (§6a-iv).
-      var tc=r.thesisCheck.slice().sort(function(a,z){ return (z.tripped?1:0)-(a.tripped?1:0); });
-      var nTrip=tc.filter(function(t){ return t.tripped; }).length;
-      b+='<div class="ov-diagram-cap" style="margin:14px 0 6px"><b>Thesis red-lines</b> '+
-         '<span style="color:var(--mu);font-weight:600;font-size:10px">· '+
-         (nTrip?('<b style="color:'+RED+'">'+nTrip+' tripped</b> of '+tc.length):('all '+tc.length+' held'))+'</span></div>';
-      b+='<div class="ce-rl">'+tc.map(function(t,i){
-        var id=t.note?ceReg('rl-'+qk+'-'+i, (t.tripped?'TRIPPED — ':'HELD — ')+t.line, '<p>'+t.note+'</p>'):null;
-        return '<div class="ce-rl-row'+(t.tripped?' trip':'')+'">'+
-          '<span class="ce-rl-v">'+(t.tripped?'TRIPPED':'HELD')+'</span>'+
-          '<span class="ce-rl-l">'+esc(t.line)+'</span>'+
-          (id?'<span class="ce-rl-w ov-clickable" data-detail="ce:'+id+'">why ＋</span>':'<span></span>')+
-        '</div>';
-      }).join('')+'</div>';
-    }
-    // 5 · what the numbers tee up — VISIBLE, as short boxes. Folding it away was hiding the
-    // thing you walk into the call with; the fix was to shorten it, not to bury it (§6a-iv).
-    if(r.intoCall&&r.intoCall.length){
-      b+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>What this tees up for the call</b> '+
-         '<span style="color:var(--mu);font-weight:600;font-size:10px">· go in hunting these</span></div>';
-      b+='<div class="ce-tee">'+r.intoCall.map(function(x,i){
-        // Everything up to the first em-dash is the hook; the rest is the argument behind it.
-        var mm=String(x).match(/^([\s\S]*?)\s+—\s+([\s\S]*)$/);
-        var head=mm?mm[1]:x, body=mm?mm[2]:'';
-        var id=body?ceReg('tee-'+qk+'-'+i, String(head).replace(/<[^>]+>/g,''), '<p>'+body+'</p>'):null;
-        return '<div class="ce-tee-c"'+(id?' data-detail="ce:'+id+'"':'')+'>'+
-          '<div class="ce-tee-h">'+head+'</div>'+
-          (id?'<div class="ce-tee-m">＋ the ask</div>':'')+'</div>';
-      }).join('')+'</div>';
-    }
-    // 6 · "Also on the call" — the supplemental colour (was the Post-Call tab, dissolved Jul 2026).
-    // Deliberately styled as a secondary aside; NOT the tracking layer (that is the Watch List) and
-    // NOT the meeting-critical read (that is the scorecard). Includes non-trackable call colour.
+    // ② "Points for the call" was REMOVED (Aug 2026) per Dani — the red-line/tee-up cards were noise.
+    // 4 · ③ The call, classified — Prepared Remarks ⇄ Q&A toggle, each item tagged to a Watch List
+    //     theme (Aug 2026). Scaffold: renders a placeholder until q.call.prepared / q.call.qanda fill.
+    b+=ceCallClassified(q, qk);
+    // 5 · "Also on the call" — the supplemental colour (was the Post-Call tab, dissolved Jul 2026).
+    // Kept at the very BOTTOM for now. NOT the tracking layer (Watch List) nor the meeting-critical
+    // read (the scorecard). Includes non-trackable call colour.
     b+=ceHighlightsBlock(q.call, qk);
     b+='<div class="ov-foot">Numbers scored against the frozen expectation — <b>Street</b> (<code>BBG_CONSENSUS.txt</code>) or <b>Summit</b> via the toggle; actuals = reported. The <i>Also on the call</i> aside is supplemental colour — the tracking layer is the Watch List.</div>';
     b+='</div>';
     return b;
   }).join('');
   return h;
+}
+// ② POINTS FOR THE CALL ── the thesis red-lines and "what this tees up" MERGED (Aug 2026) into a
+// single strip of call points. A red-line contributes a point chipped HELD / TRIPPED; a tee-up a
+// point chipped ASK. "why ＋" / "the ask ＋" opens the reasoning behind it. Red-lines rank first
+// (tripped before held), then the tee-ups. Empty in, empty out.
+function cePointsBlock(qk, r){
+  var pts=[];
+  (r.thesisCheck||[]).slice()
+    .sort(function(a,z){ return (z.tripped?1:0)-(a.tripped?1:0); })
+    .forEach(function(t,i){
+      pts.push({ headHtml:esc(t.line), body:t.note||'', chip:(t.tripped?'TRIPPED':'HELD'),
+        cls:(t.tripped?'trip':'held'), rl:true, trip:!!t.tripped, id:'pt-rl-'+qk+'-'+i, more:'why ＋' });
+    });
+  (r.intoCall||[]).forEach(function(x,i){
+    // Everything up to the first em-dash is the hook; the rest is the argument behind it.
+    var mm=String(x).match(/^([\s\S]*?)\s+—\s+([\s\S]*)$/);
+    pts.push({ headHtml:(mm?mm[1]:x), body:(mm?mm[2]:''), chip:'ASK', cls:'tee',
+      rl:false, id:'pt-tee-'+qk+'-'+i, more:'the ask ＋' });
+  });
+  if(!pts.length) return '';
+  var nTrip=pts.filter(function(p){ return p.rl&&p.trip; }).length;
+  var b='<div class="ov-diagram-cap" style="margin:16px 0 7px"><b>Points for the call</b> '+
+    '<span style="color:var(--mu);font-weight:600;font-size:10px">· go in with these'+
+    (nTrip?(' · <b style="color:'+RED+'">'+nTrip+' red-line'+(nTrip>1?'s':'')+' tripped</b>'):'')+'</span></div>';
+  b+='<div class="ce-pts">'+pts.map(function(p){
+    var id=p.body?ceReg(p.id, String(p.headHtml).replace(/<[^>]+>/g,''), '<p>'+p.body+'</p>'):null;
+    return '<div class="ce-pt '+p.cls+'"'+(id?' data-detail="ce:'+id+'"':'')+'>'+
+      '<div class="ce-pt-top"><span class="ce-pt-chip '+p.cls+'">'+p.chip+'</span></div>'+
+      '<div class="ce-pt-h">'+p.headHtml+'</div>'+
+      (id?'<div class="ce-pt-more">'+p.more+'</div>':'')+
+    '</div>';
+  }).join('')+'</div>';
+  return b;
+}
+// ③ THE CALL, CLASSIFIED ── the call split into Prepared Remarks and Q&A, each item tagged to a
+// Watch List theme (Aug 2026 scaffold). A toggle swaps between the two views (chosen over a
+// side-by-side so the long Q&A list does not dwarf the prepared-remarks column). Placeholder data
+// shape (fill per quarter under q.call):
+//   prepared: [{ topic, theme, body }]                — a prepared-remarks topic, its WL theme, detail
+//   qanda:    [{ q, analyst, theme, a }]              — an analyst question, its WL theme, the answer
+// Renders a placeholder empty state until those arrays exist.
+function ceCcTag(t){ return t ? '<span class="ce-cc-tag">#'+esc(String(t))+'</span>' : ''; }
+// Rows are COLLAPSED to a scannable line (topic/question + theme tag) — the detail opens on demand
+// (Aug 2026, "temas más resumidos"). Each row is a native <details>; the summary is the takeaway,
+// the body is the prose.
+function ceCallClassified(q, qk){
+  var cc=q.call||{};
+  var pr=cc.prepared||[], qa=cc.qanda||[];
+  var hasData=pr.length||qa.length;
+  var prBody = pr.length ? pr.map(function(p,i){
+    return '<details class="ce-cc-row">'+
+      '<summary class="ce-cc-row-h"><span class="ce-cc-topic">'+esc(p.topic||'')+'</span>'+ceCcTag(p.theme)+
+        (p.body?'<span class="ce-cc-ar">▾</span>':'')+'</summary>'+
+      (p.body?'<div class="ce-cc-row-b">'+p.body+'</div>':'')+
+    '</details>';
+  }).join('') : '<div class="ce-cc-empty">Prepared-remarks themes land here once the call is processed — each topic tagged to its Watch List theme.</div>';
+  var qaBody = qa.length ? qa.map(function(x,i){
+    return '<details class="ce-cc-row">'+
+      '<summary class="ce-cc-row-h"><span class="ce-cc-q">'+esc(x.q||'')+'</span>'+ceCcTag(x.theme)+
+        (x.a?'<span class="ce-cc-ar">▾</span>':'')+'</summary>'+
+      '<div class="ce-cc-row-b">'+
+        (x.analyst?'<div class="ce-cc-meta">'+esc(x.analyst)+'</div>':'')+
+        (x.a?'<div><span class="ce-cc-a-l">A</span>'+x.a+'</div>':'')+
+      '</div>'+
+    '</details>';
+  }).join('') : '<div class="ce-cc-empty">Every analyst question, its Watch List theme, and the answer land here once the call is processed.</div>';
+  return '<div class="ce-cc">'+
+    '<div class="ce-cc-h"><b>The call, classified</b>'+
+      (hasData?'':'<span class="ce-cc-ph">scaffold — fills after the call</span>')+
+      '<span class="ce-cc-seg"><button type="button" class="active" data-ccv="pr">By Prepared Remarks</button>'+
+        '<button type="button" data-ccv="qa">By Analyst Question</button></span>'+
+    '</div>'+
+    '<div class="ce-cc-pane" data-ccp="pr">'+prBody+'</div>'+
+    '<div class="ce-cc-pane" data-ccp="qa" hidden>'+qaBody+'</div>'+
+    ceThemeProposals(q, qk)+
+  '</div>';
+}
+// ③b PROPOSE NOTES → WATCH LIST — the call's takeaways drafted as candidate Watch List NOTES (Aug
+// 2026 scaffold). They are NOTES, not just themes: each carries a theme layer (a hashtag from Pablo's
+// Watch List taxonomy, PR #79) + the note text — the same shape a note has in his notes editor
+// (seg · theme · text). Source = q.call.newQuestions (already the next-quarter seeds). Each is
+// EDITABLE (theme select + textarea); Accept stages it, Reject drops it (and "↻ Rejected" brings the
+// rejected ones back, in case you mis-clicked — accepted ones never return). Staging is client-side;
+// the real publish into Supabase company_themes / Pablo's editor is San/Oscar-gated.
+var CE_WL_THEMES=[
+  { seg:'Amazon US', themes:['Agentic commerce','Advertisement','Robotics — the efficiency flywheel'] },
+  { seg:'Amazon International', themes:['Margin','Expansion comments'] },
+  { seg:'AWS', themes:['Backlog','Capex','Margins','Useful lives & Data Center Lifecycles','Custom silicon — Graviton, Trainium, Rainier'] }
+];
+function ceGuessTheme(t){
+  t=(t||'').toLowerCase();
+  if(/capex|frame|funding|fcf|cash|debt/.test(t)) return 'Capex';
+  if(/backlog|conversion|capacity|reserved/.test(t)) return 'Backlog';
+  if(/margin/.test(t)) return 'Margins';
+  if(/trainium|silicon|chip|rack|graviton|rainier|merchant/.test(t)) return 'Custom silicon — Graviton, Trainium, Rainier';
+  if(/advertis|prime-day|\bads?\b/.test(t)) return 'Advertisement';
+  if(/robot|fulfillment|efficiency|grocery|same-day/.test(t)) return 'Robotics — the efficiency flywheel';
+  return 'Backlog';
+}
+function ceThemeSelect(sel){
+  return '<select class="ce-tp-theme">'+CE_WL_THEMES.map(function(g){
+    return '<optgroup label="'+esc(g.seg)+'">'+g.themes.map(function(th){
+      return '<option value="'+esc(th).replace(/"/g,'&quot;')+'"'+(th===sel?' selected':'')+'>'+esc(th)+'</option>';
+    }).join('')+'</optgroup>';
+  }).join('')+'</select>';
+}
+function ceThemeProposals(q, qk){
+  var nq=(q.call&&q.call.newQuestions)||[];
+  if(!nq.length) return '';
+  var cards=nq.map(function(x,i){
+    var txt=(typeof x==='string')?x:(x.n||'');
+    var rank=(x&&x.landed&&x.landed.rank)?x.landed.rank:null;
+    return '<div class="ce-tp-card" data-tp="'+qk+'-'+i+'">'+
+      '<div class="ce-tp-row1">'+(rank?'<span class="ce-tp-rank">#'+rank+'</span>':'')+ceThemeSelect(ceGuessTheme(txt))+
+        '<span class="ce-tp-acts">'+
+          '<button type="button" class="ce-tp-ok" data-tpact="accept" title="Stage this note">✓ Accept</button>'+
+          '<button type="button" class="ce-tp-no" data-tpact="reject" title="Drop this note">✕</button>'+
+        '</span></div>'+
+      '<textarea class="ce-tp-in" rows="2">'+esc(txt)+'</textarea>'+
+    '</div>';
+  }).join('');
+  return '<div class="ce-tp">'+
+    '<div class="ce-tp-h"><span class="ce-tp-ic">📝</span><b>Propose Notes</b>'+
+      '<button type="button" class="ce-tp-refresh" data-tprefresh hidden title="Bring back the notes you rejected">↻ Rejected <span data-tprej>0</span></button>'+
+      '<span class="ce-tp-sub">AI-drafted notes from this call. Pick the theme (Pablo\'s Watch List taxonomy), edit the text, then Accept to stage or Reject to drop. Same shape as a Watch List note — theme · text.</span></div>'+
+    '<div class="ce-tp-list" data-tplist>'+cards+'</div>'+
+    '<div class="ce-tp-staged-h">Staged notes <span class="ce-tp-count" data-tpcount>0</span></div>'+
+    '<div class="ce-tp-staged" data-tpstaged><div class="ce-tp-empty">Nothing staged yet — accept a note above.</div></div>'+
+    '<div class="ce-tp-foot">Staged notes are candidates only, kept client-side. Publishing to the shared Watch List (Supabase <code>company_themes</code> · Pablo\'s notes editor) is San / Oscar-gated — this scaffold does not write to the DB.</div>'+
+  '</div>';
 }
 // E · "Also on the call" ── the supplemental colour from the call, rendered inside Post-Results as a
 // SINGLE BOX holding a plain LIST, each point with its own native <details> dropdown (v2.9). The
@@ -1692,8 +2026,14 @@ function ceHighlightsBlock(cc, qk){
   // A thesis-mover (band:'lead') is tracked on the Watch List, never here — keep filtering it out.
   var hls=cc.highlights.filter(function(x){ return (x.band||'context')!=='lead'; });
   if(!hls.length) return '';
-  var b='<div class="ce-alsobox"><div class="ce-alsobox-h"><b>Also on the call</b>'+
-    '<span class="ce-alsobox-sub">supplemental colour — the meeting-critical items are the scorecard above and the Watch List</span></div>'+
+  // The whole box is collapsed by default (Aug 2026) — a supplemental aside should not compete with
+  // the scorecard for attention. Outer <details> closed; the caret + count make it obviously openable.
+  var b='<details class="ce-alsobox"><summary class="ce-alsobox-h">'+
+    '<span class="ce-alsobox-ic">▸</span>'+
+    '<span class="ce-alsobox-htext"><b>Also on the call</b>'+
+    '<span class="ce-alsobox-sub">supplemental colour — the meeting-critical items are the scorecard above and the Watch List</span></span>'+
+    '<span class="ce-alsobox-n">'+hls.length+'</span>'+
+    '</summary>'+
     '<div class="ce-alsolist">';
   b+=hls.map(function(x){
     // No tag chips (tone/curious/connects-dots/…) — just the theme and its dropdown (v2.10).
@@ -1707,7 +2047,7 @@ function ceHighlightsBlock(cc, qk){
       (det?'<div class="ce-also-body">'+det+'</div>':'')+
     '</details>';
   }).join('');
-  b+='</div></div>';
+  b+='</div></details>';
   return b;
 }
 
@@ -1831,6 +2171,54 @@ function wireCeTrack(root){
     btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
     if(fz) fz.setAttribute('data-mm', v);
   }; });
+  // Cards ⇄ Chart — show the print as tiles OR as the diverging surprise chart, one at a time.
+  pane.querySelectorAll('.ce-gseg button[data-fzview]').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-fzview'), fz=btn.closest('.ce-fz');
+    btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    if(fz) fz.setAttribute('data-view', v);
+  }; });
+  // ③ "The call, classified" — By Prepared Remarks ⇄ By Analyst Question. Scoped to its own .ce-cc so
+  // each quarter's block toggles independently (mirrors the .ce-phtab / print-toggle pattern).
+  pane.querySelectorAll('.ce-cc-seg button[data-ccv]').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-ccv'), cc=btn.closest('.ce-cc'); if(!cc) return;
+    cc.querySelectorAll('.ce-cc-seg button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    cc.querySelectorAll('.ce-cc-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-ccp')!==v); });
+  }; });
+  // ③b Propose Notes — Accept stages the edited note (theme · text) as a Watch List candidate; Reject
+  // parks it in a rejected pool that "↻ Rejected" restores (accepted notes never return). Staging is
+  // client-side (in-DOM); the real publish to company_themes / Pablo's editor is San/Oscar-gated.
+  pane.querySelectorAll('.ce-tp').forEach(function(tp){
+    var list=tp.querySelector('[data-tplist]'), staged=tp.querySelector('[data-tpstaged]'),
+        countEl=tp.querySelector('[data-tpcount]'), rejEl=tp.querySelector('[data-tprej]'),
+        refreshBtn=tp.querySelector('[data-tprefresh]'), rejected=[];
+    function refresh(){
+      var chips=staged.querySelectorAll('.ce-tp-chip');
+      if(countEl) countEl.textContent=chips.length;
+      var empty=staged.querySelector('.ce-tp-empty'); if(empty) empty.hidden=chips.length>0;
+      if(rejEl) rejEl.textContent=rejected.length;
+      if(refreshBtn) refreshBtn.hidden=(rejected.length===0);
+    }
+    function wireCard(card){
+      card.querySelectorAll('[data-tpact]').forEach(function(btn){ btn.onclick=function(){
+        if(btn.getAttribute('data-tpact')==='accept'){
+          var ta=card.querySelector('.ce-tp-in'), th=card.querySelector('.ce-tp-theme');
+          var v=(ta&&ta.value||'').trim(); if(!v) return;
+          var theme=(th&&th.value)||'';
+          var chip=document.createElement('div'); chip.className='ce-tp-chip';
+          var tag=document.createElement('span'); tag.className='ce-tp-chip-tag'; tag.textContent='#'+theme;
+          var txt=document.createElement('span'); txt.className='ce-tp-chip-t'; txt.textContent=v;  // textContent = no injection
+          var x=document.createElement('button'); x.type='button'; x.className='ce-tp-unstage'; x.title='Unstage'; x.textContent='✕';
+          x.onclick=function(){ chip.remove(); refresh(); };
+          chip.appendChild(tag); chip.appendChild(txt); chip.appendChild(x);
+          staged.appendChild(chip); card.remove();
+        } else { rejected.push(card); card.remove(); }
+        refresh();
+      }; });
+    }
+    tp.querySelectorAll('.ce-tp-card').forEach(wireCard);
+    if(refreshBtn) refreshBtn.onclick=function(){ rejected.forEach(function(c){ list.appendChild(c); }); rejected=[]; refresh(); };
+    refresh();
+  });
 }
 function ceResultsPending(label){
   return '<div class="ce-note" style="margin:8px 0">📊 <b>'+esc(label)+'</b> — the Amazon-style actuals-vs-estimates chart + table. '+
@@ -2099,9 +2487,9 @@ function deepDiveHtml(c){
           '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
           '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
         '</div>'+
-        ceIRButton()+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="earnings">'+
+        ceIRButton()+
         '<div class="ce-phtabs">'+
           '<button type="button" class="ce-phtab active" data-cep="setup">Setup</button>'+
           '<button type="button" class="ce-phtab" data-cep="watch">Watch List</button>'+

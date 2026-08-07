@@ -77,10 +77,8 @@ export function consensusEvoHtml(ticker, metric){
         '<span class="cev-title">Consensus Evolution <span>— Street revisions across BBG snapshots</span></span>'+
         '<select class="cev-sel" data-cevmetric>'+opts+'</select>'+
       '</div>'+
-      '<div class="cev-seg">'+
-        '<button type="button" class="active" data-cevmode="fixed">Fixed FY</button>'+
-        '<button type="button" data-cevmode="rolling">Rolling NTM</button>'+
-      '</div>'+
+      // "Rolling NTM" mode toggle removed (Dani, Aug 2026) — the chart now always shows Fixed-FY
+      // revisions across snapshots (the default), which is what the view is for.
     '</div>'+
     '<div class="cev-fys" data-cevfys></div>'+
     '<div class="cev-canvas-wrap"><canvas class="cev-canvas"></canvas></div>'+

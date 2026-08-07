@@ -12,6 +12,8 @@ function sliceMetrics(view, idx){
     Object.keys(m).forEach(function(f){
       o[f] = Array.isArray(m[f]) ? idx.map(function(i){ return m[f][i]; }) : m[f];
     });
+    delete o.note;   // Setup drops the per-metric methodology notes (Dani, Aug 2026) — they clutter
+                     // the pre-print view; the full notes still live on the Results sub-tab.
     out[k] = o;
   });
   return out;
@@ -49,9 +51,11 @@ export var amznSetup = {
   intro: '',
   source: amznResults.source,
   views: {
-    q: { label: 'Quarterly', note: 'Rolling — the last 8 reported quarters plus the one next (forecast) quarter; it advances by itself as new prints land. ' + amznResults.views.q.note,
+    // Setup view notes removed (Dani, Aug 2026) — the "Rolling …" + methodology/source blurb was
+    // clutter here; the full note still lives on the Results sub-tab.
+    q: { label: 'Quarterly', note: '',
          metrics: sliceMetrics(amznResults.views.q, qIdx), sections: mergedSection(amznResults.views.q) },
-    y: { label: 'Annual', note: 'Rolling — the last 4 fiscal years plus the next 2 forward years. ' + amznResults.views.y.note,
+    y: { label: 'Annual', note: '',
          metrics: sliceMetrics(amznResults.views.y, yIdx), sections: mergedSection(amznResults.views.y) }
   }
 };

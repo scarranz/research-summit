@@ -785,46 +785,92 @@ var CALL_EARNINGS = { ticker:'AMZN', quarters:[
 
 // ── The theme record — narrative threads across the recent calls (v2.3 fold-in) ──
 var SRC_CALLS='Amazon Q4 2025–Q2 2026 earnings-call records (see docs/calls/AMZN*.md — 8-K exacts from SEC EDGAR; call record reconstructed from transcript coverage, verbatim IR transcripts pending from Dani). Contemporaneous highlights — written from each call, not with hindsight.';
+// Segment divisions for the theme record (Aug 2026, AMZN only). Each theme carries a `seg`; the
+// "By theme" view groups them under these headers, in this order. Empty themes (no `updates`) are
+// tracked placeholders — the section exists so we can fill it as the notes come in.
+var AMZN_SEG_ORDER=['Amazon US','Amazon International','AWS'];
 var AMZN_THEMES=[
-  { theme:'The AI capex cycle — demand-led, supply-priced', st:{ k:'watch', since:'Q4 2025', last:'Q2 2026' },
-    why:'The number that reprices the stock: a ~$200B capex year against ~$11B of TTM FCF, defended with contracted demand.',
+  // ── Amazon US ──────────────────────────────────────────────────────────────────────────────────
+  { seg:'Amazon US', theme:'Agentic commerce', st:{ k:'watch', since:'Q4 2025', last:'Q2 2026' },
+    why:'Whether AI compresses the shopping funnel or expands it — management argues the retailer\'s own agent wins.',
     updates:[
-      { q:'Q4 2025', items:['"About <b>$200 billion</b> in capital expenditures… predominantly in AWS, because we have very high demand." TTM FCF $11.2B; the Summit model flipped FY26 FCF negative at its next snapshot. Olsavsky: "as fast as we install this capacity… we are monetizing it."'] },
-      { q:'Q1 2026', items:['Q1 capex <b>$44.2B</b>; memory costs "<b>skyrocketed</b>" — allocations locked with strategic suppliers mid-to-late 2025; capacity installs <b>6–24 months before billing</b>; data centers 30+ year assets, chips 5–6.'] },
-      { q:'Q2 2026', items:['The frame moved: FY26 cash capex <b>~$200B → ~$220B</b>, Olsavsky attributing part of the raise to the "<b>higher cost of memory</b>". Q2 capex <b>$54.2B</b> gross (1H26 $98.4B).','⚑ The cash line broke: <b>TTM free cash flow −$7.6B</b> (from +$18.2B a year ago) against $161.4B of TTM operating cash flow — funded with <b>$67B of new long-term debt</b> in one half ($65.6B → $128.9B). The Q4-2025 red line fired in reported actuals.'] },
+      { q:'Q4 2025', items:['Rufus: <b>300M customers</b> in 2025, users "<b>60% more likely to complete a purchase</b>"; can shop tens of millions of items in OTHER stores.'] },
+      { q:'Q1 2026', items:['Rufus MAU <b>+115%</b>, engagement +400%; "we\'re going to like this for advertising" — sponsored prompts working, multi-turn = more surfaces.'] },
+      { q:'Q2 2026', items:['The claim that agentic surfaces <b>expand rather than compress</b> the funnel keeps showing up in reported dollars (see <i>Advertisement</i>).'] },
     ]},
-  { theme:'AWS — the re-acceleration and the backlog', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
-    why:'From +24% to +28% (fastest in 15 quarters) with the forward book compounding faster than revenue converts.',
+  { seg:'Amazon US', theme:'Advertisement', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
+    why:'Management argues ads WIN in agentic commerce — the dollars are accelerating at a $20B quarterly scale.',
     updates:[
-      { q:'Q4 2025', items:['<b>+24%</b> (13-quarter high), $142B run-rate, 35% margin (+40bps); backlog <b>$244B (+40%)</b>; >1GW added in Q4; 3.99GW of power added in 2025, doubling again by 2027.'] },
-      { q:'Q1 2026', items:['<b>+28%</b> ($150B run-rate) — "very unusual for a business to grow this fast on a base this large"; backlog <b>$364B</b> EXCLUDING the <b>$100B+ Anthropic deal</b>; Bedrock spend +170% QoQ; Q1 tokens exceeded all prior years combined.'] },
-      { q:'Q2 2026', items:['<b>+37%</b> ($169B run-rate) — the <b>fastest in 18 quarters</b> and the third straight acceleration; backlog <b>$496B</b>, roughly <b>2.5x</b> a year ago and still growing triple-digit.','Capacity is the constraint, and it is pre-committed: <b>2027 "largely reserved"</b>, some <b>2028 "already spoken for."</b> Segment margin <b>39.4%</b> (+650bps YoY, ~+520bps excluding energy-derivative gains). The AI business and the chips business <b>each above a $25B run-rate</b>, both triple-digit. Jassy: AWS "can be a trillion-dollar annual revenue business."'] },
+      { q:'Q4 2025', items:['Ads <b>$21.3B (+22%)</b>; Prime Video ads 315M viewers.'] },
+      { q:'Q1 2026', items:['Ads <b>$17.2B (+22%)</b>; Netflix / Comcast / Samsung signed.'] },
+      { q:'Q2 2026', items:['Advertising <b>$19.8B (+26%)</b> — an <b>acceleration</b> from +22%, at a $20B quarterly scale, with <b>sponsored products</b> named as the driver.','The next audit is structural: Q3 loses the Prime-Day event to the comp, so holding 25%+ would separate the engine from the calendar.'] },
     ]},
-  { theme:'Custom silicon — Graviton, Trainium, Rainier', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
-    why:'The margin lever under the AI build — and possibly a merchant business (rack sales) with NVIDIA-adjacent economics.',
-    updates:[
-      { q:'Q4 2025', items:['$10B+ run-rate; Trainium at triple-digit growth; <b>Project Rainier: 500K chips</b> training the next Claude model; Trainium3 "nearly all supply committed by mid-2026"; Graviton >50% growth, >90% of top-1,000 customers.'] },
-      { q:'Q1 2026', items:['Run-rate doubled to <b>$20B (+~40% QoQ)</b>; <b>$225B+ Trainium revenue commitments</b>; Trainium4 largely reserved ~18 months out; rack sales "<b>very much a possibility</b>"; Meta committed to tens of millions of Graviton cores.'] },
-      { q:'Q2 2026', items:['The chips business passed a <b>$25B annualized run-rate</b>, growing triple-digit — and the tenant list stopped being a concentration argument: <b>Anthropic AND OpenAI</b> are each making <b>multi-year, multi-gigawatt</b> Trainium commitments. <b>Graviton5</b> reached general availability.','The merchant question survives the quarter: Nowak asked about Trainium sales into third-party data centres, and the answer stayed short of a plan.'] },
-    ]},
-  { theme:'Agentic commerce & the ads engine', st:{ k:'watch', since:'Q4 2025', last:'Q2 2026' },
-    why:'Whether AI compresses the shopping funnel or expands it — management argues the retailer\'s own agent wins, and that ads WIN in agentic commerce.',
-    updates:[
-      { q:'Q4 2025', items:['Rufus: <b>300M customers</b> in 2025, users "<b>60% more likely to complete a purchase</b>"; can shop tens of millions of items in OTHER stores; ads $21.3B (+22%), Prime Video ads 315M viewers.'] },
-      { q:'Q1 2026', items:['Rufus MAU <b>+115%</b>, engagement +400%; "we\'re going to like this for advertising" — sponsored prompts working, multi-turn = more surfaces; ads $17.2B (+22%); Netflix / Comcast / Samsung signed.'] },
-      { q:'Q2 2026', items:['Advertising <b>$19.8B (+26%)</b> — an <b>acceleration</b> from +22%, at a $20B quarterly scale, with <b>sponsored products</b> named as the driver. The claim that agentic surfaces expand rather than compress the funnel keeps showing up in reported dollars.','The next audit is structural: Q3 loses the Prime-Day event to the comp, so holding 25%+ would separate the engine from the calendar.'] },
-    ]},
-  { theme:'The efficiency flywheel — robotics, regionalization, 65 days', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
+  { seg:'Amazon US', theme:'Robotics — the efficiency flywheel', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
     why:'The quiet half of the AI story: unit growth outpacing fulfillment cost growth is what pays for the build without breaking margins.',
     updates:[
       { q:'Q4 2025', items:['<b>1M+ robots</b> in the network; 8B+ items same/next-day (+30%); NA margin 9% in the holiday peak; regions extended 8 → 10.'] },
       { q:'Q1 2026', items:['Units <b>+15% vs fulfillment expense +9%</b>; record 13.1% consolidated margin; robotics in every 2026 US large-format launch; a service engine rebuilt in <b>65 days vs 40–50 person-years</b>.'] },
       { q:'Q2 2026', items:['A <b>new consolidated margin record: 13.7%</b> — set while absorbing the seasonal SBC step-up, ~$1B of LEO cost and fuel inflation the guide had flagged. Paid units <b>+17%</b>.','Fast commerce is where the flywheel now shows: <b>same-day perishables customers +50%</b> since January, and same-day orders carrying <b>3x the units</b> per order. Roughly <b>$600M of tariff-related refunds</b> landed as one-off relief inside the North America margin.'] },
     ]},
+  // ── Amazon International ────────────────────────────────────────────────────────────────────────
+  { seg:'Amazon International', theme:'Margin', st:{ k:'watch' },
+    why:'International segment profitability — the emerging-market drag and its path to sustained margin. To track.',
+    updates:[] },
+  { seg:'Amazon International', theme:'Expansion comments', st:{ k:'watch' },
+    why:'Country build-out and emerging-market expansion notes from the calls. To track.',
+    updates:[] },
+  // ── AWS ────────────────────────────────────────────────────────────────────────────────────────
+  { seg:'AWS', theme:'Backlog', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
+    why:'From +24% to +37% (fastest in 18 quarters) with the forward book compounding faster than revenue converts.',
+    updates:[
+      { q:'Q4 2025', items:['<b>+24%</b> (13-quarter high), $142B run-rate; backlog <b>$244B (+40%)</b>; >1GW added in Q4; 3.99GW of power added in 2025, doubling again by 2027.'] },
+      { q:'Q1 2026', items:['<b>+28%</b> ($150B run-rate) — "very unusual for a business to grow this fast on a base this large"; backlog <b>$364B</b> EXCLUDING the <b>$100B+ Anthropic deal</b>; Bedrock spend +170% QoQ; Q1 tokens exceeded all prior years combined.'] },
+      { q:'Q2 2026', items:['<b>+37%</b> ($169B run-rate) — the <b>fastest in 18 quarters</b> and the third straight acceleration; backlog <b>$496B</b>, roughly <b>2.5x</b> a year ago and still growing triple-digit.','Capacity is the constraint, and it is pre-committed: <b>2027 "largely reserved"</b>, some <b>2028 "already spoken for."</b> The AI business and the chips business <b>each above a $25B run-rate</b>, both triple-digit. Jassy: AWS "can be a trillion-dollar annual revenue business."'] },
+    ]},
+  { seg:'AWS', theme:'Capex', st:{ k:'watch', since:'Q4 2025', last:'Q2 2026' },
+    why:'The number that reprices the stock: a ~$220B capex year against negative TTM FCF, defended with contracted demand.',
+    updates:[
+      { q:'Q4 2025', items:['"About <b>$200 billion</b> in capital expenditures… predominantly in AWS, because we have very high demand." TTM FCF $11.2B; the Summit model flipped FY26 FCF negative at its next snapshot. Olsavsky: "as fast as we install this capacity… we are monetizing it."'] },
+      { q:'Q1 2026', items:['Q1 capex <b>$44.2B</b>; memory costs "<b>skyrocketed</b>" — allocations locked with strategic suppliers mid-to-late 2025.'] },
+      { q:'Q2 2026', items:['The frame moved: FY26 cash capex <b>~$200B → ~$220B</b>, Olsavsky attributing part of the raise to the "<b>higher cost of memory</b>". Q2 capex <b>$54.2B</b> gross (1H26 $98.4B).','⚑ The cash line broke: <b>TTM free cash flow −$7.6B</b> (from +$18.2B a year ago) against $161.4B of TTM operating cash flow — funded with <b>$67B of new long-term debt</b> in one half ($65.6B → $128.9B). The Q4-2025 red line fired in reported actuals.'] },
+    ]},
+  { seg:'AWS', theme:'Margins', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
+    why:'AWS segment profitability — expanding even through the AI build, helped by custom silicon and (in Q2) energy-derivative gains.',
+    updates:[
+      { q:'Q4 2025', items:['Segment margin <b>35%</b> (+40bps).'] },
+      { q:'Q2 2026', items:['Segment margin <b>39.4%</b> (+650bps YoY, ~+520bps excluding energy-derivative gains).'] },
+    ]},
+  { seg:'AWS', theme:'Useful lives & Data Center Lifecycles', st:{ k:'watch', since:'Q1 2026', last:'Q1 2026' },
+    why:'How Amazon depreciates the build: the install-to-billing lag and asset lives set the margin optics of the capex cycle.',
+    updates:[
+      { q:'Q1 2026', items:['Capacity installs <b>6–24 months before billing</b>; data centers <b>30+ year</b> assets, chips <b>5–6</b>.'] },
+    ]},
+  { seg:'AWS', theme:'Custom silicon — Graviton, Trainium, Rainier', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
+    why:'The margin lever under the AI build — and possibly a merchant business (rack sales) with NVIDIA-adjacent economics.',
+    updates:[
+      { q:'Q4 2025', items:['$10B+ run-rate; Trainium at triple-digit growth; <b>Project Rainier: 500K chips</b> training the next Claude model; Trainium3 "nearly all supply committed by mid-2026"; Graviton >50% growth, >90% of top-1,000 customers.'] },
+      { q:'Q1 2026', items:['Run-rate doubled to <b>$20B (+~40% QoQ)</b>; <b>$225B+ Trainium revenue commitments</b>; Trainium4 largely reserved ~18 months out; rack sales "<b>very much a possibility</b>"; Meta committed to tens of millions of Graviton cores.'] },
+      { q:'Q2 2026', items:['The chips business passed a <b>$25B annualized run-rate</b>, growing triple-digit — and the tenant list stopped being a concentration argument: <b>Anthropic AND OpenAI</b> are each making <b>multi-year, multi-gigawatt</b> Trainium commitments. <b>Graviton5</b> reached general availability.','The merchant question survives the quarter: Nowak asked about Trainium sales into third-party data centres, and the answer stayed short of a plan.'] },
+    ]},
 ];
+// A note's quarter is inside a sub-theme's tracking window when Since ≤ q ≤ Until (open bounds when
+// unset). Setting "Since" therefore shows the notes only from that quarter onward; "Until" caps them.
+function amznInWindow(q, since, until){
+  var n=ceQnum(q); if(n==null) return true;
+  if(since){ var s=ceQnum(since); if(s!=null && n<s) return false; }
+  if(until){ var u=ceQnum(until); if(u!=null && n>u) return false; }
+  return true;
+}
+// The tracking window is a GLOBAL filter on the record view (below the By-theme/By-quarter toggle),
+// not per sub-theme. Setting Since/Until narrows every sub-theme's notes to that quarter range.
+var _recSince=null, _recUntil=null;
+var _recHook='all';   // record hook filter (below the Since filter): all | open | closed
+function amznWinUpdates(ct){ return (ct.updates||[]).filter(function(u){ return amznInWindow(u.q, _recSince, _recUntil); }); }
+function amznHookMatch(ct){ if(_recHook==='open') return amznHookOpen(ct); if(_recHook==='closed') return amznHookClosed(ct); return true; }
+function amznThemeQuarters(){ var seen={}, out=[]; AMZN_THEMES.forEach(function(ct){ (ct.updates||[]).forEach(function(u){ if(!seen[u.q]){ seen[u.q]=1; out.push(u.q); } }); }); return out; }
 function amznCallsByQuarter(){
   var map={}, order=[];
-  AMZN_THEMES.forEach(function(ct){ ct.updates.forEach(function(u){ if(!map[u.q]){ map[u.q]=[]; order.push(u.q); } map[u.q].push({ theme:ct.theme, items:u.items }); }); });
+  AMZN_THEMES.forEach(function(ct){ if(!amznHookMatch(ct)) return; amznWinUpdates(ct).forEach(function(u){ if(!map[u.q]){ map[u.q]=[]; order.push(u.q); } map[u.q].push({ theme:ct.theme, items:u.items }); }); });
   function qv(q){ var m=String(q).match(/Q(\d)\s+(\d{4})/); return m?(+m[2])*10+(+m[1]):0; }
   order.sort(function(a,b){ return qv(b)-qv(a); });
   return { order:order, map:map };
@@ -835,14 +881,64 @@ function callsBody(){
     '.calls-pill{border:none;background:transparent;font:inherit;font-size:12px;font-weight:700;color:var(--mu);padding:5px 15px;border-radius:999px;cursor:pointer;transition:.12s}'+
     '.calls-pill:hover{color:var(--navy)}.calls-pill.active{background:'+BRAND+';color:#fff}'+
     '.calls-tl{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--navy);margin:0 0 4px}'+
-    '.calls-st{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:2px 8px;white-space:nowrap;border:1px solid;flex:none}</style>';
+    '.calls-st{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:2px 8px;white-space:nowrap;border:1px solid;flex:none}'+
+    /* segment divisions (Amazon US / International / AWS) — each a dropdown over its themes, */
+    /* styled to match the By-quarter accordion (.lpb-acc-item / .lpb-acc-h / .lpb-acc-ic). */
+    '.calls-seg-group{border:1px solid var(--bdr);border-radius:10px;overflow:hidden;background:var(--w)}'+
+    '.calls-seg-group.open{border-color:'+BRAND+'}'+
+    '.calls-seg{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;background:none;border:none;cursor:pointer;padding:14px 16px;font-family:\'Inter\',sans-serif;font-size:13.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--navy);text-align:left}'+
+    '.calls-seg:hover{color:'+BRAND+'}.calls-seg-group.open>.calls-seg{color:'+BRAND+'}'+
+    '.calls-seg-l{display:inline-flex;align-items:baseline;gap:9px}'+
+    '.calls-seg-n{font-size:9.5px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--mu)}'+
+    '.calls-seg-ic{flex:none;width:22px;height:22px;border-radius:50%;background:var(--brand-soft);color:'+BRAND+';font-weight:800;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center}'+
+    '.calls-seg-body{display:none;padding:2px 14px 14px;flex-direction:column;gap:10px}'+
+    '.calls-seg-group.open>.calls-seg-body{display:flex}'+
+    '.calls-empty{font-size:11.5px;color:var(--mu);font-style:italic;border:1px dashed var(--bdr);border-radius:8px;padding:9px 12px;background:#FAFBFD}'+
+    '.calls-trk{font-size:8.5px;font-weight:800;letter-spacing:.02em;color:var(--mu);background:#F2F5F8;border:1px solid var(--bdr);border-radius:20px;padding:2px 8px;white-space:nowrap;flex:none}'+
+    '.calls-trk.closed{color:'+RED+';border-color:rgba(234,67,53,0.35);background:rgba(234,67,53,0.06)}'+
+    '.calls-trkbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 14px;padding:8px 12px;background:#F7F9FB;border:1px solid var(--bdr);border-radius:10px;font-size:10.5px;font-weight:700;color:var(--mu)}'+
+    '.calls-trkbar-k{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu)}'+
+    '.calls-trkbar select{font:inherit;font-size:11px;border:1px solid var(--bdr);border-radius:8px;padding:4px 8px;background:var(--w);color:var(--navy);margin-left:5px}'+
+    '.calls-trkbar select:focus{outline:none;border-color:'+BRAND+'}'+
+    '.calls-trkbar-clr{font:inherit;font-size:10px;font-weight:800;border:1px solid var(--bdr);background:var(--w);color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
+    '.calls-trkbar-clr:hover{border-color:'+BRAND+';color:'+BRAND+'}'+
+    '.calls-hookbar{margin:-6px 0 14px}'+
+    '.calls-hookseg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+
+    '.calls-hookseg button{font:inherit;font-size:10px;font-weight:800;border:0;background:transparent;color:var(--mu);padding:4px 12px;border-radius:999px;cursor:pointer}'+
+    '.calls-hookseg button.on{background:var(--navy);color:#fff}</style>';
   h+='<div class="calls-tog" role="tablist"><button type="button" class="calls-pill active" data-callsv="theme">By theme</button><button type="button" class="calls-pill" data-callsv="quarter">By quarter</button></div>';
+  // Global "Since" filter (applies to both views): show only notes from that quarter onward.
+  var trkQ=amznThemeQuarters();
+  h+='<div class="calls-trkbar"><span>Since <select data-rectrks>'+amznQuarterOpts(_recSince||'', '— all —', trkQ)+'</select></span>'+
+     (_recSince?'<button type="button" class="calls-trkbar-clr" data-rectrkclear>clear</button>':'')+'</div>';
+  // Hook filter (below Since): All / Open hooks / Closed — narrows which sub-themes show.
+  h+='<div class="calls-hookbar"><span class="calls-hookseg">'+
+       '<button type="button" class="'+(_recHook==='all'?'on':'')+'" data-rechook="all">All</button>'+
+       '<button type="button" class="'+(_recHook==='open'?'on':'')+'" data-rechook="open">Open hooks</button>'+
+       '<button type="button" class="'+(_recHook==='closed'?'on':'')+'" data-rechook="closed">Closed</button>'+
+     '</span></div>';
   h+='<div class="lpb-acc" id="aCallsTheme">';
-  AMZN_THEMES.forEach(function(ct){
-    var sk=(ct.st&&ct.st.k)?ct.st.k:'watch'; var st=CE_THST[sk]||CE_THST.watch;
-    h+='<div class="lpb-acc-item"><button type="button" class="lpb-acc-h"><span style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap">'+esc(ct.theme)+' <span class="calls-st" style="color:'+st.c+';border-color:'+st.c+'">'+st.l+ceStAge(ct.st)+'</span></span><span class="lpb-acc-ic">+</span></button>';
-    h+='<div class="lpb-acc-body"><p style="font-size:12px;color:var(--mu);margin:0 0 10px;font-style:italic">'+esc(ct.why)+'</p>';
-    ct.updates.forEach(function(u){ h+='<div style="margin-bottom:10px"><span class="ov-chip" style="margin-right:6px">'+esc(u.q)+'</span><ul class="ov-bullets" style="margin-top:4px">'+u.items.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ul></div>'; });
+  AMZN_SEG_ORDER.forEach(function(seg,si){
+    var group=AMZN_THEMES.filter(function(ct){ return ct.seg===seg && amznHookMatch(ct); });
+    // Segments always render (even empty) so a newly added theme shows here immediately.
+    // Segment is itself a dropdown (outer accordion): click the header to unfold its sub-themes.
+    // All segments start COLLAPSED so the record opens clean.
+    h+='<div class="calls-seg-group" data-seg="'+esc(seg)+'">';
+    h+='<button type="button" class="calls-seg" data-segtog><span class="calls-seg-l">'+esc(seg)+' <span class="calls-seg-n">'+group.length+' theme'+(group.length===1?'':'s')+'</span></span><span class="calls-seg-ic">+</span></button>';
+    h+='<div class="calls-seg-body">';
+    if(!group.length) h+='<div class="calls-empty">'+(_recHook==='all'?'— no sub-themes yet. Use ✎ Edit below to add one.':'— no sub-themes match this filter.')+'</div>';
+    group.forEach(function(ct){
+      var sk=(ct.st&&ct.st.k)?ct.st.k:'watch'; var st=CE_THST[sk]||CE_THST.watch;
+      h+='<div class="lpb-acc-item" data-theme="'+esc(ct.theme)+'"><button type="button" class="lpb-acc-h"><span style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap">'+esc(ct.theme)+' <span class="calls-st" style="color:'+st.c+';border-color:'+st.c+'">'+st.l+ceStAge(ct.st)+'</span></span><span class="lpb-acc-ic">+</span></button>';
+      h+='<div class="lpb-acc-body"><p style="font-size:12px;color:var(--mu);margin:0 0 10px;font-style:italic">'+esc(ct.why)+'</p>';
+      var ups=amznWinUpdates(ct);
+      if(ups.length){
+        ups.forEach(function(u){ h+='<div style="margin-bottom:10px"><span class="ov-chip" style="margin-right:6px">'+esc(u.q)+'</span><ul class="ov-bullets" style="margin-top:4px">'+u.items.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ul></div>'; });
+      } else {
+        h+='<div class="calls-empty">— to fill: no notes tracked yet for this theme.</div>';
+      }
+      h+='</div></div>';
+    });
     h+='</div></div>';
   });
   h+='</div>';
@@ -908,6 +1004,7 @@ function ceStyle(){
     '.ce-phpane[hidden]{display:none}'+
     /* quarter selector — one Earnings, many quarters; only the selected quarter renders (page stays light) */
     '.ce-qpills{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}'+
+    '.ce-qpills[hidden]{display:none}'+
     '.ce-qpill{border:1px solid var(--bdr);background:var(--w);font:inherit;font-size:11px;font-weight:800;color:var(--mu);padding:5px 13px;border-radius:999px;cursor:pointer;transition:.12s}'+
     '.ce-qpill:hover{color:var(--navy)}.ce-qpill.active{background:var(--navy);color:#fff;border-color:var(--navy)}'+
     '.ce-qpill .ce-qtag{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-left:6px;opacity:.75}'+
@@ -1316,9 +1413,64 @@ function ceWatchBody(c){
   // dissolved Jul 2026 — no two tabs on the same call highlights). Moved to the TOP of this sub-tab
   // (Aug 2026, AMZN only) — it now leads; the Watch List is folded in below it. ──
   h+='<div class="ce-band" style="--bc:'+BRAND+'"><span class="ce-band-i">▤</span><span class="ce-band-t">The theme record — every thread, across all calls</span><span class="ce-band-s">the multi-year backbone behind the hunt below (the former "Earnings Calls" tab, folded in)</span><span class="ce-band-l"></span></div>';
-  h+=callsBody();
-  // Watch List — the SHARED engine (js/watchlist.js) mounts into this host, now below the theme record.
-  h+='<div style="margin-top:26px;border-top:2px solid var(--bdr);padding-top:16px"><div data-wlmount></div></div>';
+  // Wrapped so the editor below can re-render it in place when a theme / sub-theme is added.
+  h+='<div data-amznrec>'+callsBody()+'</div>';
+  // ── The editing surface — a Theme → Sub-theme picker (AMZN-only). HIDDEN by default so the record
+  // above reads clean; the button reveals it only when you want to add/update. Adding a theme or
+  // sub-theme reflects in the record above immediately. ──
+  h+='<style>.amzn-edit{margin-top:22px}'+
+     '.amzn-edit-tog{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;font:inherit;font-size:11px;font-weight:800;color:var(--mu);background:var(--w);border:1px dashed var(--bdr);border-radius:999px;padding:7px 15px;cursor:pointer;transition:.14s}'+
+     '.amzn-edit-tog:hover{color:'+BRAND2+';border-color:'+BRAND2+'}'+
+     '.amzn-edit[data-open="1"] .amzn-edit-tog{color:'+BRAND2+';border-style:solid;border-color:'+BRAND2+'}'+
+     '.amzn-edit-ic{font-size:12px}'+
+     '.amzn-edit-s{font-weight:600;font-style:italic;color:var(--mu);font-size:10px}'+
+     '.amzn-edit-body{margin-top:16px;border-top:2px solid var(--bdr);padding-top:16px}'+
+     '.amzn-edit-body[hidden]{display:none}'+
+     /* the Theme → Sub-theme editor */
+     '.aed-hint{font-size:11px;color:var(--navy);background:rgba(20,110,180,0.06);border:1px solid rgba(20,110,180,0.25);border-radius:9px;padding:8px 12px;margin:0 0 12px;line-height:1.5}'+
+     '.aed-row{display:flex;align-items:flex-start;gap:10px;margin:0 0 12px}'+
+     '.aed-lb{flex:none;width:78px;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);padding-top:6px}'+
+     '.aed-pills{display:flex;gap:6px;flex-wrap:wrap;flex:1}'+
+     '.aed-pill{font:inherit;font-size:11px;font-weight:800;border:1px solid var(--bdr);background:var(--w);color:var(--navy);padding:5px 13px;border-radius:999px;cursor:pointer;transition:.12s}'+
+     '.aed-pill:hover{border-color:'+BRAND2+';color:'+BRAND2+'}.aed-pill.on{background:'+BRAND2+';color:#fff;border-color:'+BRAND2+'}'+
+     '.aed-pill.sub.on{background:'+BRAND+';border-color:'+BRAND+';color:#fff}'+
+     '.aed-add{font:inherit;font-size:10.5px;font-weight:800;border:1px dashed '+BRAND2+';background:var(--w);color:'+BRAND2+';padding:5px 12px;border-radius:999px;cursor:pointer}'+
+     '.aed-add:hover{background:rgba(20,110,180,0.06)}'+
+     '.aed-win{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr);border-radius:999px;padding:2px}'+
+     '.aed-win button{font:inherit;font-size:10px;font-weight:800;border:0;background:transparent;color:var(--mu);padding:4px 11px;border-radius:999px;cursor:pointer}'+
+     '.aed-win button.on{background:var(--navy);color:#fff}'+
+     '.aed-hookst{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);align-self:center}'+
+     '.aed-hookst.open{color:'+BRAND2+'}.aed-hookst.closed{color:'+RED+'}'+
+     '.aed-delseg{font:inherit;font-size:10px;font-weight:800;border:1px solid var(--bdr);background:var(--w);color:var(--mu);padding:4px 11px;border-radius:999px;cursor:pointer}'+
+     '.aed-delseg:hover{border-color:'+RED+';color:'+RED+'}'+
+     '.aed-empty{font-size:10.5px;color:var(--mu);font-style:italic;padding:6px 0}'+
+     '.aed-detail{border:1px solid var(--bdr);border-left:3px solid '+BRAND+';border-radius:10px;padding:12px 14px;background:#FAFBFD;margin-top:4px}'+
+     '.aed-detail-h{font-size:13px;font-weight:800;color:var(--navy)}.aed-detail-seg{font-size:9.5px;font-weight:700;color:var(--mu);margin-left:8px}'+
+     '.aed-why{font-size:11.5px;color:var(--mu);font-style:italic;margin:6px 0 8px;line-height:1.5}'+
+     '.aed-notes{display:flex;flex-direction:column;gap:10px}.aed-note-q{display:inline-flex;align-items:center;gap:6px;font-size:9px;font-weight:800;color:'+BRAND+';background:rgba(255,153,0,0.10);border-radius:20px;padding:2px 8px;margin-bottom:2px}'+
+     '.aed-qgroup{border-top:1px dashed var(--bdr);padding-top:6px}'+
+     '.aed-flb{display:block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:12px 0 4px}'+
+     '.aed-ta{width:100%;box-sizing:border-box;font:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:7px 10px;background:var(--w);color:var(--navy);line-height:1.5;resize:vertical}'+
+     '.aed-ta:focus,.aed-sel:focus,.aed-addnote input:focus{outline:none;border-color:'+BRAND2+'}'+
+     '.aed-sel{font:inherit;font-size:11px;border:1px solid var(--bdr);border-radius:8px;padding:5px 8px;background:var(--w);color:var(--navy)}'+
+     '.aed-track{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:10px;font-weight:700;color:var(--mu)}'+
+     '.aed-note-row{display:flex;align-items:flex-start;gap:8px;padding:4px 0;font-size:12px;line-height:1.5}.aed-note-row>span{flex:1}'+
+     '.aed-del{flex:none;font:inherit;font-size:11px;font-weight:800;border:1px solid var(--bdr);background:var(--w);color:var(--mu);width:20px;height:20px;border-radius:6px;cursor:pointer;line-height:1}'+
+     '.aed-del:hover{border-color:'+RED+';color:'+RED+'}'+
+     '.aed-ed{flex:none;font:inherit;font-size:10px;font-weight:800;border:1px solid var(--bdr);background:var(--w);color:var(--mu);width:20px;height:20px;border-radius:6px;cursor:pointer;line-height:1}'+
+     '.aed-ed:hover{border-color:'+BRAND2+';color:'+BRAND2+'}'+
+     '.aed-mini{font:inherit;font-size:10.5px;font-weight:800;border:1px solid '+BRAND2+';background:'+BRAND2+';color:#fff;padding:6px 12px;border-radius:8px;cursor:pointer}'+
+     '.aed-mini.alt{background:var(--w);color:'+BRAND2+'}.aed-mini:hover{filter:brightness(1.06)}'+
+     '.aed-addnote{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:8px}'+
+     '.aed-addnote input{flex:1;min-width:180px;box-sizing:border-box;font:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:6px 9px;background:var(--w);color:var(--navy)}'+
+     '.aed-frow{display:flex;gap:8px;align-items:center;margin-top:10px}'+
+     '.aed-delsub{margin-left:auto;font:inherit;font-size:9.5px;font-weight:800;border:1px solid var(--bdr);background:var(--w);color:var(--mu);padding:3px 10px;border-radius:999px;cursor:pointer}'+
+     '.aed-delsub:hover{border-color:'+RED+';color:'+RED+'}'+
+     '.aed-note ul{margin:2px 0 0;padding-left:18px;font-size:12px;line-height:1.55}</style>';
+  h+='<div class="amzn-edit" data-amznedit data-open="0">'+
+       '<button type="button" class="amzn-edit-tog" data-amzneditog aria-expanded="false"><span class="amzn-edit-ic">✎</span> Edit notes &amp; tracking <span class="amzn-edit-s">— opens only to add/update a theme or sub-theme</span></button>'+
+       '<div class="amzn-edit-body" hidden><div data-amzneditor></div></div>'+
+     '</div>';
   return h;
 }
 // (Promise Tracker dissolved Jul 2026 — promise-type items now live as tracked themes inside the
@@ -1416,7 +1568,7 @@ function cePrintBlock(qLabel, r, us){
         '<div class="ce-fz-gr"><span class="ce-fz-gl">growth</span>'+
           '<span class="ce-gy">'+g('yoy')+'</span><span class="ce-gq">'+g('qoq')+'</span></div>'+
         mRow+
-        (wr?'<div class="ce-fz-wl" title="On the frozen Watch List: '+esc(wr)+'">on the list</div>':'')+
+        (wr?'<div class="ce-fz-wl" title="On the frozen Notes list: '+esc(wr)+'">on the list</div>':'')+
         (qb?'<div class="ce-fz-more">＋ detail</div>':'')+
       '</div>' };
   }).filter(Boolean);
@@ -1428,7 +1580,7 @@ function cePrintBlock(qLabel, r, us){
       '<ul><li><b>vs Street ⇄ vs Summit</b> — swaps which frozen expectation the print is scored against (Street = Bloomberg, Summit = ours). No "Both" — one basis at a time. Where Summit had no number, Summit view reads <b>no est.</b></li>'+
       '<li><b>Margin</b> — GP / Operating income / EBITDA carry an expected-vs-realized margin (the estimate-implied margin → the print\'s own), Δ in pts. No YoY/QoQ on the margin.</li>'+
       '<li><b>Verdict</b> — beat / miss / in-line off the computed surprise; <b>no est.</b> where that basis had no number</li>'+
-      '<li><b>on the list</b> — this line was on the Watch List we froze before the call</li></ul>'+
+      '<li><b>on the list</b> — this line was on the Notes we froze before the call</li></ul>'+
       '<p>Lines the archive does not track are not shown here — a disclosure with no consensus (e.g. an app-MAU rung) is a supplemental call note (below the scorecard), not a scored line.</p>')+
     '<span class="ce-vdf"><button type="button" class="active" data-vdf="all">All</button>'+
       '<button type="button" data-vdf="beat">Beats</button>'+
@@ -1655,7 +1807,7 @@ function ceResultsBody(c){
     // Deliberately styled as a secondary aside; NOT the tracking layer (that is the Watch List) and
     // NOT the meeting-critical read (that is the scorecard). Includes non-trackable call colour.
     b+=ceHighlightsBlock(q.call, qk);
-    b+='<div class="ov-foot">Numbers scored against the frozen expectation — <b>Street</b> (<code>BBG_CONSENSUS.txt</code>) or <b>Summit</b> via the toggle; actuals = reported. The <i>Also on the call</i> aside is supplemental colour — the tracking layer is the Watch List.</div>';
+    b+='<div class="ov-foot">Numbers scored against the frozen expectation — <b>Street</b> (<code>BBG_CONSENSUS.txt</code>) or <b>Summit</b> via the toggle; actuals = reported. The <i>Also on the call</i> aside is supplemental colour — the tracking layer is Notes.</div>';
     b+='</div>';
     return b;
   }).join('');
@@ -1673,7 +1825,7 @@ function ceHighlightsBlock(cc, qk){
   var hls=cc.highlights.filter(function(x){ return (x.band||'context')!=='lead'; });
   if(!hls.length) return '';
   var b='<div class="ce-alsobox"><div class="ce-alsobox-h"><b>Also on the call</b>'+
-    '<span class="ce-alsobox-sub">supplemental colour — the meeting-critical items are the scorecard above and the Watch List</span></div>'+
+    '<span class="ce-alsobox-sub">supplemental colour — the meeting-critical items are the scorecard above and Notes</span></div>'+
     '<div class="ce-alsolist">';
   b+=hls.map(function(x){
     // No tag chips (tone/curious/connects-dots/…) — just the theme and its dropdown (v2.10).
@@ -1837,6 +1989,10 @@ function ceSelectQuarter(pane, qk){
   var flat=pane.querySelector('.ce-wl-all'); if(flat) flat.hidden=true;
 }
 function ceApplyPhaseQuarters(pane, phase){
+  // The quarter selector drives the Setup & Post-Results per-quarter blocks; the Watch List pane has
+  // no per-quarter blocks (the shared engine carries its own quarters), so the pills are inert there.
+  // Hide the whole selector on the Watch List phase (AMZN-only) rather than leave a dead control.
+  var pillbar=pane.querySelector('.ce-qpills'); if(pillbar) pillbar.hidden=(phase==='watch');
   var pills=Array.prototype.slice.call(pane.querySelectorAll('.ce-qpill')), lastVisible=null, activeVisible=false;
   pills.forEach(function(b){
     var ok=(b.getAttribute('data-ceqhas')||'').split(' ').indexOf(phase)>=0;
@@ -2080,10 +2236,10 @@ function deepDiveHtml(c){
       '</div>'+
       '<div class="ovt-subpane" data-ovst="earnings">'+
         ceIRButton()+
-        '<div class="ce-note" style="margin-bottom:12px">🎯 <b>Earnings</b> — the decision layer, in two phases: <b>① Pre-Call</b> (go in ready — Setup · Watch List, with themes tracked across quarters) → <b>② Post-Results</b> (the print scored against what was frozen, <i>plus</i> the call highlights — the things worth taking into the conversation). Append-only per quarter — pick a quarter below; each quarter keeps its frozen pre-call blocks next to its post-mortem, so the tab is a record of how well we read Amazon. The <b>Watch List</b> is the single home for what we <i>track over time</i>; the Post-Results highlights are <i>talking points</i>, not tracking.</div>'+
+        '<div class="ce-note" style="margin-bottom:12px">🎯 <b>Earnings</b> — the decision layer, in two phases: <b>① Pre-Call</b> (go in ready — Setup · Notes, with themes tracked across quarters) → <b>② Post-Results</b> (the print scored against what was frozen, <i>plus</i> the call highlights — the things worth taking into the conversation). Append-only per quarter — pick a quarter below; each quarter keeps its frozen pre-call blocks next to its post-mortem, so the tab is a record of how well we read Amazon. The <b>Notes</b> tab is the single home for what we <i>track over time</i>; the Post-Results highlights are <i>talking points</i>, not tracking.</div>'+
         '<div class="ce-phtabs">'+
           '<button type="button" class="ce-phtab active" data-cep="setup">Setup</button>'+
-          '<button type="button" class="ce-phtab" data-cep="watch">Watch List</button>'+
+          '<button type="button" class="ce-phtab" data-cep="watch">Notes</button>'+
           '<button type="button" class="ce-phtab" data-cep="results">Post-Results</button>'+
         '</div>'+
         ceQPills()+
@@ -2182,10 +2338,171 @@ function wireDD(root){
   wireCallEarnings(root);
   wireCeTrack(root);
   // Accordions (theme record) + the By theme ⇄ By quarter toggle.
-  root.querySelectorAll('.lpb-acc-h').forEach(function(btn){ btn.onclick=function(){ var item=btn.parentElement; var open=item.classList.toggle('open'); var ic=btn.querySelector('.lpb-acc-ic'); if(ic) ic.textContent=open?'–':'+'; }; });
-  root.querySelectorAll('.calls-pill[data-callsv]').forEach(function(b){ b.onclick=function(){ var v=b.getAttribute('data-callsv');
-    root.querySelectorAll('.calls-pill[data-callsv]').forEach(function(x){ x.classList.toggle('active', x===b); });
-    var th=root.querySelector('#aCallsTheme'), qu=root.querySelector('#aCallsQuarter'); if(th) th.style.display=(v==='theme'?'':'none'); if(qu) qu.style.display=(v==='quarter'?'':'none'); }; });
+  wireThemeRecord(root);
+  // Show/hide the editing surface (the Theme → Sub-theme editor). Hidden by default so the record reads clean.
+  root.querySelectorAll('.amzn-edit-tog[data-amzneditog]').forEach(function(btn){ btn.onclick=function(){
+    var wrap=btn.closest('.amzn-edit'); if(!wrap) return;
+    var body=wrap.querySelector('.amzn-edit-body'); if(!body) return;
+    var open=body.hidden; body.hidden=!open;
+    wrap.setAttribute('data-open', open?'1':'0');
+    btn.setAttribute('aria-expanded', open?'true':'false');
+  }; });
+  // Build the Theme → Sub-theme editor inside the (hidden) panel.
+  amznRenderEditor(root);
+}
+// Wire the theme-record interactions (accordions, segment dropdowns, By theme ⇄ By quarter toggle).
+function wireThemeRecord(scope){
+  if(!scope) return;
+  scope.querySelectorAll('.lpb-acc-h').forEach(function(btn){ btn.onclick=function(){ var item=btn.parentElement; var open=item.classList.toggle('open'); var ic=btn.querySelector('.lpb-acc-ic'); if(ic) ic.textContent=open?'–':'+'; }; });
+  scope.querySelectorAll('.calls-seg[data-segtog]').forEach(function(btn){ btn.onclick=function(){ var g=btn.closest('.calls-seg-group'); if(!g) return; var open=g.classList.toggle('open'); var ic=btn.querySelector('.calls-seg-ic'); if(ic) ic.textContent=open?'–':'+'; }; });
+  scope.querySelectorAll('.calls-pill[data-callsv]').forEach(function(b){ b.onclick=function(){ var v=b.getAttribute('data-callsv');
+    scope.querySelectorAll('.calls-pill[data-callsv]').forEach(function(x){ x.classList.toggle('active', x===b); });
+    var th=scope.querySelector('#aCallsTheme'), qu=scope.querySelector('#aCallsQuarter'); if(th) th.style.display=(v==='theme'?'':'none'); if(qu) qu.style.display=(v==='quarter'?'':'none');
+    // The ✎ editor lives only in the By-theme view — hide it on By-quarter (edits still flow through
+    // to By-quarter since that view derives from the same data).
+    var pane=b.closest('.ce-phpane'); var edit=pane?pane.querySelector('.amzn-edit'):null; if(edit) edit.style.display=(v==='theme'?'':'none'); }; });
+  // Global tracking-window filter (below the toggle) — narrows the notes shown in both views.
+  var rerec=function(){ amznRerenderRecord(document.getElementById('co-detailview')); };
+  scope.querySelectorAll('[data-rectrks]').forEach(function(s){ s.onchange=function(){ _recSince=s.value||null; rerec(); }; });
+  scope.querySelectorAll('[data-rectrkclear]').forEach(function(b){ b.onclick=function(){ _recSince=null; rerec(); }; });
+  scope.querySelectorAll('[data-rechook]').forEach(function(b){ b.onclick=function(){ _recHook=b.getAttribute('data-rechook'); rerec(); }; });
+}
+// Re-render the theme record above (from AMZN_THEMES) and re-wire it — called after an edit or a
+// filter change. Open/closed state (segments, sub-themes, the active view) is preserved across the
+// rebuild so applying a filter never collapses the panes the user had expanded.
+function amznCaptureRecState(host){
+  var segs={}, subs={};
+  host.querySelectorAll('.calls-seg-group[data-seg]').forEach(function(g){ segs[g.getAttribute('data-seg')]=g.classList.contains('open'); });
+  host.querySelectorAll('.lpb-acc-item[data-theme]').forEach(function(it){ if(it.classList.contains('open')) subs[it.getAttribute('data-theme')]=1; });
+  var qp=host.querySelector('.calls-pill[data-callsv="quarter"]');
+  return { segs:segs, subs:subs, view:(qp&&qp.classList.contains('active'))?'quarter':'theme' };
+}
+function amznRestoreRecState(host, st){
+  host.querySelectorAll('.calls-seg-group[data-seg]').forEach(function(g){ if(st.segs[g.getAttribute('data-seg')]){ g.classList.add('open'); var ic=g.querySelector('.calls-seg-ic'); if(ic) ic.textContent='–'; } });
+  host.querySelectorAll('.lpb-acc-item[data-theme]').forEach(function(it){ if(st.subs[it.getAttribute('data-theme')]){ it.classList.add('open'); var ic=it.querySelector('.lpb-acc-ic'); if(ic) ic.textContent='–'; } });
+  if(st.view==='quarter'){
+    host.querySelectorAll('.calls-pill[data-callsv]').forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-callsv')==='quarter'); });
+    var th=host.querySelector('#aCallsTheme'), qu=host.querySelector('#aCallsQuarter'); if(th) th.style.display='none'; if(qu) qu.style.display='';
+    var pane=host.closest('.ce-phpane'); var edit=pane?pane.querySelector('.amzn-edit'):null; if(edit) edit.style.display='none';
+  }
+}
+function amznRerenderRecord(root){ var host=root&&root.querySelector('[data-amznrec]'); if(!host) return; var st=amznCaptureRecState(host); host.innerHTML=callsBody(); amznRestoreRecState(host, st); wireThemeRecord(host); }
+
+// ═══ Theme → Sub-theme editor (AMZN-only, in the hidden ✎ panel) ═══════════════════════════════
+// "Theme" = the segment (AMZN_SEG_ORDER); "Sub-theme" = a theme within it (AMZN_THEMES[].theme).
+// Picking a Theme filters the Sub-theme list to that segment. Adding either mutates the in-memory
+// model and re-renders the record above at once. (Session-only for now — see the note to the user.)
+var _edSeg=null, _edSub=null;
+function amznSubsOf(seg){ return AMZN_THEMES.filter(function(ct){ return ct.seg===seg; }); }
+// A hook is OPEN when it has a Tracking since and no Tracking until; CLOSED once an until is set.
+function amznHookOpen(ct){ return !!(ct.st&&ct.st.since) && !ct.trackUntil; }
+function amznHookClosed(ct){ return !!ct.trackUntil; }
+function amznEditorBody(){
+  if(!_edSeg || AMZN_SEG_ORDER.indexOf(_edSeg)<0) _edSeg=AMZN_SEG_ORDER[0]||null;
+  var subs=amznSubsOf(_edSeg);
+  if(_edSub && !subs.some(function(s){ return s.theme===_edSub; })) _edSub=null;
+  var h='<div class="aed-row"><span class="aed-lb">Theme</span><div class="aed-pills">';
+  AMZN_SEG_ORDER.forEach(function(seg){ h+='<button type="button" class="aed-pill'+(seg===_edSeg?' on':'')+'" data-aedseg="'+esc(seg)+'">'+esc(seg)+'</button>'; });
+  h+='<button type="button" class="aed-add" data-aedaddseg>+ New theme</button>';
+  if(_edSeg) h+='<button type="button" class="aed-delseg" data-aeddelseg title="Delete the selected Theme and all its sub-themes">✕ delete ‘'+esc(_edSeg)+'’</button>';
+  h+='</div></div>';
+  h+='<div class="aed-row"><span class="aed-lb">Sub-theme</span><div class="aed-pills">';
+  if(subs.length) subs.forEach(function(s){ h+='<button type="button" class="aed-pill sub'+(s.theme===_edSub?' on':'')+'" data-aedsub="'+esc(s.theme)+'">'+esc(s.theme)+(amznHookClosed(s)?' <span style="opacity:.6">·closed</span>':'')+'</button>'; });
+  else h+='<span class="aed-empty">no sub-themes yet</span>';
+  h+='<button type="button" class="aed-add" data-aedaddsub>+ New sub-theme</button></div></div>';
+  var cur=subs.filter(function(s){ return s.theme===_edSub; })[0];
+  if(cur){
+    var extraQ=(cur.updates||[]).map(function(u){ return u.q; });
+    h+='<div class="aed-detail">';
+    h+='<div class="aed-detail-h">'+esc(cur.theme)+'<span class="aed-detail-seg">in '+esc(cur.seg)+'</span>'+
+       '<button type="button" class="aed-delsub" data-aeddelsub>✕ delete sub-theme</button></div>';
+    // Tracking window (per sub-theme): since + until (empty = still open). Drives the Open/Closed filter.
+    h+='<label class="aed-flb">Tracking window</label>'+
+       '<div class="aed-track"><span>Tracking since <select class="aed-sel" data-aedts>'+amznQuarterOpts((cur.st&&cur.st.since)||'', '— none —', extraQ)+'</select></span>'+
+       '<span>Tracking until <select class="aed-sel" data-aedtu>'+amznQuarterOpts(cur.trackUntil||'', '— still open —', extraQ)+'</select></span>'+
+       '<span class="aed-hookst '+(amznHookClosed(cur)?'closed':(amznHookOpen(cur)?'open':''))+'">'+(amznHookClosed(cur)?'closed':(amznHookOpen(cur)?'open hook':'not tracked'))+'</span></div>';
+    // Add a note — right below the tracking window.
+    h+='<label class="aed-flb">Add a note</label>'+
+       '<div class="aed-addnote"><select class="aed-sel" data-aednoteq>'+amznQuarterOpts('', '— quarter —', extraQ)+'</select>'+
+       '<input type="text" data-aednotetext placeholder="new note for that quarter (bold ok: &lt;b&gt;…&lt;/b&gt;)">'+
+       '<button type="button" class="aed-mini" data-aedaddnote>+ Add note</button></div>';
+    // Notes per quarter — the editor shows ALL notes; the "Since" filter is global (above the record).
+    h+='<label class="aed-flb">Notes by quarter</label>';
+    if(cur.updates&&cur.updates.length){
+      h+='<div class="aed-notes">'+cur.updates.map(function(u){
+        return '<div class="aed-qgroup"><span class="aed-note-q">'+esc(u.q)+'</span>'+
+          u.items.map(function(it,ii){ return '<div class="aed-note-row"><span>'+it+'</span>'+
+            '<button type="button" class="aed-ed" data-aedednote data-q="'+esc(u.q)+'" data-i="'+ii+'" title="Edit this note">✎</button>'+
+            '<button type="button" class="aed-del" data-aeddelnote data-q="'+esc(u.q)+'" data-i="'+ii+'" title="Delete this note">✕</button></div>'; }).join('')+
+        '</div>';
+      }).join('')+'</div>';
+    } else h+='<div class="aed-empty">no notes yet — add one above</div>';
+    h+='</div>';
+  }
+  return h;
+}
+// Quarter <option>s: the tracked quarters (CALL_EARNINGS) plus any already used by this sub-theme,
+// newest first. `sel` pre-selects; `blank` is the empty option label.
+function amznQuarterOpts(sel, blank, extra){
+  var seen={}, list=[];
+  (CALL_EARNINGS.quarters||[]).forEach(function(q){ if(!seen[q.q]){ seen[q.q]=1; list.push(q.q); } });
+  (extra||[]).forEach(function(q){ if(q && !seen[q]){ seen[q]=1; list.push(q); } });
+  list.sort(function(a,b){ return (ceQnum(b)||0)-(ceQnum(a)||0); });
+  var out='<option value="">'+esc(blank||'—')+'</option>';
+  list.forEach(function(q){ out+='<option value="'+esc(q)+'"'+(sel===q?' selected':'')+'>'+esc(q)+'</option>'; });
+  return out;
+}
+function amznRenderEditor(root){
+  var host=root&&root.querySelector('[data-amzneditor]'); if(!host) return;
+  host.innerHTML=amznEditorBody();
+  host.querySelectorAll('[data-aedseg]').forEach(function(b){ b.onclick=function(){ _edSeg=b.getAttribute('data-aedseg'); _edSub=null; amznRenderEditor(root); }; });
+  host.querySelectorAll('[data-aedsub]').forEach(function(b){ b.onclick=function(){ _edSub=b.getAttribute('data-aedsub'); amznRenderEditor(root); }; });
+  var addSeg=host.querySelector('[data-aedaddseg]');
+  if(addSeg) addSeg.onclick=function(){ var n=(window.prompt('New Theme (segment) name:')||'').trim(); if(!n) return; if(AMZN_SEG_ORDER.indexOf(n)<0) AMZN_SEG_ORDER.push(n); _edSeg=n; _edSub=null; amznRenderEditor(root); amznRerenderRecord(root); };
+  var addSub=host.querySelector('[data-aedaddsub]');
+  if(addSub) addSub.onclick=function(){ if(!_edSeg){ window.alert('Pick a Theme first.'); return; } var n=(window.prompt('New Sub-theme under “'+_edSeg+'”:')||'').trim(); if(!n) return; if(!amznSubsOf(_edSeg).some(function(s){ return s.theme===n; })) AMZN_THEMES.push({ seg:_edSeg, theme:n, why:'', updates:[], st:{ k:'watch' } }); _edSub=n; amznRenderEditor(root); amznRerenderRecord(root); };
+  var delSeg=host.querySelector('[data-aeddelseg]');
+  if(delSeg) delSeg.onclick=function(){ if(!_edSeg) return; var nsub=amznSubsOf(_edSeg).length;
+    if(!window.confirm('Delete Theme “'+_edSeg+'”'+(nsub?(' and its '+nsub+' sub-theme'+(nsub>1?'s':'')+' (and their notes)'):'')+'?')) return;
+    for(var k=AMZN_THEMES.length-1;k>=0;k--){ if(AMZN_THEMES[k].seg===_edSeg) AMZN_THEMES.splice(k,1); }
+    var si=AMZN_SEG_ORDER.indexOf(_edSeg); if(si>=0) AMZN_SEG_ORDER.splice(si,1);
+    _edSeg=null; _edSub=null; amznRenderEditor(root); amznRerenderRecord(root);
+  };
+  // ── the selected sub-theme's editable detail (tracking window · notes by quarter) ──
+  var cur=amznSubsOf(_edSeg).filter(function(s){ return s.theme===_edSub; })[0];
+  if(cur){
+    var delsub=host.querySelector('[data-aeddelsub]');
+    if(delsub) delsub.onclick=function(){ if(!window.confirm('Delete sub-theme “'+cur.theme+'” and its notes?')) return; var i=AMZN_THEMES.indexOf(cur); if(i>=0) AMZN_THEMES.splice(i,1); _edSub=null; amznRenderEditor(root); amznRerenderRecord(root); };
+    var ts=host.querySelector('[data-aedts]');
+    if(ts) ts.onchange=function(){ cur.st=cur.st||{ k:'watch' }; if(ts.value) cur.st.since=ts.value; else delete cur.st.since; amznRenderEditor(root); amznRerenderRecord(root); };
+    var tu=host.querySelector('[data-aedtu]');
+    if(tu) tu.onchange=function(){ cur.trackUntil=tu.value||null; amznRenderEditor(root); amznRerenderRecord(root); };
+    host.querySelectorAll('[data-aeddelnote]').forEach(function(b){ b.onclick=function(){
+      var q=b.getAttribute('data-q'), ix=+b.getAttribute('data-i');
+      var u=(cur.updates||[]).filter(function(x){ return x.q===q; })[0]; if(!u) return;
+      u.items.splice(ix,1);
+      if(!u.items.length) cur.updates=cur.updates.filter(function(x){ return x!==u; });
+      amznRenderEditor(root); amznRerenderRecord(root);
+    }; });
+    host.querySelectorAll('[data-aedednote]').forEach(function(b){ b.onclick=function(){
+      var q=b.getAttribute('data-q'), ix=+b.getAttribute('data-i');
+      var u=(cur.updates||[]).filter(function(x){ return x.q===q; })[0]; if(!u||u.items[ix]==null) return;
+      var nv=window.prompt('Edit note ('+q+') — HTML ok (e.g. <b>…</b>):', u.items[ix]);
+      if(nv==null) return; nv=nv.trim(); if(!nv) return;
+      u.items[ix]=nv; amznRenderEditor(root); amznRerenderRecord(root);
+    }; });
+    var addNote=host.querySelector('[data-aedaddnote]');
+    if(addNote) addNote.onclick=function(){
+      var q=host.querySelector('[data-aednoteq]').value, tx=(host.querySelector('[data-aednotetext]').value||'').trim();
+      if(!q){ window.alert('Pick a quarter for the note.'); return; }
+      if(!tx) return;
+      cur.updates=cur.updates||[];
+      var u=cur.updates.filter(function(x){ return x.q===q; })[0];
+      if(!u){ u={ q:q, items:[] }; cur.updates.push(u); cur.updates.sort(function(a,z){ return (ceQnum(a.q)||0)-(ceQnum(z.q)||0); }); }
+      u.items.push(tx);
+      amznRenderEditor(root); amznRerenderRecord(root);
+    };
+  }
 }
 
 function init(c){

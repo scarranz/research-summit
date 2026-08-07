@@ -32,3 +32,6 @@ _seed_*.js
 # local reference only, never commit to a public repo. The portal-facing
 # dashboard and its curated data file ARE committed.
 hyperscalers/
+
+# consensus generator output (regenerated on demand from the Bloomberg sources)
+scripts/consensus/out/

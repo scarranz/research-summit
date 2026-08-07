@@ -1966,26 +1966,45 @@ function cePhaseStyle(){
     '.ce-cc-row-h:hover{background:#FAFBFD}'+
     '.ce-cc-ar{margin-left:auto;color:var(--mu);font-size:10px;transition:transform .15s;flex:none}'+
     '.ce-cc-row[open]>.ce-cc-row-h .ce-cc-ar{transform:rotate(180deg)}'+
-    '.ce-cc-topic,.ce-cc-q{font-size:11.5px;font-weight:700;color:var(--navy);line-height:1.45}'+
+    '.ce-cc-topic{font-size:11.5px;font-weight:700;color:var(--navy);line-height:1.45}'+
     '.ce-cc-tag{font-size:8.5px;font-weight:800;letter-spacing:.03em;color:'+BLUE+';background:rgba(26,115,232,.10);border-radius:999px;padding:2px 8px;white-space:nowrap}'+
     '.ce-cc-meta{font-size:9.5px;font-weight:700;color:var(--mu);margin-bottom:4px}'+
     '.ce-cc-row-b{font-size:10.5px;color:var(--navy);line-height:1.55;padding:0 13px 11px;font-weight:500;background:#FBFCFE}'+
     '.ce-cc-a-l{display:inline-block;font-size:8px;font-weight:900;color:#fff;background:var(--mu);border-radius:4px;padding:1px 5px;margin-right:6px;vertical-align:middle}'+
     '.ce-cc-empty{padding:16px 14px;font-size:10.5px;color:var(--mu);font-weight:600;line-height:1.5;text-align:center;background:#FBFCFE}'+
-    /* ③b theme proposals → Watch List (client-side staging scaffold) */
+    /* By Analyst Question — bank leads, analyst beside it; Q and A BOTH always visible */
+    '.ce-cc-qa{padding:11px 13px;border-bottom:1px solid var(--bdr)}'+
+    '.ce-cc-qa:last-child{border-bottom:0}'+
+    '.ce-cc-qa-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}'+
+    '.ce-cc-bank{font-size:11px;font-weight:900;color:var(--navy);letter-spacing:.01em}'+
+    '.ce-cc-analyst{font-size:10px;font-weight:600;color:var(--mu)}'+
+    '.ce-cc-q,.ce-cc-a{display:grid;grid-template-columns:16px 1fr;gap:8px;font-size:11px;line-height:1.55;margin-top:4px;color:var(--navy)}'+
+    '.ce-cc-q{font-weight:600}.ce-cc-a{font-weight:500}'+
+    '.ce-cc-ql,.ce-cc-al{font-size:8px;font-weight:900;color:#fff;border-radius:4px;width:15px;height:15px;display:flex;align-items:center;justify-content:center;margin-top:2px}'+
+    '.ce-cc-ql{background:'+BLUE+'}.ce-cc-al{background:#0a8f4c}'+
+    /* ③b Propose Notes — Theme ▸ Sub-theme filing, target line, existing/NEW badges */
     '.ce-tp{border-top:1px solid var(--bdr);background:#FCFCFF;padding:12px 13px}'+
     '.ce-tp-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}'+
     '.ce-tp-ic{font-size:13px}.ce-tp-h>b{font-size:11.5px;color:var(--navy)}'+
     '.ce-tp-refresh{font-family:inherit;font-size:9px;font-weight:800;color:'+BLUE+';border:1px solid var(--bdr);border-radius:999px;padding:3px 9px;cursor:pointer;background:#fff;transition:.12s}'+
     '.ce-tp-refresh:hover{border-color:'+BLUE+';background:rgba(26,115,232,.06)}'+
-    '.ce-tp-refresh[hidden]{display:none}'+
-    '.ce-tp-sub{font-size:9.5px;color:var(--mu);font-weight:600;flex-basis:100%;line-height:1.4}'+
+    '.ce-tp-subtitle{font-size:9.5px;color:var(--mu);font-weight:600;flex-basis:100%;line-height:1.4}'+
     '.ce-tp-list{display:flex;flex-direction:column;gap:7px}'+
     '.ce-tp-card{border:1px solid var(--bdr);border-left:3px solid '+PURPLE+';border-radius:9px;padding:8px 9px;background:#fff}'+
-    '.ce-tp-row1{display:flex;align-items:center;gap:7px;margin-bottom:6px}'+
+    '.ce-tp-row1{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}'+
     '.ce-tp-rank{font-size:8.5px;font-weight:900;color:'+PURPLE+';background:rgba(122,90,248,.10);border-radius:999px;padding:2px 7px;flex:none}'+
-    '.ce-tp-theme{flex:1;min-width:0;font-family:inherit;font-size:10px;font-weight:700;color:'+BLUE+';border:1px solid var(--bdr);border-radius:6px;padding:4px 6px;background:#F7F9FC;cursor:pointer}'+
-    '.ce-tp-theme:focus{outline:none;border-color:'+BLUE+'}'+
+    '.ce-tp-fld{display:flex;align-items:center;gap:5px;min-width:0}'+
+    '.ce-tp-lb{font-size:8.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--mu);flex:none}'+
+    '.ce-tp-seg,.ce-tp-sub{min-width:0;max-width:210px;font-family:inherit;font-size:10px;font-weight:700;color:'+BLUE+';border:1px solid var(--bdr);border-radius:6px;padding:4px 6px;background:#F7F9FC;cursor:pointer}'+
+    '.ce-tp-seg:focus,.ce-tp-sub:focus{outline:none;border-color:'+BLUE+'}'+
+    '.ce-tp-newsub{display:block;width:100%;box-sizing:border-box;font-family:inherit;font-size:10.5px;font-weight:600;color:var(--navy);border:1px solid '+AMBER+';border-radius:6px;padding:5px 8px;background:#FFFDF7;margin-bottom:6px}'+
+    '.ce-tp-newsub[hidden]{display:none}'+
+    '.ce-tp-target{font-size:9.5px;font-weight:700;color:var(--navy);margin-bottom:6px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}'+
+    '.ce-tp-arrow{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}'+
+    '.ce-tp-sep{color:var(--mu)}'+
+    '.ce-tp-badge{font-size:8px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#0a6b3a;background:rgba(10,143,76,.12);border-radius:999px;padding:2px 7px}'+
+    '.ce-tp-badge.new{color:#7A5B02;background:rgba(251,188,5,.22)}'+
+    '.ce-tp-chip-new{font-size:7.5px;font-weight:900;letter-spacing:.04em;color:#7A5B02;background:rgba(251,188,5,.22);border-radius:999px;padding:1px 6px;flex:none;margin-top:1px}'+
     '.ce-tp-acts{display:flex;gap:5px;flex:none}'+
     '.ce-tp-ok,.ce-tp-no{font-family:inherit;font-size:9.5px;font-weight:800;border:1px solid var(--bdr);border-radius:999px;padding:4px 9px;cursor:pointer;background:#fff;transition:.12s}'+
     '.ce-tp-ok{color:#0a8f4c}.ce-tp-ok:hover{border-color:#0a8f4c;background:rgba(10,143,76,.06)}'+
@@ -1997,7 +2016,7 @@ function cePhaseStyle(){
     '.ce-tp-staged{display:flex;flex-direction:column;gap:6px}'+
     '.ce-tp-empty{font-size:10px;color:var(--mu);font-weight:600;font-style:italic}'+
     '.ce-tp-chip{display:flex;align-items:flex-start;gap:8px;font-size:10.5px;font-weight:500;color:var(--navy);line-height:1.5;background:#fff;border:1px solid var(--bdr);border-left:3px solid #0a8f4c;border-radius:9px;padding:7px 9px}'+
-    '.ce-tp-chip-tag{font-size:8.5px;font-weight:800;color:'+BLUE+';background:rgba(26,115,232,.10);border-radius:999px;padding:2px 8px;white-space:nowrap;flex:none;margin-top:1px}'+
+    '.ce-tp-chip-tag{font-size:8.5px;font-weight:800;color:'+BLUE+';background:rgba(26,115,232,.10);border-radius:999px;padding:2px 8px;flex:none;margin-top:1px;line-height:1.35}'+
     '.ce-tp-chip-t{flex:1;min-width:0}'+
     '.ce-tp-unstage{font-family:inherit;font-size:9px;font-weight:900;color:var(--mu);border:0;background:none;cursor:pointer;line-height:1;padding:2px 3px;border-radius:50%;flex:none}'+
     '.ce-tp-unstage:hover{color:'+RED+';background:rgba(234,67,53,.10)}'+
@@ -2113,15 +2132,20 @@ function ceCallClassified(q, qk){
     '</details>';
   }).join('') : '<div class="ce-cc-empty">Prepared-remarks themes land here once the call is processed — each topic tagged to its Watch List theme.</div>';
   var qaBody = qa.length ? qa.map(function(x,i){
-    return '<details class="ce-cc-row">'+
-      '<summary class="ce-cc-row-h"><span class="ce-cc-q">'+esc(x.q||'')+'</span>'+ceCcTag(x.theme)+
-        (x.a?'<span class="ce-cc-ar">▾</span>':'')+'</summary>'+
-      '<div class="ce-cc-row-b">'+
-        (x.analyst?'<div class="ce-cc-meta">'+esc(x.analyst)+'</div>':'')+
-        (x.a?'<div><span class="ce-cc-a-l">A</span>'+x.a+'</div>':'')+
+    // analyst field is "Name · Bank" — the BANK leads (what matters for tracking coverage), the
+    // analyst name sits beside it. The exact curated question and the reply are BOTH always visible.
+    var parts=String(x.analyst||'').split('·');
+    var name=(parts[0]||'').trim(), bank=(parts[1]||'').trim();
+    return '<div class="ce-cc-qa">'+
+      '<div class="ce-cc-qa-h">'+
+        (bank?'<span class="ce-cc-bank">🏦 '+esc(bank)+'</span>':'')+
+        (name?'<span class="ce-cc-analyst">'+esc(name)+'</span>':'')+
+        ceCcTag(x.theme)+
       '</div>'+
-    '</details>';
-  }).join('') : '<div class="ce-cc-empty">Every analyst question, its Watch List theme, and the answer land here once the call is processed.</div>';
+      (x.q?'<div class="ce-cc-q"><span class="ce-cc-ql">Q</span><span>'+esc(x.q)+'</span></div>':'')+
+      (x.a?'<div class="ce-cc-a"><span class="ce-cc-al">A</span><span>'+x.a+'</span></div>':'')+
+    '</div>';
+  }).join('') : '<div class="ce-cc-empty">Every analyst question, the bank that asked, its theme, and the answer land here once the call is processed.</div>';
   return '<div class="ce-cc">'+
     '<div class="ce-cc-h"><b>The call, classified</b>'+
       (hasData?'':'<span class="ce-cc-ph">scaffold — fills after the call</span>')+
@@ -2133,34 +2157,52 @@ function ceCallClassified(q, qk){
     ceThemeProposals(q, qk)+
   '</div>';
 }
-// ③b PROPOSE NOTES → WATCH LIST — the call's takeaways drafted as candidate Watch List NOTES (Aug
-// 2026 scaffold). They are NOTES, not just themes: each carries a theme layer (a hashtag from Pablo's
-// Watch List taxonomy, PR #79) + the note text — the same shape a note has in his notes editor
-// (seg · theme · text). Source = q.call.newQuestions (already the next-quarter seeds). Each is
-// EDITABLE (theme select + textarea); Accept stages it, Reject drops it (and "↻ Rejected" brings the
-// rejected ones back, in case you mis-clicked — accepted ones never return). Staging is client-side;
-// the real publish into Supabase company_themes / Pablo's editor is San/Oscar-gated.
-var CE_WL_THEMES=[
-  { seg:'Amazon US', themes:['Agentic commerce','Advertisement','Robotics — the efficiency flywheel'] },
-  { seg:'Amazon International', themes:['Margin','Expansion comments'] },
-  { seg:'AWS', themes:['Backlog','Capex','Margins','Useful lives & Data Center Lifecycles','Custom silicon — Graviton, Trainium, Rainier'] }
-];
-function ceGuessTheme(t){
-  t=(t||'').toLowerCase();
-  if(/capex|frame|funding|fcf|cash|debt/.test(t)) return 'Capex';
-  if(/backlog|conversion|capacity|reserved/.test(t)) return 'Backlog';
-  if(/margin/.test(t)) return 'Margins';
-  if(/trainium|silicon|chip|rack|graviton|rainier|merchant/.test(t)) return 'Custom silicon — Graviton, Trainium, Rainier';
-  if(/advertis|prime-day|\bads?\b/.test(t)) return 'Advertisement';
-  if(/robot|fulfillment|efficiency|grocery|same-day/.test(t)) return 'Robotics — the efficiency flywheel';
-  return 'Backlog';
+// ③b PROPOSE NOTES → the Watch List. The call's takeaways drafted as candidate NOTES. Each note is
+// filed under a Theme (segment) ▸ Sub-theme — the exact shape the Watch List stores a note — so you
+// SEE where it will land, and whether the sub-theme already exists or is new, before staging it.
+// Source = q.call.newQuestions. Editable (Theme + Sub-theme + text); Accept stages it, Reject drops
+// it, "↻ Rejected" restores rejected ones if you mis-clicked (accepted ones never return). The
+// Theme/Sub-theme lists are the real Watch List taxonomy, read live from AMZN_THEMES / AMZN_SEG_ORDER.
+// Staging is client-side; the actual publish into the Watch List is San/Oscar-gated.
+function ceWlThemes(){
+  var by={}, order=[];
+  (typeof AMZN_THEMES!=='undefined'?AMZN_THEMES:[]).forEach(function(ct){
+    if(!ct||!ct.seg||!ct.theme) return;
+    if(!by[ct.seg]){ by[ct.seg]=[]; order.push(ct.seg); }
+    if(by[ct.seg].indexOf(ct.theme)<0) by[ct.seg].push(ct.theme);
+  });
+  return order.map(function(s){ return { seg:s, themes:by[s] }; });
 }
-function ceThemeSelect(sel){
-  return '<select class="ce-tp-theme">'+CE_WL_THEMES.map(function(g){
-    return '<optgroup label="'+esc(g.seg)+'">'+g.themes.map(function(th){
-      return '<option value="'+esc(th).replace(/"/g,'&quot;')+'"'+(th===sel?' selected':'')+'>'+esc(th)+'</option>';
-    }).join('')+'</optgroup>';
+function ceSegsList(){
+  if(typeof AMZN_SEG_ORDER!=='undefined' && AMZN_SEG_ORDER.length) return AMZN_SEG_ORDER.slice();
+  return ceWlThemes().map(function(g){ return g.seg; });
+}
+function ceSubsOfSeg(seg){ var g=ceWlThemes().filter(function(x){ return x.seg===seg; })[0]; return g?g.themes:[]; }
+function ceGuessTarget(txt){
+  var t=(txt||'').toLowerCase(), theme;
+  if(/capex|frame|funding|fcf|cash|debt/.test(t)) theme='Capex';
+  else if(/backlog|conversion|capacity|reserved/.test(t)) theme='Backlog';
+  else if(/margin/.test(t)) theme='Margins';
+  else if(/trainium|silicon|chip|rack|graviton|rainier|merchant/.test(t)) theme='Custom silicon — Graviton, Trainium, Rainier';
+  else if(/advertis|prime-day|\bads?\b/.test(t)) theme='Advertisement';
+  else if(/robot|fulfillment|efficiency|grocery|same-day/.test(t)) theme='Robotics — the efficiency flywheel';
+  else theme='Backlog';
+  var seg=(ceSegsList()[0]||'AWS');
+  ceWlThemes().forEach(function(g){ if(g.themes.indexOf(theme)>=0) seg=g.seg; });
+  return { seg:seg, theme:theme };
+}
+function ceSegSelectHtml(sel){
+  return '<select class="ce-tp-seg" title="Theme (segment) — where the note is filed">'+ceSegsList().map(function(s){
+    return '<option value="'+esc(s).replace(/"/g,'&quot;')+'"'+(s===sel?' selected':'')+'>'+esc(s)+'</option>';
   }).join('')+'</select>';
+}
+function ceSubSelectHtml(seg, sel){
+  var subs=ceSubsOfSeg(seg);
+  var opts=subs.map(function(th){
+    return '<option value="'+esc(th).replace(/"/g,'&quot;')+'"'+(th===sel?' selected':'')+'>'+esc(th)+'</option>';
+  }).join('');
+  opts+='<option value="__new__"'+(sel&&subs.indexOf(sel)<0?' selected':'')+'>＋ New sub-theme…</option>';
+  return '<select class="ce-tp-sub" title="Sub-theme — the tracked line the note attaches to">'+opts+'</select>';
 }
 function ceThemeProposals(q, qk){
   var nq=(q.call&&q.call.newQuestions)||[];
@@ -2168,23 +2210,28 @@ function ceThemeProposals(q, qk){
   var cards=nq.map(function(x,i){
     var txt=(typeof x==='string')?x:(x.n||'');
     var rank=(x&&x.landed&&x.landed.rank)?x.landed.rank:null;
+    var tg=ceGuessTarget(txt);
     return '<div class="ce-tp-card" data-tp="'+qk+'-'+i+'">'+
-      '<div class="ce-tp-row1">'+(rank?'<span class="ce-tp-rank">#'+rank+'</span>':'')+ceThemeSelect(ceGuessTheme(txt))+
+      '<div class="ce-tp-row1">'+(rank?'<span class="ce-tp-rank">#'+rank+'</span>':'')+
+        '<span class="ce-tp-fld"><label class="ce-tp-lb">Theme</label>'+ceSegSelectHtml(tg.seg)+'</span>'+
+        '<span class="ce-tp-fld"><label class="ce-tp-lb">Sub-theme</label>'+ceSubSelectHtml(tg.seg, tg.theme)+'</span>'+
         '<span class="ce-tp-acts">'+
           '<button type="button" class="ce-tp-ok" data-tpact="accept" title="Stage this note">✓ Accept</button>'+
           '<button type="button" class="ce-tp-no" data-tpact="reject" title="Drop this note">✕</button>'+
         '</span></div>'+
+      '<input class="ce-tp-newsub" type="text" placeholder="New sub-theme name" hidden>'+
+      '<div class="ce-tp-target" data-tptarget></div>'+
       '<textarea class="ce-tp-in" rows="2">'+esc(txt)+'</textarea>'+
     '</div>';
   }).join('');
   return '<div class="ce-tp">'+
     '<div class="ce-tp-h"><span class="ce-tp-ic">📝</span><b>Propose Notes</b>'+
-      '<button type="button" class="ce-tp-refresh" data-tprefresh hidden title="Bring back the notes you rejected">↻ Rejected <span data-tprej>0</span></button>'+
-      '<span class="ce-tp-sub">AI-drafted notes from this call. Pick the theme (Pablo\'s Watch List taxonomy), edit the text, then Accept to stage or Reject to drop. Same shape as a Watch List note — theme · text.</span></div>'+
+      '<button type="button" class="ce-tp-refresh" data-tprefresh title="Bring back the notes you rejected">↻ Rejected <span data-tprej>0</span></button>'+
+      '<span class="ce-tp-subtitle">Each note files under a <b>Theme ▸ Sub-theme</b> from the Watch List, so you see exactly where it lands. Edit the target and the text, then Accept to stage or Reject to drop. Pick an existing sub-theme, or “＋ New sub-theme…” to propose a new one.</span></div>'+
     '<div class="ce-tp-list" data-tplist>'+cards+'</div>'+
     '<div class="ce-tp-staged-h">Staged notes <span class="ce-tp-count" data-tpcount>0</span></div>'+
     '<div class="ce-tp-staged" data-tpstaged><div class="ce-tp-empty">Nothing staged yet — accept a note above.</div></div>'+
-    '<div class="ce-tp-foot">Staged notes are candidates only, kept client-side. Publishing to the shared Watch List (Supabase <code>company_themes</code> · Pablo\'s notes editor) is San / Oscar-gated — this scaffold does not write to the DB.</div>'+
+    '<div class="ce-tp-foot">Staged notes are candidates only, kept client-side. Publishing into the Watch List is gated to San / Oscar — this scaffold does not write to the database.</div>'+
   '</div>';
 }
 // E · "Also on the call" ── the supplemental colour from the call, rendered inside Post-Results as a
@@ -2356,9 +2403,10 @@ function wireCeTrack(root){
     cc.querySelectorAll('.ce-cc-seg button').forEach(function(b){ b.classList.toggle('active', b===btn); });
     cc.querySelectorAll('.ce-cc-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-ccp')!==v); });
   }; });
-  // ③b Propose Notes — Accept stages the edited note (theme · text) as a Watch List candidate; Reject
-  // parks it in a rejected pool that "↻ Rejected" restores (accepted notes never return). Staging is
-  // client-side (in-DOM); the real publish to company_themes / Pablo's editor is San/Oscar-gated.
+  // ③b Propose Notes — each note files under Theme (segment) ▸ Sub-theme. The Sub-theme list rebuilds
+  // when the Theme changes; "＋ New sub-theme…" reveals a name field and flags the note NEW. The target
+  // line shows exactly where it lands. Accept stages "Theme ▸ Sub-theme · text"; Reject parks it; the
+  // "↻ Rejected" button is ALWAYS visible and restores rejects (accepted notes never return).
   pane.querySelectorAll('.ce-tp').forEach(function(tp){
     var list=tp.querySelector('[data-tplist]'), staged=tp.querySelector('[data-tpstaged]'),
         countEl=tp.querySelector('[data-tpcount]'), rejEl=tp.querySelector('[data-tprej]'),
@@ -2368,20 +2416,47 @@ function wireCeTrack(root){
       if(countEl) countEl.textContent=chips.length;
       var empty=staged.querySelector('.ce-tp-empty'); if(empty) empty.hidden=chips.length>0;
       if(rejEl) rejEl.textContent=rejected.length;
-      if(refreshBtn) refreshBtn.hidden=(rejected.length===0);
+    }
+    function readTarget(card){
+      var seg=(card.querySelector('.ce-tp-seg')||{}).value||'';
+      var subSel=card.querySelector('.ce-tp-sub'), isNew=!!(subSel && subSel.value==='__new__');
+      var newInp=card.querySelector('.ce-tp-newsub');
+      var sub=isNew?((newInp&&newInp.value||'').trim()):(subSel?subSel.value:'');
+      return { seg:seg, sub:sub, isNew:isNew };
+    }
+    function paintTarget(card){
+      var t=readTarget(card), tgt=card.querySelector('[data-tptarget]'); if(!tgt) return;
+      var subLabel=t.sub||(t.isNew?'(name the new sub-theme)':'—');
+      tgt.innerHTML='<span class="ce-tp-arrow">files under →</span> <b></b> <span class="ce-tp-sep">▸</span> <b></b> '+
+        (t.isNew?'<span class="ce-tp-badge new">NEW sub-theme</span>':'<span class="ce-tp-badge">existing sub-theme</span>');
+      var bs=tgt.querySelectorAll('b'); if(bs[0]) bs[0].textContent=t.seg; if(bs[1]) bs[1].textContent=subLabel;
+    }
+    function rebuildSub(card){
+      var seg=(card.querySelector('.ce-tp-seg')||{}).value||'', subSel=card.querySelector('.ce-tp-sub'); if(!subSel) return;
+      var subs=ceSubsOfSeg(seg);
+      subSel.innerHTML=subs.map(function(th){ return '<option value="'+esc(th).replace(/"/g,'&quot;')+'">'+esc(th)+'</option>'; }).join('')+'<option value="__new__">＋ New sub-theme…</option>';
+    }
+    function syncNew(card){
+      var subSel=card.querySelector('.ce-tp-sub'), newInp=card.querySelector('.ce-tp-newsub');
+      if(newInp) newInp.hidden = !(subSel && subSel.value==='__new__');
     }
     function wireCard(card){
+      var segSel=card.querySelector('.ce-tp-seg'), subSel=card.querySelector('.ce-tp-sub'), newInp=card.querySelector('.ce-tp-newsub');
+      if(segSel) segSel.onchange=function(){ rebuildSub(card); syncNew(card); paintTarget(card); };
+      if(subSel) subSel.onchange=function(){ syncNew(card); paintTarget(card); };
+      if(newInp) newInp.oninput=function(){ paintTarget(card); };
+      syncNew(card); paintTarget(card);
       card.querySelectorAll('[data-tpact]').forEach(function(btn){ btn.onclick=function(){
         if(btn.getAttribute('data-tpact')==='accept'){
-          var ta=card.querySelector('.ce-tp-in'), th=card.querySelector('.ce-tp-theme');
-          var v=(ta&&ta.value||'').trim(); if(!v) return;
-          var theme=(th&&th.value)||'';
+          var ta=card.querySelector('.ce-tp-in'), v=(ta&&ta.value||'').trim(); if(!v) return;
+          var t=readTarget(card); if(t.isNew && !t.sub){ if(newInp) newInp.focus(); return; }
           var chip=document.createElement('div'); chip.className='ce-tp-chip';
-          var tag=document.createElement('span'); tag.className='ce-tp-chip-tag'; tag.textContent='#'+theme;
-          var txt=document.createElement('span'); txt.className='ce-tp-chip-t'; txt.textContent=v;  // textContent = no injection
+          var tag=document.createElement('span'); tag.className='ce-tp-chip-tag'; tag.textContent=t.seg+' ▸ '+t.sub;
+          chip.appendChild(tag);
+          if(t.isNew){ var nb=document.createElement('span'); nb.className='ce-tp-chip-new'; nb.textContent='NEW'; chip.appendChild(nb); }
+          var txt=document.createElement('span'); txt.className='ce-tp-chip-t'; txt.textContent=v; chip.appendChild(txt);  // textContent = no injection
           var x=document.createElement('button'); x.type='button'; x.className='ce-tp-unstage'; x.title='Unstage'; x.textContent='✕';
-          x.onclick=function(){ chip.remove(); refresh(); };
-          chip.appendChild(tag); chip.appendChild(txt); chip.appendChild(x);
+          x.onclick=function(){ chip.remove(); refresh(); }; chip.appendChild(x);
           staged.appendChild(chip); card.remove();
         } else { rejected.push(card); card.remove(); }
         refresh();

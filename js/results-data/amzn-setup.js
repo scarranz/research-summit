@@ -43,8 +43,12 @@ function mergedSection(view){
   return [{ key: 'setup', label: 'All tracked lines', defaultMetric: 'rev', groups: groups }];
 }
 
-var qIdx = quarterlyIdx(amznResults.views.q);
-var yIdx = annualIdx(amznResults.views.y);
+// Full range (Dani, Aug 2026) — the Setup chart now carries every period so the Results engine's own
+// range controls (preset pills Last 4Q · Last 8Q · Reported · Forward · All + the dual-handle slider)
+// become the period LEVER. The narrow pre-slice below (quarterlyIdx/annualIdx) is kept for reference
+// but no longer applied; the engine still trims the forward horizon per its own rule.
+var qIdx = amznResults.views.q.metrics.rev.periods.map(function(_, i){ return i; });
+var yIdx = amznResults.views.y.metrics.rev.periods.map(function(_, i){ return i; });
 
 export var amznSetup = {
   updated: amznResults.updated,

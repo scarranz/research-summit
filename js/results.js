@@ -203,7 +203,7 @@ var EVO_RAMP = ['#1B3F94', '#2563EB', '#5E8BEC', '#93B1F0'];
 // hidden series, chart instance. `evo` is the vintage-evolution block's state.
 // `growth` (quarterly only): 'yoy' = vs the same quarter last year; 'qoq' = vs
 // the previous reported quarter.
-var _rs = { data: null, view: 'q', growth: 'yoy', sec: {}, evo: null, surp: null };
+var _rs = { data: null, view: 'q', growth: 'yoy', sec: {}, evo: null, surp: null, vint: 'preprint' };
 
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); }
 
@@ -318,6 +318,105 @@ function rsPresetWin(m, key){
   }
 }
 
+// ─── Vintage axis (SAB, Aug 2026) ─────────────────────────────────────────────
+// `estMatrix` is a GENERATED dataset block (contract: docs/RESULTS_CONVENTIONS.md §8):
+// per source ('summit' | 'cons'), a vintage register plus — per view, per metric — one
+// PERIOD-KEYED row per snapshot. Period-keyed rather than positional so the block
+// survives the forward-horizon trim and any change to a metric's period axis, and so a
+// snapshot covering six periods costs six numbers instead of a padded row of nulls. It
+// sits at the dataset ROOT, beside `views`, to keep machine-generated numbers out of the
+// hand-curated metric blocks (labels, `act`, guidance, notes) — a refresh overwrites the
+// block wholesale without touching a word anyone wrote.
+//
+// Two reading modes:
+//   'preprint' (default) — per period, the estimate that stood going INTO that print: the
+//        latest snapshot whose own last-reported period is still before the period, i.e.
+//        the shortest forward horizon, ties broken by the later snapshot. This reproduces
+//        the hand-picked columns the datasets carried before the matrix existed.
+//   '<vintage id>'       — that one snapshot's row read straight across, so every period on
+//        screen is what a single model/consensus state said at one moment. Periods the
+//        snapshot never covered stay NULL instead of quietly falling back to an older one.
+function rsOrdIn(view, p){
+  if (view === 'q'){ var q = rsParseQ(p); return q ? q.y * 4 + q.q : null; }
+  return isNaN(+p) ? null : +p;
+}
+function rsMatrix(src){
+  var mx = _rs.data && _rs.data.estMatrix;
+  return (mx && mx[src]) || null;
+}
+// Every vintage across the sources that carry a matrix, newest first.
+function rsVintages(){
+  var out = [], seen = {};
+  ['summit', 'cons'].forEach(function(src){
+    var mx = rsMatrix(src); if (!mx) return;
+    (mx.vintages || []).forEach(function(v){ if (!seen[v.id]){ seen[v.id] = 1; out.push(v); } });
+  });
+  return out.sort(function(a, b){ return a.id < b.id ? 1 : -1; });
+}
+var RS_MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function rsVintLabel(v){
+  var p = String(v.id).split('-');
+  var d = (p.length === 3 && RS_MON[+p[1] - 1]) ? RS_MON[+p[1] - 1] + ' ' + (+p[2]) + ', ' + p[0] : v.label || v.id;
+  var thru = v.lastActual && (v.lastActual.q || v.lastActual.y);
+  return d + (thru ? ' · knew through ' + thru : '');
+}
+function rsSeriesFor(view, m, mkey, src, mode){
+  var mx = rsMatrix(src); if (!mx) return null;
+  var cells = (mx[view] || {})[mkey]; if (!cells) return null;
+  if (mode && mode !== 'preprint'){
+    var row = cells[mode] || {};
+    return m.periods.map(function(p){ return row[p] == null ? null : row[p]; });
+  }
+  var vs = mx.vintages || [];
+  return m.periods.map(function(p){
+    var po = rsOrdIn(view, p); if (po == null) return null;
+    var best = null;
+    for (var i = 0; i < vs.length; i++){
+      var v = vs[i], row = cells[v.id];
+      if (!row || row[p] == null) continue;
+      var la = v.lastActual && v.lastActual[view];
+      var lo = la == null ? -Infinity : rsOrdIn(view, la);
+      if (!(lo < po)) continue;              // this snapshot already had the period reported
+      if (best == null || lo > best.lo || (lo === best.lo && v.id > best.id)) best = { lo: lo, id: v.id, v: row[p] };
+    }
+    return best ? best.v : null;
+  });
+}
+// Rewrite every metric's `summit`/`cons` from the matrix for the current selection. The
+// engine reads those two arrays in ~40 places; resolving once, here, leaves all of them
+// untouched. The hand-authored flat arrays are stashed on first use, so a metric with no
+// matrix row keeps them and switching modes never compounds.
+function rsApplyVintage(){
+  var d = _rs.data; if (!d || !d.estMatrix) return;
+  var mode = _rs.vint || 'preprint';
+  ['q', 'y'].forEach(function(view){
+    var v = d.views && d.views[view]; if (!v) return;
+    Object.keys(v.metrics).forEach(function(mkey){
+      var m = v.metrics[mkey];
+      ['summit', 'cons'].forEach(function(src){
+        var flat = '_flat_' + src;
+        if (!(flat in m)) m[flat] = m[src];
+        m[src] = rsSeriesFor(view, m, mkey, src, mode) || m[flat];
+      });
+    });
+  });
+}
+// What each source actually resolved to — stated on screen, because one date means
+// different things for a model refreshed weekly and a consensus file refreshed quarterly,
+// and because a source with no matrix yet is still showing its pre-print series.
+function rsVintNote(){
+  var mode = _rs.vint || 'preprint';
+  var names = { summit: 'Summit', cons: 'Consensus' }, out = [];
+  ['summit', 'cons'].forEach(function(src){
+    var mx = rsMatrix(src);
+    if (!mx){ out.push(names[src] + ': no vintage matrix yet — showing the estimate that stood before each print'); return; }
+    if (mode === 'preprint'){ out.push(names[src] + ': ' + (mx.vintages || []).length + ' snapshots, each period taken from the last one before its print'); return; }
+    var hit = (mx.vintages || []).filter(function(v){ return v.id === mode; })[0];
+    out.push(names[src] + ': ' + (hit ? 'snapshot ' + hit.id + ', which knew through ' + ((hit.lastActual && (hit.lastActual.q || hit.lastActual.y)) || '—') : 'no snapshot on this date — the series is blank, not zero'));
+  });
+  return out.join(' · ');
+}
+
 // ─── Growth & margin series ───────────────────────────────────────────────────
 // Lag for growth math: quarterly YoY = 4 quarters back, quarterly QoQ = 1 back,
 // annual always 1 year back.
@@ -392,7 +491,8 @@ function rsBody(){
   '<div class="rs-views" id="rsGrowMode"' + (_rs.view === 'q' ? '' : ' hidden') + '>' +
     '<button type="button" class="rs-view' + (_rs.growth === 'yoy' ? ' active' : '') + '" data-rsgrow="yoy" title="vs the same quarter last year">YoY</button>' +
     '<button type="button" class="rs-view' + (_rs.growth === 'qoq' ? ' active' : '') + '" data-rsgrow="qoq" title="vs the previous reported quarter">QoQ</button>' +
-  '</div></div>';
+  '</div>' + rsVintSelHtml() + '</div>';
+  h += '<div class="ov-foot rs-vintnote" id="rsVintNote">' + esc(rsVintNote()) + '</div>';
   h += '<div id="rsBlocks">' + rsBlocksHtml() + '</div>';
   h += '<div class="ov-foot" id="rsViewNote">' + esc(rsView().note || '') + '</div>';
   h += '<div class="ov-foot">' + esc(d.source) + '</div>';
@@ -433,6 +533,21 @@ function rsBlocksHtml(){
     h += '</div>';
     return h;
   }).join('');
+}
+
+// Vintage picker — one control for the whole pane (it governs every section block).
+// Rendered only when the dataset carries an `estMatrix`; datasets without one keep the
+// flat pre-print columns and show no control at all.
+function rsVintSelHtml(){
+  var vints = rsVintages(); if (!vints.length) return '';
+  var mode = _rs.vint || 'preprint';
+  return '<div class="rs-vint"><span class="rs-quick-l">Estimates as of</span>' +
+    '<select class="rs-vsel" aria-label="Estimate vintage">' +
+      '<option value="preprint"' + (mode === 'preprint' ? ' selected' : '') + '>Closest snapshot before each print</option>' +
+      vints.map(function(v){
+        return '<option value="' + esc(v.id) + '"' + (mode === v.id ? ' selected' : '') + '>' + esc(rsVintLabel(v)) + '</option>';
+      }).join('') +
+    '</select></div>';
 }
 
 // Structured metric picker — a dropdown grouped by the section's groups
@@ -1503,8 +1618,19 @@ function wireResults(pane){
       rsBuildChart(k);
     }
   });
-  // Metric dropdown (grouped select) per section block.
+  // Metric dropdown (grouped select) per section block, and the pane-wide vintage picker.
   pane.onchange = (function(e){
+    if (e.target.classList.contains('rs-vsel')){
+      _rs.vint = e.target.value;
+      rsApplyVintage();                                // re-resolve summit/cons from the matrix
+      _rs.sec = {};                                    // windows/metrics reset: the series changed
+      var vn = pane.querySelector('#rsVintNote'); if (vn) vn.textContent = rsVintNote();
+      var blocks = pane.querySelector('#rsBlocks');
+      if (blocks) blocks.innerHTML = rsBlocksHtml();   // legend chips depend on what has data
+      wireSliders(pane);
+      rsBuildAll();
+      return;
+    }
     if (!e.target.classList.contains('rs-msel')) return;
     var block = e.target.closest('.rs-block');
     var k = block ? block.getAttribute('data-rsblock') : null;
@@ -1540,10 +1666,11 @@ function wireSliders(pane){
 export function initResults(wrap, ticker){
   if (ticker){
     var d = getResultsData(ticker); if (!d) return;
-    if (_rs._active !== ticker){ _rs.view = rsDefaultView(d); _rs.growth = 'yoy'; _rs.sec = {}; }
+    if (_rs._active !== ticker){ _rs.view = rsDefaultView(d); _rs.growth = 'yoy'; _rs.sec = {}; _rs.vint = 'preprint'; }
     _rs.data = d; _rs._active = ticker;
   }
   if (!_rs.data) return;
+  rsApplyVintage();          // resolve summit/cons from the vintage matrix before anything reads them
   wrap = wrap || document.querySelector('.rs-wrap:not(#rsEvoWrap)');
   if (wrap) wireResults(wrap);
   rsBuildAll();

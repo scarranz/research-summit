@@ -143,3 +143,13 @@
 .rs-ft td.colhl, .rs-ft th.colhl { background: #EFF4FA; }
 .rs-ft tbody tr:hover td.colhl { background: #E7EEF7; }
 .rs-ft tbody tr:hover td.rs-ft-s { background: #F2F6FB; }
+
+/* Vintage picker — the pane-wide "Estimates as of" control (results.js §vintage axis). */
+.rs-vint { display:flex; align-items:center; gap:8px; margin-left:auto; }
+.rs-vint .rs-quick-l { white-space:nowrap; }
+.rs-vsel {
+  font:500 12px Inter, system-ui, sans-serif; color:var(--navy, #1E2733);
+  background:#fff; border:1px solid #D7DDE4; border-radius:6px; padding:5px 8px; max-width:320px;
+}
+.rs-vsel:focus { outline:2px solid rgba(37,99,235,0.35); outline-offset:1px; }
+.rs-vintnote { margin:2px 0 10px; }

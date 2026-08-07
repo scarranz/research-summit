@@ -268,3 +268,94 @@ ticker, with Summit/guidance filled in later.
   needs consistent definitions first.
 - AMZN Overview/Deep Dive: Deep Dive sections still scaffolded (fill via the Call Prep flow /
   by hand); Call Prep phases pending "arma el Call Prep de AMZN".
+
+---
+
+# 8. The rollout contract — `estMatrix`, the vintage axis (v2 · Aug 7, 2026)
+
+**Why this exists.** Through v1 each dataset shipped `summit` and `cons` as flat arrays with
+the pre-print snapshot already chosen *by hand*, and the choice justified in a 20-line file
+comment. That made two things impossible: reading what the model or the Street said about
+every period **as of one date**, and refreshing a company without re-doing the judgement. v2
+stores the whole matrix and **derives** the flat series. Adding a company stops being an
+authoring job and becomes a generator run.
+
+## 8.1 Shape
+
+```js
+export var <tk>Results = {
+  updated, intro, source, views: { q, y },      // unchanged — hand-curated
+  estMatrix: {                                  // GENERATED — overwrite wholesale, never hand-edit
+    cons:   { vintages: [ … ], q: { <metric>: { '<vintageId>': { '<period>': value, … } } }, y: { … } },
+    summit: { … same shape … }
+  },
+  evolution: { … }                              // unchanged (Estimates tab keeps its own block)
+}
+// vintage: { id:'2026-08-07', label, lastActual: { q:'2Q26', y:'2025' } }
+```
+
+Rules that matter:
+
+* **Period-keyed, not positional.** A row is `{'3Q26': 14821}`, not a 19-slot array. It survives
+  the forward-horizon trim (§3.8) and any change to a metric's period axis, and a snapshot
+  covering six periods costs six numbers instead of thirteen nulls.
+* **At the ROOT, beside `views`** — machine-generated numbers stay out of the hand-curated metric
+  blocks (labels, `act`, `guideLo/Hi`, notes). A refresh replaces one block and touches nothing
+  anyone wrote. This separation is the whole point; do not push the matrix down into the metrics.
+* **`lastActual` per view is the only date logic needed.** A vintage is an *estimate* for every
+  period after its own last reported period — so "pre-print" is computable and no per-period
+  report dates are required anywhere.
+* **Back-compatible.** A metric with no matrix row keeps its flat `summit`/`cons`. The picker only
+  renders when a dataset has an `estMatrix`, so the other seven tickers are untouched.
+
+## 8.2 The two reading modes (engine)
+
+| Mode | Meaning |
+|---|---|
+| `preprint` (default) | Per period, the latest snapshot whose `lastActual` is still *before* it — the shortest forward horizon, ties broken by the later snapshot. Reproduces the v1 hand-picked columns. |
+| `<vintageId>` | That one snapshot's row read straight across. Periods it never covered stay **null** — blank, not zero, and never a silent fallback to an older snapshot. |
+
+`rsApplyVintage()` resolves the selection into `m.summit` / `m.cons` once. Those arrays are read
+in ~40 places; resolving centrally means no reader changes. The flat arrays are stashed as
+`m._flat_<src>` on first use, so switching modes never compounds.
+
+**Sparseness is a property of the source, not a bug.** A Bloomberg snapshot carries 4 forward
+quarters and 6 forward years, so single-vintage mode is rich annually and inherently thin
+quarterly. The Summit model projects every quarter, so its matrix will fill the quarterly axis.
+State this rather than padding it.
+
+## 8.3 Where the numbers come from
+
+| Column | Source | Rule |
+|---|---|---|
+| `estMatrix.cons` | **`Consensus_Portal.xlsm` → sheet `BBG_CONSENSUS`** ∪ **`BBG_CONSENSUS.txt`** (`G:\My Drive\Summit\Docs\0\`), deduped by `data_as_of` | ⚠ **Read the UNION.** The `.txt` is the exported archive; the sheet is live and **overwrites its most recent row**. On UBER the archive holds `2026-07-31` and the sheet holds `2026-08-07` — and 07-31 is the pre-print consensus for the very quarter the tab scores. Reading either alone silently loses a snapshot. Export the `.txt` before each refresh. |
+| `estMatrix.summit` | Summit MCP `get_fundamentals(snapshot_date=…, sheet='projection_history')`, one pull per snapshot | **Dedupe by `facts_hash`, not by date** — UBER's `2026-05-06` and `2026-05-07` are the same model state (LYFT had the same duplication). Skip intra-period saves; `2026-07-20` is unusable (its Delivery-Hero pro-forma toggle was on). |
+| `act` | Summit MCP `actuals_history`, cross-checked against the release | Unchanged from v1. Bloomberg's own `(Rep)` columns are **not** a substitute — see below. |
+| `guideLo/Hi` | The company's release, or the model's guidance rows where populated | UBER's `*_GUIDANCE` rows exist and are all literal `0`; ask San/Oscar to fill them and the next refresh reads from the model. |
+
+**Only FORWARD horizons are consensus.** `fq+1…fq+4` / `fy+1…fy+5` are estimates. `fq-3`, `fq0`
+and `(Rep)`-marked `fy0` are Bloomberg's *own reported* figures and belong to no estimate series —
+they can also sit on a different basis than the company's measure (UBER's reported "ebitda" for
+1Q24 reads 708 against a 1,382 Adjusted EBITDA print, which once manufactured a 46% miss).
+
+**Bloomberg's adjusted-EPS baskets are off-basis before they reconcile.** For UBER both the `eps`
+column and `kpi5` (`adj_eps`) imply ~0.8 for 2Q25 against a 0.602 print; consensus is therefore
+kept null before 4Q25 via a per-metric "valid from" rule in the generator. Check this per ticker
+rather than trusting the column name.
+
+**KPI slots are per-ticker and declared in the file** (`metric_kpi1…8`). UBER: `kpi1`
+mobility GB, `kpi2` delivery GB, `kpi3/4` take rates, `kpi5` adj EPS, `kpi6` trips per MAPC,
+`kpi7` total trips, `kpi8` total gross bookings. Read the header row; never assume the slot order.
+
+## 8.4 Adding a company — the short version
+
+1. Confirm coverage: is the ticker in the workbook's `BBG_CONSENSUS` sheet, and how many
+   snapshots does it have? (As of Aug 7 2026: **32 tickers**, 10 with 11–13 snapshots and 22
+   seeded that day with one each — a single snapshot still gives a usable forward column, just no
+   revision history.) Confirm the Summit MCP has snapshots via `list_snapshots`.
+2. Write the metric → BBG-column map and the per-metric "valid from" exceptions.
+3. Generate `estMatrix`, then **verify the derived `preprint` series against whatever the file
+   already shipped.** Every mismatch is either a rounding difference, a genuine refresh, or a bug —
+   identify which before moving on. This check is what caught the overwritten snapshot above.
+4. Hand-curate only what a machine cannot: labels, groups/sections, `act` reconciliation, guidance,
+   and the basis notes.

@@ -494,6 +494,10 @@ function rsBody(){
   '</div>' + rsVintSelHtml() + '</div>';
   h += '<div class="ov-foot rs-vintnote" id="rsVintNote">' + esc(rsVintNote()) + '</div>';
   h += '<div id="rsBlocks">' + rsBlocksHtml() + '</div>';
+  // The surprise scorecard closes the pane: the blocks above are levels over time, this is
+  // how each print landed against whatever you choose to judge it by. Quarterly-only (it
+  // reads the q view directly), and a dataset opts out with `surprise: false`.
+  if (d.surprise !== false && d.views.q && rsSurpGroups().length) h += rsSurpBlockHtml();
   h += '<div class="ov-foot" id="rsViewNote">' + esc(rsView().note || '') + '</div>';
   h += '<div class="ov-foot">' + esc(d.source) + '</div>';
   h += '</div>';
@@ -1096,7 +1100,10 @@ export function resultsEvoHtml(ticker){
   h += '<div class="ov-foot">' + esc(ev.note || '') + '</div>';
   // Generic Actuals-vs-Estimates surprise history at the bottom (opt-out via
   // dataset `surprise: false` — SoFi keeps its richer bespoke block).
-  if (data.surprise !== false && rsSurpGroups().length) h += rsSurpBlockHtml();
+  // NOTE: the "Actuals vs Estimates" surprise block used to render HERE, at the bottom of
+  // Estimates. SAB moved it to the bottom of RESULTS (Aug 7, 2026) — it is a per-print
+  // scorecard, so it belongs beside the prints, while this pane is about how the forecast
+  // itself moved across vintages. See rsBody().
   h += '</div>';
   return h;
 }
@@ -1316,22 +1323,61 @@ function rsRenderEvoTable(k, m){
 // lines), a Surprise % ⇄ $ toggle, the tick-dot slider, and the transposed
 // table. A dataset opts out with `surprise: false` (SoFi keeps its richer
 // bespoke block instead). ─────────────────────────────────────────────────────
+// The four comparable series. Guidance is a BAND in the dataset, so it enters the
+// comparison as its midpoint — the only way to score it as a single number; the band
+// itself stays the honest view and lives on the Results charts above.
+var RS_SRCS = ['act', 'summit', 'cons', 'guide'];
+var RS_SRC_LABEL = { act: 'Actual', summit: 'Summit', cons: 'Consensus', guide: 'Guidance (mid)' };
+var RS_SRC_SHORT = { act: 'actual', summit: 'Summit', cons: 'Consensus', guide: 'guidance mid' };
+var RS_SRC_COLOR = { act: RS_ACT, summit: RS_SUMMIT, cons: RS_CONS, guide: 'rgba(62,90,130,0.8)' };
+function rsSrcArr(m, key){
+  if (key === 'guide') return m.guideLo ? m.periods.map(function(_, i){ return rsGuideMid(m, i); }) : null;
+  return m[key] || null;
+}
+function rsSrcHas(m, key){ var a = rsSrcArr(m, key); return !!a && a.some(function(v){ return v != null; }); }
+function rsSurpPairOk(m, a, b){
+  var A = rsSrcArr(m, a), B = rsSrcArr(m, b);
+  if (!A || !B) return false;
+  return m.periods.some(function(_, i){ return A[i] != null && B[i] != null; });
+}
+// A metric qualifies when ANY two of its series overlap — not just actual-vs-Summit.
+// Deliberately independent of the current base/comparator choice, so changing the
+// comparison never makes the metric disappear from the dropdown mid-session.
 function rsSurpGroups(){
   var v = _rs.data.views.q, out = [];
   v.sections.forEach(function(cfg){
     rsSecGroups(cfg).forEach(function(g){
       var keys = g.keys.filter(function(k){
-        var m = v.metrics[k];
-        return m && m.act && m.summit && m.periods.some(function(_, i){ return m.act[i] != null && m.summit[i] != null; });
+        var m = v.metrics[k]; if (!m) return false;
+        var srcs = RS_SRCS.filter(function(s){ return rsSrcHas(m, s); });
+        for (var i = 0; i < srcs.length; i++)
+          for (var j = i + 1; j < srcs.length; j++)
+            if (rsSurpPairOk(m, srcs[i], srcs[j])) return true;
+        return false;
       });
       if (keys.length) out.push({ label: g.label, keys: keys });
     });
   });
   return out;
 }
+// Scoped element lookup for the surprise block. Its ids are NOT suffixed per section the
+// way the stacked blocks' are, so a SECOND engine instance on the page (the merged Setup
+// chart, which runs the same rsBody) would duplicate them — and a bare getElementById then
+// returns whichever is first in the DOM, which is the hidden one, and the chart silently
+// never builds. Scope to the wrap that initResults last wired instead.
+function rsSurpEl(id){
+  var root = _rs.wrap && _rs.wrap.isConnected ? _rs.wrap : document;
+  return root.querySelector('#' + id);
+}
 function rsSurpSt(){
-  if (!_rs.surp) _rs.surp = { metric: null, win: null, mode: 'pct', chart: null };
+  if (!_rs.surp) _rs.surp = { metric: null, win: null, mode: 'pct', chart: null,
+    base: 'act', cmp: { summit: true, cons: true, guide: false } };
   return _rs.surp;
+}
+// Comparators actually drawn: checked, present on this metric, and not the base itself.
+function rsSurpCmps(m){
+  var st = rsSurpSt();
+  return RS_SRCS.filter(function(s){ return s !== st.base && st.cmp[s] && rsSurpPairOk(m, st.base, s); });
 }
 function rsSurpM(){
   var st = rsSurpSt();
@@ -1341,8 +1387,10 @@ function rsSurpM(){
 }
 // Last period with a reported actual — the surprise story ends there.
 function rsSurpLr(m){
-  var lr = 0;
-  for (var i = 0; i < m.periods.length; i++) if (m.act[i] != null) lr = i;
+  // Follows the BASE series, not always the actual: comparing Summit against consensus is a
+  // story about forward periods, and capping at the last print would hide all of them.
+  var a = rsSrcArr(m, rsSurpSt().base) || m.act || [], lr = 0;
+  for (var i = 0; i < m.periods.length; i++) if (a[i] != null) lr = i;
   return lr;
 }
 function rsSurpWin(m){
@@ -1364,15 +1412,27 @@ var rsSurpLabels = {
       ctx.beginPath(); ctx.moveTo(area.left, y0); ctx.lineTo(area.right, y0); ctx.stroke();
       ctx.restore();
     }
-    for (var i = 0; i < surp.length; i++){
-      var bar = bars[i]; if (!bar || surp[i] == null) continue;
-      var up = surp[i] >= 0;
-      ctx.save();
-      ctx.textAlign = 'center';
-      ctx.font = '700 11px Inter, sans-serif';
-      ctx.fillStyle = up ? RS_GREEN : RS_RED;
-      ctx.fillText((up ? '▲ ' : '▼ ') + (chart.$fmt ? chart.$fmt(surp[i]) : ((up ? '+' : '−') + Math.abs(surp[i]).toFixed(1) + '%')), bar.x, up ? bar.y - 7 : bar.y + 15);
-      ctx.restore();
+    // One label per bar, across every comparator dataset. With more than one comparator
+    // the glyph is dropped and the type shrinks — grouped bars leave far less room, and
+    // the green/red fill already carries the beat/miss read.
+    var all = chart.$surpAll || [surp];
+    var one = all.length <= 1;
+    for (var di = 0; di < all.length; di++){
+      var ser = all[di] || [], meta = chart.getDatasetMeta(di);
+      if (!meta) continue;
+      var mbars = meta.data;
+      for (var i = 0; i < ser.length; i++){
+        var bar = mbars[i]; if (!bar || ser[i] == null) continue;
+        var up = ser[i] >= 0;
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.font = (one ? '700 11px' : '700 9.5px') + ' Inter, sans-serif';
+        ctx.fillStyle = up ? RS_GREEN : RS_RED;
+        var txt = (one ? (up ? '▲ ' : '▼ ') : '') +
+          (chart.$fmt ? chart.$fmt(ser[i]) : ((up ? '+' : '−') + Math.abs(ser[i]).toFixed(1) + '%'));
+        ctx.fillText(txt, bar.x, up ? bar.y - 6 : bar.y + 13);
+        ctx.restore();
+      }
     }
   }
 };
@@ -1386,9 +1446,27 @@ function rsSurpBlockHtml(){
       }).join('') + '</optgroup>';
     }).join('') + '</select>' +
     '<div class="rs-views" id="rsSurpMode"></div></div>';
-  h += '<div class="ave-leg"><span class="tech-leg-i"><span class="ave-leg-act" style="background:' + RS_GREEN + '"></span>Beat (actual above estimate)</span>' +
-    '<span class="tech-leg-i"><span class="ave-leg-act" style="background:' + RS_RED + '"></span>Miss (actual below)</span>' +
-    '<span class="tech-leg-i" style="margin-left:auto">the model\'s frozen pre-print estimate vs what was reported</span></div>';
+  // Base + comparators: any combination of the four series. The base is what gets judged
+  // (default the actual); every checked comparator becomes its own bar per period.
+  var cmps = rsSurpCmps(m);
+  h += '<div class="rs-surp-ctl"><span class="rs-quick-l">Compare</span>' +
+    '<select class="rs-bsel" aria-label="Base series">' + RS_SRCS.filter(function(s){ return rsSrcHas(m, s); }).map(function(s){
+      return '<option value="' + s + '"' + (s === st.base ? ' selected' : '') + '>' + esc(RS_SRC_LABEL[s]) + '</option>';
+    }).join('') + '</select>' +
+    '<span class="rs-quick-l">against</span>' +
+    RS_SRCS.filter(function(s){ return s !== st.base; }).map(function(s){
+      var avail = rsSurpPairOk(m, st.base, s);
+      var on = avail && !!st.cmp[s];
+      return '<button type="button" class="rs-cmp' + (on ? ' on' : '') + (avail ? '' : ' na') + '" data-rssurpcmp="' + s + '"' +
+        (avail ? '' : ' disabled title="' + esc(RS_SRC_LABEL[s]) + ' has no overlapping period with the base on this line"') + '>' +
+        '<span class="ave-leg-act" style="background:' + RS_SRC_COLOR[s] + '"></span>' + esc(RS_SRC_LABEL[s]) + '</button>';
+    }).join('') +
+  '</div>';
+  h += '<div class="ave-leg"><span class="tech-leg-i"><span class="ave-leg-act" style="background:' + RS_GREEN + '"></span>' + esc(RS_SRC_LABEL[st.base]) + ' came in above</span>' +
+    '<span class="tech-leg-i"><span class="ave-leg-act" style="background:' + RS_RED + '"></span>came in below</span>' +
+    '<span class="tech-leg-i" style="margin-left:auto">' +
+      (cmps.length ? 'bar outline = which series it is measured against' : 'pick at least one series to compare against') +
+    '</span></div>';
   h += '<div class="ov-chart-card">' +
     '<div class="ov-chart-t" id="rsSurpChartT"></div>' +
     '<div class="ov-chart-wrap ovs-tall"><canvas id="rsSurpChart"></canvas></div>' +
@@ -1411,35 +1489,45 @@ function rsBuildSurp(){
   if (!_rs.data || _rs.data.surprise === false) return;
   var st = rsSurpSt(), m = rsSurpM();
   if (!m) return;
-  var el = document.getElementById('rsSurpChart');
+  var el = rsSurpEl('rsSurpChart');
   if (!el || !el.offsetParent) return;
   if (st.chart){ st.chart.destroy(); st.chart = null; }
 
   var w = rsSurpWin(m), lo = w[0], hi = w[1];
   var div = rsScaleOf(m);
   var pctMode = st.mode !== 'usd';
-  var pcts = [], dols = [];
-  for (var i = lo; i <= hi; i++){
-    var ok = (m.act[i] != null && m.summit[i] != null && m.summit[i]);
-    pcts.push(ok ? rsSurp(m.act[i], m.summit[i]) : null);
-    dols.push(ok ? (m.act[i] - m.summit[i]) : null);
-  }
-  var bars = pctMode ? pcts : dols.map(function(v){ return v == null ? null : (m.unit === 'eps' ? v : v / div); });
+  var baseArr = rsSrcArr(m, st.base) || [];
+  var cmps = rsSurpCmps(m);
+  // One {pcts, dols} pair per comparator, over the selected window.
+  var series = cmps.map(function(s){
+    var A = rsSrcArr(m, s) || [], pcts = [], dols = [];
+    for (var i = lo; i <= hi; i++){
+      var ok = (baseArr[i] != null && A[i] != null && A[i]);
+      pcts.push(ok ? rsSurp(baseArr[i], A[i]) : null);
+      dols.push(ok ? (baseArr[i] - A[i]) : null);
+    }
+    return { src: s, pcts: pcts, dols: dols };
+  });
 
-  var md = document.getElementById('rsSurpMode');
+  var md = rsSurpEl('rsSurpMode');
   if (md) md.innerHTML = '<button type="button" class="rs-view' + (pctMode ? ' active' : '') + '" data-rssurpmode="pct">Surprise %</button>' +
-    '<button type="button" class="rs-view' + (!pctMode ? ' active' : '') + '" data-rssurpmode="usd">$ amount</button>';
+    '<button type="button" class="rs-view' + (!pctMode ? ' active' : '') + '" data-rssurpmode="usd">' + esc(m.unit === 'eps' ? 'per-share' : 'Amount') + '</button>';
   var unitLbl = m.unit === 'eps' ? rsCur() : (rsCurName() + (div === 1000 ? ' billions' : ' millions'));
-  var tEl = document.getElementById('rsSurpChartT');
-  if (tEl) tEl.innerHTML = esc(m.label) + ' — surprise vs the Summit estimate <span>(' + (pctMode ? '%' : esc(unitLbl)) + ' per period · hover for both values)</span>';
+  var tEl = rsSurpEl('rsSurpChartT');
+  if (tEl) tEl.innerHTML = esc(m.label) + ' — ' + esc(RS_SRC_LABEL[st.base]) + ' vs ' +
+    (cmps.length ? esc(cmps.map(function(s){ return RS_SRC_SHORT[s]; }).join(' · ')) : '<i>nothing selected</i>') +
+    ' <span>(' + (pctMode ? '%' : esc(unitLbl)) + ' per period · hover for the underlying values)</span>';
 
   st.chart = new Chart(el.getContext('2d'), {
     type: 'bar',
-    data: { labels: m.periods.slice(lo, hi + 1), datasets: [
-      { label: 'Surprise', data: bars,
-        backgroundColor: pcts.map(function(s){ return s == null ? '#C7CED6' : (s >= 0 ? RS_GREEN : RS_RED); }),
-        borderRadius: 3, maxBarThickness: 56 }
-    ] },
+    data: { labels: m.periods.slice(lo, hi + 1), datasets: series.map(function(s){
+      return { label: RS_SRC_LABEL[s.src],
+        data: pctMode ? s.pcts : s.dols.map(function(v){ return v == null ? null : (m.unit === 'eps' ? v : v / div); }),
+        // Fill carries the sign (beat/miss); the outline says which series it is against.
+        backgroundColor: s.pcts.map(function(p){ return p == null ? '#C7CED6' : (p >= 0 ? RS_GREEN : RS_RED); }),
+        borderColor: RS_SRC_COLOR[s.src], borderWidth: series.length > 1 ? 2 : 0,
+        borderRadius: 3, maxBarThickness: 56 };
+    }) },
     plugins: [rsSurpLabels],
     options: {
       responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
@@ -1447,12 +1535,14 @@ function rsBuildSurp(){
         legend: { display: false },
         tooltip: { callbacks: {
           label: function(ctx){
-            var i = ctx.dataIndex + lo;
-            var s = pcts[ctx.dataIndex], d = dols[ctx.dataIndex];
+            var i = ctx.dataIndex + lo, sr = series[ctx.datasetIndex];
+            if (!sr) return '';
+            var s = sr.pcts[ctx.dataIndex], d = sr.dols[ctx.dataIndex];
+            var A = rsSrcArr(m, sr.src) || [];
             return [
-              'Actual: ' + rsFmt(m, m.act[i]),
-              'Summit estimate: ' + rsFmt(m, m.summit[i]),
-              s == null ? 'Surprise: —' : 'Surprise: ' + (s >= 0 ? '+' : '−') + Math.abs(s).toFixed(1) + '% · ' + rsFmtD(m, d)
+              RS_SRC_LABEL[st.base] + ': ' + rsFmt(m, baseArr[i]),
+              RS_SRC_LABEL[sr.src] + ': ' + rsFmt(m, A[i]),
+              s == null ? 'Difference: —' : 'Difference: ' + (s >= 0 ? '+' : '−') + Math.abs(s).toFixed(1) + '% · ' + rsFmtD(m, d)
             ];
           }
         } }
@@ -1467,19 +1557,19 @@ function rsBuildSurp(){
       }
     }
   });
-  st.chart.$surp = pctMode ? pcts : dols;
+  st.chart.$surpAll = series.map(function(s){ return pctMode ? s.pcts : s.dols; });
   st.chart.$fmt = pctMode ? null : function(v){ return rsFmtD(m, v); };
   st.chart.update();
 
   // Slider + tick dots over the reported range.
   var lr = rsSurpLr(m), n = lr + 1;
-  var mn = document.getElementById('rsSurpMin'), mx = document.getElementById('rsSurpMax');
-  var fill = document.getElementById('rsSurpFill'), e0 = document.getElementById('rsSurpEnd0'), e1 = document.getElementById('rsSurpEnd1');
+  var mn = rsSurpEl('rsSurpMin'), mx = rsSurpEl('rsSurpMax');
+  var fill = rsSurpEl('rsSurpFill'), e0 = rsSurpEl('rsSurpEnd0'), e1 = rsSurpEl('rsSurpEnd1');
   if (mn && mx){ mn.max = n - 1; mx.max = n - 1; mn.value = lo; mx.value = hi; }
   if (fill){ fill.style.left = (lo / (n - 1) * 100) + '%'; fill.style.width = ((hi - lo) / (n - 1) * 100) + '%'; }
   if (e0) e0.textContent = m.periods[lo];
   if (e1) e1.textContent = m.periods[hi];
-  var ticks = document.getElementById('rsSurpTicks');
+  var ticks = rsSurpEl('rsSurpTicks');
   if (ticks){
     var th = '';
     for (var t = 0; t < n; t++){
@@ -1489,10 +1579,10 @@ function rsBuildSurp(){
   }
 
   rsSurpTableRender(m, lo, hi, div);
-  var note = document.getElementById('rsSurpNote'); if (note) note.textContent = m.note || '';
+  var note = rsSurpEl('rsSurpNote'); if (note) note.textContent = m.note || '';
 }
 function rsSurpTableRender(m, lo, hi, div){
-  var el = document.getElementById('rsSurpTable');
+  var el = rsSurpEl('rsSurpTable');
   if (!el) return;
   var idx = []; for (var i = lo; i <= hi; i++) idx.push(i);
   var dec = m.unit === 'eps' ? 2 : 1;
@@ -1519,20 +1609,21 @@ function rsSurpTableRender(m, lo, hi, div){
     var years = (li - fi) / 4;
     return years > 0 ? 'CAGR ' + sgn((Math.pow(last / first, 1 / years) - 1) * 100) : '';
   }
-  function sumSurprise(){
-    var pcts = [], dols2 = [], above = 0, below = 0;
+  var st = rsSurpSt(), baseArr = rsSrcArr(m, st.base) || [], cmps = rsSurpCmps(m);
+  function sumSurprise(src){
+    var A = rsSrcArr(m, src) || [], pcts = [], dols2 = [], above = 0, below = 0;
     idx.forEach(function(i){
-      if (m.summit[i] == null || m.act[i] == null || !m.summit[i]) return;
-      var dv = m.act[i] - m.summit[i];
-      pcts.push(dv / Math.abs(m.summit[i]) * 100); dols2.push(dv);
+      if (A[i] == null || baseArr[i] == null || !A[i]) return;
+      var dv = baseArr[i] - A[i];
+      pcts.push(dv / Math.abs(A[i]) * 100); dols2.push(dv);
       if (dv >= 0) above++; else below++;
     });
     if (!pcts.length) return '';
     var ap = avg(pcts);
-    return above + '▲ · ' + below + '▼<br><span class="rs-ft-dim">actual avg <span style="color:' + (ap >= 0 ? RS_GREEN : RS_RED) + '">' + sgn(ap) + '</span> · ' + rsFmtD(m, avg(dols2)) + '</span>';
+    return above + '▲ · ' + below + '▼<br><span class="rs-ft-dim">avg <span style="color:' + (ap >= 0 ? RS_GREEN : RS_RED) + '">' + sgn(ap) + '</span> · ' + rsFmtD(m, avg(dols2)) + '</span>';
   }
 
-  var h = '<div class="rs-ft-cap">' + (m.unit === 'eps' ? rsCurName() + ' per share' : (rsCurName() + (div === 1000 ? ' billions' : ' millions'))) + ' · surprise = (actual − estimate) ÷ |estimate| · ▲/green = the actual beat the frozen estimate · the right column summarizes the selected range</div>';
+  var h = '<div class="rs-ft-cap">' + (m.unit === 'eps' ? rsCurName() + ' per share' : (rsCurName() + (div === 1000 ? ' billions' : ' millions'))) + ' · difference = (' + esc(RS_SRC_SHORT[st.base]) + ' − comparator) ÷ |comparator| · ▲/green = ' + esc(RS_SRC_SHORT[st.base]) + ' came in above · the right column summarizes the selected range</div>';
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   idx.forEach(function(i){ h += '<th>' + esc(m.periods[i]) + '</th>'; });
   h += '<th class="rs-ft-s">Range record</th></tr></thead><tbody>';
@@ -1545,16 +1636,26 @@ function rsSurpTableRender(m, lo, hi, div){
     return r + '</tr>';
   }
 
-  h += row('Actual', function(i){ return m.act[i] == null ? '<span class="rs-ft-nil">—</span>' : '<b>' + num(m.act[i]) + '</b>'; }, 'main nb', sumCagr());
-  h += row('YoY growth', function(i){ return pctDollar(g(m.act, m.act, i), gd(m.act, m.act, i)); }, 'sub',
-    sumGrowth(function(i){ return g(m.act, m.act, i); }));
-  h += row('Summit estimate', function(i){ return num(m.summit[i]); }, 'main nb', '');
-  h += row('YoY growth', function(i){ return pctDollar(g(m.summit, m.act, i), gd(m.summit, m.act, i)); }, 'sub nb',
-    sumGrowth(function(i){ return g(m.summit, m.act, i); }));
-  h += row('surprise', function(i){
-    if (m.act[i] == null || m.summit[i] == null || !m.summit[i]) return '<span class="rs-ft-nil">—</span>';
-    return pctDollar(rsSurp(m.act[i], m.summit[i]), m.act[i] - m.summit[i]);
-  }, 'sub', sumSurprise());
+  // Base first, then one value row + one difference row per comparator. Growth rows always
+  // measure against the ACTUAL a year back — an estimate's growth is only meaningful off a
+  // reported base — so they are skipped when the base is not the actual.
+  h += row(RS_SRC_LABEL[st.base], function(i){ return baseArr[i] == null ? '<span class="rs-ft-nil">—</span>' : '<b>' + num(baseArr[i]) + '</b>'; }, 'main nb', sumCagr());
+  if (st.base === 'act')
+    h += row('YoY growth', function(i){ return pctDollar(g(m.act, m.act, i), gd(m.act, m.act, i)); }, 'sub',
+      sumGrowth(function(i){ return g(m.act, m.act, i); }));
+  cmps.forEach(function(src){
+    var A = rsSrcArr(m, src) || [];
+    h += row(RS_SRC_LABEL[src], function(i){ return num(A[i]); }, 'main nb', '');
+    if (m.act)
+      h += row('YoY growth', function(i){ return pctDollar(g(A, m.act, i), gd(A, m.act, i)); }, 'sub nb',
+        sumGrowth(function(i){ return g(A, m.act, i); }));
+    h += row('vs ' + RS_SRC_SHORT[src], function(i){
+      if (baseArr[i] == null || A[i] == null || !A[i]) return '<span class="rs-ft-nil">—</span>';
+      return pctDollar(rsSurp(baseArr[i], A[i]), baseArr[i] - A[i]);
+    }, 'sub', sumSurprise(src));
+  });
+  if (!cmps.length)
+    h += '<tr class="rs-ft-sub"><td class="rs-ft-h">—</td><td colspan="' + (idx.length + 1) + '">Pick at least one series to compare against.</td></tr>';
 
   h += '</tbody></table></div>';
   el.innerHTML = h;
@@ -1575,7 +1676,10 @@ function rsSurpTableRender(m, lo, hi, div){
 
 // ─── Wiring ───────────────────────────────────────────────────────────────────
 
-function rsBuildAll(){ rsView().sections.forEach(function(s){ rsBuildChart(s.key); }); }
+function rsBuildAll(){
+  rsView().sections.forEach(function(s){ rsBuildChart(s.key); });
+  rsBuildSurp();                      // the surprise scorecard at the foot of the pane
+}
 
 function wireResults(pane){
   pane.onclick = (function(e){
@@ -1599,6 +1703,16 @@ function wireResults(pane){
       _rs.growth = gw.getAttribute('data-rsgrow');
       pane.querySelectorAll('[data-rsgrow]').forEach(function(b){ b.classList.toggle('active', b === gw); });
       rsBuildAll();                                    // growth rows + summaries recompute
+      return;
+    }
+    // ── Surprise scorecard (single block at the foot of the pane) ──
+    var sm = e.target.closest('[data-rssurpmode]');
+    if (sm){ rsSurpSt().mode = sm.getAttribute('data-rssurpmode'); rsBuildSurp(); return; }
+    var sc = e.target.closest('[data-rssurpcmp]');
+    if (sc && !sc.disabled){
+      var sst = rsSurpSt(), key = sc.getAttribute('data-rssurpcmp');
+      sst.cmp[key] = !sst.cmp[key];
+      rsRerenderSurp(pane);
       return;
     }
     var block = e.target.closest('.rs-block');
@@ -1631,6 +1745,21 @@ function wireResults(pane){
       rsBuildAll();
       return;
     }
+    if (e.target.classList.contains('rs-bsel')){
+      var sstB = rsSurpSt();
+      sstB.base = e.target.value;
+      sstB.cmp[sstB.base] = false;      // a series is never compared against itself
+      sstB.win = null;                  // the window follows the base series
+      rsRerenderSurp(pane);
+      return;
+    }
+    if (e.target.classList.contains('rs-ssel')){
+      var sstM = rsSurpSt();
+      sstM.metric = e.target.value;
+      sstM.win = null;
+      rsRerenderSurp(pane);             // chip availability is per-metric
+      return;
+    }
     if (!e.target.classList.contains('rs-msel')) return;
     var block = e.target.closest('.rs-block');
     var k = block ? block.getAttribute('data-rsblock') : null;
@@ -1644,7 +1773,29 @@ function wireResults(pane){
   wireSliders(pane);
 }
 
+// Re-render the whole surprise block. The base select, the chips' availability and the
+// legend all depend on the current selection, so rebuilding the chart alone would leave
+// stale controls on screen.
+function rsRerenderSurp(pane){
+  var host = pane.querySelector('[data-rssurp]');
+  if (!host) return;
+  host.outerHTML = rsSurpBlockHtml();
+  wireSurpSlider();
+  rsBuildSurp();
+}
+function wireSurpSlider(){
+  var smn = rsSurpEl('rsSurpMin'), smx = rsSurpEl('rsSurpMax');
+  function onSlide(){
+    var a = +smn.value, b = +smx.value;
+    rsSurpSt().win = [Math.min(a, b), Math.max(a, b)];
+    rsBuildSurp();
+  }
+  if (smn) smn.oninput = onSlide;
+  if (smx) smx.oninput = onSlide;
+}
+
 function wireSliders(pane){
+  wireSurpSlider();
   rsView().sections.forEach(function(s){
     var k = s.key;
     var mn = document.getElementById('rsMin-' + k), mx = document.getElementById('rsMax-' + k);
@@ -1672,6 +1823,7 @@ export function initResults(wrap, ticker){
   if (!_rs.data) return;
   rsApplyVintage();          // resolve summit/cons from the vintage matrix before anything reads them
   wrap = wrap || document.querySelector('.rs-wrap:not(#rsEvoWrap)');
+  _rs.wrap = wrap || null;             // scopes the surprise block's element lookups
   if (wrap) wireResults(wrap);
   rsBuildAll();
 }
@@ -1692,12 +1844,6 @@ export function initResultsEvo(ticker){
   }
   wrap.onclick = function(e){
     var k;
-    var sm = e.target.closest('[data-rssurpmode]');
-    if (sm){
-      rsSurpSt().mode = sm.getAttribute('data-rssurpmode');
-      rsBuildSurp();
-      return;
-    }
     var md = e.target.closest('[data-rsevmode]');
     if (md && (k = secOf(md))){
       var mst = rsEvoSt(k);
@@ -1715,13 +1861,6 @@ export function initResultsEvo(ticker){
     }
   };
   wrap.onchange = function(e){
-    if (e.target.classList.contains('rs-ssel')){
-      var sst = rsSurpSt();
-      sst.metric = e.target.value;
-      sst.win = null;
-      rsBuildSurp();
-      return;
-    }
     if (!e.target.classList.contains('rs-esel')) return;
     var k = secOf(e.target);
     if (!k) return;
@@ -1731,15 +1870,5 @@ export function initResultsEvo(ticker){
     st.yr = null;
     rsBuildEvo(k);
   };
-  // Surprise-block slider (ids are unique; wire once).
-  var smn = document.getElementById('rsSurpMin'), smx = document.getElementById('rsSurpMax');
-  function onSurpSlide(){
-    var a = +smn.value, b = +smx.value;
-    rsSurpSt().win = [Math.min(a, b), Math.max(a, b)];
-    rsBuildSurp();
-  }
-  if (smn) smn.oninput = onSurpSlide;
-  if (smx) smx.oninput = onSurpSlide;
   rsEvo().sections.forEach(function(s){ rsBuildEvo(s.key); });
-  rsBuildSurp();
 }

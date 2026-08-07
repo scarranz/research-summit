@@ -147,9 +147,23 @@
 /* Vintage picker — the pane-wide "Estimates as of" control (results.js §vintage axis). */
 .rs-vint { display:flex; align-items:center; gap:8px; margin-left:auto; }
 .rs-vint .rs-quick-l { white-space:nowrap; }
-.rs-vsel {
+.rs-vsel, .rs-bsel {
   font:500 12px Inter, system-ui, sans-serif; color:var(--navy, #1E2733);
   background:#fff; border:1px solid #D7DDE4; border-radius:6px; padding:5px 8px; max-width:320px;
 }
-.rs-vsel:focus { outline:2px solid rgba(37,99,235,0.35); outline-offset:1px; }
+.rs-vsel:focus, .rs-bsel:focus { outline:2px solid rgba(37,99,235,0.35); outline-offset:1px; }
 .rs-vintnote { margin:2px 0 10px; }
+
+/* Surprise scorecard — base select + comparator chips (results.js §Actuals vs Estimates). */
+.rs-surp-ctl { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:8px 0 4px; }
+.rs-cmp {
+  display:inline-flex; align-items:center; gap:6px; cursor:pointer;
+  font:500 12px Inter, system-ui, sans-serif; color:#5A6472;
+  background:#fff; border:1px solid #D7DDE4; border-radius:999px; padding:4px 11px;
+}
+.rs-cmp .ave-leg-act { width:9px; height:9px; border-radius:2px; opacity:.35; }
+.rs-cmp.on { color:var(--navy, #1E2733); border-color:#9FB0C4; background:#F4F7FA; font-weight:600; }
+.rs-cmp.on .ave-leg-act { opacity:1; }
+.rs-cmp.na { opacity:.4; cursor:not-allowed; text-decoration:line-through; }
+.rs-cmp:not(.na):hover { border-color:#9FB0C4; }
+.rs-bsel { max-width:170px; }

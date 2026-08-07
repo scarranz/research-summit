@@ -604,6 +604,10 @@ export var uberSetup = {
   updated: uberResults.updated,
   intro: '',
   source: uberResults.source,
+  // No surprise scorecard on the Setup chart: it is a single pre-print view of the NEXT
+  // quarter, so "how did the print land" has nothing to score yet. (It also kept a second,
+  // hidden copy of that block in the DOM with the same element ids as the real one.)
+  surprise: false,
   views: {
     q: { label: 'Quarterly', note: 'Rolling \u2014 the last 8 reported quarters plus the one next (forecast) quarter. ' + uberResults.views.q.note,
          metrics: sliceMetrics(uberResults.views.q, qIdx), sections: mergedSection(uberResults.views.q) },

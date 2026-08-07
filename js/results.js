@@ -1113,7 +1113,8 @@ function rsEvoBlockHtml(k){
   var h = '<div class="rs-block" data-rsevo="' + k + '">';
   h += '<div class="rs-block-top"><div class="rs-block-h">' + esc(cfg.label) + '</div>' +
     '<select class="rs-msel rs-esel" aria-label="Metric">' + rsEvoSelectHtml(k) + '</select>' +
-    '<div class="rs-views" id="rsEvoMode-' + k + '">' + rsEvoModeHtml(k, m) + '</div></div>';
+    '<div class="rs-views" id="rsEvoMode-' + k + '">' + rsEvoModeHtml(k, m) + '</div>' +
+    '<div class="rs-views" id="rsEvoAct-' + k + '">' + rsEvoActHtml(k) + '</div></div>';
   h += '<div class="ave-leg" id="rsEvoLegend-' + k + '">' + rsEvoLegendHtml(k, m) + '</div>';
   h += '<div class="ov-chart-card">' +
     '<div class="ov-chart-t" id="rsEvoChartT-' + k + '"></div>' +
@@ -1134,6 +1135,17 @@ function rsEvoModeHtml(k, m){
   return '<button type="button" class="rs-view' + (st.mode === 'usd' ? ' active' : '') + '" data-rsevmode="usd">' + rsCurName() + 'B</button>' +
     '<button type="button" class="rs-view' + (st.mode === 'pct' ? ' active' : '') + '" data-rsevmode="pct">' +
     (k === 'top' ? 'YoY growth %' : 'Margin %') + '</button>';
+}
+
+// The "Reported" toggle. Disabled — with the reason in its tooltip — when no year in the
+// block has closed, which is the normal state early in a forecast window.
+function rsEvoActHtml(k){
+  var st = rsEvoSt(k), yrs = rsEvoActYears(k);
+  if (!yrs.on.length)
+    return '<button type="button" class="rs-view" disabled title="No fiscal year in this block has closed yet, so there is no reported figure to mark. ' +
+      esc(yrs.off.join(', ')) + ' are still open.">Reported ✕</button>';
+  return '<button type="button" class="rs-view' + (st.act ? ' active' : '') + '" data-rsevact="1" ' +
+    'title="Draw a reference line at the reported figure for ' + esc(yrs.on.join(', ')) + '">Reported</button>';
 }
 
 function rsEvoSelectHtml(k){
@@ -1160,8 +1172,62 @@ function rsEvoLegendHtml(k, m){
     h += '<button type="button" class="rs-leg' + (st.hidden.cons ? ' off' : '') + '" data-rsevleg="cons" title="Show / hide">' +
       '<span class="rs-leg-dash" style="color:var(--navy)"></span>Consensus (dashed)</button>';
   }
+  if (st.act){
+    var ya = rsEvoActYears(k);
+    h += '<button type="button" class="rs-leg" data-rsevact="1" title="Hide the reported line">' +
+      '<span class="rs-leg-dash" style="color:var(--navy)"></span>Reported (dotted)</button>';
+    if (ya.off.length) h += '<span class="rs-noguide" title="A fiscal year still in progress has no reported figure to mark.">⚑ FY' + esc(ya.off.join(', FY')) + ' still open</span>';
+  }
   h += '<span class="tech-leg-i" style="margin-left:auto">one line per fiscal year · click a chip to hide it</span>';
   return h;
+}
+
+// ─── "Where did it actually land" (SAB, Aug 7 2026) ───────────────────────────
+// A reference line across the whole vintage axis at the REPORTED figure, so a snapshot
+// trajectory can be read against the outcome instead of only against itself. Only fiscal
+// years that have CLOSED qualify — marking an open year would draw a line at a number that
+// does not exist yet. The annual actual is looked up in the `y` view by the evolution
+// metric's own key (or an explicit `actKey` when the two datasets name a line differently).
+function rsEvoActual(mkey, m, year){
+  var vy = _rs.data && _rs.data.views && _rs.data.views.y;
+  if (!vy) return null;
+  var am = vy.metrics[m.actKey || mkey];
+  if (!am || !am.act) return null;
+  var i = am.periods.indexOf(String(year));
+  return i < 0 ? null : (am.act[i] == null ? null : am.act[i]);
+}
+// The same figure expressed in whatever the % mode of this block means: implied YoY growth
+// on Top Line, the margin over `marginOf` on Profitability — both computed ACTUAL-on-ACTUAL,
+// never mixing a reported numerator with an estimated denominator.
+function rsEvoActualPct(k, mkey, m, year){
+  var a = rsEvoActual(mkey, m, year);
+  if (a == null) return null;
+  if (k === 'top'){
+    var prev = rsEvoActual(mkey, m, String(+year - 1));
+    return (prev == null || !prev) ? null : (a - prev) / Math.abs(prev) * 100;
+  }
+  if (!m.marginOf) return null;
+  var den = rsEvoActual(m.marginOf, rsEvo().metrics[m.marginOf] || {}, year);
+  return (den == null || !den) ? null : a / den * 100;
+}
+// Which of the block's years can be marked, and which cannot — the answer drives both the
+// toggle's availability and the on-screen reason, so an empty toggle never reads as broken.
+function rsEvoActYears(k){
+  var ev = rsEvo(), st = rsEvoSt(k), m = rsEvoMetric(k), on = [], off = [];
+  ev.years.forEach(function(y){
+    var v = st.mode === 'pct' ? rsEvoActualPct(k, st.metric, m, y) : rsEvoActual(st.metric, m, y);
+    (v == null ? off : on).push(y);
+  });
+  return { on: on, off: off };
+}
+
+// Repaint one evolution block's toggle + legend in place (the chart is rebuilt separately).
+// Both depend on the mode and on which years can be marked, so patching the chart alone
+// would leave a stale pill.
+function rsRerenderEvoHead(wrap, k){
+  var root = wrap || document;
+  var a = root.querySelector('#rsEvoAct-' + k); if (a) a.innerHTML = rsEvoActHtml(k);
+  var l = root.querySelector('#rsEvoLegend-' + k); if (l) l.innerHTML = rsEvoLegendHtml(k, rsEvoMetric(k));
 }
 
 function rsBuildEvo(k){
@@ -1199,6 +1265,19 @@ function rsBuildEvo(k){
     }
   });
 
+  // The reported reference line — flat across every snapshot, dotted so it reads as an
+  // outcome rather than another forecast. Drawn last (order 99) so it sits behind the lines.
+  if (st.act){
+    ev.years.forEach(function(y, yi){
+      if (st.hidden['y' + y]) return;
+      var av = pct ? rsEvoActualPct(k, st.metric, m, y) : scale(rsEvoActual(st.metric, m, y));
+      if (av == null) return;
+      datasets.push({ label: 'FY' + y + ' · reported', data: ev.vintages.map(function(){ return av; }),
+        borderColor: EVO_RAMP[yi % EVO_RAMP.length], borderWidth: 1.5, borderDash: [2, 3],
+        pointRadius: 0, pointHitRadius: 6, tension: 0, fill: false, _src: 'act', _yi: yi, order: 99 });
+    });
+  }
+
   var tEl = document.getElementById('rsEvoChartT-' + k);
   if (tEl) tEl.innerHTML = esc(m.label) + ' — ' +
     (pct ? esc(rsEvoPctLabel(k, m)) + ' by model snapshot <span>(% per fiscal year, each snapshot against its own numbers · solid = Summit model, dashed = stored BBG consensus)</span>'
@@ -1219,6 +1298,9 @@ function rsBuildEvo(k){
             },
             label: function(ctx){
               var i = ctx.dataIndex;
+              // The reported line is one number repeated — no revision to report against it.
+              if (ctx.dataset._src === 'act')
+                return ctx.dataset.label + ': ' + (pct ? ctx.parsed.y.toFixed(1) + '%' : rsFmt(m, ctx.parsed.y * div));
               if (pct){
                 var p = rsEvoPct(k, m, ctx.dataset._src, ctx.dataset._yi) || [];
                 var line = ctx.dataset.label + ': ' + (p[i] == null ? '—' : p[i].toFixed(1) + '%');
@@ -1844,11 +1926,20 @@ export function initResultsEvo(ticker){
   }
   wrap.onclick = function(e){
     var k;
+    var ab = e.target.closest('[data-rsevact]');
+    if (ab && !ab.disabled && (k = secOf(ab))){
+      var ast = rsEvoSt(k);
+      ast.act = !ast.act;
+      rsRerenderEvoHead(wrap, k);
+      rsBuildEvo(k);
+      return;
+    }
     var md = e.target.closest('[data-rsevmode]');
     if (md && (k = secOf(md))){
       var mst = rsEvoSt(k);
       mst.mode = md.getAttribute('data-rsevmode');
       mst.yr = null;                                   // units change $B ↔ %
+      rsRerenderEvoHead(wrap, k);                      // availability differs per mode
       rsBuildEvo(k);
       return;
     }
@@ -1870,5 +1961,8 @@ export function initResultsEvo(ticker){
     st.yr = null;
     rsBuildEvo(k);
   };
-  rsEvo().sections.forEach(function(s){ rsBuildEvo(s.key); });
+  // Repaint each block's head before building: the "Reported" toggle's availability depends
+  // on dataset state, and the markup was generated when the pane's HTML string was built —
+  // which can be long before this runs.
+  rsEvo().sections.forEach(function(s){ rsRerenderEvoHead(wrap, s.key); rsBuildEvo(s.key); });
 }

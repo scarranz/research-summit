@@ -870,7 +870,7 @@ function amznHookMatch(ct){ if(_recHook==='open') return amznHookOpen(ct); if(_r
 function amznThemeQuarters(){ var seen={}, out=[]; AMZN_THEMES.forEach(function(ct){ (ct.updates||[]).forEach(function(u){ if(!seen[u.q]){ seen[u.q]=1; out.push(u.q); } }); }); return out; }
 function amznCallsByQuarter(){
   var map={}, order=[];
-  AMZN_THEMES.forEach(function(ct){ if(!amznHookMatch(ct)) return; amznWinUpdates(ct).forEach(function(u){ if(!map[u.q]){ map[u.q]=[]; order.push(u.q); } map[u.q].push({ theme:ct.theme, items:u.items }); }); });
+  AMZN_THEMES.forEach(function(ct){ if(!amznHookMatch(ct)) return; amznWinUpdates(ct).forEach(function(u){ if(!map[u.q]){ map[u.q]=[]; order.push(u.q); } map[u.q].push({ theme:ct.theme, seg:ct.seg, items:u.items }); }); });
   function qv(q){ var m=String(q).match(/Q(\d)\s+(\d{4})/); return m?(+m[2])*10+(+m[1]):0; }
   order.sort(function(a,b){ return qv(b)-qv(a); });
   return { order:order, map:map };
@@ -881,6 +881,12 @@ function callsBody(){
     '.calls-pill{border:none;background:transparent;font:inherit;font-size:12px;font-weight:700;color:var(--mu);padding:5px 15px;border-radius:999px;cursor:pointer;transition:.12s}'+
     '.calls-pill:hover{color:var(--navy)}.calls-pill.active{background:'+BRAND+';color:#fff}'+
     '.calls-tl{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--navy);margin:0 0 4px}'+
+    /* By-quarter: segment sub-headers + per-theme cards */
+    '.calls-qseg{display:flex;align-items:center;gap:7px;font-size:9.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:'+BRAND+';margin:16px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--bdr)}'+
+    '.calls-qseg:first-child{margin-top:2px}'+
+    '.calls-qseg-n{font-size:9px;font-weight:800;color:var(--mu);background:#F2F5F8;border:1px solid var(--bdr);border-radius:20px;padding:1px 7px}'+
+    '.calls-qrow{border-left:2px solid var(--bdr);padding:1px 0 1px 11px;margin:0 0 11px}'+
+    '.calls-qrow:hover{border-left-color:'+BRAND+'}'+
     '.calls-st{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:20px;padding:2px 8px;white-space:nowrap;border:1px solid;flex:none}'+
     /* segment divisions (Amazon US / International / AWS) — each a dropdown over its themes, */
     /* styled to match the By-quarter accordion (.lpb-acc-item / .lpb-acc-h / .lpb-acc-ic). */
@@ -894,6 +900,9 @@ function callsBody(){
     '.calls-seg-body{display:none;padding:2px 14px 14px;flex-direction:column;gap:10px}'+
     '.calls-seg-group.open>.calls-seg-body{display:flex}'+
     '.calls-empty{font-size:11.5px;color:var(--mu);font-style:italic;border:1px dashed var(--bdr);border-radius:8px;padding:9px 12px;background:#FAFBFD}'+
+    '.rec-editbtn{margin-top:6px;font:inherit;font-size:10.5px;font-weight:800;border:1px dashed '+BRAND2+';background:var(--w);color:'+BRAND2+';padding:5px 12px;border-radius:999px;cursor:pointer}'+
+    '.rec-editbtn:hover{background:rgba(20,110,180,0.06)}'+
+    '.rec-edit{margin-top:10px}'+
     '.calls-trk{font-size:8.5px;font-weight:800;letter-spacing:.02em;color:var(--mu);background:#F2F5F8;border:1px solid var(--bdr);border-radius:20px;padding:2px 8px;white-space:nowrap;flex:none}'+
     '.calls-trk.closed{color:'+RED+';border-color:rgba(234,67,53,0.35);background:rgba(234,67,53,0.06)}'+
     '.calls-trkbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 14px;padding:8px 12px;background:#F7F9FB;border:1px solid var(--bdr);border-radius:10px;font-size:10.5px;font-weight:700;color:var(--mu)}'+
@@ -930,12 +939,18 @@ function callsBody(){
     group.forEach(function(ct){
       var sk=(ct.st&&ct.st.k)?ct.st.k:'watch'; var st=CE_THST[sk]||CE_THST.watch;
       h+='<div class="lpb-acc-item" data-theme="'+esc(ct.theme)+'"><button type="button" class="lpb-acc-h"><span style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap">'+esc(ct.theme)+' <span class="calls-st" style="color:'+st.c+';border-color:'+st.c+'">'+st.l+ceStAge(ct.st)+'</span></span><span class="lpb-acc-ic">+</span></button>';
+      var key=ct.seg+'|'+ct.theme, editing=!!_recEditOpen[key];
       h+='<div class="lpb-acc-body"><p style="font-size:12px;color:var(--mu);margin:0 0 10px;font-style:italic">'+esc(ct.why)+'</p>';
-      var ups=amznWinUpdates(ct);
-      if(ups.length){
-        ups.forEach(function(u){ h+='<div style="margin-bottom:10px"><span class="ov-chip" style="margin-right:6px">'+esc(u.q)+'</span><ul class="ov-bullets" style="margin-top:4px">'+u.items.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ul></div>'; });
+      if(editing){
+        h+=amznInlineEdit(ct);
       } else {
-        h+='<div class="calls-empty">— to fill: no notes tracked yet for this theme.</div>';
+        var ups=amznWinUpdates(ct);
+        if(ups.length){
+          ups.forEach(function(u){ h+='<div style="margin-bottom:10px"><span class="ov-chip" style="margin-right:6px">'+esc(u.q)+'</span><ul class="ov-bullets" style="margin-top:4px">'+u.items.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ul></div>'; });
+        } else {
+          h+='<div class="calls-empty">— to fill: no notes tracked yet for this theme.</div>';
+        }
+        h+='<button type="button" class="rec-editbtn" data-receditopen="'+esc(key)+'">✎ Edit / Add note</button>';
       }
       h+='</div></div>';
     });
@@ -946,7 +961,13 @@ function callsBody(){
   h+='<div class="lpb-acc" id="aCallsQuarter" style="display:none">';
   byQ.order.forEach(function(q){
     h+='<div class="lpb-acc-item"><button type="button" class="lpb-acc-h"><span>'+esc(q)+'</span><span class="lpb-acc-ic">+</span></button><div class="lpb-acc-body">';
-    byQ.map[q].forEach(function(row){ h+='<div style="margin-bottom:12px"><div class="calls-tl">'+esc(row.theme)+'</div><ul class="ov-bullets" style="margin-top:2px">'+row.items.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ul></div>'; });
+    // Group the quarter's themes by segment (Amazon US / International / AWS) so they read distinct.
+    AMZN_SEG_ORDER.forEach(function(seg){
+      var rows=byQ.map[q].filter(function(r){ return r.seg===seg; });
+      if(!rows.length) return;
+      h+='<div class="calls-qseg">'+esc(seg)+' <span class="calls-qseg-n">'+rows.length+'</span></div>';
+      rows.forEach(function(row){ h+='<div class="calls-qrow"><div class="calls-tl">'+esc(row.theme)+'</div><ul class="ov-bullets" style="margin-top:2px">'+row.items.map(function(it){ return '<li>'+it+'</li>'; }).join('')+'</ul></div>'; });
+    });
     h+='</div></div>';
   });
   h+='</div>';
@@ -2366,6 +2387,15 @@ function wireThemeRecord(scope){
   scope.querySelectorAll('[data-rectrks]').forEach(function(s){ s.onchange=function(){ _recSince=s.value||null; rerec(); }; });
   scope.querySelectorAll('[data-rectrkclear]').forEach(function(b){ b.onclick=function(){ _recSince=null; rerec(); }; });
   scope.querySelectorAll('[data-rechook]').forEach(function(b){ b.onclick=function(){ _recHook=b.getAttribute('data-rechook'); rerec(); }; });
+  // ── inline per-sub-theme editor (opened from each sub-theme's ✎ Edit / Add note button) ──
+  function ctOfEl(el){ var item=el.closest('.lpb-acc-item[data-theme]'), grp=el.closest('.calls-seg-group[data-seg]'); if(!item||!grp) return null; return amznFindTheme(grp.getAttribute('data-seg')+'|'+item.getAttribute('data-theme')); }
+  scope.querySelectorAll('[data-receditopen]').forEach(function(b){ b.onclick=function(){ _recEditOpen[b.getAttribute('data-receditopen')]=1; rerec(); }; });
+  scope.querySelectorAll('[data-recdone]').forEach(function(b){ b.onclick=function(){ var ct=ctOfEl(b); if(ct) delete _recEditOpen[ct.seg+'|'+ct.theme]; rerec(); }; });
+  scope.querySelectorAll('[data-rects]').forEach(function(s){ s.onchange=function(){ var ct=ctOfEl(s); if(!ct) return; ct.st=ct.st||{ k:'watch' }; if(s.value) ct.st.since=s.value; else delete ct.st.since; rerec(); }; });
+  scope.querySelectorAll('[data-rectu]').forEach(function(s){ s.onchange=function(){ var ct=ctOfEl(s); if(!ct) return; ct.trackUntil=s.value||null; rerec(); }; });
+  scope.querySelectorAll('[data-recadd]').forEach(function(b){ b.onclick=function(){ var ct=ctOfEl(b); if(!ct) return; var box=b.closest('.rec-edit'); var q=box.querySelector('[data-recnq]').value, tx=(box.querySelector('[data-recntext]').value||'').trim(); if(!q){ window.alert('Pick a quarter for the note.'); return; } if(!tx) return; ct.updates=ct.updates||[]; var u=ct.updates.filter(function(x){ return x.q===q; })[0]; if(!u){ u={ q:q, items:[] }; ct.updates.push(u); ct.updates.sort(function(a,z){ return (ceQnum(a.q)||0)-(ceQnum(z.q)||0); }); } u.items.push(tx); rerec(); }; });
+  scope.querySelectorAll('[data-recdelnote]').forEach(function(b){ b.onclick=function(){ var ct=ctOfEl(b); if(!ct) return; var q=b.getAttribute('data-q'), ix=+b.getAttribute('data-i'); var u=(ct.updates||[]).filter(function(x){ return x.q===q; })[0]; if(!u) return; u.items.splice(ix,1); if(!u.items.length) ct.updates=ct.updates.filter(function(x){ return x!==u; }); rerec(); }; });
+  scope.querySelectorAll('[data-recednote]').forEach(function(b){ b.onclick=function(){ var ct=ctOfEl(b); if(!ct) return; var q=b.getAttribute('data-q'), ix=+b.getAttribute('data-i'); var u=(ct.updates||[]).filter(function(x){ return x.q===q; })[0]; if(!u||u.items[ix]==null) return; var nv=window.prompt('Edit note ('+q+') — HTML ok:', u.items[ix]); if(nv==null) return; nv=nv.trim(); if(!nv) return; u.items[ix]=nv; rerec(); }; });
 }
 // Re-render the theme record above (from AMZN_THEMES) and re-wire it — called after an edit or a
 // filter change. Open/closed state (segments, sub-themes, the active view) is preserved across the
@@ -2393,7 +2423,9 @@ function amznRerenderRecord(root){ var host=root&&root.querySelector('[data-amzn
 // Picking a Theme filters the Sub-theme list to that segment. Adding either mutates the in-memory
 // model and re-renders the record above at once. (Session-only for now — see the note to the user.)
 var _edSeg=null, _edSub=null;
+var _recEditOpen={};   // per sub-theme inline editor open state, keyed by "seg|theme"
 function amznSubsOf(seg){ return AMZN_THEMES.filter(function(ct){ return ct.seg===seg; }); }
+function amznFindTheme(key){ var p=String(key||'').split('|'); return AMZN_THEMES.filter(function(x){ return x.seg===p[0] && x.theme===p.slice(1).join('|'); })[0]; }
 // A hook is OPEN when it has a Tracking since and no Tracking until; CLOSED once an until is set.
 function amznHookOpen(ct){ return !!(ct.st&&ct.st.since) && !ct.trackUntil; }
 function amznHookClosed(ct){ return !!ct.trackUntil; }
@@ -2503,6 +2535,32 @@ function amznRenderEditor(root){
       amznRenderEditor(root); amznRerenderRecord(root);
     };
   }
+}
+// ── Inline per-sub-theme editor (opened from the "✎ Edit / Add note" button inside a sub-theme in
+// the record). Same box as the ✎ panel: Tracking window + Add a note + notes with edit/delete. ──
+function amznInlineEdit(ct){
+  var extraQ=(ct.updates||[]).map(function(u){ return u.q; });
+  var h='<div class="aed-detail rec-edit" style="margin-top:10px">';
+  h+='<label class="aed-flb">Tracking window</label>'+
+     '<div class="aed-track"><span>Tracking since <select class="aed-sel" data-rects>'+amznQuarterOpts((ct.st&&ct.st.since)||'', '— none —', extraQ)+'</select></span>'+
+     '<span>Tracking until <select class="aed-sel" data-rectu>'+amznQuarterOpts(ct.trackUntil||'', '— still open —', extraQ)+'</select></span>'+
+     '<span class="aed-hookst '+(amznHookClosed(ct)?'closed':(amznHookOpen(ct)?'open':''))+'">'+(amznHookClosed(ct)?'closed':(amznHookOpen(ct)?'open hook':'not tracked'))+'</span></div>';
+  h+='<label class="aed-flb">Add a note</label>'+
+     '<div class="aed-addnote"><select class="aed-sel" data-recnq>'+amznQuarterOpts('', '— quarter —', extraQ)+'</select>'+
+     '<input type="text" data-recntext placeholder="new note for that quarter (bold ok: &lt;b&gt;…&lt;/b&gt;)">'+
+     '<button type="button" class="aed-mini" data-recadd>+ Add note</button></div>';
+  h+='<label class="aed-flb">Notes by quarter</label>';
+  if(ct.updates&&ct.updates.length){
+    h+='<div class="aed-notes">'+ct.updates.map(function(u){
+      return '<div class="aed-qgroup"><span class="aed-note-q">'+esc(u.q)+'</span>'+
+        u.items.map(function(it,ii){ return '<div class="aed-note-row"><span>'+it+'</span>'+
+          '<button type="button" class="aed-ed" data-recednote data-q="'+esc(u.q)+'" data-i="'+ii+'" title="Edit this note">✎</button>'+
+          '<button type="button" class="aed-del" data-recdelnote data-q="'+esc(u.q)+'" data-i="'+ii+'" title="Delete this note">✕</button></div>'; }).join('')+
+      '</div>'; }).join('')+'</div>';
+  } else h+='<div class="aed-empty">no notes yet — add one above</div>';
+  h+='<div class="aed-frow" style="margin-top:10px"><button type="button" class="aed-mini alt" data-recdone>Done</button></div>';
+  h+='</div>';
+  return h;
 }
 
 function init(c){

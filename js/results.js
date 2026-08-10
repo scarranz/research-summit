@@ -1143,16 +1143,24 @@ function rsEvoBasis(k){
   var mode = rsEvoSt(k).mode;
   return mode === 'usd' ? null : mode;
 }
+// Growth's two sub-choices. Over what (only YoY is computable here — see rsEvoModeHtml) and
+// expressed how: a percentage, or the currency amount the line grew by.
+function rsEvoGrowLag(k){ return rsEvoSt(k).growLag || 'yoy'; }
+function rsEvoGrowUnit(k){ return rsEvoSt(k).growUnit || 'pct'; }
+// Is the plotted number a percentage? Everything derived is, EXCEPT growth-as-amount, which
+// is a currency delta and has to be formatted, ticked and totalled like money.
+function rsEvoIsAmt(k){ return rsEvoSt(k).mode === 'grow' && rsEvoGrowUnit(k) === 'amt'; }
 function rsEvoPct(k, m, src, yi){
   var arr = m[src] ? m[src][yi] : null;
   if (!arr) return null;
   if (rsEvoBasis(k) === 'grow'){
+    var amt = rsEvoIsAmt(k);
     return arr.map(function(cur, vi){
       var base = yi === 0
         ? (m.prior && m.prior[src] ? m.prior[src][vi] : null)
         : (m[src][yi - 1] ? m[src][yi - 1][vi] : null);
       if (cur == null || base == null || !base) return null;
-      return (cur - base) / Math.abs(base) * 100;
+      return amt ? cur - base : (cur - base) / Math.abs(base) * 100;
     });
   }
   if (!m.marginOf) return null;
@@ -1164,7 +1172,10 @@ function rsEvoPct(k, m, src, yi){
     return v / den[vi] * 100;
   });
 }
-function rsEvoPctLabel(k, m){ return rsEvoBasis(k) === 'grow' ? 'implied YoY growth' : (m.marginLabel || 'margin'); }
+function rsEvoPctLabel(k, m){
+  if (rsEvoBasis(k) !== 'grow') return m.marginLabel || 'margin';
+  return 'implied ' + (rsEvoGrowLag(k) === 'qoq' ? 'QoQ' : 'YoY') + ' growth' + (rsEvoIsAmt(k) ? ' (amount)' : '');
+}
 // Display scale for an evolution metric (nested per-year arrays): $B or $M.
 function rsEvoScaleOf(m){
   var mx = 0;
@@ -1241,7 +1252,8 @@ function rsEvoBlockHtml(k){
   var h = '<div class="rs-block" data-rsevo="' + k + '">';
   h += '<div class="rs-block-top"><div class="rs-block-h">' + esc(cfg.label) + '</div>' +
     '<select class="rs-msel rs-esel" aria-label="Metric">' + rsEvoSelectHtml(k) + '</select>' +
-    '<div class="rs-views" id="rsEvoMode-' + k + '">' + rsEvoModeHtml(k, m) + '</div>' +
+    // A ROW of toggle groups, not one group: picking Growth opens two more beside it.
+    '<div class="rs-modes" id="rsEvoMode-' + k + '">' + rsEvoModeHtml(k, m) + '</div>' +
     '<div class="rs-views" id="rsEvoAct-' + k + '">' + rsEvoActHtml(k) + '</div></div>';
   h += '<div class="ave-leg" id="rsEvoLegend-' + k + '">' + rsEvoLegendHtml(k, m) + '</div>';
   h += '<div class="ov-chart-card">' +
@@ -1280,8 +1292,28 @@ function rsEvoModeHtml(k, m){
     return '<button type="button" class="rs-view' + (st.mode === mode ? ' active' : '') +
       '" data-rsevmode="' + mode + '">' + label + '</button>';
   };
-  return b('usd', rsCurName() + 'B') + b('grow', 'YoY growth %') +
-    (m.marginOf ? b('margin', 'Margin %') : '');
+  var h = '<div class="rs-views">' + b('usd', rsCurName() + 'B') + b('grow', 'Growth') +
+    (m.marginOf ? b('margin', 'Margin %') : '') + '</div>';
+  if (st.mode !== 'grow') return h;
+  // Growth opens two more choices: over what, and expressed how.
+  // ⚠ QoQ is offered but DISABLED, and says why. This pane's lines are fiscal YEARS — the
+  // x-axis is model snapshots, not periods — so there is no quarter to compare against. The
+  // quarter-over-quarter read lives in Results, which has a quarterly view. Rendering the
+  // button greyed with the reason beats omitting it: the question is a fair one to ask.
+  var lag = function(v, label, on, why){
+    return '<button type="button" class="rs-view' + (rsEvoGrowLag(k) === v ? ' active' : '') +
+      '" data-rsevlag="' + v + '"' + (on ? '' : ' disabled title="' + esc(why) + '"') + '>' + label + '</button>';
+  };
+  var unit = function(v, label){
+    return '<button type="button" class="rs-view' + (rsEvoGrowUnit(k) === v ? ' active' : '') +
+      '" data-rsevgunit="' + v + '">' + label + '</button>';
+  };
+  h += '<div class="rs-views">' + lag('yoy', 'YoY', true, '') +
+    lag('qoq', 'QoQ ✕', false,
+        'Every line here is a fiscal YEAR and the x-axis is model snapshots, so there is no quarter to compare against. The quarter-over-quarter read is in Results, which has a quarterly view.') +
+    '</div>';
+  h += '<div class="rs-views">' + unit('pct', '%') + unit('amt', 'Amount') + '</div>';
+  return h;
 }
 
 // The "Reported" toggle. Disabled — with the reason in its tooltip — when no year in the
@@ -1351,7 +1383,8 @@ function rsEvoActualPct(k, mkey, m, year){
   if (a == null) return null;
   if (rsEvoBasis(k) === 'grow'){
     var prev = rsEvoActual(mkey, m, String(+year - 1));
-    return (prev == null || !prev) ? null : (a - prev) / Math.abs(prev) * 100;
+    if (prev == null || !prev) return null;
+    return rsEvoIsAmt(k) ? a - prev : (a - prev) / Math.abs(prev) * 100;
   }
   if (!m.marginOf) return null;
   var den = rsEvoActual(m.marginOf, rsEvo().metrics[m.marginOf] || {}, year);
@@ -1385,11 +1418,17 @@ function rsBuildEvo(k){
   if (!el || !el.offsetParent) return;                 // pane not visible yet
   if (st.chart){ st.chart.destroy(); st.chart = null; }
 
-  var pct = st.mode !== 'usd';
+  // `derived` = the plotted number is computed (growth or margin) rather than the level.
+  // `amt` = growth expressed in currency, which is derived but NOT a percentage, so it is
+  // scaled and ticked like money. `pct` therefore means "axis and labels are percentages".
+  var derived = st.mode !== 'usd', amt = rsEvoIsAmt(k), pct = derived && !amt;
   var div = rsEvoScaleOf(m);
   var scale = function(v){ return v == null ? null : v / div; };
   function series(src, yi){
-    if (pct) return rsEvoPct(k, m, src, yi);
+    if (derived){
+      var d = rsEvoPct(k, m, src, yi);
+      return (amt && d) ? d.map(scale) : d;
+    }
     var a = m[src] ? m[src][yi] : null;
     return a ? a.map(scale) : null;
   }
@@ -1417,7 +1456,8 @@ function rsBuildEvo(k){
   if (st.act){
     ev.years.forEach(function(y, yi){
       if (st.hidden['y' + y]) return;
-      var av = pct ? rsEvoActualPct(k, st.metric, m, y) : scale(rsEvoActual(st.metric, m, y));
+      var av = derived ? (amt ? scale(rsEvoActualPct(k, st.metric, m, y)) : rsEvoActualPct(k, st.metric, m, y))
+                       : scale(rsEvoActual(st.metric, m, y));
       if (av == null) return;
       datasets.push({ label: 'FY' + y + ' · reported', data: ev.vintages.map(function(){ return av; }),
         borderColor: EVO_RAMP[yi % EVO_RAMP.length], borderWidth: 1.5, borderDash: [2, 3],
@@ -1427,8 +1467,12 @@ function rsBuildEvo(k){
 
   var tEl = document.getElementById('rsEvoChartT-' + k);
   if (tEl) tEl.innerHTML = esc(m.label) + ' — ' +
-    (pct ? esc(rsEvoPctLabel(k, m)) + ' by model snapshot <span>(% per fiscal year, each snapshot against its own numbers · solid = Summit model, dashed = stored BBG consensus)</span>'
-         : 'forecast by model snapshot <span>(' + (m.cur || '$') + (div === 1000 ? 'B' : 'M') + ' per fiscal year · solid = Summit model, dashed = stored BBG consensus · hover for the revision)</span>');
+    (derived
+      ? esc(rsEvoPctLabel(k, m)) + ' by model snapshot <span>(' +
+        (amt ? (m.cur || '$') + (div === 1000 ? 'B' : 'M') + ' of growth over the prior fiscal year'
+             : '% per fiscal year, each snapshot against its own numbers') +
+        ' · solid = Summit model, dashed = stored BBG consensus)</span>'
+      : 'forecast by model snapshot <span>(' + (m.cur || '$') + (div === 1000 ? 'B' : 'M') + ' per fiscal year · solid = Summit model, dashed = stored BBG consensus · hover for the revision)</span>');
 
   st.chart = new Chart(el.getContext('2d'), {
     type: 'line',
@@ -1448,12 +1492,14 @@ function rsBuildEvo(k){
               // The reported line is one number repeated — no revision to report against it.
               if (ctx.dataset._src === 'act')
                 return ctx.dataset.label + ': ' + (pct ? ctx.parsed.y.toFixed(1) + '%' : rsFmt(m, ctx.parsed.y * div));
-              if (pct){
+              if (derived){
                 var p = rsEvoPct(k, m, ctx.dataset._src, ctx.dataset._yi) || [];
-                var line = ctx.dataset.label + ': ' + (p[i] == null ? '—' : p[i].toFixed(1) + '%');
+                var line = ctx.dataset.label + ': ' +
+                  (p[i] == null ? '—' : (amt ? rsFmtD(m, p[i]) : p[i].toFixed(1) + '%'));
                 if (i > 0 && p[i] != null && p[i - 1] != null){
                   var d = p[i] - p[i - 1];
-                  line += '  (' + (d >= 0 ? '+' : '−') + Math.abs(d).toFixed(1) + ' pp vs prior snapshot)';
+                  line += '  (' + (amt ? rsFmtD(m, d) : (d >= 0 ? '+' : '−') + Math.abs(d).toFixed(1) + ' pp') +
+                    ' vs prior snapshot)';
                 }
                 return line;
               }
@@ -1540,9 +1586,14 @@ function rsRenderEvoTable(k, m){
     arr.forEach(function(v, i){ r += '<td>' + (i === 0 ? '<span class="rs-ft-nil">—</span>' : rsRevHtml(m, arr[i - 1], v)) + '</td>'; });
     r += '<td class="rs-ft-s"></td></tr>';
     if (hasPct){
+      // Growth-as-amount is a currency delta, so its row is money and its summary is a money
+      // difference — not points.
+      var amtRow = rsEvoIsAmt(k);
       r += '<tr class="rs-ft-sub"><td class="rs-ft-h">' + esc(rsEvoPctLabel(k, m)) + '</td>';
-      pcts.forEach(function(v){ r += '<td>' + (v == null ? '<span class="rs-ft-nil">—</span>' : v.toFixed(1) + '%') + '</td>'; });
-      r += '<td class="rs-ft-s">' + rsRevPp(pcts[0], pcts[nv - 1]) + '</td></tr>';
+      pcts.forEach(function(v){
+        r += '<td>' + (v == null ? '<span class="rs-ft-nil">—</span>' : (amtRow ? rsFmtD(m, v) : v.toFixed(1) + '%')) + '</td>';
+      });
+      r += '<td class="rs-ft-s">' + (amtRow ? rsRevHtml(m, pcts[0], pcts[nv - 1]) : rsRevPp(pcts[0], pcts[nv - 1])) + '</td></tr>';
     }
     return r;
   }
@@ -2149,21 +2200,29 @@ function rsRenderEvoTrack(k, m){
   var t = rsEvoTrackRows(k, m), pct = t.pct, div = rsEvoScaleOf(m);
   var showAct = !!st.act;                          // the Actual columns follow the Reported chip
 
+  // Three bases, three ways to write a number and its move:
+  //   level  (US$B)             value = the level,        move = % change
+  //   points (growth %, margin) value = a percentage,      move = percentage POINTS
+  //   amount (growth in $)      value = a currency delta,  move = a currency difference
+  var amt = rsEvoIsAmt(k), points = pct && !amt;
   function val(v){
     if (v == null) return '<span class="rs-ft-nil">—</span>';
-    return pct ? v.toFixed(1) + '%' : (v / div).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    if (points) return v.toFixed(1) + '%';
+    var s = (Math.abs(v) / div).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    return (amt && v < 0 ? '−' : '') + s;          // an amount can legitimately be negative
   }
   function move(v){
     if (v == null) return '<span class="rs-ft-nil">—</span>';
-    var u = pct ? ' pp' : '%';
     // Below the same 0.05 threshold that counts a revision, a move is noise — colouring a
     // rounded "−0.0" red says a line fell when it did not move.
-    if (Math.abs(v) < 0.05) return '<span class="rs-ft-dim">0.0' + u + '</span>';
+    if (Math.abs(v) < 0.05) return '<span class="rs-ft-dim">' + (amt ? rsFmtD(m, 0) : '0.0' + (points ? ' pp' : '%')) + '</span>';
+    if (amt) return '<span style="color:' + (v >= 0 ? RS_GREEN : RS_RED) + '">' + rsFmtD(m, v) + '</span>';
     return '<span style="color:' + (v >= 0 ? RS_GREEN : RS_RED) + '">' + (v >= 0 ? '+' : '−') +
-      Math.abs(v).toFixed(1) + u + '</span>';
+      Math.abs(v).toFixed(1) + (points ? ' pp' : '%') + '</span>';
   }
   var h = '<div class="rs-ft-cap">' +
-    (pct ? esc(rsEvoPctLabel(k, m)) : rsCurName(m) + ' ' + (div === 1000 ? 'billions' : 'millions')) +
+    (points ? esc(rsEvoPctLabel(k, m))
+            : (amt ? esc(rsEvoPctLabel(k, m)) + ' · ' : '') + rsCurName(m) + ' ' + (div === 1000 ? 'billions' : 'millions')) +
     ' · one row per line ON THE CHART — hide a fiscal year or a source and it leaves this table too' +
     ' · “first / latest view” are the earliest and most recent snapshots carrying that line, “net move” the travel between them' +
     (showAct ? ' · “first vs actual” is how far the earliest view sat from where the year landed'
@@ -2245,6 +2304,24 @@ export function initResultsEvo(ticker){
       mst.mode = md.getAttribute('data-rsevmode');
       mst.yr = null;                                   // units change $B ↔ %
       rsRerenderEvoHead(wrap, k);                      // availability differs per mode
+      rsBuildEvo(k);
+      return;
+    }
+    // Growth's two sub-choices. Both change the units on the axis, so the brushed y-range is
+    // dropped with them rather than carried into a scale it no longer describes.
+    var lg = e.target.closest('[data-rsevlag]');
+    if (lg && !lg.disabled && (k = secOf(lg))){
+      var lst = rsEvoSt(k);
+      lst.growLag = lg.getAttribute('data-rsevlag');
+      lst.yr = null;
+      rsBuildEvo(k);
+      return;
+    }
+    var gu = e.target.closest('[data-rsevgunit]');
+    if (gu && (k = secOf(gu))){
+      var gst = rsEvoSt(k);
+      gst.growUnit = gu.getAttribute('data-rsevgunit');
+      gst.yr = null;
       rsBuildEvo(k);
       return;
     }

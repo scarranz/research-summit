@@ -85,6 +85,11 @@
   pointer-events: none; z-index: 2;
 }
 
+/* A row of toggle GROUPS — the Estimates blocks' mode row, where picking Growth opens a
+   YoY/QoQ group and a %/Amount group beside it. Each group keeps its own pill border. */
+.rs-modes { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.rs-view:disabled { opacity: .45; cursor: not-allowed; }
+
 /* Collapsed-by-default section, for detail that should be reachable without being in the
    way. Same language as the overview modules' own `ov-collap` (which is injected inline in
    js/overviews/uber.js and so is not available to this generic engine). */

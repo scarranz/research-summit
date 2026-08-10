@@ -12,6 +12,12 @@ estimate-evolution pane, `data-ovst="estevo"`) is its own sub-tab at the same le
 briefly a stacked block inside Results; SAB split it out and later shortened the label, Jul 28).
 See `js/overviews/amzn.js` → `deepDiveHtml()` + `wireDD()` for the embedding pattern.
 
+**Adding a chart ANYWHERE in the portal?** Read **`docs/CHART_TOOLKIT.md`** first. This file is
+the data contract for the Results tab; that one is the guide to the engine as a reusable
+component — every reading mode, the period rules, the windowing, the tables, and the gotchas. The
+engine is not Results-specific, and you almost certainly want to write a dataset rather than a
+canvas.
+
 ---
 
 ## 1. Architecture
@@ -44,7 +50,7 @@ export var <tk>Results = {
   }
 }
 // section: { key:'top'|'margins', label, defaultMetric, groups:[{label, keys:[metricKey]}] }
-//   groups feed the grouped <select> (Totals / Segments / Revenue lines / …)
+//   groups feed the grouped <select> — GROUP BY METRIC FAMILY, SEGMENTS INSIDE (see below)
 // metric: { label, short, unit:'usdM'|'eps', marginOf?:<metricKey>, marginLabel?,
 //   periods:[...], act:[], summit:[], cons:[], guideLo:[], guideHi:[], note }
 //   All arrays parallel to periods; null = not available; act:null ⇒ forward ("E") period.
@@ -53,6 +59,27 @@ export var <tk>Results = {
 ```
 
 AMZN quarterly periods run `1Q23 … 2Q28` (13 reported + 9 forward); annual `2020 … 2028`.
+
+### Grouping rule — by metric family, segments inside (SAB, Aug 10 2026)
+
+A dropdown group is a **metric family**; its options are the **segments** of that family:
+
+```js
+{ label: 'Gross Bookings', keys: ['gb', 'mobgb', 'delgb', 'frgb'] },   //  Total · Mobility · Delivery · Freight
+{ label: 'Revenue',        keys: ['rev', 'mobrev', 'delrev'] }        //  Total · Mobility · Delivery
+```
+
+**Not** the transpose (`Mobility ▸ GB · revenue`), which is how UBER started. The reason is the
+rollout: every company has a handful of families and a few segments beneath them, so this shape
+carries across tickers, while a segment-first grouping is different for every business.
+
+The option TEXT stays the metric's **full label** even though the group header repeats the family.
+A closed `<select>` renders only the chosen option — the optgroup label is not part of it — so
+trimming the option to "Mobility" leaves the control reading "Mobility" with no clue which line
+that is. One name per metric, the same one the chart title and the table header use.
+
+Sections whose metrics are not segmented (Margins & Profitability, KPIs) keep a plain group —
+there is no family to fold them into and inventing one would be noise.
 
 **Optional `evolution` block** (top level, beside `views`) — feeds the *Estimate evolution*
 section (added Jul 28): how the ANNUAL forecast for each fiscal year moved across the model's
@@ -268,3 +295,124 @@ ticker, with Summit/guidance filled in later.
   needs consistent definitions first.
 - AMZN Overview/Deep Dive: Deep Dive sections still scaffolded (fill via the Call Prep flow /
   by hand); Call Prep phases pending "arma el Call Prep de AMZN".
+
+---
+
+# 8. The rollout contract — `estMatrix`, the vintage axis (v2 · Aug 7, 2026)
+
+**Why this exists.** Through v1 each dataset shipped `summit` and `cons` as flat arrays with
+the pre-print snapshot already chosen *by hand*, and the choice justified in a 20-line file
+comment. That made two things impossible: reading what the model or the Street said about
+every period **as of one date**, and refreshing a company without re-doing the judgement. v2
+stores the whole matrix and **derives** the flat series. Adding a company stops being an
+authoring job and becomes a generator run.
+
+## 8.1 Shape
+
+```js
+export var <tk>Results = {
+  updated, intro, source, views: { q, y },      // unchanged — hand-curated
+  estMatrix: {                                  // GENERATED — overwrite wholesale, never hand-edit
+    cons:   { vintages: [ … ], q: { <metric>: { '<vintageId>': { '<period>': value, … } } }, y: { … } },
+    summit: { … same shape … }
+  },
+  evolution: { … }                              // unchanged (Estimates tab keeps its own block)
+}
+// vintage: { id:'2026-08-07', label, lastActual: { q:'2Q26', y:'2025' } }
+```
+
+Rules that matter:
+
+* **Period-keyed, not positional.** A row is `{'3Q26': 14821}`, not a 19-slot array. It survives
+  the forward-horizon trim (§3.8) and any change to a metric's period axis, and a snapshot
+  covering six periods costs six numbers instead of thirteen nulls.
+* **At the ROOT, beside `views`** — machine-generated numbers stay out of the hand-curated metric
+  blocks (labels, `act`, `guideLo/Hi`, notes). A refresh replaces one block and touches nothing
+  anyone wrote. This separation is the whole point; do not push the matrix down into the metrics.
+* **`lastActual` per view is the only date logic needed.** A vintage is an *estimate* for every
+  period after its own last reported period — so "pre-print" is computable and no per-period
+  report dates are required anywhere.
+* **Back-compatible.** A metric with no matrix row keeps its flat `summit`/`cons`. The picker only
+  renders when a dataset has an `estMatrix`, so the other seven tickers are untouched.
+
+## 8.2 The two reading modes (engine)
+
+| Mode | Meaning |
+|---|---|
+| `preprint` (default) | Per period, the latest snapshot whose `lastActual` is still *before* it — the shortest forward horizon, ties broken by the later snapshot. Reproduces the v1 hand-picked columns. |
+| `<vintageId>` | That one snapshot's row read straight across. Periods it never covered stay **null** — blank, not zero, and never a silent fallback to an older snapshot. |
+
+**`preprint` has two fallbacks to the dataset's own flat array, and both matter.**
+
+1. **On an ALREADY-REPORTED period the flat value wins.** It is the projection the model *froze at
+   that print*; a snapshot is only ever as fresh as the day it was saved. UBER 1Q26 revenue reads
+   **14,040 frozen against 14,014** in the last file saved before it (Feb-5, three months stale),
+   and 4Q25 EPS **0.894 against 0.6151**. Neither number is wrong — that is the model moving between
+   its last save and the print.
+2. **Where no vintage reaches back far enough, the flat value is kept, not blanked.** Model snapshots
+   typically begin long after the reported history does (UBER's oldest is Dec 2025 against a history
+   opening in 3Q22).
+
+Stated the other way: **the matrix ADDS to a dataset and never silently subtracts from it.** Where it
+has a value the dataset lacked it fills the hole (UBER: 1Q26 trips, FY2025 across the annual view).
+Single-vintage mode is unaffected by both rules — blanks stay blank there.
+
+`rsApplyVintage()` resolves the selection into `m.summit` / `m.cons` once. Those arrays are read
+in ~40 places; resolving centrally means no reader changes. The flat arrays are stashed as
+`m._flat_<src>` on first use, so switching modes never compounds.
+
+**Sparseness is a property of the source, not a bug.** A Bloomberg snapshot carries 4 forward
+quarters and 6 forward years, so single-vintage mode is rich annually and inherently thin
+quarterly. The Summit model projects every quarter, so its matrix will fill the quarterly axis.
+State this rather than padding it.
+
+## 8.3 Where the numbers come from
+
+| Column | Source | Rule |
+|---|---|---|
+| `estMatrix.cons` | **`Consensus_Portal.xlsm` → sheet `BBG_CONSENSUS`** ∪ **`BBG_CONSENSUS.txt`** (`G:\My Drive\Summit\Docs\0\`), deduped by `data_as_of` | ⚠ **Read the UNION.** The `.txt` is the exported archive; the sheet is live and **overwrites its most recent row**. On UBER the archive holds `2026-07-31` and the sheet holds `2026-08-07` — and 07-31 is the pre-print consensus for the very quarter the tab scores. Reading either alone silently loses a snapshot. Export the `.txt` before each refresh. |
+| `estMatrix.summit` | Summit MCP `get_fundamentals(snapshot_date=…, sheet_sources=['projection_history'])`, one pull per snapshot, through `scripts/consensus/emit_summit_matrix.py` | **Dedupe by `facts_hash`, not by date** — UBER's `2026-05-06` and `2026-05-07` are the same model state (LYFT had the same duplication). Skip intra-period saves; `2026-07-20` is unusable (its Delivery-Hero pro-forma toggle was on). Pull **only the periods forward of that snapshot's `lastActual`** (see below). **Drop literal zeros** — in these models a `0` is a row nobody populated, not a forecast of nothing. Where a row exists twice under different `source` tags (UBER's annual FCF: DEFAULT 11,338 vs SEGM 10,665), decide in the config and let the generator report every conflict it resolves. |
+| `act` | Summit MCP `actuals_history`, cross-checked against the release | Unchanged from v1. Bloomberg's own `(Rep)` columns are **not** a substitute — see below. |
+| `guideLo/Hi` | The company's release, or the model's guidance rows where populated | UBER's `*_GUIDANCE` rows exist and are all literal `0`; ask San/Oscar to fill them and the next refresh reads from the model. |
+
+**A snapshot is an estimate for nothing it already knew.** Its `projection_history` also carries
+frozen projections for quarters already reported, but those belong to whatever vintage stood before
+*that* print — filing them under the snapshot's own date would date them wrong. Hence forward-only
+rows, and hence the `preprint` fallbacks in §8.2.
+
+**A reported year holds the ACTUAL, not a forecast.** Once FY2025 printed, the model's annual row and
+the workbook's stored consensus both carry the reported figure. Estimate lines therefore go *flat*
+after the print rather than continuing to move — say so on screen; it is what the Reported toggle is
+for, not a bug to hide.
+
+**A model row that does not tie to the reported basis stays null.** UBER's annual `ADJ_OPINC` reads
+7,470 against a 6,453 reported non-GAAP operating income, the same ~20% spread that sits in every
+2025 quarter and closes in 2026. Charting it against the Reported marker publishes a miss the model
+never made. Same rule as `act`: never fill with a number you cannot stand behind.
+
+**Only FORWARD horizons are consensus.** `fq+1…fq+4` / `fy+1…fy+5` are estimates. `fq-3`, `fq0`
+and `(Rep)`-marked `fy0` are Bloomberg's *own reported* figures and belong to no estimate series —
+they can also sit on a different basis than the company's measure (UBER's reported "ebitda" for
+1Q24 reads 708 against a 1,382 Adjusted EBITDA print, which once manufactured a 46% miss).
+
+**Bloomberg's adjusted-EPS baskets are off-basis before they reconcile.** For UBER both the `eps`
+column and `kpi5` (`adj_eps`) imply ~0.8 for 2Q25 against a 0.602 print; consensus is therefore
+kept null before 4Q25 via a per-metric "valid from" rule in the generator. Check this per ticker
+rather than trusting the column name.
+
+**KPI slots are per-ticker and declared in the file** (`metric_kpi1…8`). UBER: `kpi1`
+mobility GB, `kpi2` delivery GB, `kpi3/4` take rates, `kpi5` adj EPS, `kpi6` trips per MAPC,
+`kpi7` total trips, `kpi8` total gross bookings. Read the header row; never assume the slot order.
+
+## 8.4 Adding a company — the short version
+
+1. Confirm coverage: is the ticker in the workbook's `BBG_CONSENSUS` sheet, and how many
+   snapshots does it have? (As of Aug 7 2026: **32 tickers**, 10 with 11–13 snapshots and 22
+   seeded that day with one each — a single snapshot still gives a usable forward column, just no
+   revision history.) Confirm the Summit MCP has snapshots via `list_snapshots`.
+2. Write the metric → BBG-column map and the per-metric "valid from" exceptions.
+3. Generate `estMatrix`, then **verify the derived `preprint` series against whatever the file
+   already shipped.** Every mismatch is either a rounding difference, a genuine refresh, or a bug —
+   identify which before moving on. This check is what caught the overwritten snapshot above.
+4. Hand-curate only what a machine cannot: labels, groups/sections, `act` reconciliation, guidance,
+   and the basis notes.

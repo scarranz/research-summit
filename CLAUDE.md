@@ -252,6 +252,16 @@ If a PR has merge conflicts:
 
 The Companies tab is the core of the portal. Each company has a profile that is **designed and built individually with Claude's help**.
 
+### Adding a chart (anywhere in the portal)
+
+Before writing a new chart, read **`docs/CHART_TOOLKIT.md`**. `js/results.js` is a generic engine
+for "a metric over time, against expectations" and already ships four series (actual / Summit /
+Street / guidance), quarterly and annual axes, level ⇄ growth ⇄ margin modes, growth in percent or
+in amount, range presets + slider + drag-to-zoom, a vintage axis ("estimates as of …"), collapsible
+tables that mirror the chart, and a surprise scorecard. **You almost certainly want to write a
+dataset (`js/results-data/<ticker>.js`), not a canvas.** The data contract is
+`docs/RESULTS_CONVENTIONS.md`.
+
 ### Filling a company Overview (standardized)
 
 When asked to **fill, create, or refresh a company's Overview** (e.g. "llena el overview de Broadcom", "fill AVGO"), you **must** follow `docs/OVERVIEW_CONVENTIONS.md` — it defines the fixed Overview structure, the Key Facts set, the official-first source hierarchy, the anti-wall/pop-up rules, the competitor scatter spec, and a self-audit checklist. The `/fill-overview <TICKER>` command runs this end-to-end. Key invariants: **never delete existing content — move non-conforming Overview content into the most relevant Deep Dive section**; **sources decide (company IR/filings first, never a forum as authority)**; **no walls of text, no fake precision**; produce a **draft for review**, don't commit/push/PR automatically.

@@ -1,0 +1,3 @@
+{ "q": { "rev":"rev", "gb":"kpi8", "mobgb":"kpi1", "delgb":"kpi2", "opinc":"opinc",
+         "ebitda":"ebitda", "eps":"eps", "trips":"kpi7" },
+  "y": { "rev":"rev", "gb":"kpi8", "ebitda":"ebitda", "opinc":"opinc", "eps":"eps" } }

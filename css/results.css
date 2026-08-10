@@ -85,6 +85,31 @@
   pointer-events: none; z-index: 2;
 }
 
+/* A row of toggle GROUPS — the Estimates blocks' mode row, where picking Growth opens a
+   YoY/QoQ group and a %/Amount group beside it. Each group keeps its own pill border. */
+.rs-modes { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+/* Reading controls on the left, window on the right, at the same height under the heading. */
+.rs-block-modes {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin: 10px 0 4px;
+}
+.rs-view:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Collapsed-by-default section, for detail that should be reachable without being in the
+   way. Same language as the overview modules' own `ov-collap` (which is injected inline in
+   js/overviews/uber.js and so is not available to this generic engine). */
+.rs-collap { border: 1px solid var(--bdr); border-radius: 10px; overflow: hidden; margin: 18px 0 10px; }
+.rs-collap-h {
+  width: 100%; text-align: left; border: 0; background: #F7F9FB; font: inherit;
+  font-size: 12.5px; font-weight: 800; color: var(--navy); padding: 11px 14px;
+  cursor: pointer; display: flex; align-items: center; gap: 8px;
+}
+.rs-collap-h:hover { background: #EEF2F6; }
+.rs-collap-ic { font-size: 10px; color: var(--mu); }
+.rs-collap-sub { font-weight: 500; color: var(--mu); font-size: 11px; margin-left: auto; }
+.rs-collap-b { padding: 4px 14px 6px; }
+.rs-collap-b > .rs-tablewrap { margin-top: 12px; }
+
 /* Detail table — Fiscal.ai-style spreadsheet: airy, bare numbers, shaded
    estimate columns, sticky header + first column, row/column crosshair. */
 .rs-tablewrap { margin: 20px 0 10px; }
@@ -143,3 +168,27 @@
 .rs-ft td.colhl, .rs-ft th.colhl { background: #EFF4FA; }
 .rs-ft tbody tr:hover td.colhl { background: #E7EEF7; }
 .rs-ft tbody tr:hover td.rs-ft-s { background: #F2F6FB; }
+
+/* Vintage picker — the pane-wide "Estimates as of" control (results.js §vintage axis). */
+.rs-vint { display:flex; align-items:center; gap:8px; margin-left:auto; }
+.rs-vint .rs-quick-l { white-space:nowrap; }
+.rs-vsel, .rs-bsel {
+  font:500 12px Inter, system-ui, sans-serif; color:var(--navy, #1E2733);
+  background:#fff; border:1px solid #D7DDE4; border-radius:6px; padding:5px 8px; max-width:320px;
+}
+.rs-vsel:focus, .rs-bsel:focus { outline:2px solid rgba(37,99,235,0.35); outline-offset:1px; }
+.rs-vintnote { margin:2px 0 10px; }
+
+/* Surprise scorecard — base select + comparator chips (results.js §Actuals vs Estimates). */
+.rs-surp-ctl { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:8px 0 4px; }
+.rs-cmp {
+  display:inline-flex; align-items:center; gap:6px; cursor:pointer;
+  font:500 12px Inter, system-ui, sans-serif; color:#5A6472;
+  background:#fff; border:1px solid #D7DDE4; border-radius:999px; padding:4px 11px;
+}
+.rs-cmp .ave-leg-act { width:9px; height:9px; border-radius:2px; opacity:.35; }
+.rs-cmp.on { color:var(--navy, #1E2733); border-color:#9FB0C4; background:#F4F7FA; font-weight:600; }
+.rs-cmp.on .ave-leg-act { opacity:1; }
+.rs-cmp.na { opacity:.4; cursor:not-allowed; text-decoration:line-through; }
+.rs-cmp:not(.na):hover { border-color:#9FB0C4; }
+.rs-bsel { max-width:170px; }

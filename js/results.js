@@ -373,7 +373,7 @@ function rsVintLabel(v){
 // the model is saved whenever the analyst saves it. On UBER the two calendars intersect
 // exactly ONCE (2026-07-31) out of 18 dates — so picking a date by itself leaves one side
 // blank far more often than not, and the list has to say which source owns each date
-// BEFORE it is picked. That is what rsVintOwners feeds.
+// BEFORE it is picked — which is why the single-file list is split by archive.
 function rsVintSrcs(id){
   var out = [];
   ['summit', 'cons'].forEach(function(src){
@@ -381,11 +381,6 @@ function rsVintSrcs(id){
     if ((mx.vintages || []).some(function(v){ return v.id === id; })) out.push(src);
   });
   return out;
-}
-function rsVintOwners(id){
-  var s = rsVintSrcs(id);
-  if (s.length > 1) return 'both sources';
-  return s.length ? RS_SRCN[s[0]] + ' only' : 'no source';
 }
 // The snapshot a source resolves to for an "as of" reading: its latest file ON OR BEFORE
 // that date. Dated ids sort lexically, so a string compare is the date compare.
@@ -634,9 +629,25 @@ function rsVintSelHtml(){
         return opt('asof:' + v.id, rsVintDay(v.id, v.label) + ' · ' + parts.join(' + '));
       }).join('') + '</optgroup>';
   }
-  html += '<optgroup label="One file — read exactly as archived">' +
-    vints.map(function(v){ return opt(v.id, rsVintLabel(v) + ' · ' + rsVintOwners(v.id)); }).join('') +
-    '</optgroup>';
+  // One file at a time, split BY ARCHIVE — the two keep separate calendars, so a single merged
+  // list forced you to read an ownership tag on every row to know what you were about to get.
+  // Each source's own vintage register is used, so "knew through" is that file's, not a merge.
+  // The one date both archives share appears under both, flagged, because it is one pick that
+  // lights up both series — and only the first copy carries `selected`, so a re-render cannot
+  // leave two options marked in a single-choice list.
+  var seen = false;
+  [{ src: 'summit', label: 'Summit model files', other: 'Street' },
+   { src: 'cons', label: 'Street (Bloomberg) files', other: 'Summit' }].forEach(function(g){
+    var mx = rsMatrix(g.src); if (!mx || !(mx.vintages || []).length) return;
+    html += '<optgroup label="One file — ' + esc(g.label) + '">' +
+      mx.vintages.slice().sort(function(a, b){ return a.id < b.id ? 1 : -1; }).map(function(v){
+        var shared = rsVintSrcs(v.id).length > 1;
+        var label = rsVintLabel(v) + (shared ? ' · also a ' + g.other + ' file' : '');
+        var sel = mode === v.id && !seen;
+        if (sel) seen = true;
+        return '<option value="' + esc(v.id) + '"' + (sel ? ' selected' : '') + '>' + esc(label) + '</option>';
+      }).join('') + '</optgroup>';
+  });
   return '<div class="rs-vint"><span class="rs-quick-l">Estimates as of</span>' +
     '<select class="rs-vsel" aria-label="Estimate vintage">' +
       opt('preprint', 'Closest snapshot before each print') + html +

@@ -12,6 +12,12 @@ estimate-evolution pane, `data-ovst="estevo"`) is its own sub-tab at the same le
 briefly a stacked block inside Results; SAB split it out and later shortened the label, Jul 28).
 See `js/overviews/amzn.js` → `deepDiveHtml()` + `wireDD()` for the embedding pattern.
 
+**Adding a chart ANYWHERE in the portal?** Read **`docs/CHART_TOOLKIT.md`** first. This file is
+the data contract for the Results tab; that one is the guide to the engine as a reusable
+component — every reading mode, the period rules, the windowing, the tables, and the gotchas. The
+engine is not Results-specific, and you almost certainly want to write a dataset rather than a
+canvas.
+
 ---
 
 ## 1. Architecture
@@ -45,7 +51,7 @@ export var <tk>Results = {
 }
 // section: { key:'top'|'margins', label, defaultMetric, groups:[{label, keys:[metricKey]}] }
 //   groups feed the grouped <select> — GROUP BY METRIC FAMILY, SEGMENTS INSIDE (see below)
-// metric: { label, short, seg?, unit:'usdM'|'eps', marginOf?:<metricKey>, marginLabel?,
+// metric: { label, short, unit:'usdM'|'eps', marginOf?:<metricKey>, marginLabel?,
 //   periods:[...], act:[], summit:[], cons:[], guideLo:[], guideHi:[], note }
 //   All arrays parallel to periods; null = not available; act:null ⇒ forward ("E") period.
 //   marginOf points at the revenue metric IN THE SAME VIEW used as margin denominator
@@ -67,11 +73,10 @@ A dropdown group is a **metric family**; its options are the **segments** of tha
 rollout: every company has a handful of families and a few segments beneath them, so this shape
 carries across tickers, while a segment-first grouping is different for every business.
 
-The option TEXT is the segment, because the group header already carries the family. Declare it
-as `seg` on the metric (`seg: 'Mobility'`); `rsOptLabel` falls back to the full `label`, so a
-metric with no segments — or a dataset not yet regrouped — still reads correctly and nothing has
-to be migrated in one go. Everything else (chart title, table row headers, tooltips) keeps using
-the full `label`, so "Mobility Gross Bookings" is still what the chart says it is.
+The option TEXT stays the metric's **full label** even though the group header repeats the family.
+A closed `<select>` renders only the chosen option — the optgroup label is not part of it — so
+trimming the option to "Mobility" leaves the control reading "Mobility" with no clue which line
+that is. One name per metric, the same one the chart title and the table header use.
 
 Sections whose metrics are not segmented (Margins & Profitability, KPIs) keep a plain group —
 there is no family to fold them into and inventing one would be noise.

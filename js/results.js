@@ -752,10 +752,12 @@ function rsVintSelHtml(){
 // is the rollout: every company has a couple of families and a few segments under them, so
 // this shape homogenises across tickers where grouping by segment cannot.
 //
-// Which means the option text should be the SEGMENT, since the group header already carries
-// the family — `seg` when the dataset declares one, falling back to the full label so a
-// dataset that has not been regrouped yet still reads correctly.
-function rsOptLabel(m){ return m.seg || m.label; }
+// The option text stays the metric's FULL name even though the group header repeats the
+// family. A closed <select> renders only the chosen option — the optgroup label is not part
+// of it — so trimming the option to "Mobility" would leave the control reading "Mobility"
+// with no clue which line that is. One name per metric, the same one the chart title and the
+// table header use.
+function rsOptLabel(m){ return m.label; }
 function rsSelectHtml(k){
   var view = rsView(k), cfg = rsSecCfg(k), st = rsSt(k);
   rsMetric(k);                                        // ensure st.metric is valid

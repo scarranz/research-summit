@@ -731,10 +731,14 @@ export var uberResults = {
     years: ['2025', '2026', '2027', '2028', '2029'],
     sections: [
       { key: 'top', label: 'Top Line', defaultMetric: 'rev', groups: [
-        { label: 'Totals', keys: ['rev'] }
+        { label: 'Totals', keys: ['rev', 'gb'] },
+        { label: 'Mobility', keys: ['mobgb', 'mobrev'] },
+        { label: 'Delivery', keys: ['delgb', 'delrev'] },
+        { label: 'Freight', keys: ['frgb'] },
+        { label: 'Platform', keys: ['mapc'] }
       ] },
       { key: 'prof', label: 'Profitability', defaultMetric: 'ebitda', groups: [
-        { label: 'Company', keys: ['ebitda', 'opinc'] }
+        { label: 'Company', keys: ['ebitda', 'opinc', 'eps'] }
       ] }
     ],
     metrics: {
@@ -750,7 +754,47 @@ export var uberResults = {
       opinc: { label: 'Operating Income (non-GAAP)', unit: 'usdM', marginOf: 'rev', marginLabel: 'operating margin (% of rev)',
         summit: [[null, null, null, null, null], [null, 8664.2, 9122, 9653.3, 9581.7], [null, 10945, 11465.7, 11465.7, 11491.6], [null, 15375.6, 15727.2, 15727.2, 15775.6], [null, 19700.9, 20090.5, 20090.5, 20141.4]],
         cons: null,
-        note: 'The cleanest read on the model\u2019s direction, because unlike revenue it was never re-based: Summit\u2019s FY26 non-GAAP operating income has been raised at every snapshot since February \u2014 $8.66B \u2192 $9.12B \u2192 $9.65B \u2014 easing only fractionally to $9.58B after the 2Q26 print. The out-years moved with it. Read alongside revenue, that is the whole thesis in one line: the model cut the top line and raised the profit on it. The Dec 2025 vintage does not carry this metric, so the first column is empty. No stored Bloomberg consensus exists for this line. **FY2025 is left blank on purpose.** The model’s annual ADJ_OPINC for 2025 reads $7,470M against a $6,453M reported non-GAAP operating income — a 15.8% gap that is not a forecast error but a basis one: the same ~20% spread shows up in every 2025 quarter of the Results tab (1Q25 1,607 vs 1,326 · 2Q25 1,841 vs 1,534 · 3Q25 2,041 vs 1,675 · 4Q25 2,235 vs 1,918), and it closes in 2026. Scoring that against the Reported marker would publish a miss the model never really made, so the year carries no estimate here and the line is on the model-audit list.' }
+        note: 'The cleanest read on the model\u2019s direction, because unlike revenue it was never re-based: Summit\u2019s FY26 non-GAAP operating income has been raised at every snapshot since February \u2014 $8.66B \u2192 $9.12B \u2192 $9.65B \u2014 easing only fractionally to $9.58B after the 2Q26 print. The out-years moved with it. Read alongside revenue, that is the whole thesis in one line: the model cut the top line and raised the profit on it. The Dec 2025 vintage does not carry this metric, so the first column is empty. No stored Bloomberg consensus exists for this line. **FY2025 is left blank on purpose.** The model’s annual ADJ_OPINC for 2025 reads $7,470M against a $6,453M reported non-GAAP operating income — a 15.8% gap that is not a forecast error but a basis one: the same ~20% spread shows up in every 2025 quarter of the Results tab (1Q25 1,607 vs 1,326 · 2Q25 1,841 vs 1,534 · 3Q25 2,041 vs 1,675 · 4Q25 2,235 vs 1,918), and it closes in 2026. Scoring that against the Reported marker would publish a miss the model never really made, so the year carries no estimate here and the line is on the model-audit list.' },
+      gb: { label: 'Gross Bookings (Total)', unit: 'usdM',
+        summit: [[193162.8, 193535.1, 193535.1, 193535.1, 193535.1], [231672.7, 235654.2, 238687.4, 238687.4, 239376.4], [279168, 284029.2, 287559, 287559, 288233.1], [334333.5, 339432.9, 343736.8, 343736.8, 344419.1], [401288.9, 406537.1, 411802.5, 411802.5, 412497.6]],
+        cons: null,
+        prior: { summit: [161914.8, 161914.8, 161914.8, 161914.8, 161914.8] },
+        note: 'Mobility + Delivery + Freight, the same build-up gb.act uses, so it ties to each release (FY2025 stored 193,535 against a 193,454 print, +0.04%). The story is the mix: between December and February the model moved ~$5B of FY2026 bookings from Mobility into Delivery and left the total almost untouched \u2014 a re-split, not a change of view on the platform.' },
+      mobgb: { label: 'Mobility Gross Bookings', unit: 'usdM',
+        summit: [[97640.6, 99228.4, 99228.4, 99228.4, 99228.4], [117168.7, 115893.7, 118328.4, 118328.4, 118445.6], [140602.4, 135595.7, 138444.3, 138444.3, 138581.4], [175753, 169494.6, 173055.3, 173055.3, 173226.7], [219691.3, 211868.2, 216319.2, 216319.2, 216533.4]],
+        cons: null,
+        prior: { summit: [83034.5, 83034.5, 83034.5, 83034.5, 83034.5] },
+        note: 'Watch FY2025, which has already reported: the model stored 97,641 in December, then RESTATED it to 99,228 in February and never moved it again \u2014 1.8% above the 97,497 the release carries. Segment rows are the model\u2019s own build-up and are not trued to the release the way REV and EBITDA are, so read the Reported line here as a basis gap rather than a forecast miss. The forward story is a real cut: FY2027 went 140.6 \u2192 135.6 in February and only partly back.' },
+      mobrev: { label: 'Mobility Revenue', unit: 'usdM',
+        summit: [[29879.6, 30036.1, 30036.1, 30036.1, 30036.1], [36322.3, 34768.1, 30764, 30764, 30620.6], [43586.8, 39322.7, 34611.1, 34611.1, 34645.3], [49210.9, 47458.5, 43263.8, 43263.8, 43306.7], [61513.6, 59323.1, 54079.8, 54079.8, 54133.3]],
+        cons: null,
+        prior: { summit: [23930.9, 23930.9, 23930.9, 23930.9, 23930.9] },
+        note: 'The line the UK accounting change hit hardest: FY2027 Mobility revenue went 43.6 \u2192 39.3 \u2192 34.6 across December, February and May \u2014 a 21% cut in five months, while Mobility BOOKINGS for the same year fell only 1.5%. That gap is the whole re-basing in one line: the same rides, less of them booked as revenue. FY2025 stores 30,036 against a 29,670 print (+1.2%).' },
+      delgb: { label: 'Delivery Gross Bookings', unit: 'usdM',
+        summit: [[90389.2, 89271.4, 89271.4, 89271.4, 89271.4], [109371, 114692.4, 115023, 115023, 114883.8], [133432.6, 143365.5, 143778.7, 143778.7, 143604.7], [153447.5, 164870.3, 165345.5, 165345.5, 165145.4], [176464.6, 189600.9, 190147.3, 190147.3, 189917.2]],
+        cons: null,
+        prior: { summit: [73752.1, 73752.1, 73752.1, 73752.1, 73752.1] },
+        note: 'The other side of the February re-split: FY2026 Delivery bookings were raised 109.4 \u2192 114.7 and FY2027 133.4 \u2192 143.4, against Mobility being cut. FY2025 stores 89,271 against a 90,864 print (\u22121.8%) \u2014 the segment rows are the model\u2019s build-up, not the release.' },
+      delrev: { label: 'Delivery Revenue', unit: 'usdM',
+        summit: [[17097.7, 16961.6, 16961.6, 16961.6, 16961.6], [20233.6, 22135.6, 22592.2, 22592.2, 22454.8], [24685, 28099.6, 28180.6, 28180.6, 28146.5], [27620.5, 29676.7, 29762.2, 29762.2, 29726.2], [31763.6, 34128.2, 34226.5, 34226.5, 34185.1]],
+        cons: null,
+        prior: { summit: [13275.4, 13275.4, 13275.4, 13275.4, 13275.4] },
+        note: 'Raised where Mobility revenue was cut: FY2027 24.7 \u2192 28.1 in February and held. Delivery is the segment the model got more constructive on through the whole period. FY2025 stores 16,962 against a 17,248 print (\u22121.7%).' },
+      frgb: { label: 'Freight Gross Bookings', unit: 'usdM',
+        summit: [[5133, 5035.4, 5035.4, 5035.4, 5035.4], [5133, 5068, 5336, 5336, 6047], [5133, 5068, 5336, 5336, 6047], [5133, 5068, 5336, 5336, 6047], [5133, 5068, 5336, 5336, 6047]],
+        cons: null,
+        prior: { summit: [5128.3, 5128.3, 5128.3, 5128.3, 5128.3] },
+        note: 'Freight is held FLAT across every forward year inside each snapshot \u2014 5,133 in December, 5,068 in February, 6,047 from August \u2014 so its line moves only when the model re-bases the level. It is a placeholder, not a forecast, and reading a trend into it would be reading the model\u2019s own assumption back to itself.' },
+      eps: { label: 'EPS (Non-GAAP)', unit: 'eps',
+        summit: [[null, null, null, null, null], [2.9952, 3.3657, 3.4595, 3.7196, 3.6808], [4.3957, 4.4503, 4.7403, 4.7403, 4.728], [6.0979, 6.9734, 7.2525, 7.2525, 7.2398], [8.0586, 9.4053, 9.7523, 9.7523, 9.7298]],
+        cons: null,
+        prior: { summit: [1.3864, null, null, null, null] },
+        note: 'FY2025 is deliberately blank. The stored value swings from 2.02 in December to 3.08 in February against a 2.47 print \u2014 the model restated a closed year by +52%, which is not a forecast series and cannot be scored against the Reported line. The forward years are usable and tell the clearest profit story here: FY2026 EPS was raised at every snapshot from 3.00 to 3.68.' },
+      mapc: { label: 'Monthly Active Platform Consumers', unit: 'count',
+        summit: [[191.5, 191.5, 191.5, 191.5, 191.5], [214.5, 226.2, 236.3, 236.3, 236.3], [240.2, 253.4, 264.7, 264.7, 264.7], [269.1, 283.8, 296.5, 296.5, 296.5], [301.4, 317.9, 332, 332, 332]],
+        cons: null,
+        prior: { summit: [171, 171, 171, 171, 171] },
+        note: 'A count, in millions of consumers, and the one line where the Reported gap is a genuine miss rather than a basis difference: the model\u2019s FY2025 row is its own 4Q25 estimate of 191.5 and was never trued to the 202 that printed \u2014 5.2% light. Forward, consumers were raised hard in February (FY2026 214.5 \u2192 226.2) and again in May, and have not moved since.' },
     },
     note: 'Source: Summit DCF model for UBER \u2014 projection_history across the five stored snapshots that bracket a print (15 Dec 2025, 5 Feb 2026, 7 May 2026, 31 Jul 2026, 5 Aug 2026), read from the Summit MCP, with the Bloomberg consensus (REV_BBG_EST / EBITDA_BBG_EST) stored in the same file plotted as the dashed line. Values in US$ millions; growth chains within each vintage\u2019s own data (each year vs the prior year stored in the same vintage \u2014 FY2024 at $43,978M, the reported figure every one of these files carries). For FY2025, which reported in February, the estimate columns after the print are the reported figure the model and the workbook then store, not a live forecast; the Reported toggle marks where the year actually landed. Data sourced from Summit DCF models.'
   }

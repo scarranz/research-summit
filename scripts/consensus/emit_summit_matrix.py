@@ -128,6 +128,12 @@ def main():
             for v in vintages:
                 row = {}
                 for period in axis[view]:
+                    # FORWARD-ONLY, enforced here rather than by how the pull was framed. A
+                    # dump that also carries already-reported periods (the evolution pull does)
+                    # must not leak them into the matrix: a snapshot is an estimate for nothing
+                    # it already knew, and dating those cells to this snapshot would be wrong.
+                    if not (order(view, v["lastActual"][view]) < order(view, period)):
+                        continue
                     if mkey in derived:
                         parts = [vals.get((v["id"], view, period, lbl)) for lbl in derived[mkey]]
                         value = sum(parts) if all(p is not None for p in parts) else None

@@ -39,6 +39,23 @@
     "y": ["rev", "gb", "mobgb", "mobrev", "delgb", "delrev", "frgb", "opinc", "ebitda", "eps", "mapc"]
   },
 
+  "_evolution_note": "Feeds emit_evolution.py — the Estimates pane's own block. Same dumps, opposite read: every year on the axis, forward or already reported, because the pane plots how the model's view of a year moved. `prior` is the fiscal year before years[0], used for the first year's implied growth (Top Line lines only). `cons` is emitted null for every line: the dashed consensus here is the BBG the MODEL stores inside each snapshot, and it only stores REV_BBG_EST and EBITDA_BBG_EST — there is no GB_BBG_EST or segment equivalent, so the new lines are Summit-only by construction, not by omission.",
+  "evolution": {
+    "years": ["2025", "2026", "2027", "2028", "2029"],
+    "prior": "2024",
+    "keys": ["gb", "mobgb", "mobrev", "delgb", "delrev", "frgb", "eps", "mapc"],
+    "labels": {
+      "gb":     { "label": "Gross Bookings (Total)", "unit": "usdM", "prior": true },
+      "mobgb":  { "label": "Mobility Gross Bookings", "unit": "usdM", "prior": true },
+      "mobrev": { "label": "Mobility Revenue", "unit": "usdM", "prior": true },
+      "delgb":  { "label": "Delivery Gross Bookings", "unit": "usdM", "prior": true },
+      "delrev": { "label": "Delivery Revenue", "unit": "usdM", "prior": true },
+      "frgb":   { "label": "Freight Gross Bookings", "unit": "usdM", "prior": true },
+      "eps":    { "label": "EPS (Non-GAAP)", "unit": "eps", "prior": true },
+      "mapc":   { "label": "Monthly Active Platform Consumers", "unit": "count", "prior": true }
+    }
+  },
+
   "_prefer_source_note": "Some rows exist twice under different `source` tags. Annual FCF is the live case: DEFAULT reads 11,338 for FY2026 where SEGM reads 10,665 (the segment build-up). SEGM is the one the quarterly rows already reconcile to, so it wins; the emitter reports every conflict it resolves.",
   "prefer_source": ["SEGM", "DEFAULT"],
 

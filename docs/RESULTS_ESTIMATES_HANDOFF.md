@@ -45,11 +45,21 @@ ticker. The workbook now covers 32 tickers.
 
 ## 3. What is open, and the exact blocker for each
 
-**Change 2 — the SoFi table — shipped as the "Revision record"** (`rsEvoTrack*` in `js/results.js`,
-at the foot of Estimates). SoFi's version walks a full-year guide revised each quarter
-(`Initial → Q1 → … → Actual`); **Uber guides one quarter ahead only**, so the saved snapshots are the
-revision axis instead. Per FY: first view · latest view · actual · revisions n↑/n↓ · net move · first
-vs actual, over five track-record tiles. Two things to keep in mind when reading it:
+**Change 2 — the SoFi table — shipped as the "Revision record"** (`rsEvoTrack*` in `js/results.js`),
+sitting **inside each Estimates block**: chart → revision record → the snapshot-by-snapshot table.
+SoFi's version walks a full-year guide revised each quarter (`Initial → Q1 → … → Actual`); **Uber
+guides one quarter ahead only**, so the saved snapshots are the revision axis instead. Per line:
+first view · latest view · actual · revisions n↑/n↓ · net move · first vs actual, over five
+track-record tiles. Three things to keep in mind when reading it:
+
+* **Both tables render from `rsEvoVisible()`** — the one place that answers "what is the chart
+  drawing". Hide a fiscal year or a source with a legend chip and it leaves the chart, both tables
+  and the tiles together. The block's metric select and those chips are the ONLY controls; the
+  record deliberately has none of its own, because two controls saying the same thing differently
+  is how they get out of step.
+* **It follows the mode and the Reported chip.** In % mode the values are the growth/margin the
+  chart plots and moves are in percentage POINTS; with Reported off the Actual and First-vs-actual
+  columns are removed rather than left blank.
 
 * **"Net move" and "first vs actual" are different questions.** The first is the travel between
   snapshots, the second is the error against the print. They coincide on Summit (after a print the
@@ -203,7 +213,7 @@ each one before moving on. That diff is what exposed the overwritten snapshot in
 | Surprise scorecard | `rsSrcArr` `rsSurpGroups` `rsSurpCmps` `rsSurpBlockHtml` `rsBuildSurp` `rsSurpTableRender` `rsRerenderSurp` `rsSurpEl` |
 | Estimates pane | `resultsEvoHtml` `rsEvoBlockHtml` `rsBuildEvo` `rsRenderEvoTable` `initResultsEvo` |
 | Reported marker | `rsEvoActual` `rsEvoActualPct` `rsEvoActYears` `rsEvoActHtml` `rsRerenderEvoHead` |
-| Revision record | `rsEvoTrackSt` `rsEvoTrackGroups` `rsEvoTrackKey` `rsEvoTrackSrc` **`rsEvoTrack`** `rsEvoTrackHtml` `rsEvoTrackSrcHtml` `rsRenderEvoTrack` |
+| Revision record | **`rsEvoVisible`** `rsEvoTrackRows` `rsRenderEvoTrack` — and `rsEvoVisible` also filters `rsRenderEvoTable`, so the two tables can never disagree about what is on screen |
 
 **The picker offers three readings, not two** (`rsVintSelHtml`): the pre-print default, an **as of a
 date** group where each source resolves to its own latest file up to that date, and the single-file

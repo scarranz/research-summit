@@ -18,12 +18,40 @@
 
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import { mountWatchList } from '../watchlist.js';
-import { insertTheme } from '../api.js';   // Propose Notes → publish a staged note into company_themes (Notes tab)
+import { fetchThemeRecord, saveThemeRecord } from '../api.js';   // durable persistence of the AMZN theme record (Notes)
 import { amznResults } from '../results-data/amzn.js';
 import { consensusEvo } from '../consensus-evolution.js';
 
 // ─── esc: escapes <>" but deliberately leaves & literal (per contract; never double-encode) ──
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// Page-styled inline prompt/confirm — a small floating card anchored to the trigger, replacing the
+// browser's window.prompt / window.confirm so every add / edit / delete matches the page. onOk(value)
+// fires on commit (value = '' for a pure confirm); Cancel / Esc / click-outside dismiss it. Set
+// {multiline:true} for a textarea (notes), {confirm:true} for a yes/no, {danger:true} to redden OK.
+function ceInlinePop(anchor, opts, onOk){
+  Array.prototype.forEach.call(document.querySelectorAll('.ce-ip'), function(p){ p.remove(); });
+  opts=opts||{}; var isConfirm=!!opts.confirm, ml=!!opts.multiline;
+  var pop=document.createElement('div'); pop.className='ce-ip';
+  pop.innerHTML='<div class="ce-ip-t">'+esc(opts.title||'')+'</div>'+
+    (isConfirm?'':(ml?'<textarea class="ce-ip-in" rows="3"></textarea>':'<input class="ce-ip-in" type="text">'))+
+    '<div class="ce-ip-btns"><button type="button" class="ce-ip-cancel">Cancel</button>'+
+      '<button type="button" class="ce-ip-ok'+(opts.danger?' danger':'')+'">'+esc(opts.ok||(isConfirm?'Confirm':'Save'))+'</button></div>';
+  document.body.appendChild(pop);
+  var inp=pop.querySelector('.ce-ip-in'); if(inp && opts.value!=null) inp.value=opts.value;
+  var r=(anchor&&anchor.getBoundingClientRect)?anchor.getBoundingClientRect():{left:80,bottom:80};
+  pop.style.position='fixed';
+  pop.style.left=Math.max(8, Math.min(r.left, window.innerWidth-pop.offsetWidth-12))+'px';
+  pop.style.top=Math.min(r.bottom+6, window.innerHeight-pop.offsetHeight-12)+'px';
+  function close(){ pop.remove(); document.removeEventListener('mousedown', outside, true); document.removeEventListener('keydown', onKey, true); }
+  function outside(e){ if(!pop.contains(e.target)) close(); }
+  function ok(){ var v=inp?(inp.value||'').trim():''; if(inp && !v) return; close(); onOk(v); }
+  function onKey(e){ if(e.key==='Escape') close(); else if(e.key==='Enter' && (!ml || isConfirm)){ e.preventDefault(); ok(); } }
+  pop.querySelector('.ce-ip-cancel').onclick=close;
+  pop.querySelector('.ce-ip-ok').onclick=ok;
+  setTimeout(function(){ document.addEventListener('mousedown', outside, true); document.addEventListener('keydown', onKey, true); }, 0);
+  if(inp){ inp.focus(); if(inp.select) inp.select(); }
+}
 
 // ─── Brand: Amazon orange + Amazon blue ─────────────────────────────────────────────────────
 var BRAND='#FF9900', BRAND2='#146EB4', SQUID='#232F3E', GREEN='#2E8B57', GRAY='#9AA4B0';
@@ -676,22 +704,22 @@ var CALL_EARNINGS = { ticker:'AMZN', quarters:[
       qanda:[
         { q:'AWS margin sustainability, and whether Amazon needs its own frontier model', analyst:'Doug Anmuth · J.P. Morgan', theme:'Margins',
           qFull:'AWS margins just set a record while AI investment keeps climbing. How sustainable is the margin from here, and does Amazon need to own a frontier model rather than rely on partners?',
-          a:'Management framed margins as the product of disciplined efficiency (silicon mix, power, utilisation) rather than a one-off, while flagging that the derivative line can swing a given quarter. On owning a frontier model, the answer stayed non-committal: the strategy is to give customers choice across models on AWS, with Anthropic and OpenAI both on Trainium, so no in-house frontier model was asserted as necessary.' },
+          a:'<b>Olsavsky:</b> "Margins are not random. What you saw this quarter is <b>disciplined efficiency</b>, our custom-silicon mix, power efficiency and higher utilisation, not a one-off. I would caution that the <b>energy-derivative remeasurement line can swing a given quarter</b> either way, so we would not extrapolate a single print." <b>Jassy,</b> on owning a frontier model: "Our job is to give customers <b>choice</b> across the leading models on AWS. <b>Anthropic and OpenAI are both building on Trainium.</b> We do not believe we need our own frontier model to win; we need the broadest selection and the best price-performance."' },
         { q:'AWS acceleration drivers and the shape of 2027 capacity additions', analyst:'Justin Post · Bank of America', theme:'Backlog',
           qFull:'What is actually driving the AWS re-acceleration, and how should we think about the shape and pace of the capacity you are adding through 2027?',
-          a:'The drivers cited were backlog conversion and enterprise migration, with the AI and chips run-rates as evidence. On 2027, management used reservation language (largely reserved) rather than megawatt numbers, keeping the pace of adds qualitative.' },
+          a:'<b>Jassy:</b> "The acceleration is <b>backlog converting</b> plus enterprise migration. You can see it in the AI business and the chips business, <b>each now above a $25B run-rate</b>. On 2027, <b>the capacity is largely reserved</b>. I am not going to put megawatt numbers on it, but the demand is contracted well ahead of the build."' },
         { q:'2027 data-centre timelines, and selling Trainium to third-party data centres', analyst:'Brian Nowak · Morgan Stanley', theme:'Custom silicon',
           qFull:'On the 2027 data-centre build, what are the investment timelines, and is selling Trainium into third-party data centres something you would actually do, or is capacity fully captive?',
-          a:'On timing, management repeated that installs bill six to twenty-four months after commitment, so 2027 and 2028 capacity is being reserved now. On selling Trainium into external data centres, the merchant question was left open: it stayed a possibility, not a stated plan.' },
+          a:'<b>Jassy:</b> "Installs bill <b>six to twenty-four months after commitment</b>, which is why <b>2027, and parts of 2028, are being reserved now</b>. On selling Trainium into third-party data centres, <b>it is very much a possibility</b> over time, but our capacity today is fully allocated to our own customers, so it is optionality, not a committed plan."' },
         { q:'Application-layer expansion (Kiro, Transform) and how the capital is sourced', analyst:'Colin Sebastian · Baird', theme:'Capex',
           qFull:'As AWS pushes up the stack with Kiro and Transform, how are you sourcing the capital for all of this given the raised capex frame?',
-          a:'Management positioned Kiro and Transform as moving AWS from renting compute toward selling outcomes higher up the stack. On funding, the answer pointed to operating cash flow plus debt, consistent with the $67B of long-term debt raised in the half, with no co-investment vehicle announced.' },
+          a:'<b>Jassy:</b> "Kiro and Transform are about moving AWS <b>from renting compute to selling outcomes</b> higher up the stack." <b>Olsavsky,</b> on funding: "We are funding this with <b>operating cash flow plus debt</b>. We raised <b>$67B of long-term debt in the first half</b>, and we <b>have not announced a co-investment vehicle</b>."' },
         { q:'Backlog at ~2.5x YoY versus capacity planning, and AWS pricing amid cost inflation', analyst:'Ken Gawrelski · Wells Fargo', theme:'Backlog',
           qFull:'With backlog at roughly 2.5x last year, how are you planning capacity against it, and are you raising AWS prices to offset the cost inflation you are seeing?',
-          a:'Management confirmed backlog at roughly 2.5x the prior year and tied planning to that reserved book. On pricing, the message was that efficiency gains, not list-price increases, are carrying margin, so cost inflation is absorbed through silicon and utilisation rather than passed to customers.' },
+          a:'<b>Olsavsky:</b> "Backlog is roughly <b>2.5x a year ago</b>, and we are planning capacity against that reserved book. On pricing, the margin is being carried by <b>efficiency gains, not list-price increases</b>. We are absorbing input inflation through silicon and utilisation rather than passing it to customers."' },
         { q:'Fast-commerce and grocery adoption across geographies', analyst:'Eric Sheridan · Goldman Sachs', theme:'Robotics',
           qFull:'Can you unpack fast-commerce and grocery adoption across geographies? How broad is it, and is it becoming a structural part of the model?',
-          a:'Management pointed to same-day perishables customers up 50% since January and same-day orders carrying 3x the units, with grocery and everyday essentials growing faster than the rest of the business and expanding across regions. The read is that fast commerce is becoming a structural feature of the model rather than a recovery story.' },
+          a:'<b>Jassy:</b> "Same-day perishables customers are up <b>50% since January</b>, and same-day orders are carrying about <b>3x the units</b>. Grocery and everyday essentials keep growing faster than the rest of the business, and it is broadening across regions. This is becoming a <b>structural part of the model</b>, not a recovery story."' },
       ],
       dots:'Q4 2025 planted the two tensions (the bill, and the pre-sold demand that justifies it); Q1 2026 resolved demand emphatically; Q2 resolved the MARGIN question — a 13.7% record with AWS at 39.4% and the derivative flattery disclosed — while the bill crossed its red line in the actuals (TTM FCF −$7.6B, frame ~$220B, debt nearly doubled). Every thread now converges on one variable: the PACE at which $496B of contracted demand converts against reserved capacity. At +37% with record margins, pace is the only thing standing between the bulls\' trillion-dollar AWS and the bears\' negative-FCF-forever.',
       threeMinutes:[
@@ -785,17 +813,23 @@ var CALL_EARNINGS = { ticker:'AMZN', quarters:[
       ],
       qanda:[
         { q:'Capacity against the backlog: can AWS keep up with contracted demand?', analyst:'Eric Sheridan · Goldman Sachs', theme:'Backlog',
-          a:'Jassy called it a "once-in-a-lifetime opportunity" and declined to give new capex guidance, while saying he expects significant deployment. He argued that owning the chips (Graviton and Trainium) is what positions AWS to meet the inflection without being gated on third-party supply.' },
+          qFull:'With backlog where it is, can AWS actually keep up with the contracted demand, and will you invest to meet it?',
+          a:'<b>Jassy:</b> "This is a <b>once-in-a-lifetime opportunity</b>, and we expect to deploy significantly against it. I am not going to give new capex guidance today. What positions us to meet the inflection without being gated on third-party supply is <b>owning the chips</b> ourselves, Graviton and Trainium."' },
         { q:'Backlog breadth and whether third-party agents threaten Rufus', analyst:'Brian Nowak · Morgan Stanley', theme:'Advertisement',
-          a:'Jassy said the backlog is broad rather than concentrated. On agents, he reported Rufus MAU up 115% and engagement up 400%, and argued third-party agents mis-price and lack personalization, so the retailer\'s own assistant wins the shopping surface.' },
+          qFull:'Is the backlog broad or concentrated, and do third-party shopping agents threaten Rufus and your ad surface?',
+          a:'<b>Jassy:</b> "The backlog is <b>broad, not concentrated</b>. On agents, <b>Rufus MAU is up 115% and engagement up 400%</b>. Third-party agents mis-price and lack personalization, so the retailer\'s own assistant wins the shopping surface."' },
         { q:'OpenAI in Bedrock, and selling Trainium racks externally', analyst:'Justin Post · Bank of America', theme:'Custom silicon',
-          a:'Jassy noted GPT-5.4 is live in Bedrock with 5.5 due in a couple of weeks. On external rack sales he called it "very much a possibility" over the next couple of years, with the caveat that current supply is fully allocated to training, so it is optionality rather than a committed plan.' },
+          qFull:'Is OpenAI coming to Bedrock, and would you sell Trainium racks to third parties?',
+          a:'<b>Jassy:</b> "<b>GPT-5.4 is live in Bedrock</b>, with 5.5 due in a couple of weeks. On selling racks externally, it is <b>very much a possibility</b> over the next couple of years, but our supply today is fully allocated to training, so it is optionality, not a committed plan."' },
         { q:'LEO economics and the launch cadence', analyst:'Chris Sanderson · Loop Capital', theme:'LEO',
-          a:'Jassy cited 2x downlink and 6x uplink versus incumbents, 20+ launches in 2026 and 30+ in 2027, and framed LEO as "a very large, many-billion-dollar revenue business" with an AWS-like path from heavy capex to free cash flow.' },
+          qFull:'How do the LEO economics and the launch cadence look from here?',
+          a:'<b>Jassy:</b> "We are seeing <b>2x downlink and 6x uplink</b> versus incumbents, with <b>20-plus launches in 2026 and 30-plus in 2027</b>. This is <b>a very large, many-billion-dollar revenue business</b>, with an AWS-like path from heavy capex to free cash flow."' },
         { q:'Memory inflation, and advertising inside agentic commerce', analyst:'Amit Khajuria · Wolfe Research', theme:'Advertisement',
-          a:'Jassy said allocations were locked with strategic suppliers in mid-to-late 2025, so the scarcity accelerates cloud migration rather than stalling the build. On ads he said "we are going to like this for advertising," because sponsored prompts work and multi-turn conversations create more surfaces, not fewer.' },
+          qFull:'How is memory inflation affecting the build, and how does advertising fit into agentic commerce?',
+          a:'<b>Jassy:</b> "We <b>locked allocations with strategic suppliers in mid-to-late 2025</b>, so the scarcity actually accelerates cloud migration rather than stalling our build. And <b>we are going to like this for advertising</b>: sponsored prompts already work, and multi-turn conversations create more surfaces, not fewer."' },
         { q:'Which demand segments lead, and how internal AI changes the cost base', analyst:'Colin Sebastian · Baird', theme:'Backlog',
-          a:'Jassy split demand between labs and enterprise production, saying enterprise production may end up the largest and most durable. As proof of the internal leverage he cited a service engine rebuilt in 65 days versus 40-50 person-years, calling it "a very different world of operating."' },
+          qFull:'Which demand segments lead, and how is your own internal AI changing the cost base?',
+          a:'<b>Jassy:</b> "Demand splits between the labs and enterprise production, and <b>enterprise production may end up the largest and most durable</b>. On our own cost base, we <b>rebuilt a service engine in 65 days versus a 40-50 person-year baseline</b>. That is a <b>very different world of operating</b>."' },
       ],
       dots:'Every thread of the quarter is the same sentence from a different angle: demand is contractually pre-sold (backlog, Anthropic, Trainium commitments), so the binding constraint moved to SUPPLY — memory, power, racks — and the costs of building it (capex, LEO, SBC). The record margin says the model absorbs it so far; the Q2 guide says management wants room in case it does not.',
       threeMinutes:[
@@ -891,17 +925,23 @@ var CALL_EARNINGS = { ticker:'AMZN', quarters:[
       ],
       qanda:[
         { q:'ROIC and duration of the AWS investment at a 35% margin', analyst:'Mark Mahaney · Evercore ISI', theme:'Margins',
-          a:'Jassy pointed to the 35% AWS margin and said "we will see how that develops," declining to anchor a forward margin. The framing was that returns come from utilisation and silicon efficiency over the asset life rather than from a single quarter\'s print.' },
+          qFull:'At a 35% AWS margin, how should we think about ROIC and the duration of this investment cycle?',
+          a:'<b>Jassy:</b> "AWS is running at a <b>35% margin</b>, and <b>we will see how that develops</b> — I am not going to anchor a forward margin. The returns come from <b>utilisation and silicon efficiency over the asset life</b>, not from any single quarter."' },
         { q:'Project Rainier at 500K chips and where it goes next', analyst:'Doug Anmuth · J.P. Morgan', theme:'Custom silicon',
-          a:'Jassy confirmed the 500K-chip Rainier cluster training the next Claude model and said the number will keep increasing, tying the scale directly to committed Trainium demand rather than speculative capacity.' },
+          qFull:'Project Rainier is at 500K chips today — where does that go from here?',
+          a:'<b>Jassy:</b> "Rainier is a <b>500,000-chip cluster training the next Claude model</b>, and <b>that number is going to keep increasing</b>. The scale is tied directly to <b>committed Trainium demand</b>, not speculative capacity."' },
         { q:'How to think about the shape of the AI market', analyst:'Ross Sandler · Barclays', theme:'Backlog',
-          a:'Jassy described the market as "barbelled" between labs and enterprise, and said enterprise production workloads "may end up being the largest and most durable" source of demand, which is the segment AWS is built to serve.' },
+          qFull:'How should we think about the shape of the AI market from here?',
+          a:'<b>Jassy:</b> "The market is <b>barbelled</b> between the labs and enterprise, and <b>enterprise production workloads may end up being the largest and most durable</b> source of demand — which is exactly the segment AWS is built to serve."' },
         { q:'Whether AI shopping assistants compress the ad funnel', analyst:'Michael Morton · MoffettNathanson', theme:'Advertisement',
-          a:'Jassy answered with the Rufus data point that users are 60% more likely to complete a purchase, arguing that agentic surfaces expand rather than compress the funnel because they add shopping touchpoints.' },
+          qFull:'Do AI shopping assistants compress the advertising funnel?',
+          a:'<b>Jassy:</b> "With Rufus, <b>users are 60% more likely to complete a purchase</b>. Agentic surfaces <b>expand the funnel rather than compress it</b> — they add shopping touchpoints, they do not remove them."' },
         { q:'Fulfillment efficiency and network structure', analyst:'Brian Nowak · Morgan Stanley', theme:'Robotics',
-          a:'Jassy cited the extension of regions from 8 to 10 and 1M+ robots in the network as the levers, framing efficiency as a structural change in cost per unit rather than a cyclical recovery.' },
+          qFull:'What is driving fulfillment efficiency, and how is the network structured now?',
+          a:'<b>Jassy:</b> "The levers are the <b>extension of regions from 8 to 10</b> and <b>more than 1M robots in the network</b>. This is a <b>structural change in cost per unit</b>, not a cyclical recovery."' },
         { q:'Who actually consumes the backlog', analyst:'Eric Sheridan · Goldman Sachs', theme:'Backlog',
-          a:'Jassy said the "vast majority" of the backlog is consumed by external customers, addressing the concern that the book might be inflated by internal Amazon or Anthropic usage.' },
+          qFull:'Who is actually consuming the backlog — external customers, or internal and Anthropic usage?',
+          a:'<b>Jassy:</b> "The <b>vast majority of the backlog is consumed by external customers</b>. It is not inflated by internal Amazon or Anthropic usage."' },
       ],
       dots:'The Q4 call planted 2026\'s two tensions in one breath: the ~$200B bill and the pre-sold demand that justifies it (backlog +40%, Rainier, Trainium commitments). Q1 2026 then resolved the demand side emphatically (+28%, $364B + Anthropic) — leaving the bill (memory costs, LEO, FCF) as the live wire into Q2.',
       threeMinutes:[
@@ -1160,7 +1200,18 @@ function ceProse(h){
   return out+tail;
 }
 function ceStyle(){
-  return '<style>.ce-note{font-size:11px;color:var(--mu);line-height:1.5;background:#F7F9FB;border:1px solid var(--bdr);border-radius:9px;padding:9px 12px;margin:0 0 12px}'+
+  return '<style>'+
+    /* page-styled inline prompt/confirm popover (replaces window.prompt / window.confirm) */
+    '.ce-ip{z-index:9999;background:#fff;border:1px solid var(--bdr);border-radius:12px;box-shadow:0 16px 44px rgba(15,23,42,.30);padding:13px 14px;min-width:264px;max-width:380px}'+
+    '.ce-ip-t{font-size:11px;font-weight:800;color:var(--navy);margin-bottom:9px;line-height:1.4}'+
+    '.ce-ip-in{width:100%;box-sizing:border-box;font:inherit;font-size:12px;line-height:1.5;border:1px solid var(--bdr);border-radius:9px;padding:9px 11px;color:var(--navy);resize:vertical}'+
+    '.ce-ip-in:focus{outline:none;border-color:'+BRAND2+'}'+
+    '.ce-ip-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:11px}'+
+    '.ce-ip-btns button{font:inherit;font-size:11px;font-weight:800;border-radius:8px;padding:6px 15px;cursor:pointer;border:1px solid var(--bdr);background:#fff;color:var(--mu)}'+
+    '.ce-ip-cancel:hover{color:var(--navy)}'+
+    '.ce-ip-ok{background:'+BRAND2+';color:#fff;border-color:'+BRAND2+'}'+
+    '.ce-ip-ok.danger{background:'+RED+';border-color:'+RED+'}'+
+    '.ce-note{font-size:11px;color:var(--mu);line-height:1.5;background:#F7F9FB;border:1px solid var(--bdr);border-radius:9px;padding:9px 12px;margin:0 0 12px}'+
     '.ce-phtabs{display:inline-flex;gap:3px;background:rgba(66,133,244,0.08);border:1px solid var(--bdr);border-radius:9px;padding:4px;margin:0 0 20px}'+
     '.ce-phtab{background:none;border:none;color:var(--mu);font-family:\'Inter\',sans-serif;font-size:12px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;padding:7px 16px;border-radius:6px;cursor:pointer;transition:all .15s}'+
     '.ce-phtab:hover{color:var(--navy)}.ce-phtab.active{background:'+BRAND+';color:#fff}'+
@@ -1526,7 +1577,16 @@ function ceAnnualBody(){
 }
 function ceSetupWrap(){ return document.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phpane[data-cep="setup"] .rs-wrap'); }
 function gBuildCeAnnual(){ var w=ceSetupWrap(); if(w) initResults(w, 'AMZN_SETUP');   // (kept name: called from buildSub / phase-tab wiring)
-  var cev=ceConsensusEvoRoot(); if(cev && !cev._cevInit){ cev._cevInit=true; consensusEvo.init(cev, 'AMZN', 'rev'); } }
+  var cev=ceConsensusEvoRoot(); if(cev && !cev._cevInit){ cev._cevInit=true; consensusEvo.init(cev, 'AMZN', 'rev'); }
+  ceFitIRRow(); }
+// Cap the IR + EDGAR source row so the pair spans only as wide as the tab bar above it (the one that
+// ends at "Timeline") — the buttons keep flex:1 so they stay equal-sized, just no longer full-bleed.
+function ceFitIRRow(){
+  var root=document.querySelector('.dd-pane[data-dd="evolution"]'); if(!root) return;
+  var bar=root.querySelector('.ce-evohead .ovt-subtabs'), row=root.querySelector('.ovt-subpane[data-ovst="earnings"] .cp-srcrow');
+  if(!bar || !row) return;
+  var wpx=bar.offsetWidth; if(wpx>0) row.style.maxWidth=wpx+'px';
+}
 function wireCeAnnual(root){ /* the engine self-wires via initResults->wireResults; the chart builds on Setup visibility (gBuildCeAnnual). */ }
 
 // B · Watch List ─────────────────────────────────────────────────────────────────────────────────
@@ -1877,35 +1937,7 @@ function cePhaseStyle(){
     '.ce-also-i[open] .ce-also-ar{transform:rotate(180deg)}'+
     '.ce-also-body{padding:0 13px 12px 13px;font-size:10.5px;font-weight:500;color:var(--navy);line-height:1.55;background:#FBFCFE}'+
     '.ce-also-body p{margin:6px 0}'+
-    /* AI call summary — collapsible outer box + always-visible lede + nested dropdowns + glossary */
-    '.ce-sum{border:1px solid var(--bdr);border-radius:12px;background:#fff;margin:2px 0 14px}'+
-    '.ce-sum>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:12px;background:linear-gradient(180deg,rgba(122,90,248,.06),transparent)}'+
-    '.ce-sum>summary::-webkit-details-marker{display:none}'+
-    '.ce-sum-ic{font-size:15px}'+'.ce-sum-h b{font-size:13px;color:var(--navy)}'+
-    '.ce-sum-tag{font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:'+PURPLE+';background:rgba(122,90,248,.12);border:1px solid rgba(122,90,248,.25);border-radius:999px;padding:2px 8px;margin-left:auto}'+
-    '.ce-sum[open]>summary{border-bottom:1px solid var(--bdr);border-radius:12px 12px 0 0}'+
-    '.ce-sum-body{padding:12px 15px 15px}'+
-    '.ce-sum-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:11px}'+
-    '.ce-sum-tt{font-size:10px;color:var(--mu);font-weight:600;margin-right:auto}'+
-    '.ce-sum-btn{font-size:9.5px;font-weight:800;color:'+BLUE+';border:1px solid var(--bdr);background:#fff;border-radius:999px;padding:3px 10px;cursor:pointer;transition:.12s}'+
-    '.ce-sum-btn:hover{border-color:'+BLUE+';background:rgba(26,115,232,.06)}'+
-    /* the summary IS the prose: visible punch paragraphs, each with its own "＋ more" expander */
-    '.ce-sum-block{margin:0 0 13px}'+
-    '.ce-sum-para{font-size:12.5px;line-height:1.7;color:var(--navy);font-weight:500;margin:0}'+
-    '.ce-sum-more{border:0!important;background:transparent!important;border-radius:0;margin:5px 0 0}'+
-    '.ce-sum-more>.ce-sum-nt{padding:2px 0;font-size:10px;font-weight:800;color:'+BLUE+';text-transform:none}'+
-    '.ce-sum-more>.ce-sum-nt .ce-sum-caret{color:'+BLUE+'}'+
-    '.ce-sum-more>.ce-sum-nb{padding:7px 0 4px 13px;border-left:2px dashed var(--bdr);margin-top:5px;font-size:11.5px;line-height:1.65}'+
-    '.ce-sum-nodes{display:flex;flex-direction:column;gap:6px}'+
-    '.ce-sum-n{border:1px solid var(--bdr);border-left:3px solid '+BLUE+';border-radius:9px;background:#FBFCFE}'+
-    '.ce-sum-n[data-d="1"]{border-left-color:'+BRAND2+';background:#fff}'+
-    '.ce-sum-n[data-d="2"]{border-left-color:'+AMBER+'}'+
-    '.ce-sum-nt{list-style:none;cursor:pointer;display:flex;align-items:center;gap:7px;padding:8px 11px;font-size:11.5px;font-weight:700;color:var(--navy)}'+
-    '.ce-sum-nt::-webkit-details-marker{display:none}'+
-    '.ce-sum-caret{font-size:9px;color:var(--mu);transition:transform .15s;flex:none}'+
-    '.ce-sum-n[open]>.ce-sum-nt .ce-sum-caret{transform:rotate(90deg)}'+
-    '.ce-sum-nb{padding:0 12px 11px 21px;font-size:11px;line-height:1.65;color:var(--navy);font-weight:500}'+
-    '.ce-sum-nb .ce-sum-nodes{margin-top:9px}'+
+    /* (AI call-summary styles removed with the section, Dani Aug 2026) */
     /* glossary term — dashed underline, attractive hover tooltip (CSS-only, no pop-up) */
     '.ce-gl{border-bottom:1px dashed '+BLUE+';cursor:help;position:relative}'+
     '.ce-gl:hover::after{content:attr(data-def);position:absolute;left:0;bottom:calc(100% + 8px);width:min(300px,74vw);white-space:normal;text-align:left;background:#10141A;color:#fff;font-size:10.5px;font-weight:500;line-height:1.55;padding:9px 12px;border-radius:9px;box-shadow:0 10px 28px rgba(16,24,40,.28);z-index:60}'+
@@ -1972,6 +2004,19 @@ function cePhaseStyle(){
     '.ce-pt-more{position:absolute;left:11px;bottom:7px;font-size:9px;font-weight:800;color:'+BLUE+'}'+
     /* ③ the call, classified — Prepared Remarks ⇄ Q&A toggle */
     '.ce-cc{margin-top:16px;border:1px solid var(--bdr);border-radius:12px;background:#fff;overflow:hidden}'+
+    /* collapsed-by-default dropdown wrappers — The call classified and Propose Notes are separate cards */
+    '.ce-cc-wrap,.ce-tp-wrap{margin-top:14px;border:1px solid var(--bdr);border-radius:12px;background:#fff;overflow:hidden}'+
+    /* tinted header so the dropdown bar never reads as one of the white Prepared-Remarks / Q&A cards below */
+    '.ce-cc-sum,.ce-tp-sum{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;padding:12px 14px;user-select:none;background:linear-gradient(180deg,#E8EEF6,#F1F5FA);border-bottom:1px solid var(--bdr)}'+
+    '.ce-cc-wrap:not([open])>.ce-cc-sum,.ce-tp-wrap:not([open])>.ce-tp-sum{border-bottom:0}'+
+    '.ce-cc-sum:hover,.ce-tp-sum:hover{background:linear-gradient(180deg,#DFE7F2,#E9EFF7)}'+
+    '.ce-cc-sum::-webkit-details-marker,.ce-tp-sum::-webkit-details-marker{display:none}'+
+    '.ce-cc-sum-t,.ce-tp-sum-t{font-size:12.5px;font-weight:800;color:var(--navy)}'+
+    '.ce-cc-sum-s,.ce-tp-sum-s{font-size:10px;font-weight:600;color:var(--mu);flex:1}'+
+    '.ce-cc-ar2{font-size:10px;color:var(--mu);transition:transform .18s;flex:none}'+
+    'details[open]>.ce-cc-sum .ce-cc-ar2,details[open]>.ce-tp-sum .ce-cc-ar2{transform:rotate(180deg)}'+
+    '.ce-cc-wrap>.ce-cc{margin:0;border:0;border-radius:0;border-top:1px solid var(--bdr)}'+
+    '.ce-tp-wrap>.ce-tp{border-top:1px solid var(--bdr)}'+
     '.ce-cc-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:10px 13px;background:#F6F8FA;border-bottom:1px solid var(--bdr)}'+
     '.ce-cc-h>b{font-size:12px;color:var(--navy)}'+
     '.ce-cc-ph{font-size:8.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--mu);border:1px dashed var(--bdr);border-radius:999px;padding:2px 8px}'+
@@ -2099,8 +2144,7 @@ function ceResultsBody(c){
     // Pass the quarter's FROZEN Summit expectations (setup.us) so the print can be scored against
     // Street OR Summit via the vs-Street ⇄ vs-Summit toggle (§6a-iii).
     b+=cePrintBlock(q.q, r, (q.setup&&q.setup.us)||{});
-    // 2 · ① the AI-generated call summary — replaces the old one-line "take" black box (v2.10).
-    b+=ceSummaryBlock(q.q, r.summary);
+    // The AI-generated "Call summary — the minute" was REMOVED (Dani, Aug 2026) — no AI-authored section.
     // ② "Points for the call" was REMOVED (Aug 2026) per Dani — the red-line/tee-up cards were noise.
     // 4 · ③ The call, classified — Prepared Remarks ⇄ Q&A toggle, each item tagged to a Watch List
     //     theme (Aug 2026). Scaffold: renders a placeholder until q.call.prepared / q.call.qanda fill.
@@ -2172,9 +2216,9 @@ function ceCallClassified(q, qk){
   }).join('') : '<div class="ce-cc-empty">Prepared-remarks topics land here once the call is processed.</div>';
   var qaBody = qa.length ? qa.map(function(x,i){
     // THEME-LED (Aug 2026): the collapsed row leads with the theme tag + the question's topic — NOT the
-    // bank. Open it and the bank/analyst sit at the top, then the curated question (Q) and the curated
-    // management answer (A). `q` is the topic/curated question; `qFull` (optional) is the verbatim IR
-    // question — when the transcript is dropped in it renders as the Q line and `q` stays the topic.
+    // bank. Open it and the bank/analyst sit at the top, then the question (Q) and the answer (A). A is
+    // management's answer IN THEIR OWN WORDS — direct, attributed speech in quotes with the relevant parts
+    // bolded (a holds raw HTML), never a third-person summary. `qFull` (optional) is the fuller question.
     var parts=String(x.analyst||'').split('·');
     var name=(parts[0]||'').trim(), bank=(parts[1]||'').trim();
     var qLine=x.qFull||x.q||'';
@@ -2192,16 +2236,21 @@ function ceCallClassified(q, qk){
       '</div>'+
     '</details>';
   }).join('') : '<div class="ce-cc-empty">Every analyst question, tagged to its theme, with the bank and the answer inside — lands here once the call is processed.</div>';
-  return '<div class="ce-cc">'+
-    '<div class="ce-cc-h"><b>The call, classified</b>'+
-      (hasData?'':'<span class="ce-cc-ph">scaffold — fills after the call</span>')+
-      '<span class="ce-cc-seg"><button type="button" class="active" data-ccv="pr">By Prepared Remarks</button>'+
-        '<button type="button" data-ccv="qa">By Analyst Question</button></span>'+
+  // "The call, classified" is its OWN collapsed dropdown (closed by default); Propose Notes is a
+  // SEPARATE sibling section (also its own dropdown) so the two never read as one block.
+  return '<details class="ce-cc-wrap">'+
+    '<summary class="ce-cc-sum"><span class="ce-cc-sum-t">Call Summary</span>'+
+      '<span class="ce-cc-sum-s">prepared remarks &amp; analyst Q&amp;A</span><span class="ce-cc-ar2">▾</span></summary>'+
+    '<div class="ce-cc">'+
+      '<div class="ce-cc-h">'+
+        '<span class="ce-cc-seg"><button type="button" class="active" data-ccv="pr">By Prepared Remarks</button>'+
+          '<button type="button" data-ccv="qa">By Analyst Question</button></span>'+
+      '</div>'+
+      '<div class="ce-cc-pane" data-ccp="pr">'+prBody+'</div>'+
+      '<div class="ce-cc-pane" data-ccp="qa" hidden>'+qaBody+'</div>'+
     '</div>'+
-    '<div class="ce-cc-pane" data-ccp="pr">'+prBody+'</div>'+
-    '<div class="ce-cc-pane" data-ccp="qa" hidden>'+qaBody+'</div>'+
-    ceThemeProposals(q, qk)+
-  '</div>';
+  '</details>'+
+  ceThemeProposals(q, qk);
 }
 // ③b PROPOSE NOTES → the Watch List. The call's takeaways drafted as candidate NOTES. Each note is
 // filed under a Theme (segment) ▸ Sub-theme — the exact shape the Watch List stores a note — so you
@@ -2269,16 +2318,20 @@ function ceThemeProposals(q, qk){
       '<textarea class="ce-tp-in" rows="2">'+esc(txt)+'</textarea>'+
     '</div>';
   }).join('');
-  return '<div class="ce-tp" data-tpq="'+esc(q.q||'')+'">'+
-    '<div class="ce-tp-h"><span class="ce-tp-ic">📝</span><b>Propose Notes</b>'+
-      '<button type="button" class="ce-tp-refresh" data-tprefresh title="Bring back the notes you rejected">↻ Rejected <span data-tprej>0</span></button>'+
-      '<span class="ce-tp-subtitle">Each note files under a <b>Theme ▸ Sub-theme</b> from the Watch List, so you see exactly where it lands. Edit the target and the text, then Accept to stage or Reject to drop. Pick an existing sub-theme, or “＋ New sub-theme…” to propose a new one.</span></div>'+
-    '<div class="ce-tp-list" data-tplist>'+cards+'</div>'+
-    '<div class="ce-tp-staged-h">Staged notes <span class="ce-tp-count" data-tpcount>0</span>'+
-      '<button type="button" class="ce-tp-pub" data-tppublish title="Write the staged notes into the Watch List (Notes tab)">Publish to Notes →</button>'+
-      '<span class="ce-tp-status" data-tpstatus></span></div>'+
-    '<div class="ce-tp-staged" data-tpstaged><div class="ce-tp-empty">Nothing staged yet — accept a note above.</div></div>'+
-  '</div>';
+  return '<details class="ce-tp-wrap">'+
+    '<summary class="ce-tp-sum"><span class="ce-tp-ic">📝</span><span class="ce-tp-sum-t">Propose Notes</span>'+
+      '<span class="ce-tp-sum-s">draft the call&#39;s takeaways → publish to the Notes tab</span><span class="ce-cc-ar2">▾</span></summary>'+
+    '<div class="ce-tp" data-tpq="'+esc(q.q||'')+'">'+
+      '<div class="ce-tp-h">'+
+        '<button type="button" class="ce-tp-refresh" data-tprefresh title="Bring back the notes you rejected">↻ Rejected <span data-tprej>0</span></button>'+
+      '</div>'+
+      '<div class="ce-tp-list" data-tplist>'+cards+'</div>'+
+      '<div class="ce-tp-staged-h">Staged notes <span class="ce-tp-count" data-tpcount>0</span>'+
+        '<button type="button" class="ce-tp-pub" data-tppublish title="File the staged notes into the theme record on the Notes tab">Publish to Notes →</button>'+
+        '<span class="ce-tp-status" data-tpstatus></span></div>'+
+      '<div class="ce-tp-staged" data-tpstaged><div class="ce-tp-empty">Nothing staged yet — accept a note above.</div></div>'+
+    '</div>'+
+  '</details>';
 }
 // E · "Also on the call" ── the supplemental colour from the call, rendered inside Post-Results as a
 // SINGLE BOX holding a plain LIST, each point with its own native <details> dropdown (v2.9). The
@@ -2316,53 +2369,9 @@ function ceHighlightsBlock(cc, qk){
   return b;
 }
 
-// F · The AI-generated CALL SUMMARY — the "minute" (v2.10). Replaces the old one-line black "take".
-// THE SUMMARY IS THE PROSE ITSELF: several always-visible PARAGRAPHS, each landing a punch on a
-// specific theme (top line, the bill, EPS, the structural new thing…). Each paragraph carries its own
-// "＋ more" dropdown to go DEEPER — and that deeper content can hold NESTED context-guide dropdowns
-// (dropdowns within dropdowns: drivers → segments → backlog…). It is NOT one generalist paragraph
-// followed by a list. Not pop-ups — inline <details>. Technical terms are wrapped
-// `<span class="ce-gl" data-def="…">term</span>` and show their definition on hover. Expand-all /
-// Collapse-all toggle only the "＋ more" dropdowns, never the visible paragraphs. A SUMMARY, not a
-// transcript — no roll-call of every exec.
-function ceSumNodes(nodes, depth){   // nested context-guide dropdowns inside a "＋ more"
-  if(!nodes||!nodes.length) return '';
-  return '<div class="ce-sum-nodes">'+nodes.map(function(n){
-    return '<details class="ce-sum-n" data-d="'+(depth>2?2:depth)+'">'+
-      '<summary class="ce-sum-nt"><span class="ce-sum-caret">▸</span><span>'+n.t+'</span></summary>'+
-      '<div class="ce-sum-nb">'+(n.body||'')+ceSumNodes(n.nodes, depth+1)+'</div>'+
-    '</details>';
-  }).join('')+'</div>';
-}
-function ceSumMore(more){   // a "＋ more": deeper prose (string) or { body, nodes:[…] }
-  if(!more) return '';
-  if(typeof more==='string') return more;
-  return (more.body||'')+ceSumNodes(more.nodes, 1);
-}
-function ceSummaryBlock(qLabel, s){
-  if(!s||!s.paras||!s.paras.length) return '';
-  var body=s.paras.map(function(pa,i){
-    var p='<div class="ce-sum-block">'+
-      '<p class="ce-sum-para">'+(pa.p||'')+'</p>';   // the always-visible punch paragraph
-    if(pa.more){
-      p+='<details class="ce-sum-n ce-sum-more" data-d="0">'+
-        '<summary class="ce-sum-nt"><span class="ce-sum-caret">▸</span><span>'+(pa.moreLabel||'＋ more — the detail behind this')+'</span></summary>'+
-        '<div class="ce-sum-nb">'+ceSumMore(pa.more)+'</div>'+
-      '</details>';
-    }
-    return p+'</div>';
-  }).join('');
-  return '<details class="ce-sum" open>'+
-    '<summary class="ce-sum-h"><span class="ce-sum-ic">🧠</span><b>Call summary — the minute</b>'+
-      '<span class="ce-sum-tag">AI-generated</span></summary>'+
-    '<div class="ce-sum-body">'+
-      '<div class="ce-sum-tools"><span class="ce-sum-tt">The summary is the text; each paragraph lands a point · open <b>＋ more</b> for the detail · hover a <span class="ce-gl" data-def="A term with a dashed underline — hover it to read its definition here.">dashed term</span> for its definition</span>'+
-        '<button type="button" class="ce-sum-btn" data-sum="exp">⊕ Expand all</button>'+
-        '<button type="button" class="ce-sum-btn" data-sum="col">⊖ Collapse all</button></div>'+
-      body+
-    '</div>'+
-  '</details>';
-}
+// F · (REMOVED, Dani Aug 2026) The AI-generated "Call summary — the minute" — the whole AI-authored
+// section is gone: no ceSummaryBlock / ceSumNodes / ceSumMore, no `results.summary` render, no build
+// instruction. Post-Results goes straight from the print to "The call, classified".
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // EVOLUTION ▸ EARNINGS CALLS — AMZN_THEMES with By theme ⇄ By quarter toggle + accordion
@@ -2518,28 +2527,21 @@ function wireCeTrack(root){
     }
     tp.querySelectorAll('.ce-tp-card').forEach(wireCard);
     if(refreshBtn) refreshBtn.onclick=function(){ rejected.forEach(function(c){ list.appendChild(c); }); rejected=[]; refresh(); };
-    // Publish staged notes → company_themes (the Notes tab). Each becomes a theme (sub-theme = theme,
-    // segment = a tag, note text = definition), then the Watch List re-mounts so it shows without a
-    // reload. Persists only with a signed-in session (RLS); locally/preview the insert fails and the
-    // chips stay staged with an honest status — the wiring is intact and lights up on deploy.
+    // Publish staged notes → the Notes theme record (AMZN_THEMES). Pablo's #79 replaced the shared
+    // Watch List with an in-file segmented theme record, so THAT is where a note has to land to "flow
+    // to Notes": each staged note is filed under its Theme (segment) ▸ Sub-theme, as an item under the
+    // reported quarter, then the record re-renders in place. Session-only for now (AMZN_THEMES is the
+    // in-memory model Pablo's own editor mutates) — durable persistence is the next step (a Supabase
+    // table / edge function for the theme record), same gap the editor has today.
     if(publishBtn) publishBtn.onclick=function(){
       var chips=[].slice.call(staged.querySelectorAll('.ce-tp-chip')).filter(function(c){ return !c.classList.contains('published'); });
       if(!chips.length){ setStatus('Nothing new to publish.'); return; }
-      if(!_co || !_co.id){ setStatus('Sign in to publish — no company session.'); return; }
-      publishBtn.disabled=true; setStatus('Publishing '+chips.length+'…');
-      var done=0, ok=0;
       chips.forEach(function(chip){
-        var payload={ company_id:_co.id, ticker:_co.ticker, q:qLabel, created_quarter:qLabel, rank:0,
-          theme:chip.dataset.sub||chip.dataset.seg||'', tags:chip.dataset.seg?[chip.dataset.seg]:[],
-          definition:chip.dataset.text||'', track_since:qLabel, src:'Proposed from the '+qLabel+' call' };
-        Promise.resolve(insertTheme(payload)).then(function(res){ if(res && res.success){ ok++; chip.classList.add('published'); } })
-          .catch(function(){})
-          .then(function(){ if(++done===chips.length){
-            publishBtn.disabled=false;
-            setStatus(ok+' of '+chips.length+' published to Notes'+(ok<chips.length?' — the rest need a signed-in session':''));
-            if(ok>0) ceMountWatchList();
-          } });
+        cePublishNoteToRecord(chip.dataset.seg||'', chip.dataset.sub||chip.dataset.seg||'', chip.dataset.text||'', qLabel);
+        chip.classList.add('published');
       });
+      amznRerenderRecord(document);   // the theme record lives in the Notes pane; re-render it (and persist)
+      setStatus(chips.length+' filed into the theme record (Notes tab) — saved when signed in');
     };
     refresh();
   });
@@ -2585,14 +2587,7 @@ function ceApplyPhaseQuarters(pane, phase){
 }
 function wireCallEarnings(root){
   var pane=root.querySelector('.ovt-subpane[data-ovst="earnings"]'); if(!pane) return;
-  // Call-summary Expand-all / Collapse-all — toggles only the inner dropdown nodes of THIS summary
-  // box, never the always-visible lede or the outer box itself.
-  pane.querySelectorAll('.ce-sum-btn').forEach(function(btn){ btn.onclick=function(e){
-    e.preventDefault();
-    var box=btn.closest('.ce-sum'); if(!box) return;
-    var open=(btn.getAttribute('data-sum')==='exp');
-    box.querySelectorAll('details.ce-sum-n').forEach(function(d){ d.open=open; });
-  }; });
+  // (Call-summary Expand/Collapse wiring removed with the AI summary section, Dani Aug 2026.)
   pane.querySelectorAll('.ce-phtab').forEach(function(btn){ btn.onclick=function(){
     var key=btn.getAttribute('data-cep');
     ceKeepPos(btn, function(){
@@ -2939,6 +2934,8 @@ function wireDD(root){
   }; });
   // Build the Theme → Sub-theme editor inside the (hidden) panel.
   amznRenderEditor(root);
+  // Load the saved theme record from Supabase (if any) and, from here on, persist every edit.
+  amznHydrateThemes(root);
 }
 // Wire the theme-record interactions (accordions, segment dropdowns, By theme ⇄ By quarter toggle).
 function wireThemeRecord(scope){
@@ -2962,9 +2959,9 @@ function wireThemeRecord(scope){
   scope.querySelectorAll('[data-recdone]').forEach(function(b){ b.onclick=function(){ var ct=ctOfEl(b); if(ct) delete _recEditOpen[ct.seg+'|'+ct.theme]; rerec(); }; });
   scope.querySelectorAll('[data-rects]').forEach(function(s){ s.onchange=function(){ var ct=ctOfEl(s); if(!ct) return; ct.st=ct.st||{ k:'watch' }; if(s.value) ct.st.since=s.value; else delete ct.st.since; rerec(); }; });
   scope.querySelectorAll('[data-rectu]').forEach(function(s){ s.onchange=function(){ var ct=ctOfEl(s); if(!ct) return; ct.trackUntil=s.value||null; rerec(); }; });
-  scope.querySelectorAll('[data-recadd]').forEach(function(b){ b.onclick=function(){ var ct=ctOfEl(b); if(!ct) return; var box=b.closest('.rec-edit'); var q=box.querySelector('[data-recnq]').value, tx=(box.querySelector('[data-recntext]').value||'').trim(); if(!q){ window.alert('Pick a quarter for the note.'); return; } if(!tx) return; ct.updates=ct.updates||[]; var u=ct.updates.filter(function(x){ return x.q===q; })[0]; if(!u){ u={ q:q, items:[] }; ct.updates.push(u); ct.updates.sort(function(a,z){ return (ceQnum(a.q)||0)-(ceQnum(z.q)||0); }); } u.items.push(tx); rerec(); }; });
+  scope.querySelectorAll('[data-recadd]').forEach(function(b){ b.onclick=function(){ var ct=ctOfEl(b); if(!ct) return; var box=b.closest('.rec-edit'); var q=box.querySelector('[data-recnq]').value, tx=(box.querySelector('[data-recntext]').value||'').trim(); if(!q){ ceInlinePop(b, { title:'Pick a quarter for the note first.', confirm:true, ok:'OK' }, function(){}); return; } if(!tx) return; ct.updates=ct.updates||[]; var u=ct.updates.filter(function(x){ return x.q===q; })[0]; if(!u){ u={ q:q, items:[] }; ct.updates.push(u); ct.updates.sort(function(a,z){ return (ceQnum(a.q)||0)-(ceQnum(z.q)||0); }); } u.items.push(tx); rerec(); }; });
   scope.querySelectorAll('[data-recdelnote]').forEach(function(b){ b.onclick=function(){ var ct=ctOfEl(b); if(!ct) return; var q=b.getAttribute('data-q'), ix=+b.getAttribute('data-i'); var u=(ct.updates||[]).filter(function(x){ return x.q===q; })[0]; if(!u) return; u.items.splice(ix,1); if(!u.items.length) ct.updates=ct.updates.filter(function(x){ return x!==u; }); rerec(); }; });
-  scope.querySelectorAll('[data-recednote]').forEach(function(b){ b.onclick=function(){ var ct=ctOfEl(b); if(!ct) return; var q=b.getAttribute('data-q'), ix=+b.getAttribute('data-i'); var u=(ct.updates||[]).filter(function(x){ return x.q===q; })[0]; if(!u||u.items[ix]==null) return; var nv=window.prompt('Edit note ('+q+') — HTML ok:', u.items[ix]); if(nv==null) return; nv=nv.trim(); if(!nv) return; u.items[ix]=nv; rerec(); }; });
+  scope.querySelectorAll('[data-recednote]').forEach(function(b){ b.onclick=function(){ var ct=ctOfEl(b); if(!ct) return; var q=b.getAttribute('data-q'), ix=+b.getAttribute('data-i'); var u=(ct.updates||[]).filter(function(x){ return x.q===q; })[0]; if(!u||u.items[ix]==null) return; ceInlinePop(b, { title:'Edit note · '+q+'  (HTML ok)', value:u.items[ix], multiline:true }, function(nv){ u.items[ix]=nv; rerec(); }); }; });
 }
 // Re-render the theme record above (from AMZN_THEMES) and re-wire it — called after an edit or a
 // filter change. Open/closed state (segments, sub-themes, the active view) is preserved across the
@@ -2985,7 +2982,29 @@ function amznRestoreRecState(host, st){
     var pane=host.closest('.ce-phpane'); var edit=pane?pane.querySelector('.amzn-edit'):null; if(edit) edit.style.display='none';
   }
 }
-function amznRerenderRecord(root){ var host=root&&root.querySelector('[data-amznrec]'); if(!host) return; var st=amznCaptureRecState(host); host.innerHTML=callsBody(); amznRestoreRecState(host, st); wireThemeRecord(host); }
+function amznRerenderRecord(root){ var host=root&&root.querySelector('[data-amznrec]'); if(!host) return; var st=amznCaptureRecState(host); host.innerHTML=callsBody(); amznRestoreRecState(host, st); wireThemeRecord(host); amznPersistThemes(); }
+// ── Durable persistence of the theme record (AMZN Notes) to Supabase (table company_theme_record) ──
+// The record is Pablo's in-memory AMZN_THEMES; here it becomes durable. HYDRATE on mount (replace the
+// hardcoded seed with the saved record if one exists), then SAVE the whole record after every mutation.
+// amznRerenderRecord runs after every edit/publish, so a single save hook there covers them all. The
+// _amznReady gate prevents the initial (pre-hydration) render from overwriting the DB. Requires a
+// signed-in session (RLS) and sql/011_company_theme_record.sql — until then it degrades silently.
+var _amznReady=false, _amznSaveT=null;
+function amznPersistThemes(){
+  if(!_amznReady || !_co || !_co.id) return;
+  if(_amznSaveT) clearTimeout(_amznSaveT);
+  _amznSaveT=setTimeout(function(){ Promise.resolve(saveThemeRecord(_co.id, _co.ticker, AMZN_THEMES)).catch(function(){}); }, 400);
+}
+function amznHydrateThemes(root){
+  if(_amznReady) return;
+  if(!_co || !_co.id){ _amznReady=true; return; }
+  Promise.resolve(fetchThemeRecord(_co.id)).then(function(res){
+    if(res && res.success && res.data && res.data.length){
+      AMZN_THEMES.length=0; Array.prototype.push.apply(AMZN_THEMES, res.data);
+      _amznReady=true; amznRerenderRecord(root); amznRenderEditor(root);
+    } else { _amznReady=true; }   // no saved record yet — keep the seed; the first edit will persist it
+  }).catch(function(){ _amznReady=true; });
+}
 
 // ═══ Theme → Sub-theme editor (AMZN-only, in the hidden ✎ panel) ═══════════════════════════════
 // "Theme" = the segment (AMZN_SEG_ORDER); "Sub-theme" = a theme within it (AMZN_THEMES[].theme).
@@ -2995,6 +3014,18 @@ var _edSeg=null, _edSub=null;
 var _recEditOpen={};   // per sub-theme inline editor open state, keyed by "seg|theme"
 function amznSubsOf(seg){ return AMZN_THEMES.filter(function(ct){ return ct.seg===seg; }); }
 function amznFindTheme(key){ var p=String(key||'').split('|'); return AMZN_THEMES.filter(function(x){ return x.seg===p[0] && x.theme===p.slice(1).join('|'); })[0]; }
+// Propose Notes → Notes: file a staged note into the theme record. Finds (or creates) the
+// segment ▸ sub-theme, then appends the text as an item under the reported quarter's updates —
+// the same shape the ✎ editor writes, so it renders identically in the record above.
+function cePublishNoteToRecord(seg, sub, text, q){
+  if(!seg || !sub || !text) return;
+  var ct=amznFindTheme(seg+'|'+sub);
+  if(!ct){ ct={ seg:seg, theme:sub, why:'', updates:[], st:{ k:'watch' } }; AMZN_THEMES.push(ct); }
+  ct.updates=ct.updates||[];
+  var u=ct.updates.filter(function(x){ return x.q===q; })[0];
+  if(!u){ u={ q:q, items:[] }; ct.updates.push(u); ct.updates.sort(function(a,z){ return (ceQnum(a.q)||0)-(ceQnum(z.q)||0); }); }
+  u.items.push(text);
+}
 // A hook is OPEN when it has a Tracking since and no Tracking until; CLOSED once an until is set.
 function amznHookOpen(ct){ return !!(ct.st&&ct.st.since) && !ct.trackUntil; }
 function amznHookClosed(ct){ return !!ct.trackUntil; }
@@ -3059,21 +3090,22 @@ function amznRenderEditor(root){
   host.querySelectorAll('[data-aedseg]').forEach(function(b){ b.onclick=function(){ _edSeg=b.getAttribute('data-aedseg'); _edSub=null; amznRenderEditor(root); }; });
   host.querySelectorAll('[data-aedsub]').forEach(function(b){ b.onclick=function(){ _edSub=b.getAttribute('data-aedsub'); amznRenderEditor(root); }; });
   var addSeg=host.querySelector('[data-aedaddseg]');
-  if(addSeg) addSeg.onclick=function(){ var n=(window.prompt('New Theme (segment) name:')||'').trim(); if(!n) return; if(AMZN_SEG_ORDER.indexOf(n)<0) AMZN_SEG_ORDER.push(n); _edSeg=n; _edSub=null; amznRenderEditor(root); amznRerenderRecord(root); };
+  if(addSeg) addSeg.onclick=function(){ ceInlinePop(addSeg, { title:'New Theme (segment) name' }, function(n){ if(AMZN_SEG_ORDER.indexOf(n)<0) AMZN_SEG_ORDER.push(n); _edSeg=n; _edSub=null; amznRenderEditor(root); amznRerenderRecord(root); }); };
   var addSub=host.querySelector('[data-aedaddsub]');
-  if(addSub) addSub.onclick=function(){ if(!_edSeg){ window.alert('Pick a Theme first.'); return; } var n=(window.prompt('New Sub-theme under “'+_edSeg+'”:')||'').trim(); if(!n) return; if(!amznSubsOf(_edSeg).some(function(s){ return s.theme===n; })) AMZN_THEMES.push({ seg:_edSeg, theme:n, why:'', updates:[], st:{ k:'watch' } }); _edSub=n; amznRenderEditor(root); amznRerenderRecord(root); };
+  if(addSub) addSub.onclick=function(){ if(!_edSeg){ ceInlinePop(addSub, { title:'Pick a Theme first.', confirm:true, ok:'OK' }, function(){}); return; } ceInlinePop(addSub, { title:'New Sub-theme under “'+_edSeg+'”' }, function(n){ if(!amznSubsOf(_edSeg).some(function(s){ return s.theme===n; })) AMZN_THEMES.push({ seg:_edSeg, theme:n, why:'', updates:[], st:{ k:'watch' } }); _edSub=n; amznRenderEditor(root); amznRerenderRecord(root); }); };
   var delSeg=host.querySelector('[data-aeddelseg]');
   if(delSeg) delSeg.onclick=function(){ if(!_edSeg) return; var nsub=amznSubsOf(_edSeg).length;
-    if(!window.confirm('Delete Theme “'+_edSeg+'”'+(nsub?(' and its '+nsub+' sub-theme'+(nsub>1?'s':'')+' (and their notes)'):'')+'?')) return;
-    for(var k=AMZN_THEMES.length-1;k>=0;k--){ if(AMZN_THEMES[k].seg===_edSeg) AMZN_THEMES.splice(k,1); }
-    var si=AMZN_SEG_ORDER.indexOf(_edSeg); if(si>=0) AMZN_SEG_ORDER.splice(si,1);
-    _edSeg=null; _edSub=null; amznRenderEditor(root); amznRerenderRecord(root);
+    ceInlinePop(delSeg, { title:'Delete Theme “'+_edSeg+'”'+(nsub?(' and its '+nsub+' sub-theme'+(nsub>1?'s':'')+' (and their notes)'):'')+'?', confirm:true, ok:'Delete', danger:true }, function(){
+      for(var k=AMZN_THEMES.length-1;k>=0;k--){ if(AMZN_THEMES[k].seg===_edSeg) AMZN_THEMES.splice(k,1); }
+      var si=AMZN_SEG_ORDER.indexOf(_edSeg); if(si>=0) AMZN_SEG_ORDER.splice(si,1);
+      _edSeg=null; _edSub=null; amznRenderEditor(root); amznRerenderRecord(root);
+    });
   };
   // ── the selected sub-theme's editable detail (tracking window · notes by quarter) ──
   var cur=amznSubsOf(_edSeg).filter(function(s){ return s.theme===_edSub; })[0];
   if(cur){
     var delsub=host.querySelector('[data-aeddelsub]');
-    if(delsub) delsub.onclick=function(){ if(!window.confirm('Delete sub-theme “'+cur.theme+'” and its notes?')) return; var i=AMZN_THEMES.indexOf(cur); if(i>=0) AMZN_THEMES.splice(i,1); _edSub=null; amznRenderEditor(root); amznRerenderRecord(root); };
+    if(delsub) delsub.onclick=function(){ ceInlinePop(delsub, { title:'Delete sub-theme “'+cur.theme+'” and its notes?', confirm:true, ok:'Delete', danger:true }, function(){ var i=AMZN_THEMES.indexOf(cur); if(i>=0) AMZN_THEMES.splice(i,1); _edSub=null; amznRenderEditor(root); amznRerenderRecord(root); }); };
     var ts=host.querySelector('[data-aedts]');
     if(ts) ts.onchange=function(){ cur.st=cur.st||{ k:'watch' }; if(ts.value) cur.st.since=ts.value; else delete cur.st.since; amznRenderEditor(root); amznRerenderRecord(root); };
     var tu=host.querySelector('[data-aedtu]');
@@ -3088,14 +3120,14 @@ function amznRenderEditor(root){
     host.querySelectorAll('[data-aedednote]').forEach(function(b){ b.onclick=function(){
       var q=b.getAttribute('data-q'), ix=+b.getAttribute('data-i');
       var u=(cur.updates||[]).filter(function(x){ return x.q===q; })[0]; if(!u||u.items[ix]==null) return;
-      var nv=window.prompt('Edit note ('+q+') — HTML ok (e.g. <b>…</b>):', u.items[ix]);
-      if(nv==null) return; nv=nv.trim(); if(!nv) return;
-      u.items[ix]=nv; amznRenderEditor(root); amznRerenderRecord(root);
+      ceInlinePop(b, { title:'Edit note · '+q+'  (HTML ok, e.g. <b>…</b>)', value:u.items[ix], multiline:true }, function(nv){
+        u.items[ix]=nv; amznRenderEditor(root); amznRerenderRecord(root);
+      });
     }; });
     var addNote=host.querySelector('[data-aedaddnote]');
     if(addNote) addNote.onclick=function(){
       var q=host.querySelector('[data-aednoteq]').value, tx=(host.querySelector('[data-aednotetext]').value||'').trim();
-      if(!q){ window.alert('Pick a quarter for the note.'); return; }
+      if(!q){ ceInlinePop(addNote, { title:'Pick a quarter for the note first.', confirm:true, ok:'OK' }, function(){}); return; }
       if(!tx) return;
       cur.updates=cur.updates||[];
       var u=cur.updates.filter(function(x){ return x.q===q; })[0];

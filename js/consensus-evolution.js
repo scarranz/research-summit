@@ -83,11 +83,20 @@ export function consensusEvoHtml(ticker, metric){
     '.cev-fys{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:2px 0 8px}'+
     '.cev-fys-lb{font-size:10.5px;font-weight:700;color:var(--mu,#6B7684);letter-spacing:.01em;margin-right:4px}'+
     '.cev-fys button{font-family:inherit;font-size:11px;font-weight:800;letter-spacing:.02em;border:1px solid var(--bdr,#E2E8F0);background:#fff;color:var(--mu,#6B7684);border-radius:999px;padding:4px 11px;cursor:pointer;transition:.13s}'+
-    '.cev-win{display:flex;align-items:center;gap:10px;margin:0 0 10px;flex-wrap:wrap}'+
-    '.cev-win-lb{font-size:10.5px;font-weight:800;color:var(--navy,#1F2A44);letter-spacing:.01em;white-space:nowrap;min-width:150px}'+
-    '.cev-win-sliders{flex:1;min-width:180px;max-width:360px;display:flex;flex-direction:column;gap:3px}'+
-    '.cev-win-range{width:100%;accent-color:#2563EB;cursor:pointer;height:4px}'+
     '.cev-canvas-wrap{position:relative;height:330px}'+
+    /* period range — ONE bar under the chart (dot per snapshot, two thumbs), full width — mirrors the Setup slider */
+    '.cev-win{margin:12px 0 2px}'+
+    '.cev-slider{position:relative;height:30px}'+
+    '.cev-strack{position:absolute;left:0;right:0;top:13px;height:4px;background:var(--bdr,#E2E8F0);border-radius:2px}'+
+    '.cev-sfill{position:absolute;top:0;height:100%;background:#2563EB;border-radius:2px}'+
+    '.cev-sticks{position:absolute;left:0;right:0;top:0;height:30px;pointer-events:none}'+
+    '.cev-stick{position:absolute;top:11px;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:#fff;border:1.5px solid #CBD5E1;box-sizing:border-box}'+
+    '.cev-stick.on{background:#2563EB;border-color:#2563EB}'+
+    '.cev-slider input[type=range]{position:absolute;left:0;top:0;width:100%;height:30px;margin:0;background:none;-webkit-appearance:none;appearance:none;pointer-events:none}'+
+    '.cev-slider input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #2563EB;box-shadow:0 1px 4px rgba(15,23,42,.28);cursor:pointer}'+
+    '.cev-slider input[type=range]::-moz-range-thumb{pointer-events:auto;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #2563EB;cursor:pointer}'+
+    '.cev-slider input[type=range]::-moz-range-track{background:none}'+
+    '.cev-sends{display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:var(--mu,#6B7684);margin-top:1px}'+
     '.cev-sub{font-size:11.5px;color:var(--mu,#6B7684);font-weight:600;margin:8px 0 0}.cev-sub b{color:var(--navy,#1F2A44)}'+
   '</style>'+
   '<div class="cev" data-cev="'+ticker+':'+metric+'">'+
@@ -100,16 +109,18 @@ export function consensusEvoHtml(ticker, metric){
       // revisions across snapshots (the default), which is what the view is for.
     '</div>'+
     '<div class="cev-fys" data-cevfys></div>'+
-    // Period range — TWO handles (start + end): drag either edge to window ANY span of snapshots, not
-    // just "the last N". Move the left edge to drop early periods, the right edge to drop recent ones.
-    '<div class="cev-win">'+
-      '<span class="cev-win-lb" data-cevwinlb>Range</span>'+
-      '<div class="cev-win-sliders">'+
-        '<input type="range" class="cev-win-range" data-cevwinlo min="0" max="'+(nAsof-1)+'" value="0" step="1" aria-label="Range start (earliest snapshot)">'+
-        '<input type="range" class="cev-win-range" data-cevwinhi min="0" max="'+(nAsof-1)+'" value="'+(nAsof-1)+'" step="1" aria-label="Range end (latest snapshot)">'+
-      '</div>'+
-    '</div>'+
     '<div class="cev-canvas-wrap"><canvas class="cev-canvas"></canvas></div>'+
+    // Period range — ONE bar UNDER the chart, spanning its full width, a dot per snapshot and two
+    // thumbs: drag either edge to window any span (drop early periods OR recent ones). Same UX as Setup.
+    '<div class="cev-win">'+
+      '<div class="cev-slider">'+
+        '<div class="cev-strack"><div class="cev-sfill" data-cevfill></div></div>'+
+        '<div class="cev-sticks" data-cevticks></div>'+
+        '<input type="range" data-cevwinlo min="0" max="'+(nAsof-1)+'" value="0" step="1" aria-label="Range start (earliest snapshot)">'+
+        '<input type="range" data-cevwinhi min="0" max="'+(nAsof-1)+'" value="'+(nAsof-1)+'" step="1" aria-label="Range end (latest snapshot)">'+
+      '</div>'+
+      '<div class="cev-sends"><span data-cevend0></span><span data-cevend1></span></div>'+
+    '</div>'+
     '<div class="cev-sub" data-cevsub></div>'+
   '</div>';
 }
@@ -123,19 +134,22 @@ export function consensusEvoInit(root, ticker, metric){
   var canvas=host.querySelector('.cev-canvas'), sub=host.querySelector('[data-cevsub]'),
       fysBar=host.querySelector('[data-cevfys]'), sel=host.querySelector('[data-cevmetric]'),
       winLoEl=host.querySelector('[data-cevwinlo]'), winHiEl=host.querySelector('[data-cevwinhi]'),
-      winLb=host.querySelector('[data-cevwinlb]');
+      fillEl=host.querySelector('[data-cevfill]'), ticksEl=host.querySelector('[data-cevticks]'),
+      end0El=host.querySelector('[data-cevend0]'), end1El=host.querySelector('[data-cevend1]');
   var chart=null, mode='fixed', mkey=metric, onFY={}, winLo=0, winHi=labels.length-1;
 
   function toV(m,v){ return v==null?null:+(v/(m.scale||1)).toFixed(m.scale===1?2:1); }
   function unitTip(m,y){ if(m.unit==='$') return '$'+y; if(m.unit==='$B') return '$'+y+'B'; return y+' '+m.unit; }
-  // The period range windows the x-axis to [winLo … winHi] (category-scale min/max = indices). Two
-  // handles, so either edge moves independently — drop early periods OR recent ones, any span.
+  // The period range windows the x-axis to [winLo … winHi] (category-scale min/max = indices). One
+  // bar, two thumbs: either edge moves independently. Repaints the fill + the per-snapshot dots.
   function applyWindow(){
-    var total=labels.length;
-    winLo=Math.max(0, Math.min(total-1, winLo)); winHi=Math.max(0, Math.min(total-1, winHi));
+    var n=labels.length;
+    winLo=Math.max(0, Math.min(n-1, winLo)); winHi=Math.max(0, Math.min(n-1, winHi));
     if(winLo>winHi){ var t=winLo; winLo=winHi; winHi=t; }
     if(chart){ chart.options.scales.x.min=winLo; chart.options.scales.x.max=winHi; chart.update('none'); }
-    if(winLb) winLb.textContent='Range: '+labels[winLo]+' → '+labels[winHi];
+    if(fillEl && n>1){ fillEl.style.left=(winLo/(n-1)*100)+'%'; fillEl.style.width=((winHi-winLo)/(n-1)*100)+'%'; }
+    if(ticksEl && n>1){ var h=''; for(var i=0;i<n;i++){ h+='<span class="cev-stick'+((i>=winLo&&i<=winHi)?' on':'')+'" style="left:'+(i/(n-1)*100)+'%" title="'+esc(labels[i])+'"></span>'; } ticksEl.innerHTML=h; }
+    if(end0El) end0El.textContent=labels[winLo]||''; if(end1El) end1El.textContent=labels[winHi]||'';
   }
 
   function resetFYs(){

@@ -30,6 +30,20 @@ var FY_COLORS  = { 2023:'#B4BECC', 2024:'#64748B', 2025:'#2563EB', 2026:'#F97316
 var SEG_COLORS = { aws_rev:'#F97316', na_rev:'#2563EB', intl_rev:'#059669', aws_oi:'#F97316', na_oi:'#2563EB', intl_oi:'#059669' };
 var SEG_SHORT  = { aws_rev:'AWS', na_rev:'North America', intl_rev:'International', aws_oi:'AWS', na_oi:'North America', intl_oi:'International' };
 var DEFAULT_FY = 3;
+var FY_WINDOW  = 8;   // each FY line shows only its last 8 snapshots, ending at the one it was reported in
+
+// Per-FY visible window: a fiscal-year line should NOT run flat forever after the year closed, and it
+// should NOT reach back to when it was a far-out forecast (a FY2027 line in Oct-23 adds no signal).
+// So each line is clipped to [end-7 … end], where `end` = the snapshot the year was REPORTED in (its
+// first Actual point, i.e. the Q4 print); an still-open year clips to its latest known snapshot.
+function fyWindow(kinds, vals){
+  var firstVal=-1, lastVal=-1, firstA=-1;
+  for(var i=0;i<vals.length;i++){ if(vals[i]!=null){ if(firstVal<0) firstVal=i; lastVal=i; if(firstA<0 && kinds[i]==='A') firstA=i; } }
+  if(firstVal<0) return { start:0, end:-1 };
+  var end=(firstA>=0)?firstA:lastVal;                    // stop at the Q4-report snapshot — no flat tail after close
+  var start=Math.max(firstVal, end-(FY_WINDOW-1));       // only its last FY_WINDOW snapshots — no far-out forecasts
+  return { start:start, end:end };
+}
 
 function fmtAsof(d){ var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var p=d.split('-'); return M[+p[1]-1]+" '"+p[0].slice(2); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
@@ -50,7 +64,7 @@ function fyHorizon(m){
 // ── Markup ───────────────────────────────────────────────────────────────────────────────────────
 export function consensusEvoHtml(ticker, metric){
   ticker=ticker||'AMZN'; metric=metric||'rev';
-  var d=CONSENSUS_EVO[ticker]||{}, ms=d.metrics||{};
+  var d=CONSENSUS_EVO[ticker]||{}, ms=d.metrics||{}, nAsof=(d.asof||[]).length||12;
   var opts=GROUPS.map(function(g){
     var inner=Object.keys(ms).filter(function(k){ return ms[k].group===g[0]; })
       .map(function(k){ return '<option value="'+k+'"'+(k===metric?' selected':'')+'>'+esc(ms[k].short||ms[k].label)+'</option>'; }).join('');
@@ -66,8 +80,13 @@ export function consensusEvoHtml(ticker, metric){
     '.cev-seg{display:inline-flex;background:#F2F5F8;border:1px solid var(--bdr,#E2E8F0);border-radius:999px;padding:3px}'+
     '.cev-seg button{background:none;border:none;font-family:inherit;font-size:12px;font-weight:700;letter-spacing:.03em;color:var(--mu,#6B7684);padding:6px 15px;border-radius:999px;cursor:pointer;transition:.15s}'+
     '.cev-seg button.active{background:#1F2A44;color:#fff}'+
-    '.cev-fys{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 8px}'+
+    '.cev-fys{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:2px 0 8px}'+
+    '.cev-fys-lb{font-size:10.5px;font-weight:700;color:var(--mu,#6B7684);letter-spacing:.01em;margin-right:4px}'+
     '.cev-fys button{font-family:inherit;font-size:11px;font-weight:800;letter-spacing:.02em;border:1px solid var(--bdr,#E2E8F0);background:#fff;color:var(--mu,#6B7684);border-radius:999px;padding:4px 11px;cursor:pointer;transition:.13s}'+
+    '.cev-win{display:flex;align-items:center;gap:10px;margin:0 0 10px;flex-wrap:wrap}'+
+    '.cev-win-lb{font-size:10.5px;font-weight:800;color:var(--navy,#1F2A44);letter-spacing:.01em;white-space:nowrap;min-width:150px}'+
+    '.cev-win-sliders{flex:1;min-width:180px;max-width:360px;display:flex;flex-direction:column;gap:3px}'+
+    '.cev-win-range{width:100%;accent-color:#2563EB;cursor:pointer;height:4px}'+
     '.cev-canvas-wrap{position:relative;height:330px}'+
     '.cev-sub{font-size:11.5px;color:var(--mu,#6B7684);font-weight:600;margin:8px 0 0}.cev-sub b{color:var(--navy,#1F2A44)}'+
   '</style>'+
@@ -81,6 +100,15 @@ export function consensusEvoHtml(ticker, metric){
       // revisions across snapshots (the default), which is what the view is for.
     '</div>'+
     '<div class="cev-fys" data-cevfys></div>'+
+    // Period range — TWO handles (start + end): drag either edge to window ANY span of snapshots, not
+    // just "the last N". Move the left edge to drop early periods, the right edge to drop recent ones.
+    '<div class="cev-win">'+
+      '<span class="cev-win-lb" data-cevwinlb>Range</span>'+
+      '<div class="cev-win-sliders">'+
+        '<input type="range" class="cev-win-range" data-cevwinlo min="0" max="'+(nAsof-1)+'" value="0" step="1" aria-label="Range start (earliest snapshot)">'+
+        '<input type="range" class="cev-win-range" data-cevwinhi min="0" max="'+(nAsof-1)+'" value="'+(nAsof-1)+'" step="1" aria-label="Range end (latest snapshot)">'+
+      '</div>'+
+    '</div>'+
     '<div class="cev-canvas-wrap"><canvas class="cev-canvas"></canvas></div>'+
     '<div class="cev-sub" data-cevsub></div>'+
   '</div>';
@@ -93,16 +121,29 @@ export function consensusEvoInit(root, ticker, metric){
   var d=CONSENSUS_EVO[ticker]; if(!d) return;
   var labels=d.asof.map(fmtAsof);
   var canvas=host.querySelector('.cev-canvas'), sub=host.querySelector('[data-cevsub]'),
-      fysBar=host.querySelector('[data-cevfys]'), sel=host.querySelector('[data-cevmetric]');
-  var chart=null, mode='fixed', mkey=metric, onFY={};
+      fysBar=host.querySelector('[data-cevfys]'), sel=host.querySelector('[data-cevmetric]'),
+      winLoEl=host.querySelector('[data-cevwinlo]'), winHiEl=host.querySelector('[data-cevwinhi]'),
+      winLb=host.querySelector('[data-cevwinlb]');
+  var chart=null, mode='fixed', mkey=metric, onFY={}, winLo=0, winHi=labels.length-1;
 
   function toV(m,v){ return v==null?null:+(v/(m.scale||1)).toFixed(m.scale===1?2:1); }
   function unitTip(m,y){ if(m.unit==='$') return '$'+y; if(m.unit==='$B') return '$'+y+'B'; return y+' '+m.unit; }
+  // The period range windows the x-axis to [winLo … winHi] (category-scale min/max = indices). Two
+  // handles, so either edge moves independently — drop early periods OR recent ones, any span.
+  function applyWindow(){
+    var total=labels.length;
+    winLo=Math.max(0, Math.min(total-1, winLo)); winHi=Math.max(0, Math.min(total-1, winHi));
+    if(winLo>winHi){ var t=winLo; winLo=winHi; winHi=t; }
+    if(chart){ chart.options.scales.x.min=winLo; chart.options.scales.x.max=winHi; chart.update('none'); }
+    if(winLb) winLb.textContent='Range: '+labels[winLo]+' → '+labels[winHi];
+  }
 
   function resetFYs(){
     var m=d.metrics[mkey], q=fyHorizon(m).qualifying;
     onFY={}; q.forEach(function(fy,i){ onFY[fy]=(i>=q.length-DEFAULT_FY); });
-    fysBar.innerHTML=q.map(function(fy){ return '<button type="button" data-fy="'+fy+'">FY'+fy+'</button>'; }).join('');
+    // A visible label so the control is discoverable: tap a year to add/drop its line on the chart.
+    fysBar.innerHTML='<span class="cev-fys-lb">Years on chart — tap to add / drop</span>'+
+      q.map(function(fy){ return '<button type="button" data-fy="'+fy+'">FY'+fy+'</button>'; }).join('');
     fysBar.querySelectorAll('[data-fy]').forEach(function(b){
       var fy=b.getAttribute('data-fy');
       function paint(){ var on=onFY[fy]; b.style.background=on?(FY_COLORS[fy]||'#334155'):'#fff'; b.style.color=on?'#fff':'var(--mu,#6B7684)'; b.style.borderColor=on?(FY_COLORS[fy]||'#334155'):'var(--bdr,#E2E8F0)'; }
@@ -113,8 +154,9 @@ export function consensusEvoInit(root, ticker, metric){
   function fixedSets(){
     var m=d.metrics[mkey];
     return Object.keys(m.fixed).filter(function(fy){ return onFY[fy]; }).map(function(fy){
-      var kinds=m.fixedKind[fy];
-      return { label:'FY'+fy, data:m.fixed[fy].map(function(v){ return toV(m,v); }), borderColor:FY_COLORS[fy]||'#888',
+      var kinds=m.fixedKind[fy], win=fyWindow(kinds, m.fixed[fy]);
+      var data=m.fixed[fy].map(function(v,i){ return (i>=win.start && i<=win.end)?toV(m,v):null; });
+      return { label:'FY'+fy, data:data, borderColor:FY_COLORS[fy]||'#888',
         backgroundColor:FY_COLORS[fy]||'#888', borderWidth:2, tension:.25, spanGaps:false,
         pointRadius:function(c){ return kinds[c.dataIndex]==='A'?4.5:2.6; },
         pointStyle:function(c){ return kinds[c.dataIndex]==='A'?'rectRot':'circle'; },
@@ -144,11 +186,14 @@ export function consensusEvoInit(root, ticker, metric){
     fysBar.style.display=multi?'':'none';
     var seg=(rollingKeys(d,mkey).length>1);
     sub.innerHTML = multi
-      ? 'Each line is <b>one fiscal year</b>, revised across quarterly Bloomberg snapshots. Capped at the open year and the next (<b>≤ FY'+fyHorizon(m).cap+'</b>); newest '+DEFAULT_FY+' shown by default — tap the FY pills to add or drop years. A <b>solid</b> point = the year is reported.'
+      ? ''
       : ((seg?'Three <b>NTM</b> segment lines (AWS · North America · International)':'A single <b>next-twelve-months</b> line')+' — '+(m.sums?'Σ of the next four forecast quarters':'the four-quarters-out estimate')+' as of each snapshot, rolling forward on its own.');
+    applyWindow();   // re-assert the period window every rebuild (build() recreates the chart)
   }
 
   sel.onchange=function(){ mkey=sel.value; resetFYs(); build(); };
+  if(winLoEl) winLoEl.oninput=function(){ winLo=+this.value; if(winLo>winHi){ winHi=winLo; if(winHiEl) winHiEl.value=winHi; } applyWindow(); };
+  if(winHiEl) winHiEl.oninput=function(){ winHi=+this.value; if(winHi<winLo){ winLo=winHi; if(winLoEl) winLoEl.value=winLo; } applyWindow(); };
   host.querySelectorAll('[data-cevmode]').forEach(function(btn){ btn.onclick=function(){
     mode=btn.getAttribute('data-cevmode');
     host.querySelectorAll('[data-cevmode]').forEach(function(b){ b.classList.toggle('active', b===btn); });

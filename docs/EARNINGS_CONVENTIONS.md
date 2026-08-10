@@ -49,6 +49,72 @@ adopt the mount on their next cycle. The one downstream effect: the Post-Results
 list" chip can no longer name the theme inline (names load async from the DB), so it shows the frozen
 rank; the theme text lives on the Watch List itself.
 
+**What the Aug 2026 Post-Results pass changed (AMZN, on top of v3.0) — grid labels, hover, Q&A, Propose Notes hygiene:**
+
+These are binding for every company, not just AMZN. Reference implementation: `js/overviews/amzn.js`.
+
+1. **Segment revenue lines carry "net sales" in the consensus grid.** In `CE_CONS` and EVERY reference
+   keyed to it (`setup.notes` / `setup.us` / `results.notes` / `results.watch`), the segment lines read
+   **"North America net sales" / "International net sales"** to match **"AWS net sales"** — never the
+   bare segment name. The bare name survives ONLY in the segment charts and the "how it earns" cards,
+   where all three (AWS included) are bare and the chart title carries the metric. Rename the KPI `k`
+   and its lookups together or the `notes[m.k]` / `us[m.k]` joins silently break.
+
+2. **The Post-Results surprise chart hovers on the WHOLE ROW, and the tooltip is COLOURED.** The
+   diverging bars for a small surprise are ~2px wide — too thin to point at (Rule L). So the hover
+   target is the full row, and the tooltip is a **coloured HTML card** (an actual child element, not a
+   plain `title`/`::after` string) carrying, for BOTH bases: `metric · expected (in its own value+unit)
+   · actual · surprise %` — the % painted green/red/grey by beat/miss/in-line, each basis wearing its
+   Street/Summit colour. `cePrintChartRows` returns the expected value, the actual and the unit too, not
+   just the surprise. A tooltip of plain white text is not acceptable — encode with colour (Rule H).
+
+3. **"By Analyst Question" is THEME-LED and a dropdown.** The collapsed row leads with the **theme tag +
+   the question's topic** — never the bank/analyst. Opening it reveals the **bank + analyst at the top**,
+   then **Q** (the curated question) and **A** (the curated management answer). Both Q and A are *curated*
+   — filler, verbal tics and repetition removed — **without dropping relevant detail**. Data shape:
+   `qanda: [{ q (collapsed topic), qFull? (the fuller/verbatim question), analyst:'Name · Bank', theme, a }]`.
+   `qFull` renders as the Q line when present; until a verbatim IR transcript is dropped in it is a
+   faithful question-form of the recorded topic (same reconstruction provenance as the rest of the tab —
+   never invent words management did not say).
+
+4. **"By Prepared Remarks" is not capped.** Include every prepared-remark topic that carries a So-What
+   (§1) — do not limit the count "for density". The substance of the AI summary ("the minute") belongs
+   here, filed as classified prepared-remark topics, each tagged to its Watch List theme.
+
+5. **Propose Notes hygiene + the publish path.** (a) **No `#1/#2` rank badges** — they point at a rank
+   the cards no longer use, and read as noise (same reason v2.6 dropped `#n` from the scorecard). (b)
+   **No internal process text in the UI** — the desk never narrates its own plumbing or permissions to
+   the reader (e.g. "gated to San / Oscar", "this scaffold does not write to the database"). That is a
+   Rule-D violation and is removed. (c) **Accept HIDES the proposal card (does not delete it)**, and the
+   staged chip's ✕ **restores** the card so it can be re-accepted — previously Accept removed the card
+   outright and an unstaged note vanished forever. (d) **Publish path (wired).** Staged notes flow to
+   the Notes tab via a **"Publish to Notes"** button: each staged chip becomes a `company_themes` row
+   through `api.js insertTheme` (sub-theme → `theme`, segment → a tag, note text → `definition`, quarter
+   → `q`/`created_quarter`), then the shared Watch List **re-mounts** (`ceMountWatchList`) so it shows
+   without a reload. Persistence requires a signed-in session (RLS); locally/preview the insert fails
+   and the chips stay staged with an honest status line — the wiring is intact and lights up on deploy.
+   Amazon overview work did NOT touch this wiring (`js/watchlist.js` / `js/api.js` / `sql/`).
+
+6. **The Consensus-Evolution chart windows its periods, and exposes a period slider.** Three parts:
+   - **FY control** — discrete pills (one per fiscal year, newest 3 on by default, capped at open+1),
+     carrying a visible inline label ("Years on chart — tap to add / drop") so it is discoverable
+     (Rule L). The old verbose caption is dropped.
+   - **Per-FY windowing (the "desfase").** A fiscal-year line does NOT run flat forever after the year
+     closed, and does NOT reach back to when it was a far-out forecast (a FY2027 line in Oct-23 adds no
+     signal). Each line is clipped to `[end-7 … end]` where `end` = the snapshot the year was REPORTED
+     in (its first Actual point / the Q4 print); a still-open year clips to its latest known snapshot.
+     So every line shows only its **last 8 snapshots, ending where it was reported** (`fyWindow` in
+     `consensus-evolution.js`, `FY_WINDOW=8`).
+   - **Period slider (the "línea deslizable").** A draggable range control windows the x-axis to the last
+     N snapshots (category-scale `min`), so you can see more or fewer periods. It re-asserts after every
+     rebuild. This is the control the reader was asking for — discrete pills are NOT a slider.
+
+7. **The IR button deep-links to the quarterly-results page** when the company exposes one (AMZN:
+   `ir.aboutamazon.com/quarterly-results/default.aspx`), not the IR root.
+
+8. **No preamble paragraph on the Earnings tab.** The phase chips + blocks explain themselves (Rule L);
+   the "the decision layer, in two phases…" intro is removed.
+
 **What v2.10 changed — the AI call summary, the tag-less aside, and the Setup chart's margins + windows:**
 
 1. **Post-Results: the black one-line "take" is replaced by an AI-generated CALL SUMMARY ("the minute").**

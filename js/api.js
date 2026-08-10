@@ -423,6 +423,128 @@ export async function fetchBenchmarkPrices(symbol) {
   return fetchAllRows('benchmark_prices', q => q.eq('symbol', symbol || 'SPY').order('date'));
 }
 
+// ─── Investor Profiles (Hedge Funds tab) ─────────────────────
+// Per-year depth behind each investor card: yearly returns, that
+// year's top holdings, and annual letters / investor messages.
+// investor_key matches INVESTORS[].key in js/portal-data.js.
+// See sql/014_investor_profiles.sql.
+
+export async function fetchInvestorReturns(investorKey) {
+  var { data, error } = await supabase
+    .from('investor_yearly_returns')
+    .select('*')
+    .eq('investor_key', investorKey)
+    .order('year');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function fetchInvestorHoldings(investorKey) {
+  var { data, error } = await supabase
+    .from('investor_yearly_holdings')
+    .select('*')
+    .eq('investor_key', investorKey)
+    .order('year')
+    .order('rank');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function fetchInvestorLetters(investorKey) {
+  var { data, error } = await supabase
+    .from('investor_letters')
+    .select('*')
+    .eq('investor_key', investorKey)
+    .order('category')
+    .order('sort_order');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function insertInvestorReturn(row) {
+  var { data, error } = await supabase
+    .from('investor_yearly_returns')
+    .insert([row])
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+export async function insertInvestorHolding(row) {
+  var { data, error } = await supabase
+    .from('investor_yearly_holdings')
+    .insert([row])
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+// Replaces every holdings row for one investor_key+year+quarter with a
+// fresh batch — used by the "Upload 13F" flow so re-uploading a quarter
+// (e.g. an amended filing) doesn't leave stale rows behind.
+export async function replaceInvestorHoldings(investorKey, year, quarter, rows) {
+  var del = supabase
+    .from('investor_yearly_holdings')
+    .delete()
+    .eq('investor_key', investorKey)
+    .eq('year', year);
+  del = quarter == null ? del.is('quarter', null) : del.eq('quarter', quarter);
+  var { error: delError } = await del;
+  if (delError) return fail(delError.message);
+
+  if (!rows.length) return ok([]);
+  var { data, error } = await supabase
+    .from('investor_yearly_holdings')
+    .insert(rows)
+    .select();
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function insertInvestorLetter(row) {
+  var { data, error } = await supabase
+    .from('investor_letters')
+    .insert([row])
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
+// Unfiltered — every investor at once — for the Hedge Funds "Compare by
+// Period" view, so the grid only needs 2 queries instead of one per card.
+export async function fetchAllInvestorReturns() {
+  var { data, error } = await supabase
+    .from('investor_yearly_returns')
+    .select('*')
+    .order('investor_key')
+    .order('year');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function fetchAllInvestorHoldings() {
+  var { data, error } = await supabase
+    .from('investor_yearly_holdings')
+    .select('*')
+    .order('investor_key')
+    .order('year')
+    .order('rank');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function deleteInvestorLetter(id) {
+  var { error } = await supabase
+    .from('investor_letters')
+    .delete()
+    .eq('id', id);
+  if (error) return fail(error.message);
+  return ok(null);
+}
+
 // ─── Auth ───────────────────────────────────────────────────
 
 export async function fetchUserRole(userId) {

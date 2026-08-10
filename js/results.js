@@ -1195,7 +1195,10 @@ export function resultsEvoHtml(ticker){
   _rs.surp = null;
   var ev = data.evolution;
   var h = '<div class="rs-wrap" id="rsEvoWrap">';
-  h += '<p class="ov-lede">' + esc(ev.intro || '') + '</p>';
+  // `evolution.intro` is deliberately NOT rendered (SAB, Aug 10 2026). It was a paragraph of
+  // conclusions above charts that state the same thing, and it went stale on every refresh
+  // while the charts did not. The field stays in the datasets — each metric's `note`, which
+  // does render under its own block, is where a written read belongs.
   h += ev.sections.map(function(cfg){ return rsEvoBlockHtml(cfg.key); }).join('');
   h += '<div class="ov-foot">' + esc(ev.note || '') + '</div>';
   // Generic Actuals-vs-Estimates surprise history at the bottom (opt-out via
@@ -1208,9 +1211,15 @@ export function resultsEvoHtml(ticker){
   return h;
 }
 
-// The collapsed detail table's header. It carries the caret AND what is inside, so the row
-// is worth clicking rather than being a mystery bar: how many lines and how many snapshots
-// are down there, both of which follow the legend chips.
+// Both collapsible headers carry the caret AND what is inside, so neither row is a mystery
+// bar. The counts follow the legend chips like everything else in the block.
+function rsEvoRecHeadHtml(k){
+  var st = rsEvoSt(k), open = st.rec !== false;    // undefined ⇒ open: this one is the reading
+  var n = rsEvoVisible(k, rsEvoMetric(k)).length;
+  return '<span class="rs-collap-ic">' + (open ? '▾' : '▸') + '</span>Revision record' +
+    '<span class="rs-collap-sub">' + (open ? 'hide' : 'show') + ' · ' + n + ' line' + (n === 1 ? '' : 's') +
+    ' on the chart, first view to latest</span>';
+}
 function rsEvoDetHeadHtml(k){
   var st = rsEvoSt(k), ev = rsEvo(), open = !!st.det;
   var n = rsEvoVisible(k, rsEvoMetric(k)).length;
@@ -1232,7 +1241,13 @@ function rsEvoBlockHtml(k){
   '</div>';
   // Chart → per-fiscal-year record → the snapshot-by-snapshot table. Both tables below the
   // chart show ONLY what the chart is currently drawing (see rsEvoVisible).
-  h += '<div class="rs-tablewrap" id="rsEvoTrack-' + k + '"></div>';
+  // Both tables collapse. The record starts OPEN (it is the reading) and the detail table
+  // starts closed (it is the audit trail).
+  h += '<div class="rs-collap" data-rsevrec="' + k + '">' +
+    '<button type="button" class="rs-collap-h" data-rsevrecb="' + k + '">' + rsEvoRecHeadHtml(k) + '</button>' +
+    '<div class="rs-collap-b" id="rsEvoRecBody-' + k + '">' +
+      '<div class="rs-tablewrap" id="rsEvoTrack-' + k + '"></div>' +
+    '</div></div>';
   // The detail table opens on click. It is the widest thing on the page — every snapshot as
   // its own column, three rows per line — and reading it is a deliberate act, not something
   // to scroll past on the way to the next block.
@@ -1459,7 +1474,9 @@ function rsBuildEvo(k){
   // moves all three together instead of leaving a table describing a line that is gone.
   rsRenderEvoTrack(k, m);
   rsRenderEvoTable(k, m);
-  // The collapsed header counts the visible lines, so it moves with the chips too.
+  // Both collapsible headers count the visible lines, so they move with the chips too.
+  var rh = document.querySelector('[data-rsevrecb="' + k + '"]');
+  if (rh) rh.innerHTML = rsEvoRecHeadHtml(k);
   var dh = document.querySelector('[data-rsevdetb="' + k + '"]');
   if (dh) dh.innerHTML = rsEvoDetHeadHtml(k);
   var n1 = document.getElementById('rsEvoNote-' + k); if (n1) n1.textContent = m.note || '';
@@ -2126,15 +2143,12 @@ function rsRenderEvoTrack(k, m){
     return '<span style="color:' + (v >= 0 ? RS_GREEN : RS_RED) + '">' + (v >= 0 ? '+' : '−') +
       Math.abs(v).toFixed(1) + (pct ? ' pp' : '%') + '</span>';
   }
-  var sig = function(v){ return (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + (pct ? ' pp' : '%'); };
-
-  var h = '<div class="rs-ft-cap">Revision record · ' +
+  var h = '<div class="rs-ft-cap">' +
     (pct ? esc(rsEvoPctLabel(k, m)) : rsCurName(m) + ' ' + (div === 1000 ? 'billions' : 'millions')) +
     ' · one row per line ON THE CHART — hide a fiscal year or a source and it leaves this table too' +
     ' · “first / latest view” are the earliest and most recent snapshots carrying that line, “net move” the travel between them' +
     (showAct ? ' · “first vs actual” is how far the earliest view sat from where the year landed'
              : ' · turn on Reported to score the years that have landed') + '</div>';
-  h += '<div class="ov-kpis" id="rsEvoTrackStats-' + k + '"></div>';
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h">Line</th>' +
     '<th>First view</th><th>Latest view</th>' + (showAct ? '<th>Actual</th>' : '') +
     '<th>Revisions</th><th class="rs-ft-s">Net move</th>' +
@@ -2157,32 +2171,10 @@ function rsRenderEvoTrack(k, m){
   });
   h += '</tbody></table></div>';
   box.innerHTML = h;
-
-  var a = t.agg, stats = document.getElementById('rsEvoTrackStats-' + k);
-  if (stats){
-    var tile = function(l, v, sub, dir){
-      return '<div class="ov-kpi"><div class="ov-kpi-l">' + esc(l) + '</div><div class="ov-kpi-v">' + v +
-        '</div><div class="ov-kpi-d ' + (dir || 'muted') + '">' + esc(sub) + '</div></div>';
-    };
-    var drift = a.driftN ? a.driftSum / a.driftN : null;
-    var scope = t.rows.length + ' line' + (t.rows.length === 1 ? '' : 's') + ' on the chart';
-    stats.innerHTML =
-      tile('Raised', String(a.raises), a.raises ? 'avg ' + sig(a.rSum / a.raises) + ' per raise' : 'never raised', a.raises ? 'up' : 'muted') +
-      tile('Cut', String(a.cuts), a.cuts ? 'avg ' + sig(a.cSum / a.cuts) + ' per cut' : 'never cut', a.cuts ? 'down' : 'muted') +
-      tile('Net drift', drift == null ? '—' : sig(drift), 'average across ' + scope, drift == null ? 'muted' : (drift >= 0 ? 'up' : 'down')) +
-      tile('Biggest single move', a.big ? sig(a.big.mv) : '—',
-           a.big ? a.big.label + ' at ' + (a.big.at ? a.big.at.label : '—') : 'no move above 0.05',
-           a.big ? (a.big.mv >= 0 ? 'up' : 'down') : 'muted') +
-      tile('First view vs actual', (showAct && a.errN) ? sig(a.errSum / a.errN) : '—', accSub(),
-           (showAct && a.errN) ? ((a.errSum / a.errN) >= 0 ? 'up' : 'down') : 'muted');
-
-    function accSub(){
-      if (!showAct) return 'Reported is off — turn it on to score';
-      if (!a.errN) return 'nothing on the chart has landed yet';
-      return a.errN + ' line' + (a.errN === 1 ? '' : 's') + ' landed · avg miss ' +
-        (a.errAbs / a.errN).toFixed(1) + (pct ? ' pp' : '%');
-    }
-  }
+  // No aggregate tiles. They restated per-row numbers as one figure and, mixing Summit with
+  // Street and open years with landed ones, that figure answered no question anyone asks —
+  // the rows carry the same facts already attributed. `rsEvoTrackRows` still computes the
+  // aggregates (they cost nothing and a scope-picking version may want them back).
 }
 
 export function initResultsEvo(ticker){
@@ -2200,6 +2192,16 @@ export function initResultsEvo(ticker){
   }
   wrap.onclick = function(e){
     var k;
+    var rb = e.target.closest('[data-rsevrecb]');
+    if (rb){
+      k = rb.getAttribute('data-rsevrecb');
+      var rst = rsEvoSt(k);
+      rst.rec = rst.rec === false;                 // undefined/true ⇒ close, false ⇒ open
+      var rbody = document.getElementById('rsEvoRecBody-' + k);
+      if (rbody) rbody.hidden = rst.rec === false;
+      rb.innerHTML = rsEvoRecHeadHtml(k);
+      return;
+    }
     var db = e.target.closest('[data-rsevdetb]');
     if (db){
       k = db.getAttribute('data-rsevdetb');

@@ -20,6 +20,7 @@ import { qcomOverview } from './qcom.js';
 import { ibkrOverview } from './ibkr.js';
 import { googlOverview } from './googl.js';
 import { amznOverview } from './amzn.js';
+import { disOverview } from './dis.js';
 
 var OVERVIEWS = {
   RELY: remitlyOverview,
@@ -41,6 +42,7 @@ var OVERVIEWS = {
   GOOGL: googlOverview,
   GOOG: googlOverview,
   AMZN: amznOverview,
+  DIS: disOverview,
 };
 
 // Returns the overview module for a ticker, or null if none is built yet.

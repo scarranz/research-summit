@@ -1197,10 +1197,6 @@ export function resultsEvoHtml(ticker){
   var h = '<div class="rs-wrap" id="rsEvoWrap">';
   h += '<p class="ov-lede">' + esc(ev.intro || '') + '</p>';
   h += ev.sections.map(function(cfg){ return rsEvoBlockHtml(cfg.key); }).join('');
-  // The per-fiscal-year record sits at the FOOT, the same way the surprise scorecard sits at
-  // the foot of Results: the blocks above are one metric's path across snapshots, this is
-  // every year of one metric summarised in a line each.
-  h += rsEvoTrackHtml();
   h += '<div class="ov-foot">' + esc(ev.note || '') + '</div>';
   // Generic Actuals-vs-Estimates surprise history at the bottom (opt-out via
   // dataset `surprise: false` — SoFi keeps its richer bespoke block).
@@ -1224,6 +1220,9 @@ function rsEvoBlockHtml(k){
     '<div class="ov-chart-t" id="rsEvoChartT-' + k + '"></div>' +
     '<div class="ov-chart-wrap ovs-tall"><canvas id="rsEvoChart-' + k + '"></canvas></div>' +
   '</div>';
+  // Chart → per-fiscal-year record → the snapshot-by-snapshot table. Both tables below the
+  // chart show ONLY what the chart is currently drawing (see rsEvoVisible).
+  h += '<div class="rs-tablewrap" id="rsEvoTrack-' + k + '"></div>';
   h += '<div class="rs-tablewrap" id="rsEvoTable-' + k + '"></div>';
   h += '<div class="ov-foot" id="rsEvoNote-' + k + '"></div>';
   h += '</div>';
@@ -1439,6 +1438,9 @@ function rsBuildEvo(k){
     function(v1, v2){ rsEvoSt(k).yr = [v1, v2]; rsBuildEvo(k); },
     function(){ rsEvoSt(k).yr = null; rsBuildEvo(k); });
 
+  // Both tables are rebuilt with the chart, from the same visibility state — so a chip click
+  // moves all three together instead of leaving a table describing a line that is gone.
+  rsRenderEvoTrack(k, m);
   rsRenderEvoTable(k, m);
   var n1 = document.getElementById('rsEvoNote-' + k); if (n1) n1.textContent = m.note || '';
   var leg = document.getElementById('rsEvoLegend-' + k); if (leg) leg.innerHTML = rsEvoLegendHtml(k, m);
@@ -1493,10 +1495,14 @@ function rsRenderEvoTable(k, m){
     return r;
   }
 
-  ev.years.forEach(function(y, yi){
-    h += rows('FY' + esc(y) + ' · Summit', m.summit ? m.summit[yi] : null, rsEvoPct(k, m, 'summit', yi));
-    if (m.cons) h += rows('FY' + esc(y) + ' · Consensus', m.cons[yi], rsEvoPct(k, m, 'cons', yi));
+  // Only the lines the chart is drawing — same source of truth as the revision record above.
+  var vis = rsEvoVisible(k, m);
+  vis.forEach(function(v){
+    h += rows(esc(v.label), m[v.src] ? m[v.src][v.yi] : null, rsEvoPct(k, m, v.src, v.yi));
   });
+  if (!vis.length){
+    h += '<tr><td class="rs-ft-h" colspan="' + (nv + 2) + '"><span class="rs-ft-dim">Every line is hidden — click a chip above to bring one back.</span></td></tr>';
+  }
 
   h += '</tbody></table></div>';
   el.innerHTML = h;
@@ -2029,154 +2035,134 @@ export function initResults(wrap, ticker){
 // reported figure. On the consensus side they do not — FY2025 drifted +0.0% between files while
 // sitting 0.1% under the print — and the gap between the two columns is precisely the part of
 // the miss the source never corrected.
-function rsEvoTrackSt(){
-  if (!_rs.evo) _rs.evo = { sec: {} };
-  if (!_rs.evo.track) _rs.evo.track = { metric: null, src: 'summit' };
-  return _rs.evo.track;
-}
-function rsEvoTrackGroups(){
-  return rsEvo().sections.map(function(s){ return { label: s.label, keys: rsEvoKeys(s) }; });
-}
-function rsEvoTrackKey(){
-  var st = rsEvoTrackSt();
-  var all = rsEvoTrackGroups().reduce(function(a, g){ return a.concat(g.keys); }, []);
-  if (!st.metric || all.indexOf(st.metric) < 0) st.metric = all[0];
-  return st.metric;
-}
-// A source with no rows on this metric cannot be selected (UBER's op income has no stored
-// consensus at all), so the toggle falls back rather than rendering an empty table.
-function rsEvoTrackSrc(m){
-  var st = rsEvoTrackSt();
-  if (!m[st.src]) st.src = m.summit ? 'summit' : 'cons';
-  return st.src;
-}
-function rsEvoTrack(mkey, src){
-  var ev = rsEvo(), m = ev.metrics[mkey], rows = m[src];
-  var out = { years: [], raises: 0, cuts: 0, rSum: 0, cSum: 0, big: null,
-              driftSum: 0, driftN: 0, errSum: 0, errN: 0, errAbs: 0 };
-  if (!rows) return out;
+// What the chart is drawing right now: the (fiscal year × source) pairs left visible by the
+// legend chips, in chart order. BOTH tables under the chart are built from this, so hiding a
+// year or a source removes it from the record and from the aggregates in the same click —
+// there is no second place where "what is on screen" is decided.
+function rsEvoVisible(k, m){
+  var ev = rsEvo(), st = rsEvoSt(k), out = [];
   ev.years.forEach(function(y, yi){
-    var arr = rows[yi] || [], first = null, fi = -1, last = null, li = -1;
-    var up = 0, dn = 0, prev = null, pi = -1;
-    arr.forEach(function(v, i){
-      if (v == null) return;
-      if (first == null){ first = v; fi = i; }
-      last = v; li = i;
-      if (prev != null && prev !== 0){
-        var pc = (v - prev) / Math.abs(prev) * 100;
-        if (pc > 0.05){ up++; out.raises++; out.rSum += pc; }
-        else if (pc < -0.05){ dn++; out.cuts++; out.cSum += pc; }
-        if (Math.abs(pc) > 0.05 && (out.big == null || Math.abs(pc) > Math.abs(out.big.pct)))
-          out.big = { pct: pc, y: y, at: ev.vintages[i] };
-      }
-      prev = v; pi = i;
+    if (st.hidden['y' + y]) return;
+    ['summit', 'cons'].forEach(function(src){
+      if (st.hidden[src] || !m[src]) return;
+      out.push({ y: y, yi: yi, src: src, label: 'FY' + y + ' · ' + (src === 'cons' ? 'Consensus' : 'Summit') });
     });
-    var act = rsEvoActual(mkey, m, y);
-    var drift = (first != null && last != null && first !== 0) ? (last - first) / Math.abs(first) * 100 : null;
-    var err = (act != null && first != null && act !== 0) ? (first - act) / Math.abs(act) * 100 : null;
-    if (drift != null){ out.driftSum += drift; out.driftN++; }
-    if (err != null){ out.errSum += err; out.errAbs += Math.abs(err); out.errN++; }
-    out.years.push({ y: y, first: first, firstV: ev.vintages[fi], last: last, lastV: ev.vintages[li],
-                     up: up, dn: dn, drift: drift, act: act, err: err });
   });
   return out;
 }
-function rsEvoTrackHtml(){
-  var ev = rsEvo();
-  // Nothing to record with a single snapshot: every year would read 0 revisions.
-  if (!ev.vintages || ev.vintages.length < 2) return '';
-  var mkey = rsEvoTrackKey(), m = ev.metrics[mkey], src = rsEvoTrackSrc(m);
-  var h = '<div class="rs-block" data-rsevtrack>';
-  h += '<div class="rs-block-top"><div class="rs-block-h">Revision record</div>' +
-    '<select class="rs-msel rs-tsel" aria-label="Metric">' + rsEvoTrackGroups().map(function(g){
-      return '<optgroup label="' + esc(g.label) + '">' + g.keys.map(function(k){
-        return '<option value="' + k + '"' + (k === mkey ? ' selected' : '') + '>' + esc(ev.metrics[k].label) + '</option>';
-      }).join('') + '</optgroup>';
-    }).join('') + '</select>' +
-    '<div class="rs-views" id="rsEvoTrackSrc">' + rsEvoTrackSrcHtml(m, src) + '</div></div>';
-  h += '<div class="ov-kpis" id="rsEvoTrackStats"></div>';
-  h += '<div class="rs-tablewrap" id="rsEvoTrackTable"></div>';
-  h += '<div class="ov-foot" id="rsEvoTrackNote"></div>';
-  h += '</div>';
-  return h;
+// One row per visible pair, measured on the basis the chart is currently drawing: dollars in
+// US$ mode, growth/margin points in % mode. `pp` marks which one, because a move of "+2.1"
+// means percent in one and percentage points in the other.
+function rsEvoTrackRows(k, m){
+  var ev = rsEvo(), st = rsEvoSt(k), pct = st.mode === 'pct';
+  var rows = [], agg = { raises: 0, cuts: 0, rSum: 0, cSum: 0, big: null,
+                         driftSum: 0, driftN: 0, errSum: 0, errN: 0, errAbs: 0, pp: pct };
+  rsEvoVisible(k, m).forEach(function(v){
+    var arr = (pct ? rsEvoPct(k, m, v.src, v.yi) : (m[v.src] ? m[v.src][v.yi] : null)) || [];
+    var first = null, fi = -1, last = null, li = -1, up = 0, dn = 0, prev = null;
+    arr.forEach(function(val, i){
+      if (val == null) return;
+      if (first == null){ first = val; fi = i; }
+      last = val; li = i;
+      if (prev != null){
+        // In % mode a "revision" is a move in percentage points; in US$ mode it is a percent
+        // change. Same threshold either way — anything under 0.05 is noise, not a decision.
+        var mv = pct ? (val - prev) : (prev === 0 ? null : (val - prev) / Math.abs(prev) * 100);
+        if (mv != null){
+          if (mv > 0.05){ up++; agg.raises++; agg.rSum += mv; }
+          else if (mv < -0.05){ dn++; agg.cuts++; agg.cSum += mv; }
+          if (Math.abs(mv) > 0.05 && (agg.big == null || Math.abs(mv) > Math.abs(agg.big.mv)))
+            agg.big = { mv: mv, label: v.label, at: ev.vintages[i] };
+        }
+      }
+      prev = val;
+    });
+    var act = pct ? rsEvoActualPct(k, st.metric, m, v.y) : rsEvoActual(st.metric, m, v.y);
+    var drift = (first == null || last == null) ? null
+              : (pct ? last - first : (first === 0 ? null : (last - first) / Math.abs(first) * 100));
+    var err = (act == null || first == null) ? null
+            : (pct ? first - act : (act === 0 ? null : (first - act) / Math.abs(act) * 100));
+    if (drift != null){ agg.driftSum += drift; agg.driftN++; }
+    if (err != null){ agg.errSum += err; agg.errAbs += Math.abs(err); agg.errN++; }
+    rows.push({ label: v.label, src: v.src, first: first, firstV: ev.vintages[fi], last: last,
+                lastV: ev.vintages[li], up: up, dn: dn, drift: drift, act: act, err: err });
+  });
+  return { rows: rows, agg: agg, pct: pct };
 }
-function rsEvoTrackSrcHtml(m, src){
-  return ['summit', 'cons'].map(function(s){
-    var has = !!m[s], on = has && s === src, name = s === 'cons' ? 'Consensus' : 'Summit';
-    // `.active`, not `.on` — the pill styling in css/results.css keys off `.rs-view.active`,
-    // the same class the US$B / Reported toggles use.
-    return '<button type="button" class="rs-view' + (on ? ' active' : '') + '" data-rsevtsrc="' + s + '"' +
-      (has ? '' : ' disabled title="This line carries no stored ' + esc(name) + ' row, so there is nothing to record."') + '>' +
-      esc(name) + (has ? '' : ' ✕') + '</button>';
-  }).join('');
-}
-function rsRenderEvoTrack(){
-  var box = document.getElementById('rsEvoTrackTable'); if (!box) return;
-  var ev = rsEvo(), mkey = rsEvoTrackKey(), m = ev.metrics[mkey], src = rsEvoTrackSrc(m);
-  var t = rsEvoTrack(mkey, src), div = rsEvoScaleOf(m);
-  var srcEl = document.getElementById('rsEvoTrackSrc');
-  if (srcEl) srcEl.innerHTML = rsEvoTrackSrcHtml(m, src);
+function rsRenderEvoTrack(k, m){
+  var box = document.getElementById('rsEvoTrack-' + k); if (!box) return;
+  var ev = rsEvo(), st = rsEvoSt(k);
+  // Nothing to record with a single snapshot: every row would read zero revisions.
+  if (!ev.vintages || ev.vintages.length < 2){ box.innerHTML = ''; return; }
+  var t = rsEvoTrackRows(k, m), pct = t.pct, div = rsEvoScaleOf(m);
+  var showAct = !!st.act;                          // the Actual columns follow the Reported chip
 
-  function num(v){
+  function val(v){
     if (v == null) return '<span class="rs-ft-nil">—</span>';
-    return (v / div).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    return pct ? v.toFixed(1) + '%' : (v / div).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   }
-  function pct(v){
+  function move(v){
     if (v == null) return '<span class="rs-ft-nil">—</span>';
-    return '<span style="color:' + (v >= 0 ? RS_GREEN : RS_RED) + '">' + (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '%</span>';
+    return '<span style="color:' + (v >= 0 ? RS_GREEN : RS_RED) + '">' + (v >= 0 ? '+' : '−') +
+      Math.abs(v).toFixed(1) + (pct ? ' pp' : '%') + '</span>';
   }
-  var srcName = src === 'cons' ? 'Consensus' : 'Summit';
-  var h = '<div class="rs-ft-cap">' + esc(srcName) + ' · ' + rsCurName(m) + ' ' + (div === 1000 ? 'billions' : 'millions') +
-    ' · “first / latest view” are the earliest and most recent snapshots that carry this year' +
-    ' · “net move” is the travel between them · “first vs actual” is how far the earliest view sat from where the year landed' +
-    ' · a year already reported carries the reported figure in later snapshots, which is why its line flattens</div>';
-  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h">FY</th>' +
-    '<th>First view</th><th>Latest view</th><th>Actual</th><th>Revisions</th><th>Net move</th><th class="rs-ft-s">First vs actual</th></tr></thead><tbody>';
-  t.years.forEach(function(p){
-    h += '<tr class="rs-ft-main"><td class="rs-ft-h">FY' + esc(p.y) + '</td>' +
-      '<td><b>' + num(p.first) + '</b>' + (p.firstV ? '<br><span class="rs-ft-dim">' + esc(p.firstV.label) + '</span>' : '') + '</td>' +
-      '<td><b>' + num(p.last) + '</b>' + (p.lastV ? '<br><span class="rs-ft-dim">' + esc(p.lastV.label) + '</span>' : '') + '</td>' +
-      '<td>' + (p.act == null ? '<span class="rs-ft-dim">still open</span>' : '<b>' + num(p.act) + '</b>') + '</td>' +
+  var sig = function(v){ return (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + (pct ? ' pp' : '%'); };
+
+  var h = '<div class="rs-ft-cap">Revision record · ' +
+    (pct ? esc(rsEvoPctLabel(k, m)) : rsCurName(m) + ' ' + (div === 1000 ? 'billions' : 'millions')) +
+    ' · one row per line ON THE CHART — hide a fiscal year or a source and it leaves this table too' +
+    ' · “first / latest view” are the earliest and most recent snapshots carrying that line, “net move” the travel between them' +
+    (showAct ? ' · “first vs actual” is how far the earliest view sat from where the year landed'
+             : ' · turn on Reported to score the years that have landed') + '</div>';
+  h += '<div class="ov-kpis" id="rsEvoTrackStats-' + k + '"></div>';
+  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h">Line</th>' +
+    '<th>First view</th><th>Latest view</th>' + (showAct ? '<th>Actual</th>' : '') +
+    '<th>Revisions</th><th class="rs-ft-s">Net move</th>' +
+    (showAct ? '<th class="rs-ft-s">First vs actual</th>' : '') + '</tr></thead><tbody>';
+  if (!t.rows.length){
+    h += '<tr><td class="rs-ft-h" colspan="7"><span class="rs-ft-dim">Every line is hidden — click a chip above to bring one back.</span></td></tr>';
+  }
+  t.rows.forEach(function(p){
+    h += '<tr class="rs-ft-main"><td class="rs-ft-h">' + esc(p.label) + '</td>' +
+      '<td><b>' + val(p.first) + '</b>' + (p.firstV ? '<br><span class="rs-ft-dim">' + esc(p.firstV.label) + '</span>' : '') + '</td>' +
+      '<td><b>' + val(p.last) + '</b>' + (p.lastV ? '<br><span class="rs-ft-dim">' + esc(p.lastV.label) + '</span>' : '') + '</td>' +
+      (showAct ? '<td>' + (p.act == null ? '<span class="rs-ft-dim">still open</span>' : '<b>' + val(p.act) + '</b>') + '</td>' : '') +
       // "unmoved" is a finding; no view at all is not. FY2025 op income carries the actual but
       // no estimate (the model's annual ADJ_OPINC is off-basis, see the dataset note), and
       // reading that row as "unmoved" would claim a steadiness nobody ever expressed.
       '<td>' + (p.first == null ? '<span class="rs-ft-nil">—</span>'
                                 : (p.up || p.dn ? p.up + '↑ / ' + p.dn + '↓' : '<span class="rs-ft-dim">unmoved</span>')) + '</td>' +
-      '<td>' + rsRevHtml(m, p.first, p.last) + '</td>' +
-      '<td class="rs-ft-s">' + (p.err == null ? '<span class="rs-ft-dim">—</span>' : pct(p.err)) + '</td></tr>';
+      '<td class="rs-ft-s">' + move(p.drift) + '</td>' +
+      (showAct ? '<td class="rs-ft-s">' + move(p.err) + '</td>' : '') + '</tr>';
   });
   h += '</tbody></table></div>';
   box.innerHTML = h;
 
-  var stats = document.getElementById('rsEvoTrackStats');
+  var a = t.agg, stats = document.getElementById('rsEvoTrackStats-' + k);
   if (stats){
     var tile = function(l, v, sub, dir){
       return '<div class="ov-kpi"><div class="ov-kpi-l">' + esc(l) + '</div><div class="ov-kpi-v">' + v +
         '</div><div class="ov-kpi-d ' + (dir || 'muted') + '">' + esc(sub) + '</div></div>';
     };
-    var sig = function(v){ return (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '%'; };
-    var drift = t.driftN ? t.driftSum / t.driftN : null;
+    var drift = a.driftN ? a.driftSum / a.driftN : null;
+    var scope = t.rows.length + ' line' + (t.rows.length === 1 ? '' : 's') + ' on the chart';
     stats.innerHTML =
-      tile('Raised', String(t.raises), t.raises ? 'avg ' + sig(t.rSum / t.raises) + ' per raise' : 'never raised', t.raises ? 'up' : 'muted') +
-      tile('Cut', String(t.cuts), t.cuts ? 'avg ' + sig(t.cSum / t.cuts) + ' per cut' : 'never cut', t.cuts ? 'down' : 'muted') +
-      tile('Net drift', drift == null ? '—' : sig(drift), 'average across ' + t.driftN + ' fiscal year' + (t.driftN === 1 ? '' : 's'),
-           drift == null ? 'muted' : (drift >= 0 ? 'up' : 'down')) +
-      tile('Biggest single move', t.big ? sig(t.big.pct) : '—',
-           t.big ? 'FY' + t.big.y + ' at ' + (t.big.at ? t.big.at.label : '—') : 'no move above 0.05%',
-           t.big ? (t.big.pct >= 0 ? 'up' : 'down') : 'muted') +
-      tile('First view vs actual', t.errN ? sig(t.errSum / t.errN) : '—',
-           t.errN ? (t.errN + ' year' + (t.errN === 1 ? '' : 's') + ' on record · avg miss ' + (t.errAbs / t.errN).toFixed(1) + '%')
-                  : 'no fiscal year here has reported yet',
-           t.errN ? ((t.errSum / t.errN) >= 0 ? 'up' : 'down') : 'muted');
+      tile('Raised', String(a.raises), a.raises ? 'avg ' + sig(a.rSum / a.raises) + ' per raise' : 'never raised', a.raises ? 'up' : 'muted') +
+      tile('Cut', String(a.cuts), a.cuts ? 'avg ' + sig(a.cSum / a.cuts) + ' per cut' : 'never cut', a.cuts ? 'down' : 'muted') +
+      tile('Net drift', drift == null ? '—' : sig(drift), 'average across ' + scope, drift == null ? 'muted' : (drift >= 0 ? 'up' : 'down')) +
+      tile('Biggest single move', a.big ? sig(a.big.mv) : '—',
+           a.big ? a.big.label + ' at ' + (a.big.at ? a.big.at.label : '—') : 'no move above 0.05',
+           a.big ? (a.big.mv >= 0 ? 'up' : 'down') : 'muted') +
+      tile('First view vs actual', (showAct && a.errN) ? sig(a.errSum / a.errN) : '—', accSub(),
+           (showAct && a.errN) ? ((a.errSum / a.errN) >= 0 ? 'up' : 'down') : 'muted');
+
+    function accSub(){
+      if (!showAct) return 'Reported is off — turn it on to score';
+      if (!a.errN) return 'nothing on the chart has landed yet';
+      return a.errN + ' line' + (a.errN === 1 ? '' : 's') + ' landed · avg miss ' +
+        (a.errAbs / a.errN).toFixed(1) + (pct ? ' pp' : '%');
+    }
   }
-  // Say on screen what the axis IS, because the shape of this table is borrowed from a
-  // guidance record and a reader who knows that one will otherwise assume the company said
-  // these numbers.
-  var note = document.getElementById('rsEvoTrackNote');
-  if (note) note.textContent = 'The revision axis is the model’s saved snapshots, not company guidance — Uber guides ' +
-    'one quarter ahead only (Gross Bookings, Adjusted EBITDA, and non-GAAP EPS since 1Q26), so there is no annual guide ' +
-    'to walk. Each row therefore records how ' + srcName + '’s own view of that fiscal year moved across ' +
-    ev.vintages.length + ' snapshots, and — once the year reports — how far the earliest of them sat from the print.';
 }
 
 export function initResultsEvo(ticker){
@@ -2194,14 +2180,6 @@ export function initResultsEvo(ticker){
   }
   wrap.onclick = function(e){
     var k;
-    // The revision record lives OUTSIDE any [data-rsevo] block, so it is handled before
-    // anything calls secOf() — which would return null here and swallow the click.
-    var ts = e.target.closest('[data-rsevtsrc]');
-    if (ts && !ts.disabled){
-      rsEvoTrackSt().src = ts.getAttribute('data-rsevtsrc');
-      rsRenderEvoTrack();
-      return;
-    }
     var ab = e.target.closest('[data-rsevact]');
     if (ab && !ab.disabled && (k = secOf(ab))){
       var ast = rsEvoSt(k);
@@ -2228,11 +2206,6 @@ export function initResultsEvo(ticker){
     }
   };
   wrap.onchange = function(e){
-    if (e.target.classList.contains('rs-tsel')){
-      rsEvoTrackSt().metric = e.target.value;
-      rsRenderEvoTrack();
-      return;
-    }
     if (!e.target.classList.contains('rs-esel')) return;
     var k = secOf(e.target);
     if (!k) return;
@@ -2246,5 +2219,4 @@ export function initResultsEvo(ticker){
   // on dataset state, and the markup was generated when the pane's HTML string was built —
   // which can be long before this runs.
   rsEvo().sections.forEach(function(s){ rsRerenderEvoHead(wrap, s.key); rsBuildEvo(s.key); });
-  rsRenderEvoTrack();
 }

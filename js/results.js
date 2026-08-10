@@ -332,7 +332,12 @@ function rsPresetWin(m, key){
 //   'preprint' (default) — per period, the estimate that stood going INTO that print: the
 //        latest snapshot whose own last-reported period is still before the period, i.e.
 //        the shortest forward horizon, ties broken by the later snapshot. This reproduces
-//        the hand-picked columns the datasets carried before the matrix existed.
+//        the hand-picked columns the datasets carried before the matrix existed. Two rules
+//        keep it reproducing them exactly, both handled in rsSeriesFor: on an ALREADY
+//        REPORTED period the dataset's own value wins (it is the projection the model froze
+//        at that print — sharper than any snapshot saved weeks earlier), and where no
+//        vintage reaches back far enough the dataset's value is kept rather than blanked.
+//        So the matrix ADDS: it never silently subtracts a series the dataset already had.
 //   '<vintage id>'       — that one snapshot's row read straight across, so every period on
 //        screen is what a single model/consensus state said at one moment. Periods the
 //        snapshot never covered stay NULL instead of quietly falling back to an older one.
@@ -367,9 +372,17 @@ function rsSeriesFor(view, m, mkey, src, mode){
     var row = cells[mode] || {};
     return m.periods.map(function(p){ return row[p] == null ? null : row[p]; });
   }
-  var vs = mx.vintages || [];
-  return m.periods.map(function(p){
+  var vs = mx.vintages || [], flat = m['_flat_' + src] || [];
+  return m.periods.map(function(p, idx){
     var po = rsOrdIn(view, p); if (po == null) return null;
+    var f = flat[idx] == null ? null : flat[idx];
+    // On a period that has ALREADY REPORTED, the hand-authored series is the estimate the model
+    // FROZE at that print — the sharpest possible pre-print read. A snapshot can only ever be as
+    // fresh as the day it was saved, so where the two disagree (UBER 1Q26: 14,040 frozen against
+    // 14,014 in the Feb-5 file, three months stale) the frozen one wins and the matrix is left to
+    // fill holes. Forward periods have no freeze, so there the matrix — which carries the newest
+    // snapshot — is the authority.
+    if (f != null && m.act && m.act[idx] != null) return f;
     var best = null;
     for (var i = 0; i < vs.length; i++){
       var v = vs[i], row = cells[v.id];
@@ -379,7 +392,9 @@ function rsSeriesFor(view, m, mkey, src, mode){
       if (!(lo < po)) continue;              // this snapshot already had the period reported
       if (best == null || lo > best.lo || (lo === best.lo && v.id > best.id)) best = { lo: lo, id: v.id, v: row[p] };
     }
-    return best ? best.v : null;
+    // No vintage can date this period (every snapshot post-dates it) — keep whatever the dataset
+    // already shipped rather than blanking a series the matrix simply cannot reach back to.
+    return best ? best.v : f;
   });
 }
 // Rewrite every metric's `summit`/`cons` from the matrix for the current selection. The

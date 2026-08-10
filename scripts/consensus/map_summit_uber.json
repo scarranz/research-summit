@@ -1,0 +1,50 @@
+{
+  "_note": "Config for emit_summit_matrix.py — the SUMMIT side of estMatrix (the model's own estimates per snapshot). The consensus side has its own map_<tk>.json / valid_<tk>.json.",
+
+  "metrics": {
+    "rev":    "REV",
+    "mobgb":  "MOBILITY_GB",
+    "delgb":  "DELIVERY_GB",
+    "frgb":   "FREIGHT_GB",
+    "mobrev": "MOBILITY_REVENUE",
+    "delrev": "DELIVERY_REVENUE",
+    "opinc":  "ADJ_OPINC",
+    "ebitda": "EBITDA",
+    "eps":    "ADJ_EPS",
+    "fcf":    "FCF",
+    "trips":  "ORDERS",
+    "mapc":   "USERS"
+  },
+
+  "_derived_note": "Uber's model has no total-GB row; the dataset's `gb` is Mobility + Delivery + Freight, exactly as gb.act reconciles to each release (see the header note in js/results-data/uber.js).",
+  "derived": {
+    "gb": ["MOBILITY_GB", "DELIVERY_GB", "FREIGHT_GB"]
+  },
+
+  "_decimals_note": "EPS keeps 4 decimals like the consensus matrix; everything else is US$ millions / counts in millions at 1 decimal, matching the hand-authored summit arrays.",
+  "decimals": { "eps": 4, "_default": 1 },
+
+  "_vintages_note": "The five usable model snapshots. Deduped by facts_hash (2026-05-06 == 2026-05-07); 2026-07-17 and 2026-08-03 are intra-period saves; 2026-07-20 is unusable (Delivery-Hero pro-forma toggle ON). lastActual = the last period REPORTED when that file was saved.",
+  "vintages": [
+    { "id": "2025-12-15", "label": "Dec 15, 2025", "lastActual": { "q": "3Q25", "y": "2024" } },
+    { "id": "2026-02-05", "label": "Feb 5, 2026",  "lastActual": { "q": "4Q25", "y": "2025" } },
+    { "id": "2026-05-07", "label": "May 7, 2026",  "lastActual": { "q": "1Q26", "y": "2025" } },
+    { "id": "2026-07-31", "label": "Jul 31, 2026", "lastActual": { "q": "1Q26", "y": "2025" } },
+    { "id": "2026-08-05", "label": "Aug 5, 2026",  "lastActual": { "q": "2Q26", "y": "2025" } }
+  ],
+
+  "_views_note": "Which dataset metric keys get a matrix row per view. Order here is the order emitted. ANNUAL trips and fcf are deliberately absent: the model's annual ORDERS row is on the audit list (FY2026 reads 12,260 against a 13,567 FY2025 ACTUAL) and annual FCF carries two competing rows (see prefer_source). The quarterly rows of both are sound. Leaving them out keeps the matrix from re-introducing the exact numbers the dataset chose to null out.",
+  "views": {
+    "q": ["rev", "gb", "mobgb", "mobrev", "delgb", "delrev", "frgb", "opinc", "ebitda", "eps", "fcf", "trips", "mapc"],
+    "y": ["rev", "gb", "mobgb", "mobrev", "delgb", "delrev", "frgb", "opinc", "ebitda", "eps", "mapc"]
+  },
+
+  "_prefer_source_note": "Some rows exist twice under different `source` tags. Annual FCF is the live case: DEFAULT reads 11,338 for FY2026 where SEGM reads 10,665 (the segment build-up). SEGM is the one the quarterly rows already reconcile to, so it wins; the emitter reports every conflict it resolves.",
+  "prefer_source": ["SEGM", "DEFAULT"],
+
+  "_axis_note": "The dataset's period axis — cells outside it are dropped so the matrix never carries a period the metric cannot plot.",
+  "axis": {
+    "q": ["3Q22","4Q22","1Q23","2Q23","3Q23","4Q23","1Q24","2Q24","3Q24","4Q24","1Q25","2Q25","3Q25","4Q25","1Q26","2Q26","3Q26","4Q26","1Q27"],
+    "y": ["2022","2023","2024","2025","2026","2027","2028","2029","2030"]
+  }
+}

@@ -46,7 +46,9 @@ ticker. The workbook now covers 32 tickers.
 ## 3. What is open, and the exact blocker for each
 
 **Change 2 — the SoFi table — shipped as the "Revision record"** (`rsEvoTrack*` in `js/results.js`),
-sitting **inside each Estimates block**: chart → revision record → the snapshot-by-snapshot table.
+sitting **inside each Estimates block**: chart → revision record → the snapshot-by-snapshot table,
+which is **collapsed behind its own title** (`rs-collap` in `css/results.css`; the overview modules'
+`ov-collap` is injected inline in `js/overviews/uber.js` and is not reachable from the engine).
 SoFi's version walks a full-year guide revised each quarter (`Initial → Q1 → … → Actual`); **Uber
 guides one quarter ahead only**, so the saved snapshots are the revision axis instead. Per line:
 first view · latest view · actual · revisions n↑/n↓ · net move · first vs actual, over five

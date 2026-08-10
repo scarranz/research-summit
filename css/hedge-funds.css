@@ -288,7 +288,7 @@
 .rpill.rp { background: rgba(23, 122, 78, .1); color: var(--pos); }
 .rpill.rn { background: rgba(155, 42, 32, .1); color: var(--neg); }
 
-/* ─── Investor Detail Modal ─── */
+/* ─── Shared building blocks (Upload 13F panel, letters, year pills) ─── */
 
 .icard { cursor: pointer; transition: box-shadow .12s, border-color .12s; }
 .icard:hover { box-shadow: 0 2px 10px rgba(30, 39, 51, .08); border-color: var(--steel); }
@@ -403,23 +403,6 @@
 
 .im-upload-btn:hover { background: var(--ice); border-color: var(--steel); }
 
-.im-quarters { display: flex; gap: 6px; margin-bottom: 10px; }
-
-.im-q {
-  font-family: 'Inter', monospace;
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--mu);
-  background: var(--surface);
-  border: 1px solid var(--bdr);
-  border-radius: 6px;
-  padding: 3px 9px;
-  cursor: pointer;
-}
-
-.im-q:hover { border-color: var(--steel); }
-.im-q.active { background: var(--navy); border-color: var(--navy); color: #fff; }
-
 /* ─── Upload 13F panel ─── */
 
 .u13f-card { width: 560px; max-width: 92vw; max-height: 86vh; overflow-y: auto; padding: 0; }
@@ -443,3 +426,75 @@
 }
 
 .u13f-ticker-in:focus { outline: none; border-color: var(--steel); }
+
+/* ─── Investor Detail page ─── */
+
+.ivd-back {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--steel);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 18px;
+}
+
+.ivd-back:hover { text-decoration: underline; }
+
+.ivd-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--w);
+  border: 1px solid var(--bdr);
+  border-radius: 12px;
+  padding: 18px 22px;
+  margin-bottom: 22px;
+}
+
+.ivd-name { font-size: 18px; font-weight: 600; color: var(--navy); letter-spacing: -.01em; margin-bottom: 2px; }
+
+.ivd-period-pickers { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+
+.ivd-pp { min-width: 130px; }
+
+.ivd-cmp-wrap { max-height: 480px; overflow: auto; }
+
+.ivd-cmp-tbl th, .ivd-cmp-tbl td { white-space: nowrap; }
+
+.ivd-badge {
+  display: inline-block;
+  font-family: 'Inter', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+.ivd-badge.new { background: rgba(37, 99, 235, .1); color: var(--gold2); }
+.ivd-badge.sold { background: rgba(155, 42, 32, .1); color: var(--neg); }
+.ivd-badge.up { background: rgba(23, 122, 78, .1); color: var(--pos); }
+.ivd-badge.down { background: rgba(155, 42, 32, .1); color: var(--neg); }
+.ivd-badge.flat { background: var(--surface); color: var(--mu); font-weight: 500; }
+
+.ivd-summary-hdr {
+  font-family: 'Inter', monospace;
+  font-size: 10px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--mu);
+  margin: 14px 0 6px;
+}
+
+.ivd-summary-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  color: var(--text);
+  line-height: 1.7;
+}
+
+.ivd-summary-list b { color: var(--navy); }

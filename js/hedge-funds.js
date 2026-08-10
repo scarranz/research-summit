@@ -127,7 +127,7 @@ function renderInvGrid(){
       ?'<div class="icard-mv '+(inv.q1>=0?'gp':'rn')+'">'+(inv.q1>0?'+':'')+inv.q1.toFixed(2)+'%</div>'
       :'<div class="icard-mv" style="color:var(--mu);font-size:11px">n/a</div>';
     var cumLbl=inv.q1!=null?'Cumul. 2019&ndash;Q1 26':'Cumul. 2019&ndash;2025';
-    html+='<div class="icard'+(isSummit?' summit':'')+'" onclick="openInvestorModal(\''+inv.key+'\')">';
+    html+='<div class="icard'+(isSummit?' summit':'')+'" onclick="openInvestorDetail(\''+inv.key+'\')">';
     // Header
     html+='<div class="icard-hdr"><div class="icard-left">';
     if(photo){html+='<img class="icard-photo'+(isSummit?' sp':'')+'" src="'+photo+'" alt="" onerror="this.style.opacity=0.3">';}
@@ -185,9 +185,10 @@ function compareYearList(data) {
   return Object.keys(years).map(Number).sort(function(a, b) { return b - a; });
 }
 
-// Same "pick the latest quarter on file for that year" rule the pop-up
-// uses, applied per investor so each card shows its own most recent
-// snapshot even if funds filed on different schedules.
+// Same "pick the latest quarter on file for that year" rule the detail
+// page's holdings comparison uses, applied per investor so each card
+// shows its own most recent snapshot even if funds filed on different
+// schedules.
 function periodHoldingsForInvestor(holdings, investorKey, year) {
   var rows = holdings.filter(function(h) { return h.investor_key === investorKey && h.year === year; });
   if (!rows.length) return [];
@@ -206,7 +207,7 @@ function investorPeriodCardHtml(inv, year, data) {
   var retPct = retRow ? retRow.return_pct : null;
   var holdRows = periodHoldingsForInvestor(data.holdings, inv.key, year);
 
-  var html = '<div class="icard' + (isSummit ? ' summit' : '') + '" onclick="openInvestorModal(\'' + inv.key + '\')">';
+  var html = '<div class="icard' + (isSummit ? ' summit' : '') + '" onclick="openInvestorDetail(\'' + inv.key + '\')">';
   html += '<div class="icard-hdr"><div class="icard-left">';
   if (photo) { html += '<img class="icard-photo' + (isSummit ? ' sp' : '') + '" src="' + photo + '" alt="" onerror="this.style.opacity=0.3">'; }
   else { var ini = inv.name.split(' ').slice(0,2).map(function(n){ return n[0]; }).join(''); html += '<div class="icard-ini">' + esc(ini) + '</div>'; }
@@ -263,9 +264,10 @@ function renderCompareBar() {
   });
 }
 
-// ─── Investor Detail Modal ─────────────────────────────────────
-// Click an investor card → yearly returns (last 5yr), that year's top
-// holdings, and investor letters. Data lives in Supabase (see
+// ─── Investor Detail page — shared data + rendering helpers ──
+// Click an investor card → a full-page profile (see openInvestorDetail
+// near the bottom): yearly returns, the holdings comparison across
+// quarters, and investor letters. Data lives in Supabase (see
 // sql/014_investor_profiles.sql); on localhost, falls back to
 // investor-local-seed.js if the migration hasn't been run yet.
 
@@ -275,7 +277,7 @@ function imPct(v){ return v==null ? 'n/a' : (v>=0?'+':'')+v.toFixed(1)+'%'; }
 
 var CAT_LABELS = { annual_letter: 'Annual Letters', investor_message: 'Investor Messages' };
 
-// Official fund website, shown small under the fund name in the pop-up.
+// Official fund website, shown small under the fund name on the detail page.
 // Only add an entry once the URL is verified — better to show nothing
 // than a guessed link. Ackman/Pershing Square Holdings confirmed 2026-08.
 var INVESTOR_WEBSITES = {
@@ -315,27 +317,6 @@ function invYearPillsHtml(yearList, selYear) {
   }).join('') + '</div>';
 }
 
-// A year can have several 13F snapshots (one per quarter). Holdings with
-// quarter === null are "manual/undated" entries (e.g. the current-holdings
-// seed) and are grouped under their own bucket.
-function invHoldingsQuarters(holdings, year) {
-  var seen = {};
-  holdings.filter(function(h) { return h.year === year; }).forEach(function(h) { seen[h.quarter == null ? 'none' : h.quarter] = true; });
-  return Object.keys(seen).map(function(k) { return k === 'none' ? null : parseInt(k, 10); })
-    .sort(function(a, b) { return (a || 0) - (b || 0); });
-}
-
-function invHoldingsHtml(holdings, year, quarter) {
-  var rows = holdings.filter(function(h) { return h.year === year && (quarter == null ? h.quarter == null : h.quarter === quarter); })
-    .sort(function(a, b) { return (a.rank || 0) - (b.rank || 0); });
-  if (!rows.length) return '<div class="im-empty">No holdings on file for ' + year + (quarter ? ' Q' + quarter : '') + '.</div>';
-  var html = '<table class="icard-tbl"><thead><tr><th>Ticker</th><th>Company</th><th class="nr">% Port</th></tr></thead><tbody>';
-  rows.forEach(function(h) {
-    html += '<tr><td><span class="iticker">' + esc(h.ticker || '?') + '</span></td><td><span class="ico">' + esc(h.company_name) + '</span></td><td class="nr" style="color:var(--mu)">' + Number(h.weight_pct).toFixed(2) + '%</td></tr>';
-  });
-  return html + '</tbody></table>';
-}
-
 function invLettersHtml(letters) {
   if (!letters.length) return '<div class="im-empty">No letters on file yet.</div>';
   var byCat = {};
@@ -359,49 +340,6 @@ function invLettersHtml(letters) {
   return html || '<div class="im-empty">No letters on file yet.</div>';
 }
 
-function renderInvYears(id, data, selYear) {
-  var yearsEl = document.getElementById(id + '_years');
-  if (!yearsEl) return;
-  var yearList = invYearList(data);
-  yearsEl.innerHTML = invYearPillsHtml(yearList, selYear);
-  renderInvHoldingsForYear(id, data, selYear);
-  yearsEl.querySelectorAll('.im-yr').forEach(function(btn) {
-    btn.addEventListener('click', function() { renderInvYears(id, data, parseInt(btn.getAttribute('data-year'), 10)); });
-  });
-}
-
-function renderInvHoldingsForYear(id, data, year) {
-  var lblEl = document.getElementById(id + '_hold-lbl');
-  if (lblEl) lblEl.textContent = year ? ('Top Holdings — ' + year) : 'Top Holdings';
-  if (!year) {
-    var holdEl0 = document.getElementById(id + '_holdings');
-    if (holdEl0) holdEl0.innerHTML = '<div class="im-empty">No data on file yet.</div>';
-    return;
-  }
-  var quarters = invHoldingsQuarters(data.holdings, year);
-  var selQuarter = quarters.length ? quarters[quarters.length - 1] : null;
-  renderInvHoldingsQuarter(id, data, year, selQuarter, quarters);
-}
-
-function renderInvHoldingsQuarter(id, data, year, quarter, quarters) {
-  var holdEl = document.getElementById(id + '_holdings');
-  if (!holdEl) return;
-  var qHtml = '';
-  if (quarters.length > 1) {
-    qHtml = '<div class="im-quarters">' + quarters.map(function(q) {
-      var on = q === quarter;
-      return '<button type="button" class="im-q' + (on ? ' active' : '') + '" data-q="' + (q == null ? '' : q) + '">' + (q ? 'Q' + q : '—') + '</button>';
-    }).join('') + '</div>';
-  }
-  holdEl.innerHTML = qHtml + invHoldingsHtml(data.holdings, year, quarter);
-  holdEl.querySelectorAll('.im-q').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var qv = btn.getAttribute('data-q');
-      renderInvHoldingsQuarter(id, data, year, qv === '' ? null : parseInt(qv, 10), quarters);
-    });
-  });
-}
-
 function renderInvLetters(id, letters) {
   var el = document.getElementById(id + '_letters');
   if (!el) return;
@@ -415,12 +353,180 @@ function renderInvLetters(id, letters) {
   });
 }
 
-function openInvestorModal(key) {
-  var inv = INVESTORS.filter(function(i){ return i.key === key; })[0];
-  if (!inv) return;
-  document.querySelectorAll('.im-overlay').forEach(function(el){ el.remove(); });
+// ─── Holdings Comparison (buys / sells / new positions) ──────
+// A "period" is one 13F snapshot: {year, quarter}. quarter===null is the
+// legacy/manual "current holdings" bucket (e.g. the initial seed) and
+// sorts as if it were after Q4 of that year, so it reads as the freshest
+// thing on file until real quarterly uploads replace it.
 
-  var id = 'invModal_' + Date.now();
+function periodSortKey(p) { return p.year * 10 + (p.quarter == null ? 5 : p.quarter); }
+function periodKeyEq(a, b) { return a.year === b.year && a.quarter === b.quarter; }
+function periodLabel(p) { return p.quarter ? ('Q' + p.quarter + ' ' + p.year) : (p.year + ' (latest)'); }
+function periodOptionValue(p) { return p.year + '-' + (p.quarter == null ? '' : p.quarter); }
+function rowKey(h) { return h.ticker ? h.ticker : '~' + h.company_name; }
+
+function investorPeriods(holdings, investorKey) {
+  var seen = {};
+  holdings.filter(function(h) { return h.investor_key === investorKey; }).forEach(function(h) {
+    seen[periodOptionValue({ year: h.year, quarter: h.quarter })] = { year: h.year, quarter: h.quarter };
+  });
+  return Object.keys(seen).map(function(k) { return seen[k]; }).sort(function(a, b) { return periodSortKey(a) - periodSortKey(b); });
+}
+
+function periodWeightMap(holdings, investorKey, p) {
+  var map = {};
+  holdings.filter(function(h) {
+    return h.investor_key === investorKey && h.year === p.year && (p.quarter == null ? h.quarter == null : h.quarter === p.quarter);
+  }).forEach(function(h) { map[rowKey(h)] = h; });
+  return map;
+}
+
+function computeHoldingsComparison(holdings, investorKey, periods) {
+  var maps = periods.map(function(p) { return periodWeightMap(holdings, investorKey, p); });
+  var allKeys = {};
+  maps.forEach(function(m) { Object.keys(m).forEach(function(k) { allKeys[k] = true; }); });
+  var rows = Object.keys(allKeys).map(function(k) {
+    var cells = maps.map(function(m) { return m[k] ? m[k].weight_pct : null; });
+    var name = '', ticker = k.charAt(0) === '~' ? '' : k;
+    for (var i = maps.length - 1; i >= 0; i--) { if (maps[i][k]) { name = maps[i][k].company_name; break; } }
+    return { key: k, ticker: ticker, companyName: name, cells: cells };
+  });
+  rows.sort(function(a, b) {
+    var la = a.cells[a.cells.length - 1], lb = b.cells[b.cells.length - 1];
+    var pa = a.cells[a.cells.length - 2], pb = b.cells[b.cells.length - 2];
+    var va = la != null ? la : (pa != null ? -1 : -2);
+    var vb = lb != null ? lb : (pb != null ? -1 : -2);
+    if (vb !== va) return vb - va;
+    return (pb != null ? pb : -1) - (pa != null ? pa : -1);
+  });
+  return rows;
+}
+
+function classifyMove(prev, curr) {
+  if (prev == null && curr == null) return null;
+  if (prev == null) return 'new';
+  if (curr == null) return 'sold';
+  var delta = curr - prev;
+  if (Math.abs(delta) < 0.15) return 'flat';
+  return delta > 0 ? 'up' : 'down';
+}
+
+function moveBadgeHtml(prev, curr) {
+  var move = classifyMove(prev, curr);
+  if (move === 'new') return '<span class="ivd-badge new">NEW</span>';
+  if (move === 'sold') return '<span class="ivd-badge sold">SOLD</span>';
+  if (move === 'up') return '<span class="ivd-badge up">▲ +' + (curr - prev).toFixed(2) + 'pp</span>';
+  if (move === 'down') return '<span class="ivd-badge down">▼ ' + (curr - prev).toFixed(2) + 'pp</span>';
+  if (move === 'flat') return '<span class="ivd-badge flat">flat</span>';
+  return '';
+}
+
+function renderHoldingsCompareTable(rows, periods) {
+  if (!rows.length) return '<div class="im-empty">No holdings on file yet — upload a 13F to get started.</div>';
+  var html = '<div class="u13f-preview-wrap ivd-cmp-wrap"><table class="icard-tbl ivd-cmp-tbl"><thead><tr><th>Ticker</th><th>Company</th>';
+  periods.forEach(function(p) { html += '<th class="nr">' + esc(periodLabel(p)) + '</th>'; });
+  if (periods.length > 1) html += '<th class="nr">Move</th>';
+  html += '</tr></thead><tbody>';
+  rows.forEach(function(r) {
+    html += '<tr><td><span class="iticker">' + esc(r.ticker || '?') + '</span></td><td><span class="ico">' + esc(r.companyName) + '</span></td>';
+    r.cells.forEach(function(w) { html += '<td class="nr" style="color:var(--mu)">' + (w == null ? '—' : w.toFixed(2) + '%') + '</td>'; });
+    if (periods.length > 1) html += '<td class="nr">' + moveBadgeHtml(r.cells[r.cells.length - 2], r.cells[r.cells.length - 1]) + '</td>';
+    html += '</tr>';
+  });
+  return html + '</tbody></table></div>';
+}
+
+function generateMovesSummary(rows, periods) {
+  if (periods.length < 2) return '';
+  var newPos = [], sold = [], up = [], down = [];
+  rows.forEach(function(r) {
+    var prev = r.cells[r.cells.length - 2], curr = r.cells[r.cells.length - 1];
+    var move = classifyMove(prev, curr);
+    if (move === 'new') newPos.push(r);
+    else if (move === 'sold') sold.push(r);
+    else if (move === 'up') up.push({ row: r, delta: curr - prev });
+    else if (move === 'down') down.push({ row: r, delta: curr - prev });
+  });
+  up.sort(function(a, b) { return b.delta - a.delta; });
+  down.sort(function(a, b) { return a.delta - b.delta; });
+
+  var lines = [];
+  newPos.forEach(function(r) {
+    var curr = r.cells[r.cells.length - 1];
+    lines.push('<b>New position: ' + esc(r.ticker || r.companyName) + '</b> — enters at ' + curr.toFixed(2) + '% of the portfolio.');
+  });
+  sold.forEach(function(r) {
+    var prev = r.cells[r.cells.length - 2];
+    lines.push('<b>Exited: ' + esc(r.ticker || r.companyName) + '</b> — was ' + prev.toFixed(2) + '%, no longer held.');
+  });
+  up.slice(0, 3).forEach(function(o) {
+    var prev = o.row.cells[o.row.cells.length - 2], curr = o.row.cells[o.row.cells.length - 1];
+    lines.push('<b>Increased ' + esc(o.row.ticker || o.row.companyName) + '</b> from ' + prev.toFixed(2) + '% to ' + curr.toFixed(2) + '% (+' + o.delta.toFixed(2) + 'pp).');
+  });
+  down.slice(0, 3).forEach(function(o) {
+    var prev = o.row.cells[o.row.cells.length - 2], curr = o.row.cells[o.row.cells.length - 1];
+    lines.push('<b>Trimmed ' + esc(o.row.ticker || o.row.companyName) + '</b> from ' + prev.toFixed(2) + '% to ' + curr.toFixed(2) + '% (' + o.delta.toFixed(2) + 'pp).');
+  });
+
+  var hdr = '<div class="ivd-summary-hdr">' + esc(periodLabel(periods[periods.length - 2])) + ' &rarr; ' + esc(periodLabel(periods[periods.length - 1])) + '</div>';
+  if (!lines.length) return hdr + '<div class="im-empty">No notable changes between these two periods.</div>';
+  return hdr + '<ul class="ivd-summary-list"><li>' + lines.join('</li><li>') + '</li></ul>';
+}
+
+function renderPeriodPickers(allPeriods, selected) {
+  return '<div class="ivd-period-pickers">' + selected.map(function(p, i) {
+    return '<div class="ivd-pp"><label class="modal-label">Period ' + (i + 1) + '</label><select class="modal-input ivd-pp-sel" data-i="' + i + '">' +
+      allPeriods.map(function(ap) {
+        return '<option value="' + periodOptionValue(ap) + '"' + (periodKeyEq(ap, p) ? ' selected' : '') + '>' + esc(periodLabel(ap)) + '</option>';
+      }).join('') +
+      '</select></div>';
+  }).join('') + '</div>';
+}
+
+function renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, selected) {
+  var el = document.getElementById(rootId + '_cmp');
+  var sumEl = document.getElementById(rootId + '_summary');
+  if (!el) return;
+  var rows = computeHoldingsComparison(holdings, investorKey, selected);
+  var html = allPeriods.length > 1 ? renderPeriodPickers(allPeriods, selected) : '';
+  html += renderHoldingsCompareTable(rows, selected);
+  el.innerHTML = html;
+  el.querySelectorAll('.ivd-pp-sel').forEach(function(sel) {
+    sel.addEventListener('change', function() {
+      var i = parseInt(sel.getAttribute('data-i'), 10);
+      var parts = sel.value.split('-');
+      selected[i] = { year: parseInt(parts[0], 10), quarter: parts[1] === '' ? null : parseInt(parts[1], 10) };
+      selected.sort(function(a, b) { return periodSortKey(a) - periodSortKey(b); });
+      renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, selected);
+    });
+  });
+  if (sumEl) sumEl.innerHTML = selected.length >= 2 ? generateMovesSummary(rows, selected)
+    : '<div class="im-empty">Upload another quarter to see period-over-period changes.</div>';
+}
+
+function renderHoldingsSection(rootId, investorKey, holdings) {
+  var el = document.getElementById(rootId + '_cmp');
+  if (!el) return;
+  var allPeriods = investorPeriods(holdings, investorKey);
+  if (!allPeriods.length) {
+    el.innerHTML = '<div class="im-empty">No holdings on file yet — upload a 13F to get started.</div>';
+    var sumEl = document.getElementById(rootId + '_summary'); if (sumEl) sumEl.innerHTML = '';
+    return;
+  }
+  renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, allPeriods.slice(-4));
+}
+
+// ─── Investor Detail page ─────────────────────────────────────
+// Replaces the old pop-up: clicking a card swaps the Hedge Funds tab from
+// the grid to a full page for that investor — returns always visible up
+// top, the holdings comparison + auto-written summary of the biggest
+// moves, and Letters & Resources below.
+
+function openInvestorDetail(key) {
+  var inv = INVESTORS.filter(function(i){ return i.key === key; })[0];
+  var root = document.getElementById('inv-detailview');
+  if (!inv || !root) return;
+
   var photo = inv.photo ? (IMGS[inv.photo] || '') : '';
   var ini = inv.name.split(' ').slice(0,2).map(function(n){ return n[0]; }).join('');
   var website = INVESTOR_WEBSITES[key];
@@ -428,55 +534,59 @@ function openInvestorModal(key) {
     ? '<a class="im-fund-link" href="' + esc(website) + '" target="_blank" rel="noopener noreferrer">' + esc(website.replace(/^https?:\/\//, '').replace(/\/$/, '')) + ' ↗</a>'
     : '';
 
-  var overlay = document.createElement('div');
-  overlay.className = 'modal-overlay im-overlay open';
-  overlay.id = id;
-  overlay.innerHTML =
-    '<div class="modal-card im-card" onclick="event.stopPropagation()">' +
-      '<div class="modal-header im-header">' +
-        '<div style="display:flex;align-items:center;gap:12px">' +
-          (photo
-            ? '<img class="icard-photo" src="' + photo + '" alt="" style="width:44px;height:44px" onerror="this.style.opacity=0.3">'
-            : '<div class="icard-ini" style="width:44px;height:44px;font-size:13px">' + esc(ini) + '</div>') +
-          '<div><div class="modal-title" style="font-size:16px">' + esc(inv.name) + '</div><div class="icard-fund" style="font-size:11px">' + esc(inv.fund) + '</div>' + websiteHtml + '</div>' +
-        '</div>' +
-        '<button class="modal-close" id="' + id + '_close">&times;</button>' +
-      '</div>' +
-      '<div class="im-body">' +
-        '<div class="im-section-lbl">Yearly Returns</div>' +
-        '<div id="' + id + '_years"><div class="im-loading">Loading…</div></div>' +
-        '<div class="im-hold-row">' +
-          '<div class="im-section-lbl" id="' + id + '_hold-lbl">Top Holdings</div>' +
-          '<button type="button" class="im-upload-btn" id="' + id + '_upload13f">Upload 13F</button>' +
-        '</div>' +
-        '<div id="' + id + '_holdings"></div>' +
-        '<div class="im-section-lbl" style="margin-top:18px">Investor Letters</div>' +
-        '<div id="' + id + '_letters"><div class="im-loading">Loading…</div></div>' +
-      '</div>' +
-    '</div>';
-  document.body.appendChild(overlay);
+  root.innerHTML =
+    '<button type="button" class="ivd-back" id="ivd-back">&larr; Back to Superinvestors</button>' +
+    '<div class="ivd-header">' +
+      (photo
+        ? '<img class="icard-photo" src="' + photo + '" alt="" style="width:56px;height:56px" onerror="this.style.opacity=0.3">'
+        : '<div class="icard-ini" style="width:56px;height:56px;font-size:16px">' + esc(ini) + '</div>') +
+      '<div><div class="ivd-name">' + esc(inv.name) + '</div><div class="icard-fund">' + esc(inv.fund) + '</div>' + websiteHtml + '</div>' +
+      '<div style="flex:1"></div>' +
+      '<div style="text-align:right"><div class="icard-aum-lbl">Portfolio</div><div class="icard-aum-val">' + esc(inv.aum) + '</div></div>' +
+    '</div>' +
+    '<div class="im-section-lbl">Yearly Returns</div>' +
+    '<div id="ivd_years"><div class="im-loading">Loading…</div></div>' +
+    '<div class="im-hold-row">' +
+      '<div class="im-section-lbl">Holdings Comparison</div>' +
+      '<button type="button" class="im-upload-btn" id="ivd_upload13f">Upload 13F</button>' +
+    '</div>' +
+    '<div id="ivd_cmp"><div class="im-loading">Loading…</div></div>' +
+    '<div id="ivd_summary"></div>' +
+    '<div class="im-section-lbl" style="margin-top:22px">Letters &amp; Resources</div>' +
+    '<div id="ivd_letters"><div class="im-loading">Loading…</div></div>';
 
-  overlay.addEventListener('click', function(e){ if (e.target === overlay) overlay.remove(); });
-  document.addEventListener('keydown', function handler(e){ if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', handler); } });
-  document.getElementById(id + '_close').addEventListener('click', function(){ overlay.remove(); });
+  document.getElementById('inv-gridview').style.display = 'none';
+  root.style.display = 'block';
+  window.scrollTo(0, 0);
 
-  function refresh(selYear) {
+  var lastData = null;
+
+  function loadDetail() {
     loadInvestorProfileData(key).then(function(data) {
-      if (!document.getElementById(id)) return; // modal already closed
-      var yearList = invYearList(data);
-      var year = selYear != null ? selYear : (yearList.length ? yearList[yearList.length - 1].year : null);
-      renderInvYears(id, data, year);
-      renderInvLetters(id, data.letters);
+      if (root.style.display === 'none') return; // navigated back before this resolved
+      lastData = data;
+      document.getElementById('ivd_years').innerHTML = invYearPillsHtml(invYearList(data), null);
+      renderHoldingsSection('ivd', key, data.holdings);
+      renderInvLetters('ivd', data.letters);
     });
   }
 
-  document.getElementById(id + '_upload13f').addEventListener('click', function() {
-    var activeBtn = document.querySelector('#' + id + '_years .im-yr.active');
-    var year = activeBtn ? parseInt(activeBtn.getAttribute('data-year'), 10) : new Date().getFullYear();
-    openUpload13FPanel(key, year, function(savedYear) { refresh(savedYear); });
+  document.getElementById('ivd-back').addEventListener('click', closeInvestorDetail);
+  document.getElementById('ivd_upload13f').addEventListener('click', function() {
+    var allPeriods = investorPeriods(lastData ? lastData.holdings : [], key);
+    var latest = allPeriods.length ? allPeriods[allPeriods.length - 1] : null;
+    openUpload13FPanel(key, latest ? latest.year : new Date().getFullYear(), function() { loadDetail(); });
   });
 
-  refresh(null);
+  loadDetail();
+}
+
+function closeInvestorDetail() {
+  var root = document.getElementById('inv-detailview');
+  if (root) root.style.display = 'none';
+  var grid = document.getElementById('inv-gridview');
+  if (grid) grid.style.display = 'block';
+  window.scrollTo(0, 0);
 }
 
 // ─── Upload 13F panel ──────────────────────────────────────────
@@ -614,7 +724,7 @@ window.toggleFund = toggleFund;
 window.allFunds = allFunds;
 window.setAlphaStart = setAlphaStart;
 window.setAlphaMode = setAlphaMode;
-window.openInvestorModal = openInvestorModal;
+window.openInvestorDetail = openInvestorDetail;
 
 export function loadHedgeFundsPage() {
   if (!HF_FUNDS || !HF_FUNDS.length || !INVESTORS || !INVESTORS.length) {

@@ -149,17 +149,64 @@ insert into investor_yearly_returns (investor_key, year, return_pct) values
   ('ackman', 2024, 8.2),
   ('ackman', 2025, 18.3);
 
--- Top holdings — only 2025 is seeded (matches INVESTORS['ackman'].holdings,
--- i.e. real, current data). 2021-2024 are intentionally left empty: we
--- don't have Pershing Square's actual historical 13F top holdings on
--- file, and the UI shows "no holdings on file" for those years rather
--- than invented numbers. Fill them in from real 13F filings later.
-insert into investor_yearly_holdings (investor_key, year, ticker, company_name, weight_pct, rank) values
-  ('ackman', 2025, 'BN',   'Brookfield Corp',      18.15, 1),
-  ('ackman', 2025, 'UBER', 'Uber Technologies',    15.9,  2),
-  ('ackman', 2025, 'AMZN', 'Amazon.com',           14.28, 3),
-  ('ackman', 2025, 'GOOG', 'Alphabet Cl C',        12.46, 4),
-  ('ackman', 2025, 'META', 'Meta Platforms',       11.37, 5);
+-- Top holdings — real Pershing Square Capital Management 13F-HR filings
+-- (SEC EDGAR CIK 0001336528), pulled and parsed straight from each
+-- quarter's infotable.xml (same format the "Upload 13F" flow accepts):
+--   Q2 2025 (as of 2025-06-30, filed 2025-08-14) — accession 0001172661-25-003509
+--   Q3 2025 (as of 2025-09-30, filed 2025-11-14) — accession 0001172661-25-005039
+--   Q4 2025 (as of 2025-12-31, filed 2026-02-17) — accession 0001172661-26-001091
+--   Q1 2026 (as of 2026-03-31, filed 2026-05-15) — accession 0001172661-26-002336
+-- Four consecutive real quarters, so the Holdings Comparison view shows
+-- genuine buy/sell/new/exit activity (e.g. META entering in Q4 2025,
+-- MSFT entering and GOOG/GOOGL nearly fully exited in Q1 2026).
+insert into investor_yearly_holdings (investor_key, year, quarter, ticker, company_name, cusip, value_usd, weight_pct, rank, source_type) values
+  ('ackman', 2025, 2, 'UBER',  'Uber Technologies Inc',      '90353T100', 2827098321, 20.59, 1,  'sec_xml'),
+  ('ackman', 2025, 2, 'BN',    'Brookfield Corp',            '11271J107', 2545770554, 18.54, 2,  'sec_xml'),
+  ('ackman', 2025, 2, 'QSR',   'Restaurant Brands Intl Inc', '76131D103', 1524730589, 11.11, 3,  'sec_xml'),
+  ('ackman', 2025, 2, 'AMZN',  'Amazon Com Inc',              '023135106', 1277577297, 9.31,  4,  'sec_xml'),
+  ('ackman', 2025, 2, 'HHH',   'Howard Hughes Holdings Inc', '44267T102', 1272514320, 9.27,  5,  'sec_xml'),
+  ('ackman', 2025, 2, 'CMG',   'Chipotle Mexican Grill Inc', '169656105', 1209537089, 8.81,  6,  'sec_xml'),
+  ('ackman', 2025, 2, 'GOOG',  'Alphabet Inc',                '02079K107', 1121819859, 8.17,  7,  'sec_xml'),
+  ('ackman', 2025, 2, 'GOOGL', 'Alphabet Inc',                '02079K305', 945117965,  6.88,  8,  'sec_xml'),
+  ('ackman', 2025, 2, 'HLT',   'Hilton Worldwide Hldgs Inc',  '43300A203', 807164145,  5.88,  9,  'sec_xml'),
+  ('ackman', 2025, 2, 'HTZ',   'Hertz Global Hldgs Inc',      '42806J700', 104096897,  0.76,  10, 'sec_xml'),
+  ('ackman', 2025, 2, 'SEG',   'Seaport Entmt Group Inc',     '812215200', 93693497,   0.68,  11, 'sec_xml'),
+
+  ('ackman', 2025, 3, 'UBER',  'Uber Technologies Inc',       '90353T100', 2965602648, 20.25, 1,  'sec_xml'),
+  ('ackman', 2025, 3, 'BN',    'Brookfield Corp',             '11271J107', 2813167442, 19.21, 2,  'sec_xml'),
+  ('ackman', 2025, 3, 'HHH',   'Howard Hughes Holdings Inc',  '44267T102', 1549074099, 10.58, 3,  'sec_xml'),
+  ('ackman', 2025, 3, 'GOOG',  'Alphabet Inc',                '02079K107', 1540217750, 10.52, 4,  'sec_xml'),
+  ('ackman', 2025, 3, 'QSR',   'Restaurant Brands Intl Inc',  '76131D103', 1469799913, 10.04, 5,  'sec_xml'),
+  ('ackman', 2025, 3, 'AMZN',  'Amazon Com Inc',              '023135106', 1278625494, 8.73,  6,  'sec_xml'),
+  ('ackman', 2025, 3, 'GOOGL', 'Alphabet Inc',                '02079K305', 1177569836, 8.04,  7,  'sec_xml'),
+  ('ackman', 2025, 3, 'CMG',   'Chipotle Mexican Grill Inc',  '169656105', 844198727,  5.77,  8,  'sec_xml'),
+  ('ackman', 2025, 3, 'HLT',   'Hilton Worldwide Hldgs Inc',  '43300A203', 786253156,  5.37,  9,  'sec_xml'),
+  ('ackman', 2025, 3, 'SEG',   'Seaport Entmt Group Inc',     '812215200', 115145038,  0.79,  10, 'sec_xml'),
+  ('ackman', 2025, 3, 'HTZ',   'Hertz Global Hldgs Inc',      '42806J700', 103639664,  0.71,  11, 'sec_xml'),
+
+  ('ackman', 2025, 4, 'BN',    'Brookfield Corp',             '11271J107', 2817787754, 18.15, 1,  'sec_xml'),
+  ('ackman', 2025, 4, 'UBER',  'Uber Technologies Inc',       '90353T100', 2468273945, 15.9,  2,  'sec_xml'),
+  ('ackman', 2025, 4, 'AMZN',  'Amazon Com Inc',              '023135106', 2217677936, 14.28, 3,  'sec_xml'),
+  ('ackman', 2025, 4, 'GOOG',  'Alphabet Inc',                '02079K107', 1934222720, 12.46, 4,  'sec_xml'),
+  ('ackman', 2025, 4, 'META',  'Meta Platforms Inc',          '30303M102', 1764796161, 11.37, 5,  'sec_xml'),
+  ('ackman', 2025, 4, 'QSR',   'Restaurant Brands Intl Inc',  '76131D103', 1560199922, 10.05, 6,  'sec_xml'),
+  ('ackman', 2025, 4, 'HHH',   'Howard Hughes Holdings Inc',  '44267T102', 1503829145, 9.69,  7,  'sec_xml'),
+  ('ackman', 2025, 4, 'HLT',   'Hilton Worldwide Hldgs Inc',  '43300A203', 869983734,  5.6,   8,  'sec_xml'),
+  ('ackman', 2025, 4, 'GOOGL', 'Alphabet Inc',                '02079K305', 212306961,  1.37,  9,  'sec_xml'),
+  ('ackman', 2025, 4, 'SEG',   'Seaport Entmt Group Inc',     '812215200', 99320131,   0.64,  10, 'sec_xml'),
+  ('ackman', 2025, 4, 'HTZ',   'Hertz Global Hldgs Inc',      '42806J700', 78339393,   0.5,   11, 'sec_xml'),
+
+  ('ackman', 2026, 1, 'BN',    'Brookfield Corp',             '11271J107', 2415946008, 17.62, 1,  'sec_xml'),
+  ('ackman', 2026, 1, 'AMZN',  'Amazon Com Inc',              '023135106', 2385104083, 17.39, 2,  'sec_xml'),
+  ('ackman', 2026, 1, 'UBER',  'Uber Technologies Inc',       '90353T100', 2154934398, 15.71, 3,  'sec_xml'),
+  ('ackman', 2026, 1, 'MSFT',  'Microsoft Corp',              '594918104', 2092970053, 15.26, 4,  'sec_xml'),
+  ('ackman', 2026, 1, 'QSR',   'Restaurant Brands Intl Inc',  '76131D103', 1673501194, 12.2,  5,  'sec_xml'),
+  ('ackman', 2026, 1, 'META',  'Meta Platforms Inc',          '30303M102', 1522358404, 11.1,  6,  'sec_xml'),
+  ('ackman', 2026, 1, 'HHH',   'Howard Hughes Holdings Inc',  '44267T102', 1192581569, 8.7,   7,  'sec_xml'),
+  ('ackman', 2026, 1, 'SEG',   'Seaport Entmt Group Inc',     '812215200', 107910794,  0.79,  8,  'sec_xml'),
+  ('ackman', 2026, 1, 'GOOG',  'Alphabet Inc',                '02079K107', 89421720,   0.65,  9,  'sec_xml'),
+  ('ackman', 2026, 1, 'HTZ',   'Hertz Global Hldgs Inc',      '42806J700', 70261595,   0.51,  10, 'sec_xml'),
+  ('ackman', 2026, 1, 'GOOGL', 'Alphabet Inc',                '02079K305', 9310043,    0.07,  11, 'sec_xml');
 
 -- Investor letters — real, verified links from pershingsquareholdings.com
 -- (Pershing Square Holdings, Ltd. is Bill Ackman's publicly-listed fund).

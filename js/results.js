@@ -228,7 +228,7 @@ function rsSecGroups(cfg){ return cfg.groups || [{ label: '', keys: cfg.keys || 
 function rsSecKeys(cfg){ return rsSecGroups(cfg).reduce(function(a, g){ return a.concat(g.keys); }, []); }
 function rsSt(k){
   if (!_rs.sec[k]) _rs.sec[k] = { metric: null, win: null, yr: null, chart: null,
-    view: _rs.view, mode: 'level', growth: 'yoy', growUnit: 'pct',
+    view: _rs.view, mode: 'level', growth: 'yoy', growUnit: 'pct', tbl: false,
     hidden: { act:false, summit:false, cons:false, guide:false, margin:false } };
   return _rs.sec[k];
 }
@@ -1343,7 +1343,7 @@ export function resultsEvoHtml(ticker){
 // Both collapsible headers carry the caret AND what is inside, so neither row is a mystery
 // bar. The counts follow the legend chips like everything else in the block.
 function rsEvoRecHeadHtml(k){
-  var st = rsEvoSt(k), open = st.rec !== false;    // undefined ⇒ open: this one is the reading
+  var st = rsEvoSt(k), open = st.rec === true;     // every table starts collapsed (SAB, Aug 10)
   var n = rsEvoVisible(k, rsEvoMetric(k)).length;
   return '<span class="rs-collap-ic">' + (open ? '▾' : '▸') + '</span>Revision record' +
     '<span class="rs-collap-sub">' + (open ? 'hide' : 'show') + ' · ' + n + ' line' + (n === 1 ? '' : 's') +
@@ -1375,7 +1375,7 @@ function rsEvoBlockHtml(k){
   // starts closed (it is the audit trail).
   h += '<div class="rs-collap" data-rsevrec="' + k + '">' +
     '<button type="button" class="rs-collap-h" data-rsevrecb="' + k + '">' + rsEvoRecHeadHtml(k) + '</button>' +
-    '<div class="rs-collap-b" id="rsEvoRecBody-' + k + '">' +
+    '<div class="rs-collap-b" id="rsEvoRecBody-' + k + '"' + (rsEvoSt(k).rec === true ? '' : ' hidden') + '>' +
       '<div class="rs-tablewrap" id="rsEvoTrack-' + k + '"></div>' +
     '</div></div>';
   // The detail table opens on click. It is the widest thing on the page — every snapshot as
@@ -1767,7 +1767,7 @@ function rsSurpEl(id){
   return root.querySelector('#' + id);
 }
 function rsSurpSt(){
-  if (!_rs.surp) _rs.surp = { metric: null, win: null, mode: 'pct', chart: null,
+  if (!_rs.surp) _rs.surp = { metric: null, win: null, yr: null, tbl: false, mode: 'pct', chart: null,
     base: 'act', cmp: { summit: true, cons: true, guide: false } };
   return _rs.surp;
 }
@@ -1812,27 +1812,86 @@ var rsSurpLabels = {
     // One label per bar, across every comparator dataset. With more than one comparator
     // the glyph is dropped and the type shrinks — grouped bars leave far less room, and
     // the green/red fill already carries the beat/miss read.
+    //
+    // CROWDING. Two things collide as the window widens: labels from neighbouring PERIODS,
+    // and labels from different comparators inside the same period. The second is solved by
+    // giving each comparator its own line (a vertical stagger by dataset index), which also
+    // frees the first to use the whole period slot. What is left over is then THINNED — every
+    // Nth period, N derived from the widest label against the slot it has to fit in — because
+    // a readable sample beats an unreadable smear, and the tooltip still carries every value.
     var all = chart.$surpAll || [surp];
     var one = all.length <= 1;
-    for (var di = 0; di < all.length; di++){
-      var ser = all[di] || [], meta = chart.getDatasetMeta(di);
-      if (!meta) continue;
-      var mbars = meta.data;
-      for (var i = 0; i < ser.length; i++){
-        var bar = mbars[i]; if (!bar || ser[i] == null) continue;
-        var up = ser[i] >= 0;
+    var font = (one ? '700 11px' : '700 9.5px') + ' Inter, sans-serif';
+    var step = 1;
+    // With comparators, a label is centred on its PERIOD rather than on its own bar, so the two
+    // read as a stack (in the order of the chips above) instead of colliding side by side —
+    // grouped bars are ~20px apart and a "+1.4%" is nearly twice that. Centring on the period
+    // also hands each label the full period slot, which is what the thinning below measures.
+    var xAt = function(di, i){
+      var mm = chart.getDatasetMeta(di), b = mm && mm.data[i];
+      if (one || !b) return b ? b.x : 0;
+      var sum = 0, n = 0;
+      for (var q = 0; q < all.length; q++){
+        var mq = chart.getDatasetMeta(q), bq = mq && mq.data[i];
+        if (bq){ sum += bq.x; n++; }
+      }
+      return n ? sum / n : b.x;
+    };
+    ctx.save();
+    ctx.font = font;
+    var m0 = chart.getDatasetMeta(0);
+    if (m0 && m0.data.length > 1){
+      var slot = Math.abs(xAt(0, 1) - xAt(0, 0));
+      var widest = 0;
+      for (var s0 = 0; s0 < all.length; s0++){
+        var ss = all[s0] || [];
+        for (var j = 0; j < ss.length; j++){
+          if (ss[j] == null) continue;
+          var t0 = (one ? '▲ ' : '') + (chart.$fmt ? chart.$fmt(ss[j]) : (Math.abs(ss[j]).toFixed(1) + '%'));
+          widest = Math.max(widest, ctx.measureText(t0).width);
+        }
+      }
+      if (slot > 0) step = Math.max(1, Math.ceil((widest + 6) / slot));
+    }
+    ctx.restore();
+    chart.$labelStep = step;                        // read by the caption, so the thinning is stated
+    // Drawn period by period rather than series by series, so a period's labels can stack from
+    // the OUTERMOST bar in that period. Anchoring each one to its own bar's top let the second
+    // label sit over the first bar whenever the two were different heights.
+    var nper = (chart.getDatasetMeta(0) || { data: [] }).data.length;
+    for (var i = 0; i < nper; i++){
+      if (i % step !== 0) continue;
+      var topY = null, botY = null, upN = 0, dnN = 0;
+      for (var d1 = 0; d1 < all.length; d1++){
+        var s1 = (all[d1] || [])[i], b1 = (chart.getDatasetMeta(d1) || { data: [] }).data[i];
+        if (s1 == null || !b1) continue;
+        if (s1 >= 0) topY = topY == null ? b1.y : Math.min(topY, b1.y);
+        else botY = botY == null ? b1.y : Math.max(botY, b1.y);
+      }
+      for (var d2 = 0; d2 < all.length; d2++){
+        var v2 = (all[d2] || [])[i], b2 = (chart.getDatasetMeta(d2) || { data: [] }).data[i];
+        if (v2 == null || !b2) continue;
+        var up = v2 >= 0, rank = up ? upN++ : dnN++;
         ctx.save();
         ctx.textAlign = 'center';
-        ctx.font = (one ? '700 11px' : '700 9.5px') + ' Inter, sans-serif';
+        ctx.font = font;
         ctx.fillStyle = up ? RS_GREEN : RS_RED;
         var txt = (one ? (up ? '▲ ' : '▼ ') : '') +
-          (chart.$fmt ? chart.$fmt(ser[i]) : ((up ? '+' : '−') + Math.abs(ser[i]).toFixed(1) + '%'));
-        ctx.fillText(txt, bar.x, up ? bar.y - 6 : bar.y + 13);
+          (chart.$fmt ? chart.$fmt(v2) : ((up ? '+' : '−') + Math.abs(v2).toFixed(1) + '%'));
+        ctx.fillText(txt, xAt(d2, i), up ? topY - 6 - rank * 12 : botY + 13 + rank * 12);
         ctx.restore();
       }
     }
   }
 };
+function rsSurpTableHeadHtml(){
+  var st = rsSurpSt(), open = st.tbl !== false, m = rsSurpM();
+  var n = 0;
+  if (m){ var w = rsSurpWin(m); n = w[1] - w[0] + 1; }
+  return '<span class="rs-collap-ic">' + (open ? '▾' : '▸') + '</span>Period detail' +
+    '<span class="rs-collap-sub">' + (open ? 'hide' : 'show') + ' · ' + n + ' reported period' +
+    (n === 1 ? '' : 's') + ', each estimate scored against the base</span>';
+}
 function rsSurpBlockHtml(){
   var m = rsSurpM(), st = rsSurpSt();
   var h = '<div class="rs-block" data-rssurp>';
@@ -1862,7 +1921,11 @@ function rsSurpBlockHtml(){
   h += '<div class="ave-leg"><span class="tech-leg-i"><span class="ave-leg-act" style="background:' + RS_GREEN + '"></span>' + esc(RS_SRC_LABEL[st.base]) + ' came in above</span>' +
     '<span class="tech-leg-i"><span class="ave-leg-act" style="background:' + RS_RED + '"></span>came in below</span>' +
     '<span class="tech-leg-i" style="margin-left:auto">' +
-      (cmps.length ? 'bar outline = which series it is measured against' : 'pick at least one series to compare against') +
+      (cmps.length
+        ? 'bar outline = which series it is measured against' +
+          (cmps.length > 1 ? ' · labels stack per period in the order of the chips' : '') +
+          ' · drag to zoom, double-click to reset'
+        : 'pick at least one series to compare against') +
     '</span></div>';
   h += '<div class="ov-chart-card">' +
     '<div class="ov-chart-t" id="rsSurpChartT"></div>' +
@@ -1877,7 +1940,11 @@ function rsSurpBlockHtml(){
     '</div>' +
     '<div class="sg-ends"><span id="rsSurpEnd0"></span><span id="rsSurpEnd1"></span></div>' +
   '</div>';
-  h += '<div class="rs-tablewrap" id="rsSurpTable"></div>';
+  h += '<div class="rs-collap" data-rssurptbl>' +
+    '<button type="button" class="rs-collap-h" data-rssurptblb>' + rsSurpTableHeadHtml() + '</button>' +
+    '<div class="rs-collap-b" id="rsSurpTableBody"' + (rsSurpSt().tbl === false ? ' hidden' : '') + '>' +
+      '<div class="rs-tablewrap" id="rsSurpTable"></div>' +
+    '</div></div>';
   h += '<div class="ov-foot" id="rsSurpNote"></div>';
   h += '</div>';
   return h;
@@ -1946,7 +2013,9 @@ function rsBuildSurp(){
       },
       scales: {
         x: { grid: { display: false }, ticks: { font: { size: 11 } } },
-        y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
+        y: { grid: { color: 'rgba(0,0,0,0.05)' },
+          min: st.yr ? st.yr[0] : undefined, max: st.yr ? st.yr[1] : undefined,
+          ticks: { font: { size: 11 },
           callback: function(v){
             if (pctMode) return (v < 0 ? '−' : '') + Math.abs(v).toFixed(0) + '%';
             return rsTick(v, m.unit, div, rsCur(m));
@@ -1975,7 +2044,17 @@ function rsBuildSurp(){
     ticks.innerHTML = th;
   }
 
+  // Drag to zoom, like every other chart in the pane: a horizontal drag narrows the period
+  // window, a vertical one the y-range, double-click resets both. The window is stored on the
+  // surprise block's own state, so the slider above stays in step with it.
+  rsAttachBrush(el, st.chart,
+    function(a, b){ rsSurpSt().win = [lo + a, lo + b]; rsBuildSurp(); },
+    function(v1, v2){ rsSurpSt().yr = [v1, v2]; rsBuildSurp(); },
+    function(){ var s2 = rsSurpSt(); s2.win = null; s2.yr = null; rsBuildSurp(); });
+
   rsSurpTableRender(m, lo, hi, div);
+  var sh = document.querySelector('[data-rssurptblb]');
+  if (sh) sh.innerHTML = rsSurpTableHeadHtml();
   var note = rsSurpEl('rsSurpNote'); if (note) note.textContent = m.note || '';
 }
 function rsSurpTableRender(m, lo, hi, div){
@@ -2084,6 +2163,15 @@ function wireResults(pane){
     // YoY/QoQ and %/Amount. Each changes what the axis means, so that block's brushed y-range
     // and window are dropped rather than carried into a scale that no longer describes them,
     // and its control row is re-rendered because which groups exist depends on the mode.
+    var stb = e.target.closest('[data-rssurptblb]');
+    if (stb){
+      var sst2 = rsSurpSt();
+      sst2.tbl = sst2.tbl === false;
+      var sbody = document.getElementById('rsSurpTableBody');
+      if (sbody) sbody.hidden = sst2.tbl === false;
+      stb.innerHTML = rsSurpTableHeadHtml();
+      return;
+    }
     var tb = e.target.closest('[data-rstblb]');
     if (tb){
       var tk = tb.getAttribute('data-rstblb'), tst = rsSt(tk);
@@ -2401,9 +2489,9 @@ export function initResultsEvo(ticker){
     if (rb){
       k = rb.getAttribute('data-rsevrecb');
       var rst = rsEvoSt(k);
-      rst.rec = rst.rec === false;                 // undefined/true ⇒ close, false ⇒ open
+      rst.rec = rst.rec !== true;                  // starts collapsed, like every other table
       var rbody = document.getElementById('rsEvoRecBody-' + k);
-      if (rbody) rbody.hidden = rst.rec === false;
+      if (rbody) rbody.hidden = rst.rec !== true;
       rb.innerHTML = rsEvoRecHeadHtml(k);
       return;
     }

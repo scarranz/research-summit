@@ -747,12 +747,21 @@ function rsVintSelHtml(){
 
 // Structured metric picker — a dropdown grouped by the section's groups
 // (Totals / Segments / Revenue lines / …) instead of a wall of pills.
+// Dropdowns group by METRIC FAMILY, with the segments inside — "Gross Bookings ▸ Total ·
+// Mobility · Delivery · Freight", not "Mobility ▸ GB · revenue" (SAB, Aug 10 2026). The point
+// is the rollout: every company has a couple of families and a few segments under them, so
+// this shape homogenises across tickers where grouping by segment cannot.
+//
+// Which means the option text should be the SEGMENT, since the group header already carries
+// the family — `seg` when the dataset declares one, falling back to the full label so a
+// dataset that has not been regrouped yet still reads correctly.
+function rsOptLabel(m){ return m.seg || m.label; }
 function rsSelectHtml(k){
   var view = rsView(k), cfg = rsSecCfg(k), st = rsSt(k);
   rsMetric(k);                                        // ensure st.metric is valid
   return rsSecGroups(cfg).map(function(g){
     var opts = g.keys.map(function(mk){
-      return '<option value="' + mk + '"' + (mk === st.metric ? ' selected' : '') + '>' + esc(view.metrics[mk].label) + '</option>';
+      return '<option value="' + mk + '"' + (mk === st.metric ? ' selected' : '') + '>' + esc(rsOptLabel(view.metrics[mk])) + '</option>';
     }).join('');
     return g.label ? '<optgroup label="' + esc(g.label) + '">' + opts + '</optgroup>' : opts;
   }).join('');
@@ -1434,7 +1443,7 @@ function rsEvoSelectHtml(k){
   rsEvoMetric(k);                                      // ensure st.metric is valid
   return cfg.groups.map(function(g){
     var opts = g.keys.map(function(mk){
-      return '<option value="' + mk + '"' + (mk === st.metric ? ' selected' : '') + '>' + esc(ev.metrics[mk].label) + '</option>';
+      return '<option value="' + mk + '"' + (mk === st.metric ? ' selected' : '') + '>' + esc(rsOptLabel(ev.metrics[mk])) + '</option>';
     }).join('');
     return '<optgroup label="' + esc(g.label) + '">' + opts + '</optgroup>';
   }).join('');

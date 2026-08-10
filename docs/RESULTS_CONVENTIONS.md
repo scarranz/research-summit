@@ -44,8 +44,8 @@ export var <tk>Results = {
   }
 }
 // section: { key:'top'|'margins', label, defaultMetric, groups:[{label, keys:[metricKey]}] }
-//   groups feed the grouped <select> (Totals / Segments / Revenue lines / …)
-// metric: { label, short, unit:'usdM'|'eps', marginOf?:<metricKey>, marginLabel?,
+//   groups feed the grouped <select> — GROUP BY METRIC FAMILY, SEGMENTS INSIDE (see below)
+// metric: { label, short, seg?, unit:'usdM'|'eps', marginOf?:<metricKey>, marginLabel?,
 //   periods:[...], act:[], summit:[], cons:[], guideLo:[], guideHi:[], note }
 //   All arrays parallel to periods; null = not available; act:null ⇒ forward ("E") period.
 //   marginOf points at the revenue metric IN THE SAME VIEW used as margin denominator
@@ -53,6 +53,28 @@ export var <tk>Results = {
 ```
 
 AMZN quarterly periods run `1Q23 … 2Q28` (13 reported + 9 forward); annual `2020 … 2028`.
+
+### Grouping rule — by metric family, segments inside (SAB, Aug 10 2026)
+
+A dropdown group is a **metric family**; its options are the **segments** of that family:
+
+```js
+{ label: 'Gross Bookings', keys: ['gb', 'mobgb', 'delgb', 'frgb'] },   //  Total · Mobility · Delivery · Freight
+{ label: 'Revenue',        keys: ['rev', 'mobrev', 'delrev'] }        //  Total · Mobility · Delivery
+```
+
+**Not** the transpose (`Mobility ▸ GB · revenue`), which is how UBER started. The reason is the
+rollout: every company has a handful of families and a few segments beneath them, so this shape
+carries across tickers, while a segment-first grouping is different for every business.
+
+The option TEXT is the segment, because the group header already carries the family. Declare it
+as `seg` on the metric (`seg: 'Mobility'`); `rsOptLabel` falls back to the full `label`, so a
+metric with no segments — or a dataset not yet regrouped — still reads correctly and nothing has
+to be migrated in one go. Everything else (chart title, table row headers, tooltips) keeps using
+the full `label`, so "Mobility Gross Bookings" is still what the chart says it is.
+
+Sections whose metrics are not segmented (Margins & Profitability, KPIs) keep a plain group —
+there is no family to fold them into and inventing one would be noise.
 
 **Optional `evolution` block** (top level, beside `views`) — feeds the *Estimate evolution*
 section (added Jul 28): how the ANNUAL forecast for each fiscal year moved across the model's

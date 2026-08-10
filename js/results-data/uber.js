@@ -184,7 +184,7 @@ export var uberResults = {
         { key: 'margins', label: 'Margins & Profitability', defaultMetric: 'ebitda', groups: [
           { label: 'Company', keys: ['ebitda', 'opinc', 'eps', 'fcf'] },
         ] },
-        { key: 'kpis', label: 'Operating KPIs', defaultMetric: 'trips', groups: [
+        { key: 'kpis', label: 'KPIs', defaultMetric: 'trips', groups: [
           { label: 'Platform', keys: ['trips', 'mapc'] },
         ] }
       ],
@@ -295,7 +295,7 @@ export var uberResults = {
         { key: 'margins', label: 'Margins & Profitability', defaultMetric: 'ebitda', groups: [
           { label: 'Company', keys: ['ebitda', 'opinc', 'eps', 'fcf'] },
         ] },
-        { key: 'kpis', label: 'Operating KPIs', defaultMetric: 'trips', groups: [
+        { key: 'kpis', label: 'KPIs', defaultMetric: 'trips', groups: [
           { label: 'Platform', keys: ['trips', 'mapc'] },
         ] }
       ],

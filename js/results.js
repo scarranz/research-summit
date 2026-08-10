@@ -591,7 +591,9 @@ export function resultsHtml(ticker){
 function rsBody(){
   var d = _rs.data;
   var h = '<div class="rs-wrap">';
-  if (d.intro) h += '<p class="ov-lede">' + esc(d.intro) + '</p>';
+  // `intro` is deliberately NOT rendered (SAB, Aug 10 2026), the same call taken in Estimates:
+  // a paragraph restating what the controls and the chart already say, which goes stale on a
+  // refresh while they do not. The field stays in the datasets.
   h += rsTopRowHtml();
   h += '<div class="ov-foot rs-vintnote" id="rsVintNote">' + esc(rsVintNote()) + '</div>';
   h += '<div id="rsBlocks">' + rsBlocksHtml() + '</div>';
@@ -618,6 +620,14 @@ function rsLevelLabel(m){
   if (m.unit === 'pct') return '%';
   if (m.unit === 'count') return 'Units';
   return cur + (rsScaleOf(m) === 1000 ? 'B' : 'M');
+}
+// The table's own header: caret, show/hide, and what is inside — the metric and how many
+// periods the current window holds, both of which follow the controls above it.
+function rsTableHeadHtml(k, m){
+  var open = rsSt(k).tbl !== false, w = rsWin(k, m), n = w[1] - w[0] + 1;
+  return '<span class="rs-collap-ic">' + (open ? '▾' : '▸') + '</span>Period detail' +
+    '<span class="rs-collap-sub">' + (open ? 'hide' : 'show') + ' · ' + esc(m.short || m.label) +
+    ', ' + n + ' period' + (n === 1 ? '' : 's') + ' in the selected range</span>';
 }
 function rsBlockModesHtml(k, m){
   var d = _rs.data, st = rsSt(k), grow = rsIsGrow(k);
@@ -674,7 +684,14 @@ function rsBlocksHtml(){
       '</div>' +
       '<div class="sg-ends"><span id="rsEnd0-' + k + '"></span><span id="rsEnd1-' + k + '"></span></div>' +
     '</div>';
-    h += '<div class="rs-tablewrap" id="rsTable-' + k + '"></div>';
+    // The period table collapses, like the detail table in Estimates. It starts OPEN here:
+    // there is one table per block rather than two, and it is the block's own detail rather
+    // than an audit trail sitting behind a summary.
+    h += '<div class="rs-collap" data-rstbl="' + k + '">' +
+      '<button type="button" class="rs-collap-h" data-rstblb="' + k + '">' + rsTableHeadHtml(k, m) + '</button>' +
+      '<div class="rs-collap-b" id="rsTableBody-' + k + '"' + (rsSt(k).tbl === false ? ' hidden' : '') + '>' +
+        '<div class="rs-tablewrap" id="rsTable-' + k + '"></div>' +
+      '</div></div>';
     h += '<div class="ov-foot" id="rsNote-' + k + '"></div>';
     h += '</div>';
     return h;
@@ -1046,6 +1063,9 @@ function rsSyncSlider(k, m){
 // the same read.)
 
 function rsRenderTable(k, m){
+  // The collapsed header names the metric and counts the window, so it moves with both.
+  var th = document.querySelector('[data-rstblb="' + k + '"]');
+  if (th) th.innerHTML = rsTableHeadHtml(k, m);
   var el = document.getElementById('rsTable-' + k);
   if (!el) return;
   var has = rsRefsFor(m);
@@ -2064,6 +2084,15 @@ function wireResults(pane){
     // YoY/QoQ and %/Amount. Each changes what the axis means, so that block's brushed y-range
     // and window are dropped rather than carried into a scale that no longer describes them,
     // and its control row is re-rendered because which groups exist depends on the mode.
+    var tb = e.target.closest('[data-rstblb]');
+    if (tb){
+      var tk = tb.getAttribute('data-rstblb'), tst = rsSt(tk);
+      tst.tbl = tst.tbl === false;
+      var tbody = document.getElementById('rsTableBody-' + tk);
+      if (tbody) tbody.hidden = tst.tbl === false;
+      tb.innerHTML = rsTableHeadHtml(tk, rsMetric(tk));
+      return;
+    }
     var ctl = e.target.closest('[data-rsview], [data-rsmode], [data-rsgrow], [data-rsgunit]');
     if (ctl){
       var blk = ctl.closest('[data-rsblock]');

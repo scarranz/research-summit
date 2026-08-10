@@ -12,6 +12,8 @@ function sliceMetrics(view, idx){
     Object.keys(m).forEach(function(f){
       o[f] = Array.isArray(m[f]) ? idx.map(function(i){ return m[f][i]; }) : m[f];
     });
+    delete o.note;   // Setup drops the per-metric methodology notes (Dani, Aug 2026) — they clutter
+                     // the pre-print view; the full notes still live on the Results sub-tab.
     out[k] = o;
   });
   return out;
@@ -41,17 +43,23 @@ function mergedSection(view){
   return [{ key: 'setup', label: 'All tracked lines', defaultMetric: 'rev', groups: groups }];
 }
 
-var qIdx = quarterlyIdx(amznResults.views.q);
-var yIdx = annualIdx(amznResults.views.y);
+// Full range (Dani, Aug 2026) — the Setup chart now carries every period so the Results engine's own
+// range controls (preset pills Last 4Q · Last 8Q · Reported · Forward · All + the dual-handle slider)
+// become the period LEVER. The narrow pre-slice below (quarterlyIdx/annualIdx) is kept for reference
+// but no longer applied; the engine still trims the forward horizon per its own rule.
+var qIdx = amznResults.views.q.metrics.rev.periods.map(function(_, i){ return i; });
+var yIdx = amznResults.views.y.metrics.rev.periods.map(function(_, i){ return i; });
 
 export var amznSetup = {
   updated: amznResults.updated,
-  intro: 'The Setup chart — the same actuals-vs-estimates chart+table as Results, MERGED into one: every tracked line in a single grouped picker, with the period lever, the legend chips, the guidance band where Amazon guides the line (net sales + GAAP operating income only), and margin lines for the profit lines. The window is rolling: quarterly shows the last 8 reported quarters + the one next (forecast) quarter; annual shows the last 4 fiscal years + the next 2. Sources per the dataset header (js/results-data/amzn.js).',
+  intro: '',
   source: amznResults.source,
   views: {
-    q: { label: 'Quarterly', note: 'Rolling — the last 8 reported quarters plus the one next (forecast) quarter; it advances by itself as new prints land. ' + amznResults.views.q.note,
+    // Setup view notes removed (Dani, Aug 2026) — the "Rolling …" + methodology/source blurb was
+    // clutter here; the full note still lives on the Results sub-tab.
+    q: { label: 'Quarterly', note: '',
          metrics: sliceMetrics(amznResults.views.q, qIdx), sections: mergedSection(amznResults.views.q) },
-    y: { label: 'Annual', note: 'Rolling — the last 4 fiscal years plus the next 2 forward years. ' + amznResults.views.y.note,
+    y: { label: 'Annual', note: '',
          metrics: sliceMetrics(amznResults.views.y, yIdx), sections: mergedSection(amznResults.views.y) }
   }
 };

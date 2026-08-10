@@ -370,6 +370,31 @@ export async function deleteTheme(id) {
   return ok(null);
 }
 
+// ─── Company Theme RECORD (AMZN-style segmented Notes) ───────
+// The AMZN Notes tab is a SEGMENTED theme record with per-quarter note items — a richer shape than
+// the flat company_themes rows, so it persists as ONE JSONB blob per company (load on mount, save on
+// every edit) so a refresh — and the rest of the team — see the same record.
+// See sql/011_company_theme_record.sql.
+export async function fetchThemeRecord(companyId) {
+  var { data, error } = await supabase
+    .from('company_theme_record')
+    .select('record')
+    .eq('company_id', companyId)
+    .maybeSingle();
+  if (error) return fail(error.message);
+  return ok(data ? data.record : null);
+}
+
+export async function saveThemeRecord(companyId, ticker, record) {
+  var { data, error } = await supabase
+    .from('company_theme_record')
+    .upsert({ company_id: companyId, ticker: ticker, record: record, updated_at: new Date().toISOString() }, { onConflict: 'company_id' })
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
 // ─── Fund Returns ───────────────────────────────────────────
 // Daily series for the Performance Analysis dashboard. Tables are RLS-gated,
 // so only authenticated users can read them. Rows exceed PostgREST's 1000-row

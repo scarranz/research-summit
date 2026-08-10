@@ -49,19 +49,86 @@ adopt the mount on their next cycle. The one downstream effect: the Post-Results
 list" chip can no longer name the theme inline (names load async from the DB), so it shows the frozen
 rank; the theme text lives on the Watch List itself.
 
-**What v2.10 changed — the AI call summary, the tag-less aside, and the Setup chart's margins + windows:**
+**What the Aug 2026 Post-Results pass changed (AMZN, on top of v3.0) — grid labels, hover, Q&A, Propose Notes hygiene:**
 
-1. **Post-Results: the black one-line "take" is replaced by an AI-generated CALL SUMMARY ("the minute").**
-   `results.headline` (the dark `.ce-take` box) is gone. In its place, `results.summary` renders a
-   **collapsible box whose title is always shown** ("🧠 Call summary — the minute", AI-generated tag).
-   Its body is an **always-visible lede** (prose) + **nested dropdowns (dropdowns within dropdowns)** that
-   let the reader open the *whys* per category (top line → drivers → segments → backlog …) — inline
-   `<details>`, **not** pop-ups. An **Expand-all / Collapse-all** control toggles only the inner nodes
-   (never the lede). Technical terms are wrapped `<span class="ce-gl" data-def="…">term</span>` and show
-   their definition on **hover** (a styled CSS tooltip, not a pop-up). **It is a SUMMARY, not a re-run of
-   the whole call** — no roll-call of every exec; no min/max length, but it summarises, it does not
-   transcribe. It may restate the red-line themes (tripped/held) in prose. Renderer: `ceSummaryBlock` /
-   `ceSumNodes`, data model `results.summary = { intro, nodes:[{t, body, nodes:[…]}] }` (see §6c-ii).
+These are binding for every company, not just AMZN. Reference implementation: `js/overviews/amzn.js`.
+
+1. **Segment revenue lines carry "net sales" in the consensus grid.** In `CE_CONS` and EVERY reference
+   keyed to it (`setup.notes` / `setup.us` / `results.notes` / `results.watch`), the segment lines read
+   **"North America net sales" / "International net sales"** to match **"AWS net sales"** — never the
+   bare segment name. The bare name survives ONLY in the segment charts and the "how it earns" cards,
+   where all three (AWS included) are bare and the chart title carries the metric. Rename the KPI `k`
+   and its lookups together or the `notes[m.k]` / `us[m.k]` joins silently break.
+
+2. **The Post-Results surprise chart hovers on the WHOLE ROW, and the tooltip is COLOURED.** The
+   diverging bars for a small surprise are ~2px wide — too thin to point at (Rule L). So the hover
+   target is the full row, and the tooltip is a **coloured HTML card** (an actual child element, not a
+   plain `title`/`::after` string) carrying, for BOTH bases: `metric · expected (in its own value+unit)
+   · actual · surprise %` — the % painted green/red/grey by beat/miss/in-line, each basis wearing its
+   Street/Summit colour. `cePrintChartRows` returns the expected value, the actual and the unit too, not
+   just the surprise. A tooltip of plain white text is not acceptable — encode with colour (Rule H).
+
+3. **"By Analyst Question" is THEME-LED and a dropdown.** The collapsed row leads with the **theme tag +
+   the question's topic** — never the bank/analyst. Opening it reveals the **bank + analyst at the top**,
+   then **Q** (the question) and **A** (the answer). **`A` is management's answer in their OWN WORDS —
+   direct speech, attributed (Jassy / Olsavsky …), in quotation marks, with the relevant parts bolded.
+   NOT a third-person summary** ("management framed…", "the answer stayed…"). `a` holds HTML (rendered
+   raw), so use `<b>…</b>` for emphasis. It stays grounded in what was actually said — same reconstruction
+   provenance as the rest of the tab (built from earnings-day coverage), rendered as the direct reply and
+   upgraded to true verbatim when Dani drops the IR transcript in. Curate lightly (drop filler / repetition)
+   without dropping relevant detail or inventing claims. Data shape:
+   `qanda: [{ q (collapsed topic), qFull? (the fuller/verbatim question), analyst:'Name · Bank', theme, a }]`.
+
+4. **No 5-item cap — anywhere.** There is **NO limit of 5** on "By Prepared Remarks", on "By Analyst
+   Question", on "Points for the call", or on Propose Notes. Take **everything relevant** and only what
+   is relevant — that may be more than 5 or fewer than 5. Prepared Remarks in particular includes every
+   topic that carries a So-What (§1); do not drop real topics "for density", and do not pad to hit a
+   number. Everything worth saying about the prepared remarks lives here, filed as classified
+   prepared-remark topics. (Pass 1 extraction is exhaustive by rule §2; the cap is a myth, never a rule.)
+   The call-classified sections and Propose Notes each render as their **own collapsed dropdown**
+   (closed by default), visually separate so they never read as one block.
+
+5. **Propose Notes hygiene + the publish path.** (a) **No `#1/#2` rank badges** — they point at a rank
+   the cards no longer use, and read as noise (same reason v2.6 dropped `#n` from the scorecard). (b)
+   **No internal process text in the UI** — the desk never narrates its own plumbing or permissions to
+   the reader (e.g. "gated to San / Oscar", "this scaffold does not write to the database"). That is a
+   Rule-D violation and is removed. (c) **Accept HIDES the proposal card (does not delete it)**, and the
+   staged chip's ✕ **restores** the card so it can be re-accepted — previously Accept removed the card
+   outright and an unstaged note vanished forever. (d) **Publish path (wired).** Staged notes flow to
+   the Notes tab via a **"Publish to Notes"** button: each staged chip becomes a `company_themes` row
+   through `api.js insertTheme` (sub-theme → `theme`, segment → a tag, note text → `definition`, quarter
+   → `q`/`created_quarter`), then the shared Watch List **re-mounts** (`ceMountWatchList`) so it shows
+   without a reload. Persistence requires a signed-in session (RLS); locally/preview the insert fails
+   and the chips stay staged with an honest status line — the wiring is intact and lights up on deploy.
+   Amazon overview work did NOT touch this wiring (`js/watchlist.js` / `js/api.js` / `sql/`).
+
+6. **The Consensus-Evolution chart windows its periods, and exposes a period slider.** Three parts:
+   - **FY control** — discrete pills (one per fiscal year, newest 3 on by default, capped at open+1),
+     carrying a visible inline label ("Years on chart — tap to add / drop") so it is discoverable
+     (Rule L). The old verbose caption is dropped.
+   - **Per-FY windowing (the "desfase").** A fiscal-year line does NOT run flat forever after the year
+     closed, and does NOT reach back to when it was a far-out forecast (a FY2027 line in Oct-23 adds no
+     signal). Each line is clipped to `[end-7 … end]` where `end` = the snapshot the year was REPORTED
+     in (its first Actual point / the Q4 print); a still-open year clips to its latest known snapshot.
+     So every line shows only its **last 8 snapshots, ending where it was reported** (`fyWindow` in
+     `consensus-evolution.js`, `FY_WINDOW=8`).
+   - **Period slider (the "línea deslizable").** A draggable range control windows the x-axis to the last
+     N snapshots (category-scale `min`), so you can see more or fewer periods. It re-asserts after every
+     rebuild. This is the control the reader was asking for — discrete pills are NOT a slider.
+
+7. **The IR button deep-links to the quarterly-results page** when the company exposes one (AMZN:
+   `ir.aboutamazon.com/quarterly-results/default.aspx`), not the IR root.
+
+8. **No preamble paragraph on the Earnings tab.** The phase chips + blocks explain themselves (Rule L);
+   the "the decision layer, in two phases…" intro is removed.
+
+**What v2.10 changed — (the AI call summary, since removed), the tag-less aside, and the Setup chart's margins + windows:**
+
+1. ~~**Post-Results: an AI-generated CALL SUMMARY ("the minute").**~~ **SUPERSEDED / REMOVED (Dani,
+   Aug 2026).** The AI-generated "Call summary — the minute" was added in v2.10 and then **removed** — there
+   is no AI-authored summary section and no instruction to build one. The old `results.headline` "take"
+   box is also gone. Post-Results goes from the print scorecard straight to "The call, classified". See
+   §6c-ii.
 
 2. **"Also on the call" drops the tag chips.** No more `tone` / `curious` / `connects-dots` / … labels on
    each point — a point is just **the theme and its dropdown** (§6b). The `tag` still exists in the data
@@ -1247,50 +1314,14 @@ simply absent — that is fine, it means everything worth saying was a thesis-mo
 `open` is not decoration — it is the sentence you would say next. Write the unresolved thing
 itself ("Margin profile unanswered — Post pressed, got ROIC framing instead"), not a category.
 
-## 6c-ii. `results.summary` — the AI call summary ("the minute", v2.10)
+## 6c-ii. (REMOVED) the AI call summary ("the minute")
 
-The Post-Results black one-line take is gone; in its place a **collapsible AI-generated summary of the
-call**. **The summary IS THE PROSE** — several always-visible PARAGRAPHS, each landing a punch on a
-specific theme — and EACH paragraph carries its own "＋ more" to go deeper. It is **NOT** one generalist
-paragraph followed by a list of collapsed titles. Rendered by `ceSummaryBlock` / `ceSumMore` / `ceSumNodes`
-from:
-
-```js
-results.summary = {
-  paras: [
-    { p: 'always-visible paragraph (HTML) — a PUNCH on one theme (top line / the bill / EPS / …)',
-      moreLabel: '＋ more — …',                 // optional; default '＋ more — the detail behind this'
-      more: {                                    // optional deeper detail behind the ＋more dropdown
-        body: 'deeper prose (HTML)',
-        nodes: [                                 // optional context-guide dropdowns WITHIN the ＋more
-          { t: 'Cloud — the engine', body: '…', nodes: [ { t:'Backlog', body:'…' } ] }  // nesting ok
-        ]
-      } },
-    { p: '…next punch paragraph…', more: '…' },  // `more` may also be a plain HTML string
-    …
-  ]
-}
-```
-
-**Rules:**
-- **The summary is written as PROSE, several paragraphs.** Each `p` is a real paragraph that makes a point
-  and stands on its own — the reader gets the whole story by *reading the paragraphs*, top to bottom. The
-  "＋ more" is only for the reader who wants to go deeper on that specific point.
-- **The box is collapsible from outside, but its TITLE is always visible** — "🧠 Call summary — the
-  minute" + an `AI-generated` tag. Default open.
-- **The paragraphs (`p`) are ALWAYS visible** — Expand-all / Collapse-all toggles only the `＋ more`
-  dropdowns, never the paragraphs.
-- **`more` / `nodes` are nested `<details>`, NOT pop-ups.** The reader opens `＋ more` for the detail behind
-  a paragraph, and can drill deeper (dropdowns within dropdowns — drivers → segments → backlog). Depth is
-  colour-cued (`data-d` 0/1/2) but unlimited.
-- **Glossary terms** — wrap a technical concept `<span class="ce-gl" data-def="the definition">term</span>`.
-  It renders with a dashed underline and shows the definition on **hover** in a styled tooltip (CSS-only,
-  not a pop-up). Use it wherever a term deserves context ("constant-currency", "RPO / backlog", "free cash
-  flow", "TPU systems", "marks", …).
-- **It is a SUMMARY, not a transcript.** No minimum or maximum length — but it distils; it does **not**
-  re-run the whole call, and it does **not** hand out dedications to each member of management. It may
-  restate the tripped/held red-line themes in prose (that overlap is fine — it is the narrative version).
-- Rule 0 still applies inside it: every claim carries its *why* / *so-what*, not bare numbers.
+**Removed (Dani, Aug 2026).** The AI-generated "Call summary — the minute" (`results.summary`,
+`ceSummaryBlock` / `ceSumMore` / `ceSumNodes`) is **gone** — there is no AI-authored summary section in
+Post-Results, and there is **no instruction to build one**. Do not add a `results.summary` block, do not
+generate call-summary prose, and do not re-create this section. Post-Results goes from the print
+scorecard straight to **"The call, classified"**. (The glossary-term hover, `ce-gl` / `data-def`, remains
+available for use anywhere it is genuinely useful — it is not part of the removed section.)
 
 ## 6c. `threeMinutes` — the spoken deliverable (v2.7: DATA-ONLY, no longer rendered)
 
@@ -1594,12 +1625,9 @@ CSS classes that carry meaning (port with the functions): `.ce-legend`/`.ce-lege
       view reads `no est.` where `setup.us` has no number. `Margin` toggle shows GP/OpInc/EBITDA
       **expected-implied → realized** with a Δ in pts and **no YoY/QoQ**, and the `?` pop-up discloses
       the forward-revenue basis caveat. Defaults: `data-ev="cons"`, `data-mm="off"`.
-- [ ] **Post-Results ▸ AI call summary (v2.10):** `results.summary` renders a **collapsible box, title
-      always visible** ("🧠 Call summary — the minute" + `AI-generated`), an **always-visible lede** +
-      **nested `<details>` dropdowns** (dropdowns within dropdowns), **Expand-all / Collapse-all** that
-      toggles only the inner nodes, and **hover-definition glossary** terms (`.ce-gl[data-def]`, CSS
-      tooltip, not a pop-up). It is a **summary, not a transcript** (no exec roll-call). **The old black
-      one-line `.ce-take` take is gone.**
+- [ ] **Post-Results ▸ NO AI call summary.** There is **no** "Call summary — the minute" / `results.summary`
+      section (removed Dani, Aug 2026) and no instruction to build one. The old black one-line `.ce-take`
+      take is also gone. Post-Results = the print scorecard → "The call, classified" (no AI-authored prose).
 - [ ] **Post-Results ▸ "Also on the call" (v2.9 list, v2.10 tag-less):** renders **below the scorecard**
       as **one box holding a plain list** (`.ce-alsobox`), each point a native `<details>` dropdown —
       **NO band classification (context/logged) and NO tag chips** (tone/curious/…); just the theme +

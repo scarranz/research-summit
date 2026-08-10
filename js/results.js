@@ -203,7 +203,8 @@ var EVO_RAMP = ['#1B3F94', '#2563EB', '#5E8BEC', '#93B1F0'];
 // hidden series, chart instance. `evo` is the vintage-evolution block's state.
 // `growth` (quarterly only): 'yoy' = vs the same quarter last year; 'qoq' = vs
 // the previous reported quarter.
-var _rs = { data: null, view: 'q', growth: 'yoy', sec: {}, evo: null, surp: null, vint: 'preprint' };
+var _rs = { data: null, view: 'q', growth: 'yoy', mode: 'level', growUnit: 'pct',
+            sec: {}, evo: null, surp: null, vint: 'preprint' };
 
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); }
 
@@ -502,6 +503,34 @@ function rsActGrowthDollar(m, i){
   if (m.act[i] == null || m.act[i - k] == null) return null;
   return m.act[i] - m.act[i - k];
 }
+// ─── Growth as a CHART mode ───────────────────────────────────────────────────
+// Growth was only ever a row in the table. Reading it off the chart is a different
+// question — "who is growing and who is decelerating" rather than "how big is it" — and
+// with the guidance band transformed too it answers the one an analyst asks before a print:
+// what growth is the company itself signing up for.
+//
+// The base is the REPORTED period one lag back wherever it exists, so a forward estimate
+// reads as "growth vs last year's actual" the way it gets quoted. That is the rule the
+// table's growth rows already use; the chart must not invent a second one.
+function rsGrowBase(m, series, i){
+  var k = rsLook(); if (i - k < 0) return null;
+  if (series === 'act') return m.act ? m.act[i - k] : null;
+  if (m.act && m.act[i - k] != null) return m.act[i - k];
+  var ref = series === 'guideLo' || series === 'guideHi' ? null : m[series];
+  return ref ? ref[i - k] : null;
+}
+function rsGrowArr(m, series, amt){
+  var arr = m[series];
+  if (!arr) return null;
+  return m.periods.map(function(_, i){
+    var a = arr[i], b = rsGrowBase(m, series, i);
+    if (a == null || b == null) return null;
+    if (amt) return a - b;
+    return b === 0 ? null : (a - b) / Math.abs(b) * 100;
+  });
+}
+function rsIsGrow(){ return _rs.mode === 'grow'; }
+function rsGrowAmt(){ return rsIsGrow() && _rs.growUnit === 'amt'; }
 function rsMarginArr(m, series){
   if (!m.marginOf || m.unit === 'eps') return null;
   var d = rsView().metrics[m.marginOf]; if (!d) return null;
@@ -552,24 +581,41 @@ function rsBody(){
   var d = _rs.data;
   var h = '<div class="rs-wrap">';
   if (d.intro) h += '<p class="ov-lede">' + esc(d.intro) + '</p>';
-  h += '<div class="rs-toprow"><div class="rs-views">' + Object.keys(d.views).map(function(k){
-    return '<button type="button" class="rs-view' + (k === _rs.view ? ' active' : '') + '" data-rsview="' + k + '">' + esc(d.views[k].label) + '</button>';
-  }).join('') + '</div>' +
-  // Growth-basis toggle — quarterly only (annual growth is always year over year).
-  '<div class="rs-views" id="rsGrowMode"' + (_rs.view === 'q' ? '' : ' hidden') + '>' +
-    '<button type="button" class="rs-view' + (_rs.growth === 'yoy' ? ' active' : '') + '" data-rsgrow="yoy" title="vs the same quarter last year">YoY</button>' +
-    '<button type="button" class="rs-view' + (_rs.growth === 'qoq' ? ' active' : '') + '" data-rsgrow="qoq" title="vs the previous reported quarter">QoQ</button>' +
-  '</div>' + rsVintSelHtml() + '</div>';
+  h += rsTopRowHtml();
   h += '<div class="ov-foot rs-vintnote" id="rsVintNote">' + esc(rsVintNote()) + '</div>';
   h += '<div id="rsBlocks">' + rsBlocksHtml() + '</div>';
-  // The surprise scorecard closes the pane: the blocks above are levels over time, this is
-  // how each print landed against whatever you choose to judge it by. Quarterly-only (it
-  // reads the q view directly), and a dataset opts out with `surprise: false`.
   if (d.surprise !== false && d.views.q && rsSurpGroups().length) h += rsSurpBlockHtml();
   h += '<div class="ov-foot" id="rsViewNote">' + esc(rsView().note || '') + '</div>';
   h += '<div class="ov-foot">' + esc(d.source) + '</div>';
   h += '</div>';
   return h;
+}
+// The pane's control row, extracted so switching Levels ⇄ Growth can re-render it: the
+// %/Amount pair only exists while Growth is on.
+function rsTopRowHtml(){
+  var d = _rs.data;
+  return '<div class="rs-toprow"><div class="rs-views">' + Object.keys(d.views).map(function(k){
+    return '<button type="button" class="rs-view' + (k === _rs.view ? ' active' : '') + '" data-rsview="' + k + '">' + esc(d.views[k].label) + '</button>';
+  }).join('') + '</div>' +
+  // Growth-basis toggle — quarterly only (annual growth is always year over year).
+  // Levels ⇄ Growth sits UP HERE, beside Quarterly/Annual, rather than inside each block.
+  // YoY/QoQ is already pane-level and growth is meaningless without it, so splitting the two
+  // is the surest way to have them read out of step; and unlike Estimates — where the mode's
+  // availability changes per metric — growth is available identically on every line here, so
+  // there is nothing to vary per block. What IS per block is the window (range chips, slider),
+  // which is a different question.
+  '<div class="rs-views">' +
+    '<button type="button" class="rs-view' + (!rsIsGrow() ? ' active' : '') + '" data-rsmode="level" title="The reported level in each period">Levels</button>' +
+    '<button type="button" class="rs-view' + (rsIsGrow() ? ' active' : '') + '" data-rsmode="grow" title="Growth over the base period, for every series at once">Growth</button>' +
+  '</div>' +
+  '<div class="rs-views" id="rsGrowMode"' + (_rs.view === 'q' ? '' : ' hidden') + '>' +
+    '<button type="button" class="rs-view' + (_rs.growth === 'yoy' ? ' active' : '') + '" data-rsgrow="yoy" title="vs the same quarter last year">YoY</button>' +
+    '<button type="button" class="rs-view' + (_rs.growth === 'qoq' ? ' active' : '') + '" data-rsgrow="qoq" title="vs the previous reported quarter">QoQ</button>' +
+  '</div>' +
+  (rsIsGrow() ? '<div class="rs-views">' +
+    '<button type="button" class="rs-view' + (!rsGrowAmt() ? ' active' : '') + '" data-rsgunit="pct">%</button>' +
+    '<button type="button" class="rs-view' + (rsGrowAmt() ? ' active' : '') + '" data-rsgunit="amt">Amount</button>' +
+  '</div>' : '') + rsVintSelHtml() + '</div>';
 }
 
 // All section blocks, stacked. Each block owns its pills/legend/chart/slider/
@@ -705,6 +751,12 @@ function rsBuildChart(k){
   var dec = m.unit === 'eps' ? 2 : 1;
   var div = rsScaleOf(m);
   var scale = function(v){ return v == null ? null : (m.unit === 'eps' ? v : v/div); };
+  // Growth mode replaces every series with its growth over the lag. As a percentage the
+  // values are already comparable, so they are NOT scaled; as an amount they are the same
+  // units as the level and scale with it.
+  var grow = rsIsGrow(), amt = rsGrowAmt();
+  var gscale = amt ? scale : function(v){ return v; };
+  var ser = function(name){ return grow ? (rsGrowArr(m, name, amt) || []).map(gscale) : (m[name] || []).map(scale); };
   var cur = rsCur(m);
   var unitLbl = m.unit === 'eps'   ? cur
               : m.unit === 'pct'   ? '%'
@@ -720,10 +772,14 @@ function rsBuildChart(k){
     // two different marks: a translucent band for a range, and a horizontal tick
     // for a point. Both are honest about what the company actually said.
     var isPoint = function(i){ return m.guideLo[i] != null && m.guideHi[i] != null && m.guideLo[i] === m.guideHi[i]; };
+    // The band is transformed too: in growth mode it reads as the growth the company's own
+    // guide implies, which is the number the print gets judged against.
+    var gLo = ser('guideLo'), gHi = ser('guideHi');
     var bandData = m.periods.map(function(_, i){
-      return (m.guideLo[i] == null || m.guideHi[i] == null || isPoint(i)) ? null : [scale(m.guideLo[i]), scale(m.guideHi[i])];
+      return (m.guideLo[i] == null || m.guideHi[i] == null || isPoint(i) ||
+              gLo[i] == null || gHi[i] == null) ? null : [gLo[i], gHi[i]];
     });
-    var pointData = m.periods.map(function(_, i){ return isPoint(i) ? scale(m.guideLo[i]) : null; });
+    var pointData = m.periods.map(function(_, i){ return isPoint(i) ? gLo[i] : null; });
     if (bandData.some(function(v){ return v != null; })){
       datasets.push({ label: 'Guidance range', type: 'bar',
         data: sl(bandData),
@@ -739,11 +795,13 @@ function rsBuildChart(k){
         spanGaps: false, order: 1 });
     }
   }
-  if (!st.hidden.act) datasets.push({ label: 'Actual', data: sl(m.act.map(scale)), backgroundColor: RS_ACT, borderRadius: 3, maxBarThickness: 26, order: 3 });
-  if (has.summit && !st.hidden.summit) datasets.push({ label: 'Summit model', data: sl(m.summit.map(scale)), backgroundColor: RS_SUMMIT, borderRadius: 3, maxBarThickness: 26, order: 4 });
-  if (has.cons && !st.hidden.cons)     datasets.push({ label: 'Consensus', data: sl(m.cons.map(scale)), backgroundColor: RS_CONS, borderRadius: 3, maxBarThickness: 26, order: 5 });
+  if (!st.hidden.act) datasets.push({ label: 'Actual', data: sl(ser('act')), backgroundColor: RS_ACT, borderRadius: 3, maxBarThickness: 26, order: 3 });
+  if (has.summit && !st.hidden.summit) datasets.push({ label: 'Summit model', data: sl(ser('summit')), backgroundColor: RS_SUMMIT, borderRadius: 3, maxBarThickness: 26, order: 4 });
+  if (has.cons && !st.hidden.cons)     datasets.push({ label: 'Consensus', data: sl(ser('cons')), backgroundColor: RS_CONS, borderRadius: 3, maxBarThickness: 26, order: 5 });
 
-  if (!isTop && !st.hidden.margin && m.marginOf && m.unit !== 'eps'){
+  // Margin lines are suppressed in growth mode: the left axis is already a percentage there,
+  // and two unrelated percentages sharing one chart is how a reader mistakes one for the other.
+  if (!grow && !isTop && !st.hidden.margin && m.marginOf && m.unit !== 'eps'){
     var ma = rsMarginArr(m, 'act'), ms = rsMarginArr(m, 'summit'), mc = rsMarginArr(m, 'cons');
     if (ma && ma.some(function(v){ return v != null; })){
       needY2 = true;
@@ -766,7 +824,11 @@ function rsBuildChart(k){
   }
 
   var tEl = document.getElementById('rsChartT-' + k);
-  if (tEl) tEl.innerHTML = esc(m.label) + ' — actual vs expectations <span>(' + unitLbl + ' per period · ' + (isTop ? '' : 'margin lines on the right axis · ') + 'hover a period for every series)</span>';
+  if (tEl) tEl.innerHTML = esc(m.label) + ' — ' +
+    (grow ? esc(rsGrowLabel()) + ' <span>(' + (amt ? unitLbl + ' added over the base period' : 'percent') +
+            ' · every series measured against the reported period ' + rsLook() +
+            (_rs.view === 'q' ? (rsLook() === 1 ? ' quarter' : ' quarters') : ' year') + ' back)</span>'
+          : 'actual vs expectations <span>(' + unitLbl + ' per period · ' + (isTop ? '' : 'margin lines on the right axis · ') + 'hover a period for every series)</span>');
 
   // Forward (estimate) periods: the reported labels render muted grey here; the FORWARD labels are
   // hidden (callback → '') and the rsFwdZone plugin redraws them inside a highlighted bubble, over a
@@ -777,7 +839,7 @@ function rsBuildChart(k){
     x: { grid: { display: false }, ticks: { color: 'rgba(80,90,104,0.9)', font: { size: 11 }, autoSkip: false,
         callback: function(v, i){ return (fwdFrom >= 0 && i >= fwdFrom) ? '' : this.getLabelForValue(v); } } },
     y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
-      callback: function(v){ return rsTick(v, m.unit, div, m.cur); } } }
+      callback: function(v){ return (grow && !amt) ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div, m.cur); } } }
   };
   if (st.yr){ scales.y.min = st.yr[0]; scales.y.max = st.yr[1]; }
   if (needY2) scales.y2 = { position: 'right', grid: { display: false },
@@ -1990,6 +2052,23 @@ function wireResults(pane){
       _rs.growth = gw.getAttribute('data-rsgrow');
       pane.querySelectorAll('[data-rsgrow]').forEach(function(b){ b.classList.toggle('active', b === gw); });
       rsBuildAll();                                    // growth rows + summaries recompute
+      return;
+    }
+    // Levels ⇄ Growth, and the unit it is expressed in. Both change what the y-axis MEANS, so
+    // every block's brushed y-range is dropped rather than carried into a scale that no longer
+    // describes it, and the top row is re-rendered because the %/Amount pair only exists while
+    // Growth is on.
+    var mdv = e.target.closest('[data-rsmode]'), gu = e.target.closest('[data-rsgunit]');
+    if (mdv || gu){
+      if (mdv) _rs.mode = mdv.getAttribute('data-rsmode');
+      if (gu) _rs.growUnit = gu.getAttribute('data-rsgunit');
+      Object.keys(_rs.sec).forEach(function(sk){ if (_rs.sec[sk]) _rs.sec[sk].yr = null; });
+      var top = pane.querySelector('.rs-toprow');
+      if (top) top.outerHTML = rsTopRowHtml();
+      var bl = pane.querySelector('#rsBlocks');
+      if (bl) bl.innerHTML = rsBlocksHtml();           // legend chips differ per mode
+      wireSliders(pane);
+      rsBuildAll();
       return;
     }
     // ── Surprise scorecard (single block at the foot of the pane) ──

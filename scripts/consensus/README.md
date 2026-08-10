@@ -33,6 +33,24 @@ a stale `fq+2`. Export the `.txt` before each refresh.
 | **`emit_matrix.py`** | **The generator.** Emits the `estMatrix.cons` block to `out/estmatrix_<tk>.js`. | the **union** of both sources |
 | `verify_preprint.py` | Diagnostic: derives the pre-print series and diffs it against the `cons` column the dataset already ships. | the **workbook only** — so forward periods legitimately differ from the union |
 | `inspect_matrix.py` | Prints the snapshot × period matrix per metric, plus each snapshot's last reported period and KPI slot names. | the `.txt` only |
+| **`emit_summit_matrix.py`** | **The other generator** — the `estMatrix.summit` block, plus its own acceptance diff against the shipped `summit` arrays. | saved **Summit-MCP** pulls, not the workbook |
+
+`emit_summit_matrix.py` is the odd one out: its input is not a file in the team's Drive but one saved
+`get_fundamentals` response per model snapshot, pulled Claude-side through the Summit MCP. Save each
+response into a folder (the harness already writes the big ones to disk) and point the script at it —
+rows are grouped by the `snapshot_date` they carry, so file names do not matter:
+
+```bash
+py emit_summit_matrix.py UBER map_summit_uber.json <dump-dir>
+```
+
+Pull **only the periods forward of each snapshot's `lastActual`**, with `sheet_sources=
+['projection_history']` and explicit `metric_ids` — an unfiltered pull is ~14.7k facts. Its config
+(`map_summit_<tk>.json`) carries the metric map, derived sums, the vintage register with each
+snapshot's `lastActual`, the dataset's period axis, and a `prefer_source` order for rows that exist
+twice. Read the output's verdict line per metric: `N match · N uncovered (pre-snapshot history)` is
+healthy, `frozen-vs-saved` is expected and explained in the contract, and only `DIFF ON A FORWARD
+PERIOD` means stop.
 
 The read-scope difference between `emit_matrix` and `verify_preprint` is deliberate but easy to trip
 over: a `DIFF` on forward periods from `verify_preprint` is expected, because it cannot see the

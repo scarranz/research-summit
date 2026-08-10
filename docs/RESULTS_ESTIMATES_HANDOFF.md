@@ -24,10 +24,10 @@ Target data flow (all of it already exists, see §4):
 | # | Change | State | Commit |
 |---|---|---|---|
 | — | Dataset contract v2: the **vintage axis** (`estMatrix`) + rollout recipe | ✅ done | `6122b4d`, `857b65a` |
-| 4 | Vintage picker in Results ("Estimates as of") | ⚠️ **half** — consensus matrix live (13 vintages); **`estMatrix.summit` NOT populated** | `6122b4d` |
+| 4 | Vintage picker in Results ("Estimates as of") | ✅ **done** — consensus (13 vintages) **and Summit (5)**; pick `2026-07-31` and both sources read from the same day | `6122b4d`, `d95f429` |
 | 1 | Surprise scorecard moved to the foot of **Results** + base/comparator selection | ✅ done | `e21b11b` |
-| 3 | "Reported" toggle marking where each FY landed, in Estimates | ✅ done, **inert on UBER** (see §3) | `555c1dd` |
-| 2 | SoFi-style Actuals-vs-Guidance table in Estimates | ❌ not started | — |
+| 3 | "Reported" toggle marking where each FY landed, in Estimates | ✅ done, **live on UBER** since FY2025 was added | `555c1dd`, `e1c93b0` |
+| 2 | SoFi-style Actuals-vs-Guidance table in Estimates | ❌ not started — **the only open change** | — |
 
 **Decisions SAB made, do not re-litigate:**
 * **Results and Estimates keep SEPARATE data surfaces.** The hand-authored `evolution` block stays;
@@ -49,21 +49,36 @@ row per FY = first vintage · latest vintage · actual · revisions n↑/n↓ ·
 SoFi's track-record tiles. Source to port from: `js/overviews/sofi.js` → `guidanceBody()`,
 `renderGuidTable()`, `renderGuidAnnual()`, `renderGuidStatsAnnual()`, data shape `GUID_ANNUAL`.
 
-**Change 3 is built but draws nothing on UBER.** The Estimates block covers FY2026–2028 and **all
-three are still open**; annual actuals stop at 2025. The pill renders disabled with the reason in
-its tooltip — that is correct behaviour, not a bug. To make it live, add **FY2025** to
-`evolution.years` and to each evolution metric's `summit`/`cons` rows. One real data point is
-already in hand: the **2025-12-15 vintage estimated FY2025 revenue at 52,113** against a **52,017**
-actual (0.2% over); FY2025 EBITDA 8,760.2 vs 8,730 actual; `REV_BBG_EST` 51,952.4,
-`EBITDA_BBG_EST` 8,718. `OP_INCOME` for 2025 reads a literal `0` — the annual op-income rows are
-known-broken (already on the model-audit list). The other four vintages need one MCP pull each.
+**Changes 3 and 4 are closed** (Aug 10, 2026). What they taught, because it generalises to every
+ticker:
 
-**Change 4 — `estMatrix.summit`.** Needs one `get_fundamentals` pull per Summit snapshot. UBER has
-**9 snapshots**, but **dedupe by `facts_hash`, not by date** — `2026-05-06` and `2026-05-07` are the
-same model state. Skip intra-period saves; **`2026-07-20` is unusable** (its Delivery-Hero pro-forma
-toggle was on, inflating FY2025 revenue to $67.9B against a $52.0B standalone actual). ⚠ A pull
-without `metric_ids` returns ~14.7k facts; filter by `period_keys` (one period ≈ 58 rows) or by
-metric UUIDs from `list_metrics`.
+* **`estMatrix.summit` holds forward periods only.** A snapshot is an estimate for nothing it
+  already knew. Its `projection_history` also carries frozen projections for reported quarters, but
+  those belong to whatever vintage stood before *that* print — storing them under the snapshot's own
+  date would date them wrong.
+* **So `preprint` needs two fallbacks, both in `rsSeriesFor`.** On an already-reported period the
+  dataset's flat value wins: it is the projection the model **froze at the print**, and a snapshot is
+  only ever as fresh as the day it was saved (UBER 1Q26 revenue reads **14,040 frozen vs 14,014** in
+  a Feb-5 file three months stale; 4Q25 EPS **0.894 vs 0.6151**). And where no vintage reaches back
+  far enough — every quarter before Dec 2025, the oldest snapshot — the flat value is kept rather than
+  blanked. **The matrix adds; it never silently subtracts.** Any ticker whose model snapshots start
+  after its reported history needs this, which is all of them.
+* **Zeros are dropped, never emitted.** A literal `0` in these models means a row nobody populated.
+  That is why forward EBITDA resolves to the Jul-31 vintage: the Aug-5 file left those rows at zero.
+* **Reported years hold the ACTUAL, not a forecast.** Once FY2025 printed, the model's annual row and
+  the workbook's stored consensus both carry the reported figure. That is why the FY2025 line in
+  Estimates goes flat after December — and it is exactly what the Reported toggle is for.
+* **Model rows that do not tie to the reported basis stay null.** UBER's annual `ADJ_OPINC` reads
+  7,470 against a 6,453 reported non-GAAP figure (the same ~20% spread sits in every 2025 quarter and
+  closes in 2026). Publishing it against the Reported marker would invent a miss.
+
+Reproduce with `scripts/consensus/emit_summit_matrix.py` (see §6). The 9 UBER snapshots dedupe by
+`facts_hash` to 5 usable: `2026-05-06` == `2026-05-07`; `2026-07-17` / `2026-08-03` are intra-period
+saves; **`2026-07-20` is unusable** (Delivery-Hero pro-forma toggle on — FY2025 revenue $67.9B against
+a $52.0B standalone actual). ⚠ A pull without `metric_ids` returns ~14.7k facts; filter by
+`period_keys` **and** metric UUIDs from `list_metrics`, and even then the response is large enough
+that the harness writes it to a file — which is the point: parse the file with the script instead of
+transcribing numbers by hand.
 
 ## 4. The data sources — and the trap that matters most
 
@@ -152,10 +167,19 @@ Then: **Deep Dive → Evolution → Results / Estimates**.
 
 ```bash
 cd scripts/consensus
+# CONSENSUS side — from the Bloomberg workbook
 SUMMIT_DOCS="G:/My Drive/Summit/Docs/0" py emit_matrix.py UBER map_uber.json valid_uber.json
-# → out/estmatrix_uber.js ; paste over the estMatrix block in js/results-data/uber.js
+# → out/estmatrix_uber.js ; paste over the estMatrix.cons block in js/results-data/uber.js
 py verify_preprint.py UBER map_uber.json      # diff the derived pre-print vs the shipped column
+
+# SUMMIT side — from saved Summit-MCP pulls (one get_fundamentals per snapshot, saved to a folder)
+py emit_summit_matrix.py UBER map_summit_uber.json <dump-dir>
+# → out/estmatrix_summit_uber.js, plus the acceptance diff against the shipped `summit` arrays
 ```
+
+The summit generator prints its own verdict per metric: `N match · N uncovered (pre-snapshot
+history)`, any `frozen-vs-saved` gaps, holes it fills, and — the only line that should ever make you
+stop — `DIFF ON A FORWARD PERIOD`.
 
 **The acceptance test for any ticker:** derive the `preprint` series and diff it against whatever
 the dataset already ships. Every mismatch is *rounding*, *a genuine refresh*, or *a bug* — classify

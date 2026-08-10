@@ -315,6 +315,21 @@ Rules that matter:
 | `preprint` (default) | Per period, the latest snapshot whose `lastActual` is still *before* it — the shortest forward horizon, ties broken by the later snapshot. Reproduces the v1 hand-picked columns. |
 | `<vintageId>` | That one snapshot's row read straight across. Periods it never covered stay **null** — blank, not zero, and never a silent fallback to an older snapshot. |
 
+**`preprint` has two fallbacks to the dataset's own flat array, and both matter.**
+
+1. **On an ALREADY-REPORTED period the flat value wins.** It is the projection the model *froze at
+   that print*; a snapshot is only ever as fresh as the day it was saved. UBER 1Q26 revenue reads
+   **14,040 frozen against 14,014** in the last file saved before it (Feb-5, three months stale),
+   and 4Q25 EPS **0.894 against 0.6151**. Neither number is wrong — that is the model moving between
+   its last save and the print.
+2. **Where no vintage reaches back far enough, the flat value is kept, not blanked.** Model snapshots
+   typically begin long after the reported history does (UBER's oldest is Dec 2025 against a history
+   opening in 3Q22).
+
+Stated the other way: **the matrix ADDS to a dataset and never silently subtracts from it.** Where it
+has a value the dataset lacked it fills the hole (UBER: 1Q26 trips, FY2025 across the annual view).
+Single-vintage mode is unaffected by both rules — blanks stay blank there.
+
 `rsApplyVintage()` resolves the selection into `m.summit` / `m.cons` once. Those arrays are read
 in ~40 places; resolving centrally means no reader changes. The flat arrays are stashed as
 `m._flat_<src>` on first use, so switching modes never compounds.
@@ -329,9 +344,24 @@ State this rather than padding it.
 | Column | Source | Rule |
 |---|---|---|
 | `estMatrix.cons` | **`Consensus_Portal.xlsm` → sheet `BBG_CONSENSUS`** ∪ **`BBG_CONSENSUS.txt`** (`G:\My Drive\Summit\Docs\0\`), deduped by `data_as_of` | ⚠ **Read the UNION.** The `.txt` is the exported archive; the sheet is live and **overwrites its most recent row**. On UBER the archive holds `2026-07-31` and the sheet holds `2026-08-07` — and 07-31 is the pre-print consensus for the very quarter the tab scores. Reading either alone silently loses a snapshot. Export the `.txt` before each refresh. |
-| `estMatrix.summit` | Summit MCP `get_fundamentals(snapshot_date=…, sheet='projection_history')`, one pull per snapshot | **Dedupe by `facts_hash`, not by date** — UBER's `2026-05-06` and `2026-05-07` are the same model state (LYFT had the same duplication). Skip intra-period saves; `2026-07-20` is unusable (its Delivery-Hero pro-forma toggle was on). |
+| `estMatrix.summit` | Summit MCP `get_fundamentals(snapshot_date=…, sheet_sources=['projection_history'])`, one pull per snapshot, through `scripts/consensus/emit_summit_matrix.py` | **Dedupe by `facts_hash`, not by date** — UBER's `2026-05-06` and `2026-05-07` are the same model state (LYFT had the same duplication). Skip intra-period saves; `2026-07-20` is unusable (its Delivery-Hero pro-forma toggle was on). Pull **only the periods forward of that snapshot's `lastActual`** (see below). **Drop literal zeros** — in these models a `0` is a row nobody populated, not a forecast of nothing. Where a row exists twice under different `source` tags (UBER's annual FCF: DEFAULT 11,338 vs SEGM 10,665), decide in the config and let the generator report every conflict it resolves. |
 | `act` | Summit MCP `actuals_history`, cross-checked against the release | Unchanged from v1. Bloomberg's own `(Rep)` columns are **not** a substitute — see below. |
 | `guideLo/Hi` | The company's release, or the model's guidance rows where populated | UBER's `*_GUIDANCE` rows exist and are all literal `0`; ask San/Oscar to fill them and the next refresh reads from the model. |
+
+**A snapshot is an estimate for nothing it already knew.** Its `projection_history` also carries
+frozen projections for quarters already reported, but those belong to whatever vintage stood before
+*that* print — filing them under the snapshot's own date would date them wrong. Hence forward-only
+rows, and hence the `preprint` fallbacks in §8.2.
+
+**A reported year holds the ACTUAL, not a forecast.** Once FY2025 printed, the model's annual row and
+the workbook's stored consensus both carry the reported figure. Estimate lines therefore go *flat*
+after the print rather than continuing to move — say so on screen; it is what the Reported toggle is
+for, not a bug to hide.
+
+**A model row that does not tie to the reported basis stays null.** UBER's annual `ADJ_OPINC` reads
+7,470 against a 6,453 reported non-GAAP operating income, the same ~20% spread that sits in every
+2025 quarter and closes in 2026. Charting it against the Reported marker publishes a miss the model
+never made. Same rule as `act`: never fill with a number you cannot stand behind.
 
 **Only FORWARD horizons are consensus.** `fq+1…fq+4` / `fy+1…fy+5` are estimates. `fq-3`, `fq0`
 and `(Rep)`-marked `fy0` are Bloomberg's *own reported* figures and belong to no estimate series —

@@ -359,17 +359,67 @@ function rsVintages(){
   return out.sort(function(a, b){ return a.id < b.id ? 1 : -1; });
 }
 var RS_MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+var RS_SRCN = { summit: 'Summit', cons: 'Street' };
+function rsVintDay(id, fallback){
+  var p = String(id).split('-');
+  return (p.length === 3 && RS_MON[+p[1] - 1]) ? RS_MON[+p[1] - 1] + ' ' + (+p[2]) + ', ' + p[0] : (fallback || id);
+}
 function rsVintLabel(v){
-  var p = String(v.id).split('-');
-  var d = (p.length === 3 && RS_MON[+p[1] - 1]) ? RS_MON[+p[1] - 1] + ' ' + (+p[2]) + ', ' + p[0] : v.label || v.id;
   var thru = v.lastActual && (v.lastActual.q || v.lastActual.y);
-  return d + (thru ? ' · knew through ' + thru : '');
+  return rsVintDay(v.id, v.label) + (thru ? ' · knew through ' + thru : '');
+}
+// ─── Two calendars, one dropdown ──────────────────────────────────────────────
+// The sources are archived on their OWN schedules: Bloomberg exports around each print,
+// the model is saved whenever the analyst saves it. On UBER the two calendars intersect
+// exactly ONCE (2026-07-31) out of 18 dates — so picking a date by itself leaves one side
+// blank far more often than not, and the list has to say which source owns each date
+// BEFORE it is picked. That is what rsVintOwners feeds.
+function rsVintSrcs(id){
+  var out = [];
+  ['summit', 'cons'].forEach(function(src){
+    var mx = rsMatrix(src); if (!mx) return;
+    if ((mx.vintages || []).some(function(v){ return v.id === id; })) out.push(src);
+  });
+  return out;
+}
+function rsVintOwners(id){
+  var s = rsVintSrcs(id);
+  if (s.length > 1) return 'both sources';
+  return s.length ? RS_SRCN[s[0]] + ' only' : 'no source';
+}
+// The snapshot a source resolves to for an "as of" reading: its latest file ON OR BEFORE
+// that date. Dated ids sort lexically, so a string compare is the date compare.
+function rsVintAsOf(src, date){
+  var mx = rsMatrix(src); if (!mx) return null;
+  var best = null;
+  (mx.vintages || []).forEach(function(v){ if (v.id <= date && (best == null || v.id > best.id)) best = v; });
+  return best;
+}
+// Dates worth offering as "as of" — the ones where BOTH sources have something to show.
+// Earlier than that, an as-of reading is the single-file reading, so it would only pad
+// the list with duplicates.
+function rsAsOfDates(){
+  if (['summit', 'cons'].some(function(s){ return !rsMatrix(s); })) return [];
+  return rsVintages().filter(function(v){
+    return ['summit', 'cons'].every(function(s){ return rsVintAsOf(s, v.id); });
+  });
+}
+// The vintage a given source is actually showing, for any mode. Null = nothing to show.
+function rsVintFor(src, mode){
+  if (!mode || mode === 'preprint') return null;
+  if (mode.indexOf('asof:') === 0) return rsVintAsOf(src, mode.slice(5));
+  var mx = rsMatrix(src); if (!mx) return null;
+  return (mx.vintages || []).filter(function(v){ return v.id === mode; })[0] || null;
 }
 function rsSeriesFor(view, m, mkey, src, mode){
   var mx = rsMatrix(src); if (!mx) return null;
   var cells = (mx[view] || {})[mkey]; if (!cells) return null;
   if (mode && mode !== 'preprint'){
-    var row = cells[mode] || {};
+    // Single-file read — either the date itself, or (as-of) this source's latest file up to
+    // it. Nothing that old ⇒ an all-null series: blank, never a stand-in from another day.
+    var hit = rsVintFor(src, mode);
+    if (!hit) return m.periods.map(function(){ return null; });
+    var row = cells[hit.id] || {};
     return m.periods.map(function(p){ return row[p] == null ? null : row[p]; });
   }
   var vs = mx.vintages || [], flat = m['_flat_' + src] || [];
@@ -421,13 +471,21 @@ function rsApplyVintage(){
 // and because a source with no matrix yet is still showing its pre-print series.
 function rsVintNote(){
   var mode = _rs.vint || 'preprint';
-  var names = { summit: 'Summit', cons: 'Consensus' }, out = [];
+  var names = { summit: 'Summit', cons: 'Consensus' }, asof = mode.indexOf('asof:') === 0, out = [];
   ['summit', 'cons'].forEach(function(src){
     var mx = rsMatrix(src);
     if (!mx){ out.push(names[src] + ': no vintage matrix yet — showing the estimate that stood before each print'); return; }
     if (mode === 'preprint'){ out.push(names[src] + ': ' + (mx.vintages || []).length + ' snapshots, each period taken from the last one before its print'); return; }
-    var hit = (mx.vintages || []).filter(function(v){ return v.id === mode; })[0];
-    out.push(names[src] + ': ' + (hit ? 'snapshot ' + hit.id + ', which knew through ' + ((hit.lastActual && (hit.lastActual.q || hit.lastActual.y)) || '—') : 'no snapshot on this date — the series is blank, not zero'));
+    var hit = rsVintFor(src, mode);
+    if (!hit){
+      out.push(names[src] + ': ' + (asof ? 'no file that far back — the series is blank, not zero'
+                                         : 'no snapshot on this date — the series is blank, not zero'));
+      return;
+    }
+    var thru = (hit.lastActual && (hit.lastActual.q || hit.lastActual.y)) || '—';
+    // Under as-of the resolved date is usually NOT the date on the picker, so it is named.
+    out.push(names[src] + ': snapshot ' + hit.id + (asof && hit.id !== mode.slice(5) ? ' (its latest up to ' + mode.slice(5) + ')' : '') +
+             ', which knew through ' + thru);
   });
   return out.join(' · ');
 }
@@ -560,12 +618,28 @@ function rsBlocksHtml(){
 function rsVintSelHtml(){
   var vints = rsVintages(); if (!vints.length) return '';
   var mode = _rs.vint || 'preprint';
+  var opt = function(val, label){
+    return '<option value="' + esc(val) + '"' + (mode === val ? ' selected' : '') + '>' + esc(label) + '</option>';
+  };
+  var asof = rsAsOfDates(), html = '';
+  if (asof.length){
+    // What an analyst actually asks — "where did each side stand on this date" — which is not
+    // the same question as "read me this one file", because the two archives rarely share a day.
+    html += '<optgroup label="As of a date — each source&#39;s latest file">' +
+      asof.map(function(v){
+        var parts = ['summit', 'cons'].map(function(s){
+          var hit = rsVintAsOf(s, v.id);
+          return RS_SRCN[s] + ' ' + (hit ? rsVintDay(hit.id) : '—');
+        });
+        return opt('asof:' + v.id, rsVintDay(v.id, v.label) + ' · ' + parts.join(' + '));
+      }).join('') + '</optgroup>';
+  }
+  html += '<optgroup label="One file — read exactly as archived">' +
+    vints.map(function(v){ return opt(v.id, rsVintLabel(v) + ' · ' + rsVintOwners(v.id)); }).join('') +
+    '</optgroup>';
   return '<div class="rs-vint"><span class="rs-quick-l">Estimates as of</span>' +
     '<select class="rs-vsel" aria-label="Estimate vintage">' +
-      '<option value="preprint"' + (mode === 'preprint' ? ' selected' : '') + '>Closest snapshot before each print</option>' +
-      vints.map(function(v){
-        return '<option value="' + esc(v.id) + '"' + (mode === v.id ? ' selected' : '') + '>' + esc(rsVintLabel(v)) + '</option>';
-      }).join('') +
+      opt('preprint', 'Closest snapshot before each print') + html +
     '</select></div>';
 }
 

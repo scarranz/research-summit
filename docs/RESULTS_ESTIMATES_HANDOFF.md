@@ -27,7 +27,11 @@ Target data flow (all of it already exists, see §4):
 | 4 | Vintage picker in Results ("Estimates as of") | ✅ **done** — consensus (13 vintages) **and Summit (5)**; pick `2026-07-31` and both sources read from the same day | `6122b4d`, `d95f429` |
 | 1 | Surprise scorecard moved to the foot of **Results** + base/comparator selection | ✅ done | `e21b11b` |
 | 3 | "Reported" toggle marking where each FY landed, in Estimates | ✅ done, **live on UBER** since FY2025 was added | `555c1dd`, `e1c93b0` |
-| 2 | SoFi-style Actuals-vs-Guidance table in Estimates | ❌ not started — **the only open change** | — |
+| 2 | SoFi-style Actuals-vs-Guidance table in Estimates | ✅ **done** — shipped as the **Revision record** at the foot of Estimates, vintage-fed | `1c3f168` |
+
+**All four changes are closed.** What is left is rollout: the contract in
+`docs/RESULTS_CONVENTIONS.md` §8 plus the two generators in `scripts/consensus/`, applied per
+ticker. The workbook now covers 32 tickers.
 
 **Decisions SAB made, do not re-litigate:**
 * **Results and Estimates keep SEPARATE data surfaces.** The hand-authored `evolution` block stays;
@@ -41,13 +45,18 @@ Target data flow (all of it already exists, see §4):
 
 ## 3. What is open, and the exact blocker for each
 
-**Change 2 — the SoFi table.** ⚠ **It cannot be fed by UBER's guidance.** SoFi's Actuals-vs-Guidance
-walks a full-year guide revised each quarter (`Initial → Q1 revision → … → Actual`). **Uber guides
-one quarter ahead only** (Gross Bookings, Adj. EBITDA, and Non-GAAP EPS since 1Q26), so there is no
-annual guide to walk. On UBER the same table shape must use **the vintages as the revision axis**:
-row per FY = first vintage · latest vintage · actual · revisions n↑/n↓ · vs latest · vs first, plus
-SoFi's track-record tiles. Source to port from: `js/overviews/sofi.js` → `guidanceBody()`,
-`renderGuidTable()`, `renderGuidAnnual()`, `renderGuidStatsAnnual()`, data shape `GUID_ANNUAL`.
+**Change 2 — the SoFi table — shipped as the "Revision record"** (`rsEvoTrack*` in `js/results.js`,
+at the foot of Estimates). SoFi's version walks a full-year guide revised each quarter
+(`Initial → Q1 → … → Actual`); **Uber guides one quarter ahead only**, so the saved snapshots are the
+revision axis instead. Per FY: first view · latest view · actual · revisions n↑/n↓ · net move · first
+vs actual, over five track-record tiles. Two things to keep in mind when reading it:
+
+* **"Net move" and "first vs actual" are different questions.** The first is the travel between
+  snapshots, the second is the error against the print. They coincide on Summit (after a print the
+  stored row carries the reported figure) and diverge on the Street — FY2025 drifted +0.0% while
+  sitting 0.1% under the print. That gap is the part of the miss the source never corrected.
+* **It is generic.** Every dataset with an `evolution` block gets it; it hides itself below two
+  vintages. All six current datasets pass the shape check (keys ⊂ metrics, labelled vintages).
 
 **Changes 3 and 4 are closed** (Aug 10, 2026). What they taught, because it generalises to every
 ticker:
@@ -189,11 +198,19 @@ each one before moving on. That diff is what exposed the overwritten snapshot in
 
 | Area | Functions |
 |---|---|
-| Vintage axis | `rsOrdIn` `rsMatrix` `rsVintages` `rsVintLabel` `rsSeriesFor` **`rsApplyVintage`** `rsVintNote` `rsVintSelHtml` |
+| Vintage axis | `rsOrdIn` `rsMatrix` `rsVintages` `rsVintDay` `rsVintLabel` `rsVintSrcs` `rsVintAsOf` `rsAsOfDates` `rsVintFor` `rsSeriesFor` **`rsApplyVintage`** `rsVintNote` `rsVintSelHtml` |
 | Results pane | `rsBody` `rsBlocksHtml` `rsBuildChart` `rsRenderTable` `rsBuildAll` `wireResults` `initResults` |
 | Surprise scorecard | `rsSrcArr` `rsSurpGroups` `rsSurpCmps` `rsSurpBlockHtml` `rsBuildSurp` `rsSurpTableRender` `rsRerenderSurp` `rsSurpEl` |
 | Estimates pane | `resultsEvoHtml` `rsEvoBlockHtml` `rsBuildEvo` `rsRenderEvoTable` `initResultsEvo` |
 | Reported marker | `rsEvoActual` `rsEvoActualPct` `rsEvoActYears` `rsEvoActHtml` `rsRerenderEvoHead` |
+| Revision record | `rsEvoTrackSt` `rsEvoTrackGroups` `rsEvoTrackKey` `rsEvoTrackSrc` **`rsEvoTrack`** `rsEvoTrackHtml` `rsEvoTrackSrcHtml` `rsRenderEvoTrack` |
+
+**The picker offers three readings, not two** (`rsVintSelHtml`): the pre-print default, an **as of a
+date** group where each source resolves to its own latest file up to that date, and the single-file
+list **split by archive**. It has to: the two archives keep separate calendars — Bloomberg exports
+around each print, the model is saved when the analyst saves it — and on UBER they intersect exactly
+once (2026-07-31) out of 18 dates. A merged, unlabelled list silently blanked one source on 17 of
+18 picks.
 
 `rsApplyVintage` is the load-bearing one: `m.summit` / `m.cons` are read in ~40 places, so the
 vintage selection is resolved into those two arrays **once** rather than threaded through every

@@ -88,6 +88,11 @@
 /* A row of toggle GROUPS — the Estimates blocks' mode row, where picking Growth opens a
    YoY/QoQ group and a %/Amount group beside it. Each group keeps its own pill border. */
 .rs-modes { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+/* Reading controls on the left, window on the right, at the same height under the heading. */
+.rs-block-modes {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin: 10px 0 4px;
+}
 .rs-view:disabled { opacity: .45; cursor: not-allowed; }
 
 /* Collapsed-by-default section, for detail that should be reachable without being in the

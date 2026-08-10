@@ -1134,10 +1134,19 @@ function rsEvoMetric(k){
 // the year was open, the reported actual once closed). Profitability → MARGIN
 // over the `marginOf` metric, same source and same vintage (a margin built
 // from one snapshot's numerator and another's denominator would be fiction).
+// The % basis is now the MODE, not the block. Growth used to be a Top Line privilege and
+// margin a Profitability one; there is no reason a profit line cannot be read as growth, so
+// `st.mode` carries which of the two is being asked for: 'usd' | 'grow' | 'margin'.
+// Growth needs a base — the prior year inside the SAME vintage, or `prior` for the first year
+// on the list — so a metric with no `prior` simply has no growth for its first year.
+function rsEvoBasis(k){
+  var mode = rsEvoSt(k).mode;
+  return mode === 'usd' ? null : mode;
+}
 function rsEvoPct(k, m, src, yi){
   var arr = m[src] ? m[src][yi] : null;
   if (!arr) return null;
-  if (k === 'top'){
+  if (rsEvoBasis(k) === 'grow'){
     return arr.map(function(cur, vi){
       var base = yi === 0
         ? (m.prior && m.prior[src] ? m.prior[src][vi] : null)
@@ -1155,7 +1164,7 @@ function rsEvoPct(k, m, src, yi){
     return v / den[vi] * 100;
   });
 }
-function rsEvoPctLabel(k, m){ return k === 'top' ? 'implied YoY growth' : (m.marginLabel || 'margin'); }
+function rsEvoPctLabel(k, m){ return rsEvoBasis(k) === 'grow' ? 'implied YoY growth' : (m.marginLabel || 'margin'); }
 // Display scale for an evolution metric (nested per-year arrays): $B or $M.
 function rsEvoScaleOf(m){
   var mx = 0;
@@ -1256,7 +1265,6 @@ function rsEvoBlockHtml(k){
     '<div class="rs-collap-b" id="rsEvoDetBody-' + k + '" hidden>' +
       '<div class="rs-tablewrap" id="rsEvoTable-' + k + '"></div>' +
     '</div></div>';
-  h += '<div class="ov-foot" id="rsEvoNote-' + k + '"></div>';
   h += '</div>';
   return h;
 }
@@ -1266,10 +1274,14 @@ function rsEvoBlockHtml(k){
 // when the metric declares no marginOf).
 function rsEvoModeHtml(k, m){
   var st = rsEvoSt(k);
-  if (k !== 'top' && !m.marginOf){ st.mode = 'usd'; return ''; }
-  return '<button type="button" class="rs-view' + (st.mode === 'usd' ? ' active' : '') + '" data-rsevmode="usd">' + rsCurName() + 'B</button>' +
-    '<button type="button" class="rs-view' + (st.mode === 'pct' ? ' active' : '') + '" data-rsevmode="pct">' +
-    (k === 'top' ? 'YoY growth %' : 'Margin %') + '</button>';
+  // Margin needs a denominator; growth only needs a prior year, so it is offered everywhere.
+  if (st.mode === 'margin' && !m.marginOf) st.mode = 'usd';
+  var b = function(mode, label){
+    return '<button type="button" class="rs-view' + (st.mode === mode ? ' active' : '') +
+      '" data-rsevmode="' + mode + '">' + label + '</button>';
+  };
+  return b('usd', rsCurName() + 'B') + b('grow', 'YoY growth %') +
+    (m.marginOf ? b('margin', 'Margin %') : '');
 }
 
 // The "Reported" toggle. Disabled — with the reason in its tooltip — when no year in the
@@ -1337,7 +1349,7 @@ function rsEvoActual(mkey, m, year){
 function rsEvoActualPct(k, mkey, m, year){
   var a = rsEvoActual(mkey, m, year);
   if (a == null) return null;
-  if (k === 'top'){
+  if (rsEvoBasis(k) === 'grow'){
     var prev = rsEvoActual(mkey, m, String(+year - 1));
     return (prev == null || !prev) ? null : (a - prev) / Math.abs(prev) * 100;
   }
@@ -1350,7 +1362,7 @@ function rsEvoActualPct(k, mkey, m, year){
 function rsEvoActYears(k){
   var ev = rsEvo(), st = rsEvoSt(k), m = rsEvoMetric(k), on = [], off = [];
   ev.years.forEach(function(y){
-    var v = st.mode === 'pct' ? rsEvoActualPct(k, st.metric, m, y) : rsEvoActual(st.metric, m, y);
+    var v = st.mode !== 'usd' ? rsEvoActualPct(k, st.metric, m, y) : rsEvoActual(st.metric, m, y);
     (v == null ? off : on).push(y);
   });
   return { on: on, off: off };
@@ -1373,7 +1385,7 @@ function rsBuildEvo(k){
   if (!el || !el.offsetParent) return;                 // pane not visible yet
   if (st.chart){ st.chart.destroy(); st.chart = null; }
 
-  var pct = st.mode === 'pct';
+  var pct = st.mode !== 'usd';
   var div = rsEvoScaleOf(m);
   var scale = function(v){ return v == null ? null : v / div; };
   function series(src, yi){
@@ -1479,7 +1491,10 @@ function rsBuildEvo(k){
   if (rh) rh.innerHTML = rsEvoRecHeadHtml(k);
   var dh = document.querySelector('[data-rsevdetb="' + k + '"]');
   if (dh) dh.innerHTML = rsEvoDetHeadHtml(k);
-  var n1 = document.getElementById('rsEvoNote-' + k); if (n1) n1.textContent = m.note || '';
+  // The per-metric `note` is no longer rendered (SAB, Aug 10 2026), for the same reason the
+  // pane's lede went: a paragraph of conclusions under a chart that shows them, which ages
+  // out of step with the numbers above it on every refresh. The field stays in the datasets —
+  // it is still the written record of a basis decision — but the pane reads from the data.
   var leg = document.getElementById('rsEvoLegend-' + k); if (leg) leg.innerHTML = rsEvoLegendHtml(k, m);
   var md = document.getElementById('rsEvoMode-' + k); if (md) md.innerHTML = rsEvoModeHtml(k, m);
 }
@@ -1496,7 +1511,7 @@ function rsRenderEvoTable(k, m){
     return (v / div).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   }
 
-  var pctCap = k === 'top'
+  var pctCap = rsEvoBasis(k) === 'grow'
     ? ' · “implied YoY growth” = the growth that snapshot\'s estimate implies vs the prior fiscal year as known at that date'
     : ' · margins are computed within each snapshot (numerator and denominator from the same vintage)';
   // ⚠ CURLY-QUOTE FIX, finished. This line originally shipped with curly quotes as its
@@ -2091,7 +2106,7 @@ function rsEvoVisible(k, m){
 // US$ mode, growth/margin points in % mode. `pp` marks which one, because a move of "+2.1"
 // means percent in one and percentage points in the other.
 function rsEvoTrackRows(k, m){
-  var ev = rsEvo(), st = rsEvoSt(k), pct = st.mode === 'pct';
+  var ev = rsEvo(), st = rsEvoSt(k), pct = st.mode !== 'usd';
   var rows = [], agg = { raises: 0, cuts: 0, rSum: 0, cSum: 0, big: null,
                          driftSum: 0, driftN: 0, errSum: 0, errN: 0, errAbs: 0, pp: pct };
   rsEvoVisible(k, m).forEach(function(v){
@@ -2140,8 +2155,12 @@ function rsRenderEvoTrack(k, m){
   }
   function move(v){
     if (v == null) return '<span class="rs-ft-nil">—</span>';
+    var u = pct ? ' pp' : '%';
+    // Below the same 0.05 threshold that counts a revision, a move is noise — colouring a
+    // rounded "−0.0" red says a line fell when it did not move.
+    if (Math.abs(v) < 0.05) return '<span class="rs-ft-dim">0.0' + u + '</span>';
     return '<span style="color:' + (v >= 0 ? RS_GREEN : RS_RED) + '">' + (v >= 0 ? '+' : '−') +
-      Math.abs(v).toFixed(1) + (pct ? ' pp' : '%') + '</span>';
+      Math.abs(v).toFixed(1) + u + '</span>';
   }
   var h = '<div class="rs-ft-cap">' +
     (pct ? esc(rsEvoPctLabel(k, m)) : rsCurName(m) + ' ' + (div === 1000 ? 'billions' : 'millions')) +

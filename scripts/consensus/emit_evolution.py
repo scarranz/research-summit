@@ -83,6 +83,45 @@ def shipped_act(js, mkey):
     return dict(zip(ps, av)), ps
 
 
+def parse_cons_annual(js):
+    """estMatrix.cons.y out of the shipped dataset: {metric: {snapshot: {year: value}}}."""
+    blk = js[js.index("  estMatrix: {"):js.index("  evolution: {")]
+    cons = blk[blk.index("\n    cons: {"):blk.index("\n    summit: {")]
+    yseg = cons[cons.index("\n      y: {"):]
+    out, metric = {}, None
+    for line in yseg.splitlines():
+        m = re.match(r"\s*([a-z0-9_]+): \{\s*$", line)
+        if m:
+            metric = m.group(1)
+            out[metric] = {}
+            continue
+        m = re.match(r"\s*'(\d{4}-\d{2}-\d{2})':\s*\{(.*)\},?\s*$", line)
+        if m and metric:
+            out[metric][m.group(1)] = {k: float(v) for k, v in
+                                       re.findall(r"'(\d{4})':\s*(-?[\d.]+)", m.group(2))}
+    return out
+
+
+def cons_rows(cons, cons_key, model_dates, years, skip_years):
+    """The Street on the MODEL's axis: each model date takes the Street's latest file on or
+    before it. An approximation, and a weaker one than a same-day pull — see the module note
+    in emit_evolution's caller. Returns rows parallel to `years`, or None if unavailable."""
+    table = cons.get(cons_key)
+    if not table:
+        return None
+    rows = []
+    for year in years:
+        row = []
+        for d in model_dates:
+            if year in skip_years:
+                row.append(None)
+                continue
+            prior = [s for s in sorted(table) if s <= d]
+            row.append(table[prior[-1]].get(year) if prior else None)
+        rows.append(row)
+    return rows
+
+
 def main():
     if len(sys.argv) < 4:
         sys.exit(__doc__)
@@ -109,6 +148,27 @@ def main():
         out = round(v, dec)
         return repr(int(out)) if out == int(out) else repr(out)
 
+    # The CONSENSUS side, for the lines the model does not store one for.
+    #
+    # ⚠ Two provenances, and the difference is not cosmetic. For REV and EBITDA the model
+    # stores a BBG pull taken on its OWN save date (its Aug-5 figure matches the workbook's
+    # Aug-7 export exactly, and its Dec-15 figure is well ahead of the Oct-30 one) — that is
+    # the sharpest consensus this axis can have, so those rows are left alone. Everything else
+    # has to be mapped off the workbook's own calendar with the same "latest file on or before"
+    # rule the Results picker uses, which can be up to six weeks stale. Each affected line says
+    # so in its note; do not silently mix the two.
+    cons = parse_cons_annual(js)
+    cons_out = {}
+    for mkey, ckey in evo.get("cons_map", {}).items():
+        skip = evo.get("cons_skip_years", {}).get(mkey, [])
+        rows = cons_rows(cons, ckey, vintages, years, skip)
+        if rows is None:
+            print("!! no workbook rows for %s (looked for estMatrix.cons.y.%s)" % (mkey, ckey))
+            continue
+        dec = decimals.get(mkey, dec_default)
+        cons_out[mkey] = "[" + ", ".join(
+            "[" + ", ".join(fmt(v, dec) for v in row) + "]" for row in rows) + "]"
+
     lines, notes = [], []
     for mkey in evo["keys"]:
         dec = decimals.get(mkey, dec_default)
@@ -119,7 +179,7 @@ def main():
         meta = evo["labels"].get(mkey, {})
         lines.append("      %s: { label: '%s', unit: '%s'," % (mkey, meta.get("label", mkey), meta.get("unit", "usdM")))
         lines.append("        summit: [%s]," % ", ".join(rows))
-        lines.append("        cons: null,")
+        lines.append("        cons: %s," % cons_out.get(mkey, "null"))
         if meta.get("prior", False):
             lines.append("        prior: { summit: [%s] }," % ", ".join(fmt(p, dec) for p in prior))
         lines.append("        note: '' },")
@@ -143,6 +203,10 @@ def main():
     os.makedirs(out_dir, exist_ok=True)
     out_path = os.path.join(out_dir, "evolution_%s.js" % ticker.lower())
     open(out_path, "w", encoding="utf-8").write("\n".join(lines) + "\n")
+    # Also emitted alone, so a metric whose summit rows are already curated can take just its
+    # consensus row without its prose being regenerated.
+    open(os.path.join(out_dir, "evolution_cons_%s.js" % ticker.lower()), "w", encoding="utf-8").write(
+        "\n".join("%s|        cons: %s," % (k, v) for k, v in sorted(cons_out.items())) + "\n")
     print("wrote %s (%d metrics, %d years x %d vintages)"
           % (out_path, len(evo["keys"]), len(years), len(vintages)))
 

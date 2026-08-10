@@ -44,6 +44,11 @@
     "years": ["2025", "2026", "2027", "2028", "2029"],
     "prior": "2024",
     "keys": ["gb", "mobgb", "mobrev", "delgb", "delrev", "frgb", "eps", "mapc"],
+
+    "_cons_map_note": "Only for lines the MODEL does not store a consensus for. REV and EBITDA keep theirs (REV_BBG_EST / EBITDA_BBG_EST), which is a BBG pull taken on the snapshot's own date and therefore sharper than anything mapped off the workbook's calendar. Mobility/Delivery revenue, Freight GB and MAPC are absent here because Bloomberg does not publish them at all — those lines can never have a dashed twin.",
+    "cons_map": { "gb": "gb", "opinc": "opinc", "eps": "eps" },
+    "_cons_skip_note": "Bloomberg's adjusted-EPS basket only reconciles from 4Q25, so any FISCAL YEAR containing earlier quarters is off-basis — FY2025 reads 2.9 and 5.4 against a 2.47 print. Same rule as valid_uber.json applies to the quarterly axis.",
+    "cons_skip_years": { "eps": ["2025"] },
     "labels": {
       "gb":     { "label": "Gross Bookings (Total)", "unit": "usdM", "prior": true },
       "mobgb":  { "label": "Mobility Gross Bookings", "unit": "usdM", "prior": true },

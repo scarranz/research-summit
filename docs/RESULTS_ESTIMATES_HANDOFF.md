@@ -33,6 +33,27 @@ Target data flow (all of it already exists, see §4):
 `docs/RESULTS_CONVENTIONS.md` §8 plus the two generators in `scripts/consensus/`, applied per
 ticker. The workbook now covers 32 tickers.
 
+**Estimates stays ANNUAL** (SAB, Aug 10 2026) — asked and answered with the data, so do not
+re-open it without new data. Counting how many snapshots carry each quarter in UBER's `estMatrix`:
+
+| Quarter | Street | Summit |
+|---|---|---|
+| 3Q23 → 3Q25 | 1–5 | **0** |
+| 4Q25 · 1Q26 | 4 · 4 | 1 · 2 |
+| **2Q26 · 3Q26 · 4Q26** | 4 · 4 · 3 | 4 · 5 · 5 |
+| 1Q27 · 2Q27 | 2 · 1 | 5 · 0 |
+
+Three quarters of sixteen are dense on both sides. **No Summit snapshot reaches any quarter
+before 4Q25** (the oldest model file is Dec 2025), so ten of sixteen would be consensus-only —
+and the point of this pane is watching the two sources move on one axis. The Bloomberg limit is
+**structural, not a backlog**: the workbook carries `fq+1…fq+4`, so a quarter is never seen by
+more than ~4 snapshots and that window slides, while the annual axis gets `fy+1…fy+5` and a model
+that projects every year. On top of which a quarterly revision is often re-phasing — 3Q down,
+4Q up, year unchanged — which the annual line filters out and a quarterly one would publish as a
+change of view. The quarter that matters, the next print, is already covered by Earnings → Setup
+and Dani's consensus-revision chart. If a quarterly read is ever wanted here, the honest version
+is a single "next print" line over the ~6 quarters where both sources are dense, not a mode.
+
 **Decisions SAB made, do not re-litigate:**
 * **Results and Estimates keep SEPARATE data surfaces.** The hand-authored `evolution` block stays;
   only Results eats from `estMatrix`. (The unified option was offered and declined.)

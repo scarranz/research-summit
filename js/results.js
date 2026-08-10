@@ -1143,9 +1143,8 @@ function rsEvoBasis(k){
   var mode = rsEvoSt(k).mode;
   return mode === 'usd' ? null : mode;
 }
-// Growth's two sub-choices. Over what (only YoY is computable here — see rsEvoModeHtml) and
-// expressed how: a percentage, or the currency amount the line grew by.
-function rsEvoGrowLag(k){ return rsEvoSt(k).growLag || 'yoy'; }
+// Growth's one sub-choice: expressed as a percentage, or as the currency amount the line
+// grew by. The comparison itself is always year-over-year — see rsEvoModeHtml.
 function rsEvoGrowUnit(k){ return rsEvoSt(k).growUnit || 'pct'; }
 // Is the plotted number a percentage? Everything derived is, EXCEPT growth-as-amount, which
 // is a currency delta and has to be formatted, ticked and totalled like money.
@@ -1174,7 +1173,7 @@ function rsEvoPct(k, m, src, yi){
 }
 function rsEvoPctLabel(k, m){
   if (rsEvoBasis(k) !== 'grow') return m.marginLabel || 'margin';
-  return 'implied ' + (rsEvoGrowLag(k) === 'qoq' ? 'QoQ' : 'YoY') + ' growth' + (rsEvoIsAmt(k) ? ' (amount)' : '');
+  return 'implied YoY growth' + (rsEvoIsAmt(k) ? ' (amount)' : '');
 }
 // Display scale for an evolution metric (nested per-year arrays): $B or $M.
 function rsEvoScaleOf(m){
@@ -1295,23 +1294,16 @@ function rsEvoModeHtml(k, m){
   var h = '<div class="rs-views">' + b('usd', rsCurName() + 'B') + b('grow', 'Growth') +
     (m.marginOf ? b('margin', 'Margin %') : '') + '</div>';
   if (st.mode !== 'grow') return h;
-  // Growth opens two more choices: over what, and expressed how.
-  // ⚠ QoQ is offered but DISABLED, and says why. This pane's lines are fiscal YEARS — the
-  // x-axis is model snapshots, not periods — so there is no quarter to compare against. The
-  // quarter-over-quarter read lives in Results, which has a quarterly view. Rendering the
-  // button greyed with the reason beats omitting it: the question is a fair one to ask.
-  var lag = function(v, label, on, why){
-    return '<button type="button" class="rs-view' + (rsEvoGrowLag(k) === v ? ' active' : '') +
-      '" data-rsevlag="' + v + '"' + (on ? '' : ' disabled title="' + esc(why) + '"') + '>' + label + '</button>';
-  };
+  // Growth opens ONE more choice: expressed how. There is no YoY/QoQ pair because this pane
+  // is annual by decision (SAB, Aug 10 2026) — every line is a fiscal year and the x-axis is
+  // model snapshots, so no quarter exists to compare against. The data says the same thing:
+  // no Summit snapshot reaches any quarter before 4Q25, and Bloomberg only ever carries four
+  // forward quarters, so a quarterly version of this view would be consensus-only across most
+  // of the history. The quarter-over-quarter read belongs in Earnings, beside the print.
   var unit = function(v, label){
     return '<button type="button" class="rs-view' + (rsEvoGrowUnit(k) === v ? ' active' : '') +
       '" data-rsevgunit="' + v + '">' + label + '</button>';
   };
-  h += '<div class="rs-views">' + lag('yoy', 'YoY', true, '') +
-    lag('qoq', 'QoQ ✕', false,
-        'Every line here is a fiscal YEAR and the x-axis is model snapshots, so there is no quarter to compare against. The quarter-over-quarter read is in Results, which has a quarterly view.') +
-    '</div>';
   h += '<div class="rs-views">' + unit('pct', '%') + unit('amt', 'Amount') + '</div>';
   return h;
 }
@@ -2307,16 +2299,8 @@ export function initResultsEvo(ticker){
       rsBuildEvo(k);
       return;
     }
-    // Growth's two sub-choices. Both change the units on the axis, so the brushed y-range is
-    // dropped with them rather than carried into a scale it no longer describes.
-    var lg = e.target.closest('[data-rsevlag]');
-    if (lg && !lg.disabled && (k = secOf(lg))){
-      var lst = rsEvoSt(k);
-      lst.growLag = lg.getAttribute('data-rsevlag');
-      lst.yr = null;
-      rsBuildEvo(k);
-      return;
-    }
+    // % ⇄ Amount changes the units on the axis, so the brushed y-range is dropped with it
+    // rather than carried into a scale it no longer describes.
     var gu = e.target.closest('[data-rsevgunit]');
     if (gu && (k = secOf(gu))){
       var gst = rsEvoSt(k);

@@ -1208,6 +1208,16 @@ export function resultsEvoHtml(ticker){
   return h;
 }
 
+// The collapsed detail table's header. It carries the caret AND what is inside, so the row
+// is worth clicking rather than being a mystery bar: how many lines and how many snapshots
+// are down there, both of which follow the legend chips.
+function rsEvoDetHeadHtml(k){
+  var st = rsEvoSt(k), ev = rsEvo(), open = !!st.det;
+  var n = rsEvoVisible(k, rsEvoMetric(k)).length;
+  return '<span class="rs-collap-ic">' + (open ? '▾' : '▸') + '</span>Snapshot by snapshot' +
+    '<span class="rs-collap-sub">' + (open ? 'hide' : 'show') + ' · ' + n + ' line' + (n === 1 ? '' : 's') +
+    ' × ' + ev.vintages.length + ' snapshots, with each revision</span>';
+}
 function rsEvoBlockHtml(k){
   var cfg = rsEvoSecCfg(k), m = rsEvoMetric(k);
   var h = '<div class="rs-block" data-rsevo="' + k + '">';
@@ -1223,7 +1233,14 @@ function rsEvoBlockHtml(k){
   // Chart → per-fiscal-year record → the snapshot-by-snapshot table. Both tables below the
   // chart show ONLY what the chart is currently drawing (see rsEvoVisible).
   h += '<div class="rs-tablewrap" id="rsEvoTrack-' + k + '"></div>';
-  h += '<div class="rs-tablewrap" id="rsEvoTable-' + k + '"></div>';
+  // The detail table opens on click. It is the widest thing on the page — every snapshot as
+  // its own column, three rows per line — and reading it is a deliberate act, not something
+  // to scroll past on the way to the next block.
+  h += '<div class="rs-collap" data-rsevdet="' + k + '">' +
+    '<button type="button" class="rs-collap-h" data-rsevdetb="' + k + '">' + rsEvoDetHeadHtml(k) + '</button>' +
+    '<div class="rs-collap-b" id="rsEvoDetBody-' + k + '" hidden>' +
+      '<div class="rs-tablewrap" id="rsEvoTable-' + k + '"></div>' +
+    '</div></div>';
   h += '<div class="ov-foot" id="rsEvoNote-' + k + '"></div>';
   h += '</div>';
   return h;
@@ -1442,6 +1459,9 @@ function rsBuildEvo(k){
   // moves all three together instead of leaving a table describing a line that is gone.
   rsRenderEvoTrack(k, m);
   rsRenderEvoTable(k, m);
+  // The collapsed header counts the visible lines, so it moves with the chips too.
+  var dh = document.querySelector('[data-rsevdetb="' + k + '"]');
+  if (dh) dh.innerHTML = rsEvoDetHeadHtml(k);
   var n1 = document.getElementById('rsEvoNote-' + k); if (n1) n1.textContent = m.note || '';
   var leg = document.getElementById('rsEvoLegend-' + k); if (leg) leg.innerHTML = rsEvoLegendHtml(k, m);
   var md = document.getElementById('rsEvoMode-' + k); if (md) md.innerHTML = rsEvoModeHtml(k, m);
@@ -2180,6 +2200,16 @@ export function initResultsEvo(ticker){
   }
   wrap.onclick = function(e){
     var k;
+    var db = e.target.closest('[data-rsevdetb]');
+    if (db){
+      k = db.getAttribute('data-rsevdetb');
+      var dst = rsEvoSt(k);
+      dst.det = !dst.det;
+      var body = document.getElementById('rsEvoDetBody-' + k);
+      if (body) body.hidden = !dst.det;
+      db.innerHTML = rsEvoDetHeadHtml(k);
+      return;
+    }
     var ab = e.target.closest('[data-rsevact]');
     if (ab && !ab.disabled && (k = secOf(ab))){
       var ast = rsEvoSt(k);

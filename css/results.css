@@ -85,6 +85,21 @@
   pointer-events: none; z-index: 2;
 }
 
+/* Collapsed-by-default section, for detail that should be reachable without being in the
+   way. Same language as the overview modules' own `ov-collap` (which is injected inline in
+   js/overviews/uber.js and so is not available to this generic engine). */
+.rs-collap { border: 1px solid var(--bdr); border-radius: 10px; overflow: hidden; margin: 18px 0 10px; }
+.rs-collap-h {
+  width: 100%; text-align: left; border: 0; background: #F7F9FB; font: inherit;
+  font-size: 12.5px; font-weight: 800; color: var(--navy); padding: 11px 14px;
+  cursor: pointer; display: flex; align-items: center; gap: 8px;
+}
+.rs-collap-h:hover { background: #EEF2F6; }
+.rs-collap-ic { font-size: 10px; color: var(--mu); }
+.rs-collap-sub { font-weight: 500; color: var(--mu); font-size: 11px; margin-left: auto; }
+.rs-collap-b { padding: 4px 14px 6px; }
+.rs-collap-b > .rs-tablewrap { margin-top: 12px; }
+
 /* Detail table — Fiscal.ai-style spreadsheet: airy, bare numbers, shaded
    estimate columns, sticky header + first column, row/column crosshair. */
 .rs-tablewrap { margin: 20px 0 10px; }

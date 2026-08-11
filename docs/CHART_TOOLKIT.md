@@ -168,9 +168,16 @@ Estimates have a *when*. `estMatrix` stores, per source and per view, one **peri
 snapshot, so the same chart can be read as of any point in history. Full contract:
 `docs/RESULTS_CONVENTIONS.md` §8. What matters for reuse:
 
-* **Three readings.** *Latest file before each print* (the default, and what a hand-built
-  column used to be); *as of a date* — each source resolved to its own latest file up to that day;
-  *one file* — read exactly as archived, split by archive.
+* **Three readings, over two controls.** `[ how to read it ▾ ] [ which one ▾ ]`. The first names
+  the reading — *Latest file before each print* (the default, and what a hand-built column used to
+  be) · *As of a date* · *One Summit model file* · *One Street (Bloomberg) file* — four short
+  options, and the only control on screen by default. The second appears **only when the reading
+  needs an argument**, listing just that one archive's dates. Reading a single archived file is
+  the forensic case, not the daily one, so its ~13 dates per source no longer sit permanently in
+  the list everyone opens.
+* `vsrc` is the extra state this needs. A stored `'2026-07-31'` cannot say which archive you were
+  browsing — that date exists in both — and it does not have to: `rsVintFor` looks the id up in
+  each source's own register either way. It only decides which list the second select draws.
 * **Every option is labelled by the print it stands in front of**, not by what it already knew:
   `Jul 31, 2026 · before 2Q26`, never `knew through 1Q26`. Same file — but "give me the read going
   into 2Q26" is how the list gets scanned, and it is shorter, which a dropdown of dates needed.

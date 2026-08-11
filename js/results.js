@@ -738,7 +738,7 @@ function rsBody(){
 // All that is left at the pane level is the vintage picker, which genuinely IS pane-wide:
 // it selects which snapshot of the estimates every block reads from, not how a block is read.
 function rsTopRowHtml(){
-  return '<div class="rs-toprow">' + rsVintSelHtml(_rs.vint || 'preprint', 'rs-vsel', 'Estimates as of') + '</div>';
+  return '<div class="rs-toprow">' + rsVintSelHtml(_rs.vint || 'preprint', 'pane', 'Estimates as of', _rs.vsrc) + '</div>';
 }
 // Every reading control lives INSIDE its block now, so one block can be quarterly dollars
 // while the next is annual growth. The level button carries that block's own unit rather than
@@ -847,58 +847,85 @@ function rsBlocksHtml(){
 // `mode` / `cls` are passed in because there are now TWO of these on the page: the pane-wide
 // one at the top, and the scorecard's own (SAB, Aug 11 2026). They keep separate selections,
 // so the picker cannot read its state from a single global.
-function rsVintSelHtml(mode, cls, label){
-  var vints = rsVintages(); if (!vints.length) return '';
-  mode = mode || 'preprint';
-  cls = cls || 'rs-vsel';
-  var opt = function(val, label){
-    return '<option value="' + esc(val) + '"' + (mode === val ? ' selected' : '') + '>' + esc(label) + '</option>';
-  };
-  var asof = rsAsOfDates(), html = '';
-  if (asof.length){
+// ─── Two controls, not one long list (SAB, Aug 11 2026) ──────────────────────
+// This was a single <select> holding ~20 options across four optgroups. Most of that length was
+// the per-file lists, and those are the part almost nobody opens: reading ONE archived file is
+// the forensic case, not the daily one. So the picker splits in two —
+//
+//   [ how to read it ▾ ]  [ which one ▾ ]
+//
+// The first names the READING (before each print · as of a date · one Summit file · one Street
+// file), four short options and the only one on screen by default. The second appears only when
+// the reading needs an argument, and lists just that one archive's dates — so browsing Summit's
+// files never means scrolling past Bloomberg's.
+//
+// `vsrc` is the extra bit of state this needs. A stored value of '2026-07-31' cannot say which
+// archive you were browsing (that date exists in both), and it does not have to: rsVintFor looks
+// the id up in each source's own register either way. It only decides which list select B shows.
+function rsVintSrcLabel(src){ return src === 'summit' ? 'Summit model' : 'Street (Bloomberg)'; }
+// The reading a stored value represents. Falls back to whichever archive owns the id.
+function rsVintParse(val, vsrc){
+  if (!val || val === 'preprint') return { mode: 'preprint', id: null };
+  if (val.indexOf('asof:') === 0) return { mode: 'asof', id: val.slice(5) };
+  return { mode: (vsrc === 'cons' || vsrc === 'summit') ? vsrc : (rsVintSrcs(val)[0] || 'summit'), id: val };
+}
+// Newest-first list of one archive's files.
+function rsVintList(src){
+  var mx = rsMatrix(src);
+  return (mx && mx.vintages || []).slice().sort(function(a, b){ return a.id < b.id ? 1 : -1; });
+}
+// The value a freshly-picked reading should land on: the newest thing it can show.
+function rsVintDefault(mode){
+  if (mode === 'preprint') return 'preprint';
+  if (mode === 'asof'){ var a = rsAsOfDates(); return a.length ? 'asof:' + a[0].id : 'preprint'; }
+  var l = rsVintList(mode);
+  return l.length ? l[0].id : 'preprint';
+}
+function rsVintSelHtml(val, scope, label, vsrc){
+  if (!rsVintages().length) return '';
+  var cur = rsVintParse(val, vsrc), asof = rsAsOfDates();
+  var modes = [['preprint', 'Latest file before each print']];
+  if (asof.length) modes.push(['asof', 'As of a date']);
+  ['summit', 'cons'].forEach(function(src){
+    if (rsVintList(src).length) modes.push([src, 'One ' + rsVintSrcLabel(src) + ' file']);
+  });
+  var h = '<div class="rs-vint"><span class="rs-quick-l">' + esc(label || 'Estimates as of') + '</span>' +
+    '<select class="rs-vsel" data-vscope="' + esc(scope) + '" data-vpart="mode" aria-label="How to read the estimates">' +
+      modes.map(function(m){
+        return '<option value="' + m[0] + '"' + (cur.mode === m[0] ? ' selected' : '') + '>' + esc(m[1]) + '</option>';
+      }).join('') +
+    '</select>';
+
+  var opts = '';
+  if (cur.mode === 'asof'){
     // What an analyst actually asks — "where did each side stand on this date" — which is not
     // the same question as "read me this one file", because the two archives rarely share a day.
-    // Every row used to spell out BOTH sources and both resolved dates, in full, with the year
-    // repeated three times — 44 characters to say something that is usually "both are current".
-    // Now a source is named only when its latest file is OLDER than the date picked, which is
-    // the only case that costs the reader anything, and it is named without its year.
-    html += '<optgroup label="As of a date — a source is named only when its file is older">' +
-      asof.map(function(v){
-        var stale = ['summit', 'cons'].map(function(s){
-          var hit = rsVintAsOf(s, v.id);
-          if (!hit) return RS_SRCN[s] + ' —';
-          return hit.id === v.id ? null : RS_SRCN[s] + ' ' + rsVintDayShort(hit.id);
-        }).filter(Boolean);
-        var b = rsVintBefore(v);
-        return opt('asof:' + v.id, rsVintDay(v.id, v.label) + (b ? ' · before ' + b : '') +
-          (stale.length ? ' · ' + stale.join(' · ') : ''));
-      }).join('') + '</optgroup>';
+    // A source is named only when its latest file is OLDER than the date picked: that is the one
+    // case that costs the reader something, and spelling out both every time said "both are
+    // current" in 44 characters.
+    opts = asof.map(function(v){
+      var stale = ['summit', 'cons'].map(function(s){
+        var hit = rsVintAsOf(s, v.id);
+        if (!hit) return RS_SRCN[s] + ' —';
+        return hit.id === v.id ? null : RS_SRCN[s] + ' ' + rsVintDayShort(hit.id);
+      }).filter(Boolean);
+      var b = rsVintBefore(v);
+      return '<option value="asof:' + v.id + '"' + (cur.id === v.id ? ' selected' : '') + '>' +
+        esc(rsVintDay(v.id, v.label) + (b ? ' · before ' + b : '') + (stale.length ? ' · ' + stale.join(' · ') : '')) +
+        '</option>';
+    }).join('');
+  } else if (cur.mode === 'summit' || cur.mode === 'cons'){
+    // One archive at a time. Splitting the two was already necessary — they keep separate
+    // calendars, so a merged list forced an ownership tag onto every row — and now that each
+    // archive has the control to itself, the tag is the mode select above.
+    opts = rsVintList(cur.mode).map(function(v){
+      var shared = rsVintSrcs(v.id).length > 1;
+      return '<option value="' + v.id + '"' + (cur.id === v.id ? ' selected' : '') + '>' +
+        esc(rsVintLabel(v) + (shared ? ' · in both' : '')) + '</option>';
+    }).join('');
   }
-  // One file at a time, split BY ARCHIVE — the two keep separate calendars, so a single merged
-  // list forced you to read an ownership tag on every row to know what you were about to get.
-  // Each source's own vintage register is used, so "knew through" is that file's, not a merge.
-  // The one date both archives share appears under both, flagged, because it is one pick that
-  // lights up both series — and only the first copy carries `selected`, so a re-render cannot
-  // leave two options marked in a single-choice list.
-  var seen = false;
-  [{ src: 'summit', label: 'Summit model files', other: 'Street' },
-   { src: 'cons', label: 'Street (Bloomberg) files', other: 'Summit' }].forEach(function(g){
-    var mx = rsMatrix(g.src); if (!mx || !(mx.vintages || []).length) return;
-    html += '<optgroup label="One file — ' + esc(g.label) + '">' +
-      mx.vintages.slice().sort(function(a, b){ return a.id < b.id ? 1 : -1; }).map(function(v){
-        var shared = rsVintSrcs(v.id).length > 1;
-        // "in both" rather than "also a Street file": the group header already names the archive
-        // you are reading, so the only new fact is that this one date lights up the other too.
-        var label = rsVintLabel(v) + (shared ? ' · in both' : '');
-        var sel = mode === v.id && !seen;
-        if (sel) seen = true;
-        return '<option value="' + esc(v.id) + '"' + (sel ? ' selected' : '') + '>' + esc(label) + '</option>';
-      }).join('') + '</optgroup>';
-  });
-  return '<div class="rs-vint"><span class="rs-quick-l">' + esc(label || 'Estimates as of') + '</span>' +
-    '<select class="' + esc(cls) + '" aria-label="Estimate vintage">' +
-      opt('preprint', 'Latest file before each print') + html +
-    '</select></div>';
+  if (opts) h += '<select class="rs-vsel2" data-vscope="' + esc(scope) + '" data-vpart="file" aria-label="Which file">' + opts + '</select>';
+  return h + '</div>';
 }
 
 // Structured metric picker — a dropdown grouped by the section's groups
@@ -2181,7 +2208,7 @@ function rsSurpBlockHtml(){
   // …and its own snapshot. Scoring the 2Q26 print against the Street as it stood on Apr 30 is
   // a different question from scoring it against the last file before the print, and neither
   // is the question the blocks upstairs are set to.
-  var vsel = rsVintSelHtml(st.vint, 'rs-svsel', 'Estimates as of');
+  var vsel = rsVintSelHtml(st.vint, 'surp', 'Estimates as of', st.vsrc);
   if (vsel) h += '<div class="rs-surp-ctl rs-surp-vint">' + vsel + '</div>';
   // Base + comparators: any combination of the four series. The base is what gets judged
   // (default the actual); every checked comparator becomes its own bar per period.
@@ -3159,10 +3186,33 @@ function wireResults(pane){
   });
   // Metric dropdown (grouped select) per section block, and the pane-wide vintage picker.
   pane.onchange = (function(e){
-    if (e.target.classList.contains('rs-vsel')){
-      _rs.vint = e.target.value;
+    // The vintage picker is two selects now — the reading, and (only when the reading needs one)
+    // which file. Both carry `data-vscope`, so one handler serves the pane-wide copy and the
+    // scorecard's own without either knowing about the other.
+    if (e.target.classList.contains('rs-vsel') || e.target.classList.contains('rs-vsel2')){
+      var vscope = e.target.getAttribute('data-vscope');
+      var vmode = e.target.getAttribute('data-vpart') === 'mode';
+      var vst = vscope === 'surp' ? rsSurpSt() : _rs;
+      if (vmode){
+        // Changing the READING lands on the newest thing it can show, and remembers which
+        // archive is being browsed so select B knows which list to draw.
+        var mv = e.target.value;
+        vst.vsrc = (mv === 'summit' || mv === 'cons') ? mv : null;
+        vst.vint = rsVintDefault(mv);
+      } else {
+        vst.vint = e.target.value;
+      }
+      if (vscope === 'surp'){
+        var ss = rsSurpSt();
+        ss.metric = null;              // which metrics have overlapping series depends on the file
+        ss.win = null;
+        rsRerenderSurp(pane);
+        return;
+      }
       rsApplyVintage();                                // re-resolve summit/cons from the matrix
       _rs.sec = {};                                    // windows/metrics reset: the series changed
+      // The row itself is re-rendered: select B appears, disappears or changes list with the mode.
+      var tr = pane.querySelector('.rs-toprow'); if (tr) tr.outerHTML = rsTopRowHtml();
       var vn = pane.querySelector('#rsVintNote'); if (vn) vn.textContent = rsVintNote();
       var blocks = pane.querySelector('#rsBlocks');
       if (blocks) blocks.innerHTML = rsBlocksHtml();   // legend chips depend on what has data
@@ -3170,16 +3220,9 @@ function wireResults(pane){
       rsBuildAll();
       return;
     }
-    // The scorecard's OWN snapshot picker. It resolves through rsSrcArr → rsSeriesFor without
-    // mutating anything, so it never disturbs the pane-wide picker above (and vice versa).
-    if (e.target.classList.contains('rs-svsel')){
-      var sstV2 = rsSurpSt();
-      sstV2.vint = e.target.value;
-      sstV2.metric = null;             // which metrics have overlapping series depends on the file
-      sstV2.win = null;
-      rsRerenderSurp(pane);
-      return;
-    }
+    // (The scorecard's own snapshot picker is handled by the shared `data-vscope` branch above:
+    // it resolves through rsSrcArr → rsSeriesFor without mutating anything, so it never disturbs
+    // the pane-wide picker and vice versa.)
     if (e.target.classList.contains('rs-csel')){
       var cstM = rsConvSt();
       cstM.metric = e.target.value;

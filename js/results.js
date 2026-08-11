@@ -2550,6 +2550,37 @@ function rsConvDist(v, base){
   return rsConvIsPct() ? (base === 0 ? null : (v - base) / Math.abs(base) * 100) : (v - base);
 }
 
+// The OUTCOME line, labelled. The whole chart is a walk toward one number, so that number has to
+// be the loudest thing on it — as a thin dotted rule it read as chart furniture, and the eye had
+// to hunt the right axis to find out what the lines were converging on. Now it carries its own
+// value at the right end (SAB, Aug 11 2026). Reads `options.plugins.rsConvRef = { v, text, color }`,
+// where `v` is an axis value — so it works in Distance mode too, where the reference is zero.
+var rsConvRef = {
+  id: 'rsConvRef',
+  afterDatasetsDraw: function(chart, args, opts){
+    if (!opts || opts.v == null || !opts.text) return;
+    var area = chart.chartArea, ctx = chart.ctx;
+    var y = chart.scales.y.getPixelForValue(opts.v);
+    if (y == null || isNaN(y) || y < area.top - 2 || y > area.bottom + 2) return;
+    ctx.save();
+    ctx.font = '800 10px Inter, system-ui, sans-serif';
+    var pad = 8, w = ctx.measureText(opts.text).width;
+    // LEFT end of the plot, not the right. The walk starts far from its target and ends on it,
+    // so the right end of a reference line is exactly where the lines arrive — the label sat on
+    // the final Summit point every time. The left end is clear in both modes, and the right side
+    // is already spoken for by the y-axis and the "last read" marker.
+    var x = area.left + 4;
+    // Above the line by default; below it when the line is hard against the top of the plot,
+    // which is exactly where a beat puts it.
+    var top = y - 21;
+    if (top < area.top + 2) top = y + 5;
+    ctx.fillStyle = opts.color || RS_ACT;
+    rsRR(ctx, x, top, w + pad * 2, 16, 8); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(opts.text, x + pad, top + 8);
+    ctx.restore();
+  }
+};
 // A dashed marker on the last pre-print snapshot, with the size of the blind spot on it.
 // Reads `options.plugins.rsConvLast = { at, label }`.
 var rsConvLast = {
@@ -2566,7 +2597,9 @@ var rsConvLast = {
     var label = opts.label || 'last read before the print', pad = 7;
     ctx.font = '700 9px Inter, system-ui, sans-serif';
     var w = ctx.measureText(label).width;
-    var bx = Math.min(px + 6, area.right - w - pad * 2 - 2), by = area.top + 5;
+    // Anchored to the BOTTOM of its rule: the top-right corner belongs to the Reported label,
+    // and a beat puts that line hard against the top of the plot, right where this used to sit.
+    var bx = Math.min(px + 6, area.right - w - pad * 2 - 2), by = area.bottom - 21;
     ctx.fillStyle = 'rgba(192,57,43,0.90)'; rsRR(ctx, bx, by, w + pad * 2, 15, 7); ctx.fill();
     ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
     ctx.fillText(label, bx + pad, by + 8);
@@ -2723,15 +2756,22 @@ function rsBuildConv(){
         pointRadius: 0, pointHitRadius: 6, fill: false, order: 21 });
     }
   }
-  // The outcome: a flat dotted line in level mode, the zero line in distance mode.
+  // The outcome: a flat line in level mode, the zero line in distance mode. It is the target the
+  // whole chart walks toward, so it is drawn HEAVY and dashed long — dashed because it is an
+  // outcome rather than another forecast, heavy because everything else on screen is measured
+  // against it. `refLabel` puts its value at the right end (rsConvRef).
+  var refLabel = null;
   if (dist){
     datasets.push({ label: 'Zero', data: vints.map(function(){ return 0; }),
-      borderColor: 'rgba(30,39,51,0.55)', borderWidth: 1.5, borderDash: [2, 3],
+      borderColor: RS_ACT, borderWidth: 2.5, borderDash: [8, 4],
       pointRadius: 0, pointHitRadius: 0, fill: false, order: 19 });
+    refLabel = { v: 0, text: st.base === 'guide' ? 'Guided · ' + rsFmt(m, base) : 'Reported · ' + rsFmt(m, base),
+                 color: RS_ACT };
   } else if (m.act[pi] != null && !st.hidden.act){
     datasets.push({ label: 'Reported', data: flat(m.act[pi]),
-      borderColor: RS_ACT, borderWidth: 1.5, borderDash: [2, 3],
+      borderColor: RS_ACT, borderWidth: 2.5, borderDash: [8, 4],
       pointRadius: 0, pointHitRadius: 6, fill: false, order: 19 });
+    refLabel = { v: sc(m.act[pi]), text: 'Reported · ' + rsFmt(m, m.act[pi]), color: RS_ACT };
   }
   var sSum = st.hidden.summit ? null : rsConvSeries('summit', mkey, m, pi, vints);
   var sCon = st.hidden.cons   ? null : rsConvSeries('cons',   mkey, m, pi, vints);
@@ -2772,6 +2812,7 @@ function rsBuildConv(){
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
+        rsConvRef: refLabel || {},
         rsConvLast: { at: vints.length - 1, label: 'last read before the print' },
         tooltip: {
           callbacks: {
@@ -2815,7 +2856,7 @@ function rsBuildConv(){
           } } }
       }
     },
-    plugins: [rsConvLast]
+    plugins: [rsConvLast, rsConvRef]
   });
 
   // Vertical-only brush: the x-axis is a handful of archived dates, so a drag is a y-zoom.

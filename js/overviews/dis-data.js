@@ -377,6 +377,48 @@ export var DIS_DEPR_CALC = {
   caveat: "A simple, illustrative estimate: each bucket’s spend ÷ its useful life = the straight-line depreciation it adds once open. Edit the useful-life numbers to flex it. Caveat: maintenance capex partly replaces assets already being depreciated, so the true net increase to D&A is somewhat lower than the gross figure — and spend is phased over the decade, so the run-rate builds gradually.",
 };
 
+// ─── Disney+ / streaming overview (subs, economics, slate, strategy) ─────────────
+export var DIS_DPLUS_KPIS = [
+  ['~131.6M', 'Disney+ Core subs · FY25'],
+  ['$7.81', 'Disney+ ARPU / month'],
+  ['~64M', 'Hulu subscribers'],
+  ['~$2.8B', 'Streaming op. income · FY26E'],
+  ['~13%', 'SVOD margin · Q3’26'],
+];
+export var DIS_DPLUS_STUDIOS = [
+  { k:'Marvel',    color:'#E0463C' },
+  { k:'Star Wars', color:'#1D3FB8' },
+  { k:'Pixar',     color:'#E3A73A' },
+  { k:'Disney',    color:'#6B5AE0' },
+];
+export var DIS_DPLUS_SLATE = [
+  { title:'VisionQuest',                     studio:'Marvel',    type:'Series', date:'Oct 2026',   why:'Concludes the WandaVision trilogy.' },
+  { title:'Avengers: Doomsday',              studio:'Marvel',    type:'Film',   date:'Dec 2026',   why:'MCU Multiverse Saga tentpole — a major streaming tune-in after theaters.' },
+  { title:'Star Wars Visions: The Ninth Jedi', studio:'Star Wars', type:'Series', date:'2026',      why:'Anime-style Star Wars anthology.' },
+  { title:'Wonder Man',                      studio:'Marvel',    type:'Series', date:'2026',       why:'Introduces a new MCU hero.' },
+  { title:'Gatto',                           studio:'Pixar',     type:'Film',   date:'Mar 2027',   why:'Original Pixar from Luca’s director.' },
+  { title:'Ahsoka — Season 2',               studio:'Star Wars', type:'Series', date:'Early 2027', why:'The Mandoverse flagship returns.' },
+  { title:'Star Wars: Starfighter',          studio:'Star Wars', type:'Film',   date:'May 2027',   why:'First new Star Wars film in years (Ryan Gosling).' },
+  { title:'Daredevil: Born Again — S3',      studio:'Marvel',    type:'Series', date:'2027',       why:'Fan-favorite; strong retention driver.' },
+  { title:'Frozen 3',                        studio:'Disney',    type:'Film',   date:'Nov 2027',   why:'Disney+’s biggest kids franchise.' },
+  { title:'Avengers: Secret Wars',           studio:'Marvel',    type:'Film',   date:'Dec 2027',   why:'Caps the Multiverse Saga.' },
+];
+export var DIS_DPLUS_STRATEGY = [
+  { t:'One app, one bundle', d:'Disney+, Hulu and ESPN in a single app — bundled subscribers churn far less.' },
+  { t:'ARPU over adds',      d:'Price rises and the ad-supported tier lift revenue per user faster than raw sub growth.' },
+  { t:'Paid sharing',        d:'The password-sharing crackdown converts freeloaders into paying accounts.' },
+  { t:'Content flywheel',    d:'Theatrical tentpoles (Marvel, Star Wars, Pixar) drive sign-ups; the deep library retains.' },
+];
+export var DIS_DPLUS_NOTE = "Subscribers & ARPU are the Bloomberg model; streaming P&L is the combined DTC (Disney+/Hulu) segment. Release dates are studio-announced and subject to change.";
+export var DIS_MOVIES_INTRO = "The studio slate — theatrical films (Disney, Pixar, Marvel, Lucasfilm) that drive box office, then feed Disney+ and the parks. Filter by studio.";
+export var DIS_LINEAR_INTRO = "ABC and the cable networks (FX, National Geographic, Disney Channel) — the legacy TV business inside Entertainment, in managed decline as viewing shifts to streaming.";
+export var DIS_LINEAR_POINTS = [
+  { t:'The trend',      d:'Cord-cutting shrinks affiliate fees and TV advertising; Entertainment’s linear revenue falls ~10%+ a year.' },
+  { t:'Still a cash cow', d:'Profitable and cash-generative — it helps fund the streaming transition even as it shrinks.' },
+  { t:'The strategy',   d:'Manage the decline: cut costs, sell non-core assets (the A+E stake), and move content and spend to Disney+/Hulu.' },
+];
+export var DIS_LINEAR_CHART_NOTE = "Entertainment advertising revenue (Bloomberg model) — a proxy for the linear-TV trend: down from ~$8.7B (FY22) as audiences move to streaming.";
+
 // ─── Leadership bench (qualitative read; Pillars ▸ Management is the synced source of record) ─
 export var DIS_MGMT = [
   { ic: '🎬', name: 'Josh D’Amaro', role: 'Chief Executive Officer', since: 'CEO since 2026',

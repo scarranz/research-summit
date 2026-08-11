@@ -19,7 +19,9 @@ import {
   DIS_PLAN_FACTS, DIS_PLAN_THESIS, DIS_PLAN_ALLOC, DIS_PLAN_ALLOC_NOTE, DIS_PLAN_CAPEX_NOTE,
   DIS_PLAN_PILLARS, DIS_PLAN_GROWTH, DIS_PLAN_SOURCES,
   DIS_RET_THESIS, DIS_USEFUL_LIVES, DIS_LIVES_NOTE, DIS_DEPR_MATH, DIS_RET_PHASES, DIS_RET_CHART_NOTE,
-  DIS_DEPR_CALC, DIS_PROJECTS, DIS_PROJ_BUCKETS, DIS_PROJ_REGIONS
+  DIS_DEPR_CALC, DIS_PROJECTS, DIS_PROJ_BUCKETS, DIS_PROJ_REGIONS,
+  DIS_DPLUS_KPIS, DIS_DPLUS_STUDIOS, DIS_DPLUS_SLATE, DIS_DPLUS_STRATEGY, DIS_DPLUS_NOTE,
+  DIS_MOVIES_INTRO, DIS_LINEAR_INTRO, DIS_LINEAR_POINTS, DIS_LINEAR_CHART_NOTE
 } from './dis-data.js';
 import { WORLD_VB, WORLD_PATHS } from './world-paths.js';
 import {
@@ -169,7 +171,8 @@ function styleBlock(){
     '.wwh-tab.active .wwh-t{color:'+DIS_BRAND+'}'+
     '.wwh-sub{font-size:10.5px;color:var(--mu);line-height:1.3}'+
     '.wwh-pane[hidden]{display:none}'+
-    '@media(max-width:640px){.wwh-tabs{grid-template-columns:1fr}}'+
+    '.wwh-tabs.two{grid-template-columns:repeat(2,1fr)}'+
+    '@media(max-width:640px){.wwh-tabs,.wwh-tabs.two{grid-template-columns:1fr}}'+
     // What explorer — filters, chips, views
     '.wf-row{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin:2px 0 10px}'+
     '.wf-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu)}'+
@@ -220,6 +223,15 @@ function styleBlock(){
     // J-curve
     '.jc{border:1px solid var(--bdr);border-radius:12px;background:var(--w);padding:8px 10px;margin:0 0 12px}'+
     '.jc-svg{display:block;width:100%;height:auto}'+
+    // Disney+ slate + strategy
+    '.dsl{display:flex;flex-direction:column;gap:6px}'+
+    '.dsl-row{display:flex;align-items:center;gap:12px;border:1px solid var(--bdr);border-left:3px solid var(--seg,'+DIS_BRAND+');border-radius:9px;padding:9px 13px;background:var(--w)}'+
+    '.dsl-date{font-size:10.5px;font-weight:800;color:var(--mu);min-width:70px;flex:none}'+
+    '.dsl-main{flex:1;min-width:0}.dsl-t{font-size:12px;font-weight:800;color:var(--navy)}.dsl-why{font-size:11px;color:var(--mu);line-height:1.4;margin-top:1px}'+
+    '.dsl-type{font-size:9px;font-weight:800;border-radius:20px;padding:3px 9px;white-space:nowrap;flex:none}'+
+    '.dstr{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}'+
+    '.dstr-c{border:1px solid var(--bdr);border-top:3px solid '+DIS_BRAND+';border-radius:11px;padding:12px 14px;background:var(--w)}'+
+    '.dstr-t{font-size:12.5px;font-weight:800;color:var(--navy);margin-bottom:4px}.dstr-d{font-size:11.5px;color:var(--mu);line-height:1.5}'+
     // collapsible deep-dive sections
     '.dcol{border:1px solid var(--bdr);border-radius:11px;margin:10px 0;overflow:hidden;background:var(--w)}'+
     '.dcol-h{width:100%;text-align:left;border:none;background:#F7F9FB;font:inherit;font-size:12.5px;font-weight:800;color:var(--navy);padding:12px 15px;cursor:pointer;display:flex;align-items:center;gap:9px}'+
@@ -957,12 +969,157 @@ function buildRetChart(root){
   });
 }
 
+// ─── Bottom Line ▸ Disney+ — a simple, interactive streaming overview ─────────────
+function dplusStudioColor(s){ var m={}; DIS_DPLUS_STUDIOS.forEach(function(x){ m[x.k]=x.color; }); return m[s]||DIS_BRAND; }
+function dplusBody(){
+  var kpis = '<div class="dd-kpis">'+DIS_DPLUS_KPIS.map(function(k){
+    return '<div class="dd-kpi"><div class="dd-kpi-v">'+esc(k[0])+'</div><div class="dd-kpi-k">'+esc(k[1])+'</div></div>';
+  }).join('')+'</div>';
+  var viewTog = '<div class="wf-row"><span class="wf-lbl">View</span><div class="dmm-tog" data-dpview><button type="button" class="active" data-v="table">Table</button><button type="button" data-v="chart">Chart</button></div></div>';
+  var tableWrap = '<div id="dplusTableWrap">'+
+    '<div class="wf-row" style="margin:0 0 8px;gap:8px 16px">'+
+      '<span class="wf-lbl">Mode</span><div class="dmm-tog" data-dpmode><button type="button" class="active" data-m="val">$ Value</button><button type="button" data-m="yoy">YoY %</button></div>'+
+      '<span class="wf-lbl">Years</span><span class="exp-range" style="margin:0">'+dpYearSelect('from',2)+'<span>→</span>'+dpYearSelect('to',9)+'</span>'+
+    '</div>'+
+    '<div class="dfin-wrap"><div id="dplusTable"></div></div>'+
+    '<div class="dd-note" style="margin-top:6px">'+esc(DIS_DPLUS_NOTE)+'</div></div>';
+  var chartWrap = '<div id="dplusChartWrap" hidden>'+
+    '<div class="dmm-tog" data-dplusm style="margin-bottom:8px"><button type="button" class="active" data-m="subs">Subscribers &amp; ARPU</button><button type="button" data-m="pl">Streaming P&amp;L</button></div>'+
+    '<div class="dd-chart" style="height:300px"><canvas id="dplusChart"></canvas></div></div>';
+  var stratSec = '<div class="dd-cardt" style="margin:22px 0 8px">The strategy</div>'+
+    '<div class="dstr">'+DIS_DPLUS_STRATEGY.map(function(s){ return '<div class="dstr-c"><div class="dstr-t">'+esc(s.t)+'</div><div class="dstr-d">'+esc(s.d)+'</div></div>'; }).join('')+'</div>';
+  var dtcSlate = '<div class="dd-cardt" style="margin:22px 0 8px">Coming to Disney+ — streaming originals that drive engagement</div>'+
+    '<div class="wf-row">'+slateStudioChips('data-dtcstudio')+'</div><div id="dtcSlate" class="dsl"></div>';
+  var dtc = '<div class="wwh-pane" data-wwh="dtc">'+kpis+viewTog+tableWrap+chartWrap+stratSec+dtcSlate+'</div>';
+  var movies = '<div class="wwh-pane" data-wwh="movies" hidden>'+
+    '<p class="dd-sub">'+esc(DIS_MOVIES_INTRO)+'</p>'+
+    '<div class="wf-row">'+slateStudioChips('data-mvstudio')+'</div><div id="mvSlate" class="dsl"></div></div>';
+  var linPts = '<div class="dstr">'+DIS_LINEAR_POINTS.map(function(s){ return '<div class="dstr-c"><div class="dstr-t">'+esc(s.t)+'</div><div class="dstr-d">'+esc(s.d)+'</div></div>'; }).join('')+'</div>';
+  var linear = '<div class="wwh-pane" data-wwh="linear" hidden>'+
+    '<p class="dd-sub">'+esc(DIS_LINEAR_INTRO)+'</p>'+
+    '<div class="dd-cardt" style="margin:14px 0 6px">Advertising is shrinking</div>'+
+    '<div class="dd-chart" style="height:240px"><canvas id="linChart"></canvas></div>'+
+    '<div class="dd-note" style="margin:6px 0 0">'+esc(DIS_LINEAR_CHART_NOTE)+'</div>'+
+    '<div class="dd-cardt" style="margin:18px 0 8px">The read</div>'+linPts+'</div>';
+  var tabs = '<div class="wwh-tabs">'+
+    '<button type="button" class="wwh-tab active" data-wwh="dtc"><span class="wwh-t">DTC</span><span class="wwh-sub">Disney+ &amp; Hulu streaming</span></button>'+
+    '<button type="button" class="wwh-tab" data-wwh="movies"><span class="wwh-t">Movies</span><span class="wwh-sub">Studio / theatrical slate</span></button>'+
+    '<button type="button" class="wwh-tab" data-wwh="linear"><span class="wwh-t">Linear Networks</span><span class="wwh-sub">ABC &amp; cable, in decline</span></button>'+
+  '</div>';
+  return '<div class="dd-h" style="margin-bottom:12px">Entertainment — film, TV &amp; streaming</div>'+tabs+dtc+movies+linear;
+}
+// FY21 (idx 2) .. FY28E (idx 9) year-range select for the Disney+ table.
+function dpYearSelect(which, def){ var o=''; for(var i=2;i<=9;i++){ o+='<option value="'+i+'"'+(i===def?' selected':'')+'>'+DM_YEARS[i]+'</option>'; } return '<select class="exp-ysel dp-'+which+'">'+o+'</select>'; }
+// The streaming KPI table — same design as the Top Line segment tables.
+function buildDplusTable(root){
+  var scope = root||document; var out = scope.querySelector('#dplusTable'); if(!out) return;
+  var mode = ddTog(scope, '[data-dpmode]', 'data-m', 'val'); var S=DM_STREAM;
+  var fs=scope.querySelector('.dp-from'), ts=scope.querySelector('.dp-to');
+  var fromIdx = fs?parseInt(fs.value,10):2, toIdx = ts?parseInt(ts.value,10):9;
+  if(toIdx<fromIdx){ var t=toIdx; toIdx=fromIdx; fromIdx=t; }
+  var margin = S.dtcOI.map(function(oi,i){ var r=S.dtcRev[i]; return (oi==null||r==null||r===0)?null:(oi/r*100); });
+  var rows = [
+    { n:'Disney+ Core subs', a:S.disneyPlusSubs, f:'subs' },
+    { n:'Disney+ ARPU / mo', a:S.disneyPlusArpu, f:'arpu' },
+    { n:'Hulu subscribers',  a:S.huluSubs, f:'subs' },
+    { n:'DTC revenue',       a:S.dtcRev, f:'bn' },
+    { n:'DTC operating income', a:S.dtcOI, f:'bn' },
+    { n:'SVOD margin',       a:margin, f:'pct' },
+  ];
+  var cols=[]; for(var i=fromIdx;i<=toIdx;i++) cols.push(i);
+  function fmtv(v,f){ if(v==null) return '—'; if(f==='subs') return (v/1000).toFixed(1)+'M'; if(f==='arpu') return '$'+v.toFixed(2); if(f==='bn') return '$'+(v/1000).toFixed(1)+'B'; return v.toFixed(1)+'%'; }
+  function yoy(a,i){ var p=a[i-1],v=a[i]; if(v==null||p==null||p===0) return '—'; var g=(v/p-1)*100; return '<span style="color:'+(g>=0?'#2FA36B':'#E0463C')+'">'+(g>=0?'+':'')+g.toFixed(1)+'%</span>'; }
+  function cell(r,i){ return mode==='yoy' ? yoy(r.a,i) : fmtv(r.a[i], r.f); }
+  function cagr(r){ var a=r.a, av=a[fromIdx], bv=a[toIdx], n=toIdx-fromIdx; if(av==null||bv==null||av<=0||n<=0) return '—'; var g=(Math.pow(bv/av,1/n)-1)*100; return (g>=0?'+':'')+g.toFixed(1)+'%'; }
+  var cagrHdr='CAGR <span style="font-weight:600;font-size:8.5px;color:var(--mu)">'+esc(DM_YEARS[fromIdx])+'–'+esc(DM_YEARS[toIdx])+'</span>';
+  var head='<tr><th>Metric</th>'+cols.map(function(i){ return '<th class="'+(DM_ISEST[i]?'est':'')+'">'+esc(DM_YEARS[i])+'</th>'; }).join('')+'<th class="cagr">'+cagrHdr+'</th></tr>';
+  var body=rows.map(function(r){ return '<tr><td>'+esc(r.n)+'</td>'+cols.map(function(i){ return '<td class="'+(DM_ISEST[i]?'est':'')+'">'+cell(r,i)+'</td>'; }).join('')+'<td class="cagr">'+cagr(r)+'</td></tr>'; }).join('');
+  out.innerHTML='<table class="dfin"><thead>'+head+'</thead><tbody>'+body+'</tbody></table>';
+}
+// Dispatcher for the DTC pane — table or chart.
+function buildDplus(root){
+  var view = ddTog(root, '[data-dpview]', 'data-v', 'table');
+  var tw = root.querySelector('#dplusTableWrap'), cw = root.querySelector('#dplusChartWrap');
+  if(view==='chart'){ if(tw) tw.hidden=true; if(cw) cw.hidden=false; requestAnimationFrame(function(){ buildDplusChart(root); }); }
+  else { if(cw) cw.hidden=true; if(tw) tw.hidden=false; buildDplusTable(root); }
+}
+// Build the active Entertainment sub-tab (DTC / Movies / Linear Networks).
+function buildEnt(root){
+  var pane = root.querySelector('.ovt-subpane[data-ovst="dplus"]'); if(!pane) return;
+  var act = pane.querySelector(':scope > .wwh-tabs > .wwh-tab.active');
+  var k = act ? act.getAttribute('data-wwh') : 'dtc';
+  if(k==='linear') requestAnimationFrame(function(){ buildLinearChart(root); });
+  else if(k==='dtc') buildDplus(root);
+  // movies: slate is static HTML (built at init)
+}
+function slateRows(list){
+  return list.map(function(p){ var c=dplusStudioColor(p.studio);
+    return '<div class="dsl-row" style="--seg:'+c+'"><span class="dsl-date">'+esc(p.date)+'</span>'+
+      '<span class="dsl-main"><span class="dsl-t">'+esc(p.title)+'</span><div class="dsl-why">'+esc(p.why)+'</div></span>'+
+      '<span class="dsl-type" style="color:'+c+';background:'+hexA(c,.14)+'">'+esc(p.studio)+'</span></div>';
+  }).join('');
+}
+function slateStudioChips(attr){
+  return '<span class="wf-lbl">Studio</span><span class="wf-chips"><button type="button" class="wchip active" '+attr+'="all">All</button>'+
+    DIS_DPLUS_STUDIOS.map(function(s){ return '<button type="button" class="wchip" '+attr+'="'+esc(s.k)+'"><span class="wchip-dot" style="background:'+s.color+'"></span>'+esc(s.k)+'</button>'; }).join('')+'</span>';
+}
+function buildSlate(root, containerId, attr, type){
+  var scope=root||document; var out=scope.querySelector('#'+containerId); if(!out) return;
+  var active=scope.querySelector('['+attr+'].active'); var studio=active?active.getAttribute(attr):'all';
+  var list=DIS_DPLUS_SLATE.filter(function(p){ return p.type===type && (studio==='all'||p.studio===studio); });
+  out.innerHTML = list.length ? slateRows(list) : '<div class="wempty">No titles match.</div>';
+}
+function buildLinearChart(root){
+  var cv=(root||document).querySelector('#linChart'); if(!cv || !canBuild(cv)) return;
+  if(cv._chart){ try{ cv._chart.destroy(); }catch(e){} cv._chart=null; }
+  var idx=[3,4,5,6,7,8,9], adv=DM_SEG_DETAIL.Entertainment.advertising;
+  cv._chart=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:idx.map(function(i){return DM_YEARS[i];}), datasets:[
+    { label:'Entertainment advertising', data:idx.map(function(i){return adv[i];}), borderRadius:3, maxBarThickness:44,
+      backgroundColor:idx.map(function(i){return DM_ISEST[i]?hexA('#8A93A0',.5):'#8A93A0';}), borderColor:'#8A93A0', borderWidth:idx.map(function(i){return DM_ISEST[i]?1.2:0;}) },
+  ] }, options:{ responsive:true, maintainAspectRatio:false, animation:false, layout:{padding:{top:8}},
+    plugins:{ legend:{display:false}, tooltip:{callbacks:{label:function(ctx){return '$'+(ctx.parsed.y/1000).toFixed(1)+'B';}}}},
+    scales:{ x:{grid:{display:false},ticks:{color:'#8A93A0',font:{size:11}}},
+      y:{grid:{color:'#EEF2F7'},ticks:{color:'#8A93A0',font:{size:10},callback:function(v){return '$'+(v/1000).toFixed(0)+'B';}}} } } });
+}
+function buildDplusChart(root){
+  var cv=(root||document).querySelector('#dplusChart'); if(!cv || !canBuild(cv)) return;
+  if(cv._chart){ try{ cv._chart.destroy(); }catch(e){} cv._chart=null; }
+  var metric = ddTog(root, '[data-dplusm]', 'data-m', 'subs'); var S=DM_STREAM;
+  if(metric==='pl'){
+    var pi=[3,4,5,6,7,8,9];
+    cv._chart=new Chart(cv.getContext('2d'),{ data:{ labels:pi.map(function(i){return DM_YEARS[i];}), datasets:[
+      { type:'bar', label:'DTC revenue', data:pi.map(function(i){return S.dtcRev[i];}), yAxisID:'y', order:2, borderRadius:3, maxBarThickness:46,
+        backgroundColor:pi.map(function(i){return DM_ISEST[i]?hexA(DIS_BRAND,.4):DIS_BRAND;}), borderColor:DIS_BRAND, borderWidth:pi.map(function(i){return DM_ISEST[i]?1.2:0;}) },
+      { type:'line', label:'Operating income (loss)', data:pi.map(function(i){return S.dtcOI[i];}), yAxisID:'y', order:1, spanGaps:true,
+        borderColor:'#2FA36B', backgroundColor:'#2FA36B', borderWidth:2.6, tension:.2, pointRadius:3, pointBackgroundColor:'#fff', pointBorderColor:'#2FA36B', pointBorderWidth:2 },
+    ] }, options:{ responsive:true, maintainAspectRatio:false, animation:false, layout:{padding:{top:8}},
+      plugins:{ legend:{display:true,position:'bottom',labels:{boxWidth:10,font:{size:10.5},color:'#6b7684'}},
+        tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': $'+(ctx.parsed.y/1000).toFixed(1)+'B';}}}},
+      scales:{ x:{grid:{display:false},ticks:{color:'#8A93A0',font:{size:11}}},
+        y:{grid:{color:'#EEF2F7'},ticks:{color:'#8A93A0',font:{size:10},callback:function(v){return '$'+(v/1000).toFixed(0)+'B';}}} } } });
+    return;
+  }
+  var si=[2,3,4,5,6,7,8,9];
+  cv._chart=new Chart(cv.getContext('2d'),{ data:{ labels:si.map(function(i){return DM_YEARS[i];}), datasets:[
+    { type:'bar', label:'Disney+ Core subs (M)', data:si.map(function(i){return S.disneyPlusSubs[i]!=null?S.disneyPlusSubs[i]/1000:null;}), yAxisID:'y', order:2, borderRadius:3, maxBarThickness:44,
+      backgroundColor:si.map(function(i){return DM_ISEST[i]?hexA(DIS_BRAND,.4):DIS_BRAND;}), borderColor:DIS_BRAND, borderWidth:si.map(function(i){return DM_ISEST[i]?1.2:0;}) },
+    { type:'line', label:'ARPU ($/mo)', data:si.map(function(i){return S.disneyPlusArpu[i];}), yAxisID:'y1', order:1,
+      borderColor:SEG_EXP, backgroundColor:SEG_EXP, borderWidth:2.6, tension:.25, pointRadius:3, pointBackgroundColor:'#fff', pointBorderColor:SEG_EXP, pointBorderWidth:2 },
+  ] }, options:{ responsive:true, maintainAspectRatio:false, animation:false, layout:{padding:{top:8}},
+    plugins:{ legend:{display:true,position:'bottom',labels:{boxWidth:10,font:{size:10.5},color:'#6b7684'}},
+      tooltip:{callbacks:{label:function(ctx){ return ctx.datasetIndex===0 ? (ctx.dataset.label+': '+ctx.parsed.y.toFixed(0)+'M') : ('ARPU: $'+ctx.parsed.y.toFixed(2)); }}}},
+    scales:{ x:{grid:{display:false},ticks:{color:'#8A93A0',font:{size:11}}},
+      y:{grid:{color:'#EEF2F7'},ticks:{color:'#8A93A0',font:{size:10},callback:function(v){return v+'M';}}},
+      y1:{position:'right',grid:{display:false},min:0,ticks:{color:SEG_EXP,font:{size:10},callback:function(v){return '$'+v;}}} } } });
+}
+
 // Build the chart of whichever Bottom Line sub-tab is active (canvases need a visible parent).
 function buildBottomLine(root){
   var pane = root.querySelector('.dd-pane[data-dd="bottomline"]'); if(!pane) return;
   var act = pane.querySelector(':scope > .ovt-subtabs > .ovt-subtab.active');
   var key = act ? act.getAttribute('data-ovst') : 'plan';
   if(key==='returns') requestAnimationFrame(function(){ buildRetChart(root); });
+  else if(key==='dplus') buildEnt(root);
   else requestAnimationFrame(function(){ buildPlanCapex(root); });
 }
 
@@ -985,9 +1142,11 @@ function deepDiveHtml(c){
     '<div class="ovt-subtabs">'+
       '<button type="button" class="ovt-subtab active" data-ovst="plan">$60B Expansion Plan</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="returns">Returns &amp; Depreciation</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="dplus">Entertainment</button>'+
     '</div>'+
     '<div class="ovt-subpane" data-ovst="plan">'+planBody()+'</div>'+
     '<div class="ovt-subpane" data-ovst="returns" hidden>'+returnsBody()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="dplus" hidden>'+dplusBody()+'</div>'+
   '</div>';
   h += '</div>';
   return h;
@@ -1170,6 +1329,8 @@ function deepDiveInit(c){
         wrap.querySelectorAll('.wwh-tab').forEach(function(b){ b.classList.toggle('active', b===btn); });
         wrap.querySelectorAll('.wwh-pane').forEach(function(p){ p.hidden = p.getAttribute('data-wwh')!==k; });
         if(k==='where') requestAnimationFrame(function(){ buildPlanCapex(root); });   // canvas lives in Where
+        else if(k==='dtc') buildDplus(root);                                          // Entertainment ▸ DTC
+        else if(k==='linear') requestAnimationFrame(function(){ buildLinearChart(root); });
       });
     });
     // What explorer — filter chips (bucket / region), view toggle, and pin/off-map clicks
@@ -1209,6 +1370,21 @@ function deepDiveInit(c){
       buildWhat(root);
     }); });
     buildWhat(root);   // initial render (Cards view)
+    // Bottom Line ▸ Disney+ — view (table/chart) + mode + chart-metric toggles, slate filters
+    wireToggle(root, '[data-dpview]', function(){ buildDplus(root); });
+    wireToggle(root, '[data-dpmode]', function(){ buildDplusTable(root); });
+    root.querySelectorAll('.dp-from, .dp-to').forEach(function(sel){ sel.addEventListener('change', function(){ buildDplusTable(root); }); });
+    wireToggle(root, '[data-dplusm]', function(){ buildDplusChart(root); });
+    // two slate filter groups: DTC (series) and Movies (films)
+    root.querySelectorAll('[data-dtcstudio]').forEach(function(b){ b.addEventListener('click', function(){
+      root.querySelectorAll('[data-dtcstudio]').forEach(function(x){ x.classList.toggle('active', x===b); }); buildSlate(root,'dtcSlate','data-dtcstudio','Series');
+    }); });
+    root.querySelectorAll('[data-mvstudio]').forEach(function(b){ b.addEventListener('click', function(){
+      root.querySelectorAll('[data-mvstudio]').forEach(function(x){ x.classList.toggle('active', x===b); }); buildSlate(root,'mvSlate','data-mvstudio','Film');
+    }); });
+    buildDplusTable(root);
+    buildSlate(root,'dtcSlate','data-dtcstudio','Series');
+    buildSlate(root,'mvSlate','data-mvstudio','Film');
     // Bottom Line ▸ Returns — collapsible sections
     root.querySelectorAll('.dcol-h').forEach(function(btn){ btn.addEventListener('click', function(){
       var sec = btn.parentElement, open = sec.classList.toggle('open');

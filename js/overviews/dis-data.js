@@ -258,5 +258,145 @@ export var DIS_DRIVERS = [
   { ic: '💵', t: 'Capital return + EPS', tag: 'Compounding', d: "Adjusted EPS is guided to ~12% growth in FY2026 and double digits in FY2027, amplified by a buyback ramped from $3.5B to at least $9B and a dividend up 50% — funded partly by selling non-core assets (A+E).", pts: ['Buyback $3.5B → $7B → $8B → ≥$9B', 'Dividend +50% to $1.50/share', 'Non-core asset sales fund it'] },
 ];
 
+// ─── The ~$60B / 10-year Experiences expansion plan (Sept 2023; detailed at D23 Aug 2024) ─
+export var DIS_PLAN_FACTS = [
+  ['Total investment', '~$60B'],
+  ['Horizon', '~10 yrs · FY24–FY33'],
+  ['vs prior decade', '~2× (~$30B → ~$60B)'],
+  ['Capacity-expanding', '~70% of the plan'],
+  ['Cruise fleet', '~5 → ~13 ships by 2031'],
+  ['Unveiled at D23’24', '14 new attractions'],
+];
+export var DIS_PLAN_THESIS = "In September 2023 Disney said it would roughly double Experiences capital investment to about $60 billion over ten years, and at D23 (August 2024) it detailed where the money goes. Roughly 70% funds capacity-expanding projects — new lands, attractions and cruise ships — that add the physical inventory Disney can sell; the rest refreshes and modernizes what is already open. Experiences is the company’s largest profit pool, so this plan is the clearest line of sight into where growth comes from over the next decade.";
+export var DIS_PLAN_ALLOC = [
+  { k:'Theme Parks & Resorts',    pct:50, tag:'capacity', color:SEG_EXP },
+  { k:'Cruise Line & other',      pct:20, tag:'capacity', color:'#1E88C7' },
+  { k:'Technology & Maintenance', pct:30, tag:'sustain',  color:'#8A93A0' },
+];
+export var DIS_PLAN_ALLOC_NOTE = "Disney’s own split of the ~$60B (2024 investor/proxy framing): ~50% theme parks & resorts, ~20% cruise & other, ~30% technology & maintenance. Parks + cruise (~70%) is the capacity-expanding portion; ~30% sustains existing capacity.";
+export var DIS_PLAN_CAPEX_NOTE = "Experiences-segment capital expenditures (Bloomberg model). The step-up from ~$3.7B (FY24) toward ~$8B+ is the plan ramping; the ~$60B target runs roughly FY2024–FY2033, so spend continues past the forecast window. Right axis tracks cumulative spend against the $60B target.";
+
+export var DIS_PLAN_PILLARS = [
+  { name:'Domestic Parks', ic:'🏰', tag:'the core · ~50%', color:SEG_EXP, items:[
+    { name:'Magic Kingdom — Villains Land + Cars', where:'Walt Disney World, FL', when:'Cars construction 2025', detail:'Disney’s largest-ever Magic Kingdom expansion: a new Villains land (two attractions, dining, retail) plus a Cars-themed area beyond Big Thunder Mountain.' },
+    { name:'Tropical Americas', where:'Animal Kingdom, WDW', when:'~2027', detail:'Replaces DinoLand with Encanto and Indiana Jones attractions — a full land reimagining.' },
+    { name:'Monsters, Inc. Land', where:'Hollywood Studios, WDW', when:'Construction 2025+', detail:'A new land anchored by Disney’s first-ever suspended roller coaster.' },
+    { name:'Avatar · Avengers · Coco', where:'Disneyland Resort, CA', when:'Multi-year', detail:'An Avatar land at California Adventure, an Avengers Campus expansion, and the first ride-through Coco attraction — part of 14 new attractions unveiled at D23 2024.' },
+  ]},
+  { name:'International Parks', ic:'🌏', tag:'expand + capital-light', color:DIS_BRAND2, items:[
+    { name:'Disneyland Paris — Adventure World', where:'Paris (owned)', when:'World of Frozen 2026', detail:'A reimagined second gate (World of Frozen, Avengers Campus) that nearly doubles the park.' },
+    { name:'Tokyo — Fantasy Springs', where:'Tokyo (licensed)', when:'Opened 2024', detail:'Frozen / Tangled / Peter Pan expansion at Tokyo DisneySea — Disney earns royalties with no capital (capital-light, high-return).' },
+    { name:'Abu Dhabi resort', where:'Abu Dhabi, UAE', when:'Announced 2025', detail:'A 7th Disney resort destination built and operated by partner Miral; Disney licenses IP for fees — no Disney development capital.' },
+    { name:'Shanghai & Hong Kong', where:'China', when:'Ongoing', detail:'Zootopia Land (Shanghai, open) and Spider-Man; continued build-out of the consolidated Asian parks.' },
+  ]},
+  { name:'Cruise Line', ic:'🚢', tag:'~20% · fastest capacity add', color:'#1E88C7', items:[
+    { name:'Fleet: ~5 → ~13 ships', where:'Global', when:'through 2031', detail:'The biggest capacity add in the plan — the fleet roughly triples, with new homeports across Asia, Australia and Europe.' },
+    { name:'Treasure · Destiny · Adventure', where:'Florida & Singapore', when:'2024–2026', detail:'Disney Treasure (2024), Disney Destiny (2025) and the largest-ever Disney Adventure (2026, homeported in Singapore — Disney’s first in Asia).' },
+    { name:'Four more new ships', where:'Various', when:'2027–2031', detail:'Four additional ships announced at D23 2024, plus a capital-light Disney-branded ship operated by Oriental Land Co. in Japan (~2029).' },
+  ]},
+  { name:'Enhance & Technology', ic:'🛠️', tag:'~30% · sustain', color:'#8A93A0', items:[
+    { name:'Refresh & maintenance', where:'All parks', when:'Continuous', detail:'Refurbishing rides, hotels and infrastructure to keep existing capacity fresh and reliable.' },
+    { name:'Guest technology', where:'All parks', when:'Ongoing', detail:'Lightning Lane, the Disney app, MagicBand+ and virtual queue — spend that lifts throughput and per-guest monetization without adding land.' },
+  ]},
+];
+// Flat project list for the interactive "What" explorer (filters · timeline · map).
+// bucket: parks | cruise | tech (matches the ~50/20/30 allocation). lat/lng for the map;
+// cruise/tech have no single point (shown off-map). year drives the timeline (0 = ongoing).
+export var DIS_PROJ_BUCKETS = [
+  { k:'parks',  l:'Parks & resorts', color:'#E3A73A' },
+  { k:'cruise', l:'Cruise',          color:'#1E88C7' },
+  { k:'tech',   l:'Tech & maint.',   color:'#8A93A0' },
+];
+export var DIS_PROJ_REGIONS = ['Americas','Europe','Middle East','Asia','At sea','Global'];
+export var DIS_PROJECTS = [
+  { name:'Villains Land + Cars', loc:'Magic Kingdom, Orlando', bucket:'parks', region:'Americas', franchise:'Villains · Cars', year:2027, when:'Cars construction 2025', lat:28.42, lng:-81.58,
+    detail:'Disney’s largest-ever Magic Kingdom expansion — a Villains land (two attractions, dining, retail) plus a Cars area beyond Big Thunder Mountain.' },
+  { name:'Tropical Americas', loc:'Animal Kingdom, Orlando', bucket:'parks', region:'Americas', franchise:'Encanto · Indiana Jones', year:2027, when:'~2027', lat:28.36, lng:-81.59,
+    detail:'Replaces DinoLand with Encanto and Indiana Jones attractions — a full land reimagining.' },
+  { name:'Monsters, Inc. Land', loc:'Hollywood Studios, Orlando', bucket:'parks', region:'Americas', franchise:'Monsters, Inc.', year:2027, when:'Construction 2025+', lat:28.355, lng:-81.56,
+    detail:'A new land anchored by Disney’s first-ever suspended roller coaster.' },
+  { name:'Avatar · Avengers · Coco', loc:'Disneyland Resort, Anaheim', bucket:'parks', region:'Americas', franchise:'Avatar · Marvel · Coco', year:2027, when:'Multi-year', lat:33.81, lng:-117.92,
+    detail:'An Avatar land at California Adventure, an Avengers Campus expansion and the first ride-through Coco attraction — part of 14 new attractions unveiled at D23 2024.' },
+  { name:'Disneyland Paris — Adventure World', loc:'Paris (owned)', bucket:'parks', region:'Europe', franchise:'Frozen · Marvel', year:2026, when:'World of Frozen 2026', lat:48.87, lng:2.78,
+    detail:'A reimagined second gate (World of Frozen, Avengers Campus) that nearly doubles the park.' },
+  { name:'Tokyo — Fantasy Springs', loc:'Tokyo (licensed)', bucket:'parks', region:'Asia', franchise:'Frozen · Tangled', year:2024, when:'Opened 2024', lat:35.63, lng:139.88,
+    detail:'Frozen / Tangled / Peter Pan expansion at Tokyo DisneySea — Disney earns royalties with no capital (capital-light, high-return).' },
+  { name:'Abu Dhabi resort', loc:'Abu Dhabi, UAE', bucket:'parks', region:'Middle East', franchise:'—', year:2030, when:'Announced 2025', lat:24.46, lng:54.37,
+    detail:'A 7th Disney resort destination built and operated by partner Miral; Disney licenses IP for fees — no Disney development capital.' },
+  { name:'Shanghai & Hong Kong', loc:'China', bucket:'parks', region:'Asia', franchise:'Zootopia · Spider-Man', year:2025, when:'Ongoing', lat:31.14, lng:121.66,
+    detail:'Zootopia Land (Shanghai, open) and Spider-Man; continued build-out of the consolidated Asian parks.' },
+  { name:'Cruise fleet: ~5 → ~13 ships', loc:'Global (at sea)', bucket:'cruise', region:'At sea', franchise:'—', year:2031, when:'through 2031',
+    detail:'The fleet roughly triples — the biggest capacity add — with new homeports across Asia, Australia and Europe.' },
+  { name:'Treasure · Destiny · Adventure', loc:'Florida & Singapore', bucket:'cruise', region:'At sea', franchise:'—', year:2025, when:'2024–2026',
+    detail:'Disney Treasure (2024), Disney Destiny (2025) and the largest-ever Disney Adventure (2026, homeported in Singapore — Disney’s first in Asia).' },
+  { name:'Four more new ships', loc:'Various', bucket:'cruise', region:'At sea', franchise:'—', year:2029, when:'2027–2031',
+    detail:'Four additional ships announced at D23 2024, plus a capital-light Disney-branded ship operated by Oriental Land Co. in Japan (~2029).' },
+  { name:'Refresh & maintenance', loc:'All parks', bucket:'tech', region:'Global', franchise:'—', year:0, when:'Continuous',
+    detail:'Refurbishing rides, hotels and infrastructure to keep existing capacity fresh and reliable.' },
+  { name:'Guest technology', loc:'All parks', bucket:'tech', region:'Global', franchise:'—', year:0, when:'Ongoing',
+    detail:'Lightning Lane, the Disney app, MagicBand+ and virtual queue — lifts throughput and per-guest monetization without adding land.' },
+];
+
+export var DIS_PLAN_GROWTH = [
+  { ic:'🎢', t:'New capacity → attendance & spend', d:'~70% of the plan adds sellable inventory (lands, ships, rooms). More capacity absorbs demand and lifts attendance and per-capita spending — the two levers of Experiences revenue.' },
+  { ic:'📈', t:'ROIC-accretive, per management', d:'Disney frames the incremental spend as return-accretive, pointing to the prior decade (Galaxy’s Edge, Toy Story Land, Pandora) as capacity that drove growth. Returns on Experiences investment have risen over time.' },
+  { ic:'🚢', t:'Cruise is the standout', d:'The fleet roughly triples — the fastest, highest-satisfaction capacity add, extending Disney into Asia-Pacific with new homeports.' },
+  { ic:'🌍', t:'Capital-light international', d:'Abu Dhabi (Miral) and Tokyo (Oriental Land) grow the footprint on partners’ balance sheets — royalties and fees with little or no Disney capital.' },
+];
+export var DIS_PLAN_SOURCES = "Sources — The Walt Disney Company investor announcement (Sept 2023) and FY2024 proxy for the ~$60B / 10-year plan and its ~50/20/30 allocation; D23 2024 (Disney Experiences Showcase, Aug 2024) for the specific lands, attractions and cruise ships. Experiences capex is the Bloomberg model. Project dates are Disney framing and subject to change.";
+
+// ─── Returns & depreciation — how the park/cruise investments earn and depreciate ────
+export var DIS_RET_THESIS = "Park and cruise assets are long-lived — 20 to 40 years, cruise ships ~30 — so the ~$60B is depreciated slowly. That shapes a J-curve: cash goes out first, then pre-opening costs and fresh depreciation drag near-term operating income, then years of run-rate revenue against a slowly-depreciating base drive the return. Reading the timing of that curve is the key to Experiences margins.";
+export var DIS_USEFUL_LIVES = [
+  { ic:'🚢', asset:'Cruise ships',                        life:'~30–35 yrs', note:'Industry convention, net of ~10–15% residual value. Disney reports ships inside PP&E, not as a separate line.' },
+  { ic:'🏰', asset:'Attractions, buildings & improvements', life:'20–40 yrs', note:'Rides, show buildings, hotels — the bulk of park capex.' },
+  { ic:'🌳', asset:'Land improvements',                   life:'20–40 yrs', note:'Infrastructure, roads, landscaping, utilities.' },
+  { ic:'🎠', asset:'Furniture, fixtures & equipment',     life:'3–25 yrs',  note:'Ride vehicles, kitchens, hardware, décor.' },
+  { ic:'💻', asset:'Technology & software',               life:'2–10 yrs',  note:'The Disney app, Lightning Lane, MagicBand+ systems.' },
+];
+export var DIS_LIVES_NOTE = "Straight-line depreciation over these estimated useful lives (Disney 10-K PP&E note). Cruise-ship life follows cruise-industry convention (~30–35 yrs, net of residual) since Disney reports ships within PP&E rather than as a separate line.";
+export var DIS_DEPR_MATH = "Depreciation math: ~$60B spread over a ~25–30-year blended life adds roughly <b>$2B+ of incremental annual D&A</b> once fully deployed — on top of today’s ~$2.8B of Experiences D&A. That is why D&A climbs through the decade; the bet is that new-capacity revenue grows faster than the depreciation it creates.";
+export var DIS_RET_PHASES = [
+  { ph:'1 · Build',          yrs:'2–5 yrs',      drag:true,  d:'Capex is spent and sits in “projects in progress” — cash out, but no revenue and no depreciation yet.' },
+  { ph:'2 · Pre-open',       yrs:'months',        drag:true,  d:'Hiring, training and marketing hit the P&L just before opening — a near-term drag on operating income.' },
+  { ph:'3 · Open & ramp',    yrs:'1–3 yrs',       drag:false, d:'The asset opens, depreciation begins, and revenue ramps as attendance builds toward run-rate.' },
+  { ph:'4 · Mature returns', yrs:'the long tail', drag:false, d:'Full run-rate revenue against a slowly-depreciating asset (20–40 yr life) — the years the investment pays back and compounds.' },
+  { ph:'5 · Refresh',        yrs:'periodic',      drag:true,  d:'Maintenance capex and re-theming keep it fresh and extend its life — a smaller, recurring reinvestment.' },
+];
+export var DIS_RET_CHART_NOTE = "Experiences-segment capex (bars), depreciation & amortization and operating income (lines), FY2022–FY2028E (Bloomberg model). The read: capex steps up, D&A follows with a lag and climbs only gradually (long asset lives), while operating income grows faster — the gap between OI and D&A growth is the return on the investment showing up.";
+
+// ─── Simple depreciation calculator — what the $60B adds to annual D&A ───────────
+export var DIS_DEPR_CALC = {
+  total: 60,        // $B invested
+  currentDA: 2.8,   // ~today's Experiences D&A ($B)
+  buckets: [
+    { k:'Theme parks, resorts & attractions', pct:50, life:30, range:'20–40', color:'#E3A73A' },
+    { k:'Cruise ships & other',               pct:20, life:32, range:'30–35', color:'#1E88C7' },
+    { k:'Technology & maintenance',           pct:30, life:15, range:'2–40 blend', color:'#8A93A0' },
+  ],
+  caveat: "A simple, illustrative estimate: each bucket’s spend ÷ its useful life = the straight-line depreciation it adds once open. Edit the useful-life numbers to flex it. Caveat: maintenance capex partly replaces assets already being depreciated, so the true net increase to D&A is somewhat lower than the gross figure — and spend is phased over the decade, so the run-rate builds gradually.",
+};
+
+// ─── Leadership bench (qualitative read; Pillars ▸ Management is the synced source of record) ─
+export var DIS_MGMT = [
+  { ic: '🎬', name: 'Josh D’Amaro', role: 'Chief Executive Officer', since: 'CEO since 2026',
+    bio: "Long-time Disney operator who ran <b>Disney Experiences</b> (parks, resorts, cruise line and consumer products) before succeeding Bob Iger as CEO in 2026. Takes over with streaming already profitable and the ~$60B Experiences investment cycle he championed underway." },
+  { ic: '💵', name: 'Hugh Johnston', role: 'Senior EVP & Chief Financial Officer', since: 'CFO since 2023',
+    bio: "Joined Disney as CFO in December 2023 after more than a decade as <b>PepsiCo’s CFO</b>. Owns the capital-allocation framework — the buyback ramped toward ≥$9B, the dividend raised 50%, and the cost discipline behind the EPS guide." },
+  { ic: '📺', name: 'Dana Walden & Alan Bergman', role: 'Co-Chairmen, Disney Entertainment', since: 'Since 2023',
+    bio: "Run film, television and streaming (Disney+, Hulu, the studios and the linear networks) — the segment carrying the streaming-margin inflection and the studio slate." },
+  { ic: '🏈', name: 'Jimmy Pitaro', role: 'Chairman, ESPN', since: 'Since 2018',
+    bio: "Leads ESPN through its direct-to-consumer pivot — the flagship app launch (Aug 2025), the NFL equity deal, and ESPN’s first Super Bowl." },
+];
+export var DIS_MGMT_NOTE = "The 2026 Iger→D’Amaro handover completed a multi-year, board-run succession that was closely watched after two earlier false starts. Ownership and insider-transaction detail (auto-synced from Fiscal.ai) lives in the profile’s Pillars ▸ Management tab — this page is the qualitative read. Roles as of mid-2026 per Disney IR / proxy statement.";
+
+// ─── Capital return (Valuation tab) ─────────────────────────────────────────────
+export var DIS_CAPRET = [
+  ['Buyback', '$3.5B → ≥$9B', "Ramped through FY2026 — funded partly by selling non-core assets (the A+E Networks stake)."],
+  ['Dividend', '$1.50/sh · +50%', "FY2026 dividend, raised 50% year-over-year after reinstatement."],
+  ['Adj. EPS growth', '~12% (FY26E)', "Company guidance: ~12% in FY2026 and double digits in FY2027."],
+];
+export var DIS_VAL_READ = "Disney trades at a discount to Netflix on both P/E and EV/EBITDA despite a comparable streaming-margin trajectory <b>and</b> a large, cash-generative profit pool (Experiences) that pure streamers lack. The bull case is a re-rating as the streaming + sports profit scales; the bear case is that the market keeps valuing Disney as a linear-TV business in decline. Multiples below are seeded approximations (mid-2026), directional — not live quotes.";
+
 export var DIS_OV_SOURCES = "Sources — Disney FY2025 Form 10-K (year ended Sep 27, 2025) for full-year revenue, segment, subscriber and balance-sheet figures; the FY2026 10-Qs (1Q–3Q) and Q2/Q3 FY26 earnings releases for quarterly segment and SVOD figures; the FY25 Entertainment SVOD P&L supplement for the streaming ramp; and the Q3’25–Q3’26 earnings-call transcripts for guidance and strategy. Market cap is live (Massive). Peer multiples & growth are seeded approximations (mid-2026), directional — not live. Forward figures (FY26E/FY27E) are company guidance, not fact.";
 export var DIS_DD_SOURCES = "Sources — same filing set as the Overview (FY2025 10-K, FY2026 10-Qs, Q2/Q3 FY26 releases, FY25 SVOD P&L supplement, FY25–FY26 earnings calls). Quarter-standalone cash-flow figures are derived (YTD minus prior YTD) and labeled approximate. Expansion dates and the ~$60B/10-year investment figure are management framing from earnings calls, not a hard 10-K commitment.";

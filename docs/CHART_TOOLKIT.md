@@ -212,16 +212,24 @@ number (`rsGuideAt`), and it is the state each block holds as `gpt`:
 | Where | What it moves | Where the control lives |
 |---|---|---|
 | A Results block | the period table's `actual vs range` row and its Range-record summary — **not** the chart, where the band stays a band | **in that row's own label cell** |
-| The surprise scorecard | everything, since the guide is a comparator there; the chip relabels itself `Guidance (low)` | the Compare row, beside the guidance chip |
+| The surprise scorecard | **the bars themselves**, since the guide is a comparator there — plus their labels, the tooltip and the Range record; the chip relabels itself `Guidance (low)` | the Compare row **and** the table's guidance row |
 | Road to the print | the `vs …` row in the table, and — under Distance ▸ vs Guidance — the zero line | the row's label, or the control row when it sets the zero line |
 
 **A control goes where the thing it changes is** (SAB, Aug 11 2026). The Results version spent one
 commit in the block's control row and was wrong there twice over: that row is for controls that
 change the CHART, and it stood permanently even on metrics the company never guides. Living on the
 row makes it self-limiting — it exists only where a guidance row exists. There are two renderers
-for one state (`rsGptHtml` for a control row, `rsGptMiniHtml` for inside a table) and never two
-copies on screen at once: Road to the print drops the table copy exactly when the control-row copy
-appears. The in-table click also repaints **only the table** — no chart teardown, no lost brush.
+for one state (`rsGptHtml` for a control row, `rsGptMiniHtml` for inside a table) and Road to the
+print drops the table copy exactly when the control-row copy appears. The in-table click there and
+in a Results block repaints **only the table** — no chart teardown, no lost brush.
+
+**The scorecard is the exception, deliberately.** It renders both copies, because there the choice
+moves the bars, so it has to be reachable from the chart *and* from the record you are reading it
+against — and the table is collapsed by default, so only one is ever on screen unless you open it.
+Its click goes through `rsRerenderSurp` (a full rebuild) rather than a table repaint, for the same
+reason. What that unlocks on UBER Gross Bookings: **16 of 16 prints cleared the low end of the
+guide; only 12 of 16 beat the midpoint.** Same sixteen prints, two different sentences about the
+company — and the second one is the one the market was actually positioned for.
 
 The midpoint is the neutral read. The **low** end is the bar the company actually committed to —
 a print landing at the bottom of the range is a very different event from one landing at the top,

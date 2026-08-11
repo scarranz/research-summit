@@ -2363,16 +2363,24 @@ function rsSurpTableRender(m, lo, hi, div){
     return r + '</tr>';
   }
 
+  // The guidance row carries the Low/Mid/High pills, exactly like the period table upstairs.
+  // The difference here — and it is the reason this one is wired to a full re-render rather
+  // than a table repaint — is that in this block the guide is a COMPARATOR: moving the end
+  // moves the bars, the labels on them, the tooltip and the Range record, not just a row of
+  // numbers. So the whole block is rebuilt, and the chart follows the pick.
+  var gptRanged = rsGuideRanged(m);
+  function lbl(s){ return rsSrcLabel(s) + (s === 'guide' && gptRanged ? rsGptMiniHtml('rssurpgpt', st.gpt) : ''); }
+
   // Base first, then one value row + one difference row per comparator. Growth rows always
   // measure against the ACTUAL a year back — an estimate's growth is only meaningful off a
   // reported base — so they are skipped when the base is not the actual.
-  h += row(rsSrcLabel(st.base), function(i){ return baseArr[i] == null ? '<span class="rs-ft-nil">—</span>' : '<b>' + num(baseArr[i]) + '</b>'; }, 'main nb', sumCagr());
+  h += row(lbl(st.base), function(i){ return baseArr[i] == null ? '<span class="rs-ft-nil">—</span>' : '<b>' + num(baseArr[i]) + '</b>'; }, 'main nb', sumCagr());
   if (st.base === 'act')
     h += row('YoY growth', function(i){ return pctDollar(g(m.act, m.act, i), gd(m.act, m.act, i)); }, 'sub',
       sumGrowth(function(i){ return g(m.act, m.act, i); }));
   cmps.forEach(function(src){
     var A = rsSrcArr(m, src, st.metric) || [];
-    h += row(rsSrcLabel(src), function(i){ return num(A[i]); }, 'main nb', '');
+    h += row(lbl(src), function(i){ return num(A[i]); }, 'main nb', '');
     if (m.act)
       h += row('YoY growth', function(i){ return pctDollar(g(A, m.act, i), gd(A, m.act, i)); }, 'sub nb',
         sumGrowth(function(i){ return g(A, m.act, i); }));

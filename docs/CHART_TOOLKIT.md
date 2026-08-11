@@ -178,6 +178,14 @@ snapshot, so the same chart can be read as of any point in history. Full contrac
 * `vsrc` is the extra state this needs. A stored `'2026-07-31'` cannot say which archive you were
   browsing — that date exists in both — and it does not have to: `rsVintFor` looks the id up in
   each source's own register either way. It only decides which list the second select draws.
+* ⚠ **The newest file is the wrong default, and it reads as a broken pane.** Archives are written
+  around prints, so the newest file is always saved just *after* the latest one: it carries forward
+  periods only, has no estimate for anything that has reported, and every surface scoring estimates
+  against actuals renders empty on it. Picking "One Summit model file" on UBER landed on Aug 5,
+  2026 and greyed out both comparators. `rsVintDefault` now lands on the newest file that is still
+  a **forecast of something now known** (`rsVintScoreable`: its own last-reported period sits
+  strictly before the dataset's) — Jul 31 on UBER, for all three readings. And a file that really
+  has nothing to score says so, rather than drawing an empty chart.
 * **Every option is labelled by the print it stands in front of**, not by what it already knew:
   `Jul 31, 2026 · before 2Q26`, never `knew through 1Q26`. Same file — but "give me the read going
   into 2Q26" is how the list gets scanned, and it is shorter, which a dropdown of dates needed.

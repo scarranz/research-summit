@@ -874,12 +874,44 @@ function rsVintList(src){
   var mx = rsMatrix(src);
   return (mx && mx.vintages || []).slice().sort(function(a, b){ return a.id < b.id ? 1 : -1; });
 }
-// The value a freshly-picked reading should land on: the newest thing it can show.
-function rsVintDefault(mode){
+// ⚠ The newest file is the WRONG default, and it looks like a broken pane rather than a bad
+// pick. Archives are written around prints, so the newest file is always saved just AFTER the
+// latest one — it therefore carries forward periods only, has no estimate for anything that has
+// reported, and every surface that scores estimates against actuals renders empty on it. On UBER
+// picking "One Summit model file" landed on Aug 5, 2026 and greyed out both comparators.
+//
+// So a reading lands on the newest file that is still a FORECAST of something now known: its own
+// last-reported period sits strictly before the dataset's. On UBER that is Jul 31 for all three
+// readings — the last read before the 2Q26 print, which is the file anyone means anyway.
+function rsLastReportedOrd(view){
+  var v = _rs.data && _rs.data.views && _rs.data.views[view];
+  if (!v) return null;
+  var best = null;
+  Object.keys(v.metrics).forEach(function(k){
+    var m = v.metrics[k]; if (!m.act) return;
+    for (var i = 0; i < m.periods.length; i++){
+      if (m.act[i] == null) continue;
+      var o = rsOrdIn(view, m.periods[i]);
+      if (o != null && (best == null || o > best)) best = o;
+    }
+  });
+  return best;
+}
+function rsVintScoreable(v, view){
+  var la = v.lastActual && v.lastActual[view];
+  var lo = la == null ? null : rsOrdIn(view, la);
+  var lr = rsLastReportedOrd(view);
+  return lo != null && lr != null && lo < lr;
+}
+function rsVintPick(list, view, wrap){
+  for (var i = 0; i < list.length; i++) if (rsVintScoreable(list[i], view)) return wrap(list[i]);
+  return list.length ? wrap(list[0]) : 'preprint';   // nothing has printed yet — newest it is
+}
+function rsVintDefault(mode, view){
+  view = view || 'q';
   if (mode === 'preprint') return 'preprint';
-  if (mode === 'asof'){ var a = rsAsOfDates(); return a.length ? 'asof:' + a[0].id : 'preprint'; }
-  var l = rsVintList(mode);
-  return l.length ? l[0].id : 'preprint';
+  if (mode === 'asof') return rsVintPick(rsAsOfDates(), view, function(v){ return 'asof:' + v.id; });
+  return rsVintPick(rsVintList(mode), view, function(v){ return v.id; });
 }
 function rsVintSelHtml(val, scope, label, vsrc){
   if (!rsVintages().length) return '';
@@ -2188,9 +2220,33 @@ function rsSurpTableHeadHtml(){
     '<span class="rs-collap-sub">' + (open ? 'hide' : 'show') + ' · ' + n + ' reported period' +
     (n === 1 ? '' : 's') + ', each estimate scored against the base</span>';
 }
+// A file that post-dates every print has nothing to score, and it must SAY so. Rendering '' was
+// worse than useless: rsRerenderSurp assigns to host.outerHTML, so an empty string deletes the
+// block from the DOM with no host left to render back into — the scorecard was gone until the
+// pane was rebuilt. The shell (and its pickers) always renders; only the contents go.
+function rsSurpEmptyHtml(reason){
+  var st = rsSurpSt();
+  var h = '<div class="rs-block" data-rssurp>';
+  h += '<div class="rs-block-top"><div class="rs-block-h">Actuals vs Estimates</div>' +
+    '<div class="rs-views">' + Object.keys(_rs.data.views).map(function(vn){
+      return '<button type="button" class="rs-view' + (rsSurpViewName() === vn ? ' active' : '') +
+        '" data-rssurpview="' + vn + '">' + esc(_rs.data.views[vn].label) + '</button>';
+    }).join('') + '</div></div>';
+  var vsel = rsVintSelHtml(st.vint, 'surp', 'Estimates as of', st.vsrc);
+  if (vsel) h += '<div class="rs-surp-ctl rs-surp-vint">' + vsel + '</div>';
+  h += '<div class="ave-leg"><span class="rs-noguide">⚑ Nothing to score</span>' +
+    '<span class="tech-leg-i">' + esc(reason) + '</span></div>';
+  return h + '</div>';
+}
 function rsSurpBlockHtml(){
   var m = rsSurpM(), st = rsSurpSt();
-  if (!m) return '';
+  if (!m){
+    // The only way every metric drops out is a vintage that pre- or post-dates the whole history.
+    var v0 = rsVintFor('summit', st.vint) || rsVintFor('cons', st.vint);
+    return rsSurpEmptyHtml(v0
+      ? 'The ' + rsVintDay(v0.id) + ' file was saved after the last print, so it holds forward periods only — there is no estimate in it for anything that has already reported. Pick an earlier file.'
+      : 'No estimate in the selected snapshot overlaps a reported period on this view.');
+  }
   var sv = rsSurpView();
   var h = '<div class="rs-block" data-rssurp>';
   h += '<div class="rs-block-top"><div class="rs-block-h">Actuals vs Estimates</div>' +
@@ -2238,7 +2294,12 @@ function rsSurpBlockHtml(){
         ? 'bar outline = which series it is measured against' +
           (cmps.length > 1 ? ' · labels stack per period in the order of the chips' : '') +
           ' · drag to zoom, double-click to reset'
-        : 'pick at least one series to compare against') +
+        // Distinguish "you unchecked everything" from "the file you picked cannot answer this".
+        // Both used to read "pick at least one series", which on a post-print file is advice the
+        // reader cannot act on — every chip is struck through.
+        : (st.vint !== 'preprint' && RS_SRCS.every(function(s){ return s === st.base || !rsSurpPairOk(m, st.base, s, st.metric); })
+            ? 'the selected snapshot has no estimate for any period that has already reported on this line — pick an earlier file'
+            : 'pick at least one series to compare against')) +
     '</span></div>';
   h += '<div class="ov-chart-card">' +
     '<div class="ov-chart-t" id="rsSurpChartT"></div>' +
@@ -3198,7 +3259,7 @@ function wireResults(pane){
         // archive is being browsed so select B knows which list to draw.
         var mv = e.target.value;
         vst.vsrc = (mv === 'summit' || mv === 'cons') ? mv : null;
-        vst.vint = rsVintDefault(mv);
+        vst.vint = rsVintDefault(mv, vscope === 'surp' ? rsSurpViewName() : _rs.view);
       } else {
         vst.vint = e.target.value;
       }

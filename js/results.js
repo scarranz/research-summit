@@ -436,9 +436,36 @@ function rsVintDay(id, fallback){
   var p = String(id).split('-');
   return (p.length === 3 && RS_MON[+p[1] - 1]) ? RS_MON[+p[1] - 1] + ' ' + (+p[2]) + ', ' + p[0] : (fallback || id);
 }
+// The same date without its year — for the second and third mentions in one option, where the
+// year is already established by the date the option leads with.
+function rsVintDayShort(id){
+  var p = String(id).split('-');
+  return (p.length === 3 && RS_MON[+p[1] - 1]) ? RS_MON[+p[1] - 1] + ' ' + (+p[2]) : id;
+}
+// The period a snapshot was the last read BEFORE. Datasets label vintages by what they already
+// KNEW ("knew through 1Q26"), which is the archivist's fact; the question an analyst asks is
+// which print they were standing in front of. Same file, and it is the phrasing you scan a list
+// with — "give me the read going into 2Q26" — so the label is derived rather than stored.
+// It is also two characters shorter, which the dropdown needed (SAB, Aug 11 2026).
+function rsNextPeriod(view, p){
+  if (p == null) return null;
+  if (view === 'q'){
+    var q = rsParseQ(p); if (!q) return null;
+    var ny = q.q === 4 ? q.y + 1 : q.y, nq = q.q === 4 ? 1 : q.q + 1;
+    return nq + 'Q' + ('0' + (ny % 100)).slice(-2);
+  }
+  return isNaN(+p) ? null : String(+p + 1);
+}
+function rsVintBefore(v){
+  var la = v.lastActual || {};
+  var n = rsNextPeriod('q', la.q);
+  if (n) return n;
+  n = rsNextPeriod('y', la.y);
+  return n ? 'FY' + n : null;
+}
 function rsVintLabel(v){
-  var thru = v.lastActual && (v.lastActual.q || v.lastActual.y);
-  return rsVintDay(v.id, v.label) + (thru ? ' · knew through ' + thru : '');
+  var b = rsVintBefore(v);
+  return rsVintDay(v.id, v.label) + (b ? ' · before ' + b : '');
 }
 // ─── Two calendars, one dropdown ──────────────────────────────────────────────
 // The sources are archived on their OWN schedules: Bloomberg exports around each print,
@@ -549,10 +576,10 @@ function rsVintNote(){
                                          : 'no snapshot on this date — the series is blank, not zero'));
       return;
     }
-    var thru = (hit.lastActual && (hit.lastActual.q || hit.lastActual.y)) || '—';
+    var before = rsVintBefore(hit);
     // Under as-of the resolved date is usually NOT the date on the picker, so it is named.
-    out.push(names[src] + ': snapshot ' + hit.id + (asof && hit.id !== mode.slice(5) ? ' (its latest up to ' + mode.slice(5) + ')' : '') +
-             ', which knew through ' + thru);
+    out.push(names[src] + ': ' + rsVintDay(hit.id) + (asof && hit.id !== mode.slice(5) ? ' (its latest up to ' + mode.slice(5) + ')' : '') +
+             (before ? ' — the last read before ' + before : ''));
   });
   return out.join(' · ');
 }
@@ -831,13 +858,20 @@ function rsVintSelHtml(mode, cls, label){
   if (asof.length){
     // What an analyst actually asks — "where did each side stand on this date" — which is not
     // the same question as "read me this one file", because the two archives rarely share a day.
-    html += '<optgroup label="As of a date — each source&#39;s latest file">' +
+    // Every row used to spell out BOTH sources and both resolved dates, in full, with the year
+    // repeated three times — 44 characters to say something that is usually "both are current".
+    // Now a source is named only when its latest file is OLDER than the date picked, which is
+    // the only case that costs the reader anything, and it is named without its year.
+    html += '<optgroup label="As of a date — a source is named only when its file is older">' +
       asof.map(function(v){
-        var parts = ['summit', 'cons'].map(function(s){
+        var stale = ['summit', 'cons'].map(function(s){
           var hit = rsVintAsOf(s, v.id);
-          return RS_SRCN[s] + ' ' + (hit ? rsVintDay(hit.id) : '—');
-        });
-        return opt('asof:' + v.id, rsVintDay(v.id, v.label) + ' · ' + parts.join(' + '));
+          if (!hit) return RS_SRCN[s] + ' —';
+          return hit.id === v.id ? null : RS_SRCN[s] + ' ' + rsVintDayShort(hit.id);
+        }).filter(Boolean);
+        var b = rsVintBefore(v);
+        return opt('asof:' + v.id, rsVintDay(v.id, v.label) + (b ? ' · before ' + b : '') +
+          (stale.length ? ' · ' + stale.join(' · ') : ''));
       }).join('') + '</optgroup>';
   }
   // One file at a time, split BY ARCHIVE — the two keep separate calendars, so a single merged
@@ -853,7 +887,9 @@ function rsVintSelHtml(mode, cls, label){
     html += '<optgroup label="One file — ' + esc(g.label) + '">' +
       mx.vintages.slice().sort(function(a, b){ return a.id < b.id ? 1 : -1; }).map(function(v){
         var shared = rsVintSrcs(v.id).length > 1;
-        var label = rsVintLabel(v) + (shared ? ' · also a ' + g.other + ' file' : '');
+        // "in both" rather than "also a Street file": the group header already names the archive
+        // you are reading, so the only new fact is that this one date lights up the other too.
+        var label = rsVintLabel(v) + (shared ? ' · in both' : '');
         var sel = mode === v.id && !seen;
         if (sel) seen = true;
         return '<option value="' + esc(v.id) + '"' + (sel ? ' selected' : '') + '>' + esc(label) + '</option>';
@@ -861,7 +897,7 @@ function rsVintSelHtml(mode, cls, label){
   });
   return '<div class="rs-vint"><span class="rs-quick-l">' + esc(label || 'Estimates as of') + '</span>' +
     '<select class="' + esc(cls) + '" aria-label="Estimate vintage">' +
-      opt('preprint', 'Closest snapshot before each print') + html +
+      opt('preprint', 'Latest file before each print') + html +
     '</select></div>';
 }
 

@@ -168,9 +168,16 @@ Estimates have a *when*. `estMatrix` stores, per source and per view, one **peri
 snapshot, so the same chart can be read as of any point in history. Full contract:
 `docs/RESULTS_CONVENTIONS.md` §8. What matters for reuse:
 
-* **Three readings.** *Closest snapshot before each print* (the default, and what a hand-built
+* **Three readings.** *Latest file before each print* (the default, and what a hand-built
   column used to be); *as of a date* — each source resolved to its own latest file up to that day;
   *one file* — read exactly as archived, split by archive.
+* **Every option is labelled by the print it stands in front of**, not by what it already knew:
+  `Jul 31, 2026 · before 2Q26`, never `knew through 1Q26`. Same file — but "give me the read going
+  into 2Q26" is how the list gets scanned, and it is shorter, which a dropdown of dates needed.
+  Under *as of a date* a source is named **only when its own latest file is older** than the date
+  picked (`Apr 30, 2026 · before 1Q26 · Summit Feb 5`); spelling out both sources on every row cost
+  44 characters to say "both are current". Longest option went 44 → 42, and the single-file lists,
+  which are where a snapshot actually gets picked, went ~45 → 25.
 * **Sources keep separate calendars.** The Bloomberg workbook exports around each print; the
   Summit model is saved when the analyst saves it. On UBER they intersect **once** out of 18
   dates, which is why every option in the picker names its owner and why the as-of reading exists

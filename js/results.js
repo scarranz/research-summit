@@ -288,12 +288,24 @@ function rsGuideMid(m, i){ return (m.guideLo[i] == null || m.guideHi[i] == null)
 // Axis tick: negatives as −$50B, not $-50B; whole dollars only (zoomed bounds
 // arrive fractional — $135.13111B would eat the chart's left margin). `div` is
 // the metric's display scale from rsScaleOf (1000 → $B axis, 1 → $M axis).
-function rsTick(v, unit, div, cur){
-  var s = v < 0 ? '−' : '', a = Math.abs(v), c = cur || '$';
+// `ticks` is the array Chart.js hands the callback. It is used ONLY to decide how many
+// decimals a tick needs: whole dollars are right for a chart spanning $10B→$60B, and wrong
+// for one spanning $55B→$58B, where rounding prints "$58B" twice and the axis reads broken.
+// Derived from the actual tick STEP rather than from the values, so it follows the zoom.
+function rsTickDec(ticks){
+  if (!ticks || ticks.length < 2) return 0;
+  var step = Math.abs(ticks[1].value - ticks[0].value);
+  for (var i = 2; i < ticks.length; i++) step = Math.min(step, Math.abs(ticks[i].value - ticks[i - 1].value));
+  if (!isFinite(step) || step <= 0) return 0;
+  if (step >= 1) return 0;
+  return step >= 0.1 ? 1 : 2;
+}
+function rsTick(v, unit, div, cur, ticks){
+  var s = v < 0 ? '−' : '', a = Math.abs(v), c = cur || '$', d = rsTickDec(ticks);
   if (unit === 'eps') return s + c + (+a.toFixed(2));
-  if (unit === 'pct') return s + Math.round(a) + '%';
-  if (unit === 'count') return s + Math.round(a).toLocaleString();
-  return s + c + Math.round(a) + (div === 1000 ? 'B' : 'M');
+  if (unit === 'pct') return s + a.toFixed(d) + '%';
+  if (unit === 'count') return s + (d ? a.toFixed(d) : Math.round(a).toLocaleString());
+  return s + c + (d ? a.toFixed(d) : Math.round(a)) + (div === 1000 ? 'B' : 'M');
 }
 function rsWin(k, m){
   var st = rsSt(k), n = m.periods.length;
@@ -542,6 +554,41 @@ function rsGrowArr(sk, m, series, amt){
 }
 function rsIsGrow(k){ return rsSt(k).mode === 'grow'; }
 function rsGrowAmt(k){ return rsIsGrow(k) && rsSt(k).growUnit === 'amt'; }
+// ─── Margin as a READING MODE (SAB, Aug 11 2026) ──────────────────────────────
+// The margin used to be a line on a second axis, available only outside Top Line and only
+// as a legend chip. That made it a decoration on the level chart rather than a way of
+// reading it — you could not see the margin ALONE, at a scale where 40bps is visible,
+// which is exactly the question Margins & Profitability exists to ask. It is now the third
+// mode beside the level and growth, offered wherever the metric declares `marginOf`, so
+// the same block can be read three ways without a second chart.
+function rsHasMargin(k, m){ return !!(m.marginOf && m.unit !== 'eps' && rsView(k).metrics[m.marginOf]); }
+function rsIsMargin(k){ return rsSt(k).mode === 'margin'; }
+// The plotted series for the block's CURRENT mode. One place, so the chart, the tooltip and
+// the y-axis can never disagree about what is on screen — which is exactly how the tooltip
+// came to be reporting levels under a growth chart.
+function rsModeArr(k, m, name){
+  if (rsIsMargin(k)) return rsMarginArr(k, m, name);
+  if (rsIsGrow(k))   return rsGrowArr(k, m, name, rsGrowAmt(k));
+  return m[name] || null;
+}
+// Is the plotted number a PERCENTAGE? Everything derived is, except growth-as-amount —
+// which is a currency delta and has to be scaled, ticked and formatted like money.
+function rsIsPctMode(k){ return rsIsMargin(k) || (rsIsGrow(k) && !rsGrowAmt(k)); }
+// How a value reads in the current mode. A margin is a level ("6.2%"), so it carries no
+// sign; growth is a move ("+24.1%") and always does.
+function rsModeFmt(k, m, v){
+  if (v == null) return '—';
+  if (rsIsMargin(k)) return v.toFixed(1) + '%';
+  if (rsIsGrow(k))   return rsGrowAmt(k) ? rsFmtD(m, v) : ((v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '%');
+  return rsFmt(m, v);
+}
+// A DIFFERENCE between two values in the current mode. Percentages differ in percentage
+// POINTS; levels and amounts differ in their own units.
+function rsModeDiff(k, m, v){
+  if (v == null) return '—';
+  if (rsIsPctMode(k)) return (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + ' pp';
+  return rsFmtD(m, v);
+}
 function rsMarginArr(sk, m, series){
   if (!m.marginOf || m.unit === 'eps') return null;
   var d = rsView(sk).metrics[m.marginOf]; if (!d) return null;
@@ -585,6 +632,11 @@ export function resultsHtml(ticker){
   _rs.growth = 'yoy';
   _rs.sec = {};
   _rs.evo = null;
+  // The scorecard and the walk hold their own metric/period/vintage now, so they have to be
+  // dropped with the rest when the pane is rebuilt for another dataset — a stale metric key
+  // from the previous ticker would otherwise survive into a view that has no such line.
+  _rs.surp = null;
+  _rs.conv = null;
   return rsBody();
 }
 
@@ -597,7 +649,10 @@ function rsBody(){
   h += rsTopRowHtml();
   h += '<div class="ov-foot rs-vintnote" id="rsVintNote">' + esc(rsVintNote()) + '</div>';
   h += '<div id="rsBlocks">' + rsBlocksHtml() + '</div>';
-  if (d.surprise !== false && d.views.q && rsSurpGroups().length) h += rsSurpBlockHtml();
+  // The scorecard no longer requires a quarterly view — it carries its own period axis now.
+  if (d.surprise !== false && (d.views.q || d.views.y) && rsSurpGroups().length) h += rsSurpBlockHtml();
+  // …and under it, the same prints read the other way round: one period, every snapshot.
+  h += '<div id="rsConvHost">' + rsConvBlockHtml() + '</div>';
   h += '<div class="ov-foot" id="rsViewNote">' + esc(rsView().note || '') + '</div>';
   h += '<div class="ov-foot">' + esc(d.source) + '</div>';
   h += '</div>';
@@ -608,7 +663,7 @@ function rsBody(){
 // All that is left at the pane level is the vintage picker, which genuinely IS pane-wide:
 // it selects which snapshot of the estimates every block reads from, not how a block is read.
 function rsTopRowHtml(){
-  return '<div class="rs-toprow">' + rsVintSelHtml() + '</div>';
+  return '<div class="rs-toprow">' + rsVintSelHtml(_rs.vint || 'preprint', 'rs-vsel', 'Estimates as of') + '</div>';
 }
 // Every reading control lives INSIDE its block now, so one block can be quarterly dollars
 // while the next is annual growth. The level button carries that block's own unit rather than
@@ -630,7 +685,11 @@ function rsTableHeadHtml(k, m){
     ', ' + n + ' period' + (n === 1 ? '' : 's') + ' in the selected range</span>';
 }
 function rsBlockModesHtml(k, m){
-  var d = _rs.data, st = rsSt(k), grow = rsIsGrow(k);
+  var d = _rs.data, st = rsSt(k);
+  // A metric with no denominator has no margin — switching to one and then picking such a
+  // metric would otherwise leave the block in a mode it cannot draw.
+  if (st.mode === 'margin' && !rsHasMargin(k, m)) st.mode = 'level';
+  var grow = rsIsGrow(k), marg = rsIsMargin(k);
   var b = function(attr, val, on, label, title){
     return '<button type="button" class="rs-view' + (on ? ' active' : '') + '" data-' + attr + '="' + val + '"' +
       (title ? ' title="' + esc(title) + '"' : '') + '>' + label + '</button>';
@@ -639,8 +698,12 @@ function rsBlockModesHtml(k, m){
     return b('rsview', vn, rsViewName(k) === vn, esc(d.views[vn].label));
   }).join('') + '</div>';
   h += '<div class="rs-views">' +
-    b('rsmode', 'level', !grow, esc(rsLevelLabel(m)), 'The reported level in each period') +
-    b('rsmode', 'grow', grow, 'Growth', 'Growth over the base period, for every series at once') + '</div>';
+    b('rsmode', 'level', !grow && !marg, esc(rsLevelLabel(m)), 'The reported level in each period') +
+    b('rsmode', 'grow', grow, 'Growth', 'Growth over the base period, for every series at once') +
+    (rsHasMargin(k, m)
+      ? b('rsmode', 'margin', marg, 'Margin %',
+          (m.marginLabel || 'margin') + ' — every series over its OWN denominator (actual/actual, Summit/Summit, Street/Street)')
+      : '') + '</div>';
   if (grow){
     if (rsViewName(k) === 'q'){
       h += '<div class="rs-views">' +
@@ -701,9 +764,13 @@ function rsBlocksHtml(){
 // Vintage picker — one control for the whole pane (it governs every section block).
 // Rendered only when the dataset carries an `estMatrix`; datasets without one keep the
 // flat pre-print columns and show no control at all.
-function rsVintSelHtml(){
+// `mode` / `cls` are passed in because there are now TWO of these on the page: the pane-wide
+// one at the top, and the scorecard's own (SAB, Aug 11 2026). They keep separate selections,
+// so the picker cannot read its state from a single global.
+function rsVintSelHtml(mode, cls, label){
   var vints = rsVintages(); if (!vints.length) return '';
-  var mode = _rs.vint || 'preprint';
+  mode = mode || 'preprint';
+  cls = cls || 'rs-vsel';
   var opt = function(val, label){
     return '<option value="' + esc(val) + '"' + (mode === val ? ' selected' : '') + '>' + esc(label) + '</option>';
   };
@@ -739,8 +806,8 @@ function rsVintSelHtml(){
         return '<option value="' + esc(v.id) + '"' + (sel ? ' selected' : '') + '>' + esc(label) + '</option>';
       }).join('') + '</optgroup>';
   });
-  return '<div class="rs-vint"><span class="rs-quick-l">Estimates as of</span>' +
-    '<select class="rs-vsel" aria-label="Estimate vintage">' +
+  return '<div class="rs-vint"><span class="rs-quick-l">' + esc(label || 'Estimates as of') + '</span>' +
+    '<select class="' + esc(cls) + '" aria-label="Estimate vintage">' +
       opt('preprint', 'Closest snapshot before each print') + html +
     '</select></div>';
 }
@@ -772,6 +839,7 @@ function rsSelectHtml(k){
 function rsLegendHtml(k, m){
   var has = rsRefsFor(m), st = rsSt(k);
   var isTop = k === 'top';
+  var marg = rsIsMargin(k);
   function chip(key, color, label, line){
     var off = st.hidden[key];
     var sw = line ? '<span class="rs-leg-line" style="background:' + color + '"></span>' : '<span class="ave-leg-act" style="background:' + color + '"></span>';
@@ -781,14 +849,23 @@ function rsLegendHtml(k, m){
   if (has.summit) h += chip('summit', RS_SUMMIT, 'Summit model');
   if (has.cons)   h += chip('cons', RS_CONS, 'Consensus');
   // Label the chip for what the company actually gives: a range, or a single number.
-  if (has.guide){
+  // In MARGIN mode there is no guidance band to draw: a guided margin would need the company
+  // to have guided the denominator too, and pairing guideLo with guideLo is not the low end of
+  // a margin range — it is a corner of it. Say so rather than silently dropping the chip.
+  if (marg){
+    if (has.guide) h += '<span class="rs-noguide" title="The company guides this line in ' + esc(rsCurName(m)) +
+      ', not as a margin — and dividing one end of a guided range by one end of another is a corner of the band, not the band. The guidance range is on the level chart.">⚑ Guidance is not a margin</span>';
+  }
+  else if (has.guide){
     var anyRange = m.guideLo.some(function(v, i){ return v != null && m.guideHi[i] != null && v !== m.guideHi[i]; });
     h += chip('guide', 'rgba(62,90,130,0.3)', anyRange ? 'Guidance range' : 'Guidance (single number)');
   }
   // Make the ABSENCE of guidance loud and explicit — a company (or a line) with no numeric guide gets
   // an amber badge, so no reader is left guessing why there is no guidance band (§5.5).
   else h += '<span class="rs-noguide" title="This company issued no numeric guidance for this line/period — so there is no guidance band to score against (only Street and Summit).">⚑ No company guidance</span>';
-  if (!isTop && m.marginOf && m.unit !== 'eps') h += chip('margin', RS_ACT, esc(m.marginLabel || 'margin') + ' %', true);
+  // The margin LINE chip only exists in level mode — in margin mode the margin IS the chart,
+  // and in growth mode it is suppressed (two unrelated percentages on one axis).
+  if (!isTop && !marg && !rsIsGrow(k) && rsHasMargin(k, m)) h += chip('margin', RS_ACT, esc(m.marginLabel || 'margin') + ' %', true);
   h += '<span class="tech-leg-i" style="margin-left:auto">▲ beat · ▼ miss · click a chip to hide it</span>';
   return h;
 }
@@ -807,21 +884,28 @@ function rsBuildChart(k){
   var dec = m.unit === 'eps' ? 2 : 1;
   var div = rsScaleOf(m);
   var scale = function(v){ return v == null ? null : (m.unit === 'eps' ? v : v/div); };
-  // Growth mode replaces every series with its growth over the lag. As a percentage the
-  // values are already comparable, so they are NOT scaled; as an amount they are the same
-  // units as the level and scale with it.
-  var grow = rsIsGrow(k), amt = rsGrowAmt(k);
-  var gscale = amt ? scale : function(v){ return v; };
-  var ser = function(name){ return grow ? (rsGrowArr(k, m, name, amt) || []).map(gscale) : (m[name] || []).map(scale); };
+  // Each mode replaces every series with its own transform (growth over the lag, or the
+  // margin over the metric's denominator). Percentages are already comparable so they are
+  // NOT scaled; growth-as-an-amount is in the metric's own units and scales with them.
+  var grow = rsIsGrow(k), amt = rsGrowAmt(k), marg = rsIsMargin(k), pctMode = rsIsPctMode(k);
+  var mscale = pctMode ? function(v){ return v; } : scale;
+  // `raw` is the plotted number BEFORE display scaling — what the tooltip and the table
+  // quote. `ser` is the same thing scaled for the axis. Keeping the two derived from one
+  // function is the fix for the tooltip reporting levels under a growth chart.
+  var raw = function(name){ return rsModeArr(k, m, name) || []; };
+  var ser = function(name){ return raw(name).map(mscale); };
   var cur = rsCur(m);
-  var unitLbl = m.unit === 'eps'   ? cur
-              : m.unit === 'pct'   ? '%'
+  var unitLbl = marg              ? '%'
+              : m.unit === 'eps'  ? cur
+              : m.unit === 'pct'  ? '%'
               : m.unit === 'count' ? (m.unitLabel || 'count')
               : (div === 1000 ? cur + 'B' : cur + 'M');
   function sl(a){ return a.slice(lo, hi + 1); }
 
   var datasets = [], needY2 = false;
-  if (has.guide && !st.hidden.guide){
+  // Guidance is suppressed in MARGIN mode — see the legend note: the company guides the
+  // line, not the ratio, and the corner of two guided ranges is not a guided margin.
+  if (has.guide && !marg && !st.hidden.guide){
     // A guide can be a RANGE (Amazon, Lyft) or a single POINT (Spotify guides one
     // number per metric, not a band). A point guide has guideLo === guideHi, which
     // as a floating bar is zero pixels tall — i.e. invisible. So the two cases get
@@ -855,9 +939,10 @@ function rsBuildChart(k){
   if (has.summit && !st.hidden.summit) datasets.push({ label: 'Summit model', data: sl(ser('summit')), backgroundColor: RS_SUMMIT, borderRadius: 3, maxBarThickness: 26, order: 4 });
   if (has.cons && !st.hidden.cons)     datasets.push({ label: 'Consensus', data: sl(ser('cons')), backgroundColor: RS_CONS, borderRadius: 3, maxBarThickness: 26, order: 5 });
 
-  // Margin lines are suppressed in growth mode: the left axis is already a percentage there,
+  // Margin lines are suppressed in growth mode: the main axis is already a percentage there,
   // and two unrelated percentages sharing one chart is how a reader mistakes one for the other.
-  if (!grow && !isTop && !st.hidden.margin && m.marginOf && m.unit !== 'eps'){
+  // They are suppressed in margin mode for the opposite reason — there the margin IS the bars.
+  if (!grow && !marg && !isTop && !st.hidden.margin && rsHasMargin(k, m)){
     var ma = rsMarginArr(k, m, 'act'), ms = rsMarginArr(k, m, 'summit'), mc = rsMarginArr(k, m, 'cons');
     if (ma && ma.some(function(v){ return v != null; })){
       needY2 = true;
@@ -881,24 +966,31 @@ function rsBuildChart(k){
 
   var tEl = document.getElementById('rsChartT-' + k);
   if (tEl) tEl.innerHTML = esc(m.label) + ' — ' +
-    (grow ? esc(rsGrowLabel(k)) + ' <span>(' + (amt ? unitLbl + ' added over the base period' : 'percent') +
+    (marg ? esc(m.marginLabel || 'margin') + ' <span>(percent per period · each series over its OWN denominator — actual/actual, Summit/Summit, Street/Street · hover a period for every series)</span>'
+    : grow ? esc(rsGrowLabel(k)) + ' <span>(' + (amt ? unitLbl + ' added over the base period' : 'percent') +
             ' · every series measured against the reported period ' + rsLook(k) +
             (rsViewName(k) === 'q' ? (rsLook(k) === 1 ? ' quarter' : ' quarters') : ' year') + ' back)</span>'
-          : 'actual vs expectations <span>(' + unitLbl + ' per period · ' + (isTop ? '' : 'margin lines on the right axis · ') + 'hover a period for every series)</span>');
+          : 'actual vs expectations <span>(' + unitLbl + ' per period · ' + (isTop ? '' : 'margin lines on the outer right axis · ') + 'hover a period for every series)</span>');
 
   // Forward (estimate) periods: the reported labels render muted grey here; the FORWARD labels are
   // hidden (callback → '') and the rsFwdZone plugin redraws them inside a highlighted bubble, over a
   // shaded "FORECAST" zone — so old-vs-forward is unmistakable.
   var lastA = rsLastAct(m);
   var fwdFrom = (lastA + 1 > hi) ? -1 : Math.max(0, (lastA + 1) - lo);
+  // ── Y AXES ON THE RIGHT (SAB, Aug 11 2026) ──────────────────────────────────
+  // Every y-axis in the pane reads on the right-hand edge. The eye lands on the most recent
+  // period first — it is the right-most bar and the one the reader came for — and having the
+  // scale right there means no traverse back across the whole history to decode it. Where a
+  // block carries two axes they STACK on the right (`weight` decides the order: the primary
+  // inboard against the plot, the margin axis outboard of it), rather than one per side.
   var scales = {
     x: { grid: { display: false }, ticks: { color: 'rgba(80,90,104,0.9)', font: { size: 11 }, autoSkip: false,
         callback: function(v, i){ return (fwdFrom >= 0 && i >= fwdFrom) ? '' : this.getLabelForValue(v); } } },
-    y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
-      callback: function(v){ return (grow && !amt) ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div, m.cur); } } }
+    y: { position: 'right', weight: 0, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
+      callback: function(v, i, ts){ return pctMode ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div, m.cur, ts); } } }
   };
   if (st.yr){ scales.y.min = st.yr[0]; scales.y.max = st.yr[1]; }
-  if (needY2) scales.y2 = { position: 'right', grid: { display: false },
+  if (needY2) scales.y2 = { position: 'right', weight: 1, grid: { display: false },
     ticks: { font: { size: 11 }, callback: function(v){ return v + '%'; } } };
 
   st.chart = new Chart(el.getContext('2d'), {
@@ -912,24 +1004,37 @@ function rsBuildChart(k){
       plugins: {
         legend: { display: false },
         rsFwdZone: { from: fwdFrom },
+        // ── The tooltip reads in the CURRENT MODE (SAB, Aug 11 2026) ──────────────
+        // It used to quote `m.act` / `m.summit` / `m.cons` straight from the dataset, which
+        // meant a growth chart hovered as dollars: the bar said +24.1% and the tooltip said
+        // $57.3B. Every line now comes off `raw()` — the same transform the bars are drawn
+        // from — so the number under the cursor is the number on the screen. The surprise
+        // clause follows too: percentages differ in percentage POINTS, not in percent.
         tooltip: {
           callbacks: {
             label: function(ctx){
               var i = ctx.dataIndex + lo;
+              var gl = raw('guideLo'), gh = raw('guideHi');
               if (ctx.dataset.label === 'Guidance range'){
-                return 'Guidance: ' + rsFmt(m, m.guideLo[i]) + ' – ' + rsFmt(m, m.guideHi[i]);
+                return (grow ? 'Guidance implies: ' : 'Guidance: ') +
+                  rsModeFmt(k, m, gl[i]) + ' – ' + rsModeFmt(k, m, gh[i]);
               }
               if (ctx.dataset.label === 'Guidance'){   // a single guided number, no range
-                return 'Guidance: ' + rsFmt(m, m.guideLo[i]);
+                return (grow ? 'Guidance implies: ' : 'Guidance: ') + rsModeFmt(k, m, gl[i]);
               }
               if (ctx.dataset.yAxisID === 'y2'){
                 return ctx.dataset.label + ': ' + (ctx.parsed.y == null ? '—' : ctx.parsed.y.toFixed(1) + '%');
               }
-              var raw = { 'Actual': m.act, 'Summit model': m.summit, 'Consensus': m.cons }[ctx.dataset.label];
-              var line = ctx.dataset.label + ': ' + rsFmt(m, raw ? raw[i] : null);
-              if (ctx.dataset.label !== 'Actual' && raw && raw[i] != null && m.act[i] != null){
-                var s = rsSurp(m.act[i], raw[i]);
-                line += '  (actual ' + (s >= 0 ? '+' : '−') + Math.abs(s).toFixed(dec) + '% · ' + rsFmtD(m, m.act[i] - raw[i]) + ')';
+              var key = { 'Actual': 'act', 'Summit model': 'summit', 'Consensus': 'cons' }[ctx.dataset.label];
+              if (!key) return ctx.dataset.label + ': ' + (ctx.parsed.y == null ? '—' : ctx.parsed.y);
+              var arr = raw(key), aArr = raw('act');
+              var line = ctx.dataset.label + ': ' + rsModeFmt(k, m, arr[i]);
+              if (key !== 'act' && arr[i] != null && aArr[i] != null){
+                var d = aArr[i] - arr[i];
+                line += pctMode
+                  ? '  (actual ' + rsModeDiff(k, m, d) + ')'
+                  : '  (actual ' + (rsSurp(aArr[i], arr[i]) >= 0 ? '+' : '−') +
+                    Math.abs(rsSurp(aArr[i], arr[i])).toFixed(dec) + '% · ' + rsFmtD(m, d) + ')';
               }
               return line;
             }
@@ -969,7 +1074,12 @@ function rsAttachBrush(el, chart, onX, onY, onReset){
     if (ev.button !== 0) return;
     var r0 = el.getBoundingClientRect(), w0 = wrap.getBoundingClientRect();
     var area = chart.chartArea;
-    var forcedY = ((ev.clientX - r0.left) < area.left) || !onX;
+    // Starting the drag on an AXIS STRIP always means a y-drag. The strips are outside the
+    // plot on either side, and since the y-axes moved to the right (SAB, Aug 11 2026) the
+    // live one is the right strip — testing only the left made the gesture silently dead
+    // exactly where the scale now is.
+    var onAxis = (ev.clientX - r0.left) < area.left || (ev.clientX - r0.left) > area.right;
+    var forcedY = onAxis || !onX;
     var vertical = forcedY ? true : null;   // null = direction not decided yet
     var startX = ev.clientX, startY = ev.clientY;
     var box = null;
@@ -1629,8 +1739,10 @@ function rsBuildEvo(k){
       },
       scales: {
         x: { grid: { display: false }, ticks: { font: { size: 11 } } },
-        y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
-          callback: function(v){ return pct ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div, m.cur); } },
+        // Right-hand axis, like every other chart in Results and Estimates (SAB, Aug 11 2026):
+        // the latest snapshot is the right-most point and the scale now sits beside it.
+        y: { position: 'right', grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 },
+          callback: function(v, i, ts){ return pct ? (+v.toFixed(1)) + '%' : rsTick(v, m.unit, div, m.cur, ts); } },
           min: st.yr ? st.yr[0] : undefined, max: st.yr ? st.yr[1] : undefined }
       }
     }
@@ -1738,13 +1850,41 @@ var RS_SRCS = ['act', 'summit', 'cons', 'guide'];
 var RS_SRC_LABEL = { act: 'Actual', summit: 'Summit', cons: 'Consensus', guide: 'Guidance (mid)' };
 var RS_SRC_SHORT = { act: 'actual', summit: 'Summit', cons: 'Consensus', guide: 'guidance mid' };
 var RS_SRC_COLOR = { act: RS_ACT, summit: RS_SUMMIT, cons: RS_CONS, guide: 'rgba(62,90,130,0.8)' };
-function rsSrcArr(m, key){
+// ─── The scorecard reads on its OWN axes (SAB, Aug 11 2026) ───────────────────
+// This block used to be hard-wired to the quarterly view and to whatever vintage the pane's
+// picker had selected. Both were wrong for what it is: a per-print scorecard is a different
+// question from the blocks above it — "how did the year land" is asked annually, and "how did
+// the print land against the Street as it stood in April" is asked of a specific file, not of
+// whatever the reader last picked upstairs. So it carries its own Quarterly/Annual toggle and
+// its own snapshot picker, and neither one touches the rest of the pane.
+function rsSurpViewName(){
+  var st = rsSurpSt(), d = _rs.data;
+  var n = st.view || (d.views.q ? 'q' : 'y');
+  return d.views[n] ? n : (d.views.q ? 'q' : 'y');
+}
+function rsSurpView(){ return _rs.data.views[rsSurpViewName()]; }
+// Growth inside this block is always over ONE year: four quarters in the quarterly view, one
+// year in the annual one. It never follows a block's YoY/QoQ pill — that belongs to that block.
+function rsSurpLag(){ return rsSurpViewName() === 'q' ? 4 : 1; }
+// A series for the scorecard, resolved through ITS OWN vintage selection rather than the
+// pane's. `m.summit` / `m.cons` are the arrays rsApplyVintage rewrote for the pane, so reading
+// them here would silently inherit the upstairs pick; rsSeriesFor resolves from the matrix
+// without mutating anything, falling back to the hand-authored flats (`_flat_*`) exactly as
+// the pane does. `mkey` is needed because the matrix is keyed by metric, not by object.
+function rsSrcArr(m, key, mkey){
   if (key === 'guide') return m.guideLo ? m.periods.map(function(_, i){ return rsGuideMid(m, i); }) : null;
+  if (key === 'act') return m.act || null;
+  var mode = rsSurpSt().vint;
+  if (mkey && mode && _rs.data && _rs.data.estMatrix){
+    var s = rsSeriesFor(rsSurpViewName(), m, mkey, key, mode);
+    if (s) return s;
+    return m['_flat_' + key] || m[key] || null;
+  }
   return m[key] || null;
 }
-function rsSrcHas(m, key){ var a = rsSrcArr(m, key); return !!a && a.some(function(v){ return v != null; }); }
-function rsSurpPairOk(m, a, b){
-  var A = rsSrcArr(m, a), B = rsSrcArr(m, b);
+function rsSrcHas(m, key, mkey){ var a = rsSrcArr(m, key, mkey); return !!a && a.some(function(v){ return v != null; }); }
+function rsSurpPairOk(m, a, b, mkey){
+  var A = rsSrcArr(m, a, mkey), B = rsSrcArr(m, b, mkey);
   if (!A || !B) return false;
   return m.periods.some(function(_, i){ return A[i] != null && B[i] != null; });
 }
@@ -1752,15 +1892,16 @@ function rsSurpPairOk(m, a, b){
 // Deliberately independent of the current base/comparator choice, so changing the
 // comparison never makes the metric disappear from the dropdown mid-session.
 function rsSurpGroups(){
-  var v = _rs.data.views.q, out = [];
+  var v = rsSurpView(), out = [];
+  if (!v) return out;
   v.sections.forEach(function(cfg){
     rsSecGroups(cfg).forEach(function(g){
       var keys = g.keys.filter(function(k){
         var m = v.metrics[k]; if (!m) return false;
-        var srcs = RS_SRCS.filter(function(s){ return rsSrcHas(m, s); });
+        var srcs = RS_SRCS.filter(function(s){ return rsSrcHas(m, s, k); });
         for (var i = 0; i < srcs.length; i++)
           for (var j = i + 1; j < srcs.length; j++)
-            if (rsSurpPairOk(m, srcs[i], srcs[j])) return true;
+            if (rsSurpPairOk(m, srcs[i], srcs[j], k)) return true;
         return false;
       });
       if (keys.length) out.push({ label: g.label, keys: keys });
@@ -1773,31 +1914,34 @@ function rsSurpGroups(){
 // chart, which runs the same rsBody) would duplicate them — and a bare getElementById then
 // returns whichever is first in the DOM, which is the hidden one, and the chart silently
 // never builds. Scope to the wrap that initResults last wired instead.
-function rsSurpEl(id){
+function rsPaneEl(id){
   var root = _rs.wrap && _rs.wrap.isConnected ? _rs.wrap : document;
   return root.querySelector('#' + id);
 }
+function rsSurpEl(id){ return rsPaneEl(id); }
 function rsSurpSt(){
   if (!_rs.surp) _rs.surp = { metric: null, win: null, yr: null, tbl: false, mode: 'pct', chart: null,
+    view: null, vint: 'preprint',
     base: 'act', cmp: { summit: true, cons: true, guide: false } };
   return _rs.surp;
 }
 // Comparators actually drawn: checked, present on this metric, and not the base itself.
 function rsSurpCmps(m){
   var st = rsSurpSt();
-  return RS_SRCS.filter(function(s){ return s !== st.base && st.cmp[s] && rsSurpPairOk(m, st.base, s); });
+  return RS_SRCS.filter(function(s){ return s !== st.base && st.cmp[s] && rsSurpPairOk(m, st.base, s, st.metric); });
 }
 function rsSurpM(){
   var st = rsSurpSt();
   var all = rsSurpGroups().reduce(function(a, g){ return a.concat(g.keys); }, []);
   if (!st.metric || all.indexOf(st.metric) < 0) st.metric = all[0];
-  return _rs.data.views.q.metrics[st.metric];
+  return st.metric ? rsSurpView().metrics[st.metric] : null;
 }
 // Last period with a reported actual — the surprise story ends there.
 function rsSurpLr(m){
   // Follows the BASE series, not always the actual: comparing Summit against consensus is a
   // story about forward periods, and capping at the last print would hide all of them.
-  var a = rsSrcArr(m, rsSurpSt().base) || m.act || [], lr = 0;
+  var st = rsSurpSt();
+  var a = rsSrcArr(m, st.base, st.metric) || m.act || [], lr = 0;
   for (var i = 0; i < m.periods.length; i++) if (a[i] != null) lr = i;
   return lr;
 }
@@ -1905,24 +2049,36 @@ function rsSurpTableHeadHtml(){
 }
 function rsSurpBlockHtml(){
   var m = rsSurpM(), st = rsSurpSt();
+  if (!m) return '';
+  var sv = rsSurpView();
   var h = '<div class="rs-block" data-rssurp>';
   h += '<div class="rs-block-top"><div class="rs-block-h">Actuals vs Estimates</div>' +
     '<select class="rs-msel rs-ssel" aria-label="Metric">' + rsSurpGroups().map(function(g){
       return '<optgroup label="' + esc(g.label) + '">' + g.keys.map(function(k){
-        return '<option value="' + k + '"' + (k === st.metric ? ' selected' : '') + '>' + esc(_rs.data.views.q.metrics[k].label) + '</option>';
+        return '<option value="' + k + '"' + (k === st.metric ? ' selected' : '') + '>' + esc(sv.metrics[k].label) + '</option>';
       }).join('') + '</optgroup>';
     }).join('') + '</select>' +
+    // This block's OWN period axis — nothing here follows the blocks above.
+    '<div class="rs-views">' + Object.keys(_rs.data.views).map(function(vn){
+      return '<button type="button" class="rs-view' + (rsSurpViewName() === vn ? ' active' : '') +
+        '" data-rssurpview="' + vn + '">' + esc(_rs.data.views[vn].label) + '</button>';
+    }).join('') + '</div>' +
     '<div class="rs-views" id="rsSurpMode"></div></div>';
+  // …and its own snapshot. Scoring the 2Q26 print against the Street as it stood on Apr 30 is
+  // a different question from scoring it against the last file before the print, and neither
+  // is the question the blocks upstairs are set to.
+  var vsel = rsVintSelHtml(st.vint, 'rs-svsel', 'Estimates as of');
+  if (vsel) h += '<div class="rs-surp-ctl rs-surp-vint">' + vsel + '</div>';
   // Base + comparators: any combination of the four series. The base is what gets judged
   // (default the actual); every checked comparator becomes its own bar per period.
   var cmps = rsSurpCmps(m);
   h += '<div class="rs-surp-ctl"><span class="rs-quick-l">Compare</span>' +
-    '<select class="rs-bsel" aria-label="Base series">' + RS_SRCS.filter(function(s){ return rsSrcHas(m, s); }).map(function(s){
+    '<select class="rs-bsel" aria-label="Base series">' + RS_SRCS.filter(function(s){ return rsSrcHas(m, s, st.metric); }).map(function(s){
       return '<option value="' + s + '"' + (s === st.base ? ' selected' : '') + '>' + esc(RS_SRC_LABEL[s]) + '</option>';
     }).join('') + '</select>' +
     '<span class="rs-quick-l">against</span>' +
     RS_SRCS.filter(function(s){ return s !== st.base; }).map(function(s){
-      var avail = rsSurpPairOk(m, st.base, s);
+      var avail = rsSurpPairOk(m, st.base, s, st.metric);
       var on = avail && !!st.cmp[s];
       return '<button type="button" class="rs-cmp' + (on ? ' on' : '') + (avail ? '' : ' na') + '" data-rssurpcmp="' + s + '"' +
         (avail ? '' : ' disabled title="' + esc(RS_SRC_LABEL[s]) + ' has no overlapping period with the base on this line"') + '>' +
@@ -1971,11 +2127,11 @@ function rsBuildSurp(){
   var w = rsSurpWin(m), lo = w[0], hi = w[1];
   var div = rsScaleOf(m);
   var pctMode = st.mode !== 'usd';
-  var baseArr = rsSrcArr(m, st.base) || [];
+  var baseArr = rsSrcArr(m, st.base, st.metric) || [];
   var cmps = rsSurpCmps(m);
   // One {pcts, dols} pair per comparator, over the selected window.
   var series = cmps.map(function(s){
-    var A = rsSrcArr(m, s) || [], pcts = [], dols = [];
+    var A = rsSrcArr(m, s, st.metric) || [], pcts = [], dols = [];
     for (var i = lo; i <= hi; i++){
       var ok = (baseArr[i] != null && A[i] != null && A[i]);
       pcts.push(ok ? rsSurp(baseArr[i], A[i]) : null);
@@ -2013,7 +2169,7 @@ function rsBuildSurp(){
             var i = ctx.dataIndex + lo, sr = series[ctx.datasetIndex];
             if (!sr) return '';
             var s = sr.pcts[ctx.dataIndex], d = sr.dols[ctx.dataIndex];
-            var A = rsSrcArr(m, sr.src) || [];
+            var A = rsSrcArr(m, sr.src, st.metric) || [];
             return [
               RS_SRC_LABEL[st.base] + ': ' + rsFmt(m, baseArr[i]),
               RS_SRC_LABEL[sr.src] + ': ' + rsFmt(m, A[i]),
@@ -2024,12 +2180,12 @@ function rsBuildSurp(){
       },
       scales: {
         x: { grid: { display: false }, ticks: { font: { size: 11 } } },
-        y: { grid: { color: 'rgba(0,0,0,0.05)' },
+        y: { position: 'right', grid: { color: 'rgba(0,0,0,0.05)' },
           min: st.yr ? st.yr[0] : undefined, max: st.yr ? st.yr[1] : undefined,
           ticks: { font: { size: 11 },
-          callback: function(v){
-            if (pctMode) return (v < 0 ? '−' : '') + Math.abs(v).toFixed(0) + '%';
-            return rsTick(v, m.unit, div, rsCur(m));
+          callback: function(v, i, ts){
+            if (pctMode) return (v < 0 ? '−' : '') + Math.abs(v).toFixed(rsTickDec(ts)) + '%';
+            return rsTick(v, m.unit, div, rsCur(m), ts);
           } } }
       }
     }
@@ -2080,10 +2236,11 @@ function rsSurpTableRender(m, lo, hi, div){
     if (m.unit === 'eps') return Number(v).toFixed(2);
     return (v / div).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   }
-  // Growth is always YoY here (lag 4, quarterly data) — independent of the
-  // Results pane's YoY/QoQ toggle, which belongs to that pane's state.
-  function g(arr, base, i){ if (i - 4 < 0) return null; var a = arr[i], b = base[i - 4]; if (a == null || b == null || !b) return null; return (a - b) / Math.abs(b) * 100; }
-  function gd(arr, base, i){ if (i - 4 < 0) return null; var a = arr[i], b = base[i - 4]; if (a == null || b == null) return null; return a - b; }
+  // Growth is always over ONE YEAR here — four quarters in the quarterly view, one year in
+  // the annual one — and independent of any block's YoY/QoQ pill, which belongs to that block.
+  var lag = rsSurpLag();
+  function g(arr, base, i){ if (i - lag < 0) return null; var a = arr[i], b = base[i - lag]; if (a == null || b == null || !b) return null; return (a - b) / Math.abs(b) * 100; }
+  function gd(arr, base, i){ if (i - lag < 0) return null; var a = arr[i], b = base[i - lag]; if (a == null || b == null) return null; return a - b; }
   function pctDollar(p, d){
     if (p == null) return '<span class="rs-ft-nil">—</span>';
     return rsPctHtml(p, dec) + ' <span class="rs-ft-dim">· ' + rsFmtD(m, d) + '</span>';
@@ -2093,12 +2250,12 @@ function rsSurpTableRender(m, lo, hi, div){
     var first = null, last = null, fi = null, li = null;
     idx.forEach(function(i){ var v = m.act[i]; if (v != null){ if (first == null){ first = v; fi = i; } last = v; li = i; } });
     if (first == null || li === fi || first <= 0 || last <= 0) return '';
-    var years = (li - fi) / 4;
+    var years = (li - fi) / lag;
     return years > 0 ? 'CAGR ' + sgn((Math.pow(last / first, 1 / years) - 1) * 100) : '';
   }
-  var st = rsSurpSt(), baseArr = rsSrcArr(m, st.base) || [], cmps = rsSurpCmps(m);
+  var st = rsSurpSt(), baseArr = rsSrcArr(m, st.base, st.metric) || [], cmps = rsSurpCmps(m);
   function sumSurprise(src){
-    var A = rsSrcArr(m, src) || [], pcts = [], dols2 = [], above = 0, below = 0;
+    var A = rsSrcArr(m, src, st.metric) || [], pcts = [], dols2 = [], above = 0, below = 0;
     idx.forEach(function(i){
       if (A[i] == null || baseArr[i] == null || !A[i]) return;
       var dv = baseArr[i] - A[i];
@@ -2131,7 +2288,7 @@ function rsSurpTableRender(m, lo, hi, div){
     h += row('YoY growth', function(i){ return pctDollar(g(m.act, m.act, i), gd(m.act, m.act, i)); }, 'sub',
       sumGrowth(function(i){ return g(m.act, m.act, i); }));
   cmps.forEach(function(src){
-    var A = rsSrcArr(m, src) || [];
+    var A = rsSrcArr(m, src, st.metric) || [];
     h += row(RS_SRC_LABEL[src], function(i){ return num(A[i]); }, 'main nb', '');
     if (m.act)
       h += row('YoY growth', function(i){ return pctDollar(g(A, m.act, i), gd(A, m.act, i)); }, 'sub nb',
@@ -2161,11 +2318,507 @@ function rsSurpTableRender(m, lo, hi, div){
   };
 }
 
+// ─── Road to the print — ONE period, EVERY snapshot (SAB, Aug 11 2026) ────────
+// Every other chart in Results puts periods on the x-axis and asks "how big was each one".
+// This one turns that ninety degrees: pick a single quarter or fiscal year, put the SNAPSHOT
+// DATES on the x-axis, and watch the two forecasts walk toward the number that eventually
+// printed — with the actual and the company's own guidance drawn as flat references across
+// the whole walk.
+//
+// The question it answers is the one a track record is actually made of, and it is not the
+// one the scorecard above answers. The scorecard says "the print beat consensus by 1.4%".
+// This says WHEN that gap opened: whether we were early and the Street came to us, whether
+// we drifted onto the Street's number in the last file before the print, and where both of
+// us sat relative to the range the company itself had signed up for. A model that is right
+// on the day and wrong for six months before it is a different model from one that held its
+// number — and only this view can tell them apart.
+//
+// ⚠ THE LAST READ IS NOT THE DAY BEFORE. The x-axis is the archived snapshots, and Bloomberg
+// exports around each print, so the right-most point is the last FILE before the print, not
+// the consensus the morning of it. On UBER's 2Q26 that is Jul 31 against an Aug 5 print —
+// five days, and the days that move most. The gap is named on screen rather than papered
+// over; when a day-before BBG pull lands in the archive it becomes another vintage and this
+// chart picks it up with no code change (SAB: "va a ser una parte muy importante").
+function rsConvSt(){
+  if (!_rs.conv) _rs.conv = { metric: null, view: null, period: null, mode: 'level',
+    base: 'act', unit: 'pct', yr: null, chart: null, tbl: false, hidden: {} };
+  return _rs.conv;
+}
+function rsConvViewName(){
+  var st = rsConvSt(), d = _rs.data;
+  var n = st.view || (d.views.q ? 'q' : 'y');
+  return d.views[n] ? n : (d.views.q ? 'q' : 'y');
+}
+function rsConvView(){ return _rs.data.views[rsConvViewName()]; }
+// Every archived snapshot across both sources, oldest first. The two keep separate calendars
+// (Bloomberg around each print, the model when the analyst saves it), so the axis is their
+// UNION and each line simply has holes where its own archive has no file that day.
+function rsAllVints(){
+  var seen = {}, out = [];
+  ['summit', 'cons'].forEach(function(src){
+    var mx = rsMatrix(src); if (!mx) return;
+    (mx.vintages || []).forEach(function(v){ if (!seen[v.id]){ seen[v.id] = 1; out.push(v); } });
+  });
+  return out.sort(function(a, b){ return a.id < b.id ? -1 : 1; });
+}
+function rsConvCells(src, view, mkey){
+  var mx = rsMatrix(src); if (!mx) return null;
+  return (mx[view] || {})[mkey] || null;
+}
+function rsConvHasM(view, mkey){
+  return ['summit', 'cons'].some(function(src){
+    var c = rsConvCells(src, view, mkey);
+    return !!c && Object.keys(c).length > 0;
+  });
+}
+function rsConvGroups(){
+  var v = rsConvView(), view = rsConvViewName(), out = [];
+  if (!v) return out;
+  v.sections.forEach(function(cfg){
+    rsSecGroups(cfg).forEach(function(g){
+      var keys = g.keys.filter(function(k){ return v.metrics[k] && rsConvHasM(view, k); });
+      if (keys.length) out.push({ label: g.label, keys: keys });
+    });
+  });
+  return out;
+}
+function rsConvM(){
+  var st = rsConvSt();
+  var all = rsConvGroups().reduce(function(a, g){ return a.concat(g.keys); }, []);
+  if (!st.metric || all.indexOf(st.metric) < 0) st.metric = all[0] || null;
+  return st.metric ? rsConvView().metrics[st.metric] : null;
+}
+// Only periods some snapshot actually forecast. Offering a period no archive ever covered
+// would open an empty chart and leave the reader deciding whether that is a bug.
+function rsConvPeriodIdx(m, mkey){
+  var view = rsConvViewName(), out = [];
+  m.periods.forEach(function(p, i){
+    var any = ['summit', 'cons'].some(function(src){
+      var c = rsConvCells(src, view, mkey); if (!c) return false;
+      return Object.keys(c).some(function(vid){ return c[vid][p] != null; });
+    });
+    if (any) out.push(i);
+  });
+  return out;
+}
+// Default to the most recent period that has ALREADY PRINTED — the walk you can score,
+// because it is the only kind with an actual at the end of it.
+function rsConvPi(m, mkey){
+  var st = rsConvSt(), avail = rsConvPeriodIdx(m, mkey);
+  if (!avail.length) return -1;
+  var i = st.period == null ? -1 : m.periods.indexOf(st.period);
+  if (i >= 0 && avail.indexOf(i) >= 0) return i;
+  var best = avail[avail.length - 1];
+  for (var j = avail.length - 1; j >= 0; j--) if (m.act[avail[j]] != null){ best = avail[j]; break; }
+  st.period = m.periods[best];
+  return best;
+}
+// The snapshots that were still FORECASTING this period, and the first one that already knew
+// it. A snapshot taken after the print is not a forecast of it — it is a transcription of the
+// result, and plotting it would draw a convergence that never happened.
+function rsConvVints(pi, m, mkey){
+  var view = rsConvViewName(), po = rsOrdIn(view, m.periods[pi]);
+  var pre = [], knew = null;
+  rsAllVints().forEach(function(v){
+    var la = v.lastActual && v.lastActual[view];
+    var lo = la == null ? -Infinity : rsOrdIn(view, la);
+    if (po == null || lo < po) pre.push(v);
+    else if (!knew) knew = v;
+  });
+  // ⚠ Drop the LEADING snapshots that carry no read of this period at all. Bloomberg's
+  // workbook only ever holds four forward quarters (`fq+1…fq+4`), so for a 2Q26 walk the
+  // 2023 and 2024 files are simply silent — and plotting them stretches the axis across
+  // three empty years, squeezing the walk that matters into the last inch of the chart.
+  // Only the LEADING run is cut: a hole in the middle is a real gap in an archive and stays
+  // visible as one.
+  var first = -1;
+  for (var i = 0; i < pre.length; i++){
+    var any = ['summit', 'cons'].some(function(src){
+      var c = rsConvCells(src, view, mkey);
+      return !!c && c[pre[i].id] && c[pre[i].id][m.periods[pi]] != null;
+    });
+    if (any){ first = i; break; }
+  }
+  return { pre: first < 0 ? [] : pre.slice(first), knew: knew };
+}
+function rsConvSeries(src, mkey, m, pi, vints){
+  var c = rsConvCells(src, rsConvViewName(), mkey); if (!c) return null;
+  var p = m.periods[pi];
+  return vints.map(function(v){ var row = c[v.id]; return (row && row[p] != null) ? row[p] : null; });
+}
+function rsConvIsDist(){ return rsConvSt().mode === 'dist'; }
+function rsConvIsPct(){ return rsConvIsDist() && rsConvSt().unit === 'pct'; }
+// What the distance is measured against, and whether it exists on this period.
+function rsConvBase(m, pi){
+  var st = rsConvSt();
+  if (st.base === 'guide') return (m.guideLo && m.guideHi) ? rsGuideMid(m, pi) : null;
+  return m.act ? m.act[pi] : null;
+}
+function rsConvDist(v, base){
+  if (v == null || base == null) return null;
+  return rsConvIsPct() ? (base === 0 ? null : (v - base) / Math.abs(base) * 100) : (v - base);
+}
+
+// A dashed marker on the last pre-print snapshot, with the size of the blind spot on it.
+// Reads `options.plugins.rsConvLast = { at, label }`.
+var rsConvLast = {
+  id: 'rsConvLast',
+  afterDatasetsDraw: function(chart, args, opts){
+    var at = opts && opts.at; if (at == null || at < 0) return;
+    var x = chart.scales.x, area = chart.chartArea, ctx = chart.ctx;
+    var px = x.getPixelForTick(at);
+    if (px == null || isNaN(px)) return;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(192,57,43,0.45)'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(px, area.top); ctx.lineTo(px, area.bottom); ctx.stroke();
+    ctx.setLineDash([]);
+    var label = opts.label || 'last read before the print', pad = 7;
+    ctx.font = '700 9px Inter, system-ui, sans-serif';
+    var w = ctx.measureText(label).width;
+    var bx = Math.min(px + 6, area.right - w - pad * 2 - 2), by = area.top + 5;
+    ctx.fillStyle = 'rgba(192,57,43,0.90)'; rsRR(ctx, bx, by, w + pad * 2, 15, 7); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, bx + pad, by + 8);
+    ctx.restore();
+  }
+};
+
+function rsConvHeadHtml(m, pi){
+  var st = rsConvSt(), nv = pi < 0 ? 0 : rsConvVints(pi, m, st.metric).pre.length;
+  var open = st.tbl === true;
+  return '<span class="rs-collap-ic">' + (open ? '▾' : '▸') + '</span>Snapshot detail' +
+    '<span class="rs-collap-sub">' + (open ? 'hide' : 'show') + ' · ' + (pi < 0 ? '—' : esc(m.periods[pi])) +
+    ', ' + nv + ' snapshot' + (nv === 1 ? '' : 's') + ' before the print</span>';
+}
+function rsConvBlockHtml(){
+  var d = _rs.data;
+  if (!d || !d.estMatrix) return '';                 // no archive ⇒ no walk to draw
+  var m = rsConvM();
+  if (!m) return '';
+  var st = rsConvSt(), mkey = st.metric, pi = rsConvPi(m, mkey);
+  if (pi < 0) return '';
+  var avail = rsConvPeriodIdx(m, mkey);
+  var dist = rsConvIsDist(), hasGuide = !!(m.guideLo && m.guideLo[pi] != null);
+
+  var h = '<div class="rs-block" data-rsconv>';
+  h += '<div class="rs-block-top"><div class="rs-block-h">Road to the print</div>' +
+    '<select class="rs-msel rs-csel" aria-label="Metric">' + rsConvGroups().map(function(g){
+      return '<optgroup label="' + esc(g.label) + '">' + g.keys.map(function(k){
+        return '<option value="' + k + '"' + (k === mkey ? ' selected' : '') + '>' + esc(rsConvView().metrics[k].label) + '</option>';
+      }).join('') + '</optgroup>';
+    }).join('') + '</select>' +
+    // Its own period axis, and inside it the one period being walked. Both are this block's
+    // alone — nothing here follows the blocks above or the scorecard.
+    '<div class="rs-views">' + Object.keys(d.views).map(function(vn){
+      return '<button type="button" class="rs-view' + (rsConvViewName() === vn ? ' active' : '') +
+        '" data-rsconvview="' + vn + '">' + esc(d.views[vn].label) + '</button>';
+    }).join('') + '</div>' +
+    '<select class="rs-msel rs-cpsel" aria-label="Period">' + avail.slice().reverse().map(function(i){
+      var reported = m.act[i] != null;
+      return '<option value="' + esc(m.periods[i]) + '"' + (i === pi ? ' selected' : '') + '>' +
+        esc(m.periods[i]) + (reported ? ' · reported' : ' · still forward') + '</option>';
+    }).join('') + '</select></div>';
+
+  // Row 2: how to read it. The level is the walk itself; "Distance" re-bases every point on
+  // the outcome, which is the form the track-record question actually takes.
+  var b = function(attr, val, on, label, title, dis){
+    return '<button type="button" class="rs-view' + (on ? ' active' : '') + '" data-' + attr + '="' + val + '"' +
+      (dis ? ' disabled' : '') + (title ? ' title="' + esc(title) + '"' : '') + '>' + label + '</button>';
+  };
+  var baseOk = rsConvBase(m, pi) != null;
+  h += '<div class="rs-block-modes"><div class="rs-modes">' +
+    '<div class="rs-views">' +
+      b('rsconvmode', 'level', !dist, esc(rsLevelLabel(m)), 'What each snapshot said the number would be') +
+      b('rsconvmode', 'dist', dist, 'Distance',
+        baseOk ? 'Every snapshot re-based on the outcome — how far each read sat from it'
+               : 'Nothing to measure against on this period yet', !baseOk) +
+    '</div>';
+  if (dist){
+    h += '<div class="rs-views">' +
+      b('rsconvbase', 'act', st.base === 'act', 'vs Actual', 'Distance from the reported figure',
+        !(m.act && m.act[pi] != null)) +
+      b('rsconvbase', 'guide', st.base === 'guide', 'vs Guidance mid',
+        'Distance from the midpoint of the company’s own guided range', !hasGuide) + '</div>';
+    h += '<div class="rs-views">' +
+      b('rsconvunit', 'pct', rsConvIsPct(), '%') +
+      b('rsconvunit', 'amt', !rsConvIsPct(), 'Amount') + '</div>';
+  }
+  h += '</div></div>';
+  h += '<div class="ave-leg" id="rsConvLegend">' + rsConvLegendHtml(m, pi) + '</div>';
+  h += '<div class="ov-chart-card">' +
+    '<div class="ov-chart-t" id="rsConvChartT"></div>' +
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="rsConvChart"></canvas></div>' +
+  '</div>';
+  h += '<div class="rs-collap" data-rsconvtbl>' +
+    '<button type="button" class="rs-collap-h" data-rsconvtblb>' + rsConvHeadHtml(m, pi) + '</button>' +
+    '<div class="rs-collap-b" id="rsConvTableBody"' + (st.tbl === true ? '' : ' hidden') + '>' +
+      '<div class="rs-tablewrap" id="rsConvTable"></div>' +
+    '</div></div>';
+  h += '<div class="ov-foot" id="rsConvNote"></div>';
+  h += '</div>';
+  return h;
+}
+function rsConvLegendHtml(m, pi){
+  var st = rsConvSt(), dist = rsConvIsDist();
+  function chip(key, color, label, dash){
+    var off = st.hidden[key];
+    var sw = dash ? '<span class="rs-leg-dash" style="color:' + color + '"></span>'
+                  : '<span class="rs-leg-line" style="background:' + color + '"></span>';
+    return '<button type="button" class="rs-leg' + (off ? ' off' : '') + '" data-rsconvleg="' + key + '" title="Show / hide">' + sw + esc(label) + '</button>';
+  }
+  var h = '';
+  if (rsMatrix('summit')) h += chip('summit', RS_SUMMIT, 'Summit model');
+  if (rsMatrix('cons'))   h += chip('cons', RS_CONS, 'Consensus');
+  var hasAct = !!(m.act && m.act[pi] != null);
+  var hasGuide = !!(m.guideLo && m.guideLo[pi] != null);
+  // In distance mode the base IS the zero line, so it is named there rather than chipped.
+  if (!dist && hasAct)   h += chip('act', RS_ACT, 'Reported (' + m.periods[pi] + ')', true);
+  if (!dist && hasGuide) h += chip('guide', 'rgba(62,90,130,0.7)', 'Guidance range', true);
+  if (dist && hasGuide && st.base === 'act') h += chip('guide', 'rgba(62,90,130,0.7)', 'Guidance range', true);
+  if (!hasAct)
+    h += '<span class="rs-noguide" title="This period has not printed yet, so there is no outcome to walk toward — only the forecasts moving.">⚑ ' + esc(m.periods[pi]) + ' has not printed</span>';
+  else if (!hasGuide)
+    h += '<span class="rs-noguide" title="The company issued no numeric guidance for this line in this period, so there is no guided range to place the reads against.">⚑ No company guidance</span>';
+  h += '<span class="tech-leg-i" style="margin-left:auto">x-axis = archived snapshots · click a chip to hide it</span>';
+  return h;
+}
+function rsBuildConv(){
+  var d = _rs.data;
+  if (!d || !d.estMatrix) return;
+  var m = rsConvM(); if (!m) return;
+  var st = rsConvSt(), mkey = st.metric, pi = rsConvPi(m, mkey);
+  if (pi < 0) return;
+  var el = rsPaneEl('rsConvChart');
+  if (!el || !el.offsetParent) return;
+  if (st.chart){ st.chart.destroy(); st.chart = null; }
+
+  var vv = rsConvVints(pi, m, mkey), vints = vv.pre;
+  if (!vints.length) return;
+  var period = m.periods[pi];
+  var dist = rsConvIsDist(), pct = rsConvIsPct();
+  var base = rsConvBase(m, pi);
+  if (dist && base == null){ st.mode = 'level'; dist = false; pct = false; }
+  var div = rsScaleOf(m);
+  // Percent distances are already comparable, so they are never scaled; everything else is
+  // in the metric's own units and scales with it.
+  var sc = function(v){ return v == null ? null : (pct ? v : (m.unit === 'eps' ? v : v / div)); };
+  var tr = function(v){ return dist ? rsConvDist(v, base) : v; };      // raw, unscaled
+  var pt = function(arr){ return (arr || []).map(function(v){ return sc(tr(v)); }); };
+  var flat = function(v){ return vints.map(function(){ return sc(tr(v)); }); };
+
+  var datasets = [];
+  var hasGuide = !!(m.guideLo && m.guideLo[pi] != null && m.guideHi && m.guideHi[pi] != null);
+  var isPointGuide = hasGuide && m.guideLo[pi] === m.guideHi[pi];
+  // Guidance first, so it sits behind everything: a band the forecasts walk inside of.
+  // In distance mode it only makes sense against the ACTUAL — re-basing the guidance on its
+  // own midpoint would draw a band around zero that says nothing.
+  var showGuide = hasGuide && !st.hidden.guide && (!dist || st.base === 'act');
+  if (showGuide){
+    if (isPointGuide){
+      datasets.push({ label: 'Guidance', data: flat(m.guideLo[pi]),
+        borderColor: 'rgba(62,90,130,0.75)', borderWidth: 1.5, borderDash: [4, 3],
+        pointRadius: 0, pointHitRadius: 6, fill: false, order: 20 });
+    } else {
+      datasets.push({ label: 'Guidance high', data: flat(m.guideHi[pi]),
+        borderColor: 'rgba(62,90,130,0.45)', borderWidth: 1, borderDash: [4, 3],
+        pointRadius: 0, pointHitRadius: 6, backgroundColor: RS_GUIDE, fill: '+1', order: 21 });
+      datasets.push({ label: 'Guidance low', data: flat(m.guideLo[pi]),
+        borderColor: 'rgba(62,90,130,0.45)', borderWidth: 1, borderDash: [4, 3],
+        pointRadius: 0, pointHitRadius: 6, fill: false, order: 21 });
+    }
+  }
+  // The outcome: a flat dotted line in level mode, the zero line in distance mode.
+  if (dist){
+    datasets.push({ label: 'Zero', data: vints.map(function(){ return 0; }),
+      borderColor: 'rgba(30,39,51,0.55)', borderWidth: 1.5, borderDash: [2, 3],
+      pointRadius: 0, pointHitRadius: 0, fill: false, order: 19 });
+  } else if (m.act[pi] != null && !st.hidden.act){
+    datasets.push({ label: 'Reported', data: flat(m.act[pi]),
+      borderColor: RS_ACT, borderWidth: 1.5, borderDash: [2, 3],
+      pointRadius: 0, pointHitRadius: 6, fill: false, order: 19 });
+  }
+  var sSum = st.hidden.summit ? null : rsConvSeries('summit', mkey, m, pi, vints);
+  var sCon = st.hidden.cons   ? null : rsConvSeries('cons',   mkey, m, pi, vints);
+  if (sSum && sSum.some(function(v){ return v != null; })){
+    datasets.push({ label: 'Summit model', data: pt(sSum), _raw: sSum,
+      borderColor: RS_SUMMIT, backgroundColor: RS_SUMMIT, borderWidth: 2.5,
+      pointRadius: 3.5, tension: 0, spanGaps: true, fill: false, order: 1 });
+  }
+  if (sCon && sCon.some(function(v){ return v != null; })){
+    datasets.push({ label: 'Consensus', data: pt(sCon), _raw: sCon,
+      borderColor: RS_CONS, backgroundColor: RS_CONS, borderWidth: 2.5, borderDash: [6, 4],
+      pointRadius: 3, tension: 0, spanGaps: true, fill: false, order: 2 });
+  }
+
+  var cur = rsCur(m);
+  var unitLbl = m.unit === 'eps'   ? cur
+              : m.unit === 'pct'   ? '%'
+              : m.unit === 'count' ? (m.unitLabel || 'count')
+              : (div === 1000 ? cur + 'B' : cur + 'M');
+  var baseName = st.base === 'guide' ? 'the guidance midpoint' : 'the reported figure';
+  var tEl = rsPaneEl('rsConvChartT');
+  if (tEl) tEl.innerHTML = esc(m.label) + ' · ' + esc(period) + ' — ' +
+    (dist
+      ? 'distance from ' + baseName + ' <span>(' + (pct ? 'percent' : esc(unitLbl)) +
+        ' per snapshot · zero is where ' + (st.base === 'guide' ? 'the company guided' : 'it landed') + ')</span>'
+      : 'how the forecast moved <span>(' + esc(unitLbl) + ' per snapshot · each point is what that archived file said ' +
+        esc(period) + ' would be)</span>');
+
+  st.chart = new Chart(el.getContext('2d'), {
+    type: 'line',
+    data: { labels: vints.map(function(v){ return rsVintDay(v.id, v.label); }), datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        rsConvLast: { at: vints.length - 1, label: 'last read before the print' },
+        tooltip: {
+          callbacks: {
+            title: function(items){
+              var v = vints[items[0].dataIndex];
+              var thru = v.lastActual && v.lastActual[rsConvViewName()];
+              return rsVintDay(v.id, v.label) + (thru ? ' · knew through ' + thru : '');
+            },
+            label: function(ctx){
+              var i = ctx.dataIndex, lbl = ctx.dataset.label;
+              if (lbl === 'Zero') return null;
+              // Reference lines quote the underlying figure, not the re-based zero.
+              if (lbl === 'Reported') return 'Reported: ' + rsFmt(m, m.act[pi]);
+              if (lbl === 'Guidance')      return 'Guidance: ' + rsFmt(m, m.guideLo[pi]);
+              if (lbl === 'Guidance high') return 'Guidance: ' + rsFmt(m, m.guideLo[pi]) + ' – ' + rsFmt(m, m.guideHi[pi]);
+              if (lbl === 'Guidance low')  return null;
+              var raw = (ctx.dataset._raw || [])[i];
+              if (raw == null) return lbl + ': — (no file in this archive that day)';
+              var line = lbl + ': ' + rsFmt(m, raw);
+              // Both readings on every hover: what the file said, and how far that sat from
+              // where the period landed. The second is the point of the chart, and asking the
+              // reader to switch modes to see it would hide it behind a click.
+              var b2 = rsConvBase(m, pi);
+              if (b2 != null){
+                var dv = raw - b2, dp = b2 === 0 ? null : dv / Math.abs(b2) * 100;
+                line += '  (' + (dp == null ? '' : (dp >= 0 ? '+' : '−') + Math.abs(dp).toFixed(1) + '% · ') +
+                  rsFmtD(m, dv) + ' vs ' + (st.base === 'guide' ? 'guide mid' : 'actual') + ')';
+              }
+              return line;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 }, maxRotation: 0, autoSkipPadding: 12 } },
+        y: { position: 'right', grid: { color: 'rgba(0,0,0,0.05)' },
+          min: st.yr ? st.yr[0] : undefined, max: st.yr ? st.yr[1] : undefined,
+          ticks: { font: { size: 11 }, callback: function(v, i, ts){
+            if (pct) return (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(Math.max(1, rsTickDec(ts))) + '%';
+            return rsTick(v, m.unit, div, m.cur, ts);
+          } } }
+      }
+    },
+    plugins: [rsConvLast]
+  });
+
+  // Vertical-only brush: the x-axis is a handful of archived dates, so a drag is a y-zoom.
+  rsAttachBrush(el, st.chart, null,
+    function(v1, v2){ rsConvSt().yr = [v1, v2]; rsBuildConv(); },
+    function(){ rsConvSt().yr = null; rsBuildConv(); });
+
+  rsConvTableRender(m, mkey, pi, vints, div);
+  var root = _rs.wrap && _rs.wrap.isConnected ? _rs.wrap : document;
+  var th = root.querySelector('[data-rsconvtblb]');
+  if (th) th.innerHTML = rsConvHeadHtml(m, pi);
+  var lg = rsPaneEl('rsConvLegend'); if (lg) lg.innerHTML = rsConvLegendHtml(m, pi);
+
+  // The footnote names the blind spot rather than leaving the reader to assume the last point
+  // is the morning of the print — see the block comment. `knew` is the first archived file
+  // that already had the result, so the print happened between the two dates.
+  var note = rsPaneEl('rsConvNote');
+  if (note){
+    var lastV = vints[vints.length - 1];
+    var txt = 'Last archived read before the ' + period + ' print: ' + rsVintDay(lastV.id, lastV.label) + '.';
+    if (vv.knew) txt += ' The next file, ' + rsVintDay(vv.knew.id, vv.knew.label) + ', already knew the result — so the print landed between those two dates, and nothing in the archive covers the days in between.';
+    txt += ' A day-before Bloomberg pull would drop straight in here as one more snapshot.';
+    note.textContent = txt;
+  }
+}
+function rsConvTableRender(m, mkey, pi, vints, div){
+  var el = rsPaneEl('rsConvTable'); if (!el) return;
+  var st = rsConvSt(), period = m.periods[pi];
+  var act = m.act ? m.act[pi] : null;
+  var gmid = (m.guideLo && m.guideHi) ? rsGuideMid(m, pi) : null;
+  function num(v){
+    if (v == null) return '<span class="rs-ft-nil">—</span>';
+    if (m.unit === 'eps') return Number(v).toFixed(2);
+    if (m.unit === 'count') return Math.round(v).toLocaleString();
+    return (v / div).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  }
+  function vs(v, b){
+    if (v == null || b == null || !b) return '<span class="rs-ft-nil">—</span>';
+    var d = v - b;
+    return rsPctHtml(d / Math.abs(b) * 100) + ' <span class="rs-ft-dim">· ' + rsFmtD(m, d) + '</span>';
+  }
+  var unitCap = m.unit === 'eps'   ? (rsCurName(m) + ' per share')
+              : m.unit === 'count' ? (m.unitLabel || 'count')
+              : (rsCurName(m) + ' ' + (div === 1000 ? 'billions' : 'millions'));
+  var h = '<div class="rs-ft-cap">' + esc(period) + ' · ' + unitCap +
+    ' · columns are the archived snapshots that were still forecasting this period · “vs actual” is how far that file sat from where it landed' +
+    (act == null ? ' (nothing yet — this period has not printed)' : '') + '</div>';
+  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
+  vints.forEach(function(v, i){
+    h += '<th' + (i === vints.length - 1 ? ' class="rs-ft-este"' : '') + '>' + esc(rsVintDay(v.id, v.label)) +
+      (i === vints.length - 1 ? '<br><span class="rs-ft-dim">last before print</span>' : '') + '</th>';
+  });
+  h += '<th class="rs-ft-s">First → last</th></tr></thead><tbody>';
+
+  function block(label, arr){
+    if (!arr || !arr.some(function(v){ return v != null; })) return '';
+    var first = null, last = null;
+    arr.forEach(function(v){ if (v != null){ if (first == null) first = v; last = v; } });
+    var r = '<tr class="rs-ft-main rs-ft-nb"><td class="rs-ft-h">' + label + '</td>';
+    arr.forEach(function(v, i){ r += '<td' + (i === arr.length - 1 ? ' class="rs-ft-este"' : '') + '><b>' + num(v) + '</b></td>'; });
+    r += '<td class="rs-ft-s">' + rsRevHtml(m, first, last) + '</td></tr>';
+    if (act != null){
+      r += '<tr class="rs-ft-sub"><td class="rs-ft-h">vs actual</td>';
+      arr.forEach(function(v, i){ r += '<td' + (i === arr.length - 1 ? ' class="rs-ft-este"' : '') + '>' + vs(v, act) + '</td>'; });
+      r += '<td class="rs-ft-s"></td></tr>';
+    } else if (gmid != null){
+      r += '<tr class="rs-ft-sub"><td class="rs-ft-h">vs guide mid</td>';
+      arr.forEach(function(v, i){ r += '<td' + (i === arr.length - 1 ? ' class="rs-ft-este"' : '') + '>' + vs(v, gmid) + '</td>'; });
+      r += '<td class="rs-ft-s"></td></tr>';
+    }
+    return r;
+  }
+  h += block('Summit model', rsConvSeries('summit', mkey, m, pi, vints));
+  h += block('Consensus',    rsConvSeries('cons',   mkey, m, pi, vints));
+  // The references, held flat across the walk, so a column can be read straight down.
+  if (gmid != null){
+    h += '<tr class="rs-ft-main"><td class="rs-ft-h">Guidance</td>';
+    vints.forEach(function(){ h += '<td>' + (m.guideLo[pi] === m.guideHi[pi] ? num(m.guideLo[pi]) : num(m.guideLo[pi]) + '–' + num(m.guideHi[pi])) + '</td>'; });
+    h += '<td class="rs-ft-s"></td></tr>';
+  }
+  if (act != null){
+    h += '<tr class="rs-ft-main"><td class="rs-ft-h">Reported</td>';
+    vints.forEach(function(){ h += '<td><b>' + num(act) + '</b></td>'; });
+    h += '<td class="rs-ft-s"></td></tr>';
+  }
+  h += '</tbody></table></div>';
+  el.innerHTML = h;
+}
+// Re-render the whole block: which toggles exist (Distance, the base pair) depends on what
+// the selected period actually has, so rebuilding the chart alone leaves stale controls.
+function rsRerenderConv(pane){
+  var host = (pane || document).querySelector('#rsConvHost');
+  if (!host) return;
+  host.innerHTML = rsConvBlockHtml();
+  rsBuildConv();
+}
+
 // ─── Wiring ───────────────────────────────────────────────────────────────────
 
 function rsBuildAll(){
   rsView().sections.forEach(function(s){ rsBuildChart(s.key); });
   rsBuildSurp();                      // the surprise scorecard at the foot of the pane
+  rsBuildConv();                      // …and the one-period walk under it
 }
 
 function wireResults(pane){
@@ -2174,6 +2827,39 @@ function wireResults(pane){
     // YoY/QoQ and %/Amount. Each changes what the axis means, so that block's brushed y-range
     // and window are dropped rather than carried into a scale that no longer describes them,
     // and its control row is re-rendered because which groups exist depends on the mode.
+    // ── Road to the print (its own block, its own everything) ──
+    var cvt = e.target.closest('[data-rsconvtblb]');
+    if (cvt){
+      var cst0 = rsConvSt();
+      cst0.tbl = cst0.tbl !== true;
+      var cbody = pane.querySelector('#rsConvTableBody');
+      if (cbody) cbody.hidden = cst0.tbl !== true;
+      var cm0 = rsConvM();
+      if (cm0) cvt.innerHTML = rsConvHeadHtml(cm0, rsConvPi(cm0, rsConvSt().metric));
+      return;
+    }
+    var cvc = e.target.closest('[data-rsconvview], [data-rsconvmode], [data-rsconvbase], [data-rsconvunit]');
+    if (cvc && !cvc.disabled){
+      var cst = rsConvSt();
+      if (cvc.hasAttribute('data-rsconvview')){
+        cst.view = cvc.getAttribute('data-rsconvview');
+        cst.metric = null;                       // the metric list and the period axis are per view
+        cst.period = null;
+      }
+      if (cvc.hasAttribute('data-rsconvmode')) cst.mode = cvc.getAttribute('data-rsconvmode');
+      if (cvc.hasAttribute('data-rsconvbase')) cst.base = cvc.getAttribute('data-rsconvbase');
+      if (cvc.hasAttribute('data-rsconvunit')) cst.unit = cvc.getAttribute('data-rsconvunit');
+      cst.yr = null;                             // the units on the axis changed
+      rsRerenderConv(pane);
+      return;
+    }
+    var cvl = e.target.closest('[data-rsconvleg]');
+    if (cvl){
+      var cst2 = rsConvSt(), ck = cvl.getAttribute('data-rsconvleg');
+      cst2.hidden[ck] = !cst2.hidden[ck];
+      rsBuildConv();
+      return;
+    }
     var stb = e.target.closest('[data-rssurptblb]');
     if (stb){
       var sst2 = rsSurpSt();
@@ -2229,6 +2915,16 @@ function wireResults(pane){
     // ── Surprise scorecard (single block at the foot of the pane) ──
     var sm = e.target.closest('[data-rssurpmode]');
     if (sm){ rsSurpSt().mode = sm.getAttribute('data-rssurpmode'); rsBuildSurp(); return; }
+    var svw = e.target.closest('[data-rssurpview]');
+    if (svw){
+      var sstV = rsSurpSt();
+      sstV.view = svw.getAttribute('data-rssurpview');
+      sstV.metric = null;               // the metric list is per view
+      sstV.win = null;                  // and so is the period axis
+      sstV.yr = null;
+      rsRerenderSurp(pane);
+      return;
+    }
     var sc = e.target.closest('[data-rssurpcmp]');
     if (sc && !sc.disabled){
       var sst = rsSurpSt(), key = sc.getAttribute('data-rssurpcmp');
@@ -2264,6 +2960,31 @@ function wireResults(pane){
       if (blocks) blocks.innerHTML = rsBlocksHtml();   // legend chips depend on what has data
       wireSliders(pane);
       rsBuildAll();
+      return;
+    }
+    // The scorecard's OWN snapshot picker. It resolves through rsSrcArr → rsSeriesFor without
+    // mutating anything, so it never disturbs the pane-wide picker above (and vice versa).
+    if (e.target.classList.contains('rs-svsel')){
+      var sstV2 = rsSurpSt();
+      sstV2.vint = e.target.value;
+      sstV2.metric = null;             // which metrics have overlapping series depends on the file
+      sstV2.win = null;
+      rsRerenderSurp(pane);
+      return;
+    }
+    if (e.target.classList.contains('rs-csel')){
+      var cstM = rsConvSt();
+      cstM.metric = e.target.value;
+      cstM.period = null;              // which periods any archive covers is per metric
+      cstM.yr = null;
+      rsRerenderConv(pane);
+      return;
+    }
+    if (e.target.classList.contains('rs-cpsel')){
+      var cstP = rsConvSt();
+      cstP.period = e.target.value;
+      cstP.yr = null;
+      rsRerenderConv(pane);
       return;
     }
     if (e.target.classList.contains('rs-bsel')){
@@ -2338,7 +3059,8 @@ function wireSliders(pane){
 export function initResults(wrap, ticker){
   if (ticker){
     var d = getResultsData(ticker); if (!d) return;
-    if (_rs._active !== ticker){ _rs.view = rsDefaultView(d); _rs.growth = 'yoy'; _rs.sec = {}; _rs.vint = 'preprint'; }
+    if (_rs._active !== ticker){ _rs.view = rsDefaultView(d); _rs.growth = 'yoy'; _rs.sec = {}; _rs.vint = 'preprint';
+                                 _rs.surp = null; _rs.conv = null; }
     _rs.data = d; _rs._active = ticker;
   }
   if (!_rs.data) return;

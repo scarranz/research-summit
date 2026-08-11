@@ -21,6 +21,7 @@ Drop in a dataset and you inherit, with no extra code:
 | **Four series per metric** | reported actual · Summit model · Street consensus · company guidance (as a band or a point) |
 | **Two period axes** | quarterly and annual, switchable per block |
 | **Three reading modes** | the level · growth · margin — each with its own axis, ticks, tooltip and table rows |
+| **Two chart orientations** | periods on x (how big was each one) *or* snapshots on x for one chosen period (how did the forecast get there) |
 | **Two growth units** | percent, or the amount added over the base period |
 | **Windowing** | range presets, a two-handle slider, drag-to-zoom on the chart, double-click to reset |
 | **A vintage axis** | read every estimate as of a chosen snapshot, or as of a date, or "closest before each print" |
@@ -131,6 +132,22 @@ cons/cons, a Summit margin is summit/summit. Never mix bases; a consensus numera
 revenue is a meaningless hybrid wearing a real label. The denominator falls back act → summit so
 forward margins use projected revenue.
 
+It is a **full mode**, not a decoration (SAB, Aug 11 2026). It used to exist only as a line on a
+second axis, which meant you could never see the margin *alone* at a scale where 40bps is
+visible — the exact question Margins & Profitability exists to ask. The button now sits beside
+the level and growth (`[$M | Growth | Margin %]`), and when it is on, the bars **are** the margin
+and the second axis disappears. **Guidance is suppressed there**, with an amber badge saying why:
+the company guides the line in dollars, not the ratio, and `guideLo / denominator.guideLo` is a
+corner of a two-dimensional band, not the low end of a guided margin.
+
+### One transform, everywhere
+
+`rsModeArr(k, m, series)` is the single place a mode turns a series into what is drawn. The bars,
+the axis ticks, the tooltip and the table headers all read from it. That is not tidiness — the
+tooltip used to quote `m.act` straight from the dataset, so a growth chart hovered as dollars: the
+bar said `+24.1%` and the tooltip said `$57.3B`. Any new mode must go through `rsModeArr` /
+`rsModeFmt` / `rsModeDiff` or it will drift the same way.
+
 ### Units in the tables
 
 A move means different things per mode, and the tables say which:
@@ -186,11 +203,61 @@ under one chart stay honest.
 and what is inside ("Mobility GB, 18 periods in the selected range"), and those counts follow the
 controls above them.
 
+## 6b. Axes on the right
+
+Every y-axis in Results and Estimates renders on the **right**. The eye lands on the most recent
+period first — it is the right-most bar and the one the reader came for — so the scale belongs
+beside it rather than a full history away. Where a block carries two (bars + margin lines) they
+**stack on the right**, ordered by `weight`: primary inboard, margin outboard.
+
+Two things had to move with it. The drag-to-zoom brush decides "this is a y-drag" from the axis
+strip, and testing only the left strip left the gesture dead exactly where the scale now is — it
+tests both edges. And `rsTick` now takes the tick array and derives its decimals from the tick
+**step**: whole dollars are right for a $10B→$60B chart and wrong for a $55B→$58B one, where they
+print `$58B` twice and the axis reads broken.
+
 ## 7. The surprise scorecard
 
 At the foot of Results: how each print landed. Pick a **base** (usually the actual) and any set of
 **comparators** (Summit, Street, guidance mid) and every period becomes a bar — green when the
 base came in above, red below, outlined by which series it is measured against. Percent or amount.
+
+**It reads on its own axes** (SAB, Aug 11 2026): its own Quarterly/Annual toggle and its own
+snapshot picker, neither of which touches the blocks above. A per-print scorecard asks a different
+question from the blocks — "how did the *year* land" is asked annually, and "how did the print land
+against the Street *as it stood in April*" is asked of a specific file. Because the pane-wide
+picker works by rewriting `m.summit` / `m.cons` in place, the scorecard cannot read those arrays
+or it would silently inherit the upstairs pick; `rsSrcArr(m, key, mkey)` resolves through
+`rsSeriesFor` instead, which mutates nothing. That is why it needs the metric **key**, not just
+the metric object.
+
+## 7b. Road to the print — the transpose
+
+Under the scorecard, the same prints read ninety degrees round: pick **one** quarter or fiscal
+year, put the **snapshot dates** on the x-axis, and watch Summit and the Street walk toward the
+number that printed — with the actual and the company's guided range drawn as flat references
+across the whole walk.
+
+It is not the scorecard restated. The scorecard says *the print beat consensus by 1.4%*; this says
+**when that gap opened** — whether we were early and the Street came to us, whether we drifted onto
+their number in the last file, and where both of us sat against the range the company signed up
+for. A model that is right on the day and wrong for six months before it is a different model from
+one that held its number, and only this view separates them.
+
+* **Modes**: the level, or **Distance** — every point re-based on the outcome, `vs Actual` or
+  `vs Guidance mid`, in percent or amount, with a zero line where it landed.
+* **Only snapshots that were still forecasting it.** A file taken after the print is a
+  transcription of the result, not a forecast of it, and plotting it draws a convergence that
+  never happened. The first file that *did* know it is named in the footnote instead.
+* **Leading empties are trimmed.** Bloomberg carries four forward quarters, so the 2023 files are
+  silent about 2Q26; keeping them stretched the axis across three blank years. Only the leading
+  run is cut — a hole in the middle is a real gap in an archive and stays visible as one.
+* ⚠ **The last read is not the day before.** The archives export around each print, so the
+  right-most point is the last *file*, not the consensus the morning of it — on UBER's 2Q26 that
+  is Jul 31 against an Aug 5 print. The gap is drawn (a red marker) and named (the footnote)
+  rather than papered over. **A day-before BBG pull drops in as one more vintage with no code
+  change** — which is the point (SAB: *"va a ser una parte muy importante"*).
+* Degrades like everything else: no `estMatrix` ⇒ the block does not render at all.
 
 Two things in it are worth stealing for any bar chart with labels:
 
@@ -251,7 +318,8 @@ Two things in it are worth stealing for any bar chart with labels:
 |---|---|
 | Pane shells | `resultsHtml` `rsBody` `rsTopRowHtml` `rsBlocksHtml` · `resultsEvoHtml` `rsEvoBlockHtml` |
 | Per-block controls | `rsBlockModesHtml` `rsLevelLabel` `rsSelectHtml` `rsOptLabel` |
-| Reading modes | `rsIsGrow` `rsGrowAmt` `rsGrowBase` `rsGrowArr` `rsLook` `rsGrowLabel` `rsMarginArr` |
+| Reading modes | `rsIsGrow` `rsGrowAmt` `rsGrowBase` `rsGrowArr` `rsLook` `rsGrowLabel` `rsMarginArr` `rsHasMargin` `rsIsMargin` **`rsModeArr`** `rsIsPctMode` `rsModeFmt` `rsModeDiff` |
+| Road to the print | `rsConvSt` `rsConvViewName` `rsAllVints` `rsConvGroups` `rsConvM` `rsConvPeriodIdx` `rsConvPi` **`rsConvVints`** `rsConvSeries` `rsConvDist` `rsConvLast` (plugin) `rsConvBlockHtml` `rsBuildConv` `rsConvTableRender` `rsRerenderConv` |
 | Chart | `rsBuildChart` `rsFwdZone` `rsAttachBrush` `rsWireBrush` `wireSliders` |
 | Tables | `rsRenderTable` `rsTableHeadHtml` · `rsEvoVisible` `rsEvoTrackRows` `rsRenderEvoTrack` `rsRenderEvoTable` |
 | Vintage axis | `rsMatrix` `rsVintages` `rsVintSrcs` `rsVintAsOf` `rsAsOfDates` `rsVintFor` `rsSeriesFor` **`rsApplyVintage`** `rsVintNote` `rsVintSelHtml` |

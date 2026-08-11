@@ -192,3 +192,17 @@
 .rs-cmp.na { opacity:.4; cursor:not-allowed; text-decoration:line-through; }
 .rs-cmp:not(.na):hover { border-color:#9FB0C4; }
 .rs-bsel { max-width:170px; }
+/* The scorecard's OWN snapshot picker sits on its own line, so it never reads as part of the
+   Compare row beneath it (results.js §"The scorecard reads on its OWN axes"). */
+.rs-surp-vint { margin:2px 0 2px; }
+.rs-surp-vint .rs-vint { margin-left:0; }
+.rs-svsel {
+  font:500 12px Inter, system-ui, sans-serif; color:var(--navy, #1E2733);
+  background:#fff; border:1px solid #D7DDE4; border-radius:6px; padding:5px 8px; max-width:320px;
+}
+.rs-svsel:focus { outline:2px solid rgba(37,99,235,0.35); outline-offset:1px; }
+
+/* Road to the print — the period select beside the metric select. Narrower than the metric
+   dropdown because a period label is four characters, and a 240px control for "2Q26" reads
+   as though something is missing from it. */
+.rs-cpsel { min-width:170px; }

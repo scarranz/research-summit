@@ -3867,14 +3867,15 @@ function rsCurveTableRender(m, raw, raw2, div){
     ' snapshot' + (cmp ? ' against ' + esc(ev.vintages[vi2].label) : '') +
     ', fiscal years across the top · the right column is how far the projection travels over the horizon' +
     ' · <span class="rs-ft-e">E</span> = no reported figure for that year yet</div>';
-  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
+  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h">' +
+    (cmp ? 'Line · snapshot' : '') + '</th>';
   var lastA = -1;
   (raw.act || []).forEach(function(v, i){ if (v != null) lastA = i; });
   ev.years.forEach(function(y, i){
     var est = i > lastA;
     h += '<th class="' + (est ? 'rs-ft-este' : '') + '">FY' + esc(y) + (est ? ' <span class="rs-ft-e">E</span>' : '') + '</th>';
   });
-  h += '<th class="rs-ft-s">Across the horizon</th></tr></thead><tbody>';
+  h += '<th class="rs-ft-s">' + (cmp ? 'Across the horizon · biggest move' : 'Across the horizon') + '</th></tr></thead><tbody>';
 
   RS_CURVE_SER.forEach(function(s){
     if (!rsCurveHas(m, s.key)) return;
@@ -3886,27 +3887,48 @@ function rsCurveTableRender(m, raw, raw2, div){
     var sum = (f == null || l === f) ? ''
       : (pct ? '<span style="color:' + (l - f >= 0 ? RS_GREEN : RS_RED) + '">' + (l - f >= 0 ? '+' : '−') + Math.abs(l - f).toFixed(1) + ' pp</span>'
              : rsRevHtml(m, f, l));
-    h += '<tr class="rs-ft-main' + (s.key === 'act' ? '' : ' rs-ft-nb') + '"><td class="rs-ft-h">' + s.label + '</td>';
+    // Under Compare BOTH rows carry their snapshot. Labelling the selected one plain "Summit"
+    // and the other one "Dec 15, 2025" was asymmetric in a way that hid the comparison: the
+    // reader could not tell that the first row was also a snapshot, so the pair did not read as
+    // a pair at all. Now it is "Summit · Aug 5, 2026" over "Summit · Dec 15, 2025".
+    var rowLbl = (cmp && s.key !== 'act') ? s.label + ' <span class="rs-ft-dim">· ' + esc(ev.vintages[rsCurveVi()].label) + '</span>' : s.label;
+    h += '<tr class="rs-ft-main' + (s.key === 'act' ? '' : ' rs-ft-nb') + '"><td class="rs-ft-h">' + rowLbl + '</td>';
     arr.forEach(function(v, i){ h += '<td class="' + (i > lastA ? 'rs-ft-este' : '') + '">' +
       (s.key === 'act' ? '<b>' + cell(v) + '</b>' : cell(v)) + '</td>'; });
     h += '<td class="rs-ft-s">' + sum + '</td></tr>';
-    // Under Compare: the older file's row, then the move between the two — which is the number
-    // the button was opened for, so it gets its own row rather than being left to subtraction.
+    // Then the older file's row, then the move between the two — which is the number the button
+    // was opened for, so it gets its own row rather than being left to subtraction.
     if (cmp && s.key !== 'act'){
       var old = (raw2 && raw2[s.key]) || [];
-      h += '<tr class="rs-ft-sub rs-ft-nb"><td class="rs-ft-h">' + esc(ev.vintages[vi2].label) + '</td>';
+      h += '<tr class="rs-ft-sub rs-ft-nb"><td class="rs-ft-h">' + s.label +
+        ' <span class="rs-ft-dim">· ' + esc(ev.vintages[vi2].label) + '</span></td>';
       ev.years.forEach(function(_, i){ h += '<td class="' + (i > lastA ? 'rs-ft-este' : '') + '">' + cell(old[i]) + '</td>'; });
-      h += '<td class="rs-ft-s"></td></tr>';
+      // The older file travels its own horizon too — same summary, so the two rows are readable
+      // side by side rather than one carrying a number the other silently lacks.
+      var f2 = null, l2 = null;
+      old.forEach(function(v){ if (v != null){ if (f2 == null) f2 = v; l2 = v; } });
+      h += '<td class="rs-ft-s">' + ((f2 == null || l2 === f2) ? ''
+        : (pct ? '<span style="color:' + (l2 - f2 >= 0 ? RS_GREEN : RS_RED) + '">' + (l2 - f2 >= 0 ? '+' : '−') + Math.abs(l2 - f2).toFixed(1) + ' pp</span>'
+               : rsRevHtml(m, f2, l2))) + '</td></tr>';
+      var moves = [];
       h += '<tr class="rs-ft-sub rs-ft-nb"><td class="rs-ft-h">the move</td>';
       ev.years.forEach(function(_, i){
         var a = arr[i], o = old[i];
         if (a == null || o == null){ h += '<td class="' + (i > lastA ? 'rs-ft-este' : '') + '"><span class="rs-ft-nil">—</span></td>'; return; }
+        moves.push({ d: a - o, y: ev.years[i] });
         h += '<td class="' + (i > lastA ? 'rs-ft-este' : '') + '">' +
           (pct ? (Math.abs(a - o) < 0.05 ? '<span class="rs-ft-dim">0.0 pp</span>'
                  : '<span style="color:' + (a - o >= 0 ? RS_GREEN : RS_RED) + '">' + (a - o >= 0 ? '+' : '−') + Math.abs(a - o).toFixed(1) + ' pp</span>')
                : rsRevHtml(m, o, a)) + '</td>';
       });
-      h += '<td class="rs-ft-s"></td></tr>';
+      // Which year absorbed the revision — the one-line answer to "what did this save change".
+      var big = null;
+      moves.forEach(function(x){ if (big == null || Math.abs(x.d) > Math.abs(big.d)) big = x; });
+      h += '<td class="rs-ft-s">' + (!big || Math.abs(big.d) < 0.05
+        ? '<span class="rs-ft-dim">unmoved</span>'
+        : '<span style="color:' + (big.d >= 0 ? RS_GREEN : RS_RED) + '">' +
+          (pct ? ((big.d >= 0 ? '+' : '−') + Math.abs(big.d).toFixed(1) + ' pp') : rsFmtD(m, big.d)) +
+          '</span><br><span class="rs-ft-dim">most of it in FY' + esc(big.y) + '</span>') + '</td></tr>';
     }
     // Scored against the print, wherever the year has closed.
     if (s.key !== 'act' && (raw.act || []).some(function(v){ return v != null; })){

@@ -277,34 +277,32 @@ tests both edges. And `rsTick` now takes the tick array and derives its decimals
 **step**: whole dollars are right for a $10B→$60B chart and wrong for a $55B→$58B one, where they
 print `$58B` twice and the axis reads broken.
 
-## 6c. The projection curve — Estimates, transposed
+## 6c. Projection by snapshot — Estimates, transposed
 
 At the foot of **Estimates**. Every other chart in that pane puts the saved snapshots on the
 x-axis and draws one line per fiscal year ("how did our view of FY2027 move"). This is the same
-`evolution` numbers turned ninety degrees: **fiscal years on x, one line per snapshot**, oldest
-lightest. Deliberately the same block and *not* the vintage matrix — two charts on one pane that
+`evolution` numbers turned ninety degrees: **pick any archived file, see what it projected**,
+fiscal years across the bottom, `Reported · Summit · Street` as grouped bars — the same three
+series, same order, same colours as a Results block, so the two panes read as one picture with a
+different x-axis.
+
+Deliberately the same `evolution` block and *not* the vintage matrix: two charts on one pane that
 disagree about a number is worse than one chart fewer, and the transpose of a table can never
 disagree with it.
 
-**What it answers that the chart above cannot: did a revision move the LEVEL or the SHAPE.**
-Lines that fall parallel mean every year was re-based by the same proportion — arithmetic. Lines
-that fan mean the trajectory changed, which is a different claim about the business.
+**Keep it plain.** The first version drew every snapshot at once as a ramp of lines plus a
+baseline selector — which is a different question, and one the chart above it already answers.
+This block is the flat one: one file, one projection. There is no window, no baseline and no
+source toggle.
 
-* **Modes** `US$B · Growth · Margin %` — the same three readings, computed through the same
-  `rsEvoPctAt` the chart above uses (which is why that function now takes its basis as an argument
-  instead of reading a block's state).
-* **A baseline select** turns it into the sharp version: pick one snapshot and every line becomes
-  its distance from that one, so flat-at-zero means "this file changed nothing about that year".
-  Necessary, not decorative — on a metric growing $193B → $344B the absolute curves overlap.
-* **Source** `Summit · Street · Both`. Both is offered, not default: five snapshots × two sources
-  is ten lines.
-* **Reported** marks where the closed years actually landed, in whatever mode is on. Suppressed
-  under a baseline, where the axis is a difference between two forecasts and an actual has no
-  place on it.
-
-The UBER read, on Gross Bookings in Growth: FY2026 went **19.9% → 21.8% → 23.3% → 23.7%** across
-the four snapshots while FY2027 and FY2028 sat still at ~20.5% and ~19.5%. The model pulled growth
-*into* 2026 and left the out-years alone — one sentence, and nothing else in the portal can make it.
+* **Modes** `US$B · Growth · Margin %`, computed through the same `rsEvoPctAt` / `rsEvoActualPctAt`
+  the charts above use — which is why those now take their basis as an argument instead of reading
+  a block's state. One set of rules, two orientations.
+* **The newest snapshot is the right default here**, unlike the vintage picker in Results (§5): this
+  pane is not scoring anything against a print, it is reading what a file says.
+* Fiscal years with no reported figure get the **forecast zone** and the bubbled labels, exactly as
+  in Results. The tooltip and the table score each estimate against the print wherever a year has
+  closed.
 
 ## 7. The surprise scorecard
 

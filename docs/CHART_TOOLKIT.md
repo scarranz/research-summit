@@ -277,6 +277,35 @@ tests both edges. And `rsTick` now takes the tick array and derives its decimals
 **step**: whole dollars are right for a $10B→$60B chart and wrong for a $55B→$58B one, where they
 print `$58B` twice and the axis reads broken.
 
+## 6c. The projection curve — Estimates, transposed
+
+At the foot of **Estimates**. Every other chart in that pane puts the saved snapshots on the
+x-axis and draws one line per fiscal year ("how did our view of FY2027 move"). This is the same
+`evolution` numbers turned ninety degrees: **fiscal years on x, one line per snapshot**, oldest
+lightest. Deliberately the same block and *not* the vintage matrix — two charts on one pane that
+disagree about a number is worse than one chart fewer, and the transpose of a table can never
+disagree with it.
+
+**What it answers that the chart above cannot: did a revision move the LEVEL or the SHAPE.**
+Lines that fall parallel mean every year was re-based by the same proportion — arithmetic. Lines
+that fan mean the trajectory changed, which is a different claim about the business.
+
+* **Modes** `US$B · Growth · Margin %` — the same three readings, computed through the same
+  `rsEvoPctAt` the chart above uses (which is why that function now takes its basis as an argument
+  instead of reading a block's state).
+* **A baseline select** turns it into the sharp version: pick one snapshot and every line becomes
+  its distance from that one, so flat-at-zero means "this file changed nothing about that year".
+  Necessary, not decorative — on a metric growing $193B → $344B the absolute curves overlap.
+* **Source** `Summit · Street · Both`. Both is offered, not default: five snapshots × two sources
+  is ten lines.
+* **Reported** marks where the closed years actually landed, in whatever mode is on. Suppressed
+  under a baseline, where the axis is a difference between two forecasts and an actual has no
+  place on it.
+
+The UBER read, on Gross Bookings in Growth: FY2026 went **19.9% → 21.8% → 23.3% → 23.7%** across
+the four snapshots while FY2027 and FY2028 sat still at ~20.5% and ~19.5%. The model pulled growth
+*into* 2026 and left the out-years alone — one sentence, and nothing else in the portal can make it.
+
 ## 7. The surprise scorecard
 
 At the foot of Results: how each print landed. Pick a **base** (usually the actual) and any set of
@@ -381,7 +410,8 @@ Two things in it are worth stealing for any bar chart with labels:
 | Per-block controls | `rsBlockModesHtml` `rsLevelLabel` `rsSelectHtml` `rsOptLabel` |
 | Reading modes | `rsIsGrow` `rsGrowAmt` `rsGrowBase` `rsGrowArr` `rsLook` `rsGrowLabel` `rsMarginArr` `rsHasMargin` `rsIsMargin` **`rsModeArr`** `rsIsPctMode` `rsModeFmt` `rsModeDiff` |
 | Guidance end | `RS_GPTS` `rsGuideRanged` **`rsGuideAt`** `rsGptName` `rsGptHtml` · `rsSrcLabel` / `rsSrcShort` relabel the scorecard's chips |
-| Road to the print | `rsConvSt` `rsConvViewName` `rsAllVints` `rsConvGroups` `rsConvM` `rsConvPeriodIdx` `rsConvPi` **`rsConvVints`** `rsConvSeries` `rsConvDist` `rsConvLast` (plugin) `rsConvBlockHtml` `rsBuildConv` `rsConvTableRender` `rsRerenderConv` |
+| Road to the print | `rsConvSt` `rsConvViewName` `rsAllVints` `rsConvGroups` `rsConvM` `rsConvPeriodIdx` `rsConvPi` **`rsConvVints`** `rsConvSeries` `rsConvDist` `rsConvLast` / `rsConvRef` (plugins) `rsConvBlockHtml` `rsBuildConv` `rsConvTableRender` `rsRerenderConv` |
+| Projection curve | `rsCurveSt` `rsCurveGroups` `rsCurveM` `rsCurveBasis` **`rsCurveSeries`** `rsCurveVisible` `rsCurveApplyBase` `rsCurveColor` `rsCurveBlockHtml` `rsCurveLegendHtml` `rsBuildCurve` `rsCurveTableRender` `rsRerenderCurve` — the math comes from `rsEvoPctAt` / `rsEvoActualPctAt`, shared with the charts above it |
 | Chart | `rsBuildChart` `rsFwdZone` `rsAttachBrush` `rsWireBrush` `wireSliders` |
 | Tables | `rsRenderTable` `rsTableHeadHtml` · `rsEvoVisible` `rsEvoTrackRows` `rsRenderEvoTrack` `rsRenderEvoTable` |
 | Vintage axis | `rsMatrix` `rsVintages` `rsVintSrcs` `rsVintAsOf` `rsAsOfDates` `rsVintFor` `rsSeriesFor` **`rsApplyVintage`** `rsVintNote` `rsVintSelHtml` |

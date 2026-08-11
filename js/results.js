@@ -1546,11 +1546,14 @@ function rsEvoGrowUnit(k){ return rsEvoSt(k).growUnit || 'pct'; }
 // Is the plotted number a percentage? Everything derived is, EXCEPT growth-as-amount, which
 // is a currency delta and has to be formatted, ticked and totalled like money.
 function rsEvoIsAmt(k){ return rsEvoSt(k).mode === 'grow' && rsEvoGrowUnit(k) === 'amt'; }
-function rsEvoPct(k, m, src, yi){
+// The math, with the basis passed IN rather than read from a block's state — so the projection
+// curve at the foot of the pane (which is the same numbers transposed, and holds its own mode)
+// computes growth and margins through this one function instead of a second copy of the rules.
+function rsEvoPct(k, m, src, yi){ return rsEvoPctAt(m, src, yi, rsEvoBasis(k), rsEvoIsAmt(k)); }
+function rsEvoPctAt(m, src, yi, basis, amt){
   var arr = m[src] ? m[src][yi] : null;
   if (!arr) return null;
-  if (rsEvoBasis(k) === 'grow'){
-    var amt = rsEvoIsAmt(k);
+  if (basis === 'grow'){
     return arr.map(function(cur, vi){
       var base = yi === 0
         ? (m.prior && m.prior[src] ? m.prior[src][vi] : null)
@@ -1609,6 +1612,7 @@ export function resultsEvoHtml(ticker){
   _rs.data = data;
   _rs.evo = null;
   _rs.surp = null;
+  _rs.curve = null;
   var ev = data.evolution;
   var h = '<div class="rs-wrap" id="rsEvoWrap">';
   // `evolution.intro` is deliberately NOT rendered (SAB, Aug 10 2026). It was a paragraph of
@@ -1616,6 +1620,7 @@ export function resultsEvoHtml(ticker){
   // while the charts did not. The field stays in the datasets — each metric's `note`, which
   // does render under its own block, is where a written read belongs.
   h += ev.sections.map(function(cfg){ return rsEvoBlockHtml(cfg.key); }).join('');
+  h += '<div id="rsCurveHost">' + rsCurveBlockHtml() + '</div>';
   h += '<div class="ov-foot">' + esc(ev.note || '') + '</div>';
   // Generic Actuals-vs-Estimates surprise history at the bottom (opt-out via
   // dataset `surprise: false` — SoFi keeps its richer bespoke block).
@@ -1767,14 +1772,16 @@ function rsEvoActual(mkey, m, year){
 // The same figure expressed in whatever the % mode of this block means: implied YoY growth
 // on Top Line, the margin over `marginOf` on Profitability — both computed ACTUAL-on-ACTUAL,
 // never mixing a reported numerator with an estimated denominator.
-function rsEvoActualPct(k, mkey, m, year){
+function rsEvoActualPct(k, mkey, m, year){ return rsEvoActualPctAt(mkey, m, year, rsEvoBasis(k), rsEvoIsAmt(k)); }
+function rsEvoActualPctAt(mkey, m, year, basis, amt){
   var a = rsEvoActual(mkey, m, year);
   if (a == null) return null;
-  if (rsEvoBasis(k) === 'grow'){
+  if (basis === 'grow'){
     var prev = rsEvoActual(mkey, m, String(+year - 1));
     if (prev == null || !prev) return null;
-    return rsEvoIsAmt(k) ? a - prev : (a - prev) / Math.abs(prev) * 100;
+    return amt ? a - prev : (a - prev) / Math.abs(prev) * 100;
   }
+  if (!basis) return null;
   if (!m.marginOf) return null;
   var den = rsEvoActual(m.marginOf, rsEvo().metrics[m.marginOf] || {}, year);
   return (den == null || !den) ? null : a / den * 100;
@@ -3515,6 +3522,350 @@ function rsRenderEvoTrack(k, m){
   // aggregates (they cost nothing and a scope-picking version may want them back).
 }
 
+// ─── Projection curve — the WHOLE forecast, as one snapshot saw it ────────────
+// (SAB, Aug 11 2026.) Every other chart in Estimates puts the model's saved snapshots on the
+// x-axis and draws one line per fiscal year: "how did our view of FY2027 move". This is that
+// chart turned ninety degrees — PERIODS on the x-axis, one line per SNAPSHOT — and it is the
+// same `evolution` numbers, read the other way. Deliberately the same block and not the
+// vintage matrix: two charts on one pane that disagree about a number is worse than one
+// chart fewer, and the transpose of a table can never disagree with it.
+//
+// What it answers that the chart above cannot: whether a revision moved the LEVEL or the SHAPE.
+// Five lines that fall parallel mean the model cut every year by the same proportion — a
+// re-basing. Five lines that fan mean it changed the trajectory, which is a different claim
+// about the business and usually a different thesis. On UBER's revenue the May snapshot did the
+// first (a UK accounting change, ~$1B a quarter off reported revenue) and it is unmistakable
+// here: the whole curve drops and keeps its slope.
+//
+// A BASELINE select turns it into the sharper version of the same question — pick one snapshot
+// and every line becomes its distance from that one, so a flat line at zero means "this file
+// changed nothing about that year" and the shape of a non-flat one is exactly what it changed.
+var CURVE_RAMP = ['#C3D0F2', '#93B1F0', '#5E8BEC', '#2563EB', '#15307A'];
+function rsCurveColor(i, n){
+  if (n <= 1) return CURVE_RAMP[CURVE_RAMP.length - 1];
+  // Oldest → lightest, newest → darkest, spread across however many snapshots there are.
+  var t = i / (n - 1);
+  return CURVE_RAMP[Math.round(t * (CURVE_RAMP.length - 1))];
+}
+function rsCurveSt(){
+  if (!_rs.curve) _rs.curve = { metric: null, mode: 'usd', growUnit: 'pct', src: 'summit',
+    base: '', hidden: {}, act: true, yr: null, chart: null, tbl: false };
+  return _rs.curve;
+}
+function rsCurveGroups(){
+  var ev = rsEvo(), out = [];
+  (ev.sections || []).forEach(function(cfg){
+    (cfg.groups || []).forEach(function(g){ out.push({ label: g.label, keys: g.keys }); });
+  });
+  return out;
+}
+function rsCurveM(){
+  var st = rsCurveSt();
+  var all = rsCurveGroups().reduce(function(a, g){ return a.concat(g.keys); }, []);
+  if (!st.metric || all.indexOf(st.metric) < 0) st.metric = all[0] || null;
+  return st.metric ? rsEvo().metrics[st.metric] : null;
+}
+function rsCurveBasis(){ var mo = rsCurveSt().mode; return mo === 'usd' ? null : mo; }
+function rsCurveAmt(){ var st = rsCurveSt(); return st.mode === 'grow' && st.growUnit === 'amt'; }
+function rsCurveIsPct(){ return !!rsCurveBasis() && !rsCurveAmt(); }
+// One snapshot's whole curve: its value for every fiscal year on the axis.
+function rsCurveSeries(m, src, vi){
+  var ev = rsEvo(), basis = rsCurveBasis(), amt = rsCurveAmt();
+  return ev.years.map(function(y, yi){
+    if (!basis){ var a = m[src] ? m[src][yi] : null; return a ? a[vi] : null; }
+    var p = rsEvoPctAt(m, src, yi, basis, amt);
+    return p ? p[vi] : null;
+  });
+}
+// Which snapshots are drawn, in chart order — the one place that answers it, so the legend,
+// the chart and the table can never disagree about what is on screen.
+function rsCurveVisible(m){
+  var ev = rsEvo(), st = rsCurveSt(), out = [];
+  var srcs = st.src === 'both' ? ['summit', 'cons'] : [st.src];
+  ev.vintages.forEach(function(v, vi){
+    if (st.hidden['v' + vi]) return;
+    srcs.forEach(function(src){
+      if (!m[src]) return;
+      var data = rsCurveSeries(m, src, vi);
+      if (!data.some(function(x){ return x != null; })) return;
+      out.push({ vi: vi, v: v, src: src, data: data,
+                 label: v.label + (st.src === 'both' ? ' · ' + (src === 'cons' ? 'Street' : 'Summit') : '') });
+    });
+  });
+  return out;
+}
+// The baseline subtraction. In a percentage mode a difference is in POINTS, which is why the
+// table and the axis have to know which mode they are in rather than formatting blindly.
+function rsCurveBaseIdx(){
+  var st = rsCurveSt(), ev = rsEvo();
+  if (st.base === '' || st.base == null) return -1;
+  var i = +st.base;
+  return (i >= 0 && i < ev.vintages.length) ? i : -1;
+}
+function rsCurveApplyBase(rows, m){
+  var bi = rsCurveBaseIdx();
+  if (bi < 0) return rows;
+  return rows.map(function(r){
+    var base = rsCurveSeries(m, r.src, bi);
+    return { vi: r.vi, v: r.v, src: r.src, label: r.label, baseline: r.vi === bi,
+      data: r.data.map(function(x, i){ return (x == null || base[i] == null) ? null : x - base[i]; }) };
+  });
+}
+function rsCurveHeadHtml(m){
+  var st = rsCurveSt(), open = st.tbl === true, n = m ? rsCurveVisible(m).length : 0;
+  return '<span class="rs-collap-ic">' + (open ? '▾' : '▸') + '</span>Curve detail' +
+    '<span class="rs-collap-sub">' + (open ? 'hide' : 'show') + ' · ' + n + ' snapshot curve' +
+    (n === 1 ? '' : 's') + ' × ' + rsEvo().years.length + ' fiscal years</span>';
+}
+function rsCurveBlockHtml(){
+  var ev = rsEvo();
+  if (!ev || !ev.vintages || ev.vintages.length < 2) return '';   // one snapshot is not a curve to compare
+  var m = rsCurveM();
+  if (!m) return '';
+  var st = rsCurveSt(), bi = rsCurveBaseIdx();
+  var b = function(attr, val, on, label, title, dis){
+    return '<button type="button" class="rs-view' + (on ? ' active' : '') + '" data-' + attr + '="' + val + '"' +
+      (dis ? ' disabled' : '') + (title ? ' title="' + esc(title) + '"' : '') + '>' + label + '</button>';
+  };
+  var h = '<div class="rs-block" data-rscurve>';
+  h += '<div class="rs-block-top"><div class="rs-block-h">Projection curve</div>' +
+    '<select class="rs-msel rs-curvesel" aria-label="Metric">' + rsCurveGroups().map(function(g){
+      return '<optgroup label="' + esc(g.label) + '">' + g.keys.map(function(k){
+        return '<option value="' + k + '"' + (k === st.metric ? ' selected' : '') + '>' + esc(rsOptLabel(ev.metrics[k])) + '</option>';
+      }).join('') + '</optgroup>';
+    }).join('') + '</select>' +
+    '<div class="rs-views">' +
+      b('rscurvesrc', 'summit', st.src === 'summit', 'Summit') +
+      (m.cons ? b('rscurvesrc', 'cons', st.src === 'cons', 'Street') : '') +
+      (m.cons ? b('rscurvesrc', 'both', st.src === 'both', 'Both', 'Street dashed, Summit solid — ten lines on one chart, so it is not the default') : '') +
+    '</div></div>';
+  // Row 2: what the value is (left) and what it is measured against (right).
+  h += '<div class="rs-block-modes"><div class="rs-modes">' +
+    '<div class="rs-views">' +
+      b('rscurvemode', 'usd', st.mode === 'usd', esc(rsCurName(m) + (rsEvoScaleOf(m) === 1000 ? 'B' : 'M'))) +
+      b('rscurvemode', 'grow', st.mode === 'grow', 'Growth', 'Year-over-year growth along the curve, as each snapshot saw it') +
+      (m.marginOf ? b('rscurvemode', 'margin', st.mode === 'margin', 'Margin %',
+        'Each snapshot’s own numerator over its own denominator') : '') +
+    '</div>' +
+    (st.mode === 'grow' ? '<div class="rs-views">' +
+      b('rscurvegunit', 'pct', !rsCurveAmt(), '%') +
+      b('rscurvegunit', 'amt', rsCurveAmt(), 'Amount') + '</div>' : '') +
+    '</div>' +
+    // The baseline is the sharp version of the question: pick a file and read every other one
+    // as what it CHANGED, year by year, instead of eyeballing the gap between two curves.
+    '<div class="rs-quick"><span class="rs-quick-l">Measured against</span>' +
+      '<select class="rs-bsel rs-curvebase" aria-label="Baseline snapshot">' +
+        '<option value=""' + (bi < 0 ? ' selected' : '') + '>Nothing — absolute levels</option>' +
+        ev.vintages.map(function(v, i){
+          return '<option value="' + i + '"' + (bi === i ? ' selected' : '') + '>' + esc(v.label) + (v.event ? ' · ' + esc(v.event) : '') + '</option>';
+        }).join('') +
+      '</select></div>' +
+  '</div>';
+  h += '<div class="ave-leg" id="rsCurveLegend">' + rsCurveLegendHtml(m) + '</div>';
+  h += '<div class="ov-chart-card">' +
+    '<div class="ov-chart-t" id="rsCurveChartT"></div>' +
+    '<div class="ov-chart-wrap ovs-tall"><canvas id="rsCurveChart"></canvas></div>' +
+  '</div>';
+  h += '<div class="rs-collap" data-rscurvetbl>' +
+    '<button type="button" class="rs-collap-h" data-rscurvetblb>' + rsCurveHeadHtml(m) + '</button>' +
+    '<div class="rs-collap-b" id="rsCurveTableBody"' + (st.tbl === true ? '' : ' hidden') + '>' +
+      '<div class="rs-tablewrap" id="rsCurveTable"></div>' +
+    '</div></div>';
+  h += '<div class="ov-foot" id="rsCurveNote"></div>';
+  h += '</div>';
+  return h;
+}
+function rsCurveLegendHtml(m){
+  var ev = rsEvo(), st = rsCurveSt(), bi = rsCurveBaseIdx(), n = ev.vintages.length;
+  var h = ev.vintages.map(function(v, i){
+    var off = st.hidden['v' + i];
+    return '<button type="button" class="rs-leg' + (off ? ' off' : '') + '" data-rscurveleg="v' + i + '" title="Show / hide">' +
+      '<span class="rs-leg-line" style="background:' + rsCurveColor(i, n) + '"></span>' + esc(v.label) +
+      (bi === i ? ' <span class="rs-ft-dim">(baseline)</span>' : '') + '</button>';
+  }).join('');
+  // The outcome, where a year has closed. Only in absolute/derived level terms — under a
+  // baseline the axis is a difference between two forecasts and an actual has no place on it.
+  if (bi < 0){
+    var ya = rsCurveActYears(m);
+    if (ya.length){
+      h += '<button type="button" class="rs-leg' + (st.act ? '' : ' off') + '" data-rscurveact="1" title="Show / hide where those years actually landed">' +
+        '<span class="rs-leg-dash" style="color:var(--navy)"></span>Reported (' + esc(ya.join(', ')) + ')</button>';
+    }
+  }
+  h += '<span class="tech-leg-i" style="margin-left:auto">' +
+    (bi < 0 ? 'one line per saved snapshot · oldest lightest' : 'every line is its distance from the baseline · flat at zero = that file changed nothing') +
+    ' · click a chip to hide it</span>';
+  return h;
+}
+// Fiscal years on the axis that have actually landed, in the current mode.
+function rsCurveActYears(m){
+  var ev = rsEvo(), st = rsCurveSt(), out = [];
+  ev.years.forEach(function(y){
+    var v = rsCurveBasis() ? rsEvoActualPctAt(st.metric, m, y, rsCurveBasis(), rsCurveAmt())
+                           : rsEvoActual(st.metric, m, y);
+    if (v != null) out.push(y);
+  });
+  return out;
+}
+function rsBuildCurve(){
+  var ev = rsEvo(); if (!ev) return;
+  var m = rsCurveM(); if (!m) return;
+  var st = rsCurveSt();
+  var el = rsPaneEl('rsCurveChart') || document.getElementById('rsCurveChart');
+  if (!el || !el.offsetParent) return;
+  if (st.chart){ st.chart.destroy(); st.chart = null; }
+
+  var bi = rsCurveBaseIdx(), pct = rsCurveIsPct(), amt = rsCurveAmt();
+  var div = rsEvoScaleOf(m);
+  var sc = function(v){ return v == null ? null : (pct ? v : v / div); };
+  var rows = rsCurveApplyBase(rsCurveVisible(m), m);
+  var n = ev.vintages.length;
+
+  var datasets = rows.map(function(r){
+    var color = rsCurveColor(r.vi, n);
+    return { label: r.label, data: r.data.map(sc), _row: r,
+      borderColor: color, backgroundColor: color,
+      borderWidth: r.baseline ? 3 : 2.5,
+      borderDash: r.src === 'cons' ? [6, 4] : (r.baseline ? [1, 3] : []),
+      pointRadius: 3, pointHoverRadius: 5, tension: 0, spanGaps: true, fill: false };
+  });
+  // Where those years actually landed — the only non-forecast on the chart, so it is heavy and
+  // navy like every other outcome line in this engine.
+  var actData = null;
+  if (bi < 0 && st.act){
+    actData = ev.years.map(function(y){
+      var v = rsCurveBasis() ? rsEvoActualPctAt(st.metric, m, y, rsCurveBasis(), rsCurveAmt())
+                             : rsEvoActual(st.metric, m, y);
+      return sc(v);
+    });
+    if (actData.some(function(v){ return v != null; })){
+      datasets.push({ label: 'Reported', data: actData, _act: true,
+        borderColor: RS_ACT, backgroundColor: RS_ACT, borderWidth: 3, borderDash: [8, 4],
+        pointRadius: 5, pointStyle: 'rectRot', tension: 0, spanGaps: false, fill: false, order: 0 });
+    }
+  }
+
+  var unitLbl = pct ? '%' : (rsCur(m) + (div === 1000 ? 'B' : 'M'));
+  var baseName = bi < 0 ? null : ev.vintages[bi].label;
+  var tEl = rsPaneEl('rsCurveChartT') || document.getElementById('rsCurveChartT');
+  if (tEl) tEl.innerHTML = esc(m.label) + ' — ' +
+    (bi < 0
+      ? 'the forecast curve, by snapshot <span>(' + esc(unitLbl) + ' per fiscal year · each line is the whole projection as ONE saved file saw it)</span>'
+      : 'change vs ' + esc(baseName) + ' <span>(' + esc(pct ? 'percentage points' : unitLbl) +
+        ' per fiscal year · zero means that file left the year where ' + esc(baseName) + ' had it)</span>');
+
+  st.chart = new Chart(el.getContext('2d'), {
+    type: 'line',
+    data: { labels: ev.years.map(function(y){ return 'FY' + y; }), datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx){
+              var v = ctx.parsed.y;
+              if (v == null) return null;
+              var raw = pct ? v : v * div;
+              var txt = pct ? ((bi < 0 && !amt ? '' : (raw >= 0 ? '+' : '−')) + Math.abs(raw).toFixed(1) + (bi < 0 ? '%' : ' pp'))
+                            : (bi < 0 ? rsFmt(m, raw) : rsFmtD(m, raw));
+              return ctx.dataset.label + ': ' + txt;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { position: 'right', grid: { color: 'rgba(0,0,0,0.05)' },
+          min: st.yr ? st.yr[0] : undefined, max: st.yr ? st.yr[1] : undefined,
+          ticks: { font: { size: 11 }, callback: function(v, i, ts){
+            if (pct) return (bi >= 0 && v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(rsTickDec(ts)) + '%';
+            return rsTick(v, m.unit, div, m.cur, ts);
+          } } }
+      }
+    }
+  });
+
+  // Vertical-only brush: the x-axis is a handful of fiscal years, so a drag is a y-zoom.
+  rsAttachBrush(el, st.chart, null,
+    function(v1, v2){ rsCurveSt().yr = [v1, v2]; rsBuildCurve(); },
+    function(){ rsCurveSt().yr = null; rsBuildCurve(); });
+
+  rsCurveTableRender(m, rows, div);
+  var root = document.getElementById('rsEvoWrap') || document;
+  var th = root.querySelector('[data-rscurvetblb]'); if (th) th.innerHTML = rsCurveHeadHtml(m);
+  var lg = root.querySelector('#rsCurveLegend'); if (lg) lg.innerHTML = rsCurveLegendHtml(m);
+  var note = root.querySelector('#rsCurveNote');
+  if (note){
+    note.textContent = bi < 0
+      ? 'Parallel lines mean a revision moved the LEVEL — every year re-based by the same proportion. Lines that fan mean it moved the SHAPE, which is a change of view rather than of arithmetic.'
+      : 'Read against ' + baseName + ': a line flat at zero left that year untouched, a flat line away from zero moved every year by the same amount, and a sloping one changed the trajectory.';
+  }
+}
+function rsCurveTableRender(m, rows, div){
+  var root = document.getElementById('rsEvoWrap') || document;
+  var el = root.querySelector('#rsCurveTable'); if (!el) return;
+  var ev = rsEvo(), st = rsCurveSt(), bi = rsCurveBaseIdx();
+  var pct = rsCurveIsPct(), amt = rsCurveAmt();
+  function cell(v){
+    if (v == null) return '<span class="rs-ft-nil">—</span>';
+    if (pct) return (bi >= 0 ? ((v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + ' pp') : (v.toFixed(1) + '%'));
+    if (bi >= 0) return rsFmtD(m, v);
+    if (amt) return rsFmtD(m, v);
+    return (v / div).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  }
+  var unitCap = pct ? (bi >= 0 ? 'percentage points' : 'percent')
+                    : (rsCurName(m) + ' ' + (div === 1000 ? 'billions' : 'millions'));
+  var h = '<div class="rs-ft-cap">' + esc(unitCap) + ' · one row per snapshot curve, fiscal years across the top' +
+    (bi < 0 ? ' · the right column is how much the curve travels across the horizon'
+            : ' · measured against ' + esc(ev.vintages[bi].label) + ', so its own row is zero by construction') + '</div>';
+  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h">Snapshot</th>';
+  ev.years.forEach(function(y){ h += '<th>FY' + esc(y) + '</th>'; });
+  h += '<th class="rs-ft-s">' + (bi < 0 ? 'First → last FY' : 'Largest move') + '</th></tr></thead><tbody>';
+  if (!rows.length){
+    h += '<tr><td class="rs-ft-h" colspan="' + (ev.years.length + 2) + '"><span class="rs-ft-dim">Every snapshot is hidden — click a chip above to bring one back.</span></td></tr>';
+  }
+  rows.forEach(function(r){
+    var vals = r.data.filter(function(v){ return v != null; });
+    var sum = '';
+    if (bi < 0){
+      // How far the curve itself travels — the horizon's own slope, not a revision.
+      var f = null, l = null;
+      r.data.forEach(function(v){ if (v != null){ if (f == null) f = v; l = v; } });
+      sum = (f == null || l === f) ? '' : (pct ? ((l - f >= 0 ? '+' : '−') + Math.abs(l - f).toFixed(1) + ' pp') : rsRevHtml(m, f, l));
+    } else if (vals.length){
+      var big = vals.reduce(function(a, v){ return Math.abs(v) > Math.abs(a) ? v : a; }, 0);
+      sum = Math.abs(big) < 0.05 ? '<span class="rs-ft-dim">unmoved</span>'
+          : '<span style="color:' + (big >= 0 ? RS_GREEN : RS_RED) + '">' + cell(big) + '</span>';
+    }
+    h += '<tr class="rs-ft-main"><td class="rs-ft-h">' + esc(r.label) +
+      (r.baseline ? ' <span class="rs-ft-dim">baseline</span>' : '') + '</td>';
+    r.data.forEach(function(v){ h += '<td>' + cell(v) + '</td>'; });
+    h += '<td class="rs-ft-s">' + sum + '</td></tr>';
+  });
+  // The outcome row, where the years have landed — the thing every curve above is guessing at.
+  if (bi < 0){
+    var acts = ev.years.map(function(y){
+      return rsCurveBasis() ? rsEvoActualPctAt(st.metric, m, y, rsCurveBasis(), rsCurveAmt())
+                            : rsEvoActual(st.metric, m, y);
+    });
+    if (acts.some(function(v){ return v != null; })){
+      h += '<tr class="rs-ft-main"><td class="rs-ft-h">Reported</td>';
+      acts.forEach(function(v){ h += '<td>' + (v == null ? '<span class="rs-ft-dim">still open</span>' : '<b>' + cell(v) + '</b>') + '</td>'; });
+      h += '<td class="rs-ft-s"></td></tr>';
+    }
+  }
+  h += '</tbody></table></div>';
+  el.innerHTML = h;
+}
+function rsRerenderCurve(){
+  var host = (document.getElementById('rsEvoWrap') || document).querySelector('#rsCurveHost');
+  if (!host) return;
+  host.innerHTML = rsCurveBlockHtml();
+  rsBuildCurve();
+}
+
 export function initResultsEvo(ticker){
   // Re-target the shared engine state to THIS ticker's dataset. The Setup/Results charts share _rs,
   // so _rs.data may be left pointing at a *_SETUP dataset (which has no `evolution`) → empty charts.
@@ -3530,6 +3881,35 @@ export function initResultsEvo(ticker){
   }
   wrap.onclick = function(e){
     var k;
+    // ── Projection curve (one block at the foot of the pane, its own everything) ──
+    var cvt = e.target.closest('[data-rscurvetblb]');
+    if (cvt){
+      var cst0 = rsCurveSt();
+      cst0.tbl = cst0.tbl !== true;
+      var cb = wrap.querySelector('#rsCurveTableBody');
+      if (cb) cb.hidden = cst0.tbl !== true;
+      cvt.innerHTML = rsCurveHeadHtml(rsCurveM());
+      return;
+    }
+    var cvc = e.target.closest('[data-rscurvesrc], [data-rscurvemode], [data-rscurvegunit]');
+    if (cvc && !cvc.disabled){
+      var cst = rsCurveSt();
+      if (cvc.hasAttribute('data-rscurvesrc'))   cst.src = cvc.getAttribute('data-rscurvesrc');
+      if (cvc.hasAttribute('data-rscurvemode'))  cst.mode = cvc.getAttribute('data-rscurvemode');
+      if (cvc.hasAttribute('data-rscurvegunit')) cst.growUnit = cvc.getAttribute('data-rscurvegunit');
+      cst.yr = null;                                   // the units on the axis changed
+      rsRerenderCurve();
+      return;
+    }
+    var cva = e.target.closest('[data-rscurveact]');
+    if (cva){ var ast2 = rsCurveSt(); ast2.act = !ast2.act; rsBuildCurve(); return; }
+    var cvl = e.target.closest('[data-rscurveleg]');
+    if (cvl){
+      var cst2 = rsCurveSt(), ck = cvl.getAttribute('data-rscurveleg');
+      cst2.hidden[ck] = !cst2.hidden[ck];
+      rsBuildCurve();
+      return;
+    }
     var rb = e.target.closest('[data-rsevrecb]');
     if (rb){
       k = rb.getAttribute('data-rsevrecb');
@@ -3586,6 +3966,21 @@ export function initResultsEvo(ticker){
     }
   };
   wrap.onchange = function(e){
+    if (e.target.classList.contains('rs-curvesel')){
+      var cs = rsCurveSt();
+      cs.metric = e.target.value;
+      cs.mode = 'usd';                                 // % means something different per metric
+      cs.yr = null;
+      rsRerenderCurve();
+      return;
+    }
+    if (e.target.classList.contains('rs-curvebase')){
+      var cb2 = rsCurveSt();
+      cb2.base = e.target.value;
+      cb2.yr = null;                                   // absolute ⇄ difference changes the scale
+      rsRerenderCurve();
+      return;
+    }
     if (!e.target.classList.contains('rs-esel')) return;
     var k = secOf(e.target);
     if (!k) return;
@@ -3599,4 +3994,5 @@ export function initResultsEvo(ticker){
   // on dataset state, and the markup was generated when the pane's HTML string was built —
   // which can be long before this runs.
   rsEvo().sections.forEach(function(s){ rsRerenderEvoHead(wrap, s.key); rsBuildEvo(s.key); });
+  rsBuildCurve();                     // the transpose at the foot of the pane
 }

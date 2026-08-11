@@ -7,8 +7,9 @@ in it is Uber-specific or even Results-specific. **If you are adding a chart any
 portal, read this before writing one from scratch:** you probably want a dataset, not a canvas.
 
 Written Aug 10, 2026, after the revamp on `feat/results-estimates-revamp`. Companions:
-`docs/RESULTS_CONVENTIONS.md` (the data contract, §8 the vintage axis) and
-`docs/RESULTS_ESTIMATES_HANDOFF.md` (project state).
+`docs/CHART_ENGINE_REFERENCE.md` (**every function and control, in detail** — the map to read
+when you are changing the engine rather than reusing it), `docs/RESULTS_CONVENTIONS.md` (the data
+contract, §8 the vintage axis) and `docs/RESULTS_ESTIMATES_HANDOFF.md` (project state).
 
 ---
 

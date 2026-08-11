@@ -3542,8 +3542,8 @@ function rsRenderEvoTrack(k, m){
 // view move across files". This block is the plain one — pick any archived file and see what it
 // projected, in bars, the same way Results draws a period.
 function rsCurveSt(){
-  if (!_rs.curve) _rs.curve = { metric: null, vi: null, mode: 'usd', growUnit: 'pct',
-    hidden: {}, yr: null, chart: null, tbl: false };
+  if (!_rs.curve) _rs.curve = { metric: null, vi: null, vi2: null, cmp: false,
+    mode: 'usd', growUnit: 'pct', hidden: {}, yr: null, chart: null, tbl: false };
   return _rs.curve;
 }
 // The selected snapshot, defaulting to the newest — here the newest IS the right default: this
@@ -3553,6 +3553,21 @@ function rsCurveVi(){
   if (st.vi == null || st.vi < 0 || st.vi >= n) st.vi = n - 1;
   return st.vi;
 }
+// The comparison snapshot. Defaults to the one immediately BEFORE the selected file — "what
+// changed at this save" is the question Compare gets opened for nine times out of ten.
+function rsCurveVi2(){
+  var ev = rsEvo(), st = rsCurveSt(), n = (ev.vintages || []).length, vi = rsCurveVi();
+  if (st.vi2 == null || st.vi2 < 0 || st.vi2 >= n || st.vi2 === vi) st.vi2 = vi > 0 ? vi - 1 : Math.min(1, n - 1);
+  return st.vi2;
+}
+function rsCurveCmp(){
+  var ev = rsEvo();
+  return !!(rsCurveSt().cmp && (ev.vintages || []).length > 1);
+}
+// The comparison file is drawn in a washed-out version of its series' own colour rather than a
+// colour of its own: the reader is comparing two SNAPSHOTS of the same line, so the line has to
+// stay recognisable and only its age should change.
+var RS_CURVE_DIM = { act: 'rgba(30,39,51,0.30)', summit: 'rgba(37,99,235,0.32)', cons: 'rgba(124,134,148,0.38)' };
 function rsCurveGroups(){
   var ev = rsEvo(), out = [];
   (ev.sections || []).forEach(function(cfg){
@@ -3572,8 +3587,9 @@ function rsCurveIsPct(){ return !!rsCurveBasis() && !rsCurveAmt(); }
 // The selected snapshot's projection for one source, across every fiscal year on the axis —
 // transformed by whichever mode is on. `act` is the reported figure, which belongs to the year
 // rather than to any snapshot, and is only ever present where a year has closed.
-function rsCurveSeries(m, src){
-  var ev = rsEvo(), vi = rsCurveVi(), basis = rsCurveBasis(), amt = rsCurveAmt();
+function rsCurveSeries(m, src, vi){
+  var ev = rsEvo(), basis = rsCurveBasis(), amt = rsCurveAmt();
+  if (vi == null) vi = rsCurveVi();
   if (src === 'act'){
     return ev.years.map(function(y){
       return basis ? rsEvoActualPctAt(rsCurveSt().metric, m, y, basis, amt)
@@ -3609,7 +3625,7 @@ function rsCurveBlockHtml(){
   if (!ev || !ev.vintages || ev.vintages.length < 2) return '';   // one snapshot is not a curve to compare
   var m = rsCurveM();
   if (!m) return '';
-  var st = rsCurveSt(), vi = rsCurveVi();
+  var st = rsCurveSt(), vi = rsCurveVi(), cmp = rsCurveCmp(), vi2 = cmp ? rsCurveVi2() : -1;
   var b = function(attr, val, on, label, title, dis){
     return '<button type="button" class="rs-view' + (on ? ' active' : '') + '" data-' + attr + '="' + val + '"' +
       (dis ? ' disabled' : '') + (title ? ' title="' + esc(title) + '"' : '') + '>' + label + '</button>';
@@ -3622,10 +3638,20 @@ function rsCurveBlockHtml(){
         return '<option value="' + k + '"' + (k === st.metric ? ' selected' : '') + '>' + esc(rsOptLabel(ev.metrics[k])) + '</option>';
       }).join('') + '</optgroup>';
     }).join('') + '</select>' +
-    '<select class="rs-msel rs-curvevsel" aria-label="Snapshot">' + ev.vintages.map(function(v, i){
-      return '<option value="' + i + '"' + (i === vi ? ' selected' : '') + '>' + esc(v.label) +
-        (v.event ? ' · ' + esc(v.event) : '') + '</option>';
-    }).join('') + '</select></div>';
+    // NEWEST FIRST. The register is stored oldest-first because that is the order the files were
+    // written in, but a list of dates gets read from the top, and the top of this one should be
+    // the file you are most likely to want (SAB, Aug 11 2026). The option VALUE stays the stored
+    // index, so nothing downstream has to know the list was reversed.
+    rsCurveVselHtml('rs-curvevsel', vi, null) +
+    '<button type="button" class="rs-view rs-curvecmpb' + (cmp ? ' active' : '') + '" data-rscurvecmp="1"' +
+      (ev.vintages.length > 1 ? '' : ' disabled') +
+      ' title="Put a second snapshot beside this one, to see what the save changed">' +
+      (cmp ? '✕ Comparing' : '⇄ Compare') + '</button>' +
+    // "vs" and its select wrap as ONE unit — orphaned at the end of the row above, the word
+    // read as though the comparison had been dropped.
+    (cmp ? '<span class="rs-curvevs"><span class="rs-quick-l">vs</span>' +
+           rsCurveVselHtml('rs-curvevsel2', vi2, vi) + '</span>' : '') +
+    '</div>';
   // Row 2: how to read it. Nothing else — this block has no window and no baseline.
   h += '<div class="rs-block-modes"><div class="rs-modes">' +
     '<div class="rs-views">' +
@@ -3652,6 +3678,21 @@ function rsCurveBlockHtml(){
   h += '</div>';
   return h;
 }
+// One snapshot dropdown, newest at the top. `exclude` drops the file already picked by the other
+// select, so the two can never land on the same date and draw a comparison against itself.
+function rsCurveVselHtml(cls, sel, exclude){
+  var ev = rsEvo();
+  var opts = ev.vintages.map(function(v, i){ return { i: i, v: v }; })
+    .filter(function(o){ return o.i !== exclude; })
+    .sort(function(a, b){ return b.i - a.i; });
+  // The event loses its trailing "print" — "post-2Q26" is unambiguous next to a date, and the
+  // six characters are what decided whether this row fits on one line or two.
+  return '<select class="rs-msel ' + cls + '" aria-label="Snapshot">' + opts.map(function(o){
+    var ev2 = o.v.event ? String(o.v.event).replace(/\s*print$/, '') : '';
+    return '<option value="' + o.i + '"' + (o.i === sel ? ' selected' : '') + '>' + esc(o.v.label) +
+      (ev2 ? ' · ' + esc(ev2) : '') + '</option>';
+  }).join('') + '</select>';
+}
 function rsCurveLegendHtml(m){
   var st = rsCurveSt();
   var h = RS_CURVE_SER.filter(function(s){ return rsCurveHas(m, s.key); }).map(function(s){
@@ -3664,7 +3705,12 @@ function rsCurveLegendHtml(m){
   var ya = rsCurveActYears(m);
   if (!ya.length)
     h += '<span class="rs-noguide" title="No fiscal year on this axis has closed yet, so there is nothing on the chart that is not a forecast.">⚑ No year has closed yet</span>';
-  h += '<span class="tech-leg-i" style="margin-left:auto">what this one file projected · click a chip to hide it</span>';
+  var ev = rsEvo();
+  h += '<span class="tech-leg-i" style="margin-left:auto">' +
+    (rsCurveCmp()
+      ? 'solid = ' + esc(ev.vintages[rsCurveVi()].label) + ' · faded = ' + esc(ev.vintages[rsCurveVi2()].label)
+      : 'what this one file projected') +
+    ' · click a chip to hide it</span>';
   return h;
 }
 // Fiscal years on the axis that have actually landed, in the current mode.
@@ -3682,30 +3728,50 @@ function rsBuildCurve(){
   if (st.chart){ st.chart.destroy(); st.chart = null; }
 
   var vi = rsCurveVi(), pct = rsCurveIsPct(), amt = rsCurveAmt();
+  var cmp = rsCurveCmp(), vi2 = cmp ? rsCurveVi2() : -1;
   var div = rsEvoScaleOf(m);
   var sc = function(v){ return v == null ? null : (pct ? v : v / div); };
-  var raw = {};
-  RS_CURVE_SER.forEach(function(s){ raw[s.key] = rsCurveHas(m, s.key) ? rsCurveSeries(m, s.key) : []; });
+  // `raw` holds the selected file, `raw2` the comparison one. The reported row is the same in
+  // both — it belongs to the fiscal year, not to any snapshot — so it is never doubled.
+  var raw = {}, raw2 = {};
+  RS_CURVE_SER.forEach(function(s){
+    raw[s.key] = rsCurveHas(m, s.key) ? rsCurveSeries(m, s.key, vi) : [];
+    raw2[s.key] = (cmp && rsCurveHas(m, s.key)) ? rsCurveSeries(m, s.key, vi2) : [];
+  });
 
   // Bars, grouped per fiscal year, in the same order and colours Results uses — so a reader
-  // moving between the two panes is looking at the same picture with a different x-axis.
+  // moving between the two panes is looking at the same picture with a different x-axis. Under
+  // Compare each estimate series gets a second, faded bar: the older file on the left of the
+  // pair, so a group reads left-to-right in time.
   var datasets = [];
   RS_CURVE_SER.forEach(function(s, i){
     if (st.hidden[s.key] || !rsCurveHas(m, s.key)) return;
-    var arr = raw[s.key];
-    if (!arr.some(function(v){ return v != null; })) return;
-    datasets.push({ label: s.label, data: arr.map(sc), _key: s.key,
-      backgroundColor: s.color, borderRadius: 3, maxBarThickness: 46, order: i + 1 });
+    var arr = raw[s.key], old = raw2[s.key];
+    var any = function(a){ return a && a.some(function(v){ return v != null; }); };
+    if (!any(arr) && !any(old)) return;
+    var pushOne = function(a, isOld, ord){
+      datasets.push({ label: s.label + (cmp && s.key !== 'act' ? ' · ' + ev.vintages[isOld ? vi2 : vi].label : ''),
+        data: a.map(sc), _key: s.key, _old: isOld,
+        backgroundColor: isOld ? RS_CURVE_DIM[s.key] : s.color,
+        borderRadius: 3, maxBarThickness: 46, order: ord });
+    };
+    // The actual does not move with the snapshot, so it stays a single bar under Compare too.
+    if (cmp && s.key !== 'act' && any(old)){
+      if (vi2 < vi){ pushOne(old, true, i * 2 + 1); if (any(arr)) pushOne(arr, false, i * 2 + 2); }
+      else { if (any(arr)) pushOne(arr, false, i * 2 + 1); pushOne(old, true, i * 2 + 2); }
+    } else if (any(arr)) pushOne(arr, false, i * 2 + 1);
   });
 
   var unitLbl = pct ? '%' : (rsCur(m) + (div === 1000 ? 'B' : 'M'));
-  var vint = ev.vintages[vi] || {};
+  var vint = ev.vintages[vi] || {}, vint2 = cmp ? (ev.vintages[vi2] || {}) : null;
   var tEl = rsPaneEl('rsCurveChartT') || document.getElementById('rsCurveChartT');
-  if (tEl) tEl.innerHTML = esc(m.label) + ' · as of ' + esc(vint.label || '—') + ' — ' +
+  if (tEl) tEl.innerHTML = esc(m.label) + ' · ' +
+    (cmp ? esc(vint.label || '—') + ' vs ' + esc(vint2.label || '—') : 'as of ' + esc(vint.label || '—')) + ' — ' +
     (pct ? (rsCurveBasis() === 'grow' ? 'implied YoY growth' : esc(m.marginLabel || 'margin'))
          : 'the projection') +
-    ' <span>(' + esc(unitLbl) + ' per fiscal year · what this one saved file said' +
-    (vint.event ? ', ' + esc(vint.event) : '') + ')</span>';
+    ' <span>(' + esc(unitLbl) + ' per fiscal year · ' +
+    (cmp ? 'what changed between the two saves · hover for the move'
+         : 'what this one saved file said' + (vint.event ? ', ' + esc(vint.event) : '')) + ')</span>';
 
   // Fiscal years with no reported figure are forward — the same shading and the same bubbled
   // labels Results uses, so "closed" versus "still a forecast" reads identically in both panes.
@@ -3725,12 +3791,25 @@ function rsBuildCurve(){
         tooltip: {
           callbacks: {
             label: function(ctx){
-              var i = ctx.dataIndex, key = ctx.dataset._key, v = raw[key] ? raw[key][i] : null;
+              var i = ctx.dataIndex, key = ctx.dataset._key, old = ctx.dataset._old;
+              var src = old ? raw2 : raw;
+              var v = src[key] ? src[key][i] : null;
               if (v == null) return null;
-              var txt = pct ? (rsCurveBasis() === 'grow' ? ((v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '%')
-                                                         : (v.toFixed(1) + '%'))
-                            : (amt ? rsFmtD(m, v) : rsFmt(m, v));
-              var line = ctx.dataset.label + ': ' + txt;
+              var fmt = function(x){
+                return pct ? (rsCurveBasis() === 'grow' ? ((x >= 0 ? '+' : '−') + Math.abs(x).toFixed(1) + '%')
+                                                        : (x.toFixed(1) + '%'))
+                           : (amt ? rsFmtD(m, x) : rsFmt(m, x));
+              };
+              var line = ctx.dataset.label + ': ' + fmt(v);
+              // Under Compare the move between the two saves is the whole point, so it is on the
+              // NEWER bar — where the reader's eye already is — rather than left to subtraction.
+              if (cmp && !old && key !== 'act'){
+                var o = raw2[key] ? raw2[key][i] : null;
+                if (o != null){
+                  line += pct ? '  (' + ((v - o) >= 0 ? '+' : '−') + Math.abs(v - o).toFixed(1) + ' pp vs ' + ev.vintages[vi2].label + ')'
+                              : '  (' + rsFmtD(m, v - o) + ' vs ' + ev.vintages[vi2].label + ')';
+                }
+              }
               // Where the year has closed, an estimate is worth scoring against it right here.
               var a = raw.act ? raw.act[i] : null;
               if (key !== 'act' && a != null){
@@ -3762,18 +3841,19 @@ function rsBuildCurve(){
     function(v1, v2){ rsCurveSt().yr = [v1, v2]; rsBuildCurve(); },
     function(){ rsCurveSt().yr = null; rsBuildCurve(); });
 
-  rsCurveTableRender(m, raw, div);
+  rsCurveTableRender(m, raw, raw2, div);
   var root = document.getElementById('rsEvoWrap') || document;
   var th = root.querySelector('[data-rscurvetblb]'); if (th) th.innerHTML = rsCurveHeadHtml(m);
   var lg = root.querySelector('#rsCurveLegend'); if (lg) lg.innerHTML = rsCurveLegendHtml(m);
   var note = root.querySelector('#rsCurveNote');
   if (note) note.textContent = m.note || '';
 }
-function rsCurveTableRender(m, raw, div){
+function rsCurveTableRender(m, raw, raw2, div){
   var root = document.getElementById('rsEvoWrap') || document;
   var el = root.querySelector('#rsCurveTable'); if (!el) return;
   var ev = rsEvo(), st = rsCurveSt(), pct = rsCurveIsPct(), amt = rsCurveAmt();
   var grow = rsCurveBasis() === 'grow';
+  var cmp = rsCurveCmp(), vi2 = cmp ? rsCurveVi2() : -1;
   function cell(v){
     if (v == null) return '<span class="rs-ft-nil">—</span>';
     if (pct) return grow ? ((v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '%') : (v.toFixed(1) + '%');
@@ -3784,7 +3864,8 @@ function rsCurveTableRender(m, raw, div){
   var unitCap = pct ? 'percent' : (rsCurName(m) + ' ' + (div === 1000 ? 'billions' : 'millions'));
   var vint = ev.vintages[rsCurveVi()] || {};
   var h = '<div class="rs-ft-cap">' + esc(unitCap) + ' · the ' + esc(vint.label || '') +
-    ' snapshot, fiscal years across the top · the right column is how far the projection travels over the horizon' +
+    ' snapshot' + (cmp ? ' against ' + esc(ev.vintages[vi2].label) : '') +
+    ', fiscal years across the top · the right column is how far the projection travels over the horizon' +
     ' · <span class="rs-ft-e">E</span> = no reported figure for that year yet</div>';
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   var lastA = -1;
@@ -3809,6 +3890,24 @@ function rsCurveTableRender(m, raw, div){
     arr.forEach(function(v, i){ h += '<td class="' + (i > lastA ? 'rs-ft-este' : '') + '">' +
       (s.key === 'act' ? '<b>' + cell(v) + '</b>' : cell(v)) + '</td>'; });
     h += '<td class="rs-ft-s">' + sum + '</td></tr>';
+    // Under Compare: the older file's row, then the move between the two — which is the number
+    // the button was opened for, so it gets its own row rather than being left to subtraction.
+    if (cmp && s.key !== 'act'){
+      var old = (raw2 && raw2[s.key]) || [];
+      h += '<tr class="rs-ft-sub rs-ft-nb"><td class="rs-ft-h">' + esc(ev.vintages[vi2].label) + '</td>';
+      ev.years.forEach(function(_, i){ h += '<td class="' + (i > lastA ? 'rs-ft-este' : '') + '">' + cell(old[i]) + '</td>'; });
+      h += '<td class="rs-ft-s"></td></tr>';
+      h += '<tr class="rs-ft-sub rs-ft-nb"><td class="rs-ft-h">the move</td>';
+      ev.years.forEach(function(_, i){
+        var a = arr[i], o = old[i];
+        if (a == null || o == null){ h += '<td class="' + (i > lastA ? 'rs-ft-este' : '') + '"><span class="rs-ft-nil">—</span></td>'; return; }
+        h += '<td class="' + (i > lastA ? 'rs-ft-este' : '') + '">' +
+          (pct ? (Math.abs(a - o) < 0.05 ? '<span class="rs-ft-dim">0.0 pp</span>'
+                 : '<span style="color:' + (a - o >= 0 ? RS_GREEN : RS_RED) + '">' + (a - o >= 0 ? '+' : '−') + Math.abs(a - o).toFixed(1) + ' pp</span>')
+               : rsRevHtml(m, o, a)) + '</td>';
+      });
+      h += '<td class="rs-ft-s"></td></tr>';
+    }
     // Scored against the print, wherever the year has closed.
     if (s.key !== 'act' && (raw.act || []).some(function(v){ return v != null; })){
       h += '<tr class="rs-ft-sub"><td class="rs-ft-h">vs reported</td>';
@@ -3855,6 +3954,14 @@ export function initResultsEvo(ticker){
       var cb = wrap.querySelector('#rsCurveTableBody');
       if (cb) cb.hidden = cst0.tbl !== true;
       cvt.innerHTML = rsCurveHeadHtml(rsCurveM());
+      return;
+    }
+    var cvb = e.target.closest('[data-rscurvecmp]');
+    if (cvb && !cvb.disabled){
+      var bst = rsCurveSt();
+      bst.cmp = !bst.cmp;
+      bst.yr = null;                                   // a second series can widen the range
+      rsRerenderCurve();
       return;
     }
     var cvc = e.target.closest('[data-rscurvemode], [data-rscurvegunit]');
@@ -3937,9 +4044,18 @@ export function initResultsEvo(ticker){
       rsRerenderCurve();
       return;
     }
+    if (e.target.classList.contains('rs-curvevsel2')){
+      var cvB = rsCurveSt();
+      cvB.vi2 = +e.target.value;
+      cvB.yr = null;
+      rsRerenderCurve();
+      return;
+    }
     if (e.target.classList.contains('rs-curvevsel')){
       var cv2 = rsCurveSt();
       cv2.vi = +e.target.value;                        // pick any archived file — that is the block
+      // The comparison cannot be the file you just selected; let it re-derive.
+      if (cv2.vi2 === cv2.vi) cv2.vi2 = null;
       cv2.yr = null;
       rsRerenderCurve();
       return;

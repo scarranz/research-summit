@@ -292,8 +292,15 @@ disagree with it.
 
 **Keep it plain.** The first version drew every snapshot at once as a ramp of lines plus a
 baseline selector — which is a different question, and one the chart above it already answers.
-This block is the flat one: one file, one projection. There is no window, no baseline and no
-source toggle.
+This block is the flat one: one file, one projection. There is no window and no source toggle.
+
+**Compare** puts a second snapshot beside the first — one faded bar per estimate series, the
+older on the left of each pair so a group reads left-to-right in time. The reported figure stays
+a single bar: it belongs to the fiscal year, not to any snapshot. The move between the two saves
+is on the newer bar's tooltip and gets its own row in the table, because it is the number the
+button was opened for. The second dropdown excludes the file already picked, so a comparison can
+never be against itself. Both dropdowns list **newest first** — the register is stored oldest-first
+because that is the order the files were written in, but a list of dates is read from the top.
 
 * **Modes** `US$B · Growth · Margin %`, computed through the same `rsEvoPctAt` / `rsEvoActualPctAt`
   the charts above use — which is why those now take their basis as an argument instead of reading

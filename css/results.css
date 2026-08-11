@@ -208,6 +208,17 @@
    as though something is missing from it. */
 .rs-cpsel { min-width:170px; }
 
+/* Compare, in the Estimates projection block. A single pill rather than a group, because it is
+   a switch and not a choice between readings — and it carries its own state in its label
+   ("⇄ Compare" / "✕ Comparing") so the row says what it is doing without a second look. */
+.rs-curvecmpb { border:1px solid var(--bdr); border-radius:8px; }
+.rs-curvevsel2 { border-color:#9FB0C4; }
+/* Both snapshot selects are narrower than a metric select — a date plus its event is ~28
+   characters, and 240px for that is what pushed the comparison onto a second row. */
+.rs-curvevsel, .rs-curvevsel2 { min-width:172px; }
+.rs-curvesel { min-width:210px; }
+.rs-curvevs { display:inline-flex; align-items:center; gap:8px; }
+
 /* Low / Mid / High — which end of a guided range a comparison is scored at. The inline label
    is what keeps it from reading as another mode pill: without it, "Low · Mid · High" beside
    "$B · Growth · Margin %" looks like a fourth way to read the chart rather than a choice

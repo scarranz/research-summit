@@ -207,13 +207,21 @@ controls above them.
 
 A guided range is **three numbers**, and which one a print is judged by is a real choice, not a
 formatting detail. `Low · Mid · High` appears wherever guidance enters a comparison as a single
-number (`rsGptHtml` + `rsGuideAt`), and it is the state each block holds as `gpt`:
+number (`rsGuideAt`), and it is the state each block holds as `gpt`:
 
-| Where | What it moves |
-|---|---|
-| A Results block | the period table's `actual vs range` row and its Range-record summary — **not** the chart, where the band stays a band |
-| The surprise scorecard | everything, since the guide is a comparator there; the chip relabels itself `Guidance (low)` |
-| Road to the print | the `vs …` row in the table, and the zero line under Distance ▸ vs Guidance |
+| Where | What it moves | Where the control lives |
+|---|---|---|
+| A Results block | the period table's `actual vs range` row and its Range-record summary — **not** the chart, where the band stays a band | **in that row's own label cell** |
+| The surprise scorecard | everything, since the guide is a comparator there; the chip relabels itself `Guidance (low)` | the Compare row, beside the guidance chip |
+| Road to the print | the `vs …` row in the table, and — under Distance ▸ vs Guidance — the zero line | the row's label, or the control row when it sets the zero line |
+
+**A control goes where the thing it changes is** (SAB, Aug 11 2026). The Results version spent one
+commit in the block's control row and was wrong there twice over: that row is for controls that
+change the CHART, and it stood permanently even on metrics the company never guides. Living on the
+row makes it self-limiting — it exists only where a guidance row exists. There are two renderers
+for one state (`rsGptHtml` for a control row, `rsGptMiniHtml` for inside a table) and never two
+copies on screen at once: Road to the print drops the table copy exactly when the control-row copy
+appears. The in-table click also repaints **only the table** — no chart teardown, no lost brush.
 
 The midpoint is the neutral read. The **low** end is the bar the company actually committed to —
 a print landing at the bottom of the range is a very different event from one landing at the top,

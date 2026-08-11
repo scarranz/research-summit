@@ -210,5 +210,19 @@
 /* Low / Mid / High — which end of a guided range a comparison is scored at. The inline label
    is what keeps it from reading as another mode pill: without it, "Low · Mid · High" beside
    "$B · Growth · Margin %" looks like a fourth way to read the chart rather than a choice
-   about one series. */
+   about one series. Only rendered above a chart it actually changes. */
 .rs-gpt-l { margin-left:4px; }
+
+/* …and the in-table variant, which is where it usually lives: inside the sticky label cell of
+   the one row whose arithmetic it moves. Sized to the 10.5px sub-row type and dropped onto its
+   own line, so the cell keeps its width and the row keeps its height. */
+.rs-gptmini { display:flex; gap:0; margin-top:3px; width:max-content; }
+.rs-gptmini button {
+  appearance:none; border:1px solid var(--bdr); border-right:0; background:var(--w);
+  color:var(--mu); font:700 9px 'Inter', sans-serif; letter-spacing:.02em;
+  padding:2px 6px; cursor:pointer; line-height:1.4;
+}
+.rs-gptmini button:first-child { border-radius:5px 0 0 5px; }
+.rs-gptmini button:last-child { border-right:1px solid var(--bdr); border-radius:0 5px 5px 0; }
+.rs-gptmini button:hover { color:var(--navy); }
+.rs-gptmini button.on { background:var(--navy); border-color:var(--navy); color:#fff; }

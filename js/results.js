@@ -321,6 +321,18 @@ function rsGptHtml(attr, cur, ranged, label){
         ' end of the guided range">' + g[1] + '</button>';
     }).join('') + '</div>';
 }
+// The same choice, sized to live INSIDE a table row — in the sticky label cell of the row whose
+// arithmetic it changes. That is where it belongs: it moves one row's numbers, not the chart, so
+// it has no business holding permanent space in the control row above (SAB, Aug 11 2026). Sitting
+// on the row also makes it self-limiting — it exists only where a guidance row exists, which is
+// only where the company actually guided that line.
+function rsGptMiniHtml(attr, cur){
+  return '<span class="rs-gptmini">' + RS_GPTS.map(function(g){
+    return '<button type="button" class="' + ((cur || 'mid') === g[0] ? 'on' : '') + '" data-' + attr +
+      '="' + g[0] + '" title="Score against the ' + rsGptName(g[0]) + ' end of the guided range">' +
+      g[1] + '</button>';
+  }).join('') + '</span>';
+}
 // Axis tick: negatives as −$50B, not $-50B; whole dollars only (zoomed bounds
 // arrive fractional — $135.13111B would eat the chart's left margin). `div` is
 // the metric's display scale from rsScaleOf (1000 → $B axis, 1 → $M axis).
@@ -750,10 +762,11 @@ function rsBlockModesHtml(k, m){
       b('rsgunit', 'pct', !rsGrowAmt(k), '%') +
       b('rsgunit', 'amt', rsGrowAmt(k), 'Amount') + '</div>';
   }
-  // Which end of the guided range the PERIOD TABLE scores against. It does not touch the chart:
-  // the band there stays a band, which is the honest picture of what the company said. This
-  // answers the next question down — "and did we clear the floor, or only the midpoint".
-  h += rsGptHtml('rsgpt', rsSt(k).gpt, !marg && rsGuideRanged(m), 'Score guidance at');
+  // NB: the Low/Mid/High guidance control is deliberately NOT here (SAB, Aug 11 2026). It sat
+  // in this row for one commit and was wrong there: this row is where controls that change the
+  // CHART live, and that one changes a single row of the period table. Up here it also stood
+  // permanently, on metrics the company never guides. It now renders inside the table, on the
+  // row whose arithmetic it moves — see rsRenderTable.
   return h;
 }
 
@@ -1360,7 +1373,12 @@ function rsRenderTable(k, m){
     }, 'main nb', '');
     // "within" only exists when there IS a range; against a single guided number the
     // comparison is simply above or below it, and the delta is vs the guide, not vs an end.
-    h += row(anyRangeRow ? 'actual vs range' : 'actual vs guide', function(i){
+    // The Low/Mid/High pills ride in this row's own label, because this row is the only thing
+    // they change — and a company that guides a single number gets no pills at all.
+    var vsLabel = anyRangeRow
+      ? 'actual vs range' + rsGptMiniHtml('rsgpt', gpt)
+      : 'actual vs guide';
+    h += row(vsLabel, function(i){
       if (m.guideLo[i] == null || m.act[i] == null) return '<span class="rs-ft-nil">—</span>';
       var point = m.guideLo[i] === m.guideHi[i];
       var g = rsGuideAt(m, i, gpt), d = g == null ? null : m.act[i] - g;
@@ -2608,9 +2626,11 @@ function rsConvBlockHtml(){
       b('rsconvunit', 'pct', rsConvIsPct(), '%') +
       b('rsconvunit', 'amt', !rsConvIsPct(), 'Amount') + '</div>';
   }
-  // The guided end is offered whenever this period carries a real range: in Distance-vs-Guidance
-  // it moves the zero line, and in every mode it drives the "vs guide" row in the table below.
-  h += rsGptHtml('rsconvgpt', st.gpt, rsGuideRanged(m) && hasGuide && m.guideLo[pi] !== m.guideHi[pi], 'Guide at');
+  // Up here ONLY when it moves the chart — under Distance ▸ vs Guidance the chosen end IS the
+  // zero line. In every other mode it just re-bases a table row, and it rides in that row's own
+  // label instead (see rsConvTableRender), so it never holds space above a chart it cannot change.
+  var gRanged = hasGuide && m.guideLo[pi] !== m.guideHi[pi];
+  h += rsGptHtml('rsconvgpt', st.gpt, gRanged && dist && st.base === 'guide', 'Guide at');
   h += '</div></div>';
   h += '<div class="ave-leg" id="rsConvLegend">' + rsConvLegendHtml(m, pi) + '</div>';
   h += '<div class="ov-chart-card">' +
@@ -2820,6 +2840,10 @@ function rsConvTableRender(m, mkey, pi, vints, div){
   var gref = rsGuideAt(m, pi, gpt);
   var ranged = !!(gref != null && m.guideLo[pi] !== m.guideHi[pi]);
   var gname = ranged ? rsGptName(gpt) : 'guide';
+  // One control per screen. The block's own row already carries the pills when the chart is
+  // zeroed on the guide, and drawing them again down here would be the same state twice.
+  var shown = false;
+  function gptShown(){ var was = shown; shown = true; return was || (rsConvIsDist() && st.base === 'guide'); }
   function num(v){
     if (v == null) return '<span class="rs-ft-nil">—</span>';
     if (m.unit === 'eps') return Number(v).toFixed(2);
@@ -2862,7 +2886,9 @@ function rsConvTableRender(m, mkey, pi, vints, div){
       return s + '<td class="rs-ft-s"></td></tr>';
     }
     r += sub('vs actual', act, gref == null);
-    r += sub('vs ' + gname, gref, true);
+    // The pills sit on the guidance row itself, and only on the FIRST such row — repeating them
+    // once per source would be three copies of one setting arguing on the same screen.
+    r += sub('vs ' + gname + (ranged && !gptShown() ? rsGptMiniHtml('rsconvgpt', gpt) : ''), gref, true);
     return r;
   }
   h += block('Summit model', rsConvSeries('summit', mkey, m, pi, vints));
@@ -2961,7 +2987,19 @@ function wireResults(pane){
       tb.innerHTML = rsTableHeadHtml(tk, rsMetric(tk));
       return;
     }
-    var ctl = e.target.closest('[data-rsview], [data-rsmode], [data-rsgrow], [data-rsgunit], [data-rsgpt]');
+    // The guidance end changes ONE ROW of the period table. Handled before the control-row
+    // branch and on its own, so it repaints the table and nothing else: no chart teardown, no
+    // lost brush, no flicker on a click that moved a single arithmetic base.
+    var gp = e.target.closest('[data-rsgpt]');
+    if (gp){
+      var gblk = gp.closest('[data-rsblock]');
+      if (!gblk) return;
+      var gk = gblk.getAttribute('data-rsblock');
+      rsSt(gk).gpt = gp.getAttribute('data-rsgpt');
+      rsRenderTable(gk, rsMetric(gk));
+      return;
+    }
+    var ctl = e.target.closest('[data-rsview], [data-rsmode], [data-rsgrow], [data-rsgunit]');
     if (ctl){
       var blk = ctl.closest('[data-rsblock]');
       if (!blk) return;
@@ -2974,10 +3012,7 @@ function wireResults(pane){
       if (ctl.hasAttribute('data-rsmode')) bst.mode = ctl.getAttribute('data-rsmode');
       if (ctl.hasAttribute('data-rsgrow')) bst.growth = ctl.getAttribute('data-rsgrow');
       if (ctl.hasAttribute('data-rsgunit')) bst.growUnit = ctl.getAttribute('data-rsgunit');
-      // The guidance end changes the TABLE only, not the axis — so a brushed y-range survives
-      // it, where every other control here rightly drops one that no longer describes the scale.
-      if (ctl.hasAttribute('data-rsgpt')) bst.gpt = ctl.getAttribute('data-rsgpt');
-      else bst.yr = null;
+      bst.yr = null;
       var bm = rsMetric(bk);
       var head = blk.querySelector('.rs-block-h');
       var msel = blk.querySelector('.rs-msel'); if (msel) msel.innerHTML = rsSelectHtml(bk);

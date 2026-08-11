@@ -285,6 +285,42 @@ function rsPctHtml(s, dec){
   return '<span style="color:' + (up ? RS_GREEN : RS_RED) + '">' + (up ? '+' : '−') + Math.abs(s).toFixed(dec == null ? 1 : dec) + '%</span>';
 }
 function rsGuideMid(m, i){ return (m.guideLo[i] == null || m.guideHi[i] == null) ? null : (m.guideLo[i] + m.guideHi[i]) / 2; }
+// ─── Which end of a guided RANGE a comparison is scored against ───────────────
+// (SAB, Aug 11 2026.) A band is three numbers, and which one you judge a print by is a real
+// choice, not a formatting detail. The midpoint is the neutral read. The LOW end is the bar
+// the company actually committed to — "did they clear the floor they set" is the question a
+// guide exists to answer, and a print landing at the bottom of the range is a very different
+// event from one landing at the top even though both are "within". The HIGH end is what they
+// dared to put on the tape, and the gap to it is how much of the raise the market had already
+// been handed. Scoring all three against the same print is the point.
+//
+// Offered ONLY where the company gave a genuine range: against a single guided number
+// (Spotify guides one figure per metric) low, mid and high are the same value and three pills
+// that all do nothing is worse than no control.
+var RS_GPTS = [['lo', 'Low'], ['mid', 'Mid'], ['hi', 'High']];
+function rsGuideRanged(m){
+  return !!(m && m.guideLo && m.guideHi && m.guideLo.some(function(v, i){
+    return v != null && m.guideHi[i] != null && v !== m.guideHi[i];
+  }));
+}
+// The guided figure at one period, read at the chosen end. Falls back to whatever exists, so
+// a period the company guided as a single number still answers on every setting.
+function rsGuideAt(m, i, gpt){
+  if (!m.guideLo || !m.guideHi) return null;
+  var lo = m.guideLo[i], hi = m.guideHi[i];
+  if (lo == null || hi == null) return null;
+  return gpt === 'lo' ? lo : gpt === 'hi' ? hi : (lo + hi) / 2;
+}
+function rsGptName(gpt){ return gpt === 'lo' ? 'low' : gpt === 'hi' ? 'high' : 'mid'; }
+function rsGptHtml(attr, cur, ranged, label){
+  if (!ranged) return '';
+  return (label ? '<span class="rs-quick-l rs-gpt-l">' + esc(label) + '</span>' : '') +
+    '<div class="rs-views">' + RS_GPTS.map(function(g){
+      return '<button type="button" class="rs-view' + ((cur || 'mid') === g[0] ? ' active' : '') +
+        '" data-' + attr + '="' + g[0] + '" title="Score against the ' + rsGptName(g[0]) +
+        ' end of the guided range">' + g[1] + '</button>';
+    }).join('') + '</div>';
+}
 // Axis tick: negatives as −$50B, not $-50B; whole dollars only (zoomed bounds
 // arrive fractional — $135.13111B would eat the chart's left margin). `div` is
 // the metric's display scale from rsScaleOf (1000 → $B axis, 1 → $M axis).
@@ -714,6 +750,10 @@ function rsBlockModesHtml(k, m){
       b('rsgunit', 'pct', !rsGrowAmt(k), '%') +
       b('rsgunit', 'amt', rsGrowAmt(k), 'Amount') + '</div>';
   }
+  // Which end of the guided range the PERIOD TABLE scores against. It does not touch the chart:
+  // the band there stays a band, which is the honest picture of what the company said. This
+  // answers the next question down — "and did we clear the floor, or only the midpoint".
+  h += rsGptHtml('rsgpt', rsSt(k).gpt, !marg && rsGuideRanged(m), 'Score guidance at');
   return h;
 }
 
@@ -1194,6 +1234,7 @@ function rsRenderTable(k, m){
   var w = rsWin(k, m), lo = w[0], hi = w[1];
   var dec = m.unit === 'eps' ? 2 : 1;
   var div = rsScaleOf(m);
+  var gpt = rsSt(k).gpt || 'mid';                      // which end of the guided range is scored
   var idx = [], est = [], tbLastA = rsLastAct(m);
   for (var i = lo; i <= hi; i++){ idx.push(i); est.push(i > tbLastA); }
 
@@ -1246,21 +1287,27 @@ function rsRenderTable(k, m){
     return years > 0 ? 'CAGR ' + sgn((Math.pow(last / first, 1 / years) - 1) * 100) : '';
   }
   function sumGuide(){
-    var ab = 0, wi = 0, be = 0, mids = [];
+    var ab = 0, wi = 0, be = 0, gs = [];
     idx.forEach(function(i){
       if (m.guideLo[i] == null || m.act[i] == null) return;
       if (m.act[i] > m.guideHi[i]) ab++; else if (m.act[i] < m.guideLo[i]) be++; else wi++;
-      var mid = rsGuideMid(m, i); if (mid) mids.push((m.act[i] - mid) / Math.abs(mid) * 100);
+      var g = rsGuideAt(m, i, gpt); if (g) gs.push((m.act[i] - g) / Math.abs(g) * 100);
     });
     if (!(ab + wi + be)) return '';
-    return ab + '▲ · ' + wi + '⊙ · ' + be + '▼<br><span class="rs-ft-dim">avg vs mid ' + sgn(avg(mids)) + '</span>';
+    // above/within/below always describe the whole BAND — that verdict does not move with the
+    // toggle, and pretending it did would turn "within" into "below" on a low setting.
+    return ab + '▲ · ' + wi + '⊙ · ' + be + '▼<br><span class="rs-ft-dim">avg vs ' + rsGptName(gpt) + ' ' +
+      (gs.length ? sgn(avg(gs)) : '—') + '</span>';
   }
 
   var unitCap = m.unit === 'eps'   ? (rsCurName(m) + ' per share')
               : m.unit === 'pct'   ? 'percent (%)'
               : m.unit === 'count' ? (m.unitLabel || 'count')
               : (rsCurName(m) + ' ' + (div === 1000 ? 'billions' : 'millions'));
-  var h = '<div class="rs-ft-cap">' + unitCap + ' · <span class="rs-ft-e">E</span> = estimate, no actual reported yet · the right column summarizes the selected range: how the actual has come in vs each estimate (▲ = beat)</div>';
+  var h = '<div class="rs-ft-cap">' + unitCap + ' · <span class="rs-ft-e">E</span> = estimate, no actual reported yet · the right column summarizes the selected range: how the actual has come in vs each estimate (▲ = beat)' +
+    (has.guide && rsGuideRanged(m)
+      ? ' · guidance is scored at the <b>' + rsGptName(gpt) + '</b> of the range (the ▲⊙▼ verdict always describes the whole band)'
+      : '') + '</div>';
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   idx.forEach(function(i, c){
     h += '<th class="' + (est[c] ? 'rs-ft-este' : '') + '">' + esc(m.periods[i]) + (est[c] ? ' <span class="rs-ft-e">E</span>' : '') + '</th>';
@@ -1300,23 +1347,29 @@ function rsRenderTable(k, m){
   });
 
   if (has.guide){
-    // A point guide prints one number, not "4800–4800".
+    // A point guide prints one number, not "4800–4800". The end being scored against is marked
+    // in the range itself, so the two rows never disagree about which number is in play.
+    var anyRangeRow = rsGuideRanged(m);
     h += row('Guidance', function(i){
       if (m.guideLo[i] == null) return '<span class="rs-ft-nil">—</span>';
-      return (m.guideLo[i] === m.guideHi[i]) ? num(m.guideLo[i]) : (num(m.guideLo[i]) + '–' + num(m.guideHi[i]));
+      if (m.guideLo[i] === m.guideHi[i]) return num(m.guideLo[i]);
+      var lo2 = num(m.guideLo[i]), hi2 = num(m.guideHi[i]);
+      if (gpt === 'lo') lo2 = '<b>' + lo2 + '</b>';
+      else if (gpt === 'hi') hi2 = '<b>' + hi2 + '</b>';
+      return lo2 + '–' + hi2;
     }, 'main nb', '');
     // "within" only exists when there IS a range; against a single guided number the
-    // comparison is simply above or below it, and the delta is vs the guide, not vs a mid.
-    var anyRangeRow = m.guideLo.some(function(v, i){ return v != null && m.guideHi[i] != null && v !== m.guideHi[i]; });
+    // comparison is simply above or below it, and the delta is vs the guide, not vs an end.
     h += row(anyRangeRow ? 'actual vs range' : 'actual vs guide', function(i){
       if (m.guideLo[i] == null || m.act[i] == null) return '<span class="rs-ft-nil">—</span>';
       var point = m.guideLo[i] === m.guideHi[i];
-      var mid = rsGuideMid(m, i), d = mid == null ? null : m.act[i] - mid;
+      var g = rsGuideAt(m, i, gpt), d = g == null ? null : m.act[i] - g;
       var word;
       if (m.act[i] > m.guideHi[i]) word = '<span style="color:' + RS_GREEN + '">above</span>';
       else if (m.act[i] < m.guideLo[i]) word = '<span style="color:' + RS_RED + '">below</span>';
       else word = '<span style="color:var(--mu)">' + (point ? 'in line' : 'within') + '</span>';
-      return word + (d == null ? '' : ' <span class="rs-ft-dim">· ' + rsFmtD(m, d) + (point ? ' vs guide' : ' vs mid') + '</span>');
+      return word + (d == null ? '' : ' <span class="rs-ft-dim">· ' + rsFmtD(m, d) +
+        (point ? ' vs guide' : ' vs ' + rsGptName(gpt)) + '</span>');
     }, 'sub', sumGuide());
   }
 
@@ -1871,8 +1924,15 @@ function rsSurpLag(){ return rsSurpViewName() === 'q' ? 4 : 1; }
 // them here would silently inherit the upstairs pick; rsSeriesFor resolves from the matrix
 // without mutating anything, falling back to the hand-authored flats (`_flat_*`) exactly as
 // the pane does. `mkey` is needed because the matrix is keyed by metric, not by object.
+// Guidance enters the comparison as ONE number — a band cannot be scored as a band — and which
+// number that is follows the block's Low/Mid/High toggle rather than being fixed at the mid.
+function rsSrcLabel(s){ return s === 'guide' ? 'Guidance (' + rsGptName(rsSurpSt().gpt) + ')' : RS_SRC_LABEL[s]; }
+function rsSrcShort(s){ return s === 'guide' ? 'guidance ' + rsGptName(rsSurpSt().gpt) : RS_SRC_SHORT[s]; }
 function rsSrcArr(m, key, mkey){
-  if (key === 'guide') return m.guideLo ? m.periods.map(function(_, i){ return rsGuideMid(m, i); }) : null;
+  if (key === 'guide'){
+    var gpt = rsSurpSt().gpt;
+    return m.guideLo ? m.periods.map(function(_, i){ return rsGuideAt(m, i, gpt); }) : null;
+  }
   if (key === 'act') return m.act || null;
   var mode = rsSurpSt().vint;
   if (mkey && mode && _rs.data && _rs.data.estMatrix){
@@ -1921,7 +1981,7 @@ function rsPaneEl(id){
 function rsSurpEl(id){ return rsPaneEl(id); }
 function rsSurpSt(){
   if (!_rs.surp) _rs.surp = { metric: null, win: null, yr: null, tbl: false, mode: 'pct', chart: null,
-    view: null, vint: 'preprint',
+    view: null, vint: 'preprint', gpt: 'mid',
     base: 'act', cmp: { summit: true, cons: true, guide: false } };
   return _rs.surp;
 }
@@ -2074,18 +2134,23 @@ function rsSurpBlockHtml(){
   var cmps = rsSurpCmps(m);
   h += '<div class="rs-surp-ctl"><span class="rs-quick-l">Compare</span>' +
     '<select class="rs-bsel" aria-label="Base series">' + RS_SRCS.filter(function(s){ return rsSrcHas(m, s, st.metric); }).map(function(s){
-      return '<option value="' + s + '"' + (s === st.base ? ' selected' : '') + '>' + esc(RS_SRC_LABEL[s]) + '</option>';
+      return '<option value="' + s + '"' + (s === st.base ? ' selected' : '') + '>' + esc(rsSrcLabel(s)) + '</option>';
     }).join('') + '</select>' +
     '<span class="rs-quick-l">against</span>' +
     RS_SRCS.filter(function(s){ return s !== st.base; }).map(function(s){
       var avail = rsSurpPairOk(m, st.base, s, st.metric);
       var on = avail && !!st.cmp[s];
       return '<button type="button" class="rs-cmp' + (on ? ' on' : '') + (avail ? '' : ' na') + '" data-rssurpcmp="' + s + '"' +
-        (avail ? '' : ' disabled title="' + esc(RS_SRC_LABEL[s]) + ' has no overlapping period with the base on this line"') + '>' +
-        '<span class="ave-leg-act" style="background:' + RS_SRC_COLOR[s] + '"></span>' + esc(RS_SRC_LABEL[s]) + '</button>';
+        (avail ? '' : ' disabled title="' + esc(rsSrcLabel(s)) + ' has no overlapping period with the base on this line"') + '>' +
+        '<span class="ave-leg-act" style="background:' + RS_SRC_COLOR[s] + '"></span>' + esc(rsSrcLabel(s)) + '</button>';
     }).join('') +
+    // Which end of the band the guide is scored at — shown only when guidance is actually in
+    // the comparison, because a control that changes nothing on screen is noise. Here it moves
+    // the CHART as well as the table: the guide enters as a single number either way.
+    rsGptHtml('rssurpgpt', st.gpt,
+      rsGuideRanged(m) && (st.base === 'guide' || cmps.indexOf('guide') >= 0), 'at') +
   '</div>';
-  h += '<div class="ave-leg"><span class="tech-leg-i"><span class="ave-leg-act" style="background:' + RS_GREEN + '"></span>' + esc(RS_SRC_LABEL[st.base]) + ' came in above</span>' +
+  h += '<div class="ave-leg"><span class="tech-leg-i"><span class="ave-leg-act" style="background:' + RS_GREEN + '"></span>' + esc(rsSrcLabel(st.base)) + ' came in above</span>' +
     '<span class="tech-leg-i"><span class="ave-leg-act" style="background:' + RS_RED + '"></span>came in below</span>' +
     '<span class="tech-leg-i" style="margin-left:auto">' +
       (cmps.length
@@ -2145,14 +2210,14 @@ function rsBuildSurp(){
     '<button type="button" class="rs-view' + (!pctMode ? ' active' : '') + '" data-rssurpmode="usd">' + esc(m.unit === 'eps' ? 'per-share' : 'Amount') + '</button>';
   var unitLbl = m.unit === 'eps' ? rsCur() : (rsCurName() + (div === 1000 ? ' billions' : ' millions'));
   var tEl = rsSurpEl('rsSurpChartT');
-  if (tEl) tEl.innerHTML = esc(m.label) + ' — ' + esc(RS_SRC_LABEL[st.base]) + ' vs ' +
-    (cmps.length ? esc(cmps.map(function(s){ return RS_SRC_SHORT[s]; }).join(' · ')) : '<i>nothing selected</i>') +
+  if (tEl) tEl.innerHTML = esc(m.label) + ' — ' + esc(rsSrcLabel(st.base)) + ' vs ' +
+    (cmps.length ? esc(cmps.map(function(s){ return rsSrcShort(s); }).join(' · ')) : '<i>nothing selected</i>') +
     ' <span>(' + (pctMode ? '%' : esc(unitLbl)) + ' per period · hover for the underlying values)</span>';
 
   st.chart = new Chart(el.getContext('2d'), {
     type: 'bar',
     data: { labels: m.periods.slice(lo, hi + 1), datasets: series.map(function(s){
-      return { label: RS_SRC_LABEL[s.src],
+      return { label: rsSrcLabel(s.src),
         data: pctMode ? s.pcts : s.dols.map(function(v){ return v == null ? null : (m.unit === 'eps' ? v : v / div); }),
         // Fill carries the sign (beat/miss); the outline says which series it is against.
         backgroundColor: s.pcts.map(function(p){ return p == null ? '#C7CED6' : (p >= 0 ? RS_GREEN : RS_RED); }),
@@ -2171,8 +2236,8 @@ function rsBuildSurp(){
             var s = sr.pcts[ctx.dataIndex], d = sr.dols[ctx.dataIndex];
             var A = rsSrcArr(m, sr.src, st.metric) || [];
             return [
-              RS_SRC_LABEL[st.base] + ': ' + rsFmt(m, baseArr[i]),
-              RS_SRC_LABEL[sr.src] + ': ' + rsFmt(m, A[i]),
+              rsSrcLabel(st.base) + ': ' + rsFmt(m, baseArr[i]),
+              rsSrcLabel(sr.src) + ': ' + rsFmt(m, A[i]),
               s == null ? 'Difference: —' : 'Difference: ' + (s >= 0 ? '+' : '−') + Math.abs(s).toFixed(1) + '% · ' + rsFmtD(m, d)
             ];
           }
@@ -2267,7 +2332,7 @@ function rsSurpTableRender(m, lo, hi, div){
     return above + '▲ · ' + below + '▼<br><span class="rs-ft-dim">avg <span style="color:' + (ap >= 0 ? RS_GREEN : RS_RED) + '">' + sgn(ap) + '</span> · ' + rsFmtD(m, avg(dols2)) + '</span>';
   }
 
-  var h = '<div class="rs-ft-cap">' + (m.unit === 'eps' ? rsCurName() + ' per share' : (rsCurName() + (div === 1000 ? ' billions' : ' millions'))) + ' · difference = (' + esc(RS_SRC_SHORT[st.base]) + ' − comparator) ÷ |comparator| · ▲/green = ' + esc(RS_SRC_SHORT[st.base]) + ' came in above · the right column summarizes the selected range</div>';
+  var h = '<div class="rs-ft-cap">' + (m.unit === 'eps' ? rsCurName() + ' per share' : (rsCurName() + (div === 1000 ? ' billions' : ' millions'))) + ' · difference = (' + esc(rsSrcShort(st.base)) + ' − comparator) ÷ |comparator| · ▲/green = ' + esc(rsSrcShort(st.base)) + ' came in above · the right column summarizes the selected range</div>';
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   idx.forEach(function(i){ h += '<th>' + esc(m.periods[i]) + '</th>'; });
   h += '<th class="rs-ft-s">Range record</th></tr></thead><tbody>';
@@ -2283,17 +2348,17 @@ function rsSurpTableRender(m, lo, hi, div){
   // Base first, then one value row + one difference row per comparator. Growth rows always
   // measure against the ACTUAL a year back — an estimate's growth is only meaningful off a
   // reported base — so they are skipped when the base is not the actual.
-  h += row(RS_SRC_LABEL[st.base], function(i){ return baseArr[i] == null ? '<span class="rs-ft-nil">—</span>' : '<b>' + num(baseArr[i]) + '</b>'; }, 'main nb', sumCagr());
+  h += row(rsSrcLabel(st.base), function(i){ return baseArr[i] == null ? '<span class="rs-ft-nil">—</span>' : '<b>' + num(baseArr[i]) + '</b>'; }, 'main nb', sumCagr());
   if (st.base === 'act')
     h += row('YoY growth', function(i){ return pctDollar(g(m.act, m.act, i), gd(m.act, m.act, i)); }, 'sub',
       sumGrowth(function(i){ return g(m.act, m.act, i); }));
   cmps.forEach(function(src){
     var A = rsSrcArr(m, src, st.metric) || [];
-    h += row(RS_SRC_LABEL[src], function(i){ return num(A[i]); }, 'main nb', '');
+    h += row(rsSrcLabel(src), function(i){ return num(A[i]); }, 'main nb', '');
     if (m.act)
       h += row('YoY growth', function(i){ return pctDollar(g(A, m.act, i), gd(A, m.act, i)); }, 'sub nb',
         sumGrowth(function(i){ return g(A, m.act, i); }));
-    h += row('vs ' + RS_SRC_SHORT[src], function(i){
+    h += row('vs ' + rsSrcShort(src), function(i){
       if (baseArr[i] == null || A[i] == null || !A[i]) return '<span class="rs-ft-nil">—</span>';
       return pctDollar(rsSurp(baseArr[i], A[i]), baseArr[i] - A[i]);
     }, 'sub', sumSurprise(src));
@@ -2341,7 +2406,7 @@ function rsSurpTableRender(m, lo, hi, div){
 // chart picks it up with no code change (SAB: "va a ser una parte muy importante").
 function rsConvSt(){
   if (!_rs.conv) _rs.conv = { metric: null, view: null, period: null, mode: 'level',
-    base: 'act', unit: 'pct', yr: null, chart: null, tbl: false, hidden: {} };
+    base: 'act', unit: 'pct', gpt: 'mid', yr: null, chart: null, tbl: false, hidden: {} };
   return _rs.conv;
 }
 function rsConvViewName(){
@@ -2451,7 +2516,7 @@ function rsConvIsPct(){ return rsConvIsDist() && rsConvSt().unit === 'pct'; }
 // What the distance is measured against, and whether it exists on this period.
 function rsConvBase(m, pi){
   var st = rsConvSt();
-  if (st.base === 'guide') return (m.guideLo && m.guideHi) ? rsGuideMid(m, pi) : null;
+  if (st.base === 'guide') return rsGuideAt(m, pi, st.gpt);
   return m.act ? m.act[pi] : null;
 }
 function rsConvDist(v, base){
@@ -2537,12 +2602,15 @@ function rsConvBlockHtml(){
     h += '<div class="rs-views">' +
       b('rsconvbase', 'act', st.base === 'act', 'vs Actual', 'Distance from the reported figure',
         !(m.act && m.act[pi] != null)) +
-      b('rsconvbase', 'guide', st.base === 'guide', 'vs Guidance mid',
-        'Distance from the midpoint of the company’s own guided range', !hasGuide) + '</div>';
+      b('rsconvbase', 'guide', st.base === 'guide', 'vs Guidance',
+        'Distance from the company’s own guided range', !hasGuide) + '</div>';
     h += '<div class="rs-views">' +
       b('rsconvunit', 'pct', rsConvIsPct(), '%') +
       b('rsconvunit', 'amt', !rsConvIsPct(), 'Amount') + '</div>';
   }
+  // The guided end is offered whenever this period carries a real range: in Distance-vs-Guidance
+  // it moves the zero line, and in every mode it drives the "vs guide" row in the table below.
+  h += rsGptHtml('rsconvgpt', st.gpt, rsGuideRanged(m) && hasGuide && m.guideLo[pi] !== m.guideHi[pi], 'Guide at');
   h += '</div></div>';
   h += '<div class="ave-leg" id="rsConvLegend">' + rsConvLegendHtml(m, pi) + '</div>';
   h += '<div class="ov-chart-card">' +
@@ -2655,7 +2723,11 @@ function rsBuildConv(){
               : m.unit === 'pct'   ? '%'
               : m.unit === 'count' ? (m.unitLabel || 'count')
               : (div === 1000 ? cur + 'B' : cur + 'M');
-  var baseName = st.base === 'guide' ? 'the guidance midpoint' : 'the reported figure';
+  var gRanged = hasGuide && !isPointGuide;
+  var gWord = st.base === 'guide' ? (gRanged ? 'guide ' + rsGptName(st.gpt) : 'guide') : 'actual';
+  var baseName = st.base === 'guide'
+    ? (gRanged ? 'the ' + rsGptName(st.gpt) + ' end of the guided range' : 'the guided figure')
+    : 'the reported figure';
   var tEl = rsPaneEl('rsConvChartT');
   if (tEl) tEl.innerHTML = esc(m.label) + ' · ' + esc(period) + ' — ' +
     (dist
@@ -2698,7 +2770,7 @@ function rsBuildConv(){
               if (b2 != null){
                 var dv = raw - b2, dp = b2 === 0 ? null : dv / Math.abs(b2) * 100;
                 line += '  (' + (dp == null ? '' : (dp >= 0 ? '+' : '−') + Math.abs(dp).toFixed(1) + '% · ') +
-                  rsFmtD(m, dv) + ' vs ' + (st.base === 'guide' ? 'guide mid' : 'actual') + ')';
+                  rsFmtD(m, dv) + ' vs ' + gWord + ')';
               }
               return line;
             }
@@ -2743,9 +2815,11 @@ function rsBuildConv(){
 }
 function rsConvTableRender(m, mkey, pi, vints, div){
   var el = rsPaneEl('rsConvTable'); if (!el) return;
-  var st = rsConvSt(), period = m.periods[pi];
+  var st = rsConvSt(), period = m.periods[pi], gpt = st.gpt || 'mid';
   var act = m.act ? m.act[pi] : null;
-  var gmid = (m.guideLo && m.guideHi) ? rsGuideMid(m, pi) : null;
+  var gref = rsGuideAt(m, pi, gpt);
+  var ranged = !!(gref != null && m.guideLo[pi] !== m.guideHi[pi]);
+  var gname = ranged ? rsGptName(gpt) : 'guide';
   function num(v){
     if (v == null) return '<span class="rs-ft-nil">—</span>';
     if (m.unit === 'eps') return Number(v).toFixed(2);
@@ -2762,7 +2836,8 @@ function rsConvTableRender(m, mkey, pi, vints, div){
               : (rsCurName(m) + ' ' + (div === 1000 ? 'billions' : 'millions'));
   var h = '<div class="rs-ft-cap">' + esc(period) + ' · ' + unitCap +
     ' · columns are the archived snapshots that were still forecasting this period · “vs actual” is how far that file sat from where it landed' +
-    (act == null ? ' (nothing yet — this period has not printed)' : '') + '</div>';
+    (act == null ? ' (nothing yet — this period has not printed)' : '') +
+    (ranged ? ' · “vs ' + rsGptName(gpt) + '” scores against the ' + rsGptName(gpt) + ' end of the guided range' : '') + '</div>';
   h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
   vints.forEach(function(v, i){
     h += '<th' + (i === vints.length - 1 ? ' class="rs-ft-este"' : '') + '>' + esc(rsVintDay(v.id, v.label)) +
@@ -2777,23 +2852,30 @@ function rsConvTableRender(m, mkey, pi, vints, div){
     var r = '<tr class="rs-ft-main rs-ft-nb"><td class="rs-ft-h">' + label + '</td>';
     arr.forEach(function(v, i){ r += '<td' + (i === arr.length - 1 ? ' class="rs-ft-este"' : '') + '><b>' + num(v) + '</b></td>'; });
     r += '<td class="rs-ft-s">' + rsRevHtml(m, first, last) + '</td></tr>';
-    if (act != null){
-      r += '<tr class="rs-ft-sub"><td class="rs-ft-h">vs actual</td>';
-      arr.forEach(function(v, i){ r += '<td' + (i === arr.length - 1 ? ' class="rs-ft-este"' : '') + '>' + vs(v, act) + '</td>'; });
-      r += '<td class="rs-ft-s"></td></tr>';
-    } else if (gmid != null){
-      r += '<tr class="rs-ft-sub"><td class="rs-ft-h">vs guide mid</td>';
-      arr.forEach(function(v, i){ r += '<td' + (i === arr.length - 1 ? ' class="rs-ft-este"' : '') + '>' + vs(v, gmid) + '</td>'; });
-      r += '<td class="rs-ft-s"></td></tr>';
+    // Both comparisons, when both exist. "How far were we from the print" and "how far were we
+    // from what the company had told the market" are different questions, and reading them off
+    // the same column is the whole point of putting guidance on this chart.
+    function sub(label, ref, last){
+      if (ref == null) return '';
+      var s = '<tr class="rs-ft-sub' + (last ? '' : ' rs-ft-nb') + '"><td class="rs-ft-h">' + label + '</td>';
+      arr.forEach(function(v, i){ s += '<td' + (i === arr.length - 1 ? ' class="rs-ft-este"' : '') + '>' + vs(v, ref) + '</td>'; });
+      return s + '<td class="rs-ft-s"></td></tr>';
     }
+    r += sub('vs actual', act, gref == null);
+    r += sub('vs ' + gname, gref, true);
     return r;
   }
   h += block('Summit model', rsConvSeries('summit', mkey, m, pi, vints));
   h += block('Consensus',    rsConvSeries('cons',   mkey, m, pi, vints));
   // The references, held flat across the walk, so a column can be read straight down.
-  if (gmid != null){
+  if (gref != null){
     h += '<tr class="rs-ft-main"><td class="rs-ft-h">Guidance</td>';
-    vints.forEach(function(){ h += '<td>' + (m.guideLo[pi] === m.guideHi[pi] ? num(m.guideLo[pi]) : num(m.guideLo[pi]) + '–' + num(m.guideHi[pi])) + '</td>'; });
+    vints.forEach(function(){
+      if (!ranged){ h += '<td>' + num(m.guideLo[pi]) + '</td>'; return; }
+      var lo2 = num(m.guideLo[pi]), hi2 = num(m.guideHi[pi]);      // mark the end being scored
+      if (gpt === 'lo') lo2 = '<b>' + lo2 + '</b>'; else if (gpt === 'hi') hi2 = '<b>' + hi2 + '</b>';
+      h += '<td>' + lo2 + '–' + hi2 + '</td>';
+    });
     h += '<td class="rs-ft-s"></td></tr>';
   }
   if (act != null){
@@ -2838,9 +2920,10 @@ function wireResults(pane){
       if (cm0) cvt.innerHTML = rsConvHeadHtml(cm0, rsConvPi(cm0, rsConvSt().metric));
       return;
     }
-    var cvc = e.target.closest('[data-rsconvview], [data-rsconvmode], [data-rsconvbase], [data-rsconvunit]');
+    var cvc = e.target.closest('[data-rsconvview], [data-rsconvmode], [data-rsconvbase], [data-rsconvunit], [data-rsconvgpt]');
     if (cvc && !cvc.disabled){
       var cst = rsConvSt();
+      if (cvc.hasAttribute('data-rsconvgpt')) cst.gpt = cvc.getAttribute('data-rsconvgpt');
       if (cvc.hasAttribute('data-rsconvview')){
         cst.view = cvc.getAttribute('data-rsconvview');
         cst.metric = null;                       // the metric list and the period axis are per view
@@ -2878,7 +2961,7 @@ function wireResults(pane){
       tb.innerHTML = rsTableHeadHtml(tk, rsMetric(tk));
       return;
     }
-    var ctl = e.target.closest('[data-rsview], [data-rsmode], [data-rsgrow], [data-rsgunit]');
+    var ctl = e.target.closest('[data-rsview], [data-rsmode], [data-rsgrow], [data-rsgunit], [data-rsgpt]');
     if (ctl){
       var blk = ctl.closest('[data-rsblock]');
       if (!blk) return;
@@ -2891,7 +2974,10 @@ function wireResults(pane){
       if (ctl.hasAttribute('data-rsmode')) bst.mode = ctl.getAttribute('data-rsmode');
       if (ctl.hasAttribute('data-rsgrow')) bst.growth = ctl.getAttribute('data-rsgrow');
       if (ctl.hasAttribute('data-rsgunit')) bst.growUnit = ctl.getAttribute('data-rsgunit');
-      bst.yr = null;
+      // The guidance end changes the TABLE only, not the axis — so a brushed y-range survives
+      // it, where every other control here rightly drops one that no longer describes the scale.
+      if (ctl.hasAttribute('data-rsgpt')) bst.gpt = ctl.getAttribute('data-rsgpt');
+      else bst.yr = null;
       var bm = rsMetric(bk);
       var head = blk.querySelector('.rs-block-h');
       var msel = blk.querySelector('.rs-msel'); if (msel) msel.innerHTML = rsSelectHtml(bk);
@@ -2915,6 +3001,8 @@ function wireResults(pane){
     // ── Surprise scorecard (single block at the foot of the pane) ──
     var sm = e.target.closest('[data-rssurpmode]');
     if (sm){ rsSurpSt().mode = sm.getAttribute('data-rssurpmode'); rsBuildSurp(); return; }
+    var sgp = e.target.closest('[data-rssurpgpt]');
+    if (sgp){ rsSurpSt().gpt = sgp.getAttribute('data-rssurpgpt'); rsRerenderSurp(pane); return; }
     var svw = e.target.closest('[data-rssurpview]');
     if (svw){
       var sstV = rsSurpSt();

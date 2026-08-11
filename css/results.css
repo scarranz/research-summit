@@ -206,3 +206,9 @@
    dropdown because a period label is four characters, and a 240px control for "2Q26" reads
    as though something is missing from it. */
 .rs-cpsel { min-width:170px; }
+
+/* Low / Mid / High — which end of a guided range a comparison is scored at. The inline label
+   is what keeps it from reading as another mode pill: without it, "Low · Mid · High" beside
+   "$B · Growth · Margin %" looks like a fourth way to read the chart rather than a choice
+   about one series. */
+.rs-gpt-l { margin-left:4px; }

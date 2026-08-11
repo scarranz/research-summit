@@ -203,6 +203,29 @@ under one chart stay honest.
 and what is inside ("Mobility GB, 18 periods in the selected range"), and those counts follow the
 controls above them.
 
+## 5b. Which end of the guidance
+
+A guided range is **three numbers**, and which one a print is judged by is a real choice, not a
+formatting detail. `Low · Mid · High` appears wherever guidance enters a comparison as a single
+number (`rsGptHtml` + `rsGuideAt`), and it is the state each block holds as `gpt`:
+
+| Where | What it moves |
+|---|---|
+| A Results block | the period table's `actual vs range` row and its Range-record summary — **not** the chart, where the band stays a band |
+| The surprise scorecard | everything, since the guide is a comparator there; the chip relabels itself `Guidance (low)` |
+| Road to the print | the `vs …` row in the table, and the zero line under Distance ▸ vs Guidance |
+
+The midpoint is the neutral read. The **low** end is the bar the company actually committed to —
+a print landing at the bottom of the range is a very different event from one landing at the top,
+though both are "within". The **high** end is what they dared to put on the tape, and the gap to
+it is how much of the raise the market had already been handed. UBER's Gross Bookings over 16
+prints: **+2.5% vs low, +0.9% vs mid, −0.7% vs high** — three sentences about the same record.
+
+Two rules keep it honest. The **▲⊙▼ verdict never moves**: above/within/below describes the whole
+band, and letting it follow the toggle would turn a "within" into a "below". And the control is
+**hidden unless the company gave a genuine range** — Spotify guides one number per metric, where
+low, mid and high are the same value and three pills that do nothing are worse than no control.
+
 ## 6b. Axes on the right
 
 Every y-axis in Results and Estimates renders on the **right**. The eye lands on the most recent
@@ -319,6 +342,7 @@ Two things in it are worth stealing for any bar chart with labels:
 | Pane shells | `resultsHtml` `rsBody` `rsTopRowHtml` `rsBlocksHtml` · `resultsEvoHtml` `rsEvoBlockHtml` |
 | Per-block controls | `rsBlockModesHtml` `rsLevelLabel` `rsSelectHtml` `rsOptLabel` |
 | Reading modes | `rsIsGrow` `rsGrowAmt` `rsGrowBase` `rsGrowArr` `rsLook` `rsGrowLabel` `rsMarginArr` `rsHasMargin` `rsIsMargin` **`rsModeArr`** `rsIsPctMode` `rsModeFmt` `rsModeDiff` |
+| Guidance end | `RS_GPTS` `rsGuideRanged` **`rsGuideAt`** `rsGptName` `rsGptHtml` · `rsSrcLabel` / `rsSrcShort` relabel the scorecard's chips |
 | Road to the print | `rsConvSt` `rsConvViewName` `rsAllVints` `rsConvGroups` `rsConvM` `rsConvPeriodIdx` `rsConvPi` **`rsConvVints`** `rsConvSeries` `rsConvDist` `rsConvLast` (plugin) `rsConvBlockHtml` `rsBuildConv` `rsConvTableRender` `rsRerenderConv` |
 | Chart | `rsBuildChart` `rsFwdZone` `rsAttachBrush` `rsWireBrush` `wireSliders` |
 | Tables | `rsRenderTable` `rsTableHeadHtml` · `rsEvoVisible` `rsEvoTrackRows` `rsRenderEvoTrack` `rsRenderEvoTable` |

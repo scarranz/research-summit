@@ -345,6 +345,158 @@ export var DIS_PLAN_GROWTH = [
 ];
 export var DIS_PLAN_SOURCES = "Sources — The Walt Disney Company investor announcement (Sept 2023) and FY2024 proxy for the ~$60B / 10-year plan and its ~50/20/30 allocation; D23 2024 (Disney Experiences Showcase, Aug 2024) for the specific lands, attractions and cruise ships. Experiences capex is the Bloomberg model. Project dates are Disney framing and subject to change.";
 
+// ─── What ▸ Cruise deep-dive — fleet, capacity & the economics of a cruise ───────
+export var DIS_CRUISE_INTRO = "The ~$60B plan roughly triples the fleet to 13 ships by ~2031 — the highest-return corner of Experiences. Expand a section for detail.";
+export var DIS_CRUISE_STATS = [
+  ['8 → 13',      'Ships (today → 2031)'],
+  ['~20k → ~33k', 'Lower berths (+~65%)'],
+  ['~$3.0B',      'FY25 DCL revenue · +20% YoY'],
+  ['~1.4×',       'Disney per-diem vs Royal Caribbean'],
+];
+// pax = double-occupancy (lower berths), the industry-standard figure; paxMax = max incl. upper berths. gt = gross tonnage.
+export var DIS_CRUISE_FLEET = [
+  { name:'Disney Magic',     year:1998, yr:'1998', status:'service', cls:'Magic',  pax:1754, paxMax:2700, gt:83969,  port:'Seasonal — Caribbean & Europe',    cost:350000000,  note:'The original DCL ship (1998). Sails seasonal Caribbean and Europe itineraries.' },
+  { name:'Disney Wonder',    year:1999, yr:'1999', status:'service', cls:'Magic',  pax:1754, paxMax:2700, gt:84130,  port:'Seasonal — Pacific, Alaska & Australia', cost:350000000, note:'Sister to Magic; a roving seasonal deployment with no fixed year-round homeport.' },
+  { name:'Disney Dream',     year:2011, yr:'2011', status:'service', cls:'Dream',  pax:2500, paxMax:4000, gt:129690, port:'Fort Lauderdale, FL',              cost:900000000,  note:'First of the larger Dream class (2011).' },
+  { name:'Disney Fantasy',   year:2012, yr:'2012', status:'service', cls:'Dream',  pax:2500, paxMax:4000, gt:129690, port:'Port Canaveral, FL',               cost:900000000,  note:'Sister to Dream; Port Canaveral, FL.' },
+  { name:'Disney Wish',      year:2022, yr:'2022', status:'service', cls:'Wish',   pax:2508, paxMax:4000, gt:144256, port:'Port Canaveral, FL',               cost:1100000000, note:'First Wish-class ship (2022) — the template for the current newbuild wave.' },
+  { name:'Disney Treasure',  year:2024, yr:'2024', status:'service', cls:'Wish',   pax:2492, paxMax:4000, gt:144256, port:'Port Canaveral, FL',               cost:1100000000, note:'Second Wish-class; maiden voyage Dec 2024.' },
+  { name:'Disney Destiny',   year:2025, yr:'2025', status:'service', cls:'Wish',   pax:2500, paxMax:4116, gt:144256, port:'Fort Lauderdale, FL',              cost:1100000000, note:'Third Wish-class; Heroes & Villains theme. Maiden voyage Nov 2025.' },
+  { name:'Disney Adventure', year:2026, yr:'2026', status:'service', cls:'Global', pax:4222, paxMax:6700, gt:208108, port:'Singapore (Marina Bay)',           cost:1800000000, largest:true, note:'DCL’s largest ship and first based in Asia. Built on a repurposed Global-class hull (bought cheaply from the collapsed Dream Cruises) for ~$1.8B all-in. Maiden voyage Mar 2026.' },
+  { name:'Disney Believe',   year:2027, yr:'2027', status:'order',   cls:'Wish',   pax:2500, paxMax:4000, gt:144256, port:'TBA',                               cost:1100000000, note:'Fifth Wish-class; an Encanto / Frozen / Moana “believe” theme. Named Mar 2026.' },
+  { name:'Oriental Land Co. ship', year:2029, yr:'~2029', status:'order', cls:'Wish', pax:2500, paxMax:4000, gt:144256, port:'Tokyo, Japan (OLC-operated)', cost:null, capLight:true, note:'CAPITAL-LIGHT: owned and operated by Oriental Land Co. under a DCL license — not on Disney’s balance sheet. Short cruises from Tokyo Bay.' },
+  { name:'New-class ships ×3', year:2031, yr:'2029–31', status:'order', cls:'New class', pax:null, paxMax:3000, gt:100000, port:'TBA', cost:1000000000, est:true, note:'A new, smaller class (~100k GT, ~3,000 max) — the final ships to reach the 13-ship fleet. Double-occupancy capacity not yet disclosed; timing may cluster in 2029.' },
+];
+export var DIS_CRUISE_FLEET_NOTE = "Capacity = double-occupancy (lower berths); ships hold ~40–60% more at max. On-order years are Disney framing and subject to change; new-class capacities are estimates. DCL is not broken out in filings — it sits inside Experiences.";
+// Full-fleet projection — RCL's FY25 per-day economics applied to Disney's lower-berth capacity, today (8 ships) vs the full 13.
+export var DIS_CRUISE_BUILD = {
+  tiles: [
+    ['~2031',   'All 13 ships sailing'],
+    ['~33,000', 'Lower berths at full fleet'],
+    ['+~$1.3B', 'Incremental net revenue / yr'],
+    ['+~$0.4B', 'Incremental operating income / yr'],
+  ],
+  // kind: '' | rev | oi
+  rows: [
+    { l:'Ships',                       today:'8',        full:'13',      inc:'+5' },
+    { l:'Lower berths',                today:'~20,200',  full:'~33,000', inc:'+~12,800' },
+    { l:'Passenger-nights / yr (APCD)',today:'~7.4M',    full:'~12.0M',  inc:'+~4.6M' },
+    { l:'Net revenue · $274/night',    today:'~$2.0B',   full:'~$3.3B',  inc:'+~$1.3B', kind:'rev' },
+    { l:'Adj. EBITDA · 46%',           today:'~$0.9B',   full:'~$1.5B',  inc:'+~$0.6B' },
+    { l:'Operating income · 32%',      today:'~$0.65B',  full:'~$1.05B', inc:'+~$0.4B', kind:'oi' },
+  ],
+};
+export var DIS_CRUISE_BUILD_NOTE = "Illustrative. Applies Royal Caribbean’s FY25 per-day economics ($274 net revenue/APCD; 46% EBITDA, 32% operating margins) to Disney’s lower-berth capacity — “today” = 8 ships, “full fleet” = all 13 (~2031). Disney’s ~1.4× per-diem would lift the dollars; the OLC Japan ship is a capital-light royalty deal, and new-class capacities are estimated.";
+// Industry benchmarks — the three public cruise operators, latest fiscal year (FY2025). Yields use each company's
+// own denominator (APCD / ALBD / Capacity Day), all double-occupancy — directionally comparable, not identical.
+export var DIS_CRUISE_ECON_LEAD = "Ships sail >100% full, guests pay months ahead (interest-free float), and high-margin onboard spend layers onto the ticket — record EBITDA margins (27–39%) and mid-to-high-teens returns. Disney sits at the premium end.";
+export var DIS_CRUISE_ECON = [
+  { co:'Royal Caribbean', ticker:'RCL',  rev:'$17.9B', oi:'$4.9B', opm:'27.4%', ebitda:'39.1%', yield:'$274', occ:'109.7%', onboard:'30%', deposits:'$5.7B', roic:'18.0%' },
+  { co:'Carnival',        ticker:'CCL',  rev:'$26.6B', oi:'$4.5B', opm:'16.9%', ebitda:'27.1%', yield:'$208', occ:'105%',   onboard:'35%', deposits:'$7.2B', roic:'>13%' },
+  { co:'Norwegian',       ticker:'NCLH', rev:'$9.8B',  oi:'$1.6B', opm:'15.9%', ebitda:'27.9%', yield:'$301', occ:'103.5%', onboard:'32%', deposits:'$3.2B', roic:'n/d' },
+];
+export var DIS_CRUISE_ECON_NOTE = "FY2025 filings. Op. income/margin are GAAP; EBITDA margin is adjusted EBITDA / revenue. Net yield = net revenue per available passenger-day (RCL/CCL/NCLH use slightly different denominators). NCLH ROIC not disclosed. DCL is not public — shown for context.";
+// Single-ship unit economics — RCL's FY2025 fleet-wide per-day metrics scaled onto one ~2,500-berth ship over a year.
+export var DIS_CRUISE_SHIP_LEAD = "RCL’s FY25 per-day economics scaled onto one ~2,500-berth ship (Disney’s Wish/Dream size; RCL’s Radiance-class analog) over a year:";
+export var DIS_CRUISE_SHIP = {
+  tiles: [
+    ['~$250M', 'Net revenue / yr'],
+    ['~$115M', 'Adj. EBITDA / yr'],
+    ['~$80M',  'Operating income / yr'],
+    ['~9 yrs', 'Cash payback on the ship'],
+  ],
+  // kind: base | flow | sub (EBITDA) | oi (operating income)
+  lines: [
+    { l:'Available passenger-nights (APCD = 2,500 berths × 365 days)', night:'—',    year:'912,500', kind:'base' },
+    { l:'Net revenue (net yield × APCD)',            night:'$274',  year:'$250M',  kind:'flow' },
+    { l:'– Operating cost, ex-fuel',                 night:'–$128', year:'–$117M', kind:'flow' },
+    { l:'– Fuel',                                    night:'–$20',  year:'–$18M',  kind:'flow' },
+    { l:'= Adjusted EBITDA',                         night:'$126',  year:'~$115M', kind:'sub' },
+    { l:'– Depreciation (~$1.05B ship ÷ 30-yr life)', night:'–$38', year:'–$35M',  kind:'flow' },
+    { l:'= Operating income',                        night:'~$88',  year:'~$80M',  kind:'oi' },
+  ],
+};
+export var DIS_CRUISE_SHIP_NOTE = "Illustrative, not a per-ship disclosure. RCL FY25 metrics ($274 net yield/APCD, ~$128 cost ex-fuel, ~$20 fuel, ~110% occupancy) on a 2,500-berth ship × 365 days; depreciation = ~$1.05B ship ÷ 30 yrs. ~$115M EBITDA on a ~$1.05B ship ≈ ~9-yr cash payback; Disney’s ~1.4× per-diem clears these.";
+
+// ─── What ▸ Parks & resorts deep-dive — footprint (m²), and revenue per square meter ─
+export var DIS_PARKS_INTRO = "Disney’s parks run essentially full on peak days, so growth needs new capacity. How much developed area exists, what it earns per m², and the revenue potential of Disney’s land bank:";
+// acres = developed guest-facing footprint (approximate; Disney doesn’t disclose official figures). status: owned | licensed.
+export var DIS_PARKS_FOOTPRINT = [
+  { park:'Animal Kingdom',        resort:'Walt Disney World',       acres:580, sqm:2347000, status:'owned',    note:'Largest single Disney park; much is animal habitat (low guests-per-acre by design).' },
+  { park:'EPCOT',                 resort:'Walt Disney World',       acres:305, sqm:1234000, status:'owned' },
+  { park:'Shanghai Disneyland',   resort:'Shanghai',                acres:225, sqm:910000,  status:'owned',    note:'JV — Disney 43%, consolidated; range 225–310 acres by source.' },
+  { park:'Disneyland Park',       resort:'Disneyland Paris',        acres:140, sqm:567000,  status:'owned',    note:'Disney owns ~85% of the resort.' },
+  { park:'Hollywood Studios',     resort:'Walt Disney World',       acres:135, sqm:546000,  status:'owned' },
+  { park:'Magic Kingdom',         resort:'Walt Disney World',       acres:107, sqm:433000,  status:'owned',    note:'Highest intensity — ~17.8M visitors on ~107 acres.' },
+  { park:'Disneyland',            resort:'Disneyland Resort (CA)',  acres:85,  sqm:344000,  status:'owned' },
+  { park:'California Adventure',  resort:'Disneyland Resort (CA)',  acres:72,  sqm:291000,  status:'owned' },
+  { park:'Hong Kong Disneyland',  resort:'Hong Kong',               acres:68,  sqm:275000,  status:'owned',    note:'JV — Disney 47%, consolidated.' },
+  { park:'Disney Adventure World',resort:'Disneyland Paris',        acres:67,  sqm:271000,  status:'owned',    note:'The former Walt Disney Studios Park — being ~doubled by a €2B rebuild.' },
+  { park:'Tokyo DisneySea',       resort:'Tokyo Disney Resort',     acres:176, sqm:712000,  status:'licensed', note:'Licensed to Oriental Land Co. — Disney earns royalties, not park revenue.' },
+  { park:'Tokyo Disneyland',      resort:'Tokyo Disney Resort',     acres:126, sqm:510000,  status:'licensed', note:'Licensed to Oriental Land Co. — royalties only.' },
+];
+export var DIS_PARKS_FOOTPRINT_NOTE = "Developed guest-facing acreage (approximate — Disney doesn’t publish official footprints; figures vary by source). Tokyo is licensed to Oriental Land Co. (Disney earns royalties, not park revenue) — excluded from the revenue model below. Shanghai (43%) and Hong Kong (47%) are majority-partner JVs that Disney consolidates.";
+// Land-bank revenue projection: today's developed area vs a full build-out of Disney's ~1,000-acre land bank, at today's revenue/area.
+export var DIS_PARKS_BUILD_LEAD = "The $60B plan’s disclosed <b>new</b> area is small (~85 acres — it mostly <b>densifies</b> existing parks with new attractions & throughput); the real headroom is Disney’s <b>~1,000-acre land bank</b> (“~7 new Disneylands”). At today’s revenue per acre:";
+export var DIS_PARKS_BUILD = {
+  tiles: [
+    ['~$15M',     'Revenue per developed acre / yr'],
+    ['~1,000 ac', 'Developable land bank (~7 Disneylands)'],
+    ['+~$15B',    'Incremental revenue potential / yr'],
+    ['+~$3.8B',   'Incremental operating income / yr'],
+  ],
+  // kind: '' | rev | oi
+  rows: [
+    { l:'Developed park area (acres)', today:'~1,784',  full:'~2,784',  inc:'+~1,000' },
+    { l:'Developed park area (m²)',    today:'~7.2M',   full:'~11.3M',  inc:'+~4.0M' },
+    { l:'Revenue per m² (held flat)',  today:'~$3,800', full:'~$3,800', inc:'—' },
+    { l:'Parks & resorts revenue',     today:'~$27B',   full:'~$42B',   inc:'+~$15B', kind:'rev' },
+    { l:'Operating income · ~25%',     today:'~$6.8B',  full:'~$10.6B', inc:'+~$3.8B', kind:'oi' },
+  ],
+};
+export var DIS_PARKS_BUILD_NOTE = "Illustrative and long-run — a rough upper bound, not a forecast. “Today” = ~1,784 developed acres across Disney’s 10 owned parks (Tokyo excluded — licensed). Revenue = FY25 parks & resorts (Domestic + International Parks & Experiences, ex-Consumer Products and ex-Disney Cruise Line ≈ $27B); ~$15M/acre blends gate, in-park spend and on-property hotels over park-gate area. “Full build-out” develops Disney’s stated ~1,000-acre land bank — a multi-decade ceiling, not the $60B/10-yr plan alone; new parks ramp over years, and much of the near-term $60B lift comes from densification (throughput + per-capita spend), which this area model doesn’t capture.";
+// Alternative lens: incremental person-capacity × in-park ARPU (the more natural driver for parks).
+export var DIS_PARKS_CAP_LEAD = "The parks run full on peak days, so new land lifts the ceiling on <b>visits</b> (Magic Kingdom’s new Villains + Cars land alone adds capacity for ~9,000 guests at once). At today’s <b>~64,500 visits per developed acre</b> and <b>~$165 of in-park spend per visit</b>:";
+export var DIS_PARKS_CAP = {
+  tiles: [
+    ['~$165',    'In-park spend per visit (ARPU)'],
+    ['~115M',    'Annual visits today (owned parks)'],
+    ['+~65M',    'Incremental annual visits (full build-out)'],
+    ['+~$10.5B', 'Incremental in-park revenue / yr'],
+  ],
+  rows: [
+    { l:'Annual attendance (visits)', today:'~115M',  full:'~180M',  inc:'+~65M' },
+    { l:'Visits per developed acre',  today:'~64,500',full:'~64,500',inc:'—' },
+    { l:'In-park ARPU / visit',       today:'~$165',  full:'~$165',  inc:'—' },
+    { l:'In-park revenue',            today:'~$19B',  full:'~$29B',  inc:'+~$10.5B', kind:'rev' },
+    { l:'Operating income · ~25%',    today:'~$4.8B', full:'~$7.3B', inc:'+~$2.6B',  kind:'oi' },
+  ],
+};
+export var DIS_PARKS_CAP_NOTE = "Illustrative. Owned-park attendance ~115M/yr (2024 TEA estimate; excludes Tokyo — licensed). Visits-per-acre (~64,500) is a blended average — Magic Kingdom runs ~166,000/acre, Animal Kingdom far less — so new capacity ramps toward this only over years. In-park ARPU (~$165 blended; domestic ~$185, international lower) = ticket + food, beverage & merch in parks ÷ attendance; Disney discloses only the % change, so the $ level is an estimate. This lens counts in-park spend only — add on-property hotels and you approach the ~$15B of the revenue-per-m² view. Both exclude cruise.";
+
+// ─── Top Line ▸ Full Buildout — an interactive sensitivity model tying every initiative together ─
+export var DIS_BUILDOUT_INTRO = "One model for the whole build-out. The two segments we modelled in depth — Parks & Resorts and Disney Cruise Line — carry their Bottom Line deep-dive figures (fixed). The rest — Studio, DTC and ESPN — you can flex with the sliders. Depreciation from the ~$60B of new capex is the drag. Everything updates live.";
+export var DIS_BUILDOUT_INPUTS = [
+  { key:'films',      label:'Studio — theatrical films / yr',         min:6,   max:14,  step:1,    val:10,  unit:'' },
+  { key:'avgGross',   label:'Studio — avg worldwide box office',      min:300, max:900, step:25,   val:525, unit:'M', fmt:'$' },
+  { key:'dtcPrice',   label:'DTC — monthly subscription increase',    min:0,   max:5,   step:0.5,  val:2,   unit:'/mo', fmt:'$' },
+  { key:'dtcSubs',    label:'DTC — subscriber increase',              min:0,   max:120, step:5,    val:50,  unit:'M' },
+  { key:'espnSubs',   label:'ESPN — flagship app subscribers',        min:0,   max:40,  step:5,    val:15,  unit:'M' },
+  { key:'life',       label:'Depreciation — avg useful life',         min:15,  max:40,  step:1,    val:25,  unit:' yr' },
+  { key:'mult',       label:'Valuation — value / operating income',   min:8,   max:20,  step:1,    val:15,  unit:'×' },
+];
+// Fixed deep-dive results (parks, cruise) + assumptions the sliders act on. All $ in billions unless noted.
+export var DIS_BUILDOUT_BASE = {
+  parksRev:15,  parksOI:3.8,          // FIXED — from Parks ▸ Revenue per m² (full land bank): +$15B rev, +$3.8B OI
+  cruiseRev:1.3, cruiseOI:0.4,        // FIXED — from Cruise ▸ Build-out to 13 ships: +$1.3B net rev, +$0.4B OI
+  studioTake:0.35, studioMargin:0.30, // studio: rev = films × avg gross × studio take; ~30% margin
+  dtcBaseSubs:126, dtcArpu:8,         // DTC: 126M Disney+ Core subs, ~$8/mo ARPU
+  dtcPriceMargin:0.85, dtcSubMargin:0.30, // price rises ~pure margin; new subs at incremental margin
+  espnArpu:20, espnMargin:0.20,       // ESPN flagship ~$20/mo net ARPU, ~20% margin
+  capex:60, taxRate:0.25, shares:1.8, // ~$60B capex; 25% tax; ~1.8B shares
+};
+export var DIS_BUILDOUT_NOTE = "Illustrative sensitivity model — not a forecast. Parks & Resorts (+$15B rev / +$3.8B OI at the full land bank) and Disney Cruise Line (+$1.3B rev / +$0.4B OI at 13 ships) are fixed at the figures from their Bottom Line deep-dives. Studio, DTC and ESPN are slider-driven bases: Disney+ ~126M subs at ~$8 ARPU; studio rev = films × avg gross × ~35% studio take; ESPN app at ~$20/mo. Segments overlap via the content flywheel — a film also feeds streaming and the parks — so the total is directional, not strictly additive. ~$60B capex depreciated over the chosen life; implied value = incremental operating income × the chosen multiple; EPS after ~25% tax over ~1.8B shares.";
+
 // ─── Returns & depreciation — how the park/cruise investments earn and depreciate ────
 export var DIS_RET_THESIS = "Park and cruise assets are long-lived — 20 to 40 years, cruise ships ~30 — so the ~$60B is depreciated slowly. That shapes a J-curve: cash goes out first, then pre-opening costs and fresh depreciation drag near-term operating income, then years of run-rate revenue against a slowly-depreciating base drive the return. Reading the timing of that curve is the key to Experiences margins.";
 export var DIS_USEFUL_LIVES = [
@@ -411,6 +563,41 @@ export var DIS_DPLUS_STRATEGY = [
 ];
 export var DIS_DPLUS_NOTE = "Subscribers & ARPU are the Bloomberg model; streaming P&L is the combined DTC (Disney+/Hulu) segment. Release dates are studio-announced and subject to change.";
 export var DIS_MOVIES_INTRO = "The studio slate — theatrical films (Disney, Pixar, Marvel, Lucasfilm) that drive box office, then feed Disney+ and the parks. Filter by studio.";
+// Past theatrical releases FY2021–2025 (four core studios). `ww` = lifetime worldwide box office (USD, Box Office Mojo);
+// `budget` = reported/estimated production budget (marketing excluded). Excludes Luca & Turning Red (Disney+ releases, no wide theatrical run).
+export var DIS_MOVIES_PAST = [
+  { title:'The Fantastic Four: First Steps', studio:'Marvel',    date:'Jul 2025', ww:522000000,  budget:200000000 },
+  { title:'Elio',                            studio:'Pixar',     date:'Jun 2025', ww:154000000,  budget:150000000 },
+  { title:'Lilo & Stitch',                   studio:'Disney',    date:'May 2025', ww:1038000000, budget:100000000 },
+  { title:'Thunderbolts*',                   studio:'Marvel',    date:'May 2025', ww:382000000,  budget:180000000 },
+  { title:'Snow White',                      studio:'Disney',    date:'Mar 2025', ww:206000000,  budget:270000000 },
+  { title:'Captain America: Brave New World',studio:'Marvel',    date:'Feb 2025', ww:415000000,  budget:180000000 },
+  { title:'Mufasa: The Lion King',           studio:'Disney',    date:'Dec 2024', ww:720000000,  budget:200000000 },
+  { title:'Moana 2',                         studio:'Disney',    date:'Nov 2024', ww:1059000000, budget:150000000 },
+  { title:'Deadpool & Wolverine',            studio:'Marvel',    date:'Jul 2024', ww:1338000000, budget:200000000 },
+  { title:'Inside Out 2',                    studio:'Pixar',     date:'Jun 2024', ww:1699000000, budget:200000000 },
+  { title:'Wish',                            studio:'Disney',    date:'Nov 2023', ww:255000000,  budget:200000000 },
+  { title:'The Marvels',                     studio:'Marvel',    date:'Nov 2023', ww:206000000,  budget:270000000 },
+  { title:'Haunted Mansion',                 studio:'Disney',    date:'Jul 2023', ww:118000000,  budget:150000000 },
+  { title:'Indiana Jones and the Dial of Destiny', studio:'Star Wars', date:'Jun 2023', ww:384000000, budget:295000000 },
+  { title:'Elemental',                       studio:'Pixar',     date:'Jun 2023', ww:496000000,  budget:200000000 },
+  { title:'The Little Mermaid',              studio:'Disney',    date:'May 2023', ww:570000000,  budget:250000000 },
+  { title:'Guardians of the Galaxy Vol. 3',  studio:'Marvel',    date:'May 2023', ww:846000000,  budget:250000000 },
+  { title:'Ant-Man and the Wasp: Quantumania', studio:'Marvel',  date:'Feb 2023', ww:476000000,  budget:200000000 },
+  { title:'Strange World',                   studio:'Disney',    date:'Nov 2022', ww:74000000,   budget:180000000 },
+  { title:'Black Panther: Wakanda Forever',  studio:'Marvel',    date:'Nov 2022', ww:859000000,  budget:250000000 },
+  { title:'Thor: Love and Thunder',          studio:'Marvel',    date:'Jul 2022', ww:761000000,  budget:250000000 },
+  { title:'Lightyear',                       studio:'Pixar',     date:'Jun 2022', ww:226000000,  budget:200000000 },
+  { title:'Doctor Strange in the Multiverse of Madness', studio:'Marvel', date:'May 2022', ww:956000000, budget:200000000 },
+  { title:'Encanto',                         studio:'Disney',    date:'Nov 2021', ww:256000000,  budget:150000000 },
+  { title:'Eternals',                        studio:'Marvel',    date:'Nov 2021', ww:402000000,  budget:200000000 },
+  { title:'Shang-Chi and the Legend of the Ten Rings', studio:'Marvel', date:'Sep 2021', ww:432000000, budget:200000000 },
+  { title:'Jungle Cruise',                   studio:'Disney',    date:'Jul 2021', ww:221000000,  budget:200000000 },
+  { title:'Black Widow',                     studio:'Marvel',    date:'Jul 2021', ww:380000000,  budget:200000000 },
+  { title:'Cruella',                         studio:'Disney',    date:'May 2021', ww:234000000,  budget:200000000 },
+  { title:'Raya and the Last Dragon',        studio:'Disney',    date:'Mar 2021', ww:130000000,  budget:100000000 },
+];
+export var DIS_MOVIES_PAST_NOTE = "Lifetime worldwide box office (Box Office Mojo). The average recomputes with the studio filter. Excludes Luca and Turning Red (released to Disney+ with no wide theatrical run). Budgets exclude marketing.";
 export var DIS_LINEAR_INTRO = "ABC and the cable networks (FX, National Geographic, Disney Channel) — the legacy TV business inside Entertainment, in managed decline as viewing shifts to streaming.";
 export var DIS_LINEAR_POINTS = [
   { t:'The trend',      d:'Cord-cutting shrinks affiliate fees and TV advertising; Entertainment’s linear revenue falls ~10%+ a year.' },
@@ -418,6 +605,68 @@ export var DIS_LINEAR_POINTS = [
   { t:'The strategy',   d:'Manage the decline: cut costs, sell non-core assets (the A+E stake), and move content and spend to Disney+/Hulu.' },
 ];
 export var DIS_LINEAR_CHART_NOTE = "Entertainment advertising revenue (Bloomberg model) — a proxy for the linear-TV trend: down from ~$8.7B (FY22) as audiences move to streaming.";
+
+// ─── Sports (ESPN) — rights portfolio, the NFL deal, and the DTC pivot ───────────
+// NOTE: figures reconciled to public reporting (league PRs, Reuters, Sportico, The Athletic) as of early 2026.
+export var DIS_ESPN_INTRO = "ESPN is Disney’s Sports segment — the highest-margin, highest-affiliate-fee network in cable, now pivoting to direct-to-consumer. Its moat is live rights: multi-year, multi-billion-dollar deals with the NFL, NBA, college football and more. This is the portfolio — what ESPN owns, what it just won, and what it let walk.";
+export var DIS_ESPN_KPIS = [
+  ['$29.99/mo',  'ESPN flagship app · launched Aug 2025'],
+  ['$17.7B',     'FY25 Sports segment revenue'],
+  ['$2.9B',      'FY25 Sports operating income'],
+  ['~19%',       'of Disney total revenue'],
+  ['~$10.8B',    'FY26 sports-rights spend'],
+  ['~66M',       'US pay-TV homes (peak ~100M in 2011)'],
+];
+// The NFL deal has two parts: (1) an asset-for-equity swap, (2) the existing 2023–33 media-rights deal.
+export var DIS_ESPN_NFL = {
+  equityPct: 10,
+  impliedEv: "~$30B",
+  espnGets: [
+    { t:'NFL Network', d:'The 24/7 cable channel — owned & operated by ESPN, with its 7 live regular-season games (4 shifting off ESPN’s own slate).' },
+    { t:'NFL RedZone (linear)', d:'The linear-TV distribution rights + the RedZone brand. Note: the NFL keeps operating, producing and streaming it.' },
+    { t:'NFL Fantasy', d:'Merged into ESPN Fantasy — which becomes the official fantasy game of the NFL, feeding first-party fan data.' },
+  ],
+  nflGets: [
+    { t:'~10% of ESPN', d:'A stake valued at ~$3B in an SEC filing at close — implying a ~$30B value for the newly independent ESPN.' },
+  ],
+  media: {
+    annual: 2700000000, start: 2023, end: 2033, optOut: 2030,
+    covers: [
+      { t:'Monday Night Football', d:'The full 17-game MNF package (~10 simulcast on ABC), plus flex / simulcast windows.' },
+      { t:'Two Super Bowls', d:'ABC/ESPN joins the rotation for the first time — Super Bowl LXI (Feb 2027) and LXV (2031).' },
+      { t:'Playoffs & the Draft', d:'A wild-card playoff game each January, plus the Pro Bowl and the NFL Draft.' },
+    ],
+  },
+  note: "Announced Aug 2025 and closed Jan 31, 2026 after DOJ and antitrust clearance. The stake makes the NFL a part-owner of ESPN just as ESPN goes direct-to-consumer — the league’s incentive flips from squeezing rights fees to growing the app (and ESPN’s MNF deal is protected from the NFL’s opt-out until after 2030, a year longer than other partners). The NFL keeps NFL Films, NFL+, NFL.com and the club sites out of the deal.",
+};
+// Rights portfolio for the Gantt timeline. `annual` = ESPN’s approx. annual fee (USD). status: held | new | losing.
+// `renew` = true if the current deal expires within ~3 years (a near-term renewal decision).
+export var DIS_ESPN_RIGHTS = [
+  { league:'NFL',            annual:2700000000, start:2023, end:2033, status:'held',   emoji:'🏈', note:'Monday Night Football + ESPN’s first two Super Bowls (2027, 2031). NFL opt-out not until after 2030.' },
+  { league:'NBA',            annual:2600000000, start:2025, end:2036, status:'new',    emoji:'🏀', note:'New 11-year deal (Disney’s fee up ~85%). ABC keeps the NBA Finals; NBC & Amazon join, TNT is out.' },
+  { league:'College Football Playoff', annual:1300000000, start:2026, end:2032, status:'new', emoji:'🏆', note:'6-yr, $7.8B deal for the expanded 12-team CFP — the national title game moves to ABC in 2026.' },
+  { league:'SEC',            annual:800000000,  start:2024, end:2034, status:'held',   emoji:'🐘', note:'Fully exclusive from 2024 (top package moved from CBS to ABC); includes the SEC Network.' },
+  { league:'Big 12',         annual:230000000,  start:2025, end:2031, status:'held',   emoji:'🤠', note:'ESPN’s share of a six-year, $2.28B package split with Fox — ESPN holds the top football pick.' },
+  { league:'ACC',            annual:240000000,  start:2016, end:2036, status:'held',   emoji:'🎓', note:'ESPN exercised its option (Jan 2025) to run the ACC Network + tier-1 rights through 2035-36.' },
+  { league:'MLB',            annual:550000000,  start:2026, end:2028, status:'new',    emoji:'⚾', renew:true, note:'Reworked after both sides opted out: ESPN gains MLB.TV distribution + local streaming, but loses the postseason & Home Run Derby.' },
+  { league:'NHL',            annual:400000000,  start:2021, end:2028, status:'held',   emoji:'🏒', renew:true, note:'Seven-year deal; expires after 2027-28. ~25 games on ABC/ESPN + 4 of 7 Stanley Cup Finals — a near-term renewal.' },
+  { league:'Tennis Slams',   annual:250000000,  start:2015, end:2037, status:'held',   emoji:'🎾', note:'Exclusive US homes: US Open (through 2037), Wimbledon (2035) & Australian Open (2031). French Open is not ESPN.' },
+  { league:'WNBA',           annual:200000000,  start:2026, end:2036, status:'new',    emoji:'⛹️', note:'Part of the new NBA-linked deal — ABC/ESPN is lead partner in the league’s fastest-growing era.' },
+  { league:'LaLiga',         annual:175000000,  start:2021, end:2029, status:'held',   emoji:'⚽', note:'Exclusive US home of Spain’s top soccer league (all 380 matches) on ESPN+ — a key ESPN+ driver.' },
+  { league:'Golf',           annual:100000000,  start:2020, end:2030, status:'held',   emoji:'⛳', note:'The Masters early rounds, the PGA Championship (cable) and PGA Tour Live on ESPN+.' },
+  { league:'UFC',            annual:500000000,  start:2019, end:2025, status:'losing', emoji:'🥊', renew:true, note:'LOST to Paramount+ — a 7-year, $7.7B (~$1.1B/yr) deal takes UFC off ESPN from 2026. ESPN declined to match.' },
+  { league:'Formula 1',      annual:85000000,   start:2018, end:2025, status:'losing', emoji:'🏎️', renew:true, note:'LOST to Apple — Apple TV takes US F1 rights from 2026 (reported >$140M/yr). ESPN declined to match.' },
+];
+export var DIS_ESPN_RIGHTS_NOTE = "Bars span each current deal’s first-to-last season; the dotted line marks today (2026). Annual fees are ESPN’s approximate share per public reporting — Disney does not disclose per-league figures, and several (ACC, Big 12, tennis) are estimates. “Renews soon” flags deals expiring within ~3 years.";
+export var DIS_ESPN_INSIGHTS = [
+  { ic:'📱', t:'The flagship gamble', d:'The standalone ESPN app finally lets cord-cutters buy ESPN without a cable bundle — $29.99/mo unlimited, $11.99 for the ESPN Select tier, or ~$36 in a Disney+/Hulu trio (which ~80% of new sign-ups choose). It cannibalises the cable affiliate fee, so the bet is that DTC subs more than replace the ~$9.42/month ESPN earns per pay-TV home.' },
+  { ic:'📉', t:'Racing the cord-cutting clock', d:'ESPN’s cable reach fell from ~100M homes (2011) to ~66M. Yet the ~$9.42/sub affiliate fee — 3x any rival and ~$8B/yr — still funds the rights bill. The DTC pivot is a race: grow the app before the linear cash cow shrinks below the cost of the rights.' },
+  { ic:'🎰', t:'The betting retreat', d:'ESPN Bet is dead: ESPN and Penn Entertainment mutually terminated the 10-year, ~$2B branding deal effective Dec 2025 after it stalled at ~5% market share against the FanDuel/DraftKings duopoly. ESPN exits branded sportsbooks and is expected to rethink betting as a feature inside the flagship app.' },
+  { ic:'🏈', t:'Why the NFL stake matters', d:'The deal closed Jan 31, 2026: handing the NFL ~10% of ESPN (a stake valued at ~$3B, so ESPN ≈ $30B) turns the league from adversary into part-owner — the NFL now profits if the app succeeds. It also folds RedZone (linear) and NFL Network, with their own games and cord-cutter appeal, straight into ESPN.' },
+  { ic:'🚪', t:'The rights they let walk', d:'ESPN passed on UFC (→ Paramount, ~$1.1B/yr), F1 (→ Apple), Top Rank boxing and the French Open. Disciplined restraint on mid-tier properties — or ceding ground to deep-pocketed tech? Amazon, Netflix, Apple and YouTube now bid up every renewal, the reason NFL/NBA fees keep climbing.' },
+  { ic:'📦', t:'The bundle wars', d:'The Venu Sports JV (ESPN + Fox + WBD) was scrapped in Jan 2025 after Fubo won an antitrust injunction — Disney instead merged Hulu + Live TV into Fubo, taking majority control. Netflix now has WWE Raw and NFL Christmas games; the fight is as much about the bundle as the rights.' },
+  { ic:'💰', t:'An $11B annual rights bill', d:'The NFL, NBA, CFP, SEC, Big 12 and the rest add up to ~$10.8B a year (~45% of Disney’s content budget), with ~$86B of future rights commitments on the balance sheet. That contractual floor is both the moat (rivals can’t replicate it) and the risk (it must be paid whether subs grow or not).' },
+];
 
 // ─── Leadership bench (qualitative read; Pillars ▸ Management is the synced source of record) ─
 export var DIS_MGMT = [

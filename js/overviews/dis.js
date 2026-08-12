@@ -21,7 +21,16 @@ import {
   DIS_RET_THESIS, DIS_USEFUL_LIVES, DIS_LIVES_NOTE, DIS_DEPR_MATH, DIS_RET_PHASES, DIS_RET_CHART_NOTE,
   DIS_DEPR_CALC, DIS_PROJECTS, DIS_PROJ_BUCKETS, DIS_PROJ_REGIONS,
   DIS_DPLUS_KPIS, DIS_DPLUS_STUDIOS, DIS_DPLUS_SLATE, DIS_DPLUS_STRATEGY, DIS_DPLUS_NOTE,
-  DIS_MOVIES_INTRO, DIS_LINEAR_INTRO, DIS_LINEAR_POINTS, DIS_LINEAR_CHART_NOTE
+  DIS_MOVIES_INTRO, DIS_MOVIES_PAST, DIS_MOVIES_PAST_NOTE, DIS_LINEAR_INTRO, DIS_LINEAR_POINTS, DIS_LINEAR_CHART_NOTE,
+  DIS_ESPN_INTRO, DIS_ESPN_KPIS, DIS_ESPN_NFL, DIS_ESPN_RIGHTS, DIS_ESPN_RIGHTS_NOTE, DIS_ESPN_INSIGHTS,
+  DIS_CRUISE_INTRO, DIS_CRUISE_FLEET, DIS_CRUISE_FLEET_NOTE,
+  DIS_CRUISE_BUILD, DIS_CRUISE_BUILD_NOTE,
+  DIS_CRUISE_ECON_LEAD, DIS_CRUISE_ECON, DIS_CRUISE_ECON_NOTE,
+  DIS_CRUISE_SHIP_LEAD, DIS_CRUISE_SHIP, DIS_CRUISE_SHIP_NOTE,
+  DIS_PARKS_INTRO, DIS_PARKS_FOOTPRINT, DIS_PARKS_FOOTPRINT_NOTE,
+  DIS_PARKS_BUILD_LEAD, DIS_PARKS_BUILD, DIS_PARKS_BUILD_NOTE,
+  DIS_PARKS_CAP_LEAD, DIS_PARKS_CAP, DIS_PARKS_CAP_NOTE,
+  DIS_BUILDOUT_INTRO, DIS_BUILDOUT_INPUTS, DIS_BUILDOUT_BASE, DIS_BUILDOUT_NOTE
 } from './dis-data.js';
 import { WORLD_VB, WORLD_PATHS } from './world-paths.js';
 import {
@@ -229,6 +238,84 @@ function styleBlock(){
     '.dsl-date{font-size:10.5px;font-weight:800;color:var(--mu);min-width:70px;flex:none}'+
     '.dsl-main{flex:1;min-width:0}.dsl-t{font-size:12px;font-weight:800;color:var(--navy)}.dsl-why{font-size:11px;color:var(--mu);line-height:1.4;margin-top:1px}'+
     '.dsl-type{font-size:9px;font-weight:800;border-radius:20px;padding:3px 9px;white-space:nowrap;flex:none}'+
+    // Movies ▸ Past — box-office bar list
+    '.mvb{display:flex;flex-direction:column;gap:5px}'+
+    '.mvb-row{display:flex;align-items:center;gap:12px}'+
+    '.mvb-name{width:238px;flex:none;display:flex;align-items:baseline;gap:7px;min-width:0}'+
+    '.mvb-dot{width:7px;height:7px;border-radius:50%;flex:none;align-self:center}'+
+    '.mvb-t{font-size:11.5px;font-weight:800;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'+
+    '.mvb-d{font-size:9.5px;font-weight:700;color:var(--mu);flex:none}'+
+    '.mvb-track{position:relative;flex:1;height:15px;background:#F2F5F8;border-radius:5px;min-width:60px}'+
+    '.mvb-fill{position:absolute;left:0;top:0;bottom:0;border-radius:5px;min-width:2px}'+
+    '.mvb-avg{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--navy);opacity:.5;z-index:2}'+
+    '.mvb-v{width:62px;flex:none;text-align:right;font-size:11.5px;font-weight:800;color:var(--navy)}'+
+    '.mvb-legend{font-size:9.5px;font-weight:700;color:var(--mu);margin:2px 0 10px;display:flex;align-items:center;gap:6px}'+
+    '.mvb-legend i{display:inline-block;width:2px;height:11px;background:var(--navy);opacity:.5;vertical-align:middle}'+
+    // Sports (ESPN) ▸ NFL deal anatomy
+    '.espn-deal{border:1px solid var(--bdr);border-radius:13px;background:linear-gradient(180deg,#F7F9FC,var(--w));padding:16px 16px 14px;margin:4px 0 8px}'+
+    '.espn-swap{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:stretch}'+
+    '.espn-swap-col{display:flex;flex-direction:column;gap:7px}'+
+    '.espn-swap-h{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);display:flex;align-items:center;gap:6px}'+
+    '.espn-swap-h b{color:var(--navy)}'+
+    '.espn-swap-c{border:1px solid var(--bdr);border-radius:9px;background:var(--w);padding:8px 11px}'+
+    '.espn-swap-c.eg{border-left:3px solid #1D3FB8}.espn-swap-c.ng{border-left:3px solid #2FA36B}'+
+    '.espn-swap-t{font-size:12px;font-weight:800;color:var(--navy)}.espn-swap-d{font-size:10.5px;color:var(--mu);line-height:1.4;margin-top:2px}'+
+    '.espn-swap-mid{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:78px}'+
+    '.espn-swap-ar{font-size:24px;color:var(--brand);line-height:1;font-weight:800}'+
+    '.espn-swap-eq{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);text-align:center;line-height:1.3}'+
+    '.espn-mnf{margin-top:13px;border-top:1px dashed var(--bdr);padding-top:12px}'+
+    '.espn-mnf-h{font-size:12px;font-weight:800;color:var(--navy);display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;margin-bottom:9px}'+
+    '.espn-mnf-tag{font-size:9.5px;font-weight:800;color:#1D3FB8;background:rgba(29,63,184,.1);border-radius:20px;padding:2px 9px}'+
+    '.espn-mnf-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:9px}'+
+    '.espn-mnf-c{border:1px solid var(--bdr);border-radius:9px;background:var(--w);padding:9px 11px}'+
+    '.espn-mnf-t{font-size:11.5px;font-weight:800;color:var(--navy)}.espn-mnf-d{font-size:10.5px;color:var(--mu);line-height:1.4;margin-top:2px}'+
+    // Sports (ESPN) ▸ rights portfolio Gantt timeline
+    '.espn-gwrap{border:1px solid var(--bdr);border-radius:12px;background:var(--w);padding:12px 14px 6px;overflow:hidden}'+
+    '.espn-axis{position:relative;height:16px;margin:0 0 4px}'+
+    '.espn-axis-yr{position:absolute;top:0;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--mu)}'+
+    '.espn-grid{position:absolute;top:0;bottom:0;width:1px;background:#EEF2F7}'+
+    '.espn-gantt{position:relative;padding-top:2px}'+
+    '.espn-grow{position:relative;z-index:2;display:flex;align-items:center;gap:10px;height:26px}'+
+    '.espn-glabel{width:210px;flex:none;display:flex;align-items:center;gap:7px;min-width:0}'+
+    '.espn-gemoji{font-size:13px;flex:none;width:16px;text-align:center}'+
+    '.espn-gname{font-size:11.5px;font-weight:800;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'+
+    '.espn-gfee{font-size:9.5px;font-weight:700;color:var(--mu);flex:none;margin-left:auto;padding-left:6px}'+
+    '.espn-gtrack{position:relative;flex:1;height:100%;min-width:80px}'+
+    '.espn-gbar{position:absolute;top:6px;height:14px;border-radius:7px;display:flex;align-items:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}'+
+    '.espn-gbar.clip-l{border-top-left-radius:2px;border-bottom-left-radius:2px}'+
+    '.espn-gend{position:absolute;top:5px;font-size:9px;font-weight:800;white-space:nowrap;line-height:16px}'+
+    '.espn-todaywrap{position:absolute;left:220px;right:0;top:0;bottom:6px;pointer-events:none;z-index:5}'+
+    '.espn-gtoday{position:absolute;top:0;bottom:0;width:0;border-left:2px dotted var(--navy);opacity:.6}'+
+    '.espn-gtoday b{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:8.5px;font-weight:800;color:var(--navy);background:var(--w);padding:0 3px;white-space:nowrap}'+
+    '.espn-glegend{display:flex;flex-wrap:wrap;gap:14px;font-size:10px;font-weight:700;color:var(--mu);margin:9px 2px 2px}'+
+    '.espn-glegend span{display:inline-flex;align-items:center;gap:5px}'+
+    '.espn-glegend i{width:11px;height:11px;border-radius:3px;display:inline-block}'+
+    // What ▸ Cruise deep-dive — fleet list + economics
+    '.crus{display:flex;flex-direction:column;gap:6px}'+
+    '.crus-grp{display:flex;align-items:baseline;gap:8px;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:12px 2px 5px}'+
+    '.crus-grp b{color:var(--navy);font-size:12px;text-transform:none;letter-spacing:0}'+
+    '.crus-row{display:flex;align-items:center;gap:12px;border:1px solid var(--bdr);border-left:3px solid var(--seg,#1E88C7);border-radius:9px;padding:8px 12px;background:var(--w)}'+
+    '.crus-row.order{border-left-style:dashed;background:#FAFBFD}'+
+    '.crus-yr{font-size:10.5px;font-weight:800;color:var(--mu);width:40px;flex:none}'+
+    '.crus-main{width:216px;flex:none;min-width:0}'+
+    '.crus-n{font-size:12px;font-weight:800;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'+
+    '.crus-n .crus-cls{font-size:9px;font-weight:800;color:#1E88C7;background:rgba(30,136,199,.12);border-radius:20px;padding:1px 7px;margin-left:6px;vertical-align:middle}'+
+    '.crus-sub{font-size:10px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}'+
+    '.crus-bar{position:relative;flex:1;height:14px;background:#F2F5F8;border-radius:5px;min-width:50px}'+
+    '.crus-fill{position:absolute;left:0;top:0;bottom:0;border-radius:5px;min-width:3px}'+
+    '.crus-pax{width:104px;flex:none;text-align:right;font-size:11px;font-weight:800;color:var(--navy);line-height:1.2}'+
+    '.crus-pax span{display:block;font-size:8.5px;font-weight:700;color:var(--mu)}'+
+    '.cru-econ-lead{font-size:12px;font-weight:700;color:var(--navy);line-height:1.5;margin:2px 0 10px}'+
+    '.cru-econ-lead b{color:#1E88C7}'+
+    '.cru-hl{display:inline;background:linear-gradient(180deg,transparent 62%,rgba(30,136,199,.22) 0)}'+
+    // Full Buildout — interactive sensitivity model
+    '.bo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px 22px;margin:12px 0 6px}'+
+    '.bo-in{display:flex;flex-direction:column;gap:5px}'+
+    '.bo-in label{font-size:11px;font-weight:700;color:var(--navy);display:flex;justify-content:space-between;align-items:baseline;gap:8px}'+
+    '.bo-val{font-size:12.5px;font-weight:800;color:var(--brand);white-space:nowrap}'+
+    '.bo-sl{width:100%;height:5px;accent-color:var(--brand);cursor:pointer;margin:0}'+
+    '.bo-seg{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);grid-column:1/-1;margin:6px 0 -4px;border-top:1px solid var(--bdr);padding-top:9px}'+
+    '.bo-seg:first-child{border-top:none;padding-top:0;margin-top:0}'+
     '.dstr{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}'+
     '.dstr-c{border:1px solid var(--bdr);border-top:3px solid '+DIS_BRAND+';border-radius:11px;padding:12px 14px;background:var(--w)}'+
     '.dstr-t{font-size:12.5px;font-weight:800;color:var(--navy);margin-bottom:4px}.dstr-d{font-size:11.5px;color:var(--mu);line-height:1.5}'+
@@ -757,12 +844,201 @@ function whatMap(list){
   }).join('')+'</div>') : '';
   return svg + panel + offHtml + '<div class="dd-note" style="margin-top:8px">Click a pin (or a chip) for the project. Equirectangular world map; cruise & company-wide items have no single point, so they’re listed below.</div>';
 }
+// ─── What ▸ Cruise deep-dive (shown when the Cruise bucket is selected) ───────────
+function cruiseFleetRows(list){
+  var max = list.reduce(function(m,s){ return Math.max(m, s.pax||0); }, 1);
+  return list.map(function(s){
+    var c = s.status==='order' ? ' order' : '';
+    var cls = '<span class="crus-cls">'+esc(s.cls)+(s.largest?' · largest':'')+(s.capLight?' · capital-light':'')+'</span>';
+    var bar = s.pax
+      ? '<div class="crus-bar" title="'+esc(s.gt? (Math.round(s.gt/1000)+'k GT'):'')+'"><div class="crus-fill" style="width:'+Math.max(3,s.pax/max*100).toFixed(1)+'%;background:'+(s.status==='order'?hexA('#1E88C7',.5):'#1E88C7')+'"></div></div>'
+      : '<div class="crus-bar" style="background:transparent"></div>';
+    var pax = s.pax
+      ? '<div class="crus-pax">'+s.pax.toLocaleString('en-US')+'<span>double-occ'+(s.est?' · est':'')+'</span></div>'
+      : '<div class="crus-pax">~'+s.paxMax.toLocaleString('en-US')+'<span>max · est</span></div>';
+    return '<div class="crus-row'+c+'" title="'+esc(s.note)+'">'+
+      '<div class="crus-yr">'+esc(s.yr)+'</div>'+
+      '<div class="crus-main"><div class="crus-n">'+esc(s.name)+cls+'</div><div class="crus-sub">'+esc(s.port)+'</div></div>'+
+      bar+pax+'</div>';
+  }).join('');
+}
+function cruTiles(list, mt){
+  return '<div class="dd-kpis"'+(mt?' style="margin:'+mt+'"':'')+'>'+list.map(function(k){
+    return '<div class="dd-kpi"><div class="dd-kpi-v">'+esc(k[0])+'</div><div class="dd-kpi-k">'+esc(k[1])+'</div></div>';
+  }).join('')+'</div>';
+}
+// A collapsible section (reuses the .dcol pattern; toggled via delegation on #whatOut).
+function cruDcol(id, title, sub, body, open){
+  return '<div class="dcol'+(open?' open':'')+'" data-dcol="'+id+'">'+
+    '<button type="button" class="dcol-h"><span class="dcol-ic">'+(open?'▾':'▸')+'</span>'+esc(title)+
+      (sub?' <span style="color:var(--mu);font-weight:600;font-size:11px">'+esc(sub)+'</span>':'')+'</button>'+
+    '<div class="dcol-b"'+(open?'':' hidden')+'>'+body+'</div></div>';
+}
+function cruiseFleetBody(){
+  var inService = DIS_CRUISE_FLEET.filter(function(s){ return s.status==='service'; });
+  var onOrder   = DIS_CRUISE_FLEET.filter(function(s){ return s.status==='order'; });
+  return '<div class="crus-grp"><b>In service</b> · '+inService.length+' ships</div>'+
+    '<div class="crus">'+cruiseFleetRows(inService)+'</div>'+
+    '<div class="crus-grp"><b>On order</b> · through 2031</div>'+
+    '<div class="crus">'+cruiseFleetRows(onOrder)+'</div>'+
+    '<div class="dd-note" style="margin-top:8px">'+esc(DIS_CRUISE_FLEET_NOTE)+'</div>';
+}
+// Full-fleet projection — today (8 ships) vs the full 13, at RCL economics.
+function cruiseBuildBody(){
+  var B = DIS_CRUISE_BUILD;
+  var head = '<tr><th>Metric</th><th>Today · 8 ships</th><th>Full fleet · 13 (~2032)</th><th>Incremental</th></tr>';
+  var rows = B.rows.map(function(r){
+    var cls = (r.kind==='rev'||r.kind==='oi') ? ' class="dfin-tot"' : '';
+    var incStyle = (r.kind==='rev'||r.kind==='oi') ? ' style="color:#2FA36B"' : ' style="color:#1E88C7"';
+    return '<tr'+cls+'><td>'+esc(r.l)+'</td><td>'+esc(r.today)+'</td><td>'+esc(r.full)+'</td><td'+incStyle+'>'+esc(r.inc)+'</td></tr>';
+  }).join('');
+  var table = '<div class="dfin-wrap"><table class="dfin" style="min-width:520px"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>';
+  return cruTiles(B.tiles, '2px 0 12px')+table+'<div class="dd-note" style="margin-top:6px">'+esc(DIS_CRUISE_BUILD_NOTE)+'</div>';
+}
+function cruiseEconBody(){
+  var head = '<tr><th>Operator · FY25</th><th>Revenue</th><th>Op. income</th><th>Op. margin</th><th>EBITDA margin</th><th>Net yield / day</th><th>Occupancy</th><th>Onboard %</th><th>Cust. deposits</th><th>ROIC</th></tr>';
+  var rows = DIS_CRUISE_ECON.map(function(r){
+    return '<tr><td>'+esc(r.co)+' <span style="color:var(--mu);font-weight:600;font-size:10px">'+esc(r.ticker)+'</span></td>'+
+      '<td>'+esc(r.rev)+'</td><td>'+esc(r.oi)+'</td><td>'+esc(r.opm)+'</td><td>'+esc(r.ebitda)+'</td>'+
+      '<td>'+esc(r.yield)+'</td><td>'+esc(r.occ)+'</td><td>'+esc(r.onboard)+'</td><td>'+esc(r.deposits)+'</td><td>'+esc(r.roic)+'</td></tr>';
+  }).join('');
+  return '<div class="cru-econ-lead">'+DIS_CRUISE_ECON_LEAD+'</div>'+
+    '<div class="dfin-wrap"><table class="dfin"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="dd-note" style="margin-top:6px">'+esc(DIS_CRUISE_ECON_NOTE)+'</div>';
+}
+function cruiseShipBody(){
+  var S = DIS_CRUISE_SHIP;
+  var shipHead = '<tr><th>One ~2,500-berth ship · 1 year</th><th>Per passenger-night</th><th>Per year</th></tr>';
+  var shipRows = S.lines.map(function(l){
+    var cls = (l.kind==='sub'||l.kind==='oi') ? ' class="dfin-tot"' : (l.kind==='base' ? ' class="sub"' : '');
+    var yStyle = l.kind==='oi' ? ' style="color:#2FA36B"' : '';
+    return '<tr'+cls+'><td>'+esc(l.l)+'</td><td>'+esc(l.night)+'</td><td'+yStyle+'>'+esc(l.year)+'</td></tr>';
+  }).join('');
+  return '<div class="cru-econ-lead">'+DIS_CRUISE_SHIP_LEAD+'</div>'+
+    cruTiles(S.tiles, '2px 0 12px')+
+    '<div class="dfin-wrap"><table class="dfin" style="min-width:460px"><thead>'+shipHead+'</thead><tbody>'+shipRows+'</tbody></table></div>'+
+    '<div class="dd-note" style="margin-top:6px">'+esc(DIS_CRUISE_SHIP_NOTE)+'</div>';
+}
+function cruiseWhatPanel(){
+  return '<p class="dd-sub" style="margin:6px 0 12px">'+esc(DIS_CRUISE_INTRO)+'</p>'+
+    cruDcol('cru-fleet','🚢 The fleet','8 in service · 5 on order', cruiseFleetBody(), true)+
+    cruDcol('cru-econ','💰 Industry economics','Royal Caribbean · Carnival · Norwegian, FY25', cruiseEconBody(), false)+
+    cruDcol('cru-ship','🔎 Anatomy of one ship','~2,500 berths, one year', cruiseShipBody(), false)+
+    cruDcol('cru-build','📈 Build-out to 13 ships','full-fleet revenue & margins', cruiseBuildBody(), false);
+}
+// ─── What ▸ Parks & resorts deep-dive (shown when the Parks bucket is selected) ────
+function parksFootprintRows(list){
+  var max = list.reduce(function(m,p){ return Math.max(m, p.sqm||0); }, 1);
+  return list.map(function(p){
+    var lic = p.status==='licensed';
+    var tag = lic ? '<span style="font-size:9px;font-weight:800;color:var(--mu);background:#F2F5F8;border-radius:20px;padding:1px 7px;margin-left:6px">licensed</span>' : '';
+    return '<div class="crus-row'+(lic?' order':'')+'" title="'+esc(p.note||'')+'" style="--seg:#E3A73A">'+
+      '<div class="crus-main"><div class="crus-n">'+esc(p.park)+tag+'</div><div class="crus-sub">'+esc(p.resort)+'</div></div>'+
+      '<div class="crus-bar"><div class="crus-fill" style="width:'+Math.max(4,p.sqm/max*100).toFixed(1)+'%;background:'+(lic?hexA('#E3A73A',.5):'#E3A73A')+'"></div></div>'+
+      '<div class="crus-pax">'+p.acres.toLocaleString('en-US')+' ac<span>'+(p.sqm/1e6).toFixed(2)+'M m²</span></div></div>';
+  }).join('');
+}
+function parksFootprintBody(){
+  var owned    = DIS_PARKS_FOOTPRINT.filter(function(p){ return p.status==='owned'; });
+  var licensed = DIS_PARKS_FOOTPRINT.filter(function(p){ return p.status==='licensed'; });
+  var oAc = owned.reduce(function(s,p){ return s+p.acres; },0), oM = owned.reduce(function(s,p){ return s+p.sqm; },0);
+  return '<div class="crus-grp"><b>Owned &amp; operated</b> · '+owned.length+' parks · ~'+oAc.toLocaleString('en-US')+' acres (~'+(oM/1e6).toFixed(1)+'M m²)</div>'+
+    '<div class="crus">'+parksFootprintRows(owned)+'</div>'+
+    '<div class="crus-grp"><b>Licensed</b> · royalties, not park revenue</div>'+
+    '<div class="crus">'+parksFootprintRows(licensed)+'</div>'+
+    '<div class="dd-note" style="margin-top:8px">'+esc(DIS_PARKS_FOOTPRINT_NOTE)+'</div>';
+}
+// Generic today / full-build-out / incremental projection table (reused by the m² and person-capacity lenses).
+function parksProjection(lead, B, note){
+  var head = '<tr><th>Metric</th><th>Today</th><th>Full build-out</th><th>Incremental</th></tr>';
+  var rows = B.rows.map(function(r){
+    var cls = (r.kind==='rev'||r.kind==='oi') ? ' class="dfin-tot"' : '';
+    var incStyle = r.inc==='—' ? '' : ((r.kind==='rev'||r.kind==='oi') ? ' style="color:#2FA36B"' : ' style="color:#E3A73A"');
+    return '<tr'+cls+'><td>'+esc(r.l)+'</td><td>'+esc(r.today)+'</td><td>'+esc(r.full)+'</td><td'+incStyle+'>'+esc(r.inc)+'</td></tr>';
+  }).join('');
+  var table = '<div class="dfin-wrap"><table class="dfin" style="min-width:480px"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>';
+  return '<div class="cru-econ-lead">'+lead+'</div>'+cruTiles(B.tiles, '2px 0 12px')+table+
+    '<div class="dd-note" style="margin-top:6px">'+esc(note)+'</div>';
+}
+function parksWhatPanel(){
+  var projects = DIS_PROJECTS.filter(function(p){ return p.bucket==='parks'; });
+  return '<p class="dd-sub" style="margin:6px 0 12px">'+esc(DIS_PARKS_INTRO)+'</p>'+
+    cruDcol('pk-foot','🏰 Park footprint','12 parks · developed area', parksFootprintBody(), true)+
+    cruDcol('pk-proj','🎢 Expansion projects','the $60B new lands & attractions', whatCards(projects), false)+
+    cruDcol('pk-cap','👥 Capacity & ARPU','incremental visits × in-park spend', parksProjection(DIS_PARKS_CAP_LEAD, DIS_PARKS_CAP, DIS_PARKS_CAP_NOTE), false)+
+    cruDcol('pk-build','📐 Revenue per m² & full-capacity','land-bank revenue potential', parksProjection(DIS_PARKS_BUILD_LEAD, DIS_PARKS_BUILD, DIS_PARKS_BUILD_NOTE), false);
+}
+
+// ─── Top Line ▸ Full Buildout — interactive sensitivity model ─────────────────────
+function boGroup(key){
+  if(key==='parksPct') return 'Parks & Resorts';
+  if(key==='cruiseMult') return 'Disney Cruise Line';
+  if(key==='films'||key==='avgGross') return 'Studio';
+  if(key==='dtcPrice'||key==='dtcSubs') return 'Streaming (DTC)';
+  if(key==='espnSubs') return 'ESPN';
+  if(key==='life') return 'Depreciation';
+  return 'Valuation';
+}
+function boFmtVal(inp, v){ return (inp.fmt==='$'?'$':'')+v+(inp.unit||''); }
+function buildoutSubpane(){
+  var lastG=null, inputs='';
+  DIS_BUILDOUT_INPUTS.forEach(function(i){
+    var g=boGroup(i.key); if(g!==lastG){ inputs+='<div class="bo-seg">'+esc(g)+'</div>'; lastG=g; }
+    inputs+='<div class="bo-in"><label>'+esc(i.label)+' <b class="bo-val">'+esc(boFmtVal(i,i.val))+'</b></label>'+
+      '<input type="range" class="bo-sl" data-bo="'+i.key+'" data-pre="'+(i.fmt==='$'?'$':'')+'" data-unit="'+esc(i.unit||'')+'" min="'+i.min+'" max="'+i.max+'" step="'+i.step+'" value="'+i.val+'"></div>';
+  });
+  return '<p class="dd-sub" style="margin:2px 0 8px">'+esc(DIS_BUILDOUT_INTRO)+'</p>'+
+    '<div id="boTiles" class="dd-kpis"></div>'+
+    '<div class="dd-cardt" style="margin:14px 0 2px">Drivers</div>'+
+    '<div class="bo-grid">'+inputs+'</div>'+
+    '<div class="dd-cardt" style="margin:16px 0 6px">Incremental at full buildout</div>'+
+    '<div id="boOut"></div>'+
+    '<div class="dd-note" style="margin-top:8px">'+esc(DIS_BUILDOUT_NOTE)+'</div>';
+}
+function boVal(root, key){ var el=root.querySelector('.bo-sl[data-bo="'+key+'"]'); return el?parseFloat(el.value):0; }
+function buildBuildout(root){
+  var scope=root||document; var out=scope.querySelector('#boOut'); if(!out) return;
+  var B=DIS_BUILDOUT_BASE;
+  var films=boVal(scope,'films'), avgGross=boVal(scope,'avgGross'), dtcPrice=boVal(scope,'dtcPrice'),
+      dtcSubs=boVal(scope,'dtcSubs'), espnSubs=boVal(scope,'espnSubs'), life=boVal(scope,'life'), mult=boVal(scope,'mult');
+  var parksRev=B.parksRev,  parksOI=B.parksOI;       // fixed — deep-dive
+  var cruiseRev=B.cruiseRev, cruiseOI=B.cruiseOI;    // fixed — deep-dive
+  var studioRev=films*avgGross*B.studioTake/1000,   studioOI=studioRev*B.studioMargin;
+  var dtcPriceRev=B.dtcBaseSubs*dtcPrice*12/1000, dtcSubRev=dtcSubs*B.dtcArpu*12/1000;
+  var dtcRev=dtcPriceRev+dtcSubRev,                 dtcOI=dtcPriceRev*B.dtcPriceMargin+dtcSubRev*B.dtcSubMargin;
+  var espnRev=espnSubs*B.espnArpu*12/1000,          espnOI=espnRev*B.espnMargin;
+  var dep=B.capex/life;
+  var segs=[['Parks & Resorts',parksRev,parksOI,1],['Disney Cruise Line',cruiseRev,cruiseOI,1],
+            ['Studio (theatrical)',studioRev,studioOI,0],['Streaming (DTC)',dtcRev,dtcOI,0],['ESPN',espnRev,espnOI,0]];
+  var totRev=0, totOIb=0; segs.forEach(function(s){ totRev+=s[1]; totOIb+=s[2]; });
+  var totOI=totOIb-dep, val=totOI*mult, eps=totOI*(1-B.taxRate)/B.shares;
+  function b(x){ return (x<0?'–$':'$')+Math.abs(x).toFixed(1)+'B'; }
+  // headline tiles
+  var tiles=[[b(totRev),'Incremental revenue'],[b(totOI),'Incremental operating income'],
+             ['$'+Math.round(val)+'B','Implied value ('+mult+'×)'],['$'+eps.toFixed(2),'Implied EPS uplift']];
+  var tw=scope.querySelector('#boTiles');
+  if(tw) tw.innerHTML=tiles.map(function(k){ return '<div class="dd-kpi"><div class="dd-kpi-v">'+esc(k[0])+'</div><div class="dd-kpi-k">'+esc(k[1])+'</div></div>'; }).join('');
+  // detail table
+  var head='<tr><th>Segment</th><th>Δ Revenue</th><th>Δ Operating income</th></tr>';
+  var rows=segs.map(function(s){
+    var tag = s[3] ? ' <span style="font-size:9px;font-weight:800;color:#2FA36B;background:rgba(47,163,107,.12);border-radius:20px;padding:1px 7px">deep-dive</span>'
+                   : ' <span style="font-size:9px;font-weight:700;color:var(--mu)">· slider</span>';
+    return '<tr><td>'+esc(s[0])+tag+'</td><td>'+b(s[1])+'</td><td>'+b(s[2])+'</td></tr>';
+  }).join('');
+  rows+='<tr class="dfin-tot"><td>Before new depreciation</td><td>'+b(totRev)+'</td><td>'+b(totOIb)+'</td></tr>';
+  rows+='<tr><td>– New depreciation ($'+B.capex+'B ÷ '+life+' yr)</td><td>—</td><td style="color:#E0463C">'+b(-dep)+'</td></tr>';
+  rows+='<tr class="dfin-tot"><td>= Incremental operating income</td><td>—</td><td style="color:#2FA36B">'+b(totOI)+'</td></tr>';
+  out.innerHTML='<div class="dfin-wrap"><table class="dfin" style="min-width:460px"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>';
+}
 function buildWhat(root){
   var scope = root||document; var out = scope.querySelector('#whatOut'); if(!out) return;
   function act(sel,attr,dflt){ var el=scope.querySelector(sel+'.active'); return el?el.getAttribute(attr):dflt; }
   var bucket = act('[data-wbucket]','data-wbucket','all');
   var region = act('[data-wregion]','data-wregion','all');
   var view = ddTog(scope,'[data-wview]','data-view','cards');
+  // Cruise & Parks get dedicated deep-dives, ignoring the card/timeline/map toggle.
+  if(bucket==='cruise'){ out.innerHTML = cruiseWhatPanel(); return; }
+  if(bucket==='parks'){ out.innerHTML = parksWhatPanel(); return; }
   var list = DIS_PROJECTS.filter(function(p){ return (bucket==='all'||p.bucket===bucket) && (region==='all'||p.region===region); });
   out.innerHTML = view==='timeline' ? whatTimeline(list) : (view==='map' ? whatMap(list) : whatCards(list));
 }
@@ -991,9 +1267,16 @@ function dplusBody(){
   var dtcSlate = '<div class="dd-cardt" style="margin:22px 0 8px">Coming to Disney+ — streaming originals that drive engagement</div>'+
     '<div class="wf-row">'+slateStudioChips('data-dtcstudio')+'</div><div id="dtcSlate" class="dsl"></div>';
   var dtc = '<div class="wwh-pane" data-wwh="dtc">'+kpis+viewTog+tableWrap+chartWrap+stratSec+dtcSlate+'</div>';
+  var mvModeTog = '<div class="dmm-tog" data-mvmode><button type="button" class="active" data-m="upcoming">Upcoming</button><button type="button" data-m="past">Past</button></div>';
+  var mvUpcoming = '<div data-mvview="upcoming"><div id="mvSlate" class="dsl"></div></div>';
+  var mvPast = '<div data-mvview="past" hidden>'+
+    '<div id="mvPastKpis" class="dd-kpis"></div>'+
+    '<div class="mvb-legend"><i></i>average worldwide gross for the current filter</div>'+
+    '<div id="mvPast" class="mvb"></div>'+
+    '<div class="dd-note" style="margin-top:8px">'+esc(DIS_MOVIES_PAST_NOTE)+'</div></div>';
   var movies = '<div class="wwh-pane" data-wwh="movies" hidden>'+
-    '<p class="dd-sub">'+esc(DIS_MOVIES_INTRO)+'</p>'+
-    '<div class="wf-row">'+slateStudioChips('data-mvstudio')+'</div><div id="mvSlate" class="dsl"></div></div>';
+    '<p class="dd-sub">'+esc(DIS_MOVIES_INTRO)+'</p>'+mvModeTog+
+    '<div class="wf-row">'+slateStudioChips('data-mvstudio')+'</div>'+mvUpcoming+mvPast+'</div>';
   var linPts = '<div class="dstr">'+DIS_LINEAR_POINTS.map(function(s){ return '<div class="dstr-c"><div class="dstr-t">'+esc(s.t)+'</div><div class="dstr-d">'+esc(s.d)+'</div></div>'; }).join('')+'</div>';
   var linear = '<div class="wwh-pane" data-wwh="linear" hidden>'+
     '<p class="dd-sub">'+esc(DIS_LINEAR_INTRO)+'</p>'+
@@ -1069,6 +1352,110 @@ function buildSlate(root, containerId, attr, type){
   var list=DIS_DPLUS_SLATE.filter(function(p){ return p.type===type && (studio==='all'||p.studio===studio); });
   out.innerHTML = list.length ? slateRows(list) : '<div class="wempty">No titles match.</div>';
 }
+// Movies ▸ Past — worldwide box-office bars + summary tiles, recomputed for the active studio filter.
+function fmtBO(v){ return v>=1e9 ? '$'+(v/1e9).toFixed(2)+'B' : '$'+Math.round(v/1e6)+'M'; }
+function buildMoviesPast(root){
+  var scope=root||document; var out=scope.querySelector('#mvPast'); if(!out) return;
+  var active=scope.querySelector('[data-mvstudio].active'); var studio=active?active.getAttribute('data-mvstudio'):'all';
+  var list=DIS_MOVIES_PAST.filter(function(p){ return studio==='all'||p.studio===studio; })
+    .slice().sort(function(a,b){ return b.ww-a.ww; });
+  var kwrap=scope.querySelector('#mvPastKpis');
+  if(!list.length){ if(kwrap) kwrap.innerHTML=''; out.innerHTML='<div class="wempty">No titles match.</div>'; return; }
+  var n=list.length, total=list.reduce(function(s,p){ return s+p.ww; },0), avg=total/n;
+  var s=list.map(function(p){ return p.ww; }).sort(function(a,b){ return a-b; });
+  var median = n%2 ? s[(n-1)/2] : (s[n/2-1]+s[n/2])/2;
+  var billion=list.filter(function(p){ return p.ww>=1e9; }).length;
+  var kpis=[
+    [fmtBO(avg),    'Avg worldwide gross'],
+    [fmtBO(median), 'Median gross'],
+    [n+' films',    studio==='all'?'FY21–25 theatrical':studio+' releases'],
+    [billion+' / '+n, 'Crossed $1B'],
+  ];
+  if(kwrap) kwrap.innerHTML=kpis.map(function(k){ return '<div class="dd-kpi"><div class="dd-kpi-v">'+esc(k[0])+'</div><div class="dd-kpi-k">'+esc(k[1])+'</div></div>'; }).join('');
+  var max=list[0].ww||1, avgPct=Math.min(100, avg/max*100);
+  out.innerHTML=list.map(function(p){ var c=dplusStudioColor(p.studio); var pct=Math.max(1, p.ww/max*100);
+    return '<div class="mvb-row">'+
+      '<span class="mvb-name"><span class="mvb-dot" style="background:'+c+'"></span><span class="mvb-t">'+esc(p.title)+'</span><span class="mvb-d">'+esc(p.date)+'</span></span>'+
+      '<span class="mvb-track"><span class="mvb-fill" style="width:'+pct.toFixed(1)+'%;background:'+c+'"></span><span class="mvb-avg" style="left:'+avgPct.toFixed(1)+'%"></span></span>'+
+      '<span class="mvb-v">'+fmtBO(p.ww)+'</span></div>';
+  }).join('');
+}
+// Movies pane dispatcher — Upcoming slate or Past box-office view, per the active toggle + studio filter.
+function buildMovies(root){
+  var scope=root||document;
+  var mode=ddTog(scope, '[data-mvmode]', 'data-m', 'upcoming');
+  var up=scope.querySelector('[data-mvview="upcoming"]'), pa=scope.querySelector('[data-mvview="past"]');
+  if(mode==='past'){ if(up) up.hidden=true; if(pa) pa.hidden=false; buildMoviesPast(root); }
+  else { if(pa) pa.hidden=true; if(up) up.hidden=false; buildSlate(root,'mvSlate','data-mvstudio','Film'); }
+}
+// ─── Bottom Line ▸ Sports (ESPN) — rights portfolio, the NFL deal, the DTC pivot ──
+function espnStatusColor(s){ return s==='losing' ? '#E0463C' : (s==='new' ? '#2FA36B' : '#1D3FB8'); }
+function fmtFee(v){ return v>=1e9 ? '$'+(v/1e9).toFixed(1).replace(/\.0$/,'')+'B' : '$'+Math.round(v/1e6)+'M'; }
+function sportsBody(){
+  var N = DIS_ESPN_NFL;
+  var kpis = '<div class="dd-kpis">'+DIS_ESPN_KPIS.map(function(k){
+    return '<div class="dd-kpi"><div class="dd-kpi-v">'+esc(k[0])+'</div><div class="dd-kpi-k">'+esc(k[1])+'</div></div>';
+  }).join('')+'</div>';
+  // NFL deal — the asset-for-equity swap + the existing media deal
+  function swapCol(head, cls, items){
+    return '<div class="espn-swap-col"><div class="espn-swap-h">'+head+'</div>'+
+      items.map(function(x){ return '<div class="espn-swap-c '+cls+'"><div class="espn-swap-t">'+esc(x.t)+'</div><div class="espn-swap-d">'+esc(x.d)+'</div></div>'; }).join('')+'</div>';
+  }
+  var mid = '<div class="espn-swap-mid"><div class="espn-swap-eq">Asset-for-equity swap</div><div class="espn-swap-ar">⇄</div>'+
+    '<div class="espn-swap-eq">'+esc(N.equityPct)+'% of ESPN<br>≈ '+esc(N.impliedEv)+' value</div></div>';
+  var mnf = '<div class="espn-mnf"><div class="espn-mnf-h">The existing media deal '+
+      '<span class="espn-mnf-tag">'+fmtFee(N.media.annual)+'/yr · '+N.media.start+'–'+N.media.end+'</span>'+
+      '<span class="espn-mnf-tag" style="color:#E0463C;background:rgba(224,70,60,.1)">opt-out '+N.media.optOut+'</span></div>'+
+    '<div class="espn-mnf-g">'+N.media.covers.map(function(x){ return '<div class="espn-mnf-c"><div class="espn-mnf-t">'+esc(x.t)+'</div><div class="espn-mnf-d">'+esc(x.d)+'</div></div>'; }).join('')+'</div></div>';
+  var deal = '<div class="dd-cardt" style="margin:16px 0 8px">🏈 The NFL deal — two moving parts</div>'+
+    '<div class="espn-deal"><div class="espn-swap">'+
+      swapCol('ESPN <b>receives</b>', 'eg', N.espnGets)+mid+swapCol('NFL <b>receives</b>', 'ng', N.nflGets)+
+    '</div>'+mnf+'<div class="dd-note" style="margin-top:11px">'+esc(N.note)+'</div></div>';
+  // Rights portfolio timeline
+  var chips = [['all','All'],['held','Held'],['new','New / won'],['renew','Renews soon'],['losing','Losing']];
+  var filters = '<div class="wf-row"><span class="wf-lbl">Show</span><span class="wf-chips">'+
+    chips.map(function(c,i){ return '<button type="button" class="wchip'+(i===0?' active':'')+'" data-espnf="'+c[0]+'">'+esc(c[1])+'</button>'; }).join('')+'</span></div>';
+  var legend = '<div class="espn-glegend">'+
+    '<span><i style="background:#1D3FB8"></i>Held</span>'+
+    '<span><i style="background:#2FA36B"></i>New / won</span>'+
+    '<span><i style="background:#E0463C"></i>Losing (off ESPN 2026)</span>'+
+    '<span><i style="width:2px;border-radius:0;background:var(--navy);opacity:.6"></i>Today</span></div>';
+  var timeline = '<div class="dd-cardt" style="margin:22px 0 8px">📅 Rights portfolio — what they hold, and when it renews</div>'+
+    filters+'<div class="espn-gwrap"><div id="espnGantt"></div></div>'+legend+
+    '<div class="dd-note" style="margin-top:4px">'+esc(DIS_ESPN_RIGHTS_NOTE)+'</div>';
+  // Insights
+  var insights = '<div class="dd-cardt" style="margin:22px 0 8px">🔍 More ESPN insights</div>'+
+    '<div class="dstr">'+DIS_ESPN_INSIGHTS.map(function(s){ return '<div class="dstr-c"><div class="dstr-t">'+esc(s.ic)+' '+esc(s.t)+'</div><div class="dstr-d">'+esc(s.d)+'</div></div>'; }).join('')+'</div>';
+  return '<p class="dd-sub">'+esc(DIS_ESPN_INTRO)+'</p>'+kpis+deal+timeline+insights;
+}
+// Render the rights Gantt for the active status filter (bars 2022→2037, today marker at 2026).
+function buildSports(root){
+  var scope=root||document; var out=scope.querySelector('#espnGantt'); if(!out) return;
+  var active=scope.querySelector('[data-espnf].active'); var f=active?active.getAttribute('data-espnf'):'all';
+  var list=DIS_ESPN_RIGHTS.filter(function(r){
+    if(f==='all') return true; if(f==='renew') return !!r.renew; return r.status===f;
+  }).slice().sort(function(a,b){ return b.annual-a.annual; });
+  var YMIN=2022, YMAX=2037, span=YMAX-YMIN;
+  function x(y){ var c=Math.max(YMIN, Math.min(YMAX, y)); return (c-YMIN)/span*100; }
+  var ticks=[2022,2025,2028,2031,2034,2037];
+  var axis='<div class="espn-axis" style="margin-left:220px">'+ticks.map(function(y){ return '<span class="espn-axis-yr" style="left:'+x(y).toFixed(2)+'%">'+y+'</span>'; }).join('')+'</div>';
+  if(!list.length){ out.innerHTML=axis+'<div class="wempty" style="margin-top:8px">No rights match.</div>'; return; }
+  var rows=list.map(function(r){
+    var c=espnStatusColor(r.status);
+    var L=x(r.start), R=x(r.end), w=Math.max(2.5, R-L);
+    var clipL = r.start<YMIN ? ' clip-l' : '';
+    var endLbl = r.status==='losing' ? ('ends '+r.end) : ("’"+String(r.end).slice(2));
+    var inside = R>84;
+    var barLbl = inside ? '<span style="margin-left:auto;padding-right:6px;font-size:9px;font-weight:800;color:#fff">'+endLbl+'</span>' : '';
+    var bar='<div class="espn-gbar'+clipL+'" title="'+esc(r.note)+'" style="left:'+L.toFixed(2)+'%;width:'+w.toFixed(2)+'%;background:'+c+'">'+barLbl+'</div>';
+    var endTag = inside ? '' : '<span class="espn-gend" style="left:'+R.toFixed(2)+'%;padding-left:5px;color:'+(r.renew?'#E0463C':c)+'">'+endLbl+(r.renew?' ⟳':'')+'</span>';
+    return '<div class="espn-grow"><div class="espn-glabel"><span class="espn-gemoji">'+r.emoji+'</span>'+
+      '<span class="espn-gname">'+esc(r.league)+'</span><span class="espn-gfee">'+fmtFee(r.annual)+'/yr</span></div>'+
+      '<div class="espn-gtrack">'+bar+endTag+'</div></div>';
+  }).join('');
+  var today='<div class="espn-todaywrap"><div class="espn-gtoday" style="left:'+x(2026).toFixed(2)+'%"><b>TODAY</b></div></div>';
+  out.innerHTML=axis+'<div class="espn-gantt">'+today+rows+'</div>';
+}
 function buildLinearChart(root){
   var cv=(root||document).querySelector('#linChart'); if(!cv || !canBuild(cv)) return;
   if(cv._chart){ try{ cv._chart.destroy(); }catch(e){} cv._chart=null; }
@@ -1120,6 +1507,7 @@ function buildBottomLine(root){
   var key = act ? act.getAttribute('data-ovst') : 'plan';
   if(key==='returns') requestAnimationFrame(function(){ buildRetChart(root); });
   else if(key==='dplus') buildEnt(root);
+  else if(key==='sports') buildSports(root);
   else requestAnimationFrame(function(){ buildPlanCapex(root); });
 }
 
@@ -1135,18 +1523,22 @@ function deepDiveHtml(c){
   h += '<div class="dd-pane" data-dd="topline">'+
     '<div class="ovt-subtabs">'+
       '<button type="button" class="ovt-subtab active" data-ovst="segments">Segments</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="buildout">Full Buildout</button>'+
     '</div>'+
     '<div class="ovt-subpane" data-ovst="segments">'+segmentsSubpane()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="buildout" hidden>'+buildoutSubpane()+'</div>'+
   '</div>';
   h += '<div class="dd-pane" data-dd="bottomline" hidden>'+
     '<div class="ovt-subtabs">'+
       '<button type="button" class="ovt-subtab active" data-ovst="plan">$60B Expansion Plan</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="returns">Returns &amp; Depreciation</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="dplus">Entertainment</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="sports">Sports (ESPN)</button>'+
     '</div>'+
     '<div class="ovt-subpane" data-ovst="plan">'+planBody()+'</div>'+
     '<div class="ovt-subpane" data-ovst="returns" hidden>'+returnsBody()+'</div>'+
     '<div class="ovt-subpane" data-ovst="dplus" hidden>'+dplusBody()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="sports" hidden>'+sportsBody()+'</div>'+
   '</div>';
   h += '</div>';
   return h;
@@ -1344,6 +1736,14 @@ function deepDiveInit(c){
     wireToggle(root, '[data-wview]', function(){ buildWhat(root); });
     var whatOut = root.querySelector('#whatOut');
     if(whatOut) whatOut.addEventListener('click', function(e){
+      // Cruise deep-dive — collapsible section headers (delegated, since the panel is rendered on demand)
+      var dh = e.target.closest('.dcol-h');
+      if(dh && whatOut.contains(dh)){
+        var sec = dh.parentElement, open = sec.classList.toggle('open');
+        var b = sec.querySelector('.dcol-b'); if(b) b.hidden = !open;
+        var ic = dh.querySelector('.dcol-ic'); if(ic) ic.textContent = open?'▾':'▸';
+        return;
+      }
       var el = e.target.closest('[data-proj]'); if(!el) return;
       var p = DIS_PROJECTS[parseInt(el.getAttribute('data-proj'),10)]; if(!p) return;
       var panel = whatOut.querySelector('#wmapPanel');
@@ -1380,11 +1780,24 @@ function deepDiveInit(c){
       root.querySelectorAll('[data-dtcstudio]').forEach(function(x){ x.classList.toggle('active', x===b); }); buildSlate(root,'dtcSlate','data-dtcstudio','Series');
     }); });
     root.querySelectorAll('[data-mvstudio]').forEach(function(b){ b.addEventListener('click', function(){
-      root.querySelectorAll('[data-mvstudio]').forEach(function(x){ x.classList.toggle('active', x===b); }); buildSlate(root,'mvSlate','data-mvstudio','Film');
+      root.querySelectorAll('[data-mvstudio]').forEach(function(x){ x.classList.toggle('active', x===b); }); buildMovies(root);
+    }); });
+    wireToggle(root, '[data-mvmode]', function(){ buildMovies(root); });
+    // Bottom Line ▸ Sports (ESPN) — rights-timeline status filter
+    root.querySelectorAll('[data-espnf]').forEach(function(b){ b.addEventListener('click', function(){
+      root.querySelectorAll('[data-espnf]').forEach(function(x){ x.classList.toggle('active', x===b); }); buildSports(root);
     }); });
     buildDplusTable(root);
     buildSlate(root,'dtcSlate','data-dtcstudio','Series');
-    buildSlate(root,'mvSlate','data-mvstudio','Film');
+    buildMovies(root);
+    buildSports(root);
+    // Top Line ▸ Full Buildout — sensitivity sliders recompute the model live
+    root.querySelectorAll('.bo-sl').forEach(function(sl){ sl.addEventListener('input', function(){
+      var box=sl.closest('.bo-in'), v=box?box.querySelector('.bo-val'):null;
+      if(v) v.textContent=(sl.getAttribute('data-pre')||'')+sl.value+(sl.getAttribute('data-unit')||'');
+      buildBuildout(root);
+    }); });
+    buildBuildout(root);
     // Bottom Line ▸ Returns — collapsible sections
     root.querySelectorAll('.dcol-h').forEach(function(btn){ btn.addEventListener('click', function(){
       var sec = btn.parentElement, open = sec.classList.toggle('open');

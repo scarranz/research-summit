@@ -1,6 +1,6 @@
 // hedge-funds.js — extracted from summit-research-portal.html
 import { INVESTORS, SP500_REF, SP500_B26, HF_FUNDS, HF_BMK, HF_AYEARS, YEARS, SP500, IMGS, ALL_STOCKS } from './portal-data.js';
-import { fetchInvestorReturns, fetchInvestorHoldings, fetchInvestorLetters, replaceInvestorHoldings, getFileUrl } from './api.js';
+import { fetchInvestorReturns, fetchInvestorHoldings, fetchInvestorLetters, replaceInvestorHoldings, syncLatest13F, getFileUrl } from './api.js';
 import { LOCAL_INVESTOR_RETURNS, LOCAL_INVESTOR_HOLDINGS, LOCAL_INVESTOR_LETTERS } from './investor-local-seed.js';
 import { parse13FFile } from './investor-13f-parser.js';
 
@@ -118,10 +118,50 @@ function renderBenchmark(){
   el.innerHTML=html;
 }
 
+// ─── Hide / Show all (main grid) ──────────────────────────────
+// Per-card "hide" so a crowded grid can be trimmed to just the
+// investors someone actually tracks; persisted in localStorage so it
+// stays trimmed across visits. "Show all" (in the section header)
+// brings everything back.
+
+var HF_HIDDEN_LS_KEY = 'hf_hidden_investors';
+
+function getHiddenInvestors() {
+  try { return JSON.parse(localStorage.getItem(HF_HIDDEN_LS_KEY) || '[]'); } catch (e) { return []; }
+}
+
+function hideInvestor(key, ev) {
+  if (ev) ev.stopPropagation();
+  var hidden = getHiddenInvestors();
+  if (hidden.indexOf(key) === -1) {
+    hidden.push(key);
+    localStorage.setItem(HF_HIDDEN_LS_KEY, JSON.stringify(hidden));
+  }
+  renderInvGrid();
+}
+
+function showAllInvestors() {
+  localStorage.removeItem(HF_HIDDEN_LS_KEY);
+  renderInvGrid();
+}
+
+function renderShowAllControl(hiddenCount) {
+  var btn = document.getElementById('hf-showall');
+  if (!btn) return;
+  if (hiddenCount > 0) {
+    btn.textContent = 'Show all (' + hiddenCount + ' hidden)';
+    btn.style.display = '';
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
 function renderInvGrid(){
   var grid=document.getElementById('inv-grid');if(!grid)return;
+  var hidden=getHiddenInvestors();
+  renderShowAllControl(hidden.length);
   var html='';
-  INVESTORS.forEach(function(inv){
+  INVESTORS.filter(function(inv){ return hidden.indexOf(inv.key)===-1; }).forEach(function(inv){
     var isSummit=inv.key==='summit';
     var photo=inv.photo?(IMGS[inv.photo]||''):'';
     var hasPerf=inv.cum!=null;var cumClr=hasPerf?(inv.cum>=300?'gold':inv.cum>=171?'gp':''):'';
@@ -130,6 +170,7 @@ function renderInvGrid(){
       :'<div class="icard-mv" style="color:var(--mu);font-size:11px">n/a</div>';
     var cumLbl=inv.q1!=null?'Cumul. 2019&ndash;Q1 26':'Cumul. 2019&ndash;2025';
     html+='<div class="icard'+(isSummit?' summit':'')+'" onclick="openInvestorDetail(\''+inv.key+'\')">';
+    html+='<button type="button" class="icard-hide-btn" title="Hide this card" onclick="hideInvestor(\''+inv.key+'\', event)">&times;</button>';
     // Header
     html+='<div class="icard-hdr"><div class="icard-left">';
     if(photo){html+='<img class="icard-photo'+(isSummit?' sp':'')+'" src="'+photo+'" alt="" onerror="this.style.opacity=0.3">';}
@@ -175,6 +216,17 @@ var CAT_LABELS = { annual_letter: 'Annual Letters', investor_message: 'Investor 
 // than a guessed link. Ackman/Pershing Square Holdings confirmed 2026-08.
 var INVESTOR_WEBSITES = {
   ackman: 'https://www.pershingsquareholdings.com',
+};
+
+// SEC EDGAR CIK per investor's 13F-filing entity — only set once verified,
+// same rule as INVESTOR_WEBSITES. Drives the "Sync latest 13F" button:
+// investors without a CIK on file just don't get the button (Upload 13F
+// still works for everyone). Ackman/Pershing Square Capital Management
+// LP confirmed 2026-08 (sql/014_investor_profiles.sql).
+var INVESTOR_CIK = {
+  ackman: '0001336528',
+  buffett: '0001067983',  // Berkshire Hathaway Inc
+  tepper: '0001656456',   // Appaloosa LP
 };
 
 async function loadInvestorProfileData(key) {
@@ -581,7 +633,10 @@ function openInvestorDetail(key) {
     '<div id="ivd_years"><div class="im-loading">Loading…</div></div>' +
     '<div class="im-hold-row">' +
       '<div class="im-section-lbl">Holdings Comparison</div>' +
-      '<button type="button" class="im-upload-btn" id="ivd_upload13f">Upload 13F</button>' +
+      '<div style="display:flex;gap:8px">' +
+        (INVESTOR_CIK[key] ? '<button type="button" class="im-upload-btn" id="ivd_sync13f">&#x21bb; Sync latest 13F</button>' : '') +
+        '<button type="button" class="im-upload-btn" id="ivd_upload13f">Upload 13F</button>' +
+      '</div>' +
     '</div>' +
     '<div id="ivd_cmp"><div class="im-loading">Loading…</div></div>' +
     '<div class="ivd-below-row">' +
@@ -616,6 +671,8 @@ function openInvestorDetail(key) {
     var latest = allPeriods.length ? allPeriods[allPeriods.length - 1] : null;
     openUpload13FPanel(key, latest ? latest.year : new Date().getFullYear(), function() { loadDetail(); });
   });
+  var syncBtn = document.getElementById('ivd_sync13f');
+  if (syncBtn) syncBtn.addEventListener('click', function() { openSync13FPanel(key, INVESTOR_CIK[key], function() { loadDetail(); }); });
 
   loadDetail();
 }
@@ -758,6 +815,92 @@ function openUpload13FPanel(investorKey, defaultYear, onSaved) {
   });
 }
 
+// ─── Sync latest 13F (SEC EDGAR) ──────────────────────────────
+// Same preview-then-Apply flow as Upload 13F, except the file comes
+// from sync-13f (server-side, since the browser can't fetch sec.gov
+// directly — see that function's comments) instead of a local file.
+// Year/quarter are whatever SEC reports for that filing, so they're
+// shown read-only rather than picked by the user.
+
+function openSync13FPanel(investorKey, cik, onSaved) {
+  var id = 'u13f_' + Date.now();
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay im-overlay open';
+  overlay.id = id;
+  overlay.innerHTML =
+    '<div class="modal-card im-card u13f-card" onclick="event.stopPropagation()">' +
+      '<div class="modal-header im-header">' +
+        '<div class="modal-title" style="font-size:15px">Sync latest 13F</div>' +
+        '<button class="modal-close" id="' + id + '_close">&times;</button>' +
+      '</div>' +
+      '<div class="im-body">' +
+        '<div class="modal-msg" id="' + id + '_msg">Fetching the latest filing from SEC EDGAR…</div>' +
+        '<div id="' + id + '_preview"></div>' +
+        '<div class="modal-actions" id="' + id + '_actions" style="display:none">' +
+          '<button class="modal-btn modal-btn--cancel" id="' + id + '_cancel">Cancel</button>' +
+          '<button class="modal-btn modal-btn--save" id="' + id + '_apply">Apply</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) overlay.remove(); });
+  document.getElementById(id + '_close').addEventListener('click', function(){ overlay.remove(); });
+  document.getElementById(id + '_cancel').addEventListener('click', function(){ overlay.remove(); });
+
+  var parsedRows = null, parsedFormat = null, filingYear = null, filingQuarter = null;
+
+  syncLatest13F(cik).then(function(result) {
+    var msgEl = document.getElementById(id + '_msg');
+    if (!msgEl) return; // modal was closed before this resolved
+    if (!result.success) {
+      msgEl.textContent = 'Could not fetch from SEC EDGAR: ' + (result.error && result.error.message);
+      msgEl.className = 'modal-msg error';
+      return;
+    }
+    var data = result.data;
+    try {
+      var parsed = parse13FFile('sec-edgar-sync.xml', data.xml);
+      parsedFormat = parsed.format;
+      parsedRows = parsed.rows.map(function(r, i) { return { ticker: r.ticker || '', companyName: r.companyName, cusip: r.cusip || '', valueUsd: r.valueUsd || 0, weightPct: r.weightPct, include: i < 15 }; });
+      filingYear = data.year; filingQuarter = data.quarter;
+    } catch (err) {
+      msgEl.textContent = err.message || 'Could not parse the filing SEC returned.';
+      msgEl.className = 'modal-msg error';
+      return;
+    }
+    msgEl.textContent = 'Fetched Q' + filingQuarter + ' ' + filingYear + ' — filed ' + data.filedDate + ' (accession ' + data.accessionNumber + '). Review below, then Apply to save.';
+    msgEl.className = 'modal-msg';
+    document.getElementById(id + '_preview').innerHTML = u13fPreviewHtml(parsedFormat, parsedRows);
+    wireU13fPreview(id + '_preview', parsedRows);
+    document.getElementById(id + '_actions').style.display = 'flex';
+  });
+
+  document.getElementById(id + '_apply').addEventListener('click', async function() {
+    if (!parsedRows) return;
+    var included = parsedRows.filter(function(r){ return r.include; });
+    if (!included.length) { alert('Select at least one holding to save.'); return; }
+    if (included.some(function(r){ return !r.ticker; })) { alert('Fill in the ticker for every selected row before applying.'); return; }
+    var btn = document.getElementById(id + '_apply');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    var rows = included.map(function(r, i) {
+      return {
+        investor_key: investorKey, year: filingYear, quarter: filingQuarter,
+        ticker: r.ticker, company_name: r.companyName, cusip: r.cusip || null,
+        value_usd: r.valueUsd || null, weight_pct: r.weightPct, rank: i + 1,
+        source_type: parsedFormat,
+      };
+    });
+    var result = await replaceInvestorHoldings(investorKey, filingYear, filingQuarter, rows);
+    if (result.success) {
+      overlay.remove();
+      if (onSaved) onSaved(filingYear);
+    } else {
+      btn.disabled = false; btn.textContent = 'Apply';
+      alert('Could not save: ' + (result.error && result.error.message));
+    }
+  });
+}
+
 // Expose to window for inline onclick handlers
 window.toggleFund = toggleFund;
 window.allFunds = allFunds;
@@ -765,6 +908,8 @@ window.setAlphaStart = setAlphaStart;
 window.setAlphaMode = setAlphaMode;
 window.openInvestorDetail = openInvestorDetail;
 window.toggleChartVisibility = toggleChartVisibility;
+window.hideInvestor = hideInvestor;
+window.showAllInvestors = showAllInvestors;
 
 export function loadHedgeFundsPage() {
   if (!HF_FUNDS || !HF_FUNDS.length || !INVESTORS || !INVESTORS.length) {

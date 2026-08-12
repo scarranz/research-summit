@@ -513,27 +513,18 @@ export async function insertInvestorLetter(row) {
   return ok(data);
 }
 
-// Unfiltered — every investor at once — for the Hedge Funds "Compare by
-// Period" view, so the grid only needs 2 queries instead of one per card.
-export async function fetchAllInvestorReturns() {
-  var { data, error } = await supabase
-    .from('investor_yearly_returns')
-    .select('*')
-    .order('investor_key')
-    .order('year');
+// Fetches the latest 13F-HR filing for an investor straight from SEC
+// EDGAR (via the sync-13f edge function, which is the only thing
+// allowed to make that request — see supabase/functions/sync-13f).
+// Returns { year, quarter, periodOfReport, filedDate, accessionNumber,
+// xml } — xml is the raw information-table XML, parsed client-side with
+// parseSec13FXml() exactly like an uploaded file.
+export async function syncLatest13F(cik) {
+  var { data, error } = await supabase.functions.invoke('sync-13f', {
+    body: { cik: cik },
+  });
   if (error) return fail(error.message);
-  return ok(data || []);
-}
-
-export async function fetchAllInvestorHoldings() {
-  var { data, error } = await supabase
-    .from('investor_yearly_holdings')
-    .select('*')
-    .order('investor_key')
-    .order('year')
-    .order('rank');
-  if (error) return fail(error.message);
-  return ok(data || []);
+  return ok(data);
 }
 
 export async function deleteInvestorLetter(id) {

@@ -149,6 +149,42 @@
 
 .icard.summit { border-top: 3px solid var(--gold2); }
 
+.icard-hide-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--mu);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: .45;
+  transition: opacity .12s, background .12s, color .12s;
+}
+
+.icard-hide-btn:hover { opacity: 1; background: var(--surface); color: var(--neg); }
+
+.hf-showall-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: var(--mu);
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.hf-showall-btn:hover { color: var(--steel); }
+
 .icard-hdr {
   display: flex;
   justify-content: space-between;

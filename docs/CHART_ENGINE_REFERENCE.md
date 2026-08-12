@@ -25,6 +25,10 @@ the summary columns, the brush internals, the slider wiring and the two invarian
 
 Read this section before you write a chart. It is short on purpose.
 
+**Starting a whole company rather than one chart? Jump to §0.6** — the selection steps: inventory
+the data first (it decides what is even possible), take the tab spine from Amazon, then pick charts
+per tab. Come back here for each chart you end up building.
+
 ### 0.1 Which path are you on
 
 | Your chart is | Path | Start at |
@@ -204,6 +208,92 @@ Both y-axes go **on the right**, stacked by `weight`: primary inboard, margin ou
 - [ ] Scope every DOM lookup to the pane (§12, invariant 2) and `esc()` every interpolated string
 - [ ] **Click the controls in the browser.** Two bugs in `e21b11b` looked right in the DOM and did
       nothing (§12, invariant 6)
+
+### 0.6 Starting a new company — the selection steps
+
+§0.1–0.5 are per chart. This is per **company**: what to build, in what order, and what to skip.
+
+**AMZN is the reference implementation.** The plan is one company finished end to end, then
+replicated — so when you start a new ticker, the first move is to open Amazon and copy its shape,
+not to design one. Where this section and Amazon disagree, Amazon is right and this section is
+stale: fix it.
+
+#### Step 1 — inventory the data. It decides what is even possible.
+
+Do this before choosing a single chart. The capabilities are a ladder, and you cannot skip a rung:
+
+| You have | You get | Who has it today |
+|---|---|---|
+| nothing | **no Results section at all** — the profile still works | most tickers |
+| `views` + `periods` + `act` | block **A** (per-section charts + period tables) | every ticker with a dataset |
+| …and any two series overlapping on reported periods | block **B**, the surprise scorecard | most of the above |
+| …and `evolution` | the whole **Estimates pane** (D + E) | AMZN · LYFT · META · SPOT · TBBB |
+| …and `estMatrix` | the **vintage axis** ("estimates as of …") + **C**, Road to the print | **UBER only** |
+| a `js/results-data/<ticker>-setup.js` | the Earnings **Setup** chart (a 2nd engine instance) | AMZN · GOOGL · IBKR · LYFT · META · SPOT · TBBB |
+
+Two things this table is telling you:
+
+* **GOOGL and IBKR have datasets with neither `evolution` nor `estMatrix`.** They render A and B and
+  nothing else, and that is a finished state, not a broken one. Do not build an Estimates pane for a
+  ticker with no snapshot archive — there is nothing to put in it.
+* **`estMatrix` is expensive** (it is an archive of Bloomberg pulls and model saves, assembled by
+  `scripts/consensus/emit_matrix.py`). One ticker has it. Treat C and the vintage picker as advanced
+  capabilities you earn, not defaults you owe.
+
+#### Step 2 — take the tab spine from Amazon
+
+AMZN's Deep Dive is `Top Line · Bottom Line · Evolution · Valuation · Management`, with nested
+`.ovt-subtab`s inside each — Evolution holds `Call Prep · Earnings · Results · Estimates`. Read
+`js/overviews/amzn.js` (`deepDiveHtml`) and mirror the structure; the nested sub-tab machinery is
+documented in CLAUDE.md under the TBBB handoff and is shared.
+
+The other conventions docs own their own tabs and this file does not restate them: Overview →
+`OVERVIEW_CONVENTIONS.md`, Earnings → `EARNINGS_CONVENTIONS.md`, the dataset →
+`RESULTS_CONVENTIONS.md`.
+
+#### Step 3 — per tab, choose charts by the question the tab asks
+
+| The tab asks | The chart shape | Path (§0.1) |
+|---|---|---|
+| how big was each period, and who was right | periods on x, a series per source | reuse the engine — block A |
+| how did each print land vs expectations | diverging surprise bars | block B, free with the data |
+| how did our view of FY27 move | **snapshots** on x, a line per year | block D — needs `evolution` |
+| what did one saved file project | periods on x, one snapshot | block E — free once D exists |
+| how did the forecast for one period get there | snapshots on x, one period | block C — needs `estMatrix` |
+| what is the cost structure / what moved the margin | waterfall or contribution bars | **your own canvas** — §0.2 still applies |
+| how sensitive is the value to two drivers | matrix / heatmap | your own canvas |
+| where does this sit against peers | scatter | your own canvas |
+
+**When the question is "a metric over time against expectations", writing a canvas is the wrong
+answer** — you are re-implementing four series, three modes, a vintage axis and two tables, and it
+will drift from every other company. Write the dataset.
+
+#### Step 4 — order of operations
+
+1. **Dataset first** (`js/results-data/<ticker>.js`) — it unblocks A and B, which are the highest
+   value per hour of work in the whole profile.
+2. **Overview and the bespoke Deep Dive charts** — these are per company and do not depend on the
+   engine.
+3. **`evolution`** when the model snapshots exist → the Estimates pane appears with no UI work.
+4. **`estMatrix`** last, and only if the archive justifies it.
+5. **Earnings Setup** (`<ticker>-setup.js`) alongside the Earnings tab.
+
+Steps 1 and 2 are independent — they can run in parallel across two people, which is how AMZN is
+being built right now (Results/Estimates on one branch, the Deep Dive tabs on another).
+
+#### Step 5 — the rollout rule
+
+**The standard applies to new work. Existing charts are upgraded company by company, never in a
+sweep.** Most charts built before Aug 2026 — TBBB's, SoFi's, the bespoke Deep Dive canvases — do
+not meet §0.2 yet. That is expected.
+
+* **One company per PR.** A branch that touches four tickers' charts cannot be reviewed for
+  regressions by anyone, and the whole point of going company by company is that each change is
+  visible.
+* **Say what changed visually** in the PR body. The reviewer is usually not going to open every tab.
+* **Never silently restyle a chart someone else built** while doing something else — an unexplained
+  visual diff in an unrelated PR is how a regression ships unnoticed.
+* When you do upgrade one, run the §0.5 checklist against it as if it were new.
 
 ---
 

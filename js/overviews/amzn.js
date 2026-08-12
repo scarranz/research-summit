@@ -1254,7 +1254,7 @@ function ceStyle(){
     '.ce-ip-btns button{font:inherit;font-size:11px;font-weight:800;border-radius:8px;padding:6px 15px;cursor:pointer;border:1px solid var(--bdr);background:#fff;color:var(--mu)}'+
     '.ce-ip-cancel:hover{color:var(--navy)}'+
     '.ce-ip-ok{background:'+BRAND2+';color:#fff;border-color:'+BRAND2+'}'+
-    '.ce-ip-note{min-width:360px;max-width:min(480px,94vw)}'+
+    '.ce-ip-note{min-width:min(520px,92vw);max-width:92vw}'+
     '.ce-ip-row{display:flex;align-items:center;gap:8px;margin-top:8px}'+
     '.ce-ip-l{font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);width:66px;flex:none}'+
     '.ce-ip-note select{flex:1;min-width:0;font:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:6px 8px;color:var(--navy);background:#fff}'+
@@ -1555,8 +1555,9 @@ function ceGrid(u,which){
         '<span class="ce-mrl"></span><span class="ce-mh ce-mcol-cons">Street</span><span class="ce-mh ce-mcol-us">Summit</span>'+
         '<span class="ce-mrl">est</span><span class="ce-mv ce-mcol-cons">'+street+'</span><span class="ce-mv ce-mcol-us">'+summitCell+'</span>'+
         ((mgn&&den)?('<span class="ce-mrl ce-mmc">margin</span>'+
-          '<span class="ce-mv ce-mgn-v ce-mmc ce-mcol-cons">'+(mExpC!=null?mExpC+'%':'—')+(mPrevY!=null?'<span class="ce-mm-b yoy"> · prev '+mPrevY+'%</span>':'')+(mPrevQ!=null?'<span class="ce-mm-b qoq"> · prev '+mPrevQ+'%</span>':'')+'</span>'+
-          '<span class="ce-mv ce-mgn-v ce-mmc ce-mcol-us">'+(mExpU!=null?mExpU+'%':'—')+'</span>'):'')+
+          '<span class="ce-mv ce-mgn-v ce-mmc ce-mcol-cons">'+(mExpC!=null?mExpC+'%':'—')+'</span>'+
+          '<span class="ce-mv ce-mgn-v ce-mmc ce-mcol-us">'+(mExpU!=null?mExpU+'%':'—')+'</span>'+
+          ((mPrevY!=null||mPrevQ!=null)?'<span class="ce-mprev ce-mmc">'+(mPrevY!=null?'<span class="ce-mm-b yoy">prev '+mPrevY+'%</span>':'')+(mPrevQ!=null?'<span class="ce-mm-b qoq">prev '+mPrevQ+'%</span>':'')+'</span>':'')):'')+
       '</div></div>';
   }).join('')+'</div>';
 }
@@ -1578,6 +1579,9 @@ function ceGridStyle(){
     '.ce-mh{font-size:8px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)}'+
     '.ce-mv{font-size:13px;font-weight:900;color:var(--navy);display:flex;align-items:baseline;gap:4px;flex-wrap:wrap}'+
     '.ce-mgn-v{font-size:11px;color:'+PURPLE+'}'+
+    /* prev-period realised margin — its OWN full-width row so it never widens the Street cell / breaks the
+       column alignment; small + muted so it does not compete with the estimate margins. */
+    '.ce-mprev{grid-column:1/-1;font-size:8.5px;font-weight:700;color:var(--mu);margin-top:1px;line-height:1.2}'+
     '.ce-mmc{display:none}'+
     '.ce-evwrap[data-mm="on"] .ce-mmc{display:flex}'+
     '.ce-gchip{font-size:10px;font-weight:800;margin-left:2px}'+

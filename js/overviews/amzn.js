@@ -1254,7 +1254,7 @@ function ceStyle(){
     '.ce-ip-btns button{font:inherit;font-size:11px;font-weight:800;border-radius:8px;padding:6px 15px;cursor:pointer;border:1px solid var(--bdr);background:#fff;color:var(--mu)}'+
     '.ce-ip-cancel:hover{color:var(--navy)}'+
     '.ce-ip-ok{background:'+BRAND2+';color:#fff;border-color:'+BRAND2+'}'+
-    '.ce-ip-note{min-width:300px}'+
+    '.ce-ip-note{min-width:360px;max-width:min(480px,94vw)}'+
     '.ce-ip-row{display:flex;align-items:center;gap:8px;margin-top:8px}'+
     '.ce-ip-l{font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);width:66px;flex:none}'+
     '.ce-ip-note select{flex:1;min-width:0;font:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:6px 8px;color:var(--navy);background:#fff}'+
@@ -1516,18 +1516,6 @@ function ceMChip(p){ return p==null?'':'<span class="ce-mm">'+p+'% mgn</span>'; 
 // A dedicated margin ROW for a cell (label + value + the base-period margin in parens). Sits on
 // its own line so it always fits the box — the old inline chip overflowed (§6a-ii). The base
 // swaps with the growth lens: YoY → same quarter a year ago, QoQ → prior quarter.
-// The margin row now carries BOTH implied margins — Street (cons) and Summit — each ÷ its OWN-basis base,
-// swapped by the estimate toggle (in Both, both show, each labelled; the prev-period realised margin, in
-// parens, is shared). Fixes "only one margin, unclear which" when comparing two consensuses (Dani, Aug 2026).
-function ceMarginRow(streetMgn, summitMgn, baseYoy, baseQoq){
-  if(streetMgn==null && summitMgn==null) return '';
-  return '<div class="ce-mrow"><span class="ce-mrow-l">margin</span>'+
-    '<span class="ce-mrow-v ce-mval-cons"><span class="ce-val-lab">Street</span>'+(streetMgn!=null?streetMgn+'%':'—')+'</span>'+
-    '<span class="ce-mrow-v ce-mval-us"><span class="ce-val-lab">Summit</span>'+(summitMgn!=null?summitMgn+'%':'—')+'</span>'+
-    (baseYoy!=null?'<span class="ce-mm-b yoy"> vs prev '+baseYoy+'%</span>':'')+
-    (baseQoq!=null?'<span class="ce-mm-b qoq"> vs prev '+baseQoq+'%</span>':'')+
-  '</div>';
-}
 // Current margin + the margin of the period the growth chip compares against. The base swaps with
 // the lens (YoY → the same quarter a year ago; QoQ → the prior quarter), so with Margin + YoY on
 function ceGrid(u,which){
@@ -1554,30 +1542,46 @@ function ceGrid(u,which){
     var street=(c==null)
       ? '<span class="ce-empty">—</span>'+(m.t==='nocons'?'<span class="ce-nocons" title="The archive carries no forward estimate for this line — actuals only">no est.</span>':'')
       : ceFmtV(m.u,c)+'<span class="ce-gy">'+ceChip(ceGrowth(m,qi,'yoy'))+'</span><span class="ce-gq">'+ceChip(ceGrowth(m,qi,'qoq'))+'</span>';
-    // margin row = Street (consensus) implied margin ÷ its own revenue base + the prev period's realised
-    // margin. Segment OIs now use their segment net sales as the base (CE_MARGIN_DEN), not total revenue.
-    var mRow=(mgn&&den)?ceMarginRow(ceMarginPct(c,den.c), ceMarginPct(uv?uv.v:null,den.s), ceMarginPct(m.qy[qi],den.qy), ceMarginPct(m.qq[qi],den.qq)):'';
+    var summitCell=uv?ceFmtV(m.u,uv.v):'<span class="ce-empty">—</span>';
+    // Implied margins — Street (consensus ÷ its own base) and Summit (Summit ÷ its Summit base), plus the
+    // prev-period realised margin. Segment OIs use their segment net sales as base (CE_MARGIN_DEN).
+    var mExpC=(mgn&&den)?ceMarginPct(c,den.c):null, mExpU=(mgn&&den)?ceMarginPct(uv?uv.v:null,den.s):null;
+    var mPrevY=(mgn&&den)?ceMarginPct(m.qy[qi],den.qy):null, mPrevQ=(mgn&&den)?ceMarginPct(m.qq[qi],den.qq):null;
+    // One compact table per metric — columns Street | Summit (one header each, no repeated labels), rows
+    // est · margin. Single view hides the inactive column; Both widens to both (Dani, Aug 2026).
     return '<div class="ce-mcell'+(which==='cust'?' cust':'')+(m.t==='basis'?' flagged':'')+'">'+
       '<div class="ce-mcell-k">'+esc(m.k)+q+'</div>'+
-      '<div class="ce-mcell-v">'+
-        '<div class="ce-val ce-val-cons"><span class="ce-val-lab">Street</span>'+street+'</div>'+
-        '<div class="ce-val ce-val-us"><span class="ce-val-lab">Summit</span>'+(uv?ceFmtV(m.u,uv.v):'<span class="ce-empty">—</span>')+'</div>'+
-        mRow+
+      '<div class="ce-mtbl">'+
+        '<span class="ce-mrl"></span><span class="ce-mh ce-mcol-cons">Street</span><span class="ce-mh ce-mcol-us">Summit</span>'+
+        '<span class="ce-mrl">est</span><span class="ce-mv ce-mcol-cons">'+street+'</span><span class="ce-mv ce-mcol-us">'+summitCell+'</span>'+
+        ((mgn&&den)?('<span class="ce-mrl ce-mmc">margin</span>'+
+          '<span class="ce-mv ce-mgn-v ce-mmc ce-mcol-cons">'+(mExpC!=null?mExpC+'%':'—')+(mPrevY!=null?'<span class="ce-mm-b yoy"> · prev '+mPrevY+'%</span>':'')+(mPrevQ!=null?'<span class="ce-mm-b qoq"> · prev '+mPrevQ+'%</span>':'')+'</span>'+
+          '<span class="ce-mv ce-mgn-v ce-mmc ce-mcol-us">'+(mExpU!=null?mExpU+'%':'—')+'</span>'):'')+
       '</div></div>';
   }).join('')+'</div>';
 }
 function ceGridStyle(){
   return '<style>'+
-    '.ce-mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:8px;margin:4px 0}'+
+    '.ce-mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:8px;margin:4px 0}'+
     '.ce-mcell{border:1px solid var(--bdr);border-left:3px solid '+BRAND+';border-radius:9px;padding:8px 10px;background:#fff}'+
     '.ce-mcell.cust{border-left-color:'+BRAND2+'}'+
     '.ce-mcell.flagged{border-left-color:'+GRAY+';opacity:.72}'+
     '.ce-mcell-k{font-size:10px;font-weight:700;color:var(--mu);display:flex;align-items:center;gap:4px;line-height:1.3;min-height:26px}'+
     '.ce-mcell-v{margin-top:3px}'+
-    '.ce-mcell .ce-val{display:flex;align-items:baseline;gap:5px;font-size:14px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums}'+
-    '.ce-mcell .ce-val-lab{font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);flex:none;width:38px}'+
+    /* per-metric mini-table: columns Street | Summit (one header each). Single view hides the inactive
+       estimate column; Both widens to both. Column-hide uses .ce-mtbl (spec 0,4,0) so it beats the mm rule. */
+    '.ce-mtbl{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:baseline;margin-top:4px;font-variant-numeric:tabular-nums}'+
+    '.ce-evwrap[data-ev="both"] .ce-mtbl{grid-template-columns:auto 1fr 1fr}'+
+    '.ce-evwrap[data-ev="cons"] .ce-mtbl .ce-mcol-us{display:none}'+
+    '.ce-evwrap[data-ev="us"] .ce-mtbl .ce-mcol-cons{display:none}'+
+    '.ce-mrl{font-size:8px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);white-space:nowrap;align-self:center}'+
+    '.ce-mh{font-size:8px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)}'+
+    '.ce-mv{font-size:13px;font-weight:900;color:var(--navy);display:flex;align-items:baseline;gap:4px;flex-wrap:wrap}'+
+    '.ce-mgn-v{font-size:11px;color:'+PURPLE+'}'+
+    '.ce-mmc{display:none}'+
+    '.ce-evwrap[data-mm="on"] .ce-mmc{display:flex}'+
     '.ce-gchip{font-size:10px;font-weight:800;margin-left:2px}'+
-    '.ce-mm{display:none}'+'.ce-mm-b{display:none;font-size:9px;font-weight:700;color:var(--mu);white-space:nowrap}'+'.ce-evwrap[data-mm="on"][data-g="yoy"] .ce-mm-b.yoy{display:inline}'+'.ce-evwrap[data-mm="on"][data-g="qoq"] .ce-mm-b.qoq{display:inline}'+'.ce-mrow{display:none;align-items:baseline;gap:5px;margin-top:5px;padding-top:5px;border-top:1px dashed var(--bdr)}'+'.ce-evwrap[data-mm="on"] .ce-mrow{display:flex}'+'.ce-mrow-l{font-size:8px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);flex:none}'+'.ce-mrow-v{display:inline-flex;align-items:baseline;gap:3px;font-size:11px;font-weight:900;color:'+PURPLE+';font-variant-numeric:tabular-nums}'+'.ce-mval-us{display:none}'+'.ce-evwrap[data-ev="us"] .ce-mval-cons{display:none}'+'.ce-evwrap[data-ev="us"] .ce-mval-us{display:inline-flex}'+'.ce-evwrap[data-ev="both"] .ce-mval-us{display:inline-flex}'+
+    '.ce-mm{display:none}'+'.ce-mm-b{display:none;font-size:9px;font-weight:700;color:var(--mu);white-space:nowrap}'+'.ce-evwrap[data-mm="on"][data-g="yoy"] .ce-mm-b.yoy{display:inline}'+'.ce-evwrap[data-mm="on"][data-g="qoq"] .ce-mm-b.qoq{display:inline}'+
     '.ce-evwrap[data-mm="on"] .ce-mm{display:inline}'+
     '.ce-nocons{font-size:8.5px;font-weight:800;color:var(--mu);border:1px solid var(--bdr);border-radius:999px;padding:1px 6px;margin-left:6px}'+
     /* the growth lens: CSS-driven, so switching does not re-render the grid */
@@ -2038,6 +2042,7 @@ function cePhaseStyle(){
     '.ce-fz-surp{display:none}'+
     '.ce-fz[data-ev="both"] .ce-fz-surp{display:block}'+
     '.ce-fz[data-ev="both"] .ce-fz-t[data-mixed="1"]{outline:1.5px solid '+AMBER+';outline-offset:-1px}'+
+    '.ce-fz[data-ev="both"] .ce-vdf{visibility:hidden}'+
     /* category filter — All / Top line / Bottom line (cards) */
     '.ce-fz[data-fzcat="top"] .ce-fz-t:not([data-cat="top"]){display:none}'+
     '.ce-fz[data-fzcat="bottom"] .ce-fz-t:not([data-cat="bottom"]){display:none}'+
@@ -2596,7 +2601,12 @@ function wireCeTrack(root){
   pane.querySelectorAll('.ce-gseg button[data-fzev]').forEach(function(btn){ btn.onclick=function(){
     var v=btn.getAttribute('data-fzev'), fz=btn.closest('.ce-fz');
     btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
-    if(fz) fz.setAttribute('data-ev', v);
+    if(!fz) return;
+    fz.setAttribute('data-ev', v);
+    // The beat/miss filter can't score two references — clear it and reset the pills to All when entering Both
+    // (the filter group is hidden in Both by CSS; this stops a stale filter from carrying over on the way out).
+    if(v==='both'){ fz.removeAttribute('data-f'); var vdf=fz.querySelector('.ce-vdf');
+      if(vdf) vdf.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-vdf')==='all'); }); }
   }; });
   pane.querySelectorAll('.ce-gseg button[data-fzmm]').forEach(function(btn){ btn.onclick=function(){
     var v=btn.getAttribute('data-fzmm'), fz=btn.closest('.ce-fz');

@@ -12,7 +12,8 @@ Companions, and when to read which:
 | `docs/RESULTS_CONVENTIONS.md` | the **data contract** — what a dataset must contain (§8 = the vintage matrix) |
 | **this file** | **what** every function and control does, in detail |
 
-Written Aug 11, 2026 on `feat/results-estimates-v2`.
+Written Aug 11, 2026 on `feat/results-estimates-v2` (merged as PR #83). Completed Aug 12, 2026 —
+the summary columns, the brush internals, the slider wiring and the two invariants they imply.
 
 ---
 
@@ -116,7 +117,7 @@ Everything in this section is used by two or more blocks. Anything here is where
 | Function | Does |
 |---|---|
 | `getResultsData(ticker)` | returns the **trimmed copy**, memoised in `_rsTrimCache` |
-| `rsTrimData(raw)` | builds that copy: quarterly keeps forward quarters only inside the current FY; annual and `evolution` cap at current FY + 2 |
+| `rsTrimData(raw)` | builds that copy: quarterly keeps forward quarters only inside the current FY; annual and `evolution` cap at current FY + 2. The two rules are the predicates `keepQ` (`rsParseQ(p).y <= fy`) and `keepY` (`+p <= fy + 2`), and **both keep anything they cannot parse** — a period label the engine does not recognise is never silently dropped |
 | `rsTrimMetric(m, keep)` | filters one metric's parallel arrays by a period predicate |
 | `rsCurrentFY(data)` | derives the current fiscal year from the dataset's own last reported period |
 | `rsParseQ('3Q22')` | `{y:2022, q:3}` or null |
@@ -228,7 +229,8 @@ it. `rsVintDefault` lands on the newest **scoreable** file instead.
 | `rsIsPctMode(k)` | is the plotted number a percentage? (everything derived except growth-as-amount) |
 | `rsModeFmt(k, m, v)` | a value, in the current mode |
 | `rsModeDiff(k, m, v)` | a **difference**, in the current mode — percentages differ in **points** |
-| `rsActGrowthPct/Dollar`, `rsRefGrowthPct/Dollar` | the table's per-cell growth |
+| `rsActGrowthPct` / `rsActGrowthDollar` | the actual's growth in a table cell, in percent and in amount |
+| `rsRefGrowthPct` / `rsRefGrowthDollar` | the same for a reference series (Summit / Street / guidance) |
 
 **The base rule matters and every part of the system shares it.** A forward estimate reads as
 "growth vs last year's actual", the way an analyst quotes it — not "growth vs our own estimate of
@@ -268,6 +270,30 @@ orientations — E cannot drift from D.
 **The brush decides its axis from the drag's own shape**, not from where it started — plus either
 **axis strip** forces a y-drag. Testing only the left strip left the gesture dead exactly where the
 scale now is (the axes moved right in Aug 2026).
+
+Inside `rsAttachBrush`, five closures over one `mousedown`:
+
+| Closure | Does |
+|---|---|
+| `decide(cx, cy)` | locks the axis once the pointer has travelled **8px** — `vertical = dy > dx`. Until then `vertical` is `null`, meaning *undecided* |
+| `ensureBox()` | creates the `.rs-brush` rectangle **lazily**, on first `place()` — a click that never moves paints nothing |
+| `place(cx, cy)` | sizes the box: a y-drag spans the full plot width, an x-drag the full height, so the selection reads as a band across the axis being cut |
+| `onMove(e)` | `decide` then `place` |
+| `onUp(e)` | tears the listeners down, then converts pixels → values: y via `chart.scales.y.getValueForPixel`, x via the local `idxAt(clientX)` |
+
+`idxAt` rounds the x-scale's pixel value to the nearest **period index** and clamps it into
+`[0, labels.length − 1]`, so a drag that runs off the edge of the canvas selects to the end instead
+of producing an out-of-range window.
+
+**Three separate guards keep a click from being read as a zoom**: `decide` needs 8px before it
+commits to an axis, `onUp` returns early when `vertical` is still `null`, and each branch re-checks
+its own 8px travel. A one-pixel tremor on a mousedown would otherwise collapse the window to a
+single period — which renders a chart that is technically correct and completely useless.
+
+Listeners are attached to **`document`**, not the canvas, so a drag that leaves the chart still
+tracks and still releases. `rsWireBrush(k, el, chart, lo)` is A's binding: it offsets the returned
+indices by the window's own `lo` (the brush sees the *visible* slice, the state stores absolute
+indices) and repaints. `onReset` is bound to `ondblclick` and clears **both** `win` and `yr`.
 
 ### 3.9 Entry points and pane shells
 
@@ -343,6 +369,10 @@ controls that change which numbers are on screen go right.
 * **Bars**: Actual (navy) · Summit (blue) · Street (grey), grouped.
 * **Guidance**: a translucent **band** for a range, a horizontal **tick** for a single guided
   number (a floating bar of zero height is invisible — Spotify guides one figure per metric).
+  `isPoint(i)` is the test — `guideLo[i] === guideHi[i]`, both non-null — and it runs **per period**,
+  not per metric: a company that guides a range one quarter and a single number the next gets the
+  right mark on each bar. The band's own data map excludes point periods, so the two marks never
+  draw over each other.
 * **Margin lines** on a second axis (`y2`), only in level mode, only outside Top Line.
 * **Both y-axes on the right**, stacked by `weight` — primary inboard, margin outboard.
 * Suppressions: margin lines are off in growth mode (two unrelated percentages on one chart is how
@@ -366,6 +396,44 @@ record (`11▲ · 5▼`, actual avg). Forward columns are shaded and marked `E`.
 
 The table shows **all three readings at once** (value, growth, margin) regardless of the chart's
 mode — it is the block's detail, not a mirror of the chart.
+
+### The Range record — one summary per row
+
+The sticky right-hand column is not one calculation but **five**, picked per row type. All of them
+run over `idx` — the *selected window*, not the whole series — so narrowing the slider or brushing
+the chart re-states the record over what is on screen.
+
+| Function | Fills the row | Returns |
+|---|---|---|
+| `sumCagr()` | the Actual row | `CAGR +18.4%` — the reported series only |
+| `sumGrowth(fn)` | any growth row | `avg +12.1%` — the mean of the cells actually present |
+| `sumSurprise(arr)` | a Summit / Street value row | `11▲ · 5▼` + `actual avg +2.5% · +$1.2B` |
+| `sumMargin(arr)` | a margin row | `avg 34.2%` |
+| `sumGuide()` | the Guidance row | `9▲ · 5⊙ · 2▼` + `avg vs mid +0.9%` |
+
+Three shared primitives sit under them: `avg(a)` (plain mean), `sgn(v, dec, suf)` (a signed figure
+with an explicit `+`/`−` — the minus is a real `−`, not a hyphen), and `pctDollar(p, d)`, which
+renders a percentage with its currency delta dimmed beside it (`+2.4% · +$1.2B`). `pctDollar` is
+why every difference cell in the engine reads in **both** units without a toggle.
+
+Four rules are baked into these five functions, and each one exists because the naive version lied:
+
+* **`sumSurprise` is actual-centric.** It computes `actual − estimate`, so **▲ always means the
+  company beat that line** — the same direction as the surprise cells and the beat/miss legend.
+  Written the other way round (estimate vs actual) the arrows in the column would point opposite to
+  the arrows in the cells above them.
+* **`sumCagr` annualises on the *view*, never on the growth lag** — 4 periods per year in
+  quarterly, 1 in annual. Reading the YoY/QoQ pill here would make a CAGR change when a user
+  switched to QoQ, which is a different question entirely.
+* **`sumCagr` refuses to compute on a sign flip.** It bails when the first or last value is ≤ 0
+  (`first <= 0 || last <= 0`), because a compound rate through zero is not a number anybody should
+  read. The cell goes empty rather than printing a fabricated rate.
+* **`sumGuide`'s ▲⊙▼ verdict describes the whole band, always.** Only the `avg vs <end>` line
+  underneath follows the Low/Mid/High pills (§9.8). Letting the verdict follow the toggle would
+  turn a *within* into a *below* on the low setting — inventing a miss the company never had.
+
+⚠ `sumSurprise` skips a period when the reference is **zero** (`!arr[i]`), not just when it is
+null. A percentage over a zero base is infinity wearing a number's clothes.
 
 ---
 
@@ -426,6 +494,28 @@ Base row → per comparator: value row, YoY growth row, `vs <comparator>` differ
 measure against the **actual** a year back and are skipped when the base is not the actual — an
 estimate's growth is only meaningful off a reported base.
 
+`row(label, cellFn, cls, sum)` builds every line: a label cell, one cell per period in `idx`, and
+the Range record. `lbl(s)` supplies the label and is where the guidance row grows its Low/Mid/High
+pills (`rsGptMiniHtml`), but only when the metric is genuinely ranged.
+
+**B re-declares its own summary family**, and the names being identical to A's hides a real
+difference:
+
+| Function | A's version | B's version |
+|---|---|---|
+| `sumSurprise` | takes an **array** — always `actual` vs that reference | takes a **source key** — the *selected base* vs that comparator, resolved through `rsSrcArr` |
+| `sumCagr` | annualises by `_rs.view` | annualises by `rsSurpLag()` — B owns its period axis (§9.1) |
+| `sumGrowth` | shared shape | same, over B's own `idx` |
+| `g(arr, base, i)` / `gd(...)` | — | growth in **percent** and in **amount**, over `rsSurpLag()`; `gd` skips the zero-base guard because a difference over zero is still a difference |
+
+The consequence: **change B's base from Actual to Summit and every ▲ in the Range record re-points
+at the new base.** The column answers "how did the base come in against this comparator", not "how
+did the company do" — those are the same sentence only while the base is the actual.
+
+⚠ These helpers are re-declared inside each table renderer on purpose. `avg`, `sgn`, `num` and
+`pctDollar` close over that renderer's `m`, `div` and `dec` — hoisting them to module scope would
+mean passing three arguments to every call, at every cell, in five tables.
+
 ---
 
 ## 6. Block C — Road to the print
@@ -481,6 +571,25 @@ One period, every snapshot. Fed **only** by `estMatrix`, so it hides itself on d
 Snapshots across the top; per source a value row plus `vs actual` and `vs <guide end>` rows, then
 flat `Guidance` and `Reported` rows so a column reads straight down. The last column is flagged
 *last before print*.
+
+**`gptShown()` — one guidance control per screen.** C can show two `vs guide` rows (one per source)
+and the block's control row can *also* carry the Low/Mid/High pills whenever the chart is zeroed on
+the guide. Three copies of one control is three chances to think they are three settings. The
+function is a latch that answers *"has this already been drawn, or does it live upstairs?"*:
+
+```js
+var shown = false;
+function gptShown(){ var was = shown; shown = true; return was || (rsConvIsDist() && st.base === 'guide'); }
+```
+
+It returns **true when the pills should be suppressed** — either something already rendered them
+(`was`), or the control row owns them because Distance is zeroed on guidance. The first `vs guide`
+row therefore gets the pills, the second gets none, and neither gets them when the row above
+already has them. It is also **called for its side effect**, so the call order across rows is what
+decides which row wins.
+
+`ranged` (`guideLo !== guideHi` at the selected period) gates the whole thing: on a point guide the
+label reads plain `vs guide` and no pills exist to place.
 
 ---
 
@@ -580,6 +689,26 @@ anything against a print; it is reading what a file says.
 * The **move** is on the newer bar's tooltip *and* has its own table row, summarised to the biggest
   single-year move with the year named (`+$10.1B · most of it in FY2028`).
 * The second dropdown excludes the file already picked — a comparison can never be against itself.
+
+**`pushOne(a, isOld, ord)`** is the one place a bar is appended, and the `ord` it is handed is the
+whole chronology rule:
+
+```js
+if (vi2 < vi){ pushOne(old, true,  i*2+1); pushOne(arr, false, i*2+2); }   // older pick is genuinely older
+else         { pushOne(arr, false, i*2+1); pushOne(old, true,  i*2+2); }   // the user picked a NEWER file to compare
+```
+
+`order` decides left-to-right position inside a fiscal-year group, and `i*2` reserves two slots per
+series so the pairs never interleave. The comparison snapshot is **not assumed to be the older
+one** — the second dropdown lists every other file, so a user can compare backwards. The `vi2 < vi`
+test reads the actual dates and puts whichever file is genuinely older on the left, which means a
+group reads left-to-right in time no matter which order the two were picked in.
+
+Three more things `pushOne` carries: `_key` and `_old` (how the tooltip and the legend chips find
+their bars again), the faded colour from `RS_CURVE_DIM` for the older bar, and the vintage date
+appended to the label — but only for estimate series under Compare, since the actual has no date to
+append. A series is skipped entirely (`any(arr) || any(old)`) when neither file says anything about
+it: an empty legend chip invites a click that does nothing.
 
 ### The table
 
@@ -762,6 +891,21 @@ controls above them.
 A move below ±0.05 renders neutral (`0.0 pp`) rather than red — colouring a rounding artifact
 claims a line fell when it did not move.
 
+### Column highlight — A and B only
+
+Both period tables are transposed and wide, so reading *down* a period means tracking a column
+across a dozen rows. `colCells(ci)` returns every cell in one column
+(`tr > *:nth-child(ci+1)`) and a delegated `onmouseover` on the table paints them `.colhl`
+(`css/results.css:168`), clearing the previous column first and wiping on `onmouseleave`.
+
+`lastCol > 0` guards every call: **column 0 is the row-label column**, which must never highlight —
+it is sticky, so it would light up while the reader hovers somewhere else entirely.
+
+The lookup is `tb.querySelectorAll`, scoped to that one table, so the two copies of this code (A's
+renderer and B's) cannot reach into each other's rows. C, D and E have no column highlight: their
+columns are snapshots, and both D tables already carry per-column revision rows that do the same
+work in ink.
+
 ---
 
 ## 11. Event wiring
@@ -822,6 +966,35 @@ brushed zoom:
 | E anything | the whole block (`rsRerenderCurve`) |
 | A vintage picker | the top row, the note, **all** blocks, then everything |
 
+### The sliders — the one place that is not delegated
+
+Range inputs fire `input`, not `click`, and there is no useful delegation for a drag, so the two
+handles are the engine's only directly-bound listeners.
+
+| Wirer | Binds | Handler |
+|---|---|---|
+| `wireSliders(pane)` | `#rsMin-<key>` / `#rsMax-<key>`, once per A section | a local `onSlide` → `rsSt(k).win` → `rsBuildChart(k)` |
+| `wireSurpSlider()` | `rsSurpMin` / `rsSurpMax` via `rsSurpEl` | a local `onSlide` → `rsSurpSt().win` → `rsBuildSurp()` |
+
+Both `onSlide` closures do the same three things: read both handles, **sort them**
+(`[Math.min(a,b), Math.max(a,b)]` — either handle can be dragged past the other), and rebuild. They
+assign to `.oninput` rather than `addEventListener`, so re-wiring after a re-render replaces the
+handler instead of stacking a second one.
+
+⚠ **`wireSliders` looks its inputs up with a bare `document.getElementById`** — the one deliberate
+exception to invariant 2 (§12). It is safe *only* because the id carries the section key and
+section keys are unique across every dataset that can share a page: the Earnings **Setup** instance
+runs on a `*_SETUP` dataset whose sections are named differently. Give a setup dataset a section
+called `top` and its slider silently drives the Results block instead. `wireSurpSlider` has no such
+escape hatch — B's ids are fixed strings — which is exactly why it goes through `rsSurpEl`.
+
+### `secOf(el)` — which D block did that come from
+
+The Estimates pane wires **one** handler for every D block plus E. `secOf` walks up from the
+clicked element to the nearest `[data-rsevo]` and returns its key, which is how a chip in the
+Profitability block never repaints Top Line. E needs no equivalent: it is a singleton, so its
+branches (`[data-rscurve…]`) are tested **first** and return early, before any `secOf` lookup runs.
+
 ---
 
 ## 12. Invariants — break these and something renders perfectly while doing nothing
@@ -847,3 +1020,10 @@ brushed zoom:
 7. **No `node` on the Windows box**, so JS cannot be syntax-checked offline — import the module in
    the browser. `py` is the Python interpreter (`python` is a broken stub), and **a heredoc into
    `py -` hangs the shell.**
+8. **Section keys must be unique across every dataset that can share a page.** A block's slider ids
+   are `rsMin-<key>` / `rsMax-<key>` and are resolved unscoped (§11). Two datasets on one page with
+   a section called `top` — the Results pane and an Earnings `*_SETUP` — hand one slider to the
+   wrong chart. The convention is what makes the lookup safe; it is not enforced in code.
+9. **A summary column is computed over the window, not the series.** Every `sum*` helper iterates
+   `idx`. Compute one over the full array and the Range record stops agreeing with the chart the
+   moment anyone touches the slider — while still looking entirely plausible.

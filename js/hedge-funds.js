@@ -515,6 +515,116 @@ function renderPeriodPicker(allPeriods, pool, refPeriod, mode, count, maxCount) 
   return html;
 }
 
+// ─── Holdings Composition chart ───────────────────────────────
+// A 100%-stacked bar (or area) showing how the portfolio's makeup
+// shifted quarter to quarter — same "selected" periods as the table
+// below it, so the two always agree. Top N holdings get their own
+// band (max 8 — the validated categorical palette's limit); everything
+// else folds into a single "Other" band rather than generating more
+// hues. Colors are assigned per-ticker the first time it's seen and
+// then reused, so a filter/period change never repaints a holding
+// that's still on screen.
+
+var HOLDINGS_CHART_COLORS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948'];
+var HOLDINGS_CHART_OTHER_COLOR = '#898781';
+var holdingsChartColorMap = {};
+var holdingsChartNextSlot = 0;
+function tickerChartColor(key) {
+  if (!holdingsChartColorMap[key]) {
+    holdingsChartColorMap[key] = HOLDINGS_CHART_COLORS[holdingsChartNextSlot % HOLDINGS_CHART_COLORS.length];
+    holdingsChartNextSlot++;
+  }
+  return holdingsChartColorMap[key];
+}
+
+var ivdChartInstance = null;
+function destroyIvdChart() { if (ivdChartInstance) { ivdChartInstance.destroy(); ivdChartInstance = null; } }
+
+function buildHoldingsChartData(rows, periods, topN) {
+  var ranked = rows.map(function(r) {
+    var maxW = 0;
+    r.cells.forEach(function(w) { if (w != null && w > maxW) maxW = w; });
+    return { key: r.ticker || ('~' + r.companyName), ticker: r.ticker, companyName: r.companyName, cells: r.cells, maxW: maxW };
+  }).sort(function(a, b) { return b.maxW - a.maxW; });
+
+  var top = ranked.slice(0, topN);
+  var rest = ranked.slice(topN);
+
+  var datasets = top.map(function(r) {
+    return {
+      label: r.ticker || r.companyName,
+      companyName: r.companyName,
+      data: r.cells.map(function(w) { return w == null ? 0 : w; }),
+      backgroundColor: tickerChartColor(r.key),
+      stack: 'holdings',
+    };
+  });
+  if (rest.length) {
+    var otherData = periods.map(function(p, i) { return +rest.reduce(function(s, r) { return s + (r.cells[i] || 0); }, 0).toFixed(2); });
+    datasets.push({ label: 'Other (' + rest.length + ')', companyName: '', data: otherData, backgroundColor: HOLDINGS_CHART_OTHER_COLOR, stack: 'holdings' });
+  }
+  return { labels: periods.map(periodLabel), datasets: datasets };
+}
+
+function renderHoldingsChart(canvasEl, rows, periods, state) {
+  destroyIvdChart();
+  if (!canvasEl || typeof Chart === 'undefined' || !rows.length) return;
+  var chartData = buildHoldingsChartData(rows, periods, state.chartTopN);
+  var isArea = state.chartMode === 'area';
+  var datasets = chartData.datasets.map(function(ds) {
+    var base = { label: ds.label, data: ds.data, stack: ds.stack, backgroundColor: ds.backgroundColor };
+    return isArea
+      ? Object.assign(base, { fill: true, borderColor: '#fff', borderWidth: 1, pointRadius: 0, pointHoverRadius: 4, tension: 0.15 })
+      : Object.assign(base, { borderColor: '#fff', borderWidth: 2 });
+  });
+  ivdChartInstance = new Chart(canvasEl.getContext('2d'), {
+    type: isArea ? 'line' : 'bar',
+    data: { labels: chartData.labels, datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, padding: 10, font: { size: 10 }, color: '#1E2733' } },
+        tooltip: {
+          mode: 'index', intersect: false,
+          filter: function(item) { return item.raw > 0; },
+          callbacks: { label: function(c) { return c.dataset.label + ': ' + c.raw.toFixed(2) + '%'; } },
+        },
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { color: '#8A93A0', font: { size: 10 } } },
+        y: { stacked: true, min: 0, max: 100, grid: { color: '#EEF2F7' }, ticks: { color: '#8A93A0', font: { size: 10 }, callback: function(v) { return v + '%'; } } },
+      },
+    },
+  });
+}
+
+function renderHoldingsChartSection(state) {
+  var visible = state.chartVisible !== false;
+  var html = '<div class="ivd-chart-hdr">' +
+    '<div class="im-section-lbl" style="margin-bottom:0">Holdings Composition</div>' +
+    '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">';
+  if (visible) {
+    html += '<div class="sb-toggle ivd-chart-format-toggle">' +
+        '<button type="button" class="sb-tbtn' + (state.chartMode !== 'area' ? ' active' : '') + '" data-chart-mode="bar">Bars</button>' +
+        '<button type="button" class="sb-tbtn' + (state.chartMode === 'area' ? ' active' : '') + '" data-chart-mode="area">Area</button>' +
+      '</div>' +
+      '<div class="ivd-pp-stepper">' +
+        '<button type="button" class="ivd-step-btn ivd-chart-n-minus"' + (state.chartTopN <= 2 ? ' disabled' : '') + ' title="Fewer holdings">&minus;</button>' +
+        '<span class="ivd-pp-count">Top ' + state.chartTopN + '</span>' +
+        '<button type="button" class="ivd-step-btn ivd-chart-n-plus"' + (state.chartTopN >= 8 ? ' disabled' : '') + ' title="More holdings">+</button>' +
+      '</div>';
+  }
+  html += '<label class="hf-chart-toggle" title="Show or hide the chart">' +
+      '<input type="checkbox" class="ivd-chart-toggle-input"' + (visible ? ' checked' : '') + '>' +
+      '<span class="hf-chart-toggle-track"><span class="hf-chart-toggle-thumb"></span></span>' +
+      '<span class="hf-chart-toggle-txt">Chart</span>' +
+    '</label>' +
+    '</div></div>';
+  if (visible) html += '<div class="ivd-chart-wrap"><canvas class="ivd-chart-canvas"></canvas></div>';
+  return html;
+}
+
 function renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state) {
   var el = document.getElementById(rootId + '_cmp');
   var sumEl = document.getElementById(rootId + '_summary');
@@ -534,7 +644,9 @@ function renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, st
 
   var html = renderStatStrip(holdings, investorKey, selected[curIdx], rows, curIdx);
   html += renderPeriodPicker(allPeriods, pool, state.refPeriod, state.mode, state.count, maxCount);
+  html += renderHoldingsChartSection(state);
   html += renderHoldingsCompareTable(rows, selected);
+  destroyIvdChart();
   el.innerHTML = html;
 
   var sel = el.querySelector('.ivd-pp-sel');
@@ -557,6 +669,18 @@ function renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, st
   var plusBtn = el.querySelector('.ivd-step-plus');
   if (plusBtn) plusBtn.addEventListener('click', function() { state.count = Math.min(maxCount, state.count + 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
 
+  var chartToggle = el.querySelector('.ivd-chart-toggle-input');
+  if (chartToggle) chartToggle.addEventListener('change', function() { state.chartVisible = chartToggle.checked; renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
+  el.querySelectorAll('.ivd-chart-format-toggle [data-chart-mode]').forEach(function(btn) {
+    btn.addEventListener('click', function() { state.chartMode = btn.getAttribute('data-chart-mode'); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
+  });
+  var nMinus = el.querySelector('.ivd-chart-n-minus');
+  if (nMinus) nMinus.addEventListener('click', function() { state.chartTopN = Math.max(2, state.chartTopN - 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
+  var nPlus = el.querySelector('.ivd-chart-n-plus');
+  if (nPlus) nPlus.addEventListener('click', function() { state.chartTopN = Math.min(8, state.chartTopN + 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
+  var chartCanvas = el.querySelector('.ivd-chart-canvas');
+  if (chartCanvas) renderHoldingsChart(chartCanvas, rows, selected, state);
+
   if (sumEl) sumEl.innerHTML = selected.length >= 2 ? generateMovesSummary(rows, selected)
     : '<div class="im-empty">Add another period to see period-over-period changes.</div>';
   if (sharedEl) sharedEl.innerHTML = renderSharedWithSummit(investorKey, rows, selected, curIdx);
@@ -572,7 +696,7 @@ function renderHoldingsSection(rootId, investorKey, holdings) {
     var sharedEl = document.getElementById(rootId + '_shared'); if (sharedEl) sharedEl.innerHTML = '';
     return;
   }
-  var state = { refPeriod: allPeriods[allPeriods.length - 1], mode: 'quarterly', count: Math.min(HOLDINGS_DEFAULT_COUNT, allPeriods.length) };
+  var state = { refPeriod: allPeriods[allPeriods.length - 1], mode: 'quarterly', count: Math.min(HOLDINGS_DEFAULT_COUNT, allPeriods.length), chartVisible: true, chartMode: 'bar', chartTopN: 6 };
   renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state);
 }
 
@@ -611,6 +735,7 @@ function openInvestorDetail(key) {
   var inv = INVESTORS.filter(function(i){ return i.key === key; })[0];
   var root = document.getElementById('inv-detailview');
   if (!inv || !root) return;
+  destroyIvdChart();
 
   var photo = inv.photo ? (IMGS[inv.photo] || '') : '';
   var ini = inv.name.split(' ').slice(0,2).map(function(n){ return n[0]; }).join('');
@@ -678,6 +803,7 @@ function openInvestorDetail(key) {
 }
 
 function closeInvestorDetail() {
+  destroyIvdChart();
   var root = document.getElementById('inv-detailview');
   if (root) root.style.display = 'none';
   var grid = document.getElementById('inv-gridview');

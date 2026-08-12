@@ -52,6 +52,64 @@ function ceInlinePop(anchor, opts, onOk){
   setTimeout(function(){ document.addEventListener('mousedown', outside, true); document.addEventListener('keydown', onKey, true); }, 0);
   if(inp){ inp.focus(); if(inp.select) inp.select(); }
 }
+// Per-call-point note capture. The "＋ add note" button + a composer popup that reuses the SAME note
+// engine as Propose Notes (cePublishNoteToRecord → the Notes record → Supabase), but does NOT auto-propose
+// a Theme/Sub-theme — the user files it manually (this point did not qualify for Propose Notes, so the
+// filing is a deliberate manual choice). qLabel = the reported quarter (e.g. "2Q26").
+function ceNoteAddBtn(qLabel, seed){
+  return '<button type="button" class="ce-noteadd" data-noteadd data-nq="'+esc(qLabel||'').replace(/"/g,'&quot;')+'" data-nseed="'+esc(seed||'').replace(/"/g,'&quot;')+'">＋ add note</button>';
+}
+function ceNoteAddPop(anchor){
+  Array.prototype.forEach.call(document.querySelectorAll('.ce-ip'), function(p){ p.remove(); });
+  var qLabel=anchor.getAttribute('data-nq')||'', seed=anchor.getAttribute('data-nseed')||'';
+  var pop=document.createElement('div'); pop.className='ce-ip ce-ip-note';
+  pop.innerHTML='<div class="ce-ip-t">Add a note'+(qLabel?' · '+esc(qLabel):'')+'</div>'+
+    '<textarea class="ce-ip-in" rows="3"></textarea>'+
+    '<div class="ce-ip-row"><span class="ce-ip-l">Theme</span>'+ceSegSelectHtml('__none__')+'</div>'+
+    '<input class="ce-ip-newseg" type="text" placeholder="New theme name" hidden>'+
+    '<div class="ce-ip-row"><span class="ce-ip-l">Sub-theme</span><span class="ce-ip-subwrap">'+ceSubSelectHtml('','__none__')+'</span></div>'+
+    '<input class="ce-ip-newsub" type="text" placeholder="New sub-theme name" hidden>'+
+    '<div class="ce-ip-btns"><button type="button" class="ce-ip-cancel">Cancel</button>'+
+      '<button type="button" class="ce-ip-ok">Save note</button></div>';
+  document.body.appendChild(pop);
+  var ta=pop.querySelector('.ce-ip-in'); ta.value=seed;
+  var segSel=pop.querySelector('.ce-tp-seg'), subWrap=pop.querySelector('.ce-ip-subwrap');
+  var newSeg=pop.querySelector('.ce-ip-newseg'), newSub=pop.querySelector('.ce-ip-newsub');
+  // Force an explicit choice — prepend a selected blank so nothing is pre-filed (unlike Propose Notes).
+  function blankFirst(sel){ var o=document.createElement('option'); o.value='__none__'; o.textContent='— pick —'; o.selected=true; sel.insertBefore(o, sel.firstChild); }
+  blankFirst(segSel); blankFirst(subWrap.querySelector('.ce-tp-sub'));
+  function rebuildSub(){
+    if(segSel.value==='__newseg__'){ newSeg.hidden=false; subWrap.innerHTML=''; newSub.hidden=false; return; }
+    newSeg.hidden=true;
+    subWrap.innerHTML=ceSubSelectHtml(segSel.value==='__none__'?'':segSel.value,'__none__');
+    var ns=subWrap.querySelector('.ce-tp-sub'); blankFirst(ns);
+    ns.onchange=function(){ newSub.hidden=(ns.value!=='__new__'); };
+    newSub.hidden=true;
+  }
+  segSel.onchange=rebuildSub;
+  subWrap.querySelector('.ce-tp-sub').onchange=function(){ newSub.hidden=(this.value!=='__new__'); };
+  var r=(anchor&&anchor.getBoundingClientRect)?anchor.getBoundingClientRect():{left:80,bottom:80};
+  pop.style.position='fixed';
+  pop.style.left=Math.max(8, Math.min(r.left, window.innerWidth-pop.offsetWidth-12))+'px';
+  pop.style.top=Math.min(r.bottom+6, window.innerHeight-pop.offsetHeight-12)+'px';
+  function close(){ pop.remove(); document.removeEventListener('mousedown', outside, true); document.removeEventListener('keydown', onKey, true); }
+  function outside(e){ if(!pop.contains(e.target)) close(); }
+  function onKey(e){ if(e.key==='Escape') close(); }
+  function save(){
+    var text=(ta.value||'').trim(); if(!text) return;
+    var seg=(segSel.value==='__newseg__')?(newSeg.value||'').trim():segSel.value;
+    var cur=subWrap.querySelector('.ce-tp-sub');
+    var sub=(segSel.value==='__newseg__')?(newSub.value||'').trim():(cur?(cur.value==='__new__'?(newSub.value||'').trim():cur.value):'');
+    if(!seg||seg==='__none__'||!sub||sub==='__none__') return;   // both must be chosen
+    cePublishNoteToRecord(seg, sub, text, qLabel);
+    close();
+    amznRerenderRecord(document);
+  }
+  pop.querySelector('.ce-ip-cancel').onclick=close;
+  pop.querySelector('.ce-ip-ok').onclick=save;
+  setTimeout(function(){ document.addEventListener('mousedown', outside, true); document.addEventListener('keydown', onKey, true); }, 0);
+  ta.focus();
+}
 
 // ─── Brand: Amazon orange + Amazon blue ─────────────────────────────────────────────────────
 var BRAND='#FF9900', BRAND2='#146EB4', SQUID='#232F3E', GREEN='#2E8B57', GRAY='#9AA4B0';
@@ -1192,6 +1250,14 @@ function ceStyle(){
     '.ce-ip-btns button{font:inherit;font-size:11px;font-weight:800;border-radius:8px;padding:6px 15px;cursor:pointer;border:1px solid var(--bdr);background:#fff;color:var(--mu)}'+
     '.ce-ip-cancel:hover{color:var(--navy)}'+
     '.ce-ip-ok{background:'+BRAND2+';color:#fff;border-color:'+BRAND2+'}'+
+    '.ce-ip-note{min-width:300px}'+
+    '.ce-ip-row{display:flex;align-items:center;gap:8px;margin-top:8px}'+
+    '.ce-ip-l{font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);width:66px;flex:none}'+
+    '.ce-ip-note select{flex:1;min-width:0;font:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:6px 8px;color:var(--navy);background:#fff}'+
+    '.ce-ip-note .ce-ip-subwrap{flex:1;display:flex;min-width:0}'+
+    '.ce-ip-newseg,.ce-ip-newsub{width:100%;box-sizing:border-box;font:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:7px 9px;margin-top:6px;color:var(--navy)}'+
+    '.ce-noteadd{display:inline-block;margin-top:9px;font:inherit;font-size:9.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:'+BRAND2+';background:rgba(20,110,180,.08);border:1px solid rgba(20,110,180,.28);border-radius:7px;padding:4px 10px;cursor:pointer}'+
+    '.ce-noteadd:hover{background:rgba(20,110,180,.16)}'+
     '.ce-ip-ok.danger{background:'+RED+';border-color:'+RED+'}'+
     '.ce-note{font-size:11px;color:var(--mu);line-height:1.5;background:#F7F9FB;border:1px solid var(--bdr);border-radius:9px;padding:9px 12px;margin:0 0 12px}'+
     '.ce-phtabs{display:inline-flex;gap:3px;background:rgba(66,133,244,0.08);border:1px solid var(--bdr);border-radius:9px;padding:4px;margin:0 0 20px}'+
@@ -2262,7 +2328,7 @@ function ceResultsBody(c){
     // 5 · "Also on the call" — the supplemental colour (was the Post-Call tab, dissolved Jul 2026).
     // Kept at the very BOTTOM for now. NOT the tracking layer (Watch List) nor the meeting-critical
     // read (the scorecard). Includes non-trackable call colour.
-    b+=ceHighlightsBlock(q.call, qk);
+    b+=ceHighlightsBlock(q.call, qk, q.q);
     // (Foot caption "Numbers scored against the frozen expectation…" removed — Dani, Aug 2026.)
     b+='</div>';
     return b;
@@ -2321,7 +2387,7 @@ function ceCallClassified(q, qk){
     return '<details class="ce-cc-row">'+
       '<summary class="ce-cc-row-h"><span class="ce-cc-topic">'+esc(p.topic||'')+'</span>'+
         (p.body?'<span class="ce-cc-ar">▾</span>':'')+'</summary>'+
-      (p.body?'<div class="ce-cc-row-b">'+p.body+'</div>':'')+
+      (p.body?'<div class="ce-cc-row-b">'+p.body+ceNoteAddBtn(q.q, p.topic)+'</div>':'')+
     '</details>';
   }).join('') : '<div class="ce-cc-empty">Prepared-remarks topics land here once the call is processed.</div>';
   var qaBody = qa.length ? qa.map(function(x,i){
@@ -2343,6 +2409,7 @@ function ceCallClassified(q, qk){
         '</div>'+
         (qLine?'<div class="ce-cc-q"><span class="ce-cc-ql">Q</span><span>'+esc(qLine)+'</span></div>':'')+
         (x.a?'<div class="ce-cc-a"><span class="ce-cc-al">A</span><span>'+x.a+'</span></div>':'')+
+        ceNoteAddBtn(q.q, x.q||x.theme||'')+
       '</div>'+
     '</details>';
   }).join('') : '<div class="ce-cc-empty">Every analyst question, tagged to its theme, with the bank and the answer inside — lands here once the call is processed.</div>';
@@ -2453,7 +2520,7 @@ function ceThemeProposals(q, qk){
 // not the meeting-critical read (that is the scorecard + the Watch List): a thesis-mover (band:'lead')
 // is tracked on the Watch List and stays filtered out here. `take`/`threeMinutes`/`notBringing`/
 // `newQuestions` survive as data (newQuestions still seeds the next Watch List) but are not rendered.
-function ceHighlightsBlock(cc, qk){
+function ceHighlightsBlock(cc, qk, qlabel){
   if(!cc||!cc.highlights||!cc.highlights.length) return '';
   // A thesis-mover (band:'lead') is tracked on the Watch List, never here — keep filtering it out.
   var hls=cc.highlights.filter(function(x){ return (x.band||'context')!=='lead'; });
@@ -2476,7 +2543,7 @@ function ceHighlightsBlock(cc, qk){
         '<span class="ce-also-hd">'+x.head+'</span>'+
         (det?'<span class="ce-also-ar">▾</span>':'')+
       '</summary>'+
-      (det?'<div class="ce-also-body">'+det+'</div>':'')+
+      (det?'<div class="ce-also-body">'+det+ceNoteAddBtn(qlabel, x.head)+'</div>':'')+
     '</details>';
   }).join('');
   b+='</div></details>';
@@ -2583,6 +2650,11 @@ function wireCeTrack(root){
     var v=btn.getAttribute('data-fzcat'), fz=btn.closest('.ce-fz');
     btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
     if(fz) fz.setAttribute('data-fzcat', v);
+  }; });
+  // Per-point "＋ add note" (Prepared Remarks / Q&A / Also on the call) — opens the manual note composer;
+  // reuses the note engine (cePublishNoteToRecord) but the user files Theme/Sub-theme by hand.
+  pane.querySelectorAll('[data-noteadd]').forEach(function(btn){ btn.onclick=function(e){
+    e.preventDefault(); e.stopPropagation(); ceNoteAddPop(btn);
   }; });
   // ③ "The call, classified" — By Prepared Remarks ⇄ By Analyst Question. Scoped to its own .ce-cc so
   // each quarter's block toggles independently (mirrors the .ce-phtab / print-toggle pattern).

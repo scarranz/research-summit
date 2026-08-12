@@ -2771,7 +2771,6 @@ function bottomlineBody(){
     '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px"><b>Gross &amp; operating</b> = consolidated (revenue − cost of sales, then − all functional cost). <b>By segment</b> = each segment’s operating margin, with the consolidated line; AWS ~35% vs retail mid-single-digit drags the whole up. 3Q25 dips carry the $2.5B FTC charge. Annual from the Segments tab; quarterly from 8-Ks / Results.</div></div>';
   h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center">Operating income by segment<span class="acx-tog soi-tog"><button type="button" data-soi="dollar" class="active">$B</button><button type="button" data-soi="ppt">Margin contribution</button></span></div><div style="height:290px"><canvas id="aSegOpInc"></canvas></div>'+
     '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">Where the profit is made — AWS ~57% of operating income on ~18% of revenue; FY2022 the over-investment trough. <b>What drives each segment’s bottom line is in the Segments tab</b> (click a segment for its full dive).</div></div>';
-  h+=marginQualityBody();
   return h;
 }
 function aMgnArcRows(gran){
@@ -2978,13 +2977,15 @@ var EXP_WORLD={};
 EW_LINES.forEach(function(l){ EXP_WORLD[l.k]={ t:l.name+' — the full dive', h:EW_CSS+ewBase(l) }; });
 function expensesBody(){
   var h='<style>'+
-    '.exp-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:4px}'+
-    '.exp-card{border:1px solid var(--bdr);border-radius:11px;padding:12px 14px;background:var(--card,#fff);cursor:pointer;transition:.13s}'+
+    '.exp-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:4px}'+
+    '@media(max-width:640px){.exp-cards{grid-template-columns:repeat(2,1fr)}}'+
+    '@media(max-width:430px){.exp-cards{grid-template-columns:1fr}}'+
+    '.exp-card{border:1px solid var(--bdr);border-radius:14px;padding:18px;min-height:158px;display:flex;flex-direction:column;background:var(--card,#fff);cursor:pointer;transition:.13s}'+
     '.exp-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-2px)}'+
     '.exp-card-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}'+
     '.exp-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0}.exp-card-n{font-size:12.5px;font-weight:800;color:var(--navy)}'+
     '.exp-tag{font-size:9.5px;font-weight:800;color:var(--mu);background:rgba(0,0,0,.05);border-radius:20px;padding:2px 9px;margin-left:auto;white-space:nowrap}'+
-    '.exp-card-t{font-size:11.5px;color:var(--navy);line-height:1.5}.exp-more{font-size:10.5px;font-weight:800;color:var(--brand-2);margin-top:8px}'+
+    '.exp-card-t{font-size:11.5px;color:var(--navy);line-height:1.5}.exp-more{font-size:10.5px;font-weight:800;color:var(--brand-2);margin-top:auto;padding-top:10px}'+
     '.exp-stat{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:9px;overflow:hidden;margin-top:10px}'+
     '@media(max-width:560px){.exp-stat{grid-template-columns:repeat(2,1fr)}}'+
     '.exp-st{background:var(--card,#fff);padding:9px 12px}.exp-sl{font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)}'+
@@ -3007,6 +3008,7 @@ function expensesBody(){
       '<div class="exp-st"><div class="exp-sl">Finance-lease D&amp;A</div><div class="exp-sv">$3.3B</div><div class="exp-ss">inside the $41.9B P&amp;E D&amp;A</div></div>'+
     '</div>'+
     '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:6px">Finance-lease assets ($55.6B) are <b>already inside PP&amp;E</b>; operating-lease right-of-use assets ($86B) sit on their <b>own balance-sheet line</b> — that is the capacity beyond owned PP&amp;E. The $121.8B is the lease <b>liability</b> (the obligation). Operating-lease cost flows into cost of sales / fulfillment / technology; finance-lease amortization is inside the $41.9B D&amp;A.</div></div>';
+  h+=marginQualityBody();
   h+='<div class="ov-sec"><div class="ov-sec-h">The six lines — click any for a full dive</div>';
   var defs=[
     {k:'costOfSales',c:SQUID,n:'Cost of sales',tag:'$356B · 49.7%',t:'Product cost, inbound &amp; outbound shipping, and digital-media content.'},

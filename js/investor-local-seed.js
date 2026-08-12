@@ -19,6 +19,12 @@ export const LOCAL_INVESTOR_RETURNS = [
   { investor_key: 'buffett', year: 2023, return_pct: 15.8 },
   { investor_key: 'buffett', year: 2024, return_pct: 27.21 },
   { investor_key: 'buffett', year: 2025, return_pct: 10.89 },
+  // Mirrors INVESTORS[key='tepper'].returns in portal-data.js.
+  { investor_key: 'tepper', year: 2021, return_pct: 14.0 },
+  { investor_key: 'tepper', year: 2022, return_pct: -6.0 },
+  { investor_key: 'tepper', year: 2023, return_pct: 25.0 },
+  { investor_key: 'tepper', year: 2024, return_pct: 11.0 },
+  { investor_key: 'tepper', year: 2025, return_pct: 6.0 },
 ];
 
 // Real Pershing Square Capital Management 13F-HR filings (SEC EDGAR CIK

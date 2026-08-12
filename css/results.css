@@ -172,11 +172,15 @@
 /* Vintage picker — the pane-wide "Estimates as of" control (results.js §vintage axis). */
 .rs-vint { display:flex; align-items:center; gap:8px; margin-left:auto; }
 .rs-vint .rs-quick-l { white-space:nowrap; }
-.rs-vsel, .rs-bsel {
+.rs-vsel, .rs-vsel2, .rs-bsel {
   font:500 12px Inter, system-ui, sans-serif; color:var(--navy, #1E2733);
   background:#fff; border:1px solid #D7DDE4; border-radius:6px; padding:5px 8px; max-width:320px;
 }
-.rs-vsel:focus, .rs-bsel:focus { outline:2px solid rgba(37,99,235,0.35); outline-offset:1px; }
+.rs-vsel:focus, .rs-vsel2:focus, .rs-bsel:focus { outline:2px solid rgba(37,99,235,0.35); outline-offset:1px; }
+/* Select B — "which file". Present only when the reading needs an argument, so it reads as the
+   continuation of the sentence the mode select starts rather than as a second, equal control. */
+.rs-vsel2 { color:var(--mu); }
+.rs-vsel2:hover, .rs-vsel2:focus { color:var(--navy, #1E2733); }
 .rs-vintnote { margin:2px 0 10px; }
 
 /* Surprise scorecard — base select + comparator chips (results.js §Actuals vs Estimates). */
@@ -192,3 +196,45 @@
 .rs-cmp.na { opacity:.4; cursor:not-allowed; text-decoration:line-through; }
 .rs-cmp:not(.na):hover { border-color:#9FB0C4; }
 .rs-bsel { max-width:170px; }
+/* The scorecard's OWN snapshot picker sits on its own line, so it never reads as part of the
+   Compare row beneath it (results.js §"The scorecard reads on its OWN axes"). */
+.rs-surp-vint { margin:2px 0 2px; }
+.rs-surp-vint .rs-vint { margin-left:0; }
+/* (The scorecard's picker uses the same .rs-vsel / .rs-vsel2 pair as the pane-wide one; the two
+   are told apart by `data-vscope`, not by a class of their own.) */
+
+/* Road to the print — the period select beside the metric select. Narrower than the metric
+   dropdown because a period label is four characters, and a 240px control for "2Q26" reads
+   as though something is missing from it. */
+.rs-cpsel { min-width:170px; }
+
+/* Compare, in the Estimates projection block. A single pill rather than a group, because it is
+   a switch and not a choice between readings — and it carries its own state in its label
+   ("⇄ Compare" / "✕ Comparing") so the row says what it is doing without a second look. */
+.rs-curvecmpb { border:1px solid var(--bdr); border-radius:8px; }
+.rs-curvevsel2 { border-color:#9FB0C4; }
+/* Both snapshot selects are narrower than a metric select — a date plus its event is ~28
+   characters, and 240px for that is what pushed the comparison onto a second row. */
+.rs-curvevsel, .rs-curvevsel2 { min-width:172px; }
+.rs-curvesel { min-width:210px; }
+.rs-curvevs { display:inline-flex; align-items:center; gap:8px; }
+
+/* Low / Mid / High — which end of a guided range a comparison is scored at. The inline label
+   is what keeps it from reading as another mode pill: without it, "Low · Mid · High" beside
+   "$B · Growth · Margin %" looks like a fourth way to read the chart rather than a choice
+   about one series. Only rendered above a chart it actually changes. */
+.rs-gpt-l { margin-left:4px; }
+
+/* …and the in-table variant, which is where it usually lives: inside the sticky label cell of
+   the one row whose arithmetic it moves. Sized to the 10.5px sub-row type and dropped onto its
+   own line, so the cell keeps its width and the row keeps its height. */
+.rs-gptmini { display:flex; gap:0; margin-top:3px; width:max-content; }
+.rs-gptmini button {
+  appearance:none; border:1px solid var(--bdr); border-right:0; background:var(--w);
+  color:var(--mu); font:700 9px 'Inter', sans-serif; letter-spacing:.02em;
+  padding:2px 6px; cursor:pointer; line-height:1.4;
+}
+.rs-gptmini button:first-child { border-radius:5px 0 0 5px; }
+.rs-gptmini button:last-child { border-right:1px solid var(--bdr); border-radius:0 5px 5px 0; }
+.rs-gptmini button:hover { color:var(--navy); }
+.rs-gptmini button.on { background:var(--navy); border-color:var(--navy); color:#fff; }

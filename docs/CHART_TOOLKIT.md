@@ -11,6 +11,13 @@ Written Aug 10, 2026, after the revamp on `feat/results-estimates-revamp`. Compa
 when you are changing the engine rather than reusing it), `docs/RESULTS_CONVENTIONS.md` (the data
 contract, §8 the vintage axis) and `docs/RESULTS_ESTIMATES_HANDOFF.md` (project state).
 
+> **Building a chart that is *not* a metric-over-time?** A waterfall, a choropleth, a scatter, a
+> bridge — this file has nothing to plot for you, but the standard still applies. Go to
+> **`CHART_ENGINE_REFERENCE.md` §0**: the six things every chart in the portal must do (zoom on
+> both axes, click-to-hide series, a table in a dropdown carrying at least what is drawn, dropdowns
+> grouped by metric family, unambiguous units, and degrading to nothing rather than to broken),
+> each with the exact call and a ship checklist.
+
 ---
 
 ## 1. What you get for free

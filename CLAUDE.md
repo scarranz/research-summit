@@ -254,13 +254,23 @@ The Companies tab is the core of the portal. Each company has a profile that is 
 
 ### Adding a chart (anywhere in the portal)
 
-Before writing a new chart, read **`docs/CHART_TOOLKIT.md`**. `js/results.js` is a generic engine
-for "a metric over time, against expectations" and already ships four series (actual / Summit /
-Street / guidance), quarterly and annual axes, level ⇄ growth ⇄ margin modes, growth in percent or
-in amount, range presets + slider + drag-to-zoom, a vintage axis ("estimates as of …"), collapsible
-tables that mirror the chart, and a surprise scorecard. **You almost certainly want to write a
-dataset (`js/results-data/<ticker>.js`), not a canvas.** The data contract is
-`docs/RESULTS_CONVENTIONS.md`.
+Before writing a new chart, read **`docs/CHART_ENGINE_REFERENCE.md` §0 — the standard**. It is the
+build manual: the six things every chart in the portal must do no matter what it plots (drag-to-zoom
+on **both** axes with double-click reset · clicking a series hides it *and* removes it from every
+table and total · a table under the chart inside a dropdown carrying **at minimum** everything
+drawn · metric dropdowns grouped by family with segments inside · units and estimate markers never
+ambiguous · missing data renders nothing rather than something broken), each with the exact call,
+plus a menu of optional capabilities and a pre-ship checklist. The rest of that file documents every
+function and control in detail.
+
+`js/results.js` is a generic engine for "a metric over time, against expectations" and already ships
+four series (actual / Summit / Street / guidance), quarterly and annual axes, level ⇄ growth ⇄ margin
+modes, growth in percent or in amount, range presets + slider + drag-to-zoom, a vintage axis
+("estimates as of …"), collapsible tables that mirror the chart, and a surprise scorecard. **If your
+chart is a metric over time, you almost certainly want to write a dataset
+(`js/results-data/<ticker>.js`), not a canvas** — `docs/CHART_TOOLKIT.md` is the how, and
+`docs/RESULTS_CONVENTIONS.md` is the data contract. **If it is not** (a waterfall, a choropleth, a
+scatter, a bridge), you write the canvas yourself — but §0 still applies.
 
 ### Filling a company Overview (standardized)
 

@@ -1437,6 +1437,10 @@ var CE_STMT_ORDER=['Revenue','AWS net sales','North America net sales','Internat
   'Gross profit','Operating income','EBITDA','AWS operating income','North America operating income',
   'International operating income','Operating cash flow','Capex','D&A','Diluted shares','EPS (diluted)'];
 function ceStmtIdx(k){ var i=CE_STMT_ORDER.indexOf(k); return i<0?CE_STMT_ORDER.length:i; }
+// Post-Results category filter (All / Top line / Bottom line). Top line = the revenue lines; everything
+// below the top line (profit, margins, cash, shares, EPS) is Bottom line. Keys are CE_CONS.m[].k.
+var CE_TOPLINE={'Revenue':1,'AWS net sales':1,'North America net sales':1,'International net sales':1};
+function ceCat(k){ return CE_TOPLINE[k]?'top':'bottom'; }
 function ceMChip(p){ return p==null?'':'<span class="ce-mm">'+p+'% mgn</span>'; }
 // A dedicated margin ROW for a cell (label + value + the base-period margin in parens). Sits on
 // its own line so it always fits the box — the old inline chip overflowed (§6a-ii). The base
@@ -1821,6 +1825,7 @@ function cePrintBlock(qLabel, r, us){
     var m=r.m, c=r.c, a=r.a, uexp=r.uexp, cV=r.cV, uV=r.uV;
     // surprise, shown compactly inside the verdict chip (e.g. "BEAT +3.2%")
     var sp=function(s){ return (s==null)?'':' <span class="ce-fz-sp">'+(s>=0?'+':'−')+(Math.round(Math.abs(s)*10)/10)+'%</span>'; };
+    var surpFmt=function(s){ return (s==null)?'—':((s>=0?'+':'−')+(Math.round(Math.abs(s)*10)/10)+'%'); };
     // MARGIN row — now for the consolidated lines AND each segment's operating income, each ÷ its OWN
     // revenue base (CE_MARGIN_DEN). Expected = estimate-implied margin (metric ÷ its base, per basis);
     // Actual = realised, coloured by expansion vs the prior period on the growth lens. No "+x pts", no
@@ -1833,50 +1838,62 @@ function cePrintBlock(qLabel, r, us){
     var mCells='';
     if(mgnOn&&mReal!=null){
       mCells='<span class="ce-fz-rl ce-fz-mc">Margin</span>'+
-        '<span class="ce-fz-cv ce-fz-mc"><span class="ce-exp-cons">'+(mExpC!=null?mExpC+'%':'—')+'</span><span class="ce-exp-us">'+(mExpU!=null?mExpU+'%':'—')+'</span></span>'+
+        '<span class="ce-fz-cv ce-fz-mc"><span class="ce-exp-cons"><span class="ce-lbl">Street </span>'+(mExpC!=null?mExpC+'%':'—')+'</span><span class="ce-exp-us"><span class="ce-lbl">Summit </span>'+(mExpU!=null?mExpU+'%':'—')+'</span></span>'+
         '<span class="ce-fz-cv ce-fz-mc"><span class="ce-gy">'+ceMgExpSpan(mReal,mPY)+'</span><span class="ce-gq">'+ceMgExpSpan(mReal,mPQ)+'</span></span>';
     }
     // Cards are PURE METRICS only (Dani, Aug 2026) — the note text, "on the list" / Watch rank, and any
     // caveat/colour commentary belong in the Notes tab and the highlights below, NEVER on the card.
     // shared pieces
+    // Both-mode verdict chip: "BEAT ×2" when Street & Summit agree, "CLASH" (amber) when they disagree
+    // in direction; falls back to the single available verdict. Single mode keeps the plain badge.
+    var cK=cV.k, uK=uV.k, cHas=(cK==='beat'||cK==='miss'||cK==='inline'), uHas=(uK==='beat'||uK==='miss'||uK==='inline');
+    var clash=(cHas&&uHas&&cK!==uK);
+    var bothV=(cHas&&uHas)?((cK===uK)?{l:cV.l+' ×2',c:cV.c}:{l:'CLASH',c:AMBER}):(cHas?{l:cV.l,c:cV.c}:(uHas?{l:uV.l,c:uV.c}:{l:'—',c:'#6b7684'}));
     var hdr='<div class="ce-fz-k"><span class="ce-fz-kn">'+esc(m.k)+'</span>'+
       '<span class="ce-fz-vd ce-vd-cons" style="color:'+cV.c+'">'+cV.l+sp(r.cSurp)+'</span>'+
-      '<span class="ce-fz-vd ce-vd-us" style="color:'+uV.c+'">'+uV.l+sp(r.uSurp)+'</span></div>';
-    var expInline='<span class="ce-exp-cons">'+(c==null?'—':ceTkFmt(m.u,c))+'</span><span class="ce-exp-us">'+(uexp==null?'—':ceTkFmt(m.u,uexp))+'</span>';
+      '<span class="ce-fz-vd ce-vd-us" style="color:'+uV.c+'">'+uV.l+sp(r.uSurp)+'</span>'+
+      '<span class="ce-fz-vd ce-vd-both" style="color:'+bothV.c+'">'+bothV.l+'</span></div>';
+    var expInline='<span class="ce-exp-cons"><span class="ce-lbl">Street </span>'+(c==null?'—':ceTkFmt(m.u,c))+'</span><span class="ce-exp-us"><span class="ce-lbl">Summit </span>'+(uexp==null?'—':ceTkFmt(m.u,uexp))+'</span>';
     var actStr=(a==null?'—':ceTkFmt(m.u,a));
     // FRONT face — the headline only: metric + verdict/surprise + the reported Actual, and "vs est X".
     // The comparison detail (est/actual, growth, margins) lives on the flip side, so the front stays clean.
     var front='<div class="ce-fz-face ce-fz-face-f">'+hdr+
       '<div class="ce-fz-big"><span class="ce-fz-biga">'+actStr+'</span>'+
         '<span class="ce-fz-bigsub">vs est '+expInline+'</span></div>'+
-      '<div class="ce-fz-hint">＋ detail</div>'+
     '</div>';
     // BACK / DETAIL face — the full table (the flip side; also the flat card in Table style)
+    // Surprise row — ONLY shown in Both (CSS), the readout when there is no single top-right verdict.
+    var surpRow='<span class="ce-fz-rl ce-fz-surp">Surprise</span>'+
+      '<span class="ce-fz-cv ce-fz-surp ce-surp-cell">'+
+        '<span class="ce-surp-line"><span class="ce-lbl2">Street</span> '+surpFmt(r.cSurp)+' <span style="color:'+cV.c+';font-weight:800">'+cV.l+'</span></span>'+
+        '<span class="ce-surp-line"><span class="ce-lbl2">Summit</span> '+surpFmt(r.uSurp)+' <span style="color:'+uV.c+';font-weight:800">'+uV.l+'</span></span>'+
+      '</span>';
     var back='<div class="ce-fz-face ce-fz-face-b">'+hdr+
       '<div class="ce-fz-tbl">'+
         '<span class="ce-fz-rl"></span>'+
-        '<span class="ce-fz-ch"><span class="ce-exp-cons">Street est.</span><span class="ce-exp-us">Summit est.</span></span>'+
+        '<span class="ce-fz-ch"><span class="ce-exp-cons ce-hide-both">Street est.</span><span class="ce-exp-us ce-hide-both">Summit est.</span><span class="ce-both-only">Estimates</span></span>'+
         '<span class="ce-fz-ch">Actual</span>'+
         '<span class="ce-fz-rl"></span>'+
         '<span class="ce-fz-cv ce-fz-exp">'+expInline+'</span>'+
         '<span class="ce-fz-cv ce-fz-act">'+actStr+'</span>'+
         '<span class="ce-fz-rl ce-fz-gc">Growth</span>'+
-        '<span class="ce-fz-cv ce-fz-gc"><span class="ce-exp-cons"><span class="ce-gy">'+ceGwSpan(c,r.py)+'</span><span class="ce-gq">'+ceGwSpan(c,r.pq)+'</span></span><span class="ce-exp-us"><span class="ce-gy">'+ceGwSpan(uexp,r.py)+'</span><span class="ce-gq">'+ceGwSpan(uexp,r.pq)+'</span></span></span>'+
+        '<span class="ce-fz-cv ce-fz-gc"><span class="ce-exp-cons"><span class="ce-lbl">Street </span><span class="ce-gy">'+ceGwSpan(c,r.py)+'</span><span class="ce-gq">'+ceGwSpan(c,r.pq)+'</span></span><span class="ce-exp-us"><span class="ce-lbl">Summit </span><span class="ce-gy">'+ceGwSpan(uexp,r.py)+'</span><span class="ce-gq">'+ceGwSpan(uexp,r.pq)+'</span></span></span>'+
         '<span class="ce-fz-cv ce-fz-gc"><span class="ce-gy">'+ceGwSpan(a,r.py)+'</span><span class="ce-gq">'+ceGwSpan(a,r.pq)+'</span></span>'+
         mCells+
+        surpRow+
       '</div>'+
     '</div>';
     // data-vdc / data-vdu carry BOTH verdicts so the verdict filter is estimate-view-aware in pure CSS.
     // --od carries the surprise rank so "By surprise" order is a pure-CSS reflow (no re-render).
-    return '<div class="ce-fz-t" data-vdc="'+cV.k+'" data-vdu="'+uV.k+'" style="--od:'+r.od+'">'+
+    return '<div class="ce-fz-t" data-vdc="'+cV.k+'" data-vdu="'+uV.k+'" data-cat="'+ceCat(m.k)+'" data-clash="'+(clash?1:0)+'" style="--od:'+r.od+'">'+
       '<div class="ce-fz-inner">'+front+back+'</div>'+
     '</div>';
   });
-  return '<div class="ce-fz" data-g="yoy" data-ev="cons" data-mm="on" data-view="cards" data-ord="stmt" data-cardstyle="flip"><div class="ce-fz-h">The print — down the income statement'+
+  return '<div class="ce-fz" data-g="yoy" data-ev="cons" data-mm="on" data-view="cards" data-ord="stmt" data-cardview="table" data-fzcat="all"><div class="ce-fz-h">The print — down the income statement'+
     ceQ('fz-'+ceQkey(qLabel),'How this is built',
       '<p>One block, archive-driven. Every number and surprise is computed from <code>BBG_CONSENSUS.txt</code>: the last snapshot before the print carries the consensus (<code>fq+1</code>), a later snapshot carries the print (<code>fq0</code>). Reconstructed from data, so it cannot drift.</p>'+
       '<ul><li><b>Order</b> — by default the lines read top-to-bottom down the income statement (top line → sales by segment → margins → profit by segment → cash &amp; shares → EPS last). <b>By surprise</b> re-sorts to the biggest |Street surprise| first.</li>'+
-      '<li><b>vs Street ⇄ vs Summit</b> — swaps which frozen expectation the print is scored against (Street = Bloomberg, Summit = ours). No "Both" — one basis at a time. Where Summit had no number, Summit view reads <b>no est.</b></li>'+
+      '<li><b>vs Street ⇄ vs Summit ⇄ Both</b> — which frozen expectation the print is scored against (Street = Bloomberg, Summit = ours). <b>Both</b> shows the two side by side; since one BEAT/MISS badge can\'t score two references it becomes a <b>Surprise</b> row (always visible in Both) plus a <b>Clash</b> flag when Street and Summit disagree. Where Summit had no number it reads <b>—</b> (only Revenue, Operating income and the segment net-sales are modelled).</li>'+
       '<li><b>Growth</b> — the estimate\'s implied growth and the print\'s own growth, YoY or QoQ per the toggle, signed.</li>'+
       '<li><b>Margin</b> — GP / Operating income / EBITDA carry an expected (estimate-implied) and a realised margin; the realised one is coloured by expansion vs the prior period on the same YoY/QoQ lens.</li>'+
       '<li><b>Verdict</b> — beat / miss / in-line off the computed surprise; <b>no est.</b> where that basis had no number</li></ul>'+
@@ -1888,13 +1905,19 @@ function cePrintBlock(qLabel, r, us){
     '<span class="ce-gseg"><button type="button" class="active" data-fzview="cards">Cards</button>'+
       '<button type="button" data-fzview="chart">Chart</button></span>'+
     '<span class="ce-gseg"><button type="button" class="active" data-fzev="cons">vs Street</button>'+
-      '<button type="button" data-fzev="us">vs Summit</button></span>'+
+      '<button type="button" data-fzev="us">vs Summit</button>'+
+      '<button type="button" data-fzev="both">Both</button></span>'+
     '<span class="ce-vdf"><button type="button" class="active" data-vdf="all">All</button>'+
       '<button type="button" data-vdf="beat">Beats</button>'+
       '<button type="button" data-vdf="miss">Misses</button>'+
       '<button type="button" data-vdf="inline">In line</button></span>'+
     '<span class="ce-gseg"><button type="button" class="active" data-fzord="stmt">Statement order</button>'+
       '<button type="button" data-fzord="surp">By surprise</button></span>'+
+    '<span class="ce-gseg ce-gseg-cardsonly"><button type="button" class="active" data-fzcard="table">Table</button>'+
+      '<button type="button" data-fzcard="clean">Clean</button></span>'+
+    '<span class="ce-gseg ce-gseg-cardsonly"><button type="button" class="active" data-fzcat="all">All</button>'+
+      '<button type="button" data-fzcat="top">Top line</button>'+
+      '<button type="button" data-fzcat="bottom">Bottom line</button></span>'+
     '<span class="ce-gseg ce-gseg-cardsonly"><button type="button" class="active" data-fzmm="on">Margin</button>'+
       '<button type="button" data-fzmm="off">Hide mgn</button></span>'+
     '<span class="ce-gseg ce-gseg-cardsonly"><button type="button" class="active" data-ceg="yoy">YoY</button>'+
@@ -1914,7 +1937,7 @@ function cePhaseStyle(){
   return '<style>'+
     '.ce-fz{border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;margin-bottom:14px;background:#FBFCFE}'+
     '.ce-fz-h{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);margin-bottom:9px}'+
-    '.ce-fz-g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}'+
+    '.ce-fz-g{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}'+
     '@media(max-width:900px){.ce-fz-g{grid-template-columns:repeat(2,1fr)}}'+
     '@media(max-width:520px){.ce-fz-g{grid-template-columns:1fr}}'+
     '.ce-fz-t{border:1px solid var(--bdr);border-radius:9px;padding:7px 9px;background:#fff}'+
@@ -1941,22 +1964,10 @@ function cePhaseStyle(){
     '.ce-fz-big{display:flex;align-items:baseline;gap:8px;margin-top:6px;flex-wrap:wrap}'+
     '.ce-fz-biga{font-size:20px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1}'+
     '.ce-fz-bigsub{font-size:10px;font-weight:700;color:var(--mu);font-variant-numeric:tabular-nums}'+
-    '.ce-fz-hint{font-size:8.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:'+BLUE+'}'+
-    '.ce-fz[data-cardstyle="flip"] .ce-fz-t{cursor:pointer}'+
-    '.ce-fz[data-cardstyle="flip"] .ce-fz-t:hover{box-shadow:0 6px 18px rgba(16,24,40,.12)}'+
-    /* Flip — 3D turn on .flipped */
-    '.ce-fz[data-cardstyle="flip"] .ce-fz-t{padding:0;border:0;background:transparent;perspective:1200px;min-height:104px}'+
-    '.ce-fz[data-cardstyle="flip"] .ce-fz-inner{transition:transform .55s cubic-bezier(.2,.7,.2,1);transform-style:preserve-3d;min-height:104px}'+
-    '.ce-fz[data-cardstyle="flip"] .ce-fz-t.flipped .ce-fz-inner{transform:rotateY(180deg)}'+
-    // NB: NO display:flex on the face — a flex container makes Chrome ignore backface-visibility:hidden,
-    // so the reverse bleeds through and the flip looks broken. Keep the face a plain block.
-    '.ce-fz[data-cardstyle="flip"] .ce-fz-face{position:absolute;inset:0;-webkit-backface-visibility:hidden;backface-visibility:hidden;background:#fff;border:1px solid var(--bdr);border-radius:9px;padding:8px 10px;overflow:auto}'+
-    '.ce-fz[data-cardstyle="flip"] .ce-fz-tbl{gap:2px 8px;margin-top:5px}'+
-    '.ce-fz[data-cardstyle="flip"] .ce-fz-hint{position:absolute;left:10px;bottom:7px;margin:0}'+   /* pinned bottom-left (no flex) */
-    /* the flipped side reads as the "back": a slightly grey, folded sheet — a dog-ear + inner shadow so a
-       turned-over card is obvious among the others (Dani, Aug 2026) */
-    '.ce-fz[data-cardstyle="flip"] .ce-fz-face-b{transform:rotateY(180deg);background:linear-gradient(135deg,#E8ECF2 0%,#F5F7FA 55%);box-shadow:inset 0 0 0 1px rgba(148,163,184,.28),inset 3px 3px 10px rgba(148,163,184,.22)}'+
-    '.ce-fz[data-cardstyle="flip"] .ce-fz-face-b::after{content:"";position:absolute;top:0;right:0;border-top:16px solid #C6CFDB;border-left:16px solid transparent;border-top-right-radius:9px;filter:drop-shadow(-1px 1px 1px rgba(15,23,42,.12))}'+
+    '.ce-fz-t:hover{box-shadow:0 4px 14px rgba(16,24,40,.10)}'+
+    /* Card view — Table (the detail table) by default; Clean shows the headline face. No flip. */
+    '.ce-fz[data-cardview="table"] .ce-fz-face-f{display:none}'+
+    '.ce-fz[data-cardview="clean"] .ce-fz-face-b{display:none}'+
     '.ce-fz-f{font-size:9.5px;color:var(--mu);margin-top:8px}'+'.ce-fz-t{position:relative;transition:.14s}'+'.ce-fz-t[data-detail]{cursor:pointer}'+'.ce-fz-t[data-detail]:hover{box-shadow:0 4px 14px rgba(16,24,40,.10);transform:translateY(-1px)}'+'.ce-fz-vd{margin-left:auto;font-size:10.5px;font-weight:900;letter-spacing:.04em;text-transform:uppercase}'+'.ce-fz-k{display:flex;align-items:flex-start;gap:5px;flex-wrap:wrap}'+'.ce-fz-wl{font-size:8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:'+BLUE+';margin-top:5px}'+'.ce-fz-more{position:absolute;right:9px;bottom:7px;font-size:8.5px;font-weight:800;color:'+BLUE+'}'+'.ce-fz-h{display:flex;align-items:center;gap:6px}'+'.ce-fz-gr{display:flex;align-items:baseline;gap:5px;margin-top:3px;font-size:9.5px;font-weight:800}'+'.ce-fz-gl{font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}'+'.ce-fz-mgn{display:flex;align-items:baseline;gap:5px;margin-top:3px;font-size:11px;font-weight:900;color:'+PURPLE+'}'+'.ce-fz-mexp{font-size:9px;font-weight:700;color:var(--mu)}'+'.ce-fz-g-e{color:var(--mu);font-weight:600}'+'.ce-fz .ce-gq{display:none}.ce-fz[data-g="qoq"] .ce-gy{display:none}.ce-fz[data-g="qoq"] .ce-gq{display:inline}.ce-fz[data-g="off"] .ce-fz-gc{display:none}'+
     /* estimate view (vs Street ⇄ vs Summit) — pure-CSS swap of expected value, surprise & verdict */
     '.ce-fz-h{flex-wrap:wrap}'+
@@ -1967,6 +1978,26 @@ function cePhaseStyle(){
        Actual margin is coloured by expansion vs the prior period on the YoY/QoQ lens (inline styles). */
     '.ce-fz-mc{display:none}'+
     '.ce-fz[data-mm="on"] .ce-fz-mc{display:block}'+
+    /* Both mode (vs Street AND vs Summit): show both bases stacked with a small label; the single verdict
+       badge gives way to the Both chip, and the Surprise row appears (the readout with no single verdict). */
+    '.ce-vd-both{display:none}'+
+    '.ce-lbl{display:none;font-size:8px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--mu);margin-right:3px}'+
+    '.ce-both-only{display:none}'+
+    '.ce-fz-surp{display:none}'+
+    '.ce-surp-cell{grid-column:span 2}'+
+    '.ce-surp-line{display:block;font-size:10.5px;font-weight:700;color:var(--navy);line-height:1.5}'+
+    '.ce-lbl2{font-size:8px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--mu);margin-right:4px}'+
+    '.ce-fz[data-ev="both"] .ce-exp-cons,.ce-fz[data-ev="both"] .ce-exp-us{display:block}'+
+    '.ce-fz[data-ev="both"] .ce-lbl{display:inline}'+
+    '.ce-fz[data-ev="both"] .ce-both-only{display:inline}'+
+    '.ce-fz[data-ev="both"] .ce-hide-both{display:none}'+
+    '.ce-fz[data-ev="both"] .ce-vd-cons,.ce-fz[data-ev="both"] .ce-vd-us{display:none}'+
+    '.ce-fz[data-ev="both"] .ce-vd-both{display:inline}'+
+    '.ce-fz[data-ev="both"] .ce-fz-surp{display:block}'+
+    '.ce-fz[data-ev="both"] .ce-fz-t[data-clash="1"]{outline:1.5px solid '+AMBER+';outline-offset:-1px}'+
+    /* category filter — All / Top line / Bottom line (cards) */
+    '.ce-fz[data-fzcat="top"] .ce-fz-t:not([data-cat="top"]){display:none}'+
+    '.ce-fz[data-fzcat="bottom"] .ce-fz-t:not([data-cat="bottom"]){display:none}'+
     /* folds — secondary depth, closed by default */
     '.ce-fold{border:1px solid var(--bdr);border-radius:11px;margin:0 0 10px;overflow:hidden;background:#fff}'+
     '.ce-fold .ov-collap-h{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:#FAFBFD;'+
@@ -2516,7 +2547,7 @@ function wireCeTrack(root){
   }; });
   // Post-Results print-block toggles — scoped to their own .ce-fz so each quarter's print block is
   // independent. These are SEPARATE from the Setup's Consensus/Summit/Both (which does not apply
-  // here: Post-Results has no "Both"). `vs Street ⇄ vs Summit` sets data-ev (swaps the frozen
+  // now supports Both here too). `vs Street ⇄ vs Summit ⇄ Both` sets data-ev (swaps the frozen
   // expectation the print is scored against); `Margin` sets data-mm (expected-implied → realized).
   pane.querySelectorAll('.ce-gseg button[data-fzev]').forEach(function(btn){ btn.onclick=function(){
     var v=btn.getAttribute('data-fzev'), fz=btn.closest('.ce-fz');
@@ -2541,10 +2572,18 @@ function wireCeTrack(root){
     btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
     if(fz) fz.setAttribute('data-ord', v);
   }; });
-  // The print cards are Flip cards — click one to turn it over and read the full breakdown table.
-  pane.querySelectorAll('.ce-fz .ce-fz-t').forEach(function(t){ t.addEventListener('click', function(){
-    t.classList.toggle('flipped');
-  }); });
+  // Card view — Table (detail table) ⇄ Clean (headline face); sets data-cardview on the .ce-fz (CSS swap).
+  pane.querySelectorAll('.ce-gseg button[data-fzcard]').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-fzcard'), fz=btn.closest('.ce-fz');
+    btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    if(fz) fz.setAttribute('data-cardview', v);
+  }; });
+  // Metric-category filter — All / Top line / Bottom line; sets data-fzcat on the .ce-fz (pure-CSS filter).
+  pane.querySelectorAll('.ce-gseg button[data-fzcat]').forEach(function(btn){ btn.onclick=function(){
+    var v=btn.getAttribute('data-fzcat'), fz=btn.closest('.ce-fz');
+    btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    if(fz) fz.setAttribute('data-fzcat', v);
+  }; });
   // ③ "The call, classified" — By Prepared Remarks ⇄ By Analyst Question. Scoped to its own .ce-cc so
   // each quarter's block toggles independently (mirrors the .ce-phtab / print-toggle pattern).
   pane.querySelectorAll('.ce-cc-seg button[data-ccv]').forEach(function(btn){ btn.onclick=function(){

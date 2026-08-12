@@ -2963,7 +2963,9 @@ var EW_LINES=[
 EW_LINES.forEach(function(l){ if(EW_CALLS[l.k]) l.calls=EW_CALLS[l.k]; });
 var EXP_WORLD={};
 EW_LINES.forEach(function(l){ EXP_WORLD[l.k]={ t:l.name+' — the full dive', h:EW_CSS+ewBase(l) }; });
-function expensesBody(){
+// The six functional expense lines as a clickable index — rendered at the TOP of the
+// Margins & Expenses pane (before bottomlineBody's charts). Self-contained styles.
+function expenseCardsBody(){
   var h='<style>'+
     '.exp-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:4px}'+
     '@media(max-width:640px){.exp-cards{grid-template-columns:repeat(2,1fr)}}'+
@@ -2974,10 +2976,6 @@ function expensesBody(){
     '.exp-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0}.exp-card-n{font-size:12.5px;font-weight:800;color:var(--navy)}'+
     '.exp-tag{font-size:9.5px;font-weight:800;color:var(--mu);background:rgba(0,0,0,.05);border-radius:20px;padding:2px 9px;margin-left:auto;white-space:nowrap}'+
     '.exp-card-t{font-size:11.5px;color:var(--navy);line-height:1.5}.exp-more{font-size:10.5px;font-weight:800;color:var(--brand-2);margin-top:auto;padding-top:10px}'+
-    '.exp-stat{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:9px;overflow:hidden;margin-top:10px}'+
-    '@media(max-width:560px){.exp-stat{grid-template-columns:repeat(2,1fr)}}'+
-    '.exp-st{background:var(--card,#fff);padding:9px 12px}.exp-sl{font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)}'+
-    '.exp-sv{font-size:17px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;margin-top:2px}.exp-ss{font-size:9.5px;color:var(--mu);margin-top:1px}'+
   '</style>';
   h+='<div class="ov-sec"><div class="ov-sec-h">The six lines — click any for a full dive</div>';
   var defs=[
@@ -2990,6 +2988,15 @@ function expensesBody(){
   ];
   h+='<div class="exp-cards">'+defs.map(function(d){ return '<div class="exp-card ov-clickable" data-detail="exp:'+d.k+'"><div class="exp-card-h"><span class="exp-dot" style="background:'+d.c+'"></span><span class="exp-card-n">'+d.n+'</span><span class="exp-tag">'+d.tag+'</span></div><div class="exp-card-t">'+d.t+'</div><div class="exp-more">Full dive →</div></div>'; }).join('')+'</div>';
   h+='<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:6px">Definitions per the 10-K; each full dive draws on the Notes (SBC, leases, segments) and the earnings calls.</div></div>';
+  return h;
+}
+function expensesBody(){
+  var h='<style>'+
+    '.exp-stat{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:9px;overflow:hidden;margin-top:10px}'+
+    '@media(max-width:560px){.exp-stat{grid-template-columns:repeat(2,1fr)}}'+
+    '.exp-st{background:var(--card,#fff);padding:9px 12px}.exp-sl{font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)}'+
+    '.exp-sv{font-size:17px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;margin-top:2px}.exp-ss{font-size:9.5px;color:var(--mu);margin-top:1px}'+
+  '</style>';
   h+=marginBridgeBody();
   h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center">Functional cost as % of revenue — operating leverage'+
     '<span class="acx-tog exp-tog"><button type="button" data-expg="q">Quarterly</button><button type="button" data-expg="y" class="active">Annual</button></span></div>'+
@@ -3836,7 +3843,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="segments">Segments</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="capex">Capex &amp; Depreciation</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="margins">'+bottomlineBody()+expensesBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="margins">'+expenseCardsBody()+bottomlineBody()+expensesBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="segments" hidden>'+segmentsBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="capex" hidden>'+bottomlineCapexBody()+'</div>'+
     '</div>';

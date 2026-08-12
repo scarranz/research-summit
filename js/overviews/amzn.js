@@ -2751,18 +2751,6 @@ function aBuildMarginBridge(){
       plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ return (c.parsed.x>=0?'+':'')+c.parsed.x+' ppt to operating margin'; } } } },
       scales:{ x:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return (v>0?'+':'')+v; } } }, y:{ grid:{ display:false }, ticks:{ font:{ size:10 } } } } } });
 }
-function marginQualityBody(){
-  function t(v,l,c){ return '<div style="flex:1;min-width:118px;border:1px solid var(--bdr);border-top:3px solid '+(c||'var(--brand-2)')+';border-radius:10px;padding:10px 12px;background:var(--card,#fff)"><div style="font-size:18px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;letter-spacing:-.02em">'+v+'</div><div style="font-size:10px;color:var(--mu);font-weight:600;margin-top:3px;line-height:1.3">'+l+'</div></div>'; }
-  var op=function(s){ return '<div style="display:flex;align-items:center;color:var(--mu);font-size:16px;font-weight:800;padding:0 2px">'+s+'</div>'; };
-  return '<div class="ov-sec"><div class="ov-sec-h">Reported vs underlying operating margin — FY2025</div>'+
-    '<div style="display:flex;gap:7px;flex-wrap:wrap;align-items:stretch">'+
-      t('$80.0B','Reported operating income · 11.2%','#6B7683')+op('+')+
-      t('$2.5B','FTC settlement (3Q25)','#C0504D')+op('+')+
-      t('$2.7B','Severance / role eliminations','#C0504D')+op('=')+
-      t('$85.2B','Underlying · ~11.9%','#2E8B57')+
-    '</div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">Amazon disclosed two one-offs in FY2025 operating income — the <b>$2.5B FTC settlement</b> and <b>~$2.7B of severance</b> (role eliminations). Ex those, the underlying operating margin is <b>~11.9%</b>. Separately, AWS’s Q2’26 segment margin carried ~130bps of energy-derivative gains that flatter it the other way — the reported and clean numbers pull in both directions. Source: 10-K MD&amp;A / earnings calls.</div></div>';
-}
 function bottomlineBody(){
   var h='<div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:8px;flex-wrap:wrap">'+
     '<span class="acx-tog mmode-tog"><button type="button" data-mmode="grossop" class="active">Gross &amp; operating</button><button type="button" data-mmode="segment">By segment</button></span>'+
@@ -2991,6 +2979,17 @@ function expensesBody(){
     '.exp-st{background:var(--card,#fff);padding:9px 12px}.exp-sl{font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)}'+
     '.exp-sv{font-size:17px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;margin-top:2px}.exp-ss{font-size:9.5px;color:var(--mu);margin-top:1px}'+
   '</style>';
+  h+='<div class="ov-sec"><div class="ov-sec-h">The six lines — click any for a full dive</div>';
+  var defs=[
+    {k:'costOfSales',c:SQUID,n:'Cost of sales',tag:'$356B · 49.7%',t:'Product cost, inbound &amp; outbound shipping, and digital-media content.'},
+    {k:'fulfillment',c:BRAND,n:'Fulfillment',tag:'$109B · 15.2%',t:'Running &amp; staffing the fulfillment network, stores and customer service.'},
+    {k:'techInfra',c:BRAND2,n:'Technology &amp; infrastructure',tag:'$108B · 15.1%',t:'Engineering R&amp;D plus the servers/data centers and their depreciation.'},
+    {k:'marketing',c:GREEN,n:'Sales &amp; marketing',tag:'$47B · 6.6%',t:'Advertising, promotions, Prime acquisition, and S&amp;M payroll.'},
+    {k:'gAdmin',c:GRAY,n:'General &amp; administrative',tag:'$11B · 1.6%',t:'Corporate functions — finance, legal, HR, facilities.'},
+    {k:'otherOpex',c:'#B7791F',n:'Other operating expense, net',tag:'$4.6B · 0.6%',t:'Amortization, impairments, and legal settlements (FY25: the $2.5B FTC settlement).'}
+  ];
+  h+='<div class="exp-cards">'+defs.map(function(d){ return '<div class="exp-card ov-clickable" data-detail="exp:'+d.k+'"><div class="exp-card-h"><span class="exp-dot" style="background:'+d.c+'"></span><span class="exp-card-n">'+d.n+'</span><span class="exp-tag">'+d.tag+'</span></div><div class="exp-card-t">'+d.t+'</div><div class="exp-more">Full dive →</div></div>'; }).join('')+'</div>';
+  h+='<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:6px">Definitions per the 10-K; each full dive draws on the Notes (SBC, leases, segments) and the earnings calls.</div></div>';
   h+=marginBridgeBody();
   h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center">Functional cost as % of revenue — operating leverage'+
     '<span class="acx-tog exp-tog"><button type="button" data-expg="q">Quarterly</button><button type="button" data-expg="y" class="active">Annual</button></span></div>'+
@@ -3008,18 +3007,6 @@ function expensesBody(){
       '<div class="exp-st"><div class="exp-sl">Finance-lease D&amp;A</div><div class="exp-sv">$3.3B</div><div class="exp-ss">inside the $41.9B P&amp;E D&amp;A</div></div>'+
     '</div>'+
     '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:6px">Finance-lease assets ($55.6B) are <b>already inside PP&amp;E</b>; operating-lease right-of-use assets ($86B) sit on their <b>own balance-sheet line</b> — that is the capacity beyond owned PP&amp;E. The $121.8B is the lease <b>liability</b> (the obligation). Operating-lease cost flows into cost of sales / fulfillment / technology; finance-lease amortization is inside the $41.9B D&amp;A.</div></div>';
-  h+=marginQualityBody();
-  h+='<div class="ov-sec"><div class="ov-sec-h">The six lines — click any for a full dive</div>';
-  var defs=[
-    {k:'costOfSales',c:SQUID,n:'Cost of sales',tag:'$356B · 49.7%',t:'Product cost, inbound &amp; outbound shipping, and digital-media content.'},
-    {k:'fulfillment',c:BRAND,n:'Fulfillment',tag:'$109B · 15.2%',t:'Running &amp; staffing the fulfillment network, stores and customer service.'},
-    {k:'techInfra',c:BRAND2,n:'Technology &amp; infrastructure',tag:'$108B · 15.1%',t:'Engineering R&amp;D plus the servers/data centers and their depreciation.'},
-    {k:'marketing',c:GREEN,n:'Sales &amp; marketing',tag:'$47B · 6.6%',t:'Advertising, promotions, Prime acquisition, and S&amp;M payroll.'},
-    {k:'gAdmin',c:GRAY,n:'General &amp; administrative',tag:'$11B · 1.6%',t:'Corporate functions — finance, legal, HR, facilities.'},
-    {k:'otherOpex',c:'#B7791F',n:'Other operating expense, net',tag:'$4.6B · 0.6%',t:'Amortization, impairments, and legal settlements (FY25: the $2.5B FTC settlement).'}
-  ];
-  h+='<div class="exp-cards">'+defs.map(function(d){ return '<div class="exp-card ov-clickable" data-detail="exp:'+d.k+'"><div class="exp-card-h"><span class="exp-dot" style="background:'+d.c+'"></span><span class="exp-card-n">'+d.n+'</span><span class="exp-tag">'+d.tag+'</span></div><div class="exp-card-t">'+d.t+'</div><div class="exp-more">Full dive →</div></div>'; }).join('')+'</div>';
-  h+='<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:6px">Definitions per the 10-K; each full dive draws on the Notes (SBC, leases, segments) and the earnings calls.</div></div>';
   return h;
 }
 function aExpRows(root){
@@ -3205,24 +3192,7 @@ function segmentsBody(){
     '.seg-chip b{font-weight:800}.seg-chip .up{color:#1f7a3d;font-weight:800}.seg-chip .dn{color:#B7791F;font-weight:800}'+
     '.seg-off{font-size:11px;color:var(--mu);margin-top:8px;line-height:1.45}.seg-off b{color:var(--navy)}'+
   '</style>';
-  h+='<div class="seg-tog-row"><span class="acx-tog seg-tog"><button type="button" data-segg="y" class="active">Annual</button><button type="button" data-segg="q">Quarterly</button></span></div>';
-  h+='<div class="seg-kpis" id="segKpis"></div>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">Operating income by segment ($B)</div><div style="height:290px"><canvas id="aSgOI"></canvas></div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">Where the profit is made. FY2022 = the over-investment trough (NA &amp; International both at a loss); 3Q25 NA carries the $2.5B FTC settlement.</div></div>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">Operating margin by segment (%)</div><div style="height:290px"><canvas id="aSgMgn"></canvas></div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">AWS ~35% vs the retail segments in the mid-single digits; the consolidated line (dark) is dragged up by AWS mix.</div></div>';
-  h+=segCapitalBody();
-  // rev -> profit mismatch
-  h+='<div class="ov-sec"><div class="ov-sec-h">Where the revenue is vs where the profit is (FY2025)</div>'+
-     '<div class="seg-mm">'+
-       '<div class="seg-mm-row"><span class="seg-mm-lab">Revenue</span><div class="seg-mm-bar">'+
-         '<div class="seg-mm-seg" style="width:59.5%;background:'+BRAND+'">NA 59%</div><div class="seg-mm-seg" style="width:22.6%;background:'+BRAND2+'">Intl 23%</div><div class="seg-mm-seg" style="width:18%;background:'+SQUID+'">AWS 18%</div></div></div>'+
-       '<div class="seg-mm-ar">▼</div>'+
-       '<div class="seg-mm-row"><span class="seg-mm-lab">Profit</span><div class="seg-mm-bar">'+
-         '<div class="seg-mm-seg" style="width:37%;background:'+BRAND+'">NA 37%</div><div class="seg-mm-seg" style="width:5.9%;background:'+BRAND2+'"></div><div class="seg-mm-seg" style="width:57%;background:'+SQUID+'">AWS 57%</div></div></div>'+
-     '</div>'+
-     '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:10px"><b>AWS punches far above its weight</b> — 18% of revenue, 57% of operating income — while North America is the volume base and International is still a thin contributor. Move AWS a point of mix and the whole company’s margin moves.</div></div>';
-  // segment engines
+  // segment engines — the clickable driver index, kept at the top of the pane (before the charts)
   h+='<div class="ov-sec"><div class="ov-sec-h">What actually moves each segment — the drivers (10-K + latest quarters)</div>';
   var eng=[
     {c:SQUID,key:'aws',n:'AWS',m:'35% margin',role:'The profit engine',tr:'↑ re-accelerating',
@@ -3241,6 +3211,23 @@ function segmentsBody(){
       '<div class="seg-off">'+s.off+'</div><div style="font-size:10.5px;font-weight:800;color:var(--brand-2);margin-top:9px">Open detail →</div></div>';
   }).join('')+'</div>';
   h+='<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">Amazon reports <b>net sales and operating income by segment only</b> — never expense by segment. Segment definitions per the 10-K; drivers per the 10-K MD&amp;A and the last eight quarters of Bloomberg segment data. FY2025 op income of $80.0B includes a $2.5B FTC settlement and $2.7B of severance.</div></div>';
+  h+='<div class="seg-tog-row"><span class="acx-tog seg-tog"><button type="button" data-segg="y" class="active">Annual</button><button type="button" data-segg="q">Quarterly</button></span></div>';
+  h+='<div class="seg-kpis" id="segKpis"></div>';
+  h+='<div class="ov-sec"><div class="ov-sec-h">Operating income by segment ($B)</div><div style="height:290px"><canvas id="aSgOI"></canvas></div>'+
+    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">Where the profit is made. FY2022 = the over-investment trough (NA &amp; International both at a loss); 3Q25 NA carries the $2.5B FTC settlement.</div></div>';
+  h+='<div class="ov-sec"><div class="ov-sec-h">Operating margin by segment (%)</div><div style="height:290px"><canvas id="aSgMgn"></canvas></div>'+
+    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">AWS ~35% vs the retail segments in the mid-single digits; the consolidated line (dark) is dragged up by AWS mix.</div></div>';
+  h+=segCapitalBody();
+  // rev -> profit mismatch
+  h+='<div class="ov-sec"><div class="ov-sec-h">Where the revenue is vs where the profit is (FY2025)</div>'+
+     '<div class="seg-mm">'+
+       '<div class="seg-mm-row"><span class="seg-mm-lab">Revenue</span><div class="seg-mm-bar">'+
+         '<div class="seg-mm-seg" style="width:59.5%;background:'+BRAND+'">NA 59%</div><div class="seg-mm-seg" style="width:22.6%;background:'+BRAND2+'">Intl 23%</div><div class="seg-mm-seg" style="width:18%;background:'+SQUID+'">AWS 18%</div></div></div>'+
+       '<div class="seg-mm-ar">▼</div>'+
+       '<div class="seg-mm-row"><span class="seg-mm-lab">Profit</span><div class="seg-mm-bar">'+
+         '<div class="seg-mm-seg" style="width:37%;background:'+BRAND+'">NA 37%</div><div class="seg-mm-seg" style="width:5.9%;background:'+BRAND2+'"></div><div class="seg-mm-seg" style="width:57%;background:'+SQUID+'">AWS 57%</div></div></div>'+
+     '</div>'+
+     '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:10px"><b>AWS punches far above its weight</b> — 18% of revenue, 57% of operating income — while North America is the volume base and International is still a thin contributor. Move AWS a point of mix and the whole company’s margin moves.</div></div>';
   return h;
 }
 function aBuildSegments(){

@@ -1213,7 +1213,7 @@ function ceStyle(){
     '.ce-ip-ok.danger{background:'+RED+';border-color:'+RED+'}'+
     '.ce-note{font-size:11px;color:var(--mu);line-height:1.5;background:#F7F9FB;border:1px solid var(--bdr);border-radius:9px;padding:9px 12px;margin:0 0 12px}'+
     '.ce-phtabs{display:inline-flex;gap:3px;background:rgba(66,133,244,0.08);border:1px solid var(--bdr);border-radius:9px;padding:4px;margin:0 0 20px}'+
-    '.ce-phtab{background:none;border:none;color:var(--mu);font-family:\'Inter\',sans-serif;font-size:12px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;padding:7px 16px;border-radius:6px;cursor:pointer;transition:all .15s}'+
+    '.ce-phtab{background:none;border:none;color:var(--mu);font-family:\'Inter\',sans-serif;font-size:12px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;padding:7px 16px;border-radius:6px;cursor:pointer;transition:all .15s;white-space:nowrap}'+
     '.ce-phtab:hover{color:var(--navy)}.ce-phtab.active{background:'+BRAND+';color:#fff}'+
     '.ce-phpane[hidden]{display:none}'+
     /* quarter selector — one Earnings, many quarters; only the selected quarter renders (page stays light) */
@@ -2710,19 +2710,40 @@ var A_MB_COST=[
   {k:'otherOpex',lab:'Other operating expense',c:'#B7791F'}
 ];
 function marginBridgeBody(){
-  return '<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">What moved the operating margin (vs prior year, ppt of revenue)'+
-    '<span class="acx-tog mb-yr"><button type="button" data-mby="2023">FY23</button><button type="button" data-mby="2024">FY24</button><button type="button" data-mby="2025" class="active">FY25</button></span></div>'+
+  // Quarterly period options: only quarters that have BOTH a prior quarter (QoQ) and a
+  // same-quarter-prior-year (YoY) in A_OPEXQ — i.e. FY2025 onward (A_OPEXQ starts Q1'24).
+  var qBtns=A_OPEXQ.map(function(r,i){ return {i:i,p:r.p,yr:r.yr}; }).filter(function(o){ return o.yr>=2025; });
+  var lastI=qBtns.length?qBtns[qBtns.length-1].i:A_OPEXQ.length-1;
+  var qHtml=qBtns.map(function(o){ return '<button type="button" data-mbq="'+o.i+'"'+(o.i===lastI?' class="active"':'')+'>'+o.p.replace(/\s+/g,'')+'</button>'; }).join('');
+  return '<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
+      '<span>What moved the operating margin (<span class="mb-cmp-lab">vs prior year</span>, ppt of revenue)</span>'+
+      '<span style="display:flex;gap:6px;flex-wrap:wrap">'+
+        '<span class="acx-tog mb-cmp" style="display:none"><button type="button" data-mbc="qoq">QoQ</button><button type="button" data-mbc="yoy" class="active">YoY</button></span>'+
+        '<span class="acx-tog mb-gran"><button type="button" data-mbg="y" class="active">Annual</button><button type="button" data-mbg="q">Quarterly</button></span>'+
+      '</span></div>'+
+    '<div class="mb-sel mb-sel-y" style="display:flex;justify-content:flex-end;margin:0 0 8px"><span class="acx-tog mb-yr"><button type="button" data-mby="2023">FY23</button><button type="button" data-mby="2024">FY24</button><button type="button" data-mby="2025" class="active">FY25</button></span></div>'+
+    '<div class="mb-sel mb-sel-q" style="display:none;justify-content:flex-end;margin:0 0 8px"><span class="acx-tog mb-qtr" style="flex-wrap:wrap">'+qHtml+'</span></div>'+
     '<div style="height:250px"><canvas id="aMbDelta"></canvas></div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:6px">Each bar = a functional line’s change in its share of revenue: green = it fell (added to margin), red = it rose (compressed it). They sum to the total change in operating margin (ppt of revenue). Pick a year above.</div></div>';
+    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:6px">Each bar = a functional line’s change in its share of revenue: green = it fell (added to margin), red = it rose (compressed it). They sum to the total change in operating margin (ppt of revenue). <b>Annual</b> compares each year to the prior year; <b>Quarterly</b> compares the picked quarter QoQ or vs the same quarter a year ago.</div></div>';
 }
 function aBuildMarginBridge(){
-  var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]');
-  var yb=pane?pane.querySelector('.mb-yr .active'):null, yr=yb?+yb.getAttribute('data-mby'):2025;
-  var r=A_OPEX[yr], rev=r.revenue, cy=A_OPEX[yr-1], prev=cy?cy.revenue:null;
+  var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(!pane) return;
+  var gb=pane.querySelector('.mb-gran .active'), gran=gb?gb.getAttribute('data-mbg'):'y';
+  var cur, prev;   // cur/prev each carry the functional-cost lines + .revenue
+  if(gran==='q'){
+    var cb=pane.querySelector('.mb-cmp .active'), cmp=cb?cb.getAttribute('data-mbc'):'yoy';
+    var qb=pane.querySelector('.mb-qtr .active'), qi=qb?+qb.getAttribute('data-mbq'):A_OPEXQ.length-1;
+    cur=A_OPEXQ[qi];
+    if(cur) prev=(cmp==='qoq')?A_OPEXQ[qi-1]:A_OPEXQ.filter(function(x){ return x.yr===cur.yr-1&&x.q===cur.q; })[0];
+  } else {
+    var yb=pane.querySelector('.mb-yr .active'), yr=yb?+yb.getAttribute('data-mby'):2025;
+    cur=A_OPEX[yr]; prev=A_OPEX[yr-1];
+  }
   var cvd=aChartReady('aMbDelta'); if(!cvd) return; aDestroy('aMbDelta');
-  if(!prev){ _aCharts['aMbDelta']=new Chart(cvd.getContext('2d'),{type:'bar',data:{labels:['no prior year'],datasets:[{data:[0]}]},options:{plugins:{legend:{display:false}}}}); return; }
+  if(!cur||!prev){ _aCharts['aMbDelta']=new Chart(cvd.getContext('2d'),{type:'bar',data:{labels:['no prior period'],datasets:[{data:[0]}]},options:{plugins:{legend:{display:false}}}}); return; }
+  var rev=cur.revenue, prevRev=prev.revenue;
   var dl=[],dv=[],dc=[],net=0;
-  A_MB_COST.forEach(function(it){ var contrib=(cy[it.k]/prev - r[it.k]/rev)*100; net+=contrib; dl.push(it.lab); dv.push(Math.round(contrib*100)/100); dc.push(contrib>=0?'#2E8B57':'#C0504D'); });
+  A_MB_COST.forEach(function(it){ var contrib=(prev[it.k]/prevRev - cur[it.k]/rev)*100; net+=contrib; dl.push(it.lab); dv.push(Math.round(contrib*100)/100); dc.push(contrib>=0?'#2E8B57':'#C0504D'); });
   dl.push('Operating margin change'); dv.push(Math.round(net*100)/100); dc.push('#2E3B4E');
   _aCharts['aMbDelta']=new Chart(cvd.getContext('2d'),{ type:'bar',
     data:{ labels:dl, datasets:[{ data:dv, backgroundColor:dc, borderColor:'#fff', borderWidth:1, maxBarThickness:26 }] },
@@ -3033,9 +3054,28 @@ function aBuildExpenses(){
         plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+c.parsed.y.toFixed(1)+'B'; }, footer:function(it){ return 'Total lease cost: $'+it.reduce(function(a,x){ return a+x.parsed.y; },0).toFixed(1)+'B'; } } } },
         scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); }
   var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]');
-  if(pane && !pane._expWired){ pane._expWired=true;
-    pane.querySelectorAll('.exp-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.exp-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildExpensesPct(); }; });
-    pane.querySelectorAll('.mb-yr button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.mb-yr button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildMarginBridge(); }; }); }
+  if(pane){
+    // Show the year picker in Annual, the quarter picker + QoQ/YoY toggle in Quarterly, and
+    // keep the "vs prior …" label in sync. .acx-tog forces display:inline-flex, so [hidden]
+    // is overridden — toggle style.display directly.
+    function mbSync(){
+      var g=pane.querySelector('.mb-gran .active'), q=!!(g&&g.getAttribute('data-mbg')==='q');
+      var sy=pane.querySelector('.mb-sel-y'), sq=pane.querySelector('.mb-sel-q'), cmp=pane.querySelector('.mb-cmp');
+      if(sy) sy.style.display=q?'none':'flex';
+      if(sq) sq.style.display=q?'flex':'none';
+      if(cmp) cmp.style.display=q?'':'none';
+      var cb=pane.querySelector('.mb-cmp .active'), lab=pane.querySelector('.mb-cmp-lab');
+      if(lab) lab.textContent=q?((cb&&cb.getAttribute('data-mbc')==='qoq')?'vs prior quarter':'vs same quarter a year ago'):'vs prior year';
+    }
+    var tog=function(sel,after){ pane.querySelectorAll(sel+' button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll(sel+' button').forEach(function(x){ x.classList.toggle('active',x===b); }); after(); }; }); };
+    if(!pane._expWired){ pane._expWired=true;
+      tog('.exp-tog', aBuildExpensesPct);
+      tog('.mb-yr', aBuildMarginBridge);
+      tog('.mb-qtr', aBuildMarginBridge);
+      tog('.mb-cmp', function(){ mbSync(); aBuildMarginBridge(); });
+      tog('.mb-gran', function(){ mbSync(); aBuildMarginBridge(); }); }
+    mbSync();
+  }
 }
 var A_SEG=[ {k:'us',lab:'North America',c:BRAND,oi:'usOpInc',rev:'usRev',qoi:'naopinc',qrev:'usrev'},
   {k:'int',lab:'International',c:BRAND2,oi:'intOpInc',rev:'intRev',qoi:'intopinc',qrev:'intrev'},
@@ -3113,7 +3153,7 @@ function segCapitalBody(){
     '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:6px">AWS PP&amp;E stock: <b>$72.7B → $190.1B</b> (2023→2025), now &gt;50% of the group’s $357B — the balance-sheet footprint of the build.</div></div>';
 }
 function aBuildSegCapital(){
-  var root=document.querySelector('.ovt-subpane[data-ovst="segments"]'), yrs=[2023,2024,2025];
+  var root=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]'), yrs=[2023,2024,2025];
   var tg=root?root.querySelector('.segcap-tog .active'):null, pct=(tg?tg.getAttribute('data-segcap'):'dollar')==='pct';
   var SEGREV={ na:'usRev', int:'intRev', aws:'awsRev' };
   var cx=aChartReady('aSegCapex');
@@ -3202,7 +3242,7 @@ function segmentsBody(){
   return h;
 }
 function aBuildSegments(){
-  var pane=document.querySelector('.ovt-subpane[data-ovst="segments"]');
+  var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]');
   var tg=pane?pane.querySelector('.seg-tog .active'):null, gran=tg?tg.getAttribute('data-segg'):'y';
   var rows=(gran==='q')?segQuarterRows():segAnnualRows();
   // KPIs (always FY2025)

@@ -496,6 +496,7 @@
   border-radius: 6px;
   cursor: pointer;
   transition: all .15s;
+  white-space: nowrap;
 }
 .ovt-subtab:hover { color: var(--navy); }
 .ovt-subtab.active { background: var(--brand); color: #fff; }

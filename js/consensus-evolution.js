@@ -172,9 +172,10 @@ export function consensusEvoInit(root, ticker, metric){
       var data=m.fixed[fy].map(function(v,i){ return (i>=win.start && i<=win.end)?toV(m,v):null; });
       return { label:'FY'+fy, data:data, borderColor:FY_COLORS[fy]||'#888',
         backgroundColor:FY_COLORS[fy]||'#888', borderWidth:2, tension:.25, spanGaps:false,
-        pointRadius:function(c){ return kinds[c.dataIndex]==='A'?4.5:2.6; },
+        pointRadius:function(c){ return kinds[c.dataIndex]==='A'?7:2.6; },
+        pointHoverRadius:function(c){ return kinds[c.dataIndex]==='A'?8:4; },
         pointStyle:function(c){ return kinds[c.dataIndex]==='A'?'rectRot':'circle'; },
-        pointBorderColor:'#fff', pointBorderWidth:function(c){ return kinds[c.dataIndex]==='A'?1.5:0; } };
+        pointBorderColor:'#fff', pointBorderWidth:function(c){ return kinds[c.dataIndex]==='A'?2:0; } };
     });
   }
   function rollingSets(){
@@ -185,14 +186,41 @@ export function consensusEvoInit(root, ticker, metric){
         borderWidth:2.4, tension:.25, fill:single, pointRadius:3.1, pointStyle:'circle', pointBorderColor:'#fff', pointBorderWidth:1.3 }; });
   }
 
+  // "Where it landed" — a dashed horizontal line at each REPORTED fiscal year's ACTUAL, in the FY colour
+  // (Dani, Aug 2026). After all the upward-drifting revisions, this shows where the number actually ended
+  // up. Only years with an Actual point get one (e.g. FY2026 is still all estimates → no line). Drawn on
+  // the canvas (not a dataset) so it adds no tooltip/legend noise. Reads the live mkey/mode/onFY closure.
+  var fyActualsPlugin={ id:'fyActuals', afterDatasetsDraw:function(chart){
+    if(mode!=='fixed') return;
+    var m=d.metrics[mkey], ctx=chart.ctx, area=chart.chartArea, yS=chart.scales.y, xS=chart.scales.x;
+    if(!yS||!xS||!area) return;
+    Object.keys(m.fixed).filter(function(fy){ return onFY[fy]; }).forEach(function(fy){
+      var kinds=m.fixedKind[fy], vals=m.fixed[fy], ai=-1;
+      for(var i=0;i<kinds.length;i++){ if(kinds[i]==='A' && vals[i]!=null){ ai=i; break; } }
+      if(ai<0) return;                                        // not reported yet — no actual line
+      var av=toV(m, vals[ai]), y=yS.getPixelForValue(av);
+      if(y<area.top-1 || y>area.bottom+1) return;             // off the visible scale — skip
+      var win=fyWindow(kinds, vals), x1=Math.max(area.left, xS.getPixelForValue(win.start));
+      var col=FY_COLORS[fy]||'#888';
+      ctx.save();
+      ctx.beginPath(); ctx.setLineDash([2,4]); ctx.lineWidth=1.5; ctx.strokeStyle=col; ctx.globalAlpha=.85;
+      ctx.moveTo(x1, y); ctx.lineTo(area.right, y); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha=1;
+      ctx.font='700 9.5px Inter, sans-serif'; ctx.fillStyle=col; ctx.textAlign='right'; ctx.textBaseline='bottom';
+      ctx.fillText('FY'+fy+' actual', area.right-3, y-2);
+      ctx.restore();
+    });
+  }};
   function build(){
     var m=d.metrics[mkey], multi=(mode==='fixed');
     if(chart) chart.destroy();
-    chart=new Chart(canvas.getContext('2d'),{ type:'line',
+    chart=new Chart(canvas.getContext('2d'),{ type:'line', plugins:[fyActualsPlugin],
       data:{ labels:labels, datasets: multi?fixedSets():rollingSets() },
       options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'nearest', intersect:false },
         plugins:{
-          legend:{ display:true, position:'bottom', labels:{ font:{ family:'Inter', size:11, weight:'600' }, color:'#475569', boxWidth:14, usePointStyle:true, pointStyle:'line' } },
+          // Bottom legend removed (Dani, Aug 2026): the FY pills above ("Years on chart") already
+          // carry each year's colour, so a second FY colour key at the bottom is redundant.
+          legend:{ display:false },
           tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+unitTip(m,c.parsed.y); } } } },
         scales:{ x:{ grid:{ display:false }, ticks:{ font:{ family:'Inter', size:10.5 }, color:'#94A3B8' } },
           y:{ grid:{ color:'rgba(148,163,184,.18)' }, ticks:{ font:{ family:'Inter', size:10.5 }, color:'#94A3B8', callback:function(v){ return unitTip(m,v); } } } } }

@@ -101,6 +101,16 @@ These are binding for every company, not just AMZN. Reference implementation: `j
    without a reload. Persistence requires a signed-in session (RLS); locally/preview the insert fails
    and the chips stay staged with an honest status line — the wiring is intact and lights up on deploy.
    Amazon overview work did NOT touch this wiring (`js/watchlist.js` / `js/api.js` / `sql/`).
+   (e) **No duplicate notes — one filing per note (Aug 2026).** Every write path into the theme record
+   (the ＋ add-note composer, Propose Notes' *Publish*, and the ✎ editor's *+ Add note*) goes through a
+   single duplicate guard: a note is a duplicate when it **normalises to the same plain text** (HTML/
+   entities stripped, whitespace collapsed, case-folded — `ceNoteNorm`) as one **already filed under the
+   same sub-theme + quarter**. This is the real spam / double-click case, because the ＋ composer
+   **pre-seeds the point's prose**, so re-opening a point and saving twice — or re-publishing the same
+   staged batch — would otherwise file the identical note again. On a hit the write is **blocked, never
+   silent**: the composer keeps open with a red inline warning, the ✎ editor shows a confirm pop, and
+   Publish skips the chip (flagged "· already filed") and reports "N filed · M skipped (already filed)".
+   The guard lives in `cePublishNoteToRecord` (returns `{added, dup}`) + the shared `ceNoteDup` helper.
 
 6. **The Consensus-Evolution chart windows its periods, and exposes a period slider.** Three parts:
    - **FY control** — discrete pills (one per fiscal year, newest 3 on by default, capped at open+1),

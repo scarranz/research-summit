@@ -967,6 +967,10 @@ function openCo(tk){
   var px = c.price != null ? '$'+Number(c.price).toFixed(2) : '—';
   document.getElementById('co-px').textContent=px;             // static fallback (DB price)
   var pxsub=document.getElementById('co-pxsub'); if(pxsub) pxsub.innerHTML='';
+  // Source buttons (IR / EDGAR, logo-only) live in the header now — the overview module supplies them
+  // per company via headerSources(). Cleared for companies that don't (so it never shows stale marks).
+  var srcEl=document.getElementById('co-srcbtns');
+  if(srcEl){ var ov=getOverview(c.ticker); srcEl.innerHTML=(ov&&typeof ov.headerSources==='function')?ov.headerSources():''; }
   updateLiveHeader(c);                                         // then refresh with a live Massive quote
   renderOverview(c);
   renderCoAnalysis(c.id, c.ticker);

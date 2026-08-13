@@ -225,8 +225,13 @@ var INVESTOR_WEBSITES = {
 // LP confirmed 2026-08 (sql/014_investor_profiles.sql).
 var INVESTOR_CIK = {
   ackman: '0001336528',
-  buffett: '0001067983',  // Berkshire Hathaway Inc
-  tepper: '0001656456',   // Appaloosa LP
+  buffett: '0001067983',       // Berkshire Hathaway Inc
+  tepper: '0001656456',        // Appaloosa LP
+  druckenmiller: '0001536411', // Duquesne Family Office LLC
+  coleman: '0001167483',       // Tiger Global Management LLC
+  hohn: '0001647251',          // TCI Fund Management Ltd
+  altimeter: '0001541617',     // Altimeter Capital Management, LP
+  dorsey: '0001671657',        // Dorsey Asset Management, LLC
 };
 
 async function loadInvestorProfileData(key) {

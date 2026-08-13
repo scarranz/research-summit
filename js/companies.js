@@ -1495,6 +1495,14 @@ export async function loadCompaniesPage() {
         group_name: 'Semiconductors', sector: 'Technology', logo_domain: 'qualcomm.com',
         mono: 'QC', status: 'active', price: null });
     }
+    // Local-dev only: surface the in-development DIS (Disney) overview in the grid without a
+    // DB write, so it previews inside the real portal chrome. Gated to localhost — never
+    // affects production. Remove once DIS is added for real via the companies table.
+    if (location.hostname === 'localhost' && !_companies.find(function(c){ return c.ticker === 'DIS'; })) {
+      _companies.push({ id: 'dis-local', ticker: 'DIS', name: 'The Walt Disney Company',
+        group_name: 'Media & Entertainment', sector: 'Communication Services', logo_domain: 'thewaltdisneycompany.com',
+        mono: 'DI', status: 'active', price: null });
+    }
     initCoControls();
     renderCoGrid();
     initAddModal();

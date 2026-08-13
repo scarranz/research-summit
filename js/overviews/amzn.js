@@ -39,10 +39,7 @@ function ceInlinePop(anchor, opts, onOk){
       '<button type="button" class="ce-ip-ok'+(opts.danger?' danger':'')+'">'+esc(opts.ok||(isConfirm?'Confirm':'Save'))+'</button></div>';
   document.body.appendChild(pop);
   var inp=pop.querySelector('.ce-ip-in'); if(inp && opts.value!=null) inp.value=opts.value;
-  var r=(anchor&&anchor.getBoundingClientRect)?anchor.getBoundingClientRect():{left:80,bottom:80};
-  pop.style.position='fixed';
-  pop.style.left=Math.max(8, Math.min(r.left, window.innerWidth-pop.offsetWidth-12))+'px';
-  pop.style.top=Math.min(r.bottom+6, window.innerHeight-pop.offsetHeight-12)+'px';
+  cewPositionPop(pop, anchor);
   function close(){ pop.remove(); document.removeEventListener('mousedown', outside, true); document.removeEventListener('keydown', onKey, true); }
   function outside(e){ if(!pop.contains(e.target)) close(); }
   function ok(){ var v=inp?(inp.value||'').trim():''; if(inp && !v) return; close(); onOk(v); }
@@ -51,6 +48,22 @@ function ceInlinePop(anchor, opts, onOk){
   pop.querySelector('.ce-ip-ok').onclick=ok;
   setTimeout(function(){ document.addEventListener('mousedown', outside, true); document.addEventListener('keydown', onKey, true); }, 0);
   if(inp){ inp.focus(); if(inp.select) inp.select(); }
+}
+// Anchor a fixed popup to a launch button, orienting toward the side with room so a WIDE popup never
+// runs off-screen: the ＋ add-note button is pinned bottom-RIGHT, so a note composer opens LEFTWARD
+// (right edge aligned to the button) and, if there is no room below, UPWARD. Falls back to plain
+// left/below when the button sits in the left half or has room beneath it. (Dani, Aug 2026.)
+function cewPositionPop(pop, anchor){
+  var r=(anchor&&anchor.getBoundingClientRect)?anchor.getBoundingClientRect():{left:80,right:80,top:80,bottom:80};
+  pop.style.position='fixed';
+  var pw=pop.offsetWidth, ph=pop.offsetHeight, vw=window.innerWidth, vh=window.innerHeight;
+  // Horizontal: right-align to the button when it sits past the viewport midpoint, else left-align.
+  var left=(r.left>vw/2)?(r.right-pw):r.left;
+  left=Math.max(8, Math.min(left, vw-pw-12));
+  // Vertical: below the button by default; flip above if it would overflow the bottom edge.
+  var top=r.bottom+6;
+  if(top+ph>vh-12) top=Math.max(8, r.top-ph-6);
+  pop.style.left=left+'px'; pop.style.top=top+'px';
 }
 // Per-call-point note capture. The "＋ add note" button + a composer popup that reuses the SAME note
 // engine as Propose Notes (cePublishNoteToRecord → the Notes record → Supabase), but does NOT auto-propose
@@ -92,10 +105,7 @@ function ceNoteAddPop(anchor){
   }
   segSel.onchange=rebuildSub;
   subWrap.querySelector('.ce-tp-sub').onchange=function(){ newSub.hidden=(this.value!=='__new__'); };
-  var r=(anchor&&anchor.getBoundingClientRect)?anchor.getBoundingClientRect():{left:80,bottom:80};
-  pop.style.position='fixed';
-  pop.style.left=Math.max(8, Math.min(r.left, window.innerWidth-pop.offsetWidth-12))+'px';
-  pop.style.top=Math.min(r.bottom+6, window.innerHeight-pop.offsetHeight-12)+'px';
+  cewPositionPop(pop, anchor);
   function close(){ pop.remove(); document.removeEventListener('mousedown', outside, true); document.removeEventListener('keydown', onKey, true); }
   function outside(e){ if(!pop.contains(e.target)) close(); }
   function onKey(e){ if(e.key==='Escape') close(); }
@@ -105,10 +115,21 @@ function ceNoteAddPop(anchor){
     var cur=subWrap.querySelector('.ce-tp-sub');
     var sub=(segSel.value==='__newseg__')?(newSub.value||'').trim():(cur?(cur.value==='__new__'?(newSub.value||'').trim():cur.value):'');
     if(!seg||seg==='__none__'||!sub||sub==='__none__') return;   // both must be chosen
-    cePublishNoteToRecord(seg, sub, text, qLabel);
-    close();
-    amznRerenderRecord(document);
+    var res=cePublishNoteToRecord(seg, sub, text, qLabel);
+    if(res && res.dup){   // identical note already filed here — warn, keep the composer open, do not duplicate
+      var warn=pop.querySelector('.ce-ip-warn');
+      if(!warn){ warn=document.createElement('div'); warn.className='ce-ip-warn'; pop.insertBefore(warn, pop.querySelector('.ce-ip-btns')); }
+      warn.textContent='This note is already filed under '+sub+' · '+qLabel+' — not added again.';
+      return;
+    }
+    // Confirm the save on the button itself (green "Saved ✓") so a click never feels like it did nothing,
+    // then close and refresh the record once the confirmation has registered.
+    var okBtn=pop.querySelector('.ce-ip-ok'), cancelBtn=pop.querySelector('.ce-ip-cancel');
+    if(okBtn){ okBtn.classList.add('done'); okBtn.textContent='Saved ✓'; okBtn.disabled=true; }
+    if(cancelBtn) cancelBtn.disabled=true;
+    setTimeout(function(){ close(); amznRerenderRecord(document); }, 480);
   }
+  ta.addEventListener('input', function(){ var w=pop.querySelector('.ce-ip-warn'); if(w) w.remove(); });
   pop.querySelector('.ce-ip-cancel').onclick=close;
   pop.querySelector('.ce-ip-ok').onclick=save;
   setTimeout(function(){ document.addEventListener('mousedown', outside, true); document.addEventListener('keydown', onKey, true); }, 0);
@@ -1040,12 +1061,9 @@ var AMZN_THEMES=[
       { q:'Q2 2026', items:['A <b>new consolidated margin record: 13.7%</b> — set while absorbing the seasonal SBC step-up, ~$1B of LEO cost and fuel inflation the guide had flagged. Paid units <b>+17%</b>.','Fast commerce is where the flywheel now shows: <b>same-day perishables customers +50%</b> since January, and same-day orders carrying <b>3x the units</b> per order. Roughly <b>$600M of tariff-related refunds</b> landed as one-off relief inside the North America margin.'] },
     ]},
   // ── Amazon International ────────────────────────────────────────────────────────────────────────
-  { seg:'Amazon International', theme:'Margin', st:{ k:'watch' },
-    why:'International segment profitability — the emerging-market drag and its path to sustained margin. To track.',
-    updates:[] },
-  { seg:'Amazon International', theme:'Expansion comments', st:{ k:'watch' },
-    why:'Country build-out and emerging-market expansion notes from the calls. To track.',
-    updates:[] },
+  // No seeded sub-themes: a sub-theme exists only once it holds a REAL note, never as an empty
+  // placeholder (Dani, Aug 2026). International hooks (segment margin, country build-out) get filed
+  // here as the notes come in — via ＋ add note, Propose Notes, or the ✎ editor.
   // ── AWS ────────────────────────────────────────────────────────────────────────────────────────
   { seg:'AWS', theme:'Backlog', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
     why:'From +24% to +37% (fastest in 18 quarters) with the forward book compounding faster than revenue converts.',
@@ -1250,11 +1268,21 @@ function ceStyle(){
     '.ce-ip-t{font-size:11px;font-weight:800;color:var(--navy);margin-bottom:9px;line-height:1.4}'+
     '.ce-ip-in{width:100%;box-sizing:border-box;font:inherit;font-size:12px;line-height:1.5;border:1px solid var(--bdr);border-radius:9px;padding:9px 11px;color:var(--navy);resize:vertical}'+
     '.ce-ip-in:focus{outline:none;border-color:'+BRAND2+'}'+
+    '.ce-ip-warn{margin-top:10px;padding:8px 11px;border:1px solid '+RED+';border-left:4px solid '+RED+';border-radius:8px;background:rgba(234,67,53,0.06);color:'+RED+';font-size:11px;font-weight:700;line-height:1.4}'+
     '.ce-ip-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:11px}'+
-    '.ce-ip-btns button{font:inherit;font-size:11px;font-weight:800;border-radius:8px;padding:6px 15px;cursor:pointer;border:1px solid var(--bdr);background:#fff;color:var(--mu)}'+
-    '.ce-ip-cancel:hover{color:var(--navy)}'+
-    '.ce-ip-ok{background:'+BRAND2+';color:#fff;border-color:'+BRAND2+'}'+
-    '.ce-ip-note{min-width:min(520px,92vw);max-width:92vw}'+
+    '.ce-ip-btns button{font:inherit;font-size:11px;font-weight:800;border-radius:8px;padding:6px 15px;cursor:pointer;border:1px solid var(--bdr);background:#fff;color:var(--mu);transition:background .14s,color .14s,border-color .14s,transform .06s,box-shadow .14s}'+
+    /* Cancel — secondary, but it now answers the click (hover fill + pressed nudge). */
+    '.ce-ip-btns .ce-ip-cancel:hover{background:#F2F5F8;color:var(--navy);border-color:var(--mu)}'+
+    '.ce-ip-btns .ce-ip-cancel:active{transform:translateY(1px)}'+
+    /* Save — the primary action. Scoped to `.ce-ip-btns .ce-ip-ok` so it BEATS `.ce-ip-btns button`
+       (which was painting it grey), and it now reacts: hover darkens, :active presses in, .done flashes
+       green with a "Saved ✓" confirmation before the composer closes. */
+    '.ce-ip-btns .ce-ip-ok{background:'+BRAND2+';color:#fff;border-color:'+BRAND2+';box-shadow:0 1px 3px rgba(20,110,180,.30)}'+
+    '.ce-ip-btns .ce-ip-ok:hover{background:#0F5A8F;border-color:#0F5A8F}'+
+    '.ce-ip-btns .ce-ip-ok:active{transform:translateY(1px);box-shadow:none}'+
+    '.ce-ip-btns .ce-ip-ok:focus-visible{outline:2px solid #0F5A8F;outline-offset:2px}'+
+    '.ce-ip-btns .ce-ip-ok.done{background:#0a8f4c;border-color:#0a8f4c;box-shadow:none}'+
+    '.ce-ip-note{min-width:min(1040px,94vw);max-width:94vw}'+
     '.ce-ip-row{display:flex;align-items:center;gap:8px;margin-top:8px}'+
     '.ce-ip-l{font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);width:66px;flex:none}'+
     '.ce-ip-note select{flex:1;min-width:0;font:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:6px 8px;color:var(--navy);background:#fff}'+
@@ -1263,7 +1291,8 @@ function ceStyle(){
     '.ce-note-row{display:flex;justify-content:flex-end;margin-top:10px}'+
     '.ce-noteadd{display:inline-block;font:inherit;font-size:9.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:'+BRAND2+';background:rgba(20,110,180,.08);border:1px solid rgba(20,110,180,.28);border-radius:7px;padding:4px 10px;cursor:pointer}'+
     '.ce-noteadd:hover{background:rgba(20,110,180,.16)}'+
-    '.ce-ip-ok.danger{background:'+RED+';border-color:'+RED+'}'+
+    '.ce-ip-btns .ce-ip-ok.danger{background:'+RED+';border-color:'+RED+'}'+
+    '.ce-ip-btns .ce-ip-ok.danger:hover{background:#C5221F;border-color:#C5221F}'+
     '.ce-note{font-size:11px;color:var(--mu);line-height:1.5;background:#F7F9FB;border:1px solid var(--bdr);border-radius:9px;padding:9px 12px;margin:0 0 12px}'+
     '.ce-phtabs{display:inline-flex;gap:3px;background:rgba(66,133,244,0.08);border:1px solid var(--bdr);border-radius:9px;padding:4px;margin:0 0 20px}'+
     '.ce-phtab{background:none;border:none;color:var(--mu);font-family:\'Inter\',sans-serif;font-size:12px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;padding:7px 16px;border-radius:6px;cursor:pointer;transition:all .15s;white-space:nowrap}'+
@@ -1471,10 +1500,13 @@ function ceFmtV(u,v){
   if(u==='B')  return (+v)+'B';
   return String(v);
 }
-function ceGrowth(m,qi,base){
+// `cur` = the current-period value the growth is measured off. Omitted → the consensus actual
+// (Street); pass Summit's own estimate to get Summit's implied growth, so BOTH columns carry a
+// YoY/QoQ chip, not just Street (Dani, Aug 2026).
+function ceGrowth(m,qi,base,cur){
   if(m.t==='basis') return null;                       // never a growth number off a basis mismatch
   if(m.u==='%') return null;                           // a %-line IS a YoY rate — no growth-of-a-growth (AMZN ad KPIs)
-  var c=m.qr[qi]?m.qr[qi][3]:null;
+  var c=(cur!==undefined&&cur!==null)?cur:(m.qr[qi]?m.qr[qi][3]:null);
   var b=(base==='qoq')?m.qq[qi]:m.qy[qi];
   if(c==null||b==null||!b) return null;
   return Math.round((c/b-1)*100);
@@ -1542,7 +1574,9 @@ function ceGrid(u,which){
     var street=(c==null)
       ? '<span class="ce-empty">—</span>'+(m.t==='nocons'?'<span class="ce-nocons" title="The archive carries no forward estimate for this line — actuals only">no est.</span>':'')
       : ceFmtV(m.u,c)+'<span class="ce-gy">'+ceChip(ceGrowth(m,qi,'yoy'))+'</span><span class="ce-gq">'+ceChip(ceGrowth(m,qi,'qoq'))+'</span>';
-    var summitCell=uv?ceFmtV(m.u,uv.v):'<span class="ce-empty">—</span>';
+    var summitCell=uv
+      ? ceFmtV(m.u,uv.v)+'<span class="ce-gy">'+ceChip(ceGrowth(m,qi,'yoy',uv.v))+'</span><span class="ce-gq">'+ceChip(ceGrowth(m,qi,'qoq',uv.v))+'</span>'
+      : '<span class="ce-empty">—</span>';
     // Implied margins — Street (consensus ÷ its own base) and Summit (Summit ÷ its Summit base), plus the
     // prev-period realised margin. Segment OIs use their segment net sales as base (CE_MARGIN_DEN).
     var mExpC=(mgn&&den)?ceMarginPct(c,den.c):null, mExpU=(mgn&&den)?ceMarginPct(uv?uv.v:null,den.s):null;
@@ -1557,7 +1591,7 @@ function ceGrid(u,which){
         ((mgn&&den)?('<span class="ce-mrl ce-mmc">margin</span>'+
           '<span class="ce-mv ce-mgn-v ce-mmc ce-mcol-cons">'+(mExpC!=null?mExpC+'%':'—')+'</span>'+
           '<span class="ce-mv ce-mgn-v ce-mmc ce-mcol-us">'+(mExpU!=null?mExpU+'%':'—')+'</span>'+
-          ((mPrevY!=null||mPrevQ!=null)?'<span class="ce-mprev ce-mmc">'+(mPrevY!=null?'<span class="ce-mm-b yoy">prev '+mPrevY+'%</span>':'')+(mPrevQ!=null?'<span class="ce-mm-b qoq">prev '+mPrevQ+'%</span>':'')+'</span>':'')):'')+
+          ((mPrevY!=null||mPrevQ!=null)?'<span class="ce-mprev ce-mmc">'+(mPrevY!=null?'<span class="ce-mm-b yoy"><span class="ce-mprev-l">a year ago</span>'+mPrevY+'%</span>':'')+(mPrevQ!=null?'<span class="ce-mm-b qoq"><span class="ce-mprev-l">prior quarter</span>'+mPrevQ+'%</span>':'')+'</span>':'')):'')+
       '</div></div>';
   }).join('')+'</div>';
 }
@@ -1581,11 +1615,16 @@ function ceGridStyle(){
     '.ce-mgn-v{font-size:11px;color:'+PURPLE+'}'+
     /* prev-period realised margin — its OWN full-width row so it never widens the Street cell / breaks the
        column alignment; small + muted so it does not compete with the estimate margins. */
-    '.ce-mprev{grid-column:1/-1;font-size:8.5px;font-weight:700;color:var(--mu);margin-top:1px;line-height:1.2}'+
+    /* prev-period realised margin — its OWN full-width row, set off from the estimate margins by a
+       hairline so it reads as a reference, not a competing number. A small period label ("a year ago"
+       / "prior quarter") makes clear which toggled period it compares against — no bare "prev". */
+    '.ce-mprev{grid-column:1/-1;margin-top:3px;padding-top:3px;border-top:1px dotted var(--bdr);line-height:1.2}'+
+    '.ce-mprev-l{font-size:7.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--mu);margin-right:5px}'+
     '.ce-mmc{display:none}'+
     '.ce-evwrap[data-mm="on"] .ce-mmc{display:flex}'+
+    '.ce-evwrap[data-g="off"] .ce-mprev{display:none}'+   /* no toggled period → no prev line, one less thing on the card */
     '.ce-gchip{font-size:10px;font-weight:800;margin-left:2px}'+
-    '.ce-mm{display:none}'+'.ce-mm-b{display:none;font-size:9px;font-weight:700;color:var(--mu);white-space:nowrap}'+'.ce-evwrap[data-mm="on"][data-g="yoy"] .ce-mm-b.yoy{display:inline}'+'.ce-evwrap[data-mm="on"][data-g="qoq"] .ce-mm-b.qoq{display:inline}'+
+    '.ce-mm{display:none}'+'.ce-mm-b{display:none;font-size:9.5px;font-weight:800;color:var(--navy);white-space:nowrap;align-items:baseline}'+'.ce-evwrap[data-mm="on"][data-g="yoy"] .ce-mm-b.yoy{display:inline-flex}'+'.ce-evwrap[data-mm="on"][data-g="qoq"] .ce-mm-b.qoq{display:inline-flex}'+
     '.ce-evwrap[data-mm="on"] .ce-mm{display:inline}'+
     '.ce-nocons{font-size:8.5px;font-weight:800;color:var(--mu);border:1px solid var(--bdr);border-radius:999px;padding:1px 6px;margin-left:6px}'+
     /* the growth lens: CSS-driven, so switching does not re-render the grid */
@@ -1738,7 +1777,7 @@ function ceWatchBody(c){
      '.aed-ed{flex:none;font:inherit;font-size:10px;font-weight:800;border:1px solid var(--bdr);background:var(--w);color:var(--mu);width:20px;height:20px;border-radius:6px;cursor:pointer;line-height:1}'+
      '.aed-ed:hover{border-color:'+BRAND2+';color:'+BRAND2+'}'+
      '.aed-mini{font:inherit;font-size:10.5px;font-weight:800;border:1px solid '+BRAND2+';background:'+BRAND2+';color:#fff;padding:6px 12px;border-radius:8px;cursor:pointer}'+
-     '.aed-mini.alt{background:var(--w);color:'+BRAND2+'}.aed-mini:hover{filter:brightness(1.06)}'+
+     '.aed-mini.alt{background:var(--w);color:'+BRAND2+'}.aed-mini{transition:filter .14s,transform .06s}.aed-mini:hover{filter:brightness(1.08)}.aed-mini:active{transform:translateY(1px)}'+
      '.aed-addnote{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:8px}'+
      '.aed-addnote input{flex:1;min-width:180px;box-sizing:border-box;font:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:8px;padding:6px 9px;background:var(--w);color:var(--navy)}'+
      '.aed-frow{display:flex;gap:8px;align-items:center;margin-top:10px}'+
@@ -2245,6 +2284,8 @@ function cePhaseStyle(){
     '.ce-tp-status{font-size:9px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--mu)}'+
     '.ce-tp-chip.published{border-left-color:'+BLUE+';opacity:.72}'+
     '.ce-tp-chip.published .ce-tp-chip-tag::after{content:" · in Notes";color:'+BLUE+';font-weight:800}'+
+    '.ce-tp-chip.dup{border-left-color:'+RED+';opacity:.72}'+
+    '.ce-tp-chip.dup .ce-tp-chip-tag::after{content:" · already filed";color:'+RED+';font-weight:800}'+
     '.ce-tp-staged{display:flex;flex-direction:column;gap:6px}'+
     '.ce-tp-empty{font-size:10px;color:var(--mu);font-weight:600;font-style:italic}'+
     '.ce-tp-chip{display:flex;align-items:flex-start;gap:8px;font-size:10.5px;font-weight:500;color:var(--navy);line-height:1.5;background:#fff;border:1px solid var(--bdr);border-left:3px solid #0a8f4c;border-radius:9px;padding:7px 9px}'+
@@ -2740,12 +2781,14 @@ function wireCeTrack(root){
     if(publishBtn) publishBtn.onclick=function(){
       var chips=[].slice.call(staged.querySelectorAll('.ce-tp-chip')).filter(function(c){ return !c.classList.contains('published'); });
       if(!chips.length){ setStatus('Nothing new to publish.'); return; }
+      var filed=0, dup=0;
       chips.forEach(function(chip){
-        cePublishNoteToRecord(chip.dataset.seg||'', chip.dataset.sub||chip.dataset.seg||'', chip.dataset.text||'', qLabel);
-        chip.classList.add('published');
+        var res=cePublishNoteToRecord(chip.dataset.seg||'', chip.dataset.sub||chip.dataset.seg||'', chip.dataset.text||'', qLabel);
+        if(res && res.dup){ dup++; chip.classList.add('dup'); }   // already in the record — skip, flag the chip
+        else { filed++; chip.classList.add('published'); }
       });
-      amznRerenderRecord(document);   // the theme record lives in the Notes pane; re-render it (and persist)
-      setStatus(chips.length+' filed into the theme record (Notes tab) — saved when signed in');
+      if(filed) amznRerenderRecord(document);   // the theme record lives in the Notes pane; re-render it (and persist)
+      setStatus(filed+' filed into the theme record (Notes tab)'+(dup?' · '+dup+' skipped (already filed)':'')+(filed?' — saved when signed in':''));
     };
     refresh();
   });
@@ -3601,14 +3644,24 @@ function amznFindTheme(key){ var p=String(key||'').split('|'); return AMZN_THEME
 // Propose Notes → Notes: file a staged note into the theme record. Finds (or creates) the
 // segment ▸ sub-theme, then appends the text as an item under the reported quarter's updates —
 // the same shape the ✎ editor writes, so it renders identically in the record above.
+// Duplicate guard for theme-record notes. Two notes collide when they normalise to the SAME plain
+// text (HTML/entities stripped, whitespace collapsed, case-folded) under the same sub-theme + quarter
+// — the real spam / double-click case: the ＋ add-note composer pre-seeds the point's prose, so
+// re-opening it and saving twice, or publishing the same Propose-Notes batch twice, would otherwise
+// file the identical note again. Used by every note-write path so the rule holds everywhere. (§6a-ii.)
+function ceNoteNorm(t){ return ceStripHtml(t).toLowerCase(); }
+function ceNoteDup(items, text){ var n=ceNoteNorm(text); return (items||[]).some(function(it){ return ceNoteNorm(it)===n; }); }
+// Returns {added:true} on success, {added:false, dup:true} when the identical note is already filed.
 function cePublishNoteToRecord(seg, sub, text, q){
-  if(!seg || !sub || !text) return;
+  if(!seg || !sub || !text) return {added:false};
   var ct=amznFindTheme(seg+'|'+sub);
   if(!ct){ ct={ seg:seg, theme:sub, why:'', updates:[], st:{ k:'watch' } }; AMZN_THEMES.push(ct); }
   ct.updates=ct.updates||[];
   var u=ct.updates.filter(function(x){ return x.q===q; })[0];
   if(!u){ u={ q:q, items:[] }; ct.updates.push(u); ct.updates.sort(function(a,z){ return (ceQnum(a.q)||0)-(ceQnum(z.q)||0); }); }
+  if(ceNoteDup(u.items, text)) return {added:false, dup:true};   // already filed here — never duplicate
   u.items.push(text);
+  return {added:true};
 }
 // A hook is OPEN when it has a Tracking since and no Tracking until; CLOSED once an until is set.
 function amznHookOpen(ct){ return !!(ct.st&&ct.st.since) && !ct.trackUntil; }
@@ -3715,6 +3768,10 @@ function amznRenderEditor(root){
       if(!tx) return;
       cur.updates=cur.updates||[];
       var u=cur.updates.filter(function(x){ return x.q===q; })[0];
+      if(u && ceNoteDup(u.items, tx)){   // identical note already filed under this quarter — block + tell the user
+        ceInlinePop(addNote, { title:'This note is already filed under '+q+' — not added again.', confirm:true, ok:'OK' }, function(){});
+        return;
+      }
       if(!u){ u={ q:q, items:[] }; cur.updates.push(u); cur.updates.sort(function(a,z){ return (ceQnum(a.q)||0)-(ceQnum(z.q)||0); }); }
       u.items.push(tx);
       amznRenderEditor(root); amznRerenderRecord(root);

@@ -424,8 +424,7 @@ function renderHoldingsCompareTable(rows, periods, investorKey) {
   var curIdx = periods.length - 1;
   var shared = investorKey === 'summit' ? {} : summitTickerSet();
   var anyShared = false;
-  var html = '<div class="ivd-cmp-wrap"><table class="icard-tbl ivd-cmp-tbl"><thead><tr><th>Ticker</th><th>Company</th>' +
-    '<th class="nr" title="How many of the periods shown this position was held">Qtrs Held</th>';
+  var html = '<div class="ivd-cmp-wrap"><table class="icard-tbl ivd-cmp-tbl"><thead><tr><th>Ticker</th><th>Company</th>';
   periods.forEach(function(p, i) {
     var isCur = i === curIdx;
     html += '<th class="nr' + (isCur ? ' ivd-cmp-current' : '') + '">' + esc(periodLabel(p)) + (isCur ? ' <span class="ivd-cmp-current-tag">Current</span>' : '') + '</th>';
@@ -434,13 +433,11 @@ function renderHoldingsCompareTable(rows, periods, investorKey) {
   html += '<th class="nr" title="The stock\'s YTD return today — not tied to the period shown">Current YTD</th>';
   html += '</tr></thead><tbody>';
   rows.forEach(function(r) {
-    var heldCount = r.cells.filter(function(w) { return w != null; }).length;
     var isShared = !!(r.ticker && shared[r.ticker]);
     if (isShared) anyShared = true;
     html += '<tr data-key="' + esc(r.key) + '"><td><span class="iticker">' + esc(r.ticker || '?') +
       (isShared ? '<span class="ivd-shared-mark" title="Also held by Summit">*</span>' : '') + '</span></td>' +
-      '<td><span class="ico">' + esc(r.companyName) + '</span></td>' +
-      '<td class="nr">' + heldCount + '</td>';
+      '<td><span class="ico">' + esc(r.companyName) + '</span></td>';
     r.cells.forEach(function(w, i) { html += weightCellHtml(w, i === curIdx); });
     if (periods.length > 1) html += '<td class="nr">' + moveBadgeHtml(r.cells[r.cells.length - 2], r.cells[r.cells.length - 1]) + '</td>';
     html += ytdCellHtml(tickerYtd(r.ticker));
@@ -613,7 +610,7 @@ function ivdRamp(t) {
 function renderPieChart(wrapEl, chartRows, curIdx, photoUrl, initials) {
   if (!wrapEl) return;
   var items = chartRows
-    .map(function(r) { return { ticker: r.ticker, isOther: r.isOther, label: ivdRowLabel(r), value: r.cells[curIdx] }; })
+    .map(function(r) { return { ticker: r.ticker, isOther: r.isOther, label: ivdRowLabel(r), value: r.cells[curIdx], prev: curIdx > 0 ? r.cells[curIdx - 1] : null }; })
     .filter(function(it) { return it.value != null && it.value > 0; });
   if (!items.length || typeof Chart === 'undefined') {
     wrapEl.innerHTML = '<div class="im-empty">No holdings on file for this period.</div>';
@@ -668,10 +665,12 @@ function renderPieChart(wrapEl, chartRows, curIdx, photoUrl, initials) {
     var x = arc.x + r * Math.cos(mid);
     var y = arc.y + r * Math.sin(mid);
     var logo = it.isOther ? '' : ivdLogo(it.ticker, 'ivd-pie-logo');
+    var prevTxt = it.prev == null ? 'NEW' : it.prev.toFixed(1) + '%';
+    var moveCls = it.prev == null ? 'new' : (it.value > it.prev ? 'up' : it.value < it.prev ? 'down' : 'flat');
     return '<div class="ivd-pie-label" style="left:' + x.toFixed(1) + 'px;top:' + y.toFixed(1) + 'px">' +
       logo +
       '<div class="ivd-pie-label-txt"><span class="ivd-pie-label-t">' + esc(it.isOther ? it.label : (it.ticker || it.label)) + '</span>' +
-      '<span class="ivd-pie-label-p">' + it.value.toFixed(2) + '%</span></div>' +
+      '<span class="ivd-pie-label-p ivd-pie-label-move ' + moveCls + '">' + prevTxt + ' → ' + it.value.toFixed(1) + '%</span></div>' +
     '</div>';
   }).join('');
 }

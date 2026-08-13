@@ -714,10 +714,10 @@
   align-items: center;
   gap: 4px;
   pointer-events: auto;
-  max-width: 96px;
+  max-width: 112px;
   background: var(--w);
   border-radius: 6px;
-  padding: 1px 3px;
+  padding: 2px 4px;
   z-index: 1;
 }
 
@@ -737,6 +737,10 @@
 }
 
 .ivd-pie-label-p { font-family: 'Inter', monospace; font-size: 9px; color: var(--mu); }
+
+.ivd-pie-label-move.up { color: var(--pos); }
+.ivd-pie-label-move.down { color: var(--neg); }
+.ivd-pie-label-move.new { color: var(--gold2); }
 
 /* ─── Holdings / Resources sub-tabs (mirrors .cotabs/.cotab/.copane) ─── */
 

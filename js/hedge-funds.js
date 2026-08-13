@@ -404,7 +404,7 @@ function renderHoldingsCompareTable(rows, periods) {
   html += '<th class="nr" title="The stock\'s YTD return today — not tied to the period shown">Current YTD</th>';
   html += '</tr></thead><tbody>';
   rows.forEach(function(r) {
-    html += '<tr><td><span class="iticker">' + esc(r.ticker || '?') + '</span></td><td><span class="ico">' + esc(r.companyName) + '</span></td>';
+    html += '<tr data-key="' + esc(r.key) + '"><td><span class="iticker">' + esc(r.ticker || '?') + '</span></td><td><span class="ico">' + esc(r.companyName) + '</span></td>';
     r.cells.forEach(function(w, i) { html += weightCellHtml(w, i === curIdx); });
     if (periods.length > 1) html += '<td class="nr">' + moveBadgeHtml(r.cells[r.cells.length - 2], r.cells[r.cells.length - 1]) + '</td>';
     html += ytdCellHtml(tickerYtd(r.ticker));
@@ -515,15 +515,22 @@ function renderPeriodPicker(allPeriods, pool, refPeriod, mode, count, maxCount) 
   return html;
 }
 
-// ─── Holdings Composition chart ───────────────────────────────
-// A 100%-stacked bar (or area) showing how the portfolio's makeup
-// shifted quarter to quarter — same "selected" periods as the table
-// below it, so the two always agree. Top N holdings get their own
-// band (max 8 — the validated categorical palette's limit); everything
-// else folds into a single "Other" band rather than generating more
-// hues. Colors are assigned per-ticker the first time it's seen and
-// then reused, so a filter/period change never repaints a holding
-// that's still on screen.
+// ─── Holdings Composition — Small Multiples & Treemap ─────────
+// Two views over the same "selected" periods as the table below, kept
+// in sync via one Top-N/Other split (topAndOtherRows). Top N holdings
+// get their own identity (max 8 for Treemap — the validated categorical
+// palette's all-pairs limit for facet/cell forms); everything else folds
+// into a single "Other" bucket rather than generating more hues. Colors
+// are assigned per-ticker the first time it's seen and reused, so a
+// filter/period change never repaints a holding that's still on screen.
+//
+// Small Multiples deliberately does NOT color each panel by ticker: past
+// ~3 slots the palette can't clear its all-pairs CVD floor for forms
+// where any two panels might be compared (facets, small multiples,
+// treemap cells). Identity instead comes from the panel's own ticker
+// label (a single-series chart needs no legend), and color is reserved
+// for the move badges, which reuse the exact classes from the comparison
+// table below so the two stay visually tied together.
 
 var HOLDINGS_CHART_COLORS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948'];
 var HOLDINGS_CHART_OTHER_COLOR = '#898781';
@@ -537,82 +544,311 @@ function tickerChartColor(key) {
   return holdingsChartColorMap[key];
 }
 
-var ivdChartInstance = null;
-function destroyIvdChart() { if (ivdChartInstance) { ivdChartInstance.destroy(); ivdChartInstance = null; } }
-
-function buildHoldingsChartData(rows, periods, topN) {
-  var ranked = rows.map(function(r) {
-    var maxW = 0;
-    r.cells.forEach(function(w) { if (w != null && w > maxW) maxW = w; });
-    return { key: r.ticker || ('~' + r.companyName), ticker: r.ticker, companyName: r.companyName, cells: r.cells, maxW: maxW };
-  }).sort(function(a, b) { return b.maxW - a.maxW; });
-
-  var top = ranked.slice(0, topN);
-  var rest = ranked.slice(topN);
-
-  var datasets = top.map(function(r) {
-    return {
-      label: r.ticker || r.companyName,
-      companyName: r.companyName,
-      data: r.cells.map(function(w) { return w == null ? 0 : w; }),
-      backgroundColor: tickerChartColor(r.key),
-      stack: 'holdings',
-    };
-  });
-  if (rest.length) {
-    var otherData = periods.map(function(p, i) { return +rest.reduce(function(s, r) { return s + (r.cells[i] || 0); }, 0).toFixed(2); });
-    datasets.push({ label: 'Other (' + rest.length + ')', companyName: '', data: otherData, backgroundColor: HOLDINGS_CHART_OTHER_COLOR, stack: 'holdings' });
-  }
-  return { labels: periods.map(periodLabel), datasets: datasets };
+// Perceived-luminance (YIQ) pick of dark navy vs white label text for a
+// given tile fill color — the categorical palette spans both very light
+// (yellow, magenta) and very dark (blue, violet) hues, so no single text
+// color reads on all of them.
+function tmTextColor(hex) {
+  var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+  var yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  return yiq >= 150 ? '#1E2733' : '#fff';
 }
 
-function renderHoldingsChart(canvasEl, rows, periods, state) {
-  destroyIvdChart();
-  if (!canvasEl || typeof Chart === 'undefined' || !rows.length) return;
-  var chartData = buildHoldingsChartData(rows, periods, state.chartTopN);
-  var isArea = state.chartMode === 'area';
-  var datasets = chartData.datasets.map(function(ds) {
-    var base = { label: ds.label, data: ds.data, stack: ds.stack, backgroundColor: ds.backgroundColor };
-    return isArea
-      ? Object.assign(base, { fill: true, borderColor: '#fff', borderWidth: 1, pointRadius: 0, pointHoverRadius: 4, tension: 0.15 })
-      : Object.assign(base, { borderColor: '#fff', borderWidth: 2 });
+var ivdSmCharts = [];
+function destroyIvdChart() { ivdSmCharts.forEach(function(c) { c.destroy(); }); ivdSmCharts = []; }
+
+var IVD_TOPN_BOUNDS = { treemap: { min: 2, max: 8 }, multiples: { min: 3, max: 12 } };
+
+// Aggregates every row past the Top-N cut into one "Other" pseudo-row,
+// per period, and re-sorts everything (top rows + Other) by current-period
+// weight so Other lands wherever its combined size actually places it,
+// rather than always trailing.
+function topAndOtherRows(rows, periods, topN) {
+  var top = rows.slice(0, topN);
+  var rest = rows.slice(topN);
+  var out = top.slice();
+  if (rest.length) {
+    var cells = periods.map(function(_, i) {
+      var sum = 0, any = false;
+      rest.forEach(function(r) { if (r.cells[i] != null) { sum += r.cells[i]; any = true; } });
+      return any ? +sum.toFixed(2) : null;
+    });
+    out.push({ key: '__other__', ticker: '', companyName: 'Other', isOther: true, restCount: rest.length, cells: cells });
+  }
+  var curIdx = periods.length - 1;
+  out.sort(function(a, b) {
+    var va = a.cells[curIdx], vb = b.cells[curIdx];
+    return (vb == null ? -1 : vb) - (va == null ? -1 : va);
   });
-  ivdChartInstance = new Chart(canvasEl.getContext('2d'), {
-    type: isArea ? 'line' : 'bar',
-    data: { labels: chartData.labels, datasets: datasets },
+  return out;
+}
+
+// ─── Lines (single overlaid multi-line chart) ─────────────────
+// One Chart.js line per ticker, all in the same plot, each in its real
+// ticker color (same palette/assignment as the Treemap and the table
+// below) so the chart reads immediately without any interaction.
+// Hovering anywhere over the chart shows a single tooltip listing every
+// held ticker's value for that period (index mode — no need to land the
+// cursor precisely on a thin line). Hovering or clicking the legend chip
+// below, or the matching row in the comparison table, additionally
+// pushes that one line forward (thicker, full opacity) while the rest
+// recede to a translucent version of their own color — never gray —
+// so identity is never lost, just de-emphasized.
+
+function abbrevPeriodLabel(p) { return p.quarter ? ('Q' + p.quarter + '’' + String(p.year).slice(2)) : (String(p.year).slice(2) + '’L'); }
+
+function hexToRgba(hex, alpha) {
+  var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+  return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+}
+
+function ivdMlLegendItemHtml(row, curIdx) {
+  var curV = row.cells[curIdx];
+  var prevV = curIdx > 0 ? row.cells[curIdx - 1] : null;
+  var badge = moveBadgeHtml(prevV, curV);
+  var name = row.isOther ? ('Other (' + row.restCount + ')') : (row.ticker || row.companyName);
+  var color = row.isOther ? HOLDINGS_CHART_OTHER_COLOR : tickerChartColor(row.key);
+  var curTxt = curV == null ? 'SOLD' : curV.toFixed(2) + '%';
+  return '<button type="button" class="ivd-ml-legend-item" title="' + esc(row.companyName || name) + '">' +
+    '<span class="sbl-d" style="background:' + color + '"></span>' +
+    '<span class="ivd-ml-legend-tick">' + esc(name) + '</span>' +
+    '<span class="ivd-ml-legend-pct' + (curV == null ? ' na' : '') + '">' + curTxt + '</span>' +
+    (badge || '') +
+  '</button>';
+}
+
+function renderMultiLineChart(el, chartRows, periods, curIdx) {
+  var wrapEl = el.querySelector('.ivd-ml-wrap');
+  var legendEl = el.querySelector('.ivd-ml-legend');
+  if (!wrapEl || !legendEl) return;
+  if (!chartRows.length || typeof Chart === 'undefined') {
+    wrapEl.innerHTML = '<div class="im-empty">No holdings to chart for this selection.</div>';
+    legendEl.innerHTML = '';
+    return;
+  }
+
+  wrapEl.innerHTML = '<canvas class="ivd-ml-canvas"></canvas>';
+  var canvas = wrapEl.querySelector('.ivd-ml-canvas');
+  var labels = periods.map(abbrevPeriodLabel);
+  var colors = chartRows.map(function(row) { return row.isOther ? HOLDINGS_CHART_OTHER_COLOR : tickerChartColor(row.key); });
+
+  var datasets = chartRows.map(function(row, i) {
+    var color = colors[i];
+    return {
+      label: row.isOther ? ('Other (' + row.restCount + ')') : (row.ticker || row.companyName),
+      data: row.cells,
+      borderColor: color,
+      borderWidth: 2,
+      spanGaps: true,
+      pointRadius: row.cells.map(function(v, i2) {
+        if (v == null) return 0;
+        if (i2 === curIdx) return 4;
+        var edge = (i2 > 0 && row.cells[i2 - 1] == null) || (i2 < row.cells.length - 1 && row.cells[i2 + 1] == null);
+        return edge ? 3.5 : 2;
+      }),
+      pointBackgroundColor: row.cells.map(function(v, i2) {
+        var edge = (i2 > 0 && row.cells[i2 - 1] == null) || (i2 < row.cells.length - 1 && row.cells[i2 + 1] == null);
+        return edge ? '#fff' : color;
+      }),
+      pointBorderColor: color,
+      pointBorderWidth: row.cells.map(function(v, i2) {
+        var edge = (i2 > 0 && row.cells[i2 - 1] == null) || (i2 < row.cells.length - 1 && row.cells[i2 + 1] == null);
+        return edge ? 2 : 0;
+      }),
+      pointHoverRadius: 5,
+      tension: 0.2,
+      fill: false,
+      segment: { borderDash: function(ctx) { return (ctx.p1DataIndex - ctx.p0DataIndex > 1) ? [3, 3] : undefined; } },
+    };
+  });
+
+  var pinnedKey = null;
+
+  function applyActive(key) {
+    chart.data.datasets.forEach(function(ds, i) {
+      var row = chartRows[i];
+      if (!key) { ds.borderColor = colors[i]; ds.borderWidth = 2; }
+      else if (row.key === key) { ds.borderColor = colors[i]; ds.borderWidth = 3; }
+      else { ds.borderColor = hexToRgba(colors[i], .2); ds.borderWidth = 1.5; }
+    });
+    chart.update('none');
+    legendItems.forEach(function(item, i) { item.classList.toggle('active', chartRows[i].key === key); });
+    tableRows.forEach(function(tr) { tr.classList.toggle('ivd-cmp-row-active', tr.getAttribute('data-key') === key); });
+  }
+
+  function setPinned(key) {
+    pinnedKey = (pinnedKey === key) ? null : key;
+    applyActive(pinnedKey);
+  }
+
+  var chart = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: { labels: labels, datasets: datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, padding: 10, font: { size: 10 }, color: '#1E2733' } },
+        legend: { display: false },
         tooltip: {
           mode: 'index', intersect: false,
-          filter: function(item) { return item.raw > 0; },
+          filter: function(item) { return item.raw != null; },
+          itemSort: function(a, b) { return b.raw - a.raw; },
           callbacks: { label: function(c) { return c.dataset.label + ': ' + c.raw.toFixed(2) + '%'; } },
         },
       },
       scales: {
-        x: { stacked: true, grid: { display: false }, ticks: { color: '#8A93A0', font: { size: 10 } } },
-        y: { stacked: true, min: 0, max: 100, grid: { color: '#EEF2F7' }, ticks: { color: '#8A93A0', font: { size: 10 }, callback: function(v) { return v + '%'; } } },
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#8A93A0' } },
+        y: { beginAtZero: true, grid: { color: '#EEF2F7' }, ticks: { font: { size: 10 }, color: '#8A93A0', callback: function(v) { return v + '%'; } } },
       },
     },
   });
+  ivdSmCharts.push(chart);
+
+  legendEl.innerHTML = chartRows.map(function(row) { return ivdMlLegendItemHtml(row, curIdx); }).join('');
+  var legendItems = legendEl.querySelectorAll('.ivd-ml-legend-item');
+  var highlightable = {};
+  chartRows.forEach(function(r) { highlightable[r.key] = true; });
+  var tableRows = el.querySelectorAll('.ivd-cmp-tbl tbody tr[data-key]');
+
+  legendItems.forEach(function(item, i) {
+    var key = chartRows[i].key;
+    item.addEventListener('mouseenter', function() { if (!pinnedKey) applyActive(key); });
+    item.addEventListener('mouseleave', function() { if (!pinnedKey) applyActive(null); });
+    item.addEventListener('click', function() { setPinned(key); });
+  });
+  tableRows.forEach(function(tr) {
+    var key = tr.getAttribute('data-key');
+    if (!highlightable[key]) return;
+    tr.classList.add('ivd-cmp-row-hoverable');
+    tr.addEventListener('mouseenter', function() { if (!pinnedKey) applyActive(key); });
+    tr.addEventListener('mouseleave', function() { if (!pinnedKey) applyActive(null); });
+    tr.addEventListener('click', function() { setPinned(key); });
+  });
 }
 
-function renderHoldingsChartSection(state) {
+// ─── Treemap ────────────────────────────────────────────────────
+// Classic squarified treemap (Bruls/Huizing/van Wijk): builds one row at
+// a time along the container's shorter side, adding items to the row as
+// long as doing so improves (lowers) the worst aspect ratio in that row.
+
+function squarify(items, x, y, w, h) {
+  var results = [];
+  var remaining = items.slice();
+  var rx = x, ry = y, rw = w, rh = h;
+  function rowWorst(row, len) {
+    var sum = 0, rmax = -Infinity, rmin = Infinity;
+    row.forEach(function(it) { sum += it.value; if (it.value > rmax) rmax = it.value; if (it.value < rmin) rmin = it.value; });
+    if (sum <= 0 || len <= 0) return Infinity;
+    return Math.max((len * len * rmax) / (sum * sum), (sum * sum) / (len * len * rmin));
+  }
+  while (remaining.length) {
+    var len = Math.min(rw, rh);
+    var row = [remaining[0]];
+    var i = 1;
+    while (i < remaining.length) {
+      var testRow = row.concat([remaining[i]]);
+      if (rowWorst(testRow, len) <= rowWorst(row, len)) { row = testRow; i++; }
+      else break;
+    }
+    remaining = remaining.slice(row.length);
+    var rowSum = row.reduce(function(s, it) { return s + it.value; }, 0);
+    if (rw >= rh) {
+      var colW = rh > 0 ? rowSum / rh : 0;
+      var cy = ry;
+      row.forEach(function(it) {
+        var ih = colW > 0 ? it.value / colW : 0;
+        results.push({ item: it, x: rx, y: cy, w: colW, h: ih });
+        cy += ih;
+      });
+      rx += colW; rw -= colW;
+    } else {
+      var rowH = rw > 0 ? rowSum / rw : 0;
+      var cx = rx;
+      row.forEach(function(it) {
+        var iw = rowH > 0 ? it.value / rowH : 0;
+        results.push({ item: it, x: cx, y: ry, w: iw, h: rowH });
+        cx += iw;
+      });
+      ry += rowH; rh -= rowH;
+    }
+  }
+  return results;
+}
+
+var ivdTmTip = null;
+function ivdTmTipShow(text, e) {
+  ivdTmTip = document.createElement('div');
+  ivdTmTip.className = 'ivd-tm-tip';
+  ivdTmTip.textContent = text;
+  document.body.appendChild(ivdTmTip);
+  ivdTmTipMove(e);
+}
+function ivdTmTipMove(e) { if (ivdTmTip) { ivdTmTip.style.left = (e.clientX + 14) + 'px'; ivdTmTip.style.top = (e.clientY + 14) + 'px'; } }
+function ivdTmTipHide() { if (ivdTmTip) { ivdTmTip.remove(); ivdTmTip = null; } }
+
+function renderTreemap(wrapEl, legendEl, chartRows, curIdx) {
+  if (!wrapEl) return;
+  ivdTmTipHide();
+  var items = chartRows
+    .map(function(r) { return { key: r.key, label: r.isOther ? ('Other (' + r.restCount + ')') : (r.ticker || r.companyName), value: r.cells[curIdx], isOther: r.isOther }; })
+    .filter(function(it) { return it.value != null && it.value > 0; })
+    .sort(function(a, b) { return b.value - a.value; });
+
+  if (!items.length) {
+    wrapEl.innerHTML = '<div class="im-empty">No holdings on file for this period.</div>';
+    if (legendEl) legendEl.innerHTML = '';
+    return;
+  }
+
+  var W = wrapEl.clientWidth || 600;
+  var H = wrapEl.clientHeight || 340;
+  var total = items.reduce(function(s, it) { return s + it.value; }, 0);
+  var scale = total > 0 ? (W * H) / total : 0;
+  var scaledItems = items.map(function(it) { return { key: it.key, value: it.value * scale, raw: it }; });
+  var rects = squarify(scaledItems, 0, 0, W, H);
+
+  wrapEl.innerHTML = rects.map(function(r) {
+    var it = r.item.raw;
+    var color = it.isOther ? HOLDINGS_CHART_OTHER_COLOR : tickerChartColor(it.key);
+    var txt = tmTextColor(color);
+    var pctTxt = it.value.toFixed(1) + '%';
+    var showTicker = r.w >= 34 && r.h >= 20;
+    var showPct = r.w >= 56 && r.h >= 34;
+    var inner = '';
+    if (showTicker) inner += '<div class="ivd-tm-ticker" style="color:' + txt + '">' + esc(it.label) + '</div>';
+    if (showPct) inner += '<div class="ivd-tm-pct" style="color:' + txt + '">' + pctTxt + '</div>';
+    return '<div class="ivd-tm-cell" data-tip="' + esc(it.label + ' — ' + pctTxt) + '" style="left:' + r.x.toFixed(1) + 'px;top:' + r.y.toFixed(1) + 'px;width:' + r.w.toFixed(1) + 'px;height:' + r.h.toFixed(1) + 'px;background:' + color + '">' + inner + '</div>';
+  }).join('');
+
+  wrapEl.querySelectorAll('.ivd-tm-cell').forEach(function(cell) {
+    cell.addEventListener('mouseenter', function(e) { ivdTmTipShow(cell.getAttribute('data-tip'), e); });
+    cell.addEventListener('mousemove', ivdTmTipMove);
+    cell.addEventListener('mouseleave', ivdTmTipHide);
+  });
+
+  if (legendEl) {
+    legendEl.innerHTML = items.map(function(it) {
+      var color = it.isOther ? HOLDINGS_CHART_OTHER_COLOR : tickerChartColor(it.key);
+      return '<span class="sbl-i"><span class="sbl-d" style="background:' + color + '"></span>' + esc(it.label) + '</span>';
+    }).join('');
+  }
+}
+
+function renderHoldingsChartSection(state, topNBounds) {
   var visible = state.chartVisible !== false;
+  var isTreemap = state.chartMode === 'treemap';
   var html = '<div class="ivd-chart-hdr">' +
     '<div class="im-section-lbl" style="margin-bottom:0">Holdings Composition</div>' +
     '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">';
   if (visible) {
     html += '<div class="sb-toggle ivd-chart-format-toggle">' +
-        '<button type="button" class="sb-tbtn' + (state.chartMode !== 'area' ? ' active' : '') + '" data-chart-mode="bar">Bars</button>' +
-        '<button type="button" class="sb-tbtn' + (state.chartMode === 'area' ? ' active' : '') + '" data-chart-mode="area">Area</button>' +
+        '<button type="button" class="sb-tbtn' + (!isTreemap ? ' active' : '') + '" data-chart-mode="multiples">Lines</button>' +
+        '<button type="button" class="sb-tbtn' + (isTreemap ? ' active' : '') + '" data-chart-mode="treemap">Treemap</button>' +
       '</div>' +
       '<div class="ivd-pp-stepper">' +
-        '<button type="button" class="ivd-step-btn ivd-chart-n-minus"' + (state.chartTopN <= 2 ? ' disabled' : '') + ' title="Fewer holdings">&minus;</button>' +
+        '<button type="button" class="ivd-step-btn ivd-chart-n-minus"' + (state.chartTopN <= topNBounds.min ? ' disabled' : '') + ' title="Fewer holdings">&minus;</button>' +
         '<span class="ivd-pp-count">Top ' + state.chartTopN + '</span>' +
-        '<button type="button" class="ivd-step-btn ivd-chart-n-plus"' + (state.chartTopN >= 8 ? ' disabled' : '') + ' title="More holdings">+</button>' +
+        '<button type="button" class="ivd-step-btn ivd-chart-n-plus"' + (state.chartTopN >= topNBounds.max ? ' disabled' : '') + ' title="More holdings">+</button>' +
       '</div>';
   }
   html += '<label class="hf-chart-toggle" title="Show or hide the chart">' +
@@ -621,7 +857,11 @@ function renderHoldingsChartSection(state) {
       '<span class="hf-chart-toggle-txt">Chart</span>' +
     '</label>' +
     '</div></div>';
-  if (visible) html += '<div class="ivd-chart-wrap"><canvas class="ivd-chart-canvas"></canvas></div>';
+  if (visible) {
+    html += isTreemap
+      ? '<div class="ivd-tm-wrap"></div><div class="sbl ivd-tm-legend"></div>'
+      : '<div class="ivd-ml-wrap"></div><div class="ivd-ml-legend"></div>';
+  }
   return html;
 }
 
@@ -642,9 +882,13 @@ function renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, st
   var rows = computeHoldingsComparison(holdings, investorKey, selected);
   var curIdx = selected.length - 1;
 
+  var topNBounds = IVD_TOPN_BOUNDS[state.chartMode === 'treemap' ? 'treemap' : 'multiples'];
+  if (state.chartTopN > topNBounds.max) state.chartTopN = topNBounds.max;
+  if (state.chartTopN < topNBounds.min) state.chartTopN = topNBounds.min;
+
   var html = renderStatStrip(holdings, investorKey, selected[curIdx], rows, curIdx);
   html += renderPeriodPicker(allPeriods, pool, state.refPeriod, state.mode, state.count, maxCount);
-  html += renderHoldingsChartSection(state);
+  html += renderHoldingsChartSection(state, topNBounds);
   html += renderHoldingsCompareTable(rows, selected);
   destroyIvdChart();
   el.innerHTML = html;
@@ -675,11 +919,18 @@ function renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, st
     btn.addEventListener('click', function() { state.chartMode = btn.getAttribute('data-chart-mode'); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
   });
   var nMinus = el.querySelector('.ivd-chart-n-minus');
-  if (nMinus) nMinus.addEventListener('click', function() { state.chartTopN = Math.max(2, state.chartTopN - 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
+  if (nMinus) nMinus.addEventListener('click', function() { state.chartTopN = Math.max(topNBounds.min, state.chartTopN - 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
   var nPlus = el.querySelector('.ivd-chart-n-plus');
-  if (nPlus) nPlus.addEventListener('click', function() { state.chartTopN = Math.min(8, state.chartTopN + 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
-  var chartCanvas = el.querySelector('.ivd-chart-canvas');
-  if (chartCanvas) renderHoldingsChart(chartCanvas, rows, selected, state);
+  if (nPlus) nPlus.addEventListener('click', function() { state.chartTopN = Math.min(topNBounds.max, state.chartTopN + 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
+
+  if (state.chartVisible !== false) {
+    var chartRows = topAndOtherRows(rows, selected, state.chartTopN);
+    if (state.chartMode === 'treemap') {
+      renderTreemap(el.querySelector('.ivd-tm-wrap'), el.querySelector('.ivd-tm-legend'), chartRows, curIdx);
+    } else {
+      renderMultiLineChart(el, chartRows, selected, curIdx);
+    }
+  }
 
   if (sumEl) sumEl.innerHTML = selected.length >= 2 ? generateMovesSummary(rows, selected)
     : '<div class="im-empty">Add another period to see period-over-period changes.</div>';
@@ -696,7 +947,7 @@ function renderHoldingsSection(rootId, investorKey, holdings) {
     var sharedEl = document.getElementById(rootId + '_shared'); if (sharedEl) sharedEl.innerHTML = '';
     return;
   }
-  var state = { refPeriod: allPeriods[allPeriods.length - 1], mode: 'quarterly', count: Math.min(HOLDINGS_DEFAULT_COUNT, allPeriods.length), chartVisible: true, chartMode: 'bar', chartTopN: 6 };
+  var state = { refPeriod: allPeriods[allPeriods.length - 1], mode: 'quarterly', count: Math.min(HOLDINGS_DEFAULT_COUNT, allPeriods.length), chartVisible: true, chartMode: 'multiples', chartTopN: 8 };
   renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state);
 }
 

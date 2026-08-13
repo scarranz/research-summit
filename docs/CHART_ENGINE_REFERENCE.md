@@ -18,6 +18,8 @@ piece. Everything after §0 is the detail behind those calls.
 
 Written Aug 11, 2026 on `feat/results-estimates-v2` (merged as PR #83). Completed Aug 12, 2026 —
 the summary columns, the brush internals, the slider wiring and the two invariants they imply.
+Aug 13, 2026 — **§0.7, the path-3 kit**: the engine exports no helpers, so what a bespoke canvas
+gets from global CSS, what it copies, and a skeleton that passes the §0.5 checklist.
 
 ---
 
@@ -35,11 +37,12 @@ per tab. Come back here for each chart you end up building.
 |---|---|---|
 | a **metric over time, against expectations** — actuals, our model, the Street, guidance | **Reuse the engine.** Write a dataset, not a canvas | `CHART_TOOLKIT.md` §8 + `RESULTS_CONVENTIONS.md` |
 | a **snapshot axis** — how a forecast moved across model saves | Reuse the engine (blocks C / D / E) | §6, §7, §8 of this file |
-| **anything else** — waterfall, choropleth, scatter, network, org chart, bridge | **You write the canvas.** The engine has nothing to plot for you | §0.2 below, then §0.5 |
+| **anything else** — waterfall, choropleth, scatter, network, org chart, bridge | **You write the canvas.** The engine has nothing to plot for you | §0.2 below, then **§0.7 for the kit**, then §0.5 |
 
 Path 3 is the common case outside Results (TBBB's sensitivity matrix, the AMZN margin bridge, the
 robotics supply map). **The rules in §0.2 still apply to it.** They are not engine features — they
-are what makes twelve charts built by five people read as one product.
+are what makes twelve charts built by five people read as one product. §0.7 is how you meet them
+without the engine: what is already global, what you copy, and what you write.
 
 ### 0.2 The six non-negotiables
 
@@ -294,6 +297,200 @@ not meet §0.2 yet. That is expected.
 * **Never silently restyle a chart someone else built** while doing something else — an unexplained
   visual diff in an unrelated PR is how a regression ships unnoticed.
 * When you do upgrade one, run the §0.5 checklist against it as if it were new.
+
+### 0.7 Path 3 — your own canvas: what exists, what you copy, what you write
+
+§0.2 tells you to call `rsAttachBrush`, `rsFmt`, `colCells`. **You cannot.** `js/results.js` exports
+exactly five names, and none of them is a helper:
+
+```js
+export function getResultsData(ticker)      // :57    — the dataset, trimmed
+export function resultsHtml(ticker)         // :702   — the whole Results pane
+export function resultsEvoHtml(ticker)      // :1609  — the whole Estimates pane
+export function initResults(wrap, ticker)   // :3378
+export function initResultsEvo(ticker)      // :3956
+```
+
+Everything else is module-private. So path 3 is not "import the engine" — it is three separate
+answers, and the first one is much better news than it sounds.
+
+#### The visual language is already global. You write no chart CSS.
+
+`css/results.css` is loaded unconditionally in `index.html:27`, beside `base.css` and `shared.css`.
+**Every `rs-*` class works in any tab of the portal** — Companies, Industry, Team, a bespoke Deep
+Dive canvas. You are not borrowing Results' stylesheet; it is part of the portal's baseline.
+
+| You need | The markup | Gives you |
+|---|---|---|
+| the table dropdown (rule 3) | `.rs-collap` › `.rs-collap-h` (+ `.rs-collap-ic`, `.rs-collap-sub`) › `.rs-collap-b` | the framed header bar, caret, hover, the right-aligned summary text |
+| legend chips (rule 2) | `.rs-leg`, `.rs-leg.off` + `.ave-leg-act` (swatch) / `.rs-leg-line` (line) / `.rs-leg-dash` (dashed) | pill, strike-through when off, a swatch shaped like the mark |
+| the table itself | `.rs-tablewrap` › `.rs-ft-cap` + `.rs-ft-scroll` › `table.rs-ft` | Fiscal-style sheet: sticky header, tabular numerals, row/column crosshair |
+| inside that table | `.rs-ft-h` (sticky first col) · `.rs-ft-este` (shaded forward col) · `.rs-ft-e` (the `E` badge) · `.rs-ft-s` (sticky summary col) · `.rs-ft-nil` · `.rs-ft-dim` · rows `.rs-ft-main` / `.rs-ft-sub` / `.rs-ft-nb` · `.colhl` | rule 5 for free |
+| the zoom rectangle (rule 1) | `.rs-brush` | required by the brush you copy below |
+| a loud absence (rule 6) | `.rs-noguide` | the amber badge |
+| the §0.4 control row | `.rs-block-modes` (left/right split) · `.rs-modes` · `.rs-view` / `.rs-view.active` · `.rs-quick` / `.rs-preset` | the layout contract, already built |
+
+⚠ **Do not reach for `ov-collap`.** The overview modules' collapsible has **no rule in `css/`** — it
+is injected inline by `js/overviews/uber.js`, so it only exists on a page that module happened to
+build. `rs-collap` is the portable one. (The comment at `css/results.css:99` records exactly this.)
+
+#### What you copy verbatim
+
+| Copy | From | Lines | Internal deps | For |
+|---|---|---|---|---|
+| `rsAttachBrush` | `js/results.js:1217–1295` | 79 | **none** — it calls nothing else in the module | rule 1, entire |
+| `esc` | `js/results.js:209` | 1 | none | every interpolated string, always |
+| `rsFwdZone` + `rsRR` | `js/results.js:148–195` | ~48 | each other | rule 5 — the shaded forecast zone |
+| the palette | `js/results.js:141–145`, `196`, `200` | 7 | none | below |
+
+`rsFwdZone` is a **local** Chart.js plugin, not a registered one: pass it in the chart's
+`plugins: [rsFwdZone]` array and give it `options.plugins.rsFwdZone = { from: firstForwardIndex }`.
+
+```
+RS_ACT    rgba(30,39,51,0.92)     navy   — the reported / actual series
+RS_SUMMIT rgba(37,99,235,0.85)    blue   — our model
+RS_CONS   rgba(124,134,148,0.85)  gray   — the Street
+RS_GUIDE  rgba(62,90,130,0.18)    steel  — a guidance band
+RS_FWD    #2563EB                 blue   — the forward / estimate accent
+RS_GREEN  #1E9E62  ·  RS_RED  #C0392B    — beat / miss
+EVO_RAMP  ['#1B3F94','#2563EB','#5E8BEC','#93B1F0']  — ordinal, darkest = nearest year
+```
+
+**These colours are semantic, not decorative.** Navy is what actually happened, blue is us, gray is
+the Street — across every chart in the portal. Repainting "actual" in your own chart costs a reader
+more than it costs you. For categories the palette does not cover (a scatter, a map, a network),
+use the `dataviz` skill's palette and validate it the way `EVO_RAMP` was.
+
+**Do not copy `rsFmt`.** It is bound to the dataset's metric object (`m.unit`, `m.cur`) and drags
+`rsCur` and the whole currency convention with it. Write three lines for your own units — but keep
+the contract: no bare numbers, `pp` for a difference between percentages, neutral below ±0.05.
+
+#### What you write yourself — it is about twenty lines
+
+1. **The chips, and the one predicate.** Rule 2's whole weight is that the *same* function answers
+   "is this series drawn" for the chart, the table and every total. In the engine that is
+   `rsEvoVisible` (§7). In yours it is a two-line `vis(k)` — the point is that there is exactly one.
+2. **The collapsible toggle.** Eight lines, `js/results.js:3161–3169`, delegated — but bound to
+   **your root, not `document`** (§12, invariant 2). Copy the markup test *and* the caret test from
+   the same block (§9.13).
+3. **Honouring `st.yr`.** The brush hands you a range; nothing applies it for you. And drop it to
+   `null` on every control that changes the axis units, or a `$B` range crops a `%` axis to nothing.
+
+#### A skeleton that passes §0.5
+
+```js
+// js/overviews/amzn-bridge.js — a bespoke canvas meeting §0.2 without the engine.
+// Copied from js/results.js: esc (:209), rsAttachBrush (:1217–1295), rsFwdZone+rsRR (:148–195).
+
+var C_ACT = 'rgba(30,39,51,0.92)', C_EST = '#2563EB';
+var SER = [{ k: 'act', label: 'Reported', color: C_ACT },
+           { k: 'est', label: 'Plan',     color: C_EST }];
+var D = { labels: ['1Q25','2Q25','3Q25','4Q25'],
+          act: [12.1, 14.3, null, null], est: [12.5, 13.8, 15.1, 16.0] };
+
+var st = { hidden: {}, yr: null, tbl: false, chart: null };
+function vis(k){ return !st.hidden[k]; }                       // rule 2 — the ONE predicate
+function fmt(v){ return v == null ? '—' : '$' + v.toFixed(1) + 'B'; }   // rule 5 — never bare
+function firstFwd(){ for (var i = 0; i < D.act.length; i++) if (D.act[i] == null) return i; return -1; }
+
+function chips(){
+  return SER.map(function(s){
+    return '<button type="button" class="rs-leg' + (vis(s.k) ? '' : ' off') + '" data-blg="' + s.k + '">' +
+      '<span class="rs-leg-line" style="background:' + s.color + '"></span>' + esc(s.label) + '</button>';
+  }).join('');
+}
+function head(){                                               // rule 3 — the header is generated
+  var open = st.tbl === true, n = SER.filter(function(s){ return vis(s.k); }).length;
+  return '<span class="rs-collap-ic">' + (open ? '▾' : '▸') + '</span>Period detail' +
+    '<span class="rs-collap-sub">' + (open ? 'hide' : 'show') + ' · ' +
+    n + ' series, ' + D.labels.length + ' periods</span>';
+}
+function table(){
+  var est = firstFwd();
+  var h = '<div class="rs-ft-cap">$ in billions · <span class="rs-ft-e">E</span> = estimate</div>' +
+    '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h">Series</th>';
+  D.labels.forEach(function(l, i){
+    var e = est >= 0 && i >= est;
+    h += '<th class="' + (e ? 'rs-ft-este' : '') + '">' + esc(l) + (e ? ' <span class="rs-ft-e">E</span>' : '') + '</th>';
+  });
+  h += '</tr></thead><tbody>';
+  SER.filter(function(s){ return vis(s.k); }).forEach(function(s){     // rule 2 — the SAME predicate
+    h += '<tr class="rs-ft-main"><td class="rs-ft-h">' + esc(s.label) + '</td>';
+    D[s.k].forEach(function(v, i){
+      var e = est >= 0 && i >= est;
+      h += '<td class="' + (e ? 'rs-ft-este' : '') + (v == null ? ' rs-ft-nil' : '') + '">' + fmt(v) + '</td>';
+    });
+    h += '</tr>';
+  });
+  return h + '</tbody></table></div>';
+}
+
+export function bridgeHtml(){
+  if (!D.labels.length) return '';                             // rule 6 — nothing, never broken
+  return '<div class="rs-block" id="brg">' +
+    '<div id="brgLeg">' + chips() + '</div>' +
+    '<div style="position:relative"><canvas id="brgCv" height="280"></canvas></div>' +
+    '<div class="rs-collap">' +
+      '<button type="button" class="rs-collap-h" data-brgtblb="1">' + head() + '</button>' +
+      '<div class="rs-collap-b" id="brgTblBody"' + (st.tbl === true ? '' : ' hidden') + '>' +
+        '<div class="rs-tablewrap" id="brgTbl"></div>' +
+      '</div></div></div>';
+}
+
+function render(root){
+  var cv = root.querySelector('#brgCv');          // scoped to the pane (§12, invariant 2)
+  root.querySelector('#brgLeg').innerHTML = chips();
+  if (st.chart) st.chart.destroy();               // invariant 4 — or "Canvas is already in use"
+  st.chart = new Chart(cv.getContext('2d'), {
+    type: 'bar',
+    data: { labels: D.labels, datasets: SER.filter(function(s){ return vis(s.k); }).map(function(s){
+      return { label: s.label, data: D[s.k], backgroundColor: s.color }; }) },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false },                   // the chips ARE the legend
+                 rsFwdZone: { from: firstFwd() } },            // rule 5
+      scales: { y: { position: 'right',                        // §0.4 — axes on the right
+                     min: st.yr ? st.yr[0] : undefined,        // rule 1 — honour the drag
+                     max: st.yr ? st.yr[1] : undefined,
+                     ticks: { callback: function(v){ return fmt(v); } } } }
+    },
+    plugins: [rsFwdZone]
+  });
+  rsAttachBrush(cv, st.chart, null,                            // null x — the axis is not windowable
+    function(v1, v2){ st.yr = [v1, v2]; render(root); },
+    function(){ st.yr = null; render(root); });
+  root.querySelector('#brgTbl').innerHTML = table();
+}
+
+export function bridgeInit(root){
+  root.addEventListener('click', function(e){                  // delegated, on ROOT not document
+    var lg = e.target.closest('[data-blg]');
+    if (lg){ var k = lg.getAttribute('data-blg'); st.hidden[k] = !st.hidden[k]; render(root); return; }
+    var tb = e.target.closest('[data-brgtblb]');
+    if (tb){
+      st.tbl = st.tbl !== true;
+      var b = root.querySelector('#brgTblBody');
+      if (b) b.hidden = st.tbl !== true;
+      tb.innerHTML = head();
+    }
+  });
+  render(root);
+}
+```
+
+| §0.2 | Where it is above |
+|---|---|
+| 1 · both axes zoom, dbl-click resets | `rsAttachBrush` + `min`/`max` from `st.yr` |
+| 2 · click a series to hide it | `chips()` · `vis()` · the `.filter(vis)` in **both** the datasets and `table()` |
+| 3 · a table in a dropdown, ≥ what is drawn | `.rs-collap` + a generated `head()` that recounts on every toggle |
+| 4 · dropdown grouped by family | n/a — one series set, no metric picker. Add `<optgroup>` the moment there is a second. |
+| 5 · units and estimates unambiguous | `fmt()` · `rsFwdZone` · `.rs-ft-este` + the `E` badge |
+| 6 · degrade to nothing | the `return ''` guard in `bridgeHtml` |
+
+**What this skeleton deliberately does not have:** the range slider and presets (§9.5 — they only
+make sense when x is a period window), the sticky summary column (§4), the vintage axis (§3.4).
+Those are engine features with real machinery behind them. If you find yourself wanting all three,
+stop — you are on **path 1** and should be writing a dataset, not a canvas (§0.1).
 
 ---
 
@@ -1146,21 +1343,32 @@ from the revision record rather than leaving them blank.
 **The header is never a mystery bar.** It carries the caret, show/hide, and what is inside —
 *"Total GB, 18 periods in the selected range"* — and those counts follow the controls above them.
 
-Defaults split on one question: **is this table the block's own detail, or an audit trail behind
-it?**
+**Every table starts closed.** All five, without exception — the chart is the read, the table is
+the receipt you open when you want it.
 
-| Table | Starts | Because |
-|---|---|---|
-| A · Period detail | **open** (`tbl === false ? hidden`) | one table per block, and it *is* the block's detail |
-| B · Period detail | **open** | same — the scorecard's numbers are the point |
-| C · Snapshot detail | closed (`tbl === true ? '' : hidden`) | the walk is the read; the columns are the receipts |
-| D · Revision record | closed | the chart already says it |
-| D · Snapshot by snapshot | closed, always — the markup hardcodes `hidden` | a pure audit trail |
-| E · Projection detail | closed | same as C |
+| Table | Markup test | Caret test | State factory |
+|---|---|---|---|
+| A · Period detail | `tbl === false ? ' hidden' : ''` (`:835`) | `tbl !== false` (`:757`) | `rsSt` → `tbl: false` (`:231`) |
+| B · Period detail | `tbl === false ? ' hidden' : ''` (`:2326`) | same shape (`:2226`) | `rsSurpSt` → `tbl: false` (`:2103`) |
+| C · Snapshot detail | `tbl === true ? '' : ' hidden'` (`:2814`) | `tbl === true` (`:2743`) | `rsConvSt` → `tbl: false` (`:2566`) |
+| D · Revision record | `rec === true ? '' : ' hidden'` (`:1670`) | `:1640` | `rsEvoSt` — **no `rec` key at all** (`:1519`) |
+| D · Snapshot by snapshot | hardcoded ` hidden` (`:1678`) | `:1647` | — |
+| E · Projection detail | `tbl === true ? '' : ' hidden'` (`:3674`) | `tbl === true` (`:3617`) | `rsCurveSt` → `tbl: false` (`:3546`) |
 
-Note the two idioms are **not** interchangeable: `tbl === false` defaults *open* (undefined is not
-false), `tbl === true` defaults *closed*. Copying the wrong one into a new block flips its default
-and nothing else complains.
+⚠ **The two idioms are not interchangeable, but the difference is not the default here** — with the
+flag initialised to `false`, both render closed. They diverge only when the flag is **undefined**:
+`=== false ? hidden` then leaves the body *open*, `=== true ? '' : hidden` leaves it *closed*. D
+relies on exactly that: `rsEvoSt` never defines `rec`, and the `=== true` test reads the missing key
+as closed.
+
+So the way this actually bites is **mixing a markup test from one block with a caret test from
+another on a flag nobody initialised** — body open, header still saying `▸ show`. If you copy a
+collapsible into a new block, copy *both* halves from the *same* block, and initialise the flag in
+your state factory rather than leaning on `undefined`.
+
+The comment above A's markup (`js/results.js:830`) claims "It starts OPEN here". It does not —
+`rsSt` sets `tbl: false` two hundred lines earlier and both tests read it as closed. The comment is
+stale; the code is right.
 
 ---
 
@@ -1316,9 +1524,11 @@ branches (`[data-rscurve…]`) are tested **first** and return early, before any
    the browser. `py` is the Python interpreter (`python` is a broken stub), and **a heredoc into
    `py -` hangs the shell.**
 8. **Section keys must be unique across every dataset that can share a page.** A block's slider ids
-   are `rsMin-<key>` / `rsMax-<key>` and are resolved unscoped (§11). Two datasets on one page with
-   a section called `top` — the Results pane and an Earnings `*_SETUP` — hand one slider to the
-   wrong chart. The convention is what makes the lookup safe; it is not enforced in code.
+   are `rsMin-<key>` / `rsMax-<key>` and are resolved unscoped (§11); so is its collapsible header,
+   `document.querySelector('[data-rstblb="' + k + '"]')` at `js/results.js:1336`. Two datasets on
+   one page with a section called `top` — the Results pane and an Earnings `*_SETUP` — hand one
+   slider, and one table header, to the wrong chart. The convention is what makes these lookups
+   safe; it is not enforced in code. In a **new** chart, do not rely on it: scope to your root.
 9. **A summary column is computed over the window, not the series.** Every `sum*` helper iterates
    `idx`. Compute one over the full array and the Range record stops agreeing with the chart the
    moment anyone touches the slider — while still looking entirely plausible.

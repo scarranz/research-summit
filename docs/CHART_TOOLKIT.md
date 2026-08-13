@@ -374,6 +374,12 @@ Two things in it are worth stealing for any bar chart with labels:
 
 ## 8. Adding a chart — the short version
 
+**This section is the engine path.** If your chart is not a metric over time — a waterfall, a
+matrix, a scatter, a map — none of the steps below apply and there is nothing here to import: the
+engine exports five functions and no helpers. Go to `CHART_ENGINE_REFERENCE.md` **§0.7**, which
+covers what a bespoke canvas gets from the portal's global CSS, the four things worth copying out
+of `js/results.js`, and a skeleton that passes the ship checklist.
+
 1. **Write a dataset** at `js/results-data/<ticker>.js` following §2 of the conventions. The
    minimum is one view, one section, one metric with `periods` + `act`.
 2. **Register it** in the `RESULTS_DATA` map at the top of `js/results.js`.

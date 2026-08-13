@@ -475,14 +475,17 @@ export var DIS_PARKS_CAP = {
 export var DIS_PARKS_CAP_NOTE = "Illustrative. Owned-park attendance ~115M/yr (2024 TEA estimate; excludes Tokyo — licensed). Visits-per-acre (~64,500) is a blended average — Magic Kingdom runs ~166,000/acre, Animal Kingdom far less — so new capacity ramps toward this only over years. In-park ARPU (~$165 blended; domestic ~$185, international lower) = ticket + food, beverage & merch in parks ÷ attendance; Disney discloses only the % change, so the $ level is an estimate. This lens counts in-park spend only — add on-property hotels and you approach the ~$15B of the revenue-per-m² view. Both exclude cruise.";
 
 // ─── Top Line ▸ Full Buildout — an interactive sensitivity model tying every initiative together ─
-export var DIS_BUILDOUT_INTRO = "One model for the whole build-out. The two segments we modelled in depth — Parks & Resorts and Disney Cruise Line — carry their Bottom Line deep-dive figures (fixed). The rest — Studio, DTC and ESPN — you can flex with the sliders. Depreciation from the ~$60B of new capex is the drag. Everything updates live.";
+export var DIS_BUILDOUT_INTRO = "One model for the whole build-out. The two segments we modelled in depth — Parks & Resorts and Disney Cruise Line — carry their Bottom Line deep-dive figures (fixed). The rest — Studio, DTC and ESPN — you can flex with the sliders. Depreciation from the ~$60B of new capex is the drag. Set the horizon with the “Years to full buildout” slider — the “vs. today” tiles then turn the incremental into a growth rate off the FY2025 base. Everything updates live.";
 export var DIS_BUILDOUT_INPUTS = [
   { key:'films',      label:'Studio — theatrical films / yr',         min:6,   max:14,  step:1,    val:10,  unit:'' },
   { key:'avgGross',   label:'Studio — avg worldwide box office',      min:300, max:900, step:25,   val:525, unit:'M', fmt:'$' },
   { key:'dtcPrice',   label:'DTC — monthly subscription increase',    min:0,   max:5,   step:0.5,  val:2,   unit:'/mo', fmt:'$' },
   { key:'dtcSubs',    label:'DTC — subscriber increase',              min:0,   max:120, step:5,    val:50,  unit:'M' },
   { key:'espnSubs',   label:'ESPN — flagship app subscribers',        min:0,   max:40,  step:5,    val:15,  unit:'M' },
+  { key:'cpGrowth',   label:'Consumer Products — OI growth',          min:0,   max:8,   step:0.5,  val:4,   unit:'%/yr' },
+  { key:'linRetain',  label:'Linear & licensing — OI kept at buildout', min:0, max:100, step:5,    val:10,  unit:'%' },
   { key:'life',       label:'Depreciation — avg useful life',         min:15,  max:40,  step:1,    val:25,  unit:' yr' },
+  { key:'years',      label:'Years to full buildout',                 min:6,   max:12,  step:1,    val:9,   unit:' yr' },
   { key:'mult',       label:'Valuation — value / operating income',   min:8,   max:20,  step:1,    val:15,  unit:'×' },
 ];
 // Fixed deep-dive results (parks, cruise) + assumptions the sliders act on. All $ in billions unless noted.
@@ -493,9 +496,18 @@ export var DIS_BUILDOUT_BASE = {
   dtcBaseSubs:126, dtcArpu:8,         // DTC: 126M Disney+ Core subs, ~$8/mo ARPU
   dtcPriceMargin:0.85, dtcSubMargin:0.30, // price rises ~pure margin; new subs at incremental margin
   espnArpu:20, espnMargin:0.20,       // ESPN flagship ~$20/mo net ARPU, ~20% margin
+  cpOI:2.18,                          // Consumer Products FY25 OI $2,178M (Bloomberg Experiences sub-line; ~49% margin)
+  linContentOI:2.8,                   // Linear Networks + library/TV licensing, ex-DTC & ex-theatrical, FY25 ≈ $2.8B
+                                      //   (Bloomberg: Entertainment OI 4,674 − est. DTC OI ~1.3B − default theatrical ~0.55B)
   capex:60, taxRate:0.25, shares:1.8, // ~$60B capex; 25% tax; ~1.8B shares
+  baseYear:2025, baseOI:17.55, baseEps:5.93, // FY2025 anchors (Bloomberg model): segment OI $17.55B, adj. diluted EPS $5.93
 };
-export var DIS_BUILDOUT_NOTE = "Illustrative sensitivity model — not a forecast. Parks & Resorts (+$15B rev / +$3.8B OI at the full land bank) and Disney Cruise Line (+$1.3B rev / +$0.4B OI at 13 ships) are fixed at the figures from their Bottom Line deep-dives. Studio, DTC and ESPN are slider-driven bases: Disney+ ~126M subs at ~$8 ARPU; studio rev = films × avg gross × ~35% studio take; ESPN app at ~$20/mo. Segments overlap via the content flywheel — a film also feeds streaming and the parks — so the total is directional, not strictly additive. ~$60B capex depreciated over the chosen life; implied value = incremental operating income × the chosen multiple; EPS after ~25% tax over ~1.8B shares.";
+// When each piece actually matures — the horizon is NOT uniform across segments.
+export var DIS_BUILDOUT_BY = {
+  parks:'land bank ~FY2034', cruise:'13 ships ~2031', studio:'ramps ~3–5 yr', dtc:'ramps ~3–5 yr', espn:'ramps ~3–5 yr',
+  cp:'steady · moves to Entertainment FY27', lin:'melts toward ~0 by FY28E (Bloomberg)',
+};
+export var DIS_BUILDOUT_NOTE = "Illustrative sensitivity model — not a forecast. Parks & Resorts (+$15B rev / +$3.8B OI at the full land bank) and Disney Cruise Line (+$1.3B rev / +$0.4B OI at 13 ships) are fixed at the figures from their Bottom Line deep-dives. Studio, DTC and ESPN are slider-driven bases: Disney+ ~126M subs at ~$8 ARPU; studio rev = films × avg gross × ~35% studio take; ESPN app at ~$20/mo. Consumer Products (+$2.18B OI base, ~49% margin) grows at the chosen rate; Linear Networks & library licensing (ex-DTC, ex-theatrical, ~$2.8B FY25) is a structural drag — Bloomberg consensus has the whole Entertainment-ex-DTC pool collapsing from ~$2.6B (FY26E) toward ~$0 by FY28E as linear melts faster than licensing grows — so it enters the bridge as a downward bar, keeping only the chosen % of that base. Segments overlap via the content flywheel — a film also feeds streaming and the parks — so the total is directional, not strictly additive. ~$60B capex depreciated over the chosen life; implied value = incremental operating income × the chosen multiple; EPS after ~25% tax over ~1.8B shares. The pieces do not all mature in the same year — the cruise fleet reaches 13 ships ~2031, the parks land bank tracks the ~10-year plan (~FY2034), and the streaming/ESPN subscriber ramps land earlier — so the “Years to full buildout” slider is a single blended horizon. The “vs. today” CAGRs annualize this buildout’s own contribution on top of the FY2025 base (segment OI $17.6B, adj. EPS $5.93); they exclude organic growth and the linear-TV decline, so read them as the plan’s incremental pace, not total-company growth.";
 
 // ─── Returns & depreciation — how the park/cruise investments earn and depreciate ────
 export var DIS_RET_THESIS = "Park and cruise assets are long-lived — 20 to 40 years, cruise ships ~30 — so the ~$60B is depreciated slowly. That shapes a J-curve: cash goes out first, then pre-opening costs and fresh depreciation drag near-term operating income, then years of run-rate revenue against a slowly-depreciating base drive the return. Reading the timing of that curve is the key to Experiences margins.";

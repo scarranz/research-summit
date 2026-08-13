@@ -30,7 +30,7 @@ import {
   DIS_PARKS_INTRO, DIS_PARKS_FOOTPRINT, DIS_PARKS_FOOTPRINT_NOTE,
   DIS_PARKS_BUILD_LEAD, DIS_PARKS_BUILD, DIS_PARKS_BUILD_NOTE,
   DIS_PARKS_CAP_LEAD, DIS_PARKS_CAP, DIS_PARKS_CAP_NOTE,
-  DIS_BUILDOUT_INTRO, DIS_BUILDOUT_INPUTS, DIS_BUILDOUT_BASE, DIS_BUILDOUT_NOTE
+  DIS_BUILDOUT_INTRO, DIS_BUILDOUT_INPUTS, DIS_BUILDOUT_BASE, DIS_BUILDOUT_NOTE, DIS_BUILDOUT_BY
 } from './dis-data.js';
 import { WORLD_VB, WORLD_PATHS } from './world-paths.js';
 import {
@@ -308,14 +308,39 @@ function styleBlock(){
     '.cru-econ-lead{font-size:12px;font-weight:700;color:var(--navy);line-height:1.5;margin:2px 0 10px}'+
     '.cru-econ-lead b{color:#1E88C7}'+
     '.cru-hl{display:inline;background:linear-gradient(180deg,transparent 62%,rgba(30,136,199,.22) 0)}'+
-    // Full Buildout — interactive sensitivity model
-    '.bo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px 22px;margin:12px 0 6px}'+
+    // Full Buildout — interactive sensitivity model (redesigned)
+    // hero: today OI → full-buildout OI
+    '.bo-hero{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;gap:0;border:1px solid var(--bdr);border-radius:14px;overflow:hidden;background:var(--w);margin:4px 0 14px}'+
+    '.bo-hs{padding:15px 20px;display:flex;flex-direction:column;justify-content:center}'+
+    '.bo-hs--to{background:linear-gradient(180deg,rgba(29,63,184,.05),rgba(29,63,184,.02));text-align:right}'+
+    '.bo-hk{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu)}'+
+    '.bo-hv{font-size:30px;font-weight:800;color:var(--navy);line-height:1.05;margin:3px 0 1px;letter-spacing:-.01em}'+
+    '.bo-hs--to .bo-hv{color:'+DIS_BRAND+'}'+
+    '.bo-hsub{font-size:10.5px;color:var(--mu);font-weight:600}'+
+    '.bo-mid{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:0 6px;background:var(--w)}'+
+    '.bo-arrow{font-size:20px;color:var(--mu);line-height:1}'+
+    '.bo-badge{font-size:12px;font-weight:800;color:#fff;background:'+DIS_BRAND+';border-radius:20px;padding:3px 11px;white-space:nowrap}'+
+    '.bo-mid-yr{font-size:9.5px;font-weight:700;color:var(--mu);white-space:nowrap}'+
+    // bridge chart
+    '.bo-bridge{height:300px;position:relative;margin:2px 0 6px}'+
+    // driver cards
+    '.bo-cards{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0 6px;align-items:stretch}'+
+    '.bo-card{flex:1 1 190px;border:1px solid var(--bdr);border-radius:12px;background:var(--w);overflow:hidden}'+
+    '.bo-card-h{display:flex;align-items:center;gap:8px;padding:9px 13px;border-bottom:1px solid var(--bdr);background:#FBFCFD}'+
+    '.bo-dot{width:9px;height:9px;border-radius:3px;background:var(--seg);flex:none}'+
+    '.bo-cn{font-size:12px;font-weight:800;color:var(--navy)}'+
+    '.bo-pill{margin-left:auto;font-size:11px;font-weight:800;color:var(--seg);background:color-mix(in srgb,var(--seg) 12%,#fff);border-radius:20px;padding:2px 9px;white-space:nowrap}'+
+    '.bo-card-b{padding:12px 13px;display:flex;flex-direction:column;gap:12px}'+
+    '.bo-fixed{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:11.5px}'+
+    '.bo-fixed b{color:var(--navy);font-weight:700}.bo-fixed span{color:var(--seg);font-weight:800;white-space:nowrap}'+
+    '.bo-fixnote{font-size:10px;color:var(--mu);line-height:1.45}'+
     '.bo-in{display:flex;flex-direction:column;gap:5px}'+
     '.bo-in label{font-size:11px;font-weight:700;color:var(--navy);display:flex;justify-content:space-between;align-items:baseline;gap:8px}'+
-    '.bo-val{font-size:12.5px;font-weight:800;color:var(--brand);white-space:nowrap}'+
-    '.bo-sl{width:100%;height:5px;accent-color:var(--brand);cursor:pointer;margin:0}'+
-    '.bo-seg{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);grid-column:1/-1;margin:6px 0 -4px;border-top:1px solid var(--bdr);padding-top:9px}'+
-    '.bo-seg:first-child{border-top:none;padding-top:0;margin-top:0}'+
+    '.bo-val{font-size:12px;font-weight:800;color:var(--seg,var(--brand));white-space:nowrap}'+
+    '.bo-sl{width:100%;height:5px;accent-color:var(--seg,var(--brand));cursor:pointer;margin:0}'+
+    '.bo-foot{font-size:10px;color:var(--mu);line-height:1.5;border-top:1px dashed var(--bdr);padding-top:9px}'+
+    '.bo-foot b{color:var(--navy);font-weight:800}.bo-foot .bo-foot-r{color:var(--seg);font-weight:800}'+
+    '.bo-foot-h{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);margin-bottom:4px}'+
     '.dstr{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}'+
     '.dstr-c{border:1px solid var(--bdr);border-top:3px solid '+DIS_BRAND+';border-radius:11px;padding:12px 14px;background:var(--w)}'+
     '.dstr-t{font-size:12.5px;font-weight:800;color:var(--navy);margin-bottom:4px}.dstr-d{font-size:11.5px;color:var(--mu);line-height:1.5}'+
@@ -970,29 +995,64 @@ function parksWhatPanel(){
 }
 
 // ─── Top Line ▸ Full Buildout — interactive sensitivity model ─────────────────────
-function boGroup(key){
-  if(key==='parksPct') return 'Parks & Resorts';
-  if(key==='cruiseMult') return 'Disney Cruise Line';
-  if(key==='films'||key==='avgGross') return 'Studio';
-  if(key==='dtcPrice'||key==='dtcSubs') return 'Streaming (DTC)';
-  if(key==='espnSubs') return 'ESPN';
-  if(key==='life') return 'Depreciation';
-  return 'Valuation';
-}
 function boFmtVal(inp, v){ return (inp.fmt==='$'?'$':'')+v+(inp.unit||''); }
+// The bridge/segment palette — each driver is coloured by its Disney reporting segment.
+var BO_SEG = '#3E5A82';   // Assumptions / neutral
+var BO_COLORS = { parks:SEG_EXP, cruise:SEG_EXP, studio:SEG_ENT, dtc:SEG_ENT, espn:SEG_SPT };
+// One card per driver group. `fixed` cards carry the deep-dive figures (no sliders).
+var BO_CARDS = [
+  { id:'exp',    name:'Experiences',      seg:SEG_EXP, fixed:true },
+  { id:'cp',     name:'Consumer Products',seg:SEG_EXP, keys:['cpGrowth'] },
+  { id:'studio', name:'Studio',           seg:SEG_ENT, keys:['films','avgGross'] },
+  { id:'dtc',    name:'Streaming (DTC)',  seg:SEG_ENT, keys:['dtcPrice','dtcSubs'], foot:'<div class="bo-foot" id="boDtcCagr"></div>' },
+  { id:'espn',   name:'ESPN',             seg:SEG_SPT, keys:['espnSubs'] },
+  { id:'lin',    name:'Linear & Licensing',seg:BO_SEG, keys:['linRetain'], drag:true },
+  { id:'assum',  name:'Assumptions',      seg:BO_SEG,  keys:['years','life','mult'], plain:true },
+];
+function boSliderHtml(key){
+  var i; DIS_BUILDOUT_INPUTS.forEach(function(x){ if(x.key===key) i=x; }); if(!i) return '';
+  return '<div class="bo-in"><label>'+esc(i.label)+' <b class="bo-val">'+esc(boFmtVal(i,i.val))+'</b></label>'+
+    '<input type="range" class="bo-sl" data-bo="'+i.key+'" data-pre="'+(i.fmt==='$'?'$':'')+'" data-unit="'+esc(i.unit||'')+'" min="'+i.min+'" max="'+i.max+'" step="'+i.step+'" value="'+i.val+'"></div>';
+}
 function buildoutSubpane(){
-  var lastG=null, inputs='';
-  DIS_BUILDOUT_INPUTS.forEach(function(i){
-    var g=boGroup(i.key); if(g!==lastG){ inputs+='<div class="bo-seg">'+esc(g)+'</div>'; lastG=g; }
-    inputs+='<div class="bo-in"><label>'+esc(i.label)+' <b class="bo-val">'+esc(boFmtVal(i,i.val))+'</b></label>'+
-      '<input type="range" class="bo-sl" data-bo="'+i.key+'" data-pre="'+(i.fmt==='$'?'$':'')+'" data-unit="'+esc(i.unit||'')+'" min="'+i.min+'" max="'+i.max+'" step="'+i.step+'" value="'+i.val+'"></div>';
-  });
-  return '<p class="dd-sub" style="margin:2px 0 8px">'+esc(DIS_BUILDOUT_INTRO)+'</p>'+
+  var B=DIS_BUILDOUT_BASE;
+  // Hero — today's segment OI → OI at full buildout (values filled live by buildBuildout).
+  var hero = '<div class="bo-hero">'+
+    '<div class="bo-hs"><div class="bo-hk">Today · FY'+B.baseYear+'</div>'+
+      '<div class="bo-hv">$'+B.baseOI.toFixed(1)+'B</div><div class="bo-hsub">segment operating income</div></div>'+
+    '<div class="bo-mid"><div class="bo-arrow">→</div><div class="bo-badge" id="boHeroBadge">+40%</div>'+
+      '<div class="bo-mid-yr" id="boHeroYr">≈ FY2034</div></div>'+
+    '<div class="bo-hs bo-hs--to"><div class="bo-hk">Full buildout · <span id="boHeroYr2">≈ FY2034</span></div>'+
+      '<div class="bo-hv" id="boHeroTo">$24.6B</div><div class="bo-hsub">operating income at maturity</div></div>'+
+  '</div>';
+  // Driver cards.
+  var cards = BO_CARDS.map(function(c){
+    var body;
+    if(c.fixed){
+      body = '<div class="bo-fixed"><b>Parks &amp; Resorts <span style="font-weight:600;color:var(--mu)">· '+esc(DIS_BUILDOUT_BY.parks)+'</span></b><span>+$'+DIS_BUILDOUT_BASE.parksOI.toFixed(1)+'B OI</span></div>'+
+             '<div class="bo-fixed"><b>Disney Cruise Line <span style="font-weight:600;color:var(--mu)">· '+esc(DIS_BUILDOUT_BY.cruise)+'</span></b><span>+$'+DIS_BUILDOUT_BASE.cruiseOI.toFixed(1)+'B OI</span></div>'+
+             '<div class="bo-fixnote">Fixed at the figures from their Bottom Line deep-dives (revenue per m² · fleet to 13 ships).</div>';
+    } else {
+      body = c.keys.map(boSliderHtml).join('');
+    }
+    var pill = c.plain ? '<span class="bo-pill" id="boc-'+c.id+'">≈ FY2034</span>'
+                       : '<span class="bo-pill" id="boc-'+c.id+'">+$0.0B OI</span>';
+    return '<div class="bo-card" style="--seg:'+c.seg+'"><div class="bo-card-h">'+
+      '<span class="bo-dot"></span><span class="bo-cn">'+esc(c.name)+'</span>'+pill+'</div>'+
+      '<div class="bo-card-b">'+body+(c.foot||'')+'</div></div>';
+  }).join('');
+  return '<p class="dd-sub" style="margin:2px 0 10px">'+esc(DIS_BUILDOUT_INTRO)+'</p>'+
+    hero+
     '<div id="boTiles" class="dd-kpis"></div>'+
-    '<div class="dd-cardt" style="margin:14px 0 2px">Drivers</div>'+
-    '<div class="bo-grid">'+inputs+'</div>'+
-    '<div class="dd-cardt" style="margin:16px 0 6px">Incremental at full buildout</div>'+
-    '<div id="boOut"></div>'+
+    '<div class="dd-cardt" style="margin:16px 0 2px">The bridge — how today’s operating income compounds to full buildout</div>'+
+    '<div class="bo-bridge"><canvas id="boBridge"></canvas></div>'+
+    '<div class="dd-cardt" style="margin:16px 0 2px">Drivers — move the sliders; the bridge and the readouts update live</div>'+
+    '<div class="bo-cards">'+cards+'</div>'+
+    '<div class="dd-cardt" style="margin:18px 0 2px">Vs. today — what the horizon implies</div>'+
+    '<div id="boVsToday" class="dd-kpis"></div>'+
+    '<p id="boHorizon" class="dd-sub" style="margin:7px 0 0"></p>'+
+    '<details class="bo-details" style="margin:12px 0 0"><summary style="cursor:pointer;font-size:11.5px;font-weight:800;color:var(--navy)">Show the segment detail table</summary>'+
+      '<div id="boOut" style="margin-top:10px"></div></details>'+
     '<div class="dd-note" style="margin-top:8px">'+esc(DIS_BUILDOUT_NOTE)+'</div>';
 }
 function boVal(root, key){ var el=root.querySelector('.bo-sl[data-bo="'+key+'"]'); return el?parseFloat(el.value):0; }
@@ -1000,35 +1060,119 @@ function buildBuildout(root){
   var scope=root||document; var out=scope.querySelector('#boOut'); if(!out) return;
   var B=DIS_BUILDOUT_BASE;
   var films=boVal(scope,'films'), avgGross=boVal(scope,'avgGross'), dtcPrice=boVal(scope,'dtcPrice'),
-      dtcSubs=boVal(scope,'dtcSubs'), espnSubs=boVal(scope,'espnSubs'), life=boVal(scope,'life'), mult=boVal(scope,'mult');
+      dtcSubs=boVal(scope,'dtcSubs'), espnSubs=boVal(scope,'espnSubs'), life=boVal(scope,'life'),
+      years=boVal(scope,'years')||9, mult=boVal(scope,'mult'),
+      cpGrowth=boVal(scope,'cpGrowth'), linRetain=boVal(scope,'linRetain');
   var parksRev=B.parksRev,  parksOI=B.parksOI;       // fixed — deep-dive
   var cruiseRev=B.cruiseRev, cruiseOI=B.cruiseOI;    // fixed — deep-dive
   var studioRev=films*avgGross*B.studioTake/1000,   studioOI=studioRev*B.studioMargin;
   var dtcPriceRev=B.dtcBaseSubs*dtcPrice*12/1000, dtcSubRev=dtcSubs*B.dtcArpu*12/1000;
   var dtcRev=dtcPriceRev+dtcSubRev,                 dtcOI=dtcPriceRev*B.dtcPriceMargin+dtcSubRev*B.dtcSubMargin;
   var espnRev=espnSubs*B.espnArpu*12/1000,          espnOI=espnRev*B.espnMargin;
+  var cpInc=B.cpOI*(Math.pow(1+cpGrowth/100, years)-1);   // Consumer Products OI compounding over the horizon (+)
+  var linDrag=B.linContentOI*(linRetain/100-1);           // Linear & licensing OI eroding to the retained % (−)
   var dep=B.capex/life;
-  var segs=[['Parks & Resorts',parksRev,parksOI,1],['Disney Cruise Line',cruiseRev,cruiseOI,1],
-            ['Studio (theatrical)',studioRev,studioOI,0],['Streaming (DTC)',dtcRev,dtcOI,0],['ESPN',espnRev,espnOI,0]];
-  var totRev=0, totOIb=0; segs.forEach(function(s){ totRev+=s[1]; totOIb+=s[2]; });
+  // Revenue-bearing levers (drive Δ revenue + Δ OI); Consumer Products & Linear are OI-only lines below.
+  var segs=[['Parks & Resorts',parksRev,parksOI,1,DIS_BUILDOUT_BY.parks],['Disney Cruise Line',cruiseRev,cruiseOI,1,DIS_BUILDOUT_BY.cruise],
+            ['Studio (theatrical)',studioRev,studioOI,0,DIS_BUILDOUT_BY.studio],['Streaming (DTC)',dtcRev,dtcOI,0,DIS_BUILDOUT_BY.dtc],['ESPN',espnRev,espnOI,0,DIS_BUILDOUT_BY.espn]];
+  var totRev=0, segOIb=0; segs.forEach(function(s){ totRev+=s[1]; segOIb+=s[2]; });
+  var totOIb=segOIb+cpInc+linDrag;                        // all OI increments, before new depreciation
   var totOI=totOIb-dep, val=totOI*mult, eps=totOI*(1-B.taxRate)/B.shares;
+  var yrs=Math.round(years), tgt=B.baseYear+yrs;
+  var newOI=B.baseOI+totOI, oiUp=totOI/B.baseOI, oiCagr=Math.pow(newOI/B.baseOI, 1/yrs)-1;
+  var newEps=B.baseEps+eps,  epsCagr=Math.pow(newEps/B.baseEps, 1/yrs)-1;
   function b(x){ return (x<0?'–$':'$')+Math.abs(x).toFixed(1)+'B'; }
-  // headline tiles
+  function pct(x){ return (x>=0?'+':'–')+Math.abs(x*100).toFixed(0)+'%'; }
+  function rate(x){ return (x>=0?'+':'–')+Math.abs(x*100).toFixed(1)+'%/yr'; }
+  function setTxt(id,t){ var e=scope.querySelector('#'+id); if(e) e.textContent=t; }
+  // ── Hero — today → full buildout ──
+  setTxt('boHeroBadge', pct(oiUp)); setTxt('boHeroTo', '$'+newOI.toFixed(1)+'B');
+  setTxt('boHeroYr', '≈ FY'+tgt); setTxt('boHeroYr2', '≈ FY'+tgt);
+  // ── Per-card contribution pills ──
+  setTxt('boc-exp', '+$'+(parksOI+cruiseOI).toFixed(1)+'B OI'); setTxt('boc-cp', '+$'+cpInc.toFixed(1)+'B OI');
+  setTxt('boc-studio', '+$'+studioOI.toFixed(1)+'B OI'); setTxt('boc-dtc', '+$'+dtcOI.toFixed(1)+'B OI');
+  setTxt('boc-espn', '+$'+espnOI.toFixed(1)+'B OI'); setTxt('boc-lin', '–$'+Math.abs(linDrag).toFixed(1)+'B OI');
+  setTxt('boc-assum', '≈ FY'+tgt);
+  // ── DTC price rise + subscriber increase, each expressed as a growth rate over the horizon ──
+  var n1=function(x){ return x%1===0 ? String(x) : x.toFixed(1); };
+  var newArpu=B.dtcArpu+dtcPrice, arpuCagr=Math.pow(newArpu/B.dtcArpu, 1/yrs)-1;
+  var newSubs=B.dtcBaseSubs+dtcSubs, subCagr=Math.pow(newSubs/B.dtcBaseSubs, 1/yrs)-1;
+  var dtcFoot=scope.querySelector('#boDtcCagr');
+  if(dtcFoot) dtcFoot.innerHTML='<div class="bo-foot-h">Over '+yrs+' yr, that is</div>'+
+    '<div>ARPU <b>$'+n1(B.dtcArpu)+' → $'+n1(newArpu)+'/mo</b> · +$'+n1(dtcPrice)+' → <span class="bo-foot-r">'+rate(arpuCagr)+'</span></div>'+
+    '<div style="margin-top:4px">Core subs <b>'+B.dtcBaseSubs+'M → '+Math.round(newSubs)+'M</b> · +'+Math.round(dtcSubs)+'M → <span class="bo-foot-r">'+rate(subCagr)+'</span></div>';
+  // ── The bridge (waterfall) — base OI, each lever, the drags, the total ──
+  var run=B.baseOI, steps=[{label:'FY'+B.baseYear, kind:'base', color:'#1E2733', range:[0,run], runAfter:run, val:run}];
+  function up(label,d,color){ var lo=run; run=lo+d; steps.push({label:label, kind:'up', color:color, range:[lo,run], runAfter:run, val:d}); }
+  function down(label,d,color){ var hi=run; run=hi+d; steps.push({label:label, kind:'down', color:color, range:[run,hi], runAfter:run, val:d}); }
+  up('Parks',parksOI,SEG_EXP); up('Cruise',cruiseOI,SEG_EXP); up('Cons. Prod.',cpInc,SEG_EXP);
+  up('Studio',studioOI,SEG_ENT); up('DTC',dtcOI,SEG_ENT); up('ESPN',espnOI,SEG_SPT);
+  down('Linear & Lic.',linDrag,BO_SEG); down('– Deprec.',-dep,BO_SEG);
+  steps.push({label:'≈ FY'+tgt, kind:'total', color:'#1E2733', range:[0,run], runAfter:null, val:run});
+  buildBoBridge(scope, steps);
+  // ── Headline tiles ──
   var tiles=[[b(totRev),'Incremental revenue'],[b(totOI),'Incremental operating income'],
              ['$'+Math.round(val)+'B','Implied value ('+mult+'×)'],['$'+eps.toFixed(2),'Implied EPS uplift']];
   var tw=scope.querySelector('#boTiles');
   if(tw) tw.innerHTML=tiles.map(function(k){ return '<div class="dd-kpi"><div class="dd-kpi-v">'+esc(k[0])+'</div><div class="dd-kpi-k">'+esc(k[1])+'</div></div>'; }).join('');
-  // detail table
+  // ── Detail table (collapsed by default) ──
   var head='<tr><th>Segment</th><th>Δ Revenue</th><th>Δ Operating income</th></tr>';
   var rows=segs.map(function(s){
     var tag = s[3] ? ' <span style="font-size:9px;font-weight:800;color:#2FA36B;background:rgba(47,163,107,.12);border-radius:20px;padding:1px 7px">deep-dive</span>'
                    : ' <span style="font-size:9px;font-weight:700;color:var(--mu)">· slider</span>';
-    return '<tr><td>'+esc(s[0])+tag+'</td><td>'+b(s[1])+'</td><td>'+b(s[2])+'</td></tr>';
+    var by = s[4] ? ' <span style="font-size:9px;font-weight:600;color:var(--mu)">· '+esc(s[4])+'</span>' : '';
+    return '<tr><td>'+esc(s[0])+tag+by+'</td><td>'+b(s[1])+'</td><td>'+b(s[2])+'</td></tr>';
   }).join('');
+  var oiOnly=' <span style="font-size:9px;font-weight:700;color:var(--mu)">· slider</span>';
+  rows+='<tr><td>Consumer Products'+oiOnly+' <span style="font-size:9px;font-weight:600;color:var(--mu)">· '+esc(DIS_BUILDOUT_BY.cp)+'</span></td><td>—</td><td>'+b(cpInc)+'</td></tr>';
+  rows+='<tr><td>Linear &amp; licensing'+oiOnly+' <span style="font-size:9px;font-weight:600;color:var(--mu)">· '+esc(DIS_BUILDOUT_BY.lin)+'</span></td><td>—</td><td style="color:#E0463C">'+b(linDrag)+'</td></tr>';
   rows+='<tr class="dfin-tot"><td>Before new depreciation</td><td>'+b(totRev)+'</td><td>'+b(totOIb)+'</td></tr>';
   rows+='<tr><td>– New depreciation ($'+B.capex+'B ÷ '+life+' yr)</td><td>—</td><td style="color:#E0463C">'+b(-dep)+'</td></tr>';
   rows+='<tr class="dfin-tot"><td>= Incremental operating income</td><td>—</td><td style="color:#2FA36B">'+b(totOI)+'</td></tr>';
   out.innerHTML='<div class="dfin-wrap"><table class="dfin" style="min-width:460px"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>';
+  // ── Vs. today — annualize the increment off the FY2025 base so the endpoint has a year ──
+  var vt=[['FY'+tgt,'Full-buildout horizon ('+yrs+' yrs)'],
+          [pct(oiUp),'Operating income vs FY'+B.baseYear+' ($'+B.baseOI.toFixed(1)+'B → $'+newOI.toFixed(1)+'B)'],
+          [rate(oiCagr),'Implied OI CAGR'],
+          [rate(epsCagr),'Implied adj. EPS CAGR ($'+B.baseEps.toFixed(2)+' → $'+newEps.toFixed(2)+')']];
+  var vtw=scope.querySelector('#boVsToday');
+  if(vtw) vtw.innerHTML=vt.map(function(k){ return '<div class="dd-kpi"><div class="dd-kpi-v">'+esc(k[0])+'</div><div class="dd-kpi-k">'+esc(k[1])+'</div></div>'; }).join('');
+  var hz=scope.querySelector('#boHorizon');
+  if(hz) hz.textContent='At a '+yrs+'-year horizon the build-out lands around FY'+tgt+'. It is a blended endpoint — the cruise fleet hits 13 ships ~2031 and the streaming/ESPN subs mature earlier, while the parks land bank runs to the end of the ~10-year plan. The CAGRs annualize this plan’s own contribution on top of FY'+B.baseYear+' (segment OI $'+B.baseOI.toFixed(1)+'B, adj. EPS $'+B.baseEps.toFixed(2)+'); they exclude organic growth and linear-TV decline.';
+}
+// Waterfall bridge — floating bars, dashed connectors + delta labels drawn by a small plugin.
+var boBridgePlugin = { id:'boBridgeLbl', afterDatasetsDraw:function(chart){
+  var steps=chart._steps; if(!steps) return; var ctx=chart.ctx, meta=chart.getDatasetMeta(0), y=chart.scales.y;
+  ctx.save();
+  ctx.strokeStyle='rgba(120,130,145,.55)'; ctx.setLineDash([3,3]); ctx.lineWidth=1;
+  for(var i=0;i<steps.length-1;i++){ if(steps[i].runAfter==null) continue; var b0=meta.data[i], b1=meta.data[i+1];
+    var yy=y.getPixelForValue(steps[i].runAfter); ctx.beginPath(); ctx.moveTo(b0.x+b0.width/2, yy); ctx.lineTo(b1.x-b1.width/2, yy); ctx.stroke(); }
+  ctx.setLineDash([]); ctx.textAlign='center';
+  for(var j=0;j<steps.length;j++){ var s=steps[j], bar=meta.data[j],
+      topPix=y.getPixelForValue(Math.max(s.range[0], s.range[1])), txt;
+    if(s.kind==='base'||s.kind==='total'){ txt='$'+s.val.toFixed(1)+'B'; ctx.fillStyle='#1E2733'; ctx.font='800 11px Inter, system-ui, sans-serif'; }
+    else { txt=(s.val>=0?'+':'–')+Math.abs(s.val).toFixed(1); ctx.fillStyle=s.val>=0?'#3E5A82':'#DC2626'; ctx.font='700 10.5px Inter, system-ui, sans-serif'; }
+    ctx.fillText(txt, bar.x, topPix-6); }
+  ctx.restore();
+} };
+function buildBoBridge(scope, steps){
+  var cv=scope.querySelector('#boBridge'); if(!cv) return;
+  var labels=steps.map(function(s){return s.label;}), data=steps.map(function(s){return s.range;}), colors=steps.map(function(s){return s.color;});
+  if(cv._chart){ var ch=cv._chart; ch._steps=steps; ch.data.labels=labels; ch.data.datasets[0].data=data; ch.data.datasets[0].backgroundColor=colors; ch.update('none'); return; }
+  if(!cv.offsetParent) return;   // pane not visible yet — Chart.js needs a laid-out canvas; built on tab open
+  cv._chart=new Chart(cv.getContext('2d'), { type:'bar',
+    data:{ labels:labels, datasets:[{ data:data, backgroundColor:colors, borderRadius:4, borderSkipped:false, maxBarThickness:56, categoryPercentage:0.72, barPercentage:0.88 }] },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, layout:{padding:{top:24}},
+      plugins:{ legend:{display:false}, tooltip:{ displayColors:false, callbacks:{ title:function(it){return it[0].label;}, label:function(ctx){
+        var s=ctx.chart._steps[ctx.dataIndex];
+        if(s.kind==='base') return 'Today’s segment OI: $'+s.val.toFixed(1)+'B';
+        if(s.kind==='total') return 'OI at full buildout: $'+s.val.toFixed(1)+'B';
+        return (s.val>=0?'+$':'–$')+Math.abs(s.val).toFixed(1)+'B   ·   running $'+s.runAfter.toFixed(1)+'B'; } } } },
+      scales:{ x:{ grid:{display:false}, ticks:{color:'#8A93A0', font:{size:10.5}, maxRotation:0, autoSkip:false} },
+        y:{ beginAtZero:true, grid:{color:'#EEF2F7'}, ticks:{color:'#8A93A0', font:{size:10}, callback:function(v){return '$'+v+'B';}} } } },
+    plugins:[ boBridgePlugin ] });
+  cv._chart._steps=steps;
+  cv._chart.update('none');   // redraw now that _steps is attached, so the delta labels + connectors paint
 }
 function buildWhat(root){
   var scope = root||document; var out = scope.querySelector('#whatOut'); if(!out) return;
@@ -1816,6 +1960,7 @@ function deepDiveInit(c){
           pane.querySelectorAll(':scope > .ovt-subtabs > .ovt-subtab').forEach(function(b){ b.classList.toggle('active', b===btn); });
           pane.querySelectorAll(':scope > .ovt-subpane').forEach(function(p){ p.hidden = p.getAttribute('data-ovst')!==key; });
           if(pane.getAttribute('data-dd')==='bottomline') buildBottomLine(root);   // (re)build the visible chart
+          else if(key==='buildout') requestAnimationFrame(function(){ buildBuildout(root); });   // bridge chart needs a visible canvas
         });
       });
     });

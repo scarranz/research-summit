@@ -72,19 +72,31 @@ export const SPECTRUM_ZONES = [
 
 export const SPECTRUM_COMPANIES = [
   {
-    ticker: 'NVDA', name: 'NVIDIA', x: 4, y: 22, profile: 'nvidia', domain: 'nvidia.com',
+    ticker: 'NVDA', name: 'NVIDIA', x: 4, y: 20, profile: 'nvidia', domain: 'nvidia.com',
     why: 'Fabless. Owns the architecture, the instruction set and CUDA; rents the fabs. What it sells is IP with silicon attached.',
     capital: 'R&D-heavy but capex-light — the fabs belong to TSMC. Capital goes into people and into supply commitments, not plants.',
     tension: 'Asset-light on its own balance sheet only because someone else carries the fab. Reads differently if you consolidate the supply chain.'
   },
   {
-    ticker: 'AMZN', name: 'Amazon.com', x: 12, y: 82, profile: 'amzn', domain: 'amazon.com',
+    ticker: 'TSM', name: 'Taiwan Semiconductor', x: 9, y: 95, profile: null, domain: 'tsmc.com',
+    why: 'Its moat is process technology — nodes, yield, and the R&D that gets there first. By what creates the value, it belongs beside NVIDIA.',
+    capital: 'And by what the value costs, it belongs at the very bottom of the board: the fabs are among the largest capital programmes in manufacturing, running at a third to a half of revenue year after year.',
+    tension: 'The exact mirror of NVIDIA, and the most useful pair on the board. Same zone, opposite ends of the vertical axis — the fabless/foundry split IS the y axis. On the deck\'s single line these two would be neighbours, which hides the entire point.'
+  },
+  {
+    ticker: 'AMZN', name: 'Amazon.com', x: 14, y: 86, profile: 'amzn', domain: 'amazon.com',
     why: 'Placed left by the deck on the strength of AWS and advertising — the parts that scale like software.',
     capital: 'The heaviest capex programme of any company on this map: data centres, fulfilment, last-mile fleet.',
     tension: 'The clearest disagreement between the two axes on the board. Far left by business model, near the bottom by what it costs to run. Worth asking whether the retail half belongs further right on its own.'
   },
   {
-    ticker: 'META', name: 'Meta Platforms', x: 20, y: 72, profile: 'meta', domain: 'meta.com',
+    ticker: 'GOOGL', name: 'Alphabet', x: 18, y: 66, profile: 'googl', domain: 'abc.xyz',
+    why: 'Search, YouTube and Android are distribution the company owns outright, ranked by models and run on silicon it designs itself. Software economics at the top of the funnel.',
+    capital: 'The AI build-out turned one of the lightest businesses in the index into one of the heaviest spenders — on a revenue base large enough to absorb it better than its peers can.',
+    tension: 'Lands above Meta here, which will look wrong at first glance: its capex is larger in dollars but smaller against sales. Which of the two is "heavier" depends entirely on which denominator you accept.'
+  },
+  {
+    ticker: 'META', name: 'Meta Platforms', x: 24, y: 78, profile: 'meta', domain: 'meta.com',
     why: 'Attention sold to advertisers, ranked by models the company owns. Software economics on the revenue line.',
     capital: 'Was genuinely asset-light until the AI build-out; capex now runs at a share of revenue that no ad business used to carry.',
     tension: 'Migrating down the y axis year by year. The x position has not moved; the capital intensity has.'
@@ -108,10 +120,10 @@ export const SPECTRUM_COMPANIES = [
     tension: null
   },
   {
-    ticker: 'CART', name: 'Instacart (Maplebear)', x: 34, y: 9, profile: 'instacart', domain: 'instacart.com',
-    why: 'Marketplace plus a shopper network, with retail media doing the margin work — platform economics on top of someone else\'s stores.',
-    capital: 'No stores, no inventory, no fleet. The grocers carry the assets.',
-    tension: 'Its economics increasingly come from advertising, which would pull it left toward Meta rather than keep it beside Uber.'
+    ticker: 'MA', name: 'Mastercard', x: 45, y: 5, profile: 'mastercard', domain: 'mastercard.com',
+    why: 'A toll on a network it owns neither end of. Value is cards on one side and acceptance on the other — the purest network effect on the board.',
+    capital: 'Almost nothing. No lending, no inventory, no plant: the rails are software and the banks carry the balance sheet.',
+    tension: 'The deck puts it with the platforms, which is right, but its economics are more extreme than anything near it. It may deserve to anchor the top of the board rather than share the middle.'
   },
   {
     ticker: 'SOFI', name: 'SoFi Technologies', x: 53, y: 57, profile: 'sofi', domain: 'sofi.com',
@@ -126,28 +138,22 @@ export const SPECTRUM_COMPANIES = [
     tension: 'Arguably the most software-like company in the middle of the board, and the deck places it with the platforms rather than with the technology names.'
   },
   {
+    ticker: 'DIS', name: 'The Walt Disney Company', x: 58, y: 80, profile: 'dis', domain: 'thewaltdisneycompany.com',
+    why: 'Two business models under one roof: an IP library that is pure intangible, and parks, ships and hotels that are as physical as anything here. Placed on the boundary because it genuinely straddles one.',
+    capital: 'Experiences carries the weight — parks and cruise ships are multi-year, multi-billion commitments that the streaming half never needs.',
+    tension: 'The board has no way to draw a company that is two models at once. Either it sits on the border, as here, or it argues for splitting the node in two.'
+  },
+  {
     ticker: 'PAC', name: 'Grupo Aeroportuario del Pacífico', x: 62, y: 92, profile: null, domain: 'aeropuertosgap.com.mx',
     why: 'A concession over specific runways in specific cities. Geography is not a feature of the model — it is the model.',
     capital: 'The heaviest on the board: terminals and runways, built to a committed investment programme, with tariffs regulated against it.',
     tension: null
   },
   {
-    ticker: 'CVNA', name: 'Carvana', x: 72, y: 78, profile: null, domain: 'carvana.com',
-    why: 'Sells a physical, high-value, individually-sourced unit. The software is real; the thing being sold is a car.',
-    capital: 'Reconditioning centres, logistics fleet, inventory and a finance receivable book — heavy on three fronts at once.',
-    tension: 'Presents as e-commerce and is priced closer to it, but the assets sit where the deck put it. One of the two places where x and y agree and the market narrative does not.'
-  },
-  {
     ticker: 'TBBB', name: 'BBB Foods (Tiendas 3B)', x: 80, y: 62, profile: 'bbb', domain: 'tiendas3b.com',
     why: 'Hard discount: value comes from store count, density and same-store sales — throughput through a physical footprint.',
     capital: 'Every unit of growth is a store that must be built and stocked, though leases carry much of the property.',
     tension: null
-  },
-  {
-    ticker: 'VITL', name: 'Vital Farms', x: 89, y: 45, profile: null, domain: 'vitalfarms.com',
-    why: 'A branded food producer whose input is a farm network. Brand pulls it left; eggs pull it right.',
-    capital: 'Lighter than it looks — the farms are contracted, not owned. Processing capacity is the real asset.',
-    tension: 'The one company on the board whose moat is a brand. Neither the deck nor these axes has a place for brand, which is worth deciding.'
   },
   {
     ticker: 'TPL', name: 'Texas Pacific Land', x: 93, y: 15, profile: null, domain: 'texaspacific.com',
@@ -169,6 +175,6 @@ export const SPECTRUM_AXES = {
     label: 'Capital intensity',
     top: 'Asset-light',
     bottom: 'Asset-heavy',
-    note: 'the measured version (capex/revenue, PP&E/assets) is the next step, and will not cover the whole board — PAC, CVNA, VITL, TPL and IBKR have no Summit model.'
+    note: 'the measured version (capex/revenue, PP&E/assets) is the next step, and will not cover the whole board — GOOGL, TSM, DIS, PAC, TPL and IBKR have no Summit model.'
   }
 };

@@ -294,7 +294,26 @@ export const LOCAL_INVESTOR_HOLDINGS = [
   // last 4 quarterly 13F-HR filings. Each filing holds 29-42 positions;
   // showing the top 15 by value (same convention as the Upload 13F
   // preview's default selection) rather than the full list.
-  // buffett 2026 Q1 â€” 29 total positions, showing top 15
+  // buffett 2026 Q2 - 29 total positions, showing top 15. Filed 2026-08-14.
+  // Values aggregated by CUSIP across Berkshire's multiple sub-manager rows
+  // for the same security (raw XML splits e.g. Apple into 2-3 rows).
+  { investor_key: 'buffett', year: 2026, quarter: 2, ticker: 'AAPL', company_name: 'Apple Inc', cusip: '037833100', value_usd: 65950296923, weight_pct: 22.04, rank: 1, source_type: 'sec_xml' },
+  { investor_key: 'buffett', year: 2026, quarter: 2, ticker: 'AXP', company_name: 'American Express Co', cusip: '025816109', value_usd: 51282319275, weight_pct: 17.14, rank: 2, source_type: 'sec_xml' },
+  { investor_key: 'buffett', year: 2026, quarter: 2, ticker: 'KO', company_name: 'Coca Cola Co', cusip: '191216100', value_usd: 32508000000, weight_pct: 10.86, rank: 3, source_type: 'sec_xml' },
+  { investor_key: 'buffett', year: 2026, quarter: 2, ticker: 'GOOGL', company_name: 'Alphabet Inc', cusip: '02079K305', value_usd: 28157599351, weight_pct: 9.41, rank: 4, source_type: 'sec_xml' },
+  { investor_key: 'buffett', year: 2026, quarter: 2, ticker: 'BAC', company_name: 'Bank America Corp', cusip: '060505104', value_usd: 27543790975, weight_pct: 9.2, rank: 5, source_type: 'sec_xml' },
+  { investor_key: 'buffett', year: 2026, quarter: 2, ticker: 'CVX', company_name: 'Chevron Corporation', cusip: '166764100', value_usd: 13986141890, weight_pct: 4.67, rank: 6, source_type: 'sec_xml' },
+  { investor_key: 'buffett', year: 2026, quarter: 2, ticker: 'OXY', company_name: 'Occidental Pete Corp', cusip: '674599105', value_usd: 12868205304, weight_pct: 4.3, rank: 7, source_type: 'sec_xml' },
+  { investor_key: 'buffett', year: 2026, quarter: 2, ticker: 'CB', company_name: 'Chubb Ltd Switz', cusip: 'H1467J104', value_usd: 11670066615, weight_pct: 3.9, rank: 8, source_type: 'sec_xml' },
+  { investor_key: 'buffett', year: 2026, quarter: 2, ticker: 'MCO', company_name: 'Moodys Corp', cusip: '615369105', value_usd: 11173435852, weight_pct: 3.73, rank: 9, source_type: 'sec_xml' },
+  { investor_key: 'buffett', year: 2026, quarter: 2, ticker: 'GOOG', company_name: 'Alphabet Inc', cusip: '02079K107', value_usd: 9606489032, weight_pct: 3.21, rank: 10, source_type: 'sec_xml' },
+  { investor_key: 'buffett', year: 2026, quarter: 2, ticker: 'KHC', company_name: 'Kraft Heinz Co', cusip: '500754106', value_usd: 7691494401, weight_pct: 2.57, rank: 11, source_type: 'sec_xml' },
+  { investor_key: 'buffett', year: 2026, quarter: 2, ticker: 'DVA', company_name: 'Davita Inc', cusip: '23918K108', value_usd: 6425268898, weight_pct: 2.15, rank: 12, source_type: 'sec_xml' },
+  { investor_key: 'buffett', year: 2026, quarter: 2, ticker: 'DAL', company_name: 'Delta Air Lines Inc', cusip: '247361702', value_usd: 5368591200, weight_pct: 1.79, rank: 13, source_type: 'sec_xml' },
+  { investor_key: 'buffett', year: 2026, quarter: 2, ticker: 'SIRI', company_name: 'Siriusxm Holdings Inc', cusip: '829933100', value_usd: 3686802237, weight_pct: 1.23, rank: 14, source_type: 'sec_xml' },
+  { investor_key: 'buffett', year: 2026, quarter: 2, ticker: 'VRSN', company_name: 'Verisign Inc', cusip: '92343E102', value_usd: 2261494212, weight_pct: 0.76, rank: 15, source_type: 'sec_xml' },
+
+  // buffett 2026 Q1 - 29 total positions, showing top 15
   { investor_key: 'buffett', year: 2026, quarter: 1, ticker: 'AAPL', company_name: 'Apple Inc', cusip: '037833100', value_usd: 57843260493, weight_pct: 21.99, rank: 1, source_type: 'sec_xml' },
   { investor_key: 'buffett', year: 2026, quarter: 1, ticker: 'AXP', company_name: 'American Express Co', cusip: '025816109', value_usd: 45859204536, weight_pct: 17.43, rank: 2, source_type: 'sec_xml' },
   { investor_key: 'buffett', year: 2026, quarter: 1, ticker: 'KO', company_name: 'Coca Cola Co', cusip: '191216100', value_usd: 30420000000, weight_pct: 11.56, rank: 3, source_type: 'sec_xml' },
@@ -344,23 +363,6 @@ export const LOCAL_INVESTOR_HOLDINGS = [
   { investor_key: 'buffett', year: 2025, quarter: 3, ticker: 'SIRI', company_name: 'Sirius Xm Holdings Inc', cusip: '829933100', value_usd: 2904885649, weight_pct: 1.09, rank: 13, source_type: 'sec_xml' },
   { investor_key: 'buffett', year: 2025, quarter: 3, ticker: 'V', company_name: 'Visa Inc', cusip: '92826C839', value_usd: 2832586895, weight_pct: 1.06, rank: 14, source_type: 'sec_xml' },
   { investor_key: 'buffett', year: 2025, quarter: 3, ticker: 'VRSN', company_name: 'Verisign Inc', cusip: '92343E102', value_usd: 2513300752, weight_pct: 0.94, rank: 15, source_type: 'sec_xml' },
-
-  // buffett 2025 Q2 â€” 41 total positions, showing top 15
-  { investor_key: 'buffett', year: 2025, quarter: 2, ticker: 'AAPL', company_name: 'Apple Inc', cusip: '037833100', value_usd: 57447600000, weight_pct: 22.31, rank: 1, source_type: 'sec_xml' },
-  { investor_key: 'buffett', year: 2025, quarter: 2, ticker: 'AXP', company_name: 'American Express Co', cusip: '025816109', value_usd: 48360781086, weight_pct: 18.78, rank: 2, source_type: 'sec_xml' },
-  { investor_key: 'buffett', year: 2025, quarter: 2, ticker: 'BAC', company_name: 'Bank Amer Corp', cusip: '060505104', value_usd: 28641252185, weight_pct: 11.12, rank: 3, source_type: 'sec_xml' },
-  { investor_key: 'buffett', year: 2025, quarter: 2, ticker: 'KO', company_name: 'Coca Cola Co', cusip: '191216100', value_usd: 28300000000, weight_pct: 10.99, rank: 4, source_type: 'sec_xml' },
-  { investor_key: 'buffett', year: 2025, quarter: 2, ticker: 'CVX', company_name: 'Chevron Corp New', cusip: '166764100', value_usd: 17478457567, weight_pct: 6.79, rank: 5, source_type: 'sec_xml' },
-  { investor_key: 'buffett', year: 2025, quarter: 2, ticker: 'MCO', company_name: 'Moodys Corp', cusip: '615369105', value_usd: 12374113948, weight_pct: 4.81, rank: 6, source_type: 'sec_xml' },
-  { investor_key: 'buffett', year: 2025, quarter: 2, ticker: 'OXY', company_name: 'Occidental Pete Corp', cusip: '674599105', value_usd: 11130189516, weight_pct: 4.32, rank: 7, source_type: 'sec_xml' },
-  { investor_key: 'buffett', year: 2025, quarter: 2, ticker: 'KHC', company_name: 'Kraft Heinz Co', cusip: '500754106', value_usd: 8407891001, weight_pct: 3.26, rank: 8, source_type: 'sec_xml' },
-  { investor_key: 'buffett', year: 2025, quarter: 2, ticker: 'CB', company_name: 'Chubb Limited', cusip: 'H1467J104', value_usd: 7832227900, weight_pct: 3.04, rank: 9, source_type: 'sec_xml' },
-  { investor_key: 'buffett', year: 2025, quarter: 2, ticker: 'DVA', company_name: 'Davita Inc', cusip: '23918K108', value_usd: 4814317266, weight_pct: 1.87, rank: 10, source_type: 'sec_xml' },
-  { investor_key: 'buffett', year: 2025, quarter: 2, ticker: 'VRSN', company_name: 'Verisign Inc', cusip: '92343E102', value_usd: 3838117344, weight_pct: 1.49, rank: 11, source_type: 'sec_xml' },
-  { investor_key: 'buffett', year: 2025, quarter: 2, ticker: 'KR', company_name: 'Kroger Co', cusip: '501044101', value_usd: 3586500001, weight_pct: 1.39, rank: 12, source_type: 'sec_xml' },
-  { investor_key: 'buffett', year: 2025, quarter: 2, ticker: 'V', company_name: 'Visa Inc', cusip: '92826C839', value_usd: 2946013173, weight_pct: 1.14, rank: 13, source_type: 'sec_xml' },
-  { investor_key: 'buffett', year: 2025, quarter: 2, ticker: 'SIRI', company_name: 'Sirius Xm Holdings Inc', cusip: '829933100', value_usd: 2751270614, weight_pct: 1.07, rank: 14, source_type: 'sec_xml' },
-  { investor_key: 'buffett', year: 2025, quarter: 2, ticker: 'MA', company_name: 'Mastercard Inc', cusip: '57636Q104', value_usd: 2240256977, weight_pct: 0.87, rank: 15, source_type: 'sec_xml' },
 
   // Appaloosa LP (SEC EDGAR CIK 0001656456) â€” David Tepper's last 4
   // quarterly 13F-HR filings. NOTE: two positions per filing are left

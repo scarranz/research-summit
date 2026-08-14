@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Investment Spectrum harness</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/industry.css">
+<link rel="stylesheet" href="css/spectrum.css">
+<style>
+  body { background:#fff; margin:0; padding:24px; font-family:Inter,system-ui,sans-serif; }
+  #harness { max-width:1180px; margin:0 auto; }
+</style>
+</head>
+<body>
+<div id="harness"><div id="spectrum-root"></div></div>
+<script type="module">
+  const m = await import('./js/spectrum.js');
+  m.loadSpectrumPage();
+  console.log('[harness] spectrum mounted');
+</script>
+</body>
+</html>

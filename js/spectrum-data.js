@@ -4,11 +4,13 @@
 //   x  0 → 100   intangible (technology, IP, scalability) → tangible (assets, land, production)
 //   y  0 → 100   asset-light (little capital per dollar of revenue) → asset-heavy
 //
-// x is seeded from the Investment Spectrum deck ("How companies create Value"), preserving the
-// deck's left-to-right order. y is a judgment call — it is the axis the deck did not have, where
-// the deck's vertical stacking only meant "same point on the line".
+// The board started from the Investment Spectrum deck ("How companies create Value"), which had
+// only the x axis and only an ordering along it. These coordinates are no longer the deck's:
+// they are the team's placement as of Aug 14, 2026, promoted from a working session. Where a
+// placement now contradicts the deck — TSM at the tangible end rather than beside NVDA — the
+// company's `tension` note says so.
 //
-// Positions here are the SEED. What the team drags is stored separately (localStorage today,
+// Positions here are the DEFAULT. What anyone drags is stored separately (localStorage today,
 // a Supabase table once the shape settles) and always wins over these numbers.
 
 /* ─── Zones ───────────────────────────────────────────────────────────────
@@ -78,31 +80,31 @@ export const SPECTRUM_COMPANIES = [
     tension: 'Asset-light on its own balance sheet only because someone else carries the fab. Reads differently if you consolidate the supply chain.'
   },
   {
-    ticker: 'TSM', name: 'Taiwan Semiconductor', x: 9, y: 95, profile: null, domain: 'tsmc.com',
-    why: 'Its moat is process technology — nodes, yield, and the R&D that gets there first. By what creates the value, it belongs beside NVIDIA.',
-    capital: 'And by what the value costs, it belongs at the very bottom of the board: the fabs are among the largest capital programmes in manufacturing, running at a third to a half of revenue year after year.',
-    tension: 'The exact mirror of NVIDIA, and the most useful pair on the board. Same zone, opposite ends of the vertical axis — the fabless/foundry split IS the y axis. On the deck\'s single line these two would be neighbours, which hides the entire point.'
+    ticker: 'TSM', name: 'Taiwan Semiconductor', x: 86.8, y: 90.2, profile: null, domain: 'tsmc.com',
+    why: 'What TSMC sells is capacity on the most advanced nodes, and capacity is a physical thing that has to be built first. The process IP is real, but the binding constraint — and the pricing power — is the fab.',
+    capital: 'Among the heaviest capital programmes in manufacturing: capex runs at roughly a third to a half of revenue, year after year, and the next node costs more than the last.',
+    tension: 'Placed at the tangible end rather than beside NVIDIA, which makes the pair split on the horizontal axis instead of the vertical one: NVIDIA sells the design, TSMC sells the throughput. The deck\'s single line could not separate them at all.'
   },
   {
-    ticker: 'AMZN', name: 'Amazon.com', x: 14, y: 86, profile: 'amzn', domain: 'amazon.com',
+    ticker: 'AMZN', name: 'Amazon.com', x: 13.4, y: 94.4, profile: 'amzn', domain: 'amazon.com',
     why: 'Placed left by the deck on the strength of AWS and advertising — the parts that scale like software.',
     capital: 'The heaviest capex programme of any company on this map: data centres, fulfilment, last-mile fleet.',
     tension: 'The clearest disagreement between the two axes on the board. Far left by business model, near the bottom by what it costs to run. Worth asking whether the retail half belongs further right on its own.'
   },
   {
-    ticker: 'GOOGL', name: 'Alphabet', x: 18, y: 66, profile: 'googl', domain: 'abc.xyz',
+    ticker: 'GOOGL', name: 'Alphabet', x: 18, y: 76.2, profile: 'googl', domain: 'abc.xyz',
     why: 'Search, YouTube and Android are distribution the company owns outright, ranked by models and run on silicon it designs itself. Software economics at the top of the funnel.',
     capital: 'The AI build-out turned one of the lightest businesses in the index into one of the heaviest spenders — on a revenue base large enough to absorb it better than its peers can.',
-    tension: 'Lands above Meta here, which will look wrong at first glance: its capex is larger in dollars but smaller against sales. Which of the two is "heavier" depends entirely on which denominator you accept.'
+    tension: 'Sits below Meta here — heavier — which is the reading you get counting capex in dollars. Against sales the order reverses, because the revenue base is roughly twice as large. The pair is worth revisiting once the measured layer lands.'
   },
   {
-    ticker: 'META', name: 'Meta Platforms', x: 24, y: 78, profile: 'meta', domain: 'meta.com',
+    ticker: 'META', name: 'Meta Platforms', x: 29.7, y: 63.6, profile: 'meta', domain: 'meta.com',
     why: 'Attention sold to advertisers, ranked by models the company owns. Software economics on the revenue line.',
     capital: 'Was genuinely asset-light until the AI build-out; capex now runs at a share of revenue that no ad business used to carry.',
     tension: 'Migrating down the y axis year by year. The x position has not moved; the capital intensity has.'
   },
   {
-    ticker: 'SPOT', name: 'Spotify Technology', x: 28, y: 8, profile: 'spot', domain: 'spotify.com',
+    ticker: 'SPOT', name: 'Spotify Technology', x: 29.5, y: 8.4, profile: 'spot', domain: 'spotify.com',
     why: 'Software distribution over a catalogue it licenses rather than owns — the scalability is real, the IP is rented.',
     capital: 'Close to the lightest on the board: no plants, no fleet, no inventory. Cash goes to content deals, not to capex.',
     tension: 'Sits in Company Technology but owns almost no technology moat — the labels hold the IP. Arguably belongs further right, next to the platforms.'
@@ -126,19 +128,19 @@ export const SPECTRUM_COMPANIES = [
     tension: 'The deck puts it with the platforms, which is right, but its economics are more extreme than anything near it. It may deserve to anchor the top of the board rather than share the middle.'
   },
   {
-    ticker: 'SOFI', name: 'SoFi Technologies', x: 53, y: 57, profile: 'sofi', domain: 'sofi.com',
+    ticker: 'SOFI', name: 'SoFi Technologies', x: 43.9, y: 42.7, profile: 'sofi', domain: 'sofi.com',
     why: 'A digital bank that grows by adding members and cross-selling them — user metrics are literally the reported KPI.',
     capital: 'Capital-intensive in a way this axis was not built for: the constraint is regulatory capital and deposits, not property.',
     tension: 'Almost no PP&E, but a balance sheet that has to be funded. If y is measured as capex over revenue it lands near the top; as capital employed, near the bottom. The axis needs a rule for lenders.'
   },
   {
-    ticker: 'IBKR', name: 'Interactive Brokers', x: 47, y: 44, profile: 'ibkr', domain: 'interactivebrokers.com',
+    ticker: 'IBKR', name: 'Interactive Brokers', x: 48.6, y: 13.2, profile: 'ibkr', domain: 'interactivebrokers.com',
     why: 'Accounts, platform, execution — a software business whose unit of growth is the funded account.',
     capital: 'Same problem as SoFi: a very large balance sheet, almost no fixed assets. Automation is the whole point of the model.',
     tension: 'Arguably the most software-like company in the middle of the board, and the deck places it with the platforms rather than with the technology names.'
   },
   {
-    ticker: 'DIS', name: 'The Walt Disney Company', x: 58, y: 80, profile: 'dis', domain: 'thewaltdisneycompany.com',
+    ticker: 'DIS', name: 'The Walt Disney Company', x: 56.8, y: 78.2, profile: 'dis', domain: 'thewaltdisneycompany.com',
     why: 'Two business models under one roof: an IP library that is pure intangible, and parks, ships and hotels that are as physical as anything here. Placed on the boundary because it genuinely straddles one.',
     capital: 'Experiences carries the weight — parks and cruise ships are multi-year, multi-billion commitments that the streaming half never needs.',
     tension: 'The board has no way to draw a company that is two models at once. Either it sits on the border, as here, or it argues for splitting the node in two.'

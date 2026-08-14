@@ -198,7 +198,7 @@ function html() {
   // Toolbar
   h += '<div class="spec-bar">';
   h += '<div class="spec-bar-l">';
-  h += '<button class="spec-btn" id="spec-reset">Reset to deck</button>';
+  h += '<button class="spec-btn" id="spec-reset">Reset to default</button>';
   h += '<span class="spec-status" id="spec-status"></span>';
   h += '</div>';
   h += '<div class="spec-bar-r"><span class="spec-scope">Saved on this device only</span></div>';
@@ -253,8 +253,9 @@ function html() {
   h += '<div class="spec-panel" id="spec-panel"></div>';
 
   // Footnote
-  h += '<p class="spec-foot">Seeded from the Investment Spectrum deck; the left-to-right order is ' +
-       'the deck\'s. Capital intensity is a judgment call today — ' + esc(ax.y.note) + '</p>';
+  h += '<p class="spec-foot">The default board is the team\'s placement of Aug 14, 2026, which ' +
+       'started from the Investment Spectrum deck but no longer matches it everywhere. Capital ' +
+       'intensity is a judgment call today — ' + esc(ax.y.note) + '</p>';
 
   h += '</div>';
   return h;
@@ -290,7 +291,7 @@ function renderPanel() {
   h += '<div class="spec-panel-pos">';
   h += '<span class="spec-chip">' + esc(z.name) + '</span>';
   if (edgeDistance(p.x) < 4) h += '<span class="spec-chip spec-chip--edge">on the boundary</span>';
-  if (moved) h += '<span class="spec-chip spec-chip--moved">moved from the deck</span>';
+  if (moved) h += '<span class="spec-chip spec-chip--moved">moved from default</span>';
   h += '</div>';
   h += '</div>';
 
@@ -342,7 +343,7 @@ function renderStatus() {
   if (!el) return;
   var n = SPECTRUM_COMPANIES.filter(function (c) { return isMoved(c.ticker); }).length;
   el.textContent = n === 0
-    ? 'Showing the deck\'s positions'
+    ? 'Showing the default board'
     : n + (n === 1 ? ' company moved' : ' companies moved');
   el.className = 'spec-status' + (n ? ' spec-status--on' : '');
 }

@@ -53,19 +53,21 @@
 .spec-zonebar {
   grid-column: 2; grid-row: 1;
   display: flex;
-  border: 1px solid var(--bdr, #E7EAEE); border-radius: 9px; overflow: hidden;
-  background: var(--pale, #F4F6F9);
+  border-radius: 10px; overflow: hidden;
+  box-shadow: 0 1px 3px rgba(30, 39, 51, .10);
 }
 .spec-zonebar-cell {
-  padding: 9px 8px; text-align: center;
-  font: 600 11px 'Inter', sans-serif; color: var(--navy, #1E2733);
-  text-transform: uppercase; letter-spacing: .07em;
-  border-right: 1px solid var(--bdr, #E7EAEE);
-  transition: background .18s;
+  padding: 11px 8px 10px; text-align: center;
+  font: 700 11px 'Inter', sans-serif;
+  color: var(--hue, #1E2733);
+  text-transform: uppercase; letter-spacing: .08em;
+  background: var(--pale, #F4F6F9);
+  background: color-mix(in srgb, var(--hue) 11%, #fff);
+  border-bottom: 3px solid var(--hue);
+  transition: background .18s, padding .18s;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.spec-zonebar-cell:last-child { border-right: none; }
-.spec-zonebar-cell.is-lit { background: #E4EAF4; }
+.spec-zonebar-cell.is-lit { background: color-mix(in srgb, var(--hue) 22%, #fff); }
 
 /* Vertical axis label. The spans rotate individually — rotating the flex
    container instead would swap its main axis and stack them side by side. */
@@ -102,48 +104,92 @@
   touch-action: none; /* pointer drag, not scroll */
 }
 
-/* Zone bands — the warmth ramp */
+/* Zone bands — each washed in its own hue, stronger at the bottom of the
+   board so "asset-heavy" reads as denser without needing a second legend. */
 .spec-zones { position: absolute; inset: 0; }
+/* Each colour is declared twice: a plain value first, the color-mix version
+   after. Browsers without color-mix keep the plain one instead of dropping
+   the declaration and losing the border or wash entirely. */
 .spec-zone {
   position: absolute; top: 0; bottom: 0;
-  border-right: 1px dashed rgba(30, 39, 51, .10);
-  transition: background .18s;
+  background: var(--pale, #F4F6F9);
+  border-right: 1px solid var(--bdr, #E7EAEE);
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--hue) 5%, #fff),
+    color-mix(in srgb, var(--hue) 17%, #fff)
+  );
+  border-right: 1px solid color-mix(in srgb, var(--hue) 22%, #fff);
+  transition: filter .18s;
 }
 .spec-zone:last-child { border-right: none; }
-.spec-zone--tech   { background: #EFF3F9; }
-.spec-zone--users  { background: #F0F2F6; }
-.spec-zone--geo    { background: #F3F2EF; }
-.spec-zone--commod { background: #F5F1EA; }
-.spec-zone.is-lit { background: #E4EAF4; }
-.spec-zone--geo.is-lit    { background: #EDEAE2; }
-.spec-zone--commod.is-lit { background: #EFE8DB; }
+.spec-zone.is-lit { filter: saturate(1.5) brightness(.97); }
+
+/* Neighbour links — under the chips, above the bands */
+.spec-links {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; overflow: visible;
+}
 
 /* Nodes */
 .spec-nodes { position: absolute; inset: 0; }
 .spec-node {
   position: absolute;
   transform: translate(-50%, -50%);
-  display: inline-flex; align-items: center;
-  border: 1px solid #D3DAE3; background: #fff; border-radius: 7px;
-  padding: 5px 10px;
-  font: 600 11.5px 'Inter', sans-serif; color: var(--navy, #1E2733);
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid #D3DAE3;
+  border-color: color-mix(in srgb, var(--hue, #7C8694) 32%, #fff);
+  background: #fff; border-radius: 8px;
+  padding: 4px 9px 4px 5px;
+  font: 700 11.5px 'Inter', sans-serif; color: var(--navy, #1E2733);
   letter-spacing: .01em;
   cursor: grab;
-  box-shadow: 0 1px 2px rgba(30, 39, 51, .08);
-  transition: box-shadow .15s, border-color .15s, background .15s, color .15s;
+  box-shadow: 0 1px 3px rgba(30, 39, 51, .10);
+  transition: box-shadow .15s, border-color .15s, background .15s,
+              color .15s, transform .12s;
   white-space: nowrap;
 }
-.spec-node:hover { border-color: #9FADC0; box-shadow: 0 2px 8px rgba(30, 39, 51, .14); z-index: 3; }
-.spec-node.is-drag { cursor: grabbing; box-shadow: 0 6px 18px rgba(30, 39, 51, .22); z-index: 5; }
-.spec-node.is-sel {
-  background: var(--navy, #1E2733); color: #fff; border-color: var(--navy, #1E2733);
-  box-shadow: 0 3px 12px rgba(30, 39, 51, .28); z-index: 4;
+.spec-node:hover {
+  border-color: var(--hue, #9FADC0);
+  box-shadow: 0 3px 12px color-mix(in srgb, var(--hue, #1E2733) 34%, transparent);
+  transform: translate(-50%, -50%) scale(1.06);
+  z-index: 3;
 }
+.spec-node.is-drag {
+  cursor: grabbing; z-index: 6;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--hue, #1E2733) 42%, transparent);
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* the selected company fills with its zone colour */
+.spec-node.is-sel {
+  background: var(--hue, #1E2733); color: #fff;
+  border-color: var(--hue, #1E2733);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--hue, #1E2733) 50%, transparent);
+  z-index: 5;
+}
+.spec-node.is-sel .spec-node-logo { background: #fff; }
+
+/* the three the panel is arguing about */
+.spec-node.is-nb {
+  border-color: var(--hue, #9FADC0);
+  background: color-mix(in srgb, var(--hue, #fff) 9%, #fff);
+  z-index: 4;
+}
+
+.spec-node-logo {
+  width: 17px; height: 17px; border-radius: 4px;
+  object-fit: contain; flex-shrink: 0;
+  background: color-mix(in srgb, var(--hue, #fff) 8%, #fff);
+}
+.spec-node-logo.is-gone { display: none; }
+
 /* a company that has been argued with */
 .spec-node.is-moved::after {
   content: ''; position: absolute; top: -3px; right: -3px;
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--accent, #2563EB); border: 1.5px solid #fff;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent, #2563EB); border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(30, 39, 51, .3);
 }
 
 /* ─── Criteria strip ────────────────────────────────────────────────── */
@@ -153,10 +199,13 @@
   background: var(--bdr, #E7EAEE);
   border: 1px solid var(--bdr, #E7EAEE); border-radius: 12px; overflow: hidden;
 }
-.spec-crit-col { background: #fff; padding: 14px 16px; transition: background .18s; }
-.spec-crit-col.is-lit { background: var(--pale, #F4F6F9); }
+.spec-crit-col {
+  background: #fff; padding: 14px 16px; transition: background .18s;
+  border-top: 3px solid var(--hue, #E7EAEE);
+}
+.spec-crit-col.is-lit { background: color-mix(in srgb, var(--hue) 7%, #fff); }
 .spec-crit-hd {
-  font: 600 11px 'Inter', sans-serif; color: var(--navy, #1E2733);
+  font: 700 11px 'Inter', sans-serif; color: var(--hue, #1E2733);
   text-transform: uppercase; letter-spacing: .07em; margin-bottom: 9px;
 }
 .spec-crit-list { list-style: none; margin: 0 0 10px; padding: 0; }
@@ -166,7 +215,7 @@
 }
 .spec-crit-list li::before {
   content: ''; position: absolute; left: 0; top: 9px;
-  width: 4px; height: 4px; background: var(--mid, #7C8694);
+  width: 4px; height: 4px; background: var(--hue, #7C8694);
 }
 .spec-crit-blurb {
   font: 400 12px 'Inter', sans-serif; color: var(--mu, #8A93A0);
@@ -188,7 +237,11 @@
   font: 400 13px 'Inter', sans-serif; color: var(--mu, #8A93A0);
   padding: 30px 20px; text-align: center; margin: 0;
 }
-.spec-panel-in { padding: 16px 20px 18px; }
+.spec-panel-in {
+  padding: 16px 20px 18px;
+  border-top: 3px solid var(--hue, #E7EAEE);
+  border-radius: 12px 12px 0 0;
+}
 
 .spec-panel-hd {
   display: flex; align-items: center; justify-content: space-between;
@@ -196,15 +249,19 @@
   padding-bottom: 12px; margin-bottom: 14px;
   border-bottom: 1px solid var(--bdr, #E7EAEE);
 }
+.spec-panel-id { display: flex; align-items: center; gap: 10px; }
+.spec-panel-id .spec-node-logo { width: 26px; height: 26px; border-radius: 6px; }
 .spec-panel-tk {
-  font: 700 15px 'Inter', sans-serif; color: var(--navy, #1E2733);
-  margin-right: 10px; letter-spacing: -0.01em;
+  font: 700 15px 'Inter', sans-serif; color: var(--hue, #1E2733);
+  letter-spacing: -0.01em;
 }
 .spec-panel-nm { font: 400 13px 'Inter', sans-serif; color: var(--mu, #8A93A0); }
 .spec-panel-pos { display: flex; gap: 6px; flex-wrap: wrap; }
 .spec-chip {
   font: 600 10.5px 'Inter', sans-serif; letter-spacing: .05em; text-transform: uppercase;
-  background: var(--pale, #F4F6F9); color: var(--mid, #7C8694);
+  background: var(--pale, #F4F6F9);
+  background: color-mix(in srgb, var(--hue, #F4F6F9) 12%, #fff);
+  color: var(--hue, #7C8694);
   border-radius: 999px; padding: 4px 10px;
 }
 .spec-chip--edge  { background: #FDF3E3; color: #9A6A16; }
@@ -224,13 +281,20 @@
 
 .spec-nb { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 5px; }
 .spec-nb-btn {
-  display: flex; align-items: baseline; gap: 8px; width: 100%;
-  border: 1px solid var(--bdr, #E7EAEE); background: #fff; border-radius: 7px;
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  border: 1px solid var(--bdr, #E7EAEE);
+  border-color: color-mix(in srgb, var(--hue, #E7EAEE) 28%, #fff);
+  background: #fff; border-radius: 8px;
   padding: 6px 10px; cursor: pointer; text-align: left;
-  transition: border-color .15s, background .15s;
+  border-left: 3px solid var(--hue, #E7EAEE);
+  transition: border-color .15s, background .15s, transform .12s;
 }
-.spec-nb-btn:hover { border-color: #9FADC0; background: var(--pale, #F4F6F9); }
-.spec-nb-tk { font: 700 11.5px 'Inter', sans-serif; color: var(--navy, #1E2733); }
+.spec-nb-btn:hover {
+  background: color-mix(in srgb, var(--hue) 8%, #fff);
+  transform: translateX(2px);
+}
+.spec-nb-btn .spec-node-logo { width: 16px; height: 16px; }
+.spec-nb-tk { font: 700 11.5px 'Inter', sans-serif; color: var(--hue, #1E2733); }
 .spec-nb-nm {
   font: 400 11.5px 'Inter', sans-serif; color: var(--mu, #8A93A0);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;

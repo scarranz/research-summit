@@ -73,6 +73,30 @@ function zoneOf(x) {
   return SPECTRUM_ZONES[SPECTRUM_ZONES.length - 1];
 }
 
+// Logos come from the same source the Companies grid uses. Two fallbacks: the
+// company's own favicon, then a monogram tinted with the zone colour.
+function logoHtml(c) {
+  return '<img class="spec-node-logo" alt="" data-step="0"' +
+         ' data-domain="' + esc(c.domain || '') + '"' +
+         ' src="https://assets.parqet.com/logos/symbol/' + esc(c.ticker) + '">';
+}
+
+function wireLogos(scope) {
+  var imgs = scope.querySelectorAll('.spec-node-logo');
+  for (var i = 0; i < imgs.length; i++) {
+    imgs[i].addEventListener('error', function () {
+      var step = parseInt(this.dataset.step || '0', 10);
+      var domain = this.dataset.domain;
+      if (step === 0 && domain) {
+        this.dataset.step = '1';
+        this.src = 'https://www.google.com/s2/favicons?sz=64&domain=' + domain;
+      } else {
+        this.classList.add('is-gone');
+      }
+    });
+  }
+}
+
 // How close to a zone edge, in x units. Small = the company straddles a boundary,
 // which the deck could not express and which is usually the interesting case.
 function edgeDistance(x) {
@@ -102,25 +126,60 @@ function planeHtml() {
   h += '<div class="spec-zones">';
   for (var i = 0; i < SPECTRUM_ZONES.length; i++) {
     var z = SPECTRUM_ZONES[i];
-    h += '<div class="spec-zone spec-zone--' + z.id + '" data-zone="' + z.id + '"' +
-         ' style="left:' + z.from + '%;width:' + (z.to - z.from) + '%"></div>';
+    h += '<div class="spec-zone" data-zone="' + z.id + '"' +
+         ' style="left:' + z.from + '%;width:' + (z.to - z.from) + '%;--hue:' + z.hue + '"></div>';
   }
   h += '</div>';
+
+  // Neighbour links, drawn under the nodes when one is selected
+  h += '<svg class="spec-links" id="spec-links" aria-hidden="true"></svg>';
 
   // Nodes
   h += '<div class="spec-nodes" id="spec-nodes">';
   for (var j = 0; j < SPECTRUM_COMPANIES.length; j++) {
     var c = SPECTRUM_COMPANIES[j];
     var p = currentPos(c.ticker);
+    var zc = zoneOf(p.x);
     h += '<button class="spec-node" data-ticker="' + esc(c.ticker) + '"' +
-         ' style="left:' + p.x + '%;top:' + p.y + '%"' +
+         ' data-zone="' + zc.id + '"' +
+         ' style="left:' + p.x + '%;top:' + p.y + '%;--hue:' + zc.hue + '"' +
          ' title="' + esc(c.name) + '">' +
+         logoHtml(c) +
          '<span class="spec-node-tk">' + esc(c.ticker) + '</span>' +
          '</button>';
   }
   h += '</div>';
 
   return h;
+}
+
+/* ─── The neighbour links ──────────────────────────────────────────────
+   Percentage coordinates, so the lines follow the plane on resize without
+   any measurement or redraw-on-resize handler.                          */
+
+function drawLinks() {
+  var svg = document.getElementById('spec-links');
+  if (!svg) return;
+
+  if (!_spec.sel) { svg.innerHTML = ''; return; }
+
+  var me = currentPos(_spec.sel);
+  var hue = zoneOf(me.x).hue;
+  var near = neighbours(_spec.sel, 3);
+  var s = '';
+  for (var i = 0; i < near.length; i++) {
+    var p = currentPos(near[i].co.ticker);
+    // nearest neighbour draws strongest — the ranking should be visible, not
+    // just listed in the panel
+    s += '<line x1="' + me.x + '%" y1="' + me.y + '%"' +
+         ' x2="' + p.x + '%" y2="' + p.y + '%"' +
+         ' stroke="' + hue + '" stroke-width="' + (2.4 - i * 0.5) + '"' +
+         ' stroke-linecap="round" stroke-dasharray="6 5"' +
+         ' opacity="' + (0.85 - i * 0.18) + '"/>';
+    s += '<circle cx="' + p.x + '%" cy="' + p.y + '%" r="' + (4.5 - i * 0.7) + '"' +
+         ' fill="' + hue + '" opacity="' + (0.28 - i * 0.06) + '"/>';
+  }
+  svg.innerHTML = s;
 }
 
 function html() {
@@ -152,7 +211,8 @@ function html() {
   for (var zi = 0; zi < SPECTRUM_ZONES.length; zi++) {
     var zz = SPECTRUM_ZONES[zi];
     h += '<div class="spec-zonebar-cell" data-zone="' + zz.id + '"' +
-         ' style="flex:0 0 ' + (zz.to - zz.from) + '%">' + esc(zz.name) + '</div>';
+         ' style="flex:0 0 ' + (zz.to - zz.from) + '%;--hue:' + zz.hue + '">' +
+         esc(zz.name) + '</div>';
   }
   h += '</div>';
 
@@ -176,7 +236,7 @@ function html() {
   h += '<div class="spec-crit" id="spec-crit">';
   for (var i = 0; i < SPECTRUM_ZONES.length; i++) {
     var z = SPECTRUM_ZONES[i];
-    h += '<div class="spec-crit-col" data-zone="' + z.id + '">';
+    h += '<div class="spec-crit-col" data-zone="' + z.id + '" style="--hue:' + z.hue + '">';
     h += '<div class="spec-crit-hd">' + esc(z.name) + '</div>';
     h += '<ul class="spec-crit-list">';
     for (var k = 0; k < z.criteria.length; k++) {
@@ -219,10 +279,11 @@ function renderPanel() {
   var near = neighbours(c.ticker, 3);
   var moved = isMoved(c.ticker);
 
-  var h = '<div class="spec-panel-in">';
+  var h = '<div class="spec-panel-in" style="--hue:' + z.hue + '">';
 
   h += '<div class="spec-panel-hd">';
-  h += '<div>';
+  h += '<div class="spec-panel-id">';
+  h += logoHtml(c);
   h += '<span class="spec-panel-tk">' + esc(c.ticker) + '</span>';
   h += '<span class="spec-panel-nm">' + esc(c.name) + '</span>';
   h += '</div>';
@@ -250,7 +311,10 @@ function renderPanel() {
   h += '<ul class="spec-nb">';
   for (var i = 0; i < near.length; i++) {
     var n = near[i];
-    h += '<li><button class="spec-nb-btn" data-goto="' + esc(n.co.ticker) + '">' +
+    var nz = zoneOf(currentPos(n.co.ticker).x);
+    h += '<li><button class="spec-nb-btn" data-goto="' + esc(n.co.ticker) + '"' +
+         ' style="--hue:' + nz.hue + '">' +
+         logoHtml(n.co) +
          '<span class="spec-nb-tk">' + esc(n.co.ticker) + '</span>' +
          '<span class="spec-nb-nm">' + esc(n.co.name) + '</span>' +
          '</button></li>';
@@ -270,6 +334,7 @@ function renderPanel() {
 
   h += '</div>';
   el.innerHTML = h;
+  wireLogos(el);
 }
 
 function renderStatus() {
@@ -287,11 +352,27 @@ function syncNodes() {
   for (var i = 0; i < nodes.length; i++) {
     var tk = nodes[i].dataset.ticker;
     var p = currentPos(tk);
+    var z = zoneOf(p.x);
     nodes[i].style.left = p.x + '%';
     nodes[i].style.top = p.y + '%';
+    // colour follows the company, so dragging across a boundary recolours it
+    nodes[i].style.setProperty('--hue', z.hue);
+    nodes[i].dataset.zone = z.id;
     nodes[i].classList.toggle('is-sel', _spec.sel === tk);
+    nodes[i].classList.toggle('is-nb', false);
     nodes[i].classList.toggle('is-moved', isMoved(tk));
   }
+
+  // mark the three the panel is talking about
+  if (_spec.sel) {
+    var near = neighbours(_spec.sel, 3);
+    for (var j = 0; j < near.length; j++) {
+      var el = document.querySelector('#spec-nodes .spec-node[data-ticker="' + near[j].co.ticker + '"]');
+      if (el) el.classList.add('is-nb');
+    }
+  }
+
+  drawLinks();
 }
 
 function select(ticker) {
@@ -339,6 +420,12 @@ function wireDrag(plane) {
     drag.node.style.top = y + '%';
     drag.node.classList.add('is-moved');
     _spec.pos[drag.ticker] = { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
+
+    // recolour and re-aim the links while the chip is still in the air
+    var z = zoneOf(x);
+    drag.node.style.setProperty('--hue', z.hue);
+    drag.node.dataset.zone = z.id;
+    drawLinks();
   });
 
   function endDrag(e) {
@@ -423,6 +510,7 @@ export function loadSpectrumPage() {
   _spec = { pos: loadPositions(), sel: null };
 
   root.innerHTML = html();
+  wireLogos(root);
   wire(root);
   syncNodes();
   renderStatus();

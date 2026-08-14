@@ -5815,3 +5815,35 @@ insert into investor_yearly_holdings (investor_key, year, quarter, ticker, compa
   ('dorsey', 2026, 1, 'UBER', 'Uber Technologies Inc', '90353T100', 78423912, 6.24, 10, 'sec_xml'),
   ('dorsey', 2026, 1, 'BKNG', 'Booking Holdings Inc', '09857L108', 69234502, 5.51, 11, 'sec_xml');
 
+-- ─── Q2 2026 additions (dorsey, hohn) ───
+-- Both funds filed their Q2 2026 13F-HR right at the deadline (2026-08-14).
+-- dorsey: accession 0001398344-26-014470 (Dorsey Asset Management, CIK 0001671657)
+-- hohn:   accession 0001647251-26-000007 (TCI Fund Management, CIK 0001647251)
+delete from investor_yearly_holdings where investor_key = 'dorsey' and year = 2026 and quarter = 2;
+delete from investor_yearly_holdings where investor_key = 'hohn' and year = 2026 and quarter = 2;
+
+insert into investor_yearly_holdings (investor_key, year, quarter, ticker, company_name, cusip, value_usd, weight_pct, rank, source_type) values
+  ('dorsey', 2026, 2, 'ASML', 'Asml Hldg Nv', 'N07059210', 259351356, 16.61, 1, 'sec_xml'),
+  ('dorsey', 2026, 2, 'APP', 'Applovin Corp', '03831W108', 226347237, 14.5, 2, 'sec_xml'),
+  ('dorsey', 2026, 2, 'RPRX', 'Royalty Pharma Plc', 'G7709Q104', 137737525, 8.82, 3, 'sec_xml'),
+  ('dorsey', 2026, 2, 'BKNG', 'Booking Holdings Inc', '09857L108', 132164960, 8.46, 4, 'sec_xml'),
+  ('dorsey', 2026, 2, 'SPGI', 'S&P Global Inc', '78409V104', 128862358, 8.25, 5, 'sec_xml'),
+  ('dorsey', 2026, 2, 'UBER', 'Uber Technologies Inc', '90353T100', 127141663, 8.14, 6, 'sec_xml'),
+  ('dorsey', 2026, 2, 'LYV', 'Live Nation Entertainment Inc', '538034109', 120057536, 7.69, 7, 'sec_xml'),
+  ('dorsey', 2026, 2, 'DHR', 'Danaher Corp Del', '235851102', 119280671, 7.64, 8, 'sec_xml'),
+  ('dorsey', 2026, 2, 'META', 'Meta Platforms Inc', '30303M102', 112602234, 7.21, 9, 'sec_xml'),
+  ('dorsey', 2026, 2, 'AER', 'Aercap Holdings Nv', 'N00985106', 111788186, 7.16, 10, 'sec_xml'),
+  ('dorsey', 2026, 2, 'SUNB', 'Sunbelt Rentals Holdings Inc', '866966104', 86074740, 5.51, 11, 'sec_xml'),
+
+  ('hohn', 2026, 2, 'GE', 'Ge Aerospace', '369604301', 17725353519, 33.59, 1, 'sec_xml'),
+  ('hohn', 2026, 2, 'V', 'Visa Inc', '92826C839', 10462232091, 19.83, 2, 'sec_xml'),
+  ('hohn', 2026, 2, 'MCO', 'Moodys Corp', '615369105', 6492167509, 12.3, 3, 'sec_xml'),
+  ('hohn', 2026, 2, 'SPGI', 'S&P Global Inc', '78409V104', 5735017808, 10.87, 4, 'sec_xml'),
+  ('hohn', 2026, 2, 'CP', 'Canadian Pacific Kansas City', '13646K108', 3925911608, 7.44, 5, 'sec_xml'),
+  ('hohn', 2026, 2, 'GOOG', 'Alphabet Inc', '02079K107', 3511682917, 6.65, 6, 'sec_xml'),
+  ('hohn', 2026, 2, 'FER', 'Ferrovial Nv', 'N3168P101', 1434611939, 2.72, 7, 'sec_xml'),
+  ('hohn', 2026, 2, 'CNI', 'Canadian Natl Ry Co', '136375102', 1124534915, 2.13, 8, 'sec_xml'),
+  ('hohn', 2026, 2, 'GOOGL', 'Alphabet Inc', '02079K305', 878058090, 1.66, 9, 'sec_xml'),
+  ('hohn', 2026, 2, 'MLM', 'Martin Marietta Matls Inc', '573284106', 758423360, 1.44, 10, 'sec_xml'),
+  ('hohn', 2026, 2, 'VMC', 'Vulcan Matls Co', '929160109', 721890650, 1.37, 11, 'sec_xml');
+

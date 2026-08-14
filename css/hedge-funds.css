@@ -484,7 +484,14 @@
 
 .u13f-tbl th, .u13f-tbl td { padding-left: 4px; }
 
-.u13f-inc { cursor: pointer; }
+.u13f-inc, .c13f-inc { cursor: pointer; }
+
+.ivd-cmp-showmore { display: block; margin: 8px auto 0; }
+
+/* ─── Check for new 13Fs panel ─── */
+
+.c13f-row-new { background: color-mix(in srgb, var(--pos) 8%, transparent); }
+.c13f-row-err td { color: var(--neg); }
 
 .u13f-ticker-in {
   width: 62px;
@@ -724,6 +731,8 @@
 .ivd-pie-logo { width: 20px; height: 20px; border-radius: 5px; flex-shrink: 0; }
 .ivd-pie-logo img { padding: 3px; }
 
+.ivd-pie-sector-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
+
 .ivd-pie-label-txt { display: flex; flex-direction: column; line-height: 1.15; overflow: hidden; }
 
 .ivd-pie-label-t {
@@ -831,3 +840,65 @@
 .ivd-move-item.sold .ivd-move-txt b { color: var(--neg); }
 .ivd-move-item.up .ivd-move-txt b { color: var(--pos); }
 .ivd-move-item.down .ivd-move-txt b { color: var(--neg); }
+
+/* ─── Sector Exposure heatmap (main Hedge Funds tab) ─── */
+
+.hf-heat-wrap { overflow-x: auto; }
+
+.hf-heat-tbl { width: 100%; border-collapse: separate; border-spacing: 3px; font-size: 11px; }
+
+.hf-heat-sector-h, .hf-heat-total-h {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--mu);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  text-align: left;
+  padding: 0 8px 6px;
+  white-space: nowrap;
+}
+
+.hf-heat-total-h { text-align: center; }
+
+.hf-heat-inv-h {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--steel);
+  text-align: center;
+  padding: 0 0 6px;
+  cursor: default;
+}
+
+.hf-heat-sector-lbl {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  padding: 0 10px 0 8px;
+}
+
+.hf-heat-cell {
+  text-align: center;
+  min-width: 44px;
+  padding: 9px 4px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: default;
+}
+
+.hf-heat-text-lt { color: var(--w); }
+.hf-heat-text-dk { color: var(--text); }
+
+.hf-heat-empty { background: var(--pale); color: var(--bdr); font-weight: 400; }
+
+.hf-heat-total-cell {
+  text-align: center;
+  min-width: 52px;
+  padding: 9px 4px;
+  border-radius: 6px;
+  font-weight: 700;
+  color: var(--navy);
+  background: var(--ice);
+  font-variant-numeric: tabular-nums;
+}

@@ -4330,13 +4330,12 @@ function aBuildSplc(){
         plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label+': '+ctx.parsed.x+'%'; } } } },
         scales:{ x:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } }, y:{ grid:{ display:false }, ticks:{ font:{ size:10 } } } } } }); }
 }
-// ─── Miscellaneous ▸ M&A — placeholder. Summit reserves this for deals it has studied in depth.
-// Amazon has made acquisitions (Whole Foods, MGM, One Medical, iRobot [terminated], Zoox), but none
-// recent has been deep-dived by Summit — so this stays an intentional placeholder until one is.
+// ─── Miscellaneous ▸ M&A and Other Analysis — future placeholders (nothing deep-dived for AMZN yet).
 function aMandaBody(){
-  return '<p class="ov-lede"><b>Nothing deep-dived yet.</b> This tab is where Summit parks acquisitions it has studied in depth — deal thesis, price paid, integration, and what it did to the model. Amazon has been an active acquirer (Whole Foods · MGM · One Medical · Zoox; the iRobot deal was terminated on EU antitrust), but none recent has been analyzed in depth here, so this is an intentional placeholder rather than a gap.</p>'+
-    '<div class="ov-sec"><div class="ov-sec-h">When we add one</div>'+
-    '<div class="ov-fynote">Each studied deal will get: the strategic rationale, purchase price and multiple, financing, accretion/dilution to the model, and the post-close integration read. Until then, AMZN\'s capital allocation story is best read through the <b>Capex &amp; Depreciation</b> tab beside this one — where the real money is going.</div></div>';
+  return '<p class="ov-lede"><b>No M&amp;A deep-dived yet.</b> Placeholder for acquisitions Summit has studied in depth — none for Amazon to date.</p>';
+}
+function aOtherAnalysisBody(){
+  return '<p class="ov-lede"><b>Future placeholder.</b> Ad-hoc analysis will land here — nothing deep-dived for Amazon yet.</p>';
 }
 function deepDiveHtml(c){
   _co=c;   // capture company (id + ticker) for the Watch List DB wiring
@@ -4406,9 +4405,11 @@ function deepDiveHtml(c){
       '<div class="ovt-subtabs">'+
         '<button type="button" class="ovt-subtab active" data-ovst="capex">Capex &amp; Depreciation</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="manda">M&amp;A</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="other">Other Analysis</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="capex">'+bottomlineCapexBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="manda" hidden>'+aMandaBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="other" hidden>'+aOtherAnalysisBody()+'</div>'+
     '</div>';
   h+='</div>';
   return h;

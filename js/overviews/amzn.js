@@ -3111,8 +3111,6 @@ function bottomlineBody(){
     '<span class="acx-tog amgn-tog"><button type="button" data-amgn="y" class="active">Annual</button><button type="button" data-amgn="q">Quarterly</button></span></div>';
   h+='<div class="ov-sec"><div class="ov-sec-h">Operating margin</div><div style="height:320px"><canvas id="aMgnMain"></canvas></div>'+
     '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px"><b>Gross &amp; operating</b> = consolidated (revenue − cost of sales, then − all functional cost). <b>By segment</b> = each segment’s operating margin, with the consolidated line; AWS ~35% vs retail mid-single-digit drags the whole up. 3Q25 dips carry the $2.5B FTC charge. Annual from the Segments tab; quarterly from 8-Ks / Results.</div></div>';
-  h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center">Operating income by segment<span class="acx-tog soi-tog"><button type="button" data-soi="dollar" class="active">$B</button><button type="button" data-soi="ppt">Margin contribution</button></span></div><div style="height:290px"><canvas id="aSegOpInc"></canvas></div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">Where the profit is made — AWS ~57% of operating income on ~18% of revenue; FY2022 the over-investment trough. <b>What drives each segment’s bottom line is in the Segments tab</b> (click a segment for its full dive).</div></div>';
   return h;
 }
 function aMgnArcRows(gran){
@@ -3150,19 +3148,9 @@ function aBuildBottomline(){
       options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
         plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':c.parsed.y+'%'); } } } },
         scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } }); }
-  var seg=aMgnSegRows(gran), soi=aChartReady('aSegOpInc');
-  var smt=mpane?mpane.querySelector('.soi-tog .active'):null, ppt=(smt?smt.getAttribute('data-soi'):'dollar')==='ppt';
-  if(soi){ aDestroy('aSegOpInc'); var SG=[{lab:'North America',k:'us',c:BRAND},{lab:'International',k:'int',c:BRAND2},{lab:'AWS',k:'aws',c:SQUID}];
-    function sval(k){ return seg.oi[k].map(function(v,i){ return (v==null||!seg.rev[i])?(v==null?null:v):(ppt?Math.round(v*100000/seg.rev[i]*10)/10:v); }); }
-    _aCharts['aSegOpInc']=new Chart(soi.getContext('2d'),{ type:'bar',
-      data:{ labels:seg.labels, datasets:SG.map(function(s){ return { label:s.lab, data:sval(s.k), backgroundColor:s.c, borderColor:'#fff', borderWidth:1, maxBarThickness:32, stack:'o' }; }) },
-      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':(ppt?c.parsed.y+' ppt':'$'+c.parsed.y.toFixed(1)+'B')); }, footer:function(it){ var t=it.reduce(function(a,x){ return a+(x.parsed.y||0); },0); return ppt?'Consolidated margin: '+t.toFixed(1)+'%':'Total: $'+t.toFixed(1)+'B'; } } } },
-        scales:{ x:{ stacked:true, grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return ppt?v+'%':'$'+v+'B'; } } } } } }); }
   if(mpane && !mpane._amgnWired){ mpane._amgnWired=true;
     mpane.querySelectorAll('.amgn-tog button').forEach(function(b){ b.onclick=function(){ mpane.querySelectorAll('.amgn-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildBottomline(); }; });
-    mpane.querySelectorAll('.mmode-tog button').forEach(function(b){ b.onclick=function(){ mpane.querySelectorAll('.mmode-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildBottomline(); }; });
-    mpane.querySelectorAll('.soi-tog button').forEach(function(b){ b.onclick=function(){ mpane.querySelectorAll('.soi-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildBottomline(); }; }); }
+    mpane.querySelectorAll('.mmode-tog button').forEach(function(b){ b.onclick=function(){ mpane.querySelectorAll('.mmode-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildBottomline(); }; }); }
 }
 // Expense-line full dives — opened from an Expenses card via data-detail="exp:<key>". VISUAL, not prose.
 var EW_CSS='<style>'+
@@ -3382,7 +3370,7 @@ function expensesBody(){
     '.exp-st{background:var(--card,#fff);padding:9px 12px}.exp-sl{font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)}'+
     '.exp-sv{font-size:17px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;margin-top:2px}.exp-ss{font-size:9.5px;color:var(--mu);margin-top:1px}'+
   '</style>';
-  h+=marginBridgeBody();
+  // "What moved the operating margin" removed — the General ▸ The bridge (Margin change / bps) supersedes it.
   h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center">Functional cost as % of revenue — operating leverage'+
     '<span class="acx-tog exp-tog"><button type="button" data-expg="q">Quarterly</button><button type="button" data-expg="y" class="active">Annual</button></span></div>'+
     '<div style="height:300px"><canvas id="aExpPct"></canvas></div>'+
@@ -3416,7 +3404,6 @@ function aBuildExpensesPct(){
       scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ stacked:true, max:100, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } });
 }
 function aBuildExpenses(){
-  aBuildMarginBridge();
   aBuildBridge();
   aBuildExpensesPct();
   var yrs=[2023,2024,2025];
@@ -3493,21 +3480,21 @@ function segCapMini(cap,ppe){ return '<div class="ew-flow"><div class="ew-fn"><d
 // one genuinely-assignable anchor (segment capex/PP&E). This is the "expense types per segment" the
 // segment line otherwise black-boxes.
 var SEG_COST={
-  aws:{ note:'<b>The black box:</b> Amazon discloses AWS revenue and operating income, but <b>not</b> its expense breakdown. The shape below is inferred from the 10-K MD&amp;A, Note 10 segment capex/PP&amp;E, and management commentary — qualitative, not a reported split.',
+  aws:{ note:'<b>What is (and isn\'t) broken out:</b> Amazon discloses AWS revenue, operating income, <b>D&amp;A and PP&amp;E by segment</b> (10-K Note 10) — but <b>not</b> the functional-expense split. So the cost <i>shape</i> below is qualitative, but the depreciation load is a <b>reported</b> number, not inferred.',
     boxes:[
       ['🖥️','Infrastructure depreciation — biggest, fastest-rising','AWS carries $190B of PP&amp;E (from $73B in 2023) and ~68% of group capex; depreciating that fleet is the largest and fastest-growing cost in the segment — and why margin expands only once capacity is utilized.'],
       ['⚡','Power &amp; energy','Data-center electricity is increasingly material as the fleet scales — Q2 26 margin carried ~130bps of energy-derivative gains, a measure of how much energy now moves the line.'],
       ['🧑‍💻','Engineering &amp; custom silicon','R&amp;D payroll for services and Trainium/Graviton design — spending ahead of the revenue it enables, but the source of the price-performance edge.']
     ],
-    anchor:'What IS assignable: AWS = ~68% of group capex and &gt;50% of group PP&amp;E — so the group\'s depreciation concentrates here even though the functional-expense split does not exist in the filings.' },
-  us:{ note:'<b>The black box:</b> Amazon reports North America revenue and operating income, but not a functional expense split. The shape below is inferred from the 10-K MD&amp;A drivers and Note 10 — qualitative, not reported.',
+    anchor:'Disclosed, not inferred: Amazon reports <b>D&amp;A by segment</b> — AWS carries the majority of it — alongside ~68% of group capex and &gt;50% of PP&amp;E. The depreciation load here is a reported figure; only the functional-expense split is undisclosed.' },
+  us:{ note:'<b>What is (and isn\'t) broken out:</b> Amazon reports North America revenue, operating income, <b>D&amp;A and PP&amp;E by segment</b> (Note 10) — but not the functional-expense split. The cost shape below is qualitative; the depreciation is disclosed.',
     boxes:[
       ['📦','Cost of sales (1P product) — largest, shrinking','First-party product cost is the biggest line, but it falls as a share as third-party (~61% of units) and advertising mix rises.'],
       ['🚚','Fulfillment &amp; shipping — the cost-to-serve','Running the FC network and last-mile delivery; the efficiency line — units +17% while this grows far less (robots, regionalization).'],
       ['📣','Advertising — a margin offset, not a cost','Ads ride the retail surface at near-pure incremental margin; growing +18%→+26%, it is the single biggest reason NA margin climbs.']
     ],
     anchor:'What IS assignable: NA capex ~$36B on ~8% of its revenue and $122B PP&amp;E — a fraction of AWS\'s intensity, so retail carries far less depreciation.' },
-  int:{ note:'<b>The black box:</b> Same as North America — revenue and operating income are reported, the expense split is not. Two sub-economies sit under one line, which the reported margin blends.',
+  int:{ note:'<b>What is (and isn\'t) broken out:</b> Same as North America — revenue, operating income, D&amp;A and PP&amp;E are reported by segment; only the functional-expense split is not. Two sub-economies sit under one line, which the reported margin blends.',
     boxes:[
       ['📦','The NA cost shape, a few years behind','COGS + fulfillment + shipping dominate, exactly like North America; established markets (Germany/UK/Japan) already run the efficient version.'],
       ['🌱','Emerging-market investment drag','India, Brazil and the Middle East still spend ahead of revenue — the build-out cost NA already absorbed, now sitting in this line.'],

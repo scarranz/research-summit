@@ -3128,6 +3128,41 @@ function aBuildBridge(){
     SG.forEach(function(s){ var sl=pane.querySelector('.br-sl input[data-brseg="'+s.k+'"]'), v=pane.querySelector('.br-sl-v[data-brsegv="'+s.k+'"]'); if(sl&&v) v.textContent=((+sl.value)>0?'+':'')+sl.value+'%'; });
   }
 }
+// ── OI → Net income walk, with one-off normalization. Consolidated from BBG (amznBBG.is), actuals +
+// consensus. The reported net margin is flattered by equity mark-to-market gains (Rivian-type) in the
+// non-operating line; "Normalized" strips that line (pretax basis) to show the underlying margin. ──
+function aIsVal(k,y){ var s=amznBBG.is[k]; if(!s) return null; return y<=2025 ? s.a[y-2023] : s.f[y-2026]; }
+function aNetBridgeBody(){
+  var years=[2023,2024,2025,2026,2027,2028];
+  var yb=years.map(function(y){ return '<button type="button" data-nbyr="'+y+'"'+(y===2025?' class="active"':'')+'>FY'+String(y).slice(2)+(y>2025?'E':'')+'</button>'; }).join('');
+  return '<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
+      '<span>Operating income → net income — and the normalization</span>'+
+      '<span class="acx-tog nb-norm"><button type="button" data-nbnorm="rep" class="active">Reported</button><button type="button" data-nbnorm="norm">Normalized</button></span>'+
+    '</div>'+
+    '<div style="display:flex;justify-content:flex-end;margin:0 0 8px"><span class="acx-tog nb-yr" style="flex-wrap:wrap">'+yb+'</span></div>'+
+    '<div style="height:330px"><canvas id="aNetBr"></canvas></div>'+
+    '<div class="acx-cap" id="aNetBrCap" style="font-size:11px;color:var(--mu);margin-top:8px"></div></div>';
+}
+function aBuildNetBridge(){
+  var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(!pane) return;
+  var yb=pane.querySelector('.nb-yr .active'), y=yb?+yb.getAttribute('data-nbyr'):2025;
+  var nt=pane.querySelector('.nb-norm .active'), norm=!!(nt&&nt.getAttribute('data-nbnorm')==='norm');
+  var oi=aIsVal('oi',y), ni=aIsVal('netInterest',y), ono=aIsVal('otherNonOp',y), tax=aIsVal('tax',y), em=aIsVal('equityMethod',y), net=aIsVal('netIncome',y), rev=aIsVal('rev',y);
+  if(oi==null||net==null) return;
+  function B(x){ return x==null?0:x/1000; }
+  var run=B(oi), steps=[{label:'Op. income', kind:'base', color:'#1E2733', range:[0,run], runAfter:run, val:B(oi)}];
+  function step(lab,d,dc){ var lo=run; run=lo+d; steps.push({label:lab, kind:d>=0?'up':'down', color:(dc==='#B7791F'?'#B7791F':'#6B7683'), dc:dc, range:[Math.min(lo,run),Math.max(lo,run)], runAfter:run, val:d}); }
+  step('Interest, net', B(-ni), '#6B7683');
+  if(!norm) step('Equity & other (one-off)', B(-ono), '#B7791F');
+  step('– Income tax', B(-tax), '#6B7683');
+  if(em) step('– Equity-method', B(-em), '#6B7683');
+  steps.push({label:(norm?'Net income (norm.)':'Net income'), kind:'total', color:'#2E8B57', range:[0,run], runAfter:null, val:run});
+  aBuildBrWaterfall('aNetBr', steps, BR_FMT_D);
+  var cap=pane.querySelector('#aNetBrCap');
+  if(cap){ var rm=(rev?net/rev*100:null), nm=(rev?(net+ono)/rev*100:null), yl='FY'+String(y).slice(2)+(y>2025?'E':'');
+    cap.innerHTML='<b>'+yl+'</b> · reported net margin <b>'+(rm==null?'—':rm.toFixed(1)+'%')+'</b>'+(rev?' ($'+B(net).toFixed(1)+'B / $'+B(rev).toFixed(0)+'B rev)':'')+' · normalized (ex the equity / one-off non-operating line) <b>'+(nm==null?'—':nm.toFixed(1)+'%')+'</b>. The <span style="color:#B7791F;font-weight:700">amber bar</span> is the equity mark-to-market (Rivian-type) &amp; other non-operating — $'+B(Math.abs(ono)).toFixed(1)+'B in '+yl+'; it flatters reported net income (consensus runs hotter still on assumed gains). Normalized removes it on a pretax basis — the underlying read. Data: BBG consensus, as of Aug 2026.';
+  }
+}
 // ── DRAFT PROPOSALS — visible, clearly-marked pink mock-ups for Dani to evaluate & pick. Not final;
 // each shows the alternative "as it would look" with an A/B/C choice. Remove once decided. ──
 function aDraftsBody(){
@@ -3461,6 +3496,7 @@ function aBuildExpensesPct(){
 }
 function aBuildExpenses(){
   aBuildBridge();
+  aBuildNetBridge();
   aBuildDrafts();
   aBuildExpensesPct();
   var yrs=[2023,2024,2025];
@@ -3508,6 +3544,8 @@ function aBuildExpenses(){
       tog('.br-to', aBuildBridge);
       tog('.br-fy', aBuildBridge);
       pane.querySelectorAll('.br-sl input[type=range]').forEach(function(s){ s.addEventListener('input', aBuildBridge); });
+      tog('.nb-yr', aBuildNetBridge);
+      tog('.nb-norm', aBuildNetBridge);
       var etabs=pane.querySelectorAll('.exp-tab');
       etabs.forEach(function(b){ b.onclick=function(){ var k=b.getAttribute('data-exptab');
         etabs.forEach(function(x){ x.classList.toggle('active',x===b); });
@@ -4546,7 +4584,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="segments">Segments</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="supplychain">Supply Chain</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="margins">'+expenseTabsBody()+bottomlineBody()+aBridgeBody()+expensesBody()+aDraftsBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="margins">'+expenseTabsBody()+bottomlineBody()+aBridgeBody()+aNetBridgeBody()+expensesBody()+aDraftsBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="segments" hidden>'+segmentsBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="supplychain" hidden>'+aSplcBody(c)+'</div>'+
     '</div>';

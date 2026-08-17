@@ -22,6 +22,7 @@ import { fetchThemeRecord, saveThemeRecord } from '../api.js';   // durable pers
 import { amznResults } from '../results-data/amzn.js';
 import { consensusEvo } from '../consensus-evolution.js';
 import { amznSens } from './amzn-sensitivity.js';   // Valuation ▸ Sensitivity Analysis
+import { amznTargetMult } from './amzn-target-multiple.js';   // Valuation ▸ Target Multiple
 
 // ─── esc: escapes <>" but deliberately leaves & literal (per contract; never double-encode) ──
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -3446,10 +3447,12 @@ function deepDiveHtml(c){
   h+='<div class="dd-pane" data-dd="valuation" hidden>'+
       '<div class="ovt-subtabs">'+
         '<button type="button" class="ovt-subtab active" data-ovst="sensitivity">Sensitivity Analysis</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="targetmult">Target Multiple</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="peers">Peers</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="financials">Financials</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="sensitivity">'+amznSens.body()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="targetmult" hidden>'+amznTargetMult.body()+'</div>'+
       '<div class="ovt-subpane" data-ovst="peers" hidden>'+valuationPeersBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="financials" hidden>'+valuationFinBody()+'</div>'+
     '</div>';
@@ -3497,6 +3500,7 @@ function aBuildSub(root, dd, key){
   }
   if(dd==='valuation'){
     if(key==='sensitivity') requestAnimationFrame(function(){ amznSens.init(root); });
+    if(key==='targetmult') requestAnimationFrame(function(){ amznTargetMult.init(root); });
     if(key==='peers') requestAnimationFrame(function(){ aScRenderAll(root); aScChipsAll(root); aScFetchCaps(root); });
     if(key==='financials') requestAnimationFrame(aBuildFin);
   }

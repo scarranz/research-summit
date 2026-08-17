@@ -69,10 +69,13 @@ var MOCK_PE = [34, 33, 32, 31, 30, 30, 29];
 
 // ── State ────────────────────────────────────────────────────────────────────────
 var _mode = 'live';
+var _view = 'table';      // 'table' | 'chart'
+var _cm   = 'pt';         // chart metric: 'pt' targets · 'under' underlying · 'delta' move per revision
 var _mEv  = 14;
 var _mPe  = 32;
 var _netDebt = 0;
 var _px = null;
+var _chart = null;
 
 // ── Maths ────────────────────────────────────────────────────────────────────────
 function eps(s){ return s.earn / s.sh; }
@@ -135,8 +138,117 @@ function tmBody(){
          '<input class="sens-inp" id="tmNd" type="number" step="1000" value="'+_netDebt+'"><span class="sens-inp-u">$M</span></span></div>'+
        '</div>';
 
-  h += '<div id="tmWarn"></div><div class="dfin-wrap" id="tmTable"></div><div class="ov-foot" id="tmFoot"></div>';
+  h += '<div id="tmKpis"></div>';
+  h += '<div id="tmWarn"></div>';
+
+  h += '<div class="sens-controls-row sens-row-year" style="margin-top:4px">'+
+       '<div class="sens-ctrl"><span class="sens-ctrl-l">View</span><div class="sens-years">'+
+         '<button type="button" class="sens-year" data-tmview="table">Table</button>'+
+         '<button type="button" class="sens-year" data-tmview="chart">Chart</button>'+
+       '</div></div>'+
+       '<div class="sens-ctrl tm-cmwrap"><span class="sens-ctrl-l">Show</span><div class="sens-years">'+
+         '<button type="button" class="sens-year" data-tmcm="pt">Price targets</button>'+
+         '<button type="button" class="sens-year" data-tmcm="under">Underlying (indexed)</button>'+
+         '<button type="button" class="sens-year" data-tmcm="delta">Move per revision</button>'+
+       '</div></div>'+
+       '</div>';
+
+  h += '<div class="dfin-wrap" id="tmTable"></div>';
+  h += '<div id="tmChartWrap" style="height:340px;position:relative" hidden><canvas id="tmChart"></canvas></div>';
+  h += '<div class="dd-note" id="tmChartNote" hidden></div>';
+  h += '<div class="ov-foot" id="tmFoot"></div>';
   return h;
+}
+
+// ── Summary tiles ────────────────────────────────────────────────────────────────
+function renderKpis(scope){
+  var f=SNAPS[0], l=SNAPS[SNAPS.length-1];
+  var evL=ptEv(l), peL=ptPe(l);
+  var revs=0; SNAPS.forEach(function(_,i){ if(isRevision(i)) revs++; });
+  function tile(v,k,s,color){
+    return '<div class="tm-attr-c"><div class="tm-attr-v"'+(color?' style="color:'+color+'"':'')+'>'+v+'</div>'+
+      '<div class="tm-attr-k">'+esc(k)+'</div><div class="tm-attr-s">'+s+'</div></div>';
+  }
+  var up = _px ? ((evL+peL)/2/_px - 1) : null;
+  scope.querySelector('#tmKpis').innerHTML='<div class="tm-attr">'+
+    tile(fmtPx(evL), 'Target @ '+_mEv+'× EV/EBITDA', 'latest revision · '+signPct(evL/ptEv(f)-1)+' since first')+
+    tile(fmtPx(peL), 'Target @ '+_mPe+'× P/E',       'latest revision · '+signPct(peL/ptPe(f)-1)+' since first')+
+    tile(signPct(evL/peL-1), 'The two methods disagree', 'spread between them today',
+         Math.abs(evL/peL-1)>0.10?'#C0392B':'#2E8B57')+
+    tile(revs+' / '+SNAPS.length, 'Real revisions', 'the rest are re-parses')+
+    (up!=null ? tile(signPct(up),'Upside at the midpoint','vs live '+fmtPx(_px), up>=0?'#2E8B57':'#C0392B') : '')+
+  '</div>';
+}
+
+// ── Chart ────────────────────────────────────────────────────────────────────────
+var C_EV='#146EB4', C_PE='#FF9900', C_REV='#8E44AD', C_EBI='#2E8B57', C_EAR='#C0392B';
+function buildChart(scope){
+  var cv=scope.querySelector('#tmChart');
+  if(!cv || typeof Chart==='undefined' || cv.offsetParent===null) return;
+  if(_chart){ try{ _chart.destroy(); }catch(e){} _chart=null; }
+  var labels=SNAPS.map(function(s){ return s.d.slice(2); });   // yy-mm-dd
+  // a re-parse is drawn hollow, the EBITDA redefinition ringed in red
+  var ptStyle=function(){ return SNAPS.map(function(s,i){ return isRevision(i)?4.5:3; }); };
+  var ptBorder=function(base){ return SNAPS.map(function(s){ return s.d===BREAK_ON?'#C0392B':base; }); };
+  var ptFill=function(base){ return SNAPS.map(function(s,i){ return isRevision(i)?base:'#fff'; }); };
+  var ds, yFmt, note;
+
+  if(_cm==='pt'){
+    ds=[
+      { label:_mEv+'× EV/EBITDA', data:SNAPS.map(function(s){ return ptEv(s); }), borderColor:C_EV,
+        backgroundColor:C_EV, borderWidth:2.4, tension:.25, fill:false,
+        pointRadius:ptStyle(), pointBackgroundColor:ptFill(C_EV), pointBorderColor:ptBorder(C_EV), pointBorderWidth:2 },
+      { label:_mPe+'× P/E', data:SNAPS.map(function(s){ return ptPe(s); }), borderColor:C_PE,
+        backgroundColor:C_PE, borderWidth:2.4, tension:.25, fill:false,
+        pointRadius:ptStyle(), pointBackgroundColor:ptFill(C_PE), pointBorderColor:ptBorder(C_PE), pointBorderWidth:2 },
+    ];
+    if(_px!=null) ds.push({ label:'Live price', data:SNAPS.map(function(){ return _px; }), borderColor:'#8A93A0',
+      borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false });
+    yFmt=function(v){ return '$'+Math.round(v); };
+    note='Each point is one snapshot. <b>Hollow points are re-parses</b> (nothing moved); the red-ringed point is the 2026-08-04 EBITDA redefinition. '+
+         'The gap between the two lines is the disagreement between the methods at your multiples — it widens sharply at 2026-05-13, the margins-only revision.';
+  } else if(_cm==='under'){
+    var i0=function(arr){ var b=arr[0]; return arr.map(function(v){ return v/b*100; }); };
+    ds=[
+      { label:'Revenue', data:i0(SNAPS.map(function(s){ return s.rev; })), borderColor:C_REV, backgroundColor:C_REV,
+        borderWidth:2.2, tension:.25, fill:false, pointRadius:3.5 },
+      { label:'EBITDA', data:i0(SNAPS.map(function(s){ return s.ebitda; })), borderColor:C_EBI, backgroundColor:C_EBI,
+        borderWidth:2.6, tension:.25, fill:false, pointRadius:3.5 },
+      { label:'Earnings', data:i0(SNAPS.map(function(s){ return s.earn; })), borderColor:C_EAR, backgroundColor:C_EAR,
+        borderWidth:2.2, tension:.25, fill:false, pointRadius:3.5 },
+    ];
+    yFmt=function(v){ return v+''; };
+    note='All three indexed to 100 at the first vintage, so they can be compared on one axis. Revenue has moved <b>+5.5%</b> across the whole log '+
+         'while EBITDA has moved <b>+40%</b> — the model has been revised far more on profitability than on the top line, which is what makes the '+
+         'EV/EBITDA target so much more volatile than the P/E one.';
+  } else {
+    var dEv=[], dPe=[];
+    SNAPS.forEach(function(s,i){
+      dEv.push(i===0?null:(ptEv(s)/ptEv(SNAPS[i-1])-1)*100);
+      dPe.push(i===0?null:(ptPe(s)/ptPe(SNAPS[i-1])-1)*100);
+    });
+    ds=[
+      { label:'EV/EBITDA target', data:dEv, backgroundColor:C_EV, borderRadius:2, maxBarThickness:26 },
+      { label:'P/E target',       data:dPe, backgroundColor:C_PE, borderRadius:2, maxBarThickness:26 },
+    ];
+    yFmt=function(v){ return v+'%'; };
+    note='How much each revision moved the target. The two bars diverge whenever a revision hits EBITDA and earnings by different amounts — '+
+         'clearest at <b>2026-05-13</b>, where the EV/EBITDA target jumped while the P/E target barely moved.';
+  }
+
+  _chart=new Chart(cv.getContext('2d'),{
+    type:(_cm==='delta')?'bar':'line',
+    data:{ labels:labels, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10.5 }, color:'#6b7684' } },
+        tooltip:{ callbacks:{ label:function(ctx){ var v=ctx.parsed.y; if(v==null) return ctx.dataset.label+': —';
+          return ctx.dataset.label+': '+(_cm==='pt'?('$'+v.toFixed(0)):(_cm==='under'?v.toFixed(1):(v>=0?'+':'')+v.toFixed(1)+'%')); },
+          title:function(items){ var i=items[0].dataIndex; return SNAPS[i].d+(isRevision(i)?'':'  (re-parse)'); } } } },
+      scales:{ x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:10 } } },
+        y:{ grid:{ color:'#EEF2F7' }, ticks:{ color:'#8A93A0', font:{ size:10 }, callback:yFmt } } } }
+  });
+  var n=scope.querySelector('#tmChartNote'); if(n) n.innerHTML=note;
 }
 
 // ── Live render ──────────────────────────────────────────────────────────────────
@@ -247,11 +359,30 @@ function renderPreview(scope){
 
 // ── Render ───────────────────────────────────────────────────────────────────────
 function render(scope){
+  // every toggle derives from state, so the buttons can never disagree with the content
   scope.querySelectorAll('[data-tmmode]').forEach(function(b){
     b.classList.toggle('active', b.getAttribute('data-tmmode')===_mode); });
+  scope.querySelectorAll('[data-tmview]').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-tmview')===_view); });
+  scope.querySelectorAll('[data-tmcm]').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-tmcm')===_cm); });
+
   var lc=scope.querySelector('#tmLiveCtrls');
   if(lc) lc.style.display=(_mode==='preview')?'none':'';
+  var cmw=scope.querySelector('.tm-cmwrap');
+  if(cmw) cmw.style.display=(_view==='chart' && _mode==='live')?'':'none';
+
   if(_mode==='preview') renderPreview(scope); else renderLive(scope);
+  renderKpis(scope);
+
+  // Chart is a Live-mode view only: Preview is about the missing columns, not the history.
+  var showChart=(_view==='chart' && _mode==='live');
+  var tw=scope.querySelector('#tmTable'), cw=scope.querySelector('#tmChartWrap'), cn=scope.querySelector('#tmChartNote');
+  if(tw) tw.hidden=showChart;
+  if(cw) cw.hidden=!showChart;
+  if(cn) cn.hidden=!showChart;
+  if(showChart) requestAnimationFrame(function(){ buildChart(scope); });
+  else if(_chart){ try{ _chart.destroy(); }catch(e){} _chart=null; }
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────────
@@ -262,6 +393,10 @@ function initTm(root){
     scope._wired=true;
     scope.querySelectorAll('[data-tmmode]').forEach(function(b){ b.onclick=function(){
       _mode=b.getAttribute('data-tmmode'); render(scope); }; });
+    scope.querySelectorAll('[data-tmview]').forEach(function(b){ b.onclick=function(){
+      _view=b.getAttribute('data-tmview'); render(scope); }; });
+    scope.querySelectorAll('[data-tmcm]').forEach(function(b){ b.onclick=function(){
+      _cm=b.getAttribute('data-tmcm'); render(scope); }; });
     function bind(id, set){ var el=scope.querySelector('#'+id);
       el.oninput=function(){ var v=parseFloat(el.value); if(isFinite(v)) { set(v); render(scope); } }; }
     bind('tmEv', function(v){ if(v>0) _mEv=v; });

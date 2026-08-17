@@ -484,7 +484,14 @@
 
 .u13f-tbl th, .u13f-tbl td { padding-left: 4px; }
 
-.u13f-inc { cursor: pointer; }
+.u13f-inc, .c13f-inc { cursor: pointer; }
+
+.ivd-cmp-showmore { display: block; margin: 8px auto 0; }
+
+/* ─── Check for new 13Fs panel ─── */
+
+.c13f-row-new { background: color-mix(in srgb, var(--pos) 8%, transparent); }
+.c13f-row-err td { color: var(--neg); }
 
 .u13f-ticker-in {
   width: 62px;
@@ -611,6 +618,19 @@
   vertical-align: middle;
 }
 
+.ivd-shared-mark {
+  color: var(--gold2);
+  font-weight: 700;
+  margin-left: 1px;
+}
+
+.ivd-cmp-footnote {
+  font-size: 10.5px;
+  color: var(--mu);
+  margin-top: 6px;
+  padding: 0 2px;
+}
+
 /* ─── Stat strip ─── */
 
 .ivd-stats {
@@ -655,131 +675,116 @@
   margin: 18px 0 12px;
 }
 
-.ivd-chart-format-toggle { margin: 0; }
+/* ─── Pie ─── */
 
-/* ─── Lines (single overlaid multi-line chart) ─── */
-
-.ivd-ml-wrap { position: relative; height: 300px; margin-bottom: 14px; }
-.ivd-ml-canvas { width: 100%; height: 100%; }
-
-.ivd-ml-legend {
+.ivd-pie-wrap {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 18px;
+  justify-content: center;
+  padding: 30px 60px;
+  margin-bottom: 8px;
 }
 
-.ivd-ml-legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: 'Inter', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--bdr);
-  border-radius: 7px;
-  padding: 5px 9px;
-  cursor: pointer;
-  transition: background .12s, border-color .12s;
-}
+.ivd-pie-inner { position: relative; flex-shrink: 0; }
 
-.ivd-ml-legend-item:hover { border-color: var(--steel); background: var(--ice); }
+.ivd-pie-canvas { position: absolute; inset: 0; }
 
-.ivd-ml-legend-item.active { background: var(--navy); border-color: var(--navy); }
-.ivd-ml-legend-item.active .ivd-ml-legend-tick,
-.ivd-ml-legend-item.active .ivd-ml-legend-pct { color: #fff; }
-
-.ivd-ml-legend-tick { font-family: 'Inter', monospace; font-weight: 700; color: var(--navy); }
-.ivd-ml-legend-pct { font-family: 'Inter', monospace; color: var(--mu); }
-.ivd-ml-legend-pct.na { color: var(--neg); font-weight: 600; }
-.ivd-ml-legend-item .ivd-badge { font-size: 8.5px; padding: 1px 5px; }
-
-.ivd-cmp-row-hoverable { cursor: pointer; }
-.ivd-cmp-row-hoverable:hover { background: rgba(37, 99, 235, .04); }
-.ivd-cmp-row-active { background: rgba(37, 99, 235, .08) !important; }
-
-/* ─── Treemap ─── */
-
-.ivd-tm-wrap {
-  position: relative;
-  width: 100%;
-  height: 340px;
-  margin-bottom: 10px;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.ivd-tm-cell {
+.ivd-pie-photo {
   position: absolute;
-  box-sizing: border-box;
-  border: 1.5px solid var(--w);
-  padding: 4px 6px;
-  overflow: hidden;
-  transition: filter .1s;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40%;
+  height: 40%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--w);
+  box-shadow: 0 2px 12px rgba(30, 39, 51, .18);
 }
 
-.ivd-tm-cell:hover { filter: brightness(1.08); z-index: 2; }
-
-.ivd-tm-ticker {
+.ivd-pie-photo-ini {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--navy);
+  color: #fff;
   font-family: 'Inter', monospace;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 20px;
+}
+
+.ivd-pie-labels { position: absolute; inset: 0; pointer-events: none; }
+
+.ivd-pie-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: auto;
+  max-width: 112px;
+  background: var(--w);
+  border-radius: 6px;
+  padding: 2px 4px;
+  z-index: 1;
+}
+
+.ivd-pie-logo { width: 20px; height: 20px; border-radius: 5px; flex-shrink: 0; }
+.ivd-pie-logo img { padding: 3px; }
+
+.ivd-pie-sector-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
+
+.ivd-pie-label-txt { display: flex; flex-direction: column; line-height: 1.15; overflow: hidden; }
+
+.ivd-pie-label-t {
+  font-family: 'Inter', monospace;
+  font-weight: 700;
+  font-size: 10px;
+  color: var(--navy);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.ivd-tm-pct {
-  font-family: 'Inter', monospace;
-  font-weight: 600;
-  font-size: 11px;
-  margin-top: 1px;
-}
+.ivd-pie-label-p { font-family: 'Inter', monospace; font-size: 9px; color: var(--mu); }
 
-.ivd-tm-legend { margin-bottom: 18px; }
+.ivd-pie-label-move.up { color: var(--pos); }
+.ivd-pie-label-move.down { color: var(--neg); }
+.ivd-pie-label-move.new { color: var(--gold2); }
 
-.ivd-tm-tip {
-  position: fixed;
-  z-index: 80;
-  pointer-events: none;
-  background: var(--navy);
-  color: #fff;
-  border-radius: 8px;
-  padding: 6px 9px;
-  font-size: 11.5px;
-  box-shadow: 0 6px 20px rgba(30, 39, 51, .25);
-  white-space: nowrap;
-}
+/* ─── Holdings / Resources sub-tabs (mirrors .cotabs/.cotab/.copane) ─── */
 
-/* ─── Below-table row: moves summary (left) + Shared with Summit (right) ─── */
-
-.ivd-below-row {
+.ivdtabs {
   display: flex;
-  gap: 24px;
-  margin-top: 8px;
-  flex-wrap: wrap;
-  align-items: flex-start;
+  gap: 2px;
+  border-bottom: 1px solid var(--bdr);
+  margin: 18px 0 20px;
 }
 
-.ivd-below-col { flex: 1; min-width: 280px; }
-
-.ivd-shared-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.ivdtab {
+  background: none;
+  border: none;
+  color: var(--mu);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 11px 18px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all .15s;
 }
 
-.ivd-shared-list li {
-  font-size: 12.5px;
-  color: var(--text);
-  padding: 9px 2px;
-  border-bottom: .5px solid #F0F4F8;
+.ivdtab:hover { color: var(--navy); }
+
+.ivdtab.active {
+  color: var(--navy);
+  border-bottom-color: var(--steel);
 }
 
-.ivd-shared-list li:last-child { border-bottom: none; }
-.ivd-shared-list b { color: var(--navy); font-weight: 600; }
+.ivdpane { display: none; }
+.ivdpane.active { display: block; }
 
 .ivd-badge {
   display: inline-block;
@@ -807,11 +812,93 @@
 }
 
 .ivd-summary-list {
+  list-style: none;
   margin: 0;
-  padding-left: 18px;
+  padding: 0;
   font-size: 12.5px;
   color: var(--text);
-  line-height: 1.7;
 }
 
 .ivd-summary-list b { color: var(--navy); }
+
+.ivd-move-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 2px;
+  border-bottom: .5px solid #F0F4F8;
+}
+
+.ivd-move-item:last-child { border-bottom: none; }
+
+.ivd-move-logo { width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0; }
+.ivd-move-logo img { padding: 5px; }
+
+.ivd-move-txt { flex: 1; }
+
+.ivd-move-item.new .ivd-move-txt b { color: var(--gold2); }
+.ivd-move-item.sold .ivd-move-txt b { color: var(--neg); }
+.ivd-move-item.up .ivd-move-txt b { color: var(--pos); }
+.ivd-move-item.down .ivd-move-txt b { color: var(--neg); }
+
+/* ─── Sector Exposure heatmap (main Hedge Funds tab) ─── */
+
+.hf-heat-wrap { overflow-x: auto; }
+
+.hf-heat-tbl { width: 100%; border-collapse: separate; border-spacing: 3px; font-size: 11px; }
+
+.hf-heat-sector-h, .hf-heat-total-h {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--mu);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  text-align: left;
+  padding: 0 8px 6px;
+  white-space: nowrap;
+}
+
+.hf-heat-total-h { text-align: center; }
+
+.hf-heat-inv-h {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--steel);
+  text-align: center;
+  padding: 0 0 6px;
+  cursor: default;
+}
+
+.hf-heat-sector-lbl {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  padding: 0 10px 0 8px;
+}
+
+.hf-heat-cell {
+  text-align: center;
+  min-width: 44px;
+  padding: 9px 4px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: default;
+}
+
+.hf-heat-text-lt { color: var(--w); }
+.hf-heat-text-dk { color: var(--text); }
+
+.hf-heat-empty { background: var(--pale); color: var(--bdr); font-weight: 400; }
+
+.hf-heat-total-cell {
+  text-align: center;
+  min-width: 52px;
+  padding: 9px 4px;
+  border-radius: 6px;
+  font-weight: 700;
+  color: var(--navy);
+  background: var(--ice);
+  font-variant-numeric: tabular-nums;
+}

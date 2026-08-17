@@ -198,6 +198,62 @@ function renderInvGrid(){
   grid.innerHTML=html;
 }
 
+// ─── Sector Exposure heatmap (main tab) ────────────────────────
+// Rolls up every superinvestor's disclosed top holdings (the same
+// hardcoded top-5 shown on their card — no Supabase round trip needed,
+// so this renders immediately for everyone) by GICS sector, sector x
+// investor, to answer "is everyone crowded into the same trade." Reuses
+// the steel->navy sequential ramp from the by-position pie chart so a
+// darker cell always means "more concentrated" the same way it does
+// there. Summit's own book is excluded — this is about the tracked
+// superinvestors, not our own portfolio.
+
+function computeSectorHeatmapData() {
+  var investors = INVESTORS.filter(function(inv) { return inv.key !== 'summit'; });
+  var matrix = {}, sectorTotals = {};
+  investors.forEach(function(inv) {
+    (inv.holdings || []).forEach(function(h) {
+      var sector = tickerSector(h.t) || 'Other / Unclassified';
+      matrix[sector] = matrix[sector] || {};
+      matrix[sector][inv.key] = (matrix[sector][inv.key] || 0) + (h.w || 0);
+      sectorTotals[sector] = (sectorTotals[sector] || 0) + (h.w || 0);
+    });
+  });
+  var sectors = Object.keys(matrix).sort(function(a, b) { return (sectorTotals[b] || 0) - (sectorTotals[a] || 0); });
+  var maxCell = 0;
+  sectors.forEach(function(s) {
+    investors.forEach(function(inv) { var v = matrix[s][inv.key]; if (v && v > maxCell) maxCell = v; });
+  });
+  return { investors: investors, sectors: sectors, matrix: matrix, sectorTotals: sectorTotals, maxCell: maxCell };
+}
+
+function heatCellHtml(v, maxCell, invName, sector) {
+  if (!v) return '<td class="hf-heat-cell hf-heat-empty" title="' + esc(invName) + ': no ' + esc(sector) + ' exposure in top holdings">&middot;</td>';
+  var t = maxCell > 0 ? v / maxCell : 0;
+  var textCls = t > 0.55 ? 'hf-heat-text-lt' : 'hf-heat-text-dk';
+  return '<td class="hf-heat-cell ' + textCls + '" style="background:' + ivdRamp(t) + '" title="' + esc(invName) + ': ' + v.toFixed(1) + '% in ' + esc(sector) + ' (top holdings)">' + v.toFixed(1) + '%</td>';
+}
+
+function renderSectorHeatmap() {
+  var el = document.getElementById('hf-sector-heatmap');
+  if (!el) return;
+  var data = computeSectorHeatmapData();
+  if (!data.sectors.length) { el.innerHTML = '<div class="im-empty">No holdings on file yet.</div>'; return; }
+  var html = '<div class="hf-heat-wrap"><table class="hf-heat-tbl"><thead><tr><th class="hf-heat-sector-h">Sector</th>';
+  data.investors.forEach(function(inv) {
+    var ini = inv.name.split(' ').slice(0, 2).map(function(n) { return n[0]; }).join('');
+    html += '<th class="hf-heat-inv-h" title="' + esc(inv.name) + '">' + esc(ini) + '</th>';
+  });
+  html += '<th class="hf-heat-total-h">Total</th></tr></thead><tbody>';
+  data.sectors.forEach(function(sector) {
+    html += '<tr><td class="hf-heat-sector-lbl">' + esc(sector) + '</td>';
+    data.investors.forEach(function(inv) { html += heatCellHtml(data.matrix[sector][inv.key], data.maxCell, inv.name, sector); });
+    html += '<td class="hf-heat-total-cell">' + (data.sectorTotals[sector] || 0).toFixed(1) + '%</td></tr>';
+  });
+  html += '</tbody></table></div>';
+  el.innerHTML = html;
+}
+
 // ─── Investor Detail page — shared data + rendering helpers ──
 // Click an investor card → a full-page profile (see openInvestorDetail
 // near the bottom): yearly returns, the holdings comparison across
@@ -208,6 +264,18 @@ function renderInvGrid(){
 function esc(str) { if (!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function imPct(v){ return v==null ? 'n/a' : (v>=0?'+':'')+v.toFixed(1)+'%'; }
+
+// Ticker logo box — same visual + fallback chain as Companies' coLogo()
+// (js/companies.js), reimplemented locally since that module doesn't
+// export it. No logo_domain is on file for 13F holdings, so the Google-
+// favicon fallback step is skipped (empty data-domain) and a bad Parqet
+// fetch falls straight through to the ticker-initials monogram.
+function ivdLogo(ticker, cls) {
+  var mono = ticker ? ticker.slice(0, 2).toUpperCase() : '?';
+  return '<div class="cologo' + (cls ? ' ' + cls : '') + '" data-mono="' + esc(mono) + '">' +
+    (ticker ? '<img src="https://assets.parqet.com/logos/symbol/' + esc(ticker) + '" alt="" data-step="0" data-domain="" onerror="logoFallback(this)">' : esc(mono)) +
+  '</div>';
+}
 
 var CAT_LABELS = { annual_letter: 'Annual Letters', investor_message: 'Investor Messages' };
 
@@ -232,6 +300,8 @@ var INVESTOR_CIK = {
   hohn: '0001647251',          // TCI Fund Management Ltd
   altimeter: '0001541617',     // Altimeter Capital Management, LP
   dorsey: '0001671657',        // Dorsey Asset Management, LLC
+  loeb: '0001040273',          // Third Point LLC
+  klarman: '0001061768',       // Baupost Group LLC/MA
 };
 
 async function loadInvestorProfileData(key) {
@@ -397,9 +467,29 @@ function ytdCellHtml(ytd) {
   return '<td class="nr"><span class="rpill ' + cls + '">' + (ytd >= 0 ? '+' : '') + ytd.toFixed(1) + '%</span></td>';
 }
 
-function renderHoldingsCompareTable(rows, periods) {
+// Tickers in Summit's own book (INVESTORS[key='summit']), for the "*"
+// marker in the comparison table — replaces the old standalone "Shared
+// with Summit" panel.
+function summitTickerSet() {
+  var summitInv = INVESTORS.filter(function(i) { return i.key === 'summit'; })[0];
+  var set = {};
+  if (summitInv) (summitInv.holdings || []).forEach(function(h) { if (h.t) set[h.t] = true; });
+  return set;
+}
+
+// Rows already come sorted current-weight-desc (computeHoldingsComparison).
+// A fund with 30+ disclosed positions makes for an unreadable wall of rows,
+// so past this cap the table shows only the top holdings until the user
+// asks for the rest.
+var IVD_TABLE_CAP = 15;
+
+function renderHoldingsCompareTable(rows, periods, investorKey, expanded) {
   if (!rows.length) return '<div class="im-empty">No holdings on file yet — upload a 13F to get started.</div>';
   var curIdx = periods.length - 1;
+  var shared = investorKey === 'summit' ? {} : summitTickerSet();
+  var anyShared = false;
+  var displayRows = expanded ? rows : rows.slice(0, IVD_TABLE_CAP);
+  var hiddenCount = rows.length - displayRows.length;
   var html = '<div class="ivd-cmp-wrap"><table class="icard-tbl ivd-cmp-tbl"><thead><tr><th>Ticker</th><th>Company</th>';
   periods.forEach(function(p, i) {
     var isCur = i === curIdx;
@@ -408,14 +498,25 @@ function renderHoldingsCompareTable(rows, periods) {
   if (periods.length > 1) html += '<th class="nr">Move</th>';
   html += '<th class="nr" title="The stock\'s YTD return today — not tied to the period shown">Current YTD</th>';
   html += '</tr></thead><tbody>';
-  rows.forEach(function(r) {
-    html += '<tr data-key="' + esc(r.key) + '"><td><span class="iticker">' + esc(r.ticker || '?') + '</span></td><td><span class="ico">' + esc(r.companyName) + '</span></td>';
+  displayRows.forEach(function(r) {
+    var isShared = !!(r.ticker && shared[r.ticker]);
+    if (isShared) anyShared = true;
+    html += '<tr data-key="' + esc(r.key) + '"><td><span class="iticker">' + esc(r.ticker || '?') +
+      (isShared ? '<span class="ivd-shared-mark" title="Also held by Summit">*</span>' : '') + '</span></td>' +
+      '<td><span class="ico">' + esc(r.companyName) + '</span></td>';
     r.cells.forEach(function(w, i) { html += weightCellHtml(w, i === curIdx); });
     if (periods.length > 1) html += '<td class="nr">' + moveBadgeHtml(r.cells[r.cells.length - 2], r.cells[r.cells.length - 1]) + '</td>';
     html += ytdCellHtml(tickerYtd(r.ticker));
     html += '</tr>';
   });
-  return html + '</tbody></table></div>';
+  html += '</tbody></table></div>';
+  if (hiddenCount > 0) {
+    html += '<button type="button" class="im-upload-btn ivd-cmp-showmore">Show ' + hiddenCount + ' more holding' + (hiddenCount === 1 ? '' : 's') + '</button>';
+  } else if (expanded && rows.length > IVD_TABLE_CAP) {
+    html += '<button type="button" class="im-upload-btn ivd-cmp-showmore" data-collapse="1">Show fewer</button>';
+  }
+  if (anyShared) html += '<div class="ivd-cmp-footnote">* also held in Summit&rsquo;s own portfolio</div>';
+  return html;
 }
 
 function generateMovesSummary(rows, periods) {
@@ -432,27 +533,31 @@ function generateMovesSummary(rows, periods) {
   up.sort(function(a, b) { return b.delta - a.delta; });
   down.sort(function(a, b) { return a.delta - b.delta; });
 
+  function moveLine(r, cls, text) {
+    return '<li class="ivd-move-item ' + cls + '">' + ivdLogo(r.ticker, 'ivd-move-logo') + '<span class="ivd-move-txt">' + text + '</span></li>';
+  }
+
   var lines = [];
   newPos.forEach(function(r) {
     var curr = r.cells[r.cells.length - 1];
-    lines.push('<b>New position: ' + esc(r.ticker || r.companyName) + '</b> — enters at ' + curr.toFixed(2) + '% of the portfolio.');
+    lines.push(moveLine(r, 'new', '<b>New position: ' + esc(r.ticker || r.companyName) + '</b> — enters at ' + curr.toFixed(2) + '% of the portfolio.'));
   });
   sold.forEach(function(r) {
     var prev = r.cells[r.cells.length - 2];
-    lines.push('<b>Exited: ' + esc(r.ticker || r.companyName) + '</b> — was ' + prev.toFixed(2) + '%, no longer held.');
+    lines.push(moveLine(r, 'sold', '<b>Exited: ' + esc(r.ticker || r.companyName) + '</b> — was ' + prev.toFixed(2) + '%, no longer held.'));
   });
   up.slice(0, 3).forEach(function(o) {
     var prev = o.row.cells[o.row.cells.length - 2], curr = o.row.cells[o.row.cells.length - 1];
-    lines.push('<b>Increased ' + esc(o.row.ticker || o.row.companyName) + '</b> from ' + prev.toFixed(2) + '% to ' + curr.toFixed(2) + '% (+' + o.delta.toFixed(2) + 'pp).');
+    lines.push(moveLine(o.row, 'up', '<b>Increased ' + esc(o.row.ticker || o.row.companyName) + '</b> from ' + prev.toFixed(2) + '% to ' + curr.toFixed(2) + '% (+' + o.delta.toFixed(2) + 'pp).'));
   });
   down.slice(0, 3).forEach(function(o) {
     var prev = o.row.cells[o.row.cells.length - 2], curr = o.row.cells[o.row.cells.length - 1];
-    lines.push('<b>Trimmed ' + esc(o.row.ticker || o.row.companyName) + '</b> from ' + prev.toFixed(2) + '% to ' + curr.toFixed(2) + '% (' + o.delta.toFixed(2) + 'pp).');
+    lines.push(moveLine(o.row, 'down', '<b>Trimmed ' + esc(o.row.ticker || o.row.companyName) + '</b> from ' + prev.toFixed(2) + '% to ' + curr.toFixed(2) + '% (' + o.delta.toFixed(2) + 'pp).'));
   });
 
   var hdr = '<div class="ivd-summary-hdr">' + esc(periodLabel(periods[periods.length - 2])) + ' &rarr; ' + esc(periodLabel(periods[periods.length - 1])) + '</div>';
   if (!lines.length) return hdr + '<div class="im-empty">No notable changes between these two periods.</div>';
-  return hdr + '<ul class="ivd-summary-list"><li>' + lines.join('</li><li>') + '</li></ul>';
+  return hdr + '<ul class="ivd-summary-list">' + lines.join('') + '</ul>';
 }
 
 // Single "reference period" selector — the table shows the reference
@@ -520,49 +625,22 @@ function renderPeriodPicker(allPeriods, pool, refPeriod, mode, count, maxCount) 
   return html;
 }
 
-// ─── Holdings Composition — Small Multiples & Treemap ─────────
-// Two views over the same "selected" periods as the table below, kept
-// in sync via one Top-N/Other split (topAndOtherRows). Top N holdings
-// get their own identity (max 8 for Treemap — the validated categorical
-// palette's all-pairs limit for facet/cell forms); everything else folds
-// into a single "Other" bucket rather than generating more hues. Colors
-// are assigned per-ticker the first time it's seen and reused, so a
-// filter/period change never repaints a holding that's still on screen.
-//
-// Small Multiples deliberately does NOT color each panel by ticker: past
-// ~3 slots the palette can't clear its all-pairs CVD floor for forms
-// where any two panels might be compared (facets, small multiples,
-// treemap cells). Identity instead comes from the panel's own ticker
-// label (a single-series chart needs no legend), and color is reserved
-// for the move badges, which reuse the exact classes from the comparison
-// table below so the two stay visually tied together.
+// ─── Holdings Composition — Pie ────────────────────────────────
+// A single donut chart of the CURRENT reference period (same period as
+// the table's "Current" column), the investor's photo in the hole, and
+// each slice labeled outside the ring with the ticker's logo — modeled
+// after the carbonfinance-style "stock portfolio" social graphic.
+// Renders AFTER the comparison table. Slices are shaded by rank along
+// the Summit steel -> navy ramp (largest holding darkest) rather than a
+// categorical palette — identity is carried by the logo, not the hue.
 
-var HOLDINGS_CHART_COLORS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948'];
-var HOLDINGS_CHART_OTHER_COLOR = '#898781';
-var holdingsChartColorMap = {};
-var holdingsChartNextSlot = 0;
-function tickerChartColor(key) {
-  if (!holdingsChartColorMap[key]) {
-    holdingsChartColorMap[key] = HOLDINGS_CHART_COLORS[holdingsChartNextSlot % HOLDINGS_CHART_COLORS.length];
-    holdingsChartNextSlot++;
-  }
-  return holdingsChartColorMap[key];
-}
-
-// Perceived-luminance (YIQ) pick of dark navy vs white label text for a
-// given tile fill color — the categorical palette spans both very light
-// (yellow, magenta) and very dark (blue, violet) hues, so no single text
-// color reads on all of them.
-function tmTextColor(hex) {
-  var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
-  var yiq = (r * 299 + g * 587 + b * 114) / 1000;
-  return yiq >= 150 ? '#1E2733' : '#fff';
-}
+var IVD_RAMP_LO = [238, 241, 245]; // --ice
+var IVD_RAMP_HI = [30, 39, 51];    // --navy
 
 var ivdSmCharts = [];
 function destroyIvdChart() { ivdSmCharts.forEach(function(c) { c.destroy(); }); ivdSmCharts = []; }
 
-var IVD_TOPN_BOUNDS = { treemap: { min: 2, max: 8 }, multiples: { min: 3, max: 12 } };
+var IVD_TOPN_BOUNDS = { min: 3, max: 15 };
 
 // Aggregates every row past the Top-N cut into one "Other" pseudo-row,
 // per period, and re-sorts everything (top rows + Other) by current-period
@@ -588,272 +666,206 @@ function topAndOtherRows(rows, periods, topN) {
   return out;
 }
 
-// ─── Lines (single overlaid multi-line chart) ─────────────────
-// One Chart.js line per ticker, all in the same plot, each in its real
-// ticker color (same palette/assignment as the Treemap and the table
-// below) so the chart reads immediately without any interaction.
-// Hovering anywhere over the chart shows a single tooltip listing every
-// held ticker's value for that period (index mode — no need to land the
-// cursor precisely on a thin line). Hovering or clicking the legend chip
-// below, or the matching row in the comparison table, additionally
-// pushes that one line forward (thicker, full opacity) while the rest
-// recede to a translucent version of their own color — never gray —
-// so identity is never lost, just de-emphasized.
+function ivdRowLabel(row) { return row.isOther ? ('Other (' + row.restCount + ')') : (row.ticker || row.companyName); }
 
-function abbrevPeriodLabel(p) { return p.quarter ? ('Q' + p.quarter + '’' + String(p.year).slice(2)) : (String(p.year).slice(2) + '’L'); }
+// ─── Holdings Composition — by GICS sector ─────────────────────
+// Alternate donut view: same reference period, but every position
+// rolled up into its GICS sector (via ALL_STOCKS) instead of shown as an
+// individual ticker. A fixed sector -> color mapping (identity, not rank
+// -- unlike the by-ticker view there's no logo to carry identity, so
+// color + a direct label do that job here) rather than the steel->navy
+// rank ramp used for individual positions.
+var SECTOR_COLORS = {
+  'Technology': '#2A78D6',
+  'Consumer Discretionary': '#EB6834',
+  'Financials': '#1BAF7A',
+  'Communication Services': '#EDA100',
+  'Health Care': '#E87BA4',
+  'Industrials': '#4A3AA7',
+  'Consumer Staples': '#4C8C4A',
+  'Energy': '#C2554F',
+  'Materials': '#7C8694',
+  'Real Estate': '#A9784F',
+  'Utilities': '#5B7B94',
+};
+var SECTOR_OTHER_COLOR = '#C3C2B7';
 
-function hexToRgba(hex, alpha) {
-  var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
-  return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+var TICKER_SECTOR_MAP = null;
+function tickerSectorMap() {
+  if (TICKER_SECTOR_MAP) return TICKER_SECTOR_MAP;
+  var map = {};
+  ALL_STOCKS.forEach(function(s) { if (s.s) map[s.t] = s.s; });
+  TICKER_SECTOR_MAP = map;
+  return map;
+}
+function tickerSector(ticker) { return ticker ? (tickerSectorMap()[ticker] || null) : null; }
+
+// Aggregates every position in a single period into its sector, sorted
+// by combined weight descending. Uses the raw holdings rows (not the
+// multi-period comparison rows) since only the current period matters here.
+function computeSectorBreakdown(holdings, investorKey, period) {
+  var map = periodWeightMap(holdings, investorKey, period);
+  var bySector = {}, unresolvedCount = 0;
+  Object.keys(map).forEach(function(k) {
+    var h = map[k];
+    var sector = tickerSector(h.ticker);
+    if (!sector) unresolvedCount++;
+    var key = sector || 'Other / Unclassified';
+    bySector[key] = (bySector[key] || 0) + (Number(h.weight_pct) || 0);
+  });
+  var out = Object.keys(bySector).map(function(sector) {
+    return { sector: sector, weight: +bySector[sector].toFixed(2), color: SECTOR_COLORS[sector] || SECTOR_OTHER_COLOR };
+  });
+  out.sort(function(a, b) { return b.weight - a.weight; });
+  return { rows: out, unresolvedCount: unresolvedCount };
 }
 
-function ivdMlLegendItemHtml(row, curIdx) {
-  var curV = row.cells[curIdx];
-  var prevV = curIdx > 0 ? row.cells[curIdx - 1] : null;
-  var badge = moveBadgeHtml(prevV, curV);
-  var name = row.isOther ? ('Other (' + row.restCount + ')') : (row.ticker || row.companyName);
-  var color = row.isOther ? HOLDINGS_CHART_OTHER_COLOR : tickerChartColor(row.key);
-  var curTxt = curV == null ? 'SOLD' : curV.toFixed(2) + '%';
-  return '<button type="button" class="ivd-ml-legend-item" title="' + esc(row.companyName || name) + '">' +
-    '<span class="sbl-d" style="background:' + color + '"></span>' +
-    '<span class="ivd-ml-legend-tick">' + esc(name) + '</span>' +
-    '<span class="ivd-ml-legend-pct' + (curV == null ? ' na' : '') + '">' + curTxt + '</span>' +
-    (badge || '') +
-  '</button>';
-}
-
-function renderMultiLineChart(el, chartRows, periods, curIdx) {
-  var wrapEl = el.querySelector('.ivd-ml-wrap');
-  var legendEl = el.querySelector('.ivd-ml-legend');
-  if (!wrapEl || !legendEl) return;
-  if (!chartRows.length || typeof Chart === 'undefined') {
-    wrapEl.innerHTML = '<div class="im-empty">No holdings to chart for this selection.</div>';
-    legendEl.innerHTML = '';
+function renderSectorPieChart(wrapEl, breakdown, photoUrl, initials) {
+  if (!wrapEl) return;
+  var items = breakdown.rows.filter(function(r) { return r.weight > 0; });
+  if (!items.length || typeof Chart === 'undefined') {
+    wrapEl.innerHTML = '<div class="im-empty">No holdings on file for this period.</div>';
     return;
   }
-
-  wrapEl.innerHTML = '<canvas class="ivd-ml-canvas"></canvas>';
-  var canvas = wrapEl.querySelector('.ivd-ml-canvas');
-  var labels = periods.map(abbrevPeriodLabel);
-  var colors = chartRows.map(function(row) { return row.isOther ? HOLDINGS_CHART_OTHER_COLOR : tickerChartColor(row.key); });
-
-  var datasets = chartRows.map(function(row, i) {
-    var color = colors[i];
-    return {
-      label: row.isOther ? ('Other (' + row.restCount + ')') : (row.ticker || row.companyName),
-      data: row.cells,
-      borderColor: color,
-      borderWidth: 2,
-      spanGaps: true,
-      pointRadius: row.cells.map(function(v, i2) {
-        if (v == null) return 0;
-        if (i2 === curIdx) return 4;
-        var edge = (i2 > 0 && row.cells[i2 - 1] == null) || (i2 < row.cells.length - 1 && row.cells[i2 + 1] == null);
-        return edge ? 3.5 : 2;
-      }),
-      pointBackgroundColor: row.cells.map(function(v, i2) {
-        var edge = (i2 > 0 && row.cells[i2 - 1] == null) || (i2 < row.cells.length - 1 && row.cells[i2 + 1] == null);
-        return edge ? '#fff' : color;
-      }),
-      pointBorderColor: color,
-      pointBorderWidth: row.cells.map(function(v, i2) {
-        var edge = (i2 > 0 && row.cells[i2 - 1] == null) || (i2 < row.cells.length - 1 && row.cells[i2 + 1] == null);
-        return edge ? 2 : 0;
-      }),
-      pointHoverRadius: 5,
-      tension: 0.2,
-      fill: false,
-      segment: { borderDash: function(ctx) { return (ctx.p1DataIndex - ctx.p0DataIndex > 1) ? [3, 3] : undefined; } },
-    };
-  });
-
-  var pinnedKey = null;
-
-  function applyActive(key) {
-    chart.data.datasets.forEach(function(ds, i) {
-      var row = chartRows[i];
-      if (!key) { ds.borderColor = colors[i]; ds.borderWidth = 2; }
-      else if (row.key === key) { ds.borderColor = colors[i]; ds.borderWidth = 3; }
-      else { ds.borderColor = hexToRgba(colors[i], .2); ds.borderWidth = 1.5; }
-    });
-    chart.update('none');
-    legendItems.forEach(function(item, i) { item.classList.toggle('active', chartRows[i].key === key); });
-    tableRows.forEach(function(tr) { tr.classList.toggle('ivd-cmp-row-active', tr.getAttribute('data-key') === key); });
-  }
-
-  function setPinned(key) {
-    pinnedKey = (pinnedKey === key) ? null : key;
-    applyActive(pinnedKey);
-  }
-
+  var SIZE = Math.max(260, Math.min(400, (wrapEl.clientWidth || 460) - 210));
+  wrapEl.innerHTML =
+    '<div class="ivd-pie-inner" style="width:' + SIZE + 'px;height:' + SIZE + 'px">' +
+      '<canvas class="ivd-pie-canvas" width="' + SIZE + '" height="' + SIZE + '"></canvas>' +
+      (photoUrl
+        ? '<img class="ivd-pie-photo" src="' + esc(photoUrl) + '" alt="" onerror="this.style.opacity=0.3">'
+        : '<div class="ivd-pie-photo ivd-pie-photo-ini">' + esc(initials || '') + '</div>') +
+      '<div class="ivd-pie-labels"></div>' +
+    '</div>';
+  var canvas = wrapEl.querySelector('.ivd-pie-canvas');
   var chart = new Chart(canvas.getContext('2d'), {
-    type: 'line',
-    data: { labels: labels, datasets: datasets },
+    type: 'doughnut',
+    data: {
+      labels: items.map(function(it) { return it.sector; }),
+      datasets: [{ data: items.map(function(it) { return it.weight; }), backgroundColor: items.map(function(it) { return it.color; }), borderColor: '#fff', borderWidth: 2 }],
+    },
     options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
+      responsive: false,
+      animation: false,
+      cutout: '58%',
       plugins: {
         legend: { display: false },
-        tooltip: {
-          mode: 'index', intersect: false,
-          filter: function(item) { return item.raw != null; },
-          itemSort: function(a, b) { return b.raw - a.raw; },
-          callbacks: { label: function(c) { return c.dataset.label + ': ' + c.raw.toFixed(2) + '%'; } },
-        },
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#8A93A0' } },
-        y: { beginAtZero: true, grid: { color: '#EEF2F7' }, ticks: { font: { size: 10 }, color: '#8A93A0', callback: function(v) { return v + '%'; } } },
+        tooltip: { callbacks: { label: function(c) { return c.label + ': ' + c.raw.toFixed(2) + '%'; } } },
       },
     },
   });
   ivdSmCharts.push(chart);
 
-  legendEl.innerHTML = chartRows.map(function(row) { return ivdMlLegendItemHtml(row, curIdx); }).join('');
-  var legendItems = legendEl.querySelectorAll('.ivd-ml-legend-item');
-  var highlightable = {};
-  chartRows.forEach(function(r) { highlightable[r.key] = true; });
-  var tableRows = el.querySelectorAll('.ivd-cmp-tbl tbody tr[data-key]');
-
-  legendItems.forEach(function(item, i) {
-    var key = chartRows[i].key;
-    item.addEventListener('mouseenter', function() { if (!pinnedKey) applyActive(key); });
-    item.addEventListener('mouseleave', function() { if (!pinnedKey) applyActive(null); });
-    item.addEventListener('click', function() { setPinned(key); });
-  });
-  tableRows.forEach(function(tr) {
-    var key = tr.getAttribute('data-key');
-    if (!highlightable[key]) return;
-    tr.classList.add('ivd-cmp-row-hoverable');
-    tr.addEventListener('mouseenter', function() { if (!pinnedKey) applyActive(key); });
-    tr.addEventListener('mouseleave', function() { if (!pinnedKey) applyActive(null); });
-    tr.addEventListener('click', function() { setPinned(key); });
-  });
+  var labelsEl = wrapEl.querySelector('.ivd-pie-labels');
+  var meta = chart.getDatasetMeta(0);
+  labelsEl.innerHTML = items.map(function(it, i) {
+    var arc = meta.data[i];
+    var mid = (arc.startAngle + arc.endAngle) / 2;
+    var r = arc.outerRadius + 24 + (i % 2) * 38;
+    var x = arc.x + r * Math.cos(mid);
+    var y = arc.y + r * Math.sin(mid);
+    return '<div class="ivd-pie-label" style="left:' + x.toFixed(1) + 'px;top:' + y.toFixed(1) + 'px">' +
+      '<span class="ivd-pie-sector-dot" style="background:' + it.color + '"></span>' +
+      '<div class="ivd-pie-label-txt"><span class="ivd-pie-label-t">' + esc(it.sector) + '</span>' +
+      '<span class="ivd-pie-label-p">' + it.weight.toFixed(1) + '%</span></div>' +
+    '</div>';
+  }).join('');
 }
 
-// ─── Treemap ────────────────────────────────────────────────────
-// Classic squarified treemap (Bruls/Huizing/van Wijk): builds one row at
-// a time along the container's shorter side, adding items to the row as
-// long as doing so improves (lowers) the worst aspect ratio in that row.
-
-function squarify(items, x, y, w, h) {
-  var results = [];
-  var remaining = items.slice();
-  var rx = x, ry = y, rw = w, rh = h;
-  function rowWorst(row, len) {
-    var sum = 0, rmax = -Infinity, rmin = Infinity;
-    row.forEach(function(it) { sum += it.value; if (it.value > rmax) rmax = it.value; if (it.value < rmin) rmin = it.value; });
-    if (sum <= 0 || len <= 0) return Infinity;
-    return Math.max((len * len * rmax) / (sum * sum), (sum * sum) / (len * len * rmin));
-  }
-  while (remaining.length) {
-    var len = Math.min(rw, rh);
-    var row = [remaining[0]];
-    var i = 1;
-    while (i < remaining.length) {
-      var testRow = row.concat([remaining[i]]);
-      if (rowWorst(testRow, len) <= rowWorst(row, len)) { row = testRow; i++; }
-      else break;
-    }
-    remaining = remaining.slice(row.length);
-    var rowSum = row.reduce(function(s, it) { return s + it.value; }, 0);
-    if (rw >= rh) {
-      var colW = rh > 0 ? rowSum / rh : 0;
-      var cy = ry;
-      row.forEach(function(it) {
-        var ih = colW > 0 ? it.value / colW : 0;
-        results.push({ item: it, x: rx, y: cy, w: colW, h: ih });
-        cy += ih;
-      });
-      rx += colW; rw -= colW;
-    } else {
-      var rowH = rw > 0 ? rowSum / rw : 0;
-      var cx = rx;
-      row.forEach(function(it) {
-        var iw = rowH > 0 ? it.value / rowH : 0;
-        results.push({ item: it, x: cx, y: ry, w: iw, h: rowH });
-        cx += iw;
-      });
-      ry += rowH; rh -= rowH;
-    }
-  }
-  return results;
+// A single steel -> navy ramp, shaded by rank (largest holding darkest)
+// — one "professional" color story instead of a categorical palette.
+function ivdRamp(t) {
+  t = Math.max(0, Math.min(1, t));
+  var r = Math.round(IVD_RAMP_LO[0] + (IVD_RAMP_HI[0] - IVD_RAMP_LO[0]) * t);
+  var g = Math.round(IVD_RAMP_LO[1] + (IVD_RAMP_HI[1] - IVD_RAMP_LO[1]) * t);
+  var b = Math.round(IVD_RAMP_LO[2] + (IVD_RAMP_HI[2] - IVD_RAMP_LO[2]) * t);
+  return 'rgb(' + r + ',' + g + ',' + b + ')';
 }
 
-var ivdTmTip = null;
-function ivdTmTipShow(text, e) {
-  ivdTmTip = document.createElement('div');
-  ivdTmTip.className = 'ivd-tm-tip';
-  ivdTmTip.textContent = text;
-  document.body.appendChild(ivdTmTip);
-  ivdTmTipMove(e);
-}
-function ivdTmTipMove(e) { if (ivdTmTip) { ivdTmTip.style.left = (e.clientX + 14) + 'px'; ivdTmTip.style.top = (e.clientY + 14) + 'px'; } }
-function ivdTmTipHide() { if (ivdTmTip) { ivdTmTip.remove(); ivdTmTip = null; } }
-
-function renderTreemap(wrapEl, legendEl, chartRows, curIdx) {
+function renderPieChart(wrapEl, chartRows, curIdx, photoUrl, initials) {
   if (!wrapEl) return;
-  ivdTmTipHide();
   var items = chartRows
-    .map(function(r) { return { key: r.key, label: r.isOther ? ('Other (' + r.restCount + ')') : (r.ticker || r.companyName), value: r.cells[curIdx], isOther: r.isOther }; })
-    .filter(function(it) { return it.value != null && it.value > 0; })
-    .sort(function(a, b) { return b.value - a.value; });
-
-  if (!items.length) {
+    .map(function(r) { return { ticker: r.ticker, isOther: r.isOther, label: ivdRowLabel(r), value: r.cells[curIdx], prev: curIdx > 0 ? r.cells[curIdx - 1] : null }; })
+    .filter(function(it) { return it.value != null && it.value > 0; });
+  if (!items.length || typeof Chart === 'undefined') {
     wrapEl.innerHTML = '<div class="im-empty">No holdings on file for this period.</div>';
-    if (legendEl) legendEl.innerHTML = '';
     return;
   }
-
-  var W = wrapEl.clientWidth || 600;
-  var H = wrapEl.clientHeight || 340;
-  var total = items.reduce(function(s, it) { return s + it.value; }, 0);
-  var scale = total > 0 ? (W * H) / total : 0;
-  var scaledItems = items.map(function(it) { return { key: it.key, value: it.value * scale, raw: it }; });
-  var rects = squarify(scaledItems, 0, 0, W, H);
-
-  wrapEl.innerHTML = rects.map(function(r) {
-    var it = r.item.raw;
-    var color = it.isOther ? HOLDINGS_CHART_OTHER_COLOR : tickerChartColor(it.key);
-    var txt = tmTextColor(color);
-    var pctTxt = it.value.toFixed(1) + '%';
-    var showTicker = r.w >= 34 && r.h >= 20;
-    var showPct = r.w >= 56 && r.h >= 34;
-    var inner = '';
-    if (showTicker) inner += '<div class="ivd-tm-ticker" style="color:' + txt + '">' + esc(it.label) + '</div>';
-    if (showPct) inner += '<div class="ivd-tm-pct" style="color:' + txt + '">' + pctTxt + '</div>';
-    return '<div class="ivd-tm-cell" data-tip="' + esc(it.label + ' — ' + pctTxt) + '" style="left:' + r.x.toFixed(1) + 'px;top:' + r.y.toFixed(1) + 'px;width:' + r.w.toFixed(1) + 'px;height:' + r.h.toFixed(1) + 'px;background:' + color + '">' + inner + '</div>';
-  }).join('');
-
-  wrapEl.querySelectorAll('.ivd-tm-cell').forEach(function(cell) {
-    cell.addEventListener('mouseenter', function(e) { ivdTmTipShow(cell.getAttribute('data-tip'), e); });
-    cell.addEventListener('mousemove', ivdTmTipMove);
-    cell.addEventListener('mouseleave', ivdTmTipHide);
+  var SIZE = Math.max(260, Math.min(400, (wrapEl.clientWidth || 460) - 210));
+  wrapEl.innerHTML =
+    '<div class="ivd-pie-inner" style="width:' + SIZE + 'px;height:' + SIZE + 'px">' +
+      '<canvas class="ivd-pie-canvas" width="' + SIZE + '" height="' + SIZE + '"></canvas>' +
+      (photoUrl
+        ? '<img class="ivd-pie-photo" src="' + esc(photoUrl) + '" alt="" onerror="this.style.opacity=0.3">'
+        : '<div class="ivd-pie-photo ivd-pie-photo-ini">' + esc(initials || '') + '</div>') +
+      '<div class="ivd-pie-labels"></div>' +
+    '</div>';
+  var canvas = wrapEl.querySelector('.ivd-pie-canvas');
+  var n = items.length;
+  var colors = items.map(function(it, i) { return ivdRamp(n > 1 ? 1 - i / (n - 1) : 1); });
+  var chart = new Chart(canvas.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: items.map(function(it) { return it.label; }),
+      datasets: [{ data: items.map(function(it) { return it.value; }), backgroundColor: colors, borderColor: '#fff', borderWidth: 2 }],
+    },
+    options: {
+      responsive: false,
+      animation: false, // arc geometry must be final synchronously — see label positioning below
+      cutout: '58%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: function(c) { return c.label + ': ' + c.raw.toFixed(2) + '%'; } } },
+      },
+    },
   });
+  ivdSmCharts.push(chart);
 
-  if (legendEl) {
-    legendEl.innerHTML = items.map(function(it) {
-      var color = it.isOther ? HOLDINGS_CHART_OTHER_COLOR : tickerChartColor(it.key);
-      return '<span class="sbl-i"><span class="sbl-d" style="background:' + color + '"></span>' + esc(it.label) + '</span>';
-    }).join('');
-  }
+  // Position ticker/logo labels around the ring from the rendered arc
+  // geometry (chart.getDatasetMeta) rather than recomputing angles by
+  // hand, so they line up exactly with Chart.js's own slice boundaries.
+  // Requires animation:false above — mid-animation arc angles are not
+  // the final ones, which is why labels landed on the wrong slices.
+  // Small adjacent slices put their label midpoints only a few degrees
+  // apart — at any single fixed radius those labels physically collide.
+  // Alternating a near/far radius "tier" per slice index (== angular
+  // order, since Chart.js draws in dataset order) gives every other
+  // label extra breathing room without needing real collision detection.
+  var labelsEl = wrapEl.querySelector('.ivd-pie-labels');
+  var meta = chart.getDatasetMeta(0);
+  labelsEl.innerHTML = items.map(function(it, i) {
+    var arc = meta.data[i];
+    var mid = (arc.startAngle + arc.endAngle) / 2;
+    var r = arc.outerRadius + 24 + (i % 2) * 38;
+    var x = arc.x + r * Math.cos(mid);
+    var y = arc.y + r * Math.sin(mid);
+    var logo = it.isOther ? '' : ivdLogo(it.ticker, 'ivd-pie-logo');
+    var prevTxt = it.prev == null ? 'NEW' : it.prev.toFixed(1) + '%';
+    var moveCls = it.prev == null ? 'new' : (it.value > it.prev ? 'up' : it.value < it.prev ? 'down' : 'flat');
+    return '<div class="ivd-pie-label" style="left:' + x.toFixed(1) + 'px;top:' + y.toFixed(1) + 'px">' +
+      logo +
+      '<div class="ivd-pie-label-txt"><span class="ivd-pie-label-t">' + esc(it.isOther ? it.label : (it.ticker || it.label)) + '</span>' +
+      '<span class="ivd-pie-label-p ivd-pie-label-move ' + moveCls + '">' + prevTxt + ' → ' + it.value.toFixed(1) + '%</span></div>' +
+    '</div>';
+  }).join('');
 }
 
-function renderHoldingsChartSection(state, topNBounds) {
+function renderHoldingsChartSection(state) {
   var visible = state.chartVisible !== false;
-  var isTreemap = state.chartMode === 'treemap';
+  var byPosition = state.chartMode !== 'sector';
   var html = '<div class="ivd-chart-hdr">' +
     '<div class="im-section-lbl" style="margin-bottom:0">Holdings Composition</div>' +
     '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">';
   if (visible) {
-    html += '<div class="sb-toggle ivd-chart-format-toggle">' +
-        '<button type="button" class="sb-tbtn' + (!isTreemap ? ' active' : '') + '" data-chart-mode="multiples">Lines</button>' +
-        '<button type="button" class="sb-tbtn' + (isTreemap ? ' active' : '') + '" data-chart-mode="treemap">Treemap</button>' +
-      '</div>' +
-      '<div class="ivd-pp-stepper">' +
-        '<button type="button" class="ivd-step-btn ivd-chart-n-minus"' + (state.chartTopN <= topNBounds.min ? ' disabled' : '') + ' title="Fewer holdings">&minus;</button>' +
+    html += '<div class="sb-toggle ivd-chartmode-toggle">' +
+      '<button type="button" class="sb-tbtn' + (byPosition ? ' active' : '') + '" data-chartmode="position">By Position</button>' +
+      '<button type="button" class="sb-tbtn' + (!byPosition ? ' active' : '') + '" data-chartmode="sector">By Sector</button>' +
+      '</div>';
+  }
+  if (visible && byPosition) {
+    html += '<div class="ivd-pp-stepper">' +
+        '<button type="button" class="ivd-step-btn ivd-chart-n-minus"' + (state.chartTopN <= IVD_TOPN_BOUNDS.min ? ' disabled' : '') + ' title="Fewer holdings">&minus;</button>' +
         '<span class="ivd-pp-count">Top ' + state.chartTopN + '</span>' +
-        '<button type="button" class="ivd-step-btn ivd-chart-n-plus"' + (state.chartTopN >= topNBounds.max ? ' disabled' : '') + ' title="More holdings">+</button>' +
+        '<button type="button" class="ivd-step-btn ivd-chart-n-plus"' + (state.chartTopN >= IVD_TOPN_BOUNDS.max ? ' disabled' : '') + ' title="More holdings">+</button>' +
       '</div>';
   }
   html += '<label class="hf-chart-toggle" title="Show or hide the chart">' +
@@ -862,18 +874,13 @@ function renderHoldingsChartSection(state, topNBounds) {
       '<span class="hf-chart-toggle-txt">Chart</span>' +
     '</label>' +
     '</div></div>';
-  if (visible) {
-    html += isTreemap
-      ? '<div class="ivd-tm-wrap"></div><div class="sbl ivd-tm-legend"></div>'
-      : '<div class="ivd-ml-wrap"></div><div class="ivd-ml-legend"></div>';
-  }
+  if (visible) html += '<div class="ivd-pie-wrap"></div>';
   return html;
 }
 
-function renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state) {
+function renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials) {
   var el = document.getElementById(rootId + '_cmp');
   var sumEl = document.getElementById(rootId + '_summary');
-  var sharedEl = document.getElementById(rootId + '_shared');
   if (!el) return;
 
   var pool = state.mode === 'yearend' ? yearEndPeriods(allPeriods) : allPeriods;
@@ -887,14 +894,13 @@ function renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, st
   var rows = computeHoldingsComparison(holdings, investorKey, selected);
   var curIdx = selected.length - 1;
 
-  var topNBounds = IVD_TOPN_BOUNDS[state.chartMode === 'treemap' ? 'treemap' : 'multiples'];
-  if (state.chartTopN > topNBounds.max) state.chartTopN = topNBounds.max;
-  if (state.chartTopN < topNBounds.min) state.chartTopN = topNBounds.min;
+  if (state.chartTopN > IVD_TOPN_BOUNDS.max) state.chartTopN = IVD_TOPN_BOUNDS.max;
+  if (state.chartTopN < IVD_TOPN_BOUNDS.min) state.chartTopN = IVD_TOPN_BOUNDS.min;
 
   var html = renderStatStrip(holdings, investorKey, selected[curIdx], rows, curIdx);
   html += renderPeriodPicker(allPeriods, pool, state.refPeriod, state.mode, state.count, maxCount);
-  html += renderHoldingsChartSection(state, topNBounds);
-  html += renderHoldingsCompareTable(rows, selected);
+  html += renderHoldingsCompareTable(rows, selected, investorKey, state.tableExpanded);
+  html += renderHoldingsChartSection(state);
   destroyIvdChart();
   el.innerHTML = html;
 
@@ -903,82 +909,61 @@ function renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, st
     sel.addEventListener('change', function() {
       var parts = sel.value.split('-');
       state.refPeriod = { year: parseInt(parts[0], 10), quarter: parts[1] === '' ? null : parseInt(parts[1], 10) };
-      renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state);
+      renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials);
     });
   }
   el.querySelectorAll('.ivd-mode-toggle [data-mode]').forEach(function(btn) {
     btn.addEventListener('click', function() {
       if (btn.disabled) return;
       state.mode = btn.getAttribute('data-mode');
-      renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state);
+      renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials);
     });
   });
+  var showMoreBtn = el.querySelector('.ivd-cmp-showmore');
+  if (showMoreBtn) showMoreBtn.addEventListener('click', function() { state.tableExpanded = !showMoreBtn.hasAttribute('data-collapse'); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials); });
   var minusBtn = el.querySelector('.ivd-step-minus');
-  if (minusBtn) minusBtn.addEventListener('click', function() { state.count = Math.max(1, state.count - 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
+  if (minusBtn) minusBtn.addEventListener('click', function() { state.count = Math.max(1, state.count - 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials); });
   var plusBtn = el.querySelector('.ivd-step-plus');
-  if (plusBtn) plusBtn.addEventListener('click', function() { state.count = Math.min(maxCount, state.count + 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
+  if (plusBtn) plusBtn.addEventListener('click', function() { state.count = Math.min(maxCount, state.count + 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials); });
 
   var chartToggle = el.querySelector('.ivd-chart-toggle-input');
-  if (chartToggle) chartToggle.addEventListener('change', function() { state.chartVisible = chartToggle.checked; renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
-  el.querySelectorAll('.ivd-chart-format-toggle [data-chart-mode]').forEach(function(btn) {
-    btn.addEventListener('click', function() { state.chartMode = btn.getAttribute('data-chart-mode'); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
+  if (chartToggle) chartToggle.addEventListener('change', function() { state.chartVisible = chartToggle.checked; renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials); });
+  el.querySelectorAll('.ivd-chartmode-toggle [data-chartmode]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      state.chartMode = btn.getAttribute('data-chartmode');
+      renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials);
+    });
   });
   var nMinus = el.querySelector('.ivd-chart-n-minus');
-  if (nMinus) nMinus.addEventListener('click', function() { state.chartTopN = Math.max(topNBounds.min, state.chartTopN - 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
+  if (nMinus) nMinus.addEventListener('click', function() { state.chartTopN = Math.max(IVD_TOPN_BOUNDS.min, state.chartTopN - 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials); });
   var nPlus = el.querySelector('.ivd-chart-n-plus');
-  if (nPlus) nPlus.addEventListener('click', function() { state.chartTopN = Math.min(topNBounds.max, state.chartTopN + 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
+  if (nPlus) nPlus.addEventListener('click', function() { state.chartTopN = Math.min(IVD_TOPN_BOUNDS.max, state.chartTopN + 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials); });
 
   if (state.chartVisible !== false) {
-    var chartRows = topAndOtherRows(rows, selected, state.chartTopN);
-    if (state.chartMode === 'treemap') {
-      renderTreemap(el.querySelector('.ivd-tm-wrap'), el.querySelector('.ivd-tm-legend'), chartRows, curIdx);
+    if (state.chartMode === 'sector') {
+      var breakdown = computeSectorBreakdown(holdings, investorKey, selected[curIdx]);
+      renderSectorPieChart(el.querySelector('.ivd-pie-wrap'), breakdown, photoUrl, initials);
     } else {
-      renderMultiLineChart(el, chartRows, selected, curIdx);
+      var chartRows = topAndOtherRows(rows, selected, state.chartTopN);
+      renderPieChart(el.querySelector('.ivd-pie-wrap'), chartRows, curIdx, photoUrl, initials);
     }
   }
 
   if (sumEl) sumEl.innerHTML = selected.length >= 2 ? generateMovesSummary(rows, selected)
     : '<div class="im-empty">Add another period to see period-over-period changes.</div>';
-  if (sharedEl) sharedEl.innerHTML = renderSharedWithSummit(investorKey, rows, selected, curIdx);
 }
 
-function renderHoldingsSection(rootId, investorKey, holdings) {
+function renderHoldingsSection(rootId, investorKey, holdings, photoUrl, initials) {
   var el = document.getElementById(rootId + '_cmp');
   if (!el) return;
   var allPeriods = investorPeriods(holdings, investorKey);
   if (!allPeriods.length) {
     el.innerHTML = '<div class="im-empty">No holdings on file yet — upload a 13F to get started.</div>';
     var sumEl = document.getElementById(rootId + '_summary'); if (sumEl) sumEl.innerHTML = '';
-    var sharedEl = document.getElementById(rootId + '_shared'); if (sharedEl) sharedEl.innerHTML = '';
     return;
   }
-  var state = { refPeriod: allPeriods[allPeriods.length - 1], mode: 'quarterly', count: Math.min(HOLDINGS_DEFAULT_COUNT, allPeriods.length), chartVisible: true, chartMode: 'multiples', chartTopN: 8 };
-  renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state);
-}
-
-// ─── Shared with Summit ───────────────────────────────────────
-// Positions Summit's own book (INVESTORS[key='summit']) has in common
-// with this investor's reference-period holdings, with both allocations
-// side by side.
-
-function renderSharedWithSummit(investorKey, rows, periods, curIdx) {
-  if (investorKey === 'summit') return '<div class="im-empty">This is Summit&rsquo;s own portfolio.</div>';
-  var summitInv = INVESTORS.filter(function(i) { return i.key === 'summit'; })[0];
-  if (!summitInv) return '';
-  var invRow = INVESTORS.filter(function(i) { return i.key === investorKey; })[0];
-  var invName = invRow ? invRow.name.split(' ').pop() : 'Investor';
-  var summitMap = {};
-  summitInv.holdings.forEach(function(h) { summitMap[h.t] = h; });
-  var shared = rows
-    .filter(function(r) { return r.ticker && summitMap[r.ticker] && r.cells[curIdx] != null; })
-    .map(function(r) { return { ticker: r.ticker, investorW: r.cells[curIdx], summitW: summitMap[r.ticker].w }; })
-    .sort(function(a, b) { return b.investorW - a.investorW; });
-  if (!shared.length) return '<div class="im-empty">No overlapping positions with Summit&rsquo;s own portfolio in ' + esc(periodLabel(periods[curIdx])) + '.</div>';
-  var html = '<ul class="ivd-shared-list">';
-  shared.forEach(function(s) {
-    html += '<li><span class="iticker">' + esc(s.ticker) + '</span> &mdash; Summit <b>' + s.summitW.toFixed(2) + '%</b>, ' + esc(invName) + ' <b>' + s.investorW.toFixed(2) + '%</b></li>';
-  });
-  return html + '</ul>';
+  var state = { refPeriod: allPeriods[allPeriods.length - 1], mode: 'quarterly', count: Math.min(HOLDINGS_DEFAULT_COUNT, allPeriods.length), chartVisible: true, chartTopN: 8, chartMode: 'position', tableExpanded: false };
+  renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials);
 }
 
 // ─── Investor Detail page ─────────────────────────────────────
@@ -1010,25 +995,28 @@ function openInvestorDetail(key) {
       '<div style="flex:1"></div>' +
       '<div style="text-align:right"><div class="icard-aum-lbl">Portfolio</div><div class="icard-aum-val">' + esc(inv.aum) + '</div></div>' +
     '</div>' +
-    '<div class="im-section-lbl">Yearly Returns</div>' +
-    '<div id="ivd_years"><div class="im-loading">Loading…</div></div>' +
-    '<div class="im-hold-row">' +
-      '<div class="im-section-lbl">Holdings Comparison</div>' +
-      '<div style="display:flex;gap:8px">' +
-        (INVESTOR_CIK[key] ? '<button type="button" class="im-upload-btn" id="ivd_sync13f">&#x21bb; Sync latest 13F</button>' : '') +
-        '<button type="button" class="im-upload-btn" id="ivd_upload13f">Upload 13F</button>' +
-      '</div>' +
+    '<div class="ivdtabs">' +
+      '<button type="button" class="ivdtab active" data-pane="holdings" onclick="ivdTab(\'holdings\')">Holdings</button>' +
+      '<button type="button" class="ivdtab" data-pane="resources" onclick="ivdTab(\'resources\')">Resources</button>' +
     '</div>' +
-    '<div id="ivd_cmp"><div class="im-loading">Loading…</div></div>' +
-    '<div class="ivd-below-row">' +
-      '<div id="ivd_summary" class="ivd-below-col"></div>' +
-      '<div class="ivd-below-col">' +
-        '<div class="im-section-lbl">Shared with Summit</div>' +
-        '<div id="ivd_shared"><div class="im-loading">Loading…</div></div>' +
+    '<div class="ivdpane active" data-pane="holdings">' +
+      '<div class="im-section-lbl">Yearly Returns</div>' +
+      '<div id="ivd_years"><div class="im-loading">Loading…</div></div>' +
+      '<div class="im-hold-row">' +
+        '<div class="im-section-lbl">Holdings Comparison</div>' +
+        '<div style="display:flex;gap:8px">' +
+          (INVESTOR_CIK[key] ? '<button type="button" class="im-upload-btn" id="ivd_sync13f">&#x21bb; Sync latest 13F</button>' : '') +
+          '<button type="button" class="im-upload-btn" id="ivd_upload13f">Upload 13F</button>' +
+        '</div>' +
       '</div>' +
+      '<div id="ivd_cmp"><div class="im-loading">Loading…</div></div>' +
+      '<div class="im-section-lbl" style="margin-top:18px">Recent Moves</div>' +
+      '<div id="ivd_summary"></div>' +
     '</div>' +
-    '<div class="im-section-lbl" style="margin-top:22px">Letters &amp; Resources</div>' +
-    '<div id="ivd_letters"><div class="im-loading">Loading…</div></div>';
+    '<div class="ivdpane" data-pane="resources">' +
+      '<div class="im-section-lbl">Letters &amp; Resources</div>' +
+      '<div id="ivd_letters"><div class="im-loading">Loading…</div></div>' +
+    '</div>';
 
   document.getElementById('inv-gridview').style.display = 'none';
   root.style.display = 'block';
@@ -1041,7 +1029,7 @@ function openInvestorDetail(key) {
       if (root.style.display === 'none') return; // navigated back before this resolved
       lastData = data;
       document.getElementById('ivd_years').innerHTML = invYearPillsHtml(invYearList(data), null);
-      renderHoldingsSection('ivd', key, data.holdings);
+      renderHoldingsSection('ivd', key, data.holdings, photo, ini);
       renderInvLetters('ivd', data.letters);
     });
   }
@@ -1056,6 +1044,11 @@ function openInvestorDetail(key) {
   if (syncBtn) syncBtn.addEventListener('click', function() { openSync13FPanel(key, INVESTOR_CIK[key], function() { loadDetail(); }); });
 
   loadDetail();
+}
+
+function ivdTab(pane) {
+  document.querySelectorAll('#inv-detailview .ivdtab').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-pane') === pane); });
+  document.querySelectorAll('#inv-detailview .ivdpane').forEach(function(p) { p.classList.toggle('active', p.getAttribute('data-pane') === pane); });
 }
 
 function closeInvestorDetail() {
@@ -1283,12 +1276,130 @@ function openSync13FPanel(investorKey, cik, onSaved) {
   });
 }
 
+// ─── Check for new 13Fs (all investors, one click) ────────────
+// A portal-wide version of "Sync latest 13F": checks every investor with
+// a CIK on file against SEC EDGAR, shows which ones have a filing newer
+// than what's saved in Supabase, and applies all the new ones in one go.
+// Runs at most a few times a year (13F deadlines are ~45 days after each
+// quarter end), so this is a manual button rather than a schedule —
+// someone clicks it, reviews the list, applies.
+
+function check13fRowHtml(row) {
+  var cls = row.error ? 'c13f-row-err' : row.isNew ? 'c13f-row-new' : 'c13f-row-ok';
+  var onFile = row.onFilePeriod ? esc(periodLabel(row.onFilePeriod)) : 'none on file';
+  var status = row.error
+    ? 'Could not check: ' + esc(row.error)
+    : row.isNew
+      ? '<b>New: ' + esc(periodLabel(row.secPeriod)) + '</b> (filed ' + esc(row.filedDate) + ')'
+      : 'Up to date (' + esc(periodLabel(row.secPeriod)) + ')';
+  return '<tr class="' + cls + '" data-key="' + esc(row.key) + '">' +
+    '<td>' + (row.isNew && !row.error ? '<input type="checkbox" class="c13f-inc" checked>' : '') + '</td>' +
+    '<td><span class="ico">' + esc(row.name) + '</span></td>' +
+    '<td class="nr" style="color:var(--mu)">' + onFile + '</td>' +
+    '<td>' + status + '</td>' +
+  '</tr>';
+}
+
+async function openCheck13FPanel() {
+  var id = 'c13f_' + Date.now();
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay im-overlay open';
+  overlay.id = id;
+  overlay.innerHTML =
+    '<div class="modal-card im-card u13f-card" onclick="event.stopPropagation()">' +
+      '<div class="modal-header im-header">' +
+        '<div class="modal-title" style="font-size:15px">Check for new 13Fs</div>' +
+        '<button class="modal-close" id="' + id + '_close">&times;</button>' +
+      '</div>' +
+      '<div class="im-body">' +
+        '<div class="modal-msg" id="' + id + '_msg">Checking SEC EDGAR for ' + Object.keys(INVESTOR_CIK).length + ' investors&hellip;</div>' +
+        '<div id="' + id + '_preview"></div>' +
+        '<div class="modal-actions" id="' + id + '_actions" style="display:none">' +
+          '<button class="modal-btn modal-btn--cancel" id="' + id + '_cancel">Close</button>' +
+          '<button class="modal-btn modal-btn--save" id="' + id + '_apply">Apply new filings</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) overlay.remove(); });
+  document.getElementById(id + '_close').addEventListener('click', function(){ overlay.remove(); });
+
+  var keys = Object.keys(INVESTOR_CIK);
+  var rows = await Promise.all(keys.map(async function(key) {
+    var inv = INVESTORS.filter(function(i){ return i.key === key; })[0];
+    var name = inv ? inv.name : key;
+    try {
+      var holdingsResult = await fetchInvestorHoldings(key);
+      var onFilePeriods = investorPeriods(holdingsResult.success ? holdingsResult.data : [], key);
+      var onFilePeriod = onFilePeriods.length ? onFilePeriods[onFilePeriods.length - 1] : null;
+      var syncResult = await syncLatest13F(INVESTOR_CIK[key]);
+      if (!syncResult.success) return { key: key, name: name, onFilePeriod: onFilePeriod, error: (syncResult.error && syncResult.error.message) || 'sync failed' };
+      var data = syncResult.data;
+      var secPeriod = { year: data.year, quarter: data.quarter };
+      var isNew = !onFilePeriod || periodSortKey(secPeriod) > periodSortKey(onFilePeriod);
+      return { key: key, name: name, onFilePeriod: onFilePeriod, secPeriod: secPeriod, isNew: isNew, xml: data.xml, filedDate: data.filedDate };
+    } catch (err) {
+      return { key: key, name: name, onFilePeriod: null, error: (err && err.message) || String(err) };
+    }
+  }));
+
+  if (!document.getElementById(id)) return; // closed before this resolved
+  var newCount = rows.filter(function(r){ return r.isNew && !r.error; }).length;
+  var msgEl = document.getElementById(id + '_msg');
+  msgEl.textContent = newCount
+    ? newCount + ' investor' + (newCount === 1 ? '' : 's') + ' with a new 13F on file. Review below, then Apply.'
+    : 'Everyone is up to date — no new 13Fs since the last check.';
+  document.getElementById(id + '_preview').innerHTML =
+    '<div class="u13f-preview-wrap"><table class="icard-tbl u13f-tbl"><thead><tr><th></th><th>Investor</th><th class="nr">On file</th><th>SEC EDGAR</th></tr></thead><tbody>' +
+    rows.map(check13fRowHtml).join('') + '</tbody></table></div>';
+  document.getElementById(id + '_actions').style.display = 'flex';
+  document.getElementById(id + '_cancel').addEventListener('click', function(){ overlay.remove(); });
+  if (!newCount) { document.getElementById(id + '_apply').style.display = 'none'; return; }
+
+  document.getElementById(id + '_apply').addEventListener('click', async function() {
+    var btn = document.getElementById(id + '_apply');
+    btn.disabled = true;
+    var toApply = rows.filter(function(r) {
+      var cb = overlay.querySelector('tr[data-key="' + r.key + '"] .c13f-inc');
+      return r.isNew && !r.error && cb && cb.checked;
+    });
+    var done = 0;
+    for (var i = 0; i < toApply.length; i++) {
+      var row = toApply[i];
+      btn.textContent = 'Applying ' + row.name + '… (' + (i + 1) + '/' + toApply.length + ')';
+      var rowEl = overlay.querySelector('tr[data-key="' + row.key + '"]');
+      try {
+        var parsed = parse13FFile('sec-edgar-sync.xml', row.xml);
+        var included = parsed.rows.slice(0, 15).filter(function(r){ return r.ticker; });
+        var dbRows = included.map(function(r, j) {
+          return {
+            investor_key: row.key, year: row.secPeriod.year, quarter: row.secPeriod.quarter,
+            ticker: r.ticker, company_name: r.companyName, cusip: r.cusip || null,
+            value_usd: r.valueUsd || null, weight_pct: r.weightPct, rank: j + 1,
+            source_type: parsed.format,
+          };
+        });
+        var saveResult = await replaceInvestorHoldings(row.key, row.secPeriod.year, row.secPeriod.quarter, dbRows);
+        if (!saveResult.success) throw new Error(saveResult.error && saveResult.error.message);
+        done++;
+        if (rowEl) rowEl.querySelector('td:last-child').innerHTML = '<span style="color:var(--pos)">&#x2713; Applied ' + esc(periodLabel(row.secPeriod)) + '</span>';
+      } catch (err) {
+        if (rowEl) rowEl.querySelector('td:last-child').innerHTML = '<span style="color:var(--neg)">Failed: ' + esc(err.message || 'unknown error') + '</span>';
+      }
+    }
+    btn.textContent = 'Done (' + done + '/' + toApply.length + ' applied)';
+  });
+}
+
+window.openCheck13FPanel = openCheck13FPanel;
+
 // Expose to window for inline onclick handlers
 window.toggleFund = toggleFund;
 window.allFunds = allFunds;
 window.setAlphaStart = setAlphaStart;
 window.setAlphaMode = setAlphaMode;
 window.openInvestorDetail = openInvestorDetail;
+window.ivdTab = ivdTab;
 window.toggleChartVisibility = toggleChartVisibility;
 window.hideInvestor = hideInvestor;
 window.showAllInvestors = showAllInvestors;
@@ -1303,4 +1414,5 @@ export function loadHedgeFundsPage() {
   renderAlphaChart();
   renderBenchmark();
   renderInvGrid();
+  renderSectorHeatmap();
 }

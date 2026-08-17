@@ -1,85 +1,81 @@
 // overviews/amzn-target-multiple.js — Amazon (AMZN) Deep Dive ▸ Valuation ▸ Target Multiple.
 //
-// One row per model snapshot: the multiple you assume, the price target it implies, and the
-// underlying revenue / EBITDA / earnings that got you there. Hold the multiple constant and the
-// only thing moving the price target is the model itself — that is the whole point of the view.
+// Built around the actual desk workflow: every quarter, when the company reports, the numbers
+// get revised and a forward multiple is chosen — BOTH EV/EBITDA and P/E — on FY2027. That gives
+// a year-end price target, and the revision records which target was chosen.
 //
-// ── What the model does and does not carry ───────────────────────────────────────
-// Checked all 502 metrics in the catalogue: the Summit model stores NO price target and NO
-// target multiple. Nothing matching target / multiple / WACC / discount / terminal exists.
-// So the multiple here is an INPUT (yours) and the price target is the OUTPUT. This view cannot
-// reconstruct what multiple was assumed at each historical vintage, because that was never stored.
+// So this page reads as a revision log: one row per snapshot, the FY2027 underlying behind it,
+// and the year-end target each multiple implies. Hold the multiples constant and everything that
+// moves is the model being revised.
 //
-// ── The EBITDA definition break — read this before trusting an EV/EBITDA target ──
-// Between the 2026-08-03 and 2026-08-04 snapshots, one day apart:
-//     revenue   +1.9%      earnings  +6.9%      EBITDA  +38.2%  (311.1B → 430.1B)
-// Revenue and earnings moved like a normal revision. EBITDA did not — that is a change in how
-// EBITDA is defined, not in what the business is expected to earn. A constant EV/EBITDA multiple
-// therefore shows a fake +38% jump in the price target across that boundary. Earnings is the
-// series that stays comparable across all seven snapshots; EBITDA is not. The UI flags the break
-// on the affected row and in the P/E-vs-EV/EBITDA note. Flagged for the model owner.
+// ── Data (Summit DCF model, instrument AMZN, model be6d6393, FY2027) ─────────────
+// AMZN:ebitda · AMZN:earnings · AMZN:shares, read per snapshot through the revision history.
+// Revenue per snapshot is the one series not pulled yet — neither price-target path uses it, so
+// it is omitted rather than guessed; it is one more query when wanted.
 //
-// Source: Summit DCF model, instrument AMZN, model be6d6393. Target year 2028 (the horizon year
-// populated in every snapshot). Values are AMZN:rev · AMZN:ebitda · AMZN:earnings · AMZN:shares
-// read per snapshot via the model's revision history.
+// ── Seven snapshots are NOT seven revisions ──────────────────────────────────────
+// 2026-07-30 and 2026-08-03 carry byte-identical FY2027 EBITDA (303,160.67) and earnings
+// (109,981.17). 08-03 is a re-parse, not a revision. The table marks each row as one or the
+// other by comparing against the previous snapshot, so the revision log shows the ~quarterly
+// cadence that actually happened rather than every time the file was ingested.
+//
+// ── The EBITDA definition break, sized on FY2027 ─────────────────────────────────
+// Across 2026-08-03 → 08-04: FY2027 EBITDA +9.8%, earnings +8.2% — comparable, so FY2027 is
+// only mildly affected. The same break on FY2028 was EBITDA +38.2% against earnings +6.9%.
+// The redefinition lands mostly in the later years, so working on FY2027 largely sidesteps it.
+// Still flagged on the row.
+//
+// ── What the MCP cannot give ─────────────────────────────────────────────────────
+// The workbook carries the chosen multiple and the recorded price target from column EM
+// rightward on projection_history. An unfiltered pull of that sheet returns exactly 41 mapped
+// series (DEFAULT / SEGM / BBG) and none is a multiple or a target — the connector stops well
+// before column EM (the 143rd). So in Live the multiples are inputs. Preview shows the layout
+// once those columns are ingested, with clearly-marked stand-ins.
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-var TARGET_YEAR = 2028;
-var BREAK_FROM  = '2026-08-04';        // first snapshot on the new EBITDA definition
+var FWD_YEAR = 2027;
+var BREAK_ON = '2026-08-04';
 
-// $M, and shares in millions, straight from the model's snapshot history for FY2028.
+// FY2027, $M / shares in millions, straight from the model's snapshot history.
 var SNAPS = [
-  { d:'2025-12-18', rev:1075129, ebitda:258487, earn:109171, sh:10721 },
-  { d:'2026-02-10', rev:1096753, ebitda:278013, earn:109377, sh:10827 },
-  { d:'2026-05-05', rev:1115060, ebitda:291994, earn:114955, sh:10827 },
-  { d:'2026-05-13', rev:1078691, ebitda:309579, earn:127388, sh:10827 },
-  { d:'2026-07-30', rev:1080618, ebitda:311084, earn:128556, sh:10827 },
-  { d:'2026-08-03', rev:1080618, ebitda:311084, earn:128556, sh:10827 },
-  { d:'2026-08-04', rev:1101190, ebitda:430088, earn:137412, sh:10827 },
+  { d:'2025-12-18', ebitda:237442, earn: 99503, sh:10721 },
+  { d:'2026-02-10', ebitda:259787, earn: 98612, sh:10827 },
+  { d:'2026-05-05', ebitda:261050, earn:108304, sh:10827 },
+  { d:'2026-05-13', ebitda:301971, earn:109056, sh:10827 },
+  { d:'2026-07-30', ebitda:303161, earn:109981, sh:10827 },
+  { d:'2026-08-03', ebitda:303161, earn:109981, sh:10827 },
+  { d:'2026-08-04', ebitda:332726, earn:119053, sh:10827 },
 ];
+// A row is a revision when the underlying actually moved; otherwise it is a re-parse.
+function isRevision(i){
+  if(i===0) return true;
+  var a=SNAPS[i], b=SNAPS[i-1];
+  return !(a.ebitda===b.ebitda && a.earn===b.earn && a.sh===b.sh);
+}
 
-// ── PREVIEW MODE — the layout once the model's own columns are wired ─────────────
-// The workbook carries the assumed multiple and the resulting price target from column EM
-// rightward on the projection_history sheet. The MCP does not ingest that far: an unfiltered
-// pull of projection_history returns exactly 41 mapped series (DEFAULT / SEGM / BBG) and none
-// of them is a multiple or a target. So those two columns cannot be read yet.
-//
-// Preview mode shows the layout we would ship once they can be. Rule for the stand-in values,
-// stated so nobody mistakes them for data: the multiple path below is HARD-CODED, and the
-// "model" price target is simply EPS x that multiple. Underlying revenue / EBITDA / earnings /
-// EPS / shares in preview mode are REAL, straight from the model's snapshot history.
-var MOCK_MULT = [32, 31, 30, 29, 28, 28, 27];   // illustrative de-rating path — NOT model data
+// Illustrative only — the paths the recorded multiples might have taken. NOT model data.
+var MOCK_EV = [16.0, 15.5, 15.0, 14.5, 14.0, 14.0, 13.5];
+var MOCK_PE = [34, 33, 32, 31, 30, 30, 29];
 
 // ── State ────────────────────────────────────────────────────────────────────────
-var _mode  = 'live';      // 'live' = what the MCP can actually serve · 'preview' = the mock
-var _basis = 'pe';        // default to P/E: it is the series that survives the definition break
-var _mEv   = 12;
-var _mPe   = 30;
-var _over  = {};          // snapshot date -> per-row multiple override
-var _netDebt = 0;         // $M, from the live quote
-var _px = null;           // live price
+var _mode = 'live';
+var _mEv  = 14;
+var _mPe  = 32;
+var _netDebt = 0;
+var _px = null;
 
-function baseMult(){ return _basis==='ev' ? _mEv : _mPe; }
-function multFor(s){ return _over[s.d]!=null ? _over[s.d] : baseMult(); }
-function multLabel(){ return _basis==='ev' ? 'EV/EBITDA' : 'P/E'; }
-function isBroken(s){ return _basis==='ev' && s.d >= BREAK_FROM; }
-
-function pt(s){
-  var m = multFor(s);
-  return _basis==='ev' ? ((s.ebitda*m - _netDebt)/s.sh) : ((s.earn/s.sh)*m);
-}
-// What multiple today's price implies against that snapshot's underlying.
-function impliedMult(s){
-  if(_px==null) return null;
-  return _basis==='ev' ? ((_px*s.sh + _netDebt)/s.ebitda) : (_px/(s.earn/s.sh));
-}
+// ── Maths ────────────────────────────────────────────────────────────────────────
+function eps(s){ return s.earn / s.sh; }
+function ptEv(s, m){ return (s.ebitda * (m==null?_mEv:m) - _netDebt) / s.sh; }
+function ptPe(s, m){ return eps(s) * (m==null?_mPe:m); }
 
 // ── Formatting ───────────────────────────────────────────────────────────────────
 function fmtB(v){ var b=v/1000; return (Math.abs(b)>=1000)?('$'+(b/1000).toFixed(2)+'T'):('$'+Math.round(b)+'B'); }
 function fmtPx(v){ return '$'+Math.round(v).toLocaleString('en-US'); }
 function signPct(p){ return (p>=0?'+':'−')+(Math.abs(p)*100).toFixed(1)+'%'; }
-function pctCell(p){ return p==null?'—':'<span style="color:'+(p>=0?'#2E8B57':'#C0392B')+'">'+signPct(p)+'</span>'; }
+function pctCell(p){ return p==null?'<span style="color:var(--mu)">—</span>'
+  :'<span style="color:'+(p>=0?'#2E8B57':'#C0392B')+'">'+signPct(p)+'</span>'; }
 
 // ── Body ─────────────────────────────────────────────────────────────────────────
 function tmBody(){
@@ -91,19 +87,19 @@ function tmBody(){
     '.tm-tbl th,.tm-tbl td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap}'+
     '.tm-tbl th:first-child,.tm-tbl td:first-child{text-align:left}'+
     '.tm-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}'+
-    '.tm-tbl tbody tr:last-child{background:rgba(255,153,0,.07)}'+
+    '.tm-tbl tbody tr.tm-last{background:rgba(255,153,0,.07)}'+
+    '.tm-tbl tbody tr.tm-rep{background:#FAFBFC;color:var(--mu)}'+
     '.tm-tbl td.tm-pt{font-weight:800;color:var(--navy)}'+
-    '.tm-brk{background:rgba(192,57,43,.07)}'+
-    '.tm-flag{display:inline-block;font-size:9px;font-weight:800;color:#C0392B;border:1px solid #C0392B;border-radius:20px;padding:1px 6px;margin-left:6px;vertical-align:1px}'+
-    '.tm-mi{width:52px;border:1px solid var(--bdr);border-radius:6px;padding:4px 6px;font:inherit;font-size:12px;font-weight:700;text-align:right;color:var(--navy)}'+
+    '.tm-tag{display:inline-block;font-size:8.5px;font-weight:800;border-radius:20px;padding:1px 7px;margin-left:6px;vertical-align:1px}'+
+    '.tm-tag-rev{color:#2E8B57;border:1px solid #2E8B57}'+
+    '.tm-tag-rep{color:var(--mu);border:1px solid var(--bdr)}'+
+    '.tm-tag-brk{color:#C0392B;border:1px solid #C0392B}'+
     '.tm-warn{border:1px solid rgba(192,57,43,.35);border-left:4px solid #C0392B;background:rgba(192,57,43,.05);'+
       'border-radius:9px;padding:11px 14px;font-size:12px;line-height:1.55;color:var(--navy);margin:12px 0}'+
-    // preview mode: anything not real is hatched and carries a marker, so it cannot pass as data
     '.tm-mock{border:1px dashed #8E44AD;background:repeating-linear-gradient(45deg,rgba(142,68,173,.06),'+
       'rgba(142,68,173,.06) 6px,transparent 6px,transparent 12px);border-radius:9px;padding:11px 14px;'+
       'font-size:12px;line-height:1.55;color:var(--navy);margin:12px 0}'+
     '.tm-ph{color:#8E44AD;font-weight:800;border-bottom:1px dashed #8E44AD}'+
-    '.tm-ph:after{content:"\\25CA";font-size:8px;vertical-align:6px;margin-left:2px}'+
     '.tm-attr{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}'+
     '.tm-attr-c{border:1px solid var(--bdr);border-top:3px solid var(--brand);border-radius:10px;padding:11px 13px;background:#fff}'+
     '.tm-attr-v{font-size:18px;font-weight:800;line-height:1.15}'+
@@ -111,204 +107,158 @@ function tmBody(){
     '.tm-attr-s{font-size:10.5px;color:var(--mu);margin-top:3px;line-height:1.4}'+
     '</style>';
 
-  h += '<p class="ov-lede"><b>What each vintage of the model was worth.</b> Every row is one snapshot of the Summit model. '+
-       'Set the multiple you want to assume, and the price target falls out of that snapshot\'s own '+TARGET_YEAR+' revenue, EBITDA and earnings. '+
-       'Hold the multiple constant and the only thing moving the target is the model being revised.</p>';
-
-  h += '<div class="tm-warn"><b>The workbook has the assumed multiple and the price target; the MCP does not serve them.</b> '+
-       'They sit from column <b>EM</b> rightward on the <i>projection_history</i> sheet, but an unfiltered pull of that sheet returns exactly '+
-       '<b>41 mapped series</b> (DEFAULT / SEGM / BBG) and none is a multiple or a target — the connector stops well before column EM (the 143rd). '+
-       'So in <b>Live</b> the multiple below is <b>your input</b> and the price target is the <b>output</b>. '+
-       '<b>Preview</b> shows the layout we would ship once those two columns are ingested.</div>';
+  h += '<p class="ov-lede"><b>The revision log.</b> One row per snapshot of the model. Each quarter the reported numbers get revised and a forward '+
+       'multiple is picked on <b>FY'+FWD_YEAR+'</b> — EV/EBITDA and P/E — giving a <b>year-end price target</b>. Set both multiples below and hold them: '+
+       'everything that then moves is the model being revised, not the multiple.</p>';
 
   h += '<div class="sens-controls-row sens-row-year">'+
        '<div class="sens-ctrl"><span class="sens-ctrl-l">Mode</span><div class="sens-years">'+
-         '<button type="button" class="sens-year'+(_mode==='live'?' active':'')+'" data-tmmode="live">Live — MCP data</button>'+
-         '<button type="button" class="sens-year'+(_mode==='preview'?' active':'')+'" data-tmmode="preview">Preview — with model multiple</button>'+
-       '</div></div>'+
+         '<button type="button" class="sens-year" data-tmmode="live">Live — MCP data</button>'+
+         '<button type="button" class="sens-year" data-tmmode="preview">Preview — with recorded multiple</button>'+
+       '</div></div></div>';
+
+  h += '<div class="sens-controls-row sens-row-inp" id="tmLiveCtrls">'+
+       '<div class="sens-ctrl"><span class="sens-ctrl-l">EV/EBITDA '+FWD_YEAR+'</span><span class="sens-inp-wrap">'+
+         '<input class="sens-inp" id="tmEv" type="number" step="0.5" value="'+_mEv+'"><span class="sens-inp-u">×</span></span></div>'+
+       '<div class="sens-ctrl"><span class="sens-ctrl-l">P/E '+FWD_YEAR+'</span><span class="sens-inp-wrap">'+
+         '<input class="sens-inp" id="tmPe" type="number" step="0.5" value="'+_mPe+'"><span class="sens-inp-u">×</span></span></div>'+
+       '<div class="sens-ctrl"><span class="sens-ctrl-l">Net debt</span><span class="sens-inp-wrap">'+
+         '<input class="sens-inp" id="tmNd" type="number" step="1000" value="'+_netDebt+'"><span class="sens-inp-u">$M</span></span></div>'+
        '</div>';
 
-  h += '<div class="sens-controls-row sens-row-year" id="tmLiveCtrls">'+
-       '<div class="sens-ctrl"><span class="sens-ctrl-l">Multiple on</span><div class="sens-years">'+
-         '<button type="button" class="sens-year'+(_basis==='pe'?' active':'')+'" data-tmbasis="pe">P/E</button>'+
-         '<button type="button" class="sens-year'+(_basis==='ev'?' active':'')+'" data-tmbasis="ev">EV/EBITDA</button>'+
-       '</div></div>'+
-       '<div class="sens-ctrl"><span class="sens-ctrl-l" id="tmMultL">'+multLabel()+' assumed</span><span class="sens-inp-wrap">'+
-         '<input class="sens-inp" id="tmMult" type="number" step="0.5" value="'+baseMult()+'"><span class="sens-inp-u">×</span></span></div>'+
-       '<div class="sens-ctrl"><span class="sens-ctrl-l">Target year</span><span class="sens-ctrl-l" style="color:var(--navy)">'+TARGET_YEAR+'</span></div>'+
-       '<button type="button" class="sens-year" id="tmReset" style="font-size:11px;padding:5px 11px">reset row multiples</button>'+
-       '</div>';
-
-  h += '<div id="tmWarn"></div>';
-  h += '<div class="dfin-wrap" id="tmTable"></div>';
-  h += '<div class="ov-foot" id="tmFoot"></div>';
+  h += '<div id="tmWarn"></div><div class="dfin-wrap" id="tmTable"></div><div class="ov-foot" id="tmFoot"></div>';
   return h;
 }
 
-// ── Preview render — the layout once columns EM+ are ingested ────────────────────
-function renderPreview(scope){
-  var ph = function(t){ return '<span class="tm-ph">'+t+'</span>'; };
-  var rows = '', prevPt = null;
-  SNAPS.forEach(function(s, i){
-    var eps = s.earn/s.sh;
-    var mm  = MOCK_MULT[i];                 // would be the model's own assumed multiple
-    var mpt = eps * mm;                     // would be the model's own price target
-    var dPrev = (prevPt!=null) ? (mpt/prevPt - 1) : null;
-    rows += '<tr>'+
-      '<td><b>'+esc(s.d)+'</b>'+(i===SNAPS.length-1?' <span style="font-size:9.5px;color:var(--mu)">latest</span>':'')+'</td>'+
-      '<td>'+fmtB(s.rev)+'</td>'+
+// ── Live render ──────────────────────────────────────────────────────────────────
+function renderLive(scope){
+  var rows='', prevEv=null, prevPe=null, revs=0;
+  SNAPS.forEach(function(s,i){
+    var rev=isRevision(i); if(rev) revs++;
+    var pe_=ptPe(s), ev_=ptEv(s);
+    var dEv=(prevEv!=null)?(ev_/prevEv-1):null, dPe=(prevPe!=null)?(pe_/prevPe-1):null;
+    var brk=(s.d===BREAK_ON);
+    var cls=(i===SNAPS.length-1)?' class="tm-last"':(rev?'':' class="tm-rep"');
+    rows+='<tr'+cls+'>'+
+      '<td><b>'+esc(s.d)+'</b>'+
+        (rev?'<span class="tm-tag tm-tag-rev">revision</span>':'<span class="tm-tag tm-tag-rep">re-parse</span>')+
+        (brk?'<span class="tm-tag tm-tag-brk">EBITDA redefined</span>':'')+'</td>'+
       '<td>'+fmtB(s.ebitda)+'</td>'+
       '<td>'+fmtB(s.earn)+'</td>'+
-      '<td>$'+eps.toFixed(2)+'</td>'+
-      '<td>'+ph(mm.toFixed(1)+'×')+'</td>'+
-      '<td class="tm-pt">'+ph(fmtPx(mpt))+'</td>'+
-      '<td>'+pctCell(dPrev)+'</td>'+
+      '<td>$'+eps(s).toFixed(2)+'</td>'+
+      '<td class="tm-pt">'+fmtPx(ev_)+'</td>'+
+      '<td>'+pctCell(dEv)+'</td>'+
+      '<td class="tm-pt">'+fmtPx(pe_)+'</td>'+
+      '<td>'+pctCell(dPe)+'</td>'+
+      '<td>'+signPct(ev_/pe_-1)+'</td>'+
       '</tr>';
-    prevPt = mpt;
+    prevEv=ev_; prevPe=pe_;
+  });
+  scope.querySelector('#tmTable').innerHTML=
+    '<table class="tm-tbl"><thead><tr>'+
+      '<th>Snapshot</th><th>EBITDA '+FWD_YEAR+'</th><th>Earnings '+FWD_YEAR+'</th><th>EPS</th>'+
+      '<th>Target @ '+_mEv+'× EV/EBITDA</th><th>Δ</th>'+
+      '<th>Target @ '+_mPe+'× P/E</th><th>Δ</th><th>EV vs P/E</th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table>';
+
+  var f=SNAPS[0], l=SNAPS[SNAPS.length-1];
+  scope.querySelector('#tmWarn').innerHTML=
+    '<div class="dd-note" style="margin:10px 0"><b>'+revs+' of '+SNAPS.length+' snapshots are real revisions.</b> '+
+    '2026-08-03 repeats 2026-07-30 byte for byte on FY'+FWD_YEAR+' EBITDA and earnings, so it is a re-parse and is greyed out — '+
+    'the revision cadence that actually happened is roughly quarterly, as you would expect from reporting dates. '+
+    'On FY'+FWD_YEAR+' the 08-04 EBITDA redefinition is mild (+9.8% against +8.2% on earnings); the same change on FY2028 was +38.2% against +6.9%, '+
+    'so working the forward year at '+FWD_YEAR+' largely sidesteps it.</div>';
+
+  scope.querySelector('#tmFoot').innerHTML=
+    'FY'+FWD_YEAR+' EBITDA, earnings and share count per snapshot from the Summit DCF model (instrument AMZN, model be6d6393), read through the '+
+    'revision history. <b>Year-end target</b> = EBITDA × your EV/EBITDA multiple less net debt over shares, and EPS × your P/E multiple — both '+
+    'multiples shown side by side because the desk sets both. <b>EV vs P/E</b> is the spread between the two targets, which is the disagreement '+
+    'between the two methods at your chosen multiples. Share count is the model\'s own and moves (10,721 in the first vintage, 10,827 after). '+
+    'Net debt is '+fmtB(_netDebt)+', from the live quote. Revenue per snapshot is not pulled — neither target path uses it — and is one more query if wanted. '+
+    'At the multiples above the '+FWD_YEAR+' target moved '+signPct(ptEv(l)/ptEv(f)-1)+' on EV/EBITDA and '+signPct(ptPe(l)/ptPe(f)-1)+' on P/E across the log. '+
+    'The multiples are your input: the recorded ones live past column EM on projection_history and the connector does not reach them. '+
+    'Data sourced from Summit DCF models.';
+}
+
+// ── Preview render ───────────────────────────────────────────────────────────────
+function renderPreview(scope){
+  var ph=function(t){ return '<span class="tm-ph">'+t+'</span>'; };
+  var rows='', prev=null;
+  SNAPS.forEach(function(s,i){
+    var rev=isRevision(i);
+    var mev=MOCK_EV[i], mpe=MOCK_PE[i];
+    var pev=ptEv(s,mev), ppe=ptPe(s,mpe), rec=(pev+ppe)/2;   // "recorded" target, illustrative
+    var d=(prev!=null)?(rec/prev-1):null;
+    rows+='<tr'+((i===SNAPS.length-1)?' class="tm-last"':(rev?'':' class="tm-rep"'))+'>'+
+      '<td><b>'+esc(s.d)+'</b>'+(rev?'<span class="tm-tag tm-tag-rev">revision</span>':'<span class="tm-tag tm-tag-rep">re-parse</span>')+'</td>'+
+      '<td>'+fmtB(s.ebitda)+'</td><td>'+fmtB(s.earn)+'</td><td>$'+eps(s).toFixed(2)+'</td>'+
+      '<td>'+ph(mev.toFixed(1)+'×')+'</td><td>'+ph(mpe.toFixed(0)+'×')+'</td>'+
+      '<td class="tm-pt">'+ph(fmtPx(rec))+'</td><td>'+pctCell(d)+'</td>'+
+      '</tr>';
+    prev=rec;
   });
 
-  // Δ price target decomposed: how much came from the model, how much from the re-rating.
-  var e0 = SNAPS[0].earn/SNAPS[0].sh, m0 = MOCK_MULT[0];
-  var e1 = SNAPS[SNAPS.length-1].earn/SNAPS[SNAPS.length-1].sh, m1 = MOCK_MULT[MOCK_MULT.length-1];
-  var fund = (e1-e0)*m0, mult = (m1-m0)*e0, inter = (e1-e0)*(m1-m0), tot = e1*m1 - e0*m0;
-  function card(v, k, s2){
-    return '<div class="tm-attr-c"><div class="tm-attr-v" style="color:'+(v>=0?'#2E8B57':'#C0392B')+'">'+
-      (v>=0?'+':'−')+'$'+Math.abs(v).toFixed(0)+'</div><div class="tm-attr-k">'+esc(k)+'</div>'+
-      '<div class="tm-attr-s">'+esc(s2)+'</div></div>';
-  }
+  var e0=eps(SNAPS[0]), e1=eps(SNAPS[SNAPS.length-1]);
+  var m0=MOCK_PE[0], m1=MOCK_PE[MOCK_PE.length-1];
+  var fund=(e1-e0)*m0, mult=(m1-m0)*e0, inter=(e1-e0)*(m1-m0), tot=e1*m1-e0*m0;
+  function card(v,k,s2){ return '<div class="tm-attr-c"><div class="tm-attr-v" style="color:'+(v>=0?'#2E8B57':'#C0392B')+'">'+
+    (v>=0?'+':'−')+'$'+Math.abs(v).toFixed(0)+'</div><div class="tm-attr-k">'+esc(k)+'</div><div class="tm-attr-s">'+esc(s2)+'</div></div>'; }
 
-  scope.querySelector('#tmTable').innerHTML =
+  scope.querySelector('#tmTable').innerHTML=
     '<table class="tm-tbl"><thead><tr>'+
-      '<th>Snapshot</th><th>Revenue '+TARGET_YEAR+'</th><th>EBITDA '+TARGET_YEAR+'</th>'+
-      '<th>Earnings '+TARGET_YEAR+'</th><th>EPS</th>'+
-      '<th>Multiple assumed <span class="tm-ph" style="border:none"></span></th>'+
-      '<th>Model price target</th><th>vs prior snap</th>'+
+      '<th>Snapshot</th><th>EBITDA '+FWD_YEAR+'</th><th>Earnings '+FWD_YEAR+'</th><th>EPS</th>'+
+      '<th>EV/EBITDA chosen</th><th>P/E chosen</th><th>Recorded year-end target</th><th>Δ</th>'+
     '</tr></thead><tbody>'+rows+'</tbody></table>'+
     '<div class="tm-attr">'+
-      card(tot,  'Total move in the target', 'first vintage to latest')+
-      card(fund, 'From the model',           'earnings revised, multiple held')+
-      card(mult, 'From the multiple',        're-rating, earnings held')+
-      card(inter,'Interaction',              'both moving together')+
+      card(tot,'Total move in the target','first revision to latest, on P/E')+
+      card(fund,'From the model','earnings revised, multiple held')+
+      card(mult,'From the multiple','re-rating, earnings held')+
+      card(inter,'Interaction','both moving together')+
     '</div>';
 
-  scope.querySelector('#tmWarn').innerHTML =
-    '<div class="tm-mock"><b>Preview — the two purple columns are stand-ins, not data.</b> Revenue, EBITDA, earnings, EPS and share count are '+
-    '<b>real</b>, read from the model\'s snapshot history. The <span class="tm-ph">multiple</span> follows a hard-coded illustrative path '+
-    '('+MOCK_MULT.join('× → ')+'×) and the <span class="tm-ph">price target</span> is simply EPS × that multiple. '+
-    'They are here to show the shape, and every one of them is marked.</div>';
+  scope.querySelector('#tmWarn').innerHTML=
+    '<div class="tm-mock"><b>Preview — the three purple columns are stand-ins, not data.</b> EBITDA, earnings, EPS and share count are '+
+    '<b>real</b> FY'+FWD_YEAR+' figures from the snapshot history. The <span class="tm-ph">chosen multiples</span> follow hard-coded illustrative '+
+    'paths (EV/EBITDA '+MOCK_EV[0]+'× → '+MOCK_EV[MOCK_EV.length-1]+'×, P/E '+MOCK_PE[0]+'× → '+MOCK_PE[MOCK_PE.length-1]+'×) and the '+
+    '<span class="tm-ph">recorded target</span> is their midpoint. This is the shape the page takes once the workbook\'s own columns are ingested.</div>';
 
-  scope.querySelector('#tmFoot').innerHTML =
-    '<b>What this unlocks.</b> With the model\'s own multiple beside its own price target, the change in the target splits cleanly into the part '+
-    'that came from <b>revising the business</b> and the part that came from <b>changing what you pay for it</b> — the four cards above. On the '+
-    'illustrative path that is the whole story of the year: earnings went from $'+e0.toFixed(2)+' to $'+e1.toFixed(2)+' of EPS, worth '+
-    '<b>+$'+fund.toFixed(0)+'</b> at the original multiple, while the multiple went '+m0+'× to '+m1+'×, worth <b>−$'+Math.abs(mult).toFixed(0)+'</b> — '+
-    'so a materially better model produced a target that barely moved. That decomposition is impossible today, because only one of the two inputs is readable. '+
-    '<b>To make this real:</b> either the connector ingests projection_history past column EM, or drop the workbook somewhere I can read it '+
-    '(the xlsx parser from the AppLovin build handles it) — one file per snapshot if you want the history, otherwise the latest gives the current row only. '+
-    'Underlying figures: Summit DCF model, instrument AMZN, model be6d6393, FY'+TARGET_YEAR+'. Data sourced from Summit DCF models.';
+  scope.querySelector('#tmFoot').innerHTML=
+    '<b>What the recorded multiple unlocks.</b> With the chosen multiple stored beside the target, the move in the target splits into the part that '+
+    'came from <b>revising the business</b> and the part that came from <b>changing what you pay for it</b> — the cards above, computed on the P/E leg. '+
+    'On the illustrative path EPS goes $'+e0.toFixed(2)+' to $'+e1.toFixed(2)+', worth <b>+$'+fund.toFixed(0)+'</b> at the original multiple, while the '+
+    'multiple goes '+m0+'× to '+m1+'×, worth <b>−$'+Math.abs(mult).toFixed(0)+'</b>. That decomposition is the thing you cannot get today, because only '+
+    'the underlying is readable. <b>To make it real:</b> the connector ingests projection_history past column EM, or drop the workbook where I can read it '+
+    '(the xlsx parser from the AppLovin build handles it) — one file per revision for the history, otherwise the latest gives the current row only. '+
+    'Underlying: Summit DCF model, instrument AMZN, model be6d6393, FY'+FWD_YEAR+'. Data sourced from Summit DCF models.';
 }
 
 // ── Render ───────────────────────────────────────────────────────────────────────
 function render(scope){
-  // Drive the toggles off _mode/_basis here, so the buttons can never disagree with the content.
   scope.querySelectorAll('[data-tmmode]').forEach(function(b){
     b.classList.toggle('active', b.getAttribute('data-tmmode')===_mode); });
-  scope.querySelectorAll('[data-tmbasis]').forEach(function(b){
-    b.classList.toggle('active', b.getAttribute('data-tmbasis')===_basis); });
-  var lc = scope.querySelector('#tmLiveCtrls');
-  if(lc) lc.style.display = (_mode==='preview') ? 'none' : '';
-  if(_mode==='preview'){ renderPreview(scope); return; }
-  var rows = '', prevPt = null;
-  SNAPS.forEach(function(s, i){
-    var p = pt(s), im = impliedMult(s);
-    var dPrev = (prevPt!=null) ? (p/prevPt - 1) : null;
-    var up = (_px!=null) ? (p/_px - 1) : null;
-    var brk = isBroken(s) && i>0 && !isBroken(SNAPS[i-1]);
-    rows += '<tr'+(brk?' class="tm-brk"':'')+'>'+
-      '<td><b>'+esc(s.d)+'</b>'+(i===SNAPS.length-1?' <span style="font-size:9.5px;color:var(--mu)">latest</span>':'')+
-        (brk?'<span class="tm-flag">definition break</span>':'')+'</td>'+
-      '<td>'+fmtB(s.rev)+'</td>'+
-      '<td'+(isBroken(s)?' style="color:#C0392B"':'')+'>'+fmtB(s.ebitda)+'</td>'+
-      '<td>'+fmtB(s.earn)+'</td>'+
-      '<td>$'+(s.earn/s.sh).toFixed(2)+'</td>'+
-      '<td><input class="tm-mi" type="number" step="0.5" data-tmrow="'+esc(s.d)+'" value="'+multFor(s)+'"></td>'+
-      '<td class="tm-pt">'+fmtPx(p)+'</td>'+
-      '<td>'+pctCell(dPrev)+'</td>'+
-      '<td>'+(im!=null ? im.toFixed(1)+'×' : '—')+'</td>'+
-      '<td>'+pctCell(up)+'</td>'+
-      '</tr>';
-    prevPt = p;
-  });
-
-  scope.querySelector('#tmTable').innerHTML =
-    '<table class="tm-tbl"><thead><tr>'+
-      '<th>Snapshot</th><th>Revenue '+TARGET_YEAR+'</th><th>EBITDA '+TARGET_YEAR+'</th>'+
-      '<th>Earnings '+TARGET_YEAR+'</th><th>EPS</th><th>Multiple</th><th>Price target</th>'+
-      '<th>vs prior snap</th><th>Implied at spot</th><th>Upside</th>'+
-    '</tr></thead><tbody>'+rows+'</tbody></table>';
-
-  var first = pt(SNAPS[0]), last = pt(SNAPS[SNAPS.length-1]);
-  scope.querySelector('#tmWarn').innerHTML = (_basis==='ev')
-    ? '<div class="tm-warn"><b>You are on EV/EBITDA, which breaks across the 2026-08-04 snapshot.</b> Between 08-03 and 08-04 — one day — '+
-      'revenue moved +1.9% and earnings +6.9%, but EBITDA moved <b>+38.2%</b> ($311B → $430B). That is a change in how EBITDA is defined, not in '+
-      'what the business is expected to earn, so the jump in the price target on that row is an artefact. <b>Switch to P/E</b> for a like-for-like '+
-      'read across all seven vintages.</div>'
-    : '<div class="dd-note" style="margin:10px 0">Earnings is the series that stays comparable across all seven snapshots '+
-      '(109.2B → 137.4B, a steady climb). EV/EBITDA is available above but breaks on 2026-08-04 — see the flag on that row.</div>';
-
-  scope.querySelector('#tmFoot').innerHTML =
-    'One row per snapshot of the Summit DCF model (instrument AMZN, model be6d6393), read through the model\'s revision history for FY'+TARGET_YEAR+': '+
-    'AMZN:rev, AMZN:ebitda, AMZN:earnings and AMZN:shares. <b>Price target</b> = '+
-    (_basis==='ev' ? 'that snapshot\'s EBITDA × the multiple, less net debt, over that snapshot\'s share count'
-                   : 'that snapshot\'s earnings ÷ its share count × the multiple')+
-    '. The multiple is set by you — globally at the top, or per row — because the model stores none. '+
-    '<b>Implied at spot</b> reverses it: the multiple today\'s price is paying against that vintage\'s '+(_basis==='ev'?'EBITDA':'EPS')+'. '+
-    'Share count is the model\'s own and does move (10,721 in the 2025-12-18 vintage, 10,827 after). Net debt is '+fmtB(_netDebt)+', from the live quote. '+
-    'The '+TARGET_YEAR+' target year is fixed for now — it is the horizon year populated in every snapshot; other years are one more data pull. '+
-    'Price target moved '+signPct(last/first-1)+' from the first vintage to the latest at a constant multiple. '+
-    'Data sourced from Summit DCF models.';
+  var lc=scope.querySelector('#tmLiveCtrls');
+  if(lc) lc.style.display=(_mode==='preview')?'none':'';
+  if(_mode==='preview') renderPreview(scope); else renderLive(scope);
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────────
 function initTm(root){
-  var scope = root.querySelector('.ovt-subpane[data-ovst="targetmult"]');
+  var scope=root.querySelector('.ovt-subpane[data-ovst="targetmult"]');
   if(!scope || !scope.querySelector('#tmTable')) return;
-
   if(!scope._wired){
-    scope._wired = true;
+    scope._wired=true;
     scope.querySelectorAll('[data-tmmode]').forEach(function(b){ b.onclick=function(){
-      _mode = b.getAttribute('data-tmmode');
-      scope.querySelectorAll('[data-tmmode]').forEach(function(x){ x.classList.toggle('active', x===b); });
-      render(scope);
-    }; });
-    scope.querySelectorAll('[data-tmbasis]').forEach(function(b){ b.onclick=function(){
-      _basis = b.getAttribute('data-tmbasis'); _over = {};
-      scope.querySelectorAll('[data-tmbasis]').forEach(function(x){ x.classList.toggle('active', x===b); });
-      scope.querySelector('#tmMultL').textContent = multLabel()+' assumed';
-      scope.querySelector('#tmMult').value = baseMult();
-      render(scope);
-    }; });
-    var mi = scope.querySelector('#tmMult');
-    mi.oninput = function(){ var v=parseFloat(mi.value); if(!isFinite(v)||v<=0) return;
-      if(_basis==='ev') _mEv=v; else _mPe=v; _over={}; render(scope); };
-    scope.querySelector('#tmReset').onclick = function(){ _over={}; render(scope); };
-    // per-row multiple overrides (delegated — the table is re-rendered on every change)
-    scope.querySelector('#tmTable').addEventListener('input', function(e){
-      var el = e.target.closest('[data-tmrow]'); if(!el) return;
-      var v = parseFloat(el.value); if(!isFinite(v)||v<=0) return;
-      _over[el.getAttribute('data-tmrow')] = v;
-      var keep = el.getAttribute('data-tmrow');
-      render(scope);
-      var again = scope.querySelector('[data-tmrow="'+keep+'"]'); if(again) again.focus();
-    });
-
+      _mode=b.getAttribute('data-tmmode'); render(scope); }; });
+    function bind(id, set){ var el=scope.querySelector('#'+id);
+      el.oninput=function(){ var v=parseFloat(el.value); if(isFinite(v)) { set(v); render(scope); } }; }
+    bind('tmEv', function(v){ if(v>0) _mEv=v; });
+    bind('tmPe', function(v){ if(v>0) _mPe=v; });
+    bind('tmNd', function(v){ _netDebt=v; });
     import('../api.js').then(function(m){ return m && m.liveQuote ? m.liveQuote('AMZN') : null; })
-      .then(function(res){
-        var q = res && res.data ? res.data : res; if(!q) return;
-        if(q.price!=null) _px = q.price;
-        if(q.netDebt!=null) _netDebt = q.netDebt/1e6;
-        render(scope);
-      }).catch(function(){});
+      .then(function(res){ var q=res&&res.data?res.data:res; if(!q) return;
+        if(q.price!=null) _px=q.price;
+        if(q.netDebt!=null){ _netDebt=q.netDebt/1e6; var nd=scope.querySelector('#tmNd'); if(nd) nd.value=Math.round(_netDebt); }
+        render(scope); }).catch(function(){});
   }
   render(scope);
 }

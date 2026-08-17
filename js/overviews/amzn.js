@@ -4222,9 +4222,23 @@ var A_MGMT=[
   { n:'Doug Herrington', r:'CEO, Worldwide Amazon Stores', since:'since 2022 · joined 2005', d:'Runs the retail surface: the everyday-essentials push, same-day network, grocery ($150B+ gross sales) and the robotics rollout.' },
   { n:'Jeff Bezos', r:'Founder & Executive Chair', since:'chair since Jul 2021', d:'Founder; largest individual holder (~9%). Single share class — one share, one vote: influence flows from the stake and the chair, not super-voting stock (the governance mirror-image of META/GOOGL).' },
 ];
-function mgmtBody(){
-  var h='<p class="ov-lede"><b>The operator bench.</b> Amazon\'s leadership is home-grown to a degree unusual at this scale — the CEO, CFO, AWS chief and retail chief average ~20 years inside the company. Ownership and insider-transaction detail (auto-synced from Fiscal.ai) lives in the profile\'s <b>Pillars ▸ Management</b> tab; this page is the qualitative read.</p>';
-  h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin:10px 0">';
+// ═══ Management — Executives & Board · Ownership · Governance & SBC · Track Record ═══════════════
+// Verified board facts per Amazon 2025/2026 proxy (DEF 14A): 12 directors, majority independent;
+// Bezos Executive Chair; Jassy on the board; independent Lead Director (since 2010); four standing
+// committees — Audit (Nooyi, chair), Leadership Dev & Comp, Nominating & Corp Gov, Security
+// (Huttenlocher, chair). The full 12-member roster + live ownership sync in Pillars ▸ Management.
+var A_BOARD=[
+  {n:'Jeff Bezos', r:'Founder &amp; Executive Chair', ind:false, chair:true},
+  {n:'Andy Jassy', r:'President &amp; CEO', ind:false},
+  {n:'Indra K. Nooyi', r:'Independent · <b>chairs Audit</b> · former Chairman &amp; CEO, PepsiCo · director since 2019', ind:true},
+  {n:'Daniel P. Huttenlocher', r:'Independent · <b>chairs Security</b> · Dean, MIT Schwarzman College of Computing · director since 2016', ind:true},
+  {n:'Keith B. Alexander', r:'Independent · retired U.S. Army general, former Director of the NSA', ind:true},
+  {n:'Wendell P. Weeks', r:'Independent · Chairman &amp; CEO, Corning', ind:true}
+];
+function mgmtBody(){   // Executives & Board
+  var h='<p class="ov-lede"><b>The operator bench.</b> Amazon\'s leadership is home-grown to a degree unusual at this scale — the CEO, CFO, AWS chief and retail chief average ~20 years inside the company.</p>';
+  h+='<div class="ov-sec-h">Executives</div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin:6px 0 4px">';
   A_MGMT.forEach(function(m){
     h+='<div class="ov-card" style="border-top-color:'+BRAND+'"><div class="ov-card-h"><span class="ov-card-n">'+esc(m.n)+'</span></div>'+
       '<div style="font-size:11px;font-weight:800;color:'+BRAND2+';margin:2px 0 2px">'+esc(m.r)+'</div>'+
@@ -4232,8 +4246,68 @@ function mgmtBody(){
       '<div class="ov-card-s" style="font-size:12px;line-height:1.55">'+m.d+'</div></div>';
   });
   h+='</div>';
-  h+='<div class="ov-callout" style="margin-top:8px"><b>Governance in one line:</b> single share class (one vote per share), an executive-chair founder at ~9%, and a bench promoted from within — succession risk is low by construction, but so is the probability of an outsider ever forcing a strategy change. The 2025–26 severance rounds (Q3\'25 $1.8B; Q4\'25 $730M; more in 2026) are the leaner-org push showing up in the numbers.</div>';
-  h+='<div class="ov-foot">Roles and tenures per Amazon proxy statements / IR (as of mid-2026); quotes from the Q4 2025 and Q1 2026 earnings calls. Ownership figures are approximate — the synced table in Pillars ▸ Management is the source of record.</div>';
+  h+='<div class="ov-sec-h" style="margin-top:18px">Board of Directors</div>';
+  h+='<div class="ov-callout" style="margin-top:0"><b>Structure:</b> <b>12 directors</b>, the majority independent. <b>Jeff Bezos is Executive Chair</b>; Andy Jassy sits on the board; an independent <b>Lead Director</b> (role in place since 2010) presides over the executive sessions. Four standing committees — <b>Audit</b>, <b>Leadership Development &amp; Compensation</b>, <b>Nominating &amp; Corporate Governance</b>, and <b>Security</b>.</div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;margin:10px 0">'+
+    A_BOARD.map(function(b){ var tag=b.ind?'<span style="font-size:8px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:#0a8f0a;background:rgba(10,143,10,.12);border-radius:20px;padding:1px 6px;margin-left:6px">Independent</span>':'<span style="font-size:8px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--mu);background:rgba(138,147,160,.18);border-radius:20px;padding:1px 6px;margin-left:6px">Insider</span>';
+      return '<div style="border:1px solid var(--bdr);border-radius:9px;padding:9px 11px'+(b.chair?';border-left:3px solid '+BRAND:'')+'"><div style="font-size:12px;font-weight:800;color:var(--navy)">'+esc(b.n)+tag+'</div><div style="font-size:10.5px;color:var(--mu);margin-top:2px;line-height:1.4">'+b.r+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="ov-fynote">Directors and committee chairs shown are verified from Amazon\'s 2025/2026 proxy (DEF 14A). The <b>full 12-member roster</b> with each director\'s bio, plus the live ownership &amp; insider table, are in <b>Pillars ▸ Management</b>.</div>';
+  h+='<div class="ov-foot">Executive roles and tenures per Amazon proxy / IR (mid-2026).</div>';
+  return h;
+}
+function amznOwnBody(){   // Ownership
+  var h='<p class="ov-lede"><b>One share, one vote.</b> Amazon has a <b>single share class</b> — no founder super-voting stock. It is the governance mirror-image of META and GOOGL: influence flows from the stake and the chair, not from a special class.</p>';
+  h+='<div class="ew-kpis">'+[['~9%','Jeff Bezos — largest individual holder'],['1 class','one share, one vote'],['~$19.5B','stock-based comp (FY25)'],['~nil','buybacks · no dividend']].map(function(k){ return '<div class="ew-tile"><div class="ew-tv">'+k[0]+'</div><div class="ew-tl">'+k[1]+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="ov-sec-h">Who owns Amazon</div>';
+  h+=ewBoxes([
+    ['👤','Founder','Jeff Bezos holds ~9% — the largest single holder — as Executive Chair. He sells regularly under pre-set <b>10b5-1</b> plans (funding Blue Origin and philanthropy), so the stake trends down over time even as it stays the largest.'],
+    ['🏦','Institutions','The float is overwhelmingly institutional; the largest holders are the index-fund complexes — <b>Vanguard, BlackRock and State Street</b> — whose stakes track the passive flows, not an active view on Amazon.']
+  ]);
+  h+='<div class="ov-sec-h" style="margin-top:16px">Capital returned to shareholders</div>';
+  h+='<div class="ov-fynote">Amazon pays <b>no dividend</b> and repurchases stock only opportunistically — it authorized a $10B buyback in 2022 and bought ~$6B that year, then effectively paused. Capital goes to the capex build (see <b>Miscellaneous ▸ Capex &amp; Depreciation</b>), not to shareholders — so SBC dilution is <b>not</b> offset by buybacks.</div>';
+  h+='<div class="ov-foot">Exact holdings and insider transactions sync live in Pillars ▸ Management (Fiscal.ai); figures here are approximate.</div>';
+  return h;
+}
+function amznGovBody(){   // Governance & SBC
+  var h='<p class="ov-lede"><b>Clean, conventional governance.</b> Single-class stock, an independent-majority board, four standing committees and an annual say-on-pay vote — governance risk is low by construction. The trade-off: no outside holder can force a strategy change.</p>';
+  h+=ewBoxes([
+    ['🗳️','Single share class','One share, one vote — no founder super-voting stock. The opposite of META/GOOGL dual-class.'],
+    ['👤','Founder as Executive Chair','Jeff Bezos ~9% (largest individual holder); influence via stake and chair, not a special class.'],
+    ['⚖️','Independent-majority board','12 directors, the majority independent; an independent Lead Director since 2010.'],
+    ['🏛️','Four standing committees','Audit (Nooyi), Leadership Dev &amp; Comp, Nominating &amp; Corp Gov, Security (Huttenlocher).'],
+    ['🗣️','Annual say-on-pay','An advisory shareholder vote on executive compensation every year.'],
+    ['📉','SBC, not buybacks','No dividend and minimal repurchases — SBC (~$19.5B) is the main driver of share-count growth.']
+  ]);
+  h+='<div class="ov-sec"><div class="ov-sec-h" style="margin-top:16px">Stock-based compensation — the dilution engine ($B, by function)</div>'+
+    '<div style="height:280px"><canvas id="aGovSbc"></canvas></div>'+
+    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">SBC has fallen from <b>~$24.0B (2023) to ~$19.5B (2025)</b> — and faster as a share of revenue (~4.2% → ~2.7%) — as the 2022-23 grants vest off and comp normalizes. <b>Technology &amp; infrastructure</b> carries the bulk (the engineering workforce). With buybacks near zero, this SBC is the main source of share-count growth.</div></div>';
+  h+='<div class="ov-foot">Governance per Amazon 2025/2026 proxy; SBC by function per the 10-K (Note 1).</div>';
+  return h;
+}
+function aBuildGovSbc(){
+  var yrs=[2023,2024,2025], cv=aChartReady('aGovSbc'); if(!cv) return; aDestroy('aGovSbc');
+  _aCharts['aGovSbc']=new Chart(cv.getContext('2d'),{ type:'bar',
+    data:{ labels:yrs.map(String), datasets:A_OPEX_FN.map(function(f){ return { label:f.lab, data:yrs.map(function(y){ return A_TENK.sbc[y][f.k]/1000; }), backgroundColor:f.c, borderColor:'#fff', borderWidth:1, maxBarThickness:52, stack:'s' }; }) },
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+c.parsed.y.toFixed(1)+'B'; }, footer:function(it){ return 'Total SBC: $'+it.reduce(function(a,x){ return a+x.parsed.y; },0).toFixed(1)+'B'; } } } },
+      scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } });
+}
+function amznTrackBody(){   // Track Record — what each leader has delivered
+  var TR=[
+    {n:'Andy Jassy', r:'President & CEO (since 2021)', got:['Built AWS from a 2003 memo into the profit engine — its first leader (2003-21), now the majority of group operating income.','As CEO: the efficiency era — US network regionalization, org flattening, ~41k corporate roles out — that took group operating margin from low-single-digits to a record ~11%.','Set and is executing the AI build-out and the "every experience reinvented with AI" doctrine.']},
+    {n:'Matt Garman', r:'CEO, AWS (since Jun 2024)', got:['One of AWS\'s first product managers, then its top salesman — deep-inside credibility.','Presiding over the re-acceleration (growth +24% → +28%), the Trainium ramp and the Anthropic partnership — the price-performance edge behind the margin.']},
+    {n:'Doug Herrington', r:'CEO, Worldwide Amazon Stores (since 2022)', got:['Ran the retail turnaround — North America from a 2022 operating loss to a mid-single-digit margin, on cost and mix rather than price.','Drove the everyday-essentials push, the same-day network, grocery ($150B+ gross sales) and the robotics rollout.']},
+    {n:'Brian Olsavsky', r:'SVP & CFO (since 2015)', got:['Two decades of Amazon finance — the consistent voice of the guide across the pandemic build, the 2022 trough and the AI capex cycle.','Owns the capex framing that anchors the bull case: "as fast as we install this capacity, we are monetizing it."']}
+  ];
+  var h='<p class="ov-lede"><b>What the bench has actually delivered.</b> A per-leader scorecard — the record behind the roster, not the bios.</p>';
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin:6px 0">';
+  TR.forEach(function(m){
+    h+='<div class="ov-card" style="border-top-color:'+BRAND+'"><div class="ov-card-h"><span class="ov-card-n">'+esc(m.n)+'</span></div>'+
+      '<div style="font-size:11px;font-weight:800;color:'+BRAND2+';margin:2px 0 6px">'+esc(m.r)+'</div>'+
+      '<ul style="margin:0;padding-left:16px;font-size:12px;line-height:1.55;color:var(--navy)">'+m.got.map(function(g){ return '<li style="margin-bottom:5px">'+g+'</li>'; }).join('')+'</ul></div>';
+  });
+  h+='</div>';
+  h+='<div class="ov-foot">Delivered results per Amazon earnings calls / IR and segment disclosures; qualitative read, not a rating.</div>';
   return h;
 }
 
@@ -4397,9 +4471,15 @@ function deepDiveHtml(c){
     '</div>';
   h+='<div class="dd-pane" data-dd="mgmt" hidden>'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="team">Executives & Governance</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="team">Executives &amp; Board</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="ownership">Ownership</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="governance">Governance &amp; SBC</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="track">Track Record</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="team">'+mgmtBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="ownership" hidden>'+amznOwnBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="governance" hidden>'+amznGovBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="track" hidden>'+amznTrackBody()+'</div>'+
     '</div>';
   h+='<div class="dd-pane" data-dd="misc" hidden>'+
       '<div class="ovt-subtabs">'+
@@ -4452,6 +4532,9 @@ function aBuildSub(root, dd, key){
   }
   if(dd==='misc'){
     if(key==='capex' || key==null) requestAnimationFrame(function(){ aBuildCapex(root); });
+  }
+  if(dd==='mgmt'){
+    if(key==='governance') requestAnimationFrame(aBuildGovSbc);
   }
   if(dd==='valuation'){
     if(key==='peers') requestAnimationFrame(function(){ aScRenderAll(root); aScChipsAll(root); aScFetchCaps(root); });

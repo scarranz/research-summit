@@ -111,7 +111,16 @@ def main():
         cfg = json.load(fh)
 
     vals, conflicts, zeros, files = collect(dump_dir, cfg.get("prefer_source", []))
-    metrics, derived = cfg["metrics"], cfg.get("derived", {})
+    metrics = cfg["metrics"]
+    # `derived` is either flat ({key: [labels]}, applied to both views) or per view
+    # ({"q": {...}, "y": {...}}). AMZN needs the second: quarterly totals must be summed from the
+    # segment rows (the model's own quarterly REV / OP_INCOME rows are zero, or worse), while the
+    # ANNUAL rows for the same metrics are populated directly and must be read straight.
+    raw_derived = cfg.get("derived", {})
+    per_view = set(raw_derived) <= {"q", "y"} and any(isinstance(v, dict) for v in raw_derived.values())
+    derived_for = (lambda view: raw_derived.get(view, {})) if per_view else (lambda view: raw_derived)
+    # Every metric the model carries on the opposite sign to the dataset (capex as cash outflow).
+    sign = cfg.get("sign", {})
     decimals, axis = cfg.get("decimals", {}), cfg["axis"]
     vintages = cfg["vintages"]
     known = {v["id"] for v in vintages}
@@ -124,6 +133,7 @@ def main():
     # (view, dataset key, vintage id) -> {period: value}
     cells = defaultdict(dict)
     for view in ("q", "y"):
+        derived = derived_for(view)
         for mkey in cfg["views"][view]:
             for v in vintages:
                 row = {}
@@ -140,7 +150,7 @@ def main():
                     else:
                         value = vals.get((v["id"], view, period, metrics[mkey]))
                     if value is not None:
-                        row[period] = value
+                        row[period] = value * sign.get(mkey, 1)
                 if row:
                     cells[(view, mkey, v["id"])] = row
 
@@ -200,6 +210,7 @@ def main():
     js = open(os.path.normpath(js_path), encoding="utf-8").read()
     print("\n=== derived pre-print  vs  shipped summit ===")
     for view in ("q", "y"):
+        derived = derived_for(view)
         for mkey in cfg["views"][view]:
             periods, shipped_arr = shipped(js, view, mkey, "summit")
             _, act = shipped(js, view, mkey, "act")

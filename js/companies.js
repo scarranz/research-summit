@@ -967,6 +967,10 @@ function openCo(tk){
   var px = c.price != null ? '$'+Number(c.price).toFixed(2) : '—';
   document.getElementById('co-px').textContent=px;             // static fallback (DB price)
   var pxsub=document.getElementById('co-pxsub'); if(pxsub) pxsub.innerHTML='';
+  // Source buttons (IR / EDGAR, logo-only) live in the header now — the overview module supplies them
+  // per company via headerSources(). Cleared for companies that don't (so it never shows stale marks).
+  var srcEl=document.getElementById('co-srcbtns');
+  if(srcEl){ var ov=getOverview(c.ticker); srcEl.innerHTML=(ov&&typeof ov.headerSources==='function')?ov.headerSources():''; }
   updateLiveHeader(c);                                         // then refresh with a live Massive quote
   renderOverview(c);
   renderCoAnalysis(c.id, c.ticker);
@@ -1490,6 +1494,14 @@ export async function loadCompaniesPage() {
       _companies.push({ id: 'qcom-local', ticker: 'QCOM', name: 'QUALCOMM Incorporated',
         group_name: 'Semiconductors', sector: 'Technology', logo_domain: 'qualcomm.com',
         mono: 'QC', status: 'active', price: null });
+    }
+    // Local-dev only: surface the in-development DIS (Disney) overview in the grid without a
+    // DB write, so it previews inside the real portal chrome. Gated to localhost — never
+    // affects production. Remove once DIS is added for real via the companies table.
+    if (location.hostname === 'localhost' && !_companies.find(function(c){ return c.ticker === 'DIS'; })) {
+      _companies.push({ id: 'dis-local', ticker: 'DIS', name: 'The Walt Disney Company',
+        group_name: 'Media & Entertainment', sector: 'Communication Services', logo_domain: 'thewaltdisneycompany.com',
+        mono: 'DI', status: 'active', price: null });
     }
     initCoControls();
     renderCoGrid();

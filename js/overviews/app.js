@@ -17,7 +17,9 @@ import {
   APP_BRAND, APP_BRAND2, C_US, C_ROW, C_COGS, C_SM, C_RD, C_GA, C_APPS, C_POS, C_NEG,
   APP_FACTS, APP_LEDE, APP_QUAD, APP_ONE_SEGMENT, APP_GEO, APP_GEO_CAPTION, APP_PROD_DEFS,
   APP_PRODUCTS, APP_PEERS, APP_PEERS_NOTE, APP_TIMELINE,
-  APP_DD_INTRO, APP_MARGIN_DRIVERS, APP_CAPRET, APP_OV_SOURCES, APP_DD_SOURCES
+  APP_DD_INTRO, APP_MARGIN_DRIVERS, APP_CAPRET, APP_OV_SOURCES, APP_DD_SOURCES,
+  ECO_NAVY, ECO_GRAY, ECO_SKY, ECO_BLUE, ECO_RULE, ECO_HEAD,
+  APP_ECO_CHAIN, APP_ECO_PLAYERS, APP_ECO_LEGEND, APP_ECO_APPNOTE, APP_ECO_SOURCE
 } from './app-data.js';
 import {
   AM_YEARS, AM_ISEST, AM_LAST_ACTUAL, AM_MIN_FULL,
@@ -160,6 +162,51 @@ function styleBlock(){
     '.kv-k{flex:0 0 108px;font-size:11px;font-weight:800;color:'+APP_BRAND+';text-transform:uppercase;letter-spacing:.03em}'+
     '.kv-v{flex:1;font-size:11.5px;color:var(--navy);line-height:1.55}'+
     '.ov-app .ovt-subtabs{margin-bottom:12px}'+
+    // ── Advertising ecosystem: replicas of The Trade Desk slides 11 and 14 ──
+    '.eco-slide{background:'+ECO_NAVY+';border-radius:12px;padding:34px 30px 38px;margin:14px 0 0;overflow-x:auto}'+
+    '.eco-slide-light{background:#FFFFFF;border:1px solid var(--bdr)}'+
+    '.eco-title{color:#fff;font-size:clamp(19px,2.4vw,30px);font-weight:400;letter-spacing:-.01em;line-height:1.2;margin:0 0 34px}'+
+    '.eco-title-dark{color:'+ECO_HEAD+';text-align:center;margin-bottom:26px}'+
+    // slide 11 — column widths mirror the slide's own pixel proportions
+    '.eco-chain{display:grid;grid-template-columns:1fr .17fr 1.03fr 1.03fr 3.13fr 1.03fr 1.03fr .17fr 1fr;'+
+      'gap:12px;align-items:stretch;min-width:820px}'+
+    '.eco-val{align-self:center;background:#fff;border-radius:2px;min-height:98px;display:flex;align-items:center;justify-content:center}'+
+    '.eco-val span{color:'+ECO_HEAD+';font-size:clamp(17px,2.1vw,30px);font-weight:500}'+
+    '.eco-arrow{align-self:center;display:flex;align-items:center;justify-content:center;gap:0}'+
+    '.eco-line{flex:1;height:1.5px;background:'+ECO_SKY+'}'+
+    '.eco-head{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent}'+
+    '.eco-head-r{border-left:7px solid '+ECO_SKY+'}'+
+    '.eco-head-l{border-right:7px solid '+ECO_SKY+'}'+
+    '.eco-col{border-radius:2px;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px 6px}'+
+    '.eco-col span{font-size:clamp(10px,1.05vw,13.5px);line-height:1.32}'+
+    '.eco-mid{display:flex;flex-direction:column;gap:13px}'+
+    '.eco-mbox{background:'+ECO_GRAY+';border-radius:2px;display:flex;align-items:center;justify-content:center;'+
+      'text-align:center;color:#5A5A5A;font-size:clamp(10px,1.05vw,13.5px);line-height:1.3;padding:4px 8px}'+
+    '.eco-mrow{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}'+
+    '.eco-mrow .eco-mbox{height:100%}'+
+    // slide 14
+    '.eco-grid{display:grid;gap:0}'+
+    '.eco-grid-4{grid-template-columns:repeat(4,1fr)}'+
+    '.eco-grid-3{grid-template-columns:1.5fr 1.5fr 1.5fr;padding-left:11.1%;padding-right:11.1%}'+
+    '.eco-cat{padding:4px 16px 16px;border-left:1px solid '+ECO_RULE+'33;text-align:center}'+
+    '.eco-grid-4 .eco-cat:first-child,.eco-grid-3 .eco-cat:first-child{border-left:none}'+
+    '.eco-cat-h{font-size:12px;font-weight:800;letter-spacing:.02em;color:'+ECO_HEAD+';margin-bottom:16px;line-height:1.25}'+
+    '.eco-marks{display:flex;flex-wrap:wrap;gap:7px 14px;justify-content:center;align-items:center}'+
+    '.eco-mark{font-size:12px;font-weight:700;color:#4A4F5A;white-space:nowrap}'+
+    // the AppLovin placements: boxed, brand-coloured, with the product underneath
+    '.eco-mark-app{display:inline-flex;flex-direction:column;align-items:center;line-height:1.15;'+
+      'border:1.5px solid '+APP_BRAND+';background:var(--brand-soft);border-radius:7px;'+
+      'padding:5px 11px;color:'+APP_BRAND+'}'+
+    '.eco-mark-app b{font-size:12.5px;font-weight:800}'+
+    '.eco-mark-app i{font-size:9.5px;font-style:normal;font-weight:700;opacity:.8;margin-top:1px}'+
+    '.eco-cat-app .eco-cat-h{color:'+APP_BRAND+'}'+
+    '.eco-legend{display:flex;align-items:center;justify-content:center;gap:9px;margin:0 0 20px}'+
+    '.eco-legend-t{font-size:11px;font-weight:700;color:var(--mu)}'+
+    '.eco-cat-n{font-size:10.5px;color:#6B7684;margin-top:12px}'+
+    '.eco-rule{position:relative;height:1px;background:'+ECO_RULE+'55;margin:14px 0 18px}'+
+    '.eco-dot{position:absolute;top:-3px;width:7px;height:7px;border-radius:50%;background:'+ECO_BLUE+';transform:translateX(-50%)}'+
+    '@media(max-width:820px){.eco-grid-4{grid-template-columns:repeat(2,1fr)}.eco-grid-3{grid-template-columns:1fr;padding:0}'+
+      '.eco-cat{border-left:none;border-top:1px solid '+ECO_RULE+'33}}'+
     // modal (own copy — dis.js styles only exist while a Disney pane is mounted)
     '.app-modal-back{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;transition:opacity .16s;padding:20px}'+
     '.app-modal-back.on{opacity:1}.app-modal-back[hidden]{display:none}'+
@@ -652,6 +699,82 @@ function buildMargins(root){
   }
 }
 
+// ─── Bottom Line ▸ Advertising ecosystem ────────────────────────────────────────
+// Faithful replicas of The Trade Desk deck, slides 11 and 14. Column widths follow the
+// slide's own pixel proportions (140:24:144:144:438:144:144:24:140) and every colour was
+// sampled from the rendered page — see APP_ECO_SOURCE.
+function ecoLines(t){ return esc(t).split('\n').join('<br>'); }
+
+function ecoChain(){
+  var C = APP_ECO_CHAIN;
+  function col(b){
+    return '<div class="eco-col" style="background:'+b.bg+';color:'+b.fg+'">'+
+      '<span>'+ecoLines(b.t)+'</span></div>';
+  }
+  var mid = C.middle.map(function(m){
+    if(m.row){
+      return '<div class="eco-mrow" style="height:'+m.h+'px">'+m.row.map(function(r){
+        return '<div class="eco-mbox eco-chip"><span>'+esc(r)+'</span></div>';
+      }).join('')+'</div>';
+    }
+    return '<div class="eco-mbox" style="height:'+m.h+'px"><span>'+ecoLines(m.t)+'</span></div>';
+  }).join('');
+  return '<div class="eco-slide">'+
+    '<div class="eco-title">'+esc(C.title)+'</div>'+
+    '<div class="eco-chain">'+
+      '<div class="eco-val"><span>'+esc(C.leftValue)+'</span></div>'+
+      '<div class="eco-arrow"><span class="eco-line"></span><span class="eco-head eco-head-r"></span></div>'+
+      col(C.sell[0])+col(C.sell[1])+
+      '<div class="eco-mid">'+mid+'</div>'+
+      col(C.buy[0])+col(C.buy[1])+
+      '<div class="eco-arrow"><span class="eco-head eco-head-l"></span><span class="eco-line"></span></div>'+
+      '<div class="eco-val"><span>'+esc(C.rightValue)+'</span></div>'+
+    '</div>'+
+  '</div>';
+}
+
+function ecoPlayers(){
+  var P = APP_ECO_PLAYERS;
+  // An item is either a plain wordmark (string) or { n, app, via } — the AppLovin
+  // placements, boxed and in the brand colour so they read at a glance.
+  function mark(i){
+    if(typeof i === 'string') return '<span class="eco-mark">'+esc(i)+'</span>';
+    return '<span class="eco-mark eco-mark-app"><b>'+esc(i.n)+'</b>'+
+      (i.via ? '<i>'+esc(i.via)+'</i>' : '')+'</span>';
+  }
+  function isApp(c){ return c.items.some(function(i){ return typeof i !== 'string' && i.app; }); }
+  function cell(c){
+    return '<div class="eco-cat'+(isApp(c)?' eco-cat-app':'')+'">'+
+      '<div class="eco-cat-h">'+ecoLines(c.cat)+'</div>'+
+      '<div class="eco-marks">'+c.items.map(mark).join('')+'</div>'+
+      (c.note ? '<div class="eco-cat-n">'+esc(c.note)+'</div>' : '')+
+    '</div>';
+  }
+  // A dot sits wherever a column divider meets the rule — four from the top row's
+  // boundaries (25/50/75%) and the bottom row's inset edges (11.1 / 37 / 63 / 88.9%).
+  var dots = '<div class="eco-rule">'+
+    [11.1, 25, 37, 50, 63, 75, 88.9].map(function(p){
+      return '<span class="eco-dot" style="left:'+p+'%"></span>';
+    }).join('')+
+  '</div>';
+  return '<div class="eco-slide eco-slide-light">'+
+    '<div class="eco-title eco-title-dark">'+esc(P.title)+'</div>'+
+    '<div class="eco-legend"><span class="eco-mark eco-mark-app"><b>AppLovin</b><i>product</i></span>'+
+      '<span class="eco-legend-t">'+esc(APP_ECO_LEGEND)+'</span></div>'+
+    '<div class="eco-grid eco-grid-4">'+P.top.map(cell).join('')+'</div>'+
+    dots+
+    '<div class="eco-grid eco-grid-3">'+P.bottom.map(cell).join('')+'</div>'+
+  '</div>'+
+  '<div class="dd-callout">'+APP_ECO_APPNOTE+'</div>';
+}
+
+function ecosystemBody(){
+  return '<p class="dd-sub">Two slides from The Trade Desk investor deck. The first traces where a dollar of advertiser spend goes before it reaches a publisher, and is reproduced verbatim. The second maps who occupies each layer of that chain — same layout and wording, but with <b>AppLovin marked in every layer where it actually fields a product</b>, not just the single box the source assigns it.</p>'+
+    ecoChain()+
+    ecoPlayers()+
+    '<div class="dd-note">'+esc(APP_ECO_SOURCE)+'</div>';
+}
+
 // ─── Bottom Line ▸ Capital & returns ────────────────────────────────────────────
 function capitalBody(){
   var kv = APP_CAPRET.map(function(r){
@@ -714,10 +837,12 @@ function deepDiveHtml(c){
   '</div>';
   h += '<div class="dd-pane" data-dd="bottomline" hidden>'+
     '<div class="ovt-subtabs">'+
-      '<button type="button" class="ovt-subtab active" data-ovst="margins">Margins &amp; Leverage</button>'+
+      '<button type="button" class="ovt-subtab active" data-ovst="ecosystem">Advertising Ecosystem</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="margins">Margins &amp; Leverage</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="capital">Capital &amp; Returns</button>'+
     '</div>'+
-    '<div class="ovt-subpane" data-ovst="margins">'+marginsBody()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="ecosystem">'+ecosystemBody()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="margins" hidden>'+marginsBody()+'</div>'+
     '<div class="ovt-subpane" data-ovst="capital" hidden>'+capitalBody()+'</div>'+
   '</div>';
   h += '<div class="ov-foot">'+esc(APP_DD_SOURCES)+' '+esc(AM_SOURCE)+'</div>';

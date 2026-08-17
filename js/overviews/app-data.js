@@ -223,6 +223,82 @@ export var APP_CAPRET = [
   ['Dilution', 'Diluted share count is falling — 362.6M in 2023 to 342.0M in 2025 — but $489M of unrecognised stock comp and a 5%-of-shares annual evergreen on the 2021 Plan push the other way.'],
 ];
 
+// ─── Advertising ecosystem — replicated from The Trade Desk's investor deck ─────
+// Slide 11 ("The pie is getting bigger while waste is being pushed out") and slide 14
+// ("With hundreds of different players"). Colours below were sampled pixel-by-pixel from
+// the rendered slides so the replica matches the source exactly.
+export var ECO_NAVY  = '#111462';   // slide 11 background
+export var ECO_GREEN = '#00564C';   // Publishers / Sellers / Content Owners
+export var ECO_MINT  = '#CFF8EE';   // Supply-side platform
+export var ECO_GRAY  = '#F2F2F2';   // the middle stack
+export var ECO_SKY   = '#ADE3FF';   // Self-serve DSP + the arrows
+export var ECO_BLUE  = '#0371E2';   // Advertisers / Agencies + slide 14 dots
+export var ECO_RULE  = '#7F7F7F';   // slide 14 dividers
+export var ECO_HEAD  = '#0C0C27';   // slide 14 category headings
+
+// Slide 11. `t` strings use \n for the line breaks that appear on the slide.
+export var APP_ECO_CHAIN = {
+  title: 'The pie is getting bigger while waste is being pushed out',
+  leftValue: '$0.55',
+  rightValue: '$1.00',
+  sell: [
+    { t:'Publishers/\nSellers/\nContent Owners', bg:ECO_GREEN, fg:'#FFFFFF' },
+    { t:'Supply-side\nplatform\n(SSP)\nand yield\nmanagement', bg:ECO_MINT, fg:'#1C1C35' },
+  ],
+  middle: [
+    { t:'Managed-service DSPs\nand ad networks', h:80 },
+    { t:'Networks exchange', h:44 },
+    { row:['Display','Mobile','Social','TV+'], h:42 },
+    { t:'Ad server', h:44 },
+    { t:'Data platform', h:44 },
+  ],
+  buy: [
+    { t:'Self-serve\nDemand-side\nplatform (DSP)', bg:ECO_SKY, fg:'#1C1C35' },
+    { t:'Advertisers/\nAgencies', bg:ECO_BLUE, fg:'#FFFFFF' },
+  ],
+};
+
+// Slide 14. Company names are transcribed from the slide's logos, in slide order, and
+// render as text wordmarks — the deck's logo images are not reproduced.
+//
+// MODIFIED vs the source slide: The Trade Desk places AppLovin in ONE box, Ad Exchange.
+// That understates it. AppLovin runs a product in four of these seven layers, so each is
+// marked with `{ app:true, via:'<product>' }` and highlighted. Every placement below is
+// justified by the FY2025 10-K's own description of the product:
+//   • DSP            — AppLovin Ads, the advertiser-side buying engine ("vast majority of revenue")
+//   • AD EXCHANGE    — the auction matching advertiser demand to publisher supply (TTD's own placement)
+//   • SSP            — MAX, "in-app bidding technology... running a real-time competitive auction"
+//                      for a publisher's inventory: the same job as Magnite or PubMatic
+//   • DATA MGMT      — Adjust, "measurement and analytics marketing platform". Strictly an MMP
+//                      rather than a DMP, but it competes in this layer with Nielsen and Adobe
+// Deliberately NOT placed in PUBLISHER: Wurl distributes streaming video *for* content
+// companies, so it serves that layer rather than competing in it. See APP_ECO_APPNOTE.
+export var APP_ECO_PLAYERS = {
+  title: 'With hundreds of different players',
+  top: [
+    { cat:'ADVERTISER', items:['Under Armour','Aflac','Marriott','Travelers','New York Life','Vanguard'] },
+    { cat:'AGENCY', items:['WPP','Omnicom Group','Publicis Groupe','Havas Media','IPG','dentsu Aegis Network'],
+      note:'Plus hundreds of independent agencies' },
+    { cat:'DATA MANAGEMENT PLATFORM',
+      items:[{ n:'AppLovin', app:true, via:'Adjust' },'The Trade Desk','Nielsen','Adobe','Lotame','Salesforce DMP'] },
+    { cat:'DSP',
+      items:[{ n:'AppLovin', app:true, via:'AppLovin Ads' },'The Trade Desk','Moloco','Criteo','Adobe','Display & Video 360','Yahoo Advertising','MNTN'] },
+  ],
+  bottom: [
+    { cat:'AD EXCHANGE',
+      items:[{ n:'AppLovin', app:true, via:'Axon auction' },'Microsoft','Google Ad Manager','OpenX','Smaato','Magnite','PubMatic','SmartyAds'] },
+    { cat:'SSP',
+      items:[{ n:'AppLovin', app:true, via:'MAX' },'Magnite','Google Ad Manager','PubMatic','Triton','Yieldmo','OpenX','Microsoft Advertising'] },
+    { cat:'PUBLISHER', items:['The New York Times','Hulu','CNN','BBC','NBC','WSJ','National Geographic','ESPN','Dotdash Meredith'] },
+  ],
+};
+
+export var APP_ECO_LEGEND = 'Where AppLovin competes';
+
+export var APP_ECO_APPNOTE = 'The Trade Desk\'s slide puts AppLovin in a single box — Ad Exchange. On the 10-K\'s own description of its products, it runs one in <b>four of these seven layers</b>: the buying engine (<b>AppLovin Ads</b>, the vast majority of revenue), the auction itself, the publisher-side monetisation layer (<b>MAX</b>, which does the same job as Magnite or PubMatic), and measurement (<b>Adjust</b>). That is the structural difference between the two companies: The Trade Desk deliberately occupies one layer and sells neutrality; AppLovin owns the whole path from advertiser to impression. <b>Wurl</b> is not marked — it distributes streaming video <i>for</i> content companies, so it serves the publisher layer rather than competing in it.';
+
+export var APP_ECO_SOURCE = 'Panel one is replicated verbatim from The Trade Desk investor presentation, slide 11 (The pie is getting bigger while waste is being pushed out). Panel two follows slide 14 (With hundreds of different players) in layout, wording and ordering, but is MODIFIED: the source places AppLovin only in Ad Exchange, whereas the highlighted boxes mark every layer in which AppLovin actually fields a product, each traced to the FY2025 10-K. Colour values were sampled directly from the rendered source pages. Company logos are rendered as text wordmarks rather than reproduced images. The underlying framing of the open-internet ad ecosystem is The Trade Desk\'s, not AppLovin\'s and not Summit\'s.';
+
 // ─── Footers — PLAIN ────────────────────────────────────────────────────────────
 export var APP_OV_SOURCES = "Sources — AppLovin Corporation FY2025 Form 10-K (filed 19 Feb 2026) for the business description, products, competitors, employees, capital structure, litigation and all FY2023-FY2025 figures; the 1Q26 and 2Q26 Forms 10-Q for 2026 figures and for the AppLovin Ads renaming. Market cap is live via Massive. Competitor multiples are seeded approximations, not live quotes, and are labelled as such on the chart. KKR's 2018 investment terms are not stated in these filings and are flagged in the timeline for separate sourcing.";
 

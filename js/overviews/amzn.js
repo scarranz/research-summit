@@ -3260,6 +3260,7 @@ function ewBase(c){
   h+='<div class="ew-h">What sits inside this line</div>'+ewBoxes(c.comp);
   if(c.compNote) h+='<div class="ew-note">'+c.compNote+'</div>';
   h+='<div class="ew-h">Share of revenue over time</div>'+ewSpark(c.traj,7);
+  if(c.unit){ h+='<div class="ew-h">Unit economics</div>'+c.unit; }
   h+='<div class="ew-h">Why it matters to the bottom line</div><div class="ew-note">'+c.why+'</div>';
   if(c.drivers){ h+='<div class="ew-h">Why it has moved — the drivers</div>'+ewBoxes(c.drivers); }
   if(c.fwd){ h+='<div class="ew-h">Where it’s headed</div><div class="ew-note">'+c.fwd+'</div>'; }
@@ -3313,7 +3314,37 @@ var EW_LINES=[
     why:'FY2025 jumped to $4.6B — the reason 3Q25/4Q25 margins dipped. Not a run-rate.',
     drivers:[['⚖️','2025 one-offs','The <b>$2.5B FTC settlement</b>, the resolution of Italy tax disputes, and physical-store impairments — none recurring.']],extra:''}
 ];
-EW_LINES.forEach(function(l){ if(EW_CALLS[l.k]) l.calls=EW_CALLS[l.k]; });
+// Unit economics per functional line — real, disclosed figures only; honest where Amazon does not
+// disclose a per-unit metric. Attached to EW_LINES like the management-call timelines.
+var EW_UNIT={
+  costOfSales:
+    '<div class="ew-flow">'+
+      '<div class="ew-fn" style="border-color:var(--brand-2)"><div class="ew-fn-v" style="color:var(--brand-2)">50.3%</div><div class="ew-fn-l">gross margin (FY25)</div></div><div class="ew-far">←</div>'+
+      '<div class="ew-fn"><div class="ew-fn-v">60%+</div><div class="ew-fn-l">of paid units are 3P</div></div>'+
+      '<div class="ew-fn"><div class="ew-fn-v">~18%</div><div class="ew-fn-l">of revenue is AWS</div></div>'+
+      '<div class="ew-fn"><div class="ew-fn-v">~$60B</div><div class="ew-fn-l">advertising (FY25)</div></div>'+
+    '</div>'+
+    '<div class="ew-note">There is no single unit here — the economics are a <b>mix</b>. A first-party sale carries the full product cost; a third-party unit, an AWS dollar and an advertising dollar carry little to none. As 3P (60%+ of paid units), AWS and ads outgrow first-party retail, cost of sales falls as a share of revenue — the single biggest reason the operating margin keeps expanding.</div>',
+  fulfillment:
+    '<div class="ew-flow">'+
+      '<div class="ew-fn"><div class="ew-fn-v">+15%</div><div class="ew-fn-l">units shipped (YoY, Q1 26)</div></div><div class="ew-far">vs</div>'+
+      '<div class="ew-fn"><div class="ew-fn-v">+9%</div><div class="ew-fn-l">fulfillment expense</div></div><div class="ew-far">→</div>'+
+      '<div class="ew-fn" style="border-color:var(--brand-2)"><div class="ew-fn-v" style="color:var(--brand-2)">≈ −5%</div><div class="ew-fn-l">cost to serve per unit</div></div>'+
+    '</div>'+
+    '<div class="ew-note">Amazon does not disclose a dollar cost-per-unit, but the disclosed proxy is decisive: <b>units grew ~15% while fulfillment expense grew ~9%</b> (Q1 2026), so the cost to move a package keeps falling. 1M+ robots and the 2023 US network regionalization — shorter distances, fewer touches — are why. This is the retail flywheel that turned North America profitable.</div>',
+  techInfra:
+    '<div class="ew-note">This line has no clean per-unit metric — it blends engineering payroll with the depreciation of the AI build. The unit economics that matter are <b>AWS\'s</b>: a ~35% segment operating margin, with custom silicon (Trainium / Graviton) improving price-performance so each dollar of capacity monetizes better. The full segment unit economics live in the <b>Segments</b> tab; the capex → PP&amp;E → depreciation chain that lands in this line is charted below.</div>',
+  marketing:
+    '<div class="ew-note">Amazon stopped disclosing Prime membership (last official: 200M+, 2021) and has never disclosed a customer-acquisition cost — so there is no clean unit here. The disclosed truth is the ratio: <b>sales &amp; marketing fell from ~8% of revenue (2022) to ~6.6% (FY25)</b> even as the base grew. Two forces — a mature Prime base that needs less acquisition spend, and advertising (~$60B run-rate) that lets Amazon <b>monetize</b> its own surface instead of buying demand.</div>',
+  gAdmin:
+    '<div class="ew-flow">'+
+      '<div class="ew-fn"><div class="ew-fn-v">$16</div><div class="ew-fn-l">G&amp;A per $1,000 of revenue (FY25)</div></div><div class="ew-far">↓ from</div>'+
+      '<div class="ew-fn"><div class="ew-fn-v">$23</div><div class="ew-fn-l">per $1,000 (FY22)</div></div><div class="ew-far">via</div>'+
+      '<div class="ew-fn" style="border-color:var(--brand-2)"><div class="ew-fn-v" style="color:var(--brand-2)">~41k</div><div class="ew-fn-l">corporate roles cut (2022-26)</div></div>'+
+    '</div>'+
+    '<div class="ew-note">The cleanest operating-leverage line: corporate cost per revenue dollar has fallen roughly a third — from <b>$23 to $16 per $1,000 of revenue</b> — as ~27k roles (2022-23) plus ~14k more (2025-26) came out and revenue kept compounding against a largely fixed base.</div>'
+};
+EW_LINES.forEach(function(l){ if(EW_CALLS[l.k]) l.calls=EW_CALLS[l.k]; if(EW_UNIT[l.k]) l.unit=EW_UNIT[l.k]; });
 var EXP_WORLD={};
 EW_LINES.forEach(function(l){ EXP_WORLD[l.k]={ t:l.name+' — the full dive', h:EW_CSS+ewBase(l) }; });
 // The six functional expense lines as a clickable index — rendered at the TOP of the

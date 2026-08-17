@@ -22,6 +22,7 @@ import { fetchThemeRecord, saveThemeRecord } from '../api.js';   // durable pers
 import { amznResults } from '../results-data/amzn.js';
 import { consensusEvo } from '../consensus-evolution.js';
 import { makeManagement } from './management.js';   // shared Management mold (UBER/GOOGL/etc.)
+import { amznBBG } from './amzn-bbg.js';   // segment actuals + consensus (rev/OI/D&A/PP&E) from BBG
 
 // ─── esc: escapes <>" but deliberately leaves & literal (per contract; never double-encode) ──
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -3524,7 +3525,7 @@ var SEG_COST={
       ['⚡','Power &amp; energy','Data-center electricity is increasingly material as the fleet scales — Q2 26 margin carried ~130bps of energy-derivative gains, a measure of how much energy now moves the line.'],
       ['🧑‍💻','Engineering &amp; custom silicon','R&amp;D payroll for services and Trainium/Graviton design — spending ahead of the revenue it enables, but the source of the price-performance edge.']
     ],
-    anchor:'Disclosed, not inferred: Amazon reports <b>D&amp;A by segment</b> — AWS carries the majority of it — alongside ~68% of group capex and &gt;50% of PP&amp;E. The depreciation load here is a reported figure; only the functional-expense split is undisclosed.' },
+    anchor:'Disclosed, not inferred: <b>AWS D&amp;A was $21.5B in FY25</b> (vs $12.5B in 2023) and Bloomberg consensus ramps it to <b>~$93B by 2028</b> — the largest and fastest-rising cost, reported by segment (Note 10). AWS also = ~68% of group capex and &gt;50% of PP&amp;E. Only the functional-expense split is undisclosed. See the D&amp;A-by-segment chart below.' },
   us:{ note:'<b>What is (and isn\'t) broken out:</b> Amazon reports North America revenue, operating income, <b>D&amp;A and PP&amp;E by segment</b> (Note 10) — but not the functional-expense split. The cost shape below is qualitative; the depreciation is disclosed.',
     boxes:[
       ['📦','Cost of sales (1P product) — largest, shrinking','First-party product cost is the biggest line, but it falls as a share as third-party (~61% of units) and advertising mix rises.'],
@@ -3624,6 +3625,24 @@ function aBuildSegCapital(){
   if(root && !root._segcapWired){ root._segcapWired=true;
     root.querySelectorAll('.segcap-tog button').forEach(function(b){ b.onclick=function(){ root.querySelectorAll('.segcap-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegCapital(); }; }); }
 }
+// Segment D&A — actuals + consensus from BBG (amznBBG). Amazon DISCLOSES D&A by segment (Note 10);
+// this is the disclosed series, not an inference — the AWS AI-capex wave landing in the P&L.
+function segDaBody(){
+  return '<div class="ov-sec"><div class="ov-sec-h">Depreciation &amp; amortization by segment — the capex wave landing ($B, actuals → consensus)</div>'+
+    '<div style="height:290px"><canvas id="aSegDA"></canvas></div>'+
+    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">Amazon <b>discloses D&amp;A by segment</b> (10-K Note 10). AWS depreciation stepped from <b>$12.5B (2023) → $21.5B (2025)</b> and Bloomberg consensus has it ramping to <b>~$93B by 2028</b> — the AI capex landing in the P&amp;L. Retail D&amp;A grows far slower (NA ~$15.5B, International ~$4.9B in FY25). Faded bars = consensus (FY26-28E), BBG as of Aug 2026.</div></div>';
+}
+function aBuildSegDA(){
+  var cv=aChartReady('aSegDA'); if(!cv) return; aDestroy('aSegDA');
+  var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
+  var SG=[{k:'na',lab:'North America',c:BRAND},{k:'intl',lab:'International',c:BRAND2},{k:'aws',lab:'AWS',c:SQUID}];
+  var ds=SG.map(function(s){ var d=amznBBG.seg[s.k].da, vals=d.a.concat(d.f).map(function(v){ return v==null?null:Math.round(v/100)/10; });
+    return { label:s.lab, data:vals, backgroundColor:vals.map(function(_,i){ return i<3?s.c:acxRGBA(s.c,0.45); }), borderColor:'#fff', borderWidth:1, maxBarThickness:26, stack:'d' }; });
+  _aCharts['aSegDA']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:labels, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+(c.parsed.y==null?'—':c.parsed.y.toFixed(1))+'B'; }, footer:function(it){ return 'Total D&A: $'+it.reduce(function(a,x){ return a+(x.parsed.y||0); },0).toFixed(1)+'B'; } } } },
+      scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } });
+}
 function segmentsBody(){
   var h='<style>'+
     '.seg-tog-row{display:flex;justify-content:flex-end;margin-bottom:8px}'+
@@ -3677,6 +3696,7 @@ function segmentsBody(){
   h+='<div class="ov-sec"><div class="ov-sec-h">Operating margin by segment (%)</div><div style="height:290px"><canvas id="aSgMgn"></canvas></div>'+
     '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">AWS ~35% vs the retail segments in the mid-single digits; the consolidated line (dark) is dragged up by AWS mix.</div></div>';
   h+=segCapitalBody();
+  h+=segDaBody();
   // rev -> profit mismatch
   h+='<div class="ov-sec"><div class="ov-sec-h">Where the revenue is vs where the profit is (FY2025)</div>'+
      '<div class="seg-mm">'+
@@ -3720,6 +3740,7 @@ function aBuildSegments(){
         plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':c.parsed.y+'%'); } } } },
         scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } }); }
   aBuildSegCapital();
+  aBuildSegDA();
   if(pane && !pane._segWired){ pane._segWired=true;
     pane.querySelectorAll('.seg-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.seg-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegments(); }; }); }
 }

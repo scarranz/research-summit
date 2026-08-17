@@ -39,20 +39,29 @@ var BREAK_ON = '2026-08-04';
 
 // FY2027, $M / shares in millions, straight from the model's snapshot history.
 var SNAPS = [
-  { d:'2025-12-18', ebitda:237442, earn: 99503, sh:10721 },
-  { d:'2026-02-10', ebitda:259787, earn: 98612, sh:10827 },
-  { d:'2026-05-05', ebitda:261050, earn:108304, sh:10827 },
-  { d:'2026-05-13', ebitda:301971, earn:109056, sh:10827 },
-  { d:'2026-07-30', ebitda:303161, earn:109981, sh:10827 },
-  { d:'2026-08-03', ebitda:303161, earn:109981, sh:10827 },
-  { d:'2026-08-04', ebitda:332726, earn:119053, sh:10827 },
+  { d:'2025-12-18', rev:909803, ebitda:237442, earn: 99503, sh:10721 },
+  { d:'2026-02-10', rev:927372, ebitda:259787, earn: 98612, sh:10827 },
+  { d:'2026-05-05', rev:941960, ebitda:261050, earn:108304, sh:10827 },
+  { d:'2026-05-13', rev:941960, ebitda:301971, earn:109056, sh:10827 },
+  { d:'2026-07-30', rev:943343, ebitda:303161, earn:109981, sh:10827 },
+  { d:'2026-08-03', rev:943343, ebitda:303161, earn:109981, sh:10827 },
+  { d:'2026-08-04', rev:959800, ebitda:332726, earn:119053, sh:10827 },
 ];
-// A row is a revision when the underlying actually moved; otherwise it is a re-parse.
-function isRevision(i){
-  if(i===0) return true;
+
+// Classify each row by what actually moved. Revenue and profitability move independently:
+// 2026-05-13 left FY2027 revenue untouched at 941,960 while EBITDA went 261,050 -> 301,971,
+// i.e. a pure margin re-cut. Worth seeing as such rather than as a generic "revision".
+function kindOf(i){
+  if(i===0) return { rev:true, prof:true, label:'first vintage', cls:'rev' };
   var a=SNAPS[i], b=SNAPS[i-1];
-  return !(a.ebitda===b.ebitda && a.earn===b.earn && a.sh===b.sh);
+  var rMoved = (a.rev !== b.rev);
+  var pMoved = (a.ebitda !== b.ebitda || a.earn !== b.earn || a.sh !== b.sh);
+  if(!rMoved && !pMoved) return { rev:false, prof:false, label:'re-parse', cls:'rep' };
+  if(rMoved && !pMoved)  return { rev:true, prof:false, label:'top line only', cls:'rev' };
+  if(!rMoved && pMoved)  return { rev:false, prof:true,  label:'margins only', cls:'rev' };
+  return { rev:true, prof:true, label:'revision', cls:'rev' };
 }
+function isRevision(i){ var k=kindOf(i); return k.rev || k.prof; }
 
 // Illustrative only — the paths the recorded multiples might have taken. NOT model data.
 var MOCK_EV = [16.0, 15.5, 15.0, 14.5, 14.0, 14.0, 13.5];
@@ -134,15 +143,17 @@ function tmBody(){
 function renderLive(scope){
   var rows='', prevEv=null, prevPe=null, revs=0;
   SNAPS.forEach(function(s,i){
-    var rev=isRevision(i); if(rev) revs++;
+    var k=kindOf(i), rev=isRevision(i); if(rev) revs++;
     var pe_=ptPe(s), ev_=ptEv(s);
     var dEv=(prevEv!=null)?(ev_/prevEv-1):null, dPe=(prevPe!=null)?(pe_/prevPe-1):null;
     var brk=(s.d===BREAK_ON);
     var cls=(i===SNAPS.length-1)?' class="tm-last"':(rev?'':' class="tm-rep"');
+    var revFlat = (i>0 && s.rev===SNAPS[i-1].rev);
     rows+='<tr'+cls+'>'+
       '<td><b>'+esc(s.d)+'</b>'+
-        (rev?'<span class="tm-tag tm-tag-rev">revision</span>':'<span class="tm-tag tm-tag-rep">re-parse</span>')+
+        '<span class="tm-tag tm-tag-'+k.cls+'">'+esc(k.label)+'</span>'+
         (brk?'<span class="tm-tag tm-tag-brk">EBITDA redefined</span>':'')+'</td>'+
+      '<td'+(revFlat?' style="color:var(--mu)"':'')+'>'+fmtB(s.rev)+'</td>'+
       '<td>'+fmtB(s.ebitda)+'</td>'+
       '<td>'+fmtB(s.earn)+'</td>'+
       '<td>$'+eps(s).toFixed(2)+'</td>'+
@@ -156,16 +167,18 @@ function renderLive(scope){
   });
   scope.querySelector('#tmTable').innerHTML=
     '<table class="tm-tbl"><thead><tr>'+
-      '<th>Snapshot</th><th>EBITDA '+FWD_YEAR+'</th><th>Earnings '+FWD_YEAR+'</th><th>EPS</th>'+
+      '<th>Snapshot</th><th>Revenue '+FWD_YEAR+'</th><th>EBITDA '+FWD_YEAR+'</th><th>Earnings '+FWD_YEAR+'</th><th>EPS</th>'+
       '<th>Target @ '+_mEv+'× EV/EBITDA</th><th>Δ</th>'+
       '<th>Target @ '+_mPe+'× P/E</th><th>Δ</th><th>EV vs P/E</th>'+
     '</tr></thead><tbody>'+rows+'</tbody></table>';
 
   var f=SNAPS[0], l=SNAPS[SNAPS.length-1];
   scope.querySelector('#tmWarn').innerHTML=
-    '<div class="dd-note" style="margin:10px 0"><b>'+revs+' of '+SNAPS.length+' snapshots are real revisions.</b> '+
-    '2026-08-03 repeats 2026-07-30 byte for byte on FY'+FWD_YEAR+' EBITDA and earnings, so it is a re-parse and is greyed out — '+
-    'the revision cadence that actually happened is roughly quarterly, as you would expect from reporting dates. '+
+    '<div class="dd-note" style="margin:10px 0"><b>'+revs+' of '+SNAPS.length+' snapshots moved something.</b> '+
+    '2026-08-03 repeats 2026-07-30 byte for byte across revenue, EBITDA and earnings, so it is a re-parse and is greyed out. '+
+    '<b>2026-05-13 is the interesting one:</b> FY'+FWD_YEAR+' revenue did not move at all ($941,960M, unchanged from 05-05) while EBITDA went '+
+    '$261B → $302B — a pure margin re-cut worth +$41B on unchanged sales, and the single largest move in the whole log. '+
+    'Rows are tagged by what actually changed, and a greyed revenue figure means the top line was left alone. '+
     'On FY'+FWD_YEAR+' the 08-04 EBITDA redefinition is mild (+9.8% against +8.2% on earnings); the same change on FY2028 was +38.2% against +6.9%, '+
     'so working the forward year at '+FWD_YEAR+' largely sidesteps it.</div>';
 
@@ -174,7 +187,7 @@ function renderLive(scope){
     'revision history. <b>Year-end target</b> = EBITDA × your EV/EBITDA multiple less net debt over shares, and EPS × your P/E multiple — both '+
     'multiples shown side by side because the desk sets both. <b>EV vs P/E</b> is the spread between the two targets, which is the disagreement '+
     'between the two methods at your chosen multiples. Share count is the model\'s own and moves (10,721 in the first vintage, 10,827 after). '+
-    'Net debt is '+fmtB(_netDebt)+', from the live quote. Revenue per snapshot is not pulled — neither target path uses it — and is one more query if wanted. '+
+    'Net debt is '+fmtB(_netDebt)+', from the live quote. Revenue is shown for context — neither target path uses it — and is greyed when unchanged from the prior row. '+
     'At the multiples above the '+FWD_YEAR+' target moved '+signPct(ptEv(l)/ptEv(f)-1)+' on EV/EBITDA and '+signPct(ptPe(l)/ptPe(f)-1)+' on P/E across the log. '+
     'The multiples are your input: the recorded ones live past column EM on projection_history and the connector does not reach them. '+
     'Data sourced from Summit DCF models.';
@@ -185,13 +198,13 @@ function renderPreview(scope){
   var ph=function(t){ return '<span class="tm-ph">'+t+'</span>'; };
   var rows='', prev=null;
   SNAPS.forEach(function(s,i){
-    var rev=isRevision(i);
+    var k=kindOf(i), rev=isRevision(i);
     var mev=MOCK_EV[i], mpe=MOCK_PE[i];
     var pev=ptEv(s,mev), ppe=ptPe(s,mpe), rec=(pev+ppe)/2;   // "recorded" target, illustrative
     var d=(prev!=null)?(rec/prev-1):null;
     rows+='<tr'+((i===SNAPS.length-1)?' class="tm-last"':(rev?'':' class="tm-rep"'))+'>'+
-      '<td><b>'+esc(s.d)+'</b>'+(rev?'<span class="tm-tag tm-tag-rev">revision</span>':'<span class="tm-tag tm-tag-rep">re-parse</span>')+'</td>'+
-      '<td>'+fmtB(s.ebitda)+'</td><td>'+fmtB(s.earn)+'</td><td>$'+eps(s).toFixed(2)+'</td>'+
+      '<td><b>'+esc(s.d)+'</b><span class="tm-tag tm-tag-'+k.cls+'">'+esc(k.label)+'</span></td>'+
+      '<td>'+fmtB(s.rev)+'</td><td>'+fmtB(s.ebitda)+'</td><td>'+fmtB(s.earn)+'</td><td>$'+eps(s).toFixed(2)+'</td>'+
       '<td>'+ph(mev.toFixed(1)+'×')+'</td><td>'+ph(mpe.toFixed(0)+'×')+'</td>'+
       '<td class="tm-pt">'+ph(fmtPx(rec))+'</td><td>'+pctCell(d)+'</td>'+
       '</tr>';
@@ -206,7 +219,7 @@ function renderPreview(scope){
 
   scope.querySelector('#tmTable').innerHTML=
     '<table class="tm-tbl"><thead><tr>'+
-      '<th>Snapshot</th><th>EBITDA '+FWD_YEAR+'</th><th>Earnings '+FWD_YEAR+'</th><th>EPS</th>'+
+      '<th>Snapshot</th><th>Revenue '+FWD_YEAR+'</th><th>EBITDA '+FWD_YEAR+'</th><th>Earnings '+FWD_YEAR+'</th><th>EPS</th>'+
       '<th>EV/EBITDA chosen</th><th>P/E chosen</th><th>Recorded year-end target</th><th>Δ</th>'+
     '</tr></thead><tbody>'+rows+'</tbody></table>'+
     '<div class="tm-attr">'+

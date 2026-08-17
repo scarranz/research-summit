@@ -3123,37 +3123,6 @@ function aBuildNetBridge(){
     cap.innerHTML='<b>'+yl+'</b> · reported net margin <b>'+(rm==null?'—':rm.toFixed(1)+'%')+'</b>'+(rev?' ($'+B(net).toFixed(1)+'B / $'+B(rev).toFixed(0)+'B rev)':'')+' · normalized (ex the equity / one-off non-operating line) <b>'+(nm==null?'—':nm.toFixed(1)+'%')+'</b>. The <span style="color:#B7791F;font-weight:700">amber bar</span> is the equity mark-to-market (Rivian-type) &amp; other non-operating — $'+B(Math.abs(ono)).toFixed(1)+'B in '+yl+'; it flatters reported net income (consensus runs hotter still on assumed gains). Normalized removes it on a pretax basis — the underlying read. Data: BBG consensus, as of Aug 2026.';
   }
 }
-// ── DRAFT PROPOSALS — visible, clearly-marked pink mock-ups for Dani to evaluate & pick. Not final;
-// each shows the alternative "as it would look" with an A/B/C choice. Remove once decided. ──
-function aDraftsBody(){
-  var h='<style>'+
-    '.draft-box{border:1.5px dashed #E85AA0;background:rgba(232,90,160,0.05);border-radius:12px;padding:14px 16px;margin:18px 0}'+
-    '.draft-tag{display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#fff;background:#E85AA0;border-radius:20px;padding:2px 10px;margin-bottom:8px}'+
-    '.draft-opts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}'+
-    '.draft-opt{font-size:11px;font-weight:700;border:1px solid #E85AA0;color:#B5327A;border-radius:8px;padding:5px 10px;background:#fff}'+
-  '</style>';
-  h+='<div class="draft-box"><span class="draft-tag">Proposal · draft — not final</span>'+
-    '<div class="ov-sec-h" style="border:0;margin-top:0">Replace the "Functional cost as % of revenue" chart?</div>'+
-    '<div style="font-size:12px;color:var(--navy);line-height:1.55;margin-bottom:10px"><b>Option B (shown below):</b> cumulative contribution to the operating-margin change, <b>by line, since 2018</b> — this actually shows <i>where the operating lever came from</i>. Each bar segment = how many bps that line added (it fell as a share of revenue) or took (it rose); the stack nets to the total margin change vs 2018.</div>'+
-    '<div style="height:310px"><canvas id="aMgnLever"></canvas></div>'+
-    '<div class="draft-opts"><span class="draft-opt">A · just remove the old chart</span><span class="draft-opt">B · use this instead</span><span class="draft-opt">C · keep the old %-of-revenue chart</span></div>'+
-    '<div class="acx-cap" style="font-size:10.5px;color:var(--mu);margin-top:8px">Pick A / B / C. Cost of sales dominates the green — that IS the lever (mix shift to AWS/ads/3P). Data: A_OPEX functional lines.</div></div>';
-  h+='<div class="draft-box"><span class="draft-tag">Proposal · draft — not final</span>'+
-    '<div class="ov-sec-h" style="border:0;margin-top:0">Where should Leases live?</div>'+
-    '<div style="font-size:12px;color:var(--navy);line-height:1.55">The lease-cost chart (operating · finance · variable) sits in General today; it is really a capacity-commitment topic, not a P&amp;L-margin one.</div>'+
-    '<div class="draft-opts"><span class="draft-opt">A · Miscellaneous ▸ Capex &amp; Depreciation (recommended)</span><span class="draft-opt">B · a "Balance &amp; Leases" subtab in Miscellaneous</span><span class="draft-opt">C · keep it here as a note only</span></div></div>';
-  return h;
-}
-function aBuildDrafts(){
-  var cv=aChartReady('aMgnLever'); if(!cv) return; aDestroy('aMgnLever');
-  var base=A_OPEX[2018], baseRev=base.revenue, yrs=A_OPEX_YEARS.filter(function(y){ return y>=2019; });
-  var ds=A_MB_COST.map(function(it){ return { label:A_BR_SHORT[it.k]||it.lab, backgroundColor:it.c, borderColor:'#fff', borderWidth:1, maxBarThickness:34, stack:'l',
-    data:yrs.map(function(y){ var r=A_OPEX[y]; return Math.round((base[it.k]/baseRev - r[it.k]/r.revenue)*10000); }) }; });
-  _aCharts['aMgnLever']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:yrs.map(String), datasets:ds },
-    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y>=0?'+':'')+c.parsed.y+' bps'; }, footer:function(it){ var t=it.reduce(function(a,x){ return a+x.parsed.y; },0); return 'Operating margin vs 2018: '+(t>=0?'+':'')+Math.round(t)+' bps'; } } } },
-      scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return (v>0?'+':'')+v; } } } } } });
-}
 function bottomlineBody(){
   var h='<div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:8px;flex-wrap:wrap">'+
     '<span class="acx-tog mmode-tog"><button type="button" data-mmode="grossop" class="active">Gross &amp; operating</button><button type="button" data-mmode="segment">By segment</button></span>'+
@@ -3413,21 +3382,13 @@ function expenseTabsBody(){
   h+='</div>';
   return h;
 }
-function expensesBody(){
+function aLeasesBody(){   // Leases — relocated out of General into Miscellaneous ▸ Capex & Depreciation
   var h='<style>'+
     '.exp-stat{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:9px;overflow:hidden;margin-top:10px}'+
     '@media(max-width:560px){.exp-stat{grid-template-columns:repeat(2,1fr)}}'+
     '.exp-st{background:var(--card,#fff);padding:9px 12px}.exp-sl{font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)}'+
     '.exp-sv{font-size:17px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;margin-top:2px}.exp-ss{font-size:9.5px;color:var(--mu);margin-top:1px}'+
   '</style>';
-  // "What moved the operating margin" removed — the General ▸ The bridge (Margin change / bps) supersedes it.
-  h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center">Functional cost as % of revenue — operating leverage'+
-    '<span class="acx-tog exp-tog"><button type="button" data-expg="q">Quarterly</button><button type="button" data-expg="y" class="active">Annual</button></span></div>'+
-    '<div style="height:300px"><canvas id="aExpPct"></canvas></div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:6px">Quarterly shows the seasonality — cost of sales spikes to ~52% in Q4 and margin compresses, then recovers. Technology &amp; infrastructure is the line pushed up. Consolidated only.</div></div>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">Stock-based compensation embedded in each line ($B, 10-K)</div>'+
-    '<div style="height:250px"><canvas id="aExpSbc"></canvas></div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:6px">A non-cash cost inside the functional lines: <b>$19.5B in FY2025</b> (2.7% of revenue), <b>declining</b> from $24.0B in 2023, and dilutive to shareholders (~1%/yr). <b>~56% sits in Technology &amp; infrastructure</b> — the engineering payroll behind AWS and the AI build.</div></div>';
   h+='<div class="ov-sec"><div class="ov-sec-h">Leases — the other capacity bill (10-K Note 4)</div>'+
     '<div style="height:250px"><canvas id="aExpLease"></canvas></div>'+
     '<div class="exp-stat">'+
@@ -3439,46 +3400,22 @@ function expensesBody(){
     '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:6px">Finance-lease assets ($55.6B) are <b>already inside PP&amp;E</b>; operating-lease right-of-use assets ($86B) sit on their <b>own balance-sheet line</b> — that is the capacity beyond owned PP&amp;E. The $121.8B is the lease <b>liability</b> (the obligation). Operating-lease cost flows into cost of sales / fulfillment / technology; finance-lease amortization is inside the $41.9B D&amp;A.</div></div>';
   return h;
 }
-function aExpRows(root){
-  var pane=root.querySelector('.ovt-subpane[data-ovst="margins"]'), tg=pane?pane.querySelector('.exp-tog .active'):null, gran=tg?tg.getAttribute('data-expg'):'y';
-  if(gran==='q') return A_OPEXQ.slice();
-  return A_OPEX_YEARS.map(function(y){ var o={p:String(y),revenue:A_OPEX[y].revenue}; A_OPEX_FN.forEach(function(f){ o[f.k]=A_OPEX[y][f.k]; }); return o; });
-}
-function aBuildExpensesPct(){
-  var root=document.querySelector('.ov-amzn-dd')||document, rows=aExpRows(root), pct=aChartReady('aExpPct'); if(!pct) return; aDestroy('aExpPct');
-  _aCharts['aExpPct']=new Chart(pct.getContext('2d'),{ type:'line',
-    data:{ labels:rows.map(function(r){ return r.p; }), datasets:A_OPEX_FN.map(function(f){
-      return { label:f.lab, data:rows.map(function(r){ return Math.round(r[f.k]/r.revenue*1000)/10; }), borderColor:f.c, backgroundColor:acxRGBA(f.c,0.55), borderWidth:1, pointRadius:0, tension:0.2, fill:true }; }) },
+function aBuildLeases(){   // lease-cost chart, now in Miscellaneous ▸ Capex & Depreciation
+  var yrs=[2023,2024,2025], lc=aChartReady('aExpLease'); if(!lc) return; aDestroy('aExpLease');
+  var LT=[{k:'op',lab:'Operating lease',c:BRAND2},{k:'finAmort',lab:'Finance — amortization',c:SQUID},{k:'finInt',lab:'Finance — interest',c:GRAY},{k:'variable',lab:'Variable lease',c:'#B7791F'}];
+  _aCharts['aExpLease']=new Chart(lc.getContext('2d'),{ type:'bar',
+    data:{ labels:yrs.map(String), datasets:LT.map(function(t){ return { label:t.lab, data:yrs.map(function(y){ return A_TENK.leaseCost[y][t.k]/1000; }), backgroundColor:t.c, borderColor:'#fff', borderWidth:1, maxBarThickness:44, stack:'l' }; }) },
     options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+c.parsed.y+'%'; }, footer:function(it){ var t=it.reduce(function(a,x){ return a+x.parsed.y; },0); return 'op margin '+(100-t).toFixed(1)+'% (ex other)'; } } } },
-      scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ stacked:true, max:100, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } });
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+c.parsed.y.toFixed(1)+'B'; }, footer:function(it){ return 'Total lease cost: $'+it.reduce(function(a,x){ return a+x.parsed.y; },0).toFixed(1)+'B'; } } } },
+      scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } });
 }
 function aBuildExpenses(){
   aBuildBridge();
   aBuildNetBridge();
-  aBuildDrafts();
-  aBuildExpensesPct();
-  var yrs=[2023,2024,2025];
-  var sbc=aChartReady('aExpSbc');
-  if(sbc){ aDestroy('aExpSbc');
-    _aCharts['aExpSbc']=new Chart(sbc.getContext('2d'),{ type:'bar',
-      data:{ labels:yrs.map(String), datasets:A_OPEX_FN.map(function(f){ return { label:f.lab, data:yrs.map(function(y){ return A_TENK.sbc[y][f.k]/1000; }), backgroundColor:f.c, borderColor:'#fff', borderWidth:1, maxBarThickness:44, stack:'s' }; }) },
-      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+c.parsed.y.toFixed(1)+'B'; }, footer:function(it){ return 'Total SBC: $'+it.reduce(function(a,x){ return a+x.parsed.y; },0).toFixed(1)+'B'; } } } },
-        scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); }
-  var lc=aChartReady('aExpLease');
-  if(lc){ aDestroy('aExpLease');
-    var LT=[{k:'op',lab:'Operating lease',c:BRAND2},{k:'finAmort',lab:'Finance — amortization',c:SQUID},{k:'finInt',lab:'Finance — interest',c:GRAY},{k:'variable',lab:'Variable lease',c:'#B7791F'}];
-    _aCharts['aExpLease']=new Chart(lc.getContext('2d'),{ type:'bar',
-      data:{ labels:yrs.map(String), datasets:LT.map(function(t){ return { label:t.lab, data:yrs.map(function(y){ return A_TENK.leaseCost[y][t.k]/1000; }), backgroundColor:t.c, borderColor:'#fff', borderWidth:1, maxBarThickness:44, stack:'l' }; }) },
-      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+c.parsed.y.toFixed(1)+'B'; }, footer:function(it){ return 'Total lease cost: $'+it.reduce(function(a,x){ return a+x.parsed.y; },0).toFixed(1)+'B'; } } } },
-        scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); }
   var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]');
   if(pane){
     var tog=function(sel,after){ pane.querySelectorAll(sel+' button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll(sel+' button').forEach(function(x){ x.classList.toggle('active',x===b); }); after(); }; }); };
     if(!pane._expWired){ pane._expWired=true;
-      tog('.exp-tog', aBuildExpensesPct);
       tog('.br-mode', function(){ aBridgeSync(pane); aBuildBridge(); });
       tog('.br-gran', function(){ aBridgeSync(pane); aBuildBridge(); });
       tog('.br-yr', aBuildBridge);
@@ -4533,7 +4470,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="segments">Segments</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="supplychain">Supply Chain</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="margins">'+expenseTabsBody()+bottomlineBody()+aBridgeBody()+aNetBridgeBody()+expensesBody()+aDraftsBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="margins">'+expenseTabsBody()+bottomlineBody()+aBridgeBody()+aNetBridgeBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="segments" hidden>'+segmentsBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="supplychain" hidden>'+aSplcBody(c)+'</div>'+
     '</div>';
@@ -4586,7 +4523,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="manda">M&amp;A</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="other">Other Analysis</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="capex">'+bottomlineCapexBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="capex">'+bottomlineCapexBody()+aLeasesBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="manda" hidden>'+aMandaBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="other" hidden>'+aOtherAnalysisBody()+'</div>'+
     '</div>';
@@ -4630,7 +4567,7 @@ function aBuildSub(root, dd, key){
     else requestAnimationFrame(function(){ aBuildBottomline(); aBuildExpenses(); });
   }
   if(dd==='misc'){
-    if(key==='capex' || key==null) requestAnimationFrame(function(){ aBuildCapex(root); });
+    if(key==='capex' || key==null) requestAnimationFrame(function(){ aBuildCapex(root); aBuildLeases(); });
   }
   if(dd==='mgmt'){
     if(key==='governance') requestAnimationFrame(aBuildGovSbc);

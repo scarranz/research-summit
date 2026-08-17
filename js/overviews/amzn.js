@@ -3532,57 +3532,36 @@ var A_TENK={
   leaseCost:{ 2023:{op:10550,finAmort:5899,finInt:304,variable:2165,total:18918}, 2024:{op:11961,finAmort:3866,finInt:285,variable:2465,total:18577}, 2025:{op:14006,finAmort:3284,finInt:312,variable:2694,total:20296} },
   leaseLiab:{ opGross:106914, finGross:14917, totalGross:121831, pv:101538, longTerm:87339, opTermYrs:10.0, finTermYrs:12.6 }
 };
-var A_SEGCAP=[ {k:'na',lab:'North America',c:BRAND}, {k:'int',lab:'International',c:BRAND2}, {k:'aws',lab:'AWS',c:SQUID}, {k:'corp',lab:'Corporate',c:GRAY} ];
-function segCapitalBody(){
-  return '<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">Capital deployed by segment — net additions to PP&amp;E (10-K Note 10)'+
-    '<span class="acx-tog segcap-tog"><button type="button" data-segcap="dollar" class="active">$B</button><button type="button" data-segcap="pct">% of segment revenue</button></span></div>'+
-    '<div style="height:270px"><canvas id="aSegCapex"></canvas></div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:6px">The <b>% of segment revenue</b> view is the tell: <b>AWS reinvests ~75% of its own revenue in capex</b> (2025) — up from ~27% in 2023 — while the retail segments spend under 10%. That is the AI build in one number, and why AWS is where the depreciation concentrates.</div>'+
-    '<div class="ov-sec-h" style="margin-top:20px">Property &amp; equipment, net by segment ($B)</div>'+
-    '<div style="height:250px"><canvas id="aSegPPE"></canvas></div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:6px">AWS PP&amp;E stock: <b>$72.7B → $190.1B</b> (2023→2025), now &gt;50% of the group’s $357B — the balance-sheet footprint of the build.</div></div>';
+function segCapDaBody(){
+  return '<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">Capital by segment — capex builds it · PP&amp;E holds it · D&amp;A expenses it'+
+    '<span class="acx-tog segcd-tog"><button type="button" data-segcd="capex" class="active">Capex</button><button type="button" data-segcd="ppe">PP&amp;E</button><button type="button" data-segcd="da">D&amp;A</button></span></div>'+
+    '<div style="height:320px"><canvas id="aSegCapDa"></canvas></div>'+
+    '<div class="acx-cap" id="aSegCapDaCap" style="font-size:11px;color:var(--mu);margin-top:8px"></div></div>';
 }
-function aBuildSegCapital(){
-  var root=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]'), yrs=[2023,2024,2025];
-  var tg=root?root.querySelector('.segcap-tog .active'):null, pct=(tg?tg.getAttribute('data-segcap'):'dollar')==='pct';
-  var SEGREV={ na:'usRev', int:'intRev', aws:'awsRev' };
-  var cx=aChartReady('aSegCapex');
-  if(cx){ aDestroy('aSegCapex');
-    var segs=pct?A_SEGCAP.filter(function(s){ return SEGREV[s.k]; }):A_SEGCAP;
-    _aCharts['aSegCapex']=new Chart(cx.getContext('2d'),{ type:'bar',
-      data:{ labels:yrs.map(String), datasets:segs.map(function(s){ return { label:s.lab,
-        data:yrs.map(function(y){ return pct?Math.round(A_TENK.segCapex[y][s.k]/A_OPEX[y][SEGREV[s.k]]*1000)/10:A_TENK.segCapex[y][s.k]/1000; }),
-        backgroundColor:s.c, borderColor:'#fff', borderWidth:1, maxBarThickness:pct?24:46, stack:pct?undefined:'c' }; }) },
-      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(pct?c.parsed.y+'% of its revenue':'$'+c.parsed.y.toFixed(1)+'B'); }, footer:function(it){ return pct?'':'Total: $'+it.reduce(function(a,x){ return a+x.parsed.y; },0).toFixed(1)+'B'; } } } },
-        scales:{ x:{ stacked:!pct, grid:{ display:false } }, y:{ stacked:!pct, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return pct?v+'%':'$'+v+'B'; } } } } } }); }
-  var pp=aChartReady('aSegPPE');
-  if(pp){ aDestroy('aSegPPE');
-    _aCharts['aSegPPE']=new Chart(pp.getContext('2d'),{ type:'bar',
-      data:{ labels:yrs.map(String), datasets:A_SEGCAP.map(function(s){ return { label:s.lab, data:yrs.map(function(y){ return A_TENK.segPPE[y][s.k]/1000; }), backgroundColor:s.c, borderColor:'#fff', borderWidth:1, maxBarThickness:46, stack:'p' }; }) },
-      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+c.parsed.y.toFixed(1)+'B'; } } } },
-        scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); }
-  if(root && !root._segcapWired){ root._segcapWired=true;
-    root.querySelectorAll('.segcap-tog button').forEach(function(b){ b.onclick=function(){ root.querySelectorAll('.segcap-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegCapital(); }; }); }
-}
-// Segment D&A — actuals + consensus from BBG (amznBBG). Amazon DISCLOSES D&A by segment (Note 10);
-// this is the disclosed series, not an inference — the AWS AI-capex wave landing in the P&L.
-function segDaBody(){
-  return '<div class="ov-sec"><div class="ov-sec-h">Depreciation &amp; amortization by segment — the capex wave landing ($B, actuals → consensus)</div>'+
-    '<div style="height:290px"><canvas id="aSegDA"></canvas></div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">Amazon <b>discloses D&amp;A by segment</b> (10-K Note 10). AWS depreciation stepped from <b>$12.5B (2023) → $21.5B (2025)</b> and Bloomberg consensus has it ramping to <b>~$93B by 2028</b> — the AI capex landing in the P&amp;L. Retail D&amp;A grows far slower (NA ~$15.5B, International ~$4.9B in FY25). Faded bars = consensus (FY26-28E), BBG as of Aug 2026.</div></div>';
-}
-function aBuildSegDA(){
-  var cv=aChartReady('aSegDA'); if(!cv) return; aDestroy('aSegDA');
-  var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
-  var SG=[{k:'na',lab:'North America',c:BRAND},{k:'intl',lab:'International',c:BRAND2},{k:'aws',lab:'AWS',c:SQUID}];
-  var ds=SG.map(function(s){ var d=amznBBG.seg[s.k].da, vals=d.a.concat(d.f).map(function(v){ return v==null?null:Math.round(v/100)/10; });
-    return { label:s.lab, data:vals, backgroundColor:vals.map(function(_,i){ return i<3?s.c:acxRGBA(s.c,0.45); }), borderColor:'#fff', borderWidth:1, maxBarThickness:26, stack:'d' }; });
-  _aCharts['aSegDA']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:labels, datasets:ds },
+function aBuildSegCapDa(){
+  var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]');
+  var tg=pane?pane.querySelector('.segcd-tog .active'):null, mode=tg?tg.getAttribute('data-segcd'):'capex';
+  var cv=aChartReady('aSegCapDa'); if(!cv) return; aDestroy('aSegCapDa');
+  var SG=[{k:'na',bk:'na',lab:'North America',c:BRAND},{k:'int',bk:'intl',lab:'International',c:BRAND2},{k:'aws',bk:'aws',lab:'AWS',c:SQUID}];
+  var labels, ds, cap;
+  if(mode==='capex'){
+    labels=['FY23','FY24','FY25'];
+    ds=SG.map(function(s){ return { label:s.lab, data:[2023,2024,2025].map(function(y){ return A_TENK.segCapex[y][s.k]/1000; }), backgroundColor:s.c, borderColor:'#fff', borderWidth:1, maxBarThickness:44, stack:'x' }; });
+    cap='Net additions to PP&amp;E by segment (10-K Note 10). <b>AWS ~68% of group capex</b> (2025) — the AI build. Actuals only; Amazon does not give per-segment capex consensus.';
+  } else {
+    labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
+    ds=SG.map(function(s){ var sr=amznBBG.seg[s.bk][mode], vals=sr.a.concat(sr.f).map(function(v){ return v==null?null:Math.round(v/100)/10; });
+      return { label:s.lab, data:vals, backgroundColor:vals.map(function(_,i){ return i<3?s.c:acxRGBA(s.c,0.45); }), borderColor:'#fff', borderWidth:1, maxBarThickness:26, stack:'x' }; });
+    cap=(mode==='da')?'D&amp;A by segment (disclosed, Note 10). The <b>AWS wave</b>: $12.5B (2023) → $21.5B (2025) → <b>~$93B (2028E)</b> — the AI capex landing in the P&amp;L. Faded = BBG consensus.'
+        :'PP&amp;E, net by segment. AWS <b>$73B → $190B</b> (2023→25), consensus to <b>~$746B (2028E)</b> — the balance-sheet footprint of the build. Faded = BBG consensus.';
+  }
+  _aCharts['aSegCapDa']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:labels, datasets:ds },
     options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+(c.parsed.y==null?'—':c.parsed.y.toFixed(1))+'B'; }, footer:function(it){ return 'Total D&A: $'+it.reduce(function(a,x){ return a+(x.parsed.y||0); },0).toFixed(1)+'B'; } } } },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':'$'+c.parsed.y.toFixed(1)+'B'); }, footer:function(it){ return 'Total: $'+it.reduce(function(a,x){ return a+(x.parsed.y||0); },0).toFixed(1)+'B'; } } } },
       scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } });
+  var capEl=pane?pane.querySelector('#aSegCapDaCap'):null; if(capEl) capEl.innerHTML=cap;
+  if(pane && !pane._segcdWired){ pane._segcdWired=true;
+    pane.querySelectorAll('.segcd-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.segcd-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegCapDa(); }; }); }
 }
 function segmentsBody(){
   var h='<style>'+
@@ -3640,8 +3619,7 @@ function segmentsBody(){
     '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">Where the profit is made. FY2022 = the over-investment trough (NA &amp; International both at a loss); 3Q25 NA carries the $2.5B FTC settlement.</div></div>';
   h+='<div class="ov-sec"><div class="ov-sec-h">Operating margin by segment (%)</div><div style="height:290px"><canvas id="aSgMgn"></canvas></div>'+
     '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">AWS ~35% vs the retail segments in the mid-single digits; the consolidated line (dark) is dragged up by AWS mix.</div></div>';
-  h+=segCapitalBody();
-  h+=segDaBody();
+  h+=segCapDaBody();
   // rev -> profit mismatch
   h+='<div class="ov-sec"><div class="ov-sec-h">Where the revenue is vs where the profit is (FY2025)</div>'+
      '<div class="seg-mm">'+
@@ -3684,8 +3662,7 @@ function aBuildSegments(){
       options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
         plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':c.parsed.y+'%'); } } } },
         scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } }); }
-  aBuildSegCapital();
-  aBuildSegDA();
+  aBuildSegCapDa();
   if(pane && !pane._segWired){ pane._segWired=true;
     pane.querySelectorAll('.seg-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.seg-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegments(); }; });
     var stabs=pane.querySelectorAll('.segx-tab');

@@ -3123,6 +3123,29 @@ function aBuildNetBridge(){
     cap.innerHTML='<b>'+yl+'</b> · reported net margin <b>'+(rm==null?'—':rm.toFixed(1)+'%')+'</b>'+(rev?' ($'+B(net).toFixed(1)+'B / $'+B(rev).toFixed(0)+'B rev)':'')+' · normalized (ex the equity / one-off non-operating line) <b>'+(nm==null?'—':nm.toFixed(1)+'%')+'</b>. The <span style="color:#B7791F;font-weight:700">amber bar</span> is the equity mark-to-market (Rivian-type) &amp; other non-operating — $'+B(Math.abs(ono)).toFixed(1)+'B in '+yl+'; it flatters reported net income (consensus runs hotter still on assumed gains). Normalized removes it on a pretax basis — the underlying read. Data: BBG consensus, as of Aug 2026.';
   }
 }
+// SBC — back in General (where it was), BBG-driven (actuals + consensus, $B-by-line ⇄ %-of-line).
+function aSbcBody(){
+  return '<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">Stock-based compensation — where it lands ($B, actuals → consensus)<span class="acx-tog sbcm-tog"><button type="button" data-sbcm="dollar" class="active">$B by line</button><button type="button" data-sbcm="pct">% of the line</button></span></div>'+
+    '<div style="height:300px"><canvas id="aSbcMain"></canvas></div>'+
+    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">SBC fell from <b>~$24.0B (2023) to ~$19.5B (2025)</b> as 2022-23 grants vested off; consensus drifts it back to <b>~$24.6B (2028E)</b> (faded bars). In <b>% of each line</b>, <b>G&amp;A (~15%)</b> and <b>Technology &amp; infrastructure (~10%)</b> are the most stock-comp-heavy; cost of sales almost none. With buybacks near zero, SBC is the main source of share-count growth. SBC-by-line, actuals + consensus, from BBG.</div></div>';
+}
+function aBuildSbc(){
+  var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]');
+  var tg=pane?pane.querySelector('.sbcm-tog .active'):null, pct=(tg?tg.getAttribute('data-sbcm'):'dollar')==='pct';
+  var cv=aChartReady('aSbcMain'); if(!cv) return; aDestroy('aSbcMain');
+  var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
+  var LN=[{sbc:'sbcCogs',exp:'cogs',lab:'Cost of sales',c:SQUID},{sbc:'sbcFulfill',exp:'fulfillment',lab:'Fulfillment',c:BRAND},{sbc:'sbcTech',exp:'techInfra',lab:'Technology & infrastructure',c:BRAND2},{sbc:'sbcMktg',exp:'marketing',lab:'Sales & marketing',c:GREEN},{sbc:'sbcGA',exp:'gAdmin',lab:'General & administrative',c:GRAY}];
+  function ser(k){ var s=amznBBG.is[k]; return s?s.a.concat(s.f):[null,null,null,null,null,null]; }
+  var ds=LN.map(function(l){ var sbc=ser(l.sbc), exp=ser(l.exp);
+    var vals=labels.map(function(_,i){ if(sbc[i]==null) return null; return pct?(exp[i]?Math.round(sbc[i]/exp[i]*1000)/10:null):Math.round(sbc[i]/100)/10; });
+    return { label:l.lab, data:vals, backgroundColor:vals.map(function(_,i){ return i<3?l.c:acxRGBA(l.c,0.45); }), borderColor:'#fff', borderWidth:1, maxBarThickness:pct?22:44, stack:pct?undefined:'s' }; });
+  _aCharts['aSbcMain']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:labels, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':(pct?c.parsed.y+'% of the line':'$'+c.parsed.y.toFixed(1)+'B')); }, footer:function(it){ return pct?'':'Total SBC: $'+it.reduce(function(a,x){ return a+(x.parsed.y||0); },0).toFixed(1)+'B'; } } } },
+      scales:{ x:{ stacked:!pct, grid:{ display:false } }, y:{ stacked:!pct, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return pct?v+'%':'$'+v+'B'; } } } } } });
+  if(pane && !pane._sbcmWired){ pane._sbcmWired=true;
+    pane.querySelectorAll('.sbcm-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.sbcm-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSbc(); }; }); }
+}
 function bottomlineBody(){
   var h='<div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:8px;flex-wrap:wrap">'+
     '<span class="acx-tog mmode-tog"><button type="button" data-mmode="grossop" class="active">Gross &amp; operating</button><button type="button" data-mmode="segment">By segment</button></span>'+
@@ -3192,12 +3215,18 @@ var EW_CSS='<style>'+
   '.ew-q .ew-att{display:block;margin-top:4px;font-size:10.5px;font-weight:700;color:var(--mu)}'+
   '.ew-foot{font-size:10.5px;color:var(--mu);line-height:1.5;margin-top:10px;border-top:1px solid var(--bdr);padding-top:8px}'+
   '.ew-tls{position:relative;margin:8px 0 2px;padding-left:20px}'+'.ew-tls::before{content:"";position:absolute;left:5px;top:5px;bottom:5px;width:2px;background:var(--bdr)}'+'.ew-tli{position:relative;margin-bottom:13px}.ew-tli:last-child{margin-bottom:2px}'+'.ew-tli::before{content:"";position:absolute;left:-18px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--brand-2);border:2px solid var(--card,#fff);box-shadow:0 0 0 1px var(--bdr)}'+'.ew-tlq{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--brand-2)}'+'.ew-tlt{font-size:12px;color:var(--navy);line-height:1.5;margin-top:2px}'+'.ew-tlw{font-size:10px;font-weight:700;color:var(--mu);margin-top:3px}'+'.ew-tag{display:inline-block;font-size:8px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:1px 6px;border-radius:5px;margin-left:7px;vertical-align:middle;transform:translateY(-1px)}'+'.ew-tag.why{background:rgba(192,80,77,.13);color:#B23A38}.ew-tag.fwd{background:rgba(46,139,87,.15);color:#2E7D51}.ew-tag.ctx{background:rgba(107,118,131,.15);color:#5B6673}'+
+  '.ew-calls{margin-top:14px}.ew-callsum{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--brand-2);cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:5px 0}'+
+  '.ew-callsum::-webkit-details-marker{display:none}.ew-callsum::before{content:"▸";font-size:11px;transition:transform .15s}.ew-calls[open] .ew-callsum::before{content:"▾"}.ew-callsum::after{content:"";flex:1;height:1px;background:var(--bdr)}'+
 '</style>';
 var EW_LABS=["’18","’19","’20","’21","’22","’23","’24","’25"];
 function ewSpark(vals,onIdx){ var mx=Math.max.apply(null,vals.map(Math.abs));
   return '<div class="ew-spark">'+vals.map(function(v,i){ return '<div class="ew-sb'+(i===onIdx?' on':'')+'"><div class="ew-sb-v">'+v+'%</div><div class="ew-sb-bar" style="height:'+Math.max(2,Math.round(Math.abs(v)/mx*72))+'px"></div><div class="ew-sb-l">'+EW_LABS[i]+'</div></div>'; }).join('')+'</div>';
 }
 function ewBoxes(arr){ return '<div class="ew-two"'+(arr.length<2?' style="grid-template-columns:1fr"':'')+'>'+arr.map(function(b){ return '<div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">'+b[0]+'</span>'+b[1]+'</div><div class="ew-box-t">'+b[2]+'</div></div>'; }).join('')+'</div>'; }
+// Collapsible "what management has said" block — hidden by default so the dive reads clean.
+function ewCallsBlock(calls){ if(!calls||!calls.length) return '';
+  return '<details class="ew-calls"><summary class="ew-callsum">What management has said — over time</summary>'+ewCallTimeline(calls)+'</details>';
+}
 function ewCallTimeline(calls){ if(!calls||!calls.length) return '';
   var lab={why:'driver',fwd:'forward',ctx:'context'};
   return '<div class="ew-tls">'+calls.map(function(c){ return '<div class="ew-tli"><div class="ew-tlq">'+c.q+(c.tag?'<span class="ew-tag '+c.tag+'">'+lab[c.tag]+'</span>':'')+'</div><div class="ew-tlt">'+c.txt+'</div>'+(c.who&&c.who!=='—'?'<div class="ew-tlw">— '+c.who+'</div>':'')+'</div>'; }).join('')+'</div>';
@@ -3272,7 +3301,7 @@ function ewBase(c){
   if(c.drivers){ h+='<div class="ew-h">Why it has moved — the drivers</div>'+ewBoxes(c.drivers); }
   if(c.fwd){ h+='<div class="ew-h">Where it’s headed</div><div class="ew-note">'+c.fwd+'</div>'; }
   if(c.extra) h+=c.extra;
-  if(c.calls){ h+='<div class="ew-h">What management has said — over time</div>'+ewCallTimeline(c.calls); }
+  if(c.calls){ h+=ewCallsBlock(c.calls); }
   h+='<div class="ew-foot">FY2025 figures unless noted. Sources: 10-K MD&amp;A + Notes; Amazon earnings calls (management commentary).</div>';
   return h;
 }
@@ -3368,17 +3397,22 @@ function expenseTabsBody(){
   ];
   var byk={}; EW_LINES.forEach(function(l){ byk[l.k]=l; });
   var h='<style>'+
-    '.exp-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 14px}'+
-    '.exp-tab{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--bdr);background:var(--card,#fff);border-radius:10px;padding:8px 11px;cursor:pointer;font-size:12px;font-weight:700;color:var(--navy);transition:.13s}'+
-    '.exp-tab:hover{border-color:var(--brand-2)}'+
-    '.exp-tab.active{border-color:var(--brand);background:var(--brand-soft);box-shadow:inset 0 0 0 1px var(--brand)}'+
+    '.exp-explorer{border:1.5px solid var(--brand);border-radius:14px;padding:14px 16px 16px;background:linear-gradient(180deg,var(--brand-soft),transparent);margin:6px 0 6px}'+
+    '.exp-explorer-h{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-2);margin:0 0 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}'+
+    '.exp-explorer-h .exp-hint{font-size:9px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--mu);background:#fff;border:1px solid var(--bdr);border-radius:20px;padding:2px 9px}'+
+    '.exp-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}'+
+    '.exp-tab{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--bdr);background:#fff;border-radius:20px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:800;color:var(--navy);transition:.13s}'+
+    '.exp-tab:hover{border-color:var(--brand)}'+
+    '.exp-tab.active{background:var(--navy);border-color:var(--navy);color:#fff}'+
+    '.exp-tab.active .exp-tag{color:rgba(255,255,255,.8)}'+
     '.exp-tab .exp-dot{width:10px;height:10px;border-radius:3px;flex:none}'+
     '.exp-tab .exp-tag{font-size:10px;font-weight:800;color:var(--mu)}'+
+    '.exp-panel-card{background:var(--card,#fff);border:1px solid var(--bdr);border-radius:12px;padding:15px 17px}'+
   '</style>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">The six expense lines — pick one for its full dive</div>';
+  h+='<div class="exp-explorer"><div class="exp-explorer-h">Expense explorer — the six functional lines <span class="exp-hint">tap a line to switch</span></div>';
   h+='<div class="exp-tabs">'+defs.map(function(d,i){ return '<button type="button" class="exp-tab'+(i===0?' active':'')+'" data-exptab="'+d.k+'"><span class="exp-dot" style="background:'+d.c+'"></span>'+d.n+' <span class="exp-tag">'+d.tag+'</span></button>'; }).join('')+'</div>';
   h+=EW_CSS;
-  h+='<div class="exp-panels">'+defs.map(function(d,i){ return '<div class="exp-panel" data-exppanel="'+d.k+'"'+(i>0?' hidden':'')+'>'+(byk[d.k]?ewBase(byk[d.k]):'')+'</div>'; }).join('')+'</div>';
+  h+='<div class="exp-panels">'+defs.map(function(d,i){ return '<div class="exp-panel exp-panel-card" data-exppanel="'+d.k+'"'+(i>0?' hidden':'')+'>'+(byk[d.k]?ewBase(byk[d.k]):'')+'</div>'; }).join('')+'</div>';
   h+='</div>';
   return h;
 }
@@ -3412,6 +3446,7 @@ function aBuildLeases(){   // lease-cost chart, now in Miscellaneous ▸ Capex &
 function aBuildExpenses(){
   aBuildBridge();
   aBuildNetBridge();
+  aBuildSbc();
   var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]');
   if(pane){
     var tog=function(sel,after){ pane.querySelectorAll(sel+' button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll(sel+' button').forEach(function(x){ x.classList.toggle('active',x===b); }); after(); }; }); };
@@ -3498,7 +3533,7 @@ var SEG_WORLD={
     '<div class="ew-h">The capex it demands → the D&amp;A that follows</div>'+segCapMini('$96.5B','$190B')+
     '<div class="ew-q">“As fast as we install this capacity, <b>we are monetizing it</b>.” The FY26 capex frame was raised to ~$220B, partly on the higher cost of memory.<span class="ew-att">— Brian Olsavsky, CFO</span></div>'+
     segCostBox('aws')+
-    '<div class="ew-h">What management has said — over time</div>'+ewCallTimeline(SEG_CALLS.aws)+
+    ewCallsBlock(SEG_CALLS.aws)+
     '<div class="ew-foot">Sources: 10-K Note 10 (segment capex/PP&amp;E); Q4’25–Q2’26 earnings calls; Bloomberg segment series.</div>' },
   us:{ t:'North America — the volume base + the ad layer', h:EW_CSS+
     segTiles([['6.9%','operating margin (FY25)'],['$29.6B','operating income'],['$35.9B','net capex (Note 10)'],['$122B','PP&E stock']])+
@@ -3510,7 +3545,7 @@ var SEG_WORLD={
     '<div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">🤖</span>Fulfillment efficiency</div><div class="ew-box-t">Units <b>+17%</b> while fulfillment cost grows far less — 1M+ robots and regionalization. The operating-leverage flywheel.</div></div></div>'+
     '<div class="ew-h">Capital footprint</div>'+segCapMini('$35.9B','$122B')+
     segCostBox('us')+
-    '<div class="ew-h">What management has said — over time</div>'+ewCallTimeline(SEG_CALLS.us)+
+    ewCallsBlock(SEG_CALLS.us)+
     '<div class="ew-foot">Sources: 10-K MD&amp;A (drivers: units + advertising, offset by fulfillment/tech/shipping) &amp; Note 10; Bloomberg segment series.</div>' },
   int:{ t:'International — the turnaround', h:EW_CSS+
     segTiles([['2.9%','operating margin (FY25)'],['$4.75B','operating income — from −$2.7B in ’22'],['$7.6B','net capex (Note 10)'],['$31B','PP&E stock']])+
@@ -3522,7 +3557,7 @@ var SEG_WORLD={
     '<div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">💱</span>FX swings the print</div><div class="ew-box-t">A <b>+$903M</b> tailwind to operating income in 2025 — the reported margin moves with the dollar as much as with operations.</div></div></div>'+
     '<div class="ew-h">Capital footprint</div>'+segCapMini('$7.6B','$31B')+
     segCostBox('int')+
-    '<div class="ew-h">What management has said — over time</div>'+ewCallTimeline(SEG_CALLS.int)+
+    ewCallsBlock(SEG_CALLS.int)+
     '<div class="ew-foot">Sources: 10-K MD&amp;A (units + advertising, FX +$903M) &amp; Note 10; Bloomberg segment series.</div>' }
 };
 var A_TENK={
@@ -4261,32 +4296,9 @@ function amznGovBody(){   // Governance & SBC
     ['🏛️','Four standing committees','Audit (Nooyi), Leadership Dev &amp; Comp, Nominating &amp; Corp Gov, Security (Huttenlocher).'],
     ['📉','SBC, not buybacks','No dividend and minimal repurchases — SBC is the main driver of share-count growth.']
   ]);
-  h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:16px">Stock-based compensation — where it lands<span class="acx-tog sbc-tog"><button type="button" data-sbc="dollar" class="active">$B by line</button><button type="button" data-sbc="pct">% of the line</button></span></div>'+
-    '<div style="height:300px"><canvas id="aGovSbc"></canvas></div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">SBC fell from <b>~$24.0B (2023) to ~$19.5B (2025)</b> as the 2022-23 grants vested off; consensus has it drifting back up (<b>~$20-25B by 2028E</b>, faded bars). The common-size read is the tell: in <b>% of each line</b>, <b>G&amp;A (~15%)</b> and <b>Technology &amp; infrastructure (~10%)</b> are the most stock-comp-heavy (the engineering + corporate workforce), while cost of sales is almost none. With buybacks near zero, this SBC is the main source of share-count growth. SBC-by-line, actuals + consensus, from BBG (10-K Note 1 basis).</div></div>';
-  h+='<div class="ov-foot">Governance per Amazon 2025/2026 proxy; SBC by line per the 10-K / BBG (IS_SBC_ATT_TO_* codes).</div>';
+  h+='<div class="ov-fynote">SBC totals <b>~$19.5B (FY25, ~2.7% of revenue)</b>, down from $24.0B in 2023, and dilutes ~1%/yr with buybacks near zero. The full <b>by-line, actuals-vs-consensus SBC chart lives in Bottom Line ▸ General</b> (where the expenses are).</div>';
+  h+='<div class="ov-foot">Governance per Amazon 2025/2026 proxy; SBC per the 10-K / BBG.</div>';
   return h;
-}
-function aBuildGovSbc(){
-  var pane=document.querySelector('.dd-pane[data-dd="mgmt"] .ovt-subpane[data-ovst="governance"]');
-  var tg=pane?pane.querySelector('.sbc-tog .active'):null, pct=(tg?tg.getAttribute('data-sbc'):'dollar')==='pct';
-  var cv=aChartReady('aGovSbc'); if(!cv) return; aDestroy('aGovSbc');
-  var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'];   // actuals + BBG consensus
-  var LN=[{sbc:'sbcCogs',exp:'cogs',lab:'Cost of sales',c:SQUID},
-          {sbc:'sbcFulfill',exp:'fulfillment',lab:'Fulfillment',c:BRAND},
-          {sbc:'sbcTech',exp:'techInfra',lab:'Technology & infrastructure',c:BRAND2},
-          {sbc:'sbcMktg',exp:'marketing',lab:'Sales & marketing',c:GREEN},
-          {sbc:'sbcGA',exp:'gAdmin',lab:'General & administrative',c:GRAY}];
-  function ser(k){ var s=amznBBG.is[k]; return s?s.a.concat(s.f):[null,null,null,null,null,null]; }
-  var ds=LN.map(function(l){ var sbc=ser(l.sbc), exp=ser(l.exp);
-    var vals=labels.map(function(_,i){ if(sbc[i]==null) return null; return pct?(exp[i]?Math.round(sbc[i]/exp[i]*1000)/10:null):Math.round(sbc[i]/100)/10; });
-    return { label:l.lab, data:vals, backgroundColor:vals.map(function(_,i){ return i<3?l.c:acxRGBA(l.c,0.45); }), borderColor:'#fff', borderWidth:1, maxBarThickness:pct?22:44, stack:pct?undefined:'s' }; });
-  _aCharts['aGovSbc']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:labels, datasets:ds },
-    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':(pct?c.parsed.y+'% of the line':'$'+c.parsed.y.toFixed(1)+'B')); }, footer:function(it){ return pct?'':'Total SBC: $'+it.reduce(function(a,x){ return a+(x.parsed.y||0); },0).toFixed(1)+'B'; } } } },
-      scales:{ x:{ stacked:!pct, grid:{ display:false } }, y:{ stacked:!pct, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return pct?v+'%':'$'+v+'B'; } } } } } });
-  if(pane && !pane._sbcWired){ pane._sbcWired=true;
-    pane.querySelectorAll('.sbc-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.sbc-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildGovSbc(); }; }); }
 }
 // Track Record — per-leader scorecard (management only), color-rated with a tap-for-detail modal.
 // Molded on UBER's ubTrackBody. Ratings are an editorial read, not a Summit output.
@@ -4455,7 +4467,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="segments">Segments</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="supplychain">Supply Chain</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="margins">'+expenseTabsBody()+bottomlineBody()+aBridgeBody()+aNetBridgeBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="margins">'+expenseTabsBody()+bottomlineBody()+aBridgeBody()+aNetBridgeBody()+aSbcBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="segments" hidden>'+segmentsBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="supplychain" hidden>'+aSplcBody(c)+'</div>'+
     '</div>';
@@ -4553,9 +4565,6 @@ function aBuildSub(root, dd, key){
   }
   if(dd==='misc'){
     if(key==='capex' || key==null) requestAnimationFrame(function(){ aBuildCapex(root); aBuildLeases(); });
-  }
-  if(dd==='mgmt'){
-    if(key==='governance') requestAnimationFrame(aBuildGovSbc);
   }
   if(dd==='valuation'){
     if(key==='peers') requestAnimationFrame(function(){ aScRenderAll(root); aScChipsAll(root); aScFetchCaps(root); });

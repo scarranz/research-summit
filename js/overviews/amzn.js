@@ -2965,48 +2965,8 @@ var A_MB_COST=[
   {k:'gAdmin',lab:'General & administrative',c:GRAY},
   {k:'otherOpex',lab:'Other operating expense',c:'#B7791F'}
 ];
-function marginBridgeBody(){
-  // Quarterly period options: only quarters that have BOTH a prior quarter (QoQ) and a
-  // same-quarter-prior-year (YoY) in A_OPEXQ — i.e. FY2025 onward (A_OPEXQ starts Q1'24).
-  var qBtns=A_OPEXQ.map(function(r,i){ return {i:i,p:r.p,yr:r.yr}; }).filter(function(o){ return o.yr>=2025; });
-  var lastI=qBtns.length?qBtns[qBtns.length-1].i:A_OPEXQ.length-1;
-  var qHtml=qBtns.map(function(o){ return '<button type="button" data-mbq="'+o.i+'"'+(o.i===lastI?' class="active"':'')+'>'+o.p.replace(/\s+/g,'')+'</button>'; }).join('');
-  return '<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
-      '<span>What moved the operating margin (<span class="mb-cmp-lab">vs prior year</span>, ppt of revenue)</span>'+
-      '<span style="display:flex;gap:6px;flex-wrap:wrap">'+
-        '<span class="acx-tog mb-cmp" style="display:none"><button type="button" data-mbc="qoq">QoQ</button><button type="button" data-mbc="yoy" class="active">YoY</button></span>'+
-        '<span class="acx-tog mb-gran"><button type="button" data-mbg="y" class="active">Annual</button><button type="button" data-mbg="q">Quarterly</button></span>'+
-      '</span></div>'+
-    '<div class="mb-sel mb-sel-y" style="display:flex;justify-content:flex-end;margin:0 0 8px"><span class="acx-tog mb-yr"><button type="button" data-mby="2023">FY23</button><button type="button" data-mby="2024">FY24</button><button type="button" data-mby="2025" class="active">FY25</button></span></div>'+
-    '<div class="mb-sel mb-sel-q" style="display:none;justify-content:flex-end;margin:0 0 8px"><span class="acx-tog mb-qtr" style="flex-wrap:wrap">'+qHtml+'</span></div>'+
-    '<div style="height:250px"><canvas id="aMbDelta"></canvas></div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:6px">Each bar = a functional line’s change in its share of revenue: green = it fell (added to margin), red = it rose (compressed it). They sum to the total change in operating margin (ppt of revenue). <b>Annual</b> compares each year to the prior year; <b>Quarterly</b> compares the picked quarter QoQ or vs the same quarter a year ago.</div></div>';
-}
-function aBuildMarginBridge(){
-  var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(!pane) return;
-  var gb=pane.querySelector('.mb-gran .active'), gran=gb?gb.getAttribute('data-mbg'):'y';
-  var cur, prev;   // cur/prev each carry the functional-cost lines + .revenue
-  if(gran==='q'){
-    var cb=pane.querySelector('.mb-cmp .active'), cmp=cb?cb.getAttribute('data-mbc'):'yoy';
-    var qb=pane.querySelector('.mb-qtr .active'), qi=qb?+qb.getAttribute('data-mbq'):A_OPEXQ.length-1;
-    cur=A_OPEXQ[qi];
-    if(cur) prev=(cmp==='qoq')?A_OPEXQ[qi-1]:A_OPEXQ.filter(function(x){ return x.yr===cur.yr-1&&x.q===cur.q; })[0];
-  } else {
-    var yb=pane.querySelector('.mb-yr .active'), yr=yb?+yb.getAttribute('data-mby'):2025;
-    cur=A_OPEX[yr]; prev=A_OPEX[yr-1];
-  }
-  var cvd=aChartReady('aMbDelta'); if(!cvd) return; aDestroy('aMbDelta');
-  if(!cur||!prev){ _aCharts['aMbDelta']=new Chart(cvd.getContext('2d'),{type:'bar',data:{labels:['no prior period'],datasets:[{data:[0]}]},options:{plugins:{legend:{display:false}}}}); return; }
-  var rev=cur.revenue, prevRev=prev.revenue;
-  var dl=[],dv=[],dc=[],net=0;
-  A_MB_COST.forEach(function(it){ var contrib=(prev[it.k]/prevRev - cur[it.k]/rev)*100; net+=contrib; dl.push(it.lab); dv.push(Math.round(contrib*100)/100); dc.push(contrib>=0?'#2E8B57':'#C0504D'); });
-  dl.push('Operating margin change'); dv.push(Math.round(net*100)/100); dc.push('#2E3B4E');
-  _aCharts['aMbDelta']=new Chart(cvd.getContext('2d'),{ type:'bar',
-    data:{ labels:dl, datasets:[{ data:dv, backgroundColor:dc, borderColor:'#fff', borderWidth:1, maxBarThickness:26 }] },
-    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ return (c.parsed.x>=0?'+':'')+c.parsed.x+' ppt to operating margin'; } } } },
-      scales:{ x:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return (v>0?'+':'')+v; } } }, y:{ grid:{ display:false }, ticks:{ font:{ size:10 } } } } } });
-}
+// (marginBridgeBody / aBuildMarginBridge removed — the General ▸ The bridge (Margin change / bps mode)
+//  supersedes the old "What moved the operating margin" bars. A_MB_COST is still used by the bridge.)
 // ═══ The bridge — revenue→OI build-up ($B) and margin-change (bps) waterfalls ═══════════════════
 // Ported from dis.js (boBridgePlugin/buildBoBridge): floating bars + dashed connectors + delta labels.
 // Two historical modes, no sensitizing — a forward/guidance-anchored mode (AMZN gives an OI range)
@@ -3423,8 +3383,7 @@ var EW_UNIT={
     '<div class="ew-note">The cleanest operating-leverage line: corporate cost per revenue dollar has fallen roughly a third — from <b>$23 to $16 per $1,000 of revenue</b> — as ~27k roles (2022-23) plus ~14k more (2025-26) came out and revenue kept compounding against a largely fixed base.</div>'
 };
 EW_LINES.forEach(function(l){ if(EW_CALLS[l.k]) l.calls=EW_CALLS[l.k]; if(EW_UNIT[l.k]) l.unit=EW_UNIT[l.k]; });
-var EXP_WORLD={};
-EW_LINES.forEach(function(l){ EXP_WORLD[l.k]={ t:l.name+' — the full dive', h:EW_CSS+ewBase(l) }; });
+// (EXP_WORLD pop-up index removed — the expense full dives now render inline as tabs, see expenseTabsBody.)
 // The six functional expense lines as a clickable index — rendered at the TOP of the
 // Margins & Expenses pane (before bottomlineBody's charts). Self-contained styles.
 // The six functional expense lines as an inline TAB strip (was 6 big cards + a cramped pop-up):
@@ -3517,25 +3476,9 @@ function aBuildExpenses(){
         scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); }
   var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]');
   if(pane){
-    // Show the year picker in Annual, the quarter picker + QoQ/YoY toggle in Quarterly, and
-    // keep the "vs prior …" label in sync. .acx-tog forces display:inline-flex, so [hidden]
-    // is overridden — toggle style.display directly.
-    function mbSync(){
-      var g=pane.querySelector('.mb-gran .active'), q=!!(g&&g.getAttribute('data-mbg')==='q');
-      var sy=pane.querySelector('.mb-sel-y'), sq=pane.querySelector('.mb-sel-q'), cmp=pane.querySelector('.mb-cmp');
-      if(sy) sy.style.display=q?'none':'flex';
-      if(sq) sq.style.display=q?'flex':'none';
-      if(cmp) cmp.style.display=q?'':'none';
-      var cb=pane.querySelector('.mb-cmp .active'), lab=pane.querySelector('.mb-cmp-lab');
-      if(lab) lab.textContent=q?((cb&&cb.getAttribute('data-mbc')==='qoq')?'vs prior quarter':'vs same quarter a year ago'):'vs prior year';
-    }
     var tog=function(sel,after){ pane.querySelectorAll(sel+' button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll(sel+' button').forEach(function(x){ x.classList.toggle('active',x===b); }); after(); }; }); };
     if(!pane._expWired){ pane._expWired=true;
       tog('.exp-tog', aBuildExpensesPct);
-      tog('.mb-yr', aBuildMarginBridge);
-      tog('.mb-qtr', aBuildMarginBridge);
-      tog('.mb-cmp', function(){ mbSync(); aBuildMarginBridge(); });
-      tog('.mb-gran', function(){ mbSync(); aBuildMarginBridge(); });
       tog('.br-mode', function(){ aBridgeSync(pane); aBuildBridge(); });
       tog('.br-gran', function(){ aBridgeSync(pane); aBuildBridge(); });
       tog('.br-yr', aBuildBridge);
@@ -3551,7 +3494,6 @@ function aBuildExpenses(){
         etabs.forEach(function(x){ x.classList.toggle('active',x===b); });
         pane.querySelectorAll('.exp-panel').forEach(function(p){ p.hidden=(p.getAttribute('data-exppanel')!==k); }); }; });
       aBridgeSync(pane); }
-    mbSync();
   }
 }
 var A_SEG=[ {k:'us',lab:'North America',c:BRAND,oi:'usOpInc',rev:'usRev',qoi:'naopinc',qrev:'usrev'},
@@ -4660,7 +4602,6 @@ function wireModal(root){
       return {t:f.ic+' '+esc(f.fam),h:'<div class="famd" style="margin-bottom:10px;color:var(--mu)">'+esc(f.d)+'</div>'+body}; }
     if(kind==='ce'){ return CE_POP[id]||null; }
     if(kind==='seg'){ return SEG_WORLD[id]||null; }
-    if(kind==='exp'){ return EXP_WORLD[id]||null; }
     if(kind==='splc'){ var sp=A_SPLC_INFRA[+id]; return sp?{t:esc(sp.n)+' <span style="font-weight:600;color:var(--mu)">'+esc(sp.rel)+' · '+esc(sp.cost)+'</span>',h:sp.d}:null; }
     if(kind==='exec'){ var ex=AMZN_TRACK.filter(function(x){ return x.id===id; })[0]; return ex?{t:esc(ex.n)+' <span style="font-weight:600;color:var(--mu)">'+esc(ex.role)+'</span>',h:ex.detail}:null; }
     return null;

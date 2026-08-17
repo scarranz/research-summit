@@ -3105,6 +3105,37 @@ function aBuildBridge(){
     if(prev&&cur&&ya!==yb2) aBuildBrWaterfall('aBrCanvas', aBridgeBpsSteps(prev,cur,'FY'+String(ya).slice(2),'FY'+String(yb2).slice(2)), BR_FMT_BPS);
   }
 }
+// ── DRAFT PROPOSALS — visible, clearly-marked pink mock-ups for Dani to evaluate & pick. Not final;
+// each shows the alternative "as it would look" with an A/B/C choice. Remove once decided. ──
+function aDraftsBody(){
+  var h='<style>'+
+    '.draft-box{border:1.5px dashed #E85AA0;background:rgba(232,90,160,0.05);border-radius:12px;padding:14px 16px;margin:18px 0}'+
+    '.draft-tag{display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#fff;background:#E85AA0;border-radius:20px;padding:2px 10px;margin-bottom:8px}'+
+    '.draft-opts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}'+
+    '.draft-opt{font-size:11px;font-weight:700;border:1px solid #E85AA0;color:#B5327A;border-radius:8px;padding:5px 10px;background:#fff}'+
+  '</style>';
+  h+='<div class="draft-box"><span class="draft-tag">Proposal · draft — not final</span>'+
+    '<div class="ov-sec-h" style="border:0;margin-top:0">Replace the "Functional cost as % of revenue" chart?</div>'+
+    '<div style="font-size:12px;color:var(--navy);line-height:1.55;margin-bottom:10px"><b>Option B (shown below):</b> cumulative contribution to the operating-margin change, <b>by line, since 2018</b> — this actually shows <i>where the operating lever came from</i>. Each bar segment = how many bps that line added (it fell as a share of revenue) or took (it rose); the stack nets to the total margin change vs 2018.</div>'+
+    '<div style="height:310px"><canvas id="aMgnLever"></canvas></div>'+
+    '<div class="draft-opts"><span class="draft-opt">A · just remove the old chart</span><span class="draft-opt">B · use this instead</span><span class="draft-opt">C · keep the old %-of-revenue chart</span></div>'+
+    '<div class="acx-cap" style="font-size:10.5px;color:var(--mu);margin-top:8px">Pick A / B / C. Cost of sales dominates the green — that IS the lever (mix shift to AWS/ads/3P). Data: A_OPEX functional lines.</div></div>';
+  h+='<div class="draft-box"><span class="draft-tag">Proposal · draft — not final</span>'+
+    '<div class="ov-sec-h" style="border:0;margin-top:0">Where should Leases live?</div>'+
+    '<div style="font-size:12px;color:var(--navy);line-height:1.55">The lease-cost chart (operating · finance · variable) sits in General today; it is really a capacity-commitment topic, not a P&amp;L-margin one.</div>'+
+    '<div class="draft-opts"><span class="draft-opt">A · Miscellaneous ▸ Capex &amp; Depreciation (recommended)</span><span class="draft-opt">B · a "Balance &amp; Leases" subtab in Miscellaneous</span><span class="draft-opt">C · keep it here as a note only</span></div></div>';
+  return h;
+}
+function aBuildDrafts(){
+  var cv=aChartReady('aMgnLever'); if(!cv) return; aDestroy('aMgnLever');
+  var base=A_OPEX[2018], baseRev=base.revenue, yrs=A_OPEX_YEARS.filter(function(y){ return y>=2019; });
+  var ds=A_MB_COST.map(function(it){ return { label:A_BR_SHORT[it.k]||it.lab, backgroundColor:it.c, borderColor:'#fff', borderWidth:1, maxBarThickness:34, stack:'l',
+    data:yrs.map(function(y){ var r=A_OPEX[y]; return Math.round((base[it.k]/baseRev - r[it.k]/r.revenue)*10000); }) }; });
+  _aCharts['aMgnLever']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:yrs.map(String), datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y>=0?'+':'')+c.parsed.y+' bps'; }, footer:function(it){ var t=it.reduce(function(a,x){ return a+x.parsed.y; },0); return 'Operating margin vs 2018: '+(t>=0?'+':'')+Math.round(t)+' bps'; } } } },
+      scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return (v>0?'+':'')+v; } } } } } });
+}
 function bottomlineBody(){
   var h='<div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:8px;flex-wrap:wrap">'+
     '<span class="acx-tog mmode-tog"><button type="button" data-mmode="grossop" class="active">Gross &amp; operating</button><button type="button" data-mmode="segment">By segment</button></span>'+
@@ -3407,6 +3438,7 @@ function aBuildExpensesPct(){
 }
 function aBuildExpenses(){
   aBuildBridge();
+  aBuildDrafts();
   aBuildExpensesPct();
   var yrs=[2023,2024,2025];
   var sbc=aChartReady('aExpSbc');
@@ -4469,7 +4501,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="segments">Segments</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="supplychain">Supply Chain</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="margins">'+expenseTabsBody()+bottomlineBody()+aBridgeBody()+expensesBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="margins">'+expenseTabsBody()+bottomlineBody()+aBridgeBody()+expensesBody()+aDraftsBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="segments" hidden>'+segmentsBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="supplychain" hidden>'+aSplcBody(c)+'</div>'+
     '</div>';

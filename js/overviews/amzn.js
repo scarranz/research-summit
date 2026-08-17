@@ -4341,20 +4341,27 @@ function amznGovBody(){   // Governance & SBC
   ]);
   h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:16px">Stock-based compensation — where it lands<span class="acx-tog sbc-tog"><button type="button" data-sbc="dollar" class="active">$B by line</button><button type="button" data-sbc="pct">% of the line</button></span></div>'+
     '<div style="height:300px"><canvas id="aGovSbc"></canvas></div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">SBC fell from <b>~$24.0B (2023) to ~$19.5B (2025)</b> — faster as a share of revenue (~4.2% → ~2.7%). But the common-size read is the tell: in <b>% of each line</b>, <b>G&amp;A (~15%)</b> and <b>Technology &amp; infrastructure (~10%)</b> are the most stock-comp-heavy (the engineering + corporate workforce), while cost of sales is almost none. With buybacks near zero, this SBC is the main source of share-count growth. SBC-by-line per the 10-K (Note 1); BBG carries the same split.</div></div>';
+    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">SBC fell from <b>~$24.0B (2023) to ~$19.5B (2025)</b> as the 2022-23 grants vested off; consensus has it drifting back up (<b>~$20-25B by 2028E</b>, faded bars). The common-size read is the tell: in <b>% of each line</b>, <b>G&amp;A (~15%)</b> and <b>Technology &amp; infrastructure (~10%)</b> are the most stock-comp-heavy (the engineering + corporate workforce), while cost of sales is almost none. With buybacks near zero, this SBC is the main source of share-count growth. SBC-by-line, actuals + consensus, from BBG (10-K Note 1 basis).</div></div>';
   h+='<div class="ov-foot">Governance per Amazon 2025/2026 proxy; SBC by line per the 10-K / BBG (IS_SBC_ATT_TO_* codes).</div>';
   return h;
 }
 function aBuildGovSbc(){
   var pane=document.querySelector('.dd-pane[data-dd="mgmt"] .ovt-subpane[data-ovst="governance"]');
   var tg=pane?pane.querySelector('.sbc-tog .active'):null, pct=(tg?tg.getAttribute('data-sbc'):'dollar')==='pct';
-  var yrs=[2023,2024,2025], cv=aChartReady('aGovSbc'); if(!cv) return; aDestroy('aGovSbc');
-  _aCharts['aGovSbc']=new Chart(cv.getContext('2d'),{ type:'bar',
-    data:{ labels:yrs.map(String), datasets:A_OPEX_FN.map(function(f){ return { label:f.lab,
-      data:yrs.map(function(y){ return pct?Math.round(A_TENK.sbc[y][f.k]/A_OPEX[y][f.k]*1000)/10:A_TENK.sbc[y][f.k]/1000; }),
-      backgroundColor:f.c, borderColor:'#fff', borderWidth:1, maxBarThickness:pct?22:52, stack:pct?undefined:'s' }; }) },
+  var cv=aChartReady('aGovSbc'); if(!cv) return; aDestroy('aGovSbc');
+  var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'];   // actuals + BBG consensus
+  var LN=[{sbc:'sbcCogs',exp:'cogs',lab:'Cost of sales',c:SQUID},
+          {sbc:'sbcFulfill',exp:'fulfillment',lab:'Fulfillment',c:BRAND},
+          {sbc:'sbcTech',exp:'techInfra',lab:'Technology & infrastructure',c:BRAND2},
+          {sbc:'sbcMktg',exp:'marketing',lab:'Sales & marketing',c:GREEN},
+          {sbc:'sbcGA',exp:'gAdmin',lab:'General & administrative',c:GRAY}];
+  function ser(k){ var s=amznBBG.is[k]; return s?s.a.concat(s.f):[null,null,null,null,null,null]; }
+  var ds=LN.map(function(l){ var sbc=ser(l.sbc), exp=ser(l.exp);
+    var vals=labels.map(function(_,i){ if(sbc[i]==null) return null; return pct?(exp[i]?Math.round(sbc[i]/exp[i]*1000)/10:null):Math.round(sbc[i]/100)/10; });
+    return { label:l.lab, data:vals, backgroundColor:vals.map(function(_,i){ return i<3?l.c:acxRGBA(l.c,0.45); }), borderColor:'#fff', borderWidth:1, maxBarThickness:pct?22:44, stack:pct?undefined:'s' }; });
+  _aCharts['aGovSbc']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:labels, datasets:ds },
     options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(pct?c.parsed.y+'% of the line':'$'+c.parsed.y.toFixed(1)+'B'); }, footer:function(it){ return pct?'':'Total SBC: $'+it.reduce(function(a,x){ return a+x.parsed.y; },0).toFixed(1)+'B'; } } } },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':(pct?c.parsed.y+'% of the line':'$'+c.parsed.y.toFixed(1)+'B')); }, footer:function(it){ return pct?'':'Total SBC: $'+it.reduce(function(a,x){ return a+(x.parsed.y||0); },0).toFixed(1)+'B'; } } } },
       scales:{ x:{ stacked:!pct, grid:{ display:false } }, y:{ stacked:!pct, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return pct?v+'%':'$'+v+'B'; } } } } } });
   if(pane && !pane._sbcWired){ pane._sbcWired=true;
     pane.querySelectorAll('.sbc-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.sbc-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildGovSbc(); }; }); }

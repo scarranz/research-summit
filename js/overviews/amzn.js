@@ -3005,6 +3005,105 @@ function aBuildMarginBridge(){
       plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ return (c.parsed.x>=0?'+':'')+c.parsed.x+' ppt to operating margin'; } } } },
       scales:{ x:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return (v>0?'+':'')+v; } } }, y:{ grid:{ display:false }, ticks:{ font:{ size:10 } } } } } });
 }
+// ═══ The bridge — revenue→OI build-up ($B) and margin-change (bps) waterfalls ═══════════════════
+// Ported from dis.js (boBridgePlugin/buildBoBridge): floating bars + dashed connectors + delta labels.
+// Two historical modes, no sensitizing — a forward/guidance-anchored mode (AMZN gives an OI range)
+// is a later pass. Short x-axis labels so all 8 steps read without autoskip.
+var A_BR_SHORT={ costOfSales:'Cost of sales', fulfillment:'Fulfillment', techInfra:'Tech & infra', marketing:'Marketing', gAdmin:'G&A', otherOpex:'Other' };
+var aBrPlugin={ id:'aBrLbl', afterDatasetsDraw:function(chart){
+  var steps=chart._steps; if(!steps) return; var ctx=chart.ctx, meta=chart.getDatasetMeta(0), y=chart.scales.y, fmt=chart._fmt||{};
+  ctx.save();
+  ctx.strokeStyle='rgba(120,130,145,.55)'; ctx.setLineDash([3,3]); ctx.lineWidth=1;
+  for(var i=0;i<steps.length-1;i++){ if(steps[i].runAfter==null) continue; var b0=meta.data[i], b1=meta.data[i+1];
+    var yy=y.getPixelForValue(steps[i].runAfter); ctx.beginPath(); ctx.moveTo(b0.x+b0.width/2, yy); ctx.lineTo(b1.x-b1.width/2, yy); ctx.stroke(); }
+  ctx.setLineDash([]); ctx.textAlign='center';
+  for(var j=0;j<steps.length;j++){ var s=steps[j], bar=meta.data[j], topPix=y.getPixelForValue(Math.max(s.range[0], s.range[1])), txt;
+    if(s.kind==='base'||s.kind==='total'){ txt=(fmt.base||String)(s.val); ctx.fillStyle='#1E2733'; ctx.font='800 11px Inter, system-ui, sans-serif'; }
+    else { txt=(fmt.delta||String)(s.val); ctx.fillStyle=s.dc||(s.val>=0?'#2E8B57':'#C0504D'); ctx.font='700 10.5px Inter, system-ui, sans-serif'; }
+    ctx.fillText(txt, bar.x, topPix-6); }
+  ctx.restore();
+} };
+function aBuildBrWaterfall(id, steps, fmt){
+  var cv=aChartReady(id); if(!cv) return; aDestroy(id);
+  var labels=steps.map(function(s){return s.label;}), data=steps.map(function(s){return s.range;}), colors=steps.map(function(s){return s.color;});
+  var ch=new Chart(cv.getContext('2d'), { type:'bar',
+    data:{ labels:labels, datasets:[{ data:data, backgroundColor:colors, borderRadius:4, borderSkipped:false, maxBarThickness:56, categoryPercentage:0.74, barPercentage:0.9 }] },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, layout:{padding:{top:24}},
+      plugins:{ legend:{display:false}, tooltip:{ displayColors:false, callbacks:{ title:function(it){return it[0].label;}, label:function(ctx){
+        var s=ctx.chart._steps[ctx.dataIndex];
+        if(s.kind==='base') return (fmt.base||String)(s.val);
+        if(s.kind==='total') return (fmt.base||String)(s.val);
+        return (fmt.delta||String)(s.val)+(s.runAfter!=null?'   ·   running '+(fmt.base||String)(s.runAfter):''); } } } },
+      scales:{ x:{ grid:{display:false}, ticks:{color:'#8A93A0', font:{size:10}, autoSkip:false, maxRotation:45, minRotation:0} },
+        y:{ beginAtZero:true, grid:{color:'#EEF2F7'}, ticks:{color:'#8A93A0', font:{size:10}, callback:function(v){return (fmt.axis||String)(v);}} } } },
+    plugins:[ aBrPlugin ] });
+  ch._steps=steps; ch._fmt=fmt; _aCharts[id]=ch; ch.update('none');
+}
+// Revenue → −each functional cost → = Operating income, in $B, for one period row (annual or quarterly).
+function aBridgeBuildupSteps(r){
+  var rev=r.revenue/1000, run=rev;
+  var steps=[{label:'Revenue', kind:'base', color:'#1E2733', range:[0,run], runAfter:run, val:rev}];
+  A_MB_COST.forEach(function(it){ var c=(r[it.k]||0)/1000, hi=run; run=hi-c;
+    steps.push({label:A_BR_SHORT[it.k]||it.lab, kind:'down', color:it.c, dc:'#6B7683', range:[Math.min(run,hi),Math.max(run,hi)], runAfter:run, val:-c}); });
+  steps.push({label:'Op. income', kind:'total', color:'#2E8B57', range:[0,run], runAfter:null, val:run});
+  return steps;
+}
+// Operating-margin change (ppt→bps) between two periods, decomposed by functional line.
+function aBridgeBpsSteps(prev, cur, labA, labB){
+  var rev=cur.revenue, prevRev=prev.revenue;
+  var m0=(prevRev - A_MB_COST.reduce(function(a,it){return a+prev[it.k];},0))/prevRev*100, run=m0;
+  var steps=[{label:labA, kind:'base', color:'#1E2733', range:[0,run], runAfter:run, val:m0}];
+  A_MB_COST.forEach(function(it){ var contrib=(prev[it.k]/prevRev - cur[it.k]/rev)*100, lo=run; run=lo+contrib;
+    steps.push({label:A_BR_SHORT[it.k]||it.lab, kind:contrib>=0?'up':'down', color:contrib>=0?'#2E8B57':'#C0504D', range:[Math.min(lo,run),Math.max(lo,run)], runAfter:run, val:contrib}); });
+  steps.push({label:labB, kind:'total', color:'#1E2733', range:[0,run], runAfter:null, val:run});
+  return steps;
+}
+var BR_FMT_D={ axis:function(v){return '$'+Math.round(v)+'B';}, base:function(v){return '$'+v.toFixed(1)+'B';}, delta:function(v){return (v>=0?'+$':'−$')+Math.abs(v).toFixed(1)+'B';} };
+var BR_FMT_BPS={ axis:function(v){return v.toFixed(0)+'%';}, base:function(v){return v.toFixed(1)+'%';}, delta:function(v){var b=Math.round(v*100); return (b>=0?'+':'−')+Math.abs(b)+' bps';} };
+function aBridgeBody(){
+  var yBtns=function(cls,sel){ return A_OPEX_YEARS.map(function(y){ return '<button type="button" data-'+cls+'="'+y+'"'+(y===sel?' class="active"':'')+'>FY'+String(y).slice(2)+'</button>'; }).join(''); };
+  var qBtns=A_OPEXQ.map(function(r,i){ return '<button type="button" data-brq="'+i+'"'+(i===A_OPEXQ.length-1?' class="active"':'')+'>'+r.p.replace(/\s+/g,'')+'</button>'; }).join('');
+  return '<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
+      '<span>The bridge — how revenue becomes operating income</span>'+
+      '<span class="acx-tog br-mode"><button type="button" data-brm="buildup" class="active">Build-up ($B)</button><button type="button" data-brm="bps">Margin change (bps)</button></span>'+
+    '</div>'+
+    '<div class="br-ctl-bu" style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin:0 0 8px">'+
+      '<span class="acx-tog br-gran"><button type="button" data-brg="y" class="active">Annual</button><button type="button" data-brg="q">Quarterly</button></span>'+
+      '<span class="acx-tog br-yr br-sel-y">'+yBtns('bry',2025)+'</span>'+
+      '<span class="acx-tog br-qtr br-sel-q" style="display:none;flex-wrap:wrap">'+qBtns+'</span>'+
+    '</div>'+
+    '<div class="br-ctl-bps" style="display:none;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin:0 0 8px;align-items:center">'+
+      '<span style="font-size:11px;color:var(--mu)">From</span><span class="acx-tog br-from">'+yBtns('brf',2022)+'</span>'+
+      '<span style="font-size:11px;color:var(--mu)">to</span><span class="acx-tog br-to">'+yBtns('brt',2025)+'</span>'+
+    '</div>'+
+    '<div style="height:340px"><canvas id="aBrCanvas"></canvas></div>'+
+    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px"><b>Build-up</b> walks revenue down through each functional cost line to operating income, in dollars, for the picked period. <b>Margin change</b> decomposes how the operating margin moved between two years, in basis points — green lines added to margin (a cost fell as a share of revenue), red compressed it. They sum to the total change. Functional actuals from the Segments tab of <code>DCF AMZN.xlsm</code> / 8-K filings.</div></div>';
+}
+function aBridgeSync(pane){
+  var mb=pane.querySelector('.br-mode .active'), mode=mb?mb.getAttribute('data-brm'):'buildup';
+  var bu=pane.querySelector('.br-ctl-bu'), bps=pane.querySelector('.br-ctl-bps');
+  if(bu) bu.style.display=mode==='buildup'?'flex':'none';
+  if(bps) bps.style.display=mode==='bps'?'flex':'none';
+  var g=pane.querySelector('.br-gran .active'), q=!!(g&&g.getAttribute('data-brg')==='q');
+  var sy=pane.querySelector('.br-sel-y'), sq=pane.querySelector('.br-sel-q');
+  if(sy) sy.style.display=q?'none':'';
+  if(sq) sq.style.display=q?'':'none';
+}
+function aBuildBridge(){
+  var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(!pane) return;
+  var mb=pane.querySelector('.br-mode .active'), mode=mb?mb.getAttribute('data-brm'):'buildup';
+  if(mode==='buildup'){
+    var g=pane.querySelector('.br-gran .active'), gran=g?g.getAttribute('data-brg'):'y', r;
+    if(gran==='q'){ var qb=pane.querySelector('.br-qtr .active'); r=A_OPEXQ[qb?+qb.getAttribute('data-brq'):A_OPEXQ.length-1]; }
+    else { var yb=pane.querySelector('.br-yr .active'); r=A_OPEX[yb?+yb.getAttribute('data-bry'):2025]; }
+    if(r) aBuildBrWaterfall('aBrCanvas', aBridgeBuildupSteps(r), BR_FMT_D);
+  } else {
+    var fb=pane.querySelector('.br-from .active'), tb=pane.querySelector('.br-to .active');
+    var ya=fb?+fb.getAttribute('data-brf'):2022, yb2=tb?+tb.getAttribute('data-brt'):2025;
+    var prev=A_OPEX[ya], cur=A_OPEX[yb2];
+    if(prev&&cur&&ya!==yb2) aBuildBrWaterfall('aBrCanvas', aBridgeBpsSteps(prev,cur,'FY'+String(ya).slice(2),'FY'+String(yb2).slice(2)), BR_FMT_BPS);
+  }
+}
 function bottomlineBody(){
   var h='<div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:8px;flex-wrap:wrap">'+
     '<span class="acx-tog mmode-tog"><button type="button" data-mmode="grossop" class="active">Gross &amp; operating</button><button type="button" data-mmode="segment">By segment</button></span>'+
@@ -3286,6 +3385,7 @@ function aBuildExpensesPct(){
 }
 function aBuildExpenses(){
   aBuildMarginBridge();
+  aBuildBridge();
   aBuildExpensesPct();
   var yrs=[2023,2024,2025];
   var sbc=aChartReady('aExpSbc');
@@ -3323,7 +3423,14 @@ function aBuildExpenses(){
       tog('.mb-yr', aBuildMarginBridge);
       tog('.mb-qtr', aBuildMarginBridge);
       tog('.mb-cmp', function(){ mbSync(); aBuildMarginBridge(); });
-      tog('.mb-gran', function(){ mbSync(); aBuildMarginBridge(); }); }
+      tog('.mb-gran', function(){ mbSync(); aBuildMarginBridge(); });
+      tog('.br-mode', function(){ aBridgeSync(pane); aBuildBridge(); });
+      tog('.br-gran', function(){ aBridgeSync(pane); aBuildBridge(); });
+      tog('.br-yr', aBuildBridge);
+      tog('.br-qtr', aBuildBridge);
+      tog('.br-from', aBuildBridge);
+      tog('.br-to', aBuildBridge);
+      aBridgeSync(pane); }
     mbSync();
   }
 }
@@ -4189,7 +4296,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="segments">Segments</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="supplychain">Supply Chain</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="margins">'+expenseCardsBody()+bottomlineBody()+expensesBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="margins">'+expenseCardsBody()+bottomlineBody()+aBridgeBody()+expensesBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="segments" hidden>'+segmentsBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="supplychain" hidden>'+aSplcBody(c)+'</div>'+
     '</div>';

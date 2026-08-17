@@ -11,6 +11,13 @@ Written Aug 10, 2026, after the revamp on `feat/results-estimates-revamp`. Compa
 when you are changing the engine rather than reusing it), `docs/RESULTS_CONVENTIONS.md` (the data
 contract, §8 the vintage axis) and `docs/RESULTS_ESTIMATES_HANDOFF.md` (project state).
 
+> **Building a chart that is *not* a metric-over-time?** A waterfall, a choropleth, a scatter, a
+> bridge — this file has nothing to plot for you, but the standard still applies. Go to
+> **`CHART_ENGINE_REFERENCE.md` §0**: the six things every chart in the portal must do (zoom on
+> both axes, click-to-hide series, a table in a dropdown carrying at least what is drawn, dropdowns
+> grouped by metric family, unambiguous units, and degrading to nothing rather than to broken),
+> each with the exact call and a ship checklist.
+
 ---
 
 ## 1. What you get for free
@@ -366,6 +373,12 @@ Two things in it are worth stealing for any bar chart with labels:
   everything.
 
 ## 8. Adding a chart — the short version
+
+**This section is the engine path.** If your chart is not a metric over time — a waterfall, a
+matrix, a scatter, a map — none of the steps below apply and there is nothing here to import: the
+engine exports five functions and no helpers. Go to `CHART_ENGINE_REFERENCE.md` **§0.7**, which
+covers what a bespoke canvas gets from the portal's global CSS, the four things worth copying out
+of `js/results.js`, and a skeleton that passes the ship checklist.
 
 1. **Write a dataset** at `js/results-data/<ticker>.js` following §2 of the conventions. The
    minimum is one view, one section, one metric with `periods` + `act`.

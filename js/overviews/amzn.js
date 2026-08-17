@@ -3612,24 +3612,28 @@ function segmentsBody(){
     '.seg-off{font-size:11px;color:var(--mu);margin-top:8px;line-height:1.45}.seg-off b{color:var(--navy)}'+
   '</style>';
   // segment engines — the clickable driver index, kept at the top of the pane (before the charts)
-  h+='<div class="ov-sec"><div class="ov-sec-h">What actually moves each segment — the drivers (10-K + latest quarters)</div>';
   var eng=[
-    {c:SQUID,key:'aws',n:'AWS',m:'35% margin',role:'The profit engine',tr:'↑ re-accelerating',
+    {c:SQUID,key:'aws',n:'AWS',m:'35% margin',role:'The profit engine',
       chips:['<span class="up">▲</span> Growth <b>+19% → +37%</b> (Q3\'24→Q2\'26)','Backlog (RPO) <b>$164B → $496B</b> (3×)','Custom silicon (Trainium) + Anthropic'],
       off:'<b>What pressures it:</b> technology-infrastructure spend to support growth — i.e. the capex/AI build flowing into the P&amp;L as depreciation (see Capex &amp; Depreciation). The bet: capacity installs 6–24 months before it bills.'},
-    {c:BRAND,key:'us',n:'North America',m:'6.9% margin',role:'The volume base',tr:'↑ 4% → 7% (3 yrs)',
+    {c:BRAND,key:'us',n:'North America',m:'6.9% margin',role:'The volume base',
       chips:['<span class="up">▲</span> Advertising <b>+18% → +26%</b>','3P seller mix <b>~61%</b>','Units <b>+17%</b> vs fulfillment leverage'],
       off:'<b>The lever:</b> high-margin advertising riding the store + fulfillment efficiency (robotics, regionalization). <b>The noise:</b> 3Q25 op margin dips to 4.5% on the $2.5B FTC charge — a charge, not a trend.'},
-    {c:BRAND2,key:'int',n:'International',m:'2.9% margin',role:'The turnaround',tr:'↑ loss → profit (2024)',
+    {c:BRAND2,key:'int',n:'International',m:'2.9% margin',role:'The turnaround',
       chips:['Turned profitable <b>2024</b> after years of losses','Same ads + units flywheel','FX a <b>+$903M</b> tailwind in 2025'],
       off:'<b>The path:</b> established markets (Germany, UK, Japan) matured to profit while emerging markets (India, Brazil, Middle East) still invest — the blended margin is early on the same curve NA already climbed.'}
   ];
-  h+='<div class="seg-eng">'+eng.map(function(s){
-    return '<div class="seg-b ov-clickable" data-detail="seg:'+s.key+'" style="border-left-color:'+s.c+';cursor:pointer"><div class="seg-b-h"><span class="seg-b-n">'+s.n+'</span><span class="seg-b-m">'+s.m+'</span><span class="seg-b-tr">'+s.tr+'</span><span class="seg-b-role">'+s.role+'</span></div>'+
-      '<div class="seg-chips">'+s.chips.map(function(c){ return '<span class="seg-chip">'+c+'</span>'; }).join('')+'</div>'+
-      '<div class="seg-off">'+s.off+'</div><div style="font-size:10.5px;font-weight:800;color:var(--brand-2);margin-top:9px">Open detail →</div></div>';
+  h+='<style>.segx-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 14px}'+
+    '.segx-tab{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--bdr);background:var(--card,#fff);border-radius:10px;padding:9px 13px;cursor:pointer;font-size:12.5px;font-weight:800;color:var(--navy);transition:.13s}'+
+    '.segx-tab:hover{border-color:var(--brand-2)}.segx-tab.active{border-color:var(--brand);background:var(--brand-soft);box-shadow:inset 0 0 0 1px var(--brand)}'+
+    '.segx-dot{width:11px;height:11px;border-radius:3px;flex:none}.segx-tag{font-size:10.5px;font-weight:700;color:var(--mu)}</style>';
+  h+='<div class="ov-sec"><div class="ov-sec-h">The three segments — pick one for its full read</div>';
+  h+='<div class="segx-tabs">'+eng.map(function(s,i){ return '<button type="button" class="segx-tab'+(i===0?' active':'')+'" data-segtab="'+s.key+'"><span class="segx-dot" style="background:'+s.c+'"></span>'+s.n+' <span class="segx-tag">'+s.m+' · '+s.role+'</span></button>'; }).join('')+'</div>';
+  h+='<div class="segx-panels">'+eng.map(function(s,i){
+    var head='<div class="seg-chips" style="margin-bottom:8px">'+s.chips.map(function(c){ return '<span class="seg-chip">'+c+'</span>'; }).join('')+'</div><div class="seg-off" style="margin-bottom:12px">'+s.off+'</div>';
+    return '<div class="segx-panel" data-segpanel="'+s.key+'"'+(i>0?' hidden':'')+'>'+head+(SEG_WORLD[s.key]?SEG_WORLD[s.key].h:'')+'</div>';
   }).join('')+'</div>';
-  h+='<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">Amazon reports <b>net sales and operating income by segment only</b> — never expense by segment. Segment definitions per the 10-K; drivers per the 10-K MD&amp;A and the last eight quarters of Bloomberg segment data. FY2025 op income of $80.0B includes a $2.5B FTC settlement and $2.7B of severance.</div></div>';
+  h+='<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">Amazon reports <b>net sales, operating income, D&amp;A and PP&amp;E by segment</b> — never functional expense by segment. Drivers per the 10-K MD&amp;A + Bloomberg segment data; FY2025 op income $80.0B includes a $2.5B FTC settlement and $2.7B of severance.</div></div>';
   h+='<div class="seg-tog-row"><span class="acx-tog seg-tog"><button type="button" data-segg="y" class="active">Annual</button><button type="button" data-segg="q">Quarterly</button></span></div>';
   h+='<div class="seg-kpis" id="segKpis"></div>';
   h+='<div class="ov-sec"><div class="ov-sec-h">Operating income by segment ($B)</div><div style="height:290px"><canvas id="aSgOI"></canvas></div>'+
@@ -3683,7 +3687,11 @@ function aBuildSegments(){
   aBuildSegCapital();
   aBuildSegDA();
   if(pane && !pane._segWired){ pane._segWired=true;
-    pane.querySelectorAll('.seg-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.seg-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegments(); }; }); }
+    pane.querySelectorAll('.seg-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.seg-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegments(); }; });
+    var stabs=pane.querySelectorAll('.segx-tab');
+    stabs.forEach(function(b){ b.onclick=function(){ var key=b.getAttribute('data-segtab');
+      stabs.forEach(function(x){ x.classList.toggle('active',x===b); });
+      pane.querySelectorAll('.segx-panel').forEach(function(p){ p.hidden=(p.getAttribute('data-segpanel')!==key); }); }; }); }
 }
 // ═══ Bottom Line ▸ Capex & Depreciation — seeds + engine (restored) ═══
 // AMZN Capex/D&A seed -- snapshot of 'DCF AMZN.xlsm' (D&A + Segments tabs), FY2019-FY2028.

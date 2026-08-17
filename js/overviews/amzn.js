@@ -3338,29 +3338,31 @@ var EXP_WORLD={};
 EW_LINES.forEach(function(l){ EXP_WORLD[l.k]={ t:l.name+' — the full dive', h:EW_CSS+ewBase(l) }; });
 // The six functional expense lines as a clickable index — rendered at the TOP of the
 // Margins & Expenses pane (before bottomlineBody's charts). Self-contained styles.
-function expenseCardsBody(){
-  var h='<style>'+
-    '.exp-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:4px}'+
-    '@media(max-width:640px){.exp-cards{grid-template-columns:repeat(2,1fr)}}'+
-    '@media(max-width:430px){.exp-cards{grid-template-columns:1fr}}'+
-    '.exp-card{border:1px solid var(--bdr);border-radius:14px;padding:18px;min-height:158px;display:flex;flex-direction:column;background:var(--card,#fff);cursor:pointer;transition:.13s}'+
-    '.exp-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-2px)}'+
-    '.exp-card-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}'+
-    '.exp-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0}.exp-card-n{font-size:12.5px;font-weight:800;color:var(--navy)}'+
-    '.exp-tag{font-size:9.5px;font-weight:800;color:var(--mu);background:rgba(0,0,0,.05);border-radius:20px;padding:2px 9px;margin-left:auto;white-space:nowrap}'+
-    '.exp-card-t{font-size:11.5px;color:var(--navy);line-height:1.5}.exp-more{font-size:10.5px;font-weight:800;color:var(--brand-2);margin-top:auto;padding-top:10px}'+
-  '</style>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">The six lines — click any for a full dive</div>';
+// The six functional expense lines as an inline TAB strip (was 6 big cards + a cramped pop-up):
+// pick a line and its full dive (ewBase: composition, unit economics, drivers, calls) renders in place.
+function expenseTabsBody(){
   var defs=[
-    {k:'costOfSales',c:SQUID,n:'Cost of sales',tag:'$356B · 49.7%',t:'Product cost, inbound &amp; outbound shipping, and digital-media content.'},
-    {k:'fulfillment',c:BRAND,n:'Fulfillment',tag:'$109B · 15.2%',t:'Running &amp; staffing the fulfillment network, stores and customer service.'},
-    {k:'techInfra',c:BRAND2,n:'Technology &amp; infrastructure',tag:'$108B · 15.1%',t:'Engineering R&amp;D plus the servers/data centers and their depreciation.'},
-    {k:'marketing',c:GREEN,n:'Sales &amp; marketing',tag:'$47B · 6.6%',t:'Advertising, promotions, Prime acquisition, and S&amp;M payroll.'},
-    {k:'gAdmin',c:GRAY,n:'General &amp; administrative',tag:'$11B · 1.6%',t:'Corporate functions — finance, legal, HR, facilities.'},
-    {k:'otherOpex',c:'#B7791F',n:'Other operating expense, net',tag:'$4.6B · 0.6%',t:'Amortization, impairments, and legal settlements (FY25: the $2.5B FTC settlement).'}
+    {k:'costOfSales',c:SQUID,n:'Cost of sales',tag:'$356B · 49.7%'},
+    {k:'fulfillment',c:BRAND,n:'Fulfillment',tag:'$109B · 15.2%'},
+    {k:'techInfra',c:BRAND2,n:'Technology &amp; infrastructure',tag:'$108B · 15.1%'},
+    {k:'marketing',c:GREEN,n:'Sales &amp; marketing',tag:'$47B · 6.6%'},
+    {k:'gAdmin',c:GRAY,n:'General &amp; administrative',tag:'$11B · 1.6%'},
+    {k:'otherOpex',c:'#B7791F',n:'Other operating expense, net',tag:'$4.6B · 0.6%'}
   ];
-  h+='<div class="exp-cards">'+defs.map(function(d){ return '<div class="exp-card ov-clickable" data-detail="exp:'+d.k+'"><div class="exp-card-h"><span class="exp-dot" style="background:'+d.c+'"></span><span class="exp-card-n">'+d.n+'</span><span class="exp-tag">'+d.tag+'</span></div><div class="exp-card-t">'+d.t+'</div><div class="exp-more">Full dive →</div></div>'; }).join('')+'</div>';
-  h+='<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:6px">Definitions per the 10-K; each full dive draws on the Notes (SBC, leases, segments) and the earnings calls.</div></div>';
+  var byk={}; EW_LINES.forEach(function(l){ byk[l.k]=l; });
+  var h='<style>'+
+    '.exp-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 14px}'+
+    '.exp-tab{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--bdr);background:var(--card,#fff);border-radius:10px;padding:8px 11px;cursor:pointer;font-size:12px;font-weight:700;color:var(--navy);transition:.13s}'+
+    '.exp-tab:hover{border-color:var(--brand-2)}'+
+    '.exp-tab.active{border-color:var(--brand);background:var(--brand-soft);box-shadow:inset 0 0 0 1px var(--brand)}'+
+    '.exp-tab .exp-dot{width:10px;height:10px;border-radius:3px;flex:none}'+
+    '.exp-tab .exp-tag{font-size:10px;font-weight:800;color:var(--mu)}'+
+  '</style>';
+  h+='<div class="ov-sec"><div class="ov-sec-h">The six expense lines — pick one for its full dive</div>';
+  h+='<div class="exp-tabs">'+defs.map(function(d,i){ return '<button type="button" class="exp-tab'+(i===0?' active':'')+'" data-exptab="'+d.k+'"><span class="exp-dot" style="background:'+d.c+'"></span>'+d.n+' <span class="exp-tag">'+d.tag+'</span></button>'; }).join('')+'</div>';
+  h+=EW_CSS;
+  h+='<div class="exp-panels">'+defs.map(function(d,i){ return '<div class="exp-panel" data-exppanel="'+d.k+'"'+(i>0?' hidden':'')+'>'+(byk[d.k]?ewBase(byk[d.k]):'')+'</div>'; }).join('')+'</div>';
+  h+='</div>';
   return h;
 }
 function expensesBody(){
@@ -3449,6 +3451,10 @@ function aBuildExpenses(){
       tog('.br-qtr', aBuildBridge);
       tog('.br-from', aBuildBridge);
       tog('.br-to', aBuildBridge);
+      var etabs=pane.querySelectorAll('.exp-tab');
+      etabs.forEach(function(b){ b.onclick=function(){ var k=b.getAttribute('data-exptab');
+        etabs.forEach(function(x){ x.classList.toggle('active',x===b); });
+        pane.querySelectorAll('.exp-panel').forEach(function(p){ p.hidden=(p.getAttribute('data-exppanel')!==k); }); }; });
       aBridgeSync(pane); }
     mbSync();
   }
@@ -4463,7 +4469,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="segments">Segments</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="supplychain">Supply Chain</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="margins">'+expenseCardsBody()+bottomlineBody()+aBridgeBody()+expensesBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="margins">'+expenseTabsBody()+bottomlineBody()+aBridgeBody()+expensesBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="segments" hidden>'+segmentsBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="supplychain" hidden>'+aSplcBody(c)+'</div>'+
     '</div>';

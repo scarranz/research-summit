@@ -1425,6 +1425,11 @@ function ceStyle(){
     '.ce-tbl{width:100%;border-collapse:collapse;font-size:11.5px}'+
     '.ce-tbl th{text-align:left;color:var(--mu);font-weight:700;padding:7px 10px;border-bottom:1px solid var(--bdr);font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}'+
     '.ce-tbl td{padding:9px 10px;border-bottom:1px solid var(--bdr);color:var(--navy);line-height:1.45;vertical-align:top}'+
+    /* ── Bottom Line ▸ Supply Chain — stat row (ported from googl.js ddStat) ── */
+    '.gdd-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}'+
+    '.gdd-kpi{background:var(--w);border:1px solid var(--bdr);border-radius:12px;padding:12px 14px}'+
+    '.gdd-kpi-v{font-size:19px;font-weight:800;color:var(--navy);line-height:1.12}'+
+    '.gdd-kpi-k{font-size:10.5px;color:var(--mu);margin-top:4px;line-height:1.35}'+
     '.ce-pill{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 9px;white-space:nowrap}'+
     /* ── #1 · the chain: seededBy chip on watch items, landing chip on newQuestions ── */
     '.ce-seed{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:800;color:'+PURPLE+';background:rgba(122,90,248,0.08);border:1px solid rgba(122,90,248,0.3);border-radius:20px;padding:2px 9px;white-space:nowrap;flex:none}'+
@@ -4070,6 +4075,97 @@ function html(c){
   h+='</div>';
   return h;
 }
+// ─── Bottom Line ▸ Supply Chain — Bloomberg SPLC (AMZN US Equity), as of 12-Aug-2026 ────────
+// SUPPLIERS side only. The customer/demand side (traceable AWS-IT channel + the Direct-to-Consumer
+// aggregate) belongs in Top Line and is not built here. 1,452 suppliers / 24,052 supplier facilities
+// tracked. Modeled on googl.js splcBody (cards + tables + dependency bars). Geography is the one
+// section rendered as a Chart.js chart.
+function ddStat(items){
+  return '<div class="gdd-kpis">'+items.map(function(s){ return '<div class="gdd-kpi"><div class="gdd-kpi-v">'+s[0]+'</div><div class="gdd-kpi-k">'+esc(s[1])+'</div></div>'; }).join('')+'</div>';
+}
+var A_SPLC_INFRA=[
+  { n:'NVIDIA', rel:'$38.2B', cost:'24.2% of tracked cost', dep:'14.0% of NVDA rev', bar:100, col:GREEN,
+    d:'<p>By far the largest single relationship on the map ($38.2B est.) — the GPU fleet (Hopper/Blackwell, next Rubin) powering AWS training and inference, both for AWS\'s own services and rented to customers. Amazon is ~14% of NVIDIA\'s revenue: an enormous buyer, but neither side is captive.</p><p><b>The map\'s biggest blind spot:</b> Amazon\'s own custom silicon — <b>Trainium / Inferentia</b>, designed in-house at Annapurna Labs — is the strategic hedge against exactly this dependency, and it barely shows in SPLC because it is internal.</p>' },
+  { n:'Hon Hai (Foxconn)', rel:'$14.0B', cost:'7.9% of tracked cost', dep:'5.2% of Hon Hai rev', bar:37, col:GRAY,
+    d:'<p>Server and rack assembly at hyperscale for the AWS data-center build-out. Taiwan-headquartered with a global manufacturing footprint — part of why supplier facilities concentrate in Asia even where domiciles do not.</p>' },
+  { n:'Jabil', rel:'$5.6B', cost:'3.2% of tracked cost', dep:'16.0% of Jabil rev', bar:15, col:BRAND2,
+    d:'<p>Contract manufacturing for data-center and device hardware. ~16% of Jabil\'s revenue traces to Amazon — a deep dependency, and its results are a public read-through on AWS build cadence.</p>' },
+  { n:'TSMC', rel:'$5.5B', cost:'1.3% of tracked cost', dep:'4.1% of TSMC rev', bar:14, col:AMBER,
+    d:'<p>Foundry exposure — part direct, part intermediated through the silicon vendors (NVIDIA, Marvell, Broadcom, and Amazon\'s own Annapurna designs). As with GOOGL, Amazon\'s deepest chip dependency is second-order: it runs through whoever fabs the accelerators.</p>' },
+  { n:'SK hynix', rel:'$4.9B', cost:'3.0% of tracked cost', dep:'6.9% of hynix rev', bar:13, col:PURPLE,
+    d:'<p>HBM and DRAM — the scarcest input of the AI build-out. One of several memory suppliers (with Micron and Western Digital, both CAPEX) feeding the AWS accelerator fleet.</p>' },
+  { n:'AI-connectivity cluster', rel:'Astera · Credo · Accton · Arista', cost:'~1.5% of cost combined', dep:'Astera 70% · Credo 42% · Accton 35% of their rev', bar:9, col:RED,
+    d:'<p>The networking/interconnect layer of the AWS build-out: <b>Astera Labs (70.0% of its revenue from Amazon)</b>, Credo Technology (42.3%), Accton (35.4%), plus Arista and Marvell (15.5%). Individually small for Amazon; existentially large for several of them — the same quasi-captive read-through GOOGL\'s optics cluster gives, here for AWS.</p>' },
+];
+// Retail / CPG / logistics chain. [name, rel, amznCost, theirDep, category]
+var A_SPLC_RETAIL=[
+  ['United Parcel Service','$9.4B','2.6%','10.6% of UPS rev','Logistics — parcel'],
+  ['Lenovo','$8.0B','1.8%','9.0% of Lenovo rev','Devices / hardware'],
+  ['Procter & Gamble','$6.6B','1.9%','7.9% of P&G rev','1P retail — household'],
+  ['PepsiCo','$4.8B','1.3%','5.1% of PEP rev','1P retail — food & bev'],
+  ['Apple','$3.8B','1.1%','0.9% of AAPL rev','Devices (1P resale)'],
+  ['Pattern Group','$2.3B','0.7%','92.7% of its rev','Marketplace accelerator'],
+  ['Rivian','$0.9B','0.3%','16.7% of RIVN rev','Delivery EVs (AMZN-backed)'],
+  ['FedEx','$0.9B','0.2%','1.0% of FDX rev','Logistics — parcel'],
+];
+// Who depends ON Amazon — supplier revenue % from AMZN. [name, pct, note]
+var A_SPLC_DEP=[
+  ['Pattern Group', 93, 'marketplace accelerator'],
+  ['Astera Labs', 70, 'AI connectivity — AWS'],
+  ['Credo Technology', 42, 'AI connectivity'],
+  ['Accton Technology', 35, 'networking ODM'],
+  ['iRobot', 35, 'devices sold on Amazon'],
+  ['AZ-COM MARUWA', 34, 'logistics — Japan'],
+  ['Spin Master', 22, 'toys (1P/3P)'],
+  ['Helen of Troy', 20, 'consumer products'],
+];
+// Geography — supplier facilities by country (% of total supplier facilities). Rendered as a chart.
+var A_SPLC_GEO={ labels:['United States','China','India','Japan','Germany','United Kingdom','France','South Korea'],
+  sup:[37.91,7.73,6.08,5.62,3.44,3.76,2.39,1.20] };
+function aSplcBody(c){
+  var h='';
+  h+='<p class="ov-lede"><b>Who Amazon buys from.</b> The supplier side of the Bloomberg SPLC map — two distinct chains: the AWS AI-infrastructure capex chain (silicon, servers, memory, interconnect) and the retail / CPG / logistics chain (first-party merchandise, devices, parcel). The customer / demand side lives in Top Line.</p>';
+  h+=ddStat([['1,452','suppliers tracked'],['24,052','supplier facilities'],['37.9%','supplier facs in US'],['7.7%','supplier facs in China'],['$38.2B','largest single relationship (NVIDIA)']]);
+  h+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>Chain 1 · the AWS AI-infrastructure capex chain</b> (relationship size, Bloomberg est.; bar = relative size — tap a card for the read)</div>';
+  h+='<div class="ce-watch">'+A_SPLC_INFRA.map(function(s,i){
+    return '<div class="ce-w ov-clickable" data-detail="splc:'+i+'" style="border-left:4px solid '+s.col+'">'+
+      '<div class="ce-w-top"><div class="ce-w-metric">'+esc(s.n)+'</div><span class="ce-w-chip tag">'+esc(s.rel)+'</span><span class="ce-w-chip" style="margin-left:auto;color:'+BRAND+'">the read ›</span></div>'+
+      '<div class="ov-mbar" style="margin:4px 0 6px"><div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:'+Math.max(s.bar,2)+'%;background:'+s.col+'"></div></div></div>'+
+      '<div class="ce-w-chips"><span class="ce-w-chip cons">'+esc(s.cost)+'</span><span class="ce-w-chip red"><b>Their dependency:</b> '+esc(s.dep)+'</span></div>'+
+    '</div>';
+  }).join('')+'</div>';
+  h+='<div class="ov-diagram-cap" style="margin:18px 0 6px"><b>Chain 2 · the retail, CPG &amp; logistics chain</b> — first-party merchandise, devices and parcel</div>';
+  h+='<div style="overflow-x:auto"><table class="ce-tbl"><thead><tr><th>Supplier</th><th>Relationship</th><th>AMZN cost %</th><th>Their exposure to Amazon</th><th>Category</th></tr></thead><tbody>'+
+    A_SPLC_RETAIL.map(function(r){ return '<tr><td style="font-weight:700">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td><td>'+esc(r[3])+'</td><td style="color:var(--mu)">'+esc(r[4])+'</td></tr>'; }).join('')+
+  '</tbody></table></div>';
+  h+='<div class="ov-diagram-cap" style="margin:18px 0 6px"><b>Who needs whom — revenue dependency ON Amazon</b> (% of the counterpart\'s revenue)</div>';
+  h+='<div class="ov-mbars">'+A_SPLC_DEP.map(function(r){
+    return '<div class="ov-mbar"><div class="ov-mbar-l">'+esc(r[0])+' <span style="color:var(--mu);font-weight:600">'+esc(r[2])+'</span></div><div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:'+r[1]+'%;background:'+BRAND+'">'+r[1]+'%</div></div><div class="ov-mbar-v">'+r[1]+'%</div></div>';
+  }).join('')+'</div>';
+  h+='<div class="ov-sec" style="margin-top:16px"><div class="ov-sec-h">Geography — supplier facilities by country (% of total)</div>'+
+    '<div style="height:340px"><canvas id="aSplcGeo"></canvas></div>'+
+    '<div class="ov-fynote">Suppliers domiciled: US 40.7% · China 10.95% · India 8.3% · Japan 6.8% · Taiwan 3.4%. China is the tariff / geopolitics surface on both chains.</div></div>';
+  h+='<div class="ov-foot">Source: Bloomberg Supply Chain Analysis (SPLC), AMZN US Equity, as of 12-Aug-2026. Relationship sizes are Bloomberg estimates; directional, not audited. Full universe 1,452 suppliers / 24,052 supplier facilities.</div>';
+  return h;
+}
+function aBuildSplc(){
+  var c3=aChartReady('aSplcGeo');
+  if(c3){ aDestroy('aSplcGeo');
+    _aCharts['aSplcGeo']=new Chart(c3.getContext('2d'),{ type:'bar',
+      data:{ labels:A_SPLC_GEO.labels, datasets:[
+        { label:'Supplier facilities', data:A_SPLC_GEO.sup, backgroundColor:BRAND2, maxBarThickness:15 } ] },
+      options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label+': '+ctx.parsed.x+'%'; } } } },
+        scales:{ x:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } }, y:{ grid:{ display:false }, ticks:{ font:{ size:10 } } } } } }); }
+}
+// ─── Miscellaneous ▸ M&A — placeholder. Summit reserves this for deals it has studied in depth.
+// Amazon has made acquisitions (Whole Foods, MGM, One Medical, iRobot [terminated], Zoox), but none
+// recent has been deep-dived by Summit — so this stays an intentional placeholder until one is.
+function aMandaBody(){
+  return '<p class="ov-lede"><b>Nothing deep-dived yet.</b> This tab is where Summit parks acquisitions it has studied in depth — deal thesis, price paid, integration, and what it did to the model. Amazon has been an active acquirer (Whole Foods · MGM · One Medical · Zoox; the iRobot deal was terminated on EU antitrust), but none recent has been analyzed in depth here, so this is an intentional placeholder rather than a gap.</p>'+
+    '<div class="ov-sec"><div class="ov-sec-h">When we add one</div>'+
+    '<div class="ov-fynote">Each studied deal will get: the strategic rationale, purchase price and multiple, financing, accretion/dilution to the model, and the post-close integration read. Until then, AMZN\'s capital allocation story is best read through the <b>Capex &amp; Depreciation</b> tab beside this one — where the real money is going.</div></div>';
+}
 function deepDiveHtml(c){
   _co=c;   // capture company (id + ticker) for the Watch List DB wiring
   var h='<div class="ov ov-amzn ov-amzn-dd" data-brand="AMZN" style="--brand:'+BRAND+';--brand-2:'+BRAND2+';--brand-soft:rgba(255,153,0,0.10)">';
@@ -4079,6 +4175,7 @@ function deepDiveHtml(c){
       '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
       '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
       '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
+      '<button type="button" class="dd-tab" data-dd="misc">Miscellaneous</button>'+
     '</div>';
   h+='<div class="dd-pane" data-dd="topline">'+
       '<div class="ovt-subtabs">'+
@@ -4088,13 +4185,13 @@ function deepDiveHtml(c){
     '</div>';
   h+='<div class="dd-pane" data-dd="bottomline" hidden>'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="margins">Margins &amp; Expenses</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="margins">General</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="segments">Segments</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="capex">Capex &amp; Depreciation</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="supplychain">Supply Chain</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="margins">'+expenseCardsBody()+bottomlineBody()+expensesBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="segments" hidden>'+segmentsBody()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="capex" hidden>'+bottomlineCapexBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="supplychain" hidden>'+aSplcBody(c)+'</div>'+
     '</div>';
   h+='<div class="dd-pane" data-dd="evolution" hidden>'+
       '<div class="ce-evohead" style="position:relative;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 12px">'+
@@ -4133,6 +4230,14 @@ function deepDiveHtml(c){
       '</div>'+
       '<div class="ovt-subpane" data-ovst="team">'+mgmtBody()+'</div>'+
     '</div>';
+  h+='<div class="dd-pane" data-dd="misc" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="capex">Capex &amp; Depreciation</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="manda">M&amp;A</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="capex">'+bottomlineCapexBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="manda" hidden>'+aMandaBody()+'</div>'+
+    '</div>';
   h+='</div>';
   return h;
 }
@@ -4153,6 +4258,7 @@ function wireModal(root){
     if(kind==='ce'){ return CE_POP[id]||null; }
     if(kind==='seg'){ return SEG_WORLD[id]||null; }
     if(kind==='exp'){ return EXP_WORLD[id]||null; }
+    if(kind==='splc'){ var sp=A_SPLC_INFRA[+id]; return sp?{t:esc(sp.n)+' <span style="font-weight:600;color:var(--mu)">'+esc(sp.rel)+' · '+esc(sp.cost)+'</span>',h:sp.d}:null; }
     return null;
   }
   // Delegated: catches static AND dynamically-added [data-detail] elements (e.g. Earnings pop-ups,
@@ -4167,9 +4273,12 @@ function wireModal(root){
 function aBuildSub(root, dd, key){
   if(dd==='topline') requestAnimationFrame(aBuildTopline);
   if(dd==='bottomline'){
-    if(key==='capex') requestAnimationFrame(function(){ aBuildCapex(root); });
+    if(key==='supplychain') requestAnimationFrame(aBuildSplc);
     else if(key==='segments') requestAnimationFrame(aBuildSegments);
     else requestAnimationFrame(function(){ aBuildBottomline(); aBuildExpenses(); });
+  }
+  if(dd==='misc'){
+    if(key==='capex' || key==null) requestAnimationFrame(function(){ aBuildCapex(root); });
   }
   if(dd==='valuation'){
     if(key==='peers') requestAnimationFrame(function(){ aScRenderAll(root); aScChipsAll(root); aScFetchCaps(root); });

@@ -331,9 +331,17 @@
     <div style="position:relative;height:380px"><canvas id="alphaChart"></canvas><div id="alphaStatus" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#8A93A0;font-size:13px;text-align:center;padding:20px;line-height:1.5"></div></div>
   </div>
   <div class="sechdr" style="margin-bottom:18px">
+    <span class="sect">Sector Exposure Across Superinvestors</span>
+    <span class="secn">Each fund&rsquo;s disclosed top holdings, rolled up by GICS sector &mdash; darker cells mean more of that fund&rsquo;s book is concentrated there</span>
+  </div>
+  <div class="card" style="margin-bottom:30px" id="hf-heatmap-card">
+    <div id="hf-sector-heatmap"></div>
+  </div>
+  <div class="sechdr" style="margin-bottom:18px">
     <span class="sect">Superinvestor Holdings &amp; Performance</span>
     <div style="display:flex;align-items:center;gap:14px">
-      <span class="secn">Q1 2026 13F positions &middot; YTD returns through May 19, 2026 &middot; click a card for the full holdings analysis</span>
+      <span class="secn">Q1&ndash;Q2 2026 13F positions &middot; YTD returns through May 19, 2026 &middot; click a card for the full holdings analysis</span>
+      <button type="button" class="hf-showall-btn" id="hf-check13f" onclick="openCheck13FPanel()">Check for new 13Fs</button>
       <button type="button" class="hf-showall-btn" id="hf-showall" style="display:none" onclick="showAllInvestors()">Show all</button>
     </div>
   </div>

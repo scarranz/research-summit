@@ -5815,3 +5815,72 @@ insert into investor_yearly_holdings (investor_key, year, quarter, ticker, compa
   ('dorsey', 2026, 1, 'UBER', 'Uber Technologies Inc', '90353T100', 78423912, 6.24, 10, 'sec_xml'),
   ('dorsey', 2026, 1, 'BKNG', 'Booking Holdings Inc', '09857L108', 69234502, 5.51, 11, 'sec_xml');
 
+-- ─── Q2 2026 additions (dorsey, hohn) ───
+-- Both funds filed their Q2 2026 13F-HR right at the deadline (2026-08-14).
+-- dorsey:  accession 0001398344-26-014470 (Dorsey Asset Management, CIK 0001671657)
+-- hohn:    accession 0001647251-26-000007 (TCI Fund Management, CIK 0001647251)
+-- buffett: accession 0001193125-26-352200 (Berkshire Hathaway, CIK 0001067983) --
+--          filed 2026-08-14. Values aggregated by CUSIP across Berkshire's
+--          multiple sub-manager rows for the same security (the raw XML
+--          reports Apple/BAC/etc. as 2-3 separate infoTable rows each,
+--          one per manager) -- same real-dollar totals SEC shows on its
+--          own aggregated summary, just not split by manager here.
+delete from investor_yearly_holdings where investor_key = 'dorsey' and year = 2026 and quarter = 2;
+delete from investor_yearly_holdings where investor_key = 'hohn' and year = 2026 and quarter = 2;
+delete from investor_yearly_holdings where investor_key = 'buffett' and year = 2026 and quarter = 2;
+
+insert into investor_yearly_holdings (investor_key, year, quarter, ticker, company_name, cusip, value_usd, weight_pct, rank, source_type) values
+  ('dorsey', 2026, 2, 'ASML', 'Asml Hldg Nv', 'N07059210', 259351356, 16.61, 1, 'sec_xml'),
+  ('dorsey', 2026, 2, 'APP', 'Applovin Corp', '03831W108', 226347237, 14.5, 2, 'sec_xml'),
+  ('dorsey', 2026, 2, 'RPRX', 'Royalty Pharma Plc', 'G7709Q104', 137737525, 8.82, 3, 'sec_xml'),
+  ('dorsey', 2026, 2, 'BKNG', 'Booking Holdings Inc', '09857L108', 132164960, 8.46, 4, 'sec_xml'),
+  ('dorsey', 2026, 2, 'SPGI', 'S&P Global Inc', '78409V104', 128862358, 8.25, 5, 'sec_xml'),
+  ('dorsey', 2026, 2, 'UBER', 'Uber Technologies Inc', '90353T100', 127141663, 8.14, 6, 'sec_xml'),
+  ('dorsey', 2026, 2, 'LYV', 'Live Nation Entertainment Inc', '538034109', 120057536, 7.69, 7, 'sec_xml'),
+  ('dorsey', 2026, 2, 'DHR', 'Danaher Corp Del', '235851102', 119280671, 7.64, 8, 'sec_xml'),
+  ('dorsey', 2026, 2, 'META', 'Meta Platforms Inc', '30303M102', 112602234, 7.21, 9, 'sec_xml'),
+  ('dorsey', 2026, 2, 'AER', 'Aercap Holdings Nv', 'N00985106', 111788186, 7.16, 10, 'sec_xml'),
+  ('dorsey', 2026, 2, 'SUNB', 'Sunbelt Rentals Holdings Inc', '866966104', 86074740, 5.51, 11, 'sec_xml'),
+
+  ('hohn', 2026, 2, 'GE', 'Ge Aerospace', '369604301', 17725353519, 33.59, 1, 'sec_xml'),
+  ('hohn', 2026, 2, 'V', 'Visa Inc', '92826C839', 10462232091, 19.83, 2, 'sec_xml'),
+  ('hohn', 2026, 2, 'MCO', 'Moodys Corp', '615369105', 6492167509, 12.3, 3, 'sec_xml'),
+  ('hohn', 2026, 2, 'SPGI', 'S&P Global Inc', '78409V104', 5735017808, 10.87, 4, 'sec_xml'),
+  ('hohn', 2026, 2, 'CP', 'Canadian Pacific Kansas City', '13646K108', 3925911608, 7.44, 5, 'sec_xml'),
+  ('hohn', 2026, 2, 'GOOG', 'Alphabet Inc', '02079K107', 3511682917, 6.65, 6, 'sec_xml'),
+  ('hohn', 2026, 2, 'FER', 'Ferrovial Nv', 'N3168P101', 1434611939, 2.72, 7, 'sec_xml'),
+  ('hohn', 2026, 2, 'CNI', 'Canadian Natl Ry Co', '136375102', 1124534915, 2.13, 8, 'sec_xml'),
+  ('hohn', 2026, 2, 'GOOGL', 'Alphabet Inc', '02079K305', 878058090, 1.66, 9, 'sec_xml'),
+  ('hohn', 2026, 2, 'MLM', 'Martin Marietta Matls Inc', '573284106', 758423360, 1.44, 10, 'sec_xml'),
+  ('hohn', 2026, 2, 'VMC', 'Vulcan Matls Co', '929160109', 721890650, 1.37, 11, 'sec_xml'),
+
+  ('buffett', 2026, 2, 'AAPL', 'Apple Inc', '037833100', 65950296923, 22.04, 1, 'sec_xml'),
+  ('buffett', 2026, 2, 'AXP', 'American Express Co', '025816109', 51282319275, 17.14, 2, 'sec_xml'),
+  ('buffett', 2026, 2, 'KO', 'Coca Cola Co', '191216100', 32508000000, 10.86, 3, 'sec_xml'),
+  ('buffett', 2026, 2, 'GOOGL', 'Alphabet Inc', '02079K305', 28157599351, 9.41, 4, 'sec_xml'),
+  ('buffett', 2026, 2, 'BAC', 'Bank America Corp', '060505104', 27543790975, 9.2, 5, 'sec_xml'),
+  ('buffett', 2026, 2, 'CVX', 'Chevron Corporation', '166764100', 13986141890, 4.67, 6, 'sec_xml'),
+  ('buffett', 2026, 2, 'OXY', 'Occidental Pete Corp', '674599105', 12868205304, 4.3, 7, 'sec_xml'),
+  ('buffett', 2026, 2, 'CB', 'Chubb Ltd Switz', 'H1467J104', 11670066615, 3.9, 8, 'sec_xml'),
+  ('buffett', 2026, 2, 'MCO', 'Moodys Corp', '615369105', 11173435852, 3.73, 9, 'sec_xml'),
+  ('buffett', 2026, 2, 'GOOG', 'Alphabet Inc', '02079K107', 9606489032, 3.21, 10, 'sec_xml'),
+  ('buffett', 2026, 2, 'KHC', 'Kraft Heinz Co', '500754106', 7691494401, 2.57, 11, 'sec_xml'),
+  ('buffett', 2026, 2, 'DVA', 'Davita Inc', '23918K108', 6425268898, 2.15, 12, 'sec_xml'),
+  ('buffett', 2026, 2, 'DAL', 'Delta Air Lines Inc', '247361702', 5368591200, 1.79, 13, 'sec_xml'),
+  ('buffett', 2026, 2, 'SIRI', 'Siriusxm Holdings Inc', '829933100', 3686802237, 1.23, 14, 'sec_xml'),
+  ('buffett', 2026, 2, 'VRSN', 'Verisign Inc', '92343E102', 2261494212, 0.76, 15, 'sec_xml'),
+  ('buffett', 2026, 2, 'KR', 'Kroger Co', '501044101', 2165670000, 0.72, 16, 'sec_xml'),
+  ('buffett', 2026, 2, 'ALLY', 'Ally Finl Inc', '02005N100', 1240650000, 0.41, 17, 'sec_xml'),
+  ('buffett', 2026, 2, 'LEN', 'Lennar Corp', '526057104', 1186481443, 0.4, 18, 'sec_xml'),
+  ('buffett', 2026, 2, null, 'Liberty Live Holdings Inc', '530909308', 1118425787, 0.37, 19, 'sec_xml'),
+  ('buffett', 2026, 2, null, 'New York Times Co Mtn Be', '650111107', 1098686000, 0.37, 20, 'sec_xml'),
+  ('buffett', 2026, 2, 'COF', 'Capital One Finl Corp', '14040H105', 601860000, 0.2, 21, 'sec_xml'),
+  ('buffett', 2026, 2, null, 'Liberty Live Holdings Inc', '530909100', 504941901, 0.17, 22, 'sec_xml'),
+  ('buffett', 2026, 2, 'LPX', 'Louisiana Pac Corp', '546347105', 445592617, 0.15, 23, 'sec_xml'),
+  ('buffett', 2026, 2, 'NUE', 'Nucor Corp', '670346105', 413814258, 0.14, 24, 'sec_xml'),
+  ('buffett', 2026, 2, 'M', 'Macys Inc', '55616P104', 173031882, 0.06, 25, 'sec_xml'),
+  ('buffett', 2026, 2, 'NVR', 'Nvr Inc', '62944T105', 75710501, 0.03, 26, 'sec_xml'),
+  ('buffett', 2026, 2, null, 'Lennar Corp', '526057302', 26445959, 0.01, 27, 'sec_xml'),
+  ('buffett', 2026, 2, 'JEF', 'Jefferies Financial Group In', '47233W109', 21669229, 0.01, 28, 'sec_xml'),
+  ('buffett', 2026, 2, 'DHI', 'D R Horton Inc', '23331A109', 580504, 0, 29, 'sec_xml');
+

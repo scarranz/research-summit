@@ -3487,6 +3487,37 @@ function segQuarterRows(){
 // segment operating margins, and the earnings-call record.
 function segTiles(a){ return '<div class="ew-kpis">'+a.map(function(k){ return '<div class="ew-tile"><div class="ew-tv">'+k[0]+'</div><div class="ew-tl">'+k[1]+'</div></div>'; }).join('')+'</div>'; }
 function segCapMini(cap,ppe){ return '<div class="ew-flow"><div class="ew-fn"><div class="ew-fn-v">'+cap+'</div><div class="ew-fn-l">net capex, FY25 (Note 10)</div></div><div class="ew-far">→</div><div class="ew-fn"><div class="ew-fn-v">'+ppe+'</div><div class="ew-fn-l">PP&amp;E stock</div></div></div>'; }
+// Per-segment cost structure — Amazon does NOT disclose functional expenses by segment, so this is
+// qualitative (from 10-K MD&A drivers + Note 10 capex/PP&E), explicitly flagged as inferred, with the
+// one genuinely-assignable anchor (segment capex/PP&E). This is the "expense types per segment" the
+// segment line otherwise black-boxes.
+var SEG_COST={
+  aws:{ note:'<b>The black box:</b> Amazon discloses AWS revenue and operating income, but <b>not</b> its expense breakdown. The shape below is inferred from the 10-K MD&amp;A, Note 10 segment capex/PP&amp;E, and management commentary — qualitative, not a reported split.',
+    boxes:[
+      ['🖥️','Infrastructure depreciation — biggest, fastest-rising','AWS carries $190B of PP&amp;E (from $73B in 2023) and ~68% of group capex; depreciating that fleet is the largest and fastest-growing cost in the segment — and why margin expands only once capacity is utilized.'],
+      ['⚡','Power &amp; energy','Data-center electricity is increasingly material as the fleet scales — Q2 26 margin carried ~130bps of energy-derivative gains, a measure of how much energy now moves the line.'],
+      ['🧑‍💻','Engineering &amp; custom silicon','R&amp;D payroll for services and Trainium/Graviton design — spending ahead of the revenue it enables, but the source of the price-performance edge.']
+    ],
+    anchor:'What IS assignable: AWS = ~68% of group capex and &gt;50% of group PP&amp;E — so the group\'s depreciation concentrates here even though the functional-expense split does not exist in the filings.' },
+  us:{ note:'<b>The black box:</b> Amazon reports North America revenue and operating income, but not a functional expense split. The shape below is inferred from the 10-K MD&amp;A drivers and Note 10 — qualitative, not reported.',
+    boxes:[
+      ['📦','Cost of sales (1P product) — largest, shrinking','First-party product cost is the biggest line, but it falls as a share as third-party (~61% of units) and advertising mix rises.'],
+      ['🚚','Fulfillment &amp; shipping — the cost-to-serve','Running the FC network and last-mile delivery; the efficiency line — units +17% while this grows far less (robots, regionalization).'],
+      ['📣','Advertising — a margin offset, not a cost','Ads ride the retail surface at near-pure incremental margin; growing +18%→+26%, it is the single biggest reason NA margin climbs.']
+    ],
+    anchor:'What IS assignable: NA capex ~$36B on ~8% of its revenue and $122B PP&amp;E — a fraction of AWS\'s intensity, so retail carries far less depreciation.' },
+  int:{ note:'<b>The black box:</b> Same as North America — revenue and operating income are reported, the expense split is not. Two sub-economies sit under one line, which the reported margin blends.',
+    boxes:[
+      ['📦','The NA cost shape, a few years behind','COGS + fulfillment + shipping dominate, exactly like North America; established markets (Germany/UK/Japan) already run the efficient version.'],
+      ['🌱','Emerging-market investment drag','India, Brazil and the Middle East still spend ahead of revenue — the build-out cost NA already absorbed, now sitting in this line.'],
+      ['💱','FX — swings the print','A +$903M tailwind to 2025 operating income; the reported margin moves with the dollar as much as with operations.']
+    ],
+    anchor:'What IS assignable: International capex ~$7.6B and $31B PP&amp;E — the lightest footprint of the three, consistent with a retail (not infrastructure) cost base.' }
+};
+function segCostBox(k){ var c=SEG_COST[k]; if(!c) return '';
+  return '<div class="ew-h">Cost structure — what Amazon breaks out (and doesn’t)</div>'+
+    '<div class="ew-note">'+c.note+'</div>'+ewBoxes(c.boxes)+
+    (c.anchor?'<div class="ew-note">'+c.anchor+'</div>':''); }
 var SEG_WORLD={
   aws:{ t:'AWS — the profit engine', h:EW_CSS+
     segTiles([['35.4%','operating margin (FY25)'],['$45.6B','operating income — ~57% of group'],['$96.5B','net capex — 68% of the group'],['$190B','PP&E stock (from $73B in ’23)']])+
@@ -3498,6 +3529,7 @@ var SEG_WORLD={
     '<div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">🧠</span>Custom silicon</div><div class="ew-box-t">Trainium &amp; Graviton + the Anthropic partnership — the cost-and-supply edge behind the margin. AI + chips each &gt;$25B run-rate.</div></div></div>'+
     '<div class="ew-h">The capex it demands → the D&amp;A that follows</div>'+segCapMini('$96.5B','$190B')+
     '<div class="ew-q">“As fast as we install this capacity, <b>we are monetizing it</b>.” The FY26 capex frame was raised to ~$220B, partly on the higher cost of memory.<span class="ew-att">— Brian Olsavsky, CFO</span></div>'+
+    segCostBox('aws')+
     '<div class="ew-h">What management has said — over time</div>'+ewCallTimeline(SEG_CALLS.aws)+
     '<div class="ew-foot">Sources: 10-K Note 10 (segment capex/PP&amp;E); Q4’25–Q2’26 earnings calls; Bloomberg segment series.</div>' },
   us:{ t:'North America — the volume base + the ad layer', h:EW_CSS+
@@ -3509,6 +3541,7 @@ var SEG_WORLD={
     '<div class="ew-two"><div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">📣</span>Advertising — the margin lever</div><div class="ew-box-t">Growing <b>+18% → +26%</b>, riding the store at near-pure incremental margin. The single biggest reason NA margin expands.</div></div>'+
     '<div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">🤖</span>Fulfillment efficiency</div><div class="ew-box-t">Units <b>+17%</b> while fulfillment cost grows far less — 1M+ robots and regionalization. The operating-leverage flywheel.</div></div></div>'+
     '<div class="ew-h">Capital footprint</div>'+segCapMini('$35.9B','$122B')+
+    segCostBox('us')+
     '<div class="ew-h">What management has said — over time</div>'+ewCallTimeline(SEG_CALLS.us)+
     '<div class="ew-foot">Sources: 10-K MD&amp;A (drivers: units + advertising, offset by fulfillment/tech/shipping) &amp; Note 10; Bloomberg segment series.</div>' },
   int:{ t:'International — the turnaround', h:EW_CSS+
@@ -3520,6 +3553,7 @@ var SEG_WORLD={
     '<div class="ew-two"><div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">📣</span>The same flywheel</div><div class="ew-box-t">Units + advertising drive the established markets; fulfillment and shipping are the offset — exactly the NA playbook.</div></div>'+
     '<div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">💱</span>FX swings the print</div><div class="ew-box-t">A <b>+$903M</b> tailwind to operating income in 2025 — the reported margin moves with the dollar as much as with operations.</div></div></div>'+
     '<div class="ew-h">Capital footprint</div>'+segCapMini('$7.6B','$31B')+
+    segCostBox('int')+
     '<div class="ew-h">What management has said — over time</div>'+ewCallTimeline(SEG_CALLS.int)+
     '<div class="ew-foot">Sources: 10-K MD&amp;A (units + advertising, FX +$903M) &amp; Note 10; Bloomberg segment series.</div>' }
 };

@@ -102,6 +102,30 @@ def parse_cons_annual(js):
     return out
 
 
+def existing_notes(js):
+    """The prose already written into the dataset's evolution metrics, keyed by metric.
+
+    A data refresh must not silently delete a paragraph a human wrote. The arrays are
+    regenerated; the notes are carried across and flagged for re-reading, because a note that
+    says "across the three snapshots" is wrong the moment there are seven."""
+    out = {}
+    try:
+        blk = js[js.index("  evolution: {"):]
+        seg = blk[blk.index("\n    metrics: {"):]
+    except ValueError:
+        return out
+    metric = None
+    for line in seg.splitlines():
+        m = re.match(r"      ([a-z0-9_]+): \{", line)
+        if m:
+            metric = m.group(1)
+        m = re.match(r"\s*note: '(.*)' \},?\s*$", line)
+        if m and metric:
+            out[metric] = m.group(1)
+            metric = None
+    return out
+
+
 def cons_rows(cons, cons_key, model_dates, years, skip_years):
     """The Street on the MODEL's axis: each model date takes the Street's latest file on or
     before it. An approximation, and a weaker one than a same-day pull — see the module note
@@ -130,17 +154,29 @@ def main():
     evo = cfg["evolution"]
     years, prior_year = evo["years"], evo["prior"]
     vintages = [v["id"] for v in cfg["vintages"]]
-    metrics, derived = cfg["metrics"], cfg.get("derived", {})
+    metrics = cfg["metrics"]
+    # This axis is ANNUAL, so it takes the annual half of a per-view `derived` map; a block can
+    # override with `evolution.derived` where the two disagree (AMZN's total op income is a sum
+    # of the three segment rows here, while its annual revenue is read straight).
+    raw = cfg.get("derived", {})
+    if set(raw) <= {"q", "y"} and any(isinstance(v, dict) for v in raw.values()):
+        raw = raw.get("y", {})
+    derived = evo.get("derived", raw)
+    sign = cfg.get("sign", {})
     decimals, dec_default = cfg.get("decimals", {}), cfg.get("decimals", {}).get("_default", 1)
 
     vals = collect(dump_dir, cfg.get("prefer_source", []))
     js = open(os.path.join(REPO, "js", "results-data", "%s.js" % ticker.lower()), encoding="utf-8").read()
 
-    def value_at(mkey, snap, year):
-        if mkey in derived:
-            parts = [vals.get((snap, year, lbl)) for lbl in derived[mkey]]
+    def raw_at(labels_or_key, snap, year):
+        if isinstance(labels_or_key, list):
+            parts = [vals.get((snap, year, lbl)) for lbl in labels_or_key]
             return sum(parts) if all(p is not None for p in parts) else None
-        return vals.get((snap, year, metrics[mkey]))
+        return vals.get((snap, year, labels_or_key))
+
+    def value_at(mkey, snap, year):
+        v = raw_at(derived[mkey] if mkey in derived else metrics[mkey], snap, year)
+        return None if v is None else v * sign.get(mkey, 1)
 
     def fmt(v, dec):
         if v is None:
@@ -157,9 +193,26 @@ def main():
     # has to be mapped off the workbook's own calendar with the same "latest file on or before"
     # rule the Results picker uses, which can be up to six weeks stale. Each affected line says
     # so in its note; do not silently mix the two.
-    cons = parse_cons_annual(js)
     cons_out = {}
+    # BEST provenance: the BBG figure the MODEL stored inside the same snapshot block. Taken on
+    # the model's own save date, so the solid and dashed lines are as-of the same day by
+    # construction — which is the whole claim the Estimates pane makes. Use it wherever the
+    # model carries a *_BBG_EST row; fall back to the workbook only for lines it does not.
+    for mkey, label in evo.get("cons_metrics", {}).items():
+        dec = decimals.get(mkey, dec_default)
+        skip = evo.get("cons_skip_years", {}).get(mkey, [])
+        rows = []
+        for year in years:
+            rows.append("[" + ", ".join(
+                "null" if year in skip else fmt(
+                    (lambda v: None if v is None else v * sign.get(mkey, 1))(raw_at(label, s, year)), dec)
+                for s in vintages) + "]")
+        cons_out[mkey] = "[" + ", ".join(rows) + "]"
+
+    cons = parse_cons_annual(js)
     for mkey, ckey in evo.get("cons_map", {}).items():
+        if mkey in cons_out:
+            continue                      # the model's own stored BBG already won
         skip = evo.get("cons_skip_years", {}).get(mkey, [])
         rows = cons_rows(cons, ckey, vintages, years, skip)
         if rows is None:
@@ -169,6 +222,7 @@ def main():
         cons_out[mkey] = "[" + ", ".join(
             "[" + ", ".join(fmt(v, dec) for v in row) + "]" for row in rows) + "]"
 
+    kept = existing_notes(js)
     lines, notes = [], []
     for mkey in evo["keys"]:
         dec = decimals.get(mkey, dec_default)
@@ -177,12 +231,34 @@ def main():
             rows.append("[" + ", ".join(fmt(value_at(mkey, s, year), dec) for s in vintages) + "]")
         prior = [value_at(mkey, s, prior_year) for s in vintages]
         meta = evo["labels"].get(mkey, {})
-        lines.append("      %s: { label: '%s', unit: '%s'," % (mkey, meta.get("label", mkey), meta.get("unit", "usdM")))
+        head = "      %s: { label: '%s', unit: '%s'," % (mkey, meta.get("label", mkey), meta.get("unit", "usdM"))
+        # The % toggle on a Profitability line is a MARGIN over `marginOf`, numerator and
+        # denominator from the same vintage and source. Drop it and the toggle silently plots
+        # nothing, so it travels with the label rather than being re-added by hand each refresh.
+        if meta.get("marginOf"):
+            head += " marginOf: '%s', marginLabel: '%s'," % (
+                meta["marginOf"], meta.get("marginLabel", "margin"))
+        lines.append(head)
         lines.append("        summit: [%s]," % ", ".join(rows))
         lines.append("        cons: %s," % cons_out.get(mkey, "null"))
         if meta.get("prior", False):
-            lines.append("        prior: { summit: [%s] }," % ", ".join(fmt(p, dec) for p in prior))
-        lines.append("        note: '' },")
+            # The base for the FIRST year's implied growth, per source. Without a `cons` row here
+            # the dashed line simply has no growth value for years[0] — the chart drops its first
+            # point in growth mode, which reads as missing data rather than as a chaining rule.
+            parts = ["summit: [%s]" % ", ".join(fmt(p, dec) for p in prior)]
+            if mkey in cons_out:
+                cl = evo.get("cons_metrics", {}).get(mkey)
+                if cl:
+                    pv = [raw_at(cl, s, prior_year) for s in vintages]
+                else:
+                    tbl = cons.get(evo.get("cons_map", {}).get(mkey), {}) or {}
+                    pv = []
+                    for d in vintages:
+                        earlier = [s for s in sorted(tbl) if s <= d]
+                        pv.append(tbl[earlier[-1]].get(prior_year) if earlier else None)
+                parts.append("cons: [%s]" % ", ".join(fmt(p, dec) for p in pv))
+            lines.append("        prior: { %s }," % ", ".join(parts))
+        lines.append("        note: '%s' }," % kept.get(mkey, ""))
 
         # Does the stored value for an already-reported year tie to the release?
         acts, _ = shipped_act(js, mkey)
@@ -209,6 +285,12 @@ def main():
         "\n".join("%s|        cons: %s," % (k, v) for k, v in sorted(cons_out.items())) + "\n")
     print("wrote %s (%d metrics, %d years x %d vintages)"
           % (out_path, len(evo["keys"]), len(years), len(vintages)))
+
+    carried = [k for k in evo["keys"] if kept.get(k)]
+    if carried:
+        print("\n!! prose carried over verbatim for: %s" % ", ".join(carried))
+        print("   RE-READ EACH ONE. A note written against N snapshots is wrong at N+1 —")
+        print("   'across the three snapshots' does not survive a refresh that adds a fourth.")
 
     print("\n=== stored FY vs the release (gaps over 0.5%) ===")
     if not notes:

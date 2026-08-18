@@ -231,7 +231,7 @@ Do this before choosing a single chart. The capabilities are a ladder, and you c
 | `views` + `periods` + `act` | block **A** (per-section charts + period tables) | every ticker with a dataset |
 | …and any two series overlapping on reported periods | block **B**, the surprise scorecard | most of the above |
 | …and `evolution` | the whole **Estimates pane** (D + E) | AMZN · LYFT · META · SPOT · TBBB |
-| …and `estMatrix` | the **vintage axis** ("estimates as of …") + **C**, Road to the print | **UBER only** |
+| …and `estMatrix` | the **vintage axis** ("estimates as of …") + **C**, Road to the print | **AMZN · UBER** |
 | a `js/results-data/<ticker>-setup.js` | the Earnings **Setup** chart (a 2nd engine instance) | AMZN · GOOGL · IBKR · LYFT · META · SPOT · TBBB |
 
 Two things this table is telling you:
@@ -240,8 +240,14 @@ Two things this table is telling you:
   nothing else, and that is a finished state, not a broken one. Do not build an Estimates pane for a
   ticker with no snapshot archive — there is nothing to put in it.
 * **`estMatrix` is expensive** (it is an archive of Bloomberg pulls and model saves, assembled by
-  `scripts/consensus/emit_matrix.py`). One ticker has it. Treat C and the vintage picker as advanced
-  capabilities you earn, not defaults you owe.
+  `scripts/consensus/emit_matrix.py`). Two tickers have it — AMZN was added Aug 17, 2026. Treat C
+  and the vintage picker as advanced capabilities you earn, not defaults you owe.
+* **The ceiling is Bloomberg coverage, not effort.** The workbook carries **four tickers** (AMZN,
+  GOOGL, LYFT, UBER) as of Aug 2026, so `estMatrix.cons` is impossible for the rest no matter how
+  much work you put in — `py scripts/consensus/inspect_matrix.py <TK>` tells you in one command.
+  A ticker with Summit snapshots but no Bloomberg row can still take `estMatrix.summit` alone.
+* **Adding `estMatrix` switches on block C by itself.** Nothing else changes and no UI work is
+  needed — but C is then a chart you now own, so run §0.5 against it.
 
 #### Step 2 — take the tab spine from Amazon
 

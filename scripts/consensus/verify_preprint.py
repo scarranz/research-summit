@@ -1,152 +1,140 @@
-# Build the per-vintage CONSENSUS matrix for a ticker from Consensus_Portal.xlsm, then VERIFY
-# that the derived "pre-print" series reproduces what results-data/<tk>.js
-# already ships in its hand-built `cons` column.
+# THE ACCEPTANCE TEST for a generated estMatrix.
 #
-# Rules (the contract):
-#   * Only FORWARD horizons are consensus. fq-3 / fq0 / fy0-marked-(Rep) are Bloomberg's
-#     own REPORTED figures and are NOT estimates (and can sit on another basis — UBER's
-#     1Q24 "ebitda" reported column is 708 against a 1,382 Adjusted EBITDA print).
-#   * Pre-print pick for period P = among snapshots that saw P as forward, the one with
-#     the SHORTEST horizon; ties broken by the LATEST snapshot.
-import openpyxl, json, sys, re, collections
+# Replays the ENGINE's own `preprint` rule (js/results.js -> rsSeriesFor) over the matrix that
+# emit_matrix.py just wrote, and diffs the result against the flat `cons` array the dataset
+# already ships. Every mismatch is one of three things — rounding, a genuine refresh, or a bug —
+# and you classify each one before moving on. Do not skip this.
+#
+# It reads the GENERATED sidecar (out/estmatrix_<tk>.json), not the workbook, on purpose: a
+# verifier that re-derives from source only proves two parsers agree. This one tests what ships.
+#
+#   py verify_preprint.py AMZN
+#
+# ── the engine rule, restated ────────────────────────────────────────────────────────────────
+#   preprint(P) = among vintages whose lastActual[view] is strictly BEFORE P, the one with the
+#                 LATEST lastActual (ties -> later snapshot id). A snapshot is an estimate only
+#                 for periods it did not already know.
+#   Fallback 1: on an ALREADY-REPORTED period (act != null) the flat array wins — it is the
+#               number frozen at that print, and a snapshot is only as fresh as the day it was
+#               saved.
+#   Fallback 2: where no vintage reaches back far enough, the flat value is kept, not blanked.
+#   => the matrix ADDS; it never silently subtracts.
+import json, sys, re, os
 
-import os
-# Drive letter differs per machine — override with SUMMIT_DOCS. See emit_matrix.py.
-DOCS = os.environ.get('SUMMIT_DOCS', 'G:/My Drive/Summit/Docs/0')
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.normpath(os.path.join(HERE, '..', '..'))
-OUT  = os.path.join(HERE, 'out'); os.makedirs(OUT, exist_ok=True)
+OUT  = os.path.join(HERE, 'out')
+TK   = (sys.argv[1] if len(sys.argv) > 1 else "AMZN").upper()
+SRC  = sys.argv[2] if len(sys.argv) > 2 else 'cons'          # 'cons' or 'summit'
 
-WB  = os.path.join(DOCS, 'Consensus_Portal.xlsm')
-TK  = (sys.argv[1] if len(sys.argv) > 1 else "UBER").upper()
-SH  = "BBG_CONSENSUS"
+mx = json.load(open(os.path.join(OUT, 'estmatrix_%s.json' % TK.lower()), encoding='utf-8'))
+js = open(os.path.join(REPO, 'js', 'results-data', '%s.js' % TK.lower()), encoding='utf-8').read()
 
-QH = ['fq-3','fq0','fq+1','fq+2','fq+3','fq+4']
-YH = ['fy0','fy+1','fy+2','fy+3','fy+4','fy+5']
-MET = ['rev','opinc','ebitda','eps','nos','cfo','capex','d&a','gross'] + ['kpi%d'%i for i in range(1,9)]
+def ordp(p): return int(p[2:])*4 + int(p[0]) if 'Q' in p else int(p)
 
-def num(v):
-    if v is None: return None
-    if isinstance(v,(int,float)): return float(v)
-    s = str(v).strip()
-    if not s or s.startswith('#N/A'): return None
-    try: return float(s)
-    except ValueError: return None
+# ── pull `periods` / `act` / <src> out of the dataset, by brace-matching the view blocks ──────
+def block(text, start):
+    """text[start] must be '{'; return the index just past its matching '}' (string-aware)."""
+    d, i, n, q = 0, start, len(text), None
+    while i < n:
+        c = text[i]
+        if q:
+            if c == '\\': i += 2; continue
+            if c == q: q = None
+        elif c in '"\'': q = c
+        elif c == '{': d += 1
+        elif c == '}':
+            d -= 1
+            if d == 0: return i + 1
+        i += 1
+    return n
 
-def canon(lbl):
-    """'2026 Q2 (Rep)' -> ('2Q26', True) ; '2026 A (Fwd)' -> ('2026', False)"""
-    if lbl is None: return None, None
-    s = str(lbl).strip()
-    m = re.match(r'^(\d{4})\s+Q([1-4])\s*\((Rep|Fwd)\)', s)
-    if m: return m.group(2)+'Q'+m.group(1)[2:], m.group(3)=='Rep'
-    m = re.match(r'^(\d{4})\s+A\s*\((Rep|Fwd)\)', s)
-    if m: return m.group(1), m.group(2)=='Rep'
-    return None, None
+def view_src(view):
+    vi = js.find('  views: {')
+    if vi < 0: return ''
+    vend = block(js, js.index('{', vi))
+    vs = js[vi:vend]
+    mi = re.search(r'\n    %s: \{' % view, vs)
+    if not mi: return ''
+    st = vs.index('{', mi.start())
+    return vs[st:block(vs, st)]
 
-wb = openpyxl.load_workbook(WB, read_only=True, data_only=True)
-ws = wb[SH]
-rows = ws.iter_rows(values_only=True)
-hdr  = [str(v) for v in next(rows)]
-idx  = {n:i for i,n in enumerate(hdr)}
+def arr(mb, name):
+    m = re.search(r'\b' + name + r':\s*\[(.*?)\]', mb, re.S)
+    if not m: return None
+    out = []
+    for x in m.group(1).split(','):
+        x = x.strip()
+        if not x: continue
+        if x == 'null': out.append(None)
+        elif x[0] in '"\'': out.append(x.strip('"\''))
+        else:
+            try: out.append(float(x))
+            except ValueError: out.append(None)
+    return out
 
-snaps = []
-for r in rows:
-    if not r or not r[0] or not str(r[0]).upper().startswith(TK+' '): continue
-    asof = str(r[idx['data_as_of']])[:10]
-    kpi  = {('kpi%d'%i): (str(r[idx['metric_kpi%d'%i]]).strip() if r[idx['metric_kpi%d'%i]] else '')
-            for i in range(1,9)}
-    fwd, rep, hor = {}, {}, {}
-    lastQ, lastY = None, None
-    for h in QH+YH:
-        per, isrep = canon(r[idx[h]])
-        if not per: continue
-        for m in MET:
-            c = '%s_%s' % (m, h)
-            if c not in idx: continue
-            v = num(r[idx[c]])
-            if v is None: continue
-            (rep if isrep else fwd).setdefault(m, {})[per] = v
-            if not isrep: hor.setdefault(m, {})[per] = h
-    snaps.append({'asof':asof,'kpi':kpi,'fwd':fwd,'rep':rep,'hor':hor,'lastQ':lastQ,'lastY':lastY})
+def metric_block(vsrc, mkey):
+    m = re.search(r'\n        %s: \{' % re.escape(mkey), vsrc)
+    if not m: return None
+    st = vsrc.index('{', m.start())
+    return vsrc[st:block(vsrc, st)]
 
-def ordp(p):
-    return int(p[2:])*4 + int(p[0]) if 'Q' in p else int(p)
+vints = mx['vintages']
+def preprint(view, mkey, periods, act, flat):
+    cells = mx.get(view, {}).get(mkey, {})
+    out = []
+    for i, p in enumerate(periods):
+        po = ordp(p)
+        f = flat[i] if flat and i < len(flat) else None
+        a = act[i] if act and i < len(act) else None
+        if f is not None and a is not None:                     # fallback 1
+            out.append((f, 'flat/frozen')); continue
+        best = None
+        for v in vints:
+            row = cells.get(v['id'])
+            if not row or row.get(p) is None: continue
+            la = (v.get('lastActual') or {}).get(view)
+            lo = -10**9 if la is None else ordp(la)
+            if not (lo < po): continue
+            if best is None or lo > best[0] or (lo == best[0] and v['id'] > best[1]):
+                best = (lo, v['id'], row[p])
+        out.append((best[2], best[1]) if best else (f, 'flat/unreachable'))   # fallback 2
+    return out
 
-# recompute lastQ/lastY now that ordp exists
-for s in snaps:
-    lq = ly = None
-    for m in s['rep'].values():
-        for p in m:
-            if 'Q' in p: lq = p if (lq is None or ordp(p) > ordp(lq)) else lq
-            else:        ly = p if (ly is None or int(p) > int(ly)) else ly
-    s['lastQ'], s['lastY'] = lq, ly
-snaps.sort(key=lambda s: s['asof'])
-
-HORN = {'fq+1':1,'fq+2':2,'fq+3':3,'fq+4':4,'fy+1':1,'fy+2':2,'fy+3':3,'fy+4':4,'fy+5':5,'fy0':0}
-def preprint(metric, period):
-    """(value, asof, horizon) using shortest-horizon / latest-snapshot."""
-    best = None
-    for s in snaps:
-        v = s['fwd'].get(metric, {}).get(period)
-        if v is None: continue
-        h = HORN.get(s['hor'][metric][period], 9)
-        key = (h, s['asof'])                    # smaller horizon wins; then latest asof
-        if best is None or (key[0] < best[0][0]) or (key[0] == best[0][0] and key[1] > best[0][1]):
-            best = (key, v, s['asof'], s['hor'][metric][period])
-    return (best[1], best[2], best[3]) if best else (None, None, None)
-
-print('%s - %d snapshots in %s' % (TK, len(snaps), SH))
-print('  asof        lastRepQ  lastRepFY')
-for s in snaps: print('  %-11s %-9s %s' % (s['asof'], s['lastQ'], s['lastY']))
-print('\n  KPI slots: ' + json.dumps({k:v for k,v in snaps[-1]['kpi'].items() if v}))
-
-# ── verify against the shipped dataset ────────────────────────────────────────
-MAP = json.load(open(sys.argv[2])) if len(sys.argv) > 2 else {}
-js  = open(os.path.join(REPO, 'js', 'results-data', '%s.js' % TK.lower()), encoding='utf-8').read()
-
-def shipped(view_key, mkey):
-    """pull periods[] and cons[] for a metric out of the JS source"""
-    # find the view block
-    vi = js.index('\n    %s: {' % view_key)
-    vend = js.index('\n    },', vi)
-    blk = js[vi:vend]
-    mi = blk.find('\n        %s: {' % mkey)
-    if mi < 0: return None, None
-    mend = blk.find('\n        ', mi+10)
-    while mend > 0 and not re.match(r"\n        \w+: \{", blk[mend:mend+40]):
-        nxt = blk.find('\n        ', mend+1)
-        if nxt < 0: break
-        mend = nxt
-    mb = blk[mi:mend if mend > 0 else len(blk)]
-    def arr(name):
-        m = re.search(name + r':\s*\[([^\]]*)\]', mb)
-        if not m: return None
-        return [None if x.strip()=='null' else (x.strip().strip('"\'') if '"' in x or "'" in x else float(x))
-                for x in m.group(1).split(',') if x.strip()]
-    return arr('periods'), arr('cons')
-
-print('\n=== derived pre-print  vs  shipped cons ===')
-for view, keys in (('q', MAP.get('q', {})), ('y', MAP.get('y', {}))):
-    for mkey, bbgm in keys.items():
-        pers, cons = shipped(view, mkey)
-        if pers is None: print('  %s.%-8s NOT FOUND in js' % (view, mkey)); continue
-        ok = bad = miss_js = miss_bbg = 0
-        details = []
+print('%s — %d vintages, %s .. %s' % (TK, len(vints), vints[0]['id'], vints[-1]['id']))
+print('source under test: %s\n' % SRC)
+grand = {'match':0,'diff':0,'filled':0,'dropped':0}
+for view in ('q','y'):
+    vsrc = view_src(view)
+    if not vsrc: continue
+    for mkey in mx.get(view, {}):
+        mb = metric_block(vsrc, mkey)
+        if mb is None:
+            print('  ??   %s.%-9s not in the dataset — matrix row will be inert' % (view, mkey)); continue
+        pers, act, flat = arr(mb, 'periods'), arr(mb, 'act'), arr(mb, SRC)
+        if not pers: print('  ??   %s.%-9s no periods[]' % (view, mkey)); continue
+        got = preprint(view, mkey, pers, act, flat)
+        ok = bad = filled = dropped = 0; details = []
         for i, p in enumerate(pers):
-            v, asof, h = preprint(bbgm, p)
-            c = cons[i] if cons and i < len(cons) else None
-            if v is None and c is None: continue
-            if v is None: miss_bbg += 1; details.append('%s: js=%s bbg=-' % (p, c)); continue
-            if c is None: miss_js += 1;  details.append('%s: js=- bbg=%.1f (%s %s)' % (p, v, asof, h)); continue
-            if abs(v - c) <= max(0.6, abs(c)*0.0015): ok += 1
-            else: bad += 1; details.append('%s: js=%.4g bbg=%.4g (%s %s)' % (p, c, v, asof, h))
-        flag = 'OK   ' if bad == 0 else 'DIFF '
-        print('  %s %s.%-8s (bbg %-6s) match=%-3d diff=%-3d onlyJS=%-3d onlyBBG=%-3d' %
-              (flag, view, mkey, bbgm, ok, bad, miss_js, miss_bbg))
-        for d in details[:8]: print('        ' + d)
-
-out = {'ticker':TK,'sheet':SH,'snapshots':[{'asof':s['asof'],'lastQ':s['lastQ'],'lastY':s['lastY'],
-        'fwd':s['fwd'],'kpi':{k:v for k,v in s['kpi'].items() if v}} for s in snaps]}
-dest = os.path.join(OUT, 'cons_%s.json' % TK.lower())
-json.dump(out, open(dest,'w',encoding='utf-8'), indent=1)
-print('\nwrote ' + dest)
+            new, why = got[i]
+            old = flat[i] if flat and i < len(flat) else None
+            if old is None and new is None: continue
+            if old is None: filled += 1; details.append('+ %-5s %-12s  (%s)' % (p, '%.4g'%new, why)); continue
+            if new is None: dropped += 1; details.append('- %-5s was %-12s -> BLANK' % (p, '%.4g'%old)); continue
+            # 0.15% relative, with a $0.6M absolute floor for the money lines only — an
+            # absolute floor on an EPS series would swallow a 30% miss.
+            tol = max(abs(old)*0.0015, 0.6) if abs(old) >= 100 else abs(old)*0.002
+            if abs(new - old) <= tol: ok += 1
+            else:
+                bad += 1
+                details.append('~ %-5s js=%-12s matrix=%-12s (%s)  %+.1f%%' % (
+                    p, '%.6g'%old, '%.6g'%new, why, (new-old)/old*100 if old else 0))
+        flag = 'OK  ' if bad == 0 else 'DIFF'
+        print('  %s %s.%-9s  same=%-3d changed=%-3d filled=%-3d blanked=%-3d' %
+              (flag, view, mkey, ok, bad, filled, dropped))
+        for d in details[:10]: print('         ' + d)
+        if len(details) > 10: print('         … %d more' % (len(details)-10))
+        grand['match'] += ok; grand['diff'] += bad; grand['filled'] += filled; grand['dropped'] += dropped
+print('\nTOTAL  same=%(match)d  changed=%(diff)d  filled=%(filled)d  blanked=%(dropped)d' % grand)
+print('changed>0 on a REPORTED period means the flat array lost — investigate.')
+print('blanked>0 means the matrix subtracted from the dataset — that must never happen.')

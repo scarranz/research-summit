@@ -1091,20 +1091,24 @@ function rsBuildChart(k){
   // and two unrelated percentages sharing one chart is how a reader mistakes one for the other.
   // They are suppressed in margin mode for the opposite reason — there the margin IS the bars.
   if (!grow && !marg && !isTop && !st.hidden.margin && rsHasMargin(k, m)){
+    // Each margin line belongs to a SOURCE, so it follows that source's chip as well as the
+    // margin chip. Gating them on `margin` alone left "Margin % (Summit)" drawn after the Summit
+    // bars were hidden — the reader had asked for the series to go and half of it stayed, which
+    // is exactly what non-negotiable 2 forbids (CHART_ENGINE_REFERENCE §0.2).
     var ma = rsMarginArr(k, m, 'act'), ms = rsMarginArr(k, m, 'summit'), mc = rsMarginArr(k, m, 'cons');
-    if (ma && ma.some(function(v){ return v != null; })){
+    if (!st.hidden.act && ma && ma.some(function(v){ return v != null; })){
       needY2 = true;
       datasets.push({ label: 'Margin % (actual)', type: 'line', yAxisID: 'y2', data: sl(ma),
         borderColor: 'rgba(30,39,51,0.9)', backgroundColor: 'rgba(30,39,51,0.9)', borderWidth: 2,
         pointRadius: 2.5, tension: 0.25, spanGaps: true, order: 1 });
     }
-    if (ms && ms.some(function(v){ return v != null; })){
+    if (!st.hidden.summit && ms && ms.some(function(v){ return v != null; })){
       needY2 = true;
       datasets.push({ label: 'Margin % (Summit)', type: 'line', yAxisID: 'y2', data: sl(ms),
         borderColor: RS_SUMMIT, backgroundColor: RS_SUMMIT, borderWidth: 2, borderDash: [5, 4],
         pointRadius: 2, tension: 0.25, spanGaps: true, order: 2 });
     }
-    if (mc && mc.some(function(v){ return v != null; })){
+    if (!st.hidden.cons && mc && mc.some(function(v){ return v != null; })){
       needY2 = true;
       datasets.push({ label: 'Margin % (consensus)', type: 'line', yAxisID: 'y2', data: sl(mc),
         borderColor: 'rgba(124,134,148,0.9)', backgroundColor: 'rgba(124,134,148,0.9)', borderWidth: 2, borderDash: [2, 3],
@@ -1342,7 +1346,13 @@ function rsRenderTable(k, m){
   var w = rsWin(k, m), lo = w[0], hi = w[1];
   var dec = m.unit === 'eps' ? 2 : 1;
   var div = rsScaleOf(m);
-  var gpt = rsSt(k).gpt || 'mid';                      // which end of the guided range is scored
+  var st = rsSt(k);
+  var gpt = st.gpt || 'mid';                           // which end of the guided range is scored
+  // A hidden series leaves the TABLE too (non-negotiable 2). The margin chip only exists in
+  // level mode, so its state may only gate rows while the chip is on screen to un-gate them —
+  // otherwise hiding margins in level mode and switching to Growth would strip rows with no
+  // visible control to bring them back.
+  var marginChip = !isTop && !rsIsMargin(k) && !rsIsGrow(k) && rsHasMargin(k, m);
   var idx = [], est = [], tbLastA = rsLastAct(m);
   for (var i = lo; i <= hi; i++){ idx.push(i); est.push(i > tbLastA); }
 
@@ -1431,19 +1441,21 @@ function rsRenderTable(k, m){
     return r + '</tr>';
   }
 
-  var showMargin = m.marginOf && m.unit !== 'eps' && !isTop;
+  var showMargin = m.marginOf && m.unit !== 'eps' && !isTop && !(marginChip && st.hidden.margin);
 
   // Actual: value → YoY/QoQ growth (→ margin).
   var growLbl = rsGrowLabel(k);
   var maA = showMargin ? rsMarginArr(k, m, 'act') : null;
-  h += row('Actual', function(i){ return m.act[i] == null ? '<span class="rs-ft-nil">—</span>' : '<b>' + num(m.act[i]) + '</b>'; }, 'main nb', sumCagr());
-  h += row(growLbl, function(i){ return pctDollar(rsActGrowthPct(k, m, i), rsActGrowthDollar(k, m, i)); }, showMargin ? 'sub nb' : 'sub', sumGrowth(rsActGrowthPct.bind(null, k, m)));
-  if (showMargin) h += row(esc(m.marginLabel || 'margin'), function(i){ return maA && maA[i] != null ? maA[i].toFixed(1) + '%' : '<span class="rs-ft-nil">—</span>'; }, 'sub', sumMargin(maA));
+  if (!st.hidden.act){
+    h += row('Actual', function(i){ return m.act[i] == null ? '<span class="rs-ft-nil">—</span>' : '<b>' + num(m.act[i]) + '</b>'; }, 'main nb', sumCagr());
+    h += row(growLbl, function(i){ return pctDollar(rsActGrowthPct(k, m, i), rsActGrowthDollar(k, m, i)); }, showMargin ? 'sub nb' : 'sub', sumGrowth(rsActGrowthPct.bind(null, k, m)));
+    if (showMargin) h += row(esc(m.marginLabel || 'margin'), function(i){ return maA && maA[i] != null ? maA[i].toFixed(1) + '%' : '<span class="rs-ft-nil">—</span>'; }, 'sub', sumMargin(maA));
+  }
 
   // Reference series (Summit / Consensus): value → YoY growth → surprise (→ margin).
   [{ on: has.summit, series: 'summit', label: 'Summit model' },
    { on: has.cons,   series: 'cons',   label: 'Consensus' }].forEach(function(r){
-    if (!r.on) return;
+    if (!r.on || st.hidden[r.series]) return;
     var s = r.series;
     var mm = showMargin ? rsMarginArr(k, m, s) : null;
     h += row(r.label, function(i){ return num(m[s][i]); }, 'main nb', '');
@@ -1454,7 +1466,7 @@ function rsRenderTable(k, m){
     if (mm) h += row(esc(m.marginLabel || 'margin'), function(i){ return mm[i] != null ? mm[i].toFixed(1) + '%' : '<span class="rs-ft-nil">—</span>'; }, 'sub', sumMargin(mm));
   });
 
-  if (has.guide){
+  if (has.guide && !st.hidden.guide){
     // A point guide prints one number, not "4800–4800". The end being scored against is marked
     // in the range itself, so the two rows never disagree about which number is in play.
     var anyRangeRow = rsGuideRanged(m);
@@ -3071,10 +3083,14 @@ function rsConvTableRender(m, mkey, pi, vints, div){
     r += sub('vs ' + gname + (ranged && !gptShown() ? rsGptMiniHtml('rsconvgpt', gpt) : ''), gref, true);
     return r;
   }
-  h += block('Summit model', rsConvSeries('summit', mkey, m, pi, vints));
-  h += block('Consensus',    rsConvSeries('cons',   mkey, m, pi, vints));
+  // Non-negotiable 2 (CHART_ENGINE_REFERENCE §0.2): the predicate that hides a series from the
+  // chart must feed the table. rsBuildConv already nulls these on `st.hidden`; the table used to
+  // call rsConvSeries straight and kept rendering a row for a line that was no longer drawn —
+  // which is worse than no legend, because the reader trusts a number that is not on screen.
+  if (!st.hidden.summit) h += block('Summit model', rsConvSeries('summit', mkey, m, pi, vints));
+  if (!st.hidden.cons)   h += block('Consensus',    rsConvSeries('cons',   mkey, m, pi, vints));
   // The references, held flat across the walk, so a column can be read straight down.
-  if (gref != null){
+  if (gref != null && !st.hidden.guide){
     h += '<tr class="rs-ft-main"><td class="rs-ft-h">Guidance</td>';
     vints.forEach(function(){
       if (!ranged){ h += '<td>' + num(m.guideLo[pi]) + '</td>'; return; }
@@ -3084,7 +3100,7 @@ function rsConvTableRender(m, mkey, pi, vints, div){
     });
     h += '<td class="rs-ft-s"></td></tr>';
   }
-  if (act != null){
+  if (act != null && !st.hidden.act){
     h += '<tr class="rs-ft-main"><td class="rs-ft-h">Reported</td>';
     vints.forEach(function(){ h += '<td><b>' + num(act) + '</b></td>'; });
     h += '<td class="rs-ft-s"></td></tr>';

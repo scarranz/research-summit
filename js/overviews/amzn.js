@@ -3416,33 +3416,72 @@ function expenseTabsBody(){
   h+='</div>';
   return h;
 }
-function aLeasesBody(){   // Leases — relocated out of General into Miscellaneous ▸ Capex & Depreciation
-  var h='<style>'+
-    '.exp-stat{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:9px;overflow:hidden;margin-top:10px}'+
-    '@media(max-width:560px){.exp-stat{grid-template-columns:repeat(2,1fr)}}'+
-    '.exp-st{background:var(--card,#fff);padding:9px 12px}.exp-sl{font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)}'+
-    '.exp-sv{font-size:17px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;margin-top:2px}.exp-ss{font-size:9.5px;color:var(--mu);margin-top:1px}'+
+function aLeasesBody(){   // Leases explorer — Miscellaneous ▸ Capex & Depreciation. Boxed + tabbed, like Expenses/Segments.
+  var mbar=function(lab,parts){ return '<div style="margin:6px 0"><div style="font-size:10.5px;font-weight:800;color:var(--mu);margin-bottom:3px">'+lab+'</div><div style="display:flex;height:30px;border-radius:6px;overflow:hidden">'+parts.map(function(p){ return '<div style="width:'+p.w+'%;background:'+p.c+';display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;color:#fff;white-space:nowrap;min-width:0">'+p.t+'</div>'; }).join('')+'</div></div>'; };
+  var box=function(ic,t,d){ return '<div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">'+ic+'</span>'+t+'</div><div class="ew-box-t">'+d+'</div></div>'; };
+  var h='<style>'+EW_CSS.replace('<style>','').replace('</style>','')+
+    '.exp-stat{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:9px;overflow:hidden;margin-top:10px}@media(max-width:560px){.exp-stat{grid-template-columns:repeat(2,1fr)}}'+
+    '.exp-st{background:var(--card,#fff);padding:9px 12px}.exp-sl{font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)}.exp-sv{font-size:17px;font-weight:800;color:var(--navy);margin-top:2px}.exp-ss{font-size:9.5px;color:var(--mu);margin-top:1px}'+
+    '.lx-explorer{border:1.5px solid var(--brand);border-radius:14px;padding:14px 16px 16px;background:linear-gradient(180deg,var(--brand-soft),transparent)}'+
+    '.lx-h{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-2);margin:0 0 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.lx-h .lx-hint{font-size:9px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--mu);background:#fff;border:1px solid var(--bdr);border-radius:20px;padding:2px 9px}'+
+    '.lx-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}.lx-tab{border:1px solid var(--bdr);background:#fff;border-radius:20px;padding:8px 13px;cursor:pointer;font-size:12px;font-weight:800;color:var(--navy);transition:.13s}.lx-tab:hover{border-color:var(--brand)}.lx-tab.active{background:var(--navy);border-color:var(--navy);color:#fff}'+
+    '.lx-card{background:var(--card,#fff);border:1px solid var(--bdr);border-radius:12px;padding:15px 17px}'+
   '</style>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">Leases — the other capacity bill (10-K Note 4)</div>'+
-    '<div style="height:250px"><canvas id="aExpLease"></canvas></div>'+
+  h+='<div class="ov-sec"><div class="ov-sec-h">Leases — the other capacity bill (10-K Note 4)</div>';
+  h+='<div class="lx-explorer"><div class="lx-h">Leases explorer <span class="lx-hint">tap a view</span></div>';
+  var tabs=[['cost','Cost &amp; flow'],['bs','Assets vs obligations'],['pipe','The pipeline'],['what','What Amazon leases']];
+  h+='<div class="lx-tabs">'+tabs.map(function(t,i){ return '<button type="button" class="lx-tab'+(i===0?' active':'')+'" data-lxtab="'+t[0]+'">'+t[1]+'</button>'; }).join('')+'</div>';
+  // Panel 1 — cost & flow
+  var p1='<div style="height:250px"><canvas id="aExpLease"></canvas></div>'+
     '<div class="exp-stat">'+
       '<div class="exp-st"><div class="exp-sl">Total lease cost FY25</div><div class="exp-sv">$20.3B</div><div class="exp-ss">op $14.0B · fin $3.6B · var $2.7B</div></div>'+
       '<div class="exp-st"><div class="exp-sl">Lease liabilities</div><div class="exp-sv">$121.8B</div><div class="exp-ss">gross · PV $101.5B</div></div>'+
       '<div class="exp-st"><div class="exp-sl">Weighted term</div><div class="exp-sv">10–13 yr</div><div class="exp-ss">op 10.0 · finance 12.6</div></div>'+
       '<div class="exp-st"><div class="exp-sl">Finance-lease D&amp;A</div><div class="exp-sv">$3.3B</div><div class="exp-ss">inside the $41.9B P&amp;E D&amp;A</div></div>'+
     '</div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:6px">Finance-lease assets ($55.6B) are <b>already inside PP&amp;E</b>; operating-lease right-of-use assets ($86B) sit on their <b>own balance-sheet line</b> — that is the capacity beyond owned PP&amp;E. The $121.8B is the lease <b>liability</b> (the obligation). Operating-lease cost flows into cost of sales / fulfillment / technology; finance-lease amortization is inside the $41.9B D&amp;A.</div>'+
-    '<div class="ov-callout" style="margin-top:12px"><b>The lease pipeline you don\'t yet see on the balance sheet:</b> Amazon had <b>~$62B of leases &ldquo;not yet commenced&rdquo;</b> at FY2024 (signed but not started — largely data centers and fulfillment), on top of the $121.8B already capitalized. The obligations are <b>long-dated</b> — the bulk of the maturity schedule sits in &ldquo;thereafter&rdquo; (operating-lease liabilities run ~$12B in the next year to ~$44B beyond five years). This leased capacity is the other half of the capacity story next to the record owned-capex build. <span style="color:var(--mu)">Figures: 10-K Note 4 (leases-not-yet-commenced &amp; maturities as of FY2024; balance-sheet totals as of FY2025).</span></div></div>';
+    '<div class="ew-h">Where the two lease types land</div>'+
+    '<div class="ew-two">'+box('🏢','Operating leases','The bulk — fulfillment centers, offices, some data centers. The cost flows into <b>cost of sales / fulfillment / technology</b> (not a separate line); the asset is a right-of-use (ROU) asset on its own balance-sheet line.')+
+      box('✈️','Finance leases','Ownership-like (e.g. Amazon Air aircraft, some equipment). The asset sits <b>inside PP&amp;E</b>, and its cost splits into <b>amortization ($3.3B, inside D&amp;A)</b> + <b>interest ($0.3B)</b> — that is why finance-lease D&amp;A is already in the $41.9B P&amp;E depreciation.')+'</div>';
+  // Panel 2 — assets vs obligations
+  var p2='<div class="ew-note">Beyond the ~$534B of <b>owned</b> gross PP&amp;E, Amazon controls a large <b>leased</b> asset base — and owes the payments behind it. This is that picture.</div>'+
+    mbar('Right-of-use ASSETS — the leased capacity (~$142B)',[{w:60.7,c:BRAND2,t:'Operating ROU $86B'},{w:39.3,c:SQUID,t:'Finance ROU $55.6B'}])+
+    mbar('Lease LIABILITIES — the obligation ($121.8B gross · PV $101.5B)',[{w:87.8,c:BRAND,t:'Operating $106.9B'},{w:12.2,c:GRAY,t:'Finance $14.9B'}])+
+    '<div class="ew-note"><b>Finance-lease ROU ($55.6B) is already inside PP&amp;E</b> (so its depreciation is in D&amp;A); <b>operating-lease ROU ($86B) sits on its own line</b> — capacity that never shows up in the capex or PP&amp;E charts. Of the $121.8B liability, $87.3B is long-term. This is real leverage-lite: obligations that behave like debt but sit outside reported debt.</div>';
+  // Panel 3 — the pipeline
+  var p3='<div class="ov-callout" style="margin-top:0"><b>~$62B of leases &ldquo;not yet commenced&rdquo;</b> (FY2024, 10-K) — signed but not started, largely <b>data centers and fulfillment</b>. That is forward capacity <b>on top of</b> the $121.8B already capitalized, and it does not appear in capex, PP&amp;E or the lease liability until each lease starts.</div>'+
+    '<div class="ew-h">The obligation is long-dated</div>'+
+    mbar('Operating-lease payments by maturity',[{w:16,c:BRAND2,t:'≤1yr ~$12B'},{w:38,c:acxRGBA(BRAND2,0.7),t:'2–5yr'},{w:46,c:acxRGBA(BRAND2,0.4),t:'thereafter ~$44B'}])+
+    '<div class="ew-note">Weighted remaining term ~<b>10 yr (operating) / 12.6 yr (finance)</b>. The bulk sits in &ldquo;thereafter&rdquo; — Amazon is committing to capacity a decade out, in step with the AI build. <span style="color:var(--mu)">Maturities &amp; not-yet-commenced per 10-K Note 4 (FY2024); balance-sheet totals FY2025.</span></div>';
+  // Panel 4 — what Amazon leases
+  var p4='<div class="ew-two">'+box('📦','Fulfillment &amp; logistics','Warehouses, sortation centers, delivery stations and (increasingly) grocery — the largest slice of operating leases. Leasing lets Amazon flex the network up and down without owning every building.')+
+      box('🖥️','Data centers','A mix — Amazon <b>owns</b> core AWS capacity (the capex build) but also <b>leases</b> data-center space and power, especially to move fast; much of the not-yet-commenced pipeline is here.')+
+      box('✈️','Amazon Air','The cargo-aircraft fleet is largely under <b>finance</b> leases — the main reason finance-lease assets and their amortization are material.')+
+      box('🏢','Offices &amp; other','Corporate offices, physical stores and equipment round it out.')+'</div>'+
+    '<div class="ew-note"><b>Own vs lease is a deliberate choice.</b> Amazon owns where control and long-run cost matter (core AWS/data centers → capex, PP&amp;E, D&amp;A) and leases where speed and flexibility matter (fulfillment real estate, incremental data-center space, aircraft). The two together are the real capacity picture — the capex charts only show the owned half.</div>';
+  h+='<div class="lx-panels">'+
+    '<div class="lx-panel lx-card" data-lxpanel="cost">'+p1+'</div>'+
+    '<div class="lx-panel lx-card" data-lxpanel="bs" hidden>'+p2+'</div>'+
+    '<div class="lx-panel lx-card" data-lxpanel="pipe" hidden>'+p3+'</div>'+
+    '<div class="lx-panel lx-card" data-lxpanel="what" hidden>'+p4+'</div>'+
+  '</div>';
+  h+='</div></div>';
   return h;
 }
-function aBuildLeases(){   // lease-cost chart, now in Miscellaneous ▸ Capex & Depreciation
-  var yrs=[2023,2024,2025], lc=aChartReady('aExpLease'); if(!lc) return; aDestroy('aExpLease');
-  var LT=[{k:'op',lab:'Operating lease',c:BRAND2},{k:'finAmort',lab:'Finance — amortization',c:SQUID},{k:'finInt',lab:'Finance — interest',c:GRAY},{k:'variable',lab:'Variable lease',c:'#B7791F'}];
-  _aCharts['aExpLease']=new Chart(lc.getContext('2d'),{ type:'bar',
-    data:{ labels:yrs.map(String), datasets:LT.map(function(t){ return { label:t.lab, data:yrs.map(function(y){ return A_TENK.leaseCost[y][t.k]/1000; }), backgroundColor:t.c, borderColor:'#fff', borderWidth:1, maxBarThickness:44, stack:'l' }; }) },
-    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+c.parsed.y.toFixed(1)+'B'; }, footer:function(it){ return 'Total lease cost: $'+it.reduce(function(a,x){ return a+x.parsed.y; },0).toFixed(1)+'B'; } } } },
-      scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } });
+function aBuildLeases(){   // lease-cost chart + Leases-explorer tab wiring (Miscellaneous ▸ Capex & Depreciation)
+  var yrs=[2023,2024,2025], lc=aChartReady('aExpLease');
+  if(lc){ aDestroy('aExpLease');
+    var LT=[{k:'op',lab:'Operating lease',c:BRAND2},{k:'finAmort',lab:'Finance — amortization',c:SQUID},{k:'finInt',lab:'Finance — interest',c:GRAY},{k:'variable',lab:'Variable lease',c:'#B7791F'}];
+    _aCharts['aExpLease']=new Chart(lc.getContext('2d'),{ type:'bar',
+      data:{ labels:yrs.map(String), datasets:LT.map(function(t){ return { label:t.lab, data:yrs.map(function(y){ return A_TENK.leaseCost[y][t.k]/1000; }), backgroundColor:t.c, borderColor:'#fff', borderWidth:1, maxBarThickness:44, stack:'l' }; }) },
+      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+c.parsed.y.toFixed(1)+'B'; }, footer:function(it){ return 'Total lease cost: $'+it.reduce(function(a,x){ return a+x.parsed.y; },0).toFixed(1)+'B'; } } } },
+        scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); }
+  var pane=document.querySelector('.dd-pane[data-dd="misc"] .ovt-subpane[data-ovst="capex"]');
+  if(pane && !pane._lxWired){ pane._lxWired=true;
+    var lt=pane.querySelectorAll('.lx-tab');
+    lt.forEach(function(b){ b.onclick=function(){ var k=b.getAttribute('data-lxtab');
+      lt.forEach(function(x){ x.classList.toggle('active',x===b); });
+      pane.querySelectorAll('.lx-panel').forEach(function(p){ p.hidden=(p.getAttribute('data-lxpanel')!==k); }); }; }); }
 }
 function aBuildExpenses(){
   aBuildBridge();

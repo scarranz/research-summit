@@ -3568,8 +3568,21 @@ var A_TENK={
   leaseLiab:{ opGross:106914, finGross:14917, totalGross:121831, pv:101538, longTerm:87339, opTermYrs:10.0, finTermYrs:12.6 }
 };
 function segCapDaBody(){
-  return '<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">Capital by segment — capex builds it · PP&amp;E holds it · D&amp;A expenses it'+
-    '<span class="acx-tog segcd-tog"><button type="button" data-segcd="capex" class="active">Capex</button><button type="button" data-segcd="ppe">PP&amp;E</button><button type="button" data-segcd="da">D&amp;A</button></span></div>'+
+  var cx=A_CAPEX[2025].capex, da=A_CAPEX[2025].da;
+  var ppe=amznBBG.seg.na.ppe.a[2]+amznBBG.seg.intl.ppe.a[2]+amznBBG.seg.aws.ppe.a[2];
+  var life=(ppe/da).toFixed(1), ratio=(cx/da).toFixed(1);
+  function b(v){ return '$'+(Math.round(v/100)/10).toFixed(0)+'B'; }
+  var fbox=function(v,l,accent){ return '<div style="flex:1;min-width:118px;border:1px solid '+(accent?'var(--brand-2)':'var(--bdr)')+';border-radius:9px;padding:9px 11px;background:var(--card,#fff);text-align:center"><div style="font-size:15px;font-weight:800;color:'+(accent?'var(--brand-2)':'var(--navy)')+'">'+v+'</div><div style="font-size:9.5px;color:var(--mu);font-weight:600;margin-top:2px;line-height:1.3">'+l+'</div></div>'; };
+  var arr=function(t){ return '<div style="display:flex;align-items:center;justify-content:center;color:var(--brand-2);font-size:10px;font-weight:800;padding:0 7px;white-space:nowrap">'+t+'</div>'; };
+  var flow='<div style="display:flex;align-items:stretch;flex-wrap:wrap;margin:2px 0 12px">'+
+    fbox(b(cx),'Capex FY25 — the spend')+arr('builds →')+
+    fbox(b(ppe),'Net PP&amp;E — asset base')+arr('÷ ~'+life+'yr →')+
+    fbox(b(da),'D&amp;A FY25 — P&amp;L hit')+arr('')+
+    fbox(ratio+'×','Capex ÷ D&amp;A',true)+'</div>';
+  return '<div class="ov-sec"><div class="ov-sec-h">The capital cycle by segment — capex builds it · PP&amp;E holds it · D&amp;A expenses it</div>'+
+    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin:2px 0 10px">Every dollar of <b>capex</b> lands on the balance sheet as <b>PP&amp;E</b>, then depreciates over its useful life into <b>D&amp;A</b> in the P&amp;L. <b>Capex ÷ D&amp;A ≈ '+ratio+'×</b> means Amazon is building the asset base ~'+ratio+'× faster than it depreciates it — capacity going in ahead of both the revenue and the depreciation (implied life ≈ net PP&amp;E ÷ D&amp;A ≈ '+life+' yrs). The three views below are the same cycle from each angle:</div>'+
+    flow+
+    '<div style="display:flex;justify-content:flex-end;margin:0 0 6px"><span class="acx-tog segcd-tog"><button type="button" data-segcd="capex" class="active">Capex</button><button type="button" data-segcd="ppe">PP&amp;E</button><button type="button" data-segcd="da">D&amp;A</button></span></div>'+
     '<div style="height:320px"><canvas id="aSegCapDa"></canvas></div>'+
     '<div class="acx-cap" id="aSegCapDaCap" style="font-size:11px;color:var(--mu);margin-top:8px"></div></div>';
 }
@@ -3580,9 +3593,17 @@ function aBuildSegCapDa(){
   var SG=[{k:'na',bk:'na',lab:'North America',c:BRAND},{k:'int',bk:'intl',lab:'International',c:BRAND2},{k:'aws',bk:'aws',lab:'AWS',c:SQUID}];
   var labels, ds, cap;
   if(mode==='capex'){
-    labels=['FY23','FY24','FY25'];
-    ds=SG.map(function(s){ return { label:s.lab, data:[2023,2024,2025].map(function(y){ return A_TENK.segCapex[y][s.k]/1000; }), backgroundColor:s.c, borderColor:'#fff', borderWidth:1, maxBarThickness:44, stack:'x' }; });
-    cap='Net additions to PP&amp;E by segment (10-K Note 10). <b>AWS ~68% of group capex</b> (2025) — the AI build. Actuals only; Amazon does not give per-segment capex consensus.';
+    labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
+    var gf=amznBBG.is.capex.f.map(function(v){ return v==null?null:Math.abs(v); });   // group capex consensus (abs $M)
+    var implied=SG.map(function(s){ var ppe=amznBBG.seg[s.bk].ppe, da=amznBBG.seg[s.bk].da, arr=[], prev=ppe.a[2];   // roll-forward weight: ΔnetPP&E + D&A (fall back to D&A where PP&E is missing)
+      for(var i=0;i<3;i++){ var cur=ppe.f[i], d=da.f[i]||0, delta=(cur!=null&&prev!=null)?(cur-prev):0; arr.push(delta+d); if(cur!=null) prev=cur; } return arr; });
+    ds=SG.map(function(s,si){
+      var act=[2023,2024,2025].map(function(y){ return A_TENK.segCapex[y][s.k]/1000; });
+      var fwd=[0,1,2].map(function(i){ var sum=implied.reduce(function(a,x){ return a+(x[i]||0); },0), mine=implied[si][i];
+        return (!sum||gf[i]==null)?null:Math.round(gf[i]*mine/sum/100)/10; });   // allocate group capex by roll-forward share
+      var vals=act.concat(fwd);
+      return { label:s.lab, data:vals, backgroundColor:vals.map(function(_,i){ return i<3?s.c:acxRGBA(s.c,0.45); }), borderColor:'#fff', borderWidth:1, maxBarThickness:26, stack:'x' }; });
+    cap='<b>Capex by segment.</b> Actuals from the 10-K (Note 10). Amazon gives no per-segment capex consensus, so the forward is the <b>group capex consensus</b> (BBG) <b>allocated across segments by each one\'s PP&amp;E roll-forward</b> (capex ≈ Δ net PP&amp;E + D&amp;A) — it ties to the group total and splits it by where the asset base is growing (AWS-led). Faded = allocated estimate.';
   } else {
     labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
     ds=SG.map(function(s){ var sr=amznBBG.seg[s.bk][mode], vals=sr.a.concat(sr.f).map(function(v){ return v==null?null:Math.round(v/100)/10; });
@@ -3656,10 +3677,9 @@ function segmentsBody(){
   h+='<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">Amazon reports <b>net sales, operating income, D&amp;A and PP&amp;E by segment</b> — never functional expense by segment. Drivers per the 10-K MD&amp;A + Bloomberg segment data; FY2025 op income $80.0B includes a $2.5B FTC settlement and $2.7B of severance.</div></div>';
   h+='<div class="seg-tog-row"><span class="acx-tog seg-tog"><button type="button" data-segg="y" class="active">Annual</button><button type="button" data-segg="q">Quarterly</button></span></div>';
   h+='<div class="seg-kpis" id="segKpis"></div>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">Operating income by segment ($B)</div><div style="height:290px"><canvas id="aSgOI"></canvas></div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">Where the profit is made. FY2022 = the over-investment trough (NA &amp; International both at a loss); 3Q25 NA carries the $2.5B FTC settlement.</div></div>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">Operating margin by segment (%)</div><div style="height:290px"><canvas id="aSgMgn"></canvas></div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">AWS ~35% vs the retail segments in the mid-single digits; the consolidated line (dark) is dragged up by AWS mix.</div></div>';
+  h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">Operating income &amp; margin by segment<span class="acx-tog sgm-tog"><button type="button" data-sgm="dollar" class="active">$B (income)</button><button type="button" data-sgm="margin">Margin %</button></span></div>'+
+    '<div style="height:300px"><canvas id="aSgMain"></canvas></div>'+
+    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px"><b>$B</b> = stacked operating income (where the profit is made — AWS ~57% on 18% of revenue). <b>Margin %</b> = each segment\'s operating margin, with the consolidated line (dashed) dragged up by AWS mix (~35% vs retail mid-single-digit). <b>Annual ⇄ Quarterly</b> via the toggle at the top. FY2022 = the over-investment trough; 3Q25 NA carries the $2.5B FTC charge.</div></div>';
   h+=segCapDaBody();
   // rev -> profit mismatch
   h+='<div class="ov-sec"><div class="ov-sec-h">Where the revenue is vs where the profit is (FY2025)</div>'+
@@ -3685,27 +3705,28 @@ function aBuildSegments(){
       {l:'North America',v:acxPct(r.usOpInc/r.usRev,1),s:'margin · $'+(r.usOpInc/1000).toFixed(1)+'B'},
       {l:'International',v:acxPct(r.intOpInc/r.intRev,1),s:'profitable since 2024'} ];
     k.innerHTML=items.map(function(x){ return '<div class="seg-kpi"><div class="seg-kl">'+x.l+'</div><div class="seg-kv">'+x.v+'</div><div class="seg-ks">'+x.s+'</div></div>'; }).join(''); }
-  // op income stacked $B
-  var oi=aChartReady('aSgOI');
-  if(oi){ aDestroy('aSgOI');
-    _aCharts['aSgOI']=new Chart(oi.getContext('2d'),{ type:'bar',
-      data:{ labels:rows.map(function(r){ return r.p; }), datasets:A_SEG.map(function(s){ return { label:s.lab, data:rows.map(function(r){ return r[s.k].oi==null?null:r[s.k].oi/1000; }), backgroundColor:s.c, borderColor:'#fff', borderWidth:1, maxBarThickness:32, stack:'oi' }; }) },
-      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+c.parsed.y.toFixed(1)+'B'; }, footer:function(it){ return 'Total: $'+it.reduce(function(a,x){ return a+x.parsed.y; },0).toFixed(1)+'B'; } } } },
-        scales:{ x:{ stacked:true, grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); }
-  // op margin lines
-  var mg=aChartReady('aSgMgn');
-  if(mg){ aDestroy('aSgMgn');
-    var ds=A_SEG.map(function(s){ return { label:s.lab, data:rows.map(function(r){ return r[s.k].mgn; }), borderColor:s.c, backgroundColor:s.c, borderWidth:2, pointRadius:2, tension:0.25, spanGaps:true }; });
-    ds.push({ label:'Consolidated', data:rows.map(function(r){ return r.consMgn; }), borderColor:'#1E2733', backgroundColor:'#1E2733', borderWidth:2.5, pointRadius:2, tension:0.25, borderDash:[5,4] });
-    _aCharts['aSgMgn']=new Chart(mg.getContext('2d'),{ type:'line',
-      data:{ labels:rows.map(function(r){ return r.p; }), datasets:ds },
-      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':c.parsed.y+'%'); } } } },
-        scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } }); }
+  // Operating income ($B, stacked bars) ⇄ operating margin (%, lines) — one chart, one toggle.
+  var sgt=pane?pane.querySelector('.sgm-tog .active'):null, sgm=sgt?sgt.getAttribute('data-sgm'):'dollar';
+  var mc=aChartReady('aSgMain');
+  if(mc){ aDestroy('aSgMain'); var cfg;
+    if(sgm==='dollar'){
+      cfg={ type:'bar', data:{ labels:rows.map(function(r){ return r.p; }), datasets:A_SEG.map(function(s){ return { label:s.lab, data:rows.map(function(r){ return r[s.k].oi==null?null:r[s.k].oi/1000; }), backgroundColor:s.c, borderColor:'#fff', borderWidth:1, maxBarThickness:32, stack:'oi' }; }) },
+        options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+          plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+c.parsed.y.toFixed(1)+'B'; }, footer:function(it){ return 'Total: $'+it.reduce(function(a,x){ return a+(x.parsed.y||0); },0).toFixed(1)+'B'; } } } },
+          scales:{ x:{ stacked:true, grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } };
+    } else {
+      var ds=A_SEG.map(function(s){ return { label:s.lab, data:rows.map(function(r){ return r[s.k].mgn; }), borderColor:s.c, backgroundColor:s.c, borderWidth:2, pointRadius:2, tension:0.25, spanGaps:true }; });
+      ds.push({ label:'Consolidated', data:rows.map(function(r){ return r.consMgn; }), borderColor:'#1E2733', backgroundColor:'#1E2733', borderWidth:2.5, pointRadius:2, tension:0.25, borderDash:[5,4] });
+      cfg={ type:'line', data:{ labels:rows.map(function(r){ return r.p; }), datasets:ds },
+        options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+          plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':c.parsed.y+'%'); } } } },
+          scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } };
+    }
+    _aCharts['aSgMain']=new Chart(mc.getContext('2d'), cfg); }
   aBuildSegCapDa();
   if(pane && !pane._segWired){ pane._segWired=true;
     pane.querySelectorAll('.seg-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.seg-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegments(); }; });
+    pane.querySelectorAll('.sgm-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.sgm-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegments(); }; });
     var stabs=pane.querySelectorAll('.segx-tab');
     stabs.forEach(function(b){ b.onclick=function(){ var key=b.getAttribute('data-segtab');
       stabs.forEach(function(x){ x.classList.toggle('active',x===b); });

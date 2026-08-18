@@ -4275,7 +4275,7 @@ var A_MGMT=[
 // Executive Chair; Nooyi chairs Audit, Huttenlocher chairs Security; independent Lead Director (2010).
 var AMZN_MGMT = makeManagement({
   brand: BRAND,
-  lede: "Amazon's leadership is <b>home-grown</b> to a degree unusual at this scale — the CEO, CFO, AWS chief and retail chief average ~20 years inside the company. Founder <b>Jeff Bezos</b> remains Executive Chair, but with a <b>single share class</b> his control comes from the stake, not super-voting stock.",
+  lede: "The full <b>27-member S-team</b> (Amazon's senior leadership) plus founder <b>Jeff Bezos</b>, Executive Chair. Leadership is <b>home-grown</b> to a degree unusual at this scale — the CEO, CFO, AWS and retail chiefs average ~20 years inside. Tap any leader for the detail; the group clusters into AWS, Stores &amp; Operations, Media/Devices/Ads/Health, and corporate functions.",
   execs: [
     { id:'jassy', lead:true, name:'Andy Jassy', title:'President & CEO', since:'CEO since Jul 2021 · joined 1997',
       line:'Built AWS into the profit engine; now runs the efficiency era + AI build-out.',
@@ -4289,6 +4289,34 @@ var AMZN_MGMT = makeManagement({
     { id:'herrington', name:'Doug Herrington', title:'CEO, Worldwide Amazon Stores', since:'since 2022 · joined 2005',
       line:'Ran the retail turnaround; everyday-essentials, same-day, robotics.',
       bio:"CEO, Worldwide Amazon Stores since 2022. Ran the retail turnaround — North America from a 2022 operating loss to a mid-single-digit margin, on cost and mix rather than price. Drove the everyday-essentials push, the same-day network, grocery ($150B+ gross sales) and the robotics rollout." },
+    // ── AWS leadership ──
+    { id:'desantis', name:'Peter DeSantis', title:'SVP, Foundational AI Models, Custom Silicon & Quantum', line:'Owns Trainium/Inferentia custom silicon, foundational models and quantum — the compute edge under AWS.' },
+    { id:'kalyanaraman', name:'Prasad Kalyanaraman', title:'VP, AWS Infrastructure Services', line:"Runs AWS's global data-center infrastructure — the physical build the capex funds (added to the S-team Apr 2026)." },
+    { id:'aubrey', name:'Colleen Aubrey', title:'SVP, AWS Applied AI Solutions', line:'AWS applied-AI products and go-to-market.' },
+    { id:'treadwell', name:'Dave Treadwell', title:'SVP, AWS Compute & ML Services', line:'AWS core compute and machine-learning services (EC2 and up).' },
+    { id:'felton', name:'John Felton', title:'SVP, AWS CFO', line:'Finance chief for AWS — the segment carrying most of the capex and the profit.' },
+    { id:'hamilton', name:'James Hamilton', title:'SVP & Distinguished Engineer', line:"The architect behind much of AWS's hardware and data-center design." },
+    { id:'swami', name:'Swami Sivasubramanian', title:'VP, Agentic AI', line:"Leads Amazon's agentic-AI effort." },
+    // ── Stores & operations ──
+    { id:'beauchamp', name:'Christine Beauchamp', title:'SVP, North America Stores', line:'Runs the North America retail business.' },
+    { id:'grandinetti', name:'Russell Grandinetti', title:'SVP, International Stores', line:'Runs the International retail business — the turnaround segment.' },
+    { id:'madan', name:'Udit Madan', title:'SVP, Worldwide Operations', line:'Runs the fulfillment + logistics network — where fulfillment cost and the robotics rollout live.' },
+    { id:'agarwal', name:'Amit Agarwal', title:'SVP, Emerging Markets & Selling Partner Services', line:'Emerging markets and the third-party seller (3P) services engine.' },
+    // ── Media · devices · ads · health · Zoox ──
+    { id:'hopkins', name:'Mike Hopkins', title:'SVP, Amazon Video & Studios', line:'Runs Prime Video and Amazon MGM Studios.' },
+    { id:'panay', name:'Panos Panay', title:'SVP, Devices & Services', line:'Runs Devices & Services (Echo/Alexa, Kindle, Ring); joined from Microsoft (Surface).' },
+    { id:'kotas', name:'Paul Kotas', title:'SVP, Advertising, IMDb & Grand Challenge', line:'Runs the advertising business — the near-pure-margin engine lifting retail margins.' },
+    { id:'boom', name:'Steve Boom', title:'VP, Audio, Twitch & Games', line:'Audio, Twitch and games.' },
+    { id:'lindsay', name:'Neil Lindsay', title:'SVP, Amazon Health Services', line:'Health — One Medical and Amazon Pharmacy.' },
+    { id:'evans', name:'Aicha Evans', title:'CEO, Zoox', line:"Runs Zoox, Amazon's robotaxi unit." },
+    // ── Corporate functions ──
+    { id:'zapolsky', name:'David Zapolsky', title:'Chief Global Affairs & Legal Officer', line:'General counsel + global public policy — the legal/regulatory chief.' },
+    { id:'galetti', name:'Beth Galetti', title:'SVP, People eXperience & Technology', line:'Head of HR — owns the workforce and the 2022-26 headcount actions.' },
+    { id:'krawiec', name:'Peter Krawiec', title:'SVP, Worldwide Corporate & Business Development', line:'Runs corporate development and M&A.' },
+    { id:'herdener', name:'Drew Herdener', title:'SVP, Communications & Corporate Responsibility', line:'Communications and corporate responsibility.' },
+    { id:'schmidt', name:'Steve Schmidt', title:'Chief Security Officer', line:'Company-wide security.' },
+    { id:'castleberry', name:'Candi Castleberry', title:'VP, Amazon eXperience & Upskilling', line:'Employee experience and upskilling.' },
+    // ── Founder ──
     { id:'bezos', name:'Jeff Bezos', title:'Founder & Executive Chair', since:'Chair since Jul 2021 · founded 1994',
       line:'Founder; largest individual holder (~9%); single share class.',
       bio:"Founder and Executive Chair. Largest individual holder (~9%). Single share class — one share, one vote: his influence flows from the stake and the chair, not super-voting stock (the governance mirror-image of META and GOOGL)." }
@@ -4307,7 +4335,7 @@ var AMZN_MGMT = makeManagement({
     { k:'Board', v:'12 dirs · majority independent', d:'Bezos Executive Chair · independent Lead Director.' },
     { k:'Founder stake', v:'Jeff Bezos ~9%', d:'Largest individual holder; sells via 10b5-1 plans.' }
   ],
-  foot:"Executives per Amazon IR (mid-2026); board and committees per the 2025/2026 proxy (DEF 14A). Ownership and insider trades live in Pillars ▸ Management."
+  foot:"Full S-team roster + titles per Amazon's official leadership page (aboutamazon.com, 2026); board and committees per the 2025/2026 proxy (DEF 14A). Ownership and insider trades live in Pillars ▸ Management."
 });
 function amznOwnBody(){   // Ownership
   var h='<p class="ov-lede"><b>One share, one vote.</b> Amazon has a <b>single share class</b> — no founder super-voting stock. It is the governance mirror-image of META and GOOGL: influence flows from the stake and the chair, not from a special class.</p>';

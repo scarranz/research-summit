@@ -3247,9 +3247,9 @@ var EW_CALLS={
   techInfra:[
     {q:'Jan 2023', who:'Andy Jassy, CEO', tag:'ctx', txt:'Announced ~18,000 role eliminations, concentrated in corporate, devices and stores, after over-hiring through the pandemic — an early trim to the cost base that sits partly in this line.'},
     {q:'2024', who:'Andy Jassy, CEO', tag:'why', txt:'Custom silicon — Trainium for training, Inferentia for inference, Graviton for general compute — is the price-performance edge; the R&D behind it lands here ahead of the revenue it enables.'},
-    {q:'Q3 2025', who:'Andy Jassy, CEO', tag:'why', txt:'AWS demand is outstripping capacity — power and chips are the constraint, not demand. Bringing capacity on as fast as possible lifts both R&D and the depreciation carried in this line.'},
-    {q:'Oct 2025', who:'Andy Jassy, CEO', tag:'why', txt:'A further ~14,000 corporate roles were cut to remove layers and reallocate to AI — but rising infrastructure and its depreciation more than offset the payroll saving, so the line still grows.'},
-    {q:'Forward', who:'Brian Olsavsky, CFO', tag:'fwd', txt:'Capex steps up again in 2026, predominantly AWS; the depreciation that build creates keeps this the one functional line rising as a share of revenue until the capacity is monetized.'}
+    {q:'Q4 2025', who:'Management', tag:'why', txt:'The capex frame, in management\'s words: "about $200 billion in capital expenditures… predominantly in AWS, because we have very high demand" — the spend whose depreciation lands in this line.'},
+    {q:'Q1 2026', who:'Brian Olsavsky, CFO', tag:'why', txt:'Capex "primarily AWS and generative AI"; memory component costs had "skyrocketed" — the input that later pushed the frame up.'},
+    {q:'Q2 2026', who:'Brian Olsavsky, CFO', tag:'fwd', txt:'FY26 cash-capex frame raised to ~$220B from ~$200B, part of it the "higher cost of memory." The depreciation that build creates keeps this the one functional line rising as a share of revenue until the capacity is monetized.'}
   ],
   marketing:[
     {q:'2022', who:'Brian Olsavsky, CFO', tag:'ctx', txt:'Marketing spend was pulled back as measured returns fell in a softer demand environment — the company spends against efficiency, not a fixed budget.'},
@@ -3270,25 +3270,28 @@ var EW_CALLS={
   ]
 };
 var SEG_CALLS={
+  // Quotes in "…" are verbatim from the earnings-call records in docs/calls/AMZN*.md (Q4'25–Q2'26,
+  // from transcript coverage); entries marked "Summit note" / "(8-K)" are figures/context, not quotes.
   aws:[
-    {q:'2023', who:'Andy Jassy, CEO', tag:'ctx', txt:'Growth decelerated to ~12% as customers optimized spend in a tough macro; Amazon leaned into cost optimization with customers, betting the reacceleration would follow.'},
-    {q:'2024', who:'Andy Jassy, CEO', tag:'why', txt:'Reacceleration took hold as optimization lapped and AI workloads scaled; Trainium and the Anthropic partnership positioned AWS on price-performance.'},
-    {q:'Q2 2025', who:'Andy Jassy, CEO', tag:'why', txt:'Demand outstripping capacity — the company could monetize more with more capacity. Backlog (RPO) stepped up sharply; power and chips the gating factor, not demand.'},
-    {q:'Q2 2026', who:'Brian Olsavsky, CFO', tag:'why', txt:'Margin +650bps YoY, ~130bps of it from energy-derivative gains, leaving ~520bps of clean expansion from custom-silicon mix, power and utilization.'},
-    {q:'Forward', who:'Management', tag:'fwd', txt:'The FY26 capex frame was raised to ~$220B, partly on higher memory cost — reinvested against contracted demand that runs into 2027–28.'}
+    {q:'Q4 2025', who:'Andy Jassy, CEO', tag:'why', txt:'AWS grew at "the fastest we\'ve seen in thirteen quarters." On the build: Amazon added over 1GW of capacity in the quarter, "more than any other company in the world" in 2025.'},
+    {q:'Q4 2025', who:'Brian Olsavsky, CFO', tag:'why', txt:'"As fast as we install this capacity, this AI capacity, we are monetizing it — it\'s just a very unusual opportunity."'},
+    {q:'Q1 2026', who:'Andy Jassy, CEO', tag:'why', txt:'"It is very unusual for a business to grow this fast on a base this large." AWS +28% (~$150B run-rate); backlog $364B, which "does not include the recent deal… with Anthropic for over $100 billion."'},
+    {q:'Q2 2026', who:'Andy Jassy, CEO', tag:'why', txt:'"AWS is booming, growing 36.7% year-over-year in Q2 — our fastest growth in 18 quarters — and our AI and Chips businesses each eclipsed run rates of more than $25 billion." Backlog $496B.'},
+    {q:'Q2 2026', who:'Brian Olsavsky, CFO', tag:'why', txt:'AWS margin was up "650 basis points year-over-year, 520 basis points if you exclude the derivative accounting gain" — margins "aren\'t random," attributed to silicon mix, power efficiency and utilization.'},
+    {q:'Q2 2026', who:'Andy Jassy, CEO', tag:'fwd', txt:'"We have clear line of sight to strong financial returns," and AWS can become "a trillion-dollar annual revenue business." 2027 capacity is "largely reserved," some 2028 "already spoken for."'}
   ],
   us:[
-    {q:'2022', who:'Brian Olsavsky, CFO', tag:'ctx', txt:'North America fell below breakeven — the over-investment trough — as pandemic-era capacity outran demand.'},
-    {q:'2023', who:'Andy Jassy, CEO', tag:'why', txt:'Regionalization and cost-to-serve discipline pulled the margin back positive; the retail turnaround was cost-led, not price-led.'},
-    {q:'2024–25', who:'Andy Jassy, CEO', tag:'why', txt:'Advertising — growing high-teens to mid-20s% at near-incremental margin — became the single biggest reason NA margin keeps climbing.'},
-    {q:'Q3 2025', who:'Management', tag:'ctx', txt:'The quarter carried the $2.5B FTC settlement as a charge, depressing the reported NA margin without changing the underlying trend.'},
-    {q:'Forward', who:'Management', tag:'fwd', txt:'Continued advertising growth plus fulfillment efficiency support further gains; faster delivery is a cost tailwind, not a headwind, as density rises.'}
+    {q:'Q4 2025', who:'Andy Jassy, CEO', tag:'why', txt:'North America margin 9% in the peak quarter; Amazon the lowest-priced US retailer for the 9th straight year (~14% below other majors), everyday essentials now ~1 in 3 units.'},
+    {q:'Q4 2025', who:'Andy Jassy, CEO', tag:'why', txt:'Rufus reached 300M customers in 2025, with users "60% more likely to complete a purchase" — the discovery/ad flywheel on the retail surface.'},
+    {q:'Q1 2026', who:'Brian Olsavsky, CFO', tag:'why', txt:'The efficiency proof: paid units grew ~15% while fulfillment expense grew ~9% (FX-neutral); robotics is in "every 2026 US large-format launch."'},
+    {q:'Q2 2026', who:'Management (8-K)', tag:'why', txt:'Advertising +26% to $19.8B (sponsored products the driver); same-day perishables customers +50% since January, same-day orders carrying ~3x the units; ~$600M of tariff-related refunds landed in the quarter.'},
+    {q:'Q3 2025', who:'Summit note', tag:'ctx', txt:'Reported NA margin dipped on the $2.5B FTC settlement booked in the quarter — a charge, not a trend.'}
   ],
   int:[
-    {q:'2022', who:'Brian Olsavsky, CFO', tag:'ctx', txt:'International losses widened as established markets absorbed cost inflation and emerging markets (India, Middle East, Brazil) kept investing.'},
-    {q:'2023', who:'Andy Jassy, CEO', tag:'why', txt:'Established markets (Germany, UK, Japan) drove toward profitability on the same regionalization + advertising playbook North America used.'},
-    {q:'2024', who:'Andy Jassy, CEO', tag:'why', txt:'The segment crossed into operating profit for the first time — the emerging-market drag now outweighed by mature-market operating leverage.'},
-    {q:'Forward', who:'Management', tag:'fwd', txt:'Established markets keep expanding; emerging markets remain an investment drag for years. FX can swing the reported print as much as operations (+$903M in 2025).'}
+    {q:'2024', who:'Summit note', tag:'why', txt:'International crossed into operating profit for the first time — established markets (Germany, UK, Japan) running the same regionalization + advertising playbook as North America, a few years behind.'},
+    {q:'FY 2025', who:'Summit note', tag:'ctx', txt:'FX swings the reported print as much as operations — a +$903M tailwind to International operating income in 2025.'},
+    {q:'Q2 2026', who:'Management (8-K)', tag:'ctx', txt:'International net sales $42.2B (+15%), op income $1,717M (4.1% margin) — the one segment line under both Street and Summit estimates for the quarter.'},
+    {q:'Forward', who:'Summit note', tag:'fwd', txt:'Established markets keep expanding; emerging markets (India, Brazil, Middle East) remain an investment drag for years — the blended margin early on the curve NA already climbed.'}
   ]
 };
 function ewBase(c){

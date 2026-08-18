@@ -168,10 +168,6 @@ function sensBody(){
     '.ovt-subpane[data-ovst="sensitivity"] .sens-row-inp{gap:12px 18px}'+
     '.ovt-subpane[data-ovst="sensitivity"] .as-reset{padding:5px 11px;font-size:11px}'+
     '</style>';
-  h += '<p class="ov-lede"><b>Two drivers at a time.</b> Pick what goes on each axis, set where its range starts and how big a step is, '+
-       'leave everything else at the Summit model, and read the implied share price. Terminal value is an exit multiple — '+
-       '<b>EV/EBITDA or P/E</b>. Margins are <b>operating</b> margins, taken from the model; depreciation stays where the model puts it.</p>';
-
   h += '<div class="sens-controls-row sens-row-year">'+
        '<div class="sens-ctrl"><span class="sens-ctrl-l">Valuation year</span><div class="sens-years">'+
          YEARS.map(function(y){ return '<button type="button" class="sens-year'+(y===_year?' active':'')+'" data-asyear="'+y+'">'+y+'</button>'; }).join('')+
@@ -202,7 +198,6 @@ function sensBody(){
        '</div>';
 
   h += '<div class="sens-assum" id="asAssum"></div>';
-  h += '<div class="sens-base-sum" id="asBase"></div>';
   h += '<div class="sens-matrix-wrap" id="asMatrix"></div>';
   h += '<div class="sens-legend"><span>Lower</span><div class="sens-legend-bar"></div><span>Higher</span>'+
        '<span class="sens-legend-n" id="asLegendN"></span></div>';
@@ -285,17 +280,6 @@ function renderMatrix(scope){
   var lg = scope.querySelector('#asLegendN');
   if(lg) lg.textContent = refIsLive ? '(implied price vs. the live quote)'
                                     : '(implied price vs. the base case — live quote unavailable)';
-
-  var impliedMult = live ? (_basis==='ev' ? ((live*SHARES + _netDebt)/base.ebitda) : (live/base.eps)) : null;
-  scope.querySelector('#asBase').innerHTML =
-    'Base case <b>'+year+'</b>: '+
-    (_basis==='ev'
-      ? ('segment EBITDA <b>'+fmtB(base.ebitda)+'</b> × <b>'+_mEv+'×</b> → EV <b>'+fmtB(base.ev)+'</b> − net debt <b>'+fmtB(_netDebt)+'</b> = equity <b>'+fmtB(base.equity)+'</b>')
-      : ('earnings <b>'+fmtB(base.earnings)+'</b> ÷ '+SHARES.toLocaleString('en-US')+'M sh = EPS <b>$'+base.eps.toFixed(2)+'</b> × <b>'+_mPe+'×</b>'))+
-    ' → <b>'+fmtPx(base.px)+'</b>'+
-    (live ? ' <span class="sens-base-gm">vs live '+fmtPx(live)+' → <b>'+signPct(base.px/live-1)+'</b> · today\'s price implies <b>'+
-            impliedMult.toFixed(1)+'×</b> '+year+' '+multLabel()+'</span>'
-          : ' <span class="sens-base-gm">(live price unavailable)</span>');
 
   var ys = YEARS.map(function(y){
     var r=calc(y,{}), up = live ? (r.px/live-1) : null;

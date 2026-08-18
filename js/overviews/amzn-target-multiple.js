@@ -125,6 +125,8 @@ var _mEv  = 14;
 var _mPe  = 32;
 var _pegB = 'pe';         // PEG basis: 'pe' earnings · 'ev' EBITDA. Picks BOTH the numerator
                           // (that leg's multiple) and the denominator (that same line's growth).
+var _pegView = 'table';   // the PEG block has its own view toggle, independent of the log above
+var _pegChart = null;
 var _netDebt = 0;
 var _px = null;
 var _chart = null;
@@ -174,19 +176,10 @@ function signPct(p){ return (p>=0?'+':'−')+(Math.abs(p)*100).toFixed(1)+'%'; }
 function pctCell(p){ return p==null?'<span style="color:var(--mu)">—</span>'
   :'<span style="color:'+(p>=0?'#2E8B57':'#C0392B')+'">'+signPct(p)+'</span>'; }
 
-// Under 1.0 reads cheap against its own growth, over 2.0 dear — coloured on that reading, with
-// the arithmetic in the tooltip so the number is never a black box.
-function pegCell(i){
-  var g=pegGrowth(i), p=pegAt(i);
-  if(p==null) return '<td><span style="color:var(--mu)" title="'+
-    esc(g==null ? 'no prior-year figure in this vintage'
-               : 'growth is '+signPct(g)+' — PEG is undefined when growth is not positive')+'">—</span></td>';
-  var col = p<1 ? '#2E8B57' : (p>2 ? '#C0392B' : 'var(--navy)');
-  return '<td style="font-weight:700;color:'+col+'" title="'+
-    esc(pegMult(i).toFixed(1)+'× ÷ '+(g*100).toFixed(1)+'% growth ('+(FWD_YEAR-1)+' → '+FWD_YEAR+', same vintage)')+
-    '">'+p.toFixed(2)+'</td>';
-}
-function pegHead(){ return '<th title="'+esc(_pegB==='ev' ? 'EV/EBITDA multiple ÷ EBITDA growth' : 'P/E multiple ÷ earnings growth')+'">PEG</th>'; }
+// Under 1.0 reads cheap against its own growth, over 2.0 dear.
+function pegColor(p){ return p<1 ? '#2E8B57' : (p>2 ? '#C0392B' : 'var(--navy)'); }
+// The line the chosen basis is priced off, named for the column headers.
+function pegLineLabel(){ return _pegB==='ev' ? 'EBITDA' : 'Earnings'; }
 
 // ── Body ─────────────────────────────────────────────────────────────────────────
 function tmBody(){
@@ -208,6 +201,9 @@ function tmBody(){
     '.tm-warn{border:1px solid rgba(192,57,43,.35);border-left:4px solid #C0392B;background:rgba(192,57,43,.05);'+
       'border-radius:9px;padding:11px 14px;font-size:12px;line-height:1.55;color:var(--navy);margin:12px 0}'+
     '.tm-ph{color:#8E44AD;font-weight:800;border-bottom:1px dashed #8E44AD}'+
+    // the PEG column is the output of the row — shaded so the eye lands on it, not on the inputs
+    '.tm-tbl th.peg-out,.tm-tbl td.peg-out{background:#F1F3F5;font-weight:800}'+
+    '.tm-tbl tbody tr.tm-rep td.peg-out{background:#EDEFF1}'+
     '</style>';
 
   h += '<div class="sens-controls-row sens-row-year">'+
@@ -217,10 +213,6 @@ function tmBody(){
        '</div></div>'+
        '<div class="sens-ctrl"><span class="sens-ctrl-l">Forward year</span><div class="sens-years">'+
          FWD_YEARS.map(function(y){ return '<button type="button" class="sens-year" data-tmfy="'+y+'">FY'+y+'</button>'; }).join('')+
-       '</div></div>'+
-       '<div class="sens-ctrl"><span class="sens-ctrl-l">PEG on</span><div class="sens-years">'+
-         '<button type="button" class="sens-year" data-tmpeg="pe">P/E ÷ earnings growth</button>'+
-         '<button type="button" class="sens-year" data-tmpeg="ev">EV/EBITDA ÷ EBITDA growth</button>'+
        '</div></div></div>';
 
   h += '<div class="sens-controls-row sens-row-inp" id="tmLiveCtrls">'+
@@ -249,12 +241,33 @@ function tmBody(){
   h += '<div id="tmChartWrap" style="height:340px;position:relative" hidden><canvas id="tmChart"></canvas></div>';
   h += '<div class="dd-note" id="tmChartNote" hidden></div>';
   h += '<div class="ov-foot" id="tmFoot"></div>';
+
+  // ── PEG, as its own block ──────────────────────────────────────────────────────
+  // Same shape as the log above — its own basis + view toggles, its own table and chart — because
+  // the PEG asks a different question from the target. The target is "what is this worth"; the PEG
+  // is "how much growth am I paying for", and it needs the two years side by side to show its work.
+  h += '<div class="ov-sec" style="margin-top:20px"><div class="ov-sec-h">PEG</div>';
+  h += '<div class="sens-controls-row sens-row-year">'+
+       '<div class="sens-ctrl"><span class="sens-ctrl-l">PEG on</span><div class="sens-years">'+
+         '<button type="button" class="sens-year" data-tmpeg="pe">P/E ÷ earnings growth</button>'+
+         '<button type="button" class="sens-year" data-tmpeg="ev">EV/EBITDA ÷ EBITDA growth</button>'+
+       '</div></div>'+
+       '<div class="sens-ctrl"><span class="sens-ctrl-l">View</span><div class="sens-years">'+
+         '<button type="button" class="sens-year" data-pegview="table">Table</button>'+
+         '<button type="button" class="sens-year" data-pegview="chart">Chart</button>'+
+       '</div></div>'+
+       '</div>';
+  h += '<div class="dfin-wrap" id="pegTable"></div>';
+  h += '<div id="pegChartWrap" style="height:320px;position:relative" hidden><canvas id="pegChart"></canvas></div>';
+  h += '<div class="dd-note" id="pegNote"></div>';
+  h += '</div>';
   return h;
 }
 
 // ── Chart ────────────────────────────────────────────────────────────────────────
 var C_EV='#146EB4', C_PE='#FF9900';
 var C_REC='#8E44AD';   // recorded target — purple, matching the placeholder columns in the table
+var C_PEG='#5B6B7C';   // PEG — slate, deliberately not a target colour: it is a different question
 function buildChart(scope){
   var cv=scope.querySelector('#tmChart');
   if(!cv || typeof Chart==='undefined' || cv.offsetParent===null) return;
@@ -343,7 +356,6 @@ function renderLive(scope){
       '<td><b>'+esc(s.d)+'</b>'+
         '<span class="tm-tag tm-tag-'+k.cls+'">'+esc(k.label)+'</span>'+
         (brk?'<span class="tm-tag tm-tag-brk">EBITDA redefined</span>':'')+'</td>'+
-      pegCell(i)+
       '<td'+(revFlat?' style="color:var(--mu)"':'')+'>'+fmtB(s.rev)+'</td>'+
       '<td>'+fmtB(s.ebitda)+'</td>'+
       '<td>'+fmtB(s.earn)+'</td>'+
@@ -358,7 +370,7 @@ function renderLive(scope){
   });
   scope.querySelector('#tmTable').innerHTML=
     '<table class="tm-tbl"><thead><tr>'+
-      '<th>Snapshot</th>'+pegHead()+'<th>Revenue '+FWD_YEAR+'</th><th>EBITDA '+FWD_YEAR+'</th><th>Earnings '+FWD_YEAR+'</th><th>EPS</th>'+
+      '<th>Snapshot</th><th>Revenue '+FWD_YEAR+'</th><th>EBITDA '+FWD_YEAR+'</th><th>Earnings '+FWD_YEAR+'</th><th>EPS</th>'+
       '<th>Target @ '+_mEv+'× EV/EBITDA</th><th>Δ</th>'+
       '<th>Target @ '+_mPe+'× P/E</th><th>Δ</th><th>EV vs P/E</th>'+
     '</tr></thead><tbody>'+rows+'</tbody></table>';
@@ -386,7 +398,6 @@ function renderPreview(scope){
     var d=(prev!=null)?(rec/prev-1):null;
     rows+='<tr'+((i===SNAPS.length-1)?' class="tm-last"':(rev?'':' class="tm-rep"'))+'>'+
       '<td><b>'+esc(s.d)+'</b><span class="tm-tag tm-tag-'+k.cls+'">'+esc(k.label)+'</span></td>'+
-      pegCell(i)+
       '<td>'+fmtB(s.rev)+'</td><td>'+fmtB(s.ebitda)+'</td><td>'+fmtB(s.earn)+'</td><td>$'+eps(s).toFixed(2)+'</td>'+
       '<td>'+ph(mev.toFixed(1)+'×')+'</td><td>'+ph(mpe.toFixed(0)+'×')+'</td>'+
       '<td class="tm-pt">'+ph(fmtPx(rec))+'</td><td>'+pctCell(d)+'</td>'+
@@ -400,7 +411,7 @@ function renderPreview(scope){
 
   scope.querySelector('#tmTable').innerHTML=
     '<table class="tm-tbl"><thead><tr>'+
-      '<th>Snapshot</th>'+pegHead()+'<th>Revenue '+FWD_YEAR+'</th><th>EBITDA '+FWD_YEAR+'</th><th>Earnings '+FWD_YEAR+'</th><th>EPS</th>'+
+      '<th>Snapshot</th><th>Revenue '+FWD_YEAR+'</th><th>EBITDA '+FWD_YEAR+'</th><th>Earnings '+FWD_YEAR+'</th><th>EPS</th>'+
       '<th>EV/EBITDA chosen</th><th>P/E chosen</th><th>Recorded year-end target</th><th>Δ</th>'+
     '</tr></thead><tbody>'+rows+'</tbody></table>';
 
@@ -412,6 +423,87 @@ function renderPreview(scope){
     'the underlying is readable. <b>To make it real:</b> the connector ingests projection_history past column EM, or drop the workbook where I can read it '+
     '(the xlsx parser from the AppLovin build handles it) — one file per revision for the history, otherwise the latest gives the current row only. '+
     'Underlying: Summit DCF model, instrument AMZN, model be6d6393, FY'+FWD_YEAR+'. Data sourced from Summit DCF models.';
+}
+
+// ── PEG block ────────────────────────────────────────────────────────────────────
+// Shows its own arithmetic: the multiple, both years of the line it is priced off, the growth
+// between them, and the ratio. Every figure on the row comes from ONE snapshot, so the growth is
+// what that vintage actually forecast rather than something assembled across files.
+function renderPegTable(scope){
+  var k=PEG_KEY[_pegB], y0=FWD_YEAR-1, prior=priorOf(FWD_YEAR);
+  var rows='';
+  SNAPS.forEach(function(s,i){
+    var kd=kindOf(i), rev=isRevision(i);
+    var pri=prior[i], g=pegGrowth(i), p=pegAt(i), m=pegMult(i);
+    var cell = (p==null)
+      ? '<span style="color:var(--mu)" title="'+esc(g==null ? 'no prior-year figure in this vintage'
+          : 'growth is '+signPct(g)+' — PEG is undefined when growth is not positive')+'">—</span>'
+      : '<span style="color:'+pegColor(p)+'">'+p.toFixed(2)+'</span>';
+    rows+='<tr'+((i===SNAPS.length-1)?' class="tm-last"':(rev?'':' class="tm-rep"'))+'>'+
+      '<td><b>'+esc(s.d)+'</b><span class="tm-tag tm-tag-'+kd.cls+'">'+esc(kd.label)+'</span></td>'+
+      '<td>'+m.toFixed(1)+'×</td>'+
+      '<td>'+(pri&&pri[k]!=null?fmtB(pri[k]):'—')+'</td>'+
+      '<td>'+fmtB(SNAPS[i][k])+'</td>'+
+      '<td>'+pctCell(g)+'</td>'+
+      '<td class="peg-out">'+cell+'</td>'+
+      '</tr>';
+  });
+  scope.querySelector('#pegTable').innerHTML=
+    '<table class="tm-tbl"><thead><tr>'+
+      '<th>Snapshot</th>'+
+      '<th>'+(_pegB==='ev'?'EV/EBITDA':'P/E')+' multiple</th>'+
+      '<th>'+esc(pegLineLabel())+' '+y0+'</th>'+
+      '<th>'+esc(pegLineLabel())+' '+FWD_YEAR+'</th>'+
+      '<th>Growth</th>'+
+      '<th class="peg-out">PEG</th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+function buildPegChart(scope){
+  var cv=scope.querySelector('#pegChart');
+  if(!cv || typeof Chart==='undefined' || cv.offsetParent===null) return;
+  if(_pegChart){ try{ _pegChart.destroy(); }catch(e){} _pegChart=null; }
+  var data=SNAPS.map(function(s,i){ return pegAt(i); });
+  _pegChart=new Chart(cv.getContext('2d'),{
+    type:'line',
+    data:{ labels:SNAPS.map(function(s){ return s.d.slice(2); }),
+      datasets:[{ label:'PEG ('+(_pegB==='ev'?'EV/EBITDA':'P/E')+')', data:data,
+        borderColor:C_PEG, backgroundColor:C_PEG, borderWidth:2.6, tension:.25, fill:false,
+        spanGaps:true,
+        pointRadius:SNAPS.map(function(s,i){ return isRevision(i)?4.5:3; }),
+        pointBackgroundColor:SNAPS.map(function(s,i){ return isRevision(i)?C_PEG:'#fff'; }),
+        pointBorderColor:SNAPS.map(function(s){ return s.d===BREAK_ON?'#C0392B':C_PEG; }),
+        pointBorderWidth:2 }] },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10.5 }, color:'#6b7684' } },
+        tooltip:{ callbacks:{
+          label:function(ctx){ var v=ctx.parsed.y, i=ctx.dataIndex, g=pegGrowth(i);
+            return v==null ? 'PEG: — (growth not positive)'
+              : 'PEG '+v.toFixed(2)+'  ·  '+pegMult(i).toFixed(1)+'× ÷ '+(g*100).toFixed(1)+'%'; },
+          title:function(items){ var i=items[0].dataIndex; return SNAPS[i].d+(isRevision(i)?'':'  (re-parse)'); } } } },
+      scales:{ x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:10 } } },
+        y:{ grid:{ color:'#EEF2F7' }, ticks:{ color:'#8A93A0', font:{ size:10 },
+          callback:function(v){ return v.toFixed(1); } } } } }
+  });
+}
+
+function renderPeg(scope){
+  var chart=(_pegView==='chart');
+  if(chart) requestAnimationFrame(function(){ buildPegChart(scope); });
+  else { renderPegTable(scope); if(_pegChart){ try{ _pegChart.destroy(); }catch(e){} _pegChart=null; } }
+  var t=scope.querySelector('#pegTable'), c=scope.querySelector('#pegChartWrap');
+  if(t) t.hidden=chart;
+  if(c) c.hidden=!chart;
+
+  // Only the data-integrity flag survives here. It is not commentary: on this one combination the
+  // denominator is inflated by the redefinition, so the ratio flatters and the reader has no way
+  // to see that from the numbers alone.
+  var n=scope.querySelector('#pegNote');
+  if(n) n.innerHTML = (FWD_YEAR===2028 && _pegB==='ev')
+    ? '<b>On FY2028 this basis inherits the 2026-08-04 EBITDA redefinition through its denominator</b>, which inflates '+
+      'growth and flatters the ratio. The PEG does not repair that break.'
+    : '';
 }
 
 // ── Render ───────────────────────────────────────────────────────────────────────
@@ -427,6 +519,8 @@ function render(scope){
     b.classList.toggle('active', +b.getAttribute('data-tmfy')===FWD_YEAR); });
   scope.querySelectorAll('[data-tmpeg]').forEach(function(b){
     b.classList.toggle('active', b.getAttribute('data-tmpeg')===_pegB); });
+  scope.querySelectorAll('[data-pegview]').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-pegview')===_pegView); });
 
   // the multiple labels name the forward year, so they follow the toggle
   var el=scope.querySelector('#tmEvL'); if(el) el.textContent='EV/EBITDA '+FWD_YEAR;
@@ -449,6 +543,8 @@ function render(scope){
   if(cn) cn.hidden=!showChart;
   if(showChart) requestAnimationFrame(function(){ buildChart(scope); });
   else if(_chart){ try{ _chart.destroy(); }catch(e){} _chart=null; }
+
+  renderPeg(scope);
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────────
@@ -467,6 +563,8 @@ function initTm(root){
       setFwd(+b.getAttribute('data-tmfy')); render(scope); }; });
     scope.querySelectorAll('[data-tmpeg]').forEach(function(b){ b.onclick=function(){
       _pegB=b.getAttribute('data-tmpeg'); render(scope); }; });
+    scope.querySelectorAll('[data-pegview]').forEach(function(b){ b.onclick=function(){
+      _pegView=b.getAttribute('data-pegview'); render(scope); }; });
     function bind(id, set){ var el=scope.querySelector('#'+id);
       el.oninput=function(){ var v=parseFloat(el.value); if(isFinite(v)) { set(v); render(scope); } }; }
     bind('tmEv', function(v){ if(v>0) _mEv=v; });

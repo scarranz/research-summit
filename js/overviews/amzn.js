@@ -4026,10 +4026,12 @@ function bottomlineCapexBody(){
      '<div class="acx-cap">Each bar swings one driver across a plausible range while holding the rest at the model default; the dashed line is the base for the selected year. <b>Capex growth and server useful life move D&amp;A far more than allocation or the calibration factors</b> — that is where the forecast risk actually sits. Toggle FY26 → FY28 to watch the fan widen as the build compounds into the base.</div></div>';
   h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
      '<span>Consensus capex &amp; D&amp;A — how the estimates evolved</span>'+
-     '<span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="acx-tog acx-constog"><button type="button" data-acxcons="capex" class="active">Capex</button><button type="button" data-acxcons="dna">D&amp;A</button></span>'+
+     '<span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+
+     '<span class="acx-tog acx-consgran"><button type="button" data-consgran="y" class="active">Evolution</button><button type="button" data-consgran="q">Quarterly</button></span>'+
+     '<span class="acx-tog acx-constog"><button type="button" data-acxcons="capex" class="active">Capex</button><button type="button" data-acxcons="dna">D&amp;A</button></span>'+
      '<span class="acx-fychips" style="display:inline-flex;gap:4px;flex-wrap:wrap">'+'<button type="button" class="acx-rp" data-fy="2024">FY24</button>'+'<button type="button" class="acx-rp active" data-fy="2025">FY25</button>'+'<button type="button" class="acx-rp active" data-fy="2026">FY26</button>'+'<button type="button" class="acx-rp" data-fy="2027">FY27</button>'+'<button type="button" class="acx-rp" data-fy="2028">FY28</button>'+'</span></span></div>'+
      '<div style="height:290px"><canvas id="acxCons"></canvas></div>'+
-     '<div class="acx-cap">Consensus estimate per fiscal year across 12 Bloomberg snapshots; the solid line <b>stops at the report date</b> and the <b>dashed line marks the actual</b>. Capex FY2026 ran ~$56B → ~$220B. Source: BBG consensus history.</div></div>';
+     '<div class="acx-cap" id="acxConsCap"><b>Evolution</b>: consensus estimate per fiscal year across 12 Bloomberg snapshots — solid line <b>stops at the report date</b>, <b>dashed marks the actual</b>. <b>Quarterly</b>: the picked FY\'s four quarters (actuals solid, consensus faded). Source: BBG.</div></div>';
   h+='</div></div>';
   return h;
 }
@@ -4136,6 +4138,23 @@ function aCxEffChart(root){
 function aCxConsChart(root){
   var cv=aChartReady('acxCons'); if(!cv) return; aDestroy('acxCons');
   var tg=root.querySelector('.acx-constog .active'), metric=tg?tg.getAttribute('data-acxcons'):'capex';
+  var gg=root.querySelector('.acx-consgran .active'), gran=gg?gg.getAttribute('data-consgran'):'y', capEl=root.querySelector('#acxConsCap');
+  if(gran==='q'){   // quarterly levels for the picked FY (4 quarters max), BBG quarterly capex/D&A
+    var act=[]; root.querySelectorAll('.acx-fychips .acx-rp.active').forEach(function(b){ act.push(+b.getAttribute('data-fy')); });
+    var fy=(act.indexOf(2026)>=0)?2026:(act.length?act[0]:2026);
+    var qmap={'2Q25':2025,'3Q25':2025,'4Q25':2025,'1Q26':2026,'2Q26':2026,'3Q26E':2026,'4Q26E':2026,'1Q27E':2027,'2Q27E':2027};
+    var ser=(metric==='capex')?amznBBG.is.capex.q:amznBBG.is.depr.q;
+    var idxs=amznBBG.qtrs.map(function(q,i){ return {q:q,i:i,y:qmap[q]}; }).filter(function(o){ return o.y===fy; });
+    var vals=idxs.map(function(o){ return ser[o.i]==null?null:Math.round(Math.abs(ser[o.i])/100)/10; });
+    var fwd=idxs.map(function(o){ return o.i>4; }), col=(metric==='capex')?BRAND2:SQUID;
+    _aCharts['acxCons']=new Chart(cv.getContext('2d'),{ type:'bar',
+      data:{ labels:idxs.map(function(o){ return o.q; }), datasets:[{ label:(metric==='capex'?'Capex':'D&A'), data:vals, backgroundColor:vals.map(function(_,i){ return fwd[i]?acxRGBA(col,0.45):col; }), borderColor:'#fff', borderWidth:1, maxBarThickness:64 }] },
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ return '$'+c.parsed.y.toFixed(1)+'B'+(fwd[c.dataIndex]?' (consensus)':' (actual)'); } } } },
+        scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } });
+    if(capEl) capEl.innerHTML='<b>FY'+String(fy).slice(2)+' quarterly '+(metric==='capex'?'capex':'D&A')+'</b> — actuals solid, consensus faded. '+(idxs.length<4?'<span style="color:#B7791F">Only '+idxs.length+' quarters sit in the BBG window (2Q25→2Q27E); FY26 is the only complete four — pick FY26.</span>':'The four quarters, and where they actually landed.')+' Source: BBG.';
+    return;
+  }
   var data=A_CONS[metric], labels=A_CONS.asof;
   var sel={}; root.querySelectorAll('.acx-fychips .acx-rp.active').forEach(function(b){ sel[b.getAttribute('data-fy')]=1; });
   var COL={'2024':GRAY,'2025':GREEN,'2026':BRAND,'2027':BRAND2,'2028':SQUID}, ds=[], acts=[];
@@ -4223,6 +4242,7 @@ function aBuildCapex(root){
     pane.querySelectorAll('.acx-seastog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.acx-seastog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aCxSeasChart(root); }; });
     pane.querySelectorAll('.acx-wafyr button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.acx-wafyr button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildWaffle(+b.getAttribute('data-wafyr')); }; });
     pane.querySelectorAll('.acx-constog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.acx-constog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aCxConsChart(root); }; });
+    pane.querySelectorAll('.acx-consgran button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.acx-consgran button').forEach(function(x){ x.classList.toggle('active',x===b); }); aCxConsChart(root); }; });
     pane.querySelectorAll('.acx-fychips .acx-rp').forEach(function(b){ b.onclick=function(){ b.classList.toggle('active'); aCxConsChart(root); }; });
     pane.querySelectorAll('.acx-tornyr button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.acx-tornyr button').forEach(function(x){ x.classList.toggle('active',x===b); }); aCxTornado(root); }; });
     var rst=pane.querySelector('#acxReset'); if(rst) rst.onclick=function(){ A_CX_CTRLS.forEach(function(c){ if(c.grp) return; var el=root.querySelector('#acx_'+c.id); if(el) el.value=c.def; }); pane._acxDeployTouched=false; aCxRangeReset(root); aCxRender(root); };

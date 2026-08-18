@@ -2936,11 +2936,38 @@ function rsAttachBrush(el, chart, onX, onY, onReset){
     document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp); ev.preventDefault(); };
   el.ondblclick = onReset;
 }
-// Generic y-zoom + double-click reset for a categorical-x bespoke chart (rule 1; onX=null per §0.2).
-function aZoom(id){ var cv=document.getElementById(id), ch=_aCharts[id]; if(!cv||!ch||!ch.options||!ch.options.scales||!ch.options.scales.y) return;
-  rsAttachBrush(cv, ch, null,
-    function(v1,v2){ ch.options.scales.y.min=v1; ch.options.scales.y.max=v2; ch.update('none'); },
-    function(){ ch.options.scales.y.min=undefined; ch.options.scales.y.max=undefined; ch.update('none'); }); }
+// Standard treatment for a bespoke chart: y-zoom + double-click reset (rule 1; onX=null per §0.2)
+// AND an auto-generated collapsible table from the chart's own data (rule 3) — unless the chart
+// supplies its own table container (#id-tbl, e.g. the waterfalls). One call covers both.
+function aFnum(v){ if(v==null||v==='') return null; if(Array.isArray(v)) v=v[v.length-1]; if(typeof v!=='number') return String(v);
+  var a=Math.abs(v), r=a<10?Math.round(v*100)/100:(a<1000?Math.round(v*10)/10:Math.round(v)); return r.toLocaleString('en-US'); }
+// Auto-table from a chart's own data (rule 3), honouring hidden series (rule 2) and preserving open state.
+function aBuildAutoTbl(id){
+  var cv=document.getElementById(id), ch=_aCharts[id]; if(!cv||!ch) return;
+  if(document.getElementById(id+'-tbl')) return;   // chart supplies its own table
+  var labels=(ch.data&&ch.data.labels)||[], ds=(ch.data&&ch.data.datasets)||[];
+  if(!labels.length||!ds.length) return;
+  var headers=['Series'].concat(labels.map(function(l){ return Array.isArray(l)?l.join(' '):String(l); }));
+  var rows=[]; ds.forEach(function(d,i){ var meta=ch.getDatasetMeta?ch.getDatasetMeta(i):null; if(meta&&meta.hidden) return;   // rule 2: hidden series leaves the table
+    rows.push([d.label||'series'].concat((d.data||[]).map(aFnum))); });
+  var wrap=cv.parentElement, host=wrap&&wrap.parentNode; if(!host) return;
+  var prev=wrap.nextElementSibling, wasOpen=false;
+  if(prev&&prev.getAttribute&&prev.getAttribute('data-rstblhost')===id){ var ob=prev.querySelector('.rs-collap-b'); wasOpen=!!(ob&&!ob.hidden); host.removeChild(prev); }
+  var div=document.createElement('div'); div.setAttribute('data-rstblhost',id); div.style.marginTop='8px';
+  div.innerHTML=aTbl(id,'Data — what the chart draws',headers,rows);
+  if(wasOpen){ var nb=div.querySelector('.rs-collap-b'); if(nb) nb.hidden=false; var ic=div.querySelector('.rs-collap-ic'); if(ic) ic.textContent='▾'; }
+  host.insertBefore(div, wrap.nextSibling);
+}
+function aZoom(id){ var cv=document.getElementById(id), ch=_aCharts[id]; if(!cv||!ch) return;
+  if(ch.options&&ch.options.scales&&ch.options.scales.y){   // rule 1
+    rsAttachBrush(cv, ch, null,
+      function(v1,v2){ ch.options.scales.y.min=v1; ch.options.scales.y.max=v2; ch.update('none'); },
+      function(){ ch.options.scales.y.min=undefined; ch.options.scales.y.max=undefined; ch.update('none'); }); }
+  if(ch.options&&ch.options.plugins&&ch.options.plugins.legend){   // rule 2: legend hides the series AND refreshes the table
+    var orig=Chart.defaults.plugins.legend.onClick;
+    ch.options.plugins.legend.onClick=function(e,item,legend){ orig.call(this,e,item,legend); setTimeout(function(){ aBuildAutoTbl(id); },0); }; }
+  aBuildAutoTbl(id);   // rule 3
+}
 // Collapsible data table under a chart (rule 3) — the portable rs-collap markup (§0.7).
 function aTbl(id, title, headers, rows){
   var head='<span class="rs-collap-ic">▸</span> '+esc(title)+' <span class="rs-collap-sub">'+rows.length+' rows</span>';
@@ -2976,7 +3003,7 @@ function aBuildTopline(){
       { label:'International', data:aSegSeries('intrev'), backgroundColor:BRAND2, maxBarThickness:34 },
       { label:'AWS', data:aSegSeries('aws'), backgroundColor:SQUID, maxBarThickness:34 } ] },
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } } },
-      scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); }
+      scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); aZoom('aSegRev'); }
   var c2=aChartReady('aSegOp');
   if(c2){ aDestroy('aSegOp');
     function opSeries(key){ return A_SEG_YEARS.map(function(y){ var tot=0,got=0; var m=amznResults.views.q.metrics[key]; m.periods.forEach(function(p,i){ if(p.slice(2)===y.slice(2)&&m.act[i]!=null){ tot+=m.act[i]; got++; } }); return got===4?tot/1000:null; }); }
@@ -2986,7 +3013,7 @@ function aBuildTopline(){
         { label:'International', data:opSeries('intopinc'), backgroundColor:BRAND2, maxBarThickness:34 },
         { label:'AWS', data:opSeries('awsopinc'), backgroundColor:SQUID, maxBarThickness:34 } ] },
       options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } } },
-        scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); }
+        scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); aZoom('aSegOp'); }
   var c3=aChartReady('aRevLines');
   if(c3){ aDestroy('aRevLines');
     var lines=[ ['Online stores','online'], ['3P seller services','p3'], ['AWS','aws'], ['Advertising','ads'], ['Subscriptions','subs'], ['Physical stores','phys'], ['Other','other'] ];
@@ -2994,7 +3021,7 @@ function aBuildTopline(){
     _aCharts['aRevLines']=new Chart(c3.getContext('2d'),{ type:'bar',
       data:{ labels:lines.map(function(l){ return l[0]; }), datasets:[{ data:vals, backgroundColor:[BRAND,BRAND2,SQUID,'#7A5AF8','#2E8B57','#9AA4B0','#C8B49A'], maxBarThickness:26 }] },
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } },
-        scales:{ x:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } }, y:{ grid:{ display:false } } } } }); }
+        scales:{ x:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } }, y:{ grid:{ display:false } } } } }); aZoom('aRevLines'); }
 }
 function aGrossMgnSeries(){ return A_OPEX_YEARS.map(function(y){ var r=A_OPEX[y]; return Math.round((r.revenue-r.costOfSales)/r.revenue*1000)/10; }); }
 function aOpMgnSeries(){ return A_OPEX_YEARS.map(function(y){ var r=A_OPEX[y]; var cost=A_OPEX_FN.reduce(function(a,f){ return a+r[f.k]; },0)+r.otherOpex; return Math.round((r.revenue-cost)/r.revenue*1000)/10; }); }
@@ -3527,7 +3554,7 @@ function aBuildLeases(){   // lease-cost chart + Leases-explorer tab wiring (Mis
       data:{ labels:yrs.map(String), datasets:LT.map(function(t){ return { label:t.lab, data:yrs.map(function(y){ return A_TENK.leaseCost[y][t.k]/1000; }), backgroundColor:t.c, borderColor:'#fff', borderWidth:1, maxBarThickness:44, stack:'l' }; }) },
       options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
         plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+c.parsed.y.toFixed(1)+'B'; }, footer:function(it){ return 'Total lease cost: $'+it.reduce(function(a,x){ return a+x.parsed.y; },0).toFixed(1)+'B'; } } } },
-        scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); }
+        scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); aZoom('aExpLease'); }
   var pane=document.querySelector('.dd-pane[data-dd="misc"] .ovt-subpane[data-ovst="capex"]');
   if(pane && !pane._lxWired){ pane._lxWired=true;
     var lt=pane.querySelectorAll('.lx-tab');
@@ -4184,7 +4211,7 @@ function aCxCycleChart(root){
     options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
       plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
         tooltip:{ callbacks:{ label:function(x){ return x.dataset.label+': $'+x.parsed.y.toFixed(1)+'B'; }, footer:function(it){ var d=view[it[0].dataIndex]; return 'Capex − D&A gap: $'+((d.capex-d.da)/1000).toFixed(1)+'B'; } } } },
-      scales:{ x:{ stacked:true, grid:{ display:false }, ticks:{ font:{ size:9 }, maxRotation:0, autoSkip:true } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } });
+      scales:{ x:{ stacked:true, grid:{ display:false }, ticks:{ font:{ size:9 }, maxRotation:0, autoSkip:true } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); aZoom('acxCycle');
 }
 function aCxGWChart(root){
   var cv=aChartReady('acxGW'); if(!cv) return; aDestroy('acxGW');
@@ -4201,7 +4228,7 @@ function aCxGWChart(root){
     options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
       plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
         tooltip:{ callbacks:{ label:function(x){ return x.dataset.label+': '+x.parsed.y.toFixed(2)+' GW'; }, footer:function(it){ return 'Total: '+it.reduce(function(a,x){ return a+x.parsed.y; },0).toFixed(2)+' GW'; } } } },
-      scales:{ x:{ stacked:true, grid:{ display:false }, ticks:{ font:{ size:9 }, autoSkip:true } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+' GW'; } } } } } });
+      scales:{ x:{ stacked:true, grid:{ display:false }, ticks:{ font:{ size:9 }, autoSkip:true } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+' GW'; } } } } } }); aZoom('acxGW');
 }
 function aCxSeasChart(root){
   var tg=root.querySelector('.acx-seastog .active'), key=tg?tg.getAttribute('data-acxseas'):'cap';
@@ -4212,7 +4239,7 @@ function aCxSeasChart(root){
     data:{ labels:yrs.map(function(y){ return "'"+String(y).slice(2); }), datasets:ds },
     options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
       plugins:{ legend:{ position:'bottom', labels:{ boxWidth:8, font:{ size:9 } } }, tooltip:{ callbacks:{ label:function(x){ return x.dataset.label+': '+x.parsed.y+'%'; } } } },
-      scales:{ x:{ stacked:true, grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ stacked:true, max:100, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:9 }, callback:function(v){ return v+'%'; } } } } } });
+      scales:{ x:{ stacked:true, grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ stacked:true, max:100, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:9 }, callback:function(v){ return v+'%'; } } } } } }); aZoom('acxSeas');
 }
 var A_CX_MIX4=[ {k:'Servers',lab:'Servers & networking',c:BRAND2,ks:['Servers']}, {k:'LB',lab:'Land & buildings',c:BRAND,ks:['LB']},
   {k:'CIP',lab:'Construction in progress',c:'#7A5AF8',ks:['CIP']}, {k:'Other',lab:'Other equipment & assets',c:GRAY,ks:['Heavy','OtherEq','OtherAssets']} ];
@@ -4224,7 +4251,7 @@ function aCxEffChart(root){
       borderColor:BRAND2, backgroundColor:acxRGBA(BRAND2,0.08), borderWidth:2.5, pointRadius:2.5, tension:0.25, fill:'origin',
       segment:{ borderDash:function(ctx){ return rows[ctx.p1DataIndex]&&rows[ctx.p1DataIndex].proj?[5,4]:undefined; } } } ] },
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(x){ return 'Eff. rate: '+x.parsed.y+'%'; } } } },
-      scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:9 }, callback:function(v){ return v+'%'; } } } } } });
+      scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:9 }, callback:function(v){ return v+'%'; } } } } } }); aZoom('acxEff');
 }
 function aCxConsChart(root){
   var cv=aChartReady('acxCons'); if(!cv) return; aDestroy('acxCons');
@@ -4242,7 +4269,7 @@ function aCxConsChart(root){
       data:{ labels:idxs.map(function(o){ return o.q; }), datasets:[{ label:(metric==='capex'?'Capex':'D&A'), data:vals, backgroundColor:vals.map(function(_,i){ return fwd[i]?acxRGBA(col,0.45):col; }), borderColor:'#fff', borderWidth:1, maxBarThickness:64 }] },
       options:{ responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ return '$'+c.parsed.y.toFixed(1)+'B'+(fwd[c.dataIndex]?' (consensus)':' (actual)'); } } } },
-        scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } });
+        scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); aZoom('acxCons');
     if(capEl) capEl.innerHTML='<b>FY'+String(fy).slice(2)+' quarterly '+(metric==='capex'?'capex':'D&A')+'</b> — actuals solid, consensus faded. '+(idxs.length<4?'<span style="color:#B7791F">Only '+idxs.length+' quarters sit in the BBG window (2Q25→2Q27E); FY26 is the only complete four — pick FY26.</span>':'The four quarters, and where they actually landed.')+' Source: BBG.';
     return;
   }
@@ -4263,7 +4290,7 @@ function aCxConsChart(root){
     options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'nearest', intersect:false },
       plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
         tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+' est: $'+c.parsed.y+'B'; } } } },
-      scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } });
+      scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); aZoom('acxCons');
 }
 function aCxTornado(root){
   var cv=aChartReady('acxTorn'); if(!cv) return; aDestroy('acxTorn');
@@ -4290,7 +4317,7 @@ function aCxTornado(root){
       backgroundColor:rows.map(function(r){ return acxRGBA(BRAND2, 0.55+0.45*Math.min(1,r.range/rows[rows.length-1].range)); }), borderColor:BRAND2, borderWidth:1, maxBarThickness:26 }] },
     options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, layout:{ padding:{ top:14 } },
       plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ var r=rows[c.dataIndex]; return '$'+r.min.toFixed(0)+'B → $'+r.max.toFixed(0)+'B  (swing $'+r.range.toFixed(0)+'B)'; } } } },
-      scales:{ x:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } }, title:{ display:true, text:'FY'+yr+' D&A ($B)', font:{ size:9 }, color:'#6B7683' } }, y:{ grid:{ display:false }, ticks:{ font:{ size:9.5 } } } } } });
+      scales:{ x:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } }, title:{ display:true, text:'FY'+yr+' D&A ($B)', font:{ size:9 }, color:'#6B7683' } }, y:{ grid:{ display:false }, ticks:{ font:{ size:9.5 } } } } } }); aZoom('acxTorn');
 }
 function aCxSyncLabels(root){
   A_CX_CTRLS.forEach(function(c){ if(c.grp) return; var el=root.querySelector('#acx_'+c.id), out=root.querySelector('#acxv_'+c.id); if(!el||!out) return; out.textContent=c.dec!=null?(+el.value).toFixed(c.dec):(el.value+(c.u||'')); });
@@ -4368,7 +4395,7 @@ function aBuildFin(){
       var flags=estFlag(k[1]);
       return { label:k[0], data:merge(k[1]), backgroundColor:flags.map(function(e){ return e?k[2]+'55':k[2]; }), borderColor:k[2], borderWidth:flags.map(function(e){ return e?1.5:0; }), maxBarThickness:22 }; }) },
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } } },
-      scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } });
+      scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); aZoom('aFin');
 }
 var A_MGMT=[
   { n:'Andy Jassy', r:'President & CEO', since:'CEO since Jul 2021 · joined 1997', d:'Built AWS from a memo into the profit engine (its first leader, 2003–2021). As CEO: the efficiency era (regionalization, flattening), the AI build-out, and the "every experience reinvented with AI" doctrine.' },
@@ -4610,7 +4637,7 @@ function aBuildSplc(){
         { label:'Supplier facilities', data:A_SPLC_GEO.sup, backgroundColor:BRAND2, maxBarThickness:15 } ] },
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label+': '+ctx.parsed.x+'%'; } } } },
-        scales:{ x:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } }, y:{ grid:{ display:false }, ticks:{ font:{ size:10 } } } } } }); }
+        scales:{ x:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } }, y:{ grid:{ display:false }, ticks:{ font:{ size:10 } } } } } }); aZoom('aSplcGeo'); }
 }
 // ─── Miscellaneous ▸ M&A and Other Analysis — future placeholders (nothing deep-dived for AMZN yet).
 function aMandaBody(){

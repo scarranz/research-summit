@@ -2906,6 +2906,49 @@ function ceMountWatchList(){
 var _aCharts={};
 function aDestroy(id){ if(_aCharts[id]){ _aCharts[id].destroy(); _aCharts[id]=null; } }
 function aChartReady(id){ var cv=document.getElementById(id); return (cv&&typeof Chart!=='undefined'&&cv.offsetParent)?cv:null; }
+// ═══ Chart-standard kit (docs/CHART_ENGINE_REFERENCE.md §0.7) — copied verbatim / adapted so the
+// bespoke AMZN canvases meet the six non-negotiables. rs-* CSS is global (css/results.css). ═══
+function rsAttachBrush(el, chart, onX, onY, onReset){
+  var wrap = el.parentElement;
+  if (wrap && getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
+  el.style.cursor = 'crosshair';
+  el.onmousedown = function(ev){
+    if (ev.button !== 0) return;
+    var r0 = el.getBoundingClientRect(), w0 = wrap.getBoundingClientRect(), area = chart.chartArea;
+    var onAxis = (ev.clientX - r0.left) < area.left || (ev.clientX - r0.left) > area.right;
+    var forcedY = onAxis || !onX, vertical = forcedY ? true : null, startX = ev.clientX, startY = ev.clientY, box = null;
+    function ensureBox(){ if (box) return; box = document.createElement('div'); box.className = 'rs-brush';
+      if (vertical){ box.style.left = (r0.left - w0.left + area.left) + 'px'; box.style.width = (area.right - area.left) + 'px'; }
+      else { box.style.top = (r0.top - w0.top) + 'px'; box.style.height = r0.height + 'px'; } wrap.appendChild(box); }
+    function decide(cx, cy){ if (vertical != null) return; var dx = Math.abs(cx - startX), dy = Math.abs(cy - startY); if (Math.max(dx, dy) < 8) return; vertical = dy > dx; }
+    function place(cx, cy){ if (vertical == null) return; ensureBox();
+      if (vertical){ var a = Math.min(startY, cy), b = Math.max(startY, cy); box.style.top = (a - w0.top) + 'px'; box.style.height = (b - a) + 'px'; }
+      else { var a2 = Math.min(startX, cx), b2 = Math.max(startX, cx); box.style.left = (a2 - w0.left) + 'px'; box.style.width = (b2 - a2) + 'px'; } }
+    place(ev.clientX, ev.clientY);
+    function onMove(e2){ decide(e2.clientX, e2.clientY); place(e2.clientX, e2.clientY); }
+    function onUp(e2){ document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); decide(e2.clientX, e2.clientY); if (box) box.remove();
+      if (vertical == null) return;
+      if (vertical){ if (Math.abs(e2.clientY - startY) < 8) return;
+        var v1 = chart.scales.y.getValueForPixel(Math.min(startY, e2.clientY) - r0.top), v2 = chart.scales.y.getValueForPixel(Math.max(startY, e2.clientY) - r0.top); onY(Math.min(v1, v2), Math.max(v1, v2)); }
+      else { if (Math.abs(e2.clientX - startX) < 8) return;
+        function idxAt(cx){ var v = chart.scales.x.getValueForPixel(cx - r0.left); return Math.max(0, Math.min(chart.data.labels.length - 1, Math.round(v))); }
+        var a = idxAt(startX), b = idxAt(e2.clientX); if (a !== b) onX(Math.min(a, b), Math.max(a, b)); } }
+    document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp); ev.preventDefault(); };
+  el.ondblclick = onReset;
+}
+// Generic y-zoom + double-click reset for a categorical-x bespoke chart (rule 1; onX=null per §0.2).
+function aZoom(id){ var cv=document.getElementById(id), ch=_aCharts[id]; if(!cv||!ch||!ch.options||!ch.options.scales||!ch.options.scales.y) return;
+  rsAttachBrush(cv, ch, null,
+    function(v1,v2){ ch.options.scales.y.min=v1; ch.options.scales.y.max=v2; ch.update('none'); },
+    function(){ ch.options.scales.y.min=undefined; ch.options.scales.y.max=undefined; ch.update('none'); }); }
+// Collapsible data table under a chart (rule 3) — the portable rs-collap markup (§0.7).
+function aTbl(id, title, headers, rows){
+  var head='<span class="rs-collap-ic">▸</span> '+esc(title)+' <span class="rs-collap-sub">'+rows.length+' rows</span>';
+  var thead='<tr>'+headers.map(function(hh,i){ return '<th'+(i===0?' class="rs-ft-h"':'')+'>'+esc(String(hh))+'</th>'; }).join('')+'</tr>';
+  var tb=rows.map(function(r){ return '<tr>'+r.map(function(c,i){ return i===0?('<td class="rs-ft-h">'+esc(String(c))+'</td>'):('<td>'+(c==null||c===''?'<span class="rs-ft-nil">–</span>':esc(String(c)))+'</td>'); }).join('')+'</tr>'; }).join('');
+  return '<div class="rs-collap" data-rstbl="'+id+'"><button type="button" class="rs-collap-h" data-rstblb="'+id+'">'+head+'</button>'+
+    '<div class="rs-collap-b" id="rsTB-'+id+'" hidden><div class="rs-ft-scroll"><table class="rs-ft"><thead>'+thead+'</thead><tbody>'+tb+'</tbody></table></div></div></div>';
+}
 // FY sums from the quarterly actuals of the dataset (single source of truth).
 function aFy(key, year){
   var m=amznResults.views.q.metrics[key]; if(!m) return null;
@@ -2999,7 +3042,11 @@ function aBuildBrWaterfall(id, steps, fmt){
       scales:{ x:{ grid:{display:false}, ticks:{color:'#8A93A0', font:{size:10}, autoSkip:false, maxRotation:45, minRotation:0} },
         y:{ beginAtZero:true, grid:{color:'#EEF2F7'}, ticks:{color:'#8A93A0', font:{size:10}, callback:function(v){return (fmt.axis||String)(v);}} } } },
     plugins:[ aBrPlugin ] });
-  ch._steps=steps; ch._fmt=fmt; _aCharts[id]=ch; ch.update('none');
+  ch._steps=steps; ch._fmt=fmt; _aCharts[id]=ch; ch.update('none'); aZoom(id);
+  var tw=document.getElementById(id+'-tbl');   // rule 3: the table carries every step drawn
+  if(tw){ var f=(fmt&&fmt.base)||String, fd=(fmt&&fmt.delta)||String;
+    tw.innerHTML=aTbl(id, 'The waterfall — every step', ['Step','Value','Running'], steps.map(function(s){
+      return [s.label, (s.kind==='base'||s.kind==='total')?f(s.val):fd(s.val), s.runAfter==null?f(s.val):f(s.runAfter)]; })); }
 }
 // Revenue → −each functional cost → = Operating income, in $B, for one period row (annual or quarterly).
 function aBridgeBuildupSteps(r){
@@ -3047,6 +3094,7 @@ function aBridgeBody(){
       '<div class="br-sl"><span class="br-sl-l">AWS</span><input type="range" data-brseg="aws" min="-40" max="40" step="1" value="0"><span class="br-sl-v" data-brsegv="aws">0%</span></div>'+
     '</div>'+
     '<div style="height:340px"><canvas id="aBrCanvas"></canvas></div>'+
+    '<div id="aBrCanvas-tbl" style="margin-top:8px"></div>'+
     '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px"><b>Build-up</b> walks revenue down through each functional cost line to operating income, in dollars. <b>Margin change</b> decomposes how the operating margin moved between two years, in bps. <b>Forward</b> bridges FY25 operating income to the consensus target by <b>segment</b> — move a slider to sensitize a segment vs consensus and see the implied group OI. Actuals: DCF/8-K. Forward: <b>Bloomberg consensus</b> segment OI (as of Aug 2026); AWS is the swing factor.</div></div>';
 }
 function aBridgeSync(pane){
@@ -3101,6 +3149,7 @@ function aNetBridgeBody(){
     '</div>'+
     '<div style="display:flex;justify-content:flex-end;margin:0 0 8px"><span class="acx-tog nb-yr" style="flex-wrap:wrap">'+yb+'</span></div>'+
     '<div style="height:330px"><canvas id="aNetBr"></canvas></div>'+
+    '<div id="aNetBr-tbl" style="margin-top:8px"></div>'+
     '<div class="acx-cap" id="aNetBrCap" style="font-size:11px;color:var(--mu);margin-top:8px"></div></div>';
 }
 function aBuildNetBridge(){
@@ -3142,7 +3191,7 @@ function aBuildSbc(){
   _aCharts['aSbcMain']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:labels, datasets:ds },
     options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
       plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':(pct?c.parsed.y+'% of the line':'$'+c.parsed.y.toFixed(1)+'B')); }, footer:function(it){ return pct?'':'Total SBC: $'+it.reduce(function(a,x){ return a+(x.parsed.y||0); },0).toFixed(1)+'B'; } } } },
-      scales:{ x:{ stacked:!pct, grid:{ display:false } }, y:{ stacked:!pct, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return pct?v+'%':'$'+v+'B'; } } } } } });
+      scales:{ x:{ stacked:!pct, grid:{ display:false } }, y:{ stacked:!pct, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return pct?v+'%':'$'+v+'B'; } } } } } }); aZoom('aSbcMain');
   if(pane && !pane._sbcmWired){ pane._sbcmWired=true;
     pane.querySelectorAll('.sbcm-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.sbcm-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSbc(); }; }); }
 }
@@ -3188,7 +3237,7 @@ function aBuildBottomline(){
     _aCharts['aMgnMain']=new Chart(cv.getContext('2d'),{ type:'line', data:{ labels:labels, datasets:ds },
       options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
         plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':c.parsed.y+'%'); } } } },
-        scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } }); }
+        scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } }); aZoom('aMgnMain'); }
   if(mpane && !mpane._amgnWired){ mpane._amgnWired=true;
     mpane.querySelectorAll('.amgn-tog button').forEach(function(b){ b.onclick=function(){ mpane.querySelectorAll('.amgn-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildBottomline(); }; });
     mpane.querySelectorAll('.mmode-tog button').forEach(function(b){ b.onclick=function(){ mpane.querySelectorAll('.mmode-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildBottomline(); }; }); }
@@ -3657,7 +3706,7 @@ function aBuildSegCapDa(){
   _aCharts['aSegCapDa']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:labels, datasets:ds },
     options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
       plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':'$'+c.parsed.y.toFixed(1)+'B'); }, footer:function(it){ return 'Total: $'+it.reduce(function(a,x){ return a+(x.parsed.y||0); },0).toFixed(1)+'B'; } } } },
-      scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } });
+      scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); aZoom('aSegCapDa');
   var capEl=pane?pane.querySelector('#aSegCapDaCap'):null; if(capEl) capEl.innerHTML=cap;
   if(pane && !pane._segcdWired){ pane._segcdWired=true;
     pane.querySelectorAll('.segcd-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.segcd-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegCapDa(); }; }); }
@@ -3765,7 +3814,7 @@ function aBuildSegments(){
           plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':c.parsed.y+'%'); } } } },
           scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } };
     }
-    _aCharts['aSgMain']=new Chart(mc.getContext('2d'), cfg); }
+    _aCharts['aSgMain']=new Chart(mc.getContext('2d'), cfg); aZoom('aSgMain'); }
   aBuildSegCapDa();
   if(pane && !pane._segWired){ pane._segWired=true;
     pane.querySelectorAll('.seg-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.seg-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegments(); }; });
@@ -5034,6 +5083,10 @@ function deepDiveInit(c){
   wireDD(root);
   wireModal(root);   // re-run so the delegated [data-detail] handler covers the Deep Dive DOM
   AMZN_MGMT.init(root);   // wire the Executives & Board CV modal (makeManagement)
+  if(!root._rsCollapWired){ root._rsCollapWired=true;   // rule 3: the table dropdown under each chart
+    root.addEventListener('click', function(e){ var h=e.target.closest?e.target.closest('.rs-collap-h'):null; if(!h||!root.contains(h)) return;
+      var b=h.nextElementSibling; if(!b||!b.classList.contains('rs-collap-b')) return; var open=b.hidden; b.hidden=!open;
+      var ic=h.querySelector('.rs-collap-ic'); if(ic) ic.textContent=open?'▾':'▸'; }); }
   requestAnimationFrame(aBuildTopline);   // Top Line is the initially-visible pane
 }
 

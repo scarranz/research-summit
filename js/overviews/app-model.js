@@ -132,6 +132,53 @@ export var AM_DRIVERS = {
 };
 export var AM_DRIVERS_NOTE = "Volume × price does not multiply out exactly to revenue growth because AppLovin discloses only rounded percentages and the mix shifts between periods. FY2024 is the last year growth came from volume; every period since has been driven by monetisation per install. \"Net revenue per installation\" is revenue net of amounts paid to publishers, divided by installs — the company never publishes the underlying levels.";
 
+// ─── The non-GAAP bridge (10-K, continuing ops) ──────────────────────────────────
+// Net income from continuing operations up to Adjusted EBITDA, in the company's own order.
+// Indexed like every other series here (2023 at AM_MIN_FULL), so only 2023-2025 are populated:
+// consensus carries an Adjusted EBITDA number but never the reconciling items behind it.
+export var AM_BRIDGE = {
+  netIncomeCont:  [null, null, 457.826, 1589.524, 3433.195, null, null, null],
+  interest:       [null, null, 273.508,  317.209,  207.016, null, null, null],
+  otherIncome:    [null, null,  -4.729,  -23.396,  -15.694, null, null, null],
+  tax:            [null, null,  43.776,   22.419,  519.715, null, null, null],
+  daWriteoffs:    [null, null, 119.152,  128.791,  130.724, null, null, null],
+  fx:             [null, null,   0.837,    1.642,   -3.949, null, null, null],
+  sbc:            [null, null, 342.551,  357.431,  207.958, null, null, null],
+  transaction:    [null, null,   1.047,    0.885,   27.579, null, null, null],
+  restructuring:  [null, null,   2.316,   17.259,    5.908, null, null, null],
+  adjEbitda:      [null, null,1236.284, 2411.764, 4512.452, null, null, null],
+};
+// Order and labels for the bridge table — keeps the walk in the filing's own sequence.
+export var AM_BRIDGE_ROWS = [
+  ['netIncomeCont', 'Net income from continuing operations', 'start'],
+  ['interest',      'Interest expense & loss on settlement',  'add'],
+  ['otherIncome',   'Other income, net',                      'add'],
+  ['tax',           'Provision for income taxes',             'add'],
+  ['daWriteoffs',   'Amortization, depreciation, write-offs', 'add'],
+  ['fx',            'Non-operating foreign exchange',         'add'],
+  ['sbc',           'Stock-based compensation',               'add'],
+  ['transaction',   'Transaction-related expense',            'add'],
+  ['restructuring', 'Restructuring costs',                    'add'],
+  ['adjEbitda',     'Adjusted EBITDA',                        'total'],
+];
+export var AM_BRIDGE_NOTE = "AppLovin's own reconciliation, FY2025 Form 10-K. Every line between the two totals is an add-back — the reason Adjusted EBITDA margin (82.3% in FY2025) sits so far above operating margin. Consensus forecasts Adjusted EBITDA for 2026E-2028E but not the reconciling items, so the bridge stops at the last reported year.";
+
+// ─── Stock-based compensation, the largest single add-back ───────────────────────
+// Annual is continuing operations (matches the bridge). Quarterly comes from the 10-Qs and is
+// what makes the 2026 inflection visible: the October 2025 PSU grant starts amortising.
+export var AM_SBC_UNRECOGNISED = 489.0;      // $M unrecognised at 12/31/25
+export var AM_SBC_PERIOD_YRS   = 1.95;       // weighted-average recognition period, years
+export var AM_PSU_GRANT_FV     = 410.5;      // Oct-2025 grant-date fair value, $M
+// The PSU programme. The Oct-2025 grant is the one still outstanding and the only one whose
+// expense is still ahead of the P&L.
+export var AM_PSUS = [
+  { d:'Mar 2023', who:'6,902,000 PSUs each to the CEO and CTO',   cond:'Stock price $36 → $79, 5 tranches, 5-year window', st:'Vested 12/31/24', live:false },
+  { d:'Apr 2023', who:'3,451,000 PSUs to non-executives',          cond:'Same stock-price targets',                        st:'Vested 12/31/24', live:false },
+  { d:'Nov 2024', who:'348,327 PSUs to non-executives',            cond:'Stock price $184.35 → $294.96, 3 tranches',        st:'Vested 12/31/24', live:false },
+  { d:'Oct 2025', who:'920,526 PSUs to key engineering employees', cond:'Market cap $300.0B, milestones to $1.0 trillion, 7-year period', st:'Outstanding · $410.5M', live:true },
+];
+export var AM_PSU_NOTE = "The October 2025 grant is valued on market-capitalization milestones rather than a share price, and its Monte Carlo valuation (stock $620.62 at grant, 70.95% volatility, 3.85% risk-free, 20.34% marketability discount) was the Critical Audit Matter in Deloitte's FY2025 report — the auditor's own signal that this is the most judgement-heavy number in the accounts. Unrecognised stock compensation was $489.0M over a 1.95-year weighted average at 12/31/2025, BEFORE the full effect of this grant.";
+
 // ─── Quarterly progression (10-Qs). Only the four quarters these filings cover. ───
 export var AQ_LABELS = ['1Q25','2Q25','1Q26','2Q26'];
 export var AQ = {

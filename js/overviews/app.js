@@ -18,13 +18,19 @@ import {
   APP_FACTS, APP_LEDE, APP_QUAD, APP_ONE_SEGMENT, APP_GEO, APP_GEO_CAPTION, APP_PROD_DEFS,
   APP_PRODUCTS, APP_PEERS, APP_PEERS_NOTE, APP_TIMELINE,
   APP_DD_INTRO, APP_MARGIN_DRIVERS, APP_CAPRET, APP_OV_SOURCES, APP_DD_SOURCES,
+  APP_INV_SURFACES, APP_INV_FLOW, APP_INV_NOTE,
+  APP_PROD_MATRIX, APP_PROD_MATRIX_NOTE,
+  APP_AXON_STEPS, APP_AXON_CLAIM, APP_AXON_EVID, APP_AXON_LIMIT, APP_AXON_NOTE,
+  APP_CLIENT_SIDES, APP_CLIENT_FACTS, APP_CLIENT_TENSION, APP_CLIENTS_NOTE,
   ECO_NAVY, ECO_GRAY, ECO_SKY, ECO_BLUE, ECO_RULE, ECO_HEAD,
   APP_ECO_CHAIN, APP_ECO_PLAYERS, APP_ECO_LEGEND, APP_ECO_APPNOTE, APP_ECO_SOURCE
 } from './app-data.js';
 import {
   AM_YEARS, AM_ISEST, AM_LAST_ACTUAL, AM_MIN_FULL,
   AM_IS, AM_GEO, AM_GEO_NOTE, AM_APPS, AM_CF, AM_BS, AM_CODM, AM_CODM_NOTE,
-  AM_DRIVERS, AM_DRIVERS_NOTE, AQ_LABELS, AQ, AQ_NOTE, AM_SOURCE
+  AM_DRIVERS, AM_DRIVERS_NOTE, AQ_LABELS, AQ, AQ_NOTE, AM_SOURCE,
+  AM_BRIDGE, AM_BRIDGE_ROWS, AM_BRIDGE_NOTE,
+  AM_SBC_UNRECOGNISED, AM_SBC_PERIOD_YRS, AM_PSU_GRANT_FV, AM_PSUS, AM_PSU_NOTE
 } from './app-model.js';
 
 // esc: escapes <>" but leaves & literal (per contract — never double-encode).
@@ -41,6 +47,17 @@ function collapsible(title, inner, open){
     '<button type="button" class="ov-collap-h"><span class="ov-collap-ic">'+(open?'▾':'▸')+'</span>'+esc(title)+'</button>'+
     '<div class="ov-collap-b"'+(open?'':' hidden')+'>'+inner+'</div></div>';
 }
+// xp(): an expandable block for the Deep Dive. The HEADLINE is always visible and the argument
+// is one click away — so a tab can be talked through from the headings alone and opened only
+// where a question lands. `tone` styles the left rule; `sum` is the one-line standfirst.
+function xp(title, sum, inner, tone){
+  return '<div class="xp'+(tone?' '+tone:'')+'">'+
+    '<button type="button" class="xp-h"><span class="xp-ic">▸</span>'+
+      '<span class="xp-t">'+esc(title)+'</span>'+
+      (sum?'<span class="xp-s">'+sum+'</span>':'')+
+    '</button>'+
+    '<div class="xp-b" hidden>'+inner+'</div></div>';
+}
 function fmtMoneyM(v){ if(v==null) return '—'; var a=Math.abs(v); if(a>=1000) return '$'+(v/1000).toFixed(2)+'B'; return '$'+Math.round(v)+'M'; }
 function pctStr(v, dp){ if(v==null) return '—'; return Number(v).toFixed(dp==null?1:dp)+'%'; }
 function signed(v){ return (v>=0?'+':'')+v.toFixed(1)+'%'; }
@@ -50,6 +67,97 @@ function signed(v){ return (v>=0?'+':'')+v.toFixed(1)+'%'; }
 // ═══════════════════════════════════════════════════════════════════════════════
 function styleBlock(){
   return '<style>'+
+    // Earnings Quality: the bridge reads as a walk, so the two ends are anchored and the row
+    // that is still ahead of the P&L is marked rather than left to the reader to spot.
+    '.eq-tbl td:not(:first-child),.eq-tbl th:not(:first-child){text-align:right;white-space:nowrap}'+
+    '.eq-tbl tr.eq-start td{font-weight:700;border-top:1px solid var(--bdr)}'+
+    '.eq-tbl tr.eq-tot td{font-weight:800;color:var(--navy);border-top:2px solid var(--bdr);background:#F7F9FC}'+
+    '.eq-tbl td:first-child,.eq-tbl th:first-child{text-align:left}'+
+    // The PSU table is prose, not figures — left-aligned and allowed to wrap so it fits unscrolled.
+    // Needs .dfin.eq-psu (not .eq-psu alone) to outrank .dfin td:not(:first-child)'s right-align.
+    '.dfin.eq-psu td,.dfin.eq-psu th{text-align:left;white-space:normal;vertical-align:top;line-height:1.4}'+
+
+    // ── Expandable block: headline always visible, argument one click away ───────
+    '.xp{border:1px solid var(--bdr);border-left:3px solid var(--bdr);border-radius:10px;background:var(--w);margin:9px 0}'+
+    '.xp.pos{border-left-color:'+C_POS+'}.xp.neg{border-left-color:'+C_NEG+'}.xp.warn{border-left-color:'+C_SM+'}'+
+    '.xp.key{border-left-color:'+APP_BRAND+'}'+
+    '.xp-h{width:100%;text-align:left;border:none;background:none;font:inherit;cursor:pointer;'+
+      'padding:10px 13px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}'+
+    '.xp-h:hover .xp-t{color:'+APP_BRAND+'}'+
+    '.xp-ic{font-size:12px;line-height:1;color:'+APP_BRAND+';flex:0 0 auto;width:11px}'+
+    '.xp-t{font-size:12.5px;font-weight:800;color:var(--navy);flex:0 0 auto}'+
+    '.xp-s{font-size:11.5px;color:var(--mu);line-height:1.45;flex:1 1 220px}'+
+    '.xp.open .xp-ic{color:'+APP_BRAND+'}'+
+    '.xp-b{padding:2px 14px 12px 30px;font-size:12px;line-height:1.6;color:var(--navy)}'+
+    '.xp-b p{margin:0 0 8px}.xp-b ul{margin:6px 0 0;padding-left:16px}'+
+    '.xp-b li{font-size:11.5px;line-height:1.55;color:var(--mu);margin-bottom:3px}'+
+
+    // ── Inventory / Products / Axon / Clients: shared visual furniture ───────────
+    // Surface + client cards. A coloured top rule carries the category so the eye groups
+    // them before reading a word.
+    '.vx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:12px 0}'+
+    '.vx-c{border:1px solid var(--bdr);border-radius:12px;background:var(--w);padding:13px 15px;border-top:3px solid var(--bdr)}'+
+    '.vx-c.core{border-top-color:'+APP_BRAND+'}.vx-c.early{border-top-color:'+C_SM+'}.vx-c.emerge{border-top-color:'+C_RD+'}'+
+    '.vx-c.pay{border-top-color:'+C_POS+'}.vx-c.paid{border-top-color:'+C_SM+'}.vx-c.sub{border-top-color:'+C_GA+'}.vx-c.ctv{border-top-color:'+C_RD+'}'+
+    '.vx-h{display:flex;align-items:center;gap:8px;margin-bottom:7px}'+
+    '.vx-ic{font-size:18px;line-height:1}'+
+    '.vx-t{font-size:13.5px;font-weight:800;color:var(--navy)}'+
+    '.vx-tag{margin-left:auto;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;'+
+      'border:1px solid var(--bdr);border-radius:20px;padding:2px 8px;color:var(--mu);white-space:nowrap}'+
+    '.vx-c.core .vx-tag{color:'+APP_BRAND+';border-color:'+APP_BRAND+'}'+
+    '.vx-c.early .vx-tag{color:'+C_SM+';border-color:'+C_SM+'}'+
+    '.vx-c.emerge .vx-tag,.vx-c.ctv .vx-tag{color:'+C_RD+';border-color:'+C_RD+'}'+
+    '.vx-c.pay .vx-tag{color:'+C_POS+';border-color:'+C_POS+'}'+
+    '.vx-c.paid .vx-tag{color:'+C_SM+';border-color:'+C_SM+'}'+
+    '.vx-c.sub .vx-tag{color:'+C_GA+';border-color:'+C_GA+'}'+
+    '.vx-d{font-size:12px;line-height:1.55;color:var(--navy)}'+
+    '.vx-sum{font-size:12px;line-height:1.5;color:var(--navy)}'+
+    '.vx-pts{margin:8px 0 0;padding-left:16px}'+
+    '.vx-pts li{font-size:11.5px;line-height:1.5;color:var(--mu);margin-bottom:3px}'+
+    // inside a card the expander is flush and quiet — it should not compete with the headline
+    '.vx-c .xp{border:none;border-top:1px solid var(--bdr);border-radius:0;margin:9px -15px -13px;background:none}'+
+    '.vx-c .xp-h{padding:8px 15px}.vx-c .xp-t{font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.04em}'+
+    '.vx-c .xp-b{padding:0 15px 11px 15px}'+
+    // legend for the product matrix chips
+    '.pm-key{font-size:11px;color:var(--mu);margin:8px 0 0;display:flex;align-items:center;flex-wrap:wrap;gap:5px}'+
+
+
+    // Numbered flow strip — the life of an impression, and the Axon loop.
+    '.fl{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:12px 0}'+
+    '.fl-s{position:relative;border:1px solid var(--bdr);border-radius:11px;background:var(--w);padding:12px 13px 12px 15px}'+
+    '.fl-s:before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:3px;background:'+APP_BRAND+'}'+
+    '.fl-n{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;'+
+      'background:'+APP_BRAND+';color:#fff;font-size:10.5px;font-weight:800;margin-right:7px}'+
+    '.fl-t{font-size:12.5px;font-weight:800;color:var(--navy)}'+
+    '.fl-w{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;'+
+      'color:'+APP_BRAND+';background:var(--brand-soft);border-radius:20px;padding:2px 7px;margin-top:6px}'+
+    '.fl-d{font-size:11.5px;line-height:1.55;color:var(--navy);margin-top:6px}'+
+
+    // Product-vs-competitor matrix. Named = in the filing, added = analyst.
+    '.pm-chip{display:inline-block;font-size:10.5px;font-weight:700;border-radius:20px;padding:2px 9px;margin:2px 4px 2px 0;white-space:nowrap}'+
+    '.pm-named{color:'+APP_BRAND+';background:var(--brand-soft);border:1px solid '+APP_BRAND+'}'+
+    '.pm-added{color:var(--mu);background:#F4F6F8;border:1px solid var(--bdr)}'+
+    '.pm-none{color:var(--mu);font-size:11.5px;font-style:italic}'+
+    '.pm-edge{font-size:11.5px;line-height:1.5;color:var(--navy)}'+
+    // Prose table: left-align and wrap. Needs .dfin.pm-tbl to outrank .dfin td:not(:first-child).
+    '.dfin.pm-tbl td,.dfin.pm-tbl th{text-align:left;white-space:normal;vertical-align:top;line-height:1.45}'+
+    '.dfin.pm-tbl td:nth-child(2),.dfin.pm-tbl td:nth-child(3){font-size:11.5px}'+
+
+    // Axon: the loop rendered as a ring of steps with an arrow between each.
+    '.ax-loop{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin:12px 0}'+
+    '.ax-s{flex:1 1 165px;border:1px solid var(--bdr);border-top:3px solid '+APP_BRAND+';border-radius:11px;'+
+      'background:var(--w);padding:11px 13px}'+
+    '.ax-ar{display:flex;align-items:center;color:'+APP_BRAND+';font-size:17px;font-weight:800}'+
+    '@media(max-width:760px){.ax-ar{display:none}}'+
+    '.ax-back{margin-top:6px;text-align:center;font-size:11.5px;font-weight:700;color:'+APP_BRAND+'}'+
+
+    // Fact strip for the client concentration tests.
+    '.fx{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:12px 0}'+
+    '.fx-c{border:1px solid var(--bdr);border-left:4px solid '+C_POS+';border-radius:10px;background:var(--w);padding:10px 13px}'+
+    '.fx-t{font-size:12px;font-weight:800;color:var(--navy);line-height:1.35}'+
+    '.fx-s{font-size:11px;color:var(--mu);margin-top:3px}'+
+    '.eq-psu tr.eq-live td{background:#FFF7E8}'+
+    '.eq-psu tr.eq-live td:first-child{box-shadow:inset 3px 0 0 '+C_SM+'}'+
     '.stdkf{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--bdr);border-top:3px solid '+APP_BRAND+';border-radius:12px;overflow:hidden;background:var(--w);margin:2px 0}'+
     '.stdkf-cell{padding:11px 13px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}'+
     '.stdkf-cell:nth-child(5n){border-right:none}.stdkf-cell:nth-child(n+6){border-bottom:none}'+
@@ -776,6 +884,207 @@ function ecosystemBody(){
 }
 
 // ─── Bottom Line ▸ Capital & returns ────────────────────────────────────────────
+// ─── Bottom Line ▸ Inventory ────────────────────────────────────────────────────
+// What is actually being sold. AppLovin publishes no split by inventory type, so this shows
+// structure and maturity — both stated in the 10-K — and never a share-of-revenue number.
+function inventoryBody(){
+  var cards = APP_INV_SURFACES.map(function(s){
+    return '<div class="vx-c '+s.tone+'">'+
+      '<div class="vx-h"><span class="vx-ic">'+s.ic+'</span><span class="vx-t">'+esc(s.t)+'</span>'+
+        '<span class="vx-tag">'+esc(s.tag)+'</span></div>'+
+      '<div class="vx-sum">'+esc(s.sum)+'</div>'+
+      xp('More', '', '<p>'+s.d+'</p><ul>'+s.pts.map(function(p){ return '<li>'+esc(p)+'</li>'; }).join('')+'</ul>')+
+      '</div>';
+  }).join('');
+  var flow = APP_INV_FLOW.map(function(f){
+    return '<div class="fl-s"><span class="fl-n">'+esc(f.n)+'</span><span class="fl-t">'+esc(f.t)+'</span>'+
+      '<div class="fl-w">'+esc(f.who)+'</div><div class="fl-d">'+esc(f.sum)+'</div></div>';
+  }).join('');
+  var detail = APP_INV_FLOW.map(function(f){
+    return '<li><b>'+esc(f.n)+'. '+esc(f.t)+'</b> — '+f.d+'</li>';
+  }).join('');
+  return '<p class="dd-sub">AppLovin owns no content and no audience. It sells <b>access to someone else\'s attention</b>.</p>'+
+    '<div class="vx-grid">'+cards+'</div>'+
+    '<div class="dd-h" style="margin-top:20px">The life of one impression</div>'+
+    '<div class="fl">'+flow+'</div>'+
+    xp('Step by step', 'the detail behind each of the six', '<ul>'+detail+'</ul>')+
+    xp('Why revenue looks smaller than it is', 'revenue is booked <b>net</b> of what publishers are paid',
+       '<p>The reported top line is AppLovin\'s <b>take</b>, not the media spend flowing through the platform — which is materially larger and never disclosed. Comparing this revenue line to a gross-billings figure at another company is not like-for-like.</p>', 'key')+
+    xp('Sources & what is not disclosed', '', '<p>'+esc(APP_INV_NOTE)+'</p>');
+}
+
+// ─── Bottom Line ▸ Products ─────────────────────────────────────────────────────
+function productsBody(){
+  var rows = APP_PROD_MATRIX.map(function(m){
+    var chips = m.named.map(function(n){ return '<span class="pm-chip pm-named">'+esc(n)+'</span>'; }).join('')+
+                m.added.map(function(n){ return '<span class="pm-chip pm-added">'+esc(n)+'</span>'; }).join('');
+    if(!chips) chips = '<span class="pm-none">none named in the filings</span>';
+    return '<tr><td><b>'+esc(m.p)+'</b></td><td>'+esc(m.role)+'</td><td>'+esc(m.earn)+'</td>'+
+      '<td>'+chips+'</td><td class="pm-edge">'+esc(m.edge)+'</td></tr>';
+  }).join('');
+  var fams = APP_PROD_DEFS.map(function(p){
+    return xp(p.seg, '', '<p>'+p.desc+'</p><ul>'+
+      p.subs.map(function(s){ return '<li><b>'+esc(s[0])+'</b> — '+esc(s[1])+'</li>'; }).join('')+'</ul>');
+  }).join('');
+  return '<p class="dd-sub">Not four businesses — <b>four positions on the same transaction</b>. One buys the impression, one sells it, one measures it, one opens a new surface.</p>'+
+    '<div class="dfin-wrap"><table class="dfin pm-tbl" style="min-width:700px"><thead><tr>'+
+      '<th>Product</th><th>Its job</th><th>How it earns</th><th>Who else does this</th><th>The difference</th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="pm-key"><span class="pm-chip pm-named">blue</span> named in the 10-K'+
+      '<span class="pm-chip pm-added" style="margin-left:14px">grey</span> analyst-added, not in the filings</div>'+
+    '<div class="dd-h" style="margin-top:20px">Each product in detail</div>'+
+    fams+
+    xp('AppLovin vs The Trade Desk', 'the comparison worth making to a colleague',
+       '<p>The Trade Desk deliberately occupies <b>one</b> layer and sells neutrality as the product. AppLovin owns the buying engine, the auction, the selling layer and the measurement — the whole path from advertiser to impression.</p>'+
+       '<p>Neither is obviously right. They are opposite bets on whether the ecosystem rewards independence or integration.</p>', 'key')+
+    xp('Sources & what is not disclosed', '', '<p>'+esc(APP_PROD_MATRIX_NOTE)+'</p>');
+}
+
+// ─── Bottom Line ▸ Axon ─────────────────────────────────────────────────────────
+// The engine behind the vast majority of revenue. Management's flywheel is reproduced as a
+// claim and then tested against the one disclosure that can test it: yield per install.
+function axonBody(){
+  var steps = APP_AXON_STEPS.map(function(s,i){
+    return (i? '<div class="ax-ar">→</div>':'')+
+      '<div class="ax-s"><span class="fl-n">'+esc(s.n)+'</span><span class="fl-t">'+esc(s.t)+'</span></div>';
+  }).join('');
+  var loopDetail = APP_AXON_STEPS.map(function(s){
+    return '<li><b>'+esc(s.n)+'. '+esc(s.t)+'</b> — '+s.d+'</li>';
+  }).join('');
+  return '<p class="dd-sub"><b>Axon</b> decides which ad to show which user. It sits under <b>AppLovin Ads</b> — the vast majority of revenue. Almost all earnings run through one algorithm.</p>'+
+    '<div class="ax-loop">'+steps+'</div>'+
+    '<div class="ax-back">↺ more efficiency attracts more advertisers</div>'+
+    xp('What each step means', 'management\'s own flywheel, from the 10-K',
+       '<ul>'+loopDetail+'</ul><p>'+esc(APP_AXON_CLAIM)+'</p>')+
+    '<div class="dd-h" style="margin-top:20px">Does it actually work?</div>'+
+    '<div class="dd-chart" style="height:300px"><canvas id="appAxon"></canvas></div>'+
+    '<div class="dd-note">Bars are installation volume, the line is net revenue per installation, both year-over-year and both the company\'s own figures. The scissors opening after FY2024 is the whole Axon story.</div>'+
+    xp('Yes — and here is the number', 'growth is now entirely yield, not volume',
+       '<p>'+APP_AXON_EVID+'</p>', 'pos')+
+    xp('The catch', 'a ratio has a ceiling that a volume does not',
+       '<p>'+APP_AXON_LIMIT+'</p>', 'neg')+
+    xp('Sources & what is not disclosed', '', '<p>'+esc(APP_AXON_NOTE)+'</p>');
+}
+function buildAxon(root){
+  var cv = root.querySelector('#appAxon'); if(!canBuild(cv)) return; destroy('appAxon');
+  _charts['appAxon'] = new Chart(cv.getContext('2d'), {
+    data:{ labels:AM_DRIVERS.labels, datasets:[
+      { type:'bar', label:'Installation volume (YoY)', data:AM_DRIVERS.installs,
+        backgroundColor:AM_DRIVERS.installs.map(function(v){ return v>=0?C_APPS:C_NEG; }),
+        borderRadius:2, maxBarThickness:38 },
+      { type:'line', label:'Net revenue per installation (YoY)', data:AM_DRIVERS.netRevPerInstall,
+        borderColor:APP_BRAND, backgroundColor:APP_BRAND, borderWidth:2.8, pointRadius:4.5, tension:.25, fill:false } ] },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10.5 }, color:'#6b7684' } },
+        tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label+': '+signed(ctx.parsed.y); } } } },
+      scales:{ x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:10.5 } } },
+        y:{ grid:{ color:'#EEF2F7' }, ticks:{ color:'#8A93A0', font:{ size:10 },
+          callback:function(v){ return v+'%'; } } } } }
+  });
+}
+
+// ─── Bottom Line ▸ Clients ──────────────────────────────────────────────────────
+function clientsBody(){
+  var sides = APP_CLIENT_SIDES.map(function(s){
+    return '<div class="vx-c '+s.tone+'">'+
+      '<div class="vx-h"><span class="vx-ic">'+s.ic+'</span><span class="vx-t">'+esc(s.t)+'</span>'+
+        '<span class="vx-tag">'+esc(s.pay)+'</span></div>'+
+      '<div class="vx-sum">'+esc(s.sum)+'</div>'+
+      xp('More', '', '<p>'+s.d+'</p><ul>'+s.pts.map(function(p){ return '<li>'+esc(p)+'</li>'; }).join('')+'</ul>')+
+      '</div>';
+  }).join('');
+  var facts = APP_CLIENT_FACTS.map(function(f){
+    return '<div class="fx-c"><div class="fx-t">'+esc(f[0])+'</div><div class="fx-s">'+esc(f[1])+'</div></div>';
+  }).join('');
+  return '<p class="dd-sub">Only one group is a customer in the accounting sense. <b>Substantially all revenue comes from advertisers</b> — publishers are a cost above the revenue line.</p>'+
+    '<div class="vx-grid">'+sides+'</div>'+
+    '<div class="dd-h" style="margin-top:20px">Concentration, per the filings</div>'+
+    '<div class="fx">'+facts+'</div>'+
+    xp('Customers and competitors are the same companies', 'Meta, Google and Amazon are named as both',
+       '<p>They buy inventory through the platform while building the same capability in-house — a commercial relationship and a competitive threat in the same counterparty, disclosed as both in the same 10-K.</p>', 'warn')+
+    xp('The tension in the risk factors', 'the 10% test passes, yet concentration is still flagged',
+       '<p>'+APP_CLIENT_TENSION+'</p>')+
+    xp('Sources & what is not disclosed', '', '<p>'+esc(APP_CLIENTS_NOTE)+'</p>');
+}
+
+// ─── Bottom Line ▸ Earnings Quality ─────────────────────────────────────────────
+// Margins & Leverage shows the margin. This asks whether to believe it. Adjusted EBITDA is the
+// number the whole story is told in, and it is reached by adding nine things back to net income
+// — the largest of which is stock compensation, which is real dilution and is about to inflect.
+function qualityBody(){
+  var iL = AM_LAST_ACTUAL, i1 = iL-1, i2 = iL-2;      // 2025, 2024, 2023
+  var yr = function(i){ return AM_YEARS[i]; };
+  var m0 = function(v){ return v==null ? '—' : (v<0?'(':'')+Math.abs(v).toLocaleString('en-US',{maximumFractionDigits:0})+(v<0?')':''); };
+
+  var rows = AM_BRIDGE_ROWS.map(function(r){
+    var k=r[0], label=r[1], kind=r[2];
+    var cls = kind==='total' ? ' class="eq-tot"' : (kind==='start' ? ' class="eq-start"' : '');
+    return '<tr'+cls+'><td>'+esc(label)+'</td>'+
+      [i2,i1,iL].map(function(i){ return '<td>'+m0(AM_BRIDGE[k][i])+'</td>'; }).join('')+
+      '</tr>';
+  }).join('');
+
+  // How much of Adjusted EBITDA is add-back rather than net income, in the last reported year.
+  var addBack = AM_BRIDGE.adjEbitda[iL] - AM_BRIDGE.netIncomeCont[iL];
+  var sbcShare = AM_BRIDGE.sbc[iL] / AM_BRIDGE.adjEbitda[iL] * 100;
+  var sbcRev   = AM_BRIDGE.sbc[iL] / AM_IS.revenue[iL] * 100;
+
+  var kpis = [
+    [fmtMoneyM(addBack), 'Added back in FY'+yr(iL), (addBack/AM_BRIDGE.adjEbitda[iL]*100).toFixed(0)+'% of Adjusted EBITDA'],
+    [fmtMoneyM(AM_BRIDGE.sbc[iL]), 'Stock compensation, FY'+yr(iL), sbcShare.toFixed(1)+'% of Adjusted EBITDA · '+sbcRev.toFixed(1)+'% of revenue'],
+    ['$'+AM_SBC_UNRECOGNISED.toFixed(0)+'M', 'Unrecognised at 12/31/25', 'over '+AM_SBC_PERIOD_YRS+' years, before the new grant'],
+    ['$'+AM_PSU_GRANT_FV.toFixed(1)+'M', 'Oct-2025 PSU grant', 'grant-date fair value · still to amortise'],
+  ].map(function(k){ return '<div class="dd-kpi"><div class="dd-kpi-v">'+esc(k[0])+'</div><div class="dd-kpi-k">'+esc(k[1])+'</div><div class="dd-kpi-s">'+esc(k[2])+'</div></div>'; }).join('');
+
+  var psu = AM_PSUS.map(function(p){
+    return '<tr'+(p.live?' class="eq-live"':'')+'><td><b>'+esc(p.d)+'</b></td><td>'+esc(p.who)+'</td>'+
+      '<td>'+esc(p.cond)+'</td><td>'+esc(p.st)+'</td></tr>';
+  }).join('');
+
+  return '<div class="dd-kpis">'+kpis+'</div>'+
+    '<p class="dd-sub">Every margin on the previous tab is quoted on <b>Adjusted EBITDA</b>. This is what stands between that number and net income: nine add-backs, of which stock compensation is the one that is neither non-cash in substance nor going away.</p>'+
+    '<div class="dfin-wrap"><table class="dfin eq-tbl" style="min-width:520px"><thead><tr>'+
+      '<th>Reconciliation, $M</th><th>'+esc(yr(i2))+'</th><th>'+esc(yr(i1))+'</th><th>'+esc(yr(iL))+'</th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="dfin-note">'+esc(AM_BRIDGE_NOTE)+'</div>'+
+
+    '<div class="dd-h" style="margin-top:22px">Stock compensation is inflecting, not fading</div>'+
+    '<p class="dd-sub">Annual SBC actually <b>fell</b> through 2025 — which is what let the adjusted margin look so clean. The quarterly series shows that reversing hard as the October 2025 grant begins to amortise.</p>'+
+    '<div class="dd-chart" style="height:320px"><canvas id="appSbc"></canvas></div>'+
+    '<div class="dd-note">Bars are stock-based compensation by quarter, from the 10-Qs; the line is the same figure as a share of revenue. 3Q25 and 4Q25 are not in these filings, so the series jumps from 2Q25 to 1Q26 — the YoY pairs are still clean.</div>'+
+
+    '<div class="dd-h" style="margin-top:22px">The grants behind it</div>'+
+    '<div class="dfin-wrap"><table class="dfin eq-psu" style="min-width:560px"><thead><tr>'+
+      '<th>Grant</th><th>Size</th><th>Vesting condition</th><th>Status</th>'+
+    '</tr></thead><tbody>'+psu+'</tbody></table></div>'+
+    '<div class="dfin-note">'+esc(AM_PSU_NOTE)+'</div>'+
+
+    '<div class="dd-callout">The buyback and the grants pull in opposite directions. AppLovin retired 5.5M shares in FY2025, but the 2021 Plan carries an <b>evergreen that adds 5% of shares outstanding every year</b> and had 86.1M shares of capacity at 12/31/25. Read the repurchase as <b>offsetting dilution</b> as much as shrinking the count — and note the diluted share count in the model falls only about 1% a year against a buyback running near $2.2B.</div>';
+}
+function buildQuality(root){
+  var cv = root.querySelector('#appSbc'); if(!canBuild(cv)) return; destroy('appSbc');
+  var share = AQ_LABELS.map(function(_,i){ return AQ.sbc[i]/AQ.revenue[i]*100; });
+  _charts['appSbc'] = new Chart(cv.getContext('2d'), {
+    data:{ labels:AQ_LABELS, datasets:[
+      { type:'bar', label:'Stock-based compensation ($M)', data:AQ.sbc, backgroundColor:C_RD,
+        borderRadius:2, maxBarThickness:46, yAxisID:'y' },
+      { type:'line', label:'% of revenue', data:share, borderColor:C_SM, backgroundColor:C_SM,
+        borderWidth:2.4, pointRadius:4, tension:.25, fill:false, yAxisID:'y1' } ] },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10.5 }, color:'#6b7684' } },
+        tooltip:{ callbacks:{ label:function(ctx){
+          return ctx.dataset.yAxisID==='y1' ? '% of revenue: '+ctx.parsed.y.toFixed(1)+'%'
+                                            : 'SBC: $'+ctx.parsed.y.toFixed(1)+'M'; } } } },
+      scales:{ x:{ grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:10.5 } } },
+        y:{ position:'left', grid:{ color:'#EEF2F7' }, ticks:{ color:'#8A93A0', font:{ size:10 },
+          callback:function(v){ return '$'+v+'M'; } } },
+        y1:{ position:'right', grid:{ display:false }, ticks:{ color:'#8A93A0', font:{ size:10 },
+          callback:function(v){ return v.toFixed(1)+'%'; } } } } }
+  });
+}
+
 function capitalBody(){
   var kv = APP_CAPRET.map(function(r){
     return '<div class="kv-r"><div class="kv-k">'+esc(r[0])+'</div><div class="kv-v">'+esc(r[1])+'</div></div>';
@@ -838,11 +1147,21 @@ function deepDiveHtml(c){
   h += '<div class="dd-pane" data-dd="bottomline" hidden>'+
     '<div class="ovt-subtabs">'+
       '<button type="button" class="ovt-subtab active" data-ovst="ecosystem">Advertising Ecosystem</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="inventory">Inventory</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="products">Products</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="axon">Axon</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="clients">Clients</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="margins">Margins &amp; Leverage</button>'+
+      '<button type="button" class="ovt-subtab" data-ovst="quality">Earnings Quality</button>'+
       '<button type="button" class="ovt-subtab" data-ovst="capital">Capital &amp; Returns</button>'+
     '</div>'+
     '<div class="ovt-subpane" data-ovst="ecosystem">'+ecosystemBody()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="inventory" hidden>'+inventoryBody()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="products" hidden>'+productsBody()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="axon" hidden>'+axonBody()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="clients" hidden>'+clientsBody()+'</div>'+
     '<div class="ovt-subpane" data-ovst="margins" hidden>'+marginsBody()+'</div>'+
+    '<div class="ovt-subpane" data-ovst="quality" hidden>'+qualityBody()+'</div>'+
     '<div class="ovt-subpane" data-ovst="capital" hidden>'+capitalBody()+'</div>'+
   '</div>';
   h += '<div class="ov-foot">'+esc(APP_DD_SOURCES)+' '+esc(AM_SOURCE)+'</div>';
@@ -986,6 +1305,19 @@ function wireCollapsibles(root){
     });
   });
 }
+// Delegated so it covers every xp() block in the Deep Dive, including ones nested inside cards
+// and ones in panes that were hidden when init ran.
+function wireExpanders(root){
+  if(root._xpWired) return; root._xpWired=true;
+  root.addEventListener('click', function(ev){
+    var btn = ev.target.closest ? ev.target.closest('.xp-h') : null;
+    if(!btn || !root.contains(btn)) return;
+    var box = btn.parentElement, body = btn.nextElementSibling; if(!body) return;
+    var open = body.hidden; body.hidden = !open;
+    box.classList.toggle('open', open);
+    var ic = btn.querySelector('.xp-ic'); if(ic) ic.textContent = open ? '▾' : '▸';
+  });
+}
 function wireAccordions(root){
   root.querySelectorAll('.acc-h').forEach(function(btn){
     if(btn._wired) return; btn._wired=true;
@@ -1069,7 +1401,9 @@ function buildVisible(root){
   }
   else if(key==='growth')    requestAnimationFrame(function(){ buildDrivers(root); });
   else if(key==='quarterly') requestAnimationFrame(function(){ buildQtr(root); });
+  else if(key==='axon')      requestAnimationFrame(function(){ buildAxon(root); });
   else if(key==='margins')   requestAnimationFrame(function(){ buildMargins(root); });
+  else if(key==='quality')   requestAnimationFrame(function(){ buildQuality(root); });
   else if(key==='capital')   requestAnimationFrame(function(){ buildCapital(root); });
 }
 
@@ -1079,6 +1413,7 @@ function deepDiveInit(c){
   if(!root) return;
   if(root._wired){ buildVisible(root); return; }
   root._wired = true;
+  wireExpanders(root);
 
   root.querySelectorAll('.dd-tab').forEach(function(btn){
     btn.addEventListener('click', function(){

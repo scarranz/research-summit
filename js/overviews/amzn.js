@@ -3637,16 +3637,22 @@ function segmentsBody(){
       chips:['Turned profitable <b>2024</b> after years of losses','Same ads + units flywheel','FX a <b>+$903M</b> tailwind in 2025'],
       off:'<b>The path:</b> established markets (Germany, UK, Japan) matured to profit while emerging markets (India, Brazil, Middle East) still invest — the blended margin is early on the same curve NA already climbed.'}
   ];
-  h+='<style>.segx-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 14px}'+
-    '.segx-tab{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--bdr);background:var(--card,#fff);border-radius:10px;padding:9px 13px;cursor:pointer;font-size:12.5px;font-weight:800;color:var(--navy);transition:.13s}'+
-    '.segx-tab:hover{border-color:var(--brand-2)}.segx-tab.active{border-color:var(--brand);background:var(--brand-soft);box-shadow:inset 0 0 0 1px var(--brand)}'+
-    '.segx-dot{width:11px;height:11px;border-radius:3px;flex:none}.segx-tag{font-size:10.5px;font-weight:700;color:var(--mu)}</style>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">The three segments — pick one for its full read</div>';
+  h+='<style>.seg-explorer{border:1.5px solid var(--brand);border-radius:14px;padding:14px 16px 16px;background:linear-gradient(180deg,var(--brand-soft),transparent);margin:6px 0 6px}'+
+    '.seg-explorer-h{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-2);margin:0 0 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}'+
+    '.seg-explorer-h .seg-hint{font-size:9px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--mu);background:#fff;border:1px solid var(--bdr);border-radius:20px;padding:2px 9px}'+
+    '.segx-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}'+
+    '.segx-tab{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--bdr);background:#fff;border-radius:20px;padding:8px 14px;cursor:pointer;font-size:12.5px;font-weight:800;color:var(--navy);transition:.13s}'+
+    '.segx-tab:hover{border-color:var(--brand)}.segx-tab.active{background:var(--navy);border-color:var(--navy);color:#fff}.segx-tab.active .segx-tag{color:rgba(255,255,255,.8)}'+
+    '.segx-dot{width:11px;height:11px;border-radius:3px;flex:none}.segx-tag{font-size:10.5px;font-weight:700;color:var(--mu)}'+
+    '.segx-panel-card{background:var(--card,#fff);border:1px solid var(--bdr);border-radius:12px;padding:15px 17px}</style>';
+  h+='<div class="ov-sec"><div class="ov-sec-h">The three segments</div>';
+  h+='<div class="seg-explorer"><div class="seg-explorer-h">Segment explorer — AWS · North America · International <span class="seg-hint">tap a segment to switch</span></div>';
   h+='<div class="segx-tabs">'+eng.map(function(s,i){ return '<button type="button" class="segx-tab'+(i===0?' active':'')+'" data-segtab="'+s.key+'"><span class="segx-dot" style="background:'+s.c+'"></span>'+s.n+' <span class="segx-tag">'+s.m+' · '+s.role+'</span></button>'; }).join('')+'</div>';
   h+='<div class="segx-panels">'+eng.map(function(s,i){
     var head='<div class="seg-chips" style="margin-bottom:8px">'+s.chips.map(function(c){ return '<span class="seg-chip">'+c+'</span>'; }).join('')+'</div><div class="seg-off" style="margin-bottom:12px">'+s.off+'</div>';
-    return '<div class="segx-panel" data-segpanel="'+s.key+'"'+(i>0?' hidden':'')+'>'+head+(SEG_WORLD[s.key]?SEG_WORLD[s.key].h:'')+'</div>';
+    return '<div class="segx-panel segx-panel-card" data-segpanel="'+s.key+'"'+(i>0?' hidden':'')+'>'+head+(SEG_WORLD[s.key]?SEG_WORLD[s.key].h:'')+'</div>';
   }).join('')+'</div>';
+  h+='</div>';   // close .seg-explorer
   h+='<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">Amazon reports <b>net sales, operating income, D&amp;A and PP&amp;E by segment</b> — never functional expense by segment. Drivers per the 10-K MD&amp;A + Bloomberg segment data; FY2025 op income $80.0B includes a $2.5B FTC settlement and $2.7B of severance.</div></div>';
   h+='<div class="seg-tog-row"><span class="acx-tog seg-tog"><button type="button" data-segg="y" class="active">Annual</button><button type="button" data-segg="q">Quarterly</button></span></div>';
   h+='<div class="seg-kpis" id="segKpis"></div>';

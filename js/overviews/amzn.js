@@ -3447,7 +3447,7 @@ function deepDiveHtml(c){
   h+='<div class="dd-pane" data-dd="valuation" hidden>'+
       '<div class="ovt-subtabs">'+
         '<button type="button" class="ovt-subtab active" data-ovst="sensitivity">Sensitivity Analysis</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="targetmult">Target Multiple</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="targetmult">Target Multiple / PEG</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="peers">Peers</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="financials">Financials</button>'+
       '</div>'+

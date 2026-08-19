@@ -3308,8 +3308,7 @@ function bottomlineBody(){
   var h='<div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:8px;flex-wrap:wrap">'+
     '<span class="acx-tog mmode-tog"><button type="button" data-mmode="grossop" class="active">Gross &amp; operating</button><button type="button" data-mmode="segment">By segment</button></span>'+
     '<span class="acx-tog amgn-tog"><button type="button" data-amgn="y" class="active">Annual</button><button type="button" data-amgn="q">Quarterly</button></span></div>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">Operating margin</div><div style="height:320px"><canvas id="aMgnMain"></canvas></div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px"><b>Gross &amp; operating</b> = consolidated (revenue − cost of sales, then − all functional cost). <b>By segment</b> = each segment’s operating margin, with the consolidated line; AWS ~35% vs retail mid-single-digit drags the whole up. 3Q25 dips carry the $2.5B FTC charge. Annual from the Segments tab; quarterly from 8-Ks / Results.</div></div>';
+  h+='<div class="ov-sec"><div class="ov-sec-h">Operating margin</div><div style="height:320px"><canvas id="aMgnMain"></canvas></div></div>';
   return h;
 }
 function aMgnArcRows(gran){
@@ -3877,8 +3876,7 @@ function segmentsBody(){
   h+='<div class="seg-tog-row"><span class="acx-tog seg-tog"><button type="button" data-segg="y" class="active">Annual</button><button type="button" data-segg="q">Quarterly</button></span></div>';
   h+='<div class="seg-kpis" id="segKpis"></div>';
   h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">Operating income &amp; margin by segment<span class="acx-tog sgm-tog"><button type="button" data-sgm="dollar" class="active">$B (income)</button><button type="button" data-sgm="margin">Margin %</button></span></div>'+
-    '<div style="height:300px"><canvas id="aSgMain"></canvas></div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px"><b>$B</b> = stacked operating income (where the profit is made — AWS ~57% on 18% of revenue). <b>Margin %</b> = each segment\'s operating margin, with the consolidated line (dashed) dragged up by AWS mix (~35% vs retail mid-single-digit). <b>Annual ⇄ Quarterly</b> via the toggle at the top. FY2022 = the over-investment trough; 3Q25 NA carries the $2.5B FTC charge.</div></div>';
+    '<div style="height:300px"><canvas id="aSgMain"></canvas></div></div>';
   // rev -> profit mismatch
   h+='<div class="ov-sec"><div class="ov-sec-h">Where the revenue is vs where the profit is (FY2025)</div>'+
      '<div class="seg-mm">'+
@@ -3887,8 +3885,7 @@ function segmentsBody(){
        '<div class="seg-mm-ar">▼</div>'+
        '<div class="seg-mm-row"><span class="seg-mm-lab">Profit</span><div class="seg-mm-bar">'+
          '<div class="seg-mm-seg" style="width:37%;background:'+BRAND+'">NA 37%</div><div class="seg-mm-seg" style="width:5.9%;background:'+BRAND2+'"></div><div class="seg-mm-seg" style="width:57%;background:'+SQUID+'">AWS 57%</div></div></div>'+
-     '</div>'+
-     '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:10px"><b>AWS punches far above its weight</b> — 18% of revenue, 57% of operating income — while North America is the volume base and International is still a thin contributor. Move AWS a point of mix and the whole company’s margin moves.</div></div>';
+     '</div></div>';
   h+=aCollap('Segment deep dives — the full read per segment (drivers, unit economics, cost structure, calls)', segExp, false);
   return h;
 }

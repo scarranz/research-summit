@@ -4486,7 +4486,9 @@ function amznOwnBody(){   // Ownership
   ]);
   h+='<div class="ov-sec-h" style="margin-top:16px">Capital returned to shareholders</div>';
   h+='<div class="ov-fynote">Amazon pays <b>no dividend</b> and repurchases stock only opportunistically — it authorized a $10B buyback in 2022 and bought ~$6B that year, then effectively paused. Capital goes to the capex build (see <b>Miscellaneous ▸ Capex &amp; Depreciation</b>), not to shareholders — so SBC dilution is <b>not</b> offset by buybacks.</div>';
-  h+='<div class="ov-foot">Exact holdings and insider transactions sync live in Pillars ▸ Management (Fiscal.ai); figures here are approximate.</div>';
+  h+='<div class="ov-sec-h" style="margin-top:18px">Executives &amp; insider activity — live from Fiscal.ai</div>';
+  h+='<div id="dd-mgmt-slot"></div>';   // filled by companies.js (the same live table as Pillars ▸ Management), like UBER
+  h+='<div class="ov-foot">Executive holdings and insider transactions sync live from Fiscal.ai (also in Pillars ▸ Management); the narrative figures above are approximate.</div>';
   return h;
 }
 function amznGovBody(){   // Governance & SBC
@@ -4526,7 +4528,32 @@ var AMZN_TRACK=[
     amzn:'Two decades of Amazon finance — the consistent voice of the guide across the pandemic build, the 2022 trough and the AI capex cycle; owns the capex framing that anchors the bull case.',
     prior:'At Amazon since 2002 (Worldwide Operations finance); a company lifer in the finance seat.',
     detail:'<p><b>At Amazon (CFO since 2015; joined 2002).</b> Guided the company through the pandemic over-build, the 2022 margin trough and reset, and now the AI capex cycle — with the framing "as fast as we install this capacity, we are monetizing it."</p>'+
-      '<p><b>Net read — solid (green).</b> Continuity and credibility; the open question he owns is defending the capex thesis if AWS demand ever lags the build.</p>' }
+      '<p><b>Net read — solid (green).</b> Continuity and credibility; the open question he owns is defending the capex thesis if AWS demand ever lags the build.</p>' },
+  { id:'desantis', n:'Peter DeSantis', role:'SVP, Foundational AI Models, Custom Silicon & Quantum', since:'2005', rate:'green',
+    amzn:'The technical architect behind AWS\'s cost/performance edge — Nitro, the Graviton/Trainium/Inferentia custom-silicon program, data-center and power scale; now foundational models + quantum.',
+    prior:'Career built inside AWS — one of the longest-tenured infrastructure leaders.',
+    detail:'<p><b>At Amazon (since 2005).</b> Ran AWS compute and infrastructure for years; drove the Nitro system and the custom-silicon roadmap (Graviton for general compute, Trainium/Inferentia for AI) that underpins AWS\'s price-performance advantage, plus the power/data-center scale-up.</p>'+
+      '<p><b>Net read — value creator (green).</b> The silicon and infrastructure edge he owns is central to the AWS margin story; deep, proven, low-drama.</p>' },
+  { id:'grandinetti', n:'Russell Grandinetti', role:'SVP, International Stores', since:'2000', rate:'green',
+    amzn:'A 25-year Amazon veteran (early Kindle and digital); now runs International Stores — the segment that crossed into operating profit in 2024 on the same regionalization + advertising playbook as North America.',
+    prior:'Essentially a career-Amazon operator; helped build the Kindle/digital business.',
+    detail:'<p><b>At Amazon (since 2000).</b> Held senior roles across digital, Kindle and consumer; now leads International Stores, which reached its first full-year operating profit in 2024 and keeps expanding in the established markets while the emerging ones invest.</p>'+
+      '<p><b>Net read — value creator (green).</b> Long, credible operating record; the open item is the pace of emerging-market profitability.</p>' },
+  { id:'zapolsky', n:'David Zapolsky', role:'Chief Global Affairs & Legal Officer', since:'1999', rate:'green',
+    amzn:'General Counsel since 2014 and now the combined legal + global public-policy chief — steering the FTC antitrust suit, EU/DMA regulation and the M&A legal work through the most scrutiny in Amazon\'s history.',
+    prior:'At Amazon since 1999; earlier a litigator (antitrust) and prosecutor.',
+    detail:'<p><b>At Amazon (GC since 2014; joined 1999).</b> Leads Legal, Compliance and Global Public Policy through the FTC monopolization case, EU Digital Markets Act obligations, the $2.5B FTC/Prime settlement and the deal reviews (MGM, iRobot [terminated]).</p>'+
+      '<p><b>Net read — value creator (green).</b> Seasoned through Amazon\'s hardest regulatory period; the docket he manages is the standing risk, not his handling of it.</p>' },
+  { id:'galetti', n:'Beth Galetti', role:'SVP, People eXperience & Technology', since:'2013', rate:'green',
+    amzn:'Head of HR — owns the workforce through the largest headcount actions in company history (~27k in 2022-23, ~14k more in 2025-26) and the "fewer managers, more builders" flattening.',
+    prior:'Ex-FedEx (engineering/IT leadership) before joining Amazon in 2013.',
+    detail:'<p><b>At Amazon (HR chief since ~2016; joined 2013).</b> Executed the corporate-cost reset — the two large rounds of role eliminations and the manager-to-builder ratio push that drive the G&amp;A leverage — while scaling a 1.5M+ employee base.</p>'+
+      '<p><b>Net read — green, caveated.</b> Delivered the org efficiency the margin story needed; the caveat is culture/morale risk from repeated layoffs, which is hers to manage.</p>' },
+  { id:'panay', n:'Panos Panay', role:'SVP, Devices & Services', since:'2023', rate:'amber',
+    amzn:'The ex-Microsoft Surface creator, recruited in 2023 to run Devices & Services (Echo/Alexa, Kindle, Ring) and fix the historically loss-making devices unit — Alexa+ (the generative-AI assistant) launched on his watch.',
+    prior:'~19 years at <b>Microsoft</b> — created and led the Surface hardware line and Windows + Devices.',
+    detail:'<p><b>At Amazon (since Oct 2023).</b> Took over Devices & Services after Dave Limp left for Blue Origin; relaunched Alexa as the paid, generative <b>Alexa+</b> and owns the Echo/Kindle/Ring hardware roadmap.</p>'+
+      '<p><b>Net read — mixed / unproven (amber).</b> Strong hardware pedigree from Surface, but Devices has long lost money and the Alexa+ monetization is early — the turnaround is not yet demonstrated in the numbers.</p>' }
 ];
 function amznTrackBody(){
   var legend=Object.keys(AMZN_TRK_RATE).map(function(k){ var r=AMZN_TRK_RATE[k]; return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--navy)"><span style="width:10px;height:10px;border-radius:50%;background:'+r.c+'"></span>'+r.l+'</span>'; }).join('');

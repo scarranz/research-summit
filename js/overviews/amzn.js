@@ -2958,6 +2958,13 @@ function aBuildAutoTbl(id){
   if(wasOpen){ var nb=div.querySelector('.rs-collap-b'); if(nb) nb.hidden=false; var ic=div.querySelector('.rs-collap-ic'); if(ic) ic.textContent='▾'; }
   host.insertBefore(div, wrap.nextSibling);
 }
+// Collapsible SECTION (charts / deep dives) so the pane isn't a wall — less shown by default,
+// opened on demand. Uses the same rs-collap the table dropdown does (toggled in deepDiveInit).
+function aCollap(title, inner, open){
+  return '<div class="rs-collap" style="margin:16px 0 4px"><button type="button" class="rs-collap-h">'+
+    '<span class="rs-collap-ic">'+(open?'▾':'▸')+'</span> '+esc(title)+'</button>'+
+    '<div class="rs-collap-b"'+(open?'':' hidden')+' style="padding-top:10px">'+inner+'</div></div>';
+}
 function aZoom(id){ var cv=document.getElementById(id), ch=_aCharts[id]; if(!cv||!ch) return;
   if(ch.options&&ch.options.scales&&ch.options.scales.y){   // rule 1
     rsAttachBrush(cv, ch, null,
@@ -3785,15 +3792,12 @@ function segmentsBody(){
     '.segx-tab:hover{border-color:var(--brand)}.segx-tab.active{background:var(--navy);border-color:var(--navy);color:#fff}.segx-tab.active .segx-tag{color:rgba(255,255,255,.8)}'+
     '.segx-dot{width:11px;height:11px;border-radius:3px;flex:none}.segx-tag{font-size:10.5px;font-weight:700;color:var(--mu)}'+
     '.segx-panel-card{background:var(--card,#fff);border:1px solid var(--bdr);border-radius:12px;padding:15px 17px}</style>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">The three segments</div>';
-  h+='<div class="seg-explorer"><div class="seg-explorer-h">Segment explorer — AWS · North America · International <span class="seg-hint">tap a segment to switch</span></div>';
-  h+='<div class="segx-tabs">'+eng.map(function(s,i){ return '<button type="button" class="segx-tab'+(i===0?' active':'')+'" data-segtab="'+s.key+'"><span class="segx-dot" style="background:'+s.c+'"></span>'+s.n+' <span class="segx-tag">'+s.m+' · '+s.role+'</span></button>'; }).join('')+'</div>';
-  h+='<div class="segx-panels">'+eng.map(function(s,i){
-    var head='<div class="seg-chips" style="margin-bottom:8px">'+s.chips.map(function(c){ return '<span class="seg-chip">'+c+'</span>'; }).join('')+'</div><div class="seg-off" style="margin-bottom:12px">'+s.off+'</div>';
-    return '<div class="segx-panel segx-panel-card" data-segpanel="'+s.key+'"'+(i>0?' hidden':'')+'>'+head+(SEG_WORLD[s.key]?SEG_WORLD[s.key].h:'')+'</div>';
-  }).join('')+'</div>';
-  h+='</div>';   // close .seg-explorer
-  h+='<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">Amazon reports <b>net sales, operating income, D&amp;A and PP&amp;E by segment</b> — never functional expense by segment. Drivers per the 10-K MD&amp;A + Bloomberg segment data; FY2025 op income $80.0B includes a $2.5B FTC settlement and $2.7B of severance.</div></div>';
+  var segExp='<div class="seg-explorer"><div class="seg-explorer-h">Segment explorer — AWS · North America · International <span class="seg-hint">tap a segment to switch</span></div>'+
+    '<div class="segx-tabs">'+eng.map(function(s,i){ return '<button type="button" class="segx-tab'+(i===0?' active':'')+'" data-segtab="'+s.key+'"><span class="segx-dot" style="background:'+s.c+'"></span>'+s.n+' <span class="segx-tag">'+s.m+' · '+s.role+'</span></button>'; }).join('')+'</div>'+
+    '<div class="segx-panels">'+eng.map(function(s,i){
+      var head='<div class="seg-chips" style="margin-bottom:8px">'+s.chips.map(function(c){ return '<span class="seg-chip">'+c+'</span>'; }).join('')+'</div><div class="seg-off" style="margin-bottom:12px">'+s.off+'</div>';
+      return '<div class="segx-panel segx-panel-card" data-segpanel="'+s.key+'"'+(i>0?' hidden':'')+'>'+head+(SEG_WORLD[s.key]?SEG_WORLD[s.key].h:'')+'</div>';
+    }).join('')+'</div></div>';
   h+='<div class="seg-tog-row"><span class="acx-tog seg-tog"><button type="button" data-segg="y" class="active">Annual</button><button type="button" data-segg="q">Quarterly</button></span></div>';
   h+='<div class="seg-kpis" id="segKpis"></div>';
   h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">Operating income &amp; margin by segment<span class="acx-tog sgm-tog"><button type="button" data-sgm="dollar" class="active">$B (income)</button><button type="button" data-sgm="margin">Margin %</button></span></div>'+
@@ -3810,6 +3814,7 @@ function segmentsBody(){
          '<div class="seg-mm-seg" style="width:37%;background:'+BRAND+'">NA 37%</div><div class="seg-mm-seg" style="width:5.9%;background:'+BRAND2+'"></div><div class="seg-mm-seg" style="width:57%;background:'+SQUID+'">AWS 57%</div></div></div>'+
      '</div>'+
      '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:10px"><b>AWS punches far above its weight</b> — 18% of revenue, 57% of operating income — while North America is the volume base and International is still a thin contributor. Move AWS a point of mix and the whole company’s margin moves.</div></div>';
+  h+=aCollap('Segment deep dives — the full read per segment (drivers, unit economics, cost structure, calls)', segExp, false);
   return h;
 }
 function aBuildSegments(){
@@ -4696,7 +4701,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="segments">Segments</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="supplychain">Supply Chain</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="margins">'+expenseTabsBody()+bottomlineBody()+aBridgeBody()+aNetBridgeBody()+aSbcBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="margins">'+bottomlineBody()+aBridgeBody()+aNetBridgeBody()+aSbcBody()+aCollap('Expense lines — the six functional deep dives (unit economics, drivers, calls)', expenseTabsBody(), false)+'</div>'+
       '<div class="ovt-subpane" data-ovst="segments" hidden>'+segmentsBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="supplychain" hidden>'+aSplcBody(c)+'</div>'+
     '</div>';

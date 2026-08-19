@@ -3119,15 +3119,18 @@ var BR_FMT_BPS={ axis:function(v){return v.toFixed(0)+'%';}, base:function(v){re
 function aBridgeBody(){
   var yBtns=function(cls,sel){ return A_OPEX_YEARS.map(function(y){ return '<button type="button" data-'+cls+'="'+y+'"'+(y===sel?' class="active"':'')+'>FY'+String(y).slice(2)+'</button>'; }).join(''); };
   var qBtns=A_OPEXQ.map(function(r,i){ return '<button type="button" data-brq="'+i+'"'+(i===A_OPEXQ.length-1?' class="active"':'')+'>'+r.p.replace(/\s+/g,'')+'</button>'; }).join('');
-  return '<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
-      '<span>The bridge — how revenue becomes operating income</span>'+
+  return '<div class="ov-sec"><div class="ov-sec-h">The bridge — how revenue becomes operating income</div>'+
+    '<div class="mch-ctl">'+   /* §0.4 row 2: mode (left) */
       '<span class="acx-tog br-mode"><button type="button" data-brm="buildup" class="active">Build-up ($B)</button><button type="button" data-brm="bps">Margin change (bps)</button><button type="button" data-brm="fwd">Forward (consensus)</button></span>'+
+      '<span></span>'+
     '</div>'+
-    '<div class="br-ctl-bu" style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin:0 0 8px">'+
+    '<div class="br-ctl-bu mch-ctl" style="margin:0 0 8px">'+   /* treatment (left) · window (right) */
       '<span class="acx-tog br-view"><button type="button" data-brv="wf" class="active">Waterfall</button><button type="button" data-brv="pie">Pie</button></span>'+
-      '<span class="acx-tog br-gran"><button type="button" data-brg="y" class="active">Annual</button><button type="button" data-brg="q">Quarterly</button></span>'+
-      '<span class="acx-tog br-yr br-sel-y">'+yBtns('bry',2025)+'</span>'+
-      '<span class="acx-tog br-qtr br-sel-q" style="display:none;flex-wrap:wrap">'+qBtns+'</span>'+
+      '<span style="display:flex;gap:8px;flex-wrap:wrap">'+
+        '<span class="acx-tog br-gran"><button type="button" data-brg="y" class="active">Annual</button><button type="button" data-brg="q">Quarterly</button></span>'+
+        '<span class="acx-tog br-yr br-sel-y">'+yBtns('bry',2025)+'</span>'+
+        '<span class="acx-tog br-qtr br-sel-q" style="display:none;flex-wrap:wrap">'+qBtns+'</span>'+
+      '</span>'+
     '</div>'+
     '<div class="br-ctl-bps" style="display:none;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin:0 0 8px;align-items:center">'+
       '<span style="font-size:11px;color:var(--mu)">From</span><span class="acx-tog br-from">'+yBtns('brf',2022)+'</span>'+
@@ -3142,8 +3145,7 @@ function aBridgeBody(){
       '<div class="br-sl"><span class="br-sl-l">AWS</span><input type="range" data-brseg="aws" min="-40" max="40" step="1" value="0"><span class="br-sl-v" data-brsegv="aws">0%</span></div>'+
     '</div>'+
     '<div style="height:340px"><canvas id="aBrCanvas"></canvas></div>'+
-    '<div id="aBrCanvas-tbl" style="margin-top:8px"></div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px"><b>Build-up</b> walks revenue down through each functional cost line to operating income, in dollars. <b>Margin change</b> decomposes how the operating margin moved between two years, in bps. <b>Forward</b> bridges FY25 operating income to the consensus target by <b>segment</b> — move a slider to sensitize a segment vs consensus and see the implied group OI. Actuals: DCF/8-K. Forward: <b>Bloomberg consensus</b> segment OI (as of Aug 2026); AWS is the swing factor.</div></div>';
+    '<div id="aBrCanvas-tbl" style="margin-top:8px"></div></div>';
 }
 function aBridgeSync(pane){
   var mb=pane.querySelector('.br-mode .active'), mode=mb?mb.getAttribute('data-brm'):'buildup';
@@ -3193,11 +3195,11 @@ function aIsVal(k,y){ var s=amznBBG.is[k]; if(!s) return null; return y<=2025 ? 
 function aNetBridgeBody(){
   var years=[2023,2024,2025,2026,2027,2028];
   var yb=years.map(function(y){ return '<button type="button" data-nbyr="'+y+'"'+(y===2025?' class="active"':'')+'>FY'+String(y).slice(2)+(y>2025?'E':'')+'</button>'; }).join('');
-  return '<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
-      '<span>Operating income → net income — and the normalization</span>'+
+  return '<div class="ov-sec"><div class="ov-sec-h">Operating income → net income — and the normalization</div>'+
+    '<div class="mch-ctl">'+   /* §0.4 row 2: treatment (left) · window (right) */
       '<span class="acx-tog nb-norm"><button type="button" data-nbnorm="rep" class="active">Reported</button><button type="button" data-nbnorm="norm">Normalized</button></span>'+
+      '<span class="acx-tog nb-yr" style="flex-wrap:wrap">'+yb+'</span>'+
     '</div>'+
-    '<div style="display:flex;justify-content:flex-end;margin:0 0 8px"><span class="acx-tog nb-yr" style="flex-wrap:wrap">'+yb+'</span></div>'+
     '<div style="height:330px"><canvas id="aNetBr"></canvas></div>'+
     '<div id="aNetBr-tbl" style="margin-top:8px"></div>'+
     '<div class="acx-cap" id="aNetBrCap" style="font-size:11px;color:var(--mu);margin-top:8px"></div></div>';
@@ -3224,10 +3226,12 @@ function aBuildNetBridge(){
 }
 // SBC — back in General (where it was), BBG-driven (actuals + consensus, $B-by-line ⇄ %-of-line).
 function aSbcBody(){
-  return '<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
-      '<span>Stock-based compensation</span>'+
+  return '<div class="ov-sec"><div class="ov-sec-h">Stock-based compensation</div>'+
+    '<div class="mch-ctl">'+   /* §0.4 row 2 */
       '<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="acx-tog sbcv-tog"><button type="button" data-sbcv="line" class="active">By line</button><button type="button" data-sbcv="dilution">Dilution</button></span>'+
-      '<span class="acx-tog sbcm-tog"><button type="button" data-sbcm="dollar" class="active">$B</button><button type="button" data-sbcm="pct">% of revenue</button></span></span></div>'+
+      '<span class="acx-tog sbcm-tog"><button type="button" data-sbcm="dollar" class="active">$B</button><button type="button" data-sbcm="pct">% of revenue</button></span></span>'+
+      '<span></span>'+
+    '</div>'+
     '<div style="height:300px"><canvas id="aSbcMain"></canvas></div></div>';
 }
 function aSbcSer(k){ var s=amznBBG.is[k]; return s?s.a.concat(s.f):[null,null,null,null,null,null]; }
@@ -3274,8 +3278,12 @@ function aMarginsBody(){
     '<optgroup label="Cash"><option value="fcf">FCF margin</option></optgroup>';
   return '<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
       '<span style="display:flex;align-items:center;gap:8px">Profitability &amp; margins <select class="marg-metric" style="font-size:12px;font-weight:700;color:var(--navy);border:1px solid var(--bdr);border-radius:7px;padding:4px 8px;background:#fff">'+opts+'</select></span>'+
+    '</div>'+
+    '<div class="mch-ctl">'+   /* §0.4 row 2: treatment (left) · window (right) */
       '<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="acx-tog marg-gran"><button type="button" data-margg="y" class="active">Annual</button><button type="button" data-margg="q">Quarterly</button></span>'+
-      '<span class="acx-tog marg-mode"><button type="button" data-margm="pct" class="active">Margin %</button><button type="button" data-margm="amt">$B</button></span></span></div>'+
+      '<span class="acx-tog marg-mode"><button type="button" data-margm="pct" class="active">Margin %</button><button type="button" data-margm="amt">$B</button></span></span>'+
+      '<span></span>'+
+    '</div>'+
     '<div style="height:320px"><canvas id="aMargins"></canvas></div></div>';
 }
 function aBuildMargins(){
@@ -3829,7 +3837,8 @@ function segmentsBody(){
     }).join('')+'</div></div>';
   h+='<div class="seg-tog-row"><span class="acx-tog seg-tog"><button type="button" data-segg="y" class="active">Annual</button><button type="button" data-segg="q">Quarterly</button></span></div>';
   h+='<div class="seg-kpis" id="segKpis"></div>';
-  h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">Operating income &amp; margin by segment<span class="acx-tog sgm-tog"><button type="button" data-sgm="dollar" class="active">$B (income)</button><button type="button" data-sgm="margin">Margin %</button></span></div>'+
+  h+='<div class="ov-sec"><div class="ov-sec-h">Operating income &amp; margin by segment</div>'+
+    '<div class="mch-ctl"><span class="acx-tog sgm-tog"><button type="button" data-sgm="dollar" class="active">$B (income)</button><button type="button" data-sgm="margin">Margin %</button></span><span></span></div>'+
     '<div style="height:300px"><canvas id="aSgMain"></canvas></div></div>';
   // rev -> profit mismatch
   h+='<div class="ov-sec"><div class="ov-sec-h">Where the revenue is vs where the profit is (FY2025)</div>'+
@@ -4113,6 +4122,7 @@ function bottomlineCapexBody(){
     '.acx-reset{border:1px solid var(--bdr);background:#fff;color:var(--navy);font:inherit;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:6px;padding:5px 10px;cursor:pointer}.acx-reset:hover{background:rgba(0,0,0,.03)}'+
     '.acx-read{font-size:11px;color:var(--mu);font-variant-numeric:tabular-nums;margin:8px 0 0;line-height:1.5}.acx-read b{color:var(--navy)}'+
     '.acx-cap{font-size:11px;color:var(--mu);line-height:1.45;margin-top:8px}.acx-cap b{color:var(--navy);font-weight:600}'+
+    '.mch-ctl{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin:8px 0 4px}'+
     /* single dual-thumb range (Setup pattern) */
     '.acx-slwrap{display:flex;align-items:center;gap:10px;margin:2px 0 4px}'+
     '.acxsl{position:relative;height:26px;flex:1}'+

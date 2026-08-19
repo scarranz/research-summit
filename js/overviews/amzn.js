@@ -3082,6 +3082,19 @@ function aBuildBrWaterfall(id, steps, fmt){
     tw.innerHTML=aTbl(id, 'The waterfall — every step', ['Step','Value','Running'], steps.map(function(s){
       return [s.label, (s.kind==='base'||s.kind==='total')?f(s.val):fd(s.val), s.runAfter==null?f(s.val):f(s.runAfter)]; })); }
 }
+// Same build-up as a doughnut — where each revenue dollar goes (cost lines + operating income).
+function aBuildBrPie(r){
+  var cv=aChartReady('aBrCanvas'); if(!cv) return; aDestroy('aBrCanvas');
+  var rev=r.revenue, segs=A_MB_COST.map(function(it){ return {lab:A_BR_SHORT[it.k]||it.lab, v:(r[it.k]||0), c:it.c}; });
+  var oi=rev-A_MB_COST.reduce(function(a,it){ return a+(r[it.k]||0); },0);
+  segs.push({lab:'Operating income', v:oi, c:'#2E8B57'});
+  _aCharts['aBrCanvas']=new Chart(cv.getContext('2d'),{ type:'doughnut',
+    data:{ labels:segs.map(function(s){ return s.lab; }), datasets:[{ data:segs.map(function(s){ return Math.round(s.v/100)/10; }), backgroundColor:segs.map(function(s){ return s.c; }), borderColor:'#fff', borderWidth:2 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'55%',
+      plugins:{ legend:{ position:'right', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.label+': $'+c.parsed.toFixed(1)+'B ('+(rev?Math.round(c.parsed*1000/rev*100)/10:0)+'% of revenue)'; } } } } } });
+  var tw=document.getElementById('aBrCanvas-tbl');
+  if(tw) tw.innerHTML=aTbl('aBrCanvas','Where each revenue dollar goes',['Line','$B','% of revenue'],segs.map(function(s){ return [s.lab,'$'+(Math.round(s.v/100)/10).toFixed(1)+'B',(rev?Math.round(s.v/rev*1000)/10:0)+'%']; }));
+}
 // Revenue → −each functional cost → = Operating income, in $B, for one period row (annual or quarterly).
 function aBridgeBuildupSteps(r){
   var rev=r.revenue/1000, run=rev;
@@ -3111,6 +3124,7 @@ function aBridgeBody(){
       '<span class="acx-tog br-mode"><button type="button" data-brm="buildup" class="active">Build-up ($B)</button><button type="button" data-brm="bps">Margin change (bps)</button><button type="button" data-brm="fwd">Forward (consensus)</button></span>'+
     '</div>'+
     '<div class="br-ctl-bu" style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin:0 0 8px">'+
+      '<span class="acx-tog br-view"><button type="button" data-brv="wf" class="active">Waterfall</button><button type="button" data-brv="pie">Pie</button></span>'+
       '<span class="acx-tog br-gran"><button type="button" data-brg="y" class="active">Annual</button><button type="button" data-brg="q">Quarterly</button></span>'+
       '<span class="acx-tog br-yr br-sel-y">'+yBtns('bry',2025)+'</span>'+
       '<span class="acx-tog br-qtr br-sel-q" style="display:none;flex-wrap:wrap">'+qBtns+'</span>'+
@@ -3149,7 +3163,9 @@ function aBuildBridge(){
     var g=pane.querySelector('.br-gran .active'), gran=g?g.getAttribute('data-brg'):'y', r;
     if(gran==='q'){ var qb=pane.querySelector('.br-qtr .active'); r=A_OPEXQ[qb?+qb.getAttribute('data-brq'):A_OPEXQ.length-1]; }
     else { var yb=pane.querySelector('.br-yr .active'); r=A_OPEX[yb?+yb.getAttribute('data-bry'):2025]; }
-    if(r) aBuildBrWaterfall('aBrCanvas', aBridgeBuildupSteps(r), BR_FMT_D);
+    if(!r) return;
+    var vb=pane.querySelector('.br-view .active'), view=vb?vb.getAttribute('data-brv'):'wf';
+    if(view==='pie') aBuildBrPie(r); else aBuildBrWaterfall('aBrCanvas', aBridgeBuildupSteps(r), BR_FMT_D);
   } else if(mode==='bps'){
     var fb=pane.querySelector('.br-from .active'), tb=pane.querySelector('.br-to .active');
     var ya=fb?+fb.getAttribute('data-brf'):2022, yb2=tb?+tb.getAttribute('data-brt'):2025;
@@ -3620,6 +3636,7 @@ function aBuildExpenses(){
     if(!pane._expWired){ pane._expWired=true;
       tog('.br-mode', function(){ aBridgeSync(pane); aBuildBridge(); });
       tog('.br-gran', function(){ aBridgeSync(pane); aBuildBridge(); });
+      tog('.br-view', aBuildBridge);
       tog('.br-yr', aBuildBridge);
       tog('.br-qtr', aBuildBridge);
       tog('.br-from', aBuildBridge);

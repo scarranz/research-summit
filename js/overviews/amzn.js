@@ -3229,6 +3229,47 @@ function aBuildSbc(){
   if(pane && !pane._sbcmWired){ pane._sbcmWired=true;
     pane.querySelectorAll('.sbcm-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.sbcm-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSbc(); }; }); }
 }
+// Profitability & margins — the §0.4 layout: row 1 = a metric dropdown (identity), row 2 = mode
+// toggles (treatment). All margins (gross/operating/EBITDA/net/FCF) over time, reported → BBG
+// consensus, as a % or in $B. Semantic colours (navy=reported, blue=consensus) per §0.7.
+var RS_ACT='#1E2733', RS_CONS='#2563EB';
+var MARG_NUM={gross:'grossProfit', operating:'oi', ebitda:'ebitda', net:'netIncome', fcf:'fcf'};
+var MARG_LAB={gross:'Gross margin', operating:'Operating margin', ebitda:'EBITDA margin', net:'Net margin', fcf:'FCF margin'};
+function aMarginsBody(){
+  var opts='<optgroup label="Profit margins"><option value="gross">Gross margin</option><option value="operating" selected>Operating margin</option><option value="ebitda">EBITDA margin</option><option value="net">Net margin</option></optgroup>'+
+    '<optgroup label="Cash"><option value="fcf">FCF margin</option></optgroup>';
+  return '<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
+      '<span style="display:flex;align-items:center;gap:8px">Profitability &amp; margins <select class="marg-metric" style="font-size:12px;font-weight:700;color:var(--navy);border:1px solid var(--bdr);border-radius:7px;padding:4px 8px;background:#fff">'+opts+'</select></span>'+
+      '<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="acx-tog marg-gran"><button type="button" data-margg="y" class="active">Annual</button><button type="button" data-margg="q">Quarterly</button></span>'+
+      '<span class="acx-tog marg-mode"><button type="button" data-margm="pct" class="active">Margin %</button><button type="button" data-margm="amt">$B</button></span></span></div>'+
+    '<div style="height:320px"><canvas id="aMargins"></canvas></div></div>';
+}
+function aBuildMargins(){
+  var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(!pane) return;
+  var ms=pane.querySelector('.marg-metric'), metric=ms?ms.value:'operating';
+  var gm=pane.querySelector('.marg-mode .active'), mode=gm?gm.getAttribute('data-margm'):'pct';
+  var gg=pane.querySelector('.marg-gran .active'), gran=gg?gg.getAttribute('data-margg'):'y';
+  var cv=aChartReady('aMargins'); if(!cv) return; aDestroy('aMargins');
+  var num=amznBBG.is[MARG_NUM[metric]], rev=amznBBG.is.rev; if(!num||!rev) return;
+  var labels, na, rv, nAct;
+  if(gran==='q'){ labels=amznBBG.qtrs.slice(); na=num.q; rv=rev.q; nAct=5; }   // fq0=2Q26 at idx 4 → 5 actual quarters
+  else { labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E']; na=num.a.concat(num.f); rv=rev.a.concat(rev.f); nAct=3; }
+  function val(i){ var n=na[i], d=rv[i]; if(n==null||d==null||!d) return null; return mode==='pct'?Math.round(n/d*1000)/10:Math.round(n/100)/10; }
+  var actual=labels.map(function(_,i){ return i<nAct?val(i):null; });
+  var cons=labels.map(function(_,i){ return i>=nAct-1?val(i):null; });   // overlap one point so the line is continuous
+  _aCharts['aMargins']=new Chart(cv.getContext('2d'),{ type:'line',
+    data:{ labels:labels, datasets:[
+      { label:'Reported', data:actual, borderColor:RS_ACT, backgroundColor:RS_ACT, borderWidth:2.6, pointRadius:2.5, tension:0.2, spanGaps:false },
+      { label:'Consensus (BBG)', data:cons, borderColor:RS_CONS, backgroundColor:RS_CONS, borderWidth:2.2, borderDash:[5,4], pointRadius:2.5, tension:0.2, spanGaps:false } ] },
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
+        tooltip:{ callbacks:{ title:function(it){ return it[0].label; }, label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':(mode==='pct'?c.parsed.y+'%':'$'+c.parsed.y.toFixed(1)+'B')); } } } },
+      scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return mode==='pct'?v+'%':'$'+v+'B'; } } } } } });
+  aZoom('aMargins');
+  if(pane && !pane._margWired){ pane._margWired=true;
+    if(ms) ms.onchange=aBuildMargins;
+    pane.querySelectorAll('.marg-mode button, .marg-gran button').forEach(function(b){ b.onclick=function(){ var grp=b.parentNode; grp.querySelectorAll('button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildMargins(); }; }); }
+}
 function bottomlineBody(){
   var h='<div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:8px;flex-wrap:wrap">'+
     '<span class="acx-tog mmode-tog"><button type="button" data-mmode="grossop" class="active">Gross &amp; operating</button><button type="button" data-mmode="segment">By segment</button></span>'+
@@ -4701,7 +4742,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="segments">Segments</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="supplychain">Supply Chain</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="margins">'+bottomlineBody()+aBridgeBody()+aNetBridgeBody()+aSbcBody()+aCollap('Expense lines — the six functional deep dives (unit economics, drivers, calls)', expenseTabsBody(), false)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="margins">'+aMarginsBody()+aBridgeBody()+aNetBridgeBody()+aSbcBody()+aCollap('Expense lines — the six functional deep dives (unit economics, drivers, calls)', expenseTabsBody(), false)+'</div>'+
       '<div class="ovt-subpane" data-ovst="segments" hidden>'+segmentsBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="supplychain" hidden>'+aSplcBody(c)+'</div>'+
     '</div>';
@@ -4795,7 +4836,7 @@ function aBuildSub(root, dd, key){
   if(dd==='bottomline'){
     if(key==='supplychain') requestAnimationFrame(aBuildSplc);
     else if(key==='segments') requestAnimationFrame(aBuildSegments);
-    else requestAnimationFrame(function(){ aBuildBottomline(); aBuildExpenses(); });
+    else requestAnimationFrame(function(){ aBuildMargins(); aBuildExpenses(); });
   }
   if(dd==='misc'){
     if(key==='capex' || key==null) requestAnimationFrame(function(){ aBuildCapex(root); aBuildLeases(); });

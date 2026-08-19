@@ -3224,26 +3224,44 @@ function aBuildNetBridge(){
 }
 // SBC — back in General (where it was), BBG-driven (actuals + consensus, $B-by-line ⇄ %-of-line).
 function aSbcBody(){
-  return '<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">Stock-based compensation — where it lands ($B, actuals → consensus)<span class="acx-tog sbcm-tog"><button type="button" data-sbcm="dollar" class="active">$B by line</button><button type="button" data-sbcm="pct">% of the line</button></span></div>'+
-    '<div style="height:300px"><canvas id="aSbcMain"></canvas></div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px">SBC fell from <b>~$24.0B (2023) to ~$19.5B (2025)</b> as 2022-23 grants vested off; consensus drifts it back to <b>~$24.6B (2028E)</b> (faded bars). In <b>% of each line</b>, <b>G&amp;A (~15%)</b> and <b>Technology &amp; infrastructure (~10%)</b> are the most stock-comp-heavy; cost of sales almost none. With buybacks near zero, SBC is the main source of share-count growth. SBC-by-line, actuals + consensus, from BBG.</div></div>';
+  return '<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
+      '<span>Stock-based compensation</span>'+
+      '<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="acx-tog sbcv-tog"><button type="button" data-sbcv="line" class="active">By line</button><button type="button" data-sbcv="dilution">Dilution</button></span>'+
+      '<span class="acx-tog sbcm-tog"><button type="button" data-sbcm="dollar" class="active">$B</button><button type="button" data-sbcm="pct">% of revenue</button></span></span></div>'+
+    '<div style="height:300px"><canvas id="aSbcMain"></canvas></div></div>';
 }
+function aSbcSer(k){ var s=amznBBG.is[k]; return s?s.a.concat(s.f):[null,null,null,null,null,null]; }
 function aBuildSbc(){
-  var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]');
-  var tg=pane?pane.querySelector('.sbcm-tog .active'):null, pct=(tg?tg.getAttribute('data-sbcm'):'dollar')==='pct';
+  var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(!pane) return;
+  var tg=pane.querySelector('.sbcm-tog .active'), pct=(tg?tg.getAttribute('data-sbcm'):'dollar')==='pct';
+  var vw=pane.querySelector('.sbcv-tog .active'), view=vw?vw.getAttribute('data-sbcv'):'line';
   var cv=aChartReady('aSbcMain'); if(!cv) return; aDestroy('aSbcMain');
   var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
-  var LN=[{sbc:'sbcCogs',exp:'cogs',lab:'Cost of sales',c:SQUID},{sbc:'sbcFulfill',exp:'fulfillment',lab:'Fulfillment',c:BRAND},{sbc:'sbcTech',exp:'techInfra',lab:'Technology & infrastructure',c:BRAND2},{sbc:'sbcMktg',exp:'marketing',lab:'Sales & marketing',c:GREEN},{sbc:'sbcGA',exp:'gAdmin',lab:'General & administrative',c:GRAY}];
-  function ser(k){ var s=amznBBG.is[k]; return s?s.a.concat(s.f):[null,null,null,null,null,null]; }
-  var ds=LN.map(function(l){ var sbc=ser(l.sbc), exp=ser(l.exp);
-    var vals=labels.map(function(_,i){ if(sbc[i]==null) return null; return pct?(exp[i]?Math.round(sbc[i]/exp[i]*1000)/10:null):Math.round(sbc[i]/100)/10; });
-    return { label:l.lab, data:vals, backgroundColor:vals.map(function(_,i){ return i<3?l.c:acxRGBA(l.c,0.45); }), borderColor:'#fff', borderWidth:1, maxBarThickness:pct?22:44, stack:pct?undefined:'s' }; });
-  _aCharts['aSbcMain']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:labels, datasets:ds },
-    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':(pct?c.parsed.y+'% of the line':'$'+c.parsed.y.toFixed(1)+'B')); }, footer:function(it){ return pct?'':'Total SBC: $'+it.reduce(function(a,x){ return a+(x.parsed.y||0); },0).toFixed(1)+'B'; } } } },
-      scales:{ x:{ stacked:!pct, grid:{ display:false } }, y:{ stacked:!pct, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return pct?v+'%':'$'+v+'B'; } } } } } }); aZoom('aSbcMain');
+  if(view==='dilution'){   // SBC (bars) vs diluted share count (line) — dilution with ~nil buyback offset
+    var sbc=aSbcSer('sbc'), sh=aSbcSer('dilShares'), rev=aSbcSer('rev');
+    var bars=labels.map(function(_,i){ return sbc[i]==null?null:(pct?(rev[i]?Math.round(sbc[i]/rev[i]*1000)/10:null):Math.round(sbc[i]/100)/10); });
+    var shares=labels.map(function(_,i){ return sh[i]==null?null:Math.round(sh[i]); });
+    _aCharts['aSbcMain']=new Chart(cv.getContext('2d'),{ data:{ labels:labels, datasets:[
+      { type:'bar', label:'SBC '+(pct?'(% of revenue)':'($B)'), data:bars, backgroundColor:bars.map(function(_,i){ return i<3?acxRGBA(BRAND2,0.85):acxRGBA(BRAND2,0.4); }), borderColor:'#fff', borderWidth:1, maxBarThickness:44, yAxisID:'y', order:2 },
+      { type:'line', label:'Diluted shares (M)', data:shares, borderColor:SQUID, backgroundColor:SQUID, borderWidth:2.5, pointRadius:2.5, tension:0.2, yAxisID:'y1', order:1 } ]},
+      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.yAxisID==='y1'? c.dataset.label+': '+c.parsed.y.toLocaleString()+'M' : c.dataset.label+': '+(pct?c.parsed.y+'%':'$'+c.parsed.y.toFixed(1)+'B'); } } } },
+        scales:{ x:{ grid:{ display:false } },
+          y:{ position:'left', title:{ display:true, text:'SBC', font:{ size:9 } }, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return pct?v+'%':'$'+v+'B'; } } },
+          y1:{ position:'right', title:{ display:true, text:'Diluted shares (M)', font:{ size:9 } }, grid:{ display:false }, suggestedMin:10000 } } } });
+  } else {
+    var LN=[{sbc:'sbcCogs',exp:'cogs',lab:'Cost of sales',c:SQUID},{sbc:'sbcFulfill',exp:'fulfillment',lab:'Fulfillment',c:BRAND},{sbc:'sbcTech',exp:'techInfra',lab:'Technology & infrastructure',c:BRAND2},{sbc:'sbcMktg',exp:'marketing',lab:'Sales & marketing',c:GREEN},{sbc:'sbcGA',exp:'gAdmin',lab:'General & administrative',c:GRAY}];
+    var ds=LN.map(function(l){ var s=aSbcSer(l.sbc), e=aSbcSer(l.exp);   // in By line, % = % of that line's expense
+      var vals=labels.map(function(_,i){ if(s[i]==null) return null; return pct?(e[i]?Math.round(s[i]/e[i]*1000)/10:null):Math.round(s[i]/100)/10; });
+      return { label:l.lab, data:vals, backgroundColor:vals.map(function(_,i){ return i<3?l.c:acxRGBA(l.c,0.45); }), borderColor:'#fff', borderWidth:1, maxBarThickness:pct?22:44, stack:pct?undefined:'s' }; });
+    _aCharts['aSbcMain']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:labels, datasets:ds },
+      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':(pct?c.parsed.y+'% of the line':'$'+c.parsed.y.toFixed(1)+'B')); }, footer:function(it){ return pct?'':'Total SBC: $'+it.reduce(function(a,x){ return a+(x.parsed.y||0); },0).toFixed(1)+'B'; } } } },
+        scales:{ x:{ stacked:!pct, grid:{ display:false } }, y:{ stacked:!pct, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return pct?v+'%':'$'+v+'B'; } } } } } });
+  }
+  aZoom('aSbcMain');
   if(pane && !pane._sbcmWired){ pane._sbcmWired=true;
-    pane.querySelectorAll('.sbcm-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.sbcm-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSbc(); }; }); }
+    pane.querySelectorAll('.sbcm-tog button, .sbcv-tog button').forEach(function(b){ b.onclick=function(){ b.parentNode.querySelectorAll('button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSbc(); }; }); }
 }
 // Profitability & margins — the §0.4 layout: row 1 = a metric dropdown (identity), row 2 = mode
 // toggles (treatment). All margins (gross/operating/EBITDA/net/FCF) over time, reported → BBG

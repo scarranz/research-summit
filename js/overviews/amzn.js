@@ -3754,7 +3754,7 @@ function segCapDaBody(){
     '<div class="acx-cap" id="aSegCapDaCap" style="font-size:11px;color:var(--mu);margin-top:8px"></div></div>';
 }
 function aBuildSegCapDa(){
-  var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]');
+  var pane=document.querySelector('.dd-pane[data-dd="misc"] .ovt-subpane[data-ovst="capex"]');   // relocated to Miscellaneous ▸ Capex & Depreciation
   var tg=pane?pane.querySelector('.segcd-tog .active'):null, mode=tg?tg.getAttribute('data-segcd'):'capex';
   var cv=aChartReady('aSegCapDa'); if(!cv) return; aDestroy('aSegCapDa');
   var SG=[{k:'na',bk:'na',lab:'North America',c:BRAND},{k:'int',bk:'intl',lab:'International',c:BRAND2},{k:'aws',bk:'aws',lab:'AWS',c:SQUID}];
@@ -3844,7 +3844,6 @@ function segmentsBody(){
   h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">Operating income &amp; margin by segment<span class="acx-tog sgm-tog"><button type="button" data-sgm="dollar" class="active">$B (income)</button><button type="button" data-sgm="margin">Margin %</button></span></div>'+
     '<div style="height:300px"><canvas id="aSgMain"></canvas></div>'+
     '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin-top:8px"><b>$B</b> = stacked operating income (where the profit is made — AWS ~57% on 18% of revenue). <b>Margin %</b> = each segment\'s operating margin, with the consolidated line (dashed) dragged up by AWS mix (~35% vs retail mid-single-digit). <b>Annual ⇄ Quarterly</b> via the toggle at the top. FY2022 = the over-investment trough; 3Q25 NA carries the $2.5B FTC charge.</div></div>';
-  h+=segCapDaBody();
   // rev -> profit mismatch
   h+='<div class="ov-sec"><div class="ov-sec-h">Where the revenue is vs where the profit is (FY2025)</div>'+
      '<div class="seg-mm">'+
@@ -3888,7 +3887,6 @@ function aBuildSegments(){
           scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } };
     }
     _aCharts['aSgMain']=new Chart(mc.getContext('2d'), cfg); aZoom('aSgMain'); }
-  aBuildSegCapDa();
   if(pane && !pane._segWired){ pane._segWired=true;
     pane.querySelectorAll('.seg-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.seg-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegments(); }; });
     pane.querySelectorAll('.sgm-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.sgm-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegments(); }; });
@@ -4795,7 +4793,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="manda">M&amp;A</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="other">Other Analysis</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="capex">'+bottomlineCapexBody()+aLeasesBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="capex">'+bottomlineCapexBody()+segCapDaBody()+aLeasesBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="manda" hidden>'+aMandaBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="other" hidden>'+aOtherAnalysisBody()+'</div>'+
     '</div>';
@@ -4839,7 +4837,7 @@ function aBuildSub(root, dd, key){
     else requestAnimationFrame(function(){ aBuildMargins(); aBuildExpenses(); });
   }
   if(dd==='misc'){
-    if(key==='capex' || key==null) requestAnimationFrame(function(){ aBuildCapex(root); aBuildLeases(); });
+    if(key==='capex' || key==null) requestAnimationFrame(function(){ aBuildCapex(root); aBuildSegCapDa(); aBuildLeases(); });
   }
   if(dd==='valuation'){
     if(key==='peers') requestAnimationFrame(function(){ aScRenderAll(root); aScChipsAll(root); aScFetchCaps(root); });

@@ -3304,52 +3304,6 @@ function aBuildMargins(){
     if(ms) ms.onchange=aBuildMargins;
     pane.querySelectorAll('.marg-mode button, .marg-gran button').forEach(function(b){ b.onclick=function(){ var grp=b.parentNode; grp.querySelectorAll('button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildMargins(); }; }); }
 }
-function bottomlineBody(){
-  var h='<div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:8px;flex-wrap:wrap">'+
-    '<span class="acx-tog mmode-tog"><button type="button" data-mmode="grossop" class="active">Gross &amp; operating</button><button type="button" data-mmode="segment">By segment</button></span>'+
-    '<span class="acx-tog amgn-tog"><button type="button" data-amgn="y" class="active">Annual</button><button type="button" data-amgn="q">Quarterly</button></span></div>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">Operating margin</div><div style="height:320px"><canvas id="aMgnMain"></canvas></div></div>';
-  return h;
-}
-function aMgnArcRows(gran){
-  if(gran==='q') return A_OPEXQ.map(function(r){ var cost=A_OPEX_FN.reduce(function(a,f){ return a+r[f.k]; },0)+r.otherOpex;
-    return {p:r.p, gm:Math.round((r.revenue-r.costOfSales)/r.revenue*1000)/10, om:Math.round((r.revenue-cost)/r.revenue*1000)/10}; });
-  return A_OPEX_YEARS.map(function(y){ var r=A_OPEX[y], cost=A_OPEX_FN.reduce(function(a,f){ return a+r[f.k]; },0)+r.otherOpex;
-    return {p:String(y), gm:Math.round((r.revenue-r.costOfSales)/r.revenue*1000)/10, om:Math.round((r.revenue-cost)/r.revenue*1000)/10}; });
-}
-function aMgnSegRows(gran){
-  if(gran==='q'){ var q=amznResults.views.q.metrics, per=q.rev.periods, n=per.indexOf('2Q26'); if(n<0) n=per.length; var lb=per.slice(0,n);
-    function mg(a,b){ return lb.map(function(_,i){ var x=q[a].act[i], y=q[b].act[i]; return (x==null||y==null||!y)?null:Math.round(x/y*1000)/10; }); }
-    return { labels:lb, cons:mg('opinc','rev'), aws:mg('awsopinc','aws'), na:mg('naopinc','usrev'), intl:mg('intopinc','intrev'),
-      rev:lb.map(function(_,i){ return q.rev.act[i]; }), oi:{ us:lb.map(function(_,i){ return q.naopinc.act[i]==null?null:q.naopinc.act[i]/1000; }), int:lb.map(function(_,i){ return q.intopinc.act[i]==null?null:q.intopinc.act[i]/1000; }), aws:lb.map(function(_,i){ return q.awsopinc.act[i]==null?null:q.awsopinc.act[i]/1000; }) } };
-  }
-  var labels=A_OPEX_YEARS.map(String);
-  function m(oi,rev){ return A_OPEX_YEARS.map(function(y){ var r=A_OPEX[y]; return Math.round(r[oi]/r[rev]*1000)/10; }); }
-  return { labels:labels, cons:aOpMgnSeries(), aws:m('awsOpInc','awsRev'), na:m('usOpInc','usRev'), intl:m('intOpInc','intRev'),
-    rev:A_OPEX_YEARS.map(function(y){ return A_OPEX[y].revenue; }), oi:{ us:A_OPEX_YEARS.map(function(y){ return A_OPEX[y].usOpInc/1000; }), int:A_OPEX_YEARS.map(function(y){ return A_OPEX[y].intOpInc/1000; }), aws:A_OPEX_YEARS.map(function(y){ return A_OPEX[y].awsOpInc/1000; }) } };
-}
-function aBuildBottomline(){
-  var mpane=document.querySelector('.ovt-subpane[data-ovst="margins"]');
-  var gt=mpane?mpane.querySelector('.amgn-tog .active'):null, gran=gt?gt.getAttribute('data-amgn'):'y';
-  var mt=mpane?mpane.querySelector('.mmode-tog .active'):null, mode=mt?mt.getAttribute('data-mmode'):'grossop';
-  var cv=aChartReady('aMgnMain');
-  if(cv){ aDestroy('aMgnMain'); var labels, ds;
-    if(mode==='grossop'){ var ar=aMgnArcRows(gran); labels=ar.map(function(r){ return r.p; });
-      ds=[ { label:'Gross margin', data:ar.map(function(r){ return r.gm; }), borderColor:BRAND, backgroundColor:BRAND, borderWidth:2.5, pointRadius:2, tension:0.25 },
-           { label:'Operating margin', data:ar.map(function(r){ return r.om; }), borderColor:BRAND2, backgroundColor:BRAND2, borderWidth:2.5, pointRadius:2, tension:0.25 } ]; }
-    else { var sr=aMgnSegRows(gran); labels=sr.labels;
-      ds=[ { label:'Consolidated', data:sr.cons, borderColor:SQUID, backgroundColor:SQUID, borderWidth:2.5, pointRadius:2, tension:0.25 },
-           { label:'AWS', data:sr.aws, borderColor:BRAND, backgroundColor:BRAND, borderWidth:2, pointRadius:2, tension:0.25 },
-           { label:'North America', data:sr.na, borderColor:BRAND2, backgroundColor:BRAND2, borderWidth:2, pointRadius:2, tension:0.25 },
-           { label:'International', data:sr.intl, borderColor:GREEN, backgroundColor:GREEN, borderWidth:2, pointRadius:2, tension:0.25 } ]; }
-    _aCharts['aMgnMain']=new Chart(cv.getContext('2d'),{ type:'line', data:{ labels:labels, datasets:ds },
-      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':c.parsed.y+'%'); } } } },
-        scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } }); aZoom('aMgnMain'); }
-  if(mpane && !mpane._amgnWired){ mpane._amgnWired=true;
-    mpane.querySelectorAll('.amgn-tog button').forEach(function(b){ b.onclick=function(){ mpane.querySelectorAll('.amgn-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildBottomline(); }; });
-    mpane.querySelectorAll('.mmode-tog button').forEach(function(b){ b.onclick=function(){ mpane.querySelectorAll('.mmode-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildBottomline(); }; }); }
-}
 // Expense-line full dives — opened from an Expenses card via data-detail="exp:<key>". VISUAL, not prose.
 var EW_CSS='<style>'+
   '.ew-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:2px 0 16px}'+
@@ -3543,7 +3497,7 @@ var EW_UNIT={
 EW_LINES.forEach(function(l){ if(EW_CALLS[l.k]) l.calls=EW_CALLS[l.k]; if(EW_UNIT[l.k]) l.unit=EW_UNIT[l.k]; });
 // (EXP_WORLD pop-up index removed — the expense full dives now render inline as tabs, see expenseTabsBody.)
 // The six functional expense lines as a clickable index — rendered at the TOP of the
-// Margins & Expenses pane (before bottomlineBody's charts). Self-contained styles.
+// Margins & Expenses pane styles. Self-contained.
 // The six functional expense lines as an inline TAB strip (was 6 big cards + a cramped pop-up):
 // pick a line and its full dive (ewBase: composition, unit economics, drivers, calls) renders in place.
 function expenseTabsBody(){

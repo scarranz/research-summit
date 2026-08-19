@@ -270,8 +270,8 @@ function imPct(v){ return v==null ? 'n/a' : (v>=0?'+':'')+v.toFixed(1)+'%'; }
 // export it. No logo_domain is on file for 13F holdings, so the Google-
 // favicon fallback step is skipped (empty data-domain) and a bad Parqet
 // fetch falls straight through to the ticker-initials monogram.
-function ivdLogo(ticker, cls) {
-  var mono = ticker ? ticker.slice(0, 2).toUpperCase() : '?';
+function ivdLogo(ticker, cls, name) {
+  var mono = ticker ? ticker.slice(0, 2).toUpperCase() : (name ? name.slice(0, 2).toUpperCase() : '—');
   return '<div class="cologo' + (cls ? ' ' + cls : '') + '" data-mono="' + esc(mono) + '">' +
     (ticker ? '<img src="https://assets.parqet.com/logos/symbol/' + esc(ticker) + '" alt="" data-step="0" data-domain="" onerror="logoFallback(this)">' : esc(mono)) +
   '</div>';
@@ -501,7 +501,7 @@ function renderHoldingsCompareTable(rows, periods, investorKey, expanded) {
   displayRows.forEach(function(r) {
     var isShared = !!(r.ticker && shared[r.ticker]);
     if (isShared) anyShared = true;
-    html += '<tr data-key="' + esc(r.key) + '"><td><span class="iticker">' + esc(r.ticker || '?') +
+    html += '<tr data-key="' + esc(r.key) + '"><td><span class="iticker">' + esc(r.ticker || '—') +
       (isShared ? '<span class="ivd-shared-mark" title="Also held by Summit">*</span>' : '') + '</span></td>' +
       '<td><span class="ico">' + esc(r.companyName) + '</span></td>';
     r.cells.forEach(function(w, i) { html += weightCellHtml(w, i === curIdx); });
@@ -534,7 +534,7 @@ function generateMovesSummary(rows, periods) {
   down.sort(function(a, b) { return a.delta - b.delta; });
 
   function moveLine(r, cls, text) {
-    return '<li class="ivd-move-item ' + cls + '">' + ivdLogo(r.ticker, 'ivd-move-logo') + '<span class="ivd-move-txt">' + text + '</span></li>';
+    return '<li class="ivd-move-item ' + cls + '">' + ivdLogo(r.ticker, 'ivd-move-logo', r.companyName) + '<span class="ivd-move-txt">' + text + '</span></li>';
   }
 
   var lines = [];
@@ -838,7 +838,7 @@ function renderPieChart(wrapEl, chartRows, curIdx, photoUrl, initials) {
     var r = arc.outerRadius + 24 + (i % 2) * 38;
     var x = arc.x + r * Math.cos(mid);
     var y = arc.y + r * Math.sin(mid);
-    var logo = it.isOther ? '' : ivdLogo(it.ticker, 'ivd-pie-logo');
+    var logo = it.isOther ? '' : ivdLogo(it.ticker, 'ivd-pie-logo', it.label);
     var prevTxt = it.prev == null ? 'NEW' : it.prev.toFixed(1) + '%';
     var moveCls = it.prev == null ? 'new' : (it.value > it.prev ? 'up' : it.value < it.prev ? 'down' : 'flat');
     return '<div class="ivd-pie-label" style="left:' + x.toFixed(1) + 'px;top:' + y.toFixed(1) + 'px">' +

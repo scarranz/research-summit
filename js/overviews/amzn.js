@@ -3785,21 +3785,8 @@ var A_TENK={
   leaseLiab:{ opGross:106914, finGross:14917, totalGross:121831, pv:101538, longTerm:87339, opTermYrs:10.0, finTermYrs:12.6 }
 };
 function segCapDaBody(){
-  var cx=A_CAPEX[2025].capex, da=A_CAPEX[2025].da;
-  var ppe=amznBBG.seg.na.ppe.a[2]+amznBBG.seg.intl.ppe.a[2]+amznBBG.seg.aws.ppe.a[2];
-  var life=(ppe/da).toFixed(1), ratio=(cx/da).toFixed(1);
-  function b(v){ return '$'+(Math.round(v/100)/10).toFixed(0)+'B'; }
-  var fbox=function(v,l,accent){ return '<div style="flex:1;min-width:118px;border:1px solid '+(accent?'var(--brand-2)':'var(--bdr)')+';border-radius:9px;padding:9px 11px;background:var(--card,#fff);text-align:center"><div style="font-size:15px;font-weight:800;color:'+(accent?'var(--brand-2)':'var(--navy)')+'">'+v+'</div><div style="font-size:9.5px;color:var(--mu);font-weight:600;margin-top:2px;line-height:1.3">'+l+'</div></div>'; };
-  var arr=function(t){ return '<div style="display:flex;align-items:center;justify-content:center;color:var(--brand-2);font-size:10px;font-weight:800;padding:0 7px;white-space:nowrap">'+t+'</div>'; };
-  var flow='<div style="display:flex;align-items:stretch;flex-wrap:wrap;margin:2px 0 12px">'+
-    fbox(b(cx),'Capex FY25 — the spend')+arr('builds →')+
-    fbox(b(ppe),'Net PP&amp;E — asset base')+arr('÷ ~'+life+'yr →')+
-    fbox(b(da),'D&amp;A FY25 — P&amp;L hit')+arr('')+
-    fbox(ratio+'×','Capex ÷ D&amp;A',true)+'</div>';
   return '<div class="ov-sec"><div class="ov-sec-h">The capital cycle by segment — capex builds it · PP&amp;E holds it · D&amp;A expenses it</div>'+
-    '<div class="acx-cap" style="font-size:11px;color:var(--mu);margin:2px 0 10px">Every dollar of <b>capex</b> lands on the balance sheet as <b>PP&amp;E</b>, then depreciates over its useful life into <b>D&amp;A</b> in the P&amp;L. <b>Capex ÷ D&amp;A ≈ '+ratio+'×</b> means Amazon is building the asset base ~'+ratio+'× faster than it depreciates it — capacity going in ahead of both the revenue and the depreciation (implied life ≈ net PP&amp;E ÷ D&amp;A ≈ '+life+' yrs). The three views below are the same cycle from each angle:</div>'+
-    flow+
-    '<div style="display:flex;justify-content:flex-end;margin:0 0 6px"><span class="acx-tog segcd-tog"><button type="button" data-segcd="capex" class="active">Capex</button><button type="button" data-segcd="ppe">PP&amp;E</button><button type="button" data-segcd="da">D&amp;A</button></span></div>'+
+    '<div class="mch-ctl"><span class="acx-tog segcd-tog"><button type="button" data-segcd="capex" class="active">Capex</button><button type="button" data-segcd="ppe">PP&amp;E</button><button type="button" data-segcd="da">D&amp;A</button></span><span></span></div>'+
     '<div style="height:320px"><canvas id="aSegCapDa"></canvas></div>'+
     '<div class="acx-cap" id="aSegCapDaCap" style="font-size:11px;color:var(--mu);margin-top:8px"></div></div>';
 }
@@ -4008,25 +3995,31 @@ var A_CX_CLS=[
 // Gross PP&E mix as a WAFFLE — 100 squares, each = 1% of the asset base, coloured by class.
 // You SEE short-life servers displace 40-yr buildings as you step the year — the mix shift that
 // bends depreciation up faster than capex. Pure CSS grid (no chart lib).
+// Gross PP&E mix as an EVOLUTION — 100%-stacked (or $B) by asset class across FY19→FY28E, so you see
+// short-life servers displace 40-yr buildings over the whole series (the mix shift that bends
+// depreciation up faster than capex). Actuals per 10-K (Note 3); FY26E-28E from the model's projection.
 function aWaffleBody(){
-  return '<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">Gross PP&amp;E mix — every square = 1% of the asset base'+
-    '<span class="acx-tog acx-wafyr"><button type="button" data-wafyr="2019">FY19</button><button type="button" data-wafyr="2025" class="active">FY25</button><button type="button" data-wafyr="2028">FY28E</button></span></div>'+
-    '<div style="display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start;margin-top:8px">'+
-      '<div id="aWaffle" style="display:grid;grid-template-columns:repeat(10,1fr);gap:3px;width:min(300px,62vw);aspect-ratio:1"></div>'+
-      '<div id="aWaffleLeg" style="flex:1;min-width:210px"></div>'+
-    '</div>'+
-    '<div class="acx-cap" style="margin-top:10px"><b>Watch servers take over — step to FY28E.</b> Gross mix holds ~stable through 2025 (servers ~32%, land &amp; buildings ~29%), then the AI build tips it: short-life <b>servers &amp; networking</b> (~5.7-yr life) climb toward <b>~41% by 2028E</b> while 40-yr <b>land &amp; buildings</b> fall to ~28%. That shift toward short-life assets is what bends depreciation up faster than capex. Actuals per 10-K (Note 3); FY28E from the model\'s projection.</div></div>';
+  return '<div class="ov-sec"><div class="ov-sec-h">Gross PP&amp;E mix — the shift over time</div>'+
+    '<div class="mch-ctl"><span class="acx-tog ppemix-tog"><button type="button" data-ppem="pct" class="active">% of asset base</button><button type="button" data-ppem="abs">$B</button></span><span></span></div>'+
+    '<div style="height:320px"><canvas id="aPpeMix"></canvas></div></div>';
 }
-function aBuildWaffle(year){
-  var g=document.getElementById('aWaffle'), leg=document.getElementById('aWaffleLeg'); if(!g) return;
-  var s=A_CAPEX[year]; if(!s) return;
-  var vals=A_CX_CLS.map(function(c){ return {c:c, v:s[c.gk]||0}; }), tot=vals.reduce(function(a,x){ return a+x.v; },0);
-  var raw=vals.map(function(x){ return x.v/tot*100; }), cells=raw.map(Math.floor);
-  var rem=100-cells.reduce(function(a,b){ return a+b; },0);
-  raw.map(function(v,i){ return {i:i,f:v-Math.floor(v)}; }).sort(function(a,b){ return b.f-a.f; }).slice(0,rem).forEach(function(o){ cells[o.i]++; });
-  var sq=[]; vals.forEach(function(x,i){ for(var n=0;n<cells[i];n++) sq.push(x.c.c); });
-  g.innerHTML=sq.map(function(col){ return '<div style="background:'+col+';border-radius:2px;width:100%;aspect-ratio:1"></div>'; }).join('');
-  leg.innerHTML=vals.map(function(x,i){ return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="width:12px;height:12px;border-radius:3px;background:'+x.c.c+';flex:none"></span><span style="font-size:12px;font-weight:700;color:var(--navy);flex:1">'+x.c.lab+'</span><span style="font-size:12.5px;font-weight:800;color:var(--navy);width:34px;text-align:right">'+cells[i]+'%</span><span style="font-size:10.5px;color:var(--mu);width:54px;text-align:right">$'+(Math.round(x.v/1000))+'B</span></div>'; }).join('');
+function aBuildWaffle(){
+  var pane=document.querySelector('.dd-pane[data-dd="misc"] .ovt-subpane[data-ovst="capex"]'); if(!pane) return;
+  var tg=pane.querySelector('.ppemix-tog .active'), pct=(tg?tg.getAttribute('data-ppem'):'pct')!=='abs';
+  var cv=aChartReady('aPpeMix'); if(!cv) return; aDestroy('aPpeMix');
+  var years=[2019,2020,2021,2022,2023,2024,2025,2026,2027,2028];
+  var labels=years.map(function(y){ return 'FY'+String(y).slice(2)+(y>2025?'E':''); });
+  var tot=years.map(function(y){ var s=A_CAPEX[y]; return A_CX_CLS.reduce(function(a,c){ return a+(s[c.gk]||0); },0); });
+  var ds=A_CX_CLS.map(function(c){ return { label:c.lab,
+    data:years.map(function(y,i){ var v=A_CAPEX[y][c.gk]||0; return pct?(tot[i]?Math.round(v/tot[i]*1000)/10:null):Math.round(v/100)/10; }),
+    backgroundColor:years.map(function(y){ return y>2025?acxRGBA(c.c,0.45):c.c; }), borderColor:'#fff', borderWidth:1, maxBarThickness:34, stack:'p' }; });
+  _aCharts['aPpeMix']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:labels, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':(pct?c.parsed.y+'%':'$'+c.parsed.y.toFixed(1)+'B')); } } } },
+      scales:{ x:{ stacked:true, grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ stacked:true, max:pct?100:undefined, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return pct?v+'%':'$'+v+'B'; } } } } } });
+  aZoom('aPpeMix');
+  if(pane && !pane._ppemWired){ pane._ppemWired=true;
+    pane.querySelectorAll('.ppemix-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.ppemix-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildWaffle(); }; }); }
 }
 var A_CX_CTRLS=[
   {grp:'Capex path — YoY growth %'},
@@ -4429,7 +4422,7 @@ function aCxRender(root){
   aCxKPIs(root,a); aCxReadout(root,a);
   aCxCycleChart(root); aCxGWChart(root);
   aCxSeasChart(root);
-  var wy=root.querySelector('.acx-wafyr .active'); aBuildWaffle(wy?+wy.getAttribute('data-wafyr'):2025);
+  aBuildWaffle();
   aCxEffChart(root);
   aCxConsChart(root);
   aCxTornado(root);
@@ -4458,7 +4451,6 @@ function aBuildCapex(root){
     pane.querySelectorAll('.acx-grantog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.acx-grantog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aCxRangeReset(root); pane.querySelectorAll('.acx-rp').forEach(function(x){ x.classList.remove('active'); }); aCxCycleChart(root); }; });
     pane.querySelectorAll('.acx-gwtog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.acx-gwtog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aCxGWChart(root); }; });
     pane.querySelectorAll('.acx-seastog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.acx-seastog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aCxSeasChart(root); }; });
-    pane.querySelectorAll('.acx-wafyr button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.acx-wafyr button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildWaffle(+b.getAttribute('data-wafyr')); }; });
     pane.querySelectorAll('.acx-constog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.acx-constog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aCxConsChart(root); }; });
     pane.querySelectorAll('.acx-consgran button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.acx-consgran button').forEach(function(x){ x.classList.toggle('active',x===b); }); aCxConsChart(root); }; });
     pane.querySelectorAll('.acx-fychips .acx-rp').forEach(function(b){ b.onclick=function(){ b.classList.toggle('active'); aCxConsChart(root); }; });

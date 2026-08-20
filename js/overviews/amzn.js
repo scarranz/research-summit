@@ -3249,7 +3249,7 @@ function aBridgeBody(){
       '<span style="font-size:11px;color:var(--mu)">to</span><span class="acx-tog br-to">'+yBtns('brt',2025)+'</span></span></div>'+
     '<div class="br-ctl-fexp mch-ctl" style="display:none;margin:0 0 8px">'+   /* forward year (right) */
       '<span></span>'+
-      '<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="acx-tog br-fy"><button type="button" data-brfy="0">FY26E</button><button type="button" data-brfy="1">FY27E</button><button type="button" data-brfy="2" class="active">FY28E</button></span>'+
+      '<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="acx-tog br-fy"><button type="button" data-brfy="0" class="active">FY26E</button><button type="button" data-brfy="1">FY27E</button><button type="button" data-brfy="2">FY28E</button></span>'+
         '<button type="button" class="br-fx-reset">Reset to consensus</button></span>'+
     '</div>'+
     '<div class="br-fx-sl" style="display:none;flex-direction:column;gap:6px;margin:0 0 10px">'+
@@ -3298,13 +3298,15 @@ function aBuildBridge(){
 function aSegBridgeBody(){
   var yBtns=function(cls,sel){ return A_OPEX_YEARS.map(function(y){ return '<button type="button" data-'+cls+'="'+y+'"'+(y===sel?' class="active"':'')+'>FY'+String(y).slice(2)+'</button>'; }).join(''); };
   return '<div class="ov-sec"><div class="ov-sec-h">The segment bridge — FY25 operating income → target year, by segment</div>'+
-    '<style>.br-sl{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:var(--navy)}.br-sl input{flex:1;max-width:180px;accent-color:'+BRAND+'}.br-sl-v{width:44px;text-align:right;color:var(--brand-2);font-variant-numeric:tabular-nums}.br-sl-l{width:96px}</style>'+
-    '<div class="sbr-ctl-fwd" style="flex-direction:column;gap:8px;margin:0 0 10px">'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span class="acx-tog sbr-basis"><button type="button" data-sbrb="cons" class="active">vs Consensus (BBG)</button><button type="button" data-sbrb="summit">vs Summit</button></span><span class="acx-tog sbr-fy"><button type="button" data-sbrfy="0">FY26E</button><button type="button" data-sbrfy="1">FY27E</button><button type="button" data-sbrfy="2" class="active">FY28E</button></span></div>'+
-      '<div style="font-size:10.5px;color:var(--mu)" id="aSbrBasisNote">Sensitize each segment\'s operating income vs the base (0% = the base forecast):</div>'+
-      '<div class="br-sl"><span class="br-sl-l">North America</span><input type="range" data-sbrseg="na" min="-30" max="30" step="1" value="0"><span class="br-sl-v" data-sbrsegv="na">0%</span></div>'+
-      '<div class="br-sl"><span class="br-sl-l">International</span><input type="range" data-sbrseg="intl" min="-30" max="30" step="1" value="0"><span class="br-sl-v" data-sbrsegv="intl">0%</span></div>'+
-      '<div class="br-sl"><span class="br-sl-l">AWS</span><input type="range" data-sbrseg="aws" min="-40" max="40" step="1" value="0"><span class="br-sl-v" data-sbrsegv="aws">0%</span></div>'+
+    '<style>.br-sl{display:flex;align-items:center;gap:14px;font-size:12px;font-weight:700;color:var(--navy);padding:7px 0}.br-sl+.br-sl{border-top:1px solid var(--bdr)}.br-sl input{flex:1;min-width:120px;max-width:280px;accent-color:'+BRAND+'}.br-sl-v{width:50px;text-align:right;color:var(--brand-2);font-variant-numeric:tabular-nums;font-size:12.5px}.br-sl-l{width:120px}</style>'+
+    '<div class="sbr-ctl-fwd" style="flex-direction:column;gap:12px;margin:0 0 12px">'+
+      '<div class="mch-ctl" style="margin:0"><span class="acx-tog sbr-basis"><button type="button" data-sbrb="cons" class="active">vs Consensus (BBG)</button><button type="button" data-sbrb="summit">vs Summit</button></span><span class="acx-tog sbr-fy"><button type="button" data-sbrfy="0" class="active">FY26E</button><button type="button" data-sbrfy="1">FY27E</button><button type="button" data-sbrfy="2">FY28E</button></span></div>'+
+      '<div style="border:1px solid var(--bdr);border-radius:10px;padding:8px 16px 10px;background:var(--card,#fff)">'+
+        '<div style="font-size:11px;color:var(--mu);margin:2px 0 4px" id="aSbrBasisNote">Sensitize each segment’s operating income vs the base (0% = the base forecast):</div>'+
+        '<div class="br-sl"><span class="br-sl-l">North America</span><input type="range" data-sbrseg="na" min="-30" max="30" step="1" value="0"><span class="br-sl-v" data-sbrsegv="na">0%</span></div>'+
+        '<div class="br-sl"><span class="br-sl-l">International</span><input type="range" data-sbrseg="intl" min="-30" max="30" step="1" value="0"><span class="br-sl-v" data-sbrsegv="intl">0%</span></div>'+
+        '<div class="br-sl"><span class="br-sl-l">AWS</span><input type="range" data-sbrseg="aws" min="-40" max="40" step="1" value="0"><span class="br-sl-v" data-sbrsegv="aws">0%</span></div>'+
+      '</div>'+
     '</div>'+
     '<div style="height:340px"><canvas id="aSegBr"></canvas></div>'+
     '<div id="aSegBr-tbl" style="margin-top:8px"></div></div>';
@@ -3435,6 +3437,16 @@ function aSumOpAnnual(metricKey){
   return ASUM_FYQ.map(function(idxs){ if(idxs.length<4) return null; var s=0,ok=true;
     idxs.forEach(function(j){ var v=m.summit[j]; if(v==null) ok=false; else s+=v; }); return ok?s:null; });
 }
+// Summit's annual {numerator, revenue} for FY23..FY28E for a margin metric — operating (aggregated from
+// the quarterly model), EBITDA and net income (from the annual model, y.ebitda / y.earnings). Gross and
+// FCF are not modelled by Summit → returns null (no Summit line).
+function aSummitAnnual(sel){
+  var y=amznResults.views&&amznResults.views.y&&amznResults.views.y.metrics;
+  if(sel==='operating'){ var so=aSumOpAnnual('opinc'), sr=aSumOpAnnual('rev'); return (so&&sr)?{num:so,den:sr}:null; }
+  if(sel==='ebitda' && y&&y.ebitda&&y.rev&&y.ebitda.summit&&y.rev.summit) return {num:y.ebitda.summit.slice(3,9), den:y.rev.summit.slice(3,9)};   // y periods 2020..2028 → slice 3..8 = FY23..FY28E
+  if(sel==='net' && y&&y.earnings&&y.rev&&y.earnings.summit&&y.rev.summit) return {num:y.earnings.summit.slice(3,9), den:y.rev.summit.slice(3,9)};
+  return null;
+}
 // Summit's annual segment operating income (single fiscal year, ASUM_FYQ index) from the quarterly model.
 function aSumSegSummit(metricKey, fyIdx){
   var q=amznResults.views&&amznResults.views.q&&amznResults.views.q.metrics, m=q&&q[metricKey], ix=ASUM_FYQ[fyIdx];
@@ -3443,7 +3455,7 @@ function aSumSegSummit(metricKey, fyIdx){
 }
 function aMarginsBody(){
   return aStdScaffold({ id:'margins', title:'Profitability & margins', height:340,
-    metricSel:[{v:'operating',label:'Operating margin',on:true},{v:'ebitda',label:'EBITDA margin'},{v:'net',label:'Net margin'},{v:'fcf',label:'FCF margin'},{v:'gross',label:'Gross margin'}],
+    metricSel:[{v:'gross',label:'Gross margin'},{v:'operating',label:'Operating margin',on:true},{v:'ebitda',label:'EBITDA margin'},{v:'net',label:'Net margin'},{v:'fcf',label:'FCF margin'}],
     modes:[{cls:'gran',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]},{cls:'mode',opts:[{v:'pct',label:'Margin %',on:true},{v:'amt',label:'$B (nominal)'}]}],
     presets:[['all','All'],['rep','Reported'],['fwd','Forward'],['l5','Last 5']] });
 }
@@ -3469,17 +3481,19 @@ function aBuildMargins(){
       var actq=ql.map(function(_,i){ return i<=laq?val(na[i],rq[i]):null; }), conq=ql.map(function(_,i){ return i>=laq?val(na[i],rq[i]):null; });
       return { labels:ql, lastAct:laq, yFmt:fmt, series:[ {k:'act',label:'Actual',color:ASTD_ACT,data:actq}, {k:'cons',label:'Consensus (BBG)',color:ASTD_CONS,data:conq,dash:true} ] };
     }
-    // Annual — BBG actual + consensus for all metrics.
+    // Annual — Actual + Summit model + BBG consensus.
     var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], la=2;
     var na2=num.a.concat(num.f), rv2=rvb.a.concat(rvb.f);
     var actual=labels.map(function(_,i){ return i<=la?val(na2[i],rv2[i]):null; });
     var cons=labels.map(function(_,i){ return i>=la?val(na2[i],rv2[i]):null; });
-    var series=[ {k:'act',label:'Actual',color:ASTD_ACT,data:actual},
-      {k:'cons',label:'Consensus (BBG)',color:ASTD_CONS,data:cons,dash:true} ];
+    var series=[ {k:'act',label:'Actual',color:ASTD_ACT,data:actual} ];
+    var sm=aSummitAnnual(st.sel);   // Summit models operating / EBITDA / net (not gross / fcf)
+    if(sm) series.push({k:'summit',label:'Summit model',color:ASTD_SUMMIT,data:labels.map(function(_,i){ return sm.num[i]==null?null:val(sm.num[i],sm.den[i]); })});
+    series.push({k:'cons',label:'Consensus (BBG)',color:ASTD_CONS,data:cons,dash:true});
     if(st.sel==='net'){   // Net margin is distorted by the marketable-equity (Rivian) M2M one-off — add a normalized line
       var ono=amznBBG.is.otherNonOp; if(ono){ var oa=ono.a.concat(ono.f);
         var norm=labels.map(function(_,i){ var nn=na2[i]; return nn==null?null:val(nn-(oa[i]||0), rv2[i]); });
-        series.splice(1,0,{k:'norm',label:'Normalized (ex Rivian M2M)',color:ASTD_SUMMIT,data:norm}); } }
+        series.push({k:'norm',label:'Normalized (ex Rivian M2M)',color:GREEN,data:norm,dash:true}); } }
     return { labels:labels, lastAct:la, yFmt:fmt, series:series };
   });
 }

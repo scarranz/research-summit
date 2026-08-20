@@ -3007,14 +3007,16 @@ function aStdRender(id, derive){
   var lo=st.win[0], hi=st.win[1], la=spec.lastAct==null?n-1:spec.lastAct;
   var labels=spec.labels.slice(lo,hi+1), yFmt=spec.yFmt||function(v){return v;};
   aDestroy('astd-'+id);
+  var isBar=spec.type==='bar', stk=spec.stacked?'s':undefined;   // engine supports bars (levels, à la SAB) too
   var ds=spec.series.filter(function(s){ return !st.hidden[s.k]; }).map(function(s){
+    if(isBar) return { label:s.label, data:s.data.slice(lo,hi+1), backgroundColor:s.data.slice(lo,hi+1).map(function(_,i){ return (lo+i)>la?acxRGBA(s.color,0.5):s.color; }), borderColor:'#fff', borderWidth:1, maxBarThickness:34, stack:stk };
     return { label:s.label, data:s.data.slice(lo,hi+1), borderColor:s.color, backgroundColor:s.color, borderWidth:2.3, pointRadius:2, tension:0.2, spanGaps:false,
       borderDash:s.dash?[5,4]:undefined,
       segment: s.fwdDash?{ borderDash:function(ctx){ return (lo+ctx.p1DataIndex)>la?[5,4]:undefined; } }:undefined }; });
-  _aCharts['astd-'+id]=new Chart(cv.getContext('2d'),{ type:'line', data:{ labels:labels, datasets:ds },
+  _aCharts['astd-'+id]=new Chart(cv.getContext('2d'),{ type:isBar?'bar':'line', data:{ labels:labels, datasets:ds },
     options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
       plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':yFmt(c.parsed.y))+((lo+c.dataIndex)>la?' (E)':''); } } } },
-      scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:11 } } }, y:{ position:'right', grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:11 }, callback:function(v){ return yFmt(v); } } } } } });
+      scales:{ x:{ stacked:isBar&&spec.stacked, grid:{ display:false }, ticks:{ font:{ size:11 } } }, y:{ stacked:isBar&&spec.stacked, position:'right', grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:11 }, callback:function(v){ return yFmt(v); } } } } } });
   var blk=aStdBlk(id), leg=blk&&blk.querySelector('[data-astdleg="'+id+'"]');
   if(leg) leg.innerHTML=spec.series.map(function(s){ return '<button type="button" class="rs-leg'+(st.hidden[s.k]?' off':'')+'" data-astdlegk="'+id+'|'+s.k+'"><span class="ave-leg-act" style="background:'+s.color+'"></span>'+esc(s.label)+'</button>'; }).join('');
   // Collapsible data table (rule 3) — windowed + honours hidden series, like San's charts.
@@ -3229,7 +3231,7 @@ function aBridgeBody(){
   return '<div class="ov-sec"><div class="ov-sec-h">The bridge — how revenue becomes operating income</div>'+
     '<div class="mch-ctl">'+   /* §0.4 row 2: mode + view (left) */
       '<span style="display:flex;gap:6px;flex-wrap:wrap">'+
-        '<span class="acx-tog br-mode"><button type="button" data-brm="buildup" class="active">Build-up ($B)</button><button type="button" data-brm="fexp">Forward (expenses)</button></span>'+
+        '<span class="acx-tog br-mode"><button type="button" data-brm="buildup" class="active">Build-up ($B)</button><button type="button" data-brm="bps">Margin change (bps)</button><button type="button" data-brm="fexp">Forward (expenses)</button></span>'+
       '</span>'+
       '<span></span>'+
     '</div>'+
@@ -3242,6 +3244,9 @@ function aBridgeBody(){
       '</span>'+
     '</div>'+
     '<style>.br-sl{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:var(--navy)}.br-sl input{flex:1;max-width:180px;accent-color:'+BRAND+'}.br-sl-v{width:44px;text-align:right;color:var(--brand-2);font-variant-numeric:tabular-nums}.br-sl-l{width:120px}.br-fx-reset{cursor:pointer;border:1px solid var(--bdr);background:#fff;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--navy)}</style>'+
+    '<div class="br-ctl-bps mch-ctl" style="display:none;margin:0 0 8px"><span></span>'+   /* margin-change from→to (by expense line) */
+      '<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;color:var(--mu)">From</span><span class="acx-tog br-from">'+yBtns('brf',2022)+'</span>'+
+      '<span style="font-size:11px;color:var(--mu)">to</span><span class="acx-tog br-to">'+yBtns('brt',2025)+'</span></span></div>'+
     '<div class="br-ctl-fexp mch-ctl" style="display:none;margin:0 0 8px">'+   /* forward year (right) */
       '<span></span>'+
       '<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="acx-tog br-fy"><button type="button" data-brfy="0">FY26E</button><button type="button" data-brfy="1">FY27E</button><button type="button" data-brfy="2" class="active">FY28E</button></span>'+
@@ -3256,8 +3261,9 @@ function aBridgeBody(){
 }
 function aBridgeSync(pane){
   var mb=pane.querySelector('.br-mode .active'), mode=mb?mb.getAttribute('data-brm'):'buildup';
-  var bu=pane.querySelector('.br-ctl-bu'), fe=pane.querySelector('.br-ctl-fexp'), fx=pane.querySelector('.br-fx-sl');
+  var bu=pane.querySelector('.br-ctl-bu'), fe=pane.querySelector('.br-ctl-fexp'), fx=pane.querySelector('.br-fx-sl'), bp=pane.querySelector('.br-ctl-bps');
   if(bu) bu.style.display=mode==='buildup'?'flex':'none';
+  if(bp) bp.style.display=mode==='bps'?'flex':'none';
   if(fe) fe.style.display=mode==='fexp'?'flex':'none';
   if(fx) fx.style.display=mode==='fexp'?'flex':'none';
   var g=pane.querySelector('.br-gran .active'), q=!!(g&&g.getAttribute('data-brg')==='q');
@@ -3268,6 +3274,12 @@ function aBridgeSync(pane){
 function aBuildBridge(){
   var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(!pane) return;
   var mb=pane.querySelector('.br-mode .active'), mode=mb?mb.getAttribute('data-brm'):'buildup', r;
+  if(mode==='bps'){   // margin change between two years, decomposed by functional expense line
+    var fb=pane.querySelector('.br-from .active'), tb=pane.querySelector('.br-to .active');
+    var ya=fb?+fb.getAttribute('data-brf'):2022, yb2=tb?+tb.getAttribute('data-brt'):2025, prev=A_OPEX[ya], cur=A_OPEX[yb2];
+    if(prev&&cur) aBuildBrWaterfall('aBrCanvas', aBridgeBpsSteps(prev,cur,'FY'+String(ya).slice(2),'FY'+String(yb2).slice(2)), BR_FMT_BPS);
+    return;
+  }
   if(mode==='fexp'){   // forward expense build-up — BBG consensus year, sensitizable per cost line
     var fyb=pane.querySelector('.br-fy .active'), fi=fyb?+fyb.getAttribute('data-brfy'):2, adj={};
     pane.querySelectorAll('.br-fx-sl input[data-brx]').forEach(function(s){ adj[s.getAttribute('data-brx')]=+s.value;
@@ -3285,13 +3297,9 @@ function aBuildBridge(){
 // Moved out of General so the consolidated bridge there stays about expenses. Reuses aBuildBrWaterfall.
 function aSegBridgeBody(){
   var yBtns=function(cls,sel){ return A_OPEX_YEARS.map(function(y){ return '<button type="button" data-'+cls+'="'+y+'"'+(y===sel?' class="active"':'')+'>FY'+String(y).slice(2)+'</button>'; }).join(''); };
-  return '<div class="ov-sec"><div class="ov-sec-h">The segment bridge — margin change &amp; the forward walk</div>'+
+  return '<div class="ov-sec"><div class="ov-sec-h">The segment bridge — FY25 operating income → target year, by segment</div>'+
     '<style>.br-sl{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:var(--navy)}.br-sl input{flex:1;max-width:180px;accent-color:'+BRAND+'}.br-sl-v{width:44px;text-align:right;color:var(--brand-2);font-variant-numeric:tabular-nums}.br-sl-l{width:96px}</style>'+
-    '<div class="mch-ctl"><span class="acx-tog sbr-mode"><button type="button" data-sbrm="bps" class="active">Margin change (bps)</button><button type="button" data-sbrm="fwd">Forward (consensus)</button></span><span></span></div>'+
-    '<div class="sbr-ctl-bps mch-ctl" style="margin:0 0 8px"><span></span>'+
-      '<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;color:var(--mu)">From</span><span class="acx-tog sbr-from">'+yBtns('sbrf',2022)+'</span>'+
-      '<span style="font-size:11px;color:var(--mu)">to</span><span class="acx-tog sbr-to">'+yBtns('sbrt',2025)+'</span></span></div>'+
-    '<div class="sbr-ctl-fwd" style="display:none;flex-direction:column;gap:8px;margin:0 0 10px">'+
+    '<div class="sbr-ctl-fwd" style="flex-direction:column;gap:8px;margin:0 0 10px">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span class="acx-tog sbr-basis"><button type="button" data-sbrb="cons" class="active">vs Consensus (BBG)</button><button type="button" data-sbrb="summit">vs Summit</button></span><span class="acx-tog sbr-fy"><button type="button" data-sbrfy="0">FY26E</button><button type="button" data-sbrfy="1">FY27E</button><button type="button" data-sbrfy="2" class="active">FY28E</button></span></div>'+
       '<div style="font-size:10.5px;color:var(--mu)" id="aSbrBasisNote">Sensitize each segment\'s operating income vs the base (0% = the base forecast):</div>'+
       '<div class="br-sl"><span class="br-sl-l">North America</span><input type="range" data-sbrseg="na" min="-30" max="30" step="1" value="0"><span class="br-sl-v" data-sbrsegv="na">0%</span></div>'+
@@ -3303,16 +3311,7 @@ function aSegBridgeBody(){
 }
 function aBuildSegBridge(){
   var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]'); if(!pane) return;
-  var mb=pane.querySelector('.sbr-mode .active'), mode=mb?mb.getAttribute('data-sbrm'):'bps';
-  var bps=pane.querySelector('.sbr-ctl-bps'), fwd=pane.querySelector('.sbr-ctl-fwd');
-  if(bps) bps.style.display=mode==='bps'?'flex':'none';
-  if(fwd) fwd.style.display=mode==='fwd'?'flex':'none';
-  if(mode==='bps'){
-    var fb=pane.querySelector('.sbr-from .active'), tb=pane.querySelector('.sbr-to .active');
-    var ya=fb?+fb.getAttribute('data-sbrf'):2022, yb2=tb?+tb.getAttribute('data-sbrt'):2025;
-    var prev=A_OPEX[ya], cur=A_OPEX[yb2];
-    if(prev&&cur) aBuildBrWaterfall('aSegBr', aBridgeBpsSteps(prev,cur,'FY'+String(ya).slice(2),'FY'+String(yb2).slice(2)), BR_FMT_BPS);   // same FY→FY draws a flat (zero-change) bridge instead of freezing
-  } else {   // forward — FY25 OI → target-year segment forecast → sensitizable, vs Consensus OR Summit
+  {   // segment-only forward walk: FY25 OI → target-year segment forecast → sensitizable, vs Consensus OR Summit
     var fyb=pane.querySelector('.sbr-fy .active'), fi=fyb?+fyb.getAttribute('data-sbrfy'):2;
     var bb=pane.querySelector('.sbr-basis .active'), basis=bb?bb.getAttribute('data-sbrb'):'cons';
     var SG=[{k:'na',lab:'North America',mk:'naopinc',c:BRAND},{k:'intl',lab:'International',mk:'intopinc',c:BRAND2},{k:'aws',lab:'AWS',mk:'awsopinc',c:SQUID}];
@@ -3798,6 +3797,7 @@ function aBuildExpenses(){
       tog('.br-yr', aBuildBridge);
       tog('.br-qtr', aBuildBridge);
       tog('.br-fy', aBuildBridge);
+      tog('.br-from', aBuildBridge); tog('.br-to', aBuildBridge);
       pane.querySelectorAll('.br-fx-sl input[type=range]').forEach(function(s){ s.addEventListener('input', aBuildBridge); });
       var brReset=pane.querySelector('.br-fx-reset'); if(brReset) brReset.onclick=function(){ pane.querySelectorAll('.br-fx-sl input[data-brx]').forEach(function(s){ s.value=0; }); aBuildBridge(); };
       tog('.nb-yr', aBuildNetBridge);
@@ -4074,10 +4074,11 @@ function aBuildSegOi(){
     var gran=st.modes.gran||'y', mode=st.modes.mode||'margin', metric=st.sel||'operating';
     // Quarterly + operating → amznResults' 22-quarter series (1Q23–2Q28), far more history than BBG's 9q.
     if(gran==='q' && metric==='operating'){
-      var Q=amznResults.views.q.metrics, ql=Q.opinc.periods.slice(), qla=aLastActIdx(Q.opinc.act);
+      var Q=amznResults.views.q.metrics, ql=Q.opinc.periods.slice(), qla=aLastActIdx(Q.opinc.act), isAmt=mode==='amt';
       var MAP=[{oi:'naopinc',rev:'usrev',lab:'North America',c:BRAND},{oi:'intopinc',rev:'intrev',lab:'International',c:BRAND2},{oi:'awsopinc',rev:'aws',lab:'AWS',c:SQUID},{oi:'opinc',rev:'rev',lab:'Consolidated',c:'#1E2733'}];
-      var qyf=mode==='amt'?function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }:function(x){ return x+'%'; };
-      return { labels:ql, lastAct:qla, yFmt:qyf, series:MAP.map(function(m){ var oi=Q[m.oi].act, rv=Q[m.rev].act;
+      if(isAmt) MAP=MAP.slice(0,3);   // $B = stacked segment bars → drop Consolidated (it's the sum)
+      var qyf=isAmt?function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }:function(x){ return x+'%'; };
+      return { labels:ql, lastAct:qla, yFmt:qyf, type:isAmt?'bar':undefined, stacked:isAmt, series:MAP.map(function(m){ var oi=Q[m.oi].act, rv=Q[m.rev].act;
         var data=ql.map(function(_,i){ var v=oi?oi[i]:null;
           if(mode==='margin'){ var d=rv?rv[i]:null; return (v==null||d==null||!d)?null:Math.round(v/d*1000)/10; }
           if(mode==='amt'){ return v==null?null:Math.round(v/100)/10; }
@@ -4095,11 +4096,11 @@ function aBuildSegOi(){
         if(mode==='amt'){ return v==null?null:Math.round(v/100)/10; }
         var pv=incArr[i-step]; return (v==null||pv==null||!pv)?null:Math.round((v-pv)/Math.abs(pv)*1000)/10; });
       return { k:k, label:label, color:color, data:data, fwdDash:true }; }
-    var SG=[{k:'na',lab:'North America',c:BRAND},{k:'intl',lab:'International',c:BRAND2},{k:'aws',lab:'AWS',c:SQUID}];
+    var SG=[{k:'na',lab:'North America',c:BRAND},{k:'intl',lab:'International',c:BRAND2},{k:'aws',lab:'AWS',c:SQUID}], isAmt=mode==='amt';
     var series=SG.map(function(s){ var sg=amznBBG.seg[s.k]; return line(inc(sg), full(sg.rev), s.k, s.lab, s.c); });
-    series.push(line(metric==='ebitda'?full(amznBBG.is.ebitda):full(amznBBG.is.oi), full(amznBBG.is.rev), 'cons', 'Consolidated', '#1E2733'));
-    var yFmt=mode==='amt'?function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }:function(x){ return x+'%'; };
-    return { labels:labels, lastAct:la, yFmt:yFmt, series:series };
+    if(!isAmt) series.push(line(metric==='ebitda'?full(amznBBG.is.ebitda):full(amznBBG.is.oi), full(amznBBG.is.rev), 'cons', 'Consolidated', '#1E2733'));   // $B = stacked segment bars, no Consolidated
+    var yFmt=isAmt?function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }:function(x){ return x+'%'; };
+    return { labels:labels, lastAct:la, yFmt:yFmt, type:isAmt?'bar':undefined, stacked:isAmt, series:series };
   });
 }
 function aBuildSegments(){

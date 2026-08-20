@@ -3345,14 +3345,14 @@ function aBuildNetBridge(){
   var run=B(oi), steps=[{label:'Op. income', kind:'base', color:'#1E2733', range:[0,run], runAfter:run, val:B(oi)}];
   function step(lab,d,dc){ var lo=run; run=lo+d; steps.push({label:lab, kind:d>=0?'up':'down', color:(dc==='#B7791F'?'#B7791F':'#6B7683'), dc:dc, range:[Math.min(lo,run),Math.max(lo,run)], runAfter:run, val:d}); }
   step('Interest, net', B(-ni), '#6B7683');
-  if(!norm) step('Equity-securities M2M & other (one-off)', B(-ono), '#B7791F');
+  if(!norm) step('Marketable-equity M2M (Rivian, one-off)', B(-ono), '#B7791F');
   step('– Income tax', B(-tax), '#6B7683');
-  if(em) step('– Equity-method investees', B(-em), '#6B7683');
+  if(em) step('Share of associates (equity method)', B(-em), '#6B7683');
   steps.push({label:(norm?'Net income (norm.)':'Net income'), kind:'total', color:'#2E8B57', range:[0,run], runAfter:null, val:run});
   aBuildBrWaterfall('aNetBr', steps, BR_FMT_D);
   var cap=pane.querySelector('#aNetBrCap');
   if(cap){ var rm=(rev?net/rev*100:null), nm=(rev?(net+ono)/rev*100:null), yl='FY'+String(y).slice(2)+(y>2025?'E':'');
-    cap.innerHTML='<b>'+yl+'</b> · reported net margin <b>'+(rm==null?'—':rm.toFixed(1)+'%')+'</b>'+(rev?' ($'+B(net).toFixed(1)+'B / $'+B(rev).toFixed(0)+'B rev)':'')+' · normalized (ex the equity / one-off non-operating line) <b>'+(nm==null?'—':nm.toFixed(1)+'%')+'</b>. The <span style="color:#B7791F;font-weight:700">amber bar</span> is the mark-to-market on <b>marketable equity securities</b> (the Rivian-type stake) &amp; other non-operating — $'+B(Math.abs(ono)).toFixed(1)+'B in '+yl+'; it flatters reported net income (consensus runs hotter still on assumed gains). Normalized removes it on a pretax basis — the underlying read. Note this is <b>not</b> the same line as <b>Equity-method investees</b>, which is Amazon\'s share of the profit/loss of associates it accounts for by the equity method (a separate, much smaller item). Data: BBG consensus, as of Aug 2026.';
+    cap.innerHTML='<b>'+yl+'</b> · reported net margin <b>'+(rm==null?'—':rm.toFixed(1)+'%')+'</b>'+(rev?' ($'+B(net).toFixed(1)+'B / $'+B(rev).toFixed(0)+'B rev)':'')+' · normalized (ex the equity / one-off non-operating line) <b>'+(nm==null?'—':nm.toFixed(1)+'%')+'</b>. The <span style="color:#B7791F;font-weight:700">amber bar</span> is only the <b>mark-to-market on marketable equity securities</b> — mostly the <b>Rivian</b> stake ($'+B(Math.abs(ono)).toFixed(1)+'B in '+yl+'), a non-cash, non-operating swing that flatters reported net income. <b>Normalized</b> strips ONLY that one-off. The separate grey <b>“Share of associates (equity method)”</b> bar is a different, small, recurring item (Amazon\'s share of the results of companies it holds under the equity method) — it is NOT the Rivian mark and stays in both views because it is not a one-off. Data: BBG consensus, as of Aug 2026.';
   }
 }
 // SBC — back in General (where it was), BBG-driven (actuals + consensus, $B-by-line ⇄ %-of-line).
@@ -3459,9 +3459,13 @@ function aBuildMargins(){
     var na2=num.a.concat(num.f), rv2=rvb.a.concat(rvb.f);
     var actual=labels.map(function(_,i){ return i<=la?val(na2[i],rv2[i]):null; });
     var cons=labels.map(function(_,i){ return i>=la?val(na2[i],rv2[i]):null; });
-    return { labels:labels, lastAct:la, yFmt:fmt, series:[
-      {k:'act',label:'Actual',color:ASTD_ACT,data:actual},
-      {k:'cons',label:'Consensus (BBG)',color:ASTD_CONS,data:cons,dash:true} ] };
+    var series=[ {k:'act',label:'Actual',color:ASTD_ACT,data:actual},
+      {k:'cons',label:'Consensus (BBG)',color:ASTD_CONS,data:cons,dash:true} ];
+    if(st.sel==='net'){   // Net margin is distorted by the marketable-equity (Rivian) M2M one-off — add a normalized line
+      var ono=amznBBG.is.otherNonOp; if(ono){ var oa=ono.a.concat(ono.f);
+        var norm=labels.map(function(_,i){ var nn=na2[i]; return nn==null?null:val(nn-(oa[i]||0), rv2[i]); });
+        series.splice(1,0,{k:'norm',label:'Normalized (ex Rivian M2M)',color:ASTD_SUMMIT,data:norm}); } }
+    return { labels:labels, lastAct:la, yFmt:fmt, series:series };
   });
 }
 // Expense-line full dives — opened from an Expenses card via data-detail="exp:<key>". VISUAL, not prose.

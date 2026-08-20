@@ -3119,12 +3119,17 @@ var BR_FMT_BPS={ axis:function(v){return v.toFixed(0)+'%';}, base:function(v){re
 // Synthetic "opex row" for a forward year (fi = 0..2 → FY26E..FY28E) built from BBG consensus, shaped
 // exactly like an A_OPEX row so aBridgeBuildupSteps / aBuildBrPie work on it unchanged. otherOpex is the
 // residual so revenue − Σcost = operating income reconciles to the reported consensus OI.
-function aFwdOpexRow(fi){
+// adj = optional {cogs,fulfillment,techInfra,marketing,gAdmin} percent tweaks vs consensus. The "other"
+// residual is held at consensus, so with no adj OI reconciles to consensus; move a slider and OI floats.
+var FX_LINES=[{k:'cogs',lab:'Cost of sales'},{k:'fulfillment',lab:'Fulfillment'},{k:'techInfra',lab:'Tech &amp; infra'},{k:'marketing',lab:'Sales &amp; marketing'},{k:'gAdmin',lab:'G&amp;A'}];
+function aFwdOpexRow(fi, adj){
   function f(k){ var s=amznBBG.is[k]; return s?s.f[fi]:null; }
   var rev=f('rev'), oi=f('oi'); if(rev==null||oi==null) return null;
   var cogs=f('cogs')||0, ful=f('fulfillment')||0, tech=f('techInfra')||0, mkt=f('marketing')||0, ga=f('gAdmin')||0;
-  return { p:'FY'+String(amznBBG.yearsF[fi]).slice(2)+'E', revenue:rev, costOfSales:cogs, fulfillment:ful,
-    techInfra:tech, marketing:mkt, gAdmin:ga, otherOpex:(rev-cogs-ful-tech-mkt-ga-oi) };
+  var other=rev-cogs-ful-tech-mkt-ga-oi;   // consensus residual, held fixed
+  adj=adj||{}; function A(v,k){ return v*(1+((adj[k]||0)/100)); }
+  return { p:'FY'+String(amznBBG.yearsF[fi]).slice(2)+'E', revenue:rev, costOfSales:A(cogs,'cogs'), fulfillment:A(ful,'fulfillment'),
+    techInfra:A(tech,'techInfra'), marketing:A(mkt,'marketing'), gAdmin:A(ga,'gAdmin'), otherOpex:other };
 }
 function aBridgeBody(){
   var yBtns=function(cls,sel){ return A_OPEX_YEARS.map(function(y){ return '<button type="button" data-'+cls+'="'+y+'"'+(y===sel?' class="active"':'')+'>FY'+String(y).slice(2)+'</button>'; }).join(''); };
@@ -3145,18 +3150,25 @@ function aBridgeBody(){
         '<span class="acx-tog br-qtr br-sel-q" style="display:none;flex-wrap:wrap">'+qBtns+'</span>'+
       '</span>'+
     '</div>'+
+    '<style>.br-sl{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:var(--navy)}.br-sl input{flex:1;max-width:180px;accent-color:'+BRAND+'}.br-sl-v{width:44px;text-align:right;color:var(--brand-2);font-variant-numeric:tabular-nums}.br-sl-l{width:120px}.br-fx-reset{cursor:pointer;border:1px solid var(--bdr);background:#fff;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--navy)}</style>'+
     '<div class="br-ctl-fexp mch-ctl" style="display:none;margin:0 0 8px">'+   /* forward year (right) */
       '<span></span>'+
-      '<span class="acx-tog br-fy"><button type="button" data-brfy="0">FY26E</button><button type="button" data-brfy="1">FY27E</button><button type="button" data-brfy="2" class="active">FY28E</button></span>'+
+      '<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="acx-tog br-fy"><button type="button" data-brfy="0">FY26E</button><button type="button" data-brfy="1">FY27E</button><button type="button" data-brfy="2" class="active">FY28E</button></span>'+
+        '<button type="button" class="br-fx-reset">Reset to consensus</button></span>'+
+    '</div>'+
+    '<div class="br-fx-sl" style="display:none;flex-direction:column;gap:6px;margin:0 0 10px">'+
+      '<div style="font-size:10.5px;color:var(--mu)">Sensitize each cost line vs consensus (0% = BBG consensus). Operating income floats with your changes:</div>'+
+      FX_LINES.map(function(l){ return '<div class="br-sl"><span class="br-sl-l">'+l.lab+'</span><input type="range" data-brx="'+l.k+'" min="-25" max="25" step="1" value="0"><span class="br-sl-v" data-brxv="'+l.k+'">0%</span></div>'; }).join('')+
     '</div>'+
     '<div style="height:340px"><canvas id="aBrCanvas"></canvas></div>'+
     '<div id="aBrCanvas-tbl" style="margin-top:8px"></div></div>';
 }
 function aBridgeSync(pane){
   var mb=pane.querySelector('.br-mode .active'), mode=mb?mb.getAttribute('data-brm'):'buildup';
-  var bu=pane.querySelector('.br-ctl-bu'), fe=pane.querySelector('.br-ctl-fexp');
+  var bu=pane.querySelector('.br-ctl-bu'), fe=pane.querySelector('.br-ctl-fexp'), fx=pane.querySelector('.br-fx-sl');
   if(bu) bu.style.display=mode==='buildup'?'flex':'none';
   if(fe) fe.style.display=mode==='fexp'?'flex':'none';
+  if(fx) fx.style.display=mode==='fexp'?'flex':'none';
   var g=pane.querySelector('.br-gran .active'), q=!!(g&&g.getAttribute('data-brg')==='q');
   var sy=pane.querySelector('.br-sel-y'), sq=pane.querySelector('.br-sel-q');
   if(sy) sy.style.display=q?'none':'';
@@ -3166,9 +3178,11 @@ function aBuildBridge(){
   var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(!pane) return;
   var mb=pane.querySelector('.br-mode .active'), mode=mb?mb.getAttribute('data-brm'):'buildup';
   var vb=pane.querySelector('.br-view .active'), view=vb?vb.getAttribute('data-brv'):'wf', r;
-  if(mode==='fexp'){   // forward expense build-up — same walk, BBG consensus year (FY26E..FY28E)
-    var fyb=pane.querySelector('.br-fy .active'), fi=fyb?+fyb.getAttribute('data-brfy'):2;
-    r=aFwdOpexRow(fi);
+  if(mode==='fexp'){   // forward expense build-up — BBG consensus year, sensitizable per cost line
+    var fyb=pane.querySelector('.br-fy .active'), fi=fyb?+fyb.getAttribute('data-brfy'):2, adj={};
+    pane.querySelectorAll('.br-fx-sl input[data-brx]').forEach(function(s){ adj[s.getAttribute('data-brx')]=+s.value;
+      var v=pane.querySelector('.br-sl-v[data-brxv="'+s.getAttribute('data-brx')+'"]'); if(v) v.textContent=((+s.value)>0?'+':'')+s.value+'%'; });
+    r=aFwdOpexRow(fi, adj);
   } else {             // build-up — actual year or quarter
     var g=pane.querySelector('.br-gran .active'), gran=g?g.getAttribute('data-brg'):'y';
     if(gran==='q'){ var qb=pane.querySelector('.br-qtr .active'); r=A_OPEXQ[qb?+qb.getAttribute('data-brq'):A_OPEXQ.length-1]; }
@@ -3680,6 +3694,8 @@ function aBuildExpenses(){
       tog('.br-yr', aBuildBridge);
       tog('.br-qtr', aBuildBridge);
       tog('.br-fy', aBuildBridge);
+      pane.querySelectorAll('.br-fx-sl input[type=range]').forEach(function(s){ s.addEventListener('input', aBuildBridge); });
+      var brReset=pane.querySelector('.br-fx-reset'); if(brReset) brReset.onclick=function(){ pane.querySelectorAll('.br-fx-sl input[data-brx]').forEach(function(s){ s.value=0; }); aBuildBridge(); };
       tog('.nb-yr', aBuildNetBridge);
       tog('.nb-norm', aBuildNetBridge);
       var etabs=pane.querySelectorAll('.exp-tab');

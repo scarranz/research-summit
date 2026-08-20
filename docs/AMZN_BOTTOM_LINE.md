@@ -217,6 +217,40 @@ change — the module is cached aggressively.
 
 ---
 
+## 9b. Chart standard — SAB/Pablo parity (MANDATORY) and data rules
+
+Set by Dani on 2026-08-20 after the Bottom-Line charts diverged from the house style. **Every chart
+here must be built on the shared SAB scaffold, not a bespoke Chart.js lookalike.** Reference
+implementations to copy: `js/results.js` (SAB engine) and Pablo's Valuation modules
+(`js/overviews/amzn-target-multiple.js`, `amzn-histmult.js`, `amzn-sensitivity.js`, PRs #94/#95).
+
+**Layout scaffold** (global CSS lives in `css/results.css` — reuse the classes, don't reinvent):
+- Row 1 `rs-block-top`: `rs-block-h` (section title) + `rs-msel` (`<select>` metric dropdown).
+- Row 2 `rs-block-modes`: `rs-modes` (mode pills, **left**) + `rs-quick` (`Range` + `rs-preset[data-rsrange]`
+  presets, **right**). **Controls go ABOVE the chart.**
+- `ave-leg` (click-to-hide legend) → `ov-chart-card` > `ov-chart-wrap` > `<canvas>` → `sg-slider`
+  (`sg-track`/`sg-fill` + two end handles) = the two-handle **period** slider.
+- Both y-axes `position:'right'` (primary `weight:0` inboard, secondary `weight:1` outboard); tick
+  `font.size:11`.
+- `rsAttachBrush(el, chart, onX, onY, onReset)` — **onX windows the X (period); onY the Y.** The range
+  selection must move the **X** (period) axis, not just Y.
+
+**Data rules:**
+- **NEVER consult external sites for earnings-call data.** The calls are in the repo
+  (`docs/calls/AMZN*.md`) and integrated into the app on `main`. Read the repo; never WebSearch/WebFetch
+  transcripts.
+- Overlay **Summit** (`js/results-data/amzn.js` → `summit:`) next to **Consensus** on every chart where
+  Summit has a proposal, **including historical**. Where Summit doesn't forecast a breakdown (e.g. SBC by
+  expense line), still show its line where it exists.
+- Definitions verbatim from the 10-K; commentary verbatim from the repo calls (see `EW_DEF`/`SEG_DEF`,
+  `EW_CALLS`/`SEG_CALLS`).
+
+**Specific chart restructures requested (2026-08-20):**
+- Revenue-vs-profit = a single common-size-over-time view (all three of revenue/EBITDA/OI), NOT a toggle.
+- Operating income & margin by segment = metric select (Op margin / EBITDA margin / Net margin) + a
+  separate $B-vs-% control + growth (% and nominal) + YoY/QoQ for quarters. Don't put $B and two %
+  metrics on one toggle as if interchangeable.
+
 ## 10. Open items / next candidates
 
 - Visual review pass by the user (the real open loop): trim any redundant chart, color/density.

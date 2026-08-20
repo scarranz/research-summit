@@ -3904,58 +3904,63 @@ function aSegPicker(){
     '<span style="font-size:11px;color:var(--mu)">Pick one — the rest stay tucked away.</span>'+
     '</div></div>';
 }
-// The revenue-vs-profit divergence as an evolution (not a single FY): each segment's SHARE of revenue
-// ⇄ SHARE of operating income, FY24→FY28E (actual + BBG consensus). International is profitable from
-// FY24, so 100%-stacked shares stay clean. Data: amznBBG.seg (rev/oi by segment).
+// The revenue-vs-profit divergence as an evolution: each segment's SHARE of revenue · EBITDA · operating
+// income, FY24→FY28E (actual + BBG consensus). International is profitable from FY24, so 100%-stacked
+// shares stay clean. Segment EBITDA = operating income + segment D&A (both disclosed, 10-K Note 10 /
+// amznBBG.seg). "Pies" view = the three mixes as doughnuts for a selectable year.
 var A_SMIX_PTS=[{lab:'FY24',g:'a',i:1},{lab:'FY25',g:'a',i:2},{lab:'FY26E',g:'f',i:0},{lab:'FY27E',g:'f',i:1},{lab:'FY28E',g:'f',i:2}];
 var SMIX_SG=[{k:'na',lab:'North America',c:BRAND},{k:'intl',lab:'International',c:BRAND2},{k:'aws',lab:'AWS',c:SQUID}];
+var SMIX_MET=[{k:'rev',lab:'Revenue',stack:'rev'},{k:'ebitda',lab:'EBITDA',stack:'eb'},{k:'oi',lab:'Operating income',stack:'oi'}];
+function segMixVal(k,mk,g,i){ var sg=amznBBG.seg[k]; if(!sg) return null;
+  if(mk==='ebitda'){ var oi=sg.oi?sg.oi[g][i]:null, da=sg.da?sg.da[g][i]:null; return (oi==null||da==null)?null:oi+da; }
+  var s=sg[mk]; return s?s[g][i]:null; }
 function aSegMixBody(){
+  var yb=A_SMIX_PTS.map(function(p){ return '<button type="button" data-smy="'+p.g+p.i+'"'+(p.lab==='FY25'?' class="active"':'')+'>'+p.lab+'</button>'; }).join('');
   return '<div class="ov-sec"><div class="ov-sec-h">Where the revenue is vs where the profit is</div>'+
-    '<div class="mch-ctl"><span class="acx-tog smix-tog"><button type="button" data-smix="time" class="active">Over time (both)</button><button type="button" data-smix="pie">Latest FY (pies)</button></span>'+
-      '<span style="font-size:11px;color:var(--mu)">per year: left bar = revenue mix · right bar = operating-income mix</span></div>'+
-    '<div class="smix-bars"><div style="height:320px"><canvas id="aSegMix"></canvas></div></div>'+
-    '<div class="smix-pies" style="display:none;gap:18px;flex-wrap:wrap;justify-content:center">'+
-      '<div style="flex:1;min-width:210px;max-width:330px;text-align:center"><div style="font-size:11px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Revenue mix (FY25)</div><div style="height:230px"><canvas id="aSegMixR"></canvas></div></div>'+
-      '<div style="flex:1;min-width:210px;max-width:330px;text-align:center"><div style="font-size:11px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Operating-income mix (FY25)</div><div style="height:230px"><canvas id="aSegMixO"></canvas></div></div>'+
+    '<div class="mch-ctl"><span class="acx-tog smix-tog"><button type="button" data-smix="time" class="active">Over time (all)</button><button type="button" data-smix="pie">By year (pies)</button></span>'+
+      '<span class="acx-tog smix-yr" style="display:none;flex-wrap:wrap">'+yb+'</span></div>'+
+    '<div style="font-size:11px;color:var(--mu);margin:-2px 0 6px">each year, left→right: revenue · EBITDA · operating-income mix (each stacked to 100%)</div>'+
+    '<div class="smix-bars"><div style="height:340px"><canvas id="aSegMix"></canvas></div></div>'+
+    '<div class="smix-pies" style="display:none;gap:14px;flex-wrap:wrap;justify-content:center">'+
+      SMIX_MET.map(function(m){ return '<div style="flex:1;min-width:180px;max-width:290px;text-align:center"><div style="font-size:11px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">'+m.lab+' mix</div><div style="height:210px"><canvas id="aSegMix_'+m.stack+'"></canvas></div></div>'; }).join('')+
     '</div></div>';
 }
 function aBuildSegMix(){
   var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]'); if(!pane) return;
   var tg=pane.querySelector('.smix-tog .active'), view=tg?tg.getAttribute('data-smix'):'time';
-  var bars=pane.querySelector('.smix-bars'), pies=pane.querySelector('.smix-pies');
+  var bars=pane.querySelector('.smix-bars'), pies=pane.querySelector('.smix-pies'), yrsel=pane.querySelector('.smix-yr');
   if(bars) bars.style.display=view==='pie'?'none':'';
   if(pies) pies.style.display=view==='pie'?'flex':'none';
-  function val(k,metric,g,i){ var s=amznBBG.seg[k]&&amznBBG.seg[k][metric]; return s?s[g][i]:null; }
-  if(view==='pie'){   // two doughnuts, latest actual FY25 (a[2]) — revenue mix vs OI mix, side by side
-    [['aSegMixR','rev'],['aSegMixO','oi']].forEach(function(pr){
-      var cv=aChartReady(pr[0]); if(!cv) return; aDestroy(pr[0]);
-      var vals=SMIX_SG.map(function(s){ return val(s.k,pr[1],'a',2)||0; }), tot=vals.reduce(function(a,b){ return a+b; },0);
-      _aCharts[pr[0]]=new Chart(cv.getContext('2d'),{ type:'doughnut',
+  if(yrsel) yrsel.style.display=view==='pie'?'':'none';
+  if(view==='pie'){   // three doughnuts (revenue · EBITDA · OI) for the selected year
+    var yb=pane.querySelector('.smix-yr .active'), code=yb?yb.getAttribute('data-smy'):'a2', g=code.charAt(0), i=+code.slice(1);
+    SMIX_MET.forEach(function(m){ var id='aSegMix_'+m.stack, cv=aChartReady(id); if(!cv) return; aDestroy(id);
+      var vals=SMIX_SG.map(function(s){ return segMixVal(s.k,m.k,g,i)||0; }), tot=vals.reduce(function(a,b){ return a+b; },0);
+      _aCharts[id]=new Chart(cv.getContext('2d'),{ type:'doughnut',
         data:{ labels:SMIX_SG.map(function(s){ return s.lab; }), datasets:[{ data:vals, backgroundColor:SMIX_SG.map(function(s){ return s.c; }), borderColor:'#fff', borderWidth:2 }] },
-        options:{ responsive:true, maintainAspectRatio:false, cutout:'52%', plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
+        options:{ responsive:true, maintainAspectRatio:false, cutout:'52%', plugins:{ legend:{ position:'bottom', labels:{ boxWidth:9, font:{ size:9 } } },
           tooltip:{ callbacks:{ label:function(c){ return c.label+': '+(tot?Math.round(c.parsed/tot*1000)/10:0)+'% ($'+(Math.round(c.parsed/100)/10).toFixed(1)+'B)'; } } } } } });
     });
     if(pane && !pane._smixWired) aSegMixWire(pane);
     return;
   }
   var cv=aChartReady('aSegMix'); if(!cv) return; aDestroy('aSegMix');
-  var labels=A_SMIX_PTS.map(function(p){ return p.lab; });
-  function shares(metric){ return SMIX_SG.map(function(s){ return { seg:s, data:A_SMIX_PTS.map(function(p){
-      var tot=SMIX_SG.reduce(function(a,x){ return a+(val(x.k,metric,p.g,p.i)||0); },0), v=val(s.k,metric,p.g,p.i);
-      return (tot&&v!=null)?Math.round(v/tot*1000)/10:null; }) }; }); }
-  var rev=shares('rev'), oi=shares('oi'), ds=[];
-  rev.forEach(function(r){ ds.push({ label:r.seg.lab, data:r.data, backgroundColor:r.seg.c, borderColor:'#fff', borderWidth:1, maxBarThickness:30, stack:'rev' }); });
-  oi.forEach(function(o){ ds.push({ label:o.seg.lab+' (OI)', data:o.data, backgroundColor:o.seg.c, borderColor:'#fff', borderWidth:1, maxBarThickness:30, stack:'oi' }); });
+  var labels=A_SMIX_PTS.map(function(p){ return p.lab; }), ds=[];
+  SMIX_MET.forEach(function(m){ SMIX_SG.forEach(function(s){
+    var data=A_SMIX_PTS.map(function(p){ var tot=SMIX_SG.reduce(function(a,x){ return a+(segMixVal(x.k,m.k,p.g,p.i)||0); },0), v=segMixVal(s.k,m.k,p.g,p.i);
+      return (tot&&v!=null)?Math.round(v/tot*1000)/10:null; });
+    ds.push({ label:s.lab+(m.k==='rev'?'':' — '+m.lab), data:data, backgroundColor:s.c, borderColor:'#fff', borderWidth:1, maxBarThickness:22, stack:m.stack }); }); });
+  var SNAME={rev:'revenue', eb:'EBITDA', oi:'operating income'};
   _aCharts['aSegMix']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:labels, datasets:ds },
     options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 }, filter:function(it){ return it.text.indexOf('(OI)')<0; } } },
-        tooltip:{ callbacks:{ label:function(c){ var oiB=c.dataset.stack==='oi'; return c.dataset.label.replace(' (OI)','')+' — '+(oiB?'OI':'revenue')+': '+(c.parsed.y==null?'—':c.parsed.y+'%'); } } } },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 }, filter:function(it){ return it.text.indexOf('—')<0; } } },
+        tooltip:{ callbacks:{ label:function(c){ return c.dataset.label.split(' — ')[0]+' — '+SNAME[c.dataset.stack]+': '+(c.parsed.y==null?'—':c.parsed.y+'%'); } } } },
       scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, max:100, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } });
   aZoom('aSegMix');
   if(pane && !pane._smixWired) aSegMixWire(pane);
 }
 function aSegMixWire(pane){ pane._smixWired=true;
-  pane.querySelectorAll('.smix-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.smix-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegMix(); }; });
+  pane.querySelectorAll('.smix-tog button, .smix-yr button').forEach(function(b){ b.onclick=function(){ b.parentNode.querySelectorAll('button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegMix(); }; });
 }
 function aBuildSegments(){
   var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]');

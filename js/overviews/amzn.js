@@ -3007,16 +3007,20 @@ function aStdRender(id, derive){
   var lo=st.win[0], hi=st.win[1], la=spec.lastAct==null?n-1:spec.lastAct;
   var labels=spec.labels.slice(lo,hi+1), yFmt=spec.yFmt||function(v){return v;};
   aDestroy('astd-'+id);
-  var isBar=spec.type==='bar', stk=spec.stacked?'s':undefined;   // engine supports bars (levels, à la SAB) too
+  var stk=spec.stacked?'s':undefined, needY2=false;   // engine supports bars + a secondary right axis (SAB dual-axis)
   var ds=spec.series.filter(function(s){ return !st.hidden[s.k]; }).map(function(s){
-    if(isBar) return { label:s.label, data:s.data.slice(lo,hi+1), backgroundColor:s.data.slice(lo,hi+1).map(function(_,i){ return (lo+i)>la?acxRGBA(s.color,0.5):s.color; }), borderColor:'#fff', borderWidth:1, maxBarThickness:34, stack:stk };
-    return { label:s.label, data:s.data.slice(lo,hi+1), borderColor:s.color, backgroundColor:s.color, borderWidth:2.3, pointRadius:2, tension:0.2, spanGaps:false,
-      borderDash:s.dash?[5,4]:undefined,
-      segment: s.fwdDash?{ borderDash:function(ctx){ return (lo+ctx.p1DataIndex)>la?[5,4]:undefined; } }:undefined }; });
-  _aCharts['astd-'+id]=new Chart(cv.getContext('2d'),{ type:isBar?'bar':'line', data:{ labels:labels, datasets:ds },
+    var t=s.type||spec.type||'line'; if(s.yAxisID==='y2') needY2=true;
+    if(t==='bar') return { type:'bar', label:s.label, data:s.data.slice(lo,hi+1), backgroundColor:s.data.slice(lo,hi+1).map(function(_,i){ return (lo+i)>la?acxRGBA(s.color,0.5):s.color; }), borderColor:'#fff', borderWidth:1, maxBarThickness:34, stack:stk, yAxisID:s.yAxisID||'y', order:s.order||3 };
+    return { type:'line', label:s.label, data:s.data.slice(lo,hi+1), borderColor:s.color, backgroundColor:s.color, borderWidth:2.2, pointRadius:2, tension:0.2, spanGaps:false, yAxisID:s.yAxisID||'y', order:s.order||2,
+      borderDash:s.dash?[5,4]:undefined, segment: s.fwdDash?{ borderDash:function(ctx){ return (lo+ctx.p1DataIndex)>la?[5,4]:undefined; } }:undefined }; });
+  var anyBar=spec.series.some(function(s){ return (s.type||spec.type)==='bar'; }), y2f=spec.y2Fmt||function(v){return v;};
+  var scales={ x:{ stacked:anyBar&&spec.stacked, grid:{ display:false }, ticks:{ font:{ size:11 } } },
+    y:{ stacked:anyBar&&spec.stacked, position:'right', max:spec.yMax, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:11 }, callback:function(v){ return yFmt(v); } } } };
+  if(needY2) scales.y2={ position:'right', weight:1, grid:{ display:false }, ticks:{ font:{ size:11 }, callback:function(v){ return y2f(v); } } };
+  _aCharts['astd-'+id]=new Chart(cv.getContext('2d'),{ type:anyBar?'bar':'line', data:{ labels:labels, datasets:ds },
     options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':yFmt(c.parsed.y))+((lo+c.dataIndex)>la?' (E)':''); } } } },
-      scales:{ x:{ stacked:isBar&&spec.stacked, grid:{ display:false }, ticks:{ font:{ size:11 } } }, y:{ stacked:isBar&&spec.stacked, position:'right', max:spec.yMax, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:11 }, callback:function(v){ return yFmt(v); } } } } } });
+      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ var f=c.dataset.yAxisID==='y2'?y2f:yFmt; return c.dataset.label+': '+(c.parsed.y==null?'—':f(c.parsed.y))+((lo+c.dataIndex)>la?' (E)':''); } } } },
+      scales:scales } });
   var blk=aStdBlk(id), leg=blk&&blk.querySelector('[data-astdleg="'+id+'"]');
   if(leg) leg.innerHTML=spec.series.map(function(s){ return '<button type="button" class="rs-leg'+(st.hidden[s.k]?' off':'')+'" data-astdlegk="'+id+'|'+s.k+'"><span class="ave-leg-act" style="background:'+s.color+'"></span>'+esc(s.label)+'</button>'; }).join('');
   // Collapsible data table (rule 3) — windowed + honours hidden series, like San's charts.
@@ -3454,44 +3458,55 @@ function aSumSegSummit(metricKey, fyIdx){
   var s=0,ok=true; ix.forEach(function(j){ var v=m.summit[j]; if(v==null) ok=false; else s+=v; }); return ok?s:null;
 }
 function aMarginsBody(){
-  return aStdScaffold({ id:'margins', title:'Profitability & margins', height:340,
-    metricSel:[{v:'gross',label:'Gross margin'},{v:'operating',label:'Operating margin',on:true},{v:'ebitda',label:'EBITDA margin'},{v:'net',label:'Net margin'},{v:'fcf',label:'FCF margin'}],
-    modes:[{cls:'gran',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]},{cls:'mode',opts:[{v:'pct',label:'Margin %',on:true},{v:'amt',label:'$B (nominal)'}]},{cls:'norm',opts:[{v:'rep',label:'Reported',on:true},{v:'norm',label:'Normalized'}]}],
+  return aStdScaffold({ id:'margins', title:'Profitability & margins', height:360,
+    metricSel:[{v:'gross',label:'Gross'},{v:'operating',label:'Operating',on:true},{v:'ebitda',label:'EBITDA'},{v:'net',label:'Net'},{v:'fcf',label:'FCF'}],
+    modes:[{cls:'gran',label:'Period',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]},{cls:'norm',label:'Net',opts:[{v:'rep',label:'Reported',on:true},{v:'norm',label:'Normalized'}]}],
     presets:[['all','All'],['rep','Reported'],['fwd','Forward'],['l5','Last 5']] });
 }
 function aLastActIdx(arr){ var la=0; for(var i=0;i<arr.length;i++) if(arr[i]!=null) la=i; return la; }
+var MARG_LAB2={gross:'Gross profit',operating:'Op. income',ebitda:'EBITDA',net:'Net income',fcf:'FCF'};
+// SAB dual-axis: the $ amount as bars (Actual/Summit/Consensus grouped) + the margin % as lines on the
+// right y2 axis. `numX`/`revX` are the per-source $ series (null outside their window); sm = Summit {num,den}.
+function aMargDual(lab, actNum, conNum, rev, la, normOn, oa, sm){
+  function amt(v,i){ if(v==null) return null; if(normOn&&oa) v=v-(oa[i]||0); return Math.round(v/100)/10; }
+  function marg(v,i){ if(v==null||!rev[i]) return null; if(normOn&&oa) v=v-(oa[i]||0); return Math.round(v/rev[i]*1000)/10; }
+  var series=[
+    {k:'act$',label:lab+' — Actual',color:ASTD_ACT,type:'bar',data:actNum.map(amt)},
+    {k:'con$',label:lab+' — Consensus',color:ASTD_CONS,type:'bar',data:conNum.map(amt)},
+    {k:'actM',label:'Margin — Actual',color:ASTD_ACT,type:'line',yAxisID:'y2',data:actNum.map(marg)},
+    {k:'conM',label:'Margin — Consensus',color:ASTD_CONS,type:'line',yAxisID:'y2',dash:true,data:conNum.map(marg)} ];
+  if(sm&&!normOn){ series.splice(1,0,{k:'sum$',label:lab+' — Summit',color:ASTD_SUMMIT,type:'bar',data:sm.num.map(function(v){ return v==null?null:Math.round(v/100)/10; })});
+    series.push({k:'sumM',label:'Margin — Summit',color:ASTD_SUMMIT,type:'line',yAxisID:'y2',data:sm.num.map(function(v,i){ return (v==null||!sm.den[i])?null:Math.round(v/sm.den[i]*1000)/10; })}); }
+  return series;
+}
 function aBuildMargins(){
   aStdRender('margins', function(st){
-    var pct=st.modes.mode!=='amt', gran=st.modes.gran||'y';
-    function fmt(x){ return pct?x+'%':'$'+(x==null?'':x.toFixed(1))+'B'; }
-    function val(nn,dd){ if(nn==null) return null; return pct?(dd?Math.round(nn/dd*1000)/10:null):Math.round(nn/100)/10; }
-    // Quarterly + operating margin = amznResults native (Actual / Summit / Consensus) — Summit is clean here.
-    if(gran==='q' && st.sel==='operating'){
-      var q=amznResults.views.q.metrics, oi=q.opinc, rev=q.rev, labels=oi.periods, la=aLastActIdx(oi.act);
-      function ser(src){ return labels.map(function(_,i){ return val(oi[src]?oi[src][i]:null, rev[src]?rev[src][i]:null); }); }
-      return { labels:labels, lastAct:la, yFmt:fmt, series:[
-        {k:'act',label:'Actual',color:ASTD_ACT,data:ser('act')},
-        {k:'summit',label:'Summit model',color:ASTD_SUMMIT,data:ser('summit')},
-        {k:'cons',label:'Consensus',color:ASTD_CONS,data:ser('cons'),dash:true} ] };
+    var gran=st.modes.gran||'y', metric=st.sel||'operating', lab=MARG_LAB2[metric], normOn=metric==='net'&&st.modes.norm==='norm';
+    var out={ type:'bar', stacked:false, yFmt:function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }, y2Fmt:function(x){ return x+'%'; } };
+    if(gran==='q' && metric==='operating'){   // amznResults native, 22 quarters, all three sources
+      var Q=amznResults.views.q.metrics, oi=Q.opinc, rv=Q.rev, labels=oi.periods.slice(), la=aLastActIdx(oi.act);
+      function amtS(a){ return labels.map(function(_,i){ return a&&a[i]!=null?Math.round(a[i]/100)/10:null; }); }
+      function margS(a,r){ return labels.map(function(_,i){ return (a&&a[i]!=null&&r&&r[i])?Math.round(a[i]/r[i]*1000)/10:null; }); }
+      out.labels=labels; out.lastAct=la; out.series=[
+        {k:'act$',label:'Op. income — Actual',color:ASTD_ACT,type:'bar',data:amtS(oi.act)},
+        {k:'sum$',label:'Op. income — Summit',color:ASTD_SUMMIT,type:'bar',data:amtS(oi.summit)},
+        {k:'con$',label:'Op. income — Consensus',color:ASTD_CONS,type:'bar',data:amtS(oi.cons)},
+        {k:'actM',label:'Margin — Actual',color:ASTD_ACT,type:'line',yAxisID:'y2',data:margS(oi.act,rv.act)},
+        {k:'sumM',label:'Margin — Summit',color:ASTD_SUMMIT,type:'line',yAxisID:'y2',data:margS(oi.summit,rv.summit)},
+        {k:'conM',label:'Margin — Consensus',color:ASTD_CONS,type:'line',yAxisID:'y2',dash:true,data:margS(oi.cons,rv.cons)} ];
+      return out;
     }
-    var MET={operating:'oi',ebitda:'ebitda',net:'netIncome',fcf:'fcf',gross:'grossProfit'};
-    var num=amznBBG.is[MET[st.sel]], rvb=amznBBG.is.rev; if(!num||!rvb) return null;
-    if(gran==='q'){   // other metrics quarterly — BBG (Actual + Consensus; Summit not forecast at this grain)
-      var ql=amznBBG.qtrs.slice(), na=num.q, rq=rvb.q, laq=aLastActIdx(na);
-      var actq=ql.map(function(_,i){ return i<=laq?val(na[i],rq[i]):null; }), conq=ql.map(function(_,i){ return i>=laq?val(na[i],rq[i]):null; });
-      return { labels:ql, lastAct:laq, yFmt:fmt, series:[ {k:'act',label:'Actual',color:ASTD_ACT,data:actq}, {k:'cons',label:'Consensus (BBG)',color:ASTD_CONS,data:conq,dash:true} ] };
+    var MET={gross:'grossProfit',operating:'oi',ebitda:'ebitda',net:'netIncome',fcf:'fcf'};
+    var num=amznBBG.is[MET[metric]], rvb=amznBBG.is.rev; if(!num||!rvb) return null;
+    if(gran==='q'){   // other metrics quarterly — BBG (Actual + Consensus)
+      var ql=amznBBG.qtrs.slice(), nq=num.q, rq=rvb.q, laq=aLastActIdx(nq);
+      var actN=ql.map(function(_,i){ return i<=laq?nq[i]:null; }), conN=ql.map(function(_,i){ return i>=laq?nq[i]:null; });
+      out.labels=ql; out.lastAct=laq; out.series=aMargDual(lab, actN, conN, rq, laq, false, null, null); return out;
     }
-    // Annual — Actual + Summit model + BBG consensus. Net margin: the Normalized toggle strips the Rivian
-    // M2M one-off from the reported (BBG) actual & consensus (Summit isn't decomposable, so it drops out).
-    var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], la=2, normOn=st.sel==='net' && st.modes.norm==='norm';
-    var na2=num.a.concat(num.f), rv2=rvb.a.concat(rvb.f), ono=amznBBG.is.otherNonOp, oa=ono?ono.a.concat(ono.f):null;
-    function nv(i){ var nn=na2[i]; if(nn==null) return null; return (normOn&&oa)?(nn-(oa[i]||0)):nn; }
-    var actual=labels.map(function(_,i){ return i<=la?val(nv(i),rv2[i]):null; });
-    var cons=labels.map(function(_,i){ return i>=la?val(nv(i),rv2[i]):null; });
-    var series=[ {k:'act',label:'Actual'+(normOn?' (norm.)':''),color:ASTD_ACT,data:actual} ];
-    if(!normOn){ var sm=aSummitAnnual(st.sel); if(sm) series.push({k:'summit',label:'Summit model',color:ASTD_SUMMIT,data:labels.map(function(_,i){ return sm.num[i]==null?null:val(sm.num[i],sm.den[i]); })}); }
-    series.push({k:'cons',label:'Consensus (BBG)'+(normOn?' (norm.)':''),color:ASTD_CONS,data:cons,dash:true});
-    return { labels:labels, lastAct:la, yFmt:fmt, series:series };
+    var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], la=2;
+    var na=num.a.concat(num.f), rv=rvb.a.concat(rvb.f), ono=amznBBG.is.otherNonOp, oa=ono?ono.a.concat(ono.f):null;
+    var actN=labels.map(function(_,i){ return i<=la?na[i]:null; }), conN=labels.map(function(_,i){ return i>=la?na[i]:null; });
+    out.labels=labels; out.lastAct=la; out.series=aMargDual(lab, actN, conN, rv, la, normOn, oa, aSummitAnnual(metric)); return out;
   });
 }
 // Expense-line full dives — opened from an Expenses card via data-detail="exp:<key>". VISUAL, not prose.

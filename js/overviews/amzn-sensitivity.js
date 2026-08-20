@@ -61,8 +61,88 @@ function drv(k){ for(var i=0;i<DRIVERS.length;i++) if(DRIVERS[i].k===k) return D
 
 var NCELL = 5;
 
+// ── Street consensus — THE MAP IS REAL, THE NUMBERS ARE NOT ──────────────────────
+// What consensus assumes for the two drivers on the axes, shown beside the grid so the matrix can
+// be read against someone other than us.
+//
+// ⚠ The workbook this comes from is not wired yet. Every figure in CONS.v below is INVENTED to
+// show the layout — placed a little under the model, which is where the Street usually sits, but
+// it is not Street data and the card says so in amber until it is. Nothing else in this file is
+// invented (see the header): keep that line clean by replacing these numbers, not by adding more.
+//
+// The shape IS the mapping, and it is what the sheet has to supply: one value per driver key per
+// valuation year. Wiring it up is three things and no UI work —
+//   1. fill CONS.v from the sheet (same keys as DRIVERS, same years as YEARS),
+//   2. set CONS.src ('Bloomberg consensus', 'Visible Alpha', whatever it is) and CONS.asOf,
+//   3. nothing else — the amber placeholder badge disappears on its own once CONS.src is set.
+//
+// Units match the drivers exactly: growth is a CAGR off the 2025 actual (the same basis the axis
+// applies), margin is that year's operating margin, both as fractions.
+var CONS = {
+  src:  null,        // e.g. 'Bloomberg consensus' — null means "still a placeholder"
+  asOf: null,        // e.g. '2026-08-04'
+  v: {
+    aws_g:  { 2026:0.345, 2027:0.335, 2028:0.300, 2029:0.285 },
+    aws_m:  { 2026:0.365, 2027:0.350, 2028:0.355, 2029:0.360 },
+    na_g:   { 2026:0.110, 2027:0.100, 2028:0.097, 2029:0.095 },
+    na_m:   { 2026:0.075, 2027:0.082, 2028:0.084, 2029:0.086 },
+    intl_g: { 2026:0.138, 2027:0.128, 2028:0.130, 2029:0.126 },
+    intl_m: { 2026:0.035, 2027:0.038, 2028:0.040, 2029:0.042 },
+    // The exit multiple is the reader's own input, not something consensus publishes. Left empty
+    // on purpose: it is the null path the sheet will also hit, and it should render as a stated
+    // absence rather than as a number nobody chose.
+    mult:   {},
+  },
+};
+function consValue(k, year){ var row=CONS.v[k]; var v=row?row[year]:null; return v==null?null:v; }
+function consPlaceholder(){ return !CONS.src; }
+function consSrcLabel(){ return CONS.src ? (CONS.src + (CONS.asOf?(' · '+CONS.asOf):'')) : 'placeholder'; }
+function baseName(b){ return (b||_base)==='cons' ? 'Street consensus' : 'the Summit model'; }
+function baseNameCap(b){ return (b||_base)==='cons' ? 'Street consensus' : 'Summit model'; }
+function altBase(){ return _base==='summit' ? 'cons' : 'summit'; }
+
+// ── Whose number is this? ────────────────────────────────────────────────────────
+// One function decides it for every driver, and everything downstream — the grid's defaults, the
+// axis centring, the assumptions strip and the year cards — reads it. Consensus does not cover
+// every driver (the exit multiple is nobody's but yours), so a missing figure falls back to the
+// model rather than blanking the grid; consFellBack() is what makes that fallback visible instead
+// of silent.
+function baseValue(k, year){
+  if(_base==='cons'){ var c=consValue(k,year); if(c!=null) return c; }
+  return modelValue(k, year);
+}
+function consFellBack(k, year){ return _base==='cons' && consValue(k,year)==null; }
+// Segment defaults under the current base. Growth is applied the same way an axis applies it —
+// a flat rate compounded off the 2025 actual — so a consensus CAGR and an axis CAGR mean the same
+// thing and the base case sits exactly on the grid.
+function baseRev(seg, year){
+  var g = (_base==='cons') ? consValue(seg+'_g', year) : null;
+  if(g==null) return M[year][seg].rev;
+  var rev = M[BASE_YEAR][seg].rev;
+  for(var y=BASE_YEAR+1; y<=year; y++) rev *= (1+g);
+  return rev;
+}
+function baseMargin(seg, year){
+  var m = (_base==='cons') ? consValue(seg+'_m', year) : null;
+  return m==null ? modelOpMargin(seg, year) : m;
+}
+
+// The OTHER side, for the card beside the grid: consensus while you are reading the model, the
+// model while you are reading consensus.
+function altValue(k, year){ return _base==='summit' ? consValue(k, year) : modelValue(k, year); }
+// The same calc as any grid cell, with the other side substituted for the two drivers on the axes
+// and everything else left at the current base — so the number is directly comparable to a cell.
+function altCalc(year){
+  var over={}, any=false;
+  var ax=altValue(_x,year), ay=altValue(_y,year);
+  if(drv(_x).kind!=='x' && ax!=null){ over[_x]=ax; any=true; }
+  if(drv(_y).kind!=='x' && ay!=null){ over[_y]=ay; any=true; }
+  return any ? calc(year, over) : null;
+}
+
 // ── State ────────────────────────────────────────────────────────────────────────
 var _year  = 2028;
+var _base  = 'summit';    // whose assumptions everything OFF the axes is held at: 'summit' | 'cons'
 var _x     = 'aws_g';
 var _y     = 'aws_m';
 var _basis = 'ev';        // 'ev' = EV/EBITDA · 'pe' = P/E
@@ -94,11 +174,12 @@ function modelValue(k, year){
   if(d.kind==='x') return activeMult();
   return d.kind==='g' ? modelCagr(d.seg, year) : modelOpMargin(d.seg, year);
 }
-// Axis geometry: start + step, defaulting to "model value sits in the middle".
+// Axis geometry: start + step, defaulting to "the BASE's value sits in the middle" — so switching
+// to consensus re-centres the grid on consensus rather than leaving it around the model.
 function axis(k, st, year){
   var d = drv(k);
   var step  = (st.step!=null)  ? st.step  : d.step;
-  var start = (st.start!=null) ? st.start : (modelValue(k, year) - Math.floor(NCELL/2)*step);
+  var start = (st.start!=null) ? st.start : (baseValue(k, year) - Math.floor(NCELL/2)*step);
   var vals = []; for(var i=0;i<NCELL;i++) vals.push(start + i*step);
   return { start:start, step:step, vals:vals, auto:(st.start==null && st.step==null) };
 }
@@ -112,8 +193,8 @@ function calc(year, over){
     if(over[gK]!=null){                                   // flat rate compounded 2026 → year
       rev = M[BASE_YEAR][s.k].rev;
       for(var y=BASE_YEAR+1; y<=year; y++) rev *= (1 + over[gK]);
-    } else rev = M[year][s.k].rev;
-    var om = over[mK]!=null ? over[mK] : modelOpMargin(s.k, year);
+    } else rev = baseRev(s.k, year);                      // off the axes: whichever base is selected
+    var om = over[mK]!=null ? over[mK] : baseMargin(s.k, year);
     var op = rev * om;
     var dna = segDna(s.k, year);                          // depreciation held at the model
     opTotal += op;
@@ -167,10 +248,40 @@ function sensBody(){
     '.ovt-subpane[data-ovst="sensitivity"] .sens-ctrl{margin:0;gap:8px}'+
     '.ovt-subpane[data-ovst="sensitivity"] .sens-row-inp{gap:12px 18px}'+
     '.ovt-subpane[data-ovst="sensitivity"] .as-reset{padding:5px 11px;font-size:11px}'+
+    // the grid and the consensus card sit side by side; the card drops under the grid when the
+    // pane gets narrow rather than squeezing the matrix
+    '.as-mxrow{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin:10px 0 4px}'+
+    '.as-mxrow>.sens-matrix-wrap{flex:1 1 520px;min-width:0;margin:0}'+
+    '.as-cons{flex:0 0 258px;border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;background:#FCFCFD}'+
+    '.as-cons-h{font-size:11px;font-weight:800;color:var(--navy);letter-spacing:.02em;margin-bottom:2px}'+
+    '.as-cons-src{font-size:10px;color:var(--mu);margin-bottom:10px}'+
+    '.as-cons-r{padding:8px 0;border-top:1px solid var(--bdr)}'+
+    '.as-cons-k{font-size:10.5px;font-weight:700;color:var(--mu);margin-bottom:3px}'+
+    '.as-cons-v{display:flex;align-items:baseline;gap:8px;font-size:13px;font-weight:800;color:var(--navy)}'+
+    '.as-cons-v small{font-size:10px;font-weight:600;color:var(--mu)}'+
+    '.as-cons-d{font-size:10.5px;font-weight:700;margin-top:2px}'+
+    '.as-cons-nil{font-size:10.5px;color:var(--mu);line-height:1.45}'+
+    '.as-cons-px{margin-top:10px;padding-top:10px;border-top:2px solid var(--bdr)}'+
+    '.as-cons-px .v{font-size:20px;font-weight:800;color:var(--navy);line-height:1.1}'+
+    '.as-cons-px .s{font-size:10.5px;color:var(--mu);margin-top:3px;line-height:1.45}'+
+    // the consensus cell, ringed on the grid — purple, the same "not model data" colour the
+    // Target Multiple block uses for its stand-ins
+    '.sens-cell.as-cons-cell{outline:2px solid #8E44AD;outline-offset:-2px}'+
+    '.as-cons-ph{display:inline-block;font-size:9px;font-weight:800;border-radius:20px;padding:1px 7px;'+
+      'color:#8E44AD;border:1px solid #8E44AD;margin-left:6px;vertical-align:1px}'+
     '</style>';
   h += '<div class="sens-controls-row sens-row-year">'+
        '<div class="sens-ctrl"><span class="sens-ctrl-l">Valuation year</span><div class="sens-years">'+
          YEARS.map(function(y){ return '<button type="button" class="sens-year'+(y===_year?' active':'')+'" data-asyear="'+y+'">'+y+'</button>'; }).join('')+
+       '</div></div>'+
+       // Whose assumptions the grid is built on. Everything OFF the two axes is held here, so this
+       // is the control that changes what the whole matrix means — hence its place on the top row.
+       '<div class="sens-ctrl"><span class="sens-ctrl-l">Assumptions</span><div class="sens-years">'+
+         '<button type="button" class="sens-year'+(_base==='summit'?' active':'')+'" data-asbase="summit"'+
+           ' title="Every driver off the axes held at the Summit model">Summit model</button>'+
+         '<button type="button" class="sens-year'+(_base==='cons'?' active':'')+'" data-asbase="cons"'+
+           ' title="Every driver off the axes held at consensus'+(consPlaceholder()?' — placeholder numbers until the workbook is wired':'')+'">'+
+           'Street consensus'+(consPlaceholder()?' ⚑':'')+'</button>'+
        '</div></div>'+
        '<div class="sens-ctrl"><span class="sens-ctrl-l">Exit multiple on</span><div class="sens-years">'+
          '<button type="button" class="sens-year'+(_basis==='ev'?' active':'')+'" data-asbasis="ev">EV/EBITDA</button>'+
@@ -198,7 +309,10 @@ function sensBody(){
        '</div>';
 
   h += '<div class="sens-assum" id="asAssum"></div>';
-  h += '<div class="sens-matrix-wrap" id="asMatrix"></div>';
+  h += '<div class="as-mxrow">'+
+         '<div class="sens-matrix-wrap" id="asMatrix"></div>'+
+         '<div class="as-cons" id="asCons"></div>'+
+       '</div>';
   h += '<div class="sens-legend"><span>Lower</span><div class="sens-legend-bar"></div><span>Higher</span>'+
        '<span class="sens-legend-n" id="asLegendN"></span></div>';
 
@@ -228,16 +342,83 @@ function renderAssum(scope){
   var year=_year;
   var items = SEGS.map(function(s){
     var live = (drv(_x).seg===s.k) || (drv(_y).seg===s.k);
+    // a consensus run that quietly used model figures for a segment the sheet does not cover
+    // would read as consensus; say which lines fell back instead
+    var fb = consFellBack(s.k+'_g', year) || consFellBack(s.k+'_m', year);
     return '<span class="sens-assum-i'+(live?' sens-assum-hi':'')+'">'+esc(s.n)+
-      ' growth <b>'+pctLbl(modelCagr(s.k,year))+'</b> · op margin <b>'+pctLbl(modelOpMargin(s.k,year))+'</b>'+
-      (live?' <i>(on an axis)</i>':'')+'</span>';
+      ' growth <b>'+pctLbl(baseValue(s.k+'_g',year))+'</b> · op margin <b>'+pctLbl(baseValue(s.k+'_m',year))+'</b>'+
+      (live?' <i>(on an axis)</i>':'')+(fb?' <i>(no consensus figure — held at the model)</i>':'')+'</span>';
   }).join('');
   scope.querySelector('#asAssum').innerHTML =
-    '<span class="sens-assum-t">Held at the Summit model ('+year+')</span>'+items+
-    '<span class="sens-assum-i">Corporate / other EBITDA <b>'+fmtB(corpFor(year))+'</b>'+(M[year].corp==null?' <i>(2029 unpopulated — held at 2028)</i>':'')+'</span>'+
-    '<span class="sens-assum-i">Tax <b>'+pctLbl(taxFor(year))+'</b>'+(M[year].tax==null?' <i>(held at 2028)</i>':'')+'</span>'+
+    '<span class="sens-assum-t">Held at '+esc(baseName())+' ('+year+')'+
+      (_base==='cons' && consPlaceholder() ? ' ⚑ placeholder' : '')+'</span>'+items+
+    // consensus covers the six segment drivers and nothing else — these three stay the model's
+    // under either base, and say so rather than inheriting the strip's title
+    '<span class="sens-assum-i">Corporate / other EBITDA <b>'+fmtB(corpFor(year))+'</b>'+(M[year].corp==null?' <i>(2029 unpopulated — held at 2028)</i>':(_base==='cons'?' <i>(model)</i>':''))+'</span>'+
+    '<span class="sens-assum-i">Tax <b>'+pctLbl(taxFor(year))+'</b>'+(M[year].tax==null?' <i>(held at 2028)</i>':(_base==='cons'?' <i>(model)</i>':''))+'</span>'+
     '<span class="sens-assum-i">Shares <b>'+SHARES.toLocaleString('en-US')+'M</b> <i>(flat in the model)</i></span>'+
     '<span class="sens-assum-i">Net debt <b>'+fmtB(_netDebt)+'</b></span>';
+}
+
+// ── The other side, at the right of the grid ─────────────────────────────────────
+// Always shows whichever base you are NOT reading: consensus while the grid is on the Summit
+// model, the model while the grid is on consensus. One row per axis driver — its figure, the
+// current base's figure, and the gap — then the price those two figures imply, computed exactly
+// like a cell so it is comparable.
+function consRowHtml(role, k, year){
+  var d=drv(k), av=altValue(k,year), bv=baseValue(k,year);
+  var h='<div class="as-cons-r"><div class="as-cons-k">'+esc(role)+' &nbsp;'+esc(d.n)+'</div>';
+  if(d.kind==='x' || av==null){
+    // stated, not blank: an empty row here would read as "consensus says nothing" when the truth
+    // is that this driver is the reader's own input
+    return h+'<div class="as-cons-nil">'+(d.kind==='x'
+      ? 'The exit multiple is your input — consensus does not publish one.'
+      : 'No consensus figure for this driver; the grid holds it at the model.')+'</div></div>';
+  }
+  var gap=av-bv;
+  var gapTxt = d.kind==='x' ? ((gap>=0?'+':'−')+Math.abs(gap).toFixed(1)+'×')
+                            : ((gap>=0?'+':'−')+Math.abs(gap*100).toFixed(1)+' pp');
+  var col = Math.abs(gap) < (d.kind==='x'?0.05:0.0005) ? 'var(--mu)' : (gap>=0?'#2E8B57':'#C0392B');
+  return h+
+    '<div class="as-cons-v">'+axisLbl(k,av)+'<small>'+esc(baseNameCap())+' '+axisLbl(k,bv)+'</small></div>'+
+    '<div class="as-cons-d" style="color:'+col+'">'+gapTxt+' vs '+esc(baseName())+'</div></div>';
+}
+function renderCons(scope, aX, aY, cell){
+  var el=scope.querySelector('#asCons'); if(!el) return;
+  var year=_year, r=altCalc(year), live=_px;
+  var isCons=(altBase()==='cons');
+  var h='<div class="as-cons-h">What '+(isCons?'consensus':'the Summit model')+' assumes'+
+        (isCons && consPlaceholder()?'<span class="as-cons-ph">placeholder</span>':'')+'</div>'+
+    '<div class="as-cons-src">'+esc(isCons?consSrcLabel():('Summit DCF model · '+SNAP))+' · '+year+
+    ' · the two drivers on the axes</div>';
+  h += consRowHtml('X →', _x, year);
+  h += consRowHtml('Y ↓', _y, year);
+
+  if(r){
+    var up = live ? (r.px/live-1) : null;
+    // Which drivers consensus actually spoke about. With only one of them covered the price is a
+    // hybrid — consensus on that driver, your own input on the other — and the label has to say so
+    // rather than claiming "at both".
+    var hasX = drv(_x).kind!=='x' && altValue(_x,year)!=null;
+    var hasY = drv(_y).kind!=='x' && altValue(_y,year)!=null;
+    var lbl  = (hasX&&hasY) ? 'Implied at both' : ('Implied at the '+(hasX?'X':'Y')+' figure alone');
+    var where = (hasX&&hasY)
+      ? (cell ? 'Ringed on the grid.' : 'Off the current grid — widen a range to see it.')
+      : ('The '+(hasX?esc(drv(_y).n):esc(drv(_x).n))+' axis keeps your own input, so this cannot be '+
+         'placed on the grid.');
+    h += '<div class="as-cons-px"><div class="as-cons-k">'+lbl+'</div>'+
+      '<div class="v">'+fmtPx(r.px)+'</div>'+
+      '<div class="s">'+(up!=null ? (signPct(up)+' vs the live quote') : 'live quote unavailable')+
+      ' · '+(_basis==='ev' ? ('EBITDA '+fmtB(r.ebitda)+' × '+r.mult.toFixed(1)+'×')
+                           : ('EPS $'+r.eps.toFixed(2)+' × '+r.mult.toFixed(1)+'×'))+
+      '<br>'+where+
+      '</div></div>';
+  }
+  if(consPlaceholder()){
+    h += '<div class="rs-noguide" style="margin-top:10px">⚑ The consensus figures are invented, shown to '+
+         'fix the layout. They land here from the consensus workbook once it is wired — nothing else changes.</div>';
+  }
+  el.innerHTML=h;
 }
 
 function renderMatrix(scope){
@@ -246,6 +427,21 @@ function renderMatrix(scope){
   var base=calc(year,{}), live=_px, ref=live||base.px, refIsLive=!!live;
 
   var rowsY = aY.vals.slice().reverse();      // highest at the top
+
+  // Where the OTHER side lands on this grid. Nearest cell, but only when it is genuinely inside
+  // the range — half a step past either end and the ring would be claiming a precision the grid
+  // does not have. Null means "off the grid", which the card says out loud.
+  function nearest(vals, v, step){
+    if(v==null) return -1;
+    var lo=Math.min.apply(null,vals), hi=Math.max.apply(null,vals);
+    if(v < lo-step/2 || v > hi+step/2) return -1;
+    var bi=0, bd=Infinity;
+    vals.forEach(function(x,i){ var d=Math.abs(x-v); if(d<bd){ bd=d; bi=i; } });
+    return bi;
+  }
+  var cxi = drv(_x).kind==='x' ? -1 : nearest(aX.vals, altValue(_x,year), aX.step);
+  var cyi = drv(_y).kind==='x' ? -1 : nearest(rowsY,   altValue(_y,year), aY.step);
+  var consCell = (cxi>=0 && cyi>=0) ? { x:cxi, y:cyi } : null;
   var grid = rowsY.map(function(vy){
     return aX.vals.map(function(vx){
       var over={}; over[_x]=vx; over[_y]=vy;
@@ -263,12 +459,15 @@ function renderMatrix(scope){
   '</thead><tbody>';
   grid.forEach(function(row, ri){
     h += '<tr><th class="sens-rowh">'+axisLbl(_y, rowsY[ri])+'</th>';
-    row.forEach(function(c){
+    row.forEach(function(c, ci){
+      var isCons = !!(consCell && consCell.x===ci && consCell.y===ri);
       var ttl = year+' · '+dX.n+' '+axisLbl(_x,c.vx)+' · '+dY.n+' '+axisLbl(_y,c.vy)+' → '+
         (_basis==='ev' ? ('EBITDA '+fmtB(c.r.ebitda)+' × '+c.r.mult.toFixed(1)+'× = EV '+fmtB(c.r.ev)+' → equity '+fmtB(c.r.equity))
                        : ('EPS $'+c.r.eps.toFixed(2)+' × '+c.r.mult.toFixed(1)+'× (earnings '+fmtB(c.r.earnings)+')'))+
-        ' → '+fmtPx(c.r.px)+'/sh ('+signPct(c.up)+(refIsLive?' vs live price)':' vs base case)');
-      h += '<td class="sens-cell" style="background:'+colorFor(c.up,cap)+'" title="'+esc(ttl)+'">'+
+        ' → '+fmtPx(c.r.px)+'/sh ('+signPct(c.up)+(refIsLive?' vs live price)':' vs base case)')+
+        (isCons ? ('  ·  closest cell to '+baseName(altBase())+
+          (altBase()==='cons' && consPlaceholder() ? ' (placeholder)' : '')) : '');
+      h += '<td class="sens-cell'+(isCons?' as-cons-cell':'')+'" style="background:'+colorFor(c.up,cap)+'" title="'+esc(ttl)+'">'+
            '<div class="sens-eb">'+fmtPx(c.r.px)+'</div>'+
            '<div class="sens-pct">'+signPct(c.up)+'</div></td>';
     });
@@ -276,6 +475,7 @@ function renderMatrix(scope){
   });
   h += '</tbody></table>';
   scope.querySelector('#asMatrix').innerHTML = h;
+  renderCons(scope, aX, aY, consCell);
 
   var lg = scope.querySelector('#asLegendN');
   if(lg) lg.textContent = refIsLive ? '(implied price vs. the live quote)'
@@ -301,6 +501,15 @@ function renderMatrix(scope){
     'model\'s consolidated OP_INCOME of '+fmtB(OP_INCOME_2025)+' — a 1.4% corporate/unallocated drag that is left OUT rather than plugged, because '+
     'OP_INCOME is unpopulated for 2026-2029. Corporate/other EBITDA (2029) and the tax rate (2029) are likewise unpopulated and hold the 2028 value, '+
     'marked ⚠. All three flagged for the model owner. The exit multiple is your input, not a model output. Live price and net debt via Massive. '+
+    '<b>Assumptions</b> switches whose figures every driver OFF the two axes is held at: the Summit model, or Street consensus. Consensus covers the '+
+    'six segment drivers only — the exit multiple stays your input, and corporate/other EBITDA, tax and shares stay the model\'s, each marked in the '+
+    'strip above the grid. Growth is applied identically under both (a flat CAGR off the '+BASE_YEAR+' actual), so a consensus base case sits exactly '+
+    'on the grid. The card beside the grid always shows <b>the other side</b> — consensus while you read the model, the model while you read consensus — '+
+    'with the two axis drivers substituted and everything else left at the current base, so its price is directly comparable to a cell. '+
+    (consPlaceholder()
+      ? '<b>⚑ The consensus figures are a layout placeholder: invented, not Street data, badged amber wherever they appear until the consensus '+
+        'workbook is wired.</b> '
+      : '<b>Consensus read from '+esc(consSrcLabel())+'.</b> ')+
     'Data sourced from Summit DCF models.';
 }
 
@@ -318,6 +527,16 @@ function initSens(root){
       _year = +b.getAttribute('data-asyear');
       _rx={start:null,step:null}; _ry={start:null,step:null};      // ranges re-centre on the new year
       scope.querySelectorAll('[data-asyear]').forEach(function(x){ x.classList.toggle('active', x===b); });
+      render(scope);
+    }; });
+
+    // Switching the base moves every default on the grid, so the auto-centred ranges have to
+    // re-centre with it — leaving them where they were would show a consensus grid framed around
+    // the model's numbers.
+    scope.querySelectorAll('[data-asbase]').forEach(function(b){ b.onclick=function(){
+      _base = b.getAttribute('data-asbase');
+      _rx={start:null,step:null}; _ry={start:null,step:null};
+      scope.querySelectorAll('[data-asbase]').forEach(function(x){ x.classList.toggle('active', x===b); });
       render(scope);
     }; });
 

@@ -4112,7 +4112,9 @@ function aBuildSegOi(){
       return { k:k, label:label, color:color, data:data, fwdDash:true }; }
     var SG=[{k:'na',lab:'North America',c:BRAND},{k:'intl',lab:'International',c:BRAND2},{k:'aws',lab:'AWS',c:SQUID}], isAmt=mode==='amt';
     var series=SG.map(function(s){ var sg=amznBBG.seg[s.k]; return line(inc(sg), full(sg.rev), s.k, s.lab, s.c); });
-    if(!isAmt) series.push(line(metric==='ebitda'?full(amznBBG.is.ebitda):full(amznBBG.is.oi), full(amznBBG.is.rev), 'cons', 'Consolidated', '#1E2733'));   // $B = stacked segment bars, no Consolidated
+    if(!isAmt){ series.push(line(metric==='ebitda'?full(amznBBG.is.ebitda):full(amznBBG.is.oi), full(amznBBG.is.rev), 'cons', 'Consolidated', '#1E2733'));   // $B = stacked segment bars, no Consolidated
+      if(mode==='margin'){ var sm=aSummitAnnual(metric);   // Summit's consolidated margin path, for comparison
+        if(sm) series.push({ k:'summit', label:'Consolidated — Summit', color:ASTD_SUMMIT, data:labels.map(function(_,i){ return sm.num[i]==null?null:Math.round(sm.num[i]/sm.den[i]*1000)/10; }), dash:true }); } }
     var yFmt=isAmt?function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }:function(x){ return x+'%'; };
     return { labels:labels, lastAct:la, yFmt:yFmt, type:isAmt?'bar':undefined, stacked:isAmt, series:series };
   });

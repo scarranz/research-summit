@@ -2993,7 +2993,9 @@ function aStdScaffold(cfg){
     '<input type="range" class="astd-r0" min="0" max="1" value="0" step="1" aria-label="Start period">'+
     '<input type="range" class="astd-r1" min="0" max="1" value="1" step="1" aria-label="End period"></div>'+
     '<div class="sg-ends"><span data-astdend0="'+id+'"></span><span data-astdend1="'+id+'"></span></div></div>';
-  return '<div class="ov-sec" data-astdblock="'+id+'">'+top+row2+leg+chart+slider+'</div>';
+  var tbl='<div class="rs-collap" style="margin-top:8px"><button type="button" class="rs-collap-h"><span class="rs-collap-ic">▸</span> Data — what the chart draws</button>'+
+    '<div class="rs-collap-b" hidden style="padding-top:8px"><div class="rs-tablewrap" data-astdtbl="'+id+'"></div></div></div>';
+  return '<div class="ov-sec" data-astdblock="'+id+'">'+top+row2+leg+chart+slider+tbl+'</div>';
 }
 function aStdBlk(id){ return document.querySelector('[data-astdblock="'+id+'"]'); }
 function aStdRender(id, derive){
@@ -3015,6 +3017,12 @@ function aStdRender(id, derive){
       scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:11 } } }, y:{ position:'right', grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:11 }, callback:function(v){ return yFmt(v); } } } } } });
   var blk=aStdBlk(id), leg=blk&&blk.querySelector('[data-astdleg="'+id+'"]');
   if(leg) leg.innerHTML=spec.series.map(function(s){ return '<button type="button" class="rs-leg'+(st.hidden[s.k]?' off':'')+'" data-astdlegk="'+id+'|'+s.k+'"><span class="ave-leg-act" style="background:'+s.color+'"></span>'+esc(s.label)+'</button>'; }).join('');
+  // Collapsible data table (rule 3) — windowed + honours hidden series, like San's charts.
+  var tblc=blk&&blk.querySelector('[data-astdtbl="'+id+'"]');
+  if(tblc){ var vis=spec.series.filter(function(s){ return !st.hidden[s.k]; });
+    var hd='<tr><th style="text-align:left;position:sticky;left:0;background:var(--card,#fff)">Series</th>'+labels.map(function(l){ return '<th style="text-align:right">'+esc(l)+'</th>'; }).join('')+'</tr>';
+    var bd=vis.map(function(s){ return '<tr><td style="text-align:left;font-weight:700;position:sticky;left:0;background:var(--card,#fff)">'+esc(s.label)+'</td>'+s.data.slice(lo,hi+1).map(function(v){ return '<td style="text-align:right;font-variant-numeric:tabular-nums">'+(v==null?'—':esc(String(yFmt(v))))+'</td>'; }).join('')+'</tr>'; }).join('');
+    tblc.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead>'+hd+'</thead><tbody>'+bd+'</tbody></table>'; }
   aStdSyncSlider(id, spec.labels, la);
   aStdWire(id);
   // Re-attach the X-window brush to the freshly-built chart each render (onmousedown assignment, not
@@ -3357,10 +3365,9 @@ function aBuildNetBridge(){
 }
 // SBC — back in General (where it was), BBG-driven (actuals + consensus, $B-by-line ⇄ %-of-line).
 function aSbcBody(){
-  return '<div class="ov-sec"><div class="ov-sec-h">Stock-based compensation</div>'+
-    '<div class="mch-ctl">'+   /* §0.4 row 2 */
-      '<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="acx-tog sbcv-tog"><button type="button" data-sbcv="line" class="active">By line</button><button type="button" data-sbcv="dilution">Dilution</button></span>'+
-      '<span class="acx-tog sbcm-tog"><button type="button" data-sbcm="dollar" class="active">$B</button><button type="button" data-sbcm="pct">% of revenue</button></span></span>'+
+  return '<div class="ov-sec"><div class="ov-sec-h">Stock-based compensation ($B)</div>'+
+    '<div class="mch-ctl">'+
+      '<span class="acx-tog sbcv-tog"><button type="button" data-sbcv="line" class="active">By line</button><button type="button" data-sbcv="dilution">Dilution</button></span>'+
       '<span></span>'+
     '</div>'+
     '<div style="height:300px"><canvas id="aSbcMain"></canvas></div></div>';
@@ -3368,7 +3375,7 @@ function aSbcBody(){
 function aSbcSer(k){ var s=amznBBG.is[k]; return s?s.a.concat(s.f):[null,null,null,null,null,null]; }
 function aBuildSbc(){
   var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(!pane) return;
-  var tg=pane.querySelector('.sbcm-tog .active'), pct=(tg?tg.getAttribute('data-sbcm'):'dollar')==='pct';
+  var pct=false;   // SBC shown in $B only — Summit doesn't forecast a % here, so the % view added no signal
   var vw=pane.querySelector('.sbcv-tog .active'), view=vw?vw.getAttribute('data-sbcv'):'line';
   var cv=aChartReady('aSbcMain'); if(!cv) return; aDestroy('aSbcMain');
   var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
@@ -3396,7 +3403,7 @@ function aBuildSbc(){
   }
   aZoom('aSbcMain');
   if(pane && !pane._sbcmWired){ pane._sbcmWired=true;
-    pane.querySelectorAll('.sbcm-tog button, .sbcv-tog button').forEach(function(b){ b.onclick=function(){ b.parentNode.querySelectorAll('button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSbc(); }; }); }
+    pane.querySelectorAll('.sbcv-tog button').forEach(function(b){ b.onclick=function(){ b.parentNode.querySelectorAll('button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSbc(); }; }); }
 }
 // Profitability & margins — the §0.4 layout: row 1 = a metric dropdown (identity), row 2 = mode
 // toggles (treatment). All margins (gross/operating/EBITDA/net/FCF) over time, reported → BBG

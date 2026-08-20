@@ -3207,7 +3207,9 @@ var FX_LINES=[{k:'cogs',lab:'Cost of sales'},{k:'fulfillment',lab:'Fulfillment'}
 function aFwdOpexRow(fi, adj){
   function f(k){ var s=amznBBG.is[k]; return s?s.f[fi]:null; }
   var rev=f('rev'), oi=f('oi'); if(rev==null||oi==null) return null;
-  var cogs=f('cogs')||0, ful=f('fulfillment')||0, tech=f('techInfra')||0, mkt=f('marketing')||0, ga=f('gAdmin')||0;
+  // BBG gives forward gross profit, not COGS directly → derive COGS = revenue − gross profit.
+  var cogs=f('cogs'); if(cogs==null){ var gp=f('grossProfit'); cogs=(gp!=null)?(rev-gp):0; } cogs=cogs||0;
+  var ful=f('fulfillment')||0, tech=f('techInfra')||0, mkt=f('marketing')||0, ga=f('gAdmin')||0;
   var other=rev-cogs-ful-tech-mkt-ga-oi;   // consensus residual, held fixed
   adj=adj||{}; function A(v,k){ return v*(1+((adj[k]||0)/100)); }
   return { p:'FY'+String(amznBBG.yearsF[fi]).slice(2)+'E', revenue:rev, costOfSales:A(cogs,'cogs'), fulfillment:A(ful,'fulfillment'),
@@ -3220,7 +3222,6 @@ function aBridgeBody(){
     '<div class="mch-ctl">'+   /* §0.4 row 2: mode + view (left) */
       '<span style="display:flex;gap:6px;flex-wrap:wrap">'+
         '<span class="acx-tog br-mode"><button type="button" data-brm="buildup" class="active">Build-up ($B)</button><button type="button" data-brm="fexp">Forward (expenses)</button></span>'+
-        '<span class="acx-tog br-view"><button type="button" data-brv="wf" class="active">Waterfall</button><button type="button" data-brv="pie">Pie</button></span>'+
       '</span>'+
       '<span></span>'+
     '</div>'+
@@ -3258,8 +3259,7 @@ function aBridgeSync(pane){
 }
 function aBuildBridge(){
   var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(!pane) return;
-  var mb=pane.querySelector('.br-mode .active'), mode=mb?mb.getAttribute('data-brm'):'buildup';
-  var vb=pane.querySelector('.br-view .active'), view=vb?vb.getAttribute('data-brv'):'wf', r;
+  var mb=pane.querySelector('.br-mode .active'), mode=mb?mb.getAttribute('data-brm'):'buildup', r;
   if(mode==='fexp'){   // forward expense build-up — BBG consensus year, sensitizable per cost line
     var fyb=pane.querySelector('.br-fy .active'), fi=fyb?+fyb.getAttribute('data-brfy'):2, adj={};
     pane.querySelectorAll('.br-fx-sl input[data-brx]').forEach(function(s){ adj[s.getAttribute('data-brx')]=+s.value;
@@ -3271,7 +3271,7 @@ function aBuildBridge(){
     else { var yb=pane.querySelector('.br-yr .active'); r=A_OPEX[yb?+yb.getAttribute('data-bry'):2025]; }
   }
   if(!r) return;
-  if(view==='pie') aBuildBrPie(r); else aBuildBrWaterfall('aBrCanvas', aBridgeBuildupSteps(r), BR_FMT_D);
+  aBuildBrWaterfall('aBrCanvas', aBridgeBuildupSteps(r), BR_FMT_D);
 }
 // ── Segment bridge (Segments tab): margin-change decomposition + the forward segment-consensus walk.
 // Moved out of General so the consolidated bridge there stays about expenses. Reuses aBuildBrWaterfall.
@@ -3303,7 +3303,7 @@ function aBuildSegBridge(){
     var fb=pane.querySelector('.sbr-from .active'), tb=pane.querySelector('.sbr-to .active');
     var ya=fb?+fb.getAttribute('data-sbrf'):2022, yb2=tb?+tb.getAttribute('data-sbrt'):2025;
     var prev=A_OPEX[ya], cur=A_OPEX[yb2];
-    if(prev&&cur&&ya!==yb2) aBuildBrWaterfall('aSegBr', aBridgeBpsSteps(prev,cur,'FY'+String(ya).slice(2),'FY'+String(yb2).slice(2)), BR_FMT_BPS);
+    if(prev&&cur) aBuildBrWaterfall('aSegBr', aBridgeBpsSteps(prev,cur,'FY'+String(ya).slice(2),'FY'+String(yb2).slice(2)), BR_FMT_BPS);   // same FY→FY draws a flat (zero-change) bridge instead of freezing
   } else {   // forward — FY25 OI → segment consensus contributions → target year, sensitizable
     var fyb=pane.querySelector('.sbr-fy .active'), fi=fyb?+fyb.getAttribute('data-sbrfy'):2;
     var SG=[{k:'na',lab:'North America',c:BRAND},{k:'intl',lab:'International',c:BRAND2},{k:'aws',lab:'AWS',c:SQUID}];
@@ -3786,7 +3786,6 @@ function aBuildExpenses(){
         if(GEN_BUILD[v]) GEN_BUILD[v](); }; }
       tog('.br-mode', function(){ aBridgeSync(pane); aBuildBridge(); });
       tog('.br-gran', function(){ aBridgeSync(pane); aBuildBridge(); });
-      tog('.br-view', aBuildBridge);
       tog('.br-yr', aBuildBridge);
       tog('.br-qtr', aBuildBridge);
       tog('.br-fy', aBuildBridge);

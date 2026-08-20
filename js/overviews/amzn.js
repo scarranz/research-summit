@@ -3996,11 +3996,7 @@ function segmentsBody(){
       return '<div class="segx-panel segx-panel-card" data-segpanel="'+s.key+'"'+(i>0?' hidden':'')+'>'+head+(SEG_WORLD[s.key]?SEG_WORLD[s.key].h:'')+'</div>';
     }).join('')+'</div></div>';
   h+=aSegPicker();
-  h+='<div class="seg-gsec" data-sgsec="oimargin">'+
-    '<div class="seg-tog-row"><span class="acx-tog seg-tog"><button type="button" data-segg="y" class="active">Annual</button><button type="button" data-segg="q">Quarterly</button></span></div>'+
-    '<div class="ov-sec"><div class="ov-sec-h">Operating income &amp; margin by segment</div>'+
-    '<div class="mch-ctl"><span class="acx-tog sgm-tog"><button type="button" data-sgm="dollar" class="active">$B (income)</button><button type="button" data-sgm="opm">Op margin %</button><button type="button" data-sgm="ebm">EBITDA margin %</button></span><span></span></div>'+
-    '<div style="height:300px"><canvas id="aSgMain"></canvas></div></div></div>';
+  h+='<div class="seg-gsec" data-sgsec="oimargin">'+aSegOiBody()+'</div>';
   h+='<div class="seg-gsec" data-sgsec="mix" hidden>'+aSegMixBody()+'</div>';
   h+='<div class="seg-gsec" data-sgsec="bridge" hidden>'+aSegBridgeBody()+'</div>';
   h+=aCollap('Segment deep dives — the full read per segment (drivers, unit economics, cost structure, calls)', segExp, false);
@@ -4074,36 +4070,46 @@ function aBuildSegMix(){
 function aSegMixWire(pane){ pane._smixWired=true;
   pane.querySelectorAll('.smix-tog button, .smix-yr button').forEach(function(b){ b.onclick=function(){ b.parentNode.querySelectorAll('button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegMix(); }; });
 }
+// Operating income & margin by segment, on the SAB engine: metric (Operating / EBITDA) → mode
+// (Margin % / $B / Growth %) → Annual/Quarterly. Series = the 3 segments + Consolidated (Actual;
+// forward dashed). EBITDA = segment operating income + segment D&A (both disclosed, amznBBG.seg).
+function aSegOiBody(){
+  return aStdScaffold({ id:'segoi', title:'Operating income & margin by segment', height:320,
+    metricSel:[{v:'operating',label:'Operating',on:true},{v:'ebitda',label:'EBITDA'}],
+    modes:[{cls:'gran',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]},
+           {cls:'mode',opts:[{v:'margin',label:'Margin %',on:true},{v:'amt',label:'$B'},{v:'grow',label:'Growth %'}]}],
+    presets:[['all','All'],['rep','Reported'],['fwd','Forward'],['l5','Last 5']] });
+}
+function aBuildSegOi(){
+  aStdRender('segoi', function(st){
+    var gran=st.modes.gran||'y', mode=st.modes.mode||'margin', metric=st.sel||'operating';
+    function full(obj){ if(!obj) return null; return gran==='q'?obj.q:obj.a.concat(obj.f); }
+    function inc(sg){ var oi=full(sg.oi), da=full(sg.da);
+      return oi.map(function(v,i){ if(v==null) return null; return metric==='ebitda'?((da&&da[i]!=null)?v+da[i]:null):v; }); }
+    var labels=gran==='q'?amznBBG.qtrs.slice():['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
+    var la=gran==='q'?((amznBBG.is.oi.qA?amznBBG.is.oi.qA.length:5)-1):2, step=gran==='q'?4:1;
+    function line(incArr, revArr, k, label, color){
+      var data=labels.map(function(_,i){ var v=incArr[i];
+        if(mode==='margin'){ var d=revArr?revArr[i]:null; return (v==null||d==null||!d)?null:Math.round(v/d*1000)/10; }
+        if(mode==='amt'){ return v==null?null:Math.round(v/100)/10; }
+        var pv=incArr[i-step]; return (v==null||pv==null||!pv)?null:Math.round((v-pv)/Math.abs(pv)*1000)/10; });
+      return { k:k, label:label, color:color, data:data, fwdDash:true }; }
+    var SG=[{k:'na',lab:'North America',c:BRAND},{k:'intl',lab:'International',c:BRAND2},{k:'aws',lab:'AWS',c:SQUID}];
+    var series=SG.map(function(s){ var sg=amznBBG.seg[s.k]; return line(inc(sg), full(sg.rev), s.k, s.lab, s.c); });
+    series.push(line(metric==='ebitda'?full(amznBBG.is.ebitda):full(amznBBG.is.oi), full(amznBBG.is.rev), 'cons', 'Consolidated', '#1E2733'));
+    var yFmt=mode==='amt'?function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }:function(x){ return x+'%'; };
+    return { labels:labels, lastAct:la, yFmt:yFmt, series:series };
+  });
+}
 function aBuildSegments(){
   var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]');
-  var tg=pane?pane.querySelector('.seg-tog .active'):null, gran=tg?tg.getAttribute('data-segg'):'y';
-  var rows=(gran==='q')?segQuarterRows():segAnnualRows();
-  var sgt=pane?pane.querySelector('.sgm-tog .active'):null, sgm=sgt?sgt.getAttribute('data-sgm'):'dollar';
-  var mc=aChartReady('aSgMain');
-  if(mc){ aDestroy('aSgMain'); var cfg;
-    if(sgm==='dollar'){
-      cfg={ type:'bar', data:{ labels:rows.map(function(r){ return r.p; }), datasets:A_SEG.map(function(s){ return { label:s.lab, data:rows.map(function(r){ return r[s.k].oi==null?null:r[s.k].oi/1000; }), backgroundColor:s.c, borderColor:'#fff', borderWidth:1, maxBarThickness:32, stack:'oi' }; }) },
-        options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-          plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+c.parsed.y.toFixed(1)+'B'; }, footer:function(it){ return 'Total: $'+it.reduce(function(a,x){ return a+(x.parsed.y||0); },0).toFixed(1)+'B'; } } } },
-          scales:{ x:{ stacked:true, grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } };
-    } else {
-      var fld=(sgm==='ebm')?'eb':'mgn', cfld=(sgm==='ebm')?'consEb':'consMgn';
-      var ds=A_SEG.map(function(s){ return { label:s.lab, data:rows.map(function(r){ return r[s.k][fld]; }), borderColor:s.c, backgroundColor:s.c, borderWidth:2, pointRadius:2, tension:0.25, spanGaps:true }; });
-      ds.push({ label:'Consolidated', data:rows.map(function(r){ return r[cfld]; }), borderColor:'#1E2733', backgroundColor:'#1E2733', borderWidth:2.5, pointRadius:2, tension:0.25, borderDash:[5,4] });
-      cfg={ type:'line', data:{ labels:rows.map(function(r){ return r.p; }), datasets:ds },
-        options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-          plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':c.parsed.y+'%'); } } } },
-          scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } };
-    }
-    _aCharts['aSgMain']=new Chart(mc.getContext('2d'), cfg); aZoom('aSgMain'); }
+  aBuildSegOi();
   if(pane && !pane._segWired){ pane._segWired=true;
-    var SEG_BUILD={ oimargin:aBuildSegments, mix:aBuildSegMix, bridge:aBuildSegBridge };
+    var SEG_BUILD={ oimargin:aBuildSegOi, mix:aBuildSegMix, bridge:aBuildSegBridge };
     var ssel=pane.querySelector('.seg-chart');
     if(ssel){ ssel.onchange=function(){ var v=ssel.value;
       pane.querySelectorAll('.seg-gsec').forEach(function(s){ s.hidden=(s.getAttribute('data-sgsec')!==v); });
       if(SEG_BUILD[v]) SEG_BUILD[v](); }; }
-    pane.querySelectorAll('.seg-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.seg-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegments(); }; });
-    pane.querySelectorAll('.sgm-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.sgm-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegments(); }; });
     var segtog=function(sel){ pane.querySelectorAll(sel+' button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll(sel+' button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegBridge(); }; }); };
     segtog('.sbr-mode'); segtog('.sbr-from'); segtog('.sbr-to'); segtog('.sbr-fy');
     pane.querySelectorAll('.sbr-ctl-fwd input[type=range]').forEach(function(s){ s.addEventListener('input', aBuildSegBridge); });

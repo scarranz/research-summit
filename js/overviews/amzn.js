@@ -3695,8 +3695,10 @@ function aLeasesBody(){   // Leases explorer — Miscellaneous ▸ Capex & Depre
     '.lx-card{background:var(--card,#fff);border:1px solid var(--bdr);border-radius:12px;padding:15px 17px}'+
   '</style>';
   h+='<div class="ov-sec"><div class="ov-sec-h">Leases — the other capacity bill (10-K Note 4)</div>';
+  // The thesis, up front — so the reader knows where this is going.
+  h+='<div class="ew-note" style="margin:0 0 12px"><b>The idea:</b> the capex/PP&amp;E charts only show the capacity Amazon <b>owns</b>. It also <b>leases</b> a huge amount — and signs leases years ahead. Add it up and the real capacity commitment is far bigger than capex alone: <b>~$534B owned PP&amp;E</b> + <b>~$142B leased right-of-use assets</b> + <b>~$62B signed but not yet started</b>, against a <b>$121.8B lease obligation</b> that behaves like debt but sits outside reported debt. This section is that off-capex half of the build.</div>';
   h+='<div class="lx-explorer"><div class="lx-h">Leases explorer <span class="lx-hint">tap a view</span></div>';
-  var tabs=[['cost','Cost &amp; flow'],['bs','Assets vs obligations'],['pipe','The pipeline'],['what','What Amazon leases']];
+  var tabs=[['bs','Owned vs leased vs pipeline'],['pipe','The obligation (debt-like)'],['cost','Annual lease cost'],['what','What Amazon leases']];
   h+='<div class="lx-tabs">'+tabs.map(function(t,i){ return '<button type="button" class="lx-tab'+(i===0?' active':'')+'" data-lxtab="'+t[0]+'">'+t[1]+'</button>'; }).join('')+'</div>';
   // Panel 1 — cost & flow
   var p1='<div style="height:250px"><canvas id="aExpLease"></canvas></div>'+
@@ -3709,8 +3711,10 @@ function aLeasesBody(){   // Leases explorer — Miscellaneous ▸ Capex & Depre
     '<div class="ew-h">Where the two lease types land</div>'+
     '<div class="ew-two">'+box('🏢','Operating leases','The bulk — fulfillment centers, offices, some data centers. The cost flows into <b>cost of sales / fulfillment / technology</b> (not a separate line); the asset is a right-of-use (ROU) asset on its own balance-sheet line.')+
       box('✈️','Finance leases','Ownership-like (e.g. Amazon Air aircraft, some equipment). The asset sits <b>inside PP&amp;E</b>, and its cost splits into <b>amortization ($3.3B, inside D&amp;A)</b> + <b>interest ($0.3B)</b> — that is why finance-lease D&amp;A is already in the $41.9B P&amp;E depreciation.')+'</div>';
-  // Panel 2 — assets vs obligations
-  var p2='<div class="ew-note">Beyond the ~$534B of <b>owned</b> gross PP&amp;E, Amazon controls a large <b>leased</b> asset base — and owes the payments behind it. This is that picture.</div>'+
+  // Panel 2 — owned vs leased vs pipeline (the capacity picture)
+  var p2='<div class="ew-h">The full capacity picture — owned, leased, and signed-but-not-started</div>'+
+    mbar('Total controlled capacity (~$738B of assets + pipeline)',[{w:72.4,c:'#1E2733',t:'Owned PP&E $534B'},{w:11.7,c:BRAND2,t:'Op-lease ROU $86B'},{w:7.5,c:SQUID,t:'Fin-lease ROU $56B'},{w:8.4,c:acxRGBA(BRAND,0.55),t:'Pipeline $62B'}])+
+    '<div class="ew-note" style="margin-top:2px">Leasing adds <b>~$142B of in-use capacity</b> and another <b>~$62B already signed</b> on top of the owned $534B — roughly <b>38% more capacity</b> than the capex/PP&amp;E charts alone show.</div>'+
     mbar('Right-of-use ASSETS — the leased capacity (~$142B)',[{w:60.7,c:BRAND2,t:'Operating ROU $86B'},{w:39.3,c:SQUID,t:'Finance ROU $55.6B'}])+
     mbar('Lease LIABILITIES — the obligation ($121.8B gross · PV $101.5B)',[{w:87.8,c:BRAND,t:'Operating $106.9B'},{w:12.2,c:GRAY,t:'Finance $14.9B'}])+
     '<div class="ew-note"><b>Finance-lease ROU ($55.6B) is already inside PP&amp;E</b> (so its depreciation is in D&amp;A); <b>operating-lease ROU ($86B) sits on its own line</b> — capacity that never shows up in the capex or PP&amp;E charts. Of the $121.8B liability, $87.3B is long-term. This is real leverage-lite: obligations that behave like debt but sit outside reported debt.</div>';
@@ -3726,9 +3730,9 @@ function aLeasesBody(){   // Leases explorer — Miscellaneous ▸ Capex & Depre
       box('🏢','Offices &amp; other','Corporate offices, physical stores and equipment round it out.')+'</div>'+
     '<div class="ew-note"><b>Own vs lease is a deliberate choice.</b> Amazon owns where control and long-run cost matter (core AWS/data centers → capex, PP&amp;E, D&amp;A) and leases where speed and flexibility matter (fulfillment real estate, incremental data-center space, aircraft). The two together are the real capacity picture — the capex charts only show the owned half.</div>';
   h+='<div class="lx-panels">'+
-    '<div class="lx-panel lx-card" data-lxpanel="cost">'+p1+'</div>'+
-    '<div class="lx-panel lx-card" data-lxpanel="bs" hidden>'+p2+'</div>'+
+    '<div class="lx-panel lx-card" data-lxpanel="bs">'+p2+'</div>'+
     '<div class="lx-panel lx-card" data-lxpanel="pipe" hidden>'+p3+'</div>'+
+    '<div class="lx-panel lx-card" data-lxpanel="cost" hidden>'+p1+'</div>'+
     '<div class="lx-panel lx-card" data-lxpanel="what" hidden>'+p4+'</div>'+
   '</div>';
   h+='</div></div>';
@@ -3748,7 +3752,9 @@ function aBuildLeases(){   // lease-cost chart + Leases-explorer tab wiring (Mis
     var lt=pane.querySelectorAll('.lx-tab');
     lt.forEach(function(b){ b.onclick=function(){ var k=b.getAttribute('data-lxtab');
       lt.forEach(function(x){ x.classList.toggle('active',x===b); });
-      pane.querySelectorAll('.lx-panel').forEach(function(p){ p.hidden=(p.getAttribute('data-lxpanel')!==k); }); }; }); }
+      pane.querySelectorAll('.lx-panel').forEach(function(p){ p.hidden=(p.getAttribute('data-lxpanel')!==k); });
+      if(k==='cost') aBuildLeases();   // the cost chart lives in a now-hidden-by-default panel — build it when shown
+    }; }); }
 }
 function aBuildExpenses(){
   aBuildBridge();

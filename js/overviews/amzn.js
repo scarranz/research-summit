@@ -3292,8 +3292,8 @@ function aSegBridgeBody(){
       '<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;color:var(--mu)">From</span><span class="acx-tog sbr-from">'+yBtns('sbrf',2022)+'</span>'+
       '<span style="font-size:11px;color:var(--mu)">to</span><span class="acx-tog sbr-to">'+yBtns('sbrt',2025)+'</span></span></div>'+
     '<div class="sbr-ctl-fwd" style="display:none;flex-direction:column;gap:8px;margin:0 0 10px">'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span style="font-size:11px;color:var(--mu)">Target year</span><span class="acx-tog sbr-fy"><button type="button" data-sbrfy="0">FY26E</button><button type="button" data-sbrfy="1">FY27E</button><button type="button" data-sbrfy="2" class="active">FY28E</button></span></div>'+
-      '<div style="font-size:10.5px;color:var(--mu)">Sensitize each segment\'s operating income vs consensus (0% = the BBG consensus):</div>'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span class="acx-tog sbr-basis"><button type="button" data-sbrb="cons" class="active">vs Consensus (BBG)</button><button type="button" data-sbrb="summit">vs Summit</button></span><span class="acx-tog sbr-fy"><button type="button" data-sbrfy="0">FY26E</button><button type="button" data-sbrfy="1">FY27E</button><button type="button" data-sbrfy="2" class="active">FY28E</button></span></div>'+
+      '<div style="font-size:10.5px;color:var(--mu)" id="aSbrBasisNote">Sensitize each segment\'s operating income vs the base (0% = the base forecast):</div>'+
       '<div class="br-sl"><span class="br-sl-l">North America</span><input type="range" data-sbrseg="na" min="-30" max="30" step="1" value="0"><span class="br-sl-v" data-sbrsegv="na">0%</span></div>'+
       '<div class="br-sl"><span class="br-sl-l">International</span><input type="range" data-sbrseg="intl" min="-30" max="30" step="1" value="0"><span class="br-sl-v" data-sbrsegv="intl">0%</span></div>'+
       '<div class="br-sl"><span class="br-sl-l">AWS</span><input type="range" data-sbrseg="aws" min="-40" max="40" step="1" value="0"><span class="br-sl-v" data-sbrsegv="aws">0%</span></div>'+
@@ -3312,11 +3312,15 @@ function aBuildSegBridge(){
     var ya=fb?+fb.getAttribute('data-sbrf'):2022, yb2=tb?+tb.getAttribute('data-sbrt'):2025;
     var prev=A_OPEX[ya], cur=A_OPEX[yb2];
     if(prev&&cur) aBuildBrWaterfall('aSegBr', aBridgeBpsSteps(prev,cur,'FY'+String(ya).slice(2),'FY'+String(yb2).slice(2)), BR_FMT_BPS);   // same FY→FY draws a flat (zero-change) bridge instead of freezing
-  } else {   // forward — FY25 OI → segment consensus contributions → target year, sensitizable
+  } else {   // forward — FY25 OI → target-year segment forecast → sensitizable, vs Consensus OR Summit
     var fyb=pane.querySelector('.sbr-fy .active'), fi=fyb?+fyb.getAttribute('data-sbrfy'):2;
-    var SG=[{k:'na',lab:'North America',c:BRAND},{k:'intl',lab:'International',c:BRAND2},{k:'aws',lab:'AWS',c:SQUID}];
+    var bb=pane.querySelector('.sbr-basis .active'), basis=bb?bb.getAttribute('data-sbrb'):'cons';
+    var SG=[{k:'na',lab:'North America',mk:'naopinc',c:BRAND},{k:'intl',lab:'International',mk:'intopinc',c:BRAND2},{k:'aws',lab:'AWS',mk:'awsopinc',c:SQUID}];
     var base=SG.map(function(s){ return amznBBG.seg[s.k].oi.a[2]; });   // FY25 actual, $M
-    var tgt=SG.map(function(s){ var cons=amznBBG.seg[s.k].oi.f[fi]; var sl=pane.querySelector('.sbr-ctl-fwd input[data-sbrseg="'+s.k+'"]'); return cons*(sl?(1+(+sl.value)/100):1); });
+    var tgt=SG.map(function(s){
+      var b=(basis==='summit')?aSumSegSummit(s.mk, fi+3):null; if(b==null) b=amznBBG.seg[s.k].oi.f[fi];   // Summit unavailable (e.g. partial FY28) → BBG
+      var sl=pane.querySelector('.sbr-ctl-fwd input[data-sbrseg="'+s.k+'"]'); return b*(sl?(1+(+sl.value)/100):1); });
+    var bn=pane.querySelector('#aSbrBasisNote'); if(bn) bn.textContent='Sensitize each segment’s operating income vs '+(basis==='summit'?'Summit’s segment forecast':'the BBG consensus')+' (0% = the base):';
     var run=base.reduce(function(a,b){ return a+b; },0)/1000;
     var steps=[{label:'FY25 OI', kind:'base', color:'#1E2733', range:[0,run], runAfter:run, val:run}];
     SG.forEach(function(s,i){ var d=(tgt[i]-base[i])/1000, lo=run; run=lo+d;
@@ -3432,6 +3436,12 @@ function aSumOpAnnual(metricKey){
   if(!m||!m.summit) return null;
   return ASUM_FYQ.map(function(idxs){ if(idxs.length<4) return null; var s=0,ok=true;
     idxs.forEach(function(j){ var v=m.summit[j]; if(v==null) ok=false; else s+=v; }); return ok?s:null; });
+}
+// Summit's annual segment operating income (single fiscal year, ASUM_FYQ index) from the quarterly model.
+function aSumSegSummit(metricKey, fyIdx){
+  var q=amznResults.views&&amznResults.views.q&&amznResults.views.q.metrics, m=q&&q[metricKey], ix=ASUM_FYQ[fyIdx];
+  if(!m||!m.summit||!ix||ix.length<4) return null;
+  var s=0,ok=true; ix.forEach(function(j){ var v=m.summit[j]; if(v==null) ok=false; else s+=v; }); return ok?s:null;
 }
 function aMarginsBody(){
   return aStdScaffold({ id:'margins', title:'Profitability & margins', height:340,
@@ -4076,7 +4086,7 @@ function aBuildSegments(){
       pane.querySelectorAll('.seg-gsec').forEach(function(s){ s.hidden=(s.getAttribute('data-sgsec')!==v); });
       if(SEG_BUILD[v]) SEG_BUILD[v](); }; }
     var segtog=function(sel){ pane.querySelectorAll(sel+' button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll(sel+' button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegBridge(); }; }); };
-    segtog('.sbr-mode'); segtog('.sbr-from'); segtog('.sbr-to'); segtog('.sbr-fy');
+    segtog('.sbr-mode'); segtog('.sbr-from'); segtog('.sbr-to'); segtog('.sbr-fy'); segtog('.sbr-basis');
     pane.querySelectorAll('.sbr-ctl-fwd input[type=range]').forEach(function(s){ s.addEventListener('input', aBuildSegBridge); });
     var stabs=pane.querySelectorAll('.segx-tab');
     stabs.forEach(function(b){ b.onclick=function(){ var key=b.getAttribute('data-segtab');

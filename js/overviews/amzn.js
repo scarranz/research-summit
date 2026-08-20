@@ -3734,6 +3734,12 @@ function aLeasesBody(){   // Leases explorer — Miscellaneous ▸ Capex & Depre
   h+='<div class="ov-sec"><div class="ov-sec-h">Leases — the other capacity bill (10-K Note 4)</div>';
   // The thesis, up front — so the reader knows where this is going.
   h+='<div class="ew-note" style="margin:0 0 12px"><b>The idea:</b> the capex/PP&amp;E charts only show the capacity Amazon <b>owns</b>. It also <b>leases</b> a huge amount — and signs leases years ahead. Add it up and the real capacity commitment is far bigger than capex alone: <b>~$534B owned PP&amp;E</b> + <b>~$142B leased right-of-use assets</b> + <b>~$62B signed but not yet started</b>, against a <b>$121.8B lease obligation</b> that behaves like debt but sits outside reported debt. This section is that off-capex half of the build.</div>';
+  h+='<div class="exp-stat" style="margin:0 0 12px">'+
+    '<div class="exp-st"><div class="exp-sl">Lease obligation</div><div class="exp-sv">$121.8B</div><div class="exp-ss">gross · PV $101.5B · $87.3B long-term</div></div>'+
+    '<div class="exp-st"><div class="exp-sl">Right-of-use assets</div><div class="exp-sv">$141.6B</div><div class="exp-ss">operating $86B · finance $55.6B</div></div>'+
+    '<div class="exp-st"><div class="exp-sl">Signed, not started</div><div class="exp-sv">~$62B</div><div class="exp-ss">not yet in capex/PP&amp;E/liability</div></div>'+
+    '<div class="exp-st"><div class="exp-sl">Weighted term</div><div class="exp-sv">10–13 yr</div><div class="exp-ss">op 10.0 · finance 12.6 · vs ~5yr owned assets</div></div>'+
+  '</div>';
   h+='<div class="lx-explorer"><div class="lx-h">Leases explorer <span class="lx-hint">tap a view</span></div>';
   var tabs=[['bs','Owned vs leased vs pipeline'],['pipe','The obligation (debt-like)'],['cost','Annual lease cost'],['what','What Amazon leases']];
   h+='<div class="lx-tabs">'+tabs.map(function(t,i){ return '<button type="button" class="lx-tab'+(i===0?' active':'')+'" data-lxtab="'+t[0]+'">'+t[1]+'</button>'; }).join('')+'</div>';

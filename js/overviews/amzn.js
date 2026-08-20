@@ -3892,41 +3892,39 @@ var A_TENK={
   leaseCost:{ 2023:{op:10550,finAmort:5899,finInt:304,variable:2165,total:18918}, 2024:{op:11961,finAmort:3866,finInt:285,variable:2465,total:18577}, 2025:{op:14006,finAmort:3284,finInt:312,variable:2694,total:20296} },
   leaseLiab:{ opGross:106914, finGross:14917, totalGross:121831, pv:101538, longTerm:87339, opTermYrs:10.0, finTermYrs:12.6 }
 };
+// The capital cycle PER SEGMENT: pick a segment and see the three linked pieces together — Capex (the
+// build) and D&A (what hits the P&L) as bars, and Net PP&E (the stock they flow through) as a line on
+// the right axis. Capex spend lifts PP&E; PP&E depreciates into D&A. Capex actuals: 10-K Note 10;
+// forward capex ≈ Δ net PP&E + D&A (the roll-forward identity), from BBG's forward PP&E/D&A.
 function segCapDaBody(){
-  return '<div class="ov-sec"><div class="ov-sec-h">The capital cycle by segment — capex builds it · PP&amp;E holds it · D&amp;A expenses it</div>'+
-    '<div class="mch-ctl"><span class="acx-tog segcd-tog"><button type="button" data-segcd="capex" class="active">Capex</button><button type="button" data-segcd="ppe">PP&amp;E</button><button type="button" data-segcd="da">D&amp;A</button></span><span></span></div>'+
-    '<div style="height:320px"><canvas id="aSegCapDa"></canvas></div>'+
-    '<div class="acx-cap" id="aSegCapDaCap" style="font-size:11px;color:var(--mu);margin-top:8px"></div></div>';
+  return '<div class="ov-sec"><div class="ov-sec-h">The capital cycle by segment — capex builds it → PP&amp;E holds it → D&amp;A expenses it</div>'+
+    '<div class="mch-ctl"><span class="acx-tog segcd-tog"><button type="button" data-segcd="aws" class="active">AWS</button><button type="button" data-segcd="na">North America</button><button type="button" data-segcd="intl">International</button><button type="button" data-segcd="cons">Consolidated</button></span><span></span></div>'+
+    '<div class="acx-cap" id="aSegCapDaCap" style="font-size:11px;color:var(--mu);margin:2px 0 6px"></div>'+
+    '<div style="height:320px"><canvas id="aSegCapDa"></canvas></div></div>';
 }
 function aBuildSegCapDa(){
-  var pane=document.querySelector('.dd-pane[data-dd="misc"] .ovt-subpane[data-ovst="capex"]');   // relocated to Miscellaneous ▸ Capex & Depreciation
-  var tg=pane?pane.querySelector('.segcd-tog .active'):null, mode=tg?tg.getAttribute('data-segcd'):'capex';
+  var pane=document.querySelector('.dd-pane[data-dd="misc"] .ovt-subpane[data-ovst="capex"]');
+  var tg=pane?pane.querySelector('.segcd-tog .active'):null, seg=tg?tg.getAttribute('data-segcd'):'aws';
   var cv=aChartReady('aSegCapDa'); if(!cv) return; aDestroy('aSegCapDa');
-  var SG=[{k:'na',bk:'na',lab:'North America',c:BRAND},{k:'int',bk:'intl',lab:'International',c:BRAND2},{k:'aws',bk:'aws',lab:'AWS',c:SQUID}];
-  var labels, ds, cap;
-  if(mode==='capex'){
-    labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
-    var gf=amznBBG.is.capex.f.map(function(v){ return v==null?null:Math.abs(v); });   // group capex consensus (abs $M)
-    var implied=SG.map(function(s){ var ppe=amznBBG.seg[s.bk].ppe, da=amznBBG.seg[s.bk].da, arr=[], prev=ppe.a[2];   // roll-forward weight: ΔnetPP&E + D&A (fall back to D&A where PP&E is missing)
-      for(var i=0;i<3;i++){ var cur=ppe.f[i], d=da.f[i]||0, delta=(cur!=null&&prev!=null)?(cur-prev):0; arr.push(delta+d); if(cur!=null) prev=cur; } return arr; });
-    ds=SG.map(function(s,si){
-      var act=[2023,2024,2025].map(function(y){ return A_TENK.segCapex[y][s.k]/1000; });
-      var fwd=[0,1,2].map(function(i){ var sum=implied.reduce(function(a,x){ return a+(x[i]||0); },0), mine=implied[si][i];
-        return (!sum||gf[i]==null)?null:Math.round(gf[i]*mine/sum/100)/10; });   // allocate group capex by roll-forward share
-      var vals=act.concat(fwd);
-      return { label:s.lab, data:vals, backgroundColor:vals.map(function(_,i){ return i<3?s.c:acxRGBA(s.c,0.45); }), borderColor:'#fff', borderWidth:1, maxBarThickness:26, stack:'x' }; });
-    cap='<b>Capex by segment.</b> Actuals from the 10-K (Note 10). Amazon gives no per-segment capex consensus, so the forward is the <b>group capex consensus</b> (BBG) <b>allocated across segments by each one\'s PP&amp;E roll-forward</b> (capex ≈ Δ net PP&amp;E + D&amp;A) — it ties to the group total and splits it by where the asset base is growing (AWS-led). Faded = allocated estimate.';
-  } else {
-    labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
-    ds=SG.map(function(s){ var sr=amznBBG.seg[s.bk][mode], vals=sr.a.concat(sr.f).map(function(v){ return v==null?null:Math.round(v/100)/10; });
-      return { label:s.lab, data:vals, backgroundColor:vals.map(function(_,i){ return i<3?s.c:acxRGBA(s.c,0.45); }), borderColor:'#fff', borderWidth:1, maxBarThickness:26, stack:'x' }; });
-    cap=(mode==='da')?'D&amp;A by segment (disclosed, Note 10). The <b>AWS wave</b>: $12.5B (2023) → $21.5B (2025) → <b>~$93B (2028E)</b> — the AI capex landing in the P&amp;L. Faded = BBG consensus.'
-        :'PP&amp;E, net by segment. AWS <b>$73B → $190B</b> (2023→25), consensus to <b>~$746B (2028E)</b> — the balance-sheet footprint of the build. Faded = BBG consensus.';
-  }
-  _aCharts['aSegCapDa']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:labels, datasets:ds },
+  var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], yrs=[2023,2024,2025], tk={aws:'aws',na:'na',intl:'int'};
+  function bbg(field){ if(seg==='cons'){ return labels.map(function(_,i){ return ['na','intl','aws'].reduce(function(a,k){ var s=amznBBG.seg[k][field], v=s.a.concat(s.f); return a+(v[i]||0); },0); }); } var s=amznBBG.seg[seg][field]; return s.a.concat(s.f); }
+  var ppe=bbg('ppe'), da=bbg('da'), B=function(v){ return v==null?null:Math.round(v/100)/10; };
+  function actCapex(i){ var y=yrs[i], m=A_TENK.segCapex[y]; return seg==='cons'?(m.na+m.int+m.aws+(m.corp||0)):m[tk[seg]]; }
+  var capex=labels.map(function(_,i){ if(i<3) return B(actCapex(i));
+    return (ppe[i]!=null&&ppe[i-1]!=null&&da[i]!=null)?B(ppe[i]-ppe[i-1]+da[i]):null; });
+  var daB=da.map(B), ppeB=ppe.map(B);
+  _aCharts['aSegCapDa']=new Chart(cv.getContext('2d'),{ data:{ labels:labels, datasets:[
+    { type:'bar', label:'Capex (build)', data:capex, backgroundColor:capex.map(function(_,i){ return i<3?BRAND:acxRGBA(BRAND,0.5); }), borderColor:'#fff', borderWidth:1, maxBarThickness:26, yAxisID:'y', order:3 },
+    { type:'bar', label:'D&A (expensed)', data:daB, backgroundColor:daB.map(function(_,i){ return i<3?BRAND2:acxRGBA(BRAND2,0.5); }), borderColor:'#fff', borderWidth:1, maxBarThickness:26, yAxisID:'y', order:2 },
+    { type:'line', label:'Net PP&E (stock →)', data:ppeB, borderColor:'#1E2733', backgroundColor:'#1E2733', borderWidth:2.6, pointRadius:2, tension:0.2, yAxisID:'y1', order:1 } ]},
     options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':'$'+c.parsed.y.toFixed(1)+'B'); }, footer:function(it){ return 'Total: $'+it.reduce(function(a,x){ return a+(x.parsed.y||0); },0).toFixed(1)+'B'; } } } },
-      scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); aZoom('aSegCapDa');
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+(c.parsed.y==null?'':c.parsed.y.toFixed(1))+'B'; } } } },
+      scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:11 } } },
+        y:{ position:'left', grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:11 }, callback:function(v){ return '$'+v+'B'; } }, title:{ display:true, text:'Capex / D&A — annual flow', font:{ size:9 } } },
+        y1:{ position:'right', grid:{ display:false }, ticks:{ font:{ size:11 }, callback:function(v){ return '$'+v+'B'; } }, title:{ display:true, text:'Net PP&E — the stock', font:{ size:9 } } } } } });
+  aZoom('aSegCapDa');
+  var cd=capex[2], dd=daB[2], p=ppeB[2];
+  var cap='<b>The cycle:</b> capex flows onto the balance sheet as <b>net PP&amp;E</b> (the line), which then depreciates into <b>D&amp;A</b> in the P&amp;L. FY25: capex <b>$'+(cd?cd.toFixed(0):'—')+'B</b> vs D&amp;A <b>$'+(dd?dd.toFixed(0):'—')+'B</b> → <b>Capex ÷ D&amp;A ≈ '+((cd&&dd)?(cd/dd).toFixed(1):'—')+'×</b> (building faster than it depreciates), implied life ≈ net PP&amp;E ÷ D&amp;A ≈ <b>'+((p&&dd)?(p/dd).toFixed(1):'—')+' yrs</b>. Actuals: 10-K Note 10; forward capex ≈ Δ net PP&amp;E + D&amp;A (BBG). Faded bars = estimate.';
   var capEl=pane?pane.querySelector('#aSegCapDaCap'):null; if(capEl) capEl.innerHTML=cap;
   if(pane && !pane._segcdWired){ pane._segcdWired=true;
     pane.querySelectorAll('.segcd-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.segcd-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegCapDa(); }; }); }

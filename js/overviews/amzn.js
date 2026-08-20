@@ -3397,42 +3397,18 @@ function ewCallTimeline(calls){ if(!calls||!calls.length) return '';
   var lab={why:'driver',fwd:'forward',ctx:'context'};
   return '<div class="ew-tls">'+calls.map(function(c){ return '<div class="ew-tli"><div class="ew-tlq">'+c.q+(c.tag?'<span class="ew-tag '+c.tag+'">'+lab[c.tag]+'</span>':'')+'</div><div class="ew-tlt">'+c.txt+'</div>'+(c.who&&c.who!=='—'?'<div class="ew-tlw">— '+c.who+'</div>':'')+'</div>'; }).join('')+'</div>';
 }
+// Management commentary = ONLY verbatim quotes from the repo call records (docs/calls/AMZN*.md, which
+// cover Q4'25–Q2'26) or facts sourced to a filing. Quotes are in “…”. Expense lines with no direct
+// management quote in the covered calls carry no commentary block — we do not paraphrase management or
+// attribute our own words to a speaker. Older-quarter transcripts (2022–2024) are not in the repo.
 var EW_CALLS={
-  costOfSales:[
-    {q:'Q1 2023', who:'Andy Jassy / Brian Olsavsky', tag:'why', txt:'Completed the regionalization of the US fulfillment network — from one national model to eight self-sufficient regions. Shorter distances and fewer touches per package began pulling shipping cost per unit down.'},
-    {q:'Q4 2023', who:'Brian Olsavsky, CFO', tag:'why', txt:'Cost to serve per unit fell year over year for the first time since 2018 — the network redesign and inbound consolidation flowing through the line.'},
-    {q:'2024', who:'Andy Jassy, CEO', tag:'why', txt:'Faster delivery got cheaper, not costlier: as same-day and next-day volume rose, in-region inventory placement lifted density and lowered the marginal cost of each shipment.'},
-    {q:'Forward', who:'Management', tag:'fwd', txt:'The structural pull continues — every point of mix toward AWS, advertising and third-party services lowers cost of sales as a share of revenue, on top of the shipping gains.'}
-  ],
-  fulfillment:[
-    {q:'2022', who:'Brian Olsavsky, CFO', tag:'ctx', txt:'The pandemic roughly doubled the fulfillment network in about two years; 2022 was about growing volume into that fixed footprint after over-building — the ratio peaked near 16.4%.'},
-    {q:'2023', who:'Andy Jassy, CEO', tag:'why', txt:'Regionalization plus robotics held fulfillment cost roughly flat even as units grew — the efficiency program that reset the retail margin.'},
-    {q:'2024', who:'Andy Jassy, CEO', tag:'why', txt:'Next-generation robotics (Sequoia, Proteus) and the Shreveport facility cut cost to fulfill materially where they run — a template now being rolled out across the network.'},
-    {q:'Forward', who:'Management', tag:'fwd', txt:'Continued robotics deployment and same-day site expansion are expected to keep fulfillment roughly flat-to-lower as a share of revenue, offsetting the cost of faster delivery.'}
-  ],
   techInfra:[
-    {q:'Jan 2023', who:'Andy Jassy, CEO', tag:'ctx', txt:'Announced ~18,000 role eliminations, concentrated in corporate, devices and stores, after over-hiring through the pandemic — an early trim to the cost base that sits partly in this line.'},
-    {q:'2024', who:'Andy Jassy, CEO', tag:'why', txt:'Custom silicon — Trainium for training, Inferentia for inference, Graviton for general compute — is the price-performance edge; the R&D behind it lands here ahead of the revenue it enables.'},
-    {q:'Q4 2025', who:'Management', tag:'why', txt:'The capex frame, in management\'s words: "about $200 billion in capital expenditures… predominantly in AWS, because we have very high demand" — the spend whose depreciation lands in this line.'},
-    {q:'Q1 2026', who:'Brian Olsavsky, CFO', tag:'why', txt:'Capex "primarily AWS and generative AI"; memory component costs had "skyrocketed" — the input that later pushed the frame up.'},
-    {q:'Q2 2026', who:'Brian Olsavsky, CFO', tag:'fwd', txt:'FY26 cash-capex frame raised to ~$220B from ~$200B, part of it the "higher cost of memory." The depreciation that build creates keeps this the one functional line rising as a share of revenue until the capacity is monetized.'}
-  ],
-  marketing:[
-    {q:'2022', who:'Brian Olsavsky, CFO', tag:'ctx', txt:'Marketing spend was pulled back as measured returns fell in a softer demand environment — the company spends against efficiency, not a fixed budget.'},
-    {q:'2023–24', who:'Andy Jassy, CEO', tag:'why', txt:'The advertising business — sponsored products and now Prime Video ads — lets Amazon monetize its own surface rather than buy demand, structurally lowering net marketing intensity.'},
-    {q:'Forward', who:'Management', tag:'fwd', txt:'Continued leverage expected: a large, mature Prime base needs proportionally less acquisition spend each year.'}
-  ],
-  gAdmin:[
-    {q:'Jan 2023', who:'Andy Jassy, CEO', tag:'why', txt:'Began the largest headcount reduction in company history — ~27,000 roles across rounds — explicitly to remove cost and bureaucracy from corporate functions.'},
-    {q:'2024', who:'Andy Jassy, CEO', tag:'why', txt:'“Fewer managers, more builders”: flattened the org and raised the ratio of individual contributors to managers, stripping out a layer of overhead.'},
-    {q:'Oct 2025', who:'Andy Jassy, CEO', tag:'why', txt:'Framed the ~14,000 further corporate cuts as culture and speed rather than primarily cost — reducing bureaucracy and freeing resources for AI. Severance is booked as a charge when taken.'},
-    {q:'Forward', who:'Management', tag:'fwd', txt:'With overhead largely fixed and revenue still growing, G&A stays the most leveraged line — shrinking as a share every year absent new charges.'}
+    {q:'Q4 2025', who:'Amazon Q4 2025 earnings call', tag:'why', txt:'The capex frame, verbatim: “about $200 billion in capital expenditures… predominantly in AWS, because we have very high demand.”'},
+    {q:'Q1 2026', who:'Brian Olsavsky, CFO — Q1 2026 call', tag:'why', txt:'Capex “primarily AWS and generative AI”; memory component costs had “skyrocketed.”'},
+    {q:'Q2 2026', who:'Brian Olsavsky, CFO — Q2 2026 call', tag:'fwd', txt:'FY26 cash-capex frame raised to ~$220B from ~$200B, part of it the “higher cost of memory.”'}
   ],
   otherOpex:[
-    {q:'Context', who:'—', tag:'ctx', txt:'Normally a rounding line (~0.1% of revenue): amortization of acquired intangibles, impairments and legal matters. It only matters when a large charge lands.'},
-    {q:'Q3 2025', who:'Management', tag:'why', txt:'The $2.5B FTC settlement was recognized here — the main reason the 3Q25 operating margin dipped. A one-off, not a run-rate.'},
-    {q:'FY 2025', who:'Management', tag:'why', txt:'The full-year jump to $4.6B also carried Italy tax matters and physical-store impairments — none recurring.'},
-    {q:'Forward', who:'Management', tag:'fwd', txt:'Reverts toward a small run-rate once the 2025 charges lap; no recurring guidance is given for this line.'}
+    {q:'FY 2025', who:'Amazon 8-K / FY2025 10-K', tag:'why', txt:'FY2025 carried the $2.5B FTC settlement (recognized Q3 2025), the resolution of Italy stores-business tax disputes, and physical-store & other asset impairments — the reason this line jumped to $4.6B.'}
   ]
 };
 var SEG_CALLS={
@@ -3447,7 +3423,7 @@ var SEG_CALLS={
     {q:'Q2 2026', who:'Andy Jassy, CEO', tag:'fwd', txt:'"We have clear line of sight to strong financial returns," and AWS can become "a trillion-dollar annual revenue business." 2027 capacity is "largely reserved," some 2028 "already spoken for."'}
   ],
   us:[
-    {q:'Q4 2025', who:'Andy Jassy, CEO', tag:'why', txt:'North America margin 9% in the peak quarter; Amazon the lowest-priced US retailer for the 9th straight year (~14% below other majors), everyday essentials now ~1 in 3 units.'},
+    {q:'Q4 2025', who:'Amazon Q4 2025 (8-K / call)', tag:'why', txt:'North America margin 9% in the peak quarter; Amazon the lowest-priced US retailer for the 9th straight year (~14% below other majors), everyday essentials now ~1 in 3 units.'},
     {q:'Q4 2025', who:'Andy Jassy, CEO', tag:'why', txt:'Rufus reached 300M customers in 2025, with users "60% more likely to complete a purchase" — the discovery/ad flywheel on the retail surface.'},
     {q:'Q1 2026', who:'Brian Olsavsky, CFO', tag:'why', txt:'The efficiency proof: paid units grew ~15% while fulfillment expense grew ~9% (FX-neutral); robotics is in "every 2026 US large-format launch."'},
     {q:'Q2 2026', who:'Management (8-K)', tag:'why', txt:'Advertising +26% to $19.8B (sponsored products the driver); same-day perishables customers +50% since January, same-day orders carrying ~3x the units; ~$600M of tariff-related refunds landed in the quarter.'},

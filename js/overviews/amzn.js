@@ -2968,6 +2968,85 @@ function aCollap(title, inner, open){
     '<span class="rs-collap-ic">'+(open?'▾':'▸')+'</span> '+esc(title)+'</button>'+
     '<div class="rs-collap-b"'+(open?'':' hidden')+' style="padding-top:10px">'+inner+'</div></div>';
 }
+// ═══ SAB-parity chart scaffold (docs/AMZN_BOTTOM_LINE §9b) ═════════════════════════════════════════
+// Same classes/CSS as results.js so Bottom-Line charts read as ONE product: row1 title + rs-msel metric
+// dropdown; row2 rs-views mode pills (left) · rs-quick Range presets (right) — ABOVE the chart; ave-leg
+// (Actual/Summit/Consensus, click-to-hide); ov-chart-card; y-axis on the RIGHT; sg-slider two-handle
+// PERIOD window with rs-ticks dots + drag-to-zoom on the X. A chart registers a derive(state) fn that
+// returns {labels,lastAct,series:[{k,label,color,data,fwdDash}],yFmt}; controls re-render via it.
+var ASTD_ACT='rgba(30,39,51,0.92)', ASTD_SUMMIT='rgba(37,99,235,0.85)', ASTD_CONS='rgba(124,134,148,0.85)';
+var _aStd={}, _aStdDerive={};
+function aStdScaffold(cfg){
+  var id=cfg.id;
+  var st=_aStd[id]||(_aStd[id]={win:null,hidden:{},sel:null,modes:{}});
+  if(cfg.metricSel && st.sel==null){ var on=cfg.metricSel.filter(function(o){return o.on;})[0]||cfg.metricSel[0]; st.sel=on.v; }
+  (cfg.modes||[]).forEach(function(g){ if(st.modes[g.cls]==null){ var d=g.opts.filter(function(o){return o.on;})[0]||g.opts[0]; st.modes[g.cls]=d.v; } });
+  var sel=cfg.metricSel? '<select class="rs-msel" data-astdsel="'+id+'">'+cfg.metricSel.map(function(o){ return '<option value="'+esc(o.v)+'"'+(o.v===st.sel?' selected':'')+'>'+esc(o.label)+'</option>'; }).join('')+'</select>':'';
+  var top='<div class="rs-block-top"><div class="rs-block-h">'+esc(cfg.title)+'</div>'+sel+'</div>';
+  var modes=(cfg.modes||[]).map(function(g){ return '<div class="rs-views">'+g.opts.map(function(o){ return '<button type="button" class="rs-view'+(o.v===st.modes[g.cls]?' active':'')+'" data-astdmode="'+id+'|'+g.cls+'|'+o.v+'">'+esc(o.label)+'</button>'; }).join('')+'</div>'; }).join('');
+  var presets=cfg.presets||[['all','All'],['rep','Reported'],['fwd','Forward']];
+  var quick='<div class="rs-quick"><span class="rs-quick-l">Range</span>'+presets.map(function(p){ return '<button type="button" class="rs-preset" data-astdrange="'+id+'|'+p[0]+'">'+esc(p[1])+'</button>'; }).join('')+'</div>';
+  var row2='<div class="rs-block-modes"><div class="rs-modes">'+modes+'</div>'+quick+'</div>';
+  var leg='<div class="ave-leg" data-astdleg="'+id+'"></div>';
+  var chart='<div class="ov-chart-card"><div class="ov-chart-wrap ovs-tall" style="min-height:'+(cfg.height||320)+'px"><canvas id="astd-'+id+'"></canvas></div></div>';
+  var slider='<div class="sg-controls"><div class="sg-slider"><div class="sg-track"><div class="sg-fill" data-astdfill="'+id+'"></div></div><div class="rs-ticks" data-astdticks="'+id+'"></div>'+
+    '<input type="range" class="astd-r0" min="0" max="1" value="0" step="1" aria-label="Start period">'+
+    '<input type="range" class="astd-r1" min="0" max="1" value="1" step="1" aria-label="End period"></div>'+
+    '<div class="sg-ends"><span data-astdend0="'+id+'"></span><span data-astdend1="'+id+'"></span></div></div>';
+  return '<div class="ov-sec" data-astdblock="'+id+'">'+top+row2+leg+chart+slider+'</div>';
+}
+function aStdBlk(id){ return document.querySelector('[data-astdblock="'+id+'"]'); }
+function aStdRender(id, derive){
+  if(derive) _aStdDerive[id]=derive; derive=_aStdDerive[id]; if(!derive) return;
+  var cv=aChartReady('astd-'+id); if(!cv) return;
+  var st=_aStd[id]||(_aStd[id]={win:null,hidden:{},sel:null,modes:{}});
+  var spec=derive(st); if(!spec) return;
+  var n=spec.labels.length; if(!st.win || st.win[1]>n-1 || st.win[0]>st.win[1]) st.win=[0,n-1];
+  var lo=st.win[0], hi=st.win[1], la=spec.lastAct==null?n-1:spec.lastAct;
+  var labels=spec.labels.slice(lo,hi+1), yFmt=spec.yFmt||function(v){return v;};
+  aDestroy('astd-'+id);
+  var ds=spec.series.filter(function(s){ return !st.hidden[s.k]; }).map(function(s){
+    return { label:s.label, data:s.data.slice(lo,hi+1), borderColor:s.color, backgroundColor:s.color, borderWidth:2.3, pointRadius:2, tension:0.2, spanGaps:false,
+      borderDash:s.dash?[5,4]:undefined,
+      segment: s.fwdDash?{ borderDash:function(ctx){ return (lo+ctx.p1DataIndex)>la?[5,4]:undefined; } }:undefined }; });
+  _aCharts['astd-'+id]=new Chart(cv.getContext('2d'),{ type:'line', data:{ labels:labels, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':yFmt(c.parsed.y))+((lo+c.dataIndex)>la?' (E)':''); } } } },
+      scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:11 } } }, y:{ position:'right', grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:11 }, callback:function(v){ return yFmt(v); } } } } } });
+  var blk=aStdBlk(id), leg=blk&&blk.querySelector('[data-astdleg="'+id+'"]');
+  if(leg) leg.innerHTML=spec.series.map(function(s){ return '<button type="button" class="rs-leg'+(st.hidden[s.k]?' off':'')+'" data-astdlegk="'+id+'|'+s.k+'"><span class="ave-leg-act" style="background:'+s.color+'"></span>'+esc(s.label)+'</button>'; }).join('');
+  aStdSyncSlider(id, spec.labels, la);
+  aStdWire(id);
+  // Re-attach the X-window brush to the freshly-built chart each render (onmousedown assignment, not
+  // addEventListener, so it replaces rather than stacks). onX windows the PERIOD; double-click resets.
+  var cvv=document.getElementById('astd-'+id), chh=_aCharts['astd-'+id];
+  if(cvv&&chh) rsAttachBrush(cvv, chh, function(i1,i2){ var w=_aStd[id].win, lo=w[0]; _aStd[id].win=[lo+i1, lo+i2]; aStdRender(id); }, null, function(){ _aStd[id].win=null; aStdRender(id); });
+}
+function aStdSyncSlider(id, labels, la){
+  var blk=aStdBlk(id); if(!blk) return; var n=labels.length, w=_aStd[id].win;
+  var r0=blk.querySelector('.astd-r0'), r1=blk.querySelector('.astd-r1'), fill=blk.querySelector('[data-astdfill]'), ticks=blk.querySelector('[data-astdticks]'), e0=blk.querySelector('[data-astdend0]'), e1=blk.querySelector('[data-astdend1]');
+  if(r0){ r0.max=n-1; r0.value=w[0]; } if(r1){ r1.max=n-1; r1.value=w[1]; }
+  if(fill){ fill.style.left=(w[0]/(n-1)*100)+'%'; fill.style.width=((w[1]-w[0])/(n-1)*100)+'%'; }
+  if(e0) e0.textContent=labels[w[0]]||''; if(e1) e1.textContent=labels[w[1]]||'';
+  if(ticks){ var h=''; for(var i=0;i<n;i++){ h+='<span class="rs-tick'+(i>=w[0]&&i<=w[1]?' on':'')+(i>la?' est':'')+'" style="left:'+(i/(n-1)*100)+'%"></span>'; } ticks.innerHTML=h; }
+}
+function aStdPresetWin(code, n, la){ switch(code){ case 'rep': return [0,la]; case 'fwd': return [Math.max(0,la),n-1];
+  case 'l3': return [Math.max(0,la-2),la]; case 'l5': return [Math.max(0,la-4),la];
+  case 'l4': return [Math.max(0,la-3),la]; case 'l8': return [Math.max(0,la-7),la]; default: return [0,n-1]; } }
+function aStdWire(id){
+  var blk=aStdBlk(id); if(!blk || blk._astdWired) return; blk._astdWired=true; var st=_aStd[id];
+  blk.addEventListener('click', function(e){
+    var mode=e.target.closest&&e.target.closest('[data-astdmode]'); if(mode){ var p=mode.getAttribute('data-astdmode').split('|'); st.modes[p[1]]=p[2];
+      mode.parentNode.querySelectorAll('.rs-view').forEach(function(x){ x.classList.toggle('active',x===mode); }); aStdRender(id); return; }
+    var lg=e.target.closest&&e.target.closest('[data-astdlegk]'); if(lg){ var k=lg.getAttribute('data-astdlegk').split('|')[1]; st.hidden[k]=!st.hidden[k]; aStdRender(id); return; }
+    var rp=e.target.closest&&e.target.closest('[data-astdrange]'); if(rp){ var spec=_aStdDerive[id]&&_aStdDerive[id](st); var n=spec?spec.labels.length:2, la=spec&&spec.lastAct!=null?spec.lastAct:n-1;
+      st.win=aStdPresetWin(rp.getAttribute('data-astdrange').split('|')[1], n, la); aStdRender(id); return; }
+  });
+  var sel=blk.querySelector('[data-astdsel]'); if(sel) sel.onchange=function(){ st.sel=sel.value; aStdRender(id); };
+  var r0=blk.querySelector('.astd-r0'), r1=blk.querySelector('.astd-r1');
+  function onSlide(){ var a=+r0.value, b=+r1.value; st.win=[Math.min(a,b),Math.max(a,b)]; aStdRender(id); }
+  if(r0) r0.oninput=onSlide; if(r1) r1.oninput=onSlide;
+}
 function aZoom(id){ var cv=document.getElementById(id), ch=_aCharts[id]; if(!cv||!ch) return;
   if(ch.options&&ch.options.scales&&ch.options.scales.y){   // rule 1
     rsAttachBrush(cv, ch, null,
@@ -3338,38 +3417,37 @@ function aGeneralPicker(){
     '</div></div>';
 }
 var MARG_MET=[{k:'gross',c:GRAY},{k:'operating',c:BRAND2},{k:'ebitda',c:BRAND},{k:'net',c:GREEN},{k:'fcf',c:SQUID}];
+// Summit annual aggregation from amznResults quarterly (1Q23..2Q28 → FY23..FY28E). Sums each fiscal
+// year's quarters; FY28 is partial (2 quarters published) so it returns null there to avoid a false low.
+var ASUM_FYQ=[[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15],[16,17,18,19],[20,21]];
+function aSumOpAnnual(metricKey){
+  var q=amznResults.views&&amznResults.views.q&&amznResults.views.q.metrics, m=q&&q[metricKey];
+  if(!m||!m.summit) return null;
+  return ASUM_FYQ.map(function(idxs){ if(idxs.length<4) return null; var s=0,ok=true;
+    idxs.forEach(function(j){ var v=m.summit[j]; if(v==null) ok=false; else s+=v; }); return ok?s:null; });
+}
 function aMarginsBody(){
-  return '<div class="ov-sec"><div class="ov-sec-h">Profitability &amp; margins — all of them</div>'+
-    '<div class="mch-ctl">'+   /* §0.4 row 2: treatment (left) · note (right) */
-      '<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="acx-tog marg-gran"><button type="button" data-margg="y" class="active">Annual</button><button type="button" data-margg="q">Quarterly</button></span>'+
-      '<span class="acx-tog marg-mode"><button type="button" data-margm="pct" class="active">Margin %</button><button type="button" data-margm="amt">$B (nominal)</button></span></span>'+
-      '<span style="font-size:11px;color:var(--mu)">solid = reported · dashed = BBG consensus · click a legend item to hide</span>'+
-    '</div>'+
-    '<div style="height:340px"><canvas id="aMargins"></canvas></div></div>';
+  return aStdScaffold({ id:'margins', title:'Profitability & margins', height:340,
+    metricSel:[{v:'operating',label:'Operating margin',on:true},{v:'ebitda',label:'EBITDA margin'},{v:'net',label:'Net margin'},{v:'fcf',label:'FCF margin'},{v:'gross',label:'Gross margin'}],
+    modes:[{cls:'mode',opts:[{v:'pct',label:'Margin %',on:true},{v:'amt',label:'$B (nominal)'}]}],
+    presets:[['all','All'],['rep','Reported'],['fwd','Forward'],['l3','Last 3Y']] });
 }
 function aBuildMargins(){
-  var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(!pane) return;
-  var gm=pane.querySelector('.marg-mode .active'), mode=gm?gm.getAttribute('data-margm'):'pct';
-  var gg=pane.querySelector('.marg-gran .active'), gran=gg?gg.getAttribute('data-margg'):'y';
-  var cv=aChartReady('aMargins'); if(!cv) return; aDestroy('aMargins');
-  var rev=amznBBG.is.rev; if(!rev) return;
-  var labels, rv, nAct;
-  if(gran==='q'){ labels=amznBBG.qtrs.slice(); rv=rev.q; nAct=5; }   // fq0=2Q26 at idx 4 → 5 actual quarters
-  else { labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E']; rv=rev.a.concat(rev.f); nAct=3; }
-  var ds=MARG_MET.map(function(m){                                   // one line per margin — ALL of them, at once
-    var num=amznBBG.is[MARG_NUM[m.k]]; var na=num?(gran==='q'?num.q:num.a.concat(num.f)):null;
-    var data=labels.map(function(_,i){ if(!na) return null; var n=na[i], d=rv[i]; if(n==null||d==null||!d) return null; return mode==='pct'?Math.round(n/d*1000)/10:Math.round(n/100)/10; });
-    return { label:MARG_LAB[m.k], data:data, borderColor:m.c, backgroundColor:m.c, borderWidth:2.4, pointRadius:2, tension:0.2, spanGaps:false,
-      segment:{ borderDash:function(ctx){ return ctx.p1DataIndex>=nAct?[5,4]:undefined; } } };   // forward (consensus) dashed
+  aStdRender('margins', function(st){
+    var MET={operating:'oi',ebitda:'ebitda',net:'netIncome',fcf:'fcf',gross:'grossProfit'};
+    var num=amznBBG.is[MET[st.sel]], rev=amznBBG.is.rev; if(!num||!rev) return null;
+    var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], la=2, pct=st.modes.mode!=='amt';
+    var na=num.a.concat(num.f), rv=rev.a.concat(rev.f);
+    function val(nn,dd){ if(nn==null) return null; return pct?(dd?Math.round(nn/dd*1000)/10:null):Math.round(nn/100)/10; }
+    var actual=labels.map(function(_,i){ return i<=la?val(na[i],rv[i]):null; });
+    var cons=labels.map(function(_,i){ return i>=la?val(na[i],rv[i]):null; });   // anchor at FY25 for a continuous line
+    var series=[{k:'act',label:'Actual',color:ASTD_ACT,data:actual},
+                {k:'cons',label:'Consensus (BBG)',color:ASTD_CONS,data:cons,dash:true}];
+    if(st.sel==='operating'){ var so=aSumOpAnnual('opinc'), sr=aSumOpAnnual('rev');
+      if(so&&sr){ var sm=labels.map(function(_,i){ return (so[i]==null||sr[i]==null)?null:val(so[i],sr[i]); });
+        series.splice(1,0,{k:'summit',label:'Summit model',color:ASTD_SUMMIT,data:sm}); } }
+    return { labels:labels, lastAct:la, series:series, yFmt:function(x){ return pct?x+'%':'$'+(x==null?'':x.toFixed(1))+'B'; } };
   });
-  _aCharts['aMargins']=new Chart(cv.getContext('2d'),{ type:'line', data:{ labels:labels, datasets:ds },
-    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
-        tooltip:{ callbacks:{ title:function(it){ return it[0].label; }, label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':(mode==='pct'?c.parsed.y+'%':'$'+c.parsed.y.toFixed(1)+'B'))+(c.dataIndex>=nAct?' (E)':''); } } } },
-      scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return mode==='pct'?v+'%':'$'+v+'B'; } } } } } });
-  aZoom('aMargins');
-  if(pane && !pane._margWired){ pane._margWired=true;
-    pane.querySelectorAll('.marg-mode button, .marg-gran button').forEach(function(b){ b.onclick=function(){ var grp=b.parentNode; grp.querySelectorAll('button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildMargins(); }; }); }
 }
 // Expense-line full dives — opened from an Expenses card via data-detail="exp:<key>". VISUAL, not prose.
 var EW_CSS='<style>'+

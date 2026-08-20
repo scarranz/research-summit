@@ -2983,7 +2983,7 @@ function aStdScaffold(cfg){
   (cfg.modes||[]).forEach(function(g){ if(st.modes[g.cls]==null){ var d=g.opts.filter(function(o){return o.on;})[0]||g.opts[0]; st.modes[g.cls]=d.v; } });
   var sel=cfg.metricSel? '<select class="rs-msel" data-astdsel="'+id+'">'+cfg.metricSel.map(function(o){ return '<option value="'+esc(o.v)+'"'+(o.v===st.sel?' selected':'')+'>'+esc(o.label)+'</option>'; }).join('')+'</select>':'';
   var top='<div class="rs-block-top"><div class="rs-block-h">'+esc(cfg.title)+'</div>'+sel+'</div>';
-  var modes=(cfg.modes||[]).map(function(g){ return '<div class="rs-views">'+g.opts.map(function(o){ return '<button type="button" class="rs-view'+(o.v===st.modes[g.cls]?' active':'')+'" data-astdmode="'+id+'|'+g.cls+'|'+o.v+'">'+esc(o.label)+'</button>'; }).join('')+'</div>'; }).join('');
+  var modes=(cfg.modes||[]).map(function(g){ return '<div style="display:inline-flex;align-items:center;gap:6px;margin:0 10px 6px 0">'+(g.label?'<span class="rs-quick-l">'+esc(g.label)+'</span>':'')+'<div class="rs-views">'+g.opts.map(function(o){ return '<button type="button" class="rs-view'+(o.v===st.modes[g.cls]?' active':'')+'" data-astdmode="'+id+'|'+g.cls+'|'+o.v+'">'+esc(o.label)+'</button>'; }).join('')+'</div></div>'; }).join('');
   var presets=cfg.presets||[['all','All'],['rep','Reported'],['fwd','Forward']];
   var quick='<div class="rs-quick"><span class="rs-quick-l">Range</span>'+presets.map(function(p){ return '<button type="button" class="rs-preset" data-astdrange="'+id+'|'+p[0]+'">'+esc(p[1])+'</button>'; }).join('')+'</div>';
   var row2='<div class="rs-block-modes"><div class="rs-modes">'+modes+'</div>'+quick+'</div>';
@@ -3016,7 +3016,7 @@ function aStdRender(id, derive){
   _aCharts['astd-'+id]=new Chart(cv.getContext('2d'),{ type:isBar?'bar':'line', data:{ labels:labels, datasets:ds },
     options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
       plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':yFmt(c.parsed.y))+((lo+c.dataIndex)>la?' (E)':''); } } } },
-      scales:{ x:{ stacked:isBar&&spec.stacked, grid:{ display:false }, ticks:{ font:{ size:11 } } }, y:{ stacked:isBar&&spec.stacked, position:'right', grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:11 }, callback:function(v){ return yFmt(v); } } } } } });
+      scales:{ x:{ stacked:isBar&&spec.stacked, grid:{ display:false }, ticks:{ font:{ size:11 } } }, y:{ stacked:isBar&&spec.stacked, position:'right', max:spec.yMax, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:11 }, callback:function(v){ return yFmt(v); } } } } } });
   var blk=aStdBlk(id), leg=blk&&blk.querySelector('[data-astdleg="'+id+'"]');
   if(leg) leg.innerHTML=spec.series.map(function(s){ return '<button type="button" class="rs-leg'+(st.hidden[s.k]?' off':'')+'" data-astdlegk="'+id+'|'+s.k+'"><span class="ave-leg-act" style="background:'+s.color+'"></span>'+esc(s.label)+'</button>'; }).join('');
   // Collapsible data table (rule 3) — windowed + honours hidden series, like San's charts.
@@ -4027,13 +4027,12 @@ function segmentsBody(){
     }).join('')+'</div></div>';
   h+=aSegPicker();
   h+='<div class="seg-gsec" data-sgsec="oimargin">'+aSegOiBody()+'</div>';
-  h+='<div class="seg-gsec" data-sgsec="mix" hidden>'+aSegMixBody()+'</div>';
   h+='<div class="seg-gsec" data-sgsec="bridge" hidden>'+aSegBridgeBody()+'</div>';
   h+=aCollap('Segment deep dives — the full read per segment (drivers, unit economics, cost structure, calls)', segExp, false);
   return h;
 }
 function aSegPicker(){
-  var opts=[['oimargin','Operating income & margin by segment'],['mix','Where the revenue is vs where the profit is'],['bridge','The segment bridge — margin change & forward walk']];
+  var opts=[['oimargin','Segments — revenue & profit'],['bridge','The segment bridge — forward walk']];
   return '<div class="ov-sec" style="padding-bottom:10px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
     '<span style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)">Chart</span>'+
     '<select class="seg-chart" style="font-size:13px;font-weight:700;color:var(--navy);border:1px solid var(--bdr);border-radius:8px;padding:6px 10px;background:#fff">'+
@@ -4089,48 +4088,46 @@ function aBuildSegMix(){
 var SEGOI_SEG=[{v:'aws',label:'AWS',mk:'awsopinc',rmk:'aws',bk:'aws'},{v:'na',label:'North America',mk:'naopinc',rmk:'usrev',bk:'na'},{v:'intl',label:'International',mk:'intopinc',rmk:'intrev',bk:'intl'},{v:'cons',label:'Consolidated',mk:'opinc',rmk:'rev',bk:null}];
 function aSegSummitAnnual(mk){ var q=amznResults.views&&amznResults.views.q&&amznResults.views.q.metrics, m=q&&q[mk];
   if(!m||!m.summit) return null; return ASUM_FYQ.map(function(ix){ if(ix.length<4) return null; var s=0,ok=true; ix.forEach(function(j){ var v=m.summit[j]; if(v==null) ok=false; else s+=v; }); return ok?s:null; }); }
+// One SAB-format chart for the segments (replaces the old op/margin + common-size split). Series = the
+// three segments; pick the metric (Revenue / Operating income / EBITDA) and how to Show it — $B (stacked
+// or side-by-side bars), Share (100%-stacked), or Growth (YoY). Both y-axes on the right; forward faded.
+var SEGENG_SG=[{k:'na',lab:'North America',c:BRAND},{k:'intl',lab:'International',c:BRAND2},{k:'aws',lab:'AWS',c:SQUID}];
+function aSegSeries(k, metric, gran){ var s=amznBBG.seg[k]; if(!s) return null;
+  function arr(f){ var o=s[f]; return o?(gran==='q'?o.q:o.a.concat(o.f)):null; }
+  if(metric==='rev') return arr('rev');
+  var oi=arr('oi'), da=arr('da');
+  if(metric==='ebitda') return oi.map(function(v,i){ return (v==null||!da||da[i]==null)?null:v+da[i]; });
+  return oi; }
 function aSegOiBody(){
-  return aStdScaffold({ id:'segoi', title:'Operating income & margin by segment', height:320,
-    metricSel:SEGOI_SEG.map(function(s){ return {v:s.v,label:s.label,on:s.v==='aws'}; }),
-    modes:[{cls:'metric',opts:[{v:'operating',label:'Operating',on:true},{v:'ebitda',label:'EBITDA'}]},
-           {cls:'mode',opts:[{v:'amt',label:'$B',on:true},{v:'margin',label:'Margin %'}]},
-           {cls:'gran',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]}],
+  return aStdScaffold({ id:'segoi', title:'Segments — revenue &amp; profit', height:340,
+    metricSel:[{v:'oi',label:'Operating income',on:true},{v:'rev',label:'Revenue'},{v:'ebitda',label:'EBITDA'}],
+    modes:[{cls:'show',label:'Show',opts:[{v:'amt',label:'$B',on:true},{v:'share',label:'Share'},{v:'growth',label:'Growth (YoY)'}]},
+           {cls:'layout',label:'Layout',opts:[{v:'stack',label:'Stacked',on:true},{v:'side',label:'Side by side'}]},
+           {cls:'gran',label:'Period',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]}],
     presets:[['all','All'],['rep','Reported'],['fwd','Forward']] });
 }
 function aBuildSegOi(){
   aStdRender('segoi', function(st){
-    var seg=SEGOI_SEG.filter(function(s){ return s.v===st.sel; })[0]||SEGOI_SEG[0];
-    var metric=st.modes.metric||'operating', mode=st.modes.mode||'amt', gran=st.modes.gran||'y', pct=mode==='margin';
-    function fmt(x){ return pct?x+'%':'$'+(x==null?'':x.toFixed(1))+'B'; }
-    function mval(n,d){ if(n==null) return null; return pct?(d?Math.round(n/d*1000)/10:null):Math.round(n/100)/10; }
-    if(gran==='q'){   // quarterly = amznResults native, operating only (Actual / Summit / Consensus, 22 quarters)
-      var Q=amznResults.views.q.metrics, ql=Q[seg.mk].periods.slice(), qla=aLastActIdx(Q[seg.mk].act), oi=Q[seg.mk], rv=Q[seg.rmk];
-      function qser(src){ return ql.map(function(_,i){ return mval(oi[src]?oi[src][i]:null, rv[src]?rv[src][i]:null); }); }
-      return { labels:ql, lastAct:qla, yFmt:fmt, type:'bar', stacked:false, series:[
-        {k:'act',label:'Actual',color:ASTD_ACT,data:qser('act')},
-        {k:'summit',label:'Summit',color:ASTD_SUMMIT,data:qser('summit')},
-        {k:'cons',label:'Consensus',color:ASTD_CONS,data:qser('cons')} ] };
-    }
-    var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], la=2;
-    function bbg(field){ if(seg.bk){ var s=amznBBG.seg[seg.bk][field]; return s?s.a.concat(s.f):null; } var s2=amznBBG.is[field]; return s2?s2.a.concat(s2.f):null; }
-    var oiA=bbg('oi'), daA=bbg('da'), revA=bbg('rev');
-    function incA(i){ if(metric!=='ebitda') return oiA[i];
-      if(!seg.bk){ var eb=bbg('ebitda'); return eb?eb[i]:null; }   // consolidated EBITDA from is.ebitda
-      return (oiA[i]==null||!daA||daA[i]==null)?null:oiA[i]+daA[i]; }
-    var actual=labels.map(function(_,i){ return i<=la?mval(incA(i),revA[i]):null; });
-    var cons=labels.map(function(_,i){ return i>=la?mval(incA(i),revA[i]):null; });
-    var series=[{k:'act',label:'Actual',color:ASTD_ACT,data:actual}];
-    if(metric==='operating'){ var so=aSegSummitAnnual(seg.mk), sr=aSegSummitAnnual(seg.rmk);
-      if(so&&sr) series.push({k:'summit',label:'Summit',color:ASTD_SUMMIT,data:labels.map(function(_,i){ return so[i]==null?null:mval(so[i],sr[i]); })}); }
-    series.push({k:'cons',label:'Consensus',color:ASTD_CONS,data:cons});
-    return { labels:labels, lastAct:la, yFmt:fmt, type:'bar', stacked:false, series:series };
+    var metric=st.sel||'oi', show=st.modes.show||'amt', layout=st.modes.layout||'stack', gran=st.modes.gran||'y';
+    var labels=gran==='q'?amznBBG.qtrs.slice():['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
+    var la=gran==='q'?((amznBBG.seg.aws.oi.qA?amznBBG.seg.aws.oi.qA.length:5)-1):2, step=gran==='q'?4:1;
+    var raw=SEGENG_SG.map(function(seg){ return { seg:seg, v:aSegSeries(seg.k,metric,gran) }; });
+    var totals=labels.map(function(_,i){ return raw.reduce(function(a,r){ return a+((r.v&&r.v[i]!=null)?r.v[i]:0); },0); });
+    var series=raw.map(function(r){ return { k:r.seg.k, label:r.seg.lab, color:r.seg.c,
+      data:labels.map(function(_,i){ var v=r.v?r.v[i]:null; if(v==null) return null;
+        if(show==='share') return totals[i]?Math.round(v/totals[i]*1000)/10:null;
+        if(show==='growth'){ var pv=r.v?r.v[i-step]:null; return (pv==null||!pv)?null:Math.round((v-pv)/Math.abs(pv)*1000)/10; }
+        return Math.round(v/100)/10; }) }; });
+    var stacked=show==='share'||(show==='amt'&&layout==='stack');
+    var yFmt=show==='amt'?function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }:function(x){ return x+'%'; };
+    return { labels:labels, lastAct:la, yFmt:yFmt, type:'bar', stacked:stacked, yMax:show==='share'?100:undefined, series:series };
   });
 }
 function aBuildSegments(){
   var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]');
   aBuildSegOi();
   if(pane && !pane._segWired){ pane._segWired=true;
-    var SEG_BUILD={ oimargin:aBuildSegOi, mix:aBuildSegMix, bridge:aBuildSegBridge };
+    var SEG_BUILD={ oimargin:aBuildSegOi, bridge:aBuildSegBridge };
     var ssel=pane.querySelector('.seg-chart');
     if(ssel){ ssel.onchange=function(){ var v=ssel.value;
       pane.querySelectorAll('.seg-gsec').forEach(function(s){ s.hidden=(s.getAttribute('data-sgsec')!==v); });
@@ -4142,7 +4139,6 @@ function aBuildSegments(){
     stabs.forEach(function(b){ b.onclick=function(){ var key=b.getAttribute('data-segtab');
       stabs.forEach(function(x){ x.classList.toggle('active',x===b); });
       pane.querySelectorAll('.segx-panel').forEach(function(p){ p.hidden=(p.getAttribute('data-segpanel')!==key); }); }; }); }
-  aBuildSegMix();
   aBuildSegBridge();
 }
 // ═══ Bottom Line ▸ Capex & Depreciation — seeds + engine (restored) ═══

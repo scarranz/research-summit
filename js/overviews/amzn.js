@@ -4003,25 +4003,33 @@ function segMixVal(k,mk,g,i){ var sg=amznBBG.seg[k]; if(!sg) return null;
 // Single common-size-over-time view (no toggles): for each year, three 100%-stacked bars — revenue,
 // EBITDA and operating-income mix by segment, side by side — so the divergence (AWS small in revenue,
 // large in profit) reads across the whole FY24→FY28E series at once.
+// ONE metric at a time (toggle), a 100%-stacked bar of the 3 segments across time — readable: each bar
+// sums to 100%, and switching Revenue→EBITDA→Operating income shows AWS grow from a small revenue slice
+// to the bulk of profit. (The old version stacked all three metrics at once and was unreadable.)
 function aSegMixBody(){
   return '<div class="ov-sec"><div class="ov-sec-h">Where the revenue is vs where the profit is — common size over time</div>'+
-    '<div style="font-size:11px;color:var(--mu);margin:2px 0 6px">each year, left→right: revenue · EBITDA · operating-income mix (each stacked to 100% by segment)</div>'+
-    '<div style="height:340px"><canvas id="aSegMix"></canvas></div></div>';
+    '<div class="mch-ctl"><span class="acx-tog smix-met"><button type="button" data-smixm="rev" class="active">Share of revenue</button><button type="button" data-smixm="ebitda">Share of EBITDA</button><button type="button" data-smixm="oi">Share of operating income</button></span><span></span></div>'+
+    '<div style="font-size:11px;color:var(--mu);margin:2px 0 6px">each bar sums to 100% by segment — switch the metric to see how AWS goes from a small slice of revenue to the bulk of profit</div>'+
+    '<div style="height:320px"><canvas id="aSegMix"></canvas></div></div>';
 }
 function aBuildSegMix(){
+  var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]'); if(!pane) return;
+  var mt=pane.querySelector('.smix-met .active'), metric=mt?mt.getAttribute('data-smixm'):'rev';
   var cv=aChartReady('aSegMix'); if(!cv) return; aDestroy('aSegMix');
-  var labels=A_SMIX_PTS.map(function(p){ return p.lab; }), ds=[];
-  SMIX_MET.forEach(function(m){ SMIX_SG.forEach(function(s){
-    var data=A_SMIX_PTS.map(function(p){ var tot=SMIX_SG.reduce(function(a,x){ return a+(segMixVal(x.k,m.k,p.g,p.i)||0); },0), v=segMixVal(s.k,m.k,p.g,p.i);
-      return (tot&&v!=null)?Math.round(v/tot*1000)/10:null; });
-    ds.push({ label:s.lab+(m.k==='rev'?'':' — '+m.lab), data:data, backgroundColor:s.c, borderColor:'#fff', borderWidth:1, maxBarThickness:22, stack:m.stack }); }); });
-  var SNAME={rev:'revenue', eb:'EBITDA', oi:'operating income'};
+  var labels=A_SMIX_PTS.map(function(p){ return p.lab; });
+  var mlab={rev:'revenue',ebitda:'EBITDA',oi:'operating income'}[metric];
+  var ds=SMIX_SG.map(function(s){ return { label:s.lab, data:A_SMIX_PTS.map(function(p){
+      var tot=SMIX_SG.reduce(function(a,x){ return a+(segMixVal(x.k,metric,p.g,p.i)||0); },0), v=segMixVal(s.k,metric,p.g,p.i);
+      return (tot&&v!=null)?Math.round(v/tot*1000)/10:null; }),
+    backgroundColor:s.c, borderColor:'#fff', borderWidth:1, maxBarThickness:40, stack:'m' }; });
   _aCharts['aSegMix']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:labels, datasets:ds },
     options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 }, filter:function(it){ return it.text.indexOf('—')<0; } } },
-        tooltip:{ callbacks:{ label:function(c){ return c.dataset.label.split(' — ')[0]+' — '+SNAME[c.dataset.stack]+': '+(c.parsed.y==null?'—':c.parsed.y+'%'); } } } },
-      scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, max:100, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } });
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
+        tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':c.parsed.y+'% of '+mlab); } } } },
+      scales:{ x:{ stacked:true, grid:{ display:false }, ticks:{ font:{ size:11 } } }, y:{ position:'right', stacked:true, max:100, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:11 }, callback:function(v){ return v+'%'; } } } } } });
   aZoom('aSegMix');
+  if(pane && !pane._smixmWired){ pane._smixmWired=true;
+    pane.querySelectorAll('.smix-met button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.smix-met button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegMix(); }; }); }
 }
 // Operating income & margin by segment, on the SAB engine: metric (Operating / EBITDA) → mode
 // (Margin % / $B / Growth %) → Annual/Quarterly. Series = the 3 segments + Consolidated (Actual;

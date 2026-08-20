@@ -3462,6 +3462,7 @@ var SEG_CALLS={
 };
 function ewBase(c){
   var h='<div class="ew-kpis">'+c.kpis.map(function(k){ return '<div class="ew-tile"><div class="ew-tv">'+k[0]+'</div><div class="ew-tl">'+k[1]+'</div></div>'; }).join('')+'</div>';
+  if(c.def){ h+='<div class="ew-h">How the 10-K defines it</div><div class="ew-q ew-def">“'+c.def+'”<span class="ew-att">'+EW_SRC+'</span></div>'; }
   h+='<div class="ew-h">What sits inside this line</div>'+ewBoxes(c.comp);
   if(c.compNote) h+='<div class="ew-note">'+c.compNote+'</div>';
   h+='<div class="ew-h">Share of revenue over time</div>'+ewSpark(c.traj,7);
@@ -3549,7 +3550,18 @@ var EW_UNIT={
     '</div>'+
     '<div class="ew-note">The cleanest operating-leverage line: corporate cost per revenue dollar has fallen roughly a third — from <b>$23 to $16 per $1,000 of revenue</b> — as ~27k roles (2022-23) plus ~14k more (2025-26) came out and revenue kept compounding against a largely fixed base.</div>'
 };
-EW_LINES.forEach(function(l){ if(EW_CALLS[l.k]) l.calls=EW_CALLS[l.k]; if(EW_UNIT[l.k]) l.unit=EW_UNIT[l.k]; });
+// Verbatim line-item definitions — the EXACT wording from Amazon's FY2025 Form 10-K, MD&A ▸ Operating
+// Expenses (SEC EDGAR accession 0001018724-26-000004, amzn-20251231.htm). Quoted, not paraphrased.
+var EW_SRC='— Amazon FY2025 Form 10-K · MD&amp;A, Operating Expenses (SEC EDGAR)';
+var EW_DEF={
+  costOfSales:'Cost of sales primarily consists of the purchase price of consumer products, inbound and outbound shipping costs, including costs related to sortation and delivery centers and where we are the transportation service provider, and digital media content costs where we record revenue gross, including video and music.',
+  fulfillment:'Fulfillment costs primarily consist of those costs incurred in operating and staffing our North America and International segments’ fulfillment centers, physical stores, and customer service centers, including facilities and equipment expenses, such as depreciation and amortization, and rent; costs attributable to buying, receiving, inspecting, and warehousing inventories; picking, packaging, and preparing customer orders for shipment; payment processing and related transaction costs, including costs associated with our guarantee for certain seller transactions; responding to inquiries from customers; and supply chain management for our manufactured electronic devices.',
+  techInfra:'Technology and infrastructure costs include payroll and related expenses for employees involved in the research and development of new and existing products and services, development, design, and maintenance of our stores, curation and display of products and services made available in our online stores, and infrastructure costs. Infrastructure costs include servers, networking equipment, and data center related depreciation and amortization, rent, utilities, and other expenses necessary to support AWS and other Amazon businesses.',
+  marketing:'Sales and marketing costs include advertising and payroll and related expenses for personnel engaged in marketing and selling activities, including sales commissions related to AWS.',
+  gAdmin:'General and administrative costs primarily consist of costs for corporate functions, including payroll and related expenses; facilities and equipment expenses, such as depreciation and amortization expense and rent; and professional fees.',
+  otherOpex:'Other operating expense (income), net, consists primarily of the amortization of intangible assets and asset impairments.'
+};
+EW_LINES.forEach(function(l){ if(EW_CALLS[l.k]) l.calls=EW_CALLS[l.k]; if(EW_UNIT[l.k]) l.unit=EW_UNIT[l.k]; if(EW_DEF[l.k]) l.def=EW_DEF[l.k]; });
 // (EXP_WORLD pop-up index removed — the expense full dives now render inline as tabs, see expenseTabsBody.)
 // The six functional expense lines as a clickable index — rendered at the TOP of the
 // Margins & Expenses pane styles. Self-contained.
@@ -3734,8 +3746,17 @@ var SEG_COST={
     ],
     anchor:'What IS assignable: International capex ~$7.6B and $31B PP&amp;E — the lightest footprint of the three, consistent with a retail (not infrastructure) cost base.' }
 };
+// Verbatim segment definitions — exact wording from Amazon's FY2025 Form 10-K, Note 10 (Segment
+// Information), SEC EDGAR amzn-20251231.htm. Quoted, not paraphrased.
+var SEG_DEF={
+  aws:'The AWS segment consists of amounts earned from global sales of compute, storage, database, and other services for start-ups, enterprises, government agencies, and academic institutions.',
+  us:'The North America segment primarily consists of amounts earned from retail sales of consumer products (including from sellers) and advertising and subscription services through North America-focused online and physical stores. This segment includes export sales from these online stores.',
+  int:'The International segment primarily consists of amounts earned from retail sales of consumer products (including from sellers) and advertising and subscription services through internationally-focused online stores. This segment includes export sales from these internationally-focused online stores (including export sales from these online stores to customers in the U.S., Mexico, and Canada), but excludes export sales from our North America-focused online stores.'
+};
+var SEG_SRC='— Amazon FY2025 Form 10-K · Note 10, Segment Information (SEC EDGAR)';
 function segCostBox(k){ var c=SEG_COST[k]; if(!c) return '';
-  return '<div class="ew-h">Cost structure — what Amazon breaks out (and doesn’t)</div>'+
+  return (SEG_DEF[k]?'<div class="ew-h">How the 10-K defines this segment</div><div class="ew-q ew-def">“'+SEG_DEF[k]+'”<span class="ew-att">'+SEG_SRC+'</span></div>':'')+
+    '<div class="ew-h">Cost structure — what Amazon breaks out (and doesn’t)</div>'+
     '<div class="ew-note">'+c.note+'</div>'+ewBoxes(c.boxes)+
     (c.anchor?'<div class="ew-note">'+c.anchor+'</div>':''); }
 var SEG_WORLD={

@@ -238,3 +238,262 @@
 .rs-gptmini button:last-child { border-right:1px solid var(--bdr); border-radius:0 5px 5px 0; }
 .rs-gptmini button:hover { color:var(--navy); }
 .rs-gptmini button.on { background:var(--navy); border-color:var(--navy); color:#fff; }
+
+/* ── Segments pane (js/segments.js) ─────────────────────────────────────────────────────────
+   Path-3 canvas per CHART_ENGINE_REFERENCE §0.7: everything else it needs (.rs-collap,
+   .rs-leg, .rs-ft*, .rs-brush, .rs-modes/.rs-view) is already global in this file. Only the
+   pieces with no equivalent live here. */
+.sg-segpills{margin:2px 0 10px}
+.sg-lede{font-size:13px;line-height:1.55;color:var(--text);margin:0 0 12px}
+.sg-identity{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:2px 0 9px}
+.sg-identity code{font-size:11.5px;background:var(--pale);border:1px solid var(--bdr);
+  border-radius:6px;padding:3px 8px;color:var(--navy)}
+.sg-kind{font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  padding:2px 7px;border-radius:20px;background:rgba(192,57,43,0.10);color:#96301f}
+.sg-kind.ok{background:rgba(30,158,98,0.12);color:#14724a}
+.sg-chartwrap{position:relative;height:300px;margin:4px 0 10px}
+.sg-src{margin-top:12px}
+.sg-sec{margin:0 0 26px;padding:0 0 4px}
+.sg-sec-h{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:800;color:var(--navy);
+  padding:0 0 8px;margin:0 0 12px;border-bottom:1.5px solid var(--bdr)}
+.sg-sec-n{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;
+  border-radius:50%;background:var(--navy);color:#fff;font-size:10.5px;font-weight:800;flex:0 0 auto}
+.sg-sec-sub{margin-left:auto;font-size:10.5px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.04em}
+.sg-drill{margin:2px 0 14px}
+.sg-drill-b{padding:10px 12px;font-size:12px;line-height:1.55;color:var(--text)}
+.sg-drill-b p{margin:0 0 8px}
+/* a prose caveat, not the little NO-GUIDANCE pill it used to borrow: a paragraph set in
+   all-caps 10px shouts over the thing it is qualifying */
+.sg-needs{display:block;margin-top:12px;padding:9px 12px;font-size:11.5px;line-height:1.55;
+  color:#7a5108;background:rgba(234,179,8,.09);border-left:3px solid rgba(234,179,8,.55);
+  border-radius:0 7px 7px 0}
+.sg-engine{margin-top:6px}
+.sg-size{margin-left:auto;font-size:9.5px;font-weight:700;color:var(--mu);background:var(--pale);
+  border:1px solid var(--bdr);border-radius:20px;padding:1px 7px;white-space:nowrap}
+.sg-basis{color:var(--mu);font-size:11px}
+.sg-kpis{display:flex;flex-direction:column;gap:6px;margin:0 0 16px}
+.sg-kpi{border:1px solid var(--bdr);border-radius:8px;background:#fff;overflow:hidden}
+.sg-kpi-h{display:flex;align-items:center;gap:9px;width:100%;border:none;background:transparent;
+  font:inherit;text-align:left;padding:9px 12px;cursor:pointer}
+.sg-kpi-h:hover{background:var(--surface)}
+.sg-kpi-n{font-size:12.5px;font-weight:700;color:var(--navy)}
+.sg-kpi-m{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.04em}
+.sg-kpi-v{margin-left:auto;font-size:12px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums}
+.sg-kpi-v i{font-style:normal;font-weight:500;color:var(--mu);font-size:10.5px;margin-left:4px}
+.sg-kpi-b{padding:2px 12px 12px 40px;font-size:12px;line-height:1.55;color:var(--text);border-top:1px solid var(--bdr)}
+.sg-kpi-b p{margin:8px 0 0}
+.sg-adj{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:0 0 16px}
+.sg-adj-i{border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;background:#fff}
+.sg-adj-n{display:flex;align-items:center;font-size:12px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.sg-chartblock{margin:6px 0 0}
+.sg-modes{margin:0 0 8px}
+.sg-ovcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:4px 0 6px;align-items:start}
+.sg-ovcard{border:1px solid var(--bdr);border-top:3px solid var(--navy);border-radius:9px;padding:12px 13px;background:#fff}
+.sg-ovcard-n{font-size:12px;font-weight:800;color:var(--navy);letter-spacing:.01em}
+.sg-ovcard-v{font-size:22px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;margin:2px 0 9px;line-height:1.1}
+.sg-ovcard-v span{display:block;font-size:9.5px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.sg-ovcard-r{display:grid;grid-template-columns:1fr 1fr;gap:7px 10px}
+.sg-ovcard-r b{display:block;font-size:13px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums}
+.sg-ovcard-r span{font-size:9.5px;color:var(--mu);text-transform:uppercase;letter-spacing:.04em}
+.sg-ctrls{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin:0 0 10px}
+.sg-ctrlg{display:inline-flex;align-items:center;gap:7px}
+.sg-ctrlg + .sg-ctrlg{padding-left:18px;border-left:1px solid var(--bdr)}
+.sg-ctrlg .rs-quick-l{margin:0}
+.sg-ovcard-top{cursor:pointer;border-radius:5px;margin:-3px;padding:3px}
+.sg-ovcard-top:hover{background:var(--surface)}
+.sg-ovcard-top:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.sg-ovcard-h{display:flex;align-items:center;gap:7px}
+.sg-ovcard-more{margin-left:auto;font-size:9.5px;font-weight:700;color:var(--mu);
+  text-transform:uppercase;letter-spacing:.04em}
+.sg-ovcard-top:hover .sg-ovcard-more{color:var(--navy)}
+.sg-ovcard-ic{font-size:10px;color:var(--mu)}
+.sg-ovcard-b{margin-top:10px;padding-top:9px;border-top:1px solid var(--bdr);font-size:11.5px;line-height:1.5;color:var(--text)}
+.sg-ovcard-b p{margin:0 0 8px}
+.sg-ovcard-l{margin:0;padding-left:15px}
+.sg-ovcard-l li{margin:0 0 5px;color:var(--mu)}
+.sg-ovcard-l b{color:var(--navy)}
+/* the Overview's cross-segment notes: four statements, so they get four cards. Running them
+   together as paragraphs made four separate claims read as one undivided block of prose. */
+.sg-ix{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:11px;margin:0 0 6px}
+.sg-ix-i{border:1px solid var(--bdr);border-left:3px solid var(--navy);border-radius:9px;
+  background:#fff;padding:12px 14px}
+.sg-ix-n{font-size:12.5px;font-weight:700;color:var(--navy);margin-bottom:6px}
+.sg-ix-w{margin:0;font-size:12px;line-height:1.55;color:var(--text)}
+.sg-ix-e{margin:8px 0 0;padding-top:8px;border-top:1px dashed var(--bdr);
+  font-size:10.5px;line-height:1.5;color:var(--mu)}
+
+/* a quarter (or a theme) is a shut button until asked for: the list of titles is the index */
+.sg-mgmt{display:flex;flex-direction:column;gap:8px}
+.sg-mq{border:1px solid var(--bdr);border-radius:9px;background:#fff;overflow:hidden}
+.sg-mq.open{border-color:var(--navy)}
+.sg-mq-h{display:flex;align-items:center;gap:9px;padding:11px 13px;cursor:pointer}
+.sg-mq-h:hover{background:var(--surface)}
+.sg-mq-h:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.sg-mq-n{font-size:12.5px;font-weight:700;color:var(--navy);flex:none}
+.sg-mq-m{font-size:10.5px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sg-mq-c{margin-left:auto;flex:none;font-size:9.5px;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--mu);background:var(--pale);border-radius:20px;padding:2px 8px}
+.sg-mq-b{padding:2px 14px 12px;border-top:1px solid var(--bdr)}
+.sg-mq-t{margin-top:11px}
+.sg-mq-t>b{display:block;font-size:11.5px;color:var(--navy);margin-bottom:3px}
+.sg-mq-b .sg-named{list-style:disc;margin:0;padding-left:17px;font-size:12px;line-height:1.6}
+.sg-mq-b .sg-named li{display:list-item;border:0;padding:2px 0;color:var(--text)}
+/* the OURS editor, wherever it is attached */
+.sg-noteed .sg-note-t{margin:7px 0 0}
+.sg-noteed .sg-note-act{margin-top:8px}
+
+/* our note on a segment: clearly ours, clearly editable, never mistaken for the filing */
+.sg-note{margin:14px 0 18px}
+.sg-note .rs-collap-h .sg-tier{margin-left:8px}
+.sg-note .rs-collap-b{padding:12px 14px 13px}
+.sg-note-t{margin:0;font-size:12.5px;line-height:1.6;color:var(--text)}
+.sg-note-t.empty{color:var(--mu);font-style:italic}
+.sg-note-ta{width:100%;font:inherit;font-size:12.5px;line-height:1.6;color:var(--text);
+  border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;resize:vertical;background:#fff}
+.sg-note-ta:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.sg-note-act{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+.sg-note-where{font-size:10.5px;color:var(--mu)}
+.sg-btn{font:inherit;font-size:11.5px;font-weight:600;color:var(--navy);background:#fff;
+  border:1px solid var(--bdr);border-radius:7px;padding:6px 13px;cursor:pointer}
+.sg-btn:hover{border-color:var(--navy)}
+.sg-btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+.sg-btn.primary:hover{background:#2c3846}
+.sg-btn.ghost{color:var(--mu)}
+
+/* the filing's paragraphs are uneven; clamp for the row, expandable because it is a quote */
+.sg-def{display:flex;flex-direction:column}
+.sg-def-t.clamp{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.sg-def-more{align-self:flex-start;margin-top:7px;font:inherit;font-size:10px;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;color:var(--accent);background:none;border:0;
+  padding:0;cursor:pointer}
+.sg-def-more:hover{text-decoration:underline}
+.sg-def .sg-cite{margin-top:auto;padding-top:8px}
+
+/* the fourth provenance tier: a claim nobody at the company made */
+.sg-tier-counterparty{background:rgba(124,58,237,0.12);color:#5B21B6}
+/* an absence that IS the finding, so it is stated rather than left as a blank */
+.sg-finding{margin:14px 0 4px;padding:13px 15px;border:1px solid rgba(234,179,8,.45);
+  border-left:3px solid rgba(234,179,8,.75);border-radius:0 9px 9px 0;background:rgba(234,179,8,.07)}
+.sg-finding-h{font-size:12.5px;font-weight:800;color:#7a5108;margin-bottom:7px}
+.sg-finding p{margin:0;font-size:12px;line-height:1.6;color:var(--text)}
+.sg-finding .sg-cite{margin-top:8px}
+/* what is missing, and the command that fills it */
+.sg-empty{border:1px dashed var(--bdr);border-radius:10px;padding:15px 17px;background:var(--surface)}
+.sg-empty-h{font-size:12.5px;font-weight:800;color:var(--navy);margin-bottom:7px}
+.sg-empty p{margin:0 0 9px;font-size:12px;line-height:1.6;color:var(--text)}
+.sg-empty-c{display:block;font-size:11.5px;background:#fff;border:1px solid var(--bdr);
+  border-radius:7px;padding:9px 12px;color:var(--navy);margin:0 0 10px;overflow-x:auto}
+.sg-empty .sg-cite{margin:0}
+/* the names on the record */
+.sg-cust{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:11px}
+.sg-cust-i{border:1px solid var(--bdr);border-left:3px solid var(--accent);border-radius:9px;
+  background:#fff;padding:12px 13px}
+.sg-cust-n{display:flex;align-items:baseline;gap:9px;font-size:12.5px;font-weight:700;color:var(--navy)}
+.sg-cust-q{margin-left:auto;flex:none;font-size:9.5px;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--mu);background:var(--pale);border-radius:20px;padding:2px 8px}
+.sg-cust-w{margin:7px 0 0;font-size:12px;line-height:1.55;color:var(--text)}
+.sg-cust-s{margin:8px 0 0;padding-top:7px;border-top:1px dashed var(--bdr);
+  font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.04em}
+
+/* the alternative revenue cuts: each line's own words from the filing, one card each */
+.sg-defs{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:11px;margin:14px 0 0}
+.sg-def{border:1px solid var(--bdr);border-radius:9px;background:#fff;padding:11px 13px}
+.sg-def-n{display:flex;align-items:baseline;gap:8px;font-size:12px;font-weight:700;
+  color:var(--navy);margin-bottom:6px}
+.sg-def-n .sg-tier{margin-left:auto}
+.sg-def-t{margin:0;font-size:11.5px;line-height:1.55;color:var(--text)}
+.sg-def .sg-cite{margin-top:7px;padding-top:7px;border-top:1px dashed var(--bdr)}
+
+/* ── master–detail: a row of cards, exactly one panel ───────────────────────────────────────
+   A card has to LOOK pressable before anyone presses it, and the panel it opens has to be
+   obviously the same object: hence the connector notch, the shared navy edge, and one visible
+   affordance per card ("detail ›"). Content inside the panel is split into tabs and separated by
+   rules, so opening a card never lands a wall of text on the reader. */
+.sg-md{margin:0 0 18px}
+.sg-cards{display:grid;gap:10px;margin-bottom:11px}
+.sg-cards-prod,.sg-cards-kpi{grid-template-columns:repeat(auto-fit,minmax(205px,1fr))}
+.sg-cards-inter{grid-template-columns:1fr}
+.sg-cards-inter .sg-panel{margin-top:1px}
+.sg-card{position:relative;display:flex;flex-direction:column;gap:5px;
+  border:1px solid var(--bdr);border-radius:9px;background:#fff;padding:12px 13px 36px;
+  cursor:pointer;transition:border-color .12s,box-shadow .12s,transform .12s}
+.sg-card:hover{border-color:var(--navy);box-shadow:0 3px 12px rgba(16,32,58,.10);transform:translateY(-1px)}
+.sg-card:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.sg-card.open{border-color:var(--navy);box-shadow:0 3px 14px rgba(16,32,58,.13)}
+/* the notch that ties the open card to its panel */
+.sg-card.open::after{content:'';position:absolute;left:50%;bottom:-6px;width:11px;height:11px;
+  margin-left:-6px;background:var(--navy);transform:rotate(45deg)}
+.sg-card.mute{background:#fcfcfd}
+.sg-card.mute .sg-card-n{color:#5b6673}
+.sg-card-n{display:flex;align-items:baseline;gap:7px;font-size:12px;font-weight:700;color:var(--navy)}
+.sg-card-l{font-size:11.5px;line-height:1.45;color:var(--mu)}
+.sg-card-c{display:block;font-size:11px;background:var(--pale);border:1px solid var(--bdr);
+  border-radius:6px;padding:5px 9px;color:var(--navy)}
+.sg-card-tag{margin-left:auto;flex:none;font-size:8.5px;font-weight:800;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--mu);background:var(--pale);border-radius:20px;padding:2px 7px}
+.sg-card-tag.tk-on{background:rgba(37,99,235,.12);color:#1B3F94}
+.sg-card-tag.tk-no{background:rgba(192,57,43,.10);color:#96301f}
+.sg-card-v{font-size:21px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.1}
+.sg-card-v i{font-size:11.5px;font-weight:500;font-style:normal;color:var(--mu)}
+.sg-card-g{display:flex;align-items:baseline;gap:8px;font-size:11px;font-variant-numeric:tabular-nums}
+.sg-card-p{color:var(--mu);font-size:10px}
+.sg-card-f{position:absolute;left:13px;right:13px;bottom:10px;display:flex;align-items:center;gap:9px}
+.sg-card-go{margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--mu)}
+.sg-card:hover .sg-card-go,.sg-card.open .sg-card-go{color:var(--navy)}
+.sg-card.on{border-left:3px solid var(--accent)}
+
+.sg-panel{border:1px solid var(--navy);border-radius:10px;background:#fff;overflow:hidden;
+  box-shadow:0 4px 20px rgba(16,32,58,.10)}
+.sg-panel-h{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--navy);color:#fff}
+.sg-panel-t{font-size:11.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+.sg-panel-s{font-size:11px;color:rgba(255,255,255,.70)}
+.sg-panel-x{margin-left:auto;background:none;border:0;color:rgba(255,255,255,.75);
+  font:inherit;font-size:13px;line-height:1;cursor:pointer;padding:3px 5px;border-radius:5px}
+.sg-panel-x:hover{color:#fff;background:rgba(255,255,255,.14)}
+.sg-panel-tabs{display:flex;flex-wrap:wrap;gap:2px;padding:0 8px;
+  background:var(--pale);border-bottom:1px solid var(--bdr)}
+.sg-panel-tab{background:none;border:0;border-bottom:2px solid transparent;padding:9px 13px;
+  font:inherit;font-size:11.5px;font-weight:600;color:var(--mu);cursor:pointer}
+.sg-panel-tab:hover{color:var(--navy)}
+.sg-panel-tab.active{color:var(--navy);border-bottom-color:var(--navy);background:#fff}
+.sg-panel-tc{margin-left:6px;font-size:9.5px;font-weight:800;background:var(--bdr);color:var(--navy);
+  border-radius:20px;padding:1px 6px}
+.sg-panel-b{padding:15px 17px;font-size:12px;line-height:1.6;color:var(--text)}
+.sg-panel-b>.sg-p{margin:0}
+/* one claim per block, a rule between them — the undivided stack was the whole problem */
+.sg-tb+.sg-tb{margin-top:14px;padding-top:14px;border-top:1px solid var(--bdr)}
+.sg-tb .sg-quote{margin:7px 0 0}
+.sg-tb>p{margin:7px 0 0}
+.sg-cite{margin:6px 0 0;font-size:10.5px;color:var(--mu)}
+.sg-panel .sg-named{list-style:none;margin:8px 0 0;padding:0}
+.sg-panel .sg-named li{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 9px;
+  padding:9px 0;border-top:1px dashed var(--bdr);font-size:12px;line-height:1.5;color:var(--text)}
+.sg-panel .sg-named li:first-child{border-top:0;padding-top:2px}
+.sg-panel .sg-named b{color:var(--navy)}
+.sg-panel .sg-named i{font-style:normal;font-size:9.5px;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--mu);background:var(--pale);border-radius:20px;padding:2px 7px}
+.sg-panel .sg-named span{flex:1 1 100%}
+
+/* §1's single collapse borrows the same affordance so the tab has one visual language */
+.sg-drill{margin:2px 0 16px;border:1px solid var(--bdr);border-radius:9px;overflow:hidden}
+.sg-drill .rs-collap-h{width:100%;background:var(--surface)}
+.sg-drill .rs-collap-b{border-top:1px solid var(--bdr)}
+
+.sg-quote{margin:0 0 8px;padding:8px 12px;border-left:3px solid var(--navy);background:var(--surface);
+  font-size:12px;line-height:1.6;color:var(--navy)}
+
+/* ── Segments §2–§5 ──────────────────────────────────────────────────────────────────────── */
+.sg-tier{display:inline-block;font-size:8.5px;font-weight:800;letter-spacing:.06em;padding:1px 6px;
+  border-radius:20px;margin-right:6px;vertical-align:1px}
+.sg-tier-filing{background:rgba(30,39,51,0.10);color:var(--navy)}
+.sg-tier-call{background:rgba(37,99,235,0.12);color:#1B3F94}
+.sg-tier-ours{background:rgba(124,134,148,0.14);color:#5b6673}
+.sg-named{margin:4px 0 0;padding-left:16px;font-size:11.5px;line-height:1.55}
+.sg-named li{margin:0 0 5px;color:var(--text)}
+.sg-named i{font-style:normal;color:var(--mu);font-size:10.5px}
+.sg-up{color:#1E9E62;font-weight:700}.sg-dn{color:#C0392B;font-weight:700}.sg-flat{color:var(--mu)}
+.sg-charthint{margin:0 0 6px}
+.sg-inter-b{margin-top:9px;padding-top:8px;border-top:1px dashed var(--bdr);font-size:11.5px;line-height:1.55}
+.sg-inter-b p{margin:0 0 7px}
+.sg-mgmt{display:flex;flex-direction:column;gap:12px}

@@ -3155,8 +3155,8 @@ function aBuildBrWaterfall(id, steps, fmt){
         if(s.kind==='base') return (fmt.base||String)(s.val);
         if(s.kind==='total') return (fmt.base||String)(s.val);
         return (fmt.delta||String)(s.val)+(s.runAfter!=null?'   ·   running '+(fmt.base||String)(s.runAfter):''); } } } },
-      scales:{ x:{ grid:{display:false}, ticks:{color:'#8A93A0', font:{size:10}, autoSkip:false, maxRotation:45, minRotation:0} },
-        y:{ beginAtZero:true, grid:{color:'#EEF2F7'}, ticks:{color:'#8A93A0', font:{size:10}, callback:function(v){return (fmt.axis||String)(v);}} } } },
+      scales:{ x:{ grid:{display:false}, ticks:{color:'#8A93A0', font:{size:11}, autoSkip:false, maxRotation:45, minRotation:0} },
+        y:{ position:'right', beginAtZero:true, grid:{color:'#EEF2F7'}, ticks:{color:'#8A93A0', font:{size:11}, callback:function(v){return (fmt.axis||String)(v);}} } } },
     plugins:[ aBrPlugin ] });
   ch._steps=steps; ch._fmt=fmt; _aCharts[id]=ch; ch.update('none'); aZoom(id);
   var tw=document.getElementById(id+'-tbl');   // rule 3: the table carries every step drawn

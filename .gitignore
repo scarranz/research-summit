@@ -35,3 +35,8 @@ hyperscalers/
 
 # consensus generator output (regenerated on demand from the Bloomberg sources)
 scripts/consensus/out/
+
+# Saved Summit-MCP pulls that feed scripts/consensus (large, regenerable)
+scripts/consensus/dumps_*/
+scripts/consensus/out/
+harness-*.html

@@ -1513,6 +1513,14 @@ export async function loadCompaniesPage() {
         group_name: 'Media & Entertainment', sector: 'Communication Services', logo_domain: 'thewaltdisneycompany.com',
         mono: 'DI', status: 'active', price: null });
     }
+    // Local-dev only: surface the in-development APP (AppLovin) overview in the grid without
+    // a DB write, so it previews inside the real portal chrome. Gated to localhost — never
+    // affects production. Remove once APP is added for real via the companies table.
+    if (location.hostname === 'localhost' && !_companies.find(function(c){ return c.ticker === 'APP'; })) {
+      _companies.push({ id: 'app-local', ticker: 'APP', name: 'AppLovin Corporation',
+        group_name: 'Advertising Technology', sector: 'Technology', logo_domain: 'applovin.com',
+        mono: 'AP', status: 'active', price: null });
+    }
     initCoControls();
     renderCoGrid();
     initAddModal();

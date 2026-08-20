@@ -1,93 +1,170 @@
-# scripts/consensus — rebuilding the per-vintage consensus matrix
+# scripts/consensus — standing a ticker up on the vintage axis
 
-Data-prep tooling for the `estMatrix` block in `js/results-data/<ticker>.js`.
+Data-prep tooling for the `estMatrix` block and the `evolution` block in
+`js/results-data/<ticker>.js`.
 Contract: `docs/RESULTS_CONVENTIONS.md` §8 · Current state: `docs/RESULTS_ESTIMATES_HANDOFF.md`.
 
 **This is not part of the site build.** The portal stays a zero-build static site; these scripts
-run by hand, on demand, and their only output is a block of JavaScript you paste into a dataset.
+run by hand, on demand, and their only output is a block of JavaScript spliced into a dataset.
 
 ## Requirements
 
-`py` (Python 3.14 on this machine — **not** `python`, which is a broken WindowsApps stub) and
-`openpyxl`. No other dependencies.
+`py` (Python 3.12 on this machine — **not** `python`, which is a broken WindowsApps stub) and
+`openpyxl`. `node` **is** installed (v24) and is the fastest way to syntax-check a dataset:
+
+```bash
+node --input-type=module -e "const m=await import('./js/results-data/amzn.js'); console.log('ok')"
+```
 
 ## The sources
 
-Both live in the team's Google Drive under `Summit/Docs/0`. **The drive letter differs per machine**,
-so every script honours `SUMMIT_DOCS`:
+| Source | What it is |
+|---|---|
+| `BBG_CONSENSUS.txt` | The exported archive. One row per (ticker, snapshot). |
+| `Consensus_Portal.xlsm`, sheet **`CONSENSUS`** | The live sheet. Same columns; can hold a row the archive lacks. |
+| Summit MCP `get_fundamentals` | The model's own projections, one pull per snapshot. |
+
+Both files live in the team's Google Drive under `Summit/Docs/0`. The drive letter differs per
+machine, so every script honours `SUMMIT_DOCS`:
 
 ```bash
-SUMMIT_DOCS="G:/My Drive/Summit/Docs/0" py emit_matrix.py UBER map_uber.json valid_uber.json
+SUMMIT_DOCS="G:/My Drive/Summit/Docs/0" py emit_matrix.py AMZN map_amzn.json
 ```
 
-⚠ **The two sources are not interchangeable — read the union.** `BBG_CONSENSUS.txt` is the exported
-archive; the `BBG_CONSENSUS` sheet inside `Consensus_Portal.xlsm` is live and **overwrites its own
-most recent row**. On UBER the archive holds `2026-07-31` and the sheet holds `2026-08-07`; the 07-31
-snapshot is the pre-print consensus for the 2Q26 quarter the tab scores. Losing it silently swaps in
-a stale `fq+2`. Export the `.txt` before each refresh.
+⚠ **Read the union of both.** `emit_matrix.py` does, and prints which snapshots came from only
+one of them. Export the `.txt` before each refresh or a sheet-only row is lost.
+
+⚠ **Coverage is the binding constraint, not the tooling.** As of Aug 2026 both sources carry
+**four tickers — AMZN, GOOGL, LYFT, UBER.** An earlier note claimed 32; that is no longer true.
+`inspect_matrix.py <TK>` on anything else exits telling you what is actually there. Adding a
+ticker to the workbook is a Bloomberg-terminal job for San/Oscar, and nothing here can work
+around it.
+
+## The schema changed in Aug 2026 — address metrics by CODE
+
+The workbook is now **self-describing**. Each row declares its own slots:
+
+```
+metric1..50      code1..50      segment1..50      unit1..50      scale1..50
+metric_kpi1..50  code_kpi1..50  segment_kpi1..50  unit_kpi1..50  scale_kpi1..50
+```
+
+and carries values in `<slot>_<horizon>` columns (`metric12_fq+1`, `kpi3_fy+2`) over
+`fq-4..fq+4` and `fy-2..fy+3`. Each horizon column names its period: `2026 Q3 (Fwd)`,
+`2025 A (Rep)`.
+
+So a metric is addressed by its **Bloomberg code (+ segment id)**, never by slot number. Slot
+numbering is a property of the export; the codes differ per ticker too — AMZN's operating income
+is `IS_COMPARABLE_EBIT`, LYFT's is `IS_EBIT_AS_REPORTED`. The pre-v2 configs named fixed columns
+(`rev_fq+1`, `ebitda_fq0`) that no longer exist, which is why a stale config yields an
+almost-empty matrix instead of an error.
+
+⚠ **Read the `scale` column.** A blank scale on a money row means whole units, not millions.
+AMZN's North-America operating income arrives as `9123000000` next to siblings at `1717`. Declare
+the target `unit` (`usdM` / `eps`) and the generator normalizes; get it wrong and one series is
+off by 10⁶ while looking perfectly plausible on a log-ish axis.
 
 ## The scripts
 
-| Script | What it does | Reads |
-|---|---|---|
-| **`emit_matrix.py`** | **The generator.** Emits the `estMatrix.cons` block to `out/estmatrix_<tk>.js`. | the **union** of both sources |
-| `verify_preprint.py` | Diagnostic: derives the pre-print series and diffs it against the `cons` column the dataset already ships. | the **workbook only** — so forward periods legitimately differ from the union |
-| `inspect_matrix.py` | Prints the snapshot × period matrix per metric, plus each snapshot's last reported period and KPI slot names. | the `.txt` only |
-| **`emit_summit_matrix.py`** | **The other generator** — the `estMatrix.summit` block, plus its own acceptance diff against the shipped `summit` arrays. | saved **Summit-MCP** pulls, not the workbook |
+| Script | What it does |
+|---|---|
+| **`inspect_matrix.py`** | **Step 1.** Every slot with its code, segment, scale and populated horizons; the snapshot list with each file's last reported period; whether the layout drifts. Write `map_<tk>.json` off its CODE column. |
+| **`emit_matrix.py`** | The consensus generator → `out/estmatrix_<tk>.js` + a `.json` sidecar. Prints a **resolution report** (every configured metric, the slot it bound to, how many snapshots carry it) and a **frozen-series check**. |
+| **`verify_preprint.py`** | **The acceptance test.** Replays the ENGINE's own `preprint` rule over the emitted sidecar and diffs it against the flat arrays the dataset ships. |
+| **`emit_summit_matrix.py`** | The Summit side of `estMatrix`, from saved MCP dumps, with its own acceptance diff. |
+| **`emit_evolution.py`** | The Estimates pane's `evolution` block, from the same dumps — the opposite read (all years, not just forward). |
+| **`apply_matrix.py`** | Splices both halves into the dataset as one `estMatrix` block. Re-running replaces it wholesale. |
 
-`emit_summit_matrix.py` is the odd one out: its input is not a file in the team's Drive but one saved
-`get_fundamentals` response per model snapshot, pulled Claude-side through the Summit MCP. Save each
-response into a folder (the harness already writes the big ones to disk) and point the script at it —
-rows are grouped by the `snapshot_date` they carry, so file names do not matter:
+### The two guard rails, and why they exist
+
+**The resolution report.** Every configured metric prints the slot it resolved to, or
+`UNRESOLVED`. A wrong code is otherwise indistinguishable from a metric Bloomberg does not carry.
+
+**The frozen-series check.** A real consensus is a fresh survey every quarter; it essentially
+never reprints a value to four decimals. When a BQL cell dies the export keeps emitting its last
+result and *relabels it a year forward at each print* — which reads as a beautifully smooth
+estimate series and is entirely fictional. AMZN's ANNUAL North-America revenue does exactly this:
+473,099 / 517,634 / 561,728 at every snapshot since May 2021 (27 distinct values across 90
+cells), labelled FY21–23, then FY22–24, … now FY26–28. Its quarterly twin is fine, so this is one
+dead cell, not a bad ticker. Anything flagged goes in `drop` until Bloomberg is fixed:
+
+```json
+"drop": { "y": ["usrev"] }
+```
+
+## Adding a ticker — the whole recipe
 
 ```bash
-py emit_summit_matrix.py UBER map_summit_uber.json <dump-dir>
+cd scripts/consensus
+export SUMMIT_DOCS="G:/My Drive/Summit/Docs/0"
+
+# 1. what does the workbook actually carry?
+py inspect_matrix.py <TK>
+
+# 2. write map_<TK>.json off the CODE column (+ valid_<TK>.json for off-basis lines)
+# 3. generate, and READ BOTH REPORTS
+py emit_matrix.py <TK> map_<TK>.json valid_<TK>.json
+
+# 4. the acceptance test — classify every difference before moving on
+py apply_matrix.py <TK> && py verify_preprint.py <TK> cons
 ```
 
-Pull **only the periods forward of each snapshot's `lastActual`**, with `sheet_sources=
-['projection_history']` and explicit `metric_ids` — an unfiltered pull is ~14.7k facts. Its config
-(`map_summit_<tk>.json`) carries the metric map, derived sums, the vintage register with each
-snapshot's `lastActual`, the dataset's period axis, and a `prefer_source` order for rows that exist
-twice. Read the output's verdict line per metric: `N match · N uncovered (pre-snapshot history)` is
-healthy, `frozen-vs-saved` is expected and explained in the contract, and only `DIFF ON A FORWARD
-PERIOD` means stop.
+`verify_preprint.py` prints four counts per metric:
 
-The read-scope difference between `emit_matrix` and `verify_preprint` is deliberate but easy to trip
-over: a `DIFF` on forward periods from `verify_preprint` is expected, because it cannot see the
-archive-only snapshot. Reported quarters are the ones that must match.
+| Count | Means |
+|---|---|
+| `same` | the matrix reproduces what the dataset already shipped |
+| `filled` | the matrix has a value where the dataset had `null` — the win |
+| `changed` | a genuine refresh, a rounding difference, or a bug. **Classify each one.** A change on a REPORTED period means the frozen flat value lost, which should not happen |
+| `blanked` | **must be 0.** The matrix ADDS; it never subtracts |
 
-## Per-ticker config
+For the Summit side, save one `get_fundamentals` response per snapshot into a folder (the
+harness writes large ones to disk already, so copy the file it names) and:
 
-`map_<tk>.json` — the metric → Bloomberg-column map, per view:
+```bash
+py emit_summit_matrix.py <TK> map_summit_<TK>.json <dump-dir>
+py emit_evolution.py     <TK> map_summit_<TK>.json <dump-dir>
+py apply_matrix.py <TK>
+```
+
+Pull `sheet_sources=['projection_history']` with explicit `metric_ids`, over every period on the
+dataset's axis. `emit_summit_matrix.py` enforces forward-only itself, and `emit_evolution.py`
+needs the reported years too, so one pull per snapshot serves both.
+
+Read the Summit emitter's verdict per metric: `N match · N uncovered (pre-snapshot history)` is
+healthy, `frozen-vs-saved` is expected and explained in the contract, and only
+`DIFF ON A FORWARD PERIOD` means look — normally it just means a newer snapshot moved.
+
+### `map_<tk>.json` (consensus)
 
 ```json
-{ "q": { "rev":"rev", "gb":"kpi8", "mobgb":"kpi1", "opinc":"opinc", "ebitda":"ebitda", "eps":"eps" },
-  "y": { "rev":"rev", "gb":"kpi8", "ebitda":"ebitda" } }
+{ "segments": { "na": "SEG0000227430", "aws": "SEG0000227465" },
+  "drop": { "y": ["usrev"] },
+  "q": { "rev":   { "code": "SALES_REV_TURN", "unit": "usdM" },
+         "aws":   { "code": "SALES_REV_TURN", "unit": "usdM", "segment": "aws" },
+         "eps":   { "code": "IS_COMP_EPS_GAAP", "unit": "eps" },
+         "capex": { "code": "HEADLINE_CAPEX", "unit": "usdM", "sign": -1 } },
+  "y": { "…": "…" } }
 ```
 
-Column names are the header prefixes: `rev`, `opinc`, `ebitda`, `eps`, `nos`, `cfo`, `capex`, `d&a`,
-`gross`, and `kpi1`–`kpi8`. ⚠ **The KPI slots are per ticker** — read the header's `metric_kpi1…8`
-rather than assuming an order. UBER: `kpi1` mobility GB · `kpi2` delivery GB · `kpi3/4` take rates ·
-`kpi5` adj EPS · `kpi6` trips per MAPC · `kpi7` total trips · `kpi8` total gross bookings.
+Identify a segment id by tying its `fq0` value to the last printed quarter — that is how AMZN's
+three were pinned (NA 116,177 / Intl 42,197 / AWS 42,232 for 2Q26).
 
-`valid_<tk>.json` — per-metric "consensus is only valid from this period on", for lines where
-Bloomberg's basket sits on another basis before it reconciles:
+`valid_<tk>.json` carries per-metric "consensus is only valid from this period on", for lines
+where Bloomberg's basket sits on another basis until it reconciles.
 
-```json
-{ "q": { "eps": "4Q25" } }
-```
+### `map_summit_<tk>.json` (Summit + evolution)
 
-## Adding a ticker
+Beyond the metric map it carries `derived` (per view — quarterly totals are often the sum of
+segment rows because the model zeroes its own total; annual is usually read straight), `sign`,
+the `vintages` register with each file's `lastActual`, the dataset's period `axis`, and an
+`evolution` block with `cons_metrics` (the BBG figures the model stores inside its own snapshot —
+best provenance, same save date) and `cons_map` (the workbook mapped onto the model's calendar,
+up to three months stale — say so in the note).
 
-1. `py inspect_matrix.py <TK>` — how many snapshots, which metrics carry data, what the KPI slots
-   are, and each snapshot's last reported period.
-2. Write `map_<TK>.json`, and `valid_<TK>.json` for any off-basis line.
-3. `py emit_matrix.py <TK> map_<TK>.json valid_<TK>.json`.
-4. `py verify_preprint.py <TK> map_<TK>.json` — **the acceptance test.** Classify every mismatch as
-   rounding, a genuine refresh, or a bug before you move on. Do not skip this: it is what caught the
-   overwritten snapshot above.
-5. Paste `out/estmatrix_<TK>.js` over the dataset's `estMatrix` block, keeping it at the dataset
-   ROOT beside `views` — generated numbers must not mix into the hand-curated metric blocks.
+**Establish `lastActual` from the DATA, not the calendar.** AMZN's 2026-07-30 and 2026-08-03
+files are dated after the 2Q26 print but still carry the May projection for 2Q26, so both are
+pre-print saves; 2026-08-04 is the re-cut that ingested it.
 
-Regenerating UBER today reproduces the committed block byte for byte; that is the reproducibility
-check if you suspect drift.
+`emit_evolution.py` carries existing prose across a refresh and then tells you to re-read it —
+a note written against three snapshots is wrong the moment there is a fourth.

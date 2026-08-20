@@ -23,6 +23,9 @@ import { amznResults } from '../results-data/amzn.js';
 import { consensusEvo } from '../consensus-evolution.js';
 import { makeManagement } from './management.js';   // shared Management mold (UBER/GOOGL/etc.)
 import { amznBBG } from './amzn-bbg.js';   // segment actuals + consensus (rev/OI/D&A/PP&E) from BBG
+import { amznSens } from './amzn-sensitivity.js';   // Valuation ▸ Sensitivity Analysis
+import { amznTargetMult } from './amzn-target-multiple.js';   // Valuation ▸ Target Multiple
+import { amznHistMult } from './amzn-histmult.js';            // Valuation ▸ Historic Multiple
 
 // ─── esc: escapes <>" but deliberately leaves & literal (per contract; never double-encode) ──
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -4546,9 +4549,17 @@ function aBuildCapex(root){
   }
   aCxRender(root);
 }
+// Valuation ▸ Historic Multiple — the multiple the market has paid over time, in js/overviews/
+// amzn-histmult.js. Modelled on the Fiscal.ai Forward P/E export, with the metric, the direction,
+// the horizon and the point frequency all made into controls. Its data is synthetic for now and
+// the pane says so — the module header lists what each series has to come from.
+function valuationHistBody(){ return amznHistMult.body(); }
 function valuationPeersBody(){
   return '<p class="ov-lede"><b>The peer map.</b> The same live-cap scatter as the Overview, kept beside the valuation work: X = multiple (P/E ⇄ EV/EBITDA, forward ⇄ trailing), Y = expected growth, bubble = live market cap. Peer multiples are seeded approximations (Jul 2026) — directional, not live.</p>'+stdPeerScatter('dd');
 }
+// ⚠ PARKED, not dead: the Financials sub-tab was taken off the Valuation bar (Pablo, Aug 19 2026).
+// This body and aBuildFin below are kept so the work is not lost — restoring the tab is one button
+// and one pane in deepDiveHtml, plus its branch in aBuildSub.
 function valuationFinBody(){
   return '<p class="ov-lede"><b>The financial arc.</b> Reported history and the model\'s live forward view for the lines valuation hangs on. Bars = reported actuals; outlined bars = Summit model forward (2026-05-05 vintage). The full vintage-by-vintage story is in Evolution ▸ Estimates.</p>'+
     '<div class="ov-sec"><div class="ov-sec-h">Revenue · EBITDA · Earnings · Capex ($B, FY)</div><div style="height:320px"><canvas id="aFin"></canvas></div>'+
@@ -4903,11 +4914,17 @@ function deepDiveHtml(c){
     '</div>';
   h+='<div class="dd-pane" data-dd="valuation" hidden>'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="peers">Peers</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="financials">Financials</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="histmult">Historic Multiple</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="peers">Peers</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="targetmult">Target Multiple / PEG</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="sensitivity">Sensitivity Analysis</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="peers">'+valuationPeersBody()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="financials" hidden>'+valuationFinBody()+'</div>'+
+      // Financials was removed from this bar (Pablo, Aug 19 2026). Its body and chart builder are
+      // parked below rather than deleted — putting the tab back is these two lines.
+      '<div class="ovt-subpane" data-ovst="histmult">'+valuationHistBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="peers" hidden>'+valuationPeersBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="targetmult" hidden>'+amznTargetMult.body()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="sensitivity" hidden>'+amznSens.body()+'</div>'+
     '</div>';
   h+='<div class="dd-pane" data-dd="mgmt" hidden>'+
       '<div class="ovt-subtabs">'+
@@ -4974,8 +4991,11 @@ function aBuildSub(root, dd, key){
     if(key==='capex' || key==null) requestAnimationFrame(function(){ aBuildCapex(root); aBuildSegCapDa(); aBuildLeases(); });
   }
   if(dd==='valuation'){
+    if(key==='histmult') requestAnimationFrame(function(){ amznHistMult.init(root); });
+    if(key==='sensitivity') requestAnimationFrame(function(){ amznSens.init(root); });
+    if(key==='targetmult') requestAnimationFrame(function(){ amznTargetMult.init(root); });
     if(key==='peers') requestAnimationFrame(function(){ aScRenderAll(root); aScChipsAll(root); aScFetchCaps(root); });
-    if(key==='financials') requestAnimationFrame(aBuildFin);
+    // no 'financials' branch — that sub-tab was removed (Aug 19 2026); aBuildFin is parked with it
   }
   if(dd==='evolution'){
     if(key==='earnings'){

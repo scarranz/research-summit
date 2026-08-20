@@ -4327,8 +4327,9 @@ function bottomlineCapexBody(){
     '@media(max-width:620px){.acx-kpis{grid-template-columns:repeat(2,1fr)}}'+
     '.acx-kpi{background:var(--card,#fff);padding:10px 13px}.acx-kl{font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}'+
     '.acx-kv{font-size:20px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;margin-top:2px;letter-spacing:-.02em}.acx-ks{font-size:10px;color:var(--mu);font-variant-numeric:tabular-nums;margin-top:1px}'+
-    '.acx-tog{display:inline-flex;gap:2px;background:rgba(0,0,0,.04);border:1px solid var(--bdr);border-radius:7px;padding:2px}'+
-    '.acx-tog button{border:none;background:none;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:5px;cursor:pointer}.acx-tog button.active{background:var(--brand-2);color:#fff}'+
+    /* match SAB pills (results.css .rs-views/.rs-view) so every toggle reads as one product */
+    '.acx-tog{display:inline-flex;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;flex-wrap:wrap}'+
+    '.acx-tog button{appearance:none;border:0;border-right:1px solid var(--bdr);background:#fff;font:600 12px Inter,sans-serif;color:var(--mu);padding:7px 16px;cursor:pointer}.acx-tog button:last-child{border-right:0}.acx-tog button:hover{color:var(--navy)}.acx-tog button.active{background:var(--navy);color:#fff}'+
     '.acx-reset{border:1px solid var(--bdr);background:#fff;color:var(--navy);font:inherit;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:6px;padding:5px 10px;cursor:pointer}.acx-reset:hover{background:rgba(0,0,0,.03)}'+
     '.acx-read{font-size:11px;color:var(--mu);font-variant-numeric:tabular-nums;margin:8px 0 0;line-height:1.5}.acx-read b{color:var(--navy)}'+
     '.acx-cap{font-size:11px;color:var(--mu);line-height:1.45;margin-top:8px}.acx-cap b{color:var(--navy);font-weight:600}'+

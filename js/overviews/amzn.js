@@ -3529,11 +3529,10 @@ function ewSpark(vals,onIdx){ var mx=Math.max.apply(null,vals.map(Math.abs));
 function ewBoxes(arr){ return '<div class="ew-two"'+(arr.length<2?' style="grid-template-columns:1fr"':'')+'>'+arr.map(function(b){ return '<div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">'+b[0]+'</span>'+b[1]+'</div><div class="ew-box-t">'+b[2]+'</div></div>'; }).join('')+'</div>'; }
 // Collapsible "what management has said" block — hidden by default so the dive reads clean.
 function ewCallsBlock(calls){ if(!calls||!calls.length) return '';
-  return '<details class="ew-calls"><summary class="ew-callsum">What management has said — over time</summary>'+ewCallTimeline(calls)+'</details>';
+  return '<details class="ew-calls" open><summary class="ew-callsum">What management has said</summary>'+ewCallTimeline(calls)+'</details>';
 }
 function ewCallTimeline(calls){ if(!calls||!calls.length) return '';
-  var lab={why:'driver',fwd:'forward',ctx:'context'};
-  return '<div class="ew-tls">'+calls.map(function(c){ return '<div class="ew-tli"><div class="ew-tlq">'+c.q+(c.tag?'<span class="ew-tag '+c.tag+'">'+lab[c.tag]+'</span>':'')+'</div><div class="ew-tlt">'+c.txt+'</div>'+(c.who&&c.who!=='—'?'<div class="ew-tlw">— '+c.who+'</div>':'')+'</div>'; }).join('')+'</div>';
+  return '<div class="ew-tls">'+calls.map(function(c){ return '<div class="ew-tli"><div class="ew-tlq">'+c.q+'</div><div class="ew-tlt">'+c.txt+'</div>'+(c.who&&c.who!=='—'?'<div class="ew-tlw">— '+c.who+'</div>':'')+'</div>'; }).join('')+'</div>';
 }
 // Management commentary per expense line — VERBATIM quotes only, taken from the repo call records
 // (docs/calls/AMZN*.md, Q4'25–Q2'26). No external sites, no paraphrase attributed to management, and no
@@ -3541,29 +3540,38 @@ function ewCallTimeline(calls){ if(!calls||!calls.length) return '';
 // verbatim quote in the covered calls carry no block — we do not invent one.
 var EW_CALLS={
   costOfSales:[
-    {q:'Q1 2026', who:'Andy Jassy, CEO — Q1 2026 call', tag:'why', txt:'Retail delivery got faster while cost to serve fell: store units +15% (highest since COVID) and 1B+ same/next-day items YTD, on the regionalized US network.'},
-    {q:'Q4 2025', who:'Andy Jassy, CEO — Q4 2025 call', tag:'why', txt:'8B+ items shipped same/next-day (+30% YoY); Amazon the lowest-priced US retailer for the 9th straight year (~14% below other major retailers); everyday essentials ~1 in 3 units.'}
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'Amazon was the “lowest-priced US retailer” for the 9th straight year (14% below other majors); everyday essentials were 1-in-3 units; 8B+ items shipped same/next-day, +30%.'},
+    {q:'Q1 2026', who:'Andy Jassy, CEO', txt:'Store units +15% (highest since COVID); 1B+ same/next-day items YTD; grocery $150B+ gross sales (second-largest US grocer).'},
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'On Rufus (shopping assistant): 300M customers in 2025, users “60% more likely to complete a purchase.”'}
   ],
   fulfillment:[
-    {q:'Q1 2026', who:'Brian Olsavsky, CFO — Q1 2026 call', tag:'why', txt:'The efficiency proof, in the CFO’s numbers: paid units +15% vs fulfillment expense +9% (FX-neutral); robotics is in “every 2026 US large-format launch.”'},
-    {q:'Q4 2025', who:'Brian Olsavsky, CFO — Q4 2025 call', tag:'why', txt:'“1M+ robots” in the fulfillment network; perishables extended to 2,300+ cities — the automation and network redesign that hold fulfillment ~flat as a share of revenue.'}
+    {q:'Q1 2026', who:'Brian Olsavsky, CFO', txt:'Units +15% vs fulfillment expense +9% (FX-neutral); robotics in every 2026 US large-format launch.'},
+    {q:'Q4 2025', who:'Brian Olsavsky, CFO', txt:'“1M+ robots in the network”; perishables extended to 2,300+ cities.'},
+    {q:'Q2 2026', who:'Amazon (Q2 2026 call)', txt:'Same-day perishables customers +50% since the start of the year; same-day orders average 3x more units per order.'}
   ],
   techInfra:[
-    {q:'Q4 2025', who:'Andy Jassy, CEO — Q4 2025 call', tag:'why', txt:'“…about $200 billion in capital expenditures… predominantly in AWS, because we have very high demand.”'},
-    {q:'Q4 2025', who:'Brian Olsavsky, CFO — Q4 2025 call', tag:'why', txt:'“As fast as we install this capacity, this AI capacity, we are monetizing it — it’s just a very unusual opportunity.”'},
-    {q:'Q1 2026', who:'Brian Olsavsky, CFO — Q1 2026 call', tag:'why', txt:'Capex focus “primarily AWS and generative AI”; memory component costs had “skyrocketed.”'},
-    {q:'Q2 2026', who:'Brian Olsavsky, CFO — Q2 2026 call', tag:'why', txt:'FY26 cash-capex frame raised to ~$220B from ~$200B, part of it the “higher cost of memory.”'}
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'“about $200 billion in capital expenditures… predominantly in AWS, because we have very high demand.”'},
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'AWS grew at “the fastest we’ve seen in thirteen quarters”; >1GW of capacity added in Q4, “more than any other company in the world.”'},
+    {q:'Q4 2025', who:'Brian Olsavsky, CFO', txt:'“As fast as we install this capacity, this AI capacity, we are monetizing it — it’s just a very unusual opportunity.”'},
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'On Trainium3: “nearly all supply committed by mid-2026.” On Project Rainier (500K chips): “you will see that continuing to increase.”'},
+    {q:'Q1 2026', who:'Andy Jassy, CEO', txt:'“It is very unusual for a business to grow this fast on a base this large.” Backlog $364B, which “does not include the recent deal… with Anthropic for over $100 billion.”'},
+    {q:'Q1 2026', who:'Brian Olsavsky, CFO', txt:'Capex focus “primarily AWS and generative AI”; memory component costs had “skyrocketed.”'},
+    {q:'Q2 2026', who:'Andy Jassy, CEO', txt:'“AWS is booming, growing 36.7% year-over-year in Q2 — our fastest growth in 18 quarters — and our AI and Chips businesses each eclipsed run rates of more than $25 billion.”'},
+    {q:'Q2 2026', who:'Brian Olsavsky, CFO', txt:'AWS margin up “650 basis points year-over-year, 520 basis points if you exclude the derivative accounting gain”; the FY26 capex frame moved up on the “higher cost of memory.”'},
+    {q:'Q2 2026', who:'Andy Jassy, CEO', txt:'“We have clear line of sight to strong financial returns”; AWS can become “a trillion-dollar annual revenue business.”'}
   ],
   marketing:[
-    {q:'Q4 2025', who:'Andy Jassy, CEO — Q4 2025 call', tag:'why', txt:'Advertising +22%, with $12B of incremental ad revenue in 2025; Prime Video ads reached ~315M monthly viewers — Amazon monetizing its own surface rather than buying demand.'},
-    {q:'Q2 2026', who:'Amazon Q2 2026 call', tag:'why', txt:'Advertising +26%, “sponsored products the driver.”'}
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'Advertising +22%; $12B of incremental ad revenue in 2025; Prime Video ads ~315M monthly viewers.'},
+    {q:'Q1 2026', who:'Andy Jassy, CEO', txt:'On ads in agentic commerce: “we’re going to like this for advertising” — sponsored prompts work, and multi-turn means more surfaces.'},
+    {q:'Q2 2026', who:'Amazon (Q2 2026 call)', txt:'Advertising +26%, “sponsored products the driver.”'}
   ],
   gAdmin:[
-    {q:'Q4 2025', who:'Brian Olsavsky, CFO — Q4 2025 call', tag:'ctx', txt:'The $2.4B of special charges in the quarter included $730M of severance — the corporate-headcount reductions that keep G&A the most leveraged line.'}
+    {q:'Q1 2026', who:'Andy Jassy, CEO', txt:'On internal AI efficiency: a service engine rebuilt in “65 days vs 40–50 person-years” — “that is a very different world of operating.”'},
+    {q:'Q4 2025', who:'Brian Olsavsky, CFO', txt:'The $2.4B of special charges in the quarter included $730M of severance.'}
   ],
   otherOpex:[
-    {q:'Q4 2025', who:'Brian Olsavsky, CFO — Q4 2025 call', tag:'why', txt:'The $2.4B of Q4 special charges: Italy tax settlement $1.1B, severance $730M, physical-store impairments $610M — one-offs, not a run-rate.'},
-    {q:'Q3 2025', who:'Amazon 8-K / 10-K (filing)', tag:'ctx', txt:'The $2.5B FTC settlement was recognized here in Q3 2025 — the main reason the line jumped to $4.6B for FY2025.'}
+    {q:'Q4 2025', who:'Brian Olsavsky, CFO', txt:'The $2.4B of Q4 special charges: Italy tax settlement $1.1B, severance $730M, physical-store impairments $610M.'},
+    {q:'Q3 2025', who:'Amazon (8-K / 10-K)', txt:'The $2.5B FTC settlement was recognized in Q3 2025 — the main reason the line jumped to $4.6B for FY2025.'}
   ]
 };
 var SEG_CALLS={

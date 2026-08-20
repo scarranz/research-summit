@@ -3116,43 +3116,47 @@ function aBridgeBpsSteps(prev, cur, labA, labB){
 }
 var BR_FMT_D={ axis:function(v){return '$'+Math.round(v)+'B';}, base:function(v){return '$'+v.toFixed(1)+'B';}, delta:function(v){return (v>=0?'+$':'−$')+Math.abs(v).toFixed(1)+'B';} };
 var BR_FMT_BPS={ axis:function(v){return v.toFixed(0)+'%';}, base:function(v){return v.toFixed(1)+'%';}, delta:function(v){var b=Math.round(v*100); return (b>=0?'+':'−')+Math.abs(b)+' bps';} };
+// Synthetic "opex row" for a forward year (fi = 0..2 → FY26E..FY28E) built from BBG consensus, shaped
+// exactly like an A_OPEX row so aBridgeBuildupSteps / aBuildBrPie work on it unchanged. otherOpex is the
+// residual so revenue − Σcost = operating income reconciles to the reported consensus OI.
+function aFwdOpexRow(fi){
+  function f(k){ var s=amznBBG.is[k]; return s?s.f[fi]:null; }
+  var rev=f('rev'), oi=f('oi'); if(rev==null||oi==null) return null;
+  var cogs=f('cogs')||0, ful=f('fulfillment')||0, tech=f('techInfra')||0, mkt=f('marketing')||0, ga=f('gAdmin')||0;
+  return { p:'FY'+String(amznBBG.yearsF[fi]).slice(2)+'E', revenue:rev, costOfSales:cogs, fulfillment:ful,
+    techInfra:tech, marketing:mkt, gAdmin:ga, otherOpex:(rev-cogs-ful-tech-mkt-ga-oi) };
+}
 function aBridgeBody(){
   var yBtns=function(cls,sel){ return A_OPEX_YEARS.map(function(y){ return '<button type="button" data-'+cls+'="'+y+'"'+(y===sel?' class="active"':'')+'>FY'+String(y).slice(2)+'</button>'; }).join(''); };
   var qBtns=A_OPEXQ.map(function(r,i){ return '<button type="button" data-brq="'+i+'"'+(i===A_OPEXQ.length-1?' class="active"':'')+'>'+r.p.replace(/\s+/g,'')+'</button>'; }).join('');
   return '<div class="ov-sec"><div class="ov-sec-h">The bridge — how revenue becomes operating income</div>'+
-    '<div class="mch-ctl">'+   /* §0.4 row 2: mode (left) */
-      '<span class="acx-tog br-mode"><button type="button" data-brm="buildup" class="active">Build-up ($B)</button><button type="button" data-brm="bps">Margin change (bps)</button><button type="button" data-brm="fwd">Forward (consensus)</button></span>'+
+    '<div class="mch-ctl">'+   /* §0.4 row 2: mode + view (left) */
+      '<span style="display:flex;gap:6px;flex-wrap:wrap">'+
+        '<span class="acx-tog br-mode"><button type="button" data-brm="buildup" class="active">Build-up ($B)</button><button type="button" data-brm="fexp">Forward (expenses)</button></span>'+
+        '<span class="acx-tog br-view"><button type="button" data-brv="wf" class="active">Waterfall</button><button type="button" data-brv="pie">Pie</button></span>'+
+      '</span>'+
       '<span></span>'+
     '</div>'+
-    '<div class="br-ctl-bu mch-ctl" style="margin:0 0 8px">'+   /* treatment (left) · window (right) */
-      '<span class="acx-tog br-view"><button type="button" data-brv="wf" class="active">Waterfall</button><button type="button" data-brv="pie">Pie</button></span>'+
+    '<div class="br-ctl-bu mch-ctl" style="margin:0 0 8px">'+   /* buildup window (right) */
+      '<span></span>'+
       '<span style="display:flex;gap:8px;flex-wrap:wrap">'+
         '<span class="acx-tog br-gran"><button type="button" data-brg="y" class="active">Annual</button><button type="button" data-brg="q">Quarterly</button></span>'+
         '<span class="acx-tog br-yr br-sel-y">'+yBtns('bry',2025)+'</span>'+
         '<span class="acx-tog br-qtr br-sel-q" style="display:none;flex-wrap:wrap">'+qBtns+'</span>'+
       '</span>'+
     '</div>'+
-    '<div class="br-ctl-bps" style="display:none;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin:0 0 8px;align-items:center">'+
-      '<span style="font-size:11px;color:var(--mu)">From</span><span class="acx-tog br-from">'+yBtns('brf',2022)+'</span>'+
-      '<span style="font-size:11px;color:var(--mu)">to</span><span class="acx-tog br-to">'+yBtns('brt',2025)+'</span>'+
-    '</div>'+
-    '<div class="br-ctl-fwd" style="display:none;flex-direction:column;gap:8px;margin:0 0 10px">'+
-      '<style>.br-sl{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:var(--navy)}.br-sl input{flex:1;max-width:180px;accent-color:'+BRAND+'}.br-sl-v{width:44px;text-align:right;color:var(--brand-2);font-variant-numeric:tabular-nums}.br-sl-l{width:96px}</style>'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span style="font-size:11px;color:var(--mu)">Target year</span><span class="acx-tog br-fy"><button type="button" data-brfy="0">FY26E</button><button type="button" data-brfy="1">FY27E</button><button type="button" data-brfy="2" class="active">FY28E</button></span></div>'+
-      '<div style="font-size:10.5px;color:var(--mu)">Sensitize each segment\'s operating income vs consensus (0% = the BBG consensus):</div>'+
-      '<div class="br-sl"><span class="br-sl-l">North America</span><input type="range" data-brseg="na" min="-30" max="30" step="1" value="0"><span class="br-sl-v" data-brsegv="na">0%</span></div>'+
-      '<div class="br-sl"><span class="br-sl-l">International</span><input type="range" data-brseg="intl" min="-30" max="30" step="1" value="0"><span class="br-sl-v" data-brsegv="intl">0%</span></div>'+
-      '<div class="br-sl"><span class="br-sl-l">AWS</span><input type="range" data-brseg="aws" min="-40" max="40" step="1" value="0"><span class="br-sl-v" data-brsegv="aws">0%</span></div>'+
+    '<div class="br-ctl-fexp mch-ctl" style="display:none;margin:0 0 8px">'+   /* forward year (right) */
+      '<span></span>'+
+      '<span class="acx-tog br-fy"><button type="button" data-brfy="0">FY26E</button><button type="button" data-brfy="1">FY27E</button><button type="button" data-brfy="2" class="active">FY28E</button></span>'+
     '</div>'+
     '<div style="height:340px"><canvas id="aBrCanvas"></canvas></div>'+
     '<div id="aBrCanvas-tbl" style="margin-top:8px"></div></div>';
 }
 function aBridgeSync(pane){
   var mb=pane.querySelector('.br-mode .active'), mode=mb?mb.getAttribute('data-brm'):'buildup';
-  var bu=pane.querySelector('.br-ctl-bu'), bps=pane.querySelector('.br-ctl-bps'), fwd=pane.querySelector('.br-ctl-fwd');
+  var bu=pane.querySelector('.br-ctl-bu'), fe=pane.querySelector('.br-ctl-fexp');
   if(bu) bu.style.display=mode==='buildup'?'flex':'none';
-  if(bps) bps.style.display=mode==='bps'?'flex':'none';
-  if(fwd) fwd.style.display=mode==='fwd'?'flex':'none';
+  if(fe) fe.style.display=mode==='fexp'?'flex':'none';
   var g=pane.querySelector('.br-gran .active'), q=!!(g&&g.getAttribute('data-brg')==='q');
   var sy=pane.querySelector('.br-sel-y'), sq=pane.querySelector('.br-sel-q');
   if(sy) sy.style.display=q?'none':'';
@@ -3161,31 +3165,62 @@ function aBridgeSync(pane){
 function aBuildBridge(){
   var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(!pane) return;
   var mb=pane.querySelector('.br-mode .active'), mode=mb?mb.getAttribute('data-brm'):'buildup';
-  if(mode==='buildup'){
-    var g=pane.querySelector('.br-gran .active'), gran=g?g.getAttribute('data-brg'):'y', r;
+  var vb=pane.querySelector('.br-view .active'), view=vb?vb.getAttribute('data-brv'):'wf', r;
+  if(mode==='fexp'){   // forward expense build-up — same walk, BBG consensus year (FY26E..FY28E)
+    var fyb=pane.querySelector('.br-fy .active'), fi=fyb?+fyb.getAttribute('data-brfy'):2;
+    r=aFwdOpexRow(fi);
+  } else {             // build-up — actual year or quarter
+    var g=pane.querySelector('.br-gran .active'), gran=g?g.getAttribute('data-brg'):'y';
     if(gran==='q'){ var qb=pane.querySelector('.br-qtr .active'); r=A_OPEXQ[qb?+qb.getAttribute('data-brq'):A_OPEXQ.length-1]; }
     else { var yb=pane.querySelector('.br-yr .active'); r=A_OPEX[yb?+yb.getAttribute('data-bry'):2025]; }
-    if(!r) return;
-    var vb=pane.querySelector('.br-view .active'), view=vb?vb.getAttribute('data-brv'):'wf';
-    if(view==='pie') aBuildBrPie(r); else aBuildBrWaterfall('aBrCanvas', aBridgeBuildupSteps(r), BR_FMT_D);
-  } else if(mode==='bps'){
-    var fb=pane.querySelector('.br-from .active'), tb=pane.querySelector('.br-to .active');
-    var ya=fb?+fb.getAttribute('data-brf'):2022, yb2=tb?+tb.getAttribute('data-brt'):2025;
+  }
+  if(!r) return;
+  if(view==='pie') aBuildBrPie(r); else aBuildBrWaterfall('aBrCanvas', aBridgeBuildupSteps(r), BR_FMT_D);
+}
+// ── Segment bridge (Segments tab): margin-change decomposition + the forward segment-consensus walk.
+// Moved out of General so the consolidated bridge there stays about expenses. Reuses aBuildBrWaterfall.
+function aSegBridgeBody(){
+  var yBtns=function(cls,sel){ return A_OPEX_YEARS.map(function(y){ return '<button type="button" data-'+cls+'="'+y+'"'+(y===sel?' class="active"':'')+'>FY'+String(y).slice(2)+'</button>'; }).join(''); };
+  return '<div class="ov-sec"><div class="ov-sec-h">The segment bridge — margin change &amp; the forward walk</div>'+
+    '<style>.br-sl{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:var(--navy)}.br-sl input{flex:1;max-width:180px;accent-color:'+BRAND+'}.br-sl-v{width:44px;text-align:right;color:var(--brand-2);font-variant-numeric:tabular-nums}.br-sl-l{width:96px}</style>'+
+    '<div class="mch-ctl"><span class="acx-tog sbr-mode"><button type="button" data-sbrm="bps" class="active">Margin change (bps)</button><button type="button" data-sbrm="fwd">Forward (consensus)</button></span><span></span></div>'+
+    '<div class="sbr-ctl-bps mch-ctl" style="margin:0 0 8px"><span></span>'+
+      '<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;color:var(--mu)">From</span><span class="acx-tog sbr-from">'+yBtns('sbrf',2022)+'</span>'+
+      '<span style="font-size:11px;color:var(--mu)">to</span><span class="acx-tog sbr-to">'+yBtns('sbrt',2025)+'</span></span></div>'+
+    '<div class="sbr-ctl-fwd" style="display:none;flex-direction:column;gap:8px;margin:0 0 10px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span style="font-size:11px;color:var(--mu)">Target year</span><span class="acx-tog sbr-fy"><button type="button" data-sbrfy="0">FY26E</button><button type="button" data-sbrfy="1">FY27E</button><button type="button" data-sbrfy="2" class="active">FY28E</button></span></div>'+
+      '<div style="font-size:10.5px;color:var(--mu)">Sensitize each segment\'s operating income vs consensus (0% = the BBG consensus):</div>'+
+      '<div class="br-sl"><span class="br-sl-l">North America</span><input type="range" data-sbrseg="na" min="-30" max="30" step="1" value="0"><span class="br-sl-v" data-sbrsegv="na">0%</span></div>'+
+      '<div class="br-sl"><span class="br-sl-l">International</span><input type="range" data-sbrseg="intl" min="-30" max="30" step="1" value="0"><span class="br-sl-v" data-sbrsegv="intl">0%</span></div>'+
+      '<div class="br-sl"><span class="br-sl-l">AWS</span><input type="range" data-sbrseg="aws" min="-40" max="40" step="1" value="0"><span class="br-sl-v" data-sbrsegv="aws">0%</span></div>'+
+    '</div>'+
+    '<div style="height:340px"><canvas id="aSegBr"></canvas></div>'+
+    '<div id="aSegBr-tbl" style="margin-top:8px"></div></div>';
+}
+function aBuildSegBridge(){
+  var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]'); if(!pane) return;
+  var mb=pane.querySelector('.sbr-mode .active'), mode=mb?mb.getAttribute('data-sbrm'):'bps';
+  var bps=pane.querySelector('.sbr-ctl-bps'), fwd=pane.querySelector('.sbr-ctl-fwd');
+  if(bps) bps.style.display=mode==='bps'?'flex':'none';
+  if(fwd) fwd.style.display=mode==='fwd'?'flex':'none';
+  if(mode==='bps'){
+    var fb=pane.querySelector('.sbr-from .active'), tb=pane.querySelector('.sbr-to .active');
+    var ya=fb?+fb.getAttribute('data-sbrf'):2022, yb2=tb?+tb.getAttribute('data-sbrt'):2025;
     var prev=A_OPEX[ya], cur=A_OPEX[yb2];
-    if(prev&&cur&&ya!==yb2) aBuildBrWaterfall('aBrCanvas', aBridgeBpsSteps(prev,cur,'FY'+String(ya).slice(2),'FY'+String(yb2).slice(2)), BR_FMT_BPS);
+    if(prev&&cur&&ya!==yb2) aBuildBrWaterfall('aSegBr', aBridgeBpsSteps(prev,cur,'FY'+String(ya).slice(2),'FY'+String(yb2).slice(2)), BR_FMT_BPS);
   } else {   // forward — FY25 OI → segment consensus contributions → target year, sensitizable
-    var fyb=pane.querySelector('.br-fy .active'), fi=fyb?+fyb.getAttribute('data-brfy'):2;
+    var fyb=pane.querySelector('.sbr-fy .active'), fi=fyb?+fyb.getAttribute('data-sbrfy'):2;
     var SG=[{k:'na',lab:'North America',c:BRAND},{k:'intl',lab:'International',c:BRAND2},{k:'aws',lab:'AWS',c:SQUID}];
     var base=SG.map(function(s){ return amznBBG.seg[s.k].oi.a[2]; });   // FY25 actual, $M
-    var tgt=SG.map(function(s){ var cons=amznBBG.seg[s.k].oi.f[fi]; var sl=pane.querySelector('.br-sl input[data-brseg="'+s.k+'"]'); return cons*(sl?(1+(+sl.value)/100):1); });
+    var tgt=SG.map(function(s){ var cons=amznBBG.seg[s.k].oi.f[fi]; var sl=pane.querySelector('.sbr-ctl-fwd input[data-sbrseg="'+s.k+'"]'); return cons*(sl?(1+(+sl.value)/100):1); });
     var run=base.reduce(function(a,b){ return a+b; },0)/1000;
     var steps=[{label:'FY25 OI', kind:'base', color:'#1E2733', range:[0,run], runAfter:run, val:run}];
     SG.forEach(function(s,i){ var d=(tgt[i]-base[i])/1000, lo=run; run=lo+d;
       steps.push({label:s.lab, kind:d>=0?'up':'down', color:s.c, dc:'#6B7683', range:[Math.min(lo,run),Math.max(lo,run)], runAfter:run, val:d}); });
     var yr=String(amznBBG.yearsF[fi]).slice(2);
     steps.push({label:'FY'+yr+'E OI', kind:'total', color:'#2E8B57', range:[0,run], runAfter:null, val:run});
-    aBuildBrWaterfall('aBrCanvas', steps, BR_FMT_D);
-    SG.forEach(function(s){ var sl=pane.querySelector('.br-sl input[data-brseg="'+s.k+'"]'), v=pane.querySelector('.br-sl-v[data-brsegv="'+s.k+'"]'); if(sl&&v) v.textContent=((+sl.value)>0?'+':'')+sl.value+'%'; });
+    aBuildBrWaterfall('aSegBr', steps, BR_FMT_D);
+    SG.forEach(function(s){ var sl=pane.querySelector('.sbr-ctl-fwd input[data-sbrseg="'+s.k+'"]'), v=pane.querySelector('.br-sl-v[data-sbrsegv="'+s.k+'"]'); if(sl&&v) v.textContent=((+sl.value)>0?'+':'')+sl.value+'%'; });
   }
 }
 // ── OI → Net income walk, with one-off normalization. Consolidated from BBG (amznBBG.is), actuals +
@@ -3214,14 +3249,14 @@ function aBuildNetBridge(){
   var run=B(oi), steps=[{label:'Op. income', kind:'base', color:'#1E2733', range:[0,run], runAfter:run, val:B(oi)}];
   function step(lab,d,dc){ var lo=run; run=lo+d; steps.push({label:lab, kind:d>=0?'up':'down', color:(dc==='#B7791F'?'#B7791F':'#6B7683'), dc:dc, range:[Math.min(lo,run),Math.max(lo,run)], runAfter:run, val:d}); }
   step('Interest, net', B(-ni), '#6B7683');
-  if(!norm) step('Equity & other (one-off)', B(-ono), '#B7791F');
+  if(!norm) step('Equity-securities M2M & other (one-off)', B(-ono), '#B7791F');
   step('– Income tax', B(-tax), '#6B7683');
-  if(em) step('– Equity-method', B(-em), '#6B7683');
+  if(em) step('– Equity-method investees', B(-em), '#6B7683');
   steps.push({label:(norm?'Net income (norm.)':'Net income'), kind:'total', color:'#2E8B57', range:[0,run], runAfter:null, val:run});
   aBuildBrWaterfall('aNetBr', steps, BR_FMT_D);
   var cap=pane.querySelector('#aNetBrCap');
   if(cap){ var rm=(rev?net/rev*100:null), nm=(rev?(net+ono)/rev*100:null), yl='FY'+String(y).slice(2)+(y>2025?'E':'');
-    cap.innerHTML='<b>'+yl+'</b> · reported net margin <b>'+(rm==null?'—':rm.toFixed(1)+'%')+'</b>'+(rev?' ($'+B(net).toFixed(1)+'B / $'+B(rev).toFixed(0)+'B rev)':'')+' · normalized (ex the equity / one-off non-operating line) <b>'+(nm==null?'—':nm.toFixed(1)+'%')+'</b>. The <span style="color:#B7791F;font-weight:700">amber bar</span> is the equity mark-to-market (Rivian-type) &amp; other non-operating — $'+B(Math.abs(ono)).toFixed(1)+'B in '+yl+'; it flatters reported net income (consensus runs hotter still on assumed gains). Normalized removes it on a pretax basis — the underlying read. Data: BBG consensus, as of Aug 2026.';
+    cap.innerHTML='<b>'+yl+'</b> · reported net margin <b>'+(rm==null?'—':rm.toFixed(1)+'%')+'</b>'+(rev?' ($'+B(net).toFixed(1)+'B / $'+B(rev).toFixed(0)+'B rev)':'')+' · normalized (ex the equity / one-off non-operating line) <b>'+(nm==null?'—':nm.toFixed(1)+'%')+'</b>. The <span style="color:#B7791F;font-weight:700">amber bar</span> is the mark-to-market on <b>marketable equity securities</b> (the Rivian-type stake) &amp; other non-operating — $'+B(Math.abs(ono)).toFixed(1)+'B in '+yl+'; it flatters reported net income (consensus runs hotter still on assumed gains). Normalized removes it on a pretax basis — the underlying read. Note this is <b>not</b> the same line as <b>Equity-method investees</b>, which is Amazon\'s share of the profit/loss of associates it accounts for by the equity method (a separate, much smaller item). Data: BBG consensus, as of Aug 2026.';
   }
 }
 // SBC — back in General (where it was), BBG-driven (actuals + consensus, $B-by-line ⇄ %-of-line).
@@ -3273,6 +3308,18 @@ function aBuildSbc(){
 var RS_ACT='#1E2733', RS_CONS='#2563EB';
 var MARG_NUM={gross:'grossProfit', operating:'oi', ebitda:'ebitda', net:'netIncome', fcf:'fcf'};
 var MARG_LAB={gross:'Gross margin', operating:'Operating margin', ebitda:'EBITDA margin', net:'Net margin', fcf:'FCF margin'};
+// General master chart-picker — one dropdown swaps which chart is on screen (less-by-default; the
+// others stay hidden until chosen). Sections are wrapped in .gen-sec[data-gsec]; wiring in aBuildExpenses.
+function aGeneralPicker(){
+  var opts=[['margins','Profitability & margins'],['bridge','The bridge — revenue → operating income'],['net','Operating income → net income'],['sbc','Stock-based compensation']];
+  return '<div class="ov-sec" style="padding-bottom:10px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+    '<span style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)">Chart</span>'+
+    '<select class="gen-chart" style="font-size:13px;font-weight:700;color:var(--navy);border:1px solid var(--bdr);border-radius:8px;padding:6px 10px;background:#fff">'+
+    opts.map(function(o){ return '<option value="'+o[0]+'"'+(o[0]==='margins'?' selected':'')+'>'+o[1]+'</option>'; }).join('')+
+    '</select>'+
+    '<span style="font-size:11px;color:var(--mu)">Pick one — the rest stay tucked away.</span>'+
+    '</div></div>';
+}
 function aMarginsBody(){
   var opts='<optgroup label="Profit margins"><option value="gross">Gross margin</option><option value="operating" selected>Operating margin</option><option value="ebitda">EBITDA margin</option><option value="net">Net margin</option></optgroup>'+
     '<optgroup label="Cash"><option value="fcf">FCF margin</option></optgroup>';
@@ -3613,15 +3660,17 @@ function aBuildExpenses(){
   if(pane){
     var tog=function(sel,after){ pane.querySelectorAll(sel+' button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll(sel+' button').forEach(function(x){ x.classList.toggle('active',x===b); }); after(); }; }); };
     if(!pane._expWired){ pane._expWired=true;
+      var GEN_BUILD={ margins:aBuildMargins, bridge:function(){ aBridgeSync(pane); aBuildBridge(); }, net:aBuildNetBridge, sbc:aBuildSbc };
+      var gsel=pane.querySelector('.gen-chart');
+      if(gsel){ gsel.onchange=function(){ var v=gsel.value;
+        pane.querySelectorAll('.gen-sec').forEach(function(s){ s.hidden=(s.getAttribute('data-gsec')!==v); });
+        if(GEN_BUILD[v]) GEN_BUILD[v](); }; }
       tog('.br-mode', function(){ aBridgeSync(pane); aBuildBridge(); });
       tog('.br-gran', function(){ aBridgeSync(pane); aBuildBridge(); });
       tog('.br-view', aBuildBridge);
       tog('.br-yr', aBuildBridge);
       tog('.br-qtr', aBuildBridge);
-      tog('.br-from', aBuildBridge);
-      tog('.br-to', aBuildBridge);
       tog('.br-fy', aBuildBridge);
-      pane.querySelectorAll('.br-sl input[type=range]').forEach(function(s){ s.addEventListener('input', aBuildBridge); });
       tog('.nb-yr', aBuildNetBridge);
       tog('.nb-norm', aBuildNetBridge);
       var etabs=pane.querySelectorAll('.exp-tab');
@@ -3849,6 +3898,7 @@ function segmentsBody(){
        '<div class="seg-mm-row"><span class="seg-mm-lab">Profit</span><div class="seg-mm-bar">'+
          '<div class="seg-mm-seg" style="width:37%;background:'+BRAND+'">NA 37%</div><div class="seg-mm-seg" style="width:5.9%;background:'+BRAND2+'"></div><div class="seg-mm-seg" style="width:57%;background:'+SQUID+'">AWS 57%</div></div></div>'+
      '</div></div>';
+  h+=aSegBridgeBody();
   h+=aCollap('Segment deep dives — the full read per segment (drivers, unit economics, cost structure, calls)', segExp, false);
   return h;
 }
@@ -3885,10 +3935,14 @@ function aBuildSegments(){
   if(pane && !pane._segWired){ pane._segWired=true;
     pane.querySelectorAll('.seg-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.seg-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegments(); }; });
     pane.querySelectorAll('.sgm-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.sgm-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegments(); }; });
+    var segtog=function(sel){ pane.querySelectorAll(sel+' button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll(sel+' button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegBridge(); }; }); };
+    segtog('.sbr-mode'); segtog('.sbr-from'); segtog('.sbr-to'); segtog('.sbr-fy');
+    pane.querySelectorAll('.sbr-ctl-fwd input[type=range]').forEach(function(s){ s.addEventListener('input', aBuildSegBridge); });
     var stabs=pane.querySelectorAll('.segx-tab');
     stabs.forEach(function(b){ b.onclick=function(){ var key=b.getAttribute('data-segtab');
       stabs.forEach(function(x){ x.classList.toggle('active',x===b); });
       pane.querySelectorAll('.segx-panel').forEach(function(p){ p.hidden=(p.getAttribute('data-segpanel')!==key); }); }; }); }
+  aBuildSegBridge();
 }
 // ═══ Bottom Line ▸ Capex & Depreciation — seeds + engine (restored) ═══
 // AMZN Capex/D&A seed -- snapshot of 'DCF AMZN.xlsm' (D&A + Segments tabs), FY2019-FY2028.
@@ -4736,7 +4790,12 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="segments">Segments</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="supplychain">Supply Chain</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="margins">'+aMarginsBody()+aBridgeBody()+aNetBridgeBody()+aSbcBody()+aCollap('Expense lines — the six functional deep dives (unit economics, drivers, calls)', expenseTabsBody(), false)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="margins">'+aGeneralPicker()+
+        '<div class="gen-sec" data-gsec="margins">'+aMarginsBody()+'</div>'+
+        '<div class="gen-sec" data-gsec="bridge" hidden>'+aBridgeBody()+'</div>'+
+        '<div class="gen-sec" data-gsec="net" hidden>'+aNetBridgeBody()+'</div>'+
+        '<div class="gen-sec" data-gsec="sbc" hidden>'+aSbcBody()+'</div>'+
+        aCollap('Expense lines — the six functional deep dives (unit economics, drivers, calls)', expenseTabsBody(), false)+'</div>'+
       '<div class="ovt-subpane" data-ovst="segments" hidden>'+segmentsBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="supplychain" hidden>'+aSplcBody(c)+'</div>'+
     '</div>';

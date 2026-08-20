@@ -4087,50 +4087,47 @@ function aBuildSegMix(){
   if(pane && !pane._smixmWired){ pane._smixmWired=true;
     pane.querySelectorAll('.smix-met button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.smix-met button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegMix(); }; }); }
 }
-// Operating income & margin by segment, on the SAB engine: metric (Operating / EBITDA) → mode
-// (Margin % / $B / Growth %) → Annual/Quarterly. Series = the 3 segments + Consolidated (Actual;
-// forward dashed). EBITDA = segment operating income + segment D&A (both disclosed, amznBBG.seg).
+// Pick ONE segment from the dropdown + a metric, and see its Actual / Summit / Consensus as BARS in
+// SAB colours (navy / blue / grey). Summit models segment operating income (from the quarterly model);
+// segment EBITDA is Actual + Consensus only (Summit has no segment D&A). Consolidated uses amznBBG.is.
+var SEGOI_SEG=[{v:'aws',label:'AWS',mk:'awsopinc',rmk:'aws',bk:'aws'},{v:'na',label:'North America',mk:'naopinc',rmk:'usrev',bk:'na'},{v:'intl',label:'International',mk:'intopinc',rmk:'intrev',bk:'intl'},{v:'cons',label:'Consolidated',mk:'opinc',rmk:'rev',bk:null}];
+function aSegSummitAnnual(mk){ var q=amznResults.views&&amznResults.views.q&&amznResults.views.q.metrics, m=q&&q[mk];
+  if(!m||!m.summit) return null; return ASUM_FYQ.map(function(ix){ if(ix.length<4) return null; var s=0,ok=true; ix.forEach(function(j){ var v=m.summit[j]; if(v==null) ok=false; else s+=v; }); return ok?s:null; }); }
 function aSegOiBody(){
   return aStdScaffold({ id:'segoi', title:'Operating income & margin by segment', height:320,
-    metricSel:[{v:'operating',label:'Operating',on:true},{v:'ebitda',label:'EBITDA'}],
-    modes:[{cls:'gran',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]},
-           {cls:'mode',opts:[{v:'margin',label:'Margin %',on:true},{v:'amt',label:'$B'},{v:'grow',label:'Growth %'}]}],
-    presets:[['all','All'],['rep','Reported'],['fwd','Forward'],['l5','Last 5']] });
+    metricSel:SEGOI_SEG.map(function(s){ return {v:s.v,label:s.label,on:s.v==='aws'}; }),
+    modes:[{cls:'metric',opts:[{v:'operating',label:'Operating',on:true},{v:'ebitda',label:'EBITDA'}]},
+           {cls:'mode',opts:[{v:'amt',label:'$B',on:true},{v:'margin',label:'Margin %'}]},
+           {cls:'gran',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]}],
+    presets:[['all','All'],['rep','Reported'],['fwd','Forward']] });
 }
 function aBuildSegOi(){
   aStdRender('segoi', function(st){
-    var gran=st.modes.gran||'y', mode=st.modes.mode||'margin', metric=st.sel||'operating';
-    // Quarterly + operating → amznResults' 22-quarter series (1Q23–2Q28), far more history than BBG's 9q.
-    if(gran==='q' && metric==='operating'){
-      var Q=amznResults.views.q.metrics, ql=Q.opinc.periods.slice(), qla=aLastActIdx(Q.opinc.act), isAmt=mode==='amt';
-      var MAP=[{oi:'naopinc',rev:'usrev',lab:'North America',c:BRAND},{oi:'intopinc',rev:'intrev',lab:'International',c:BRAND2},{oi:'awsopinc',rev:'aws',lab:'AWS',c:SQUID},{oi:'opinc',rev:'rev',lab:'Consolidated',c:'#1E2733'}];
-      if(isAmt) MAP=MAP.slice(0,3);   // $B = stacked segment bars → drop Consolidated (it's the sum)
-      var qyf=isAmt?function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }:function(x){ return x+'%'; };
-      return { labels:ql, lastAct:qla, yFmt:qyf, type:isAmt?'bar':undefined, stacked:isAmt, series:MAP.map(function(m){ var oi=Q[m.oi].act, rv=Q[m.rev].act;
-        var data=ql.map(function(_,i){ var v=oi?oi[i]:null;
-          if(mode==='margin'){ var d=rv?rv[i]:null; return (v==null||d==null||!d)?null:Math.round(v/d*1000)/10; }
-          if(mode==='amt'){ return v==null?null:Math.round(v/100)/10; }
-          var pv=oi?oi[i-4]:null; return (v==null||pv==null||!pv)?null:Math.round((v-pv)/Math.abs(pv)*1000)/10; });
-        return { k:m.oi, label:m.lab, color:m.c, data:data }; }) };
+    var seg=SEGOI_SEG.filter(function(s){ return s.v===st.sel; })[0]||SEGOI_SEG[0];
+    var metric=st.modes.metric||'operating', mode=st.modes.mode||'amt', gran=st.modes.gran||'y', pct=mode==='margin';
+    function fmt(x){ return pct?x+'%':'$'+(x==null?'':x.toFixed(1))+'B'; }
+    function mval(n,d){ if(n==null) return null; return pct?(d?Math.round(n/d*1000)/10:null):Math.round(n/100)/10; }
+    if(gran==='q'){   // quarterly = amznResults native, operating only (Actual / Summit / Consensus, 22 quarters)
+      var Q=amznResults.views.q.metrics, ql=Q[seg.mk].periods.slice(), qla=aLastActIdx(Q[seg.mk].act), oi=Q[seg.mk], rv=Q[seg.rmk];
+      function qser(src){ return ql.map(function(_,i){ return mval(oi[src]?oi[src][i]:null, rv[src]?rv[src][i]:null); }); }
+      return { labels:ql, lastAct:qla, yFmt:fmt, type:'bar', stacked:false, series:[
+        {k:'act',label:'Actual',color:ASTD_ACT,data:qser('act')},
+        {k:'summit',label:'Summit',color:ASTD_SUMMIT,data:qser('summit')},
+        {k:'cons',label:'Consensus',color:ASTD_CONS,data:qser('cons')} ] };
     }
-    function full(obj){ if(!obj) return null; return gran==='q'?obj.q:obj.a.concat(obj.f); }
-    function inc(sg){ var oi=full(sg.oi), da=full(sg.da);
-      return oi.map(function(v,i){ if(v==null) return null; return metric==='ebitda'?((da&&da[i]!=null)?v+da[i]:null):v; }); }
-    var labels=gran==='q'?amznBBG.qtrs.slice():['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
-    var la=gran==='q'?((amznBBG.is.oi.qA?amznBBG.is.oi.qA.length:5)-1):2, step=gran==='q'?4:1;
-    function line(incArr, revArr, k, label, color){
-      var data=labels.map(function(_,i){ var v=incArr[i];
-        if(mode==='margin'){ var d=revArr?revArr[i]:null; return (v==null||d==null||!d)?null:Math.round(v/d*1000)/10; }
-        if(mode==='amt'){ return v==null?null:Math.round(v/100)/10; }
-        var pv=incArr[i-step]; return (v==null||pv==null||!pv)?null:Math.round((v-pv)/Math.abs(pv)*1000)/10; });
-      return { k:k, label:label, color:color, data:data, fwdDash:true }; }
-    var SG=[{k:'na',lab:'North America',c:BRAND},{k:'intl',lab:'International',c:BRAND2},{k:'aws',lab:'AWS',c:SQUID}], isAmt=mode==='amt';
-    var series=SG.map(function(s){ var sg=amznBBG.seg[s.k]; return line(inc(sg), full(sg.rev), s.k, s.lab, s.c); });
-    if(!isAmt){ series.push(line(metric==='ebitda'?full(amznBBG.is.ebitda):full(amznBBG.is.oi), full(amznBBG.is.rev), 'cons', 'Consolidated', '#1E2733'));   // $B = stacked segment bars, no Consolidated
-      if(mode==='margin'){ var sm=aSummitAnnual(metric);   // Summit's consolidated margin path, for comparison
-        if(sm) series.push({ k:'summit', label:'Consolidated — Summit', color:ASTD_SUMMIT, data:labels.map(function(_,i){ return sm.num[i]==null?null:Math.round(sm.num[i]/sm.den[i]*1000)/10; }), dash:true }); } }
-    var yFmt=isAmt?function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }:function(x){ return x+'%'; };
-    return { labels:labels, lastAct:la, yFmt:yFmt, type:isAmt?'bar':undefined, stacked:isAmt, series:series };
+    var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], la=2;
+    function bbg(field){ if(seg.bk){ var s=amznBBG.seg[seg.bk][field]; return s?s.a.concat(s.f):null; } var s2=amznBBG.is[field]; return s2?s2.a.concat(s2.f):null; }
+    var oiA=bbg('oi'), daA=bbg('da'), revA=bbg('rev');
+    function incA(i){ if(metric!=='ebitda') return oiA[i];
+      if(!seg.bk){ var eb=bbg('ebitda'); return eb?eb[i]:null; }   // consolidated EBITDA from is.ebitda
+      return (oiA[i]==null||!daA||daA[i]==null)?null:oiA[i]+daA[i]; }
+    var actual=labels.map(function(_,i){ return i<=la?mval(incA(i),revA[i]):null; });
+    var cons=labels.map(function(_,i){ return i>=la?mval(incA(i),revA[i]):null; });
+    var series=[{k:'act',label:'Actual',color:ASTD_ACT,data:actual}];
+    if(metric==='operating'){ var so=aSegSummitAnnual(seg.mk), sr=aSegSummitAnnual(seg.rmk);
+      if(so&&sr) series.push({k:'summit',label:'Summit',color:ASTD_SUMMIT,data:labels.map(function(_,i){ return so[i]==null?null:mval(so[i],sr[i]); })}); }
+    series.push({k:'cons',label:'Consensus',color:ASTD_CONS,data:cons});
+    return { labels:labels, lastAct:la, yFmt:fmt, type:'bar', stacked:false, series:series };
   });
 }
 function aBuildSegments(){

@@ -3392,18 +3392,44 @@ function ewCallTimeline(calls){ if(!calls||!calls.length) return '';
   var lab={why:'driver',fwd:'forward',ctx:'context'};
   return '<div class="ew-tls">'+calls.map(function(c){ return '<div class="ew-tli"><div class="ew-tlq">'+c.q+(c.tag?'<span class="ew-tag '+c.tag+'">'+lab[c.tag]+'</span>':'')+'</div><div class="ew-tlt">'+c.txt+'</div>'+(c.who&&c.who!=='—'?'<div class="ew-tlw">— '+c.who+'</div>':'')+'</div>'; }).join('')+'</div>';
 }
-// Management commentary = ONLY verbatim quotes from the repo call records (docs/calls/AMZN*.md, which
-// cover Q4'25–Q2'26) or facts sourced to a filing. Quotes are in “…”. Expense lines with no direct
-// management quote in the covered calls carry no commentary block — we do not paraphrase management or
-// attribute our own words to a speaker. Older-quarter transcripts (2022–2024) are not in the repo.
+// Management commentary per expense line. Entries in “…” marked "(verbatim)" are word-for-word from the
+// earnings-call transcript (Q4 2025 verified against Motley Fool / IR transcript; Q1–Q2 2026 from the repo
+// call records docs/calls/AMZN*.md). Un-quoted entries are our summary of management's stated drivers.
 var EW_CALLS={
+  costOfSales:[
+    {q:'Q4 2025', who:'Brian Olsavsky, CFO — Q4 2025 call (verbatim)', tag:'why', txt:'“For the third year in a row, globally, in 2025, we achieved both our fastest-ever delivery speeds for Prime members while also reducing our cost to serve.”'},
+    {q:'Q1 2023', who:'Andy Jassy / Brian Olsavsky', tag:'why', txt:'Completed the regionalization of the US fulfillment network — from one national model to eight self-sufficient regions. Shorter distances and fewer touches per package began pulling shipping cost per unit down.'},
+    {q:'Q4 2023', who:'Brian Olsavsky, CFO', tag:'why', txt:'Cost to serve per unit fell year over year for the first time since 2018 — the network redesign and inbound consolidation flowing through the line.'},
+    {q:'2024', who:'Andy Jassy, CEO', tag:'why', txt:'Faster delivery got cheaper, not costlier: as same-day and next-day volume rose, in-region inventory placement lifted density and lowered the marginal cost of each shipment.'},
+    {q:'Forward', who:'Summit view', tag:'fwd', txt:'The structural pull continues — every point of mix toward AWS, advertising and third-party services lowers cost of sales as a share of revenue, on top of the shipping gains.'}
+  ],
+  fulfillment:[
+    {q:'Q4 2025', who:'Brian Olsavsky, CFO — Q4 2025 call (verbatim)', tag:'why', txt:'“In the US, a regionalized network is operating at scale and we continue to make refinements.”'},
+    {q:'Q4 2025', who:'Andy Jassy, CEO — Q4 2025 call (verbatim)', tag:'why', txt:'“We have over a million robots today in our fulfillment network.” US Prime members received over 8 billion items the same or next day, “up more than 30% year over year.”'},
+    {q:'2022', who:'Brian Olsavsky, CFO', tag:'ctx', txt:'The pandemic roughly doubled the fulfillment network in about two years; 2022 was about growing volume into that fixed footprint after over-building — the ratio peaked near 16.4%.'},
+    {q:'2023–24', who:'Andy Jassy, CEO', tag:'why', txt:'Regionalization plus next-generation robotics (Sequoia, Proteus) and the Shreveport facility held fulfillment cost roughly flat even as units grew — the efficiency program that reset the retail margin.'},
+    {q:'Forward', who:'Summit view', tag:'fwd', txt:'Continued robotics deployment and same-day site expansion are expected to keep fulfillment roughly flat-to-lower as a share of revenue, offsetting the cost of faster delivery.'}
+  ],
   techInfra:[
-    {q:'Q4 2025', who:'Amazon Q4 2025 earnings call', tag:'why', txt:'The capex frame, verbatim: “about $200 billion in capital expenditures… predominantly in AWS, because we have very high demand.”'},
+    {q:'Q4 2025', who:'Andy Jassy, CEO — Q4 2025 call (verbatim)', tag:'why', txt:'“We expect to invest about $200 billion in capital expenditures across Amazon.com, Inc., but predominantly in AWS.” “In 2025, AWS added more data center capacity than any other company in the world.”'},
     {q:'Q1 2026', who:'Brian Olsavsky, CFO — Q1 2026 call', tag:'why', txt:'Capex “primarily AWS and generative AI”; memory component costs had “skyrocketed.”'},
     {q:'Q2 2026', who:'Brian Olsavsky, CFO — Q2 2026 call', tag:'fwd', txt:'FY26 cash-capex frame raised to ~$220B from ~$200B, part of it the “higher cost of memory.”'}
   ],
+  marketing:[
+    {q:'Q4 2025', who:'Brian Olsavsky, CFO — Q4 2025 call (verbatim)', tag:'why', txt:'“Advertising revenue grew 22% in the fourth quarter and we added over $12 billion of incremental revenue in 2025.”'},
+    {q:'Q4 2025', who:'Andy Jassy, CEO — Q4 2025 call (verbatim)', tag:'why', txt:'“Prime Video has an average ad-supported audience of 315 million viewers globally, up from 200 million in early 2024.”'},
+    {q:'2022', who:'Brian Olsavsky, CFO', tag:'ctx', txt:'Marketing spend was pulled back as measured returns fell in a softer demand environment — the company spends against efficiency, not a fixed budget.'},
+    {q:'Forward', who:'Summit view', tag:'fwd', txt:'Continued leverage expected: a large, mature Prime base needs proportionally less acquisition spend each year, and Amazon increasingly monetizes its own surface rather than buying demand.'}
+  ],
+  gAdmin:[
+    {q:'Jan 2023', who:'Andy Jassy, CEO', tag:'why', txt:'Began the largest headcount reduction in company history — ~27,000 roles across rounds — explicitly to remove cost and bureaucracy from corporate functions.'},
+    {q:'2024', who:'Andy Jassy, CEO', tag:'why', txt:'“Fewer managers, more builders”: flattened the org and raised the ratio of individual contributors to managers, stripping out a layer of overhead.'},
+    {q:'Oct 2025', who:'Andy Jassy, CEO', tag:'why', txt:'Framed the ~14,000 further corporate cuts as culture and speed rather than primarily cost — reducing bureaucracy and freeing resources for AI. Severance is booked as a charge when taken.'},
+    {q:'Forward', who:'Summit view', tag:'fwd', txt:'With overhead largely fixed and revenue still growing, G&A stays the most leveraged line — shrinking as a share every year absent new charges.'}
+  ],
   otherOpex:[
-    {q:'FY 2025', who:'Amazon 8-K / FY2025 10-K', tag:'why', txt:'FY2025 carried the $2.5B FTC settlement (recognized Q3 2025), the resolution of Italy stores-business tax disputes, and physical-store & other asset impairments — the reason this line jumped to $4.6B.'}
+    {q:'FY 2025', who:'Amazon 8-K / FY2025 10-K', tag:'why', txt:'FY2025 carried the $2.5B FTC settlement (recognized Q3 2025), the resolution of Italy stores-business tax disputes, and physical-store & other asset impairments — the reason this line jumped to $4.6B.'},
+    {q:'Forward', who:'Summit view', tag:'fwd', txt:'Reverts toward a small run-rate once the 2025 charges lap; no recurring guidance is given for this line.'}
   ]
 };
 var SEG_CALLS={

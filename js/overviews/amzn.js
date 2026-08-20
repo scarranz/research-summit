@@ -3429,24 +3429,39 @@ function aSumOpAnnual(metricKey){
 function aMarginsBody(){
   return aStdScaffold({ id:'margins', title:'Profitability & margins', height:340,
     metricSel:[{v:'operating',label:'Operating margin',on:true},{v:'ebitda',label:'EBITDA margin'},{v:'net',label:'Net margin'},{v:'fcf',label:'FCF margin'},{v:'gross',label:'Gross margin'}],
-    modes:[{cls:'mode',opts:[{v:'pct',label:'Margin %',on:true},{v:'amt',label:'$B (nominal)'}]}],
-    presets:[['all','All'],['rep','Reported'],['fwd','Forward'],['l3','Last 3Y']] });
+    modes:[{cls:'gran',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]},{cls:'mode',opts:[{v:'pct',label:'Margin %',on:true},{v:'amt',label:'$B (nominal)'}]}],
+    presets:[['all','All'],['rep','Reported'],['fwd','Forward'],['l5','Last 5']] });
 }
+function aLastActIdx(arr){ var la=0; for(var i=0;i<arr.length;i++) if(arr[i]!=null) la=i; return la; }
 function aBuildMargins(){
   aStdRender('margins', function(st){
-    var MET={operating:'oi',ebitda:'ebitda',net:'netIncome',fcf:'fcf',gross:'grossProfit'};
-    var num=amznBBG.is[MET[st.sel]], rev=amznBBG.is.rev; if(!num||!rev) return null;
-    var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], la=2, pct=st.modes.mode!=='amt';
-    var na=num.a.concat(num.f), rv=rev.a.concat(rev.f);
+    var pct=st.modes.mode!=='amt', gran=st.modes.gran||'y';
+    function fmt(x){ return pct?x+'%':'$'+(x==null?'':x.toFixed(1))+'B'; }
     function val(nn,dd){ if(nn==null) return null; return pct?(dd?Math.round(nn/dd*1000)/10:null):Math.round(nn/100)/10; }
-    var actual=labels.map(function(_,i){ return i<=la?val(na[i],rv[i]):null; });
-    var cons=labels.map(function(_,i){ return i>=la?val(na[i],rv[i]):null; });   // anchor at FY25 for a continuous line
-    var series=[{k:'act',label:'Actual',color:ASTD_ACT,data:actual},
-                {k:'cons',label:'Consensus (BBG)',color:ASTD_CONS,data:cons,dash:true}];
-    if(st.sel==='operating'){ var so=aSumOpAnnual('opinc'), sr=aSumOpAnnual('rev');
-      if(so&&sr){ var sm=labels.map(function(_,i){ return (so[i]==null||sr[i]==null)?null:val(so[i],sr[i]); });
-        series.splice(1,0,{k:'summit',label:'Summit model',color:ASTD_SUMMIT,data:sm}); } }
-    return { labels:labels, lastAct:la, series:series, yFmt:function(x){ return pct?x+'%':'$'+(x==null?'':x.toFixed(1))+'B'; } };
+    // Quarterly + operating margin = amznResults native (Actual / Summit / Consensus) — Summit is clean here.
+    if(gran==='q' && st.sel==='operating'){
+      var q=amznResults.views.q.metrics, oi=q.opinc, rev=q.rev, labels=oi.periods, la=aLastActIdx(oi.act);
+      function ser(src){ return labels.map(function(_,i){ return val(oi[src]?oi[src][i]:null, rev[src]?rev[src][i]:null); }); }
+      return { labels:labels, lastAct:la, yFmt:fmt, series:[
+        {k:'act',label:'Actual',color:ASTD_ACT,data:ser('act')},
+        {k:'summit',label:'Summit model',color:ASTD_SUMMIT,data:ser('summit')},
+        {k:'cons',label:'Consensus',color:ASTD_CONS,data:ser('cons'),dash:true} ] };
+    }
+    var MET={operating:'oi',ebitda:'ebitda',net:'netIncome',fcf:'fcf',gross:'grossProfit'};
+    var num=amznBBG.is[MET[st.sel]], rvb=amznBBG.is.rev; if(!num||!rvb) return null;
+    if(gran==='q'){   // other metrics quarterly — BBG (Actual + Consensus; Summit not forecast at this grain)
+      var ql=amznBBG.qtrs.slice(), na=num.q, rq=rvb.q, laq=aLastActIdx(na);
+      var actq=ql.map(function(_,i){ return i<=laq?val(na[i],rq[i]):null; }), conq=ql.map(function(_,i){ return i>=laq?val(na[i],rq[i]):null; });
+      return { labels:ql, lastAct:laq, yFmt:fmt, series:[ {k:'act',label:'Actual',color:ASTD_ACT,data:actq}, {k:'cons',label:'Consensus (BBG)',color:ASTD_CONS,data:conq,dash:true} ] };
+    }
+    // Annual — BBG actual + consensus for all metrics.
+    var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], la=2;
+    var na2=num.a.concat(num.f), rv2=rvb.a.concat(rvb.f);
+    var actual=labels.map(function(_,i){ return i<=la?val(na2[i],rv2[i]):null; });
+    var cons=labels.map(function(_,i){ return i>=la?val(na2[i],rv2[i]):null; });
+    return { labels:labels, lastAct:la, yFmt:fmt, series:[
+      {k:'act',label:'Actual',color:ASTD_ACT,data:actual},
+      {k:'cons',label:'Consensus (BBG)',color:ASTD_CONS,data:cons,dash:true} ] };
   });
 }
 // Expense-line full dives — opened from an Expenses card via data-detail="exp:<key>". VISUAL, not prose.

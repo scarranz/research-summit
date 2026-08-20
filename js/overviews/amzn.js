@@ -4058,6 +4058,18 @@ function aSegOiBody(){
 function aBuildSegOi(){
   aStdRender('segoi', function(st){
     var gran=st.modes.gran||'y', mode=st.modes.mode||'margin', metric=st.sel||'operating';
+    // Quarterly + operating → amznResults' 22-quarter series (1Q23–2Q28), far more history than BBG's 9q.
+    if(gran==='q' && metric==='operating'){
+      var Q=amznResults.views.q.metrics, ql=Q.opinc.periods.slice(), qla=aLastActIdx(Q.opinc.act);
+      var MAP=[{oi:'naopinc',rev:'usrev',lab:'North America',c:BRAND},{oi:'intopinc',rev:'intrev',lab:'International',c:BRAND2},{oi:'awsopinc',rev:'aws',lab:'AWS',c:SQUID},{oi:'opinc',rev:'rev',lab:'Consolidated',c:'#1E2733'}];
+      var qyf=mode==='amt'?function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }:function(x){ return x+'%'; };
+      return { labels:ql, lastAct:qla, yFmt:qyf, series:MAP.map(function(m){ var oi=Q[m.oi].act, rv=Q[m.rev].act;
+        var data=ql.map(function(_,i){ var v=oi?oi[i]:null;
+          if(mode==='margin'){ var d=rv?rv[i]:null; return (v==null||d==null||!d)?null:Math.round(v/d*1000)/10; }
+          if(mode==='amt'){ return v==null?null:Math.round(v/100)/10; }
+          var pv=oi?oi[i-4]:null; return (v==null||pv==null||!pv)?null:Math.round((v-pv)/Math.abs(pv)*1000)/10; });
+        return { k:m.oi, label:m.lab, color:m.c, data:data }; }) };
+    }
     function full(obj){ if(!obj) return null; return gran==='q'?obj.q:obj.a.concat(obj.f); }
     function inc(sg){ var oi=full(sg.oi), da=full(sg.da);
       return oi.map(function(v,i){ if(v==null) return null; return metric==='ebitda'?((da&&da[i]!=null)?v+da[i]:null):v; }); }

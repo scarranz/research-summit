@@ -3680,21 +3680,26 @@ function aBuildExpenses(){
       aBridgeSync(pane); }
   }
 }
-var A_SEG=[ {k:'us',lab:'North America',c:BRAND,oi:'usOpInc',rev:'usRev',qoi:'naopinc',qrev:'usrev'},
-  {k:'int',lab:'International',c:BRAND2,oi:'intOpInc',rev:'intRev',qoi:'intopinc',qrev:'intrev'},
-  {k:'aws',lab:'AWS',c:SQUID,oi:'awsOpInc',rev:'awsRev',qoi:'awsopinc',qrev:'aws'} ];
+var A_SEG=[ {k:'us',lab:'North America',c:BRAND,oi:'usOpInc',rev:'usRev',qoi:'naopinc',qrev:'usrev',bk:'na'},
+  {k:'int',lab:'International',c:BRAND2,oi:'intOpInc',rev:'intRev',qoi:'intopinc',qrev:'intrev',bk:'intl'},
+  {k:'aws',lab:'AWS',c:SQUID,oi:'awsOpInc',rev:'awsRev',qoi:'awsopinc',qrev:'aws',bk:'aws'} ];
+// Segment D&A is disclosed (10-K Note 10) and lives in amznBBG.seg[bk].da (annual, FY23-25 actual + fwd);
+// EBITDA margin = (operating income + segment D&A) ÷ segment revenue. No quarterly segment D&A → eb=null there.
+function segDA(bk,y){ var s=amznBBG.seg[bk]; if(!s||!s.da||y<2023) return null; return (y<=2025)?s.da.a[y-2023]:(s.da.f?s.da.f[y-2026]:null); }
 function segAnnualRows(){
   return A_OPEX_YEARS.map(function(y){ var r=A_OPEX[y], o={p:String(y)};
-    A_SEG.forEach(function(s){ o[s.k]={oi:r[s.oi], mgn:Math.round(r[s.oi]/r[s.rev]*1000)/10}; });
+    A_SEG.forEach(function(s){ var oi=r[s.oi], rev=r[s.rev], da=segDA(s.bk,y);
+      o[s.k]={oi:oi, mgn:Math.round(oi/rev*1000)/10, eb:(da==null?null:Math.round((oi+da)/rev*1000)/10)}; });
     o.consMgn=(function(){ var cost=A_OPEX_FN.reduce(function(a,f){ return a+r[f.k]; },0)+r.otherOpex; return Math.round((r.revenue-cost)/r.revenue*1000)/10; })();
+    var ie=amznBBG.is.ebitda, ir=amznBBG.is.rev; o.consEb=(y>=2023&&ie&&ir&&ir.a[y-2023])?Math.round(ie.a[y-2023]/ir.a[y-2023]*1000)/10:null;
     return o; });
 }
 function segQuarterRows(){
   var q=amznResults.views.q.metrics, per=q.rev.periods, n=per.indexOf('2Q26'); if(n<0) n=per.length;
   var labels=per.slice(0,n);
   return labels.map(function(_,i){ var o={p:labels[i]};
-    A_SEG.forEach(function(s){ var oi=q[s.qoi].act[i], rv=q[s.qrev].act[i]; o[s.k]={oi:oi, mgn:(oi==null||rv==null||!rv)?null:Math.round(oi/rv*1000)/10}; });
-    var a=q.opinc.act[i], b=q.rev.act[i]; o.consMgn=(a==null||b==null||!b)?null:Math.round(a/b*1000)/10;
+    A_SEG.forEach(function(s){ var oi=q[s.qoi].act[i], rv=q[s.qrev].act[i]; o[s.k]={oi:oi, mgn:(oi==null||rv==null||!rv)?null:Math.round(oi/rv*1000)/10, eb:null}; });
+    var a=q.opinc.act[i], b=q.rev.act[i]; o.consMgn=(a==null||b==null||!b)?null:Math.round(a/b*1000)/10; o.consEb=null;
     return o; });
 }
 // Segment deep-dive "worlds" — opened from the Segments tab via data-detail="seg:aws|us|int".
@@ -3834,17 +3839,6 @@ function aBuildSegCapDa(){
 function segmentsBody(){
   var h='<style>'+
     '.seg-tog-row{display:flex;justify-content:flex-end;margin-bottom:8px}'+
-    '.seg-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:9px;overflow:hidden;margin-bottom:16px}'+
-    '@media(max-width:620px){.seg-kpis{grid-template-columns:repeat(2,1fr)}}'+
-    '.seg-kpi{background:var(--card,#fff);padding:11px 13px}.seg-kl{font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}'+
-    '.seg-kv{font-size:21px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;margin-top:2px;letter-spacing:-.02em}.seg-ks{font-size:10.5px;color:var(--mu);margin-top:1px}'+
-    /* rev->profit mismatch bars */
-    '.seg-mm{display:flex;flex-direction:column;gap:10px;margin:4px 0 2px}'+
-    '.seg-mm-row{display:flex;align-items:center;gap:10px}'+
-    '.seg-mm-lab{width:66px;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);text-align:right;flex-shrink:0}'+
-    '.seg-mm-bar{flex:1;display:flex;height:30px;border-radius:6px;overflow:hidden}'+
-    '.seg-mm-seg{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;white-space:nowrap;min-width:0}'+
-    '.seg-mm-ar{text-align:center;color:var(--mu);font-size:13px;margin:-2px 0}'+
     /* engine blocks */
     '.seg-eng{display:flex;flex-direction:column;gap:10px;margin-top:4px}'+
     '.seg-b{border:1px solid var(--bdr);border-left:4px solid var(--bdr);border-radius:10px;padding:12px 15px;background:var(--card,#fff)}'+
@@ -3885,36 +3879,46 @@ function segmentsBody(){
       return '<div class="segx-panel segx-panel-card" data-segpanel="'+s.key+'"'+(i>0?' hidden':'')+'>'+head+(SEG_WORLD[s.key]?SEG_WORLD[s.key].h:'')+'</div>';
     }).join('')+'</div></div>';
   h+='<div class="seg-tog-row"><span class="acx-tog seg-tog"><button type="button" data-segg="y" class="active">Annual</button><button type="button" data-segg="q">Quarterly</button></span></div>';
-  h+='<div class="seg-kpis" id="segKpis"></div>';
   h+='<div class="ov-sec"><div class="ov-sec-h">Operating income &amp; margin by segment</div>'+
-    '<div class="mch-ctl"><span class="acx-tog sgm-tog"><button type="button" data-sgm="dollar" class="active">$B (income)</button><button type="button" data-sgm="margin">Margin %</button></span><span></span></div>'+
+    '<div class="mch-ctl"><span class="acx-tog sgm-tog"><button type="button" data-sgm="dollar" class="active">$B (income)</button><button type="button" data-sgm="opm">Op margin %</button><button type="button" data-sgm="ebm">EBITDA margin %</button></span><span></span></div>'+
     '<div style="height:300px"><canvas id="aSgMain"></canvas></div></div>';
-  // rev -> profit mismatch
-  h+='<div class="ov-sec"><div class="ov-sec-h">Where the revenue is vs where the profit is (FY2025)</div>'+
-     '<div class="seg-mm">'+
-       '<div class="seg-mm-row"><span class="seg-mm-lab">Revenue</span><div class="seg-mm-bar">'+
-         '<div class="seg-mm-seg" style="width:59.5%;background:'+BRAND+'">NA 59%</div><div class="seg-mm-seg" style="width:22.6%;background:'+BRAND2+'">Intl 23%</div><div class="seg-mm-seg" style="width:18%;background:'+SQUID+'">AWS 18%</div></div></div>'+
-       '<div class="seg-mm-ar">▼</div>'+
-       '<div class="seg-mm-row"><span class="seg-mm-lab">Profit</span><div class="seg-mm-bar">'+
-         '<div class="seg-mm-seg" style="width:37%;background:'+BRAND+'">NA 37%</div><div class="seg-mm-seg" style="width:5.9%;background:'+BRAND2+'"></div><div class="seg-mm-seg" style="width:57%;background:'+SQUID+'">AWS 57%</div></div></div>'+
-     '</div></div>';
+  h+=aSegMixBody();   // where the revenue is vs where the profit is — as an evolution, not a single year
   h+=aSegBridgeBody();
   h+=aCollap('Segment deep dives — the full read per segment (drivers, unit economics, cost structure, calls)', segExp, false);
   return h;
+}
+// The revenue-vs-profit divergence as an evolution (not a single FY): each segment's SHARE of revenue
+// ⇄ SHARE of operating income, FY24→FY28E (actual + BBG consensus). International is profitable from
+// FY24, so 100%-stacked shares stay clean. Data: amznBBG.seg (rev/oi by segment).
+var A_SMIX_PTS=[{lab:'FY24',g:'a',i:1},{lab:'FY25',g:'a',i:2},{lab:'FY26E',g:'f',i:0},{lab:'FY27E',g:'f',i:1},{lab:'FY28E',g:'f',i:2}];
+function aSegMixBody(){
+  return '<div class="ov-sec"><div class="ov-sec-h">Where the revenue is vs where the profit is — over time</div>'+
+    '<div class="mch-ctl"><span class="acx-tog smix-tog"><button type="button" data-smix="rev" class="active">Share of revenue</button><button type="button" data-smix="oi">Share of operating income</button></span><span></span></div>'+
+    '<div style="height:300px"><canvas id="aSegMix"></canvas></div></div>';
+}
+function aBuildSegMix(){
+  var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]'); if(!pane) return;
+  var tg=pane.querySelector('.smix-tog .active'), metric=(tg&&tg.getAttribute('data-smix')==='oi')?'oi':'rev';
+  var cv=aChartReady('aSegMix'); if(!cv) return; aDestroy('aSegMix');
+  var SG=[{k:'na',lab:'North America',c:BRAND},{k:'intl',lab:'International',c:BRAND2},{k:'aws',lab:'AWS',c:SQUID}];
+  function val(k,p){ var s=amznBBG.seg[k]&&amznBBG.seg[k][metric]; return s?s[p.g][p.i]:null; }
+  var labels=A_SMIX_PTS.map(function(p){ return p.lab; });
+  var ds=SG.map(function(s){ return { label:s.lab, data:A_SMIX_PTS.map(function(p){
+      var tot=SG.reduce(function(a,x){ return a+(val(x.k,p)||0); },0), v=val(s.k,p);
+      return (tot&&v!=null)?Math.round(v/tot*1000)/10:null; }),
+    backgroundColor:s.c, borderColor:'#fff', borderWidth:1, maxBarThickness:46, stack:'m' }; });
+  _aCharts['aSegMix']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:labels, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':c.parsed.y+'% of '+(metric==='oi'?'operating income':'revenue')); } } } },
+      scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, max:100, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } });
+  aZoom('aSegMix');
+  if(pane && !pane._smixWired){ pane._smixWired=true;
+    pane.querySelectorAll('.smix-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.smix-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegMix(); }; }); }
 }
 function aBuildSegments(){
   var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]');
   var tg=pane?pane.querySelector('.seg-tog .active'):null, gran=tg?tg.getAttribute('data-segg'):'y';
   var rows=(gran==='q')?segQuarterRows():segAnnualRows();
-  // KPIs (always FY2025)
-  var k=document.getElementById('segKpis');
-  if(k){ var r=A_OPEX[2025], awsMgn=r.awsOpInc/r.awsRev, cons=r.awsOpInc+r.usOpInc+r.intOpInc;
-    var items=[ {l:'AWS op income',v:acxB(r.awsOpInc),s:acxPct(awsMgn,0)+' margin'},
-      {l:'AWS share of OI',v:acxPct(r.awsOpInc/79975,0),s:'of consolidated'},
-      {l:'North America',v:acxPct(r.usOpInc/r.usRev,1),s:'margin · $'+(r.usOpInc/1000).toFixed(1)+'B'},
-      {l:'International',v:acxPct(r.intOpInc/r.intRev,1),s:'profitable since 2024'} ];
-    k.innerHTML=items.map(function(x){ return '<div class="seg-kpi"><div class="seg-kl">'+x.l+'</div><div class="seg-kv">'+x.v+'</div><div class="seg-ks">'+x.s+'</div></div>'; }).join(''); }
-  // Operating income ($B, stacked bars) ⇄ operating margin (%, lines) — one chart, one toggle.
   var sgt=pane?pane.querySelector('.sgm-tog .active'):null, sgm=sgt?sgt.getAttribute('data-sgm'):'dollar';
   var mc=aChartReady('aSgMain');
   if(mc){ aDestroy('aSgMain'); var cfg;
@@ -3924,8 +3928,9 @@ function aBuildSegments(){
           plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+c.parsed.y.toFixed(1)+'B'; }, footer:function(it){ return 'Total: $'+it.reduce(function(a,x){ return a+(x.parsed.y||0); },0).toFixed(1)+'B'; } } } },
           scales:{ x:{ stacked:true, grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } };
     } else {
-      var ds=A_SEG.map(function(s){ return { label:s.lab, data:rows.map(function(r){ return r[s.k].mgn; }), borderColor:s.c, backgroundColor:s.c, borderWidth:2, pointRadius:2, tension:0.25, spanGaps:true }; });
-      ds.push({ label:'Consolidated', data:rows.map(function(r){ return r.consMgn; }), borderColor:'#1E2733', backgroundColor:'#1E2733', borderWidth:2.5, pointRadius:2, tension:0.25, borderDash:[5,4] });
+      var fld=(sgm==='ebm')?'eb':'mgn', cfld=(sgm==='ebm')?'consEb':'consMgn';
+      var ds=A_SEG.map(function(s){ return { label:s.lab, data:rows.map(function(r){ return r[s.k][fld]; }), borderColor:s.c, backgroundColor:s.c, borderWidth:2, pointRadius:2, tension:0.25, spanGaps:true }; });
+      ds.push({ label:'Consolidated', data:rows.map(function(r){ return r[cfld]; }), borderColor:'#1E2733', backgroundColor:'#1E2733', borderWidth:2.5, pointRadius:2, tension:0.25, borderDash:[5,4] });
       cfg={ type:'line', data:{ labels:rows.map(function(r){ return r.p; }), datasets:ds },
         options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
           plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':c.parsed.y+'%'); } } } },
@@ -3942,6 +3947,7 @@ function aBuildSegments(){
     stabs.forEach(function(b){ b.onclick=function(){ var key=b.getAttribute('data-segtab');
       stabs.forEach(function(x){ x.classList.toggle('active',x===b); });
       pane.querySelectorAll('.segx-panel').forEach(function(p){ p.hidden=(p.getAttribute('data-segpanel')!==key); }); }; }); }
+  aBuildSegMix();
   aBuildSegBridge();
 }
 // ═══ Bottom Line ▸ Capex & Depreciation — seeds + engine (restored) ═══

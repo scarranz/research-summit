@@ -3320,43 +3320,38 @@ function aGeneralPicker(){
     '<span style="font-size:11px;color:var(--mu)">Pick one — the rest stay tucked away.</span>'+
     '</div></div>';
 }
+var MARG_MET=[{k:'gross',c:GRAY},{k:'operating',c:BRAND2},{k:'ebitda',c:BRAND},{k:'net',c:GREEN},{k:'fcf',c:SQUID}];
 function aMarginsBody(){
-  var opts='<optgroup label="Profit margins"><option value="gross">Gross margin</option><option value="operating" selected>Operating margin</option><option value="ebitda">EBITDA margin</option><option value="net">Net margin</option></optgroup>'+
-    '<optgroup label="Cash"><option value="fcf">FCF margin</option></optgroup>';
-  return '<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
-      '<span style="display:flex;align-items:center;gap:8px">Profitability &amp; margins <select class="marg-metric" style="font-size:12px;font-weight:700;color:var(--navy);border:1px solid var(--bdr);border-radius:7px;padding:4px 8px;background:#fff">'+opts+'</select></span>'+
-    '</div>'+
-    '<div class="mch-ctl">'+   /* §0.4 row 2: treatment (left) · window (right) */
+  return '<div class="ov-sec"><div class="ov-sec-h">Profitability &amp; margins — all of them</div>'+
+    '<div class="mch-ctl">'+   /* §0.4 row 2: treatment (left) · note (right) */
       '<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="acx-tog marg-gran"><button type="button" data-margg="y" class="active">Annual</button><button type="button" data-margg="q">Quarterly</button></span>'+
-      '<span class="acx-tog marg-mode"><button type="button" data-margm="pct" class="active">Margin %</button><button type="button" data-margm="amt">$B</button></span></span>'+
-      '<span></span>'+
+      '<span class="acx-tog marg-mode"><button type="button" data-margm="pct" class="active">Margin %</button><button type="button" data-margm="amt">$B (nominal)</button></span></span>'+
+      '<span style="font-size:11px;color:var(--mu)">solid = reported · dashed = BBG consensus · click a legend item to hide</span>'+
     '</div>'+
-    '<div style="height:320px"><canvas id="aMargins"></canvas></div></div>';
+    '<div style="height:340px"><canvas id="aMargins"></canvas></div></div>';
 }
 function aBuildMargins(){
   var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(!pane) return;
-  var ms=pane.querySelector('.marg-metric'), metric=ms?ms.value:'operating';
   var gm=pane.querySelector('.marg-mode .active'), mode=gm?gm.getAttribute('data-margm'):'pct';
   var gg=pane.querySelector('.marg-gran .active'), gran=gg?gg.getAttribute('data-margg'):'y';
   var cv=aChartReady('aMargins'); if(!cv) return; aDestroy('aMargins');
-  var num=amznBBG.is[MARG_NUM[metric]], rev=amznBBG.is.rev; if(!num||!rev) return;
-  var labels, na, rv, nAct;
-  if(gran==='q'){ labels=amznBBG.qtrs.slice(); na=num.q; rv=rev.q; nAct=5; }   // fq0=2Q26 at idx 4 → 5 actual quarters
-  else { labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E']; na=num.a.concat(num.f); rv=rev.a.concat(rev.f); nAct=3; }
-  function val(i){ var n=na[i], d=rv[i]; if(n==null||d==null||!d) return null; return mode==='pct'?Math.round(n/d*1000)/10:Math.round(n/100)/10; }
-  var actual=labels.map(function(_,i){ return i<nAct?val(i):null; });
-  var cons=labels.map(function(_,i){ return i>=nAct-1?val(i):null; });   // overlap one point so the line is continuous
-  _aCharts['aMargins']=new Chart(cv.getContext('2d'),{ type:'line',
-    data:{ labels:labels, datasets:[
-      { label:'Reported', data:actual, borderColor:RS_ACT, backgroundColor:RS_ACT, borderWidth:2.6, pointRadius:2.5, tension:0.2, spanGaps:false },
-      { label:'Consensus (BBG)', data:cons, borderColor:RS_CONS, backgroundColor:RS_CONS, borderWidth:2.2, borderDash:[5,4], pointRadius:2.5, tension:0.2, spanGaps:false } ] },
+  var rev=amznBBG.is.rev; if(!rev) return;
+  var labels, rv, nAct;
+  if(gran==='q'){ labels=amznBBG.qtrs.slice(); rv=rev.q; nAct=5; }   // fq0=2Q26 at idx 4 → 5 actual quarters
+  else { labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E']; rv=rev.a.concat(rev.f); nAct=3; }
+  var ds=MARG_MET.map(function(m){                                   // one line per margin — ALL of them, at once
+    var num=amznBBG.is[MARG_NUM[m.k]]; var na=num?(gran==='q'?num.q:num.a.concat(num.f)):null;
+    var data=labels.map(function(_,i){ if(!na) return null; var n=na[i], d=rv[i]; if(n==null||d==null||!d) return null; return mode==='pct'?Math.round(n/d*1000)/10:Math.round(n/100)/10; });
+    return { label:MARG_LAB[m.k], data:data, borderColor:m.c, backgroundColor:m.c, borderWidth:2.4, pointRadius:2, tension:0.2, spanGaps:false,
+      segment:{ borderDash:function(ctx){ return ctx.p1DataIndex>=nAct?[5,4]:undefined; } } };   // forward (consensus) dashed
+  });
+  _aCharts['aMargins']=new Chart(cv.getContext('2d'),{ type:'line', data:{ labels:labels, datasets:ds },
     options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
       plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
-        tooltip:{ callbacks:{ title:function(it){ return it[0].label; }, label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':(mode==='pct'?c.parsed.y+'%':'$'+c.parsed.y.toFixed(1)+'B')); } } } },
+        tooltip:{ callbacks:{ title:function(it){ return it[0].label; }, label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':(mode==='pct'?c.parsed.y+'%':'$'+c.parsed.y.toFixed(1)+'B'))+(c.dataIndex>=nAct?' (E)':''); } } } },
       scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:9 } } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return mode==='pct'?v+'%':'$'+v+'B'; } } } } } });
   aZoom('aMargins');
   if(pane && !pane._margWired){ pane._margWired=true;
-    if(ms) ms.onchange=aBuildMargins;
     pane.querySelectorAll('.marg-mode button, .marg-gran button').forEach(function(b){ b.onclick=function(){ var grp=b.parentNode; grp.querySelectorAll('button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildMargins(); }; }); }
 }
 // Expense-line full dives — opened from an Expenses card via data-detail="exp:<key>". VISUAL, not prose.
@@ -3862,42 +3857,79 @@ function segmentsBody(){
       var head='<div class="seg-chips" style="margin-bottom:8px">'+s.chips.map(function(c){ return '<span class="seg-chip">'+c+'</span>'; }).join('')+'</div><div class="seg-off" style="margin-bottom:12px">'+s.off+'</div>';
       return '<div class="segx-panel segx-panel-card" data-segpanel="'+s.key+'"'+(i>0?' hidden':'')+'>'+head+(SEG_WORLD[s.key]?SEG_WORLD[s.key].h:'')+'</div>';
     }).join('')+'</div></div>';
-  h+='<div class="seg-tog-row"><span class="acx-tog seg-tog"><button type="button" data-segg="y" class="active">Annual</button><button type="button" data-segg="q">Quarterly</button></span></div>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">Operating income &amp; margin by segment</div>'+
+  h+=aSegPicker();
+  h+='<div class="seg-gsec" data-sgsec="oimargin">'+
+    '<div class="seg-tog-row"><span class="acx-tog seg-tog"><button type="button" data-segg="y" class="active">Annual</button><button type="button" data-segg="q">Quarterly</button></span></div>'+
+    '<div class="ov-sec"><div class="ov-sec-h">Operating income &amp; margin by segment</div>'+
     '<div class="mch-ctl"><span class="acx-tog sgm-tog"><button type="button" data-sgm="dollar" class="active">$B (income)</button><button type="button" data-sgm="opm">Op margin %</button><button type="button" data-sgm="ebm">EBITDA margin %</button></span><span></span></div>'+
-    '<div style="height:300px"><canvas id="aSgMain"></canvas></div></div>';
-  h+=aSegMixBody();   // where the revenue is vs where the profit is — as an evolution, not a single year
-  h+=aSegBridgeBody();
+    '<div style="height:300px"><canvas id="aSgMain"></canvas></div></div></div>';
+  h+='<div class="seg-gsec" data-sgsec="mix" hidden>'+aSegMixBody()+'</div>';
+  h+='<div class="seg-gsec" data-sgsec="bridge" hidden>'+aSegBridgeBody()+'</div>';
   h+=aCollap('Segment deep dives — the full read per segment (drivers, unit economics, cost structure, calls)', segExp, false);
   return h;
+}
+function aSegPicker(){
+  var opts=[['oimargin','Operating income & margin by segment'],['mix','Where the revenue is vs where the profit is'],['bridge','The segment bridge — margin change & forward walk']];
+  return '<div class="ov-sec" style="padding-bottom:10px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+    '<span style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)">Chart</span>'+
+    '<select class="seg-chart" style="font-size:13px;font-weight:700;color:var(--navy);border:1px solid var(--bdr);border-radius:8px;padding:6px 10px;background:#fff">'+
+    opts.map(function(o){ return '<option value="'+o[0]+'"'+(o[0]==='oimargin'?' selected':'')+'>'+o[1]+'</option>'; }).join('')+
+    '</select>'+
+    '<span style="font-size:11px;color:var(--mu)">Pick one — the rest stay tucked away.</span>'+
+    '</div></div>';
 }
 // The revenue-vs-profit divergence as an evolution (not a single FY): each segment's SHARE of revenue
 // ⇄ SHARE of operating income, FY24→FY28E (actual + BBG consensus). International is profitable from
 // FY24, so 100%-stacked shares stay clean. Data: amznBBG.seg (rev/oi by segment).
 var A_SMIX_PTS=[{lab:'FY24',g:'a',i:1},{lab:'FY25',g:'a',i:2},{lab:'FY26E',g:'f',i:0},{lab:'FY27E',g:'f',i:1},{lab:'FY28E',g:'f',i:2}];
+var SMIX_SG=[{k:'na',lab:'North America',c:BRAND},{k:'intl',lab:'International',c:BRAND2},{k:'aws',lab:'AWS',c:SQUID}];
 function aSegMixBody(){
-  return '<div class="ov-sec"><div class="ov-sec-h">Where the revenue is vs where the profit is — over time</div>'+
-    '<div class="mch-ctl"><span class="acx-tog smix-tog"><button type="button" data-smix="rev" class="active">Share of revenue</button><button type="button" data-smix="oi">Share of operating income</button></span><span></span></div>'+
-    '<div style="height:300px"><canvas id="aSegMix"></canvas></div></div>';
+  return '<div class="ov-sec"><div class="ov-sec-h">Where the revenue is vs where the profit is</div>'+
+    '<div class="mch-ctl"><span class="acx-tog smix-tog"><button type="button" data-smix="time" class="active">Over time (both)</button><button type="button" data-smix="pie">Latest FY (pies)</button></span>'+
+      '<span style="font-size:11px;color:var(--mu)">per year: left bar = revenue mix · right bar = operating-income mix</span></div>'+
+    '<div class="smix-bars"><div style="height:320px"><canvas id="aSegMix"></canvas></div></div>'+
+    '<div class="smix-pies" style="display:none;gap:18px;flex-wrap:wrap;justify-content:center">'+
+      '<div style="flex:1;min-width:210px;max-width:330px;text-align:center"><div style="font-size:11px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Revenue mix (FY25)</div><div style="height:230px"><canvas id="aSegMixR"></canvas></div></div>'+
+      '<div style="flex:1;min-width:210px;max-width:330px;text-align:center"><div style="font-size:11px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Operating-income mix (FY25)</div><div style="height:230px"><canvas id="aSegMixO"></canvas></div></div>'+
+    '</div></div>';
 }
 function aBuildSegMix(){
   var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]'); if(!pane) return;
-  var tg=pane.querySelector('.smix-tog .active'), metric=(tg&&tg.getAttribute('data-smix')==='oi')?'oi':'rev';
+  var tg=pane.querySelector('.smix-tog .active'), view=tg?tg.getAttribute('data-smix'):'time';
+  var bars=pane.querySelector('.smix-bars'), pies=pane.querySelector('.smix-pies');
+  if(bars) bars.style.display=view==='pie'?'none':'';
+  if(pies) pies.style.display=view==='pie'?'flex':'none';
+  function val(k,metric,g,i){ var s=amznBBG.seg[k]&&amznBBG.seg[k][metric]; return s?s[g][i]:null; }
+  if(view==='pie'){   // two doughnuts, latest actual FY25 (a[2]) — revenue mix vs OI mix, side by side
+    [['aSegMixR','rev'],['aSegMixO','oi']].forEach(function(pr){
+      var cv=aChartReady(pr[0]); if(!cv) return; aDestroy(pr[0]);
+      var vals=SMIX_SG.map(function(s){ return val(s.k,pr[1],'a',2)||0; }), tot=vals.reduce(function(a,b){ return a+b; },0);
+      _aCharts[pr[0]]=new Chart(cv.getContext('2d'),{ type:'doughnut',
+        data:{ labels:SMIX_SG.map(function(s){ return s.lab; }), datasets:[{ data:vals, backgroundColor:SMIX_SG.map(function(s){ return s.c; }), borderColor:'#fff', borderWidth:2 }] },
+        options:{ responsive:true, maintainAspectRatio:false, cutout:'52%', plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
+          tooltip:{ callbacks:{ label:function(c){ return c.label+': '+(tot?Math.round(c.parsed/tot*1000)/10:0)+'% ($'+(Math.round(c.parsed/100)/10).toFixed(1)+'B)'; } } } } } });
+    });
+    if(pane && !pane._smixWired) aSegMixWire(pane);
+    return;
+  }
   var cv=aChartReady('aSegMix'); if(!cv) return; aDestroy('aSegMix');
-  var SG=[{k:'na',lab:'North America',c:BRAND},{k:'intl',lab:'International',c:BRAND2},{k:'aws',lab:'AWS',c:SQUID}];
-  function val(k,p){ var s=amznBBG.seg[k]&&amznBBG.seg[k][metric]; return s?s[p.g][p.i]:null; }
   var labels=A_SMIX_PTS.map(function(p){ return p.lab; });
-  var ds=SG.map(function(s){ return { label:s.lab, data:A_SMIX_PTS.map(function(p){
-      var tot=SG.reduce(function(a,x){ return a+(val(x.k,p)||0); },0), v=val(s.k,p);
-      return (tot&&v!=null)?Math.round(v/tot*1000)/10:null; }),
-    backgroundColor:s.c, borderColor:'#fff', borderWidth:1, maxBarThickness:46, stack:'m' }; });
+  function shares(metric){ return SMIX_SG.map(function(s){ return { seg:s, data:A_SMIX_PTS.map(function(p){
+      var tot=SMIX_SG.reduce(function(a,x){ return a+(val(x.k,metric,p.g,p.i)||0); },0), v=val(s.k,metric,p.g,p.i);
+      return (tot&&v!=null)?Math.round(v/tot*1000)/10:null; }) }; }); }
+  var rev=shares('rev'), oi=shares('oi'), ds=[];
+  rev.forEach(function(r){ ds.push({ label:r.seg.lab, data:r.data, backgroundColor:r.seg.c, borderColor:'#fff', borderWidth:1, maxBarThickness:30, stack:'rev' }); });
+  oi.forEach(function(o){ ds.push({ label:o.seg.lab+' (OI)', data:o.data, backgroundColor:o.seg.c, borderColor:'#fff', borderWidth:1, maxBarThickness:30, stack:'oi' }); });
   _aCharts['aSegMix']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:labels, datasets:ds },
     options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':c.parsed.y+'% of '+(metric==='oi'?'operating income':'revenue')); } } } },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 }, filter:function(it){ return it.text.indexOf('(OI)')<0; } } },
+        tooltip:{ callbacks:{ label:function(c){ var oiB=c.dataset.stack==='oi'; return c.dataset.label.replace(' (OI)','')+' — '+(oiB?'OI':'revenue')+': '+(c.parsed.y==null?'—':c.parsed.y+'%'); } } } },
       scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, max:100, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } });
   aZoom('aSegMix');
-  if(pane && !pane._smixWired){ pane._smixWired=true;
-    pane.querySelectorAll('.smix-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.smix-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegMix(); }; }); }
+  if(pane && !pane._smixWired) aSegMixWire(pane);
+}
+function aSegMixWire(pane){ pane._smixWired=true;
+  pane.querySelectorAll('.smix-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.smix-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegMix(); }; });
 }
 function aBuildSegments(){
   var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]');
@@ -3922,6 +3954,11 @@ function aBuildSegments(){
     }
     _aCharts['aSgMain']=new Chart(mc.getContext('2d'), cfg); aZoom('aSgMain'); }
   if(pane && !pane._segWired){ pane._segWired=true;
+    var SEG_BUILD={ oimargin:aBuildSegments, mix:aBuildSegMix, bridge:aBuildSegBridge };
+    var ssel=pane.querySelector('.seg-chart');
+    if(ssel){ ssel.onchange=function(){ var v=ssel.value;
+      pane.querySelectorAll('.seg-gsec').forEach(function(s){ s.hidden=(s.getAttribute('data-sgsec')!==v); });
+      if(SEG_BUILD[v]) SEG_BUILD[v](); }; }
     pane.querySelectorAll('.seg-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.seg-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegments(); }; });
     pane.querySelectorAll('.sgm-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.sgm-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegments(); }; });
     var segtog=function(sel){ pane.querySelectorAll(sel+' button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll(sel+' button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegBridge(); }; }); };

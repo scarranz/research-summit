@@ -3357,14 +3357,13 @@ function aBuildNetBridge(){
   var run=B(oi), steps=[{label:'Op. income', kind:'base', color:'#1E2733', range:[0,run], runAfter:run, val:B(oi)}];
   function step(lab,d,dc){ var lo=run; run=lo+d; steps.push({label:lab, kind:d>=0?'up':'down', color:(dc==='#B7791F'?'#B7791F':'#6B7683'), dc:dc, range:[Math.min(lo,run),Math.max(lo,run)], runAfter:run, val:d}); }
   step('Interest, net', B(-ni), '#6B7683');
-  if(!norm) step('Marketable-equity M2M (Rivian, one-off)', B(-ono), '#B7791F');
-  step('– Income tax', B(-tax), '#6B7683');
-  if(em) step('Share of associates (equity method)', B(-em), '#6B7683');
+  if(!norm) step('Rivian mark-to-market (one-off)', B(-ono), '#B7791F');   // the ONLY item the normalization strips
+  step('– Income tax & other', B(-(tax+(em||0))), '#6B7683');              // equity-method associates folded in (immaterial) — no second "equity" line to confuse
   steps.push({label:(norm?'Net income (norm.)':'Net income'), kind:'total', color:'#2E8B57', range:[0,run], runAfter:null, val:run});
   aBuildBrWaterfall('aNetBr', steps, BR_FMT_D);
   var cap=pane.querySelector('#aNetBrCap');
   if(cap){ var rm=(rev?net/rev*100:null), nm=(rev?(net+ono)/rev*100:null), yl='FY'+String(y).slice(2)+(y>2025?'E':'');
-    cap.innerHTML='<b>'+yl+'</b> · reported net margin <b>'+(rm==null?'—':rm.toFixed(1)+'%')+'</b>'+(rev?' ($'+B(net).toFixed(1)+'B / $'+B(rev).toFixed(0)+'B rev)':'')+' · normalized (ex the equity / one-off non-operating line) <b>'+(nm==null?'—':nm.toFixed(1)+'%')+'</b>. The <span style="color:#B7791F;font-weight:700">amber bar</span> is only the <b>mark-to-market on marketable equity securities</b> — mostly the <b>Rivian</b> stake ($'+B(Math.abs(ono)).toFixed(1)+'B in '+yl+'), a non-cash, non-operating swing that flatters reported net income. <b>Normalized</b> strips ONLY that one-off. The separate grey <b>“Share of associates (equity method)”</b> bar is a different, small, recurring item (Amazon\'s share of the results of companies it holds under the equity method) — it is NOT the Rivian mark and stays in both views because it is not a one-off. Data: BBG consensus, as of Aug 2026.';
+    cap.innerHTML='<b>'+yl+'</b> · reported net margin <b>'+(rm==null?'—':rm.toFixed(1)+'%')+'</b>'+(rev?' ($'+B(net).toFixed(1)+'B / $'+B(rev).toFixed(0)+'B rev)':'')+' · normalized <b>'+(nm==null?'—':nm.toFixed(1)+'%')+'</b>. Read it left to right: operating income, minus net interest, then the one <span style="color:#B7791F;font-weight:700">amber bar</span> — the <b>Rivian mark-to-market</b> ($'+B(Math.abs(ono)).toFixed(1)+'B in '+yl+'), a non-cash swing on Amazon\'s stake that flatters reported net income — then income tax &amp; other, to net income. <b>Normalized strips only that one Rivian bar</b>; everything else (interest, tax, the immaterial equity-method associates folded into “tax &amp; other”) is recurring and stays. Data: BBG consensus, as of Aug 2026.';
   }
 }
 // SBC — back in General (where it was), BBG-driven (actuals + consensus, $B-by-line ⇄ %-of-line).
@@ -3528,14 +3527,30 @@ function ewCallTimeline(calls){ if(!calls||!calls.length) return '';
 // forward "Summit view" (Summit's own read stays in the analysis fields, not here). Lines with no
 // verbatim quote in the covered calls carry no block — we do not invent one.
 var EW_CALLS={
+  costOfSales:[
+    {q:'Q1 2026', who:'Andy Jassy, CEO — Q1 2026 call', tag:'why', txt:'Retail delivery got faster while cost to serve fell: store units +15% (highest since COVID) and 1B+ same/next-day items YTD, on the regionalized US network.'},
+    {q:'Q4 2025', who:'Andy Jassy, CEO — Q4 2025 call', tag:'why', txt:'8B+ items shipped same/next-day (+30% YoY); Amazon the lowest-priced US retailer for the 9th straight year (~14% below other major retailers); everyday essentials ~1 in 3 units.'}
+  ],
+  fulfillment:[
+    {q:'Q1 2026', who:'Brian Olsavsky, CFO — Q1 2026 call', tag:'why', txt:'The efficiency proof, in the CFO’s numbers: paid units +15% vs fulfillment expense +9% (FX-neutral); robotics is in “every 2026 US large-format launch.”'},
+    {q:'Q4 2025', who:'Brian Olsavsky, CFO — Q4 2025 call', tag:'why', txt:'“1M+ robots” in the fulfillment network; perishables extended to 2,300+ cities — the automation and network redesign that hold fulfillment ~flat as a share of revenue.'}
+  ],
   techInfra:[
-    {q:'Q4 2025', who:'Andy Jassy, CEO', tag:'why', txt:'“…about $200 billion in capital expenditures… predominantly in AWS, because we have very high demand.”'},
-    {q:'Q4 2025', who:'Brian Olsavsky, CFO', tag:'why', txt:'“As fast as we install this capacity, this AI capacity, we are monetizing it — it’s just a very unusual opportunity.”'},
-    {q:'Q1 2026', who:'Brian Olsavsky, CFO', tag:'why', txt:'Memory component costs had “skyrocketed.”'},
-    {q:'Q2 2026', who:'Brian Olsavsky, CFO', tag:'why', txt:'The FY26 capex frame moved up partly on the “higher cost of memory.”'}
+    {q:'Q4 2025', who:'Andy Jassy, CEO — Q4 2025 call', tag:'why', txt:'“…about $200 billion in capital expenditures… predominantly in AWS, because we have very high demand.”'},
+    {q:'Q4 2025', who:'Brian Olsavsky, CFO — Q4 2025 call', tag:'why', txt:'“As fast as we install this capacity, this AI capacity, we are monetizing it — it’s just a very unusual opportunity.”'},
+    {q:'Q1 2026', who:'Brian Olsavsky, CFO — Q1 2026 call', tag:'why', txt:'Capex focus “primarily AWS and generative AI”; memory component costs had “skyrocketed.”'},
+    {q:'Q2 2026', who:'Brian Olsavsky, CFO — Q2 2026 call', tag:'why', txt:'FY26 cash-capex frame raised to ~$220B from ~$200B, part of it the “higher cost of memory.”'}
+  ],
+  marketing:[
+    {q:'Q4 2025', who:'Andy Jassy, CEO — Q4 2025 call', tag:'why', txt:'Advertising +22%, with $12B of incremental ad revenue in 2025; Prime Video ads reached ~315M monthly viewers — Amazon monetizing its own surface rather than buying demand.'},
+    {q:'Q2 2026', who:'Amazon Q2 2026 call', tag:'why', txt:'Advertising +26%, “sponsored products the driver.”'}
+  ],
+  gAdmin:[
+    {q:'Q4 2025', who:'Brian Olsavsky, CFO — Q4 2025 call', tag:'ctx', txt:'The $2.4B of special charges in the quarter included $730M of severance — the corporate-headcount reductions that keep G&A the most leveraged line.'}
   ],
   otherOpex:[
-    {q:'FY 2025', who:'Amazon 8-K / FY2025 10-K (filing, not a call quote)', tag:'ctx', txt:'FY2025 carried the $2.5B FTC settlement (Q3 2025), the resolution of Italy stores-business tax disputes, and physical-store & other asset impairments — the reason this line jumped to $4.6B.'}
+    {q:'Q4 2025', who:'Brian Olsavsky, CFO — Q4 2025 call', tag:'why', txt:'The $2.4B of Q4 special charges: Italy tax settlement $1.1B, severance $730M, physical-store impairments $610M — one-offs, not a run-rate.'},
+    {q:'Q3 2025', who:'Amazon 8-K / 10-K (filing)', tag:'ctx', txt:'The $2.5B FTC settlement was recognized here in Q3 2025 — the main reason the line jumped to $4.6B for FY2025.'}
   ]
 };
 var SEG_CALLS={
@@ -3565,7 +3580,6 @@ function ewBase(c){
   if(c.unit){ h+='<div class="ew-h">Unit economics</div>'+c.unit; }
   h+='<div class="ew-h">Why it matters to the bottom line</div><div class="ew-note">'+c.why+'</div>';
   if(c.drivers){ h+='<div class="ew-h">Why it has moved — the drivers</div>'+ewBoxes(c.drivers); }
-  if(c.fwd){ h+='<div class="ew-h">Where it’s headed</div><div class="ew-note">'+c.fwd+'</div>'; }
   if(c.extra) h+=c.extra;
   if(c.calls){ h+=ewCallsBlock(c.calls); }
   h+='<div class="ew-foot">FY2025 figures unless noted. Sources: 10-K MD&amp;A + Notes; Amazon earnings calls (management commentary).</div>';

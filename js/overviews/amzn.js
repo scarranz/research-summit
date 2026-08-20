@@ -3456,7 +3456,7 @@ function aSumSegSummit(metricKey, fyIdx){
 function aMarginsBody(){
   return aStdScaffold({ id:'margins', title:'Profitability & margins', height:340,
     metricSel:[{v:'gross',label:'Gross margin'},{v:'operating',label:'Operating margin',on:true},{v:'ebitda',label:'EBITDA margin'},{v:'net',label:'Net margin'},{v:'fcf',label:'FCF margin'}],
-    modes:[{cls:'gran',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]},{cls:'mode',opts:[{v:'pct',label:'Margin %',on:true},{v:'amt',label:'$B (nominal)'}]}],
+    modes:[{cls:'gran',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]},{cls:'mode',opts:[{v:'pct',label:'Margin %',on:true},{v:'amt',label:'$B (nominal)'}]},{cls:'norm',opts:[{v:'rep',label:'Reported',on:true},{v:'norm',label:'Normalized'}]}],
     presets:[['all','All'],['rep','Reported'],['fwd','Forward'],['l5','Last 5']] });
 }
 function aLastActIdx(arr){ var la=0; for(var i=0;i<arr.length;i++) if(arr[i]!=null) la=i; return la; }
@@ -3481,19 +3481,16 @@ function aBuildMargins(){
       var actq=ql.map(function(_,i){ return i<=laq?val(na[i],rq[i]):null; }), conq=ql.map(function(_,i){ return i>=laq?val(na[i],rq[i]):null; });
       return { labels:ql, lastAct:laq, yFmt:fmt, series:[ {k:'act',label:'Actual',color:ASTD_ACT,data:actq}, {k:'cons',label:'Consensus (BBG)',color:ASTD_CONS,data:conq,dash:true} ] };
     }
-    // Annual — Actual + Summit model + BBG consensus.
-    var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], la=2;
-    var na2=num.a.concat(num.f), rv2=rvb.a.concat(rvb.f);
-    var actual=labels.map(function(_,i){ return i<=la?val(na2[i],rv2[i]):null; });
-    var cons=labels.map(function(_,i){ return i>=la?val(na2[i],rv2[i]):null; });
-    var series=[ {k:'act',label:'Actual',color:ASTD_ACT,data:actual} ];
-    var sm=aSummitAnnual(st.sel);   // Summit models operating / EBITDA / net (not gross / fcf)
-    if(sm) series.push({k:'summit',label:'Summit model',color:ASTD_SUMMIT,data:labels.map(function(_,i){ return sm.num[i]==null?null:val(sm.num[i],sm.den[i]); })});
-    series.push({k:'cons',label:'Consensus (BBG)',color:ASTD_CONS,data:cons,dash:true});
-    if(st.sel==='net'){   // Net margin is distorted by the marketable-equity (Rivian) M2M one-off — add a normalized line
-      var ono=amznBBG.is.otherNonOp; if(ono){ var oa=ono.a.concat(ono.f);
-        var norm=labels.map(function(_,i){ var nn=na2[i]; return nn==null?null:val(nn-(oa[i]||0), rv2[i]); });
-        series.push({k:'norm',label:'Normalized (ex Rivian M2M)',color:GREEN,data:norm,dash:true}); } }
+    // Annual — Actual + Summit model + BBG consensus. Net margin: the Normalized toggle strips the Rivian
+    // M2M one-off from the reported (BBG) actual & consensus (Summit isn't decomposable, so it drops out).
+    var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], la=2, normOn=st.sel==='net' && st.modes.norm==='norm';
+    var na2=num.a.concat(num.f), rv2=rvb.a.concat(rvb.f), ono=amznBBG.is.otherNonOp, oa=ono?ono.a.concat(ono.f):null;
+    function nv(i){ var nn=na2[i]; if(nn==null) return null; return (normOn&&oa)?(nn-(oa[i]||0)):nn; }
+    var actual=labels.map(function(_,i){ return i<=la?val(nv(i),rv2[i]):null; });
+    var cons=labels.map(function(_,i){ return i>=la?val(nv(i),rv2[i]):null; });
+    var series=[ {k:'act',label:'Actual'+(normOn?' (norm.)':''),color:ASTD_ACT,data:actual} ];
+    if(!normOn){ var sm=aSummitAnnual(st.sel); if(sm) series.push({k:'summit',label:'Summit model',color:ASTD_SUMMIT,data:labels.map(function(_,i){ return sm.num[i]==null?null:val(sm.num[i],sm.den[i]); })}); }
+    series.push({k:'cons',label:'Consensus (BBG)'+(normOn?' (norm.)':''),color:ASTD_CONS,data:cons,dash:true});
     return { labels:labels, lastAct:la, yFmt:fmt, series:series };
   });
 }
@@ -3740,8 +3737,7 @@ function aLeasesBody(){   // Leases explorer — Miscellaneous ▸ Capex & Depre
     '.lx-card{background:var(--card,#fff);border:1px solid var(--bdr);border-radius:12px;padding:15px 17px}'+
   '</style>';
   h+='<div class="ov-sec"><div class="ov-sec-h">Leases — the other capacity bill (10-K Note 4)</div>';
-  // The thesis, up front — so the reader knows where this is going.
-  h+='<div class="ew-note" style="margin:0 0 12px"><b>The idea:</b> the capex/PP&amp;E charts only show the capacity Amazon <b>owns</b>. It also <b>leases</b> a huge amount — and signs leases years ahead. Add it up and the real capacity commitment is far bigger than capex alone: <b>~$534B owned PP&amp;E</b> + <b>~$142B leased right-of-use assets</b> + <b>~$62B signed but not yet started</b>, against a <b>$121.8B lease obligation</b> that behaves like debt but sits outside reported debt. This section is that off-capex half of the build.</div>';
+  h+='<div class="ew-note" style="margin:0 0 12px">Amazon doesn’t own all its capacity — it leases warehouses, data-center space and aircraft. Leases come in two forms: <b>operating leases</b> (the bulk; the right-of-use asset sits on its own balance-sheet line and the cost runs through cost of sales / fulfillment / technology) and <b>finance leases</b> (ownership-like; the asset is inside PP&amp;E and depreciates into D&amp;A). The reason this matters: a lease is a multi-year payment obligation that behaves like debt but is not reported as debt, and none of it shows in the capex or PP&amp;E charts. Amazon also signs leases years before they start (~$62B currently), so the committed capacity is larger than the capex numbers alone suggest.</div>';
   h+='<div class="exp-stat" style="margin:0 0 12px">'+
     '<div class="exp-st"><div class="exp-sl">Lease obligation</div><div class="exp-sv">$121.8B</div><div class="exp-ss">gross · PV $101.5B · $87.3B long-term</div></div>'+
     '<div class="exp-st"><div class="exp-sl">Right-of-use assets</div><div class="exp-sv">$141.6B</div><div class="exp-ss">operating $86B · finance $55.6B</div></div>'+

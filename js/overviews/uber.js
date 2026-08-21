@@ -1335,49 +1335,233 @@ var UB_MRG_NOTE_FB='Gross / operating / net = <b>GAAP</b>; EBITDA = <b>Adjusted 
 var UB_MRG_NOTE_LIVE='Historical margins computed <b>live from Massive</b> (income & cash-flow statements): gross/op/net = line ÷ revenue; EBITDA = (op income + D&A) ÷ revenue; CFO & FCF ÷ revenue. Operating and EBITDA margin are the clean trend; GAAP net is skewed by equity-stake & tax one-offs.';
 var _ubMrgRows=UB_MRG_FALLBACK.slice();
 var _ubMrgSrc='fallback';
+// ═══ §0.2-compliant chart engine (ported verbatim from amzn.js aStdScaffold) ─ metric-family
+// dropdown + level/growth/margin modes + period slider + zoom + auto-table + Actual/Summit/Consensus.
+// This replaces the bespoke dual-axis charts that violated the standard. ═══
+function aDestroy(id){ if(_aCharts[id]){ _aCharts[id].destroy(); _aCharts[id]=null; } }
+function aChartReady(id){ var cv=document.getElementById(id); return (cv&&typeof Chart!=='undefined'&&cv.offsetParent)?cv:null; }
+// ═══ Chart-standard kit (docs/CHART_ENGINE_REFERENCE.md §0.7) — copied verbatim / adapted so the
+// bespoke AMZN canvases meet the six non-negotiables. rs-* CSS is global (css/results.css). ═══
+function rsAttachBrush(el, chart, onX, onY, onReset){
+  var wrap = el.parentElement;
+  if (wrap && getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
+  el.style.cursor = 'crosshair';
+  el.onmousedown = function(ev){
+    if (ev.button !== 0) return;
+    var r0 = el.getBoundingClientRect(), w0 = wrap.getBoundingClientRect(), area = chart.chartArea;
+    var onAxis = (ev.clientX - r0.left) < area.left || (ev.clientX - r0.left) > area.right;
+    var forcedY = onAxis || !onX, vertical = forcedY ? true : null, startX = ev.clientX, startY = ev.clientY, box = null;
+    function ensureBox(){ if (box) return; box = document.createElement('div'); box.className = 'rs-brush';
+      if (vertical){ box.style.left = (r0.left - w0.left + area.left) + 'px'; box.style.width = (area.right - area.left) + 'px'; }
+      else { box.style.top = (r0.top - w0.top) + 'px'; box.style.height = r0.height + 'px'; } wrap.appendChild(box); }
+    function decide(cx, cy){ if (vertical != null) return; var dx = Math.abs(cx - startX), dy = Math.abs(cy - startY); if (Math.max(dx, dy) < 8) return; vertical = dy > dx; }
+    function place(cx, cy){ if (vertical == null) return; ensureBox();
+      if (vertical){ var a = Math.min(startY, cy), b = Math.max(startY, cy); box.style.top = (a - w0.top) + 'px'; box.style.height = (b - a) + 'px'; }
+      else { var a2 = Math.min(startX, cx), b2 = Math.max(startX, cx); box.style.left = (a2 - w0.left) + 'px'; box.style.width = (b2 - a2) + 'px'; } }
+    place(ev.clientX, ev.clientY);
+    function onMove(e2){ decide(e2.clientX, e2.clientY); place(e2.clientX, e2.clientY); }
+    function onUp(e2){ document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); decide(e2.clientX, e2.clientY); if (box) box.remove();
+      if (vertical == null) return;
+      if (vertical){ if (Math.abs(e2.clientY - startY) < 8) return;
+        var v1 = chart.scales.y.getValueForPixel(Math.min(startY, e2.clientY) - r0.top), v2 = chart.scales.y.getValueForPixel(Math.max(startY, e2.clientY) - r0.top); onY(Math.min(v1, v2), Math.max(v1, v2)); }
+      else { if (Math.abs(e2.clientX - startX) < 8) return;
+        function idxAt(cx){ var v = chart.scales.x.getValueForPixel(cx - r0.left); return Math.max(0, Math.min(chart.data.labels.length - 1, Math.round(v))); }
+        var a = idxAt(startX), b = idxAt(e2.clientX); if (a !== b) onX(Math.min(a, b), Math.max(a, b)); } }
+    document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp); ev.preventDefault(); };
+  el.ondblclick = onReset;
+}
+// Standard treatment for a bespoke chart: y-zoom + double-click reset (rule 1; onX=null per §0.2)
+// AND an auto-generated collapsible table from the chart's own data (rule 3) — unless the chart
+// supplies its own table container (#id-tbl, e.g. the waterfalls). One call covers both.
+function aFnum(v){ if(v==null||v==='') return null; if(Array.isArray(v)) v=v[v.length-1]; if(typeof v!=='number') return String(v);
+  var a=Math.abs(v), r=a<10?Math.round(v*100)/100:(a<1000?Math.round(v*10)/10:Math.round(v)); return r.toLocaleString('en-US'); }
+// Auto-table from a chart's own data (rule 3), honouring hidden series (rule 2) and preserving open state.
+function aBuildAutoTbl(id){
+  var cv=document.getElementById(id), ch=_aCharts[id]; if(!cv||!ch) return;
+  if(document.getElementById(id+'-tbl')) return;   // chart supplies its own table
+  var labels=(ch.data&&ch.data.labels)||[], ds=(ch.data&&ch.data.datasets)||[];
+  if(!labels.length||!ds.length) return;
+  var headers=['Series'].concat(labels.map(function(l){ return Array.isArray(l)?l.join(' '):String(l); }));
+  var rows=[]; ds.forEach(function(d,i){ var meta=ch.getDatasetMeta?ch.getDatasetMeta(i):null; if(meta&&meta.hidden) return;   // rule 2: hidden series leaves the table
+    rows.push([d.label||'series'].concat((d.data||[]).map(aFnum))); });
+  var wrap=cv.parentElement, host=wrap&&wrap.parentNode; if(!host) return;
+  var prev=wrap.nextElementSibling, wasOpen=false;
+  if(prev&&prev.getAttribute&&prev.getAttribute('data-rstblhost')===id){ var ob=prev.querySelector('.rs-collap-b'); wasOpen=!!(ob&&!ob.hidden); host.removeChild(prev); }
+  var div=document.createElement('div'); div.setAttribute('data-rstblhost',id); div.style.marginTop='8px';
+  div.innerHTML=aTbl(id,'Data — what the chart draws',headers,rows);
+  if(wasOpen){ var nb=div.querySelector('.rs-collap-b'); if(nb) nb.hidden=false; var ic=div.querySelector('.rs-collap-ic'); if(ic) ic.textContent='▾'; }
+  host.insertBefore(div, wrap.nextSibling);
+}
+// Collapsible SECTION (charts / deep dives) so the pane isn't a wall — less shown by default,
+// opened on demand. Uses the same rs-collap the table dropdown does (toggled in deepDiveInit).
+function aCollap(title, inner, open){
+  return '<div class="rs-collap" style="margin:16px 0 4px"><button type="button" class="rs-collap-h">'+
+    '<span class="rs-collap-ic">'+(open?'▾':'▸')+'</span> '+esc(title)+'</button>'+
+    '<div class="rs-collap-b"'+(open?'':' hidden')+' style="padding-top:10px">'+inner+'</div></div>';
+}
+// ═══ SAB-parity chart scaffold (docs/AMZN_BOTTOM_LINE §9b) ═════════════════════════════════════════
+// Same classes/CSS as results.js so Bottom-Line charts read as ONE product: row1 title + rs-msel metric
+// dropdown; row2 rs-views mode pills (left) · rs-quick Range presets (right) — ABOVE the chart; ave-leg
+// (Actual/Summit/Consensus, click-to-hide); ov-chart-card; y-axis on the RIGHT; sg-slider two-handle
+// PERIOD window with rs-ticks dots + drag-to-zoom on the X. A chart registers a derive(state) fn that
+// returns {labels,lastAct,series:[{k,label,color,data,fwdDash}],yFmt}; controls re-render via it.
+var ASTD_ACT='rgba(30,39,51,0.92)', ASTD_SUMMIT='rgba(37,99,235,0.85)', ASTD_CONS='rgba(124,134,148,0.85)';
+var _aStd={}, _aStdDerive={};
+function aStdScaffold(cfg){
+  var id=cfg.id;
+  var st=_aStd[id]||(_aStd[id]={win:null,hidden:{},sel:null,modes:{}});
+  if(cfg.metricSel && st.sel==null){ var on=cfg.metricSel.filter(function(o){return o.on;})[0]||cfg.metricSel[0]; st.sel=on.v; }
+  (cfg.modes||[]).forEach(function(g){ if(st.modes[g.cls]==null){ var d=g.opts.filter(function(o){return o.on;})[0]||g.opts[0]; st.modes[g.cls]=d.v; } });
+  var sel=cfg.metricSel? '<select class="rs-msel" data-astdsel="'+id+'">'+cfg.metricSel.map(function(o){ return '<option value="'+esc(o.v)+'"'+(o.v===st.sel?' selected':'')+'>'+esc(o.label)+'</option>'; }).join('')+'</select>':'';
+  var top='<div class="rs-block-top"><div class="rs-block-h">'+esc(cfg.title)+'</div>'+sel+'</div>';
+  var modes=(cfg.modes||[]).map(function(g){ return '<div class="astd-modeg" data-astdmodeg="'+id+'|'+g.cls+'" style="display:inline-flex;align-items:center;gap:6px;margin:0 10px 6px 0">'+(g.label?'<span class="rs-quick-l">'+esc(g.label)+'</span>':'')+'<div class="rs-views">'+g.opts.map(function(o){ return '<button type="button" class="rs-view'+(o.v===st.modes[g.cls]?' active':'')+'" data-astdmode="'+id+'|'+g.cls+'|'+o.v+'">'+esc(o.label)+'</button>'; }).join('')+'</div></div>'; }).join('');
+  var presets=cfg.presets||[['all','All'],['rep','Reported'],['fwd','Forward']];
+  var quick='<div class="rs-quick"><span class="rs-quick-l">Range</span>'+presets.map(function(p){ return '<button type="button" class="rs-preset" data-astdrange="'+id+'|'+p[0]+'">'+esc(p[1])+'</button>'; }).join('')+'</div>';
+  var row2='<div class="rs-block-modes"><div class="rs-modes">'+modes+'</div>'+quick+'</div>';
+  var leg='<div class="ave-leg" data-astdleg="'+id+'"></div>';
+  var chart='<div class="ov-chart-card"><div class="ov-chart-wrap ovs-tall" style="min-height:'+(cfg.height||320)+'px"><canvas id="astd-'+id+'"></canvas></div></div>';
+  var slider='<div class="sg-controls"><div class="sg-slider"><div class="sg-track"><div class="sg-fill" data-astdfill="'+id+'"></div></div><div class="rs-ticks" data-astdticks="'+id+'"></div>'+
+    '<input type="range" class="astd-r0" min="0" max="1" value="0" step="1" aria-label="Start period">'+
+    '<input type="range" class="astd-r1" min="0" max="1" value="1" step="1" aria-label="End period"></div>'+
+    '<div class="sg-ends"><span data-astdend0="'+id+'"></span><span data-astdend1="'+id+'"></span></div></div>';
+  var tbl='<div class="rs-collap" style="margin-top:8px"><button type="button" class="rs-collap-h"><span class="rs-collap-ic">▸</span> Data — what the chart draws</button>'+
+    '<div class="rs-collap-b" hidden style="padding-top:8px"><div class="rs-tablewrap" data-astdtbl="'+id+'"></div></div></div>';
+  return '<div class="ov-sec" data-astdblock="'+id+'">'+top+row2+leg+chart+slider+tbl+'</div>';
+}
+function aStdBlk(id){ return document.querySelector('[data-astdblock="'+id+'"]'); }
+function aStdRender(id, derive){
+  if(derive) _aStdDerive[id]=derive; derive=_aStdDerive[id]; if(!derive) return;
+  var cv=aChartReady('astd-'+id); if(!cv) return;
+  var st=_aStd[id]||(_aStd[id]={win:null,hidden:{},sel:null,modes:{}});
+  var spec=derive(st); if(!spec) return;
+  var n=spec.labels.length; if(!st.win || st.win[1]>n-1 || st.win[0]>st.win[1]) st.win=[0,n-1];
+  var lo=st.win[0], hi=st.win[1], la=spec.lastAct==null?n-1:spec.lastAct;
+  var labels=spec.labels.slice(lo,hi+1), yFmt=spec.yFmt||function(v){return v;};
+  aDestroy('astd-'+id);
+  var stk=spec.stacked?'s':undefined, needY2=false;   // engine supports bars + a secondary right axis (SAB dual-axis)
+  var ds=spec.series.filter(function(s){ return !st.hidden[s.k]; }).map(function(s){
+    var t=s.type||spec.type||'line'; if(s.yAxisID==='y2') needY2=true;
+    if(t==='bar') return { type:'bar', label:s.label, data:s.data.slice(lo,hi+1), backgroundColor:s.data.slice(lo,hi+1).map(function(_,i){ return (lo+i)>la?acxRGBA(s.color,0.5):s.color; }), borderColor:'#fff', borderWidth:1, maxBarThickness:34, stack:stk, yAxisID:s.yAxisID||'y', order:s.order||3 };
+    return { type:'line', label:s.label, data:s.data.slice(lo,hi+1), borderColor:s.color, backgroundColor:s.color, borderWidth:2.2, pointRadius:2, tension:0.2, spanGaps:false, yAxisID:s.yAxisID||'y', order:s.order||2,
+      borderDash:s.dash?[5,4]:undefined, segment: s.fwdDash?{ borderDash:function(ctx){ return (lo+ctx.p1DataIndex)>la?[5,4]:undefined; } }:undefined }; });
+  var anyBar=spec.series.some(function(s){ return (s.type||spec.type)==='bar'; }), y2f=spec.y2Fmt||function(v){return v;};
+  var scales={ x:{ stacked:anyBar&&spec.stacked, grid:{ display:false }, ticks:{ font:{ size:11 } } },
+    y:{ stacked:anyBar&&spec.stacked, position:'right', max:spec.yMax, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:11 }, callback:function(v){ return yFmt(v); } } } };
+  if(needY2) scales.y2={ position:'right', weight:1, grid:{ display:false }, ticks:{ font:{ size:11 }, callback:function(v){ return y2f(v); } } };
+  _aCharts['astd-'+id]=new Chart(cv.getContext('2d'),{ type:anyBar?'bar':'line', data:{ labels:labels, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ var f=c.dataset.yAxisID==='y2'?y2f:yFmt; return c.dataset.label+': '+(c.parsed.y==null?'—':f(c.parsed.y))+((lo+c.dataIndex)>la?' (E)':''); } } } },
+      scales:scales } });
+  var blk=aStdBlk(id);
+  if(blk){ var hm=spec.hideModes||[];   // contextual controls: hide groups that don't apply to the current view (SAB does this)
+    blk.querySelectorAll('[data-astdmodeg]').forEach(function(g){ var cls=g.getAttribute('data-astdmodeg').split('|')[1]; g.style.display=hm.indexOf(cls)>=0?'none':'inline-flex'; }); }
+  var leg=blk&&blk.querySelector('[data-astdleg="'+id+'"]');
+  if(leg){
+    if(spec.paired){   // one chip per source; toggling hides its bar AND its margin line. Caption disambiguates shapes.
+      var seen={}, chips=[];
+      spec.series.forEach(function(s){ var g=s.grp||s.k; if(seen[g])return; seen[g]=1;
+        chips.push('<button type="button" class="rs-leg'+(st.hidden[s.k]?' off':'')+'" data-astdleggrp="'+id+'|'+g+'"><span class="ave-leg-act" style="background:'+s.color+'"></span>'+esc(s.src||s.label)+'</button>'); });
+      leg.innerHTML=chips.join('')+'<span style="font-size:11px;color:var(--mu,#64748b);font-weight:600;margin-left:2px">Bars = $ amount &nbsp;·&nbsp; lines = margin (right axis)</span>';
+    } else {
+      leg.innerHTML=spec.series.map(function(s){ return '<button type="button" class="rs-leg'+(st.hidden[s.k]?' off':'')+'" data-astdlegk="'+id+'|'+s.k+'"><span class="ave-leg-act" style="background:'+s.color+'"></span>'+esc(s.label)+'</button>'; }).join('');
+    }
+  }
+  // Collapsible data table (rule 3) — windowed + honours hidden series, like San's charts.
+  var tblc=blk&&blk.querySelector('[data-astdtbl="'+id+'"]');
+  if(tblc){ var vis=spec.series.filter(function(s){ return !st.hidden[s.k]; });
+    var hd='<tr><th style="text-align:left;position:sticky;left:0;background:var(--card,#fff)">Series</th>'+labels.map(function(l){ return '<th style="text-align:right">'+esc(l)+'</th>'; }).join('')+'</tr>';
+    var bd=vis.map(function(s){ return '<tr><td style="text-align:left;font-weight:700;position:sticky;left:0;background:var(--card,#fff)">'+esc(s.label)+'</td>'+s.data.slice(lo,hi+1).map(function(v){ return '<td style="text-align:right;font-variant-numeric:tabular-nums">'+(v==null?'—':esc(String(yFmt(v))))+'</td>'; }).join('')+'</tr>'; }).join('');
+    tblc.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead>'+hd+'</thead><tbody>'+bd+'</tbody></table>'; }
+  aStdSyncSlider(id, spec.labels, la);
+  aStdWire(id);
+  // Re-attach the X-window brush to the freshly-built chart each render (onmousedown assignment, not
+  // addEventListener, so it replaces rather than stacks). onX windows the PERIOD; double-click resets.
+  var cvv=document.getElementById('astd-'+id), chh=_aCharts['astd-'+id];
+  if(cvv&&chh) rsAttachBrush(cvv, chh, function(i1,i2){ var w=_aStd[id].win, lo=w[0]; _aStd[id].win=[lo+i1, lo+i2]; aStdRender(id); }, null, function(){ _aStd[id].win=null; aStdRender(id); });
+}
+function aStdSyncSlider(id, labels, la){
+  var blk=aStdBlk(id); if(!blk) return; var n=labels.length, w=_aStd[id].win;
+  var r0=blk.querySelector('.astd-r0'), r1=blk.querySelector('.astd-r1'), fill=blk.querySelector('[data-astdfill]'), ticks=blk.querySelector('[data-astdticks]'), e0=blk.querySelector('[data-astdend0]'), e1=blk.querySelector('[data-astdend1]');
+  if(r0){ r0.max=n-1; r0.value=w[0]; } if(r1){ r1.max=n-1; r1.value=w[1]; }
+  if(fill){ fill.style.left=(w[0]/(n-1)*100)+'%'; fill.style.width=((w[1]-w[0])/(n-1)*100)+'%'; }
+  if(e0) e0.textContent=labels[w[0]]||''; if(e1) e1.textContent=labels[w[1]]||'';
+  if(ticks){ var h=''; for(var i=0;i<n;i++){ h+='<span class="rs-tick'+(i>=w[0]&&i<=w[1]?' on':'')+(i>la?' est':'')+'" style="left:'+(i/(n-1)*100)+'%"></span>'; } ticks.innerHTML=h; }
+}
+function aStdPresetWin(code, n, la){ switch(code){ case 'rep': return [0,la]; case 'fwd': return [Math.max(0,la),n-1];
+  case 'l3': return [Math.max(0,la-2),la]; case 'l5': return [Math.max(0,la-4),la];
+  case 'l4': return [Math.max(0,la-3),la]; case 'l8': return [Math.max(0,la-7),la]; default: return [0,n-1]; } }
+function aStdWire(id){
+  var blk=aStdBlk(id); if(!blk || blk._astdWired) return; blk._astdWired=true; var st=_aStd[id];
+  blk.addEventListener('click', function(e){
+    var mode=e.target.closest&&e.target.closest('[data-astdmode]'); if(mode){ var p=mode.getAttribute('data-astdmode').split('|'); st.modes[p[1]]=p[2];
+      mode.parentNode.querySelectorAll('.rs-view').forEach(function(x){ x.classList.toggle('active',x===mode); }); aStdRender(id); return; }
+    var lg=e.target.closest&&e.target.closest('[data-astdlegk]'); if(lg){ var k=lg.getAttribute('data-astdlegk').split('|')[1]; st.hidden[k]=!st.hidden[k]; aStdRender(id); return; }
+    var lgg=e.target.closest&&e.target.closest('[data-astdleggrp]'); if(lgg){ var g=lgg.getAttribute('data-astdleggrp').split('|')[1], spc=_aStdDerive[id]&&_aStdDerive[id](st);
+      if(spc){ var mem=spc.series.filter(function(s){ return (s.grp||s.k)===g; }), off=mem.every(function(s){ return st.hidden[s.k]; }); mem.forEach(function(s){ st.hidden[s.k]=!off; }); } aStdRender(id); return; }
+    var rp=e.target.closest&&e.target.closest('[data-astdrange]'); if(rp){ var spec=_aStdDerive[id]&&_aStdDerive[id](st); var n=spec?spec.labels.length:2, la=spec&&spec.lastAct!=null?spec.lastAct:n-1;
+      st.win=aStdPresetWin(rp.getAttribute('data-astdrange').split('|')[1], n, la); aStdRender(id); return; }
+  });
+  var sel=blk.querySelector('[data-astdsel]'); if(sel) sel.onchange=function(){ st.sel=sel.value; aStdRender(id); };
+  var r0=blk.querySelector('.astd-r0'), r1=blk.querySelector('.astd-r1');
+  function onSlide(){ var a=+r0.value, b=+r1.value; st.win=[Math.min(a,b),Math.max(a,b)]; aStdRender(id); }
+  if(r0) r0.oninput=onSlide; if(r1) r1.oninput=onSlide;
+}
+function aZoom(id){ var cv=document.getElementById(id), ch=_aCharts[id]; if(!cv||!ch) return;
+  if(ch.options&&ch.options.scales&&ch.options.scales.y){   // rule 1
+    rsAttachBrush(cv, ch, null,
+      function(v1,v2){ ch.options.scales.y.min=v1; ch.options.scales.y.max=v2; ch.update('none'); },
+      function(){ ch.options.scales.y.min=undefined; ch.options.scales.y.max=undefined; ch.update('none'); }); }
+  if(ch.options&&ch.options.plugins&&ch.options.plugins.legend){   // rule 2: legend hides the series AND refreshes the table
+    var orig=Chart.defaults.plugins.legend.onClick;
+    ch.options.plugins.legend.onClick=function(e,item,legend){ orig.call(this,e,item,legend); setTimeout(function(){ aBuildAutoTbl(id); },0); }; }
+  aBuildAutoTbl(id);   // rule 3
+}
+// Collapsible data table under a chart (rule 3) — the portable rs-collap markup (§0.7).
+function aTbl(id, title, headers, rows){
+  var head='<span class="rs-collap-ic">▸</span> '+esc(title)+' <span class="rs-collap-sub">'+rows.length+' rows</span>';
+  var thead='<tr>'+headers.map(function(hh,i){ return '<th'+(i===0?' class="rs-ft-h"':'')+'>'+esc(String(hh))+'</th>'; }).join('')+'</tr>';
+  var tb=rows.map(function(r){ return '<tr>'+r.map(function(c,i){ return i===0?('<td class="rs-ft-h">'+esc(String(c))+'</td>'):('<td>'+(c==null||c===''?'<span class="rs-ft-nil">–</span>':esc(String(c)))+'</td>'); }).join('')+'</tr>'; }).join('');
+  return '<div class="rs-collap" data-rstbl="'+id+'"><button type="button" class="rs-collap-h" data-rstblb="'+id+'">'+head+'</button>'+
+    '<div class="rs-collap-b" id="rsTB-'+id+'" hidden><div class="rs-ft-scroll"><table class="rs-ft"><thead>'+thead+'</thead><tbody>'+tb+'</tbody></table></div></div></div>';
+}
+function acxRGBA(hex,a){ var h=hex.replace('#',''); var r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16); return 'rgba('+r+','+g+','+b+','+a+')'; }
+
 // ── Bottom Line ▸ Adjusted EBITDA & margin — the AMZN-standard dual-axis: $ as bars, margin as a line
 // on a right y2 axis, with Actual / Summit / Consensus. Data from uberResults (act/summit/cons). UBER's
 // EBITDA margin is measured against GROSS BOOKINGS (marginOf:'gb') — its house convention. ──
 var UB_ACT='rgba(16,20,26,0.92)', UB_SUMMIT='#06C167', UB_CONS='#8A94A2';
 function ubHexA(hex,a){ var h=hex.replace('#',''); if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
   return 'rgba('+parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16)+','+a+')'; }
+// §0.2-compliant profitability chart via the ported aStdScaffold engine: metric-family dropdown
+// (Adj EBITDA / Operating income / FCF), Period mode, $ bars + margin lines on y2 (one legend chip per
+// source, "lines = margin"), Actual/Summit/Consensus across full history, period slider, zoom, table.
 function ubProfitBody(){
-  return '<div class="ov-sec" data-ubpfblock="1">'+
-    '<div class="rs-block-top"><div class="rs-block-h">Adjusted EBITDA &amp; margin — Actual vs Summit vs Consensus</div></div>'+
-    '<div class="rs-block-modes"><div class="rs-modes">'+
-      '<div style="display:inline-flex;align-items:center;gap:6px;margin:0 10px 6px 0"><span class="rs-quick-l">Period</span><div class="rs-views">'+
-        '<button type="button" class="rs-view active" data-ubpf="y">Annual</button>'+
-        '<button type="button" class="rs-view" data-ubpf="q">Quarterly</button></div></div>'+
-    '</div></div>'+
-    '<div class="ave-leg" id="ubProfitLeg" style="margin:2px 0 8px"></div>'+
-    '<div class="ov-chart-card"><div class="ov-chart-wrap ovs-tall" style="min-height:330px"><canvas id="ubChartProfit"></canvas></div></div>'+
-  '</div>';
+  return aStdScaffold({ id:'ubprofit', title:'Profitability & margins', height:360,
+    metricSel:[{v:'ebitda',label:'Adjusted EBITDA',on:true},{v:'opinc',label:'Operating income (GAAP)'},{v:'fcf',label:'Free cash flow'}],
+    modes:[{cls:'gran',label:'Period',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]}],
+    presets:[['all','All'],['rep','Reported'],['fwd','Forward'],['l8','Last 8']] });
 }
+var UB_PF_LAB={ebitda:'Adj EBITDA',opinc:'Op. income',fcf:'FCF'};
 function buildUbProfit(root){
-  var cv=document.getElementById('ubChartProfit'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
-  destroy('ubChartProfit');
-  var host=root||document;
-  var gb=host.querySelector('[data-ubpf].active'), gran=gb?gb.getAttribute('data-ubpf'):'y';
-  var V=uberResults.views[gran==='q'?'q':'y'].metrics, eb=V.ebitda, gbk=V.gb;
-  var labels=eb.periods.map(function(p){ return gran==='q'?p:('FY'+String(p).slice(2)); });
-  function lastActIdx(a){ var la=0; for(var i=0;i<a.length;i++) if(a[i]!=null) la=i; return la; }
-  var la=lastActIdx(eb.act);
-  function bars(a){ return a.map(function(v){ return v==null?null:Math.round(v/100)/10; }); }              // $B
-  function marg(ebArr,gbArr){ return ebArr.map(function(v,i){ return (v==null||!gbArr||gbArr[i]==null||!gbArr[i])?null:Math.round(v/gbArr[i]*1000)/10; }); }  // % of that source's gross bookings
-  function barBg(a,color){ return a.map(function(v,i){ return i>la?ubHexA(color,0.42):color; }); }
-  var srcs=[{k:'act',lab:'Actual',c:UB_ACT},{k:'summit',lab:'Summit',c:UB_SUMMIT},{k:'cons',lab:'Consensus (BBG)',c:UB_CONS}];
-  var ds=[];
-  srcs.forEach(function(s){ ds.push({ type:'bar', label:'Adj EBITDA — '+s.lab, data:bars(eb[s.k]), backgroundColor:barBg(eb[s.k],s.c), borderColor:'#fff', borderWidth:1, maxBarThickness:26, yAxisID:'y', order:3 }); });
-  srcs.forEach(function(s){ ds.push({ type:'line', label:'Margin — '+s.lab, data:marg(eb[s.k],gbk[s.k]), borderColor:s.c, backgroundColor:s.c, borderWidth:2.4, pointRadius:2.2, tension:.2, spanGaps:false, yAxisID:'y2', order:1, borderDash:s.k==='cons'?[5,4]:undefined }); });
-  _charts['ubChartProfit']=new Chart(cv.getContext('2d'),{ data:{ labels:labels, datasets:ds },
-    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:function(c){ var e=(la!=null&&c.dataIndex>la)?' (E)':''; return c.dataset.label+': '+(c.parsed.y==null?'—':(c.dataset.yAxisID==='y2'?c.parsed.y+'%':'$'+c.parsed.y.toFixed(1)+'B'))+e; } } } },
-      scales:{ x:{ grid:{display:false}, ticks:{font:{size:10.5}} },
-        y:{ position:'right', beginAtZero:true, grid:{color:'#EEF2F7'}, ticks:{ font:{size:10.5}, callback:function(v){ return '$'+v+'B'; } } },
-        y2:{ position:'right', grid:{display:false}, ticks:{ font:{size:10.5}, callback:function(v){ return v+'%'; } } } } }
+  aStdRender('ubprofit', function(st){
+    var metric=st.sel||'ebitda', gran=st.modes.gran==='q'?'q':'y', lab=UB_PF_LAB[metric];
+    var V=uberResults.views[gran].metrics, num=V[metric]; if(!num) return null;
+    var den=(metric==='fcf')?V.rev:V.gb, denLbl=(metric==='fcf')?'revenue':'gross bookings';
+    var labels=num.periods.map(function(p){ return gran==='q'?p:('FY'+String(p).slice(2)); });
+    var la=0; for(var i=0;i<num.act.length;i++) if(num.act[i]!=null) la=i;
+    function amt(a){ return a.map(function(v){ return v==null?null:Math.round(v/100)/10; }); }
+    function marg(a){ return a.map(function(v,i){ return (v==null||!den||den[i]==null||!den[i])?null:Math.round(v/den[i]*1000)/10; }); }
+    // den is the metric object; index per source below
+    function mrg(numArr,denArr){ return numArr.map(function(v,i){ return (v==null||!denArr||denArr[i]==null||!denArr[i])?null:Math.round(v/denArr[i]*1000)/10; }); }
+    var series=[
+      {k:'act$',grp:'act',src:'Actual',label:lab+' — Actual',color:ASTD_ACT,type:'bar',data:amt(num.act)},
+      {k:'sum$',grp:'sum',src:'Summit',label:lab+' — Summit',color:ASTD_SUMMIT,type:'bar',data:amt(num.summit)},
+      {k:'con$',grp:'con',src:'Consensus',label:lab+' — Consensus',color:ASTD_CONS,type:'bar',data:amt(num.cons)},
+      {k:'actM',grp:'act',src:'Actual',label:'Margin — Actual',color:ASTD_ACT,type:'line',yAxisID:'y2',data:mrg(num.act,den.act)},
+      {k:'sumM',grp:'sum',src:'Summit',label:'Margin — Summit',color:ASTD_SUMMIT,type:'line',yAxisID:'y2',data:mrg(num.summit,den.summit)},
+      {k:'conM',grp:'con',src:'Consensus',label:'Margin — Consensus',color:ASTD_CONS,type:'line',yAxisID:'y2',dash:true,data:mrg(num.cons,den.cons)} ];
+    return { labels:labels, lastAct:la, paired:true, type:'bar', yFmt:function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }, y2Fmt:function(x){ return x+'%'; }, series:series, marginDen:denLbl };
   });
-  var leg=host.querySelector('#ubProfitLeg');
-  if(leg) leg.innerHTML=srcs.map(function(s){ return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--mu);margin-right:14px"><span style="width:13px;height:13px;border-radius:3px;background:'+s.c+'"></span>'+s.lab+'</span>'; }).join('')+'<span style="font-size:11px;color:var(--mu)">Bars = Adj EBITDA ($B) &nbsp;·&nbsp; lines = margin (% of gross bookings, right axis)</span>';
 }
 // ── Bottom Line ▸ Unit Economics — company-level funnel: Gross Bookings ($B bars) + Net Take Rate
 // (% line, y2), Actual / Summit / Consensus. All three from uberResults (take rate = revenue ÷ GB). ──

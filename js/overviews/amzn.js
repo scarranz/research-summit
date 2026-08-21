@@ -318,6 +318,24 @@ function stdPeerScatter(sfx){
     '.mg-tip .mgt-h{display:flex;align-items:center;gap:7px;margin-bottom:4px}.mg-tip .mgt-h img{width:18px;height:18px;border-radius:4px;background:#fff;object-fit:contain}'+
     '.mg-tip .mgt-n{font-weight:800;font-size:12.5px;color:#FFB84D}</style>';
   h+='<div class="amzn-sc" data-sfx="'+sfx+'">';
+  // The comps table under the map. Same visual language as the Target Multiple tables (.tm-tbl),
+  // written here rather than imported because this canvas carries its own styles already.
+  h+='<style>.asc-tblwrap{overflow-x:auto}'+
+    '.asc-tbl{border-collapse:collapse;width:100%;font-size:12px;margin:4px 0}'+
+    '.asc-tbl th,.asc-tbl td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap}'+
+    '.asc-tbl th:first-child,.asc-tbl td:first-child{text-align:left}'+
+    '.asc-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}'+
+    '.asc-tbl td.asc-m{font-weight:800;color:var(--navy)}'+
+    '.asc-tbl tbody tr.asc-hl{background:rgba(255,153,0,.07)}'+
+    '.asc-tbl tbody tr.asc-nil td{color:var(--mu)}'+
+    '.asc-tbl tfoot td{border-top:2px solid var(--bdr);border-bottom:none;font-weight:800;color:var(--navy);background:#F7F9FB}'+
+    '.asc-tbl tfoot tr.asc-med td{background:#FAFBFC;font-weight:700;color:var(--mu)}'+
+    '.asc-nm{display:inline-flex;align-items:center;gap:7px}'+
+    '.asc-nm img{width:16px;height:16px;border-radius:4px;background:#fff;object-fit:contain}'+
+    '.asc-tk{color:var(--mu);font-weight:700;font-size:10.5px}'+
+    '.asc-up{color:#C0392B;font-weight:700}.asc-dn{color:#2E8B57;font-weight:700}'+
+    '.asc-nilv{color:var(--mu)}'+
+    '</style>';
   h+='<div class="ov-diagram-cap" style="margin:0 0 6px">Peers mapped by <b>valuation multiple</b> (x) and <b>revenue growth</b> (y). <b>Bubble size = live market cap in USD.</b> <span style="opacity:.75">Hover or tap a bubble for the read.</span></div>';
   h+='<div class="mg-tog-row">'+
     '<span class="mg-tog">Multiple: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgmetric="pe">P/E</button><button type="button" class="mg-pill" data-mgmetric="ev">EV/EBITDA</button></span></span>'+
@@ -335,6 +353,14 @@ function stdPeerScatter(sfx){
   '</svg></div>';
   h+='<div class="asc-chips amzn-sc-chips"></div>';
   h+='<div class="ov-diagram-cap" style="margin-top:4px">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only <b>listed</b> peers with a public multiple plot here — private retail rivals (SHEIN, Temu\'s parent PDD is listed but Temu itself is a unit) and private AI/cloud players have no market multiple. <span class="ave-subh-note">Multiples & growth are seeded approximations (Jul 2026; forward EV/EBITDA is derived, not quoted); market caps are live.</span></div>';
+  // §0.2 rule 3 — the receipt under the read. It is .rs-collap markup so it reads like every other
+  // table in the portal, but it OPENS by default: there is one table, it is the block's own detail,
+  // and the whole point of the sub-tab is the numbers (Pablo, Aug 20 2026).
+  if(sfx==='dd') h+='<div class="rs-collap amzn-sc-collap">'+
+      '<button type="button" class="rs-collap-h amzn-sc-tblh"></button>'+
+      '<div class="rs-collap-b amzn-sc-tblb">'+
+        '<div class="rs-tablewrap asc-tblwrap"><div class="amzn-sc-tbl"></div></div>'+
+      '</div></div>';
   h+='<div class="mg-tip amzn-sc-tip" hidden></div>';
   h+='</div>';
   return h;
@@ -359,6 +385,7 @@ function aScRenderOne(wrap){
       '<text y="'+(r+12).toFixed(1)+'" font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?'#C7761A':'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>';
   });
   g.innerHTML=frag;
+  aScTableOne(wrap);
 }
 function aScChipsOne(wrap){
   var box=wrap.querySelector('.amzn-sc-chips'); if(!box||!A_SC.peers) return;
@@ -367,11 +394,77 @@ function aScChipsOne(wrap){
   box.innerHTML=h;
 }
 function aScRenderAll(root){ root.querySelectorAll('.amzn-sc').forEach(aScRenderOne); }
+// ─── The comps table under the peer map (Valuation ▸ Peers) ─────────────────────────────────────
+// §0.2 rule 3: everything the scatter draws, as numbers, in the units it draws them in. It reads
+// the SAME state as the bubbles — the metric/basis pills pick the column, removing a chip drops the
+// row, and a ticker added by hand appears here with an em dash until a multiple exists for it.
+//
+// The average and the median EXCLUDE Amazon. They are the set Amazon is being read against, so
+// folding the subject into its own benchmark would shrink whatever gap the table exists to show.
+// AMZN keeps its highlighted row and its "vs peer avg" is its premium/discount to them.
+// Both statistics are shown because this set is skewed: COST and MELI in the 40s against BABA at
+// 17 drag a mean that seven names cannot defend, and the median is the honest middle.
+function aScGrowth(p){ var g=A_SC.basis==='f'?p.gf:p.gt; if(g==null) g=(p.gf!=null?p.gf:p.gt); return g; }
+function aScNum(v){ return v!=null && !isNaN(v); }
+function aScFmtMult(v){ return aScNum(v)?v.toFixed(1)+'×':'—'; }
+function aScFmtPct(v){ return aScNum(v)?v.toFixed(1)+'%':'—'; }
+function aScFmtMc(v){ return aScNum(v)?('$'+(v>=1000?(v/1000).toFixed(2)+'T':Math.round(v)+'B')):'—'; }
+function aScMean(a){ if(!a.length) return null; return a.reduce(function(s,v){ return s+v; },0)/a.length; }
+function aScMedian(a){ if(!a.length) return null; var s=a.slice().sort(function(x,y){ return x-y; }), h=Math.floor(s.length/2); return s.length%2?s[h]:(s[h-1]+s[h])/2; }
+function aScVsAvg(m, avg){
+  if(!aScNum(m)||!aScNum(avg)||avg===0) return '<span class="asc-nilv">—</span>';
+  var d=(m/avg-1)*100;
+  return '<span class="'+(d>=0?'asc-up':'asc-dn')+'">'+(d>=0?'+':'')+Math.round(d)+'%</span>';
+}
+function aScTableOne(wrap){
+  var box=wrap.querySelector('.amzn-sc-tbl'); if(!box||!A_SC.peers) return;
+  var mLab=(A_SC.metric==='pe'?'P/E':'EV/EBITDA'), bLab=(A_SC.basis==='f'?'forward':'trailing');
+  var rows=A_SC.peers.map(function(p){ return { p:p, m:aScMult(p), g:aScGrowth(p) }; });
+  // Cheapest first on the ACTIVE multiple. A name with no multiple on file sinks to the bottom
+  // instead of sorting as zero, which would read as "the cheapest name on the map".
+  rows.sort(function(a,b){
+    var an=aScNum(a.m), bn=aScNum(b.m);
+    if(!an&&!bn) return 0; if(!an) return 1; if(!bn) return -1; return a.m-b.m;
+  });
+  var peers=rows.filter(function(r){ return !r.p.hl; });
+  var avgM=aScMean(peers.filter(function(r){ return aScNum(r.m); }).map(function(r){ return r.m; }));
+  var medM=aScMedian(peers.filter(function(r){ return aScNum(r.m); }).map(function(r){ return r.m; }));
+  var avgG=aScMean(peers.filter(function(r){ return aScNum(r.g); }).map(function(r){ return r.g; }));
+  var medG=aScMedian(peers.filter(function(r){ return aScNum(r.g); }).map(function(r){ return r.g; }));
+  var nM=peers.filter(function(r){ return aScNum(r.m); }).length;
+  var body=rows.map(function(r){
+    var p=r.p, cls=(p.hl?'asc-hl':'')+(aScNum(r.m)?'':' asc-nil');
+    return '<tr class="'+cls.trim()+'">'+
+      '<td><span class="asc-nm"><img src="'+esc(scLogoUrl(p))+'" alt="" onerror="this.style.display=\'none\'">'+
+        '<span>'+esc(p.n)+' <span class="asc-tk">'+esc(p.tk)+'</span></span></span></td>'+
+      '<td class="asc-m">'+aScFmtMult(r.m)+'</td>'+
+      '<td>'+aScFmtPct(r.g)+'</td>'+
+      '<td>'+aScFmtMc(p.mc)+'</td>'+
+      '<td>'+aScVsAvg(r.m, avgM)+'</td></tr>';
+  }).join('');
+  var foot='<tr class="asc-avg"><td>Peer average <span class="asc-tk">ex-AMZN · '+nM+' names</span></td>'+
+      '<td>'+aScFmtMult(avgM)+'</td><td>'+aScFmtPct(avgG)+'</td>'+
+      '<td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>'+
+    '<tr class="asc-med"><td>Peer median <span class="asc-tk">ex-AMZN</span></td>'+
+      '<td>'+aScFmtMult(medM)+'</td><td>'+aScFmtPct(medG)+'</td>'+
+      '<td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>';
+  box.innerHTML='<table class="asc-tbl"><thead><tr>'+
+      '<th>Peer</th><th>'+esc(mLab)+' · '+esc(bLab)+'</th>'+
+      '<th>Rev growth · '+esc(bLab)+'</th><th>Market cap</th><th>vs peer avg</th></tr></thead>'+
+    '<tbody>'+body+'</tbody><tfoot>'+foot+'</tfoot></table>';
+  var hd=wrap.querySelector('.amzn-sc-tblh'), bd=wrap.querySelector('.amzn-sc-tblb');
+  if(hd){ var open=!(bd&&bd.hidden);
+    hd.innerHTML='<span class="rs-collap-ic">'+(open?'▾':'▸')+'</span>The numbers behind the map'+
+      '<span class="rs-collap-sub">'+(open?'hide':'show')+' · '+esc(mLab)+' · '+esc(bLab)+
+      ', '+rows.length+' names</span>'; }
+}
 function aScChipsAll(root){ root.querySelectorAll('.amzn-sc').forEach(function(w){ aScChipsOne(w); wireScChips(root, w); }); }
 function wireScatters(root){
   aScReset();
   root.querySelectorAll('.amzn-sc').forEach(function(wrap){
     if(wrap._scWired) return; wrap._scWired=true;
+    var tblH=wrap.querySelector('.amzn-sc-tblh'), tblB=wrap.querySelector('.amzn-sc-tblb');
+    if(tblH&&tblB) tblH.onclick=function(){ tblB.hidden=!tblB.hidden; aScRenderOne(wrap); };
     var g=wrap.querySelector('.amzn-sc-nodes'), tip=wrap.querySelector('.amzn-sc-tip');
     wrap.querySelectorAll('.mg-pill[data-mgbasis]').forEach(function(btn){ btn.onclick=function(){ A_SC.basis=btn.getAttribute('data-mgbasis'); aScRenderAll(root); }; });
     wrap.querySelectorAll('.mg-pill[data-mgmetric]').forEach(function(btn){ btn.onclick=function(){ A_SC.metric=btn.getAttribute('data-mgmetric'); aScRenderAll(root); }; });
@@ -3424,7 +3517,10 @@ function aBuildSub(root, dd, key){
     if(key==='histmult') requestAnimationFrame(function(){ amznHistMult.init(root); });
     if(key==='sensitivity') requestAnimationFrame(function(){ amznSens.init(root); });
     if(key==='targetmult') requestAnimationFrame(function(){ amznTargetMult.init(root); });
-    if(key==='peers') requestAnimationFrame(function(){ aScRenderAll(root); aScChipsAll(root); aScFetchCaps(root); });
+    // wireScatters() rather than the three render calls it ends with: entering the sub-tab must also
+    // bind the pills and the table dropdown. It is idempotent (the _scWired guard) and keeps the peer
+    // list as the user left it (aScReset only seeds when A_SC.peers is null).
+    if(key==='peers') requestAnimationFrame(function(){ wireScatters(root); });
     // no 'financials' branch — that sub-tab was removed (Aug 19 2026); aBuildFin is parked with it
   }
   if(dd==='evolution'){

@@ -3365,12 +3365,17 @@ function aBuildSegBridge(){
   }
 }
 // ── OI → Net income walk, with one-off normalization. Consolidated from BBG (amznBBG.is), actuals +
-// consensus. The reported net margin is flattered by equity mark-to-market gains (Rivian-type) in the
-// non-operating line; "Normalized" strips that line (pretax basis) to show the underlying margin. ──
+// consensus. Reported net income is flattered by NON-CASH valuation gains on Amazon's equity
+// investments — historically Rivian, and by 2026 dominated by the ANTHROPIC stake mark (the calls:
+// Q1'26 "~$16.8B of pre-tax Anthropic valuation gains"; latest quarter "other income, primarily the
+// Anthropic investment mark"). These land in GAAP "Other income (expense), net" (amznBBG.is.otherNonOp,
+// stored so that a negative = a gain). "Normalized" removes that gain AFTER TAX, at the period's
+// effective rate — because the reported tax provision already carries the tax accrued on the gain, so
+// stripping it pretax while keeping full tax would understate underlying earnings. ──
 function aIsVal(k,y){ var s=amznBBG.is[k]; if(!s) return null; return y<=2025 ? s.a[y-2023] : s.f[y-2026]; }
 function aNetBridgeBody(){
   var years=[2023,2024,2025,2026,2027,2028];
-  var yb=years.map(function(y){ return '<button type="button" data-nbyr="'+y+'"'+(y===2025?' class="active"':'')+'>FY'+String(y).slice(2)+(y>2025?'E':'')+'</button>'; }).join('');
+  var yb=years.map(function(y){ return '<button type="button" data-nbyr="'+y+'"'+(y===2026?' class="active"':'')+'>FY'+String(y).slice(2)+(y>2025?'E':'')+'</button>'; }).join('');
   return '<div class="ov-sec"><div class="ov-sec-h">Operating income → net income — and the normalization</div>'+
     '<div class="mch-ctl">'+   /* §0.4 row 2: treatment (left) · window (right) */
       '<span class="acx-tog nb-norm"><button type="button" data-nbnorm="rep" class="active">Reported</button><button type="button" data-nbnorm="norm">Normalized</button></span>'+
@@ -3382,21 +3387,30 @@ function aNetBridgeBody(){
 }
 function aBuildNetBridge(){
   var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(!pane) return;
-  var yb=pane.querySelector('.nb-yr .active'), y=yb?+yb.getAttribute('data-nbyr'):2025;
+  var yb=pane.querySelector('.nb-yr .active'), y=yb?+yb.getAttribute('data-nbyr'):2026;
   var nt=pane.querySelector('.nb-norm .active'), norm=!!(nt&&nt.getAttribute('data-nbnorm')==='norm');
-  var oi=aIsVal('oi',y), ni=aIsVal('netInterest',y), ono=aIsVal('otherNonOp',y), tax=aIsVal('tax',y), em=aIsVal('equityMethod',y), net=aIsVal('netIncome',y), rev=aIsVal('rev',y);
-  if(oi==null||net==null) return;
+  var oi=aIsVal('oi',y), nInt=aIsVal('netInterest',y), ono=aIsVal('otherNonOp',y), tax=aIsVal('tax',y), pretax=aIsVal('pretax',y), net=aIsVal('netIncome',y), rev=aIsVal('rev',y);
+  if(oi==null||net==null||tax==null) return;
   function B(x){ return x==null?0:x/1000; }
+  var I = nInt==null?0:-nInt;                 // net interest income (Amazon nets interest income − expense here)
+  var G = ono==null?0:-ono;                    // equity-investment valuation gain (positive = gain): the Anthropic/Rivian mark
+  var effR = (pretax&&pretax>0)?(tax/pretax):0;   // period effective tax rate — used to remove the tax accrued on the gain
+  var plug = net - (oi + I + G - tax);         // small reconciling item (minority interest / equity-method / consensus noise) — keeps the walk tying to reported net
   var run=B(oi), steps=[{label:'Op. income', kind:'base', color:'#1E2733', range:[0,run], runAfter:run, val:B(oi)}];
   function step(lab,d,dc){ var lo=run; run=lo+d; steps.push({label:lab, kind:d>=0?'up':'down', color:(dc==='#B7791F'?'#B7791F':'#6B7683'), dc:dc, range:[Math.min(lo,run),Math.max(lo,run)], runAfter:run, val:d}); }
-  step('Interest, net', B(-ni), '#6B7683');
-  if(!norm) step('Rivian mark-to-market (one-off)', B(-ono), '#B7791F');   // the ONLY item the normalization strips
-  step('– Income tax & other', B(-(tax+(em||0))), '#6B7683');              // equity-method associates folded in (immaterial) — no second "equity" line to confuse
-  steps.push({label:(norm?'Net income (norm.)':'Net income'), kind:'total', color:'#2E8B57', range:[0,run], runAfter:null, val:run});
+  step('Net interest income', B(I), '#6B7683');
+  if(!norm) step('Equity-investment gains, net', B(G), '#B7791F');   // the Anthropic/Rivian mark — the ONLY item normalization removes
+  var taxShown = norm ? -(tax - G*effR) : -tax;   // normalized: also remove the tax accrued on the stripped gain
+  step(norm?'Income tax (ex-mark)':'Income tax', B(taxShown), '#6B7683');
+  if(Math.abs(plug)>=50) step('Minority interest & other', B(plug), '#6B7683');   // only draw when non-trivial
+  var endNet = norm ? (net - G*(1-effR)) : net;
+  run=B(endNet); steps.push({label:(norm?'Net income (norm.)':'Net income'), kind:'total', color:'#2E8B57', range:[0,run], runAfter:null, val:B(endNet)});
   aBuildBrWaterfall('aNetBr', steps, BR_FMT_D);
   var cap=pane.querySelector('#aNetBrCap');
-  if(cap){ var rm=(rev?net/rev*100:null), nm=(rev?(net+ono)/rev*100:null), yl='FY'+String(y).slice(2)+(y>2025?'E':'');
-    cap.innerHTML='<b>'+yl+'</b> · reported net margin <b>'+(rm==null?'—':rm.toFixed(1)+'%')+'</b>'+(rev?' ($'+B(net).toFixed(1)+'B / $'+B(rev).toFixed(0)+'B rev)':'')+' · normalized <b>'+(nm==null?'—':nm.toFixed(1)+'%')+'</b>. Read it left to right: operating income, minus net interest, then the one <span style="color:#B7791F;font-weight:700">amber bar</span> — the <b>Rivian mark-to-market</b> ($'+B(Math.abs(ono)).toFixed(1)+'B in '+yl+'), a non-cash swing on Amazon\'s stake that flatters reported net income — then income tax &amp; other, to net income. <b>Normalized strips only that one Rivian bar</b>; everything else (interest, tax, the immaterial equity-method associates folded into “tax &amp; other”) is recurring and stays. Data: BBG consensus, as of Aug 2026.';
+  if(cap){ var yl='FY'+String(y).slice(2)+(y>2025?'E':''), rm=(rev?net/rev*100:null), nmv=net-G*(1-effR), nm=(rev?nmv/rev*100:null);
+    cap.innerHTML='<b>'+yl+'</b> — reported net margin <b>'+(rm==null?'—':rm.toFixed(1)+'%')+'</b>'+(rev?' ($'+B(net).toFixed(1)+'B on $'+B(rev).toFixed(0)+'B revenue)':'')+', normalized <b>'+(nm==null?'—':nm.toFixed(1)+'%')+'</b>.<br>'+
+      'The <span style="color:#B7791F;font-weight:700">amber bar</span> is GAAP <i>“other income (expense), net”</i> — non-cash valuation gains on Amazon’s equity investments (historically <b>Rivian</b>; by 2026 dominated by the <b>Anthropic</b> stake mark: the Q1’26 call flagged “~$16.8B of pre-tax Anthropic valuation gains,” and the latest quarter’s other income was “primarily the Anthropic investment mark”). It’s <b>$'+B(G).toFixed(1)+'B pre-tax</b> in '+yl+' — real under GAAP, but non-cash, non-operating and lumpy, so it flatters the reported margin.<br>'+
+      '<b>Normalization</b> removes it <b>after tax</b>: normalized net income = reported − gain × (1 − effective rate), with the '+yl+' effective rate <b>'+(effR*100).toFixed(0)+'%</b> (= $'+B(G*(1-effR)).toFixed(1)+'B removed). We strip the gain’s tax too — the reported provision already carries it, so removing the gain pretax while keeping full tax would understate the underlying result. Everything else (net interest, operating tax, minority interest) is recurring and stays. Source: BBG consensus (as of Aug 2026) + AMZN earnings calls.';
   }
 }
 // SBC — back in General (where it was), BBG-driven (actuals + consensus, $B-by-line ⇄ %-of-line).

@@ -3547,9 +3547,11 @@ function aLastActIdx(arr){ var la=0; for(var i=0;i<arr.length;i++) if(arr[i]!=nu
 var MARG_LAB2={gross:'Gross profit',operating:'Op. income',ebitda:'EBITDA',net:'Net income',fcf:'FCF'};
 // SAB dual-axis: the $ amount as bars (Actual/Summit/Consensus grouped) + the margin % as lines on the
 // right y2 axis. `numX`/`revX` are the per-source $ series (null outside their window); sm = Summit {num,den}.
-function aMargDual(lab, actNum, conNum, rev, la, normOn, oa, sm){
-  function amt(v,i){ if(v==null) return null; if(normOn&&oa) v=v-(oa[i]||0); return Math.round(v/100)/10; }
-  function marg(v,i){ if(v==null||!rev[i]) return null; if(normOn&&oa) v=v-(oa[i]||0); return Math.round(v/rev[i]*1000)/10; }
+// normSub[i] = the AFTER-TAX one-off to REMOVE from a normalized value (gain × (1 − effective rate)).
+// Subtracting it lowers a gain-flattered net income to its underlying level (see the net bridge).
+function aMargDual(lab, actNum, conNum, rev, la, normOn, normSub, sm){
+  function amt(v,i){ if(v==null) return null; if(normOn&&normSub) v=v-(normSub[i]||0); return Math.round(v/100)/10; }
+  function marg(v,i){ if(v==null||!rev[i]) return null; if(normOn&&normSub) v=v-(normSub[i]||0); return Math.round(v/rev[i]*1000)/10; }
   var series=[
     {k:'act$',grp:'act',src:'Actual',label:lab+' — Actual',color:ASTD_ACT,type:'bar',data:actNum.map(amt)},
     {k:'con$',grp:'con',src:'Consensus',label:lab+' — Consensus',color:ASTD_CONS,type:'bar',data:conNum.map(amt)},
@@ -3580,13 +3582,17 @@ function aBuildMargins(){
     var num=amznBBG.is[MET[metric]], rvb=amznBBG.is.rev; if(!num||!rvb) return null;
     if(gran==='q'){   // other metrics quarterly — BBG (Actual + Consensus)
       var ql=amznBBG.qtrs.slice(), nq=num.q, rq=rvb.q, laq=aLastActIdx(nq);
-      var actN=ql.map(function(_,i){ return i<=laq?nq[i]:null; }), conN=ql.map(function(_,i){ return i>=laq?nq[i]:null; });
+      var actN=ql.map(function(_,i){ return i<=laq?nq[i]:null; }), conN=ql.map(function(_,i){ return i>laq?nq[i]:null; });
       out.labels=ql; out.lastAct=laq; out.paired=true; out.series=aMargDual(lab, actN, conN, rq, laq, false, null, null); return out;
     }
     var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], la=2;
-    var na=num.a.concat(num.f), rv=rvb.a.concat(rvb.f), ono=amznBBG.is.otherNonOp, oa=ono?ono.a.concat(ono.f):null;
-    var actN=labels.map(function(_,i){ return i<=la?na[i]:null; }), conN=labels.map(function(_,i){ return i>=la?na[i]:null; });
-    out.labels=labels; out.lastAct=la; out.paired=true; out.series=aMargDual(lab, actN, conN, rv, la, normOn, oa, aSummitAnnual(metric)); return out;
+    var na=num.a.concat(num.f), rv=rvb.a.concat(rvb.f);
+    // after-tax one-off to strip when normalizing net income: gain × (1 − effective rate), gain = −otherNonOp
+    var ono=amznBBG.is.otherNonOp, taxA=amznBBG.is.tax, preA=amznBBG.is.pretax, normSub=null;
+    if(metric==='net' && ono && taxA && preA){ var oaA=ono.a.concat(ono.f), tA=taxA.a.concat(taxA.f), pA=preA.a.concat(preA.f);
+      normSub=labels.map(function(_,i){ var G=oaA[i]==null?0:-oaA[i], eff=(pA[i]?tA[i]/pA[i]:0); return G*(1-eff); }); }
+    var actN=labels.map(function(_,i){ return i<=la?na[i]:null; }), conN=labels.map(function(_,i){ return i>la?na[i]:null; });
+    out.labels=labels; out.lastAct=la; out.paired=true; out.series=aMargDual(lab, actN, conN, rv, la, normOn, normSub, aSummitAnnual(metric)); return out;
   });
 }
 // Expense-line full dives — opened from an Expenses card via data-detail="exp:<key>". VISUAL, not prose.
@@ -4248,7 +4254,7 @@ function aBuildSegFc(){
     function bbg(f){ if(seg.bk){ var s=amznBBG.seg[seg.bk][f]; return s?s.a.concat(s.f):null; } var s2=amznBBG.is[f]; return s2?s2.a.concat(s2.f):null; }
     var oiA=bbg('oi'), daA=bbg('da'), revA=bbg('rev');
     function num(i){ if(metric!=='ebitda') return oiA[i]; if(!seg.bk){ var eb=bbg('ebitda'); return eb?eb[i]:null; } return (oiA[i]==null||!daA||daA[i]==null)?null:oiA[i]+daA[i]; }
-    var actN=labels.map(function(_,i){ return i<=la?num(i):null; }), conN=labels.map(function(_,i){ return i>=la?num(i):null; });
+    var actN=labels.map(function(_,i){ return i<=la?num(i):null; }), conN=labels.map(function(_,i){ return i>la?num(i):null; });
     var sm=null; if(metric==='oi'){ var so=aSegSummitAnnual(seg.mk), sr=aSegSummitAnnual(seg.rk); if(so&&sr) sm={num:so,den:sr}; }
     out.labels=labels; out.lastAct=la; out.paired=true; out.series=aMargDual(lab, actN, conN, revA, la, false, null, sm); return out;
   });

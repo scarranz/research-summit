@@ -4255,7 +4255,7 @@ function aBuildSegFc(){
 }
 function aSegOiBody(){
   return aStdScaffold({ id:'segoi', title:'Revenue vs profit — common size by segment', height:340,
-    metricSel:[{v:'oi',label:'Operating income',on:true},{v:'rev',label:'Revenue'},{v:'ebitda',label:'EBITDA'}],
+    metricSel:[{v:'rev',label:'Revenue',on:true},{v:'oi',label:'Operating income'},{v:'ebitda',label:'EBITDA'}],
     modes:[{cls:'show',label:'Show',opts:[{v:'amt',label:'$B',on:true},{v:'share',label:'Share'},{v:'growth',label:'Growth'}]},
            {cls:'layout',label:'Layout',opts:[{v:'stack',label:'Stacked',on:true},{v:'side',label:'Side by side'}]},
            {cls:'gran',label:'Period',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]},
@@ -4265,7 +4265,7 @@ function aSegOiBody(){
 }
 function aBuildSegOi(){
   aStdRender('segoi', function(st){
-    var metric=st.sel||'oi', show=st.modes.show||'amt', layout=st.modes.layout||'stack', gran=st.modes.gran||'y';
+    var metric=st.sel||'rev', show=st.modes.show||'amt', layout=st.modes.layout||'stack', gran=st.modes.gran||'y';
     var cmp=st.modes.cmp||'yoy', gin=st.modes.gin||'pct';
     var labels=gran==='q'?amznBBG.qtrs.slice():['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
     var la=gran==='q'?((amznBBG.seg.aws.oi.qA?amznBBG.seg.aws.oi.qA.length:5)-1):2;

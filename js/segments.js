@@ -448,7 +448,7 @@ function modesHtml(id, opts){
       return '<button type="button" class="rs-view' + ((st.stack !== false) === m[0] ? ' active' : '') +
         '" data-sgstack="' + esc(id) + '|' + (m[0] ? '1' : '0') + '">' + m[1] + '</button>'; }).join(''));
   }
-  h += group('Values', [[true, 'On'], [false, 'Off']].map(function(m){
+  h += group('Labels', [[true, 'On'], [false, 'Off']].map(function(m){
     return '<button type="button" class="rs-view' + ((st.labels === true) === m[0] ? ' active' : '') +
       '" data-sglab="' + esc(id) + '|' + (m[0] ? '1' : '0') + '" title="Print every plotted value on the chart">' +
       m[1] + '</button>'; }).join(''));

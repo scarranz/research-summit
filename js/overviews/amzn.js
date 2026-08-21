@@ -3850,7 +3850,11 @@ function aLeasesBody(){   // Leases explorer — Miscellaneous ▸ Capex & Depre
     '.lx-card{background:var(--card,#fff);border:1px solid var(--bdr);border-radius:12px;padding:15px 17px}'+
   '</style>';
   h+='<div class="ov-sec"><div class="ov-sec-h">Leases — the other capacity bill (10-K Note 4)</div>';
-  h+='<div class="ew-note" style="margin:0 0 12px">Amazon doesn’t own all its capacity — it leases warehouses, data-center space and aircraft. Leases come in two forms: <b>operating leases</b> (the bulk; the right-of-use asset sits on its own balance-sheet line and the cost runs through cost of sales / fulfillment / technology) and <b>finance leases</b> (ownership-like; the asset is inside PP&amp;E and depreciates into D&amp;A). The reason this matters: a lease is a multi-year payment obligation that behaves like debt but is not reported as debt, and none of it shows in the capex or PP&amp;E charts. Amazon also signs leases years before they start (~$62B currently), so the committed capacity is larger than the capex numbers alone suggest.</div>';
+  h+='<div style="display:flex;gap:10px;flex-wrap:wrap;margin:0 0 10px">'+
+    '<div style="flex:1;min-width:220px;border:1px solid var(--bdr);border-left:4px solid '+BRAND2+';border-radius:9px;padding:8px 12px;background:var(--card,#fff)"><div style="font-size:12px;font-weight:800;color:var(--navy)">🏢 Operating leases</div><div style="font-size:10.5px;color:var(--mu);margin-top:2px">ROU asset on its <b>own B/S line</b> · cost runs through COGS / fulfillment / tech · <b>not</b> in capex or PP&amp;E</div></div>'+
+    '<div style="flex:1;min-width:220px;border:1px solid var(--bdr);border-left:4px solid '+SQUID+';border-radius:9px;padding:8px 12px;background:var(--card,#fff)"><div style="font-size:12px;font-weight:800;color:var(--navy)">✈️ Finance leases</div><div style="font-size:10.5px;color:var(--mu);margin-top:2px">Ownership-like · asset sits <b>inside PP&amp;E</b> · depreciates into D&amp;A</div></div>'+
+  '</div>'+
+  '<div style="font-size:11.5px;font-weight:700;color:var(--brand-2);margin:0 0 12px">Debt-like capacity that never shows in the capex/PP&amp;E charts — plus ~$62B signed but not yet started.</div>';
   h+='<div class="exp-stat" style="margin:0 0 12px">'+
     '<div class="exp-st"><div class="exp-sl">Lease obligation</div><div class="exp-sv">$121.8B</div><div class="exp-ss">gross · PV $101.5B · $87.3B long-term</div></div>'+
     '<div class="exp-st"><div class="exp-sl">Right-of-use assets</div><div class="exp-sv">$141.6B</div><div class="exp-ss">operating $86B · finance $55.6B</div></div>'+
@@ -3877,7 +3881,7 @@ function aLeasesBody(){   // Leases explorer — Miscellaneous ▸ Capex & Depre
     '<div class="ew-note" style="margin-top:2px">Leasing adds <b>~$142B of in-use capacity</b> and another <b>~$62B already signed</b> on top of the owned $534B — roughly <b>38% more capacity</b> than the capex/PP&amp;E charts alone show.</div>'+
     mbar('Right-of-use ASSETS — the leased capacity (~$142B)',[{w:60.7,c:BRAND2,t:'Operating ROU $86B'},{w:39.3,c:SQUID,t:'Finance ROU $55.6B'}])+
     mbar('Lease LIABILITIES — the obligation ($121.8B gross · PV $101.5B)',[{w:87.8,c:BRAND,t:'Operating $106.9B'},{w:12.2,c:GRAY,t:'Finance $14.9B'}])+
-    '<div class="ew-note"><b>Finance-lease ROU ($55.6B) is already inside PP&amp;E</b> (so its depreciation is in D&amp;A); <b>operating-lease ROU ($86B) sits on its own line</b> — capacity that never shows up in the capex or PP&amp;E charts. Of the $121.8B liability, $87.3B is long-term. This is real leverage-lite: obligations that behave like debt but sit outside reported debt.</div>';
+    '<div class="ew-note">Finance ROU ($55.6B) is already in PP&amp;E; operating ROU ($86B) sits on its own line — invisible to the capex/PP&amp;E charts. Of the $121.8B liability, $87.3B is long-term: debt-like, but outside reported debt.</div>';
   // Panel 3 — the pipeline
   var p3='<div class="exp-stat" style="margin:0 0 12px">'+
       '<div class="exp-st"><div class="exp-sl">Signed, not started</div><div class="exp-sv">~$62B</div><div class="exp-ss">10-K Note 4 (FY2024)</div></div>'+
@@ -3893,7 +3897,7 @@ function aLeasesBody(){   // Leases explorer — Miscellaneous ▸ Capex & Depre
       box('🖥️','Data centers','A mix — Amazon <b>owns</b> core AWS capacity (the capex build) but also <b>leases</b> data-center space and power, especially to move fast; much of the not-yet-commenced pipeline is here.')+
       box('✈️','Amazon Air','The cargo-aircraft fleet is largely under <b>finance</b> leases — the main reason finance-lease assets and their amortization are material.')+
       box('🏢','Offices &amp; other','Corporate offices, physical stores and equipment round it out.')+'</div>'+
-    '<div class="ew-note"><b>Own vs lease is a deliberate choice.</b> Amazon owns where control and long-run cost matter (core AWS/data centers → capex, PP&amp;E, D&amp;A) and leases where speed and flexibility matter (fulfillment real estate, incremental data-center space, aircraft). The two together are the real capacity picture — the capex charts only show the owned half.</div>';
+    '<div class="ew-note"><b>Own vs lease is deliberate:</b> own where control/long-run cost matter (core AWS → capex/PP&amp;E), lease where speed matters (fulfillment, incremental DC space, aircraft). The capex charts show only the owned half.</div>';
   h+='<div class="lx-panels">'+
     '<div class="lx-panel lx-card" data-lxpanel="bs">'+p2+'</div>'+
     '<div class="lx-panel lx-card" data-lxpanel="pipe" hidden>'+p3+'</div>'+

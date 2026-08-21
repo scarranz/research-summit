@@ -4316,8 +4316,6 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="results">Results</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="estevo">Estimates</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="earnings">'+
         ceIRButton()+
@@ -4335,8 +4333,6 @@ function deepDiveHtml(c){
       '<div class="ovt-subpane" data-ovst="results" hidden>'+(resultsHtml('UBER')||ceResultsPending('Results'))+'</div>'+
       '<div class="ovt-subpane" data-ovst="estevo" hidden>'+(resultsEvoHtml('UBER')||ceResultsPending('Estimates'))+'</div>'+
       '<div class="ovt-subpane" data-ovst="guidance" hidden>'+modelBody(c)+ub3yrTargets()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="strategy" hidden>'+ubStrategyBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="timeline" hidden>'+historyStoryBody()+'</div>'+
     '</div>';
   // ── VALUATION — Multiples · Peers (listed-peer multiples) · Analyst Ratings (Massive, absorbed) ·
   // Capital Allocation · Balance Sheet. (Sensitivity grid removed; competitive map moved to Industry.) ──
@@ -4346,13 +4342,11 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="peers">Peers</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="ratings">Analyst Ratings</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="capital">Capital Allocation</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="balance">Balance Sheet</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="multiples">'+UBER_VAL.body()+'</div>'+
       '<div class="ovt-subpane" data-ovst="peers" hidden>'+ubPeerMultBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="ratings" hidden><div id="dd-val-slot"></div></div>'+
       '<div class="ovt-subpane" data-ovst="capital" hidden>'+ubCapAllocBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="balance" hidden>'+ubBalanceBody(c)+'</div>'+
     '</div>';
   // ── MANAGEMENT — Executives & Board · Ownership (Fiscal.ai, absorbed) · Governance & SBC ·
   // Track Record. ──
@@ -4368,13 +4362,20 @@ function deepDiveHtml(c){
       '<div class="ovt-subpane" data-ovst="governance" hidden>'+ubGovBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="track" hidden>'+ubTrackBody(c)+'</div>'+
     '</div>';
-  // ── MISCELLANEOUS — M&A (Delivery Hero acquisition, moved out of Evolution per Dani). Mirrors
-  // AMZN's Miscellaneous tab; UBER is asset-light so there's no Capex & Depreciation deep dive. ──
+  // ── MISCELLANEOUS — the catch-all for what doesn't belong in a core tab (per Dani): M&A (Delivery
+  // Hero), plus Strategy, Timeline and Balance Sheet, relocated out of Evolution/Valuation. UBER is
+  // asset-light so there's no Capex & Depreciation deep dive. ──
   h+='<div class="dd-pane" data-dd="misc" hidden>'+
       '<div class="ovt-subtabs">'+
         '<button type="button" class="ovt-subtab active" data-ovst="manda">M&amp;A</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="balance">Balance Sheet</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="manda">'+deliveryHeroBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="strategy" hidden>'+ubStrategyBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="timeline" hidden>'+historyStoryBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="balance" hidden>'+ubBalanceBody(c)+'</div>'+
     '</div>';
   h+='</div>';
   return h;
@@ -4645,10 +4646,11 @@ function buildSub(root, group, key){
     else if(key==='estevo') requestAnimationFrame(function(){ initResultsEvo('UBER'); });
     // strategy, timeline: no charts
   } else if(group==='misc'){
+    if(key==='balance')       buildUbBal();     // equity-stake portfolio bar (moved from Valuation)
     // manda (Delivery Hero): SVG/HTML map wired via delegated .dhm-pill handlers in init — no Chart.js
+    // strategy, timeline: no charts
   } else if(group==='valuation'){
     if(key==='multiples')     UBER_VAL.init(root);
-    else if(key==='balance')  buildUbBal();     // equity-stake portfolio bar
     else if(key==='capital')  buildUbCapAlloc(root);   // FCF/buybacks + share count
     // peers (static table), ratings: no charts
   } else if(group==='mgmt'){

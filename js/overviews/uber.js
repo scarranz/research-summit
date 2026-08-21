@@ -4296,17 +4296,19 @@ function deepDiveHtml(c){
       '<div class="ovt-subpane" data-ovst="industry" hidden>'+ubIndustryBody(c)+'</div>'+
     '</div>';
   // ── BOTTOM LINE — Unit Economics · Suppliers · Insurance & FCF · Margins (live via Massive). ──
+  // ── BOTTOM LINE — AMZN standard: General (profitability up top; the take-rate/per-trip unit
+  // economics and the insurance-float/FCF as expense-style deep-dives below) · Supply Chain (suppliers).
+  // Capital Allocation and per-segment profitability get their own homes as the reorg proceeds. ──
   h+='<div class="dd-pane" data-dd="bottomline" hidden>'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="unit">Unit Economics</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="suppliers">Suppliers</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="insurance">Insurance & FCF</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="margins">Margins</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="general">General</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="supplychain">Supply Chain</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="unit">'+unitEconBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="suppliers" hidden>'+suppliersBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="insurance" hidden>'+insuranceBody()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="margins" hidden>'+ubMarginsBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="general">'+ubMarginsBody(c)+
+        collapsible('Unit economics — how a trip & an order make money, and the take rate', unitEconBody(c), false)+
+        collapsible('The insurance float & free cash flow', insuranceBody(), false)+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="supplychain" hidden>'+suppliersBody(c)+'</div>'+
     '</div>';
   // ── EVOLUTION — Earnings History (narrative) · Guidance (Model vs. Reality + 3-yr targets) ·
   // Strategy (turnaround + drivers) · Timeline (company history & M&A). ──
@@ -4629,10 +4631,11 @@ function buildSub(root, group, key){
     else if(key==='customers') buildUberOneCharts();
     // tam, industry: no charts
   } else if(group==='bottomline'){
-    if(key==='unit'){ buildUbUnit(root); buildMobilityCharts(); }  // company GB+take dual-axis + Mobility/Delivery take comparison
-    else if(key==='margins'){ buildUbProfit(root); buildUbBridge(root); buildUbMargins(); }   // Adj EBITDA dual-axis + bridge + live Massive margins
-    else if(key==='insurance') buildUbFcf(root);   // FCF & conversion dual-axis
-    // suppliers: no charts
+    if(key==='general'){   // profitability up top + the Unit-economics & Insurance deep-dives (collapsibles build on expand)
+      buildUbProfit(root); buildUbBridge(root); buildUbMargins();
+      buildUbUnit(root); buildMobilityCharts(); buildUbFcf(root);
+    }
+    // supplychain: no charts
   } else if(group==='evolution'){
     if(key==='guidance')      buildModelTab();          // Model vs. Reality lives under Guidance
     else if(key==='earnings'){
@@ -4826,7 +4829,9 @@ function init(c){
   }; });
   wireModal(root);
   // Collapsible sections (reader chooses what to expand)
-  root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var c=btn.parentElement; var open=c.classList.toggle('open'); var b=c.querySelector('.ov-collap-b'); if(b) b.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.textContent=open?'▾':'▸'; }; });
+  root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var c=btn.parentElement; var open=c.classList.toggle('open'); var b=c.querySelector('.ov-collap-b'); if(b) b.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.textContent=open?'▾':'▸';
+    // charts nested inside a collapsible have no offsetParent until it opens → rebuild the active subpane on expand
+    if(open){ var dd=activeDD(root), sk=activeSubKey(root,dd); if(sk) requestAnimationFrame(function(){ buildSub(root,dd,sk); }); } }; });
   // Competitive-map scatter: hover/tap a dot → floating detail tip
   var ptip=root.querySelector('#ubPeerTip');
   if(ptip){ root.querySelectorAll('.peer-dot').forEach(function(d){

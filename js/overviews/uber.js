@@ -11,6 +11,8 @@ import { makeManagement } from './management.js';
 import { WORLD_PATHS, WORLD_VB } from './world-paths.js';
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 import { mountWatchList } from '../watchlist.js';
+import { uberResults } from '../results-data/uber.js';   // Actual/Summit/Consensus metric series (Bottom Line reformat)
+import { uberBBG } from './uber-bbg.js';                  // BBG consensus incl. per-segment GB/take-rate/EBITDA
 // Company context for the shared Watch List mount (id+ticker); set in html()/deepDiveHtml()
 // because init(c) may receive no arg depending on the caller (mirrors googl.js _co).
 var _co = null;
@@ -1269,8 +1271,53 @@ var UB_MRG_NOTE_FB='Gross / operating / net = <b>GAAP</b>; EBITDA = <b>Adjusted 
 var UB_MRG_NOTE_LIVE='Historical margins computed <b>live from Massive</b> (income & cash-flow statements): gross/op/net = line ÷ revenue; EBITDA = (op income + D&A) ÷ revenue; CFO & FCF ÷ revenue. Operating and EBITDA margin are the clean trend; GAAP net is skewed by equity-stake & tax one-offs.';
 var _ubMrgRows=UB_MRG_FALLBACK.slice();
 var _ubMrgSrc='fallback';
+// ── Bottom Line ▸ Adjusted EBITDA & margin — the AMZN-standard dual-axis: $ as bars, margin as a line
+// on a right y2 axis, with Actual / Summit / Consensus. Data from uberResults (act/summit/cons). UBER's
+// EBITDA margin is measured against GROSS BOOKINGS (marginOf:'gb') — its house convention. ──
+var UB_ACT='rgba(16,20,26,0.92)', UB_SUMMIT='#06C167', UB_CONS='#8A94A2';
+function ubHexA(hex,a){ var h=hex.replace('#',''); if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  return 'rgba('+parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16)+','+a+')'; }
+function ubProfitBody(){
+  return '<div class="ov-sec" data-ubpfblock="1">'+
+    '<div class="rs-block-top"><div class="rs-block-h">Adjusted EBITDA &amp; margin — Actual vs Summit vs Consensus</div></div>'+
+    '<div class="rs-block-modes"><div class="rs-modes">'+
+      '<div style="display:inline-flex;align-items:center;gap:6px;margin:0 10px 6px 0"><span class="rs-quick-l">Period</span><div class="rs-views">'+
+        '<button type="button" class="rs-view active" data-ubpf="y">Annual</button>'+
+        '<button type="button" class="rs-view" data-ubpf="q">Quarterly</button></div></div>'+
+    '</div></div>'+
+    '<div class="ave-leg" id="ubProfitLeg" style="margin:2px 0 8px"></div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-wrap ovs-tall" style="min-height:330px"><canvas id="ubChartProfit"></canvas></div></div>'+
+  '</div>';
+}
+function buildUbProfit(root){
+  var cv=document.getElementById('ubChartProfit'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
+  destroy('ubChartProfit');
+  var host=root||document;
+  var gb=host.querySelector('[data-ubpf].active'), gran=gb?gb.getAttribute('data-ubpf'):'y';
+  var V=uberResults.views[gran==='q'?'q':'y'].metrics, eb=V.ebitda, gbk=V.gb;
+  var labels=eb.periods.map(function(p){ return gran==='q'?p:('FY'+String(p).slice(2)); });
+  function lastActIdx(a){ var la=0; for(var i=0;i<a.length;i++) if(a[i]!=null) la=i; return la; }
+  var la=lastActIdx(eb.act);
+  function bars(a){ return a.map(function(v){ return v==null?null:Math.round(v/100)/10; }); }              // $B
+  function marg(ebArr,gbArr){ return ebArr.map(function(v,i){ return (v==null||!gbArr||gbArr[i]==null||!gbArr[i])?null:Math.round(v/gbArr[i]*1000)/10; }); }  // % of that source's gross bookings
+  function barBg(a,color){ return a.map(function(v,i){ return i>la?ubHexA(color,0.42):color; }); }
+  var srcs=[{k:'act',lab:'Actual',c:UB_ACT},{k:'summit',lab:'Summit',c:UB_SUMMIT},{k:'cons',lab:'Consensus (BBG)',c:UB_CONS}];
+  var ds=[];
+  srcs.forEach(function(s){ ds.push({ type:'bar', label:'Adj EBITDA — '+s.lab, data:bars(eb[s.k]), backgroundColor:barBg(eb[s.k],s.c), borderColor:'#fff', borderWidth:1, maxBarThickness:26, yAxisID:'y', order:3 }); });
+  srcs.forEach(function(s){ ds.push({ type:'line', label:'Margin — '+s.lab, data:marg(eb[s.k],gbk[s.k]), borderColor:s.c, backgroundColor:s.c, borderWidth:2.4, pointRadius:2.2, tension:.2, spanGaps:false, yAxisID:'y2', order:1, borderDash:s.k==='cons'?[5,4]:undefined }); });
+  _charts['ubChartProfit']=new Chart(cv.getContext('2d'),{ data:{ labels:labels, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:function(c){ var e=(la!=null&&c.dataIndex>la)?' (E)':''; return c.dataset.label+': '+(c.parsed.y==null?'—':(c.dataset.yAxisID==='y2'?c.parsed.y+'%':'$'+c.parsed.y.toFixed(1)+'B'))+e; } } } },
+      scales:{ x:{ grid:{display:false}, ticks:{font:{size:10.5}} },
+        y:{ position:'right', beginAtZero:true, grid:{color:'#EEF2F7'}, ticks:{ font:{size:10.5}, callback:function(v){ return '$'+v+'B'; } } },
+        y2:{ position:'right', grid:{display:false}, ticks:{ font:{size:10.5}, callback:function(v){ return v+'%'; } } } } }
+  });
+  var leg=host.querySelector('#ubProfitLeg');
+  if(leg) leg.innerHTML=srcs.map(function(s){ return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--mu);margin-right:14px"><span style="width:13px;height:13px;border-radius:3px;background:'+s.c+'"></span>'+s.lab+'</span>'; }).join('')+'<span style="font-size:11px;color:var(--mu)">Bars = Adj EBITDA ($B) &nbsp;·&nbsp; lines = margin (% of gross bookings, right axis)</span>';
+}
 function ubMarginsBody(c){
-  return '<p class="ov-lede">Profitability & cash margins as a % of revenue — gross, operating and net, plus Adjusted EBITDA, CFO and FCF. The turnaround reads cleanest in <b>operating</b> and <b>EBITDA</b> margin, which climb every year from deeply negative (FY21) into the high-teens.</p>'+
+  return ubProfitBody()+
+    '<p class="ov-lede">Profitability & cash margins as a % of revenue — gross, operating and net, plus Adjusted EBITDA, CFO and FCF. The turnaround reads cleanest in <b>operating</b> and <b>EBITDA</b> margin, which climb every year from deeply negative (FY21) into the high-teens.</p>'+
     '<div class="ov-chart-card"><div class="ov-chart-t">Margins (% of revenue) <span>· fiscal years · FY26E = estimate</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartMargins"></canvas></div></div>'+
     '<div class="ave-subh-note" id="ubMrgNote" style="margin-top:8px">'+UB_MRG_NOTE_FB+'</div>';
 }
@@ -4388,7 +4435,7 @@ function buildSub(root, group, key){
     // tam, industry: no charts
   } else if(group==='bottomline'){
     if(key==='unit')          buildMobilityCharts();  // ubChartTake (take rate) — moved here
-    else if(key==='margins')  buildUbMargins();        // live Massive margins
+    else if(key==='margins'){ buildUbProfit(root); buildUbMargins(); }   // Adj EBITDA dual-axis + live Massive margins
     // suppliers, insurance: no charts
   } else if(group==='evolution'){
     if(key==='guidance')      buildModelTab();          // Model vs. Reality lives under Guidance
@@ -4546,6 +4593,10 @@ function init(c){
   }; });
   root.querySelectorAll('.ave-pill').forEach(function(btn){ btn.onclick=function(){ switchAveMetric(root, btn.getAttribute('data-ave')); }; });
   root.querySelectorAll('.guid-pill').forEach(function(btn){ btn.onclick=function(){ switchGuideMetric(root, btn.getAttribute('data-guidm')); }; });
+  // Bottom Line ▸ Adjusted EBITDA & margin — Annual/Quarterly toggle
+  root.querySelectorAll('[data-ubpf]').forEach(function(btn){ btn.onclick=function(){
+    var box=btn.closest('[data-ubpfblock]'); if(box) box.querySelectorAll('[data-ubpf]').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    requestAnimationFrame(function(){ buildUbProfit(root); }); }; });
   // Delivery Hero acquisition markets: "mode" pills swap Map/List, "view" pills swap between
   // Uber Today / Delivery Hero Today / Uber After the Deal — swapping each map path/dot's fill
   // in place and toggling the matching legend + list block (three of each, one per view).

@@ -4107,7 +4107,7 @@ function aSegSummitAnnual(mk){ var q=amznResults.views&&amznResults.views.q&&amz
 // three segments; pick the metric (Revenue / Operating income / EBITDA) and how to Show it — $B (stacked
 // or side-by-side bars), Share (100%-stacked), or Growth (YoY). Both y-axes on the right; forward faded.
 var SEGENG_SG=[{k:'na',lab:'North America',c:BRAND},{k:'intl',lab:'International',c:BRAND2},{k:'aws',lab:'AWS',c:SQUID}];
-function aSegSeries(k, metric, gran){ var s=amznBBG.seg[k]; if(!s) return null;
+function aSegEngSeries(k, metric, gran){ var s=amznBBG.seg[k]; if(!s) return null;
   function arr(f){ var o=s[f]; return o?(gran==='q'?o.q:o.a.concat(o.f)):null; }
   if(metric==='rev') return arr('rev');
   var oi=arr('oi'), da=arr('da');
@@ -4126,7 +4126,7 @@ function aBuildSegOi(){
     var metric=st.sel||'oi', show=st.modes.show||'amt', layout=st.modes.layout||'stack', gran=st.modes.gran||'y';
     var labels=gran==='q'?amznBBG.qtrs.slice():['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
     var la=gran==='q'?((amznBBG.seg.aws.oi.qA?amznBBG.seg.aws.oi.qA.length:5)-1):2, step=gran==='q'?4:1;
-    var raw=SEGENG_SG.map(function(seg){ return { seg:seg, v:aSegSeries(seg.k,metric,gran) }; });
+    var raw=SEGENG_SG.map(function(seg){ return { seg:seg, v:aSegEngSeries(seg.k,metric,gran) }; });
     var totals=labels.map(function(_,i){ return raw.reduce(function(a,r){ return a+((r.v&&r.v[i]!=null)?r.v[i]:0); },0); });
     var series=raw.map(function(r){ return { k:r.seg.k, label:r.seg.lab, color:r.seg.c,
       data:labels.map(function(_,i){ var v=r.v?r.v[i]:null; if(v==null) return null;

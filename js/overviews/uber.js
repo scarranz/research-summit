@@ -1401,8 +1401,47 @@ function buildUbUnit(root){
   var leg=host.querySelector('#ubUnitLeg');
   if(leg) leg.innerHTML=srcs.map(function(s){ return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--mu);margin-right:14px"><span style="width:13px;height:13px;border-radius:3px;background:'+s.c+'"></span>'+s.lab+'</span>'; }).join('')+'<span style="font-size:11px;color:var(--mu)">Bars = gross bookings ($B) &nbsp;·&nbsp; lines = net take rate (right axis)</span>';
 }
+// ── Bottom Line ▸ The bridge — revenue → operating income, by functional cost line. Floating-bar
+// waterfall, reconciled from uber-bbg (rev − cost of revenue − ops − R&D − S&M − G&A − D&A = GAAP OI,
+// ties exactly). Pick an actual year or a consensus forward year. ──
+var UB_BR_COST=[{k:'cogs',lab:'Cost of revenue'},{k:'fulfillment',lab:'Operations & support'},{k:'techInfra',lab:'R&D'},{k:'marketing',lab:'Sales & marketing'},{k:'gAdmin',lab:'G&A'},{k:'da',lab:'D&A'}];
+var UB_BR_YEARS=[{v:2,lab:'FY25'},{v:3,lab:'FY26E'},{v:4,lab:'FY27E'},{v:5,lab:'FY28E'}];
+function ubBridgeBody(){
+  var pills=UB_BR_YEARS.map(function(y){ return '<button type="button" class="rs-view'+(y.v===3?' active':'')+'" data-ubbr="'+y.v+'">'+y.lab+'</button>'; }).join('');
+  return '<div class="ov-sec" data-ubbrblock="1">'+
+    '<div class="rs-block-top"><div class="rs-block-h">The bridge — revenue → operating income</div></div>'+
+    '<div class="rs-block-modes"><div class="rs-modes"><div style="display:inline-flex;align-items:center;gap:6px;margin:0 10px 6px 0"><span class="rs-quick-l">Year</span><div class="rs-views">'+pills+'</div></div></div></div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-wrap ovs-tall" style="min-height:320px"><canvas id="ubChartBridge"></canvas></div></div>'+
+    '<div class="ave-subh-note" id="ubBridgeNote" style="margin-top:8px"></div>'+
+  '</div>';
+}
+function buildUbBridge(root){
+  var cv=document.getElementById('ubChartBridge'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
+  destroy('ubChartBridge'); var host=root||document;
+  var yb=host.querySelector('[data-ubbr].active'), yi=yb?+yb.getAttribute('data-ubbr'):3;
+  var B=uberBBG.is; function val(k){ var s=B[k]; if(!s) return null; var arr=s.a.concat(s.f); return arr[yi]; }
+  var rev=val('rev'); if(rev==null){ return; }
+  function b(x){ return x==null?0:x/1000; }
+  var run=b(rev), steps=[{label:'Revenue', lo:0, hi:run, c:UB_ACT, val:b(rev)}];
+  UB_BR_COST.forEach(function(cl){ var d=b(val(cl.k)); var lo=run-d; steps.push({label:cl.lab, lo:Math.min(lo,run), hi:Math.max(lo,run), c:'#8A94A2', val:-d}); run=lo; });
+  var oiRep=b(val('operatingIncome')), diff=oiRep-run;   // reconcile to reported OI (forward line items don't perfectly sum)
+  if(Math.abs(diff)>=0.05){ var lo=run+diff; steps.push({label:'Other', lo:Math.min(run,lo), hi:Math.max(run,lo), c:'#C4CCD6', val:diff}); run=lo; }
+  steps.push({label:'Operating income', lo:0, hi:run, c:'#06965A', val:run});
+  var yl=UB_BR_YEARS.filter(function(y){return y.v===yi;})[0].lab;
+  _charts['ubChartBridge']=new Chart(cv.getContext('2d'),{ type:'bar',
+    data:{ labels:steps.map(function(s){return s.label;}), datasets:[{ data:steps.map(function(s){return [s.lo,s.hi];}), backgroundColor:steps.map(function(s){return s.c;}), borderColor:'#fff', borderWidth:1, maxBarThickness:46 }] },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:function(c){ var s=steps[c.dataIndex]; return (s.val>=0?'+$':'−$')+Math.abs(s.val).toFixed(1)+'B'; } } } },
+      scales:{ x:{ grid:{display:false}, ticks:{font:{size:10},maxRotation:35,minRotation:0} }, y:{ position:'right', beginAtZero:true, grid:{color:'#EEF2F7'}, ticks:{font:{size:10.5},callback:function(v){return '$'+v+'B';}} } } },
+    plugins:[{ id:'ubbrlab', afterDatasetsDraw:function(chart){ var ctx=chart.ctx, meta=chart.getDatasetMeta(0);
+      meta.data.forEach(function(bar,i){ var s=steps[i]; ctx.save(); ctx.textAlign='center'; ctx.font='700 10px Inter, sans-serif'; ctx.fillStyle=(s.val<0?'#8A94A2':'#1E2733');
+        ctx.fillText((s.val>=0?'':'−')+'$'+Math.abs(s.val).toFixed(1)+'B', bar.x, bar.y-6); ctx.restore(); }); } }]
+  });
+  var note=host.querySelector('#ubBridgeNote');
+  if(note) note.innerHTML='<b>'+yl+'</b> — $'+b(rev).toFixed(0)+'B revenue converts to <b>$'+run.toFixed(1)+'B operating income</b> ('+(run/b(rev)*100).toFixed(1)+'% margin) after cost of revenue and the four opex lines. Reconciled from BBG consensus (Adj EBITDA adds back D&A + SBC on top of GAAP operating income). '+(yi>2?'Forward = consensus.':'');
+}
 function ubMarginsBody(c){
-  return ubProfitBody()+
+  return ubProfitBody()+ubBridgeBody()+
     '<p class="ov-lede">Profitability & cash margins as a % of revenue — gross, operating and net, plus Adjusted EBITDA, CFO and FCF. The turnaround reads cleanest in <b>operating</b> and <b>EBITDA</b> margin, which climb every year from deeply negative (FY21) into the high-teens.</p>'+
     '<div class="ov-chart-card"><div class="ov-chart-t">Margins (% of revenue) <span>· fiscal years · FY26E = estimate</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartMargins"></canvas></div></div>'+
     '<div class="ave-subh-note" id="ubMrgNote" style="margin-top:8px">'+UB_MRG_NOTE_FB+'</div>';
@@ -4527,7 +4566,7 @@ function buildSub(root, group, key){
     // tam, industry: no charts
   } else if(group==='bottomline'){
     if(key==='unit'){ buildUbUnit(root); buildMobilityCharts(); }  // company GB+take dual-axis + Mobility/Delivery take comparison
-    else if(key==='margins'){ buildUbProfit(root); buildUbMargins(); }   // Adj EBITDA dual-axis + live Massive margins
+    else if(key==='margins'){ buildUbProfit(root); buildUbBridge(root); buildUbMargins(); }   // Adj EBITDA dual-axis + bridge + live Massive margins
     // suppliers, insurance: no charts
   } else if(group==='evolution'){
     if(key==='guidance')      buildModelTab();          // Model vs. Reality lives under Guidance
@@ -4694,6 +4733,10 @@ function init(c){
   root.querySelectorAll('[data-ubsg]').forEach(function(btn){ btn.onclick=function(){
     var box=btn.closest('[data-ubsgblock]'); if(box) box.querySelectorAll('[data-ubsg]').forEach(function(b){ b.classList.toggle('active', b===btn); });
     requestAnimationFrame(function(){ buildUbSegDual(root); }); }; });
+  // Bottom Line ▸ The bridge — year selector
+  root.querySelectorAll('[data-ubbr]').forEach(function(btn){ btn.onclick=function(){
+    var box=btn.closest('[data-ubbrblock]'); if(box) box.querySelectorAll('[data-ubbr]').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    requestAnimationFrame(function(){ buildUbBridge(root); }); }; });
   // Delivery Hero acquisition markets: "mode" pills swap Map/List, "view" pills swap between
   // Uber Today / Delivery Hero Today / Uber After the Deal — swapping each map path/dot's fill
   // in place and toggling the matching legend + list block (three of each, one per view).

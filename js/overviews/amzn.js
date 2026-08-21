@@ -3245,7 +3245,10 @@ function aFwdOpexRow(fi, adj){
 }
 function aBridgeBody(){
   var yBtns=function(cls,sel){ return A_OPEX_YEARS.map(function(y){ return '<button type="button" data-'+cls+'="'+y+'"'+(y===sel?' class="active"':'')+'>FY'+String(y).slice(2)+'</button>'; }).join(''); };
-  var qBtns=A_OPEXQ.map(function(r,i){ return '<button type="button" data-brq="'+i+'"'+(i===A_OPEXQ.length-1?' class="active"':'')+'>'+r.p.replace(/\s+/g,'')+'</button>'; }).join('');
+  var qYears=[]; A_OPEXQ.forEach(function(r){ if(qYears.indexOf(r.yr)<0) qYears.push(r.yr); });
+  var qLast=A_OPEXQ[A_OPEXQ.length-1];
+  var qyBtns=qYears.map(function(y){ return '<button type="button" data-brqy="'+y+'"'+(y===qLast.yr?' class="active"':'')+'>FY'+String(y).slice(2)+'</button>'; }).join('');
+  var qqBtns=['Q1','Q2','Q3','Q4'].map(function(q){ return '<button type="button" data-brqq="'+q+'"'+(q===qLast.q?' class="active"':'')+'>'+q+'</button>'; }).join('');
   return '<div class="ov-sec"><div class="ov-sec-h">The bridge — how revenue becomes operating income</div>'+
     '<div class="mch-ctl">'+   /* §0.4 row 2: mode + view (left) */
       '<span style="display:flex;gap:6px;flex-wrap:wrap">'+
@@ -3258,7 +3261,8 @@ function aBridgeBody(){
       '<span style="display:flex;gap:8px;flex-wrap:wrap">'+
         '<span class="acx-tog br-gran"><button type="button" data-brg="y" class="active">Annual</button><button type="button" data-brg="q">Quarterly</button></span>'+
         '<span class="acx-tog br-yr br-sel-y">'+yBtns('bry',2025)+'</span>'+
-        '<span class="acx-tog br-qtr br-sel-q" style="display:none;flex-wrap:wrap">'+qBtns+'</span>'+
+        '<span class="acx-tog br-qy br-sel-q" style="display:none">'+qyBtns+'</span>'+
+        '<span class="acx-tog br-qq br-sel-q" style="display:none">'+qqBtns+'</span>'+
       '</span>'+
     '</div>'+
     '<style>.br-sl{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:var(--navy)}.br-sl input{flex:1;max-width:180px;accent-color:'+BRAND+'}.br-sl-v{width:44px;text-align:right;color:var(--brand-2);font-variant-numeric:tabular-nums}.br-sl-l{width:120px}.br-fx-reset{cursor:pointer;border:1px solid var(--bdr);background:#fff;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--navy)}</style>'+
@@ -3285,9 +3289,17 @@ function aBridgeSync(pane){
   if(fe) fe.style.display=mode==='fexp'?'flex':'none';
   if(fx) fx.style.display=mode==='fexp'?'flex':'none';
   var g=pane.querySelector('.br-gran .active'), q=!!(g&&g.getAttribute('data-brg')==='q');
-  var sy=pane.querySelector('.br-sel-y'), sq=pane.querySelector('.br-sel-q');
+  var sy=pane.querySelector('.br-sel-y');
   if(sy) sy.style.display=q?'none':'';
-  if(sq) sq.style.display=q?'':'none';
+  pane.querySelectorAll('.br-sel-q').forEach(function(el){ el.style.display=q?'':'none'; });
+  if(q){   // grey out quarters not yet reported for the picked year; snap the active pill onto an available quarter
+    var yb=pane.querySelector('.br-qy .active'), yy=yb?+yb.getAttribute('data-brqy'):null;
+    var avail=A_OPEXQ.filter(function(r){ return r.yr===yy; }).map(function(r){ return r.q; });
+    var qbtns=pane.querySelectorAll('.br-qq button'), anyActive=false;
+    qbtns.forEach(function(b){ var ok=avail.indexOf(b.getAttribute('data-brqq'))>=0; b.disabled=!ok; b.style.opacity=ok?'':'0.35'; b.style.cursor=ok?'':'not-allowed'; if(b.classList.contains('active')&&!ok) b.classList.remove('active'); });
+    qbtns.forEach(function(b){ if(b.classList.contains('active')) anyActive=true; });
+    if(!anyActive&&avail.length){ var lastQ=avail[avail.length-1]; qbtns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-brqq')===lastQ); }); }
+  }
 }
 function aBuildBridge(){
   var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(!pane) return;
@@ -3305,7 +3317,9 @@ function aBuildBridge(){
     r=aFwdOpexRow(fi, adj);
   } else {             // build-up — actual year or quarter
     var g=pane.querySelector('.br-gran .active'), gran=g?g.getAttribute('data-brg'):'y';
-    if(gran==='q'){ var qb=pane.querySelector('.br-qtr .active'); r=A_OPEXQ[qb?+qb.getAttribute('data-brq'):A_OPEXQ.length-1]; }
+    if(gran==='q'){ var yb2=pane.querySelector('.br-qy .active'), qb=pane.querySelector('.br-qq .active');
+      var yy=yb2?+yb2.getAttribute('data-brqy'):A_OPEXQ[A_OPEXQ.length-1].yr, qq=qb?qb.getAttribute('data-brqq'):A_OPEXQ[A_OPEXQ.length-1].q;
+      r=A_OPEXQ.filter(function(x){ return x.yr===yy && x.q===qq; })[0]; }
     else { var yb=pane.querySelector('.br-yr .active'); r=A_OPEX[yb?+yb.getAttribute('data-bry'):2025]; }
   }
   if(!r) return;
@@ -3860,7 +3874,8 @@ function aBuildExpenses(){
       tog('.br-mode', function(){ aBridgeSync(pane); aBuildBridge(); });
       tog('.br-gran', function(){ aBridgeSync(pane); aBuildBridge(); });
       tog('.br-yr', aBuildBridge);
-      tog('.br-qtr', aBuildBridge);
+      tog('.br-qy', function(){ aBridgeSync(pane); aBuildBridge(); });   // year change re-derives which quarters exist
+      tog('.br-qq', aBuildBridge);
       tog('.br-fy', aBuildBridge);
       tog('.br-from', aBuildBridge); tog('.br-to', aBuildBridge);
       pane.querySelectorAll('.br-fx-sl input[type=range]').forEach(function(s){ s.addEventListener('input', aBuildBridge); });

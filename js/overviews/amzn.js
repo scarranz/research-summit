@@ -3455,7 +3455,7 @@ function aSbcBody(){
   return '<div class="ov-sec"><div class="ov-sec-h">Stock-based compensation &amp; dilution</div>'+
     '<div class="mch-ctl">'+
       '<span class="acx-tog sbcv-tog"><button type="button" data-sbcv="dilution" class="active">Dilution</button><button type="button" data-sbcv="line">SBC by line</button></span>'+
-      '<span class="acx-tog sbcu-tog"><button type="button" data-sbcu="usd" class="active">$B</button><button type="button" data-sbcu="pct">% of rev / line</button></span>'+
+      '<span class="acx-tog sbcu-tog"><button type="button" data-sbcu="usd" class="active">$B</button><button type="button" data-sbcu="pct">%</button></span>'+
     '</div>'+
     '<div class="ave-leg" data-sbcleg="1" style="margin:2px 0 8px"></div>'+
     '<div style="height:320px"><canvas id="aSbcMain"></canvas></div></div>';
@@ -3487,13 +3487,14 @@ function aBuildSbc(){
   } else {
     if(legEl) legEl.innerHTML='';
     var LN=[{sbc:'sbcCogs',exp:'cogs',lab:'Cost of sales',c:SQUID},{sbc:'sbcFulfill',exp:'fulfillment',lab:'Fulfillment',c:BRAND},{sbc:'sbcTech',exp:'techInfra',lab:'Technology & infrastructure',c:BRAND2},{sbc:'sbcMktg',exp:'marketing',lab:'Sales & marketing',c:GREEN},{sbc:'sbcGA',exp:'gAdmin',lab:'General & administrative',c:GRAY}];
-    var ds=LN.map(function(l){ var s=aSbcSer(l.sbc), e=aSbcSer(l.exp);   // in By line, % = % of that line's expense
-      var vals=labels.map(function(_,i){ if(s[i]==null) return null; return pct?(e[i]?Math.round(s[i]/e[i]*1000)/10:null):Math.round(s[i]/100)/10; });
-      return { label:l.lab, data:vals, backgroundColor:vals.map(function(_,i){ return i<3?l.c:acxRGBA(l.c,0.45); }), borderColor:'#fff', borderWidth:1, maxBarThickness:pct?22:44, stack:pct?undefined:'s' }; });
+    var tot=aSbcSer('sbc');   // in By line, % = each line's share of TOTAL SBC that period
+    var ds=LN.map(function(l){ var s=aSbcSer(l.sbc);
+      var vals=labels.map(function(_,i){ if(s[i]==null) return null; return pct?(tot[i]?Math.round(s[i]/tot[i]*1000)/10:null):Math.round(s[i]/100)/10; });
+      return { label:l.lab, data:vals, backgroundColor:vals.map(function(_,i){ return i<3?l.c:acxRGBA(l.c,0.45); }), borderColor:'#fff', borderWidth:1, maxBarThickness:44, stack:'s' }; });
     _aCharts['aSbcMain']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:labels, datasets:ds },
       options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':(pct?c.parsed.y+'% of the line':'$'+c.parsed.y.toFixed(1)+'B')); }, footer:function(it){ return pct?'':'Total SBC: $'+it.reduce(function(a,x){ return a+(x.parsed.y||0); },0).toFixed(1)+'B'; } } } },
-        scales:{ x:{ stacked:!pct, grid:{ display:false } }, y:{ stacked:!pct, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return pct?v+'%':'$'+v+'B'; } } } } } });
+        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':(pct?c.parsed.y+'% of total SBC':'$'+c.parsed.y.toFixed(1)+'B')); }, footer:function(it){ return pct?'':'Total SBC: $'+it.reduce(function(a,x){ return a+(x.parsed.y||0); },0).toFixed(1)+'B'; } } } },
+        scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, max:pct?100:undefined, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return pct?v+'%':'$'+v+'B'; } } } } } });
   }
   aZoom('aSbcMain');
   if(pane && !pane._sbcmWired){ pane._sbcmWired=true;
@@ -3587,8 +3588,8 @@ function aBuildMargins(){
     var MET={gross:'grossProfit',operating:'oi',ebitda:'ebitda',net:'netIncome',fcf:'fcf'};
     var num=amznBBG.is[MET[metric]], rvb=amznBBG.is.rev; if(!num||!rvb) return null;
     if(gran==='q'){   // other metrics quarterly — BBG (Actual + Consensus)
-      var ql=amznBBG.qtrs.slice(), nq=num.q, rq=rvb.q, laq=aLastActIdx(nq);
-      var actN=ql.map(function(_,i){ return i<=laq?nq[i]:null; }), conN=ql.map(function(_,i){ return i>laq?nq[i]:null; });
+      var ql=amznBBG.qtrs.slice(), nq=num.q, rq=rvb.q, laq=(num.qA?num.qA.length-1:aLastActIdx(nq));   // actual quarters end at qA.length-1 — the q[] array is fully populated (actual+consensus), so aLastActIdx alone wrongly marks every quarter actual
+      var actN=ql.map(function(_,i){ return i<=laq?nq[i]:null; }), conN=ql.map(function(_,i){ return i>=laq?nq[i]:null; });
       out.labels=ql; out.lastAct=laq; out.paired=true; out.series=aMargDual(lab, actN, conN, rq, laq, false, null, null); return out;
     }
     var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], la=2;
@@ -3597,7 +3598,7 @@ function aBuildMargins(){
     var ono=amznBBG.is.otherNonOp, taxA=amznBBG.is.tax, preA=amznBBG.is.pretax, normSub=null;
     if(metric==='net' && ono && taxA && preA){ var oaA=ono.a.concat(ono.f), tA=taxA.a.concat(taxA.f), pA=preA.a.concat(preA.f);
       normSub=labels.map(function(_,i){ var G=oaA[i]==null?0:-oaA[i], eff=(pA[i]?tA[i]/pA[i]:0); return G*(1-eff); }); }
-    var actN=labels.map(function(_,i){ return i<=la?na[i]:null; }), conN=labels.map(function(_,i){ return i>la?na[i]:null; });
+    var actN=labels.map(function(_,i){ return i<=la?na[i]:null; }), conN=labels.map(function(_,i){ return i>=la?na[i]:null; });
     out.labels=labels; out.lastAct=la; out.paired=true; out.series=aMargDual(lab, actN, conN, rv, la, normOn, normSub, aSummitAnnual(metric)); return out;
   });
 }
@@ -4245,15 +4246,15 @@ function aSegEngSeries(k, metric, gran, source){
 // operating income; segment EBITDA is Actual + Consensus (Summit has no segment D&A).
 var SEGFC=[{v:'aws',bk:'aws',mk:'awsopinc',rk:'aws',lab:'AWS'},{v:'na',bk:'na',mk:'naopinc',rk:'usrev',lab:'North America'},{v:'intl',bk:'intl',mk:'intopinc',rk:'intrev',lab:'International'},{v:'cons',bk:null,mk:'opinc',rk:'rev',lab:'Consolidated'}];
 function aSegFcBody(){
-  return aStdScaffold({ id:'segfc', title:'Operating income & margin by segment', height:340,
-    metricSel:SEGFC.map(function(s){ return {v:s.v,label:s.lab,on:s.v==='aws'}; }),
-    modes:[{cls:'metric',label:'Metric',opts:[{v:'oi',label:'Operating income',on:true},{v:'ebitda',label:'EBITDA'}]},{cls:'gran',label:'Period',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]}],
+  return aStdScaffold({ id:'segfc', title:'Profit by segment — Actual vs Summit vs Consensus', height:340,
+    metricSel:[{v:'oi',label:'Operating income',on:true},{v:'ebitda',label:'EBITDA'}],
+    modes:[{cls:'seg',label:'Segment',opts:SEGFC.map(function(s){ return {v:s.v,label:s.lab,on:s.v==='aws'}; })},{cls:'gran',label:'Period',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]}],
     presets:[['all','All'],['rep','Reported'],['fwd','Forward']] });
 }
 function aBuildSegFc(){
   aStdRender('segfc', function(st){
-    var seg=SEGFC.filter(function(s){ return s.v===st.sel; })[0]||SEGFC[0];
-    var metric=st.modes.metric||'oi', gran=st.modes.gran||'y', lab=metric==='ebitda'?'EBITDA':'Op. income';
+    var seg=SEGFC.filter(function(s){ return s.v===(st.modes.seg||'aws'); })[0]||SEGFC[0];
+    var metric=st.sel||'oi', gran=st.modes.gran||'y', lab=metric==='ebitda'?'EBITDA':'Op. income';
     var out={ type:'bar', stacked:false, yFmt:function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }, y2Fmt:function(x){ return x+'%'; } };
     if(gran==='q' && metric==='oi'){   // amznResults native (Actual/Summit/Consensus, 22 quarters)
       var Q=amznResults.views.q.metrics, oi=Q[seg.mk], rv=Q[seg.rk], labels=oi.periods.slice(), la=aLastActIdx(oi.act);
@@ -4272,7 +4273,7 @@ function aBuildSegFc(){
     function bbg(f){ if(seg.bk){ var s=amznBBG.seg[seg.bk][f]; return s?s.a.concat(s.f):null; } var s2=amznBBG.is[f]; return s2?s2.a.concat(s2.f):null; }
     var oiA=bbg('oi'), daA=bbg('da'), revA=bbg('rev');
     function num(i){ if(metric!=='ebitda') return oiA[i]; if(!seg.bk){ var eb=bbg('ebitda'); return eb?eb[i]:null; } return (oiA[i]==null||!daA||daA[i]==null)?null:oiA[i]+daA[i]; }
-    var actN=labels.map(function(_,i){ return i<=la?num(i):null; }), conN=labels.map(function(_,i){ return i>la?num(i):null; });
+    var actN=labels.map(function(_,i){ return i<=la?num(i):null; }), conN=labels.map(function(_,i){ return i>=la?num(i):null; });
     var sm=null; if(metric==='oi'){ var so=aSegSummitAnnual(seg.mk), sr=aSegSummitAnnual(seg.rk); if(so&&sr) sm={num:so,den:sr}; }
     out.labels=labels; out.lastAct=la; out.paired=true; out.series=aMargDual(lab, actN, conN, revA, la, false, null, sm); return out;
   });

@@ -3976,10 +3976,14 @@ function aBuildSegCapDa(){
   var tg=pane?pane.querySelector('.segcd-tog .active'):null, seg=tg?tg.getAttribute('data-segcd'):'aws';
   var cv=aChartReady('aSegCapDa'); if(!cv) return; aDestroy('aSegCapDa');
   var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], yrs=[2023,2024,2025], tk={aws:'aws',na:'na',intl:'int'};
-  function bbg(field){ if(seg==='cons'){ return labels.map(function(_,i){ return ['na','intl','aws'].reduce(function(a,k){ var s=amznBBG.seg[k][field], v=s.a.concat(s.f); return a+(v[i]||0); },0); }); } var s=amznBBG.seg[seg][field]; return s.a.concat(s.f); }
-  var ppe=bbg('ppe'), da=bbg('da'), B=function(v){ return v==null?null:Math.round(v/100)/10; };
+  function fill(a){ a=a.slice(); for(var i=0;i<a.length;i++){ if(a[i]==null){ var p=i-1; while(p>=0&&a[p]==null)p--; var n=i+1; while(n<a.length&&a[n]==null)n++;
+    if(p>=0&&n<a.length) a[i]=a[p]+(a[n]-a[p])*(i-p)/(n-p); else if(p>=0) a[i]=a[p]; else if(n<a.length) a[i]=a[n]; } } return a; }   // linear-interpolate interior nulls (BBG leaves NA FY26 PP&E blank)
+  function segArr(field){ if(seg==='cons'){ return labels.map(function(_,i){ return ['na','intl','aws'].reduce(function(a,k){ var s=amznBBG.seg[k][field], v=fill(s.a.concat(s.f)); return a+(v[i]||0); },0); }); } return fill(amznBBG.seg[seg][field].a.concat(amznBBG.seg[seg][field].f)); }
+  var ppe=segArr('ppe'), da=segArr('da'), B=function(v){ return v==null?null:Math.round(v/100)/10; };
   function actCapex(i){ var y=yrs[i], m=A_TENK.segCapex[y]; return seg==='cons'?(m.na+m.int+m.aws+(m.corp||0)):m[tk[seg]]; }
+  var grpCx=amznBBG.is.capex?amznBBG.is.capex.a.concat(amznBBG.is.capex.f):null;   // BBG forecasts TOTAL capex forward (real, monotonic) — use it for Consolidated
   var capex=labels.map(function(_,i){ if(i<3) return B(actCapex(i));
+    if(seg==='cons') return (grpCx&&grpCx[i]!=null)?B(Math.abs(grpCx[i])):null;
     return (ppe[i]!=null&&ppe[i-1]!=null&&da[i]!=null)?B(ppe[i]-ppe[i-1]+da[i]):null; });
   var daB=da.map(B), ppeB=ppe.map(B);
   _aCharts['aSegCapDa']=new Chart(cv.getContext('2d'),{ data:{ labels:labels, datasets:[

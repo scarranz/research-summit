@@ -20,9 +20,13 @@ import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../res
 import { mountWatchList } from '../watchlist.js';
 import { fetchThemeRecord, saveThemeRecord } from '../api.js';   // durable persistence of the AMZN theme record (Notes)
 import { amznResults } from '../results-data/amzn.js';
+import { AMZN_THEMES } from '../themes-data/amzn.js';   // the theme record, shared with Segments
 import { consensusEvo } from '../consensus-evolution.js';
 import { makeManagement } from './management.js';   // shared Management mold (UBER/GOOGL/etc.)
 import { amznBBG } from './amzn-bbg.js';   // segment actuals + consensus (rev/OI/D&A/PP&E) from BBG
+import { segmentsHtml, initSegments, segmentsOverviewHtml, initSegmentsOverview,
+         segmentsOtherHtml, initSegmentsOther,
+         segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line ▸ General · Segments · Other · Customers
 import { amznSens } from './amzn-sensitivity.js';   // Valuation ▸ Sensitivity Analysis
 import { amznTargetMult } from './amzn-target-multiple.js';   // Valuation ▸ Target Multiple
 import { amznHistMult } from './amzn-histmult.js';            // Valuation ▸ Historic Multiple
@@ -316,6 +320,24 @@ function stdPeerScatter(sfx){
     '.mg-tip .mgt-h{display:flex;align-items:center;gap:7px;margin-bottom:4px}.mg-tip .mgt-h img{width:18px;height:18px;border-radius:4px;background:#fff;object-fit:contain}'+
     '.mg-tip .mgt-n{font-weight:800;font-size:12.5px;color:#FFB84D}</style>';
   h+='<div class="amzn-sc" data-sfx="'+sfx+'">';
+  // The comps table under the map. Same visual language as the Target Multiple tables (.tm-tbl),
+  // written here rather than imported because this canvas carries its own styles already.
+  h+='<style>.asc-tblwrap{overflow-x:auto}'+
+    '.asc-tbl{border-collapse:collapse;width:100%;font-size:12px;margin:4px 0}'+
+    '.asc-tbl th,.asc-tbl td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap}'+
+    '.asc-tbl th:first-child,.asc-tbl td:first-child{text-align:left}'+
+    '.asc-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}'+
+    '.asc-tbl td.asc-m{font-weight:800;color:var(--navy)}'+
+    '.asc-tbl tbody tr.asc-hl{background:rgba(255,153,0,.07)}'+
+    '.asc-tbl tbody tr.asc-nil td{color:var(--mu)}'+
+    '.asc-tbl tfoot td{border-top:2px solid var(--bdr);border-bottom:none;font-weight:800;color:var(--navy);background:#F7F9FB}'+
+    '.asc-tbl tfoot tr.asc-med td{background:#FAFBFC;font-weight:700;color:var(--mu)}'+
+    '.asc-nm{display:inline-flex;align-items:center;gap:7px}'+
+    '.asc-nm img{width:16px;height:16px;border-radius:4px;background:#fff;object-fit:contain}'+
+    '.asc-tk{color:var(--mu);font-weight:700;font-size:10.5px}'+
+    '.asc-up{color:#C0392B;font-weight:700}.asc-dn{color:#2E8B57;font-weight:700}'+
+    '.asc-nilv{color:var(--mu)}'+
+    '</style>';
   h+='<div class="ov-diagram-cap" style="margin:0 0 6px">Peers mapped by <b>valuation multiple</b> (x) and <b>revenue growth</b> (y). <b>Bubble size = live market cap in USD.</b> <span style="opacity:.75">Hover or tap a bubble for the read.</span></div>';
   h+='<div class="mg-tog-row">'+
     '<span class="mg-tog">Multiple: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgmetric="pe">P/E</button><button type="button" class="mg-pill" data-mgmetric="ev">EV/EBITDA</button></span></span>'+
@@ -333,6 +355,14 @@ function stdPeerScatter(sfx){
   '</svg></div>';
   h+='<div class="asc-chips amzn-sc-chips"></div>';
   h+='<div class="ov-diagram-cap" style="margin-top:4px">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only <b>listed</b> peers with a public multiple plot here — private retail rivals (SHEIN, Temu\'s parent PDD is listed but Temu itself is a unit) and private AI/cloud players have no market multiple. <span class="ave-subh-note">Multiples & growth are seeded approximations (Jul 2026; forward EV/EBITDA is derived, not quoted); market caps are live.</span></div>';
+  // §0.2 rule 3 — the receipt under the read. It is .rs-collap markup so it reads like every other
+  // table in the portal, but it OPENS by default: there is one table, it is the block's own detail,
+  // and the whole point of the sub-tab is the numbers (Pablo, Aug 20 2026).
+  if(sfx==='dd') h+='<div class="rs-collap amzn-sc-collap">'+
+      '<button type="button" class="rs-collap-h amzn-sc-tblh"></button>'+
+      '<div class="rs-collap-b amzn-sc-tblb">'+
+        '<div class="rs-tablewrap asc-tblwrap"><div class="amzn-sc-tbl"></div></div>'+
+      '</div></div>';
   h+='<div class="mg-tip amzn-sc-tip" hidden></div>';
   h+='</div>';
   return h;
@@ -357,6 +387,7 @@ function aScRenderOne(wrap){
       '<text y="'+(r+12).toFixed(1)+'" font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?'#C7761A':'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>';
   });
   g.innerHTML=frag;
+  aScTableOne(wrap);
 }
 function aScChipsOne(wrap){
   var box=wrap.querySelector('.amzn-sc-chips'); if(!box||!A_SC.peers) return;
@@ -365,11 +396,77 @@ function aScChipsOne(wrap){
   box.innerHTML=h;
 }
 function aScRenderAll(root){ root.querySelectorAll('.amzn-sc').forEach(aScRenderOne); }
+// ─── The comps table under the peer map (Valuation ▸ Peers) ─────────────────────────────────────
+// §0.2 rule 3: everything the scatter draws, as numbers, in the units it draws them in. It reads
+// the SAME state as the bubbles — the metric/basis pills pick the column, removing a chip drops the
+// row, and a ticker added by hand appears here with an em dash until a multiple exists for it.
+//
+// The average and the median EXCLUDE Amazon. They are the set Amazon is being read against, so
+// folding the subject into its own benchmark would shrink whatever gap the table exists to show.
+// AMZN keeps its highlighted row and its "vs peer avg" is its premium/discount to them.
+// Both statistics are shown because this set is skewed: COST and MELI in the 40s against BABA at
+// 17 drag a mean that seven names cannot defend, and the median is the honest middle.
+function aScGrowth(p){ var g=A_SC.basis==='f'?p.gf:p.gt; if(g==null) g=(p.gf!=null?p.gf:p.gt); return g; }
+function aScNum(v){ return v!=null && !isNaN(v); }
+function aScFmtMult(v){ return aScNum(v)?v.toFixed(1)+'×':'—'; }
+function aScFmtPct(v){ return aScNum(v)?v.toFixed(1)+'%':'—'; }
+function aScFmtMc(v){ return aScNum(v)?('$'+(v>=1000?(v/1000).toFixed(2)+'T':Math.round(v)+'B')):'—'; }
+function aScMean(a){ if(!a.length) return null; return a.reduce(function(s,v){ return s+v; },0)/a.length; }
+function aScMedian(a){ if(!a.length) return null; var s=a.slice().sort(function(x,y){ return x-y; }), h=Math.floor(s.length/2); return s.length%2?s[h]:(s[h-1]+s[h])/2; }
+function aScVsAvg(m, avg){
+  if(!aScNum(m)||!aScNum(avg)||avg===0) return '<span class="asc-nilv">—</span>';
+  var d=(m/avg-1)*100;
+  return '<span class="'+(d>=0?'asc-up':'asc-dn')+'">'+(d>=0?'+':'')+Math.round(d)+'%</span>';
+}
+function aScTableOne(wrap){
+  var box=wrap.querySelector('.amzn-sc-tbl'); if(!box||!A_SC.peers) return;
+  var mLab=(A_SC.metric==='pe'?'P/E':'EV/EBITDA'), bLab=(A_SC.basis==='f'?'forward':'trailing');
+  var rows=A_SC.peers.map(function(p){ return { p:p, m:aScMult(p), g:aScGrowth(p) }; });
+  // Cheapest first on the ACTIVE multiple. A name with no multiple on file sinks to the bottom
+  // instead of sorting as zero, which would read as "the cheapest name on the map".
+  rows.sort(function(a,b){
+    var an=aScNum(a.m), bn=aScNum(b.m);
+    if(!an&&!bn) return 0; if(!an) return 1; if(!bn) return -1; return a.m-b.m;
+  });
+  var peers=rows.filter(function(r){ return !r.p.hl; });
+  var avgM=aScMean(peers.filter(function(r){ return aScNum(r.m); }).map(function(r){ return r.m; }));
+  var medM=aScMedian(peers.filter(function(r){ return aScNum(r.m); }).map(function(r){ return r.m; }));
+  var avgG=aScMean(peers.filter(function(r){ return aScNum(r.g); }).map(function(r){ return r.g; }));
+  var medG=aScMedian(peers.filter(function(r){ return aScNum(r.g); }).map(function(r){ return r.g; }));
+  var nM=peers.filter(function(r){ return aScNum(r.m); }).length;
+  var body=rows.map(function(r){
+    var p=r.p, cls=(p.hl?'asc-hl':'')+(aScNum(r.m)?'':' asc-nil');
+    return '<tr class="'+cls.trim()+'">'+
+      '<td><span class="asc-nm"><img src="'+esc(scLogoUrl(p))+'" alt="" onerror="this.style.display=\'none\'">'+
+        '<span>'+esc(p.n)+' <span class="asc-tk">'+esc(p.tk)+'</span></span></span></td>'+
+      '<td class="asc-m">'+aScFmtMult(r.m)+'</td>'+
+      '<td>'+aScFmtPct(r.g)+'</td>'+
+      '<td>'+aScFmtMc(p.mc)+'</td>'+
+      '<td>'+aScVsAvg(r.m, avgM)+'</td></tr>';
+  }).join('');
+  var foot='<tr class="asc-avg"><td>Peer average <span class="asc-tk">ex-AMZN · '+nM+' names</span></td>'+
+      '<td>'+aScFmtMult(avgM)+'</td><td>'+aScFmtPct(avgG)+'</td>'+
+      '<td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>'+
+    '<tr class="asc-med"><td>Peer median <span class="asc-tk">ex-AMZN</span></td>'+
+      '<td>'+aScFmtMult(medM)+'</td><td>'+aScFmtPct(medG)+'</td>'+
+      '<td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>';
+  box.innerHTML='<table class="asc-tbl"><thead><tr>'+
+      '<th>Peer</th><th>'+esc(mLab)+' · '+esc(bLab)+'</th>'+
+      '<th>Rev growth · '+esc(bLab)+'</th><th>Market cap</th><th>vs peer avg</th></tr></thead>'+
+    '<tbody>'+body+'</tbody><tfoot>'+foot+'</tfoot></table>';
+  var hd=wrap.querySelector('.amzn-sc-tblh'), bd=wrap.querySelector('.amzn-sc-tblb');
+  if(hd){ var open=!(bd&&bd.hidden);
+    hd.innerHTML='<span class="rs-collap-ic">'+(open?'▾':'▸')+'</span>The numbers behind the map'+
+      '<span class="rs-collap-sub">'+(open?'hide':'show')+' · '+esc(mLab)+' · '+esc(bLab)+
+      ', '+rows.length+' names</span>'; }
+}
 function aScChipsAll(root){ root.querySelectorAll('.amzn-sc').forEach(function(w){ aScChipsOne(w); wireScChips(root, w); }); }
 function wireScatters(root){
   aScReset();
   root.querySelectorAll('.amzn-sc').forEach(function(wrap){
     if(wrap._scWired) return; wrap._scWired=true;
+    var tblH=wrap.querySelector('.amzn-sc-tblh'), tblB=wrap.querySelector('.amzn-sc-tblb');
+    if(tblH&&tblB) tblH.onclick=function(){ tblB.hidden=!tblB.hidden; aScRenderOne(wrap); };
     var g=wrap.querySelector('.amzn-sc-nodes'), tip=wrap.querySelector('.amzn-sc-tip');
     wrap.querySelectorAll('.mg-pill[data-mgbasis]').forEach(function(btn){ btn.onclick=function(){ A_SC.basis=btn.getAttribute('data-mgbasis'); aScRenderAll(root); }; });
     wrap.querySelectorAll('.mg-pill[data-mgmetric]').forEach(function(btn){ btn.onclick=function(){ A_SC.metric=btn.getAttribute('data-mgmetric'); aScRenderAll(root); }; });
@@ -1042,67 +1139,6 @@ var CALL_EARNINGS = { ticker:'AMZN', quarters:[
 // "By theme" view groups them under these headers, in this order. Empty themes (no `updates`) are
 // tracked placeholders — the section exists so we can fill it as the notes come in.
 var AMZN_SEG_ORDER=['Amazon US','Amazon International','AWS'];
-var AMZN_THEMES=[
-  // ── Amazon US ──────────────────────────────────────────────────────────────────────────────────
-  { seg:'Amazon US', theme:'Agentic commerce', st:{ k:'watch', since:'Q4 2025', last:'Q2 2026' },
-    why:'Whether AI compresses the shopping funnel or expands it — management argues the retailer\'s own agent wins.',
-    updates:[
-      { q:'Q4 2025', items:['Rufus: <b>300M customers</b> in 2025, users "<b>60% more likely to complete a purchase</b>"; can shop tens of millions of items in OTHER stores.'] },
-      { q:'Q1 2026', items:['Rufus MAU <b>+115%</b>, engagement +400%; "we\'re going to like this for advertising" — sponsored prompts working, multi-turn = more surfaces.'] },
-      { q:'Q2 2026', items:['The claim that agentic surfaces <b>expand rather than compress</b> the funnel keeps showing up in reported dollars (see <i>Advertisement</i>).'] },
-    ]},
-  { seg:'Amazon US', theme:'Advertisement', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
-    why:'Management argues ads WIN in agentic commerce — the dollars are accelerating at a $20B quarterly scale.',
-    updates:[
-      { q:'Q4 2025', items:['Ads <b>$21.3B (+22%)</b>; Prime Video ads 315M viewers.'] },
-      { q:'Q1 2026', items:['Ads <b>$17.2B (+22%)</b>; Netflix / Comcast / Samsung signed.'] },
-      { q:'Q2 2026', items:['Advertising <b>$19.8B (+26%)</b> — an <b>acceleration</b> from +22%, at a $20B quarterly scale, with <b>sponsored products</b> named as the driver.','The next audit is structural: Q3 loses the Prime-Day event to the comp, so holding 25%+ would separate the engine from the calendar.'] },
-    ]},
-  { seg:'Amazon US', theme:'Robotics — the efficiency flywheel', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
-    why:'The quiet half of the AI story: unit growth outpacing fulfillment cost growth is what pays for the build without breaking margins.',
-    updates:[
-      { q:'Q4 2025', items:['<b>1M+ robots</b> in the network; 8B+ items same/next-day (+30%); NA margin 9% in the holiday peak; regions extended 8 → 10.'] },
-      { q:'Q1 2026', items:['Units <b>+15% vs fulfillment expense +9%</b>; record 13.1% consolidated margin; robotics in every 2026 US large-format launch; a service engine rebuilt in <b>65 days vs 40–50 person-years</b>.'] },
-      { q:'Q2 2026', items:['A <b>new consolidated margin record: 13.7%</b> — set while absorbing the seasonal SBC step-up, ~$1B of LEO cost and fuel inflation the guide had flagged. Paid units <b>+17%</b>.','Fast commerce is where the flywheel now shows: <b>same-day perishables customers +50%</b> since January, and same-day orders carrying <b>3x the units</b> per order. Roughly <b>$600M of tariff-related refunds</b> landed as one-off relief inside the North America margin.'] },
-    ]},
-  // ── Amazon International ────────────────────────────────────────────────────────────────────────
-  // No seeded sub-themes: a sub-theme exists only once it holds a REAL note, never as an empty
-  // placeholder (Dani, Aug 2026). International hooks (segment margin, country build-out) get filed
-  // here as the notes come in — via ＋ add note, Propose Notes, or the ✎ editor.
-  // ── AWS ────────────────────────────────────────────────────────────────────────────────────────
-  { seg:'AWS', theme:'Backlog', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
-    why:'From +24% to +37% (fastest in 18 quarters) with the forward book compounding faster than revenue converts.',
-    updates:[
-      { q:'Q4 2025', items:['<b>+24%</b> (13-quarter high), $142B run-rate; backlog <b>$244B (+40%)</b>; >1GW added in Q4; 3.99GW of power added in 2025, doubling again by 2027.'] },
-      { q:'Q1 2026', items:['<b>+28%</b> ($150B run-rate) — "very unusual for a business to grow this fast on a base this large"; backlog <b>$364B</b> EXCLUDING the <b>$100B+ Anthropic deal</b>; Bedrock spend +170% QoQ; Q1 tokens exceeded all prior years combined.'] },
-      { q:'Q2 2026', items:['<b>+37%</b> ($169B run-rate) — the <b>fastest in 18 quarters</b> and the third straight acceleration; backlog <b>$496B</b>, roughly <b>2.5x</b> a year ago and still growing triple-digit.','Capacity is the constraint, and it is pre-committed: <b>2027 "largely reserved"</b>, some <b>2028 "already spoken for."</b> The AI business and the chips business <b>each above a $25B run-rate</b>, both triple-digit. Jassy: AWS "can be a trillion-dollar annual revenue business."'] },
-    ]},
-  { seg:'AWS', theme:'Capex', st:{ k:'watch', since:'Q4 2025', last:'Q2 2026' },
-    why:'The number that reprices the stock: a ~$220B capex year against negative TTM FCF, defended with contracted demand.',
-    updates:[
-      { q:'Q4 2025', items:['"About <b>$200 billion</b> in capital expenditures… predominantly in AWS, because we have very high demand." TTM FCF $11.2B; the Summit model flipped FY26 FCF negative at its next snapshot. Olsavsky: "as fast as we install this capacity… we are monetizing it."'] },
-      { q:'Q1 2026', items:['Q1 capex <b>$44.2B</b>; memory costs "<b>skyrocketed</b>" — allocations locked with strategic suppliers mid-to-late 2025.'] },
-      { q:'Q2 2026', items:['The frame moved: FY26 cash capex <b>~$200B → ~$220B</b>, Olsavsky attributing part of the raise to the "<b>higher cost of memory</b>". Q2 capex <b>$54.2B</b> gross (1H26 $98.4B).','⚑ The cash line broke: <b>TTM free cash flow −$7.6B</b> (from +$18.2B a year ago) against $161.4B of TTM operating cash flow — funded with <b>$67B of new long-term debt</b> in one half ($65.6B → $128.9B). The Q4-2025 red line fired in reported actuals.'] },
-    ]},
-  { seg:'AWS', theme:'Margins', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
-    why:'AWS segment profitability — expanding even through the AI build, helped by custom silicon and (in Q2) energy-derivative gains.',
-    updates:[
-      { q:'Q4 2025', items:['Segment margin <b>35%</b> (+40bps).'] },
-      { q:'Q2 2026', items:['Segment margin <b>39.4%</b> (+650bps YoY, ~+520bps excluding energy-derivative gains).'] },
-    ]},
-  { seg:'AWS', theme:'Useful lives & Data Center Lifecycles', st:{ k:'watch', since:'Q1 2026', last:'Q1 2026' },
-    why:'How Amazon depreciates the build: the install-to-billing lag and asset lives set the margin optics of the capex cycle.',
-    updates:[
-      { q:'Q1 2026', items:['Capacity installs <b>6–24 months before billing</b>; data centers <b>30+ year</b> assets, chips <b>5–6</b>.'] },
-    ]},
-  { seg:'AWS', theme:'Custom silicon — Graviton, Trainium, Rainier', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
-    why:'The margin lever under the AI build — and possibly a merchant business (rack sales) with NVIDIA-adjacent economics.',
-    updates:[
-      { q:'Q4 2025', items:['$10B+ run-rate; Trainium at triple-digit growth; <b>Project Rainier: 500K chips</b> training the next Claude model; Trainium3 "nearly all supply committed by mid-2026"; Graviton >50% growth, >90% of top-1,000 customers.'] },
-      { q:'Q1 2026', items:['Run-rate doubled to <b>$20B (+~40% QoQ)</b>; <b>$225B+ Trainium revenue commitments</b>; Trainium4 largely reserved ~18 months out; rack sales "<b>very much a possibility</b>"; Meta committed to tens of millions of Graviton cores.'] },
-      { q:'Q2 2026', items:['The chips business passed a <b>$25B annualized run-rate</b>, growing triple-digit — and the tenant list stopped being a concentration argument: <b>Anthropic AND OpenAI</b> are each making <b>multi-year, multi-gigawatt</b> Trainium commitments. <b>Graviton5</b> reached general availability.','The merchant question survives the quarter: Nowak asked about Trainium sales into third-party data centres, and the answer stayed short of a plan.'] },
-    ]},
-];
 // A note's quarter is inside a sub-theme's tracking window when Since ≤ q ≤ Until (open bounds when
 // unset). Setting "Since" therefore shows the notes only from that quarter onward; "Until" caps them.
 function amznInWindow(q, since, until){
@@ -3094,53 +3130,6 @@ function aTbl(id, title, headers, rows){
     '<div class="rs-collap-b" id="rsTB-'+id+'" hidden><div class="rs-ft-scroll"><table class="rs-ft"><thead>'+thead+'</thead><tbody>'+tb+'</tbody></table></div></div></div>';
 }
 // FY sums from the quarterly actuals of the dataset (single source of truth).
-function aFy(key, year){
-  var m=amznResults.views.q.metrics[key]; if(!m) return null;
-  var tot=0, got=0;
-  m.periods.forEach(function(p,i){ if(p.slice(2)===String(year).slice(2) && m.act[i]!=null){ tot+=m.act[i]; got++; } });
-  return got===4 ? tot : null;
-}
-var A_SEG_YEARS=['2021','2022','2023','2024','2025'];
-function aSegSeries(key){ var m=amznResults.views.y.metrics[key]; return A_SEG_YEARS.map(function(y){ var i=m.periods.indexOf(y); return i>=0&&m.act[i]!=null?m.act[i]/1000:null; }); }
-function toplineSegBody(){
-  var h='<p class="ov-lede"><b>Three engines, one flywheel.</b> North America and International are the retail surface (first-party stores + the 3P marketplace + ads riding on both); AWS is the profit engine that funds the AI build. The revenue-line view below cuts the same company by WHAT is sold rather than where.</p>';
-  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:8px 0">'+
-    '<div class="ov-sec" style="margin:0"><div class="ov-sec-h">Segment revenue ($B, FY)</div><div style="height:280px"><canvas id="aSegRev"></canvas></div></div>'+
-    '<div class="ov-sec" style="margin:0"><div class="ov-sec-h">Segment operating income ($B, FY)</div><div style="height:280px"><canvas id="aSegOp"></canvas></div></div>'+
-  '</div>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">FY2025 revenue lines — what is actually sold ($B)</div><div style="height:260px"><canvas id="aRevLines"></canvas></div>'+
-    '<div class="ov-fynote">Revenue-line disaggregation summed from the quarterly 8-K actuals in the Results dataset. Advertising ($68.6B, +23%) and 3P seller services ($172.2B) are the high-margin lines riding the retail surface; AWS ($128.7B) carries most of the operating income. Forward views live in Evolution ▸ Results / Estimates.</div></div>';
-  return h;
-}
-function aBuildTopline(){
-  var cv=aChartReady('aSegRev');
-  if(cv){ aDestroy('aSegRev'); _aCharts['aSegRev']=new Chart(cv.getContext('2d'),{ type:'bar',
-    data:{ labels:A_SEG_YEARS, datasets:[
-      { label:'North America', data:aSegSeries('usrev'), backgroundColor:BRAND, maxBarThickness:34 },
-      { label:'International', data:aSegSeries('intrev'), backgroundColor:BRAND2, maxBarThickness:34 },
-      { label:'AWS', data:aSegSeries('aws'), backgroundColor:SQUID, maxBarThickness:34 } ] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } } },
-      scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); aZoom('aSegRev'); }
-  var c2=aChartReady('aSegOp');
-  if(c2){ aDestroy('aSegOp');
-    function opSeries(key){ return A_SEG_YEARS.map(function(y){ var tot=0,got=0; var m=amznResults.views.q.metrics[key]; m.periods.forEach(function(p,i){ if(p.slice(2)===y.slice(2)&&m.act[i]!=null){ tot+=m.act[i]; got++; } }); return got===4?tot/1000:null; }); }
-    _aCharts['aSegOp']=new Chart(c2.getContext('2d'),{ type:'bar',
-      data:{ labels:A_SEG_YEARS, datasets:[
-        { label:'North America', data:opSeries('naopinc'), backgroundColor:BRAND, maxBarThickness:34 },
-        { label:'International', data:opSeries('intopinc'), backgroundColor:BRAND2, maxBarThickness:34 },
-        { label:'AWS', data:opSeries('awsopinc'), backgroundColor:SQUID, maxBarThickness:34 } ] },
-      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } } },
-        scales:{ x:{ grid:{ display:false } }, y:{ position:'right', grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); aZoom('aSegOp'); }
-  var c3=aChartReady('aRevLines');
-  if(c3){ aDestroy('aRevLines');
-    var lines=[ ['Online stores','online'], ['3P seller services','p3'], ['AWS','aws'], ['Advertising','ads'], ['Subscriptions','subs'], ['Physical stores','phys'], ['Other','other'] ];
-    var vals=lines.map(function(l){ var v=aFy(l[1], 2025); return v==null?null:Math.round(v/100)/10; });
-    _aCharts['aRevLines']=new Chart(c3.getContext('2d'),{ type:'bar',
-      data:{ labels:lines.map(function(l){ return l[0]; }), datasets:[{ data:vals, backgroundColor:[BRAND,BRAND2,SQUID,'#7A5AF8','#2E8B57','#9AA4B0','#C8B49A'], maxBarThickness:26 }] },
-      options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } },
-        scales:{ x:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } }, y:{ grid:{ display:false } } } } }); aZoom('aRevLines'); }
-}
-function aGrossMgnSeries(){ return A_OPEX_YEARS.map(function(y){ var r=A_OPEX[y]; return Math.round((r.revenue-r.costOfSales)/r.revenue*1000)/10; }); }
 function aOpMgnSeries(){ return A_OPEX_YEARS.map(function(y){ var r=A_OPEX[y]; var cost=A_OPEX_FN.reduce(function(a,f){ return a+r[f.k]; },0)+r.otherOpex; return Math.round((r.revenue-cost)/r.revenue*1000)/10; }); }
 // Operating-margin bridge — revenue -> each functional cost -> operating income, as a waterfall.
 // Plus the YoY margin-contribution bars (which cost line expanded / compressed the margin). No prose.
@@ -5182,9 +5171,16 @@ function deepDiveHtml(c){
     '</div>';
   h+='<div class="dd-pane" data-dd="topline">'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="segments">Segments</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="segov">General</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="segdrv">Segments</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="segoth">Other</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="segcus">Customers</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="segments">'+toplineSegBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segov">'+(segmentsOverviewHtml('AMZN')||ceResultsPending('Overview'))+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segdrv" hidden>'+(segmentsHtml('AMZN')||ceResultsPending('Segments'))+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segoth" hidden>'+(segmentsOtherHtml('AMZN')||ceResultsPending('Other'))+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segcus" hidden>'+(segmentsCustomersHtml('AMZN')||ceResultsPending('Customers'))+'</div>'+
+
     '</div>';
   h+='<div class="dd-pane" data-dd="bottomline" hidden>'+
       '<div class="ovt-subtabs">'+
@@ -5293,7 +5289,14 @@ function wireModal(root){
 }
 // Lazy chart builds per Deep Dive pane / sub-tab (Chart.js needs a non-null offsetParent).
 function aBuildSub(root, dd, key){
-  if(dd==='topline') requestAnimationFrame(aBuildTopline);
+  if(dd==='topline'){
+    // Mix was retired Aug 2026 (SAB): General covers the split and the growth, Other covers the
+    // product-line and country cuts, so it had nothing of its own left to show.
+    if(key==='segdrv') requestAnimationFrame(function(){ initSegments(root, 'AMZN'); });
+    else if(key==='segoth') requestAnimationFrame(function(){ initSegmentsOther(root, 'AMZN'); });
+    else if(key==='segcus') requestAnimationFrame(function(){ initSegmentsCustomers(root, 'AMZN'); });
+    else requestAnimationFrame(function(){ initSegmentsOverview(root, 'AMZN'); });
+  }
   if(dd==='bottomline'){
     if(key==='supplychain') requestAnimationFrame(aBuildSplc);
     else if(key==='segments') requestAnimationFrame(aBuildSegments);
@@ -5306,7 +5309,10 @@ function aBuildSub(root, dd, key){
     if(key==='histmult') requestAnimationFrame(function(){ amznHistMult.init(root); });
     if(key==='sensitivity') requestAnimationFrame(function(){ amznSens.init(root); });
     if(key==='targetmult') requestAnimationFrame(function(){ amznTargetMult.init(root); });
-    if(key==='peers') requestAnimationFrame(function(){ aScRenderAll(root); aScChipsAll(root); aScFetchCaps(root); });
+    // wireScatters() rather than the three render calls it ends with: entering the sub-tab must also
+    // bind the pills and the table dropdown. It is idempotent (the _scWired guard) and keeps the peer
+    // list as the user left it (aScReset only seeds when A_SC.peers is null).
+    if(key==='peers') requestAnimationFrame(function(){ wireScatters(root); });
     // no 'financials' branch — that sub-tab was removed (Aug 19 2026); aBuildFin is parked with it
   }
   if(dd==='evolution'){
@@ -5651,7 +5657,15 @@ function deepDiveInit(c){
     root.addEventListener('click', function(e){ var h=e.target.closest?e.target.closest('.rs-collap-h'):null; if(!h||!root.contains(h)) return;
       var b=h.nextElementSibling; if(!b||!b.classList.contains('rs-collap-b')) return; var open=b.hidden; b.hidden=!open;
       var ic=h.querySelector('.rs-collap-ic'); if(ic) ic.textContent=open?'▾':'▸'; }); }
-  requestAnimationFrame(aBuildTopline);   // Top Line is the initially-visible pane
+  // Build whatever is ACTUALLY visible, rather than a hardcoded pane. This used to call one
+  // pane's builder directly, which left the visible pane empty the moment a sub-tab was added in
+  // front of it. Reading the active tabs means the next one added costs nothing.
+  requestAnimationFrame(function(){
+    var pane = root.querySelector('.dd-pane:not([hidden])');
+    var dd = pane ? pane.getAttribute('data-dd') : 'topline';
+    var sub = pane ? pane.querySelector('.ovt-subtab.active') : null;
+    aBuildSub(root, dd, sub ? sub.getAttribute('data-ovst') : null);
+  });
 }
 
 export var amznOverview = { html: html, init: init, headerSources: ceHeaderSources, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

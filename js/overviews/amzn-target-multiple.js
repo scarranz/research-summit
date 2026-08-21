@@ -275,6 +275,40 @@ function recAt(s,i){ return (evAt(s,i)+peAt(s,i))/2; }   // the recorded target:
 function multEv(i){ return _mode==='preview' ? MOCK_EV[i] : _mEv; }
 function multPe(i){ return _mode==='preview' ? MOCK_PE[i] : _mPe; }
 
+// ── What the multiple TURNED OUT to be ───────────────────────────────────────────
+// The desk cycle (Pablo, Aug 20 2026): standing from 1 November of one year to 31 October of the
+// next, the multiple goes on FY(Y+1) and the target is dated 31 December of year Y. Every snapshot
+// in this log sits in that window — 2025-12-18 through 2026-08-04 — so the whole book is FY2027 for
+// a 31 Dec 2026 target, which is exactly what FWD_YEAR already says.
+//
+// On that date the market is paying SOME multiple on FY2027, and that is what the chosen multiple
+// gets marked against. Not the price target — the multiple itself. One number per target date, so
+// it belongs in the band header rather than repeated down every row; what varies per snapshot is
+// the miss, and that is the column.
+//
+// ⚠ STAND-IN, like the recorded multiples above it. 31 Dec 2026 has not happened on this desk clock
+// (it is Aug 2026), so the figures are illustrative and carry the purple mark. When the date lands
+// the realized multiple is one price and one FY figure, nothing more:
+//     realized EV/EBITDA = (price × shares + net debt) ÷ FY EBITDA
+//     realized P/E       =  price ÷ FY EPS
+// both read on the last trading day of the target year.
+var REALIZED = {
+  2027: { at:'31 Dec 2026', ev:14.8, pe:26.5 },
+  2028: { at:'31 Dec 2027', ev:null, pe:null },   // two years out — nothing to mark against yet
+};
+function realizedOf(){ return REALIZED[FWD_YEAR] || null; }
+function rlzVal(leg){ var r=realizedOf(); if(!r) return null; var v=(leg==='ev')?r.ev:r.pe; return (v==null||isNaN(v))?null:v; }
+// The miss: the multiple you put on the year against the one the market ended up paying for it.
+// Positive means you were assuming a richer multiple than turned up.
+// signPct() cannot take the null: `null >= 0` is true in JS, so a pending target would print
+// +0.0% — a miss of exactly zero — instead of saying it has nothing to compare against yet.
+function missCell(m){ return m==null ? '<span class="rs-ft-nil">—</span>' : signPct(m); }
+function missOf(leg, i){
+  var rz=rlzVal(leg); if(rz==null) return null;
+  var chosen=(leg==='ev')?multEv(i):multPe(i);
+  return (chosen==null||!isFinite(chosen)) ? null : (chosen/rz-1);
+}
+
 // ── Metrics — §0.2 rule 4: families first, the lines inside them ─────────────────
 // Every option reads standalone (a closed <select> shows the option, never its group header),
 // which is why each carries its fiscal year.
@@ -434,6 +468,19 @@ function tmBody(){
     '.tm-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}'+
     '.tm-tbl tbody tr.tm-last{background:rgba(255,153,0,.07)}'+
     '.tm-tbl tbody tr.tm-rep{background:#FAFBFC;color:var(--mu)}'+
+    // The two bands: the group header takes the leg's colour from the chart, and a rule runs down
+    // the left edge of each band so the split is visible in the body rows, not only in the header.
+    '.tm-tbl thead tr.tm-grp th{padding:5px 10px;text-align:center;font-size:9.5px;font-weight:800;'+
+      'text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bdr)}'+
+    '.tm-tbl thead tr.tm-grp th.tm-gh-ev{background:'+C_EV+';color:#fff}'+
+    '.tm-tbl thead tr.tm-grp th.tm-gh-pe{background:'+C_PE+';color:#3A2A00}'+
+    '.tm-tbl th.tm-gs,.tm-tbl td.tm-gs{border-left:2px solid var(--bdr)}'+
+    '.tm-tbl td.tm-flat{color:var(--mu)}'+
+    '.tm-tbl thead tr.tm-grp .tm-gsub{display:block;font-size:9px;font-weight:600;letter-spacing:.02em;text-transform:none;opacity:.92;margin-top:2px}'+
+    '.tm-tbl thead tr.tm-grp th.tm-gh-ev .tm-ph{color:#EAF3FB;border-bottom-color:#EAF3FB}'+
+    '.tm-tbl thead tr.tm-grp th.tm-gh-pe .tm-ph{color:#3A2A00;border-bottom-color:#3A2A00}'+
+    '.tm-tbl td.tm-miss-hi{color:#C0392B;font-weight:800}'+
+    '.tm-tbl td.tm-miss-lo{color:#2E8B57;font-weight:800}'+
     '.tm-tbl td.tm-pt{font-weight:800;color:var(--navy)}'+
     '.tm-tag{display:inline-block;font-size:8.5px;font-weight:800;border-radius:20px;padding:1px 7px;margin-left:6px;vertical-align:1px}'+
     '.tm-tag-rev{color:#2E8B57;border:1px solid #2E8B57}'+
@@ -623,73 +670,117 @@ function renderTable(scope){
   var el=scope.querySelector('#tmTable'); if(!el) return;
   var idx=winIdx();
   var ph=function(t){ return '<span class="tm-ph">'+t+'</span>'; };
-  var head='', rows='';
 
   // which columns survive the legend
   var cEv=colOn('ev'), cPe=colOn('pe'), cRec=colOn('rec'), cSpread=colOn('spread');
   var cRev=colOn('rev'), cEbitda=colOn('ebitda'), cEarn=colOn('earn'), cEps=colOn('eps');
+  var pv=(_mode==='preview');
 
-  if(_mode==='preview'){
-    head='<th>Snapshot</th>'+
-      (cRev?'<th>Revenue '+FWD_YEAR+'</th>':'')+
-      (cEbitda?'<th>EBITDA '+FWD_YEAR+'</th>':'')+
-      (cEarn?'<th>Earnings '+FWD_YEAR+'</th>':'')+
-      (cEps?'<th>EPS</th>':'')+
-      (cEv?'<th>EV/EBITDA chosen</th>':'')+
-      (cPe?'<th>P/E chosen</th>':'')+
-      (cRec?'<th>Recorded year-end target</th><th>Δ</th>':'');
-    var prev=null;
-    idx.forEach(function(i,p){
-      var s=SNAPS[i], k=kindOf(i), rev=isRevision(i);
-      var mev=MOCK_EV[i], mpe=MOCK_PE[i];
-      var recv=recAt(s,i);
-      var d=(prev!=null)?(recv/prev-1):null;
-      rows+='<tr'+((i===SNAPS.length-1)?' class="tm-last"':(rev?'':' class="tm-rep"'))+'>'+
-        '<td><b>'+esc(s.d)+'</b><span class="tm-tag tm-tag-'+k.cls+'">'+esc(k.label)+'</span>'+
-          (s.d===BREAK_ON?'<span class="tm-tag tm-tag-brk">EBITDA redefined</span>':'')+'</td>'+
-        (cRev?'<td>'+fmtB(s.rev)+'</td>':'')+
-        (cEbitda?'<td>'+fmtB(s.ebitda)+'</td>':'')+
-        (cEarn?'<td>'+fmtB(s.earn)+'</td>':'')+
-        (cEps?'<td>$'+eps(s).toFixed(2)+'</td>':'')+
-        (cEv?'<td>'+ph(mev.toFixed(1)+'×')+'</td>':'')+
-        (cPe?'<td>'+ph(mpe.toFixed(0)+'×')+'</td>':'')+
-        (cRec?'<td class="tm-pt">'+ph(fmtPx(recv))+'</td><td>'+pctCell(d)+'</td>':'')+
-        '</tr>';
-      prev=recv;
-    });
-  } else {
-    head='<th>Snapshot</th>'+
-      (cRev?'<th>Revenue '+FWD_YEAR+'</th>':'')+
-      (cEbitda?'<th>EBITDA '+FWD_YEAR+'</th>':'')+
-      (cEarn?'<th>Earnings '+FWD_YEAR+'</th>':'')+
-      (cEps?'<th>EPS</th>':'')+
-      (cEv?'<th>Target @ '+_mEv+'× EV/EBITDA</th><th>Δ</th>':'')+
-      (cPe?'<th>Target @ '+_mPe+'× P/E</th><th>Δ</th>':'')+
-      ((cEv&&cPe&&cSpread)?'<th>EV vs P/E</th>':'');
-    var prevEv=null, prevPe=null;
-    idx.forEach(function(i,p){
-      var s=SNAPS[i], k=kindOf(i), rev=isRevision(i);
-      var pe_=ptPe(s), ev_=ptEv(s);
-      var dEv=(prevEv!=null)?(ev_/prevEv-1):null, dPe=(prevPe!=null)?(pe_/prevPe-1):null;
-      // greyed when unchanged from the prior row IN THE WINDOW, so the flag still reads right
-      // once the re-parses are filtered out
-      var revFlat=(p>0 && s.rev===SNAPS[idx[p-1]].rev);
-      rows+='<tr'+((i===SNAPS.length-1)?' class="tm-last"':(rev?'':' class="tm-rep"'))+'>'+
-        '<td><b>'+esc(s.d)+'</b><span class="tm-tag tm-tag-'+k.cls+'">'+esc(k.label)+'</span>'+
-          (s.d===BREAK_ON?'<span class="tm-tag tm-tag-brk">EBITDA redefined</span>':'')+'</td>'+
-        (cRev?'<td'+(revFlat?' style="color:var(--mu)"':'')+'>'+fmtB(s.rev)+'</td>':'')+
-        (cEbitda?'<td>'+fmtB(s.ebitda)+'</td>':'')+
-        (cEarn?'<td>'+fmtB(s.earn)+'</td>':'')+
-        (cEps?'<td>$'+eps(s).toFixed(2)+'</td>':'')+
-        (cEv?'<td class="tm-pt">'+fmtPx(ev_)+'</td><td>'+pctCell(dEv)+'</td>':'')+
-        (cPe?'<td class="tm-pt">'+fmtPx(pe_)+'</td><td>'+pctCell(dPe)+'</td>':'')+
-        ((cEv&&cPe&&cSpread)?'<td>'+signPct(ev_/pe_-1)+'</td>':'')+
-        '</tr>';
-      prevEv=ev_; prevPe=pe_;
-    });
+  // ── Three bands (Pablo, Aug 20 2026) ───────────────────────────────────────────
+  // Snapshot and revenue are the row's IDENTITY: the same figures whichever way you value the
+  // company. Everything after them splits in two, because the target price depends on which line
+  // you capitalise — EBITDA through an EV/EBITDA multiple, earnings through a P/E. Same snapshot,
+  // same model, two different answers. So each band carries its own underlying, its own multiple
+  // and its own target, under a coloured group header that matches the leg's colour in the chart.
+  //
+  // Header and body are generated from the SAME column list, so the two can never drift apart,
+  // and a band whose columns are all switched off in the legend disappears with its group header
+  // — which is §0.2 rule 2 still holding after the regrouping.
+  var LEAD=[{ h:'Snapshot', f:function(c){
+      return '<b>'+esc(c.s.d)+'</b><span class="tm-tag tm-tag-'+c.k.cls+'">'+esc(c.k.label)+'</span>'+
+        (c.s.d===BREAK_ON?'<span class="tm-tag tm-tag-brk">EBITDA redefined</span>':''); } }];
+  if(cRev) LEAD.push({ h:'Revenue '+FWD_YEAR,
+    cls:function(c){ return c.revFlat?'tm-flat':''; },      // unchanged from the row above, greyed
+    f:function(c){ return fmtB(c.s.rev); } });
+  // Each band ends in ITS OWN target, in both modes. In Live that is your multiple applied to the
+  // band's line; in Recorded-multiple it is the multiple the desk chose at that snapshot applied to
+  // the same line — recorded targets diverge exactly as live ones do, because the multiple behind
+  // each leg was recorded separately (Pablo, Aug 20 2026).
+  var EB=[], EA=[], TAIL=[];
+  if(cEbitda) EB.push({ h:'EBITDA '+FWD_YEAR, f:function(c){ return fmtB(c.s.ebitda); } });
+  if(cEv&&pv) EB.push({ h:'EV/EBITDA chosen', f:function(c){ return ph(multEv(c.i).toFixed(1)+'×'); } });
+  if(cEv) EB.push({ h:(pv?'Recorded target':'Target @ '+_mEv+'× EV/EBITDA'), cls:'tm-pt',
+    f:function(c){ return pv?ph(fmtPx(c.ev)):fmtPx(c.ev); } });
+  if(cEv) EB.push({ h:'Δ', f:function(c){ return pctCell(c.dEv); } });
+  // What the multiple you put on the year was worth against the one the market ended up paying.
+  // Positive = you were assuming a richer multiple than turned up.
+  if(cEv) EB.push({ h:'vs realized',
+    cls:function(c){ var m=missOf('ev',c.i); return m==null?'':(m>=0?'tm-miss-hi':'tm-miss-lo'); },
+    f:function(c){ return missCell(missOf('ev',c.i)); } });
+
+  if(cEarn) EA.push({ h:'Earnings '+FWD_YEAR, f:function(c){ return fmtB(c.s.earn); } });
+  if(cEps)  EA.push({ h:'EPS', f:function(c){ return '$'+eps(c.s).toFixed(2); } });
+  if(cPe&&pv) EA.push({ h:'P/E chosen', f:function(c){ return ph(multPe(c.i).toFixed(0)+'×'); } });
+  if(cPe) EA.push({ h:(pv?'Recorded target':'Target @ '+_mPe+'× P/E'), cls:'tm-pt',
+    f:function(c){ return pv?ph(fmtPx(c.pe)):fmtPx(c.pe); } });
+  if(cPe) EA.push({ h:'Δ', f:function(c){ return pctCell(c.dPe); } });
+  if(cPe) EA.push({ h:'vs realized',
+    cls:function(c){ var m=missOf('pe',c.i); return m==null?'':(m>=0?'tm-miss-hi':'tm-miss-lo'); },
+    f:function(c){ return missCell(missOf('pe',c.i)); } });
+
+  // The tail belongs to NEITHER band, in both modes and for the same reason: it is a statement
+  // ABOUT the two. In Live that is the spread between them. In Recorded-multiple it is the blend
+  // — the midpoint of the two recorded legs, which is the purple series the chart draws, so it has
+  // to stay readable in the table (§0.2 rule 2) even though each leg now carries its own target.
+  if(pv){
+    if(cRec){ TAIL.push({ h:'Blended target', cls:'tm-pt', f:function(c){ return ph(fmtPx(c.rec)); } });
+              TAIL.push({ h:'Δ', f:function(c){ return pctCell(c.dRec); } }); }
+  } else if(cEv&&cPe&&cSpread){
+    TAIL.push({ h:'EV vs P/E', f:function(c){ return signPct(c.ev/c.pe-1); } });
   }
 
-  el.innerHTML='<table class="tm-tbl"><thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table>';
+  // ctx===null builds the header row; a ctx builds that snapshot's cells. `divide` puts the
+  // band rule on the first column of the band.
+  function band(cols, ctx, tag, divide){
+    return cols.map(function(col,j){
+      var cls=(typeof col.cls==='function') ? (ctx?col.cls(ctx):'') : (col.cls||'');
+      if(divide && j===0) cls=(cls?cls+' ':'')+'tm-gs';
+      return '<'+tag+(cls?' class="'+cls+'"':'')+'>'+(ctx?col.f(ctx):col.h)+'</'+tag+'>';
+    }).join('');
+  }
+  function allBands(ctx, tag){
+    return band(LEAD,ctx,tag,false)+band(EB,ctx,tag,true)+band(EA,ctx,tag,true)+band(TAIL,ctx,tag,true);
+  }
+
+  // The realized multiple is ONE number per target date, not one per snapshot, so it sits in the
+  // band header — the constant the whole band is being marked against — and only the miss goes in
+  // a column. Pending when the target date has not arrived on the data yet.
+  function gLabel(name, leg){
+    var r=realizedOf(), v=rlzVal(leg);
+    if(!r) return name;
+    return name+'<span class="tm-gsub">'+(v!=null
+      // One decimal on both legs, including P/E. The CHOSEN P/E is a round number the desk picked;
+      // the realized one is whatever the market happened to be paying, and rounding 26.5 to 27 in
+      // the header while the miss column divides by 26.5 is exactly the kind of half-point drift
+      // that makes a reader distrust the whole table.
+      ? ('realized '+ph(v.toFixed(1)+'×')+' · '+esc(r.at))
+      : ('realized pending · '+esc(r.at)))+'</span>';
+  }
+  var grp='';
+  if(EB.length||EA.length){
+    grp='<tr class="tm-grp"><th colspan="'+LEAD.length+'"></th>'+
+      (EB.length?'<th class="tm-gh tm-gh-ev tm-gs" colspan="'+EB.length+'">'+gLabel('EBITDA','ev')+'</th>':'')+
+      (EA.length?'<th class="tm-gh tm-gh-pe tm-gs" colspan="'+EA.length+'">'+gLabel('Earnings','pe')+'</th>':'')+
+      (TAIL.length?'<th class="tm-gs" colspan="'+TAIL.length+'"></th>':'')+'</tr>';
+  }
+
+  var rows='', prevEv=null, prevPe=null, prevRec=null;
+  idx.forEach(function(i,p){
+    var s=SNAPS[i], k=kindOf(i), rev=isRevision(i);
+    var c={ s:s, i:i, p:p, k:k, ev:evAt(s,i), pe:peAt(s,i), rec:recAt(s,i),
+            // greyed when unchanged from the prior row IN THE WINDOW, so the flag still reads
+            // right once the re-parses are filtered out
+            revFlat:(!pv && p>0 && s.rev===SNAPS[idx[p-1]].rev) };
+    c.dEv =(prevEv !=null)?(c.ev /prevEv -1):null;
+    c.dPe =(prevPe !=null)?(c.pe /prevPe -1):null;
+    c.dRec=(prevRec!=null)?(c.rec/prevRec-1):null;
+    rows+='<tr'+((i===SNAPS.length-1)?' class="tm-last"':(rev?'':' class="tm-rep"'))+'>'+
+      allBands(c,'td')+'</tr>';
+    prevEv=c.ev; prevPe=c.pe; prevRec=c.rec;
+  });
+
+  el.innerHTML='<table class="tm-tbl"><thead>'+grp+'<tr>'+allBands(null,'th')+'</tr></thead>'+
+    '<tbody>'+rows+'</tbody></table>';
 }
 
 function footHtml(){
@@ -697,7 +788,14 @@ function footHtml(){
   var common='FY'+FWD_YEAR+' revenue, EBITDA, earnings and share count per snapshot from the Summit DCF model (instrument AMZN, model be6d6393), '+
     'read through the revision history. <b>Year-end target</b> = EBITDA × the EV/EBITDA multiple less net debt over shares, and EPS × the P/E multiple — '+
     'both shown side by side because the desk sets both. The <b>spread</b> is the disagreement between the two methods. Share count is the model\'s own and '+
-    'moves (10,721 in the first vintage, 10,827 after). Net debt is '+fmtB(_netDebt)+', from the live quote. ';
+    'moves (10,721 in the first vintage, 10,827 after). Net debt is '+fmtB(_netDebt)+', from the live quote. '+
+    '<b>The multiple you chose, marked to the one that turned up.</b> Standing from 1 November to 31 October the multiple goes on FY'+FWD_YEAR+
+    ' and the target is dated <b>31 December '+(FWD_YEAR-1)+'</b> — every snapshot in this log sits inside that window. On that date the market is '+
+    'paying some multiple on FY'+FWD_YEAR+', and that is what the chosen multiple gets marked against: not the price target, the multiple itself. '+
+    'It is one number per target date, so it sits in the band header, and <b>vs realized</b> carries the miss per snapshot — positive means the '+
+    'multiple assumed was richer than the one that turned up. <b>⚑ The realized figures are stand-ins</b>, purple like the recorded multiples: '+
+    '31 December '+(FWD_YEAR-1)+' has not happened yet. When it does they are one price and one FY figure — (price × shares + net debt) ÷ FY EBITDA, '+
+    'and price ÷ FY EPS, both on the last trading day of the year. ';
   if(_mode==='live'){
     return common+'At the multiples above the '+FWD_YEAR+' target moved '+signPct(ptEv(l)/ptEv(f)-1)+' on EV/EBITDA and '+
       signPct(ptPe(l)/ptPe(f)-1)+' on P/E across the selected snapshots. The multiples are your input: the recorded ones live past column EM on '+

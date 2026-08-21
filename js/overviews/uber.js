@@ -1734,6 +1734,38 @@ function ubExpenseTabsBody(c){
   h+='</div>';
   return h;
 }
+// ── Bottom Line ▸ Segments — concise like AMZN: Adjusted EBITDA & margin by segment (§0.2 scaffold),
+// segment Adj EBITDA from the 10-K (Note 13, FY23-25 reported). The verbose segment "worlds" live under
+// Miscellaneous ▸ Other Analysis; the standardized segment definitions live in Top Line (the engine). ──
+var UB_SEGEB_YRS=['2023','2024','2025'];
+var UB_SEGEB={ mobility:{eb:[4963,6497,7899],gb:[68897,83024,97497],lab:'Mobility',c:'#10141A'},
+               delivery:{eb:[1506,2471,3572],gb:[63726,74614,90864],lab:'Delivery',c:'#06C167'},
+               freight :{eb:[-64,-74,-33],   gb:[5242,5135,5093],   lab:'Freight',c:'#9AA3AE'} };
+function ubSegProfitCards(){
+  var rows=[['Mobility','~8% of GB','$7.9B Adj EBITDA (2025) — the profit engine, highest margin.'],
+            ['Delivery','~4% of GB','$3.6B — margin still converging up via advertising & scale.'],
+            ['Freight','~breakeven','−$33M — near-breakeven, held for optionality.']];
+  return '<div class="ov-kpis" style="margin-top:10px">'+rows.map(function(r){ return '<div class="ov-kpi"><div class="ov-kpi-l">'+r[0]+'</div><div class="ov-kpi-v">'+r[1]+'</div><div class="ov-kpi-d muted">'+r[2]+'</div></div>'; }).join('')+'</div>'+
+    '<div class="ov-fynote" style="margin-top:6px">Segment Adjusted EBITDA before Corporate G&amp;A and Platform R&amp;D (−$2.7B in 2025). Source: Uber FY2025 10-K, Note 13. Each segment’s definition is in Top Line ▸ Segments.</div>';
+}
+function ubSegProfitBody(){
+  return aStdScaffold({ id:'ubsegeb', title:'Adjusted EBITDA & margin by segment', height:330,
+    metricSel:[{v:'ebitda',label:'Adjusted EBITDA',on:true}],
+    modes:[{cls:'show',label:'Show',opts:[{v:'amt',label:'$B',on:true},{v:'margin',label:'Margin (% of GB)'}]}],
+    presets:[['all','All']] });
+}
+function buildUbSegProfit(root){
+  aStdRender('ubsegeb', function(st){
+    var show=st.modes.show||'amt', labels=UB_SEGEB_YRS.map(function(y){ return 'FY'+y.slice(2); });
+    var segs=['mobility','delivery','freight'];
+    var series=segs.map(function(k){ var s=UB_SEGEB[k];
+      var data=show==='margin'? s.eb.map(function(v,i){ return s.gb[i]?Math.round(v/s.gb[i]*1000)/10:null; })
+                              : s.eb.map(function(v){ return Math.round(v/100)/10; });
+      return { k:k, label:s.lab, color:s.c, type:show==='margin'?'line':'bar', data:data }; });
+    var yf=show==='margin'?function(x){ return x+'%'; }:function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; };
+    return { labels:labels, lastAct:2, type:show==='margin'?'line':'bar', stacked:false, yFmt:yf, series:series };
+  });
+}
 // Bottom Line ▸ General — one chart at a time via a dropdown (AMZN's gen-chart pattern), not a stack.
 function ubGeneralPicker(){
   var opts=[['profit','Profitability & margins'],['bridge','The bridge — revenue → operating income']];
@@ -4593,7 +4625,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="supplychain">Supply Chain</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="general">'+ubBottomGeneralBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="segments" hidden>'+ubSegmentsBody(c)+
+      '<div class="ovt-subpane" data-ovst="segments" hidden>'+ubSegProfitBody()+ubSegProfitCards()+
         collapsible('Capital allocation — FCF, buybacks & the share count', ubCapAllocBody(c), false)+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="supplychain" hidden>'+suppliersBody(c)+'</div>'+
@@ -4656,22 +4688,26 @@ function deepDiveHtml(c){
   h+='<div class="dd-pane" data-dd="misc" hidden>'+
       '<div class="ovt-subtabs">'+
         '<button type="button" class="ovt-subtab active" data-ovst="manda">M&amp;A</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="insurance">Insurance &amp; Float</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="balance">Balance Sheet</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="other">Other Analysis</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="manda">'+deliveryHeroBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="insurance" hidden>'+insuranceBody()+'</div>'+   // the self-insurance/float topic (complex, per Dani → Miscellaneous)
       '<div class="ovt-subpane" data-ovst="strategy" hidden>'+ubStrategyBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="timeline" hidden>'+historyStoryBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="balance" hidden>'+ubBalanceBody(c)+'</div>'+
-      // Other Analysis — bespoke Top-Line content preserved from before the shared segments engine took
-      // over Top Line: TAM, the competitive/industry landscape, Uber One membership, and the segment
-      // "worlds". Kept here so nothing is lost; to be distributed into segment adjacencies / Bottom Line.
+      // Other Analysis — bespoke Top-Line content that doesn't conform to the standardized engine tabs
+      // (Golden Rule #1: preserved, not deleted): TAM, the competitive/industry landscape, Uber One
+      // membership, and the verbose segment "worlds". To be distilled into segment adjacencies later.
       '<div class="ovt-subpane" data-ovst="other" hidden>'+
         collapsible('TAM — the addressable market', ubTamBody(c), false)+
         collapsible('Industry & competitive landscape', ubIndustryBody(c), false)+
         collapsible('Uber One — membership economics', ubCustomersBody(c), false)+
+        collapsible('Unit economics — per-trip & per-order money split (the take rate lives in Top Line ▸ Segments)', unitEconBody(c), false)+
+        collapsible('Segment worlds — Mobility · Delivery · Freight in depth (bespoke narrative)', ubSegmentsBody(c), false)+
       '</div>'+
     '</div>';
   h+='</div>';
@@ -4928,9 +4964,7 @@ function buildSub(root, group, key){
     else if(key==='segcus') requestAnimationFrame(function(){ initSegmentsCustomers(root, 'UBER'); });
   } else if(group==='bottomline'){
     if(key==='general') buildUbGeneral(root);   // dropdown picker (Profitability / Bridge, one at a time) + expense deep-dives
-    else if(key==='segments'){   // per-segment worlds (GB/EBITDA composition + dual-axis + active segment) + capital allocation
-      buildUbSegDual(root); buildOverviewCharts(); buildActiveSeg(root); buildUbCapAlloc(root);
-    }
+    else if(key==='segments'){ buildUbSegProfit(root); buildUbCapAlloc(root); }   // concise Adj EBITDA by segment + capital allocation
     // supplychain: no charts
   } else if(group==='evolution'){
     if(key==='guidance')      buildModelTab();          // Model vs. Reality lives under Guidance
@@ -4946,7 +4980,10 @@ function buildSub(root, group, key){
     // strategy, timeline: no charts
   } else if(group==='misc'){
     if(key==='balance')       buildUbBal();     // equity-stake portfolio bar (moved from Valuation)
-    else if(key==='other')    buildUberOneCharts();   // Uber One membership chart (TAM/Industry have no charts)
+    else if(key==='insurance') buildUbFcf(root);  // insurance/float & FCF (moved from Bottom Line)
+    else if(key==='other'){   // preserved bespoke content: Uber One, unit economics, segment worlds (build on expand)
+      buildUberOneCharts(); buildUbUnit(root); buildMobilityCharts(); buildUbSegDual(root); buildOverviewCharts(); buildActiveSeg(root);
+    }
     // manda (Delivery Hero): SVG/HTML map wired via delegated .dhm-pill handlers in init — no Chart.js
     // strategy, timeline: no charts
   } else if(group==='valuation'){

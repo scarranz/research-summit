@@ -3329,9 +3329,13 @@ function aBuildBridge(){
 // Moved out of General so the consolidated bridge there stays about expenses. Reuses aBuildBrWaterfall.
 function aSegBridgeBody(){
   var yBtns=function(cls,sel){ return A_OPEX_YEARS.map(function(y){ return '<button type="button" data-'+cls+'="'+y+'"'+(y===sel?' class="active"':'')+'>FY'+String(y).slice(2)+'</button>'; }).join(''); };
-  return '<div class="ov-sec"><div class="ov-sec-h">The segment bridge — FY25 operating income → target year, by segment</div>'+
+  return '<div class="ov-sec"><div class="ov-sec-h">The segment bridge — what each segment added to operating income</div>'+
     '<style>.br-sl{display:flex;align-items:center;gap:14px;font-size:12px;font-weight:700;color:var(--navy);padding:7px 0}.br-sl+.br-sl{border-top:1px solid var(--bdr)}.br-sl input{flex:1;min-width:120px;max-width:280px;accent-color:'+BRAND+'}.br-sl-v{width:50px;text-align:right;color:var(--brand-2);font-variant-numeric:tabular-nums;font-size:12.5px}.br-sl-l{width:120px}</style>'+
-    '<div class="sbr-ctl-fwd" style="flex-direction:column;gap:12px;margin:0 0 12px">'+
+    '<div class="mch-ctl" style="margin:0 0 10px"><span class="acx-tog sbr-mode"><button type="button" data-sbrm="hist" class="active">Historical (actuals)</button><button type="button" data-sbrm="fwd">Forward (consensus / Summit)</button></span><span></span></div>'+
+    /* Historical: decompose the OI change between two actual years by segment */
+    '<div class="sbr-ctl-hist mch-ctl" style="margin:0 0 12px"><span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;color:var(--mu)">From</span><span class="acx-tog sbr-from">'+yBtns('sbrf',2022)+'</span><span style="font-size:11px;color:var(--mu)">to</span><span class="acx-tog sbr-to">'+yBtns('sbrt',2025)+'</span></span><span></span></div>'+
+    /* Forward: FY25 OI → target-year forecast, sensitizable */
+    '<div class="sbr-ctl-fwd" style="display:none;flex-direction:column;gap:12px;margin:0 0 12px">'+
       '<div class="mch-ctl" style="margin:0"><span class="acx-tog sbr-basis"><button type="button" data-sbrb="cons" class="active">vs Consensus (BBG)</button><button type="button" data-sbrb="summit">vs Summit</button></span><span class="acx-tog sbr-fy"><button type="button" data-sbrfy="0" class="active">FY26E</button><button type="button" data-sbrfy="1">FY27E</button><button type="button" data-sbrfy="2">FY28E</button></span></div>'+
       '<div style="border:1px solid var(--bdr);border-radius:10px;padding:8px 16px 10px;background:var(--card,#fff)">'+
         '<div style="font-size:11px;color:var(--mu);margin:2px 0 4px" id="aSbrBasisNote">Sensitize each segment’s operating income vs the base (0% = the base forecast):</div>'+
@@ -3343,8 +3347,30 @@ function aSegBridgeBody(){
     '<div style="height:340px"><canvas id="aSegBr"></canvas></div>'+
     '<div id="aSegBr-tbl" style="margin-top:8px"></div></div>';
 }
+function aSegBridgeSync(pane){
+  var mb=pane.querySelector('.sbr-mode .active'), mode=mb?mb.getAttribute('data-sbrm'):'hist';
+  var h=pane.querySelector('.sbr-ctl-hist'), f=pane.querySelector('.sbr-ctl-fwd');
+  if(h) h.style.display=mode==='hist'?'flex':'none';
+  if(f) f.style.display=mode==='fwd'?'flex':'none';
+}
 function aBuildSegBridge(){
   var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]'); if(!pane) return;
+  var mb=pane.querySelector('.sbr-mode .active'), mode=mb?mb.getAttribute('data-sbrm'):'hist';
+  if(mode==='hist'){   // decompose the actual OI change between two years, by segment ($B added or bps of consolidated margin)
+    var fb=pane.querySelector('.sbr-from .active'), tb=pane.querySelector('.sbr-to .active');
+    var y0=fb?+fb.getAttribute('data-sbrf'):2022, y1=tb?+tb.getAttribute('data-sbrt'):2025;
+    if(y1<=y0){ aBuildBrWaterfall('aSegBr', [], BR_FMT_D); return; }
+    var A=A_OPEX[y0], B2=A_OPEX[y1]; if(!A||!B2) return;
+    var SGH=[{k:'us',lab:'North America',oi:'usOpInc',c:BRAND},{k:'intl',lab:'International',oi:'intOpInc',c:BRAND2},{k:'aws',lab:'AWS',oi:'awsOpInc',c:SQUID}];
+    // start = total OI(y0); each bar = ΔOI_seg (ties exactly, segment OI sums to consolidated for AMZN); end = total OI(y1)
+    var oiStart=SGH.reduce(function(a,s){ return a+A[s.oi]; },0);
+    var run=oiStart/1000, steps=[{label:'FY'+String(y0).slice(2)+' OI', kind:'base', color:'#1E2733', range:[0,run], runAfter:run, val:run}];
+    SGH.forEach(function(s){ var d=(B2[s.oi]-A[s.oi])/1000, lo=run; run=lo+d;
+      steps.push({label:s.lab, kind:d>=0?'up':'down', color:s.c, dc:'#6B7683', range:[Math.min(lo,run),Math.max(lo,run)], runAfter:run, val:d}); });
+    steps.push({label:'FY'+String(y1).slice(2)+' OI', kind:'total', color:'#2E8B57', range:[0,run], runAfter:null, val:run});
+    aBuildBrWaterfall('aSegBr', steps, BR_FMT_D);
+    return;
+  }
   {   // segment-only forward walk: FY25 OI → target-year segment forecast → sensitizable, vs Consensus OR Summit
     var fyb=pane.querySelector('.sbr-fy .active'), fi=fyb?+fyb.getAttribute('data-sbrfy'):2;
     var bb=pane.querySelector('.sbr-basis .active'), basis=bb?bb.getAttribute('data-sbrb'):'cons';
@@ -4269,9 +4295,10 @@ function aBuildSegments(){
     if(ssel){ ssel.onchange=function(){ var v=ssel.value;
       pane.querySelectorAll('.seg-gsec').forEach(function(s){ s.hidden=(s.getAttribute('data-sgsec')!==v); });
       if(SEG_BUILD[v]) SEG_BUILD[v](); }; }
-    var segtog=function(sel){ pane.querySelectorAll(sel+' button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll(sel+' button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegBridge(); }; }); };
-    segtog('.sbr-mode'); segtog('.sbr-from'); segtog('.sbr-to'); segtog('.sbr-fy'); segtog('.sbr-basis');
+    var segtog=function(sel,extra){ pane.querySelectorAll(sel+' button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll(sel+' button').forEach(function(x){ x.classList.toggle('active',x===b); }); if(extra) extra(); aBuildSegBridge(); }; }); };
+    segtog('.sbr-mode', function(){ aSegBridgeSync(pane); }); segtog('.sbr-from'); segtog('.sbr-to'); segtog('.sbr-fy'); segtog('.sbr-basis');
     pane.querySelectorAll('.sbr-ctl-fwd input[type=range]').forEach(function(s){ s.addEventListener('input', aBuildSegBridge); });
+    aSegBridgeSync(pane);
     var stabs=pane.querySelectorAll('.segx-tab');
     stabs.forEach(function(b){ b.onclick=function(){ var key=b.getAttribute('data-segtab');
       stabs.forEach(function(x){ x.classList.toggle('active',x===b); });

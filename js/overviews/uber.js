@@ -1265,6 +1265,8 @@ function unitEconBody(c){
     '</div>'+
     '<div class="ov-fynote" style="margin-top:10px">Per $100 of Delivery gross bookings Uber keeps ~<b>$19</b> of revenue and ~<b>$3.90</b> of Adjusted EBITDA today — roughly half Mobility’s ~$8. Closing that gap via ~100%-margin <b>advertising</b> and scale, <b>without touching the merchant/courier split</b>, is the Delivery margin-convergence thesis. <span class="ave-subh-note">Take rate & EBITDA margin: Uber FY2025 segment results. The order-split shares are illustrative of the disclosed structure, not a reported per-order breakdown.</span></div>');
   h+=sec('Take Rate',
+    ubUnitDualBody()+
+    '<div class="ov-sec-h ovt-store-h" style="margin-top:14px">By segment — Mobility vs Delivery</div>'+
     '<div class="tech-leg"><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+MOB+'"></span>Mobility</span><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+DEL+'"></span>Delivery</span></div>'+
     '<div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartTake"></canvas></div>'+
     '<div class="ov-fynote" style="margin-top:10px">Mobility take held ~30% until the 1Q26 dip to ~25.8% — a <span class="ov-clickable" data-detail="note:take" style="color:#06C167;font-weight:600;cursor:pointer">UK accounting artifact ›</span>, not real compression.</div>');
@@ -1366,6 +1368,38 @@ function buildUbProfit(root){
   });
   var leg=host.querySelector('#ubProfitLeg');
   if(leg) leg.innerHTML=srcs.map(function(s){ return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--mu);margin-right:14px"><span style="width:13px;height:13px;border-radius:3px;background:'+s.c+'"></span>'+s.lab+'</span>'; }).join('')+'<span style="font-size:11px;color:var(--mu)">Bars = Adj EBITDA ($B) &nbsp;·&nbsp; lines = margin (% of gross bookings, right axis)</span>';
+}
+// ── Bottom Line ▸ Unit Economics — company-level funnel: Gross Bookings ($B bars) + Net Take Rate
+// (% line, y2), Actual / Summit / Consensus. All three from uberResults (take rate = revenue ÷ GB). ──
+function ubUnitDualBody(){
+  return '<div class="ov-sec" style="margin:0 0 6px">'+
+    '<div class="rs-block-top"><div class="rs-block-h">Company economics — gross bookings &amp; take rate</div></div>'+
+    '<div class="ave-leg" id="ubUnitLeg" style="margin:2px 0 8px"></div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-wrap ovs-tall" style="min-height:320px"><canvas id="ubChartUnit"></canvas></div></div>'+
+  '</div>';
+}
+function buildUbUnit(root){
+  var cv=document.getElementById('ubChartUnit'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
+  destroy('ubChartUnit'); var host=root||document;
+  var Y=uberResults.views.y.metrics, gbM=Y.gb, revM=Y.rev;
+  var labels=gbM.periods.map(function(p){ return 'FY'+String(p).slice(2); });
+  var la=0; for(var i=0;i<gbM.act.length;i++) if(gbM.act[i]!=null) la=i;
+  function bars(a){ return a.map(function(v){ return v==null?null:Math.round(v/1000*10)/10; }); }   // $B (GB in $M)
+  function barBg(a,c){ return a.map(function(v,i){ return i>la?ubHexA(c,0.42):c; }); }
+  function take(k){ return gbM[k].map(function(g,i){ return (g&&revM[k][i]!=null)?Math.round(revM[k][i]/g*1000)/10:null; }); }
+  var srcs=[{k:'act',lab:'Actual',c:UB_ACT},{k:'summit',lab:'Summit',c:UB_SUMMIT},{k:'cons',lab:'Consensus (BBG)',c:UB_CONS}];
+  var ds=[];
+  srcs.forEach(function(s){ ds.push({ type:'bar', label:'Gross bookings — '+s.lab, data:bars(gbM[s.k]), backgroundColor:barBg(bars(gbM[s.k]),s.c), borderColor:'#fff', borderWidth:1, maxBarThickness:26, yAxisID:'y', order:3 }); });
+  srcs.forEach(function(s){ ds.push({ type:'line', label:'Take rate — '+s.lab, data:take(s.k), borderColor:s.c, backgroundColor:s.c, borderWidth:2.4, pointRadius:2.2, tension:.2, spanGaps:false, yAxisID:'y2', order:1, borderDash:s.k==='cons'?[5,4]:undefined }); });
+  _charts['ubChartUnit']=new Chart(cv.getContext('2d'),{ data:{ labels:labels, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:function(c){ var e=(c.dataIndex>la)?' (E)':''; return c.dataset.label+': '+(c.parsed.y==null?'—':(c.dataset.yAxisID==='y2'?c.parsed.y+'%':'$'+c.parsed.y.toFixed(0)+'B'))+e; } } } },
+      scales:{ x:{ grid:{display:false}, ticks:{font:{size:10.5}} },
+        y:{ position:'right', beginAtZero:true, grid:{color:'#EEF2F7'}, ticks:{ font:{size:10.5}, callback:function(v){ return '$'+v+'B'; } } },
+        y2:{ position:'right', grid:{display:false}, ticks:{ font:{size:10.5}, callback:function(v){ return v+'%'; } } } } }
+  });
+  var leg=host.querySelector('#ubUnitLeg');
+  if(leg) leg.innerHTML=srcs.map(function(s){ return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--mu);margin-right:14px"><span style="width:13px;height:13px;border-radius:3px;background:'+s.c+'"></span>'+s.lab+'</span>'; }).join('')+'<span style="font-size:11px;color:var(--mu)">Bars = gross bookings ($B) &nbsp;·&nbsp; lines = net take rate (right axis)</span>';
 }
 function ubMarginsBody(c){
   return ubProfitBody()+
@@ -4486,7 +4520,7 @@ function buildSub(root, group, key){
     else if(key==='customers') buildUberOneCharts();
     // tam, industry: no charts
   } else if(group==='bottomline'){
-    if(key==='unit')          buildMobilityCharts();  // ubChartTake (take rate) — moved here
+    if(key==='unit'){ buildUbUnit(root); buildMobilityCharts(); }  // company GB+take dual-axis + Mobility/Delivery take comparison
     else if(key==='margins'){ buildUbProfit(root); buildUbMargins(); }   // Adj EBITDA dual-axis + live Massive margins
     // suppliers, insurance: no charts
   } else if(group==='evolution'){

@@ -40,3 +40,6 @@ scripts/consensus/out/
 scripts/consensus/dumps_*/
 scripts/consensus/out/
 harness-*.html
+PR_BODY_*.md
+scripts/segments/dcf_*.json
+scripts/segments/tenk/

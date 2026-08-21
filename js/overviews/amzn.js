@@ -20,7 +20,11 @@ import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../res
 import { mountWatchList } from '../watchlist.js';
 import { fetchThemeRecord, saveThemeRecord } from '../api.js';   // durable persistence of the AMZN theme record (Notes)
 import { amznResults } from '../results-data/amzn.js';
+import { AMZN_THEMES } from '../themes-data/amzn.js';   // the theme record, shared with Segments
 import { consensusEvo } from '../consensus-evolution.js';
+import { segmentsHtml, initSegments, segmentsOverviewHtml, initSegmentsOverview,
+         segmentsOtherHtml, initSegmentsOther,
+         segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line ▸ General · Segments · Other · Customers
 import { amznSens } from './amzn-sensitivity.js';   // Valuation ▸ Sensitivity Analysis
 import { amznTargetMult } from './amzn-target-multiple.js';   // Valuation ▸ Target Multiple
 import { amznHistMult } from './amzn-histmult.js';            // Valuation ▸ Historic Multiple
@@ -1040,67 +1044,6 @@ var CALL_EARNINGS = { ticker:'AMZN', quarters:[
 // "By theme" view groups them under these headers, in this order. Empty themes (no `updates`) are
 // tracked placeholders — the section exists so we can fill it as the notes come in.
 var AMZN_SEG_ORDER=['Amazon US','Amazon International','AWS'];
-var AMZN_THEMES=[
-  // ── Amazon US ──────────────────────────────────────────────────────────────────────────────────
-  { seg:'Amazon US', theme:'Agentic commerce', st:{ k:'watch', since:'Q4 2025', last:'Q2 2026' },
-    why:'Whether AI compresses the shopping funnel or expands it — management argues the retailer\'s own agent wins.',
-    updates:[
-      { q:'Q4 2025', items:['Rufus: <b>300M customers</b> in 2025, users "<b>60% more likely to complete a purchase</b>"; can shop tens of millions of items in OTHER stores.'] },
-      { q:'Q1 2026', items:['Rufus MAU <b>+115%</b>, engagement +400%; "we\'re going to like this for advertising" — sponsored prompts working, multi-turn = more surfaces.'] },
-      { q:'Q2 2026', items:['The claim that agentic surfaces <b>expand rather than compress</b> the funnel keeps showing up in reported dollars (see <i>Advertisement</i>).'] },
-    ]},
-  { seg:'Amazon US', theme:'Advertisement', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
-    why:'Management argues ads WIN in agentic commerce — the dollars are accelerating at a $20B quarterly scale.',
-    updates:[
-      { q:'Q4 2025', items:['Ads <b>$21.3B (+22%)</b>; Prime Video ads 315M viewers.'] },
-      { q:'Q1 2026', items:['Ads <b>$17.2B (+22%)</b>; Netflix / Comcast / Samsung signed.'] },
-      { q:'Q2 2026', items:['Advertising <b>$19.8B (+26%)</b> — an <b>acceleration</b> from +22%, at a $20B quarterly scale, with <b>sponsored products</b> named as the driver.','The next audit is structural: Q3 loses the Prime-Day event to the comp, so holding 25%+ would separate the engine from the calendar.'] },
-    ]},
-  { seg:'Amazon US', theme:'Robotics — the efficiency flywheel', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
-    why:'The quiet half of the AI story: unit growth outpacing fulfillment cost growth is what pays for the build without breaking margins.',
-    updates:[
-      { q:'Q4 2025', items:['<b>1M+ robots</b> in the network; 8B+ items same/next-day (+30%); NA margin 9% in the holiday peak; regions extended 8 → 10.'] },
-      { q:'Q1 2026', items:['Units <b>+15% vs fulfillment expense +9%</b>; record 13.1% consolidated margin; robotics in every 2026 US large-format launch; a service engine rebuilt in <b>65 days vs 40–50 person-years</b>.'] },
-      { q:'Q2 2026', items:['A <b>new consolidated margin record: 13.7%</b> — set while absorbing the seasonal SBC step-up, ~$1B of LEO cost and fuel inflation the guide had flagged. Paid units <b>+17%</b>.','Fast commerce is where the flywheel now shows: <b>same-day perishables customers +50%</b> since January, and same-day orders carrying <b>3x the units</b> per order. Roughly <b>$600M of tariff-related refunds</b> landed as one-off relief inside the North America margin.'] },
-    ]},
-  // ── Amazon International ────────────────────────────────────────────────────────────────────────
-  // No seeded sub-themes: a sub-theme exists only once it holds a REAL note, never as an empty
-  // placeholder (Dani, Aug 2026). International hooks (segment margin, country build-out) get filed
-  // here as the notes come in — via ＋ add note, Propose Notes, or the ✎ editor.
-  // ── AWS ────────────────────────────────────────────────────────────────────────────────────────
-  { seg:'AWS', theme:'Backlog', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
-    why:'From +24% to +37% (fastest in 18 quarters) with the forward book compounding faster than revenue converts.',
-    updates:[
-      { q:'Q4 2025', items:['<b>+24%</b> (13-quarter high), $142B run-rate; backlog <b>$244B (+40%)</b>; >1GW added in Q4; 3.99GW of power added in 2025, doubling again by 2027.'] },
-      { q:'Q1 2026', items:['<b>+28%</b> ($150B run-rate) — "very unusual for a business to grow this fast on a base this large"; backlog <b>$364B</b> EXCLUDING the <b>$100B+ Anthropic deal</b>; Bedrock spend +170% QoQ; Q1 tokens exceeded all prior years combined.'] },
-      { q:'Q2 2026', items:['<b>+37%</b> ($169B run-rate) — the <b>fastest in 18 quarters</b> and the third straight acceleration; backlog <b>$496B</b>, roughly <b>2.5x</b> a year ago and still growing triple-digit.','Capacity is the constraint, and it is pre-committed: <b>2027 "largely reserved"</b>, some <b>2028 "already spoken for."</b> The AI business and the chips business <b>each above a $25B run-rate</b>, both triple-digit. Jassy: AWS "can be a trillion-dollar annual revenue business."'] },
-    ]},
-  { seg:'AWS', theme:'Capex', st:{ k:'watch', since:'Q4 2025', last:'Q2 2026' },
-    why:'The number that reprices the stock: a ~$220B capex year against negative TTM FCF, defended with contracted demand.',
-    updates:[
-      { q:'Q4 2025', items:['"About <b>$200 billion</b> in capital expenditures… predominantly in AWS, because we have very high demand." TTM FCF $11.2B; the Summit model flipped FY26 FCF negative at its next snapshot. Olsavsky: "as fast as we install this capacity… we are monetizing it."'] },
-      { q:'Q1 2026', items:['Q1 capex <b>$44.2B</b>; memory costs "<b>skyrocketed</b>" — allocations locked with strategic suppliers mid-to-late 2025.'] },
-      { q:'Q2 2026', items:['The frame moved: FY26 cash capex <b>~$200B → ~$220B</b>, Olsavsky attributing part of the raise to the "<b>higher cost of memory</b>". Q2 capex <b>$54.2B</b> gross (1H26 $98.4B).','⚑ The cash line broke: <b>TTM free cash flow −$7.6B</b> (from +$18.2B a year ago) against $161.4B of TTM operating cash flow — funded with <b>$67B of new long-term debt</b> in one half ($65.6B → $128.9B). The Q4-2025 red line fired in reported actuals.'] },
-    ]},
-  { seg:'AWS', theme:'Margins', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
-    why:'AWS segment profitability — expanding even through the AI build, helped by custom silicon and (in Q2) energy-derivative gains.',
-    updates:[
-      { q:'Q4 2025', items:['Segment margin <b>35%</b> (+40bps).'] },
-      { q:'Q2 2026', items:['Segment margin <b>39.4%</b> (+650bps YoY, ~+520bps excluding energy-derivative gains).'] },
-    ]},
-  { seg:'AWS', theme:'Useful lives & Data Center Lifecycles', st:{ k:'watch', since:'Q1 2026', last:'Q1 2026' },
-    why:'How Amazon depreciates the build: the install-to-billing lag and asset lives set the margin optics of the capex cycle.',
-    updates:[
-      { q:'Q1 2026', items:['Capacity installs <b>6–24 months before billing</b>; data centers <b>30+ year</b> assets, chips <b>5–6</b>.'] },
-    ]},
-  { seg:'AWS', theme:'Custom silicon — Graviton, Trainium, Rainier', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
-    why:'The margin lever under the AI build — and possibly a merchant business (rack sales) with NVIDIA-adjacent economics.',
-    updates:[
-      { q:'Q4 2025', items:['$10B+ run-rate; Trainium at triple-digit growth; <b>Project Rainier: 500K chips</b> training the next Claude model; Trainium3 "nearly all supply committed by mid-2026"; Graviton >50% growth, >90% of top-1,000 customers.'] },
-      { q:'Q1 2026', items:['Run-rate doubled to <b>$20B (+~40% QoQ)</b>; <b>$225B+ Trainium revenue commitments</b>; Trainium4 largely reserved ~18 months out; rack sales "<b>very much a possibility</b>"; Meta committed to tens of millions of Graviton cores.'] },
-      { q:'Q2 2026', items:['The chips business passed a <b>$25B annualized run-rate</b>, growing triple-digit — and the tenant list stopped being a concentration argument: <b>Anthropic AND OpenAI</b> are each making <b>multi-year, multi-gigawatt</b> Trainium commitments. <b>Graviton5</b> reached general availability.','The merchant question survives the quarter: Nowak asked about Trainium sales into third-party data centres, and the answer stayed short of a plan.'] },
-    ]},
-];
 // A note's quarter is inside a sub-theme's tracking window when Since ≤ q ≤ Until (open bounds when
 // unset). Setting "Since" therefore shows the notes only from that quarter onward; "Until" caps them.
 function amznInWindow(q, since, until){
@@ -2903,52 +2846,6 @@ var _aCharts={};
 function aDestroy(id){ if(_aCharts[id]){ _aCharts[id].destroy(); _aCharts[id]=null; } }
 function aChartReady(id){ var cv=document.getElementById(id); return (cv&&typeof Chart!=='undefined'&&cv.offsetParent)?cv:null; }
 // FY sums from the quarterly actuals of the dataset (single source of truth).
-function aFy(key, year){
-  var m=amznResults.views.q.metrics[key]; if(!m) return null;
-  var tot=0, got=0;
-  m.periods.forEach(function(p,i){ if(p.slice(2)===String(year).slice(2) && m.act[i]!=null){ tot+=m.act[i]; got++; } });
-  return got===4 ? tot : null;
-}
-var A_SEG_YEARS=['2021','2022','2023','2024','2025'];
-function aSegSeries(key){ var m=amznResults.views.y.metrics[key]; return A_SEG_YEARS.map(function(y){ var i=m.periods.indexOf(y); return i>=0&&m.act[i]!=null?m.act[i]/1000:null; }); }
-function toplineSegBody(){
-  var h='<p class="ov-lede"><b>Three engines, one flywheel.</b> North America and International are the retail surface (first-party stores + the 3P marketplace + ads riding on both); AWS is the profit engine that funds the AI build. The revenue-line view below cuts the same company by WHAT is sold rather than where.</p>';
-  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:8px 0">'+
-    '<div class="ov-sec" style="margin:0"><div class="ov-sec-h">Segment revenue ($B, FY)</div><div style="height:280px"><canvas id="aSegRev"></canvas></div></div>'+
-    '<div class="ov-sec" style="margin:0"><div class="ov-sec-h">Segment operating income ($B, FY)</div><div style="height:280px"><canvas id="aSegOp"></canvas></div></div>'+
-  '</div>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">FY2025 revenue lines — what is actually sold ($B)</div><div style="height:260px"><canvas id="aRevLines"></canvas></div>'+
-    '<div class="ov-fynote">Revenue-line disaggregation summed from the quarterly 8-K actuals in the Results dataset. Advertising ($68.6B, +23%) and 3P seller services ($172.2B) are the high-margin lines riding the retail surface; AWS ($128.7B) carries most of the operating income. Forward views live in Evolution ▸ Results / Estimates.</div></div>';
-  return h;
-}
-function aBuildTopline(){
-  var cv=aChartReady('aSegRev');
-  if(cv){ aDestroy('aSegRev'); _aCharts['aSegRev']=new Chart(cv.getContext('2d'),{ type:'bar',
-    data:{ labels:A_SEG_YEARS, datasets:[
-      { label:'North America', data:aSegSeries('usrev'), backgroundColor:BRAND, maxBarThickness:34 },
-      { label:'International', data:aSegSeries('intrev'), backgroundColor:BRAND2, maxBarThickness:34 },
-      { label:'AWS', data:aSegSeries('aws'), backgroundColor:SQUID, maxBarThickness:34 } ] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } } },
-      scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); }
-  var c2=aChartReady('aSegOp');
-  if(c2){ aDestroy('aSegOp');
-    function opSeries(key){ return A_SEG_YEARS.map(function(y){ var tot=0,got=0; var m=amznResults.views.q.metrics[key]; m.periods.forEach(function(p,i){ if(p.slice(2)===y.slice(2)&&m.act[i]!=null){ tot+=m.act[i]; got++; } }); return got===4?tot/1000:null; }); }
-    _aCharts['aSegOp']=new Chart(c2.getContext('2d'),{ type:'bar',
-      data:{ labels:A_SEG_YEARS, datasets:[
-        { label:'North America', data:opSeries('naopinc'), backgroundColor:BRAND, maxBarThickness:34 },
-        { label:'International', data:opSeries('intopinc'), backgroundColor:BRAND2, maxBarThickness:34 },
-        { label:'AWS', data:opSeries('awsopinc'), backgroundColor:SQUID, maxBarThickness:34 } ] },
-      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } } },
-        scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); }
-  var c3=aChartReady('aRevLines');
-  if(c3){ aDestroy('aRevLines');
-    var lines=[ ['Online stores','online'], ['3P seller services','p3'], ['AWS','aws'], ['Advertising','ads'], ['Subscriptions','subs'], ['Physical stores','phys'], ['Other','other'] ];
-    var vals=lines.map(function(l){ var v=aFy(l[1], 2025); return v==null?null:Math.round(v/100)/10; });
-    _aCharts['aRevLines']=new Chart(c3.getContext('2d'),{ type:'bar',
-      data:{ labels:lines.map(function(l){ return l[0]; }), datasets:[{ data:vals, backgroundColor:[BRAND,BRAND2,SQUID,'#7A5AF8','#2E8B57','#9AA4B0','#C8B49A'], maxBarThickness:26 }] },
-      options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } },
-        scales:{ x:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } }, y:{ grid:{ display:false } } } } }); }
-}
 function aOpMgnSeries(){ return A_OPEX_YEARS.map(function(y){ var r=A_OPEX[y]; var cost=A_OPEX_FN.reduce(function(a,f){ return a+r[f.k]; },0)+r.otherOpex; return Math.round((r.revenue-cost)/r.revenue*1000)/10; }); }
 function bottomlineBody(){
   var h='<p class="ov-lede"><b>The margin machine.</b> Amazon’s consolidated operating margin has climbed from low single digits to a record ~13% on two structural levers — <b>AWS mix</b> (the profit engine growing faster than the whole) and <b>retail efficiency</b> (unit growth outpacing fulfillment-cost growth). This view traces the arc, splits it by segment, and shows where the profit is actually made. The bill underneath it — capex and its depreciation — lives in the <b>Capex &amp; Depreciation</b> tab.</p>';
@@ -3416,9 +3313,16 @@ function deepDiveHtml(c){
     '</div>';
   h+='<div class="dd-pane" data-dd="topline">'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="segments">Segments</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="segov">General</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="segdrv">Segments</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="segoth">Other</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="segcus">Customers</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="segments">'+toplineSegBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segov">'+(segmentsOverviewHtml('AMZN')||ceResultsPending('Overview'))+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segdrv" hidden>'+(segmentsHtml('AMZN')||ceResultsPending('Segments'))+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segoth" hidden>'+(segmentsOtherHtml('AMZN')||ceResultsPending('Other'))+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segcus" hidden>'+(segmentsCustomersHtml('AMZN')||ceResultsPending('Customers'))+'</div>'+
+
     '</div>';
   h+='<div class="dd-pane" data-dd="bottomline" hidden>'+
       '<div class="ovt-subtabs">'+
@@ -3503,7 +3407,14 @@ function wireModal(root){
 }
 // Lazy chart builds per Deep Dive pane / sub-tab (Chart.js needs a non-null offsetParent).
 function aBuildSub(root, dd, key){
-  if(dd==='topline') requestAnimationFrame(aBuildTopline);
+  if(dd==='topline'){
+    // Mix was retired Aug 2026 (SAB): General covers the split and the growth, Other covers the
+    // product-line and country cuts, so it had nothing of its own left to show.
+    if(key==='segdrv') requestAnimationFrame(function(){ initSegments(root, 'AMZN'); });
+    else if(key==='segoth') requestAnimationFrame(function(){ initSegmentsOther(root, 'AMZN'); });
+    else if(key==='segcus') requestAnimationFrame(function(){ initSegmentsCustomers(root, 'AMZN'); });
+    else requestAnimationFrame(function(){ initSegmentsOverview(root, 'AMZN'); });
+  }
   if(dd==='bottomline'){
     if(key==='capex') requestAnimationFrame(function(){ aBuildCapex(root); });
     else if(key==='expenses') requestAnimationFrame(aBuildExpenses);
@@ -3853,7 +3764,15 @@ function deepDiveInit(c){
   var root=document.getElementById('co-detailview'); if(!root) return;
   wireDD(root);
   wireModal(root);   // re-run so the delegated [data-detail] handler covers the Deep Dive DOM
-  requestAnimationFrame(aBuildTopline);   // Top Line is the initially-visible pane
+  // Build whatever is ACTUALLY visible, rather than a hardcoded pane. This used to call one
+  // pane's builder directly, which left the visible pane empty the moment a sub-tab was added in
+  // front of it. Reading the active tabs means the next one added costs nothing.
+  requestAnimationFrame(function(){
+    var pane = root.querySelector('.dd-pane:not([hidden])');
+    var dd = pane ? pane.getAttribute('data-dd') : 'topline';
+    var sub = pane ? pane.querySelector('.ovt-subtab.active') : null;
+    aBuildSub(root, dd, sub ? sub.getAttribute('data-ovst') : null);
+  });
 }
 
 export var amznOverview = { html: html, init: init, headerSources: ceHeaderSources, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

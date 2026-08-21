@@ -1,0 +1,82 @@
+{
+  "company": "AMAZON COM INC",
+  "note": "Net sales are attributed to countries primarily based on country-focused online and physical stores or, for AWS purposes, the selling entity.",
+  "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "series": {
+    "United States": {
+      "2023": 395637,
+      "2024": 438015,
+      "2025": 489657,
+      "2022": 356113,
+      "2021": 314006
+    },
+    "Germany": {
+      "2023": 37588,
+      "2024": 40856,
+      "2025": 45900,
+      "2022": 33598,
+      "2021": 37326
+    },
+    "United Kingdom": {
+      "2023": 33591,
+      "2024": 37855,
+      "2025": 43212,
+      "2022": 30074,
+      "2021": 31914
+    },
+    "Japan": {
+      "2023": 26002,
+      "2024": 27401,
+      "2025": 30688,
+      "2022": 24396,
+      "2021": 23071
+    },
+    "Rest of world": {
+      "2023": 81967,
+      "2024": 93832,
+      "2025": 107467,
+      "2022": 69802,
+      "2021": 63505
+    },
+    "Consolidated": {
+      "2023": 574785,
+      "2024": 637959,
+      "2025": 716924,
+      "2022": 513983,
+      "2021": 469822
+    }
+  },
+  "provenance": {
+    "2023": {
+      "accession": "0001018724-26-000004",
+      "filed": "2026-02-06",
+      "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm"
+    },
+    "2024": {
+      "accession": "0001018724-26-000004",
+      "filed": "2026-02-06",
+      "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm"
+    },
+    "2025": {
+      "accession": "0001018724-26-000004",
+      "filed": "2026-02-06",
+      "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm"
+    },
+    "2022": {
+      "accession": "0001018724-25-000004",
+      "filed": "2025-02-07",
+      "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872425000004/amzn-20241231.htm"
+    },
+    "2021": {
+      "accession": "0001018724-24-000008",
+      "filed": "2024-02-02",
+      "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872424000008/amzn-20231231.htm"
+    }
+  }
+}

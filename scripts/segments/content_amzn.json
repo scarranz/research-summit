@@ -1,0 +1,749 @@
+{
+  "_doc": "Hand-authored content for the AMZN Segments tab: the narrative half that no generator can produce. Merged into js/segments-data/amzn.js by emit_segments.py alongside the generated series. Section order follows the tab: summary -> products -> KPIs -> bridge -> adjacencies.",
+  "_sourcing_note": "The `tenK` passages are now VERBATIM from the filing, pulled by scripts/segments/extract_10k.py straight off EDGAR — AMAZON COM INC, 10-K (period 2025-12-31, accession 0001018724-26-000004), https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm. They are quotes, not summaries: re-run the extractor after each 10-K rather than editing them by hand. `summary` and `brief` are ours and say so on screen. What the filing does NOT contain is recorded in `absent` and is shown to the reader, because \"Amazon discloses no customer concentration at all\" is a finding, not a gap in our research.",
+  "segments": {
+    "aws": {
+      "summary": "Amazon Web Services sells compute, storage, database and a long catalogue of managed services to startups, enterprises, government and academia, worldwide. It is roughly a sixth of revenue and the majority of operating income — and, since the AI build-out, the reason consolidated free cash flow turned negative.",
+      "tenK": {
+        "text": "The AWS segment consists of amounts earned from global sales of compute, storage, database, and other services for start-ups, enterprises, government agencies, and academic institutions.",
+        "verbatim": true,
+        "cite": "AMAZON COM INC, 10-K (period 2025-12-31, accession 0001018724-26-000004)",
+        "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm",
+        "where": "Note 10 — Segment Information",
+        "needs": null
+      },
+      "products": [
+        {
+          "name": "Compute",
+          "what": "EC2 instances and the managed layers above them; increasingly accelerated instances for training and inference.",
+          "customers": {
+            "archetype": {
+              "text": "Developers and Enterprises We serve developers and enterprises of all sizes, including start-ups, government agencies, and academic institutions, through AWS, which offers a broad set of on-demand technology services, including compute, storage, database, analytics, artificial intelligence and machine learning, and other services.",
+              "source": "FILING",
+              "where": "Item 1 — Business"
+            },
+            "named": [
+              {
+                "name": "Meta",
+                "q": "Q1 2026",
+                "what": "committed to tens of millions of Graviton cores"
+              }
+            ],
+            "note": "AWS revenue is not disaggregated by service in any disclosure, so there is no way to say how large Compute is inside the segment.",
+            "concentration": "The filing carries no customer-concentration disclosure of any kind — no \"no single customer accounted for 10%\" sentence, and no named customer anywhere. Amazon discloses SUPPLIER concentration (\"During 2025, no vendor accounted for 10% or more of our purchases\") and not the customer side. Named customers therefore have to come from the earnings calls, and any sizing of a customer is somebody's estimate, not a disclosure."
+          },
+          "management": [
+            {
+              "q": "Q1 2026",
+              "text": "Graviton in 98% of the top-1,000 EC2 customers.",
+              "source": "CALL",
+              "where": "docs/calls/AMZN.md · docs/calls/AMZN-latest.md"
+            },
+            {
+              "q": "Q4 2025",
+              "text": "Graviton growing over 50%, in more than 90% of the top-1,000 customers.",
+              "source": "CALL",
+              "where": "docs/calls/AMZN.md · docs/calls/AMZN-latest.md"
+            },
+            {
+              "q": "Q2 2026",
+              "text": "Graviton5 generally available.",
+              "source": "CALL",
+              "where": "docs/calls/AMZN.md · docs/calls/AMZN-latest.md"
+            }
+          ],
+          "tenK": null,
+          "size": null
+        },
+        {
+          "name": "Storage & data",
+          "what": "S3, EBS and the database and analytics services that bill off stored volume and queries.",
+          "customers": {
+            "archetype": {
+              "text": "Developers and Enterprises We serve developers and enterprises of all sizes, including start-ups, government agencies, and academic institutions, through AWS, which offers a broad set of on-demand technology services, including compute, storage, database, analytics, artificial intelligence and machine learning, and other services.",
+              "source": "FILING",
+              "where": "Item 1 — Business"
+            },
+            "named": [],
+            "note": "No disclosed split and no named customers for this line on the calls.",
+            "concentration": "The filing carries no customer-concentration disclosure of any kind — no \"no single customer accounted for 10%\" sentence, and no named customer anywhere. Amazon discloses SUPPLIER concentration (\"During 2025, no vendor accounted for 10% or more of our purchases\") and not the customer side. Named customers therefore have to come from the earnings calls, and any sizing of a customer is somebody's estimate, not a disclosure."
+          },
+          "management": [],
+          "tenK": null,
+          "size": null
+        },
+        {
+          "name": "AI platform",
+          "what": "Bedrock, SageMaker and the Trainium / Inferentia silicon — the newest line and the one driving the capex step-up.",
+          "customers": {
+            "archetype": {
+              "text": "Developers and Enterprises We serve developers and enterprises of all sizes, including start-ups, government agencies, and academic institutions, through AWS, which offers a broad set of on-demand technology services, including compute, storage, database, analytics, artificial intelligence and machine learning, and other services.",
+              "source": "FILING",
+              "where": "Item 1 — Business"
+            },
+            "named": [
+              {
+                "name": "Anthropic",
+                "q": "Q4 2025 → Q2 2026",
+                "what": "Project Rainier, 500K chips training the next Claude model; a deal \"for over $100 billion\" (Q1 2026); a multi-year, multi-gigawatt Trainium commitment (Q2 2026)"
+              },
+              {
+                "name": "OpenAI",
+                "q": "Q2 2026",
+                "what": "multi-year, multi-gigawatt Trainium commitment"
+              },
+              {
+                "name": "Bedrock customer base",
+                "q": "Q1 2026",
+                "what": "125,000+ customers, including 80% of the Fortune 100"
+              }
+            ],
+            "note": "These are the only AWS customers Amazon has named. They come from the calls, not the filing.",
+            "concentration": "The filing carries no customer-concentration disclosure of any kind — no \"no single customer accounted for 10%\" sentence, and no named customer anywhere. Amazon discloses SUPPLIER concentration (\"During 2025, no vendor accounted for 10% or more of our purchases\") and not the customer side. Named customers therefore have to come from the earnings calls, and any sizing of a customer is somebody's estimate, not a disclosure."
+          },
+          "management": [
+            {
+              "q": "Q2 2026",
+              "text": "AWS AI business above a $25B annualized run-rate and the chips business above $25B, each growing triple-digit.",
+              "source": "CALL",
+              "where": "docs/calls/AMZN.md · docs/calls/AMZN-latest.md"
+            },
+            {
+              "q": "Q1 2026",
+              "text": "AI run-rate $15B+ in three years; Bedrock spend +170% sequentially; $225B+ of Trainium revenue commitments; custom silicon at a $20B run-rate, \"$50B run-rate if sold externally\".",
+              "source": "CALL",
+              "where": "docs/calls/AMZN.md · docs/calls/AMZN-latest.md"
+            },
+            {
+              "q": "Q2 2026",
+              "text": "2027 capacity \"largely reserved\", some 2028 capacity \"already spoken for\".",
+              "source": "CALL",
+              "where": "docs/calls/AMZN.md · docs/calls/AMZN-latest.md"
+            }
+          ],
+          "tenK": null,
+          "size": null
+        },
+        {
+          "name": "Networking & the long tail",
+          "what": "Data transfer, edge, security and the rest of the managed-service catalogue.",
+          "customers": {
+            "archetype": {
+              "text": "Developers and Enterprises We serve developers and enterprises of all sizes, including start-ups, government agencies, and academic institutions, through AWS, which offers a broad set of on-demand technology services, including compute, storage, database, analytics, artificial intelligence and machine learning, and other services.",
+              "source": "FILING",
+              "where": "Item 1 — Business"
+            },
+            "named": [],
+            "note": "No disclosed split.",
+            "concentration": "The filing carries no customer-concentration disclosure of any kind — no \"no single customer accounted for 10%\" sentence, and no named customer anywhere. Amazon discloses SUPPLIER concentration (\"During 2025, no vendor accounted for 10% or more of our purchases\") and not the customer side. Named customers therefore have to come from the earnings calls, and any sizing of a customer is somebody's estimate, not a disclosure."
+          },
+          "management": [],
+          "tenK": null,
+          "size": null
+        }
+      ],
+      "kpis": [
+        {
+          "name": "Segment net sales",
+          "definition": "AWS revenue as reported in the Segment Information note. The only AWS volume figure Amazon publishes.",
+          "unit": "usdM",
+          "periodicity": "Quarterly and annual",
+          "source": "10-Q / 10-K segment note",
+          "series": "results:aws",
+          "filing": "Note 10 — Segment Information gives net sales and operating income for each reportable segment. There are no internal revenue transactions between segments."
+        },
+        {
+          "name": "Segment operating income",
+          "definition": "AWS revenue less the segment's own operating expenses, including the technology infrastructure it consumes. Excludes stock-based compensation and other corporate costs.",
+          "unit": "usdM",
+          "periodicity": "Quarterly and annual",
+          "source": "10-Q / 10-K segment note",
+          "series": "results:awsopinc",
+          "filing": "Note 10: operating expenses are reflected in the segment in which the costs are incurred; infrastructure costs in \"Technology and infrastructure\" are allocated to AWS based on usage."
+        },
+        {
+          "name": "Remaining performance obligations",
+          "definition": "Contracted revenue not yet recognised — committed customer spend that has not been delivered. Reported for the company, and for Amazon it is essentially all AWS. The closest thing AWS has to a backlog or a units number.",
+          "unit": "usdM",
+          "periodicity": "Quarterly",
+          "source": "Bloomberg, off the filings",
+          "series": "shared:rpo"
+        },
+        {
+          "name": "Annualised revenue run-rate",
+          "definition": "Management's own framing on earnings calls — the latest quarter's AWS revenue multiplied by four. Not a reported line and not audited; it appears in the call, not the filing.",
+          "unit": "usdM",
+          "periodicity": "Mentioned on calls, not reported",
+          "source": "Earnings call",
+          "series": null,
+          "needs": "Derived here as quarterly revenue x 4 rather than quoted; if we want management's exact figure it has to come from the call transcript with its date."
+        }
+      ],
+      "kpiNote": "AWS publishes no operating KPI at all — no customer count, no instance hours, no utilisation, no price. Everything above is either a financial line from the segment note or a contract balance. That absence is why the revenue bridge below is built on capacity and backlog rather than on price and quantity.",
+      "adjacencies": [
+        {
+          "name": "Trainium & Inferentia",
+          "why": "Amazon's own AI silicon sits inside AWS but changes the economics of the whole segment: it substitutes internal chips for purchased GPUs, which moves cost out of COGS and into the capex line the bridge above tracks.",
+          "series": null,
+          "needs": "No disclosed revenue or volume. Management gives directional comments on calls."
+        },
+        {
+          "name": "Project Kuiper",
+          "why": "The satellite network is funded outside the AWS segment but is expected to sell through it. It consumes capex today with no segment revenue against it.",
+          "series": null,
+          "needs": "Not separately reported. Capex contribution is inside the corporate/other line."
+        }
+      ],
+      "brief": "Rents computing by the hour. Customers put their applications, data and models on Amazon's servers instead of buying their own, and pay for what they use. Amazon has to build the data centre before it can sell a single hour of it — which is why this segment consumes most of the company's capital while producing the least revenue of the three.",
+      "interactions": [
+        {
+          "name": "Capacity × yield",
+          "relation": "revenue = capacity deployed (PP&E) × revenue per $ of capacity",
+          "lines": [
+            "Compute",
+            "Storage & data",
+            "AI platform"
+          ],
+          "bridge": "capacity",
+          "why": "AWS sells access to hardware it must own first. Revenue is therefore bounded by capacity, and the second term is how hard that capacity is being worked. It is the closest thing the segment has to price × quantity: capacity is the quantity, yield is the price.",
+          "data": "Both terms are reported and both are projected by the model — annual, 2022 through 2028."
+        },
+        {
+          "name": "Backlog × conversion",
+          "relation": "revenue = contracted backlog (RPO) × the share converted in the quarter",
+          "lines": [
+            "AI platform",
+            "Compute"
+          ],
+          "bridge": "backlog",
+          "why": "Backlog is demand already signed and not yet delivered — the only forward-looking volume figure AWS has. Conversion falling while backlog triples says the contracts are getting longer, not that demand is softening.",
+          "data": "Backlog is reported quarterly; conversion is derived. 14 quarters available."
+        },
+        {
+          "name": "Chips × commitments",
+          "relation": "silicon revenue = customers committed × contracted volume per customer",
+          "lines": [
+            "AI platform"
+          ],
+          "bridge": null,
+          "why": "Management sizes the chips business by run-rate and by committed dollars ($225B+ of Trainium commitments, Anthropic and OpenAI both multi-gigawatt). It is the clearest P × Q in the segment and neither term is reported.",
+          "data": "NOT CHARTED — no reported series for either term. Management gives point figures on calls, which are quoted in What management has said."
+        }
+      ]
+    },
+    "na": {
+      "summary": "North America is the retail surface at home — Amazon's own inventory, the third-party marketplace running on the same fulfilment network, subscriptions and physical stores. It is the largest segment by revenue and a fraction of AWS on operating income.",
+      "tenK": {
+        "text": "The North America segment primarily consists of amounts earned from retail sales of consumer products (including from sellers) and advertising and subscription services through North America-focused online and physical stores. This segment includes export sales from these online stores.",
+        "verbatim": true,
+        "cite": "AMAZON COM INC, 10-K (period 2025-12-31, accession 0001018724-26-000004)",
+        "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm",
+        "where": "Note 10 — Segment Information",
+        "needs": null
+      },
+      "products": [
+        {
+          "name": "Online stores (1P)",
+          "what": "Amazon's own inventory, sold and shipped by Amazon. The original business and still the largest single revenue line.",
+          "customers": {
+            "archetype": {
+              "text": "Consumers We serve consumers through our online and physical stores and focus on selection, price, and convenience. We design our stores to enable hundreds of millions of unique products to be sold by us and by third parties across dozens of product categories. Customers access our offerings through our websites, mobile apps, Alexa, devices, streaming, and physically visiting our stores. We also manufacture and sell electronic devices, including Kindle, Fire tablet, Fire TV, Echo, Ring, Blink, and eero, and we develop and produce media content. We seek to offer our customers low prices, fast and free delivery, easy-to-use functionality, and timely customer service. In addition, we offer subscription services such as Amazon Prime, a membership program that includes fast, free shipping on tens of millions of items, access to award-winning movies and series, live sports, and other benefits. We fulfill customer orders in a number of ways, including through: North America and International fulfillment networks that we operate; co-sourced and outsourced arrangements in certain countries; digital delivery; and through our physical stores. We operate customer service centers globally, which are supplemented by co-sourced arrangements. See Item 2 of Part I, \"Properties.\"",
+              "source": "FILING",
+              "where": "Item 1 — Business"
+            },
+            "named": [],
+            "note": "A consumer business: hundreds of millions of buyers, none of them individually material. The named-customer question does not apply.",
+            "concentration": "The filing carries no customer-concentration disclosure of any kind — no \"no single customer accounted for 10%\" sentence, and no named customer anywhere. Amazon discloses SUPPLIER concentration (\"During 2025, no vendor accounted for 10% or more of our purchases\") and not the customer side. Named customers therefore have to come from the earnings calls, and any sizing of a customer is somebody's estimate, not a disclosure."
+          },
+          "management": [
+            {
+              "q": "Q2 2026",
+              "text": "Worldwide paid units +17%.",
+              "source": "CALL",
+              "where": "docs/calls/AMZN.md · docs/calls/AMZN-latest.md"
+            },
+            {
+              "q": "Q1 2026",
+              "text": "Units +15% against fulfilment expense +9% (FX-neutral) — the efficiency gap that pays for the build.",
+              "source": "CALL",
+              "where": "docs/calls/AMZN.md · docs/calls/AMZN-latest.md"
+            },
+            {
+              "q": "Q4 2025",
+              "text": "Lowest-priced US retailer for the ninth straight year, 14% below other majors; 8B+ items same or next day, +30%.",
+              "source": "CALL",
+              "where": "docs/calls/AMZN.md · docs/calls/AMZN-latest.md"
+            }
+          ],
+          "tenK": {
+            "text": "Includes product sales and digital media content where we record revenue gross. We leverage our retail infrastructure to offer a wide selection of consumable and durable goods that includes media products available in both a physical and digital format, such as books, videos, games, music, and software. These product sales include digital products sold on a transactional basis. Digital media content subscriptions that provide unlimited viewing or usage rights are included in \"Subscription services.\"",
+            "where": "Note 10 — net sales by groups of similar products and services",
+            "verbatim": true
+          },
+          "size": null
+        },
+        {
+          "name": "Third-party seller services",
+          "what": "Commissions, FBA fulfilment and shipping fees from sellers using the same network. Higher margin than 1P because Amazon carries no inventory risk.",
+          "customers": {
+            "archetype": {
+              "text": "Sellers We offer programs that enable sellers to grow their businesses, sell their products in our stores, and fulfill orders using our services. We are not the seller of record in these transactions. We earn fixed fees, a percentage of sales, per-unit activity fees, interest, or some combination thereof, for our seller programs.",
+              "source": "FILING",
+              "where": "Item 1 — Business"
+            },
+            "named": [],
+            "note": "The customers here are the SELLERS, not the shoppers — Amazon earns a fee from them and is not the seller of record.",
+            "concentration": "The filing carries no customer-concentration disclosure of any kind — no \"no single customer accounted for 10%\" sentence, and no named customer anywhere. Amazon discloses SUPPLIER concentration (\"During 2025, no vendor accounted for 10% or more of our purchases\") and not the customer side. Named customers therefore have to come from the earnings calls, and any sizing of a customer is somebody's estimate, not a disclosure."
+          },
+          "management": [],
+          "tenK": {
+            "text": "Includes commissions and any related fulfillment and shipping fees, and other third-party seller services.",
+            "where": "Note 10 — net sales by groups of similar products and services",
+            "verbatim": true
+          },
+          "size": null
+        },
+        {
+          "name": "Advertising",
+          "what": "Sponsored placement against shopping intent. Reported as a company-wide revenue line and economically sits on top of the retail segments.",
+          "customers": {
+            "archetype": {
+              "text": "Advertisers We provide advertising services to sellers, vendors, publishers, authors, and others, through programs such as sponsored ads, display, and video advertising.",
+              "source": "FILING",
+              "where": "Item 1 — Business"
+            },
+            "named": [
+              {
+                "name": "Netflix, Comcast, Samsung",
+                "q": "Q1 2026",
+                "what": "signed as Prime Video ad partnerships"
+              }
+            ],
+            "note": "Advertisers are the customers; the shoppers are the inventory.",
+            "concentration": "The filing carries no customer-concentration disclosure of any kind — no \"no single customer accounted for 10%\" sentence, and no named customer anywhere. Amazon discloses SUPPLIER concentration (\"During 2025, no vendor accounted for 10% or more of our purchases\") and not the customer side. Named customers therefore have to come from the earnings calls, and any sizing of a customer is somebody's estimate, not a disclosure."
+          },
+          "management": [
+            {
+              "q": "Q2 2026",
+              "text": "Advertising $19.8B, +26% — an acceleration from +22%, with sponsored products named as the driver.",
+              "source": "CALL",
+              "where": "docs/calls/AMZN.md · docs/calls/AMZN-latest.md"
+            },
+            {
+              "q": "Q4 2025",
+              "text": "$12B of incremental ad revenue in 2025; Prime Video ads reaching 315M viewers.",
+              "source": "CALL",
+              "where": "docs/calls/AMZN.md · docs/calls/AMZN-latest.md"
+            }
+          ],
+          "tenK": {
+            "text": "Includes sales of advertising services to sellers, vendors, publishers, authors, and others, through programs such as sponsored ads, display, and video advertising.",
+            "where": "Note 10 — net sales by groups of similar products and services",
+            "verbatim": true
+          },
+          "size": null
+        },
+        {
+          "name": "Subscriptions & physical stores",
+          "what": "Prime and content subscriptions; Whole Foods, Fresh and Go.",
+          "customers": {
+            "archetype": {
+              "text": "Consumers We serve consumers through our online and physical stores and focus on selection, price, and convenience. We design our stores to enable hundreds of millions of unique products to be sold by us and by third parties across dozens of product categories. Customers access our offerings through our websites, mobile apps, Alexa, devices, streaming, and physically visiting our stores. We also manufacture and sell electronic devices, including Kindle, Fire tablet, Fire TV, Echo, Ring, Blink, and eero, and we develop and produce media content. We seek to offer our customers low prices, fast and free delivery, easy-to-use functionality, and timely customer service. In addition, we offer subscription services such as Amazon Prime, a membership program that includes fast, free shipping on tens of millions of items, access to award-winning movies and series, live sports, and other benefits. We fulfill customer orders in a number of ways, including through: North America and International fulfillment networks that we operate; co-sourced and outsourced arrangements in certain countries; digital delivery; and through our physical stores. We operate customer service centers globally, which are supplemented by co-sourced arrangements. See Item 2 of Part I, \"Properties.\"",
+              "source": "FILING",
+              "where": "Item 1 — Business"
+            },
+            "named": [],
+            "note": "Prime member count has not been disclosed since 2021, when it was given as over 200 million.",
+            "concentration": "The filing carries no customer-concentration disclosure of any kind — no \"no single customer accounted for 10%\" sentence, and no named customer anywhere. Amazon discloses SUPPLIER concentration (\"During 2025, no vendor accounted for 10% or more of our purchases\") and not the customer side. Named customers therefore have to come from the earnings calls, and any sizing of a customer is somebody's estimate, not a disclosure."
+          },
+          "management": [
+            {
+              "q": "Q1 2026",
+              "text": "Grocery over $150B of gross sales — the second-largest US grocer.",
+              "source": "CALL",
+              "where": "docs/calls/AMZN.md · docs/calls/AMZN-latest.md"
+            },
+            {
+              "q": "Q4 2025",
+              "text": "Alexa+ free for Prime members.",
+              "source": "CALL",
+              "where": "docs/calls/AMZN.md · docs/calls/AMZN-latest.md"
+            }
+          ],
+          "tenK": {
+            "text": "Includes annual and monthly fees associated with Amazon Prime memberships, as well as digital video, audiobook, digital music, e-book, and other non-AWS subscription services.",
+            "where": "Note 10 — net sales by groups of similar products and services",
+            "verbatim": true
+          },
+          "size": null
+        }
+      ],
+      "kpis": [
+        {
+          "name": "Segment net sales",
+          "definition": "North America revenue as reported in the Segment Information note.",
+          "unit": "usdM",
+          "periodicity": "Quarterly and annual",
+          "source": "10-Q / 10-K segment note",
+          "series": "results:usrev",
+          "filing": "Note 10 — Segment Information gives net sales and operating income for each reportable segment. There are no internal revenue transactions between segments."
+        },
+        {
+          "name": "Segment operating income",
+          "definition": "North America revenue less the segment's operating expenses, including fulfilment and logistics. Excludes stock-based compensation and other corporate costs, and carries one-off charges in the quarter they land.",
+          "unit": "usdM",
+          "periodicity": "Quarterly and annual",
+          "source": "10-Q / 10-K segment note",
+          "series": "results:naopinc",
+          "filing": "Note 10: operating expenses are reflected in the segment in which the costs are incurred; infrastructure costs in \"Technology and infrastructure\" are allocated to AWS based on usage."
+        },
+        {
+          "name": "Shipping cost",
+          "definition": "The outbound shipping Amazon absorbs. A memo item that overlaps cost of sales and fulfilment rather than a clean expense line, and Amazon's FY2025 disclosure of it changed, which is why the series breaks.",
+          "unit": "usdM",
+          "periodicity": "Quarterly",
+          "source": "Bloomberg, off the filings",
+          "series": "shared:shipping"
+        },
+        {
+          "name": "Days payable outstanding",
+          "definition": "How long Amazon takes to pay suppliers. Retail's working-capital lever: the longer it runs, the more of the business suppliers finance.",
+          "unit": "days",
+          "periodicity": "Quarterly",
+          "source": "Bloomberg, computed off the filings",
+          "series": "shared:dpo"
+        },
+        {
+          "name": "Worldwide paid units growth",
+          "definition": "How much more Amazon sold, in units rather than dollars. The one genuine VOLUME statistic Amazon publishes — and it is given as a growth rate only, never as a level, and company-wide rather than by segment.",
+          "filing": "Disclosed in the quarterly earnings release supplemental, not in the 10-K.",
+          "unit": "pct",
+          "periodicity": "Quarterly, growth rate only",
+          "source": "8-K Ex. 99.1 supplemental",
+          "series": null,
+          "needs": "Values exist per quarter (Q1 2026 +15%, Q2 2026 +17%) but are not loaded as a series — they would have to be keyed in from each release, the same way guidance is."
+        }
+      ],
+      "kpiNote": "Amazon publishes no unit count, no average selling price and no Prime member count (the last figure given was over 200 million, in 2021). The third-party unit mix in the 10-K MD&A is the one genuine volume statistic and is not yet loaded here. That is why the bridge below is capacity-based: the terms for a price x quantity build do not exist.",
+      "adjacencies": [
+        {
+          "name": "Advertising",
+          "why": "Amazon reports advertising as a company-wide revenue line, but it is earned on the retail surface — it is demand generated against North America and International traffic and monetised at a margin far above 1P retail. Growing faster than either segment it rides on, so it quietly lifts the reported segment margin without appearing as its own segment.",
+          "series": "results:ads",
+          "needs": null
+        },
+        {
+          "name": "Subscriptions",
+          "why": "Prime is booked as its own revenue line but exists to drive the retail segments' frequency. The fee is a small share of revenue; the behaviour it buys is most of the flywheel.",
+          "series": "results:subs",
+          "needs": null
+        },
+        {
+          "name": "Physical stores",
+          "why": "Whole Foods, Fresh and Go — small, slow-growing, and the part of the segment with an entirely different cost structure.",
+          "series": "results:phys",
+          "needs": null
+        }
+      ],
+      "brief": "Sells things to people in the US and Canada. Half of it is Amazon's own inventory, bought and resold; the other half is a marketplace where independent sellers list and Amazon takes a cut and ships the box. Same warehouses, same trucks, two different ways of booking the money. Prime and the ads sold against shopping searches ride on top of both.",
+      "interactions": [
+        {
+          "name": "Units × price",
+          "relation": "first-party revenue = paid units × average selling price",
+          "lines": [
+            "Online stores (1P)"
+          ],
+          "bridge": null,
+          "why": "The textbook retail identity, and the one Amazon almost gives you: unit GROWTH is disclosed each quarter, but never the level and never the price. With one of three terms you can say the direction and not the size.",
+          "data": "NOT CHARTED — only the growth rate of units exists, company-wide. Charting one of three terms would imply a bridge that cannot be closed."
+        },
+        {
+          "name": "Volume × take rate",
+          "relation": "third-party revenue = gross merchandise volume × take rate",
+          "lines": [
+            "Third-party seller services"
+          ],
+          "bridge": null,
+          "why": "The marketplace identity. Amazon books a fee rather than the sale, so revenue moves with both the volume flowing through and the percentage kept. A unit shifting from 1P to 3P cuts reported revenue while raising margin — mix alone moves the growth rate.",
+          "data": "NOT CHARTED — Amazon discloses neither GMV nor the take rate. Both are third-party estimates."
+        },
+        {
+          "name": "Capacity × network productivity",
+          "relation": "revenue = fulfilment capacity (PP&E) × revenue per $ of capacity",
+          "lines": [
+            "Online stores (1P)",
+            "Third-party seller services"
+          ],
+          "bridge": "capacity",
+          "why": "What the disclosure does support for retail. It reads as network productivity, and read against AWS it is the whole difference between the two businesses: retail turns several dollars of sales per dollar of owned capacity, AWS turns well under one.",
+          "data": "Both terms reported and projected — annual, 2022 through 2028."
+        },
+        {
+          "name": "Impressions × price",
+          "relation": "advertising revenue = ad impressions × price per impression",
+          "lines": [
+            "Advertising"
+          ],
+          "bridge": null,
+          "why": "The advertising identity. Amazon reports the revenue line and nothing underneath it — no impressions, no CPM, and no split by segment even though the revenue is earned on retail traffic.",
+          "data": "NOT CHARTED — neither term is disclosed."
+        },
+        {
+          "name": "Members × fee",
+          "relation": "subscription revenue = members × fee per member",
+          "lines": [
+            "Subscriptions & physical stores"
+          ],
+          "bridge": null,
+          "why": "Prime is a subscription, so the identity is exact. The fee is public; the member count is not — last given as over 200 million, in 2021.",
+          "data": "NOT CHARTED — the member count has not been disclosed for five years."
+        }
+      ]
+    },
+    "intl": {
+      "summary": "The same retail model outside North America, several years behind on margin and with a different mix of owned versus marketplace. It turned profitable in 2024 after years of losses.",
+      "tenK": {
+        "text": "The International segment primarily consists of amounts earned from retail sales of consumer products (including from sellers) and advertising and subscription services through internationally-focused online stores. This segment includes export sales from these internationally-focused online stores (including export sales from these online stores to customers in the U.S., Mexico, and Canada), but excludes export sales from our North America-focused online stores.",
+        "verbatim": true,
+        "cite": "AMAZON COM INC, 10-K (period 2025-12-31, accession 0001018724-26-000004)",
+        "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm",
+        "where": "Note 10 — Segment Information",
+        "needs": null
+      },
+      "products": [
+        {
+          "name": "Online stores (1P)",
+          "what": "Amazon's own inventory in each country it operates.",
+          "customers": {
+            "archetype": {
+              "text": "Consumers We serve consumers through our online and physical stores and focus on selection, price, and convenience. We design our stores to enable hundreds of millions of unique products to be sold by us and by third parties across dozens of product categories. Customers access our offerings through our websites, mobile apps, Alexa, devices, streaming, and physically visiting our stores. We also manufacture and sell electronic devices, including Kindle, Fire tablet, Fire TV, Echo, Ring, Blink, and eero, and we develop and produce media content. We seek to offer our customers low prices, fast and free delivery, easy-to-use functionality, and timely customer service. In addition, we offer subscription services such as Amazon Prime, a membership program that includes fast, free shipping on tens of millions of items, access to award-winning movies and series, live sports, and other benefits. We fulfill customer orders in a number of ways, including through: North America and International fulfillment networks that we operate; co-sourced and outsourced arrangements in certain countries; digital delivery; and through our physical stores. We operate customer service centers globally, which are supplemented by co-sourced arrangements. See Item 2 of Part I, \"Properties.\"",
+              "source": "FILING",
+              "where": "Item 1 — Business"
+            },
+            "named": [],
+            "note": "The filing gives a country split rather than a customer split: US $489.7B, Germany $45.9B, UK $43.2B, Japan $30.7B, rest of world $107.5B (FY2025, company-wide).",
+            "concentration": "The filing carries no customer-concentration disclosure of any kind — no \"no single customer accounted for 10%\" sentence, and no named customer anywhere. Amazon discloses SUPPLIER concentration (\"During 2025, no vendor accounted for 10% or more of our purchases\") and not the customer side. Named customers therefore have to come from the earnings calls, and any sizing of a customer is somebody's estimate, not a disclosure."
+          },
+          "management": [],
+          "tenK": null,
+          "size": null
+        },
+        {
+          "name": "Third-party seller services",
+          "what": "The marketplace, at a lower share of the mix than North America.",
+          "customers": {
+            "archetype": {
+              "text": "Sellers We offer programs that enable sellers to grow their businesses, sell their products in our stores, and fulfill orders using our services. We are not the seller of record in these transactions. We earn fixed fees, a percentage of sales, per-unit activity fees, interest, or some combination thereof, for our seller programs.",
+              "source": "FILING",
+              "where": "Item 1 — Business"
+            },
+            "named": [],
+            "note": null,
+            "concentration": "The filing carries no customer-concentration disclosure of any kind — no \"no single customer accounted for 10%\" sentence, and no named customer anywhere. Amazon discloses SUPPLIER concentration (\"During 2025, no vendor accounted for 10% or more of our purchases\") and not the customer side. Named customers therefore have to come from the earnings calls, and any sizing of a customer is somebody's estimate, not a disclosure."
+          },
+          "management": [],
+          "tenK": null,
+          "size": null
+        },
+        {
+          "name": "Subscriptions & other",
+          "what": "Prime and local services.",
+          "customers": {
+            "archetype": {
+              "text": "Consumers We serve consumers through our online and physical stores and focus on selection, price, and convenience. We design our stores to enable hundreds of millions of unique products to be sold by us and by third parties across dozens of product categories. Customers access our offerings through our websites, mobile apps, Alexa, devices, streaming, and physically visiting our stores. We also manufacture and sell electronic devices, including Kindle, Fire tablet, Fire TV, Echo, Ring, Blink, and eero, and we develop and produce media content. We seek to offer our customers low prices, fast and free delivery, easy-to-use functionality, and timely customer service. In addition, we offer subscription services such as Amazon Prime, a membership program that includes fast, free shipping on tens of millions of items, access to award-winning movies and series, live sports, and other benefits. We fulfill customer orders in a number of ways, including through: North America and International fulfillment networks that we operate; co-sourced and outsourced arrangements in certain countries; digital delivery; and through our physical stores. We operate customer service centers globally, which are supplemented by co-sourced arrangements. See Item 2 of Part I, \"Properties.\"",
+              "source": "FILING",
+              "where": "Item 1 — Business"
+            },
+            "named": [],
+            "note": null,
+            "concentration": "The filing carries no customer-concentration disclosure of any kind — no \"no single customer accounted for 10%\" sentence, and no named customer anywhere. Amazon discloses SUPPLIER concentration (\"During 2025, no vendor accounted for 10% or more of our purchases\") and not the customer side. Named customers therefore have to come from the earnings calls, and any sizing of a customer is somebody's estimate, not a disclosure."
+          },
+          "management": [],
+          "tenK": null,
+          "size": null
+        }
+      ],
+      "kpis": [
+        {
+          "name": "Segment net sales",
+          "definition": "International revenue as reported in the Segment Information note. Reported in dollars, so it carries FX; Amazon gives an FX-neutral growth rate alongside it.",
+          "unit": "usdM",
+          "periodicity": "Quarterly and annual",
+          "source": "10-Q / 10-K segment note",
+          "series": "results:intrev",
+          "filing": "Note 10 — Segment Information gives net sales and operating income for each reportable segment. There are no internal revenue transactions between segments."
+        },
+        {
+          "name": "Segment operating income",
+          "definition": "International revenue less its operating expenses. Negative for most of the segment's history; crossed into profit in 2024.",
+          "unit": "usdM",
+          "periodicity": "Quarterly and annual",
+          "source": "10-Q / 10-K segment note",
+          "series": "results:intopinc",
+          "filing": "Note 10: operating expenses are reflected in the segment in which the costs are incurred; infrastructure costs in \"Technology and infrastructure\" are allocated to AWS based on usage."
+        }
+      ],
+      "kpiNote": "International discloses less than North America: no country split, no unit count, no member count. Amazon does give an FX-neutral growth rate for the segment on each release, which is the single most useful International KPI and is not yet loaded here.",
+      "adjacencies": [
+        {
+          "name": "Foreign exchange",
+          "why": "International is the only segment whose reported growth is materially a currency statement. Amazon guides consolidated revenue with an explicit FX assumption each quarter, and the gap between reported and FX-neutral growth belongs to this segment.",
+          "series": null,
+          "needs": "The FX-neutral growth rate is given in each release and is not loaded. Worth adding — it is the segment's most-quoted number."
+        }
+      ],
+      "brief": "The same shop, everywhere else. Runs several years behind North America on scale, with a bigger share of the sales going through the marketplace rather than Amazon's own inventory, and a reported number that moves with the dollar as much as with the business.",
+      "interactions": [
+        {
+          "name": "Capacity × network productivity",
+          "relation": "revenue = fulfilment capacity (PP&E) × revenue per $ of capacity",
+          "lines": [
+            "Online stores (1P)",
+            "Third-party seller services"
+          ],
+          "bridge": "capacity",
+          "why": "The same identity as North America. International carries the least owned infrastructure per dollar sold of the three segments, which is a mix statement as much as an efficiency one.",
+          "data": "Both terms reported and projected — annual, 2022 through 2028."
+        },
+        {
+          "name": "Local demand × currency",
+          "relation": "reported revenue = local-currency revenue × the exchange rate",
+          "lines": [
+            "Online stores (1P)"
+          ],
+          "bridge": null,
+          "why": "The only segment whose reported growth is materially a currency statement. Amazon gives an FX-neutral growth rate alongside the reported one on every release, and the gap between them belongs almost entirely here.",
+          "data": "NOT CHARTED — the FX-neutral rate is given each quarter but is not loaded as a series."
+        }
+      ]
+    }
+  },
+  "overview": {
+    "lede": "",
+    "interactions": [
+      {
+        "name": "Retail funds the AI build",
+        "what": "AWS takes roughly 71% of group capex while producing about a sixth of revenue. The spending is decided at the group level and paid for out of the cash the retail segments generate, so the size of one segment's revenue tells you very little about how much of the company's money it absorbs.",
+        "evidence": "AWS capex $38.5B of a $54.2B group total in 2Q26; AWS revenue $42.2B of $200.6B."
+      },
+      {
+        "name": "Advertising is earned in retail and reported nowhere",
+        "what": "Advertising is disclosed as a company-wide revenue line, but it is sold against North America and International shopping traffic. It is counted inside those segments' revenue and never shown separately for either — so neither segment's reported growth can be split into 'selling more goods' and 'selling more ads'.",
+        "evidence": "Advertising is ~9.6% of company revenue and is not split by segment in any disclosure."
+      },
+      {
+        "name": "One fulfilment network, two revenue models",
+        "what": "First-party sales and third-party seller services run through the same warehouses and the same trucks. A unit shifting from 1P to 3P moves reported revenue DOWN — Amazon books a fee instead of the whole sale — without anything changing about how much was actually sold. Mix between the two moves the growth rate on its own.",
+        "evidence": "1P online stores ~37.6% and 3P seller services ~24.0% of company revenue in FY2025."
+      },
+      {
+        "name": "Prime sits across all three",
+        "what": "The subscription is booked as its own revenue line, is sold in both retail segments, and is increasingly delivered on AWS-hosted video. The fee is a small share of revenue; the purchase frequency it buys is most of the retail flywheel.",
+        "evidence": "Subscription services ~6.9% of company revenue in FY2025; member count has not been disclosed since 2021."
+      }
+    ],
+    "tenK": {
+      "text": "We have organized our operations into three segments: North America, International, and Amazon Web Services (\"AWS\"). These segments reflect the way the Company evaluates its business performance and manages its operations.",
+      "where": "Item 1 — Business"
+    }
+  },
+  "_tenk": {
+    "provenance": {
+      "company": "AMAZON COM INC",
+      "form": "10-K",
+      "accession": "0001018724-26-000004",
+      "filed": "2026-02-06",
+      "period": "2025-12-31",
+      "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm"
+    },
+    "productLines": {
+      "online": {
+        "label": "Online stores",
+        "text": "Includes product sales and digital media content where we record revenue gross. We leverage our retail infrastructure to offer a wide selection of consumable and durable goods that includes media products available in both a physical and digital format, such as books, videos, games, music, and software. These product sales include digital products sold on a transactional basis. Digital media content subscriptions that provide unlimited viewing or usage rights are included in \"Subscription services.\"",
+        "source": "Note 10 — net sales by groups of similar products and services"
+      },
+      "phys": {
+        "label": "Physical stores",
+        "text": "Includes product sales where our customers physically select items in a store. Sales to customers who order goods online for delivery or pickup at our physical stores are included in \"Online stores.\"",
+        "source": "Note 10 — net sales by groups of similar products and services"
+      },
+      "p3": {
+        "label": "Third-party seller services",
+        "text": "Includes commissions and any related fulfillment and shipping fees, and other third-party seller services.",
+        "source": "Note 10 — net sales by groups of similar products and services"
+      },
+      "ads": {
+        "label": "Advertising services",
+        "text": "Includes sales of advertising services to sellers, vendors, publishers, authors, and others, through programs such as sponsored ads, display, and video advertising.",
+        "source": "Note 10 — net sales by groups of similar products and services"
+      },
+      "subs": {
+        "label": "Subscription services",
+        "text": "Includes annual and monthly fees associated with Amazon Prime memberships, as well as digital video, audiobook, digital music, e-book, and other non-AWS subscription services.",
+        "source": "Note 10 — net sales by groups of similar products and services"
+      },
+      "other": {
+        "label": "Other",
+        "text": "Includes sales related to various other offerings (such as shipping services, healthcare services, and certain licensing and distribution of video content) and our co-branded credit card agreements.",
+        "source": "Note 10 — net sales by groups of similar products and services"
+      }
+    },
+    "customerClasses": {
+      "consumers": {
+        "text": "Consumers We serve consumers through our online and physical stores and focus on selection, price, and convenience. We design our stores to enable hundreds of millions of unique products to be sold by us and by third parties across dozens of product categories. Customers access our offerings through our websites, mobile apps, Alexa, devices, streaming, and physically visiting our stores. We also manufacture and sell electronic devices, including Kindle, Fire tablet, Fire TV, Echo, Ring, Blink, and eero, and we develop and produce media content. We seek to offer our customers low prices, fast and free delivery, easy-to-use functionality, and timely customer service. In addition, we offer subscription services such as Amazon Prime, a membership program that includes fast, free shipping on tens of millions of items, access to award-winning movies and series, live sports, and other benefits. We fulfill customer orders in a number of ways, including through: North America and International fulfillment networks that we operate; co-sourced and outsourced arrangements in certain countries; digital delivery; and through our physical stores. We operate customer service centers globally, which are supplemented by co-sourced arrangements. See Item 2 of Part I, \"Properties.\"",
+        "source": "Item 1 — Business"
+      },
+      "sellers": {
+        "text": "Sellers We offer programs that enable sellers to grow their businesses, sell their products in our stores, and fulfill orders using our services. We are not the seller of record in these transactions. We earn fixed fees, a percentage of sales, per-unit activity fees, interest, or some combination thereof, for our seller programs.",
+        "source": "Item 1 — Business"
+      },
+      "devent": {
+        "text": "Developers and Enterprises We serve developers and enterprises of all sizes, including start-ups, government agencies, and academic institutions, through AWS, which offers a broad set of on-demand technology services, including compute, storage, database, analytics, artificial intelligence and machine learning, and other services.",
+        "source": "Item 1 — Business"
+      },
+      "creators": {
+        "text": "Content Creators We offer programs that allow authors, independent publishers, musicians, filmmakers, Twitch streamers, skill and app developers, and others to publish and sell content.",
+        "source": "Item 1 — Business"
+      },
+      "advertisers": {
+        "text": "Advertisers We provide advertising services to sellers, vendors, publishers, authors, and others, through programs such as sponsored ads, display, and video advertising.",
+        "source": "Item 1 — Business"
+      }
+    },
+    "absent": {
+      "customerConcentration": "The filing carries no customer-concentration disclosure of any kind — no \"no single customer accounted for 10%\" sentence, and no named customer anywhere. Amazon discloses SUPPLIER concentration (\"During 2025, no vendor accounted for 10% or more of our purchases\") and not the customer side. Named customers therefore have to come from the earnings calls, and any sizing of a customer is somebody's estimate, not a disclosure.",
+      "paidUnits": "Not disclosed in this filing.",
+      "primeMembers": "Not disclosed in this filing.",
+      "asp": "Not disclosed in this filing."
+    }
+  },
+  "_tiers": {
+    "FILING": "Verbatim from the 10-K, with accession and link.",
+    "CALL": "What management said on an earnings call, with the quarter.",
+    "OURS": "Our reading. Not sourced to the company."
+  },
+  "other": {
+    "_doc": "The revenue cuts that are NOT the reportable segments. Amazon publishes two: by groups of similar products and services, and by country. Both are disaggregations of the SAME total revenue — they are alternative ways to slice one number, not additional revenue, and the tab has to say so or a reader will double-count.",
+    "cuts": [
+      {
+        "key": "lines",
+        "label": "Product lines",
+        "sub": "groups of similar products and services",
+        "lede": "The same total revenue cut by WHAT is sold rather than by where it is managed. This is the cut that shows the mix shift: first-party retail (Online stores) is the big, slow line, while advertising and third-party seller services — the high-margin ones riding the same retail surface — are the ones compounding. It cross-cuts the segments: Online stores, 3P services, advertising and subscriptions each contain both North America and International, and only AWS lines up one-to-one with a reportable segment.",
+        "caveat": "This cut does not tell you profitability. Amazon reports operating income by SEGMENT only — there is no margin, no cost line and no operating income for any of these product lines anywhere in the filings, so any per-line margin you see quoted is somebody’s estimate.",
+        "annualNote": "Annual figures are the four reported quarters added together, so the last fiscal year on the axis only appears once its fourth quarter has printed.",
+        "tenK": {
+          "text": "Net sales by groups of similar products and services, which also have similar economic characteristics, is as follows (in millions):",
+          "where": "Note 10 — Segment Information"
+        }
+      },
+      {
+        "key": "geo",
+        "label": "Geography",
+        "sub": "net sales attributed to countries",
+        "lede": "The same total revenue cut by country. Amazon names only four countries and buckets everything else into \"Rest of world\", so this is a concentration disclosure rather than a map: it answers \"how American is this company\" (roughly two thirds) and very little else. Rest of world is the fastest-growing bucket and the least informative — it holds every market from Canada and India to Brazil with no split.",
+        "caveat": "The attribution rule is not the same for the whole company: retail is assigned by the country-focused store the customer bought from, but AWS is assigned by the SELLING ENTITY. So an American company running its workloads in Frankfurt can land in United States, and the geographic cut is not a map of where demand physically sits. It is also annual only — the country table appears in the 10-K and not in the quarterly reports."
+      }
+    ]
+  }
+}

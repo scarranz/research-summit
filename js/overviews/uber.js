@@ -1556,13 +1556,19 @@ var UB_SBC_HIST={ yrs:['FY20','FY21','FY22','FY23','FY24','FY25'], sbcPct:[7.4,6
 function buildUbSbc(){
   var cv=document.getElementById('ubChartSbc'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
   destroy('ubChartSbc');
+  // Actuals FY20-25 (UB_SBC_HIST) + consensus forward FY26-28E (uber-bbg): diluted shares keep falling as
+  // buybacks out-run SBC, and SBC % of revenue keeps shrinking. Forward faded / dashed.
+  var bbg=uberBBG.is, fShares=bbg.dilShares?bbg.dilShares.f:[null,null,null];
+  var fPct=(bbg.sbc&&bbg.rev)?bbg.sbc.f.map(function(v,i){ var r=bbg.rev.f[i]; return (v!=null&&r)?Math.round(v/r*1000)/10:null; }):[null,null,null];
+  var yrs=UB_SBC_HIST.yrs.concat(['FY26E','FY27E','FY28E']);
+  var shares=UB_SBC_HIST.shares.concat(fShares), sbcPct=UB_SBC_HIST.sbcPct.concat(fPct), la=UB_SBC_HIST.yrs.length-1;
   _charts['ubChartSbc']=new Chart(cv.getContext('2d'),{
-    data:{ labels:UB_SBC_HIST.yrs, datasets:[
-      { type:'bar', label:'Shares out (M)', data:UB_SBC_HIST.shares, backgroundColor:'rgba(58,123,213,0.26)', borderColor:'#3A7BD5', borderWidth:1, yAxisID:'y', order:2 },
-      { type:'line', label:'SBC % of revenue', data:UB_SBC_HIST.sbcPct, borderColor:'#7A5AF8', backgroundColor:'#7A5AF8', borderWidth:2.5, tension:.3, pointRadius:3, yAxisID:'y1', order:1 }
+    data:{ labels:yrs, datasets:[
+      { type:'bar', label:'Shares out (M)', data:shares, backgroundColor:shares.map(function(_,i){ return i>la?'rgba(58,123,213,0.12)':'rgba(58,123,213,0.26)'; }), borderColor:'#3A7BD5', borderWidth:1, yAxisID:'y', order:2 },
+      { type:'line', label:'SBC % of revenue', data:sbcPct, borderColor:'#7A5AF8', backgroundColor:'#7A5AF8', borderWidth:2.5, tension:.3, pointRadius:3, yAxisID:'y1', order:1, segment:{ borderDash:function(ctx){ return ctx.p1DataIndex>la?[5,4]:undefined; } } }
     ]},
     options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
-      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}}, tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.yAxisID==='y1'? ' '+ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+'%' : ' '+ctx.dataset.label+': '+ctx.parsed.y.toLocaleString()+'M'; } } } },
+      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}}, tooltip:{ callbacks:{ label:function(ctx){ var e=ctx.dataIndex>la?' (E)':''; return ctx.dataset.yAxisID==='y1'? ' '+ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+'%'+e : ' '+ctx.dataset.label+': '+ctx.parsed.y.toLocaleString()+'M'+e; } } } },
       scales:{ y:{ position:'left', title:{display:true,text:'Shares out (M)',font:{size:9}}, ticks:{font:{size:9}}, grid:{color:'#EEF2F7'}, suggestedMin:1600 },
         y1:{ position:'right', title:{display:true,text:'SBC % of revenue',font:{size:9}}, ticks:{callback:function(v){return v+'%';},font:{size:9}}, grid:{display:false}, min:0 },
         x:{ grid:{display:false}, ticks:{font:{size:10}} } } }
@@ -1579,8 +1585,8 @@ function ubGovBody(c){
   h+='<div class="ov-kpis">'+k.map(function(f){return '<div class="ov-kpi"><div class="ov-kpi-l">'+esc(f[0])+'</div><div class="ov-kpi-v">'+esc(f[1])+'</div><div class="ov-kpi-d muted">'+esc(f[2])+'</div></div>';}).join('')+'</div>';
   h+=sec('Stock-based compensation & alignment — did buybacks offset it?',
     '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">The honest answer is <b>not until recently</b>. SBC has run a <b>flat ~$1.8B/yr</b> since FY22 while revenue nearly doubled — so as a share of revenue it <b>fell from ~7.4% (FY20) to ~3.5% (FY25)</b>, a genuinely shrinking drag. But SBC still <b>dilutes</b>, and with <b>no buybacks before 2024</b> the share count <b>rose every year from FY20 to FY24</b> (~1,793M → ~2,141M). Only in <b>FY25</b>, once repurchases hit $6.5B, did the count finally <b>tick down</b> (~2,106M) — the first time buybacks more-than-offset dilution. CEO pay is <b>96% at-risk</b> (base ~$1.08M), say-on-pay support ~<b>94%</b>.</div>'+
-    '<div class="ov-chart-card" style="margin-top:10px"><div class="ov-chart-t">SBC as % of revenue vs shares outstanding <span>· FY2020–FY2025</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartSbc"></canvas></div></div>'+
-    '<div class="ave-subh-note" style="margin-top:8px">Bars = period-end shares outstanding (left); line = SBC ÷ revenue (right). The bar peaks in FY24 and turns down in FY25 — the inflection where buybacks first out-ran SBC. <span style="color:#B7791F">SBC % of revenue and shares from Uber filings / Summit; directional.</span></div>');
+    '<div class="ov-chart-card" style="margin-top:10px"><div class="ov-chart-t">SBC as % of revenue vs shares outstanding <span>· FY2020–FY2028E · faded = consensus</span></div><div class="ov-chart-wrap ovt-ue-wrap"><canvas id="ubChartSbc"></canvas></div></div>'+
+    '<div class="ave-subh-note" style="margin-top:8px">Bars = period-end shares outstanding (left); line = SBC ÷ revenue (right). Shares peak in FY24, turn down in FY25 as buybacks first out-run SBC, and <b>consensus has them falling further to ~1,976M by FY28E</b> while SBC keeps shrinking to ~2.9% of revenue. <span style="color:#B7791F">Actuals: Uber filings / Summit. Forward: BBG consensus (uber-bbg).</span></div>');
   return h;
 }
 // ── Management ▸ Track Record — per-person scorecard (management only, not the board). Each exec is

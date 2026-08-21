@@ -3647,21 +3647,26 @@ var SEG_CALLS={
   // Figures/context that are not a management quote were removed from this block (they live in the
   // tiles/charts). Segments with no verbatim quote in the covered calls carry no block.
   aws:[
-    {q:'Q4 2025', who:'Andy Jassy, CEO', tag:'why', txt:'AWS grew at "the fastest we\'ve seen in thirteen quarters." On the build: Amazon added over 1GW of capacity in the quarter, "more than any other company in the world" in 2025.'},
-    {q:'Q4 2025', who:'Brian Olsavsky, CFO', tag:'why', txt:'"As fast as we install this capacity, this AI capacity, we are monetizing it — it\'s just a very unusual opportunity."'},
-    {q:'Q1 2026', who:'Andy Jassy, CEO', tag:'why', txt:'"It is very unusual for a business to grow this fast on a base this large." AWS +28% (~$150B run-rate); backlog $364B, which "does not include the recent deal… with Anthropic for over $100 billion."'},
-    {q:'Q2 2026', who:'Andy Jassy, CEO', tag:'why', txt:'"AWS is booming, growing 36.7% year-over-year in Q2 — our fastest growth in 18 quarters — and our AI and Chips businesses each eclipsed run rates of more than $25 billion." Backlog $496B.'},
-    {q:'Q2 2026', who:'Brian Olsavsky, CFO', tag:'why', txt:'AWS margin was up "650 basis points year-over-year, 520 basis points if you exclude the derivative accounting gain" — margins "aren\'t random," attributed to silicon mix, power efficiency and utilization.'},
-    {q:'Q2 2026', who:'Andy Jassy, CEO', tag:'fwd', txt:'"We have clear line of sight to strong financial returns," and AWS can become "a trillion-dollar annual revenue business." 2027 capacity is "largely reserved," some 2028 "already spoken for."'}
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'AWS grew at "the fastest we\'ve seen in thirteen quarters." On the build: Amazon added over 1GW of capacity in the quarter, "more than any other company in the world" in 2025.'},
+    {q:'Q4 2025', who:'Brian Olsavsky, CFO', txt:'"As fast as we install this capacity, this AI capacity, we are monetizing it — it\'s just a very unusual opportunity."'},
+    {q:'Q1 2026', who:'Andy Jassy, CEO', txt:'"It is very unusual for a business to grow this fast on a base this large." AWS +28% (~$150B run-rate); backlog $364B, which "does not include the recent deal… with Anthropic for over $100 billion."'},
+    {q:'Q2 2026', who:'Andy Jassy, CEO', txt:'"AWS is booming, growing 36.7% year-over-year in Q2 — our fastest growth in 18 quarters — and our AI and Chips businesses each eclipsed run rates of more than $25 billion." Backlog $496B.'},
+    {q:'Q2 2026', who:'Brian Olsavsky, CFO', txt:'AWS margin was up "650 basis points year-over-year, 520 basis points if you exclude the derivative accounting gain" — margins "aren\'t random," attributed to silicon mix, power efficiency and utilization.'},
+    {q:'Q2 2026', who:'Andy Jassy, CEO', txt:'"We have clear line of sight to strong financial returns," and AWS can become "a trillion-dollar annual revenue business." 2027 capacity is "largely reserved," some 2028 "already spoken for."'}
   ],
   us:[
     {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'“Lowest-priced US retailer” for the 9th straight year (14% below other majors); everyday essentials 1-in-3 units; 8B+ items same/next-day (+30%).'},
     {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'Rufus reached 300M customers in 2025, with users “60% more likely to complete a purchase.”'},
     {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'Advertising +22%, with $12B of incremental ad revenue in 2025 — largely on the North America retail surface.'},
-    {q:'Q1 2026', who:'Brian Olsavsky, CFO', txt:'Paid units +15% vs fulfillment expense +9% (FX-neutral); robotics in “every 2026 US large-format launch.”'}
+    {q:'Q1 2026', who:'Andy Jassy, CEO', txt:'Retail: store units +15% (highest since COVID); grocery $150B+ gross sales (second-largest US grocer); 1B+ same/next-day items YTD.'},
+    {q:'Q1 2026', who:'Brian Olsavsky, CFO', txt:'Paid units +15% vs fulfillment expense +9% (FX-neutral); robotics in “every 2026 US large-format launch.”'},
+    {q:'Q2 2026', who:'Andy Jassy, CEO', txt:'Same-day perishables customers +50% since the start of the year; same-day orders average 3x more units per order; grocery and everyday essentials “growing faster than the rest of the business.”'},
+    {q:'Q2 2026', who:'Andy Jassy, CEO', txt:'Advertising +26%, “sponsored products the driver” ($19.8B) — the ad surface sits largely on the North America retail business.'}
   ],
   int:[
-    {q:'FY 2025', who:'Amazon 10-K MD&A', txt:'A +$903M FX tailwind to International operating income in 2025 — the reported margin moves with the dollar as much as with operations.'},
+    {q:'Q1 2026', who:'Amazon Q1 2026 (8-K)', txt:'International $39.8B (+11% constant-currency, 3.6% margin) — management frames the segment on an ex-FX basis because the reported line swings with the dollar as much as with operations.'},
+    {q:'FY 2025', who:'Amazon 10-K MD&A', txt:'A +$903M FX tailwind to International operating income in 2025 — confirming the point above: the reported margin moves with the dollar.'},
+    {q:'Q2 2026', who:'Andy Jassy, CEO', txt:'On the consolidated guide, ex-Prime-Day timing (Q3’25 fell in Q2’26 for most major geos) “growth would be nearly 400bps higher” — the calendar shift lands disproportionately on International, where Prime Day is a bigger mix event.'},
     {q:'Q2 2026', who:'Amazon Q2 2026 (8-K)', txt:'International net sales $42.2B (+15%), operating income $1,717M (4.1% margin) — the one segment line that came in under both the Street ($42.7B) and Summit ($43.4B) for the quarter.'}
   ]
 };

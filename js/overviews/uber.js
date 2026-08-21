@@ -1018,9 +1018,61 @@ function ubIntro(){
 }
 // Top Line ▸ Segments — the segment split and each engine in depth (inner toggle). Company-level
 // snapshot/description/KPIs live in the Overview tab; this tab is about the segments themselves.
+// ── Top Line ▸ Segments — AMZN-standard dual-axis per segment: Gross Bookings ($B bars) + Net Take
+// Rate (% line, y2), Actual / Summit / Consensus. GB + take-rate act/summit come from uberResults;
+// the take-rate CONSENSUS comes from uber-bbg (segment revenue has no consensus in results-data). ──
+var UB_SEG_MAP={ mobility:{gb:'mobgb',rev:'mobrev',bbg:'mobility',lab:'Mobility'},
+                 delivery:{gb:'delgb',rev:'delrev',bbg:'delivery',lab:'Delivery'},
+                 freight :{gb:'frgb', rev:null,    bbg:'freight', lab:'Freight'} };
+// Map a uber-bbg segment series (FY23-28) onto a given annual-period axis (e.g. uberResults' 2022-2030).
+function ubBbgSegOnAxis(seg, key, periods){
+  var s=uberBBG.seg[seg]; if(!s||!s[key]) return periods.map(function(){ return null; });
+  var vals=s[key].a.concat(s[key].f), yrs=uberBBG.yearsA.concat(uberBBG.yearsF), by={};
+  yrs.forEach(function(y,i){ by[y]=vals[i]; });
+  return periods.map(function(p){ return by[+p]!=null?by[+p]:null; });
+}
+function ubSegDualBody(){
+  var pills=Object.keys(UB_SEG_MAP).map(function(k,i){ return '<button type="button" class="rs-view'+(i===0?' active':'')+'" data-ubsg="'+k+'">'+UB_SEG_MAP[k].lab+'</button>'; }).join('');
+  return '<div class="ov-sec" data-ubsgblock="1">'+
+    '<div class="rs-block-top"><div class="rs-block-h">Segment economics — gross bookings &amp; take rate</div></div>'+
+    '<div class="rs-block-modes"><div class="rs-modes"><div style="display:inline-flex;align-items:center;gap:6px;margin:0 10px 6px 0"><span class="rs-quick-l">Segment</span><div class="rs-views">'+pills+'</div></div></div></div>'+
+    '<div class="ave-leg" id="ubSegLeg" style="margin:2px 0 8px"></div>'+
+    '<div class="ov-chart-card"><div class="ov-chart-wrap ovs-tall" style="min-height:330px"><canvas id="ubChartSegDual"></canvas></div></div>'+
+  '</div>';
+}
+function buildUbSegDual(root){
+  var cv=document.getElementById('ubChartSegDual'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
+  destroy('ubChartSegDual'); var host=root||document;
+  var pb=host.querySelector('[data-ubsg].active'), segk=pb?pb.getAttribute('data-ubsg'):'mobility', seg=UB_SEG_MAP[segk];
+  var Y=uberResults.views.y.metrics, gbM=Y[seg.gb], revM=seg.rev?Y[seg.rev]:null;
+  var periods=gbM.periods.slice(), labels=periods.map(function(p){ return 'FY'+String(p).slice(2); });
+  function la(a){ var l=0; for(var i=0;i<a.length;i++) if(a[i]!=null) l=i; return l; }
+  var lastAct=la(gbM.act);
+  function bars(a){ return a?a.map(function(v){ return v==null?null:Math.round(v/100)/10; }):labels.map(function(){return null;}); }
+  function barBg(a,color){ return a.map(function(v,i){ return i>lastAct?ubHexA(color,0.42):color; }); }
+  function takeFrom(gbArr,revArr){ return gbArr.map(function(g,i){ return (g&&revArr&&revArr[i]!=null)?Math.round(revArr[i]/g*1000)/10:null; }); }
+  var srcs=[{k:'act',lab:'Actual',c:UB_ACT},{k:'summit',lab:'Summit',c:UB_SUMMIT},{k:'cons',lab:'Consensus (BBG)',c:UB_CONS}];
+  var ds=[];
+  srcs.forEach(function(s){ var g=gbM[s.k]; if(g&&g.some(function(v){return v!=null;})) ds.push({ type:'bar', label:'Gross bookings — '+s.lab, data:bars(g), backgroundColor:barBg(bars(g),s.c), borderColor:'#fff', borderWidth:1, maxBarThickness:26, yAxisID:'y', order:3 }); });
+  // take rate: act/summit = rev/gb (uberResults); consensus = uber-bbg netTakeRate mapped to this axis
+  srcs.forEach(function(s){ var t;
+    if(s.k==='cons') t=ubBbgSegOnAxis(seg.bbg,'netTakeRate',periods);
+    else t=revM?takeFrom(gbM[s.k]||[], revM[s.k]):null;
+    if(t&&t.some(function(v){return v!=null;})) ds.push({ type:'line', label:'Take rate — '+s.lab, data:t, borderColor:s.c, backgroundColor:s.c, borderWidth:2.4, pointRadius:2.2, tension:.2, spanGaps:false, yAxisID:'y2', order:1, borderDash:s.k==='cons'?[5,4]:undefined }); });
+  _charts['ubChartSegDual']=new Chart(cv.getContext('2d'),{ data:{ labels:labels, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:function(c){ var e=(c.dataIndex>lastAct)?' (E)':''; return c.dataset.label+': '+(c.parsed.y==null?'—':(c.dataset.yAxisID==='y2'?c.parsed.y+'%':'$'+c.parsed.y.toFixed(1)+'B'))+e; } } } },
+      scales:{ x:{ grid:{display:false}, ticks:{font:{size:10.5}} },
+        y:{ position:'right', beginAtZero:true, grid:{color:'#EEF2F7'}, ticks:{ font:{size:10.5}, callback:function(v){ return '$'+v+'B'; } } },
+        y2:{ position:'right', grid:{display:false}, ticks:{ font:{size:10.5}, callback:function(v){ return v+'%'; } } } } }
+  });
+  var leg=host.querySelector('#ubSegLeg');
+  if(leg) leg.innerHTML=srcs.map(function(s){ return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--mu);margin-right:14px"><span style="width:13px;height:13px;border-radius:3px;background:'+s.c+'"></span>'+s.lab+'</span>'; }).join('')+'<span style="font-size:11px;color:var(--mu)">Bars = gross bookings ($B) &nbsp;·&nbsp; lines = net take rate (right axis)</span>';
+}
 function ubSegmentsBody(c){
   var h='<div class="ov-live" id="ubLive" hidden></div>';
   h+='<p class="ov-lede">Uber is really <b>three businesses of very different size and economics</b>. <b>Mobility</b> (~$97B FY2025 gross bookings) is the profit engine; <b>Delivery</b> (~$91B) is the scale story whose margins are still converging upward; <b>Freight</b> (~$5B) is a near-breakeven logistics option kept for optionality. Below: how the three split, then each engine in depth.</p>';
+  h+=ubSegDualBody();
   h+='<div class="tech-leg"><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+MOB+'"></span>Mobility</span><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+DEL+'"></span>Delivery</span><span class="tech-leg-i"><span class="tech-leg-bar" style="background:'+FRT+'"></span>Freight</span></div>';
   h+='<div class="ov-charts" style="grid-template-columns:1fr 1fr">'+
     '<div class="ov-chart-card"><div class="ov-chart-t">Gross Bookings by segment <span>($B, FY · light = estimate)</span></div><div class="ov-chart-wrap"><canvas id="ubChartGB"></canvas></div></div>'+
@@ -4430,7 +4482,7 @@ function buildUberOneCharts(){ buildLines('ubChartMembers', UBERONE_GROWTH.label
 // Build the lazy charts that live inside a sub-pane, by (group, sub-key).
 function buildSub(root, group, key){
   if(group==='topline'){
-    if(key==='segments'){ buildOverviewCharts(); buildActiveSeg(root); }  // GB + EBITDA + active segment
+    if(key==='segments'){ buildUbSegDual(root); buildOverviewCharts(); buildActiveSeg(root); }  // segment dual-axis + GB/EBITDA + active segment
     else if(key==='customers') buildUberOneCharts();
     // tam, industry: no charts
   } else if(group==='bottomline'){
@@ -4597,6 +4649,10 @@ function init(c){
   root.querySelectorAll('[data-ubpf]').forEach(function(btn){ btn.onclick=function(){
     var box=btn.closest('[data-ubpfblock]'); if(box) box.querySelectorAll('[data-ubpf]').forEach(function(b){ b.classList.toggle('active', b===btn); });
     requestAnimationFrame(function(){ buildUbProfit(root); }); }; });
+  // Top Line ▸ Segment economics — Mobility/Delivery/Freight selector
+  root.querySelectorAll('[data-ubsg]').forEach(function(btn){ btn.onclick=function(){
+    var box=btn.closest('[data-ubsgblock]'); if(box) box.querySelectorAll('[data-ubsg]').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    requestAnimationFrame(function(){ buildUbSegDual(root); }); }; });
   // Delivery Hero acquisition markets: "mode" pills swap Map/List, "view" pills swap between
   // Uber Today / Delivery Hero Today / Uber After the Deal — swapping each map path/dot's fill
   // in place and toggling the matching legend + list block (three of each, one per view).

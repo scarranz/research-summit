@@ -1372,35 +1372,32 @@ function custNamed(d){
   return out.sort(function(a, b){ return String(b.q).localeCompare(String(a.q)); });
 }
 
-function custSplcSection(c){
+// The SPLC census, or the shape of its absence. Short either way — the long version is one click
+// down, like everything else on this tab.
+function custSplcSection(c, n){
   var sp = c.splc;
   if (!sp || !sp.customers || !sp.customers.length){
-    // The gap is rendered, not hidden. A tab that quietly shows nothing reads as "there is
-    // nothing to know"; this one says what is missing and what would fill it.
-    return sec(3, 'Who has said they buy from Amazon', 'Bloomberg SPLC · not loaded yet',
+    return sec(n, 'Who has said they buy from Amazon', 'Bloomberg SPLC · not loaded yet',
       '<p class="sg-lede">' + tierTag('COUNTERPARTY') +
-      'The other side of the transaction. Amazon names almost no customers, but its customers file ' +
-      'their own accounts — and some of them name Amazon. Bloomberg\'s Supply Chain Analysis ' +
-      'assembles those disclosures into a counterparty census, which is the only customer list here ' +
-      'that does not depend on Amazon choosing to speak.</p>' +
-      '<div class="sg-empty">' +
-        '<div class="sg-empty-h">No SPLC export loaded</div>' +
-        '<p>SPLC is a terminal screen, not a BQL function on our tier, so it has to come in as an ' +
-        'export. Drop it next to the loader and run it — the tab picks it up on the next build:</p>' +
+      'The other side of the transaction: not what Amazon says about its customers, but what its ' +
+      'customers filed about Amazon.</p>' +
+      drill('splc', 'Why this is empty, and what fills it',
+        '<p>Bloomberg\'s Supply Chain Analysis assembles counterparty disclosures into a customer ' +
+        'census — the only customer list here that does not depend on Amazon choosing to speak. ' +
+        'SPLC is a terminal screen, not a BQL function on our tier, so it has to come in as an ' +
+        'export:</p>' +
         '<code class="sg-empty-c">py scripts/segments/load_splc.py AMZN &lt;export.csv&gt;</code>' +
         '<p class="sg-cite">The loader normalises the columns, prints the mapping so it can be ' +
         'checked, and computes the one number that decides how this may be drawn: what share of ' +
         'revenue the named customers account for between them. Under ~10% it renders as a list of ' +
-        'disclosed relationships, never as a concentration chart.</p>' +
-      '</div>');
+        'disclosed relationships, never as a concentration chart.</p>'));
   }
   var rows = sp.customers.slice().sort(function(a, b){ return (b.pct || 0) - (a.pct || 0); });
   var cov = sp.sumPct != null
-    ? 'The names below account for <b>' + pctStr(sp.sumPct / 100) + '</b> of revenue between them — ' +
-      'the other ' + pctStr(1 - sp.sumPct / 100) + ' is not attributed to anyone here.'
-    : 'None of these names carries a size, so they can be listed but not ranked.';
-  return sec(3, 'Who has said they buy from Amazon',
-    sp.named + ' named · ' + sp.sized + ' sized',
+    ? 'They account for <b>' + pctStr(sp.sumPct / 100) + '</b> of revenue between them; the other ' +
+      pctStr(1 - sp.sumPct / 100) + ' is not attributed to anyone here.'
+    : 'None of them carries a size, so they can be listed but not ranked.';
+  return sec(n, 'Who has said they buy from Amazon', sp.named + ' named · ' + sp.sized + ' sized',
     '<p class="sg-lede">' + tierTag('COUNTERPARTY') +
       'Assembled by Bloomberg from what these companies filed about Amazon, not from what Amazon ' +
       'filed about them. ' + cov + '</p>' +
@@ -1416,6 +1413,27 @@ function custSplcSection(c){
     '<p class="sg-cite">' + esc(sp.source) + (sp.file ? ' · ' + esc(sp.file) : '') + '</p>');
 }
 
+// ── the two card decks, in the same master-detail language as the rest of Top Line ────────────
+// A name is the index; the words behind it are one click down. The filing's own paragraphs run
+// from four lines to twenty, so putting any of them on a card is what made this tab a wall.
+SG_MD.cclass = function(){
+  var c = custData() || {};
+  return (c.classes || []).map(function(x){
+    return { name: x.label, line: '', tabs: [{ label: 'Verbatim',
+      body: sgTB('FILING', sgQuote(x.text, x.where,
+        (c.cite && c.cite.url) ? c.cite.url : null)) }] };
+  });
+};
+SG_MD.cname = function(){
+  var d = sgData();
+  return custNamed(d).map(function(n){
+    return { name: n.name, line: n.seg + ' · ' + n.line, tag: n.q,
+      tabs: [{ label: 'What was said', body: sgTB('CALL', '<p>' + esc(n.what) + '</p>' +
+        '<p class="sg-cite">Earnings call, ' + esc(n.q) + ' · ' + esc(n.seg) + ' · ' +
+        esc(n.line) + '</p>') }] };
+  });
+};
+
 export function segmentsCustomersHtml(ticker){
   var d = SEGMENTS_DATA[ticker];
   if (!d) return '<p class="sg-lede">No segments dataset for ' + esc(ticker) + '.</p>';
@@ -1423,56 +1441,35 @@ export function segmentsCustomersHtml(ticker){
   var c = d.seg.customers;
   if (!c) return '<p class="sg-lede">No customer disclosure assembled for ' + esc(ticker) + ' yet.</p>';
 
-  // §1 — the finding, which for this company is an absence
+  // §1 — the finding, which for this company is an absence. One line of it; the rest on click.
   var conc = c.concentration || {};
-  var h1 = '<p class="sg-lede">Who buys, and how much of it any one of them is. The second half is ' +
-    'the one that matters for risk, and it is the half Amazon does not answer.</p>';
+  var h1;
   if (conc.disclosed === false){
-    h1 += '<div class="sg-finding"><div class="sg-finding-h">⚑ No customer concentration is disclosed at all</div>' +
-      '<p>' + esc(conc.note || '') + '</p>' +
-      (c.cite ? '<p class="sg-cite">' + esc(c.cite.form) + ' for ' + esc(c.cite.period) +
-        ' · accession ' + esc(c.cite.accession) +
-        (c.cite.url ? ' · <a href="' + esc(c.cite.url) + '" target="_blank" rel="noopener">read the filing</a>' : '') +
-        '</p>' : '') + '</div>';
-  } else if (conc.note){
-    h1 += sgTB('FILING', sgQuote(conc.note, (c.cite || {}).form));
+    h1 = '<div class="sg-finding"><div class="sg-finding-h">⚑ No customer concentration is disclosed at all</div>' +
+      '<p>No "no single customer accounted for 10%" sentence, and no named customer anywhere in ' +
+      'the filing. Nothing on this tab is a revenue ranking.</p></div>' +
+      drill('conc', 'What the filing does and does not say',
+        '<p>' + esc(conc.note || '') + '</p>' +
+        (c.cite ? '<p class="sg-cite">' + esc(c.cite.form) + ' for ' + esc(c.cite.period) +
+          ' · accession ' + esc(c.cite.accession) +
+          (c.cite.url ? ' · <a href="' + esc(c.cite.url) + '" target="_blank" rel="noopener">read the filing</a>' : '') +
+          '</p>' : ''));
+  } else {
+    h1 = conc.note ? sgTB('FILING', sgQuote(conc.note, (c.cite || {}).form)) : '';
   }
 
-  // §2 — the classes the company names for itself
-  // The filing's own paragraphs are wildly uneven — "Consumers" runs twenty lines and "Sellers"
-  // four. Clamped so the row stays scannable, expandable because the point of quoting a filing is
-  // that the reader can see all of it. Never truncated in the markup: the full text is always there.
-  var classes = (c.classes || []).map(function(x){
-    var open = _sg.open['cls-' + x.key] === true;
-    return '<div class="sg-def' + (open ? ' open' : '') + '">' +
-      '<div class="sg-def-n">' + esc(x.label) + tierTag('FILING') + '</div>' +
-      '<p class="sg-def-t' + (open ? '' : ' clamp') + '">' + esc(x.text) + '</p>' +
-      '<button type="button" class="sg-def-more" data-sgclass="' + esc(x.key) + '">' +
-        (open ? 'show less' : 'full text ›') + '</button>' +
-      (x.where ? '<p class="sg-cite">' + esc(x.where) + '</p>' : '') + '</div>';
-  }).join('');
-
-  // §3 — the names on the record, then the counterparty census
   var named = custNamed(d);
-  var namedBody = named.length
-    ? '<p class="sg-lede">' + tierTag('CALL') + 'Every customer Amazon has named out loud, with the ' +
-      'quarter it was said. It is a short and self-selected list — a company names the customers it ' +
-      'wants named — so read it as evidence of what management is proud of, not as a ranking.</p>' +
-      '<div class="sg-cust">' + named.map(function(n){
-        return '<div class="sg-cust-i"><div class="sg-cust-n">' + esc(n.name) +
-          '<span class="sg-cust-q">' + esc(n.q) + '</span></div>' +
-          '<p class="sg-cust-w">' + esc(n.what) + '</p>' +
-          '<p class="sg-cust-s">' + esc(n.seg) + ' · ' + esc(n.line) + '</p></div>';
-      }).join('') + '</div>'
-    : '<div class="sg-needs">⚑ No customer has been named on a call for this company yet.</div>';
-
   return '<div class="sg-wrap" id="sgCustWrap">' +
     sec(1, 'What the company discloses', 'concentration', h1) +
     sec(2, 'The customer classes it names for itself',
-      (c.classes || []).length + ' classes · verbatim',
-      '<div class="sg-defs">' + classes + '</div>') +
-    sec(3, 'Named on the record', named.length + ' named', namedBody) +
-    custSplcSection(c).replace('<span class="sg-sec-n">3</span>', '<span class="sg-sec-n">4</span>') +
+      (c.classes || []).length + ' classes · verbatim', mdHtml('cclass', null)) +
+    sec(3, 'Named on the record', named.length + ' named',
+      (named.length
+        ? '<p class="sg-lede">' + tierTag('CALL') + 'Every customer Amazon has named out loud. A ' +
+          'short and self-selected list — read it as what management is proud of, not as a ranking.</p>' +
+          mdHtml('cname', null)
+        : '<div class="sg-needs">⚑ No customer has been named on a call for this company yet.</div>')) +
+    custSplcSection(c, 4) +
     '<div class="ov-fynote sg-src">Three registers, kept apart on purpose: what the filing says, ' +
     'what management said on a call, and what somebody else disclosed about Amazon. None of them ' +
     'is a revenue ranking, and the tab never presents one.</div></div>';
@@ -1484,18 +1481,34 @@ export function initSegmentsCustomers(root, ticker){
   var wrap = host.querySelector ? host.querySelector('#sgCustWrap') : null;
   if (!wrap || wrap.__sgWired) return;
   wrap.__sgWired = true;
-  // No chart and no controls on this tab yet — only the clamp on the filing's own paragraphs.
+  wrap.addEventListener('keydown', function(ev){
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    var t = ev.target.closest('[data-sgpick]');
+    if (t){ ev.preventDefault(); t.click(); }
+  });
+  // No chart on this tab, so a card only ever re-renders its own deck — nothing else moves.
   wrap.addEventListener('click', function(ev){
-    var cb = ev.target.closest('[data-sgclass]');
-    if (!cb) return;
-    var k = 'cls-' + cb.getAttribute('data-sgclass');
-    var open = !(_sg.open[k] === true);
-    _sg.open[k] = open;
-    var card = cb.closest('.sg-def');
-    card.classList.toggle('open', open);
-    var t = card.querySelector('.sg-def-t');
-    if (t) t.classList.toggle('clamp', !open);
-    cb.textContent = open ? 'show less' : 'full text ›';
+    var pk = ev.target.closest('[data-sgpick]');
+    if (pk && !ev.target.closest('.sg-panel')){
+      var pa = pk.getAttribute('data-sgpick').split('|'), kind = pa[0];
+      _sg.open[sgPickKey(kind)] = (pa[1] === 'close') ? null
+        : (sgPicked(kind) === +pa[1] ? null : +pa[1]);
+      renderMd(kind); return;
+    }
+    var pt = ev.target.closest('[data-sgptab]');
+    if (pt){ var ta = pt.getAttribute('data-sgptab').split('|');
+             _sg.open['ptab-' + ta[0] + '-' + sgPicked(ta[0])] = +ta[1];
+             renderMd(ta[0]); return; }
+    var dr = ev.target.closest('[data-sgdrill]');
+    if (dr){ var k = dr.getAttribute('data-sgdrill');
+             _sg.open[k] = !(_sg.open[k] === true);
+             var body = dr.nextElementSibling;
+             if (body) body.hidden = !(_sg.open[k] === true);
+             var ic = dr.querySelector('.rs-collap-ic');
+             if (ic) ic.textContent = _sg.open[k] === true ? '▾' : '▸';
+             var sub = dr.querySelector('.rs-collap-sub');
+             if (sub) sub.textContent = _sg.open[k] === true ? 'hide' : 'show';
+             return; }
   });
 }
 

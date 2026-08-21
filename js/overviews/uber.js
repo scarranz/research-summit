@@ -4626,7 +4626,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="supplychain">Supply Chain</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="general">'+ubBottomGeneralBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="segments" hidden>'+ubSegProfitBody()+ubSegProfitCards()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segments" hidden>'+ubSegProfitBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="supplychain" hidden>'+suppliersBody(c)+'</div>'+
     '</div>';
   // ── EVOLUTION — Earnings History (narrative) · Guidance (Model vs. Reality + 3-yr targets) ·
@@ -5169,6 +5169,12 @@ function init(c){
   root.querySelectorAll('.ov-collap-h').forEach(function(btn){ btn.onclick=function(){ var c=btn.parentElement; var open=c.classList.toggle('open'); var b=c.querySelector('.ov-collap-b'); if(b) b.hidden=!open; var ic=btn.querySelector('.ov-collap-ic'); if(ic) ic.textContent=open?'▾':'▸';
     // charts nested inside a collapsible have no offsetParent until it opens → rebuild the active subpane on expand
     if(open){ var dd=activeDD(root), sk=activeSubKey(root,dd); if(sk) requestAnimationFrame(function(){ buildSub(root,dd,sk); }); } }; });
+  // Ported-engine table dropdown (rule 3): the scaffold's "Data — what the chart draws" uses .rs-collap-h
+  // (a different class from .ov-collap-h). Wire it the way AMZN does, or the table can never open.
+  if(!root._rsCollapWired){ root._rsCollapWired=true;
+    root.addEventListener('click', function(e){ var h=e.target.closest?e.target.closest('.rs-collap-h'):null; if(!h||!root.contains(h)) return;
+      var b=h.nextElementSibling; if(!b||!b.classList.contains('rs-collap-b')) return; var open=b.hidden; b.hidden=!open;
+      var ic=h.querySelector('.rs-collap-ic'); if(ic) ic.textContent=open?'▾':'▸'; }); }
   // Competitive-map scatter: hover/tap a dot → floating detail tip
   var ptip=root.querySelector('#ubPeerTip');
   if(ptip){ root.querySelectorAll('.peer-dot').forEach(function(d){

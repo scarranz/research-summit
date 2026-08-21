@@ -1406,6 +1406,7 @@ function aCollap(title, inner, open){
 // PERIOD window with rs-ticks dots + drag-to-zoom on the X. A chart registers a derive(state) fn that
 // returns {labels,lastAct,series:[{k,label,color,data,fwdDash}],yFmt}; controls re-render via it.
 var ASTD_ACT='rgba(30,39,51,0.92)', ASTD_SUMMIT='rgba(37,99,235,0.85)', ASTD_CONS='rgba(124,134,148,0.85)';
+var _aCharts={};   // ported-engine chart registry (amzn.js declares this outside the block I extracted)
 var _aStd={}, _aStdDerive={};
 function aStdScaffold(cfg){
   var id=cfg.id;

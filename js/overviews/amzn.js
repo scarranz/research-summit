@@ -3459,7 +3459,7 @@ function aSumSegSummit(metricKey, fyIdx){
 }
 function aMarginsBody(){
   return aStdScaffold({ id:'margins', title:'Profitability & margins', height:360,
-    metricSel:[{v:'gross',label:'Gross'},{v:'operating',label:'Operating',on:true},{v:'ebitda',label:'EBITDA'},{v:'net',label:'Net'},{v:'fcf',label:'FCF'}],
+    metricSel:[{v:'gross',label:'Gross profit'},{v:'operating',label:'Operating income (GAAP)',on:true},{v:'ebitda',label:'EBITDA'},{v:'net',label:'Net income (GAAP)'},{v:'fcf',label:'Free cash flow'}],
     modes:[{cls:'gran',label:'Period',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]},{cls:'norm',label:'Net',opts:[{v:'rep',label:'Reported',on:true},{v:'norm',label:'Normalized'}]}],
     presets:[['all','All'],['rep','Reported'],['fwd','Forward'],['l5','Last 5']] });
 }
@@ -3788,10 +3788,15 @@ function aLeasesBody(){   // Leases explorer — Miscellaneous ▸ Capex & Depre
     mbar('Lease LIABILITIES — the obligation ($121.8B gross · PV $101.5B)',[{w:87.8,c:BRAND,t:'Operating $106.9B'},{w:12.2,c:GRAY,t:'Finance $14.9B'}])+
     '<div class="ew-note"><b>Finance-lease ROU ($55.6B) is already inside PP&amp;E</b> (so its depreciation is in D&amp;A); <b>operating-lease ROU ($86B) sits on its own line</b> — capacity that never shows up in the capex or PP&amp;E charts. Of the $121.8B liability, $87.3B is long-term. This is real leverage-lite: obligations that behave like debt but sit outside reported debt.</div>';
   // Panel 3 — the pipeline
-  var p3='<div class="ov-callout" style="margin-top:0"><b>~$62B of leases &ldquo;not yet commenced&rdquo;</b> (FY2024, 10-K) — signed but not started, largely <b>data centers and fulfillment</b>. That is forward capacity <b>on top of</b> the $121.8B already capitalized, and it does not appear in capex, PP&amp;E or the lease liability until each lease starts.</div>'+
-    '<div class="ew-h">The obligation is long-dated</div>'+
-    mbar('Operating-lease payments by maturity',[{w:16,c:BRAND2,t:'≤1yr ~$12B'},{w:38,c:acxRGBA(BRAND2,0.7),t:'2–5yr'},{w:46,c:acxRGBA(BRAND2,0.4),t:'thereafter ~$44B'}])+
-    '<div class="ew-note">Weighted remaining term ~<b>10 yr (operating) / 12.6 yr (finance)</b>. The bulk sits in &ldquo;thereafter&rdquo; — Amazon is committing to capacity a decade out, in step with the AI build. <span style="color:var(--mu)">Maturities &amp; not-yet-commenced per 10-K Note 4 (FY2024); balance-sheet totals FY2025.</span></div>';
+  var p3='<div class="exp-stat" style="margin:0 0 12px">'+
+      '<div class="exp-st"><div class="exp-sl">Signed, not started</div><div class="exp-sv">~$62B</div><div class="exp-ss">10-K Note 4 (FY2024)</div></div>'+
+      '<div class="exp-st"><div class="exp-sl">Mostly</div><div class="exp-sv">DC + FCs</div><div class="exp-ss">data centers &amp; fulfillment</div></div>'+
+      '<div class="exp-st"><div class="exp-sl">On books?</div><div class="exp-sv">No — yet</div><div class="exp-ss">enters capex/PP&amp;E/liability only when each lease starts</div></div>'+
+      '<div class="exp-st"><div class="exp-sl">Weighted term</div><div class="exp-sv">10–13 yr</div><div class="exp-ss">op 10.0 · finance 12.6</div></div>'+
+    '</div>'+
+    '<div class="ew-h">Operating-lease payments by maturity</div>'+
+    mbar('',[{w:16,c:BRAND2,t:'≤1yr ~$12B'},{w:38,c:acxRGBA(BRAND2,0.7),t:'2–5yr'},{w:46,c:acxRGBA(BRAND2,0.4),t:'thereafter ~$44B'}])+
+    '<div class="ew-foot">Maturities &amp; not-yet-commenced per 10-K Note 4 (FY2024); balance-sheet totals FY2025.</div>';
   // Panel 4 — what Amazon leases
   var p4='<div class="ew-two">'+box('📦','Fulfillment &amp; logistics','Warehouses, sortation centers, delivery stations and (increasingly) grocery — the largest slice of operating leases. Leasing lets Amazon flex the network up and down without owning every building.')+
       box('🖥️','Data centers','A mix — Amazon <b>owns</b> core AWS capacity (the capex build) but also <b>leases</b> data-center space and power, especially to move fast; much of the not-yet-commenced pipeline is here.')+
@@ -4963,7 +4968,6 @@ var A_SPLC_GEO={ labels:['United States','China','India','Japan','Germany','Unit
   sup:[37.91,7.73,6.08,5.62,3.44,3.76,2.39,1.20] };
 function aSplcBody(c){
   var h='';
-  h+='<p class="ov-lede"><b>Who Amazon buys from.</b> The supplier side of the Bloomberg SPLC map — two distinct chains: the AWS AI-infrastructure capex chain (silicon, servers, memory, interconnect) and the retail / CPG / logistics chain (first-party merchandise, devices, parcel). The customer / demand side lives in Top Line.</p>';
   h+=ddStat([['1,452','suppliers tracked'],['24,052','supplier facilities'],['37.9%','supplier facs in US'],['7.7%','supplier facs in China'],['$38.2B','largest single relationship (NVIDIA)']]);
   h+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>Chain 1 · the AWS AI-infrastructure capex chain</b> (relationship size, Bloomberg est.; bar = relative size — tap a card for the read)</div>';
   h+='<div class="ce-watch">'+A_SPLC_INFRA.map(function(s,i){

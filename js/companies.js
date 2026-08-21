@@ -446,6 +446,16 @@ function renderCoAnalysis(companyId, ticker) {
   _valSlotId = 'valuation-data-slot';
   renderPillarFilter();
   renderPillarContent();
+
+  // A Deep Dive can mirror the live Management (ownership + insider) table WITHOUT absorbing Pillars
+  // (keeps the Pillars tab and does not touch Valuation): if it exposes #dd-mgmt-slot, fill it too.
+  // loadManagementData captures its slot synchronously, so we can point it there and restore.
+  if (document.getElementById('dd-mgmt-slot')) {
+    var _keep = _mgmtSlotId;
+    _mgmtSlotId = 'dd-mgmt-slot';
+    loadManagementData(companyId);
+    _mgmtSlotId = _keep;
+  }
 }
 
 

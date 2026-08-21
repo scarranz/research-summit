@@ -3353,6 +3353,11 @@ function aSegBridgeSync(pane){
   if(h) h.style.display=mode==='hist'?'flex':'none';
   if(f) f.style.display=mode==='fwd'?'flex':'none';
 }
+// Segment-bridge sensitivity levers are stored SEPARATELY per basis — moving them under Summit does not
+// touch the BBG scenario and vice-versa. aSegBrLoadLevers restores the active basis's saved slider set.
+var _aSegBrLev={cons:{na:0,intl:0,aws:0},summit:{na:0,intl:0,aws:0}};
+function aSegBrLoadLevers(pane){ var bb=pane.querySelector('.sbr-basis .active'), basis=bb?bb.getAttribute('data-sbrb'):'cons', st=_aSegBrLev[basis]||{};
+  ['na','intl','aws'].forEach(function(k){ var sl=pane.querySelector('.sbr-ctl-fwd input[data-sbrseg="'+k+'"]'); if(sl) sl.value=(st[k]||0); }); }
 function aBuildSegBridge(){
   var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]'); if(!pane) return;
   var mb=pane.querySelector('.sbr-mode .active'), mode=mb?mb.getAttribute('data-sbrm'):'hist';
@@ -3378,7 +3383,8 @@ function aBuildSegBridge(){
     var base=SG.map(function(s){ return amznBBG.seg[s.k].oi.a[2]; });   // FY25 actual, $M
     var tgt=SG.map(function(s){
       var b=(basis==='summit')?aSumSegSummit(s.mk, fi+3):null; if(b==null) b=amznBBG.seg[s.k].oi.f[fi];   // Summit unavailable (e.g. partial FY28) → BBG
-      var sl=pane.querySelector('.sbr-ctl-fwd input[data-sbrseg="'+s.k+'"]'); return b*(sl?(1+(+sl.value)/100):1); });
+      var sl=pane.querySelector('.sbr-ctl-fwd input[data-sbrseg="'+s.k+'"]'); if(sl) _aSegBrLev[basis][s.k]=+sl.value;   // persist levers PER BASIS (Summit and BBG keep their own)
+      return b*(sl?(1+(+sl.value)/100):1); });
     var bn=pane.querySelector('#aSbrBasisNote'); if(bn) bn.textContent='Sensitize each segment’s operating income vs '+(basis==='summit'?'Summit’s segment forecast':'the BBG consensus')+' (0% = the base):';
     var run=base.reduce(function(a,b){ return a+b; },0)/1000;
     var steps=[{label:'FY25 OI', kind:'base', color:'#1E2733', range:[0,run], runAfter:run, val:run}];
@@ -4316,7 +4322,7 @@ function aBuildSegments(){
       pane.querySelectorAll('.seg-gsec').forEach(function(s){ s.hidden=(s.getAttribute('data-sgsec')!==v); });
       if(SEG_BUILD[v]) SEG_BUILD[v](); }; }
     var segtog=function(sel,extra){ pane.querySelectorAll(sel+' button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll(sel+' button').forEach(function(x){ x.classList.toggle('active',x===b); }); if(extra) extra(); aBuildSegBridge(); }; }); };
-    segtog('.sbr-mode', function(){ aSegBridgeSync(pane); }); segtog('.sbr-from'); segtog('.sbr-to'); segtog('.sbr-fy'); segtog('.sbr-basis');
+    segtog('.sbr-mode', function(){ aSegBridgeSync(pane); }); segtog('.sbr-from'); segtog('.sbr-to'); segtog('.sbr-fy'); segtog('.sbr-basis', function(){ aSegBrLoadLevers(pane); });
     pane.querySelectorAll('.sbr-ctl-fwd input[type=range]').forEach(function(s){ s.addEventListener('input', aBuildSegBridge); });
     aSegBridgeSync(pane);
     var stabs=pane.querySelectorAll('.segx-tab');

@@ -4625,9 +4625,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="supplychain">Supply Chain</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="general">'+ubBottomGeneralBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="segments" hidden>'+ubSegProfitBody()+ubSegProfitCards()+
-        collapsible('Capital allocation — FCF, buybacks & the share count', ubCapAllocBody(c), false)+
-      '</div>'+
+      '<div class="ovt-subpane" data-ovst="segments" hidden>'+ubSegProfitBody()+ubSegProfitCards()+'</div>'+
       '<div class="ovt-subpane" data-ovst="supplychain" hidden>'+suppliersBody(c)+'</div>'+
     '</div>';
   // ── EVOLUTION — Earnings History (narrative) · Guidance (Model vs. Reality + 3-yr targets) ·
@@ -4679,7 +4677,7 @@ function deepDiveHtml(c){
       '</div>'+
       '<div class="ovt-subpane" data-ovst="team">'+UBER_MGMT.body()+'</div>'+
       '<div class="ovt-subpane" data-ovst="ownership" hidden><div id="dd-mgmt-slot"></div></div>'+
-      '<div class="ovt-subpane" data-ovst="governance" hidden>'+ubGovBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="governance" hidden>'+ubGovBody(c)+collapsible('Capital allocation — FCF, buybacks &amp; the share count', ubCapAllocBody(c), false)+'</div>'+
       '<div class="ovt-subpane" data-ovst="track" hidden>'+ubTrackBody(c)+'</div>'+
     '</div>';
   // ── MISCELLANEOUS — the catch-all for what doesn't belong in a core tab (per Dani): M&A (Delivery
@@ -4964,7 +4962,7 @@ function buildSub(root, group, key){
     else if(key==='segcus') requestAnimationFrame(function(){ initSegmentsCustomers(root, 'UBER'); });
   } else if(group==='bottomline'){
     if(key==='general') buildUbGeneral(root);   // dropdown picker (Profitability / Bridge, one at a time) + expense deep-dives
-    else if(key==='segments'){ buildUbSegProfit(root); buildUbCapAlloc(root); }   // concise Adj EBITDA by segment + capital allocation
+    else if(key==='segments') buildUbSegProfit(root);   // concise Adj EBITDA by segment
     // supplychain: no charts
   } else if(group==='evolution'){
     if(key==='guidance')      buildModelTab();          // Model vs. Reality lives under Guidance
@@ -4991,7 +4989,7 @@ function buildSub(root, group, key){
     // peers (static table), ratings: no charts (Capital Allocation moved to Bottom Line ▸ Segments)
   } else if(group==='mgmt'){
     if(key==='team')          UBER_MGMT.init(root);
-    else if(key==='governance') buildUbSbc();   // SBC % vs share-count history
+    else if(key==='governance'){ buildUbSbc(); buildUbCapAlloc(root); }   // SBC % vs share-count + capital allocation (buybacks)
     // ownership, track: no charts
   }
 }

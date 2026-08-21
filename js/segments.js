@@ -33,6 +33,8 @@
 
 import { amznSegments } from './segments-data/amzn.js';
 import { amznResults } from './results-data/amzn.js';
+import { uberSegments } from './segments-data/uber.js';
+import { uberResults } from './results-data/uber.js';
 import { registerResultsData, resultsHtml, initResults } from './results.js';
 import { AMZN_THEMES } from './themes-data/amzn.js';
 
@@ -41,7 +43,8 @@ var THEME_SEG = { AMZN: { 'Amazon US': 'na', 'Amazon International': 'intl', 'AW
 var THEME_SRC = { AMZN: AMZN_THEMES };
 
 var SEGMENTS_DATA = {
-  AMZN: { seg: amznSegments, res: amznResults }
+  AMZN: { seg: amznSegments, res: amznResults },
+  UBER: { seg: uberSegments, res: uberResults }
 };
 
 export function getSegmentsData(ticker){ return SEGMENTS_DATA[ticker] || null; }

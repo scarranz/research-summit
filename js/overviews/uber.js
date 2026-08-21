@@ -10,6 +10,9 @@ import { makeValuation } from './valuation.js';
 import { makeManagement } from './management.js';
 import { WORLD_PATHS, WORLD_VB } from './world-paths.js';
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
+import { segmentsHtml, initSegments, segmentsOverviewHtml, initSegmentsOverview,
+         segmentsOtherHtml, initSegmentsOther,
+         segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line ▸ shared segments engine (General·Segments·Other·Customers)
 import { mountWatchList } from '../watchlist.js';
 import { uberResults } from '../results-data/uber.js';   // Actual/Summit/Consensus metric series (Bottom Line reformat)
 import { uberBBG } from './uber-bbg.js';                  // BBG consensus incl. per-segment GB/take-rate/EBITDA
@@ -4281,19 +4284,20 @@ function deepDiveHtml(c){
       '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
       '<button type="button" class="dd-tab" data-dd="misc">Miscellaneous</button>'+
     '</div>';
-  // ── TOP LINE — Segments (with an inner Mobility/Delivery/Freight toggle) · Customers · TAM ·
-  // Industry Analysis. The old "Deep Overview" is dismantled into these (Golden Rule #1). ──
+  // ── TOP LINE — the shared segments engine (segments.js), fed by segments-data/uber.js, exactly like
+  // AMZN: General · Segments · Other · Customers. UBER's former bespoke Top Line (segment worlds,
+  // UberOne, TAM, Industry) is preserved under Miscellaneous ▸ Other Analysis pending fine distribution. ──
   h+='<div class="dd-pane" data-dd="topline">'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="segments">Segments</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="customers">Customers</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="tam">TAM</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="industry">Industry Analysis</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="segov">General</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="segdrv">Segments</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="segoth">Other</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="segcus">Customers</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="segments">'+ubSegmentsBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="customers" hidden>'+ubCustomersBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="tam" hidden>'+ubTamBody(c)+'</div>'+
-      '<div class="ovt-subpane" data-ovst="industry" hidden>'+ubIndustryBody(c)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segov">'+(segmentsOverviewHtml('UBER')||ceResultsPending('Overview'))+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segdrv" hidden>'+(segmentsHtml('UBER')||ceResultsPending('Segments'))+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segoth" hidden>'+(segmentsOtherHtml('UBER')||ceResultsPending('Other'))+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segcus" hidden>'+(segmentsCustomersHtml('UBER')||ceResultsPending('Customers'))+'</div>'+
     '</div>';
   // ── BOTTOM LINE — Unit Economics · Suppliers · Insurance & FCF · Margins (live via Massive). ──
   // ── BOTTOM LINE — AMZN standard: General (profitability up top; the take-rate/per-trip unit
@@ -4373,11 +4377,21 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="balance">Balance Sheet</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="other">Other Analysis</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="manda">'+deliveryHeroBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="strategy" hidden>'+ubStrategyBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="timeline" hidden>'+historyStoryBody()+'</div>'+
       '<div class="ovt-subpane" data-ovst="balance" hidden>'+ubBalanceBody(c)+'</div>'+
+      // Other Analysis — bespoke Top-Line content preserved from before the shared segments engine took
+      // over Top Line: TAM, the competitive/industry landscape, Uber One membership, and the segment
+      // "worlds". Kept here so nothing is lost; to be distributed into segment adjacencies / Bottom Line.
+      '<div class="ovt-subpane" data-ovst="other" hidden>'+
+        collapsible('TAM — the addressable market', ubTamBody(c), false)+
+        collapsible('Industry & competitive landscape', ubIndustryBody(c), false)+
+        collapsible('Uber One — membership economics', ubCustomersBody(c), false)+
+        collapsible('Segment worlds — Mobility · Delivery · Freight in depth', ubSegmentsBody(c), false)+
+      '</div>'+
     '</div>';
   h+='</div>';
   return h;
@@ -4626,10 +4640,11 @@ function buildDeliveryCharts(){ buildLines('ubChartMargin', Q13.slice(0,12), { l
 function buildUberOneCharts(){ buildLines('ubChartMembers', UBERONE_GROWTH.labels, { label:'Members', data:UBERONE_GROWTH.data, color:BRAND2 }, null, function(v){ return v+'M'; }); }
 // Build the lazy charts that live inside a sub-pane, by (group, sub-key).
 function buildSub(root, group, key){
-  if(group==='topline'){
-    if(key==='segments'){ buildUbSegDual(root); buildOverviewCharts(); buildActiveSeg(root); }  // segment dual-axis + GB/EBITDA + active segment
-    else if(key==='customers') buildUberOneCharts();
-    // tam, industry: no charts
+  if(group==='topline'){   // the shared segments engine (segments.js), same as AMZN
+    if(key==='segov') requestAnimationFrame(function(){ initSegmentsOverview(root, 'UBER'); });
+    else if(key==='segdrv') requestAnimationFrame(function(){ initSegments(root, 'UBER'); });
+    else if(key==='segoth') requestAnimationFrame(function(){ initSegmentsOther(root, 'UBER'); });
+    else if(key==='segcus') requestAnimationFrame(function(){ initSegmentsCustomers(root, 'UBER'); });
   } else if(group==='bottomline'){
     if(key==='general'){   // profitability up top + the Unit-economics & Insurance deep-dives (collapsibles build on expand)
       buildUbProfit(root); buildUbBridge(root); buildUbMargins();
@@ -4650,6 +4665,9 @@ function buildSub(root, group, key){
     // strategy, timeline: no charts
   } else if(group==='misc'){
     if(key==='balance')       buildUbBal();     // equity-stake portfolio bar (moved from Valuation)
+    else if(key==='other'){   // preserved bespoke Top-Line charts (build on expand via the collapsible handler)
+      buildUbSegDual(root); buildOverviewCharts(); buildActiveSeg(root); buildUberOneCharts();
+    }
     // manda (Delivery Hero): SVG/HTML map wired via delegated .dhm-pill handlers in init — no Chart.js
     // strategy, timeline: no charts
   } else if(group==='valuation'){

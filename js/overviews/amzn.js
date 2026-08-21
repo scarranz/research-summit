@@ -3543,8 +3543,10 @@ function ewBoxes(arr){ return '<div class="ew-two"'+(arr.length<2?' style="grid-
 function ewCallsBlock(calls){ if(!calls||!calls.length) return '';
   return '<details class="ew-calls" open><summary class="ew-callsum">What management has said</summary>'+ewCallTimeline(calls)+'</details>';
 }
+function ewQord(q){ var m=/Q(\d)\s*(\d{4})/.exec(q||''); if(m) return (+m[2])*10+(+m[1]); var y=/(\d{4})/.exec(q||''); return y?(+y[1])*10:0; }
 function ewCallTimeline(calls){ if(!calls||!calls.length) return '';
-  return '<div class="ew-tls">'+calls.map(function(c){ return '<div class="ew-tli"><div class="ew-tlq">'+c.q+'</div><div class="ew-tlt">'+c.txt+'</div>'+(c.who&&c.who!=='—'?'<div class="ew-tlw">— '+c.who+'</div>':'')+'</div>'; }).join('')+'</div>';
+  var sorted=calls.slice().sort(function(a,b){ return ewQord(a.q)-ewQord(b.q); });   // always oldest → newest
+  return '<div class="ew-tls">'+sorted.map(function(c){ return '<div class="ew-tli"><div class="ew-tlq">'+c.q+'</div><div class="ew-tlt">'+c.txt+'</div>'+(c.who&&c.who!=='—'?'<div class="ew-tlw">— '+c.who+'</div>':'')+'</div>'; }).join('')+'</div>';
 }
 // Management commentary per expense line — VERBATIM quotes only, taken from the repo call records
 // (docs/calls/AMZN*.md, Q4'25–Q2'26). No external sites, no paraphrase attributed to management, and no
@@ -3599,10 +3601,15 @@ var SEG_CALLS={
     {q:'Q2 2026', who:'Andy Jassy, CEO', tag:'fwd', txt:'"We have clear line of sight to strong financial returns," and AWS can become "a trillion-dollar annual revenue business." 2027 capacity is "largely reserved," some 2028 "already spoken for."'}
   ],
   us:[
-    {q:'Q4 2025', who:'Andy Jassy, CEO', tag:'why', txt:'Rufus reached 300M customers in 2025, with users “60% more likely to complete a purchase.”'},
-    {q:'Q1 2026', who:'Brian Olsavsky, CFO', tag:'why', txt:'Robotics is in “every 2026 US large-format launch.”'}
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'“Lowest-priced US retailer” for the 9th straight year (14% below other majors); everyday essentials 1-in-3 units; 8B+ items same/next-day (+30%).'},
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'Rufus reached 300M customers in 2025, with users “60% more likely to complete a purchase.”'},
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'Advertising +22%, with $12B of incremental ad revenue in 2025 — largely on the North America retail surface.'},
+    {q:'Q1 2026', who:'Brian Olsavsky, CFO', txt:'Paid units +15% vs fulfillment expense +9% (FX-neutral); robotics in “every 2026 US large-format launch.”'}
   ],
-  int:[]
+  int:[
+    {q:'FY 2025', who:'Amazon 10-K MD&A', txt:'A +$903M FX tailwind to International operating income in 2025 — the reported margin moves with the dollar as much as with operations.'},
+    {q:'Q2 2026', who:'Amazon Q2 2026 (8-K)', txt:'International net sales $42.2B (+15%), operating income $1,717M (4.1% margin) — the one segment line that came in under both the Street ($42.7B) and Summit ($43.4B) for the quarter.'}
+  ]
 };
 function ewBase(c){
   var h='<div class="ew-kpis">'+c.kpis.map(function(k){ return '<div class="ew-tile"><div class="ew-tv">'+k[0]+'</div><div class="ew-tl">'+k[1]+'</div></div>'; }).join('')+'</div>';

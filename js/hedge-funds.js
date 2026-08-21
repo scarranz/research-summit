@@ -108,12 +108,12 @@ function renderBenchmark(){
   var annStr=(annualized*100).toFixed(1)+'%';
   var html='<div class="inv-bench-left"><div class="inv-bench-title">S&amp;P 500 Benchmark</div><div class="inv-bench-sub">All managers measured against this</div></div>';
   html+='<div class="inv-bench-mets">';
-  html+='<div class="inv-bench-m"><div class="inv-bench-ml">Cumul. 2019&ndash;Q1 2026</div><div class="inv-bench-mv">+'+SP500_REF.cum.toFixed(1)+'%</div></div>';
+  html+='<div class="inv-bench-m"><div class="inv-bench-ml">Cumul. 2019&ndash;Q2 2026</div><div class="inv-bench-mv">+'+SP500_REF.cum.toFixed(1)+'%</div></div>';
   html+='<div class="inv-bench-m"><div class="inv-bench-ml">Annualized (7yr)</div><div class="inv-bench-mv">+'+annStr+'</div></div>';
-  html+='<div class="inv-bench-m"><div class="inv-bench-ml">2026 YTD</div><div class="inv-bench-mv">+10.0%</div></div>';
+  html+='<div class="inv-bench-m"><div class="inv-bench-ml">H1 2026</div><div class="inv-bench-mv">'+(SP500_B26>=0?'+':'')+SP500_B26.toFixed(1)+'%</div></div>';
   html+='<div class="inv-bench-bars">';
-  rets.forEach(function(r,i){var pp=r>=0?Math.min(r/80*100,100):0;var np=r<0?Math.min(Math.abs(r)/40*100,100):0;
-    html+='<div class="ibb-col"><div class="ibb-wrap"><div class="ibb-pos" style="height:'+pp+'%"></div><div class="ibb-neg" style="height:'+np+'%"></div></div><div class="ibb-lbl">'+YEARS[i].slice(2)+'</div></div>';});
+  rets.forEach(function(r,i){var pp=r>=0?Math.min(r/35*100,100):0;var np=r<0?Math.min(Math.abs(r)/25*100,100):0;
+    html+='<div class="ibb-col"><div class="ibb-wrap"><div class="ibb-poswrap"><div class="ibb-pos" style="height:'+pp+'%" title="'+YEARS[i]+': '+(r>=0?'+':'')+r.toFixed(1)+'%"></div></div><div class="ibb-zero"></div><div class="ibb-negwrap"><div class="ibb-neg" style="height:'+np+'%" title="'+YEARS[i]+': '+(r>=0?'+':'')+r.toFixed(1)+'%"></div></div></div><div class="ibb-lbl">'+YEARS[i].slice(2)+'</div></div>';});
   html+='</div></div>';
   el.innerHTML=html;
 }
@@ -214,42 +214,160 @@ function renderInvGrid(){
 function computeSectorHeatmapData() {
   var investors = INVESTORS.filter(function(inv) { return inv.key !== 'summit'; });
   var sectorTotals = {};
-  var sectorTickers = {}; // sector -> ticker -> { company, holders: [{key, name, fund, w}] }
+  var sectorTickers = {}; // sector -> ticker -> { company, ytd, weight, holders: [{key, name, fund, w}] }
   investors.forEach(function(inv) {
     (inv.holdings || []).forEach(function(h) {
       var sector = tickerSector(h.t) || 'Other / Unclassified';
       sectorTotals[sector] = (sectorTotals[sector] || 0) + (h.w || 0);
       sectorTickers[sector] = sectorTickers[sector] || {};
-      sectorTickers[sector][h.t] = sectorTickers[sector][h.t] || { company: h.co, holders: [] };
+      sectorTickers[sector][h.t] = sectorTickers[sector][h.t] || { company: h.co, ytd: h.ytd, weight: 0, holders: [] };
+      sectorTickers[sector][h.t].weight += (h.w || 0);
       sectorTickers[sector][h.t].holders.push({ key: inv.key, name: inv.name, fund: inv.fund, w: h.w });
     });
+  });
+  // Average YTD return across the *distinct companies* on file in each
+  // sector (not weighted by position size, and not double-counted when
+  // several funds hold the same name) — this is what drives the
+  // red/green coloring, like a market-monitor sector heatmap.
+  var sectorAvgYtd = {};
+  Object.keys(sectorTickers).forEach(function(sector) {
+    var tickers = sectorTickers[sector];
+    var vals = Object.keys(tickers).map(function(t) { return tickers[t].ytd; }).filter(function(v) { return v != null; });
+    sectorAvgYtd[sector] = vals.length ? vals.reduce(function(s, v) { return s + v; }, 0) / vals.length : null;
   });
   var sectors = Object.keys(sectorTotals).sort(function(a, b) { return sectorTotals[b] - sectorTotals[a]; });
   var grandTotal = sectors.reduce(function(sum, s) { return sum + sectorTotals[s]; }, 0);
   var maxSector = sectors.length ? sectorTotals[sectors[0]] : 0;
-  return { investors: investors, sectors: sectors, sectorTotals: sectorTotals, sectorTickers: sectorTickers, grandTotal: grandTotal, maxSector: maxSector };
+  return { investors: investors, sectors: sectors, sectorTotals: sectorTotals, sectorTickers: sectorTickers, sectorAvgYtd: sectorAvgYtd, grandTotal: grandTotal, maxSector: maxSector };
+}
+
+// Red/green diverging fill for a %, like a market-monitor stock heatmap
+// -- green above 0, red below, saturating by PERF_RAMP_CAP so a +40% and
+// a +90% sector don't look identical but a +25% one is already clearly
+// "strong green."
+var PERF_RAMP_CAP = 20;
+var PERF_NEG = [200, 45, 45];
+var PERF_ZERO = [238, 241, 245];
+var PERF_POS = [21, 128, 61];
+function perfRamp(pct) {
+  if (pct == null) return 'var(--surface)';
+  var t = Math.max(-1, Math.min(1, pct / PERF_RAMP_CAP));
+  var from = t < 0 ? PERF_NEG : PERF_POS;
+  var at = Math.abs(t);
+  var r = Math.round(PERF_ZERO[0] + (from[0] - PERF_ZERO[0]) * at);
+  var g = Math.round(PERF_ZERO[1] + (from[1] - PERF_ZERO[1]) * at);
+  var b = Math.round(PERF_ZERO[2] + (from[2] - PERF_ZERO[2]) * at);
+  return 'rgb(' + r + ',' + g + ',' + b + ')';
 }
 
 var _hfHeatmapData = null;
+var _hfHeatmapShowPerf = true;
 
+function hfHeatmapTogglePerf(checked) {
+  _hfHeatmapShowPerf = checked;
+  renderSectorHeatmap();
+}
+
+// Squarified treemap layout (Bruls/Huizing/van Wijk): given items with a
+// .value and a target rect, returns them with .x/.y/.w/.h filling that
+// rect edge-to-edge -- no leftover whitespace, unlike flex-wrap sizing
+// (which only ever grows/shrinks along one axis at a time). Used twice:
+// once for the sector regions across the whole canvas, once more for
+// each sector's own tickers inside the region it was given.
+function squarify(items, x, y, w, h) {
+  var total = items.reduce(function(s, i) { return s + i.value; }, 0);
+  if (!total || !items.length || w <= 0 || h <= 0) { items.forEach(function(i) { i.x = x; i.y = y; i.w = 0; i.h = 0; }); return items; }
+  var area = w * h;
+  items.forEach(function(i) { i._area = i.value / total * area; });
+  function worst(row, side) {
+    var sum = 0, max = -Infinity, min = Infinity;
+    row.forEach(function(i) { sum += i._area; if (i._area > max) max = i._area; if (i._area < min) min = i._area; });
+    var s2 = sum * sum, side2 = side * side;
+    return Math.max((side2 * max) / s2, s2 / (side2 * min));
+  }
+  var remaining = items.slice(), rx = x, ry = y, rw = w, rh = h, out = [];
+  while (remaining.length) {
+    var shortSide = Math.min(rw, rh);
+    var row = [remaining[0]], idx = 1;
+    while (idx < remaining.length) {
+      var candidate = row.concat([remaining[idx]]);
+      if (worst(candidate, shortSide) <= worst(row, shortSide)) { row = candidate; idx++; } else break;
+    }
+    var rowArea = row.reduce(function(s, i) { return s + i._area; }, 0);
+    if (rw >= rh) {
+      var stripW = rowArea / rh, cy = ry;
+      row.forEach(function(item) { var ih = item._area / stripW; item.x = rx; item.y = cy; item.w = stripW; item.h = ih; cy += ih; });
+      rx += stripW; rw -= stripW;
+    } else {
+      var stripH = rowArea / rw, cx = rx;
+      row.forEach(function(item) { var iw = item._area / stripH; item.x = cx; item.y = ry; item.w = iw; item.h = stripH; cx += iw; });
+      ry += stripH; rh -= stripH;
+    }
+    out = out.concat(row);
+    remaining = remaining.slice(row.length);
+  }
+  return out;
+}
+
+var HF_TM_W = 1000, HF_TM_H = 520, HF_TM_HDR = 34;
+
+// True two-level treemap, like a market-monitor sector map: sector
+// regions sized by how much of the tracked book sits there, each
+// containing one tile per company (ticker) sized by that company's own
+// aggregate weight across funds and colored by that company's own YTD
+// return -- so "how big" and "how it's doing" are two separate signals,
+// same as the reference S&P 500 heatmap. Laid out with squarify() so the
+// whole canvas is filled, no whitespace. The Performance toggle swaps
+// the color signal off (neutral tiles, size-only) without re-fetching
+// anything, since this is all built from data already on the page.
 function renderSectorHeatmap() {
   var el = document.getElementById('hf-sector-heatmap');
   if (!el) return;
   var data = _hfHeatmapData = computeSectorHeatmapData();
   if (!data.sectors.length) { el.innerHTML = '<div class="hf-secmosaic-empty">No holdings on file yet.</div>'; return; }
-  var html = '<div class="hf-secmosaic">';
-  data.sectors.forEach(function(sector, i) {
-    var v = data.sectorTotals[sector];
-    var shareOfBook = data.grandTotal > 0 ? v / data.grandTotal * 100 : 0;
-    var t = data.maxSector > 0 ? v / data.maxSector : 0;
-    var textCls = t > 0.5 ? 'hf-secmosaic-text-lt' : 'hf-secmosaic-text-dk';
-    html += '<div class="hf-secmosaic-tile ' + textCls + '" style="background:' + ivdRamp(t) + '" onclick="hfSectorClick(' + i + ')" title="Click for the ' + esc(sector) + ' breakdown">' +
-      '<div class="hf-secmosaic-name">' + esc(sector) + '</div>' +
-      '<div class="hf-secmosaic-pct">' + shareOfBook.toFixed(1) + '%</div>' +
-      '<div class="hf-secmosaic-sub">of tracked book</div>' +
-    '</div>';
+  var showPerf = _hfHeatmapShowPerf;
+  var html = '<div class="hf-secmonitor"><div class="hf-secmonitor-hd">' +
+    '<span class="hf-secmonitor-title">Sized by position weight &middot; colored by each company&rsquo;s own YTD return</span>' +
+    '<span style="display:flex;align-items:center;gap:14px">' +
+    '<span class="hf-secmonitor-legend">' + (showPerf ? '<span class="hf-secmonitor-sw" style="background:' + perfRamp(-PERF_RAMP_CAP) + '"></span>Down<span class="hf-secmonitor-sw" style="background:' + perfRamp(0) + '"></span>Flat<span class="hf-secmonitor-sw" style="background:' + perfRamp(PERF_RAMP_CAP) + '"></span>Up' : '') + '</span>' +
+    '<label class="hf-chart-toggle" title="Show or hide YTD color coding"><input type="checkbox" ' + (showPerf ? 'checked' : '') + ' onchange="hfHeatmapTogglePerf(this.checked)"><span class="hf-chart-toggle-track"><span class="hf-chart-toggle-thumb"></span></span><span class="hf-chart-toggle-txt">Performance</span></label>' +
+    '</span></div><div class="hf-treemap">';
+
+  var sectorItems = data.sectors.map(function(sector) { return { sector: sector, value: Math.max(data.sectorTotals[sector], 0.01) }; });
+  squarify(sectorItems, 0, 0, HF_TM_W, HF_TM_H);
+
+  sectorItems.forEach(function(si) {
+    var sector = si.sector, i = data.sectors.indexOf(sector);
+    var avgYtd = data.sectorAvgYtd[sector];
+    var avgStr = avgYtd == null ? 'n/a' : (avgYtd >= 0 ? '+' : '') + avgYtd.toFixed(1) + '%';
+    var avgCls = avgYtd == null ? '' : (avgYtd >= 0 ? 'hf-tm-pos' : 'hf-tm-neg');
+    var pctBox = { left: si.x / HF_TM_W * 100, top: si.y / HF_TM_H * 100, width: si.w / HF_TM_W * 100, height: si.h / HF_TM_H * 100 };
+    var hdrH = Math.min(HF_TM_HDR, si.h * 0.4);
+
+    html += '<div class="hf-tm-sector" style="left:' + pctBox.left + '%;top:' + pctBox.top + '%;width:' + pctBox.width + '%;height:' + pctBox.height + '%">' +
+      '<div class="hf-tm-sector-hd" style="height:' + hdrH + 'px" onclick="hfSectorClick(' + i + ')" title="Click for the full ' + esc(sector) + ' breakdown"><span class="hf-tm-sector-name">' + esc(sector) + '</span>' + (showPerf ? '<span class="hf-tm-sector-avg ' + avgCls + '">' + avgStr + '</span>' : '') + '</div>' +
+      '<div class="hf-tm-tickers" style="top:' + hdrH + 'px">';
+
+    var tickers = data.sectorTickers[sector];
+    var tickerItems = Object.keys(tickers).map(function(t) { return { t: t, value: Math.max(tickers[t].weight, 0.01) }; });
+    var tickerAreaW = si.w, tickerAreaH = Math.max(si.h - hdrH, 0);
+    squarify(tickerItems, 0, 0, tickerAreaW, tickerAreaH);
+
+    tickerItems.forEach(function(ti) {
+      var entry = tickers[ti.t];
+      var bg = showPerf ? perfRamp(entry.ytd) : 'var(--surface)';
+      var tt = showPerf && entry.ytd != null ? Math.abs(entry.ytd) / PERF_RAMP_CAP : 0;
+      var textCls = showPerf && tt > 0.45 ? 'hf-secmosaic-text-lt' : 'hf-secmosaic-text-dk';
+      var tLeft = ti.x / tickerAreaW * 100, tTop = ti.y / tickerAreaH * 100, tW = ti.w / tickerAreaW * 100, tH = ti.h / tickerAreaH * 100;
+      var showYtd = showPerf && entry.ytd != null && ti.w >= 30 && ti.h >= 34;
+      html += '<div class="hf-tm-tile ' + textCls + '" style="left:' + tLeft + '%;top:' + tTop + '%;width:' + tW + '%;height:' + tH + '%;background:' + bg + '" onclick="hfTickerClick(\'' + esc(sector).replace(/'/g, "\\'") + '\',\'' + esc(ti.t) + '\')" title="' + esc(entry.company) + '">' +
+        '<div class="hf-tm-ticker">' + esc(ti.t) + '</div>' +
+        (showYtd ? '<div class="hf-tm-ytd">' + (entry.ytd >= 0 ? '+' : '') + entry.ytd.toFixed(1) + '%</div>' : '') +
+      '</div>';
+    });
+    html += '</div></div>';
   });
-  html += '</div>';
+  html += '</div></div>';
   el.innerHTML = html;
 }
 
@@ -277,8 +395,9 @@ function hfSectorClick(i) {
     tks.forEach(function(t) {
       var entry = tickers[t];
       var holders = entry.holders.slice().sort(function(a, b) { return b.w - a.w; });
+      var ytdBadge = entry.ytd != null ? '<span class="hf-secpop-ytd ' + (entry.ytd >= 0 ? 'pos' : 'neg') + '">' + (entry.ytd >= 0 ? '+' : '') + entry.ytd.toFixed(1) + '%</span>' : '';
       body += '<div class="hf-secpop-row">' +
-        '<div class="hf-secpop-co">' + ivdLogo(t, 'hf-secpop-logo') + '<div><div class="hf-secpop-ticker">' + esc(t) + '</div><div class="hf-secpop-name">' + esc(entry.company) + '</div></div></div>' +
+        '<div class="hf-secpop-co">' + ivdLogo(t, 'hf-secpop-logo') + '<div><div class="hf-secpop-ticker">' + esc(t) + ytdBadge + '</div><div class="hf-secpop-name">' + esc(entry.company) + '</div></div></div>' +
         '<div class="hf-secpop-holders">' + holders.map(function(h) {
           return '<span class="hf-secpop-holder" title="' + esc(h.fund) + '">' + esc(h.name) + ' <b>' + h.w.toFixed(1) + '%</b></span>';
         }).join('') + '</div>' +
@@ -299,14 +418,46 @@ function hfSectorClick(i) {
   document.getElementById(id + '_close').addEventListener('click', function() { overlay.remove(); });
 }
 
+// Click one tile in the treemap — a compact popup with just that
+// company: who holds it and how big each fund's position is.
+function hfTickerClick(sector, ticker) {
+  if (!_hfHeatmapData) return;
+  var entry = (_hfHeatmapData.sectorTickers[sector] || {})[ticker];
+  if (!entry) return;
+  var holders = entry.holders.slice().sort(function(a, b) { return b.w - a.w; });
+
+  var id = 'hftk_' + Date.now();
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = id;
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+  var ytdBadge = entry.ytd != null ? '<span class="hf-secpop-ytd ' + (entry.ytd >= 0 ? 'pos' : 'neg') + '">' + (entry.ytd >= 0 ? '+' : '') + entry.ytd.toFixed(1) + '% YTD</span>' : '';
+  var body = '<div class="hf-tkpop-holders">' + holders.map(function(h) {
+    return '<div class="hf-tkpop-row"><span class="hf-tkpop-name" title="' + esc(h.fund) + '">' + esc(h.name) + '</span><span class="hf-tkpop-w">' + h.w.toFixed(2) + '%</span></div>';
+  }).join('') + '</div>';
+
+  overlay.innerHTML =
+    '<div class="modal-card hf-tkpop-card" onclick="event.stopPropagation()">' +
+      '<div class="modal-header">' +
+        '<div>' + ivdLogo(ticker, 'hf-secpop-logo') + '</div>' +
+        '<div style="flex:1;margin-left:10px"><div class="modal-title" style="font-size:15px">' + esc(ticker) + ytdBadge + '</div><div style="font-size:11px;color:var(--mu)">' + esc(entry.company) + '</div></div>' +
+        '<button class="modal-close" id="' + id + '_close">&times;</button>' +
+      '</div>' +
+      '<div class="hf-secpop-body">' + body + '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  document.getElementById(id + '_close').addEventListener('click', function() { overlay.remove(); });
+}
+
 // ─── Stock lookup (Overall sub-tab) ────────────────────────────
 // "Of the names Summit covers, who else owns this, and is their
 // conviction growing or shrinking" — a fixed, curated ticker list (not
 // tied to Summit's live position sizing, which changes), then a
-// per-investor row across the 4 most recent quarters found in that
-// ticker's investor_yearly_holdings rows (funds file on different
-// schedules, so "4 most recent" is derived from whatever data actually
-// comes back, not assumed to be the same 4 quarters for every ticker).
+// per-investor row across a FIXED window of the 12 most recent
+// quarters (bump HF_LATEST_PERIOD forward each time a new quarter's
+// 13Fs get backfilled) — the columns never move as data fills in, only
+// the % cells do.
 
 var HF_STOCKLOOKUP_TICKERS = [
   { t: 'AMZN', co: 'Amazon.com, Inc.' },
@@ -322,11 +473,30 @@ var HF_STOCKLOOKUP_TICKERS = [
   { t: 'UBER', co: 'Uber Technologies, Inc.' },
 ].sort(function(a, b) { return a.t < b.t ? -1 : a.t > b.t ? 1 : 0; });
 
+var HF_LATEST_PERIOD = { year: 2026, quarter: 2 };
+var HF_STOCKLOOKUP_PERIODS = lastNPeriods(HF_LATEST_PERIOD, 12);
+var _hfStockLookupShowPerf = true;
+
+function lastNPeriods(latest, n) {
+  var periods = [], y = latest.year, q = latest.quarter;
+  for (var i = 0; i < n; i++) {
+    periods.unshift({ year: y, quarter: q });
+    q--; if (q < 1) { q = 4; y--; }
+  }
+  return periods;
+}
+
 function populateStockLookupSelect() {
   var sel = document.getElementById('hf-stocklookup-sel');
   if (!sel) return;
   sel.innerHTML = HF_STOCKLOOKUP_TICKERS.map(function(h) { return '<option value="' + esc(h.t) + '">' + esc(h.t) + ' — ' + esc(h.co) + '</option>'; }).join('');
   hfStockLookupSelect(sel.value);
+}
+
+function hfStockLookupTogglePerf(checked) {
+  _hfStockLookupShowPerf = checked;
+  var wrap = document.getElementById('hf-stocklookup-body');
+  if (wrap) wrap.classList.toggle('hf-stocklookup-noperf', !checked);
 }
 
 async function hfStockLookupSelect(ticker) {
@@ -346,14 +516,8 @@ function renderStockLookupTable(ticker, rows) {
   var body = document.getElementById('hf-stocklookup-body');
   if (!body) return;
   rows = rows.filter(function(r) { return r.investor_key !== 'summit'; });
-  if (!rows.length) { body.innerHTML = '<div class="hf-stocklookup-empty">No tracked superinvestor has disclosed a position in ' + esc(ticker) + '.</div>'; return; }
 
-  var periodSet = {};
-  rows.forEach(function(r) { periodSet[periodOptionValue({ year: r.year, quarter: r.quarter })] = { year: r.year, quarter: r.quarter }; });
-  var periods = Object.keys(periodSet).map(function(k) { return periodSet[k]; })
-    .sort(function(a, b) { return periodSortKey(b) - periodSortKey(a); })
-    .slice(0, 4)
-    .sort(function(a, b) { return periodSortKey(a) - periodSortKey(b); });
+  var periods = HF_STOCKLOOKUP_PERIODS;
   var periodKeys = periods.map(periodOptionValue);
   var latestKey = periodKeys[periodKeys.length - 1];
 
@@ -364,9 +528,13 @@ function renderStockLookupTable(ticker, rows) {
     byInv[r.investor_key] = byInv[r.investor_key] || {};
     byInv[r.investor_key][pk] = r.weight_pct;
   });
-  var invKeys = Object.keys(byInv);
+  // Rows are every tracked superinvestor, always, not just the ones with
+  // a position on file -- someone with no position on this ticker still
+  // shows up, just blank across the row, so the list never reflows as
+  // you switch tickers.
+  var invKeys = INVESTORS.filter(function(i) { return i.key !== 'summit'; }).map(function(i) { return i.key; });
   invKeys.sort(function(a, b) {
-    var wa = byInv[a][latestKey], wb = byInv[b][latestKey];
+    var wa = byInv[a] ? byInv[a][latestKey] : null, wb = byInv[b] ? byInv[b][latestKey] : null;
     if (wa == null && wb == null) return 0;
     if (wa == null) return 1;
     if (wb == null) return -1;
@@ -374,19 +542,40 @@ function renderStockLookupTable(ticker, rows) {
   });
 
   var html = '<div class="hf-heat-wrap"><table class="hf-stocklookup-tbl"><thead><tr><th>Superinvestor</th>';
-  periods.forEach(function(p) { html += '<th class="nr">' + esc(periodLabel(p)) + '</th>'; });
+  periods.forEach(function(p, i) {
+    var isCur = i === periods.length - 1;
+    html += '<th class="nr' + (isCur ? ' ivd-cmp-current' : '') + '">' + esc(periodLabel(p)) + (isCur ? ' <span class="ivd-cmp-current-tag">Current</span>' : '') + '</th>';
+  });
   html += '</tr></thead><tbody>';
   invKeys.forEach(function(key) {
     var inv = INVESTORS.filter(function(i) { return i.key === key; })[0];
-    html += '<tr><td><div class="hf-stocklookup-inv">' + esc(inv ? inv.name : key) + '<span class="hf-stocklookup-fund">' + esc(inv ? inv.fund : '') + '</span></div></td>';
-    periodKeys.forEach(function(pk) {
-      var w = byInv[key][pk];
-      html += '<td class="nr hf-stocklookup-w">' + (w != null ? w.toFixed(2) + '%' : '<span class="hf-stocklookup-dash">&mdash;</span>') + '</td>';
+    var photo = inv && inv.photo ? (IMGS[inv.photo] || '') : '';
+    var avatar = photo
+      ? '<img class="hf-stocklookup-logo" src="' + esc(photo) + '" alt="" onerror="this.style.opacity=0.3">'
+      : '<div class="hf-stocklookup-logo hf-stocklookup-ini">' + esc((inv ? inv.name : key).split(' ').slice(0, 2).map(function(n) { return n[0]; }).join('')) + '</div>';
+    html += '<tr><td><div class="hf-stocklookup-inv">' + avatar + '<span>' + esc(inv ? inv.name : key) + '<span class="hf-stocklookup-fund">' + esc(inv ? inv.fund : '') + '</span></span></div></td>';
+    var invData = byInv[key] || {};
+    // Performance color only marks the CURRENT quarter (up/down/new vs.
+    // whatever the last non-null quarter before it was) -- earlier
+    // quarters show as plain numbers, since coloring every column at once
+    // read as "how did the stock do that quarter," which isn't what this
+    // signals (it's whether the fund's position grew or shrank).
+    var lastNonNull = null;
+    periodKeys.forEach(function(pk, i) {
+      var w = invData[pk];
+      var isCur = i === periodKeys.length - 1;
+      var moveCls = '';
+      if (isCur && w != null) {
+        moveCls = lastNonNull == null ? 'hf-slk-new' : w > lastNonNull ? 'hf-slk-up' : w < lastNonNull ? 'hf-slk-down' : 'hf-slk-flat';
+      }
+      if (w != null) lastNonNull = w;
+      html += '<td class="nr hf-stocklookup-w ' + moveCls + (isCur ? ' ivd-cmp-current' : '') + '">' + (w != null ? w.toFixed(2) + '%' : '<span class="hf-stocklookup-dash">&mdash;</span>') + '</td>';
     });
     html += '</tr>';
   });
   html += '</tbody></table></div>';
   body.innerHTML = html;
+  body.classList.toggle('hf-stocklookup-noperf', !_hfStockLookupShowPerf);
 }
 
 // ─── Overall / Superinvestors sub-tabs ─────────────────────────
@@ -1600,7 +1789,10 @@ window.hideInvestor = hideInvestor;
 window.showAllInvestors = showAllInvestors;
 window.hfMainTab = hfMainTab;
 window.hfStockLookupSelect = hfStockLookupSelect;
+window.hfStockLookupTogglePerf = hfStockLookupTogglePerf;
 window.hfSectorClick = hfSectorClick;
+window.hfHeatmapTogglePerf = hfHeatmapTogglePerf;
+window.hfTickerClick = hfTickerClick;
 
 export function loadHedgeFundsPage() {
   if (!HF_FUNDS || !HF_FUNDS.length || !INVESTORS || !INVESTORS.length) {

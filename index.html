@@ -343,15 +343,22 @@
     <div class="card" style="margin-bottom:30px" id="hf-heatmap-card">
       <div id="hf-sector-heatmap"></div>
       <p style="margin-top:16px;font-size:11px;color:var(--mu);line-height:1.6">
-        Each tile is a GICS sector&rsquo;s share of the combined disclosed top holdings across every tracked superinvestor (Summit&rsquo;s own book excluded) &mdash; not that sector&rsquo;s share of the market. Darker/bigger-looking tiles mean more of the tracked funds&rsquo; visible money sits there right now, i.e. how crowded that trade is. Click a tile to see which companies make up that sector and which superinvestors hold each one.
+Each tile is a GICS sector, colored by the average YTD return of the companies tracked superinvestors hold there (Summit&rsquo;s own book excluded) &mdash; green means that sector&rsquo;s holdings are up on the year on average, red means down, like a stock-market heatmap. It&rsquo;s not the sector&rsquo;s market performance, just the performance of the specific names these funds happen to hold. Click a tile to see which companies make up that sector, their individual YTD, and which superinvestors hold each one.
       </p>
     </div>
     <div class="sechdr" style="margin-bottom:18px">
       <span class="sect">Superinvestor Conviction by Stock</span>
-      <span class="secn">Pick one of Summit&rsquo;s own holdings &mdash; see which superinvestors also own it, and how their position size has moved over the last 4 quarters</span>
+      <span class="secn">Pick a stock Summit covers &mdash; see which superinvestors also own it and how their position size has moved over the last 12 quarters on file</span>
     </div>
     <div class="card" style="margin-bottom:30px" id="hf-stocklookup-card">
-      <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px"><span style="font-size:12px;color:var(--mu)">Stock</span><select class="fsel" id="hf-stocklookup-sel" onchange="hfStockLookupSelect(this.value)"></select></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:9px"><span style="font-size:12px;color:var(--mu)">Stock</span><select class="fsel" id="hf-stocklookup-sel" onchange="hfStockLookupSelect(this.value)"></select></div>
+        <label class="hf-chart-toggle" title="Show or hide position-size color coding">
+          <input type="checkbox" id="hf-stocklookup-perf-toggle" checked onchange="hfStockLookupTogglePerf(this.checked)">
+          <span class="hf-chart-toggle-track"><span class="hf-chart-toggle-thumb"></span></span>
+          <span class="hf-chart-toggle-txt">Performance</span>
+        </label>
+      </div>
       <div id="hf-stocklookup-body"></div>
     </div>
   </div>

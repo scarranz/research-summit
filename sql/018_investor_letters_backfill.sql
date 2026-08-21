@@ -27,16 +27,18 @@
 --     own distribution terms. What's on Scribd/etc. are leaks — do not
 --     link these here regardless of how easy they are to find.
 --
--- loeb (Third Point) is a special case, not a "nothing found": the
--- vehicle that used to publish Third Point's public quarterly letters,
--- Third Point Investors Limited (LSE: TPOU), completed a reverse
--- merger with Malibu Life Reinsurance in Sept 2025 and renamed itself
--- Malibu Life Holdings Limited (LSE: MLHL) — it is no longer a Third
--- Point vehicle. thirdpointlimited.com now redirects to
--- malibulifeinsurance.com. Any Third-Point-branded PDFs still showing
--- up in search results live on that same (now unrelated) infra and
--- should not be linked here as if they were Daniel Loeb's own investor
--- relations page.
+-- UPDATE 2026-08-21: the note above (that the Third Point vehicle "is no
+-- longer a Third Point vehicle" post-merger) turned out to be incomplete.
+-- Re-verified today: Malibu Life Holdings Limited (LSE: MLHL, formerly
+-- Third Point Investors Limited) still allocates to Third Point Offshore
+-- Fund and still publishes Daniel Loeb's real quarterly investor letters
+-- -- Q1 2026 and Q2 2026 letters were fetched directly and confirmed live
+-- (assets-malibu-life.s3.us-west-2.amazonaws.com, PDF metadata dated
+-- 2026-04-10), and a separate Malibu Life RNS ("Third Point Master Fund
+-- February 2026 Performance") corroborates the fund is still reporting
+-- Third Point performance under the MLHL banner. thirdpointlimited.com
+-- itself is stale/redirects, but malibu-life's own asset host is not --
+-- see the loeb rows below.
 -- ============================================================
 
 insert into investor_letters (investor_key, year, title, category, date, type, url, sort_order) values
@@ -44,4 +46,11 @@ insert into investor_letters (investor_key, year, title, category, date, type, u
 
   ('dorsey', 2026, 'Ten Lessons from Ten Years', 'investor_message', '2026-05-31', 'link', 'https://dorseyasset.com/wp-content/uploads/2026/06/ten-lessons-from-ten-years_pat-dorsey_good-investing_20260531.pdf', 1),
   ('dorsey', 2026, 'Competitive Advantage and Capital Allocation', 'investor_message', '2026-06-01', 'link', 'https://dorseyasset.com/wp-content/uploads/2026/06/competitive-advantage-and-capital-allocation_dorsey-asset-management_june-2026.pdf', 2),
-  ('dorsey', 2026, 'Maximizing Moats: Reinvestment Runways & Capital Allocation', 'investor_message', '2026-06-01', 'link', 'https://dorseyasset.com/wp-content/uploads/2026/06/maximizing-moats_reinvestment-runways-capital-allocation_june-2026.pdf', 3);
+  ('dorsey', 2026, 'Maximizing Moats: Reinvestment Runways & Capital Allocation', 'investor_message', '2026-06-01', 'link', 'https://dorseyasset.com/wp-content/uploads/2026/06/maximizing-moats_reinvestment-runways-capital-allocation_june-2026.pdf', 3),
+
+  ('loeb', 2026, 'Q2 2026 Investor Letter', 'investor_message', '2026-07-31', 'link', 'https://assets-malibu-life.s3.us-west-2.amazonaws.com/system/uploads/fae/file/asset/1713/Third_Point_Q2_2026_Investor_Letter_MLHL.pdf', 1),
+  ('loeb', 2026, 'Q1 2026 Investor Letter', 'investor_message', '2026-04-10', 'link', 'https://assets-malibu-life.s3.us-west-2.amazonaws.com/system/uploads/fae/file/asset/1696/Third_Point_Q1_2026_Investor_Letter_MLHL.pdf', 2),
+  ('loeb', 2025, 'Q4 2025 Investor Letter', 'investor_message', '2026-02-24', 'link', 'https://assets-malibu-life.s3.us-west-2.amazonaws.com/system/uploads/fae/file/asset/1689/Third_Point_Q4_2025_Investor_Letter_TPIL.pdf', 3),
+  ('loeb', 2025, 'Q3 2025 Investor Letter', 'investor_message', '2025-11-03', 'link', 'https://assets-malibu-life.s3.us-west-2.amazonaws.com/system/uploads/fae/file/asset/1673/Third_Point_Q3_2025_Investor_Letter_TPIL.pdf', 4),
+  ('loeb', 2024, '2024 Annual Report and Audited Financial Statements', 'annual_letter', '2025-04-01', 'link', 'https://assets.thirdpointlimited.com/f/166217/x/1453295197/third-point-investors-limited-2024-annual-report-and-audited-financial-statements.pdf', 5),
+  ('loeb', 2023, '2023 Annual Report and Audited Financial Statements', 'annual_letter', '2024-04-01', 'link', 'https://assets.thirdpointlimited.com/f/166217/x/2cd31da5fc/tpil-annual-afs-31-12-2023-final.pdf', 6);

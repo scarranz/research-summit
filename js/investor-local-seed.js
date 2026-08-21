@@ -25,6 +25,46 @@ export const LOCAL_INVESTOR_RETURNS = [
   { investor_key: 'tepper', year: 2023, return_pct: 25.0 },
   { investor_key: 'tepper', year: 2024, return_pct: 11.0 },
   { investor_key: 'tepper', year: 2025, return_pct: 6.0 },
+  // Mirrors INVESTORS[key='druckenmiller'].returns in portal-data.js — was
+  // missing here entirely, which is why every year pill on the detail page
+  // showed "n/a" even though the years themselves come from holdings data.
+  { investor_key: 'druckenmiller', year: 2021, return_pct: 22.0 },
+  { investor_key: 'druckenmiller', year: 2022, return_pct: -6.0 },
+  { investor_key: 'druckenmiller', year: 2023, return_pct: 25.0 },
+  { investor_key: 'druckenmiller', year: 2024, return_pct: 21.0 },
+  { investor_key: 'druckenmiller', year: 2025, return_pct: 17.0 },
+  // Mirrors INVESTORS[key='coleman'].returns in portal-data.js.
+  { investor_key: 'coleman', year: 2021, return_pct: 15.0 },
+  { investor_key: 'coleman', year: 2022, return_pct: -58.0 },
+  { investor_key: 'coleman', year: 2023, return_pct: 40.0 },
+  { investor_key: 'coleman', year: 2024, return_pct: 21.0 },
+  { investor_key: 'coleman', year: 2025, return_pct: 16.5 },
+  // Mirrors INVESTORS[key='hohn'].returns in portal-data.js.
+  { investor_key: 'hohn', year: 2021, return_pct: 35.0 },
+  { investor_key: 'hohn', year: 2022, return_pct: -20.0 },
+  { investor_key: 'hohn', year: 2023, return_pct: 33.0 },
+  { investor_key: 'hohn', year: 2024, return_pct: 30.0 },
+  { investor_key: 'hohn', year: 2025, return_pct: 24.0 },
+  // Mirrors INVESTORS[key='altimeter'].returns in portal-data.js.
+  { investor_key: 'altimeter', year: 2021, return_pct: 30.0 },
+  { investor_key: 'altimeter', year: 2022, return_pct: -58.0 },
+  { investor_key: 'altimeter', year: 2023, return_pct: 65.0 },
+  { investor_key: 'altimeter', year: 2024, return_pct: 25.0 },
+  { investor_key: 'altimeter', year: 2025, return_pct: 18.0 },
+  // Mirrors INVESTORS[key='loeb'].returns in portal-data.js.
+  { investor_key: 'loeb', year: 2021, return_pct: 22.5 },
+  { investor_key: 'loeb', year: 2022, return_pct: -21.9 },
+  { investor_key: 'loeb', year: 2023, return_pct: 3.3 },
+  { investor_key: 'loeb', year: 2024, return_pct: 24.2 },
+  { investor_key: 'loeb', year: 2025, return_pct: 8.9 },
+  // Mirrors INVESTORS[key='klarman'].returns in portal-data.js.
+  { investor_key: 'klarman', year: 2021, return_pct: 12.0 },
+  { investor_key: 'klarman', year: 2022, return_pct: -3.0 },
+  { investor_key: 'klarman', year: 2023, return_pct: 4.0 },
+  { investor_key: 'klarman', year: 2024, return_pct: 10.0 },
+  { investor_key: 'klarman', year: 2025, return_pct: 6.0 },
+  // Dorsey Asset Management has no annual return series on file (fund is
+  // newer / doesn't disclose) — its year pills correctly stay "n/a".
 ];
 
 // Real Pershing Square Capital Management 13F-HR filings (SEC EDGAR CIK
@@ -1452,4 +1492,31 @@ export const LOCAL_INVESTOR_LETTERS = [
   { investor_key: 'dorsey', year: 2026, title: 'Ten Lessons from Ten Years', category: 'investor_message', date: '2026-05-31', type: 'link', url: 'https://dorseyasset.com/wp-content/uploads/2026/06/ten-lessons-from-ten-years_pat-dorsey_good-investing_20260531.pdf', sort_order: 1 },
   { investor_key: 'dorsey', year: 2026, title: 'Competitive Advantage and Capital Allocation', category: 'investor_message', date: '2026-06-01', type: 'link', url: 'https://dorseyasset.com/wp-content/uploads/2026/06/competitive-advantage-and-capital-allocation_dorsey-asset-management_june-2026.pdf', sort_order: 2 },
   { investor_key: 'dorsey', year: 2026, title: 'Maximizing Moats: Reinvestment Runways & Capital Allocation', category: 'investor_message', date: '2026-06-01', type: 'link', url: 'https://dorseyasset.com/wp-content/uploads/2026/06/maximizing-moats_reinvestment-runways-capital-allocation_june-2026.pdf', sort_order: 3 },
+
+  // Daniel Loeb / Third Point doesn't publish letters directly, but Third
+  // Point Investors Limited -- since renamed Malibu Life Holdings Limited
+  // (LSE-listed, invests into Third Point Offshore Fund) -- posts Third
+  // Point's real quarterly investor letters and annual reports publicly at
+  // thirdpointlimited.com/resources -- verified 2026-08-21.
+  { investor_key: 'loeb', year: 2026, title: 'Q2 2026 Investor Letter', category: 'investor_message', date: '2026-07-31', type: 'link', url: 'https://assets-malibu-life.s3.us-west-2.amazonaws.com/system/uploads/fae/file/asset/1713/Third_Point_Q2_2026_Investor_Letter_MLHL.pdf', sort_order: 1 },
+  { investor_key: 'loeb', year: 2026, title: 'Q1 2026 Investor Letter', category: 'investor_message', date: '2026-04-10', type: 'link', url: 'https://assets-malibu-life.s3.us-west-2.amazonaws.com/system/uploads/fae/file/asset/1696/Third_Point_Q1_2026_Investor_Letter_MLHL.pdf', sort_order: 2 },
+  { investor_key: 'loeb', year: 2025, title: 'Q4 2025 Investor Letter', category: 'investor_message', date: '2026-02-24', type: 'link', url: 'https://assets-malibu-life.s3.us-west-2.amazonaws.com/system/uploads/fae/file/asset/1689/Third_Point_Q4_2025_Investor_Letter_TPIL.pdf', sort_order: 3 },
+  { investor_key: 'loeb', year: 2025, title: 'Q3 2025 Investor Letter', category: 'investor_message', date: '2025-11-03', type: 'link', url: 'https://assets-malibu-life.s3.us-west-2.amazonaws.com/system/uploads/fae/file/asset/1673/Third_Point_Q3_2025_Investor_Letter_TPIL.pdf', sort_order: 4 },
+  { investor_key: 'loeb', year: 2024, title: '2024 Annual Report and Audited Financial Statements', category: 'annual_letter', date: '2025-04-01', type: 'link', url: 'https://assets.thirdpointlimited.com/f/166217/x/1453295197/third-point-investors-limited-2024-annual-report-and-audited-financial-statements.pdf', sort_order: 5 },
+  { investor_key: 'loeb', year: 2023, title: '2023 Annual Report and Audited Financial Statements', category: 'annual_letter', date: '2024-04-01', type: 'link', url: 'https://assets.thirdpointlimited.com/f/166217/x/2cd31da5fc/tpil-annual-afs-31-12-2023-final.pdf', sort_order: 6 },
 ];
+
+// Investors confirmed (via public-web research, 2026-08-21) to have no
+// public letters, annual reports, or commentary at all -- these are
+// private funds/family offices with no public-facing vehicle (unlike
+// Ackman's Pershing Square Holdings or Loeb's Malibu Life Holdings, both
+// LSE-listed). Shown as an explicit note on the Resources tab instead of
+// the generic "no letters on file yet" empty state, so it reads as
+// confirmed-absent rather than not-yet-added.
+export const NO_PUBLIC_LETTERS_NOTE = {
+  tepper: 'Appaloosa Management is privately held and has no public investor vehicle. David Tepper does not publish shareholder letters or investor commentary — his SEC 13F filings (shown in Holdings) are the only public disclosure on file.',
+  druckenmiller: 'Duquesne Family Office is a private family office with no public investor vehicle. Stanley Druckenmiller does not publish shareholder letters — his SEC 13F filings (shown in Holdings) are the only public disclosure on file.',
+  coleman: 'Tiger Global Management is privately held and has no public investor vehicle. Investor letters exist but are distributed privately to fund LPs, not published publicly — its SEC 13F filings (shown in Holdings) are the only public disclosure on file.',
+  hohn: 'TCI Fund Management is privately held and has no public investor vehicle, so Chris Hohn’s LP letters aren’t published publicly. TCI does post activist engagement letters to portfolio-company boards (e.g. to Alphabet’s Sundar Pichai, Nov 2022) at tcifund.com, but that site blocks automated access and no stable direct link could be confirmed — its SEC 13F filings (shown in Holdings) are the only public disclosure on file here.',
+  klarman: 'Baupost Group is privately held and has no public investor vehicle. Seth Klarman’s letters are famously not published publicly — copies occasionally circulate on third-party forums, but Baupost itself has no official public source. Its SEC 13F filings (shown in Holdings) are the only public disclosure on file.',
+};

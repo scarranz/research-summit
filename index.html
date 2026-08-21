@@ -308,48 +308,69 @@
 <!-- HEDGE FUNDS TAB -->
 <div id="tp-inv" class="tp">
 <div id="inv-gridview">
-  <div class="sechdr" style="margin-bottom:18px">
-    <span class="sect">Cumulative Return vs S&amp;P 500 &mdash; 2015&ndash;2025</span>
-    <div style="display:flex;align-items:center;gap:14px">
-      <span class="secn">Four managers benchmarked to the index</span>
-      <label class="hf-chart-toggle" title="Show or hide the chart">
-        <input type="checkbox" id="chart-toggle" checked onchange="toggleChartVisibility(this.checked)">
-        <span class="hf-chart-toggle-track"><span class="hf-chart-toggle-thumb"></span></span>
-        <span class="hf-chart-toggle-txt">Chart</span>
-      </label>
-    </div>
+  <div class="hf-maintabs">
+    <button class="hf-maintab active" data-pane="overall" onclick="hfMainTab('overall')">Overall</button>
+    <button class="hf-maintab" data-pane="superinvestors" onclick="hfMainTab('superinvestors')">Superinvestors</button>
   </div>
-  <div class="card" style="margin-bottom:30px" id="hf-chart-card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-      <div style="display:flex;align-items:center;gap:9px"><span style="font-size:12px;color:var(--mu)">Start year</span><select class="fsel" id="alpha-start" onchange="setAlphaStart(this.value)"><option>2015</option><option>2016</option><option>2017</option><option>2018</option><option>2019</option><option>2020</option><option>2021</option><option>2022</option><option>2023</option><option>2024</option><option>2025</option></select></div>
-      <div class="sb-toggle" id="alpha-toggle">
-        <button class="sb-tbtn" data-am="annual" onclick="setAlphaMode('annual')">Annual</button>
-        <button class="sb-tbtn active" data-am="cum" onclick="setAlphaMode('cum')">Cumulative</button>
+
+  <div class="hf-mainpane active" data-pane="overall">
+    <div class="sechdr" style="margin-bottom:18px">
+      <span class="sect">Cumulative Return vs S&amp;P 500 &mdash; 2015&ndash;2025</span>
+      <div style="display:flex;align-items:center;gap:14px">
+        <span class="secn">Four managers benchmarked to the index</span>
+        <label class="hf-chart-toggle" title="Show or hide the chart">
+          <input type="checkbox" id="chart-toggle" checked onchange="toggleChartVisibility(this.checked)">
+          <span class="hf-chart-toggle-track"><span class="hf-chart-toggle-thumb"></span></span>
+          <span class="hf-chart-toggle-txt">Chart</span>
+        </label>
       </div>
     </div>
-    <div class="sb-secrow" id="fund-chips" style="margin-bottom:14px"></div>
-    <div style="position:relative;height:380px"><canvas id="alphaChart"></canvas><div id="alphaStatus" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#8A93A0;font-size:13px;text-align:center;padding:20px;line-height:1.5"></div></div>
-  </div>
-  <div class="sechdr" style="margin-bottom:18px">
-    <span class="sect">Sector Exposure Across Superinvestors</span>
-    <span class="secn">Each fund&rsquo;s disclosed top holdings, rolled up by GICS sector &mdash; darker cells mean more of that fund&rsquo;s book is concentrated there</span>
-  </div>
-  <div class="card" style="margin-bottom:30px" id="hf-heatmap-card">
-    <div id="hf-sector-heatmap"></div>
-  </div>
-  <div class="sechdr" style="margin-bottom:18px">
-    <span class="sect">Superinvestor Holdings &amp; Performance</span>
-    <div style="display:flex;align-items:center;gap:14px">
-      <span class="secn">Q1&ndash;Q2 2026 13F positions &middot; YTD returns through May 19, 2026 &middot; click a card for the full holdings analysis</span>
-      <button type="button" class="hf-showall-btn" id="hf-check13f" onclick="openCheck13FPanel()">Check for new 13Fs</button>
-      <button type="button" class="hf-showall-btn" id="hf-showall" style="display:none" onclick="showAllInvestors()">Show all</button>
+    <div class="card" style="margin-bottom:30px" id="hf-chart-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;align-items:center;gap:9px"><span style="font-size:12px;color:var(--mu)">Start year</span><select class="fsel" id="alpha-start" onchange="setAlphaStart(this.value)"><option>2015</option><option>2016</option><option>2017</option><option>2018</option><option>2019</option><option>2020</option><option>2021</option><option>2022</option><option>2023</option><option>2024</option><option>2025</option></select></div>
+        <div class="sb-toggle" id="alpha-toggle">
+          <button class="sb-tbtn" data-am="annual" onclick="setAlphaMode('annual')">Annual</button>
+          <button class="sb-tbtn active" data-am="cum" onclick="setAlphaMode('cum')">Cumulative</button>
+        </div>
+      </div>
+      <div class="sb-secrow" id="fund-chips" style="margin-bottom:14px"></div>
+      <div style="position:relative;height:380px"><canvas id="alphaChart"></canvas><div id="alphaStatus" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#8A93A0;font-size:13px;text-align:center;padding:20px;line-height:1.5"></div></div>
+    </div>
+    <div class="sechdr" style="margin-bottom:18px">
+      <span class="sect">Sector Exposure Across Superinvestors</span>
+      <span class="secn">Aggregate of every fund&rsquo;s disclosed top holdings, rolled up by GICS sector &mdash; hover a tile for the exact split</span>
+    </div>
+    <div class="card" style="margin-bottom:30px" id="hf-heatmap-card">
+      <div id="hf-sector-heatmap"></div>
+      <p style="margin-top:16px;font-size:11px;color:var(--mu);line-height:1.6">
+        Each tile is a GICS sector&rsquo;s share of the combined disclosed top holdings across every tracked superinvestor (Summit&rsquo;s own book excluded) &mdash; not that sector&rsquo;s share of the market. Darker/bigger-looking tiles mean more of the tracked funds&rsquo; visible money sits there right now, i.e. how crowded that trade is. Click a tile to see which companies make up that sector and which superinvestors hold each one.
+      </p>
+    </div>
+    <div class="sechdr" style="margin-bottom:18px">
+      <span class="sect">Superinvestor Conviction by Stock</span>
+      <span class="secn">Pick one of Summit&rsquo;s own holdings &mdash; see which superinvestors also own it, and how their position size has moved over the last 4 quarters</span>
+    </div>
+    <div class="card" style="margin-bottom:30px" id="hf-stocklookup-card">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px"><span style="font-size:12px;color:var(--mu)">Stock</span><select class="fsel" id="hf-stocklookup-sel" onchange="hfStockLookupSelect(this.value)"></select></div>
+      <div id="hf-stocklookup-body"></div>
     </div>
   </div>
-  <div class="inv-bench" id="inv-bench"></div>
-  <div class="inv-grid" id="inv-grid"></div>
-  <p style="margin-top:16px;font-size:11px;color:var(--mu);line-height:1.6">
-    Holdings: SEC 13F filings (Q1 2026) &middot; Returns: YTD through May 19, 2026 &middot; Einhorn Q1 2026 verified via Greenlight investor letter &middot; &#x26A0; Altimeter returns estimated from portfolio composition
-  </p>
+
+  <div class="hf-mainpane" data-pane="superinvestors">
+    <div class="sechdr" style="margin-bottom:18px">
+      <span class="sect">Superinvestor Holdings &amp; Performance</span>
+      <div style="display:flex;align-items:center;gap:14px">
+        <span class="secn">Q2 2026 13F positions (Ackman still Q1 2026 &mdash; no Q2 filing yet) &middot; returns through H1 2026 &middot; click a card for the full holdings analysis</span>
+        <button type="button" class="hf-showall-btn" id="hf-check13f" onclick="openCheck13FPanel()">Check for new 13Fs</button>
+        <button type="button" class="hf-showall-btn" id="hf-showall" style="display:none" onclick="showAllInvestors()">Show all</button>
+      </div>
+    </div>
+    <div class="inv-bench" id="inv-bench"></div>
+    <div class="inv-grid" id="inv-grid"></div>
+    <p style="margin-top:16px;font-size:11px;color:var(--mu);line-height:1.6">
+      Holdings: SEC 13F filings (Q2 2026; Ackman Q1 2026, most recent on file) &middot; Returns: H1 2026 (through June 30, 2026) &middot; Buffett (BRK.B price), Ackman (PSH NAV), Tepper (Bloomberg), and Loeb (Third Point investor letters) are real, sourced figures &middot; &#x26A0; other funds&rsquo; H1 2026 returns are estimated by weighting each fund&rsquo;s disclosed 13F holdings by their actual Q1/Q2 2026 stock performance, since none of those funds publish real-time returns
+    </p>
+  </div>
 </div>
 <div id="inv-detailview" style="display:none"></div>
 </div>

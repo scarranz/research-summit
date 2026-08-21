@@ -1,3 +1,37 @@
+/* ─── Hedge Funds: Overall / Superinvestors sub-tabs (mirrors .cotabs/.cotab) ─── */
+
+.hf-maintabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--bdr);
+  margin-bottom: 22px;
+}
+
+.hf-maintab {
+  background: none;
+  border: none;
+  color: var(--mu);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  letter-spacing: .3px;
+  font-weight: 600;
+  padding: 11px 20px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all .15s;
+}
+
+.hf-maintab:hover { color: var(--navy); }
+
+.hf-maintab.active {
+  color: var(--navy);
+  border-bottom-color: var(--steel);
+}
+
+.hf-mainpane { display: none; }
+.hf-mainpane.active { display: block; }
+
 /* ─── Hedge Funds: benchmark bar + investor cards ─── */
 
 .inv-bench {
@@ -403,6 +437,14 @@
   font-size: 12px;
   color: var(--mu);
   padding: 10px 0;
+}
+
+.im-no-public {
+  background: var(--surface);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  padding: 14px 16px;
+  line-height: 1.6;
 }
 
 .im-years { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -841,64 +883,114 @@
 .ivd-move-item.up .ivd-move-txt b { color: var(--pos); }
 .ivd-move-item.down .ivd-move-txt b { color: var(--neg); }
 
-/* ─── Sector Exposure heatmap (main Hedge Funds tab) ─── */
+/* ─── Sector Exposure mosaic (main Hedge Funds tab, Overall sub-tab) ───
+   One tile per GICS sector, aggregated across every tracked superinvestor's
+   disclosed top holdings. Fill intensity = that sector's share of total
+   disclosed exposure (steel -> navy ramp, same as the by-position pie chart
+   and old heatmap) -- more "lit up" means more of the tracked book sits
+   there. Hover/tap a tile for the exact percentage. */
 
-.hf-heat-wrap { overflow-x: auto; }
+.hf-secmosaic { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
 
-.hf-heat-tbl { width: 100%; border-collapse: separate; border-spacing: 3px; font-size: 11px; }
+.hf-secmosaic-tile {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 14px;
+  border: 1px solid var(--bdr);
+  padding: 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  transition: transform .12s, box-shadow .12s;
+}
 
-.hf-heat-sector-h, .hf-heat-total-h {
+.hf-secmosaic-tile:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.12); }
+
+.hf-secmosaic-name {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+
+.hf-secmosaic-pct {
+  font-size: 28px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.hf-secmosaic-sub {
   font-size: 10px;
   font-weight: 600;
-  color: var(--mu);
   text-transform: uppercase;
-  letter-spacing: .03em;
-  text-align: left;
-  padding: 0 8px 6px;
-  white-space: nowrap;
+  letter-spacing: .04em;
+  margin-top: 4px;
 }
 
-.hf-heat-total-h { text-align: center; }
+.hf-secmosaic-text-lt .hf-secmosaic-name,
+.hf-secmosaic-text-lt .hf-secmosaic-pct { color: var(--w); }
+.hf-secmosaic-text-lt .hf-secmosaic-sub { color: rgba(255,255,255,.88); }
+.hf-secmosaic-text-dk .hf-secmosaic-name,
+.hf-secmosaic-text-dk .hf-secmosaic-pct,
+.hf-secmosaic-text-dk .hf-secmosaic-sub { color: var(--navy); }
 
-.hf-heat-inv-h {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--steel);
-  text-align: center;
-  padding: 0 0 6px;
-  cursor: default;
+.hf-secmosaic-empty { color: var(--mu); font-size: 13px; padding: 20px; text-align: center; }
+
+/* ─── Sector detail popup (click a mosaic tile) ─── */
+
+.hf-secpop-card { max-width: 620px; width: 100%; max-height: 82vh; display: flex; flex-direction: column; }
+
+.hf-secpop-body { padding: 8px 26px 26px; overflow-y: auto; }
+
+.hf-secpop-list { display: flex; flex-direction: column; }
+
+.hf-secpop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--bdr);
+  flex-wrap: wrap;
 }
 
-.hf-heat-sector-lbl {
+.hf-secpop-row:last-child { border-bottom: none; }
+
+.hf-secpop-co { display: flex; align-items: center; gap: 10px; min-width: 160px; }
+
+.hf-secpop-logo { width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; }
+
+.hf-secpop-ticker { font-size: 13px; font-weight: 700; color: var(--navy); }
+
+.hf-secpop-name { font-size: 11.5px; color: var(--mu); }
+
+.hf-secpop-holders { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; flex: 1; }
+
+.hf-secpop-holder {
   font-size: 11px;
   font-weight: 500;
   color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--bdr);
+  border-radius: 20px;
+  padding: 4px 10px;
   white-space: nowrap;
-  padding: 0 10px 0 8px;
 }
 
-.hf-heat-cell {
-  text-align: center;
-  min-width: 44px;
-  padding: 9px 4px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  cursor: default;
-}
+.hf-secpop-holder b { color: var(--navy); font-weight: 700; margin-left: 3px; }
 
-.hf-heat-text-lt { color: var(--w); }
-.hf-heat-text-dk { color: var(--text); }
+/* ─── Stock lookup: which superinvestors hold ticker X, by quarter ─── */
 
-.hf-heat-empty { background: var(--pale); color: var(--bdr); font-weight: 400; }
-
-.hf-heat-total-cell {
-  text-align: center;
-  min-width: 52px;
-  padding: 9px 4px;
-  border-radius: 6px;
-  font-weight: 700;
-  color: var(--navy);
-  background: var(--ice);
-  font-variant-numeric: tabular-nums;
-}
+.hf-heat-wrap { overflow-x: auto; }
+.hf-stocklookup-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.hf-stocklookup-tbl th { font-size: 10px; font-weight: 600; color: var(--mu); text-transform: uppercase; letter-spacing: .03em; text-align: left; padding: 0 10px 8px; border-bottom: 1px solid var(--bdr); }
+.hf-stocklookup-tbl th.nr, .hf-stocklookup-tbl td.nr { text-align: right; }
+.hf-stocklookup-tbl td { padding: 9px 10px; border-bottom: 1px solid var(--bdr); }
+.hf-stocklookup-tbl tr:last-child td { border-bottom: none; }
+.hf-stocklookup-inv { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--navy); }
+.hf-stocklookup-fund { font-size: 11px; color: var(--mu); font-weight: 400; margin-left: 4px; }
+.hf-stocklookup-w { font-variant-numeric: tabular-nums; }
+.hf-stocklookup-dash { color: var(--bdr); }
+.hf-stocklookup-empty { color: var(--mu); font-size: 13px; padding: 24px; text-align: center; }

@@ -1737,12 +1737,18 @@ function ubExpenseTabsBody(c){
     '.ubx-box-h{font-size:12px;font-weight:800;color:var(--navy);display:flex;gap:6px;align-items:center}'+
     '.ubx-box-t{font-size:11px;color:var(--mu);line-height:1.45;margin-top:3px}'+
     '.ubx-note{font-size:12px;line-height:1.55;color:var(--navy);margin:2px 0}.ubx-kpi{font-size:11px;font-weight:800;color:var(--brand-2,#049a4f)}'+
+    '.ubx-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:2px 0 4px}.ubx-tile{border:1px solid var(--bdr);border-radius:9px;padding:9px 11px;background:#fff}.ubx-tv{font-size:16px;font-weight:800;color:var(--navy)}.ubx-tl{font-size:9.5px;color:var(--mu);font-weight:700;margin-top:1px}'+
     '.ubx-calls{border-left:2px solid var(--bdr);padding-left:12px;margin:4px 0 2px}.ubx-call{margin:0 0 10px}.ubx-call-q{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--brand-2,#049a4f)}.ubx-call-t{font-size:12px;line-height:1.5;color:var(--navy);margin:2px 0}.ubx-call-w{font-size:10.5px;color:var(--mu);font-weight:700}'+
   '</style>';
   h+='<div class="ubx-exp"><div class="ubx-tabs">'+UB_EXP.map(function(l,i){ return '<button type="button" class="ubx-tab'+(i===0?' active':'')+'" data-ubx="'+l.k+'">'+l.n+'</button>'; }).join('')+'</div>';
   h+=UB_EXP.map(function(l,i){
-    return '<div class="ubx-panel" data-ubxp="'+l.k+'"'+(i===0?'':' hidden')+'>'+
-      '<div class="ubx-kpi">'+l.tag+'</div>'+
+    var tp=l.tag.split(' · '), ppt=(l.traj[2]-l.traj[1]);   // $ · % of rev; plus YoY ppt from the trajectory
+    var tiles='<div class="ubx-tiles">'+
+      '<div class="ubx-tile"><div class="ubx-tv">'+tp[0]+'</div><div class="ubx-tl">FY2025</div></div>'+
+      '<div class="ubx-tile"><div class="ubx-tv">'+(tp[1]||'').replace(' of revenue','')+'</div><div class="ubx-tl">of revenue</div></div>'+
+      '<div class="ubx-tile"><div class="ubx-tv">'+(ppt>=0?'+':'−')+Math.abs(ppt).toFixed(1)+' ppt</div><div class="ubx-tl">vs FY24 (% of rev)</div></div>'+
+    '</div>';
+    return '<div class="ubx-panel" data-ubxp="'+l.k+'"'+(i===0?'':' hidden')+'>'+tiles+
       '<div class="ubx-h">How the 10-K defines it</div><div class="ubx-def">"'+l.def+'"<span class="ubx-att">— Uber FY2025 10-K, MD&amp;A · Components of Results of Operations</span></div>'+
       '<div class="ubx-h">What sits inside this line</div><div class="ubx-two">'+l.comp.map(function(b){ return '<div class="ubx-box"><div class="ubx-box-h"><span>'+b[0]+'</span>'+b[1]+'</div><div class="ubx-box-t">'+b[2]+'</div></div>'; }).join('')+'</div>'+
       '<div class="ubx-h">Share of revenue over time</div>'+ubExpSpark(l.traj)+

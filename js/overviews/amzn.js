@@ -3449,7 +3449,7 @@ function aSbcBody(){
   return '<div class="ov-sec"><div class="ov-sec-h">Stock-based compensation &amp; dilution</div>'+
     '<div class="mch-ctl">'+
       '<span class="acx-tog sbcv-tog"><button type="button" data-sbcv="dilution" class="active">Dilution</button><button type="button" data-sbcv="line">SBC by line</button></span>'+
-      '<span></span>'+
+      '<span class="acx-tog sbcu-tog"><button type="button" data-sbcu="usd" class="active">$B</button><button type="button" data-sbcu="pct">% of rev / line</button></span>'+
     '</div>'+
     '<div class="ave-leg" data-sbcleg="1" style="margin:2px 0 8px"></div>'+
     '<div style="height:320px"><canvas id="aSbcMain"></canvas></div></div>';
@@ -3457,27 +3457,27 @@ function aSbcBody(){
 function aSbcSer(k){ var s=amznBBG.is[k]; return s?s.a.concat(s.f):[null,null,null,null,null,null]; }
 function aBuildSbc(){
   var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(!pane) return;
-  var pct=false;   // SBC shown in $B only — Summit doesn't forecast a % here, so the % view added no signal
+  var uw=pane.querySelector('.sbcu-tog .active'), pct=!!(uw&&uw.getAttribute('data-sbcu')==='pct');   // $B vs % (of revenue in Dilution; of the line's expense in By line)
   var vw=pane.querySelector('.sbcv-tog .active'), view=vw?vw.getAttribute('data-sbcv'):'dilution';
   var cv=aChartReady('aSbcMain'); if(!cv) return; aDestroy('aSbcMain');
   var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], legEl=pane.querySelector('[data-sbcleg]');
   var SBC_BAR='rgba(30,39,51,0.42)';   // SBC $ = muted navy context bars; the two share lines carry the comparison
   if(view==='dilution'){   // SBC (bars) vs diluted shares — Summit (flat) vs Consensus (rising)
-    var sbc=aSbcSer('sbc'), shC=aSbcSer('dilShares');
-    var bars=labels.map(function(_,i){ return sbc[i]==null?null:Math.round(sbc[i]/100)/10; });
+    var sbc=aSbcSer('sbc'), shC=aSbcSer('dilShares'), rvS=aSbcSer('rev');
+    var bars=labels.map(function(_,i){ return sbc[i]==null?null:(pct?(rvS[i]?Math.round(sbc[i]/rvS[i]*1000)/10:null):Math.round(sbc[i]/100)/10); });
     var shCons=labels.map(function(_,i){ return shC[i]==null?null:Math.round(shC[i]); });
     var shSum=A_SUMMIT_SHARES.slice();
     function fdash(ctx){ return ctx.p1DataIndex>=3?[5,4]:undefined; }   // dash the forward segment
     _aCharts['aSbcMain']=new Chart(cv.getContext('2d'),{ data:{ labels:labels, datasets:[
-      { type:'bar', label:'SBC ($B)', data:bars, backgroundColor:bars.map(function(_,i){ return i<3?SBC_BAR:'rgba(30,39,51,0.20)'; }), borderColor:'#fff', borderWidth:1, maxBarThickness:46, yAxisID:'y', order:3 },
+      { type:'bar', label:'SBC '+(pct?'(% of rev)':'($B)'), data:bars, backgroundColor:bars.map(function(_,i){ return i<3?SBC_BAR:'rgba(30,39,51,0.20)'; }), borderColor:'#fff', borderWidth:1, maxBarThickness:46, yAxisID:'y', order:3 },
       { type:'line', label:'Diluted shares — Summit', data:shSum, borderColor:ASTD_SUMMIT, backgroundColor:ASTD_SUMMIT, borderWidth:2.6, pointRadius:2.6, tension:0.15, yAxisID:'y1', order:1, segment:{ borderDash:fdash } },
       { type:'line', label:'Diluted shares — Consensus (BBG)', data:shCons, borderColor:ASTD_CONS, backgroundColor:ASTD_CONS, borderWidth:2.6, pointRadius:2.6, tension:0.15, yAxisID:'y1', order:2, segment:{ borderDash:fdash } } ]},
       options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-        plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.yAxisID==='y1'? c.dataset.label+': '+c.parsed.y.toLocaleString()+'M'+(c.dataIndex>2?' (E)':'') : c.dataset.label+': $'+c.parsed.y.toFixed(1)+'B'+(c.dataIndex>2?' (E)':''); } } } },
+        plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.yAxisID==='y1'? c.dataset.label+': '+c.parsed.y.toLocaleString()+'M'+(c.dataIndex>2?' (E)':'') : c.dataset.label+': '+(pct?c.parsed.y+'%':'$'+c.parsed.y.toFixed(1)+'B')+(c.dataIndex>2?' (E)':''); } } } },
         scales:{ x:{ grid:{ display:false } },
-          y:{ position:'left', title:{ display:true, text:'SBC ($B)', font:{ size:11 } }, grid:{ color:'rgba(0,0,0,0.05)' }, beginAtZero:true, ticks:{ callback:function(v){ return '$'+v+'B'; } } },
+          y:{ position:'left', title:{ display:true, text:pct?'SBC (% of rev)':'SBC ($B)', font:{ size:11 } }, grid:{ color:'rgba(0,0,0,0.05)' }, beginAtZero:true, ticks:{ callback:function(v){ return pct?v+'%':'$'+v+'B'; } } },
           y1:{ position:'right', title:{ display:true, text:'Diluted shares (M)', font:{ size:11 } }, grid:{ display:false }, suggestedMin:10300, suggestedMax:11300, ticks:{ callback:function(v){ return v.toLocaleString(); } } } } } });
-    if(legEl) legEl.innerHTML=[['SBC ($B)',SBC_BAR],['Diluted shares — Summit',ASTD_SUMMIT],['Diluted shares — Consensus (BBG)',ASTD_CONS]].map(function(p){ return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--mu);margin-right:14px"><span style="width:13px;height:13px;border-radius:3px;background:'+p[1]+'"></span>'+p[0]+'</span>'; }).join('')+'<span style="font-size:11px;color:var(--mu)">Summit holds shares flat (dilution offset); consensus carries it up to 11,111M by FY28E</span>';
+    if(legEl) legEl.innerHTML=[['SBC '+(pct?'(% of rev)':'($B)'),SBC_BAR],['Diluted shares — Summit',ASTD_SUMMIT],['Diluted shares — Consensus (BBG)',ASTD_CONS]].map(function(p){ return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--mu);margin-right:14px"><span style="width:13px;height:13px;border-radius:3px;background:'+p[1]+'"></span>'+p[0]+'</span>'; }).join('')+'<span style="font-size:11px;color:var(--mu)">Summit holds shares flat (dilution offset); consensus carries it up to 11,111M by FY28E</span>';
   } else {
     if(legEl) legEl.innerHTML='';
     var LN=[{sbc:'sbcCogs',exp:'cogs',lab:'Cost of sales',c:SQUID},{sbc:'sbcFulfill',exp:'fulfillment',lab:'Fulfillment',c:BRAND},{sbc:'sbcTech',exp:'techInfra',lab:'Technology & infrastructure',c:BRAND2},{sbc:'sbcMktg',exp:'marketing',lab:'Sales & marketing',c:GREEN},{sbc:'sbcGA',exp:'gAdmin',lab:'General & administrative',c:GRAY}];
@@ -3491,7 +3491,7 @@ function aBuildSbc(){
   }
   aZoom('aSbcMain');
   if(pane && !pane._sbcmWired){ pane._sbcmWired=true;
-    pane.querySelectorAll('.sbcv-tog button').forEach(function(b){ b.onclick=function(){ b.parentNode.querySelectorAll('button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSbc(); }; }); }
+    pane.querySelectorAll('.sbcv-tog button, .sbcu-tog button').forEach(function(b){ b.onclick=function(){ b.parentNode.querySelectorAll('button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSbc(); }; }); }
 }
 // Profitability & margins — the §0.4 layout: row 1 = a metric dropdown (identity), row 2 = mode
 // toggles (treatment). All margins (gross/operating/EBITDA/net/FCF) over time, reported → BBG
@@ -4216,7 +4216,15 @@ function aSegSummitAnnual(mk){ var q=amznResults.views&&amznResults.views.q&&amz
 // three segments; pick the metric (Revenue / Operating income / EBITDA) and how to Show it — $B (stacked
 // or side-by-side bars), Share (100%-stacked), or Growth (YoY). Both y-axes on the right; forward faded.
 var SEGENG_SG=[{k:'na',lab:'North America',c:BRAND},{k:'intl',lab:'International',c:BRAND2},{k:'aws',lab:'AWS',c:SQUID}];
-function aSegEngSeries(k, metric, gran){ var s=amznBBG.seg[k]; if(!s) return null;
+function aSegEngSeries(k, metric, gran, source){
+  if(source==='summit'){   // Summit segment model (amznResults) — revenue & operating income; no segment D&A → no EBITDA
+    var RK={na:'usrev',intl:'intrev',aws:'aws'}, OK={na:'naopinc',intl:'intopinc',aws:'awsopinc'};
+    var mk=metric==='rev'?RK[k]:OK[k], q=amznResults.views&&amznResults.views.q&&amznResults.views.q.metrics, m=q&&q[mk];
+    if(!m||!m.summit||metric==='ebitda') return null;
+    if(gran==='q') return m.summit.slice();
+    return ASUM_FYQ.map(function(ix){ if(ix.length<4) return null; var s=0,ok=true; ix.forEach(function(j){ var v=m.summit[j]; if(v==null)ok=false; else s+=v; }); return ok?s:null; });
+  }
+  var s=amznBBG.seg[k]; if(!s) return null;   // Consensus (BBG): actual history + BBG consensus forward
   function arr(f){ var o=s[f]; return o?(gran==='q'?o.q:o.a.concat(o.f)):null; }
   if(metric==='rev') return arr('rev');
   var oi=arr('oi'), da=arr('da');
@@ -4261,8 +4269,9 @@ function aBuildSegFc(){
 }
 function aSegOiBody(){
   return aStdScaffold({ id:'segoi', title:'Revenue vs profit — common size by segment', height:340,
-    metricSel:[{v:'rev',label:'Revenue',on:true},{v:'oi',label:'Operating income'},{v:'ebitda',label:'EBITDA'}],
-    modes:[{cls:'show',label:'Show',opts:[{v:'amt',label:'$B',on:true},{v:'share',label:'Share'},{v:'growth',label:'Growth'}]},
+    metricSel:[{v:'rev',label:'Revenue',on:true},{v:'oi',label:'Operating income'}],
+    modes:[{cls:'basis',label:'Basis',opts:[{v:'cons',label:'Actual + Consensus',on:true},{v:'summit',label:'Summit'}]},
+           {cls:'show',label:'Show',opts:[{v:'amt',label:'$B',on:true},{v:'share',label:'Share'},{v:'growth',label:'Growth'}]},
            {cls:'layout',label:'Layout',opts:[{v:'stack',label:'Stacked',on:true},{v:'side',label:'Side by side'}]},
            {cls:'gran',label:'Period',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]},
            {cls:'cmp',label:'Compare',opts:[{v:'yoy',label:'YoY',on:true},{v:'qoq',label:'QoQ'}]},
@@ -4271,13 +4280,14 @@ function aSegOiBody(){
 }
 function aBuildSegOi(){
   aStdRender('segoi', function(st){
-    var metric=st.sel||'rev', show=st.modes.show||'amt', layout=st.modes.layout||'stack', gran=st.modes.gran||'y';
+    var metric=st.sel||'rev', basis=st.modes.basis||'cons', show=st.modes.show||'amt', layout=st.modes.layout||'stack', gran=st.modes.gran||'y';
     var cmp=st.modes.cmp||'yoy', gin=st.modes.gin||'pct';
+    if(basis==='summit') gran='y';   // Summit segment series is quarterly-indexed differently → aggregate to annual only (labels stay aligned)
     var labels=gran==='q'?amznBBG.qtrs.slice():['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
-    var la=gran==='q'?((amznBBG.seg.aws.oi.qA?amznBBG.seg.aws.oi.qA.length:5)-1):2;
+    var la=gran==='q'?((amznBBG.seg.aws.oi.qA?amznBBG.seg.aws.oi.qA.length:5)-1):(basis==='summit'?5:2);   // Summit is a forecast across all years (no actual/est split)
     // Annual axis is always YoY (step 1). Quarterly: QoQ = prior quarter (step 1), YoY = same quarter last year (step 4).
     var step=gran==='q'?(cmp==='qoq'?1:4):1, addMode=(show==='growth'&&gin==='add');
-    var raw=SEGENG_SG.map(function(seg){ return { seg:seg, v:aSegEngSeries(seg.k,metric,gran) }; });
+    var raw=SEGENG_SG.map(function(seg){ return { seg:seg, v:aSegEngSeries(seg.k,metric,gran,basis) }; });
     var totals=labels.map(function(_,i){ return raw.reduce(function(a,r){ return a+((r.v&&r.v[i]!=null)?r.v[i]:0); },0); });
     var series=raw.map(function(r){ return { k:r.seg.k, label:r.seg.lab, color:r.seg.c,
       data:labels.map(function(_,i){ var v=r.v?r.v[i]:null; if(v==null) return null;
@@ -4288,7 +4298,7 @@ function aBuildSegOi(){
         return Math.round(v/100)/10; }) }; });
     var stacked=show==='share'||(show==='amt'&&layout==='stack')||(addMode&&layout==='stack');
     var yFmt=(show==='amt'||addMode)?function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }:function(x){ return x+'%'; };
-    var hide=[]; if(!(show==='growth'&&gran==='q')) hide.push('cmp'); if(show!=='growth') hide.push('gin'); if(show==='share') hide.push('layout');
+    var hide=[]; if(!(show==='growth'&&gran==='q')) hide.push('cmp'); if(show!=='growth') hide.push('gin'); if(show==='share') hide.push('layout'); if(basis==='summit') hide.push('gran');   // Summit = annual only
     return { labels:labels, lastAct:la, yFmt:yFmt, type:'bar', stacked:stacked, yMax:show==='share'?100:undefined, series:series, hideModes:hide };
   });
 }

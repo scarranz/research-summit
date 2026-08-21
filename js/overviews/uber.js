@@ -4532,8 +4532,9 @@ function buildSub(root, group, key){
   } else if(group==='evolution'){
     if(key==='guidance')      buildModelTab();          // Model vs. Reality lives under Guidance
     else if(key==='earnings'){
-      // Setup chart is the shared Results engine (pending for UBER \u2014 no UBER_SETUP dataset). Build only
-      // when Earnings is visible AND Setup is the active phase (Chart.js needs a laid-out canvas).
+      // Setup chart is the shared Results engine (UBER_SETUP dataset, registered in results.js and
+      // populated in results-data/uber.js). Build only when Earnings is visible AND Setup is the active
+      // phase (Chart.js needs a laid-out canvas).
       var ph=root.querySelector('.ovt-subpane[data-ovst="earnings"] .ce-phtab.active');
       if(!ph || ph.getAttribute('data-cep')==='setup'){ requestAnimationFrame(gBuildCeAnnual); }
     }

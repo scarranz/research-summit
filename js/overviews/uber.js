@@ -1698,6 +1698,23 @@ var UB_EXP=[
     why:'Small and shrinking — Uber is asset-light, so D&amp;A is barely 1% of revenue and falling. (Sits below the segment cost lines above, in reconciliation to operating income.)',
     driver:'Roughly flat in 2025 (+$8M, +1%): the change in depreciation and amortization was not material.' }
 ];
+// Management call commentaries per expense line — VERBATIM from docs/calls/UBER.md, chronological, no
+// invention. Only lines with a genuine quote carry a block (like AMZN's EW_CALLS).
+var UB_EW_CALLS={
+  cogs:[
+    {q:'Q2 2025', who:'Dara Khosrowshahi, CEO', txt:'Our profit per ride in the U.S. is up on a year-on-year basis. This is insurance money passed right to consumers.'},
+    {q:'Q4 2025', who:'Uber management', txt:'Insurance is going from a deleveraging cost item to something that gives us leverage and that allows us to hold prices flat or better in certain markets.'}
+  ],
+  marketing:[
+    {q:'Q4 2025', who:'Uber management', txt:'SMB ad penetration is a lot higher than 2%, and enterprise year-on-year growth is now outpacing SMBs by a lot more — there is going to be a lot of runway here.'}
+  ]
+};
+function ubExpCalls(k){ var calls=UB_EW_CALLS[k]; if(!calls||!calls.length) return '';
+  function qord(q){ var m=/Q(\d)\s*(\d{4})/.exec(q||''); return m?(+m[2])*10+(+m[1]):0; }
+  var sorted=calls.slice().sort(function(a,b){ return qord(a.q)-qord(b.q); });
+  return '<div class="ubx-h">What management has said</div><div class="ubx-calls">'+sorted.map(function(c){
+    return '<div class="ubx-call"><div class="ubx-call-q">'+c.q+'</div><div class="ubx-call-t">“'+c.txt+'”</div><div class="ubx-call-w">— '+c.who+'</div></div>'; }).join('')+'</div>';
+}
 function ubExpSpark(traj){
   var mx=Math.max.apply(null,traj.map(Math.abs))||1;
   return '<div style="display:flex;align-items:flex-end;gap:5px;height:64px;margin:4px 0 2px">'+traj.map(function(v,i){
@@ -1720,6 +1737,7 @@ function ubExpenseTabsBody(c){
     '.ubx-box-h{font-size:12px;font-weight:800;color:var(--navy);display:flex;gap:6px;align-items:center}'+
     '.ubx-box-t{font-size:11px;color:var(--mu);line-height:1.45;margin-top:3px}'+
     '.ubx-note{font-size:12px;line-height:1.55;color:var(--navy);margin:2px 0}.ubx-kpi{font-size:11px;font-weight:800;color:var(--brand-2,#049a4f)}'+
+    '.ubx-calls{border-left:2px solid var(--bdr);padding-left:12px;margin:4px 0 2px}.ubx-call{margin:0 0 10px}.ubx-call-q{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--brand-2,#049a4f)}.ubx-call-t{font-size:12px;line-height:1.5;color:var(--navy);margin:2px 0}.ubx-call-w{font-size:10.5px;color:var(--mu);font-weight:700}'+
   '</style>';
   h+='<div class="ubx-exp"><div class="ubx-tabs">'+UB_EXP.map(function(l,i){ return '<button type="button" class="ubx-tab'+(i===0?' active':'')+'" data-ubx="'+l.k+'">'+l.n+'</button>'; }).join('')+'</div>';
   h+=UB_EXP.map(function(l,i){
@@ -1730,6 +1748,7 @@ function ubExpenseTabsBody(c){
       '<div class="ubx-h">Share of revenue over time</div>'+ubExpSpark(l.traj)+
       '<div class="ubx-h">Why it matters</div><div class="ubx-note">'+l.why+'</div>'+
       '<div class="ubx-h">Why it moved — FY2025</div><div class="ubx-note">'+l.driver+'</div>'+
+      ubExpCalls(l.k)+
     '</div>'; }).join('');
   h+='<div class="ov-fynote" style="margin-top:10px">Definitions &amp; year-over-year drivers verbatim from Uber’s FY2025 10-K (MD&amp;A). Share-of-revenue trajectory FY23-25 reported, FY26-28E consensus (uber-bbg). Forward bars are lighter.</div>';
   h+='</div>';
@@ -1739,9 +1758,9 @@ function ubExpenseTabsBody(c){
 // segment Adj EBITDA from the 10-K (Note 13, FY23-25 reported). The verbose segment "worlds" live under
 // Miscellaneous ▸ Other Analysis; the standardized segment definitions live in Top Line (the engine). ──
 var UB_SEGEB_YRS=['2023','2024','2025'];
-var UB_SEGEB={ mobility:{eb:[4963,6497,7899],gb:[68897,83024,97497],lab:'Mobility',c:'#10141A'},
-               delivery:{eb:[1506,2471,3572],gb:[63726,74614,90864],lab:'Delivery',c:'#06C167'},
-               freight :{eb:[-64,-74,-33],   gb:[5242,5135,5093],   lab:'Freight',c:'#9AA3AE'} };
+var UB_SEGEB={ mobility:{eb:[4963,6497,7899],rev:[19832,25087,29670],gb:[68897,83024,97497],lab:'Mobility',c:'#10141A'},
+               delivery:{eb:[1506,2471,3572],rev:[12204,13750,17248],gb:[63726,74614,90864],lab:'Delivery',c:'#06C167'},
+               freight :{eb:[-64,-74,-33],   rev:[5245,5141,5099],   gb:[5242,5135,5093],   lab:'Freight',c:'#9AA3AE'} };
 function ubSegProfitCards(){
   var rows=[['Mobility','~8% of GB','$7.9B Adj EBITDA (2025) — the profit engine, highest margin.'],
             ['Delivery','~4% of GB','$3.6B — margin still converging up via advertising & scale.'],
@@ -1750,21 +1769,30 @@ function ubSegProfitCards(){
     '<div class="ov-fynote" style="margin-top:6px">Segment Adjusted EBITDA before Corporate G&amp;A and Platform R&amp;D (−$2.7B in 2025). Source: Uber FY2025 10-K, Note 13. Each segment’s definition is in Top Line ▸ Segments.</div>';
 }
 function ubSegProfitBody(){
-  return aStdScaffold({ id:'ubsegeb', title:'Adjusted EBITDA & margin by segment', height:330,
-    metricSel:[{v:'ebitda',label:'Adjusted EBITDA',on:true}],
-    modes:[{cls:'show',label:'Show',opts:[{v:'amt',label:'$B',on:true},{v:'margin',label:'Margin (% of GB)'}]}],
+  return aStdScaffold({ id:'ubsegeb', title:'Segments — profitability & mix', height:340,
+    metricSel:[{v:'ebitda',label:'Adjusted EBITDA',on:true},{v:'rev',label:'Revenue'}],
+    modes:[{cls:'show',label:'Show',opts:[{v:'amt',label:'$B',on:true},{v:'share',label:'Share'},{v:'growth',label:'Growth'},{v:'margin',label:'Margin (% of GB)'}]},
+           {cls:'layout',label:'Layout',opts:[{v:'stack',label:'Stacked',on:true},{v:'side',label:'Side by side'}]}],
     presets:[['all','All']] });
 }
 function buildUbSegProfit(root){
   aStdRender('ubsegeb', function(st){
-    var show=st.modes.show||'amt', labels=UB_SEGEB_YRS.map(function(y){ return 'FY'+y.slice(2); });
-    var segs=['mobility','delivery','freight'];
-    var series=segs.map(function(k){ var s=UB_SEGEB[k];
-      var data=show==='margin'? s.eb.map(function(v,i){ return s.gb[i]?Math.round(v/s.gb[i]*1000)/10:null; })
-                              : s.eb.map(function(v){ return Math.round(v/100)/10; });
-      return { k:k, label:s.lab, color:s.c, type:show==='margin'?'line':'bar', data:data }; });
-    var yf=show==='margin'?function(x){ return x+'%'; }:function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; };
-    return { labels:labels, lastAct:2, type:show==='margin'?'line':'bar', stacked:false, yFmt:yf, series:series };
+    var metric=st.sel||'ebitda', show=st.modes.show||'amt', layout=st.modes.layout||'stack';
+    if(metric==='rev'&&show==='margin') show='amt';   // no "% of GB margin" view for revenue
+    var labels=UB_SEGEB_YRS.map(function(y){ return 'FY'+y.slice(2); }), segs=['mobility','delivery','freight'];
+    var raw=segs.map(function(k){ var s=UB_SEGEB[k]; return { k:k, s:s, v:s[metric] }; });
+    var totals=labels.map(function(_,i){ return raw.reduce(function(a,r){ return a+(r.v[i]||0); },0); });
+    var series=raw.map(function(r){ var s=r.s;
+      var data=labels.map(function(_,i){ var v=r.v[i]; if(v==null) return null;
+        if(show==='margin') return s.gb[i]?Math.round(v/s.gb[i]*1000)/10:null;
+        if(show==='share')  return totals[i]?Math.round(v/totals[i]*1000)/10:null;
+        if(show==='growth'){ var pv=r.v[i-1]; return (pv==null||!pv)?null:Math.round((v-pv)/Math.abs(pv)*1000)/10; }
+        return Math.round(v/100)/10; });
+      return { k:r.k, label:s.lab, color:s.c, type:show==='margin'?'line':'bar', data:data }; });
+    var pct=(show!=='amt'), stacked=(show==='share')||(show==='amt'&&layout==='stack');
+    var hide=[]; if(show==='margin'||show==='share') hide.push('layout');
+    return { labels:labels, lastAct:2, type:show==='margin'?'line':'bar', stacked:stacked, yMax:show==='share'?100:undefined,
+      yFmt:pct?function(x){ return x+'%'; }:function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }, series:series, hideModes:hide };
   });
 }
 // Bottom Line ▸ General — one chart at a time via a dropdown (AMZN's gen-chart pattern), not a stack.

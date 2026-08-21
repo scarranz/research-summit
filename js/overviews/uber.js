@@ -1526,6 +1526,8 @@ function ubCapAllocBody(c){
     '<div class="ov-kpi"><div class="ov-kpi-l">FY25 SBC</div><div class="ov-kpi-v">$1.8B</div><div class="ov-kpi-d muted">~flat since FY22</div></div>'+
     '<div class="ov-kpi"><div class="ov-kpi-l">Shares out</div><div class="ov-kpi-v">2.11B</div><div class="ov-kpi-d muted">▼ '+Math.abs(shChg).toFixed(1)+'% YoY</div></div>'+
   '</div>';
+  h+='<div class="ov-chart-card"><div class="ov-chart-t">FCF, buybacks &amp; share count <span>· FY22–FY28E · faded = consensus</span></div><div class="ov-chart-wrap ovs-tall" style="min-height:300px"><canvas id="ubChartCapAlloc"></canvas></div></div>';
+  h+='<div class="ave-subh-note" style="margin:8px 0 4px">Bars = free cash flow (green) &amp; buybacks (navy), $B left; line = diluted shares (M, right). Consensus keeps buybacks ~$6–8B/yr, driving the share count down to ~1,976M by FY28E. <span style="color:#B7791F">Actuals + BBG consensus (uber-bbg).</span></div>';
   h+='<div class="ov-chart-card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="color:var(--mu)"><th style="text-align:left;padding:7px 10px">Fiscal year</th><th style="text-align:right;padding:7px 10px">Free cash flow</th><th style="text-align:right;padding:7px 10px">Buybacks</th><th style="text-align:right;padding:7px 10px">SBC</th><th style="text-align:right;padding:7px 10px">Shares out (M)</th></tr></thead><tbody>'+
     R.map(function(r){ return '<tr style="border-top:1px solid var(--bdr)"><td style="padding:7px 10px;font-weight:700">'+r.fy+'</td><td style="text-align:right;padding:7px 10px">'+bb(r.fcf)+'</td><td style="text-align:right;padding:7px 10px">'+(r.bb?bb(-r.bb):'—')+'</td><td style="text-align:right;padding:7px 10px">'+bb(-r.sbc)+'</td><td style="text-align:right;padding:7px 10px">'+r.sh.toLocaleString()+'</td></tr>'; }).join('')+
   '</tbody></table></div>';
@@ -1535,6 +1537,28 @@ function ubCapAllocBody(c){
   h+=sec('SBC & dilution — the honest history', '<div class="ov-tl-body" style="font-size:12px;line-height:1.6">SBC has <b>plateaued around ~$1.8B/yr</b> since FY22 while revenue nearly doubled, so as a share of revenue it <b>fell from ~7.4% (2020) to ~3.5% (2025)</b> — a shrinking drag. But dilution was <b>not</b> offset for most of Uber’s life: with <b>$0 of buybacks until 2024</b>, the diluted share count <b>rose every year from 2020 to 2024</b> (~1,753M → ~2,151M). <b>FY25 is the first year it actually fell</b> ('+prev.sh.toLocaleString()+'M → '+last.sh.toLocaleString()+'M, ≈ −1.4%) as $6.5B of repurchases finally out-ran SBC. So the accurate read is not "buybacks always offset SBC" — it is that they <b>failed to for years</b> and have only <b>just begun to more-than-offset</b> it. The full historical picture is charted under <b>Governance & SBC</b>.</div>');
   h+='<div class="ov-foot">Buyback authorizations and framework: Uber 8-Ks / Q4 2025 earnings materials. FY actuals (FCF, repurchases, SBC, shares): Summit model. Remaining authorization ~$19B is an estimate ($20B less ~$0.8B drawn beyond the exhausted $7B program).</div>';
   return h;
+}
+// ── Valuation ▸ Capital Allocation — FCF & buybacks ($B bars) + diluted shares (M line, y2), actuals +
+// BBG consensus forward. Shows FCF funding a growing buyback that finally shrinks the share count. ──
+function buildUbCapAlloc(root){
+  var cv=document.getElementById('ubChartCapAlloc'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
+  destroy('ubChartCapAlloc'); var host=root||document, B=uberBBG.is;
+  var yrs=['FY22','FY23','FY24','FY25','FY26E','FY27E','FY28E'], la=3;
+  function babs(v){ return v==null?null:Math.abs(v); }
+  var fcf=[390].concat(B.fcf.a, B.fcf.f).map(function(v){ return v==null?null:Math.round(v/100)/10; });
+  var bbk=[0].concat(B.buyback.a.map(babs), B.buyback.f.map(babs)).map(function(v){ return v==null?null:Math.round(v/100)/10; });
+  var sh=[2061].concat(B.dilShares.a, B.dilShares.f).map(function(v){ return v==null?null:Math.round(v); });
+  function fade(arr,c){ return arr.map(function(_,i){ return i>la?ubHexA(c,0.42):c; }); }
+  _charts['ubChartCapAlloc']=new Chart(cv.getContext('2d'),{ data:{ labels:yrs, datasets:[
+    { type:'bar', label:'Free cash flow', data:fcf, backgroundColor:fade(fcf,UB_SUMMIT), borderColor:'#fff', borderWidth:1, maxBarThickness:24, yAxisID:'y', order:3 },
+    { type:'bar', label:'Buybacks', data:bbk, backgroundColor:fade(bbk,UB_ACT), borderColor:'#fff', borderWidth:1, maxBarThickness:24, yAxisID:'y', order:3 },
+    { type:'line', label:'Diluted shares (M)', data:sh, borderColor:'#7A5AF8', backgroundColor:'#7A5AF8', borderWidth:2.4, pointRadius:2.2, tension:.2, yAxisID:'y2', order:1, segment:{ borderDash:function(ctx){ return ctx.p1DataIndex>la?[5,4]:undefined; } } } ]},
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}, tooltip:{ callbacks:{ label:function(c){ var e=c.dataIndex>la?' (E)':''; return c.dataset.yAxisID==='y2'? c.dataset.label+': '+c.parsed.y.toLocaleString()+'M'+e : c.dataset.label+': $'+c.parsed.y.toFixed(1)+'B'+e; } } } },
+      scales:{ x:{ grid:{display:false}, ticks:{font:{size:10.5}} },
+        y:{ position:'left', beginAtZero:true, grid:{color:'#EEF2F7'}, ticks:{font:{size:10.5},callback:function(v){return '$'+v+'B';}} },
+        y2:{ position:'right', grid:{display:false}, suggestedMin:1900, suggestedMax:2200, ticks:{font:{size:10.5},callback:function(v){return v.toLocaleString();}} } } }
+  });
 }
 // ── Valuation ▸ Balance Sheet — downside/solidity view, sourced from Uber's Q1 2026 10-Q
 // (SEC EDGAR, condensed consolidated balance sheet as of March 31, 2026; $M). WORK IN PROGRESS. ──
@@ -4625,7 +4649,8 @@ function buildSub(root, group, key){
   } else if(group==='valuation'){
     if(key==='multiples')     UBER_VAL.init(root);
     else if(key==='balance')  buildUbBal();     // equity-stake portfolio bar
-    // peers (static table), ratings, capital: no charts
+    else if(key==='capital')  buildUbCapAlloc(root);   // FCF/buybacks + share count
+    // peers (static table), ratings: no charts
   } else if(group==='mgmt'){
     if(key==='team')          UBER_MGMT.init(root);
     else if(key==='governance') buildUbSbc();   // SBC % vs share-count history

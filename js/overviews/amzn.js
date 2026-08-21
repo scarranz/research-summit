@@ -4057,13 +4057,14 @@ function segmentsBody(){
       return '<div class="segx-panel segx-panel-card" data-segpanel="'+s.key+'"'+(i>0?' hidden':'')+'>'+head+(SEG_WORLD[s.key]?SEG_WORLD[s.key].h:'')+'</div>';
     }).join('')+'</div></div>';
   h+=aSegPicker();
-  h+='<div class="seg-gsec" data-sgsec="oimargin">'+aSegOiBody()+'</div>';
+  h+='<div class="seg-gsec" data-sgsec="oimargin">'+aSegFcBody()+'</div>';
+  h+='<div class="seg-gsec" data-sgsec="mix" hidden>'+aSegOiBody()+'</div>';
   h+='<div class="seg-gsec" data-sgsec="bridge" hidden>'+aSegBridgeBody()+'</div>';
   h+=aCollap('Segment deep dives — the full read per segment (drivers, unit economics, cost structure, calls)', segExp, false);
   return h;
 }
 function aSegPicker(){
-  var opts=[['oimargin','Segments — revenue & profit'],['bridge','The segment bridge — forward walk']];
+  var opts=[['oimargin','Operating income & margin by segment'],['mix','Revenue vs profit — common size'],['bridge','The segment bridge']];
   return '<div class="ov-sec" style="padding-bottom:10px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
     '<span style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)">Chart</span>'+
     '<select class="seg-chart" style="font-size:13px;font-weight:700;color:var(--navy);border:1px solid var(--bdr);border-radius:8px;padding:6px 10px;background:#fff">'+
@@ -4129,8 +4130,45 @@ function aSegEngSeries(k, metric, gran){ var s=amznBBG.seg[k]; if(!s) return nul
   var oi=arr('oi'), da=arr('da');
   if(metric==='ebitda') return oi.map(function(v,i){ return (v==null||!da||da[i]==null)?null:v+da[i]; });
   return oi; }
+// Per-segment forecast: pick a segment + metric, see its Actual / Summit / Consensus — $ as bars,
+// margin % as lines on y2 (same SAB shape as the consolidated margins chart). Summit models segment
+// operating income; segment EBITDA is Actual + Consensus (Summit has no segment D&A).
+var SEGFC=[{v:'aws',bk:'aws',mk:'awsopinc',rk:'aws',lab:'AWS'},{v:'na',bk:'na',mk:'naopinc',rk:'usrev',lab:'North America'},{v:'intl',bk:'intl',mk:'intopinc',rk:'intrev',lab:'International'},{v:'cons',bk:null,mk:'opinc',rk:'rev',lab:'Consolidated'}];
+function aSegFcBody(){
+  return aStdScaffold({ id:'segfc', title:'Operating income & margin by segment', height:340,
+    metricSel:SEGFC.map(function(s){ return {v:s.v,label:s.lab,on:s.v==='aws'}; }),
+    modes:[{cls:'metric',label:'Metric',opts:[{v:'oi',label:'Operating income',on:true},{v:'ebitda',label:'EBITDA'}]},{cls:'gran',label:'Period',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]}],
+    presets:[['all','All'],['rep','Reported'],['fwd','Forward']] });
+}
+function aBuildSegFc(){
+  aStdRender('segfc', function(st){
+    var seg=SEGFC.filter(function(s){ return s.v===st.sel; })[0]||SEGFC[0];
+    var metric=st.modes.metric||'oi', gran=st.modes.gran||'y', lab=metric==='ebitda'?'EBITDA':'Op. income';
+    var out={ type:'bar', stacked:false, yFmt:function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }, y2Fmt:function(x){ return x+'%'; } };
+    if(gran==='q' && metric==='oi'){   // amznResults native (Actual/Summit/Consensus, 22 quarters)
+      var Q=amznResults.views.q.metrics, oi=Q[seg.mk], rv=Q[seg.rk], labels=oi.periods.slice(), la=aLastActIdx(oi.act);
+      function amtS(a){ return labels.map(function(_,i){ return a&&a[i]!=null?Math.round(a[i]/100)/10:null; }); }
+      function margS(a,r){ return labels.map(function(_,i){ return (a&&a[i]!=null&&r&&r[i])?Math.round(a[i]/r[i]*1000)/10:null; }); }
+      out.labels=labels; out.lastAct=la; out.series=[
+        {k:'act$',label:lab+' — Actual',color:ASTD_ACT,type:'bar',data:amtS(oi.act)},
+        {k:'sum$',label:lab+' — Summit',color:ASTD_SUMMIT,type:'bar',data:amtS(oi.summit)},
+        {k:'con$',label:lab+' — Consensus',color:ASTD_CONS,type:'bar',data:amtS(oi.cons)},
+        {k:'actM',label:'Margin — Actual',color:ASTD_ACT,type:'line',yAxisID:'y2',data:margS(oi.act,rv.act)},
+        {k:'sumM',label:'Margin — Summit',color:ASTD_SUMMIT,type:'line',yAxisID:'y2',data:margS(oi.summit,rv.summit)},
+        {k:'conM',label:'Margin — Consensus',color:ASTD_CONS,type:'line',yAxisID:'y2',dash:true,data:margS(oi.cons,rv.cons)} ];
+      return out;
+    }
+    var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], la=2;
+    function bbg(f){ if(seg.bk){ var s=amznBBG.seg[seg.bk][f]; return s?s.a.concat(s.f):null; } var s2=amznBBG.is[f]; return s2?s2.a.concat(s2.f):null; }
+    var oiA=bbg('oi'), daA=bbg('da'), revA=bbg('rev');
+    function num(i){ if(metric!=='ebitda') return oiA[i]; if(!seg.bk){ var eb=bbg('ebitda'); return eb?eb[i]:null; } return (oiA[i]==null||!daA||daA[i]==null)?null:oiA[i]+daA[i]; }
+    var actN=labels.map(function(_,i){ return i<=la?num(i):null; }), conN=labels.map(function(_,i){ return i>=la?num(i):null; });
+    var sm=null; if(metric==='oi'){ var so=aSegSummitAnnual(seg.mk), sr=aSegSummitAnnual(seg.rk); if(so&&sr) sm={num:so,den:sr}; }
+    out.labels=labels; out.lastAct=la; out.series=aMargDual(lab, actN, conN, revA, la, false, null, sm); return out;
+  });
+}
 function aSegOiBody(){
-  return aStdScaffold({ id:'segoi', title:'Segments — revenue &amp; profit', height:340,
+  return aStdScaffold({ id:'segoi', title:'Revenue vs profit — common size by segment', height:340,
     metricSel:[{v:'oi',label:'Operating income',on:true},{v:'rev',label:'Revenue'},{v:'ebitda',label:'EBITDA'}],
     modes:[{cls:'show',label:'Show',opts:[{v:'amt',label:'$B',on:true},{v:'share',label:'Share'},{v:'growth',label:'Growth (YoY)'}]},
            {cls:'layout',label:'Layout',opts:[{v:'stack',label:'Stacked',on:true},{v:'side',label:'Side by side'}]},
@@ -4156,9 +4194,9 @@ function aBuildSegOi(){
 }
 function aBuildSegments(){
   var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]');
-  aBuildSegOi();
+  aBuildSegFc(); aBuildSegOi();
   if(pane && !pane._segWired){ pane._segWired=true;
-    var SEG_BUILD={ oimargin:aBuildSegOi, bridge:aBuildSegBridge };
+    var SEG_BUILD={ oimargin:aBuildSegFc, mix:aBuildSegOi, bridge:aBuildSegBridge };
     var ssel=pane.querySelector('.seg-chart');
     if(ssel){ ssel.onchange=function(){ var v=ssel.value;
       pane.querySelectorAll('.seg-gsec').forEach(function(s){ s.hidden=(s.getAttribute('data-sgsec')!==v); });

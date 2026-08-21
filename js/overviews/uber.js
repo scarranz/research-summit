@@ -1031,6 +1031,13 @@ function ubBbgSegOnAxis(seg, key, periods){
   yrs.forEach(function(y,i){ by[y]=vals[i]; });
   return periods.map(function(p){ return by[+p]!=null?by[+p]:null; });
 }
+// Same, for a consolidated uber-bbg income-statement series.
+function ubBbgIsOnAxis(key, periods){
+  var s=uberBBG.is[key]; if(!s) return periods.map(function(){ return null; });
+  var vals=s.a.concat(s.f), yrs=uberBBG.yearsA.concat(uberBBG.yearsF), by={};
+  yrs.forEach(function(y,i){ by[y]=vals[i]; });
+  return periods.map(function(p){ return by[+p]!=null?by[+p]:null; });
+}
 function ubSegDualBody(){
   var pills=Object.keys(UB_SEG_MAP).map(function(k,i){ return '<button type="button" class="rs-view'+(i===0?' active':'')+'" data-ubsg="'+k+'">'+UB_SEG_MAP[k].lab+'</button>'; }).join('');
   return '<div class="ov-sec" data-ubsgblock="1">'+
@@ -1439,6 +1446,33 @@ function buildUbBridge(root){
   });
   var note=host.querySelector('#ubBridgeNote');
   if(note) note.innerHTML='<b>'+yl+'</b> — $'+b(rev).toFixed(0)+'B revenue converts to <b>$'+run.toFixed(1)+'B operating income</b> ('+(run/b(rev)*100).toFixed(1)+'% margin) after cost of revenue and the four opex lines. Reconciled from BBG consensus (Adj EBITDA adds back D&A + SBC on top of GAAP operating income). '+(yi>2?'Forward = consensus.':'');
+}
+// ── Bottom Line ▸ Insurance & FCF — free cash flow ($B bars) + FCF conversion (% of Adj EBITDA, y2),
+// Actual / Summit / Consensus, all from uberResults. ──
+function buildUbFcf(root){
+  var cv=document.getElementById('ubChartFcf'); if(!cv||typeof Chart==='undefined'||!cv.offsetParent) return;
+  destroy('ubChartFcf'); var host=root||document;
+  var Y=uberResults.views.y.metrics, fcfM=Y.fcf, ebM=Y.ebitda, periods=fcfM.periods.slice();
+  var labels=periods.map(function(p){ return 'FY'+String(p).slice(2); });
+  var la=0; for(var i=0;i<fcfM.act.length;i++) if(fcfM.act[i]!=null) la=i;
+  // Summit doesn't publish a forward FCF here → Actual (uberResults) + Consensus (uber-bbg). No fabricated Summit line.
+  var consFcf=ubBbgIsOnAxis('fcf',periods), consEb=ubBbgIsOnAxis('ebitda',periods);
+  function bars(a){ return a.map(function(v){ return v==null?null:Math.round(v/100)/10; }); }
+  function barBg(a,c){ return a.map(function(v,i){ return i>la?ubHexA(c,0.42):c; }); }
+  var srcs=[{lab:'Actual',c:UB_ACT,fcf:fcfM.act,eb:ebM.act,dash:false},{lab:'Consensus (BBG)',c:UB_CONS,fcf:consFcf,eb:consEb,dash:true}];
+  var ds=[];
+  srcs.forEach(function(s){ ds.push({ type:'bar', label:'FCF — '+s.lab, data:bars(s.fcf), backgroundColor:barBg(bars(s.fcf),s.c), borderColor:'#fff', borderWidth:1, maxBarThickness:30, yAxisID:'y', order:3 }); });
+  srcs.forEach(function(s){ var conv=s.fcf.map(function(v,i){ return (v!=null&&s.eb[i])?Math.round(v/s.eb[i]*100):null; });
+    ds.push({ type:'line', label:'Conversion — '+s.lab, data:conv, borderColor:s.c, backgroundColor:s.c, borderWidth:2.4, pointRadius:2.2, tension:.2, spanGaps:false, yAxisID:'y2', order:1, borderDash:s.dash?[5,4]:undefined }); });
+  _charts['ubChartFcf']=new Chart(cv.getContext('2d'),{ data:{ labels:labels, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:function(c){ var e=(c.dataIndex>la)?' (E)':''; return c.dataset.label+': '+(c.parsed.y==null?'—':(c.dataset.yAxisID==='y2'?c.parsed.y+'%':'$'+c.parsed.y.toFixed(1)+'B'))+e; } } } },
+      scales:{ x:{ grid:{display:false}, ticks:{font:{size:10.5}} },
+        y:{ position:'right', beginAtZero:true, grid:{color:'#EEF2F7'}, ticks:{ font:{size:10.5}, callback:function(v){ return '$'+v+'B'; } } },
+        y2:{ position:'right', grid:{display:false}, ticks:{ font:{size:10.5}, callback:function(v){ return v+'%'; } } } } }
+  });
+  var leg=host.querySelector('#ubFcfLeg');
+  if(leg) leg.innerHTML=srcs.map(function(s){ return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--mu);margin-right:14px"><span style="width:13px;height:13px;border-radius:3px;background:'+s.c+'"></span>'+s.lab+'</span>'; }).join('');
 }
 function ubMarginsBody(c){
   return ubProfitBody()+ubBridgeBody()+
@@ -2024,6 +2058,11 @@ function insuranceBody(){
   '</style>';
   h+='<div class="uins-hero"><div class="uins-hero-v">$12.9B</div>'+
     '<div class="uins-hero-t">Uber quietly runs one of the largest in-house insurers you have never heard of — a <b>~$12.9B</b> book of claims reserves (Q1 2026). Its <b>float</b> helped power the cash-flow turnaround; and as Gross Bookings compound ~20% a year, insurance is finally becoming a <b>smaller slice</b> of the model.</div></div>';
+  // Free cash flow — the cash the float helped unlock, AMZN-standard dual-axis (Actual/Summit/Consensus).
+  h+='<div class="uins-h">Free cash flow &amp; conversion</div>';
+  h+='<div class="ave-leg" id="ubFcfLeg" style="margin:2px 0 8px"></div>';
+  h+='<div class="ov-chart-card"><div class="ov-chart-wrap ovs-tall" style="min-height:300px"><canvas id="ubChartFcf"></canvas></div></div>';
+  h+='<div class="ave-subh-note" style="margin-top:8px">Bars = free cash flow ($B); line = FCF conversion (FCF ÷ Adjusted EBITDA, right axis). Uber converts well above 100% of EBITDA to cash — the insurance float plus low capex intensity. Forward = Summit vs BBG consensus.</div>';
   // machine
   h+='<div class="uins-h">The self-insurance machine</div>';
   h+='<div class="uins-primer"><span class="uins-primer-l">New to this? Start here:</span>'+
@@ -4567,7 +4606,8 @@ function buildSub(root, group, key){
   } else if(group==='bottomline'){
     if(key==='unit'){ buildUbUnit(root); buildMobilityCharts(); }  // company GB+take dual-axis + Mobility/Delivery take comparison
     else if(key==='margins'){ buildUbProfit(root); buildUbBridge(root); buildUbMargins(); }   // Adj EBITDA dual-axis + bridge + live Massive margins
-    // suppliers, insurance: no charts
+    else if(key==='insurance') buildUbFcf(root);   // FCF & conversion dual-axis
+    // suppliers: no charts
   } else if(group==='evolution'){
     if(key==='guidance')      buildModelTab();          // Model vs. Reality lives under Guidance
     else if(key==='earnings'){

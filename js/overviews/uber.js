@@ -4038,6 +4038,7 @@ function deepDiveHtml(c){
       '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
       '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
       '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
+      '<button type="button" class="dd-tab" data-dd="misc">Miscellaneous</button>'+
     '</div>';
   // ── TOP LINE — Segments (with an inner Mobility/Delivery/Freight toggle) · Customers · TAM ·
   // Industry Analysis. The old "Deep Overview" is dismantled into these (Golden Rule #1). ──
@@ -4076,7 +4077,6 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="guidance">Guidance</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="strategy">Strategy</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="timeline">Timeline</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="dhacq">Delivery Hero Acquisition</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="earnings">'+
         ceIRButton()+
@@ -4096,7 +4096,6 @@ function deepDiveHtml(c){
       '<div class="ovt-subpane" data-ovst="guidance" hidden>'+modelBody(c)+ub3yrTargets()+'</div>'+
       '<div class="ovt-subpane" data-ovst="strategy" hidden>'+ubStrategyBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="timeline" hidden>'+historyStoryBody()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="dhacq" hidden>'+deliveryHeroBody()+'</div>'+
     '</div>';
   // ── VALUATION — Multiples · Peers (listed-peer multiples) · Analyst Ratings (Massive, absorbed) ·
   // Capital Allocation · Balance Sheet. (Sensitivity grid removed; competitive map moved to Industry.) ──
@@ -4127,6 +4126,14 @@ function deepDiveHtml(c){
       '<div class="ovt-subpane" data-ovst="ownership" hidden><div id="dd-mgmt-slot"></div></div>'+
       '<div class="ovt-subpane" data-ovst="governance" hidden>'+ubGovBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="track" hidden>'+ubTrackBody(c)+'</div>'+
+    '</div>';
+  // ── MISCELLANEOUS — M&A (Delivery Hero acquisition, moved out of Evolution per Dani). Mirrors
+  // AMZN's Miscellaneous tab; UBER is asset-light so there's no Capex & Depreciation deep dive. ──
+  h+='<div class="dd-pane" data-dd="misc" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="manda">M&amp;A</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="manda">'+deliveryHeroBody()+'</div>'+
     '</div>';
   h+='</div>';
   return h;
@@ -4393,7 +4400,9 @@ function buildSub(root, group, key){
     }
     else if(key==='results') requestAnimationFrame(function(){ initResults(root.querySelector('.ovt-subpane[data-ovst="results"] .rs-wrap'), 'UBER'); });
     else if(key==='estevo') requestAnimationFrame(function(){ initResultsEvo('UBER'); });
-    // strategy, timeline, dhacq: no charts
+    // strategy, timeline: no charts
+  } else if(group==='misc'){
+    // manda (Delivery Hero): SVG/HTML map wired via delegated .dhm-pill handlers in init — no Chart.js
   } else if(group==='valuation'){
     if(key==='multiples')     UBER_VAL.init(root);
     else if(key==='balance')  buildUbBal();     // equity-stake portfolio bar
@@ -4526,7 +4535,7 @@ function init(c){
   var root=document.getElementById('co-detailview'); if(!root) return;
   renderLive(root); // Deep Dive ▸ Deep Overview keeps its live-price banner (#ubLive lives only there now); the standardized Overview has no price strip.
   wireDD(root);
-  wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt');
+  wireSubtabs(root,'topline'); wireSubtabs(root,'bottomline'); wireSubtabs(root,'evolution'); wireSubtabs(root,'valuation'); wireSubtabs(root,'mgmt'); wireSubtabs(root,'misc');
   wireCallEarnings(root); wireCeTrack(root); wireCeAnnual(root); // ported earnings phase system + Setup/Post-Results lens toggles
   // Segments ▸ inner Mobility/Delivery/Freight toggle (the "sub-tabs de los segmentos").
   root.querySelectorAll('.seg-pill').forEach(function(btn){ btn.onclick=function(){

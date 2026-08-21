@@ -1661,6 +1661,105 @@ function buildUbFcf(root){
   var leg=host.querySelector('#ubFcfLeg');
   if(leg) leg.innerHTML=srcs.map(function(s){ return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--mu);margin-right:14px"><span style="width:13px;height:13px;border-radius:3px;background:'+s.c+'"></span>'+s.lab+'</span>'; }).join('');
 }
+// ── Expense-line deep dives (AMZN ewBase mold) — each functional cost line with its VERBATIM 10-K
+// definition, what sits inside it, its trajectory as a % of revenue (FY23-28E, uber-bbg), and the
+// year's driver from MD&A. Definitions & drivers verbatim from Uber's FY2025 10-K. ──
+var UB_EXP_YRS=['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
+var UB_EXP=[
+  { k:'cogs', n:'Cost of revenue', tag:'$31.3B · 60.2% of revenue', traj:[60.2,60.6,60.2,55.7,56.0,55.4],
+    def:'Cost of revenue, exclusive of depreciation and amortization, primarily consists of costs incurred for certain Mobility and Delivery transactions where we are primarily responsible for Mobility and Delivery services and pay Drivers and Couriers for services, certain insurance costs related to our Mobility and Delivery offerings, costs incurred with Carriers for Uber Freight transportation services, credit card processing fees, bank fees, data center and networking expenses, mobile device and service costs, and amounts related to fare chargebacks and other credit card losses.',
+    comp:[['🚗','Driver &amp; Courier payments','In gross-basis markets, what Uber pays Drivers and Couriers to fulfil rides and orders — the largest slice.'],['🛡️','Insurance','Mobility &amp; Delivery insurance cost — rises with rate-per-mile and miles driven.'],['🚚','Freight carrier costs','What Uber pays Carriers for Uber Freight shipments.'],['💳','Payments &amp; infrastructure','Card processing, bank fees, data-centre &amp; networking, devices, chargebacks.']],
+    why:'The platform-fulfilment line — it scales with Trip volume, so it is the biggest driver of where the take converts to gross profit. Falling as a share of revenue (60%→~55%) as mix and pricing improve.',
+    driver:'Up +18% ($4.7B) in 2025: +$1.6B Driver payments (higher Mobility gross bookings), +$1.6B Courier payments (higher Delivery gross bookings), and +$851M insurance (higher rate per mile and miles driven).' },
+  { k:'fulfillment', n:'Operations &amp; support', tag:'$2.9B · 5.5% of revenue', traj:[7.2,6.2,5.5,5.5,5.2,4.9],
+    def:'Operations and support expenses primarily consist of compensation expenses, including stock-based compensation, for employees that support operations in cities, including the general managers, Driver operations, platform user support representatives and community managers. Also included is the cost of customer support, Driver background checks and the allocation of certain corporate costs.',
+    comp:[['🧑‍💼','City-operations staff','General managers, Driver-operations and community managers (incl. SBC).'],['🎧','Customer support','Rider/Driver/merchant support.'],['✅','Driver background checks','Onboarding safety checks.']],
+    why:'The cost of running the marketplace on the ground. Pure operating leverage — held roughly flat in dollars while revenue grew, so it falls as a share of revenue every year.',
+    driver:'Up +4% ($122M) in 2025: +$138M employee headcount costs, partially offset by a $30M decrease in external contractor expenses.' },
+  { k:'techInfra', n:'Research &amp; development', tag:'$3.4B · 6.5% of revenue', traj:[8.5,7.1,6.5,6.9,6.6,6.2],
+    def:'Research and development expenses primarily consist of compensation costs, including stock-based compensation, for employees in engineering, design and product development. Expenses also include ongoing improvements to, and maintenance of, existing products and services, and allocation of certain corporate costs. We expense substantially all research and development expenses as incurred.',
+    comp:[['🧑‍💻','Engineering &amp; product payroll','Engineering, design and product-development compensation (incl. SBC).'],['🛠️','Product maintenance','Ongoing improvement and upkeep of the platform.']],
+    why:'The platform-investment line. Uber runs a single tech stack across all three marketplaces, so R&amp;D leverages down as revenue scales — the opposite of Amazon’s AI-driven tech line.',
+    driver:'Up +9% ($293M) in 2025: primarily a $313M increase in employee headcount costs.' },
+  { k:'marketing', n:'Sales &amp; marketing', tag:'$4.9B · 9.4% of revenue', traj:[11.7,9.9,9.4,10.0,9.6,9.5],
+    def:'Sales and marketing expenses primarily consist of advertising costs, product marketing costs, consumer discounts, promotions, credits and refunds provided to end-users who are not customers, compensation costs, including stock-based compensation to sales and marketing employees, and the allocation of certain corporate costs. We expense advertising and other promotional expenditures as incurred.',
+    comp:[['📣','Advertising &amp; product marketing','Paid acquisition and brand.'],['🎟️','Consumer incentives','Discounts, promotions, credits and refunds to non-customer end-users (~$1.6B in 2025).'],['🧑‍💼','S&amp;M payroll','Sales &amp; marketing compensation (incl. SBC).']],
+    why:'The demand-generation line, and the biggest discretionary lever. Falling as a share of revenue as the brand and Uber One membership reduce the need to buy each next trip.',
+    driver:'Up +13% ($561M) in 2025: +$221M indirect advertising &amp; marketing, +$207M consumer discounts/promotions/credits/refunds (to $1.6B from $1.4B), and +$129M employee headcount costs.' },
+  { k:'gAdmin', n:'General &amp; administrative', tag:'$3.2B · 6.2% of revenue', traj:[7.2,8.3,6.2,5.9,5.5,5.1],
+    def:'General and administrative expenses primarily consist of compensation costs, including stock-based compensation, for executive management and administrative employees, including finance and accounting, human resources, policy and communications, legal, and certain impairment charges, as well as allocation of certain corporate costs, occupancy, and general corporate insurance costs. General and administrative expenses also include certain legal-related accruals and expenses.',
+    comp:[['🏢','Corporate functions','Exec, finance, HR, policy/comms and legal (incl. SBC).'],['⚖️','Legal accruals','Legal-related accruals and expenses — the lumpy part.'],['🏬','Occupancy &amp; insurance','Offices and general corporate insurance.']],
+    why:'The overhead line, swung by legal accruals. The 2025 fall came from lapping large prior-year legal charges — the underlying corporate cost leverages down with scale.',
+    driver:'DOWN −11% (−$398M) in 2025: a $549M decrease in legal-related accruals and expenses, partly offset by +$65M headcount and +$47M other corporate expenses.' },
+  { k:'da', n:'Depreciation &amp; amortization', tag:'$0.7B · 1.4% of revenue', traj:[2.2,1.6,1.4,1.3,1.2,1.1],
+    def:'Depreciation and amortization expenses primarily consist of depreciation on buildings, site improvements, computer and network equipment, software, leasehold improvements, furniture and fixtures, and amortization of intangible assets. Amortization includes expenses associated with our capitalized internal-use software and acquired intangible assets.',
+    comp:[['🖥️','Depreciation of PP&amp;E','Buildings, computer/network equipment, leasehold improvements, furniture &amp; fixtures.'],['📀','Amortization','Capitalised internal-use software and acquired intangibles.']],
+    why:'Small and shrinking — Uber is asset-light, so D&amp;A is barely 1% of revenue and falling. (Sits below the segment cost lines above, in reconciliation to operating income.)',
+    driver:'Roughly flat in 2025 (+$8M, +1%): the change in depreciation and amortization was not material.' }
+];
+function ubExpSpark(traj){
+  var mx=Math.max.apply(null,traj.map(Math.abs))||1;
+  return '<div style="display:flex;align-items:flex-end;gap:5px;height:64px;margin:4px 0 2px">'+traj.map(function(v,i){
+    var h=Math.max(3,Math.round(Math.abs(v)/mx*58)), est=i>2;
+    return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><div style="font-size:9.5px;font-weight:800;color:var(--navy)">'+v.toFixed(1)+'%</div>'+
+      '<div style="width:100%;height:'+h+'px;background:'+(est?'rgba(6,193,103,0.4)':'#06965A')+';border-radius:3px 3px 0 0"></div>'+
+      '<div style="font-size:9px;color:var(--mu)">'+UB_EXP_YRS[i]+'</div></div>'; }).join('')+'</div>';
+}
+function ubExpenseTabsBody(c){
+  var h='<style>'+
+    '.ubx-exp{border:1.5px solid var(--brand,#06C167);border-radius:14px;padding:14px 16px 16px;background:linear-gradient(180deg,rgba(6,193,103,0.05),transparent)}'+
+    '.ubx-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}'+
+    '.ubx-tab{border:1px solid var(--bdr);background:#fff;border-radius:20px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:800;color:var(--navy);transition:.13s}'+
+    '.ubx-tab:hover{border-color:var(--brand,#06C167)}.ubx-tab.active{background:var(--navy);border-color:var(--navy);color:#fff}'+
+    '.ubx-h{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);margin:14px 0 6px}'+
+    '.ubx-def{font-size:12px;line-height:1.55;color:var(--navy);background:var(--surface,#F7F9FB);border-left:3px solid var(--brand,#06C167);border-radius:8px;padding:10px 13px}'+
+    '.ubx-att{display:block;font-size:9.5px;color:var(--mu);margin-top:5px;font-weight:700}'+
+    '.ubx-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:9px}'+
+    '.ubx-box{border:1px solid var(--bdr);border-radius:9px;padding:9px 11px;background:#fff}'+
+    '.ubx-box-h{font-size:12px;font-weight:800;color:var(--navy);display:flex;gap:6px;align-items:center}'+
+    '.ubx-box-t{font-size:11px;color:var(--mu);line-height:1.45;margin-top:3px}'+
+    '.ubx-note{font-size:12px;line-height:1.55;color:var(--navy);margin:2px 0}.ubx-kpi{font-size:11px;font-weight:800;color:var(--brand-2,#049a4f)}'+
+  '</style>';
+  h+='<div class="ubx-exp"><div class="ubx-tabs">'+UB_EXP.map(function(l,i){ return '<button type="button" class="ubx-tab'+(i===0?' active':'')+'" data-ubx="'+l.k+'">'+l.n+'</button>'; }).join('')+'</div>';
+  h+=UB_EXP.map(function(l,i){
+    return '<div class="ubx-panel" data-ubxp="'+l.k+'"'+(i===0?'':' hidden')+'>'+
+      '<div class="ubx-kpi">'+l.tag+'</div>'+
+      '<div class="ubx-h">How the 10-K defines it</div><div class="ubx-def">"'+l.def+'"<span class="ubx-att">— Uber FY2025 10-K, MD&amp;A · Components of Results of Operations</span></div>'+
+      '<div class="ubx-h">What sits inside this line</div><div class="ubx-two">'+l.comp.map(function(b){ return '<div class="ubx-box"><div class="ubx-box-h"><span>'+b[0]+'</span>'+b[1]+'</div><div class="ubx-box-t">'+b[2]+'</div></div>'; }).join('')+'</div>'+
+      '<div class="ubx-h">Share of revenue over time</div>'+ubExpSpark(l.traj)+
+      '<div class="ubx-h">Why it matters</div><div class="ubx-note">'+l.why+'</div>'+
+      '<div class="ubx-h">Why it moved — FY2025</div><div class="ubx-note">'+l.driver+'</div>'+
+    '</div>'; }).join('');
+  h+='<div class="ov-fynote" style="margin-top:10px">Definitions &amp; year-over-year drivers verbatim from Uber’s FY2025 10-K (MD&amp;A). Share-of-revenue trajectory FY23-25 reported, FY26-28E consensus (uber-bbg). Forward bars are lighter.</div>';
+  h+='</div>';
+  return h;
+}
+// Bottom Line ▸ General — one chart at a time via a dropdown (AMZN's gen-chart pattern), not a stack.
+function ubGeneralPicker(){
+  var opts=[['profit','Profitability & margins'],['bridge','The bridge — revenue → operating income']];
+  return '<div class="ov-sec" style="padding-bottom:10px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+    '<span style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)">Chart</span>'+
+    '<select class="gen-chart" style="font-size:13px;font-weight:700;color:var(--navy);border:1px solid var(--bdr);border-radius:8px;padding:6px 10px;background:#fff">'+
+    opts.map(function(o){ return '<option value="'+o[0]+'"'+(o[0]==='profit'?' selected':'')+'>'+o[1]+'</option>'; }).join('')+
+    '</select><span style="font-size:11px;color:var(--mu)">Pick one — the rest stay tucked away.</span></div></div>';
+}
+function ubBottomGeneralBody(c){
+  return ubGeneralPicker()+
+    '<div class="gen-sec" data-gsec="profit">'+ubProfitBody()+'</div>'+
+    '<div class="gen-sec" data-gsec="bridge" hidden>'+ubBridgeBody()+'</div>'+
+    collapsible('Expense lines — the functional deep dives (definitions, trajectory, drivers)', ubExpenseTabsBody(c), false);
+}
+function buildUbGeneral(root){
+  var pane=root.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="general"]'); if(!pane) return;
+  var GEN_BUILD={ profit:function(){ buildUbProfit(root); }, bridge:function(){ buildUbBridge(root); } };
+  if(!pane._genWired){ pane._genWired=true;
+    var gsel=pane.querySelector('.gen-chart');
+    if(gsel){ gsel.onchange=function(){ var v=gsel.value;
+      pane.querySelectorAll('.gen-sec').forEach(function(s){ s.hidden=(s.getAttribute('data-gsec')!==v); });
+      if(GEN_BUILD[v]) GEN_BUILD[v](); }; } }
+  var gs=pane.querySelector('.gen-chart'), v=gs?gs.value:'profit';
+  if(GEN_BUILD[v]) GEN_BUILD[v]();
+}
 function ubMarginsBody(c){
   return ubProfitBody()+ubBridgeBody()+
     '<p class="ov-lede">Profitability & cash margins as a % of revenue — gross, operating and net, plus Adjusted EBITDA, CFO and FCF. The turnaround reads cleanest in <b>operating</b> and <b>EBITDA</b> margin, which climb every year from deeply negative (FY21) into the high-teens.</p>'+
@@ -4493,10 +4592,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="segments">Segments</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="supplychain">Supply Chain</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="general">'+ubMarginsBody(c)+
-        collapsible('Unit economics — how a trip & an order make money, and the take rate', unitEconBody(c), false)+
-        collapsible('The insurance float & free cash flow', insuranceBody(), false)+
-      '</div>'+
+      '<div class="ovt-subpane" data-ovst="general">'+ubBottomGeneralBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="segments" hidden>'+ubSegmentsBody(c)+
         collapsible('Capital allocation — FCF, buybacks & the share count', ubCapAllocBody(c), false)+
       '</div>'+
@@ -4831,10 +4927,7 @@ function buildSub(root, group, key){
     else if(key==='segoth') requestAnimationFrame(function(){ initSegmentsOther(root, 'UBER'); });
     else if(key==='segcus') requestAnimationFrame(function(){ initSegmentsCustomers(root, 'UBER'); });
   } else if(group==='bottomline'){
-    if(key==='general'){   // profitability up top + the Unit-economics & Insurance deep-dives (collapsibles build on expand)
-      buildUbProfit(root); buildUbBridge(root); buildUbMargins();
-      buildUbUnit(root); buildMobilityCharts(); buildUbFcf(root);
-    }
+    if(key==='general') buildUbGeneral(root);   // dropdown picker (Profitability / Bridge, one at a time) + expense deep-dives
     else if(key==='segments'){   // per-segment worlds (GB/EBITDA composition + dual-axis + active segment) + capital allocation
       buildUbSegDual(root); buildOverviewCharts(); buildActiveSeg(root); buildUbCapAlloc(root);
     }
@@ -5010,6 +5103,11 @@ function init(c){
   root.querySelectorAll('[data-ubbr]').forEach(function(btn){ btn.onclick=function(){
     var box=btn.closest('[data-ubbrblock]'); if(box) box.querySelectorAll('[data-ubbr]').forEach(function(b){ b.classList.toggle('active', b===btn); });
     requestAnimationFrame(function(){ buildUbBridge(root); }); }; });
+  // Bottom Line ▸ General ▸ expense-line deep-dive tabs
+  root.querySelectorAll('[data-ubx]').forEach(function(btn){ btn.onclick=function(){
+    var k=btn.getAttribute('data-ubx'), box=btn.closest('.ubx-exp'); if(!box) return;
+    box.querySelectorAll('[data-ubx]').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    box.querySelectorAll('[data-ubxp]').forEach(function(p){ p.hidden=(p.getAttribute('data-ubxp')!==k); }); }; });
   // Delivery Hero acquisition markets: "mode" pills swap Map/List, "view" pills swap between
   // Uber Today / Delivery Hero Today / Uber After the Deal — swapping each map path/dot's fill
   // in place and toggling the matching legend + list block (three of each, one per view).

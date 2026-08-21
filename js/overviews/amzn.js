@@ -4296,7 +4296,7 @@ function aBuildSegOi(){
     if(metric==='ebitda') basis='cons';   // Summit has no segment D&A → EBITDA only on the Actual+Consensus basis (no fabricated Summit segment EBITDA)
     if(basis==='summit') gran='y';   // Summit segment series is quarterly-indexed differently → aggregate to annual only (labels stay aligned)
     var labels=gran==='q'?amznBBG.qtrs.slice():['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
-    var la=gran==='q'?((amznBBG.seg.aws.oi.qA?amznBBG.seg.aws.oi.qA.length:5)-1):(basis==='summit'?5:2);   // Summit is a forecast across all years (no actual/est split)
+    var la=gran==='q'?((amznBBG.seg.aws.oi.qA?amznBBG.seg.aws.oi.qA.length:5)-1):2;   // FY26E+ are estimates on BOTH bases → fade them consistently (no full-colour Summit forward)
     // Annual axis is always YoY (step 1). Quarterly: QoQ = prior quarter (step 1), YoY = same quarter last year (step 4).
     var step=gran==='q'?(cmp==='qoq'?1:4):1, addMode=(show==='growth'&&gin==='add');
     var raw=SEGENG_SG.map(function(seg){ return { seg:seg, v:aSegEngSeries(seg.k,metric,gran,basis) }; });

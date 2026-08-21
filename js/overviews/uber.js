@@ -4300,17 +4300,21 @@ function deepDiveHtml(c){
       '<div class="ovt-subpane" data-ovst="segcus" hidden>'+(segmentsCustomersHtml('UBER')||ceResultsPending('Customers'))+'</div>'+
     '</div>';
   // ── BOTTOM LINE — Unit Economics · Suppliers · Insurance & FCF · Margins (live via Massive). ──
-  // ── BOTTOM LINE — AMZN standard: General (profitability up top; the take-rate/per-trip unit
-  // economics and the insurance-float/FCF as expense-style deep-dives below) · Supply Chain (suppliers).
-  // Capital Allocation and per-segment profitability get their own homes as the reorg proceeds. ──
+  // ── BOTTOM LINE — AMZN standard: General (profitability up top; the take-rate/per-trip unit economics
+  // and the insurance-float/FCF as expense-style deep-dives below) · Segments (per-segment worlds +
+  // Capital Allocation) · Supply Chain (suppliers). ──
   h+='<div class="dd-pane" data-dd="bottomline" hidden>'+
       '<div class="ovt-subtabs">'+
         '<button type="button" class="ovt-subtab active" data-ovst="general">General</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="segments">Segments</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="supplychain">Supply Chain</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="general">'+ubMarginsBody(c)+
         collapsible('Unit economics — how a trip & an order make money, and the take rate', unitEconBody(c), false)+
         collapsible('The insurance float & free cash flow', insuranceBody(), false)+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="segments" hidden>'+ubSegmentsBody(c)+
+        collapsible('Capital allocation — FCF, buybacks & the share count', ubCapAllocBody(c), false)+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="supplychain" hidden>'+suppliersBody(c)+'</div>'+
     '</div>';
@@ -4347,12 +4351,10 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab active" data-ovst="multiples">Multiples</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="peers">Peers</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="ratings">Analyst Ratings</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="capital">Capital Allocation</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="multiples">'+UBER_VAL.body()+'</div>'+
       '<div class="ovt-subpane" data-ovst="peers" hidden>'+ubPeerMultBody(c)+'</div>'+
       '<div class="ovt-subpane" data-ovst="ratings" hidden><div id="dd-val-slot"></div></div>'+
-      '<div class="ovt-subpane" data-ovst="capital" hidden>'+ubCapAllocBody(c)+'</div>'+
     '</div>';
   // ── MANAGEMENT — Executives & Board · Ownership (Fiscal.ai, absorbed) · Governance & SBC ·
   // Track Record. ──
@@ -4390,7 +4392,6 @@ function deepDiveHtml(c){
         collapsible('TAM — the addressable market', ubTamBody(c), false)+
         collapsible('Industry & competitive landscape', ubIndustryBody(c), false)+
         collapsible('Uber One — membership economics', ubCustomersBody(c), false)+
-        collapsible('Segment worlds — Mobility · Delivery · Freight in depth', ubSegmentsBody(c), false)+
       '</div>'+
     '</div>';
   h+='</div>';
@@ -4650,6 +4651,9 @@ function buildSub(root, group, key){
       buildUbProfit(root); buildUbBridge(root); buildUbMargins();
       buildUbUnit(root); buildMobilityCharts(); buildUbFcf(root);
     }
+    else if(key==='segments'){   // per-segment worlds (GB/EBITDA composition + dual-axis + active segment) + capital allocation
+      buildUbSegDual(root); buildOverviewCharts(); buildActiveSeg(root); buildUbCapAlloc(root);
+    }
     // supplychain: no charts
   } else if(group==='evolution'){
     if(key==='guidance')      buildModelTab();          // Model vs. Reality lives under Guidance
@@ -4665,15 +4669,12 @@ function buildSub(root, group, key){
     // strategy, timeline: no charts
   } else if(group==='misc'){
     if(key==='balance')       buildUbBal();     // equity-stake portfolio bar (moved from Valuation)
-    else if(key==='other'){   // preserved bespoke Top-Line charts (build on expand via the collapsible handler)
-      buildUbSegDual(root); buildOverviewCharts(); buildActiveSeg(root); buildUberOneCharts();
-    }
+    else if(key==='other')    buildUberOneCharts();   // Uber One membership chart (TAM/Industry have no charts)
     // manda (Delivery Hero): SVG/HTML map wired via delegated .dhm-pill handlers in init — no Chart.js
     // strategy, timeline: no charts
   } else if(group==='valuation'){
     if(key==='multiples')     UBER_VAL.init(root);
-    else if(key==='capital')  buildUbCapAlloc(root);   // FCF/buybacks + share count
-    // peers (static table), ratings: no charts
+    // peers (static table), ratings: no charts (Capital Allocation moved to Bottom Line ▸ Segments)
   } else if(group==='mgmt'){
     if(key==='team')          UBER_MGMT.init(root);
     else if(key==='governance') buildUbSbc();   // SBC % vs share-count history

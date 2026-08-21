@@ -4280,7 +4280,7 @@ function aBuildSegFc(){
 }
 function aSegOiBody(){
   return aStdScaffold({ id:'segoi', title:'Revenue vs profit — common size by segment', height:340,
-    metricSel:[{v:'rev',label:'Revenue',on:true},{v:'oi',label:'Operating income'}],
+    metricSel:[{v:'rev',label:'Revenue',on:true},{v:'oi',label:'Operating income'},{v:'ebitda',label:'EBITDA'}],
     modes:[{cls:'basis',label:'Basis',opts:[{v:'cons',label:'Actual + Consensus',on:true},{v:'summit',label:'Summit'}]},
            {cls:'show',label:'Show',opts:[{v:'amt',label:'$B',on:true},{v:'share',label:'Share'},{v:'growth',label:'Growth'}]},
            {cls:'layout',label:'Layout',opts:[{v:'stack',label:'Stacked',on:true},{v:'side',label:'Side by side'}]},
@@ -4293,6 +4293,7 @@ function aBuildSegOi(){
   aStdRender('segoi', function(st){
     var metric=st.sel||'rev', basis=st.modes.basis||'cons', show=st.modes.show||'amt', layout=st.modes.layout||'stack', gran=st.modes.gran||'y';
     var cmp=st.modes.cmp||'yoy', gin=st.modes.gin||'pct';
+    if(metric==='ebitda') basis='cons';   // Summit has no segment D&A → EBITDA only on the Actual+Consensus basis (no fabricated Summit segment EBITDA)
     if(basis==='summit') gran='y';   // Summit segment series is quarterly-indexed differently → aggregate to annual only (labels stay aligned)
     var labels=gran==='q'?amznBBG.qtrs.slice():['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
     var la=gran==='q'?((amznBBG.seg.aws.oi.qA?amznBBG.seg.aws.oi.qA.length:5)-1):(basis==='summit'?5:2);   // Summit is a forecast across all years (no actual/est split)
@@ -4309,7 +4310,7 @@ function aBuildSegOi(){
         return Math.round(v/100)/10; }) }; });
     var stacked=show==='share'||(show==='amt'&&layout==='stack')||(addMode&&layout==='stack');
     var yFmt=(show==='amt'||addMode)?function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }:function(x){ return x+'%'; };
-    var hide=[]; if(!(show==='growth'&&gran==='q')) hide.push('cmp'); if(show!=='growth') hide.push('gin'); if(show==='share') hide.push('layout'); if(basis==='summit') hide.push('gran');   // Summit = annual only
+    var hide=[]; if(!(show==='growth'&&gran==='q')) hide.push('cmp'); if(show!=='growth') hide.push('gin'); if(show==='share') hide.push('layout'); if(basis==='summit') hide.push('gran'); if(metric==='ebitda') hide.push('basis');   // Summit = annual only; EBITDA has no Summit segment basis
     return { labels:labels, lastAct:la, yFmt:yFmt, type:'bar', stacked:stacked, yMax:show==='share'?100:undefined, series:series, hideModes:hide };
   });
 }

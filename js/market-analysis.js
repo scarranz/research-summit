@@ -1,7 +1,7 @@
 // market-analysis.js — extracted from summit-research-portal.html
-import { ALL_STOCKS, SP500_B26, SP500_B25, SP500_B24, SP500_BMK, SP500_CUM3, SCOLS, SDATA, COMPANY_NAMES } from './portal-data.js';
+import { ALL_STOCKS, SP500_TODAY26, SP500_B26, SP500_Q1_2026, SP500_B25, SP500_B24, SP500_BMK, SP500_CUM3, SCOLS, SDATA, COMPANY_NAMES } from './portal-data.js';
 
-let scatChart = null, tblData = [], tblData2 = [], sortCol = 5, sortAsc = false, sortCol2 = 7, sortAsc2 = false, IMAP = {}, SB_MODE = 'abs', SECTOR_RETS = {};
+let scatChart = null, tblData = [], tblData2 = [], sortCol = 5, sortAsc = false, sortCol2 = 7, sortAsc2 = false, IMAP = {}, SB_MODE = 'abs', SECTOR_RETS = {}, SB_2026 = 'compare';
 let SB_YEARS = {'2017':true,'2018':true,'2019':true,'2020':true,'2021':true,'2022':true,'2023':true,'2024':true,'2025':true,'2026':true};
 let SB_SECTORS = {}, SS_EXCL = {};
 
@@ -12,6 +12,59 @@ function setSBMode(m){
   document.getElementById('sb-abs').classList.toggle('active',m==='abs');
   document.getElementById('sb-rel').classList.toggle('active',m==='rel');
   renderSectorBars();
+  renderSBCompareTable();
+}
+
+function setSB2026(m){
+  SB_2026=m;
+  ['q1','q2','compare'].forEach(function(k){
+    var btn=document.getElementById('sb2026-'+k);
+    if(btn)btn.classList.toggle('active',k===m);
+  });
+  renderSectorBars();
+}
+
+var SB_TABLE_ON=false;
+
+function toggleSBCompareTable(show){
+  SB_TABLE_ON=show;
+  var wrap=document.getElementById('sb-cmptable-wrap');if(!wrap)return;
+  wrap.style.display=show?'':'none';
+  if(show)renderSBCompareTable();
+}
+
+function renderSBCompareTable(){
+  var wrap=document.getElementById('sb-cmptable-wrap');if(!wrap||!SB_TABLE_ON)return;
+  function q(s,which){var rr=SECTOR_RETS[s][which+'_26'];if(rr==null)return null;
+    if(SB_MODE==='abs')return rr;
+    return rr-(which==='q1'?SP500_Q1_2026:SP500_B26);
+  }
+  var rows=Object.keys(SECTOR_RETS).filter(function(s){return SB_SECTORS[s];}).map(function(s){
+    var q1=q(s,'q1'),q2=q(s,'q2');
+    var delta=(q1!=null&&q2!=null)?q2-q1:null;
+    var flip=(q1!=null&&q2!=null&&((q1<0&&q2>0)||(q1>0&&q2<0)));
+    return {s:s,q1:q1,q2:q2,delta:delta,flip:flip};
+  }).sort(function(a,b){return Math.abs(b.delta||0)-Math.abs(a.delta||0);});
+  var maxD=Math.max.apply(null,rows.map(function(r){return Math.abs(r.delta||0);}).concat([1]));
+  var html='<div class="sbcmp-note">Ordenado por magnitud del cambio Q1&rarr;Q2 &mdash; los movimientos m&aacute;s grandes arriba. &#x1F504; = el sector cambi&oacute; de signo (rotaci&oacute;n).</div>';
+  html+='<table class="rt sbcmp-tbl"><thead><tr><th>Sector</th><th style="text-align:right">Q1 2026</th><th style="text-align:right">Q2 2026</th><th style="text-align:right">Cambio</th><th></th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    var q1s=r.q1!=null?(r.q1>=0?'+':'')+r.q1.toFixed(1)+'%':'n/a';
+    var q2s=r.q2!=null?(r.q2>=0?'+':'')+r.q2.toFixed(1)+'%':'n/a';
+    var q2cls=r.q2!=null?(r.q2>=0?'sbcmp-pos':'sbcmp-neg'):'';
+    var dstr=r.delta!=null?((r.delta>=0?'&#x25B2; +':'&#x25BC; ')+r.delta.toFixed(1)+'pp'):'n/a';
+    var dcls=r.delta!=null?(r.delta>=0?'sbcmp-pos':'sbcmp-neg'):'';
+    var barPct=r.delta!=null?Math.min(Math.abs(r.delta)/maxD*100,100):0;
+    var barLeft=r.delta!=null&&r.delta<0?100-barPct:0;
+    var barColor=r.delta!=null&&r.delta>=0?'#1E3A5F':'#9B2A20';
+    html+='<tr><td>'+r.s+(r.flip?' <span class="sbcmp-flip" title="Cambió de signo entre Q1 y Q2">&#x1F504;</span>':'')+'</td>';
+    html+='<td style="text-align:right;color:var(--mu)">'+q1s+'</td>';
+    html+='<td style="text-align:right" class="'+q2cls+'"><strong>'+q2s+'</strong></td>';
+    html+='<td style="text-align:right" class="'+dcls+'">'+dstr+'</td>';
+    html+='<td style="width:90px"><div class="sbcmp-mbar"><div class="sbcmp-mfill" style="left:'+barLeft+'%;width:'+barPct+'%;background:'+barColor+'"></div></div></td></tr>';
+  });
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
 }
 
 function toggleYear(yr){
@@ -30,6 +83,7 @@ function toggleSBSec(sec){
   if(!anyOn){SB_SECTORS[sec]=true;return;}
   renderSBSecChips();
   renderSectorBars();
+  renderSBCompareTable();
 }
 
 function sbSecAll(on){
@@ -37,6 +91,7 @@ function sbSecAll(on){
   if(!on){var first=Object.keys(SB_SECTORS)[0];SB_SECTORS[first]=true;}
   renderSBSecChips();
   renderSectorBars();
+  renderSBCompareTable();
 }
 
 function renderSBSecChips(){
@@ -101,7 +156,7 @@ function cls(r,b){return r==null?'neu':r>b?'pos':r>0?'neu':'neg';}
 // Shared filter logic — applies year-based positive/beat-market filters to a stock array
 function filterStocks(data, filters) {
   var yearCfg = [
-    { yr: '26', field: 'r26', bench: SP500_B26 },
+    { yr: '26', field: 'r26', bench: SP500_TODAY26 },
     { yr: '25', field: 'r25', bench: SP500_B25 },
     { yr: '24', field: 'r24', bench: SP500_B24 },
     { yr: '23', field: 'r23', bench: SP500_BMK['2023'] },
@@ -246,7 +301,7 @@ function renderTbl(){
   html+='<td style="text-align:right;font-weight:700;font-size:14px;color:var(--navy)">'+totMatch+'</td>';
   html+='<td style="text-align:right;font-weight:700;color:var(--navy)">'+totPct.toFixed(0)+'%</td>';
   html+='<td style="text-align:right;color:var(--mu);font-weight:600">'+totSec+'</td>';
-  html+='<td style="text-align:right">'+fmtRet(SP500_B26)+'</td>';
+  html+='<td style="text-align:right">'+fmtRet(SP500_TODAY26)+'</td>';
   html+='</tr>';
   body.innerHTML=html;
 }
@@ -301,7 +356,7 @@ function renderTbl2(){
     var bd23=s.r23!=null&&s.r23>SP500_BMK['2023']?'<span class="bdt"></span>':'';
     var bd24=s.r24!=null&&s.r24>SP500_B24?'<span class="bdt"></span>':'';
     var bd25=s.r25!=null&&s.r25>SP500_B25?'<span class="bdt"></span>':'';
-    var bd26=s.r26!=null&&s.r26>SP500_B26?'<span class="bdt"></span>':'';
+    var bd26=s.r26!=null&&s.r26>SP500_TODAY26?'<span class="bdt"></span>':'';
     var tipName=(s.n&&s.n!==s.t)?s.n:(s.i||s.t);
     var cumCls=s.c3==null?'neu':s.c3>100?'pos':s.c3>0?'neu':'neg';
     rows+='<tr>';
@@ -312,7 +367,7 @@ function renderTbl2(){
     rows+='<td class="'+cls(s.r23,SP500_BMK['2023'])+'">'+fmt(s.r23)+bd23+'</td>';
     rows+='<td class="'+cls(s.r24,SP500_B24)+'">'+fmt(s.r24)+bd24+'</td>';
     rows+='<td class="'+cls(s.r25,SP500_B25)+'">'+fmt(s.r25)+bd25+'</td>';
-    rows+='<td class="'+cls(s.r26,SP500_B26)+'">'+fmt(s.r26)+bd26+'</td>';
+    rows+='<td class="'+cls(s.r26,SP500_TODAY26)+'">'+fmt(s.r26)+bd26+'</td>';
     rows+='<td class="'+cumCls+'" style="font-weight:600">'+fmt(s.c3)+'</td>';
     rows+='</tr>';
   }
@@ -330,9 +385,9 @@ function renderScatter(){
   // Quadrant counts
   var q1=0,q2=0,q3=0,q4=0;
   data.forEach(function(d){
-    if(d.r25>SP500_B25&&d.r26>SP500_B26)q1++;
-    else if(d.r25<=SP500_B25&&d.r26>SP500_B26)q2++;
-    else if(d.r25<=SP500_B25&&d.r26<=SP500_B26)q3++;
+    if(d.r25>SP500_B25&&d.r26>SP500_TODAY26)q1++;
+    else if(d.r25<=SP500_B25&&d.r26>SP500_TODAY26)q2++;
+    else if(d.r25<=SP500_B25&&d.r26<=SP500_TODAY26)q3++;
     else q4++;
   });
   var qEl=document.getElementById('quad-counts');
@@ -346,8 +401,8 @@ function renderScatter(){
     ctx.fillRect(ca.left,sy.getPixelForValue(0),Math.min(sx.getPixelForValue(0),ca.right)-ca.left,ca.bottom-sy.getPixelForValue(0));ctx.restore();
     var xl=sx.getPixelForValue(SP500_B25);
     if(xl>=ca.left&&xl<=ca.right){ctx.save();ctx.strokeStyle='rgba(74,127,181,0.75)';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);ctx.beginPath();ctx.moveTo(xl,ca.top);ctx.lineTo(xl,ca.bottom);ctx.stroke();ctx.fillStyle='rgba(74,127,181,.9)';ctx.font='bold 10px Inter,sans-serif';ctx.fillText('S&P 2025 +15.7%',xl+4,ca.top+13);ctx.restore();}
-    var yl=sy.getPixelForValue(SP500_B26);
-    if(yl>=ca.top&&yl<=ca.bottom){ctx.save();ctx.strokeStyle='rgba(23,122,78,0.75)';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);ctx.beginPath();ctx.moveTo(ca.left,yl);ctx.lineTo(ca.right,yl);ctx.stroke();ctx.fillStyle='rgba(23,122,78,.9)';ctx.font='bold 10px Inter,sans-serif';ctx.fillText('S&P 2026 +7.6%',ca.left+4,yl-4);ctx.restore();}
+    var yl=sy.getPixelForValue(SP500_TODAY26);
+    if(yl>=ca.top&&yl<=ca.bottom){ctx.save();ctx.strokeStyle='rgba(23,122,78,0.75)';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);ctx.beginPath();ctx.moveTo(ca.left,yl);ctx.lineTo(ca.right,yl);ctx.stroke();ctx.fillStyle='rgba(23,122,78,.9)';ctx.font='bold 10px Inter,sans-serif';ctx.fillText('S&P 2026 +12.3%',ca.left+4,yl-4);ctx.restore();}
   }};
   var ds=[];
   sects.forEach(function(sec2){
@@ -383,7 +438,7 @@ function showDetail(ticker){
   var cumBg=cb?'#E6F3EC':'var(--w)',cumBrd=cb?'1px solid #B3D9C3':'.5px solid var(--bdr)';
   var html='<div style="display:flex;align-items:center;gap:10px;margin-bottom:11px"><span style="font-family:Inter,serif;font-size:21px;font-weight:600;color:var(--navy)">'+s.t+'</span><span style="font-size:11px;color:var(--mu)">'+(s.n||s.t)+' &middot; '+s.s+'</span></div>';
   html+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:9px">';
-  html+=cd('2022',s.r22,SP500_BMK['2022'])+cd('2023',s.r23,SP500_BMK['2023'])+cd('2024',s.r24,SP500_B24)+cd('2025',s.r25,SP500_B25)+cd('2026 YTD',s.r26,SP500_B26);
+  html+=cd('2022',s.r22,SP500_BMK['2022'])+cd('2023',s.r23,SP500_BMK['2023'])+cd('2024',s.r24,SP500_B24)+cd('2025',s.r25,SP500_B25)+cd('2026 YTD',s.r26,SP500_TODAY26);
   html+='<div style="background:'+cumBg+';border:'+cumBrd+';border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">3yr Cumul.</div><div style="font-size:16px;font-weight:600;color:'+(cum==null?'var(--mu)':cum>0?'var(--pos)':'var(--neg)')+'">'+fmt(cum)+'</div><div style="font-size:10px;margin-top:3px;color:'+(cb?'var(--pos)':'var(--mu)')+'">'+( cum!=null?(cb?'&#x2705; Beats S&P':'vs S&P'):'N/A')+'</div></div>';
   html+='</div>';
   var det=document.getElementById('sr-det-c');if(det)det.innerHTML=html;
@@ -392,7 +447,7 @@ function showDetail(ticker){
 
 function renderRotTbl(){
   var body=document.getElementById('rot-body');if(!body)return;
-  var rows=ALL_STOCKS.filter(function(d){return d.r25!=null&&d.r26!=null&&d.r25<0&&d.r26>SP500_B26;});
+  var rows=ALL_STOCKS.filter(function(d){return d.r25!=null&&d.r26!=null&&d.r25<0&&d.r26>SP500_TODAY26;});
   rows.sort(function(a,b){return b.r26-a.r26;});rows=rows.slice(0,18);
   var html='';
   rows.forEach(function(d){var cb=d.c3!=null&&d.c3>SP500_CUM3;var cc=SCOLS[d.s]||'#888';
@@ -408,27 +463,87 @@ function renderSectorBars(){
   var wrap=document.getElementById('sb-wrap');if(!wrap)return;
   var YL=['2017','2018','2019','2020','2021','2022','2023','2024','2025','2026'];
   var active=YL.filter(function(y){return SB_YEARS[y];});
-  var sectors=Object.keys(SDATA).slice().sort(function(a,b){return SECTOR_RETS[b].r26-SECTOR_RETS[a].r26;}).filter(function(s){return SB_SECTORS[s];});
   function val(s,yr){var rr=SECTOR_RETS[s]['r'+yr.slice(2)];if(rr==null)return null;return SB_MODE==='abs'?rr:(rr-SP500_BMK[yr]);}
-  if(SB_MODE!=='abs'){sectors.sort(function(a,b){return val(b,'2026')-val(a,'2026');});}
+  function val26(s,which){var rr=SECTOR_RETS[s][which+'_26'];if(rr==null)return null;
+    if(SB_MODE==='abs')return rr;
+    return rr-(which==='q1'?SP500_Q1_2026:SP500_B26);
+  }
+  function rank26(s){
+    if(SB_2026==='q1')return val26(s,'q1');
+    if(SB_2026==='q2')return val26(s,'q2');
+    if(SB_2026==='compare')return val26(s,'q2');
+    return val(s,'2026');
+  }
+  var sectors=Object.keys(SDATA).slice().filter(function(s){return SB_SECTORS[s];}).sort(function(a,b){return rank26(b)-rank26(a);});
   var maxV=0;
-  sectors.forEach(function(s){active.forEach(function(yr){var v=val(s,yr);if(v!=null&&Math.abs(v)>maxV)maxV=Math.abs(v);});});
+  sectors.forEach(function(s){
+    active.forEach(function(yr){
+      if(yr==='2026'){
+        if(SB_2026==='compare'){[val26(s,'q1'),val26(s,'q2')].forEach(function(v){if(v!=null&&Math.abs(v)>maxV)maxV=Math.abs(v);});}
+        else{var v=rank26(s);if(v!=null&&Math.abs(v)>maxV)maxV=Math.abs(v);}
+      } else {var v=val(s,yr);if(v!=null&&Math.abs(v)>maxV)maxV=Math.abs(v);}
+    });
+  });
   maxV=Math.max(maxV, SB_MODE==='abs'?30:15);
+  function bar(label,v,hlClass,keyClass){
+    if(v==null)return '<div class="sby'+hlClass+'"><span class="sbyl">'+label+'</span><div class="sbtr-div"></div><span class="sbi" style="color:var(--mu);font-weight:600">n/a</span></div>';
+    var pct=Math.min(Math.abs(v)/maxV*50,50);var sign=v>=0?'+':'';var color=v>=0?'#1E3A5F':'#9B2A20';var left=v>=0?50:50-pct;
+    return '<div class="sby'+hlClass+'"><span class="sbyl">'+label+'</span><div class="sbtr-div"><div class="sbfl-div" style="left:'+left+'%;width:'+pct+'%;background:'+color+'"></div></div><span class="sbi'+keyClass+'" style="color:'+(v>=0?'var(--pos)':'var(--neg)')+';font-weight:600">'+sign+v.toFixed(1)+'%</span></div>';
+  }
+  function pos(v){var pct=Math.min(Math.abs(v)/maxV*50,50);return {left:v>=0?50:50-pct,width:pct};}
+  function overlayBar(label,q1v,q2v,keyClass){
+    if(q1v==null&&q2v==null)return '<div class="sby"><span class="sbyl">'+label+'</span><div class="sbtr-div"></div><span class="sbi" style="color:var(--mu);font-weight:600">n/a</span></div>';
+    var p1=q1v!=null?pos(q1v):{left:50,width:0};
+    var q1sign=q1v>=0?'+':'',q2sign=q2v>=0?'+':'';
+    var q2color=q2v>=0?'#1E3A5F':'#9B2A20';
+    var html='<div class="sby"><span class="sbyl">'+label+'</span><div class="sbtr-div sbtr-overlay">';
+    html+='<div class="sbfl-q1" style="left:'+p1.left+'%;width:'+p1.width+'%"></div>';
+    html+='<div class="sbfl-q2" data-left="'+(q2v!=null?pos(q2v).left:50)+'" data-width="'+(q2v!=null?pos(q2v).width:0)+'" style="left:'+p1.left+'%;width:'+p1.width+'%;background:'+q2color+'"></div>';
+    html+='</div><span class="sbi'+keyClass+'" style="min-width:172px;white-space:nowrap"><span class="sbi-q1">'+(q1v!=null?q1sign+q1v.toFixed(1)+'%':'n/a')+'</span> <span class="sbi-arrow">&rarr;</span> <span class="sbi-q2" style="color:'+(q2v>=0?'var(--pos)':'var(--neg)')+'">'+(q2v!=null?q2sign+q2v.toFixed(1)+'%':'n/a')+'</span></span></div>';
+    return html;
+  }
   var html='';
+  var hasOverlay=false;
   sectors.forEach(function(s){var d=SDATA[s],k=d.key?' key':'';
     html+='<div class="sbr"><span class="sbn'+k+'">'+s+'</span><div class="sbbs">';
-    active.forEach(function(yr){var v=val(s,yr);
-      if(v==null){html+='<div class="sby"><span class="sbyl">'+yr+'</span><div class="sbtr-div"></div><span class="sbi" style="color:var(--mu);font-weight:600">n/a</span></div>';return;}
-      var pct=Math.min(Math.abs(v)/maxV*50,50);var sign=v>=0?'+':'';var color=v>=0?'#1E3A5F':'#9B2A20';var left=v>=0?50:50-pct;
-      html+='<div class="sby"><span class="sbyl">'+yr+'</span><div class="sbtr-div"><div class="sbfl-div" style="left:'+left+'%;width:'+pct+'%;background:'+color+'"></div></div><span class="sbi'+(yr==='2026'?k:'')+'" style="color:'+(v>=0?'var(--pos)':'var(--neg)')+';font-weight:600">'+sign+v.toFixed(1)+'%</span></div>';
+    active.forEach(function(yr){
+      if(yr==='2026'){
+        if(SB_2026==='compare'){
+          var q1v=val26(s,'q1'),q2v=val26(s,'q2');
+          html+=overlayBar('26',q1v,q2v,k);
+          hasOverlay=true;
+          if(q1v!=null&&q2v!=null){
+            var delta=q2v-q1v,dSign=delta>=0?'&#x25B2;':'&#x25BC;',dColor=delta>=0?'var(--pos)':'var(--neg)';
+            html+='<div class="sbdelta" style="color:'+dColor+'">'+dSign+' '+(delta>=0?'+':'')+delta.toFixed(1)+'pp Q1&rarr;Q2</div>';
+          }
+        } else {
+          var v=rank26(s),lbl=SB_2026==='q1'?'Q1':(SB_2026==='q2'?'Q2':'26');
+          html+=bar(lbl,v,' sby-hl',k);
+        }
+        return;
+      }
+      var v=val(s,yr);
+      html+=bar(yr,v,'','');
     });
     html+='</div>'+(d.key?'<span class="sbtag">&#x2B06; ROTATION</span>':'<span style="min-width:68px"></span>')+'</div>';
   });
   wrap.innerHTML=html;
+  if(hasOverlay){
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        wrap.querySelectorAll('.sbfl-q2').forEach(function(el){
+          el.style.left=el.getAttribute('data-left')+'%';
+          el.style.width=el.getAttribute('data-width')+'%';
+        });
+      });
+    });
+  }
 }
 
 // Expose to window for inline onclick handlers
 window.setSBMode = setSBMode;
+window.setSB2026 = setSB2026;
+window.toggleSBCompareTable = toggleSBCompareTable;
 window.toggleYear = toggleYear;
 window.toggleSBSec = toggleSBSec;
 window.sbSecAll = sbSecAll;
@@ -465,17 +580,17 @@ export function loadMarketAnalysisPage() {
 
   // Sector returns from SPDR ETFs (actual market data)
   SECTOR_RETS = {
-    "Industrials":{r17:21.62,r18:-15.73,r19:27.83,r20:8.12,r21:19.54,r22:-6.79,r23:16.07,r24:15.73,r25:17.59,r26:11.14},
-    "Technology":{r17:32.24,r18:-3.99,r19:48.83,r20:42.08,r21:34.58,r22:-28.78,r23:54.68,r24:21.82,r25:22.8,r26:35.97},
-    "Consumer Staples":{r17:10.02,r18:-11.11,r19:24.42,r20:6.45,r21:14.35,r22:-2.66,r23:-3.38,r24:8.8,r25:-0.88,r26:5.6},
-    "Communication Services":{r17:null,r18:null,r19:29.86,r20:25.05,r21:17.67,r22:-39.08,r23:51.41,r24:33.68,r25:21.2,r26:-1.79},
-    "Energy":{r17:-4.06,r18:-21.05,r19:4.65,r20:-35.98,r21:44.85,r22:58.0,r23:-4.15,r24:0.85,r25:5.76,r26:28.16},
-    "Real Estate":{r17:7.12,r18:-6.07,r19:24.11,r20:-5.94,r21:43.13,r22:-28.57,r23:8.48,r24:0.72,r25:0,r26:7.24},
-    "Materials":{r17:21.79,r18:-17.23,r19:21.7,r20:18.27,r21:25.1,r22:-13.89,r23:10.12,r24:-2.03,r25:8.23,r26:12.28},
-    "Utilities":{r17:8.46,r18:0.28,r19:21.84,r20:-4.02,r21:15.46,r22:-1.16,r23:-10.17,r24:19.63,r25:12.7,r26:0.96},
-    "Health Care":{r17:19.93,r18:3.11,r19:19.25,r20:10.43,r21:26.04,r22:-3.99,r23:0.39,r24:0.63,r25:12.8,r26:-4.5},
-    "Financials":{r17:20.04,r18:-15.48,r19:30.06,r20:-5.08,r21:34.34,r22:-12.58,r23:9.94,r24:28.4,r25:13.44,r26:-6.1},
-    "Consumer Discretionary":{r17:21.24,r18:-0.74,r19:27.85,r20:28.31,r21:27.53,r22:-36.97,r23:38.44,r24:26.42,r25:5.65,r26:-1.02}
+    "Industrials":{r17:21.62,r18:-15.73,r19:27.83,r20:8.12,r21:19.54,r22:-6.79,r23:16.07,r24:15.73,r25:17.59,r26:16.2,q1_26:4.3,q2_26:19.4},
+    "Technology":{r17:32.24,r18:-3.99,r19:48.83,r20:42.08,r21:34.58,r22:-28.78,r23:54.68,r24:21.82,r25:22.8,r26:27.32,q1_26:-7.7,q2_26:32.3},
+    "Consumer Staples":{r17:10.02,r18:-11.11,r19:24.42,r20:6.45,r21:14.35,r22:-2.66,r23:-3.38,r24:8.8,r25:-0.88,r26:10.7,q1_26:5.5,q2_26:6.9},
+    "Communication Services":{r17:null,r18:null,r19:29.86,r20:25.05,r21:17.67,r22:-39.08,r23:51.41,r24:33.68,r25:21.2,r26:-5.37,q1_26:-5.8,q2_26:-9.0},
+    "Energy":{r17:-4.06,r18:-21.05,r19:4.65,r20:-35.98,r21:44.85,r22:58.0,r23:-4.15,r24:0.85,r25:5.76,r26:42.34,q1_26:37.0,q2_26:18.8},
+    "Real Estate":{r17:7.12,r18:-6.07,r19:24.11,r20:-5.94,r21:43.13,r22:-28.57,r23:8.48,r24:0.72,r25:0,r26:11.72,q1_26:1.2,q2_26:9.1},
+    "Materials":{r17:21.79,r18:-17.23,r19:21.7,r20:18.27,r21:25.1,r22:-13.89,r23:10.12,r24:-2.03,r25:8.23,r26:18.06,q1_26:10.2,q2_26:12.1},
+    "Utilities":{r17:8.46,r18:0.28,r19:21.84,r20:-4.02,r21:15.46,r22:-1.16,r23:-10.17,r24:19.63,r25:12.7,r26:0.19,q1_26:7.5,q2_26:6.2},
+    "Health Care":{r17:19.93,r18:3.11,r19:19.25,r20:10.43,r21:26.04,r22:-3.99,r23:0.39,r24:0.63,r25:12.8,r26:12.8,q1_26:-5.3,q2_26:2.5},
+    "Financials":{r17:20.04,r18:-15.48,r19:30.06,r20:-5.08,r21:34.34,r22:-12.58,r23:9.94,r24:28.4,r25:13.44,r26:4.95,q1_26:-9.9,q2_26:-2.1},
+    "Consumer Discretionary":{r17:21.24,r18:-0.74,r19:27.85,r20:28.31,r21:27.53,r22:-36.97,r23:38.44,r24:26.42,r25:5.65,r26:-1.16,q1_26:-8.7,q2_26:-1.8}
   };
 
   // Initialize sector filter

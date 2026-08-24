@@ -1,3 +1,53 @@
+/* ─── Hedge Funds: Overall / Superinvestors sub-tabs (mirrors .cotabs/.cotab) ─── */
+
+.hf-maintabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--bdr);
+  margin-bottom: 22px;
+}
+
+.hf-maintab {
+  background: none;
+  border: none;
+  color: var(--mu);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  letter-spacing: .3px;
+  font-weight: 600;
+  padding: 11px 20px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all .15s;
+}
+
+.hf-maintab:hover { color: var(--navy); }
+
+.hf-maintab.active {
+  color: var(--navy);
+  border-bottom-color: var(--steel);
+}
+
+.hf-mainpane { display: none; }
+.hf-mainpane.active { display: block; }
+
+.hf-qtoggle-btn {
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+
+.hf-qtoggle-btn:hover { opacity: .85; }
+
 /* ─── Hedge Funds: benchmark bar + investor cards ─── */
 
 .inv-bench {
@@ -66,26 +116,47 @@
   flex: 1;
 }
 
+/* True diverging bars: a fixed zero-line in the middle, positive years
+   grow up from it, negative years grow down -- so a down year (2022)
+   actually reads as "down," not just a shorter bar in the same direction
+   as an up year. */
 .ibb-wrap {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  height: 32px;
+  height: 40px;
   width: 100%;
   align-items: center;
 }
 
-.ibb-pos {
-  background: rgba(22, 163, 74, .55);
+.ibb-poswrap {
+  height: 20px;
   width: 100%;
-  border-radius: 1px 1px 0 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.ibb-negwrap {
+  height: 20px;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.ibb-zero { width: 100%; height: 1px; background: var(--bdr); flex-shrink: 0; }
+
+.ibb-pos {
+  background: rgba(22, 163, 74, .65);
+  width: 60%;
+  border-radius: 2px 2px 0 0;
   min-height: 1px;
 }
 
 .ibb-neg {
-  background: rgba(220, 38, 38, .5);
-  width: 100%;
-  border-radius: 0 0 1px 1px;
+  background: rgba(220, 38, 38, .6);
+  width: 60%;
+  border-radius: 0 0 2px 2px;
   min-height: 1px;
 }
 
@@ -361,6 +432,97 @@
 .rpill.rp { background: rgba(23, 122, 78, .1); color: var(--pos); }
 .rpill.rn { background: rgba(155, 42, 32, .1); color: var(--neg); }
 
+/* ─── Investor card: Q1 vs Q2 2026 holdings snapshot comparison ─── */
+
+.icard-cmp { display: flex; gap: 8px; }
+
+.icard-cmp-col { flex: 1; min-width: 0; padding-top: 2px; }
+
+.icard-cmp-q2 {
+  background: rgba(30, 58, 95, .045);
+  border-radius: 8px;
+  padding: 2px 7px 4px;
+  margin: -2px -7px -4px 0;
+}
+
+.icard-cmp-hd {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--mu);
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid var(--bdr);
+}
+
+.icard-cmp-q2 .icard-cmp-hd { color: var(--navy); }
+
+.icard-cmp-dt {
+  font-size: 9px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--mu);
+}
+
+.icard-cmp-row {
+  display: grid;
+  grid-template-columns: 1fr 42px 44px;
+  align-items: center;
+  column-gap: 4px;
+  padding: 3.5px 0;
+  border-bottom: .5px solid #F0F4F8;
+}
+
+.icard-cmp-row:last-child { border-bottom: none; }
+
+.icard-cmp-t {
+  font-family: 'Inter', monospace;
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--navy);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icard-cmp-w {
+  font-family: 'Inter', monospace;
+  font-size: 9.5px;
+  color: var(--mu);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.icard-cmp-r {
+  font-family: 'Inter', monospace;
+  font-weight: 500;
+  font-size: 10px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.icard-cmp-r.rp { color: var(--pos); }
+.icard-cmp-r.rn { color: var(--neg); }
+.icard-cmp-r.rna { color: var(--mu); font-weight: 400; }
+
+.icard-cmp-newbadge {
+  display: inline-block;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  color: #2563EB;
+  border: 1px solid #2563EB;
+  border-radius: 3px;
+  padding: 0 3px;
+  margin-left: 3px;
+  vertical-align: middle;
+}
+
 /* ─── Shared building blocks (Upload 13F panel, letters, year pills) ─── */
 
 .icard { cursor: pointer; transition: box-shadow .12s, border-color .12s; }
@@ -403,6 +565,14 @@
   font-size: 12px;
   color: var(--mu);
   padding: 10px 0;
+}
+
+.im-no-public {
+  background: var(--surface);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  padding: 14px 16px;
+  line-height: 1.6;
 }
 
 .im-years { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -841,64 +1011,195 @@
 .ivd-move-item.up .ivd-move-txt b { color: var(--pos); }
 .ivd-move-item.down .ivd-move-txt b { color: var(--neg); }
 
-/* ─── Sector Exposure heatmap (main Hedge Funds tab) ─── */
+/* ─── Sector Exposure treemap (main Hedge Funds tab, Overall sub-tab) ───
+   True two-level treemap, like a market-monitor stock heatmap: sector
+   regions sized by how much of the tracked book sits there, each holding
+   one tile per company sized by that company's own aggregate weight and
+   colored by that company's own YTD return. All inside a bordered
+   "monitor" frame with its own header/legend/toggle row. Click a
+   sector's header for the full per-company breakdown popup. */
 
-.hf-heat-wrap { overflow-x: auto; }
-
-.hf-heat-tbl { width: 100%; border-collapse: separate; border-spacing: 3px; font-size: 11px; }
-
-.hf-heat-sector-h, .hf-heat-total-h {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--mu);
-  text-transform: uppercase;
-  letter-spacing: .03em;
-  text-align: left;
-  padding: 0 8px 6px;
-  white-space: nowrap;
+.hf-secmonitor {
+  border: 1px solid var(--bdr);
+  border-radius: 14px;
+  padding: 12px;
+  background: var(--w);
 }
 
-.hf-heat-total-h { text-align: center; }
-
-.hf-heat-inv-h {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--steel);
-  text-align: center;
-  padding: 0 0 6px;
-  cursor: default;
+.hf-secmonitor-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
-.hf-heat-sector-lbl {
+.hf-secmonitor-title { font-size: 11px; font-weight: 600; color: var(--mu); }
+
+.hf-secmonitor-legend { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--mu); font-weight: 500; }
+
+.hf-secmonitor-sw { width: 11px; height: 11px; border-radius: 3px; display: inline-block; margin-left: 5px; }
+
+/* Every box below is placed with an inline left/top/width/height (in %,
+   from the squarify() layout in JS) inside this relatively-positioned
+   canvas, so the treemap fills edge-to-edge with no leftover whitespace.
+   A 2px page-colored border is the only "gap" between boxes. */
+.hf-treemap { position: relative; width: 100%; height: 500px; }
+
+.hf-tm-sector {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid var(--w);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.hf-tm-sector-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 0 6px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.hf-tm-sector-name { font-size: 10.5px; font-weight: 700; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.hf-tm-sector-avg { font-size: 10.5px; font-weight: 700; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.hf-tm-sector-avg.hf-tm-pos { color: var(--pos); }
+.hf-tm-sector-avg.hf-tm-neg { color: var(--neg); }
+
+.hf-tm-tickers { position: absolute; left: 0; right: 0; bottom: 0; }
+
+.hf-tm-tile {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1.5px solid var(--surface);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  overflow: hidden;
+  transition: filter .12s;
+  z-index: 1;
+}
+
+.hf-tm-tile:hover { filter: brightness(1.08); z-index: 2; box-shadow: 0 0 0 1.5px var(--navy) inset; }
+
+.hf-tm-ticker { font-size: 10px; font-weight: 700; line-height: 1.1; text-align: center; }
+.hf-tm-ytd { font-size: 8.5px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1; }
+
+.hf-secmosaic-text-lt .hf-tm-ticker,
+.hf-secmosaic-text-lt .hf-tm-ytd { color: var(--w); }
+.hf-secmosaic-text-dk .hf-tm-ticker,
+.hf-secmosaic-text-dk .hf-tm-ytd { color: var(--navy); }
+
+.hf-secmosaic-empty { color: var(--mu); font-size: 13px; padding: 20px; text-align: center; }
+
+/* ─── Sector detail popup (click a mosaic tile) ─── */
+
+.hf-secpop-card { max-width: 620px; width: 100%; max-height: 82vh; display: flex; flex-direction: column; }
+
+/* ─── Single-ticker popup (click one treemap tile) ─── */
+
+.hf-tkpop-card { max-width: 380px; width: 100%; }
+.hf-tkpop-card .modal-header { align-items: center; }
+.hf-tkpop-holders { display: flex; flex-direction: column; }
+.hf-tkpop-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--bdr); font-size: 12.5px; }
+.hf-tkpop-row:last-child { border-bottom: none; }
+.hf-tkpop-name { font-weight: 600; color: var(--navy); }
+.hf-tkpop-w { font-weight: 700; color: var(--navy); font-variant-numeric: tabular-nums; }
+
+.hf-secpop-body { padding: 8px 26px 26px; overflow-y: auto; }
+
+.hf-secpop-list { display: flex; flex-direction: column; }
+
+.hf-secpop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--bdr);
+  flex-wrap: wrap;
+}
+
+.hf-secpop-row:last-child { border-bottom: none; }
+
+.hf-secpop-co { display: flex; align-items: center; gap: 10px; min-width: 160px; }
+
+.hf-secpop-logo { width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; }
+
+.hf-secpop-ticker { font-size: 13px; font-weight: 700; color: var(--navy); }
+
+.hf-secpop-ytd { font-size: 11px; font-weight: 600; margin-left: 6px; }
+.hf-secpop-ytd.pos { color: var(--pos); }
+.hf-secpop-ytd.neg { color: var(--neg); }
+
+.hf-secpop-name { font-size: 11.5px; color: var(--mu); }
+
+.hf-secpop-holders { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; flex: 1; }
+
+.hf-secpop-holder {
   font-size: 11px;
   font-weight: 500;
   color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--bdr);
+  border-radius: 20px;
+  padding: 4px 10px;
   white-space: nowrap;
-  padding: 0 10px 0 8px;
 }
 
-.hf-heat-cell {
-  text-align: center;
-  min-width: 44px;
-  padding: 9px 4px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  cursor: default;
+.hf-secpop-holder b { color: var(--navy); font-weight: 700; margin-left: 3px; }
+
+/* ─── Stock lookup: which superinvestors hold ticker X, by quarter ─── */
+
+.hf-heat-wrap { overflow-x: auto; }
+.hf-stocklookup-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.hf-stocklookup-tbl th { font-size: 10px; font-weight: 600; color: var(--mu); text-transform: uppercase; letter-spacing: .03em; text-align: left; padding: 0 10px 8px; border-bottom: 1px solid var(--bdr); }
+.hf-stocklookup-tbl th.nr, .hf-stocklookup-tbl td.nr { text-align: right; }
+.hf-stocklookup-tbl td { padding: 9px 10px; border-bottom: 1px solid var(--bdr); }
+.hf-stocklookup-tbl tr:last-child td { border-bottom: none; }
+.hf-stocklookup-inv { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--navy); }
+.hf-stocklookup-fund { display: block; font-size: 11px; color: var(--mu); font-weight: 400; }
+.hf-stocklookup-w { font-variant-numeric: tabular-nums; }
+.hf-stocklookup-dash { color: var(--bdr); }
+
+.hf-stocklookup-logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+  background: var(--surface);
+  border: 1px solid var(--bdr);
 }
 
-.hf-heat-text-lt { color: var(--w); }
-.hf-heat-text-dk { color: var(--text); }
-
-.hf-heat-empty { background: var(--pale); color: var(--bdr); font-weight: 400; }
-
-.hf-heat-total-cell {
-  text-align: center;
-  min-width: 52px;
-  padding: 9px 4px;
-  border-radius: 6px;
+.hf-stocklookup-ini {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
   font-weight: 700;
-  color: var(--navy);
-  background: var(--ice);
-  font-variant-numeric: tabular-nums;
+  color: var(--mu);
 }
+
+/* Position-size move coloring (the "performance" toggle) -- green when
+   this fund grew the position vs. the prior quarter shown, red when
+   trimmed, gold for a brand-new position, same color language as the
+   Recent Moves list on each investor's own detail page. */
+.hf-slk-up { color: var(--pos); font-weight: 700; }
+.hf-slk-down { color: var(--neg); font-weight: 700; }
+.hf-slk-new { color: var(--gold2); font-weight: 700; }
+
+.hf-stocklookup-noperf .hf-slk-up,
+.hf-stocklookup-noperf .hf-slk-down,
+.hf-stocklookup-noperf .hf-slk-new,
+.hf-stocklookup-noperf .hf-slk-flat { color: inherit; font-weight: 400; }
+.hf-stocklookup-empty { color: var(--mu); font-size: 13px; padding: 24px; text-align: center; }

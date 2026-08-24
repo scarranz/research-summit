@@ -139,15 +139,59 @@ create policy "authenticated_delete_investor_letters" on investor_letters
 -- ─── 4. Seed: Bill Ackman / Pershing Square ───────────────────
 -- First investor built out end-to-end (design reference for the rest).
 
--- Yearly returns 2021-2025 — same figures already shown on the Ackman
--- card today (INVESTORS['ackman'].returns in js/portal-data.js, which
--- covers 2019-2025; this seed takes just the last 5 years).
+-- Yearly returns 2021-2025 — same figures already shown on each investor's
+-- card today (INVESTORS[key].returns in js/portal-data.js, which covers
+-- 2019-2025; this seed takes just the last 5 years, mirroring
+-- js/investor-local-seed.js's LOCAL_INVESTOR_RETURNS). Dorsey Asset
+-- Management has no annual return series on file (fund doesn't disclose),
+-- so it has no rows here — its year pills correctly show "n/a".
 insert into investor_yearly_returns (investor_key, year, return_pct) values
   ('ackman', 2021, 22.9),
   ('ackman', 2022, -7.8),
   ('ackman', 2023, 20.8),
   ('ackman', 2024, 8.2),
-  ('ackman', 2025, 18.3);
+  ('ackman', 2025, 18.3),
+  ('buffett', 2021, 29.6),
+  ('buffett', 2022, 4.0),
+  ('buffett', 2023, 15.8),
+  ('buffett', 2024, 27.21),
+  ('buffett', 2025, 10.89),
+  ('tepper', 2021, 14.0),
+  ('tepper', 2022, -6.0),
+  ('tepper', 2023, 25.0),
+  ('tepper', 2024, 11.0),
+  ('tepper', 2025, 6.0),
+  ('druckenmiller', 2021, 22.0),
+  ('druckenmiller', 2022, -6.0),
+  ('druckenmiller', 2023, 25.0),
+  ('druckenmiller', 2024, 21.0),
+  ('druckenmiller', 2025, 17.0),
+  ('coleman', 2021, 15.0),
+  ('coleman', 2022, -58.0),
+  ('coleman', 2023, 40.0),
+  ('coleman', 2024, 21.0),
+  ('coleman', 2025, 16.5),
+  ('hohn', 2021, 35.0),
+  ('hohn', 2022, -20.0),
+  ('hohn', 2023, 33.0),
+  ('hohn', 2024, 30.0),
+  ('hohn', 2025, 24.0),
+  ('altimeter', 2021, 30.0),
+  ('altimeter', 2022, -58.0),
+  ('altimeter', 2023, 65.0),
+  ('altimeter', 2024, 25.0),
+  ('altimeter', 2025, 18.0),
+  ('loeb', 2021, 22.5),
+  ('loeb', 2022, -21.9),
+  ('loeb', 2023, 3.3),
+  ('loeb', 2024, 24.2),
+  ('loeb', 2025, 8.9),
+  ('klarman', 2021, 12.0),
+  ('klarman', 2022, -3.0),
+  ('klarman', 2023, 4.0),
+  ('klarman', 2024, 10.0),
+  ('klarman', 2025, 6.0)
+on conflict do nothing;
 
 -- Top holdings — real Pershing Square Capital Management 13F-HR filings
 -- (SEC EDGAR CIK 0001336528), pulled and parsed straight from each

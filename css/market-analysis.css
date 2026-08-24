@@ -236,6 +236,57 @@
   font-weight: 700;
 }
 
+/* Q1 vs Q2 comparison table (toggle above the sector bars) */
+.sbcmp-note {
+  font-size: 11px;
+  color: var(--mu);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.sbcmp-tbl th {
+  font-size: 10px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--mu);
+  font-weight: 600;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--bdr);
+  text-align: left;
+}
+
+.sbcmp-tbl td {
+  padding: 9px 10px;
+  border-bottom: .5px solid #F0F4F8;
+  font-size: 12.5px;
+  font-family: 'Inter', monospace;
+}
+
+.sbcmp-tbl td:first-child { font-family: 'Inter', sans-serif; font-weight: 600; color: var(--navy); }
+
+.sbcmp-tbl tr:last-child td { border-bottom: none; }
+.sbcmp-tbl tr:hover td { background: #F7FAFD; }
+
+.sbcmp-pos { color: var(--pos); }
+.sbcmp-neg { color: var(--neg); }
+
+.sbcmp-flip { font-size: 11px; }
+
+.sbcmp-mbar {
+  position: relative;
+  height: 8px;
+  background: #EEF2F7;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.sbcmp-mfill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+}
+
 .sbtag {
   font-size: 9px;
   background: var(--surface);
@@ -262,10 +313,11 @@
   content: '';
   position: absolute;
   left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: #5A6E83;
+  top: -2px;
+  bottom: -2px;
+  width: 0;
+  border-left: 2px dashed #2B3B4E;
+  opacity: .85;
   z-index: 2;
 }
 

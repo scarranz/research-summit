@@ -12,6 +12,7 @@ function setSBMode(m){
   document.getElementById('sb-abs').classList.toggle('active',m==='abs');
   document.getElementById('sb-rel').classList.toggle('active',m==='rel');
   renderSectorBars();
+  renderSBCompareTable();
 }
 
 function setSB2026(m){
@@ -21,6 +22,49 @@ function setSB2026(m){
     if(btn)btn.classList.toggle('active',k===m);
   });
   renderSectorBars();
+}
+
+var SB_TABLE_ON=false;
+
+function toggleSBCompareTable(show){
+  SB_TABLE_ON=show;
+  var wrap=document.getElementById('sb-cmptable-wrap');if(!wrap)return;
+  wrap.style.display=show?'':'none';
+  if(show)renderSBCompareTable();
+}
+
+function renderSBCompareTable(){
+  var wrap=document.getElementById('sb-cmptable-wrap');if(!wrap||!SB_TABLE_ON)return;
+  function q(s,which){var rr=SECTOR_RETS[s][which+'_26'];if(rr==null)return null;
+    if(SB_MODE==='abs')return rr;
+    return rr-(which==='q1'?SP500_Q1_2026:SP500_B26);
+  }
+  var rows=Object.keys(SECTOR_RETS).filter(function(s){return SB_SECTORS[s];}).map(function(s){
+    var q1=q(s,'q1'),q2=q(s,'q2');
+    var delta=(q1!=null&&q2!=null)?q2-q1:null;
+    var flip=(q1!=null&&q2!=null&&((q1<0&&q2>0)||(q1>0&&q2<0)));
+    return {s:s,q1:q1,q2:q2,delta:delta,flip:flip};
+  }).sort(function(a,b){return Math.abs(b.delta||0)-Math.abs(a.delta||0);});
+  var maxD=Math.max.apply(null,rows.map(function(r){return Math.abs(r.delta||0);}).concat([1]));
+  var html='<div class="sbcmp-note">Ordenado por magnitud del cambio Q1&rarr;Q2 &mdash; los movimientos m&aacute;s grandes arriba. &#x1F504; = el sector cambi&oacute; de signo (rotaci&oacute;n).</div>';
+  html+='<table class="rt sbcmp-tbl"><thead><tr><th>Sector</th><th style="text-align:right">Q1 2026</th><th style="text-align:right">Q2 2026</th><th style="text-align:right">Cambio</th><th></th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    var q1s=r.q1!=null?(r.q1>=0?'+':'')+r.q1.toFixed(1)+'%':'n/a';
+    var q2s=r.q2!=null?(r.q2>=0?'+':'')+r.q2.toFixed(1)+'%':'n/a';
+    var q2cls=r.q2!=null?(r.q2>=0?'sbcmp-pos':'sbcmp-neg'):'';
+    var dstr=r.delta!=null?((r.delta>=0?'&#x25B2; +':'&#x25BC; ')+r.delta.toFixed(1)+'pp'):'n/a';
+    var dcls=r.delta!=null?(r.delta>=0?'sbcmp-pos':'sbcmp-neg'):'';
+    var barPct=r.delta!=null?Math.min(Math.abs(r.delta)/maxD*100,100):0;
+    var barLeft=r.delta!=null&&r.delta<0?100-barPct:0;
+    var barColor=r.delta!=null&&r.delta>=0?'#1E3A5F':'#9B2A20';
+    html+='<tr><td>'+r.s+(r.flip?' <span class="sbcmp-flip" title="Cambió de signo entre Q1 y Q2">&#x1F504;</span>':'')+'</td>';
+    html+='<td style="text-align:right;color:var(--mu)">'+q1s+'</td>';
+    html+='<td style="text-align:right" class="'+q2cls+'"><strong>'+q2s+'</strong></td>';
+    html+='<td style="text-align:right" class="'+dcls+'">'+dstr+'</td>';
+    html+='<td style="width:90px"><div class="sbcmp-mbar"><div class="sbcmp-mfill" style="left:'+barLeft+'%;width:'+barPct+'%;background:'+barColor+'"></div></div></td></tr>';
+  });
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
 }
 
 function toggleYear(yr){
@@ -39,6 +83,7 @@ function toggleSBSec(sec){
   if(!anyOn){SB_SECTORS[sec]=true;return;}
   renderSBSecChips();
   renderSectorBars();
+  renderSBCompareTable();
 }
 
 function sbSecAll(on){
@@ -46,6 +91,7 @@ function sbSecAll(on){
   if(!on){var first=Object.keys(SB_SECTORS)[0];SB_SECTORS[first]=true;}
   renderSBSecChips();
   renderSectorBars();
+  renderSBCompareTable();
 }
 
 function renderSBSecChips(){
@@ -497,6 +543,7 @@ function renderSectorBars(){
 // Expose to window for inline onclick handlers
 window.setSBMode = setSBMode;
 window.setSB2026 = setSB2026;
+window.toggleSBCompareTable = toggleSBCompareTable;
 window.toggleYear = toggleYear;
 window.toggleSBSec = toggleSBSec;
 window.sbSecAll = sbSecAll;

@@ -209,7 +209,14 @@
         <button class="sb-tbtn" id="sb2026-q2" onclick="setSB2026('q2')">Q2 2026</button>
         <button class="sb-tbtn active" id="sb2026-compare" onclick="setSB2026('compare')">Q1 &rarr; Q2</button>
       </div>
-    </div><div class="sbrs" id="sb-wrap"></div></div>
+      <label class="hf-chart-toggle" title="Show or hide the Q1 vs Q2 table">
+        <input type="checkbox" id="sb-cmptable-toggle" onchange="toggleSBCompareTable(this.checked)">
+        <span class="hf-chart-toggle-track"><span class="hf-chart-toggle-thumb"></span></span>
+        <span class="hf-chart-toggle-txt">Tabla Q1 vs Q2</span>
+      </label>
+    </div>
+    <div id="sb-cmptable-wrap" style="display:none;margin-bottom:16px"></div>
+    <div class="sbrs" id="sb-wrap"></div></div>
   </div>
   <div class="sec">
     <div class="sechdr"><span class="sect">Sector Summary &mdash; Market Beaters</span><span class="secn">Stock counts update with filters above</span></div>

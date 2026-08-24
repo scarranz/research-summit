@@ -1,7 +1,19 @@
 // market-analysis.js — extracted from summit-research-portal.html
-import { ALL_STOCKS, SP500_TODAY26, SP500_B26, SP500_Q1_2026, SP500_B25, SP500_B24, SP500_BMK, SP500_CUM3, SCOLS, SDATA, COMPANY_NAMES } from './portal-data.js';
+import { ALL_STOCKS, SP500_TODAY26, SP500_B25, SP500_B24, SP500_BMK, SP500_CUM3, SCOLS, SDATA, COMPANY_NAMES } from './portal-data.js';
 
-let scatChart = null, tblData = [], tblData2 = [], sortCol = 5, sortAsc = false, sortCol2 = 7, sortAsc2 = false, IMAP = {}, SB_MODE = 'abs', SECTOR_RETS = {}, SB_2026 = 'compare';
+let scatChart = null, tblData = [], tblData2 = [], sortCol = 5, sortAsc = false, sortCol2 = 7, sortAsc2 = false, IMAP = {}, SB_MODE = 'abs', SECTOR_RETS = {}, SB_2026 = 'may';
+
+// Sector Alpha "2026" YTD as it was hardcoded before this refresh (a stale
+// snapshot as of May 19, 2026). Kept only so the May-19-vs-today comparison
+// has something real to diff against.
+var OLD_SECTOR_R26 = {
+  "Industrials": 11.14, "Technology": 35.97, "Consumer Staples": 5.6,
+  "Communication Services": -1.79, "Energy": 28.16, "Real Estate": 7.24,
+  "Materials": 12.28, "Utilities": 0.96, "Health Care": -4.5,
+  "Financials": -6.1, "Consumer Discretionary": -1.02
+};
+var SP500_MAY26 = 11.25;
+
 let SB_YEARS = {'2017':true,'2018':true,'2019':true,'2020':true,'2021':true,'2022':true,'2023':true,'2024':true,'2025':true,'2026':true};
 let SB_SECTORS = {}, SS_EXCL = {};
 
@@ -17,14 +29,14 @@ function setSBMode(m){
 
 function setSB2026(m){
   SB_2026=m;
-  ['q1','q2','compare'].forEach(function(k){
+  ['may','today'].forEach(function(k){
     var btn=document.getElementById('sb2026-'+k);
     if(btn)btn.classList.toggle('active',k===m);
   });
   renderSectorBars();
 }
 
-var SB_TABLE_ON=false;
+var SB_TABLE_ON=true;
 
 function toggleSBCompareTable(show){
   SB_TABLE_ON=show;
@@ -33,35 +45,38 @@ function toggleSBCompareTable(show){
   if(show)renderSBCompareTable();
 }
 
+function sbMayVal(s,side){
+  var rr = side==='left' ? OLD_SECTOR_R26[s] : SECTOR_RETS[s].r26;
+  var bench = side==='left' ? SP500_MAY26 : SP500_TODAY26;
+  if(rr==null)return null;
+  return SB_MODE==='abs'?rr:(rr-bench);
+}
+
 function renderSBCompareTable(){
   var wrap=document.getElementById('sb-cmptable-wrap');if(!wrap||!SB_TABLE_ON)return;
-  function q(s,which){var rr=SECTOR_RETS[s][which+'_26'];if(rr==null)return null;
-    if(SB_MODE==='abs')return rr;
-    return rr-(which==='q1'?SP500_Q1_2026:SP500_B26);
-  }
   var rows=Object.keys(SECTOR_RETS).filter(function(s){return SB_SECTORS[s];}).map(function(s){
-    var q1=q(s,'q1'),q2=q(s,'q2');
-    var delta=(q1!=null&&q2!=null)?q2-q1:null;
-    var flip=(q1!=null&&q2!=null&&((q1<0&&q2>0)||(q1>0&&q2<0)));
-    return {s:s,q1:q1,q2:q2,delta:delta,flip:flip};
+    var lv=sbMayVal(s,'left'),rv=sbMayVal(s,'right');
+    var delta=(lv!=null&&rv!=null)?rv-lv:null;
+    var flip=(lv!=null&&rv!=null&&((lv<0&&rv>0)||(lv>0&&rv<0)));
+    return {s:s,lv:lv,rv:rv,delta:delta,flip:flip};
   }).sort(function(a,b){return Math.abs(b.delta||0)-Math.abs(a.delta||0);});
   var maxD=Math.max.apply(null,rows.map(function(r){return Math.abs(r.delta||0);}).concat([1]));
-  var html='<div class="sbcmp-note">Ordenado por magnitud del cambio Q1&rarr;Q2 &mdash; los movimientos m&aacute;s grandes arriba. &#x1F504; = el sector cambi&oacute; de signo (rotaci&oacute;n).</div>';
-  html+='<table class="rt sbcmp-tbl"><thead><tr><th>Sector</th><th style="text-align:right">Q1 2026</th><th style="text-align:right">Q2 2026</th><th style="text-align:right">Cambio</th><th></th></tr></thead><tbody>';
+  var html='<div class="sbcmp-note">Sorted by magnitude of change (Last Meeting&rarr;Today) &mdash; biggest moves first. &#x1F504; = sector flipped sign (rotation).</div>';
+  html+='<table class="rt sbcmp-tbl"><thead><tr><th>Sector</th><th style="text-align:right">Last Meeting</th><th style="text-align:right">Today</th><th style="text-align:right">Change</th><th style="width:90px"></th></tr></thead><tbody>';
   rows.forEach(function(r){
-    var q1s=r.q1!=null?(r.q1>=0?'+':'')+r.q1.toFixed(1)+'%':'n/a';
-    var q2s=r.q2!=null?(r.q2>=0?'+':'')+r.q2.toFixed(1)+'%':'n/a';
-    var q2cls=r.q2!=null?(r.q2>=0?'sbcmp-pos':'sbcmp-neg'):'';
+    var lvs=r.lv!=null?(r.lv>=0?'+':'')+r.lv.toFixed(1)+'%':'n/a';
+    var rvs=r.rv!=null?(r.rv>=0?'+':'')+r.rv.toFixed(1)+'%':'n/a';
+    var rvcls=r.rv!=null?(r.rv>=0?'sbcmp-pos':'sbcmp-neg'):'';
     var dstr=r.delta!=null?((r.delta>=0?'&#x25B2; +':'&#x25BC; ')+r.delta.toFixed(1)+'pp'):'n/a';
     var dcls=r.delta!=null?(r.delta>=0?'sbcmp-pos':'sbcmp-neg'):'';
     var barPct=r.delta!=null?Math.min(Math.abs(r.delta)/maxD*100,100):0;
     var barLeft=r.delta!=null&&r.delta<0?100-barPct:0;
     var barColor=r.delta!=null&&r.delta>=0?'#1E3A5F':'#9B2A20';
-    html+='<tr><td>'+r.s+(r.flip?' <span class="sbcmp-flip" title="Cambió de signo entre Q1 y Q2">&#x1F504;</span>':'')+'</td>';
-    html+='<td style="text-align:right;color:var(--mu)">'+q1s+'</td>';
-    html+='<td style="text-align:right" class="'+q2cls+'"><strong>'+q2s+'</strong></td>';
+    html+='<tr><td>'+r.s+(r.flip?' <span class="sbcmp-flip" title="Flipped sign">&#x1F504;</span>':'')+'</td>';
+    html+='<td style="text-align:right;color:var(--mu)">'+lvs+'</td>';
+    html+='<td style="text-align:right" class="'+rvcls+'"><strong>'+rvs+'</strong></td>';
     html+='<td style="text-align:right" class="'+dcls+'">'+dstr+'</td>';
-    html+='<td style="width:90px"><div class="sbcmp-mbar"><div class="sbcmp-mfill" style="left:'+barLeft+'%;width:'+barPct+'%;background:'+barColor+'"></div></div></td></tr>';
+    html+='<td><div class="sbcmp-mbar"><div class="sbcmp-mfill" style="left:'+barLeft+'%;width:'+barPct+'%;background:'+barColor+'"></div></div></td></tr>';
   });
   html+='</tbody></table>';
   wrap.innerHTML=html;
@@ -464,24 +479,16 @@ function renderSectorBars(){
   var YL=['2017','2018','2019','2020','2021','2022','2023','2024','2025','2026'];
   var active=YL.filter(function(y){return SB_YEARS[y];});
   function val(s,yr){var rr=SECTOR_RETS[s]['r'+yr.slice(2)];if(rr==null)return null;return SB_MODE==='abs'?rr:(rr-SP500_BMK[yr]);}
-  function val26(s,which){var rr=SECTOR_RETS[s][which+'_26'];if(rr==null)return null;
-    if(SB_MODE==='abs')return rr;
-    return rr-(which==='q1'?SP500_Q1_2026:SP500_B26);
-  }
   function rank26(s){
-    if(SB_2026==='q1')return val26(s,'q1');
-    if(SB_2026==='q2')return val26(s,'q2');
-    if(SB_2026==='compare')return val26(s,'q2');
-    return val(s,'2026');
+    if(SB_2026==='may')return sbMayVal(s,'left');
+    return sbMayVal(s,'right');
   }
   var sectors=Object.keys(SDATA).slice().filter(function(s){return SB_SECTORS[s];}).sort(function(a,b){return rank26(b)-rank26(a);});
   var maxV=0;
   sectors.forEach(function(s){
     active.forEach(function(yr){
-      if(yr==='2026'){
-        if(SB_2026==='compare'){[val26(s,'q1'),val26(s,'q2')].forEach(function(v){if(v!=null&&Math.abs(v)>maxV)maxV=Math.abs(v);});}
-        else{var v=rank26(s);if(v!=null&&Math.abs(v)>maxV)maxV=Math.abs(v);}
-      } else {var v=val(s,yr);if(v!=null&&Math.abs(v)>maxV)maxV=Math.abs(v);}
+      var v=yr==='2026'?rank26(s):val(s,yr);
+      if(v!=null&&Math.abs(v)>maxV)maxV=Math.abs(v);
     });
   });
   maxV=Math.max(maxV, SB_MODE==='abs'?30:15);
@@ -490,36 +497,13 @@ function renderSectorBars(){
     var pct=Math.min(Math.abs(v)/maxV*50,50);var sign=v>=0?'+':'';var color=v>=0?'#1E3A5F':'#9B2A20';var left=v>=0?50:50-pct;
     return '<div class="sby'+hlClass+'"><span class="sbyl">'+label+'</span><div class="sbtr-div"><div class="sbfl-div" style="left:'+left+'%;width:'+pct+'%;background:'+color+'"></div></div><span class="sbi'+keyClass+'" style="color:'+(v>=0?'var(--pos)':'var(--neg)')+';font-weight:600">'+sign+v.toFixed(1)+'%</span></div>';
   }
-  function pos(v){var pct=Math.min(Math.abs(v)/maxV*50,50);return {left:v>=0?50:50-pct,width:pct};}
-  function overlayBar(label,q1v,q2v,keyClass){
-    if(q1v==null&&q2v==null)return '<div class="sby"><span class="sbyl">'+label+'</span><div class="sbtr-div"></div><span class="sbi" style="color:var(--mu);font-weight:600">n/a</span></div>';
-    var p1=q1v!=null?pos(q1v):{left:50,width:0};
-    var q1sign=q1v>=0?'+':'',q2sign=q2v>=0?'+':'';
-    var q2color=q2v>=0?'#1E3A5F':'#9B2A20';
-    var html='<div class="sby"><span class="sbyl">'+label+'</span><div class="sbtr-div sbtr-overlay">';
-    html+='<div class="sbfl-q1" style="left:'+p1.left+'%;width:'+p1.width+'%"></div>';
-    html+='<div class="sbfl-q2" data-left="'+(q2v!=null?pos(q2v).left:50)+'" data-width="'+(q2v!=null?pos(q2v).width:0)+'" style="left:'+p1.left+'%;width:'+p1.width+'%;background:'+q2color+'"></div>';
-    html+='</div><span class="sbi'+keyClass+'" style="min-width:172px;white-space:nowrap"><span class="sbi-q1">'+(q1v!=null?q1sign+q1v.toFixed(1)+'%':'n/a')+'</span> <span class="sbi-arrow">&rarr;</span> <span class="sbi-q2" style="color:'+(q2v>=0?'var(--pos)':'var(--neg)')+'">'+(q2v!=null?q2sign+q2v.toFixed(1)+'%':'n/a')+'</span></span></div>';
-    return html;
-  }
   var html='';
-  var hasOverlay=false;
   sectors.forEach(function(s){var d=SDATA[s],k=d.key?' key':'';
     html+='<div class="sbr"><span class="sbn'+k+'">'+s+'</span><div class="sbbs">';
     active.forEach(function(yr){
       if(yr==='2026'){
-        if(SB_2026==='compare'){
-          var q1v=val26(s,'q1'),q2v=val26(s,'q2');
-          html+=overlayBar('26',q1v,q2v,k);
-          hasOverlay=true;
-          if(q1v!=null&&q2v!=null){
-            var delta=q2v-q1v,dSign=delta>=0?'&#x25B2;':'&#x25BC;',dColor=delta>=0?'var(--pos)':'var(--neg)';
-            html+='<div class="sbdelta" style="color:'+dColor+'">'+dSign+' '+(delta>=0?'+':'')+delta.toFixed(1)+'pp Q1&rarr;Q2</div>';
-          }
-        } else {
-          var v=rank26(s),lbl=SB_2026==='q1'?'Q1':(SB_2026==='q2'?'Q2':'26');
-          html+=bar(lbl,v,' sby-hl',k);
-        }
+        var v=rank26(s),lbl=SB_2026==='may'?'Last':'Now';
+        html+=bar(lbl,v,' sby-hl',k);
         return;
       }
       var v=val(s,yr);
@@ -528,16 +512,6 @@ function renderSectorBars(){
     html+='</div>'+(d.key?'<span class="sbtag">&#x2B06; ROTATION</span>':'<span style="min-width:68px"></span>')+'</div>';
   });
   wrap.innerHTML=html;
-  if(hasOverlay){
-    requestAnimationFrame(function(){
-      requestAnimationFrame(function(){
-        wrap.querySelectorAll('.sbfl-q2').forEach(function(el){
-          el.style.left=el.getAttribute('data-left')+'%';
-          el.style.width=el.getAttribute('data-width')+'%';
-        });
-      });
-    });
-  }
 }
 
 // Expose to window for inline onclick handlers
@@ -603,6 +577,7 @@ export function loadMarketAnalysisPage() {
   renderSBSecChips();
   renderSSExclChips();
   renderSectorBars();
+  renderSBCompareTable();
   renderTbl();
   renderTbl2();
   renderRotTbl();

@@ -1,5 +1,5 @@
 // hedge-funds.js — extracted from summit-research-portal.html
-import { INVESTORS, SP500_REF, SP500_B26, HF_FUNDS, HF_BMK, HF_AYEARS, YEARS, SP500, IMGS, ALL_STOCKS } from './portal-data.js';
+import { INVESTORS, SP500_REF, SP500_B26, SP500_Q1_2026, HF_FUNDS, HF_BMK, HF_AYEARS, YEARS, SP500, IMGS, ALL_STOCKS } from './portal-data.js';
 import { fetchInvestorReturns, fetchInvestorHoldings, fetchHoldingsByTicker, fetchInvestorLetters, replaceInvestorHoldings, syncLatest13F, getFileUrl } from './api.js';
 import { LOCAL_INVESTOR_RETURNS, LOCAL_INVESTOR_HOLDINGS, LOCAL_INVESTOR_LETTERS, NO_PUBLIC_LETTERS_NOTE } from './investor-local-seed.js';
 import { parse13FFile } from './investor-13f-parser.js';
@@ -118,6 +118,35 @@ function renderBenchmark(){
   el.innerHTML=html;
 }
 
+// ─── Overall tab: S&P 500 benchmark, toggled between Q1 and Q2 2026 close ───
+// Same visual language as the Superinvestors benchmark bar, but scoped to a
+// single quarter so the user can flip between "how the market stood at Q1
+// close" and "how it stands now at Q2 close" without leaving the Overall tab.
+
+var HF_OVBENCH_Q = 1;
+
+function renderOverallBenchmark(){
+  var el=document.getElementById('hf-ovbench');if(!el||!SP500_REF)return;
+  var q=HF_OVBENCH_Q;
+  var qRet=q===1?SP500_Q1_2026:SP500_B26;
+  var cumThru=((1+SP500_REF.cum/100)*(1+qRet/100)-1)*100;
+  var html='<div class="inv-bench-left"><div class="inv-bench-title">S&amp;P 500 Benchmark</div><div class="inv-bench-sub">'+(q===1?'As of Q1 2026 close (Mar 31)':'As of Q2 2026 close (Jun 30)')+'</div></div>';
+  html+='<div class="inv-bench-mets">';
+  html+='<div class="inv-bench-m"><div class="inv-bench-ml">Cumul. 2019&ndash;Q'+q+' 2026</div><div class="inv-bench-mv">'+(cumThru>=0?'+':'')+cumThru.toFixed(1)+'%</div></div>';
+  html+='<div class="inv-bench-m"><div class="inv-bench-ml">'+(q===1?'Q1 2026':'H1 2026')+' Return</div><div class="inv-bench-mv'+(qRet<0?' neg':'')+'">'+(qRet>=0?'+':'')+qRet.toFixed(2)+'%</div></div>';
+  html+='</div>';
+  el.innerHTML=html;
+  var secn=document.getElementById('hf-ovbench-secn');if(secn)secn.textContent='Through Q'+q+' 2026 close';
+  var btn=document.getElementById('hf-ovbench-toggle');
+  if(btn)btn.innerHTML=q===1?'Q2 2026 &rarr;':'&larr; Q1 2026';
+}
+
+function hfOverallBenchToggle(){
+  HF_OVBENCH_Q=HF_OVBENCH_Q===1?2:1;
+  renderOverallBenchmark();
+}
+window.hfOverallBenchToggle=hfOverallBenchToggle;
+
 // ─── Hide / Show all (main grid) ──────────────────────────────
 // Per-card "hide" so a crowded grid can be trimmed to just the
 // investors someone actually tracks; persisted in localStorage so it
@@ -187,11 +216,32 @@ function renderInvGrid(){
     html+='<div class="icard-met"><div class="icard-ml">Annualized (7yr)</div><div class="icard-mv">'+(hasPerf?((annualized>=0?'+':'')+annStr):'<span style="color:var(--mu);font-size:11px">n/a</span>')+'</div></div>';
     html+='<div class="icard-met"><div class="icard-ml">2026 YTD</div><div class="icard-mv">'+ytdStr+(inv.ytdEst?' <span style="font-size:9px;color:var(--mu)">est</span>':'')+'</div>'+(ytd2026!=null&&ytd2026<SP500_B26?'<div style="font-size:8px;color:var(--neg);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-top:2px">Underperforming</div>':'')+'</div>';
     html+='</div>';
-    // Holdings
-    html+='<table class="icard-tbl"><thead><tr><th>Ticker</th><th>Company</th><th class="nr">% Port</th><th class="nr">YTD</th></tr></thead><tbody>';
-    inv.holdings.forEach(function(h){var pc=h.ytd>=0?'rp':'rn';var ys=(h.ytd>=0?'+':'')+h.ytd.toFixed(2)+'%';var nb=h.nw?' <span style="font-size:8px;font-weight:700;letter-spacing:.5px;color:#2563EB;border:1px solid #2563EB;border-radius:3px;padding:0 3px;vertical-align:middle">NEW</span>':'';
-      html+='<tr><td><span class="iticker">'+h.t+'</span></td><td><span class="ico">'+h.co+'</span>'+nb+'</td><td class="nr" style="color:var(--mu)">'+h.w.toFixed(2)+'%</td><td class="nr"><span class="rpill '+pc+'">'+ys+'</span></td></tr>';});
-    html+='</tbody></table>';
+    // Holdings: Q1 vs Q2 2026 snapshot comparison where Q1 data is on
+    // file (holdingsQ1), else fall back to the single current-quarter table.
+    if(inv.holdingsQ1&&inv.holdingsQ1.length){
+      html+='<div class="icard-cmp">';
+      html+='<div class="icard-cmp-col"><div class="icard-cmp-hd">Q1 close <span class="icard-cmp-dt">Mar 31</span></div>';
+      inv.holdingsQ1.forEach(function(h){
+        var rc=h.ytd==null?'rna':(h.ytd>=0?'rp':'rn');
+        var rs=h.ytd==null?'n/a':(h.ytd>=0?'+':'')+h.ytd.toFixed(1)+'%';
+        html+='<div class="icard-cmp-row" title="'+h.co+'"><span class="icard-cmp-t">'+h.t+'</span><span class="icard-cmp-w">'+h.w.toFixed(1)+'%</span><span class="icard-cmp-r '+rc+'">'+rs+'</span></div>';
+      });
+      html+='</div>';
+      html+='<div class="icard-cmp-col icard-cmp-q2"><div class="icard-cmp-hd">Q2 close <span class="icard-cmp-dt">Jun 30</span></div>';
+      inv.holdings.forEach(function(h){
+        var rc=h.ytd==null?'rna':(h.ytd>=0?'rp':'rn');
+        var rs=h.ytd==null?'n/a':(h.ytd>=0?'+':'')+h.ytd.toFixed(1)+'%';
+        var isNew=inv.holdingsQ1.every(function(q1h){return q1h.t!==h.t;});
+        var nb=isNew?'<span class="icard-cmp-newbadge">NEW</span>':'';
+        html+='<div class="icard-cmp-row" title="'+h.co+'"><span class="icard-cmp-t">'+h.t+nb+'</span><span class="icard-cmp-w">'+h.w.toFixed(1)+'%</span><span class="icard-cmp-r '+rc+'">'+rs+'</span></div>';
+      });
+      html+='</div></div>';
+    } else {
+      html+='<table class="icard-tbl"><thead><tr><th>Ticker</th><th>Company</th><th class="nr">% Port</th><th class="nr">YTD</th></tr></thead><tbody>';
+      inv.holdings.forEach(function(h){var pc=h.ytd>=0?'rp':'rn';var ys=(h.ytd>=0?'+':'')+h.ytd.toFixed(2)+'%';var nb=h.nw?' <span style="font-size:8px;font-weight:700;letter-spacing:.5px;color:#2563EB;border:1px solid #2563EB;border-radius:3px;padding:0 3px;vertical-align:middle">NEW</span>':'';
+        html+='<tr><td><span class="iticker">'+h.t+'</span></td><td><span class="ico">'+h.co+'</span>'+nb+'</td><td class="nr" style="color:var(--mu)">'+h.w.toFixed(2)+'%</td><td class="nr"><span class="rpill '+pc+'">'+ys+'</span></td></tr>';});
+      html+='</tbody></table>';
+    }
     if(inv.est)html+='<div class="est-note">&#x26A0; Annual returns estimated from portfolio data.</div>';
     html+='</div>';
   });
@@ -1803,6 +1853,7 @@ export function loadHedgeFundsPage() {
   renderFundChips();
   renderAlphaChart();
   renderBenchmark();
+  renderOverallBenchmark();
   renderInvGrid();
   renderSectorHeatmap();
   populateStockLookupSelect();

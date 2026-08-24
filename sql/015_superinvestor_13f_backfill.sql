@@ -6083,3 +6083,33 @@ insert into investor_yearly_holdings (investor_key, year, quarter, ticker, compa
   ('coleman', 2026, 2, 'ARX', 'Accelerant Holdings', 'G00894108', 879000, 0.0, 44, 'sec_xml'),
   ('coleman', 2026, 2, 'GEMI', 'Gemini Space Sta Inc', '36866J105', 298200, 0.0, 45, 'sec_xml'),
   ('coleman', 2026, 2, 'MNTN', 'Mntn Inc', '55318A108', 184000, 0.0, 46, 'sec_xml');
+
+-- ─── Q2 2026 addition (ackman) ───
+-- Filed 2026-08-14, accession 0001172661-26-003790. NOTE: the 13F-HR
+-- holdings report is now filed under a NEW CIK, 'Pershing Square Inc.'
+-- (CIK 0002026053) -- the original CIK (0001336528, 'Pershing Square
+-- Capital Management, L.P.') now only files a 13F-NT notice pointing to
+-- it, as part of a joint filing group with William A Ackman personally.
+-- Portfolio composition changed materially from Q1 2026: added MA, V,
+-- NFLX, SPGI, and Ackman's own permanent-capital vehicle PSUS (Pershing
+-- Square USA Ltd, CUSIP 71531T105); GOOG/GOOGL dropped out entirely.
+-- Howard Hughes Holdings (HHH) appears as two raw infoTable rows (same
+-- CUSIP, split across sub-managers) -- summed into one position here,
+-- consistent with how Berkshire's multi-manager rows are handled.
+delete from investor_yearly_holdings where investor_key = 'ackman' and year = 2026 and quarter = 2;
+
+insert into investor_yearly_holdings (investor_key, year, quarter, ticker, company_name, cusip, value_usd, weight_pct, rank, source_type) values
+  ('ackman', 2026, 2, 'UBER', 'Uber Technologies Inc', '90353T100', 2476978592, 12.73, 1, 'sec_xml'),
+  ('ackman', 2026, 2, 'BN', 'Brookfield Corp', '11271J107', 2448117792, 12.58, 2, 'sec_xml'),
+  ('ackman', 2026, 2, 'MSFT', 'Microsoft Corp', '594918104', 2315234425, 11.89, 3, 'sec_xml'),
+  ('ackman', 2026, 2, 'AMZN', 'Amazon Com Inc', '023135106', 2041109677, 10.49, 4, 'sec_xml'),
+  ('ackman', 2026, 2, 'HHH', 'Howard Hughes Holdings Inc', '44267T102', 1991144055, 10.23, 5, 'sec_xml'),
+  ('ackman', 2026, 2, 'QSR', 'Restaurant Brands Intl Inc', '76131D103', 1872301303, 9.62, 6, 'sec_xml'),
+  ('ackman', 2026, 2, 'META', 'Meta Platforms Inc', '30303M102', 1800309764, 9.25, 7, 'sec_xml'),
+  ('ackman', 2026, 2, 'V', 'Visa Inc', '92826C839', 1122065552, 5.76, 8, 'sec_xml'),
+  ('ackman', 2026, 2, 'MA', 'Mastercard Incorporated', '57636Q104', 1091218186, 5.61, 9, 'sec_xml'),
+  ('ackman', 2026, 2, 'SPGI', 'S&P Global Inc', '78409V104', 1056088305, 5.43, 10, 'sec_xml'),
+  ('ackman', 2026, 2, 'NFLX', 'Netflix Inc', '64110L106', 934016601, 4.8, 11, 'sec_xml'),
+  ('ackman', 2026, 2, 'PSUS', 'Pershing Square Usa Ltd', '71531T105', 149520000, 0.77, 12, 'sec_xml'),
+  ('ackman', 2026, 2, 'SEG', 'Seaport Entmt Group Inc', '812215200', 133632548, 0.69, 13, 'sec_xml'),
+  ('ackman', 2026, 2, 'HTZ', 'Hertz Global Hldgs Inc', '42806J700', 33955972, 0.17, 14, 'sec_xml');

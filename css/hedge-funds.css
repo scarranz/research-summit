@@ -32,6 +32,22 @@
 .hf-mainpane { display: none; }
 .hf-mainpane.active { display: block; }
 
+.hf-qtoggle-btn {
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+
+.hf-qtoggle-btn:hover { opacity: .85; }
+
 /* ─── Hedge Funds: benchmark bar + investor cards ─── */
 
 .inv-bench {
@@ -415,6 +431,97 @@
 
 .rpill.rp { background: rgba(23, 122, 78, .1); color: var(--pos); }
 .rpill.rn { background: rgba(155, 42, 32, .1); color: var(--neg); }
+
+/* ─── Investor card: Q1 vs Q2 2026 holdings snapshot comparison ─── */
+
+.icard-cmp { display: flex; gap: 8px; }
+
+.icard-cmp-col { flex: 1; min-width: 0; padding-top: 2px; }
+
+.icard-cmp-q2 {
+  background: rgba(30, 58, 95, .045);
+  border-radius: 8px;
+  padding: 2px 7px 4px;
+  margin: -2px -7px -4px 0;
+}
+
+.icard-cmp-hd {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--mu);
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid var(--bdr);
+}
+
+.icard-cmp-q2 .icard-cmp-hd { color: var(--navy); }
+
+.icard-cmp-dt {
+  font-size: 9px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--mu);
+}
+
+.icard-cmp-row {
+  display: grid;
+  grid-template-columns: 1fr 42px 44px;
+  align-items: center;
+  column-gap: 4px;
+  padding: 3.5px 0;
+  border-bottom: .5px solid #F0F4F8;
+}
+
+.icard-cmp-row:last-child { border-bottom: none; }
+
+.icard-cmp-t {
+  font-family: 'Inter', monospace;
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--navy);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icard-cmp-w {
+  font-family: 'Inter', monospace;
+  font-size: 9.5px;
+  color: var(--mu);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.icard-cmp-r {
+  font-family: 'Inter', monospace;
+  font-weight: 500;
+  font-size: 10px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.icard-cmp-r.rp { color: var(--pos); }
+.icard-cmp-r.rn { color: var(--neg); }
+.icard-cmp-r.rna { color: var(--mu); font-weight: 400; }
+
+.icard-cmp-newbadge {
+  display: inline-block;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  color: #2563EB;
+  border: 1px solid #2563EB;
+  border-radius: 3px;
+  padding: 0 3px;
+  margin-left: 3px;
+  vertical-align: middle;
+}
 
 /* ─── Shared building blocks (Upload 13F panel, letters, year pills) ─── */
 

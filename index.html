@@ -179,12 +179,12 @@
 <div id="tp-rot" class="tp">
   <div class="srow">
     <div class="sc"><div class="sl">S&amp;P 500 Universe</div><div class="sv">503</div><div class="ss">Companies Analyzed</div></div>
-    <div class="sc" style="border-top-color:#177A4E"><div class="sl">Positive YTD 2026</div><div class="sv" style="color:#177A4E">265</div><div class="ss">53% of companies</div></div>
-    <div class="sc" style="border-top-color:#1E3A5F"><div class="sl">Beating S&amp;P 500</div><div class="sv">186</div><div class="ss">vs +7.6% benchmark</div></div>
-    <div class="sc" style="border-top-color:#177A4E"><div class="sl">S&amp;P 500 YTD 2026</div><div class="sv" style="color:#177A4E">+7.6%</div><div class="ss">May 19, 2026</div></div>
+    <div class="sc" style="border-top-color:#177A4E"><div class="sl">Positive YTD 2026</div><div class="sv" style="color:#177A4E">348</div><div class="ss">69% of companies</div></div>
+    <div class="sc" style="border-top-color:#1E3A5F"><div class="sl">Beating S&amp;P 500</div><div class="sv">224</div><div class="ss">vs +12.3% benchmark</div></div>
+    <div class="sc" style="border-top-color:#177A4E"><div class="sl">S&amp;P 500 YTD 2026</div><div class="sv" style="color:#177A4E">+12.3%</div><div class="ss">August 21, 2026</div></div>
   </div>
   <div class="sec">
-    <div class="sechdr"><span class="sect">Sector Alpha &mdash; Avg Annual Return by Sector</span></div>
+    <div class="sechdr"><span class="sect">Sector Alpha &mdash; Avg Annual Return by Sector</span><span class="secn">SPDR sector ETFs, 2026 updated to August 21, 2026 close</span></div>
     <div class="card">
       <div class="sb-secrow" id="sb-secrow"></div>
       <div class="sbl">
@@ -203,6 +203,11 @@
       <div class="sb-toggle">
         <button class="sb-tbtn active" id="sb-abs" onclick="setSBMode('abs')">Absolute</button>
         <button class="sb-tbtn" id="sb-rel" onclick="setSBMode('rel')">Relative</button>
+      </div>
+      <div class="sb-toggle" title="How the 2026 row is shown">
+        <button class="sb-tbtn" id="sb2026-q1" onclick="setSB2026('q1')">Q1 2026</button>
+        <button class="sb-tbtn" id="sb2026-q2" onclick="setSB2026('q2')">Q2 2026</button>
+        <button class="sb-tbtn active" id="sb2026-compare" onclick="setSB2026('compare')">Q1 &rarr; Q2</button>
       </div>
     </div><div class="sbrs" id="sb-wrap"></div></div>
   </div>
@@ -234,7 +239,7 @@
     </div>
   </div>
   <div class="sec">
-    <div class="sechdr"><span class="sect">S&amp;P 500 Companies Explorer</span><span class="secn">Working copy</span></div>
+    <div class="sechdr"><span class="sect">S&amp;P 500 Companies Explorer</span><span class="secn">2026 YTD updated to August 21, 2026 close</span></div>
     <div class="card">
       <div class="fbar">
         <span class="flm">Filters:</span>
@@ -287,7 +292,7 @@
       <div class="qcounts" id="quad-counts"></div>
       <div class="scrl">
         <span class="scrli"><span class="scline" style="border-color:#4A7FB5"></span>S&amp;P 2025 (+15.7%)</span>
-        <span class="scrli"><span class="scline" style="border-color:#177A4E"></span>S&amp;P 2026 (+7.6%)</span>
+        <span class="scrli"><span class="scline" style="border-color:#177A4E"></span>S&amp;P 2026 (+12.3%)</span>
         <span class="scrli"><span style="width:12px;height:12px;background:rgba(180,30,30,.1);border:1px solid rgba(180,30,30,.25);display:inline-block;border-radius:2px"></span>Lag both years</span>
       </div>
       <div style="position:relative;height:390px"><canvas id="scat-c"></canvas></div>
@@ -314,6 +319,16 @@
   </div>
 
   <div class="hf-mainpane active" data-pane="overall">
+    <div class="sechdr" style="margin-bottom:18px">
+      <span class="sect">S&amp;P 500 Benchmark</span>
+      <div style="display:flex;align-items:center;gap:14px">
+        <span class="secn" id="hf-ovbench-secn">Through Q1 2026 close</span>
+        <button type="button" class="hf-qtoggle-btn" id="hf-ovbench-toggle" onclick="hfOverallBenchToggle()">Q2 2026 &rarr;</button>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:30px" id="hf-ovbench-card">
+      <div class="inv-bench" id="hf-ovbench"></div>
+    </div>
     <div class="sechdr" style="margin-bottom:18px">
       <span class="sect">Cumulative Return vs S&amp;P 500 &mdash; 2015&ndash;2025</span>
       <div style="display:flex;align-items:center;gap:14px">
@@ -367,7 +382,7 @@ Each tile is a GICS sector, colored by the average YTD return of the companies t
     <div class="sechdr" style="margin-bottom:18px">
       <span class="sect">Superinvestor Holdings &amp; Performance</span>
       <div style="display:flex;align-items:center;gap:14px">
-        <span class="secn">Q2 2026 13F positions (Ackman still Q1 2026 &mdash; no Q2 filing yet) &middot; returns through H1 2026 &middot; click a card for the full holdings analysis</span>
+        <span class="secn">Top 5 holdings at Q1 close vs. Q2 close 2026 (Q2 highlighted) &middot; click a card for the full holdings analysis</span>
         <button type="button" class="hf-showall-btn" id="hf-check13f" onclick="openCheck13FPanel()">Check for new 13Fs</button>
         <button type="button" class="hf-showall-btn" id="hf-showall" style="display:none" onclick="showAllInvestors()">Show all</button>
       </div>
@@ -375,7 +390,7 @@ Each tile is a GICS sector, colored by the average YTD return of the companies t
     <div class="inv-bench" id="inv-bench"></div>
     <div class="inv-grid" id="inv-grid"></div>
     <p style="margin-top:16px;font-size:11px;color:var(--mu);line-height:1.6">
-      Holdings: SEC 13F filings (Q2 2026; Ackman Q1 2026, most recent on file) &middot; Returns: H1 2026 (through June 30, 2026) &middot; Buffett (BRK.B price), Ackman (PSH NAV), Tepper (Bloomberg), and Loeb (Third Point investor letters) are real, sourced figures &middot; &#x26A0; other funds&rsquo; H1 2026 returns are estimated by weighting each fund&rsquo;s disclosed 13F holdings by their actual Q1/Q2 2026 stock performance, since none of those funds publish real-time returns
+      Holdings: SEC 13F filings, Q1 2026 (filed mid-May) vs. Q2 2026 (most recent on file) &middot; Each holding&rsquo;s return is its own stock price move from Jan 1 to that quarter&rsquo;s close, not the fund&rsquo;s overall return &middot; Fund-level returns: H1 2026 (through June 30, 2026) &middot; Buffett (BRK.B price), Ackman (PSH NAV), Tepper (Bloomberg), and Loeb (Third Point investor letters) are real, sourced figures &middot; &#x26A0; other funds&rsquo; H1 2026 returns are estimated by weighting each fund&rsquo;s disclosed 13F holdings by their actual Q1/Q2 2026 stock performance, since none of those funds publish real-time returns
     </p>
   </div>
 </div>

@@ -1463,6 +1463,24 @@ export const LOCAL_INVESTOR_HOLDINGS = [
   { investor_key: 'loeb', year: 2026, quarter: 2, ticker: 'COF', company_name: 'Capital One Finl Corp', cusip: '14040H105', value_usd: 165511500, weight_pct: 3.54, rank: 13, source_type: 'sec_xml' },
   { investor_key: 'loeb', year: 2026, quarter: 2, ticker: 'HUT', company_name: 'Hut 8 Corp', cusip: '44812J104', value_usd: 151810175, weight_pct: 3.24, rank: 14, source_type: 'sec_xml' },
   { investor_key: 'loeb', year: 2026, quarter: 2, ticker: 'CRS', company_name: 'Carpenter Technology Corp', cusip: '144285103', value_usd: 132620600, weight_pct: 2.83, rank: 15, source_type: 'sec_xml' },
+
+  // Q2 2026 addition (ackman) — filed 2026-08-14 under a new CIK
+  // ("Pershing Square Inc.", 0002026053); see sql/015 for the full note.
+  // All 14 positions (Howard Hughes' two raw rows summed into one).
+  { investor_key: 'ackman', year: 2026, quarter: 2, ticker: 'UBER', company_name: 'Uber Technologies Inc', cusip: '90353T100', value_usd: 2476978592, weight_pct: 12.73, rank: 1, source_type: 'sec_xml' },
+  { investor_key: 'ackman', year: 2026, quarter: 2, ticker: 'BN', company_name: 'Brookfield Corp', cusip: '11271J107', value_usd: 2448117792, weight_pct: 12.58, rank: 2, source_type: 'sec_xml' },
+  { investor_key: 'ackman', year: 2026, quarter: 2, ticker: 'MSFT', company_name: 'Microsoft Corp', cusip: '594918104', value_usd: 2315234425, weight_pct: 11.89, rank: 3, source_type: 'sec_xml' },
+  { investor_key: 'ackman', year: 2026, quarter: 2, ticker: 'AMZN', company_name: 'Amazon Com Inc', cusip: '023135106', value_usd: 2041109677, weight_pct: 10.49, rank: 4, source_type: 'sec_xml' },
+  { investor_key: 'ackman', year: 2026, quarter: 2, ticker: 'HHH', company_name: 'Howard Hughes Holdings Inc', cusip: '44267T102', value_usd: 1991144055, weight_pct: 10.23, rank: 5, source_type: 'sec_xml' },
+  { investor_key: 'ackman', year: 2026, quarter: 2, ticker: 'QSR', company_name: 'Restaurant Brands Intl Inc', cusip: '76131D103', value_usd: 1872301303, weight_pct: 9.62, rank: 6, source_type: 'sec_xml' },
+  { investor_key: 'ackman', year: 2026, quarter: 2, ticker: 'META', company_name: 'Meta Platforms Inc', cusip: '30303M102', value_usd: 1800309764, weight_pct: 9.25, rank: 7, source_type: 'sec_xml' },
+  { investor_key: 'ackman', year: 2026, quarter: 2, ticker: 'V', company_name: 'Visa Inc', cusip: '92826C839', value_usd: 1122065552, weight_pct: 5.76, rank: 8, source_type: 'sec_xml' },
+  { investor_key: 'ackman', year: 2026, quarter: 2, ticker: 'MA', company_name: 'Mastercard Incorporated', cusip: '57636Q104', value_usd: 1091218186, weight_pct: 5.61, rank: 9, source_type: 'sec_xml' },
+  { investor_key: 'ackman', year: 2026, quarter: 2, ticker: 'SPGI', company_name: 'S&P Global Inc', cusip: '78409V104', value_usd: 1056088305, weight_pct: 5.43, rank: 10, source_type: 'sec_xml' },
+  { investor_key: 'ackman', year: 2026, quarter: 2, ticker: 'NFLX', company_name: 'Netflix Inc', cusip: '64110L106', value_usd: 934016601, weight_pct: 4.8, rank: 11, source_type: 'sec_xml' },
+  { investor_key: 'ackman', year: 2026, quarter: 2, ticker: 'PSUS', company_name: 'Pershing Square Usa Ltd', cusip: '71531T105', value_usd: 149520000, weight_pct: 0.77, rank: 12, source_type: 'sec_xml' },
+  { investor_key: 'ackman', year: 2026, quarter: 2, ticker: 'SEG', company_name: 'Seaport Entmt Group Inc', cusip: '812215200', value_usd: 133632548, weight_pct: 0.69, rank: 13, source_type: 'sec_xml' },
+  { investor_key: 'ackman', year: 2026, quarter: 2, ticker: 'HTZ', company_name: 'Hertz Global Hldgs Inc', cusip: '42806J700', value_usd: 33955972, weight_pct: 0.17, rank: 14, source_type: 'sec_xml' },
 ];
 
 export const LOCAL_INVESTOR_LETTERS = [

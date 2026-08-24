@@ -118,34 +118,23 @@ function renderBenchmark(){
   el.innerHTML=html;
 }
 
-// ─── Overall tab: S&P 500 benchmark, toggled between Q1 and Q2 2026 close ───
-// Same visual language as the Superinvestors benchmark bar, but scoped to a
-// single quarter so the user can flip between "how the market stood at Q1
-// close" and "how it stands now at Q2 close" without leaving the Overall tab.
-
-var HF_OVBENCH_Q = 1;
+// ─── Overall tab: S&P 500 benchmark, Q1 -> Q2 2026 arrow format ───
+// Same visual language as the Superinvestors benchmark bar, but scoped to
+// the Overall tab and shown as "Q1 value -> Q2 value" so both quarters are
+// visible at once instead of a click-to-toggle single value.
 
 function renderOverallBenchmark(){
   var el=document.getElementById('hf-ovbench');if(!el||!SP500_REF)return;
-  var q=HF_OVBENCH_Q;
-  var qRet=q===1?SP500_Q1_2026:SP500_B26;
-  var cumThru=((1+SP500_REF.cum/100)*(1+qRet/100)-1)*100;
-  var html='<div class="inv-bench-left"><div class="inv-bench-title">S&amp;P 500 Benchmark</div><div class="inv-bench-sub">'+(q===1?'As of Q1 2026 close (Mar 31)':'As of Q2 2026 close (Jun 30)')+'</div></div>';
+  var cumQ1=((1+SP500_REF.cum/100)*(1+SP500_Q1_2026/100)-1)*100;
+  var cumQ2=((1+SP500_REF.cum/100)*(1+SP500_B26/100)-1)*100;
+  var html='<div class="inv-bench-left"><div class="inv-bench-title">S&amp;P 500 Benchmark</div><div class="inv-bench-sub">Q1 2026 close (Mar 31) &rarr; Q2 2026 close (Jun 30)</div></div>';
   html+='<div class="inv-bench-mets">';
-  html+='<div class="inv-bench-m"><div class="inv-bench-ml">Cumul. 2019&ndash;Q'+q+' 2026</div><div class="inv-bench-mv">'+(cumThru>=0?'+':'')+cumThru.toFixed(1)+'%</div></div>';
-  html+='<div class="inv-bench-m"><div class="inv-bench-ml">'+(q===1?'Q1 2026':'H1 2026')+' Return</div><div class="inv-bench-mv'+(qRet<0?' neg':'')+'">'+(qRet>=0?'+':'')+qRet.toFixed(2)+'%</div></div>';
+  html+='<div class="inv-bench-m"><div class="inv-bench-ml">Cumul. 2019&ndash;Q1&rarr;Q2 2026</div><div class="inv-bench-mv">'+(cumQ1>=0?'+':'')+cumQ1.toFixed(1)+'% &rarr; '+(cumQ2>=0?'+':'')+cumQ2.toFixed(1)+'%</div></div>';
+  html+='<div class="inv-bench-m"><div class="inv-bench-ml">Q1 &rarr; Q2 2026 Return</div><div class="inv-bench-mv'+(SP500_B26<0?' neg':'')+'">'+(SP500_Q1_2026>=0?'+':'')+SP500_Q1_2026.toFixed(2)+'% &rarr; '+(SP500_B26>=0?'+':'')+SP500_B26.toFixed(2)+'%</div></div>';
   html+='</div>';
   el.innerHTML=html;
-  var secn=document.getElementById('hf-ovbench-secn');if(secn)secn.textContent='Through Q'+q+' 2026 close';
-  var btn=document.getElementById('hf-ovbench-toggle');
-  if(btn)btn.innerHTML=q===1?'Q2 2026 &rarr;':'&larr; Q1 2026';
+  var secn=document.getElementById('hf-ovbench-secn');if(secn)secn.textContent='Q1 2026 close vs. Q2 2026 close';
 }
-
-function hfOverallBenchToggle(){
-  HF_OVBENCH_Q=HF_OVBENCH_Q===1?2:1;
-  renderOverallBenchmark();
-}
-window.hfOverallBenchToggle=hfOverallBenchToggle;
 
 // ─── Hide / Show all (main grid) ──────────────────────────────
 // Per-card "hide" so a crowded grid can be trimmed to just the
@@ -216,26 +205,34 @@ function renderInvGrid(){
     html+='<div class="icard-met"><div class="icard-ml">Annualized (7yr)</div><div class="icard-mv">'+(hasPerf?((annualized>=0?'+':'')+annStr):'<span style="color:var(--mu);font-size:11px">n/a</span>')+'</div></div>';
     html+='<div class="icard-met"><div class="icard-ml">2026 YTD</div><div class="icard-mv">'+ytdStr+(inv.ytdEst?' <span style="font-size:9px;color:var(--mu)">est</span>':'')+'</div>'+(ytd2026!=null&&ytd2026<SP500_B26?'<div style="font-size:8px;color:var(--neg);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-top:2px">Underperforming</div>':'')+'</div>';
     html+='</div>';
-    // Holdings: Q1 vs Q2 2026 snapshot comparison where Q1 data is on
-    // file (holdingsQ1), else fall back to the single current-quarter table.
+    // Holdings: Q1 -> Q2 2026, one row per company, kept in Q1's own rank
+    // order (not re-sorted by Q2 weight) so the same ticker lines up on the
+    // same row across both quarters. Q2-only names (not in the Q1 top-5)
+    // are appended below, marked NEW.
     if(inv.holdingsQ1&&inv.holdingsQ1.length){
-      html+='<div class="icard-cmp">';
-      html+='<div class="icard-cmp-col"><div class="icard-cmp-hd">Q1 close <span class="icard-cmp-dt">Mar 31</span></div>';
-      inv.holdingsQ1.forEach(function(h){
-        var rc=h.ytd==null?'rna':(h.ytd>=0?'rp':'rn');
-        var rs=h.ytd==null?'n/a':(h.ytd>=0?'+':'')+h.ytd.toFixed(1)+'%';
-        html+='<div class="icard-cmp-row" title="'+h.co+'"><span class="icard-cmp-t">'+h.t+'</span><span class="icard-cmp-w">'+h.w.toFixed(1)+'%</span><span class="icard-cmp-r '+rc+'">'+rs+'</span></div>';
+      var q2ByT={};inv.holdings.forEach(function(h){q2ByT[h.t]=h;});
+      var q1Ts={};inv.holdingsQ1.forEach(function(h){q1Ts[h.t]=true;});
+      html+='<table class="icard-arrow-tbl"><thead><tr><th rowspan="2" class="icard-arrow-tick">Ticker</th><th colspan="2">Allocation</th><th colspan="2">Return</th></tr><tr><th class="nr">Then</th><th class="nr">Now</th><th class="nr">Then</th><th class="nr">Now</th></tr></thead><tbody>';
+      inv.holdingsQ1.forEach(function(h1){
+        var h2=q2ByT[h1.t];
+        var wThen=h1.w.toFixed(1)+'%', wNow=h2?h2.w.toFixed(1)+'%':'&mdash;';
+        var rThen=h1.ytd!=null?(h1.ytd>=0?'+':'')+h1.ytd.toFixed(1)+'%':'n/a';
+        var rNow=h2&&h2.ytd!=null?(h2.ytd>=0?'+':'')+h2.ytd.toFixed(1)+'%':'&mdash;';
+        var rc=h2&&h2.ytd!=null?(h2.ytd>=0?'rp':'rn'):'rna';
+        html+='<tr class="icard-arrow-row'+(h2?'':' icard-arrow-dropped')+'" title="'+h1.co+'"><td><span class="iticker">'+h1.t+'</span>'+(h2?'':' <span class="icard-cmp-newbadge" style="color:var(--mu);border-color:var(--mu)">DROPPED</span>')+'</td>';
+        html+='<td class="nr icard-arrow-m">'+wThen+'</td><td class="nr icard-arrow-m">'+wNow+'</td>';
+        html+='<td class="nr icard-arrow-m">'+rThen+'</td><td class="nr icard-arrow-m '+rc+'">'+rNow+'</td></tr>';
       });
-      html+='</div>';
-      html+='<div class="icard-cmp-col icard-cmp-q2"><div class="icard-cmp-hd">Q2 close <span class="icard-cmp-dt">Jun 30</span></div>';
-      inv.holdings.forEach(function(h){
-        var rc=h.ytd==null?'rna':(h.ytd>=0?'rp':'rn');
-        var rs=h.ytd==null?'n/a':(h.ytd>=0?'+':'')+h.ytd.toFixed(1)+'%';
-        var isNew=inv.holdingsQ1.every(function(q1h){return q1h.t!==h.t;});
-        var nb=isNew?'<span class="icard-cmp-newbadge">NEW</span>':'';
-        html+='<div class="icard-cmp-row" title="'+h.co+'"><span class="icard-cmp-t">'+h.t+nb+'</span><span class="icard-cmp-w">'+h.w.toFixed(1)+'%</span><span class="icard-cmp-r '+rc+'">'+rs+'</span></div>';
+      inv.holdings.forEach(function(h2){
+        if(q1Ts[h2.t])return;
+        var rNow=h2.ytd!=null?(h2.ytd>=0?'+':'')+h2.ytd.toFixed(1)+'%':'&mdash;';
+        var rc=h2.ytd!=null?(h2.ytd>=0?'rp':'rn'):'rna';
+        html+='<tr class="icard-arrow-row" title="'+h2.co+'"><td><span class="iticker">'+h2.t+'</span> <span class="icard-cmp-newbadge">NEW</span></td>';
+        html+='<td class="nr icard-arrow-m">&mdash;</td><td class="nr icard-arrow-m">'+h2.w.toFixed(1)+'%</td>';
+        html+='<td class="nr icard-arrow-m">n/a</td><td class="nr icard-arrow-m '+rc+'">'+rNow+'</td></tr>';
       });
-      html+='</div></div>';
+      html+='</tbody></table>';
+      html+='<div class="icard-arrow-legend">Then = Q1 close (Mar 31) &middot; Now = Q2 close (Jun 30) 2026 &middot; rows kept in Q1&rsquo;s original order</div>';
     } else {
       html+='<table class="icard-tbl"><thead><tr><th>Ticker</th><th>Company</th><th class="nr">% Port</th><th class="nr">YTD</th></tr></thead><tbody>';
       inv.holdings.forEach(function(h){var pc=h.ytd>=0?'rp':'rn';var ys=(h.ytd>=0?'+':'')+h.ytd.toFixed(2)+'%';var nb=h.nw?' <span style="font-size:8px;font-weight:700;letter-spacing:.5px;color:#2563EB;border:1px solid #2563EB;border-radius:3px;padding:0 3px;vertical-align:middle">NEW</span>':'';

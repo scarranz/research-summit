@@ -195,6 +195,14 @@
   margin-top: -3px;
 }
 
+.sbnote {
+  font-size: 10.5px;
+  color: var(--mu);
+  font-style: italic;
+  padding: 2px 0 0 31px;
+  line-height: 1.4;
+}
+
 /* Q1/Q2 overlay bar (comparison mode) — Q1 sits as a pale ghost fill,
    Q2 renders solid on top and animates from Q1's position/width into
    its own on every render, so the shift between quarters reads as

@@ -205,17 +205,16 @@
         <button class="sb-tbtn" id="sb-rel" onclick="setSBMode('rel')">Relative</button>
       </div>
       <div class="sb-toggle" title="How the 2026 row is shown">
-        <button class="sb-tbtn" id="sb2026-q1" onclick="setSB2026('q1')">Q1 2026</button>
-        <button class="sb-tbtn" id="sb2026-q2" onclick="setSB2026('q2')">Q2 2026</button>
-        <button class="sb-tbtn active" id="sb2026-compare" onclick="setSB2026('compare')">Q1 &rarr; Q2</button>
+        <button class="sb-tbtn active" id="sb2026-may" onclick="setSB2026('may')">Last Meeting</button>
+        <button class="sb-tbtn" id="sb2026-today" onclick="setSB2026('today')">Today</button>
       </div>
-      <label class="hf-chart-toggle" title="Show or hide the Q1 vs Q2 table">
-        <input type="checkbox" id="sb-cmptable-toggle" onchange="toggleSBCompareTable(this.checked)">
+      <label class="hf-chart-toggle" title="Show or hide the comparison table">
+        <input type="checkbox" id="sb-cmptable-toggle" checked onchange="toggleSBCompareTable(this.checked)">
         <span class="hf-chart-toggle-track"><span class="hf-chart-toggle-thumb"></span></span>
-        <span class="hf-chart-toggle-txt">Tabla Q1 vs Q2</span>
+        <span class="hf-chart-toggle-txt">Comparison table</span>
       </label>
     </div>
-    <div id="sb-cmptable-wrap" style="display:none;margin-bottom:16px"></div>
+    <div id="sb-cmptable-wrap" style="margin-bottom:16px"></div>
     <div class="sbrs" id="sb-wrap"></div></div>
   </div>
   <div class="sec">
@@ -328,10 +327,7 @@
   <div class="hf-mainpane active" data-pane="overall">
     <div class="sechdr" style="margin-bottom:18px">
       <span class="sect">S&amp;P 500 Benchmark</span>
-      <div style="display:flex;align-items:center;gap:14px">
-        <span class="secn" id="hf-ovbench-secn">Through Q1 2026 close</span>
-        <button type="button" class="hf-qtoggle-btn" id="hf-ovbench-toggle" onclick="hfOverallBenchToggle()">Q2 2026 &rarr;</button>
-      </div>
+      <span class="secn" id="hf-ovbench-secn">Q1 2026 close vs. Q2 2026 close</span>
     </div>
     <div class="card" style="margin-bottom:30px" id="hf-ovbench-card">
       <div class="inv-bench" id="hf-ovbench"></div>

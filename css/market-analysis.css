@@ -295,6 +295,31 @@
   border-radius: 3px;
 }
 
+/* Two-bar mode: Last Meeting (pale) stacked above Today (bold), each its
+   own center-diverging bar, toggled on/off from the table header. */
+.sbcmp-dbars {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sbcmp-dbar {
+  position: relative;
+  height: 6px;
+  background: #EEF2F7;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.sbcmp-dbar-ghost { opacity: .75; }
+
+.sbcmp-dbar-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 2px;
+}
+
 .sbtag {
   font-size: 9px;
   background: var(--surface);

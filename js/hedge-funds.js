@@ -1,10 +1,66 @@
 // hedge-funds.js — extracted from summit-research-portal.html
 import { INVESTORS, SP500_REF, SP500_MAY31, SP500_TODAY_HF, QQQ_B26, QQQ_TODAY26, HF_FUNDS, HF_BMK, HF_AYEARS, YEARS, SP500, IMGS, ALL_STOCKS } from './portal-data.js';
-import { fetchInvestorReturns, fetchInvestorHoldings, fetchHoldingsByTicker, fetchInvestorLetters, replaceInvestorHoldings, syncLatest13F, getFileUrl } from './api.js';
+import { fetchInvestorReturns, fetchInvestorHoldings, fetchHoldingsByTicker, fetchInvestorLetters, replaceInvestorHoldings, syncLatest13F, getFileUrl, fetchReturnOverrides, saveReturnOverride } from './api.js';
 import { LOCAL_INVESTOR_RETURNS, LOCAL_INVESTOR_HOLDINGS, LOCAL_INVESTOR_LETTERS, NO_PUBLIC_LETTERS_NOTE } from './investor-local-seed.js';
 import { parse13FFile } from './investor-13f-parser.js';
+import { getCurrentUser } from './auth.js';
 
 let alphaChart = null, ALPHA_MODE = 'cum', HF_SEL = {}, HF_START = '2015';
+
+// ─── Manual return overrides (editable Then/Now holdings returns) ───
+// Only the designated editor's email gets an actual <input>; everyone else
+// still sees the corrected value (once someone with access has saved one),
+// just as plain text like every other cell.
+var HF_RETURN_EDITOR_EMAIL = 'scarranza@summit-mgmtx.com';
+var HF_OVERRIDES = {};
+
+function hfCanEditReturns(){
+  var u = getCurrentUser();
+  return !!(u && u.email && u.email.toLowerCase() === HF_RETURN_EDITOR_EMAIL);
+}
+
+function hfOverrideKey(investorKey, ticker, period){ return investorKey+'|'+ticker+'|'+period; }
+
+function hfGetOverride(investorKey, ticker, period){
+  var v = HF_OVERRIDES[hfOverrideKey(investorKey, ticker, period)];
+  return v==null ? null : v;
+}
+
+async function hfLoadOverrides(){
+  var res = await fetchReturnOverrides();
+  if (res.success) {
+    HF_OVERRIDES = {};
+    res.data.forEach(function(row){
+      HF_OVERRIDES[hfOverrideKey(row.investor_key, row.ticker, row.period)] = row.value_pct;
+    });
+    renderInvGrid();
+  }
+}
+
+function hfSaveReturnEdit(inputEl){
+  var newVal = parseFloat(inputEl.value);
+  if (isNaN(newVal)) { inputEl.value = inputEl.defaultValue; return; }
+  var oldVal = parseFloat(inputEl.defaultValue);
+  if (newVal === oldVal) return;
+  var investorKey = inputEl.dataset.inv, ticker = inputEl.dataset.ticker, period = inputEl.dataset.period;
+  inputEl.classList.add('icard-edit-saving');
+  inputEl.classList.remove('icard-edit-saved','icard-edit-error');
+  saveReturnOverride(investorKey, ticker, period, newVal).then(function(res){
+    inputEl.classList.remove('icard-edit-saving');
+    if (res.success) {
+      HF_OVERRIDES[hfOverrideKey(investorKey, ticker, period)] = newVal;
+      inputEl.defaultValue = String(newVal);
+      inputEl.classList.add('icard-edit-saved');
+      setTimeout(function(){ inputEl.classList.remove('icard-edit-saved'); }, 1500);
+    } else {
+      inputEl.value = inputEl.defaultValue;
+      inputEl.classList.add('icard-edit-error');
+      setTimeout(function(){ inputEl.classList.remove('icard-edit-error'); }, 2000);
+      alert('Could not save this edit: '+res.error.message);
+    }
+  });
+}
+window.hfSaveReturnEdit = hfSaveReturnEdit;
 
 // Stock price returns as of today (Aug 21, 2026), for holdings tickers that
 // aren't S&P 500 constituents (so not already in ALL_STOCKS's r26). Real,
@@ -257,30 +313,34 @@ function renderInvGrid(){
     if(inv.holdingsQ1&&inv.holdingsQ1.length){
       var q2ByT={};inv.holdings.forEach(function(h){q2ByT[h.t]=h;});
       var q1Ts={};inv.holdingsQ1.forEach(function(h){q1Ts[h.t]=true;});
+      var canEditReturns=hfCanEditReturns();
+      function returnCell(ticker,baseVal,period){
+        var ov=hfGetOverride(inv.key,ticker,period);
+        var val=ov!=null?ov:baseVal;
+        var cls=val!=null?(val>=0?'rp':'rn'):'rna';
+        if(canEditReturns){
+          var iv=val!=null?val.toFixed(2):'';
+          return '<td class="nr icard-arrow-m '+cls+'"><input class="icard-edit-input" type="text" inputmode="decimal" value="'+iv+'" placeholder="n/a" data-inv="'+inv.key+'" data-ticker="'+ticker+'" data-period="'+period+'" onblur="hfSaveReturnEdit(this)" onkeydown="if(event.key===\'Enter\')this.blur()">%</td>';
+        }
+        var str=val!=null?(val>=0?'+':'')+val.toFixed(1)+'%':'n/a';
+        return '<td class="nr icard-arrow-m '+cls+'">'+str+'</td>';
+      }
       html+='<table class="icard-arrow-tbl"><thead><tr><th rowspan="2" class="icard-arrow-tick">Ticker</th><th colspan="2">Allocation</th><th colspan="2">Return</th></tr><tr><th class="nr">Then</th><th class="nr">Now</th><th class="nr">Then</th><th class="nr">Now</th></tr></thead><tbody>';
       inv.holdingsQ1.forEach(function(h1){
         var h2=q2ByT[h1.t];
         var wThen=h1.w.toFixed(1)+'%', wNow=h2?h2.w.toFixed(1)+'%':'&mdash;';
-        var rThenV=h1.ytd, rNowV=todayReturn(h1.t);
-        var rThen=rThenV!=null?(rThenV>=0?'+':'')+rThenV.toFixed(1)+'%':'n/a';
-        var rNow=rNowV!=null?(rNowV>=0?'+':'')+rNowV.toFixed(1)+'%':'n/a';
-        var rcThen=rThenV!=null?(rThenV>=0?'rp':'rn'):'rna';
-        var rcNow=rNowV!=null?(rNowV>=0?'rp':'rn'):'rna';
         html+='<tr class="icard-arrow-row'+(h2?'':' icard-arrow-dropped')+'" title="'+h1.co+'"><td><span class="iticker">'+h1.t+'</span>'+(h2?'':' <span class="icard-cmp-newbadge" style="color:var(--mu);border-color:var(--mu)">DROPPED</span>')+'</td>';
         html+='<td class="nr icard-arrow-m">'+wThen+'</td><td class="nr icard-arrow-m">'+wNow+'</td>';
-        html+='<td class="nr icard-arrow-m '+rcThen+'">'+rThen+'</td><td class="nr icard-arrow-m '+rcNow+'">'+rNow+'</td></tr>';
+        html+=returnCell(h1.t,h1.ytd,'then')+returnCell(h1.t,todayReturn(h1.t),'now')+'</tr>';
       });
       inv.holdings.forEach(function(h2){
         if(q1Ts[h2.t])return;
-        var rNowV=todayReturn(h2.t);
-        var rNow=rNowV!=null?(rNowV>=0?'+':'')+rNowV.toFixed(1)+'%':'n/a';
-        var rcNow=rNowV!=null?(rNowV>=0?'rp':'rn'):'rna';
         html+='<tr class="icard-arrow-row" title="'+h2.co+'"><td><span class="iticker">'+h2.t+'</span> <span class="icard-cmp-newbadge">NEW</span></td>';
         html+='<td class="nr icard-arrow-m">&mdash;</td><td class="nr icard-arrow-m">'+h2.w.toFixed(1)+'%</td>';
-        html+='<td class="nr icard-arrow-m rna">n/a</td><td class="nr icard-arrow-m '+rcNow+'">'+rNow+'</td></tr>';
+        html+='<td class="nr icard-arrow-m rna">n/a</td>'+returnCell(h2.t,todayReturn(h2.t),'now')+'</tr>';
       });
       html+='</tbody></table>';
-      html+='<div class="icard-arrow-legend">Then = Q1 2026 close (Mar 31) &middot; Now allocation = Q2 2026 13F (latest filed) &middot; Now return = today&rsquo;s price (Aug 21, 2026) &middot; rows kept in Q1&rsquo;s original order</div>';
+      html+='<div class="icard-arrow-legend">Then = Q1 2026 close (Mar 31) &middot; Now allocation = Q2 2026 13F (latest filed) &middot; Now return = today&rsquo;s price (Aug 21, 2026) &middot; rows kept in Q1&rsquo;s original order'+(canEditReturns?' &middot; click a return to edit it':'')+'</div>';
     } else {
       html+='<table class="icard-tbl"><thead><tr><th>Ticker</th><th>Company</th><th class="nr">% Port</th><th class="nr">YTD</th></tr></thead><tbody>';
       inv.holdings.forEach(function(h){var pc=h.ytd>=0?'rp':'rn';var ys=(h.ytd>=0?'+':'')+h.ytd.toFixed(2)+'%';var nb=h.nw?' <span style="font-size:8px;font-weight:700;letter-spacing:.5px;color:#2563EB;border:1px solid #2563EB;border-radius:3px;padding:0 3px;vertical-align:middle">NEW</span>':'';
@@ -1902,4 +1962,5 @@ export function loadHedgeFundsPage() {
   renderInvGrid();
   renderSectorHeatmap();
   populateStockLookupSelect();
+  hfLoadOverrides();
 }

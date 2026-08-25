@@ -550,6 +550,27 @@ export async function deleteInvestorLetter(id) {
   return ok(null);
 }
 
+// Manual corrections to a Superinvestor card's Then/Now holdings returns.
+// RLS restricts insert/update to one editor email (019_investor_return_
+// overrides.sql); anyone signed in can read them.
+export async function fetchReturnOverrides() {
+  var { data, error } = await supabase
+    .from('investor_return_overrides')
+    .select('*');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function saveReturnOverride(investorKey, ticker, period, valuePct) {
+  var { data, error } = await supabase
+    .from('investor_return_overrides')
+    .upsert([{ investor_key: investorKey, ticker: ticker, period: period, value_pct: valuePct, updated_at: new Date().toISOString() }], { onConflict: 'investor_key,ticker,period' })
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
 // ─── Auth ───────────────────────────────────────────────────
 
 export async function fetchUserRole(userId) {

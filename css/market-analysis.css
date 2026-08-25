@@ -113,13 +113,20 @@
 .sbrs {
   display: flex;
   flex-direction: column;
-  gap: 11px;
+  gap: 28px;
 }
 
 .sbr {
   display: flex;
   align-items: flex-start;
   gap: 11px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--bdr);
+}
+
+.sbr:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .sbn {

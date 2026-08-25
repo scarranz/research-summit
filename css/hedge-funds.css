@@ -333,10 +333,16 @@
 
 .icard-mets {
   display: flex;
+  flex-direction: column;
   border: .5px solid var(--bdr);
   border-radius: 8px;
   overflow: hidden;
   margin-bottom: 12px;
+}
+
+.icard-mets-row {
+  display: flex;
+  border-bottom: .5px solid var(--bdr);
 }
 
 .icard-met {
@@ -348,6 +354,12 @@
 }
 
 .icard-met:last-child { border-right: none; }
+
+.icard-met-full {
+  padding: 8px 10px;
+  background: var(--surface);
+  text-align: center;
+}
 
 .icard-ml {
   font-family: 'Inter', monospace;
@@ -549,6 +561,30 @@
 
 .icard-arrow-row:last-child td { border-bottom: none; }
 .icard-arrow-row:hover td { background: #F7FAFD; }
+
+.icard-edit-input {
+  width: 44px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: right;
+  padding: 1px 2px;
+  border-radius: 3px;
+  transition: background .12s, outline .12s;
+}
+
+.icard-edit-input:hover { background: rgba(30, 58, 95, .06); }
+
+.icard-edit-input:focus {
+  outline: 1.5px solid var(--steel);
+  background: var(--w);
+  color: var(--text);
+}
+
+.icard-edit-saving { opacity: .5; }
+.icard-edit-saved { outline: 1.5px solid var(--pos) !important; background: rgba(23, 122, 78, .08) !important; }
+.icard-edit-error { outline: 1.5px solid var(--neg) !important; }
 .icard-arrow-row.icard-arrow-dropped { opacity: .55; }
 
 .icard-arrow-m {

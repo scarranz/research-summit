@@ -1,10 +1,66 @@
 // hedge-funds.js — extracted from summit-research-portal.html
-import { INVESTORS, SP500_REF, SP500_B26, SP500_Q1_2026, SP500_TODAY26, QQQ_B26, QQQ_TODAY26, HF_FUNDS, HF_BMK, HF_AYEARS, YEARS, SP500, IMGS, ALL_STOCKS } from './portal-data.js';
-import { fetchInvestorReturns, fetchInvestorHoldings, fetchHoldingsByTicker, fetchInvestorLetters, replaceInvestorHoldings, syncLatest13F, getFileUrl } from './api.js';
+import { INVESTORS, SP500_REF, SP500_MAY31, SP500_TODAY_HF, QQQ_B26, QQQ_TODAY26, HF_FUNDS, HF_BMK, HF_AYEARS, YEARS, SP500, IMGS, ALL_STOCKS } from './portal-data.js';
+import { fetchInvestorReturns, fetchInvestorHoldings, fetchHoldingsByTicker, fetchInvestorLetters, replaceInvestorHoldings, syncLatest13F, getFileUrl, fetchReturnOverrides, saveReturnOverride } from './api.js';
 import { LOCAL_INVESTOR_RETURNS, LOCAL_INVESTOR_HOLDINGS, LOCAL_INVESTOR_LETTERS, NO_PUBLIC_LETTERS_NOTE } from './investor-local-seed.js';
 import { parse13FFile } from './investor-13f-parser.js';
+import { getCurrentUser } from './auth.js';
 
 let alphaChart = null, ALPHA_MODE = 'cum', HF_SEL = {}, HF_START = '2015';
+
+// ─── Manual return overrides (editable Then/Now holdings returns) ───
+// Only the designated editor's email gets an actual <input>; everyone else
+// still sees the corrected value (once someone with access has saved one),
+// just as plain text like every other cell.
+var HF_RETURN_EDITOR_EMAIL = 'scarranza@summit-mgmtx.com';
+var HF_OVERRIDES = {};
+
+function hfCanEditReturns(){
+  var u = getCurrentUser();
+  return !!(u && u.email && u.email.toLowerCase() === HF_RETURN_EDITOR_EMAIL);
+}
+
+function hfOverrideKey(investorKey, ticker, period){ return investorKey+'|'+ticker+'|'+period; }
+
+function hfGetOverride(investorKey, ticker, period){
+  var v = HF_OVERRIDES[hfOverrideKey(investorKey, ticker, period)];
+  return v==null ? null : v;
+}
+
+async function hfLoadOverrides(){
+  var res = await fetchReturnOverrides();
+  if (res.success) {
+    HF_OVERRIDES = {};
+    res.data.forEach(function(row){
+      HF_OVERRIDES[hfOverrideKey(row.investor_key, row.ticker, row.period)] = row.value_pct;
+    });
+    renderInvGrid();
+  }
+}
+
+function hfSaveReturnEdit(inputEl){
+  var newVal = parseFloat(inputEl.value);
+  if (isNaN(newVal)) { inputEl.value = inputEl.defaultValue; return; }
+  var oldVal = parseFloat(inputEl.defaultValue);
+  if (newVal === oldVal) return;
+  var investorKey = inputEl.dataset.inv, ticker = inputEl.dataset.ticker, period = inputEl.dataset.period;
+  inputEl.classList.add('icard-edit-saving');
+  inputEl.classList.remove('icard-edit-saved','icard-edit-error');
+  saveReturnOverride(investorKey, ticker, period, newVal).then(function(res){
+    inputEl.classList.remove('icard-edit-saving');
+    if (res.success) {
+      HF_OVERRIDES[hfOverrideKey(investorKey, ticker, period)] = newVal;
+      inputEl.defaultValue = String(newVal);
+      inputEl.classList.add('icard-edit-saved');
+      setTimeout(function(){ inputEl.classList.remove('icard-edit-saved'); }, 1500);
+    } else {
+      inputEl.value = inputEl.defaultValue;
+      inputEl.classList.add('icard-edit-error');
+      setTimeout(function(){ inputEl.classList.remove('icard-edit-error'); }, 2000);
+      alert('Could not save this edit: '+res.error.message);
+    }
+  });
+}
+window.hfSaveReturnEdit = hfSaveReturnEdit;
 
 // Stock price returns as of today (Aug 21, 2026), for holdings tickers that
 // aren't S&P 500 constituents (so not already in ALL_STOCKS's r26). Real,
@@ -143,19 +199,11 @@ function toggleChartVisibility(show){
 
 function renderBenchmark(){
   var el=document.getElementById('inv-bench');if(!el||!SP500_REF)return;
-  var rets=SP500_REF.returns;
-  var annualized=Math.pow(1+SP500_REF.cum/100,1/7)-1;
-  var annStr=(annualized*100).toFixed(1)+'%';
   var html='<div class="inv-bench-left"><div class="inv-bench-title">S&amp;P 500 Benchmark</div><div class="inv-bench-sub">All managers measured against this</div></div>';
   html+='<div class="inv-bench-mets">';
-  html+='<div class="inv-bench-m"><div class="inv-bench-ml">Cumul. 2019&ndash;Q2 2026</div><div class="inv-bench-mv">+'+SP500_REF.cum.toFixed(1)+'%</div></div>';
-  html+='<div class="inv-bench-m"><div class="inv-bench-ml">Annualized (7yr)</div><div class="inv-bench-mv">+'+annStr+'</div></div>';
-  html+='<div class="inv-bench-m"><div class="inv-bench-ml">S&amp;P 500 2026 (Then &rarr; Now)</div><div class="inv-bench-mv">'+(SP500_B26>=0?'+':'')+SP500_B26.toFixed(1)+'% &rarr; '+(SP500_TODAY26>=0?'+':'')+SP500_TODAY26.toFixed(1)+'%</div></div>';
-  html+='<div class="inv-bench-m"><div class="inv-bench-ml">QQQ 2026 (Then &rarr; Now)</div><div class="inv-bench-mv">'+(QQQ_B26>=0?'+':'')+QQQ_B26.toFixed(1)+'% &rarr; '+(QQQ_TODAY26>=0?'+':'')+QQQ_TODAY26.toFixed(1)+'%</div></div>';
-  html+='<div class="inv-bench-bars">';
-  rets.forEach(function(r,i){var pp=r>=0?Math.min(r/35*100,100):0;var np=r<0?Math.min(Math.abs(r)/25*100,100):0;
-    html+='<div class="ibb-col"><div class="ibb-wrap"><div class="ibb-poswrap"><div class="ibb-pos" style="height:'+pp+'%" title="'+YEARS[i]+': '+(r>=0?'+':'')+r.toFixed(1)+'%"></div></div><div class="ibb-zero"></div><div class="ibb-negwrap"><div class="ibb-neg" style="height:'+np+'%" title="'+YEARS[i]+': '+(r>=0?'+':'')+r.toFixed(1)+'%"></div></div></div><div class="ibb-lbl">'+YEARS[i].slice(2)+'</div></div>';});
-  html+='</div></div>';
+  html+='<div class="inv-bench-m"><div class="inv-bench-ml">S&amp;P 500 (May 31 &rarr; Today)</div><div class="inv-bench-mv">'+(SP500_MAY31>=0?'+':'')+SP500_MAY31.toFixed(1)+'% &rarr; '+(SP500_TODAY_HF>=0?'+':'')+SP500_TODAY_HF.toFixed(1)+'%</div></div>';
+  html+='<div class="inv-bench-m"><div class="inv-bench-ml">QQQ (May 31 &rarr; Today)</div><div class="inv-bench-mv">'+(QQQ_B26>=0?'+':'')+QQQ_B26.toFixed(1)+'% &rarr; '+(QQQ_TODAY26>=0?'+':'')+QQQ_TODAY26.toFixed(1)+'%</div></div>';
+  html+='</div>';
   el.innerHTML=html;
 }
 
@@ -166,17 +214,16 @@ function renderBenchmark(){
 
 function renderOverallBenchmark(){
   var el=document.getElementById('hf-ovbench');if(!el||!SP500_REF)return;
-  var cumThen=((1+SP500_REF.cum/100)*(1+SP500_B26/100)-1)*100;
-  var cumNow=((1+SP500_REF.cum/100)*(1+SP500_TODAY26/100)-1)*100;
-  var qqqThen=QQQ_B26,qqqNow=QQQ_TODAY26;
-  var html='<div class="inv-bench-left"><div class="inv-bench-title">S&amp;P 500 &amp; QQQ Benchmark</div><div class="inv-bench-sub">Last meeting (Q2 2026 close, Jun 30) &rarr; today (Aug 21)</div></div>';
+  var cumThen=((1+SP500_REF.cum/100)*(1+SP500_MAY31/100)-1)*100;
+  var cumNow=((1+SP500_REF.cum/100)*(1+SP500_TODAY_HF/100)-1)*100;
+  var html='<div class="inv-bench-left"><div class="inv-bench-title">S&amp;P 500 &amp; QQQ Benchmark</div><div class="inv-bench-sub">Last meeting (May 31) &rarr; today</div></div>';
   html+='<div class="inv-bench-mets">';
   html+='<div class="inv-bench-m"><div class="inv-bench-ml">Cumul. 2019&ndash;2026 (S&amp;P)</div><div class="inv-bench-mv">'+(cumThen>=0?'+':'')+cumThen.toFixed(1)+'% &rarr; '+(cumNow>=0?'+':'')+cumNow.toFixed(1)+'%</div></div>';
-  html+='<div class="inv-bench-m"><div class="inv-bench-ml">S&amp;P 500 2026</div><div class="inv-bench-mv">'+(SP500_B26>=0?'+':'')+SP500_B26.toFixed(1)+'% &rarr; '+(SP500_TODAY26>=0?'+':'')+SP500_TODAY26.toFixed(1)+'%</div></div>';
-  html+='<div class="inv-bench-m"><div class="inv-bench-ml">QQQ 2026</div><div class="inv-bench-mv">'+(qqqThen>=0?'+':'')+qqqThen.toFixed(1)+'% &rarr; '+(qqqNow>=0?'+':'')+qqqNow.toFixed(1)+'%</div></div>';
+  html+='<div class="inv-bench-m"><div class="inv-bench-ml">S&amp;P 500 2026</div><div class="inv-bench-mv">'+(SP500_MAY31>=0?'+':'')+SP500_MAY31.toFixed(1)+'% &rarr; '+(SP500_TODAY_HF>=0?'+':'')+SP500_TODAY_HF.toFixed(1)+'%</div></div>';
+  html+='<div class="inv-bench-m"><div class="inv-bench-ml">QQQ 2026</div><div class="inv-bench-mv">'+(QQQ_B26>=0?'+':'')+QQQ_B26.toFixed(1)+'% &rarr; '+(QQQ_TODAY26>=0?'+':'')+QQQ_TODAY26.toFixed(1)+'%</div></div>';
   html+='</div>';
   el.innerHTML=html;
-  var secn=document.getElementById('hf-ovbench-secn');if(secn)secn.textContent='Last meeting (Q2 2026 close) vs. today';
+  var secn=document.getElementById('hf-ovbench-secn');if(secn)secn.textContent='Last meeting (May 31) vs. today';
 }
 
 // ─── Hide / Show all (main grid) ──────────────────────────────
@@ -242,11 +289,22 @@ function renderInvGrid(){
     var annualized=hasPerf?Math.pow(1+inv.cum/100,1/7)-1:null;
     var annStr=hasPerf?(annualized*100).toFixed(1)+'%':'n/a';
     var ytd2026=inv.ytd2026!=null?inv.ytd2026:null;
-    var ytdStr=ytd2026!=null?((ytd2026>=0?'+':'')+ytd2026.toFixed(1)+'%'):'n/a';
+    var ytdNow=inv.ytdNow!=null?inv.ytdNow:null;
+    var ytdThenStr=ytd2026!=null?((ytd2026>=0?'+':'')+ytd2026.toFixed(1)+'%'):'n/a';
+    var estTag=' <span style="font-size:9px;color:var(--mu)">est</span>';
+    var ytdVal;
+    if(ytdNow!=null){
+      var ytdNowStr=(ytdNow>=0?'+':'')+ytdNow.toFixed(1)+'%';
+      ytdVal=ytdThenStr+(inv.ytdEst?estTag:'')+' &rarr; '+ytdNowStr+(inv.ytdNowEst?estTag:'');
+    } else {
+      ytdVal=ytdThenStr+(inv.ytdEst?estTag:'');
+    }
     html+='<div class="icard-mets">';
+    html+='<div class="icard-mets-row">';
     html+='<div class="icard-met"><div class="icard-ml">'+cumLbl+'</div><div class="icard-mv">'+(hasPerf?((inv.cum>0?'+':'')+inv.cum.toFixed(1)+'%'+(inv.est?' <span style="font-size:9px;color:var(--mu)">est</span>':'')):'<span style="color:var(--mu);font-size:11px">n/a</span>')+'</div></div>';
     html+='<div class="icard-met"><div class="icard-ml">Annualized (7yr)</div><div class="icard-mv">'+(hasPerf?((annualized>=0?'+':'')+annStr):'<span style="color:var(--mu);font-size:11px">n/a</span>')+'</div></div>';
-    html+='<div class="icard-met"><div class="icard-ml">2026 YTD</div><div class="icard-mv">'+ytdStr+(inv.ytdEst?' <span style="font-size:9px;color:var(--mu)">est</span>':'')+'</div>'+(ytd2026!=null&&ytd2026<SP500_B26?'<div style="font-size:8px;color:var(--neg);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-top:2px">Underperforming</div>':'')+'</div>';
+    html+='</div>';
+    html+='<div class="icard-met-full"><div class="icard-ml">2026 YTD'+(ytdNow!=null?' (Then &rarr; Now)':'')+'</div><div class="icard-mv" style="'+(ytdNow!=null?'font-size:13px;white-space:nowrap':'')+'">'+ytdVal+'</div></div>';
     html+='</div>';
     // Holdings: Q1 -> Q2 2026, one row per company, kept in Q1's own rank
     // order (not re-sorted by Q2 weight) so the same ticker lines up on the
@@ -255,30 +313,34 @@ function renderInvGrid(){
     if(inv.holdingsQ1&&inv.holdingsQ1.length){
       var q2ByT={};inv.holdings.forEach(function(h){q2ByT[h.t]=h;});
       var q1Ts={};inv.holdingsQ1.forEach(function(h){q1Ts[h.t]=true;});
+      var canEditReturns=hfCanEditReturns();
+      function returnCell(ticker,baseVal,period){
+        var ov=hfGetOverride(inv.key,ticker,period);
+        var val=ov!=null?ov:baseVal;
+        var cls=val!=null?(val>=0?'rp':'rn'):'rna';
+        if(canEditReturns){
+          var iv=val!=null?val.toFixed(2):'';
+          return '<td class="nr icard-arrow-m '+cls+'"><input class="icard-edit-input" type="text" inputmode="decimal" value="'+iv+'" placeholder="n/a" data-inv="'+inv.key+'" data-ticker="'+ticker+'" data-period="'+period+'" onblur="hfSaveReturnEdit(this)" onkeydown="if(event.key===\'Enter\')this.blur()">%</td>';
+        }
+        var str=val!=null?(val>=0?'+':'')+val.toFixed(1)+'%':'n/a';
+        return '<td class="nr icard-arrow-m '+cls+'">'+str+'</td>';
+      }
       html+='<table class="icard-arrow-tbl"><thead><tr><th rowspan="2" class="icard-arrow-tick">Ticker</th><th colspan="2">Allocation</th><th colspan="2">Return</th></tr><tr><th class="nr">Then</th><th class="nr">Now</th><th class="nr">Then</th><th class="nr">Now</th></tr></thead><tbody>';
       inv.holdingsQ1.forEach(function(h1){
         var h2=q2ByT[h1.t];
         var wThen=h1.w.toFixed(1)+'%', wNow=h2?h2.w.toFixed(1)+'%':'&mdash;';
-        var rThenV=h1.ytd, rNowV=todayReturn(h1.t);
-        var rThen=rThenV!=null?(rThenV>=0?'+':'')+rThenV.toFixed(1)+'%':'n/a';
-        var rNow=rNowV!=null?(rNowV>=0?'+':'')+rNowV.toFixed(1)+'%':'n/a';
-        var rcThen=rThenV!=null?(rThenV>=0?'rp':'rn'):'rna';
-        var rcNow=rNowV!=null?(rNowV>=0?'rp':'rn'):'rna';
         html+='<tr class="icard-arrow-row'+(h2?'':' icard-arrow-dropped')+'" title="'+h1.co+'"><td><span class="iticker">'+h1.t+'</span>'+(h2?'':' <span class="icard-cmp-newbadge" style="color:var(--mu);border-color:var(--mu)">DROPPED</span>')+'</td>';
         html+='<td class="nr icard-arrow-m">'+wThen+'</td><td class="nr icard-arrow-m">'+wNow+'</td>';
-        html+='<td class="nr icard-arrow-m '+rcThen+'">'+rThen+'</td><td class="nr icard-arrow-m '+rcNow+'">'+rNow+'</td></tr>';
+        html+=returnCell(h1.t,h1.ytd,'then')+returnCell(h1.t,todayReturn(h1.t),'now')+'</tr>';
       });
       inv.holdings.forEach(function(h2){
         if(q1Ts[h2.t])return;
-        var rNowV=todayReturn(h2.t);
-        var rNow=rNowV!=null?(rNowV>=0?'+':'')+rNowV.toFixed(1)+'%':'n/a';
-        var rcNow=rNowV!=null?(rNowV>=0?'rp':'rn'):'rna';
         html+='<tr class="icard-arrow-row" title="'+h2.co+'"><td><span class="iticker">'+h2.t+'</span> <span class="icard-cmp-newbadge">NEW</span></td>';
         html+='<td class="nr icard-arrow-m">&mdash;</td><td class="nr icard-arrow-m">'+h2.w.toFixed(1)+'%</td>';
-        html+='<td class="nr icard-arrow-m rna">n/a</td><td class="nr icard-arrow-m '+rcNow+'">'+rNow+'</td></tr>';
+        html+='<td class="nr icard-arrow-m rna">n/a</td>'+returnCell(h2.t,todayReturn(h2.t),'now')+'</tr>';
       });
       html+='</tbody></table>';
-      html+='<div class="icard-arrow-legend">Then = Q1 2026 close (Mar 31) &middot; Now allocation = Q2 2026 13F (latest filed) &middot; Now return = today&rsquo;s price (Aug 21, 2026) &middot; rows kept in Q1&rsquo;s original order</div>';
+      html+='<div class="icard-arrow-legend">Then = Q1 2026 close (Mar 31) &middot; Now allocation = Q2 2026 13F (latest filed) &middot; Now return = today&rsquo;s price (Aug 21, 2026) &middot; rows kept in Q1&rsquo;s original order'+(canEditReturns?' &middot; click a return to edit it':'')+'</div>';
     } else {
       html+='<table class="icard-tbl"><thead><tr><th>Ticker</th><th>Company</th><th class="nr">% Port</th><th class="nr">YTD</th></tr></thead><tbody>';
       inv.holdings.forEach(function(h){var pc=h.ytd>=0?'rp':'rn';var ys=(h.ytd>=0?'+':'')+h.ytd.toFixed(2)+'%';var nb=h.nw?' <span style="font-size:8px;font-weight:700;letter-spacing:.5px;color:#2563EB;border:1px solid #2563EB;border-radius:3px;padding:0 3px;vertical-align:middle">NEW</span>':'';
@@ -1900,4 +1962,5 @@ export function loadHedgeFundsPage() {
   renderInvGrid();
   renderSectorHeatmap();
   populateStockLookupSelect();
+  hfLoadOverrides();
 }

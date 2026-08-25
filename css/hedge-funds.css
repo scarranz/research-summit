@@ -333,10 +333,16 @@
 
 .icard-mets {
   display: flex;
+  flex-direction: column;
   border: .5px solid var(--bdr);
   border-radius: 8px;
   overflow: hidden;
   margin-bottom: 12px;
+}
+
+.icard-mets-row {
+  display: flex;
+  border-bottom: .5px solid var(--bdr);
 }
 
 .icard-met {
@@ -348,6 +354,12 @@
 }
 
 .icard-met:last-child { border-right: none; }
+
+.icard-met-full {
+  padding: 8px 10px;
+  background: var(--surface);
+  text-align: center;
+}
 
 .icard-ml {
   font-family: 'Inter', monospace;

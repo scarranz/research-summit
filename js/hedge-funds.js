@@ -1,5 +1,5 @@
 // hedge-funds.js — extracted from summit-research-portal.html
-import { INVESTORS, SP500_REF, SP500_B26, SP500_MAY31, SP500_TODAY_HF, QQQ_B26, QQQ_TODAY26, HF_FUNDS, HF_BMK, HF_AYEARS, YEARS, SP500, IMGS, ALL_STOCKS } from './portal-data.js';
+import { INVESTORS, SP500_REF, SP500_MAY31, SP500_TODAY_HF, QQQ_B26, QQQ_TODAY26, HF_FUNDS, HF_BMK, HF_AYEARS, YEARS, SP500, IMGS, ALL_STOCKS } from './portal-data.js';
 import { fetchInvestorReturns, fetchInvestorHoldings, fetchHoldingsByTicker, fetchInvestorLetters, replaceInvestorHoldings, syncLatest13F, getFileUrl } from './api.js';
 import { LOCAL_INVESTOR_RETURNS, LOCAL_INVESTOR_HOLDINGS, LOCAL_INVESTOR_LETTERS, NO_PUBLIC_LETTERS_NOTE } from './investor-local-seed.js';
 import { parse13FFile } from './investor-13f-parser.js';
@@ -236,19 +236,19 @@ function renderInvGrid(){
     var ytdNow=inv.ytdNow!=null?inv.ytdNow:null;
     var ytdThenStr=ytd2026!=null?((ytd2026>=0?'+':'')+ytd2026.toFixed(1)+'%'):'n/a';
     var estTag=' <span style="font-size:9px;color:var(--mu)">est</span>';
-    var ytdVal, underperf;
+    var ytdVal;
     if(ytdNow!=null){
       var ytdNowStr=(ytdNow>=0?'+':'')+ytdNow.toFixed(1)+'%';
       ytdVal=ytdThenStr+(inv.ytdEst?estTag:'')+' &rarr; '+ytdNowStr+(inv.ytdNowEst?estTag:'');
-      underperf=ytdNow<SP500_TODAY_HF;
     } else {
       ytdVal=ytdThenStr+(inv.ytdEst?estTag:'');
-      underperf=ytd2026!=null&&ytd2026<SP500_B26;
     }
     html+='<div class="icard-mets">';
+    html+='<div class="icard-mets-row">';
     html+='<div class="icard-met"><div class="icard-ml">'+cumLbl+'</div><div class="icard-mv">'+(hasPerf?((inv.cum>0?'+':'')+inv.cum.toFixed(1)+'%'+(inv.est?' <span style="font-size:9px;color:var(--mu)">est</span>':'')):'<span style="color:var(--mu);font-size:11px">n/a</span>')+'</div></div>';
     html+='<div class="icard-met"><div class="icard-ml">Annualized (7yr)</div><div class="icard-mv">'+(hasPerf?((annualized>=0?'+':'')+annStr):'<span style="color:var(--mu);font-size:11px">n/a</span>')+'</div></div>';
-    html+='<div class="icard-met"><div class="icard-ml">2026 YTD'+(ytdNow!=null?' (Then &rarr; Now)':'')+'</div><div class="icard-mv" style="'+(ytdNow!=null?'font-size:12px':'')+'">'+ytdVal+'</div>'+(underperf?'<div style="font-size:8px;color:var(--neg);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-top:2px">Underperforming</div>':'')+'</div>';
+    html+='</div>';
+    html+='<div class="icard-met-full"><div class="icard-ml">2026 YTD'+(ytdNow!=null?' (Then &rarr; Now)':'')+'</div><div class="icard-mv" style="'+(ytdNow!=null?'font-size:13px;white-space:nowrap':'')+'">'+ytdVal+'</div></div>';
     html+='</div>';
     // Holdings: Q1 -> Q2 2026, one row per company, kept in Q1's own rank
     // order (not re-sorted by Q2 weight) so the same ticker lines up on the

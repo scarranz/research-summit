@@ -178,10 +178,10 @@
 <!-- MARKET ANALYSIS TAB -->
 <div id="tp-rot" class="tp">
   <div class="srow">
-    <div class="sc"><div class="sl">S&amp;P 500 Universe</div><div class="sv">503</div><div class="ss">Companies Analyzed</div></div>
+    <div class="sc" style="border-top-color:#177A4E"><div class="sl">S&amp;P 500 YTD 2026</div><div class="sv" style="color:#177A4E;font-size:20px">+10.5% &rarr; +11%</div><div class="ss">May 31st &rarr; Today</div></div>
+    <div class="sc" style="border-top-color:#177A4E"><div class="sl">QQQ YTD 2026</div><div class="sv" style="color:#177A4E;font-size:20px">+20% &rarr; +14.5%</div><div class="ss">May 31st &rarr; Today</div></div>
     <div class="sc" style="border-top-color:#177A4E"><div class="sl">Positive YTD 2026</div><div class="sv" style="color:#177A4E">348</div><div class="ss">69% of companies</div></div>
     <div class="sc" style="border-top-color:#1E3A5F"><div class="sl">Beating S&amp;P 500</div><div class="sv">224</div><div class="ss">vs +12.3% benchmark</div></div>
-    <div class="sc" style="border-top-color:#177A4E"><div class="sl">S&amp;P 500 YTD 2026</div><div class="sv" style="color:#177A4E;font-size:20px">+10.5% &rarr; +11%</div><div class="ss">May 31st &rarr; Today</div></div>
   </div>
   <div class="sec">
     <div class="sechdr"><span class="sect">Sector Alpha &mdash; Avg Annual Return by Sector</span><span class="secn">SPDR sector ETFs &middot; 2026 1 = last meeting (May 19), 2026 2 = today &mdash; select both for a side-by-side comparison</span></div>
@@ -377,6 +377,7 @@ Each tile is a GICS sector, colored by the average YTD return of the companies t
       <span class="sect">Superinvestor Holdings &amp; Performance</span>
       <div style="display:flex;align-items:center;gap:14px">
         <span class="secn">Top 5 holdings at Q1 close vs. Q2 close 2026 (Q2 highlighted) &middot; click a card for the full holdings analysis</span>
+        <button type="button" class="hf-showall-btn" id="hf-editall-btn" style="display:none" onclick="openAllEditModal()">&#9998; Edit Then/Now</button>
         <button type="button" class="hf-showall-btn" id="hf-check13f" onclick="openCheck13FPanel()">Check for new 13Fs</button>
         <button type="button" class="hf-showall-btn" id="hf-showall" style="display:none" onclick="showAllInvestors()">Show all</button>
       </div>

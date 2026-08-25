@@ -181,10 +181,10 @@
     <div class="sc"><div class="sl">S&amp;P 500 Universe</div><div class="sv">503</div><div class="ss">Companies Analyzed</div></div>
     <div class="sc" style="border-top-color:#177A4E"><div class="sl">Positive YTD 2026</div><div class="sv" style="color:#177A4E">348</div><div class="ss">69% of companies</div></div>
     <div class="sc" style="border-top-color:#1E3A5F"><div class="sl">Beating S&amp;P 500</div><div class="sv">224</div><div class="ss">vs +12.3% benchmark</div></div>
-    <div class="sc" style="border-top-color:#177A4E"><div class="sl">S&amp;P 500 YTD 2026</div><div class="sv" style="color:#177A4E">+12.3%</div><div class="ss">August 21, 2026</div></div>
+    <div class="sc" style="border-top-color:#177A4E"><div class="sl">S&amp;P 500 YTD 2026</div><div class="sv" style="color:#177A4E;font-size:20px">+10.5% &rarr; +11%</div><div class="ss">May 31st &rarr; Today</div></div>
   </div>
   <div class="sec">
-    <div class="sechdr"><span class="sect">Sector Alpha &mdash; Avg Annual Return by Sector</span><span class="secn">SPDR sector ETFs, 2026 updated to August 21, 2026 close</span></div>
+    <div class="sechdr"><span class="sect">Sector Alpha &mdash; Avg Annual Return by Sector</span><span class="secn">SPDR sector ETFs &middot; 2026 1 = last meeting (May 19), 2026 2 = today &mdash; select both for a side-by-side comparison</span></div>
     <div class="card">
       <div class="sb-secrow" id="sb-secrow"></div>
       <div class="sbl">
@@ -198,25 +198,17 @@
         <button class="sb-tbtn active" data-yr="2023" onclick="toggleYear('2023')">2023</button>
         <button class="sb-tbtn active" data-yr="2024" onclick="toggleYear('2024')">2024</button>
         <button class="sb-tbtn active" data-yr="2025" onclick="toggleYear('2025')">2025</button>
-        <button class="sb-tbtn active" data-yr="2026" onclick="toggleYear('2026')">2026</button>
+        <button class="sb-tbtn active" data-yr="2026a" onclick="toggleYear('2026a')">2026 1</button>
+        <button class="sb-tbtn active" data-yr="2026" onclick="toggleYear('2026')">2026 2</button>
       </div>
       <div class="sb-toggle">
         <button class="sb-tbtn active" id="sb-abs" onclick="setSBMode('abs')">Absolute</button>
         <button class="sb-tbtn" id="sb-rel" onclick="setSBMode('rel')">Relative</button>
       </div>
-      <div class="sb-toggle" title="How the 2026 row is shown">
-        <button class="sb-tbtn active" id="sb2026-may" onclick="setSB2026('may')">Last Meeting</button>
-        <button class="sb-tbtn" id="sb2026-today" onclick="setSB2026('today')">Today</button>
-      </div>
       <label class="hf-chart-toggle" title="Show or hide the comparison table">
         <input type="checkbox" id="sb-cmptable-toggle" checked onchange="toggleSBCompareTable(this.checked)">
         <span class="hf-chart-toggle-track"><span class="hf-chart-toggle-thumb"></span></span>
         <span class="hf-chart-toggle-txt">Comparison table</span>
-      </label>
-      <label class="hf-chart-toggle" title="Show both Last Meeting and Today as bars in the table">
-        <input type="checkbox" id="sb-cmpbars-toggle" checked onchange="toggleSBTableBars(this.checked)">
-        <span class="hf-chart-toggle-track"><span class="hf-chart-toggle-thumb"></span></span>
-        <span class="hf-chart-toggle-txt">Bars</span>
       </label>
     </div>
     <div id="sb-cmptable-wrap" style="margin-bottom:16px"></div>
@@ -332,7 +324,7 @@
   <div class="hf-mainpane active" data-pane="overall">
     <div class="sechdr" style="margin-bottom:18px">
       <span class="sect">S&amp;P 500 &amp; QQQ Benchmark</span>
-      <span class="secn" id="hf-ovbench-secn">Last meeting (Q2 2026 close) vs. today</span>
+      <span class="secn" id="hf-ovbench-secn">Last meeting (May 31) vs. today</span>
     </div>
     <div class="card" style="margin-bottom:30px" id="hf-ovbench-card">
       <div class="inv-bench" id="hf-ovbench"></div>

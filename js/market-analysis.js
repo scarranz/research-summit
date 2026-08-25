@@ -1,11 +1,11 @@
 // market-analysis.js — extracted from summit-research-portal.html
 import { ALL_STOCKS, SP500_TODAY26, SP500_B25, SP500_B24, SP500_BMK, SP500_CUM3, SCOLS, SDATA, COMPANY_NAMES } from './portal-data.js';
 
-let scatChart = null, tblData = [], tblData2 = [], sortCol = 5, sortAsc = false, sortCol2 = 7, sortAsc2 = false, IMAP = {}, SB_MODE = 'abs', SECTOR_RETS = {}, SB_2026 = 'may';
+let scatChart = null, tblData = [], tblData2 = [], sortCol = 5, sortAsc = false, sortCol2 = 7, sortAsc2 = false, IMAP = {}, SB_MODE = 'abs', SECTOR_RETS = {};
 
-// Sector Alpha "2026" YTD as it was hardcoded before this refresh (a stale
-// snapshot as of May 19, 2026). Kept only so the May-19-vs-today comparison
-// has something real to diff against.
+// Sector Alpha "2026 1" YTD as it was hardcoded before this refresh (a
+// stale snapshot as of May 19, 2026). Kept only so the "2026 1" vs
+// "2026 2" (today) comparison has something real to diff against.
 var OLD_SECTOR_R26 = {
   "Industrials": 11.14, "Technology": 35.97, "Consumer Staples": 5.6,
   "Communication Services": -1.79, "Energy": 28.16, "Real Estate": 7.24,
@@ -14,7 +14,7 @@ var OLD_SECTOR_R26 = {
 };
 var SP500_MAY26 = 11.25;
 
-let SB_YEARS = {'2017':true,'2018':true,'2019':true,'2020':true,'2021':true,'2022':true,'2023':true,'2024':true,'2025':true,'2026':true};
+let SB_YEARS = {'2017':true,'2018':true,'2019':true,'2020':true,'2021':true,'2022':true,'2023':true,'2024':true,'2025':true,'2026a':true,'2026':true};
 let SB_SECTORS = {}, SS_EXCL = {};
 
 function safeVal(id){var e=document.getElementById(id);return e?e.value:'';}
@@ -27,15 +27,6 @@ function setSBMode(m){
   renderSBCompareTable();
 }
 
-function setSB2026(m){
-  SB_2026=m;
-  ['may','today'].forEach(function(k){
-    var btn=document.getElementById('sb2026-'+k);
-    if(btn)btn.classList.toggle('active',k===m);
-  });
-  renderSectorBars();
-}
-
 var SB_TABLE_ON=true;
 
 function toggleSBCompareTable(show){
@@ -43,13 +34,6 @@ function toggleSBCompareTable(show){
   var wrap=document.getElementById('sb-cmptable-wrap');if(!wrap)return;
   wrap.style.display=show?'':'none';
   if(show)renderSBCompareTable();
-}
-
-var SB_TABLE_BARS=true;
-
-function toggleSBTableBars(show){
-  SB_TABLE_BARS=show;
-  renderSBCompareTable();
 }
 
 function sbMayVal(s,side){
@@ -63,39 +47,17 @@ function renderSBCompareTable(){
   var wrap=document.getElementById('sb-cmptable-wrap');if(!wrap||!SB_TABLE_ON)return;
   var rows=Object.keys(SECTOR_RETS).filter(function(s){return SB_SECTORS[s];}).map(function(s){
     var lv=sbMayVal(s,'left'),rv=sbMayVal(s,'right');
-    var delta=(lv!=null&&rv!=null)?rv-lv:null;
-    var flip=(lv!=null&&rv!=null&&((lv<0&&rv>0)||(lv>0&&rv<0)));
-    return {s:s,lv:lv,rv:rv,delta:delta,flip:flip};
-  }).sort(function(a,b){return Math.abs(b.delta||0)-Math.abs(a.delta||0);});
-  var maxD=Math.max.apply(null,rows.map(function(r){return Math.abs(r.delta||0);}).concat([1]));
-  var maxV=Math.max.apply(null,rows.map(function(r){return Math.max(Math.abs(r.lv||0),Math.abs(r.rv||0));}).concat([1]));
-  var html='<div class="sbcmp-note">Sorted by magnitude of change (Last Meeting&rarr;Today) &mdash; biggest moves first. &#x1F504; = sector flipped sign (rotation).</div>';
-  var barColHdr=SB_TABLE_BARS?'<th style="width:150px">Last Meeting &middot; Today</th>':'<th style="width:90px"></th>';
-  html+='<table class="rt sbcmp-tbl"><thead><tr><th>Sector</th><th style="text-align:right">Last Meeting</th><th style="text-align:right">Today</th><th style="text-align:right">Change</th>'+barColHdr+'</tr></thead><tbody>';
+    return {s:s,lv:lv,rv:rv};
+  }).sort(function(a,b){return (b.rv||0)-(a.rv||0);});
+  var html='<table class="rt sbcmp-tbl"><thead><tr><th>Sector</th><th style="text-align:right">Last Meeting</th><th style="text-align:right">Today</th></tr></thead><tbody>';
   rows.forEach(function(r){
     var lvs=r.lv!=null?(r.lv>=0?'+':'')+r.lv.toFixed(1)+'%':'n/a';
     var rvs=r.rv!=null?(r.rv>=0?'+':'')+r.rv.toFixed(1)+'%':'n/a';
+    var lvcls=r.lv!=null?(r.lv>=0?'sbcmp-pos':'sbcmp-neg'):'';
     var rvcls=r.rv!=null?(r.rv>=0?'sbcmp-pos':'sbcmp-neg'):'';
-    var dstr=r.delta!=null?((r.delta>=0?'&#x25B2; +':'&#x25BC; ')+r.delta.toFixed(1)+'pp'):'n/a';
-    var dcls=r.delta!=null?(r.delta>=0?'sbcmp-pos':'sbcmp-neg'):'';
-    html+='<tr><td>'+r.s+(r.flip?' <span class="sbcmp-flip" title="Flipped sign">&#x1F504;</span>':'')+'</td>';
-    html+='<td style="text-align:right;color:var(--mu)">'+lvs+'</td>';
-    html+='<td style="text-align:right" class="'+rvcls+'"><strong>'+rvs+'</strong></td>';
-    html+='<td style="text-align:right" class="'+dcls+'">'+dstr+'</td>';
-    if(SB_TABLE_BARS){
-      function divBar(v,ghost){
-        if(v==null)return '<div class="sbcmp-dbar"></div>';
-        var pct=Math.min(Math.abs(v)/maxV*50,50);var left=v>=0?50:50-pct;
-        var color=ghost?'rgba(90,110,131,.4)':(v>=0?'#1E3A5F':'#9B2A20');
-        return '<div class="sbcmp-dbar'+(ghost?' sbcmp-dbar-ghost':'')+'"><div class="sbcmp-dbar-fill" style="left:'+left+'%;width:'+pct+'%;background:'+color+'"></div></div>';
-      }
-      html+='<td><div class="sbcmp-dbars">'+divBar(r.lv,true)+divBar(r.rv,false)+'</div></td></tr>';
-    } else {
-      var barPct=r.delta!=null?Math.min(Math.abs(r.delta)/maxD*100,100):0;
-      var barLeft=r.delta!=null&&r.delta<0?100-barPct:0;
-      var barColor=r.delta!=null&&r.delta>=0?'#1E3A5F':'#9B2A20';
-      html+='<td><div class="sbcmp-mbar"><div class="sbcmp-mfill" style="left:'+barLeft+'%;width:'+barPct+'%;background:'+barColor+'"></div></div></td></tr>';
-    }
+    html+='<tr><td>'+r.s+'</td>';
+    html+='<td style="text-align:right" class="'+lvcls+'">'+lvs+'</td>';
+    html+='<td style="text-align:right" class="'+rvcls+'"><strong>'+rvs+'</strong></td></tr>';
   });
   html+='</tbody></table>';
   wrap.innerHTML=html;
@@ -103,7 +65,7 @@ function renderSBCompareTable(){
 
 function toggleYear(yr){
   SB_YEARS[yr]=!SB_YEARS[yr];
-  var anyOn=['2017','2018','2019','2020','2021','2022','2023','2024','2025','2026'].some(function(y){return SB_YEARS[y];});
+  var anyOn=['2017','2018','2019','2020','2021','2022','2023','2024','2025','2026a','2026'].some(function(y){return SB_YEARS[y];});
   if(!anyOn){SB_YEARS[yr]=true;return;}
   var btn=document.querySelector('#sb-yearfilter [data-yr="'+yr+'"]');
   if(btn)btn.classList.toggle('active',SB_YEARS[yr]);
@@ -495,18 +457,14 @@ function renderRotTbl(){
 
 function renderSectorBars(){
   var wrap=document.getElementById('sb-wrap');if(!wrap)return;
-  var YL=['2017','2018','2019','2020','2021','2022','2023','2024','2025','2026'];
+  var YL=['2017','2018','2019','2020','2021','2022','2023','2024','2025','2026a','2026'];
   var active=YL.filter(function(y){return SB_YEARS[y];});
   function val(s,yr){var rr=SECTOR_RETS[s]['r'+yr.slice(2)];if(rr==null)return null;return SB_MODE==='abs'?rr:(rr-SP500_BMK[yr]);}
-  function rank26(s){
-    if(SB_2026==='may')return sbMayVal(s,'left');
-    return sbMayVal(s,'right');
-  }
-  var sectors=Object.keys(SDATA).slice().filter(function(s){return SB_SECTORS[s];}).sort(function(a,b){return rank26(b)-rank26(a);});
+  var sectors=Object.keys(SDATA).slice().filter(function(s){return SB_SECTORS[s];}).sort(function(a,b){return (SECTOR_RETS[b].r26||0)-(SECTOR_RETS[a].r26||0);});
   var maxV=0;
   sectors.forEach(function(s){
     active.forEach(function(yr){
-      var v=yr==='2026'?rank26(s):val(s,yr);
+      var v=val(s,yr);
       if(v!=null&&Math.abs(v)>maxV)maxV=Math.abs(v);
     });
   });
@@ -516,17 +474,14 @@ function renderSectorBars(){
     var pct=Math.min(Math.abs(v)/maxV*50,50);var sign=v>=0?'+':'';var color=v>=0?'#1E3A5F':'#9B2A20';var left=v>=0?50:50-pct;
     return '<div class="sby'+hlClass+'"><span class="sbyl">'+label+'</span><div class="sbtr-div"><div class="sbfl-div" style="left:'+left+'%;width:'+pct+'%;background:'+color+'"></div></div><span class="sbi'+keyClass+'" style="color:'+(v>=0?'var(--pos)':'var(--neg)')+';font-weight:600">'+sign+v.toFixed(1)+'%</span></div>';
   }
+  var YR_LABEL={'2026a':'26.1','2026':'26.2'};
   var html='';
   sectors.forEach(function(s){var d=SDATA[s],k=d.key?' key':'';
     html+='<div class="sbr"><span class="sbn'+k+'">'+s+'</span><div class="sbbs">';
     active.forEach(function(yr){
-      if(yr==='2026'){
-        var v=rank26(s),lbl=SB_2026==='may'?'Last':'Now';
-        html+=bar(lbl,v,' sby-hl',k);
-        return;
-      }
       var v=val(s,yr);
-      html+=bar(yr,v,'','');
+      var isCur=(yr==='2026a'||yr==='2026');
+      html+=bar(YR_LABEL[yr]||yr,v,isCur?' sby-hl':'',isCur?k:'');
     });
     html+='</div>'+(d.key?'<span class="sbtag">&#x2B06; ROTATION</span>':'<span style="min-width:68px"></span>')+'</div>';
   });
@@ -535,9 +490,7 @@ function renderSectorBars(){
 
 // Expose to window for inline onclick handlers
 window.setSBMode = setSBMode;
-window.setSB2026 = setSB2026;
 window.toggleSBCompareTable = toggleSBCompareTable;
-window.toggleSBTableBars = toggleSBTableBars;
 window.toggleYear = toggleYear;
 window.toggleSBSec = toggleSBSec;
 window.sbSecAll = sbSecAll;
@@ -574,17 +527,17 @@ export function loadMarketAnalysisPage() {
 
   // Sector returns from SPDR ETFs (actual market data)
   SECTOR_RETS = {
-    "Industrials":{r17:21.62,r18:-15.73,r19:27.83,r20:8.12,r21:19.54,r22:-6.79,r23:16.07,r24:15.73,r25:17.59,r26:16.2,q1_26:4.3,q2_26:19.4},
-    "Technology":{r17:32.24,r18:-3.99,r19:48.83,r20:42.08,r21:34.58,r22:-28.78,r23:54.68,r24:21.82,r25:22.8,r26:27.32,q1_26:-7.7,q2_26:32.3},
-    "Consumer Staples":{r17:10.02,r18:-11.11,r19:24.42,r20:6.45,r21:14.35,r22:-2.66,r23:-3.38,r24:8.8,r25:-0.88,r26:10.7,q1_26:5.5,q2_26:6.9},
-    "Communication Services":{r17:null,r18:null,r19:29.86,r20:25.05,r21:17.67,r22:-39.08,r23:51.41,r24:33.68,r25:21.2,r26:-5.37,q1_26:-5.8,q2_26:-9.0},
-    "Energy":{r17:-4.06,r18:-21.05,r19:4.65,r20:-35.98,r21:44.85,r22:58.0,r23:-4.15,r24:0.85,r25:5.76,r26:42.34,q1_26:37.0,q2_26:18.8},
-    "Real Estate":{r17:7.12,r18:-6.07,r19:24.11,r20:-5.94,r21:43.13,r22:-28.57,r23:8.48,r24:0.72,r25:0,r26:11.72,q1_26:1.2,q2_26:9.1},
-    "Materials":{r17:21.79,r18:-17.23,r19:21.7,r20:18.27,r21:25.1,r22:-13.89,r23:10.12,r24:-2.03,r25:8.23,r26:18.06,q1_26:10.2,q2_26:12.1},
-    "Utilities":{r17:8.46,r18:0.28,r19:21.84,r20:-4.02,r21:15.46,r22:-1.16,r23:-10.17,r24:19.63,r25:12.7,r26:0.19,q1_26:7.5,q2_26:6.2},
-    "Health Care":{r17:19.93,r18:3.11,r19:19.25,r20:10.43,r21:26.04,r22:-3.99,r23:0.39,r24:0.63,r25:12.8,r26:12.8,q1_26:-5.3,q2_26:2.5},
-    "Financials":{r17:20.04,r18:-15.48,r19:30.06,r20:-5.08,r21:34.34,r22:-12.58,r23:9.94,r24:28.4,r25:13.44,r26:4.95,q1_26:-9.9,q2_26:-2.1},
-    "Consumer Discretionary":{r17:21.24,r18:-0.74,r19:27.85,r20:28.31,r21:27.53,r22:-36.97,r23:38.44,r24:26.42,r25:5.65,r26:-1.16,q1_26:-8.7,q2_26:-1.8}
+    "Industrials":{r17:21.62,r18:-15.73,r19:27.83,r20:8.12,r21:19.54,r22:-6.79,r23:16.07,r24:15.73,r25:17.59,r26a:11.14,r26:16.2},
+    "Technology":{r17:32.24,r18:-3.99,r19:48.83,r20:42.08,r21:34.58,r22:-28.78,r23:54.68,r24:21.82,r25:22.8,r26a:35.97,r26:27.32},
+    "Consumer Staples":{r17:10.02,r18:-11.11,r19:24.42,r20:6.45,r21:14.35,r22:-2.66,r23:-3.38,r24:8.8,r25:-0.88,r26a:5.6,r26:10.7},
+    "Communication Services":{r17:null,r18:null,r19:29.86,r20:25.05,r21:17.67,r22:-39.08,r23:51.41,r24:33.68,r25:21.2,r26a:-1.79,r26:-5.37},
+    "Energy":{r17:-4.06,r18:-21.05,r19:4.65,r20:-35.98,r21:44.85,r22:58.0,r23:-4.15,r24:0.85,r25:5.76,r26a:28.16,r26:42.34},
+    "Real Estate":{r17:7.12,r18:-6.07,r19:24.11,r20:-5.94,r21:43.13,r22:-28.57,r23:8.48,r24:0.72,r25:0,r26a:7.24,r26:11.72},
+    "Materials":{r17:21.79,r18:-17.23,r19:21.7,r20:18.27,r21:25.1,r22:-13.89,r23:10.12,r24:-2.03,r25:8.23,r26a:12.28,r26:18.06},
+    "Utilities":{r17:8.46,r18:0.28,r19:21.84,r20:-4.02,r21:15.46,r22:-1.16,r23:-10.17,r24:19.63,r25:12.7,r26a:0.96,r26:0.19},
+    "Health Care":{r17:19.93,r18:3.11,r19:19.25,r20:10.43,r21:26.04,r22:-3.99,r23:0.39,r24:0.63,r25:12.8,r26a:-4.5,r26:12.8},
+    "Financials":{r17:20.04,r18:-15.48,r19:30.06,r20:-5.08,r21:34.34,r22:-12.58,r23:9.94,r24:28.4,r25:13.44,r26a:-6.1,r26:4.95},
+    "Consumer Discretionary":{r17:21.24,r18:-0.74,r19:27.85,r20:28.31,r21:27.53,r22:-36.97,r23:38.44,r24:26.42,r25:5.65,r26a:-1.02,r26:-1.16}
   };
 
   // Initialize sector filter

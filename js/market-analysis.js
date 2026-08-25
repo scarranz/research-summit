@@ -45,6 +45,13 @@ function toggleSBCompareTable(show){
   if(show)renderSBCompareTable();
 }
 
+var SB_TABLE_BARS=true;
+
+function toggleSBTableBars(show){
+  SB_TABLE_BARS=show;
+  renderSBCompareTable();
+}
+
 function sbMayVal(s,side){
   var rr = side==='left' ? OLD_SECTOR_R26[s] : SECTOR_RETS[s].r26;
   var bench = side==='left' ? SP500_MAY26 : SP500_TODAY26;
@@ -61,22 +68,34 @@ function renderSBCompareTable(){
     return {s:s,lv:lv,rv:rv,delta:delta,flip:flip};
   }).sort(function(a,b){return Math.abs(b.delta||0)-Math.abs(a.delta||0);});
   var maxD=Math.max.apply(null,rows.map(function(r){return Math.abs(r.delta||0);}).concat([1]));
+  var maxV=Math.max.apply(null,rows.map(function(r){return Math.max(Math.abs(r.lv||0),Math.abs(r.rv||0));}).concat([1]));
   var html='<div class="sbcmp-note">Sorted by magnitude of change (Last Meeting&rarr;Today) &mdash; biggest moves first. &#x1F504; = sector flipped sign (rotation).</div>';
-  html+='<table class="rt sbcmp-tbl"><thead><tr><th>Sector</th><th style="text-align:right">Last Meeting</th><th style="text-align:right">Today</th><th style="text-align:right">Change</th><th style="width:90px"></th></tr></thead><tbody>';
+  var barColHdr=SB_TABLE_BARS?'<th style="width:150px">Last Meeting &middot; Today</th>':'<th style="width:90px"></th>';
+  html+='<table class="rt sbcmp-tbl"><thead><tr><th>Sector</th><th style="text-align:right">Last Meeting</th><th style="text-align:right">Today</th><th style="text-align:right">Change</th>'+barColHdr+'</tr></thead><tbody>';
   rows.forEach(function(r){
     var lvs=r.lv!=null?(r.lv>=0?'+':'')+r.lv.toFixed(1)+'%':'n/a';
     var rvs=r.rv!=null?(r.rv>=0?'+':'')+r.rv.toFixed(1)+'%':'n/a';
     var rvcls=r.rv!=null?(r.rv>=0?'sbcmp-pos':'sbcmp-neg'):'';
     var dstr=r.delta!=null?((r.delta>=0?'&#x25B2; +':'&#x25BC; ')+r.delta.toFixed(1)+'pp'):'n/a';
     var dcls=r.delta!=null?(r.delta>=0?'sbcmp-pos':'sbcmp-neg'):'';
-    var barPct=r.delta!=null?Math.min(Math.abs(r.delta)/maxD*100,100):0;
-    var barLeft=r.delta!=null&&r.delta<0?100-barPct:0;
-    var barColor=r.delta!=null&&r.delta>=0?'#1E3A5F':'#9B2A20';
     html+='<tr><td>'+r.s+(r.flip?' <span class="sbcmp-flip" title="Flipped sign">&#x1F504;</span>':'')+'</td>';
     html+='<td style="text-align:right;color:var(--mu)">'+lvs+'</td>';
     html+='<td style="text-align:right" class="'+rvcls+'"><strong>'+rvs+'</strong></td>';
     html+='<td style="text-align:right" class="'+dcls+'">'+dstr+'</td>';
-    html+='<td><div class="sbcmp-mbar"><div class="sbcmp-mfill" style="left:'+barLeft+'%;width:'+barPct+'%;background:'+barColor+'"></div></div></td></tr>';
+    if(SB_TABLE_BARS){
+      function divBar(v,ghost){
+        if(v==null)return '<div class="sbcmp-dbar"></div>';
+        var pct=Math.min(Math.abs(v)/maxV*50,50);var left=v>=0?50:50-pct;
+        var color=ghost?'rgba(90,110,131,.4)':(v>=0?'#1E3A5F':'#9B2A20');
+        return '<div class="sbcmp-dbar'+(ghost?' sbcmp-dbar-ghost':'')+'"><div class="sbcmp-dbar-fill" style="left:'+left+'%;width:'+pct+'%;background:'+color+'"></div></div>';
+      }
+      html+='<td><div class="sbcmp-dbars">'+divBar(r.lv,true)+divBar(r.rv,false)+'</div></td></tr>';
+    } else {
+      var barPct=r.delta!=null?Math.min(Math.abs(r.delta)/maxD*100,100):0;
+      var barLeft=r.delta!=null&&r.delta<0?100-barPct:0;
+      var barColor=r.delta!=null&&r.delta>=0?'#1E3A5F':'#9B2A20';
+      html+='<td><div class="sbcmp-mbar"><div class="sbcmp-mfill" style="left:'+barLeft+'%;width:'+barPct+'%;background:'+barColor+'"></div></div></td></tr>';
+    }
   });
   html+='</tbody></table>';
   wrap.innerHTML=html;
@@ -518,6 +537,7 @@ function renderSectorBars(){
 window.setSBMode = setSBMode;
 window.setSB2026 = setSB2026;
 window.toggleSBCompareTable = toggleSBCompareTable;
+window.toggleSBTableBars = toggleSBTableBars;
 window.toggleYear = toggleYear;
 window.toggleSBSec = toggleSBSec;
 window.sbSecAll = sbSecAll;

@@ -35,7 +35,8 @@ var HF_TODAY_EXTRA = {
   'TDS': -19.29,
   'TSM': 34.96,
   'WCC': 37.76,
-  'CRWV': 20.44
+  'CRWV': 20.44,
+  'TBBB': 52.2
 };
 
 function todayReturn(ticker){

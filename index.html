@@ -177,29 +177,32 @@
 
 <!-- MARKET ANALYSIS TAB -->
 <div id="tp-rot" class="tp">
-  <div class="srow">
-    <div class="sc" style="border-top-color:#177A4E"><div class="sl">S&amp;P 500 YTD 2026</div><div class="sv" style="color:#177A4E;font-size:20px">+10.5% &rarr; +11%</div><div class="ss">May 31st &rarr; Today</div></div>
-    <div class="sc" style="border-top-color:#177A4E"><div class="sl">QQQ YTD 2026</div><div class="sv" style="color:#177A4E;font-size:20px">+20% &rarr; +14.5%</div><div class="ss">May 31st &rarr; Today</div></div>
-    <div class="sc" style="border-top-color:#177A4E"><div class="sl">Positive YTD 2026</div><div class="sv" style="color:#177A4E">348</div><div class="ss">69% of companies</div></div>
-    <div class="sc" style="border-top-color:#1E3A5F"><div class="sl">Beating S&amp;P 500</div><div class="sv">224</div><div class="ss">vs +12.3% benchmark</div></div>
+  <div class="srow" id="ma-srow">
+    <div class="sc" style="border-top-color:#177A4E"><div class="sl">S&amp;P 500 YTD</div><div class="sv" id="ma-spy-ytd" style="color:#177A4E;font-size:20px">&mdash;</div><div class="ss">Live once connected</div></div>
+    <div class="sc" style="border-top-color:#177A4E"><div class="sl">QQQ YTD</div><div class="sv" id="ma-qqq-ytd" style="color:#177A4E;font-size:20px">&mdash;</div><div class="ss">Live once connected</div></div>
+    <div class="sc" style="border-top-color:#177A4E"><div class="sl">Positive YTD 2026</div><div class="sv" id="ma-positive-ytd" style="color:#177A4E">&mdash;</div><div class="ss" id="ma-positive-ytd-sub">&nbsp;</div></div>
+    <div class="sc" style="border-top-color:#1E3A5F"><div class="sl">Beating S&amp;P 500</div><div class="sv" id="ma-beating-sp500">&mdash;</div><div class="ss" id="ma-beating-sp500-sub">&nbsp;</div></div>
   </div>
   <div class="sec">
-    <div class="sechdr"><span class="sect">Sector Alpha &mdash; Avg Annual Return by Sector</span><span class="secn">SPDR sector ETFs &middot; 2026 1 = last meeting (May 19), 2026 2 = today &mdash; select both for a side-by-side comparison</span></div>
+    <div class="sechdr"><span class="sect">Sector Alpha &mdash; Avg Annual Return by Sector</span><span class="secn">SPDR sector ETFs &middot; the current year is always YTD-through-today &middot; mix any years and any elapsed months in the same view</span></div>
     <div class="card">
       <div class="sb-secrow" id="sb-secrow"></div>
       <div class="sbl">
-      <div class="sb-toggle" id="sb-yearfilter" style="gap:6px;padding:3px;flex-wrap:wrap">
-        <button class="sb-tbtn active" data-yr="2017" onclick="toggleYear('2017')">2017</button>
-        <button class="sb-tbtn active" data-yr="2018" onclick="toggleYear('2018')">2018</button>
-        <button class="sb-tbtn active" data-yr="2019" onclick="toggleYear('2019')">2019</button>
-        <button class="sb-tbtn active" data-yr="2020" onclick="toggleYear('2020')">2020</button>
-        <button class="sb-tbtn active" data-yr="2021" onclick="toggleYear('2021')">2021</button>
-        <button class="sb-tbtn active" data-yr="2022" onclick="toggleYear('2022')">2022</button>
-        <button class="sb-tbtn active" data-yr="2023" onclick="toggleYear('2023')">2023</button>
-        <button class="sb-tbtn active" data-yr="2024" onclick="toggleYear('2024')">2024</button>
-        <button class="sb-tbtn active" data-yr="2025" onclick="toggleYear('2025')">2025</button>
-        <button class="sb-tbtn active" data-yr="2026a" onclick="toggleYear('2026a')">2026 1</button>
-        <button class="sb-tbtn active" data-yr="2026" onclick="toggleYear('2026')">2026 2</button>
+      <div class="sb-secrow" id="sb-yearfilter">
+        <span class="sb-secrow-lbl">Years</span>
+        <span class="sb-secchip" data-yr="2017" onclick="toggleYear('2017')">2017</span>
+        <span class="sb-secchip" data-yr="2018" onclick="toggleYear('2018')">2018</span>
+        <span class="sb-secchip" data-yr="2019" onclick="toggleYear('2019')">2019</span>
+        <span class="sb-secchip" data-yr="2020" onclick="toggleYear('2020')">2020</span>
+        <span class="sb-secchip" data-yr="2021" onclick="toggleYear('2021')">2021</span>
+        <span class="sb-secchip active" data-yr="2022" onclick="toggleYear('2022')">2022</span>
+        <span class="sb-secchip active" data-yr="2023" onclick="toggleYear('2023')">2023</span>
+        <span class="sb-secchip active" data-yr="2024" onclick="toggleYear('2024')">2024</span>
+        <span class="sb-secchip active" data-yr="2025" onclick="toggleYear('2025')">2025</span>
+        <span class="sb-secchip active" data-yr="ytd" onclick="toggleYear('ytd')">YTD</span>
+      </div>
+      <div class="sb-secrow" id="sb-monthfilter">
+        <span class="sb-secrow-lbl">Months</span>
       </div>
       <div class="sb-toggle">
         <button class="sb-tbtn active" id="sb-abs" onclick="setSBMode('abs')">Absolute</button>
@@ -317,13 +320,6 @@
 
   <div class="hf-mainpane active" data-pane="overall">
     <div class="sechdr" style="margin-bottom:18px">
-      <span class="sect">S&amp;P 500 &amp; QQQ Benchmark</span>
-      <span class="secn" id="hf-ovbench-secn">Last meeting (May 31) vs. today</span>
-    </div>
-    <div class="card" style="margin-bottom:30px" id="hf-ovbench-card">
-      <div class="inv-bench" id="hf-ovbench"></div>
-    </div>
-    <div class="sechdr" style="margin-bottom:18px">
       <span class="sect">Cumulative Return vs S&amp;P 500 &mdash; 2015&ndash;2025</span>
       <div style="display:flex;align-items:center;gap:14px">
         <span class="secn">Four managers benchmarked to the index</span>
@@ -376,16 +372,18 @@ Each tile is a GICS sector, colored by the average YTD return of the companies t
     <div class="sechdr" style="margin-bottom:18px">
       <span class="sect">Superinvestor Holdings &amp; Performance</span>
       <div style="display:flex;align-items:center;gap:14px">
-        <span class="secn">Top 5 holdings at Q1 close vs. Q2 close 2026 (Q2 highlighted) &middot; click a card for the full holdings analysis</span>
-        <button type="button" class="hf-showall-btn" id="hf-editall-btn" style="display:none" onclick="openAllEditModal()">&#9998; Edit Then/Now</button>
+        <span class="secn">Top holdings from the latest 13F on file (Q2 2026) &middot; click a card for the full holdings analysis</span>
+        <div class="sb-toggle" id="hf-topn-toggle">
+          <button type="button" class="sb-tbtn" data-topn="3" onclick="hfSetTopN(3)">Top 3</button>
+          <button type="button" class="sb-tbtn active" data-topn="5" onclick="hfSetTopN(5)">Top 5</button>
+        </div>
         <button type="button" class="hf-showall-btn" id="hf-check13f" onclick="openCheck13FPanel()">Check for new 13Fs</button>
         <button type="button" class="hf-showall-btn" id="hf-showall" style="display:none" onclick="showAllInvestors()">Show all</button>
       </div>
     </div>
-    <div class="inv-bench" id="inv-bench"></div>
     <div class="inv-grid" id="inv-grid"></div>
     <p style="margin-top:16px;font-size:11px;color:var(--mu);line-height:1.6">
-      Holdings: SEC 13F filings, Q1 2026 (filed mid-May) vs. Q2 2026 (most recent on file) &middot; Each holding&rsquo;s return is its own stock price move from Jan 1 to that quarter&rsquo;s close, not the fund&rsquo;s overall return &middot; Fund-level returns: H1 2026 (through June 30, 2026) &middot; Buffett (BRK.B price), Ackman (PSH NAV), Tepper (Bloomberg), and Loeb (Third Point investor letters) are real, sourced figures &middot; &#x26A0; other funds&rsquo; H1 2026 returns are estimated by weighting each fund&rsquo;s disclosed 13F holdings by their actual Q1/Q2 2026 stock performance, since none of those funds publish real-time returns
+      Holdings: SEC 13F filings, Q2 2026 (most recent on file) &middot; Each holding&rsquo;s return is its own stock price move from Jan 1 to today, not the fund&rsquo;s overall return &middot; Fund-level returns: H1 2026 (through June 30, 2026) &middot; Buffett (BRK.B price), Ackman (PSH NAV), Tepper (Bloomberg), and Loeb (Third Point investor letters) are real, sourced figures &middot; &#x26A0; other funds&rsquo; H1 2026 returns are estimated by weighting each fund&rsquo;s disclosed 13F holdings by their actual quarterly stock performance, since none of those funds publish real-time returns
     </p>
   </div>
 </div>

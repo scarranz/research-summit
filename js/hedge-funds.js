@@ -1,180 +1,22 @@
 // hedge-funds.js — extracted from summit-research-portal.html
-import { INVESTORS, SP500_REF, SP500_MAY31, SP500_TODAY_HF, QQQ_B26, QQQ_TODAY26, HF_FUNDS, HF_BMK, HF_AYEARS, YEARS, SP500, IMGS, ALL_STOCKS } from './portal-data.js';
-import { fetchInvestorReturns, fetchInvestorHoldings, fetchHoldingsByTicker, fetchInvestorLetters, replaceInvestorHoldings, syncLatest13F, getFileUrl, fetchReturnOverrides, saveReturnOverride } from './api.js';
+import { INVESTORS, HF_FUNDS, HF_BMK, HF_AYEARS, YEARS, SP500, IMGS, ALL_STOCKS } from './portal-data.js';
+import { fetchInvestorReturns, fetchInvestorHoldings, fetchHoldingsByTicker, fetchInvestorLetters, replaceInvestorHoldings, syncLatest13F, getFileUrl } from './api.js';
 import { LOCAL_INVESTOR_RETURNS, LOCAL_INVESTOR_HOLDINGS, LOCAL_INVESTOR_LETTERS, NO_PUBLIC_LETTERS_NOTE } from './investor-local-seed.js';
 import { parse13FFile } from './investor-13f-parser.js';
-import { getCurrentUser } from './auth.js';
 
 let alphaChart = null, ALPHA_MODE = 'cum', HF_SEL = {}, HF_START = '2015';
 
-// ─── Manual return overrides (editable Then/Now holdings returns) ───
-// Only the designated editor's email gets an actual <input>; everyone else
-// still sees the corrected value (once someone with access has saved one),
-// just as plain text like every other cell.
-var HF_RETURN_EDITOR_EMAILS = ['scarranza@summit-mgmtx.com', 'dposternak@summit-mgmtx.com'];
-var HF_OVERRIDES = {};
+// ─── Top-N holdings toggle (Superinvestors grid) ───────────────
+// One global setting applied to every card at once: how many of the
+// latest 13F's top holdings each card's mini-table shows.
+var HF_TOPN = 5;
 
-function hfCanEditReturns(){
-  var u = getCurrentUser();
-  return !!(u && u.email && HF_RETURN_EDITOR_EMAILS.indexOf(u.email.toLowerCase()) !== -1);
+function hfSetTopN(n){
+  HF_TOPN = n;
+  document.querySelectorAll('#hf-topn-toggle .sb-tbtn').forEach(function(b){ b.classList.toggle('active', parseInt(b.getAttribute('data-topn'),10)===n); });
+  renderInvGrid();
 }
-
-function hfOverrideKey(investorKey, ticker, period){ return investorKey+'|'+ticker+'|'+period; }
-
-function hfGetOverride(investorKey, ticker, period){
-  var v = HF_OVERRIDES[hfOverrideKey(investorKey, ticker, period)];
-  return v==null ? null : v;
-}
-
-async function hfLoadOverrides(){
-  var res = await fetchReturnOverrides();
-  if (res.success) {
-    HF_OVERRIDES = {};
-    res.data.forEach(function(row){
-      HF_OVERRIDES[hfOverrideKey(row.investor_key, row.ticker, row.period)] = row.value_pct;
-    });
-    renderInvGrid();
-    renderBenchmark();
-    renderOverallBenchmark();
-  }
-}
-
-// ─── Edit modal: fund-level YTD + every holding's Then/Now, or the S&P
-// 500/QQQ benchmark, in one popup instead of inline in the card -- inline
-// inputs on the card body fought with the card's own click-to-open-detail
-// handler, so editing now only happens behind an explicit pencil button
-// that stops that click from propagating.
-function hfEditFieldRow(label, investorKey, ticker, thenVal, nowVal){
-  function field(period, val){
-    var iv = val!=null ? val.toFixed(2) : '';
-    return '<input class="icard-edit-input edit-modal-input" type="text" inputmode="decimal" value="'+iv+'" placeholder="n/a" data-inv="'+investorKey+'" data-ticker="'+ticker+'" data-period="'+period+'" onblur="hfSaveReturnEdit(this)" onkeydown="if(event.key===\'Enter\')this.blur()">';
-  }
-  return '<div class="edit-modal-row"><div class="edit-modal-label">'+label+'</div><div class="edit-modal-fields">'+field('then',thenVal)+'<span class="edit-modal-arrow">&rarr;</span>'+field('now',nowVal)+'<span class="edit-modal-pct">%</span></div></div>';
-}
-
-function hfInvestorEditSection(inv){
-  var body = '';
-  var ytdThenOv=hfGetOverride(inv.key,'__YTD__','then'), ytdNowOv=hfGetOverride(inv.key,'__YTD__','now');
-  body += hfEditFieldRow('Fund 2026 YTD', inv.key, '__YTD__', ytdThenOv!=null?ytdThenOv:inv.ytd2026, ytdNowOv!=null?ytdNowOv:inv.ytdNow);
-  if (inv.holdingsQ1 && inv.holdingsQ1.length){
-    body += '<div class="edit-modal-divider">Holdings</div>';
-    var q2ByT={}; (inv.holdings||[]).forEach(function(h){ q2ByT[h.t]=h; });
-    var q1Ts={}; inv.holdingsQ1.forEach(function(h){ q1Ts[h.t]=true; });
-    inv.holdingsQ1.forEach(function(h1){
-      var thenOv=hfGetOverride(inv.key,h1.t,'then'), nowOv=hfGetOverride(inv.key,h1.t,'now');
-      body += hfEditFieldRow(h1.t, inv.key, h1.t, thenOv!=null?thenOv:h1.ytd, nowOv!=null?nowOv:todayReturn(h1.t));
-    });
-    (inv.holdings||[]).forEach(function(h2){
-      if (q1Ts[h2.t]) return;
-      var nowOv=hfGetOverride(inv.key,h2.t,'now');
-      body += hfEditFieldRow(h2.t+' (new)', inv.key, h2.t, null, nowOv!=null?nowOv:todayReturn(h2.t));
-    });
-  }
-  return '<details class="edit-modal-inv"><summary>'+inv.name+' <span class="edit-modal-inv-fund">'+inv.fund+'</span></summary><div class="edit-modal-inv-body">'+body+'</div></details>';
-}
-
-// Single global edit entry point: one popup, everything editable in it --
-// the S&P 500/QQQ benchmark up top, then every investor collapsed under
-// its own <details> so the list stays navigable instead of one giant
-// scroll of 11 holdings tables at once.
-function openAllEditModal(){
-  var id = 'editall_' + Date.now();
-  var overlay = document.createElement('div');
-  overlay.className = 'modal-overlay im-overlay open';
-  overlay.id = id;
-  var spThen=hfGetOverride('__benchmark__','SP500','then'), spNow=hfGetOverride('__benchmark__','SP500','now');
-  var qqThen=hfGetOverride('__benchmark__','QQQ','then'), qqNow=hfGetOverride('__benchmark__','QQQ','now');
-  var body = '<div class="edit-modal-divider" style="margin-top:0">Benchmarks</div>';
-  body += hfEditFieldRow('S&amp;P 500', '__benchmark__', 'SP500', spThen!=null?spThen:SP500_MAY31, spNow!=null?spNow:SP500_TODAY_HF);
-  body += hfEditFieldRow('QQQ', '__benchmark__', 'QQQ', qqThen!=null?qqThen:QQQ_B26, qqNow!=null?qqNow:QQQ_TODAY26);
-  body += '<div class="edit-modal-divider">Superinvestors</div>';
-  INVESTORS.forEach(function(inv){ body += hfInvestorEditSection(inv); });
-  overlay.innerHTML =
-    '<div class="modal-card im-card" onclick="event.stopPropagation()">' +
-      '<div class="modal-header im-header">' +
-        '<div class="modal-title" style="font-size:15px">Edit Then/Now &mdash; Benchmarks &amp; Superinvestors</div>' +
-        '<button class="modal-close" id="'+id+'_close">&times;</button>' +
-      '</div>' +
-      '<div class="im-body edit-modal-body">' + body + '</div>' +
-      '<div class="modal-actions"><button class="modal-btn modal-btn--cancel" id="'+id+'_done">Done</button></div>' +
-    '</div>';
-  document.body.appendChild(overlay);
-  function closeAndRefresh(){ overlay.remove(); renderInvGrid(); renderBenchmark(); renderOverallBenchmark(); }
-  overlay.addEventListener('click', function(e){ if (e.target===overlay) closeAndRefresh(); });
-  document.getElementById(id+'_close').addEventListener('click', closeAndRefresh);
-  document.getElementById(id+'_done').addEventListener('click', closeAndRefresh);
-}
-window.openAllEditModal = openAllEditModal;
-
-function hfRefreshEditAllButton(){
-  var btn = document.getElementById('hf-editall-btn');
-  if (btn) btn.style.display = hfCanEditReturns() ? '' : 'none';
-}
-
-function hfSaveReturnEdit(inputEl){
-  var newVal = parseFloat(inputEl.value);
-  if (isNaN(newVal)) { inputEl.value = inputEl.defaultValue; return; }
-  var oldVal = parseFloat(inputEl.defaultValue);
-  if (newVal === oldVal) return;
-  var investorKey = inputEl.dataset.inv, ticker = inputEl.dataset.ticker, period = inputEl.dataset.period;
-  inputEl.classList.add('icard-edit-saving');
-  inputEl.classList.remove('icard-edit-saved','icard-edit-error');
-  saveReturnOverride(investorKey, ticker, period, newVal).then(function(res){
-    inputEl.classList.remove('icard-edit-saving');
-    if (res.success) {
-      HF_OVERRIDES[hfOverrideKey(investorKey, ticker, period)] = newVal;
-      inputEl.defaultValue = String(newVal);
-      inputEl.classList.add('icard-edit-saved');
-      setTimeout(function(){ inputEl.classList.remove('icard-edit-saved'); }, 1500);
-    } else {
-      inputEl.value = inputEl.defaultValue;
-      inputEl.classList.add('icard-edit-error');
-      setTimeout(function(){ inputEl.classList.remove('icard-edit-error'); }, 2000);
-      alert('Could not save this edit: '+res.error.message);
-    }
-  });
-}
-window.hfSaveReturnEdit = hfSaveReturnEdit;
-
-// Stock price returns as of today (Aug 21, 2026), for holdings tickers that
-// aren't S&P 500 constituents (so not already in ALL_STOCKS's r26). Real,
-// individually verified prices vs. each stock's Dec 31, 2025 close -- not
-// derived from the Q1/Q2 13F-quarter figures stored per holding.
-// Real price returns as of today (Aug 21-24, 2026 close, whichever was
-// most recently available), independently verified vs. each stock's Dec
-// 31, 2025 close. ASML uses Santiago's direct correction (+56%, replacing
-// a stale +86% Q2-close figure) since it's a specific singular correction,
-// not re-derived by us. CBRS and SUNB have no Jan-1 baseline -- both are
-// 2026 IPOs/spinoffs (Cerebras ~May 2026, Sunbelt Rentals Mar 2 2026) --
-// so they're left out and render as n/a rather than guess.
-var HF_TODAY_EXTRA = {
-  'ASML': 56.0,
-  'AER': 2.64,
-  'BN': -8.54,
-  'CP': 28.59,
-  'CRS': 51.55,
-  'EWZ': 10.70,
-  'FERG': 6.21,
-  'HHH': -16.32,
-  'INSM': -28.77,
-  'NTRA': 43.06,
-  'QSR': 19.55,
-  'RPRX': 58.71,
-  'RSP': 15.85,
-  'SGI': -27.97,
-  'TDS': -19.29,
-  'TSM': 34.96,
-  'WCC': 37.76,
-  'CRWV': 20.44,
-  'TBBB': 52.2
-};
-
-function todayReturn(ticker){
-  var s=ALL_STOCKS.find(function(x){return x.t===ticker;});
-  if(s&&s.r26!=null)return s.r26;
-  if(HF_TODAY_EXTRA[ticker]!=null)return HF_TODAY_EXTRA[ticker];
-  return null;
-}
+window.hfSetTopN = hfSetTopN;
 
 function hfList(){return HF_FUNDS.concat([{name:'S&P 500 (SPY)',color:'#94A3B8',r:HF_BMK,bench:true}]);}
 
@@ -271,44 +113,6 @@ function toggleChartVisibility(show){
   if(show&&alphaChart){requestAnimationFrame(function(){alphaChart.resize();});}
 }
 
-function hfBenchVal(ticker,period,fallback){
-  var ov=hfGetOverride('__benchmark__',ticker,period);
-  return ov!=null?ov:fallback;
-}
-
-function renderBenchmark(){
-  var el=document.getElementById('inv-bench');if(!el||!SP500_REF)return;
-  var spThen=hfBenchVal('SP500','then',SP500_MAY31), spNow=hfBenchVal('SP500','now',SP500_TODAY_HF);
-  var qqThen=hfBenchVal('QQQ','then',QQQ_B26), qqNow=hfBenchVal('QQQ','now',QQQ_TODAY26);
-  var html='<div class="inv-bench-left"><div class="inv-bench-title">S&amp;P 500 Benchmark</div><div class="inv-bench-sub">All managers measured against this</div></div>';
-  html+='<div class="inv-bench-mets">';
-  html+='<div class="inv-bench-m"><div class="inv-bench-ml">S&amp;P 500 (May 31 &rarr; Today)</div><div class="inv-bench-mv">'+(spThen>=0?'+':'')+spThen.toFixed(1)+'% &rarr; '+(spNow>=0?'+':'')+spNow.toFixed(1)+'%</div></div>';
-  html+='<div class="inv-bench-m"><div class="inv-bench-ml">QQQ (May 31 &rarr; Today)</div><div class="inv-bench-mv">'+(qqThen>=0?'+':'')+qqThen.toFixed(1)+'% &rarr; '+(qqNow>=0?'+':'')+qqNow.toFixed(1)+'%</div></div>';
-  html+='</div>';
-  el.innerHTML=html;
-}
-
-// ─── Overall tab: S&P 500 benchmark, Q1 -> Q2 2026 arrow format ───
-// Same visual language as the Superinvestors benchmark bar, but scoped to
-// the Overall tab and shown as "Q1 value -> Q2 value" so both quarters are
-// visible at once instead of a click-to-toggle single value.
-
-function renderOverallBenchmark(){
-  var el=document.getElementById('hf-ovbench');if(!el||!SP500_REF)return;
-  var spThen=hfBenchVal('SP500','then',SP500_MAY31), spNow=hfBenchVal('SP500','now',SP500_TODAY_HF);
-  var qqThen=hfBenchVal('QQQ','then',QQQ_B26), qqNow=hfBenchVal('QQQ','now',QQQ_TODAY26);
-  var cumThen=((1+SP500_REF.cum/100)*(1+spThen/100)-1)*100;
-  var cumNow=((1+SP500_REF.cum/100)*(1+spNow/100)-1)*100;
-  var html='<div class="inv-bench-left"><div class="inv-bench-title">S&amp;P 500 &amp; QQQ Benchmark</div><div class="inv-bench-sub">Last meeting (May 31) &rarr; today</div></div>';
-  html+='<div class="inv-bench-mets">';
-  html+='<div class="inv-bench-m"><div class="inv-bench-ml">Cumul. 2019&ndash;2026 (S&amp;P)</div><div class="inv-bench-mv">'+(cumThen>=0?'+':'')+cumThen.toFixed(1)+'% &rarr; '+(cumNow>=0?'+':'')+cumNow.toFixed(1)+'%</div></div>';
-  html+='<div class="inv-bench-m"><div class="inv-bench-ml">S&amp;P 500 2026</div><div class="inv-bench-mv">'+(spThen>=0?'+':'')+spThen.toFixed(1)+'% &rarr; '+(spNow>=0?'+':'')+spNow.toFixed(1)+'%</div></div>';
-  html+='<div class="inv-bench-m"><div class="inv-bench-ml">QQQ 2026</div><div class="inv-bench-mv">'+(qqThen>=0?'+':'')+qqThen.toFixed(1)+'% &rarr; '+(qqNow>=0?'+':'')+qqNow.toFixed(1)+'%</div></div>';
-  html+='</div>';
-  el.innerHTML=html;
-  var secn=document.getElementById('hf-ovbench-secn');if(secn)secn.textContent='Last meeting (May 31) vs. today';
-}
-
 // ─── Hide / Show all (main grid) ──────────────────────────────
 // Per-card "hide" so a crowded grid can be trimmed to just the
 // investors someone actually tracks; persisted in localStorage so it
@@ -355,10 +159,7 @@ function renderInvGrid(){
   INVESTORS.filter(function(inv){ return hidden.indexOf(inv.key)===-1; }).forEach(function(inv){
     var isSummit=inv.key==='summit';
     var photo=inv.photo?(IMGS[inv.photo]||''):'';
-    var hasPerf=inv.cum!=null;var cumClr=hasPerf?(inv.cum>=300?'gold':inv.cum>=171?'gp':''):'';
-    var q1html=inv.q1!=null
-      ?'<div class="icard-mv '+(inv.q1>=0?'gp':'rn')+'">'+(inv.q1>0?'+':'')+inv.q1.toFixed(2)+'%</div>'
-      :'<div class="icard-mv" style="color:var(--mu);font-size:11px">n/a</div>';
+    var hasPerf=inv.cum!=null;
     var cumLbl=inv.q1!=null?'Cumul. 2019&ndash;Q2 26':'Cumul. 2019&ndash;2025';
     html+='<div class="icard'+(isSummit?' summit':'')+'" onclick="openInvestorDetail(\''+inv.key+'\')">';
     html+='<button type="button" class="icard-hide-btn" title="Hide this card" onclick="hideInvestor(\''+inv.key+'\', event)">&times;</button>';
@@ -371,62 +172,24 @@ function renderInvGrid(){
     // Metrics
     var annualized=hasPerf?Math.pow(1+inv.cum/100,1/7)-1:null;
     var annStr=hasPerf?(annualized*100).toFixed(1)+'%':'n/a';
-    var ytdThenOv=hfGetOverride(inv.key,'__YTD__','then');
-    var ytdNowOv=hfGetOverride(inv.key,'__YTD__','now');
-    var ytd2026=ytdThenOv!=null?ytdThenOv:(inv.ytd2026!=null?inv.ytd2026:null);
-    var ytdNow=ytdNowOv!=null?ytdNowOv:(inv.ytdNow!=null?inv.ytdNow:null);
-    var ytdThenStr=ytd2026!=null?((ytd2026>=0?'+':'')+ytd2026.toFixed(1)+'%'):'n/a';
+    var ytd=inv.ytdNow!=null?inv.ytdNow:(inv.ytd2026!=null?inv.ytd2026:null);
+    var ytdIsEst=inv.ytdNow!=null?inv.ytdNowEst:inv.ytdEst;
     var estTag=' <span style="font-size:9px;color:var(--mu)">est</span>';
-    var ytdVal;
-    if(ytdNow!=null){
-      var ytdNowStr=(ytdNow>=0?'+':'')+ytdNow.toFixed(1)+'%';
-      ytdVal=ytdThenStr+(inv.ytdEst?estTag:'')+' &rarr; '+ytdNowStr+(inv.ytdNowEst?estTag:'');
-    } else {
-      ytdVal=ytdThenStr+(inv.ytdEst?estTag:'');
-    }
+    var ytdVal=ytd!=null?((ytd>=0?'+':'')+ytd.toFixed(1)+'%'+(ytdIsEst?estTag:'')):'n/a';
     html+='<div class="icard-mets">';
     html+='<div class="icard-mets-row">';
     html+='<div class="icard-met"><div class="icard-ml">'+cumLbl+'</div><div class="icard-mv">'+(hasPerf?((inv.cum>0?'+':'')+inv.cum.toFixed(1)+'%'+(inv.est?' <span style="font-size:9px;color:var(--mu)">est</span>':'')):'<span style="color:var(--mu);font-size:11px">n/a</span>')+'</div></div>';
     html+='<div class="icard-met"><div class="icard-ml">Annualized (7yr)</div><div class="icard-mv">'+(hasPerf?((annualized>=0?'+':'')+annStr):'<span style="color:var(--mu);font-size:11px">n/a</span>')+'</div></div>';
     html+='</div>';
-    html+='<div class="icard-met-full"><div class="icard-ml">2026 YTD'+(ytdNow!=null?' (Then &rarr; Now)':'')+'</div><div class="icard-mv" style="'+(ytdNow!=null?'font-size:13px;white-space:nowrap':'')+'">'+ytdVal+'</div></div>';
+    html+='<div class="icard-met-full"><div class="icard-ml">2026 YTD</div><div class="icard-mv">'+ytdVal+'</div></div>';
     html+='</div>';
-    // Holdings: Q1 -> Q2 2026, one row per company, kept in Q1's own rank
-    // order (not re-sorted by Q2 weight) so the same ticker lines up on the
-    // same row across both quarters. Q2-only names (not in the Q1 top-5)
-    // are appended below, marked NEW.
-    if(inv.holdingsQ1&&inv.holdingsQ1.length){
-      var q2ByT={};inv.holdings.forEach(function(h){q2ByT[h.t]=h;});
-      var q1Ts={};inv.holdingsQ1.forEach(function(h){q1Ts[h.t]=true;});
-      function returnCellStatic(ticker,baseVal,period){
-        var ov=hfGetOverride(inv.key,ticker,period);
-        var val=ov!=null?ov:baseVal;
-        var cls=val!=null?(val>=0?'rp':'rn'):'rna';
-        var str=val!=null?(val>=0?'+':'')+val.toFixed(1)+'%':'n/a';
-        return '<td class="nr icard-arrow-m '+cls+'">'+str+'</td>';
-      }
-      html+='<table class="icard-arrow-tbl"><thead><tr><th rowspan="2" class="icard-arrow-tick">Ticker</th><th colspan="2">Allocation</th><th colspan="2">Return</th></tr><tr><th class="nr">Then</th><th class="nr">Now</th><th class="nr">Then</th><th class="nr">Now</th></tr></thead><tbody>';
-      inv.holdingsQ1.forEach(function(h1){
-        var h2=q2ByT[h1.t];
-        var wThen=h1.w.toFixed(1)+'%', wNow=h2?h2.w.toFixed(1)+'%':'&mdash;';
-        html+='<tr class="icard-arrow-row'+(h2?'':' icard-arrow-dropped')+'" title="'+h1.co+'"><td><span class="iticker">'+h1.t+'</span>'+(h2?'':' <span class="icard-cmp-newbadge" style="color:var(--mu);border-color:var(--mu)">DROPPED</span>')+'</td>';
-        html+='<td class="nr icard-arrow-m">'+wThen+'</td><td class="nr icard-arrow-m">'+wNow+'</td>';
-        html+=returnCellStatic(h1.t,h1.ytd,'then')+returnCellStatic(h1.t,todayReturn(h1.t),'now')+'</tr>';
-      });
-      inv.holdings.forEach(function(h2){
-        if(q1Ts[h2.t])return;
-        html+='<tr class="icard-arrow-row" title="'+h2.co+'"><td><span class="iticker">'+h2.t+'</span> <span class="icard-cmp-newbadge">NEW</span></td>';
-        html+='<td class="nr icard-arrow-m">&mdash;</td><td class="nr icard-arrow-m">'+h2.w.toFixed(1)+'%</td>';
-        html+='<td class="nr icard-arrow-m rna">n/a</td>'+returnCellStatic(h2.t,todayReturn(h2.t),'now')+'</tr>';
-      });
-      html+='</tbody></table>';
-      html+='<div class="icard-arrow-legend">Then = Q1 2026 close (Mar 31) &middot; Now allocation = Q2 2026 13F (latest filed) &middot; Now return = today&rsquo;s price (Aug 21, 2026) &middot; rows kept in Q1&rsquo;s original order</div>';
-    } else {
-      html+='<table class="icard-tbl"><thead><tr><th>Ticker</th><th>Company</th><th class="nr">% Port</th><th class="nr">YTD</th></tr></thead><tbody>';
-      inv.holdings.forEach(function(h){var pc=h.ytd>=0?'rp':'rn';var ys=(h.ytd>=0?'+':'')+h.ytd.toFixed(2)+'%';var nb=h.nw?' <span style="font-size:8px;font-weight:700;letter-spacing:.5px;color:#2563EB;border:1px solid #2563EB;border-radius:3px;padding:0 3px;vertical-align:middle">NEW</span>':'';
-        html+='<tr><td><span class="iticker">'+h.t+'</span></td><td><span class="ico">'+h.co+'</span>'+nb+'</td><td class="nr" style="color:var(--mu)">'+h.w.toFixed(2)+'%</td><td class="nr"><span class="rpill '+pc+'">'+ys+'</span></td></tr>';});
-      html+='</tbody></table>';
-    }
+    // Holdings: top N of the latest 13F on file (Q2 2026), N set by the
+    // global toggle above the grid — same list for every card.
+    var topHoldings=(inv.holdings||[]).slice(0,HF_TOPN);
+    html+='<table class="icard-tbl"><thead><tr><th>Ticker</th><th>Company</th><th class="nr">% Port</th><th class="nr">YTD</th></tr></thead><tbody>';
+    topHoldings.forEach(function(h){var pc=h.ytd>=0?'rp':'rn';var ys=(h.ytd>=0?'+':'')+h.ytd.toFixed(2)+'%';var nb=h.nw?' <span style="font-size:8px;font-weight:700;letter-spacing:.5px;color:#2563EB;border:1px solid #2563EB;border-radius:3px;padding:0 3px;vertical-align:middle">NEW</span>':'';
+      html+='<tr><td><span class="iticker">'+h.t+'</span></td><td><span class="ico">'+h.co+'</span>'+nb+'</td><td class="nr" style="color:var(--mu)">'+h.w.toFixed(2)+'%</td><td class="nr"><span class="rpill '+pc+'">'+ys+'</span></td></tr>';});
+    html+='</tbody></table>';
     if(inv.est)html+='<div class="est-note">&#x26A0; Annual returns estimated from portfolio data.</div>';
     html+='</div>';
   });
@@ -1138,40 +901,36 @@ function renderHoldingsCompareTable(rows, periods, investorKey, expanded) {
   return html;
 }
 
+// Every move type (new / sold / up / down) competes on the same axis — the
+// absolute size of the change — so a brand-new 4% position and a 3.5pp trim
+// are ranked against each other honestly instead of new/sold always
+// crowding out the biggest actual re-weightings. Capped at the 8 largest.
+var IVD_MOVES_CAP = 8;
+
 function generateMovesSummary(rows, periods) {
   if (periods.length < 2) return '';
-  var newPos = [], sold = [], up = [], down = [];
+  var moves = [];
   rows.forEach(function(r) {
     var prev = r.cells[r.cells.length - 2], curr = r.cells[r.cells.length - 1];
     var move = classifyMove(prev, curr);
-    if (move === 'new') newPos.push(r);
-    else if (move === 'sold') sold.push(r);
-    else if (move === 'up') up.push({ row: r, delta: curr - prev });
-    else if (move === 'down') down.push({ row: r, delta: curr - prev });
+    if (move === 'new') moves.push({ row: r, type: 'new', prev: prev, curr: curr, mag: curr });
+    else if (move === 'sold') moves.push({ row: r, type: 'sold', prev: prev, curr: curr, mag: prev });
+    else if (move === 'up') moves.push({ row: r, type: 'up', prev: prev, curr: curr, mag: Math.abs(curr - prev) });
+    else if (move === 'down') moves.push({ row: r, type: 'down', prev: prev, curr: curr, mag: Math.abs(curr - prev) });
   });
-  up.sort(function(a, b) { return b.delta - a.delta; });
-  down.sort(function(a, b) { return a.delta - b.delta; });
+  moves.sort(function(a, b) { return b.mag - a.mag; });
+  moves = moves.slice(0, IVD_MOVES_CAP);
 
-  function moveLine(r, cls, text) {
-    return '<li class="ivd-move-item ' + cls + '">' + ivdLogo(r.ticker, 'ivd-move-logo', r.companyName) + '<span class="ivd-move-txt">' + text + '</span></li>';
+  function moveLine(o, text) {
+    return '<li class="ivd-move-item ' + o.type + '">' + ivdLogo(o.row.ticker, 'ivd-move-logo', o.row.companyName) + '<span class="ivd-move-txt">' + text + '</span></li>';
   }
 
-  var lines = [];
-  newPos.forEach(function(r) {
-    var curr = r.cells[r.cells.length - 1];
-    lines.push(moveLine(r, 'new', '<b>New position: ' + esc(r.ticker || r.companyName) + '</b> — enters at ' + curr.toFixed(2) + '% of the portfolio.'));
-  });
-  sold.forEach(function(r) {
-    var prev = r.cells[r.cells.length - 2];
-    lines.push(moveLine(r, 'sold', '<b>Exited: ' + esc(r.ticker || r.companyName) + '</b> — was ' + prev.toFixed(2) + '%, no longer held.'));
-  });
-  up.slice(0, 3).forEach(function(o) {
-    var prev = o.row.cells[o.row.cells.length - 2], curr = o.row.cells[o.row.cells.length - 1];
-    lines.push(moveLine(o.row, 'up', '<b>Increased ' + esc(o.row.ticker || o.row.companyName) + '</b> from ' + prev.toFixed(2) + '% to ' + curr.toFixed(2) + '% (+' + o.delta.toFixed(2) + 'pp).'));
-  });
-  down.slice(0, 3).forEach(function(o) {
-    var prev = o.row.cells[o.row.cells.length - 2], curr = o.row.cells[o.row.cells.length - 1];
-    lines.push(moveLine(o.row, 'down', '<b>Trimmed ' + esc(o.row.ticker || o.row.companyName) + '</b> from ' + prev.toFixed(2) + '% to ' + curr.toFixed(2) + '% (' + o.delta.toFixed(2) + 'pp).'));
+  var lines = moves.map(function(o) {
+    var r = o.row, ticker = esc(r.ticker || r.companyName);
+    if (o.type === 'new') return moveLine(o, '<b>New position: ' + ticker + '</b> — enters at ' + o.curr.toFixed(2) + '% of the portfolio.');
+    if (o.type === 'sold') return moveLine(o, '<b>Exited: ' + ticker + '</b> — was ' + o.prev.toFixed(2) + '%, no longer held.');
+    if (o.type === 'up') return moveLine(o, '<b>Increased ' + ticker + '</b> from ' + o.prev.toFixed(2) + '% to ' + o.curr.toFixed(2) + '% (+' + (o.curr - o.prev).toFixed(2) + 'pp).');
+    return moveLine(o, '<b>Trimmed ' + ticker + '</b> from ' + o.prev.toFixed(2) + '% to ' + o.curr.toFixed(2) + '% (' + (o.curr - o.prev).toFixed(2) + 'pp).');
   });
 
   var hdr = '<div class="ivd-summary-hdr">' + esc(periodLabel(periods[periods.length - 2])) + ' &rarr; ' + esc(periodLabel(periods[periods.length - 1])) + '</div>';
@@ -1579,10 +1338,313 @@ function renderHoldingsSection(rootId, investorKey, holdings, photoUrl, initials
   if (!allPeriods.length) {
     el.innerHTML = '<div class="im-empty">No holdings on file yet — upload a 13F to get started.</div>';
     var sumEl = document.getElementById(rootId + '_summary'); if (sumEl) sumEl.innerHTML = '';
+    var allocEl = document.getElementById(rootId + '_alloc'); if (allocEl) allocEl.innerHTML = '';
     return;
   }
   var state = { refPeriod: allPeriods[allPeriods.length - 1], mode: 'quarterly', count: Math.min(HOLDINGS_DEFAULT_COUNT, allPeriods.length), chartVisible: true, chartTopN: 8, chartMode: 'position', tableExpanded: false };
   renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials);
+  renderAllocationSection(rootId, investorKey, holdings, allPeriods);
+}
+
+// ─── Holdings Allocation Over Time ─────────────────────────────
+// A user-picked set of tickers, plotted as % of portfolio across this
+// investor's own quarterly 13F history (separate from the single-period
+// composition pie above). Chips work like the Alpha chart's fund chips:
+// add a ticker from the dropdown, click a chip to dim/undim it (dimming
+// pulls it from the chart AND the table under it in the same step, since
+// "is this chip active" is the one predicate both render from), × to drop
+// it entirely. Colors are assigned in first-added order from a fixed,
+// CVD-validated 7-hue set — slot "blue" is deliberately left out of that
+// set and reserved for the Summit overlay, so a ticker's own line and its
+// Summit comparison are never the same hue.
+var IVD_ALLOC_COLORS = ['#eb6834','#1baf7a','#eda100','#e87ba4','#008300','#4a3aa7','#e34948'];
+var IVD_ALLOC_SUMMIT_COLOR = '#2a78d6';
+var IVD_ALLOC_CAP = IVD_ALLOC_COLORS.length;
+
+var IVD_ALLOC_STATE = {};
+var IVD_ALLOC_CHARTS = {};
+var IVD_ALLOC_SUMMIT_PROMISE = null;
+
+function ivdAllocState(key, allPeriods) {
+  if (!IVD_ALLOC_STATE[key]) {
+    IVD_ALLOC_STATE[key] = { quarters: Math.min(8, allPeriods.length), added: [], hidden: {}, showSummit: false, yZoom: null };
+  }
+  return IVD_ALLOC_STATE[key];
+}
+
+function destroyIvdAllocChart(key) {
+  if (IVD_ALLOC_CHARTS[key]) { IVD_ALLOC_CHARTS[key].destroy(); delete IVD_ALLOC_CHARTS[key]; }
+}
+
+// Ticker -> periodKey -> weight_pct, for one investor across every period
+// on file — keyed on ticker (not cusip) since the add/remove picker is
+// itself ticker-based.
+function tickerWeightSeries(holdings, investorKey) {
+  var map = {};
+  holdings.filter(function(h) { return h.investor_key === investorKey && h.ticker; }).forEach(function(h) {
+    var pk = periodOptionValue({ year: h.year, quarter: h.quarter });
+    map[h.ticker] = map[h.ticker] || {};
+    // Sum rather than overwrite -- a ticker can legitimately have more than
+    // one row in the same quarter (e.g. common stock + warrant sharing a
+    // display ticker but distinct CUSIPs, same case rowKey() above guards
+    // against), and this picker is ticker-based rather than cusip-based.
+    map[h.ticker][pk] = (map[h.ticker][pk] || 0) + (Number(h.weight_pct) || 0);
+  });
+  return map;
+}
+
+function ivdAllocFetchSummit() {
+  if (!IVD_ALLOC_SUMMIT_PROMISE) IVD_ALLOC_SUMMIT_PROMISE = loadInvestorProfileData('summit');
+  return IVD_ALLOC_SUMMIT_PROMISE;
+}
+
+function ivdAllocToggle(key, ticker) {
+  var state = IVD_ALLOC_STATE[key]; if (!state) return;
+  state.hidden[ticker] = !state.hidden[ticker];
+  ivdAllocRerender(key);
+}
+window.ivdAllocToggle = ivdAllocToggle;
+
+function ivdAllocRemove(key, ticker) {
+  var state = IVD_ALLOC_STATE[key]; if (!state) return;
+  state.added = state.added.filter(function(t) { return t !== ticker; });
+  delete state.hidden[ticker];
+  ivdAllocRerender(key);
+}
+window.ivdAllocRemove = ivdAllocRemove;
+
+var IVD_ALLOC_CTX = {}; // key -> { rootId, holdings, allPeriods }
+function ivdAllocRerender(key) {
+  var ctx = IVD_ALLOC_CTX[key]; if (!ctx) return;
+  renderAllocationSection(ctx.rootId, key, ctx.holdings, ctx.allPeriods);
+}
+
+// x is a categorical quarter axis (not continuous), so per the portal's
+// chart standard (docs/CHART_ENGINE_REFERENCE.md §0.2 item 1: "pass
+// onX=null when the x-axis is categorical and unwindowable"), only the
+// y-axis is draggable here. Listeners are scoped to the canvas itself
+// (not window) so they're garbage-collected along with it on re-render,
+// rather than accumulating across renders.
+function ivdAllocAttachZoom(wrapEl, canvas, state, rerender) {
+  var band = document.createElement('div');
+  band.className = 'ivd-alloc-zoomband';
+  var dragging = false, startPx = 0;
+  function chart() { return IVD_ALLOC_CHARTS[wrapEl.getAttribute('data-invkey')]; }
+  function endDrag(e) {
+    if (!dragging) return;
+    dragging = false;
+    if (band.parentNode) band.parentNode.removeChild(band);
+    var ch = chart(); if (!ch || !ch.scales.y) return;
+    var rect = canvas.getBoundingClientRect();
+    var y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+    if (Math.abs(y - startPx) < 6) return; // a click, not a drag
+    var v1 = ch.scales.y.getValueForPixel(startPx), v2 = ch.scales.y.getValueForPixel(y);
+    state.yZoom = [Math.min(v1, v2), Math.max(v1, v2)];
+    rerender();
+  }
+  canvas.addEventListener('mousedown', function(e) {
+    var ch = chart(); if (!ch || !ch.scales.y) return;
+    var rect = canvas.getBoundingClientRect();
+    var area = ch.chartArea;
+    var y = e.clientY - rect.top;
+    if (y < area.top || y > area.bottom) return;
+    dragging = true; startPx = y;
+    band.style.top = y + 'px'; band.style.height = '0px'; band.style.left = area.left + 'px'; band.style.width = (area.right - area.left) + 'px';
+    wrapEl.appendChild(band);
+  });
+  canvas.addEventListener('mousemove', function(e) {
+    if (!dragging) return;
+    var rect = canvas.getBoundingClientRect();
+    var y = e.clientY - rect.top;
+    var top = Math.min(startPx, y), h = Math.abs(y - startPx);
+    band.style.top = top + 'px'; band.style.height = h + 'px';
+  });
+  canvas.addEventListener('mouseup', endDrag);
+  canvas.addEventListener('mouseleave', function(e) { if (dragging) endDrag(e); });
+  canvas.addEventListener('dblclick', function() {
+    if (!state.yZoom) return;
+    state.yZoom = null;
+    rerender();
+  });
+}
+
+function ivdAllocTable(rows, periods) {
+  if (!rows.length) return '';
+  var html = '<div class="ivd-cmp-wrap"><table class="icard-tbl ivd-cmp-tbl"><thead><tr><th>Ticker</th>';
+  periods.forEach(function(p) { html += '<th class="nr">' + esc(periodLabel(p)) + '</th>'; });
+  html += '</tr></thead><tbody>';
+  rows.forEach(function(r) {
+    html += '<tr><td><span class="iticker" style="color:' + r.color + '">' + esc(r.ticker) + (r.isSummit ? ' <span style="font-size:9px;color:' + IVD_ALLOC_SUMMIT_COLOR + '">(Summit)</span>' : '') + '</span></td>';
+    r.values.forEach(function(v) { html += '<td class="nr">' + (v == null ? '&mdash;' : v.toFixed(2) + '%') + '</td>'; });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function renderAllocationSection(rootId, investorKey, holdings, allPeriods) {
+  var el = document.getElementById(rootId + '_alloc');
+  if (!el) return;
+  IVD_ALLOC_CTX[investorKey] = { rootId: rootId, holdings: holdings, allPeriods: allPeriods };
+  destroyIvdAllocChart(investorKey);
+  if (allPeriods.length < 2) {
+    el.innerHTML = '<div class="im-section-lbl">Holdings Allocation Over Time</div><div class="im-empty">Need at least two quarters on file to chart allocation over time.</div>';
+    return;
+  }
+
+  var state = ivdAllocState(investorKey, allPeriods);
+  if (state.quarters > allPeriods.length) state.quarters = allPeriods.length;
+  if (state.quarters < 2) state.quarters = Math.min(2, allPeriods.length);
+
+  var series = tickerWeightSeries(holdings, investorKey);
+  var allTickers = Object.keys(series).sort();
+
+  if (!state.added.length) {
+    // Default to the current top 3 holdings so the chart isn't empty on open.
+    var latest = allPeriods[allPeriods.length - 1];
+    var latestMap = periodWeightMap(holdings, investorKey, latest);
+    state.added = Object.keys(latestMap).map(function(k) { return latestMap[k]; })
+      .filter(function(h) { return h.ticker; })
+      .sort(function(a, b) { return b.weight_pct - a.weight_pct; })
+      .slice(0, 3).map(function(h) { return h.ticker; });
+  }
+
+  var periods = allPeriods.slice(Math.max(0, allPeriods.length - state.quarters));
+  var shared = investorKey === 'summit' ? {} : summitTickerSet();
+  var canShowSummit = investorKey !== 'summit' && state.added.some(function(t) { return !state.hidden[t] && shared[t]; });
+  if (!canShowSummit) state.showSummit = false;
+
+  var html = '<div class="ivd-chart-hdr"><div class="im-section-lbl" style="margin-bottom:0">Holdings Allocation Over Time</div>' +
+    '<div class="ivd-pp-stepper">' +
+      '<button type="button" class="ivd-step-btn ivd-alloc-q-minus"' + (state.quarters <= 2 ? ' disabled' : '') + ' title="Fewer quarters">&minus;</button>' +
+      '<span class="ivd-pp-count">' + state.quarters + ' quarter' + (state.quarters === 1 ? '' : 's') + '</span>' +
+      '<button type="button" class="ivd-step-btn ivd-alloc-q-plus"' + (state.quarters >= allPeriods.length ? ' disabled' : '') + ' title="More quarters">+</button>' +
+    '</div></div>';
+
+  html += '<div class="sb-secrow" style="margin:10px 0">';
+  html += '<span class="sb-secrow-lbl">Holdings</span>';
+  state.added.forEach(function(t, i) {
+    var color = IVD_ALLOC_COLORS[i % IVD_ALLOC_COLORS.length];
+    var on = !state.hidden[t];
+    html += '<span class="sb-secchip' + (on ? ' active' : '') + '" style="' + (on ? 'background:' + color + ';color:#fff;border-color:' + color : '') + '" onclick="ivdAllocToggle(\'' + esc(investorKey) + '\',\'' + esc(t) + '\')" title="Click to show/hide &middot; the &times; removes it">' + esc(t) +
+      '<span class="ivd-alloc-x" onclick="event.stopPropagation();ivdAllocRemove(\'' + esc(investorKey) + '\',\'' + esc(t) + '\')">&times;</span></span>';
+  });
+  if (state.added.length < IVD_ALLOC_CAP) {
+    var avail = allTickers.filter(function(t) { return state.added.indexOf(t) === -1; });
+    if (avail.length) {
+      html += '<select class="fsel ivd-alloc-add"><option value="">+ Add holding&hellip;</option>' +
+        avail.map(function(t) { return '<option value="' + esc(t) + '">' + esc(t) + '</option>'; }).join('') + '</select>';
+    }
+  } else {
+    html += '<span style="font-size:11px;color:var(--mu)">Remove a holding to add another (max ' + IVD_ALLOC_CAP + ')</span>';
+  }
+  html += '</div>';
+
+  if (canShowSummit) {
+    html += '<label class="hf-chart-toggle" style="margin-bottom:10px" title="Overlay Summit’s own allocation for shared holdings, as a dashed blue line">' +
+      '<input type="checkbox" class="ivd-alloc-summit-toggle"' + (state.showSummit ? ' checked' : '') + '>' +
+      '<span class="hf-chart-toggle-track"><span class="hf-chart-toggle-thumb"></span></span>' +
+      '<span class="hf-chart-toggle-txt">Summit&rsquo;s allocation (dashed blue)</span></label>';
+  }
+
+  var activeTickers = state.added.filter(function(t) { return !state.hidden[t]; });
+  if (!activeTickers.length) {
+    html += '<div class="im-empty">Add a holding above to chart its allocation over time.</div>';
+    el.innerHTML = html;
+    wireAllocControls(rootId, investorKey, allPeriods);
+    return;
+  }
+
+  html += '<div class="ivd-alloc-wrap" data-invkey="' + esc(investorKey) + '" style="position:relative;height:320px;margin-top:4px"><canvas class="ivd-alloc-canvas"></canvas></div>';
+  html += '<div class="ivd-alloc-tbl-holder"></div>';
+  el.innerHTML = html;
+
+  // Build the row data once — the chart and the table under it both read
+  // from this exact array, so hiding a chip removes a ticker from both at
+  // the same time (§0.2 item 2).
+  var tableRows = [];
+  var datasets = [];
+  state.added.forEach(function(t, i) {
+    if (state.hidden[t]) return;
+    var color = IVD_ALLOC_COLORS[i % IVD_ALLOC_COLORS.length];
+    var vals = periods.map(function(p) { var s = series[t]; return s ? (s[periodOptionValue(p)] != null ? s[periodOptionValue(p)] : null) : null; });
+    tableRows.push({ ticker: t, color: color, values: vals, isSummit: false });
+    datasets.push({ label: t, data: vals, borderColor: color, backgroundColor: color, borderWidth: 2, pointRadius: 3, pointHoverRadius: 6, spanGaps: false, tension: .2 });
+  });
+
+  el.querySelector('.ivd-alloc-tbl-holder').innerHTML = ivdAllocTable(tableRows, periods);
+
+  function buildChart(extraDatasets) {
+    var canvas = el.querySelector('.ivd-alloc-canvas');
+    if (!canvas || typeof Chart === 'undefined') return;
+    destroyIvdAllocChart(investorKey);
+    var all = datasets.concat(extraDatasets || []);
+    var chart = new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: { labels: periods.map(periodLabel), datasets: all },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'nearest', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: function(c) { return c.dataset.label + ': ' + (c.raw == null ? 'n/a' : (c.raw >= 0 ? '+' : '') + c.raw.toFixed(2) + '%'); } } },
+        },
+        scales: {
+          y: {
+            title: { display: true, text: 'Portfolio weight (%)', font: { size: 11 }, color: '#8A93A0' },
+            min: state.yZoom ? state.yZoom[0] : undefined,
+            max: state.yZoom ? state.yZoom[1] : undefined,
+            ticks: { color: '#8A93A0', font: { size: 10 }, callback: function(v) { return v + '%'; } },
+            grid: { color: '#EEF2F7' },
+          },
+          x: { grid: { display: false }, ticks: { color: '#8A93A0', font: { size: 10 } } },
+        },
+      },
+    });
+    IVD_ALLOC_CHARTS[investorKey] = chart;
+    var wrap = el.querySelector('.ivd-alloc-wrap');
+    ivdAllocAttachZoom(wrap, canvas, state, function() { renderAllocationSection(rootId, investorKey, holdings, allPeriods); });
+  }
+
+  if (canShowSummit && state.showSummit) {
+    ivdAllocFetchSummit().then(function(summitData) {
+      if (!IVD_ALLOC_CTX[investorKey] || document.getElementById(rootId + '_alloc') !== el) return; // navigated away
+      var summitSeries = tickerWeightSeries(summitData.holdings, 'summit');
+      var extra = [];
+      state.added.forEach(function(t) {
+        if (state.hidden[t] || !shared[t] || !summitSeries[t]) return;
+        var vals = periods.map(function(p) { var v = summitSeries[t][periodOptionValue(p)]; return v != null ? v : null; });
+        tableRows.push({ ticker: t, color: IVD_ALLOC_SUMMIT_COLOR, values: vals, isSummit: true });
+        extra.push({ label: t + ' (Summit)', data: vals, borderColor: IVD_ALLOC_SUMMIT_COLOR, backgroundColor: IVD_ALLOC_SUMMIT_COLOR, borderWidth: 2, borderDash: [6, 4], pointRadius: 2.5, pointHoverRadius: 5, spanGaps: false, tension: .2 });
+      });
+      el.querySelector('.ivd-alloc-tbl-holder').innerHTML = ivdAllocTable(tableRows, periods);
+      buildChart(extra);
+    });
+  } else {
+    buildChart([]);
+  }
+
+  wireAllocControls(rootId, investorKey, allPeriods);
+}
+
+function wireAllocControls(rootId, investorKey, allPeriods) {
+  var el = document.getElementById(rootId + '_alloc');
+  if (!el) return;
+  var state = ivdAllocState(investorKey, allPeriods);
+  function rerender() { renderAllocationSection(rootId, investorKey, IVD_ALLOC_CTX[investorKey].holdings, allPeriods); }
+  var qMinus = el.querySelector('.ivd-alloc-q-minus');
+  if (qMinus) qMinus.addEventListener('click', function() { state.quarters = Math.max(2, state.quarters - 1); rerender(); });
+  var qPlus = el.querySelector('.ivd-alloc-q-plus');
+  if (qPlus) qPlus.addEventListener('click', function() { state.quarters = Math.min(allPeriods.length, state.quarters + 1); rerender(); });
+  var addSel = el.querySelector('.ivd-alloc-add');
+  if (addSel) addSel.addEventListener('change', function() {
+    if (!addSel.value || state.added.length >= IVD_ALLOC_CAP) return;
+    state.added.push(addSel.value);
+    delete state.hidden[addSel.value];
+    rerender();
+  });
+  var summitToggle = el.querySelector('.ivd-alloc-summit-toggle');
+  if (summitToggle) summitToggle.addEventListener('change', function() { state.showSummit = summitToggle.checked; rerender(); });
 }
 
 // ─── Investor Detail page ─────────────────────────────────────
@@ -1591,11 +1653,14 @@ function renderHoldingsSection(rootId, investorKey, holdings, photoUrl, initials
 // top, the holdings comparison + auto-written summary of the biggest
 // moves, and Letters & Resources below.
 
+function destroyAllIvdAllocCharts() { Object.keys(IVD_ALLOC_CHARTS).forEach(destroyIvdAllocChart); }
+
 function openInvestorDetail(key) {
   var inv = INVESTORS.filter(function(i){ return i.key === key; })[0];
   var root = document.getElementById('inv-detailview');
   if (!inv || !root) return;
   destroyIvdChart();
+  destroyAllIvdAllocCharts();
 
   var photo = inv.photo ? (IMGS[inv.photo] || '') : '';
   var ini = inv.name.split(' ').slice(0,2).map(function(n){ return n[0]; }).join('');
@@ -1631,6 +1696,7 @@ function openInvestorDetail(key) {
       '<div id="ivd_cmp"><div class="im-loading">Loading…</div></div>' +
       '<div class="im-section-lbl" style="margin-top:18px">Recent Moves</div>' +
       '<div id="ivd_summary"></div>' +
+      '<div id="ivd_alloc" style="margin-top:18px"></div>' +
     '</div>' +
     '<div class="ivdpane" data-pane="resources">' +
       '<div class="im-section-lbl">Letters &amp; Resources</div>' +
@@ -1672,6 +1738,7 @@ function ivdTab(pane) {
 
 function closeInvestorDetail() {
   destroyIvdChart();
+  destroyAllIvdAllocCharts();
   var root = document.getElementById('inv-detailview');
   if (root) root.style.display = 'none';
   var grid = document.getElementById('inv-gridview');
@@ -2037,11 +2104,7 @@ export function loadHedgeFundsPage() {
   }
   renderFundChips();
   renderAlphaChart();
-  renderBenchmark();
-  renderOverallBenchmark();
   renderInvGrid();
   renderSectorHeatmap();
   populateStockLookupSelect();
-  hfRefreshEditAllButton();
-  hfLoadOverrides();
 }

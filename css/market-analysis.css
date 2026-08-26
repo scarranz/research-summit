@@ -23,6 +23,15 @@
   border-radius: 2px;
 }
 
+/* Years and Months filter rows sit inside .sbl (a flex row) alongside the
+   Absolute/Relative toggle -- force each to the full width so they stack
+   left-aligned, one below the other, instead of competing for space and
+   sitting side by side on wide screens. */
+.sbl .sb-secrow {
+  width: 100%;
+  margin-bottom: 0;
+}
+
 .sb-toggle {
   display: inline-flex;
   background: var(--surface);
@@ -113,14 +122,14 @@
 .sbrs {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 12px;
 }
 
 .sbr {
   display: flex;
   align-items: flex-start;
   gap: 11px;
-  padding-bottom: 20px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--bdr);
 }
 

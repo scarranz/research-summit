@@ -1,20 +1,53 @@
 // market-analysis.js — extracted from summit-research-portal.html
-import { ALL_STOCKS, SP500_TODAY26, SP500_B25, SP500_B24, SP500_BMK, SP500_CUM3, SCOLS, SDATA, COMPANY_NAMES } from './portal-data.js';
+import { ALL_STOCKS, SP500_TODAY26, SP500_B25, SP500_B24, SP500_BMK, SP500_CUM3, SCOLS, SDATA, COMPANY_NAMES, QQQ_TODAY26 } from './portal-data.js';
+
+// ─── Market snapshot — single seam for "live" data ─────────────
+// Everything the top stat row needs funnels through this one function
+// (see getSectorYtd below for Sector Alpha's equivalent seam). Today it
+// derives its numbers from the same static ALL_STOCKS/SP500_TODAY26 data
+// already loaded for the rest of the tab, but every caller reads it here
+// rather than inlining its own computation — so wiring in a live feed
+// later (a fetch, a Supabase edge function) is a one-function swap, not a
+// hunt through the file.
+function getMarketSnapshot() {
+  var withYtd = ALL_STOCKS.filter(function(s) { return s.r26 != null; });
+  var positive = withYtd.filter(function(s) { return s.r26 > 0; });
+  var beating = withYtd.filter(function(s) { return s.r26 > SP500_TODAY26; });
+  return {
+    spyYtd: SP500_TODAY26,
+    qqqYtd: QQQ_TODAY26,
+    positiveCount: positive.length,
+    positivePct: withYtd.length ? Math.round(positive.length / withYtd.length * 100) : 0,
+    beatingCount: beating.length,
+    universeCount: withYtd.length,
+  };
+}
+
+// Sector Alpha's YTD bar reads through here rather than touching
+// SECTOR_RETS directly — same seam idea as getMarketSnapshot above, just
+// scoped to one sector at a time.
+function getSectorYtd(sector) {
+  var s = SECTOR_RETS[sector];
+  return s ? s.r26 : null;
+}
+
+function renderMarketSnapshot() {
+  var snap = getMarketSnapshot();
+  function set(id, text) { var el = document.getElementById(id); if (el) el.textContent = text; }
+  set('ma-spy-ytd', (snap.spyYtd >= 0 ? '+' : '') + snap.spyYtd.toFixed(1) + '%');
+  set('ma-qqq-ytd', (snap.qqqYtd >= 0 ? '+' : '') + snap.qqqYtd.toFixed(1) + '%');
+  set('ma-positive-ytd', String(snap.positiveCount));
+  set('ma-positive-ytd-sub', snap.positivePct + '% of companies');
+  set('ma-beating-sp500', String(snap.beatingCount));
+  set('ma-beating-sp500-sub', 'vs ' + (snap.spyYtd >= 0 ? '+' : '') + snap.spyYtd.toFixed(1) + '% benchmark');
+}
 
 let scatChart = null, tblData = [], tblData2 = [], sortCol = 5, sortAsc = false, sortCol2 = 7, sortAsc2 = false, IMAP = {}, SB_MODE = 'abs', SECTOR_RETS = {};
 
-// Sector Alpha "2026 1" YTD as it was hardcoded before this refresh (a
-// stale snapshot as of May 19, 2026). Kept only so the "2026 1" vs
-// "2026 2" (today) comparison has something real to diff against.
-var OLD_SECTOR_R26 = {
-  "Industrials": 11.14, "Technology": 35.97, "Consumer Staples": 5.6,
-  "Communication Services": -1.79, "Energy": 28.16, "Real Estate": 7.24,
-  "Materials": 12.28, "Utilities": 0.96, "Health Care": -4.5,
-  "Financials": -6.1, "Consumer Discretionary": -1.02
-};
-var SP500_MAY26 = 11.25;
-
-let SB_YEARS = {'2017':true,'2018':true,'2019':true,'2020':true,'2021':true,'2022':true,'2023':true,'2024':true,'2025':true,'2026a':true,'2026':true};
+// Sector Alpha's current-year slot is always YTD-through-today now (no more
+// "last meeting" vs "today" split) — 'ytd' reads SECTOR_RETS[s].r26, the
+// same live-ready figure the market snapshot above is built from.
+let SB_YEARS = {'2017':false,'2018':false,'2019':false,'2020':false,'2021':false,'2022':true,'2023':true,'2024':true,'2025':true,'ytd':true};
 let SB_SECTORS = {}, SS_EXCL = {};
 
 function safeVal(id){var e=document.getElementById(id);return e?e.value:'';}
@@ -24,48 +57,11 @@ function setSBMode(m){
   document.getElementById('sb-abs').classList.toggle('active',m==='abs');
   document.getElementById('sb-rel').classList.toggle('active',m==='rel');
   renderSectorBars();
-  renderSBCompareTable();
-}
-
-var SB_TABLE_ON=true;
-
-function toggleSBCompareTable(show){
-  SB_TABLE_ON=show;
-  var wrap=document.getElementById('sb-cmptable-wrap');if(!wrap)return;
-  wrap.style.display=show?'':'none';
-  if(show)renderSBCompareTable();
-}
-
-function sbMayVal(s,side){
-  var rr = side==='left' ? OLD_SECTOR_R26[s] : SECTOR_RETS[s].r26;
-  var bench = side==='left' ? SP500_MAY26 : SP500_TODAY26;
-  if(rr==null)return null;
-  return SB_MODE==='abs'?rr:(rr-bench);
-}
-
-function renderSBCompareTable(){
-  var wrap=document.getElementById('sb-cmptable-wrap');if(!wrap||!SB_TABLE_ON)return;
-  var rows=Object.keys(SECTOR_RETS).filter(function(s){return SB_SECTORS[s];}).map(function(s){
-    var lv=sbMayVal(s,'left'),rv=sbMayVal(s,'right');
-    return {s:s,lv:lv,rv:rv};
-  }).sort(function(a,b){return (b.rv||0)-(a.rv||0);});
-  var html='<table class="rt sbcmp-tbl"><thead><tr><th>Sector</th><th style="text-align:right">Last Meeting</th><th style="text-align:right">Today</th></tr></thead><tbody>';
-  rows.forEach(function(r){
-    var lvs=r.lv!=null?(r.lv>=0?'+':'')+r.lv.toFixed(1)+'%':'n/a';
-    var rvs=r.rv!=null?(r.rv>=0?'+':'')+r.rv.toFixed(1)+'%':'n/a';
-    var lvcls=r.lv!=null?(r.lv>=0?'sbcmp-pos':'sbcmp-neg'):'';
-    var rvcls=r.rv!=null?(r.rv>=0?'sbcmp-pos':'sbcmp-neg'):'';
-    html+='<tr><td>'+r.s+'</td>';
-    html+='<td style="text-align:right" class="'+lvcls+'">'+lvs+'</td>';
-    html+='<td style="text-align:right" class="'+rvcls+'"><strong>'+rvs+'</strong></td></tr>';
-  });
-  html+='</tbody></table>';
-  wrap.innerHTML=html;
 }
 
 function toggleYear(yr){
   SB_YEARS[yr]=!SB_YEARS[yr];
-  var anyOn=['2017','2018','2019','2020','2021','2022','2023','2024','2025','2026a','2026'].some(function(y){return SB_YEARS[y];});
+  var anyOn=['2017','2018','2019','2020','2021','2022','2023','2024','2025','ytd'].some(function(y){return SB_YEARS[y];});
   if(!anyOn){SB_YEARS[yr]=true;return;}
   var btn=document.querySelector('#sb-yearfilter [data-yr="'+yr+'"]');
   if(btn)btn.classList.toggle('active',SB_YEARS[yr]);
@@ -79,7 +75,6 @@ function toggleSBSec(sec){
   if(!anyOn){SB_SECTORS[sec]=true;return;}
   renderSBSecChips();
   renderSectorBars();
-  renderSBCompareTable();
 }
 
 function sbSecAll(on){
@@ -87,7 +82,6 @@ function sbSecAll(on){
   if(!on){var first=Object.keys(SB_SECTORS)[0];SB_SECTORS[first]=true;}
   renderSBSecChips();
   renderSectorBars();
-  renderSBCompareTable();
 }
 
 function renderSBSecChips(){
@@ -229,7 +223,7 @@ function renderTbl(){
   rows.forEach(function(r){var cc=SCOLS[r.sec]||'#888';
     var pctClr=r.pct>=70?'var(--pos)':r.pct>=40?'var(--text)':'var(--mu)';
     var caret=window.SEC_EXPANDED&&window.SEC_EXPANDED[r.sec]?'&#x25BC;':'&#x25B6;';
-    var secRet=SECTOR_RETS[r.sec]?SECTOR_RETS[r.sec].r26:null;
+    var secRet=getSectorYtd(r.sec);
     html+='<tr class="sec-row" data-sec="'+r.sec+'" onclick="toggleSecExp(\''+r.sec.replace(/\'/g,"\\'")+'\')" style="cursor:pointer">';
     html+='<td><span style="display:inline-block;width:13px;color:var(--mu);font-size:9px">'+caret+'</span><span class="sch" style="background:'+cc+'22;color:'+cc+';font-weight:600;margin-left:4px">'+r.sec+'</span></td>';
     html+='<td style="text-align:right;font-weight:700;font-size:14px;color:var(--navy)">'+r.m+'</td>';
@@ -455,43 +449,95 @@ function renderRotTbl(){
   body.innerHTML=html;
 }
 
+function sbBar(label,v,maxV,hlClass,keyClass){
+  if(v==null)return '<div class="sby'+hlClass+'"><span class="sbyl">'+label+'</span><div class="sbtr-div"></div><span class="sbi" style="color:var(--mu);font-weight:600">n/a</span></div>';
+  var pct=Math.min(Math.abs(v)/maxV*50,50);var sign=v>=0?'+':'';var color=v>=0?'#1E3A5F':'#9B2A20';var left=v>=0?50:50-pct;
+  return '<div class="sby'+hlClass+'"><span class="sbyl">'+label+'</span><div class="sbtr-div"><div class="sbfl-div" style="left:'+left+'%;width:'+pct+'%;background:'+color+'"></div></div><span class="sbi'+keyClass+'" style="color:'+(v>=0?'var(--pos)':'var(--neg)')+';font-weight:600">'+sign+v.toFixed(1)+'%</span></div>';
+}
+
+// Years and months are two independent filters that render TOGETHER in
+// the same row per sector, not an either/or view — pick any mix of years
+// (including YTD) and any mix of elapsed months and they all show up side
+// by side, so "YTD vs. May" or "2024 vs. 2025 vs. Aug" are both one view.
+var CUR_MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+// No live month-by-month sector feed exists yet, so every month cell
+// renders through sbBar's existing n/a state until one is connected;
+// MONTHLY_SECTOR_RETS['Technology']['Mar'] = 12.3 is the shape to fill.
+var MONTHLY_SECTOR_RETS = {};
+let SB_MONTHS = {};
+
+function monthsElapsedThisYear(){ return CUR_MONTH_NAMES.slice(0, new Date().getMonth()+1); }
+
+// One combined, ordered list of active periods — years first (in the
+// sb-yearfilter order, "ytd" last among them), then active elapsed
+// months — each entry carrying enough to both compute and label its bar.
+function sbActivePeriods(){
+  var YL=['2017','2018','2019','2020','2021','2022','2023','2024','2025','ytd'];
+  var periods=YL.filter(function(y){return SB_YEARS[y];}).map(function(y){
+    return {type:'year', key:y, label: y==='ytd'?'YTD':y};
+  });
+  var months=monthsElapsedThisYear().filter(function(m){return SB_MONTHS[m];});
+  return periods.concat(months.map(function(m){ return {type:'month', key:m, label:m}; }));
+}
+
+function sbPeriodVal(sector,p){
+  if(p.type==='year'){
+    var rr = p.key==='ytd' ? getSectorYtd(sector) : SECTOR_RETS[sector]['r'+p.key.slice(2)];
+    if(rr==null)return null;
+    var bench = p.key==='ytd' ? SP500_TODAY26 : SP500_BMK[p.key];
+    return SB_MODE==='abs'?rr:(rr-bench);
+  }
+  var sm=MONTHLY_SECTOR_RETS[sector];
+  return sm && sm[p.key]!=null ? sm[p.key] : null; // no monthly benchmark feed yet -- abs only
+}
+
 function renderSectorBars(){
   var wrap=document.getElementById('sb-wrap');if(!wrap)return;
-  var YL=['2017','2018','2019','2020','2021','2022','2023','2024','2025','2026a','2026'];
-  var active=YL.filter(function(y){return SB_YEARS[y];});
-  function val(s,yr){var rr=SECTOR_RETS[s]['r'+yr.slice(2)];if(rr==null)return null;return SB_MODE==='abs'?rr:(rr-SP500_BMK[yr]);}
-  var sectors=Object.keys(SDATA).slice().filter(function(s){return SB_SECTORS[s];}).sort(function(a,b){return (SECTOR_RETS[b].r26||0)-(SECTOR_RETS[a].r26||0);});
+  var sectors=Object.keys(SDATA).slice().filter(function(s){return SB_SECTORS[s];}).sort(function(a,b){return (getSectorYtd(b)||0)-(getSectorYtd(a)||0);});
+  var periods=sbActivePeriods();
+  if(!periods.length){ wrap.innerHTML='<div class="im-empty">Select at least one year or month.</div>'; return; }
+  var lastMonth=monthsElapsedThisYear().slice(-1)[0];
   var maxV=0;
   sectors.forEach(function(s){
-    active.forEach(function(yr){
-      var v=val(s,yr);
+    periods.forEach(function(p){
+      var v=sbPeriodVal(s,p);
       if(v!=null&&Math.abs(v)>maxV)maxV=Math.abs(v);
     });
   });
   maxV=Math.max(maxV, SB_MODE==='abs'?30:15);
-  function bar(label,v,hlClass,keyClass){
-    if(v==null)return '<div class="sby'+hlClass+'"><span class="sbyl">'+label+'</span><div class="sbtr-div"></div><span class="sbi" style="color:var(--mu);font-weight:600">n/a</span></div>';
-    var pct=Math.min(Math.abs(v)/maxV*50,50);var sign=v>=0?'+':'';var color=v>=0?'#1E3A5F':'#9B2A20';var left=v>=0?50:50-pct;
-    return '<div class="sby'+hlClass+'"><span class="sbyl">'+label+'</span><div class="sbtr-div"><div class="sbfl-div" style="left:'+left+'%;width:'+pct+'%;background:'+color+'"></div></div><span class="sbi'+keyClass+'" style="color:'+(v>=0?'var(--pos)':'var(--neg)')+';font-weight:600">'+sign+v.toFixed(1)+'%</span></div>';
-  }
-  var YR_LABEL={'2026a':'26.1','2026':'26.2'};
   var html='';
   sectors.forEach(function(s){var d=SDATA[s],k=d.key?' key':'';
     html+='<div class="sbr"><span class="sbn'+k+'">'+s+'</span><div class="sbbs">';
-    active.forEach(function(yr){
-      var v=val(s,yr);
-      var isCur=(yr==='2026a'||yr==='2026');
-      html+=bar(YR_LABEL[yr]||yr,v,isCur?' sby-hl':'',isCur?k:'');
+    periods.forEach(function(p){
+      var v=sbPeriodVal(s,p);
+      var isCur=(p.key==='ytd'||p.key===lastMonth);
+      html+=sbBar(p.label,v,maxV,isCur?' sby-hl':'',isCur?k:'');
     });
     html+='</div>'+(d.key?'<span class="sbtag">&#x2B06; ROTATION</span>':'<span style="min-width:68px"></span>')+'</div>';
   });
   wrap.innerHTML=html;
 }
 
+function toggleSBMonth(m){
+  SB_MONTHS[m]=!SB_MONTHS[m];
+  var anyOn=monthsElapsedThisYear().some(function(mm){return SB_MONTHS[mm];});
+  if(!anyOn){SB_MONTHS[m]=true;return;}
+  var btn=document.querySelector('#sb-monthfilter [data-mo="'+m+'"]');
+  if(btn)btn.classList.toggle('active',SB_MONTHS[m]);
+  renderSectorBars();
+}
+
+function renderSBMonthChips(){
+  var row=document.getElementById('sb-monthfilter');if(!row)return;
+  row.innerHTML='<span class="sb-secrow-lbl">Months</span>'+monthsElapsedThisYear().map(function(m){
+    return '<span class="sb-secchip'+(SB_MONTHS[m]?' active':'')+'" data-mo="'+m+'" onclick="toggleSBMonth(\''+m+'\')">'+m+'</span>';
+  }).join('');
+}
+
 // Expose to window for inline onclick handlers
 window.setSBMode = setSBMode;
-window.toggleSBCompareTable = toggleSBCompareTable;
 window.toggleYear = toggleYear;
+window.toggleSBMonth = toggleSBMonth;
 window.toggleSBSec = toggleSBSec;
 window.sbSecAll = sbSecAll;
 window.toggleSSExcl = toggleSSExcl;
@@ -541,16 +587,19 @@ export function loadMarketAnalysisPage() {
   };
 
   // Initialize sector filter
-  var allSecs = Object.keys(SECTOR_RETS).slice().sort(function(a, b) { return SECTOR_RETS[b].r26 - SECTOR_RETS[a].r26; });
+  var allSecs = Object.keys(SECTOR_RETS).slice().sort(function(a, b) { return getSectorYtd(b) - getSectorYtd(a); });
   allSecs.forEach(function(s) { SB_SECTORS[s] = true; SS_EXCL[s] = false; });
   SS_EXCL['Semiconductors'] = false;
   SS_EXCL['Hardware'] = false;
   SS_EXCL['Software'] = false;
+  // Years and months start unchecked — the user picks what to compare
+  // rather than seeing every year at once.
 
+  renderMarketSnapshot();
   renderSBSecChips();
   renderSSExclChips();
+  renderSBMonthChips();
   renderSectorBars();
-  renderSBCompareTable();
   renderTbl();
   renderTbl2();
   renderRotTbl();

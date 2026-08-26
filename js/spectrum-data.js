@@ -72,9 +72,9 @@ export const SPECTRUM_ZONES = [
    through to real work. null = we do not cover it in the portal today.
    `domain` is only the logo fallback when the ticker lookup misses.
 
-   `caveat` is set where the measured layer is known to misread the company —
-   not because the arithmetic is wrong but because of how the accounts are
-   drawn. Without it a reader would take the ghost at face value.             */
+   `caveat` is set where a company's filed numbers do not mean what they look
+   like they mean, so the metrics table beside them is read with the right
+   warning attached.                                                          */
 
 export const SPECTRUM_COMPANIES = [
   {
@@ -99,7 +99,7 @@ export const SPECTRUM_COMPANIES = [
     ticker: 'GOOGL', name: 'Alphabet', x: 18, y: 76.2, profile: 'googl', domain: 'abc.xyz',
     why: 'Search, YouTube and Android are distribution the company owns outright, ranked by models and run on silicon it designs itself. Software economics at the top of the funnel.',
     capital: 'The AI build-out turned one of the lightest businesses in the index into one of the heaviest spenders — on a revenue base large enough to absorb it better than its peers can.',
-    tension: 'Sits below Meta here — heavier — which is the reading you get counting capex in dollars. Against sales the order reverses, because the revenue base is roughly twice as large. The pair is worth revisiting once the measured layer lands.'
+    tension: 'Sits below Meta here — heavier — which is the reading you get counting capex in dollars. Against sales the order reverses, because the revenue base is roughly twice as large. The pair is worth revisiting against capex over revenue rather than capex in dollars.'
   },
   {
     ticker: 'META', name: 'Meta Platforms', x: 29.7, y: 63.6, profile: 'meta', domain: 'meta.com',
@@ -154,7 +154,7 @@ export const SPECTRUM_COMPANIES = [
     why: 'A concession over specific runways in specific cities. Geography is not a feature of the model — it is the model.',
     capital: 'The heaviest on the board: terminals and runways, built to a committed investment programme, with tariffs regulated against it.',
     tension: null,
-    caveat: 'Read the measured marker with care. Under IFRIC 12 an airport concession is an intangible right, not property — so the terminals and runways never reach the property line the score is built on — and PAC does not tag capital expenditure in its 20-F at all. The accounts make the heaviest business on the board look mid-pack; the judgment placement is the better one here.'
+    caveat: 'Read the capital lines with care. Under IFRIC 12 an airport concession is an intangible right rather than property, so the runways and terminals never reach the property line at all, and PAC does not tag capital expenditure in its 20-F. The heaviest business on the board therefore shows almost no capex.'
   },
   {
     ticker: 'TBBB', name: 'BBB Foods (Tiendas 3B)', x: 80, y: 62, profile: 'bbb', domain: 'tiendas3b.com',
@@ -167,7 +167,7 @@ export const SPECTRUM_COMPANIES = [
     why: 'Land ownership in its purest form: royalties on production it does not carry out, over acreage it has held since the railroad.',
     capital: 'A royalty, not an operator. Almost no capital consumed — the operators drill, TPL collects.',
     tension: 'The single best argument for the second axis. Furthest right on the board and almost the lightest, at the same time. On a one-line spectrum it would sit next to PAC, which is wrong in every way that matters.',
-    caveat: 'The measured marker drops TPL to the middle of the board, and the reason is the equity term: a royalty on land held since the railroad throws off little revenue against the book it sits on, so equity over revenue reads like capital intensity when it is really an unusually small denominator. The capital TPL actually consumes each year is close to nothing.'
+    caveat: 'Capex is tagged in only five of the eight years on file, so any capital ratio here rests on a partial history. What the reported years do show is a royalty rather than an operator: the drilling is somebody else\'s capital.'
   }
 ];
 
@@ -183,6 +183,6 @@ export const SPECTRUM_AXES = {
     label: 'Capital intensity',
     top: 'Asset-light',
     bottom: 'Asset-heavy',
-    note: 'the positions on the board are ours; "Show what the filings say" puts each company where its own annual report places it.'
+    note: 'the placement is ours; the numbers under the board are the company\'s own, so a position can be argued with rather than just disagreed with.'
   }
 };

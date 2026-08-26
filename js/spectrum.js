@@ -13,33 +13,30 @@
 // has to change (see loadPositions / savePositions).
 
 import { SPECTRUM_ZONES, SPECTRUM_COMPANIES, SPECTRUM_AXES } from './spectrum-data.js';
-import { measureCapital, MEASURED_NOTE } from './spectrum-measured.js';
+import {
+  METRICS, WINDOWS, seriesFor, averageFor, ttmFor, forwardFor, meta as metricsMeta
+} from './spectrum-metrics.js';
 
 var SPEC_STORE = 'summit.spectrum.positions.v1';
-var _spec = null; // { pos: {TICKER: {x,y}}, sel: ticker|null, measured: bool }
+// win  — which averaging window the average columns use
+// basis— which column the comparison table shows
+// sort — { key, dir } for the comparison table
+var _spec = null;
 
-/* ─── The measured layer ───────────────────────────────────────────────────
-   Computed once at load from filed figures (see spectrum-measured.js) and
-   cached, because nothing on this page changes it — dragging moves the
-   judgment, never the accounts.                                             */
+// Estimates load on demand from js/results-data/, so the panel and the table
+// draw immediately and fill the forward column when it arrives.
+var _fwd = {};
 
-var _measured = null;
-
-// A score of 0 or 100 is a real answer — Spotify really is at the light end of
-// the scale — but a marker centred on the edge is half outside the plane. Nudge
-// the drawing, never the number.
-function ghostTop(y) { return clamp(y, 2.5, 97.5); }
-
-function measuredOf(ticker) {
-  if (!_measured) {
-    _measured = {};
-    for (var i = 0; i < SPECTRUM_COMPANIES.length; i++) {
-      var t = SPECTRUM_COMPANIES[i].ticker;
-      _measured[t] = measureCapital(t);
-    }
-  }
-  return _measured[ticker] || null;
+function forwardOf(ticker, then) {
+  if (ticker in _fwd) return _fwd[ticker];
+  _fwd[ticker] = null;
+  forwardFor(ticker).then(function (v) {
+    _fwd[ticker] = v;
+    if (v && then) then();
+  });
+  return null;
 }
+
 
 function esc(s) {
   if (s === null || s === undefined) return '';
@@ -158,23 +155,6 @@ function planeHtml() {
   // Neighbour links, drawn under the nodes when one is selected
   h += '<svg class="spec-links" id="spec-links" aria-hidden="true"></svg>';
 
-  // Ghosts: the same company placed by its accounts instead of by us. Only the
-  // height differs — the measured layer has nothing to say about the x axis —
-  // so each ghost sits directly above or below its node.
-  h += '<div class="spec-ghosts" id="spec-ghosts">';
-  for (var g = 0; g < SPECTRUM_COMPANIES.length; g++) {
-    var gc = SPECTRUM_COMPANIES[g];
-    var gm = measuredOf(gc.ticker);
-    if (!gm) continue;
-    var gp = currentPos(gc.ticker);
-    h += '<div class="spec-ghost" data-ticker="' + esc(gc.ticker) + '"' +
-         (gm.partial ? ' data-partial="1"' : '') +
-         ' style="left:' + gp.x + '%;top:' + ghostTop(gm.y) + '%"' +
-         ' title="' + esc(gc.ticker) + ' — measured from filings">' +
-         '<span class="spec-ghost-tk">' + esc(gc.ticker) + '</span>' +
-         '</div>';
-  }
-  h += '</div>';
 
   // Nodes
   h += '<div class="spec-nodes" id="spec-nodes">';
@@ -204,24 +184,6 @@ function drawLinks() {
   if (!svg) return;
 
   var s = '';
-
-  // Judgment-to-accounts connectors first, so they sit under the neighbour
-  // links. Drawn for every company at once: the pattern of which way the board
-  // leans is the point, not any single gap.
-  if (_spec.measured) {
-    for (var m = 0; m < SPECTRUM_COMPANIES.length; m++) {
-      var mt = SPECTRUM_COMPANIES[m].ticker;
-      var mm = measuredOf(mt);
-      if (!mm) continue;
-      var mp = currentPos(mt);
-      if (Math.abs(mm.y - mp.y) < 0.6) continue; // agreement needs no line
-      var sel = _spec.sel === mt;
-      s += '<line class="spec-gap" x1="' + mp.x + '%" y1="' + mp.y + '%"' +
-           ' x2="' + mp.x + '%" y2="' + ghostTop(mm.y) + '%"' +
-           ' stroke-width="' + (sel ? 2.4 : 1.4) + '"' +
-           ' opacity="' + (sel ? 0.9 : 0.42) + '"/>';
-    }
-  }
 
   if (!_spec.sel) { svg.innerHTML = s; return; }
 
@@ -260,8 +222,6 @@ function html() {
   h += '<div class="spec-bar">';
   h += '<div class="spec-bar-l">';
   h += '<button class="spec-btn" id="spec-reset">Reset to default</button>';
-  h += '<button class="spec-btn spec-btn--toggle" id="spec-measured" aria-pressed="false">' +
-       'Show what the filings say</button>';
   h += '<span class="spec-status" id="spec-status"></span>';
   h += '</div>';
   h += '<div class="spec-bar-r"><span class="spec-scope">Saved on this device only</span></div>';
@@ -315,10 +275,17 @@ function html() {
   // Detail panel
   h += '<div class="spec-panel" id="spec-panel"></div>';
 
+  // The numbers, all fifteen at once
+  h += '<div class="spec-table-wrap" id="spec-table"></div>';
+
   // Footnote
   h += '<p class="spec-foot">The default board is the team\'s placement of Aug 14, 2026, which ' +
        'started from the Investment Spectrum deck but no longer matches it everywhere. ' +
-       esc(MEASURED_NOTE) + '</p>';
+       'Every figure below is as filed with the SEC — 10-K, or 20-F for TSMC, Spotify, Grupo ' +
+       'Aeroportuario and Tiendas 3B — and ratios only ever divide two numbers from the same ' +
+       'statement, so the reporting currency does not matter. A blank cell means the company ' +
+       'does not report that line, never that the figure is zero. The estimate column comes from ' +
+       'the portal\'s own Results datasets, which cover eight of the fifteen.</p>';
 
   h += '</div>';
   return h;
@@ -389,7 +356,7 @@ function renderPanel() {
 
   h += '</div>'; // grid
 
-  h += measuredHtml(c, p);
+  h += metricsHtml(c);
 
   if (c.tension) {
     h += '<div class="spec-tension">';
@@ -403,136 +370,221 @@ function renderPanel() {
   wireLogos(el);
 }
 
-/* ─── Render: the measured block inside the panel ──────────────────────────
-   Always shown, whether or not the ghosts are on the board — the toggle
-   controls the picture, this is where the number is accounted for. Every term
-   is listed with the ratio behind it, so a reader can disagree with the
-   weighting rather than with a black box.                                    */
+/* ─── The numbers ──────────────────────────────────────────────────────────
+   Seven ratios, as an average over a window you choose, as trailing twelve
+   months, and as this year's estimate. No score, no ranking, no verdict: where
+   a company belongs on the board is the reader's call, and this is the evidence
+   they make it on.                                                            */
 
-// Place in the running order, heaviest first. Companies without a measurement
-// are left out of the count rather than ranked last, which would read as light.
-function rankOf(ticker, valueOf) {
-  var vals = [];
-  for (var i = 0; i < SPECTRUM_COMPANIES.length; i++) {
-    var t = SPECTRUM_COMPANIES[i].ticker;
-    var v = valueOf(t);
-    if (v === null || v === undefined) continue;
-    vals.push({ t: t, v: v });
-  }
-  vals.sort(function (a, b) { return b.v - a.v; });
-  for (var j = 0; j < vals.length; j++) {
-    if (vals[j].t === ticker) return { place: j + 1, total: vals.length };
-  }
-  return { place: null, total: vals.length };
+function winYears() {
+  var w = WINDOWS.filter(function (x) { return x.key === _spec.win; })[0];
+  return w ? w.years : 10;
 }
 
-function ordinal(n) {
-  if (n === null) return '—';
-  var rem100 = n % 100;
-  if (rem100 >= 11 && rem100 <= 13) return n + 'th';
-  return n + ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th');
+function fmt(metric, v) {
+  return (v === null || v === undefined || !isFinite(v)) ? '' : metric.format(v);
 }
 
-function measuredHtml(c, p) {
-  var m = measuredOf(c.ticker);
-  if (!m) {
-    return '<div class="spec-meas spec-meas--none">' +
-           '<span class="spec-meas-lbl">What the filings say</span>' +
-           '<p class="spec-meas-verdict">Not enough of this company\'s annual filing is tagged ' +
-           'to place it. The board keeps the judgment call.</p></div>';
-  }
+// A sparkline of the company's own history for one ratio, scaled to its own
+// range. Comparing shapes across rows is meaningless and deliberately not
+// offered — the numbers beside it are what compare.
+function sparkHtml(series, key) {
+  var pts = series.map(function (r) { return r.values[key]; });
+  var have = pts.filter(function (v) { return v != null && isFinite(v); });
+  if (have.length < 2) return '<span class="spec-spark spec-spark--empty"></span>';
 
-  // Both positions are read as a place in the running order rather than as a
-  // score. The axis has no units — "45" is a coordinate, and a reader has no way
-  // to know whether that is a lot — but "8th of 15" needs nothing explained.
-  var filedRank = rankOf(c.ticker, function (t) { var mm = measuredOf(t); return mm ? mm.y : null; });
-  var boardRank = rankOf(c.ticker, function (t) { return currentPos(t).y; });
+  var lo = Math.min.apply(null, have), hi = Math.max.apply(null, have);
+  var range = (hi - lo) || Math.abs(hi) || 1;
+  var w = 100, hgt = 22, step = w / (pts.length - 1);
 
-  // Rank and height can disagree, and the ranking is the more honest headline:
-  // NVIDIA moves 25 points up the axis and still barely changes place, because
-  // the middle of this board is thinly populated. Say which of the two happened
-  // rather than let a long connector imply an argument that is not there.
-  var gap = m.y - p.y;
-  var places = boardRank.place - filedRank.place; // > 0 = filings rank it heavier
-  var heavier = gap > 0;
-  var tail = ordinal(filedRank.place) + ' of ' + filedRank.total + ' on the filings, ' +
-             ordinal(boardRank.place) + ' on the board.';
-  var verdict;
-
-  if (Math.abs(places) >= 2) {
-    verdict = 'The accounts move it <strong>' + Math.abs(places) + ' places ' +
-              (places > 0 ? 'heavier' : 'lighter') + '</strong>: ' + tail;
-  } else if (Math.abs(gap) >= 6) {
-    verdict = '<strong>' + (heavier ? 'Heavier' : 'Lighter') + ' on the numbers</strong> than the ' +
-              'board has it, but not by enough to change the running order: ' + tail;
-  } else {
-    verdict = 'The accounts land where the board does: ' + tail;
-  }
-
-  var h = '<div class="spec-meas">';
-  h += '<div class="spec-meas-hd">';
-  h += '<span class="spec-meas-lbl">What the filings say</span>';
-  h += '<span class="spec-meas-src">' + esc(m.form) + ' · FY to ' + esc(m.period) +
-       ' · ' + esc(m.currency) + '</span>';
-  h += '</div>';
-
-  h += '<p class="spec-meas-verdict">' + verdict + '</p>';
-
-  // The same two positions as a picture, on this company alone — the board shows
-  // them among fifteen others, which is where a single gap gets lost.
-  h += '<div class="spec-meas-scale">';
-  h += '<span class="spec-meas-end">Asset-light</span>';
-  h += '<span class="spec-meas-track">';
-  h += '<i class="spec-meas-mk spec-meas-mk--board" style="left:' + clamp(p.y, 0, 100) + '%"' +
-       ' title="Where the board puts it"></i>';
-  h += '<i class="spec-meas-mk spec-meas-mk--filed" style="left:' + clamp(m.y, 0, 100) + '%"' +
-       ' title="Where the filings put it"></i>';
-  h += '</span>';
-  h += '<span class="spec-meas-end">Asset-heavy</span>';
-  h += '</div>';
-  h += '<div class="spec-meas-key">' +
-       '<span class="spec-meas-k spec-meas-k--board">Board</span>' +
-       '<span class="spec-meas-k spec-meas-k--filed">Filings</span>' +
-       '</div>';
-
-  h += '<ul class="spec-meas-terms">';
-  for (var i = 0; i < m.terms.length; i++) {
-    var t = m.terms[i];
-    h += '<li class="spec-meas-term" title="' + esc(t.hint) + '">' +
-         '<span class="spec-meas-tlbl">' + esc(t.label) + '</span>' +
-         '<span class="spec-meas-tval">' + esc(t.display) + '</span>' +
-         '<span class="spec-meas-tbar"><i style="width:' + t.score.toFixed(1) + '%"></i></span>' +
-         '<span class="spec-meas-twt">' + Math.round(t.weight * 100) + '%</span>' +
-         '</li>';
-  }
-  h += '</ul>';
-
-  if (m.missing.length) {
-    var names = m.missing.map(function (x) { return x.label; }).join(' and ');
-    h += '<p class="spec-meas-gapnote">' + esc(names) +
-         (m.missing.length > 1 ? ' are' : ' is') +
-         ' not tagged in the filing, so the score rests on the other terms.</p>';
-  }
-
-  if (c.caveat) {
-    h += '<p class="spec-meas-caveat">' + esc(c.caveat) + '</p>';
-  }
-
-  var ev = m.evidence.filter(function (e) { return e.display; });
-  if (ev.length) {
-    h += '<div class="spec-meas-ev">';
-    h += '<span class="spec-meas-evlbl">Evidence on the horizontal axis, not scored</span>';
-    h += '<ul class="spec-meas-evlist">';
-    for (var j = 0; j < ev.length; j++) {
-      h += '<li title="' + esc(ev[j].hint) + '"><span>' + esc(ev[j].label) + '</span>' +
-           '<b>' + esc(ev[j].display) + '</b></li>';
+  var d = '', open = false, dots = '';
+  for (var i = 0; i < pts.length; i++) {
+    if (pts[i] == null || !isFinite(pts[i])) { open = false; continue; }
+    var x = i * step;
+    var y = hgt - 2 - ((pts[i] - lo) / range) * (hgt - 4);
+    d += (open ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1) + ' ';
+    open = true;
+    if (i === pts.length - 1) {
+      dots = '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="2.2" fill="currentColor"/>';
     }
-    h += '</ul>';
-    h += '</div>';
   }
+  // A zero line only where the series actually crosses it, so a margin that
+  // has never been negative is not given a baseline it never touches.
+  var zero = '';
+  if (lo < 0 && hi > 0) {
+    var zy = hgt - 2 - ((0 - lo) / range) * (hgt - 4);
+    zero = '<line x1="0" y1="' + zy.toFixed(1) + '" x2="' + w + '" y2="' + zy.toFixed(1) +
+           '" stroke="#D3DAE3" stroke-width="1"/>';
+  }
+  return '<svg class="spec-spark" viewBox="0 0 ' + w + ' ' + hgt + '" preserveAspectRatio="none" aria-hidden="true">' +
+         zero + '<path d="' + d.trim() + '" fill="none" stroke="currentColor" stroke-width="1.6" ' +
+         'stroke-linejoin="round" stroke-linecap="round"/>' + dots + '</svg>';
+}
+
+function metricsHtml(c) {
+  var series = seriesFor(c.ticker);
+  if (!series || !series.length) {
+    return '<div class="spec-nums spec-nums--none">' +
+           '<span class="spec-nums-lbl">The numbers</span>' +
+           '<p class="spec-nums-empty">No filing history for this company.</p></div>';
+  }
+
+  var info = metricsMeta(c.ticker);
+  var avg = averageFor(c.ticker, winYears());
+  var ttm = ttmFor(c.ticker);
+  var fwd = forwardOf(c.ticker, renderPanel);
+
+  var h = '<div class="spec-nums">';
+
+  h += '<div class="spec-nums-hd">';
+  h += '<span class="spec-nums-lbl">The numbers</span>';
+  h += '<span class="spec-nums-src">' + esc(info.currency) + ' · FY' + info.firstYear.fy +
+       '–FY' + info.lastYear.fy + ' · ' + esc(info.lastYear.form || '') + '</span>';
+  h += '</div>';
+
+  h += '<table class="spec-nums-tbl"><thead><tr>';
+  h += '<th class="spec-nums-th spec-nums-th--m">Metric</th>';
+  h += '<th class="spec-nums-th spec-nums-th--s">FY' + info.firstYear.fy + '–' + info.lastYear.fy + '</th>';
+  h += '<th class="spec-nums-th">' + avg.span + '-yr avg</th>';
+  h += '<th class="spec-nums-th">' + (ttm ? 'TTM' : 'TTM') + '</th>';
+  h += '<th class="spec-nums-th">' + (fwd ? esc(fwd.period) + 'E' : 'Est.') + '</th>';
+  h += '</tr></thead><tbody>';
+
+  for (var i = 0; i < METRICS.length; i++) {
+    var m = METRICS[i];
+    var a = avg.values[m.key];
+    h += '<tr class="spec-nums-row" title="' + esc(m.hint) + '">';
+    h += '<td class="spec-nums-m">' + esc(m.label) + '</td>';
+    h += '<td class="spec-nums-spark">' + sparkHtml(series, m.key) + '</td>';
+    h += '<td class="spec-nums-v">' + fmt(m, a.value) +
+         (a.value != null && a.n < a.of ? '<i class="spec-nums-part" title="' + a.n + ' of ' +
+           a.of + ' years reported">' + a.n + '/' + a.of + '</i>' : '') + '</td>';
+    h += '<td class="spec-nums-v">' + (ttm ? fmt(m, ttm.values[m.key]) : '') + '</td>';
+    h += '<td class="spec-nums-v spec-nums-v--est">' + (fwd ? fmt(m, fwd.values[m.key]) : '') + '</td>';
+    h += '</tr>';
+  }
+  h += '</tbody></table>';
+
+  var notes = [];
+  if (ttm) notes.push('TTM to ' + ttm.end + ' (' + ttm.note + ').');
+  else notes.push('No trailing-twelve-month column: this filer publishes no interim XBRL.');
+  if (fwd) notes.push(fwd.period + ' estimate from the ' + fwd.source + ', via the Results dataset.');
+  else notes.push('No estimate column: the portal carries no Results dataset for this company.');
+  h += '<p class="spec-nums-note">' + esc(notes.join(' ')) + '</p>';
+
+  if (c.caveat) h += '<p class="spec-nums-caveat">' + esc(c.caveat) + '</p>';
 
   h += '</div>';
   return h;
+}
+
+/* ─── The comparison table ─────────────────────────────────────────────────
+   Fifteen rows, seven columns, one basis at a time. Placing a company is a
+   comparison, so the board needs a view where the comparison is direct rather
+   than one profile after another.                                            */
+
+var BASES = [
+  { key: 'avg', label: 'Average' },
+  { key: 'ttm', label: 'TTM' },
+  { key: 'est', label: 'Estimate' }
+];
+
+function basisValues(ticker) {
+  if (_spec.basis === 'ttm') {
+    var t = ttmFor(ticker);
+    return t ? t.values : null;
+  }
+  if (_spec.basis === 'est') {
+    var f = forwardOf(ticker, renderTable);
+    return f ? f.values : null;
+  }
+  var a = averageFor(ticker, winYears());
+  if (!a) return null;
+  var out = {}, thin = {};
+  for (var i = 0; i < METRICS.length; i++) {
+    var cell = a.values[METRICS[i].key];
+    out[METRICS[i].key] = cell.value;
+    // An average over 5 of 10 years is not the same claim as one over 10, and
+    // the table has no room to say so in full — so those cells are marked and
+    // carry the count in their tooltip.
+    if (cell.value != null && cell.n < cell.of) thin[METRICS[i].key] = cell.n + ' of ' + cell.of + ' years reported';
+  }
+  out.__thin = thin;
+  return out;
+}
+
+function renderTable() {
+  var el = document.getElementById('spec-table');
+  if (!el) return;
+
+  var rows = SPECTRUM_COMPANIES.map(function (c) {
+    return { co: c, values: basisValues(c.ticker) || {} };
+  });
+
+  if (_spec.sort && _spec.sort.key) {
+    var k = _spec.sort.key, dir = _spec.sort.dir;
+    rows.sort(function (a, b) {
+      var av = a.values[k], bv = b.values[k];
+      // Blanks always sink, whichever way the column is sorted — a company that
+      // does not report a line has not scored badly on it.
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      return dir === 'asc' ? av - bv : bv - av;
+    });
+  }
+
+  var basisLabel = _spec.basis === 'ttm' ? 'trailing twelve months'
+    : _spec.basis === 'est' ? 'this year\'s estimate'
+    : winYears() + '-year average';
+
+  var h = '<div class="spec-table-hd">';
+  h += '<span class="spec-table-lbl">All fifteen, ' + esc(basisLabel) + '</span>';
+  h += '<div class="spec-table-ctl">';
+  for (var b = 0; b < BASES.length; b++) {
+    h += '<button class="spec-pill' + (_spec.basis === BASES[b].key ? ' is-on' : '') +
+         '" data-basis="' + BASES[b].key + '">' + esc(BASES[b].label) + '</button>';
+  }
+  h += '<span class="spec-pill-sep"></span>';
+  for (var w = 0; w < WINDOWS.length; w++) {
+    h += '<button class="spec-pill spec-pill--win' + (_spec.win === WINDOWS[w].key ? ' is-on' : '') +
+         (_spec.basis !== 'avg' ? ' is-off' : '') +
+         '" data-win="' + WINDOWS[w].key + '">' + esc(WINDOWS[w].label) + '</button>';
+  }
+  h += '</div></div>';
+
+  h += '<div class="spec-table-scroll"><table class="spec-table"><thead><tr>';
+  h += '<th class="spec-th spec-th--co">Company</th>';
+  for (var i = 0; i < METRICS.length; i++) {
+    var m = METRICS[i];
+    var on = _spec.sort && _spec.sort.key === m.key;
+    h += '<th class="spec-th spec-th--n' + (on ? ' is-sorted' : '') + '" data-sort="' + m.key + '"' +
+         ' title="' + esc(m.hint) + '">' + esc(m.short) +
+         (on ? '<i class="spec-th-dir">' + (_spec.sort.dir === 'asc' ? '↑' : '↓') + '</i>' : '') +
+         '</th>';
+  }
+  h += '</tr></thead><tbody>';
+
+  for (var r = 0; r < rows.length; r++) {
+    var co = rows[r].co, vals = rows[r].values;
+    var z = zoneOf(currentPos(co.ticker).x);
+    h += '<tr class="spec-tr' + (_spec.sel === co.ticker ? ' is-sel' : '') +
+         '" data-goto="' + esc(co.ticker) + '" style="--hue:' + z.hue + '">';
+    h += '<td class="spec-td spec-td--co">' + logoHtml(co) +
+         '<span class="spec-td-tk">' + esc(co.ticker) + '</span>' +
+         '<span class="spec-td-nm">' + esc(co.name) + '</span></td>';
+    for (var j = 0; j < METRICS.length; j++) {
+      var mm = METRICS[j];
+      var thin = vals.__thin && vals.__thin[mm.key];
+      h += '<td class="spec-td spec-td--n' + (thin ? ' is-thin' : '') + '"' +
+           (thin ? ' title="' + esc(thin) + '"' : '') + '>' + fmt(mm, vals[mm.key]) + '</td>';
+    }
+    h += '</tr>';
+  }
+  h += '</tbody></table></div>';
+
+  el.innerHTML = h;
+  wireLogos(el);
 }
 
 function renderStatus() {
@@ -561,16 +613,6 @@ function syncNodes() {
     nodes[i].classList.toggle('is-moved', isMoved(tk));
   }
 
-  // Ghosts keep the node's x, so dragging a company sideways carries its
-  // measured marker along and only the vertical gap stays meaningful.
-  var ghosts = document.querySelectorAll('#spec-ghosts .spec-ghost');
-  for (var g = 0; g < ghosts.length; g++) {
-    var gt = ghosts[g].dataset.ticker;
-    ghosts[g].style.left = currentPos(gt).x + '%';
-    ghosts[g].classList.toggle('is-sel', _spec.sel === gt);
-  }
-  var layer = document.getElementById('spec-ghosts');
-  if (layer) layer.classList.toggle('is-on', !!_spec.measured);
 
   // mark the three the panel is talking about
   if (_spec.sel) {
@@ -588,6 +630,7 @@ function select(ticker) {
   _spec.sel = ticker;
   syncNodes();
   renderPanel();
+  renderTable();
 }
 
 /* ─── Drag ─────────────────────────────────────────────────────────────── */
@@ -672,6 +715,9 @@ function wire(root) {
     var nb = e.target.closest('.spec-nb-btn');
     if (nb) { select(nb.dataset.goto); return; }
 
+    var tr = e.target.closest('.spec-tr[data-goto]');
+    if (tr) { select(tr.dataset.goto); return; }
+
     if (e.target.closest('#spec-reset')) {
       _spec.pos = {};
       savePositions({});
@@ -681,14 +727,31 @@ function wire(root) {
       return;
     }
 
-    var mBtn = e.target.closest('#spec-measured');
-    if (mBtn) {
-      _spec.measured = !_spec.measured;
-      mBtn.setAttribute('aria-pressed', _spec.measured ? 'true' : 'false');
-      mBtn.classList.toggle('is-on', _spec.measured);
-      mBtn.textContent = _spec.measured ? 'Hide what the filings say' : 'Show what the filings say';
-      syncNodes();
+    var basis = e.target.closest('[data-basis]');
+    if (basis) {
+      _spec.basis = basis.dataset.basis;
+      renderTable();
+      return;
+    }
+
+    // The window pills stay live on any basis: picking "5 years" while looking
+    // at TTM switches the table back to averages rather than doing nothing.
+    var win = e.target.closest('[data-win]');
+    if (win) {
+      _spec.win = win.dataset.win;
+      _spec.basis = 'avg';
+      renderTable();
       renderPanel();
+      return;
+    }
+
+    var th = e.target.closest('[data-sort]');
+    if (th) {
+      var key = th.dataset.sort;
+      _spec.sort = (_spec.sort && _spec.sort.key === key && _spec.sort.dir === 'desc')
+        ? { key: key, dir: 'asc' }
+        : { key: key, dir: 'desc' };
+      renderTable();
       return;
     }
   });
@@ -727,7 +790,10 @@ export function loadSpectrumPage() {
   var root = document.getElementById('spectrum-root');
   if (!root) return;
 
-  _spec = { pos: loadPositions(), sel: null, measured: false };
+  _spec = {
+    pos: loadPositions(), sel: null,
+    win: '10y', basis: 'avg', sort: null
+  };
 
   root.innerHTML = html();
   wireLogos(root);
@@ -735,4 +801,5 @@ export function loadSpectrumPage() {
   syncNodes();
   renderStatus();
   renderPanel();
+  renderTable();
 }

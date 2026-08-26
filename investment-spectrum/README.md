@@ -78,77 +78,90 @@ enough to begin.
 |---|---|
 | Aug 13, 2026 | Branch `feat/investment-spectrum` created. Folder set up, awaiting reference material. Nothing built yet. |
 | Aug 14, 2026 | Built. A plane, not a line: `x` keeps the deck's spectrum, `y` becomes capital intensity. Draggable, persisted in `localStorage`, nearest-neighbour panel. Files: `js/spectrum-data.js`, `js/spectrum.js`, `css/spectrum.css`. |
-| Aug 26, 2026 | Measured layer added, and the branch caught up with `main`. |
+| Aug 26, 2026 | Branch caught up with `main`. Metrics layer added: seven ratios per company from SEC XBRL, with a period toggle, TTM and this year's estimate. |
 
 ---
 
-## The measured layer
+## The numbers under the board
 
-The board's vertical axis was a judgment: someone decided where NVIDIA sits relative to Meta.
-**"Show what the filings say"** puts a second marker on every company, computed from its own annual
-report, and draws the gap between the two. That gap is the output — the board is a set of claims,
-and this is the first thing that can disagree with them.
+Where a company belongs on the board is a judgment, and it stays one. What the board now carries
+underneath is the evidence that judgment is made on: **seven ratios per company, as filed**, with no
+score, no ranking and no verdict attached.
 
-### How it is built
+| Ratio | Built from |
+|---|---|
+| Revenue growth | Revenue, year on year |
+| Gross margin | Gross profit ÷ revenue |
+| Operating margin | Operating income ÷ revenue |
+| CFO margin | Cash from operations ÷ revenue |
+| FCF margin | (Cash from operations − capex) ÷ revenue |
+| Capex / revenue | Capex ÷ revenue |
+| Capex / D&A | Capex ÷ depreciation and amortisation |
+
+Each appears three ways: an **average** over the last 10, 5 or 3 years; **trailing twelve months**;
+and **this year's estimate**. In the panel every row also carries a sparkline of the company's own
+history. Under the board, all fifteen sit in one sortable table on whichever basis you pick — which
+is how a placement actually gets decided, since placing a company is a comparison.
+
+### Where the numbers come from
 
 | | |
 |---|---|
-| Source | SEC XBRL company concepts (`data.sec.gov`) — 10-K, or 20-F for TSMC, Spotify, Grupo Aeroportuario and Tiendas 3B |
-| Puller | `scripts/spectrum/fetch-fundamentals.ps1` → writes `js/spectrum-measured-data.js` (generated; do not hand-edit) |
-| Formula | `js/spectrum-measured.js` |
+| History | SEC XBRL company concepts (`data.sec.gov`) — 10-K, or 20-F for TSMC, Spotify, Grupo Aeroportuario and Tiendas 3B |
+| Puller | `scripts/spectrum/fetch-metrics.ps1` → writes `js/spectrum-metrics-data.js` (generated; never hand-edit) |
+| Ratios | `js/spectrum-metrics.js` |
+| Estimates | The portal's own `js/results-data/<ticker>.js`, loaded on demand |
 
-Every figure is as-filed, and each one records the XBRL tag, the period end and the form it came
-from, so any marker traces back to a filing. Ratios only ever divide two numbers from the same
-statement, so TSMC in TWD and Tiendas 3B in MXN stay comparable to Amazon in USD.
+Ratios only ever divide two figures from the same filing, so the reporting currency never matters —
+TSMC in TWD and Tiendas 3B in MXN stay comparable to Amazon in USD. **A blank cell means the company
+does not report that line, never that the figure is zero.**
 
-Capital intensity is read as **how much capital a dollar of revenue ties up, in whatever form the
-business ties it up**, blended from three filed ratios:
+### Four things the puller has to get right
 
-| Term | Weight | What it catches |
-|---|---|---|
-| Capex / revenue | 40% | Capital being consumed now — the flow |
-| Productive assets / revenue | 35% | Property, leased space and inventory — the stock |
-| Equity / revenue | 25% | Capital the business must hold to operate — **the rule the axis was missing for lenders** |
+Each of these was a wrong answer before it was a rule, and removing any of them reintroduces a
+silent error rather than an obvious one:
 
-That third term is the answer to the open question from Aug 14: SoFi and Interactive Brokers have
-almost no fixed assets and are not asset-light in any sense that matters. Each term is scaled on a
-log axis between round anchors, because capital intensity spans two orders of magnitude across this
-board. Where a term is not tagged the score uses the rest and the panel says which one is missing;
-below two terms no marker is drawn at all.
+1. **Pin one reporting currency per company.** TSMC files the same statements in TWD and in a USD
+   convenience translation. A ratio taking its numerator from one and its denominator from the other
+   is wrong by the exchange rate and looks perfectly reasonable.
+2. **Try every candidate tag and take the latest period.** Filers rotate tags: NVIDIA's revenue tag
+   went stale after FY2023, and Meta, Uber, Lyft and SoFi all moved off `PropertyPlantAndEquipmentNet`
+   around 2019. "First tag that answers" quietly returns a stale decade.
+3. **Drop a figure older than the revenue period.** A tag a filer abandoned still answers — Grupo
+   Aeroportuario's last tagged capex is from 2018 — and pairing it with current revenue invents a
+   ratio no filing supports.
+4. **Compose D&A where it is filed in parts.** Alphabet, TSMC and Spotify never tag a combined line;
+   depreciation and amortisation are added only where the combined tag is absent.
 
-### Why the horizontal axis is not measured
+Use `companyconcept`, not `companyfacts`: the blob is megabytes, and Amazon, Spotify and Interactive
+Brokers all ship keys differing only in case, which PowerShell 5.1's `ConvertFrom-Json` refuses.
 
-It was tried and abandoned. The x axis asks how a company creates value, and no filed ratio says
-that without collapsing into capital intensity: Meta's property and equipment now runs near a full
-year of revenue, so any asset-based measure of x pushes the purest advertising business on the board
-past a hard-discount grocer. Gross margin and R&D intensity do bear on the question, so they are
-shown in the panel as evidence — not folded into a coordinate.
+### The estimate column, and why it is anchored
 
-### What it found
+The estimate is used for its **rate of change only**, applied to the last reported level:
+`est = reported[t−1] × (series[t] ÷ series[t−1])`.
 
-The panel reports both positions as a **place in the running order**, heaviest first, not as a
-coordinate: the axis has no units, so "45" tells a reader nothing while "8th of 15" needs no
-explaining. The height on the board is still what the marker draws — the two can disagree, and
-which one moved is itself information.
+This is not tidiness. Alphabet's consensus revenue is net of traffic acquisition costs — about 84% of
+the reported line — so dividing a consensus cost by a consensus revenue showed a **70% gross margin
+against 60% in the accounts**. The estimate column was describing a different company. Anchoring
+cancels any constant difference in definition and puts the column back on the same footing as the
+history beside it.
 
-| | Board | Filings | Moves | |
-|---|---|---|---|---|
-| PAC | 2nd | 9th | 7 lighter | **Flagged** — under IFRIC 12 the runways are an intangible and never reach the property line |
-| TPL | 11th | 6th | 5 heavier | **Flagged** — the equity term punishes a small revenue base, not real capital consumption |
-| META | 6th | 2nd | 4 heavier | The AI build-out is heavier than the board admits: capex is 35% of revenue |
-| AMZN | 1st | 4th | 3 lighter | Not the heaviest company on the board — TSMC is |
-| TBBB | 7th | 10th | 3 lighter | Leases carry more of the store base than the placement assumes |
-| GOOGL · TSM · MA · IBKR | | | 2 places | Small, consistent corrections |
-| NVDA | 9th | 8th | — | Rises 25 points up the axis and still barely changes place: the middle of this board is thinly populated |
-| SOFI | 8th | 7th | — | The funding term **confirms** the board here rather than overturning it |
-
-Two of those are the measure being wrong rather than the board being wrong, and both carry a
-`caveat` in `js/spectrum-data.js` that the panel prints under the score.
+The model is preferred over the Street where both exist, and the panel says which answered.
 
 ### Known limits
 
-- Four companies (PAC, TPL, LYFT, IBKR) do not tag capital expenditure, so their marker rests on two
-  terms and is drawn dotted.
-- TSMC's most recent XBRL annual filing is FY2024; everyone else is FY2025 or later.
-- The anchors and the 40/35/25 weights are choices, not findings. They are in one place in
-  `js/spectrum-measured.js` and are meant to be argued with.
+- **The estimate column covers six of fifteen** — AMZN, GOOGL, META, UBER, LYFT and TBBB — and each
+  dataset carries a different set of lines. Alphabet models all seven ratios; Tiendas 3B two.
+- **No TTM for the 20-F filers** (TSMC, Spotify, Grupo Aeroportuario, Tiendas 3B): they publish no
+  interim XBRL. TTM elsewhere is the last full year plus the current year to date, less the same
+  stretch of the prior year — including for the growth rate, which compares against the same twelve
+  months a year earlier rather than the last closed year.
+- **Some lines are genuinely never filed.** Mastercard, Interactive Brokers, Disney, TPL and PAC
+  report no gross profit; SoFi and IBKR no operating income; Lyft and IBKR no capex. Those cells stay
+  blank.
+- **Averages resting on fewer years than the window are marked** with a dotted underline and the
+  count in the tooltip — NVIDIA tags capex in only five of the last ten years, PAC in four.
+- **PAC and TPL carry a `caveat`** in `js/spectrum-data.js` that the panel prints under the table:
+  under IFRIC 12 an airport concession is an intangible, so PAC's runways never reach the property
+  line at all.

@@ -30,10 +30,6 @@
   transition: border-color .15s, background .15s;
 }
 .spec-btn:hover { border-color: #b9c2cd; background: var(--pale, #F4F6F9); }
-.spec-btn--toggle.is-on {
-  background: var(--navy, #1E2733); border-color: var(--navy, #1E2733); color: #fff;
-}
-.spec-btn--toggle.is-on:hover { background: #2A3646; border-color: #2A3646; }
 .spec-status { font: 500 12px 'Inter', sans-serif; color: var(--mu, #8A93A0); }
 .spec-status--on { color: var(--accent, #2563EB); }
 .spec-status--warn { color: var(--neg, #DC2626); }
@@ -133,39 +129,6 @@
 .spec-links {
   position: absolute; inset: 0; width: 100%; height: 100%;
   pointer-events: none; overflow: visible;
-}
-
-/* ─── The measured layer ──────────────────────────────────────────────
-   The ghost is deliberately quieter than the node: it is a second opinion,
-   not a correction. Dashed outline, no logo, no fill — so a board with the
-   layer on still reads as the team's board with evidence attached.      */
-
-.spec-gap { stroke: #7C8694; stroke-dasharray: 3 4; stroke-linecap: round; }
-
-.spec-ghosts {
-  position: absolute; inset: 0; pointer-events: none;
-  opacity: 0; visibility: hidden;
-  transition: opacity .18s;
-}
-.spec-ghosts.is-on { opacity: 1; visibility: visible; }
-
-.spec-ghost {
-  position: absolute; transform: translate(-50%, -50%);
-  border: 1px dashed #A3ACB9; border-radius: 8px;
-  background: rgba(255, 255, 255, .82);
-  padding: 3px 8px;
-  font: 600 10.5px 'Inter', sans-serif; color: var(--mid, #7C8694);
-  letter-spacing: .02em; white-space: nowrap;
-}
-/* Two terms of three: the marker says so rather than pretending to the same
-   standing as a fully measured one. */
-.spec-ghost[data-partial] { border-style: dotted; opacity: .72; }
-.spec-ghost[data-partial]::after {
-  content: '·'; margin-left: 4px; font-weight: 800; color: #B98A2E;
-}
-.spec-ghost.is-sel {
-  border-color: var(--navy, #1E2733); color: var(--navy, #1E2733);
-  background: #fff; box-shadow: 0 1px 4px rgba(30, 39, 51, .12);
 }
 
 /* Nodes */
@@ -341,106 +304,6 @@
   line-height: 1.5; margin: 0; font-style: italic;
 }
 
-/* ─── The measured block in the panel ─────────────────────────────────── */
-
-.spec-meas {
-  margin-top: 16px; padding: 13px 15px;
-  background: var(--pale, #F4F6F9); border: 1px solid var(--bdr, #E7EAEE);
-  border-radius: 9px;
-}
-.spec-meas-hd {
-  display: flex; align-items: baseline; justify-content: space-between;
-  gap: 12px; flex-wrap: wrap; margin-bottom: 7px;
-}
-.spec-meas-lbl {
-  font: 600 10.5px 'Inter', sans-serif; color: var(--mid, #7C8694);
-  text-transform: uppercase; letter-spacing: .07em;
-}
-.spec-meas-src {
-  font: 500 10.5px 'Inter', sans-serif; color: var(--mu, #8A93A0);
-  font-variant-numeric: tabular-nums;
-}
-.spec-meas-verdict {
-  font: 400 12.5px 'Inter', sans-serif; color: var(--text, #1E2733);
-  line-height: 1.6; margin: 0 0 10px;
-}
-.spec-meas-verdict strong { font-weight: 700; }
-.spec-meas--none .spec-meas-verdict { margin-bottom: 0; }
-
-.spec-meas-scale {
-  display: flex; align-items: center; gap: 10px; margin: 0 0 6px;
-}
-.spec-meas-end {
-  font: 500 10.5px 'Inter', sans-serif; color: var(--mu, #8A93A0);
-  white-space: nowrap; flex: none;
-}
-.spec-meas-track {
-  position: relative; flex: 1 1 auto; height: 6px; border-radius: 999px;
-  background: linear-gradient(90deg, #EDF0F4, #C7CED8);
-}
-.spec-meas-mk {
-  position: absolute; top: 50%; width: 11px; height: 11px; border-radius: 50%;
-  transform: translate(-50%, -50%); border: 2px solid #fff;
-}
-.spec-meas-mk--board { background: var(--navy, #1E2733); z-index: 2; }
-.spec-meas-mk--filed { background: #7C8694; z-index: 1; }
-
-.spec-meas-key { display: flex; gap: 14px; margin: 0 0 11px; }
-.spec-meas-k {
-  display: inline-flex; align-items: center; gap: 5px;
-  font: 500 10.5px 'Inter', sans-serif; color: var(--mu, #8A93A0);
-}
-.spec-meas-k::before {
-  content: ''; width: 8px; height: 8px; border-radius: 50%;
-}
-.spec-meas-k--board::before { background: var(--navy, #1E2733); }
-.spec-meas-k--filed::before { background: #7C8694; }
-
-.spec-meas-terms { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
-.spec-meas-term {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto 90px 32px;
-  align-items: center; gap: 10px;
-}
-.spec-meas-tlbl { font: 500 11.5px 'Inter', sans-serif; color: var(--text, #1E2733); }
-.spec-meas-tval {
-  font: 700 11.5px 'Inter', sans-serif; color: var(--navy, #1E2733);
-  font-variant-numeric: tabular-nums;
-}
-.spec-meas-tbar {
-  height: 5px; border-radius: 999px; background: #E1E6EC; overflow: hidden;
-}
-.spec-meas-tbar i { display: block; height: 100%; background: #7C8694; border-radius: 999px; }
-.spec-meas-twt {
-  font: 500 10.5px 'Inter', sans-serif; color: var(--mu, #8A93A0);
-  text-align: right; font-variant-numeric: tabular-nums;
-}
-.spec-meas-gapnote {
-  font: 400 11.5px 'Inter', sans-serif; color: #9A6A16;
-  line-height: 1.55; margin: 9px 0 0;
-}
-
-.spec-meas-caveat {
-  font: 400 11.5px 'Inter', sans-serif; color: #5C4A28; line-height: 1.6;
-  margin: 10px 0 0; padding: 9px 11px;
-  background: #FCF8F0; border: 1px solid #F0E4CC; border-radius: 7px;
-}
-
-.spec-meas-ev { margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--bdr, #E7EAEE); }
-.spec-meas-evlbl {
-  display: block;
-  font: 600 10.5px 'Inter', sans-serif; color: var(--mid, #7C8694);
-  text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px;
-}
-.spec-meas-evlist {
-  list-style: none; margin: 0; padding: 0; display: flex; gap: 22px; flex-wrap: wrap;
-}
-.spec-meas-evlist li { display: flex; align-items: baseline; gap: 7px; }
-.spec-meas-evlist span { font: 400 11.5px 'Inter', sans-serif; color: var(--mu, #8A93A0); }
-.spec-meas-evlist b {
-  font: 700 12px 'Inter', sans-serif; color: var(--navy, #1E2733);
-  font-variant-numeric: tabular-nums;
-}
-
 .spec-tension {
   margin-top: 16px; padding: 12px 14px;
   background: #FCF8F0; border: 1px solid #F0E4CC; border-radius: 9px;
@@ -452,6 +315,128 @@
 }
 .spec-tension-txt {
   font: 400 12.5px 'Inter', sans-serif; color: #5C4A28; line-height: 1.6; margin: 0;
+}
+
+/* ─── The numbers, in the panel ─────────────────────────────────────────
+   A plain table. No bars scaled against other companies, no colour scale,
+   no highlighting of a "good" figure — the point of this block is that the
+   reader draws the conclusion, so the styling stops at making the columns
+   easy to compare down and across.                                        */
+
+.spec-nums {
+  margin-top: 16px; padding: 13px 15px 11px;
+  background: var(--pale, #F4F6F9); border: 1px solid var(--bdr, #E7EAEE);
+  border-radius: 9px;
+}
+.spec-nums-hd {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 9px;
+}
+.spec-nums-lbl {
+  font: 600 10.5px 'Inter', sans-serif; color: var(--mid, #7C8694);
+  text-transform: uppercase; letter-spacing: .07em;
+}
+.spec-nums-src {
+  font: 500 10.5px 'Inter', sans-serif; color: var(--mu, #8A93A0);
+  font-variant-numeric: tabular-nums;
+}
+.spec-nums-empty { font: 400 12.5px 'Inter', sans-serif; color: var(--mu, #8A93A0); margin: 0; }
+
+.spec-nums-tbl { width: 100%; border-collapse: collapse; }
+.spec-nums-th {
+  font: 600 10px 'Inter', sans-serif; color: var(--mu, #8A93A0);
+  text-transform: uppercase; letter-spacing: .06em;
+  text-align: right; padding: 0 0 6px; white-space: nowrap;
+}
+.spec-nums-th--m { text-align: left; }
+.spec-nums-th--s { text-align: center; width: 110px; }
+.spec-nums-row { border-top: 1px solid #E4E8ED; }
+.spec-nums-row:hover { background: rgba(255, 255, 255, .7); }
+.spec-nums-m {
+  font: 500 12px 'Inter', sans-serif; color: var(--text, #1E2733);
+  padding: 6px 12px 6px 0; white-space: nowrap;
+}
+.spec-nums-spark { padding: 4px 12px; color: #9AA5B2; width: 110px; }
+.spec-spark { display: block; width: 100%; height: 22px; }
+.spec-spark--empty { display: block; height: 22px; }
+.spec-nums-v {
+  font: 600 12.5px 'Inter', sans-serif; color: var(--navy, #1E2733);
+  font-variant-numeric: tabular-nums; text-align: right;
+  padding: 6px 0 6px 16px; white-space: nowrap;
+}
+.spec-nums-v--est { color: var(--mid, #7C8694); }
+/* How many of the window's years the company actually reported. */
+.spec-nums-part {
+  font: 500 9.5px 'Inter', sans-serif; color: var(--mu, #8A93A0);
+  font-style: normal; margin-left: 5px;
+}
+.spec-nums-note {
+  font: 400 11px 'Inter', sans-serif; color: var(--mu, #8A93A0);
+  line-height: 1.55; margin: 9px 0 0; padding-top: 8px;
+  border-top: 1px solid #E4E8ED;
+}
+
+/* ─── The comparison table ──────────────────────────────────────────── */
+
+.spec-table-wrap {
+  border: 1px solid var(--bdr, #E7EAEE); border-radius: 12px; background: #fff;
+  overflow: hidden;
+}
+.spec-table-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  padding: 12px 16px; border-bottom: 1px solid var(--bdr, #E7EAEE);
+}
+.spec-table-lbl { font: 600 12.5px 'Inter', sans-serif; color: var(--navy, #1E2733); }
+.spec-table-ctl { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.spec-pill {
+  border: 1px solid var(--bdr, #E7EAEE); background: #fff; border-radius: 999px;
+  font: 600 11px 'Inter', sans-serif; color: var(--mid, #7C8694);
+  padding: 4px 11px; cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s, opacity .15s;
+}
+.spec-pill:hover { border-color: #b9c2cd; color: var(--navy, #1E2733); }
+.spec-pill.is-on {
+  background: var(--navy, #1E2733); border-color: var(--navy, #1E2733); color: #fff;
+}
+/* The window pills stay clickable while another basis is showing — they just
+   stop claiming to describe what is on screen. */
+.spec-pill--win.is-off { opacity: .45; }
+.spec-pill-sep { width: 1px; height: 16px; background: var(--bdr, #E7EAEE); margin: 0 5px; }
+
+.spec-table-scroll { overflow-x: auto; }
+.spec-table { width: 100%; border-collapse: collapse; min-width: 760px; }
+.spec-th {
+  font: 600 10px 'Inter', sans-serif; color: var(--mu, #8A93A0);
+  text-transform: uppercase; letter-spacing: .06em;
+  padding: 9px 12px; text-align: right; white-space: nowrap;
+  background: var(--pale, #F4F6F9);
+  border-bottom: 1px solid var(--bdr, #E7EAEE);
+  cursor: pointer; user-select: none;
+}
+.spec-th--co { text-align: left; cursor: default; }
+.spec-th--n:hover { color: var(--navy, #1E2733); }
+.spec-th.is-sorted { color: var(--navy, #1E2733); }
+.spec-th-dir { font-style: normal; margin-left: 3px; }
+
+.spec-tr { border-bottom: 1px solid #EEF1F4; cursor: pointer; }
+.spec-tr:last-child { border-bottom: none; }
+.spec-tr:hover { background: color-mix(in srgb, var(--hue, #F4F6F9) 7%, #fff); }
+.spec-tr.is-sel { background: color-mix(in srgb, var(--hue, #F4F6F9) 13%, #fff); }
+.spec-td { padding: 7px 12px; }
+.spec-td--co {
+  display: flex; align-items: center; gap: 8px; white-space: nowrap;
+  border-left: 3px solid var(--hue, transparent);
+}
+.spec-td--co .spec-node-logo { width: 16px; height: 16px; }
+.spec-td-tk { font: 700 11.5px 'Inter', sans-serif; color: var(--hue, #1E2733); }
+.spec-td-nm {
+  font: 400 11.5px 'Inter', sans-serif; color: var(--mu, #8A93A0);
+  overflow: hidden; text-overflow: ellipsis; max-width: 170px;
+}
+.spec-td--n {
+  font: 500 12px 'Inter', sans-serif; color: var(--text, #1E2733);
+  font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap;
 }
 
 .spec-foot {
@@ -466,4 +451,19 @@
   .spec-crit { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .spec-panel-grid { grid-template-columns: 1fr; gap: 16px; }
   .spec-xlab-n { display: none; }
+}
+
+/* A cell whose average rests on fewer years than the window asked for. Marked
+   rather than hidden: the number is real, the history behind it is shorter. */
+.spec-td--n.is-thin {
+  color: var(--mid, #7C8694);
+  text-decoration: underline dotted #C3CBD5;
+  text-underline-offset: 3px;
+  cursor: help;
+}
+
+.spec-nums-caveat {
+  font: 400 11.5px 'Inter', sans-serif; color: #5C4A28; line-height: 1.6;
+  margin: 9px 0 0; padding: 9px 11px;
+  background: #FCF8F0; border: 1px solid #F0E4CC; border-radius: 7px;
 }

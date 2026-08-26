@@ -4,18 +4,20 @@
 // sections for absolute and relative (alpha) monthly returns.
 // Every figure is derived from the two daily series — nothing is hardcoded, so
 // new days appear on their own as the live feed extends the series.
-import { getSeries } from './fund-data.js';
+import { getSeries, getPortfolios } from './fund-data.js';
 import * as C from './fund-calc.js';
 
 const PORTFOLIO_DEFAULT = 'summit';
 const RFR_DEFAULT = 0.045;
 const LOOKBACK_DEFAULT = 12; // months (TTM window)
+const WINDOW_LENGTHS = [2, 3, 4, 5]; // Rolling Window Analysis, in years
 const COLOR = { summit: '#44546A', bench: '#808080', neg: '#C0392B', grid: '#E7EAEE', mu: '#8A93A0' };
 
 let _strategy = null;   // full aligned series, loaded once
 let _bench = null;
 let _meta = null;       // which portfolio, which benchmark, where the days came from
 let _charts = {};
+let _req = 0;           // ticket for the in-flight portfolio switch (latest wins)
 let _winLen = 3;        // Rolling Window Analysis: window length in years
 let _winStart = null;   // ...and chosen start year (null = auto-pick latest)
 let _heroStartYear = null; // Hero charts: chosen start calendar year (null = Max / inception)
@@ -24,25 +26,71 @@ export async function loadFundReturnsPage() {
   const root = document.getElementById('fr-root');
   if (!root) return;
 
-  try {
-    if (!_strategy) {
-      const series = await getSeries(PORTFOLIO_DEFAULT);
-      _strategy = series.portfolio;
-      _bench = series.benchmark;
-      _meta = series.meta;
-    }
-  } catch (err) {
-    root.innerHTML = `<div class="fr-msg">Could not load the return series: ${esc(err.message)}</div>`;
-    return;
-  }
-  if (!_strategy.length) {
-    root.innerHTML = '<div class="fr-msg">No return data for this portfolio yet.</div>';
+  const portfolios = await getPortfolios();
+  if (!portfolios.length) {
+    root.innerHTML = '<div class="fr-msg">No portfolios configured.</div>';
     return;
   }
 
+  // The portfolio bar sits outside #fr-body, which is rebuilt on every switch:
+  // the dashboard below is specific to one portfolio, the chooser is not.
+  root.innerHTML = `
+    <div class="fr-pf-bar">
+      <span class="fr-hero-label">Portfolio</span>
+      <div class="fr-toggle" id="fr-pf-toggle">${portfolios.map(p =>
+        `<button class="fr-tg" data-code="${esc(p.code)}">${esc(p.label)}</button>`).join('')}</div>
+    </div>
+    <div id="fr-body"></div>`;
+
+  root.querySelectorAll('#fr-pf-toggle .fr-tg').forEach(btn =>
+    btn.addEventListener('click', () => showPortfolio(btn.dataset.code)));
+
+  const start = portfolios.some(p => p.code === PORTFOLIO_DEFAULT) ? PORTFOLIO_DEFAULT : portfolios[0].code;
+  await showPortfolio(start);
+}
+
+// Load one portfolio and rebuild the dashboard around it. Everything that
+// depends on the series — the shell's titles, the date range, the year toggles,
+// the rolling-window lengths — is derived here rather than assumed, because a
+// portfolio that starts in 2026 has none of the spans the original one had.
+async function showPortfolio(code) {
+  // Clicking a second portfolio while the first is still loading must not drop
+  // the click, and must not let the slower load overwrite the newer one. Each
+  // call takes a ticket; whoever comes back holding a stale one steps aside.
+  const req = ++_req;
+  const body = document.getElementById('fr-body');
+  document.querySelectorAll('#fr-pf-toggle .fr-tg').forEach(b =>
+    b.classList.toggle('active', b.dataset.code === code));
+  body.innerHTML = '<div class="fr-loading">Loading…</div>';
+
+  try {
+    const series = await getSeries(code);
+    if (req !== _req) return;
+    _strategy = series.portfolio;
+    _bench = series.benchmark;
+    _meta = series.meta;
+  } catch (err) {
+    if (req !== _req) return;
+    body.innerHTML = `<div class="fr-msg">Could not load the return series: ${esc(err.message)}</div>`;
+    return;
+  }
+  if (!_strategy.length) {
+    body.innerHTML = '<div class="fr-msg">No return data for this portfolio yet.</div>';
+    return;
+  }
+
+  // Control state belongs to the portfolio that was on screen, not to this one:
+  // its years, and the window lengths its history can support, are different.
+  _heroStartYear = null;
+  _winStart = null;
+  // Destroy the outgoing charts before the canvases they own are replaced.
+  // Dropping the map without destroying leaves live Chart instances animating
+  // against detached canvases, which piles up on every switch.
+  destroyCharts();
+
   // Built after the data loads so every title can name the portfolio and the
   // benchmark actually on screen, instead of one fund's names hardcoded.
-  root.innerHTML = shell(_meta);
+  body.innerHTML = shell(_meta);
 
   const dmin = _strategy[0].date, dmax = _strategy[_strategy.length - 1].date;
   document.getElementById('fr-ini').value = iso(dmin);
@@ -184,29 +232,45 @@ function renderMeta(s, b) {
 function sourceNote(m) {
   if (!m.liveFrom) return '';
   const via = m.liveSource === 'db' ? 'live feed' : 'pending feed connection';
-  return `<span class="fr-meta-note">History through ${fmtMonthLong(m.historyThrough)},`
-    + ` ${fmtMonthLong(m.liveFrom)} onward from the ${via}</span>`;
+  // A portfolio that starts after the cutoff has no frozen half at all — most
+  // of them will look like this, so the note has to read correctly with the
+  // history side missing rather than assume both halves exist.
+  const txt = m.historyThrough
+    ? `History through ${fmtMonthLong(m.historyThrough)}, ${fmtMonthLong(m.liveFrom)} onward from the ${via}`
+    : `${fmtMonthLong(m.liveFrom)} onward from the ${via}`;
+  return `<span class="fr-meta-note">${txt}</span>`;
 }
 
 // ─── Renderers: tables ──────────────────────────────────────
 function renderAnalysisTable(s, b, ini, fin) {
   const P = esc(_meta.label), BS = esc(_meta.benchmarkShort);
   const years = [...new Set(s.map(p => p.date.getFullYear()))].sort((a, c) => c - a);
-  const rowFor = (label, sSlice, bSlice, mode) => {
+  // Annualizing less than a year of returns compounds a partial period up to a
+  // full one — for a portfolio eight months old that produces a figure that
+  // looks like a track record and is not one. Volatility still holds (it is a
+  // daily figure scaled by √252, not an extrapolation), so only the return and
+  // the ratio built on it are withheld.
+  const canAnnualize = spanMonths(s) >= 12;
+  const rowFor = (label, sSlice, bSlice, mode, title = '') => {
     const sr = C.rets(sSlice), br = C.rets(bSlice);
+    const blankRet = mode === 'annualized' && !canAnnualize;
     // Risk Adjusted divides whatever return the row shows by the annualized vol,
     // so each row's Return ÷ Volatility = its Risk Adjusted column.
     const retVal = (a) => mode === 'annualized' ? C.annualizedArr(a) : C.totalReturnArr(a);
-    const ret = (a) => pct(retVal(a));
+    const ret = (a) => blankRet ? '—' : pct(retVal(a));
     const vol = (a) => mode === 'overall' ? '—' : pct(C.volArr(a, false));
-    const rar = (a) => { if (mode === 'overall') return '—'; const v = C.volArr(a, false); return v ? num(retVal(a) / v) : '—'; };
-    return `<tr><td class="fr-rl">${label}</td>
+    const rar = (a) => {
+      if (mode === 'overall' || blankRet) return '—';
+      const v = C.volArr(a, false); return v ? num(retVal(a) / v) : '—';
+    };
+    return `<tr><td class="fr-rl"${title ? ` title="${esc(title)}"` : ''}>${label}</td>
       <td>${ret(sr)}</td><td class="fr-bm">${ret(br)}</td>
       <td>${vol(sr)}</td><td class="fr-bm">${vol(br)}</td>
       <td>${rar(sr)}</td><td class="fr-bm">${rar(br)}</td></tr>`;
   };
   let rows = years.map(y => rowFor(y, C.yearSlice(s, y), C.yearSlice(b, y), 'year')).join('');
-  rows += rowFor('Annualized', s, b, 'annualized');
+  rows += rowFor('Annualized', s, b, 'annualized',
+    canAnnualize ? '' : 'Needs at least 12 months; the period on screen is shorter');
   rows += rowFor('Overall', s, b, 'overall');
   document.getElementById('fr-t-analysis').innerHTML = `
     <table class="fr-table">
@@ -225,10 +289,17 @@ function renderMetricsTable(s, b, ini, fin, rfr) {
   const row = (label, ttmS, ttmB, perS, perB) =>
     `<tr><td class="fr-rl">${label}</td><td>${ttmS}</td><td class="fr-bm">${ttmB}</td><td>${perS}</td><td class="fr-bm">${perB}</td></tr>`;
   const dash = '—';
+  // For a portfolio younger than the lookback, the "trailing twelve months"
+  // window is simply its whole life. Same numbers either way — but calling that
+  // column TTM would claim a year of history that does not exist.
+  const short = spanMonths(s) < LOOKBACK_DEFAULT;
+  const ttmHead = short
+    ? `<th colspan="2" title="Less than ${LOOKBACK_DEFAULT} months of data">Since inception</th>`
+    : '<th colspan="2">TTM</th>';
   const html = `
     <table class="fr-table">
       <thead>
-        <tr><th></th><th colspan="2">TTM</th><th colspan="2">Period</th></tr>
+        <tr><th></th>${ttmHead}<th colspan="2">Period</th></tr>
         <tr><th></th><th>${P}</th><th class="fr-bm">${BS}</th><th>${P}</th><th class="fr-bm">${BS}</th></tr>
       </thead><tbody>
       ${row('Standard Deviation', pct(C.volArr(aT, true)), pct(C.volArr(bT, true)), pct(C.volArr(aP, false)), pct(C.volArr(bP, false)))}
@@ -280,14 +351,46 @@ function renderStatsBlock(id, values, labels, posName, negName, downInclusiveZer
 // Rolling Window Analysis — pick a window length (2Y–5Y) and which span of
 // years to view (e.g. 3Y → 2022–2024, 2023–2025 …). Independent of the From/To
 // filter; always computed over the full series.
+// Calendar years present in the loaded series.
+function seriesYears() {
+  return [...new Set(_strategy.map(p => p.date.getFullYear()))].sort((a, b) => a - b);
+}
+// Window lengths this portfolio's history can actually fill. The rolling window
+// works in whole calendar years, so the count of years is the ceiling.
+function availableWindowLens() {
+  if (!_strategy || !_strategy.length) return WINDOW_LENGTHS;
+  const n = seriesYears().length;
+  return WINDOW_LENGTHS.filter(l => l <= n);
+}
+// Whole months between the first and last day of a series. Used to decide when
+// a figure would be extrapolating rather than measuring.
+function spanMonths(s) {
+  if (!s.length) return 0;
+  const a = s[0].date, z = s[s.length - 1].date;
+  const m = (z.getFullYear() - a.getFullYear()) * 12 + (z.getMonth() - a.getMonth());
+  return z.getDate() >= a.getDate() ? m : m - 1;
+}
+
 function renderWindowTable() {
   const P = esc(_meta.label), B = esc(_meta.benchmarkLabel);
-  const years = [...new Set(_strategy.map(p => p.date.getFullYear()))].sort((a, b) => a - b);
+  const cont = document.getElementById('fr-window');
+  const years = seriesYears();
+  const avail = availableWindowLens();
+
+  // A portfolio that started this year cannot fill even the shortest window.
+  // Say so, rather than quietly showing a "3Y" figure covering eight months.
+  if (!avail.length) {
+    cont.innerHTML = `<div class="fr-empty">Needs at least two calendar years.`
+      + ` ${esc(_meta.label)} has ${years.length === 1 ? 'one' : years.length} (${years.join(', ')}).</div>`;
+    return;
+  }
+
   const minY = years[0], maxY = years[years.length - 1];
-  const len = _winLen;
+  // _winLen is the user's preference and survives a portfolio switch; the length
+  // actually drawn is the closest one this portfolio's history can fill.
+  const len = avail.includes(_winLen) ? _winLen : avail[avail.length - 1];
   const starts = [];
   for (let y = minY; y <= maxY - len + 1; y++) starts.push(y);
-  if (starts.length === 0) starts.push(minY);
   if (_winStart == null || !starts.includes(_winStart)) _winStart = starts[starts.length - 1];
   const endY = Math.min(_winStart + len - 1, maxY);
 
@@ -299,9 +402,14 @@ function renderWindowTable() {
   }
   const sArr = C.rets(s), bArr = C.rets(b);
 
-  const lenBtns = [2, 3, 4, 5].map(n => `<button class="fr-tg ${n === len ? 'active' : ''}" data-len="${n}">${n}Y</button>`).join('');
+  // Lengths the series cannot fill stay visible but disabled — that reads as
+  // "not yet" rather than as a control that silently went missing.
+  const lenBtns = WINDOW_LENGTHS.map(n => {
+    const ok = avail.includes(n);
+    return `<button class="fr-tg ${n === len ? 'active' : ''}" data-len="${n}"`
+      + `${ok ? '' : ' disabled title="Not enough history"'}>${n}Y</button>`;
+  }).join('');
   const opts = starts.map(y => `<option value="${y}" ${y === _winStart ? 'selected' : ''}>${y}–${Math.min(y + len - 1, maxY)}</option>`).join('');
-  const cont = document.getElementById('fr-window');
   cont.innerHTML = `
     <div class="fr-win-controls">
       <div class="fr-toggle">${lenBtns}</div>
@@ -451,6 +559,10 @@ function renderHistogram(id, values, step, xlabel) {
 function build(key, canvasId, config) {
   _charts[key]?.destroy();
   _charts[key] = new Chart(document.getElementById(canvasId), config);
+}
+function destroyCharts() {
+  for (const c of Object.values(_charts)) c?.destroy();
+  _charts = {};
 }
 
 // ─── helpers ────────────────────────────────────────────────

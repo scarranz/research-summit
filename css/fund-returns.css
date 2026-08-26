@@ -40,6 +40,16 @@
 .fr-canvas-short { height: 240px; }
 .fr-foot { font-size: 10px; color: var(--mu); margin-top: 8px; font-style: italic; }
 
+/* Portfolio chooser — sits above the dashboard, which is rebuilt beneath it */
+.fr-pf-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--bdr);
+}
+.fr-loading { color: var(--mu); font-size: 13px; padding: 40px 0; text-align: center; }
+/* A control the current series cannot fill (e.g. a 5Y window on one year) */
+.fr-tg[disabled] { opacity: .38; cursor: not-allowed; }
+.fr-empty { color: var(--mu); font-size: 12px; padding: 10px 0; }
+
 .fr-hero-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
 .fr-hero-label { font-size: 11px; font-weight: 600; color: var(--mu); text-transform: uppercase; letter-spacing: .03em; }
 .fr-hero { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; margin-bottom: 18px; }

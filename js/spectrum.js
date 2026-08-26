@@ -216,8 +216,7 @@ function html() {
   h += '<h2 class="spec-title">Investment Spectrum</h2>';
   h += '<p class="spec-sub">How companies create value. Left to right is the original spectrum — ' +
        'intangible to tangible. Top to bottom is capital intensity, the axis the deck did not have. ' +
-       '<strong>Drag a company</strong> to where you think it belongs; where it lands is an argument ' +
-       'about who its neighbours are.</p>';
+       '<strong>Drag a company</strong> to where you think it belongs.</p>';
   h += '</div>';
 
   // Toolbar
@@ -298,7 +297,7 @@ function renderPanel() {
   if (!el) return;
 
   if (!_spec.sel) {
-    el.innerHTML = '<p class="spec-panel-empty">Select a company to see why it sits there — and who it ends up next to.</p>';
+    el.innerHTML = '<p class="spec-panel-empty">Select a company.</p>';
     return;
   }
 
@@ -351,7 +350,6 @@ function renderPanel() {
          '</button></li>';
   }
   h += '</ul>';
-  h += '<p class="spec-nb-ask">Same way of creating value, same appetite for capital — or not?</p>';
   h += '</div>';
 
   h += '</div>'; // grid

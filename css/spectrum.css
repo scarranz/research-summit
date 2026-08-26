@@ -279,7 +279,7 @@
   line-height: 1.62; margin: 0;
 }
 
-.spec-nb { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.spec-nb { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
 .spec-nb-btn {
   display: flex; align-items: center; gap: 8px; width: 100%;
   border: 1px solid var(--bdr, #E7EAEE);
@@ -298,10 +298,6 @@
 .spec-nb-nm {
   font: 400 11.5px 'Inter', sans-serif; color: var(--mu, #8A93A0);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.spec-nb-ask {
-  font: 400 11.5px 'Inter', sans-serif; color: var(--mu, #8A93A0);
-  line-height: 1.5; margin: 0; font-style: italic;
 }
 
 .spec-tension {

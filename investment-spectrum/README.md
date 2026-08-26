@@ -104,7 +104,7 @@ time order, with a sparkline of the company's own history beside it:
 
 | Column | What it is | Switchable |
 |---|---|---|
-| **N-yr** | 10, 5 or 3 years — a **CAGR for revenue**, a plain average of the reported years for every other row | yes |
+| **N-yr** | 10, 5 or 3 years (**3 by default**) — a **CAGR for revenue**, a plain average of the reported years for every other row | yes |
 | **LFY** | The last closed fiscal year | always on |
 | **TTM** | Trailing twelve months | yes |
 | **NFY** | Next fiscal year, estimated | yes |

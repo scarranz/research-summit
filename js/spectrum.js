@@ -781,7 +781,7 @@ export function loadSpectrumPage() {
 
   _spec = {
     pos: loadPositions(), sel: null,
-    win: '10y', numsOpen: false,
+    win: '3y', numsOpen: false,
     // Which columns The Numbers shows. LFY is always on and is not listed.
     cols: { avg: true, ttm: false, nfy: true, nfy1: true }
   };

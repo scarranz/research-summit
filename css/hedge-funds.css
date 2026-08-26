@@ -1045,6 +1045,33 @@
   margin: 18px 0 12px;
 }
 
+/* ─── Holdings Allocation Over Time ─── */
+
+.ivd-alloc-x {
+  display: inline-block;
+  margin-left: 6px;
+  opacity: .75;
+  font-weight: 700;
+}
+.ivd-alloc-x:hover { opacity: 1; }
+
+.ivd-alloc-zoomband {
+  position: absolute;
+  left: 0;
+  background: rgba(74, 127, 181, .12);
+  border-top: 1px dashed rgba(74, 127, 181, .6);
+  border-bottom: 1px dashed rgba(74, 127, 181, .6);
+  pointer-events: none;
+}
+
+.ivd-alloc-canvas { cursor: crosshair; }
+
+.ivd-alloc-add {
+  font-size: 10.5px;
+  padding: 4px 8px;
+  border-radius: 14px;
+}
+
 /* ─── Pie ─── */
 
 .ivd-pie-wrap {

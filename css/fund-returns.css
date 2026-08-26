@@ -94,16 +94,6 @@
 }
 .fr-cardhead .fr-charttitle { margin-bottom: 12px; }
 
-/* Four columns should not stretch across a full-width card */
-.fr-table-narrow { max-width: 640px; }
-
-/* Names a table or chart inside a card that holds more than one */
-.fr-subhead {
-  font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
-  color: var(--mu); margin: 16px 0 8px;
-}
-.fr-subhead:first-child { margin-top: 0; }
-
 /* Rolling window controls */
 .fr-win-controls { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
 .fr-toggle { display: inline-flex; border: 1px solid var(--bdr); border-radius: 8px; overflow: hidden; }

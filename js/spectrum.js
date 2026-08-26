@@ -19,9 +19,10 @@ import {
 } from './spectrum-metrics.js';
 
 var SPEC_STORE = 'summit.spectrum.positions.v1';
-// win  — which averaging window the average columns use
-// basis— which column the comparison table shows
-// sort — { key, dir } for the comparison table
+// win      — how many years the average / CAGR column covers
+// numsOpen  — whether The Numbers is expanded (closed on first load; the board
+//             is the point of the page, the figures are what you open to check)
+// cols      — which of The Numbers' switchable columns are showing
 var _spec = null;
 
 // Estimates load on demand from js/results-data/, so the panel and the table
@@ -276,17 +277,15 @@ function html() {
   // Detail panel
   h += '<div class="spec-panel" id="spec-panel"></div>';
 
-  // The numbers, all fifteen at once
-  h += '<div class="spec-table-wrap" id="spec-table"></div>';
-
   // Footnote
   h += '<p class="spec-foot">The default board is the team\'s placement of Aug 14, 2026, which ' +
        'started from the Investment Spectrum deck but no longer matches it everywhere. ' +
-       'Every figure below is as filed with the SEC — 10-K, or 20-F for TSMC, Spotify, Grupo ' +
+       'Select a company and open <strong>The numbers</strong> for the figures behind its ' +
+       'placement. Every one is as filed with the SEC — 10-K, or 20-F for TSMC, Spotify, Grupo ' +
        'Aeroportuario and Tiendas 3B — and ratios only ever divide two numbers from the same ' +
        'statement, so the reporting currency does not matter. A blank cell means the company ' +
-       'does not report that line, never that the figure is zero. The estimate column comes from ' +
-       'the portal\'s own Results datasets, which cover eight of the fifteen.</p>';
+       'does not report that line, never that the figure is zero. The NFY and NFY+1 columns come ' +
+       'from the portal\'s own Results datasets, which cover six of the fifteen.</p>';
 
   h += '</div>';
   return h;
@@ -382,7 +381,8 @@ function renderPanel() {
 var NUM_COLS = [
   { key: 'avg', label: 'Average', hint: 'Compound growth for revenue, average for the ratios, over the window on the right.' },
   { key: 'ttm', label: 'TTM', hint: 'The twelve months to the last interim filing.' },
-  { key: 'est', label: 'Estimate', hint: 'Next fiscal year, from the portal\'s Results dataset.' }
+  { key: 'nfy', label: 'NFY', hint: 'Next fiscal year, from the portal\'s Results dataset.' },
+  { key: 'nfy1', label: 'NFY+1', hint: 'The year after next. Anchored to the same reported year as NFY, so it carries the whole cumulative change rather than compounding an estimate onto an estimate.' }
 ];
 
 function winYears() {
@@ -430,11 +430,20 @@ function sparkHtml(series, key) {
          'stroke-linejoin="round" stroke-linecap="round"/>' + dots + '</svg>';
 }
 
+function numsToggleHtml(open, sub) {
+  return '<button class="spec-nums-toggle" id="spec-nums-toggle" aria-expanded="' +
+         (open ? 'true' : 'false') + '">' +
+         '<span class="spec-nums-chev" aria-hidden="true"></span>' +
+         '<span class="spec-nums-lbl">The numbers</span>' +
+         (sub ? '<span class="spec-nums-src">' + esc(sub) + '</span>' : '') +
+         '</button>';
+}
+
 function metricsHtml(c) {
   var series = seriesFor(c.ticker);
   if (!series || !series.length) {
     return '<div class="spec-nums spec-nums--none">' +
-           '<span class="spec-nums-lbl">The numbers</span>' +
+           numsToggleHtml(false, '') +
            '<p class="spec-nums-empty">No filing history for this company.</p></div>';
   }
 
@@ -445,13 +454,14 @@ function metricsHtml(c) {
   var ttm = ttmFor(c.ticker);
   var fwd = forwardOf(c.ticker, renderPanel);
 
-  var h = '<div class="spec-nums">';
+  var h = '<div class="spec-nums' + (_spec.numsOpen ? ' is-open' : '') + '">';
 
-  h += '<div class="spec-nums-hd">';
-  h += '<span class="spec-nums-lbl">The numbers</span>';
-  h += '<span class="spec-nums-src">' + esc(info.currency) + ' · FY' + info.firstYear.fy +
-       '–FY' + info.lastYear.fy + ' · ' + esc(info.lastYear.form || '') + '</span>';
-  h += '</div>';
+  h += numsToggleHtml(_spec.numsOpen, info.currency + ' · FY' + info.firstYear.fy +
+       '–FY' + info.lastYear.fy + ' · ' + (info.lastYear.form || ''));
+
+  if (!_spec.numsOpen) return h + '</div>';
+
+  h += '<div class="spec-nums-body">';
 
   // Column switches. Multi-select, because which comparison matters depends on
   // the company: a long average against the last year for a cyclical, the last
@@ -486,8 +496,15 @@ function metricsHtml(c) {
   if (_spec.cols.ttm) {
     cols.push({ key: 'ttm', top: 'TTM', sub: ttm ? ttm.end.slice(0, 7) : 'n/a', hint: 'Trailing twelve months.' });
   }
-  if (_spec.cols.est) {
-    cols.push({ key: 'nfy', top: 'NFY', sub: fwd ? fwd.period + 'E' : 'n/a', hint: 'Next fiscal year, estimated.' });
+  if (_spec.cols.nfy) {
+    cols.push({ key: 'nfy', top: 'NFY', sub: fwd ? fwd.nfy.period + 'E' : 'n/a', hint: 'Next fiscal year, estimated.' });
+  }
+  if (_spec.cols.nfy1) {
+    cols.push({
+      key: 'nfy1', top: 'NFY+1',
+      sub: fwd && fwd.nfy1 ? fwd.nfy1.period + 'E' : 'n/a',
+      hint: 'The year after next, estimated.'
+    });
   }
 
   h += '<table class="spec-nums-tbl"><thead><tr>';
@@ -523,10 +540,13 @@ function metricsHtml(c) {
         cell = lfy ? fmt(m, lfy.values[m.key]) : '';
       } else if (key === 'ttm') {
         cell = ttm ? fmt(m, ttm.values[m.key]) : '';
+      } else if (key === 'nfy') {
+        cell = fwd ? fmt(m, fwd.nfy.values[m.key]) : '';
       } else {
-        cell = fwd ? fmt(m, fwd.values[m.key]) : '';
+        cell = fwd && fwd.nfy1 ? fmt(m, fwd.nfy1.values[m.key]) : '';
       }
-      h += '<td class="spec-nums-v' + (key === 'nfy' ? ' spec-nums-v--est' : '') + '">' +
+      var est = key === 'nfy' || key === 'nfy1';
+      h += '<td class="spec-nums-v' + (est ? ' spec-nums-v--est' : '') + '">' +
            cell + extra + '</td>';
     }
     h += '</tr>';
@@ -542,125 +562,18 @@ function metricsHtml(c) {
     notes.push(ttm ? 'TTM to ' + ttm.end + ' (' + ttm.note + ').'
       : 'No TTM for this filer — it publishes no interim XBRL.');
   }
-  if (_spec.cols.est) {
-    notes.push(fwd ? 'NFY ' + fwd.period + ' from the ' + fwd.source + ', via the Results dataset.'
-      : 'No NFY — the portal carries no Results dataset for this company.');
+  if (_spec.cols.nfy || _spec.cols.nfy1) {
+    notes.push(fwd ? 'Estimates from the ' + fwd.source + ', via the Results dataset' +
+        (fwd.nfy1 ? '.' : '; it reaches only one year out, so NFY+1 is blank.')
+      : 'No estimates — the portal carries no Results dataset for this company.');
   }
   h += '<p class="spec-nums-note">' + esc(notes.join(' ')) + '</p>';
 
   if (c.caveat) h += '<p class="spec-nums-caveat">' + esc(c.caveat) + '</p>';
 
+  h += '</div>'; // body
   h += '</div>';
   return h;
-}
-
-/* ─── The comparison table ─────────────────────────────────────────────────
-   Fifteen rows, seven columns, one basis at a time. Placing a company is a
-   comparison, so the board needs a view where the comparison is direct rather
-   than one profile after another.                                            */
-
-var BASES = [
-  { key: 'avg', label: 'Average' },
-  { key: 'ttm', label: 'TTM' },
-  { key: 'est', label: 'Estimate' }
-];
-
-function basisValues(ticker) {
-  if (_spec.basis === 'ttm') {
-    var t = ttmFor(ticker);
-    return t ? t.values : null;
-  }
-  if (_spec.basis === 'est') {
-    var f = forwardOf(ticker, renderTable);
-    return f ? f.values : null;
-  }
-  var a = averageFor(ticker, winYears());
-  if (!a) return null;
-  var out = {}, thin = {};
-  for (var i = 0; i < METRICS.length; i++) {
-    var cell = a.values[METRICS[i].key];
-    out[METRICS[i].key] = cell.value;
-    // An average over 5 of 10 years is not the same claim as one over 10, and
-    // the table has no room to say so in full — so those cells are marked and
-    // carry the count in their tooltip.
-    if (cell.value != null && cell.n < cell.of) thin[METRICS[i].key] = cell.n + ' of ' + cell.of + ' years reported';
-  }
-  out.__thin = thin;
-  return out;
-}
-
-function renderTable() {
-  var el = document.getElementById('spec-table');
-  if (!el) return;
-
-  var rows = SPECTRUM_COMPANIES.map(function (c) {
-    return { co: c, values: basisValues(c.ticker) || {} };
-  });
-
-  if (_spec.sort && _spec.sort.key) {
-    var k = _spec.sort.key, dir = _spec.sort.dir;
-    rows.sort(function (a, b) {
-      var av = a.values[k], bv = b.values[k];
-      // Blanks always sink, whichever way the column is sorted — a company that
-      // does not report a line has not scored badly on it.
-      if (av == null && bv == null) return 0;
-      if (av == null) return 1;
-      if (bv == null) return -1;
-      return dir === 'asc' ? av - bv : bv - av;
-    });
-  }
-
-  var basisLabel = _spec.basis === 'ttm' ? 'trailing twelve months'
-    : _spec.basis === 'est' ? 'this year\'s estimate'
-    : winYears() + '-year average';
-
-  var h = '<div class="spec-table-hd">';
-  h += '<span class="spec-table-lbl">All fifteen, ' + esc(basisLabel) + '</span>';
-  h += '<div class="spec-table-ctl">';
-  for (var b = 0; b < BASES.length; b++) {
-    h += '<button class="spec-pill' + (_spec.basis === BASES[b].key ? ' is-on' : '') +
-         '" data-basis="' + BASES[b].key + '">' + esc(BASES[b].label) + '</button>';
-  }
-  h += '<span class="spec-pill-sep"></span>';
-  for (var w = 0; w < WINDOWS.length; w++) {
-    h += '<button class="spec-pill spec-pill--win' + (_spec.win === WINDOWS[w].key ? ' is-on' : '') +
-         (_spec.basis !== 'avg' ? ' is-off' : '') +
-         '" data-win="' + WINDOWS[w].key + '">' + esc(WINDOWS[w].label) + '</button>';
-  }
-  h += '</div></div>';
-
-  h += '<div class="spec-table-scroll"><table class="spec-table"><thead><tr>';
-  h += '<th class="spec-th spec-th--co">Company</th>';
-  for (var i = 0; i < METRICS.length; i++) {
-    var m = METRICS[i];
-    var on = _spec.sort && _spec.sort.key === m.key;
-    h += '<th class="spec-th spec-th--n' + (on ? ' is-sorted' : '') + '" data-sort="' + m.key + '"' +
-         ' title="' + esc(m.hint) + '">' + esc(m.short) +
-         (on ? '<i class="spec-th-dir">' + (_spec.sort.dir === 'asc' ? '↑' : '↓') + '</i>' : '') +
-         '</th>';
-  }
-  h += '</tr></thead><tbody>';
-
-  for (var r = 0; r < rows.length; r++) {
-    var co = rows[r].co, vals = rows[r].values;
-    var z = zoneOf(currentPos(co.ticker).x);
-    h += '<tr class="spec-tr' + (_spec.sel === co.ticker ? ' is-sel' : '') +
-         '" data-goto="' + esc(co.ticker) + '" style="--hue:' + z.hue + '">';
-    h += '<td class="spec-td spec-td--co">' + logoHtml(co) +
-         '<span class="spec-td-tk">' + esc(co.ticker) + '</span>' +
-         '<span class="spec-td-nm">' + esc(co.name) + '</span></td>';
-    for (var j = 0; j < METRICS.length; j++) {
-      var mm = METRICS[j];
-      var thin = vals.__thin && vals.__thin[mm.key];
-      h += '<td class="spec-td spec-td--n' + (thin ? ' is-thin' : '') + '"' +
-           (thin ? ' title="' + esc(thin) + '"' : '') + '>' + fmt(mm, vals[mm.key]) + '</td>';
-    }
-    h += '</tr>';
-  }
-  h += '</tbody></table></div>';
-
-  el.innerHTML = h;
-  wireLogos(el);
 }
 
 function renderStatus() {
@@ -706,7 +619,6 @@ function select(ticker) {
   _spec.sel = ticker;
   syncNodes();
   renderPanel();
-  renderTable();
 }
 
 /* ─── Drag ─────────────────────────────────────────────────────────────── */
@@ -791,14 +703,19 @@ function wire(root) {
     var nb = e.target.closest('.spec-nb-btn');
     if (nb) { select(nb.dataset.goto); return; }
 
-    var tr = e.target.closest('.spec-tr[data-goto]');
-    if (tr) { select(tr.dataset.goto); return; }
-
     if (e.target.closest('#spec-reset')) {
       _spec.pos = {};
       savePositions({});
       syncNodes();
       renderStatus();
+      renderPanel();
+      return;
+    }
+
+    // Open once and it stays open as you move between companies — the point of
+    // the block is comparing them, and re-opening it every time would defeat it.
+    if (e.target.closest('#spec-nums-toggle')) {
+      _spec.numsOpen = !_spec.numsOpen;
       renderPanel();
       return;
     }
@@ -815,35 +732,17 @@ function wire(root) {
       return;
     }
 
-    var basis = e.target.closest('[data-basis]');
-    if (basis) {
-      _spec.basis = basis.dataset.basis;
-      renderTable();
-      return;
-    }
-
     // One window for the whole page, set from either place. Picking a window
     // also turns on the column or basis it describes, so the click always
     // changes something visible rather than silently arming a hidden setting.
     var win = e.target.closest('[data-win]');
     if (win) {
       _spec.win = win.dataset.win;
-      if (win.closest('.spec-nums-ctl')) _spec.cols.avg = true;
-      else _spec.basis = 'avg';
-      renderTable();
+      _spec.cols.avg = true;
       renderPanel();
       return;
     }
 
-    var th = e.target.closest('[data-sort]');
-    if (th) {
-      var key = th.dataset.sort;
-      _spec.sort = (_spec.sort && _spec.sort.key === key && _spec.sort.dir === 'desc')
-        ? { key: key, dir: 'asc' }
-        : { key: key, dir: 'desc' };
-      renderTable();
-      return;
-    }
   });
 
   // Hovering a zone band lights up its criteria column, and vice versa.
@@ -882,9 +781,9 @@ export function loadSpectrumPage() {
 
   _spec = {
     pos: loadPositions(), sel: null,
-    win: '10y', basis: 'avg', sort: null,
+    win: '10y', numsOpen: false,
     // Which columns The Numbers shows. LFY is always on and is not listed.
-    cols: { avg: true, ttm: false, est: true }
+    cols: { avg: true, ttm: false, nfy: true, nfy1: true }
   };
 
   root.innerHTML = html();
@@ -893,5 +792,4 @@ export function loadSpectrumPage() {
   syncNodes();
   renderStatus();
   renderPanel();
-  renderTable();
 }

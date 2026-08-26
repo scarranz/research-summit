@@ -328,10 +328,29 @@
   background: var(--pale, #F4F6F9); border: 1px solid var(--bdr, #E7EAEE);
   border-radius: 9px;
 }
-.spec-nums-hd {
-  display: flex; align-items: baseline; justify-content: space-between;
-  gap: 12px; flex-wrap: wrap; margin-bottom: 9px;
+.spec-nums.is-open { padding-bottom: 13px; }
+
+/* Closed by default: the board is what the page is for, and the figures are
+   what you open to check a placement against. The whole header is the control,
+   so there is no small target to hunt for. */
+.spec-nums-toggle {
+  display: flex; align-items: baseline; gap: 10px; width: 100%;
+  background: none; border: 0; padding: 0; margin: 0;
+  cursor: pointer; text-align: left;
 }
+.spec-nums-toggle:hover .spec-nums-lbl { color: var(--navy, #1E2733); }
+.spec-nums.is-open .spec-nums-toggle { margin-bottom: 10px; }
+
+.spec-nums-chev {
+  flex: none; width: 0; height: 0; align-self: center;
+  border-left: 5px solid var(--mid, #7C8694);
+  border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+  transition: transform .16s;
+}
+.spec-nums.is-open .spec-nums-chev { transform: rotate(90deg); }
+
+.spec-nums-toggle .spec-nums-src { margin-left: auto; }
+
 .spec-nums-lbl {
   font: 600 10.5px 'Inter', sans-serif; color: var(--mid, #7C8694);
   text-transform: uppercase; letter-spacing: .07em;
@@ -376,69 +395,6 @@
   border-top: 1px solid #E4E8ED;
 }
 
-/* ─── The comparison table ──────────────────────────────────────────── */
-
-.spec-table-wrap {
-  border: 1px solid var(--bdr, #E7EAEE); border-radius: 12px; background: #fff;
-  overflow: hidden;
-}
-.spec-table-hd {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 12px; flex-wrap: wrap;
-  padding: 12px 16px; border-bottom: 1px solid var(--bdr, #E7EAEE);
-}
-.spec-table-lbl { font: 600 12.5px 'Inter', sans-serif; color: var(--navy, #1E2733); }
-.spec-table-ctl { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
-.spec-pill {
-  border: 1px solid var(--bdr, #E7EAEE); background: #fff; border-radius: 999px;
-  font: 600 11px 'Inter', sans-serif; color: var(--mid, #7C8694);
-  padding: 4px 11px; cursor: pointer;
-  transition: border-color .15s, background .15s, color .15s, opacity .15s;
-}
-.spec-pill:hover { border-color: #b9c2cd; color: var(--navy, #1E2733); }
-.spec-pill.is-on {
-  background: var(--navy, #1E2733); border-color: var(--navy, #1E2733); color: #fff;
-}
-/* The window pills stay clickable while another basis is showing — they just
-   stop claiming to describe what is on screen. */
-.spec-pill--win.is-off { opacity: .45; }
-.spec-pill-sep { width: 1px; height: 16px; background: var(--bdr, #E7EAEE); margin: 0 5px; }
-
-.spec-table-scroll { overflow-x: auto; }
-.spec-table { width: 100%; border-collapse: collapse; min-width: 760px; }
-.spec-th {
-  font: 600 10px 'Inter', sans-serif; color: var(--mu, #8A93A0);
-  text-transform: uppercase; letter-spacing: .06em;
-  padding: 9px 12px; text-align: right; white-space: nowrap;
-  background: var(--pale, #F4F6F9);
-  border-bottom: 1px solid var(--bdr, #E7EAEE);
-  cursor: pointer; user-select: none;
-}
-.spec-th--co { text-align: left; cursor: default; }
-.spec-th--n:hover { color: var(--navy, #1E2733); }
-.spec-th.is-sorted { color: var(--navy, #1E2733); }
-.spec-th-dir { font-style: normal; margin-left: 3px; }
-
-.spec-tr { border-bottom: 1px solid #EEF1F4; cursor: pointer; }
-.spec-tr:last-child { border-bottom: none; }
-.spec-tr:hover { background: color-mix(in srgb, var(--hue, #F4F6F9) 7%, #fff); }
-.spec-tr.is-sel { background: color-mix(in srgb, var(--hue, #F4F6F9) 13%, #fff); }
-.spec-td { padding: 7px 12px; }
-.spec-td--co {
-  display: flex; align-items: center; gap: 8px; white-space: nowrap;
-  border-left: 3px solid var(--hue, transparent);
-}
-.spec-td--co .spec-node-logo { width: 16px; height: 16px; }
-.spec-td-tk { font: 700 11.5px 'Inter', sans-serif; color: var(--hue, #1E2733); }
-.spec-td-nm {
-  font: 400 11.5px 'Inter', sans-serif; color: var(--mu, #8A93A0);
-  overflow: hidden; text-overflow: ellipsis; max-width: 170px;
-}
-.spec-td--n {
-  font: 500 12px 'Inter', sans-serif; color: var(--text, #1E2733);
-  font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap;
-}
-
 .spec-foot {
   font: 400 11.5px 'Inter', sans-serif; color: var(--mu, #8A93A0);
   line-height: 1.6; margin: 0; max-width: 900px;
@@ -453,23 +409,28 @@
   .spec-xlab-n { display: none; }
 }
 
-/* A cell whose average rests on fewer years than the window asked for. Marked
-   rather than hidden: the number is real, the history behind it is shorter. */
-.spec-td--n.is-thin {
-  color: var(--mid, #7C8694);
-  text-decoration: underline dotted #C3CBD5;
-  text-underline-offset: 3px;
-  cursor: help;
-}
-
 .spec-nums-caveat {
   font: 400 11.5px 'Inter', sans-serif; color: #5C4A28; line-height: 1.6;
   margin: 9px 0 0; padding: 9px 11px;
   background: #FCF8F0; border: 1px solid #F0E4CC; border-radius: 7px;
 }
 
-/* Column switches inside The Numbers. Same pills as the table below, one size
-   down — this is a control on a block, not on the page. */
+/* Column switches inside The Numbers. */
+.spec-pill {
+  border: 1px solid var(--bdr, #E7EAEE); background: #fff; border-radius: 999px;
+  font: 600 11px 'Inter', sans-serif; color: var(--mid, #7C8694);
+  padding: 4px 11px; cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s, opacity .15s;
+}
+.spec-pill:hover { border-color: #b9c2cd; color: var(--navy, #1E2733); }
+.spec-pill.is-on {
+  background: var(--navy, #1E2733); border-color: var(--navy, #1E2733); color: #fff;
+}
+/* The window pills stay clickable while the column they describe is hidden —
+   they just stop claiming to describe what is on screen. */
+.spec-pill--win.is-off { opacity: .45; }
+.spec-pill-sep { width: 1px; height: 16px; background: #D8DEE5; margin: 0 5px; }
+
 .spec-nums-ctl {
   display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
   margin: 0 0 10px;

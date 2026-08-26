@@ -78,7 +78,7 @@ enough to begin.
 |---|---|
 | Aug 13, 2026 | Branch `feat/investment-spectrum` created. Folder set up, awaiting reference material. Nothing built yet. |
 | Aug 14, 2026 | Built. A plane, not a line: `x` keeps the deck's spectrum, `y` becomes capital intensity. Draggable, persisted in `localStorage`, nearest-neighbour panel. Files: `js/spectrum-data.js`, `js/spectrum.js`, `css/spectrum.css`. |
-| Aug 26, 2026 | Branch caught up with `main`. Metrics layer added: seven ratios per company from SEC XBRL, with a period toggle, TTM and this year's estimate. |
+| Aug 26, 2026 | Branch caught up with `main`. Metrics layer added: seven ratios per company from SEC XBRL, collapsed in the company panel, with columns for the 10/5/3-year figure, LFY, TTM, NFY and NFY+1. |
 
 ---
 
@@ -98,8 +98,9 @@ score, no ranking and no verdict attached.
 | Capex / revenue | Capex ÷ revenue |
 | Capex / D&A | Capex ÷ depreciation and amortisation |
 
-In the panel each ratio is a row, read left to right in time order, with a sparkline of the
-company's own history beside it:
+It lives in the company panel, **collapsed by default** — the board is what the page is for, and the
+figures are what you open to check a placement against. Each ratio is a row, read left to right in
+time order, with a sparkline of the company's own history beside it:
 
 | Column | What it is | Switchable |
 |---|---|---|
@@ -107,20 +108,20 @@ company's own history beside it:
 | **LFY** | The last closed fiscal year | always on |
 | **TTM** | Trailing twelve months | yes |
 | **NFY** | Next fiscal year, estimated | yes |
+| **NFY+1** | The year after that, estimated | yes |
 
-The three switchable columns are pills above the table, multi-select: which comparison matters
-depends on the company — a long average against last year for a cyclical, last year against next for
-one whose model is changing. LFY never switches off, because it is the anchor everything else is read
-against, and the last remaining switched column cannot be turned off either — an empty table looks
-like a bug rather than a choice.
+The switchable columns are pills above the table, multi-select: which comparison matters depends on
+the company — a long average against last year for a cyclical, last year against next for one whose
+model is changing. LFY never switches off, because it is the anchor everything else is read against,
+and the last remaining switched column cannot be turned off either: an empty table looks like a bug
+rather than a choice. Open the block once and it stays open as you move between companies.
 
 Revenue gets a **compound** rate rather than an average of yearly rates: averaging ten growth rates
 overweights whichever year happened to be small and reports a number no shareholder ever earned.
 Only revenue compounds, so only revenue gets one.
 
-Under the board, all fifteen sit in one sortable table on whichever basis you pick — which is how a
-placement actually gets decided, since placing a company is a comparison. The window pills are shared
-between the two, so the page never shows a 5-year figure in one place and a 10-year one in the other.
+**NFY+1 is anchored to the same reported year as NFY**, not to NFY. It carries the whole cumulative
+change from the last actual rather than compounding one anchoring adjustment onto another.
 
 ### Where the numbers come from
 
@@ -170,7 +171,7 @@ The model is preferred over the Street where both exist, and the panel says whic
 
 ### Known limits
 
-- **The estimate column covers six of fifteen** — AMZN, GOOGL, META, UBER, LYFT and TBBB — and each
+- **The estimate columns cover six of fifteen** — AMZN, GOOGL, META, UBER, LYFT and TBBB — and each
   dataset carries a different set of lines. Alphabet models all seven ratios; Tiendas 3B two.
 - **No TTM for the 20-F filers** (TSMC, Spotify, Grupo Aeroportuario, Tiendas 3B): they publish no
   interim XBRL. TTM elsewhere is the last full year plus the current year to date, less the same

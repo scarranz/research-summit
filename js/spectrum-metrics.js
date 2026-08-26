@@ -202,15 +202,18 @@ function pickSource(metric, index) {
   return null;
 }
 
-function anchored(metric, index, source) {
+// `anchorIdx` is the last period with a reported actual. Every forward year is
+// anchored to that same one, so the second estimated year carries the whole
+// cumulative change rather than compounding one anchoring error onto another.
+function anchored(metric, index, source, anchorIdx) {
   if (!metric) return null;
   const series = metric[source] || (metric.summit && metric.summit[index] != null ? metric.summit : metric.cons);
   if (!series || series[index] == null) return null;
 
-  const prevEst = series[index - 1];
-  const prevAct = metric.act && metric.act[index - 1];
-  if (prevEst != null && prevAct != null && prevEst !== 0) {
-    return prevAct * (series[index] / prevEst);
+  const baseEst = series[anchorIdx];
+  const baseAct = metric.act && metric.act[anchorIdx];
+  if (baseEst != null && baseAct != null && baseEst !== 0) {
+    return baseAct * (series[index] / baseEst);
   }
   return series[index];
 }
@@ -238,32 +241,45 @@ export async function forwardFor(ticker) {
 
   const source = pickSource(rev, i);
   if (!source) return (_forwardCache[ticker] = null);
+  const anchorIdx = i - 1;
 
-  const get = (slot) => (spec.keys[slot] ? anchored(view.metrics[spec.keys[slot]], i, source) : null);
-  const revNow = get('rev');
-  if (!revNow) return (_forwardCache[ticker] = null);
+  // One forward year, resolved against the last reported year and against the
+  // revenue of the year before it for the growth line.
+  const yearAt = (idx, prevRevenue) => {
+    const get = (slot) => (spec.keys[slot] ? anchored(view.metrics[spec.keys[slot]], idx, source, anchorIdx) : null);
+    const revNow = get('rev');
+    if (revNow == null) return null;
 
-  const revPrev = rev.act && rev.act[i - 1] != null ? rev.act[i - 1] : null;
-  const gp = get('gp'), op = get('op'), cfo = get('cfo'), capex = get('capex'), da = get('da'), fcf = get('fcf');
+    const gp = get('gp'), op = get('op'), cfo = get('cfo'),
+          capex = get('capex'), da = get('da'), fcf = get('fcf');
+    const ratio = (a, b) => (a != null && b ? a / b : null);
 
-  const ratio = (a, b) => (a != null && b ? a / b : null);
-  const values = {
-    revGrowth: revPrev ? revNow / revPrev - 1 : null,
-    grossMargin: ratio(gp, revNow),
-    opMargin: ratio(op, revNow),
-    cfoMargin: ratio(cfo, revNow),
-    // A modelled free-cash-flow line is used where one exists; otherwise it is
-    // built the same way the history builds it, from cash flow less capex.
-    fcfMargin: fcf != null ? ratio(fcf, revNow)
-      : (cfo != null && capex != null ? (cfo - capex) / revNow : null),
-    capexRev: ratio(capex, revNow),
-    capexDa: capex != null && da ? capex / da : null
+    return {
+      period: rev.periods[idx],
+      revenue: revNow,
+      values: {
+        revGrowth: prevRevenue ? revNow / prevRevenue - 1 : null,
+        grossMargin: ratio(gp, revNow),
+        opMargin: ratio(op, revNow),
+        cfoMargin: ratio(cfo, revNow),
+        // A modelled free-cash-flow line is used where one exists; otherwise it
+        // is built the way the history builds it, from cash flow less capex.
+        fcfMargin: fcf != null ? ratio(fcf, revNow)
+          : (cfo != null && capex != null ? (cfo - capex) / revNow : null),
+        capexRev: ratio(capex, revNow),
+        capexDa: capex != null && da ? capex / da : null
+      }
+    };
   };
 
+  const lastActual = rev.act && rev.act[anchorIdx] != null ? rev.act[anchorIdx] : null;
+  const nfy = yearAt(i, lastActual);
+  if (!nfy) return (_forwardCache[ticker] = null);
+  const nfy1 = i + 1 < rev.periods.length ? yearAt(i + 1, nfy.revenue) : null;
+
   return (_forwardCache[ticker] = {
-    period: rev.periods[i],
     source: source === 'summit' ? 'Summit model' : 'Street consensus',
-    values
+    nfy, nfy1
   });
 }
 

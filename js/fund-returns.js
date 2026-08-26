@@ -573,6 +573,7 @@ function renderWindowBlock() {
       <div class="fr-toggle">${lenBtns}</div>${metricSel}
     </div>
     <div class="fr-period fr-period-card" id="fr-p-window"></div>
+    <div id="fr-roll-summary"></div>
     <div id="fr-roll-out"></div>`;
 
   cont.querySelectorAll('.fr-tg').forEach(btn =>
@@ -581,7 +582,26 @@ function renderWindowBlock() {
     .addEventListener('change', e => { _rollMetric = e.target.value; renderWindowBlock(); });
   renderPeriod('window', 'fr-p-window', renderWindowBlock);
 
+  renderWindowSummary(s, b);
   renderRolling(s, b, m, span);
+}
+
+// The headline numbers over the selected period, portfolio against benchmark.
+// Rendered outside the rolling chart's guard on purpose: the period totals are
+// valid even when the period is too short to fill a single rolling window.
+function renderWindowSummary(s, b) {
+  const el = document.getElementById('fr-roll-summary');
+  if (!s.length) { el.innerHTML = '<div class="fr-empty">No data in this period.</div>'; return; }
+  const P = esc(_meta.label), B = esc(_meta.benchmarkLabel);
+  const sArr = C.rets(s), bArr = C.rets(b);
+  el.innerHTML = `
+    <div class="fr-subhead">Selected period</div>
+    <table class="fr-table fr-table-narrow">
+      <thead><tr><th></th><th>Return</th><th>Volatility</th><th>Risk Adjusted</th></tr></thead>
+      <tbody>
+        <tr><td class="fr-rl">${P}</td><td>${pct(C.totalReturnArr(sArr))}</td><td>${pct(C.volArr(sArr, false))}</td><td>${num(C.riskAdjusted(sArr))}</td></tr>
+        <tr><td class="fr-rl fr-bm">${B}</td><td class="fr-bm">${pct(C.totalReturnArr(bArr))}</td><td class="fr-bm">${pct(C.volArr(bArr, false))}</td><td class="fr-bm">${num(C.riskAdjusted(bArr))}</td></tr>
+      </tbody></table>`;
 }
 
 function renderRolling(s, b, m, span) {
@@ -604,6 +624,7 @@ function renderRolling(s, b, m, span) {
   const fmt = v => v == null || Number.isNaN(v) ? '—' : (m.pct ? pct(v) : num(v));
 
   out.innerHTML = `
+    <div class="fr-subhead">Rolling ${_rollLen}-month windows</div>
     <div class="fr-canvas-wrap fr-canvas-short"><canvas id="fr-roll"></canvas></div>
     <div id="fr-roll-table"></div>
     <div class="fr-foot">*Each point is the ${_rollLen}-month window ending that day.

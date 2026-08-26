@@ -10,7 +10,7 @@ import * as C from './fund-calc.js';
 const PORTFOLIO_DEFAULT = 'summit';
 const RFR_DEFAULT = 0.045;
 const LOOKBACK_DEFAULT = 12; // months (TTM window)
-const WINDOW_LENGTHS = [2, 3, 4, 5]; // Rolling Window Analysis, in years
+const ROLL_LENGTHS = [3, 6, 12, 24, 36, 60]; // Rolling Window Analysis, in months
 const COLOR = { summit: '#44546A', bench: '#808080', neg: '#C0392B', grid: '#E7EAEE', mu: '#8A93A0' };
 
 let _strategy = null;   // full aligned series, loaded once
@@ -18,8 +18,8 @@ let _bench = null;
 let _meta = null;       // which portfolio, which benchmark, where the days came from
 let _charts = {};
 let _req = 0;           // ticket for the in-flight portfolio switch (latest wins)
-let _winLen = 3;        // Rolling Window Analysis: window length in years
-let _winStart = null;   // ...and chosen start year (null = auto-pick latest)
+let _rollLen = 12;      // Rolling Window Analysis: window length in months
+let _rollMetric = 'return';  // ...and which metric it plots
 // One period-picker state per block. They are deliberately independent: the
 // global From/To they replace forced every table to answer the same question.
 let _periods = {};
@@ -87,8 +87,7 @@ async function showPortfolio(code) {
 
   // Control state belongs to the portfolio that was on screen, not to this one:
   // its years, and the window lengths its history can support, are different.
-  _periods = { hero: newPeriod(), metrics: newPeriod(), capture: newPeriod(), monthly: newPeriod() };
-  _winStart = null;
+  _periods = { hero: newPeriod(), metrics: newPeriod(), capture: newPeriod(), monthly: newPeriod(), window: newPeriod() };
   // Destroy the outgoing charts before the canvases they own are replaced.
   // Dropping the map without destroying leaves live Chart instances animating
   // against detached canvases, which piles up on every switch.
@@ -224,7 +223,7 @@ function renderAll() {
   renderMetricsBlock();
   renderCaptureBlock();
   renderMonthlyBlock();
-  renderWindowTable();
+  renderWindowBlock();
   setBadge(`Data through ${fmtDate(_meta.through)}`, 'neutral');
 }
 
@@ -292,7 +291,12 @@ function shell(m) {
     <div class="fr-tables">
       <div class="fr-tcol">
         <div class="card"><div class="fr-charttitle">Performance &amp; Risk Analysis</div><div id="fr-t-analysis"></div></div>
-        <div class="card"><div class="fr-charttitle">Rolling Window Analysis</div><div id="fr-window"></div></div>
+        <div class="card">
+          <div class="fr-cardhead"><div class="fr-charttitle">Capture Ratios</div></div>
+          <div class="fr-period fr-period-card" id="fr-p-capture"></div>
+          <div id="fr-t-capture"></div>
+          <div class="fr-foot">*Calculated with monthly returns</div>
+        </div>
       </div>
       <div class="fr-tcol">
         <div class="card">
@@ -304,13 +308,12 @@ function shell(m) {
           <div id="fr-t-metrics"></div>
           <div class="fr-foot">*The period control drives the Period columns; TTM is always the last twelve months</div>
         </div>
-        <div class="card">
-          <div class="fr-cardhead"><div class="fr-charttitle">Capture Ratios</div></div>
-          <div class="fr-period fr-period-card" id="fr-p-capture"></div>
-          <div id="fr-t-capture"></div>
-          <div class="fr-foot">*Calculated with monthly returns</div>
-        </div>
       </div>
+    </div>
+
+    <div class="card fr-section">
+      <div class="fr-charttitle">Rolling Window Analysis</div>
+      <div id="fr-window"></div>
     </div>
 
     <div class="fr-hero-bar">
@@ -496,13 +499,6 @@ function renderStatsBlock(id, values, labels, posName, negName, downInclusiveZer
 function seriesYears() {
   return [...new Set(_strategy.map(p => p.date.getFullYear()))].sort((a, b) => a - b);
 }
-// Window lengths this portfolio's history can actually fill. The rolling window
-// works in whole calendar years, so the count of years is the ceiling.
-function availableWindowLens() {
-  if (!_strategy || !_strategy.length) return WINDOW_LENGTHS;
-  const n = seriesYears().length;
-  return WINDOW_LENGTHS.filter(l => l <= n);
-}
 // Whole months between the first and last day of a series. Used to decide when
 // a figure would be extrapolating rather than measuring.
 function spanMonths(s) {
@@ -512,59 +508,136 @@ function spanMonths(s) {
   return z.getDate() >= a.getDate() ? m : m - 1;
 }
 
-function renderWindowTable() {
-  const P = esc(_meta.label), B = esc(_meta.benchmarkLabel);
+// ─── Rolling Window Analysis ────────────────────────────────
+// This used to be two rows of numbers for one static window, which answers
+// "what did three years look like" but not "was it steady or did it come from a
+// couple of good months". So it draws the metric as a series: one window per
+// day, moving across the period, which is where persistence actually shows.
+//
+// `calc` receives the portfolio and benchmark returns inside the window. The
+// absolute metrics ignore the second argument, which is what lets the same
+// function compute the benchmark's own line by passing it as both.
+const ROLL_METRICS = [
+  { key: 'return', label: 'Return', group: 'Absolute', pct: true, both: true, signed: true, calc: a => C.totalReturnArr(a) },
+  { key: 'vol', label: 'Volatility', group: 'Absolute', pct: true, both: true, calc: a => C.volArr(a, false) },
+  { key: 'rar', label: 'Risk Adjusted', group: 'Absolute', both: true, signed: true, calc: a => { const v = C.volArr(a, false); return v ? C.totalReturnArr(a) / v : null; } },
+  { key: 'sharpe', label: 'Sharpe Ratio', group: 'Absolute', both: true, signed: true, calc: (a, _b, rfr) => C.sharpe(a, rfr, false) },
+  { key: 'alpha', label: 'Alpha', group: 'Versus benchmark', pct: true, signed: true, calc: (a, b) => C.totalReturnArr(a) - C.totalReturnArr(b) },
+  { key: 'beta', label: 'Beta', group: 'Versus benchmark', calc: (a, b) => C.betaPost(a, b) },
+  { key: 'corr', label: 'Correlation', group: 'Versus benchmark', pct: true, calc: (a, b) => C.correlation(a, b) },
+  { key: 'te', label: 'Tracking Error', group: 'Versus benchmark', pct: true, calc: (a, b) => C.volArr(a.map((x, i) => x - b[i]), false) },
+  { key: 'ir', label: 'Information Ratio', group: 'Versus benchmark', signed: true, calc: (a, b) => C.informationRatio(a, b) },
+];
+const rollMetric = () => ROLL_METRICS.find(m => m.key === _rollMetric) || ROLL_METRICS[0];
+
+// One value per day, each computed over the `months` ending that day.
+//
+// Points only start once the window is complete. A partial window compounds a
+// few days into what the axis labels as a three-year return, which reads as
+// wild early volatility that never happened.
+function rollingPoints(s, b, months, m, rfr) {
+  const labels = [], a = [], bench = [];
+  let j = 0;
+  for (let i = 0; i < s.length; i++) {
+    const end = s[i].date;
+    const start = new Date(end.getFullYear(), end.getMonth() - months, end.getDate());
+    if (start < s[0].date) continue;
+    while (j < i && s[j].date < start) j++;
+    if (i - j < 2) continue;
+    const as = [], bs = [];
+    for (let k = j; k <= i; k++) { as.push(s[k].r); bs.push(b[k].r); }
+    labels.push(end);
+    a.push(m.calc(as, bs, rfr));
+    if (m.both) bench.push(m.calc(bs, bs, rfr));
+  }
+  return { labels, a, bench: m.both ? bench : null };
+}
+
+function renderWindowBlock() {
   const cont = document.getElementById('fr-window');
-  const years = seriesYears();
-  const avail = availableWindowLens();
+  const m = rollMetric();
+  const { s, b } = sliceFor('window');
+  const span = spanMonths(s);
 
-  // A portfolio that started this year cannot fill even the shortest window.
-  // Say so, rather than quietly showing a "3Y" figure covering eight months.
-  if (!avail.length) {
-    cont.innerHTML = `<div class="fr-empty">Needs at least two calendar years.`
-      + ` ${esc(_meta.label)} has ${years.length === 1 ? 'one' : years.length} (${years.join(', ')}).</div>`;
-    return;
-  }
+  // Lengths the period cannot fill stay visible but disabled — "not yet",
+  // rather than a control that silently went missing.
+  const lenBtns = ROLL_LENGTHS.map(n => `<button class="fr-tg ${n === _rollLen ? 'active' : ''}" data-len="${n}"`
+    + `${n <= span ? '' : ' disabled title="Longer than the selected period"'}>${n}M</button>`).join('');
+  const groups = [...new Set(ROLL_METRICS.map(x => x.group))];
+  const metricSel = `<select class="fr-sel" id="fr-roll-metric">${groups.map(g =>
+    `<optgroup label="${g}">${ROLL_METRICS.filter(x => x.group === g).map(x =>
+      `<option value="${x.key}" ${x.key === m.key ? 'selected' : ''}>${x.label}</option>`).join('')}</optgroup>`).join('')}</select>`;
 
-  const minY = years[0], maxY = years[years.length - 1];
-  // _winLen is the user's preference and survives a portfolio switch; the length
-  // actually drawn is the closest one this portfolio's history can fill.
-  const len = avail.includes(_winLen) ? _winLen : avail[avail.length - 1];
-  const starts = [];
-  for (let y = minY; y <= maxY - len + 1; y++) starts.push(y);
-  if (_winStart == null || !starts.includes(_winStart)) _winStart = starts[starts.length - 1];
-  const endY = Math.min(_winStart + len - 1, maxY);
-
-  const ini = new Date(_winStart, 0, 1), fin = new Date(endY, 11, 31);
-  const s = [], b = [];
-  for (let i = 0; i < _strategy.length; i++) {
-    const d = _strategy[i].date;
-    if (d >= ini && d <= fin) { s.push(_strategy[i]); b.push(_bench[i]); }
-  }
-  const sArr = C.rets(s), bArr = C.rets(b);
-
-  // Lengths the series cannot fill stay visible but disabled — that reads as
-  // "not yet" rather than as a control that silently went missing.
-  const lenBtns = WINDOW_LENGTHS.map(n => {
-    const ok = avail.includes(n);
-    return `<button class="fr-tg ${n === len ? 'active' : ''}" data-len="${n}"`
-      + `${ok ? '' : ' disabled title="Not enough history"'}>${n}Y</button>`;
-  }).join('');
-  const opts = starts.map(y => `<option value="${y}" ${y === _winStart ? 'selected' : ''}>${y}–${Math.min(y + len - 1, maxY)}</option>`).join('');
   cont.innerHTML = `
     <div class="fr-win-controls">
-      <div class="fr-toggle">${lenBtns}</div>
-      <select id="fr-win-range" class="fr-sel">${opts}</select>
+      <div class="fr-toggle">${lenBtns}</div>${metricSel}
     </div>
-    <table class="fr-table">
-      <thead><tr><th></th><th>Return</th><th>Volatility</th><th>Risk Adjusted</th></tr></thead>
-      <tbody>
-        <tr><td class="fr-rl">${P}</td><td>${pct(C.totalReturnArr(sArr))}</td><td>${pct(C.volArr(sArr, false))}</td><td>${num(C.riskAdjusted(sArr))}</td></tr>
-        <tr><td class="fr-rl fr-bm">${B}</td><td class="fr-bm">${pct(C.totalReturnArr(bArr))}</td><td class="fr-bm">${pct(C.volArr(bArr, false))}</td><td class="fr-bm">${num(C.riskAdjusted(bArr))}</td></tr>
-      </tbody></table>`;
+    <div class="fr-period fr-period-card" id="fr-p-window"></div>
+    <div id="fr-roll-out"></div>`;
+
   cont.querySelectorAll('.fr-tg').forEach(btn =>
-    btn.addEventListener('click', () => { _winLen = +btn.dataset.len; _winStart = null; renderWindowTable(); }));
-  document.getElementById('fr-win-range').addEventListener('change', e => { _winStart = +e.target.value; renderWindowTable(); });
+    btn.addEventListener('click', () => { _rollLen = +btn.dataset.len; renderWindowBlock(); }));
+  document.getElementById('fr-roll-metric')
+    .addEventListener('change', e => { _rollMetric = e.target.value; renderWindowBlock(); });
+  renderPeriod('window', 'fr-p-window', renderWindowBlock);
+
+  renderRolling(s, b, m, span);
+}
+
+function renderRolling(s, b, m, span) {
+  const out = document.getElementById('fr-roll-out');
+  destroyChart('roll');
+  if (_rollLen > span) {
+    out.innerHTML = `<div class="fr-empty">The selected period is ${span} month${span === 1 ? '' : 's'} long,`
+      + ` shorter than the ${_rollLen}-month window. Pick a shorter window or a longer period.</div>`;
+    return;
+  }
+  const rfr = rfrValue();
+  const r = rollingPoints(s, b, _rollLen, m, rfr);
+  if (!r.labels.length) { out.innerHTML = '<div class="fr-empty">No complete window in this period.</div>'; return; }
+
+  // Escaped for the table, raw for the chart: Chart.js draws its legend on a
+  // canvas, where an HTML entity would render literally as "S&amp;P 500".
+  const P = esc(_meta.label), B = esc(_meta.benchmarkLabel);
+  const Praw = _meta.label, Braw = _meta.benchmarkLabel;
+  const scale = m.pct ? 100 : 1;
+  const fmt = v => v == null || Number.isNaN(v) ? '—' : (m.pct ? pct(v) : num(v));
+
+  out.innerHTML = `
+    <div class="fr-canvas-wrap fr-canvas-short"><canvas id="fr-roll"></canvas></div>
+    <div id="fr-roll-table"></div>
+    <div class="fr-foot">*Each point is the ${_rollLen}-month window ending that day.
+      ${esc(m.label)} over the whole selected period is shown for comparison.</div>`;
+
+  const rows = [{ label: P, vals: r.a, bm: false }];
+  if (r.bench) rows.push({ label: B, vals: r.bench, bm: true });
+
+  // "Full period" is the same metric computed once over the whole period rather
+  // than rolled — the reference the rolling line is scattered around.
+  const sArr = C.rets(s), bArr = C.rets(b);
+  const full = [m.calc(sArr, bArr, rfr), r.bench ? m.calc(bArr, bArr, rfr) : null];
+
+  const head = `<tr><th></th><th>Latest</th><th>Min</th><th>Max</th><th>Average</th>`
+    + `<th>Full period</th>${m.signed ? '<th>% &gt; 0</th>' : ''}</tr>`;
+  const body = rows.map((row, idx) => {
+    const v = row.vals.filter(x => x != null && !Number.isNaN(x));
+    const cls = row.bm ? ' class="fr-bm"' : '';
+    const posPct = v.length ? v.filter(x => x > 0).length / v.length : 0;
+    return `<tr><td class="fr-rl${row.bm ? ' fr-bm' : ''}">${row.label}</td>
+      <td${cls}>${fmt(v[v.length - 1])}</td><td${cls}>${fmt(Math.min(...v))}</td>
+      <td${cls}>${fmt(Math.max(...v))}</td><td${cls}>${fmt(C.mean(v))}</td>
+      <td${cls}>${fmt(full[idx])}</td>${m.signed ? `<td${cls}>${pct(posPct, 0)}</td>` : ''}</tr>`;
+  }).join('');
+  document.getElementById('fr-roll-table').innerHTML =
+    `<table class="fr-table"><thead>${head}</thead><tbody>${body}</tbody></table>`;
+
+  const ds = [{ label: Praw, data: r.labels.map((d, i) => ({ x: d.getTime(), y: r.a[i] * scale })), borderColor: COLOR.summit, backgroundColor: COLOR.summit, borderWidth: 1.5, pointRadius: 0, tension: 0.05 }];
+  if (r.bench) ds.push({ label: Braw, data: r.labels.map((d, i) => ({ x: d.getTime(), y: r.bench[i] * scale })), borderColor: COLOR.bench, backgroundColor: COLOR.bench, borderWidth: 1.3, pointRadius: 0, tension: 0.05 });
+
+  const opts = timeLineOpts(!!r.bench, semiAnnual(r.labels.map(d => ({ date: d }))));
+  opts.scales.y.ticks.callback = v => m.pct ? v + '%' : v;
+  opts.plugins.tooltip.callbacks.label = c => `${c.dataset.label}: ${m.pct ? c.parsed.y.toFixed(1) + '%' : c.parsed.y.toFixed(2)}`;
+  build('roll', 'fr-roll', { type: 'line', data: { datasets: ds }, options: opts });
 }
 
 // Monthly returns table — the portfolio, its benchmark, and the month's alpha.

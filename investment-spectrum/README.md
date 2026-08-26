@@ -98,10 +98,29 @@ score, no ranking and no verdict attached.
 | Capex / revenue | Capex ÷ revenue |
 | Capex / D&A | Capex ÷ depreciation and amortisation |
 
-Each appears three ways: an **average** over the last 10, 5 or 3 years; **trailing twelve months**;
-and **this year's estimate**. In the panel every row also carries a sparkline of the company's own
-history. Under the board, all fifteen sit in one sortable table on whichever basis you pick — which
-is how a placement actually gets decided, since placing a company is a comparison.
+In the panel each ratio is a row, read left to right in time order, with a sparkline of the
+company's own history beside it:
+
+| Column | What it is | Switchable |
+|---|---|---|
+| **N-yr** | 10, 5 or 3 years — a **CAGR for revenue**, a plain average of the reported years for every other row | yes |
+| **LFY** | The last closed fiscal year | always on |
+| **TTM** | Trailing twelve months | yes |
+| **NFY** | Next fiscal year, estimated | yes |
+
+The three switchable columns are pills above the table, multi-select: which comparison matters
+depends on the company — a long average against last year for a cyclical, last year against next for
+one whose model is changing. LFY never switches off, because it is the anchor everything else is read
+against, and the last remaining switched column cannot be turned off either — an empty table looks
+like a bug rather than a choice.
+
+Revenue gets a **compound** rate rather than an average of yearly rates: averaging ten growth rates
+overweights whichever year happened to be small and reports a number no shareholder ever earned.
+Only revenue compounds, so only revenue gets one.
+
+Under the board, all fifteen sit in one sortable table on whichever basis you pick — which is how a
+placement actually gets decided, since placing a company is a comparison. The window pills are shared
+between the two, so the page never shows a 5-year figure in one place and a 10-year one in the other.
 
 ### Where the numbers come from
 

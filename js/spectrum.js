@@ -14,7 +14,8 @@
 
 import { SPECTRUM_ZONES, SPECTRUM_COMPANIES, SPECTRUM_AXES } from './spectrum-data.js';
 import {
-  METRICS, WINDOWS, seriesFor, averageFor, ttmFor, forwardFor, meta as metricsMeta
+  METRICS, WINDOWS, seriesFor, averageFor, cagrFor, lfyFor, ttmFor, forwardFor,
+  meta as metricsMeta
 } from './spectrum-metrics.js';
 
 var SPEC_STORE = 'summit.spectrum.positions.v1';
@@ -376,6 +377,14 @@ function renderPanel() {
    a company belongs on the board is the reader's call, and this is the evidence
    they make it on.                                                            */
 
+// The switchable columns. LFY is not among them: a company's last closed year
+// is the anchor everything else is read against, so it always shows.
+var NUM_COLS = [
+  { key: 'avg', label: 'Average', hint: 'Compound growth for revenue, average for the ratios, over the window on the right.' },
+  { key: 'ttm', label: 'TTM', hint: 'The twelve months to the last interim filing.' },
+  { key: 'est', label: 'Estimate', hint: 'Next fiscal year, from the portal\'s Results dataset.' }
+];
+
 function winYears() {
   var w = WINDOWS.filter(function (x) { return x.key === _spec.win; })[0];
   return w ? w.years : 10;
@@ -431,6 +440,8 @@ function metricsHtml(c) {
 
   var info = metricsMeta(c.ticker);
   var avg = averageFor(c.ticker, winYears());
+  var cagr = cagrFor(c.ticker, winYears());
+  var lfy = lfyFor(c.ticker);
   var ttm = ttmFor(c.ticker);
   var fwd = forwardOf(c.ticker, renderPanel);
 
@@ -442,12 +453,50 @@ function metricsHtml(c) {
        '–FY' + info.lastYear.fy + ' · ' + esc(info.lastYear.form || '') + '</span>';
   h += '</div>';
 
+  // Column switches. Multi-select, because which comparison matters depends on
+  // the company: a long average against the last year for a cyclical, the last
+  // year against next for one whose model is changing.
+  h += '<div class="spec-nums-ctl">';
+  for (var ci = 0; ci < NUM_COLS.length; ci++) {
+    var col = NUM_COLS[ci];
+    h += '<button class="spec-pill spec-pill--col' + (_spec.cols[col.key] ? ' is-on' : '') +
+         '" data-col="' + col.key + '" aria-pressed="' + (_spec.cols[col.key] ? 'true' : 'false') +
+         '" title="' + esc(col.hint) + '">' + esc(col.label) + '</button>';
+  }
+  h += '<span class="spec-pill-sep"></span>';
+  for (var wi = 0; wi < WINDOWS.length; wi++) {
+    h += '<button class="spec-pill spec-pill--win' + (_spec.win === WINDOWS[wi].key ? ' is-on' : '') +
+         (_spec.cols.avg ? '' : ' is-off') +
+         '" data-win="' + WINDOWS[wi].key + '">' + esc(WINDOWS[wi].label) + '</button>';
+  }
+  h += '</div>';
+
+  // Left to right in time order: the window, the last closed year, the twelve
+  // months to now, next year.
+  var cols = [];
+  if (_spec.cols.avg) {
+    cols.push({
+      key: 'avg',
+      top: (cagr ? cagr.span : avg.span) + '-yr',
+      sub: 'CAGR / avg',
+      hint: 'Compound annual growth for revenue; the plain average of the reported years for every other row.'
+    });
+  }
+  cols.push({ key: 'lfy', top: 'LFY', sub: lfy ? 'FY' + lfy.fy : '', hint: 'The last closed fiscal year.' });
+  if (_spec.cols.ttm) {
+    cols.push({ key: 'ttm', top: 'TTM', sub: ttm ? ttm.end.slice(0, 7) : 'n/a', hint: 'Trailing twelve months.' });
+  }
+  if (_spec.cols.est) {
+    cols.push({ key: 'nfy', top: 'NFY', sub: fwd ? fwd.period + 'E' : 'n/a', hint: 'Next fiscal year, estimated.' });
+  }
+
   h += '<table class="spec-nums-tbl"><thead><tr>';
   h += '<th class="spec-nums-th spec-nums-th--m">Metric</th>';
   h += '<th class="spec-nums-th spec-nums-th--s">FY' + info.firstYear.fy + '–' + info.lastYear.fy + '</th>';
-  h += '<th class="spec-nums-th">' + avg.span + '-yr avg</th>';
-  h += '<th class="spec-nums-th">' + (ttm ? 'TTM' : 'TTM') + '</th>';
-  h += '<th class="spec-nums-th">' + (fwd ? esc(fwd.period) + 'E' : 'Est.') + '</th>';
+  for (var ch = 0; ch < cols.length; ch++) {
+    h += '<th class="spec-nums-th" title="' + esc(cols[ch].hint) + '">' + esc(cols[ch].top) +
+         (cols[ch].sub ? '<i class="spec-nums-sub">' + esc(cols[ch].sub) + '</i>' : '') + '</th>';
+  }
   h += '</tr></thead><tbody>';
 
   for (var i = 0; i < METRICS.length; i++) {
@@ -456,20 +505,47 @@ function metricsHtml(c) {
     h += '<tr class="spec-nums-row" title="' + esc(m.hint) + '">';
     h += '<td class="spec-nums-m">' + esc(m.label) + '</td>';
     h += '<td class="spec-nums-spark">' + sparkHtml(series, m.key) + '</td>';
-    h += '<td class="spec-nums-v">' + fmt(m, a.value) +
-         (a.value != null && a.n < a.of ? '<i class="spec-nums-part" title="' + a.n + ' of ' +
-           a.of + ' years reported">' + a.n + '/' + a.of + '</i>' : '') + '</td>';
-    h += '<td class="spec-nums-v">' + (ttm ? fmt(m, ttm.values[m.key]) : '') + '</td>';
-    h += '<td class="spec-nums-v spec-nums-v--est">' + (fwd ? fmt(m, fwd.values[m.key]) : '') + '</td>';
+
+    for (var cc = 0; cc < cols.length; cc++) {
+      var key = cols[cc].key, cell = '', extra = '';
+      if (key === 'avg') {
+        // Revenue compounds, so its window figure is a CAGR; the rest average.
+        if (m.kind === 'growth') {
+          cell = cagr ? fmt(m, cagr.value) : '';
+        } else {
+          cell = fmt(m, a.value);
+          if (a.value != null && a.n < a.of) {
+            extra = '<i class="spec-nums-part" title="' + a.n + ' of ' + a.of +
+                    ' years reported">' + a.n + '/' + a.of + '</i>';
+          }
+        }
+      } else if (key === 'lfy') {
+        cell = lfy ? fmt(m, lfy.values[m.key]) : '';
+      } else if (key === 'ttm') {
+        cell = ttm ? fmt(m, ttm.values[m.key]) : '';
+      } else {
+        cell = fwd ? fmt(m, fwd.values[m.key]) : '';
+      }
+      h += '<td class="spec-nums-v' + (key === 'nfy' ? ' spec-nums-v--est' : '') + '">' +
+           cell + extra + '</td>';
+    }
     h += '</tr>';
   }
   h += '</tbody></table>';
 
   var notes = [];
-  if (ttm) notes.push('TTM to ' + ttm.end + ' (' + ttm.note + ').');
-  else notes.push('No trailing-twelve-month column: this filer publishes no interim XBRL.');
-  if (fwd) notes.push(fwd.period + ' estimate from the ' + fwd.source + ', via the Results dataset.');
-  else notes.push('No estimate column: the portal carries no Results dataset for this company.');
+  if (_spec.cols.avg) {
+    notes.push('The ' + (cagr ? cagr.span : avg.span) + '-year column compounds for revenue (FY' +
+      (cagr ? cagr.from + ' to FY' + cagr.to : '') + ') and averages the reported years for the rest.');
+  }
+  if (_spec.cols.ttm) {
+    notes.push(ttm ? 'TTM to ' + ttm.end + ' (' + ttm.note + ').'
+      : 'No TTM for this filer — it publishes no interim XBRL.');
+  }
+  if (_spec.cols.est) {
+    notes.push(fwd ? 'NFY ' + fwd.period + ' from the ' + fwd.source + ', via the Results dataset.'
+      : 'No NFY — the portal carries no Results dataset for this company.');
+  }
   h += '<p class="spec-nums-note">' + esc(notes.join(' ')) + '</p>';
 
   if (c.caveat) h += '<p class="spec-nums-caveat">' + esc(c.caveat) + '</p>';
@@ -727,6 +803,18 @@ function wire(root) {
       return;
     }
 
+    var col = e.target.closest('[data-col]');
+    if (col) {
+      var ck = col.dataset.col;
+      // Never leave the table with nothing but LFY — turning off the last
+      // switched column would look like a rendering failure.
+      var on = Object.keys(_spec.cols).filter(function (k) { return _spec.cols[k]; });
+      if (_spec.cols[ck] && on.length === 1) return;
+      _spec.cols[ck] = !_spec.cols[ck];
+      renderPanel();
+      return;
+    }
+
     var basis = e.target.closest('[data-basis]');
     if (basis) {
       _spec.basis = basis.dataset.basis;
@@ -734,12 +822,14 @@ function wire(root) {
       return;
     }
 
-    // The window pills stay live on any basis: picking "5 years" while looking
-    // at TTM switches the table back to averages rather than doing nothing.
+    // One window for the whole page, set from either place. Picking a window
+    // also turns on the column or basis it describes, so the click always
+    // changes something visible rather than silently arming a hidden setting.
     var win = e.target.closest('[data-win]');
     if (win) {
       _spec.win = win.dataset.win;
-      _spec.basis = 'avg';
+      if (win.closest('.spec-nums-ctl')) _spec.cols.avg = true;
+      else _spec.basis = 'avg';
       renderTable();
       renderPanel();
       return;
@@ -792,7 +882,9 @@ export function loadSpectrumPage() {
 
   _spec = {
     pos: loadPositions(), sel: null,
-    win: '10y', basis: 'avg', sort: null
+    win: '10y', basis: 'avg', sort: null,
+    // Which columns The Numbers shows. LFY is always on and is not listed.
+    cols: { avg: true, ttm: false, est: true }
   };
 
   root.innerHTML = html();

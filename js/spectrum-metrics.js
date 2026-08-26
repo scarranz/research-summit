@@ -78,7 +78,9 @@ export const WINDOWS = [
 
 /* ─── History ────────────────────────────────────────────────────────────── */
 
-// One row per fiscal year, oldest first, with all seven ratios resolved.
+// One row per fiscal year, oldest first, with all seven ratios resolved. The
+// revenue level rides along because a compound growth rate needs the endpoints,
+// not the year-by-year rates.
 export function seriesFor(ticker) {
   const c = BY_TICKER[ticker];
   if (!c) return null;
@@ -86,8 +88,38 @@ export function seriesFor(ticker) {
     const prev = i > 0 ? c.years[i - 1] : null;
     const values = {};
     for (const m of METRICS) values[m.key] = m.of(y, prev);
-    return { fy: y.fy, end: y.end, form: y.form, values };
+    return { fy: y.fy, end: y.end, form: y.form, revenue: y.revenue, values };
   });
+}
+
+/* Compound annual growth over the window, which is what a multi-year revenue
+   number should be: averaging ten yearly growth rates overweights whichever
+   year happened to be small, and would say something no shareholder ever
+   earned. Only revenue compounds, so only revenue gets one — the margins and
+   capital ratios are levels, and their window figure stays a plain average.
+
+   `years` growth needs `years + 1` observations; where the history is shorter
+   the span shrinks and is reported, rather than being labelled as ten. */
+export function cagrFor(ticker, years) {
+  const series = seriesFor(ticker);
+  if (!series) return null;
+  const window = series.slice(-(years + 1)).filter(r => r.revenue > 0);
+  if (window.length < 2) return null;
+  const first = window[0], last = window[window.length - 1];
+  const span = window.length - 1;
+  return {
+    value: Math.pow(last.revenue / first.revenue, 1 / span) - 1,
+    span, from: first.fy, to: last.fy
+  };
+}
+
+// The last closed fiscal year, on its own — the anchor between a multi-year
+// average and anything forward-looking.
+export function lfyFor(ticker) {
+  const series = seriesFor(ticker);
+  if (!series || !series.length) return null;
+  const row = series[series.length - 1];
+  return { fy: row.fy, end: row.end, form: row.form, values: row.values };
 }
 
 // A plain mean of the years available inside the window. Years the company did

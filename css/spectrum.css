@@ -467,3 +467,19 @@
   margin: 9px 0 0; padding: 9px 11px;
   background: #FCF8F0; border: 1px solid #F0E4CC; border-radius: 7px;
 }
+
+/* Column switches inside The Numbers. Same pills as the table below, one size
+   down — this is a control on a block, not on the page. */
+.spec-nums-ctl {
+  display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+  margin: 0 0 10px;
+}
+.spec-nums-ctl .spec-pill { font-size: 10.5px; padding: 3px 10px; }
+.spec-nums-ctl .spec-pill-sep { height: 14px; }
+
+/* The period a column covers, under its name. */
+.spec-nums-sub {
+  display: block; font: 500 9.5px 'Inter', sans-serif; font-style: normal;
+  color: var(--mu, #8A93A0); text-transform: none; letter-spacing: 0;
+  margin-top: 2px;
+}

@@ -9,7 +9,6 @@ import * as C from './fund-calc.js';
 
 const PORTFOLIO_DEFAULT = 'summit';
 const RFR_DEFAULT = 0.045;
-const LOOKBACK_DEFAULT = 12; // months (TTM window)
 const WINDOW_LENGTHS = [2, 3, 4, 5]; // Rolling Window Analysis, in whole years
 const COLOR = { summit: '#44546A', bench: '#808080', neg: '#C0392B', grid: '#E7EAEE', mu: '#8A93A0' };
 
@@ -316,7 +315,7 @@ function shell(m) {
           </div>
           <div class="fr-period fr-period-card" id="fr-p-metrics"></div>
           <div id="fr-t-metrics" class="fr-tscroll"></div>
-          <div class="fr-foot">*The period control drives the Period columns; TTM is always the last twelve months</div>
+          <div class="fr-foot">*Over the selected period</div>
         </div>
         <div class="card">
           <div class="fr-cardhead"><div class="fr-charttitle">Capture Ratios</div></div>
@@ -430,41 +429,26 @@ function renderAnalysisTable() {
       </thead><tbody>${rows}</tbody></table>`;
 }
 
-// s/b are this block's period slice and drive the Period columns. TTM is
-// deliberately NOT sliced with them: it is always the last twelve months of the
-// series, so the table always answers "recently, and over the period you chose"
-// rather than two views of the same window.
+// s/b are this block's period slice. The table shows that period and nothing
+// else — the TTM pair it used to carry alongside is gone, so the period control
+// above is now the only thing deciding what these numbers cover.
 function renderMetricsTable(s, b, rfr) {
   const P = esc(_meta.label), BS = esc(_meta.benchmarkShort);
-  const last = _strategy[_strategy.length - 1].date;
-  const ttmStart = new Date(last.getFullYear(), last.getMonth() - LOOKBACK_DEFAULT, last.getDate());
-  const ttm = sliceRange(ttmStart, last);
-  const sTtm = ttm.s, bTtm = ttm.b;
-  const aT = C.rets(sTtm), bT = C.rets(bTtm), aP = C.rets(s), bP = C.rets(b);
-  const row = (label, ttmS, ttmB, perS, perB) =>
-    `<tr><td class="fr-rl">${label}</td><td>${ttmS}</td><td class="fr-bm">${ttmB}</td><td>${perS}</td><td class="fr-bm">${perB}</td></tr>`;
+  const a = C.rets(s), bm = C.rets(b);
+  const row = (label, sv, bv) =>
+    `<tr><td class="fr-rl">${label}</td><td>${sv}</td><td class="fr-bm">${bv}</td></tr>`;
   const dash = '—';
-  // For a portfolio younger than the lookback, the "trailing twelve months"
-  // window is simply its whole life. Same numbers either way — but calling that
-  // column TTM would claim a year of history that does not exist.
-  const short = spanMonths(_strategy) < LOOKBACK_DEFAULT;
-  const ttmHead = short
-    ? `<th colspan="2" title="Less than ${LOOKBACK_DEFAULT} months of data">Since inception</th>`
-    : '<th colspan="2">TTM</th>';
-  const html = `
+  document.getElementById('fr-t-metrics').innerHTML = `
     <table class="fr-table">
-      <thead>
-        <tr><th></th>${ttmHead}<th colspan="2">Period</th></tr>
-        <tr><th></th><th>${P}</th><th class="fr-bm">${BS}</th><th>${P}</th><th class="fr-bm">${BS}</th></tr>
-      </thead><tbody>
-      ${row('Standard Deviation', pct(C.volArr(aT, true)), pct(C.volArr(bT, true)), pct(C.volArr(aP, false)), pct(C.volArr(bP, false)))}
-      ${row('Beta Ante', num(C.betaAnte(sTtm)), dash, num(C.betaAnte(s)), dash)}
-      ${row('Beta Post', num(C.betaPost(aT, bT)), dash, num(C.betaPost(aP, bP)), dash)}
-      ${row('Correlation', pct(C.correlation(aT, bT), 1), dash, pct(C.correlation(aP, bP), 1), dash)}
-      ${row('Information Ratio', num(C.informationRatio(aT, bT)), dash, num(C.informationRatio(aP, bP)), dash)}
-      ${row('Sharpe Ratio', num(C.sharpe(aT, rfr, true)), num(C.sharpe(bT, rfr, true)), num(C.sharpe(aP, rfr, false)), num(C.sharpe(bP, rfr, false)))}
+      <thead><tr><th></th><th>${P}</th><th class="fr-bm">${BS}</th></tr></thead>
+      <tbody>
+      ${row('Standard Deviation', pct(C.volArr(a, false)), pct(C.volArr(bm, false)))}
+      ${row('Beta Ante', num(C.betaAnte(s)), dash)}
+      ${row('Beta Post', num(C.betaPost(a, bm)), dash)}
+      ${row('Correlation', pct(C.correlation(a, bm), 1), dash)}
+      ${row('Information Ratio', num(C.informationRatio(a, bm)), dash)}
+      ${row('Sharpe Ratio', num(C.sharpe(a, rfr, false)), num(C.sharpe(bm, rfr, false)))}
       </tbody></table>`;
-  document.getElementById('fr-t-metrics').innerHTML = html;
 }
 
 function renderCaptureTable(c) {

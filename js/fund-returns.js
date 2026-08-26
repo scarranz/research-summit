@@ -20,7 +20,9 @@ let _charts = {};
 let _req = 0;           // ticket for the in-flight portfolio switch (latest wins)
 let _winLen = 3;        // Rolling Window Analysis: window length in years
 let _winStart = null;   // ...and chosen start year (null = auto-pick latest)
-let _heroStartYear = null; // Hero charts: chosen start calendar year (null = Max / inception)
+// One period-picker state per block. They are deliberately independent: the
+// global From/To they replace forced every table to answer the same question.
+let _periods = {};
 
 export async function loadFundReturnsPage() {
   const root = document.getElementById('fr-root');
@@ -85,7 +87,7 @@ async function showPortfolio(code) {
 
   // Control state belongs to the portfolio that was on screen, not to this one:
   // its years, and the window lengths its history can support, are different.
-  _heroStartYear = null;
+  _periods = { hero: newPeriod(), metrics: newPeriod(), capture: newPeriod(), monthly: newPeriod() };
   _winStart = null;
   // Destroy the outgoing charts before the canvases they own are replaced.
   // Dropping the map without destroying leaves live Chart instances animating
@@ -96,53 +98,167 @@ async function showPortfolio(code) {
   // benchmark actually on screen, instead of one fund's names hardcoded.
   body.innerHTML = shell(_meta);
 
-  const dmin = _strategy[0].date, dmax = _strategy[_strategy.length - 1].date;
-  document.getElementById('fr-ini').value = iso(dmin);
-  document.getElementById('fr-fin').value = iso(dmax);
   document.getElementById('fr-rfr').value = (RFR_DEFAULT * 100).toFixed(1);
-  ['fr-ini', 'fr-fin', 'fr-rfr'].forEach(id =>
-    document.getElementById(id).addEventListener('change', recompute));
-  renderHeroToggle();
-  recompute();
+  document.getElementById('fr-rfr').addEventListener('change', renderMetricsBlock);
+
+  renderPeriod('hero', 'fr-p-hero', renderHeroBlock);
+  renderPeriod('metrics', 'fr-p-metrics', renderMetricsBlock);
+  renderPeriod('capture', 'fr-p-capture', renderCaptureBlock);
+  renderPeriod('monthly', 'fr-p-monthly', renderMonthlyBlock);
+  renderAll();
 }
 
-function recompute() {
-  const ini = parseInput(document.getElementById('fr-ini').value);
-  const fin = parseInput(document.getElementById('fr-fin').value);
-  const rfr = (parseFloat(document.getElementById('fr-rfr').value) || 0) / 100;
-  if (!ini || !fin || ini > fin) { setBadge('Invalid range', 'warn'); return; }
+// ─── Period picker ──────────────────────────────────────────
+// One reusable control, instantiated once per block. Each instance owns its own
+// state, which is the whole point: reading capture ratios over 2023 while the
+// monthly distribution covers the full run is a normal thing to want, and the
+// single global From/To this replaces made it impossible.
+//
+// Mode pills pick the kind of period; a secondary control appears only for the
+// two modes that need one. That mirrors the Rolling Window block, which already
+// pairs a pill toggle with a select, rather than inventing a new pattern.
+const PERIOD_MODES = [
+  { key: 'max', label: 'Max' },
+  { key: 'ytd', label: 'YTD' },
+  { key: '1y', label: '1Y', months: 12 },
+  { key: '3y', label: '3Y', months: 36 },
+  { key: '5y', label: '5Y', months: 60 },
+  { key: 'year', label: 'Year' },
+  { key: 'custom', label: 'Custom' },
+];
 
-  // filter both series together (they are index-aligned by date)
+function newPeriod() { return { mode: 'max', year: null, from: null, to: null }; }
+
+// Resolve one instance's state into actual dates, against this portfolio's own
+// bounds — a preset never runs past the data it has.
+function periodRange(st) {
+  const first = _strategy[0].date, last = _strategy[_strategy.length - 1].date;
+  const clamp = d => d < first ? first : d;
+  switch (st.mode) {
+    case 'ytd':
+      return { ini: clamp(new Date(last.getFullYear(), 0, 1)), fin: last };
+    case '1y': case '3y': case '5y': {
+      const n = parseInt(st.mode, 10);
+      return { ini: clamp(new Date(last.getFullYear() - n, last.getMonth(), last.getDate())), fin: last };
+    }
+    case 'year': {
+      const y = st.year ?? last.getFullYear();
+      return { ini: new Date(y, 0, 1), fin: new Date(y, 11, 31) };
+    }
+    case 'custom':
+      return { ini: st.from ? parseInput(st.from) : first, fin: st.to ? parseInput(st.to) : last };
+    default:
+      return { ini: first, fin: last };
+  }
+}
+
+function renderPeriod(key, containerId, onChange) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const st = _periods[key];
+  const span = spanMonths(_strategy);
+  const first = _strategy[0].date, last = _strategy[_strategy.length - 1].date;
+
+  // Presets longer than the history stay visible but disabled — the same
+  // treatment the rolling window gives its window lengths.
+  const pills = PERIOD_MODES.map(m => {
+    const ok = !m.months || m.months <= span + 1;
+    return `<button class="fr-tg ${st.mode === m.key ? 'active' : ''}" data-mode="${m.key}"`
+      + `${ok ? '' : ' disabled title="Not enough history"'}>${m.label}</button>`;
+  }).join('');
+
+  let extra = '';
+  if (st.mode === 'year') {
+    const years = seriesYears().slice().reverse();
+    if (!years.includes(st.year)) st.year = years[0];
+    extra = `<select class="fr-sel" data-role="year">${years.map(y =>
+      `<option value="${y}" ${y === st.year ? 'selected' : ''}>${y}</option>`).join('')}</select>`;
+  } else if (st.mode === 'custom') {
+    if (!st.from) st.from = iso(first);
+    if (!st.to) st.to = iso(last);
+    extra = `<input type="date" class="fr-pdate" data-role="from" value="${st.from}" min="${iso(first)}" max="${iso(last)}">`
+      + `<span class="fr-pdash">–</span>`
+      + `<input type="date" class="fr-pdate" data-role="to" value="${st.to}" min="${iso(first)}" max="${iso(last)}">`;
+  }
+
+  el.innerHTML = `<div class="fr-toggle">${pills}</div>${extra}`;
+  el.querySelectorAll('.fr-tg').forEach(btn => btn.addEventListener('click', () => {
+    st.mode = btn.dataset.mode;
+    renderPeriod(key, containerId, onChange);   // the secondary control appears/disappears
+    onChange();
+  }));
+  el.querySelector('[data-role="year"]')?.addEventListener('change', e => { st.year = +e.target.value; onChange(); });
+  el.querySelector('[data-role="from"]')?.addEventListener('change', e => { st.from = e.target.value; onChange(); });
+  el.querySelector('[data-role="to"]')?.addEventListener('change', e => { st.to = e.target.value; onChange(); });
+}
+
+// Both series sliced together — they are index-aligned, so they have to be cut
+// at the same positions or every relative figure silently compares mismatched days.
+function sliceRange(ini, fin) {
   const s = [], b = [];
   for (let i = 0; i < _strategy.length; i++) {
     const d = _strategy[i].date;
     if (d >= ini && d <= fin) { s.push(_strategy[i]); b.push(_bench[i]); }
   }
-  if (s.length === 0) { setBadge('No data in range', 'warn'); return; }
+  return { s, b };
+}
+function sliceFor(key) {
+  const { ini, fin } = periodRange(_periods[key]);
+  return (!ini || !fin || ini > fin) ? { s: [], b: [] } : sliceRange(ini, fin);
+}
+function monthlyFor(s, b) {
+  return C.monthlyAligned(C.monthlySeries(s), C.monthlySeries(b));
+}
+function emptyNote(id, msg = 'No data in this period.') {
+  document.getElementById(id).innerHTML = `<div class="fr-empty">${msg}</div>`;
+}
 
-  const sM = C.monthlySeries(s), bM = C.monthlySeries(b);
-  const ma = C.monthlyAligned(sM, bM);
-  const capture = C.captureRatios(ma.a, ma.b);
+// ─── Blocks ─────────────────────────────────────────────────
+// Each renders from its own period, and only re-renders when its own control
+// moves. Nothing here recomputes the whole page.
+function renderAll() {
+  renderMeta();
+  renderAnalysisTable();          // no filter, by design: it is the year-by-year table
+  renderMonthlyTable();           // no filter either
+  renderHeroBlock();
+  renderMetricsBlock();
+  renderCaptureBlock();
+  renderMonthlyBlock();
+  renderWindowTable();
+  setBadge(`Data through ${fmtDate(_meta.through)}`, 'neutral');
+}
 
-  renderMeta(s, b);
-  renderAnalysisTable(s, b, ini, fin);
-  renderMetricsTable(s, b, ini, fin, rfr);
-  renderCaptureTable(capture);
-  renderHeroCharts();
+function renderMetricsBlock() {
+  const { s, b } = sliceFor('metrics');
+  if (!s.length) return emptyNote('fr-t-metrics');
+  renderMetricsTable(s, b, rfrValue());
+}
+
+function renderCaptureBlock() {
+  const { s, b } = sliceFor('capture');
+  if (!s.length) return emptyNote('fr-t-capture');
+  const ma = monthlyFor(s, b);
+  renderCaptureTable(C.captureRatios(ma.a, ma.b));
+}
+
+function renderMonthlyBlock() {
+  const { s, b } = sliceFor('monthly');
+  if (!s.length) {
+    ['mbars', 'abars', 'mhist', 'ahist'].forEach(destroyChart);
+    emptyNote('fr-abs-stats'); emptyNote('fr-rel-stats');
+    return;
+  }
+  const ma = monthlyFor(s, b);
   renderMonthlyBars('fr-mbars', ma.labels, ma.a);
   renderMonthlyBars('fr-abars', ma.labels, ma.alpha);
   renderStatsBlock('fr-abs-stats', ma.a, ma.labels, 'Up', 'Down', true);
   renderStatsBlock('fr-rel-stats', ma.alpha, ma.labels, 'Winning', 'Losing', false);
   renderHistogram('fr-mhist', ma.a, 0.02, 'Monthly Return');
   renderHistogram('fr-ahist', ma.alpha, 0.01, 'Monthly Alpha');
-  renderWindowTable();
-  renderMonthlyTable(ma);
+}
 
-  // How current the series is. (This used to check the engine against a set of
-  // hardcoded reference figures; those referred to a series that no longer
-  // exists, so the badge read "Mismatch" on every load. What is actually worth
-  // showing here is how fresh the data is.)
-  setBadge(`Data through ${fmtDate(_meta.through)}`, 'neutral');
+function rfrValue() {
+  return (parseFloat(document.getElementById('fr-rfr')?.value) || 0) / 100;
 }
 
 // ─── Page shell ─────────────────────────────────────────────
@@ -151,18 +267,13 @@ function shell(m) {
   return `
     <div class="fr-head">
       <div class="fr-meta" id="fr-meta"></div>
-      <div class="fr-controls">
-        <label class="fr-ctl">From <input type="date" id="fr-ini"></label>
-        <label class="fr-ctl">To <input type="date" id="fr-fin"></label>
-        <label class="fr-ctl">RFR <input type="number" id="fr-rfr" step="0.1" style="width:64px"></label>
-        <span id="fr-badge" class="fr-badge"></span>
-      </div>
+      <div class="fr-controls"><span id="fr-badge" class="fr-badge"></span></div>
     </div>
     <div id="fr-msg" class="fr-msg" style="display:none"></div>
 
     <div class="fr-hero-bar">
       <span class="fr-hero-label">Period</span>
-      <div class="fr-toggle" id="fr-hero-toggle"></div>
+      <div class="fr-period" id="fr-p-hero"></div>
     </div>
 
     <div class="fr-hero">
@@ -184,10 +295,27 @@ function shell(m) {
         <div class="card"><div class="fr-charttitle">Rolling Window Analysis</div><div id="fr-window"></div></div>
       </div>
       <div class="fr-tcol">
-        <div class="card"><div class="fr-charttitle">Performance &amp; Risk Metrics</div><div id="fr-t-metrics"></div></div>
-        <div class="card"><div class="fr-charttitle">Capture Ratios</div><div id="fr-t-capture"></div>
-          <div class="fr-foot">*Calculated with monthly returns</div></div>
+        <div class="card">
+          <div class="fr-cardhead">
+            <div class="fr-charttitle">Performance &amp; Risk Metrics</div>
+            <label class="fr-ctl">RFR <input type="number" id="fr-rfr" step="0.1" style="width:58px"></label>
+          </div>
+          <div class="fr-period fr-period-card" id="fr-p-metrics"></div>
+          <div id="fr-t-metrics"></div>
+          <div class="fr-foot">*The period control drives the Period columns; TTM is always the last twelve months</div>
+        </div>
+        <div class="card">
+          <div class="fr-cardhead"><div class="fr-charttitle">Capture Ratios</div></div>
+          <div class="fr-period fr-period-card" id="fr-p-capture"></div>
+          <div id="fr-t-capture"></div>
+          <div class="fr-foot">*Calculated with monthly returns</div>
+        </div>
       </div>
+    </div>
+
+    <div class="fr-hero-bar">
+      <span class="fr-hero-label">Monthly period</span>
+      <div class="fr-period" id="fr-p-monthly"></div>
     </div>
 
     <div class="card fr-section">
@@ -215,8 +343,9 @@ function shell(m) {
 }
 
 // ─── Renderers: header + KPIs ───────────────────────────────
-function renderMeta(s, b) {
-  const d0 = s[0].date, d1 = s[s.length - 1].date;
+// Header describes the whole loaded series, not any one block's period.
+function renderMeta() {
+  const d0 = _strategy[0].date, d1 = _strategy[_strategy.length - 1].date;
   const m = _meta;
   document.getElementById('fr-meta').innerHTML = `
     <div class="fr-meta-row">
@@ -246,7 +375,10 @@ function sourceNote(m) {
 }
 
 // ─── Renderers: tables ──────────────────────────────────────
-function renderAnalysisTable(s, b, ini, fin) {
+// Year by year over the whole series: this table IS the period breakdown, so a
+// period filter on top of it would only ever remove rows.
+function renderAnalysisTable() {
+  const s = _strategy, b = _bench;
   const P = esc(_meta.label), BS = esc(_meta.benchmarkShort);
   const years = [...new Set(s.map(p => p.date.getFullYear()))].sort((a, c) => c - a);
   // Annualizing less than a year of returns compounds a partial period up to a
@@ -284,11 +416,16 @@ function renderAnalysisTable(s, b, ini, fin) {
       </thead><tbody>${rows}</tbody></table>`;
 }
 
-function renderMetricsTable(s, b, ini, fin, rfr) {
+// s/b are this block's period slice and drive the Period columns. TTM is
+// deliberately NOT sliced with them: it is always the last twelve months of the
+// series, so the table always answers "recently, and over the period you chose"
+// rather than two views of the same window.
+function renderMetricsTable(s, b, rfr) {
   const P = esc(_meta.label), BS = esc(_meta.benchmarkShort);
-  // TTM window = last LOOKBACK months
-  const ttmStart = new Date(fin.getFullYear(), fin.getMonth() - LOOKBACK_DEFAULT, fin.getDate());
-  const sTtm = s.filter(p => p.date >= ttmStart), bTtm = b.filter(p => p.date >= ttmStart);
+  const last = _strategy[_strategy.length - 1].date;
+  const ttmStart = new Date(last.getFullYear(), last.getMonth() - LOOKBACK_DEFAULT, last.getDate());
+  const ttm = sliceRange(ttmStart, last);
+  const sTtm = ttm.s, bTtm = ttm.b;
   const aT = C.rets(sTtm), bT = C.rets(bTtm), aP = C.rets(s), bP = C.rets(b);
   const row = (label, ttmS, ttmB, perS, perB) =>
     `<tr><td class="fr-rl">${label}</td><td>${ttmS}</td><td class="fr-bm">${ttmB}</td><td>${perS}</td><td class="fr-bm">${perB}</td></tr>`;
@@ -296,7 +433,7 @@ function renderMetricsTable(s, b, ini, fin, rfr) {
   // For a portfolio younger than the lookback, the "trailing twelve months"
   // window is simply its whole life. Same numbers either way — but calling that
   // column TTM would claim a year of history that does not exist.
-  const short = spanMonths(s) < LOOKBACK_DEFAULT;
+  const short = spanMonths(_strategy) < LOOKBACK_DEFAULT;
   const ttmHead = short
     ? `<th colspan="2" title="Less than ${LOOKBACK_DEFAULT} months of data">Since inception</th>`
     : '<th colspan="2">TTM</th>';
@@ -431,7 +568,8 @@ function renderWindowTable() {
 }
 
 // Monthly returns table — the portfolio, its benchmark, and the month's alpha.
-function renderMonthlyTable(ma) {
+function renderMonthlyTable() {
+  const ma = monthlyFor(_strategy, _bench);
   const P = esc(_meta.label), B = esc(_meta.benchmarkLabel);
   const rows = ma.labels.map((m, i) =>
     `<tr><td class="fr-rl">${monthLabel(m)}</td>
@@ -449,26 +587,9 @@ function renderMonthlyTable(ma) {
 // Drives the two hero charts only; picking a year shows just that calendar year
 // (Jan–Dec) with the cumulative series rebased to 0 at its start. Independent of
 // the From/To filter that drives the tables.
-function renderHeroToggle() {
-  const years = [...new Set(_strategy.map(p => p.date.getFullYear()))].sort((a, b) => a - b);
-  const btn = (val, label, active) => `<button class="fr-tg ${active ? 'active' : ''}" data-year="${val}">${label}</button>`;
-  const el = document.getElementById('fr-hero-toggle');
-  el.innerHTML = btn('max', 'Max', _heroStartYear == null)
-    + years.map(y => btn(y, y, _heroStartYear === y)).join('');
-  el.querySelectorAll('.fr-tg').forEach(b => b.addEventListener('click', () => {
-    _heroStartYear = b.dataset.year === 'max' ? null : +b.dataset.year;
-    renderHeroToggle();
-    renderHeroCharts();
-  }));
-}
-function renderHeroCharts() {
-  let s = _strategy, b = _bench;
-  if (_heroStartYear != null) {
-    s = []; b = [];
-    for (let i = 0; i < _strategy.length; i++)
-      if (_strategy[i].date.getFullYear() === _heroStartYear) { s.push(_strategy[i]); b.push(_bench[i]); }
-  }
-  if (!s.length) return;
+function renderHeroBlock() {
+  const { s, b } = sliceFor('hero');
+  if (!s.length) { destroyChart('cum'); destroyChart('alpha'); return; }
   renderCumChart(s, b);
   renderAlphaChart(s, b);
 }
@@ -564,6 +685,7 @@ function build(key, canvasId, config) {
   _charts[key]?.destroy();
   _charts[key] = new Chart(document.getElementById(canvasId), config);
 }
+function destroyChart(key) { _charts[key]?.destroy(); delete _charts[key]; }
 function destroyCharts() {
   for (const c of Object.values(_charts)) c?.destroy();
   _charts = {};
@@ -590,7 +712,6 @@ function esc(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&
 function iso(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
 function parseInput(s) { if (!s) return null; const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
 function fmtDate(d) { return d.toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
-function fmtMonth(d) { return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }); }
 function fmtMonthYear(d) { return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }); }
 function fmtMonthLong(d) { return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }); }
 function monthLabel(m) { return new Date(m.year, m.month - 1, 1).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }); }

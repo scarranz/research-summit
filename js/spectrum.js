@@ -409,6 +409,30 @@ function renderPanel() {
    is listed with the ratio behind it, so a reader can disagree with the
    weighting rather than with a black box.                                    */
 
+// Place in the running order, heaviest first. Companies without a measurement
+// are left out of the count rather than ranked last, which would read as light.
+function rankOf(ticker, valueOf) {
+  var vals = [];
+  for (var i = 0; i < SPECTRUM_COMPANIES.length; i++) {
+    var t = SPECTRUM_COMPANIES[i].ticker;
+    var v = valueOf(t);
+    if (v === null || v === undefined) continue;
+    vals.push({ t: t, v: v });
+  }
+  vals.sort(function (a, b) { return b.v - a.v; });
+  for (var j = 0; j < vals.length; j++) {
+    if (vals[j].t === ticker) return { place: j + 1, total: vals.length };
+  }
+  return { place: null, total: vals.length };
+}
+
+function ordinal(n) {
+  if (n === null) return '—';
+  var rem100 = n % 100;
+  if (rem100 >= 11 && rem100 <= 13) return n + 'th';
+  return n + ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th');
+}
+
 function measuredHtml(c, p) {
   var m = measuredOf(c.ticker);
   if (!m) {
@@ -418,16 +442,31 @@ function measuredHtml(c, p) {
            'to place it. The board keeps the judgment call.</p></div>';
   }
 
+  // Both positions are read as a place in the running order rather than as a
+  // score. The axis has no units — "45" is a coordinate, and a reader has no way
+  // to know whether that is a lot — but "8th of 15" needs nothing explained.
+  var filedRank = rankOf(c.ticker, function (t) { var mm = measuredOf(t); return mm ? mm.y : null; });
+  var boardRank = rankOf(c.ticker, function (t) { return currentPos(t).y; });
+
+  // Rank and height can disagree, and the ranking is the more honest headline:
+  // NVIDIA moves 25 points up the axis and still barely changes place, because
+  // the middle of this board is thinly populated. Say which of the two happened
+  // rather than let a long connector imply an argument that is not there.
   var gap = m.y - p.y;
-  var dir = gap > 0 ? 'heavier' : 'lighter';
+  var places = boardRank.place - filedRank.place; // > 0 = filings rank it heavier
+  var heavier = gap > 0;
+  var tail = ordinal(filedRank.place) + ' of ' + filedRank.total + ' on the filings, ' +
+             ordinal(boardRank.place) + ' on the board.';
   var verdict;
-  if (Math.abs(gap) < 6) {
-    verdict = 'The accounts agree with the board — ' + m.y.toFixed(0) + ' against ' +
-              p.y.toFixed(0) + '.';
+
+  if (Math.abs(places) >= 2) {
+    verdict = 'The accounts move it <strong>' + Math.abs(places) + ' places ' +
+              (places > 0 ? 'heavier' : 'lighter') + '</strong>: ' + tail;
+  } else if (Math.abs(gap) >= 6) {
+    verdict = '<strong>' + (heavier ? 'Heavier' : 'Lighter') + ' on the numbers</strong> than the ' +
+              'board has it, but not by enough to change the running order: ' + tail;
   } else {
-    verdict = 'The accounts put it at ' + m.y.toFixed(0) + ', <strong>' +
-              Math.abs(gap).toFixed(0) + ' ' + dir + '</strong> than where it sits on the board (' +
-              p.y.toFixed(0) + ').';
+    verdict = 'The accounts land where the board does: ' + tail;
   }
 
   var h = '<div class="spec-meas">';
@@ -438,6 +477,23 @@ function measuredHtml(c, p) {
   h += '</div>';
 
   h += '<p class="spec-meas-verdict">' + verdict + '</p>';
+
+  // The same two positions as a picture, on this company alone — the board shows
+  // them among fifteen others, which is where a single gap gets lost.
+  h += '<div class="spec-meas-scale">';
+  h += '<span class="spec-meas-end">Asset-light</span>';
+  h += '<span class="spec-meas-track">';
+  h += '<i class="spec-meas-mk spec-meas-mk--board" style="left:' + clamp(p.y, 0, 100) + '%"' +
+       ' title="Where the board puts it"></i>';
+  h += '<i class="spec-meas-mk spec-meas-mk--filed" style="left:' + clamp(m.y, 0, 100) + '%"' +
+       ' title="Where the filings put it"></i>';
+  h += '</span>';
+  h += '<span class="spec-meas-end">Asset-heavy</span>';
+  h += '</div>';
+  h += '<div class="spec-meas-key">' +
+       '<span class="spec-meas-k spec-meas-k--board">Board</span>' +
+       '<span class="spec-meas-k spec-meas-k--filed">Filings</span>' +
+       '</div>';
 
   h += '<ul class="spec-meas-terms">';
   for (var i = 0; i < m.terms.length; i++) {

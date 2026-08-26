@@ -126,15 +126,21 @@ shown in the panel as evidence — not folded into a coordinate.
 
 ### What it found
 
-| | Board | Filings | |
-|---|---|---|---|
-| META | 64 | 88 | The AI build-out is heavier than the board admits — capex is 35% of revenue |
-| TPL | 15 | 66 | Flagged: the equity term punishes a small revenue base, not real capital consumption |
-| SOFI | 43 | 65 | The funding term doing its job |
-| IBKR | 13 | 43 | Same |
-| NVDA | 20 | 45 | Heavier than judged, even fabless |
-| AMZN | 94 | 74 | Not the heaviest company on the board — TSMC is |
-| PAC | 92 | 45 | Flagged: under IFRIC 12 the runways are an intangible, so they never reach the property line |
+The panel reports both positions as a **place in the running order**, heaviest first, not as a
+coordinate: the axis has no units, so "45" tells a reader nothing while "8th of 15" needs no
+explaining. The height on the board is still what the marker draws — the two can disagree, and
+which one moved is itself information.
+
+| | Board | Filings | Moves | |
+|---|---|---|---|---|
+| PAC | 2nd | 9th | 7 lighter | **Flagged** — under IFRIC 12 the runways are an intangible and never reach the property line |
+| TPL | 11th | 6th | 5 heavier | **Flagged** — the equity term punishes a small revenue base, not real capital consumption |
+| META | 6th | 2nd | 4 heavier | The AI build-out is heavier than the board admits: capex is 35% of revenue |
+| AMZN | 1st | 4th | 3 lighter | Not the heaviest company on the board — TSMC is |
+| TBBB | 7th | 10th | 3 lighter | Leases carry more of the store base than the placement assumes |
+| GOOGL · TSM · MA · IBKR | | | 2 places | Small, consistent corrections |
+| NVDA | 9th | 8th | — | Rises 25 points up the axis and still barely changes place: the middle of this board is thinly populated |
+| SOFI | 8th | 7th | — | The funding term **confirms** the board here rather than overturning it |
 
 Two of those are the measure being wrong rather than the board being wrong, and both carry a
 `caveat` in `js/spectrum-data.js` that the panel prints under the score.

@@ -446,6 +446,16 @@ function renderCoAnalysis(companyId, ticker) {
   _valSlotId = 'valuation-data-slot';
   renderPillarFilter();
   renderPillarContent();
+
+  // A Deep Dive can mirror the live Management (ownership + insider) table WITHOUT absorbing Pillars
+  // (keeps the Pillars tab and does not touch Valuation): if it exposes #dd-mgmt-slot, fill it too.
+  // loadManagementData captures its slot synchronously, so we can point it there and restore.
+  if (document.getElementById('dd-mgmt-slot')) {
+    var _keep = _mgmtSlotId;
+    _mgmtSlotId = 'dd-mgmt-slot';
+    loadManagementData(companyId);
+    _mgmtSlotId = _keep;
+  }
 }
 
 
@@ -1502,6 +1512,14 @@ export async function loadCompaniesPage() {
       _companies.push({ id: 'dis-local', ticker: 'DIS', name: 'The Walt Disney Company',
         group_name: 'Media & Entertainment', sector: 'Communication Services', logo_domain: 'thewaltdisneycompany.com',
         mono: 'DI', status: 'active', price: null });
+    }
+    // Local-dev only: surface the in-development APP (AppLovin) overview in the grid without
+    // a DB write, so it previews inside the real portal chrome. Gated to localhost — never
+    // affects production. Remove once APP is added for real via the companies table.
+    if (location.hostname === 'localhost' && !_companies.find(function(c){ return c.ticker === 'APP'; })) {
+      _companies.push({ id: 'app-local', ticker: 'APP', name: 'AppLovin Corporation',
+        group_name: 'Advertising Technology', sector: 'Technology', logo_domain: 'applovin.com',
+        mono: 'AP', status: 'active', price: null });
     }
     initCoControls();
     renderCoGrid();

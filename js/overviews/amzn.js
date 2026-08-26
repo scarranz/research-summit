@@ -20,7 +20,16 @@ import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../res
 import { mountWatchList } from '../watchlist.js';
 import { fetchThemeRecord, saveThemeRecord } from '../api.js';   // durable persistence of the AMZN theme record (Notes)
 import { amznResults } from '../results-data/amzn.js';
+import { AMZN_THEMES } from '../themes-data/amzn.js';   // the theme record, shared with Segments
 import { consensusEvo } from '../consensus-evolution.js';
+import { makeManagement } from './management.js';   // shared Management mold (UBER/GOOGL/etc.)
+import { amznBBG } from './amzn-bbg.js';   // segment actuals + consensus (rev/OI/D&A/PP&E) from BBG
+import { segmentsHtml, initSegments, segmentsOverviewHtml, initSegmentsOverview,
+         segmentsOtherHtml, initSegmentsOther,
+         segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';   // Top Line ▸ General · Segments · Other · Customers
+import { amznSens } from './amzn-sensitivity.js';   // Valuation ▸ Sensitivity Analysis
+import { amznTargetMult } from './amzn-target-multiple.js';   // Valuation ▸ Target Multiple
+import { amznHistMult } from './amzn-histmult.js';            // Valuation ▸ Historic Multiple
 
 // ─── esc: escapes <>" but deliberately leaves & literal (per contract; never double-encode) ──
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -311,6 +320,24 @@ function stdPeerScatter(sfx){
     '.mg-tip .mgt-h{display:flex;align-items:center;gap:7px;margin-bottom:4px}.mg-tip .mgt-h img{width:18px;height:18px;border-radius:4px;background:#fff;object-fit:contain}'+
     '.mg-tip .mgt-n{font-weight:800;font-size:12.5px;color:#FFB84D}</style>';
   h+='<div class="amzn-sc" data-sfx="'+sfx+'">';
+  // The comps table under the map. Same visual language as the Target Multiple tables (.tm-tbl),
+  // written here rather than imported because this canvas carries its own styles already.
+  h+='<style>.asc-tblwrap{overflow-x:auto}'+
+    '.asc-tbl{border-collapse:collapse;width:100%;font-size:12px;margin:4px 0}'+
+    '.asc-tbl th,.asc-tbl td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap}'+
+    '.asc-tbl th:first-child,.asc-tbl td:first-child{text-align:left}'+
+    '.asc-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu);border-bottom:2px solid var(--bdr)}'+
+    '.asc-tbl td.asc-m{font-weight:800;color:var(--navy)}'+
+    '.asc-tbl tbody tr.asc-hl{background:rgba(255,153,0,.07)}'+
+    '.asc-tbl tbody tr.asc-nil td{color:var(--mu)}'+
+    '.asc-tbl tfoot td{border-top:2px solid var(--bdr);border-bottom:none;font-weight:800;color:var(--navy);background:#F7F9FB}'+
+    '.asc-tbl tfoot tr.asc-med td{background:#FAFBFC;font-weight:700;color:var(--mu)}'+
+    '.asc-nm{display:inline-flex;align-items:center;gap:7px}'+
+    '.asc-nm img{width:16px;height:16px;border-radius:4px;background:#fff;object-fit:contain}'+
+    '.asc-tk{color:var(--mu);font-weight:700;font-size:10.5px}'+
+    '.asc-up{color:#C0392B;font-weight:700}.asc-dn{color:#2E8B57;font-weight:700}'+
+    '.asc-nilv{color:var(--mu)}'+
+    '</style>';
   h+='<div class="ov-diagram-cap" style="margin:0 0 6px">Peers mapped by <b>valuation multiple</b> (x) and <b>revenue growth</b> (y). <b>Bubble size = live market cap in USD.</b> <span style="opacity:.75">Hover or tap a bubble for the read.</span></div>';
   h+='<div class="mg-tog-row">'+
     '<span class="mg-tog">Multiple: <span class="mg-seg"><button type="button" class="mg-pill active" data-mgmetric="pe">P/E</button><button type="button" class="mg-pill" data-mgmetric="ev">EV/EBITDA</button></span></span>'+
@@ -328,6 +355,14 @@ function stdPeerScatter(sfx){
   '</svg></div>';
   h+='<div class="asc-chips amzn-sc-chips"></div>';
   h+='<div class="ov-diagram-cap" style="margin-top:4px">Remove a peer with the <b>×</b> on its chip, or add one by ticker. Only <b>listed</b> peers with a public multiple plot here — private retail rivals (SHEIN, Temu\'s parent PDD is listed but Temu itself is a unit) and private AI/cloud players have no market multiple. <span class="ave-subh-note">Multiples & growth are seeded approximations (Jul 2026; forward EV/EBITDA is derived, not quoted); market caps are live.</span></div>';
+  // §0.2 rule 3 — the receipt under the read. It is .rs-collap markup so it reads like every other
+  // table in the portal, but it OPENS by default: there is one table, it is the block's own detail,
+  // and the whole point of the sub-tab is the numbers (Pablo, Aug 20 2026).
+  if(sfx==='dd') h+='<div class="rs-collap amzn-sc-collap">'+
+      '<button type="button" class="rs-collap-h amzn-sc-tblh"></button>'+
+      '<div class="rs-collap-b amzn-sc-tblb">'+
+        '<div class="rs-tablewrap asc-tblwrap"><div class="amzn-sc-tbl"></div></div>'+
+      '</div></div>';
   h+='<div class="mg-tip amzn-sc-tip" hidden></div>';
   h+='</div>';
   return h;
@@ -352,6 +387,7 @@ function aScRenderOne(wrap){
       '<text y="'+(r+12).toFixed(1)+'" font-family="Inter,sans-serif" font-size="'+(p.hl?12:11)+'" font-weight="'+(p.hl?800:700)+'" fill="'+(p.hl?'#C7761A':'#3A4552')+'" text-anchor="middle">'+esc(p.n)+'</text></g>';
   });
   g.innerHTML=frag;
+  aScTableOne(wrap);
 }
 function aScChipsOne(wrap){
   var box=wrap.querySelector('.amzn-sc-chips'); if(!box||!A_SC.peers) return;
@@ -360,11 +396,77 @@ function aScChipsOne(wrap){
   box.innerHTML=h;
 }
 function aScRenderAll(root){ root.querySelectorAll('.amzn-sc').forEach(aScRenderOne); }
+// ─── The comps table under the peer map (Valuation ▸ Peers) ─────────────────────────────────────
+// §0.2 rule 3: everything the scatter draws, as numbers, in the units it draws them in. It reads
+// the SAME state as the bubbles — the metric/basis pills pick the column, removing a chip drops the
+// row, and a ticker added by hand appears here with an em dash until a multiple exists for it.
+//
+// The average and the median EXCLUDE Amazon. They are the set Amazon is being read against, so
+// folding the subject into its own benchmark would shrink whatever gap the table exists to show.
+// AMZN keeps its highlighted row and its "vs peer avg" is its premium/discount to them.
+// Both statistics are shown because this set is skewed: COST and MELI in the 40s against BABA at
+// 17 drag a mean that seven names cannot defend, and the median is the honest middle.
+function aScGrowth(p){ var g=A_SC.basis==='f'?p.gf:p.gt; if(g==null) g=(p.gf!=null?p.gf:p.gt); return g; }
+function aScNum(v){ return v!=null && !isNaN(v); }
+function aScFmtMult(v){ return aScNum(v)?v.toFixed(1)+'×':'—'; }
+function aScFmtPct(v){ return aScNum(v)?v.toFixed(1)+'%':'—'; }
+function aScFmtMc(v){ return aScNum(v)?('$'+(v>=1000?(v/1000).toFixed(2)+'T':Math.round(v)+'B')):'—'; }
+function aScMean(a){ if(!a.length) return null; return a.reduce(function(s,v){ return s+v; },0)/a.length; }
+function aScMedian(a){ if(!a.length) return null; var s=a.slice().sort(function(x,y){ return x-y; }), h=Math.floor(s.length/2); return s.length%2?s[h]:(s[h-1]+s[h])/2; }
+function aScVsAvg(m, avg){
+  if(!aScNum(m)||!aScNum(avg)||avg===0) return '<span class="asc-nilv">—</span>';
+  var d=(m/avg-1)*100;
+  return '<span class="'+(d>=0?'asc-up':'asc-dn')+'">'+(d>=0?'+':'')+Math.round(d)+'%</span>';
+}
+function aScTableOne(wrap){
+  var box=wrap.querySelector('.amzn-sc-tbl'); if(!box||!A_SC.peers) return;
+  var mLab=(A_SC.metric==='pe'?'P/E':'EV/EBITDA'), bLab=(A_SC.basis==='f'?'forward':'trailing');
+  var rows=A_SC.peers.map(function(p){ return { p:p, m:aScMult(p), g:aScGrowth(p) }; });
+  // Cheapest first on the ACTIVE multiple. A name with no multiple on file sinks to the bottom
+  // instead of sorting as zero, which would read as "the cheapest name on the map".
+  rows.sort(function(a,b){
+    var an=aScNum(a.m), bn=aScNum(b.m);
+    if(!an&&!bn) return 0; if(!an) return 1; if(!bn) return -1; return a.m-b.m;
+  });
+  var peers=rows.filter(function(r){ return !r.p.hl; });
+  var avgM=aScMean(peers.filter(function(r){ return aScNum(r.m); }).map(function(r){ return r.m; }));
+  var medM=aScMedian(peers.filter(function(r){ return aScNum(r.m); }).map(function(r){ return r.m; }));
+  var avgG=aScMean(peers.filter(function(r){ return aScNum(r.g); }).map(function(r){ return r.g; }));
+  var medG=aScMedian(peers.filter(function(r){ return aScNum(r.g); }).map(function(r){ return r.g; }));
+  var nM=peers.filter(function(r){ return aScNum(r.m); }).length;
+  var body=rows.map(function(r){
+    var p=r.p, cls=(p.hl?'asc-hl':'')+(aScNum(r.m)?'':' asc-nil');
+    return '<tr class="'+cls.trim()+'">'+
+      '<td><span class="asc-nm"><img src="'+esc(scLogoUrl(p))+'" alt="" onerror="this.style.display=\'none\'">'+
+        '<span>'+esc(p.n)+' <span class="asc-tk">'+esc(p.tk)+'</span></span></span></td>'+
+      '<td class="asc-m">'+aScFmtMult(r.m)+'</td>'+
+      '<td>'+aScFmtPct(r.g)+'</td>'+
+      '<td>'+aScFmtMc(p.mc)+'</td>'+
+      '<td>'+aScVsAvg(r.m, avgM)+'</td></tr>';
+  }).join('');
+  var foot='<tr class="asc-avg"><td>Peer average <span class="asc-tk">ex-AMZN · '+nM+' names</span></td>'+
+      '<td>'+aScFmtMult(avgM)+'</td><td>'+aScFmtPct(avgG)+'</td>'+
+      '<td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>'+
+    '<tr class="asc-med"><td>Peer median <span class="asc-tk">ex-AMZN</span></td>'+
+      '<td>'+aScFmtMult(medM)+'</td><td>'+aScFmtPct(medG)+'</td>'+
+      '<td><span class="asc-nilv">—</span></td><td><span class="asc-nilv">—</span></td></tr>';
+  box.innerHTML='<table class="asc-tbl"><thead><tr>'+
+      '<th>Peer</th><th>'+esc(mLab)+' · '+esc(bLab)+'</th>'+
+      '<th>Rev growth · '+esc(bLab)+'</th><th>Market cap</th><th>vs peer avg</th></tr></thead>'+
+    '<tbody>'+body+'</tbody><tfoot>'+foot+'</tfoot></table>';
+  var hd=wrap.querySelector('.amzn-sc-tblh'), bd=wrap.querySelector('.amzn-sc-tblb');
+  if(hd){ var open=!(bd&&bd.hidden);
+    hd.innerHTML='<span class="rs-collap-ic">'+(open?'▾':'▸')+'</span>The numbers behind the map'+
+      '<span class="rs-collap-sub">'+(open?'hide':'show')+' · '+esc(mLab)+' · '+esc(bLab)+
+      ', '+rows.length+' names</span>'; }
+}
 function aScChipsAll(root){ root.querySelectorAll('.amzn-sc').forEach(function(w){ aScChipsOne(w); wireScChips(root, w); }); }
 function wireScatters(root){
   aScReset();
   root.querySelectorAll('.amzn-sc').forEach(function(wrap){
     if(wrap._scWired) return; wrap._scWired=true;
+    var tblH=wrap.querySelector('.amzn-sc-tblh'), tblB=wrap.querySelector('.amzn-sc-tblb');
+    if(tblH&&tblB) tblH.onclick=function(){ tblB.hidden=!tblB.hidden; aScRenderOne(wrap); };
     var g=wrap.querySelector('.amzn-sc-nodes'), tip=wrap.querySelector('.amzn-sc-tip');
     wrap.querySelectorAll('.mg-pill[data-mgbasis]').forEach(function(btn){ btn.onclick=function(){ A_SC.basis=btn.getAttribute('data-mgbasis'); aScRenderAll(root); }; });
     wrap.querySelectorAll('.mg-pill[data-mgmetric]').forEach(function(btn){ btn.onclick=function(){ A_SC.metric=btn.getAttribute('data-mgmetric'); aScRenderAll(root); }; });
@@ -1037,67 +1139,6 @@ var CALL_EARNINGS = { ticker:'AMZN', quarters:[
 // "By theme" view groups them under these headers, in this order. Empty themes (no `updates`) are
 // tracked placeholders — the section exists so we can fill it as the notes come in.
 var AMZN_SEG_ORDER=['Amazon US','Amazon International','AWS'];
-var AMZN_THEMES=[
-  // ── Amazon US ──────────────────────────────────────────────────────────────────────────────────
-  { seg:'Amazon US', theme:'Agentic commerce', st:{ k:'watch', since:'Q4 2025', last:'Q2 2026' },
-    why:'Whether AI compresses the shopping funnel or expands it — management argues the retailer\'s own agent wins.',
-    updates:[
-      { q:'Q4 2025', items:['Rufus: <b>300M customers</b> in 2025, users "<b>60% more likely to complete a purchase</b>"; can shop tens of millions of items in OTHER stores.'] },
-      { q:'Q1 2026', items:['Rufus MAU <b>+115%</b>, engagement +400%; "we\'re going to like this for advertising" — sponsored prompts working, multi-turn = more surfaces.'] },
-      { q:'Q2 2026', items:['The claim that agentic surfaces <b>expand rather than compress</b> the funnel keeps showing up in reported dollars (see <i>Advertisement</i>).'] },
-    ]},
-  { seg:'Amazon US', theme:'Advertisement', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
-    why:'Management argues ads WIN in agentic commerce — the dollars are accelerating at a $20B quarterly scale.',
-    updates:[
-      { q:'Q4 2025', items:['Ads <b>$21.3B (+22%)</b>; Prime Video ads 315M viewers.'] },
-      { q:'Q1 2026', items:['Ads <b>$17.2B (+22%)</b>; Netflix / Comcast / Samsung signed.'] },
-      { q:'Q2 2026', items:['Advertising <b>$19.8B (+26%)</b> — an <b>acceleration</b> from +22%, at a $20B quarterly scale, with <b>sponsored products</b> named as the driver.','The next audit is structural: Q3 loses the Prime-Day event to the comp, so holding 25%+ would separate the engine from the calendar.'] },
-    ]},
-  { seg:'Amazon US', theme:'Robotics — the efficiency flywheel', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
-    why:'The quiet half of the AI story: unit growth outpacing fulfillment cost growth is what pays for the build without breaking margins.',
-    updates:[
-      { q:'Q4 2025', items:['<b>1M+ robots</b> in the network; 8B+ items same/next-day (+30%); NA margin 9% in the holiday peak; regions extended 8 → 10.'] },
-      { q:'Q1 2026', items:['Units <b>+15% vs fulfillment expense +9%</b>; record 13.1% consolidated margin; robotics in every 2026 US large-format launch; a service engine rebuilt in <b>65 days vs 40–50 person-years</b>.'] },
-      { q:'Q2 2026', items:['A <b>new consolidated margin record: 13.7%</b> — set while absorbing the seasonal SBC step-up, ~$1B of LEO cost and fuel inflation the guide had flagged. Paid units <b>+17%</b>.','Fast commerce is where the flywheel now shows: <b>same-day perishables customers +50%</b> since January, and same-day orders carrying <b>3x the units</b> per order. Roughly <b>$600M of tariff-related refunds</b> landed as one-off relief inside the North America margin.'] },
-    ]},
-  // ── Amazon International ────────────────────────────────────────────────────────────────────────
-  // No seeded sub-themes: a sub-theme exists only once it holds a REAL note, never as an empty
-  // placeholder (Dani, Aug 2026). International hooks (segment margin, country build-out) get filed
-  // here as the notes come in — via ＋ add note, Propose Notes, or the ✎ editor.
-  // ── AWS ────────────────────────────────────────────────────────────────────────────────────────
-  { seg:'AWS', theme:'Backlog', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
-    why:'From +24% to +37% (fastest in 18 quarters) with the forward book compounding faster than revenue converts.',
-    updates:[
-      { q:'Q4 2025', items:['<b>+24%</b> (13-quarter high), $142B run-rate; backlog <b>$244B (+40%)</b>; >1GW added in Q4; 3.99GW of power added in 2025, doubling again by 2027.'] },
-      { q:'Q1 2026', items:['<b>+28%</b> ($150B run-rate) — "very unusual for a business to grow this fast on a base this large"; backlog <b>$364B</b> EXCLUDING the <b>$100B+ Anthropic deal</b>; Bedrock spend +170% QoQ; Q1 tokens exceeded all prior years combined.'] },
-      { q:'Q2 2026', items:['<b>+37%</b> ($169B run-rate) — the <b>fastest in 18 quarters</b> and the third straight acceleration; backlog <b>$496B</b>, roughly <b>2.5x</b> a year ago and still growing triple-digit.','Capacity is the constraint, and it is pre-committed: <b>2027 "largely reserved"</b>, some <b>2028 "already spoken for."</b> The AI business and the chips business <b>each above a $25B run-rate</b>, both triple-digit. Jassy: AWS "can be a trillion-dollar annual revenue business."'] },
-    ]},
-  { seg:'AWS', theme:'Capex', st:{ k:'watch', since:'Q4 2025', last:'Q2 2026' },
-    why:'The number that reprices the stock: a ~$220B capex year against negative TTM FCF, defended with contracted demand.',
-    updates:[
-      { q:'Q4 2025', items:['"About <b>$200 billion</b> in capital expenditures… predominantly in AWS, because we have very high demand." TTM FCF $11.2B; the Summit model flipped FY26 FCF negative at its next snapshot. Olsavsky: "as fast as we install this capacity… we are monetizing it."'] },
-      { q:'Q1 2026', items:['Q1 capex <b>$44.2B</b>; memory costs "<b>skyrocketed</b>" — allocations locked with strategic suppliers mid-to-late 2025.'] },
-      { q:'Q2 2026', items:['The frame moved: FY26 cash capex <b>~$200B → ~$220B</b>, Olsavsky attributing part of the raise to the "<b>higher cost of memory</b>". Q2 capex <b>$54.2B</b> gross (1H26 $98.4B).','⚑ The cash line broke: <b>TTM free cash flow −$7.6B</b> (from +$18.2B a year ago) against $161.4B of TTM operating cash flow — funded with <b>$67B of new long-term debt</b> in one half ($65.6B → $128.9B). The Q4-2025 red line fired in reported actuals.'] },
-    ]},
-  { seg:'AWS', theme:'Margins', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
-    why:'AWS segment profitability — expanding even through the AI build, helped by custom silicon and (in Q2) energy-derivative gains.',
-    updates:[
-      { q:'Q4 2025', items:['Segment margin <b>35%</b> (+40bps).'] },
-      { q:'Q2 2026', items:['Segment margin <b>39.4%</b> (+650bps YoY, ~+520bps excluding energy-derivative gains).'] },
-    ]},
-  { seg:'AWS', theme:'Useful lives & Data Center Lifecycles', st:{ k:'watch', since:'Q1 2026', last:'Q1 2026' },
-    why:'How Amazon depreciates the build: the install-to-billing lag and asset lives set the margin optics of the capex cycle.',
-    updates:[
-      { q:'Q1 2026', items:['Capacity installs <b>6–24 months before billing</b>; data centers <b>30+ year</b> assets, chips <b>5–6</b>.'] },
-    ]},
-  { seg:'AWS', theme:'Custom silicon — Graviton, Trainium, Rainier', st:{ k:'trend', since:'Q4 2025', last:'Q2 2026' },
-    why:'The margin lever under the AI build — and possibly a merchant business (rack sales) with NVIDIA-adjacent economics.',
-    updates:[
-      { q:'Q4 2025', items:['$10B+ run-rate; Trainium at triple-digit growth; <b>Project Rainier: 500K chips</b> training the next Claude model; Trainium3 "nearly all supply committed by mid-2026"; Graviton >50% growth, >90% of top-1,000 customers.'] },
-      { q:'Q1 2026', items:['Run-rate doubled to <b>$20B (+~40% QoQ)</b>; <b>$225B+ Trainium revenue commitments</b>; Trainium4 largely reserved ~18 months out; rack sales "<b>very much a possibility</b>"; Meta committed to tens of millions of Graviton cores.'] },
-      { q:'Q2 2026', items:['The chips business passed a <b>$25B annualized run-rate</b>, growing triple-digit — and the tenant list stopped being a concentration argument: <b>Anthropic AND OpenAI</b> are each making <b>multi-year, multi-gigawatt</b> Trainium commitments. <b>Graviton5</b> reached general availability.','The merchant question survives the quarter: Nowak asked about Trainium sales into third-party data centres, and the answer stayed short of a plan.'] },
-    ]},
-];
 // A note's quarter is inside a sub-theme's tracking window when Since ≤ q ≤ Until (open bounds when
 // unset). Setting "Since" therefore shows the notes only from that quarter onward; "Until" caps them.
 function amznInWindow(q, since, until){
@@ -1425,6 +1466,11 @@ function ceStyle(){
     '.ce-tbl{width:100%;border-collapse:collapse;font-size:11.5px}'+
     '.ce-tbl th{text-align:left;color:var(--mu);font-weight:700;padding:7px 10px;border-bottom:1px solid var(--bdr);font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}'+
     '.ce-tbl td{padding:9px 10px;border-bottom:1px solid var(--bdr);color:var(--navy);line-height:1.45;vertical-align:top}'+
+    /* ── Bottom Line ▸ Supply Chain — stat row (ported from googl.js ddStat) ── */
+    '.gdd-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}'+
+    '.gdd-kpi{background:var(--w);border:1px solid var(--bdr);border-radius:12px;padding:12px 14px}'+
+    '.gdd-kpi-v{font-size:19px;font-weight:800;color:var(--navy);line-height:1.12}'+
+    '.gdd-kpi-k{font-size:10.5px;color:var(--mu);margin-top:4px;line-height:1.35}'+
     '.ce-pill{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#fff;border-radius:20px;padding:2px 9px;white-space:nowrap}'+
     /* ── #1 · the chain: seededBy chip on watch items, landing chip on newQuestions ── */
     '.ce-seed{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:800;color:'+PURPLE+';background:rgba(122,90,248,0.08);border:1px solid rgba(122,90,248,0.3);border-radius:20px;padding:2px 9px;white-space:nowrap;flex:none}'+
@@ -2899,171 +2945,1400 @@ function ceMountWatchList(){
 var _aCharts={};
 function aDestroy(id){ if(_aCharts[id]){ _aCharts[id].destroy(); _aCharts[id]=null; } }
 function aChartReady(id){ var cv=document.getElementById(id); return (cv&&typeof Chart!=='undefined'&&cv.offsetParent)?cv:null; }
+// ═══ Chart-standard kit (docs/CHART_ENGINE_REFERENCE.md §0.7) — copied verbatim / adapted so the
+// bespoke AMZN canvases meet the six non-negotiables. rs-* CSS is global (css/results.css). ═══
+function rsAttachBrush(el, chart, onX, onY, onReset){
+  var wrap = el.parentElement;
+  if (wrap && getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
+  el.style.cursor = 'crosshair';
+  el.onmousedown = function(ev){
+    if (ev.button !== 0) return;
+    var r0 = el.getBoundingClientRect(), w0 = wrap.getBoundingClientRect(), area = chart.chartArea;
+    var onAxis = (ev.clientX - r0.left) < area.left || (ev.clientX - r0.left) > area.right;
+    var forcedY = onAxis || !onX, vertical = forcedY ? true : null, startX = ev.clientX, startY = ev.clientY, box = null;
+    function ensureBox(){ if (box) return; box = document.createElement('div'); box.className = 'rs-brush';
+      if (vertical){ box.style.left = (r0.left - w0.left + area.left) + 'px'; box.style.width = (area.right - area.left) + 'px'; }
+      else { box.style.top = (r0.top - w0.top) + 'px'; box.style.height = r0.height + 'px'; } wrap.appendChild(box); }
+    function decide(cx, cy){ if (vertical != null) return; var dx = Math.abs(cx - startX), dy = Math.abs(cy - startY); if (Math.max(dx, dy) < 8) return; vertical = dy > dx; }
+    function place(cx, cy){ if (vertical == null) return; ensureBox();
+      if (vertical){ var a = Math.min(startY, cy), b = Math.max(startY, cy); box.style.top = (a - w0.top) + 'px'; box.style.height = (b - a) + 'px'; }
+      else { var a2 = Math.min(startX, cx), b2 = Math.max(startX, cx); box.style.left = (a2 - w0.left) + 'px'; box.style.width = (b2 - a2) + 'px'; } }
+    place(ev.clientX, ev.clientY);
+    function onMove(e2){ decide(e2.clientX, e2.clientY); place(e2.clientX, e2.clientY); }
+    function onUp(e2){ document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); decide(e2.clientX, e2.clientY); if (box) box.remove();
+      if (vertical == null) return;
+      if (vertical){ if (Math.abs(e2.clientY - startY) < 8) return;
+        var v1 = chart.scales.y.getValueForPixel(Math.min(startY, e2.clientY) - r0.top), v2 = chart.scales.y.getValueForPixel(Math.max(startY, e2.clientY) - r0.top); onY(Math.min(v1, v2), Math.max(v1, v2)); }
+      else { if (Math.abs(e2.clientX - startX) < 8) return;
+        function idxAt(cx){ var v = chart.scales.x.getValueForPixel(cx - r0.left); return Math.max(0, Math.min(chart.data.labels.length - 1, Math.round(v))); }
+        var a = idxAt(startX), b = idxAt(e2.clientX); if (a !== b) onX(Math.min(a, b), Math.max(a, b)); } }
+    document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp); ev.preventDefault(); };
+  el.ondblclick = onReset;
+}
+// Standard treatment for a bespoke chart: y-zoom + double-click reset (rule 1; onX=null per §0.2)
+// AND an auto-generated collapsible table from the chart's own data (rule 3) — unless the chart
+// supplies its own table container (#id-tbl, e.g. the waterfalls). One call covers both.
+function aFnum(v){ if(v==null||v==='') return null; if(Array.isArray(v)) v=v[v.length-1]; if(typeof v!=='number') return String(v);
+  var a=Math.abs(v), r=a<10?Math.round(v*100)/100:(a<1000?Math.round(v*10)/10:Math.round(v)); return r.toLocaleString('en-US'); }
+// Auto-table from a chart's own data (rule 3), honouring hidden series (rule 2) and preserving open state.
+function aBuildAutoTbl(id){
+  var cv=document.getElementById(id), ch=_aCharts[id]; if(!cv||!ch) return;
+  if(document.getElementById(id+'-tbl')) return;   // chart supplies its own table
+  var labels=(ch.data&&ch.data.labels)||[], ds=(ch.data&&ch.data.datasets)||[];
+  if(!labels.length||!ds.length) return;
+  var headers=['Series'].concat(labels.map(function(l){ return Array.isArray(l)?l.join(' '):String(l); }));
+  var rows=[]; ds.forEach(function(d,i){ var meta=ch.getDatasetMeta?ch.getDatasetMeta(i):null; if(meta&&meta.hidden) return;   // rule 2: hidden series leaves the table
+    rows.push([d.label||'series'].concat((d.data||[]).map(aFnum))); });
+  var wrap=cv.parentElement, host=wrap&&wrap.parentNode; if(!host) return;
+  var prev=wrap.nextElementSibling, wasOpen=false;
+  if(prev&&prev.getAttribute&&prev.getAttribute('data-rstblhost')===id){ var ob=prev.querySelector('.rs-collap-b'); wasOpen=!!(ob&&!ob.hidden); host.removeChild(prev); }
+  var div=document.createElement('div'); div.setAttribute('data-rstblhost',id); div.style.marginTop='8px';
+  div.innerHTML=aTbl(id,'Data — what the chart draws',headers,rows);
+  if(wasOpen){ var nb=div.querySelector('.rs-collap-b'); if(nb) nb.hidden=false; var ic=div.querySelector('.rs-collap-ic'); if(ic) ic.textContent='▾'; }
+  host.insertBefore(div, wrap.nextSibling);
+}
+// Collapsible SECTION (charts / deep dives) so the pane isn't a wall — less shown by default,
+// opened on demand. Uses the same rs-collap the table dropdown does (toggled in deepDiveInit).
+function aCollap(title, inner, open){
+  return '<div class="rs-collap" style="margin:16px 0 4px"><button type="button" class="rs-collap-h">'+
+    '<span class="rs-collap-ic">'+(open?'▾':'▸')+'</span> '+esc(title)+'</button>'+
+    '<div class="rs-collap-b"'+(open?'':' hidden')+' style="padding-top:10px">'+inner+'</div></div>';
+}
+// ═══ SAB-parity chart scaffold (docs/AMZN_BOTTOM_LINE §9b) ═════════════════════════════════════════
+// Same classes/CSS as results.js so Bottom-Line charts read as ONE product: row1 title + rs-msel metric
+// dropdown; row2 rs-views mode pills (left) · rs-quick Range presets (right) — ABOVE the chart; ave-leg
+// (Actual/Summit/Consensus, click-to-hide); ov-chart-card; y-axis on the RIGHT; sg-slider two-handle
+// PERIOD window with rs-ticks dots + drag-to-zoom on the X. A chart registers a derive(state) fn that
+// returns {labels,lastAct,series:[{k,label,color,data,fwdDash}],yFmt}; controls re-render via it.
+var ASTD_ACT='rgba(30,39,51,0.92)', ASTD_SUMMIT='rgba(37,99,235,0.85)', ASTD_CONS='rgba(124,134,148,0.85)';
+var _aStd={}, _aStdDerive={};
+function aStdScaffold(cfg){
+  var id=cfg.id;
+  var st=_aStd[id]||(_aStd[id]={win:null,hidden:{},sel:null,modes:{}});
+  if(cfg.metricSel && st.sel==null){ var on=cfg.metricSel.filter(function(o){return o.on;})[0]||cfg.metricSel[0]; st.sel=on.v; }
+  (cfg.modes||[]).forEach(function(g){ if(st.modes[g.cls]==null){ var d=g.opts.filter(function(o){return o.on;})[0]||g.opts[0]; st.modes[g.cls]=d.v; } });
+  var sel=cfg.metricSel? '<select class="rs-msel" data-astdsel="'+id+'">'+cfg.metricSel.map(function(o){ return '<option value="'+esc(o.v)+'"'+(o.v===st.sel?' selected':'')+'>'+esc(o.label)+'</option>'; }).join('')+'</select>':'';
+  var top='<div class="rs-block-top"><div class="rs-block-h">'+esc(cfg.title)+'</div>'+sel+'</div>';
+  var modes=(cfg.modes||[]).map(function(g){ return '<div class="astd-modeg" data-astdmodeg="'+id+'|'+g.cls+'" style="display:inline-flex;align-items:center;gap:6px;margin:0 10px 6px 0">'+(g.label?'<span class="rs-quick-l">'+esc(g.label)+'</span>':'')+'<div class="rs-views">'+g.opts.map(function(o){ return '<button type="button" class="rs-view'+(o.v===st.modes[g.cls]?' active':'')+'" data-astdmode="'+id+'|'+g.cls+'|'+o.v+'">'+esc(o.label)+'</button>'; }).join('')+'</div></div>'; }).join('');
+  var presets=cfg.presets||[['all','All'],['rep','Reported'],['fwd','Forward']];
+  var quick='<div class="rs-quick"><span class="rs-quick-l">Range</span>'+presets.map(function(p){ return '<button type="button" class="rs-preset" data-astdrange="'+id+'|'+p[0]+'">'+esc(p[1])+'</button>'; }).join('')+'</div>';
+  var row2='<div class="rs-block-modes"><div class="rs-modes">'+modes+'</div>'+quick+'</div>';
+  var leg='<div class="ave-leg" data-astdleg="'+id+'"></div>';
+  var chart='<div class="ov-chart-card"><div class="ov-chart-wrap ovs-tall" style="min-height:'+(cfg.height||320)+'px"><canvas id="astd-'+id+'"></canvas></div></div>';
+  var slider='<div class="sg-controls"><div class="sg-slider"><div class="sg-track"><div class="sg-fill" data-astdfill="'+id+'"></div></div><div class="rs-ticks" data-astdticks="'+id+'"></div>'+
+    '<input type="range" class="astd-r0" min="0" max="1" value="0" step="1" aria-label="Start period">'+
+    '<input type="range" class="astd-r1" min="0" max="1" value="1" step="1" aria-label="End period"></div>'+
+    '<div class="sg-ends"><span data-astdend0="'+id+'"></span><span data-astdend1="'+id+'"></span></div></div>';
+  var tbl='<div class="rs-collap" style="margin-top:8px"><button type="button" class="rs-collap-h"><span class="rs-collap-ic">▸</span> Data — what the chart draws</button>'+
+    '<div class="rs-collap-b" hidden style="padding-top:8px"><div class="rs-tablewrap" data-astdtbl="'+id+'"></div></div></div>';
+  return '<div class="ov-sec" data-astdblock="'+id+'">'+top+row2+leg+chart+slider+tbl+'</div>';
+}
+function aStdBlk(id){ return document.querySelector('[data-astdblock="'+id+'"]'); }
+function aStdRender(id, derive){
+  if(derive) _aStdDerive[id]=derive; derive=_aStdDerive[id]; if(!derive) return;
+  var cv=aChartReady('astd-'+id); if(!cv) return;
+  var st=_aStd[id]||(_aStd[id]={win:null,hidden:{},sel:null,modes:{}});
+  var spec=derive(st); if(!spec) return;
+  var n=spec.labels.length; if(!st.win || st.win[1]>n-1 || st.win[0]>st.win[1]) st.win=[0,n-1];
+  var lo=st.win[0], hi=st.win[1], la=spec.lastAct==null?n-1:spec.lastAct;
+  var labels=spec.labels.slice(lo,hi+1), yFmt=spec.yFmt||function(v){return v;};
+  aDestroy('astd-'+id);
+  var stk=spec.stacked?'s':undefined, needY2=false;   // engine supports bars + a secondary right axis (SAB dual-axis)
+  var ds=spec.series.filter(function(s){ return !st.hidden[s.k]; }).map(function(s){
+    var t=s.type||spec.type||'line'; if(s.yAxisID==='y2') needY2=true;
+    if(t==='bar') return { type:'bar', label:s.label, data:s.data.slice(lo,hi+1), backgroundColor:s.data.slice(lo,hi+1).map(function(_,i){ return (lo+i)>la?acxRGBA(s.color,0.5):s.color; }), borderColor:'#fff', borderWidth:1, maxBarThickness:34, stack:stk, yAxisID:s.yAxisID||'y', order:s.order||3 };
+    return { type:'line', label:s.label, data:s.data.slice(lo,hi+1), borderColor:s.color, backgroundColor:s.color, borderWidth:2.2, pointRadius:2, tension:0.2, spanGaps:false, yAxisID:s.yAxisID||'y', order:s.order||2,
+      borderDash:s.dash?[5,4]:undefined, segment: s.fwdDash?{ borderDash:function(ctx){ return (lo+ctx.p1DataIndex)>la?[5,4]:undefined; } }:undefined }; });
+  var anyBar=spec.series.some(function(s){ return (s.type||spec.type)==='bar'; }), y2f=spec.y2Fmt||function(v){return v;};
+  var scales={ x:{ stacked:anyBar&&spec.stacked, grid:{ display:false }, ticks:{ font:{ size:11 } } },
+    y:{ stacked:anyBar&&spec.stacked, position:'right', max:spec.yMax, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:11 }, callback:function(v){ return yFmt(v); } } } };
+  if(needY2) scales.y2={ position:'right', weight:1, grid:{ display:false }, ticks:{ font:{ size:11 }, callback:function(v){ return y2f(v); } } };
+  _aCharts['astd-'+id]=new Chart(cv.getContext('2d'),{ type:anyBar?'bar':'line', data:{ labels:labels, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ var f=c.dataset.yAxisID==='y2'?y2f:yFmt; return c.dataset.label+': '+(c.parsed.y==null?'—':f(c.parsed.y))+((lo+c.dataIndex)>la?' (E)':''); } } } },
+      scales:scales } });
+  var blk=aStdBlk(id);
+  if(blk){ var hm=spec.hideModes||[];   // contextual controls: hide groups that don't apply to the current view (SAB does this)
+    blk.querySelectorAll('[data-astdmodeg]').forEach(function(g){ var cls=g.getAttribute('data-astdmodeg').split('|')[1]; g.style.display=hm.indexOf(cls)>=0?'none':'inline-flex'; }); }
+  var leg=blk&&blk.querySelector('[data-astdleg="'+id+'"]');
+  if(leg){
+    if(spec.paired){   // one chip per source; toggling hides its bar AND its margin line. Caption disambiguates shapes.
+      var seen={}, chips=[];
+      spec.series.forEach(function(s){ var g=s.grp||s.k; if(seen[g])return; seen[g]=1;
+        chips.push('<button type="button" class="rs-leg'+(st.hidden[s.k]?' off':'')+'" data-astdleggrp="'+id+'|'+g+'"><span class="ave-leg-act" style="background:'+s.color+'"></span>'+esc(s.src||s.label)+'</button>'); });
+      leg.innerHTML=chips.join('')+'<span style="font-size:11px;color:var(--mu,#64748b);font-weight:600;margin-left:2px">Bars = $ amount &nbsp;·&nbsp; lines = margin (right axis)</span>';
+    } else {
+      leg.innerHTML=spec.series.map(function(s){ return '<button type="button" class="rs-leg'+(st.hidden[s.k]?' off':'')+'" data-astdlegk="'+id+'|'+s.k+'"><span class="ave-leg-act" style="background:'+s.color+'"></span>'+esc(s.label)+'</button>'; }).join('');
+    }
+  }
+  // Collapsible data table (rule 3) — windowed + honours hidden series, like San's charts.
+  var tblc=blk&&blk.querySelector('[data-astdtbl="'+id+'"]');
+  if(tblc){ var vis=spec.series.filter(function(s){ return !st.hidden[s.k]; });
+    var hd='<tr><th style="text-align:left;position:sticky;left:0;background:var(--card,#fff)">Series</th>'+labels.map(function(l){ return '<th style="text-align:right">'+esc(l)+'</th>'; }).join('')+'</tr>';
+    var bd=vis.map(function(s){ return '<tr><td style="text-align:left;font-weight:700;position:sticky;left:0;background:var(--card,#fff)">'+esc(s.label)+'</td>'+s.data.slice(lo,hi+1).map(function(v){ return '<td style="text-align:right;font-variant-numeric:tabular-nums">'+(v==null?'—':esc(String(yFmt(v))))+'</td>'; }).join('')+'</tr>'; }).join('');
+    tblc.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead>'+hd+'</thead><tbody>'+bd+'</tbody></table>'; }
+  aStdSyncSlider(id, spec.labels, la);
+  aStdWire(id);
+  // Re-attach the X-window brush to the freshly-built chart each render (onmousedown assignment, not
+  // addEventListener, so it replaces rather than stacks). onX windows the PERIOD; double-click resets.
+  var cvv=document.getElementById('astd-'+id), chh=_aCharts['astd-'+id];
+  if(cvv&&chh) rsAttachBrush(cvv, chh, function(i1,i2){ var w=_aStd[id].win, lo=w[0]; _aStd[id].win=[lo+i1, lo+i2]; aStdRender(id); }, null, function(){ _aStd[id].win=null; aStdRender(id); });
+}
+function aStdSyncSlider(id, labels, la){
+  var blk=aStdBlk(id); if(!blk) return; var n=labels.length, w=_aStd[id].win;
+  var r0=blk.querySelector('.astd-r0'), r1=blk.querySelector('.astd-r1'), fill=blk.querySelector('[data-astdfill]'), ticks=blk.querySelector('[data-astdticks]'), e0=blk.querySelector('[data-astdend0]'), e1=blk.querySelector('[data-astdend1]');
+  if(r0){ r0.max=n-1; r0.value=w[0]; } if(r1){ r1.max=n-1; r1.value=w[1]; }
+  if(fill){ fill.style.left=(w[0]/(n-1)*100)+'%'; fill.style.width=((w[1]-w[0])/(n-1)*100)+'%'; }
+  if(e0) e0.textContent=labels[w[0]]||''; if(e1) e1.textContent=labels[w[1]]||'';
+  if(ticks){ var h=''; for(var i=0;i<n;i++){ h+='<span class="rs-tick'+(i>=w[0]&&i<=w[1]?' on':'')+(i>la?' est':'')+'" style="left:'+(i/(n-1)*100)+'%"></span>'; } ticks.innerHTML=h; }
+}
+function aStdPresetWin(code, n, la){ switch(code){ case 'rep': return [0,la]; case 'fwd': return [Math.max(0,la),n-1];
+  case 'l3': return [Math.max(0,la-2),la]; case 'l5': return [Math.max(0,la-4),la];
+  case 'l4': return [Math.max(0,la-3),la]; case 'l8': return [Math.max(0,la-7),la]; default: return [0,n-1]; } }
+function aStdWire(id){
+  var blk=aStdBlk(id); if(!blk || blk._astdWired) return; blk._astdWired=true; var st=_aStd[id];
+  blk.addEventListener('click', function(e){
+    var mode=e.target.closest&&e.target.closest('[data-astdmode]'); if(mode){ var p=mode.getAttribute('data-astdmode').split('|'); st.modes[p[1]]=p[2];
+      mode.parentNode.querySelectorAll('.rs-view').forEach(function(x){ x.classList.toggle('active',x===mode); }); aStdRender(id); return; }
+    var lg=e.target.closest&&e.target.closest('[data-astdlegk]'); if(lg){ var k=lg.getAttribute('data-astdlegk').split('|')[1]; st.hidden[k]=!st.hidden[k]; aStdRender(id); return; }
+    var lgg=e.target.closest&&e.target.closest('[data-astdleggrp]'); if(lgg){ var g=lgg.getAttribute('data-astdleggrp').split('|')[1], spc=_aStdDerive[id]&&_aStdDerive[id](st);
+      if(spc){ var mem=spc.series.filter(function(s){ return (s.grp||s.k)===g; }), off=mem.every(function(s){ return st.hidden[s.k]; }); mem.forEach(function(s){ st.hidden[s.k]=!off; }); } aStdRender(id); return; }
+    var rp=e.target.closest&&e.target.closest('[data-astdrange]'); if(rp){ var spec=_aStdDerive[id]&&_aStdDerive[id](st); var n=spec?spec.labels.length:2, la=spec&&spec.lastAct!=null?spec.lastAct:n-1;
+      st.win=aStdPresetWin(rp.getAttribute('data-astdrange').split('|')[1], n, la); aStdRender(id); return; }
+  });
+  var sel=blk.querySelector('[data-astdsel]'); if(sel) sel.onchange=function(){ st.sel=sel.value; aStdRender(id); };
+  var r0=blk.querySelector('.astd-r0'), r1=blk.querySelector('.astd-r1');
+  function onSlide(){ var a=+r0.value, b=+r1.value; st.win=[Math.min(a,b),Math.max(a,b)]; aStdRender(id); }
+  if(r0) r0.oninput=onSlide; if(r1) r1.oninput=onSlide;
+}
+function aZoom(id){ var cv=document.getElementById(id), ch=_aCharts[id]; if(!cv||!ch) return;
+  if(ch.options&&ch.options.scales&&ch.options.scales.y){   // rule 1
+    rsAttachBrush(cv, ch, null,
+      function(v1,v2){ ch.options.scales.y.min=v1; ch.options.scales.y.max=v2; ch.update('none'); },
+      function(){ ch.options.scales.y.min=undefined; ch.options.scales.y.max=undefined; ch.update('none'); }); }
+  if(ch.options&&ch.options.plugins&&ch.options.plugins.legend){   // rule 2: legend hides the series AND refreshes the table
+    var orig=Chart.defaults.plugins.legend.onClick;
+    ch.options.plugins.legend.onClick=function(e,item,legend){ orig.call(this,e,item,legend); setTimeout(function(){ aBuildAutoTbl(id); },0); }; }
+  aBuildAutoTbl(id);   // rule 3
+}
+// Collapsible data table under a chart (rule 3) — the portable rs-collap markup (§0.7).
+function aTbl(id, title, headers, rows){
+  var head='<span class="rs-collap-ic">▸</span> '+esc(title)+' <span class="rs-collap-sub">'+rows.length+' rows</span>';
+  var thead='<tr>'+headers.map(function(hh,i){ return '<th'+(i===0?' class="rs-ft-h"':'')+'>'+esc(String(hh))+'</th>'; }).join('')+'</tr>';
+  var tb=rows.map(function(r){ return '<tr>'+r.map(function(c,i){ return i===0?('<td class="rs-ft-h">'+esc(String(c))+'</td>'):('<td>'+(c==null||c===''?'<span class="rs-ft-nil">–</span>':esc(String(c)))+'</td>'); }).join('')+'</tr>'; }).join('');
+  return '<div class="rs-collap" data-rstbl="'+id+'"><button type="button" class="rs-collap-h" data-rstblb="'+id+'">'+head+'</button>'+
+    '<div class="rs-collap-b" id="rsTB-'+id+'" hidden><div class="rs-ft-scroll"><table class="rs-ft"><thead>'+thead+'</thead><tbody>'+tb+'</tbody></table></div></div></div>';
+}
 // FY sums from the quarterly actuals of the dataset (single source of truth).
-function aFy(key, year){
-  var m=amznResults.views.q.metrics[key]; if(!m) return null;
-  var tot=0, got=0;
-  m.periods.forEach(function(p,i){ if(p.slice(2)===String(year).slice(2) && m.act[i]!=null){ tot+=m.act[i]; got++; } });
-  return got===4 ? tot : null;
-}
-var A_SEG_YEARS=['2021','2022','2023','2024','2025'];
-function aSegSeries(key){ var m=amznResults.views.y.metrics[key]; return A_SEG_YEARS.map(function(y){ var i=m.periods.indexOf(y); return i>=0&&m.act[i]!=null?m.act[i]/1000:null; }); }
-function toplineSegBody(){
-  var h='<p class="ov-lede"><b>Three engines, one flywheel.</b> North America and International are the retail surface (first-party stores + the 3P marketplace + ads riding on both); AWS is the profit engine that funds the AI build. The revenue-line view below cuts the same company by WHAT is sold rather than where.</p>';
-  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:8px 0">'+
-    '<div class="ov-sec" style="margin:0"><div class="ov-sec-h">Segment revenue ($B, FY)</div><div style="height:280px"><canvas id="aSegRev"></canvas></div></div>'+
-    '<div class="ov-sec" style="margin:0"><div class="ov-sec-h">Segment operating income ($B, FY)</div><div style="height:280px"><canvas id="aSegOp"></canvas></div></div>'+
-  '</div>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">FY2025 revenue lines — what is actually sold ($B)</div><div style="height:260px"><canvas id="aRevLines"></canvas></div>'+
-    '<div class="ov-fynote">Revenue-line disaggregation summed from the quarterly 8-K actuals in the Results dataset. Advertising ($68.6B, +23%) and 3P seller services ($172.2B) are the high-margin lines riding the retail surface; AWS ($128.7B) carries most of the operating income. Forward views live in Evolution ▸ Results / Estimates.</div></div>';
-  return h;
-}
-function aBuildTopline(){
-  var cv=aChartReady('aSegRev');
-  if(cv){ aDestroy('aSegRev'); _aCharts['aSegRev']=new Chart(cv.getContext('2d'),{ type:'bar',
-    data:{ labels:A_SEG_YEARS, datasets:[
-      { label:'North America', data:aSegSeries('usrev'), backgroundColor:BRAND, maxBarThickness:34 },
-      { label:'International', data:aSegSeries('intrev'), backgroundColor:BRAND2, maxBarThickness:34 },
-      { label:'AWS', data:aSegSeries('aws'), backgroundColor:SQUID, maxBarThickness:34 } ] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } } },
-      scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); }
-  var c2=aChartReady('aSegOp');
-  if(c2){ aDestroy('aSegOp');
-    function opSeries(key){ return A_SEG_YEARS.map(function(y){ var tot=0,got=0; var m=amznResults.views.q.metrics[key]; m.periods.forEach(function(p,i){ if(p.slice(2)===y.slice(2)&&m.act[i]!=null){ tot+=m.act[i]; got++; } }); return got===4?tot/1000:null; }); }
-    _aCharts['aSegOp']=new Chart(c2.getContext('2d'),{ type:'bar',
-      data:{ labels:A_SEG_YEARS, datasets:[
-        { label:'North America', data:opSeries('naopinc'), backgroundColor:BRAND, maxBarThickness:34 },
-        { label:'International', data:opSeries('intopinc'), backgroundColor:BRAND2, maxBarThickness:34 },
-        { label:'AWS', data:opSeries('awsopinc'), backgroundColor:SQUID, maxBarThickness:34 } ] },
-      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } } },
-        scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); }
-  var c3=aChartReady('aRevLines');
-  if(c3){ aDestroy('aRevLines');
-    var lines=[ ['Online stores','online'], ['3P seller services','p3'], ['AWS','aws'], ['Advertising','ads'], ['Subscriptions','subs'], ['Physical stores','phys'], ['Other','other'] ];
-    var vals=lines.map(function(l){ var v=aFy(l[1], 2025); return v==null?null:Math.round(v/100)/10; });
-    _aCharts['aRevLines']=new Chart(c3.getContext('2d'),{ type:'bar',
-      data:{ labels:lines.map(function(l){ return l[0]; }), datasets:[{ data:vals, backgroundColor:[BRAND,BRAND2,SQUID,'#7A5AF8','#2E8B57','#9AA4B0','#C8B49A'], maxBarThickness:26 }] },
-      options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } },
-        scales:{ x:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } }, y:{ grid:{ display:false } } } } }); }
-}
 function aOpMgnSeries(){ return A_OPEX_YEARS.map(function(y){ var r=A_OPEX[y]; var cost=A_OPEX_FN.reduce(function(a,f){ return a+r[f.k]; },0)+r.otherOpex; return Math.round((r.revenue-cost)/r.revenue*1000)/10; }); }
-function bottomlineBody(){
-  var h='<p class="ov-lede"><b>The margin machine.</b> Amazon’s consolidated operating margin has climbed from low single digits to a record ~13% on two structural levers — <b>AWS mix</b> (the profit engine growing faster than the whole) and <b>retail efficiency</b> (unit growth outpacing fulfillment-cost growth). This view traces the arc, splits it by segment, and shows where the profit is actually made. The bill underneath it — capex and its depreciation — lives in the <b>Capex &amp; Depreciation</b> tab.</p>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">Gross &amp; operating margin — the arc ($ FY, %)</div><div style="height:290px"><canvas id="aMgnArc"></canvas></div>'+
-    '<div class="ov-fynote">Gross margin (revenue − cost of sales) has expanded ~11 points since 2019 as the higher-margin lines — AWS, advertising, third-party services — outgrow first-party retail; operating margin has expanded faster still as fulfillment and G&amp;A leverage. Annual actuals from the model’s Segments tab (snapshot of <code>DCF AMZN.xlsm</code>).</div></div>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">Operating margin by segment (%, quarterly)</div><div style="height:300px"><canvas id="aMgn"></canvas></div>'+
-    '<div class="ov-fynote">Segment op income ÷ segment net sales, from the quarterly 8-K actuals in the Results dataset. 3Q25 North America carries the $2.5B FTC settlement; 4Q25 carries $2.4B of special charges (Italy tax · severance · impairments) — the dips are charges, not deterioration.</div></div>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">Where the profit is made — operating income by segment ($B, annual)</div><div style="height:290px"><canvas id="aSegOpInc"></canvas></div>'+
-    '<div class="ov-fynote">AWS carries the majority of operating income (~51% in FY2025) on ~18% of revenue. North America turned decisively profitable through 2023–25; International crossed into the black in 2024 after years of build-out losses. FY2022 shows the over-investment trough — both retail segments ran at a loss before the efficiency reset.</div></div>';
-  h+='<div class="ov-callout"><ul class="ov-bullets">'+
-    '<li><b>AWS mix is the slow, structural lever.</b> AWS has climbed from ~11% of revenue (2018) to ~18% (2025) at a segment margin many multiples of retail — every point of mix shift lifts the consolidated margin mechanically, before any operating improvement.</li>'+
-    '<li><b>Retail efficiency is the fast one.</b> Units +15% vs fulfillment expense +9% (1Q26), 1M+ robots deployed, robotics in every 2026 US large-format launch — the flywheel that turned North America from break-even to a mid-single-digit margin.</li>'+
-    '<li><b>The caveat to watch.</b> The record margin is being printed <i>through</i> the largest capex cycle in the company’s history; the depreciation it creates is still ramping (see Capex &amp; Depreciation). The bull case is that efficiency + AWS mix keep expanding margin faster than the D&amp;A bill lands.</li>'+
-    '</ul><div class="ov-fynote" style="margin-top:8px">Sources: 8-K/10-K actuals via the Results dataset and the Segments tab of <code>DCF AMZN.xlsm</code>; Q4 2025 / Q1 2026 earnings calls.</div></div>';
+// Operating-margin bridge — revenue -> each functional cost -> operating income, as a waterfall.
+// Plus the YoY margin-contribution bars (which cost line expanded / compressed the margin). No prose.
+var A_MB_COST=[
+  {k:'costOfSales',lab:'Cost of sales',c:'#6B7683'},
+  {k:'fulfillment',lab:'Fulfillment',c:BRAND},
+  {k:'techInfra',lab:'Technology & infrastructure',c:BRAND2},
+  {k:'marketing',lab:'Sales & marketing',c:'#7A5AF8'},
+  {k:'gAdmin',lab:'General & administrative',c:GRAY},
+  {k:'otherOpex',lab:'Other operating expense',c:'#B7791F'}
+];
+// (marginBridgeBody / aBuildMarginBridge removed — the General ▸ The bridge (Margin change / bps mode)
+//  supersedes the old "What moved the operating margin" bars. A_MB_COST is still used by the bridge.)
+// ═══ The bridge — revenue→OI build-up ($B) and margin-change (bps) waterfalls ═══════════════════
+// Ported from dis.js (boBridgePlugin/buildBoBridge): floating bars + dashed connectors + delta labels.
+// Two historical modes, no sensitizing — a forward/guidance-anchored mode (AMZN gives an OI range)
+// is a later pass. Short x-axis labels so all 8 steps read without autoskip.
+var A_BR_SHORT={ costOfSales:'Cost of sales', fulfillment:'Fulfillment', techInfra:'Tech & infra', marketing:'Marketing', gAdmin:'G&A', otherOpex:'Other' };
+var aBrPlugin={ id:'aBrLbl', afterDatasetsDraw:function(chart){
+  var steps=chart._steps; if(!steps) return; var ctx=chart.ctx, meta=chart.getDatasetMeta(0), y=chart.scales.y, fmt=chart._fmt||{};
+  ctx.save();
+  ctx.strokeStyle='rgba(120,130,145,.55)'; ctx.setLineDash([3,3]); ctx.lineWidth=1;
+  for(var i=0;i<steps.length-1;i++){ if(steps[i].runAfter==null) continue; var b0=meta.data[i], b1=meta.data[i+1];
+    var yy=y.getPixelForValue(steps[i].runAfter); ctx.beginPath(); ctx.moveTo(b0.x+b0.width/2, yy); ctx.lineTo(b1.x-b1.width/2, yy); ctx.stroke(); }
+  ctx.setLineDash([]); ctx.textAlign='center';
+  for(var j=0;j<steps.length;j++){ var s=steps[j], bar=meta.data[j], topPix=y.getPixelForValue(Math.max(s.range[0], s.range[1])), txt;
+    if(s.kind==='base'||s.kind==='total'){ txt=(fmt.base||String)(s.val); ctx.fillStyle='#1E2733'; ctx.font='800 11px Inter, system-ui, sans-serif'; }
+    else { txt=(fmt.delta||String)(s.val); ctx.fillStyle=s.dc||(s.val>=0?'#2E8B57':'#C0504D'); ctx.font='700 10.5px Inter, system-ui, sans-serif'; }
+    ctx.fillText(txt, bar.x, topPix-6); }
+  ctx.restore();
+} };
+function aBuildBrWaterfall(id, steps, fmt){
+  var cv=aChartReady(id); if(!cv) return; aDestroy(id);
+  var labels=steps.map(function(s){return s.label;}), data=steps.map(function(s){return s.range;}), colors=steps.map(function(s){return s.color;});
+  var ch=new Chart(cv.getContext('2d'), { type:'bar',
+    data:{ labels:labels, datasets:[{ data:data, backgroundColor:colors, borderRadius:4, borderSkipped:false, maxBarThickness:56, categoryPercentage:0.74, barPercentage:0.9 }] },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, layout:{padding:{top:24}},
+      plugins:{ legend:{display:false}, tooltip:{ displayColors:false, callbacks:{ title:function(it){return it[0].label;}, label:function(ctx){
+        var s=ctx.chart._steps[ctx.dataIndex];
+        if(s.kind==='base') return (fmt.base||String)(s.val);
+        if(s.kind==='total') return (fmt.base||String)(s.val);
+        return (fmt.delta||String)(s.val)+(s.runAfter!=null?'   ·   running '+(fmt.base||String)(s.runAfter):''); } } } },
+      scales:{ x:{ grid:{display:false}, ticks:{color:'#8A93A0', font:{size:11}, autoSkip:false, maxRotation:45, minRotation:0} },
+        y:{ position:'right', beginAtZero:true, grid:{color:'#EEF2F7'}, ticks:{color:'#8A93A0', font:{size:11}, callback:function(v){return (fmt.axis||String)(v);}} } } },
+    plugins:[ aBrPlugin ] });
+  ch._steps=steps; ch._fmt=fmt; _aCharts[id]=ch; ch.update('none'); aZoom(id);
+  var tw=document.getElementById(id+'-tbl');   // rule 3: the table carries every step drawn
+  if(tw){ var f=(fmt&&fmt.base)||String, fd=(fmt&&fmt.delta)||String;
+    tw.innerHTML=aTbl(id, 'The waterfall — every step', ['Step','Value','Running'], steps.map(function(s){
+      return [s.label, (s.kind==='base'||s.kind==='total')?f(s.val):fd(s.val), s.runAfter==null?f(s.val):f(s.runAfter)]; })); }
+}
+// Same build-up as a doughnut — where each revenue dollar goes (cost lines + operating income).
+function aBuildBrPie(r){
+  var cv=aChartReady('aBrCanvas'); if(!cv) return; aDestroy('aBrCanvas');
+  var rev=r.revenue, segs=A_MB_COST.map(function(it){ return {lab:A_BR_SHORT[it.k]||it.lab, v:(r[it.k]||0), c:it.c}; });
+  var oi=rev-A_MB_COST.reduce(function(a,it){ return a+(r[it.k]||0); },0);
+  segs.push({lab:'Operating income', v:oi, c:'#2E8B57'});
+  _aCharts['aBrCanvas']=new Chart(cv.getContext('2d'),{ type:'doughnut',
+    data:{ labels:segs.map(function(s){ return s.lab; }), datasets:[{ data:segs.map(function(s){ return Math.round(s.v/100)/10; }), backgroundColor:segs.map(function(s){ return s.c; }), borderColor:'#fff', borderWidth:2 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'55%',
+      plugins:{ legend:{ position:'right', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.label+': $'+c.parsed.toFixed(1)+'B ('+(rev?Math.round(c.parsed*1000/rev*100)/10:0)+'% of revenue)'; } } } } } });
+  var tw=document.getElementById('aBrCanvas-tbl');
+  if(tw) tw.innerHTML=aTbl('aBrCanvas','Where each revenue dollar goes',['Line','$B','% of revenue'],segs.map(function(s){ return [s.lab,'$'+(Math.round(s.v/100)/10).toFixed(1)+'B',(rev?Math.round(s.v/rev*1000)/10:0)+'%']; }));
+}
+// Revenue → −each functional cost → = Operating income, in $B, for one period row (annual or quarterly).
+function aBridgeBuildupSteps(r){
+  var rev=r.revenue/1000, run=rev;
+  var steps=[{label:'Revenue', kind:'base', color:'#1E2733', range:[0,run], runAfter:run, val:rev}];
+  A_MB_COST.forEach(function(it){ var c=(r[it.k]||0)/1000, hi=run; run=hi-c;
+    steps.push({label:A_BR_SHORT[it.k]||it.lab, kind:'down', color:it.c, dc:'#6B7683', range:[Math.min(run,hi),Math.max(run,hi)], runAfter:run, val:-c}); });
+  steps.push({label:'Op. income', kind:'total', color:'#2E8B57', range:[0,run], runAfter:null, val:run});
+  return steps;
+}
+// Operating-margin change (ppt→bps) between two periods, decomposed by functional line.
+function aBridgeBpsSteps(prev, cur, labA, labB){
+  var rev=cur.revenue, prevRev=prev.revenue;
+  var m0=(prevRev - A_MB_COST.reduce(function(a,it){return a+prev[it.k];},0))/prevRev*100, run=m0;
+  var steps=[{label:labA, kind:'base', color:'#1E2733', range:[0,run], runAfter:run, val:m0}];
+  A_MB_COST.forEach(function(it){ var contrib=(prev[it.k]/prevRev - cur[it.k]/rev)*100, lo=run; run=lo+contrib;
+    steps.push({label:A_BR_SHORT[it.k]||it.lab, kind:contrib>=0?'up':'down', color:contrib>=0?'#2E8B57':'#C0504D', range:[Math.min(lo,run),Math.max(lo,run)], runAfter:run, val:contrib}); });
+  steps.push({label:labB, kind:'total', color:'#1E2733', range:[0,run], runAfter:null, val:run});
+  return steps;
+}
+var BR_FMT_D={ axis:function(v){return '$'+Math.round(v)+'B';}, base:function(v){return '$'+v.toFixed(1)+'B';}, delta:function(v){return (v>=0?'+$':'−$')+Math.abs(v).toFixed(1)+'B';} };
+var BR_FMT_BPS={ axis:function(v){return v.toFixed(0)+'%';}, base:function(v){return v.toFixed(1)+'%';}, delta:function(v){var b=Math.round(v*100); return (b>=0?'+':'−')+Math.abs(b)+' bps';} };
+// Synthetic "opex row" for a forward year (fi = 0..2 → FY26E..FY28E) built from BBG consensus, shaped
+// exactly like an A_OPEX row so aBridgeBuildupSteps / aBuildBrPie work on it unchanged. otherOpex is the
+// residual so revenue − Σcost = operating income reconciles to the reported consensus OI.
+// adj = optional {cogs,fulfillment,techInfra,marketing,gAdmin} percent tweaks vs consensus. The "other"
+// residual is held at consensus, so with no adj OI reconciles to consensus; move a slider and OI floats.
+var FX_LINES=[{k:'cogs',lab:'Cost of sales'},{k:'fulfillment',lab:'Fulfillment'},{k:'techInfra',lab:'Tech &amp; infra'},{k:'marketing',lab:'Sales &amp; marketing'},{k:'gAdmin',lab:'G&amp;A'}];
+function aFwdOpexRow(fi, adj){
+  function f(k){ var s=amznBBG.is[k]; return s?s.f[fi]:null; }
+  var rev=f('rev'), oi=f('oi'); if(rev==null||oi==null) return null;
+  // BBG gives forward gross profit, not COGS directly → derive COGS = revenue − gross profit.
+  var cogs=f('cogs'); if(cogs==null){ var gp=f('grossProfit'); cogs=(gp!=null)?(rev-gp):0; } cogs=cogs||0;
+  var ful=f('fulfillment')||0, tech=f('techInfra')||0, mkt=f('marketing')||0, ga=f('gAdmin')||0;
+  var other=rev-cogs-ful-tech-mkt-ga-oi;   // consensus residual, held fixed
+  adj=adj||{}; function A(v,k){ return v*(1+((adj[k]||0)/100)); }
+  return { p:'FY'+String(amznBBG.yearsF[fi]).slice(2)+'E', revenue:rev, costOfSales:A(cogs,'cogs'), fulfillment:A(ful,'fulfillment'),
+    techInfra:A(tech,'techInfra'), marketing:A(mkt,'marketing'), gAdmin:A(ga,'gAdmin'), otherOpex:other };
+}
+function aBridgeBody(){
+  var yBtns=function(cls,sel){ return A_OPEX_YEARS.map(function(y){ return '<button type="button" data-'+cls+'="'+y+'"'+(y===sel?' class="active"':'')+'>FY'+String(y).slice(2)+'</button>'; }).join(''); };
+  var qYears=[]; A_OPEXQ.forEach(function(r){ if(qYears.indexOf(r.yr)<0) qYears.push(r.yr); });
+  var qLast=A_OPEXQ[A_OPEXQ.length-1];
+  var qyBtns=qYears.map(function(y){ return '<button type="button" data-brqy="'+y+'"'+(y===qLast.yr?' class="active"':'')+'>FY'+String(y).slice(2)+'</button>'; }).join('');
+  var qqBtns=['Q1','Q2','Q3','Q4'].map(function(q){ return '<button type="button" data-brqq="'+q+'"'+(q===qLast.q?' class="active"':'')+'>'+q+'</button>'; }).join('');
+  return '<div class="ov-sec"><div class="ov-sec-h">The bridge — how revenue becomes operating income</div>'+
+    '<div class="mch-ctl">'+   /* §0.4 row 2: mode + view (left) */
+      '<span style="display:flex;gap:6px;flex-wrap:wrap">'+
+        '<span class="acx-tog br-mode"><button type="button" data-brm="buildup" class="active">Build-up ($B)</button><button type="button" data-brm="bps">Margin change (bps)</button><button type="button" data-brm="fexp">Forward (expenses)</button></span>'+
+      '</span>'+
+      '<span></span>'+
+    '</div>'+
+    '<div class="br-ctl-bu mch-ctl" style="margin:0 0 8px">'+   /* buildup window (right) */
+      '<span></span>'+
+      '<span style="display:flex;gap:8px;flex-wrap:wrap">'+
+        '<span class="acx-tog br-gran"><button type="button" data-brg="y" class="active">Annual</button><button type="button" data-brg="q">Quarterly</button></span>'+
+        '<span class="acx-tog br-yr br-sel-y">'+yBtns('bry',2025)+'</span>'+
+        '<span class="acx-tog br-qy br-sel-q" style="display:none">'+qyBtns+'</span>'+
+        '<span class="acx-tog br-qq br-sel-q" style="display:none">'+qqBtns+'</span>'+
+      '</span>'+
+    '</div>'+
+    '<style>.br-sl{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:var(--navy)}.br-sl input{flex:1;max-width:180px;accent-color:'+BRAND+'}.br-sl-v{width:44px;text-align:right;color:var(--brand-2);font-variant-numeric:tabular-nums}.br-sl-l{width:120px}.br-fx-reset{cursor:pointer;border:1px solid var(--bdr);background:#fff;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--navy)}</style>'+
+    '<div class="br-ctl-bps mch-ctl" style="display:none;margin:0 0 8px"><span></span>'+   /* margin-change from→to (by expense line) */
+      '<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;color:var(--mu)">From</span><span class="acx-tog br-from">'+yBtns('brf',2022)+'</span>'+
+      '<span style="font-size:11px;color:var(--mu)">to</span><span class="acx-tog br-to">'+yBtns('brt',2025)+'</span></span></div>'+
+    '<div class="br-ctl-fexp mch-ctl" style="display:none;margin:0 0 8px">'+   /* forward year (right) */
+      '<span></span>'+
+      '<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="acx-tog br-fy"><button type="button" data-brfy="0" class="active">FY26E</button><button type="button" data-brfy="1">FY27E</button><button type="button" data-brfy="2">FY28E</button></span>'+
+        '<button type="button" class="br-fx-reset">Reset to consensus</button></span>'+
+    '</div>'+
+    '<div class="br-fx-sl" style="display:none;flex-direction:column;gap:6px;margin:0 0 10px">'+
+      '<div style="font-size:10.5px;color:var(--mu)">Sensitize each cost line vs consensus (0% = BBG consensus). Operating income floats with your changes:</div>'+
+      FX_LINES.map(function(l){ return '<div class="br-sl"><span class="br-sl-l">'+l.lab+'</span><input type="range" data-brx="'+l.k+'" min="-25" max="25" step="1" value="0"><span class="br-sl-v" data-brxv="'+l.k+'">0%</span></div>'; }).join('')+
+    '</div>'+
+    '<div style="height:340px"><canvas id="aBrCanvas"></canvas></div>'+
+    '<div id="aBrCanvas-tbl" style="margin-top:8px"></div></div>';
+}
+function aBridgeSync(pane){
+  var mb=pane.querySelector('.br-mode .active'), mode=mb?mb.getAttribute('data-brm'):'buildup';
+  var bu=pane.querySelector('.br-ctl-bu'), fe=pane.querySelector('.br-ctl-fexp'), fx=pane.querySelector('.br-fx-sl'), bp=pane.querySelector('.br-ctl-bps');
+  if(bu) bu.style.display=mode==='buildup'?'flex':'none';
+  if(bp) bp.style.display=mode==='bps'?'flex':'none';
+  if(fe) fe.style.display=mode==='fexp'?'flex':'none';
+  if(fx) fx.style.display=mode==='fexp'?'flex':'none';
+  var g=pane.querySelector('.br-gran .active'), q=!!(g&&g.getAttribute('data-brg')==='q');
+  var sy=pane.querySelector('.br-sel-y');
+  if(sy) sy.style.display=q?'none':'';
+  pane.querySelectorAll('.br-sel-q').forEach(function(el){ el.style.display=q?'':'none'; });
+  if(q){   // grey out quarters not yet reported for the picked year; snap the active pill onto an available quarter
+    var yb=pane.querySelector('.br-qy .active'), yy=yb?+yb.getAttribute('data-brqy'):null;
+    var avail=A_OPEXQ.filter(function(r){ return r.yr===yy; }).map(function(r){ return r.q; });
+    var qbtns=pane.querySelectorAll('.br-qq button'), anyActive=false;
+    qbtns.forEach(function(b){ var ok=avail.indexOf(b.getAttribute('data-brqq'))>=0; b.disabled=!ok; b.style.opacity=ok?'':'0.35'; b.style.cursor=ok?'':'not-allowed'; if(b.classList.contains('active')&&!ok) b.classList.remove('active'); });
+    qbtns.forEach(function(b){ if(b.classList.contains('active')) anyActive=true; });
+    if(!anyActive&&avail.length){ var lastQ=avail[avail.length-1]; qbtns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-brqq')===lastQ); }); }
+  }
+}
+function aBuildBridge(){
+  var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(!pane) return;
+  var mb=pane.querySelector('.br-mode .active'), mode=mb?mb.getAttribute('data-brm'):'buildup', r;
+  if(mode==='bps'){   // margin change between two years, decomposed by functional expense line
+    var fb=pane.querySelector('.br-from .active'), tb=pane.querySelector('.br-to .active');
+    var ya=fb?+fb.getAttribute('data-brf'):2022, yb2=tb?+tb.getAttribute('data-brt'):2025, prev=A_OPEX[ya], cur=A_OPEX[yb2];
+    if(prev&&cur) aBuildBrWaterfall('aBrCanvas', aBridgeBpsSteps(prev,cur,'FY'+String(ya).slice(2),'FY'+String(yb2).slice(2)), BR_FMT_BPS);
+    return;
+  }
+  if(mode==='fexp'){   // forward expense build-up — BBG consensus year, sensitizable per cost line
+    var fyb=pane.querySelector('.br-fy .active'), fi=fyb?+fyb.getAttribute('data-brfy'):2, adj={};
+    pane.querySelectorAll('.br-fx-sl input[data-brx]').forEach(function(s){ adj[s.getAttribute('data-brx')]=+s.value;
+      var v=pane.querySelector('.br-sl-v[data-brxv="'+s.getAttribute('data-brx')+'"]'); if(v) v.textContent=((+s.value)>0?'+':'')+s.value+'%'; });
+    r=aFwdOpexRow(fi, adj);
+  } else {             // build-up — actual year or quarter
+    var g=pane.querySelector('.br-gran .active'), gran=g?g.getAttribute('data-brg'):'y';
+    if(gran==='q'){ var yb2=pane.querySelector('.br-qy .active'), qb=pane.querySelector('.br-qq .active');
+      var yy=yb2?+yb2.getAttribute('data-brqy'):A_OPEXQ[A_OPEXQ.length-1].yr, qq=qb?qb.getAttribute('data-brqq'):A_OPEXQ[A_OPEXQ.length-1].q;
+      r=A_OPEXQ.filter(function(x){ return x.yr===yy && x.q===qq; })[0]; }
+    else { var yb=pane.querySelector('.br-yr .active'); r=A_OPEX[yb?+yb.getAttribute('data-bry'):2025]; }
+  }
+  if(!r) return;
+  aBuildBrWaterfall('aBrCanvas', aBridgeBuildupSteps(r), BR_FMT_D);
+}
+// ── Segment bridge (Segments tab): margin-change decomposition + the forward segment-consensus walk.
+// Moved out of General so the consolidated bridge there stays about expenses. Reuses aBuildBrWaterfall.
+function aSegBridgeBody(){
+  var yBtns=function(cls,sel){ return A_OPEX_YEARS.map(function(y){ return '<button type="button" data-'+cls+'="'+y+'"'+(y===sel?' class="active"':'')+'>FY'+String(y).slice(2)+'</button>'; }).join(''); };
+  return '<div class="ov-sec"><div class="ov-sec-h">The segment bridge — what each segment added to operating income</div>'+
+    '<style>.br-sl{display:flex;align-items:center;gap:14px;font-size:12px;font-weight:700;color:var(--navy);padding:7px 0}.br-sl+.br-sl{border-top:1px solid var(--bdr)}.br-sl input{flex:1;min-width:120px;max-width:280px;accent-color:'+BRAND+'}.br-sl-v{width:50px;text-align:right;color:var(--brand-2);font-variant-numeric:tabular-nums;font-size:12.5px}.br-sl-l{width:120px}</style>'+
+    '<div class="mch-ctl" style="margin:0 0 10px"><span class="acx-tog sbr-mode"><button type="button" data-sbrm="hist" class="active">Historical (actuals)</button><button type="button" data-sbrm="fwd">Forward (consensus / Summit)</button></span><span></span></div>'+
+    /* Historical: decompose the OI change between two actual years by segment */
+    '<div class="sbr-ctl-hist mch-ctl" style="margin:0 0 12px"><span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;color:var(--mu)">From</span><span class="acx-tog sbr-from">'+yBtns('sbrf',2022)+'</span><span style="font-size:11px;color:var(--mu)">to</span><span class="acx-tog sbr-to">'+yBtns('sbrt',2025)+'</span></span><span></span></div>'+
+    /* Forward: FY25 OI → target-year forecast, sensitizable */
+    '<div class="sbr-ctl-fwd" style="display:none;flex-direction:column;gap:12px;margin:0 0 12px">'+
+      '<div class="mch-ctl" style="margin:0"><span class="acx-tog sbr-basis"><button type="button" data-sbrb="cons" class="active">vs Consensus (BBG)</button><button type="button" data-sbrb="summit">vs Summit</button></span><span class="acx-tog sbr-fy"><button type="button" data-sbrfy="0" class="active">FY26E</button><button type="button" data-sbrfy="1">FY27E</button><button type="button" data-sbrfy="2">FY28E</button></span></div>'+
+      '<div style="border:1px solid var(--bdr);border-radius:10px;padding:8px 16px 10px;background:var(--card,#fff)">'+
+        '<div style="font-size:11px;color:var(--mu);margin:2px 0 4px" id="aSbrBasisNote">Sensitize each segment’s operating income vs the base (0% = the base forecast):</div>'+
+        '<div class="br-sl"><span class="br-sl-l">North America</span><input type="range" data-sbrseg="na" min="-30" max="30" step="1" value="0"><span class="br-sl-v" data-sbrsegv="na">0%</span></div>'+
+        '<div class="br-sl"><span class="br-sl-l">International</span><input type="range" data-sbrseg="intl" min="-30" max="30" step="1" value="0"><span class="br-sl-v" data-sbrsegv="intl">0%</span></div>'+
+        '<div class="br-sl"><span class="br-sl-l">AWS</span><input type="range" data-sbrseg="aws" min="-40" max="40" step="1" value="0"><span class="br-sl-v" data-sbrsegv="aws">0%</span></div>'+
+      '</div>'+
+    '</div>'+
+    '<div style="height:340px"><canvas id="aSegBr"></canvas></div>'+
+    '<div id="aSegBr-tbl" style="margin-top:8px"></div></div>';
+}
+function aSegBridgeSync(pane){
+  var mb=pane.querySelector('.sbr-mode .active'), mode=mb?mb.getAttribute('data-sbrm'):'hist';
+  var h=pane.querySelector('.sbr-ctl-hist'), f=pane.querySelector('.sbr-ctl-fwd');
+  if(h) h.style.display=mode==='hist'?'flex':'none';
+  if(f) f.style.display=mode==='fwd'?'flex':'none';
+}
+// Segment-bridge sensitivity levers are stored SEPARATELY per basis — moving them under Summit does not
+// touch the BBG scenario and vice-versa. aSegBrLoadLevers restores the active basis's saved slider set.
+var _aSegBrLev={cons:{na:0,intl:0,aws:0},summit:{na:0,intl:0,aws:0}};
+function aSegBrLoadLevers(pane){ var bb=pane.querySelector('.sbr-basis .active'), basis=bb?bb.getAttribute('data-sbrb'):'cons', st=_aSegBrLev[basis]||{};
+  ['na','intl','aws'].forEach(function(k){ var sl=pane.querySelector('.sbr-ctl-fwd input[data-sbrseg="'+k+'"]'); if(sl) sl.value=(st[k]||0); }); }
+function aBuildSegBridge(){
+  var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]'); if(!pane) return;
+  var mb=pane.querySelector('.sbr-mode .active'), mode=mb?mb.getAttribute('data-sbrm'):'hist';
+  if(mode==='hist'){   // decompose the actual OI change between two years, by segment ($B added or bps of consolidated margin)
+    var fb=pane.querySelector('.sbr-from .active'), tb=pane.querySelector('.sbr-to .active');
+    var y0=fb?+fb.getAttribute('data-sbrf'):2022, y1=tb?+tb.getAttribute('data-sbrt'):2025;
+    if(y1<=y0){ aBuildBrWaterfall('aSegBr', [], BR_FMT_D); return; }
+    var A=A_OPEX[y0], B2=A_OPEX[y1]; if(!A||!B2) return;
+    var SGH=[{k:'us',lab:'North America',oi:'usOpInc',c:BRAND},{k:'intl',lab:'International',oi:'intOpInc',c:BRAND2},{k:'aws',lab:'AWS',oi:'awsOpInc',c:SQUID}];
+    // start = total OI(y0); each bar = ΔOI_seg (ties exactly, segment OI sums to consolidated for AMZN); end = total OI(y1)
+    var oiStart=SGH.reduce(function(a,s){ return a+A[s.oi]; },0);
+    var run=oiStart/1000, steps=[{label:'FY'+String(y0).slice(2)+' OI', kind:'base', color:'#1E2733', range:[0,run], runAfter:run, val:run}];
+    SGH.forEach(function(s){ var d=(B2[s.oi]-A[s.oi])/1000, lo=run; run=lo+d;
+      steps.push({label:s.lab, kind:d>=0?'up':'down', color:s.c, dc:'#6B7683', range:[Math.min(lo,run),Math.max(lo,run)], runAfter:run, val:d}); });
+    steps.push({label:'FY'+String(y1).slice(2)+' OI', kind:'total', color:'#2E8B57', range:[0,run], runAfter:null, val:run});
+    aBuildBrWaterfall('aSegBr', steps, BR_FMT_D);
+    return;
+  }
+  {   // segment-only forward walk: FY25 OI → target-year segment forecast → sensitizable, vs Consensus OR Summit
+    var fyb=pane.querySelector('.sbr-fy .active'), fi=fyb?+fyb.getAttribute('data-sbrfy'):2;
+    var bb=pane.querySelector('.sbr-basis .active'), basis=bb?bb.getAttribute('data-sbrb'):'cons';
+    var SG=[{k:'na',lab:'North America',mk:'naopinc',c:BRAND},{k:'intl',lab:'International',mk:'intopinc',c:BRAND2},{k:'aws',lab:'AWS',mk:'awsopinc',c:SQUID}];
+    var base=SG.map(function(s){ return amznBBG.seg[s.k].oi.a[2]; });   // FY25 actual, $M
+    var tgt=SG.map(function(s){
+      var b=(basis==='summit')?aSumSegSummit(s.mk, fi+3):null; if(b==null) b=amznBBG.seg[s.k].oi.f[fi];   // Summit unavailable (e.g. partial FY28) → BBG
+      var sl=pane.querySelector('.sbr-ctl-fwd input[data-sbrseg="'+s.k+'"]'); if(sl) _aSegBrLev[basis][s.k]=+sl.value;   // persist levers PER BASIS (Summit and BBG keep their own)
+      return b*(sl?(1+(+sl.value)/100):1); });
+    var bn=pane.querySelector('#aSbrBasisNote'); if(bn) bn.textContent='Sensitize each segment’s operating income vs '+(basis==='summit'?'Summit’s segment forecast':'the BBG consensus')+' (0% = the base):';
+    var run=base.reduce(function(a,b){ return a+b; },0)/1000;
+    var steps=[{label:'FY25 OI', kind:'base', color:'#1E2733', range:[0,run], runAfter:run, val:run}];
+    SG.forEach(function(s,i){ var d=(tgt[i]-base[i])/1000, lo=run; run=lo+d;
+      steps.push({label:s.lab, kind:d>=0?'up':'down', color:s.c, dc:'#6B7683', range:[Math.min(lo,run),Math.max(lo,run)], runAfter:run, val:d}); });
+    var yr=String(amznBBG.yearsF[fi]).slice(2);
+    steps.push({label:'FY'+yr+'E OI', kind:'total', color:'#2E8B57', range:[0,run], runAfter:null, val:run});
+    aBuildBrWaterfall('aSegBr', steps, BR_FMT_D);
+    SG.forEach(function(s){ var sl=pane.querySelector('.sbr-ctl-fwd input[data-sbrseg="'+s.k+'"]'), v=pane.querySelector('.br-sl-v[data-sbrsegv="'+s.k+'"]'); if(sl&&v) v.textContent=((+sl.value)>0?'+':'')+sl.value+'%'; });
+  }
+}
+// ── OI → Net income walk, with one-off normalization. Consolidated from BBG (amznBBG.is), actuals +
+// consensus. Reported net income is flattered by NON-CASH valuation gains on Amazon's equity
+// investments — historically Rivian, and by 2026 dominated by the ANTHROPIC stake mark (the calls:
+// Q1'26 "~$16.8B of pre-tax Anthropic valuation gains"; latest quarter "other income, primarily the
+// Anthropic investment mark"). These land in GAAP "Other income (expense), net" (amznBBG.is.otherNonOp,
+// stored so that a negative = a gain). "Normalized" removes that gain AFTER TAX, at the period's
+// effective rate — because the reported tax provision already carries the tax accrued on the gain, so
+// stripping it pretax while keeping full tax would understate underlying earnings. ──
+function aIsVal(k,y){ var s=amznBBG.is[k]; if(!s) return null; return y<=2025 ? s.a[y-2023] : s.f[y-2026]; }
+function aNetBridgeBody(){
+  var years=[2023,2024,2025,2026,2027,2028];
+  var yb=years.map(function(y){ return '<button type="button" data-nbyr="'+y+'"'+(y===2026?' class="active"':'')+'>FY'+String(y).slice(2)+(y>2025?'E':'')+'</button>'; }).join('');
+  return '<div class="ov-sec"><div class="ov-sec-h">Operating income → net income — and the normalization</div>'+
+    '<div class="mch-ctl">'+   /* §0.4 row 2: treatment (left) · window (right) */
+      '<span class="acx-tog nb-norm"><button type="button" data-nbnorm="rep" class="active">Reported</button><button type="button" data-nbnorm="norm">Normalized</button></span>'+
+      '<span class="acx-tog nb-yr" style="flex-wrap:wrap">'+yb+'</span>'+
+    '</div>'+
+    '<div style="height:330px"><canvas id="aNetBr"></canvas></div>'+
+    '<div id="aNetBr-tbl" style="margin-top:8px"></div>'+
+    '<div class="acx-cap" id="aNetBrCap" style="font-size:11px;color:var(--mu);margin-top:8px"></div></div>';
+}
+function aBuildNetBridge(){
+  var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(!pane) return;
+  var yb=pane.querySelector('.nb-yr .active'), y=yb?+yb.getAttribute('data-nbyr'):2026;
+  var nt=pane.querySelector('.nb-norm .active'), norm=!!(nt&&nt.getAttribute('data-nbnorm')==='norm');
+  var oi=aIsVal('oi',y), nInt=aIsVal('netInterest',y), ono=aIsVal('otherNonOp',y), tax=aIsVal('tax',y), pretax=aIsVal('pretax',y), net=aIsVal('netIncome',y), rev=aIsVal('rev',y);
+  if(oi==null||net==null||tax==null) return;
+  function B(x){ return x==null?0:x/1000; }
+  var I = nInt==null?0:-nInt;                 // net interest income (Amazon nets interest income − expense here)
+  var G = ono==null?0:-ono;                    // equity-investment valuation gain (positive = gain): the Anthropic/Rivian mark
+  var effR = (pretax&&pretax>0)?(tax/pretax):0;   // period effective tax rate — used to remove the tax accrued on the gain
+  var plug = net - (oi + I + G - tax);         // small reconciling item (minority interest / equity-method / consensus noise) — keeps the walk tying to reported net
+  var run=B(oi), steps=[{label:'Op. income', kind:'base', color:'#1E2733', range:[0,run], runAfter:run, val:B(oi)}];
+  function step(lab,d,dc){ var lo=run; run=lo+d; steps.push({label:lab, kind:d>=0?'up':'down', color:(dc==='#B7791F'?'#B7791F':'#6B7683'), dc:dc, range:[Math.min(lo,run),Math.max(lo,run)], runAfter:run, val:d}); }
+  step('Net interest income', B(I), '#6B7683');
+  if(!norm) step('Equity-investment gains, net', B(G), '#B7791F');   // the Anthropic/Rivian mark — the ONLY item normalization removes
+  var taxShown = norm ? -(tax - G*effR) : -tax;   // normalized: also remove the tax accrued on the stripped gain
+  step(norm?'Income tax (ex-mark)':'Income tax', B(taxShown), '#6B7683');
+  if(Math.abs(plug)>=50) step('Minority interest & other', B(plug), '#6B7683');   // only draw when non-trivial
+  var endNet = norm ? (net - G*(1-effR)) : net;
+  run=B(endNet); steps.push({label:(norm?'Net income (norm.)':'Net income'), kind:'total', color:'#2E8B57', range:[0,run], runAfter:null, val:B(endNet)});
+  aBuildBrWaterfall('aNetBr', steps, BR_FMT_D);
+  var cap=pane.querySelector('#aNetBrCap');
+  if(cap){ var yl='FY'+String(y).slice(2)+(y>2025?'E':''), rm=(rev?net/rev*100:null), nmv=net-G*(1-effR), nm=(rev?nmv/rev*100:null);
+    cap.innerHTML='<b>'+yl+'</b> — reported net margin <b>'+(rm==null?'—':rm.toFixed(1)+'%')+'</b>'+(rev?' ($'+B(net).toFixed(1)+'B on $'+B(rev).toFixed(0)+'B revenue)':'')+', normalized <b>'+(nm==null?'—':nm.toFixed(1)+'%')+'</b>.<br>'+
+      'The <span style="color:#B7791F;font-weight:700">amber bar</span> is GAAP <i>“other income (expense), net”</i> — non-cash valuation gains on Amazon’s equity investments (historically <b>Rivian</b>; by 2026 dominated by the <b>Anthropic</b> stake mark: the Q1’26 call flagged “~$16.8B of pre-tax Anthropic valuation gains,” and the latest quarter’s other income was “primarily the Anthropic investment mark”). It’s <b>$'+B(G).toFixed(1)+'B pre-tax</b> in '+yl+' — real under GAAP, but non-cash, non-operating and lumpy, so it flatters the reported margin.<br>'+
+      '<b>Normalization</b> removes it <b>after tax</b>: normalized net income = reported − gain × (1 − effective rate), with the '+yl+' effective rate <b>'+(effR*100).toFixed(0)+'%</b> (= $'+B(G*(1-effR)).toFixed(1)+'B removed). We strip the gain’s tax too — the reported provision already carries it, so removing the gain pretax while keeping full tax would understate the underlying result. Everything else (net interest, operating tax, minority interest) is recurring and stays. Source: BBG consensus (as of Aug 2026) + AMZN earnings calls.';
+  }
+}
+// SBC — General tab. Dilution view overlays Summit's diluted-share forecast on consensus (Summit holds
+// shares flat, i.e. SBC dilution assumed offset; BBG carries continued dilution). By-line = BBG breakdown.
+// Summit diluted shares — snapshot of the Summit DCF (amzn-target-multiple SNAP_DATA, 8/4/26 vintage):
+// FY23-25 actual, FY26-28E held flat at the FY25 level (10,827M). Summit does NOT publish an SBC-$
+// forecast, so the $ bars stay BBG-only (no fabricated Summit SBC line).
+var A_SUMMIT_SHARES=[10492,10721,10827,10827,10827,10827];
+function aSbcBody(){
+  return '<div class="ov-sec"><div class="ov-sec-h">Stock-based compensation &amp; dilution</div>'+
+    '<div class="mch-ctl">'+
+      '<span class="acx-tog sbcv-tog"><button type="button" data-sbcv="dilution" class="active">Dilution</button><button type="button" data-sbcv="line">SBC by line</button></span>'+
+      '<span class="acx-tog sbcu-tog"><button type="button" data-sbcu="usd" class="active">$B</button><button type="button" data-sbcu="pct">%</button></span>'+
+    '</div>'+
+    '<div class="ave-leg" data-sbcleg="1" style="margin:2px 0 8px"></div>'+
+    '<div style="height:320px"><canvas id="aSbcMain"></canvas></div></div>';
+}
+function aSbcSer(k){ var s=amznBBG.is[k]; return s?s.a.concat(s.f):[null,null,null,null,null,null]; }
+function aBuildSbc(){
+  var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]'); if(!pane) return;
+  var uw=pane.querySelector('.sbcu-tog .active'), pct=!!(uw&&uw.getAttribute('data-sbcu')==='pct');   // $B vs % (of revenue in Dilution; of the line's expense in By line)
+  var vw=pane.querySelector('.sbcv-tog .active'), view=vw?vw.getAttribute('data-sbcv'):'dilution';
+  var cv=aChartReady('aSbcMain'); if(!cv) return; aDestroy('aSbcMain');
+  var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], legEl=pane.querySelector('[data-sbcleg]');
+  var SBC_BAR='rgba(30,39,51,0.42)';   // SBC $ = muted navy context bars; the two share lines carry the comparison
+  if(view==='dilution'){   // SBC (bars) vs diluted shares — Summit (flat) vs Consensus (rising)
+    var sbc=aSbcSer('sbc'), shC=aSbcSer('dilShares'), rvS=aSbcSer('rev');
+    var bars=labels.map(function(_,i){ return sbc[i]==null?null:(pct?(rvS[i]?Math.round(sbc[i]/rvS[i]*1000)/10:null):Math.round(sbc[i]/100)/10); });
+    var shCons=labels.map(function(_,i){ return shC[i]==null?null:Math.round(shC[i]); });
+    var shSum=A_SUMMIT_SHARES.slice();
+    function fdash(ctx){ return ctx.p1DataIndex>=3?[5,4]:undefined; }   // dash the forward segment
+    _aCharts['aSbcMain']=new Chart(cv.getContext('2d'),{ data:{ labels:labels, datasets:[
+      { type:'bar', label:'SBC '+(pct?'(% of rev)':'($B)'), data:bars, backgroundColor:bars.map(function(_,i){ return i<3?SBC_BAR:'rgba(30,39,51,0.20)'; }), borderColor:'#fff', borderWidth:1, maxBarThickness:46, yAxisID:'y', order:3 },
+      { type:'line', label:'Diluted shares — Summit', data:shSum, borderColor:ASTD_SUMMIT, backgroundColor:ASTD_SUMMIT, borderWidth:2.6, pointRadius:2.6, tension:0.15, yAxisID:'y1', order:1, segment:{ borderDash:fdash } },
+      { type:'line', label:'Diluted shares — Consensus (BBG)', data:shCons, borderColor:ASTD_CONS, backgroundColor:ASTD_CONS, borderWidth:2.6, pointRadius:2.6, tension:0.15, yAxisID:'y1', order:2, segment:{ borderDash:fdash } } ]},
+      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+        plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.yAxisID==='y1'? c.dataset.label+': '+c.parsed.y.toLocaleString()+'M'+(c.dataIndex>2?' (E)':'') : c.dataset.label+': '+(pct?c.parsed.y+'%':'$'+c.parsed.y.toFixed(1)+'B')+(c.dataIndex>2?' (E)':''); } } } },
+        scales:{ x:{ grid:{ display:false } },
+          y:{ position:'left', title:{ display:true, text:pct?'SBC (% of rev)':'SBC ($B)', font:{ size:11 } }, grid:{ color:'rgba(0,0,0,0.05)' }, beginAtZero:true, ticks:{ callback:function(v){ return pct?v+'%':'$'+v+'B'; } } },
+          y1:{ position:'right', title:{ display:true, text:'Diluted shares (M)', font:{ size:11 } }, grid:{ display:false }, suggestedMin:10300, suggestedMax:11300, ticks:{ callback:function(v){ return v.toLocaleString(); } } } } } });
+    if(legEl) legEl.innerHTML=[['SBC '+(pct?'(% of rev)':'($B)'),SBC_BAR],['Diluted shares — Summit',ASTD_SUMMIT],['Diluted shares — Consensus (BBG)',ASTD_CONS]].map(function(p){ return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--mu);margin-right:14px"><span style="width:13px;height:13px;border-radius:3px;background:'+p[1]+'"></span>'+p[0]+'</span>'; }).join('')+'<span style="font-size:11px;color:var(--mu)">Summit holds shares flat (dilution offset); consensus carries it up to 11,111M by FY28E</span>';
+  } else {
+    if(legEl) legEl.innerHTML='';
+    var LN=[{sbc:'sbcCogs',exp:'cogs',lab:'Cost of sales',c:SQUID},{sbc:'sbcFulfill',exp:'fulfillment',lab:'Fulfillment',c:BRAND},{sbc:'sbcTech',exp:'techInfra',lab:'Technology & infrastructure',c:BRAND2},{sbc:'sbcMktg',exp:'marketing',lab:'Sales & marketing',c:GREEN},{sbc:'sbcGA',exp:'gAdmin',lab:'General & administrative',c:GRAY}];
+    var tot=aSbcSer('sbc');   // in By line, % = each line's share of TOTAL SBC that period
+    var ds=LN.map(function(l){ var s=aSbcSer(l.sbc);
+      var vals=labels.map(function(_,i){ if(s[i]==null) return null; return pct?(tot[i]?Math.round(s[i]/tot[i]*1000)/10:null):Math.round(s[i]/100)/10; });
+      return { label:l.lab, data:vals, backgroundColor:vals.map(function(_,i){ return i<3?l.c:acxRGBA(l.c,0.45); }), borderColor:'#fff', borderWidth:1, maxBarThickness:44, stack:'s' }; });
+    _aCharts['aSbcMain']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:labels, datasets:ds },
+      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':(pct?c.parsed.y+'% of total SBC':'$'+c.parsed.y.toFixed(1)+'B')); }, footer:function(it){ return pct?'':'Total SBC: $'+it.reduce(function(a,x){ return a+(x.parsed.y||0); },0).toFixed(1)+'B'; } } } },
+        scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, max:pct?100:undefined, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return pct?v+'%':'$'+v+'B'; } } } } } });
+  }
+  aZoom('aSbcMain');
+  if(pane && !pane._sbcmWired){ pane._sbcmWired=true;
+    pane.querySelectorAll('.sbcv-tog button, .sbcu-tog button').forEach(function(b){ b.onclick=function(){ b.parentNode.querySelectorAll('button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSbc(); }; }); }
+}
+// Profitability & margins — the §0.4 layout: row 1 = a metric dropdown (identity), row 2 = mode
+// toggles (treatment). All margins (gross/operating/EBITDA/net/FCF) over time, reported → BBG
+// consensus, as a % or in $B. Semantic colours (navy=reported, blue=consensus) per §0.7.
+var RS_ACT='#1E2733', RS_CONS='#2563EB';
+var MARG_NUM={gross:'grossProfit', operating:'oi', ebitda:'ebitda', net:'netIncome', fcf:'fcf'};
+var MARG_LAB={gross:'Gross margin', operating:'Operating margin', ebitda:'EBITDA margin', net:'Net margin', fcf:'FCF margin'};
+// General master chart-picker — one dropdown swaps which chart is on screen (less-by-default; the
+// others stay hidden until chosen). Sections are wrapped in .gen-sec[data-gsec]; wiring in aBuildExpenses.
+function aGeneralPicker(){
+  var opts=[['margins','Profitability & margins'],['bridge','The bridge — revenue → operating income'],['net','Operating income → net income'],['sbc','Stock-based compensation']];
+  return '<div class="ov-sec" style="padding-bottom:10px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+    '<span style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)">Chart</span>'+
+    '<select class="gen-chart" style="font-size:13px;font-weight:700;color:var(--navy);border:1px solid var(--bdr);border-radius:8px;padding:6px 10px;background:#fff">'+
+    opts.map(function(o){ return '<option value="'+o[0]+'"'+(o[0]==='margins'?' selected':'')+'>'+o[1]+'</option>'; }).join('')+
+    '</select>'+
+    '<span style="font-size:11px;color:var(--mu)">Pick one — the rest stay tucked away.</span>'+
+    '</div></div>';
+}
+var MARG_MET=[{k:'gross',c:GRAY},{k:'operating',c:BRAND2},{k:'ebitda',c:BRAND},{k:'net',c:GREEN},{k:'fcf',c:SQUID}];
+// Summit annual aggregation from amznResults quarterly (1Q23..2Q28 → FY23..FY28E). Sums each fiscal
+// year's quarters; FY28 is partial (2 quarters published) so it returns null there to avoid a false low.
+var ASUM_FYQ=[[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15],[16,17,18,19],[20,21]];
+function aSumOpAnnual(metricKey){
+  var q=amznResults.views&&amznResults.views.q&&amznResults.views.q.metrics, m=q&&q[metricKey];
+  if(!m||!m.summit) return null;
+  return ASUM_FYQ.map(function(idxs){ if(idxs.length<4) return null; var s=0,ok=true;
+    idxs.forEach(function(j){ var v=m.summit[j]; if(v==null) ok=false; else s+=v; }); return ok?s:null; });
+}
+// Summit's annual {numerator, revenue} for FY23..FY28E for a margin metric — operating (aggregated from
+// the quarterly model), EBITDA and net income (from the annual model, y.ebitda / y.earnings). Gross and
+// FCF are not modelled by Summit → returns null (no Summit line).
+function aSummitAnnual(sel){
+  var y=amznResults.views&&amznResults.views.y&&amznResults.views.y.metrics;
+  if(sel==='operating'){ var so=aSumOpAnnual('opinc'), sr=aSumOpAnnual('rev'); return (so&&sr)?{num:so,den:sr}:null; }
+  if(sel==='ebitda' && y&&y.ebitda&&y.rev&&y.ebitda.summit&&y.rev.summit) return {num:y.ebitda.summit.slice(3,9), den:y.rev.summit.slice(3,9)};   // y periods 2020..2028 → slice 3..8 = FY23..FY28E
+  if(sel==='net' && y&&y.earnings&&y.rev&&y.earnings.summit&&y.rev.summit) return {num:y.earnings.summit.slice(3,9), den:y.rev.summit.slice(3,9)};
+  return null;
+}
+// Summit's annual segment operating income (single fiscal year, ASUM_FYQ index) from the quarterly model.
+function aSumSegSummit(metricKey, fyIdx){
+  var q=amznResults.views&&amznResults.views.q&&amznResults.views.q.metrics, m=q&&q[metricKey], ix=ASUM_FYQ[fyIdx];
+  if(!m||!m.summit||!ix||ix.length<4) return null;
+  var s=0,ok=true; ix.forEach(function(j){ var v=m.summit[j]; if(v==null) ok=false; else s+=v; }); return ok?s:null;
+}
+function aMarginsBody(){
+  return aStdScaffold({ id:'margins', title:'Profitability & margins', height:360,
+    metricSel:[{v:'gross',label:'Gross profit'},{v:'operating',label:'Operating income (GAAP)',on:true},{v:'ebitda',label:'EBITDA'},{v:'net',label:'Net income (GAAP)'},{v:'fcf',label:'Free cash flow'}],
+    modes:[{cls:'gran',label:'Period',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]},{cls:'norm',label:'Net',opts:[{v:'rep',label:'Reported',on:true},{v:'norm',label:'Normalized'}]}],
+    presets:[['all','All'],['rep','Reported'],['fwd','Forward'],['l5','Last 5']] });
+}
+function aLastActIdx(arr){ var la=0; for(var i=0;i<arr.length;i++) if(arr[i]!=null) la=i; return la; }
+var MARG_LAB2={gross:'Gross profit',operating:'Op. income',ebitda:'EBITDA',net:'Net income',fcf:'FCF'};
+// SAB dual-axis: the $ amount as bars (Actual/Summit/Consensus grouped) + the margin % as lines on the
+// right y2 axis. `numX`/`revX` are the per-source $ series (null outside their window); sm = Summit {num,den}.
+// normSub[i] = the AFTER-TAX one-off to REMOVE from a normalized value (gain × (1 − effective rate)).
+// Subtracting it lowers a gain-flattered net income to its underlying level (see the net bridge).
+function aMargDual(lab, actNum, conNum, rev, la, normOn, normSub, sm){
+  function amt(v,i){ if(v==null) return null; if(normOn&&normSub) v=v-(normSub[i]||0); return Math.round(v/100)/10; }
+  function marg(v,i){ if(v==null||!rev[i]) return null; if(normOn&&normSub) v=v-(normSub[i]||0); return Math.round(v/rev[i]*1000)/10; }
+  var series=[
+    {k:'act$',grp:'act',src:'Actual',label:lab+' — Actual',color:ASTD_ACT,type:'bar',data:actNum.map(amt)},
+    {k:'con$',grp:'con',src:'Consensus',label:lab+' — Consensus',color:ASTD_CONS,type:'bar',data:conNum.map(amt)},
+    {k:'actM',grp:'act',src:'Actual',label:'Margin — Actual',color:ASTD_ACT,type:'line',yAxisID:'y2',data:actNum.map(marg)},
+    {k:'conM',grp:'con',src:'Consensus',label:'Margin — Consensus',color:ASTD_CONS,type:'line',yAxisID:'y2',dash:true,data:conNum.map(marg)} ];
+  if(sm&&!normOn){ series.splice(1,0,{k:'sum$',grp:'sum',src:'Summit',label:lab+' — Summit',color:ASTD_SUMMIT,type:'bar',data:sm.num.map(function(v){ return v==null?null:Math.round(v/100)/10; })});
+    series.push({k:'sumM',grp:'sum',src:'Summit',label:'Margin — Summit',color:ASTD_SUMMIT,type:'line',yAxisID:'y2',data:sm.num.map(function(v,i){ return (v==null||!sm.den[i])?null:Math.round(v/sm.den[i]*1000)/10; })}); }
+  return series;
+}
+function aBuildMargins(){
+  aStdRender('margins', function(st){
+    var gran=st.modes.gran||'y', metric=st.sel||'operating', lab=MARG_LAB2[metric], normOn=metric==='net'&&st.modes.norm==='norm';
+    var out={ type:'bar', stacked:false, yFmt:function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }, y2Fmt:function(x){ return x+'%'; } };
+    if(gran==='q' && metric==='operating'){   // amznResults native, 22 quarters, all three sources
+      var Q=amznResults.views.q.metrics, oi=Q.opinc, rv=Q.rev, labels=oi.periods.slice(), la=aLastActIdx(oi.act);
+      function amtS(a){ return labels.map(function(_,i){ return a&&a[i]!=null?Math.round(a[i]/100)/10:null; }); }
+      function margS(a,r){ return labels.map(function(_,i){ return (a&&a[i]!=null&&r&&r[i])?Math.round(a[i]/r[i]*1000)/10:null; }); }
+      out.labels=labels; out.lastAct=la; out.paired=true; out.series=[
+        {k:'act$',grp:'act',src:'Actual',label:'Op. income — Actual',color:ASTD_ACT,type:'bar',data:amtS(oi.act)},
+        {k:'sum$',grp:'sum',src:'Summit',label:'Op. income — Summit',color:ASTD_SUMMIT,type:'bar',data:amtS(oi.summit)},
+        {k:'con$',grp:'con',src:'Consensus',label:'Op. income — Consensus',color:ASTD_CONS,type:'bar',data:amtS(oi.cons)},
+        {k:'actM',grp:'act',src:'Actual',label:'Margin — Actual',color:ASTD_ACT,type:'line',yAxisID:'y2',data:margS(oi.act,rv.act)},
+        {k:'sumM',grp:'sum',src:'Summit',label:'Margin — Summit',color:ASTD_SUMMIT,type:'line',yAxisID:'y2',data:margS(oi.summit,rv.summit)},
+        {k:'conM',grp:'con',src:'Consensus',label:'Margin — Consensus',color:ASTD_CONS,type:'line',yAxisID:'y2',dash:true,data:margS(oi.cons,rv.cons)} ];
+      return out;
+    }
+    var MET={gross:'grossProfit',operating:'oi',ebitda:'ebitda',net:'netIncome',fcf:'fcf'};
+    var num=amznBBG.is[MET[metric]], rvb=amznBBG.is.rev; if(!num||!rvb) return null;
+    if(gran==='q'){   // other metrics quarterly — BBG (Actual + Consensus)
+      var ql=amznBBG.qtrs.slice(), nq=num.q, rq=rvb.q, laq=(num.qA?num.qA.length-1:aLastActIdx(nq));   // actual quarters end at qA.length-1 — the q[] array is fully populated (actual+consensus), so aLastActIdx alone wrongly marks every quarter actual
+      var actN=ql.map(function(_,i){ return i<=laq?nq[i]:null; }), conN=ql.map(function(_,i){ return i>=laq?nq[i]:null; });
+      out.labels=ql; out.lastAct=laq; out.paired=true; out.series=aMargDual(lab, actN, conN, rq, laq, false, null, null); return out;
+    }
+    var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], la=2;
+    var na=num.a.concat(num.f), rv=rvb.a.concat(rvb.f);
+    // after-tax one-off to strip when normalizing net income: gain × (1 − effective rate), gain = −otherNonOp
+    var ono=amznBBG.is.otherNonOp, taxA=amznBBG.is.tax, preA=amznBBG.is.pretax, normSub=null;
+    if(metric==='net' && ono && taxA && preA){ var oaA=ono.a.concat(ono.f), tA=taxA.a.concat(taxA.f), pA=preA.a.concat(preA.f);
+      normSub=labels.map(function(_,i){ var G=oaA[i]==null?0:-oaA[i], eff=(pA[i]?tA[i]/pA[i]:0); return G*(1-eff); }); }
+    var actN=labels.map(function(_,i){ return i<=la?na[i]:null; }), conN=labels.map(function(_,i){ return i>=la?na[i]:null; });
+    out.labels=labels; out.lastAct=la; out.paired=true; out.series=aMargDual(lab, actN, conN, rv, la, normOn, normSub, aSummitAnnual(metric)); return out;
+  });
+}
+// Expense-line full dives — opened from an Expenses card via data-detail="exp:<key>". VISUAL, not prose.
+var EW_CSS='<style>'+
+  '.ew-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:2px 0 16px}'+
+  '.ew-tile{border:1px solid var(--bdr);border-top:3px solid var(--brand-2);border-radius:10px;padding:10px 12px;background:var(--card,#fff)}'+
+  '.ew-tv{font-size:19px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;letter-spacing:-.02em}.ew-tl{font-size:10px;color:var(--mu);font-weight:600;margin-top:3px;line-height:1.35}'+
+  '.ew-h{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--brand-2);margin:18px 0 9px;display:flex;align-items:center;gap:8px}.ew-h::after{content:"";flex:1;height:1px;background:var(--bdr)}'+
+  '.ew-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:560px){.ew-two{grid-template-columns:1fr}}'+
+  '.ew-box{border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;background:var(--card,#fff)}'+
+  '.ew-box-h{font-size:13px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:8px;margin-bottom:5px}.ew-box-i{font-size:18px}'+
+  '.ew-box-t{font-size:11.5px;color:var(--navy);line-height:1.5}'+
+  '.ew-note{font-size:12px;color:var(--navy);background:rgba(20,110,180,.06);border-radius:8px;padding:9px 12px;margin-top:9px;line-height:1.5}'+
+  '.ew-spark{display:flex;align-items:flex-end;gap:5px;height:96px;margin:4px 0}'+
+  '.ew-sb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px}'+
+  '.ew-sb-v{font-size:9.5px;font-weight:800;color:var(--navy)}.ew-sb-bar{width:100%;border-radius:4px 4px 0 0;background:#B7CBE0}.ew-sb.on .ew-sb-bar{background:var(--brand-2)}.ew-sb-l{font-size:8.5px;color:var(--mu)}'+
+  '.ew-flow{display:flex;align-items:stretch;flex-wrap:wrap;margin:2px 0}'+
+  '.ew-fn{flex:1;min-width:110px;border:1px solid var(--bdr);border-radius:9px;padding:9px 11px;background:var(--card,#fff);text-align:center}'+
+  '.ew-fn-v{font-size:14px;font-weight:800;color:var(--navy)}.ew-fn-l{font-size:9.5px;color:var(--mu);font-weight:600;margin-top:2px}'+
+  '.ew-far{display:flex;align-items:center;justify-content:center;color:var(--brand-2);font-size:18px;font-weight:800;padding:0 6px}'+
+  '.ew-q{border-left:3px solid var(--brand);background:rgba(0,0,0,.025);border-radius:0 8px 8px 0;padding:9px 13px;margin:8px 0;font-size:12px;line-height:1.55;color:var(--navy)}'+
+  '.ew-q .ew-att{display:block;margin-top:4px;font-size:10.5px;font-weight:700;color:var(--mu)}'+
+  '.ew-foot{font-size:10.5px;color:var(--mu);line-height:1.5;margin-top:10px;border-top:1px solid var(--bdr);padding-top:8px}'+
+  '.ew-tls{position:relative;margin:8px 0 2px;padding-left:20px}'+'.ew-tls::before{content:"";position:absolute;left:5px;top:5px;bottom:5px;width:2px;background:var(--bdr)}'+'.ew-tli{position:relative;margin-bottom:13px}.ew-tli:last-child{margin-bottom:2px}'+'.ew-tli::before{content:"";position:absolute;left:-18px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--brand-2);border:2px solid var(--card,#fff);box-shadow:0 0 0 1px var(--bdr)}'+'.ew-tlq{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--brand-2)}'+'.ew-tlt{font-size:12px;color:var(--navy);line-height:1.5;margin-top:2px}'+'.ew-tlw{font-size:10px;font-weight:700;color:var(--mu);margin-top:3px}'+'.ew-tag{display:inline-block;font-size:8px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:1px 6px;border-radius:5px;margin-left:7px;vertical-align:middle;transform:translateY(-1px)}'+'.ew-tag.why{background:rgba(192,80,77,.13);color:#B23A38}.ew-tag.fwd{background:rgba(46,139,87,.15);color:#2E7D51}.ew-tag.ctx{background:rgba(107,118,131,.15);color:#5B6673}'+
+  '.ew-calls{margin-top:14px}.ew-callsum{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--brand-2);cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:5px 0}'+
+  '.ew-callsum::-webkit-details-marker{display:none}.ew-callsum::before{content:"▸";font-size:11px;transition:transform .15s}.ew-calls[open] .ew-callsum::before{content:"▾"}.ew-callsum::after{content:"";flex:1;height:1px;background:var(--bdr)}'+
+'</style>';
+var EW_LABS=["’18","’19","’20","’21","’22","’23","’24","’25"];
+function ewSpark(vals,onIdx){ var mx=Math.max.apply(null,vals.map(Math.abs));
+  return '<div class="ew-spark">'+vals.map(function(v,i){ return '<div class="ew-sb'+(i===onIdx?' on':'')+'"><div class="ew-sb-v">'+v+'%</div><div class="ew-sb-bar" style="height:'+Math.max(2,Math.round(Math.abs(v)/mx*72))+'px"></div><div class="ew-sb-l">'+EW_LABS[i]+'</div></div>'; }).join('')+'</div>';
+}
+function ewBoxes(arr){ return '<div class="ew-two"'+(arr.length<2?' style="grid-template-columns:1fr"':'')+'>'+arr.map(function(b){ return '<div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">'+b[0]+'</span>'+b[1]+'</div><div class="ew-box-t">'+b[2]+'</div></div>'; }).join('')+'</div>'; }
+// Collapsible "what management has said" block — hidden by default so the dive reads clean.
+function ewCallsBlock(calls){ if(!calls||!calls.length) return '';
+  return '<details class="ew-calls" open><summary class="ew-callsum">What management has said</summary>'+ewCallTimeline(calls)+'</details>';
+}
+function ewQord(q){ var m=/Q(\d)\s*(\d{4})/.exec(q||''); if(m) return (+m[2])*10+(+m[1]); var y=/(\d{4})/.exec(q||''); return y?(+y[1])*10:0; }
+function ewCallTimeline(calls){ if(!calls||!calls.length) return '';
+  var sorted=calls.slice().sort(function(a,b){ return ewQord(a.q)-ewQord(b.q); });   // always oldest → newest
+  return '<div class="ew-tls">'+sorted.map(function(c){ return '<div class="ew-tli"><div class="ew-tlq">'+c.q+'</div><div class="ew-tlt">'+c.txt+'</div>'+(c.who&&c.who!=='—'?'<div class="ew-tlw">— '+c.who+'</div>':'')+'</div>'; }).join('')+'</div>';
+}
+// Management commentary per expense line — VERBATIM quotes only, taken from the repo call records
+// (docs/calls/AMZN*.md, Q4'25–Q2'26). No external sites, no paraphrase attributed to management, and no
+// forward "Summit view" (Summit's own read stays in the analysis fields, not here). Lines with no
+// verbatim quote in the covered calls carry no block — we do not invent one.
+var EW_CALLS={
+  costOfSales:[
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'Amazon was the “lowest-priced US retailer” for the 9th straight year (14% below other majors); everyday essentials were 1-in-3 units; 8B+ items shipped same/next-day, +30%.'},
+    {q:'Q1 2026', who:'Andy Jassy, CEO', txt:'Store units +15% (highest since COVID); 1B+ same/next-day items YTD; grocery $150B+ gross sales (second-largest US grocer).'},
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'On Rufus (shopping assistant): 300M customers in 2025, users “60% more likely to complete a purchase.”'}
+  ],
+  fulfillment:[
+    {q:'Q1 2026', who:'Brian Olsavsky, CFO', txt:'Units +15% vs fulfillment expense +9% (FX-neutral); robotics in every 2026 US large-format launch.'},
+    {q:'Q4 2025', who:'Brian Olsavsky, CFO', txt:'“1M+ robots in the network”; perishables extended to 2,300+ cities.'},
+    {q:'Q2 2026', who:'Amazon (Q2 2026 call)', txt:'Same-day perishables customers +50% since the start of the year; same-day orders average 3x more units per order.'}
+  ],
+  techInfra:[
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'“about $200 billion in capital expenditures… predominantly in AWS, because we have very high demand.”'},
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'AWS grew at “the fastest we’ve seen in thirteen quarters”; >1GW of capacity added in Q4, “more than any other company in the world.”'},
+    {q:'Q4 2025', who:'Brian Olsavsky, CFO', txt:'“As fast as we install this capacity, this AI capacity, we are monetizing it — it’s just a very unusual opportunity.”'},
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'On Trainium3: “nearly all supply committed by mid-2026.” On Project Rainier (500K chips): “you will see that continuing to increase.”'},
+    {q:'Q1 2026', who:'Andy Jassy, CEO', txt:'“It is very unusual for a business to grow this fast on a base this large.” Backlog $364B, which “does not include the recent deal… with Anthropic for over $100 billion.”'},
+    {q:'Q1 2026', who:'Brian Olsavsky, CFO', txt:'Capex focus “primarily AWS and generative AI”; memory component costs had “skyrocketed.”'},
+    {q:'Q2 2026', who:'Andy Jassy, CEO', txt:'“AWS is booming, growing 36.7% year-over-year in Q2 — our fastest growth in 18 quarters — and our AI and Chips businesses each eclipsed run rates of more than $25 billion.”'},
+    {q:'Q2 2026', who:'Brian Olsavsky, CFO', txt:'AWS margin up “650 basis points year-over-year, 520 basis points if you exclude the derivative accounting gain”; the FY26 capex frame moved up on the “higher cost of memory.”'},
+    {q:'Q2 2026', who:'Andy Jassy, CEO', txt:'“We have clear line of sight to strong financial returns”; AWS can become “a trillion-dollar annual revenue business.”'}
+  ],
+  marketing:[
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'Advertising +22%; $12B of incremental ad revenue in 2025; Prime Video ads ~315M monthly viewers.'},
+    {q:'Q1 2026', who:'Andy Jassy, CEO', txt:'On ads in agentic commerce: “we’re going to like this for advertising” — sponsored prompts work, and multi-turn means more surfaces.'},
+    {q:'Q2 2026', who:'Amazon (Q2 2026 call)', txt:'Advertising +26%, “sponsored products the driver.”'}
+  ],
+  gAdmin:[
+    {q:'Q1 2026', who:'Andy Jassy, CEO', txt:'On internal AI efficiency: a service engine rebuilt in “65 days vs 40–50 person-years” — “that is a very different world of operating.”'},
+    {q:'Q4 2025', who:'Brian Olsavsky, CFO', txt:'The $2.4B of special charges in the quarter included $730M of severance.'}
+  ],
+  otherOpex:[
+    {q:'Q4 2025', who:'Brian Olsavsky, CFO', txt:'The $2.4B of Q4 special charges: Italy tax settlement $1.1B, severance $730M, physical-store impairments $610M.'},
+    {q:'Q3 2025', who:'Amazon (8-K / 10-K)', txt:'The $2.5B FTC settlement was recognized in Q3 2025 — the main reason the line jumped to $4.6B for FY2025.'}
+  ]
+};
+var SEG_CALLS={
+  // VERBATIM management quotes only, from the repo call records (docs/calls/AMZN*.md, Q4'25–Q2'26).
+  // Figures/context that are not a management quote were removed from this block (they live in the
+  // tiles/charts). Segments with no verbatim quote in the covered calls carry no block.
+  aws:[
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'AWS grew at "the fastest we\'ve seen in thirteen quarters." On the build: Amazon added over 1GW of capacity in the quarter, "more than any other company in the world" in 2025.'},
+    {q:'Q4 2025', who:'Brian Olsavsky, CFO', txt:'"As fast as we install this capacity, this AI capacity, we are monetizing it — it\'s just a very unusual opportunity."'},
+    {q:'Q1 2026', who:'Andy Jassy, CEO', txt:'"It is very unusual for a business to grow this fast on a base this large." AWS +28% (~$150B run-rate); backlog $364B, which "does not include the recent deal… with Anthropic for over $100 billion."'},
+    {q:'Q2 2026', who:'Andy Jassy, CEO', txt:'"AWS is booming, growing 36.7% year-over-year in Q2 — our fastest growth in 18 quarters — and our AI and Chips businesses each eclipsed run rates of more than $25 billion." Backlog $496B.'},
+    {q:'Q2 2026', who:'Brian Olsavsky, CFO', txt:'AWS margin was up "650 basis points year-over-year, 520 basis points if you exclude the derivative accounting gain" — margins "aren\'t random," attributed to silicon mix, power efficiency and utilization.'},
+    {q:'Q2 2026', who:'Andy Jassy, CEO', txt:'"We have clear line of sight to strong financial returns," and AWS can become "a trillion-dollar annual revenue business." 2027 capacity is "largely reserved," some 2028 "already spoken for."'}
+  ],
+  us:[
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'“Lowest-priced US retailer” for the 9th straight year (14% below other majors); everyday essentials 1-in-3 units; 8B+ items same/next-day (+30%).'},
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'Rufus reached 300M customers in 2025, with users “60% more likely to complete a purchase.”'},
+    {q:'Q4 2025', who:'Andy Jassy, CEO', txt:'Advertising +22%, with $12B of incremental ad revenue in 2025 — largely on the North America retail surface.'},
+    {q:'Q1 2026', who:'Andy Jassy, CEO', txt:'Retail: store units +15% (highest since COVID); grocery $150B+ gross sales (second-largest US grocer); 1B+ same/next-day items YTD.'},
+    {q:'Q1 2026', who:'Brian Olsavsky, CFO', txt:'Paid units +15% vs fulfillment expense +9% (FX-neutral); robotics in “every 2026 US large-format launch.”'},
+    {q:'Q2 2026', who:'Andy Jassy, CEO', txt:'Same-day perishables customers +50% since the start of the year; same-day orders average 3x more units per order; grocery and everyday essentials “growing faster than the rest of the business.”'},
+    {q:'Q2 2026', who:'Andy Jassy, CEO', txt:'Advertising +26%, “sponsored products the driver” ($19.8B) — the ad surface sits largely on the North America retail business.'}
+  ],
+  int:[
+    {q:'Q1 2026', who:'Amazon Q1 2026 (8-K)', txt:'International $39.8B (+11% constant-currency, 3.6% margin) — management frames the segment on an ex-FX basis because the reported line swings with the dollar as much as with operations.'},
+    {q:'FY 2025', who:'Amazon 10-K MD&A', txt:'A +$903M FX tailwind to International operating income in 2025 — confirming the point above: the reported margin moves with the dollar.'},
+    {q:'Q2 2026', who:'Andy Jassy, CEO', txt:'On the consolidated guide, ex-Prime-Day timing (Q3’25 fell in Q2’26 for most major geos) “growth would be nearly 400bps higher” — the calendar shift lands disproportionately on International, where Prime Day is a bigger mix event.'},
+    {q:'Q2 2026', who:'Amazon Q2 2026 (8-K)', txt:'International net sales $42.2B (+15%), operating income $1,717M (4.1% margin) — the one segment line that came in under both the Street ($42.7B) and Summit ($43.4B) for the quarter.'}
+  ]
+};
+function ewBase(c){
+  var h='<div class="ew-kpis">'+c.kpis.map(function(k){ return '<div class="ew-tile"><div class="ew-tv">'+k[0]+'</div><div class="ew-tl">'+k[1]+'</div></div>'; }).join('')+'</div>';
+  if(c.def){ h+='<div class="ew-h">How the 10-K defines it</div><div class="ew-q ew-def">“'+c.def+'”<span class="ew-att">'+EW_SRC+'</span></div>'; }
+  h+='<div class="ew-h">What sits inside this line</div>'+ewBoxes(c.comp);
+  if(c.compNote) h+='<div class="ew-note">'+c.compNote+'</div>';
+  h+='<div class="ew-h">Share of revenue over time</div>'+ewSpark(c.traj,7);
+  if(c.unit){ h+='<div class="ew-h">Unit economics</div>'+c.unit; }
+  h+='<div class="ew-h">Why it matters to the bottom line</div><div class="ew-note">'+c.why+'</div>';
+  if(c.drivers){ h+='<div class="ew-h">Why it has moved — the drivers</div>'+ewBoxes(c.drivers); }
+  if(c.extra) h+=c.extra;
+  if(c.calls){ h+=ewCallsBlock(c.calls); }
+  h+='<div class="ew-foot">FY2025 figures unless noted. Sources: 10-K MD&amp;A + Notes; Amazon earnings calls (management commentary).</div>';
   return h;
 }
-function aBuildBottomline(){
-  // (1) Gross & operating margin arc — annual
-  var arc=aChartReady('aMgnArc');
-  if(arc){ aDestroy('aMgnArc');
-    var gm=A_OPEX_YEARS.map(function(y){ var r=A_CAPEX[y]; return (r&&r.grossMargin)?Math.round(r.grossMargin*1000)/10:null; });
-    _aCharts['aMgnArc']=new Chart(arc.getContext('2d'),{ type:'line',
-      data:{ labels:A_OPEX_YEARS.map(String), datasets:[
-        { label:'Gross margin', data:gm, borderColor:BRAND, backgroundColor:BRAND, borderWidth:2.5, pointRadius:2.5, tension:0.25, spanGaps:true },
-        { label:'Operating margin', data:aOpMgnSeries(), borderColor:BRAND2, backgroundColor:BRAND2, borderWidth:2.5, pointRadius:2.5, tension:0.25 } ] },
-      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
-          tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'–':c.parsed.y+'%'); } } } },
-        scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } }); }
-  // (2) Segment operating margin — quarterly (Results dataset)
-  var cv=aChartReady('aMgn');
-  if(cv){ aDestroy('aMgn');
-    var q=amznResults.views.q.metrics, per=q.rev.periods;
-    var n=per.indexOf('2Q26'); if(n<0) n=per.length;
-    var labels=per.slice(0,n);
-    function mgn(num,den){ return labels.map(function(_,i){ var a=q[num].act[i], b=q[den].act[i]; return (a==null||b==null||!b)?null:Math.round(a/b*1000)/10; }); }
-    _aCharts['aMgn']=new Chart(cv.getContext('2d'),{ type:'line',
-      data:{ labels:labels, datasets:[
-        { label:'Consolidated', data:mgn('opinc','rev'), borderColor:'#1E2733', backgroundColor:'#1E2733', borderWidth:2.5, pointRadius:2, tension:0.25 },
-        { label:'AWS', data:mgn('awsopinc','aws'), borderColor:SQUID, backgroundColor:SQUID, borderWidth:2, pointRadius:2, tension:0.25, borderDash:[5,4] },
-        { label:'North America', data:mgn('naopinc','usrev'), borderColor:BRAND, backgroundColor:BRAND, borderWidth:2, pointRadius:2, tension:0.25 },
-        { label:'International', data:mgn('intopinc','intrev'), borderColor:BRAND2, backgroundColor:BRAND2, borderWidth:2, pointRadius:2, tension:0.25 } ] },
-      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
-          tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label+': '+(ctx.parsed.y==null?'—':ctx.parsed.y+'%'); } } } },
-        scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:10 } } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } }); }
-  // (3) Operating income by segment — annual, stacked $B
-  var soi=aChartReady('aSegOpInc');
-  if(soi){ aDestroy('aSegOpInc');
-    _aCharts['aSegOpInc']=new Chart(soi.getContext('2d'),{ type:'bar',
-      data:{ labels:A_OPEX_YEARS.map(String), datasets:A_SEG_OI.map(function(s){
-        return { label:s.lab, data:A_OPEX_YEARS.map(function(y){ return A_OPEX[y][s.k]/1000; }), backgroundColor:s.c, borderColor:'#fff', borderWidth:1, maxBarThickness:34, stack:'o' }; }) },
-      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
-          tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+c.parsed.y.toFixed(1)+'B'; },
-            footer:function(items){ var t=items.reduce(function(a,it){ return a+it.parsed.y; },0); return 'Total op income: $'+t.toFixed(1)+'B'; } } } },
-        scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); }
-}
-function expensesBody(){
-  var h='<p class="ov-lede"><b>The cost structure, by function.</b> Amazon discloses its operating expenses <b>by function</b> — cost of sales, fulfillment, technology &amp; infrastructure, sales &amp; marketing, G&amp;A — at the <b>consolidated level only</b> (the segment view gives net sales and operating income, never the expense split). Read as a share of revenue, these lines are the operating-leverage story: the mature ones bend down as scale absorbs them, while technology &amp; infrastructure is the one line management is deliberately pushing <i>up</i> to fund the AI build.</p>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">Operating expenses by function (% of revenue)</div><div style="height:310px"><canvas id="aExpPct"></canvas></div>'+
-    '<div class="ov-fynote">The leverage is visible: fulfillment has held ~15% of revenue even as volumes compounded (the robotics/regionalization payoff), and sales &amp; marketing + G&amp;A have each drifted lower. <b>Technology &amp; infrastructure is the exception</b> — it stepped up to ~15% of revenue in 2025 (+23% YoY in dollars) as the AI capex flows through R&amp;D and depreciation. Cost of sales falling is the same mix shift that lifts gross margin.</div></div>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">Operating cost stack ($B)</div><div style="height:300px"><canvas id="aExpAbs"></canvas></div>'+
-    '<div class="ov-fynote">Absolute dollars — every function still grows, but at very different rates. Cost of sales is the largest block and the slowest-growing (mix); technology &amp; infrastructure is the fastest. The stack sums to the functional operating cost (a small “other operating expense” reconciling line, ±$1–5B, is omitted), so operating income is approximately the gap to revenue. <b>Shipping is excluded</b> (a memo item that overlaps cost of sales and fulfillment; Amazon’s FY2025 disclosure of it also changed, so the series breaks).</div></div>';
-  h+='<div class="ov-callout"><ul class="ov-bullets">'+
-    '<li><b>By function, not by segment — that is a real limit.</b> Because Amazon never publishes expense by segment, you cannot see AWS’s cost of revenue or North America’s fulfillment directly; you infer them from segment operating income vs net sales. The functional view here is the only clean expense disclosure there is.</li>'+
-    '<li><b>Fulfillment is the retail-efficiency proof.</b> Holding ~15% of revenue through 15%+ unit growth is the flywheel management keeps pointing to — the robots and same-day network are why the retail margin can expand while volume grows.</li>'+
-    '<li><b>Technology &amp; infrastructure is where the AI bill first shows.</b> It moves before capex fully depreciates — the P&amp;L is already carrying more of the build than the depreciation line alone implies.</li>'+
-    '</ul><div class="ov-fynote" style="margin-top:8px">Functional expense from the Segments tab of <code>DCF AMZN.xlsm</code> (FY2018–FY2025 actuals; Amazon 10-K income statement). Forward years are not modelled by function.</div></div>';
+var EW_LINES=[
+  {k:'costOfSales',name:'Cost of sales',kpis:[['$356B','of revenue: 49.7%'],['+1.4 ppt','to operating margin (YoY)'],['$0.8B','stock-based comp inside']],
+    comp:[['📦','Product cost','The purchase price of everything Amazon sells first-party.'],['🚚','Shipping &amp; content','Inbound &amp; outbound shipping — sortation, delivery, transport — and digital-media content.']],
+    compNote:'The largest line by far, and the one that has fallen the most.',fwd:'Keeps falling. The mix shift toward AWS, advertising and 3P has years to run — each point of that mix pulls the cost-of-sales ratio down.',
+    traj:[59.8,59.0,60.4,58.0,56.2,53.0,51.1,49.7],
+    why:'<b>The margin lever.</b> It fell ~10 points since 2019 — its −1.4ppt in 2025 did more to expand the operating margin than anything else.',
+    drivers:[['🔀','Mix shift to higher-margin lines','AWS, advertising and third-party services grow faster than first-party retail — so cost-of-goods shrinks as a share of revenue. This is the biggest driver.'],['🚚','Shipping efficiency','Regionalizing the US network (2023) cut transportation cost per unit — shorter distances, fewer touches.'],['🤝','Scale &amp; supplier terms','Larger purchasing scale and better terms on the goods it resells.']],extra:''},
+  {k:'fulfillment',name:'Fulfillment',kpis:[['$109B','of revenue: 15.2%'],['+0.2 ppt','to operating margin (YoY)'],['$2.7B','stock-based comp inside']],
+    comp:[['🏭','The FC network','Operating &amp; staffing fulfillment centers, physical stores and customer service — pick, pack, ship, payments.'],['🤖','Robotics','1M+ robots and a regionalized network that holds cost flat as volume grows.']],
+    compNote:'Held at ~15% of revenue through 15%+ unit growth — the efficiency proof.',fwd:'Roughly flat. Management guides no line item but points to continued robotics / regionalization leverage — the retail-margin path implies stable-to-lower.',
+    traj:[14.6,14.3,15.2,16.0,16.4,15.8,15.4,15.2],
+    why:'<b>The retail-efficiency line.</b> Units grew +17% while this stayed ~15% of revenue — the operating leverage the margin depends on.',
+    drivers:[['🤖','Robotics &amp; automation','1M+ robots plus the 2023 regionalization of the US network — fewer touches, shorter distances per package.'],['✂️','Headcount discipline','2022–24 role eliminations and a flatter org held staffing cost flat even as volume rose.'],['📦','Density','Same-day / faster delivery got cheaper per unit as order density rose in each region.']],extra:''},
+  {k:'techInfra',name:'Technology &amp; infrastructure',kpis:[['$108.5B','of revenue: 15.1%'],['+22.6%','YoY — fastest-growing line'],['−1.2 ppt','to operating margin (the drag)'],['$10.9B','stock-based comp inside']],
+    comp:[['🧑‍💻','R&amp;D / engineering payroll','Product development for AWS, the store, Alexa, devices and AI — the largest engineering workforce in tech.'],['🖥️','Infrastructure + its depreciation','Servers, networking and data centers — <b>including the depreciation of those assets</b>. Where the AI capex lands in the P&amp;L.']],
+    compNote:'The <b>only</b> line that carries both a huge payroll and the depreciation of the AI build.',fwd:'The one line headed <b>up</b>. FY26 capex is framed at ~$220B (predominantly AWS); the depreciation it creates ramps from $42B toward ~$120B by FY28 (Summit model) — so this line keeps rising until the capacity monetizes.',
+    traj:[12.4,12.8,11.1,11.9,14.2,14.9,13.9,15.1],
+    why:'It is the <b>only functional line rising</b> as a share of revenue — the capex is hitting the P&amp;L faster than the revenue it will serve.',
+    drivers:[['🧠','The AI build','R&amp;D for AI/ML and <b>custom-silicon development</b> (Trainium, Graviton) — spending ahead of the revenue it will generate.'],['🏗️','AWS infrastructure + D&amp;A','Servers and data centers scaling up, and the depreciation of that capacity, land here.'],['✂️','Partly offset by 2023 tech layoffs','The 2022–23 tech-role cuts pulled payroll back — but the AI investment more than replaced it.']],
+    extra:'<div class="ew-h">The chain that compresses the margin</div>'+
+      '<div class="ew-flow"><div class="ew-fn"><div class="ew-fn-v">$96.5B</div><div class="ew-fn-l">AWS capex (FY25)</div></div><div class="ew-far">→</div>'+
+      '<div class="ew-fn"><div class="ew-fn-v">$190B</div><div class="ew-fn-l">AWS PP&amp;E stock</div></div><div class="ew-far">→</div>'+
+      '<div class="ew-fn"><div class="ew-fn-v">depreciation</div><div class="ew-fn-l">lands in this line</div></div><div class="ew-far">→</div>'+
+      '<div class="ew-fn" style="border-color:var(--brand-2)"><div class="ew-fn-v" style="color:var(--brand-2)">−1.2 ppt</div><div class="ew-fn-l">of the operating margin</div></div></div>'+
+      '<div class="ew-q">AWS margin +650bps YoY — but ~130bps from energy-derivative gains, leaving <b>~520bps of clean expansion</b> from custom-silicon mix, power and utilisation.<span class="ew-att">— Brian Olsavsky, CFO · Q2 2026</span></div>'+
+      '<div class="ew-q">“As fast as we install this capacity, <b>we are monetizing it</b>.”<span class="ew-att">— Brian Olsavsky, CFO</span></div>'},
+  {k:'marketing',name:'Sales &amp; marketing',kpis:[['$47B','of revenue: 6.6%'],['+0.3 ppt','to operating margin (YoY)'],['$3.4B','stock-based comp inside']],
+    comp:[['📣','Advertising &amp; acquisition','Advertising, promotions and Prime-member acquisition.'],['🧑‍💼','S&amp;M payroll','Sales and marketing staff.']],
+    compNote:'Leveraging down as the brand and the Prime base mature.',fwd:'Continued leverage as Prime matures and Amazon monetizes its own surface rather than buying demand.',
+    traj:[5.9,6.7,5.7,6.9,8.2,7.7,6.9,6.6],
+    why:'Falling as a share of revenue — Amazon spends proportionally less to win the next customer.',
+    drivers:[['👑','Prime maturity','A large, mature Prime base needs proportionally less acquisition spend each year.'],['📣','Own-the-surface ads','Amazon increasingly <b>monetizes</b> its own traffic rather than buying demand — a structural tailwind.']],extra:''},
+  {k:'gAdmin',name:'General &amp; administrative',kpis:[['$11B','of revenue: 1.6%'],['+0.2 ppt','to operating margin (YoY)'],['$1.7B','stock-based comp inside']],
+    comp:[['🏢','Corporate functions','Finance, legal, HR, professional fees and corporate facilities.']],
+    compNote:'The smallest line, and the most leveraged.',fwd:'Continued leverage — the leaner-org push persists (further severance booked in 2025–26).',
+    traj:[1.9,1.9,1.7,1.9,2.3,2.1,1.8,1.6],
+    why:'Pure operating leverage — corporate cost grows far slower than revenue, so it shrinks as a share every year.',
+    drivers:[['✂️','The leaner-org push','~27k corporate roles cut in 2022–23 and further severance since — the flattening and regionalization Jassy drove.'],['📈','Fixed-cost leverage','Corporate overhead is largely fixed; revenue outgrew it every year.']],extra:''},
+  {k:'otherOpex',name:'Other operating expense, net',kpis:[['$4.6B','of revenue: 0.6%'],['−0.5 ppt','to operating margin (YoY)'],['—','no stock-based comp']],
+    comp:[['⚖️','Charges &amp; settlements','Amortization of acquired intangibles, impairments and legal settlements.']],
+    compNote:'The “one-off” line — usually tiny, occasionally large.',fwd:'Reverts toward a small run-rate once the 2025 charges lap; no recurring guidance.',
+    traj:[0.1,0.1,0.0,0.0,0.2,0.1,0.1,0.6],
+    why:'FY2025 jumped to $4.6B — the reason 3Q25/4Q25 margins dipped. Not a run-rate.',
+    drivers:[['⚖️','2025 one-offs','The <b>$2.5B FTC settlement</b>, the resolution of Italy tax disputes, and physical-store impairments — none recurring.']],extra:''}
+];
+// Unit economics per functional line — real, disclosed figures only; honest where Amazon does not
+// disclose a per-unit metric. Attached to EW_LINES like the management-call timelines.
+var EW_UNIT={
+  costOfSales:
+    '<div class="ew-flow">'+
+      '<div class="ew-fn" style="border-color:var(--brand-2)"><div class="ew-fn-v" style="color:var(--brand-2)">50.3%</div><div class="ew-fn-l">gross margin (FY25)</div></div><div class="ew-far">←</div>'+
+      '<div class="ew-fn"><div class="ew-fn-v">60%+</div><div class="ew-fn-l">of paid units are 3P</div></div>'+
+      '<div class="ew-fn"><div class="ew-fn-v">~18%</div><div class="ew-fn-l">of revenue is AWS</div></div>'+
+      '<div class="ew-fn"><div class="ew-fn-v">~$60B</div><div class="ew-fn-l">advertising (FY25)</div></div>'+
+    '</div>'+
+    '<div class="ew-note">There is no single unit here — the economics are a <b>mix</b>. A first-party sale carries the full product cost; a third-party unit, an AWS dollar and an advertising dollar carry little to none. As 3P (60%+ of paid units), AWS and ads outgrow first-party retail, cost of sales falls as a share of revenue — the single biggest reason the operating margin keeps expanding.</div>',
+  fulfillment:
+    '<div class="ew-flow">'+
+      '<div class="ew-fn"><div class="ew-fn-v">+15%</div><div class="ew-fn-l">units shipped (YoY, Q1 26)</div></div><div class="ew-far">vs</div>'+
+      '<div class="ew-fn"><div class="ew-fn-v">+9%</div><div class="ew-fn-l">fulfillment expense</div></div><div class="ew-far">→</div>'+
+      '<div class="ew-fn" style="border-color:var(--brand-2)"><div class="ew-fn-v" style="color:var(--brand-2)">≈ −5%</div><div class="ew-fn-l">cost to serve per unit</div></div>'+
+    '</div>'+
+    '<div class="ew-note">Amazon does not disclose a dollar cost-per-unit, but the disclosed proxy is decisive: <b>units grew ~15% while fulfillment expense grew ~9%</b> (Q1 2026), so the cost to move a package keeps falling. 1M+ robots and the 2023 US network regionalization — shorter distances, fewer touches — are why. This is the retail flywheel that turned North America profitable.</div>',
+  techInfra:
+    '<div class="ew-note">This line has no clean per-unit metric — it blends engineering payroll with the depreciation of the AI build. The unit economics that matter are <b>AWS\'s</b>: a ~35% segment operating margin, with custom silicon (Trainium / Graviton) improving price-performance so each dollar of capacity monetizes better. The full segment unit economics live in the <b>Segments</b> tab; the capex → PP&amp;E → depreciation chain that lands in this line is charted below.</div>',
+  marketing:
+    '<div class="ew-note">Amazon stopped disclosing Prime membership (last official: 200M+, 2021) and has never disclosed a customer-acquisition cost — so there is no clean unit here. The disclosed truth is the ratio: <b>sales &amp; marketing fell from ~8% of revenue (2022) to ~6.6% (FY25)</b> even as the base grew. Two forces — a mature Prime base that needs less acquisition spend, and advertising (~$60B run-rate) that lets Amazon <b>monetize</b> its own surface instead of buying demand.</div>',
+  gAdmin:
+    '<div class="ew-flow">'+
+      '<div class="ew-fn"><div class="ew-fn-v">$16</div><div class="ew-fn-l">G&amp;A per $1,000 of revenue (FY25)</div></div><div class="ew-far">↓ from</div>'+
+      '<div class="ew-fn"><div class="ew-fn-v">$23</div><div class="ew-fn-l">per $1,000 (FY22)</div></div><div class="ew-far">via</div>'+
+      '<div class="ew-fn" style="border-color:var(--brand-2)"><div class="ew-fn-v" style="color:var(--brand-2)">~41k</div><div class="ew-fn-l">corporate roles cut (2022-26)</div></div>'+
+    '</div>'+
+    '<div class="ew-note">The cleanest operating-leverage line: corporate cost per revenue dollar has fallen roughly a third — from <b>$23 to $16 per $1,000 of revenue</b> — as ~27k roles (2022-23) plus ~14k more (2025-26) came out and revenue kept compounding against a largely fixed base.</div>'
+};
+// Verbatim line-item definitions — the EXACT wording from Amazon's FY2025 Form 10-K, MD&A ▸ Operating
+// Expenses (SEC EDGAR accession 0001018724-26-000004, amzn-20251231.htm). Quoted, not paraphrased.
+var EW_SRC='— Amazon FY2025 Form 10-K · MD&amp;A, Operating Expenses (SEC EDGAR)';
+var EW_DEF={
+  costOfSales:'Cost of sales primarily consists of the purchase price of consumer products, inbound and outbound shipping costs, including costs related to sortation and delivery centers and where we are the transportation service provider, and digital media content costs where we record revenue gross, including video and music.',
+  fulfillment:'Fulfillment costs primarily consist of those costs incurred in operating and staffing our North America and International segments’ fulfillment centers, physical stores, and customer service centers, including facilities and equipment expenses, such as depreciation and amortization, and rent; costs attributable to buying, receiving, inspecting, and warehousing inventories; picking, packaging, and preparing customer orders for shipment; payment processing and related transaction costs, including costs associated with our guarantee for certain seller transactions; responding to inquiries from customers; and supply chain management for our manufactured electronic devices.',
+  techInfra:'Technology and infrastructure costs include payroll and related expenses for employees involved in the research and development of new and existing products and services, development, design, and maintenance of our stores, curation and display of products and services made available in our online stores, and infrastructure costs. Infrastructure costs include servers, networking equipment, and data center related depreciation and amortization, rent, utilities, and other expenses necessary to support AWS and other Amazon businesses.',
+  marketing:'Sales and marketing costs include advertising and payroll and related expenses for personnel engaged in marketing and selling activities, including sales commissions related to AWS.',
+  gAdmin:'General and administrative costs primarily consist of costs for corporate functions, including payroll and related expenses; facilities and equipment expenses, such as depreciation and amortization expense and rent; and professional fees.',
+  otherOpex:'Other operating expense (income), net, consists primarily of the amortization of intangible assets and asset impairments.'
+};
+EW_LINES.forEach(function(l){ if(EW_CALLS[l.k]) l.calls=EW_CALLS[l.k]; if(EW_UNIT[l.k]) l.unit=EW_UNIT[l.k]; if(EW_DEF[l.k]) l.def=EW_DEF[l.k]; });
+// (EXP_WORLD pop-up index removed — the expense full dives now render inline as tabs, see expenseTabsBody.)
+// The six functional expense lines as a clickable index — rendered at the TOP of the
+// Margins & Expenses pane styles. Self-contained.
+// The six functional expense lines as an inline TAB strip (was 6 big cards + a cramped pop-up):
+// pick a line and its full dive (ewBase: composition, unit economics, drivers, calls) renders in place.
+function expenseTabsBody(){
+  var defs=[
+    {k:'costOfSales',c:SQUID,n:'Cost of sales',tag:'$356B · 49.7%'},
+    {k:'fulfillment',c:BRAND,n:'Fulfillment',tag:'$109B · 15.2%'},
+    {k:'techInfra',c:BRAND2,n:'Technology &amp; infrastructure',tag:'$108B · 15.1%'},
+    {k:'marketing',c:GREEN,n:'Sales &amp; marketing',tag:'$47B · 6.6%'},
+    {k:'gAdmin',c:GRAY,n:'General &amp; administrative',tag:'$11B · 1.6%'},
+    {k:'otherOpex',c:'#B7791F',n:'Other operating expense, net',tag:'$4.6B · 0.6%'}
+  ];
+  var byk={}; EW_LINES.forEach(function(l){ byk[l.k]=l; });
+  var h='<style>'+
+    '.exp-explorer{border:1.5px solid var(--brand);border-radius:14px;padding:14px 16px 16px;background:linear-gradient(180deg,var(--brand-soft),transparent);margin:6px 0 6px}'+
+    '.exp-explorer-h{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-2);margin:0 0 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}'+
+    '.exp-explorer-h .exp-hint{font-size:9px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--mu);background:#fff;border:1px solid var(--bdr);border-radius:20px;padding:2px 9px}'+
+    '.exp-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}'+
+    '.exp-tab{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--bdr);background:#fff;border-radius:20px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:800;color:var(--navy);transition:.13s}'+
+    '.exp-tab:hover{border-color:var(--brand)}'+
+    '.exp-tab.active{background:var(--navy);border-color:var(--navy);color:#fff}'+
+    '.exp-tab.active .exp-tag{color:rgba(255,255,255,.8)}'+
+    '.exp-tab .exp-dot{width:10px;height:10px;border-radius:3px;flex:none}'+
+    '.exp-tab .exp-tag{font-size:10px;font-weight:800;color:var(--mu)}'+
+    '.exp-panel-card{background:var(--card,#fff);border:1px solid var(--bdr);border-radius:12px;padding:15px 17px}'+
+  '</style>';
+  h+='<div class="exp-explorer"><div class="exp-explorer-h">Expense explorer — the six functional lines <span class="exp-hint">tap a line to switch</span></div>';
+  h+='<div class="exp-tabs">'+defs.map(function(d,i){ return '<button type="button" class="exp-tab'+(i===0?' active':'')+'" data-exptab="'+d.k+'"><span class="exp-dot" style="background:'+d.c+'"></span>'+d.n+' <span class="exp-tag">'+d.tag+'</span></button>'; }).join('')+'</div>';
+  h+=EW_CSS;
+  h+='<div class="exp-panels">'+defs.map(function(d,i){ return '<div class="exp-panel exp-panel-card" data-exppanel="'+d.k+'"'+(i>0?' hidden':'')+'>'+(byk[d.k]?ewBase(byk[d.k]):'')+'</div>'; }).join('')+'</div>';
+  h+='</div>';
   return h;
+}
+function aLeasesBody(){   // Leases explorer — Miscellaneous ▸ Capex & Depreciation. Boxed + tabbed, like Expenses/Segments.
+  var mbar=function(lab,parts){ return '<div style="margin:6px 0"><div style="font-size:10.5px;font-weight:800;color:var(--mu);margin-bottom:3px">'+lab+'</div><div style="display:flex;height:30px;border-radius:6px;overflow:hidden">'+parts.map(function(p){ return '<div style="width:'+p.w+'%;background:'+p.c+';display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;color:#fff;white-space:nowrap;min-width:0">'+p.t+'</div>'; }).join('')+'</div></div>'; };
+  var box=function(ic,t,d){ return '<div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">'+ic+'</span>'+t+'</div><div class="ew-box-t">'+d+'</div></div>'; };
+  var h='<style>'+EW_CSS.replace('<style>','').replace('</style>','')+
+    '.exp-stat{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:9px;overflow:hidden;margin-top:10px}@media(max-width:560px){.exp-stat{grid-template-columns:repeat(2,1fr)}}'+
+    '.exp-st{background:var(--card,#fff);padding:9px 12px}.exp-sl{font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)}.exp-sv{font-size:17px;font-weight:800;color:var(--navy);margin-top:2px}.exp-ss{font-size:9.5px;color:var(--mu);margin-top:1px}'+
+    '.lx-explorer{border:1.5px solid var(--brand);border-radius:14px;padding:14px 16px 16px;background:linear-gradient(180deg,var(--brand-soft),transparent)}'+
+    '.lx-h{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-2);margin:0 0 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.lx-h .lx-hint{font-size:9px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--mu);background:#fff;border:1px solid var(--bdr);border-radius:20px;padding:2px 9px}'+
+    '.lx-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}.lx-tab{border:1px solid var(--bdr);background:#fff;border-radius:20px;padding:8px 13px;cursor:pointer;font-size:12px;font-weight:800;color:var(--navy);transition:.13s}.lx-tab:hover{border-color:var(--brand)}.lx-tab.active{background:var(--navy);border-color:var(--navy);color:#fff}'+
+    '.lx-card{background:var(--card,#fff);border:1px solid var(--bdr);border-radius:12px;padding:15px 17px}'+
+  '</style>';
+  h+='<div class="ov-sec"><div class="ov-sec-h">Leases — the other capacity bill (10-K Note 4)</div>';
+  h+='<div style="display:flex;gap:10px;flex-wrap:wrap;margin:0 0 10px">'+
+    '<div style="flex:1;min-width:220px;border:1px solid var(--bdr);border-left:4px solid '+BRAND2+';border-radius:9px;padding:8px 12px;background:var(--card,#fff)"><div style="font-size:12px;font-weight:800;color:var(--navy)">🏢 Operating leases</div><div style="font-size:10.5px;color:var(--mu);margin-top:2px">ROU asset on its <b>own B/S line</b> · cost runs through COGS / fulfillment / tech · <b>not</b> in capex or PP&amp;E</div></div>'+
+    '<div style="flex:1;min-width:220px;border:1px solid var(--bdr);border-left:4px solid '+SQUID+';border-radius:9px;padding:8px 12px;background:var(--card,#fff)"><div style="font-size:12px;font-weight:800;color:var(--navy)">✈️ Finance leases</div><div style="font-size:10.5px;color:var(--mu);margin-top:2px">Ownership-like · asset sits <b>inside PP&amp;E</b> · depreciates into D&amp;A</div></div>'+
+  '</div>'+
+  '<div style="font-size:11.5px;font-weight:700;color:var(--brand-2);margin:0 0 12px">Debt-like capacity that never shows in the capex/PP&amp;E charts — plus ~$62B signed but not yet started.</div>';
+  h+='<div class="exp-stat" style="margin:0 0 12px">'+
+    '<div class="exp-st"><div class="exp-sl">Lease obligation</div><div class="exp-sv">$121.8B</div><div class="exp-ss">gross · PV $101.5B · $87.3B long-term</div></div>'+
+    '<div class="exp-st"><div class="exp-sl">Right-of-use assets</div><div class="exp-sv">$141.6B</div><div class="exp-ss">operating $86B · finance $55.6B</div></div>'+
+    '<div class="exp-st"><div class="exp-sl">Signed, not started</div><div class="exp-sv">~$62B</div><div class="exp-ss">not yet in capex/PP&amp;E/liability</div></div>'+
+    '<div class="exp-st"><div class="exp-sl">Weighted term</div><div class="exp-sv">10–13 yr</div><div class="exp-ss">op 10.0 · finance 12.6 · vs ~5yr owned assets</div></div>'+
+  '</div>';
+  h+='<div class="lx-explorer"><div class="lx-h">Leases explorer <span class="lx-hint">tap a view</span></div>';
+  var tabs=[['bs','Owned vs leased vs pipeline'],['pipe','The obligation (debt-like)'],['cost','Annual lease cost'],['what','What Amazon leases']];
+  h+='<div class="lx-tabs">'+tabs.map(function(t,i){ return '<button type="button" class="lx-tab'+(i===0?' active':'')+'" data-lxtab="'+t[0]+'">'+t[1]+'</button>'; }).join('')+'</div>';
+  // Panel 1 — cost & flow
+  var p1='<div style="height:250px"><canvas id="aExpLease"></canvas></div>'+
+    '<div class="exp-stat">'+
+      '<div class="exp-st"><div class="exp-sl">Total lease cost FY25</div><div class="exp-sv">$20.3B</div><div class="exp-ss">op $14.0B · fin $3.6B · var $2.7B</div></div>'+
+      '<div class="exp-st"><div class="exp-sl">Lease liabilities</div><div class="exp-sv">$121.8B</div><div class="exp-ss">gross · PV $101.5B</div></div>'+
+      '<div class="exp-st"><div class="exp-sl">Weighted term</div><div class="exp-sv">10–13 yr</div><div class="exp-ss">op 10.0 · finance 12.6</div></div>'+
+      '<div class="exp-st"><div class="exp-sl">Finance-lease D&amp;A</div><div class="exp-sv">$3.3B</div><div class="exp-ss">inside the $41.9B P&amp;E D&amp;A</div></div>'+
+    '</div>'+
+    '<div class="ew-h">Where the two lease types land</div>'+
+    '<div class="ew-two">'+box('🏢','Operating leases','The bulk — fulfillment centers, offices, some data centers. The cost flows into <b>cost of sales / fulfillment / technology</b> (not a separate line); the asset is a right-of-use (ROU) asset on its own balance-sheet line.')+
+      box('✈️','Finance leases','Ownership-like (e.g. Amazon Air aircraft, some equipment). The asset sits <b>inside PP&amp;E</b>, and its cost splits into <b>amortization ($3.3B, inside D&amp;A)</b> + <b>interest ($0.3B)</b> — that is why finance-lease D&amp;A is already in the $41.9B P&amp;E depreciation.')+'</div>';
+  // Panel 2 — owned vs leased vs pipeline (the capacity picture)
+  var p2='<div class="ew-h">The full capacity picture — owned, leased, and signed-but-not-started</div>'+
+    mbar('Total controlled capacity (~$738B of assets + pipeline)',[{w:72.4,c:'#1E2733',t:'Owned PP&E $534B'},{w:11.7,c:BRAND2,t:'Op-lease ROU $86B'},{w:7.5,c:SQUID,t:'Fin-lease ROU $56B'},{w:8.4,c:acxRGBA(BRAND,0.55),t:'Pipeline $62B'}])+
+    '<div class="ew-note" style="margin-top:2px">Leasing adds <b>~$142B of in-use capacity</b> and another <b>~$62B already signed</b> on top of the owned $534B — roughly <b>38% more capacity</b> than the capex/PP&amp;E charts alone show.</div>'+
+    mbar('Right-of-use ASSETS — the leased capacity (~$142B)',[{w:60.7,c:BRAND2,t:'Operating ROU $86B'},{w:39.3,c:SQUID,t:'Finance ROU $55.6B'}])+
+    mbar('Lease LIABILITIES — the obligation ($121.8B gross · PV $101.5B)',[{w:87.8,c:BRAND,t:'Operating $106.9B'},{w:12.2,c:GRAY,t:'Finance $14.9B'}])+
+    '<div class="ew-note">Finance ROU ($55.6B) is already in PP&amp;E; operating ROU ($86B) sits on its own line — invisible to the capex/PP&amp;E charts. Of the $121.8B liability, $87.3B is long-term: debt-like, but outside reported debt.</div>';
+  // Panel 3 — the pipeline
+  var p3='<div class="exp-stat" style="margin:0 0 12px">'+
+      '<div class="exp-st"><div class="exp-sl">Signed, not started</div><div class="exp-sv">~$62B</div><div class="exp-ss">10-K Note 4 (FY2024)</div></div>'+
+      '<div class="exp-st"><div class="exp-sl">Mostly</div><div class="exp-sv">DC + FCs</div><div class="exp-ss">data centers &amp; fulfillment</div></div>'+
+      '<div class="exp-st"><div class="exp-sl">On books?</div><div class="exp-sv">No — yet</div><div class="exp-ss">enters capex/PP&amp;E/liability only when each lease starts</div></div>'+
+      '<div class="exp-st"><div class="exp-sl">Weighted term</div><div class="exp-sv">10–13 yr</div><div class="exp-ss">op 10.0 · finance 12.6</div></div>'+
+    '</div>'+
+    '<div class="ew-h">Operating-lease payments by maturity</div>'+
+    mbar('',[{w:16,c:BRAND2,t:'≤1yr ~$12B'},{w:38,c:acxRGBA(BRAND2,0.7),t:'2–5yr'},{w:46,c:acxRGBA(BRAND2,0.4),t:'thereafter ~$44B'}])+
+    '<div class="ew-foot">Maturities &amp; not-yet-commenced per 10-K Note 4 (FY2024); balance-sheet totals FY2025.</div>';
+  // Panel 4 — what Amazon leases
+  var p4='<div class="ew-two">'+box('📦','Fulfillment &amp; logistics','Warehouses, sortation centers, delivery stations and (increasingly) grocery — the largest slice of operating leases. Leasing lets Amazon flex the network up and down without owning every building.')+
+      box('🖥️','Data centers','A mix — Amazon <b>owns</b> core AWS capacity (the capex build) but also <b>leases</b> data-center space and power, especially to move fast; much of the not-yet-commenced pipeline is here.')+
+      box('✈️','Amazon Air','The cargo-aircraft fleet is largely under <b>finance</b> leases — the main reason finance-lease assets and their amortization are material.')+
+      box('🏢','Offices &amp; other','Corporate offices, physical stores and equipment round it out.')+'</div>'+
+    '<div class="ew-note"><b>Own vs lease is deliberate:</b> own where control/long-run cost matter (core AWS → capex/PP&amp;E), lease where speed matters (fulfillment, incremental DC space, aircraft). The capex charts show only the owned half.</div>';
+  h+='<div class="lx-panels">'+
+    '<div class="lx-panel lx-card" data-lxpanel="bs">'+p2+'</div>'+
+    '<div class="lx-panel lx-card" data-lxpanel="pipe" hidden>'+p3+'</div>'+
+    '<div class="lx-panel lx-card" data-lxpanel="cost" hidden>'+p1+'</div>'+
+    '<div class="lx-panel lx-card" data-lxpanel="what" hidden>'+p4+'</div>'+
+  '</div>';
+  h+='</div></div>';
+  return h;
+}
+function aBuildLeases(){   // lease-cost chart + Leases-explorer tab wiring (Miscellaneous ▸ Capex & Depreciation)
+  var yrs=[2023,2024,2025], lc=aChartReady('aExpLease');
+  if(lc){ aDestroy('aExpLease');
+    var LT=[{k:'op',lab:'Operating lease',c:BRAND2},{k:'finAmort',lab:'Finance — amortization',c:SQUID},{k:'finInt',lab:'Finance — interest',c:GRAY},{k:'variable',lab:'Variable lease',c:'#B7791F'}];
+    _aCharts['aExpLease']=new Chart(lc.getContext('2d'),{ type:'bar',
+      data:{ labels:yrs.map(String), datasets:LT.map(function(t){ return { label:t.lab, data:yrs.map(function(y){ return A_TENK.leaseCost[y][t.k]/1000; }), backgroundColor:t.c, borderColor:'#fff', borderWidth:1, maxBarThickness:44, stack:'l' }; }) },
+      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+c.parsed.y.toFixed(1)+'B'; }, footer:function(it){ return 'Total lease cost: $'+it.reduce(function(a,x){ return a+x.parsed.y; },0).toFixed(1)+'B'; } } } },
+        scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); aZoom('aExpLease'); }
+  var pane=document.querySelector('.dd-pane[data-dd="misc"] .ovt-subpane[data-ovst="capex"]');
+  if(pane && !pane._lxWired){ pane._lxWired=true;
+    var lt=pane.querySelectorAll('.lx-tab');
+    lt.forEach(function(b){ b.onclick=function(){ var k=b.getAttribute('data-lxtab');
+      lt.forEach(function(x){ x.classList.toggle('active',x===b); });
+      pane.querySelectorAll('.lx-panel').forEach(function(p){ p.hidden=(p.getAttribute('data-lxpanel')!==k); });
+      if(k==='cost') aBuildLeases();   // the cost chart lives in a now-hidden-by-default panel — build it when shown
+    }; }); }
 }
 function aBuildExpenses(){
-  var pct=aChartReady('aExpPct');
-  if(pct){ aDestroy('aExpPct');
-    _aCharts['aExpPct']=new Chart(pct.getContext('2d'),{ type:'line',
-      data:{ labels:A_OPEX_YEARS.map(String), datasets:A_OPEX_FN.map(function(f){
-        return { label:f.lab, data:A_OPEX_YEARS.map(function(y){ return Math.round(A_OPEX[y][f.k]/A_OPEX[y].revenue*1000)/10; }),
-          borderColor:f.c, backgroundColor:f.c, borderWidth:2, pointRadius:2, tension:0.25 }; }) },
-      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
-          tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+c.parsed.y+'%'; } } } },
-        scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } }); }
-  var abs=aChartReady('aExpAbs');
-  if(abs){ aDestroy('aExpAbs');
-    _aCharts['aExpAbs']=new Chart(abs.getContext('2d'),{ type:'bar',
-      data:{ labels:A_OPEX_YEARS.map(String), datasets:A_OPEX_FN.map(function(f){
-        return { label:f.lab, data:A_OPEX_YEARS.map(function(y){ return A_OPEX[y][f.k]/1000; }), backgroundColor:f.c, borderColor:'#fff', borderWidth:1, maxBarThickness:34, stack:'e' }; }) },
-      options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
-          tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+c.parsed.y.toFixed(1)+'B'; },
-            footer:function(items){ var t=items.reduce(function(a,it){ return a+it.parsed.y; },0); return 'Total op cost: $'+t.toFixed(1)+'B'; } } } },
-        scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); }
+  aBuildBridge();
+  aBuildNetBridge();
+  aBuildSbc();
+  var pane=document.querySelector('.ovt-subpane[data-ovst="margins"]');
+  if(pane){
+    var tog=function(sel,after){ pane.querySelectorAll(sel+' button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll(sel+' button').forEach(function(x){ x.classList.toggle('active',x===b); }); after(); }; }); };
+    if(!pane._expWired){ pane._expWired=true;
+      var GEN_BUILD={ margins:aBuildMargins, bridge:function(){ aBridgeSync(pane); aBuildBridge(); }, net:aBuildNetBridge, sbc:aBuildSbc };
+      var gsel=pane.querySelector('.gen-chart');
+      if(gsel){ gsel.onchange=function(){ var v=gsel.value;
+        pane.querySelectorAll('.gen-sec').forEach(function(s){ s.hidden=(s.getAttribute('data-gsec')!==v); });
+        if(GEN_BUILD[v]) GEN_BUILD[v](); }; }
+      tog('.br-mode', function(){ aBridgeSync(pane); aBuildBridge(); });
+      tog('.br-gran', function(){ aBridgeSync(pane); aBuildBridge(); });
+      tog('.br-yr', aBuildBridge);
+      tog('.br-qy', function(){ aBridgeSync(pane); aBuildBridge(); });   // year change re-derives which quarters exist
+      tog('.br-qq', aBuildBridge);
+      tog('.br-fy', aBuildBridge);
+      tog('.br-from', aBuildBridge); tog('.br-to', aBuildBridge);
+      pane.querySelectorAll('.br-fx-sl input[type=range]').forEach(function(s){ s.addEventListener('input', aBuildBridge); });
+      var brReset=pane.querySelector('.br-fx-reset'); if(brReset) brReset.onclick=function(){ pane.querySelectorAll('.br-fx-sl input[data-brx]').forEach(function(s){ s.value=0; }); aBuildBridge(); };
+      tog('.nb-yr', aBuildNetBridge);
+      tog('.nb-norm', aBuildNetBridge);
+      var etabs=pane.querySelectorAll('.exp-tab');
+      etabs.forEach(function(b){ b.onclick=function(){ var k=b.getAttribute('data-exptab');
+        etabs.forEach(function(x){ x.classList.toggle('active',x===b); });
+        pane.querySelectorAll('.exp-panel').forEach(function(p){ p.hidden=(p.getAttribute('data-exppanel')!==k); }); }; });
+      aBridgeSync(pane); }
+  }
 }
-// ═══ Bottom Line ▸ Capex & Depreciation ═══════════════════════════════════════════════════════
-// A live capex→D&A engine seeded from a snapshot of "DCF AMZN.xlsm" (D&A + Segments tabs). Unlike a
-// static replica, it spans the FULL history (FY2019) AND the projection, and it exposes the DCF's two
-// adjustment factors instead of hiding them: (1) the DEPLOYMENT factor (~0.59) — the time-weighted
-// share of a year's capex in service its first year, set by quarterly capex seasonality; (2) the
-// prior-stock ADJUSTMENT (~0.955) — the Goal-Seek plug that ties the bottom-up build to reported
-// depreciation. Given capex path + allocation mix + useful lives + those two factors, D&A is fully
-// determined (the "allocate one, derive the other" identity). The engine reproduces the DCF's
-// FY26-28 PP&E depreciation to within ~0.02%.
+var A_SEG=[ {k:'us',lab:'North America',c:BRAND,oi:'usOpInc',rev:'usRev',qoi:'naopinc',qrev:'usrev',bk:'na'},
+  {k:'int',lab:'International',c:BRAND2,oi:'intOpInc',rev:'intRev',qoi:'intopinc',qrev:'intrev',bk:'intl'},
+  {k:'aws',lab:'AWS',c:SQUID,oi:'awsOpInc',rev:'awsRev',qoi:'awsopinc',qrev:'aws',bk:'aws'} ];
+// Segment D&A is disclosed (10-K Note 10) and lives in amznBBG.seg[bk].da (annual, FY23-25 actual + fwd);
+// EBITDA margin = (operating income + segment D&A) ÷ segment revenue. No quarterly segment D&A → eb=null there.
+function segDA(bk,y){ var s=amznBBG.seg[bk]; if(!s||!s.da||y<2023) return null; return (y<=2025)?s.da.a[y-2023]:(s.da.f?s.da.f[y-2026]:null); }
+function segAnnualRows(){
+  return A_OPEX_YEARS.map(function(y){ var r=A_OPEX[y], o={p:String(y)};
+    A_SEG.forEach(function(s){ var oi=r[s.oi], rev=r[s.rev], da=segDA(s.bk,y);
+      o[s.k]={oi:oi, mgn:Math.round(oi/rev*1000)/10, eb:(da==null?null:Math.round((oi+da)/rev*1000)/10)}; });
+    o.consMgn=(function(){ var cost=A_OPEX_FN.reduce(function(a,f){ return a+r[f.k]; },0)+r.otherOpex; return Math.round((r.revenue-cost)/r.revenue*1000)/10; })();
+    var ie=amznBBG.is.ebitda, ir=amznBBG.is.rev; o.consEb=(y>=2023&&ie&&ir&&ir.a[y-2023])?Math.round(ie.a[y-2023]/ir.a[y-2023]*1000)/10:null;
+    return o; });
+}
+function segQuarterRows(){
+  var q=amznResults.views.q.metrics, per=q.rev.periods, n=per.indexOf('2Q26'); if(n<0) n=per.length;
+  var labels=per.slice(0,n);
+  return labels.map(function(_,i){ var o={p:labels[i]};
+    A_SEG.forEach(function(s){ var oi=q[s.qoi].act[i], rv=q[s.qrev].act[i]; o[s.k]={oi:oi, mgn:(oi==null||rv==null||!rv)?null:Math.round(oi/rv*1000)/10, eb:null}; });
+    var a=q.opinc.act[i], b=q.rev.act[i]; o.consMgn=(a==null||b==null||!b)?null:Math.round(a/b*1000)/10; o.consEb=null;
+    return o; });
+}
+// Segment deep-dive "worlds" — opened from the Segments tab via data-detail="seg:aws|us|int".
+// VISUAL (reuses EW_CSS / ewSpark from the expense full dives). Data: 10-K Note 10 (segment capex/PP&E),
+// segment operating margins, and the earnings-call record.
+function segTiles(a){ return '<div class="ew-kpis">'+a.map(function(k){ return '<div class="ew-tile"><div class="ew-tv">'+k[0]+'</div><div class="ew-tl">'+k[1]+'</div></div>'; }).join('')+'</div>'; }
+function segCapMini(cap,ppe){ return '<div class="ew-flow"><div class="ew-fn"><div class="ew-fn-v">'+cap+'</div><div class="ew-fn-l">net capex, FY25 (Note 10)</div></div><div class="ew-far">→</div><div class="ew-fn"><div class="ew-fn-v">'+ppe+'</div><div class="ew-fn-l">PP&amp;E stock</div></div></div>'; }
+// Per-segment cost structure — Amazon does NOT disclose functional expenses by segment, so this is
+// qualitative (from 10-K MD&A drivers + Note 10 capex/PP&E), explicitly flagged as inferred, with the
+// one genuinely-assignable anchor (segment capex/PP&E). This is the "expense types per segment" the
+// segment line otherwise black-boxes.
+var SEG_COST={
+  aws:{ note:'<b>What is (and isn\'t) broken out:</b> Amazon discloses AWS revenue, operating income, <b>D&amp;A and PP&amp;E by segment</b> (10-K Note 10) — but <b>not</b> the functional-expense split. So the cost <i>shape</i> below is qualitative, but the depreciation load is a <b>reported</b> number, not inferred.',
+    boxes:[
+      ['🖥️','Infrastructure depreciation — biggest, fastest-rising','AWS carries $190B of PP&amp;E (from $73B in 2023) and ~68% of group capex; depreciating that fleet is the largest and fastest-growing cost in the segment — and why margin expands only once capacity is utilized.'],
+      ['⚡','Power &amp; energy','Data-center electricity is increasingly material as the fleet scales — Q2 26 margin carried ~130bps of energy-derivative gains, a measure of how much energy now moves the line.'],
+      ['🧑‍💻','Engineering &amp; custom silicon','R&amp;D payroll for services and Trainium/Graviton design — spending ahead of the revenue it enables, but the source of the price-performance edge.']
+    ],
+    anchor:'Disclosed, not inferred: <b>AWS D&amp;A was $21.5B in FY25</b> (vs $12.5B in 2023) and Bloomberg consensus ramps it to <b>~$93B by 2028</b> — the largest and fastest-rising cost, reported by segment (Note 10). AWS also = ~68% of group capex and &gt;50% of PP&amp;E. Only the functional-expense split is undisclosed. See the D&amp;A-by-segment chart below.' },
+  us:{ note:'<b>What is (and isn\'t) broken out:</b> Amazon reports North America revenue, operating income, <b>D&amp;A and PP&amp;E by segment</b> (Note 10) — but not the functional-expense split. The cost shape below is qualitative; the depreciation is disclosed.',
+    boxes:[
+      ['📦','Cost of sales (1P product) — largest, shrinking','First-party product cost is the biggest line, but it falls as a share as third-party (~61% of units) and advertising mix rises.'],
+      ['🚚','Fulfillment &amp; shipping — the cost-to-serve','Running the FC network and last-mile delivery; the efficiency line — units +17% while this grows far less (robots, regionalization).'],
+      ['📣','Advertising — a margin offset, not a cost','Ads ride the retail surface at near-pure incremental margin; growing +18%→+26%, it is the single biggest reason NA margin climbs.']
+    ],
+    anchor:'What IS assignable: NA capex ~$36B on ~8% of its revenue and $122B PP&amp;E — a fraction of AWS\'s intensity, so retail carries far less depreciation.' },
+  int:{ note:'<b>What is (and isn\'t) broken out:</b> Same as North America — revenue, operating income, D&amp;A and PP&amp;E are reported by segment; only the functional-expense split is not. Two sub-economies sit under one line, which the reported margin blends.',
+    boxes:[
+      ['📦','The NA cost shape, a few years behind','COGS + fulfillment + shipping dominate, exactly like North America; established markets (Germany/UK/Japan) already run the efficient version.'],
+      ['🌱','Emerging-market investment drag','India, Brazil and the Middle East still spend ahead of revenue — the build-out cost NA already absorbed, now sitting in this line.'],
+      ['💱','FX — swings the print','A +$903M tailwind to 2025 operating income; the reported margin moves with the dollar as much as with operations.']
+    ],
+    anchor:'What IS assignable: International capex ~$7.6B and $31B PP&amp;E — the lightest footprint of the three, consistent with a retail (not infrastructure) cost base.' }
+};
+// Verbatim segment definitions — exact wording from Amazon's FY2025 Form 10-K, Note 10 (Segment
+// Information), SEC EDGAR amzn-20251231.htm. Quoted, not paraphrased.
+var SEG_DEF={
+  aws:'The AWS segment consists of amounts earned from global sales of compute, storage, database, and other services for start-ups, enterprises, government agencies, and academic institutions.',
+  us:'The North America segment primarily consists of amounts earned from retail sales of consumer products (including from sellers) and advertising and subscription services through North America-focused online and physical stores. This segment includes export sales from these online stores.',
+  int:'The International segment primarily consists of amounts earned from retail sales of consumer products (including from sellers) and advertising and subscription services through internationally-focused online stores. This segment includes export sales from these internationally-focused online stores (including export sales from these online stores to customers in the U.S., Mexico, and Canada), but excludes export sales from our North America-focused online stores.'
+};
+var SEG_SRC='— Amazon FY2025 Form 10-K · Note 10, Segment Information (SEC EDGAR)';
+function segCostBox(k){ var c=SEG_COST[k]; if(!c) return '';
+  return (SEG_DEF[k]?'<div class="ew-h">How the 10-K defines this segment</div><div class="ew-q ew-def">“'+SEG_DEF[k]+'”<span class="ew-att">'+SEG_SRC+'</span></div>':'')+
+    '<div class="ew-h">Cost structure — what Amazon breaks out (and doesn’t)</div>'+
+    '<div class="ew-note">'+c.note+'</div>'+ewBoxes(c.boxes)+
+    (c.anchor?'<div class="ew-note">'+c.anchor+'</div>':''); }
+var SEG_WORLD={
+  aws:{ t:'AWS — the profit engine', h:EW_CSS+
+    segTiles([['35.4%','operating margin (FY25)'],['$45.6B','operating income — ~57% of group'],['$96.5B','net capex — 68% of the group'],['$190B','PP&E stock (from $73B in ’23)']])+
+    '<div class="ew-h">The business</div><div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">☁️</span>On-demand compute, storage, database &amp; AI</div><div class="ew-box-t">~18% of Amazon’s revenue, but the majority of its operating income — and where nearly all the capex goes. The bottom-line question for Amazon is a question about AWS.</div></div>'+
+    '<div class="ew-h">Operating margin over time</div>'+ewSpark([28.4,26.3,29.8,29.8,28.5,27.1,37.0,35.4],7)+
+    '<div class="ew-note">Expanding <b>through</b> the build: +650bps YoY in Q2’26 — ~130bps from energy-derivative gains, <b>~520bps clean</b> from custom-silicon mix, power and utilisation.</div>'+
+    '<div class="ew-h">What moves it</div>'+
+    '<div class="ew-two"><div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">📈</span>Demand, contracted far out</div><div class="ew-box-t">Growth re-accelerating <b>+19% → +37%</b>; backlog (RPO) <b>$164B → $496B</b>; “2027 largely reserved, some 2028 spoken for.” The demand that justifies the capex.</div></div>'+
+    '<div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">🧠</span>Custom silicon</div><div class="ew-box-t">Trainium &amp; Graviton + the Anthropic partnership — the cost-and-supply edge behind the margin. AI + chips each &gt;$25B run-rate.</div></div></div>'+
+    '<div class="ew-h">The capex it demands → the D&amp;A that follows</div>'+segCapMini('$96.5B','$190B')+
+    '<div class="ew-q">“As fast as we install this capacity, <b>we are monetizing it</b>.” The FY26 capex frame was raised to ~$220B, partly on the higher cost of memory.<span class="ew-att">— Brian Olsavsky, CFO</span></div>'+
+    segCostBox('aws')+
+    ewCallsBlock(SEG_CALLS.aws)+
+    '<div class="ew-foot">Sources: 10-K Note 10 (segment capex/PP&amp;E); Q4’25–Q2’26 earnings calls; Bloomberg segment series.</div>' },
+  us:{ t:'North America — the volume base + the ad layer', h:EW_CSS+
+    segTiles([['6.9%','operating margin (FY25)'],['$29.6B','operating income'],['$35.9B','net capex (Note 10)'],['$122B','PP&E stock']])+
+    '<div class="ew-h">The business</div><div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">🛒</span>First-party store + 3P marketplace + advertising</div><div class="ew-box-t">The retail surface: own inventory, third-party sellers (~61% of units), and the high-margin ad layer riding on top. Margin has climbed ~4% → 7% in three years — on mix and cost, not price.</div></div>'+
+    '<div class="ew-h">Operating margin over time</div>'+ewSpark([5.1,4.1,3.7,2.6,-0.9,4.2,6.4,6.9],7)+
+    '<div class="ew-note">The FY2022 dip below zero was the over-investment trough; the climb since is advertising + fulfillment efficiency. The 3Q25 quarter carries the <b>$2.5B FTC settlement</b> — a charge, not a trend.</div>'+
+    '<div class="ew-h">What moves it</div>'+
+    '<div class="ew-two"><div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">📣</span>Advertising — the margin lever</div><div class="ew-box-t">Growing <b>+18% → +26%</b>, riding the store at near-pure incremental margin. The single biggest reason NA margin expands.</div></div>'+
+    '<div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">🤖</span>Fulfillment efficiency</div><div class="ew-box-t">Units <b>+17%</b> while fulfillment cost grows far less — 1M+ robots and regionalization. The operating-leverage flywheel.</div></div></div>'+
+    '<div class="ew-h">Capital footprint</div>'+segCapMini('$35.9B','$122B')+
+    segCostBox('us')+
+    ewCallsBlock(SEG_CALLS.us)+
+    '<div class="ew-foot">Sources: 10-K MD&amp;A (drivers: units + advertising, offset by fulfillment/tech/shipping) &amp; Note 10; Bloomberg segment series.</div>' },
+  int:{ t:'International — the turnaround', h:EW_CSS+
+    segTiles([['2.9%','operating margin (FY25)'],['$4.75B','operating income — from −$2.7B in ’22'],['$7.6B','net capex (Note 10)'],['$31B','PP&E stock']])+
+    '<div class="ew-h">The business</div><div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">🌍</span>Two businesses under one line</div><div class="ew-box-t"><b>Established markets</b> (Germany, UK, Japan) matured to profit and drive the reported margin; <b>emerging markets</b> (India, Brazil, Middle East) are still in the investment phase NA already passed through.</div></div>'+
+    '<div class="ew-h">Operating margin over time</div>'+ewSpark([-3.3,-2.3,0.7,-0.7,-6.6,-2.0,2.7,2.9],7)+
+    '<div class="ew-note">It crossed into profit in <b>2024</b> after years of build-out losses — the same curve NA already climbed, a few years behind.</div>'+
+    '<div class="ew-h">What moves it</div>'+
+    '<div class="ew-two"><div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">📣</span>The same flywheel</div><div class="ew-box-t">Units + advertising drive the established markets; fulfillment and shipping are the offset — exactly the NA playbook.</div></div>'+
+    '<div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">💱</span>FX swings the print</div><div class="ew-box-t">A <b>+$903M</b> tailwind to operating income in 2025 — the reported margin moves with the dollar as much as with operations.</div></div></div>'+
+    '<div class="ew-h">Capital footprint</div>'+segCapMini('$7.6B','$31B')+
+    segCostBox('int')+
+    ewCallsBlock(SEG_CALLS.int)+
+    '<div class="ew-foot">Sources: 10-K MD&amp;A (units + advertising, FX +$903M) &amp; Note 10; Bloomberg segment series.</div>' }
+};
+var A_TENK={
+  segCapex:{ 2023:{na:17529,int:4144,aws:24843,corp:1828}, 2024:{na:24348,int:6643,aws:53267,corp:1494}, 2025:{na:35919,int:7617,aws:96496,corp:2320} },
+  segPPE:{ 2023:{na:93632,int:24357,aws:72701,corp:13487}, 2024:{na:103041,int:25618,aws:110683,corp:13323}, 2025:{na:122043,int:30632,aws:190055,corp:14295} },
+  sbc:{ 2023:{costOfSales:836,fulfillment:3090,techInfra:13434,marketing:4623,gAdmin:2040,total:24023}, 2024:{costOfSales:838,fulfillment:2973,techInfra:12150,marketing:4084,gAdmin:1966,total:22011}, 2025:{costOfSales:777,fulfillment:2703,techInfra:10871,marketing:3445,gAdmin:1671,total:19467} },
+  leaseCost:{ 2023:{op:10550,finAmort:5899,finInt:304,variable:2165,total:18918}, 2024:{op:11961,finAmort:3866,finInt:285,variable:2465,total:18577}, 2025:{op:14006,finAmort:3284,finInt:312,variable:2694,total:20296} },
+  leaseLiab:{ opGross:106914, finGross:14917, totalGross:121831, pv:101538, longTerm:87339, opTermYrs:10.0, finTermYrs:12.6 }
+};
+// The capital cycle PER SEGMENT: pick a segment and see the three linked pieces together — Capex (the
+// build) and D&A (what hits the P&L) as bars, and Net PP&E (the stock they flow through) as a line on
+// the right axis. Capex spend lifts PP&E; PP&E depreciates into D&A. Capex actuals: 10-K Note 10;
+// forward capex ≈ Δ net PP&E + D&A (the roll-forward identity), from BBG's forward PP&E/D&A.
+function segCapDaBody(){
+  return '<div class="ov-sec"><div class="ov-sec-h">The capital cycle by segment — capex builds it → PP&amp;E holds it → D&amp;A expenses it</div>'+
+    '<div class="mch-ctl"><span class="acx-tog segcd-tog"><button type="button" data-segcd="aws" class="active">AWS</button><button type="button" data-segcd="na">North America</button><button type="button" data-segcd="intl">International</button><button type="button" data-segcd="cons">Consolidated</button></span><span></span></div>'+
+    '<div class="acx-cap" id="aSegCapDaCap" style="font-size:11px;color:var(--mu);margin:2px 0 6px"></div>'+
+    '<div style="height:320px"><canvas id="aSegCapDa"></canvas></div></div>';
+}
+function aBuildSegCapDa(){
+  var pane=document.querySelector('.dd-pane[data-dd="misc"] .ovt-subpane[data-ovst="capex"]');
+  var tg=pane?pane.querySelector('.segcd-tog .active'):null, seg=tg?tg.getAttribute('data-segcd'):'aws';
+  var cv=aChartReady('aSegCapDa'); if(!cv) return; aDestroy('aSegCapDa');
+  var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], yrs=[2023,2024,2025], tk={aws:'aws',na:'na',intl:'int'};
+  function fill(a){ a=a.slice(); for(var i=0;i<a.length;i++){ if(a[i]==null){ var p=i-1; while(p>=0&&a[p]==null)p--; var n=i+1; while(n<a.length&&a[n]==null)n++;
+    if(p>=0&&n<a.length) a[i]=a[p]+(a[n]-a[p])*(i-p)/(n-p); else if(p>=0) a[i]=a[p]; else if(n<a.length) a[i]=a[n]; } } return a; }   // linear-interpolate interior nulls (BBG leaves NA FY26 PP&E blank)
+  function segArr(field){ if(seg==='cons'){ return labels.map(function(_,i){ return ['na','intl','aws'].reduce(function(a,k){ var s=amznBBG.seg[k][field], v=fill(s.a.concat(s.f)); return a+(v[i]||0); },0); }); } return fill(amznBBG.seg[seg][field].a.concat(amznBBG.seg[seg][field].f)); }
+  var ppe=segArr('ppe'), da=segArr('da'), B=function(v){ return v==null?null:Math.round(v/100)/10; };
+  function actCapex(i){ var y=yrs[i], m=A_TENK.segCapex[y]; return seg==='cons'?(m.na+m.int+m.aws+(m.corp||0)):m[tk[seg]]; }
+  var grpCx=amznBBG.is.capex?amznBBG.is.capex.a.concat(amznBBG.is.capex.f):null;   // BBG forecasts TOTAL capex forward (real, monotonic) — use it for Consolidated
+  var capex=labels.map(function(_,i){ if(i<3) return B(actCapex(i));
+    if(seg==='cons') return (grpCx&&grpCx[i]!=null)?B(Math.abs(grpCx[i])):null;
+    return (ppe[i]!=null&&ppe[i-1]!=null&&da[i]!=null)?B(ppe[i]-ppe[i-1]+da[i]):null; });
+  var daB=da.map(B), ppeB=ppe.map(B);
+  _aCharts['aSegCapDa']=new Chart(cv.getContext('2d'),{ data:{ labels:labels, datasets:[
+    { type:'bar', label:'Capex (build)', data:capex, backgroundColor:capex.map(function(_,i){ return i<3?BRAND:acxRGBA(BRAND,0.5); }), borderColor:'#fff', borderWidth:1, maxBarThickness:26, yAxisID:'y', order:3 },
+    { type:'bar', label:'D&A (expensed)', data:daB, backgroundColor:daB.map(function(_,i){ return i<3?BRAND2:acxRGBA(BRAND2,0.5); }), borderColor:'#fff', borderWidth:1, maxBarThickness:26, yAxisID:'y', order:2 },
+    { type:'line', label:'Net PP&E (stock →)', data:ppeB, borderColor:'#1E2733', backgroundColor:'#1E2733', borderWidth:2.6, pointRadius:2, tension:0.2, yAxisID:'y1', order:1 } ]},
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': $'+(c.parsed.y==null?'':c.parsed.y.toFixed(1))+'B'; } } } },
+      scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:11 } } },
+        y:{ position:'left', grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:11 }, callback:function(v){ return '$'+v+'B'; } }, title:{ display:true, text:'Capex / D&A — annual flow', font:{ size:9 } } },
+        y1:{ position:'right', grid:{ display:false }, ticks:{ font:{ size:11 }, callback:function(v){ return '$'+v+'B'; } }, title:{ display:true, text:'Net PP&E — the stock', font:{ size:9 } } } } } });
+  aZoom('aSegCapDa');
+  var cd=capex[2], dd=daB[2], p=ppeB[2];
+  var cap='<b>The cycle:</b> capex flows onto the balance sheet as <b>net PP&amp;E</b> (the line), which then depreciates into <b>D&amp;A</b> in the P&amp;L. FY25: capex <b>$'+(cd?cd.toFixed(0):'—')+'B</b> vs D&amp;A <b>$'+(dd?dd.toFixed(0):'—')+'B</b> → <b>Capex ÷ D&amp;A ≈ '+((cd&&dd)?(cd/dd).toFixed(1):'—')+'×</b> (building faster than it depreciates), implied life ≈ net PP&amp;E ÷ D&amp;A ≈ <b>'+((p&&dd)?(p/dd).toFixed(1):'—')+' yrs</b>. Actuals: 10-K Note 10; forward capex ≈ Δ net PP&amp;E + D&amp;A (BBG). Faded bars = estimate.';
+  var capEl=pane?pane.querySelector('#aSegCapDaCap'):null; if(capEl) capEl.innerHTML=cap;
+  if(pane && !pane._segcdWired){ pane._segcdWired=true;
+    pane.querySelectorAll('.segcd-tog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.segcd-tog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegCapDa(); }; }); }
+}
+function segmentsBody(){
+  var h='<style>'+
+    '.seg-tog-row{display:flex;justify-content:flex-end;margin-bottom:8px}'+
+    /* engine blocks */
+    '.seg-eng{display:flex;flex-direction:column;gap:10px;margin-top:4px}'+
+    '.seg-b{border:1px solid var(--bdr);border-left:4px solid var(--bdr);border-radius:10px;padding:12px 15px;background:var(--card,#fff)}'+
+    '.seg-b-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}'+
+    '.seg-b-n{font-size:14px;font-weight:800;color:var(--navy)}'+
+    '.seg-b-m{font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;background:rgba(0,0,0,.05);border-radius:20px;padding:2px 10px}'+
+    '.seg-b-tr{font-size:11px;font-weight:700;color:var(--brand-2)}'+
+    '.seg-b-role{font-size:11px;color:var(--mu);margin-left:auto;font-weight:600}'+
+    '.seg-chips{display:flex;flex-wrap:wrap;gap:6px}'+
+    '.seg-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--navy);background:rgba(0,0,0,.035);border:1px solid var(--bdr);border-radius:7px;padding:4px 9px}'+
+    '.seg-chip b{font-weight:800}.seg-chip .up{color:#1f7a3d;font-weight:800}.seg-chip .dn{color:#B7791F;font-weight:800}'+
+    '.seg-off{font-size:11px;color:var(--mu);margin-top:8px;line-height:1.45}.seg-off b{color:var(--navy)}'+
+  '</style>';
+  // segment engines — the clickable driver index, kept at the top of the pane (before the charts)
+  var eng=[
+    {c:SQUID,key:'aws',n:'AWS',m:'35% margin',role:'The profit engine',
+      chips:['<span class="up">▲</span> Growth <b>+19% → +37%</b> (Q3\'24→Q2\'26)','Backlog (RPO) <b>$164B → $496B</b> (3×)','Custom silicon (Trainium) + Anthropic'],
+      off:'<b>What pressures it:</b> technology-infrastructure spend to support growth — i.e. the capex/AI build flowing into the P&amp;L as depreciation (see Capex &amp; Depreciation). The bet: capacity installs 6–24 months before it bills.'},
+    {c:BRAND,key:'us',n:'North America',m:'6.9% margin',role:'The volume base',
+      chips:['<span class="up">▲</span> Advertising <b>+18% → +26%</b>','3P seller mix <b>~61%</b>','Units <b>+17%</b> vs fulfillment leverage'],
+      off:'<b>The lever:</b> high-margin advertising riding the store + fulfillment efficiency (robotics, regionalization). <b>The noise:</b> 3Q25 op margin dips to 4.5% on the $2.5B FTC charge — a charge, not a trend.'},
+    {c:BRAND2,key:'int',n:'International',m:'2.9% margin',role:'The turnaround',
+      chips:['Turned profitable <b>2024</b> after years of losses','Same ads + units flywheel','FX a <b>+$903M</b> tailwind in 2025'],
+      off:'<b>The path:</b> established markets (Germany, UK, Japan) matured to profit while emerging markets (India, Brazil, Middle East) still invest — the blended margin is early on the same curve NA already climbed.'}
+  ];
+  h+='<style>.seg-explorer{border:1.5px solid var(--brand);border-radius:14px;padding:14px 16px 16px;background:linear-gradient(180deg,var(--brand-soft),transparent);margin:6px 0 6px}'+
+    '.seg-explorer-h{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-2);margin:0 0 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}'+
+    '.seg-explorer-h .seg-hint{font-size:9px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--mu);background:#fff;border:1px solid var(--bdr);border-radius:20px;padding:2px 9px}'+
+    '.segx-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}'+
+    '.segx-tab{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--bdr);background:#fff;border-radius:20px;padding:8px 14px;cursor:pointer;font-size:12.5px;font-weight:800;color:var(--navy);transition:.13s}'+
+    '.segx-tab:hover{border-color:var(--brand)}.segx-tab.active{background:var(--navy);border-color:var(--navy);color:#fff}.segx-tab.active .segx-tag{color:rgba(255,255,255,.8)}'+
+    '.segx-dot{width:11px;height:11px;border-radius:3px;flex:none}.segx-tag{font-size:10.5px;font-weight:700;color:var(--mu)}'+
+    '.segx-panel-card{background:var(--card,#fff);border:1px solid var(--bdr);border-radius:12px;padding:15px 17px}</style>';
+  var segExp='<div class="seg-explorer"><div class="seg-explorer-h">Segment explorer — AWS · North America · International <span class="seg-hint">tap a segment to switch</span></div>'+
+    '<div class="segx-tabs">'+eng.map(function(s,i){ return '<button type="button" class="segx-tab'+(i===0?' active':'')+'" data-segtab="'+s.key+'"><span class="segx-dot" style="background:'+s.c+'"></span>'+s.n+' <span class="segx-tag">'+s.m+' · '+s.role+'</span></button>'; }).join('')+'</div>'+
+    '<div class="segx-panels">'+eng.map(function(s,i){
+      var head='<div class="seg-chips" style="margin-bottom:8px">'+s.chips.map(function(c){ return '<span class="seg-chip">'+c+'</span>'; }).join('')+'</div><div class="seg-off" style="margin-bottom:12px">'+s.off+'</div>';
+      return '<div class="segx-panel segx-panel-card" data-segpanel="'+s.key+'"'+(i>0?' hidden':'')+'>'+head+(SEG_WORLD[s.key]?SEG_WORLD[s.key].h:'')+'</div>';
+    }).join('')+'</div></div>';
+  h+=aSegPicker();
+  h+='<div class="seg-gsec" data-sgsec="oimargin">'+aSegFcBody()+'</div>';
+  h+='<div class="seg-gsec" data-sgsec="mix" hidden>'+aSegOiBody()+'</div>';
+  h+='<div class="seg-gsec" data-sgsec="bridge" hidden>'+aSegBridgeBody()+'</div>';
+  h+=aCollap('Segment deep dives — the full read per segment (drivers, unit economics, cost structure, calls)', segExp, false);
+  return h;
+}
+function aSegPicker(){
+  var opts=[['oimargin','Operating income & margin by segment'],['mix','Revenue vs profit — common size'],['bridge','The segment bridge']];
+  return '<div class="ov-sec" style="padding-bottom:10px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+    '<span style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)">Chart</span>'+
+    '<select class="seg-chart" style="font-size:13px;font-weight:700;color:var(--navy);border:1px solid var(--bdr);border-radius:8px;padding:6px 10px;background:#fff">'+
+    opts.map(function(o){ return '<option value="'+o[0]+'"'+(o[0]==='oimargin'?' selected':'')+'>'+o[1]+'</option>'; }).join('')+
+    '</select>'+
+    '<span style="font-size:11px;color:var(--mu)">Pick one — the rest stay tucked away.</span>'+
+    '</div></div>';
+}
+// The revenue-vs-profit divergence as an evolution: each segment's SHARE of revenue · EBITDA · operating
+// income, FY24→FY28E (actual + BBG consensus). International is profitable from FY24, so 100%-stacked
+// shares stay clean. Segment EBITDA = operating income + segment D&A (both disclosed, 10-K Note 10 /
+// amznBBG.seg). "Pies" view = the three mixes as doughnuts for a selectable year.
+var A_SMIX_PTS=[{lab:'FY24',g:'a',i:1},{lab:'FY25',g:'a',i:2},{lab:'FY26E',g:'f',i:0},{lab:'FY27E',g:'f',i:1},{lab:'FY28E',g:'f',i:2}];
+var SMIX_SG=[{k:'na',lab:'North America',c:BRAND},{k:'intl',lab:'International',c:BRAND2},{k:'aws',lab:'AWS',c:SQUID}];
+var SMIX_MET=[{k:'rev',lab:'Revenue',stack:'rev'},{k:'ebitda',lab:'EBITDA',stack:'eb'},{k:'oi',lab:'Operating income',stack:'oi'}];
+function segMixVal(k,mk,g,i){ var sg=amznBBG.seg[k]; if(!sg) return null;
+  if(mk==='ebitda'){ var oi=sg.oi?sg.oi[g][i]:null, da=sg.da?sg.da[g][i]:null; return (oi==null||da==null)?null:oi+da; }
+  var s=sg[mk]; return s?s[g][i]:null; }
+// Single common-size-over-time view (no toggles): for each year, three 100%-stacked bars — revenue,
+// EBITDA and operating-income mix by segment, side by side — so the divergence (AWS small in revenue,
+// large in profit) reads across the whole FY24→FY28E series at once.
+// ONE metric at a time (toggle), a 100%-stacked bar of the 3 segments across time — readable: each bar
+// sums to 100%, and switching Revenue→EBITDA→Operating income shows AWS grow from a small revenue slice
+// to the bulk of profit. (The old version stacked all three metrics at once and was unreadable.)
+function aSegMixBody(){
+  return '<div class="ov-sec"><div class="ov-sec-h">Where the revenue is vs where the profit is — common size over time</div>'+
+    '<div class="mch-ctl"><span class="acx-tog smix-met"><button type="button" data-smixm="rev" class="active">Share of revenue</button><button type="button" data-smixm="ebitda">Share of EBITDA</button><button type="button" data-smixm="oi">Share of operating income</button></span><span></span></div>'+
+    '<div style="font-size:11px;color:var(--mu);margin:2px 0 6px">each bar sums to 100% by segment — switch the metric to see how AWS goes from a small slice of revenue to the bulk of profit</div>'+
+    '<div style="height:320px"><canvas id="aSegMix"></canvas></div></div>';
+}
+function aBuildSegMix(){
+  var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]'); if(!pane) return;
+  var mt=pane.querySelector('.smix-met .active'), metric=mt?mt.getAttribute('data-smixm'):'rev';
+  var cv=aChartReady('aSegMix'); if(!cv) return; aDestroy('aSegMix');
+  var labels=A_SMIX_PTS.map(function(p){ return p.lab; });
+  var mlab={rev:'revenue',ebitda:'EBITDA',oi:'operating income'}[metric];
+  var ds=SMIX_SG.map(function(s){ return { label:s.lab, data:A_SMIX_PTS.map(function(p){
+      var tot=SMIX_SG.reduce(function(a,x){ return a+(segMixVal(x.k,metric,p.g,p.i)||0); },0), v=segMixVal(s.k,metric,p.g,p.i);
+      return (tot&&v!=null)?Math.round(v/tot*1000)/10:null; }),
+    backgroundColor:s.c, borderColor:'#fff', borderWidth:1, maxBarThickness:40, stack:'m' }; });
+  _aCharts['aSegMix']=new Chart(cv.getContext('2d'),{ type:'bar', data:{ labels:labels, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
+        tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':c.parsed.y+'% of '+mlab); } } } },
+      scales:{ x:{ stacked:true, grid:{ display:false }, ticks:{ font:{ size:11 } } }, y:{ position:'right', stacked:true, max:100, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:11 }, callback:function(v){ return v+'%'; } } } } } });
+  aZoom('aSegMix');
+  if(pane && !pane._smixmWired){ pane._smixmWired=true;
+    pane.querySelectorAll('.smix-met button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.smix-met button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildSegMix(); }; }); }
+}
+// Pick ONE segment from the dropdown + a metric, and see its Actual / Summit / Consensus as BARS in
+// SAB colours (navy / blue / grey). Summit models segment operating income (from the quarterly model);
+// segment EBITDA is Actual + Consensus only (Summit has no segment D&A). Consolidated uses amznBBG.is.
+var SEGOI_SEG=[{v:'aws',label:'AWS',mk:'awsopinc',rmk:'aws',bk:'aws'},{v:'na',label:'North America',mk:'naopinc',rmk:'usrev',bk:'na'},{v:'intl',label:'International',mk:'intopinc',rmk:'intrev',bk:'intl'},{v:'cons',label:'Consolidated',mk:'opinc',rmk:'rev',bk:null}];
+function aSegSummitAnnual(mk){ var q=amznResults.views&&amznResults.views.q&&amznResults.views.q.metrics, m=q&&q[mk];
+  if(!m||!m.summit) return null; return ASUM_FYQ.map(function(ix){ if(ix.length<4) return null; var s=0,ok=true; ix.forEach(function(j){ var v=m.summit[j]; if(v==null) ok=false; else s+=v; }); return ok?s:null; }); }
+// One SAB-format chart for the segments (replaces the old op/margin + common-size split). Series = the
+// three segments; pick the metric (Revenue / Operating income / EBITDA) and how to Show it — $B (stacked
+// or side-by-side bars), Share (100%-stacked), or Growth (YoY). Both y-axes on the right; forward faded.
+var SEGENG_SG=[{k:'na',lab:'North America',c:BRAND},{k:'intl',lab:'International',c:BRAND2},{k:'aws',lab:'AWS',c:SQUID}];
+function aSegEngSeries(k, metric, gran, source){
+  if(source==='summit'){   // Summit segment model (amznResults) — revenue & operating income; no segment D&A → no EBITDA
+    var RK={na:'usrev',intl:'intrev',aws:'aws'}, OK={na:'naopinc',intl:'intopinc',aws:'awsopinc'};
+    var mk=metric==='rev'?RK[k]:OK[k], q=amznResults.views&&amznResults.views.q&&amznResults.views.q.metrics, m=q&&q[mk];
+    if(!m||!m.summit||metric==='ebitda') return null;
+    if(gran==='q') return m.summit.slice();
+    return ASUM_FYQ.map(function(ix){ if(ix.length<4) return null; var s=0,ok=true; ix.forEach(function(j){ var v=m.summit[j]; if(v==null)ok=false; else s+=v; }); return ok?s:null; });
+  }
+  var s=amznBBG.seg[k]; if(!s) return null;   // Consensus (BBG): actual history + BBG consensus forward
+  function arr(f){ var o=s[f]; return o?(gran==='q'?o.q:o.a.concat(o.f)):null; }
+  if(metric==='rev') return arr('rev');
+  var oi=arr('oi'), da=arr('da');
+  if(metric==='ebitda') return oi.map(function(v,i){ return (v==null||!da||da[i]==null)?null:v+da[i]; });
+  return oi; }
+// Per-segment forecast: pick a segment + metric, see its Actual / Summit / Consensus — $ as bars,
+// margin % as lines on y2 (same SAB shape as the consolidated margins chart). Summit models segment
+// operating income; segment EBITDA is Actual + Consensus (Summit has no segment D&A).
+var SEGFC=[{v:'aws',bk:'aws',mk:'awsopinc',rk:'aws',lab:'AWS'},{v:'na',bk:'na',mk:'naopinc',rk:'usrev',lab:'North America'},{v:'intl',bk:'intl',mk:'intopinc',rk:'intrev',lab:'International'},{v:'cons',bk:null,mk:'opinc',rk:'rev',lab:'Consolidated'}];
+function aSegFcBody(){
+  return aStdScaffold({ id:'segfc', title:'Profit by segment — Actual vs Summit vs Consensus', height:340,
+    metricSel:[{v:'oi',label:'Operating income',on:true},{v:'ebitda',label:'EBITDA'}],
+    modes:[{cls:'seg',label:'Segment',opts:SEGFC.map(function(s){ return {v:s.v,label:s.lab,on:s.v==='aws'}; })},{cls:'gran',label:'Period',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]}],
+    presets:[['all','All'],['rep','Reported'],['fwd','Forward']] });
+}
+function aBuildSegFc(){
+  aStdRender('segfc', function(st){
+    var seg=SEGFC.filter(function(s){ return s.v===(st.modes.seg||'aws'); })[0]||SEGFC[0];
+    var metric=st.sel||'oi', gran=st.modes.gran||'y', lab=metric==='ebitda'?'EBITDA':'Op. income';
+    var out={ type:'bar', stacked:false, yFmt:function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }, y2Fmt:function(x){ return x+'%'; } };
+    if(gran==='q' && metric==='oi'){   // amznResults native (Actual/Summit/Consensus, 22 quarters)
+      var Q=amznResults.views.q.metrics, oi=Q[seg.mk], rv=Q[seg.rk], labels=oi.periods.slice(), la=aLastActIdx(oi.act);
+      function amtS(a){ return labels.map(function(_,i){ return a&&a[i]!=null?Math.round(a[i]/100)/10:null; }); }
+      function margS(a,r){ return labels.map(function(_,i){ return (a&&a[i]!=null&&r&&r[i])?Math.round(a[i]/r[i]*1000)/10:null; }); }
+      out.labels=labels; out.lastAct=la; out.paired=true; out.series=[
+        {k:'act$',grp:'act',src:'Actual',label:lab+' — Actual',color:ASTD_ACT,type:'bar',data:amtS(oi.act)},
+        {k:'sum$',grp:'sum',src:'Summit',label:lab+' — Summit',color:ASTD_SUMMIT,type:'bar',data:amtS(oi.summit)},
+        {k:'con$',grp:'con',src:'Consensus',label:lab+' — Consensus',color:ASTD_CONS,type:'bar',data:amtS(oi.cons)},
+        {k:'actM',grp:'act',src:'Actual',label:'Margin — Actual',color:ASTD_ACT,type:'line',yAxisID:'y2',data:margS(oi.act,rv.act)},
+        {k:'sumM',grp:'sum',src:'Summit',label:'Margin — Summit',color:ASTD_SUMMIT,type:'line',yAxisID:'y2',data:margS(oi.summit,rv.summit)},
+        {k:'conM',grp:'con',src:'Consensus',label:'Margin — Consensus',color:ASTD_CONS,type:'line',yAxisID:'y2',dash:true,data:margS(oi.cons,rv.cons)} ];
+      return out;
+    }
+    var labels=['FY23','FY24','FY25','FY26E','FY27E','FY28E'], la=2;
+    function bbg(f){ if(seg.bk){ var s=amznBBG.seg[seg.bk][f]; return s?s.a.concat(s.f):null; } var s2=amznBBG.is[f]; return s2?s2.a.concat(s2.f):null; }
+    var oiA=bbg('oi'), daA=bbg('da'), revA=bbg('rev');
+    function num(i){ if(metric!=='ebitda') return oiA[i]; if(!seg.bk){ var eb=bbg('ebitda'); return eb?eb[i]:null; } return (oiA[i]==null||!daA||daA[i]==null)?null:oiA[i]+daA[i]; }
+    var actN=labels.map(function(_,i){ return i<=la?num(i):null; }), conN=labels.map(function(_,i){ return i>=la?num(i):null; });
+    var sm=null; if(metric==='oi'){ var so=aSegSummitAnnual(seg.mk), sr=aSegSummitAnnual(seg.rk); if(so&&sr) sm={num:so,den:sr}; }
+    out.labels=labels; out.lastAct=la; out.paired=true; out.series=aMargDual(lab, actN, conN, revA, la, false, null, sm); return out;
+  });
+}
+function aSegOiBody(){
+  return aStdScaffold({ id:'segoi', title:'Revenue vs profit — common size by segment', height:340,
+    metricSel:[{v:'rev',label:'Revenue',on:true},{v:'oi',label:'Operating income'},{v:'ebitda',label:'EBITDA'}],
+    modes:[{cls:'basis',label:'Basis',opts:[{v:'cons',label:'Actual + Consensus',on:true},{v:'summit',label:'Summit'}]},
+           {cls:'show',label:'Show',opts:[{v:'amt',label:'$B',on:true},{v:'share',label:'Share'},{v:'growth',label:'Growth'}]},
+           {cls:'layout',label:'Layout',opts:[{v:'stack',label:'Stacked',on:true},{v:'side',label:'Side by side'}]},
+           {cls:'gran',label:'Period',opts:[{v:'y',label:'Annual',on:true},{v:'q',label:'Quarterly'}]},
+           {cls:'cmp',label:'Compare',opts:[{v:'yoy',label:'YoY',on:true},{v:'qoq',label:'QoQ'}]},
+           {cls:'gin',label:'Growth in',opts:[{v:'pct',label:'%',on:true},{v:'add',label:'$ added'}]}],
+    presets:[['all','All'],['rep','Reported'],['fwd','Forward']] });
+}
+function aBuildSegOi(){
+  aStdRender('segoi', function(st){
+    var metric=st.sel||'rev', basis=st.modes.basis||'cons', show=st.modes.show||'amt', layout=st.modes.layout||'stack', gran=st.modes.gran||'y';
+    var cmp=st.modes.cmp||'yoy', gin=st.modes.gin||'pct';
+    if(metric==='ebitda') basis='cons';   // Summit has no segment D&A → EBITDA only on the Actual+Consensus basis (no fabricated Summit segment EBITDA)
+    if(basis==='summit') gran='y';   // Summit segment series is quarterly-indexed differently → aggregate to annual only (labels stay aligned)
+    var labels=gran==='q'?amznBBG.qtrs.slice():['FY23','FY24','FY25','FY26E','FY27E','FY28E'];
+    var la=gran==='q'?((amznBBG.seg.aws.oi.qA?amznBBG.seg.aws.oi.qA.length:5)-1):2;   // FY26E+ are estimates on BOTH bases → fade them consistently (no full-colour Summit forward)
+    // Annual axis is always YoY (step 1). Quarterly: QoQ = prior quarter (step 1), YoY = same quarter last year (step 4).
+    var step=gran==='q'?(cmp==='qoq'?1:4):1, addMode=(show==='growth'&&gin==='add');
+    var raw=SEGENG_SG.map(function(seg){ return { seg:seg, v:aSegEngSeries(seg.k,metric,gran,basis) }; });
+    var totals=labels.map(function(_,i){ return raw.reduce(function(a,r){ return a+((r.v&&r.v[i]!=null)?r.v[i]:0); },0); });
+    var series=raw.map(function(r){ return { k:r.seg.k, label:r.seg.lab, color:r.seg.c,
+      data:labels.map(function(_,i){ var v=r.v?r.v[i]:null; if(v==null) return null;
+        if(show==='share') return totals[i]?Math.round(v/totals[i]*1000)/10:null;
+        if(show==='growth'){ var pv=r.v?r.v[i-step]:null; if(pv==null) return null;
+          if(addMode) return Math.round((v-pv)/100)/10;   // $B added vs the comparison period
+          return !pv?null:Math.round((v-pv)/Math.abs(pv)*1000)/10; }
+        return Math.round(v/100)/10; }) }; });
+    var stacked=show==='share'||(show==='amt'&&layout==='stack')||(addMode&&layout==='stack');
+    var yFmt=(show==='amt'||addMode)?function(x){ return '$'+(x==null?'':x.toFixed(1))+'B'; }:function(x){ return x+'%'; };
+    var hide=[]; if(!(show==='growth'&&gran==='q')) hide.push('cmp'); if(show!=='growth') hide.push('gin'); if(show==='share') hide.push('layout'); if(basis==='summit') hide.push('gran'); if(metric==='ebitda') hide.push('basis');   // Summit = annual only; EBITDA has no Summit segment basis
+    return { labels:labels, lastAct:la, yFmt:yFmt, type:'bar', stacked:stacked, yMax:show==='share'?100:undefined, series:series, hideModes:hide };
+  });
+}
+function aBuildSegments(){
+  var pane=document.querySelector('.dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="segments"]');
+  aBuildSegFc(); aBuildSegOi();
+  if(pane && !pane._segWired){ pane._segWired=true;
+    var SEG_BUILD={ oimargin:aBuildSegFc, mix:aBuildSegOi, bridge:aBuildSegBridge };
+    var ssel=pane.querySelector('.seg-chart');
+    if(ssel){ ssel.onchange=function(){ var v=ssel.value;
+      pane.querySelectorAll('.seg-gsec').forEach(function(s){ s.hidden=(s.getAttribute('data-sgsec')!==v); });
+      if(SEG_BUILD[v]) SEG_BUILD[v](); }; }
+    var segtog=function(sel,extra){ pane.querySelectorAll(sel+' button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll(sel+' button').forEach(function(x){ x.classList.toggle('active',x===b); }); if(extra) extra(); aBuildSegBridge(); }; }); };
+    segtog('.sbr-mode', function(){ aSegBridgeSync(pane); }); segtog('.sbr-from'); segtog('.sbr-to'); segtog('.sbr-fy'); segtog('.sbr-basis', function(){ aSegBrLoadLevers(pane); });
+    pane.querySelectorAll('.sbr-ctl-fwd input[type=range]').forEach(function(s){ s.addEventListener('input', aBuildSegBridge); });
+    aSegBridgeSync(pane);
+    var stabs=pane.querySelectorAll('.segx-tab');
+    stabs.forEach(function(b){ b.onclick=function(){ var key=b.getAttribute('data-segtab');
+      stabs.forEach(function(x){ x.classList.toggle('active',x===b); });
+      pane.querySelectorAll('.segx-panel').forEach(function(p){ p.hidden=(p.getAttribute('data-segpanel')!==key); }); }; }); }
+  aBuildSegBridge();
+}
+// ═══ Bottom Line ▸ Capex & Depreciation — seeds + engine (restored) ═══
 // AMZN Capex/D&A seed -- snapshot of 'DCF AMZN.xlsm' (D&A + Segments tabs), FY2019-FY2028.
 // 2019-2025 = 10-K/8-K actuals as tied out in the DCF; 2026-2028 = Summit model projection.
 // $mm unless noted. depPPE ties to reported PP&E depreciation; effDepRate = depPPE / avg gross PP&E (ex CIP & Land).
 var A_CAPEX_YEARS=[2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028];
 var A_CAPEX_FIRST_PROJ=2026;
 var A_CAPEX={
-  2019:{"capex":16861,"grossLB":39223,"grossServers":38836,"grossHeavy":16261,"grossOtherEq":16213,"grossOtherAssets":3111,"grossCIP":6036,"depLB":889,"depServers":9066,"depHeavy":1518,"depOtherEq":3028,"depOtherAssets":599,"depPPE":15100,"amort":null,"da":null,"effDepRate":0.1518,"cogs":165536,"revenue":280522,"capexPctRev":0.0601,"deployFactor":0.5716,"adjFactor":1.0446,"grossProfit":114986,"grossMargin":0.4099},
-  2020:{"capex":40141,"grossLB":57324,"grossServers":52949,"grossHeavy":22170,"grossOtherEq":22105,"grossOtherAssets":3772,"grossCIP":15228,"depLB":1114,"depServers":9867,"depHeavy":1859,"depOtherEq":2852,"depOtherAssets":508,"depPPE":16200,"amort":8980,"da":25180,"effDepRate":0.1213,"cogs":233307,"revenue":386064,"capexPctRev":0.104,"deployFactor":0.5388,"adjFactor":0.9475,"grossProfit":152757,"grossMargin":0.3957},
-  2021:{"capex":61053,"grossLB":81104,"grossServers":70082,"grossHeavy":29344,"grossOtherEq":29257,"grossOtherAssets":4118,"grossCIP":24895,"depLB":1686,"depServers":13946,"depHeavy":2628,"depOtherEq":4031,"depOtherAssets":610,"depPPE":22900,"amort":11533,"da":34433,"effDepRate":0.1254,"cogs":272344,"revenue":469822,"capexPctRev":0.1299,"deployFactor":0.5799,"adjFactor":0.9976,"grossProfit":197478,"grossMargin":0.4203},
-  2022:{"capex":63645,"grossLB":91650,"grossServers":85754,"grossHeavy":35905,"grossOtherEq":35799,"grossOtherAssets":4602,"grossCIP":30020,"depLB":2012,"depServers":14039,"depHeavy":3233,"depOtherEq":4959,"depOtherAssets":657,"depPPE":24900,"amort":17021,"da":41921,"effDepRate":0.1085,"cogs":288831,"revenue":513983,"capexPctRev":0.1238,"deployFactor":0.614,"adjFactor":0.9645,"grossProfit":225152,"grossMargin":0.4381},
-  2023:{"capex":52729,"grossLB":105293,"grossServers":100775,"grossHeavy":42194,"grossOtherEq":42070,"grossOtherAssets":5116,"grossCIP":28840,"depLB":2353,"depServers":17112,"depHeavy":3941,"depOtherEq":6045,"depOtherAssets":749,"depPPE":30200,"amort":18463,"da":48663,"effDepRate":0.112,"cogs":304739,"revenue":574785,"capexPctRev":0.0917,"deployFactor":0.6199,"adjFactor":0.9889,"grossProfit":270046,"grossMargin":0.4698},
-  2024:{"capex":82999,"grossLB":123039,"grossServers":113156,"grossHeavy":52228,"grossOtherEq":53509,"grossOtherAssets":5487,"grossCIP":46636,"depLB":2603,"depServers":17054,"depHeavy":4555,"depOtherEq":7111,"depOtherAssets":777,"depPPE":32100,"amort":20695,"da":52795,"effDepRate":0.1017,"cogs":326288,"revenue":637959,"capexPctRev":0.1301,"deployFactor":0.5591,"adjFactor":0.9467,"grossProfit":311671,"grossMargin":0.4885},
-  2025:{"capex":131819,"grossLB":155121,"grossServers":172492,"grossHeavy":65545,"grossOtherEq":63376,"grossOtherAssets":5819,"grossCIP":71745,"depLB":3159,"depServers":24500,"depHeavy":4894,"depOtherEq":8533,"depOtherAssets":814,"depPPE":41900,"amort":23856,"da":65756,"effDepRate":0.1053,"cogs":356414,"revenue":716924,"capexPctRev":0.1839,"deployFactor":0.581,"adjFactor":0.9295,"grossProfit":360510,"grossMargin":0.5029},
-  2026:{"capex":221456,"revenue":831124,"cogs":398760,"grossMargin":0.5202},
-  2027:{"capex":276820,"revenue":959800,"cogs":null,"grossMargin":null},
-  2028:{"capex":346025,"revenue":1101190,"cogs":null,"grossMargin":null}
+  2019:{"capex":16861,"grossLB":39223,"grossServers":38836.0,"grossHeavy":16261.0,"grossOtherEq":16213.0,"grossOtherAssets":3111,"grossCIP":6036,"depLB":889.0,"depServers":9066.0,"depHeavy":1518.0,"depOtherEq":3028.0,"depOtherAssets":599.0,"depPPE":15100,"amort":null,"da":null,"effDepRate":0.1518,"cogs":165536,"revenue":280522,"capexPctRev":0.0601,"daPctCogs":0,"deployFactor":0.5716,"adjFactor":1.0446,"lifeBuildings":40,"lifeServers":4,"lifeHeavy":10,"lifeOther":5,"grossProfit":114986,"grossMargin":0.4099},
+  2020:{"capex":40141,"grossLB":57324,"grossServers":52949.0,"grossHeavy":22170.0,"grossOtherEq":22105.0,"grossOtherAssets":3772,"grossCIP":15228,"depLB":1114.0,"depServers":9867.0,"depHeavy":1859.0,"depOtherEq":2852.0,"depOtherAssets":508.0,"depPPE":16200.0,"amort":8980.0,"da":25180,"effDepRate":0.1213,"cogs":233307,"revenue":386064,"capexPctRev":0.104,"daPctCogs":0.1079,"deployFactor":0.5388,"adjFactor":0.9475,"lifeBuildings":40,"lifeServers":4.5,"lifeHeavy":10,"lifeOther":6.5,"grossProfit":152757,"grossMargin":0.3957},
+  2021:{"capex":61053,"grossLB":81104,"grossServers":70082.0,"grossHeavy":29344.0,"grossOtherEq":29257.0,"grossOtherAssets":4118,"grossCIP":24895,"depLB":1686.0,"depServers":13946.0,"depHeavy":2628.0,"depOtherEq":4031.0,"depOtherAssets":610.0,"depPPE":22900.0,"amort":11533.0,"da":34433,"effDepRate":0.1254,"cogs":272344,"revenue":469822,"capexPctRev":0.1299,"daPctCogs":0.1264,"deployFactor":0.5799,"adjFactor":0.9976,"lifeBuildings":40,"lifeServers":4.5,"lifeHeavy":10,"lifeOther":6.5,"grossProfit":197478,"grossMargin":0.4203},
+  2022:{"capex":63645,"grossLB":91650,"grossServers":85754.0,"grossHeavy":35905.0,"grossOtherEq":35799.0,"grossOtherAssets":4602,"grossCIP":30020,"depLB":2012.0,"depServers":14039.0,"depHeavy":3233.0,"depOtherEq":4959.0,"depOtherAssets":657.0,"depPPE":24900.0,"amort":17021.0,"da":41921,"effDepRate":0.1085,"cogs":288831,"revenue":513983,"capexPctRev":0.1238,"daPctCogs":0.1451,"deployFactor":0.614,"adjFactor":0.9645,"lifeBuildings":40,"lifeServers":5.5,"lifeHeavy":10,"lifeOther":6.5,"grossProfit":225152,"grossMargin":0.4381},
+  2023:{"capex":52729,"grossLB":105293,"grossServers":100775.0,"grossHeavy":42194.0,"grossOtherEq":42070.0,"grossOtherAssets":5116,"grossCIP":28840,"depLB":2353.0,"depServers":17112.0,"depHeavy":3941.0,"depOtherEq":6045.0,"depOtherAssets":749.0,"depPPE":30200.0,"amort":18463.0,"da":48663,"effDepRate":0.112,"cogs":304739,"revenue":574785,"capexPctRev":0.0917,"daPctCogs":0.1597,"deployFactor":0.6199,"adjFactor":0.9889,"lifeBuildings":40,"lifeServers":5.5,"lifeHeavy":10,"lifeOther":6.5,"grossProfit":270046,"grossMargin":0.4698},
+  2024:{"capex":82999,"grossLB":123039,"grossServers":113156,"grossHeavy":52228,"grossOtherEq":53509,"grossOtherAssets":5487,"grossCIP":46636,"depLB":2603.0,"depServers":17054.0,"depHeavy":4555.0,"depOtherEq":7111.0,"depOtherAssets":777.0,"depPPE":32100,"amort":20695,"da":52795,"effDepRate":0.1017,"cogs":326288,"revenue":637959,"capexPctRev":0.1301,"daPctCogs":0.1618,"deployFactor":0.5591,"adjFactor":0.9467,"lifeBuildings":40,"lifeServers":6,"lifeHeavy":10,"lifeOther":6.5,"grossProfit":311671,"grossMargin":0.4885},
+  2025:{"capex":131819,"grossLB":155121,"grossServers":172492,"grossHeavy":65545,"grossOtherEq":63376,"grossOtherAssets":5819,"grossCIP":71745,"depLB":3159.0,"depServers":24500.0,"depHeavy":4894.0,"depOtherEq":8533.0,"depOtherAssets":814.0,"depPPE":41900.0,"amort":23856.0,"da":65756,"effDepRate":0.1053,"cogs":356414,"revenue":716924,"capexPctRev":0.1839,"daPctCogs":0.1845,"deployFactor":0.581,"adjFactor":0.9295,"lifeBuildings":40,"lifeServers":5.7,"lifeHeavy":11.5,"lifeOther":6.5,"grossProfit":360510,"grossMargin":0.5029},
+  2026:{"capex":221456.0,"grossLB":218610.0,"grossServers":277684.0,"grossHeavy":83261.0,"grossOtherEq":76663.0,"grossOtherAssets":6926.0,"grossCIP":92409.0,"depLB":4407.0,"depServers":39781.0,"depHeavy":6351.0,"depOtherEq":10517.0,"depOtherAssets":955.0,"depPPE":62012.0,"amort":24000,"da":86012.0,"effDepRate":0.1121,"cogs":398760.0,"revenue":831124.0,"capexPctRev":0.2665,"daPctCogs":0.2157,"deployFactor":0.5896,"adjFactor":0.955,"lifeBuildings":40,"lifeServers":5.7,"lifeHeavy":11.5,"lifeOther":6.5,"grossProfit":432363.0,"grossMargin":0.5202},
+  2027:{"capex":276820.0,"grossLB":298888.0,"grossServers":409173.0,"grossHeavy":105407.0,"grossOtherEq":93273.0,"grossOtherAssets":8310.0,"grossCIP":123600.0,"depLB":6069.0,"depServers":59962.0,"depHeavy":8036.0,"depOtherEq":12752.0,"depOtherAssets":1142.0,"depPPE":87962.0,"amort":24000,"da":111962.0,"effDepRate":0.1133,"cogs":1640111.0,"revenue":959800.0,"capexPctRev":0.2884,"daPctCogs":0.0683,"deployFactor":0.5825,"adjFactor":0.955,"lifeBuildings":40,"lifeServers":5.7,"lifeHeavy":11.5,"lifeOther":6.5,"grossProfit":null,"grossMargin":null},
+  2028:{"capex":346025.0,"grossLB":399235.0,"grossServers":573535.0,"grossHeavy":133089.0,"grossOtherEq":114034.0,"grossOtherAssets":10041.0,"grossCIP":175504.0,"depLB":8168.0,"depServers":85352.0,"depHeavy":10156.0,"depOtherEq":15565.0,"depOtherAssets":1376.0,"depPPE":120616.0,"amort":24000,"da":144616.0,"effDepRate":0.1143,"cogs":880952.0,"revenue":1101190.0,"capexPctRev":0.3142,"daPctCogs":0.1642,"deployFactor":0.5825,"adjFactor":0.955,"lifeBuildings":40,"lifeServers":5.7,"lifeHeavy":11.5,"lifeOther":6.5,"grossProfit":220238.0,"grossMargin":0.2},
 };
 // AMZN operating-expense & segment seed -- snapshot of 'DCF AMZN.xlsm' Segments tab, FY2018-FY2025 actuals.
 // By-function opex is CONSOLIDATED (Amazon discloses functional expense only company-wide, not by segment).
@@ -3071,14 +4346,14 @@ var A_CAPEX={
 // Segment lines: net sales + operating income by segment (NA / International / AWS). $mm.
 var A_OPEX_YEARS=[2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025];
 var A_OPEX={
-  2018:{"costOfSales":139156,"fulfillment":34027,"techInfra":28837,"marketing":13814,"gAdmin":4336,"otherOpex":-297,"shipping":27668,"usRev":141366,"intRev":65865,"awsRev":25656,"revenue":232887,"usOpInc":7267,"intOpInc":-2143,"awsOpInc":7296},
-  2019:{"costOfSales":165536,"fulfillment":40231,"techInfra":35932,"marketing":18879,"gAdmin":5203,"otherOpex":-201,"shipping":37946,"usRev":170773,"intRev":74723,"awsRev":35026,"revenue":280522,"usOpInc":7033,"intOpInc":-1694,"awsOpInc":9201},
-  2020:{"costOfSales":233307,"fulfillment":58516,"techInfra":42738,"marketing":22010,"gAdmin":6668,"otherOpex":74,"shipping":61116,"usRev":236282,"intRev":104412,"awsRev":45370,"revenue":386064,"usOpInc":8651,"intOpInc":717,"awsOpInc":13531},
-  2021:{"costOfSales":272344,"fulfillment":75111,"techInfra":56052,"marketing":32551,"gAdmin":8823,"otherOpex":-62,"shipping":76673,"usRev":279833,"intRev":127787,"awsRev":62202,"revenue":469822,"usOpInc":7271,"intOpInc":-924,"awsOpInc":18532},
-  2022:{"costOfSales":288831,"fulfillment":84299,"techInfra":73213,"marketing":42238,"gAdmin":11891,"otherOpex":-1263,"shipping":83520,"usRev":315880,"intRev":118007,"awsRev":80096,"revenue":513983,"usOpInc":-2847,"intOpInc":-7746,"awsOpInc":22841},
-  2023:{"costOfSales":304739,"fulfillment":90619,"techInfra":85622,"marketing":44370,"gAdmin":11816,"otherOpex":-767,"shipping":89480,"usRev":352828,"intRev":131200,"awsRev":90757,"revenue":574785,"usOpInc":14877,"intOpInc":-2656,"awsOpInc":24631},
-  2024:{"costOfSales":326288,"fulfillment":98505,"techInfra":88544,"marketing":43907,"gAdmin":11359,"otherOpex":-763,"shipping":95849,"usRev":387497,"intRev":142906,"awsRev":107556,"revenue":637959,"usOpInc":24967,"intOpInc":3792,"awsOpInc":39834},
-  2025:{"costOfSales":356414,"fulfillment":109074,"techInfra":108521,"marketing":47129,"gAdmin":11172,"otherOpex":-4639,"shipping":45865,"usRev":426305,"intRev":161894,"awsRev":128725,"revenue":716924,"usOpInc":29619,"intOpInc":4750,"awsOpInc":45606}
+  2018:{"costOfSales":139156,"fulfillment":34027,"techInfra":28837,"marketing":13814,"gAdmin":4336,"otherOpex":297,"shipping":27668,"usRev":141366,"intRev":65865,"awsRev":25656,"usOpex":134099,"intOpex":68008,"awsOpex":18360,"revenue":232887,"usOpInc":7267,"intOpInc":-2143,"awsOpInc":7296},
+  2019:{"costOfSales":165536,"fulfillment":40231,"techInfra":35932,"marketing":18879,"gAdmin":5203,"otherOpex":201,"shipping":37946,"usRev":170773,"intRev":74723,"awsRev":35026,"usOpex":163740,"intOpex":76417,"awsOpex":25825,"revenue":280522,"usOpInc":7033,"intOpInc":-1694,"awsOpInc":9201},
+  2020:{"costOfSales":233307,"fulfillment":58516,"techInfra":42738,"marketing":22010,"gAdmin":6668,"otherOpex":-74,"shipping":61116,"usRev":236282,"intRev":104412,"awsRev":45370,"usOpex":227631,"intOpex":103695,"awsOpex":31839,"revenue":386064,"usOpInc":8651,"intOpInc":717,"awsOpInc":13531},
+  2021:{"costOfSales":272344,"fulfillment":75111,"techInfra":56052,"marketing":32551,"gAdmin":8823,"otherOpex":62,"shipping":76673,"usRev":279833,"intRev":127787,"awsRev":62202,"usOpex":272562,"intOpex":128711,"awsOpex":43670,"revenue":469822,"usOpInc":7271,"intOpInc":-924,"awsOpInc":18532},
+  2022:{"costOfSales":288831,"fulfillment":84299,"techInfra":73213,"marketing":42238,"gAdmin":11891,"otherOpex":1263,"shipping":83520,"usRev":315880,"intRev":118007,"awsRev":80096,"usOpex":318727,"intOpex":125753,"awsOpex":57255,"revenue":513983,"usOpInc":-2847,"intOpInc":-7746,"awsOpInc":22841},
+  2023:{"costOfSales":304739,"fulfillment":90619,"techInfra":85622,"marketing":44370,"gAdmin":11816,"otherOpex":767,"shipping":89480,"usRev":352828,"intRev":131200,"awsRev":90757,"usOpex":337951,"intOpex":133856,"awsOpex":66126,"revenue":574785,"usOpInc":14877,"intOpInc":-2656,"awsOpInc":24631},
+  2024:{"costOfSales":326288,"fulfillment":98505,"techInfra":88544,"marketing":43907,"gAdmin":11359,"otherOpex":763,"shipping":95849,"usRev":387497,"intRev":142906,"awsRev":107556,"usOpex":362530,"intOpex":139114,"awsOpex":67722,"revenue":637959,"usOpInc":24967,"intOpInc":3792,"awsOpInc":39834},
+  2025:{"costOfSales":356414,"fulfillment":109074,"techInfra":108521,"marketing":47129,"gAdmin":11172,"otherOpex":4639,"shipping":45865,"usRev":426305,"intRev":161894,"awsRev":128725,"usOpex":396686,"intOpex":157144,"awsOpex":83119,"revenue":716924,"usOpInc":29619,"intOpInc":4750,"awsOpInc":45606},
 };
 // Functional expense lines (mutually exclusive, sum to total operating cost). Shipping excluded (memo/overlap).
 var A_OPEX_FN=[
@@ -3088,16 +4363,12 @@ var A_OPEX_FN=[
   {k:'marketing',lab:'Sales & marketing',c:GREEN},
   {k:'gAdmin',lab:'General & administrative',c:GRAY}
 ];
-// Segment operating-income registry (colours match the Top Line segment charts).
 var A_SEG_OI=[ {k:'usOpInc',lab:'North America',c:BRAND}, {k:'intOpInc',lab:'International',c:BRAND2}, {k:'awsOpInc',lab:'AWS',c:SQUID} ];
-
 // DCF baseline projection (what the model prints today) — for the engine-vs-model readout.
 var A_CAPEX_DCF={ 2026:{depPPE:62012,da:86012,eff:0.1121}, 2027:{depPPE:87962,da:111962,eff:0.1133}, 2028:{depPPE:120616,da:144616,eff:0.1143} };
-// Per-year deployment factor the DCF actually uses (from each year's quarterly capex seasonality). The
-// slider overrides this with a single flat assumption once the user moves it; until then the engine uses
-// these so the projection baseline ties to the model.
+// Per-year deployment factor the DCF actually uses (from each year's quarterly capex seasonality).
 var A_CX_DEPLOY={ 2026:0.5896, 2027:0.5825, 2028:0.5825 };
-// Asset-class registry — stack order (bottom→top) chosen for CVD-safe adjacency; portal brand palette.
+// Asset-class registry — stack order chosen for CVD-safe adjacency; portal brand palette.
 var A_CX_CLS=[
   {k:'Servers',     lab:'Servers & networking',      c:BRAND2,   gk:'grossServers',     dk:'depServers'},
   {k:'LB',          lab:'Land & buildings',          c:BRAND,    gk:'grossLB',          dk:'depLB'},
@@ -3106,7 +4377,34 @@ var A_CX_CLS=[
   {k:'OtherEq',     lab:'Other equipment',           c:SQUID,    gk:'grossOtherEq',     dk:'depOtherEq'},
   {k:'OtherAssets', lab:'Other assets',              c:GRAY,     gk:'grossOtherAssets', dk:'depOtherAssets'}
 ];
-// Control model — drives both the rendered sliders and the state read. def = DCF projection default.
+// Gross PP&E mix as a WAFFLE — 100 squares, each = 1% of the asset base, coloured by class.
+// You SEE short-life servers displace 40-yr buildings as you step the year — the mix shift that
+// bends depreciation up faster than capex. Pure CSS grid (no chart lib).
+// Gross PP&E mix as a WAFFLE — 100 squares, each = 1% of the asset base, coloured by class. Step the
+// year selector across the WHOLE series (FY19→FY28E) to watch short-life servers displace 40-yr
+// buildings — the mix shift that bends depreciation up faster than capex. Actuals per 10-K (Note 3);
+// FY26E-28E from the model's projection. Pure CSS grid (no chart lib).
+function aWaffleBody(){
+  var years=[2019,2020,2021,2022,2023,2024,2025,2026,2027,2028];
+  var btns=years.map(function(y){ return '<button type="button" data-wafyr="'+y+'"'+(y===2025?' class="active"':'')+'>FY'+String(y).slice(2)+(y>2025?'E':'')+'</button>'; }).join('');
+  return '<div class="ov-sec"><div class="ov-sec-h">Gross PP&amp;E mix — every square = 1% of the asset base</div>'+
+    '<div class="mch-ctl"><span></span><span class="acx-tog acx-wafyr" style="flex-wrap:wrap">'+btns+'</span></div>'+
+    '<div style="display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start;margin-top:8px">'+
+      '<div id="aWaffle" style="display:grid;grid-template-columns:repeat(10,1fr);gap:3px;width:min(300px,62vw);aspect-ratio:1"></div>'+
+      '<div id="aWaffleLeg" style="flex:1;min-width:210px"></div>'+
+    '</div></div>';
+}
+function aBuildWaffle(year){
+  var g=document.getElementById('aWaffle'), leg=document.getElementById('aWaffleLeg'); if(!g) return;
+  var s=A_CAPEX[year]; if(!s) return;
+  var vals=A_CX_CLS.map(function(c){ return {c:c, v:s[c.gk]||0}; }), tot=vals.reduce(function(a,x){ return a+x.v; },0);
+  var raw=vals.map(function(x){ return x.v/tot*100; }), cells=raw.map(Math.floor);
+  var rem=100-cells.reduce(function(a,b){ return a+b; },0);
+  raw.map(function(v,i){ return {i:i,f:v-Math.floor(v)}; }).sort(function(a,b){ return b.f-a.f; }).slice(0,rem).forEach(function(o){ cells[o.i]++; });
+  var sq=[]; vals.forEach(function(x,i){ for(var n=0;n<cells[i];n++) sq.push(x.c.c); });
+  g.innerHTML=sq.map(function(col){ return '<div style="background:'+col+';border-radius:2px;width:100%;aspect-ratio:1"></div>'; }).join('');
+  leg.innerHTML=vals.map(function(x,i){ return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="width:12px;height:12px;border-radius:3px;background:'+x.c.c+';flex:none"></span><span style="font-size:12px;font-weight:700;color:var(--navy);flex:1">'+x.c.lab+'</span><span style="font-size:12.5px;font-weight:800;color:var(--navy);width:34px;text-align:right">'+cells[i]+'%</span><span style="font-size:10.5px;color:var(--mu);width:54px;text-align:right">$'+(Math.round(x.v/1000))+'B</span></div>'; }).join('');
+}
 var A_CX_CTRLS=[
   {grp:'Capex path — YoY growth %'},
   {id:'g26',lab:'2026',min:-20,max:150,step:1,def:68,u:'%',warn:1},
@@ -3128,12 +4426,15 @@ var A_CX_CTRLS=[
   {id:'deploy',lab:'Deployment factor',min:0.3,max:1,step:0.005,def:0.5896,dec:3},
   {id:'adj',lab:'Prior-stock adjustment',min:0.85,max:1.05,step:0.001,def:0.955,dec:3}
 ];
+var A_CX_SCEN={
+  base:{ g26:68,g27:25,g28:25, mServers:47.5,mLB:23, lServers:5.7, deploy:null },
+  ai:{ g26:90,g27:45,g28:40, mServers:55,mLB:18, lServers:5.0, deploy:0.65 },
+  decel:{ g26:35,g27:8,g28:8, mServers:40,mLB:28, lServers:6.5, deploy:0.55 }
+};
 function acxRGBA(hex,a){ var h=hex.replace('#',''); var r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16); return 'rgba('+r+','+g+','+b+','+a+')'; }
 var acxFmt=function(n){ return n==null?'–':Math.round(n).toLocaleString('en-US'); };
 var acxB=function(n){ return n==null?'–':'$'+(Math.round(n/100)/10).toLocaleString('en-US')+'B'; };
 var acxPct=function(n,d){ return n==null?'–':(n*100).toFixed(d==null?1:d)+'%'; };
-
-// The engine — reproduces the DCF depreciation build given a state.
 function aCxRun(st){
   var base=A_CAPEX[2025], CIPCONV=0.40, LAND=0.05, AMORT=24000;
   var prev={LB:base.grossLB,Servers:base.grossServers,Heavy:base.grossHeavy,OtherEq:base.grossOtherEq,OtherAssets:base.grossOtherAssets,CIP:base.grossCIP};
@@ -3162,184 +4463,405 @@ function aCxState(root){
     life:{Servers:v('lServers'),Buildings:v('lBuildings'),Heavy:v('lHeavy'),Other:v('lOther')},
     deploy:touched?v('deploy'):null, adj:v('adj') };
 }
+var A_OPEXQ=[
+  {"p":"Q1 '24","yr":2024,"q":"Q1","costOfSales":72633,"fulfillment":22317,"techInfra":20424,"marketing":9662,"gAdmin":2742,"otherOpex":228,"revenue":143313},
+  {"p":"Q2 '24","yr":2024,"q":"Q2","costOfSales":73785,"fulfillment":23566,"techInfra":22304,"marketing":10512,"gAdmin":3041,"otherOpex":97,"revenue":147977},
+  {"p":"Q3 '24","yr":2024,"q":"Q3","costOfSales":80977,"fulfillment":24660,"techInfra":22245,"marketing":10609,"gAdmin":2713,"otherOpex":262,"revenue":158877},
+  {"p":"Q4 '24","yr":2024,"q":"Q4","costOfSales":98893,"fulfillment":27962,"techInfra":23571,"marketing":13124,"gAdmin":2863,"otherOpex":176,"revenue":187792},
+  {"p":"Q1 '25","yr":2025,"q":"Q1","costOfSales":76976,"fulfillment":24593,"techInfra":22994,"marketing":9763,"gAdmin":2628,"otherOpex":308,"revenue":155667},
+  {"p":"Q2 '25","yr":2025,"q":"Q2","costOfSales":80809,"fulfillment":25976,"techInfra":27166,"marketing":11416,"gAdmin":2965,"otherOpex":199,"revenue":167702},
+  {"p":"Q3 '25","yr":2025,"q":"Q3","costOfSales":88670,"fulfillment":27679,"techInfra":28962,"marketing":11686,"gAdmin":2875,"otherOpex":2875,"revenue":180169},
+  {"p":"Q4 '25","yr":2025,"q":"Q4","costOfSales":109959,"fulfillment":30826,"techInfra":29399,"marketing":14264,"gAdmin":2704,"otherOpex":1257,"revenue":213386},
+  {"p":"Q1 '26","yr":2026,"q":"Q1","costOfSales":87463,"fulfillment":27289,"techInfra":29567,"marketing":10314,"gAdmin":2587,"otherOpex":447,"revenue":181519},
+  {"p":"Q2 '26","yr":2026,"q":"Q2","costOfSales":95778,"fulfillment":29633,"techInfra":33158,"marketing":11698,"gAdmin":2788,"otherOpex":90,"revenue":200606},
+];
+// AMZN consensus estimate evolution -- BBG_CONSENSUS.txt snapshots (12 as-of dates). $B. k: E=estimate, A=reported actual.
+var A_CONS={"asof":["2023-10","2024-02","2024-05","2024-08","2024-11","2025-02","2025-05","2025-08","2025-11","2026-02","2026-05","2026-08"],"capex":{"2024":{"v":[46.4,55.4,59.3,67.6,73.8,83,83,83,83,null,null,null],"k":["E","E","E","E","E","A","A","A","A",null,null,null]},"2025":{"v":[47.3,59,62.9,74,81.7,101.1,103.9,114.4,122.9,131.8,131.8,131.8],"k":["E","E","E","E","E","E","E","E","E","A","A","A"]},"2026":{"v":[56,57.6,60.9,75.5,88.3,106.9,108.7,123.6,143.7,177,199,219.5],"k":["E","E","E","E","E","E","E","E","E","E","E","E"]},"2027":{"v":[58.3,60.8,63.8,79.6,85.7,105.9,109.7,129.5,163.6,202,221.7,278.2],"k":["E","E","E","E","E","E","E","E","E","E","E","E"]},"2028":{"v":[null,63,64.4,86,91.7,103.5,115.1,128.3,158.6,202.5,240.7,315.2],"k":[null,"E","E","E","E","E","E","E","E","E","E","E"]}},"dna":{"2024":{"v":[53.2,53.3,51.4,50.1,50.2,52.8,52.8,52.8,52.8,null,null,null],"k":["E","E","E","E","E","A","A","A","A",null,null,null]},"2025":{"v":[58,57.1,57.4,56.9,57.7,60.8,60.6,61.9,63.9,65.8,65.8,65.8],"k":["E","E","E","E","E","E","E","E","E","A","A","A"]},"2026":{"v":[58.8,60.8,62.6,62.5,64,68.9,68.5,72.7,78.2,84.7,86.6,86.1],"k":["E","E","E","E","E","E","E","E","E","E","E","E"]},"2027":{"v":[61,62.6,67.2,67.7,72.4,78.8,75.7,84.5,95.6,105.3,108.7,111.6],"k":["E","E","E","E","E","E","E","E","E","E","E","E"]},"2028":{"v":[null,65.5,68.9,71.6,76.4,85.6,83.8,94.4,108.8,122.6,131,143.1],"k":[null,"E","E","E","E","E","E","E","E","E","E","E"]}}};
+// AMZN quarterly capex & D&A -- snapshot of 'DCF AMZN.xlsm' (D&A tab quarterly blocks), Q1'19-Q4'28. $mm.
+var A_QTR_FIRST_PROJ=2026;
+var A_QTR=[
+  {"p":"Q1 '19","yr":2019,"q":"Q1","capex":3290,"da":4854,"amort":null,"dep":null,"proj":false},
+  {"p":"Q2 '19","yr":2019,"q":"Q2","capex":3562,"da":5202,"amort":null,"dep":null,"proj":false},
+  {"p":"Q3 '19","yr":2019,"q":"Q3","capex":4697,"da":5563,"amort":null,"dep":null,"proj":false},
+  {"p":"Q4 '19","yr":2019,"q":"Q4","capex":5312,"da":6170,"amort":null,"dep":null,"proj":false},
+  {"p":"Q1 '20","yr":2020,"q":"Q1","capex":6795,"da":5362,"amort":2245,"dep":3117,"proj":false},
+  {"p":"Q2 '20","yr":2020,"q":"Q2","capex":7459,"da":5748,"amort":2245,"dep":3503,"proj":false},
+  {"p":"Q3 '20","yr":2020,"q":"Q3","capex":11063,"da":6523,"amort":2245,"dep":4278,"proj":false},
+  {"p":"Q4 '20","yr":2020,"q":"Q4","capex":14824,"da":7618,"amort":2245,"dep":5373,"proj":false},
+  {"p":"Q1 '21","yr":2021,"q":"Q1","capex":12082,"da":7508,"amort":2883,"dep":4625,"proj":false},
+  {"p":"Q2 '21","yr":2021,"q":"Q2","capex":14288,"da":8038,"amort":2883,"dep":5155,"proj":false},
+  {"p":"Q3 '21","yr":2021,"q":"Q3","capex":15748,"da":8948,"amort":2883,"dep":6065,"proj":false},
+  {"p":"Q4 '21","yr":2021,"q":"Q4","capex":18935,"da":9867,"amort":2883,"dep":6984,"proj":false},
+  {"p":"Q1 '22","yr":2022,"q":"Q1","capex":14951,"da":8978,"amort":4255,"dep":4723,"proj":false},
+  {"p":"Q2 '22","yr":2022,"q":"Q2","capex":15724,"da":9594,"amort":4255,"dep":5339,"proj":false},
+  {"p":"Q3 '22","yr":2022,"q":"Q3","capex":16378,"da":10204,"amort":4255,"dep":5949,"proj":false},
+  {"p":"Q4 '22","yr":2022,"q":"Q4","capex":16592,"da":12685,"amort":4255,"dep":8430,"proj":false},
+  {"p":"Q1 '23","yr":2023,"q":"Q1","capex":14207,"da":11123,"amort":4616,"dep":6507,"proj":false},
+  {"p":"Q2 '23","yr":2023,"q":"Q2","capex":11455,"da":11589,"amort":4616,"dep":6973,"proj":false},
+  {"p":"Q3 '23","yr":2023,"q":"Q3","capex":12479,"da":12131,"amort":4616,"dep":7515,"proj":false},
+  {"p":"Q4 '23","yr":2023,"q":"Q4","capex":14588,"da":13820,"amort":4616,"dep":9204,"proj":false},
+  {"p":"Q1 '24","yr":2024,"q":"Q1","capex":14925,"da":11684,"amort":5174,"dep":6510,"proj":false},
+  {"p":"Q2 '24","yr":2024,"q":"Q2","capex":17620,"da":12038,"amort":5174,"dep":6864,"proj":false},
+  {"p":"Q3 '24","yr":2024,"q":"Q3","capex":22620,"da":13442,"amort":5174,"dep":8268,"proj":false},
+  {"p":"Q4 '24","yr":2024,"q":"Q4","capex":27834,"da":15631,"amort":5174,"dep":10457,"proj":false},
+  {"p":"Q1 '25","yr":2025,"q":"Q1","capex":25019,"da":14262,"amort":5964,"dep":8298,"proj":false},
+  {"p":"Q2 '25","yr":2025,"q":"Q2","capex":32183,"da":15227,"amort":5964,"dep":9263,"proj":false},
+  {"p":"Q3 '25","yr":2025,"q":"Q3","capex":35095,"da":16796,"amort":5964,"dep":10832,"proj":false},
+  {"p":"Q4 '25","yr":2025,"q":"Q4","capex":39522,"da":19471,"amort":5964,"dep":13507,"proj":false},
+  {"p":"Q1 '26","yr":2026,"q":"Q1","capex":44203,"da":18945,"amort":6000,"dep":12945,"proj":true},
+  {"p":"Q2 '26","yr":2026,"q":"Q2","capex":54208,"da":19988,"amort":6000,"dep":13988,"proj":true},
+  {"p":"Q3 '26","yr":2026,"q":"Q3","capex":59793,"da":22363,"amort":6000,"dep":16363,"proj":true},
+  {"p":"Q4 '26","yr":2026,"q":"Q4","capex":63252,"da":24716,"amort":6000,"dep":18716,"proj":true},
+  {"p":"Q1 '27","yr":2027,"q":"Q1","capex":55364,"da":24632,"amort":6000,"dep":18632,"proj":true},
+  {"p":"Q2 '27","yr":2027,"q":"Q2","capex":63669,"da":25751,"amort":6000,"dep":19751,"proj":true},
+  {"p":"Q3 '27","yr":2027,"q":"Q3","capex":74741,"da":29110,"amort":6000,"dep":23110,"proj":true},
+  {"p":"Q4 '27","yr":2027,"q":"Q4","capex":83046,"da":32469,"amort":6000,"dep":26469,"proj":true},
+  {"p":"Q1 '28","yr":2028,"q":"Q1","capex":69205,"da":31816,"amort":6000,"dep":25816,"proj":true},
+  {"p":"Q2 '28","yr":2028,"q":"Q2","capex":79586,"da":33262,"amort":6000,"dep":27262,"proj":true},
+  {"p":"Q3 '28","yr":2028,"q":"Q3","capex":93427,"da":37600,"amort":6000,"dep":31600,"proj":true},
+  {"p":"Q4 '28","yr":2028,"q":"Q4","capex":103807,"da":41939,"amort":6000,"dep":35939,"proj":true}
+];
+var A_CX_QSHARE={ cap:[0.1996,0.2448,0.2700,0.2856], da:[0.2203,0.2324,0.2599,0.2874] };
+// capex -> physical GW capacity (each GW ~ $34B: $23.3B chips + $10.7B infrastructure). Chip mix. $mm / GW.
+var A_GW_ECON={ perGW:33988, chipsPerGW:23300, infraPerGW:10688, chipShare:0.6855,
+  chipMix:[{n:'Trainium',share:0.40,c:'#146EB4'},{n:'Inferentia2',share:0.35,c:'#5B9BD5'},{n:'Blackwell H200',share:0.25,c:'#232F3E'}] };
+var A_GW={ 2019:{gw:0.5},2020:{gw:1.181},2021:{gw:1.796},2022:{gw:1.873},2023:{gw:1.551},2024:{gw:2.442},2025:{gw:3.878},2026:{gw:6.516},2027:{gw:8.145},2028:{gw:10.181} };
+// quarterly seasonality shares by year (capex & D&A as % of their year) -- the deployment cadence.
+var A_QSEAS={
+  2019:{cap:[0.195,0.211,0.279,0.315],da:null},2020:{cap:[0.169,0.186,0.276,0.369],da:[0.213,0.228,0.259,0.303]},
+  2021:{cap:[0.198,0.234,0.258,0.31],da:[0.218,0.233,0.26,0.287]},2022:{cap:[0.235,0.247,0.257,0.261],da:[0.214,0.229,0.243,0.303]},
+  2023:{cap:[0.269,0.217,0.237,0.277],da:[0.229,0.238,0.249,0.284]},2024:{cap:[0.18,0.212,0.273,0.335],da:[0.221,0.228,0.255,0.296]},
+  2025:{cap:[0.19,0.244,0.266,0.3],da:[0.217,0.232,0.255,0.296]},2026:{cap:[0.2,0.245,0.27,0.286],da:[0.22,0.232,0.26,0.287]},
+  2027:{cap:[0.2,0.23,0.27,0.3],da:[0.22,0.23,0.26,0.29]},2028:{cap:[0.2,0.23,0.27,0.3],da:[0.22,0.23,0.26,0.29]}
+};
+var A_QCOL=['#C6DBEF','#6BAED6','#2E7EBC','#0B3D66']; // Q1..Q4 sequential
+
 function bottomlineCapexBody(){
   var h='<style>'+
-    '.acx-wrap{display:grid;grid-template-columns:300px 1fr;gap:22px;align-items:start;margin-top:6px}'+
+    '.acx-wrap{display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start;margin-top:6px}'+
     '@media(max-width:900px){.acx-wrap{grid-template-columns:1fr}}'+
     '.acx-ctl{position:sticky;top:12px}'+
-    '.acx-grp{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--brand-2);margin:16px 0 8px;display:flex;align-items:center;gap:8px}'+
-    '.acx-grp:first-child{margin-top:2px}.acx-grp::after{content:"";flex:1;height:1px;background:var(--bdr)}'+
-    '.acx-grp .acx-sum{font-size:10px;font-weight:800;color:var(--mu)}'+
-    '.acx-row{margin-bottom:11px}'+
-    '.acx-rh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:3px}'+
+    '.acx-grp{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--brand-2);margin:15px 0 8px;display:flex;align-items:center;gap:8px}'+
+    '.acx-grp:first-child{margin-top:2px}.acx-grp::after{content:"";flex:1;height:1px;background:var(--bdr)}.acx-grp .acx-sum{font-size:10px;font-weight:800}'+
+    '.acx-row{margin-bottom:10px}.acx-rh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:3px}'+
     '.acx-rl{font-size:12px;font-weight:600;color:var(--navy)}'+
-    '.acx-rv{font-size:11.5px;font-weight:800;color:var(--brand-2);font-variant-numeric:tabular-nums;background:rgba(20,110,180,.08);border-radius:5px;padding:1px 7px;min-width:52px;text-align:right}'+
-    '.acx-wrap input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:3px;background:var(--bdr);outline:none;margin:2px 0 0}'+
-    '.acx-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--brand-2);border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:pointer}'+
-    '.acx-wrap input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--brand-2);border:2px solid #fff;cursor:pointer}'+
-    '.acx-wrap input.acx-warn::-webkit-slider-thumb{background:var(--brand)}.acx-wrap input.acx-warn::-moz-range-thumb{background:var(--brand)}'+
-    '.acx-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:9px;overflow:hidden;margin-bottom:16px}'+
+    '.acx-rv{font-size:11.5px;font-weight:800;color:var(--brand-2);font-variant-numeric:tabular-nums;background:rgba(20,110,180,.08);border-radius:5px;padding:1px 7px;min-width:50px;text-align:right}'+
+    '.acx-ctl input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:3px;background:var(--bdr);outline:none;margin:2px 0 0}'+
+    '.acx-ctl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--brand-2);border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:pointer}'+
+    '.acx-ctl input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--brand-2);border:2px solid #fff;cursor:pointer}'+
+    '.acx-ctl input.acx-warn::-webkit-slider-thumb{background:var(--brand)}.acx-ctl input.acx-warn::-moz-range-thumb{background:var(--brand)}'+
+    '.acx-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:9px;overflow:hidden;margin-bottom:14px}'+
     '@media(max-width:620px){.acx-kpis{grid-template-columns:repeat(2,1fr)}}'+
-    '.acx-kpi{background:var(--card,#fff);padding:11px 13px}'+
-    '.acx-kl{font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}'+
-    '.acx-kv{font-size:21px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;margin-top:2px;letter-spacing:-.02em}'+
-    '.acx-ks{font-size:10.5px;color:var(--mu);font-variant-numeric:tabular-nums;margin-top:1px}'+
-    '.acx-up{color:var(--brand-2);font-weight:700}.acx-dn{color:#D64545;font-weight:700}'+
-    '.acx-tog{display:inline-flex;gap:2px;background:rgba(0,0,0,.04);border:1px solid var(--bdr);border-radius:7px;padding:2px}'+
-    '.acx-tog button{border:none;background:none;font:inherit;font-size:10.5px;font-weight:700;color:var(--mu);padding:3px 10px;border-radius:5px;cursor:pointer}'+
-    '.acx-tog button.active{background:var(--brand-2);color:#fff}'+
-    '.acx-reset{border:1px solid var(--bdr);background:#fff;color:var(--navy);font:inherit;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:6px;padding:5px 10px;cursor:pointer}'+
-    '.acx-reset:hover{background:rgba(0,0,0,.03)}'+
-    '.acx-read{font-size:11.5px;color:var(--mu);font-variant-numeric:tabular-nums;margin:2px 0 0;line-height:1.5}'+
-    '.acx-read b{color:var(--navy)}'+
+    '.acx-kpi{background:var(--card,#fff);padding:10px 13px}.acx-kl{font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}'+
+    '.acx-kv{font-size:20px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;margin-top:2px;letter-spacing:-.02em}.acx-ks{font-size:10px;color:var(--mu);font-variant-numeric:tabular-nums;margin-top:1px}'+
+    /* match SAB pills (results.css .rs-views/.rs-view) so every toggle reads as one product */
+    '.acx-tog{display:inline-flex;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;flex-wrap:wrap}'+
+    '.acx-tog button{appearance:none;border:0;border-right:1px solid var(--bdr);background:#fff;font:600 12px Inter,sans-serif;color:var(--mu);padding:7px 16px;cursor:pointer}.acx-tog button:last-child{border-right:0}.acx-tog button:hover{color:var(--navy)}.acx-tog button.active{background:var(--navy);color:#fff}'+
+    '.acx-reset{border:1px solid var(--bdr);background:#fff;color:var(--navy);font:inherit;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:6px;padding:5px 10px;cursor:pointer}.acx-reset:hover{background:rgba(0,0,0,.03)}'+
+    '.acx-read{font-size:11px;color:var(--mu);font-variant-numeric:tabular-nums;margin:8px 0 0;line-height:1.5}.acx-read b{color:var(--navy)}'+
+    '.acx-cap{font-size:11px;color:var(--mu);line-height:1.45;margin-top:8px}.acx-cap b{color:var(--navy);font-weight:600}'+
+    '.mch-ctl{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin:8px 0 4px}'+
+    /* single dual-thumb range (Setup pattern) */
+    '.acx-slwrap{display:flex;align-items:center;gap:10px;margin:2px 0 4px}'+
+    '.acxsl{position:relative;height:26px;flex:1}'+
+    '.acxsl-track{position:absolute;left:0;right:0;top:11px;height:4px;background:var(--bdr);border-radius:2px}'+
+    '.acxsl-fill{position:absolute;top:0;height:100%;background:var(--brand-2);border-radius:2px}'+
+    '.acxsl-tk{position:absolute;left:0;right:0;top:0;height:26px;pointer-events:none}'+
+    '.acxsl-tk span{position:absolute;top:13px;width:5px;height:5px;border-radius:50%;transform:translate(-50%,-50%);background:#fff;border:1.5px solid #C7CED6}'+
+    '.acxsl-tk span.on{background:var(--brand-2);border-color:var(--brand-2)}.acxsl-tk span.on.est{opacity:.5}'+
+    '.acxsl input[type=range]{position:absolute;top:0;left:0;width:100%;height:26px;margin:0;background:none;pointer-events:none;-webkit-appearance:none;appearance:none}'+
+    '.acxsl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--brand-2);box-shadow:0 1px 3px rgba(0,0,0,.22);cursor:pointer}'+
+    '.acxsl input[type=range]::-moz-range-thumb{pointer-events:auto;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--brand-2);cursor:pointer}.acxsl input[type=range]::-moz-range-track{background:none}'+
+    '.acx-rp{border:1px solid var(--bdr);background:#fff;color:var(--mu);font:700 10.5px Inter,sans-serif;padding:3px 9px;border-radius:999px;cursor:pointer}.acx-rp:hover{color:var(--navy);border-color:var(--brand-2)}.acx-rp.active{background:var(--brand-2);color:#fff;border-color:var(--brand-2)}'+
+    '.acx-slend{font-size:10.5px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums;min-width:42px;text-align:center}'+
+    /* gdd-style economics bars */
+    '.acx-eb{display:flex;align-items:center;gap:10px;margin-bottom:7px}.acx-eb-l{width:120px;font-size:11px;font-weight:600;color:var(--navy);text-align:right;flex-shrink:0}'+
+    '.acx-eb-tr{flex:1;height:22px;background:rgba(0,0,0,.04);border-radius:5px;overflow:hidden}.acx-eb-f{height:100%;border-radius:5px;display:flex;align-items:center;padding:0 9px;font-size:10.5px;font-weight:700;color:#fff;white-space:nowrap}'+
+    '.acx-eb-v{width:80px;text-align:right;font-size:11px;font-weight:700;color:var(--mu);flex-shrink:0;font-variant-numeric:tabular-nums}'+
   '</style>';
-  h+='<p class="ov-lede"><b>The capex→depreciation engine.</b> Amazon’s $132B (FY25) capex is re-rating toward $200B+ as the AI build accelerates, and it flows into the P&L as depreciation on a lag set by <b>what</b> it buys (a 5.7-yr server vs a 40-yr building), <b>when</b> in the year it lands, and <b>how</b> the mix keeps shifting. This tool rebuilds that lag from the ground up across the full history and the projection — move any driver and the schedule, the mix, and the effective depreciation rate recompute. $mm unless noted; projection shaded lighter.</p>';
   h+='<div class="acx-kpis" id="acxKpis"></div>';
   h+='<div class="acx-wrap">';
-  // ── controls ──
-  h+='<aside class="acx-ctl"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--navy)">Assumptions</span><button type="button" class="acx-reset" id="acxReset">Reset to model</button></div>';
+  h+='<aside class="acx-ctl"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--navy)">Assumptions</span><button type="button" class="acx-reset" id="acxReset">Reset</button></div><div class="acx-scen" style="display:flex;gap:4px;margin:2px 0 10px;flex-wrap:wrap"><span style="font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);align-self:center;margin-right:2px">Scenario</span><button type="button" class="acx-rp active" data-scen="base">Base</button><button type="button" class="acx-rp" data-scen="ai">AI supercycle</button><button type="button" class="acx-rp" data-scen="decel">Deceleration</button></div>';
   A_CX_CTRLS.forEach(function(c){
     if(c.grp){ h+='<div class="acx-grp">'+esc(c.grp)+(c.sum?'<span class="acx-sum" id="acxSum"></span>':'')+'</div>'; return; }
     var disp=c.dec!=null?(+c.def).toFixed(c.dec):(c.def+(c.u||''));
     h+='<div class="acx-row"><div class="acx-rh"><span class="acx-rl">'+esc(c.lab)+'</span><span class="acx-rv" id="acxv_'+c.id+'">'+disp+'</span></div>'+
        '<input type="range" id="acx_'+c.id+'"'+(c.warn?' class="acx-warn"':'')+' min="'+c.min+'" max="'+c.max+'" step="'+c.step+'" value="'+c.def+'"></div>';
   });
-  h+='</aside>';
-  // ── charts ──
-  h+='<div>';
-  h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center">Gross PP&amp;E by asset class'+
-     '<span class="acx-tog acx-mixtog"><button type="button" data-acxmix="level" class="active">$B</button><button type="button" data-acxmix="share">% mix</button></span></div>'+
-     '<div style="height:300px"><canvas id="acxMix"></canvas></div>'+
-     '<div class="ov-fynote">The mix is the story the DCF’s flat-allocation assumption glosses over: servers &amp; networking climb from ~33% of gross PP&amp;E (2019) toward ~48% of every incremental capex dollar. Shorter-life servers displacing 40-yr buildings is what bends the depreciation curve up faster than the capex.</div></div>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">Depreciation build by asset class ($B) + amortization</div>'+
-     '<div style="height:300px"><canvas id="acxDA"></canvas></div>'+
-     '<p class="acx-read" id="acxRead"></p>'+
-     '<div class="ov-fynote">Each class = prior gross ÷ life × prior-stock adjustment (~0.955, the Goal-Seek plug) + current additions ÷ life × deployment factor (~0.59, the time-weighted first-year share). Amortization (intangibles) is held at the model’s $24B/yr. Given the mix, lives and timing, D&amp;A is fully determined — you allocate the capex, the depreciation follows.</div></div>';
-  h+='<div class="ov-sec"><div class="ov-sec-h">The bill vs the business (% of revenue)</div>'+
-     '<div style="height:280px"><canvas id="acxBill"></canvas></div>'+
-     '<div class="ov-fynote">Capex has jumped to ~27% of revenue while the depreciation it creates is still ramping (D&amp;A ~10% of revenue) — the gap is the capacity that installs 6–24 months before it bills. Gross margin is drawn through FY2026 (where the COGS split still reconciles); FY27–28 are omitted because the DCF’s forward segment COGS reconciles inconsistently there — flagged for the model owner, and shown as a gap rather than a wrong number.</div></div>';
-  h+='<div class="ov-callout"><ul class="ov-bullets">'+
-     '<li><b>Sensitize the timing, not an abstract knob.</b> The ~0.59 deployment factor is not a guess — it is Q1×1.0 + Q2×0.75 + Q3×0.5 + Q4×0.25 on the quarterly capex split. Amazon back-loads capex (Q4 ≈ 30%), so first-year depreciation is muted; a flatter cadence would pull D&amp;A forward.</li>'+
-     '<li><b>The flat-mix assumption is the real risk.</b> The model holds the allocation constant at 47.5% servers through 2028, but the historical mix has drifted every year. A 5-point shift toward servers (life 5.7) from buildings (life 40) adds materially to D&amp;A without adding a dollar of capex — flex the allocation sliders to see it.</li>'+
-     '<li><b>Capex and D&amp;A are one system.</b> You do not need to forecast depreciation separately — the effective rate (~11%, the depreciation ÷ average depreciable gross PP&amp;E) is the clean output, and it creeps up as the short-life mix compounds. That is the regression hiding inside the Goal-Seek.</li>'+
-     '</ul><div class="ov-fynote" style="margin-top:8px">Source: snapshot of <code>DCF AMZN.xlsm</code> (D&amp;A + Segments tabs). Actuals FY2019–FY2025 tie to the 10-K; FY2026–FY2028 is the Summit model projection. Engine reproduces the DCF PP&amp;E depreciation to within ~0.02%.</div></div>';
+  h+='</aside><div>';
+  // 1 · cycle
+  h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
+     '<span>The capex cycle — capex vs the depreciation it creates</span>'+
+     '<span style="display:flex;gap:6px;align-items:center"><span class="acx-tog acx-grantog"><button type="button" data-acxgran="q" class="active">Quarterly</button><button type="button" data-acxgran="y">Annual</button></span>'+
+     '<button type="button" class="acx-rp" data-acxrp="all">All</button><button type="button" class="acx-rp" data-acxrp="rep">Reported</button><button type="button" class="acx-rp" data-acxrp="fwd">Forward</button></span></div>'+
+     '<div class="acx-slwrap"><span class="acx-slend" id="acxr0lab"></span><div class="acxsl"><div class="acxsl-track"><div class="acxsl-fill" id="acxslFill"></div></div><div class="acxsl-tk" id="acxslTk"></div>'+
+       '<input type="range" id="acx_r0" min="0" max="1" value="0" step="1" aria-label="Start"><input type="range" id="acx_r1" min="0" max="1" value="1" step="1" aria-label="End"></div><span class="acx-slend" id="acxr1lab"></span></div>'+
+     '<div style="height:330px"><canvas id="acxCycle"></canvas></div>'+
+     '<div class="acx-cap">Bars = D&amp;A (depreciation + amortization). Line + shaded area = capex. The shaded gap above the bars is capacity installed <b>ahead of the P&amp;L</b> — cash out now, depreciation later. Lighter = projection.</div>'+
+     '<p class="acx-read" id="acxRead"></p></div>';
+  // 2 · GW deployments
+  h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center">What the capex buys — capacity in gigawatts'+
+     '<span class="acx-tog acx-gwtog"><button type="button" data-acxgw="y" class="active">Annual</button><button type="button" data-acxgw="q">Quarterly</button></span></div>'+
+     '<div style="height:250px"><canvas id="acxGW"></canvas></div>'+
+     '<div class="acx-cap" style="margin-bottom:8px"><b>~0.5 GW (2019) → ~10 GW (2028E).</b> Each GW of capacity costs ~$34B, and the split is where the money goes:</div>'+
+     '<div class="acx-eb"><div class="acx-eb-l">Chips (GPU/accelerators)</div><div class="acx-eb-tr"><div class="acx-eb-f" style="width:68.5%;background:'+BRAND2+'">68.5%</div></div><div class="acx-eb-v">$23.3B / GW</div></div>'+
+     '<div class="acx-eb"><div class="acx-eb-l">General infrastructure</div><div class="acx-eb-tr"><div class="acx-eb-f" style="width:31.5%;background:'+SQUID+'">31.5%</div></div><div class="acx-eb-v">$10.7B / GW</div></div>'+
+     '<div class="acx-cap">Chip mix per GW: Trainium 40% · Inferentia2 35% · Blackwell/H200 25% (blended ~$11.8k/chip). Source: DCF datacenter build assumptions.</div></div>';
+  // 3 · seasonality
+  h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center">Deployment cadence — quarters as % of the year<span class="acx-tog acx-seastog"><button type="button" data-acxseas="cap" class="active">Capex</button><button type="button" data-acxseas="da">D&amp;A</button></span></div>'+
+     '<div style="height:240px"><canvas id="acxSeas"></canvas></div>'+
+     '<div class="acx-cap">Capex is <b>back-loaded</b> (Q4 ~30–37%); D&amp;A is flatter. That gap is exactly why new capex depreciates so little in its first year — the <b>deployment factor ~0.59</b> the engine uses is this cadence, time-weighted.</div></div>';
+  // 4 · mix (full width, 4 colors, area)
+  h+=aWaffleBody();
+  // 5 · eff rate
+  h+='<div class="ov-sec"><div class="ov-sec-h">Effective depreciation rate</div><div style="height:220px"><canvas id="acxEff"></canvas></div>'+
+     '<div class="acx-cap">Depreciation ÷ average depreciable gross PP&amp;E (ex CIP &amp; land). The clean output — creeps up as the short-life mix compounds.</div></div>';
+  h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">Sensitivity — which driver moves D&amp;A most'+
+     '<span class="acx-tog acx-tornyr"><button type="button" data-tyr="2026">FY26</button><button type="button" data-tyr="2027">FY27</button><button type="button" data-tyr="2028" class="active">FY28</button></span></div>'+
+     '<div style="height:250px"><canvas id="acxTorn"></canvas></div>'+
+     '<div class="acx-cap">Each bar swings one driver across a plausible range while holding the rest at the model default; the dashed line is the base for the selected year. <b>Capex growth and server useful life move D&amp;A far more than allocation or the calibration factors</b> — that is where the forecast risk actually sits. Toggle FY26 → FY28 to watch the fan widen as the build compounds into the base.</div></div>';
+  h+='<div class="ov-sec"><div class="ov-sec-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
+     '<span>Consensus capex &amp; D&amp;A — how the estimates evolved</span>'+
+     '<span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+
+     '<span class="acx-tog acx-consgran"><button type="button" data-consgran="y" class="active">Evolution</button><button type="button" data-consgran="q">Quarterly</button></span>'+
+     '<span class="acx-tog acx-constog"><button type="button" data-acxcons="capex" class="active">Capex</button><button type="button" data-acxcons="dna">D&amp;A</button></span>'+
+     '<span class="acx-fychips" style="display:inline-flex;gap:4px;flex-wrap:wrap">'+'<button type="button" class="acx-rp" data-fy="2024">FY24</button>'+'<button type="button" class="acx-rp active" data-fy="2025">FY25</button>'+'<button type="button" class="acx-rp active" data-fy="2026">FY26</button>'+'<button type="button" class="acx-rp" data-fy="2027">FY27</button>'+'<button type="button" class="acx-rp" data-fy="2028">FY28</button>'+'</span></span></div>'+
+     '<div style="height:290px"><canvas id="acxCons"></canvas></div>'+
+     '<div class="acx-cap" id="acxConsCap"><b>Evolution</b>: consensus estimate per fiscal year across 12 Bloomberg snapshots — solid line <b>stops at the report date</b>, <b>dashed marks the actual</b>. <b>Quarterly</b>: the picked FY\'s four quarters (actuals solid, consensus faded). Source: BBG.</div></div>';
   h+='</div></div>';
   return h;
 }
-function aCxKPIs(root,rows,eng,st){
-  var el=root.querySelector('#acxKpis'); if(!el) return;
-  var r26=rows[A_CAPEX_YEARS.indexOf(2026)], r28=rows[A_CAPEX_YEARS.indexOf(2028)];
-  var capGrow=r26.capex/A_CAPEX[2025].capex-1;
-  var daDelta=eng[2026].da-A_CAPEX_DCF[2026].da;
-  var servShare28=r28.gross.Servers/(r28.gross.Servers+r28.gross.LB+r28.gross.Heavy+r28.gross.OtherEq+r28.gross.OtherAssets+r28.gross.CIP);
-  var k=[
-    {l:'FY26 capex',v:acxB(r26.capex),s:'<span class="'+(capGrow>=0?'acx-up':'acx-dn')+'">'+(capGrow>=0?'+':'')+acxPct(capGrow,0)+'</span> YoY'},
-    {l:'FY26 D&A',v:acxB(r26.da),s:'vs model '+acxB(A_CAPEX_DCF[2026].da)+' <span class="'+(Math.abs(daDelta)<50?'':(daDelta>0?'acx-up':'acx-dn'))+'">'+(Math.abs(daDelta)<50?'':(daDelta>0?'+':'')+acxFmt(daDelta))+'</span>'},
-    {l:'FY26 eff. dep rate',v:acxPct(r26.eff),s:'implied life '+(1/r26.eff).toFixed(1)+' yr'},
-    {l:'FY28 servers share',v:acxPct(servShare28,0),s:'of gross PP&E'}
-  ];
-  el.innerHTML=k.map(function(x){ return '<div class="acx-kpi"><div class="acx-kl">'+x.l+'</div><div class="acx-kv">'+x.v+'</div><div class="acx-ks">'+x.s+'</div></div>'; }).join('');
-}
-function aCxReadout(root,eng,st){
-  var el=root.querySelector('#acxRead'); if(!el) return;
-  var d28=eng[2028].da, m28=A_CAPEX_DCF[2028].da, delta=d28-m28;
-  el.innerHTML='Engine FY28 D&A <b>'+acxB(d28)+'</b> vs model <b>'+acxB(m28)+'</b> ('+(delta>=0?'+':'')+acxFmt(delta)+' mm) · blended implied life <b>'+(1/eng[2028].eff).toFixed(1)+' yr</b> · deployment factor <b>'+(st.deploy!=null?st.deploy.toFixed(3):'model (seasonality)')+'</b>, prior-stock adj <b>'+st.adj.toFixed(3)+'</b>.';
-}
-function aCxRows(root){
+function aCxAnnual(root){
   var st=aCxState(root), eng=aCxRun(st);
-  var rows=A_CAPEX_YEARS.map(function(y){
-    var s=A_CAPEX[y], proj=y>=A_CAPEX_FIRST_PROJ, e=proj?eng[y]:null, gross={}, dep={};
-    A_CX_CLS.forEach(function(c){ gross[c.k]=proj?e.gross[c.k]:s[c.gk]; dep[c.k]=c.dk?(proj?e.dep[c.k]:s[c.dk]):0; });
-    var capex=proj?e.capex:s.capex, da=proj?e.da:s.da, depPPE=proj?e.depPPE:s.depPPE, eff=proj?e.eff:s.effDepRate, rev=s.revenue;
-    return {y:y,proj:proj,gross:gross,dep:dep,amort:proj?e.amort:s.amort,capex:capex,da:da,depPPE:depPPE,eff:eff,rev:rev,
-      capexPctRev:rev?capex/rev:null, daPctRev:(da&&rev)?da/rev:null,
-      gm:(s.grossMargin&&s.grossMargin>0.3)?s.grossMargin:null };
-  });
+  var rows=A_CAPEX_YEARS.map(function(y){ var s=A_CAPEX[y], proj=y>=A_CAPEX_FIRST_PROJ, e=proj?eng[y]:null, gross={};
+    A_CX_CLS.forEach(function(c){ gross[c.k]=proj?e.gross[c.k]:s[c.gk]; });
+    return {y:y,proj:proj,gross:gross,capex:proj?e.capex:s.capex,depPPE:proj?e.depPPE:s.depPPE,da:proj?e.da:s.da,eff:proj?e.eff:s.effDepRate}; });
   return {rows:rows,eng:eng,st:st};
 }
-function aCxLabel(y){ return "’"+String(y).slice(2)+(y>=A_CAPEX_FIRST_PROJ?'E':''); }
-function aCxMixChart(root,rows,mode){
-  var cv=aChartReady('acxMix'); if(!cv) return; aDestroy('acxMix');
-  var share=mode==='share';
-  var totals=rows.map(function(r){ return A_CX_CLS.reduce(function(a,c){ return a+r.gross[c.k]; },0); });
-  var ds=A_CX_CLS.map(function(c){
-    return { label:c.lab, data:rows.map(function(r,i){ var v=r.gross[c.k]; return share?(v/totals[i]*100):v/1000; }),
-      backgroundColor:rows.map(function(r){ return r.proj?acxRGBA(c.c,0.6):c.c; }), borderColor:'#fff', borderWidth:1, maxBarThickness:38, stack:'g' };
-  });
-  _aCharts['acxMix']=new Chart(cv.getContext('2d'),{ type:'bar',
-    data:{ labels:rows.map(function(r){ return aCxLabel(r.y); }), datasets:ds },
-    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
-        tooltip:{ callbacks:{ label:function(x){ return x.dataset.label+': '+(share?x.parsed.y.toFixed(1)+'%':'$'+x.parsed.y.toFixed(0)+'B'); } } } },
-      scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, max:share?100:undefined,
-        ticks:{ callback:function(v){ return share?v+'%':'$'+v+'B'; } } } } } });
+function aCxKPIs(root,a){
+  var el=root.querySelector('#acxKpis'); if(!el) return;
+  var r26=a.rows[A_CAPEX_YEARS.indexOf(2026)], r28=a.rows[A_CAPEX_YEARS.indexOf(2028)];
+  var gap26=r26.capex-r26.da, capGrow=r26.capex/A_CAPEX[2025].capex-1;
+  var gw28=r28.capex/A_GW_ECON.perGW;
+  var k=[ {l:'FY26 capex',v:acxB(r26.capex),s:(capGrow>=0?'+':'')+acxPct(capGrow,0)+' YoY'},
+    {l:'FY26 D&A',v:acxB(r26.da),s:'eff '+acxPct(r26.eff)},
+    {l:'FY26 capex − D&A',v:acxB(gap26),s:'ahead of P&L'},
+    {l:'FY28 capacity',v:gw28.toFixed(1)+' GW',s:'≈ $34B / GW'} ];
+  el.innerHTML=k.map(function(x){ return '<div class="acx-kpi"><div class="acx-kl">'+x.l+'</div><div class="acx-kv">'+x.v+'</div><div class="acx-ks">'+x.s+'</div></div>'; }).join('');
 }
-function aCxDAChart(root,rows){
-  var cv=aChartReady('acxDA'); if(!cv) return; aDestroy('acxDA');
-  var ds=A_CX_CLS.filter(function(c){ return c.dk; }).map(function(c){
-    return { label:c.lab, data:rows.map(function(r){ return r.dep[c.k]/1000; }),
-      backgroundColor:rows.map(function(r){ return r.proj?acxRGBA(c.c,0.6):c.c; }), borderColor:'#fff', borderWidth:1, maxBarThickness:38, stack:'d' };
-  });
-  ds.push({ label:'Amortization', data:rows.map(function(r){ return r.amort!=null?r.amort/1000:null; }),
-    backgroundColor:rows.map(function(r){ return r.proj?acxRGBA('#C8B49A',0.6):'#C8B49A'; }), borderColor:'#fff', borderWidth:1, maxBarThickness:38, stack:'d' });
-  _aCharts['acxDA']=new Chart(cv.getContext('2d'),{ type:'bar',
-    data:{ labels:rows.map(function(r){ return aCxLabel(r.y); }), datasets:ds },
-    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
-        tooltip:{ callbacks:{ label:function(x){ return x.dataset.label+': $'+x.parsed.y.toFixed(1)+'B'; },
-          footer:function(items){ var t=items.reduce(function(a,it){ return a+it.parsed.y; },0); return 'Total D&A: $'+t.toFixed(1)+'B'; } } } },
-      scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } });
+function aCxReadout(root,a){
+  var el=root.querySelector('#acxRead'); if(!el) return; var d28=a.eng[2028].da, m28=A_CAPEX_DCF[2028].da, delta=d28-m28, st=a.st;
+  el.innerHTML='Engine FY28 D&A <b>'+acxB(d28)+'</b> vs model <b>'+acxB(m28)+'</b> ('+(delta>=0?'+':'')+acxFmt(delta)+' mm) · implied life <b>'+(1/a.eng[2028].eff).toFixed(1)+' yr</b> · deployment <b>'+(st.deploy!=null?st.deploy.toFixed(3):'model')+'</b>, prior-stock adj <b>'+st.adj.toFixed(3)+'</b>.';
 }
-function aCxBillChart(root,rows){
-  var cv=aChartReady('acxBill'); if(!cv) return; aDestroy('acxBill');
-  function line(key,lab,col,dash){ return { label:lab, data:rows.map(function(r){ return r[key]!=null?r[key]*100:null; }),
-    borderColor:col, backgroundColor:col, borderWidth:2, pointRadius:2.5, tension:0.25, spanGaps:true, borderDash:dash||[] }; }
-  _aCharts['acxBill']=new Chart(cv.getContext('2d'),{ type:'line',
-    data:{ labels:rows.map(function(r){ return aCxLabel(r.y); }), datasets:[
-      line('capexPctRev','Capex / revenue',BRAND),
-      line('daPctRev','D&A / revenue',BRAND2),
-      line('gm','Gross margin (actuals)',GREEN,[5,4]) ] },
+function aCxTimeline(root,gran){
+  var st=aCxState(root), eng=aCxRun(st), out=[];
+  if(gran==='y'){ A_CAPEX_YEARS.forEach(function(y){ var s=A_CAPEX[y], proj=y>=A_CAPEX_FIRST_PROJ, e=proj?eng[y]:null;
+    var dep=proj?e.depPPE:(s.depPPE||0), am=proj?e.amort:(s.amort||0), da=proj?e.da:(s.da||dep+am);
+    if(!proj&&!s.amort){ am=0; dep=s.depPPE||0; da=s.da||dep; }
+    out.push({p:"'"+String(y).slice(2),capex:proj?e.capex:s.capex,dep:dep,amort:am,da:da,proj:proj}); });
+  } else { A_QTR.forEach(function(t){ if(t.yr<A_CAPEX_FIRST_PROJ) out.push({p:t.p,capex:t.capex,dep:t.dep!=null?t.dep:t.da,amort:t.amort||0,da:t.da,proj:false}); });
+    [2026,2027,2028].forEach(function(y){ var e=eng[y], amq=e.amort/4; for(var i=0;i<4;i++){ var da=e.da*A_CX_QSHARE.da[i]; out.push({p:['Q1','Q2','Q3','Q4'][i]+" '"+String(y).slice(2),capex:e.capex*A_CX_QSHARE.cap[i],dep:da-amq,amort:amq,da:da,proj:true}); } }); }
+  return out;
+}
+function aCxWin(root,n){
+  var pane=root.querySelector('.ovt-subpane[data-ovst="capex"]'); var w=pane&&pane._acxWin;
+  if(!w||w[1]>=n||w[0]<0||w[0]>w[1]) w=[0,n-1]; return w;
+}
+function aCxLastAct(gran){ return gran==='y'? A_CAPEX_YEARS.indexOf(2025) : 27; }
+function aCxSyncRange(root,gran,tl){
+  var n=tl.length, w=aCxWin(root,n), r0=root.querySelector('#acx_r0'), r1=root.querySelector('#acx_r1');
+  if(r0){ r0.max=n-1; r0.value=w[0]; } if(r1){ r1.max=n-1; r1.value=w[1]; }
+  var fill=root.querySelector('#acxslFill'); if(fill){ fill.style.left=(w[0]/(n-1)*100)+'%'; fill.style.width=((w[1]-w[0])/(n-1)*100)+'%'; }
+  var l0=root.querySelector('#acxr0lab'), l1=root.querySelector('#acxr1lab'); if(l0) l0.textContent=tl[w[0]].p; if(l1) l1.textContent=tl[w[1]].p;
+  var tk=root.querySelector('#acxslTk'); if(tk){ var la=aCxLastAct(gran), h=''; for(var i=0;i<n;i++){ h+='<span class="'+('on'.repeat(i>=w[0]&&i<=w[1]?1:0)+(i>la?' est':''))+'" style="left:'+(i/(n-1)*100)+'%"></span>'; } tk.innerHTML=h.replace(/class="est/g,'class=" est').replace(/class=""/g,'class=""'); }
+}
+function aCxCycleChart(root){
+  var cv=aChartReady('acxCycle'); if(!cv) return; aDestroy('acxCycle');
+  var g=root.querySelector('.acx-grantog .active'), gran=g?g.getAttribute('data-acxgran'):'q';
+  var tl=aCxTimeline(root,gran), n=tl.length, w=aCxWin(root,n), view=tl.slice(w[0],w[1]+1);
+  aCxSyncRange(root,gran,tl);
+  var barA=function(base){ return view.map(function(d){ return d.proj?acxRGBA(base,0.5):base; }); };
+  _aCharts['acxCycle']=new Chart(cv.getContext('2d'),{ type:'bar',
+    data:{ labels:view.map(function(d){ return d.p; }), datasets:[
+      { type:'line', label:'Capex', data:view.map(function(d){ return d.capex/1000; }), borderColor:SQUID, backgroundColor:acxRGBA(SQUID,0.10), borderWidth:2, pointRadius:0, tension:0.2, fill:'origin', order:2 },
+      { label:'Depreciation', data:view.map(function(d){ return d.dep/1000; }), backgroundColor:barA(BRAND2), stack:'da', maxBarThickness:30, order:1 },
+      { label:'Amortization', data:view.map(function(d){ return d.amort/1000; }), backgroundColor:barA(GRAY), stack:'da', maxBarThickness:30, order:1 } ] },
     options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
       plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
-        tooltip:{ callbacks:{ label:function(x){ return x.dataset.label+': '+(x.parsed.y==null?'–':x.parsed.y.toFixed(1)+'%'); } } } },
-      scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } } } } });
+        tooltip:{ callbacks:{ label:function(x){ return x.dataset.label+': $'+x.parsed.y.toFixed(1)+'B'; }, footer:function(it){ var d=view[it[0].dataIndex]; return 'Capex − D&A gap: $'+((d.capex-d.da)/1000).toFixed(1)+'B'; } } } },
+      scales:{ x:{ stacked:true, grid:{ display:false }, ticks:{ font:{ size:11 }, maxRotation:0, autoSkip:true } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); aZoom('acxCycle');
+}
+function aCxGWChart(root){
+  var cv=aChartReady('acxGW'); if(!cv) return; aDestroy('acxGW');
+  var g=root.querySelector('.acx-gwtog .active'), q=g&&g.getAttribute('data-acxgw')==='q';
+  var eng=aCxRun(aCxState(root)); var labels=[], chips=[], infra=[], projF=[];
+  function push(lab,capex,proj){ var gw=capex/A_GW_ECON.perGW; labels.push(lab); chips.push(gw*A_GW_ECON.chipShare); infra.push(gw*(1-A_GW_ECON.chipShare)); projF.push(proj); }
+  if(q){ A_QTR.forEach(function(t){ if(t.yr<A_CAPEX_FIRST_PROJ) push(t.p,t.capex,false); }); [2026,2027,2028].forEach(function(y){ for(var i=0;i<4;i++) push(['Q1','Q2','Q3','Q4'][i]+" '"+String(y).slice(2), eng[y].capex*A_CX_QSHARE.cap[i], true); }); }
+  else { A_CAPEX_YEARS.forEach(function(y){ var proj=y>=A_CAPEX_FIRST_PROJ; push("'"+String(y).slice(2), proj?eng[y].capex:A_CAPEX[y].capex, proj); }); }
+  var cA=function(base){ return projF.map(function(p){ return p?acxRGBA(base,0.5):base; }); };
+  _aCharts['acxGW']=new Chart(cv.getContext('2d'),{ type:'bar',
+    data:{ labels:labels, datasets:[
+      { label:'Chips (GPU)', data:chips, backgroundColor:cA(BRAND2), stack:'gw', maxBarThickness:30 },
+      { label:'Infrastructure', data:infra, backgroundColor:cA(SQUID), stack:'gw', maxBarThickness:30 } ] },
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
+        tooltip:{ callbacks:{ label:function(x){ return x.dataset.label+': '+x.parsed.y.toFixed(2)+' GW'; }, footer:function(it){ return 'Total: '+it.reduce(function(a,x){ return a+x.parsed.y; },0).toFixed(2)+' GW'; } } } },
+      scales:{ x:{ stacked:true, grid:{ display:false }, ticks:{ font:{ size:11 }, autoSkip:true } }, y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+' GW'; } } } } } }); aZoom('acxGW');
+}
+function aCxSeasChart(root){
+  var tg=root.querySelector('.acx-seastog .active'), key=tg?tg.getAttribute('data-acxseas'):'cap';
+  var cv=aChartReady('acxSeas'); if(!cv) return; aDestroy('acxSeas');
+  var yrs=A_CAPEX_YEARS.filter(function(y){ return A_QSEAS[y] && A_QSEAS[y][key]; });
+  var ds=[0,1,2,3].map(function(qi){ return { label:'Q'+(qi+1), data:yrs.map(function(y){ return Math.round(A_QSEAS[y][key][qi]*1000)/10; }), backgroundColor:A_QCOL[qi], stack:'s', maxBarThickness:26, borderColor:'#fff', borderWidth:0.5 }; });
+  _aCharts['acxSeas']=new Chart(cv.getContext('2d'),{ type:'bar',
+    data:{ labels:yrs.map(function(y){ return "'"+String(y).slice(2); }), datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:8, font:{ size:11 } } }, tooltip:{ callbacks:{ label:function(x){ return x.dataset.label+': '+x.parsed.y+'%'; } } } },
+      scales:{ x:{ stacked:true, grid:{ display:false }, ticks:{ font:{ size:11 } } }, y:{ stacked:true, max:100, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:11 }, callback:function(v){ return v+'%'; } } } } } }); aZoom('acxSeas');
+}
+var A_CX_MIX4=[ {k:'Servers',lab:'Servers & networking',c:BRAND2,ks:['Servers']}, {k:'LB',lab:'Land & buildings',c:BRAND,ks:['LB']},
+  {k:'CIP',lab:'Construction in progress',c:'#7A5AF8',ks:['CIP']}, {k:'Other',lab:'Other equipment & assets',c:GRAY,ks:['Heavy','OtherEq','OtherAssets']} ];
+function aCxEffChart(root){
+  var cv=aChartReady('acxEff'); if(!cv) return; aDestroy('acxEff');
+  var rows=aCxAnnual(root).rows;
+  _aCharts['acxEff']=new Chart(cv.getContext('2d'),{ type:'line',
+    data:{ labels:rows.map(function(r){ return "'"+String(r.y).slice(2); }), datasets:[ { label:'Effective dep rate', data:rows.map(function(r){ return Math.round(r.eff*1000)/10; }),
+      borderColor:BRAND2, backgroundColor:acxRGBA(BRAND2,0.08), borderWidth:2.5, pointRadius:2.5, tension:0.25, fill:'origin',
+      segment:{ borderDash:function(ctx){ return rows[ctx.p1DataIndex]&&rows[ctx.p1DataIndex].proj?[5,4]:undefined; } } } ] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(x){ return 'Eff. rate: '+x.parsed.y+'%'; } } } },
+      scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:11 } } }, y:{ position:'right', grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{ size:11 }, callback:function(v){ return v+'%'; } } } } } }); aZoom('acxEff');
+}
+function aCxConsChart(root){
+  var cv=aChartReady('acxCons'); if(!cv) return; aDestroy('acxCons');
+  var tg=root.querySelector('.acx-constog .active'), metric=tg?tg.getAttribute('data-acxcons'):'capex';
+  var gg=root.querySelector('.acx-consgran .active'), gran=gg?gg.getAttribute('data-consgran'):'y', capEl=root.querySelector('#acxConsCap');
+  if(gran==='q'){   // quarterly levels for the picked FY (4 quarters max), BBG quarterly capex/D&A
+    var act=[]; root.querySelectorAll('.acx-fychips .acx-rp.active').forEach(function(b){ act.push(+b.getAttribute('data-fy')); });
+    var fy=(act.indexOf(2026)>=0)?2026:(act.length?act[0]:2026);
+    var qmap={'2Q25':2025,'3Q25':2025,'4Q25':2025,'1Q26':2026,'2Q26':2026,'3Q26E':2026,'4Q26E':2026,'1Q27E':2027,'2Q27E':2027};
+    var ser=(metric==='capex')?amznBBG.is.capex.q:amznBBG.is.depr.q;
+    var idxs=amznBBG.qtrs.map(function(q,i){ return {q:q,i:i,y:qmap[q]}; }).filter(function(o){ return o.y===fy; });
+    var vals=idxs.map(function(o){ return ser[o.i]==null?null:Math.round(Math.abs(ser[o.i])/100)/10; });
+    var fwd=idxs.map(function(o){ return o.i>4; }), col=(metric==='capex')?BRAND2:SQUID;
+    _aCharts['acxCons']=new Chart(cv.getContext('2d'),{ type:'bar',
+      data:{ labels:idxs.map(function(o){ return o.q; }), datasets:[{ label:(metric==='capex'?'Capex':'D&A'), data:vals, backgroundColor:vals.map(function(_,i){ return fwd[i]?acxRGBA(col,0.45):col; }), borderColor:'#fff', borderWidth:1, maxBarThickness:64 }] },
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ return '$'+c.parsed.y.toFixed(1)+'B'+(fwd[c.dataIndex]?' (consensus)':' (actual)'); } } } },
+        scales:{ x:{ grid:{ display:false } }, y:{ position:'right', grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); aZoom('acxCons');
+    if(capEl) capEl.innerHTML='<b>FY'+String(fy).slice(2)+' quarterly '+(metric==='capex'?'capex':'D&A')+'</b> — actuals solid, consensus faded. '+(idxs.length<4?'<span style="color:#B7791F">Only '+idxs.length+' quarters sit in the BBG window (2Q25→2Q27E); FY26 is the only complete four — pick FY26.</span>':'The four quarters, and where they actually landed.')+' Source: BBG.';
+    return;
+  }
+  var data=A_CONS[metric], labels=A_CONS.asof;
+  var sel={}; root.querySelectorAll('.acx-fychips .acx-rp.active').forEach(function(b){ sel[b.getAttribute('data-fy')]=1; });
+  var COL={'2024':GRAY,'2025':GREEN,'2026':BRAND,'2027':BRAND2,'2028':SQUID}, ds=[], acts=[];
+  ['2024','2025','2026','2027','2028'].forEach(function(fy){ if(!sel[fy]||!data[fy]) return; var d=data[fy], c=COL[fy], ri=d.k.indexOf('A');
+    ds.push({ label:'FY'+fy, data:d.v.map(function(v,i){ return (ri<0||i<=ri)?v:null; }), borderColor:c, backgroundColor:c, borderWidth:2, tension:0.2, spanGaps:false,
+      pointRadius:d.k.map(function(k,i){ return (i===ri)?5:2; }), pointStyle:d.k.map(function(k,i){ return (i===ri)?'rectRot':'circle'; }), pointBackgroundColor:c });
+    if(ri>=0) acts.push({ y:d.v[ri], x0:Math.max(0,ri-1), col:c, fy:fy });
+  });
+  var plugin={ id:'acxActuals', afterDatasetsDraw:function(ch){ var yS=ch.scales.y, xS=ch.scales.x, area=ch.chartArea; if(!yS||!xS||!area) return;
+    acts.forEach(function(a){ var y=yS.getPixelForValue(a.y); if(y<area.top||y>area.bottom) return; var x1=Math.max(area.left,xS.getPixelForValue(a.x0)), ctx=ch.ctx;
+      ctx.save(); ctx.setLineDash([3,4]); ctx.lineWidth=1.5; ctx.strokeStyle=a.col; ctx.globalAlpha=.8; ctx.beginPath(); ctx.moveTo(x1,y); ctx.lineTo(area.right,y); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha=1; ctx.font='700 9px Inter,sans-serif'; ctx.fillStyle=a.col; ctx.textAlign='right'; ctx.textBaseline='bottom'; ctx.fillText('FY'+a.fy+' actual $'+Math.round(a.y)+'B', area.right-3, y-2); ctx.restore(); }); } };
+  _aCharts['acxCons']=new Chart(cv.getContext('2d'),{ type:'line', plugins:[plugin],
+    data:{ labels:labels, datasets:ds },
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'nearest', intersect:false },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } },
+        tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+' est: $'+c.parsed.y+'B'; } } } },
+      scales:{ x:{ grid:{ display:false }, ticks:{ font:{ size:11 } } }, y:{ position:'right', grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); aZoom('acxCons');
+}
+function aCxTornado(root){
+  var cv=aChartReady('acxTorn'); if(!cv) return; aDestroy('acxTorn');
+  var yb=root?root.querySelector('.acx-tornyr .active'):null, yr=yb?+yb.getAttribute('data-tyr'):2028;
+  var d0={ g:[68,25,25], mix:{Servers:0.475,LB:0.23,CIP:0.15,Heavy:0.08,OtherEq:0.06,OtherAssets:0.005}, life:{Servers:5.7,Buildings:40,Heavy:11.5,Other:6.5}, deploy:null, adj:0.955 };
+  function da(st){ return aCxRun(st)[yr].da/1000; }
+  function clone(){ return { g:d0.g.slice(), mix:Object.assign({},d0.mix), life:Object.assign({},d0.life), deploy:d0.deploy, adj:d0.adj }; }
+  function mk(lab,loFn,hiFn){ var lo=clone(); loFn(lo); var hi=clone(); hiFn(hi); var a=da(lo), b=da(hi); return { lab:lab, min:Math.min(a,b), max:Math.max(a,b), range:Math.abs(a-b) }; }
+  var base=da(d0);
+  var rows=[
+    mk('Capex growth  (±15pp / yr)', function(s){ s.g=[53,10,10]; }, function(s){ s.g=[83,40,40]; }),
+    mk('Server useful life  (5.7 ±1 yr)', function(s){ s.life.Servers=6.7; }, function(s){ s.life.Servers=4.7; }),
+    mk('Server allocation  (±5pp vs L&B)', function(s){ s.mix.Servers=0.425; s.mix.LB=0.28; }, function(s){ s.mix.Servers=0.525; s.mix.LB=0.18; }),
+    mk('Deployment factor  (±0.05)', function(s){ s.deploy=0.53; }, function(s){ s.deploy=0.63; }),
+    mk('Prior-stock adj.  (±0.02)', function(s){ s.adj=0.935; }, function(s){ s.adj=0.975; }),
+    mk('Buildings life  (40 ±5 yr)', function(s){ s.life.Buildings=45; }, function(s){ s.life.Buildings=35; })
+  ];
+  rows.sort(function(a,b){ return a.range-b.range; });
+  var basePlug={ id:'tornBase', afterDatasetsDraw:function(ch){ var xS=ch.scales.x, area=ch.chartArea; if(!xS||!area) return; var x=xS.getPixelForValue(base), ctx=ch.ctx;
+    ctx.save(); ctx.setLineDash([4,4]); ctx.strokeStyle='#2E3B4E'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(x,area.top); ctx.lineTo(x,area.bottom); ctx.stroke();
+    ctx.setLineDash([]); ctx.font='700 9.5px Inter,sans-serif'; ctx.fillStyle='#2E3B4E'; ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText('base $'+base.toFixed(0)+'B', x, area.top-1); ctx.restore(); } };
+  _aCharts['acxTorn']=new Chart(cv.getContext('2d'),{ type:'bar', plugins:[basePlug],
+    data:{ labels:rows.map(function(r){ return r.lab; }), datasets:[{ data:rows.map(function(r){ return [r.min,r.max]; }),
+      backgroundColor:rows.map(function(r){ return acxRGBA(BRAND2, 0.55+0.45*Math.min(1,r.range/rows[rows.length-1].range)); }), borderColor:BRAND2, borderWidth:1, maxBarThickness:26 }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, layout:{ padding:{ top:14 } },
+      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ var r=rows[c.dataIndex]; return '$'+r.min.toFixed(0)+'B → $'+r.max.toFixed(0)+'B  (swing $'+r.range.toFixed(0)+'B)'; } } } },
+      scales:{ x:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } }, title:{ display:true, text:'FY'+yr+' D&A ($B)', font:{ size:11 }, color:'#6B7683' } }, y:{ grid:{ display:false }, ticks:{ font:{ size:9.5 } } } } } }); aZoom('acxTorn');
 }
 function aCxSyncLabels(root){
-  A_CX_CTRLS.forEach(function(c){ if(c.grp) return;
-    var el=root.querySelector('#acx_'+c.id), out=root.querySelector('#acxv_'+c.id); if(!el||!out) return;
-    out.textContent=c.dec!=null?(+el.value).toFixed(c.dec):(el.value+(c.u||''));
-  });
-  var sum=['mServers','mLB','mCIP','mHeavy','mOtherEq','mOtherAssets'].reduce(function(a,id){ var el=root.querySelector('#acx_'+id); return a+(el?+el.value:0); },0);
+  A_CX_CTRLS.forEach(function(c){ if(c.grp) return; var el=root.querySelector('#acx_'+c.id), out=root.querySelector('#acxv_'+c.id); if(!el||!out) return; out.textContent=c.dec!=null?(+el.value).toFixed(c.dec):(el.value+(c.u||'')); });
+  var sum=['mServers','mLB','mCIP','mHeavy','mOtherEq','mOtherAssets'].reduce(function(s,id){ var el=root.querySelector('#acx_'+id); return s+(el?+el.value:0); },0);
   var s=root.querySelector('#acxSum'); if(s){ s.textContent='Σ '+sum.toFixed(1)+'%'; s.style.color=Math.abs(sum-100)>0.6?'#D64545':'var(--mu)'; }
 }
 function aCxRender(root){
-  aCxSyncLabels(root);
-  var d=aCxRows(root);
-  aCxKPIs(root,d.rows,d.eng,d.st);
-  aCxReadout(root,d.eng,d.st);
-  var tog=root.querySelector('.acx-mixtog .active'), mode=tog?tog.getAttribute('data-acxmix'):'level';
-  aCxMixChart(root,d.rows,mode);
-  aCxDAChart(root,d.rows);
-  aCxBillChart(root,d.rows);
+  aCxSyncLabels(root); var a=aCxAnnual(root);
+  aCxKPIs(root,a); aCxReadout(root,a);
+  aCxCycleChart(root); aCxGWChart(root);
+  aCxSeasChart(root);
+  var wy=root.querySelector('.acx-wafyr .active'); aBuildWaffle(wy?+wy.getAttribute('data-wafyr'):2025);
+  aCxEffChart(root);
+  aCxConsChart(root);
+  aCxTornado(root);
+}
+function aCxRangeReset(root){
+  var pane=root.querySelector('.ovt-subpane[data-ovst="capex"]'); if(!pane) return;
+  var g=root.querySelector('.acx-grantog .active'), gran=g?g.getAttribute('data-acxgran'):'q';
+  var n=aCxTimeline(root,gran).length; pane._acxWin=[gran==='y'?0:12, n-1];
 }
 function aBuildCapex(root){
   var pane=root.querySelector('.ovt-subpane[data-ovst="capex"]'); if(!pane) return;
   if(!pane._acxWired){
-    pane._acxWired=true;
-    pane.querySelectorAll('input[type=range]').forEach(function(inp){ inp.addEventListener('input', function(){ if(inp.id==='acx_deploy') pane._acxDeployTouched=true; aCxRender(root); }); });
-    pane.querySelectorAll('.acx-mixtog button').forEach(function(b){ b.onclick=function(){
-      pane.querySelectorAll('.acx-mixtog button').forEach(function(x){ x.classList.toggle('active', x===b); });
-      var tog=root.querySelector('.acx-mixtog .active'), d=aCxRows(root);
-      aCxMixChart(root,d.rows,tog?tog.getAttribute('data-acxmix'):'level'); }; });
-    var rst=pane.querySelector('#acxReset'); if(rst) rst.onclick=function(){
+    pane._acxWired=true; aCxRangeReset(root);
+    var MIX=['mServers','mLB','mCIP','mHeavy','mOtherEq','mOtherAssets'];
+    pane.querySelectorAll('.acx-ctl input[type=range]').forEach(function(inp){ inp.addEventListener('input', function(){
+      if(inp.id==='acx_deploy') pane._acxDeployTouched=true;
+      if(inp.id.indexOf('acx_m')===0){ var sum=MIX.reduce(function(s,id){ var e=root.querySelector('#acx_'+id); return s+(e?+e.value:0); },0); if(sum>100) inp.value=Math.max(+inp.min,(+inp.value)-(sum-100)); }
+      aCxRender(root); }); });
+    // dual-thumb range
+    ['acx_r0','acx_r1'].forEach(function(id){ var el=pane.querySelector('#'+id); if(el) el.oninput=function(){ var a=+pane.querySelector('#acx_r0').value, b=+pane.querySelector('#acx_r1').value; pane._acxWin=[Math.min(a,b),Math.max(a,b)]; pane.querySelectorAll('.acx-rp').forEach(function(x){ x.classList.remove('active'); }); aCxCycleChart(root); }; });
+    pane.querySelectorAll('.acx-rp').forEach(function(b){ b.onclick=function(){
+      var g=root.querySelector('.acx-grantog .active'), gran=g?g.getAttribute('data-acxgran'):'q', n=aCxTimeline(root,gran).length, la=aCxLastAct(gran), v=b.getAttribute('data-acxrp');
+      pane._acxWin = v==='rep'?[0,la] : v==='fwd'?[Math.max(0,la),n-1] : [0,n-1];
+      pane.querySelectorAll('.acx-rp').forEach(function(x){ x.classList.toggle('active',x===b); });
+      aCxCycleChart(root); }; });
+    pane.querySelectorAll('.acx-wafyr button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.acx-wafyr button').forEach(function(x){ x.classList.toggle('active',x===b); }); aBuildWaffle(+b.getAttribute('data-wafyr')); }; });
+    pane.querySelectorAll('.acx-grantog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.acx-grantog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aCxRangeReset(root); pane.querySelectorAll('.acx-rp').forEach(function(x){ x.classList.remove('active'); }); aCxCycleChart(root); }; });
+    pane.querySelectorAll('.acx-gwtog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.acx-gwtog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aCxGWChart(root); }; });
+    pane.querySelectorAll('.acx-seastog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.acx-seastog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aCxSeasChart(root); }; });
+    pane.querySelectorAll('.acx-constog button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.acx-constog button').forEach(function(x){ x.classList.toggle('active',x===b); }); aCxConsChart(root); }; });
+    pane.querySelectorAll('.acx-consgran button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.acx-consgran button').forEach(function(x){ x.classList.toggle('active',x===b); }); aCxConsChart(root); }; });
+    pane.querySelectorAll('.acx-fychips .acx-rp').forEach(function(b){ b.onclick=function(){ b.classList.toggle('active'); aCxConsChart(root); }; });
+    pane.querySelectorAll('.acx-tornyr button').forEach(function(b){ b.onclick=function(){ pane.querySelectorAll('.acx-tornyr button').forEach(function(x){ x.classList.toggle('active',x===b); }); aCxTornado(root); }; });
+    var rst=pane.querySelector('#acxReset'); if(rst) rst.onclick=function(){ A_CX_CTRLS.forEach(function(c){ if(c.grp) return; var el=root.querySelector('#acx_'+c.id); if(el) el.value=c.def; }); pane._acxDeployTouched=false; aCxRangeReset(root); aCxRender(root); };
+    pane.querySelectorAll('.acx-scen button').forEach(function(b){ b.onclick=function(){ var sc=A_CX_SCEN[b.getAttribute('data-scen')]; if(!sc) return;
+      pane.querySelectorAll('.acx-scen button').forEach(function(x){ x.classList.toggle('active',x===b); });
       A_CX_CTRLS.forEach(function(c){ if(c.grp) return; var el=root.querySelector('#acx_'+c.id); if(el) el.value=c.def; });
-      pane._acxDeployTouched=false; aCxRender(root); };
+      Object.keys(sc).forEach(function(k){ if(k==='deploy') return; var el=root.querySelector('#acx_'+k); if(el&&sc[k]!=null) el.value=sc[k]; });
+      if(sc.deploy!=null){ var de=root.querySelector('#acx_deploy'); if(de) de.value=sc.deploy; pane._acxDeployTouched=true; } else pane._acxDeployTouched=false;
+      aCxRender(root); }; });
   }
   aCxRender(root);
 }
+// Valuation ▸ Historic Multiple — the multiple the market has paid over time, in js/overviews/
+// amzn-histmult.js. Modelled on the Fiscal.ai Forward P/E export, with the metric, the direction,
+// the horizon and the point frequency all made into controls. Its data is synthetic for now and
+// the pane says so — the module header lists what each series has to come from.
+function valuationHistBody(){ return amznHistMult.body(); }
 function valuationPeersBody(){
   return '<p class="ov-lede"><b>The peer map.</b> The same live-cap scatter as the Overview, kept beside the valuation work: X = multiple (P/E ⇄ EV/EBITDA, forward ⇄ trailing), Y = expected growth, bubble = live market cap. Peer multiples are seeded approximations (Jul 2026) — directional, not live.</p>'+stdPeerScatter('dd');
 }
+// ⚠ PARKED, not dead: the Financials sub-tab was taken off the Valuation bar (Pablo, Aug 19 2026).
+// This body and aBuildFin below are kept so the work is not lost — restoring the tab is one button
+// and one pane in deepDiveHtml, plus its branch in aBuildSub.
 function valuationFinBody(){
   return '<p class="ov-lede"><b>The financial arc.</b> Reported history and the model\'s live forward view for the lines valuation hangs on. Bars = reported actuals; outlined bars = Summit model forward (2026-05-05 vintage). The full vintage-by-vintage story is in Evolution ▸ Estimates.</p>'+
     '<div class="ov-sec"><div class="ov-sec-h">Revenue · EBITDA · Earnings · Capex ($B, FY)</div><div style="height:320px"><canvas id="aFin"></canvas></div>'+
@@ -3359,7 +4881,7 @@ function aBuildFin(){
       var flags=estFlag(k[1]);
       return { label:k[0], data:merge(k[1]), backgroundColor:flags.map(function(e){ return e?k[2]+'55':k[2]; }), borderColor:k[2], borderWidth:flags.map(function(e){ return e?1.5:0; }), maxBarThickness:22 }; }) },
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } } },
-      scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } });
+      scales:{ x:{ grid:{ display:false } }, y:{ position:'right', grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return '$'+v+'B'; } } } } } }); aZoom('aFin');
 }
 var A_MGMT=[
   { n:'Andy Jassy', r:'President & CEO', since:'CEO since Jul 2021 · joined 1997', d:'Built AWS from a memo into the profit engine (its first leader, 2003–2021). As CEO: the efficiency era (regionalization, flattening), the AI build-out, and the "every experience reinvented with AI" doctrine.' },
@@ -3368,18 +4890,172 @@ var A_MGMT=[
   { n:'Doug Herrington', r:'CEO, Worldwide Amazon Stores', since:'since 2022 · joined 2005', d:'Runs the retail surface: the everyday-essentials push, same-day network, grocery ($150B+ gross sales) and the robotics rollout.' },
   { n:'Jeff Bezos', r:'Founder & Executive Chair', since:'chair since Jul 2021', d:'Founder; largest individual holder (~9%). Single share class — one share, one vote: influence flows from the stake and the chair, not super-voting stock (the governance mirror-image of META/GOOGL).' },
 ];
-function mgmtBody(){
-  var h='<p class="ov-lede"><b>The operator bench.</b> Amazon\'s leadership is home-grown to a degree unusual at this scale — the CEO, CFO, AWS chief and retail chief average ~20 years inside the company. Ownership and insider-transaction detail (auto-synced from Fiscal.ai) lives in the profile\'s <b>Pillars ▸ Management</b> tab; this page is the qualitative read.</p>';
-  h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin:10px 0">';
-  A_MGMT.forEach(function(m){
-    h+='<div class="ov-card" style="border-top-color:'+BRAND+'"><div class="ov-card-h"><span class="ov-card-n">'+esc(m.n)+'</span></div>'+
-      '<div style="font-size:11px;font-weight:800;color:'+BRAND2+';margin:2px 0 2px">'+esc(m.r)+'</div>'+
-      '<div style="font-size:10px;color:var(--mu);font-weight:700;margin-bottom:6px">'+esc(m.since)+'</div>'+
-      '<div class="ov-card-s" style="font-size:12px;line-height:1.55">'+m.d+'</div></div>';
-  });
-  h+='</div>';
-  h+='<div class="ov-callout" style="margin-top:8px"><b>Governance in one line:</b> single share class (one vote per share), an executive-chair founder at ~9%, and a bench promoted from within — succession risk is low by construction, but so is the probability of an outsider ever forcing a strategy change. The 2025–26 severance rounds (Q3\'25 $1.8B; Q4\'25 $730M; more in 2026) are the leaner-org push showing up in the numbers.</div>';
-  h+='<div class="ov-foot">Roles and tenures per Amazon proxy statements / IR (as of mid-2026); quotes from the Q4 2025 and Q1 2026 earnings calls. Ownership figures are approximate — the synced table in Pillars ▸ Management is the source of record.</div>';
+// ═══ Management — Executives & Board · Ownership · Governance & SBC · Track Record ═══════════════
+// Verified board facts per Amazon 2025/2026 proxy (DEF 14A): 12 directors, majority independent;
+// Bezos Executive Chair; Jassy on the board; independent Lead Director (since 2010); four standing
+// committees — Audit (Nooyi, chair), Leadership Dev & Comp, Nominating & Corp Gov, Security
+// (Huttenlocher, chair). The full 12-member roster + live ownership sync in Pillars ▸ Management.
+// Executives & Board — built with the shared makeManagement mold (same as UBER/GOOGL). Board facts
+// verified from Amazon's 2025/2026 proxy (DEF 14A): 12 directors, majority independent; Bezos
+// Executive Chair; Nooyi chairs Audit, Huttenlocher chairs Security; independent Lead Director (2010).
+var AMZN_MGMT = makeManagement({
+  brand: BRAND,
+  lede: "The full <b>27-member S-team</b> (Amazon's senior leadership) plus founder <b>Jeff Bezos</b>, Executive Chair. Leadership is <b>home-grown</b> to a degree unusual at this scale — the CEO, CFO, AWS and retail chiefs average ~20 years inside. Tap any leader for the detail; the group clusters into AWS, Stores &amp; Operations, Media/Devices/Ads/Health, and corporate functions.",
+  execs: [
+    { id:'jassy', lead:true, name:'Andy Jassy', title:'President & CEO', since:'CEO since Jul 2021 · joined 1997',
+      line:'Built AWS into the profit engine; now runs the efficiency era + AI build-out.',
+      bio:"President & CEO since July 2021. Built AWS from a 2003 memo into Amazon's profit engine as its first leader (2003–2021). As CEO: the efficiency era (US network regionalization, org flattening, ~41k corporate roles out), the largest capex cycle in company history, and the \"every experience reinvented with AI\" doctrine." },
+    { id:'olsavsky', name:'Brian Olsavsky', title:'SVP & CFO', since:'CFO since 2015 · joined 2002',
+      line:'The voice of the guide; owns the capex framing.',
+      bio:"SVP & CFO since 2015; two decades of Amazon finance from Worldwide Operations to the CFO seat. The consistent voice of the guide across the pandemic build, the 2022 trough and the AI capex cycle — owns the framing \"as fast as we install this capacity, we are monetizing it.\"" },
+    { id:'garman', name:'Matt Garman', title:'CEO, AWS', since:'since Jun 2024 · joined 2006',
+      line:"One of AWS's first PMs, then its top salesman, now its CEO.",
+      bio:"CEO of AWS since June 2024. One of AWS's first product managers, then its top salesman — deep-inside credibility. Presiding over the re-acceleration (growth +24% → +28%), the Trainium ramp and the Anthropic partnership — the price-performance edge behind the margin." },
+    { id:'herrington', name:'Doug Herrington', title:'CEO, Worldwide Amazon Stores', since:'since 2022 · joined 2005',
+      line:'Ran the retail turnaround; everyday-essentials, same-day, robotics.',
+      bio:"CEO, Worldwide Amazon Stores since 2022. Ran the retail turnaround — North America from a 2022 operating loss to a mid-single-digit margin, on cost and mix rather than price. Drove the everyday-essentials push, the same-day network, grocery ($150B+ gross sales) and the robotics rollout." },
+    // ── AWS leadership ──
+    { id:'desantis', name:'Peter DeSantis', title:'SVP, Foundational AI Models, Custom Silicon & Quantum', line:'Owns Trainium/Inferentia custom silicon, foundational models and quantum — the compute edge under AWS.' },
+    { id:'kalyanaraman', name:'Prasad Kalyanaraman', title:'VP, AWS Infrastructure Services', line:"Runs AWS's global data-center infrastructure — the physical build the capex funds (added to the S-team Apr 2026)." },
+    { id:'aubrey', name:'Colleen Aubrey', title:'SVP, AWS Applied AI Solutions', line:'AWS applied-AI products and go-to-market.' },
+    { id:'treadwell', name:'Dave Treadwell', title:'SVP, AWS Compute & ML Services', line:'AWS core compute and machine-learning services (EC2 and up).' },
+    { id:'felton', name:'John Felton', title:'SVP, AWS CFO', line:'Finance chief for AWS — the segment carrying most of the capex and the profit.' },
+    { id:'hamilton', name:'James Hamilton', title:'SVP & Distinguished Engineer', line:"The architect behind much of AWS's hardware and data-center design." },
+    { id:'swami', name:'Swami Sivasubramanian', title:'VP, Agentic AI', line:"Leads Amazon's agentic-AI effort." },
+    // ── Stores & operations ──
+    { id:'beauchamp', name:'Christine Beauchamp', title:'SVP, North America Stores', line:'Runs the North America retail business.' },
+    { id:'grandinetti', name:'Russell Grandinetti', title:'SVP, International Stores', line:'Runs the International retail business — the turnaround segment.' },
+    { id:'madan', name:'Udit Madan', title:'SVP, Worldwide Operations', line:'Runs the fulfillment + logistics network — where fulfillment cost and the robotics rollout live.' },
+    { id:'agarwal', name:'Amit Agarwal', title:'SVP, Emerging Markets & Selling Partner Services', line:'Emerging markets and the third-party seller (3P) services engine.' },
+    // ── Media · devices · ads · health · Zoox ──
+    { id:'hopkins', name:'Mike Hopkins', title:'SVP, Amazon Video & Studios', line:'Runs Prime Video and Amazon MGM Studios.' },
+    { id:'panay', name:'Panos Panay', title:'SVP, Devices & Services', line:'Runs Devices & Services (Echo/Alexa, Kindle, Ring); joined from Microsoft (Surface).' },
+    { id:'kotas', name:'Paul Kotas', title:'SVP, Advertising, IMDb & Grand Challenge', line:'Runs the advertising business — the near-pure-margin engine lifting retail margins.' },
+    { id:'boom', name:'Steve Boom', title:'VP, Audio, Twitch & Games', line:'Audio, Twitch and games.' },
+    { id:'lindsay', name:'Neil Lindsay', title:'SVP, Amazon Health Services', line:'Health — One Medical and Amazon Pharmacy.' },
+    { id:'evans', name:'Aicha Evans', title:'CEO, Zoox', line:"Runs Zoox, Amazon's robotaxi unit." },
+    // ── Corporate functions ──
+    { id:'zapolsky', name:'David Zapolsky', title:'Chief Global Affairs & Legal Officer', line:'General counsel + global public policy — the legal/regulatory chief.' },
+    { id:'galetti', name:'Beth Galetti', title:'SVP, People eXperience & Technology', line:'Head of HR — owns the workforce and the 2022-26 headcount actions.' },
+    { id:'krawiec', name:'Peter Krawiec', title:'SVP, Worldwide Corporate & Business Development', line:'Runs corporate development and M&A.' },
+    { id:'herdener', name:'Drew Herdener', title:'SVP, Communications & Corporate Responsibility', line:'Communications and corporate responsibility.' },
+    { id:'schmidt', name:'Steve Schmidt', title:'Chief Security Officer', line:'Company-wide security.' },
+    { id:'castleberry', name:'Candi Castleberry', title:'VP, Amazon eXperience & Upskilling', line:'Employee experience and upskilling.' },
+    // ── Founder ──
+    { id:'bezos', name:'Jeff Bezos', title:'Founder & Executive Chair', since:'Chair since Jul 2021 · founded 1994',
+      line:'Founder; largest individual holder (~9%); single share class.',
+      bio:"Founder and Executive Chair. Largest individual holder (~9%). Single share class — one share, one vote: his influence flows from the stake and the chair, not super-voting stock (the governance mirror-image of META and GOOGL)." }
+  ],
+  board: [
+    { name:'Jeff Bezos', chair:true, dual:true, independent:false, role:'Founder & Executive Chair.' },
+    { name:'Andy Jassy', dual:true, independent:false, role:'President & CEO.' },
+    { name:'Indra K. Nooyi', independent:true, role:'Chairs Audit · former Chairman & CEO of PepsiCo · director since 2019.' },
+    { name:'Daniel P. Huttenlocher', independent:true, role:'Chairs Security · Dean, MIT Schwarzman College of Computing · director since 2016.' },
+    { name:'Keith B. Alexander', independent:true, role:'Retired U.S. Army general, former Director of the NSA.' },
+    { name:'Wendell P. Weeks', independent:true, role:'Chairman & CEO of Corning.' }
+  ],
+  boardNote:'12 directors, the majority independent · Bezos Executive Chair · independent Lead Director since 2010 · committees: Audit, Leadership Dev & Comp, Nominating & Corp Gov, Security. Verified subset shown — full roster in Pillars ▸ Management.',
+  gov: [
+    { k:'Share & voting', v:'1 vote / share', d:'Single class — no founder super-voting stock.' },
+    { k:'Board', v:'12 dirs · majority independent', d:'Bezos Executive Chair · independent Lead Director.' },
+    { k:'Founder stake', v:'Jeff Bezos ~9%', d:'Largest individual holder; sells via 10b5-1 plans.' }
+  ],
+  foot:"Full S-team roster + titles per Amazon's official leadership page (aboutamazon.com, 2026); board and committees per the 2025/2026 proxy (DEF 14A). Ownership and insider trades live in Pillars ▸ Management."
+});
+function amznOwnBody(){   // Ownership
+  var h='<p class="ov-lede"><b>One share, one vote.</b> Amazon has a <b>single share class</b> — no founder super-voting stock. It is the governance mirror-image of META and GOOGL: influence flows from the stake and the chair, not from a special class.</p>';
+  h+='<div class="ew-kpis">'+[['~9%','Jeff Bezos — largest individual holder'],['1 class','one share, one vote'],['~$19.5B','stock-based comp (FY25)'],['~nil','buybacks · no dividend']].map(function(k){ return '<div class="ew-tile"><div class="ew-tv">'+k[0]+'</div><div class="ew-tl">'+k[1]+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="ov-sec-h">Who owns Amazon</div>';
+  h+=ewBoxes([
+    ['👤','Founder','Jeff Bezos holds ~9% — the largest single holder — as Executive Chair. He sells regularly under pre-set <b>10b5-1</b> plans (funding Blue Origin and philanthropy), so the stake trends down over time even as it stays the largest.'],
+    ['🏦','Institutions','The float is overwhelmingly institutional; the largest holders are the index-fund complexes — <b>Vanguard, BlackRock and State Street</b> — whose stakes track the passive flows, not an active view on Amazon.']
+  ]);
+  h+='<div class="ov-sec-h" style="margin-top:16px">Capital returned to shareholders</div>';
+  h+='<div class="ov-fynote">Amazon pays <b>no dividend</b> and repurchases stock only opportunistically — it authorized a $10B buyback in 2022 and bought ~$6B that year, then effectively paused. Capital goes to the capex build (see <b>Miscellaneous ▸ Capex &amp; Depreciation</b>), not to shareholders — so SBC dilution is <b>not</b> offset by buybacks.</div>';
+  h+='<div class="ov-sec-h" style="margin-top:18px">Executives &amp; insider activity — live from Fiscal.ai</div>';
+  h+='<div id="dd-mgmt-slot"></div>';   // filled by companies.js (the same live table as Pillars ▸ Management), like UBER
+  h+='<div class="ov-foot">Executive holdings and insider transactions sync live from Fiscal.ai (also in Pillars ▸ Management); the narrative figures above are approximate.</div>';
+  return h;
+}
+function amznGovBody(){   // Governance & SBC
+  var h='<p class="ov-lede"><b>Clean, conventional governance.</b> Single-class stock, an independent-majority board, four standing committees and an annual say-on-pay vote — governance risk is low by construction. The trade-off: no outside holder can force a strategy change.</p>';
+  h+='<div class="ew-kpis">'+[['1 vote / sh','single share class'],['12 dirs','majority independent'],['~$19.5B','SBC · ~2.7% of revenue (FY25)'],['~nil','buybacks · no dividend']].map(function(k){ return '<div class="ew-tile"><div class="ew-tv">'+k[0]+'</div><div class="ew-tl">'+k[1]+'</div></div>'; }).join('')+'</div>';
+  h+=ewBoxes([
+    ['🗳️','Single share class','One share, one vote — no founder super-voting stock. The opposite of META/GOOGL dual-class.'],
+    ['⚖️','Independent-majority board','12 directors, the majority independent; an independent Lead Director since 2010.'],
+    ['🏛️','Four standing committees','Audit (Nooyi), Leadership Dev &amp; Comp, Nominating &amp; Corp Gov, Security (Huttenlocher).'],
+    ['📉','SBC, not buybacks','No dividend and minimal repurchases — SBC is the main driver of share-count growth.']
+  ]);
+  h+='<div class="ov-fynote">SBC totals <b>~$19.5B (FY25, ~2.7% of revenue)</b>, down from $24.0B in 2023, and dilutes ~1%/yr with buybacks near zero. The full <b>by-line, actuals-vs-consensus SBC chart lives in Bottom Line ▸ General</b> (where the expenses are).</div>';
+  h+='<div class="ov-foot">Governance per Amazon 2025/2026 proxy; SBC per the 10-K / BBG.</div>';
+  return h;
+}
+// Track Record — per-leader scorecard (management only), color-rated with a tap-for-detail modal.
+// Molded on UBER's ubTrackBody. Ratings are an editorial read, not a Summit output.
+var AMZN_TRK_RATE={ green:{c:'#06965A',bg:'rgba(6,150,90,0.09)',bd:'rgba(6,150,90,0.34)',l:'Value creator'},
+  amber:{c:'#B7791F',bg:'rgba(183,121,31,0.10)',bd:'rgba(183,121,31,0.34)',l:'Mixed / unproven'} };
+var AMZN_TRACK=[
+  { id:'jassy', n:'Andy Jassy', role:'President & CEO', since:'2021', rate:'green',
+    amzn:'Built AWS into the profit engine (its first leader, 2003-21); as CEO drove the efficiency era — regionalization, org flattening, ~41k roles out — that lifted group operating margin from low-single-digits to a record ~11%, and set the AI build-out.',
+    prior:'26 years inside Amazon; no outside executive record — his track record <i>is</i> the AWS-and-then-Amazon record.',
+    detail:'<p><b>At Amazon (CEO since Jul 2021; joined 1997).</b> Founded and ran AWS from a 2003 memo to the majority of group operating income. As CEO: the efficiency reset (US network regionalization 2023, a flatter org, ~27k + ~14k corporate roles out), the largest capex cycle in company history, and the AI doctrine.</p>'+
+      '<p><b>Net read — value creator (green).</b> Delivered the margin turnaround and the AWS reacceleration. Caveats, not disqualifying: the ~$220B/yr AI capex is a huge bet still unproven on returns, and the 2025-26 layoffs are efficiency but also culture risk.</p>' },
+  { id:'garman', n:'Matt Garman', role:'CEO, AWS', since:'2024', rate:'green',
+    amzn:'One of AWS\'s first product managers, then its top salesman, now its CEO — presiding over the re-acceleration (growth +24% → +28%), the Trainium ramp and the Anthropic partnership.',
+    prior:'Career built inside AWS (joined 2006) — deep-inside credibility, but no outside benchmark.',
+    detail:'<p><b>At Amazon (CEO of AWS since Jun 2024; joined 2006).</b> Rose from one of AWS\'s first PMs to head of sales & marketing to the top seat. Owns the current reacceleration, the custom-silicon (Trainium) price-performance push, and the Anthropic partnership; backlog (RPO) has stepped up sharply.</p>'+
+      '<p><b>Net read — value creator, lightly caveated (green).</b> Strong reacceleration on his watch; the caveat is simply a short standalone tenure as CEO.</p>' },
+  { id:'herrington', n:'Doug Herrington', role:'CEO, Worldwide Amazon Stores', since:'2022', rate:'green',
+    amzn:'Ran the retail turnaround — North America from a 2022 operating loss to a mid-single-digit margin, on cost and mix rather than price; drove same-day, grocery ($150B+ gross sales) and the robotics rollout.',
+    prior:'At Amazon since 2005 (ex-Consumer chief); the retail turnaround is his defining record.',
+    detail:'<p><b>At Amazon (CEO Worldwide Stores since 2022; joined 2005).</b> Took the retail segment from the 2022 over-investment loss back to profit via regionalization, cost-to-serve discipline and the advertising mix — not price. Drove the everyday-essentials push, the same-day network and the 1M+-robot rollout.</p>'+
+      '<p><b>Net read — value creator (green).</b> A clean, measurable turnaround. The forward question is whether retail margin keeps climbing as the LEO/robotics capex lands.</p>' },
+  { id:'olsavsky', n:'Brian Olsavsky', role:'SVP & CFO', since:'2015', rate:'green',
+    amzn:'Two decades of Amazon finance — the consistent voice of the guide across the pandemic build, the 2022 trough and the AI capex cycle; owns the capex framing that anchors the bull case.',
+    prior:'At Amazon since 2002 (Worldwide Operations finance); a company lifer in the finance seat.',
+    detail:'<p><b>At Amazon (CFO since 2015; joined 2002).</b> Guided the company through the pandemic over-build, the 2022 margin trough and reset, and now the AI capex cycle — with the framing "as fast as we install this capacity, we are monetizing it."</p>'+
+      '<p><b>Net read — solid (green).</b> Continuity and credibility; the open question he owns is defending the capex thesis if AWS demand ever lags the build.</p>' },
+  { id:'desantis', n:'Peter DeSantis', role:'SVP, Foundational AI Models, Custom Silicon & Quantum', since:'2005', rate:'green',
+    amzn:'The technical architect behind AWS\'s cost/performance edge — Nitro, the Graviton/Trainium/Inferentia custom-silicon program, data-center and power scale; now foundational models + quantum.',
+    prior:'Career built inside AWS — one of the longest-tenured infrastructure leaders.',
+    detail:'<p><b>At Amazon (since 2005).</b> Ran AWS compute and infrastructure for years; drove the Nitro system and the custom-silicon roadmap (Graviton for general compute, Trainium/Inferentia for AI) that underpins AWS\'s price-performance advantage, plus the power/data-center scale-up.</p>'+
+      '<p><b>Net read — value creator (green).</b> The silicon and infrastructure edge he owns is central to the AWS margin story; deep, proven, low-drama.</p>' },
+  { id:'grandinetti', n:'Russell Grandinetti', role:'SVP, International Stores', since:'2000', rate:'green',
+    amzn:'A 25-year Amazon veteran (early Kindle and digital); now runs International Stores — the segment that crossed into operating profit in 2024 on the same regionalization + advertising playbook as North America.',
+    prior:'Essentially a career-Amazon operator; helped build the Kindle/digital business.',
+    detail:'<p><b>At Amazon (since 2000).</b> Held senior roles across digital, Kindle and consumer; now leads International Stores, which reached its first full-year operating profit in 2024 and keeps expanding in the established markets while the emerging ones invest.</p>'+
+      '<p><b>Net read — value creator (green).</b> Long, credible operating record; the open item is the pace of emerging-market profitability.</p>' },
+  { id:'zapolsky', n:'David Zapolsky', role:'Chief Global Affairs & Legal Officer', since:'1999', rate:'green',
+    amzn:'General Counsel since 2014 and now the combined legal + global public-policy chief — steering the FTC antitrust suit, EU/DMA regulation and the M&A legal work through the most scrutiny in Amazon\'s history.',
+    prior:'At Amazon since 1999; earlier a litigator (antitrust) and prosecutor.',
+    detail:'<p><b>At Amazon (GC since 2014; joined 1999).</b> Leads Legal, Compliance and Global Public Policy through the FTC monopolization case, EU Digital Markets Act obligations, the $2.5B FTC/Prime settlement and the deal reviews (MGM, iRobot [terminated]).</p>'+
+      '<p><b>Net read — value creator (green).</b> Seasoned through Amazon\'s hardest regulatory period; the docket he manages is the standing risk, not his handling of it.</p>' },
+  { id:'galetti', n:'Beth Galetti', role:'SVP, People eXperience & Technology', since:'2013', rate:'green',
+    amzn:'Head of HR — owns the workforce through the largest headcount actions in company history (~27k in 2022-23, ~14k more in 2025-26) and the "fewer managers, more builders" flattening.',
+    prior:'Ex-FedEx (engineering/IT leadership) before joining Amazon in 2013.',
+    detail:'<p><b>At Amazon (HR chief since ~2016; joined 2013).</b> Executed the corporate-cost reset — the two large rounds of role eliminations and the manager-to-builder ratio push that drive the G&amp;A leverage — while scaling a 1.5M+ employee base.</p>'+
+      '<p><b>Net read — green, caveated.</b> Delivered the org efficiency the margin story needed; the caveat is culture/morale risk from repeated layoffs, which is hers to manage.</p>' },
+  { id:'panay', n:'Panos Panay', role:'SVP, Devices & Services', since:'2023', rate:'amber',
+    amzn:'The ex-Microsoft Surface creator, recruited in 2023 to run Devices & Services (Echo/Alexa, Kindle, Ring) and fix the historically loss-making devices unit — Alexa+ (the generative-AI assistant) launched on his watch.',
+    prior:'~19 years at <b>Microsoft</b> — created and led the Surface hardware line and Windows + Devices.',
+    detail:'<p><b>At Amazon (since Oct 2023).</b> Took over Devices & Services after Dave Limp left for Blue Origin; relaunched Alexa as the paid, generative <b>Alexa+</b> and owns the Echo/Kindle/Ring hardware roadmap.</p>'+
+      '<p><b>Net read — mixed / unproven (amber).</b> Strong hardware pedigree from Surface, but Devices has long lost money and the Alexa+ monetization is early — the turnaround is not yet demonstrated in the numbers.</p>' }
+];
+function amznTrackBody(){
+  var legend=Object.keys(AMZN_TRK_RATE).map(function(k){ var r=AMZN_TRK_RATE[k]; return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--navy)"><span style="width:10px;height:10px;border-radius:50%;background:'+r.c+'"></span>'+r.l+'</span>'; }).join('');
+  var cards=AMZN_TRACK.map(function(m){ var r=AMZN_TRK_RATE[m.rate];
+    return '<div class="ov-clickable" data-detail="exec:'+m.id+'" style="border:1px solid '+r.bd+';border-left:4px solid '+r.c+';background:'+r.bg+';border-radius:11px;padding:13px 15px;cursor:pointer">'+
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><div style="font-size:13.5px;font-weight:800;color:var(--navy)">'+esc(m.n)+'</div><div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:'+r.c+'">'+r.l+'</div></div>'+
+      '<div style="font-size:11px;color:var(--mu);font-weight:600;margin:1px 0 8px">'+esc(m.role)+' · at Amazon since '+esc(m.since)+'</div>'+
+      '<div style="font-size:11.5px;color:var(--navy);line-height:1.5;margin-bottom:6px"><b style="color:'+r.c+'">At Amazon:</b> '+m.amzn+'</div>'+
+      '<div style="font-size:11.5px;color:var(--navy);line-height:1.5"><b style="color:var(--mu)">Context:</b> '+m.prior+'</div>'+
+      '<div class="ov-more" style="margin-top:7px;font-size:10.5px;font-weight:800;color:'+BRAND2+'">Full track record ›</div></div>';
+  }).join('');
+  var h='<p class="ov-lede">The people running Amazon today, rated on <b>what they have actually built</b>. Color = the net read; <b>tap a card</b> for the full history. (Management only — board and ownership are separate tabs.)</p>';
+  h+='<div style="display:flex;gap:14px;flex-wrap:wrap;margin:0 0 12px">'+legend+'</div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">'+cards+'</div>';
+  h+='<div class="ov-callout" style="margin-top:14px"><b>The bench, in one line:</b> a home-grown C-suite (avg ~20 yrs inside) that delivered the margin turnaround and the AWS reacceleration — its open bet is whether the ~$220B/yr AI capex earns its return.</div>';
+  h+='<div class="ov-foot">Roster and roles per Amazon IR (mid-2026); records from earnings calls and segment disclosures. Ratings are an editorial read, not a Summit output.</div>';
   return h;
 }
 
@@ -3393,6 +5069,95 @@ function html(c){
   h+='</div>';
   return h;
 }
+// ─── Bottom Line ▸ Supply Chain — Bloomberg SPLC (AMZN US Equity), as of 12-Aug-2026 ────────
+// SUPPLIERS side only. The customer/demand side (traceable AWS-IT channel + the Direct-to-Consumer
+// aggregate) belongs in Top Line and is not built here. 1,452 suppliers / 24,052 supplier facilities
+// tracked. Modeled on googl.js splcBody (cards + tables + dependency bars). Geography is the one
+// section rendered as a Chart.js chart.
+function ddStat(items){
+  return '<div class="gdd-kpis">'+items.map(function(s){ return '<div class="gdd-kpi"><div class="gdd-kpi-v">'+s[0]+'</div><div class="gdd-kpi-k">'+esc(s[1])+'</div></div>'; }).join('')+'</div>';
+}
+var A_SPLC_INFRA=[
+  { n:'NVIDIA', rel:'$38.2B', cost:'24.2% of tracked cost', dep:'14.0% of NVDA rev', bar:100, col:GREEN,
+    d:'<p>By far the largest single relationship on the map ($38.2B est.) — the GPU fleet (Hopper/Blackwell, next Rubin) powering AWS training and inference, both for AWS\'s own services and rented to customers. Amazon is ~14% of NVIDIA\'s revenue: an enormous buyer, but neither side is captive.</p><p><b>The map\'s biggest blind spot:</b> Amazon\'s own custom silicon — <b>Trainium / Inferentia</b>, designed in-house at Annapurna Labs — is the strategic hedge against exactly this dependency, and it barely shows in SPLC because it is internal.</p>' },
+  { n:'Hon Hai (Foxconn)', rel:'$14.0B', cost:'7.9% of tracked cost', dep:'5.2% of Hon Hai rev', bar:37, col:GRAY,
+    d:'<p>Server and rack assembly at hyperscale for the AWS data-center build-out. Taiwan-headquartered with a global manufacturing footprint — part of why supplier facilities concentrate in Asia even where domiciles do not.</p>' },
+  { n:'Jabil', rel:'$5.6B', cost:'3.2% of tracked cost', dep:'16.0% of Jabil rev', bar:15, col:BRAND2,
+    d:'<p>Contract manufacturing for data-center and device hardware. ~16% of Jabil\'s revenue traces to Amazon — a deep dependency, and its results are a public read-through on AWS build cadence.</p>' },
+  { n:'TSMC', rel:'$5.5B', cost:'1.3% of tracked cost', dep:'4.1% of TSMC rev', bar:14, col:AMBER,
+    d:'<p>Foundry exposure — part direct, part intermediated through the silicon vendors (NVIDIA, Marvell, Broadcom, and Amazon\'s own Annapurna designs). As with GOOGL, Amazon\'s deepest chip dependency is second-order: it runs through whoever fabs the accelerators.</p>' },
+  { n:'SK hynix', rel:'$4.9B', cost:'3.0% of tracked cost', dep:'6.9% of hynix rev', bar:13, col:PURPLE,
+    d:'<p>HBM and DRAM — the scarcest input of the AI build-out. One of several memory suppliers (with Micron and Western Digital, both CAPEX) feeding the AWS accelerator fleet.</p>' },
+  { n:'AI-connectivity cluster', rel:'Astera · Credo · Accton · Arista', cost:'~1.5% of cost combined', dep:'Astera 70% · Credo 42% · Accton 35% of their rev', bar:9, col:RED,
+    d:'<p>The networking/interconnect layer of the AWS build-out: <b>Astera Labs (70.0% of its revenue from Amazon)</b>, Credo Technology (42.3%), Accton (35.4%), plus Arista and Marvell (15.5%). Individually small for Amazon; existentially large for several of them — the same quasi-captive read-through GOOGL\'s optics cluster gives, here for AWS.</p>' },
+];
+// Retail / CPG / logistics chain. [name, rel, amznCost, theirDep, category]
+var A_SPLC_RETAIL=[
+  ['United Parcel Service','$9.4B','2.6%','10.6% of UPS rev','Logistics — parcel'],
+  ['Lenovo','$8.0B','1.8%','9.0% of Lenovo rev','Devices / hardware'],
+  ['Procter & Gamble','$6.6B','1.9%','7.9% of P&G rev','1P retail — household'],
+  ['PepsiCo','$4.8B','1.3%','5.1% of PEP rev','1P retail — food & bev'],
+  ['Apple','$3.8B','1.1%','0.9% of AAPL rev','Devices (1P resale)'],
+  ['Pattern Group','$2.3B','0.7%','92.7% of its rev','Marketplace accelerator'],
+  ['Rivian','$0.9B','0.3%','16.7% of RIVN rev','Delivery EVs (AMZN-backed)'],
+  ['FedEx','$0.9B','0.2%','1.0% of FDX rev','Logistics — parcel'],
+];
+// Who depends ON Amazon — supplier revenue % from AMZN. [name, pct, note]
+var A_SPLC_DEP=[
+  ['Pattern Group', 93, 'marketplace accelerator'],
+  ['Astera Labs', 70, 'AI connectivity — AWS'],
+  ['Credo Technology', 42, 'AI connectivity'],
+  ['Accton Technology', 35, 'networking ODM'],
+  ['iRobot', 35, 'devices sold on Amazon'],
+  ['AZ-COM MARUWA', 34, 'logistics — Japan'],
+  ['Spin Master', 22, 'toys (1P/3P)'],
+  ['Helen of Troy', 20, 'consumer products'],
+];
+// Geography — supplier facilities by country (% of total supplier facilities). Rendered as a chart.
+var A_SPLC_GEO={ labels:['United States','China','India','Japan','Germany','United Kingdom','France','South Korea'],
+  sup:[37.91,7.73,6.08,5.62,3.44,3.76,2.39,1.20] };
+function aSplcBody(c){
+  var h='';
+  h+=ddStat([['1,452','suppliers tracked'],['24,052','supplier facilities'],['37.9%','supplier facs in US'],['7.7%','supplier facs in China'],['$38.2B','largest single relationship (NVIDIA)']]);
+  h+='<div class="ov-diagram-cap" style="margin:16px 0 6px"><b>Chain 1 · the AWS AI-infrastructure capex chain</b> (relationship size, Bloomberg est.; bar = relative size — tap a card for the read)</div>';
+  h+='<div class="ce-watch">'+A_SPLC_INFRA.map(function(s,i){
+    return '<div class="ce-w ov-clickable" data-detail="splc:'+i+'" style="border-left:4px solid '+s.col+'">'+
+      '<div class="ce-w-top"><div class="ce-w-metric">'+esc(s.n)+'</div><span class="ce-w-chip tag">'+esc(s.rel)+'</span><span class="ce-w-chip" style="margin-left:auto;color:'+BRAND+'">the read ›</span></div>'+
+      '<div class="ov-mbar" style="margin:4px 0 6px"><div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:'+Math.max(s.bar,2)+'%;background:'+s.col+'"></div></div></div>'+
+      '<div class="ce-w-chips"><span class="ce-w-chip cons">'+esc(s.cost)+'</span><span class="ce-w-chip red"><b>Their dependency:</b> '+esc(s.dep)+'</span></div>'+
+    '</div>';
+  }).join('')+'</div>';
+  h+='<div class="ov-diagram-cap" style="margin:18px 0 6px"><b>Chain 2 · the retail, CPG &amp; logistics chain</b> — first-party merchandise, devices and parcel</div>';
+  h+='<div style="overflow-x:auto"><table class="ce-tbl"><thead><tr><th>Supplier</th><th>Relationship</th><th>AMZN cost %</th><th>Their exposure to Amazon</th><th>Category</th></tr></thead><tbody>'+
+    A_SPLC_RETAIL.map(function(r){ return '<tr><td style="font-weight:700">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td><td>'+esc(r[3])+'</td><td style="color:var(--mu)">'+esc(r[4])+'</td></tr>'; }).join('')+
+  '</tbody></table></div>';
+  h+='<div class="ov-diagram-cap" style="margin:18px 0 6px"><b>Who needs whom — revenue dependency ON Amazon</b> (% of the counterpart\'s revenue)</div>';
+  h+='<div class="ov-mbars">'+A_SPLC_DEP.map(function(r){
+    return '<div class="ov-mbar"><div class="ov-mbar-l">'+esc(r[0])+' <span style="color:var(--mu);font-weight:600">'+esc(r[2])+'</span></div><div class="ov-mbar-track"><div class="ov-mbar-fill" style="width:'+r[1]+'%;background:'+BRAND+'">'+r[1]+'%</div></div><div class="ov-mbar-v">'+r[1]+'%</div></div>';
+  }).join('')+'</div>';
+  h+='<div class="ov-sec" style="margin-top:16px"><div class="ov-sec-h">Geography — supplier facilities by country (% of total)</div>'+
+    '<div style="height:340px"><canvas id="aSplcGeo"></canvas></div>'+
+    '<div class="ov-fynote">Suppliers domiciled: US 40.7% · China 10.95% · India 8.3% · Japan 6.8% · Taiwan 3.4%. China is the tariff / geopolitics surface on both chains.</div></div>';
+  h+='<div class="ov-foot">Source: Bloomberg Supply Chain Analysis (SPLC), AMZN US Equity, as of 12-Aug-2026. Relationship sizes are Bloomberg estimates; directional, not audited. Full universe 1,452 suppliers / 24,052 supplier facilities.</div>';
+  return h;
+}
+function aBuildSplc(){
+  var c3=aChartReady('aSplcGeo');
+  if(c3){ aDestroy('aSplcGeo');
+    _aCharts['aSplcGeo']=new Chart(c3.getContext('2d'),{ type:'bar',
+      data:{ labels:A_SPLC_GEO.labels, datasets:[
+        { label:'Supplier facilities', data:A_SPLC_GEO.sup, backgroundColor:BRAND2, maxBarThickness:15 } ] },
+      options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10 } } }, tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label+': '+ctx.parsed.x+'%'; } } } },
+        scales:{ x:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } }, y:{ grid:{ display:false }, ticks:{ font:{ size:10 } } } } } }); aZoom('aSplcGeo'); }
+}
+// ─── Miscellaneous ▸ M&A and Other Analysis — future placeholders (nothing deep-dived for AMZN yet).
+function aMandaBody(){
+  return '<p class="ov-lede"><b>No M&amp;A deep-dived yet.</b> Placeholder for acquisitions Summit has studied in depth — none for Amazon to date.</p>';
+}
+function aOtherAnalysisBody(){
+  return '<p class="ov-lede"><b>Future placeholder.</b> Ad-hoc analysis will land here — nothing deep-dived for Amazon yet.</p>';
+}
 function deepDiveHtml(c){
   _co=c;   // capture company (id + ticker) for the Watch List DB wiring
   var h='<div class="ov ov-amzn ov-amzn-dd" data-brand="AMZN" style="--brand:'+BRAND+';--brand-2:'+BRAND2+';--brand-soft:rgba(255,153,0,0.10)">';
@@ -3402,22 +5167,35 @@ function deepDiveHtml(c){
       '<button type="button" class="dd-tab" data-dd="evolution">Evolution</button>'+
       '<button type="button" class="dd-tab" data-dd="valuation">Valuation</button>'+
       '<button type="button" class="dd-tab" data-dd="mgmt">Management</button>'+
+      '<button type="button" class="dd-tab" data-dd="misc">Miscellaneous</button>'+
     '</div>';
   h+='<div class="dd-pane" data-dd="topline">'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="segments">Segments</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="segov">General</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="segdrv">Segments</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="segoth">Other</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="segcus">Customers</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="segments">'+toplineSegBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segov">'+(segmentsOverviewHtml('AMZN')||ceResultsPending('Overview'))+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segdrv" hidden>'+(segmentsHtml('AMZN')||ceResultsPending('Segments'))+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segoth" hidden>'+(segmentsOtherHtml('AMZN')||ceResultsPending('Other'))+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segcus" hidden>'+(segmentsCustomersHtml('AMZN')||ceResultsPending('Customers'))+'</div>'+
+
     '</div>';
   h+='<div class="dd-pane" data-dd="bottomline" hidden>'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="margins">Margins</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="expenses">Expenses</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="capex">Capex &amp; Depreciation</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="margins">General</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="segments">Segments</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="supplychain">Supply Chain</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="margins">'+bottomlineBody()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="expenses" hidden>'+expensesBody()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="capex" hidden>'+bottomlineCapexBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="margins">'+aGeneralPicker()+
+        '<div class="gen-sec" data-gsec="margins">'+aMarginsBody()+'</div>'+
+        '<div class="gen-sec" data-gsec="bridge" hidden>'+aBridgeBody()+'</div>'+
+        '<div class="gen-sec" data-gsec="net" hidden>'+aNetBridgeBody()+'</div>'+
+        '<div class="gen-sec" data-gsec="sbc" hidden>'+aSbcBody()+'</div>'+
+        aCollap('Expense lines — the six functional deep dives (unit economics, drivers, calls)', expenseTabsBody(), false)+'</div>'+
+      '<div class="ovt-subpane" data-ovst="segments" hidden>'+segmentsBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="supplychain" hidden>'+aSplcBody(c)+'</div>'+
     '</div>';
   h+='<div class="dd-pane" data-dd="evolution" hidden>'+
       '<div class="ce-evohead" style="position:relative;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 12px">'+
@@ -3444,17 +5222,39 @@ function deepDiveHtml(c){
     '</div>';
   h+='<div class="dd-pane" data-dd="valuation" hidden>'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="peers">Peers</button>'+
-        '<button type="button" class="ovt-subtab" data-ovst="financials">Financials</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="histmult">Historic Multiple</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="peers">Peers</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="targetmult">Target Multiple / PEG</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="sensitivity">Sensitivity Analysis</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="peers">'+valuationPeersBody()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="financials" hidden>'+valuationFinBody()+'</div>'+
+      // Financials was removed from this bar (Pablo, Aug 19 2026). Its body and chart builder are
+      // parked below rather than deleted — putting the tab back is these two lines.
+      '<div class="ovt-subpane" data-ovst="histmult">'+valuationHistBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="peers" hidden>'+valuationPeersBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="targetmult" hidden>'+amznTargetMult.body()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="sensitivity" hidden>'+amznSens.body()+'</div>'+
     '</div>';
   h+='<div class="dd-pane" data-dd="mgmt" hidden>'+
       '<div class="ovt-subtabs">'+
-        '<button type="button" class="ovt-subtab active" data-ovst="team">Executives & Governance</button>'+
+        '<button type="button" class="ovt-subtab active" data-ovst="team">Executives &amp; Board</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="ownership">Ownership</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="governance">Governance &amp; SBC</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="track">Track Record</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="team">'+mgmtBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="team">'+AMZN_MGMT.body()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="ownership" hidden>'+amznOwnBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="governance" hidden>'+amznGovBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="track" hidden>'+amznTrackBody()+'</div>'+
+    '</div>';
+  h+='<div class="dd-pane" data-dd="misc" hidden>'+
+      '<div class="ovt-subtabs">'+
+        '<button type="button" class="ovt-subtab active" data-ovst="capex">Capex &amp; Depreciation</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="manda">M&amp;A</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="other">Other Analysis</button>'+
+      '</div>'+
+      '<div class="ovt-subpane" data-ovst="capex">'+bottomlineCapexBody()+segCapDaBody()+aLeasesBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="manda" hidden>'+aMandaBody()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="other" hidden>'+aOtherAnalysisBody()+'</div>'+
     '</div>';
   h+='</div>';
   return h;
@@ -3474,6 +5274,9 @@ function wireModal(root){
       var body=f.items.map(function(it){ return '<div style="margin:0 0 10px"><div style="font-size:12.5px;font-weight:800;color:var(--navy)">'+esc(it[0])+'</div><div class="famd">'+it[1]+'</div></div>'; }).join('');
       return {t:f.ic+' '+esc(f.fam),h:'<div class="famd" style="margin-bottom:10px;color:var(--mu)">'+esc(f.d)+'</div>'+body}; }
     if(kind==='ce'){ return CE_POP[id]||null; }
+    if(kind==='seg'){ return SEG_WORLD[id]||null; }
+    if(kind==='splc'){ var sp=A_SPLC_INFRA[+id]; return sp?{t:esc(sp.n)+' <span style="font-weight:600;color:var(--mu)">'+esc(sp.rel)+' · '+esc(sp.cost)+'</span>',h:sp.d}:null; }
+    if(kind==='exec'){ var ex=AMZN_TRACK.filter(function(x){ return x.id===id; })[0]; return ex?{t:esc(ex.n)+' <span style="font-weight:600;color:var(--mu)">'+esc(ex.role)+'</span>',h:ex.detail}:null; }
     return null;
   }
   // Delegated: catches static AND dynamically-added [data-detail] elements (e.g. Earnings pop-ups,
@@ -3486,15 +5289,31 @@ function wireModal(root){
 }
 // Lazy chart builds per Deep Dive pane / sub-tab (Chart.js needs a non-null offsetParent).
 function aBuildSub(root, dd, key){
-  if(dd==='topline') requestAnimationFrame(aBuildTopline);
+  if(dd==='topline'){
+    // Mix was retired Aug 2026 (SAB): General covers the split and the growth, Other covers the
+    // product-line and country cuts, so it had nothing of its own left to show.
+    if(key==='segdrv') requestAnimationFrame(function(){ initSegments(root, 'AMZN'); });
+    else if(key==='segoth') requestAnimationFrame(function(){ initSegmentsOther(root, 'AMZN'); });
+    else if(key==='segcus') requestAnimationFrame(function(){ initSegmentsCustomers(root, 'AMZN'); });
+    else requestAnimationFrame(function(){ initSegmentsOverview(root, 'AMZN'); });
+  }
   if(dd==='bottomline'){
-    if(key==='capex') requestAnimationFrame(function(){ aBuildCapex(root); });
-    else if(key==='expenses') requestAnimationFrame(aBuildExpenses);
-    else requestAnimationFrame(aBuildBottomline);
+    if(key==='supplychain') requestAnimationFrame(aBuildSplc);
+    else if(key==='segments') requestAnimationFrame(aBuildSegments);
+    else requestAnimationFrame(function(){ aBuildMargins(); aBuildExpenses(); });
+  }
+  if(dd==='misc'){
+    if(key==='capex' || key==null) requestAnimationFrame(function(){ aBuildCapex(root); aBuildSegCapDa(); aBuildLeases(); });
   }
   if(dd==='valuation'){
-    if(key==='peers') requestAnimationFrame(function(){ aScRenderAll(root); aScChipsAll(root); aScFetchCaps(root); });
-    if(key==='financials') requestAnimationFrame(aBuildFin);
+    if(key==='histmult') requestAnimationFrame(function(){ amznHistMult.init(root); });
+    if(key==='sensitivity') requestAnimationFrame(function(){ amznSens.init(root); });
+    if(key==='targetmult') requestAnimationFrame(function(){ amznTargetMult.init(root); });
+    // wireScatters() rather than the three render calls it ends with: entering the sub-tab must also
+    // bind the pills and the table dropdown. It is idempotent (the _scWired guard) and keeps the peer
+    // list as the user left it (aScReset only seeds when A_SC.peers is null).
+    if(key==='peers') requestAnimationFrame(function(){ wireScatters(root); });
+    // no 'financials' branch — that sub-tab was removed (Aug 19 2026); aBuildFin is parked with it
   }
   if(dd==='evolution'){
     if(key==='earnings'){
@@ -3833,7 +5652,20 @@ function deepDiveInit(c){
   var root=document.getElementById('co-detailview'); if(!root) return;
   wireDD(root);
   wireModal(root);   // re-run so the delegated [data-detail] handler covers the Deep Dive DOM
-  requestAnimationFrame(aBuildTopline);   // Top Line is the initially-visible pane
+  AMZN_MGMT.init(root);   // wire the Executives & Board CV modal (makeManagement)
+  if(!root._rsCollapWired){ root._rsCollapWired=true;   // rule 3: the table dropdown under each chart
+    root.addEventListener('click', function(e){ var h=e.target.closest?e.target.closest('.rs-collap-h'):null; if(!h||!root.contains(h)) return;
+      var b=h.nextElementSibling; if(!b||!b.classList.contains('rs-collap-b')) return; var open=b.hidden; b.hidden=!open;
+      var ic=h.querySelector('.rs-collap-ic'); if(ic) ic.textContent=open?'▾':'▸'; }); }
+  // Build whatever is ACTUALLY visible, rather than a hardcoded pane. This used to call one
+  // pane's builder directly, which left the visible pane empty the moment a sub-tab was added in
+  // front of it. Reading the active tabs means the next one added costs nothing.
+  requestAnimationFrame(function(){
+    var pane = root.querySelector('.dd-pane:not([hidden])');
+    var dd = pane ? pane.getAttribute('data-dd') : 'topline';
+    var sub = pane ? pane.querySelector('.ovt-subtab.active') : null;
+    aBuildSub(root, dd, sub ? sub.getAttribute('data-ovst') : null);
+  });
 }
 
 export var amznOverview = { html: html, init: init, headerSources: ceHeaderSources, deepDive: { html: deepDiveHtml, init: deepDiveInit } };

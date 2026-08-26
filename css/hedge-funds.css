@@ -1,6 +1,57 @@
+/* ─── Hedge Funds: Overall / Superinvestors sub-tabs (mirrors .cotabs/.cotab) ─── */
+
+.hf-maintabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--bdr);
+  margin-bottom: 22px;
+}
+
+.hf-maintab {
+  background: none;
+  border: none;
+  color: var(--mu);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  letter-spacing: .3px;
+  font-weight: 600;
+  padding: 11px 20px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all .15s;
+}
+
+.hf-maintab:hover { color: var(--navy); }
+
+.hf-maintab.active {
+  color: var(--navy);
+  border-bottom-color: var(--steel);
+}
+
+.hf-mainpane { display: none; }
+.hf-mainpane.active { display: block; }
+
+.hf-qtoggle-btn {
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+
+.hf-qtoggle-btn:hover { opacity: .85; }
+
 /* ─── Hedge Funds: benchmark bar + investor cards ─── */
 
 .inv-bench {
+  position: relative;
   background: var(--w);
   border: 1px solid var(--bdr);
   border-radius: 14px;
@@ -66,26 +117,47 @@
   flex: 1;
 }
 
+/* True diverging bars: a fixed zero-line in the middle, positive years
+   grow up from it, negative years grow down -- so a down year (2022)
+   actually reads as "down," not just a shorter bar in the same direction
+   as an up year. */
 .ibb-wrap {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  height: 32px;
+  height: 40px;
   width: 100%;
   align-items: center;
 }
 
-.ibb-pos {
-  background: rgba(22, 163, 74, .55);
+.ibb-poswrap {
+  height: 20px;
   width: 100%;
-  border-radius: 1px 1px 0 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.ibb-negwrap {
+  height: 20px;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.ibb-zero { width: 100%; height: 1px; background: var(--bdr); flex-shrink: 0; }
+
+.ibb-pos {
+  background: rgba(22, 163, 74, .65);
+  width: 60%;
+  border-radius: 2px 2px 0 0;
   min-height: 1px;
 }
 
 .ibb-neg {
-  background: rgba(220, 38, 38, .5);
-  width: 100%;
-  border-radius: 0 0 1px 1px;
+  background: rgba(220, 38, 38, .6);
+  width: 60%;
+  border-radius: 0 0 2px 2px;
   min-height: 1px;
 }
 
@@ -170,6 +242,28 @@
 }
 
 .icard-hide-btn:hover { opacity: 1; background: var(--surface); color: var(--neg); }
+
+.icard-edit-btn {
+  position: absolute;
+  top: 8px;
+  right: 30px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--mu);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: .35;
+  transition: opacity .12s, background .12s, color .12s;
+}
+
+.icard-edit-btn:hover { opacity: 1; background: var(--surface); color: var(--steel); }
 
 .hf-showall-btn {
   font-family: 'Inter', sans-serif;
@@ -262,10 +356,16 @@
 
 .icard-mets {
   display: flex;
+  flex-direction: column;
   border: .5px solid var(--bdr);
   border-radius: 8px;
   overflow: hidden;
   margin-bottom: 12px;
+}
+
+.icard-mets-row {
+  display: flex;
+  border-bottom: .5px solid var(--bdr);
 }
 
 .icard-met {
@@ -277,6 +377,12 @@
 }
 
 .icard-met:last-child { border-right: none; }
+
+.icard-met-full {
+  padding: 8px 10px;
+  background: var(--surface);
+  text-align: center;
+}
 
 .icard-ml {
   font-family: 'Inter', monospace;
@@ -361,6 +467,181 @@
 .rpill.rp { background: rgba(23, 122, 78, .1); color: var(--pos); }
 .rpill.rn { background: rgba(155, 42, 32, .1); color: var(--neg); }
 
+/* ─── Investor card: Q1 vs Q2 2026 holdings snapshot comparison ─── */
+
+.icard-cmp { display: flex; gap: 8px; }
+
+.icard-cmp-col { flex: 1; min-width: 0; padding-top: 2px; }
+
+.icard-cmp-q2 {
+  background: rgba(30, 58, 95, .045);
+  border-radius: 8px;
+  padding: 2px 7px 4px;
+  margin: -2px -7px -4px 0;
+}
+
+.icard-cmp-hd {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--mu);
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid var(--bdr);
+}
+
+.icard-cmp-q2 .icard-cmp-hd { color: var(--navy); }
+
+.icard-cmp-dt {
+  font-size: 9px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--mu);
+}
+
+.icard-cmp-row {
+  display: grid;
+  grid-template-columns: 1fr 42px 44px;
+  align-items: center;
+  column-gap: 4px;
+  padding: 3.5px 0;
+  border-bottom: .5px solid #F0F4F8;
+}
+
+.icard-cmp-row:last-child { border-bottom: none; }
+
+.icard-cmp-t {
+  font-family: 'Inter', monospace;
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--navy);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icard-cmp-w {
+  font-family: 'Inter', monospace;
+  font-size: 9.5px;
+  color: var(--mu);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.icard-cmp-r {
+  font-family: 'Inter', monospace;
+  font-weight: 500;
+  font-size: 10px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.icard-cmp-r.rp { color: var(--pos); }
+.icard-cmp-r.rn { color: var(--neg); }
+.icard-cmp-r.rna { color: var(--mu); font-weight: 400; }
+
+.icard-arrow-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+}
+
+.icard-arrow-tbl th {
+  font-size: 9.5px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--mu);
+  padding: 4px 4px 4px 0;
+  font-weight: 500;
+  text-align: left;
+}
+
+.icard-arrow-tbl thead tr:first-child th {
+  text-align: center;
+  color: var(--navy);
+  font-weight: 700;
+  padding-bottom: 2px;
+}
+
+.icard-arrow-tbl thead tr:last-child th {
+  padding: 2px 4px 6px 0;
+  border-bottom: 1px solid var(--bdr);
+}
+
+.icard-arrow-tick { vertical-align: bottom; }
+
+.icard-arrow-tbl th.nr { text-align: right; padding-right: 0; }
+
+.icard-arrow-row td {
+  padding: 7px 4px 7px 0;
+  border-bottom: .5px solid #F0F4F8;
+}
+
+.icard-arrow-row:last-child td { border-bottom: none; }
+.icard-arrow-row:hover td { background: #F7FAFD; }
+
+.icard-edit-input {
+  width: 44px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: right;
+  padding: 1px 2px;
+  border-radius: 3px;
+  transition: background .12s, outline .12s;
+}
+
+.icard-edit-input:hover { background: rgba(30, 58, 95, .06); }
+
+.icard-edit-input:focus {
+  outline: 1.5px solid var(--steel);
+  background: var(--w);
+  color: var(--text);
+}
+
+.icard-edit-saving { opacity: .5; }
+.icard-edit-saved { outline: 1.5px solid var(--pos) !important; background: rgba(23, 122, 78, .08) !important; }
+.icard-edit-error { outline: 1.5px solid var(--neg) !important; }
+.icard-arrow-row.icard-arrow-dropped { opacity: .55; }
+
+.icard-arrow-m {
+  text-align: right;
+  font-family: 'Inter', monospace;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.icard-arrow-m.rp { color: var(--pos); }
+.icard-arrow-m.rn { color: var(--neg); }
+.icard-arrow-m.rna { color: var(--mu); }
+
+.icard-arrow-legend {
+  font-size: 9.5px;
+  color: var(--mu);
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+.icard-cmp-newbadge {
+  display: inline-block;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  color: #2563EB;
+  border: 1px solid #2563EB;
+  border-radius: 3px;
+  padding: 0 3px;
+  margin-left: 3px;
+  vertical-align: middle;
+}
+
 /* ─── Shared building blocks (Upload 13F panel, letters, year pills) ─── */
 
 .icard { cursor: pointer; transition: box-shadow .12s, border-color .12s; }
@@ -389,6 +670,87 @@
 
 .im-body { padding: 20px 26px 26px; }
 
+.edit-modal-body { display: flex; flex-direction: column; gap: 2px; }
+
+.edit-modal-divider {
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mu);
+  font-weight: 600;
+  margin: 14px 0 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--bdr);
+}
+
+.edit-modal-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: .5px solid #F0F4F8;
+}
+
+.edit-modal-row:last-child { border-bottom: none; }
+
+.edit-modal-label {
+  font-family: 'Inter', monospace;
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--navy);
+}
+
+.edit-modal-fields {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-modal-arrow { color: var(--mu); font-size: 11px; }
+.edit-modal-pct { color: var(--mu); font-size: 12px; margin-left: -2px; }
+
+.edit-modal-input {
+  width: 62px;
+  border: 1px solid var(--bdr);
+  border-radius: 6px;
+  padding: 5px 7px;
+  text-align: right;
+  font-size: 12.5px;
+}
+
+.edit-modal-input:focus { outline: none; border-color: var(--steel); }
+
+.edit-modal-inv {
+  border: 1px solid var(--bdr);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.edit-modal-inv summary {
+  padding: 9px 12px;
+  background: var(--surface);
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--navy);
+  list-style: none;
+}
+
+.edit-modal-inv summary::-webkit-details-marker { display: none; }
+.edit-modal-inv summary::before { content: '\25B8'; display: inline-block; margin-right: 6px; color: var(--mu); transition: transform .12s; }
+.edit-modal-inv[open] summary::before { transform: rotate(90deg); }
+
+.edit-modal-inv-fund {
+  font-family: 'Inter', monospace;
+  font-weight: 400;
+  font-size: 10.5px;
+  color: var(--mu);
+}
+
+.edit-modal-inv-body { padding: 4px 12px 6px; }
+
 .im-section-lbl {
   font-family: 'Inter', monospace;
   font-size: 10px;
@@ -403,6 +765,14 @@
   font-size: 12px;
   color: var(--mu);
   padding: 10px 0;
+}
+
+.im-no-public {
+  background: var(--surface);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  padding: 14px 16px;
+  line-height: 1.6;
 }
 
 .im-years { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -484,7 +854,14 @@
 
 .u13f-tbl th, .u13f-tbl td { padding-left: 4px; }
 
-.u13f-inc { cursor: pointer; }
+.u13f-inc, .c13f-inc { cursor: pointer; }
+
+.ivd-cmp-showmore { display: block; margin: 8px auto 0; }
+
+/* ─── Check for new 13Fs panel ─── */
+
+.c13f-row-new { background: color-mix(in srgb, var(--pos) 8%, transparent); }
+.c13f-row-err td { color: var(--neg); }
 
 .u13f-ticker-in {
   width: 62px;
@@ -611,6 +988,19 @@
   vertical-align: middle;
 }
 
+.ivd-shared-mark {
+  color: var(--gold2);
+  font-weight: 700;
+  margin-left: 1px;
+}
+
+.ivd-cmp-footnote {
+  font-size: 10.5px;
+  color: var(--mu);
+  margin-top: 6px;
+  padding: 0 2px;
+}
+
 /* ─── Stat strip ─── */
 
 .ivd-stats {
@@ -655,131 +1045,116 @@
   margin: 18px 0 12px;
 }
 
-.ivd-chart-format-toggle { margin: 0; }
+/* ─── Pie ─── */
 
-/* ─── Lines (single overlaid multi-line chart) ─── */
-
-.ivd-ml-wrap { position: relative; height: 300px; margin-bottom: 14px; }
-.ivd-ml-canvas { width: 100%; height: 100%; }
-
-.ivd-ml-legend {
+.ivd-pie-wrap {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 18px;
+  justify-content: center;
+  padding: 30px 60px;
+  margin-bottom: 8px;
 }
 
-.ivd-ml-legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: 'Inter', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--bdr);
-  border-radius: 7px;
-  padding: 5px 9px;
-  cursor: pointer;
-  transition: background .12s, border-color .12s;
-}
+.ivd-pie-inner { position: relative; flex-shrink: 0; }
 
-.ivd-ml-legend-item:hover { border-color: var(--steel); background: var(--ice); }
+.ivd-pie-canvas { position: absolute; inset: 0; }
 
-.ivd-ml-legend-item.active { background: var(--navy); border-color: var(--navy); }
-.ivd-ml-legend-item.active .ivd-ml-legend-tick,
-.ivd-ml-legend-item.active .ivd-ml-legend-pct { color: #fff; }
-
-.ivd-ml-legend-tick { font-family: 'Inter', monospace; font-weight: 700; color: var(--navy); }
-.ivd-ml-legend-pct { font-family: 'Inter', monospace; color: var(--mu); }
-.ivd-ml-legend-pct.na { color: var(--neg); font-weight: 600; }
-.ivd-ml-legend-item .ivd-badge { font-size: 8.5px; padding: 1px 5px; }
-
-.ivd-cmp-row-hoverable { cursor: pointer; }
-.ivd-cmp-row-hoverable:hover { background: rgba(37, 99, 235, .04); }
-.ivd-cmp-row-active { background: rgba(37, 99, 235, .08) !important; }
-
-/* ─── Treemap ─── */
-
-.ivd-tm-wrap {
-  position: relative;
-  width: 100%;
-  height: 340px;
-  margin-bottom: 10px;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.ivd-tm-cell {
+.ivd-pie-photo {
   position: absolute;
-  box-sizing: border-box;
-  border: 1.5px solid var(--w);
-  padding: 4px 6px;
-  overflow: hidden;
-  transition: filter .1s;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40%;
+  height: 40%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--w);
+  box-shadow: 0 2px 12px rgba(30, 39, 51, .18);
 }
 
-.ivd-tm-cell:hover { filter: brightness(1.08); z-index: 2; }
-
-.ivd-tm-ticker {
+.ivd-pie-photo-ini {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--navy);
+  color: #fff;
   font-family: 'Inter', monospace;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 20px;
+}
+
+.ivd-pie-labels { position: absolute; inset: 0; pointer-events: none; }
+
+.ivd-pie-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: auto;
+  max-width: 112px;
+  background: var(--w);
+  border-radius: 6px;
+  padding: 2px 4px;
+  z-index: 1;
+}
+
+.ivd-pie-logo { width: 20px; height: 20px; border-radius: 5px; flex-shrink: 0; }
+.ivd-pie-logo img { padding: 3px; }
+
+.ivd-pie-sector-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
+
+.ivd-pie-label-txt { display: flex; flex-direction: column; line-height: 1.15; overflow: hidden; }
+
+.ivd-pie-label-t {
+  font-family: 'Inter', monospace;
+  font-weight: 700;
+  font-size: 10px;
+  color: var(--navy);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.ivd-tm-pct {
-  font-family: 'Inter', monospace;
-  font-weight: 600;
-  font-size: 11px;
-  margin-top: 1px;
-}
+.ivd-pie-label-p { font-family: 'Inter', monospace; font-size: 9px; color: var(--mu); }
 
-.ivd-tm-legend { margin-bottom: 18px; }
+.ivd-pie-label-move.up { color: var(--pos); }
+.ivd-pie-label-move.down { color: var(--neg); }
+.ivd-pie-label-move.new { color: var(--gold2); }
 
-.ivd-tm-tip {
-  position: fixed;
-  z-index: 80;
-  pointer-events: none;
-  background: var(--navy);
-  color: #fff;
-  border-radius: 8px;
-  padding: 6px 9px;
-  font-size: 11.5px;
-  box-shadow: 0 6px 20px rgba(30, 39, 51, .25);
-  white-space: nowrap;
-}
+/* ─── Holdings / Resources sub-tabs (mirrors .cotabs/.cotab/.copane) ─── */
 
-/* ─── Below-table row: moves summary (left) + Shared with Summit (right) ─── */
-
-.ivd-below-row {
+.ivdtabs {
   display: flex;
-  gap: 24px;
-  margin-top: 8px;
-  flex-wrap: wrap;
-  align-items: flex-start;
+  gap: 2px;
+  border-bottom: 1px solid var(--bdr);
+  margin: 18px 0 20px;
 }
 
-.ivd-below-col { flex: 1; min-width: 280px; }
-
-.ivd-shared-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.ivdtab {
+  background: none;
+  border: none;
+  color: var(--mu);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 11px 18px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all .15s;
 }
 
-.ivd-shared-list li {
-  font-size: 12.5px;
-  color: var(--text);
-  padding: 9px 2px;
-  border-bottom: .5px solid #F0F4F8;
+.ivdtab:hover { color: var(--navy); }
+
+.ivdtab.active {
+  color: var(--navy);
+  border-bottom-color: var(--steel);
 }
 
-.ivd-shared-list li:last-child { border-bottom: none; }
-.ivd-shared-list b { color: var(--navy); font-weight: 600; }
+.ivdpane { display: none; }
+.ivdpane.active { display: block; }
 
 .ivd-badge {
   display: inline-block;
@@ -807,11 +1182,224 @@
 }
 
 .ivd-summary-list {
+  list-style: none;
   margin: 0;
-  padding-left: 18px;
+  padding: 0;
   font-size: 12.5px;
   color: var(--text);
-  line-height: 1.7;
 }
 
 .ivd-summary-list b { color: var(--navy); }
+
+.ivd-move-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 2px;
+  border-bottom: .5px solid #F0F4F8;
+}
+
+.ivd-move-item:last-child { border-bottom: none; }
+
+.ivd-move-logo { width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0; }
+.ivd-move-logo img { padding: 5px; }
+
+.ivd-move-txt { flex: 1; }
+
+.ivd-move-item.new .ivd-move-txt b { color: var(--gold2); }
+.ivd-move-item.sold .ivd-move-txt b { color: var(--neg); }
+.ivd-move-item.up .ivd-move-txt b { color: var(--pos); }
+.ivd-move-item.down .ivd-move-txt b { color: var(--neg); }
+
+/* ─── Sector Exposure treemap (main Hedge Funds tab, Overall sub-tab) ───
+   True two-level treemap, like a market-monitor stock heatmap: sector
+   regions sized by how much of the tracked book sits there, each holding
+   one tile per company sized by that company's own aggregate weight and
+   colored by that company's own YTD return. All inside a bordered
+   "monitor" frame with its own header/legend/toggle row. Click a
+   sector's header for the full per-company breakdown popup. */
+
+.hf-secmonitor {
+  border: 1px solid var(--bdr);
+  border-radius: 14px;
+  padding: 12px;
+  background: var(--w);
+}
+
+.hf-secmonitor-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.hf-secmonitor-title { font-size: 11px; font-weight: 600; color: var(--mu); }
+
+.hf-secmonitor-legend { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--mu); font-weight: 500; }
+
+.hf-secmonitor-sw { width: 11px; height: 11px; border-radius: 3px; display: inline-block; margin-left: 5px; }
+
+/* Every box below is placed with an inline left/top/width/height (in %,
+   from the squarify() layout in JS) inside this relatively-positioned
+   canvas, so the treemap fills edge-to-edge with no leftover whitespace.
+   A 2px page-colored border is the only "gap" between boxes. */
+.hf-treemap { position: relative; width: 100%; height: 500px; }
+
+.hf-tm-sector {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid var(--w);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.hf-tm-sector-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 0 6px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.hf-tm-sector-name { font-size: 10.5px; font-weight: 700; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.hf-tm-sector-avg { font-size: 10.5px; font-weight: 700; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.hf-tm-sector-avg.hf-tm-pos { color: var(--pos); }
+.hf-tm-sector-avg.hf-tm-neg { color: var(--neg); }
+
+.hf-tm-tickers { position: absolute; left: 0; right: 0; bottom: 0; }
+
+.hf-tm-tile {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1.5px solid var(--surface);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  overflow: hidden;
+  transition: filter .12s;
+  z-index: 1;
+}
+
+.hf-tm-tile:hover { filter: brightness(1.08); z-index: 2; box-shadow: 0 0 0 1.5px var(--navy) inset; }
+
+.hf-tm-ticker { font-size: 10px; font-weight: 700; line-height: 1.1; text-align: center; }
+.hf-tm-ytd { font-size: 8.5px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1; }
+
+.hf-secmosaic-text-lt .hf-tm-ticker,
+.hf-secmosaic-text-lt .hf-tm-ytd { color: var(--w); }
+.hf-secmosaic-text-dk .hf-tm-ticker,
+.hf-secmosaic-text-dk .hf-tm-ytd { color: var(--navy); }
+
+.hf-secmosaic-empty { color: var(--mu); font-size: 13px; padding: 20px; text-align: center; }
+
+/* ─── Sector detail popup (click a mosaic tile) ─── */
+
+.hf-secpop-card { max-width: 620px; width: 100%; max-height: 82vh; display: flex; flex-direction: column; }
+
+/* ─── Single-ticker popup (click one treemap tile) ─── */
+
+.hf-tkpop-card { max-width: 380px; width: 100%; }
+.hf-tkpop-card .modal-header { align-items: center; }
+.hf-tkpop-holders { display: flex; flex-direction: column; }
+.hf-tkpop-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--bdr); font-size: 12.5px; }
+.hf-tkpop-row:last-child { border-bottom: none; }
+.hf-tkpop-name { font-weight: 600; color: var(--navy); }
+.hf-tkpop-w { font-weight: 700; color: var(--navy); font-variant-numeric: tabular-nums; }
+
+.hf-secpop-body { padding: 8px 26px 26px; overflow-y: auto; }
+
+.hf-secpop-list { display: flex; flex-direction: column; }
+
+.hf-secpop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--bdr);
+  flex-wrap: wrap;
+}
+
+.hf-secpop-row:last-child { border-bottom: none; }
+
+.hf-secpop-co { display: flex; align-items: center; gap: 10px; min-width: 160px; }
+
+.hf-secpop-logo { width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; }
+
+.hf-secpop-ticker { font-size: 13px; font-weight: 700; color: var(--navy); }
+
+.hf-secpop-ytd { font-size: 11px; font-weight: 600; margin-left: 6px; }
+.hf-secpop-ytd.pos { color: var(--pos); }
+.hf-secpop-ytd.neg { color: var(--neg); }
+
+.hf-secpop-name { font-size: 11.5px; color: var(--mu); }
+
+.hf-secpop-holders { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; flex: 1; }
+
+.hf-secpop-holder {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--bdr);
+  border-radius: 20px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+.hf-secpop-holder b { color: var(--navy); font-weight: 700; margin-left: 3px; }
+
+/* ─── Stock lookup: which superinvestors hold ticker X, by quarter ─── */
+
+.hf-heat-wrap { overflow-x: auto; }
+.hf-stocklookup-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.hf-stocklookup-tbl th { font-size: 10px; font-weight: 600; color: var(--mu); text-transform: uppercase; letter-spacing: .03em; text-align: left; padding: 0 10px 8px; border-bottom: 1px solid var(--bdr); }
+.hf-stocklookup-tbl th.nr, .hf-stocklookup-tbl td.nr { text-align: right; }
+.hf-stocklookup-tbl td { padding: 9px 10px; border-bottom: 1px solid var(--bdr); }
+.hf-stocklookup-tbl tr:last-child td { border-bottom: none; }
+.hf-stocklookup-inv { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--navy); }
+.hf-stocklookup-fund { display: block; font-size: 11px; color: var(--mu); font-weight: 400; }
+.hf-stocklookup-w { font-variant-numeric: tabular-nums; }
+.hf-stocklookup-dash { color: var(--bdr); }
+
+.hf-stocklookup-logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+  background: var(--surface);
+  border: 1px solid var(--bdr);
+}
+
+.hf-stocklookup-ini {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mu);
+}
+
+/* Position-size move coloring (the "performance" toggle) -- green when
+   this fund grew the position vs. the prior quarter shown, red when
+   trimmed, gold for a brand-new position, same color language as the
+   Recent Moves list on each investor's own detail page. */
+.hf-slk-up { color: var(--pos); font-weight: 700; }
+.hf-slk-down { color: var(--neg); font-weight: 700; }
+.hf-slk-new { color: var(--gold2); font-weight: 700; }
+
+.hf-stocklookup-noperf .hf-slk-up,
+.hf-stocklookup-noperf .hf-slk-down,
+.hf-stocklookup-noperf .hf-slk-new,
+.hf-stocklookup-noperf .hf-slk-flat { color: inherit; font-weight: 400; }
+.hf-stocklookup-empty { color: var(--mu); font-size: 13px; padding: 24px; text-align: center; }

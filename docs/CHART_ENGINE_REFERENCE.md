@@ -10,9 +10,493 @@ Companions, and when to read which:
 |---|---|
 | `docs/CHART_TOOLKIT.md` | **why** the engine is shaped this way, and how to reuse it for a new chart |
 | `docs/RESULTS_CONVENTIONS.md` | the **data contract** — what a dataset must contain (§8 = the vintage matrix) |
-| **this file** | **what** every function and control does, in detail |
+| **this file** | **what** every function and control does, in detail — and **§0, the standard every chart in the portal owes its reader** |
 
-Written Aug 11, 2026 on `feat/results-estimates-v2`.
+**If you are about to build a chart, start at §0.** It is the checklist: what every chart must do
+regardless of what it plots, what the engine will hand you for free, and the exact call for each
+piece. Everything after §0 is the detail behind those calls.
+
+Written Aug 11, 2026 on `feat/results-estimates-v2` (merged as PR #83). Completed Aug 12, 2026 —
+the summary columns, the brush internals, the slider wiring and the two invariants they imply.
+Aug 13, 2026 — **§0.7, the path-3 kit**: the engine exports no helpers, so what a bespoke canvas
+gets from global CSS, what it copies, and a skeleton that passes the §0.5 checklist.
+
+---
+
+## 0. The standard — what every chart owes its reader
+
+Read this section before you write a chart. It is short on purpose.
+
+**Starting a whole company rather than one chart? Jump to §0.6** — the selection steps: inventory
+the data first (it decides what is even possible), take the tab spine from Amazon, then pick charts
+per tab. Come back here for each chart you end up building.
+
+### 0.1 Which path are you on
+
+| Your chart is | Path | Start at |
+|---|---|---|
+| a **metric over time, against expectations** — actuals, our model, the Street, guidance | **Reuse the engine.** Write a dataset, not a canvas | `CHART_TOOLKIT.md` §8 + `RESULTS_CONVENTIONS.md` |
+| a **snapshot axis** — how a forecast moved across model saves | Reuse the engine (blocks C / D / E) | §6, §7, §8 of this file |
+| **anything else** — waterfall, choropleth, scatter, network, org chart, bridge | **You write the canvas.** The engine has nothing to plot for you | §0.2 below, then **§0.7 for the kit**, then §0.5 |
+
+Path 3 is the common case outside Results (TBBB's sensitivity matrix, the AMZN margin bridge, the
+robotics supply map). **The rules in §0.2 still apply to it.** They are not engine features — they
+are what makes twelve charts built by five people read as one product. §0.7 is how you meet them
+without the engine: what is already global, what you copy, and what you write.
+
+### 0.2 The six non-negotiables
+
+Every chart in the portal does these six things. If yours cannot, that is a finding to raise, not a
+default to skip.
+
+| # | The rule | You get it from | Verify by |
+|---|---|---|---|
+| 1 | **Both axes zoom, double-click resets** | `rsAttachBrush(el, chart, onX, onY, onReset)` | drag sideways, drag down, drag on the axis strip, double-click |
+| 2 | **Clicking a series hides it** — and everything downstream follows | legend chips + a `hidden{}` map in state | hide a series; the table and the summary column must lose it too |
+| 3 | **A table under the chart, inside a dropdown, carrying at minimum everything drawn** | `.rs-collap` markup + a delegated `…tblb` handler | collapse it; the header still says what is inside |
+| 4 | **The metric dropdown is grouped by family** | `<optgroup>` per family, segments as options | open it: `Gross Bookings ▸ Total · Mobility · Delivery` |
+| 5 | **Every number carries its unit, every estimate is marked as one** | `rsFmt` / `rsModeFmt`, `act: null` → `rsFwdZone` | a forward column is shaded and marked `E`; the axis says `$B`, not `1234` |
+| 6 | **Missing data renders nothing, never broken** | return `''` from the `*Html`; badge the absence | load a ticker with no guidance: an amber badge, not an empty band |
+
+#### 1 · Zoom on both axes
+
+One call, on every chart in the engine, and it is four lines in a new one:
+
+```js
+rsAttachBrush(canvasEl, chart,
+  function(a, b){ st.win = [lo + a, lo + b]; rebuild(); },  // x-drag → period window (null if x is not windowable)
+  function(v1, v2){ st.yr = [v1, v2]; rebuild(); },         // y-drag → value range
+  function(){ st.win = null; st.yr = null; rebuild(); });    // double-click → reset both
+```
+
+Then honour `st.yr` where you build the scales — this half is easy to forget, and without it the
+drag paints a rectangle and does nothing:
+
+```js
+min: st.yr ? st.yr[0] : undefined,
+max: st.yr ? st.yr[1] : undefined
+```
+
+⚠ **Drop the zoom whenever the axis units change.** Every mode toggle in the engine sets
+`st.yr = null` before rebuilding (`js/results.js:3141, 3985, 4037`, …). A y-range of `[40, 60]`
+captured on a `$B` axis, re-applied to a `%` axis, silently crops the chart to nothing.
+
+Pass `onX = null` when the x-axis is categorical and unwindowable (D and E do this) — the brush
+then treats every drag as a y-drag instead of dying.
+
+#### 2 · Click a series to hide it
+
+Two halves. The chip:
+
+```js
+'<button type="button" class="rs-leg' + (st.hidden[key] ? ' off' : '') +
+  '" data-rsleg="' + key + '" title="Show / hide">' +
+  '<span class="ave-leg-act" style="background:' + color + '"></span>' + esc(label) + '</button>'
+```
+
+…and the rule that makes it honest: **the same predicate that hides the series must feed the
+table.** In D this is enforced by having exactly one function — `rsEvoVisible(k, m)` — that answers
+"what is the chart drawing", with the chart, both tables and the aggregates all rendering from it
+(§7). Copy that shape. A legend that hides a line from the chart while the table keeps totalling it
+is worse than no legend, because the reader now trusts a number that is not on screen.
+
+Use `<span class="rs-leg-line">` instead of the swatch when the series is drawn as a line, so the
+chip looks like the mark it controls.
+
+#### 3 · The table under the chart
+
+**Minimum bar: the table contains everything the chart draws.** It may contain more — A's table
+shows level, growth and margin at once regardless of the chart's mode (§4) — but never less.
+
+```js
+'<div class="rs-collap" data-rstbl="' + k + '">' +
+  '<button type="button" class="rs-collap-h" data-rstblb="' + k + '">' + headHtml + '</button>' +
+  '<div class="rs-collap-b" id="rsTableBody-' + k + '"' + (st.tbl === false ? ' hidden' : '') + '>' +
+    '<div class="rs-tablewrap" id="rsTable-' + k + '"></div>' +
+  '</div></div>'
+```
+
+The header is generated, not static: it carries the caret, `show`/`hide`, **the metric, and the
+count of what is inside** — *"Total GB, 18 periods in the selected range"* — and it is re-rendered
+on every toggle so those counts follow the controls above. See §9.13 for which blocks default open
+and the `=== false` / `=== true` trap that decides it.
+
+#### 4 · Dropdowns grouped by metric family
+
+```js
+'<optgroup label="' + esc(group.label) + '">' + options + '</optgroup>'
+```
+
+**Family first, segments inside** — `Gross Bookings ▸ Total · Mobility · Delivery · Freight`, never
+the transpose. Every company has a handful of families with segments beneath them, so this shape
+homogenises across tickers while segment-first does not. The option text stays the metric's full
+name: a closed `<select>` shows the option alone, never its group header, so an option that reads
+`Total` out of context is a bug.
+
+Validate the stored key against the group's keys on every render (`rsMetric(k)` does this) — a
+metric key surviving a view or ticker switch is the classic "chart renders empty" cause.
+
+#### 5 · Units and estimates are never ambiguous
+
+* The level button carries **the unit itself** (`$B`, `US$`, `Units`), not the word "Levels".
+* `act: null` is the **only** declaration that a period is forward. It drives the forecast shading,
+  the muted axis labels, the `E` marks and what can be scored (§3.3). Never add an `isEstimate`
+  flag; leave the actual empty.
+* A difference in a percentage mode is in **percentage points**, and says `pp`. §10 has the full
+  units-per-mode table — it is the rule every table in the portal obeys.
+* Below ±0.05 a move renders neutral, not red. Colouring a rounding artifact claims a line fell.
+
+#### 6 · Degrade to nothing, never to broken
+
+`resultsHtml` / `resultsEvoHtml` return `''` when the dataset or its `evolution` block is missing,
+so an unfinished ticker renders **no section** rather than a broken one. Do the same, and make
+absences that a reader might mistake for a bug **loud**: the amber `⚑ No company guidance` badge
+exists precisely so nobody wonders why the band is missing.
+
+⚠ One exception worth knowing: `rsRerenderSurp` assigns to `host.outerHTML`, so returning `''`
+there **deletes the block** and leaves nothing to render back into. `rsSurpEmptyHtml(reason)`
+exists for that case (invariant 3, §12).
+
+### 0.3 The menu — offer these when the data supports them
+
+Not mandatory. Each is worth one line of thought, and the answer is often yes.
+
+| Capability | Offer it when | The call | §|
+|---|---|---|---|
+| Range presets + slider | the x-axis is periods | `rsPresetWin`, `rsSyncSlider`, `wireSliders` | 9.5 |
+| Level ⇄ Growth ⇄ Margin | the metric has a denominator (`marginOf`) | `rsModeArr` — **one transform for all three** | 9.2 |
+| Growth in % **or** amount | you offer growth at all | `rsGrowArr(sk, m, series, amt)` | 9.4 |
+| YoY / QoQ | the view is quarterly | `rsLook(k)` | 9.3 |
+| Quarterly ⇄ Annual | the dataset has both views | `data-rsview`, per block | 9.1 |
+| A vintage axis | you have snapshots (`estMatrix`) | `rsSeriesFor`, `rsVintSelHtml` | 3.4 |
+| Guidance Low/Mid/High | the company guides a genuine **range** | `rsGuideAt`, `rsGptMiniHtml` | 9.8 |
+| A surprise scorecard | two series overlap on reported periods | block B | 5 |
+| A summary column | the chart has a window | the `sum*` family — **compute over the window** | 4 |
+| Column highlight | the table is transposed and wide | `colCells` + `.colhl` | 10 |
+
+**Growth in amount is the one people skip**, and it is often the more honest half: a percentage
+flatters a small base and hides a large one.
+
+### 0.4 The layout contract
+
+```
+┃ Section name   [ metric ▾ ]                          ← row 1: WHAT (identity)
+  [Quarterly|Annual] [$B|Growth|Margin %] [YoY|QoQ]        Range  Last 4Q · …
+                                                        ← row 2: HOW (left) · WINDOW (right)
+  ■ Actual  ■ Summit  ■ Street  ■ Guidance              ← legend chips, click to hide
+  ┌────────────────────────────────────────┐
+  │  chart                                  │           ← drag to zoom · double-click resets
+  └────────────────────────────────────────┘
+  ●──────────────────────────────●                      ← slider, when x is periods
+  ▸ Period detail   show · Total GB, 18 periods         ← the table, collapsed behind its own summary
+```
+
+**Row 1 is identity, row 2 is treatment.** Controls that change what a number *means* go left;
+controls that change *which numbers are on screen* go right. And **a control lives where the thing
+it changes lives** — that is why A's guidance pills sit inside the guidance row rather than in the
+control row (§9.8), and why C suppresses the second copy (§6, `gptShown`).
+
+Both y-axes go **on the right**, stacked by `weight`: primary inboard, margin outboard.
+
+### 0.5 Before you ship
+
+- [ ] Drag sideways, drag down, **drag on the axis strip**, double-click to reset
+- [ ] Switch every mode with a zoom active — the zoom drops instead of cropping
+- [ ] Click every legend chip: the series leaves the chart **and every table and total**
+- [ ] Collapse the table: the header still names the metric and counts what is inside
+- [ ] Open the dropdown: families with segments inside, and every option reads standalone
+- [ ] A forward period is shaded, muted and marked `E`; the axis shows units
+- [ ] Load a ticker with no data for this chart: nothing renders, nothing throws
+- [ ] Resize to ~380px: labels thin out, the table scrolls, nothing smears
+- [ ] Scope every DOM lookup to the pane (§12, invariant 2) and `esc()` every interpolated string
+- [ ] **Click the controls in the browser.** Two bugs in `e21b11b` looked right in the DOM and did
+      nothing (§12, invariant 6)
+
+### 0.6 Starting a new company — the selection steps
+
+§0.1–0.5 are per chart. This is per **company**: what to build, in what order, and what to skip.
+
+**AMZN is the reference implementation.** The plan is one company finished end to end, then
+replicated — so when you start a new ticker, the first move is to open Amazon and copy its shape,
+not to design one. Where this section and Amazon disagree, Amazon is right and this section is
+stale: fix it.
+
+#### Step 1 — inventory the data. It decides what is even possible.
+
+Do this before choosing a single chart. The capabilities are a ladder, and you cannot skip a rung:
+
+| You have | You get | Who has it today |
+|---|---|---|
+| nothing | **no Results section at all** — the profile still works | most tickers |
+| `views` + `periods` + `act` | block **A** (per-section charts + period tables) | every ticker with a dataset |
+| …and any two series overlapping on reported periods | block **B**, the surprise scorecard | most of the above |
+| …and `evolution` | the whole **Estimates pane** (D + E) | AMZN · LYFT · META · SPOT · TBBB |
+| …and `estMatrix` | the **vintage axis** ("estimates as of …") + **C**, Road to the print | **AMZN · UBER** |
+| a `js/results-data/<ticker>-setup.js` | the Earnings **Setup** chart (a 2nd engine instance) | AMZN · GOOGL · IBKR · LYFT · META · SPOT · TBBB |
+
+Two things this table is telling you:
+
+* **GOOGL and IBKR have datasets with neither `evolution` nor `estMatrix`.** They render A and B and
+  nothing else, and that is a finished state, not a broken one. Do not build an Estimates pane for a
+  ticker with no snapshot archive — there is nothing to put in it.
+* **`estMatrix` is expensive** (it is an archive of Bloomberg pulls and model saves, assembled by
+  `scripts/consensus/emit_matrix.py`). Two tickers have it — AMZN was added Aug 17, 2026. Treat C
+  and the vintage picker as advanced capabilities you earn, not defaults you owe.
+* **The ceiling is Bloomberg coverage, not effort.** The workbook carries **four tickers** (AMZN,
+  GOOGL, LYFT, UBER) as of Aug 2026, so `estMatrix.cons` is impossible for the rest no matter how
+  much work you put in — `py scripts/consensus/inspect_matrix.py <TK>` tells you in one command.
+  A ticker with Summit snapshots but no Bloomberg row can still take `estMatrix.summit` alone.
+* **Adding `estMatrix` switches on block C by itself.** Nothing else changes and no UI work is
+  needed — but C is then a chart you now own, so run §0.5 against it.
+
+#### Step 2 — take the tab spine from Amazon
+
+AMZN's Deep Dive is `Top Line · Bottom Line · Evolution · Valuation · Management`, with nested
+`.ovt-subtab`s inside each — Evolution holds `Call Prep · Earnings · Results · Estimates`. Read
+`js/overviews/amzn.js` (`deepDiveHtml`) and mirror the structure; the nested sub-tab machinery is
+documented in CLAUDE.md under the TBBB handoff and is shared.
+
+The other conventions docs own their own tabs and this file does not restate them: Overview →
+`OVERVIEW_CONVENTIONS.md`, Earnings → `EARNINGS_CONVENTIONS.md`, the dataset →
+`RESULTS_CONVENTIONS.md`.
+
+#### Step 3 — per tab, choose charts by the question the tab asks
+
+| The tab asks | The chart shape | Path (§0.1) |
+|---|---|---|
+| how big was each period, and who was right | periods on x, a series per source | reuse the engine — block A |
+| how did each print land vs expectations | diverging surprise bars | block B, free with the data |
+| how did our view of FY27 move | **snapshots** on x, a line per year | block D — needs `evolution` |
+| what did one saved file project | periods on x, one snapshot | block E — free once D exists |
+| how did the forecast for one period get there | snapshots on x, one period | block C — needs `estMatrix` |
+| what is the cost structure / what moved the margin | waterfall or contribution bars | **your own canvas** — §0.2 still applies |
+| how sensitive is the value to two drivers | matrix / heatmap | your own canvas |
+| where does this sit against peers | scatter | your own canvas |
+
+**When the question is "a metric over time against expectations", writing a canvas is the wrong
+answer** — you are re-implementing four series, three modes, a vintage axis and two tables, and it
+will drift from every other company. Write the dataset.
+
+#### Step 4 — order of operations
+
+1. **Dataset first** (`js/results-data/<ticker>.js`) — it unblocks A and B, which are the highest
+   value per hour of work in the whole profile.
+2. **Overview and the bespoke Deep Dive charts** — these are per company and do not depend on the
+   engine.
+3. **`evolution`** when the model snapshots exist → the Estimates pane appears with no UI work.
+4. **`estMatrix`** last, and only if the archive justifies it.
+5. **Earnings Setup** (`<ticker>-setup.js`) alongside the Earnings tab.
+
+Steps 1 and 2 are independent — they can run in parallel across two people, which is how AMZN is
+being built right now (Results/Estimates on one branch, the Deep Dive tabs on another).
+
+#### Step 5 — the rollout rule
+
+**The standard applies to new work. Existing charts are upgraded company by company, never in a
+sweep.** Most charts built before Aug 2026 — TBBB's, SoFi's, the bespoke Deep Dive canvases — do
+not meet §0.2 yet. That is expected.
+
+* **One company per PR.** A branch that touches four tickers' charts cannot be reviewed for
+  regressions by anyone, and the whole point of going company by company is that each change is
+  visible.
+* **Say what changed visually** in the PR body. The reviewer is usually not going to open every tab.
+* **Never silently restyle a chart someone else built** while doing something else — an unexplained
+  visual diff in an unrelated PR is how a regression ships unnoticed.
+* When you do upgrade one, run the §0.5 checklist against it as if it were new.
+
+### 0.7 Path 3 — your own canvas: what exists, what you copy, what you write
+
+§0.2 tells you to call `rsAttachBrush`, `rsFmt`, `colCells`. **You cannot.** `js/results.js` exports
+exactly five names, and none of them is a helper:
+
+```js
+export function getResultsData(ticker)      // :57    — the dataset, trimmed
+export function resultsHtml(ticker)         // :702   — the whole Results pane
+export function resultsEvoHtml(ticker)      // :1609  — the whole Estimates pane
+export function initResults(wrap, ticker)   // :3378
+export function initResultsEvo(ticker)      // :3956
+```
+
+Everything else is module-private. So path 3 is not "import the engine" — it is three separate
+answers, and the first one is much better news than it sounds.
+
+#### The visual language is already global. You write no chart CSS.
+
+`css/results.css` is loaded unconditionally in `index.html:27`, beside `base.css` and `shared.css`.
+**Every `rs-*` class works in any tab of the portal** — Companies, Industry, Team, a bespoke Deep
+Dive canvas. You are not borrowing Results' stylesheet; it is part of the portal's baseline.
+
+| You need | The markup | Gives you |
+|---|---|---|
+| the table dropdown (rule 3) | `.rs-collap` › `.rs-collap-h` (+ `.rs-collap-ic`, `.rs-collap-sub`) › `.rs-collap-b` | the framed header bar, caret, hover, the right-aligned summary text |
+| legend chips (rule 2) | `.rs-leg`, `.rs-leg.off` + `.ave-leg-act` (swatch) / `.rs-leg-line` (line) / `.rs-leg-dash` (dashed) | pill, strike-through when off, a swatch shaped like the mark |
+| the table itself | `.rs-tablewrap` › `.rs-ft-cap` + `.rs-ft-scroll` › `table.rs-ft` | Fiscal-style sheet: sticky header, tabular numerals, row/column crosshair |
+| inside that table | `.rs-ft-h` (sticky first col) · `.rs-ft-este` (shaded forward col) · `.rs-ft-e` (the `E` badge) · `.rs-ft-s` (sticky summary col) · `.rs-ft-nil` · `.rs-ft-dim` · rows `.rs-ft-main` / `.rs-ft-sub` / `.rs-ft-nb` · `.colhl` | rule 5 for free |
+| the zoom rectangle (rule 1) | `.rs-brush` | required by the brush you copy below |
+| a loud absence (rule 6) | `.rs-noguide` | the amber badge |
+| the §0.4 control row | `.rs-block-modes` (left/right split) · `.rs-modes` · `.rs-view` / `.rs-view.active` · `.rs-quick` / `.rs-preset` | the layout contract, already built |
+
+⚠ **Do not reach for `ov-collap`.** The overview modules' collapsible has **no rule in `css/`** — it
+is injected inline by `js/overviews/uber.js`, so it only exists on a page that module happened to
+build. `rs-collap` is the portable one. (The comment at `css/results.css:99` records exactly this.)
+
+#### What you copy verbatim
+
+| Copy | From | Lines | Internal deps | For |
+|---|---|---|---|---|
+| `rsAttachBrush` | `js/results.js:1217–1295` | 79 | **none** — it calls nothing else in the module | rule 1, entire |
+| `esc` | `js/results.js:209` | 1 | none | every interpolated string, always |
+| `rsFwdZone` + `rsRR` | `js/results.js:148–195` | ~48 | each other | rule 5 — the shaded forecast zone |
+| the palette | `js/results.js:141–145`, `196`, `200` | 7 | none | below |
+
+`rsFwdZone` is a **local** Chart.js plugin, not a registered one: pass it in the chart's
+`plugins: [rsFwdZone]` array and give it `options.plugins.rsFwdZone = { from: firstForwardIndex }`.
+
+```
+RS_ACT    rgba(30,39,51,0.92)     navy   — the reported / actual series
+RS_SUMMIT rgba(37,99,235,0.85)    blue   — our model
+RS_CONS   rgba(124,134,148,0.85)  gray   — the Street
+RS_GUIDE  rgba(62,90,130,0.18)    steel  — a guidance band
+RS_FWD    #2563EB                 blue   — the forward / estimate accent
+RS_GREEN  #1E9E62  ·  RS_RED  #C0392B    — beat / miss
+EVO_RAMP  ['#1B3F94','#2563EB','#5E8BEC','#93B1F0']  — ordinal, darkest = nearest year
+```
+
+**These colours are semantic, not decorative.** Navy is what actually happened, blue is us, gray is
+the Street — across every chart in the portal. Repainting "actual" in your own chart costs a reader
+more than it costs you. For categories the palette does not cover (a scatter, a map, a network),
+use the `dataviz` skill's palette and validate it the way `EVO_RAMP` was.
+
+**Do not copy `rsFmt`.** It is bound to the dataset's metric object (`m.unit`, `m.cur`) and drags
+`rsCur` and the whole currency convention with it. Write three lines for your own units — but keep
+the contract: no bare numbers, `pp` for a difference between percentages, neutral below ±0.05.
+
+#### What you write yourself — it is about twenty lines
+
+1. **The chips, and the one predicate.** Rule 2's whole weight is that the *same* function answers
+   "is this series drawn" for the chart, the table and every total. In the engine that is
+   `rsEvoVisible` (§7). In yours it is a two-line `vis(k)` — the point is that there is exactly one.
+2. **The collapsible toggle.** Eight lines, `js/results.js:3161–3169`, delegated — but bound to
+   **your root, not `document`** (§12, invariant 2). Copy the markup test *and* the caret test from
+   the same block (§9.13).
+3. **Honouring `st.yr`.** The brush hands you a range; nothing applies it for you. And drop it to
+   `null` on every control that changes the axis units, or a `$B` range crops a `%` axis to nothing.
+
+#### A skeleton that passes §0.5
+
+```js
+// js/overviews/amzn-bridge.js — a bespoke canvas meeting §0.2 without the engine.
+// Copied from js/results.js: esc (:209), rsAttachBrush (:1217–1295), rsFwdZone+rsRR (:148–195).
+
+var C_ACT = 'rgba(30,39,51,0.92)', C_EST = '#2563EB';
+var SER = [{ k: 'act', label: 'Reported', color: C_ACT },
+           { k: 'est', label: 'Plan',     color: C_EST }];
+var D = { labels: ['1Q25','2Q25','3Q25','4Q25'],
+          act: [12.1, 14.3, null, null], est: [12.5, 13.8, 15.1, 16.0] };
+
+var st = { hidden: {}, yr: null, tbl: false, chart: null };
+function vis(k){ return !st.hidden[k]; }                       // rule 2 — the ONE predicate
+function fmt(v){ return v == null ? '—' : '$' + v.toFixed(1) + 'B'; }   // rule 5 — never bare
+function firstFwd(){ for (var i = 0; i < D.act.length; i++) if (D.act[i] == null) return i; return -1; }
+
+function chips(){
+  return SER.map(function(s){
+    return '<button type="button" class="rs-leg' + (vis(s.k) ? '' : ' off') + '" data-blg="' + s.k + '">' +
+      '<span class="rs-leg-line" style="background:' + s.color + '"></span>' + esc(s.label) + '</button>';
+  }).join('');
+}
+function head(){                                               // rule 3 — the header is generated
+  var open = st.tbl === true, n = SER.filter(function(s){ return vis(s.k); }).length;
+  return '<span class="rs-collap-ic">' + (open ? '▾' : '▸') + '</span>Period detail' +
+    '<span class="rs-collap-sub">' + (open ? 'hide' : 'show') + ' · ' +
+    n + ' series, ' + D.labels.length + ' periods</span>';
+}
+function table(){
+  var est = firstFwd();
+  var h = '<div class="rs-ft-cap">$ in billions · <span class="rs-ft-e">E</span> = estimate</div>' +
+    '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h">Series</th>';
+  D.labels.forEach(function(l, i){
+    var e = est >= 0 && i >= est;
+    h += '<th class="' + (e ? 'rs-ft-este' : '') + '">' + esc(l) + (e ? ' <span class="rs-ft-e">E</span>' : '') + '</th>';
+  });
+  h += '</tr></thead><tbody>';
+  SER.filter(function(s){ return vis(s.k); }).forEach(function(s){     // rule 2 — the SAME predicate
+    h += '<tr class="rs-ft-main"><td class="rs-ft-h">' + esc(s.label) + '</td>';
+    D[s.k].forEach(function(v, i){
+      var e = est >= 0 && i >= est;
+      h += '<td class="' + (e ? 'rs-ft-este' : '') + (v == null ? ' rs-ft-nil' : '') + '">' + fmt(v) + '</td>';
+    });
+    h += '</tr>';
+  });
+  return h + '</tbody></table></div>';
+}
+
+export function bridgeHtml(){
+  if (!D.labels.length) return '';                             // rule 6 — nothing, never broken
+  return '<div class="rs-block" id="brg">' +
+    '<div id="brgLeg">' + chips() + '</div>' +
+    '<div style="position:relative"><canvas id="brgCv" height="280"></canvas></div>' +
+    '<div class="rs-collap">' +
+      '<button type="button" class="rs-collap-h" data-brgtblb="1">' + head() + '</button>' +
+      '<div class="rs-collap-b" id="brgTblBody"' + (st.tbl === true ? '' : ' hidden') + '>' +
+        '<div class="rs-tablewrap" id="brgTbl"></div>' +
+      '</div></div></div>';
+}
+
+function render(root){
+  var cv = root.querySelector('#brgCv');          // scoped to the pane (§12, invariant 2)
+  root.querySelector('#brgLeg').innerHTML = chips();
+  if (st.chart) st.chart.destroy();               // invariant 4 — or "Canvas is already in use"
+  st.chart = new Chart(cv.getContext('2d'), {
+    type: 'bar',
+    data: { labels: D.labels, datasets: SER.filter(function(s){ return vis(s.k); }).map(function(s){
+      return { label: s.label, data: D[s.k], backgroundColor: s.color }; }) },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false },                   // the chips ARE the legend
+                 rsFwdZone: { from: firstFwd() } },            // rule 5
+      scales: { y: { position: 'right',                        // §0.4 — axes on the right
+                     min: st.yr ? st.yr[0] : undefined,        // rule 1 — honour the drag
+                     max: st.yr ? st.yr[1] : undefined,
+                     ticks: { callback: function(v){ return fmt(v); } } } }
+    },
+    plugins: [rsFwdZone]
+  });
+  rsAttachBrush(cv, st.chart, null,                            // null x — the axis is not windowable
+    function(v1, v2){ st.yr = [v1, v2]; render(root); },
+    function(){ st.yr = null; render(root); });
+  root.querySelector('#brgTbl').innerHTML = table();
+}
+
+export function bridgeInit(root){
+  root.addEventListener('click', function(e){                  // delegated, on ROOT not document
+    var lg = e.target.closest('[data-blg]');
+    if (lg){ var k = lg.getAttribute('data-blg'); st.hidden[k] = !st.hidden[k]; render(root); return; }
+    var tb = e.target.closest('[data-brgtblb]');
+    if (tb){
+      st.tbl = st.tbl !== true;
+      var b = root.querySelector('#brgTblBody');
+      if (b) b.hidden = st.tbl !== true;
+      tb.innerHTML = head();
+    }
+  });
+  render(root);
+}
+```
+
+| §0.2 | Where it is above |
+|---|---|
+| 1 · both axes zoom, dbl-click resets | `rsAttachBrush` + `min`/`max` from `st.yr` |
+| 2 · click a series to hide it | `chips()` · `vis()` · the `.filter(vis)` in **both** the datasets and `table()` |
+| 3 · a table in a dropdown, ≥ what is drawn | `.rs-collap` + a generated `head()` that recounts on every toggle |
+| 4 · dropdown grouped by family | n/a — one series set, no metric picker. Add `<optgroup>` the moment there is a second. |
+| 5 · units and estimates unambiguous | `fmt()` · `rsFwdZone` · `.rs-ft-este` + the `E` badge |
+| 6 · degrade to nothing | the `return ''` guard in `bridgeHtml` |
+
+**What this skeleton deliberately does not have:** the range slider and presets (§9.5 — they only
+make sense when x is a period window), the sticky summary column (§4), the vintage axis (§3.4).
+Those are engine features with real machinery behind them. If you find yourself wanting all three,
+stop — you are on **path 1** and should be writing a dataset, not a canvas (§0.1).
 
 ---
 
@@ -116,7 +600,7 @@ Everything in this section is used by two or more blocks. Anything here is where
 | Function | Does |
 |---|---|
 | `getResultsData(ticker)` | returns the **trimmed copy**, memoised in `_rsTrimCache` |
-| `rsTrimData(raw)` | builds that copy: quarterly keeps forward quarters only inside the current FY; annual and `evolution` cap at current FY + 2 |
+| `rsTrimData(raw)` | builds that copy: quarterly keeps forward quarters only inside the current FY; annual and `evolution` cap at current FY + 2. The two rules are the predicates `keepQ` (`rsParseQ(p).y <= fy`) and `keepY` (`+p <= fy + 2`), and **both keep anything they cannot parse** — a period label the engine does not recognise is never silently dropped |
 | `rsTrimMetric(m, keep)` | filters one metric's parallel arrays by a period predicate |
 | `rsCurrentFY(data)` | derives the current fiscal year from the dataset's own last reported period |
 | `rsParseQ('3Q22')` | `{y:2022, q:3}` or null |
@@ -228,7 +712,8 @@ it. `rsVintDefault` lands on the newest **scoreable** file instead.
 | `rsIsPctMode(k)` | is the plotted number a percentage? (everything derived except growth-as-amount) |
 | `rsModeFmt(k, m, v)` | a value, in the current mode |
 | `rsModeDiff(k, m, v)` | a **difference**, in the current mode — percentages differ in **points** |
-| `rsActGrowthPct/Dollar`, `rsRefGrowthPct/Dollar` | the table's per-cell growth |
+| `rsActGrowthPct` / `rsActGrowthDollar` | the actual's growth in a table cell, in percent and in amount |
+| `rsRefGrowthPct` / `rsRefGrowthDollar` | the same for a reference series (Summit / Street / guidance) |
 
 **The base rule matters and every part of the system shares it.** A forward estimate reads as
 "growth vs last year's actual", the way an analyst quotes it — not "growth vs our own estimate of
@@ -268,6 +753,30 @@ orientations — E cannot drift from D.
 **The brush decides its axis from the drag's own shape**, not from where it started — plus either
 **axis strip** forces a y-drag. Testing only the left strip left the gesture dead exactly where the
 scale now is (the axes moved right in Aug 2026).
+
+Inside `rsAttachBrush`, five closures over one `mousedown`:
+
+| Closure | Does |
+|---|---|
+| `decide(cx, cy)` | locks the axis once the pointer has travelled **8px** — `vertical = dy > dx`. Until then `vertical` is `null`, meaning *undecided* |
+| `ensureBox()` | creates the `.rs-brush` rectangle **lazily**, on first `place()` — a click that never moves paints nothing |
+| `place(cx, cy)` | sizes the box: a y-drag spans the full plot width, an x-drag the full height, so the selection reads as a band across the axis being cut |
+| `onMove(e)` | `decide` then `place` |
+| `onUp(e)` | tears the listeners down, then converts pixels → values: y via `chart.scales.y.getValueForPixel`, x via the local `idxAt(clientX)` |
+
+`idxAt` rounds the x-scale's pixel value to the nearest **period index** and clamps it into
+`[0, labels.length − 1]`, so a drag that runs off the edge of the canvas selects to the end instead
+of producing an out-of-range window.
+
+**Three separate guards keep a click from being read as a zoom**: `decide` needs 8px before it
+commits to an axis, `onUp` returns early when `vertical` is still `null`, and each branch re-checks
+its own 8px travel. A one-pixel tremor on a mousedown would otherwise collapse the window to a
+single period — which renders a chart that is technically correct and completely useless.
+
+Listeners are attached to **`document`**, not the canvas, so a drag that leaves the chart still
+tracks and still releases. `rsWireBrush(k, el, chart, lo)` is A's binding: it offsets the returned
+indices by the window's own `lo` (the brush sees the *visible* slice, the state stores absolute
+indices) and repaints. `onReset` is bound to `ondblclick` and clears **both** `win` and `yr`.
 
 ### 3.9 Entry points and pane shells
 
@@ -343,6 +852,10 @@ controls that change which numbers are on screen go right.
 * **Bars**: Actual (navy) · Summit (blue) · Street (grey), grouped.
 * **Guidance**: a translucent **band** for a range, a horizontal **tick** for a single guided
   number (a floating bar of zero height is invisible — Spotify guides one figure per metric).
+  `isPoint(i)` is the test — `guideLo[i] === guideHi[i]`, both non-null — and it runs **per period**,
+  not per metric: a company that guides a range one quarter and a single number the next gets the
+  right mark on each bar. The band's own data map excludes point periods, so the two marks never
+  draw over each other.
 * **Margin lines** on a second axis (`y2`), only in level mode, only outside Top Line.
 * **Both y-axes on the right**, stacked by `weight` — primary inboard, margin outboard.
 * Suppressions: margin lines are off in growth mode (two unrelated percentages on one chart is how
@@ -366,6 +879,44 @@ record (`11▲ · 5▼`, actual avg). Forward columns are shaded and marked `E`.
 
 The table shows **all three readings at once** (value, growth, margin) regardless of the chart's
 mode — it is the block's detail, not a mirror of the chart.
+
+### The Range record — one summary per row
+
+The sticky right-hand column is not one calculation but **five**, picked per row type. All of them
+run over `idx` — the *selected window*, not the whole series — so narrowing the slider or brushing
+the chart re-states the record over what is on screen.
+
+| Function | Fills the row | Returns |
+|---|---|---|
+| `sumCagr()` | the Actual row | `CAGR +18.4%` — the reported series only |
+| `sumGrowth(fn)` | any growth row | `avg +12.1%` — the mean of the cells actually present |
+| `sumSurprise(arr)` | a Summit / Street value row | `11▲ · 5▼` + `actual avg +2.5% · +$1.2B` |
+| `sumMargin(arr)` | a margin row | `avg 34.2%` |
+| `sumGuide()` | the Guidance row | `9▲ · 5⊙ · 2▼` + `avg vs mid +0.9%` |
+
+Three shared primitives sit under them: `avg(a)` (plain mean), `sgn(v, dec, suf)` (a signed figure
+with an explicit `+`/`−` — the minus is a real `−`, not a hyphen), and `pctDollar(p, d)`, which
+renders a percentage with its currency delta dimmed beside it (`+2.4% · +$1.2B`). `pctDollar` is
+why every difference cell in the engine reads in **both** units without a toggle.
+
+Four rules are baked into these five functions, and each one exists because the naive version lied:
+
+* **`sumSurprise` is actual-centric.** It computes `actual − estimate`, so **▲ always means the
+  company beat that line** — the same direction as the surprise cells and the beat/miss legend.
+  Written the other way round (estimate vs actual) the arrows in the column would point opposite to
+  the arrows in the cells above them.
+* **`sumCagr` annualises on the *view*, never on the growth lag** — 4 periods per year in
+  quarterly, 1 in annual. Reading the YoY/QoQ pill here would make a CAGR change when a user
+  switched to QoQ, which is a different question entirely.
+* **`sumCagr` refuses to compute on a sign flip.** It bails when the first or last value is ≤ 0
+  (`first <= 0 || last <= 0`), because a compound rate through zero is not a number anybody should
+  read. The cell goes empty rather than printing a fabricated rate.
+* **`sumGuide`'s ▲⊙▼ verdict describes the whole band, always.** Only the `avg vs <end>` line
+  underneath follows the Low/Mid/High pills (§9.8). Letting the verdict follow the toggle would
+  turn a *within* into a *below* on the low setting — inventing a miss the company never had.
+
+⚠ `sumSurprise` skips a period when the reference is **zero** (`!arr[i]`), not just when it is
+null. A percentage over a zero base is infinity wearing a number's clothes.
 
 ---
 
@@ -426,6 +977,28 @@ Base row → per comparator: value row, YoY growth row, `vs <comparator>` differ
 measure against the **actual** a year back and are skipped when the base is not the actual — an
 estimate's growth is only meaningful off a reported base.
 
+`row(label, cellFn, cls, sum)` builds every line: a label cell, one cell per period in `idx`, and
+the Range record. `lbl(s)` supplies the label and is where the guidance row grows its Low/Mid/High
+pills (`rsGptMiniHtml`), but only when the metric is genuinely ranged.
+
+**B re-declares its own summary family**, and the names being identical to A's hides a real
+difference:
+
+| Function | A's version | B's version |
+|---|---|---|
+| `sumSurprise` | takes an **array** — always `actual` vs that reference | takes a **source key** — the *selected base* vs that comparator, resolved through `rsSrcArr` |
+| `sumCagr` | annualises by `_rs.view` | annualises by `rsSurpLag()` — B owns its period axis (§9.1) |
+| `sumGrowth` | shared shape | same, over B's own `idx` |
+| `g(arr, base, i)` / `gd(...)` | — | growth in **percent** and in **amount**, over `rsSurpLag()`; `gd` skips the zero-base guard because a difference over zero is still a difference |
+
+The consequence: **change B's base from Actual to Summit and every ▲ in the Range record re-points
+at the new base.** The column answers "how did the base come in against this comparator", not "how
+did the company do" — those are the same sentence only while the base is the actual.
+
+⚠ These helpers are re-declared inside each table renderer on purpose. `avg`, `sgn`, `num` and
+`pctDollar` close over that renderer's `m`, `div` and `dec` — hoisting them to module scope would
+mean passing three arguments to every call, at every cell, in five tables.
+
 ---
 
 ## 6. Block C — Road to the print
@@ -481,6 +1054,25 @@ One period, every snapshot. Fed **only** by `estMatrix`, so it hides itself on d
 Snapshots across the top; per source a value row plus `vs actual` and `vs <guide end>` rows, then
 flat `Guidance` and `Reported` rows so a column reads straight down. The last column is flagged
 *last before print*.
+
+**`gptShown()` — one guidance control per screen.** C can show two `vs guide` rows (one per source)
+and the block's control row can *also* carry the Low/Mid/High pills whenever the chart is zeroed on
+the guide. Three copies of one control is three chances to think they are three settings. The
+function is a latch that answers *"has this already been drawn, or does it live upstairs?"*:
+
+```js
+var shown = false;
+function gptShown(){ var was = shown; shown = true; return was || (rsConvIsDist() && st.base === 'guide'); }
+```
+
+It returns **true when the pills should be suppressed** — either something already rendered them
+(`was`), or the control row owns them because Distance is zeroed on guidance. The first `vs guide`
+row therefore gets the pills, the second gets none, and neither gets them when the row above
+already has them. It is also **called for its side effect**, so the call order across rows is what
+decides which row wins.
+
+`ranged` (`guideLo !== guideHi` at the selected period) gates the whole thing: on a point guide the
+label reads plain `vs guide` and no pills exist to place.
 
 ---
 
@@ -580,6 +1172,26 @@ anything against a print; it is reading what a file says.
 * The **move** is on the newer bar's tooltip *and* has its own table row, summarised to the biggest
   single-year move with the year named (`+$10.1B · most of it in FY2028`).
 * The second dropdown excludes the file already picked — a comparison can never be against itself.
+
+**`pushOne(a, isOld, ord)`** is the one place a bar is appended, and the `ord` it is handed is the
+whole chronology rule:
+
+```js
+if (vi2 < vi){ pushOne(old, true,  i*2+1); pushOne(arr, false, i*2+2); }   // older pick is genuinely older
+else         { pushOne(arr, false, i*2+1); pushOne(old, true,  i*2+2); }   // the user picked a NEWER file to compare
+```
+
+`order` decides left-to-right position inside a fiscal-year group, and `i*2` reserves two slots per
+series so the pairs never interleave. The comparison snapshot is **not assumed to be the older
+one** — the second dropdown lists every other file, so a user can compare backwards. The `vi2 < vi`
+test reads the actual dates and puts whichever file is genuinely older on the left, which means a
+group reads left-to-right in time no matter which order the two were picked in.
+
+Three more things `pushOne` carries: `_key` and `_old` (how the tooltip and the legend chips find
+their bars again), the faded colour from `RS_CURVE_DIM` for the older bar, and the vintage date
+appended to the label — but only for estimate series under Compare, since the actual has no date to
+append. A series is skipped entirely (`any(arr) || any(old)`) when neither file says anything about
+it: an empty legend chip invites a click that does nothing.
 
 ### The table
 
@@ -734,9 +1346,35 @@ from the revision record rather than leaving them blank.
 `data-rstblb` (A) · `data-rssurptblb` (B) · `data-rsconvtblb` (C) · `data-rsevrecb` /
 `data-rsevdetb` (D) · `data-rscurvetblb` (E).
 
-**Everything starts collapsed.** The header is not a mystery bar: it carries the caret, show/hide,
-and what is inside — *"Total GB, 18 periods in the selected range"* — and those counts follow the
-controls above them.
+**The header is never a mystery bar.** It carries the caret, show/hide, and what is inside —
+*"Total GB, 18 periods in the selected range"* — and those counts follow the controls above them.
+
+**Every table starts closed.** All five, without exception — the chart is the read, the table is
+the receipt you open when you want it.
+
+| Table | Markup test | Caret test | State factory |
+|---|---|---|---|
+| A · Period detail | `tbl === false ? ' hidden' : ''` (`:835`) | `tbl !== false` (`:757`) | `rsSt` → `tbl: false` (`:231`) |
+| B · Period detail | `tbl === false ? ' hidden' : ''` (`:2326`) | same shape (`:2226`) | `rsSurpSt` → `tbl: false` (`:2103`) |
+| C · Snapshot detail | `tbl === true ? '' : ' hidden'` (`:2814`) | `tbl === true` (`:2743`) | `rsConvSt` → `tbl: false` (`:2566`) |
+| D · Revision record | `rec === true ? '' : ' hidden'` (`:1670`) | `:1640` | `rsEvoSt` — **no `rec` key at all** (`:1519`) |
+| D · Snapshot by snapshot | hardcoded ` hidden` (`:1678`) | `:1647` | — |
+| E · Projection detail | `tbl === true ? '' : ' hidden'` (`:3674`) | `tbl === true` (`:3617`) | `rsCurveSt` → `tbl: false` (`:3546`) |
+
+⚠ **The two idioms are not interchangeable, but the difference is not the default here** — with the
+flag initialised to `false`, both render closed. They diverge only when the flag is **undefined**:
+`=== false ? hidden` then leaves the body *open*, `=== true ? '' : hidden` leaves it *closed*. D
+relies on exactly that: `rsEvoSt` never defines `rec`, and the `=== true` test reads the missing key
+as closed.
+
+So the way this actually bites is **mixing a markup test from one block with a caret test from
+another on a flag nobody initialised** — body open, header still saying `▸ show`. If you copy a
+collapsible into a new block, copy *both* halves from the *same* block, and initialise the flag in
+your state factory rather than leaning on `undefined`.
+
+The comment above A's markup (`js/results.js:830`) claims "It starts OPEN here". It does not —
+`rsSt` sets `tbl: false` two hundred lines earlier and both tests read it as closed. The comment is
+stale; the code is right.
 
 ---
 
@@ -761,6 +1399,21 @@ controls above them.
 
 A move below ±0.05 renders neutral (`0.0 pp`) rather than red — colouring a rounding artifact
 claims a line fell when it did not move.
+
+### Column highlight — A and B only
+
+Both period tables are transposed and wide, so reading *down* a period means tracking a column
+across a dozen rows. `colCells(ci)` returns every cell in one column
+(`tr > *:nth-child(ci+1)`) and a delegated `onmouseover` on the table paints them `.colhl`
+(`css/results.css:168`), clearing the previous column first and wiping on `onmouseleave`.
+
+`lastCol > 0` guards every call: **column 0 is the row-label column**, which must never highlight —
+it is sticky, so it would light up while the reader hovers somewhere else entirely.
+
+The lookup is `tb.querySelectorAll`, scoped to that one table, so the two copies of this code (A's
+renderer and B's) cannot reach into each other's rows. C, D and E have no column highlight: their
+columns are snapshots, and both D tables already carry per-column revision rows that do the same
+work in ink.
 
 ---
 
@@ -822,6 +1475,35 @@ brushed zoom:
 | E anything | the whole block (`rsRerenderCurve`) |
 | A vintage picker | the top row, the note, **all** blocks, then everything |
 
+### The sliders — the one place that is not delegated
+
+Range inputs fire `input`, not `click`, and there is no useful delegation for a drag, so the two
+handles are the engine's only directly-bound listeners.
+
+| Wirer | Binds | Handler |
+|---|---|---|
+| `wireSliders(pane)` | `#rsMin-<key>` / `#rsMax-<key>`, once per A section | a local `onSlide` → `rsSt(k).win` → `rsBuildChart(k)` |
+| `wireSurpSlider()` | `rsSurpMin` / `rsSurpMax` via `rsSurpEl` | a local `onSlide` → `rsSurpSt().win` → `rsBuildSurp()` |
+
+Both `onSlide` closures do the same three things: read both handles, **sort them**
+(`[Math.min(a,b), Math.max(a,b)]` — either handle can be dragged past the other), and rebuild. They
+assign to `.oninput` rather than `addEventListener`, so re-wiring after a re-render replaces the
+handler instead of stacking a second one.
+
+⚠ **`wireSliders` looks its inputs up with a bare `document.getElementById`** — the one deliberate
+exception to invariant 2 (§12). It is safe *only* because the id carries the section key and
+section keys are unique across every dataset that can share a page: the Earnings **Setup** instance
+runs on a `*_SETUP` dataset whose sections are named differently. Give a setup dataset a section
+called `top` and its slider silently drives the Results block instead. `wireSurpSlider` has no such
+escape hatch — B's ids are fixed strings — which is exactly why it goes through `rsSurpEl`.
+
+### `secOf(el)` — which D block did that come from
+
+The Estimates pane wires **one** handler for every D block plus E. `secOf` walks up from the
+clicked element to the nearest `[data-rsevo]` and returns its key, which is how a chip in the
+Profitability block never repaints Top Line. E needs no equivalent: it is a singleton, so its
+branches (`[data-rscurve…]`) are tested **first** and return early, before any `secOf` lookup runs.
+
 ---
 
 ## 12. Invariants — break these and something renders perfectly while doing nothing
@@ -847,3 +1529,12 @@ brushed zoom:
 7. **No `node` on the Windows box**, so JS cannot be syntax-checked offline — import the module in
    the browser. `py` is the Python interpreter (`python` is a broken stub), and **a heredoc into
    `py -` hangs the shell.**
+8. **Section keys must be unique across every dataset that can share a page.** A block's slider ids
+   are `rsMin-<key>` / `rsMax-<key>` and are resolved unscoped (§11); so is its collapsible header,
+   `document.querySelector('[data-rstblb="' + k + '"]')` at `js/results.js:1336`. Two datasets on
+   one page with a section called `top` — the Results pane and an Earnings `*_SETUP` — hand one
+   slider, and one table header, to the wrong chart. The convention is what makes these lookups
+   safe; it is not enforced in code. In a **new** chart, do not rely on it: scope to your root.
+9. **A summary column is computed over the window, not the series.** Every `sum*` helper iterates
+   `idx`. Compute one over the full array and the Range record stops agreeing with the chart the
+   moment anyone touches the slider — while still looking entirely plausible.

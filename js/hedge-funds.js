@@ -1,10 +1,180 @@
 // hedge-funds.js — extracted from summit-research-portal.html
-import { INVESTORS, SP500_REF, SP500_B26, HF_FUNDS, HF_BMK, HF_AYEARS, YEARS, SP500, IMGS, ALL_STOCKS } from './portal-data.js';
-import { fetchInvestorReturns, fetchInvestorHoldings, fetchInvestorLetters, replaceInvestorHoldings, syncLatest13F, getFileUrl } from './api.js';
-import { LOCAL_INVESTOR_RETURNS, LOCAL_INVESTOR_HOLDINGS, LOCAL_INVESTOR_LETTERS } from './investor-local-seed.js';
+import { INVESTORS, SP500_REF, SP500_MAY31, SP500_TODAY_HF, QQQ_B26, QQQ_TODAY26, HF_FUNDS, HF_BMK, HF_AYEARS, YEARS, SP500, IMGS, ALL_STOCKS } from './portal-data.js';
+import { fetchInvestorReturns, fetchInvestorHoldings, fetchHoldingsByTicker, fetchInvestorLetters, replaceInvestorHoldings, syncLatest13F, getFileUrl, fetchReturnOverrides, saveReturnOverride } from './api.js';
+import { LOCAL_INVESTOR_RETURNS, LOCAL_INVESTOR_HOLDINGS, LOCAL_INVESTOR_LETTERS, NO_PUBLIC_LETTERS_NOTE } from './investor-local-seed.js';
 import { parse13FFile } from './investor-13f-parser.js';
+import { getCurrentUser } from './auth.js';
 
 let alphaChart = null, ALPHA_MODE = 'cum', HF_SEL = {}, HF_START = '2015';
+
+// ─── Manual return overrides (editable Then/Now holdings returns) ───
+// Only the designated editor's email gets an actual <input>; everyone else
+// still sees the corrected value (once someone with access has saved one),
+// just as plain text like every other cell.
+var HF_RETURN_EDITOR_EMAILS = ['scarranza@summit-mgmtx.com', 'dposternak@summit-mgmtx.com'];
+var HF_OVERRIDES = {};
+
+function hfCanEditReturns(){
+  var u = getCurrentUser();
+  return !!(u && u.email && HF_RETURN_EDITOR_EMAILS.indexOf(u.email.toLowerCase()) !== -1);
+}
+
+function hfOverrideKey(investorKey, ticker, period){ return investorKey+'|'+ticker+'|'+period; }
+
+function hfGetOverride(investorKey, ticker, period){
+  var v = HF_OVERRIDES[hfOverrideKey(investorKey, ticker, period)];
+  return v==null ? null : v;
+}
+
+async function hfLoadOverrides(){
+  var res = await fetchReturnOverrides();
+  if (res.success) {
+    HF_OVERRIDES = {};
+    res.data.forEach(function(row){
+      HF_OVERRIDES[hfOverrideKey(row.investor_key, row.ticker, row.period)] = row.value_pct;
+    });
+    renderInvGrid();
+    renderBenchmark();
+    renderOverallBenchmark();
+  }
+}
+
+// ─── Edit modal: fund-level YTD + every holding's Then/Now, or the S&P
+// 500/QQQ benchmark, in one popup instead of inline in the card -- inline
+// inputs on the card body fought with the card's own click-to-open-detail
+// handler, so editing now only happens behind an explicit pencil button
+// that stops that click from propagating.
+function hfEditFieldRow(label, investorKey, ticker, thenVal, nowVal){
+  function field(period, val){
+    var iv = val!=null ? val.toFixed(2) : '';
+    return '<input class="icard-edit-input edit-modal-input" type="text" inputmode="decimal" value="'+iv+'" placeholder="n/a" data-inv="'+investorKey+'" data-ticker="'+ticker+'" data-period="'+period+'" onblur="hfSaveReturnEdit(this)" onkeydown="if(event.key===\'Enter\')this.blur()">';
+  }
+  return '<div class="edit-modal-row"><div class="edit-modal-label">'+label+'</div><div class="edit-modal-fields">'+field('then',thenVal)+'<span class="edit-modal-arrow">&rarr;</span>'+field('now',nowVal)+'<span class="edit-modal-pct">%</span></div></div>';
+}
+
+function hfInvestorEditSection(inv){
+  var body = '';
+  var ytdThenOv=hfGetOverride(inv.key,'__YTD__','then'), ytdNowOv=hfGetOverride(inv.key,'__YTD__','now');
+  body += hfEditFieldRow('Fund 2026 YTD', inv.key, '__YTD__', ytdThenOv!=null?ytdThenOv:inv.ytd2026, ytdNowOv!=null?ytdNowOv:inv.ytdNow);
+  if (inv.holdingsQ1 && inv.holdingsQ1.length){
+    body += '<div class="edit-modal-divider">Holdings</div>';
+    var q2ByT={}; (inv.holdings||[]).forEach(function(h){ q2ByT[h.t]=h; });
+    var q1Ts={}; inv.holdingsQ1.forEach(function(h){ q1Ts[h.t]=true; });
+    inv.holdingsQ1.forEach(function(h1){
+      var thenOv=hfGetOverride(inv.key,h1.t,'then'), nowOv=hfGetOverride(inv.key,h1.t,'now');
+      body += hfEditFieldRow(h1.t, inv.key, h1.t, thenOv!=null?thenOv:h1.ytd, nowOv!=null?nowOv:todayReturn(h1.t));
+    });
+    (inv.holdings||[]).forEach(function(h2){
+      if (q1Ts[h2.t]) return;
+      var nowOv=hfGetOverride(inv.key,h2.t,'now');
+      body += hfEditFieldRow(h2.t+' (new)', inv.key, h2.t, null, nowOv!=null?nowOv:todayReturn(h2.t));
+    });
+  }
+  return '<details class="edit-modal-inv"><summary>'+inv.name+' <span class="edit-modal-inv-fund">'+inv.fund+'</span></summary><div class="edit-modal-inv-body">'+body+'</div></details>';
+}
+
+// Single global edit entry point: one popup, everything editable in it --
+// the S&P 500/QQQ benchmark up top, then every investor collapsed under
+// its own <details> so the list stays navigable instead of one giant
+// scroll of 11 holdings tables at once.
+function openAllEditModal(){
+  var id = 'editall_' + Date.now();
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay im-overlay open';
+  overlay.id = id;
+  var spThen=hfGetOverride('__benchmark__','SP500','then'), spNow=hfGetOverride('__benchmark__','SP500','now');
+  var qqThen=hfGetOverride('__benchmark__','QQQ','then'), qqNow=hfGetOverride('__benchmark__','QQQ','now');
+  var body = '<div class="edit-modal-divider" style="margin-top:0">Benchmarks</div>';
+  body += hfEditFieldRow('S&amp;P 500', '__benchmark__', 'SP500', spThen!=null?spThen:SP500_MAY31, spNow!=null?spNow:SP500_TODAY_HF);
+  body += hfEditFieldRow('QQQ', '__benchmark__', 'QQQ', qqThen!=null?qqThen:QQQ_B26, qqNow!=null?qqNow:QQQ_TODAY26);
+  body += '<div class="edit-modal-divider">Superinvestors</div>';
+  INVESTORS.forEach(function(inv){ body += hfInvestorEditSection(inv); });
+  overlay.innerHTML =
+    '<div class="modal-card im-card" onclick="event.stopPropagation()">' +
+      '<div class="modal-header im-header">' +
+        '<div class="modal-title" style="font-size:15px">Edit Then/Now &mdash; Benchmarks &amp; Superinvestors</div>' +
+        '<button class="modal-close" id="'+id+'_close">&times;</button>' +
+      '</div>' +
+      '<div class="im-body edit-modal-body">' + body + '</div>' +
+      '<div class="modal-actions"><button class="modal-btn modal-btn--cancel" id="'+id+'_done">Done</button></div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  function closeAndRefresh(){ overlay.remove(); renderInvGrid(); renderBenchmark(); renderOverallBenchmark(); }
+  overlay.addEventListener('click', function(e){ if (e.target===overlay) closeAndRefresh(); });
+  document.getElementById(id+'_close').addEventListener('click', closeAndRefresh);
+  document.getElementById(id+'_done').addEventListener('click', closeAndRefresh);
+}
+window.openAllEditModal = openAllEditModal;
+
+function hfRefreshEditAllButton(){
+  var btn = document.getElementById('hf-editall-btn');
+  if (btn) btn.style.display = hfCanEditReturns() ? '' : 'none';
+}
+
+function hfSaveReturnEdit(inputEl){
+  var newVal = parseFloat(inputEl.value);
+  if (isNaN(newVal)) { inputEl.value = inputEl.defaultValue; return; }
+  var oldVal = parseFloat(inputEl.defaultValue);
+  if (newVal === oldVal) return;
+  var investorKey = inputEl.dataset.inv, ticker = inputEl.dataset.ticker, period = inputEl.dataset.period;
+  inputEl.classList.add('icard-edit-saving');
+  inputEl.classList.remove('icard-edit-saved','icard-edit-error');
+  saveReturnOverride(investorKey, ticker, period, newVal).then(function(res){
+    inputEl.classList.remove('icard-edit-saving');
+    if (res.success) {
+      HF_OVERRIDES[hfOverrideKey(investorKey, ticker, period)] = newVal;
+      inputEl.defaultValue = String(newVal);
+      inputEl.classList.add('icard-edit-saved');
+      setTimeout(function(){ inputEl.classList.remove('icard-edit-saved'); }, 1500);
+    } else {
+      inputEl.value = inputEl.defaultValue;
+      inputEl.classList.add('icard-edit-error');
+      setTimeout(function(){ inputEl.classList.remove('icard-edit-error'); }, 2000);
+      alert('Could not save this edit: '+res.error.message);
+    }
+  });
+}
+window.hfSaveReturnEdit = hfSaveReturnEdit;
+
+// Stock price returns as of today (Aug 21, 2026), for holdings tickers that
+// aren't S&P 500 constituents (so not already in ALL_STOCKS's r26). Real,
+// individually verified prices vs. each stock's Dec 31, 2025 close -- not
+// derived from the Q1/Q2 13F-quarter figures stored per holding.
+// Real price returns as of today (Aug 21-24, 2026 close, whichever was
+// most recently available), independently verified vs. each stock's Dec
+// 31, 2025 close. ASML uses Santiago's direct correction (+56%, replacing
+// a stale +86% Q2-close figure) since it's a specific singular correction,
+// not re-derived by us. CBRS and SUNB have no Jan-1 baseline -- both are
+// 2026 IPOs/spinoffs (Cerebras ~May 2026, Sunbelt Rentals Mar 2 2026) --
+// so they're left out and render as n/a rather than guess.
+var HF_TODAY_EXTRA = {
+  'ASML': 56.0,
+  'AER': 2.64,
+  'BN': -8.54,
+  'CP': 28.59,
+  'CRS': 51.55,
+  'EWZ': 10.70,
+  'FERG': 6.21,
+  'HHH': -16.32,
+  'INSM': -28.77,
+  'NTRA': 43.06,
+  'QSR': 19.55,
+  'RPRX': 58.71,
+  'RSP': 15.85,
+  'SGI': -27.97,
+  'TDS': -19.29,
+  'TSM': 34.96,
+  'WCC': 37.76,
+  'CRWV': 20.44,
+  'TBBB': 52.2
+};
+
+function todayReturn(ticker){
+  var s=ALL_STOCKS.find(function(x){return x.t===ticker;});
+  if(s&&s.r26!=null)return s.r26;
+  if(HF_TODAY_EXTRA[ticker]!=null)return HF_TODAY_EXTRA[ticker];
+  return null;
+}
 
 function hfList(){return HF_FUNDS.concat([{name:'S&P 500 (SPY)',color:'#94A3B8',r:HF_BMK,bench:true}]);}
 
@@ -101,21 +271,42 @@ function toggleChartVisibility(show){
   if(show&&alphaChart){requestAnimationFrame(function(){alphaChart.resize();});}
 }
 
+function hfBenchVal(ticker,period,fallback){
+  var ov=hfGetOverride('__benchmark__',ticker,period);
+  return ov!=null?ov:fallback;
+}
+
 function renderBenchmark(){
   var el=document.getElementById('inv-bench');if(!el||!SP500_REF)return;
-  var rets=SP500_REF.returns;
-  var annualized=Math.pow(1+SP500_REF.cum/100,1/7)-1;
-  var annStr=(annualized*100).toFixed(1)+'%';
+  var spThen=hfBenchVal('SP500','then',SP500_MAY31), spNow=hfBenchVal('SP500','now',SP500_TODAY_HF);
+  var qqThen=hfBenchVal('QQQ','then',QQQ_B26), qqNow=hfBenchVal('QQQ','now',QQQ_TODAY26);
   var html='<div class="inv-bench-left"><div class="inv-bench-title">S&amp;P 500 Benchmark</div><div class="inv-bench-sub">All managers measured against this</div></div>';
   html+='<div class="inv-bench-mets">';
-  html+='<div class="inv-bench-m"><div class="inv-bench-ml">Cumul. 2019&ndash;Q1 2026</div><div class="inv-bench-mv">+'+SP500_REF.cum.toFixed(1)+'%</div></div>';
-  html+='<div class="inv-bench-m"><div class="inv-bench-ml">Annualized (7yr)</div><div class="inv-bench-mv">+'+annStr+'</div></div>';
-  html+='<div class="inv-bench-m"><div class="inv-bench-ml">2026 YTD</div><div class="inv-bench-mv">+10.0%</div></div>';
-  html+='<div class="inv-bench-bars">';
-  rets.forEach(function(r,i){var pp=r>=0?Math.min(r/80*100,100):0;var np=r<0?Math.min(Math.abs(r)/40*100,100):0;
-    html+='<div class="ibb-col"><div class="ibb-wrap"><div class="ibb-pos" style="height:'+pp+'%"></div><div class="ibb-neg" style="height:'+np+'%"></div></div><div class="ibb-lbl">'+YEARS[i].slice(2)+'</div></div>';});
-  html+='</div></div>';
+  html+='<div class="inv-bench-m"><div class="inv-bench-ml">S&amp;P 500 (May 31 &rarr; Today)</div><div class="inv-bench-mv">'+(spThen>=0?'+':'')+spThen.toFixed(1)+'% &rarr; '+(spNow>=0?'+':'')+spNow.toFixed(1)+'%</div></div>';
+  html+='<div class="inv-bench-m"><div class="inv-bench-ml">QQQ (May 31 &rarr; Today)</div><div class="inv-bench-mv">'+(qqThen>=0?'+':'')+qqThen.toFixed(1)+'% &rarr; '+(qqNow>=0?'+':'')+qqNow.toFixed(1)+'%</div></div>';
+  html+='</div>';
   el.innerHTML=html;
+}
+
+// ─── Overall tab: S&P 500 benchmark, Q1 -> Q2 2026 arrow format ───
+// Same visual language as the Superinvestors benchmark bar, but scoped to
+// the Overall tab and shown as "Q1 value -> Q2 value" so both quarters are
+// visible at once instead of a click-to-toggle single value.
+
+function renderOverallBenchmark(){
+  var el=document.getElementById('hf-ovbench');if(!el||!SP500_REF)return;
+  var spThen=hfBenchVal('SP500','then',SP500_MAY31), spNow=hfBenchVal('SP500','now',SP500_TODAY_HF);
+  var qqThen=hfBenchVal('QQQ','then',QQQ_B26), qqNow=hfBenchVal('QQQ','now',QQQ_TODAY26);
+  var cumThen=((1+SP500_REF.cum/100)*(1+spThen/100)-1)*100;
+  var cumNow=((1+SP500_REF.cum/100)*(1+spNow/100)-1)*100;
+  var html='<div class="inv-bench-left"><div class="inv-bench-title">S&amp;P 500 &amp; QQQ Benchmark</div><div class="inv-bench-sub">Last meeting (May 31) &rarr; today</div></div>';
+  html+='<div class="inv-bench-mets">';
+  html+='<div class="inv-bench-m"><div class="inv-bench-ml">Cumul. 2019&ndash;2026 (S&amp;P)</div><div class="inv-bench-mv">'+(cumThen>=0?'+':'')+cumThen.toFixed(1)+'% &rarr; '+(cumNow>=0?'+':'')+cumNow.toFixed(1)+'%</div></div>';
+  html+='<div class="inv-bench-m"><div class="inv-bench-ml">S&amp;P 500 2026</div><div class="inv-bench-mv">'+(spThen>=0?'+':'')+spThen.toFixed(1)+'% &rarr; '+(spNow>=0?'+':'')+spNow.toFixed(1)+'%</div></div>';
+  html+='<div class="inv-bench-m"><div class="inv-bench-ml">QQQ 2026</div><div class="inv-bench-mv">'+(qqThen>=0?'+':'')+qqThen.toFixed(1)+'% &rarr; '+(qqNow>=0?'+':'')+qqNow.toFixed(1)+'%</div></div>';
+  html+='</div>';
+  el.innerHTML=html;
+  var secn=document.getElementById('hf-ovbench-secn');if(secn)secn.textContent='Last meeting (May 31) vs. today';
 }
 
 // ─── Hide / Show all (main grid) ──────────────────────────────
@@ -168,7 +359,7 @@ function renderInvGrid(){
     var q1html=inv.q1!=null
       ?'<div class="icard-mv '+(inv.q1>=0?'gp':'rn')+'">'+(inv.q1>0?'+':'')+inv.q1.toFixed(2)+'%</div>'
       :'<div class="icard-mv" style="color:var(--mu);font-size:11px">n/a</div>';
-    var cumLbl=inv.q1!=null?'Cumul. 2019&ndash;Q1 26':'Cumul. 2019&ndash;2025';
+    var cumLbl=inv.q1!=null?'Cumul. 2019&ndash;Q2 26':'Cumul. 2019&ndash;2025';
     html+='<div class="icard'+(isSummit?' summit':'')+'" onclick="openInvestorDetail(\''+inv.key+'\')">';
     html+='<button type="button" class="icard-hide-btn" title="Hide this card" onclick="hideInvestor(\''+inv.key+'\', event)">&times;</button>';
     // Header
@@ -180,22 +371,453 @@ function renderInvGrid(){
     // Metrics
     var annualized=hasPerf?Math.pow(1+inv.cum/100,1/7)-1:null;
     var annStr=hasPerf?(annualized*100).toFixed(1)+'%':'n/a';
-    var ytd2026=inv.ytd2026!=null?inv.ytd2026:null;
-    var ytdStr=ytd2026!=null?((ytd2026>=0?'+':'')+ytd2026.toFixed(1)+'%'):'n/a';
+    var ytdThenOv=hfGetOverride(inv.key,'__YTD__','then');
+    var ytdNowOv=hfGetOverride(inv.key,'__YTD__','now');
+    var ytd2026=ytdThenOv!=null?ytdThenOv:(inv.ytd2026!=null?inv.ytd2026:null);
+    var ytdNow=ytdNowOv!=null?ytdNowOv:(inv.ytdNow!=null?inv.ytdNow:null);
+    var ytdThenStr=ytd2026!=null?((ytd2026>=0?'+':'')+ytd2026.toFixed(1)+'%'):'n/a';
+    var estTag=' <span style="font-size:9px;color:var(--mu)">est</span>';
+    var ytdVal;
+    if(ytdNow!=null){
+      var ytdNowStr=(ytdNow>=0?'+':'')+ytdNow.toFixed(1)+'%';
+      ytdVal=ytdThenStr+(inv.ytdEst?estTag:'')+' &rarr; '+ytdNowStr+(inv.ytdNowEst?estTag:'');
+    } else {
+      ytdVal=ytdThenStr+(inv.ytdEst?estTag:'');
+    }
     html+='<div class="icard-mets">';
-    html+='<div class="icard-met"><div class="icard-ml">Cumul. 2019&ndash;Q1 26</div><div class="icard-mv">'+(hasPerf?((inv.cum>0?'+':'')+inv.cum.toFixed(1)+'%'+(inv.est?' <span style="font-size:9px;color:var(--mu)">est</span>':'')):'<span style="color:var(--mu);font-size:11px">n/a</span>')+'</div></div>';
+    html+='<div class="icard-mets-row">';
+    html+='<div class="icard-met"><div class="icard-ml">'+cumLbl+'</div><div class="icard-mv">'+(hasPerf?((inv.cum>0?'+':'')+inv.cum.toFixed(1)+'%'+(inv.est?' <span style="font-size:9px;color:var(--mu)">est</span>':'')):'<span style="color:var(--mu);font-size:11px">n/a</span>')+'</div></div>';
     html+='<div class="icard-met"><div class="icard-ml">Annualized (7yr)</div><div class="icard-mv">'+(hasPerf?((annualized>=0?'+':'')+annStr):'<span style="color:var(--mu);font-size:11px">n/a</span>')+'</div></div>';
-    html+='<div class="icard-met"><div class="icard-ml">2026 YTD</div><div class="icard-mv">'+ytdStr+(inv.ytdEst?' <span style="font-size:9px;color:var(--mu)">est</span>':'')+'</div>'+(ytd2026!=null&&ytd2026<SP500_B26?'<div style="font-size:8px;color:var(--neg);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-top:2px">Underperforming</div>':'')+'</div>';
     html+='</div>';
-    // Holdings
-    html+='<table class="icard-tbl"><thead><tr><th>Ticker</th><th>Company</th><th class="nr">% Port</th><th class="nr">YTD</th></tr></thead><tbody>';
-    inv.holdings.forEach(function(h){var pc=h.ytd>=0?'rp':'rn';var ys=(h.ytd>=0?'+':'')+h.ytd.toFixed(2)+'%';var nb=h.nw?' <span style="font-size:8px;font-weight:700;letter-spacing:.5px;color:#2563EB;border:1px solid #2563EB;border-radius:3px;padding:0 3px;vertical-align:middle">NEW</span>':'';
-      html+='<tr><td><span class="iticker">'+h.t+'</span></td><td><span class="ico">'+h.co+'</span>'+nb+'</td><td class="nr" style="color:var(--mu)">'+h.w.toFixed(2)+'%</td><td class="nr"><span class="rpill '+pc+'">'+ys+'</span></td></tr>';});
-    html+='</tbody></table>';
+    html+='<div class="icard-met-full"><div class="icard-ml">2026 YTD'+(ytdNow!=null?' (Then &rarr; Now)':'')+'</div><div class="icard-mv" style="'+(ytdNow!=null?'font-size:13px;white-space:nowrap':'')+'">'+ytdVal+'</div></div>';
+    html+='</div>';
+    // Holdings: Q1 -> Q2 2026, one row per company, kept in Q1's own rank
+    // order (not re-sorted by Q2 weight) so the same ticker lines up on the
+    // same row across both quarters. Q2-only names (not in the Q1 top-5)
+    // are appended below, marked NEW.
+    if(inv.holdingsQ1&&inv.holdingsQ1.length){
+      var q2ByT={};inv.holdings.forEach(function(h){q2ByT[h.t]=h;});
+      var q1Ts={};inv.holdingsQ1.forEach(function(h){q1Ts[h.t]=true;});
+      function returnCellStatic(ticker,baseVal,period){
+        var ov=hfGetOverride(inv.key,ticker,period);
+        var val=ov!=null?ov:baseVal;
+        var cls=val!=null?(val>=0?'rp':'rn'):'rna';
+        var str=val!=null?(val>=0?'+':'')+val.toFixed(1)+'%':'n/a';
+        return '<td class="nr icard-arrow-m '+cls+'">'+str+'</td>';
+      }
+      html+='<table class="icard-arrow-tbl"><thead><tr><th rowspan="2" class="icard-arrow-tick">Ticker</th><th colspan="2">Allocation</th><th colspan="2">Return</th></tr><tr><th class="nr">Then</th><th class="nr">Now</th><th class="nr">Then</th><th class="nr">Now</th></tr></thead><tbody>';
+      inv.holdingsQ1.forEach(function(h1){
+        var h2=q2ByT[h1.t];
+        var wThen=h1.w.toFixed(1)+'%', wNow=h2?h2.w.toFixed(1)+'%':'&mdash;';
+        html+='<tr class="icard-arrow-row'+(h2?'':' icard-arrow-dropped')+'" title="'+h1.co+'"><td><span class="iticker">'+h1.t+'</span>'+(h2?'':' <span class="icard-cmp-newbadge" style="color:var(--mu);border-color:var(--mu)">DROPPED</span>')+'</td>';
+        html+='<td class="nr icard-arrow-m">'+wThen+'</td><td class="nr icard-arrow-m">'+wNow+'</td>';
+        html+=returnCellStatic(h1.t,h1.ytd,'then')+returnCellStatic(h1.t,todayReturn(h1.t),'now')+'</tr>';
+      });
+      inv.holdings.forEach(function(h2){
+        if(q1Ts[h2.t])return;
+        html+='<tr class="icard-arrow-row" title="'+h2.co+'"><td><span class="iticker">'+h2.t+'</span> <span class="icard-cmp-newbadge">NEW</span></td>';
+        html+='<td class="nr icard-arrow-m">&mdash;</td><td class="nr icard-arrow-m">'+h2.w.toFixed(1)+'%</td>';
+        html+='<td class="nr icard-arrow-m rna">n/a</td>'+returnCellStatic(h2.t,todayReturn(h2.t),'now')+'</tr>';
+      });
+      html+='</tbody></table>';
+      html+='<div class="icard-arrow-legend">Then = Q1 2026 close (Mar 31) &middot; Now allocation = Q2 2026 13F (latest filed) &middot; Now return = today&rsquo;s price (Aug 21, 2026) &middot; rows kept in Q1&rsquo;s original order</div>';
+    } else {
+      html+='<table class="icard-tbl"><thead><tr><th>Ticker</th><th>Company</th><th class="nr">% Port</th><th class="nr">YTD</th></tr></thead><tbody>';
+      inv.holdings.forEach(function(h){var pc=h.ytd>=0?'rp':'rn';var ys=(h.ytd>=0?'+':'')+h.ytd.toFixed(2)+'%';var nb=h.nw?' <span style="font-size:8px;font-weight:700;letter-spacing:.5px;color:#2563EB;border:1px solid #2563EB;border-radius:3px;padding:0 3px;vertical-align:middle">NEW</span>':'';
+        html+='<tr><td><span class="iticker">'+h.t+'</span></td><td><span class="ico">'+h.co+'</span>'+nb+'</td><td class="nr" style="color:var(--mu)">'+h.w.toFixed(2)+'%</td><td class="nr"><span class="rpill '+pc+'">'+ys+'</span></td></tr>';});
+      html+='</tbody></table>';
+    }
     if(inv.est)html+='<div class="est-note">&#x26A0; Annual returns estimated from portfolio data.</div>';
     html+='</div>';
   });
   grid.innerHTML=html;
+}
+
+// ─── Sector Exposure mosaic (Overall sub-tab) ──────────────────
+// Rolls up every superinvestor's disclosed top holdings (the same
+// hardcoded top-5 shown on their card — no Supabase round trip needed,
+// so this renders immediately for everyone) by GICS sector, aggregated
+// across all tracked funds into one number per sector — "how crowded is
+// the whole tracked book into this trade," not broken out per-investor
+// (that per-fund matrix got too busy; the per-fund breakdown still lives
+// on each investor's own detail page). Reuses the steel->navy sequential
+// ramp from the by-position pie chart, so a more "lit up" tile always
+// means more concentrated the same way it does there. Summit's own book
+// is excluded — this is about the tracked superinvestors, not our own
+// portfolio.
+
+function computeSectorHeatmapData() {
+  var investors = INVESTORS.filter(function(inv) { return inv.key !== 'summit'; });
+  var sectorTotals = {};
+  var sectorTickers = {}; // sector -> ticker -> { company, ytd, weight, holders: [{key, name, fund, w}] }
+  investors.forEach(function(inv) {
+    (inv.holdings || []).forEach(function(h) {
+      var sector = tickerSector(h.t) || 'Other / Unclassified';
+      sectorTotals[sector] = (sectorTotals[sector] || 0) + (h.w || 0);
+      sectorTickers[sector] = sectorTickers[sector] || {};
+      sectorTickers[sector][h.t] = sectorTickers[sector][h.t] || { company: h.co, ytd: h.ytd, weight: 0, holders: [] };
+      sectorTickers[sector][h.t].weight += (h.w || 0);
+      sectorTickers[sector][h.t].holders.push({ key: inv.key, name: inv.name, fund: inv.fund, w: h.w });
+    });
+  });
+  // Average YTD return across the *distinct companies* on file in each
+  // sector (not weighted by position size, and not double-counted when
+  // several funds hold the same name) — this is what drives the
+  // red/green coloring, like a market-monitor sector heatmap.
+  var sectorAvgYtd = {};
+  Object.keys(sectorTickers).forEach(function(sector) {
+    var tickers = sectorTickers[sector];
+    var vals = Object.keys(tickers).map(function(t) { return tickers[t].ytd; }).filter(function(v) { return v != null; });
+    sectorAvgYtd[sector] = vals.length ? vals.reduce(function(s, v) { return s + v; }, 0) / vals.length : null;
+  });
+  var sectors = Object.keys(sectorTotals).sort(function(a, b) { return sectorTotals[b] - sectorTotals[a]; });
+  var grandTotal = sectors.reduce(function(sum, s) { return sum + sectorTotals[s]; }, 0);
+  var maxSector = sectors.length ? sectorTotals[sectors[0]] : 0;
+  return { investors: investors, sectors: sectors, sectorTotals: sectorTotals, sectorTickers: sectorTickers, sectorAvgYtd: sectorAvgYtd, grandTotal: grandTotal, maxSector: maxSector };
+}
+
+// Red/green diverging fill for a %, like a market-monitor stock heatmap
+// -- green above 0, red below, saturating by PERF_RAMP_CAP so a +40% and
+// a +90% sector don't look identical but a +25% one is already clearly
+// "strong green."
+var PERF_RAMP_CAP = 20;
+var PERF_NEG = [200, 45, 45];
+var PERF_ZERO = [238, 241, 245];
+var PERF_POS = [21, 128, 61];
+function perfRamp(pct) {
+  if (pct == null) return 'var(--surface)';
+  var t = Math.max(-1, Math.min(1, pct / PERF_RAMP_CAP));
+  var from = t < 0 ? PERF_NEG : PERF_POS;
+  var at = Math.abs(t);
+  var r = Math.round(PERF_ZERO[0] + (from[0] - PERF_ZERO[0]) * at);
+  var g = Math.round(PERF_ZERO[1] + (from[1] - PERF_ZERO[1]) * at);
+  var b = Math.round(PERF_ZERO[2] + (from[2] - PERF_ZERO[2]) * at);
+  return 'rgb(' + r + ',' + g + ',' + b + ')';
+}
+
+var _hfHeatmapData = null;
+var _hfHeatmapShowPerf = true;
+
+function hfHeatmapTogglePerf(checked) {
+  _hfHeatmapShowPerf = checked;
+  renderSectorHeatmap();
+}
+
+// Squarified treemap layout (Bruls/Huizing/van Wijk): given items with a
+// .value and a target rect, returns them with .x/.y/.w/.h filling that
+// rect edge-to-edge -- no leftover whitespace, unlike flex-wrap sizing
+// (which only ever grows/shrinks along one axis at a time). Used twice:
+// once for the sector regions across the whole canvas, once more for
+// each sector's own tickers inside the region it was given.
+function squarify(items, x, y, w, h) {
+  var total = items.reduce(function(s, i) { return s + i.value; }, 0);
+  if (!total || !items.length || w <= 0 || h <= 0) { items.forEach(function(i) { i.x = x; i.y = y; i.w = 0; i.h = 0; }); return items; }
+  var area = w * h;
+  items.forEach(function(i) { i._area = i.value / total * area; });
+  function worst(row, side) {
+    var sum = 0, max = -Infinity, min = Infinity;
+    row.forEach(function(i) { sum += i._area; if (i._area > max) max = i._area; if (i._area < min) min = i._area; });
+    var s2 = sum * sum, side2 = side * side;
+    return Math.max((side2 * max) / s2, s2 / (side2 * min));
+  }
+  var remaining = items.slice(), rx = x, ry = y, rw = w, rh = h, out = [];
+  while (remaining.length) {
+    var shortSide = Math.min(rw, rh);
+    var row = [remaining[0]], idx = 1;
+    while (idx < remaining.length) {
+      var candidate = row.concat([remaining[idx]]);
+      if (worst(candidate, shortSide) <= worst(row, shortSide)) { row = candidate; idx++; } else break;
+    }
+    var rowArea = row.reduce(function(s, i) { return s + i._area; }, 0);
+    if (rw >= rh) {
+      var stripW = rowArea / rh, cy = ry;
+      row.forEach(function(item) { var ih = item._area / stripW; item.x = rx; item.y = cy; item.w = stripW; item.h = ih; cy += ih; });
+      rx += stripW; rw -= stripW;
+    } else {
+      var stripH = rowArea / rw, cx = rx;
+      row.forEach(function(item) { var iw = item._area / stripH; item.x = cx; item.y = ry; item.w = iw; item.h = stripH; cx += iw; });
+      ry += stripH; rh -= stripH;
+    }
+    out = out.concat(row);
+    remaining = remaining.slice(row.length);
+  }
+  return out;
+}
+
+var HF_TM_W = 1000, HF_TM_H = 520, HF_TM_HDR = 34;
+
+// True two-level treemap, like a market-monitor sector map: sector
+// regions sized by how much of the tracked book sits there, each
+// containing one tile per company (ticker) sized by that company's own
+// aggregate weight across funds and colored by that company's own YTD
+// return -- so "how big" and "how it's doing" are two separate signals,
+// same as the reference S&P 500 heatmap. Laid out with squarify() so the
+// whole canvas is filled, no whitespace. The Performance toggle swaps
+// the color signal off (neutral tiles, size-only) without re-fetching
+// anything, since this is all built from data already on the page.
+function renderSectorHeatmap() {
+  var el = document.getElementById('hf-sector-heatmap');
+  if (!el) return;
+  var data = _hfHeatmapData = computeSectorHeatmapData();
+  if (!data.sectors.length) { el.innerHTML = '<div class="hf-secmosaic-empty">No holdings on file yet.</div>'; return; }
+  var showPerf = _hfHeatmapShowPerf;
+  var html = '<div class="hf-secmonitor"><div class="hf-secmonitor-hd">' +
+    '<span class="hf-secmonitor-title">Sized by position weight &middot; colored by each company&rsquo;s own YTD return</span>' +
+    '<span style="display:flex;align-items:center;gap:14px">' +
+    '<span class="hf-secmonitor-legend">' + (showPerf ? '<span class="hf-secmonitor-sw" style="background:' + perfRamp(-PERF_RAMP_CAP) + '"></span>Down<span class="hf-secmonitor-sw" style="background:' + perfRamp(0) + '"></span>Flat<span class="hf-secmonitor-sw" style="background:' + perfRamp(PERF_RAMP_CAP) + '"></span>Up' : '') + '</span>' +
+    '<label class="hf-chart-toggle" title="Show or hide YTD color coding"><input type="checkbox" ' + (showPerf ? 'checked' : '') + ' onchange="hfHeatmapTogglePerf(this.checked)"><span class="hf-chart-toggle-track"><span class="hf-chart-toggle-thumb"></span></span><span class="hf-chart-toggle-txt">Performance</span></label>' +
+    '</span></div><div class="hf-treemap">';
+
+  var sectorItems = data.sectors.map(function(sector) { return { sector: sector, value: Math.max(data.sectorTotals[sector], 0.01) }; });
+  squarify(sectorItems, 0, 0, HF_TM_W, HF_TM_H);
+
+  sectorItems.forEach(function(si) {
+    var sector = si.sector, i = data.sectors.indexOf(sector);
+    var avgYtd = data.sectorAvgYtd[sector];
+    var avgStr = avgYtd == null ? 'n/a' : (avgYtd >= 0 ? '+' : '') + avgYtd.toFixed(1) + '%';
+    var avgCls = avgYtd == null ? '' : (avgYtd >= 0 ? 'hf-tm-pos' : 'hf-tm-neg');
+    var pctBox = { left: si.x / HF_TM_W * 100, top: si.y / HF_TM_H * 100, width: si.w / HF_TM_W * 100, height: si.h / HF_TM_H * 100 };
+    var hdrH = Math.min(HF_TM_HDR, si.h * 0.4);
+
+    html += '<div class="hf-tm-sector" style="left:' + pctBox.left + '%;top:' + pctBox.top + '%;width:' + pctBox.width + '%;height:' + pctBox.height + '%">' +
+      '<div class="hf-tm-sector-hd" style="height:' + hdrH + 'px" onclick="hfSectorClick(' + i + ')" title="Click for the full ' + esc(sector) + ' breakdown"><span class="hf-tm-sector-name">' + esc(sector) + '</span>' + (showPerf ? '<span class="hf-tm-sector-avg ' + avgCls + '">' + avgStr + '</span>' : '') + '</div>' +
+      '<div class="hf-tm-tickers" style="top:' + hdrH + 'px">';
+
+    var tickers = data.sectorTickers[sector];
+    var tickerItems = Object.keys(tickers).map(function(t) { return { t: t, value: Math.max(tickers[t].weight, 0.01) }; });
+    var tickerAreaW = si.w, tickerAreaH = Math.max(si.h - hdrH, 0);
+    squarify(tickerItems, 0, 0, tickerAreaW, tickerAreaH);
+
+    tickerItems.forEach(function(ti) {
+      var entry = tickers[ti.t];
+      var bg = showPerf ? perfRamp(entry.ytd) : 'var(--surface)';
+      var tt = showPerf && entry.ytd != null ? Math.abs(entry.ytd) / PERF_RAMP_CAP : 0;
+      var textCls = showPerf && tt > 0.45 ? 'hf-secmosaic-text-lt' : 'hf-secmosaic-text-dk';
+      var tLeft = ti.x / tickerAreaW * 100, tTop = ti.y / tickerAreaH * 100, tW = ti.w / tickerAreaW * 100, tH = ti.h / tickerAreaH * 100;
+      var showYtd = showPerf && entry.ytd != null && ti.w >= 30 && ti.h >= 34;
+      html += '<div class="hf-tm-tile ' + textCls + '" style="left:' + tLeft + '%;top:' + tTop + '%;width:' + tW + '%;height:' + tH + '%;background:' + bg + '" onclick="hfTickerClick(\'' + esc(sector).replace(/'/g, "\\'") + '\',\'' + esc(ti.t) + '\')" title="' + esc(entry.company) + '">' +
+        '<div class="hf-tm-ticker">' + esc(ti.t) + '</div>' +
+        (showYtd ? '<div class="hf-tm-ytd">' + (entry.ytd >= 0 ? '+' : '') + entry.ytd.toFixed(1) + '%</div>' : '') +
+      '</div>';
+    });
+    html += '</div></div>';
+  });
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+
+function hfSectorClick(i) {
+  if (!_hfHeatmapData) return;
+  var sector = _hfHeatmapData.sectors[i];
+  if (!sector) return;
+  var tickers = _hfHeatmapData.sectorTickers[sector] || {};
+  var tks = Object.keys(tickers).sort(function(a, b) {
+    var sa = tickers[a].holders.reduce(function(s, h) { return s + h.w; }, 0);
+    var sb = tickers[b].holders.reduce(function(s, h) { return s + h.w; }, 0);
+    return sb - sa;
+  });
+
+  var id = 'hfsec_' + Date.now();
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = id;
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+  var body = '<div class="hf-secpop-list">';
+  if (!tks.length) {
+    body += '<div class="hf-stocklookup-empty">No holdings on file for this sector.</div>';
+  } else {
+    tks.forEach(function(t) {
+      var entry = tickers[t];
+      var holders = entry.holders.slice().sort(function(a, b) { return b.w - a.w; });
+      var ytdBadge = entry.ytd != null ? '<span class="hf-secpop-ytd ' + (entry.ytd >= 0 ? 'pos' : 'neg') + '">' + (entry.ytd >= 0 ? '+' : '') + entry.ytd.toFixed(1) + '%</span>' : '';
+      body += '<div class="hf-secpop-row">' +
+        '<div class="hf-secpop-co">' + ivdLogo(t, 'hf-secpop-logo') + '<div><div class="hf-secpop-ticker">' + esc(t) + ytdBadge + '</div><div class="hf-secpop-name">' + esc(entry.company) + '</div></div></div>' +
+        '<div class="hf-secpop-holders">' + holders.map(function(h) {
+          return '<span class="hf-secpop-holder" title="' + esc(h.fund) + '">' + esc(h.name) + ' <b>' + h.w.toFixed(1) + '%</b></span>';
+        }).join('') + '</div>' +
+      '</div>';
+    });
+  }
+  body += '</div>';
+
+  overlay.innerHTML =
+    '<div class="modal-card hf-secpop-card" onclick="event.stopPropagation()">' +
+      '<div class="modal-header">' +
+        '<div class="modal-title">' + esc(sector) + '</div>' +
+        '<button class="modal-close" id="' + id + '_close">&times;</button>' +
+      '</div>' +
+      '<div class="hf-secpop-body">' + body + '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  document.getElementById(id + '_close').addEventListener('click', function() { overlay.remove(); });
+}
+
+// Click one tile in the treemap — a compact popup with just that
+// company: who holds it and how big each fund's position is.
+function hfTickerClick(sector, ticker) {
+  if (!_hfHeatmapData) return;
+  var entry = (_hfHeatmapData.sectorTickers[sector] || {})[ticker];
+  if (!entry) return;
+  var holders = entry.holders.slice().sort(function(a, b) { return b.w - a.w; });
+
+  var id = 'hftk_' + Date.now();
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = id;
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+  var ytdBadge = entry.ytd != null ? '<span class="hf-secpop-ytd ' + (entry.ytd >= 0 ? 'pos' : 'neg') + '">' + (entry.ytd >= 0 ? '+' : '') + entry.ytd.toFixed(1) + '% YTD</span>' : '';
+  var body = '<div class="hf-tkpop-holders">' + holders.map(function(h) {
+    return '<div class="hf-tkpop-row"><span class="hf-tkpop-name" title="' + esc(h.fund) + '">' + esc(h.name) + '</span><span class="hf-tkpop-w">' + h.w.toFixed(2) + '%</span></div>';
+  }).join('') + '</div>';
+
+  overlay.innerHTML =
+    '<div class="modal-card hf-tkpop-card" onclick="event.stopPropagation()">' +
+      '<div class="modal-header">' +
+        '<div>' + ivdLogo(ticker, 'hf-secpop-logo') + '</div>' +
+        '<div style="flex:1;margin-left:10px"><div class="modal-title" style="font-size:15px">' + esc(ticker) + ytdBadge + '</div><div style="font-size:11px;color:var(--mu)">' + esc(entry.company) + '</div></div>' +
+        '<button class="modal-close" id="' + id + '_close">&times;</button>' +
+      '</div>' +
+      '<div class="hf-secpop-body">' + body + '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  document.getElementById(id + '_close').addEventListener('click', function() { overlay.remove(); });
+}
+
+// ─── Stock lookup (Overall sub-tab) ────────────────────────────
+// "Of the names Summit covers, who else owns this, and is their
+// conviction growing or shrinking" — a fixed, curated ticker list (not
+// tied to Summit's live position sizing, which changes), then a
+// per-investor row across a FIXED window of the 12 most recent
+// quarters (bump HF_LATEST_PERIOD forward each time a new quarter's
+// 13Fs get backfilled) — the columns never move as data fills in, only
+// the % cells do.
+
+var HF_STOCKLOOKUP_TICKERS = [
+  { t: 'AMZN', co: 'Amazon.com, Inc.' },
+  { t: 'GOOGL', co: 'Alphabet Inc.' },
+  { t: 'LYFT', co: 'Lyft, Inc.' },
+  { t: 'MA', co: 'Mastercard Incorporated' },
+  { t: 'META', co: 'Meta Platforms, Inc.' },
+  { t: 'NVDA', co: 'NVIDIA Corporation' },
+  { t: 'SOFI', co: 'SoFi Technologies, Inc.' },
+  { t: 'SPOT', co: 'Spotify Technology S.A.' },
+  { t: 'TBBB', co: 'BBB Foods Inc.' },
+  { t: 'TSM', co: 'Taiwan Semiconductor Manufacturing Company' },
+  { t: 'UBER', co: 'Uber Technologies, Inc.' },
+].sort(function(a, b) { return a.t < b.t ? -1 : a.t > b.t ? 1 : 0; });
+
+var HF_LATEST_PERIOD = { year: 2026, quarter: 2 };
+var HF_STOCKLOOKUP_PERIODS = lastNPeriods(HF_LATEST_PERIOD, 12);
+var _hfStockLookupShowPerf = true;
+
+function lastNPeriods(latest, n) {
+  var periods = [], y = latest.year, q = latest.quarter;
+  for (var i = 0; i < n; i++) {
+    periods.unshift({ year: y, quarter: q });
+    q--; if (q < 1) { q = 4; y--; }
+  }
+  return periods;
+}
+
+function populateStockLookupSelect() {
+  var sel = document.getElementById('hf-stocklookup-sel');
+  if (!sel) return;
+  sel.innerHTML = HF_STOCKLOOKUP_TICKERS.map(function(h) { return '<option value="' + esc(h.t) + '">' + esc(h.t) + ' — ' + esc(h.co) + '</option>'; }).join('');
+  hfStockLookupSelect(sel.value);
+}
+
+function hfStockLookupTogglePerf(checked) {
+  _hfStockLookupShowPerf = checked;
+  var wrap = document.getElementById('hf-stocklookup-body');
+  if (wrap) wrap.classList.toggle('hf-stocklookup-noperf', !checked);
+}
+
+async function hfStockLookupSelect(ticker) {
+  var body = document.getElementById('hf-stocklookup-body');
+  if (!body) return;
+  if (!ticker) { body.innerHTML = ''; return; }
+  body.innerHTML = '<div class="hf-stocklookup-empty">Loading&hellip;</div>';
+  var result = await fetchHoldingsByTicker(ticker);
+  var rows = result.success ? result.data : [];
+  if (location.hostname === 'localhost' && !rows.length) {
+    rows = LOCAL_INVESTOR_HOLDINGS.filter(function(r) { return r.ticker === ticker; });
+  }
+  renderStockLookupTable(ticker, rows);
+}
+
+function renderStockLookupTable(ticker, rows) {
+  var body = document.getElementById('hf-stocklookup-body');
+  if (!body) return;
+  rows = rows.filter(function(r) { return r.investor_key !== 'summit'; });
+
+  var periods = HF_STOCKLOOKUP_PERIODS;
+  var periodKeys = periods.map(periodOptionValue);
+  var latestKey = periodKeys[periodKeys.length - 1];
+
+  var byInv = {};
+  rows.forEach(function(r) {
+    var pk = periodOptionValue({ year: r.year, quarter: r.quarter });
+    if (periodKeys.indexOf(pk) === -1) return;
+    byInv[r.investor_key] = byInv[r.investor_key] || {};
+    byInv[r.investor_key][pk] = r.weight_pct;
+  });
+  // Rows are every tracked superinvestor, always, not just the ones with
+  // a position on file -- someone with no position on this ticker still
+  // shows up, just blank across the row, so the list never reflows as
+  // you switch tickers.
+  var invKeys = INVESTORS.filter(function(i) { return i.key !== 'summit'; }).map(function(i) { return i.key; });
+  invKeys.sort(function(a, b) {
+    var wa = byInv[a] ? byInv[a][latestKey] : null, wb = byInv[b] ? byInv[b][latestKey] : null;
+    if (wa == null && wb == null) return 0;
+    if (wa == null) return 1;
+    if (wb == null) return -1;
+    return wb - wa;
+  });
+
+  var html = '<div class="hf-heat-wrap"><table class="hf-stocklookup-tbl"><thead><tr><th>Superinvestor</th>';
+  periods.forEach(function(p, i) {
+    var isCur = i === periods.length - 1;
+    html += '<th class="nr' + (isCur ? ' ivd-cmp-current' : '') + '">' + esc(periodLabel(p)) + (isCur ? ' <span class="ivd-cmp-current-tag">Current</span>' : '') + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+  invKeys.forEach(function(key) {
+    var inv = INVESTORS.filter(function(i) { return i.key === key; })[0];
+    var photo = inv && inv.photo ? (IMGS[inv.photo] || '') : '';
+    var avatar = photo
+      ? '<img class="hf-stocklookup-logo" src="' + esc(photo) + '" alt="" onerror="this.style.opacity=0.3">'
+      : '<div class="hf-stocklookup-logo hf-stocklookup-ini">' + esc((inv ? inv.name : key).split(' ').slice(0, 2).map(function(n) { return n[0]; }).join('')) + '</div>';
+    html += '<tr><td><div class="hf-stocklookup-inv">' + avatar + '<span>' + esc(inv ? inv.name : key) + '<span class="hf-stocklookup-fund">' + esc(inv ? inv.fund : '') + '</span></span></div></td>';
+    var invData = byInv[key] || {};
+    // Performance color only marks the CURRENT quarter (up/down/new vs.
+    // whatever the last non-null quarter before it was) -- earlier
+    // quarters show as plain numbers, since coloring every column at once
+    // read as "how did the stock do that quarter," which isn't what this
+    // signals (it's whether the fund's position grew or shrank).
+    var lastNonNull = null;
+    periodKeys.forEach(function(pk, i) {
+      var w = invData[pk];
+      var isCur = i === periodKeys.length - 1;
+      var moveCls = '';
+      if (isCur && w != null) {
+        moveCls = lastNonNull == null ? 'hf-slk-new' : w > lastNonNull ? 'hf-slk-up' : w < lastNonNull ? 'hf-slk-down' : 'hf-slk-flat';
+      }
+      if (w != null) lastNonNull = w;
+      html += '<td class="nr hf-stocklookup-w ' + moveCls + (isCur ? ' ivd-cmp-current' : '') + '">' + (w != null ? w.toFixed(2) + '%' : '<span class="hf-stocklookup-dash">&mdash;</span>') + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  body.innerHTML = html;
+  body.classList.toggle('hf-stocklookup-noperf', !_hfStockLookupShowPerf);
+}
+
+// ─── Overall / Superinvestors sub-tabs ─────────────────────────
+
+function hfMainTab(pane) {
+  document.querySelectorAll('.hf-maintab').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-pane') === pane); });
+  document.querySelectorAll('.hf-mainpane').forEach(function(p) { p.classList.toggle('active', p.getAttribute('data-pane') === pane); });
 }
 
 // ─── Investor Detail page — shared data + rendering helpers ──
@@ -208,6 +830,18 @@ function renderInvGrid(){
 function esc(str) { if (!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function imPct(v){ return v==null ? 'n/a' : (v>=0?'+':'')+v.toFixed(1)+'%'; }
+
+// Ticker logo box — same visual + fallback chain as Companies' coLogo()
+// (js/companies.js), reimplemented locally since that module doesn't
+// export it. No logo_domain is on file for 13F holdings, so the Google-
+// favicon fallback step is skipped (empty data-domain) and a bad Parqet
+// fetch falls straight through to the ticker-initials monogram.
+function ivdLogo(ticker, cls, name) {
+  var mono = ticker ? ticker.slice(0, 2).toUpperCase() : (name ? name.slice(0, 2).toUpperCase() : '—');
+  return '<div class="cologo' + (cls ? ' ' + cls : '') + '" data-mono="' + esc(mono) + '">' +
+    (ticker ? '<img src="https://assets.parqet.com/logos/symbol/' + esc(ticker) + '" alt="" data-step="0" data-domain="" onerror="logoFallback(this)">' : esc(mono)) +
+  '</div>';
+}
 
 var CAT_LABELS = { annual_letter: 'Annual Letters', investor_message: 'Investor Messages' };
 
@@ -232,17 +866,53 @@ var INVESTOR_CIK = {
   hohn: '0001647251',          // TCI Fund Management Ltd
   altimeter: '0001541617',     // Altimeter Capital Management, LP
   dorsey: '0001671657',        // Dorsey Asset Management, LLC
+  loeb: '0001040273',          // Third Point LLC
+  klarman: '0001061768',       // Baupost Group LLC/MA
 };
+
+// One row per (year, quarter, cusip) — first occurrence wins. CUSIP, not
+// ticker, is the real unique key: a common-stock position and a warrant
+// or note in the same company legitimately share the same display ticker
+// (e.g. FLYX common vs. FLYX warrant) but always have distinct CUSIPs, so
+// keying on ticker would wrongly drop one of them. Guards against
+// duplicate holdings showing up in a fund's detail page, whether the
+// dupe comes from Supabase itself (e.g. a migration re-run that inserted
+// the same quarter twice server-side) or from double-adding the same
+// period during the local-seed merge below.
+function dedupeHoldingRows(rows) {
+  var seen = {}, out = [];
+  rows.forEach(function(r) {
+    var k = r.year + '-' + r.quarter + '-' + (r.cusip || r.ticker || r.company_name);
+    if (seen[k]) return;
+    seen[k] = true;
+    out.push(r);
+  });
+  return out;
+}
 
 async function loadInvestorProfileData(key) {
   var results = await Promise.all([fetchInvestorReturns(key), fetchInvestorHoldings(key), fetchInvestorLetters(key)]);
   var returns = results[0].success ? results[0].data : [];
-  var holdings = results[1].success ? results[1].data : [];
+  var holdings = dedupeHoldingRows(results[1].success ? results[1].data : []);
   var letters = results[2].success ? results[2].data : [];
-  if (location.hostname === 'localhost' && !returns.length && !holdings.length && !letters.length) {
-    returns = LOCAL_INVESTOR_RETURNS.filter(function(r){ return r.investor_key === key; });
-    holdings = LOCAL_INVESTOR_HOLDINGS.filter(function(r){ return r.investor_key === key; });
-    letters = LOCAL_INVESTOR_LETTERS.filter(function(r){ return r.investor_key === key; });
+  // Supplement (don't just fall back wholesale) with local-seed rows on
+  // localhost: Supabase may already have SOME quarters for an investor
+  // (e.g. everything through Q1 2026) while the local seed has newer ones
+  // (e.g. Q2 2026) that haven't been migrated into Supabase yet. An
+  // all-or-nothing check here would silently hide those newer quarters
+  // just because Supabase wasn't empty. Merge per (year, quarter/id)
+  // instead, letting Supabase win when both have the same row.
+  if (location.hostname === 'localhost') {
+    var localReturns = LOCAL_INVESTOR_RETURNS.filter(function(r){ return r.investor_key === key; });
+    var haveReturnYear = {}; returns.forEach(function(r){ haveReturnYear[r.year] = true; });
+    localReturns.forEach(function(r){ if (!haveReturnYear[r.year]) returns.push(r); });
+
+    var localHoldings = LOCAL_INVESTOR_HOLDINGS.filter(function(r){ return r.investor_key === key; });
+    var haveHoldingPeriod = {}; holdings.forEach(function(r){ haveHoldingPeriod[periodOptionValue(r)] = true; });
+    localHoldings.forEach(function(r){ if (!haveHoldingPeriod[periodOptionValue(r)]) holdings.push(r); });
+    holdings = dedupeHoldingRows(holdings);
+
+    if (!letters.length) letters = LOCAL_INVESTOR_LETTERS.filter(function(r){ return r.investor_key === key; });
   }
   return { returns: returns, holdings: holdings, letters: letters };
 }
@@ -267,8 +937,12 @@ function invYearPillsHtml(yearList, selYear) {
   }).join('') + '</div>';
 }
 
-function invLettersHtml(letters) {
-  if (!letters.length) return '<div class="im-empty">No letters on file yet.</div>';
+function invLettersHtml(letters, key) {
+  if (!letters.length) {
+    var note = key && NO_PUBLIC_LETTERS_NOTE[key];
+    if (note) return '<div class="im-empty im-no-public">' + esc(note) + '</div>';
+    return '<div class="im-empty">No letters on file yet.</div>';
+  }
   var byCat = {};
   letters.forEach(function(l) { (byCat[l.category] = byCat[l.category] || []).push(l); });
   var html = '';
@@ -290,10 +964,10 @@ function invLettersHtml(letters) {
   return html || '<div class="im-empty">No letters on file yet.</div>';
 }
 
-function renderInvLetters(id, letters) {
+function renderInvLetters(id, letters, key) {
   var el = document.getElementById(id + '_letters');
   if (!el) return;
-  el.innerHTML = invLettersHtml(letters);
+  el.innerHTML = invLettersHtml(letters, key);
   el.querySelectorAll('.im-let-file').forEach(function(btn) {
     btn.addEventListener('click', async function() {
       var result = await getFileUrl(btn.getAttribute('data-path'));
@@ -313,7 +987,14 @@ function periodSortKey(p) { return p.year * 10 + (p.quarter == null ? 5 : p.quar
 function periodKeyEq(a, b) { return a.year === b.year && a.quarter === b.quarter; }
 function periodLabel(p) { return p.quarter ? ('Q' + p.quarter + ' ' + p.year) : (p.year + ' (latest)'); }
 function periodOptionValue(p) { return p.year + '-' + (p.quarter == null ? '' : p.quarter); }
-function rowKey(h) { return h.ticker ? h.ticker : '~' + h.company_name; }
+// CUSIP is the stable identity across periods — a ticker can be resolved
+// in one quarter's row and still null in another (e.g. only some
+// quarters have been ticker-backfilled), and keying on ticker would then
+// split the SAME security into two rows: one that only has data in the
+// resolved-ticker periods, another ('~Company Name') that only has data
+// in the unresolved periods. Fall back to ticker, then company name,
+// only when cusip itself is missing.
+function rowKey(h) { return h.cusip ? h.cusip : (h.ticker ? h.ticker : '~' + h.company_name); }
 
 function investorPeriods(holdings, investorKey) {
   var seen = {};
@@ -337,8 +1018,16 @@ function computeHoldingsComparison(holdings, investorKey, periods) {
   maps.forEach(function(m) { Object.keys(m).forEach(function(k) { allKeys[k] = true; }); });
   var rows = Object.keys(allKeys).map(function(k) {
     var cells = maps.map(function(m) { return m[k] ? m[k].weight_pct : null; });
-    var name = '', ticker = k.charAt(0) === '~' ? '' : k;
-    for (var i = maps.length - 1; i >= 0; i--) { if (maps[i][k]) { name = maps[i][k].company_name; break; } }
+    // Backfill name/ticker from whichever period has them — not just the
+    // latest one, since the most recent quarter's row is sometimes the
+    // one still missing a resolved ticker.
+    var name = '', ticker = '';
+    for (var i = maps.length - 1; i >= 0; i--) {
+      if (!maps[i][k]) continue;
+      if (!name) name = maps[i][k].company_name;
+      if (!ticker && maps[i][k].ticker) ticker = maps[i][k].ticker;
+      if (name && ticker) break;
+    }
     return { key: k, ticker: ticker, companyName: name, cells: cells };
   });
   rows.sort(function(a, b) {
@@ -397,9 +1086,29 @@ function ytdCellHtml(ytd) {
   return '<td class="nr"><span class="rpill ' + cls + '">' + (ytd >= 0 ? '+' : '') + ytd.toFixed(1) + '%</span></td>';
 }
 
-function renderHoldingsCompareTable(rows, periods) {
+// Tickers in Summit's own book (INVESTORS[key='summit']), for the "*"
+// marker in the comparison table — replaces the old standalone "Shared
+// with Summit" panel.
+function summitTickerSet() {
+  var summitInv = INVESTORS.filter(function(i) { return i.key === 'summit'; })[0];
+  var set = {};
+  if (summitInv) (summitInv.holdings || []).forEach(function(h) { if (h.t) set[h.t] = true; });
+  return set;
+}
+
+// Rows already come sorted current-weight-desc (computeHoldingsComparison).
+// A fund with 30+ disclosed positions makes for an unreadable wall of rows,
+// so past this cap the table shows only the top holdings until the user
+// asks for the rest.
+var IVD_TABLE_CAP = 15;
+
+function renderHoldingsCompareTable(rows, periods, investorKey, expanded) {
   if (!rows.length) return '<div class="im-empty">No holdings on file yet — upload a 13F to get started.</div>';
   var curIdx = periods.length - 1;
+  var shared = investorKey === 'summit' ? {} : summitTickerSet();
+  var anyShared = false;
+  var displayRows = expanded ? rows : rows.slice(0, IVD_TABLE_CAP);
+  var hiddenCount = rows.length - displayRows.length;
   var html = '<div class="ivd-cmp-wrap"><table class="icard-tbl ivd-cmp-tbl"><thead><tr><th>Ticker</th><th>Company</th>';
   periods.forEach(function(p, i) {
     var isCur = i === curIdx;
@@ -408,14 +1117,25 @@ function renderHoldingsCompareTable(rows, periods) {
   if (periods.length > 1) html += '<th class="nr">Move</th>';
   html += '<th class="nr" title="The stock\'s YTD return today — not tied to the period shown">Current YTD</th>';
   html += '</tr></thead><tbody>';
-  rows.forEach(function(r) {
-    html += '<tr data-key="' + esc(r.key) + '"><td><span class="iticker">' + esc(r.ticker || '?') + '</span></td><td><span class="ico">' + esc(r.companyName) + '</span></td>';
+  displayRows.forEach(function(r) {
+    var isShared = !!(r.ticker && shared[r.ticker]);
+    if (isShared) anyShared = true;
+    html += '<tr data-key="' + esc(r.key) + '"><td><span class="iticker">' + esc(r.ticker || '—') +
+      (isShared ? '<span class="ivd-shared-mark" title="Also held by Summit">*</span>' : '') + '</span></td>' +
+      '<td><span class="ico">' + esc(r.companyName) + '</span></td>';
     r.cells.forEach(function(w, i) { html += weightCellHtml(w, i === curIdx); });
     if (periods.length > 1) html += '<td class="nr">' + moveBadgeHtml(r.cells[r.cells.length - 2], r.cells[r.cells.length - 1]) + '</td>';
     html += ytdCellHtml(tickerYtd(r.ticker));
     html += '</tr>';
   });
-  return html + '</tbody></table></div>';
+  html += '</tbody></table></div>';
+  if (hiddenCount > 0) {
+    html += '<button type="button" class="im-upload-btn ivd-cmp-showmore">Show ' + hiddenCount + ' more holding' + (hiddenCount === 1 ? '' : 's') + '</button>';
+  } else if (expanded && rows.length > IVD_TABLE_CAP) {
+    html += '<button type="button" class="im-upload-btn ivd-cmp-showmore" data-collapse="1">Show fewer</button>';
+  }
+  if (anyShared) html += '<div class="ivd-cmp-footnote">* also held in Summit&rsquo;s own portfolio</div>';
+  return html;
 }
 
 function generateMovesSummary(rows, periods) {
@@ -432,27 +1152,31 @@ function generateMovesSummary(rows, periods) {
   up.sort(function(a, b) { return b.delta - a.delta; });
   down.sort(function(a, b) { return a.delta - b.delta; });
 
+  function moveLine(r, cls, text) {
+    return '<li class="ivd-move-item ' + cls + '">' + ivdLogo(r.ticker, 'ivd-move-logo', r.companyName) + '<span class="ivd-move-txt">' + text + '</span></li>';
+  }
+
   var lines = [];
   newPos.forEach(function(r) {
     var curr = r.cells[r.cells.length - 1];
-    lines.push('<b>New position: ' + esc(r.ticker || r.companyName) + '</b> — enters at ' + curr.toFixed(2) + '% of the portfolio.');
+    lines.push(moveLine(r, 'new', '<b>New position: ' + esc(r.ticker || r.companyName) + '</b> — enters at ' + curr.toFixed(2) + '% of the portfolio.'));
   });
   sold.forEach(function(r) {
     var prev = r.cells[r.cells.length - 2];
-    lines.push('<b>Exited: ' + esc(r.ticker || r.companyName) + '</b> — was ' + prev.toFixed(2) + '%, no longer held.');
+    lines.push(moveLine(r, 'sold', '<b>Exited: ' + esc(r.ticker || r.companyName) + '</b> — was ' + prev.toFixed(2) + '%, no longer held.'));
   });
   up.slice(0, 3).forEach(function(o) {
     var prev = o.row.cells[o.row.cells.length - 2], curr = o.row.cells[o.row.cells.length - 1];
-    lines.push('<b>Increased ' + esc(o.row.ticker || o.row.companyName) + '</b> from ' + prev.toFixed(2) + '% to ' + curr.toFixed(2) + '% (+' + o.delta.toFixed(2) + 'pp).');
+    lines.push(moveLine(o.row, 'up', '<b>Increased ' + esc(o.row.ticker || o.row.companyName) + '</b> from ' + prev.toFixed(2) + '% to ' + curr.toFixed(2) + '% (+' + o.delta.toFixed(2) + 'pp).'));
   });
   down.slice(0, 3).forEach(function(o) {
     var prev = o.row.cells[o.row.cells.length - 2], curr = o.row.cells[o.row.cells.length - 1];
-    lines.push('<b>Trimmed ' + esc(o.row.ticker || o.row.companyName) + '</b> from ' + prev.toFixed(2) + '% to ' + curr.toFixed(2) + '% (' + o.delta.toFixed(2) + 'pp).');
+    lines.push(moveLine(o.row, 'down', '<b>Trimmed ' + esc(o.row.ticker || o.row.companyName) + '</b> from ' + prev.toFixed(2) + '% to ' + curr.toFixed(2) + '% (' + o.delta.toFixed(2) + 'pp).'));
   });
 
   var hdr = '<div class="ivd-summary-hdr">' + esc(periodLabel(periods[periods.length - 2])) + ' &rarr; ' + esc(periodLabel(periods[periods.length - 1])) + '</div>';
   if (!lines.length) return hdr + '<div class="im-empty">No notable changes between these two periods.</div>';
-  return hdr + '<ul class="ivd-summary-list"><li>' + lines.join('</li><li>') + '</li></ul>';
+  return hdr + '<ul class="ivd-summary-list">' + lines.join('') + '</ul>';
 }
 
 // Single "reference period" selector — the table shows the reference
@@ -520,49 +1244,22 @@ function renderPeriodPicker(allPeriods, pool, refPeriod, mode, count, maxCount) 
   return html;
 }
 
-// ─── Holdings Composition — Small Multiples & Treemap ─────────
-// Two views over the same "selected" periods as the table below, kept
-// in sync via one Top-N/Other split (topAndOtherRows). Top N holdings
-// get their own identity (max 8 for Treemap — the validated categorical
-// palette's all-pairs limit for facet/cell forms); everything else folds
-// into a single "Other" bucket rather than generating more hues. Colors
-// are assigned per-ticker the first time it's seen and reused, so a
-// filter/period change never repaints a holding that's still on screen.
-//
-// Small Multiples deliberately does NOT color each panel by ticker: past
-// ~3 slots the palette can't clear its all-pairs CVD floor for forms
-// where any two panels might be compared (facets, small multiples,
-// treemap cells). Identity instead comes from the panel's own ticker
-// label (a single-series chart needs no legend), and color is reserved
-// for the move badges, which reuse the exact classes from the comparison
-// table below so the two stay visually tied together.
+// ─── Holdings Composition — Pie ────────────────────────────────
+// A single donut chart of the CURRENT reference period (same period as
+// the table's "Current" column), the investor's photo in the hole, and
+// each slice labeled outside the ring with the ticker's logo — modeled
+// after the carbonfinance-style "stock portfolio" social graphic.
+// Renders AFTER the comparison table. Slices are shaded by rank along
+// the Summit steel -> navy ramp (largest holding darkest) rather than a
+// categorical palette — identity is carried by the logo, not the hue.
 
-var HOLDINGS_CHART_COLORS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948'];
-var HOLDINGS_CHART_OTHER_COLOR = '#898781';
-var holdingsChartColorMap = {};
-var holdingsChartNextSlot = 0;
-function tickerChartColor(key) {
-  if (!holdingsChartColorMap[key]) {
-    holdingsChartColorMap[key] = HOLDINGS_CHART_COLORS[holdingsChartNextSlot % HOLDINGS_CHART_COLORS.length];
-    holdingsChartNextSlot++;
-  }
-  return holdingsChartColorMap[key];
-}
-
-// Perceived-luminance (YIQ) pick of dark navy vs white label text for a
-// given tile fill color — the categorical palette spans both very light
-// (yellow, magenta) and very dark (blue, violet) hues, so no single text
-// color reads on all of them.
-function tmTextColor(hex) {
-  var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
-  var yiq = (r * 299 + g * 587 + b * 114) / 1000;
-  return yiq >= 150 ? '#1E2733' : '#fff';
-}
+var IVD_RAMP_LO = [238, 241, 245]; // --ice
+var IVD_RAMP_HI = [30, 39, 51];    // --navy
 
 var ivdSmCharts = [];
 function destroyIvdChart() { ivdSmCharts.forEach(function(c) { c.destroy(); }); ivdSmCharts = []; }
 
-var IVD_TOPN_BOUNDS = { treemap: { min: 2, max: 8 }, multiples: { min: 3, max: 12 } };
+var IVD_TOPN_BOUNDS = { min: 3, max: 15 };
 
 // Aggregates every row past the Top-N cut into one "Other" pseudo-row,
 // per period, and re-sorts everything (top rows + Other) by current-period
@@ -588,272 +1285,206 @@ function topAndOtherRows(rows, periods, topN) {
   return out;
 }
 
-// ─── Lines (single overlaid multi-line chart) ─────────────────
-// One Chart.js line per ticker, all in the same plot, each in its real
-// ticker color (same palette/assignment as the Treemap and the table
-// below) so the chart reads immediately without any interaction.
-// Hovering anywhere over the chart shows a single tooltip listing every
-// held ticker's value for that period (index mode — no need to land the
-// cursor precisely on a thin line). Hovering or clicking the legend chip
-// below, or the matching row in the comparison table, additionally
-// pushes that one line forward (thicker, full opacity) while the rest
-// recede to a translucent version of their own color — never gray —
-// so identity is never lost, just de-emphasized.
+function ivdRowLabel(row) { return row.isOther ? ('Other (' + row.restCount + ')') : (row.ticker || row.companyName); }
 
-function abbrevPeriodLabel(p) { return p.quarter ? ('Q' + p.quarter + '’' + String(p.year).slice(2)) : (String(p.year).slice(2) + '’L'); }
+// ─── Holdings Composition — by GICS sector ─────────────────────
+// Alternate donut view: same reference period, but every position
+// rolled up into its GICS sector (via ALL_STOCKS) instead of shown as an
+// individual ticker. A fixed sector -> color mapping (identity, not rank
+// -- unlike the by-ticker view there's no logo to carry identity, so
+// color + a direct label do that job here) rather than the steel->navy
+// rank ramp used for individual positions.
+var SECTOR_COLORS = {
+  'Technology': '#2A78D6',
+  'Consumer Discretionary': '#EB6834',
+  'Financials': '#1BAF7A',
+  'Communication Services': '#EDA100',
+  'Health Care': '#E87BA4',
+  'Industrials': '#4A3AA7',
+  'Consumer Staples': '#4C8C4A',
+  'Energy': '#C2554F',
+  'Materials': '#7C8694',
+  'Real Estate': '#A9784F',
+  'Utilities': '#5B7B94',
+};
+var SECTOR_OTHER_COLOR = '#C3C2B7';
 
-function hexToRgba(hex, alpha) {
-  var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
-  return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+var TICKER_SECTOR_MAP = null;
+function tickerSectorMap() {
+  if (TICKER_SECTOR_MAP) return TICKER_SECTOR_MAP;
+  var map = {};
+  ALL_STOCKS.forEach(function(s) { if (s.s) map[s.t] = s.s; });
+  TICKER_SECTOR_MAP = map;
+  return map;
+}
+function tickerSector(ticker) { return ticker ? (tickerSectorMap()[ticker] || null) : null; }
+
+// Aggregates every position in a single period into its sector, sorted
+// by combined weight descending. Uses the raw holdings rows (not the
+// multi-period comparison rows) since only the current period matters here.
+function computeSectorBreakdown(holdings, investorKey, period) {
+  var map = periodWeightMap(holdings, investorKey, period);
+  var bySector = {}, unresolvedCount = 0;
+  Object.keys(map).forEach(function(k) {
+    var h = map[k];
+    var sector = tickerSector(h.ticker);
+    if (!sector) unresolvedCount++;
+    var key = sector || 'Other / Unclassified';
+    bySector[key] = (bySector[key] || 0) + (Number(h.weight_pct) || 0);
+  });
+  var out = Object.keys(bySector).map(function(sector) {
+    return { sector: sector, weight: +bySector[sector].toFixed(2), color: SECTOR_COLORS[sector] || SECTOR_OTHER_COLOR };
+  });
+  out.sort(function(a, b) { return b.weight - a.weight; });
+  return { rows: out, unresolvedCount: unresolvedCount };
 }
 
-function ivdMlLegendItemHtml(row, curIdx) {
-  var curV = row.cells[curIdx];
-  var prevV = curIdx > 0 ? row.cells[curIdx - 1] : null;
-  var badge = moveBadgeHtml(prevV, curV);
-  var name = row.isOther ? ('Other (' + row.restCount + ')') : (row.ticker || row.companyName);
-  var color = row.isOther ? HOLDINGS_CHART_OTHER_COLOR : tickerChartColor(row.key);
-  var curTxt = curV == null ? 'SOLD' : curV.toFixed(2) + '%';
-  return '<button type="button" class="ivd-ml-legend-item" title="' + esc(row.companyName || name) + '">' +
-    '<span class="sbl-d" style="background:' + color + '"></span>' +
-    '<span class="ivd-ml-legend-tick">' + esc(name) + '</span>' +
-    '<span class="ivd-ml-legend-pct' + (curV == null ? ' na' : '') + '">' + curTxt + '</span>' +
-    (badge || '') +
-  '</button>';
-}
-
-function renderMultiLineChart(el, chartRows, periods, curIdx) {
-  var wrapEl = el.querySelector('.ivd-ml-wrap');
-  var legendEl = el.querySelector('.ivd-ml-legend');
-  if (!wrapEl || !legendEl) return;
-  if (!chartRows.length || typeof Chart === 'undefined') {
-    wrapEl.innerHTML = '<div class="im-empty">No holdings to chart for this selection.</div>';
-    legendEl.innerHTML = '';
+function renderSectorPieChart(wrapEl, breakdown, photoUrl, initials) {
+  if (!wrapEl) return;
+  var items = breakdown.rows.filter(function(r) { return r.weight > 0; });
+  if (!items.length || typeof Chart === 'undefined') {
+    wrapEl.innerHTML = '<div class="im-empty">No holdings on file for this period.</div>';
     return;
   }
-
-  wrapEl.innerHTML = '<canvas class="ivd-ml-canvas"></canvas>';
-  var canvas = wrapEl.querySelector('.ivd-ml-canvas');
-  var labels = periods.map(abbrevPeriodLabel);
-  var colors = chartRows.map(function(row) { return row.isOther ? HOLDINGS_CHART_OTHER_COLOR : tickerChartColor(row.key); });
-
-  var datasets = chartRows.map(function(row, i) {
-    var color = colors[i];
-    return {
-      label: row.isOther ? ('Other (' + row.restCount + ')') : (row.ticker || row.companyName),
-      data: row.cells,
-      borderColor: color,
-      borderWidth: 2,
-      spanGaps: true,
-      pointRadius: row.cells.map(function(v, i2) {
-        if (v == null) return 0;
-        if (i2 === curIdx) return 4;
-        var edge = (i2 > 0 && row.cells[i2 - 1] == null) || (i2 < row.cells.length - 1 && row.cells[i2 + 1] == null);
-        return edge ? 3.5 : 2;
-      }),
-      pointBackgroundColor: row.cells.map(function(v, i2) {
-        var edge = (i2 > 0 && row.cells[i2 - 1] == null) || (i2 < row.cells.length - 1 && row.cells[i2 + 1] == null);
-        return edge ? '#fff' : color;
-      }),
-      pointBorderColor: color,
-      pointBorderWidth: row.cells.map(function(v, i2) {
-        var edge = (i2 > 0 && row.cells[i2 - 1] == null) || (i2 < row.cells.length - 1 && row.cells[i2 + 1] == null);
-        return edge ? 2 : 0;
-      }),
-      pointHoverRadius: 5,
-      tension: 0.2,
-      fill: false,
-      segment: { borderDash: function(ctx) { return (ctx.p1DataIndex - ctx.p0DataIndex > 1) ? [3, 3] : undefined; } },
-    };
-  });
-
-  var pinnedKey = null;
-
-  function applyActive(key) {
-    chart.data.datasets.forEach(function(ds, i) {
-      var row = chartRows[i];
-      if (!key) { ds.borderColor = colors[i]; ds.borderWidth = 2; }
-      else if (row.key === key) { ds.borderColor = colors[i]; ds.borderWidth = 3; }
-      else { ds.borderColor = hexToRgba(colors[i], .2); ds.borderWidth = 1.5; }
-    });
-    chart.update('none');
-    legendItems.forEach(function(item, i) { item.classList.toggle('active', chartRows[i].key === key); });
-    tableRows.forEach(function(tr) { tr.classList.toggle('ivd-cmp-row-active', tr.getAttribute('data-key') === key); });
-  }
-
-  function setPinned(key) {
-    pinnedKey = (pinnedKey === key) ? null : key;
-    applyActive(pinnedKey);
-  }
-
+  var SIZE = Math.max(260, Math.min(400, (wrapEl.clientWidth || 460) - 210));
+  wrapEl.innerHTML =
+    '<div class="ivd-pie-inner" style="width:' + SIZE + 'px;height:' + SIZE + 'px">' +
+      '<canvas class="ivd-pie-canvas" width="' + SIZE + '" height="' + SIZE + '"></canvas>' +
+      (photoUrl
+        ? '<img class="ivd-pie-photo" src="' + esc(photoUrl) + '" alt="" onerror="this.style.opacity=0.3">'
+        : '<div class="ivd-pie-photo ivd-pie-photo-ini">' + esc(initials || '') + '</div>') +
+      '<div class="ivd-pie-labels"></div>' +
+    '</div>';
+  var canvas = wrapEl.querySelector('.ivd-pie-canvas');
   var chart = new Chart(canvas.getContext('2d'), {
-    type: 'line',
-    data: { labels: labels, datasets: datasets },
+    type: 'doughnut',
+    data: {
+      labels: items.map(function(it) { return it.sector; }),
+      datasets: [{ data: items.map(function(it) { return it.weight; }), backgroundColor: items.map(function(it) { return it.color; }), borderColor: '#fff', borderWidth: 2 }],
+    },
     options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
+      responsive: false,
+      animation: false,
+      cutout: '58%',
       plugins: {
         legend: { display: false },
-        tooltip: {
-          mode: 'index', intersect: false,
-          filter: function(item) { return item.raw != null; },
-          itemSort: function(a, b) { return b.raw - a.raw; },
-          callbacks: { label: function(c) { return c.dataset.label + ': ' + c.raw.toFixed(2) + '%'; } },
-        },
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#8A93A0' } },
-        y: { beginAtZero: true, grid: { color: '#EEF2F7' }, ticks: { font: { size: 10 }, color: '#8A93A0', callback: function(v) { return v + '%'; } } },
+        tooltip: { callbacks: { label: function(c) { return c.label + ': ' + c.raw.toFixed(2) + '%'; } } },
       },
     },
   });
   ivdSmCharts.push(chart);
 
-  legendEl.innerHTML = chartRows.map(function(row) { return ivdMlLegendItemHtml(row, curIdx); }).join('');
-  var legendItems = legendEl.querySelectorAll('.ivd-ml-legend-item');
-  var highlightable = {};
-  chartRows.forEach(function(r) { highlightable[r.key] = true; });
-  var tableRows = el.querySelectorAll('.ivd-cmp-tbl tbody tr[data-key]');
-
-  legendItems.forEach(function(item, i) {
-    var key = chartRows[i].key;
-    item.addEventListener('mouseenter', function() { if (!pinnedKey) applyActive(key); });
-    item.addEventListener('mouseleave', function() { if (!pinnedKey) applyActive(null); });
-    item.addEventListener('click', function() { setPinned(key); });
-  });
-  tableRows.forEach(function(tr) {
-    var key = tr.getAttribute('data-key');
-    if (!highlightable[key]) return;
-    tr.classList.add('ivd-cmp-row-hoverable');
-    tr.addEventListener('mouseenter', function() { if (!pinnedKey) applyActive(key); });
-    tr.addEventListener('mouseleave', function() { if (!pinnedKey) applyActive(null); });
-    tr.addEventListener('click', function() { setPinned(key); });
-  });
+  var labelsEl = wrapEl.querySelector('.ivd-pie-labels');
+  var meta = chart.getDatasetMeta(0);
+  labelsEl.innerHTML = items.map(function(it, i) {
+    var arc = meta.data[i];
+    var mid = (arc.startAngle + arc.endAngle) / 2;
+    var r = arc.outerRadius + 24 + (i % 2) * 38;
+    var x = arc.x + r * Math.cos(mid);
+    var y = arc.y + r * Math.sin(mid);
+    return '<div class="ivd-pie-label" style="left:' + x.toFixed(1) + 'px;top:' + y.toFixed(1) + 'px">' +
+      '<span class="ivd-pie-sector-dot" style="background:' + it.color + '"></span>' +
+      '<div class="ivd-pie-label-txt"><span class="ivd-pie-label-t">' + esc(it.sector) + '</span>' +
+      '<span class="ivd-pie-label-p">' + it.weight.toFixed(1) + '%</span></div>' +
+    '</div>';
+  }).join('');
 }
 
-// ─── Treemap ────────────────────────────────────────────────────
-// Classic squarified treemap (Bruls/Huizing/van Wijk): builds one row at
-// a time along the container's shorter side, adding items to the row as
-// long as doing so improves (lowers) the worst aspect ratio in that row.
-
-function squarify(items, x, y, w, h) {
-  var results = [];
-  var remaining = items.slice();
-  var rx = x, ry = y, rw = w, rh = h;
-  function rowWorst(row, len) {
-    var sum = 0, rmax = -Infinity, rmin = Infinity;
-    row.forEach(function(it) { sum += it.value; if (it.value > rmax) rmax = it.value; if (it.value < rmin) rmin = it.value; });
-    if (sum <= 0 || len <= 0) return Infinity;
-    return Math.max((len * len * rmax) / (sum * sum), (sum * sum) / (len * len * rmin));
-  }
-  while (remaining.length) {
-    var len = Math.min(rw, rh);
-    var row = [remaining[0]];
-    var i = 1;
-    while (i < remaining.length) {
-      var testRow = row.concat([remaining[i]]);
-      if (rowWorst(testRow, len) <= rowWorst(row, len)) { row = testRow; i++; }
-      else break;
-    }
-    remaining = remaining.slice(row.length);
-    var rowSum = row.reduce(function(s, it) { return s + it.value; }, 0);
-    if (rw >= rh) {
-      var colW = rh > 0 ? rowSum / rh : 0;
-      var cy = ry;
-      row.forEach(function(it) {
-        var ih = colW > 0 ? it.value / colW : 0;
-        results.push({ item: it, x: rx, y: cy, w: colW, h: ih });
-        cy += ih;
-      });
-      rx += colW; rw -= colW;
-    } else {
-      var rowH = rw > 0 ? rowSum / rw : 0;
-      var cx = rx;
-      row.forEach(function(it) {
-        var iw = rowH > 0 ? it.value / rowH : 0;
-        results.push({ item: it, x: cx, y: ry, w: iw, h: rowH });
-        cx += iw;
-      });
-      ry += rowH; rh -= rowH;
-    }
-  }
-  return results;
+// A single steel -> navy ramp, shaded by rank (largest holding darkest)
+// — one "professional" color story instead of a categorical palette.
+function ivdRamp(t) {
+  t = Math.max(0, Math.min(1, t));
+  var r = Math.round(IVD_RAMP_LO[0] + (IVD_RAMP_HI[0] - IVD_RAMP_LO[0]) * t);
+  var g = Math.round(IVD_RAMP_LO[1] + (IVD_RAMP_HI[1] - IVD_RAMP_LO[1]) * t);
+  var b = Math.round(IVD_RAMP_LO[2] + (IVD_RAMP_HI[2] - IVD_RAMP_LO[2]) * t);
+  return 'rgb(' + r + ',' + g + ',' + b + ')';
 }
 
-var ivdTmTip = null;
-function ivdTmTipShow(text, e) {
-  ivdTmTip = document.createElement('div');
-  ivdTmTip.className = 'ivd-tm-tip';
-  ivdTmTip.textContent = text;
-  document.body.appendChild(ivdTmTip);
-  ivdTmTipMove(e);
-}
-function ivdTmTipMove(e) { if (ivdTmTip) { ivdTmTip.style.left = (e.clientX + 14) + 'px'; ivdTmTip.style.top = (e.clientY + 14) + 'px'; } }
-function ivdTmTipHide() { if (ivdTmTip) { ivdTmTip.remove(); ivdTmTip = null; } }
-
-function renderTreemap(wrapEl, legendEl, chartRows, curIdx) {
+function renderPieChart(wrapEl, chartRows, curIdx, photoUrl, initials) {
   if (!wrapEl) return;
-  ivdTmTipHide();
   var items = chartRows
-    .map(function(r) { return { key: r.key, label: r.isOther ? ('Other (' + r.restCount + ')') : (r.ticker || r.companyName), value: r.cells[curIdx], isOther: r.isOther }; })
-    .filter(function(it) { return it.value != null && it.value > 0; })
-    .sort(function(a, b) { return b.value - a.value; });
-
-  if (!items.length) {
+    .map(function(r) { return { ticker: r.ticker, isOther: r.isOther, label: ivdRowLabel(r), value: r.cells[curIdx], prev: curIdx > 0 ? r.cells[curIdx - 1] : null }; })
+    .filter(function(it) { return it.value != null && it.value > 0; });
+  if (!items.length || typeof Chart === 'undefined') {
     wrapEl.innerHTML = '<div class="im-empty">No holdings on file for this period.</div>';
-    if (legendEl) legendEl.innerHTML = '';
     return;
   }
-
-  var W = wrapEl.clientWidth || 600;
-  var H = wrapEl.clientHeight || 340;
-  var total = items.reduce(function(s, it) { return s + it.value; }, 0);
-  var scale = total > 0 ? (W * H) / total : 0;
-  var scaledItems = items.map(function(it) { return { key: it.key, value: it.value * scale, raw: it }; });
-  var rects = squarify(scaledItems, 0, 0, W, H);
-
-  wrapEl.innerHTML = rects.map(function(r) {
-    var it = r.item.raw;
-    var color = it.isOther ? HOLDINGS_CHART_OTHER_COLOR : tickerChartColor(it.key);
-    var txt = tmTextColor(color);
-    var pctTxt = it.value.toFixed(1) + '%';
-    var showTicker = r.w >= 34 && r.h >= 20;
-    var showPct = r.w >= 56 && r.h >= 34;
-    var inner = '';
-    if (showTicker) inner += '<div class="ivd-tm-ticker" style="color:' + txt + '">' + esc(it.label) + '</div>';
-    if (showPct) inner += '<div class="ivd-tm-pct" style="color:' + txt + '">' + pctTxt + '</div>';
-    return '<div class="ivd-tm-cell" data-tip="' + esc(it.label + ' — ' + pctTxt) + '" style="left:' + r.x.toFixed(1) + 'px;top:' + r.y.toFixed(1) + 'px;width:' + r.w.toFixed(1) + 'px;height:' + r.h.toFixed(1) + 'px;background:' + color + '">' + inner + '</div>';
-  }).join('');
-
-  wrapEl.querySelectorAll('.ivd-tm-cell').forEach(function(cell) {
-    cell.addEventListener('mouseenter', function(e) { ivdTmTipShow(cell.getAttribute('data-tip'), e); });
-    cell.addEventListener('mousemove', ivdTmTipMove);
-    cell.addEventListener('mouseleave', ivdTmTipHide);
+  var SIZE = Math.max(260, Math.min(400, (wrapEl.clientWidth || 460) - 210));
+  wrapEl.innerHTML =
+    '<div class="ivd-pie-inner" style="width:' + SIZE + 'px;height:' + SIZE + 'px">' +
+      '<canvas class="ivd-pie-canvas" width="' + SIZE + '" height="' + SIZE + '"></canvas>' +
+      (photoUrl
+        ? '<img class="ivd-pie-photo" src="' + esc(photoUrl) + '" alt="" onerror="this.style.opacity=0.3">'
+        : '<div class="ivd-pie-photo ivd-pie-photo-ini">' + esc(initials || '') + '</div>') +
+      '<div class="ivd-pie-labels"></div>' +
+    '</div>';
+  var canvas = wrapEl.querySelector('.ivd-pie-canvas');
+  var n = items.length;
+  var colors = items.map(function(it, i) { return ivdRamp(n > 1 ? 1 - i / (n - 1) : 1); });
+  var chart = new Chart(canvas.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: items.map(function(it) { return it.label; }),
+      datasets: [{ data: items.map(function(it) { return it.value; }), backgroundColor: colors, borderColor: '#fff', borderWidth: 2 }],
+    },
+    options: {
+      responsive: false,
+      animation: false, // arc geometry must be final synchronously — see label positioning below
+      cutout: '58%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: function(c) { return c.label + ': ' + c.raw.toFixed(2) + '%'; } } },
+      },
+    },
   });
+  ivdSmCharts.push(chart);
 
-  if (legendEl) {
-    legendEl.innerHTML = items.map(function(it) {
-      var color = it.isOther ? HOLDINGS_CHART_OTHER_COLOR : tickerChartColor(it.key);
-      return '<span class="sbl-i"><span class="sbl-d" style="background:' + color + '"></span>' + esc(it.label) + '</span>';
-    }).join('');
-  }
+  // Position ticker/logo labels around the ring from the rendered arc
+  // geometry (chart.getDatasetMeta) rather than recomputing angles by
+  // hand, so they line up exactly with Chart.js's own slice boundaries.
+  // Requires animation:false above — mid-animation arc angles are not
+  // the final ones, which is why labels landed on the wrong slices.
+  // Small adjacent slices put their label midpoints only a few degrees
+  // apart — at any single fixed radius those labels physically collide.
+  // Alternating a near/far radius "tier" per slice index (== angular
+  // order, since Chart.js draws in dataset order) gives every other
+  // label extra breathing room without needing real collision detection.
+  var labelsEl = wrapEl.querySelector('.ivd-pie-labels');
+  var meta = chart.getDatasetMeta(0);
+  labelsEl.innerHTML = items.map(function(it, i) {
+    var arc = meta.data[i];
+    var mid = (arc.startAngle + arc.endAngle) / 2;
+    var r = arc.outerRadius + 24 + (i % 2) * 38;
+    var x = arc.x + r * Math.cos(mid);
+    var y = arc.y + r * Math.sin(mid);
+    var logo = it.isOther ? '' : ivdLogo(it.ticker, 'ivd-pie-logo', it.label);
+    var prevTxt = it.prev == null ? 'NEW' : it.prev.toFixed(1) + '%';
+    var moveCls = it.prev == null ? 'new' : (it.value > it.prev ? 'up' : it.value < it.prev ? 'down' : 'flat');
+    return '<div class="ivd-pie-label" style="left:' + x.toFixed(1) + 'px;top:' + y.toFixed(1) + 'px">' +
+      logo +
+      '<div class="ivd-pie-label-txt"><span class="ivd-pie-label-t">' + esc(it.isOther ? it.label : (it.ticker || it.label)) + '</span>' +
+      '<span class="ivd-pie-label-p ivd-pie-label-move ' + moveCls + '">' + prevTxt + ' → ' + it.value.toFixed(1) + '%</span></div>' +
+    '</div>';
+  }).join('');
 }
 
-function renderHoldingsChartSection(state, topNBounds) {
+function renderHoldingsChartSection(state) {
   var visible = state.chartVisible !== false;
-  var isTreemap = state.chartMode === 'treemap';
+  var byPosition = state.chartMode !== 'sector';
   var html = '<div class="ivd-chart-hdr">' +
     '<div class="im-section-lbl" style="margin-bottom:0">Holdings Composition</div>' +
     '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">';
   if (visible) {
-    html += '<div class="sb-toggle ivd-chart-format-toggle">' +
-        '<button type="button" class="sb-tbtn' + (!isTreemap ? ' active' : '') + '" data-chart-mode="multiples">Lines</button>' +
-        '<button type="button" class="sb-tbtn' + (isTreemap ? ' active' : '') + '" data-chart-mode="treemap">Treemap</button>' +
-      '</div>' +
-      '<div class="ivd-pp-stepper">' +
-        '<button type="button" class="ivd-step-btn ivd-chart-n-minus"' + (state.chartTopN <= topNBounds.min ? ' disabled' : '') + ' title="Fewer holdings">&minus;</button>' +
+    html += '<div class="sb-toggle ivd-chartmode-toggle">' +
+      '<button type="button" class="sb-tbtn' + (byPosition ? ' active' : '') + '" data-chartmode="position">By Position</button>' +
+      '<button type="button" class="sb-tbtn' + (!byPosition ? ' active' : '') + '" data-chartmode="sector">By Sector</button>' +
+      '</div>';
+  }
+  if (visible && byPosition) {
+    html += '<div class="ivd-pp-stepper">' +
+        '<button type="button" class="ivd-step-btn ivd-chart-n-minus"' + (state.chartTopN <= IVD_TOPN_BOUNDS.min ? ' disabled' : '') + ' title="Fewer holdings">&minus;</button>' +
         '<span class="ivd-pp-count">Top ' + state.chartTopN + '</span>' +
-        '<button type="button" class="ivd-step-btn ivd-chart-n-plus"' + (state.chartTopN >= topNBounds.max ? ' disabled' : '') + ' title="More holdings">+</button>' +
+        '<button type="button" class="ivd-step-btn ivd-chart-n-plus"' + (state.chartTopN >= IVD_TOPN_BOUNDS.max ? ' disabled' : '') + ' title="More holdings">+</button>' +
       '</div>';
   }
   html += '<label class="hf-chart-toggle" title="Show or hide the chart">' +
@@ -862,18 +1493,13 @@ function renderHoldingsChartSection(state, topNBounds) {
       '<span class="hf-chart-toggle-txt">Chart</span>' +
     '</label>' +
     '</div></div>';
-  if (visible) {
-    html += isTreemap
-      ? '<div class="ivd-tm-wrap"></div><div class="sbl ivd-tm-legend"></div>'
-      : '<div class="ivd-ml-wrap"></div><div class="ivd-ml-legend"></div>';
-  }
+  if (visible) html += '<div class="ivd-pie-wrap"></div>';
   return html;
 }
 
-function renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state) {
+function renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials) {
   var el = document.getElementById(rootId + '_cmp');
   var sumEl = document.getElementById(rootId + '_summary');
-  var sharedEl = document.getElementById(rootId + '_shared');
   if (!el) return;
 
   var pool = state.mode === 'yearend' ? yearEndPeriods(allPeriods) : allPeriods;
@@ -887,14 +1513,13 @@ function renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, st
   var rows = computeHoldingsComparison(holdings, investorKey, selected);
   var curIdx = selected.length - 1;
 
-  var topNBounds = IVD_TOPN_BOUNDS[state.chartMode === 'treemap' ? 'treemap' : 'multiples'];
-  if (state.chartTopN > topNBounds.max) state.chartTopN = topNBounds.max;
-  if (state.chartTopN < topNBounds.min) state.chartTopN = topNBounds.min;
+  if (state.chartTopN > IVD_TOPN_BOUNDS.max) state.chartTopN = IVD_TOPN_BOUNDS.max;
+  if (state.chartTopN < IVD_TOPN_BOUNDS.min) state.chartTopN = IVD_TOPN_BOUNDS.min;
 
   var html = renderStatStrip(holdings, investorKey, selected[curIdx], rows, curIdx);
   html += renderPeriodPicker(allPeriods, pool, state.refPeriod, state.mode, state.count, maxCount);
-  html += renderHoldingsChartSection(state, topNBounds);
-  html += renderHoldingsCompareTable(rows, selected);
+  html += renderHoldingsCompareTable(rows, selected, investorKey, state.tableExpanded);
+  html += renderHoldingsChartSection(state);
   destroyIvdChart();
   el.innerHTML = html;
 
@@ -903,82 +1528,61 @@ function renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, st
     sel.addEventListener('change', function() {
       var parts = sel.value.split('-');
       state.refPeriod = { year: parseInt(parts[0], 10), quarter: parts[1] === '' ? null : parseInt(parts[1], 10) };
-      renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state);
+      renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials);
     });
   }
   el.querySelectorAll('.ivd-mode-toggle [data-mode]').forEach(function(btn) {
     btn.addEventListener('click', function() {
       if (btn.disabled) return;
       state.mode = btn.getAttribute('data-mode');
-      renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state);
+      renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials);
     });
   });
+  var showMoreBtn = el.querySelector('.ivd-cmp-showmore');
+  if (showMoreBtn) showMoreBtn.addEventListener('click', function() { state.tableExpanded = !showMoreBtn.hasAttribute('data-collapse'); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials); });
   var minusBtn = el.querySelector('.ivd-step-minus');
-  if (minusBtn) minusBtn.addEventListener('click', function() { state.count = Math.max(1, state.count - 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
+  if (minusBtn) minusBtn.addEventListener('click', function() { state.count = Math.max(1, state.count - 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials); });
   var plusBtn = el.querySelector('.ivd-step-plus');
-  if (plusBtn) plusBtn.addEventListener('click', function() { state.count = Math.min(maxCount, state.count + 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
+  if (plusBtn) plusBtn.addEventListener('click', function() { state.count = Math.min(maxCount, state.count + 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials); });
 
   var chartToggle = el.querySelector('.ivd-chart-toggle-input');
-  if (chartToggle) chartToggle.addEventListener('change', function() { state.chartVisible = chartToggle.checked; renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
-  el.querySelectorAll('.ivd-chart-format-toggle [data-chart-mode]').forEach(function(btn) {
-    btn.addEventListener('click', function() { state.chartMode = btn.getAttribute('data-chart-mode'); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
+  if (chartToggle) chartToggle.addEventListener('change', function() { state.chartVisible = chartToggle.checked; renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials); });
+  el.querySelectorAll('.ivd-chartmode-toggle [data-chartmode]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      state.chartMode = btn.getAttribute('data-chartmode');
+      renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials);
+    });
   });
   var nMinus = el.querySelector('.ivd-chart-n-minus');
-  if (nMinus) nMinus.addEventListener('click', function() { state.chartTopN = Math.max(topNBounds.min, state.chartTopN - 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
+  if (nMinus) nMinus.addEventListener('click', function() { state.chartTopN = Math.max(IVD_TOPN_BOUNDS.min, state.chartTopN - 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials); });
   var nPlus = el.querySelector('.ivd-chart-n-plus');
-  if (nPlus) nPlus.addEventListener('click', function() { state.chartTopN = Math.min(topNBounds.max, state.chartTopN + 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state); });
+  if (nPlus) nPlus.addEventListener('click', function() { state.chartTopN = Math.min(IVD_TOPN_BOUNDS.max, state.chartTopN + 1); renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials); });
 
   if (state.chartVisible !== false) {
-    var chartRows = topAndOtherRows(rows, selected, state.chartTopN);
-    if (state.chartMode === 'treemap') {
-      renderTreemap(el.querySelector('.ivd-tm-wrap'), el.querySelector('.ivd-tm-legend'), chartRows, curIdx);
+    if (state.chartMode === 'sector') {
+      var breakdown = computeSectorBreakdown(holdings, investorKey, selected[curIdx]);
+      renderSectorPieChart(el.querySelector('.ivd-pie-wrap'), breakdown, photoUrl, initials);
     } else {
-      renderMultiLineChart(el, chartRows, selected, curIdx);
+      var chartRows = topAndOtherRows(rows, selected, state.chartTopN);
+      renderPieChart(el.querySelector('.ivd-pie-wrap'), chartRows, curIdx, photoUrl, initials);
     }
   }
 
   if (sumEl) sumEl.innerHTML = selected.length >= 2 ? generateMovesSummary(rows, selected)
     : '<div class="im-empty">Add another period to see period-over-period changes.</div>';
-  if (sharedEl) sharedEl.innerHTML = renderSharedWithSummit(investorKey, rows, selected, curIdx);
 }
 
-function renderHoldingsSection(rootId, investorKey, holdings) {
+function renderHoldingsSection(rootId, investorKey, holdings, photoUrl, initials) {
   var el = document.getElementById(rootId + '_cmp');
   if (!el) return;
   var allPeriods = investorPeriods(holdings, investorKey);
   if (!allPeriods.length) {
     el.innerHTML = '<div class="im-empty">No holdings on file yet — upload a 13F to get started.</div>';
     var sumEl = document.getElementById(rootId + '_summary'); if (sumEl) sumEl.innerHTML = '';
-    var sharedEl = document.getElementById(rootId + '_shared'); if (sharedEl) sharedEl.innerHTML = '';
     return;
   }
-  var state = { refPeriod: allPeriods[allPeriods.length - 1], mode: 'quarterly', count: Math.min(HOLDINGS_DEFAULT_COUNT, allPeriods.length), chartVisible: true, chartMode: 'multiples', chartTopN: 8 };
-  renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state);
-}
-
-// ─── Shared with Summit ───────────────────────────────────────
-// Positions Summit's own book (INVESTORS[key='summit']) has in common
-// with this investor's reference-period holdings, with both allocations
-// side by side.
-
-function renderSharedWithSummit(investorKey, rows, periods, curIdx) {
-  if (investorKey === 'summit') return '<div class="im-empty">This is Summit&rsquo;s own portfolio.</div>';
-  var summitInv = INVESTORS.filter(function(i) { return i.key === 'summit'; })[0];
-  if (!summitInv) return '';
-  var invRow = INVESTORS.filter(function(i) { return i.key === investorKey; })[0];
-  var invName = invRow ? invRow.name.split(' ').pop() : 'Investor';
-  var summitMap = {};
-  summitInv.holdings.forEach(function(h) { summitMap[h.t] = h; });
-  var shared = rows
-    .filter(function(r) { return r.ticker && summitMap[r.ticker] && r.cells[curIdx] != null; })
-    .map(function(r) { return { ticker: r.ticker, investorW: r.cells[curIdx], summitW: summitMap[r.ticker].w }; })
-    .sort(function(a, b) { return b.investorW - a.investorW; });
-  if (!shared.length) return '<div class="im-empty">No overlapping positions with Summit&rsquo;s own portfolio in ' + esc(periodLabel(periods[curIdx])) + '.</div>';
-  var html = '<ul class="ivd-shared-list">';
-  shared.forEach(function(s) {
-    html += '<li><span class="iticker">' + esc(s.ticker) + '</span> &mdash; Summit <b>' + s.summitW.toFixed(2) + '%</b>, ' + esc(invName) + ' <b>' + s.investorW.toFixed(2) + '%</b></li>';
-  });
-  return html + '</ul>';
+  var state = { refPeriod: allPeriods[allPeriods.length - 1], mode: 'quarterly', count: Math.min(HOLDINGS_DEFAULT_COUNT, allPeriods.length), chartVisible: true, chartTopN: 8, chartMode: 'position', tableExpanded: false };
+  renderHoldingsSectionBody(rootId, investorKey, holdings, allPeriods, state, photoUrl, initials);
 }
 
 // ─── Investor Detail page ─────────────────────────────────────
@@ -1010,25 +1614,28 @@ function openInvestorDetail(key) {
       '<div style="flex:1"></div>' +
       '<div style="text-align:right"><div class="icard-aum-lbl">Portfolio</div><div class="icard-aum-val">' + esc(inv.aum) + '</div></div>' +
     '</div>' +
-    '<div class="im-section-lbl">Yearly Returns</div>' +
-    '<div id="ivd_years"><div class="im-loading">Loading…</div></div>' +
-    '<div class="im-hold-row">' +
-      '<div class="im-section-lbl">Holdings Comparison</div>' +
-      '<div style="display:flex;gap:8px">' +
-        (INVESTOR_CIK[key] ? '<button type="button" class="im-upload-btn" id="ivd_sync13f">&#x21bb; Sync latest 13F</button>' : '') +
-        '<button type="button" class="im-upload-btn" id="ivd_upload13f">Upload 13F</button>' +
-      '</div>' +
+    '<div class="ivdtabs">' +
+      '<button type="button" class="ivdtab active" data-pane="holdings" onclick="ivdTab(\'holdings\')">Holdings</button>' +
+      '<button type="button" class="ivdtab" data-pane="resources" onclick="ivdTab(\'resources\')">Resources</button>' +
     '</div>' +
-    '<div id="ivd_cmp"><div class="im-loading">Loading…</div></div>' +
-    '<div class="ivd-below-row">' +
-      '<div id="ivd_summary" class="ivd-below-col"></div>' +
-      '<div class="ivd-below-col">' +
-        '<div class="im-section-lbl">Shared with Summit</div>' +
-        '<div id="ivd_shared"><div class="im-loading">Loading…</div></div>' +
+    '<div class="ivdpane active" data-pane="holdings">' +
+      '<div class="im-section-lbl">Yearly Returns</div>' +
+      '<div id="ivd_years"><div class="im-loading">Loading…</div></div>' +
+      '<div class="im-hold-row">' +
+        '<div class="im-section-lbl">Holdings Comparison</div>' +
+        '<div style="display:flex;gap:8px">' +
+          (INVESTOR_CIK[key] ? '<button type="button" class="im-upload-btn" id="ivd_sync13f">&#x21bb; Sync latest 13F</button>' : '') +
+          '<button type="button" class="im-upload-btn" id="ivd_upload13f">Upload 13F</button>' +
+        '</div>' +
       '</div>' +
+      '<div id="ivd_cmp"><div class="im-loading">Loading…</div></div>' +
+      '<div class="im-section-lbl" style="margin-top:18px">Recent Moves</div>' +
+      '<div id="ivd_summary"></div>' +
     '</div>' +
-    '<div class="im-section-lbl" style="margin-top:22px">Letters &amp; Resources</div>' +
-    '<div id="ivd_letters"><div class="im-loading">Loading…</div></div>';
+    '<div class="ivdpane" data-pane="resources">' +
+      '<div class="im-section-lbl">Letters &amp; Resources</div>' +
+      '<div id="ivd_letters"><div class="im-loading">Loading…</div></div>' +
+    '</div>';
 
   document.getElementById('inv-gridview').style.display = 'none';
   root.style.display = 'block';
@@ -1041,8 +1648,8 @@ function openInvestorDetail(key) {
       if (root.style.display === 'none') return; // navigated back before this resolved
       lastData = data;
       document.getElementById('ivd_years').innerHTML = invYearPillsHtml(invYearList(data), null);
-      renderHoldingsSection('ivd', key, data.holdings);
-      renderInvLetters('ivd', data.letters);
+      renderHoldingsSection('ivd', key, data.holdings, photo, ini);
+      renderInvLetters('ivd', data.letters, key);
     });
   }
 
@@ -1056,6 +1663,11 @@ function openInvestorDetail(key) {
   if (syncBtn) syncBtn.addEventListener('click', function() { openSync13FPanel(key, INVESTOR_CIK[key], function() { loadDetail(); }); });
 
   loadDetail();
+}
+
+function ivdTab(pane) {
+  document.querySelectorAll('#inv-detailview .ivdtab').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-pane') === pane); });
+  document.querySelectorAll('#inv-detailview .ivdpane').forEach(function(p) { p.classList.toggle('active', p.getAttribute('data-pane') === pane); });
 }
 
 function closeInvestorDetail() {
@@ -1283,15 +1895,139 @@ function openSync13FPanel(investorKey, cik, onSaved) {
   });
 }
 
+// ─── Check for new 13Fs (all investors, one click) ────────────
+// A portal-wide version of "Sync latest 13F": checks every investor with
+// a CIK on file against SEC EDGAR, shows which ones have a filing newer
+// than what's saved in Supabase, and applies all the new ones in one go.
+// Runs at most a few times a year (13F deadlines are ~45 days after each
+// quarter end), so this is a manual button rather than a schedule —
+// someone clicks it, reviews the list, applies.
+
+function check13fRowHtml(row) {
+  var cls = row.error ? 'c13f-row-err' : row.isNew ? 'c13f-row-new' : 'c13f-row-ok';
+  var onFile = row.onFilePeriod ? esc(periodLabel(row.onFilePeriod)) : 'none on file';
+  var status = row.error
+    ? 'Could not check: ' + esc(row.error)
+    : row.isNew
+      ? '<b>New: ' + esc(periodLabel(row.secPeriod)) + '</b> (filed ' + esc(row.filedDate) + ')'
+      : 'Up to date (' + esc(periodLabel(row.secPeriod)) + ')';
+  return '<tr class="' + cls + '" data-key="' + esc(row.key) + '">' +
+    '<td>' + (row.isNew && !row.error ? '<input type="checkbox" class="c13f-inc" checked>' : '') + '</td>' +
+    '<td><span class="ico">' + esc(row.name) + '</span></td>' +
+    '<td class="nr" style="color:var(--mu)">' + onFile + '</td>' +
+    '<td>' + status + '</td>' +
+  '</tr>';
+}
+
+async function openCheck13FPanel() {
+  var id = 'c13f_' + Date.now();
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay im-overlay open';
+  overlay.id = id;
+  overlay.innerHTML =
+    '<div class="modal-card im-card u13f-card" onclick="event.stopPropagation()">' +
+      '<div class="modal-header im-header">' +
+        '<div class="modal-title" style="font-size:15px">Check for new 13Fs</div>' +
+        '<button class="modal-close" id="' + id + '_close">&times;</button>' +
+      '</div>' +
+      '<div class="im-body">' +
+        '<div class="modal-msg" id="' + id + '_msg">Checking SEC EDGAR for ' + Object.keys(INVESTOR_CIK).length + ' investors&hellip;</div>' +
+        '<div id="' + id + '_preview"></div>' +
+        '<div class="modal-actions" id="' + id + '_actions" style="display:none">' +
+          '<button class="modal-btn modal-btn--cancel" id="' + id + '_cancel">Close</button>' +
+          '<button class="modal-btn modal-btn--save" id="' + id + '_apply">Apply new filings</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) overlay.remove(); });
+  document.getElementById(id + '_close').addEventListener('click', function(){ overlay.remove(); });
+
+  var keys = Object.keys(INVESTOR_CIK);
+  var rows = await Promise.all(keys.map(async function(key) {
+    var inv = INVESTORS.filter(function(i){ return i.key === key; })[0];
+    var name = inv ? inv.name : key;
+    try {
+      var holdingsResult = await fetchInvestorHoldings(key);
+      var onFilePeriods = investorPeriods(holdingsResult.success ? holdingsResult.data : [], key);
+      var onFilePeriod = onFilePeriods.length ? onFilePeriods[onFilePeriods.length - 1] : null;
+      var syncResult = await syncLatest13F(INVESTOR_CIK[key]);
+      if (!syncResult.success) return { key: key, name: name, onFilePeriod: onFilePeriod, error: (syncResult.error && syncResult.error.message) || 'sync failed' };
+      var data = syncResult.data;
+      var secPeriod = { year: data.year, quarter: data.quarter };
+      var isNew = !onFilePeriod || periodSortKey(secPeriod) > periodSortKey(onFilePeriod);
+      return { key: key, name: name, onFilePeriod: onFilePeriod, secPeriod: secPeriod, isNew: isNew, xml: data.xml, filedDate: data.filedDate };
+    } catch (err) {
+      return { key: key, name: name, onFilePeriod: null, error: (err && err.message) || String(err) };
+    }
+  }));
+
+  if (!document.getElementById(id)) return; // closed before this resolved
+  var newCount = rows.filter(function(r){ return r.isNew && !r.error; }).length;
+  var msgEl = document.getElementById(id + '_msg');
+  msgEl.textContent = newCount
+    ? newCount + ' investor' + (newCount === 1 ? '' : 's') + ' with a new 13F on file. Review below, then Apply.'
+    : 'Everyone is up to date — no new 13Fs since the last check.';
+  document.getElementById(id + '_preview').innerHTML =
+    '<div class="u13f-preview-wrap"><table class="icard-tbl u13f-tbl"><thead><tr><th></th><th>Investor</th><th class="nr">On file</th><th>SEC EDGAR</th></tr></thead><tbody>' +
+    rows.map(check13fRowHtml).join('') + '</tbody></table></div>';
+  document.getElementById(id + '_actions').style.display = 'flex';
+  document.getElementById(id + '_cancel').addEventListener('click', function(){ overlay.remove(); });
+  if (!newCount) { document.getElementById(id + '_apply').style.display = 'none'; return; }
+
+  document.getElementById(id + '_apply').addEventListener('click', async function() {
+    var btn = document.getElementById(id + '_apply');
+    btn.disabled = true;
+    var toApply = rows.filter(function(r) {
+      var cb = overlay.querySelector('tr[data-key="' + r.key + '"] .c13f-inc');
+      return r.isNew && !r.error && cb && cb.checked;
+    });
+    var done = 0;
+    for (var i = 0; i < toApply.length; i++) {
+      var row = toApply[i];
+      btn.textContent = 'Applying ' + row.name + '… (' + (i + 1) + '/' + toApply.length + ')';
+      var rowEl = overlay.querySelector('tr[data-key="' + row.key + '"]');
+      try {
+        var parsed = parse13FFile('sec-edgar-sync.xml', row.xml);
+        var included = parsed.rows.slice(0, 15).filter(function(r){ return r.ticker; });
+        var dbRows = included.map(function(r, j) {
+          return {
+            investor_key: row.key, year: row.secPeriod.year, quarter: row.secPeriod.quarter,
+            ticker: r.ticker, company_name: r.companyName, cusip: r.cusip || null,
+            value_usd: r.valueUsd || null, weight_pct: r.weightPct, rank: j + 1,
+            source_type: parsed.format,
+          };
+        });
+        var saveResult = await replaceInvestorHoldings(row.key, row.secPeriod.year, row.secPeriod.quarter, dbRows);
+        if (!saveResult.success) throw new Error(saveResult.error && saveResult.error.message);
+        done++;
+        if (rowEl) rowEl.querySelector('td:last-child').innerHTML = '<span style="color:var(--pos)">&#x2713; Applied ' + esc(periodLabel(row.secPeriod)) + '</span>';
+      } catch (err) {
+        if (rowEl) rowEl.querySelector('td:last-child').innerHTML = '<span style="color:var(--neg)">Failed: ' + esc(err.message || 'unknown error') + '</span>';
+      }
+    }
+    btn.textContent = 'Done (' + done + '/' + toApply.length + ' applied)';
+  });
+}
+
+window.openCheck13FPanel = openCheck13FPanel;
+
 // Expose to window for inline onclick handlers
 window.toggleFund = toggleFund;
 window.allFunds = allFunds;
 window.setAlphaStart = setAlphaStart;
 window.setAlphaMode = setAlphaMode;
 window.openInvestorDetail = openInvestorDetail;
+window.ivdTab = ivdTab;
 window.toggleChartVisibility = toggleChartVisibility;
 window.hideInvestor = hideInvestor;
 window.showAllInvestors = showAllInvestors;
+window.hfMainTab = hfMainTab;
+window.hfStockLookupSelect = hfStockLookupSelect;
+window.hfStockLookupTogglePerf = hfStockLookupTogglePerf;
+window.hfSectorClick = hfSectorClick;
+window.hfHeatmapTogglePerf = hfHeatmapTogglePerf;
+window.hfTickerClick = hfTickerClick;
 
 export function loadHedgeFundsPage() {
   if (!HF_FUNDS || !HF_FUNDS.length || !INVESTORS || !INVESTORS.length) {
@@ -1302,5 +2038,10 @@ export function loadHedgeFundsPage() {
   renderFundChips();
   renderAlphaChart();
   renderBenchmark();
+  renderOverallBenchmark();
   renderInvGrid();
+  renderSectorHeatmap();
+  populateStockLookupSelect();
+  hfRefreshEditAllButton();
+  hfLoadOverrides();
 }

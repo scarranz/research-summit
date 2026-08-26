@@ -450,6 +450,20 @@ export async function fetchInvestorHoldings(investorKey) {
   return ok(data || []);
 }
 
+// Cross-investor lookup for one ticker — "who owns this, and how has their
+// position size moved" — used by the Overall sub-tab's stock lookup table.
+// Unlike fetchInvestorHoldings, this is NOT scoped to a single investor_key.
+export async function fetchHoldingsByTicker(ticker) {
+  var { data, error } = await supabase
+    .from('investor_yearly_holdings')
+    .select('*')
+    .eq('ticker', ticker)
+    .order('year')
+    .order('quarter');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
 export async function fetchInvestorLetters(investorKey) {
   var { data, error } = await supabase
     .from('investor_letters')
@@ -534,6 +548,27 @@ export async function deleteInvestorLetter(id) {
     .eq('id', id);
   if (error) return fail(error.message);
   return ok(null);
+}
+
+// Manual corrections to a Superinvestor card's Then/Now holdings returns.
+// RLS restricts insert/update to one editor email (019_investor_return_
+// overrides.sql); anyone signed in can read them.
+export async function fetchReturnOverrides() {
+  var { data, error } = await supabase
+    .from('investor_return_overrides')
+    .select('*');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function saveReturnOverride(investorKey, ticker, period, valuePct) {
+  var { data, error } = await supabase
+    .from('investor_return_overrides')
+    .upsert([{ investor_key: investorKey, ticker: ticker, period: period, value_pct: valuePct, updated_at: new Date().toISOString() }], { onConflict: 'investor_key,ticker,period' })
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
 }
 
 // ─── Auth ───────────────────────────────────────────────────

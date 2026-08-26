@@ -113,13 +113,20 @@
 .sbrs {
   display: flex;
   flex-direction: column;
-  gap: 11px;
+  gap: 28px;
 }
 
 .sbr {
   display: flex;
   align-items: flex-start;
   gap: 11px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--bdr);
+}
+
+.sbr:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .sbn {
@@ -178,6 +185,148 @@
   font-weight: 700;
 }
 
+.sby-hl {
+  background: rgba(30, 58, 95, .06);
+  border-radius: 6px;
+  padding: 3px 6px;
+  margin: -3px -6px;
+}
+
+.sby-hl .sbyl { color: var(--navy); font-weight: 700; }
+
+.sbdelta {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  padding: 1px 0 1px 31px;
+  margin-top: -3px;
+}
+
+.sbnote {
+  font-size: 10.5px;
+  color: var(--mu);
+  font-style: italic;
+  padding: 2px 0 0 31px;
+  line-height: 1.4;
+}
+
+/* Q1/Q2 overlay bar (comparison mode) — Q1 sits as a pale ghost fill,
+   Q2 renders solid on top and animates from Q1's position/width into
+   its own on every render, so the shift between quarters reads as
+   motion, not just two numbers. */
+.sbtr-overlay {
+  height: 18px;
+}
+
+.sbfl-q1 {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+  background: rgba(90, 110, 131, .22);
+  border: 1px solid rgba(90, 110, 131, .3);
+}
+
+.sbfl-q2 {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(20, 30, 45, .25);
+  transition: left 1.4s cubic-bezier(.22, 1, .36, 1), width 1.4s cubic-bezier(.22, 1, .36, 1);
+}
+
+.sbi-q1 {
+  color: var(--mu);
+  font-weight: 500;
+  opacity: .75;
+}
+
+.sbi-arrow {
+  color: var(--mu);
+  opacity: .6;
+}
+
+.sbi-q2 {
+  font-weight: 700;
+}
+
+/* Q1 vs Q2 comparison table (toggle above the sector bars) */
+.sbcmp-note {
+  font-size: 11px;
+  color: var(--mu);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.sbcmp-tbl th {
+  font-size: 10px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--mu);
+  font-weight: 600;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--bdr);
+  text-align: left;
+}
+
+.sbcmp-tbl td {
+  padding: 9px 10px;
+  border-bottom: .5px solid #F0F4F8;
+  font-size: 12.5px;
+  font-family: 'Inter', monospace;
+}
+
+.sbcmp-tbl td:first-child { font-family: 'Inter', sans-serif; font-weight: 600; color: var(--navy); }
+
+.sbcmp-tbl tr:last-child td { border-bottom: none; }
+.sbcmp-tbl tr:hover td { background: #F7FAFD; }
+
+.sbcmp-pos { color: var(--pos); }
+.sbcmp-neg { color: var(--neg); }
+
+.sbcmp-flip { font-size: 11px; }
+
+.sbcmp-mbar {
+  position: relative;
+  height: 8px;
+  background: #EEF2F7;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.sbcmp-mfill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+}
+
+/* Two-bar mode: Last Meeting (pale) stacked above Today (bold), each its
+   own center-diverging bar, toggled on/off from the table header. */
+.sbcmp-dbars {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sbcmp-dbar {
+  position: relative;
+  height: 6px;
+  background: #EEF2F7;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.sbcmp-dbar-ghost { opacity: .75; }
+
+.sbcmp-dbar-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 2px;
+}
+
 .sbtag {
   font-size: 9px;
   background: var(--surface);
@@ -204,10 +353,11 @@
   content: '';
   position: absolute;
   left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: #5A6E83;
+  top: -2px;
+  bottom: -2px;
+  width: 0;
+  border-left: 2px dashed #2B3B4E;
+  opacity: .85;
   z-index: 2;
 }
 

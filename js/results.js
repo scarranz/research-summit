@@ -54,6 +54,16 @@ var RESULTS_DATA = {
   TBBB_SETUP: tbbbSetup
 };
 
+// Register a dataset at runtime, so a caller can compose one and get the whole engine — every
+// mode, the presets, the slider, drag-to-zoom, the chips and the table — instead of building a
+// canvas that reimplements them badly. js/segments.js uses this to give each segment its own
+// top-line block from the metrics that already live in this ticker's dataset.
+export function registerResultsData(key, data){
+  RESULTS_DATA[key] = data;
+  delete _rsTrimCache[key];                 // a re-registration must not serve the old trim
+  return key;
+}
+
 export function getResultsData(ticker){
   var raw = RESULTS_DATA[ticker] || null;
   if (!raw) return null;
@@ -227,9 +237,17 @@ function rsSecCfg(k){ return rsView(k).sections.filter(function(s){ return s.key
 function rsSecGroups(cfg){ return cfg.groups || [{ label: '', keys: cfg.keys || [] }]; }
 function rsSecKeys(cfg){ return rsSecGroups(cfg).reduce(function(a, g){ return a.concat(g.keys); }, []); }
 function rsSt(k){
-  if (!_rs.sec[k]) _rs.sec[k] = { metric: null, win: null, yr: null, chart: null,
-    view: _rs.view, mode: 'level', growth: 'yoy', growUnit: 'pct', tbl: false,
-    hidden: { act:false, summit:false, cons:false, guide:false, margin:false } };
+  if (!_rs.sec[k]){
+    // A dataset can open with series switched OFF via `defaultHidden: ['summit','cons']`. The
+    // chips still turn them on — this only decides what the reader meets first. Used where the
+    // question is "how big is this and how fast is it moving", and the expectation lines are a
+    // second question the reader should have to ask for.
+    var off = (_rs.data && _rs.data.defaultHidden) || [];
+    var hid = { act:false, summit:false, cons:false, guide:false, margin:false };
+    off.forEach(function(x){ hid[x] = true; });
+    _rs.sec[k] = { metric: null, win: null, yr: null, chart: null,
+      view: _rs.view, mode: 'level', growth: 'yoy', growUnit: 'pct', labels: false, tbl: false, hidden: hid };
+  }
   return _rs.sec[k];
 }
 function rsMetric(k){
@@ -789,6 +807,9 @@ function rsBlockModesHtml(k, m){
       b('rsgunit', 'pct', !rsGrowAmt(k), '%') +
       b('rsgunit', 'amt', rsGrowAmt(k), 'Amount') + '</div>';
   }
+  h += '<div class="rs-views">' +
+    b('rslab', '1', st.labels === true, 'On', 'Print every plotted value on the chart') +
+    b('rslab', '0', st.labels !== true, 'Off') + '</div>';
   // NB: the Low/Mid/High guidance control is deliberately NOT here (SAB, Aug 11 2026). It sat
   // in this row for one commit and was wrong there: this row is where controls that change the
   // CHART live, and that one changes a single row of the period table. Up here it also stood
@@ -1020,6 +1041,61 @@ function rsLegendHtml(k, m){
 
 // ─── Chart (per section) ──────────────────────────────────────────────────────
 
+// Create a chart, unbinding anything still attached to the canvas first.
+//
+// The engine keeps ONE module-level `_rs`, and initResults() wipes `_rs.sec` / `_rs.surp` /
+// `_rs.conv` whenever it re-targets to a different dataset. That orphans the live Chart objects
+// without unbinding them from their canvases, so returning to a pane that is still on screen —
+// two engine instances in one profile, which js/segments.js now creates — hits Chart.js's
+// "Canvas is already in use". State we no longer hold a reference to cannot be cleaned up any
+// other way, so ask Chart.js for it.
+// Values printed on the plot itself, off by default — the same instrument the Segments charts
+// carry, so one toggle means one thing everywhere in the portal. A label that will not fit inside
+// its own bar segment, or that would run past the plot edge, is skipped rather than half-drawn.
+var rsLabels = {
+  id: 'rsLabels',
+  afterDatasetsDraw: function(chart, args, opts){
+    if (!opts || !opts.on) return;
+    var ctx = chart.ctx, area = chart.chartArea;
+    ctx.save();
+    ctx.font = '600 9.5px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    chart.data.datasets.forEach(function(ds, di){
+      var meta = chart.getDatasetMeta(di);
+      if (meta.hidden || ds.rsNoLabel) return;
+      var bar = meta.type === 'bar';
+      (meta.data || []).forEach(function(el, i){
+        var v = ds.data[i];
+        if (v == null || typeof v !== 'number' || !el) return;
+        var txt = opts.fmt ? opts.fmt(v) : String(v);
+        var w = ctx.measureText(txt).width;
+        if (el.x - w / 2 < area.left - 1 || el.x + w / 2 > area.right + 1) return;
+        if (bar){
+          var top = Math.min(el.y, el.base), bot = Math.max(el.y, el.base);
+          if (bot - top < 13) return;
+          ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff';
+          ctx.fillText(txt, el.x, (top + bot) / 2);
+        } else {
+          var y = el.y - 6;
+          if (y < area.top + 8) y = el.y + 13;
+          ctx.textBaseline = 'bottom'; ctx.fillStyle = 'rgba(30,39,51,0.85)';
+          ctx.fillText(txt, el.x, y);
+        }
+      });
+    });
+    ctx.restore();
+  }
+};
+// Short enough not to collide; the period table underneath carries the precision.
+function rsLabNum(v){
+  var a = Math.abs(v);
+  return a >= 100 ? v.toFixed(0) : a >= 1 ? v.toFixed(1) : v.toFixed(2);
+}
+function rsNewChart(el, cfg){
+  var prev = (typeof Chart !== 'undefined' && Chart.getChart) ? Chart.getChart(el) : null;
+  if (prev) prev.destroy();
+  return new Chart(el.getContext('2d'), cfg);
+}
 function rsBuildChart(k){
   var m = rsMetric(k), st = rsSt(k);
   var el = document.getElementById('rsChart-' + k);
@@ -1091,20 +1167,24 @@ function rsBuildChart(k){
   // and two unrelated percentages sharing one chart is how a reader mistakes one for the other.
   // They are suppressed in margin mode for the opposite reason — there the margin IS the bars.
   if (!grow && !marg && !isTop && !st.hidden.margin && rsHasMargin(k, m)){
+    // Each margin line belongs to a SOURCE, so it follows that source's chip as well as the
+    // margin chip. Gating them on `margin` alone left "Margin % (Summit)" drawn after the Summit
+    // bars were hidden — the reader had asked for the series to go and half of it stayed, which
+    // is exactly what non-negotiable 2 forbids (CHART_ENGINE_REFERENCE §0.2).
     var ma = rsMarginArr(k, m, 'act'), ms = rsMarginArr(k, m, 'summit'), mc = rsMarginArr(k, m, 'cons');
-    if (ma && ma.some(function(v){ return v != null; })){
+    if (!st.hidden.act && ma && ma.some(function(v){ return v != null; })){
       needY2 = true;
       datasets.push({ label: 'Margin % (actual)', type: 'line', yAxisID: 'y2', data: sl(ma),
         borderColor: 'rgba(30,39,51,0.9)', backgroundColor: 'rgba(30,39,51,0.9)', borderWidth: 2,
         pointRadius: 2.5, tension: 0.25, spanGaps: true, order: 1 });
     }
-    if (ms && ms.some(function(v){ return v != null; })){
+    if (!st.hidden.summit && ms && ms.some(function(v){ return v != null; })){
       needY2 = true;
       datasets.push({ label: 'Margin % (Summit)', type: 'line', yAxisID: 'y2', data: sl(ms),
         borderColor: RS_SUMMIT, backgroundColor: RS_SUMMIT, borderWidth: 2, borderDash: [5, 4],
         pointRadius: 2, tension: 0.25, spanGaps: true, order: 2 });
     }
-    if (mc && mc.some(function(v){ return v != null; })){
+    if (!st.hidden.cons && mc && mc.some(function(v){ return v != null; })){
       needY2 = true;
       datasets.push({ label: 'Margin % (consensus)', type: 'line', yAxisID: 'y2', data: sl(mc),
         borderColor: 'rgba(124,134,148,0.9)', backgroundColor: 'rgba(124,134,148,0.9)', borderWidth: 2, borderDash: [2, 3],
@@ -1141,7 +1221,7 @@ function rsBuildChart(k){
   if (needY2) scales.y2 = { position: 'right', weight: 1, grid: { display: false },
     ticks: { font: { size: 11 }, callback: function(v){ return v + '%'; } } };
 
-  st.chart = new Chart(el.getContext('2d'), {
+  st.chart = rsNewChart(el, {
     type: 'bar',
     data: { labels: sl(m.periods), datasets: datasets },
     options: {
@@ -1152,6 +1232,7 @@ function rsBuildChart(k){
       plugins: {
         legend: { display: false },
         rsFwdZone: { from: fwdFrom },
+        rsLabels: { on: st.labels === true, fmt: rsLabNum },
         // ── The tooltip reads in the CURRENT MODE (SAB, Aug 11 2026) ──────────────
         // It used to quote `m.act` / `m.summit` / `m.cons` straight from the dataset, which
         // meant a growth chart hovered as dollars: the bar said +24.1% and the tooltip said
@@ -1191,7 +1272,7 @@ function rsBuildChart(k){
       },
       scales: scales
     },
-    plugins: [rsFwdZone]
+    plugins: [rsFwdZone, rsLabels]
   });
 
   rsSyncSlider(k, m);
@@ -1342,7 +1423,13 @@ function rsRenderTable(k, m){
   var w = rsWin(k, m), lo = w[0], hi = w[1];
   var dec = m.unit === 'eps' ? 2 : 1;
   var div = rsScaleOf(m);
-  var gpt = rsSt(k).gpt || 'mid';                      // which end of the guided range is scored
+  var st = rsSt(k);
+  var gpt = st.gpt || 'mid';                           // which end of the guided range is scored
+  // A hidden series leaves the TABLE too (non-negotiable 2). The margin chip only exists in
+  // level mode, so its state may only gate rows while the chip is on screen to un-gate them —
+  // otherwise hiding margins in level mode and switching to Growth would strip rows with no
+  // visible control to bring them back.
+  var marginChip = !isTop && !rsIsMargin(k) && !rsIsGrow(k) && rsHasMargin(k, m);
   var idx = [], est = [], tbLastA = rsLastAct(m);
   for (var i = lo; i <= hi; i++){ idx.push(i); est.push(i > tbLastA); }
 
@@ -1431,19 +1518,21 @@ function rsRenderTable(k, m){
     return r + '</tr>';
   }
 
-  var showMargin = m.marginOf && m.unit !== 'eps' && !isTop;
+  var showMargin = m.marginOf && m.unit !== 'eps' && !isTop && !(marginChip && st.hidden.margin);
 
   // Actual: value → YoY/QoQ growth (→ margin).
   var growLbl = rsGrowLabel(k);
   var maA = showMargin ? rsMarginArr(k, m, 'act') : null;
-  h += row('Actual', function(i){ return m.act[i] == null ? '<span class="rs-ft-nil">—</span>' : '<b>' + num(m.act[i]) + '</b>'; }, 'main nb', sumCagr());
-  h += row(growLbl, function(i){ return pctDollar(rsActGrowthPct(k, m, i), rsActGrowthDollar(k, m, i)); }, showMargin ? 'sub nb' : 'sub', sumGrowth(rsActGrowthPct.bind(null, k, m)));
-  if (showMargin) h += row(esc(m.marginLabel || 'margin'), function(i){ return maA && maA[i] != null ? maA[i].toFixed(1) + '%' : '<span class="rs-ft-nil">—</span>'; }, 'sub', sumMargin(maA));
+  if (!st.hidden.act){
+    h += row('Actual', function(i){ return m.act[i] == null ? '<span class="rs-ft-nil">—</span>' : '<b>' + num(m.act[i]) + '</b>'; }, 'main nb', sumCagr());
+    h += row(growLbl, function(i){ return pctDollar(rsActGrowthPct(k, m, i), rsActGrowthDollar(k, m, i)); }, showMargin ? 'sub nb' : 'sub', sumGrowth(rsActGrowthPct.bind(null, k, m)));
+    if (showMargin) h += row(esc(m.marginLabel || 'margin'), function(i){ return maA && maA[i] != null ? maA[i].toFixed(1) + '%' : '<span class="rs-ft-nil">—</span>'; }, 'sub', sumMargin(maA));
+  }
 
   // Reference series (Summit / Consensus): value → YoY growth → surprise (→ margin).
   [{ on: has.summit, series: 'summit', label: 'Summit model' },
    { on: has.cons,   series: 'cons',   label: 'Consensus' }].forEach(function(r){
-    if (!r.on) return;
+    if (!r.on || st.hidden[r.series]) return;
     var s = r.series;
     var mm = showMargin ? rsMarginArr(k, m, s) : null;
     h += row(r.label, function(i){ return num(m[s][i]); }, 'main nb', '');
@@ -1454,7 +1543,7 @@ function rsRenderTable(k, m){
     if (mm) h += row(esc(m.marginLabel || 'margin'), function(i){ return mm[i] != null ? mm[i].toFixed(1) + '%' : '<span class="rs-ft-nil">—</span>'; }, 'sub', sumMargin(mm));
   });
 
-  if (has.guide){
+  if (has.guide && !st.hidden.guide){
     // A point guide prints one number, not "4800–4800". The end being scored against is marked
     // in the range itself, so the two rows never disagree about which number is in play.
     var anyRangeRow = rsGuideRanged(m);
@@ -1870,7 +1959,7 @@ function rsBuildEvo(k){
         ' · solid = Summit model, dashed = stored BBG consensus)</span>'
       : 'forecast by model snapshot <span>(' + (m.cur || '$') + (div === 1000 ? 'B' : 'M') + ' per fiscal year · solid = Summit model, dashed = stored BBG consensus · hover for the revision)</span>');
 
-  st.chart = new Chart(el.getContext('2d'), {
+  st.chart = rsNewChart(el, {
     type: 'line',
     data: { labels: ev.vintages.map(function(v){ return [v.label, v.event]; }), datasets: datasets },
     options: {
@@ -2363,7 +2452,7 @@ function rsBuildSurp(){
     (cmps.length ? esc(cmps.map(function(s){ return rsSrcShort(s); }).join(' · ')) : '<i>nothing selected</i>') +
     ' <span>(' + (pctMode ? '%' : esc(unitLbl)) + ' per period · hover for the underlying values)</span>';
 
-  st.chart = new Chart(el.getContext('2d'), {
+  st.chart = rsNewChart(el, {
     type: 'bar',
     data: { labels: m.periods.slice(lo, hi + 1), datasets: series.map(function(s){
       return { label: rsSrcLabel(s.src),
@@ -2746,6 +2835,11 @@ function rsConvHeadHtml(m, pi){
     ', ' + nv + ' snapshot' + (nv === 1 ? '' : 's') + ' before the print</span>';
 }
 function rsConvBlockHtml(){
+  // A dataset opts out of "Road to the print" with `conv: false`, the same way it opts out of the
+  // surprise scorecard with `surprise: false`. The per-segment datasets js/segments.js composes
+  // carry the vintage matrix (so the picker works) but sit inside a Top Line section that is
+  // about size and growth — block C there would be a second copy of what Evolution already shows.
+  if (_rs.data && _rs.data.conv === false) return '';
   var d = _rs.data;
   if (!d || !d.estMatrix) return '';                 // no archive ⇒ no walk to draw
   var m = rsConvM();
@@ -2935,7 +3029,7 @@ function rsBuildConv(){
       : 'how the forecast moved <span>(' + esc(unitLbl) + ' per snapshot · each point is what that archived file said ' +
         esc(period) + ' would be)</span>');
 
-  st.chart = new Chart(el.getContext('2d'), {
+  st.chart = rsNewChart(el, {
     type: 'line',
     data: { labels: vints.map(function(v){ return rsVintDay(v.id, v.label); }), datasets: datasets },
     options: {
@@ -3071,10 +3165,14 @@ function rsConvTableRender(m, mkey, pi, vints, div){
     r += sub('vs ' + gname + (ranged && !gptShown() ? rsGptMiniHtml('rsconvgpt', gpt) : ''), gref, true);
     return r;
   }
-  h += block('Summit model', rsConvSeries('summit', mkey, m, pi, vints));
-  h += block('Consensus',    rsConvSeries('cons',   mkey, m, pi, vints));
+  // Non-negotiable 2 (CHART_ENGINE_REFERENCE §0.2): the predicate that hides a series from the
+  // chart must feed the table. rsBuildConv already nulls these on `st.hidden`; the table used to
+  // call rsConvSeries straight and kept rendering a row for a line that was no longer drawn —
+  // which is worse than no legend, because the reader trusts a number that is not on screen.
+  if (!st.hidden.summit) h += block('Summit model', rsConvSeries('summit', mkey, m, pi, vints));
+  if (!st.hidden.cons)   h += block('Consensus',    rsConvSeries('cons',   mkey, m, pi, vints));
   // The references, held flat across the walk, so a column can be read straight down.
-  if (gref != null){
+  if (gref != null && !st.hidden.guide){
     h += '<tr class="rs-ft-main"><td class="rs-ft-h">Guidance</td>';
     vints.forEach(function(){
       if (!ranged){ h += '<td>' + num(m.guideLo[pi]) + '</td>'; return; }
@@ -3084,7 +3182,7 @@ function rsConvTableRender(m, mkey, pi, vints, div){
     });
     h += '<td class="rs-ft-s"></td></tr>';
   }
-  if (act != null){
+  if (act != null && !st.hidden.act){
     h += '<tr class="rs-ft-main"><td class="rs-ft-h">Reported</td>';
     vints.forEach(function(){ h += '<td><b>' + num(act) + '</b></td>'; });
     h += '<td class="rs-ft-s"></td></tr>';
@@ -3179,7 +3277,7 @@ function wireResults(pane){
       rsRenderTable(gk, rsMetric(gk));
       return;
     }
-    var ctl = e.target.closest('[data-rsview], [data-rsmode], [data-rsgrow], [data-rsgunit]');
+    var ctl = e.target.closest('[data-rsview], [data-rsmode], [data-rsgrow], [data-rsgunit], [data-rslab]');
     if (ctl){
       var blk = ctl.closest('[data-rsblock]');
       if (!blk) return;
@@ -3191,6 +3289,7 @@ function wireResults(pane){
       }
       if (ctl.hasAttribute('data-rsmode')) bst.mode = ctl.getAttribute('data-rsmode');
       if (ctl.hasAttribute('data-rsgrow')) bst.growth = ctl.getAttribute('data-rsgrow');
+      if (ctl.hasAttribute('data-rslab')) bst.labels = ctl.getAttribute('data-rslab') === '1';
       if (ctl.hasAttribute('data-rsgunit')) bst.growUnit = ctl.getAttribute('data-rsgunit');
       bst.yr = null;
       var bm = rsMetric(bk);
@@ -3779,7 +3878,7 @@ function rsBuildCurve(){
   (raw.act || []).forEach(function(v, i){ if (v != null) lastA = i; });
   var fwdFrom = (lastA + 1 >= ev.years.length) ? -1 : lastA + 1;
 
-  st.chart = new Chart(el.getContext('2d'), {
+  st.chart = rsNewChart(el, {
     type: 'bar',
     data: { labels: ev.years.map(function(y){ return 'FY' + y; }), datasets: datasets },
     options: {
@@ -3833,7 +3932,7 @@ function rsBuildCurve(){
           } } }
       }
     },
-    plugins: [rsFwdZone]
+    plugins: [rsFwdZone, rsLabels]
   });
 
   // Vertical-only brush: the x-axis is a handful of fiscal years, so a drag is a y-zoom.

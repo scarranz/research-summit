@@ -24,6 +24,7 @@
 <link rel="stylesheet" href="css/fund-returns.css">
 <link rel="stylesheet" href="css/covered-calls.css">
 <link rel="stylesheet" href="css/industry.css">
+<link rel="stylesheet" href="css/spectrum.css">
 <link rel="stylesheet" href="css/results.css">
 <link rel="stylesheet" href="css/payments.css">
   <link rel="stylesheet" href="css/hyperscalers.css">
@@ -165,12 +166,7 @@
 
     <!-- SPECTRUM -->
     <div id="summit-spectrum" class="summit-sub">
-      <div class="ind-wrap">
-        <div class="ind-head">
-          <h2 class="ind-title">Spectrum</h2>
-          <p class="ind-sub">Coming soon.</p>
-        </div>
-      </div>
+      <div id="spectrum-root"></div>
     </div>
   </div>
 </div>
@@ -707,6 +703,7 @@ import { initNav, registerPageLoader } from './js/nav.js';
 import { loadCompaniesPage } from './js/companies.js';
 import { loadInvestmentPage } from './js/investment.js';
 import { loadThesisPage } from './js/thesis.js';
+import { loadSpectrumPage } from './js/spectrum.js';
 import { loadMarketAnalysisPage } from './js/market-analysis.js';
 import { loadHedgeFundsPage } from './js/hedge-funds.js';
 import { loadTeamPage } from './js/team.js';
@@ -739,6 +736,7 @@ async function boot() {
         if (!_summitLoaded[sub]) {
           _summitLoaded[sub] = true;
           if (sub === 'thesis') loadThesisPage();
+          if (sub === 'spectrum') loadSpectrumPage();
         }
       };
 

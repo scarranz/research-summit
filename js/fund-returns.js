@@ -1,18 +1,20 @@
-// fund-returns.js — Fund Returns tab: "Performance Analysis" dashboard.
+// fund-returns.js — Return Analysis tab: "Performance Analysis" dashboard.
 // Replicates the content of presentation slides 2 & 3, reorganized for a
-// dashboard: executive KPI strip, a hero cumulative chart, the slide-2 detail
-// tables, and themed sections for absolute and relative (alpha) monthly returns.
-// All figures are derived live from the two daily series — nothing hardcoded,
-// so new months (incl. 2026) appear automatically.
-import { getStrategy, getBenchmark } from './fund-data.js';
+// dashboard: a hero cumulative chart, the slide-2 detail tables, and themed
+// sections for absolute and relative (alpha) monthly returns.
+// Every figure is derived from the two daily series — nothing is hardcoded, so
+// new days appear on their own as the live feed extends the series.
+import { getSeries } from './fund-data.js';
 import * as C from './fund-calc.js';
 
+const PORTFOLIO_DEFAULT = 'summit';
 const RFR_DEFAULT = 0.045;
 const LOOKBACK_DEFAULT = 12; // months (TTM window)
 const COLOR = { summit: '#44546A', bench: '#808080', neg: '#C0392B', grid: '#E7EAEE', mu: '#8A93A0' };
 
 let _strategy = null;   // full aligned series, loaded once
 let _bench = null;
+let _meta = null;       // which portfolio, which benchmark, where the days came from
 let _charts = {};
 let _winLen = 3;        // Rolling Window Analysis: window length in years
 let _winStart = null;   // ...and chosen start year (null = auto-pick latest)
@@ -22,81 +24,25 @@ export async function loadFundReturnsPage() {
   const root = document.getElementById('fr-root');
   if (!root) return;
 
-  root.innerHTML = `
-    <div class="fr-head">
-      <div class="fr-meta" id="fr-meta"></div>
-      <div class="fr-controls">
-        <label class="fr-ctl">From <input type="date" id="fr-ini"></label>
-        <label class="fr-ctl">To <input type="date" id="fr-fin"></label>
-        <label class="fr-ctl">RFR <input type="number" id="fr-rfr" step="0.1" style="width:64px"></label>
-        <span id="fr-badge" class="fr-badge"></span>
-      </div>
-    </div>
-    <div id="fr-msg" class="fr-msg" style="display:none"></div>
-
-    <div class="fr-hero-bar">
-      <span class="fr-hero-label">Period</span>
-      <div class="fr-toggle" id="fr-hero-toggle"></div>
-    </div>
-
-    <div class="fr-hero">
-      <div class="card">
-        <div class="fr-charttitle">Total Return — Summit vs S&amp;P 500</div>
-        <div class="fr-canvas-wrap"><canvas id="fr-cum"></canvas></div>
-        <div class="fr-foot">*Cumulative daily total return of Summit and S&amp;P 500</div>
-      </div>
-      <div class="card">
-        <div class="fr-charttitle">Cumulative Performance vs Benchmark</div>
-        <div class="fr-canvas-wrap fr-canvas-short"><canvas id="fr-alpha"></canvas></div>
-        <div class="fr-foot">*Cumulative difference in returns between Summit and S&amp;P 500</div>
-      </div>
-    </div>
-
-    <div class="fr-tables">
-      <div class="fr-tcol">
-        <div class="card"><div class="fr-charttitle">Performance &amp; Risk Analysis</div><div id="fr-t-analysis"></div></div>
-        <div class="card"><div class="fr-charttitle">Rolling Window Analysis</div><div id="fr-window"></div></div>
-      </div>
-      <div class="fr-tcol">
-        <div class="card"><div class="fr-charttitle">Performance &amp; Risk Metrics</div><div id="fr-t-metrics"></div></div>
-        <div class="card"><div class="fr-charttitle">Capture Ratios</div><div id="fr-t-capture"></div>
-          <div class="fr-foot">*Calculated with monthly returns</div></div>
-      </div>
-    </div>
-
-    <div class="card fr-section">
-      <div class="fr-charttitle">Absolute Return — Monthly (Summit)</div>
-      <div class="fr-secgrid">
-        <div class="fr-canvas-wrap"><canvas id="fr-mbars"></canvas></div>
-        <div id="fr-abs-stats"></div>
-        <div class="fr-canvas-wrap"><canvas id="fr-mhist"></canvas></div>
-      </div>
-    </div>
-
-    <div class="card fr-section">
-      <div class="fr-charttitle">Relative Return vs Benchmark — Monthly (Alpha)</div>
-      <div class="fr-secgrid">
-        <div class="fr-canvas-wrap"><canvas id="fr-abars"></canvas></div>
-        <div id="fr-rel-stats"></div>
-        <div class="fr-canvas-wrap"><canvas id="fr-ahist"></canvas></div>
-      </div>
-    </div>
-
-    <div class="card fr-section">
-      <div class="fr-charttitle">Monthly Returns — Summit, S&amp;P 500 &amp; Alpha</div>
-      <div id="fr-monthly"></div>
-    </div>`;
-
   try {
     if (!_strategy) {
-      _strategy = await getStrategy();
-      _bench = await getBenchmark(_strategy.map(p => p.date));
+      const series = await getSeries(PORTFOLIO_DEFAULT);
+      _strategy = series.portfolio;
+      _bench = series.benchmark;
+      _meta = series.meta;
     }
   } catch (err) {
-    showMessage(root, `No se pudieron cargar los datos: ${err.message}. ` +
-      `En esta fase de diseño los CSV solo existen en el servidor local.`);
+    root.innerHTML = `<div class="fr-msg">Could not load the return series: ${esc(err.message)}</div>`;
     return;
   }
+  if (!_strategy.length) {
+    root.innerHTML = '<div class="fr-msg">No return data for this portfolio yet.</div>';
+    return;
+  }
+
+  // Built after the data loads so every title can name the portfolio and the
+  // benchmark actually on screen, instead of one fund's names hardcoded.
+  root.innerHTML = shell(_meta);
 
   const dmin = _strategy[0].date, dmax = _strategy[_strategy.length - 1].date;
   document.getElementById('fr-ini').value = iso(dmin);
@@ -122,13 +68,6 @@ function recompute() {
   }
   if (s.length === 0) { setBadge('No data in range', 'warn'); return; }
 
-  const sArr = C.rets(s), bArr = C.rets(b);
-  // M holds just what the validation badge checks (the detail tables compute
-  // their own figures).
-  const M = {
-    totalS: C.totalReturnArr(sArr), totalB: C.totalReturnArr(bArr),
-    volS: C.volArr(sArr, false), corr: C.correlation(sArr, bArr),
-  };
   const sM = C.monthlySeries(s), bM = C.monthlySeries(b);
   const ma = C.monthlyAligned(sM, bM);
   const capture = C.captureRatios(ma.a, ma.b);
@@ -147,31 +86,111 @@ function recompute() {
   renderWindowTable();
   renderMonthlyTable(ma);
 
-  // validation badge vs PowerShell reference for the full default range
-  const full = iso(_strategy[0].date) === document.getElementById('fr-ini').value
-    && iso(_strategy[_strategy.length - 1].date) === document.getElementById('fr-fin').value;
-  if (full) {
-    const ok = near(M.totalS, 0.6165) && near(M.volS, 0.1858) && near(M.totalB, 0.5722) && near(M.corr, 0.821, 0.002);
-    setBadge(ok ? '✓ Engine validated' : '✗ Mismatch', ok ? 'ok' : 'warn');
-  } else setBadge('Custom range', 'neutral');
+  // How current the series is. (This used to check the engine against a set of
+  // hardcoded reference figures; those referred to a series that no longer
+  // exists, so the badge read "Mismatch" on every load. What is actually worth
+  // showing here is how fresh the data is.)
+  setBadge(`Data through ${fmtDate(_meta.through)}`, 'neutral');
+}
+
+// ─── Page shell ─────────────────────────────────────────────
+function shell(m) {
+  const P = esc(m.label), B = esc(m.benchmarkLabel);
+  return `
+    <div class="fr-head">
+      <div class="fr-meta" id="fr-meta"></div>
+      <div class="fr-controls">
+        <label class="fr-ctl">From <input type="date" id="fr-ini"></label>
+        <label class="fr-ctl">To <input type="date" id="fr-fin"></label>
+        <label class="fr-ctl">RFR <input type="number" id="fr-rfr" step="0.1" style="width:64px"></label>
+        <span id="fr-badge" class="fr-badge"></span>
+      </div>
+    </div>
+    <div id="fr-msg" class="fr-msg" style="display:none"></div>
+
+    <div class="fr-hero-bar">
+      <span class="fr-hero-label">Period</span>
+      <div class="fr-toggle" id="fr-hero-toggle"></div>
+    </div>
+
+    <div class="fr-hero">
+      <div class="card">
+        <div class="fr-charttitle">Total Return — ${P} vs ${B}</div>
+        <div class="fr-canvas-wrap"><canvas id="fr-cum"></canvas></div>
+        <div class="fr-foot">*Cumulative daily total return of ${P} and ${B}</div>
+      </div>
+      <div class="card">
+        <div class="fr-charttitle">Cumulative Performance vs Benchmark</div>
+        <div class="fr-canvas-wrap fr-canvas-short"><canvas id="fr-alpha"></canvas></div>
+        <div class="fr-foot">*Cumulative difference in returns between ${P} and ${B}</div>
+      </div>
+    </div>
+
+    <div class="fr-tables">
+      <div class="fr-tcol">
+        <div class="card"><div class="fr-charttitle">Performance &amp; Risk Analysis</div><div id="fr-t-analysis"></div></div>
+        <div class="card"><div class="fr-charttitle">Rolling Window Analysis</div><div id="fr-window"></div></div>
+      </div>
+      <div class="fr-tcol">
+        <div class="card"><div class="fr-charttitle">Performance &amp; Risk Metrics</div><div id="fr-t-metrics"></div></div>
+        <div class="card"><div class="fr-charttitle">Capture Ratios</div><div id="fr-t-capture"></div>
+          <div class="fr-foot">*Calculated with monthly returns</div></div>
+      </div>
+    </div>
+
+    <div class="card fr-section">
+      <div class="fr-charttitle">Absolute Return — Monthly (${P})</div>
+      <div class="fr-secgrid">
+        <div class="fr-canvas-wrap"><canvas id="fr-mbars"></canvas></div>
+        <div id="fr-abs-stats"></div>
+        <div class="fr-canvas-wrap"><canvas id="fr-mhist"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card fr-section">
+      <div class="fr-charttitle">Relative Return vs Benchmark — Monthly (Alpha)</div>
+      <div class="fr-secgrid">
+        <div class="fr-canvas-wrap"><canvas id="fr-abars"></canvas></div>
+        <div id="fr-rel-stats"></div>
+        <div class="fr-canvas-wrap"><canvas id="fr-ahist"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card fr-section">
+      <div class="fr-charttitle">Monthly Returns — ${P}, ${B} &amp; Alpha</div>
+      <div id="fr-monthly"></div>
+    </div>`;
 }
 
 // ─── Renderers: header + KPIs ───────────────────────────────
 function renderMeta(s, b) {
   const d0 = s[0].date, d1 = s[s.length - 1].date;
+  const m = _meta;
   document.getElementById('fr-meta').innerHTML = `
     <div class="fr-meta-row">
-      <span><b>Summit Management</b></span><span>Benchmark: <b>S&amp;P 500</b></span>
-      <span>Start: <b>${fmtDate(d0)}</b></span><span>End: <b>${fmtDate(d1)}</b></span><span>Currency: <b>USD</b></span>
+      <span><b>${esc(m.label)}</b></span><span>Benchmark: <b>${esc(m.benchmarkLabel)}</b></span>
+      <span>Start: <b>${fmtDate(d0)}</b></span><span>End: <b>${fmtDate(d1)}</b></span>
+      <span>Currency: <b>${m.currency}</b></span>
     </div>
     <div class="fr-meta-row fr-meta-sub">
-      <span>Benchmark Proxy: SPY</span><span>Period: ${fmtMonthLong(d0)} – ${fmtMonthLong(d1)}</span>
-      <span class="fr-source">Daily total returns</span>
+      <span>Benchmark Proxy: ${esc(m.benchmark)}</span><span>Period: ${fmtMonthLong(d0)} – ${fmtMonthLong(d1)}</span>
+      <span class="fr-source">Daily total returns</span>${sourceNote(m)}
     </div>`;
+}
+
+// Where the days on screen came from. Worth saying out loud: the series is two
+// halves spliced at HISTORY_CUTOFF, and until the daily feed is connected the
+// recent half is a checked-in file rather than the database.
+function sourceNote(m) {
+  if (!m.liveFrom) return '';
+  const via = m.liveSource === 'db' ? 'live feed' : 'pending feed connection';
+  return `<span class="fr-meta-note">History through ${fmtMonthLong(m.historyThrough)},`
+    + ` ${fmtMonthLong(m.liveFrom)} onward from the ${via}</span>`;
 }
 
 // ─── Renderers: tables ──────────────────────────────────────
 function renderAnalysisTable(s, b, ini, fin) {
+  const P = esc(_meta.label), BS = esc(_meta.benchmarkShort);
   const years = [...new Set(s.map(p => p.date.getFullYear()))].sort((a, c) => c - a);
   const rowFor = (label, sSlice, bSlice, mode) => {
     const sr = C.rets(sSlice), br = C.rets(bSlice);
@@ -193,11 +212,12 @@ function renderAnalysisTable(s, b, ini, fin) {
     <table class="fr-table">
       <thead>
         <tr><th></th><th colspan="2">Return</th><th colspan="2">Volatility</th><th colspan="2">Risk Adjusted</th></tr>
-        <tr><th></th><th>Summit</th><th class="fr-bm">S&amp;P</th><th>Summit</th><th class="fr-bm">S&amp;P</th><th>Summit</th><th class="fr-bm">S&amp;P</th></tr>
+        <tr><th></th><th>${P}</th><th class="fr-bm">${BS}</th><th>${P}</th><th class="fr-bm">${BS}</th><th>${P}</th><th class="fr-bm">${BS}</th></tr>
       </thead><tbody>${rows}</tbody></table>`;
 }
 
 function renderMetricsTable(s, b, ini, fin, rfr) {
+  const P = esc(_meta.label), BS = esc(_meta.benchmarkShort);
   // TTM window = last LOOKBACK months
   const ttmStart = new Date(fin.getFullYear(), fin.getMonth() - LOOKBACK_DEFAULT, fin.getDate());
   const sTtm = s.filter(p => p.date >= ttmStart), bTtm = b.filter(p => p.date >= ttmStart);
@@ -209,7 +229,7 @@ function renderMetricsTable(s, b, ini, fin, rfr) {
     <table class="fr-table">
       <thead>
         <tr><th></th><th colspan="2">TTM</th><th colspan="2">Period</th></tr>
-        <tr><th></th><th>Summit</th><th class="fr-bm">S&amp;P</th><th>Summit</th><th class="fr-bm">S&amp;P</th></tr>
+        <tr><th></th><th>${P}</th><th class="fr-bm">${BS}</th><th>${P}</th><th class="fr-bm">${BS}</th></tr>
       </thead><tbody>
       ${row('Standard Deviation', pct(C.volArr(aT, true)), pct(C.volArr(bT, true)), pct(C.volArr(aP, false)), pct(C.volArr(bP, false)))}
       ${row('Beta Ante', num(C.betaAnte(sTtm)), dash, num(C.betaAnte(s)), dash)}
@@ -222,9 +242,10 @@ function renderMetricsTable(s, b, ini, fin, rfr) {
 }
 
 function renderCaptureTable(c) {
+  const P = esc(_meta.label), BS = esc(_meta.benchmarkShort);
   document.getElementById('fr-t-capture').innerHTML = `
     <table class="fr-table">
-      <thead><tr><th></th><th>Summit</th><th class="fr-bm">S&amp;P</th><th>Capture</th></tr></thead>
+      <thead><tr><th></th><th>${P}</th><th class="fr-bm">${BS}</th><th>Capture</th></tr></thead>
       <tbody>
         <tr><td class="fr-rl">Upside Avg</td><td>${pct(c.upSummit)}</td><td class="fr-bm">${pct(c.upBench)}</td><td>${num(c.captureUp)}</td></tr>
         <tr><td class="fr-rl">Downside Avg</td><td>${pct(c.dnSummit)}</td><td class="fr-bm">${pct(c.dnBench)}</td><td>${num(c.captureDown)}</td></tr>
@@ -260,6 +281,7 @@ function renderStatsBlock(id, values, labels, posName, negName, downInclusiveZer
 // years to view (e.g. 3Y → 2022–2024, 2023–2025 …). Independent of the From/To
 // filter; always computed over the full series.
 function renderWindowTable() {
+  const P = esc(_meta.label), B = esc(_meta.benchmarkLabel);
   const years = [...new Set(_strategy.map(p => p.date.getFullYear()))].sort((a, b) => a - b);
   const minY = years[0], maxY = years[years.length - 1];
   const len = _winLen;
@@ -288,16 +310,17 @@ function renderWindowTable() {
     <table class="fr-table">
       <thead><tr><th></th><th>Return</th><th>Volatility</th><th>Risk Adjusted</th></tr></thead>
       <tbody>
-        <tr><td class="fr-rl">Summit</td><td>${pct(C.totalReturnArr(sArr))}</td><td>${pct(C.volArr(sArr, false))}</td><td>${num(C.riskAdjusted(sArr))}</td></tr>
-        <tr><td class="fr-rl fr-bm">S&amp;P 500</td><td class="fr-bm">${pct(C.totalReturnArr(bArr))}</td><td class="fr-bm">${pct(C.volArr(bArr, false))}</td><td class="fr-bm">${num(C.riskAdjusted(bArr))}</td></tr>
+        <tr><td class="fr-rl">${P}</td><td>${pct(C.totalReturnArr(sArr))}</td><td>${pct(C.volArr(sArr, false))}</td><td>${num(C.riskAdjusted(sArr))}</td></tr>
+        <tr><td class="fr-rl fr-bm">${B}</td><td class="fr-bm">${pct(C.totalReturnArr(bArr))}</td><td class="fr-bm">${pct(C.volArr(bArr, false))}</td><td class="fr-bm">${num(C.riskAdjusted(bArr))}</td></tr>
       </tbody></table>`;
   cont.querySelectorAll('.fr-tg').forEach(btn =>
     btn.addEventListener('click', () => { _winLen = +btn.dataset.len; _winStart = null; renderWindowTable(); }));
   document.getElementById('fr-win-range').addEventListener('change', e => { _winStart = +e.target.value; renderWindowTable(); });
 }
 
-// Monthly returns table — Summit, S&P 500 and the month's alpha.
+// Monthly returns table — the portfolio, its benchmark, and the month's alpha.
 function renderMonthlyTable(ma) {
+  const P = esc(_meta.label), B = esc(_meta.benchmarkLabel);
   const rows = ma.labels.map((m, i) =>
     `<tr><td class="fr-rl">${monthLabel(m)}</td>
        <td class="${sign(ma.a[i])}">${pct(ma.a[i], 2, true)}</td>
@@ -305,7 +328,7 @@ function renderMonthlyTable(ma) {
        <td class="${sign(ma.alpha[i])}">${pct(ma.alpha[i], 2, true)}</td></tr>`).join('');
   document.getElementById('fr-monthly').innerHTML = `
     <table class="fr-table fr-monthly-table">
-      <thead><tr><th class="fr-rl">Month</th><th>Summit</th><th>S&amp;P 500</th><th>Alpha</th></tr></thead>
+      <thead><tr><th class="fr-rl">Month</th><th>${P}</th><th>${B}</th><th>Alpha</th></tr></thead>
       <tbody>${rows}</tbody></table>`;
 }
 
@@ -341,7 +364,7 @@ function renderCumChart(s, b) {
   const cs = C.cumulativeSeries(s), cb = C.cumulativeSeries(b);
   build('cum', 'fr-cum', {
     type: 'line',
-    data: { datasets: [tline('Summit Management', cs, COLOR.summit), tline('S&P 500', cb, COLOR.bench)] },
+    data: { datasets: [tline(_meta.label, cs, COLOR.summit), tline(_meta.benchmarkLabel, cb, COLOR.bench)] },
     options: timeLineOpts(true, semiAnnual(s)),
   });
 }
@@ -434,7 +457,20 @@ function build(key, canvasId, config) {
 function pct(x, dec = 2, signed = false) { if (x === '—' || x == null || Number.isNaN(x)) return '—'; const v = (x * 100).toFixed(dec) + '%'; return signed && x > 0 ? '+' + v : v; }
 function num(x, dec = 2) { return (x == null || Number.isNaN(x)) ? '—' : x.toFixed(dec); }
 function sign(x) { return x >= 0 ? 'pos' : 'neg'; }
-function near(a, b, tol = 0.0005) { return Math.abs(a - b) < tol; }
+// The freshness badge in the header. (This helper went missing when the KPI
+// strip was removed in 3bf59d7, so every setBadge call has been throwing a
+// ReferenceError at the end of recompute() since then -- which is why the badge
+// has been blank, and why an invalid date range silently left the previous
+// figures on screen instead of flagging itself.)
+function setBadge(text, kind) {
+  const el = document.getElementById('fr-badge');
+  if (!el) return;
+  el.textContent = text;
+  el.className = `fr-badge fr-badge-${kind || 'neutral'}`;
+}
+// Labels come from the portfolio registry and land inside HTML strings, so the
+// ampersand in "S&P 500" has to be escaped or the markup is malformed.
+function esc(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function iso(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
 function parseInput(s) { if (!s) return null; const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
 function fmtDate(d) { return d.toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
@@ -442,4 +478,3 @@ function fmtMonth(d) { return d.toLocaleDateString('en-US', { month: 'short', ye
 function fmtMonthYear(d) { return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }); }
 function fmtMonthLong(d) { return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }); }
 function monthLabel(m) { return new Date(m.year, m.month - 1, 1).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }); }
-function showMessage(root, msg) { const el = root.querySelector('#fr-msg'); if (el) { el.textContent = msg; el.style.display = ''; } }

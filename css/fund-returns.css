@@ -12,6 +12,8 @@
 .fr-meta-row b { font-weight: 600; }
 .fr-meta-sub { margin-top: 5px; font-size: 11.5px; color: var(--mu); }
 .fr-source { color: var(--accent); background: rgba(37,99,235,.07); padding: 1px 7px; border-radius: 5px; }
+/* Where the days on screen came from (frozen history + live feed) */
+.fr-meta-note { color: var(--mu); }
 
 .fr-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .fr-ctl {

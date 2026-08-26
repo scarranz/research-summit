@@ -395,10 +395,11 @@ export async function saveThemeRecord(companyId, ticker, record) {
   return ok(data);
 }
 
-// ─── Fund Returns ───────────────────────────────────────────
-// Daily series for the Performance Analysis dashboard. Tables are RLS-gated,
-// so only authenticated users can read them. Rows exceed PostgREST's 1000-row
-// page limit, so fetch them in pages.
+// ─── Return Analysis ────────────────────────────────────────
+// Daily series for the Return Analysis dashboard, from 2026 onward (everything
+// earlier is the frozen history in js/fund-history-data.js). Tables are
+// RLS-gated, so only authenticated users can read them. Rows exceed PostgREST's
+// 1000-row page limit, so fetch them in pages.
 
 async function fetchAllRows(table, build) {
   const pageSize = 1000;
@@ -415,12 +416,25 @@ async function fetchAllRows(table, build) {
   return ok(all);
 }
 
-export async function fetchFundReturns(portfolio) {
-  return fetchAllRows('fund_daily_returns', q => q.eq('portfolio', portfolio || 'STRATEGY').order('date'));
+// The portfolios the tab can show. Their database ids live here and never in
+// the committed front-end registry (the repo is public), so the front end looks
+// a portfolio up by its `code`.
+export async function fetchPortfolios() {
+  return fetchAllRows('portfolios', q => q.eq('active', true).order('display_order'));
 }
 
-export async function fetchBenchmarkPrices(symbol) {
-  return fetchAllRows('benchmark_prices', q => q.eq('symbol', symbol || 'SPY').order('date'));
+// One portfolio's daily returns, from `from` (inclusive) onward.
+export async function fetchPortfolioReturns(portfolioId, from) {
+  return fetchAllRows('portfolio_daily_returns', q =>
+    q.eq('portfolio_id', portfolioId).gte('date', from || '1900-01-01').order('date'));
+}
+
+// Benchmark daily closes, from `from` (inclusive) onward. Returns are derived
+// from the closes client-side, so `from` should reach back far enough to include
+// the close *before* the first day you need a return for.
+export async function fetchBenchmarkPrices(symbol, from) {
+  return fetchAllRows('benchmark_prices', q =>
+    q.eq('symbol', symbol || 'SPY').gte('date', from || '1900-01-01').order('date'));
 }
 
 // ─── Investor Profiles (Hedge Funds tab) ─────────────────────

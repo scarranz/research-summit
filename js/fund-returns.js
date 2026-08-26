@@ -17,12 +17,18 @@ let _strategy = null;   // full aligned series, loaded once
 let _bench = null;
 let _meta = null;       // which portfolio, which benchmark, where the days came from
 let _charts = {};
+// Per-chart zoom, and the unzoomed axis to restore on double-click. Dropped
+// whenever the data behind a chart changes: a range captured on one period,
+// re-applied to another, crops the chart to nothing (CHART_ENGINE_REFERENCE 0.2).
+let _zoom = {};
+let _zoomBase = {};
 let _req = 0;           // ticket for the in-flight portfolio switch (latest wins)
 let _winLen = 3;        // Rolling Window Analysis: window length in years
 let _winStart = null;   // ...and chosen start year (null = auto-pick latest)
 // One period-picker state per block. They are deliberately independent: the
 // global From/To they replace forced every table to answer the same question.
 let _periods = {};
+let _heroTbl = false;   // cumulative-path table: collapsed until asked for
 
 export async function loadFundReturnsPage() {
   const root = document.getElementById('fr-root');
@@ -152,9 +158,15 @@ function periodRange(st) {
   }
 }
 
+// Which charts a block owns, so a period change can drop their zoom. A range
+// captured over 2023 and re-applied to the full run crops the chart to nothing.
+const BLOCK_CHARTS = { hero: ['cum', 'alpha'], monthly: ['mbars', 'abars', 'mhist', 'ahist'] };
+function clearZoomFor(key) { for (const k of (BLOCK_CHARTS[key] || [])) delete _zoom[k]; }
+
 function renderPeriod(key, containerId, onChange) {
   const el = document.getElementById(containerId);
   if (!el) return;
+  const fire = () => { clearZoomFor(key); onChange(); };
   const st = _periods[key];
   const span = spanMonths(_strategy);
   const first = _strategy[0].date, last = _strategy[_strategy.length - 1].date;
@@ -185,11 +197,11 @@ function renderPeriod(key, containerId, onChange) {
   el.querySelectorAll('.fr-tg').forEach(btn => btn.addEventListener('click', () => {
     st.mode = btn.dataset.mode;
     renderPeriod(key, containerId, onChange);   // the secondary control appears/disappears
-    onChange();
+    fire();
   }));
-  el.querySelector('[data-role="year"]')?.addEventListener('change', e => { st.year = +e.target.value; onChange(); });
-  el.querySelector('[data-role="from"]')?.addEventListener('change', e => { st.from = e.target.value; onChange(); });
-  el.querySelector('[data-role="to"]')?.addEventListener('change', e => { st.to = e.target.value; onChange(); });
+  el.querySelector('[data-role="year"]')?.addEventListener('change', e => { st.year = +e.target.value; fire(); });
+  el.querySelector('[data-role="from"]')?.addEventListener('change', e => { st.from = e.target.value; fire(); });
+  el.querySelector('[data-role="to"]')?.addEventListener('change', e => { st.to = e.target.value; fire(); });
 }
 
 // Both series sliced together — they are index-aligned, so they have to be cut
@@ -289,10 +301,12 @@ function shell(m) {
       </div>
     </div>
 
+    <div id="fr-hero-tbl"></div>
+
     <div class="fr-tables">
       <div class="fr-tcol">
-        <div class="card"><div class="fr-charttitle">Performance &amp; Risk Analysis</div><div id="fr-t-analysis"></div></div>
-        <div class="card"><div class="fr-charttitle">Rolling Window Analysis</div><div id="fr-window"></div></div>
+        <div class="card"><div class="fr-charttitle">Performance &amp; Risk Analysis</div><div id="fr-t-analysis" class="fr-tscroll"></div></div>
+        <div class="card"><div class="fr-charttitle">Rolling Window Analysis</div><div id="fr-window" class="fr-tscroll"></div></div>
       </div>
       <div class="fr-tcol">
         <div class="card">
@@ -301,13 +315,13 @@ function shell(m) {
             <label class="fr-ctl">RFR <input type="number" id="fr-rfr" step="0.1" style="width:58px"></label>
           </div>
           <div class="fr-period fr-period-card" id="fr-p-metrics"></div>
-          <div id="fr-t-metrics"></div>
+          <div id="fr-t-metrics" class="fr-tscroll"></div>
           <div class="fr-foot">*The period control drives the Period columns; TTM is always the last twelve months</div>
         </div>
         <div class="card">
           <div class="fr-cardhead"><div class="fr-charttitle">Capture Ratios</div></div>
           <div class="fr-period fr-period-card" id="fr-p-capture"></div>
-          <div id="fr-t-capture"></div>
+          <div id="fr-t-capture" class="fr-tscroll"></div>
           <div class="fr-foot">*Calculated with monthly returns</div>
         </div>
       </div>
@@ -322,7 +336,7 @@ function shell(m) {
       <div class="fr-charttitle">Absolute Return — Monthly (${P})</div>
       <div class="fr-secgrid">
         <div class="fr-canvas-wrap"><canvas id="fr-mbars"></canvas></div>
-        <div id="fr-abs-stats"></div>
+        <div id="fr-abs-stats" class="fr-tscroll"></div>
         <div class="fr-canvas-wrap"><canvas id="fr-mhist"></canvas></div>
       </div>
     </div>
@@ -331,14 +345,14 @@ function shell(m) {
       <div class="fr-charttitle">Relative Return vs Benchmark — Monthly (Alpha)</div>
       <div class="fr-secgrid">
         <div class="fr-canvas-wrap"><canvas id="fr-abars"></canvas></div>
-        <div id="fr-rel-stats"></div>
+        <div id="fr-rel-stats" class="fr-tscroll"></div>
         <div class="fr-canvas-wrap"><canvas id="fr-ahist"></canvas></div>
       </div>
     </div>
 
     <div class="card fr-section">
       <div class="fr-charttitle">Monthly Returns — ${P}, ${B} &amp; Alpha</div>
-      <div id="fr-monthly"></div>
+      <div id="fr-monthly" class="fr-tscroll"></div>
     </div>`;
 }
 
@@ -588,9 +602,61 @@ function renderMonthlyTable() {
 // the From/To filter that drives the tables.
 function renderHeroBlock() {
   const { s, b } = sliceFor('hero');
-  if (!s.length) { destroyChart('cum'); destroyChart('alpha'); return; }
+  const tbl = document.getElementById('fr-hero-tbl');
+  if (!s.length) {
+    destroyChart('cum'); destroyChart('alpha');
+    if (tbl) tbl.innerHTML = '';
+    return;
+  }
   renderCumChart(s, b);
   renderAlphaChart(s, b);
+  renderHeroTable(s, b);
+}
+
+// The numbers behind the two hero charts (CHART_ENGINE_REFERENCE §0.2 rule 3).
+// Both charts draw a cumulative path, and a cumulative path is the one thing on
+// this page no other table carries — Monthly Returns has each month on its own,
+// which never adds up to "where were we in March 2024" without a calculator.
+// Sampled month-end rather than daily: 1,165 rows would be a data dump.
+function renderHeroTable(s, b) {
+  const host = document.getElementById('fr-hero-tbl');
+  if (!host) return;
+  const P = esc(_meta.label), B = esc(_meta.benchmarkLabel);
+  const cs = C.cumulativeSeries(s), cb = C.cumulativeSeries(b);
+
+  // Last trading day of each month, plus the final day so the table ends where
+  // the chart does even mid-month.
+  const rows = [];
+  for (let i = 0; i < s.length; i++) {
+    const last = i === s.length - 1;
+    if (!last && s[i].date.getMonth() === s[i + 1].date.getMonth()) continue;
+    rows.push({ date: s[i].date, a: cs[i].cum, b: cb[i].cum, alpha: cs[i].cum - cb[i].cum });
+  }
+
+  const open = _heroTbl !== false;
+  host.innerHTML = `
+    <div class="rs-collap">
+      <button type="button" class="rs-collap-h" id="fr-hero-tblb">
+        <span class="rs-collap-ic">${open ? '▾' : '▸'}</span> Cumulative path
+        <span class="rs-collap-sub">${open ? 'hide' : 'show'} · month-end, ${rows.length} month${rows.length === 1 ? '' : 's'} in the selected period</span>
+      </button>
+      <div class="rs-collap-b"${open ? '' : ' hidden'}>
+        <div class="rs-tablewrap fr-tscroll">
+          <table class="fr-table">
+            <thead><tr><th class="fr-rl">Month</th><th>${P}</th><th>${B}</th><th>Alpha</th></tr></thead>
+            <tbody>${rows.map(r => `<tr>
+              <td class="fr-rl">${monthLabel({ year: r.date.getFullYear(), month: r.date.getMonth() + 1 })}</td>
+              <td class="${sign(r.a)}">${pct(r.a, 2, true)}</td>
+              <td class="${sign(r.b)}">${pct(r.b, 2, true)}</td>
+              <td class="${sign(r.alpha)}">${pct(r.alpha, 2, true)}</td></tr>`).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('fr-hero-tblb').addEventListener('click', () => {
+    _heroTbl = !(_heroTbl !== false);
+    renderHeroTable(s, b);
+  });
 }
 function renderCumChart(s, b) {
   const cs = C.cumulativeSeries(s), cb = C.cumulativeSeries(b);
@@ -680,14 +746,130 @@ function renderHistogram(id, values, step, xlabel) {
     },
   });
 }
+// ─── Zoom (§0.2 rule 1) ─────────────────────────────────────
+// Drag sideways or down to zoom, drag on an axis strip to force a y-drag,
+// double-click to reset. Copied from rsAttachBrush (js/results.js:1298) with one
+// change: the original resolves an x-drag to label indices, which assumes a
+// category axis. Half the charts here are on a linear time axis, so this hands
+// the callback raw scale values and lets each chart decide what they mean.
+// The .rs-brush rectangle it draws is already global CSS (css/results.css).
+function attachBrush(el, chart, onX, onY, onReset) {
+  const wrap = el.parentElement;
+  if (wrap && getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
+  el.style.cursor = 'crosshair';
+  el.onmousedown = function (ev) {
+    if (ev.button !== 0) return;
+    const r0 = el.getBoundingClientRect(), w0 = wrap.getBoundingClientRect();
+    const area = chart.chartArea;
+    // A drag that starts on an axis strip always means a y-drag. The strips sit
+    // outside the plot; the live one is on the right, where the scales are.
+    const onAxis = (ev.clientX - r0.left) < area.left || (ev.clientX - r0.left) > area.right;
+    let vertical = (onAxis || !onX) ? true : null;   // null = direction not decided yet
+    const startX = ev.clientX, startY = ev.clientY;
+    let box = null;
+
+    function ensureBox() {
+      if (box) return;
+      box = document.createElement('div');
+      box.className = 'rs-brush';
+      if (vertical) {
+        box.style.left = (r0.left - w0.left + area.left) + 'px';
+        box.style.width = (area.right - area.left) + 'px';
+      } else {
+        box.style.top = (r0.top - w0.top) + 'px';
+        box.style.height = r0.height + 'px';
+      }
+      wrap.appendChild(box);
+    }
+    // Lock the axis once the pointer has moved far enough to show intent.
+    function decide(cx, cy) {
+      if (vertical != null) return;
+      const dx = Math.abs(cx - startX), dy = Math.abs(cy - startY);
+      if (Math.max(dx, dy) < 8) return;
+      vertical = dy > dx;
+    }
+    function place(cx, cy) {
+      if (vertical == null) return;
+      ensureBox();
+      if (vertical) {
+        box.style.top = (Math.min(startY, cy) - w0.top) + 'px';
+        box.style.height = Math.abs(cy - startY) + 'px';
+      } else {
+        box.style.left = (Math.min(startX, cx) - w0.left) + 'px';
+        box.style.width = Math.abs(cx - startX) + 'px';
+      }
+    }
+    place(ev.clientX, ev.clientY);
+
+    function onMove(e2) { decide(e2.clientX, e2.clientY); place(e2.clientX, e2.clientY); }
+    function onUp(e2) {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      decide(e2.clientX, e2.clientY);
+      if (box) box.remove();
+      if (vertical == null) return;                      // a click, not a drag
+      if (vertical) {
+        if (Math.abs(e2.clientY - startY) < 8) return;
+        const v1 = chart.scales.y.getValueForPixel(Math.min(startY, e2.clientY) - r0.top);
+        const v2 = chart.scales.y.getValueForPixel(Math.max(startY, e2.clientY) - r0.top);
+        onY(Math.min(v1, v2), Math.max(v1, v2));
+      } else {
+        if (Math.abs(e2.clientX - startX) < 8) return;
+        const x1 = chart.scales.x.getValueForPixel(Math.min(startX, e2.clientX) - r0.left);
+        const x2 = chart.scales.x.getValueForPixel(Math.max(startX, e2.clientX) - r0.left);
+        onX(Math.min(x1, x2), Math.max(x1, x2));
+      }
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    ev.preventDefault();
+  };
+  el.ondblclick = onReset;
+}
+
+// Zoom is applied to the live chart rather than by re-rendering the block: a
+// rebuild would destroy and recreate every canvas in that block just to crop one.
+function applyZoom(key) {
+  const chart = _charts[key], base = _zoomBase[key];
+  if (!chart || !base) return;
+  const z = _zoom[key] || {};
+  const x = chart.options.scales.x, y = chart.options.scales.y;
+  if (z.x) {
+    x.min = base.category ? Math.round(z.x[0]) : z.x[0];
+    x.max = base.category ? Math.round(z.x[1]) : z.x[1];
+    // The fixed Jun/Dec ticks are computed for the full range; inside a zoom they
+    // mostly fall outside it, which would leave the axis blank.
+    x.afterBuildTicks = undefined;
+  } else {
+    x.min = base.x[0]; x.max = base.x[1];
+    x.afterBuildTicks = base.ticks;
+  }
+  y.min = z.y ? z.y[0] : undefined;
+  y.max = z.y ? z.y[1] : undefined;
+  chart.update('none');
+}
+
 function build(key, canvasId, config) {
   _charts[key]?.destroy();
-  _charts[key] = new Chart(document.getElementById(canvasId), config);
+  const el = document.getElementById(canvasId);
+  const chart = new Chart(el, config);
+  _charts[key] = chart;
+  // Remember the unzoomed axis so a double-click has something to restore.
+  _zoomBase[key] = {
+    x: [config.options.scales.x.min, config.options.scales.x.max],
+    ticks: config.options.scales.x.afterBuildTicks,
+    category: config.options.scales.x.type !== 'linear',
+  };
+  attachBrush(el, chart,
+    (a, b) => { _zoom[key] = { ...(_zoom[key] || {}), x: [a, b] }; applyZoom(key); },
+    (a, b) => { _zoom[key] = { ...(_zoom[key] || {}), y: [a, b] }; applyZoom(key); },
+    () => { delete _zoom[key]; applyZoom(key); });
+  if (_zoom[key]) applyZoom(key);
 }
-function destroyChart(key) { _charts[key]?.destroy(); delete _charts[key]; }
+function destroyChart(key) { _charts[key]?.destroy(); delete _charts[key]; delete _zoomBase[key]; }
 function destroyCharts() {
   for (const c of Object.values(_charts)) c?.destroy();
-  _charts = {};
+  _charts = {}; _zoom = {}; _zoomBase = {};
 }
 
 // ─── helpers ────────────────────────────────────────────────

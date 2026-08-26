@@ -108,6 +108,16 @@
   border: 1px solid var(--bdr); border-radius: 8px; background: var(--w); cursor: pointer;
 }
 
+/* Grid and flex children default to min-width:auto, so a wide table pushes its
+   card and then the page instead of scrolling. This is the half that makes
+   .fr-tscroll actually work. */
+.fr-tcol, .fr-tcol > .card, .fr-hero > .card, .fr-secgrid > * { min-width: 0; }
+
+/* A table wider than its card scrolls inside it instead of pushing the page
+   out (CHART_ENGINE_REFERENCE 0.5). The cells are nowrap, so on a narrow screen
+   something has to give and it should not be the layout. */
+.fr-tscroll { overflow-x: auto; }
+
 /* Monthly returns table */
 .fr-monthly-table { width: 100%; }
 .fr-monthly-table th:first-child, .fr-monthly-table td:first-child { text-align: left; }

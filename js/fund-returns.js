@@ -34,16 +34,18 @@ export async function loadFundReturnsPage() {
 
   // The portfolio bar sits outside #fr-body, which is rebuilt on every switch:
   // the dashboard below is specific to one portfolio, the chooser is not.
+  // A dropdown rather than pills — the list is meant to grow, and pills stop
+  // scaling once there are more than a handful.
   root.innerHTML = `
     <div class="fr-pf-bar">
       <span class="fr-hero-label">Portfolio</span>
-      <div class="fr-toggle" id="fr-pf-toggle">${portfolios.map(p =>
-        `<button class="fr-tg" data-code="${esc(p.code)}">${esc(p.label)}</button>`).join('')}</div>
+      <select class="fr-sel fr-pf-select" id="fr-pf-select">${portfolios.map(p =>
+        `<option value="${esc(p.code)}">${esc(p.label)}</option>`).join('')}</select>
     </div>
     <div id="fr-body"></div>`;
 
-  root.querySelectorAll('#fr-pf-toggle .fr-tg').forEach(btn =>
-    btn.addEventListener('click', () => showPortfolio(btn.dataset.code)));
+  document.getElementById('fr-pf-select')
+    .addEventListener('change', e => showPortfolio(e.target.value));
 
   const start = portfolios.some(p => p.code === PORTFOLIO_DEFAULT) ? PORTFOLIO_DEFAULT : portfolios[0].code;
   await showPortfolio(start);
@@ -59,8 +61,10 @@ async function showPortfolio(code) {
   // call takes a ticket; whoever comes back holding a stale one steps aside.
   const req = ++_req;
   const body = document.getElementById('fr-body');
-  document.querySelectorAll('#fr-pf-toggle .fr-tg').forEach(b =>
-    b.classList.toggle('active', b.dataset.code === code));
+  // Keep the dropdown in step when the switch was not started by the user
+  // picking from it (first load, or a fallback to another portfolio).
+  const sel = document.getElementById('fr-pf-select');
+  if (sel && sel.value !== code) sel.value = code;
   body.innerHTML = '<div class="fr-loading">Loading…</div>';
 
   try {

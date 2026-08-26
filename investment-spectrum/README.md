@@ -77,3 +77,72 @@ enough to begin.
 | Date | State |
 |---|---|
 | Aug 13, 2026 | Branch `feat/investment-spectrum` created. Folder set up, awaiting reference material. Nothing built yet. |
+| Aug 14, 2026 | Built. A plane, not a line: `x` keeps the deck's spectrum, `y` becomes capital intensity. Draggable, persisted in `localStorage`, nearest-neighbour panel. Files: `js/spectrum-data.js`, `js/spectrum.js`, `css/spectrum.css`. |
+| Aug 26, 2026 | Measured layer added, and the branch caught up with `main`. |
+
+---
+
+## The measured layer
+
+The board's vertical axis was a judgment: someone decided where NVIDIA sits relative to Meta.
+**"Show what the filings say"** puts a second marker on every company, computed from its own annual
+report, and draws the gap between the two. That gap is the output — the board is a set of claims,
+and this is the first thing that can disagree with them.
+
+### How it is built
+
+| | |
+|---|---|
+| Source | SEC XBRL company concepts (`data.sec.gov`) — 10-K, or 20-F for TSMC, Spotify, Grupo Aeroportuario and Tiendas 3B |
+| Puller | `scripts/spectrum/fetch-fundamentals.ps1` → writes `js/spectrum-measured-data.js` (generated; do not hand-edit) |
+| Formula | `js/spectrum-measured.js` |
+
+Every figure is as-filed, and each one records the XBRL tag, the period end and the form it came
+from, so any marker traces back to a filing. Ratios only ever divide two numbers from the same
+statement, so TSMC in TWD and Tiendas 3B in MXN stay comparable to Amazon in USD.
+
+Capital intensity is read as **how much capital a dollar of revenue ties up, in whatever form the
+business ties it up**, blended from three filed ratios:
+
+| Term | Weight | What it catches |
+|---|---|---|
+| Capex / revenue | 40% | Capital being consumed now — the flow |
+| Productive assets / revenue | 35% | Property, leased space and inventory — the stock |
+| Equity / revenue | 25% | Capital the business must hold to operate — **the rule the axis was missing for lenders** |
+
+That third term is the answer to the open question from Aug 14: SoFi and Interactive Brokers have
+almost no fixed assets and are not asset-light in any sense that matters. Each term is scaled on a
+log axis between round anchors, because capital intensity spans two orders of magnitude across this
+board. Where a term is not tagged the score uses the rest and the panel says which one is missing;
+below two terms no marker is drawn at all.
+
+### Why the horizontal axis is not measured
+
+It was tried and abandoned. The x axis asks how a company creates value, and no filed ratio says
+that without collapsing into capital intensity: Meta's property and equipment now runs near a full
+year of revenue, so any asset-based measure of x pushes the purest advertising business on the board
+past a hard-discount grocer. Gross margin and R&D intensity do bear on the question, so they are
+shown in the panel as evidence — not folded into a coordinate.
+
+### What it found
+
+| | Board | Filings | |
+|---|---|---|---|
+| META | 64 | 88 | The AI build-out is heavier than the board admits — capex is 35% of revenue |
+| TPL | 15 | 66 | Flagged: the equity term punishes a small revenue base, not real capital consumption |
+| SOFI | 43 | 65 | The funding term doing its job |
+| IBKR | 13 | 43 | Same |
+| NVDA | 20 | 45 | Heavier than judged, even fabless |
+| AMZN | 94 | 74 | Not the heaviest company on the board — TSMC is |
+| PAC | 92 | 45 | Flagged: under IFRIC 12 the runways are an intangible, so they never reach the property line |
+
+Two of those are the measure being wrong rather than the board being wrong, and both carry a
+`caveat` in `js/spectrum-data.js` that the panel prints under the score.
+
+### Known limits
+
+- Four companies (PAC, TPL, LYFT, IBKR) do not tag capital expenditure, so their marker rests on two
+  terms and is drawn dotted.
+- TSMC's most recent XBRL annual filing is FY2024; everyone else is FY2025 or later.
+- The anchors and the 40/35/25 weights are choices, not findings. They are in one place in
+  `js/spectrum-measured.js` and are meant to be argued with.

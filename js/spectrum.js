@@ -13,9 +13,33 @@
 // has to change (see loadPositions / savePositions).
 
 import { SPECTRUM_ZONES, SPECTRUM_COMPANIES, SPECTRUM_AXES } from './spectrum-data.js';
+import { measureCapital, MEASURED_NOTE } from './spectrum-measured.js';
 
 var SPEC_STORE = 'summit.spectrum.positions.v1';
-var _spec = null; // { pos: {TICKER: {x,y}}, sel: ticker|null, dirty: bool }
+var _spec = null; // { pos: {TICKER: {x,y}}, sel: ticker|null, measured: bool }
+
+/* ─── The measured layer ───────────────────────────────────────────────────
+   Computed once at load from filed figures (see spectrum-measured.js) and
+   cached, because nothing on this page changes it — dragging moves the
+   judgment, never the accounts.                                             */
+
+var _measured = null;
+
+// A score of 0 or 100 is a real answer — Spotify really is at the light end of
+// the scale — but a marker centred on the edge is half outside the plane. Nudge
+// the drawing, never the number.
+function ghostTop(y) { return clamp(y, 2.5, 97.5); }
+
+function measuredOf(ticker) {
+  if (!_measured) {
+    _measured = {};
+    for (var i = 0; i < SPECTRUM_COMPANIES.length; i++) {
+      var t = SPECTRUM_COMPANIES[i].ticker;
+      _measured[t] = measureCapital(t);
+    }
+  }
+  return _measured[ticker] || null;
+}
 
 function esc(s) {
   if (s === null || s === undefined) return '';
@@ -134,6 +158,24 @@ function planeHtml() {
   // Neighbour links, drawn under the nodes when one is selected
   h += '<svg class="spec-links" id="spec-links" aria-hidden="true"></svg>';
 
+  // Ghosts: the same company placed by its accounts instead of by us. Only the
+  // height differs — the measured layer has nothing to say about the x axis —
+  // so each ghost sits directly above or below its node.
+  h += '<div class="spec-ghosts" id="spec-ghosts">';
+  for (var g = 0; g < SPECTRUM_COMPANIES.length; g++) {
+    var gc = SPECTRUM_COMPANIES[g];
+    var gm = measuredOf(gc.ticker);
+    if (!gm) continue;
+    var gp = currentPos(gc.ticker);
+    h += '<div class="spec-ghost" data-ticker="' + esc(gc.ticker) + '"' +
+         (gm.partial ? ' data-partial="1"' : '') +
+         ' style="left:' + gp.x + '%;top:' + ghostTop(gm.y) + '%"' +
+         ' title="' + esc(gc.ticker) + ' — measured from filings">' +
+         '<span class="spec-ghost-tk">' + esc(gc.ticker) + '</span>' +
+         '</div>';
+  }
+  h += '</div>';
+
   // Nodes
   h += '<div class="spec-nodes" id="spec-nodes">';
   for (var j = 0; j < SPECTRUM_COMPANIES.length; j++) {
@@ -161,12 +203,31 @@ function drawLinks() {
   var svg = document.getElementById('spec-links');
   if (!svg) return;
 
-  if (!_spec.sel) { svg.innerHTML = ''; return; }
+  var s = '';
+
+  // Judgment-to-accounts connectors first, so they sit under the neighbour
+  // links. Drawn for every company at once: the pattern of which way the board
+  // leans is the point, not any single gap.
+  if (_spec.measured) {
+    for (var m = 0; m < SPECTRUM_COMPANIES.length; m++) {
+      var mt = SPECTRUM_COMPANIES[m].ticker;
+      var mm = measuredOf(mt);
+      if (!mm) continue;
+      var mp = currentPos(mt);
+      if (Math.abs(mm.y - mp.y) < 0.6) continue; // agreement needs no line
+      var sel = _spec.sel === mt;
+      s += '<line class="spec-gap" x1="' + mp.x + '%" y1="' + mp.y + '%"' +
+           ' x2="' + mp.x + '%" y2="' + ghostTop(mm.y) + '%"' +
+           ' stroke-width="' + (sel ? 2.4 : 1.4) + '"' +
+           ' opacity="' + (sel ? 0.9 : 0.42) + '"/>';
+    }
+  }
+
+  if (!_spec.sel) { svg.innerHTML = s; return; }
 
   var me = currentPos(_spec.sel);
   var hue = zoneOf(me.x).hue;
   var near = neighbours(_spec.sel, 3);
-  var s = '';
   for (var i = 0; i < near.length; i++) {
     var p = currentPos(near[i].co.ticker);
     // nearest neighbour draws strongest — the ranking should be visible, not
@@ -199,6 +260,8 @@ function html() {
   h += '<div class="spec-bar">';
   h += '<div class="spec-bar-l">';
   h += '<button class="spec-btn" id="spec-reset">Reset to default</button>';
+  h += '<button class="spec-btn spec-btn--toggle" id="spec-measured" aria-pressed="false">' +
+       'Show what the filings say</button>';
   h += '<span class="spec-status" id="spec-status"></span>';
   h += '</div>';
   h += '<div class="spec-bar-r"><span class="spec-scope">Saved on this device only</span></div>';
@@ -254,8 +317,8 @@ function html() {
 
   // Footnote
   h += '<p class="spec-foot">The default board is the team\'s placement of Aug 14, 2026, which ' +
-       'started from the Investment Spectrum deck but no longer matches it everywhere. Capital ' +
-       'intensity is a judgment call today — ' + esc(ax.y.note) + '</p>';
+       'started from the Investment Spectrum deck but no longer matches it everywhere. ' +
+       esc(MEASURED_NOTE) + '</p>';
 
   h += '</div>';
   return h;
@@ -326,6 +389,8 @@ function renderPanel() {
 
   h += '</div>'; // grid
 
+  h += measuredHtml(c, p);
+
   if (c.tension) {
     h += '<div class="spec-tension">';
     h += '<span class="spec-tension-lbl">Where this placement is contested</span>';
@@ -336,6 +401,82 @@ function renderPanel() {
   h += '</div>';
   el.innerHTML = h;
   wireLogos(el);
+}
+
+/* ─── Render: the measured block inside the panel ──────────────────────────
+   Always shown, whether or not the ghosts are on the board — the toggle
+   controls the picture, this is where the number is accounted for. Every term
+   is listed with the ratio behind it, so a reader can disagree with the
+   weighting rather than with a black box.                                    */
+
+function measuredHtml(c, p) {
+  var m = measuredOf(c.ticker);
+  if (!m) {
+    return '<div class="spec-meas spec-meas--none">' +
+           '<span class="spec-meas-lbl">What the filings say</span>' +
+           '<p class="spec-meas-verdict">Not enough of this company\'s annual filing is tagged ' +
+           'to place it. The board keeps the judgment call.</p></div>';
+  }
+
+  var gap = m.y - p.y;
+  var dir = gap > 0 ? 'heavier' : 'lighter';
+  var verdict;
+  if (Math.abs(gap) < 6) {
+    verdict = 'The accounts agree with the board — ' + m.y.toFixed(0) + ' against ' +
+              p.y.toFixed(0) + '.';
+  } else {
+    verdict = 'The accounts put it at ' + m.y.toFixed(0) + ', <strong>' +
+              Math.abs(gap).toFixed(0) + ' ' + dir + '</strong> than where it sits on the board (' +
+              p.y.toFixed(0) + ').';
+  }
+
+  var h = '<div class="spec-meas">';
+  h += '<div class="spec-meas-hd">';
+  h += '<span class="spec-meas-lbl">What the filings say</span>';
+  h += '<span class="spec-meas-src">' + esc(m.form) + ' · FY to ' + esc(m.period) +
+       ' · ' + esc(m.currency) + '</span>';
+  h += '</div>';
+
+  h += '<p class="spec-meas-verdict">' + verdict + '</p>';
+
+  h += '<ul class="spec-meas-terms">';
+  for (var i = 0; i < m.terms.length; i++) {
+    var t = m.terms[i];
+    h += '<li class="spec-meas-term" title="' + esc(t.hint) + '">' +
+         '<span class="spec-meas-tlbl">' + esc(t.label) + '</span>' +
+         '<span class="spec-meas-tval">' + esc(t.display) + '</span>' +
+         '<span class="spec-meas-tbar"><i style="width:' + t.score.toFixed(1) + '%"></i></span>' +
+         '<span class="spec-meas-twt">' + Math.round(t.weight * 100) + '%</span>' +
+         '</li>';
+  }
+  h += '</ul>';
+
+  if (m.missing.length) {
+    var names = m.missing.map(function (x) { return x.label; }).join(' and ');
+    h += '<p class="spec-meas-gapnote">' + esc(names) +
+         (m.missing.length > 1 ? ' are' : ' is') +
+         ' not tagged in the filing, so the score rests on the other terms.</p>';
+  }
+
+  if (c.caveat) {
+    h += '<p class="spec-meas-caveat">' + esc(c.caveat) + '</p>';
+  }
+
+  var ev = m.evidence.filter(function (e) { return e.display; });
+  if (ev.length) {
+    h += '<div class="spec-meas-ev">';
+    h += '<span class="spec-meas-evlbl">Evidence on the horizontal axis, not scored</span>';
+    h += '<ul class="spec-meas-evlist">';
+    for (var j = 0; j < ev.length; j++) {
+      h += '<li title="' + esc(ev[j].hint) + '"><span>' + esc(ev[j].label) + '</span>' +
+           '<b>' + esc(ev[j].display) + '</b></li>';
+    }
+    h += '</ul>';
+    h += '</div>';
+  }
+
+  h += '</div>';
+  return h;
 }
 
 function renderStatus() {
@@ -363,6 +504,17 @@ function syncNodes() {
     nodes[i].classList.toggle('is-nb', false);
     nodes[i].classList.toggle('is-moved', isMoved(tk));
   }
+
+  // Ghosts keep the node's x, so dragging a company sideways carries its
+  // measured marker along and only the vertical gap stays meaningful.
+  var ghosts = document.querySelectorAll('#spec-ghosts .spec-ghost');
+  for (var g = 0; g < ghosts.length; g++) {
+    var gt = ghosts[g].dataset.ticker;
+    ghosts[g].style.left = currentPos(gt).x + '%';
+    ghosts[g].classList.toggle('is-sel', _spec.sel === gt);
+  }
+  var layer = document.getElementById('spec-ghosts');
+  if (layer) layer.classList.toggle('is-on', !!_spec.measured);
 
   // mark the three the panel is talking about
   if (_spec.sel) {
@@ -472,6 +624,17 @@ function wire(root) {
       renderPanel();
       return;
     }
+
+    var mBtn = e.target.closest('#spec-measured');
+    if (mBtn) {
+      _spec.measured = !_spec.measured;
+      mBtn.setAttribute('aria-pressed', _spec.measured ? 'true' : 'false');
+      mBtn.classList.toggle('is-on', _spec.measured);
+      mBtn.textContent = _spec.measured ? 'Hide what the filings say' : 'Show what the filings say';
+      syncNodes();
+      renderPanel();
+      return;
+    }
   });
 
   // Hovering a zone band lights up its criteria column, and vice versa.
@@ -508,7 +671,7 @@ export function loadSpectrumPage() {
   var root = document.getElementById('spectrum-root');
   if (!root) return;
 
-  _spec = { pos: loadPositions(), sel: null };
+  _spec = { pos: loadPositions(), sel: null, measured: false };
 
   root.innerHTML = html();
   wireLogos(root);

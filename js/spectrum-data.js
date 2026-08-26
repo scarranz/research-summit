@@ -70,7 +70,11 @@ export const SPECTRUM_ZONES = [
 
    `profile` is the portal Overview slug where one exists, so a node can link
    through to real work. null = we do not cover it in the portal today.
-   `domain` is only the logo fallback when the ticker lookup misses.          */
+   `domain` is only the logo fallback when the ticker lookup misses.
+
+   `caveat` is set where the measured layer is known to misread the company —
+   not because the arithmetic is wrong but because of how the accounts are
+   drawn. Without it a reader would take the ghost at face value.             */
 
 export const SPECTRUM_COMPANIES = [
   {
@@ -149,7 +153,8 @@ export const SPECTRUM_COMPANIES = [
     ticker: 'PAC', name: 'Grupo Aeroportuario del Pacífico', x: 62, y: 92, profile: null, domain: 'aeropuertosgap.com.mx',
     why: 'A concession over specific runways in specific cities. Geography is not a feature of the model — it is the model.',
     capital: 'The heaviest on the board: terminals and runways, built to a committed investment programme, with tariffs regulated against it.',
-    tension: null
+    tension: null,
+    caveat: 'Read the measured marker with care. Under IFRIC 12 an airport concession is an intangible right, not property — so the terminals and runways never reach the property line the score is built on — and PAC does not tag capital expenditure in its 20-F at all. The accounts make the heaviest business on the board look mid-pack; the judgment placement is the better one here.'
   },
   {
     ticker: 'TBBB', name: 'BBB Foods (Tiendas 3B)', x: 80, y: 62, profile: 'bbb', domain: 'tiendas3b.com',
@@ -161,7 +166,8 @@ export const SPECTRUM_COMPANIES = [
     ticker: 'TPL', name: 'Texas Pacific Land', x: 93, y: 15, profile: null, domain: 'texaspacific.com',
     why: 'Land ownership in its purest form: royalties on production it does not carry out, over acreage it has held since the railroad.',
     capital: 'A royalty, not an operator. Almost no capital consumed — the operators drill, TPL collects.',
-    tension: 'The single best argument for the second axis. Furthest right on the board and almost the lightest, at the same time. On a one-line spectrum it would sit next to PAC, which is wrong in every way that matters.'
+    tension: 'The single best argument for the second axis. Furthest right on the board and almost the lightest, at the same time. On a one-line spectrum it would sit next to PAC, which is wrong in every way that matters.',
+    caveat: 'The measured marker drops TPL to the middle of the board, and the reason is the equity term: a royalty on land held since the railroad throws off little revenue against the book it sits on, so equity over revenue reads like capital intensity when it is really an unusually small denominator. The capital TPL actually consumes each year is close to nothing.'
   }
 ];
 
@@ -177,6 +183,6 @@ export const SPECTRUM_AXES = {
     label: 'Capital intensity',
     top: 'Asset-light',
     bottom: 'Asset-heavy',
-    note: 'the measured version (capex/revenue, PP&E/assets) is the next step, and will not cover the whole board — GOOGL, TSM, DIS, PAC, TPL and IBKR have no Summit model.'
+    note: 'the positions on the board are ours; "Show what the filings say" puts each company where its own annual report places it.'
   }
 };

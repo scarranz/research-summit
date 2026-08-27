@@ -1522,6 +1522,70 @@ export const LOCAL_INVESTOR_LETTERS = [
   { investor_key: 'loeb', year: 2025, title: 'Q3 2025 Investor Letter', category: 'investor_message', date: '2025-11-03', type: 'link', url: 'https://assets-malibu-life.s3.us-west-2.amazonaws.com/system/uploads/fae/file/asset/1673/Third_Point_Q3_2025_Investor_Letter_TPIL.pdf', sort_order: 4 },
   { investor_key: 'loeb', year: 2024, title: '2024 Annual Report and Audited Financial Statements', category: 'annual_letter', date: '2025-04-01', type: 'link', url: 'https://assets.thirdpointlimited.com/f/166217/x/1453295197/third-point-investors-limited-2024-annual-report-and-audited-financial-statements.pdf', sort_order: 5 },
   { investor_key: 'loeb', year: 2023, title: '2023 Annual Report and Audited Financial Statements', category: 'annual_letter', date: '2024-04-01', type: 'link', url: 'https://assets.thirdpointlimited.com/f/166217/x/2cd31da5fc/tpil-annual-afs-31-12-2023-final.pdf', sort_order: 6 },
+
+  // Gavin M. Abrams / Abrams Bison Investments -- not a tracked
+  // Superinvestor card (no AUM/13F/return series on file, letters
+  // only), added to the Resources tab via RES_ONLY_FUNDS in
+  // hedge-funds.js. Source: PDFs supplied directly by the team, not a
+  // public URL -- `url` is the Supabase Storage path these need to be
+  // uploaded to (bucket 'company-files') before the real Supabase row
+  // works; until then this local-seed entry is title/date-only.
+  { investor_key: 'abrams', year: 2008, title: '2008 Q4 Shareholder Letter', category: 'annual_letter', date: '2009-02-04', type: 'file', url: 'investors/abrams/abrams-bison-2008-q4-shareholder-letter.pdf', sort_order: 1 },
+  { investor_key: 'abrams', year: 2009, title: '2009 Q4 Shareholder Letter', category: 'annual_letter', date: '2010-01-20', type: 'file', url: 'investors/abrams/abrams-bison-2009-q4-shareholder-letter.pdf', sort_order: 2 },
+
+  // Bristlemoon Capital / Bristlemoon Global Fund -- same resources-only
+  // treatment as Abrams above (RES_ONLY_FUNDS, no Superinvestor card).
+  // No individual manager name is given anywhere in the report, only
+  // the firm ("Kind regards, Bristlemoon Capital"), so the fund name
+  // is used as both name and fund rather than guessing a person. Date
+  // is the quarter-end (31 Mar 2026) printed on the report -- no
+  // separate publish date is stated in the document.
+  { investor_key: 'bristlemoon', year: 2026, title: 'Q1 2026 Quarterly Report', category: 'investor_message', date: '2026-03-31', type: 'file', url: 'investors/bristlemoon/bristlemoon-global-fund-2026-q1-quarterly-report.pdf', sort_order: 1 },
+
+  // Howard Marks / Oaktree Capital Management -- resources-only, same
+  // as Abrams/Bristlemoon above (RES_ONLY_FUNDS, no Superinvestor
+  // card). Every memo from 2021 through the most recent one on file,
+  // sourced directly from oaktreecapital.com/insights/memos (Oaktree's
+  // own archive -- verified 2026-08-27). Titles/dates spot-checked
+  // against the individual memo pages for the newest (Apr 2026),
+  // oldest (Jan 2021), and "Sea Change" (Dec 2022, the best-known one)
+  // -- all three matched exactly. Categorized as investor_message
+  // throughout: these are periodic essays on irregular schedule, not
+  // fiscal-year shareholder/annual reports.
+  { investor_key: 'marks', year: 2026, title: "What's Going on in Private Credit?", category: 'investor_message', date: '2026-04-09', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/whats-going-on-in-private-credit', sort_order: 1 },
+  { investor_key: 'marks', year: 2026, title: 'AI Hurtles Ahead', category: 'investor_message', date: '2026-02-26', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/ai-hurtles-ahead', sort_order: 2 },
+  { investor_key: 'marks', year: 2025, title: 'Is It a Bubble?', category: 'investor_message', date: '2025-12-09', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/is-it-a-bubble', sort_order: 3 },
+  { investor_key: 'marks', year: 2025, title: 'Cockroaches in the Coal Mine', category: 'investor_message', date: '2025-11-06', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/cockroaches-in-the-coal-mine', sort_order: 4 },
+  { investor_key: 'marks', year: 2025, title: 'A Look Under the Hood', category: 'investor_message', date: '2025-10-28', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/a-look-under-the-hood', sort_order: 5 },
+  { investor_key: 'marks', year: 2025, title: 'The Best of . . .', category: 'investor_message', date: '2025-10-12', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/the-best-of', sort_order: 6 },
+  { investor_key: 'marks', year: 2025, title: 'The Calculus of Value', category: 'investor_message', date: '2025-08-14', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/the-calculus-of-value', sort_order: 7 },
+  { investor_key: 'marks', year: 2025, title: 'More on Repealing the Laws of Economics', category: 'investor_message', date: '2025-06-18', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/more-on-repealing-the-laws-of-economics', sort_order: 8 },
+  { investor_key: 'marks', year: 2025, title: 'Nobody Knows (Yet Again)', category: 'investor_message', date: '2025-04-09', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/nobody-knows-yet-again', sort_order: 9 },
+  { investor_key: 'marks', year: 2025, title: 'Gimme Credit', category: 'investor_message', date: '2025-03-06', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/gimme-credit', sort_order: 10 },
+  { investor_key: 'marks', year: 2025, title: 'On Bubble Watch', category: 'investor_message', date: '2025-01-07', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/on-bubble-watch', sort_order: 11 },
+  { investor_key: 'marks', year: 2024, title: 'Ruminating on Asset Allocation', category: 'investor_message', date: '2024-10-22', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/ruminating-on-asset-allocation', sort_order: 12 },
+  { investor_key: 'marks', year: 2024, title: 'Shall We Repeal the Laws of Economics?', category: 'investor_message', date: '2024-09-19', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/shall-we-repeal-the-laws-of-economics', sort_order: 13 },
+  { investor_key: 'marks', year: 2024, title: 'Mr. Market Miscalculates', category: 'investor_message', date: '2024-08-22', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/mr-market-miscalculates', sort_order: 14 },
+  { investor_key: 'marks', year: 2024, title: 'The Folly of Certainty', category: 'investor_message', date: '2024-07-17', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/the-folly-of-certainty', sort_order: 15 },
+  { investor_key: 'marks', year: 2024, title: 'The Impact of Debt', category: 'investor_message', date: '2024-05-08', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/the-impact-of-debt', sort_order: 16 },
+  { investor_key: 'marks', year: 2024, title: 'The Indispensability of Risk', category: 'investor_message', date: '2024-04-17', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/the-indispensability-of-risk', sort_order: 17 },
+  { investor_key: 'marks', year: 2024, title: 'Easy Money', category: 'investor_message', date: '2024-01-09', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/easy-money', sort_order: 18 },
+  { investor_key: 'marks', year: 2023, title: 'Further Thoughts on Sea Change', category: 'investor_message', date: '2023-10-11', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/further-thoughts-on-sea-change', sort_order: 19 },
+  { investor_key: 'marks', year: 2023, title: 'Fewer Losers, or More Winners?', category: 'investor_message', date: '2023-09-12', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/fewer-losers-or-more-winners', sort_order: 20 },
+  { investor_key: 'marks', year: 2023, title: 'Taking the Temperature', category: 'investor_message', date: '2023-07-10', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/taking-the-temperature', sort_order: 21 },
+  { investor_key: 'marks', year: 2023, title: 'Lessons from Silicon Valley Bank', category: 'investor_message', date: '2023-04-17', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/lessons-from-silicon-valley-bank', sort_order: 22 },
+  { investor_key: 'marks', year: 2022, title: 'Sea Change', category: 'investor_message', date: '2022-12-13', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/sea-change', sort_order: 23 },
+  { investor_key: 'marks', year: 2022, title: 'What Really Matters?', category: 'investor_message', date: '2022-11-22', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/what-really-matters', sort_order: 24 },
+  { investor_key: 'marks', year: 2022, title: 'The Illusion of Knowledge', category: 'investor_message', date: '2022-09-08', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/the-illusion-of-knowledge', sort_order: 25 },
+  { investor_key: 'marks', year: 2022, title: 'I Beg to Differ', category: 'investor_message', date: '2022-07-26', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/i-beg-to-differ', sort_order: 26 },
+  { investor_key: 'marks', year: 2022, title: 'Conversation at Panmure House', category: 'investor_message', date: '2022-06-23', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/conversation-at-panmure-house', sort_order: 27 },
+  { investor_key: 'marks', year: 2022, title: 'Bull Market Rhymes', category: 'investor_message', date: '2022-05-26', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/bull-market-rhymes', sort_order: 28 },
+  { investor_key: 'marks', year: 2022, title: 'The Pendulum in International Affairs', category: 'investor_message', date: '2022-03-23', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/the-pendulum-in-international-affairs', sort_order: 29 },
+  { investor_key: 'marks', year: 2022, title: 'Selling Out', category: 'investor_message', date: '2022-01-13', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/selling-out', sort_order: 30 },
+  { investor_key: 'marks', year: 2021, title: 'The Winds of Change', category: 'investor_message', date: '2021-11-23', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/the-winds-of-change', sort_order: 31 },
+  { investor_key: 'marks', year: 2021, title: 'Thinking About Macro', category: 'investor_message', date: '2021-07-29', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/thinking-about-macro', sort_order: 32 },
+  { investor_key: 'marks', year: 2021, title: '2020 in Review', category: 'investor_message', date: '2021-03-04', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/2020-in-review', sort_order: 33 },
+  { investor_key: 'marks', year: 2021, title: 'Something of Value', category: 'investor_message', date: '2021-01-11', type: 'link', url: 'https://www.oaktreecapital.com/insights/memo/something-of-value', sort_order: 34 },
 ];
 
 // Investors confirmed (via public-web research, 2026-08-21) to have no

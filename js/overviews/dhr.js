@@ -30,6 +30,8 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 import { dhrBottomLineHtml, dhrBottomLineInit } from './dhr-bottomline.js';
+import { dhrTopLineGeneralHtml, dhrTopLineSegmentsHtml, dhrTopLineOtherHtml, dhrTopLineCustomersHtml,
+         dhrTopLineInit } from './dhr-topline.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -594,40 +596,10 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="tloth">Other</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="tlcus">Customers</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="tlgen">'+ddPending('Revenue and core growth over time',
-        'Reported vs core growth, with the acquisition and FX bridge separated. Danaher prints the bridge in a reconciling sign convention &mdash; normalise on ingest (see the note at the top of this file).',
-        ['Company growth series Q1&#39;25 &rarr; Q2&#39;26: total, acquisitions, FX, core, and core ex-respiratory',
-         'Segment core growth matrix, actual and guided, through FY26E',
-         'Segment revenue in dollars for Q2&#39;25, Q2&#39;26, 1H25 and 1H26',
-         'FY2025 and FY2024 revenue totals'],
-        ['Quarterly revenue in dollars before Q2&#39;25',
-         'Any revenue history before FY2024 &mdash; the SEC XBRL puller closes this',
-         'The Q2&#39;26 10-Q for the segment note']) +'</div>'+
-      '<div class="ovt-subpane" data-ovst="tlseg" hidden>'+ddPending('Segment drivers',
-        'Bioprocessing, Diagnostics and Life Sciences each move on a different clock.',
-        ['Bioprocessing: consumables, equipment and order growth by category; the Q2&#39;26 resin push-out quantified ($50&ndash;60M, ~500bps, >$100M into 2027)',
-         'Respiratory testing revenue by quarter, FY25 actual through FY26E',
-         'Diagnostics: Cepheid, Beckman, Leica and Radiometer growth by line',
-         'Life Sciences: Pall ~+10%, instruments, consumables, academic'],
-        ['Bioprocessing revenue base &mdash; the $4&ndash;5B figure in the handoff is a back-solve from two spoken numbers, NOT a disclosure. Source it or strike it.',
-         'GeneXpert placements, cartridge volumes, utilisation &mdash; none disclosed',
-         'Any order or backlog figure &mdash; Danaher publishes none']) +'</div>'+
-      '<div class="ovt-subpane" data-ovst="tloth" hidden>'+ddPending('Other cuts',
-        'Geography, end market and revenue type.',
-        ['FY2025 sales by geographic destination, group and by segment, in percent',
-         'China ~11% of FY2025 sales; ~59% of sales outside the US',
-         'End-market state for Q2&#39;26: large pharma, emerging biotech, academic (&lt;5% of revenue), clinical, applied, China',
-         'Recurring vs non-recurring mix, group and by segment'],
-        ['Revenue dollars by region &mdash; not disclosed at all',
-         'China revenue in dollars, and China by segment',
-         'Recurring revenue in dollars, and a growth rate for either half']) +'</div>'+
-      '<div class="ovt-subpane" data-ovst="tlcus" hidden>'+ddPending('Customers',
-        '<b>Danaher does not name customers and does not disclose customer concentration.</b> The FY2025 10-K Item 1 has no "Major Customers" heading. Any named top-customer list for Danaher is inference, not disclosure &mdash; it must not go to committee as fact.',
-        ['Disclosed customer TYPES per business line, from the 10-K',
-         'Route to market: direct sales force plus independent distributors, by segment',
-         'Revealed concentration &mdash; the Q2&#39;26 push-out shows "a few" large customers moving ~500bps of a segment&#39;s growth',
-         'Named counterparties that appear in the sources (AstraZeneca, CHOP/Penn, NHLS Sebokeng) &mdash; none of them a disclosed revenue relationship'],
-        ['Whether the FY2025 10-K still carries the no-customer-above-10% language. Only FY2019 wording was verified, from a search snippet &mdash; six years stale.']) +'</div>'+
+      '<div class="ovt-subpane" data-ovst="tlgen">'+dhrTopLineGeneralHtml()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="tlseg" hidden>'+dhrTopLineSegmentsHtml()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="tloth" hidden>'+dhrTopLineOtherHtml()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="tlcus" hidden>'+dhrTopLineCustomersHtml()+'</div>'+
     '</div>';
 
   h+='<div class="dd-pane" data-dd="bottomline" hidden>'+
@@ -817,13 +789,26 @@ function init(c){
     var md=root.querySelector('#dhrModalBack'); if(md && md.parentNode!==detail) detail.appendChild(md);
   }
 }
-// Bottom Line ▸ General builds its charts the first time the pane is actually on screen —
-// Chart.js measures a canvas with a null offsetParent as zero and never recovers.
+// Every built pane wires itself the first time it is actually on screen — Chart.js measures a
+// canvas with a null offsetParent as zero and never recovers.
+function ensurePane(root, sel, init){
+  var pane=root.querySelector(sel);
+  if(!pane || pane.hidden || pane._dhrWired) return;
+  pane._dhrWired=true;
+  init(pane);
+}
+var DD='.ov-dhr-dd .dd-pane';
 function ensureBottomLine(root){
-  var pane=root.querySelector('.ov-dhr-dd .dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="blgen"]');
-  if(!pane || pane.hidden || pane._blWired) return;
-  pane._blWired=true;
-  dhrBottomLineInit(pane);
+  ensurePane(root, DD+'[data-dd="bottomline"] .ovt-subpane[data-ovst="blgen"]', dhrBottomLineInit);
+}
+// Top Line is four separate sub-panes, each with its own picker and its own charts.
+var TL_SUB={ tlgen:'general', tlseg:'segments', tloth:'other', tlcus:'customers' };
+function ensureTopLine(root, key){
+  var keys = key ? [key] : Object.keys(TL_SUB);
+  keys.forEach(function(k){
+    if(!TL_SUB[k]) return;
+    ensurePane(root, DD+'[data-dd="topline"] .ovt-subpane[data-ovst="'+k+'"]', function(p){ dhrTopLineInit(p, TL_SUB[k]); });
+  });
 }
 function wireDD(root){
   root.querySelectorAll('.ov-dhr-dd .dd-tab').forEach(function(btn){ btn.onclick=function(){
@@ -832,6 +817,7 @@ function wireDD(root){
     root.querySelectorAll('.ov-dhr-dd .dd-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-dd')!==key); });
     if(key==='valuation') requestAnimationFrame(function(){ dScRenderAll(root); });
     if(key==='bottomline') requestAnimationFrame(function(){ ensureBottomLine(root); });
+    if(key==='topline') requestAnimationFrame(function(){ ensureTopLine(root); });
   }; });
   // Sub-tabs, pane-scoped so panes never collide.
   root.querySelectorAll('.ov-dhr-dd .dd-pane').forEach(function(pane){
@@ -842,6 +828,7 @@ function wireDD(root){
       pane.querySelectorAll(':scope > .ovt-subpane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovst')!==key); });
       if(key==='valpeers') requestAnimationFrame(function(){ dScRenderAll(root); });
       if(key==='blgen') requestAnimationFrame(function(){ ensureBottomLine(root); });
+      if(TL_SUB[key]) requestAnimationFrame(function(){ ensureTopLine(root, key); });
     }; });
   });
 }
@@ -849,6 +836,8 @@ function deepDiveInit(c){
   var root=document.getElementById('co-detailview'); if(!root) return;
   wireDD(root);
   wireModal(root);
+  // Top Line is the DEFAULT pane, so its General sub-pane is already on screen at mount.
+  requestAnimationFrame(function(){ ensureTopLine(root, 'tlgen'); });
   wireScatters(root);   // the Peers pane carries the same map as the Overview
   if(!root._dhrCollapWired){ root._dhrCollapWired=true;
     root.addEventListener('click', function(e){ var hd=e.target.closest?e.target.closest('.rs-collap-h'):null; if(!hd||!root.contains(hd)) return;

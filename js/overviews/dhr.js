@@ -30,8 +30,11 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 import { dhrBottomLineHtml, dhrBottomLineInit } from './dhr-bottomline.js';
-import { dhrTopLineGeneralHtml, dhrTopLineSegmentsHtml, dhrTopLineOtherHtml, dhrTopLineCustomersHtml,
-         dhrTopLineInit } from './dhr-topline.js';
+// Top Line is the shared segments engine, not a bespoke pane: js/segments.js renders all four
+// sub-tabs from js/segments-data/dhr.js (which points at js/results-data/dhr.js for the series).
+import { segmentsHtml, initSegments, segmentsOverviewHtml, initSegmentsOverview,
+         segmentsOtherHtml, initSegmentsOther,
+         segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -596,10 +599,10 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="tloth">Other</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="tlcus">Customers</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="tlgen">'+dhrTopLineGeneralHtml()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="tlseg" hidden>'+dhrTopLineSegmentsHtml()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="tloth" hidden>'+dhrTopLineOtherHtml()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="tlcus" hidden>'+dhrTopLineCustomersHtml()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="tlgen">'+segmentsOverviewHtml('DHR')+'</div>'+
+      '<div class="ovt-subpane" data-ovst="tlseg" hidden>'+segmentsHtml('DHR')+'</div>'+
+      '<div class="ovt-subpane" data-ovst="tloth" hidden>'+segmentsOtherHtml('DHR')+'</div>'+
+      '<div class="ovt-subpane" data-ovst="tlcus" hidden>'+segmentsCustomersHtml('DHR')+'</div>'+
     '</div>';
 
   h+='<div class="dd-pane" data-dd="bottomline" hidden>'+
@@ -801,14 +804,13 @@ var DD='.ov-dhr-dd .dd-pane';
 function ensureBottomLine(root){
   ensurePane(root, DD+'[data-dd="bottomline"] .ovt-subpane[data-ovst="blgen"]', dhrBottomLineInit);
 }
-// Top Line is four separate sub-panes, each with its own picker and its own charts.
-var TL_SUB={ tlgen:'general', tlseg:'segments', tloth:'other', tlcus:'customers' };
+// Top Line's four sub-panes are the shared segments engine. Each init is scoped to the DD root
+// and is re-run on every show — segments.js re-renders its own wrapper on control changes, so it
+// must not be treated as a one-shot wiring the way the bespoke panes are.
+var TL_SUB={ tlgen:initSegmentsOverview, tlseg:initSegments, tloth:initSegmentsOther, tlcus:initSegmentsCustomers };
 function ensureTopLine(root, key){
-  var keys = key ? [key] : Object.keys(TL_SUB);
-  keys.forEach(function(k){
-    if(!TL_SUB[k]) return;
-    ensurePane(root, DD+'[data-dd="topline"] .ovt-subpane[data-ovst="'+k+'"]', function(p){ dhrTopLineInit(p, TL_SUB[k]); });
-  });
+  var fn = TL_SUB[key || 'tlgen']; if(!fn) return;
+  fn(root, 'DHR');
 }
 function wireDD(root){
   root.querySelectorAll('.ov-dhr-dd .dd-tab').forEach(function(btn){ btn.onclick=function(){

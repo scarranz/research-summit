@@ -30,6 +30,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 import { dhrBottomLineHtml, dhrBottomLineInit } from './dhr-bottomline.js';
+import { dhrBlSegmentsHtml, dhrBlSegmentsInit } from './dhr-bl-segments.js';
 // Top Line is the shared segments engine, not a bespoke pane: js/segments.js renders all four
 // sub-tabs from js/segments-data/dhr.js (which points at js/results-data/dhr.js for the series).
 import { segmentsHtml, initSegments, segmentsOverviewHtml, initSegmentsOverview,
@@ -612,12 +613,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="blsc">Supply Chain</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="blgen">'+dhrBottomLineHtml()+'</div>'+
-      '<div class="ovt-subpane" data-ovst="blseg" hidden>'+ddPending('Segment margins over time',
-        'Only four observations exist today: Q2&#39;25, Q2&#39;26, 1H25 and 1H26.',
-        ['Segment adjusted and GAAP operating margins for those four periods',
-         'The year-over-year margin bridge by segment, including the Masimo and impairment effects',
-         'The Q2&#39;25 Life Sciences trade-name impairment ($432M) that makes GAAP incomparable'],
-        ['FY2025 and prior segment operating profit and margin &mdash; the truncated 10-K pull is why they are missing']) +'</div>'+
+      '<div class="ovt-subpane" data-ovst="blseg" hidden>'+dhrBlSegmentsHtml()+'</div>'+
       '<div class="ovt-subpane" data-ovst="blsc" hidden>'+ddPending('Supply chain',
         'Danaher states that <b>no single supplier is material</b>, while noting that some components have only one qualified source.',
         ['Raw materials, supplier concentration language and mitigation, from the 10-K',
@@ -801,8 +797,13 @@ function ensurePane(root, sel, init){
   init(pane);
 }
 var DD='.ov-dhr-dd .dd-pane';
-function ensureBottomLine(root){
-  ensurePane(root, DD+'[data-dd="bottomline"] .ovt-subpane[data-ovst="blgen"]', dhrBottomLineInit);
+var BL_SUB={ blgen:dhrBottomLineInit, blseg:dhrBlSegmentsInit };
+function ensureBottomLine(root, key){
+  var keys = key ? [key] : Object.keys(BL_SUB);
+  keys.forEach(function(k){
+    if(!BL_SUB[k]) return;
+    ensurePane(root, DD+'[data-dd="bottomline"] .ovt-subpane[data-ovst="'+k+'"]', BL_SUB[k]);
+  });
 }
 // Top Line's four sub-panes are the shared segments engine. Each init is scoped to the DD root
 // and is re-run on every show — segments.js re-renders its own wrapper on control changes, so it
@@ -818,7 +819,7 @@ function wireDD(root){
     root.querySelectorAll('.ov-dhr-dd .dd-tab').forEach(function(b){ b.classList.toggle('active', b===btn); });
     root.querySelectorAll('.ov-dhr-dd .dd-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-dd')!==key); });
     if(key==='valuation') requestAnimationFrame(function(){ dScRenderAll(root); });
-    if(key==='bottomline') requestAnimationFrame(function(){ ensureBottomLine(root); });
+    if(key==='bottomline') requestAnimationFrame(function(){ ensureBottomLine(root, 'blgen'); });
     if(key==='topline') requestAnimationFrame(function(){ ensureTopLine(root); });
   }; });
   // Sub-tabs, pane-scoped so panes never collide.
@@ -829,7 +830,7 @@ function wireDD(root){
       pane.querySelectorAll(SUB).forEach(function(b){ b.classList.toggle('active', b===btn); });
       pane.querySelectorAll(':scope > .ovt-subpane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovst')!==key); });
       if(key==='valpeers') requestAnimationFrame(function(){ dScRenderAll(root); });
-      if(key==='blgen') requestAnimationFrame(function(){ ensureBottomLine(root); });
+      if(BL_SUB[key]) requestAnimationFrame(function(){ ensureBottomLine(root, key); });
       if(TL_SUB[key]) requestAnimationFrame(function(){ ensureTopLine(root, key); });
     }; });
   });

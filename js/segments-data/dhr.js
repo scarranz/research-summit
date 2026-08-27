@@ -29,7 +29,7 @@
 export var dhrSegments = {
   company: 'Danaher',
   updated: 'Aug 2026',
-  source: 'Segment revenue and operating profit are read from the Results dataset (js/results-data/dhr.js), which sources them from Danaher\'s 10-K and 10-Q segment notes via SEC EDGAR (CIK 0000313616). Segment depreciation and amortisation, capital expenditure, impairment charges and identifiable assets are from the annual 10-K segment note. Recurring-revenue mix, geographic destination percentages and the growth bridges are from the FY2025 annual report segment pages and the Q2 2026 press release and earnings presentation, 21-Jul-2026. Fourth quarters are derived as the fiscal year less the three published quarters.',
+  source: 'Segment revenue and operating profit are read from the Results dataset (js/results-data/dhr.js), which sources them from Danaher\'s 10-K and 10-Q segment notes via SEC EDGAR (CIK 0000313616). Segment depreciation and amortisation, capital expenditure, impairment charges and identifiable assets are from the annual 10-K segment note. Recurring / non-recurring revenue and revenue by region are from Note 5 of the FY2025 10-K, in dollars per segment for three years. The growth bridges are from the FY2025 annual report segment pages and the Q2 2026 press release and earnings presentation, 21-Jul-2026. Fourth quarters are derived as the fiscal year less the three published quarters.',
 
   axis: {
     q: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26'],
@@ -44,6 +44,25 @@ export var dhrSegments = {
       y: { act: { '2021': 3565, '2022': 3611, '2023': 3143, '2024': 2805, '2025': 2631 }, summit: {} } },
     geo_other: { label: 'All other countries', short: 'All other', unit: 'usdM', src: '10-K segment note, sales by country', scope: 'company',
       y: { act: { '2021': 11826, '2022': 11743, '2023': 11168, '2024': 11143, '2025': 11956 }, summit: {} } },
+
+    // ── Note 5, "Revenue" — the disaggregation, IN DOLLARS, three years ────────────────────────
+    // This note is the one that is easy to miss and easy to get wrong. The SEGMENT note gives
+    // sales by COUNTRY for the countries above 5% (the geo_* series above). Note 5 gives a
+    // different cut entirely: sales by REGION and by REVENUE TYPE, per segment, in dollars.
+    // Danaher's annual report also states the recurring mix as round percentages, which is what
+    // most write-ups quote — but the dollars exist, and they say more than the percentages do.
+    rec:    { label: 'Recurring revenue', short: 'Recurring', unit: 'usdM', src: '10-K Note 5 — revenue by type', scope: 'company',
+      y: { act: { '2023': 18682, '2024': 19366, '2025': 20127 }, summit: {} } },
+    nonrec: { label: 'Non-recurring revenue', short: 'Non-recurring', unit: 'usdM', src: '10-K Note 5 — revenue by type', scope: 'company',
+      y: { act: { '2023': 5208, '2024': 4509, '2025': 4441 }, summit: {} } },
+    reg_na: { label: 'North America', short: 'North America', unit: 'usdM', src: '10-K Note 5 — revenue by region', scope: 'company',
+      y: { act: { '2023': 9961, '2024': 10295, '2025': 10356 }, summit: {} } },
+    reg_we: { label: 'Western Europe', short: 'Western Europe', unit: 'usdM', src: '10-K Note 5 — revenue by region', scope: 'company',
+      y: { act: { '2023': 5468, '2024': 5457, '2025': 5938 }, summit: {} } },
+    reg_hg: { label: 'High-growth markets', short: 'High-growth', unit: 'usdM', src: '10-K Note 5 — revenue by region', scope: 'company',
+      y: { act: { '2023': 7191, '2024': 6870, '2025': 7022 }, summit: {} } },
+    reg_od: { label: 'Other developed markets', short: 'Other developed', unit: 'usdM', src: '10-K Note 5 — revenue by region', scope: 'company',
+      y: { act: { '2023': 1270, '2024': 1253, '2025': 1252 }, summit: {} } },
 
     // The company as it was constituted before Veralto — FY2020–FY2022 only, on purpose.
     leg_bio: { label: 'Biotechnology', short: 'Biotechnology', unit: 'usdM', src: 'FY2022 10-K segment note', scope: 'company',
@@ -62,7 +81,8 @@ export var dhrSegments = {
     daInt:     { label: 'Depreciation & amortisation as % of revenue', short: 'D&A %', unit: 'pct', num: 'da', den: 'rev' },
     assetTurn: { label: 'Revenue per $ of identifiable assets', short: 'Asset turn', unit: 'x', num: 'rev', den: 'assets' },
     roa:       { label: 'Operating profit per $ of identifiable assets', short: 'Return on assets', unit: 'pct', num: 'opinc', den: 'assets' },
-    impInt:    { label: 'Impairment charges as % of revenue', short: 'Impairment %', unit: 'pct', num: 'impair', den: 'rev' }
+    impInt:    { label: 'Impairment charges as % of revenue', short: 'Impairment %', unit: 'pct', num: 'impair', den: 'rev' },
+    recShare:  { label: 'Recurring share of revenue', short: 'Recurring %', unit: 'pct', num: 'rec', den: 'rev' }
   },
 
   overview: {
@@ -101,6 +121,38 @@ export var dhrSegments = {
         { key: 'geo_us', ref: 'shared:geo_us', label: 'United States' },
         { key: 'geo_cn', ref: 'shared:geo_cn', label: 'China' },
         { key: 'geo_other', ref: 'shared:geo_other', label: 'All other countries' }
+      ]
+    },
+    {
+      key: 'type', label: 'Recurring vs one-off', sub: 'revenue by type, in dollars',
+      lede: 'The cut that explains why a flat revenue line is not a flat business. Danaher\'s total went $23,890M → $23,875M → $24,568M and looks like nothing happened. Underneath, <b>recurring revenue compounded about 4% a year</b> — $18,682M to $20,127M — while <b>non-recurring fell 15% in two years</b>, from $5,208M to $4,441M. The whole instrument-cycle downturn is in the second line, and it is fully disclosed.',
+      caveat: 'Most write-ups quote the annual report\'s round percentages (82% recurring; 88 / 66 / 89 by segment) because that is what the segment pages show. The dollars are in <b>Note 5 of the 10-K</b>, per segment, and they say more: the percentages are stable while the two halves move in opposite directions. Recurring is consumables, reagents and service; non-recurring is instruments and equipment. Annual only — Note 5 does not appear in the 10-Qs — and the note reaches back three years, so FY2023 is the earliest.',
+      note: 'Danaher gives this per segment as well. The company total is charted; the segment split is in the KPI section of each segment.',
+      tenK: { text: 'The following table presents the Company\'s revenues disaggregated by geographical region and revenue type.', where: 'Note 5 — Revenue' },
+      axis: { y: ['2023','2024','2025'] },
+      views: ['y'],
+      cite: { form: '10-K', period: '2025-12-31', accession: '0000313616-26-000062',
+              url: 'https://www.sec.gov/Archives/edgar/data/313616/000031361626000062/' },
+      series: [
+        { key: 'rec', ref: 'shared:rec', label: 'Recurring' },
+        { key: 'nonrec', ref: 'shared:nonrec', label: 'Non-recurring' }
+      ]
+    },
+    {
+      key: 'regions', label: 'Regions', sub: 'revenue by region, in dollars',
+      lede: 'Danaher\'s own regional grouping, in dollars — a different cut from the country table, which names only the countries above 5% of sales. The flat line here is <b>high-growth markets</b>: $7,191M in FY2023 and $7,022M in FY2025, no growth over two years for the bucket that is supposed to be the growth. China, inside it, went from $3,143M to $2,631M over the same period.',
+      caveat: 'The definitions are Danaher\'s and are not the obvious ones: <b>North America</b> is the US and Canada; <b>high-growth markets</b> are Eastern Europe, the Middle East, Africa, Latin America including Mexico, and Asia except Japan, Australia and New Zealand; <b>developed markets</b> is everything else. So Japan and Australia sit in "other developed", not in Asia. Revenue is attributed by destination — where the final sale to the unaffiliated customer is made — not by where anything is manufactured.',
+      note: 'Annual only, from Note 5, which carries three fiscal years. Danaher gives this per segment too.',
+      tenK: { text: 'The Company defines high-growth markets as Eastern Europe, the Middle East, Africa, Latin America (including Mexico) and Asia (with the exception of Japan, Australia and New Zealand). The Company defines developed markets as all markets of the world that are not high-growth markets.', where: 'Note 5 — Revenue' },
+      axis: { y: ['2023','2024','2025'] },
+      views: ['y'],
+      cite: { form: '10-K', period: '2025-12-31', accession: '0000313616-26-000062',
+              url: 'https://www.sec.gov/Archives/edgar/data/313616/000031361626000062/' },
+      series: [
+        { key: 'reg_na', ref: 'shared:reg_na', label: 'North America' },
+        { key: 'reg_we', ref: 'shared:reg_we', label: 'Western Europe' },
+        { key: 'reg_hg', ref: 'shared:reg_hg', label: 'High-growth markets' },
+        { key: 'reg_od', ref: 'shared:reg_od', label: 'Other developed markets' }
       ]
     },
     {
@@ -179,10 +231,10 @@ export var dhrSegments = {
       kpis: [
         { name: 'Segment revenue', definition: 'Biotechnology net sales as reported in the segment note. The only volume figure Danaher publishes for this segment.', filing: 'The segment note gives sales, operating profit, depreciation, amortisation, impairment charges, identifiable assets and gross capital expenditure for each reportable segment.', unit: 'usdM', periodicity: 'Quarterly and annual', source: '10-Q / 10-K segment note', series: 'results:bio', needs: null },
         { name: 'Segment operating profit', definition: 'Segment revenue less the segment\'s own operating expenses, on a GAAP basis. Excludes unallocated corporate cost, which Danaher reports separately as "Other".', filing: 'Operating profit represents total revenues less operating expenses, excluding the corporate function reported in Other.', unit: 'usdM', periodicity: 'Quarterly and annual', source: '10-Q / 10-K segment note', series: 'results:bioopinc', needs: null },
-        { name: 'Recurring share of revenue', definition: 'The share of segment sales from consumables, reagents and service rather than instruments and equipment. Danaher publishes it as a percentage and never in dollars.', filing: null, unit: 'pct', periodicity: 'Annual', source: 'FY2025 annual report segment page', series: null, needs: '88% for FY2025. There is no dollar figure and no growth rate for either half in anything filed, so this cannot be charted as a series.' },
+        { name: 'Recurring and non-recurring revenue', definition: 'Consumables, reagents and service versus instruments and equipment. Note 5 of the 10-K gives this per segment IN DOLLARS for three years — most write-ups quote the annual report\'s round 88% because that is what the segment pages show, but the dollars say more.', filing: 'The following table presents the Company\'s revenues disaggregated by geographical region and revenue type.', unit: 'usdM', periodicity: 'Annual', source: '10-K Note 5', series: 'rec', needs: 'Three years only — Note 5 does not appear in the 10-Qs and each 10-K carries three fiscal years. The whole shape of this segment is in the second line: non-recurring revenue fell from $1,275M in FY2023 to $869M in FY2025, down 32%, while recurring grew 9%.' },
         { name: 'Identifiable assets', definition: 'The assets the segment carries — for an acquisition-built segment this is mostly goodwill and acquired intangibles, which is why it is large relative to revenue.', filing: 'Identifiable assets by segment, disclosed annually.', unit: 'usdM', periodicity: 'Annual', source: '10-K segment note', series: null, needs: null }
       ],
-      kpiNote: 'Danaher publishes no operating KPI for this segment at all — no order book, no backlog, no capacity, no consumable volume, no customer count. Everything above is a financial line from the segment note or a percentage from the annual report. That absence is why the relation below is built on the asset base rather than on price and quantity: there is no published quantity.',
+      kpiNote: 'Danaher publishes no operating KPI for this segment — no order book, no backlog, no capacity, no consumable volume, no customer count. What it does publish, and what most write-ups miss, is the recurring / non-recurring split in DOLLARS in Note 5 of the 10-K. That is the closest thing to a volume signal the segment has: non-recurring revenue is the instrument line, and it fell 32% between FY2023 and FY2025 while recurring grew 9%. There is still no published quantity, which is why the relation below is built on the asset base rather than on price times units.',
       interactions: [
         { name: 'Assets × turn', relation: 'revenue = identifiable assets × revenue per $ of assets', bridge: 'assets',
           lines: ['Bioprocessing', 'Discovery & medical'],
@@ -214,8 +266,13 @@ export var dhrSegments = {
           y: { act: { '2021': 38118, '2022': 37536, '2023': 37421, '2024': 34605, '2025': 37337 }, summit: {} } },
         impair: { label: 'Impairment charges', short: 'Impairments', unit: 'usdM', src: '10-K segment note',
           y: { act: { '2023': 54, '2024': 0, '2025': 101 }, summit: {} } }
+,
+        rec: { label: 'Recurring revenue', short: 'Recurring', unit: 'usdM', src: '10-K Note 5 — revenue by type',
+          y: { act: { '2023': 5897, '2024': 5758, '2025': 6424 }, summit: {} } },
+        nonrec: { label: 'Non-recurring revenue', short: 'Non-recurring', unit: 'usdM', src: '10-K Note 5 — revenue by type',
+          y: { act: { '2023': 1275, '2024': 1001, '2025': 869 }, summit: {} } }
       },
-      highlights: ['opMgn', 'assetTurn', 'roa', 'capexInt', 'daInt']
+      highlights: ['opMgn', 'recShare', 'assetTurn', 'roa', 'capexInt']
     },
 
     {
@@ -259,7 +316,7 @@ export var dhrSegments = {
         { name: 'Segment revenue', definition: 'Life Sciences net sales as reported in the segment note.', filing: 'The segment note gives sales, operating profit, depreciation, amortisation, impairment charges, identifiable assets and gross capital expenditure for each reportable segment.', unit: 'usdM', periodicity: 'Quarterly and annual', source: '10-Q / 10-K segment note', series: 'results:ls', needs: null },
         { name: 'Segment operating profit', definition: 'Segment revenue less its own operating expenses, GAAP. This is the line the impairments run through — it is not a trading number in FY2024 and FY2025.', filing: 'Operating profit represents total revenues less operating expenses, excluding the corporate function reported in Other.', unit: 'usdM', periodicity: 'Quarterly and annual', source: '10-Q / 10-K segment note', series: 'results:lsopinc', needs: null },
         { name: 'Impairment charges', definition: 'Write-downs of goodwill, trade names and other assets carried in the segment. Disclosed by segment annually from FY2023, when Danaher adopted the current segment-note format.', filing: 'Impairment charges are presented as a separate line within the segment note.', unit: 'usdM', periodicity: 'Annual', source: '10-K segment note', series: null, needs: 'Quarterly impairments are not broken out by segment; the $432M Q2\'25 trade-name charge is known from the press release, not the segment note.' },
-        { name: 'Recurring share of revenue', definition: 'Consumables, reagents and service as a share of segment sales — 66% in FY2025, the lowest of the three and the reason this segment swings with capital budgets.', filing: null, unit: 'pct', periodicity: 'Annual', source: 'FY2025 annual report segment page', series: null, needs: 'Percentage only; no dollar figure or growth rate exists for either half.' }
+        { name: 'Recurring and non-recurring revenue', definition: 'Consumables, reagents and service versus instruments — 66% recurring in FY2025, the lowest of the three. Note 5 gives both halves in dollars, and they move in opposite directions: recurring $4,360M → $4,844M while non-recurring $2,781M → $2,490M across FY2023–FY2025.', filing: 'The following table presents the Company\'s revenues disaggregated by geographical region and revenue type.', unit: 'usdM', periodicity: 'Annual', source: '10-K Note 5', series: 'rec', needs: 'Three years only. The reason this segment\'s revenue looks flat is that the two halves offset — it is not a business standing still, it is an instrument business shrinking under a consumables business growing.' }
       ],
       kpiNote: 'As with the other segments, no operating KPI is published — no instrument placements, no consumable volume, no customer count. What is unusual here is that the segment note carries a line that is not an operating figure at all: impairment charges, which in FY2024 and FY2025 are the difference between this segment looking flat and looking broken.',
       interactions: [
@@ -270,7 +327,7 @@ export var dhrSegments = {
         { name: 'Instrument cycle × consumable pull-through', relation: 'revenue = instruments placed × consumables and service pulled through each', bridge: null,
           lines: ['Instruments', 'Reagents and genomic consumables'],
           why: 'At 66% recurring this is the least annuity-like of the three, and the third that is not recurring is the instrument itself. That share is why the segment turns down first when research budgets tighten and recovers last: the consumable stream only grows once new instruments have been placed.',
-          data: 'NOT CHARTED — neither term is disclosed. The 66% recurring share is published as a percentage once a year and never in dollars, so even the split cannot be drawn as a series.' },
+          data: 'PARTLY CHARTED — the instrument count and the pull-through per instrument are not disclosed, but the SPLIT is: Note 5 gives recurring and non-recurring revenue in dollars for three years, and it is in the KPI section above. Recurring $4,360M → $4,844M while non-recurring $2,781M → $2,490M across FY2023–FY2025 — the two halves offsetting is why the segment looks flat.' },
         { name: 'Two businesses, one segment', relation: 'segment revenue = life-science tools + Pall industrial filtration', bridge: null,
           lines: ['Industrial filtration (Pall)'],
           why: 'Pall\'s industrial filtration — semiconductor fabs, aerospace, refineries, food and beverage — sits inside a segment named Life Sciences and is not sized separately anywhere. A reader cannot tell how much of this life-science segment is semiconductors, which matters because the two halves answer to completely different cycles.',
@@ -293,8 +350,13 @@ export var dhrSegments = {
           y: { act: { '2021': 19768, '2022': 17572, '2023': 23730, '2024': 23211, '2025': 23112 }, summit: {} } },
         impair: { label: 'Impairment charges', short: 'Impairments', unit: 'usdM', src: '10-K segment note',
           y: { act: { '2023': 0, '2024': 222, '2025': 446 }, summit: {} } }
+,
+        rec: { label: 'Recurring revenue', short: 'Recurring', unit: 'usdM', src: '10-K Note 5 — revenue by type',
+          y: { act: { '2023': 4360, '2024': 4889, '2025': 4844 }, summit: {} } },
+        nonrec: { label: 'Non-recurring revenue', short: 'Non-recurring', unit: 'usdM', src: '10-K Note 5 — revenue by type',
+          y: { act: { '2023': 2781, '2024': 2440, '2025': 2490 }, summit: {} } }
       },
-      highlights: ['opMgn', 'impInt', 'assetTurn', 'roa', 'daInt']
+      highlights: ['opMgn', 'impInt', 'recShare', 'assetTurn', 'roa']
     },
 
     {
@@ -381,8 +443,13 @@ export var dhrSegments = {
           y: { act: { '2021': 15054, '2022': 14722, '2023': 14552, '2024': 14204, '2025': 14748 }, summit: {} } },
         impair: { label: 'Impairment charges', short: 'Impairments', unit: 'usdM', src: '10-K segment note',
           y: { act: { '2023': 23, '2024': 43, '2025': 15 }, summit: {} } }
+,
+        rec: { label: 'Recurring revenue', short: 'Recurring', unit: 'usdM', src: '10-K Note 5 — revenue by type',
+          y: { act: { '2023': 8425, '2024': 8719, '2025': 8859 }, summit: {} } },
+        nonrec: { label: 'Non-recurring revenue', short: 'Non-recurring', unit: 'usdM', src: '10-K Note 5 — revenue by type',
+          y: { act: { '2023': 1152, '2024': 1068, '2025': 1082 }, summit: {} } }
       },
-      highlights: ['opMgn', 'assetTurn', 'roa', 'daInt', 'capexInt']
+      highlights: ['opMgn', 'recShare', 'assetTurn', 'roa', 'daInt']
     }
   ]
 };

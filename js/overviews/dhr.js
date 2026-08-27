@@ -29,6 +29,8 @@
 // pull. Working material lives in danaher-research/ (local only).
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
+import { dhrBottomLineHtml, dhrBottomLineInit } from './dhr-bottomline.js';
+
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // Danaher palette — corporate blue, with a distinct hue per reportable segment.
@@ -634,16 +636,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="blseg">Segments</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="blsc">Supply Chain</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="blgen">'+ddPending('Margins and cash',
-        'Adjusted EPS excludes a large recurring item: acquisition-intangible amortisation, guided at ~$1,900M for FY26 &mdash; roughly $1.26 of the $2.68 GAAP 1H EPS. Any margin work has to show both bases.',
-        ['Full Q2/1H P&amp;L, GAAP and adjusted, both years',
-         'Gross, SG&amp;A, R&amp;D, operating, EBITDA and net margins by period',
-         'The GAAP &rarr; adjusted EPS bridge, line by line',
-         'Cash flow, capex and free cash flow; FY25 FCF $5,293M at ~145% of net income',
-         'FY2025 / FY2024 balance-sheet highlights: total debt $18,418M, equity $52,541M'],
-        ['Cash on hand &mdash; so no net debt and no EV of our own',
-         'The post-Masimo balance sheet (Q2&#39;26 10-Q)',
-         'Any margin or cash history before FY2024']) +'</div>'+
+      '<div class="ovt-subpane" data-ovst="blgen">'+dhrBottomLineHtml()+'</div>'+
       '<div class="ovt-subpane" data-ovst="blseg" hidden>'+ddPending('Segment margins over time',
         'Only four observations exist today: Q2&#39;25, Q2&#39;26, 1H25 and 1H26.',
         ['Segment adjusted and GAAP operating margins for those four periods',
@@ -824,12 +817,21 @@ function init(c){
     var md=root.querySelector('#dhrModalBack'); if(md && md.parentNode!==detail) detail.appendChild(md);
   }
 }
+// Bottom Line ▸ General builds its charts the first time the pane is actually on screen —
+// Chart.js measures a canvas with a null offsetParent as zero and never recovers.
+function ensureBottomLine(root){
+  var pane=root.querySelector('.ov-dhr-dd .dd-pane[data-dd="bottomline"] .ovt-subpane[data-ovst="blgen"]');
+  if(!pane || pane.hidden || pane._blWired) return;
+  pane._blWired=true;
+  dhrBottomLineInit(pane);
+}
 function wireDD(root){
   root.querySelectorAll('.ov-dhr-dd .dd-tab').forEach(function(btn){ btn.onclick=function(){
     var key=btn.getAttribute('data-dd');
     root.querySelectorAll('.ov-dhr-dd .dd-tab').forEach(function(b){ b.classList.toggle('active', b===btn); });
     root.querySelectorAll('.ov-dhr-dd .dd-pane').forEach(function(p){ p.hidden=(p.getAttribute('data-dd')!==key); });
     if(key==='valuation') requestAnimationFrame(function(){ dScRenderAll(root); });
+    if(key==='bottomline') requestAnimationFrame(function(){ ensureBottomLine(root); });
   }; });
   // Sub-tabs, pane-scoped so panes never collide.
   root.querySelectorAll('.ov-dhr-dd .dd-pane').forEach(function(pane){
@@ -839,6 +841,7 @@ function wireDD(root){
       pane.querySelectorAll(SUB).forEach(function(b){ b.classList.toggle('active', b===btn); });
       pane.querySelectorAll(':scope > .ovt-subpane').forEach(function(p){ p.hidden=(p.getAttribute('data-ovst')!==key); });
       if(key==='valpeers') requestAnimationFrame(function(){ dScRenderAll(root); });
+      if(key==='blgen') requestAnimationFrame(function(){ ensureBottomLine(root); });
     }; });
   });
 }
@@ -849,6 +852,9 @@ function deepDiveInit(c){
   wireScatters(root);   // the Peers pane carries the same map as the Overview
   if(!root._dhrCollapWired){ root._dhrCollapWired=true;
     root.addEventListener('click', function(e){ var hd=e.target.closest?e.target.closest('.rs-collap-h'):null; if(!hd||!root.contains(hd)) return;
+      // A block that wires its own collapsible (it regenerates the whole header, not just the
+      // caret) opts out here — otherwise both handlers fire and the panel toggles twice.
+      if(hd.hasAttribute('data-selfwired')) return;
       var b=hd.nextElementSibling; if(!b||!b.classList.contains('rs-collap-b')) return; var open=b.hidden; b.hidden=!open;
       var ic=hd.querySelector('.rs-collap-ic'); if(ic) ic.innerHTML=open?'&#9662;':'&#9656;'; }); }
 }

@@ -6,9 +6,12 @@ import { parse13FFile } from './investor-13f-parser.js';
 
 let alphaChart = null, ALPHA_MODE = 'cum', HF_SEL = {}, HF_START = '2015';
 
-// ─── Top-N holdings toggle (Superinvestors grid) ───────────────
-// One global setting applied to every card at once: how many of the
-// latest 13F's top holdings each card's mini-table shows.
+// ─── Top-N concentration toggle (Superinvestors grid) ──────────
+// One global setting applied to every card at once: which
+// concentration figure the card shows — the combined % of portfolio
+// held in the top 3 vs. top 5 positions from the latest 13F on file.
+// The mini-table itself always lists all disclosed holdings; N only
+// changes how many of them are summed into that concentration stat.
 var HF_TOPN = 5;
 
 function hfSetTopN(n){
@@ -181,13 +184,21 @@ function renderInvGrid(){
     html+='<div class="icard-met"><div class="icard-ml">'+cumLbl+'</div><div class="icard-mv">'+(hasPerf?((inv.cum>0?'+':'')+inv.cum.toFixed(1)+'%'+(inv.est?' <span style="font-size:9px;color:var(--mu)">est</span>':'')):'<span style="color:var(--mu);font-size:11px">n/a</span>')+'</div></div>';
     html+='<div class="icard-met"><div class="icard-ml">Annualized (7yr)</div><div class="icard-mv">'+(hasPerf?((annualized>=0?'+':'')+annStr):'<span style="color:var(--mu);font-size:11px">n/a</span>')+'</div></div>';
     html+='</div>';
-    html+='<div class="icard-met-full"><div class="icard-ml">2026 YTD</div><div class="icard-mv">'+ytdVal+'</div></div>';
+    // Concentration: combined % of portfolio held in the top-N positions
+    // from the latest 13F on file (Q2 2026), N set by the global toggle
+    // above the grid — holdings are already ordered by weight descending.
+    var allHoldings=inv.holdings||[];
+    var conc=allHoldings.slice(0,HF_TOPN).reduce(function(s,h){return s+(h.w||0);},0);
+    html+='<div class="icard-mets-row">';
+    html+='<div class="icard-met"><div class="icard-ml">2026 YTD</div><div class="icard-mv">'+ytdVal+'</div></div>';
+    html+='<div class="icard-met"><div class="icard-ml">Top '+HF_TOPN+' Concentration</div><div class="icard-mv">'+(allHoldings.length?conc.toFixed(1)+'%':'<span style="color:var(--mu);font-size:11px">n/a</span>')+'</div></div>';
     html+='</div>';
-    // Holdings: top N of the latest 13F on file (Q2 2026), N set by the
-    // global toggle above the grid — same list for every card.
-    var topHoldings=(inv.holdings||[]).slice(0,HF_TOPN);
+    html+='</div>';
+    // Holdings: every disclosed position from the latest 13F on file
+    // (Q2 2026) — the toggle above the grid controls the concentration
+    // stat above, not how many rows this table lists.
     html+='<table class="icard-tbl"><thead><tr><th>Ticker</th><th>Company</th><th class="nr">% Port</th><th class="nr">YTD</th></tr></thead><tbody>';
-    topHoldings.forEach(function(h){var pc=h.ytd>=0?'rp':'rn';var ys=(h.ytd>=0?'+':'')+h.ytd.toFixed(2)+'%';var nb=h.nw?' <span style="font-size:8px;font-weight:700;letter-spacing:.5px;color:#2563EB;border:1px solid #2563EB;border-radius:3px;padding:0 3px;vertical-align:middle">NEW</span>':'';
+    allHoldings.forEach(function(h){var pc=h.ytd>=0?'rp':'rn';var ys=(h.ytd>=0?'+':'')+h.ytd.toFixed(2)+'%';var nb=h.nw?' <span style="font-size:8px;font-weight:700;letter-spacing:.5px;color:#2563EB;border:1px solid #2563EB;border-radius:3px;padding:0 3px;vertical-align:middle">NEW</span>':'';
       html+='<tr><td><span class="iticker">'+h.t+'</span></td><td><span class="ico">'+h.co+'</span>'+nb+'</td><td class="nr" style="color:var(--mu)">'+h.w.toFixed(2)+'%</td><td class="nr"><span class="rpill '+pc+'">'+ys+'</span></td></tr>';});
     html+='</tbody></table>';
     if(inv.est)html+='<div class="est-note">&#x26A0; Annual returns estimated from portfolio data.</div>';

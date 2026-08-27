@@ -312,6 +312,7 @@
   <div class="hf-maintabs">
     <button class="hf-maintab active" data-pane="overall" onclick="hfMainTab('overall')">Overall</button>
     <button class="hf-maintab" data-pane="superinvestors" onclick="hfMainTab('superinvestors')">Superinvestors</button>
+    <button class="hf-maintab" data-pane="resources" onclick="hfMainTab('resources')">Resources</button>
   </div>
 
   <div class="hf-mainpane active" data-pane="overall">
@@ -381,6 +382,31 @@ Each tile is a GICS sector, colored by the average YTD return of the companies t
     <p style="margin-top:16px;font-size:11px;color:var(--mu);line-height:1.6">
       Holdings: SEC 13F filings, Q2 2026 (most recent on file) &middot; Each holding&rsquo;s return is its own stock price move from Jan 1 to today, not the fund&rsquo;s overall return &middot; Fund-level returns: H1 2026 (through June 30, 2026) &middot; Buffett (BRK.B price), Ackman (PSH NAV), Tepper (Bloomberg), and Loeb (Third Point investor letters) are real, sourced figures &middot; &#x26A0; other funds&rsquo; H1 2026 returns are estimated by weighting each fund&rsquo;s disclosed 13F holdings by their actual quarterly stock performance, since none of those funds publish real-time returns
     </p>
+    <div class="hf-res-cta">
+      <button type="button" class="hf-res-cta-btn" onclick="hfMainTab('resources')">View all Superinvestor Resources &rarr;</button>
+    </div>
+  </div>
+
+  <div class="hf-mainpane" data-pane="resources">
+    <div class="sechdr" style="margin-bottom:18px">
+      <span class="sect">Superinvestor Resources</span>
+      <div style="display:flex;align-items:center;gap:14px">
+        <span class="secn">Letters, reports &amp; commentary from every tracked fund</span>
+        <div class="sb-toggle" id="hf-res-mode-toggle">
+          <button type="button" class="sb-tbtn" data-mode="date" onclick="hfResSetMode('date')">By Date</button>
+          <button type="button" class="sb-tbtn active" data-mode="fund" onclick="hfResSetMode('fund')">By Fund</button>
+        </div>
+        <button type="button" class="hf-res-cta-btn" style="padding:7px 14px;font-size:11px" onclick="openHfAddResourcesModal()">+ Add Resources</button>
+      </div>
+    </div>
+    <div class="hf-res-searchrow">
+      <div class="hf-res-search-wrap">
+        <input type="text" id="hf-res-search" class="hf-res-search-input" placeholder="Search superinvestor&hellip;" autocomplete="off" oninput="hfResSearchInput(this.value)" onfocus="hfResSearchInput(this.value)">
+        <div class="hf-res-search-results" id="hf-res-search-results"></div>
+      </div>
+      <div id="hf-res-filter-pill"></div>
+    </div>
+    <div id="hf-res-body"><div class="im-loading">Loading&hellip;</div></div>
   </div>
 </div>
 <div id="inv-detailview" style="display:none"></div>

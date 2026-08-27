@@ -475,6 +475,39 @@ export async function fetchInvestorLetters(investorKey) {
   return ok(data || []);
 }
 
+// Every fund's letters in one round trip, for the Superinvestors ->
+// Resources tab (aggregated view across all tracked funds).
+export async function fetchAllInvestorLetters() {
+  var { data, error } = await supabase
+    .from('investor_letters')
+    .select('*')
+    .order('date', { ascending: false });
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+// ─── Resources-only fund metadata (Add Resources) ────────────
+// investor_meta backs funds/people that get resources via "Add
+// Resources" but aren't a Superinvestor card (js/portal-data.js
+// INVESTORS) or one of the hardcoded RES_ONLY_FUNDS in
+// js/hedge-funds.js — see sql/022_investor_meta.sql.
+
+export async function fetchInvestorMeta() {
+  var { data, error } = await supabase.from('investor_meta').select('*');
+  if (error) return fail(error.message);
+  return ok(data || []);
+}
+
+export async function insertInvestorMeta(row) {
+  var { data, error } = await supabase
+    .from('investor_meta')
+    .insert([row])
+    .select()
+    .single();
+  if (error) return fail(error.message);
+  return ok(data);
+}
+
 export async function insertInvestorReturn(row) {
   var { data, error } = await supabase
     .from('investor_yearly_returns')

@@ -1,6 +1,6 @@
 // hedge-funds.js — extracted from summit-research-portal.html
 import { INVESTORS, HF_FUNDS, HF_BMK, HF_AYEARS, YEARS, SP500, IMGS, ALL_STOCKS } from './portal-data.js';
-import { fetchInvestorReturns, fetchInvestorHoldings, fetchHoldingsByTicker, fetchInvestorLetters, replaceInvestorHoldings, syncLatest13F, getFileUrl } from './api.js';
+import { fetchInvestorReturns, fetchInvestorHoldings, fetchHoldingsByTicker, fetchInvestorLetters, fetchAllInvestorLetters, insertInvestorLetter, fetchInvestorMeta, insertInvestorMeta, replaceInvestorHoldings, syncLatest13F, getFileUrl, uploadFile } from './api.js';
 import { LOCAL_INVESTOR_RETURNS, LOCAL_INVESTOR_HOLDINGS, LOCAL_INVESTOR_LETTERS, NO_PUBLIC_LETTERS_NOTE } from './investor-local-seed.js';
 import { parse13FFile } from './investor-13f-parser.js';
 
@@ -750,6 +750,409 @@ function renderInvLetters(id, letters, key) {
     });
   });
 }
+
+// ─── Superinvestor Resources tab (Superinvestors sub-tab) ────
+// Rolls up every fund's investor_letters into one browsable pool —
+// same underlying rows as each card's own "Letters & Resources"
+// section above, just aggregated so there's one place to see
+// everything at once, viewable by release date or grouped by fund.
+// Summit is excluded (this is about the tracked superinvestors, not
+// our own book), same as the sector mosaic.
+
+var HF_RES_MODE = 'fund'; // 'date' | 'fund'
+var HF_RES_FILTER_KEY = null; // investor_key to narrow to, or null for every fund
+var HF_RES_LETTERS = null; // null until first load completes
+
+// Funds with resources on file but no Superinvestor card (no AUM, 13F
+// holdings, or return series tracked for them — just letters). Kept
+// separate from INVESTORS/portal-data.js on purpose: that file is
+// static reference data for the grid and isn't touched for a
+// resources-only addition. Add an entry here whenever a new letter
+// comes in for a fund that isn't already a superinvestor card.
+var RES_ONLY_FUNDS = [
+  { key: 'abrams', name: 'Gavin M. Abrams', fund: 'Abrams Bison Investments' },
+  { key: 'bristlemoon', name: 'Bristlemoon Capital', fund: 'Bristlemoon Global Fund' },
+  { key: 'marks', name: 'Howard Marks', fund: 'Oaktree Capital Management' },
+];
+
+// Same idea as RES_ONLY_FUNDS above, but populated at runtime from the
+// investor_meta table (sql/022_investor_meta.sql) — one row per
+// fund/person added through "Add Resources" that wasn't already
+// covered by INVESTORS or the hardcoded list above. Filled in by
+// loadHfResources() on load.
+var HF_RES_META = [];
+
+function resFundList() {
+  return INVESTORS.filter(function(inv) { return inv.key !== 'summit'; }).concat(RES_ONLY_FUNDS).concat(HF_RES_META);
+}
+
+// Search-as-you-type over the fixed, local investor list (only ~10
+// funds — no need for a remote lookup like the company search).
+function hfResSearchInput(q) {
+  var box = document.getElementById('hf-res-search-results'); if (!box) return;
+  q = (q || '').trim().toLowerCase();
+  if (!q) { box.classList.remove('open'); box.innerHTML = ''; return; }
+  var matches = resFundList().filter(function(inv) {
+    return inv.name.toLowerCase().indexOf(q) !== -1 || (inv.fund || '').toLowerCase().indexOf(q) !== -1;
+  }).slice(0, 8);
+  box.innerHTML = matches.length
+    ? matches.map(function(inv) {
+        return '<div class="hf-res-search-item" data-key="' + esc(inv.key) + '"><span class="hf-res-search-name">' + esc(inv.name) + '</span><span class="hf-res-search-fund">' + esc(inv.fund) + '</span></div>';
+      }).join('')
+    : '<div class="hf-res-search-empty">No match</div>';
+  box.classList.add('open');
+  box.querySelectorAll('.hf-res-search-item').forEach(function(el) {
+    el.addEventListener('mousedown', function(e) { e.preventDefault(); hfResSelectFund(el.getAttribute('data-key')); });
+  });
+}
+window.hfResSearchInput = hfResSearchInput;
+
+function hfResSelectFund(key) {
+  HF_RES_FILTER_KEY = key;
+  var input = document.getElementById('hf-res-search'); if (input) input.value = '';
+  var box = document.getElementById('hf-res-search-results'); if (box) { box.classList.remove('open'); box.innerHTML = ''; }
+  renderResFilterPill();
+  renderHfResources();
+}
+window.hfResSelectFund = hfResSelectFund;
+
+function hfResClearFilter() {
+  HF_RES_FILTER_KEY = null;
+  renderResFilterPill();
+  renderHfResources();
+}
+window.hfResClearFilter = hfResClearFilter;
+
+function renderResFilterPill() {
+  var el = document.getElementById('hf-res-filter-pill'); if (!el) return;
+  if (!HF_RES_FILTER_KEY) { el.innerHTML = ''; return; }
+  var inv = resFundList().filter(function(i) { return i.key === HF_RES_FILTER_KEY; })[0];
+  el.innerHTML = '<span class="hf-res-filter-pill">' + esc(inv ? inv.name : HF_RES_FILTER_KEY) + '<button type="button" onclick="hfResClearFilter()" title="Clear filter">&times;</button></span>';
+}
+
+// Close the suggestions dropdown on outside click — mirrors the
+// Add Company search in companies.js. Bound once at module load since
+// the search box itself is never re-rendered.
+document.addEventListener('click', function(e) {
+  var box = document.getElementById('hf-res-search-results');
+  var wrap = document.querySelector('.hf-res-search-wrap');
+  if (box && wrap && !wrap.contains(e.target)) box.classList.remove('open');
+});
+
+function hfResSetMode(m) {
+  HF_RES_MODE = m;
+  document.querySelectorAll('#hf-res-mode-toggle .sb-tbtn').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-mode') === m); });
+  renderHfResources();
+}
+window.hfResSetMode = hfResSetMode;
+
+async function loadHfResources() {
+  var results = await Promise.all([fetchAllInvestorLetters(), fetchInvestorMeta()]);
+  var letters = results[0].success ? results[0].data : [];
+  HF_RES_META = results[1].success ? results[1].data : [];
+  // Same "supplement, don't replace" rule as loadInvestorProfileData:
+  // only fall back to the local seed for a fund Supabase returned
+  // nothing for, so migrated funds aren't clobbered by stale local rows.
+  if (location.hostname === 'localhost') {
+    var haveKey = {};
+    letters.forEach(function(l) { haveKey[l.investor_key] = true; });
+    LOCAL_INVESTOR_LETTERS.forEach(function(l) { if (!haveKey[l.investor_key]) letters.push(l); });
+  }
+  HF_RES_LETTERS = letters;
+  renderHfResources();
+}
+
+function hfResLetterRow(l, showFund) {
+  var isFile = l.type === 'file';
+  var inv = showFund ? resFundList().filter(function(i) { return i.key === l.investor_key; })[0] : null;
+  var fundTag = inv ? '<span class="im-let-fund">' + esc(inv.name) + '</span>' : '';
+  var inner = fundTag + '<span class="im-let-title">' + esc(l.title) + '</span>' +
+    (l.date ? '<span class="im-let-date">' + esc(l.date) + '</span>' : '') +
+    '<span class="im-let-go">' + (isFile ? 'Download' : 'Open ↗') + '</span>';
+  return isFile
+    ? '<button type="button" class="im-let-row im-let-file" data-path="' + esc(l.url || '') + '">' + inner + '</button>'
+    : '<a class="im-let-row" href="' + esc(l.url || '#') + '" target="_blank" rel="noopener noreferrer">' + inner + '</a>';
+}
+
+function byDateDesc(a, b) { return (b.date || '').localeCompare(a.date || ''); }
+
+function renderHfResources() {
+  var body = document.getElementById('hf-res-body'); if (!body) return;
+  if (HF_RES_LETTERS == null) { body.innerHTML = '<div class="im-loading">Loading&hellip;</div>'; return; }
+  var funds = HF_RES_FILTER_KEY ? resFundList().filter(function(inv) { return inv.key === HF_RES_FILTER_KEY; }) : resFundList();
+  var filtered = HF_RES_LETTERS.filter(function(l) { return !HF_RES_FILTER_KEY || l.investor_key === HF_RES_FILTER_KEY; });
+
+  var html = '';
+  if (HF_RES_MODE === 'date') {
+    var sorted = filtered.slice().sort(byDateDesc);
+    html = sorted.length ? sorted.map(function(l) { return hfResLetterRow(l, true); }).join('') : '<div class="im-empty">No resources' + (HF_RES_FILTER_KEY ? ' for this fund.' : ' on file yet.') + '</div>';
+  } else {
+    // Only funds with at least one resource on file get a group — a
+    // superinvestor with nothing yet (or a confirmed "no public
+    // letters" fund) just doesn't show up here — sorted alphabetically
+    // by name rather than the grid's AUM-descending order.
+    var groups = funds.map(function(inv) {
+      return { inv: inv, items: filtered.filter(function(l) { return l.investor_key === inv.key; }).sort(byDateDesc) };
+    }).filter(function(g) { return g.items.length > 0; });
+    groups.sort(function(a, b) { return a.inv.name.localeCompare(b.inv.name); });
+    if (!groups.length) {
+      html = '<div class="im-empty">No resources' + (HF_RES_FILTER_KEY ? ' for this fund.' : ' on file yet.') + '</div>';
+    } else {
+      groups.forEach(function(g) {
+        html += '<div class="im-let-group"><div class="im-let-cat">' + esc(g.inv.name) + ' <span class="hf-res-fundsub">' + esc(g.inv.fund) + '</span></div>';
+        g.items.forEach(function(l) { html += hfResLetterRow(l, false); });
+        html += '</div>';
+      });
+    }
+  }
+  body.innerHTML = html || '<div class="im-empty">No resources on file yet.</div>';
+  body.querySelectorAll('.im-let-file').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      var result = await getFileUrl(btn.getAttribute('data-path'));
+      if (result.success && result.data && result.data.signedUrl) window.open(result.data.signedUrl, '_blank');
+      else alert('Could not generate download link.');
+    });
+  });
+}
+
+// ─── Add Resources (upload a file, confirm date + fund, then save) ──
+// Pick a file → a popup asks who it's from and its release date →
+// only on "Add" does the upload + DB insert actually happen. Mirrors
+// the Companies "Add Resource" file flow (js/companies.js: uploadFile
+// into the 'company-files' Storage bucket, then a matching DB row).
+
+var HF_ADDRES_FILE = null; // selected File, while the modal is open
+
+function hfResModalMsg(text, type) {
+  var el = document.getElementById('hfres-msg'); if (!el) return;
+  el.textContent = text || '';
+  el.className = 'modal-msg' + (type ? ' ' + type : '');
+}
+
+// Title-cases a filename into a default title, e.g.
+// "q2-2026-letter.pdf" -> "Q2 2026 Letter" — just a starting point,
+// the field stays editable.
+function hfResTitleFromFilename(filename) {
+  var base = (filename || '').replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim();
+  return base.replace(/\w\S*/g, function(w) { return /^\d/.test(w) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1); });
+}
+
+function openHfAddResourcesModal() {
+  HF_ADDRES_FILE = null;
+  var id = 'hfres_' + Date.now();
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = id;
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+  overlay.innerHTML =
+    '<div class="modal-card" style="max-width:480px" onclick="event.stopPropagation()">' +
+      '<div class="modal-header">' +
+        '<div class="modal-title">Add Resources</div>' +
+        '<button class="modal-close" id="' + id + '_close">&times;</button>' +
+      '</div>' +
+      '<div style="padding:18px 22px 22px">' +
+        '<div class="res-dropzone" id="hfres-dropzone">' +
+          '<div class="res-dropzone-text">Drop file here or <span class="res-browse">browse</span></div>' +
+          '<input type="file" id="hfres-file" accept=".pdf,.doc,.docx,.ppt,.pptx" style="display:none">' +
+        '</div>' +
+        '<div class="res-file-preview" id="hfres-preview" style="display:none">' +
+          '<span class="res-file-icon">&#x1F4C4;</span>' +
+          '<span class="res-file-name" id="hfres-fileName"></span>' +
+          '<button type="button" class="res-file-remove" id="hfres-fileRemove">&times;</button>' +
+        '</div>' +
+        '<div id="hfres-fields" style="display:none">' +
+          '<div class="modal-field">' +
+            '<label class="modal-label">Title <span class="modal-req">*</span></label>' +
+            '<input class="modal-input" type="text" id="hfres-title" placeholder="e.g. Q2 2026 Investor Letter">' +
+          '</div>' +
+          '<div class="modal-field">' +
+            '<label class="modal-label">Fund or superinvestor <span class="modal-req">*</span></label>' +
+            '<div class="hf-res-search-wrap" style="width:100%">' +
+              '<input class="modal-input" type="text" id="hfres-fund" placeholder="e.g. Michael Burry, Scion Asset Management" autocomplete="off" oninput="hfAddResFundInput(this.value)" onfocus="hfAddResFundInput(this.value)">' +
+              '<div class="hf-res-search-results" id="hfres-fund-results"></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="modal-row">' +
+            '<div class="modal-field">' +
+              '<label class="modal-label">Release date <span class="modal-req">*</span></label>' +
+              '<input class="modal-input" type="date" id="hfres-date">' +
+            '</div>' +
+            '<div class="modal-field">' +
+              '<label class="modal-label">Category</label>' +
+              '<select class="modal-input" id="hfres-category">' +
+                '<option value="investor_message">Investor Message</option>' +
+                '<option value="annual_letter">Annual Letter</option>' +
+              '</select>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="modal-msg" id="hfres-msg"></div>' +
+        '<div class="modal-actions">' +
+          '<button type="button" class="modal-btn modal-btn--cancel" id="' + id + '_cancel">Cancel</button>' +
+          '<button type="button" class="modal-btn modal-btn--save" id="hfres-action-btn" onclick="hfAddResSave()" disabled>Add</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  document.getElementById(id + '_close').addEventListener('click', function() { overlay.remove(); });
+  document.getElementById(id + '_cancel').addEventListener('click', function() { overlay.remove(); });
+
+  var dropzone = document.getElementById('hfres-dropzone');
+  var fileInput = document.getElementById('hfres-file');
+  dropzone.addEventListener('click', function() { fileInput.click(); });
+  fileInput.addEventListener('change', function() { if (fileInput.files && fileInput.files[0]) hfResSelectFile(fileInput.files[0]); });
+  dropzone.addEventListener('dragover', function(e) { e.preventDefault(); dropzone.classList.add('drag-over'); });
+  dropzone.addEventListener('dragleave', function() { dropzone.classList.remove('drag-over'); });
+  dropzone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    dropzone.classList.remove('drag-over');
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) hfResSelectFile(e.dataTransfer.files[0]);
+  });
+  document.getElementById('hfres-fileRemove').addEventListener('click', function() {
+    HF_ADDRES_FILE = null;
+    fileInput.value = '';
+    document.getElementById('hfres-dropzone').style.display = '';
+    document.getElementById('hfres-preview').style.display = 'none';
+    document.getElementById('hfres-fields').style.display = 'none';
+    hfAddResValidate();
+  });
+  ['hfres-title', 'hfres-fund', 'hfres-date'].forEach(function(fid) {
+    document.getElementById(fid).addEventListener('input', hfAddResValidate);
+  });
+}
+window.openHfAddResourcesModal = openHfAddResourcesModal;
+
+function hfResSelectFile(file) {
+  HF_ADDRES_FILE = file;
+  document.getElementById('hfres-dropzone').style.display = 'none';
+  document.getElementById('hfres-preview').style.display = '';
+  document.getElementById('hfres-fileName').textContent = file.name;
+  document.getElementById('hfres-fields').style.display = '';
+  document.getElementById('hfres-title').value = hfResTitleFromFilename(file.name);
+  hfAddResValidate();
+}
+
+// Suggestions dropdown for the fund field — same idea as the
+// Resources tab's own search box (hfResSearchInput), scoped to this
+// modal's elements so picking an existing fund reuses its key exactly.
+function hfAddResFundInput(q) {
+  var box = document.getElementById('hfres-fund-results'); if (!box) return;
+  q = (q || '').trim().toLowerCase();
+  if (!q) { box.classList.remove('open'); box.innerHTML = ''; return; }
+  var matches = resFundList().filter(function(inv) {
+    return inv.name.toLowerCase().indexOf(q) !== -1 || (inv.fund || '').toLowerCase().indexOf(q) !== -1;
+  }).slice(0, 8);
+  if (!matches.length) { box.classList.remove('open'); box.innerHTML = ''; return; }
+  box.innerHTML = matches.map(function(inv) {
+    return '<div class="hf-res-search-item" data-key="' + esc(inv.key) + '" data-name="' + esc(inv.name) + '"><span class="hf-res-search-name">' + esc(inv.name) + '</span><span class="hf-res-search-fund">' + esc(inv.fund) + '</span></div>';
+  }).join('');
+  box.classList.add('open');
+  box.querySelectorAll('.hf-res-search-item').forEach(function(el) {
+    el.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      document.getElementById('hfres-fund').value = el.getAttribute('data-name');
+      document.getElementById('hfres-fund').setAttribute('data-matched-key', el.getAttribute('data-key'));
+      box.classList.remove('open');
+      box.innerHTML = '';
+      hfAddResValidate();
+    });
+  });
+}
+window.hfAddResFundInput = hfAddResFundInput;
+
+document.addEventListener('click', function(e) {
+  var box = document.getElementById('hfres-fund-results');
+  var wrap = box ? box.closest('.hf-res-search-wrap') : null;
+  if (box && wrap && !wrap.contains(e.target)) box.classList.remove('open');
+});
+
+function hfAddResValidate() {
+  var btn = document.getElementById('hfres-action-btn'); if (!btn) return;
+  var title = document.getElementById('hfres-title').value.trim();
+  var fund = document.getElementById('hfres-fund').value.trim();
+  var date = document.getElementById('hfres-date').value;
+  btn.disabled = !(HF_ADDRES_FILE && title && fund && date);
+}
+
+// Best-effort de-dupe: reuse an existing fund's key when the typed
+// text plausibly matches one we already track, instead of registering
+// a near-duplicate fund under a new key.
+function hfResMatchExistingKey(nameText) {
+  var fundInput = document.getElementById('hfres-fund');
+  var matchedKey = fundInput ? fundInput.getAttribute('data-matched-key') : null;
+  if (matchedKey) return matchedKey;
+  var q = (nameText || '').toLowerCase();
+  var match = resFundList().filter(function(inv) {
+    var n = (inv.name || '').toLowerCase(), f = (inv.fund || '').toLowerCase();
+    return (q && n && (n.indexOf(q) !== -1 || q.indexOf(n) !== -1)) || (q && f && (f.indexOf(q) !== -1 || q.indexOf(f) !== -1));
+  })[0];
+  return match ? match.key : null;
+}
+
+function hfResSlugKey(nameText) {
+  var words = (nameText || 'fund').trim().split(/\s+/);
+  var base = (words[words.length - 1] || nameText).toLowerCase().replace(/[^a-z0-9]/g, '') || 'fund';
+  var existing = {}; resFundList().forEach(function(inv) { existing[inv.key] = true; });
+  var key = base, n = 2;
+  while (existing[key]) { key = base + n; n++; }
+  return key;
+}
+
+async function hfAddResSave() {
+  var title = document.getElementById('hfres-title').value.trim();
+  var fundText = document.getElementById('hfres-fund').value.trim();
+  var date = document.getElementById('hfres-date').value;
+  var category = document.getElementById('hfres-category').value;
+  if (!HF_ADDRES_FILE || !title || !fundText || !date) { hfAddResValidate(); return; }
+
+  var btn = document.getElementById('hfres-action-btn');
+  btn.disabled = true;
+  btn.textContent = 'Adding…';
+  hfResModalMsg('', '');
+
+  var key = hfResMatchExistingKey(fundText) || hfResSlugKey(fundText);
+  var isNewFund = !resFundList().some(function(inv) { return inv.key === key; });
+
+  if (isNewFund) {
+    var metaResult = await insertInvestorMeta({ key: key, name: fundText, fund: fundText });
+    if (!metaResult.success) {
+      btn.disabled = false; btn.textContent = 'Add';
+      hfResModalMsg('Could not save fund: ' + metaResult.error.message, 'error');
+      return;
+    }
+  }
+
+  var filePath = 'investors/' + key + '/' + Date.now() + '-' + HF_ADDRES_FILE.name;
+  var uploadResult = await uploadFile(filePath, HF_ADDRES_FILE);
+  if (!uploadResult.success) {
+    btn.disabled = false; btn.textContent = 'Add';
+    hfResModalMsg('Upload failed: ' + uploadResult.error.message, 'error');
+    return;
+  }
+
+  var letterResult = await insertInvestorLetter({
+    investor_key: key,
+    year: parseInt(date.slice(0, 4), 10),
+    title: title,
+    category: category,
+    date: date,
+    type: 'file',
+    url: filePath,
+    sort_order: 0,
+  });
+
+  if (!letterResult.success) {
+    btn.disabled = false; btn.textContent = 'Add';
+    hfResModalMsg('Could not save resource: ' + letterResult.error.message, 'error');
+    return;
+  }
+
+  await loadHfResources();
+  var overlay = document.getElementById('hfres-action-btn').closest('.modal-overlay');
+  if (overlay) overlay.remove();
+}
+window.hfAddResSave = hfAddResSave;
 
 // ─── Holdings Comparison (buys / sells / new positions) ──────
 // A "period" is one 13F snapshot: {year, quarter}. quarter===null is the
@@ -2118,4 +2521,5 @@ export function loadHedgeFundsPage() {
   renderInvGrid();
   renderSectorHeatmap();
   populateStockLookupSelect();
+  loadHfResources();
 }

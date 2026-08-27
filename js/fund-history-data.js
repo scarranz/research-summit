@@ -1,21 +1,30 @@
-// fund-returns-data.js -- Embedded daily return series for the Fund Returns tab.
+// fund-history-data.js -- FROZEN daily return history, BEFORE 2026-01-01.
 //
-// This is the ONLY file you edit to update the dashboard's numbers. No database,
-// no build step: the series below is a plain CSV string, read directly by the app.
+// This file is a closed book. It holds the track record as it was published for
+// 2022-2025 and it should not change again. Everything from 2026-01-01 onward
+// arrives live from the database (or, until Oscar connects it, from the
+// temporary js/fund-live-seed.js) -- see js/fund-data.js for how the two halves
+// are spliced together.
 //
-// HOW TO UPDATE (no coding needed):
-//   1. Prepare a CSV with one row per trading day and these columns:
-//          date,summit,sp500,beta
-//        - date    YYYY-MM-DD
-//        - summit  Summit daily return as a decimal  (0.0123 = +1.23%)
-//        - sp500   S&P 500 daily return as a decimal
-//        - beta    (optional) portfolio beta that day; leave blank if unknown.
-//                  Drop this column entirely and the "Beta Ante" metric shows a dash.
-//   2. Replace everything between the two backticks (`) below with your CSV.
-//   3. Save the file. The dashboard picks it up on the next page load.
+// One entry per portfolio, keyed by the `code` in js/fund-portfolios.js. A
+// portfolio with no history simply has no entry here: nothing to backfill, the
+// splice just starts at its first live day.
 //
-// No portfolio holdings are stored here -- only daily total returns.
-export const FUND_RETURNS_CSV = `date,summit,sp500,beta
+// CSV columns (matched by header name, so aliases and reordering are fine):
+//   date       YYYY-MM-DD, one row per trading day
+//   portfolio  the portfolio's daily total return, as a decimal (0.0123 = +1.23%)
+//   benchmark  the benchmark's daily return that same day, as a decimal
+//   beta       (optional) the portfolio's beta that day; blank -> "Beta Ante"
+//              shows a dash for that day
+//
+// No holdings are stored here -- only daily total returns.
+export const FUND_HISTORY = {
+  // Summit -- spliced composite series, 2022-01-03 -> 2025-12-31, benchmark
+  // derived from adjusted SPY closes. NOTE: this composite is not computed on
+  // the same basis as the live series that takes over in 2026; the two are
+  // 99.25% correlated but differ by ~208bp over the Oct-Dec 2025 overlap. See
+  // docs/FUND_RETURNS_DATA_CONTRACT.md for why we splice rather than restate.
+  summit: `date,portfolio,benchmark,beta
 2022-01-03,0.003006555,0.0057899612598955041,0.806366
 2022-01-04,-0.003352382,-0.00033493123443084638,0.806366
 2022-01-05,-0.009408516,-0.019202177782431162,0.806366
@@ -1018,4 +1027,5 @@ export const FUND_RETURNS_CSV = `date,summit,sp500,beta
 2025-12-29,-0.00630389283009457399,-0.0035636163462791082,1.338985
 2025-12-30,0.0022782207625366,-0.001221196481791087,1.339843
 2025-12-31,-0.00401557868511410644,-0.0074089169007729438,1.342460
-`;
+`,
+};

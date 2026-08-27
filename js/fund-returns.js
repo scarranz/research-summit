@@ -1,74 +1,341 @@
-// fund-returns.js — Fund Returns tab: "Performance Analysis" dashboard.
+// fund-returns.js — Return Analysis tab: "Performance Analysis" dashboard.
 // Replicates the content of presentation slides 2 & 3, reorganized for a
-// dashboard: executive KPI strip, a hero cumulative chart, the slide-2 detail
-// tables, and themed sections for absolute and relative (alpha) monthly returns.
-// All figures are derived live from the two daily series — nothing hardcoded,
-// so new months (incl. 2026) appear automatically.
-import { getStrategy, getBenchmark } from './fund-data.js';
+// dashboard: a hero cumulative chart, the slide-2 detail tables, and themed
+// sections for absolute and relative (alpha) monthly returns.
+// Every figure is derived from the two daily series — nothing is hardcoded, so
+// new days appear on their own as the live feed extends the series.
+import { getSeries, getPortfolios } from './fund-data.js';
 import * as C from './fund-calc.js';
 
+const PORTFOLIO_DEFAULT = 'summit';
 const RFR_DEFAULT = 0.045;
-const LOOKBACK_DEFAULT = 12; // months (TTM window)
+const WINDOW_LENGTHS = [2, 3, 4, 5]; // Rolling Window Analysis, in whole years
 const COLOR = { summit: '#44546A', bench: '#808080', neg: '#C0392B', grid: '#E7EAEE', mu: '#8A93A0' };
 
 let _strategy = null;   // full aligned series, loaded once
 let _bench = null;
+let _meta = null;       // which portfolio, which benchmark, where the days came from
 let _charts = {};
+// Per-chart zoom, and the unzoomed axis to restore on double-click. Dropped
+// whenever the data behind a chart changes: a range captured on one period,
+// re-applied to another, crops the chart to nothing (CHART_ENGINE_REFERENCE 0.2).
+let _zoom = {};
+let _zoomBase = {};
+let _req = 0;           // ticket for the in-flight portfolio switch (latest wins)
 let _winLen = 3;        // Rolling Window Analysis: window length in years
 let _winStart = null;   // ...and chosen start year (null = auto-pick latest)
-let _heroStartYear = null; // Hero charts: chosen start calendar year (null = Max / inception)
+// One period-picker state per block. They are deliberately independent: the
+// global From/To they replace forced every table to answer the same question.
+let _periods = {};
+let _heroTbl = false;   // cumulative-path table: collapsed until asked for
 
 export async function loadFundReturnsPage() {
   const root = document.getElementById('fr-root');
   if (!root) return;
 
+  const portfolios = await getPortfolios();
+  if (!portfolios.length) {
+    root.innerHTML = '<div class="fr-msg">No portfolios configured.</div>';
+    return;
+  }
+
+  // The portfolio bar sits outside #fr-body, which is rebuilt on every switch:
+  // the dashboard below is specific to one portfolio, the chooser is not.
+  // A dropdown rather than pills — the list is meant to grow, and pills stop
+  // scaling once there are more than a handful.
   root.innerHTML = `
+    <div class="fr-pf-bar">
+      <span class="fr-hero-label">Portfolio</span>
+      <select class="fr-sel fr-pf-select" id="fr-pf-select">${portfolios.map(p =>
+        `<option value="${esc(p.code)}">${esc(p.label)}</option>`).join('')}</select>
+    </div>
+    <div id="fr-body"></div>`;
+
+  document.getElementById('fr-pf-select')
+    .addEventListener('change', e => showPortfolio(e.target.value));
+
+  const start = portfolios.some(p => p.code === PORTFOLIO_DEFAULT) ? PORTFOLIO_DEFAULT : portfolios[0].code;
+  await showPortfolio(start);
+}
+
+// Load one portfolio and rebuild the dashboard around it. Everything that
+// depends on the series — the shell's titles, the date range, the year toggles,
+// the rolling-window lengths — is derived here rather than assumed, because a
+// portfolio that starts in 2026 has none of the spans the original one had.
+async function showPortfolio(code) {
+  // Clicking a second portfolio while the first is still loading must not drop
+  // the click, and must not let the slower load overwrite the newer one. Each
+  // call takes a ticket; whoever comes back holding a stale one steps aside.
+  const req = ++_req;
+  const body = document.getElementById('fr-body');
+  // Keep the dropdown in step when the switch was not started by the user
+  // picking from it (first load, or a fallback to another portfolio).
+  const sel = document.getElementById('fr-pf-select');
+  if (sel && sel.value !== code) sel.value = code;
+  body.innerHTML = '<div class="fr-loading">Loading…</div>';
+
+  try {
+    const series = await getSeries(code);
+    if (req !== _req) return;
+    _strategy = series.portfolio;
+    _bench = series.benchmark;
+    _meta = series.meta;
+  } catch (err) {
+    if (req !== _req) return;
+    body.innerHTML = `<div class="fr-msg">Could not load the return series: ${esc(err.message)}</div>`;
+    return;
+  }
+  if (!_strategy.length) {
+    body.innerHTML = '<div class="fr-msg">No return data for this portfolio yet.</div>';
+    return;
+  }
+
+  // Control state belongs to the portfolio that was on screen, not to this one:
+  // its years, and the window lengths its history can support, are different.
+  _periods = { hero: newPeriod(), metrics: newPeriod(), capture: newPeriod(), monthly: newPeriod() };
+  _winStart = null;
+  // Destroy the outgoing charts before the canvases they own are replaced.
+  // Dropping the map without destroying leaves live Chart instances animating
+  // against detached canvases, which piles up on every switch.
+  destroyCharts();
+
+  // Built after the data loads so every title can name the portfolio and the
+  // benchmark actually on screen, instead of one fund's names hardcoded.
+  body.innerHTML = shell(_meta);
+
+  document.getElementById('fr-rfr').value = (RFR_DEFAULT * 100).toFixed(1);
+  document.getElementById('fr-rfr').addEventListener('change', renderMetricsBlock);
+
+  renderPeriod('hero', 'fr-p-hero', renderHeroBlock);
+  renderPeriod('metrics', 'fr-p-metrics', renderMetricsBlock);
+  renderPeriod('capture', 'fr-p-capture', renderCaptureBlock);
+  renderPeriod('monthly', 'fr-p-monthly', renderMonthlyBlock);
+  renderAll();
+}
+
+// ─── Period picker ──────────────────────────────────────────
+// One reusable control, instantiated once per block. Each instance owns its own
+// state, which is the whole point: reading capture ratios over 2023 while the
+// monthly distribution covers the full run is a normal thing to want, and the
+// single global From/To this replaces made it impossible.
+//
+// Mode pills pick the kind of period; a secondary control appears only for the
+// two modes that need one. That mirrors the Rolling Window block, which already
+// pairs a pill toggle with a select, rather than inventing a new pattern.
+const PERIOD_MODES = [
+  { key: 'max', label: 'Max' },
+  { key: 'ytd', label: 'YTD' },
+  { key: '1y', label: '1Y', months: 12 },
+  { key: '3y', label: '3Y', months: 36 },
+  { key: '5y', label: '5Y', months: 60 },
+  { key: 'year', label: 'Year' },
+  { key: 'custom', label: 'Custom' },
+];
+
+function newPeriod() { return { mode: 'max', year: null, from: null, to: null }; }
+
+// Resolve one instance's state into actual dates, against this portfolio's own
+// bounds — a preset never runs past the data it has.
+function periodRange(st) {
+  const first = _strategy[0].date, last = _strategy[_strategy.length - 1].date;
+  const clamp = d => d < first ? first : d;
+  switch (st.mode) {
+    case 'ytd':
+      return { ini: clamp(new Date(last.getFullYear(), 0, 1)), fin: last };
+    case '1y': case '3y': case '5y': {
+      const n = parseInt(st.mode, 10);
+      return { ini: clamp(new Date(last.getFullYear() - n, last.getMonth(), last.getDate())), fin: last };
+    }
+    case 'year': {
+      const y = st.year ?? last.getFullYear();
+      return { ini: new Date(y, 0, 1), fin: new Date(y, 11, 31) };
+    }
+    case 'custom':
+      return { ini: st.from ? parseInput(st.from) : first, fin: st.to ? parseInput(st.to) : last };
+    default:
+      return { ini: first, fin: last };
+  }
+}
+
+// Which charts a block owns, so a period change can drop their zoom. A range
+// captured over 2023 and re-applied to the full run crops the chart to nothing.
+const BLOCK_CHARTS = { hero: ['cum', 'alpha'], monthly: ['mbars', 'abars', 'mhist', 'ahist'] };
+function clearZoomFor(key) { for (const k of (BLOCK_CHARTS[key] || [])) delete _zoom[k]; }
+
+function renderPeriod(key, containerId, onChange) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const fire = () => { clearZoomFor(key); onChange(); };
+  const st = _periods[key];
+  const span = spanMonths(_strategy);
+  const first = _strategy[0].date, last = _strategy[_strategy.length - 1].date;
+
+  // Presets longer than the history stay visible but disabled — the same
+  // treatment the rolling window gives its window lengths.
+  const pills = PERIOD_MODES.map(m => {
+    const ok = !m.months || m.months <= span + 1;
+    return `<button class="fr-tg ${st.mode === m.key ? 'active' : ''}" data-mode="${m.key}"`
+      + `${ok ? '' : ' disabled title="Not enough history"'}>${m.label}</button>`;
+  }).join('');
+
+  let extra = '';
+  if (st.mode === 'year') {
+    const years = seriesYears().slice().reverse();
+    if (!years.includes(st.year)) st.year = years[0];
+    extra = `<select class="fr-sel" data-role="year">${years.map(y =>
+      `<option value="${y}" ${y === st.year ? 'selected' : ''}>${y}</option>`).join('')}</select>`;
+  } else if (st.mode === 'custom') {
+    if (!st.from) st.from = iso(first);
+    if (!st.to) st.to = iso(last);
+    extra = `<input type="date" class="fr-pdate" data-role="from" value="${st.from}" min="${iso(first)}" max="${iso(last)}">`
+      + `<span class="fr-pdash">–</span>`
+      + `<input type="date" class="fr-pdate" data-role="to" value="${st.to}" min="${iso(first)}" max="${iso(last)}">`;
+  }
+
+  el.innerHTML = `<div class="fr-toggle">${pills}</div>${extra}`;
+  el.querySelectorAll('.fr-tg').forEach(btn => btn.addEventListener('click', () => {
+    st.mode = btn.dataset.mode;
+    renderPeriod(key, containerId, onChange);   // the secondary control appears/disappears
+    fire();
+  }));
+  el.querySelector('[data-role="year"]')?.addEventListener('change', e => { st.year = +e.target.value; fire(); });
+  el.querySelector('[data-role="from"]')?.addEventListener('change', e => { st.from = e.target.value; fire(); });
+  el.querySelector('[data-role="to"]')?.addEventListener('change', e => { st.to = e.target.value; fire(); });
+}
+
+// Both series sliced together — they are index-aligned, so they have to be cut
+// at the same positions or every relative figure silently compares mismatched days.
+function sliceRange(ini, fin) {
+  const s = [], b = [];
+  for (let i = 0; i < _strategy.length; i++) {
+    const d = _strategy[i].date;
+    if (d >= ini && d <= fin) { s.push(_strategy[i]); b.push(_bench[i]); }
+  }
+  return { s, b };
+}
+function sliceFor(key) {
+  const { ini, fin } = periodRange(_periods[key]);
+  return (!ini || !fin || ini > fin) ? { s: [], b: [] } : sliceRange(ini, fin);
+}
+function monthlyFor(s, b) {
+  return C.monthlyAligned(C.monthlySeries(s), C.monthlySeries(b));
+}
+function emptyNote(id, msg = 'No data in this period.') {
+  document.getElementById(id).innerHTML = `<div class="fr-empty">${msg}</div>`;
+}
+
+// ─── Blocks ─────────────────────────────────────────────────
+// Each renders from its own period, and only re-renders when its own control
+// moves. Nothing here recomputes the whole page.
+function renderAll() {
+  renderMeta();
+  renderAnalysisTable();          // no filter, by design: it is the year-by-year table
+  renderMonthlyTable();           // no filter either
+  renderHeroBlock();
+  renderMetricsBlock();
+  renderCaptureBlock();
+  renderMonthlyBlock();
+  renderWindowTable();
+  setBadge(`Data through ${fmtDate(_meta.through)}`, 'neutral');
+}
+
+function renderMetricsBlock() {
+  const { s, b } = sliceFor('metrics');
+  if (!s.length) return emptyNote('fr-t-metrics');
+  renderMetricsTable(s, b, rfrValue());
+}
+
+function renderCaptureBlock() {
+  const { s, b } = sliceFor('capture');
+  if (!s.length) return emptyNote('fr-t-capture');
+  const ma = monthlyFor(s, b);
+  renderCaptureTable(C.captureRatios(ma.a, ma.b));
+}
+
+function renderMonthlyBlock() {
+  const { s, b } = sliceFor('monthly');
+  if (!s.length) {
+    ['mbars', 'abars', 'mhist', 'ahist'].forEach(destroyChart);
+    emptyNote('fr-abs-stats'); emptyNote('fr-rel-stats');
+    return;
+  }
+  const ma = monthlyFor(s, b);
+  renderMonthlyBars('fr-mbars', ma.labels, ma.a);
+  renderMonthlyBars('fr-abars', ma.labels, ma.alpha);
+  renderStatsBlock('fr-abs-stats', ma.a, ma.labels, 'Up', 'Down', true);
+  renderStatsBlock('fr-rel-stats', ma.alpha, ma.labels, 'Winning', 'Losing', false);
+  renderHistogram('fr-mhist', ma.a, 0.02, 'Monthly Return');
+  renderHistogram('fr-ahist', ma.alpha, 0.01, 'Monthly Alpha');
+}
+
+function rfrValue() {
+  return (parseFloat(document.getElementById('fr-rfr')?.value) || 0) / 100;
+}
+
+// ─── Page shell ─────────────────────────────────────────────
+function shell(m) {
+  const P = esc(m.label), B = esc(m.benchmarkLabel);
+  return `
     <div class="fr-head">
       <div class="fr-meta" id="fr-meta"></div>
-      <div class="fr-controls">
-        <label class="fr-ctl">From <input type="date" id="fr-ini"></label>
-        <label class="fr-ctl">To <input type="date" id="fr-fin"></label>
-        <label class="fr-ctl">RFR <input type="number" id="fr-rfr" step="0.1" style="width:64px"></label>
-        <span id="fr-badge" class="fr-badge"></span>
-      </div>
+      <div class="fr-controls"><span id="fr-badge" class="fr-badge"></span></div>
     </div>
     <div id="fr-msg" class="fr-msg" style="display:none"></div>
 
     <div class="fr-hero-bar">
       <span class="fr-hero-label">Period</span>
-      <div class="fr-toggle" id="fr-hero-toggle"></div>
+      <div class="fr-period" id="fr-p-hero"></div>
     </div>
 
     <div class="fr-hero">
       <div class="card">
-        <div class="fr-charttitle">Total Return — Summit vs S&amp;P 500</div>
+        <div class="fr-charttitle">Total Return — ${P} vs ${B}</div>
         <div class="fr-canvas-wrap"><canvas id="fr-cum"></canvas></div>
-        <div class="fr-foot">*Cumulative daily total return of Summit and S&amp;P 500</div>
+        <div class="fr-foot">*Cumulative daily total return of ${P} and ${B}</div>
       </div>
       <div class="card">
         <div class="fr-charttitle">Cumulative Performance vs Benchmark</div>
         <div class="fr-canvas-wrap fr-canvas-short"><canvas id="fr-alpha"></canvas></div>
-        <div class="fr-foot">*Cumulative difference in returns between Summit and S&amp;P 500</div>
+        <div class="fr-foot">*Cumulative difference in returns between ${P} and ${B}</div>
       </div>
     </div>
+
+    <div id="fr-hero-tbl"></div>
 
     <div class="fr-tables">
       <div class="fr-tcol">
-        <div class="card"><div class="fr-charttitle">Performance &amp; Risk Analysis</div><div id="fr-t-analysis"></div></div>
-        <div class="card"><div class="fr-charttitle">Rolling Window Analysis</div><div id="fr-window"></div></div>
+        <div class="card"><div class="fr-charttitle">Performance &amp; Risk Analysis</div><div id="fr-t-analysis" class="fr-tscroll"></div></div>
+        <div class="card"><div class="fr-charttitle">Rolling Window Analysis</div><div id="fr-window" class="fr-tscroll"></div></div>
       </div>
       <div class="fr-tcol">
-        <div class="card"><div class="fr-charttitle">Performance &amp; Risk Metrics</div><div id="fr-t-metrics"></div></div>
-        <div class="card"><div class="fr-charttitle">Capture Ratios</div><div id="fr-t-capture"></div>
-          <div class="fr-foot">*Calculated with monthly returns</div></div>
+        <div class="card">
+          <div class="fr-cardhead">
+            <div class="fr-charttitle">Performance &amp; Risk Metrics</div>
+            <label class="fr-ctl">RFR <input type="number" id="fr-rfr" step="0.1" style="width:58px"></label>
+          </div>
+          <div class="fr-period fr-period-card" id="fr-p-metrics"></div>
+          <div id="fr-t-metrics" class="fr-tscroll"></div>
+          <div class="fr-foot">*Over the selected period</div>
+        </div>
+        <div class="card">
+          <div class="fr-cardhead"><div class="fr-charttitle">Capture Ratios</div></div>
+          <div class="fr-period fr-period-card" id="fr-p-capture"></div>
+          <div id="fr-t-capture" class="fr-tscroll"></div>
+          <div class="fr-foot">*Calculated with monthly returns</div>
+        </div>
       </div>
     </div>
 
+    <div class="fr-hero-bar">
+      <span class="fr-hero-label">Monthly period</span>
+      <div class="fr-period" id="fr-p-monthly"></div>
+    </div>
+
     <div class="card fr-section">
-      <div class="fr-charttitle">Absolute Return — Monthly (Summit)</div>
+      <div class="fr-charttitle">Absolute Return — Monthly (${P})</div>
       <div class="fr-secgrid">
         <div class="fr-canvas-wrap"><canvas id="fr-mbars"></canvas></div>
-        <div id="fr-abs-stats"></div>
+        <div id="fr-abs-stats" class="fr-tscroll"></div>
         <div class="fr-canvas-wrap"><canvas id="fr-mhist"></canvas></div>
       </div>
     </div>
@@ -77,154 +344,118 @@ export async function loadFundReturnsPage() {
       <div class="fr-charttitle">Relative Return vs Benchmark — Monthly (Alpha)</div>
       <div class="fr-secgrid">
         <div class="fr-canvas-wrap"><canvas id="fr-abars"></canvas></div>
-        <div id="fr-rel-stats"></div>
+        <div id="fr-rel-stats" class="fr-tscroll"></div>
         <div class="fr-canvas-wrap"><canvas id="fr-ahist"></canvas></div>
       </div>
     </div>
 
     <div class="card fr-section">
-      <div class="fr-charttitle">Monthly Returns — Summit, S&amp;P 500 &amp; Alpha</div>
-      <div id="fr-monthly"></div>
+      <div class="fr-charttitle">Monthly Returns — ${P}, ${B} &amp; Alpha</div>
+      <div id="fr-monthly" class="fr-tscroll"></div>
     </div>`;
-
-  try {
-    if (!_strategy) {
-      _strategy = await getStrategy();
-      _bench = await getBenchmark(_strategy.map(p => p.date));
-    }
-  } catch (err) {
-    showMessage(root, `No se pudieron cargar los datos: ${err.message}. ` +
-      `En esta fase de diseño los CSV solo existen en el servidor local.`);
-    return;
-  }
-
-  const dmin = _strategy[0].date, dmax = _strategy[_strategy.length - 1].date;
-  document.getElementById('fr-ini').value = iso(dmin);
-  document.getElementById('fr-fin').value = iso(dmax);
-  document.getElementById('fr-rfr').value = (RFR_DEFAULT * 100).toFixed(1);
-  ['fr-ini', 'fr-fin', 'fr-rfr'].forEach(id =>
-    document.getElementById(id).addEventListener('change', recompute));
-  renderHeroToggle();
-  recompute();
-}
-
-function recompute() {
-  const ini = parseInput(document.getElementById('fr-ini').value);
-  const fin = parseInput(document.getElementById('fr-fin').value);
-  const rfr = (parseFloat(document.getElementById('fr-rfr').value) || 0) / 100;
-  if (!ini || !fin || ini > fin) { setBadge('Invalid range', 'warn'); return; }
-
-  // filter both series together (they are index-aligned by date)
-  const s = [], b = [];
-  for (let i = 0; i < _strategy.length; i++) {
-    const d = _strategy[i].date;
-    if (d >= ini && d <= fin) { s.push(_strategy[i]); b.push(_bench[i]); }
-  }
-  if (s.length === 0) { setBadge('No data in range', 'warn'); return; }
-
-  const sArr = C.rets(s), bArr = C.rets(b);
-  // M holds just what the validation badge checks (the detail tables compute
-  // their own figures).
-  const M = {
-    totalS: C.totalReturnArr(sArr), totalB: C.totalReturnArr(bArr),
-    volS: C.volArr(sArr, false), corr: C.correlation(sArr, bArr),
-  };
-  const sM = C.monthlySeries(s), bM = C.monthlySeries(b);
-  const ma = C.monthlyAligned(sM, bM);
-  const capture = C.captureRatios(ma.a, ma.b);
-
-  renderMeta(s, b);
-  renderAnalysisTable(s, b, ini, fin);
-  renderMetricsTable(s, b, ini, fin, rfr);
-  renderCaptureTable(capture);
-  renderHeroCharts();
-  renderMonthlyBars('fr-mbars', ma.labels, ma.a);
-  renderMonthlyBars('fr-abars', ma.labels, ma.alpha);
-  renderStatsBlock('fr-abs-stats', ma.a, ma.labels, 'Up', 'Down', true);
-  renderStatsBlock('fr-rel-stats', ma.alpha, ma.labels, 'Winning', 'Losing', false);
-  renderHistogram('fr-mhist', ma.a, 0.02, 'Monthly Return');
-  renderHistogram('fr-ahist', ma.alpha, 0.01, 'Monthly Alpha');
-  renderWindowTable();
-  renderMonthlyTable(ma);
-
-  // validation badge vs PowerShell reference for the full default range
-  const full = iso(_strategy[0].date) === document.getElementById('fr-ini').value
-    && iso(_strategy[_strategy.length - 1].date) === document.getElementById('fr-fin').value;
-  if (full) {
-    const ok = near(M.totalS, 0.6165) && near(M.volS, 0.1858) && near(M.totalB, 0.5722) && near(M.corr, 0.821, 0.002);
-    setBadge(ok ? '✓ Engine validated' : '✗ Mismatch', ok ? 'ok' : 'warn');
-  } else setBadge('Custom range', 'neutral');
 }
 
 // ─── Renderers: header + KPIs ───────────────────────────────
-function renderMeta(s, b) {
-  const d0 = s[0].date, d1 = s[s.length - 1].date;
+// Header describes the whole loaded series, not any one block's period.
+function renderMeta() {
+  const d0 = _strategy[0].date, d1 = _strategy[_strategy.length - 1].date;
+  const m = _meta;
   document.getElementById('fr-meta').innerHTML = `
     <div class="fr-meta-row">
-      <span><b>Summit Management</b></span><span>Benchmark: <b>S&amp;P 500</b></span>
-      <span>Start: <b>${fmtDate(d0)}</b></span><span>End: <b>${fmtDate(d1)}</b></span><span>Currency: <b>USD</b></span>
+      <span><b>${esc(m.label)}</b></span><span>Benchmark: <b>${esc(m.benchmarkLabel)}</b></span>
+      <span>Start: <b>${fmtDate(d0)}</b></span><span>End: <b>${fmtDate(d1)}</b></span>
+      <span>Currency: <b>${m.currency}</b></span>
     </div>
     <div class="fr-meta-row fr-meta-sub">
-      <span>Benchmark Proxy: SPY</span><span>Period: ${fmtMonthLong(d0)} – ${fmtMonthLong(d1)}</span>
-      <span class="fr-source">Daily total returns</span>
+      <span>Benchmark Proxy: ${esc(m.benchmark)}</span><span>Period: ${fmtMonthLong(d0)} – ${fmtMonthLong(d1)}</span>
+      <span class="fr-source">Daily total returns</span>${sourceNote(m)}
     </div>`;
 }
 
+// Where the days on screen came from. Worth saying out loud: the series is two
+// halves spliced at HISTORY_CUTOFF, and until the daily feed is connected the
+// recent half is a checked-in file rather than the database.
+function sourceNote(m) {
+  if (!m.liveFrom) return '';
+  const via = m.liveSource === 'db' ? 'live feed' : 'pending feed connection';
+  // A portfolio that starts after the cutoff has no frozen half at all — most
+  // of them will look like this, so the note has to read correctly with the
+  // history side missing rather than assume both halves exist.
+  const txt = m.historyThrough
+    ? `History through ${fmtMonthLong(m.historyThrough)}, ${fmtMonthLong(m.liveFrom)} onward from the ${via}`
+    : `${fmtMonthLong(m.liveFrom)} onward from the ${via}`;
+  return `<span class="fr-meta-note">${txt}</span>`;
+}
+
 // ─── Renderers: tables ──────────────────────────────────────
-function renderAnalysisTable(s, b, ini, fin) {
+// Year by year over the whole series: this table IS the period breakdown, so a
+// period filter on top of it would only ever remove rows.
+function renderAnalysisTable() {
+  const s = _strategy, b = _bench;
+  const P = esc(_meta.label), BS = esc(_meta.benchmarkShort);
   const years = [...new Set(s.map(p => p.date.getFullYear()))].sort((a, c) => c - a);
-  const rowFor = (label, sSlice, bSlice, mode) => {
+  // Annualizing less than a year of returns compounds a partial period up to a
+  // full one — for a portfolio eight months old that produces a figure that
+  // looks like a track record and is not one. Volatility still holds (it is a
+  // daily figure scaled by √252, not an extrapolation), so only the return and
+  // the ratio built on it are withheld.
+  const canAnnualize = spanMonths(s) >= 12;
+  const rowFor = (label, sSlice, bSlice, mode, title = '') => {
     const sr = C.rets(sSlice), br = C.rets(bSlice);
+    const blankRet = mode === 'annualized' && !canAnnualize;
     // Risk Adjusted divides whatever return the row shows by the annualized vol,
     // so each row's Return ÷ Volatility = its Risk Adjusted column.
     const retVal = (a) => mode === 'annualized' ? C.annualizedArr(a) : C.totalReturnArr(a);
-    const ret = (a) => pct(retVal(a));
+    const ret = (a) => blankRet ? '—' : pct(retVal(a));
     const vol = (a) => mode === 'overall' ? '—' : pct(C.volArr(a, false));
-    const rar = (a) => { if (mode === 'overall') return '—'; const v = C.volArr(a, false); return v ? num(retVal(a) / v) : '—'; };
-    return `<tr><td class="fr-rl">${label}</td>
+    const rar = (a) => {
+      if (mode === 'overall' || blankRet) return '—';
+      const v = C.volArr(a, false); return v ? num(retVal(a) / v) : '—';
+    };
+    return `<tr><td class="fr-rl"${title ? ` title="${esc(title)}"` : ''}>${label}</td>
       <td>${ret(sr)}</td><td class="fr-bm">${ret(br)}</td>
       <td>${vol(sr)}</td><td class="fr-bm">${vol(br)}</td>
       <td>${rar(sr)}</td><td class="fr-bm">${rar(br)}</td></tr>`;
   };
   let rows = years.map(y => rowFor(y, C.yearSlice(s, y), C.yearSlice(b, y), 'year')).join('');
-  rows += rowFor('Annualized', s, b, 'annualized');
+  rows += rowFor('Annualized', s, b, 'annualized',
+    canAnnualize ? '' : 'Needs at least 12 months; the period on screen is shorter');
   rows += rowFor('Overall', s, b, 'overall');
   document.getElementById('fr-t-analysis').innerHTML = `
     <table class="fr-table">
       <thead>
         <tr><th></th><th colspan="2">Return</th><th colspan="2">Volatility</th><th colspan="2">Risk Adjusted</th></tr>
-        <tr><th></th><th>Summit</th><th class="fr-bm">S&amp;P</th><th>Summit</th><th class="fr-bm">S&amp;P</th><th>Summit</th><th class="fr-bm">S&amp;P</th></tr>
+        <tr><th></th><th>${P}</th><th class="fr-bm">${BS}</th><th>${P}</th><th class="fr-bm">${BS}</th><th>${P}</th><th class="fr-bm">${BS}</th></tr>
       </thead><tbody>${rows}</tbody></table>`;
 }
 
-function renderMetricsTable(s, b, ini, fin, rfr) {
-  // TTM window = last LOOKBACK months
-  const ttmStart = new Date(fin.getFullYear(), fin.getMonth() - LOOKBACK_DEFAULT, fin.getDate());
-  const sTtm = s.filter(p => p.date >= ttmStart), bTtm = b.filter(p => p.date >= ttmStart);
-  const aT = C.rets(sTtm), bT = C.rets(bTtm), aP = C.rets(s), bP = C.rets(b);
-  const row = (label, ttmS, ttmB, perS, perB) =>
-    `<tr><td class="fr-rl">${label}</td><td>${ttmS}</td><td class="fr-bm">${ttmB}</td><td>${perS}</td><td class="fr-bm">${perB}</td></tr>`;
+// s/b are this block's period slice. The table shows that period and nothing
+// else — the TTM pair it used to carry alongside is gone, so the period control
+// above is now the only thing deciding what these numbers cover.
+function renderMetricsTable(s, b, rfr) {
+  const P = esc(_meta.label), BS = esc(_meta.benchmarkShort);
+  const a = C.rets(s), bm = C.rets(b);
+  const row = (label, sv, bv) =>
+    `<tr><td class="fr-rl">${label}</td><td>${sv}</td><td class="fr-bm">${bv}</td></tr>`;
   const dash = '—';
-  const html = `
+  document.getElementById('fr-t-metrics').innerHTML = `
     <table class="fr-table">
-      <thead>
-        <tr><th></th><th colspan="2">TTM</th><th colspan="2">Period</th></tr>
-        <tr><th></th><th>Summit</th><th class="fr-bm">S&amp;P</th><th>Summit</th><th class="fr-bm">S&amp;P</th></tr>
-      </thead><tbody>
-      ${row('Standard Deviation', pct(C.volArr(aT, true)), pct(C.volArr(bT, true)), pct(C.volArr(aP, false)), pct(C.volArr(bP, false)))}
-      ${row('Beta Ante', num(C.betaAnte(sTtm)), dash, num(C.betaAnte(s)), dash)}
-      ${row('Beta Post', num(C.betaPost(aT, bT)), dash, num(C.betaPost(aP, bP)), dash)}
-      ${row('Correlation', pct(C.correlation(aT, bT), 1), dash, pct(C.correlation(aP, bP), 1), dash)}
-      ${row('Information Ratio', num(C.informationRatio(aT, bT)), dash, num(C.informationRatio(aP, bP)), dash)}
-      ${row('Sharpe Ratio', num(C.sharpe(aT, rfr, true)), num(C.sharpe(bT, rfr, true)), num(C.sharpe(aP, rfr, false)), num(C.sharpe(bP, rfr, false)))}
+      <thead><tr><th></th><th>${P}</th><th class="fr-bm">${BS}</th></tr></thead>
+      <tbody>
+      ${row('Standard Deviation', pct(C.volArr(a, false)), pct(C.volArr(bm, false)))}
+      ${row('Beta Ante', num(C.betaAnte(s)), dash)}
+      ${row('Beta Post', num(C.betaPost(a, bm)), dash)}
+      ${row('Correlation', pct(C.correlation(a, bm), 1), dash)}
+      ${row('Information Ratio', num(C.informationRatio(a, bm)), dash)}
+      ${row('Sharpe Ratio', num(C.sharpe(a, rfr, false)), num(C.sharpe(bm, rfr, false)))}
       </tbody></table>`;
-  document.getElementById('fr-t-metrics').innerHTML = html;
 }
 
 function renderCaptureTable(c) {
+  const P = esc(_meta.label), BS = esc(_meta.benchmarkShort);
   document.getElementById('fr-t-capture').innerHTML = `
     <table class="fr-table">
-      <thead><tr><th></th><th>Summit</th><th class="fr-bm">S&amp;P</th><th>Capture</th></tr></thead>
+      <thead><tr><th></th><th>${P}</th><th class="fr-bm">${BS}</th><th>Capture</th></tr></thead>
       <tbody>
         <tr><td class="fr-rl">Upside Avg</td><td>${pct(c.upSummit)}</td><td class="fr-bm">${pct(c.upBench)}</td><td>${num(c.captureUp)}</td></tr>
         <tr><td class="fr-rl">Downside Avg</td><td>${pct(c.dnSummit)}</td><td class="fr-bm">${pct(c.dnBench)}</td><td>${num(c.captureDown)}</td></tr>
@@ -259,13 +490,46 @@ function renderStatsBlock(id, values, labels, posName, negName, downInclusiveZer
 // Rolling Window Analysis — pick a window length (2Y–5Y) and which span of
 // years to view (e.g. 3Y → 2022–2024, 2023–2025 …). Independent of the From/To
 // filter; always computed over the full series.
+// Calendar years present in the loaded series.
+function seriesYears() {
+  return [...new Set(_strategy.map(p => p.date.getFullYear()))].sort((a, b) => a - b);
+}
+// Window lengths this portfolio's history can actually fill. The rolling window
+// works in whole calendar years, so the count of years is the ceiling.
+function availableWindowLens() {
+  if (!_strategy || !_strategy.length) return WINDOW_LENGTHS;
+  const n = seriesYears().length;
+  return WINDOW_LENGTHS.filter(l => l <= n);
+}
+// Whole months between the first and last day of a series. Used to decide when
+// a figure would be extrapolating rather than measuring.
+function spanMonths(s) {
+  if (!s.length) return 0;
+  const a = s[0].date, z = s[s.length - 1].date;
+  const m = (z.getFullYear() - a.getFullYear()) * 12 + (z.getMonth() - a.getMonth());
+  return z.getDate() >= a.getDate() ? m : m - 1;
+}
+
 function renderWindowTable() {
-  const years = [...new Set(_strategy.map(p => p.date.getFullYear()))].sort((a, b) => a - b);
+  const P = esc(_meta.label), B = esc(_meta.benchmarkLabel);
+  const cont = document.getElementById('fr-window');
+  const years = seriesYears();
+  const avail = availableWindowLens();
+
+  // A portfolio that started this year cannot fill even the shortest window.
+  // Say so, rather than quietly showing a "3Y" figure covering eight months.
+  if (!avail.length) {
+    cont.innerHTML = `<div class="fr-empty">Needs at least two calendar years.`
+      + ` ${esc(_meta.label)} has ${years.length === 1 ? 'one' : years.length} (${years.join(', ')}).</div>`;
+    return;
+  }
+
   const minY = years[0], maxY = years[years.length - 1];
-  const len = _winLen;
+  // _winLen is the user's preference and survives a portfolio switch; the length
+  // actually drawn is the closest one this portfolio's history can fill.
+  const len = avail.includes(_winLen) ? _winLen : avail[avail.length - 1];
   const starts = [];
   for (let y = minY; y <= maxY - len + 1; y++) starts.push(y);
-  if (starts.length === 0) starts.push(minY);
   if (_winStart == null || !starts.includes(_winStart)) _winStart = starts[starts.length - 1];
   const endY = Math.min(_winStart + len - 1, maxY);
 
@@ -277,9 +541,14 @@ function renderWindowTable() {
   }
   const sArr = C.rets(s), bArr = C.rets(b);
 
-  const lenBtns = [2, 3, 4, 5].map(n => `<button class="fr-tg ${n === len ? 'active' : ''}" data-len="${n}">${n}Y</button>`).join('');
+  // Lengths the series cannot fill stay visible but disabled — that reads as
+  // "not yet" rather than as a control that silently went missing.
+  const lenBtns = WINDOW_LENGTHS.map(n => {
+    const ok = avail.includes(n);
+    return `<button class="fr-tg ${n === len ? 'active' : ''}" data-len="${n}"`
+      + `${ok ? '' : ' disabled title="Not enough history"'}>${n}Y</button>`;
+  }).join('');
   const opts = starts.map(y => `<option value="${y}" ${y === _winStart ? 'selected' : ''}>${y}–${Math.min(y + len - 1, maxY)}</option>`).join('');
-  const cont = document.getElementById('fr-window');
   cont.innerHTML = `
     <div class="fr-win-controls">
       <div class="fr-toggle">${lenBtns}</div>
@@ -288,16 +557,17 @@ function renderWindowTable() {
     <table class="fr-table">
       <thead><tr><th></th><th>Return</th><th>Volatility</th><th>Risk Adjusted</th></tr></thead>
       <tbody>
-        <tr><td class="fr-rl">Summit</td><td>${pct(C.totalReturnArr(sArr))}</td><td>${pct(C.volArr(sArr, false))}</td><td>${num(C.riskAdjusted(sArr))}</td></tr>
-        <tr><td class="fr-rl fr-bm">S&amp;P 500</td><td class="fr-bm">${pct(C.totalReturnArr(bArr))}</td><td class="fr-bm">${pct(C.volArr(bArr, false))}</td><td class="fr-bm">${num(C.riskAdjusted(bArr))}</td></tr>
+        <tr><td class="fr-rl">${P}</td><td>${pct(C.totalReturnArr(sArr))}</td><td>${pct(C.volArr(sArr, false))}</td><td>${num(C.riskAdjusted(sArr))}</td></tr>
+        <tr><td class="fr-rl fr-bm">${B}</td><td class="fr-bm">${pct(C.totalReturnArr(bArr))}</td><td class="fr-bm">${pct(C.volArr(bArr, false))}</td><td class="fr-bm">${num(C.riskAdjusted(bArr))}</td></tr>
       </tbody></table>`;
   cont.querySelectorAll('.fr-tg').forEach(btn =>
     btn.addEventListener('click', () => { _winLen = +btn.dataset.len; _winStart = null; renderWindowTable(); }));
   document.getElementById('fr-win-range').addEventListener('change', e => { _winStart = +e.target.value; renderWindowTable(); });
 }
-
-// Monthly returns table — Summit, S&P 500 and the month's alpha.
-function renderMonthlyTable(ma) {
+// Monthly returns table — the portfolio, its benchmark, and the month's alpha.
+function renderMonthlyTable() {
+  const ma = monthlyFor(_strategy, _bench);
+  const P = esc(_meta.label), B = esc(_meta.benchmarkLabel);
   const rows = ma.labels.map((m, i) =>
     `<tr><td class="fr-rl">${monthLabel(m)}</td>
        <td class="${sign(ma.a[i])}">${pct(ma.a[i], 2, true)}</td>
@@ -305,7 +575,7 @@ function renderMonthlyTable(ma) {
        <td class="${sign(ma.alpha[i])}">${pct(ma.alpha[i], 2, true)}</td></tr>`).join('');
   document.getElementById('fr-monthly').innerHTML = `
     <table class="fr-table fr-monthly-table">
-      <thead><tr><th class="fr-rl">Month</th><th>Summit</th><th>S&amp;P 500</th><th>Alpha</th></tr></thead>
+      <thead><tr><th class="fr-rl">Month</th><th>${P}</th><th>${B}</th><th>Alpha</th></tr></thead>
       <tbody>${rows}</tbody></table>`;
 }
 
@@ -314,34 +584,69 @@ function renderMonthlyTable(ma) {
 // Drives the two hero charts only; picking a year shows just that calendar year
 // (Jan–Dec) with the cumulative series rebased to 0 at its start. Independent of
 // the From/To filter that drives the tables.
-function renderHeroToggle() {
-  const years = [...new Set(_strategy.map(p => p.date.getFullYear()))].sort((a, b) => a - b);
-  const btn = (val, label, active) => `<button class="fr-tg ${active ? 'active' : ''}" data-year="${val}">${label}</button>`;
-  const el = document.getElementById('fr-hero-toggle');
-  el.innerHTML = btn('max', 'Max', _heroStartYear == null)
-    + years.map(y => btn(y, y, _heroStartYear === y)).join('');
-  el.querySelectorAll('.fr-tg').forEach(b => b.addEventListener('click', () => {
-    _heroStartYear = b.dataset.year === 'max' ? null : +b.dataset.year;
-    renderHeroToggle();
-    renderHeroCharts();
-  }));
-}
-function renderHeroCharts() {
-  let s = _strategy, b = _bench;
-  if (_heroStartYear != null) {
-    s = []; b = [];
-    for (let i = 0; i < _strategy.length; i++)
-      if (_strategy[i].date.getFullYear() === _heroStartYear) { s.push(_strategy[i]); b.push(_bench[i]); }
+function renderHeroBlock() {
+  const { s, b } = sliceFor('hero');
+  const tbl = document.getElementById('fr-hero-tbl');
+  if (!s.length) {
+    destroyChart('cum'); destroyChart('alpha');
+    if (tbl) tbl.innerHTML = '';
+    return;
   }
-  if (!s.length) return;
   renderCumChart(s, b);
   renderAlphaChart(s, b);
+  renderHeroTable(s, b);
+}
+
+// The numbers behind the two hero charts (CHART_ENGINE_REFERENCE §0.2 rule 3).
+// Both charts draw a cumulative path, and a cumulative path is the one thing on
+// this page no other table carries — Monthly Returns has each month on its own,
+// which never adds up to "where were we in March 2024" without a calculator.
+// Sampled month-end rather than daily: 1,165 rows would be a data dump.
+function renderHeroTable(s, b) {
+  const host = document.getElementById('fr-hero-tbl');
+  if (!host) return;
+  const P = esc(_meta.label), B = esc(_meta.benchmarkLabel);
+  const cs = C.cumulativeSeries(s), cb = C.cumulativeSeries(b);
+
+  // Last trading day of each month, plus the final day so the table ends where
+  // the chart does even mid-month.
+  const rows = [];
+  for (let i = 0; i < s.length; i++) {
+    const last = i === s.length - 1;
+    if (!last && s[i].date.getMonth() === s[i + 1].date.getMonth()) continue;
+    rows.push({ date: s[i].date, a: cs[i].cum, b: cb[i].cum, alpha: cs[i].cum - cb[i].cum });
+  }
+
+  const open = _heroTbl !== false;
+  host.innerHTML = `
+    <div class="rs-collap">
+      <button type="button" class="rs-collap-h" id="fr-hero-tblb">
+        <span class="rs-collap-ic">${open ? '▾' : '▸'}</span> Cumulative path
+        <span class="rs-collap-sub">${open ? 'hide' : 'show'} · month-end, ${rows.length} month${rows.length === 1 ? '' : 's'} in the selected period</span>
+      </button>
+      <div class="rs-collap-b"${open ? '' : ' hidden'}>
+        <div class="rs-tablewrap fr-tscroll">
+          <table class="fr-table">
+            <thead><tr><th class="fr-rl">Month</th><th>${P}</th><th>${B}</th><th>Alpha</th></tr></thead>
+            <tbody>${rows.map(r => `<tr>
+              <td class="fr-rl">${monthLabel({ year: r.date.getFullYear(), month: r.date.getMonth() + 1 })}</td>
+              <td class="${sign(r.a)}">${pct(r.a, 2, true)}</td>
+              <td class="${sign(r.b)}">${pct(r.b, 2, true)}</td>
+              <td class="${sign(r.alpha)}">${pct(r.alpha, 2, true)}</td></tr>`).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('fr-hero-tblb').addEventListener('click', () => {
+    _heroTbl = !(_heroTbl !== false);
+    renderHeroTable(s, b);
+  });
 }
 function renderCumChart(s, b) {
   const cs = C.cumulativeSeries(s), cb = C.cumulativeSeries(b);
   build('cum', 'fr-cum', {
     type: 'line',
-    data: { datasets: [tline('Summit Management', cs, COLOR.summit), tline('S&P 500', cb, COLOR.bench)] },
+    data: { datasets: [tline(_meta.label, cs, COLOR.summit), tline(_meta.benchmarkLabel, cb, COLOR.bench)] },
     options: timeLineOpts(true, semiAnnual(s)),
   });
 }
@@ -425,21 +730,153 @@ function renderHistogram(id, values, step, xlabel) {
     },
   });
 }
+// ─── Zoom (§0.2 rule 1) ─────────────────────────────────────
+// Drag sideways or down to zoom, drag on an axis strip to force a y-drag,
+// double-click to reset. Copied from rsAttachBrush (js/results.js:1298) with one
+// change: the original resolves an x-drag to label indices, which assumes a
+// category axis. Half the charts here are on a linear time axis, so this hands
+// the callback raw scale values and lets each chart decide what they mean.
+// The .rs-brush rectangle it draws is already global CSS (css/results.css).
+function attachBrush(el, chart, onX, onY, onReset) {
+  const wrap = el.parentElement;
+  if (wrap && getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
+  el.style.cursor = 'crosshair';
+  el.onmousedown = function (ev) {
+    if (ev.button !== 0) return;
+    const r0 = el.getBoundingClientRect(), w0 = wrap.getBoundingClientRect();
+    const area = chart.chartArea;
+    // A drag that starts on an axis strip always means a y-drag. The strips sit
+    // outside the plot; the live one is on the right, where the scales are.
+    const onAxis = (ev.clientX - r0.left) < area.left || (ev.clientX - r0.left) > area.right;
+    let vertical = (onAxis || !onX) ? true : null;   // null = direction not decided yet
+    const startX = ev.clientX, startY = ev.clientY;
+    let box = null;
+
+    function ensureBox() {
+      if (box) return;
+      box = document.createElement('div');
+      box.className = 'rs-brush';
+      if (vertical) {
+        box.style.left = (r0.left - w0.left + area.left) + 'px';
+        box.style.width = (area.right - area.left) + 'px';
+      } else {
+        box.style.top = (r0.top - w0.top) + 'px';
+        box.style.height = r0.height + 'px';
+      }
+      wrap.appendChild(box);
+    }
+    // Lock the axis once the pointer has moved far enough to show intent.
+    function decide(cx, cy) {
+      if (vertical != null) return;
+      const dx = Math.abs(cx - startX), dy = Math.abs(cy - startY);
+      if (Math.max(dx, dy) < 8) return;
+      vertical = dy > dx;
+    }
+    function place(cx, cy) {
+      if (vertical == null) return;
+      ensureBox();
+      if (vertical) {
+        box.style.top = (Math.min(startY, cy) - w0.top) + 'px';
+        box.style.height = Math.abs(cy - startY) + 'px';
+      } else {
+        box.style.left = (Math.min(startX, cx) - w0.left) + 'px';
+        box.style.width = Math.abs(cx - startX) + 'px';
+      }
+    }
+    place(ev.clientX, ev.clientY);
+
+    function onMove(e2) { decide(e2.clientX, e2.clientY); place(e2.clientX, e2.clientY); }
+    function onUp(e2) {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      decide(e2.clientX, e2.clientY);
+      if (box) box.remove();
+      if (vertical == null) return;                      // a click, not a drag
+      if (vertical) {
+        if (Math.abs(e2.clientY - startY) < 8) return;
+        const v1 = chart.scales.y.getValueForPixel(Math.min(startY, e2.clientY) - r0.top);
+        const v2 = chart.scales.y.getValueForPixel(Math.max(startY, e2.clientY) - r0.top);
+        onY(Math.min(v1, v2), Math.max(v1, v2));
+      } else {
+        if (Math.abs(e2.clientX - startX) < 8) return;
+        const x1 = chart.scales.x.getValueForPixel(Math.min(startX, e2.clientX) - r0.left);
+        const x2 = chart.scales.x.getValueForPixel(Math.max(startX, e2.clientX) - r0.left);
+        onX(Math.min(x1, x2), Math.max(x1, x2));
+      }
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    ev.preventDefault();
+  };
+  el.ondblclick = onReset;
+}
+
+// Zoom is applied to the live chart rather than by re-rendering the block: a
+// rebuild would destroy and recreate every canvas in that block just to crop one.
+function applyZoom(key) {
+  const chart = _charts[key], base = _zoomBase[key];
+  if (!chart || !base) return;
+  const z = _zoom[key] || {};
+  const x = chart.options.scales.x, y = chart.options.scales.y;
+  if (z.x) {
+    x.min = base.category ? Math.round(z.x[0]) : z.x[0];
+    x.max = base.category ? Math.round(z.x[1]) : z.x[1];
+    // The fixed Jun/Dec ticks are computed for the full range; inside a zoom they
+    // mostly fall outside it, which would leave the axis blank.
+    x.afterBuildTicks = undefined;
+  } else {
+    x.min = base.x[0]; x.max = base.x[1];
+    x.afterBuildTicks = base.ticks;
+  }
+  y.min = z.y ? z.y[0] : undefined;
+  y.max = z.y ? z.y[1] : undefined;
+  chart.update('none');
+}
+
 function build(key, canvasId, config) {
   _charts[key]?.destroy();
-  _charts[key] = new Chart(document.getElementById(canvasId), config);
+  const el = document.getElementById(canvasId);
+  const chart = new Chart(el, config);
+  _charts[key] = chart;
+  // Remember the unzoomed axis so a double-click has something to restore.
+  _zoomBase[key] = {
+    x: [config.options.scales.x.min, config.options.scales.x.max],
+    ticks: config.options.scales.x.afterBuildTicks,
+    category: config.options.scales.x.type !== 'linear',
+  };
+  attachBrush(el, chart,
+    (a, b) => { _zoom[key] = { ...(_zoom[key] || {}), x: [a, b] }; applyZoom(key); },
+    (a, b) => { _zoom[key] = { ...(_zoom[key] || {}), y: [a, b] }; applyZoom(key); },
+    () => { delete _zoom[key]; applyZoom(key); });
+  if (_zoom[key]) applyZoom(key);
+}
+function destroyChart(key) { _charts[key]?.destroy(); delete _charts[key]; delete _zoomBase[key]; }
+function destroyCharts() {
+  for (const c of Object.values(_charts)) c?.destroy();
+  _charts = {}; _zoom = {}; _zoomBase = {};
 }
 
 // ─── helpers ────────────────────────────────────────────────
 function pct(x, dec = 2, signed = false) { if (x === '—' || x == null || Number.isNaN(x)) return '—'; const v = (x * 100).toFixed(dec) + '%'; return signed && x > 0 ? '+' + v : v; }
 function num(x, dec = 2) { return (x == null || Number.isNaN(x)) ? '—' : x.toFixed(dec); }
 function sign(x) { return x >= 0 ? 'pos' : 'neg'; }
-function near(a, b, tol = 0.0005) { return Math.abs(a - b) < tol; }
+// The freshness badge in the header. (This helper went missing when the KPI
+// strip was removed in 3bf59d7, so every setBadge call has been throwing a
+// ReferenceError at the end of recompute() since then -- which is why the badge
+// has been blank, and why an invalid date range silently left the previous
+// figures on screen instead of flagging itself.)
+function setBadge(text, kind) {
+  const el = document.getElementById('fr-badge');
+  if (!el) return;
+  el.textContent = text;
+  el.className = `fr-badge fr-badge-${kind || 'neutral'}`;
+}
+// Labels come from the portfolio registry and land inside HTML strings, so the
+// ampersand in "S&P 500" has to be escaped or the markup is malformed.
+function esc(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function iso(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
 function parseInput(s) { if (!s) return null; const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
 function fmtDate(d) { return d.toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
-function fmtMonth(d) { return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }); }
 function fmtMonthYear(d) { return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }); }
 function fmtMonthLong(d) { return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }); }
 function monthLabel(m) { return new Date(m.year, m.month - 1, 1).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }); }
-function showMessage(root, msg) { const el = root.querySelector('#fr-msg'); if (el) { el.textContent = msg; el.style.display = ''; } }

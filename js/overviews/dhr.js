@@ -31,6 +31,10 @@
 
 import { dhrBottomLineHtml, dhrBottomLineInit } from './dhr-bottomline.js';
 import { dhrBlSegmentsHtml, dhrBlSegmentsInit } from './dhr-bl-segments.js';
+// Executives & Board is the SHARED mold (js/overviews/management.js, used by 7 companies);
+// Ownership, Governance & SBC and Track Record are bespoke, exactly as they are for Amazon.
+import { dhrMgmtTeamHtml, dhrMgmtOwnHtml, dhrMgmtGovHtml, dhrMgmtTrackHtml,
+         dhrMgmtTeamInit } from './dhr-management.js';
 // Top Line is the shared segments engine, not a bespoke pane: js/segments.js renders all four
 // sub-tabs from js/segments-data/dhr.js (which points at js/results-data/dhr.js for the series).
 import { segmentsHtml, initSegments, segmentsOverviewHtml, initSegmentsOverview,
@@ -681,33 +685,10 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="mggov">Governance &amp; SBC</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="mgtrack">Track Record</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="mgteam">'+ddPending('Executives and board',
-        'Part III of the 10-K incorporates directors and officers by reference from the proxy &mdash; which is why almost nothing is here yet.',
-        ['Rainer M. Blair, President &amp; CEO',
-         'Matt Gugino, CFO since 2025, succeeding Matt McGrew after ~two decades',
-         'Steven M. and Mitchell P. Rales, founders'],
-        ['The 2026 proxy statement &mdash; it unlocks the board, tenures, committees and compensation',
-         'CEO tenure dates: neither the join date nor the CEO start date is in any source held',
-         'The five executive officers appointed across 2025&ndash;26']) +'</div>'+
-      '<div class="ovt-subpane" data-ovst="mgown" hidden>'+ddPending('Ownership',
-        'Single class of common stock &mdash; no dual-class structure.',
-        ['Share count 707,139,356 as of 2-Feb-2026'],
-        ['The proxy: institutional holders, the Rales family stake, insider ownership. Note the 10-K cover&#39;s exclusion of any &ge;10% beneficial owner is boilerplate &mdash; it does NOT establish that one exists.']) +'</div>'+
-      '<div class="ovt-subpane" data-ovst="mggov" hidden>'+ddPending('Governance and SBC',
-        '',
-        ['Buybacks: ~$900M for 5.0M shares in Q2&#39;26; ~$4B returned in FY2025 through dividends and buybacks combined',
-         'Diluted share count 719.1M &rarr; 707.6M year over year'],
-        ['Stock-based compensation in any period &mdash; no figure held',
-         'Executive compensation &mdash; proxy',
-         'The dividend itself: no per-share amount, no policy, no streak']) +'</div>'+
-      '<div class="ovt-subpane" data-ovst="mgtrack" hidden>'+ddPending('Track record and capital allocation',
-        'For a company whose entire thesis is capital deployment, this is the tab that matters most &mdash; and it is empty. A notable admission sits in the 10-K risk factors: "Over the past several years we have not consummated acquisitions at rates similar to our historical practice."',
-        ['Stated capital allocation priorities, and the FY2026 stated bias to M&amp;A',
-         'Balance-sheet capacity at Dec-2025: debt/total capitalisation 26.0%',
-         'Recent deployment: Masimo, StatLab, ~$900M of buybacks'],
-        ['<b>Every acquisition price.</b> None is disclosed in any source held, so cumulative M&amp;A spend cannot be computed &mdash; 8-Ks and deal press releases are the route.',
-         'Deal-level returns: no revenue, margin or ROIC attribution exists for any acquisition',
-         'The economics of the three separations']) +'</div>'+
+      '<div class="ovt-subpane" data-ovst="mgteam">'+dhrMgmtTeamHtml()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="mgown" hidden>'+dhrMgmtOwnHtml()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="mggov" hidden>'+dhrMgmtGovHtml()+'</div>'+
+      '<div class="ovt-subpane" data-ovst="mgtrack" hidden>'+dhrMgmtTrackHtml()+'</div>'+
     '</div>';
 
   h+='<div class="dd-pane" data-dd="misc" hidden>'+
@@ -805,6 +786,9 @@ function ensureBottomLine(root, key){
     ensurePane(root, DD+'[data-dd="bottomline"] .ovt-subpane[data-ovst="'+k+'"]', BL_SUB[k]);
   });
 }
+function ensureMgmt(root){
+  ensurePane(root, DD+'[data-dd="mgmt"] .ovt-subpane[data-ovst="mgteam"]', dhrMgmtTeamInit);
+}
 // Top Line's four sub-panes are the shared segments engine. Each init is scoped to the DD root
 // and is re-run on every show — segments.js re-renders its own wrapper on control changes, so it
 // must not be treated as a one-shot wiring the way the bespoke panes are.
@@ -821,6 +805,8 @@ function wireDD(root){
     if(key==='valuation') requestAnimationFrame(function(){ dScRenderAll(root); });
     if(key==='bottomline') requestAnimationFrame(function(){ ensureBottomLine(root, 'blgen'); });
     if(key==='topline') requestAnimationFrame(function(){ ensureTopLine(root); });
+    // Only the shared mold needs wiring — it owns the CV modal. The other three are prose.
+    if(key==='mgmt') requestAnimationFrame(function(){ ensureMgmt(root); });
   }; });
   // Sub-tabs, pane-scoped so panes never collide.
   root.querySelectorAll('.ov-dhr-dd .dd-pane').forEach(function(pane){

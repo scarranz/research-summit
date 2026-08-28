@@ -109,3 +109,8 @@
 #bc-root .bc-fundtbl td.flexed{color:var(--accent);font-weight:600;}
 #bc-root .block-top button.ghost.on{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:600;}
 #bc-root .pill.flex{background:#EAF0FB;color:var(--accent);}
+
+/* A ladder cell that carries a headline figure with its raw amount underneath */
+#bc-root #bc-tbl td.two{line-height:1.25;}
+#bc-root #bc-tbl td.two .v1{font-weight:700;}
+#bc-root #bc-tbl td.two .v2{font-size:10px;color:var(--mu);margin-top:1px;}

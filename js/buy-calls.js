@@ -234,16 +234,19 @@ function rowFor(K) {
   };
   if (!c) return base;
   const prem = premiumOf(c);
+  const cost = (prem != null) ? prem * 100 : null;
   const be = (prem != null) ? K + prem : null;
   const mK = multiplesAt(K, st.basisYear);
   const mBe = multiplesAt(be, st.basisYear);
   return {
     ...base,
-    prem, be,
-    cost: (prem != null) ? prem * 100 : null,
+    prem, be, cost,
     // What the option costs as a share of the strike it buys — the cheapness of the
     // optionality, independent of the size of the stock.
     costPct: (prem != null && K) ? prem / K : null,
+    // And as a share of the account the exposure rule implies: the premium is the
+    // cash actually at risk, so this is the real position size.
+    costPctPort: (cost != null && base.minPort) ? cost / base.minPort : null,
     toBe: (be != null && st.spot != null) ? be / st.spot - 1 : null,
     days: daysTo(c.details.expiration_date),
     iv: c.implied_volatility ?? null,
@@ -400,7 +403,7 @@ function renderLadder() {
       <th class="sep">Breakeven</th><th>% move</th><th>P/E</th><th>EV/EBITDA</th>
       <th class="sep">Exposure <input id="bc-expo" class="hnum" type="number" step="0.5" min="0.1" value="${(st.exposurePct * 100).toFixed(1)}"></th>
       <th>Cost % of strike</th>
-      <th>Cost outflow</th>
+      <th>Cost outflow % of portfolio</th>
       <th>Min. portfolio</th>
     </tr>`;
 
@@ -434,7 +437,7 @@ function renderLadder() {
       <td class="${rich(r.evBe, curP.ev)}">${mult(r.evBe)}</td>
       <td class="sep muted">${pct(st.exposurePct, 1)}</td>
       <td>${pct(r.costPct, 1)}</td>
-      <td>${cash(r.cost)}</td>
+      <td class="two"><div class="v1">${pct(r.costPctPort, 2)}</div><div class="v2">${cash(r.cost)}</div></td>
       <td class="big">${cash(r.minPort)}</td>
       <td class="sep"><button class="x" data-del="${r.K}" title="remove this strike">✕</button></td>
     </tr>`;
@@ -582,7 +585,7 @@ function renderFoot() {
   $('bc-foot').innerHTML = `
     <b>Contract</b> — a buyer lifting the offer pays the <b>ask</b> (the default); <b>mid</b> is the fair-value view and <b>last</b> is the last print, which on an illiquid strike can be hours old. Hover the <b>i</b> for bid/ask/mid, last trade, open interest, theta, and the cash cost and notional of one contract. <b>+</b> opens IV and delta.<br>
     <b>At strike</b> and <b>Breakeven</b> — the multiples the company would trade at <em>at that price</em>, on the estimate year picked in the header (both groups follow it). Breakeven = strike + premium, the price at expiry where the position returns the cheque; <b>% move</b> is the move from spot it needs. EV/EBITDA uses the estimate year's own net debt where the model carries one, otherwise live enterprise value − market cap. <span class="cheap">Green</span> = below today's multiple, <span class="rich">red</span> = above it.<br>
-    <b>Summary</b>, read left to right as the sizing decision itself — <b>Exposure</b> is the share of the account a single contract's notional is allowed to be; set it once in the header and it applies to every row. <b>Cost % of strike</b> = premium ÷ strike, what the optionality costs relative to what it buys. <b>Cost outflow</b> = premium × 100, the cash that actually leaves the account for one contract, and the most you can lose on it. <b>Min. portfolio</b> = notional ÷ the exposure limit — the smallest account for which one contract still sits inside it, with notional = ${st.notionalBasis === 'strike' ? 'strike' : 'spot'} × 100. The gap between the last two columns is the whole trade: the outflow is what is at risk, the notional is what the position <em>controls</em>, and the exposure limit is a rule about the second, not the first.<br>
+    <b>Summary</b>, read left to right as the sizing decision itself — <b>Exposure</b> is the share of the account a single contract's notional is allowed to be; set it once in the header and it applies to every row. <b>Cost % of strike</b> = premium ÷ strike, what the optionality costs relative to what it buys. <b>Cost outflow</b> is the cash that actually leaves the account for one contract — premium × 100, on the small line — shown as a <b>% of the minimum portfolio in the next column</b>: at a ${pct(st.exposurePct, 1)} exposure limit that is the real size of the position, and the most of the account that can be lost on it. <b>Min. portfolio</b> = notional ÷ the exposure limit — the smallest account for which one contract still sits inside it, with notional = ${st.notionalBasis === 'strike' ? 'strike' : 'spot'} × 100. The two columns together are the whole trade: the outflow is what is at risk, the notional behind the minimum is what the position <em>controls</em>, and the exposure limit is a rule about the second, not the first — which is why the outflow lands at a small fraction of it.<br>
     Price, premium, IV and greeks are live from the Massive option chain. Nothing on this page is stored — every input is in-memory and resets on reload.`;
 }
 

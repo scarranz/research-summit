@@ -1,0 +1,101 @@
+/* Buy Calls tab — every rule scoped under #bc-root so nothing leaks into the rest
+   of the portal. The palette mirrors css/covered-calls.css: the two tabs are two
+   sides of the same trade and should read as one family. The payoff chart borrows
+   .rs-collap / .rs-leg / .rs-ft* / .rs-brush from css/results.css, which is global
+   (CHART_ENGINE_REFERENCE §0.7) — no chart CSS is redefined here. */
+#bc-root{
+  --navy:#1E2733; --blue:#2C3E54; --steel:#3E5A82; --mid:#7C8694;
+  --ice:#EEF1F5; --pale:#F4F6F9; --w:#FFFFFF; --text:#1E2733; --mu:#8A93A0;
+  --bdr:#E7EAEE; --pos:#16A34A; --neg:#DC2626; --accent:#2563EB; --warn:#B45309;
+  color:var(--text); font-variant-numeric:tabular-nums;
+}
+#bc-root .bc-wrap{max-width:1620px;margin:0 auto;}
+#bc-root .topbar{display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap;}
+#bc-root .topbar h2{font-size:18px;font-weight:700;color:var(--text);text-transform:none;letter-spacing:-.01em;}
+#bc-root .sub{color:var(--mu);font-size:13px;margin-bottom:12px;max-width:820px;}
+#bc-root .controls{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin-left:auto;}
+#bc-root .ctl{display:flex;flex-direction:column;gap:4px;}
+#bc-root .ctl.grow{flex:1;min-width:280px;}
+#bc-root .ctl label{font-size:10px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+#bc-root .ctl .row{display:flex;gap:6px;align-items:center;}
+#bc-root .ctl .row .x{font-size:11px;color:var(--mu);}
+#bc-root input,#bc-root select,#bc-root button{font-family:inherit;font-size:13px;border:1px solid var(--bdr);border-radius:7px;padding:7px 10px;background:var(--w);color:var(--text);}
+#bc-root input[type=number]{width:110px;}
+#bc-root button{background:var(--navy);color:#fff;border-color:var(--navy);cursor:pointer;font-weight:600;}
+#bc-root button.ghost{background:var(--w);color:var(--steel);border-color:var(--bdr);font-weight:500;}
+#bc-root button:hover{opacity:.92;}
+/* The shared components style themselves — the navy default above must not repaint
+   the collapsible header or the legend chips that come from css/results.css. */
+#bc-root button.rs-collap-h,#bc-root button.rs-leg{background:none;color:inherit;border-color:transparent;}
+#bc-root button.rs-collap-h{background:var(--pale);color:var(--text);}
+#bc-root button.rs-leg{border:1px solid transparent;}
+#bc-root .seg{display:inline-flex;border:1px solid var(--bdr);border-radius:7px;overflow:hidden;}
+#bc-root .seg button{border:none;border-radius:0;background:var(--w);color:var(--steel);padding:7px 11px;font-weight:600;white-space:nowrap;}
+#bc-root .seg button.on{background:var(--navy);color:#fff;}
+#bc-root .seg button+button{border-left:1px solid var(--bdr);}
+
+/* Ticker chips — the names we hold estimates for */
+#bc-root .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+#bc-root .chip{font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;background:var(--w);color:var(--steel);border:1px solid var(--bdr);cursor:pointer;}
+#bc-root .chip.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+#bc-root .kpis{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:16px;}
+#bc-root .kpi{background:var(--w);border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;}
+#bc-root .kpi .l{font-size:9.5px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+#bc-root .kpi .v{font-size:20px;font-weight:700;margin-top:4px;}
+#bc-root .kpi .s{font-size:10.5px;color:var(--mu);margin-top:2px;}
+
+/* Sizing & scenario panel */
+#bc-root .panel{background:var(--w);border:1px solid var(--bdr);border-radius:14px;margin-bottom:16px;overflow:hidden;}
+#bc-root .panel-h{font-size:10px;font-weight:700;color:var(--steel);text-transform:uppercase;letter-spacing:.06em;padding:11px 16px 0;}
+#bc-root .panel-b{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;padding:10px 16px 14px;}
+#bc-root .scenout{border-top:1px solid var(--bdr);background:var(--pale);padding:11px 16px;font-size:13px;color:var(--text);}
+#bc-root .scenout .big{font-weight:700;font-size:15px;}
+
+#bc-root .card{background:var(--w);border:1px solid var(--bdr);border-radius:14px;padding:6px 6px 12px;overflow-x:auto;margin-bottom:18px;}
+#bc-root table#bc-tbl{width:100%;border-collapse:collapse;font-size:12.5px;}
+#bc-root #bc-tbl th,#bc-root #bc-tbl td{padding:7px 8px;border-bottom:1px solid var(--bdr);white-space:nowrap;text-align:center;}
+#bc-root #bc-tbl th{font-size:9.5px;color:var(--mu);text-transform:uppercase;letter-spacing:.03em;font-weight:600;position:sticky;top:0;background:var(--w);z-index:1;}
+#bc-root #bc-tbl th.grp{font-size:9px;color:var(--steel);font-weight:700;letter-spacing:.06em;border-bottom:none;padding-bottom:2px;}
+#bc-root #bc-tbl th.lft,#bc-root #bc-tbl td.lft{text-align:left;width:34px;}
+#bc-root #bc-tbl .sep{border-left:1px solid var(--bdr);}
+#bc-root #bc-tbl td.tk{font-weight:700;text-align:left;}
+#bc-root #bc-tbl tbody tr{cursor:pointer;}
+#bc-root #bc-tbl tbody tr:hover{background:var(--pale);}
+#bc-root #bc-tbl tbody tr.sel{background:#EAF0FB;box-shadow:inset 3px 0 0 var(--accent);}
+#bc-root .tag{font-size:8.5px;font-weight:700;color:var(--steel);background:var(--ice);padding:1px 4px;border-radius:5px;letter-spacing:.02em;}
+#bc-root .big{font-weight:700;}
+#bc-root .cheap{color:var(--pos);} #bc-root .rich{color:var(--neg);}
+#bc-root .up{color:var(--pos);} #bc-root .dn{color:var(--neg);}
+#bc-root .muted{color:var(--mu);font-size:12px;}
+#bc-root .err{color:var(--neg);font-weight:600;}
+#bc-root .pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;background:var(--ice);color:var(--steel);}
+#bc-root .spin{color:var(--mu);font-size:13px;padding:22px 0;}
+#bc-root .ttip{display:inline-block;width:13px;height:13px;line-height:13px;margin-left:5px;text-align:center;font-size:9px;font-weight:700;font-style:italic;color:var(--steel);background:var(--ice);border-radius:50%;cursor:help;vertical-align:middle;}
+#bc-root .ttip:hover{background:var(--steel);color:#fff;}
+
+/* Payoff chart block */
+#bc-root .block{background:var(--w);border:1px solid var(--bdr);border-radius:14px;padding:14px 16px 16px;margin-bottom:18px;}
+#bc-root .block-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px;}
+#bc-root .block-h{font-size:13px;font-weight:700;color:var(--text);}
+#bc-root .block-top .rs-modes{margin-left:auto;}
+#bc-root .legend{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+#bc-root .cwrap{position:relative;height:320px;}
+#bc-root .hint{font-size:10.5px;color:var(--mu);margin-top:8px;}
+#bc-root #bc-est .foot{margin-top:10px;}
+#bc-root .rs-ft-h .sub{display:block;font-size:10px;color:var(--mu);font-weight:500;}
+#bc-root .foot{margin-top:12px;font-size:11px;color:var(--mu);line-height:1.65;}
+
+/* Cursor-following tooltip (top level, position:fixed) */
+#bc-tip{position:fixed;z-index:50;background:#1E2733;color:#fff;font-size:11px;font-weight:500;padding:7px 10px;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .1s;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.2);}
+#bc-tip.on{opacity:1;}
+#bc-tip b{color:#9DB4D4;font-weight:600;}
+
+@media (max-width:1200px){
+  #bc-root .kpis{grid-template-columns:repeat(4,1fr);}
+}
+@media (max-width:760px){
+  #bc-root .kpis{grid-template-columns:repeat(2,1fr);}
+  #bc-root .controls{margin-left:0;}
+  #bc-root .cwrap{height:260px;}
+}

@@ -1,18 +1,18 @@
 // Buy Calls — long-call analyzer.
 //
 // The mirror image of the Covered Calls tab. There we SELL a call and ask "at what
-// valuation do I get called away"; here we BUY one and ask three questions the
-// option chain alone cannot answer:
+// valuation do I get called away"; here we BUY one and ask two questions the option
+// chain alone cannot answer:
 //
 //   1. What multiple am I underwriting?  A $400 strike is meaningless until it is
 //      "28x 2027E EPS". Every strike and every breakeven is priced back into an
-//      implied P/E and EV/EBITDA on a chosen estimate year.
-//   2. What does the position cost, and what does it control?  Premium × 100 is the
-//      cheque; spot × 100 is the exposure. The gap between them is the whole trade.
-//   3. How big an account does this need?  Given a maximum % of the account we are
-//      willing to have in notional exposure, the minimum account value that a given
-//      number of contracts implies — and, the other way round, the contracts an
-//      account of a given size supports.
+//      implied P/E and EV/EBITDA on a year picked in the table header itself.
+//   2. How big an account does one contract need?  Notional ÷ the share of the
+//      account we allow a single position to control.
+//
+// The ladder is a HAND-PICKED list of strikes, not the whole chain — a long call is
+// a considered bet on a few strikes, so they are added deliberately (a dropdown of
+// what is listed, or a range) and removed one by one.
 //
 // Live price, premium, IV and greeks come from the Massive option chain via the
 // covered-calls-massive edge function. Forward EPS / EBITDA / net debt come from
@@ -37,12 +37,10 @@ function esc(s) {
 
 // ── Formatting. Rule 5: no bare numbers, estimates always marked. ─────────────
 const px = (x) => (x == null || !isFinite(x)) ? '—' : `$${x.toFixed(2)}`;
-const px0 = (x) => (x == null || !isFinite(x)) ? '—' : `$${Math.round(x).toLocaleString()}`;
 const mult = (x) => (x == null || !isFinite(x) || x <= 0) ? '—' : `${x.toFixed(1)}x`;
-const mom = (x) => (x == null || !isFinite(x)) ? '—' : `${x.toFixed(2)}x`;
 const pct = (x, d = 1) => (x == null || !isFinite(x)) ? '—' : `${(x * 100).toFixed(d)}%`;
 const pctS = (x, d = 1) => (x == null || !isFinite(x)) ? '—' : `${x >= 0 ? '+' : ''}${(x * 100).toFixed(d)}%`;
-// Dollars at position size — these get large, so compact above $1M.
+// Dollars at position size — these get large, so compact above $10K.
 const cash = (x) => {
   if (x == null || !isFinite(x)) return '—';
   const a = Math.abs(x), s = x < 0 ? '−' : '';
@@ -65,21 +63,19 @@ const st = {
   chain: [],                 // raw call contracts for the selected expiry
   loading: true, err: null,
 
-  basisYear: null,           // estimate year driving every multiple
-  premBasis: 'ask',          // 'ask' | 'mid' | 'last' — a buyer lifts the ask
-  notionalBasis: 'spot',     // 'spot' | 'strike'
-  band: 0.35,                // ± moneyness band of strikes shown
-  account: 1000000,          // account value, $
-  exposurePct: 0.20,         // max % of the account allowed in notional exposure
-  contracts: 10,             // contracts per position
+  strikes: [],               // the hand-picked ladder, ascending
+  rangeFrom: null, rangeTo: null,   // the "add range" inputs
+  seeded: false,             // has this ticker's default range been laid down yet
 
-  scenKind: 'pe',            // 'pe' | 'ev' — the multiple the scenario price is built on
-  scenMult: 25,
-  scenYear: null,
+  basisYear: null,           // estimate year driving every multiple (picked in the header)
+  premBasis: 'ask',          // 'ask' | 'mid' | 'last' — a buyer lifts the ask
+  notionalBasis: 'strike',   // 'strike' | 'spot'
+  exposurePct: 0.02,         // share of the account one contract's notional may be
+  expand: false,             // show IV + delta inside the Contract group
 
   selected: null,            // selected strike (drives the KPI strip)
   plotted: {},               // strike -> true, the strikes drawn on the payoff chart
-  mode: 'pnl',               // 'pnl' | 'ret' | 'pos'
+  mode: 'pnl',               // 'pnl' | 'ret'
   hidden: {},                // series key -> true (rule 2)
   yr: null, win: null,       // brush zoom: y range, x window (grid indexes)
   tbl: false,                // payoff table open
@@ -101,14 +97,14 @@ const daysTo = (d) => {
 // ── Estimates ─────────────────────────────────────────────────────────────────
 const estOf = () => BC_ESTIMATES[st.ticker] || null;
 const yearsOf = () => { const e = estOf(); return e ? Object.keys(e.years).map(Number).sort((a, b) => a - b) : []; };
-const basis = () => { const e = estOf(); return (e && st.basisYear != null) ? e.years[st.basisYear] : null; };
 // Multiples need a USD estimate set: SPOT reports in EUR and TBBB in MXN, and a
 // EUR EBITDA against a USD share price is simply a wrong number. Rule 6 — show
 // nothing rather than something broken.
 const usable = () => { const e = estOf(); return !!e && e.currency === 'USD'; };
+const yl = (y) => { const e = estOf(); return (e && e.years[y] && e.years[y].est) ? `${y}E` : `${y}`; };
 
-// Diluted shares (M) and net debt ($M) for the basis year. Net debt falls back to
-// the live enterprise-value − market-cap when the estimate set has none.
+// Diluted shares (M) and net debt ($M) for a year. Net debt falls back to the live
+// enterprise-value − market-cap when the estimate set has none.
 function capital(year) {
   const e = estOf(); const y = e && e.years[year];
   const shares = (y && y.shares != null) ? y.shares : (st.shares != null ? st.shares / 1e6 : null);
@@ -129,22 +125,9 @@ function multiplesAt(price, year) {
   return { pe, ev };
 }
 
-// The inverse: the share price a target multiple implies. This is the scenario engine —
-// "if AppLovin trades at 25x 2027E EPS, the stock is $517".
-function priceFromMultiple(kind, m, year) {
-  if (!usable() || !(m > 0)) return null;
-  const e = estOf(); const y = e && e.years[year];
-  if (!y) return null;
-  if (kind === 'pe') return (y.eps != null && y.eps > 0) ? m * y.eps : null;
-  const { shares, netDebt } = capital(year);
-  if (y.ebitda == null || shares == null || netDebt == null) return null;
-  return (m * y.ebitda - netDebt) / shares;
-}
-const scenPrice = () => priceFromMultiple(st.scenKind, st.scenMult, st.scenYear);
-
 // ── The strike ladder ─────────────────────────────────────────────────────────
-// One row per call contract, everything derived. `premium` is the basis the user
-// chose; a buyer paying the ask is the honest default, mid is the fair-value view.
+// `premium` is the basis the user chose; a buyer paying the ask is the honest
+// default, mid is the fair-value view.
 function premiumOf(c) {
   const q = c.last_quote || {};
   const last = (c.last_trade && c.last_trade.price) ?? (c.day && c.day.close) ?? null;
@@ -153,60 +136,73 @@ function premiumOf(c) {
   return last ?? q.midpoint ?? q.ask;
 }
 
-function ladder() {
-  if (st.spot == null) return [];
-  const lo = st.spot * (1 - st.band), hi = st.spot * (1 + st.band);
-  const S = scenPrice();
-  return st.chain
-    .filter((c) => c.details && c.details.strike_price >= lo && c.details.strike_price <= hi)
-    .map((c) => {
-      const K = c.details.strike_price;
-      const prem = premiumOf(c);
-      const cost = (prem != null) ? prem * 100 : null;                 // cheque per contract
-      const notional = 100 * (st.notionalBasis === 'strike' ? K : st.spot);
-      const be = (prem != null) ? K + prem : null;                     // breakeven at expiry
-      const days = daysTo(c.details.expiration_date);
-      const toBe = (be != null) ? be / st.spot - 1 : null;
-      // The same move, annualized — a 22% move needed in 5 months is not a 22% bet.
-      const annBe = (toBe != null && days > 0) ? Math.pow(1 + toBe, 365 / days) - 1 : null;
-      const mK = multiplesAt(K, st.basisYear);
-      const mBe = multiplesAt(be, st.basisYear);
-      const delta = c.greeks ? c.greeks.delta : null;
-      // Effective leverage: the $ of underlying each $ of premium moves with.
-      const lev = (delta != null && prem) ? delta * st.spot / prem : null;
-      // Scenario payoff at expiry, per contract.
-      const payoff = (S != null) ? Math.max(0, S - K) * 100 : null;
-      const pnl = (payoff != null && cost != null) ? payoff - cost : null;
-      const moM = (payoff != null && cost) ? payoff / cost : null;
-      const stockRet = (S != null) ? S / st.spot - 1 : null;           // same cash in shares
-      // Sizing. Notional ÷ the % of the account it is allowed to be = the account
-      // this position needs; the inverse gives the contracts an account supports.
-      const minAcct = (st.exposurePct > 0) ? notional * st.contracts / st.exposurePct : null;
-      const maxCts = (st.exposurePct > 0 && notional > 0)
-        ? Math.floor(st.account * st.exposurePct / notional) : null;
-      return {
-        K, prem, cost, notional, be, days, toBe, annBe, delta, lev,
-        iv: c.implied_volatility ?? null, theta: c.greeks ? c.greeks.theta : null,
-        oi: c.open_interest ?? null,
-        bid: (c.last_quote || {}).bid ?? null, ask: (c.last_quote || {}).ask ?? null,
-        mid: (c.last_quote || {}).midpoint ?? null,
-        lastTrade: (c.last_trade || {}).price ?? null,
-        moneyness: K / st.spot - 1,
-        premPctNotional: (prem != null) ? prem * 100 / notional : null,
-        peK: mK.pe, evK: mK.ev, peBe: mBe.pe, evBe: mBe.ev,
-        payoff, pnl, moM, stockRet,
-        outlay: (cost != null) ? cost * st.contracts : null,
-        minAcct, maxCts,
-        exp: c.details.expiration_date,
-      };
-    })
-    .sort((a, b) => a.K - b.K);
+// Every strike listed at this expiry, ascending — the menu the picker offers.
+function listedStrikes() {
+  return [...new Set(st.chain.map((c) => c.details.strike_price))].sort((a, b) => a - b);
+}
+// The modal gap between consecutive listed strikes: the chain's own increment.
+function strikeStep(all) {
+  const gaps = {};
+  for (let i = 1; i < all.length; i++) {
+    const g = +(all[i] - all[i - 1]).toFixed(2);
+    gaps[g] = (gaps[g] || 0) + 1;
+  }
+  let best = null, n = 0;
+  Object.keys(gaps).forEach((g) => { if (gaps[g] > n) { n = gaps[g]; best = +g; } });
+  return best || 5;
+}
+// The ladder a new ticker opens on: ten increments of listed strikes starting just
+// out of the money. On AppLovin at ~$319 with $10 strikes that is exactly 350–450.
+function defaultRange() {
+  const all = listedStrikes();
+  if (!all.length || st.spot == null) return { from: null, to: null };
+  const step = strikeStep(all);
+  const from = Math.ceil(st.spot * 1.08 / step) * step;
+  return { from, to: from + 10 * step };
 }
 
+function rowFor(K) {
+  const c = st.chain.find((x) => x.details.strike_price === K) || null;
+  const notional = 100 * (st.notionalBasis === 'spot' ? st.spot : K);
+  const base = {
+    K, listed: !!c, notional,
+    // Sizing: the account for which one contract's notional is still no more than
+    // the exposure limit.
+    minPort: (st.exposurePct > 0) ? notional / st.exposurePct : null,
+    moneyness: (st.spot != null) ? K / st.spot - 1 : null,
+  };
+  if (!c) return base;
+  const prem = premiumOf(c);
+  const be = (prem != null) ? K + prem : null;
+  const mK = multiplesAt(K, st.basisYear);
+  const mBe = multiplesAt(be, st.basisYear);
+  return {
+    ...base,
+    prem, be,
+    cost: (prem != null) ? prem * 100 : null,
+    // What the option costs as a share of the strike it buys — the cheapness of the
+    // optionality, independent of the size of the stock.
+    costPct: (prem != null && K) ? prem / K : null,
+    toBe: (be != null && st.spot != null) ? be / st.spot - 1 : null,
+    days: daysTo(c.details.expiration_date),
+    iv: c.implied_volatility ?? null,
+    delta: c.greeks ? c.greeks.delta : null,
+    theta: c.greeks ? c.greeks.theta : null,
+    oi: c.open_interest ?? null,
+    bid: (c.last_quote || {}).bid ?? null, ask: (c.last_quote || {}).ask ?? null,
+    mid: (c.last_quote || {}).midpoint ?? null,
+    lastTrade: (c.last_trade || {}).price ?? null,
+    peK: mK.pe, evK: mK.ev, peBe: mBe.pe, evBe: mBe.ev,
+    exp: c.details.expiration_date,
+  };
+}
+
+const ladder = () => st.strikes.slice().sort((a, b) => a - b).map(rowFor);
+
 const selectedRow = () => {
-  const rows = ladder();
+  const rows = ladder().filter((r) => r.listed);
   if (!rows.length) return null;
-  return rows.find((r) => r.K === st.selected) || rows.find((r) => r.K >= st.spot) || rows[0];
+  return rows.find((r) => r.K === st.selected) || rows[0];
 };
 
 // ── Fetching ──────────────────────────────────────────────────────────────────
@@ -250,20 +246,24 @@ async function loadChain() {
     if (st.spot == null) throw new Error(`no live price for ${st.ticker}`);
     const j = await mfetch('chain', st.ticker, {
       contract_type: 'call', expiration_date: st.expiry,
-      'strike_price.gte': Math.round(st.spot * 0.4), 'strike_price.lte': Math.round(st.spot * 2.2),
+      'strike_price.gte': Math.round(st.spot * 0.4), 'strike_price.lte': Math.round(st.spot * 2.4),
       limit: 250,
     });
     st.chain = (j.results || []).filter((c) => c.details && c.details.contract_type === 'call'
       && c.details.expiration_date === st.expiry);
     if (!st.chain.length) throw new Error(`no call contracts for ${st.ticker} at ${st.expiry}`);
-    // Land the selection and the plotted set on the money.
-    const rows = ladder();
-    if (rows.length) {
-      const atm = rows.find((r) => r.K >= st.spot) || rows[rows.length - 1];
-      st.selected = atm.K;
+
+    // Lay down the default ladder once per ticker; a later expiry change keeps
+    // whatever the user has picked.
+    const dr = defaultRange();
+    if (st.rangeFrom == null) { st.rangeFrom = dr.from; st.rangeTo = dr.to; }
+    if (!st.seeded) {
+      st.seeded = true;
+      st.strikes = listedStrikes().filter((k) => k >= dr.from - 1e-9 && k <= dr.to + 1e-9);
+      st.selected = st.strikes[0] ?? null;
       st.plotted = {};
-      const i = rows.indexOf(atm);
-      [rows[i], rows[i + 2], rows[i + 4]].forEach((r) => { if (r) st.plotted[r.K] = true; });
+      [st.strikes[0], st.strikes[Math.floor(st.strikes.length / 2)], st.strikes[st.strikes.length - 1]]
+        .forEach((k) => { if (k != null) st.plotted[k] = true; });
     }
   } catch (e) {
     st.err = e.message; st.chain = [];
@@ -276,14 +276,12 @@ async function loadTicker(tk) {
   st.ticker = tk.toUpperCase();
   killChart($('bc-canvas'));
   st.loading = true; st.err = null; st.chain = [];
+  st.strikes = []; st.seeded = false; st.rangeFrom = null; st.rangeTo = null;
   st.selected = null; st.plotted = {}; st.yr = null; st.win = null; st.hidden = {};
-  const ys = yearsOf();
-  // Default the valuation basis to the first estimate year we hold (2026E for APP),
-  // and the scenario to the year after it — a LEAPS is usually underwritten a year out.
-  const e = estOf();
+  const ys = yearsOf(), e = estOf();
+  // Default the valuation basis to the first estimate year we hold (2026E for APP).
   const estYears = ys.filter((y) => e && e.years[y] && e.years[y].est);
   st.basisYear = estYears[0] ?? ys[ys.length - 1] ?? null;
-  st.scenYear = estYears[1] ?? st.basisYear;
   render();
   await loadExpiries();
   if (!st.expiries.length) { st.err = `no listed options found for ${st.ticker}`; st.loading = false; render(); return; }
@@ -293,18 +291,16 @@ async function loadTicker(tk) {
 // ── The payoff chart (path-3 canvas, CHART_ENGINE_REFERENCE §0.7) ─────────────
 const C_CALL = ['#1B3F94', '#2563EB', '#5E8BEC', '#93B1F0'];   // EVO_RAMP — ordinal by strike
 const C_STOCK = 'rgba(30,39,51,0.92)';                          // RS_ACT — what you'd own instead
-const C_ZERO = 'rgba(124,134,148,0.85)';
 
 // The one predicate (rule 2): the chart, the table and every total ask this.
 function vis(k) { return !st.hidden[k]; }
 
 // Price grid on the x-axis — a category axis so the copied brush's index maths works.
 function grid() {
-  const rows = ladder();
   if (st.spot == null) return [];
-  const ks = rows.map((r) => r.K);
-  const lo = Math.max(1, Math.min(st.spot * 0.55, (ks[0] || st.spot) * 0.85));
-  const hi = Math.max(st.spot * 1.75, (ks[ks.length - 1] || st.spot) * 1.3, (scenPrice() || 0) * 1.05);
+  const ks = ladder().filter((r) => r.listed).map((r) => r.K);
+  const lo = Math.max(1, Math.min(st.spot * 0.65, (ks[0] || st.spot) * 0.85));
+  const hi = Math.max(st.spot * 1.6, (ks[ks.length - 1] || st.spot) * 1.35);
   const n = 60, out = [];
   for (let i = 0; i <= n; i++) out.push(lo + (hi - lo) * i / n);
   return out;
@@ -312,7 +308,7 @@ function grid() {
 
 // Series drawn: one per plotted strike, plus the same cash held in shares.
 function series() {
-  const rows = ladder().filter((r) => st.plotted[r.K] && r.prem != null);
+  const rows = ladder().filter((r) => r.listed && st.plotted[r.K] && r.prem != null);
   const out = rows.map((r, i) => ({
     k: `k${r.K}`, label: `$${r.K} call`, color: C_CALL[i % C_CALL.length], row: r,
   }));
@@ -325,17 +321,14 @@ function series() {
 function valueAt(s, price) {
   const r = s.row;
   if (r.cost == null) return null;
-  const n = st.mode === 'pos' ? st.contracts : 1;
   if (s.isStock) {
     // The same cheque put into shares instead: outlay × (price/spot − 1).
-    const p = r.cost * n * (price / st.spot - 1);
-    return st.mode === 'ret' ? (price / st.spot - 1) * 100 : p;
+    return st.mode === 'ret' ? (price / st.spot - 1) * 100 : r.cost * (price / st.spot - 1);
   }
-  const pnl = (Math.max(0, price - r.K) - r.prem) * 100 * n;
-  return st.mode === 'ret' ? pnl / (r.cost) * 100 : pnl;
+  const pnl = (Math.max(0, price - r.K) - r.prem) * 100;
+  return st.mode === 'ret' ? pnl / r.cost * 100 : pnl;
 }
 
-const modeUnit = () => st.mode === 'ret' ? '%' : '$';
 const modeFmt = (v) => v == null ? '—' : (st.mode === 'ret' ? `${v >= 0 ? '+' : ''}${v.toFixed(0)}%` : cash(v));
 
 // Chart.js keeps its own registry keyed on the canvas element, so dropping our
@@ -368,9 +361,8 @@ function buildChart() {
     pointRadius: 0, pointHitRadius: 8, tension: 0,
   }));
 
-  const S = scenPrice();
-  // Vertical markers for spot and the valuation-implied price — a local plugin, the
-  // rsFwdZone pattern (§0.7): passed in `plugins`, configured under options.plugins.
+  // A vertical marker at spot — a local plugin, the rsFwdZone pattern (§0.7):
+  // passed in `plugins`, configured under options.plugins.
   const markers = {
     id: 'bcMarkers',
     beforeDatasetsDraw(chart, args, opts) {
@@ -394,9 +386,6 @@ function buildChart() {
   };
   const nearest = (p) => p == null ? -1 : gx.reduce((best, v, i) => Math.abs(v - p) < Math.abs(gx[best] - p) ? i : best, 0);
   const at = [{ i: nearest(st.spot), label: `spot ${px(st.spot)}`, color: 'rgba(124,134,148,0.9)' }];
-  if (S != null && S >= gx[0] && S <= gx[gx.length - 1]) {
-    at.push({ i: nearest(S), label: `${st.scenMult}x ${st.scenYear}E → ${px(S)}`, color: '#2563EB', dash: [2, 3] });
-  }
 
   st.chart = new Chart(el.getContext('2d'), {
     type: 'line',
@@ -510,94 +499,87 @@ function rsAttachBrush(el, chart, onX, onY, onReset) {
 
 // ── Render: KPIs ──────────────────────────────────────────────────────────────
 function renderKpis() {
-  const r = selectedRow(), e = estOf(), S = scenPrice();
+  const r = selectedRow();
   const cur = multiplesAt(st.spot, st.basisYear);
-  const yl = (y) => (e && e.years[y] && e.years[y].est) ? `${y}E` : `${y}`;
   const cells = [
     ['Spot', px(st.spot), st.changePct != null ? `${pctS(st.changePct)} today` : esc(st.ticker)],
-    ['Selected strike', r ? `$${r.K}` : '—', r ? `${pctS(r.moneyness)} · ${r.days}d to ${r.exp}` : '—'],
+    ['Selected strike', r ? `$${r.K}` : '—', r ? `${pctS(r.moneyness)} · ${r.days}d to ${r.exp}` : 'pick a strike'],
     ['Premium', r ? px(r.prem) : '—', r ? `${cash(r.cost)} per contract · ${st.premBasis}` : '—'],
-    ['Breakeven', r ? px(r.be) : '—', r ? `${pctS(r.toBe)} · ${pctS(r.annBe)} ann.` : '—'],
+    ['Breakeven', r ? px(r.be) : '—', r ? `${pctS(r.toBe)} from spot` : '—'],
     [`P/E at breakeven · ${yl(st.basisYear)}`, r ? mult(r.peBe) : '—',
       cur.pe != null ? `spot is ${mult(cur.pe)}` : (usable() ? 'no EPS estimate' : 'non-USD estimates')],
-    ['Position cost', r ? cash(r.outlay) : '—', `${st.contracts} contract${st.contracts === 1 ? '' : 's'}`],
-    ['Min. account', r ? cash(r.minAcct) : '—',
-      r ? `${cash(r.notional * st.contracts)} notional at ${pct(st.exposurePct, 0)}` : '—'],
+    ['Min. portfolio', r ? cash(r.minPort) : '—',
+      r ? `${cash(r.notional)} notional at ${pct(st.exposurePct, 1)}` : '—'],
   ];
   $('bc-kpis').innerHTML = cells.map(([l, v, s]) =>
     `<div class="kpi"><div class="l">${esc(l)}</div><div class="v">${esc(v)}</div><div class="s">${esc(s)}</div></div>`).join('');
 
-  // The scenario read-out: the price a target multiple implies, and what the
-  // selected call is worth there.
-  const sc = $('bc-scenout');
-  if (!sc) return;
-  if (!usable()) {
-    sc.innerHTML = `<span class="muted">${esc(e ? e.name : st.ticker)} reports in ${esc(e ? e.currency : '—')} — multiples against a USD share price would be wrong, so they are not shown.</span>`;
-  } else if (S == null) {
-    sc.innerHTML = '<span class="muted">no estimate for that year — pick another.</span>';
-  } else {
-    const up = S / st.spot - 1;
-    sc.innerHTML = `<b>${st.scenMult}x ${esc(st.scenKind === 'pe' ? 'P/E' : 'EV/EBITDA')} on ${esc(yl(st.scenYear))}</b> → `
-      + `<span class="big">${px(S)}</span> <span class="${up >= 0 ? 'up' : 'dn'}">${pctS(up)}</span> vs spot`
-      + (r && r.moM != null ? ` · the $${r.K} call returns <span class="big ${r.pnl >= 0 ? 'up' : 'dn'}">${mom(r.moM)}</span> the premium (${cash(r.pnl * st.contracts)} on ${st.contracts})` : '');
+  const note = $('bc-note');
+  if (note) {
+    note.innerHTML = usable() ? ''
+      : `<span class="muted">${esc(estOf() ? estOf().name : st.ticker)} reports in ${esc(estOf() ? estOf().currency : '—')} — multiples against a USD share price would be wrong, so they are not shown.</span>`;
   }
 }
 
 // ── Render: the strike ladder ─────────────────────────────────────────────────
 function renderLadder() {
-  const rows = ladder(), e = estOf();
-  const yl = (y) => (e && e.years[y] && e.years[y].est) ? `${y}E` : `${y}`;
-  const S = scenPrice();
+  const rows = ladder(), ys = yearsOf().filter((y) => y >= 2025), e = estOf();
+  const yearSel = `<select id="bc-basisYear" class="hsel">`
+    + ys.map((y) => `<option value="${y}" ${y === st.basisYear ? 'selected' : ''}>${y}${e && e.years[y] && e.years[y].est ? 'E' : ''}</option>`).join('')
+    + `</select>`;
+  const nContract = st.expand ? 5 : 3;
   $('bc-thead').innerHTML = `
     <tr>
       <th rowspan="2" class="lft">Plot</th>
-      <th colspan="5" class="grp">Contract</th>
-      <th colspan="4" class="grp sep">Cost &amp; exposure</th>
+      <th colspan="${nContract}" class="grp">Contract
+        <button type="button" class="xp" id="bc-expand" title="${st.expand ? 'hide IV and delta' : 'show IV and delta'}">${st.expand ? '−' : '+'}</button></th>
+      <th colspan="2" class="grp sep">At strike · ${yearSel}</th>
       <th colspan="4" class="grp sep">Breakeven · ${esc(yl(st.basisYear))}</th>
-      <th colspan="2" class="grp sep">At strike · ${esc(yl(st.basisYear))}</th>
-      <th colspan="3" class="grp sep">Scenario${S != null ? ' · ' + px(S) : ''}</th>
-      <th colspan="2" class="grp sep">Sizing @ ${pct(st.exposurePct, 0)}</th>
+      <th colspan="3" class="grp sep">Summary</th>
+      <th rowspan="2" class="sep"></th>
     </tr>
     <tr>
-      <th>Strike</th><th>Moneyness</th><th>Premium</th><th>IV</th><th>Delta</th>
-      <th class="sep">Cost / ct</th><th>Notional / ct</th><th>Prem % not.</th><th>Leverage</th>
-      <th class="sep">Breakeven</th><th>% move</th><th>P/E</th><th>EV/EBITDA</th>
+      <th>Strike</th><th>Moneyness</th><th>Premium</th>${st.expand ? '<th>IV</th><th>Delta</th>' : ''}
       <th class="sep">P/E</th><th>EV/EBITDA</th>
-      <th class="sep">Payoff / ct</th><th>P&amp;L / ct</th><th>× premium</th>
-      <th class="sep">Max contracts</th><th>Min. account</th>
+      <th class="sep">Breakeven</th><th>% move</th><th>P/E</th><th>EV/EBITDA</th>
+      <th class="sep">Cost % of strike</th>
+      <th>Exposure <input id="bc-expo" class="hnum" type="number" step="0.5" min="0.1" value="${(st.exposurePct * 100).toFixed(1)}"></th>
+      <th>Min. portfolio</th>
     </tr>`;
 
+  const ncol = 1 + nContract + 2 + 4 + 3 + 1;
   if (!rows.length) {
-    $('bc-tbody').innerHTML = `<tr><td colspan="21" class="muted">no strikes in the ±${pct(st.band, 0)} band — widen it.</td></tr>`;
+    $('bc-tbody').innerHTML = `<tr><td colspan="${ncol}" class="muted">no strikes picked yet — add them below.</td></tr>`;
     return;
   }
   const curP = multiplesAt(st.spot, st.basisYear);
   $('bc-tbody').innerHTML = rows.map((r) => {
+    if (!r.listed) {
+      return `<tr data-k="${r.K}"><td class="lft"></td><td class="tk">$${r.K}</td>
+        <td colspan="${ncol - 3}" class="muted">not listed at ${esc(st.expiry || '')}</td>
+        <td class="sep"><button class="x" data-del="${r.K}" title="remove">✕</button></td></tr>`;
+    }
     const sel = r.K === (selectedRow() || {}).K;
-    const itm = r.K <= st.spot;
-    const q = `<b>Bid</b> ${px(r.bid)}  <b>Ask</b> ${px(r.ask)}  <b>Mid</b> ${px(r.mid)}<br><b>Last</b> ${px(r.lastTrade)} · <b>OI</b> ${r.oi == null ? '—' : r.oi.toLocaleString()} · <b>Theta</b> ${r.theta == null ? '—' : r.theta.toFixed(3)}`;
+    const itm = st.spot != null && r.K <= st.spot;
+    const q = `<b>Bid</b> ${px(r.bid)}  <b>Ask</b> ${px(r.ask)}  <b>Mid</b> ${px(r.mid)}<br>`
+      + `<b>Last</b> ${px(r.lastTrade)} · <b>OI</b> ${r.oi == null ? '—' : r.oi.toLocaleString()} · <b>Theta</b> ${r.theta == null ? '—' : r.theta.toFixed(3)}`
+      + `<br><b>Cost</b> ${cash(r.cost)} / contract · <b>Notional</b> ${cash(r.notional)}`;
     return `<tr class="${sel ? 'sel' : ''}" data-k="${r.K}">
       <td class="lft"><input type="checkbox" data-plot="${r.K}" ${st.plotted[r.K] ? 'checked' : ''} title="draw on the payoff chart"></td>
       <td class="tk">$${r.K}${itm ? ' <span class="tag">ITM</span>' : ''}</td>
       <td class="${r.moneyness >= 0 ? '' : 'up'}">${pctS(r.moneyness)}</td>
       <td class="big">${px(r.prem)}<span class="ttip" data-tip="${esc(q)}">i</span></td>
-      <td>${pct(r.iv, 0)}</td>
-      <td>${r.delta == null ? '—' : r.delta.toFixed(2)}</td>
-      <td class="sep">${cash(r.cost)}</td>
-      <td>${cash(r.notional)}</td>
-      <td>${pct(r.premPctNotional, 1)}</td>
-      <td>${mom(r.lev)}</td>
+      ${st.expand ? `<td>${pct(r.iv, 0)}</td><td>${r.delta == null ? '—' : r.delta.toFixed(2)}</td>` : ''}
+      <td class="sep ${rich(r.peK, curP.pe)}">${mult(r.peK)}</td>
+      <td class="${rich(r.evK, curP.ev)}">${mult(r.evK)}</td>
       <td class="sep big">${px(r.be)}</td>
       <td class="dn">${pctS(r.toBe)}</td>
       <td class="${rich(r.peBe, curP.pe)}">${mult(r.peBe)}</td>
       <td class="${rich(r.evBe, curP.ev)}">${mult(r.evBe)}</td>
-      <td class="sep ${rich(r.peK, curP.pe)}">${mult(r.peK)}</td>
-      <td class="${rich(r.evK, curP.ev)}">${mult(r.evK)}</td>
-      <td class="sep">${cash(r.payoff)}</td>
-      <td class="${r.pnl == null ? '' : (r.pnl >= 0 ? 'up' : 'dn')}">${cash(r.pnl)}</td>
-      <td class="big ${r.moM == null ? '' : (r.moM >= 1 ? 'up' : 'dn')}">${mom(r.moM)}</td>
-      <td class="sep">${r.maxCts == null ? '—' : r.maxCts.toLocaleString()}</td>
-      <td class="big">${cash(r.minAcct)}</td>
+      <td class="sep">${pct(r.costPct, 1)}</td>
+      <td class="muted">${pct(st.exposurePct, 1)}</td>
+      <td class="big">${cash(r.minPort)}</td>
+      <td class="sep"><button class="x" data-del="${r.K}" title="remove this strike">✕</button></td>
     </tr>`;
   }).join('');
   wireLadder();
@@ -614,9 +596,35 @@ function wireLadder() {
     if (el.checked) st.plotted[k] = true; else delete st.plotted[k];
     renderChartBlock();
   });
+  root().querySelectorAll('[data-del]').forEach((el) => el.onclick = (ev) => {
+    ev.stopPropagation();
+    const k = +el.dataset.del;
+    st.strikes = st.strikes.filter((x) => x !== k);
+    delete st.plotted[k];
+    if (st.selected === k) st.selected = st.strikes[0] ?? null;
+    render();
+  });
   root().querySelectorAll('#bc-tbody tr[data-k]').forEach((tr) => tr.onclick = () => {
     st.selected = +tr.dataset.k; render();
   });
+}
+
+// ── Render: the strike picker ─────────────────────────────────────────────────
+function renderPicker() {
+  const all = listedStrikes();
+  const free = all.filter((k) => !st.strikes.includes(k));
+  // Open the menu on the nearest unpicked strike above the money — the one someone
+  // reaching for this control almost always wants — rather than the deepest ITM.
+  const dflt = free.find((k) => st.spot != null && k >= st.spot) ?? free[free.length - 1];
+  $('bc-addSel').innerHTML = free.length
+    ? free.map((k) => `<option value="${k}" ${k === dflt ? 'selected' : ''}>$${k}</option>`).join('')
+    : '<option value="">all listed strikes added</option>';
+  const f = $('bc-from'), t = $('bc-to');
+  if (f && document.activeElement !== f) f.value = st.rangeFrom ?? '';
+  if (t && document.activeElement !== t) t.value = st.rangeTo ?? '';
+  $('bc-pickinfo').textContent = all.length
+    ? `${st.strikes.length} picked · ${all.length} listed at ${st.expiry} ($${all[0]}–$${all[all.length - 1]})`
+    : '';
 }
 
 // ── Render: the payoff chart block (legend, canvas, table) ────────────────────
@@ -658,7 +666,7 @@ function renderPayoffTable() {
     return `<tr><td class="rs-ft-h">${esc(s.label)}<span class="sub">breakeven ${px(be)}</span></td>${cells}</tr>`;
   }).join('');
   $('bc-tbl2').innerHTML = `
-    <div class="rs-ft-cap">Underlying price at expiry (${esc(st.expiry || '')}) · values ${st.mode === 'ret' ? 'as a % of premium paid' : st.mode === 'pos' ? `for the whole ${st.contracts}-contract position` : 'per contract'}</div>
+    <div class="rs-ft-cap">Underlying price at expiry (${esc(st.expiry || '')}) · values ${st.mode === 'ret' ? 'as a % of premium paid' : 'per contract'}</div>
     <div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h">Series</th>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
@@ -687,13 +695,10 @@ function estRow(label, cols, get, e) {
 }
 
 function renderFoot() {
-  const r = selectedRow();
   $('bc-foot').innerHTML = `
-    <b>Premium basis</b> — a buyer lifting the offer pays the <b>ask</b> (the default); <b>mid</b> is the fair-value view and <b>last</b> is the last print, which on an illiquid strike can be hours old (hover the <b>i</b> for bid/ask/mid, last trade, open interest and theta).
-    <b>Cost / ct</b> = premium × 100 · <b>Notional / ct</b> = ${st.notionalBasis === 'strike' ? 'strike' : 'spot'} × 100, the exposure one contract controls · <b>Leverage</b> = delta × spot ÷ premium, the dollars of underlying each dollar of premium moves with.<br>
-    <b>Breakeven</b> = strike + premium, the price at expiry where the position returns the cheque; <b>% move</b> is the move from spot it needs${r && r.days ? `, over ${r.days} days` : ''}. The <b>P/E</b> and <b>EV/EBITDA</b> under it are the multiples the company would trade at <em>at that price</em> on the estimate year selected — that is the bar the thesis has to clear. EV/EBITDA uses the estimate year's own net debt where the model carries one, otherwise live enterprise value − market cap. <span class="cheap">Green</span> = below today's multiple, <span class="rich">red</span> = above it.<br>
-    <b>Scenario</b> — pick a target multiple and a year and the page solves for the share price it implies, then values every strike there: <b>payoff</b> is intrinsic value at expiry, <b>P&amp;L</b> nets the premium, <b>× premium</b> is the multiple of money.<br>
-    <b>Sizing</b> — <b>Min. account</b> = notional × contracts ÷ the exposure limit: the smallest account for which ${st.contracts} contract${st.contracts === 1 ? '' : 's'} still sits inside ${pct(st.exposurePct, 0)} of notional. <b>Max contracts</b> is the same rule read the other way, against the account value entered. Premium at risk is the cost, not the notional — the notional is what the position <em>controls</em>, and the exposure limit is a rule about that.<br>
+    <b>Contract</b> — a buyer lifting the offer pays the <b>ask</b> (the default); <b>mid</b> is the fair-value view and <b>last</b> is the last print, which on an illiquid strike can be hours old. Hover the <b>i</b> for bid/ask/mid, last trade, open interest, theta, and the cash cost and notional of one contract. <b>+</b> opens IV and delta.<br>
+    <b>At strike</b> and <b>Breakeven</b> — the multiples the company would trade at <em>at that price</em>, on the estimate year picked in the header (both groups follow it). Breakeven = strike + premium, the price at expiry where the position returns the cheque; <b>% move</b> is the move from spot it needs. EV/EBITDA uses the estimate year's own net debt where the model carries one, otherwise live enterprise value − market cap. <span class="cheap">Green</span> = below today's multiple, <span class="rich">red</span> = above it.<br>
+    <b>Summary</b> — <b>Cost % of strike</b> = premium ÷ strike, what the optionality costs relative to what it buys. <b>Exposure</b> is the share of the account a single contract's notional is allowed to be; set it in the header and it applies to every row. <b>Min. portfolio</b> = notional ÷ that exposure — the smallest account for which one contract still sits inside the limit, with notional = ${st.notionalBasis === 'strike' ? 'strike' : 'spot'} × 100. Note the cash at risk is the premium, not the notional: the notional is what the position <em>controls</em>, and the exposure limit is a rule about that.<br>
     Price, premium, IV and greeks are live from the Massive option chain; estimates are as sourced under the table below. Nothing on this page is stored — every input is in-memory and resets on reload.`;
 }
 
@@ -709,27 +714,22 @@ function render() {
   if (st.err || st.loading) return;
   renderKpis();
   renderLadder();
+  renderPicker();
   renderChartBlock();
   renderEstimates();
   renderFoot();
 }
 
 function syncControls() {
-  const e = estOf(), ys = yearsOf().filter((y) => y >= 2025);
   const sel = $('bc-expiry');
   if (sel) {
     sel.innerHTML = st.expiries.map((d) =>
       `<option value="${esc(d)}" ${d === st.expiry ? 'selected' : ''}>${esc(d)} · ${daysTo(d)}d</option>`).join('')
       || '<option>—</option>';
   }
-  const by = $('bc-basisYear'), sy = $('bc-scenYear');
-  const opts = (cur) => ys.map((y) => `<option value="${y}" ${y === cur ? 'selected' : ''}>${y}${e && e.years[y] && e.years[y].est ? 'E' : 'A'}</option>`).join('');
-  if (by) by.innerHTML = opts(st.basisYear);
-  if (sy) sy.innerHTML = opts(st.scenYear);
   root().querySelectorAll('#bc-premSel button').forEach((b) => b.classList.toggle('on', b.dataset.prem === st.premBasis));
   root().querySelectorAll('#bc-notSel button').forEach((b) => b.classList.toggle('on', b.dataset.not === st.notionalBasis));
   root().querySelectorAll('#bc-modeSel button').forEach((b) => b.classList.toggle('on', b.dataset.mode === st.mode));
-  root().querySelectorAll('#bc-scenSel button').forEach((b) => b.classList.toggle('on', b.dataset.scen === st.scenKind));
   const tt = $('bc-tickers');
   if (tt) tt.innerHTML = Object.keys(BC_ESTIMATES).map((t) =>
     `<button type="button" class="chip ${t === st.ticker ? 'on' : ''}" data-tkbtn="${esc(t)}">${esc(t)}</button>`).join('');
@@ -747,40 +747,32 @@ function injectMarkup() {
           <div class="ctl"><label>Expiry</label><select id="bc-expiry"></select></div>
           <div class="ctl"><label>Premium</label><div class="seg" id="bc-premSel">
             <button data-prem="ask">Ask</button><button data-prem="mid">Mid</button><button data-prem="last">Last</button></div></div>
-          <div class="ctl"><label>Valuation basis</label><select id="bc-basisYear"></select></div>
+          <div class="ctl"><label>Notional basis</label><div class="seg" id="bc-notSel">
+            <button data-not="strike">Strike × 100</button><button data-not="spot">Spot × 100</button></div></div>
           <div class="ctl"><label>&nbsp;</label><button id="bc-refresh">↻ Refresh</button></div>
         </div>
       </div>
-      <div class="sub">Buying a call is a bet on a price. This prices every strike and every breakeven back into the multiple it implies, then sizes the position against the account.</div>
+      <div class="sub">Buying a call is a bet on a price. This prices the strikes you pick, and their breakevens, back into the multiple they imply.</div>
       <div class="chips" id="bc-tickers"></div>
 
       <div id="bc-status" class="spin">Loading…</div>
       <div id="bc-body" hidden>
         <div class="kpis" id="bc-kpis"></div>
-
-        <div class="panel">
-          <div class="panel-h">Sizing &amp; scenario</div>
-          <div class="panel-b">
-            <div class="ctl"><label>Account value</label><input id="bc-account" type="number" step="10000" value="${st.account}"></div>
-            <div class="ctl"><label>Max exposure (% of notional)</label><input id="bc-exposure" type="number" step="1" value="${(st.exposurePct * 100).toFixed(0)}"></div>
-            <div class="ctl"><label>Contracts</label><input id="bc-contracts" type="number" step="1" min="1" value="${st.contracts}"></div>
-            <div class="ctl"><label>Notional basis</label><div class="seg" id="bc-notSel">
-              <button data-not="spot">Spot × 100</button><button data-not="strike">Strike × 100</button></div></div>
-            <div class="ctl"><label>Strike band (±%)</label><input id="bc-band" type="number" step="5" min="5" max="120" value="${(st.band * 100).toFixed(0)}"></div>
-            <div class="ctl grow"><label>Scenario — the price a target multiple implies</label>
-              <div class="row">
-                <div class="seg" id="bc-scenSel"><button data-scen="pe">P/E</button><button data-scen="ev">EV/EBITDA</button></div>
-                <input id="bc-scenMult" type="number" step="0.5" min="0" value="${st.scenMult}" title="target multiple">
-                <span class="x">on</span>
-                <select id="bc-scenYear"></select>
-              </div>
-            </div>
-          </div>
-          <div class="scenout" id="bc-scenout"></div>
-        </div>
+        <div id="bc-note"></div>
 
         <div class="card">
           <table id="bc-tbl"><thead id="bc-thead"></thead><tbody id="bc-tbody"></tbody></table>
+        </div>
+
+        <div class="picker">
+          <div class="ctl"><label>Add strike</label><select id="bc-addSel"></select></div>
+          <button id="bc-addBtn" class="ghost sm">+ Add</button>
+          <span class="divider"></span>
+          <div class="ctl"><label>Range from</label><input id="bc-from" type="number" step="5"></div>
+          <div class="ctl"><label>to</label><input id="bc-to" type="number" step="5"></div>
+          <button id="bc-addRange" class="ghost sm">+ Add range</button>
+          <button id="bc-clear" class="ghost sm">Clear all</button>
+          <span class="muted" id="bc-pickinfo"></span>
         </div>
 
         <div class="block">
@@ -788,7 +780,7 @@ function injectMarkup() {
             <div class="block-h">Payoff at expiry</div>
             <div class="rs-modes">
               <div class="seg" id="bc-modeSel">
-                <button data-mode="pnl">P&amp;L / contract</button><button data-mode="ret">% of premium</button><button data-mode="pos">Whole position</button>
+                <button data-mode="pnl">P&amp;L / contract</button><button data-mode="ret">% of premium</button>
               </div>
             </div>
           </div>
@@ -809,9 +801,16 @@ function injectMarkup() {
 }
 
 // ── Wiring ────────────────────────────────────────────────────────────────────
+function addStrikes(list) {
+  const set = new Set(st.strikes);
+  list.forEach((k) => { if (isFinite(k)) set.add(k); });
+  st.strikes = [...set].sort((a, b) => a - b);
+  if (st.selected == null) st.selected = st.strikes[0] ?? null;
+  render();
+}
+
 function wireControls() {
   const r = root();
-  const num = (id, f) => { const el = $(id); if (el) el.onchange = () => { f(parseFloat(el.value)); render(); }; };
 
   $('bc-refresh').onclick = () => loadChain();
   $('bc-ticker').onchange = () => {
@@ -819,31 +818,44 @@ function wireControls() {
     if (t && t !== st.ticker) loadTicker(t);
   };
   $('bc-expiry').onchange = () => { st.expiry = $('bc-expiry').value; loadChain(); };
-  $('bc-basisYear').onchange = () => { st.basisYear = +$('bc-basisYear').value; render(); };
-  $('bc-scenYear').onchange = () => { st.scenYear = +$('bc-scenYear').value; render(); };
 
-  num('bc-account', (v) => { st.account = isFinite(v) ? v : st.account; });
-  num('bc-exposure', (v) => { st.exposurePct = (isFinite(v) && v > 0) ? v / 100 : st.exposurePct; });
-  num('bc-contracts', (v) => { st.contracts = (isFinite(v) && v >= 1) ? Math.round(v) : st.contracts; });
-  num('bc-band', (v) => { st.band = (isFinite(v) && v > 0) ? Math.min(1.2, v / 100) : st.band; });
-  num('bc-scenMult', (v) => { st.scenMult = (isFinite(v) && v > 0) ? v : st.scenMult; });
+  $('bc-addBtn').onclick = () => {
+    const v = parseFloat($('bc-addSel').value);
+    if (isFinite(v)) addStrikes([v]);
+  };
+  $('bc-addRange').onclick = () => {
+    const a = parseFloat($('bc-from').value), b = parseFloat($('bc-to').value);
+    if (!isFinite(a) || !isFinite(b)) return;
+    st.rangeFrom = Math.min(a, b); st.rangeTo = Math.max(a, b);
+    addStrikes(listedStrikes().filter((k) => k >= st.rangeFrom - 1e-9 && k <= st.rangeTo + 1e-9));
+  };
+  $('bc-clear').onclick = () => { st.strikes = []; st.plotted = {}; st.selected = null; render(); };
 
-  // Delegated on the tab root, never on document (§12, invariant 2).
+  // Delegated on the tab root, never on document (§12, invariant 2). The year
+  // dropdown and the exposure input live inside the table header, which is
+  // rewritten on every render, so they cannot be bound directly.
+  r.addEventListener('change', (ev) => {
+    if (ev.target.id === 'bc-basisYear') { st.basisYear = +ev.target.value; render(); }
+    if (ev.target.id === 'bc-expo') {
+      const v = parseFloat(ev.target.value);
+      if (isFinite(v) && v > 0) st.exposurePct = v / 100;
+      render();
+    }
+  });
+
   r.addEventListener('click', (ev) => {
     const prem = ev.target.closest('#bc-premSel button');
     if (prem) { st.premBasis = prem.dataset.prem; render(); return; }
     const not = ev.target.closest('#bc-notSel button');
     if (not) { st.notionalBasis = not.dataset.not; render(); return; }
-    const scen = ev.target.closest('#bc-scenSel button');
-    if (scen) { st.scenKind = scen.dataset.scen; st.scenMult = scen.dataset.scen === 'pe' ? 25 : 20; $('bc-scenMult').value = st.scenMult; render(); return; }
+    if (ev.target.closest('#bc-expand')) { st.expand = !st.expand; render(); return; }
     const mode = ev.target.closest('#bc-modeSel button');
     // Switching mode changes the y-axis units, so the zoom is dropped rather than
     // cropping a % range to a $ one (§0.2, rule 1).
     if (mode) { st.mode = mode.dataset.mode; st.yr = null; renderChartBlock(); return; }
     const tk = ev.target.closest('[data-tkbtn]');
     if (tk) { $('bc-ticker').value = tk.dataset.tkbtn; loadTicker(tk.dataset.tkbtn); return; }
-    const coll = ev.target.closest('#bc-collh');
-    if (coll) { st.tbl = !st.tbl; renderChartBlock(); return; }
+    if (ev.target.closest('#bc-collh')) { st.tbl = !st.tbl; renderChartBlock(); return; }
   });
 
   // Cursor tooltip for the quote detail on each premium.

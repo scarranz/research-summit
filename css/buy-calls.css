@@ -1,8 +1,7 @@
 /* Buy Calls tab — every rule scoped under #bc-root so nothing leaks into the rest
    of the portal. The palette mirrors css/covered-calls.css: the two tabs are two
-   sides of the same trade and should read as one family. The payoff chart borrows
-   .rs-collap / .rs-leg / .rs-ft* / .rs-brush from css/results.css, which is global
-   (CHART_ENGINE_REFERENCE §0.7) — no chart CSS is redefined here. */
+   sides of the same trade and should read as one family. The EBITDA / Net Income
+   table borrows the .rs-ft* sheet styles from css/results.css, which is global. */
 #bc-root{
   --navy:#1E2733; --blue:#2C3E54; --steel:#3E5A82; --mid:#7C8694;
   --ice:#EEF1F5; --pale:#F4F6F9; --w:#FFFFFF; --text:#1E2733; --mu:#8A93A0;
@@ -13,7 +12,7 @@
 #bc-root .topbar{display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap;}
 #bc-root .topbar h2{font-size:18px;font-weight:700;color:var(--text);text-transform:none;letter-spacing:-.01em;}
 #bc-root .sub{color:var(--mu);font-size:13px;margin-bottom:12px;max-width:820px;}
-#bc-root .controls{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin-left:auto;}
+#bc-root .controls{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin:0 0 14px;}
 #bc-root .ctl{display:flex;flex-direction:column;gap:4px;}
 #bc-root .ctl.grow{flex:1;min-width:280px;}
 #bc-root .ctl label{font-size:10px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
@@ -24,11 +23,6 @@
 #bc-root button{background:var(--navy);color:#fff;border-color:var(--navy);cursor:pointer;font-weight:600;}
 #bc-root button.ghost{background:var(--w);color:var(--steel);border-color:var(--bdr);font-weight:500;}
 #bc-root button:hover{opacity:.92;}
-/* The shared components style themselves — the navy default above must not repaint
-   the collapsible header or the legend chips that come from css/results.css. */
-#bc-root button.rs-collap-h,#bc-root button.rs-leg{background:none;color:inherit;border-color:transparent;}
-#bc-root button.rs-collap-h{background:var(--pale);color:var(--text);}
-#bc-root button.rs-leg{border:1px solid transparent;}
 #bc-root .seg{display:inline-flex;border:1px solid var(--bdr);border-radius:7px;overflow:hidden;}
 #bc-root .seg button{border:none;border-radius:0;background:var(--w);color:var(--steel);padding:7px 11px;font-weight:600;white-space:nowrap;}
 #bc-root .seg button.on{background:var(--navy);color:#fff;}
@@ -82,16 +76,16 @@
 #bc-root .ttip{display:inline-block;width:13px;height:13px;line-height:13px;margin-left:5px;text-align:center;font-size:9px;font-weight:700;font-style:italic;color:var(--steel);background:var(--ice);border-radius:50%;cursor:help;vertical-align:middle;}
 #bc-root .ttip:hover{background:var(--steel);color:#fff;}
 
-/* Payoff chart block */
+/* EBITDA & Net Income block — the Covered Calls fundamentals view, one ticker */
 #bc-root .block{background:var(--w);border:1px solid var(--bdr);border-radius:14px;padding:14px 16px 16px;margin-bottom:18px;}
 #bc-root .block-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px;}
 #bc-root .block-h{font-size:13px;font-weight:700;color:var(--text);}
-#bc-root .block-top .rs-modes{margin-left:auto;}
-#bc-root .legend{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
-#bc-root .cwrap{position:relative;height:320px;}
-#bc-root .hint{font-size:10.5px;color:var(--mu);margin-top:8px;}
-#bc-root #bc-est .foot{margin-top:10px;}
-#bc-root .rs-ft-h .sub{display:block;font-size:10px;color:var(--mu);font-weight:500;}
+#bc-root .block-top .muted{margin-left:auto;font-size:11px;}
+#bc-root .bc-fundtbl .fv{font-weight:600;}
+#bc-root .bc-fundtbl .fg{font-size:10px;margin-top:1px;color:var(--mu);min-height:12px;}
+#bc-root .bc-fundtbl .fg.up{color:var(--pos);} #bc-root .bc-fundtbl .fg.dn{color:var(--neg);}
+#bc-root .bc-fundtbl .sep{border-left:1px solid var(--bdr);}
+#bc-root .bc-fundtbl tr.lvl td{vertical-align:top;}
 #bc-root .foot{margin-top:12px;font-size:11px;color:var(--mu);line-height:1.65;}
 
 /* Cursor-following tooltip (top level, position:fixed) */
@@ -104,6 +98,4 @@
 }
 @media (max-width:760px){
   #bc-root .kpis{grid-template-columns:repeat(2,1fr);}
-  #bc-root .controls{margin-left:0;}
-  #bc-root .cwrap{height:260px;}
 }

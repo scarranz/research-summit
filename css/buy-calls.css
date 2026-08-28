@@ -39,18 +39,17 @@
 #bc-root .chip{font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;background:var(--w);color:var(--steel);border:1px solid var(--bdr);cursor:pointer;}
 #bc-root .chip.on{background:var(--navy);color:#fff;border-color:var(--navy);}
 
-#bc-root .kpis{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:16px;}
+#bc-root .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px;}
 #bc-root .kpi{background:var(--w);border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;}
 #bc-root .kpi .l{font-size:9.5px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
 #bc-root .kpi .v{font-size:20px;font-weight:700;margin-top:4px;}
 #bc-root .kpi .s{font-size:10.5px;color:var(--mu);margin-top:2px;}
 
-/* Sizing & scenario panel */
-#bc-root .panel{background:var(--w);border:1px solid var(--bdr);border-radius:14px;margin-bottom:16px;overflow:hidden;}
-#bc-root .panel-h{font-size:10px;font-weight:700;color:var(--steel);text-transform:uppercase;letter-spacing:.06em;padding:11px 16px 0;}
-#bc-root .panel-b{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;padding:10px 16px 14px;}
-#bc-root .scenout{border-top:1px solid var(--bdr);background:var(--pale);padding:11px 16px;font-size:13px;color:var(--text);}
-#bc-root .scenout .big{font-weight:700;font-size:15px;}
+/* Strike picker — the ladder is hand-picked, so this is how rows get added */
+#bc-root .picker{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;background:var(--w);border:1px solid var(--bdr);border-radius:12px;padding:12px 16px;margin:-6px 0 18px;}
+#bc-root .picker .divider{width:1px;align-self:stretch;background:var(--bdr);margin:0 2px;}
+#bc-root .picker input[type=number]{width:88px;}
+#bc-root .picker .muted{margin-left:auto;font-size:11px;}
 
 #bc-root .card{background:var(--w);border:1px solid var(--bdr);border-radius:14px;padding:6px 6px 12px;overflow-x:auto;margin-bottom:18px;}
 #bc-root table#bc-tbl{width:100%;border-collapse:collapse;font-size:12.5px;}
@@ -64,6 +63,15 @@
 #bc-root #bc-tbl tbody tr:hover{background:var(--pale);}
 #bc-root #bc-tbl tbody tr.sel{background:#EAF0FB;box-shadow:inset 3px 0 0 var(--accent);}
 #bc-root .tag{font-size:8.5px;font-weight:700;color:var(--steel);background:var(--ice);padding:1px 4px;border-radius:5px;letter-spacing:.02em;}
+/* Controls that live INSIDE the table header: the estimate year that both the
+   At-strike and Breakeven groups follow, the exposure limit every row uses, and
+   the +/- that opens IV and delta. */
+#bc-root #bc-tbl th .hsel{font-size:10px;font-weight:700;color:var(--steel);padding:1px 4px;border-radius:5px;border:1px solid var(--bdr);background:var(--w);text-transform:none;letter-spacing:0;cursor:pointer;}
+#bc-root #bc-tbl th .hnum{width:44px;font-size:10px;font-weight:700;color:var(--steel);padding:1px 4px;border-radius:5px;border:1px solid var(--bdr);text-align:center;}
+#bc-root #bc-tbl th .xp{background:var(--w);color:var(--steel);border:1px solid var(--bdr);border-radius:4px;padding:0 5px;font-size:11px;line-height:14px;font-weight:700;margin-left:5px;cursor:pointer;}
+#bc-root #bc-tbl th .xp:hover{background:var(--navy);color:#fff;border-color:var(--navy);}
+#bc-root #bc-tbl .x{color:var(--mu);cursor:pointer;font-weight:700;border:none;background:none;font-size:13px;padding:2px 6px;}
+#bc-root #bc-tbl .x:hover{color:var(--neg);}
 #bc-root .big{font-weight:700;}
 #bc-root .cheap{color:var(--pos);} #bc-root .rich{color:var(--neg);}
 #bc-root .up{color:var(--pos);} #bc-root .dn{color:var(--neg);}

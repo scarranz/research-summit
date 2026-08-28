@@ -110,7 +110,7 @@
 #bc-root .block-top button.ghost.on{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:600;}
 #bc-root .pill.flex{background:#EAF0FB;color:var(--accent);}
 
-/* A ladder cell that carries a headline figure with its raw amount underneath */
-#bc-root #bc-tbl td.two{line-height:1.25;}
-#bc-root #bc-tbl td.two .v1{font-weight:700;}
-#bc-root #bc-tbl td.two .v2{font-size:10px;color:var(--mu);margin-top:1px;}
+/* The sub-header row wraps — a two-line label keeps a long name from stretching
+   its whole column. Body cells stay nowrap. */
+#bc-root #bc-tbl thead tr:last-child th{white-space:normal;line-height:1.3;vertical-align:bottom;}
+#bc-root #bc-tbl thead tr:last-child th .hnum{margin-top:2px;}

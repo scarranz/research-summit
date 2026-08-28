@@ -5,23 +5,20 @@
 // chain alone cannot answer:
 //
 //   1. What multiple am I underwriting?  A $400 strike is meaningless until it is
-//      "28x 2027E EPS". Every strike and every breakeven is priced back into an
+//      "18x 2028E EPS". Every strike and every breakeven is priced back into an
 //      implied P/E and EV/EBITDA on a year picked in the table header itself.
 //   2. How big an account does one contract need?  Notional ÷ the share of the
 //      account we allow a single position to control.
 //
 // The ladder is a HAND-PICKED list of strikes, not the whole chain — a long call is
 // a considered bet on a few strikes, so they are added deliberately (a dropdown of
-// what is listed, or a range) and removed one by one.
+// what is listed, or a range) and removed one by one. The tab opens on the January
+// LEAPS and on the last estimate year we hold: a valuation thesis needs the time.
 //
 // Live price, premium, IV and greeks come from the Massive option chain via the
-// covered-calls-massive edge function. Forward EPS / EBITDA / net debt come from
-// js/buy-calls-data.js (Bloomberg consensus for APP, Summit DCF for the rest).
-// Nothing is written anywhere — every input on the page is in-memory.
-//
-// The payoff chart is a path-3 bespoke canvas per docs/CHART_ENGINE_REFERENCE §0.7:
-// esc() and rsAttachBrush() are copied verbatim from js/results.js (:219, :1298),
-// the visual language (.rs-collap, .rs-leg, .rs-ft*, .rs-brush) is global CSS.
+// covered-calls-massive edge function. Forward EBITDA / net income / EPS / net debt
+// come from js/buy-calls-data.js (Bloomberg consensus for APP, Summit DCF for the
+// rest). Nothing is written anywhere — every input on the page is in-memory.
 
 import { BC_ESTIMATES, BC_DEFAULT_TICKER } from './buy-calls-data.js';
 import { coveredCallsQuote } from './api.js';
@@ -35,7 +32,7 @@ function esc(s) {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 }
 
-// ── Formatting. Rule 5: no bare numbers, estimates always marked. ─────────────
+// ── Formatting. No bare numbers, estimates always marked. ─────────────────────
 const px = (x) => (x == null || !isFinite(x)) ? '—' : `$${x.toFixed(2)}`;
 const mult = (x) => (x == null || !isFinite(x) || x <= 0) ? '—' : `${x.toFixed(1)}x`;
 const pct = (x, d = 1) => (x == null || !isFinite(x)) ? '—' : `${(x * 100).toFixed(d)}%`;
@@ -72,14 +69,9 @@ const st = {
   notionalBasis: 'strike',   // 'strike' | 'spot'
   exposurePct: 0.02,         // share of the account one contract's notional may be
   expand: false,             // show IV + delta inside the Contract group
+  showFund: true,            // show the EBITDA / Net Income block
 
   selected: null,            // selected strike (drives the KPI strip)
-  plotted: {},               // strike -> true, the strikes drawn on the payoff chart
-  mode: 'pnl',               // 'pnl' | 'ret'
-  hidden: {},                // series key -> true (rule 2)
-  yr: null, win: null,       // brush zoom: y range, x window (grid indexes)
-  tbl: false,                // payoff table open
-  chart: null,
 };
 
 // ── Massive proxy ─────────────────────────────────────────────────────────────
@@ -97,9 +89,10 @@ const daysTo = (d) => {
 // ── Estimates ─────────────────────────────────────────────────────────────────
 const estOf = () => BC_ESTIMATES[st.ticker] || null;
 const yearsOf = () => { const e = estOf(); return e ? Object.keys(e.years).map(Number).sort((a, b) => a - b) : []; };
+const estYearsOf = () => { const e = estOf(); return yearsOf().filter((y) => e.years[y] && e.years[y].est); };
 // Multiples need a USD estimate set: SPOT reports in EUR and TBBB in MXN, and a
-// EUR EBITDA against a USD share price is simply a wrong number. Rule 6 — show
-// nothing rather than something broken.
+// EUR EBITDA against a USD share price is simply a wrong number. Show nothing
+// rather than something broken.
 const usable = () => { const e = estOf(); return !!e && e.currency === 'USD'; };
 const yl = (y) => { const e = estOf(); return (e && e.years[y] && e.years[y].est) ? `${y}E` : `${y}`; };
 
@@ -123,6 +116,21 @@ function multiplesAt(price, year) {
   const ev = (y.ebitda != null && y.ebitda > 0 && shares != null && netDebt != null)
     ? (price * shares + netDebt) / y.ebitda : null;
   return { pe, ev };
+}
+
+// YoY growth of one estimate line, and its CAGR across the visible window. Both
+// return null unless the endpoints are positive — a growth rate off a loss is noise.
+function growth(key, year) {
+  const e = estOf(); if (!e) return null;
+  const cur = e.years[year] && e.years[year][key];
+  const prev = e.years[year - 1] && e.years[year - 1][key];
+  return (cur != null && prev != null && prev > 0) ? cur / prev - 1 : null;
+}
+function cagr(key, from, to) {
+  const e = estOf(); if (!e) return null;
+  const a = e.years[from] && e.years[from][key], b = e.years[to] && e.years[to][key];
+  return (a != null && b != null && a > 0 && b > 0 && to > from)
+    ? Math.pow(b / a, 1 / (to - from)) - 1 : null;
 }
 
 // ── The strike ladder ─────────────────────────────────────────────────────────
@@ -151,14 +159,17 @@ function strikeStep(all) {
   Object.keys(gaps).forEach((g) => { if (gaps[g] > n) { n = gaps[g]; best = +g; } });
   return best || 5;
 }
-// The ladder a new ticker opens on: ten increments of listed strikes starting just
-// out of the money. On AppLovin at ~$319 with $10 strikes that is exactly 350–450.
+// The ladder a new ticker opens on: a band roughly 8%–42% out of the money, snapped
+// to whatever increment the chain lists. On AppLovin at ~$319 that is exactly
+// 350–450, and it stays sensible on a name whose strikes step in 20s or 50s.
 function defaultRange() {
   const all = listedStrikes();
   if (!all.length || st.spot == null) return { from: null, to: null };
   const step = strikeStep(all);
-  const from = Math.ceil(st.spot * 1.08 / step) * step;
-  return { from, to: from + 10 * step };
+  return {
+    from: Math.ceil(st.spot * 1.08 / step) * step,
+    to: Math.floor(st.spot * 1.42 / step) * step,
+  };
 }
 
 function rowFor(K) {
@@ -206,6 +217,17 @@ const selectedRow = () => {
 };
 
 // ── Fetching ──────────────────────────────────────────────────────────────────
+// The tab opens on the JANUARY LEAPS — a call bought on a valuation view needs the
+// time for the estimate year to arrive. Prefer a January expiry between one and
+// roughly two and a half years out (Jan-2028 from here), else the longest listed.
+function defaultExpiry(dates) {
+  const jan = dates.filter((d) => d.slice(5, 7) === '01' && daysTo(d) >= 300 && daysTo(d) <= 950);
+  if (jan.length) return jan[0];
+  const long = dates.filter((d) => daysTo(d) >= 300);
+  if (long.length) return long[0];
+  return dates.find((d) => daysTo(d) >= 150) || dates[dates.length - 1];
+}
+
 async function loadExpiries() {
   const today = new Date().toISOString().slice(0, 10);
   let dates = [];
@@ -220,9 +242,7 @@ async function loadExpiries() {
     dates = [...new Set(dates.concat((j2.results || []).map((c) => c.expiration_date)))].filter(Boolean).sort();
   } catch { /* the first list stands */ }
   st.expiries = dates;
-  if (!dates.length) return;
-  // Default to the first expiry at least ~6 months out: a valuation thesis needs time.
-  st.expiry = dates.find((d) => daysTo(d) >= 150) || dates[dates.length - 1];
+  if (dates.length) st.expiry = defaultExpiry(dates);
 }
 
 async function loadChain() {
@@ -261,9 +281,6 @@ async function loadChain() {
       st.seeded = true;
       st.strikes = listedStrikes().filter((k) => k >= dr.from - 1e-9 && k <= dr.to + 1e-9);
       st.selected = st.strikes[0] ?? null;
-      st.plotted = {};
-      [st.strikes[0], st.strikes[Math.floor(st.strikes.length / 2)], st.strikes[st.strikes.length - 1]]
-        .forEach((k) => { if (k != null) st.plotted[k] = true; });
     }
   } catch (e) {
     st.err = e.message; st.chain = [];
@@ -274,227 +291,17 @@ async function loadChain() {
 
 async function loadTicker(tk) {
   st.ticker = tk.toUpperCase();
-  killChart($('bc-canvas'));
   st.loading = true; st.err = null; st.chain = [];
   st.strikes = []; st.seeded = false; st.rangeFrom = null; st.rangeTo = null;
-  st.selected = null; st.plotted = {}; st.yr = null; st.win = null; st.hidden = {};
-  const ys = yearsOf(), e = estOf();
-  // Default the valuation basis to the first estimate year we hold (2026E for APP).
-  const estYears = ys.filter((y) => e && e.years[y] && e.years[y].est);
-  st.basisYear = estYears[0] ?? ys[ys.length - 1] ?? null;
+  st.selected = null;
+  // Underwrite on the LAST estimate year we hold (2028E for APP) — it is the one a
+  // January LEAPS is actually a bet on.
+  const ys = yearsOf(), ey = estYearsOf();
+  st.basisYear = ey[ey.length - 1] ?? ys[ys.length - 1] ?? null;
   render();
   await loadExpiries();
   if (!st.expiries.length) { st.err = `no listed options found for ${st.ticker}`; st.loading = false; render(); return; }
   await loadChain();
-}
-
-// ── The payoff chart (path-3 canvas, CHART_ENGINE_REFERENCE §0.7) ─────────────
-const C_CALL = ['#1B3F94', '#2563EB', '#5E8BEC', '#93B1F0'];   // EVO_RAMP — ordinal by strike
-const C_STOCK = 'rgba(30,39,51,0.92)';                          // RS_ACT — what you'd own instead
-
-// The one predicate (rule 2): the chart, the table and every total ask this.
-function vis(k) { return !st.hidden[k]; }
-
-// Price grid on the x-axis — a category axis so the copied brush's index maths works.
-function grid() {
-  if (st.spot == null) return [];
-  const ks = ladder().filter((r) => r.listed).map((r) => r.K);
-  const lo = Math.max(1, Math.min(st.spot * 0.65, (ks[0] || st.spot) * 0.85));
-  const hi = Math.max(st.spot * 1.6, (ks[ks.length - 1] || st.spot) * 1.35);
-  const n = 60, out = [];
-  for (let i = 0; i <= n; i++) out.push(lo + (hi - lo) * i / n);
-  return out;
-}
-
-// Series drawn: one per plotted strike, plus the same cash held in shares.
-function series() {
-  const rows = ladder().filter((r) => r.listed && st.plotted[r.K] && r.prem != null);
-  const out = rows.map((r, i) => ({
-    k: `k${r.K}`, label: `$${r.K} call`, color: C_CALL[i % C_CALL.length], row: r,
-  }));
-  const ref = rows[0];
-  if (ref) out.push({ k: 'stock', label: 'Same cash in shares', color: C_STOCK, row: ref, isStock: true });
-  return out;
-}
-
-// The value of one series at one underlying price, in the current mode.
-function valueAt(s, price) {
-  const r = s.row;
-  if (r.cost == null) return null;
-  if (s.isStock) {
-    // The same cheque put into shares instead: outlay × (price/spot − 1).
-    return st.mode === 'ret' ? (price / st.spot - 1) * 100 : r.cost * (price / st.spot - 1);
-  }
-  const pnl = (Math.max(0, price - r.K) - r.prem) * 100;
-  return st.mode === 'ret' ? pnl / r.cost * 100 : pnl;
-}
-
-const modeFmt = (v) => v == null ? '—' : (st.mode === 'ret' ? `${v >= 0 ? '+' : ''}${v.toFixed(0)}%` : cash(v));
-
-// Chart.js keeps its own registry keyed on the canvas element, so dropping our
-// reference is not enough — a ticker switch would hit "canvas is already in use".
-// Ask the registry too, then clear ours.
-function killChart(el) {
-  const prev = (typeof Chart !== 'undefined' && el) ? Chart.getChart(el) : null;
-  if (prev) prev.destroy();
-  if (st.chart) { try { st.chart.destroy(); } catch { /* already gone */ } }
-  st.chart = null;
-}
-
-function buildChart() {
-  const el = $('bc-canvas');
-  if (!el || typeof Chart === 'undefined') return;
-  const g = grid();
-  if (!g.length) { killChart(el); return; }
-  const lo = st.win ? st.win[0] : 0, hi = st.win ? st.win[1] : g.length - 1;
-  const gx = g.slice(lo, hi + 1);
-  const ss = series().filter((s) => vis(s.k));
-  killChart(el);
-
-  const datasets = ss.map((s) => ({
-    label: s.label,
-    data: gx.map((p) => valueAt(s, p)),
-    borderColor: s.color,
-    backgroundColor: s.color,
-    borderWidth: s.isStock ? 1.6 : 2.2,
-    borderDash: s.isStock ? [5, 4] : undefined,
-    pointRadius: 0, pointHitRadius: 8, tension: 0,
-  }));
-
-  // A vertical marker at spot — a local plugin, the rsFwdZone pattern (§0.7):
-  // passed in `plugins`, configured under options.plugins.
-  const markers = {
-    id: 'bcMarkers',
-    beforeDatasetsDraw(chart, args, opts) {
-      const { ctx, chartArea: a, scales } = chart;
-      if (!a) return;
-      (opts.at || []).forEach((m) => {
-        if (m.i == null || m.i < 0) return;
-        const x = scales.x.getPixelForValue(m.i);
-        if (x < a.left || x > a.right) return;
-        ctx.save();
-        ctx.setLineDash(m.dash || [4, 4]);
-        ctx.strokeStyle = m.color; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(x, a.top); ctx.lineTo(x, a.bottom); ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = m.color; ctx.font = '600 10px Inter, system-ui, sans-serif';
-        ctx.textAlign = x > a.right - 70 ? 'right' : 'left';
-        ctx.fillText(m.label, x > a.right - 70 ? x - 5 : x + 5, a.top + 11);
-        ctx.restore();
-      });
-    },
-  };
-  const nearest = (p) => p == null ? -1 : gx.reduce((best, v, i) => Math.abs(v - p) < Math.abs(gx[best] - p) ? i : best, 0);
-  const at = [{ i: nearest(st.spot), label: `spot ${px(st.spot)}`, color: 'rgba(124,134,148,0.9)' }];
-
-  st.chart = new Chart(el.getContext('2d'), {
-    type: 'line',
-    data: { labels: gx.map((p) => `$${Math.round(p)}`), datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false, animation: { duration: 200 },
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: false },
-        bcMarkers: { at },
-        tooltip: {
-          callbacks: {
-            title: (items) => `Underlying at expiry: ${items[0].label}`,
-            label: (ctx) => `${ctx.dataset.label}: ${modeFmt(ctx.parsed.y)}`,
-          },
-        },
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
-        y: {
-          position: 'right', grid: { color: 'rgba(0,0,0,0.05)' },
-          min: st.yr ? st.yr[0] : undefined, max: st.yr ? st.yr[1] : undefined,
-          ticks: { font: { size: 11 }, callback: (v) => st.mode === 'ret' ? `${v}%` : cash(v) },
-        },
-      },
-    },
-    plugins: [markers],
-  });
-
-  rsAttachBrush(el, st.chart,
-    (a, b) => { st.win = [lo + a, lo + b]; buildChart(); },
-    (v1, v2) => { st.yr = [v1, v2]; buildChart(); },
-    () => { st.win = null; st.yr = null; buildChart(); });
-}
-
-// Copied verbatim from js/results.js:1298 — drag-to-zoom on both axes, double-click resets.
-function rsAttachBrush(el, chart, onX, onY, onReset) {
-  var wrap = el.parentElement;
-  if (wrap && getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
-  el.style.cursor = 'crosshair';
-  el.onmousedown = function (ev) {
-    if (ev.button !== 0) return;
-    var r0 = el.getBoundingClientRect(), w0 = wrap.getBoundingClientRect();
-    var area = chart.chartArea;
-    var onAxis = (ev.clientX - r0.left) < area.left || (ev.clientX - r0.left) > area.right;
-    var forcedY = onAxis || !onX;
-    var vertical = forcedY ? true : null;
-    var startX = ev.clientX, startY = ev.clientY;
-    var box = null;
-    function ensureBox() {
-      if (box) return;
-      box = document.createElement('div');
-      box.className = 'rs-brush';
-      if (vertical) {
-        box.style.left = (r0.left - w0.left + area.left) + 'px';
-        box.style.width = (area.right - area.left) + 'px';
-      } else {
-        box.style.top = (r0.top - w0.top) + 'px';
-        box.style.height = r0.height + 'px';
-      }
-      wrap.appendChild(box);
-    }
-    function decide(cx, cy) {
-      if (vertical != null) return;
-      var dx = Math.abs(cx - startX), dy = Math.abs(cy - startY);
-      if (Math.max(dx, dy) < 8) return;
-      vertical = dy > dx;
-    }
-    function place(cx, cy) {
-      if (vertical == null) return;
-      ensureBox();
-      if (vertical) {
-        var a = Math.min(startY, cy), b = Math.max(startY, cy);
-        box.style.top = (a - w0.top) + 'px';
-        box.style.height = (b - a) + 'px';
-      } else {
-        var a2 = Math.min(startX, cx), b2 = Math.max(startX, cx);
-        box.style.left = (a2 - w0.left) + 'px';
-        box.style.width = (b2 - a2) + 'px';
-      }
-    }
-    place(ev.clientX, ev.clientY);
-    function onMove(e2) { decide(e2.clientX, e2.clientY); place(e2.clientX, e2.clientY); }
-    function onUp(e2) {
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-      decide(e2.clientX, e2.clientY);
-      if (box) box.remove();
-      if (vertical == null) return;
-      if (vertical) {
-        if (Math.abs(e2.clientY - startY) < 8) return;
-        var v1 = chart.scales.y.getValueForPixel(Math.min(startY, e2.clientY) - r0.top);
-        var v2 = chart.scales.y.getValueForPixel(Math.max(startY, e2.clientY) - r0.top);
-        onY(Math.min(v1, v2), Math.max(v1, v2));
-      } else {
-        if (Math.abs(e2.clientX - startX) < 8) return;
-        function idxAt(clientX) {
-          var v = chart.scales.x.getValueForPixel(clientX - r0.left);
-          return Math.max(0, Math.min(chart.data.labels.length - 1, Math.round(v)));
-        }
-        var a = idxAt(startX), b = idxAt(e2.clientX);
-        if (a !== b) onX(Math.min(a, b), Math.max(a, b));
-      }
-    }
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-    ev.preventDefault();
-  };
-  el.ondblclick = onReset;
 }
 
 // ── Render: KPIs ──────────────────────────────────────────────────────────────
@@ -530,7 +337,6 @@ function renderLadder() {
   const nContract = st.expand ? 5 : 3;
   $('bc-thead').innerHTML = `
     <tr>
-      <th rowspan="2" class="lft">Plot</th>
       <th colspan="${nContract}" class="grp">Contract
         <button type="button" class="xp" id="bc-expand" title="${st.expand ? 'hide IV and delta' : 'show IV and delta'}">${st.expand ? '−' : '+'}</button></th>
       <th colspan="2" class="grp sep">At strike · ${yearSel}</th>
@@ -539,7 +345,7 @@ function renderLadder() {
       <th rowspan="2" class="sep"></th>
     </tr>
     <tr>
-      <th>Strike</th><th>Moneyness</th><th>Premium</th>${st.expand ? '<th>IV</th><th>Delta</th>' : ''}
+      <th class="lft">Strike</th><th>Moneyness</th><th>Premium</th>${st.expand ? '<th>IV</th><th>Delta</th>' : ''}
       <th class="sep">P/E</th><th>EV/EBITDA</th>
       <th class="sep">Breakeven</th><th>% move</th><th>P/E</th><th>EV/EBITDA</th>
       <th class="sep">Cost % of strike</th>
@@ -547,7 +353,7 @@ function renderLadder() {
       <th>Min. portfolio</th>
     </tr>`;
 
-  const ncol = 1 + nContract + 2 + 4 + 3 + 1;
+  const ncol = nContract + 2 + 4 + 3 + 1;
   if (!rows.length) {
     $('bc-tbody').innerHTML = `<tr><td colspan="${ncol}" class="muted">no strikes picked yet — add them below.</td></tr>`;
     return;
@@ -555,8 +361,8 @@ function renderLadder() {
   const curP = multiplesAt(st.spot, st.basisYear);
   $('bc-tbody').innerHTML = rows.map((r) => {
     if (!r.listed) {
-      return `<tr data-k="${r.K}"><td class="lft"></td><td class="tk">$${r.K}</td>
-        <td colspan="${ncol - 3}" class="muted">not listed at ${esc(st.expiry || '')}</td>
+      return `<tr data-k="${r.K}"><td class="tk lft">$${r.K}</td>
+        <td colspan="${ncol - 2}" class="muted">not listed at ${esc(st.expiry || '')}</td>
         <td class="sep"><button class="x" data-del="${r.K}" title="remove">✕</button></td></tr>`;
     }
     const sel = r.K === (selectedRow() || {}).K;
@@ -565,8 +371,7 @@ function renderLadder() {
       + `<b>Last</b> ${px(r.lastTrade)} · <b>OI</b> ${r.oi == null ? '—' : r.oi.toLocaleString()} · <b>Theta</b> ${r.theta == null ? '—' : r.theta.toFixed(3)}`
       + `<br><b>Cost</b> ${cash(r.cost)} / contract · <b>Notional</b> ${cash(r.notional)}`;
     return `<tr class="${sel ? 'sel' : ''}" data-k="${r.K}">
-      <td class="lft"><input type="checkbox" data-plot="${r.K}" ${st.plotted[r.K] ? 'checked' : ''} title="draw on the payoff chart"></td>
-      <td class="tk">$${r.K}${itm ? ' <span class="tag">ITM</span>' : ''}</td>
+      <td class="tk lft">$${r.K}${itm ? ' <span class="tag">ITM</span>' : ''}</td>
       <td class="${r.moneyness >= 0 ? '' : 'up'}">${pctS(r.moneyness)}</td>
       <td class="big">${px(r.prem)}<span class="ttip" data-tip="${esc(q)}">i</span></td>
       ${st.expand ? `<td>${pct(r.iv, 0)}</td><td>${r.delta == null ? '—' : r.delta.toFixed(2)}</td>` : ''}
@@ -590,17 +395,10 @@ function renderLadder() {
 const rich = (v, base) => (v != null && base != null) ? (v > base ? 'rich' : 'cheap') : '';
 
 function wireLadder() {
-  root().querySelectorAll('[data-plot]').forEach((el) => el.onclick = (ev) => {
-    ev.stopPropagation();
-    const k = +el.dataset.plot;
-    if (el.checked) st.plotted[k] = true; else delete st.plotted[k];
-    renderChartBlock();
-  });
   root().querySelectorAll('[data-del]').forEach((el) => el.onclick = (ev) => {
     ev.stopPropagation();
     const k = +el.dataset.del;
     st.strikes = st.strikes.filter((x) => x !== k);
-    delete st.plotted[k];
     if (st.selected === k) st.selected = st.strikes[0] ?? null;
     render();
   });
@@ -627,71 +425,65 @@ function renderPicker() {
     : '';
 }
 
-// ── Render: the payoff chart block (legend, canvas, table) ────────────────────
-function renderChartBlock() {
-  const ss = series();
-  $('bc-legend').innerHTML = ss.length
-    ? ss.map((s) => `<button type="button" class="rs-leg ${vis(s.k) ? '' : 'off'}" data-leg="${esc(s.k)}">`
-        + `<span class="${s.isStock ? 'rs-leg-dash' : 'rs-leg-line'}" style="background:${s.color}"></span>${esc(s.label)}</button>`).join('')
-    : '<span class="muted">tick a strike in the ladder to draw it</span>';
-  root().querySelectorAll('[data-leg]').forEach((el) => el.onclick = () => {
-    const k = el.dataset.leg;
-    if (st.hidden[k]) delete st.hidden[k]; else st.hidden[k] = true;
-    renderChartBlock();
-  });
-  $('bc-collh').innerHTML = `<span class="rs-collap-ic">${st.tbl ? '▾' : '▸'}</span>Payoff at expiry`
-    + `<span class="rs-collap-sub">${st.tbl ? 'hide' : 'show'} · ${ss.filter((s) => vis(s.k)).length} series `
-    + `× ${grid().length} price points, ${st.mode === 'ret' ? 'return on premium' : 'P&L in $'}</span>`;
-  $('bc-collb').hidden = !st.tbl;
-  renderPayoffTable();
-  buildChart();
-}
+// ── Render: EBITDA & Net Income ───────────────────────────────────────────────
+// The Covered Calls fundamentals block, on one ticker instead of nine: each year's
+// level with its YoY growth underneath, the CAGR across the window, and the PEG —
+// the multiple the stock trades at today divided by the growth it is buying.
+function renderFund() {
+  const wrap = $('bc-fund');
+  if (!wrap) return;
+  wrap.hidden = !st.showFund;
+  if (!st.showFund) return;
+  const e = estOf();
+  if (!e) { wrap.innerHTML = ''; return; }
 
-// The table under the chart carries every series that is drawn, across the same
-// price range — coarser on x so it stays readable (rule 3).
-function renderPayoffTable() {
-  const g = grid(), ss = series().filter((s) => vis(s.k));
-  if (!g.length || !ss.length) { $('bc-tbl2').innerHTML = '<div class="muted">nothing drawn.</div>'; return; }
-  const lo = st.win ? st.win[0] : 0, hi = st.win ? st.win[1] : g.length - 1;
-  const gx = g.slice(lo, hi + 1);
-  const step = Math.max(1, Math.round(gx.length / 14));
-  const cols = gx.filter((_, i) => i % step === 0);
-  const head = cols.map((p) => `<th>$${Math.round(p)}</th>`).join('');
-  const body = ss.map((s) => {
-    const cells = cols.map((p) => {
-      const v = valueAt(s, p);
-      return `<td class="${v == null ? 'rs-ft-nil' : (v >= 0 ? 'up' : 'dn')}">${esc(modeFmt(v))}</td>`;
-    }).join('');
-    const be = s.isStock ? st.spot : s.row.be;
-    return `<tr><td class="rs-ft-h">${esc(s.label)}<span class="sub">breakeven ${px(be)}</span></td>${cells}</tr>`;
-  }).join('');
-  $('bc-tbl2').innerHTML = `
-    <div class="rs-ft-cap">Underlying price at expiry (${esc(st.expiry || '')}) · values ${st.mode === 'ret' ? 'as a % of premium paid' : 'per contract'}</div>
-    <div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h">Series</th>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
-}
+  const cols = yearsOf().filter((y) => y >= 2024);
+  const firstA = cols.find((y) => !e.years[y].est) ?? cols[0];
+  const lastY = cols[cols.length - 1];
+  const cur = multiplesAt(st.spot, st.basisYear);
+  // PEG on the selected basis year: today's multiple ÷ that year's growth, in points.
+  const gEb = growth('ebitda', st.basisYear), gNi = growth('netIncome', st.basisYear);
+  const pegEv = (cur.ev != null && gEb && gEb > 0) ? cur.ev / (gEb * 100) : null;
+  const pegPe = (cur.pe != null && gNi && gNi > 0) ? cur.pe / (gNi * 100) : null;
 
-// ── Render: the estimates strip and the footnote ──────────────────────────────
-function renderEstimates() {
-  const e = estOf(), ys = yearsOf();
-  if (!e) { $('bc-est').innerHTML = ''; return; }
-  const cols = ys.filter((y) => y >= 2024);
-  $('bc-est').innerHTML = `
-    <div class="rs-ft-cap">${esc(e.name)} — the estimates every multiple on this page is built on${e.currency !== 'USD' ? ` · reports in ${esc(e.currency)}` : ''}</div>
-    <div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h">$M unless noted</th>
-      ${cols.map((y) => `<th class="${e.years[y].est ? 'rs-ft-este' : ''}">${y}${e.years[y].est ? '<span class="rs-ft-e">E</span>' : ''}</th>`).join('')}</tr></thead>
+  // One block = a level row with growth underneath, then CAGR and PEG.
+  const block = (label, key, fmtv, cagrVal, pegVal) => `
+    <tr class="lvl">
+      <td class="rs-ft-h">${esc(label)}</td>
+      ${cols.map((y) => {
+        const v = e.years[y][key], g = growth(key, y);
+        return `<td class="${e.years[y].est ? 'rs-ft-este' : ''}">
+          <div class="fv">${esc(fmtv(v))}</div>
+          <div class="fg ${g == null ? '' : (g >= 0 ? 'up' : 'dn')}">${g == null ? '' : pctS(g, 0)}</div></td>`;
+      }).join('')}
+      <td class="sep ${cagrVal == null ? '' : (cagrVal >= 0 ? 'up' : 'dn')}">${cagrVal == null ? '—' : pctS(cagrVal)}</td>
+      <td>${pegVal == null ? '—' : pegVal.toFixed(2)}</td>
+    </tr>`;
+
+  wrap.innerHTML = `
+    <div class="block-top">
+      <div class="block-h">${esc(e.name)} — EBITDA &amp; Net Income</div>
+      <span class="muted">growth under each level · CAGR ${firstA}→${lastY} · PEG on ${esc(yl(st.basisYear))}</span>
+    </div>
+    <div class="rs-tablewrap"><div class="rs-ft-scroll"><table class="rs-ft bc-fundtbl">
+      <thead><tr><th class="rs-ft-h">$M unless noted</th>
+        ${cols.map((y) => `<th class="${e.years[y].est ? 'rs-ft-este' : ''}">${y}${e.years[y].est ? '<span class="rs-ft-e">E</span>' : ''}</th>`).join('')}
+        <th class="sep">CAGR</th><th>PEG</th></tr></thead>
       <tbody>
-        ${estRow('Revenue', cols, (y) => bn(e.years[y].rev), e)}
-        ${estRow(e.ebitdaLabel, cols, (y) => bn(e.years[y].ebitda), e)}
-        ${estRow('Net income', cols, (y) => bn(e.years[y].netIncome), e)}
-        ${estRow(e.epsLabel, cols, (y) => e.years[y].eps == null ? '—' : `$${e.years[y].eps.toFixed(2)}`, e)}
-        ${estRow('Diluted shares (M)', cols, (y) => e.years[y].shares == null ? '—' : e.years[y].shares.toFixed(1), e)}
-        ${estRow('Net debt (cash)', cols, (y) => e.years[y].netDebt == null ? '—' : bn(e.years[y].netDebt), e)}
-      </tbody></table></div>
-    <div class="foot">${esc(e.source)}</div>`;
-}
-function estRow(label, cols, get, e) {
-  return `<tr><td class="rs-ft-h">${esc(label)}</td>`
-    + cols.map((y) => `<td class="${e.years[y].est ? 'rs-ft-este' : ''}">${esc(get(y))}</td>`).join('') + '</tr>';
+        ${block(e.ebitdaLabel, 'ebitda', bn, cagr('ebitda', firstA, lastY), pegEv)}
+        ${block('Net income', 'netIncome', bn, cagr('netIncome', firstA, lastY), pegPe)}
+        ${block(e.epsLabel, 'eps', (v) => v == null ? '—' : `$${v.toFixed(2)}`, cagr('eps', firstA, lastY), null)}
+        ${block('Revenue', 'rev', bn, cagr('rev', firstA, lastY), null)}
+        <tr><td class="rs-ft-h">Diluted shares (M)</td>
+          ${cols.map((y) => `<td class="${e.years[y].est ? 'rs-ft-este' : ''}">${e.years[y].shares == null ? '—' : e.years[y].shares.toFixed(1)}</td>`).join('')}
+          <td class="sep">—</td><td>—</td></tr>
+        <tr><td class="rs-ft-h">Net debt (cash)</td>
+          ${cols.map((y) => `<td class="${e.years[y].est ? 'rs-ft-este' : ''}">${e.years[y].netDebt == null ? '—' : bn(e.years[y].netDebt)}</td>`).join('')}
+          <td class="sep">—</td><td>—</td></tr>
+      </tbody></table></div></div>
+    <div class="foot">
+      <b>PEG</b> = the multiple ${esc(st.ticker)} trades at <em>today</em> on ${esc(yl(st.basisYear))} ÷ that year's growth in points — EV/EBITDA ÷ EBITDA growth on the EBITDA line, P/E ÷ net-income growth on the Net income line. Growth off a loss-making or missing prior year is left blank rather than invented. Diluted shares and net debt earn no growth rate; they are here because the EV/EBITDA in the ladder above is built from them.<br>
+      ${esc(e.source)}</div>`;
 }
 
 function renderFoot() {
@@ -699,7 +491,7 @@ function renderFoot() {
     <b>Contract</b> — a buyer lifting the offer pays the <b>ask</b> (the default); <b>mid</b> is the fair-value view and <b>last</b> is the last print, which on an illiquid strike can be hours old. Hover the <b>i</b> for bid/ask/mid, last trade, open interest, theta, and the cash cost and notional of one contract. <b>+</b> opens IV and delta.<br>
     <b>At strike</b> and <b>Breakeven</b> — the multiples the company would trade at <em>at that price</em>, on the estimate year picked in the header (both groups follow it). Breakeven = strike + premium, the price at expiry where the position returns the cheque; <b>% move</b> is the move from spot it needs. EV/EBITDA uses the estimate year's own net debt where the model carries one, otherwise live enterprise value − market cap. <span class="cheap">Green</span> = below today's multiple, <span class="rich">red</span> = above it.<br>
     <b>Summary</b> — <b>Cost % of strike</b> = premium ÷ strike, what the optionality costs relative to what it buys. <b>Exposure</b> is the share of the account a single contract's notional is allowed to be; set it in the header and it applies to every row. <b>Min. portfolio</b> = notional ÷ that exposure — the smallest account for which one contract still sits inside the limit, with notional = ${st.notionalBasis === 'strike' ? 'strike' : 'spot'} × 100. Note the cash at risk is the premium, not the notional: the notional is what the position <em>controls</em>, and the exposure limit is a rule about that.<br>
-    Price, premium, IV and greeks are live from the Massive option chain; estimates are as sourced under the table below. Nothing on this page is stored — every input is in-memory and resets on reload.`;
+    Price, premium, IV and greeks are live from the Massive option chain. Nothing on this page is stored — every input is in-memory and resets on reload.`;
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
@@ -715,8 +507,7 @@ function render() {
   renderKpis();
   renderLadder();
   renderPicker();
-  renderChartBlock();
-  renderEstimates();
+  renderFund();
   renderFoot();
 }
 
@@ -729,7 +520,8 @@ function syncControls() {
   }
   root().querySelectorAll('#bc-premSel button').forEach((b) => b.classList.toggle('on', b.dataset.prem === st.premBasis));
   root().querySelectorAll('#bc-notSel button').forEach((b) => b.classList.toggle('on', b.dataset.not === st.notionalBasis));
-  root().querySelectorAll('#bc-modeSel button').forEach((b) => b.classList.toggle('on', b.dataset.mode === st.mode));
+  const tf = $('bc-togFund');
+  if (tf) tf.textContent = st.showFund ? 'Hide EBITDA / NI' : 'Show EBITDA / NI';
   const tt = $('bc-tickers');
   if (tt) tt.innerHTML = Object.keys(BC_ESTIMATES).map((t) =>
     `<button type="button" class="chip ${t === st.ticker ? 'on' : ''}" data-tkbtn="${esc(t)}">${esc(t)}</button>`).join('');
@@ -742,17 +534,18 @@ function injectMarkup() {
       <div class="topbar">
         <h2>Buy Calls — Long Call Analyzer</h2>
         <span class="pill">live · Massive</span>
-        <div class="controls">
+      </div>
+      <div class="sub">Buying a call is a bet on a price. This prices the strikes you pick, and their breakevens, back into the multiple they imply.</div>
+      <div class="controls">
           <div class="ctl"><label>Ticker</label><input id="bc-ticker" value="${esc(st.ticker)}" size="6"></div>
           <div class="ctl"><label>Expiry</label><select id="bc-expiry"></select></div>
           <div class="ctl"><label>Premium</label><div class="seg" id="bc-premSel">
             <button data-prem="ask">Ask</button><button data-prem="mid">Mid</button><button data-prem="last">Last</button></div></div>
           <div class="ctl"><label>Notional basis</label><div class="seg" id="bc-notSel">
             <button data-not="strike">Strike × 100</button><button data-not="spot">Spot × 100</button></div></div>
+          <div class="ctl"><label>&nbsp;</label><button id="bc-togFund" class="ghost">Hide EBITDA / NI</button></div>
           <div class="ctl"><label>&nbsp;</label><button id="bc-refresh">↻ Refresh</button></div>
-        </div>
       </div>
-      <div class="sub">Buying a call is a bet on a price. This prices the strikes you pick, and their breakevens, back into the multiple they imply.</div>
       <div class="chips" id="bc-tickers"></div>
 
       <div id="bc-status" class="spin">Loading…</div>
@@ -775,25 +568,7 @@ function injectMarkup() {
           <span class="muted" id="bc-pickinfo"></span>
         </div>
 
-        <div class="block">
-          <div class="block-top">
-            <div class="block-h">Payoff at expiry</div>
-            <div class="rs-modes">
-              <div class="seg" id="bc-modeSel">
-                <button data-mode="pnl">P&amp;L / contract</button><button data-mode="ret">% of premium</button>
-              </div>
-            </div>
-          </div>
-          <div class="legend rs-leg-row" id="bc-legend"></div>
-          <div class="cwrap"><canvas id="bc-canvas" height="300"></canvas></div>
-          <div class="hint">Drag across the chart to zoom — sideways for the price range, down for the value axis. Double-click resets.</div>
-          <div class="rs-collap">
-            <button type="button" class="rs-collap-h" id="bc-collh"></button>
-            <div class="rs-collap-b" id="bc-collb" hidden><div class="rs-tablewrap" id="bc-tbl2"></div></div>
-          </div>
-        </div>
-
-        <div class="block"><div id="bc-est" class="rs-tablewrap"></div></div>
+        <div class="block" id="bc-fund"></div>
         <div class="foot" id="bc-foot"></div>
       </div>
     </div>
@@ -818,6 +593,7 @@ function wireControls() {
     if (t && t !== st.ticker) loadTicker(t);
   };
   $('bc-expiry').onchange = () => { st.expiry = $('bc-expiry').value; loadChain(); };
+  $('bc-togFund').onclick = () => { st.showFund = !st.showFund; render(); };
 
   $('bc-addBtn').onclick = () => {
     const v = parseFloat($('bc-addSel').value);
@@ -829,11 +605,11 @@ function wireControls() {
     st.rangeFrom = Math.min(a, b); st.rangeTo = Math.max(a, b);
     addStrikes(listedStrikes().filter((k) => k >= st.rangeFrom - 1e-9 && k <= st.rangeTo + 1e-9));
   };
-  $('bc-clear').onclick = () => { st.strikes = []; st.plotted = {}; st.selected = null; render(); };
+  $('bc-clear').onclick = () => { st.strikes = []; st.selected = null; render(); };
 
-  // Delegated on the tab root, never on document (§12, invariant 2). The year
-  // dropdown and the exposure input live inside the table header, which is
-  // rewritten on every render, so they cannot be bound directly.
+  // Delegated on the tab root, never on document. The year dropdown and the
+  // exposure input live inside the table header, which is rewritten on every
+  // render, so they cannot be bound directly.
   r.addEventListener('change', (ev) => {
     if (ev.target.id === 'bc-basisYear') { st.basisYear = +ev.target.value; render(); }
     if (ev.target.id === 'bc-expo') {
@@ -849,13 +625,8 @@ function wireControls() {
     const not = ev.target.closest('#bc-notSel button');
     if (not) { st.notionalBasis = not.dataset.not; render(); return; }
     if (ev.target.closest('#bc-expand')) { st.expand = !st.expand; render(); return; }
-    const mode = ev.target.closest('#bc-modeSel button');
-    // Switching mode changes the y-axis units, so the zoom is dropped rather than
-    // cropping a % range to a $ one (§0.2, rule 1).
-    if (mode) { st.mode = mode.dataset.mode; st.yr = null; renderChartBlock(); return; }
     const tk = ev.target.closest('[data-tkbtn]');
     if (tk) { $('bc-ticker').value = tk.dataset.tkbtn; loadTicker(tk.dataset.tkbtn); return; }
-    if (ev.target.closest('#bc-collh')) { st.tbl = !st.tbl; renderChartBlock(); return; }
   });
 
   // Cursor tooltip for the quote detail on each premium.

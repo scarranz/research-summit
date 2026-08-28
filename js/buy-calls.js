@@ -69,7 +69,9 @@ const st = {
   notionalBasis: 'strike',   // 'strike' | 'spot'
   exposurePct: 0.02,         // share of the account one contract's notional may be
   expand: false,             // show IV + delta inside the Contract group
-  showFund: true,            // show the EBITDA / Net Income block
+  showFund: true,            // show the income-statement block
+  sens: false,               // revenue-growth sensitivity inputs on/off
+  revG: {},                  // year -> overridden revenue growth (decimal)
 
   selected: null,            // selected strike (drives the KPI strip)
 };
@@ -96,10 +98,52 @@ const estYearsOf = () => { const e = estOf(); return yearsOf().filter((y) => e.y
 const usable = () => { const e = estOf(); return !!e && e.currency === 'USD'; };
 const yl = (y) => { const e = estOf(); return (e && e.years[y] && e.years[y].est) ? `${y}E` : `${y}`; };
 
+// ── The sensitivity layer ─────────────────────────────────────────────────────
+// Every number on the page reads its estimates through eff(), not through the raw
+// data file. That is what makes the sensitivity work: override the REVENUE GROWTH
+// of a forward year and the revenue line is rebuilt off the prior year, then
+// EBITDA, net income and EPS follow at their CONSENSUS MARGINS — everything else
+// is held constant. Overrides compound, so flexing 2027 moves 2028 with it.
+//
+// Net debt is deliberately NOT flexed: moving it would need a cash-flow model, and
+// inventing one behind a slider is exactly the kind of fake precision this page is
+// supposed to avoid. The block says so.
+const flexYears = () => estYearsOf().slice(-2);
+const isFlexed = () => Object.keys(st.revG).some((y) => st.revG[y] != null);
+
+function eff() {
+  const e = estOf(); if (!e) return {};
+  const out = {};
+  Object.keys(e.years).forEach((y) => { out[y] = { ...e.years[y] }; });
+  const ys = yearsOf();
+  const first = ys.find((y) => st.revG[y] != null);
+  if (first == null) return out;
+  // From the first overridden year on, EVERY later year is rebuilt too — at its own
+  // consensus growth rate unless it is itself overridden. Leaving a later year at its
+  // consensus LEVEL would silently invent a growth rate for it: cut 2027 to +15% and
+  // 2028 would have had to accelerate to +40% to land back on the consensus number.
+  ys.filter((y) => y >= first).forEach((y) => {
+    const base = e.years[y], prev = out[y - 1], prevC = e.years[y - 1];
+    if (!base || !prev || prev.rev == null || !prevC || !(prevC.rev > 0)) return;
+    const consG = base.rev != null ? base.rev / prevC.rev - 1 : null;
+    const g = st.revG[y] != null ? st.revG[y] : consG;
+    if (g == null) return;
+    const mEb = (base.ebitda != null && base.rev) ? base.ebitda / base.rev : null;
+    const mNi = (base.netIncome != null && base.rev) ? base.netIncome / base.rev : null;
+    const rev = prev.rev * (1 + g);
+    out[y].rev = rev;
+    if (mEb != null) out[y].ebitda = rev * mEb;
+    if (mNi != null) out[y].netIncome = rev * mNi;
+    if (out[y].netIncome != null && out[y].shares) out[y].eps = out[y].netIncome / out[y].shares;
+    if (base.rev && Math.abs(rev / base.rev - 1) > 1e-9) out[y].flexed = true;
+  });
+  return out;
+}
+
 // Diluted shares (M) and net debt ($M) for a year. Net debt falls back to the live
 // enterprise-value − market-cap when the estimate set has none.
 function capital(year) {
-  const e = estOf(); const y = e && e.years[year];
+  const y = eff()[year];
   const shares = (y && y.shares != null) ? y.shares : (st.shares != null ? st.shares / 1e6 : null);
   const netDebt = (y && y.netDebt != null) ? y.netDebt
                 : (st.netDebtLive != null ? st.netDebtLive / 1e6 : null);
@@ -109,7 +153,7 @@ function capital(year) {
 // The two multiples a share price implies on a given estimate year.
 function multiplesAt(price, year) {
   if (!usable() || price == null) return { pe: null, ev: null };
-  const e = estOf(); const y = e && e.years[year];
+  const y = eff()[year];
   if (!y) return { pe: null, ev: null };
   const { shares, netDebt } = capital(year);
   const pe = (y.eps != null && y.eps > 0) ? price / y.eps : null;
@@ -118,19 +162,25 @@ function multiplesAt(price, year) {
   return { pe, ev };
 }
 
-// YoY growth of one estimate line, and its CAGR across the visible window. Both
-// return null unless the endpoints are positive — a growth rate off a loss is noise.
-function growth(key, year) {
-  const e = estOf(); if (!e) return null;
-  const cur = e.years[year] && e.years[year][key];
-  const prev = e.years[year - 1] && e.years[year - 1][key];
+// YoY growth of one estimate line, its CAGR across the window, and its margin on
+// revenue. Each returns null unless the inputs are positive — a growth rate off a
+// loss, or a margin off no revenue, is noise.
+function growth(key, year, src) {
+  const E = src || eff();
+  const cur = E[year] && E[year][key];
+  const prev = E[year - 1] && E[year - 1][key];
   return (cur != null && prev != null && prev > 0) ? cur / prev - 1 : null;
 }
-function cagr(key, from, to) {
-  const e = estOf(); if (!e) return null;
-  const a = e.years[from] && e.years[from][key], b = e.years[to] && e.years[to][key];
+function cagr(key, from, to, src) {
+  const E = src || eff();
+  const a = E[from] && E[from][key], b = E[to] && E[to][key];
   return (a != null && b != null && a > 0 && b > 0 && to > from)
     ? Math.pow(b / a, 1 / (to - from)) - 1 : null;
+}
+function margin(key, year, src) {
+  const E = src || eff();
+  const v = E[year] && E[year][key], rev = E[year] && E[year].rev;
+  return (v != null && rev != null && rev > 0) ? v / rev : null;
 }
 
 // ── The strike ladder ─────────────────────────────────────────────────────────
@@ -293,7 +343,7 @@ async function loadTicker(tk) {
   st.ticker = tk.toUpperCase();
   st.loading = true; st.err = null; st.chain = [];
   st.strikes = []; st.seeded = false; st.rangeFrom = null; st.rangeTo = null;
-  st.selected = null;
+  st.selected = null; st.revG = {};
   // Underwrite on the LAST estimate year we hold (2028E for APP) — it is the one a
   // January LEAPS is actually a bet on.
   const ys = yearsOf(), ey = estYearsOf();
@@ -425,10 +475,14 @@ function renderPicker() {
     : '';
 }
 
-// ── Render: EBITDA & Net Income ───────────────────────────────────────────────
-// The Covered Calls fundamentals block, on one ticker instead of nine: each year's
-// level with its YoY growth underneath, the CAGR across the window, and the PEG —
-// the multiple the stock trades at today divided by the growth it is buying.
+// ── Render: the income statement ──────────────────────────────────────────────
+// The Covered Calls fundamentals block, on one ticker instead of nine, and read in
+// income-statement order: revenue down to EPS, each level followed by its growth
+// and — where it means anything — its margin on revenue. The CAGR sits on the
+// growth line because that is what it measures; the PEG sits on the level.
+//
+// With Sensitivity on, the revenue growth of the last two estimate years becomes
+// an input. See eff() for what moves and what is held.
 function renderFund() {
   const wrap = $('bc-fund');
   if (!wrap) return;
@@ -437,52 +491,88 @@ function renderFund() {
   const e = estOf();
   if (!e) { wrap.innerHTML = ''; return; }
 
+  const E = eff(), cons = e.years;
   const cols = yearsOf().filter((y) => y >= 2024);
-  const firstA = cols.find((y) => !e.years[y].est) ?? cols[0];
+  const firstA = cols.find((y) => !cons[y].est) ?? cols[0];
   const lastY = cols[cols.length - 1];
+  const flex = flexYears();
   const cur = multiplesAt(st.spot, st.basisYear);
   // PEG on the selected basis year: today's multiple ÷ that year's growth, in points.
   const gEb = growth('ebitda', st.basisYear), gNi = growth('netIncome', st.basisYear);
   const pegEv = (cur.ev != null && gEb && gEb > 0) ? cur.ev / (gEb * 100) : null;
   const pegPe = (cur.pe != null && gNi && gNi > 0) ? cur.pe / (gNi * 100) : null;
 
-  // One block = a level row with growth underneath, then CAGR and PEG.
-  const block = (label, key, fmtv, cagrVal, pegVal) => `
-    <tr class="lvl">
-      <td class="rs-ft-h">${esc(label)}</td>
-      ${cols.map((y) => {
-        const v = e.years[y][key], g = growth(key, y);
-        return `<td class="${e.years[y].est ? 'rs-ft-este' : ''}">
-          <div class="fv">${esc(fmtv(v))}</div>
-          <div class="fg ${g == null ? '' : (g >= 0 ? 'up' : 'dn')}">${g == null ? '' : pctS(g, 0)}</div></td>`;
-      }).join('')}
-      <td class="sep ${cagrVal == null ? '' : (cagrVal >= 0 ? 'up' : 'dn')}">${cagrVal == null ? '—' : pctS(cagrVal)}</td>
-      <td>${pegVal == null ? '—' : pegVal.toFixed(2)}</td>
-    </tr>`;
+  const est = (y) => cons[y].est ? ' rs-ft-este' : '';
+  const flexed = (y) => E[y] && E[y].flexed ? ' flexed' : '';
+  // These are REPORTING-currency figures, not the USD the ladder above is priced in.
+  // A peso EBITDA printed with a $ reads as dollars, so only USD reporters get one;
+  // the stub column names the unit for everyone else.
+  const sym = e.currency === 'USD' ? '$' : '';
+  const fbn = (x) => {
+    if (x == null || !isFinite(x)) return '—';
+    const a = Math.abs(x), s = x < 0 ? '−' : '';
+    return a >= 1000 ? `${s}${sym}${(a / 1000).toFixed(2)}B` : `${s}${sym}${a.toFixed(0)}M`;
+  };
+  const fps = (v) => v == null ? '—' : `${sym}${v.toFixed(2)}`;
+
+  // A level row, then a growth sub-row, then optionally a margin sub-row.
+  function lines(label, key, fmtv, opts) {
+    const o = opts || {};
+    const lvl = `<tr class="rs-ft-main rs-ft-nb"><td class="rs-ft-h">${esc(label)}</td>`
+      + cols.map((y) => `<td class="${est(y)}${flexed(y)}">${esc(fmtv(E[y][key]))}</td>`).join('')
+      + `<td class="sep"></td><td>${o.peg == null ? '' : o.peg.toFixed(2)}</td></tr>`;
+
+    const gcells = cols.map((y) => {
+      const g = growth(key, y);
+      // The one editable number on the page: revenue growth in a flex year.
+      if (o.editable && st.sens && flex.includes(y)) {
+        const val = (st.revG[y] != null ? st.revG[y] : g);
+        return `<td class="${est(y)} gcell"><input class="gin" type="number" step="1" data-revg="${y}"
+          value="${val == null ? '' : (val * 100).toFixed(1)}" title="revenue growth for ${y}E — everything below follows at consensus margins"></td>`;
+      }
+      return `<td class="${est(y)}${flexed(y)} ${g == null ? '' : (g >= 0 ? 'up' : 'dn')}">${g == null ? '—' : pctS(g, 0)}</td>`;
+    }).join('');
+    const cg = cagr(key, firstA, lastY);
+    const grow = `<tr class="rs-ft-sub${o.margin ? ' rs-ft-nb' : ''}"><td class="rs-ft-h">growth</td>${gcells}`
+      + `<td class="sep ${cg == null ? '' : (cg >= 0 ? 'up' : 'dn')}">${cg == null ? '—' : pctS(cg)}</td><td></td></tr>`;
+
+    if (!o.margin) return lvl + grow;
+    // No flexed marker on the margin line: the margins are exactly what the
+    // sensitivity HOLDS, so painting them as moved would contradict itself.
+    const mcells = cols.map((y) => {
+      const m = margin(key, y);
+      return `<td class="${est(y)}">${m == null ? '—' : pct(m, 1)}</td>`;
+    }).join('');
+    return lvl + grow + `<tr class="rs-ft-sub"><td class="rs-ft-h">margin</td>${mcells}<td class="sep"></td><td></td></tr>`;
+  }
+
+  const plain = (label, fmtv) => `<tr class="rs-ft-main"><td class="rs-ft-h">${esc(label)}</td>`
+    + cols.map((y) => `<td class="${est(y)}">${esc(fmtv(y))}</td>`).join('')
+    + `<td class="sep"></td><td></td></tr>`;
 
   wrap.innerHTML = `
     <div class="block-top">
-      <div class="block-h">${esc(e.name)} — EBITDA &amp; Net Income</div>
-      <span class="muted">growth under each level · CAGR ${firstA}→${lastY} · PEG on ${esc(yl(st.basisYear))}</span>
+      <div class="block-h">${esc(e.name)} — income statement</div>
+      <button type="button" class="ghost sm ${st.sens ? 'on' : ''}" id="bc-sens">${st.sens ? '✓ ' : ''}Sensitivity</button>
+      ${isFlexed() ? '<button type="button" class="ghost sm" id="bc-sensReset">Reset to consensus</button>' : ''}
+      <span class="muted">CAGR ${firstA}→${lastY} on each growth line · PEG on ${esc(yl(st.basisYear))}</span>
     </div>
+    ${st.sens ? `<div class="senshint">Type a revenue growth for ${flex.map((y) => esc(yl(y))).join(' and ')}. Revenue is rebuilt off the prior year and compounds; EBITDA, net income and EPS follow at their <b>consensus margins</b>; shares and net debt are held. Every multiple in the ladder above moves with it.</div>` : ''}
     <div class="rs-tablewrap"><div class="rs-ft-scroll"><table class="rs-ft bc-fundtbl">
-      <thead><tr><th class="rs-ft-h">$M unless noted</th>
-        ${cols.map((y) => `<th class="${e.years[y].est ? 'rs-ft-este' : ''}">${y}${e.years[y].est ? '<span class="rs-ft-e">E</span>' : ''}</th>`).join('')}
+      <thead><tr><th class="rs-ft-h">${e.currency === 'USD' ? '$M' : esc(e.currency) + ' M'} unless noted</th>
+        ${cols.map((y) => `<th class="${est(y)}">${y}${cons[y].est ? '<span class="rs-ft-e">E</span>' : ''}</th>`).join('')}
         <th class="sep">CAGR</th><th>PEG</th></tr></thead>
       <tbody>
-        ${block(e.ebitdaLabel, 'ebitda', bn, cagr('ebitda', firstA, lastY), pegEv)}
-        ${block('Net income', 'netIncome', bn, cagr('netIncome', firstA, lastY), pegPe)}
-        ${block(e.epsLabel, 'eps', (v) => v == null ? '—' : `$${v.toFixed(2)}`, cagr('eps', firstA, lastY), null)}
-        ${block('Revenue', 'rev', bn, cagr('rev', firstA, lastY), null)}
-        <tr><td class="rs-ft-h">Diluted shares (M)</td>
-          ${cols.map((y) => `<td class="${e.years[y].est ? 'rs-ft-este' : ''}">${e.years[y].shares == null ? '—' : e.years[y].shares.toFixed(1)}</td>`).join('')}
-          <td class="sep">—</td><td>—</td></tr>
-        <tr><td class="rs-ft-h">Net debt (cash)</td>
-          ${cols.map((y) => `<td class="${e.years[y].est ? 'rs-ft-este' : ''}">${e.years[y].netDebt == null ? '—' : bn(e.years[y].netDebt)}</td>`).join('')}
-          <td class="sep">—</td><td>—</td></tr>
+        ${lines('Revenue', 'rev', fbn, { editable: true })}
+        ${lines(e.ebitdaLabel, 'ebitda', fbn, { margin: true, peg: pegEv })}
+        ${lines('Net income', 'netIncome', fbn, { margin: true, peg: pegPe })}
+        ${lines(e.epsLabel, 'eps', fps, {})}
+        ${plain('Diluted shares (M)', (y) => E[y].shares == null ? '—' : E[y].shares.toFixed(1))}
+        ${plain('Net debt (cash)', (y) => E[y].netDebt == null ? '—' : fbn(E[y].netDebt))}
       </tbody></table></div></div>
     <div class="foot">
-      <b>PEG</b> = the multiple ${esc(st.ticker)} trades at <em>today</em> on ${esc(yl(st.basisYear))} ÷ that year's growth in points — EV/EBITDA ÷ EBITDA growth on the EBITDA line, P/E ÷ net-income growth on the Net income line. Growth off a loss-making or missing prior year is left blank rather than invented. Diluted shares and net debt earn no growth rate; they are here because the EV/EBITDA in the ladder above is built from them.<br>
+      <b>Margin</b> is the line as a % of revenue — the common-size view. Revenue has none by definition, and EPS is per share rather than a share of revenue, so neither carries one. <b>PEG</b> = the multiple ${esc(st.ticker)} trades at <em>today</em> on ${esc(yl(st.basisYear))} ÷ that year's growth in points: EV/EBITDA ÷ EBITDA growth on the EBITDA line, P/E ÷ net-income growth on Net income. Growth off a loss-making or missing prior year is left blank rather than invented. Diluted shares and net debt carry no growth or margin; they are here because the ladder's EV/EBITDA is built from them.<br>
+      <b>Sensitivity</b> holds every margin at consensus and moves revenue only, so it answers "what if the top line compounds differently", not "what if the business changes shape". <b>Net debt is not flexed</b> — restating it would need a cash-flow model, and guessing one behind an input would be false precision.<br>
       ${esc(e.source)}</div>`;
 }
 
@@ -522,6 +612,9 @@ function syncControls() {
   root().querySelectorAll('#bc-notSel button').forEach((b) => b.classList.toggle('on', b.dataset.not === st.notionalBasis));
   const tf = $('bc-togFund');
   if (tf) tf.textContent = st.showFund ? 'Hide EBITDA / NI' : 'Show EBITDA / NI';
+  // Say it out loud when the multiples are no longer running on consensus.
+  const fp = $('bc-flexpill');
+  if (fp) { fp.hidden = !isFlexed(); fp.textContent = 'estimates flexed'; }
   const tt = $('bc-tickers');
   if (tt) tt.innerHTML = Object.keys(BC_ESTIMATES).map((t) =>
     `<button type="button" class="chip ${t === st.ticker ? 'on' : ''}" data-tkbtn="${esc(t)}">${esc(t)}</button>`).join('');
@@ -534,6 +627,7 @@ function injectMarkup() {
       <div class="topbar">
         <h2>Buy Calls — Long Call Analyzer</h2>
         <span class="pill">live · Massive</span>
+        <span class="pill flex" id="bc-flexpill" hidden></span>
       </div>
       <div class="sub">Buying a call is a bet on a price. This prices the strikes you pick, and their breakevens, back into the multiple they imply.</div>
       <div class="controls">
@@ -617,6 +711,13 @@ function wireControls() {
       if (isFinite(v) && v > 0) st.exposurePct = v / 100;
       render();
     }
+    // Revenue-growth override: blank clears it back to consensus.
+    if (ev.target.dataset && ev.target.dataset.revg) {
+      const y = +ev.target.dataset.revg, v = parseFloat(ev.target.value);
+      if (ev.target.value === '' || !isFinite(v)) delete st.revG[y];
+      else st.revG[y] = v / 100;
+      render();
+    }
   });
 
   r.addEventListener('click', (ev) => {
@@ -625,6 +726,8 @@ function wireControls() {
     const not = ev.target.closest('#bc-notSel button');
     if (not) { st.notionalBasis = not.dataset.not; render(); return; }
     if (ev.target.closest('#bc-expand')) { st.expand = !st.expand; render(); return; }
+    if (ev.target.closest('#bc-sens')) { st.sens = !st.sens; render(); return; }
+    if (ev.target.closest('#bc-sensReset')) { st.revG = {}; render(); return; }
     const tk = ev.target.closest('[data-tkbtn]');
     if (tk) { $('bc-ticker').value = tk.dataset.tkbtn; loadTicker(tk.dataset.tkbtn); return; }
   });

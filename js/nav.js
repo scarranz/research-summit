@@ -16,6 +16,7 @@ const TAB_MAP = {
   'tools': 'tools',
   'dcf-models': 'dcf',
   'betas': 'betas',
+  'buy-calls': 'bc',
 };
 
 const TAB_TITLES = {
@@ -29,6 +30,7 @@ const TAB_TITLES = {
   'tools': 'Tools',
   'dcf': 'DCF Models',
   'betas': 'Betas',
+  'bc': 'Buy Calls',
 };
 
 export function registerPageLoader(page, loader) {

@@ -41,6 +41,10 @@ import { dhrMgmtTeamHtml, dhrMgmtOwnHtml, dhrMgmtGovHtml, dhrMgmtTrackHtml,
 import { segmentsHtml, initSegments, segmentsOverviewHtml, initSegmentsOverview,
          segmentsOtherHtml, initSegmentsOther,
          segmentsCustomersHtml, initSegmentsCustomers } from '../segments.js';
+// Evolution ▸ Results and ▸ Estimates are the shared engine (js/results.js), driven entirely by
+// js/results-data/dhr.js. Nothing bespoke: the picker, the presets, the drag-zoom, the slider,
+// the legend chips, the tables and the surprise scorecard all come from the dataset.
+import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -642,18 +646,19 @@ function deepDiveHtml(c){
          'Management commentary by topic, with speaker attribution'],
         ['Prior-quarter calls &mdash; only Q2&#39;26 was available',
          'Guidance vintages before Q2&#39;26 (only the prior EPS range, $8.35&ndash;8.55, is held)']) +'</div>'+
-      '<div class="ovt-subpane" data-ovst="evres" hidden>'+ddPending('Results vs expectations',
-        'This is the js/results.js engine &mdash; it needs a dataset at js/results-data/dhr.js, not a bespoke chart. Read docs/CHART_ENGINE_REFERENCE.md &sect;0 first.',
-        ['Actuals for Q2&#39;26 and 1H26 across revenue, core growth, margins and EPS',
-         'Guidance for Q3&#39;26 and FY26 to serve as the guidance series'],
-        ['<b>Consensus &mdash; nothing exists yet.</b> No provider was pulled. The Summit model snapshots carry BBG consensus inside them; that is the route.',
-         'Summit DCF projections for DHR, for the Summit series',
-         'Actuals before Q2&#39;25']) +'</div>'+
-      '<div class="ovt-subpane" data-ovst="evest" hidden>'+ddPending('Estimates &mdash; how the forecast moved',
-        'The vintage view: what the Street and Summit expected for a given period, as of each date.',
-        [],
-        ['Everything. This needs consensus vintages, which need the Summit snapshots.',
-         'Analyst figures spoken on the Q2&#39;26 call are individual numbers, NOT consensus &mdash; they must never be labelled as such.']) +'</div>'+
+      '<div class="ovt-subpane" data-ovst="evres" hidden>'+resultsHtml('DHR')+'</div>'+
+      // Estimates needs an `evolution` block, which needs a SERIES of dated snapshots. DHR has
+      // exactly one (the Aug-2026 Bloomberg export), so resultsEvoHtml returns '' and the pane
+      // falls back to a note that says what is missing — the GOOGL pattern. One snapshot is a
+      // reading, not an axis; inventing vintages out of it is the one thing that would make this
+      // pane lie.
+      '<div class="ovt-subpane" data-ovst="evest" hidden>'+(resultsEvoHtml('DHR')||ddPending('Estimates &mdash; how the forecast moved',
+        'The vintage view: what the Street and Summit expected for a given period, <b>as of each date</b>. It needs a run of dated snapshots; Danaher has one, so there is nothing to plot a revision against yet. The engine switches this pane on by itself the moment a second vintage lands &mdash; no UI work is needed.',
+        ['The Aug-2026 Bloomberg export is archived as the FIRST vintage (<code>danaher-research/bbg/BBG_DHR_2026-08-31.xlsx</code>, gitignored). Its numbers are already live in <b>Results</b>.',
+         'Danaher&#39;s own guidance history IS dated and is recorded in <code>js/results-data/dhr.js</code>: FY25 $7.60&ndash;7.75 &rarr; $7.70&ndash;7.80 &rarr; held; FY26 $8.35&ndash;8.50 &rarr; $8.35&ndash;8.55 &rarr; $8.45&ndash;8.60.'],
+        ['<b>A second consensus snapshot.</b> DHR is not in <code>BBG_CONSENSUS.txt</code> or <code>Consensus_Portal.xlsm</code> (which carry AMZN, NVDA and UBER as of Aug 2026) &mdash; adding it is a Bloomberg-terminal job, not a code one.',
+         '<b>A Summit DCF model.</b> <code>search_ticker(&quot;Danaher&quot;)</code> returns no matches, so there is no projection history and no Summit line anywhere in this tab.',
+         'Analyst figures spoken on the Q2&#39;26 call are individual numbers, NOT consensus &mdash; they must never be labelled as such.'])) +'</div>'+
     '</div>';
 
   h+='<div class="dd-pane" data-dd="valuation" hidden>'+
@@ -821,6 +826,13 @@ function wireDD(root){
       if(BL_SUB[key]) requestAnimationFrame(function(){ ensureBottomLine(root, key); });
       if(TL_SUB[key]) requestAnimationFrame(function(){ ensureTopLine(root, key); });
       if(MS_SUB[key]) requestAnimationFrame(function(){ ensureMisc(root, key); });
+      // Evolution ▸ Results / Estimates. Re-run on every show, not once: the engine shares one
+      // `_rs` state across every dataset on the page (Top Line ▸ Segments registers its own), so
+      // coming back to this pane after visiting a segment has to re-point it at DHR. Passing the
+      // ticker to both is what makes the order the reader clicks in stop mattering.
+      if(key==='evres') requestAnimationFrame(function(){
+        initResults(pane.querySelector('.ovt-subpane[data-ovst="evres"] .rs-wrap'), 'DHR'); });
+      if(key==='evest') requestAnimationFrame(function(){ initResultsEvo('DHR'); });
     }; });
   });
 }

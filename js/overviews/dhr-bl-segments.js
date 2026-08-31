@@ -36,8 +36,18 @@ function rsM(view, key){
   var v = dhrResults.views[view];
   return (v && v.metrics[key]) || null;
 }
-function rsPeriods(view){ var m = rsM(view, 'rev'); return m ? m.periods.slice() : []; }
-function rsAct(view, key){ var m = rsM(view, key); return m ? m.act.slice() : []; }
+// REPORTED periods only. The Results dataset carries forward quarters and years too (Street
+// consensus, `cons`), and every chart in this pane is a history of what was reported — a bridge
+// between two FY26 estimates, or a "latest quarter" that resolves to 3Q27, is not a thing this
+// pane means. Cutting the axis at the last period with an actual keeps it immune to the forward
+// horizon growing again.
+function rsPeriods(view){
+  var m = rsM(view, 'rev'); if (!m) return [];
+  var last = -1;
+  m.act.forEach(function(v, i){ if (v != null) last = i; });
+  return m.periods.slice(0, last + 1);
+}
+function rsAct(view, key){ var m = rsM(view, key); return m ? m.act.slice(0, rsPeriods(view).length) : []; }
 // Segment-note drivers live in the segments dataset, keyed by period rather than indexed.
 function segDriverAt(segKey, driver, view, period){
   var s = dhrSegments.segments.filter(function(x){ return x.key === segKey; })[0];

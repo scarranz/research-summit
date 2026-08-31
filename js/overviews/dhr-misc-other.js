@@ -88,8 +88,15 @@ var NG_ANN = { labels:['FY2024', 'FY2025'], gaap:[5.29, 5.03], adj:[7.48, 7.80] 
 
 // ── 3 · The corporate ("Other") line ──────────────────────────────────────────────────────────
 function rsM(view, key){ var v = dhrResults.views[view]; return (v && v.metrics[key]) || null; }
-function rsAct(view, key){ var m = rsM(view, key); return m ? m.act.slice() : []; }
-function rsPer(view){ var m = rsM(view, 'rev'); return m ? m.periods.slice() : []; }
+// REPORTED periods only — the Results dataset also carries forward periods (Street consensus),
+// and this pane charts reported history. See the same helper in dhr-bl-segments.js.
+function rsPer(view){
+  var m = rsM(view, 'rev'); if (!m) return [];
+  var last = -1;
+  m.act.forEach(function(v, i){ if (v != null) last = i; });
+  return m.periods.slice(0, last + 1);
+}
+function rsAct(view, key){ var m = rsM(view, key); return m ? m.act.slice(0, rsPer(view).length) : []; }
 // The corporate line is negative in every period, and the shared fMs renders that as "$-89".
 // This section carries its own signed formatter rather than changing a helper five panes share.
 function fMsS(v){

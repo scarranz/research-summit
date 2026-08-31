@@ -31,6 +31,7 @@
 
 import { dhrBottomLineHtml, dhrBottomLineInit } from './dhr-bottomline.js';
 import { dhrBlSegmentsHtml, dhrBlSegmentsInit } from './dhr-bl-segments.js';
+import { dhrMiscOtherHtml, dhrMiscOtherInit } from './dhr-misc-other.js';
 // Executives & Board is the SHARED mold (js/overviews/management.js, used by 7 companies);
 // Ownership, Governance & SBC and Track Record are bespoke, exactly as they are for Amazon.
 import { dhrMgmtTeamHtml, dhrMgmtOwnHtml, dhrMgmtGovHtml, dhrMgmtTrackHtml,
@@ -709,13 +710,7 @@ function deepDiveHtml(c){
         ['Balance-sheet capacity and the stated priorities',
          'StatLab, the only named pending transaction'],
         ['Post-Masimo leverage &mdash; needs the Q2&#39;26 10-Q balance sheet']) +'</div>'+
-      '<div class="ovt-subpane" data-ovst="msoth" hidden>'+ddPending('Other analysis &mdash; accounting and definitional notes',
-        '<b>Two core-sales definition changes in two quarters.</b> Danaher began excluding respiratory testing with the Q2&#39;26 10-Q, and will exclude tariff refunds from core sales beginning with Q3&#39;26. A new adjusted metric introduced in a year when the old one looks weaker is a disclosure choice worth tracking.',
-        ['The full set of accounting and definitional notes from the handoff',
-         'The Other segment: corporate only, no revenue, guided ~$(360)M FY26',
-         'The 52/53-week fiscal calendar and the quarter end dates',
-         'The regulatory framework: FDA, EU MDR/IVDR transition timelines, PAMA, China VBP'],
-        ['Nothing blocking &mdash; this pane can be built from what is already held.']) +'</div>'+
+      '<div class="ovt-subpane" data-ovst="msoth" hidden>'+dhrMiscOtherHtml()+'</div>'+
     '</div>';
 
   h+='</div>';
@@ -789,6 +784,13 @@ function ensureBottomLine(root, key){
 function ensureMgmt(root){
   ensurePane(root, DD+'[data-dd="mgmt"] .ovt-subpane[data-ovst="mgteam"]', dhrMgmtTeamInit);
 }
+// Miscellaneous ▸ Other Analysis is the only sub-pane of that tab with charts so far; Capex and
+// M&A are still staged placeholders, so there is nothing to wire for them.
+var MS_SUB={ msoth:dhrMiscOtherInit };
+function ensureMisc(root, key){
+  var fn=MS_SUB[key]; if(!fn) return;
+  ensurePane(root, DD+'[data-dd="misc"] .ovt-subpane[data-ovst="'+key+'"]', fn);
+}
 // Top Line's four sub-panes are the shared segments engine. Each init is scoped to the DD root
 // and is re-run on every show — segments.js re-renders its own wrapper on control changes, so it
 // must not be treated as a one-shot wiring the way the bespoke panes are.
@@ -818,6 +820,7 @@ function wireDD(root){
       if(key==='valpeers') requestAnimationFrame(function(){ dScRenderAll(root); });
       if(BL_SUB[key]) requestAnimationFrame(function(){ ensureBottomLine(root, key); });
       if(TL_SUB[key]) requestAnimationFrame(function(){ ensureTopLine(root, key); });
+      if(MS_SUB[key]) requestAnimationFrame(function(){ ensureMisc(root, key); });
     }; });
   });
 }

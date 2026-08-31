@@ -95,8 +95,8 @@ export var dhrResults = {
           periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27'],
           act:  [5949, 5912, 5624, 6405, 5796, 5743, 5798, 6538, 5741, 5936, 6053, 6838, 5951, 6265, null, null, null, null, null],
           summit: [],
-          cons: [null,null,null,null,null,null,null,null,null,null,null,null,null,null, 6554, 7545, 6590, 6793, 6832],
-          note: 'Fourth quarters are the fiscal year less the three published quarters. Danaher does not guide revenue in dollars — see Core revenue growth, which is what it does guide. The segment consensus sums to about 0.2–0.3% more than the total-revenue consensus in each forward quarter; different analyst samples, not an error.' },
+          cons: [null,null,null,null,null,null,null,null, 5560, 5840, 6000, 6790, 5990, 6100, 6554, 7545, 6590, 6793, 6832],
+          note: 'Fourth quarters are the fiscal year less the three published quarters. Danaher does not guide revenue in dollars — see Core revenue growth, which is what it does guide. TWO SOURCES IN ONE ROW: 1Q25–2Q26 is the pre-print Street number reported on earnings day (Investing.com’s consensus, the one provider that prints both revenue and EPS every quarter); 3Q26 onward is the Bloomberg BEst export. Everything before 1Q25 is null — checked, not compiled. The segment consensus sums to about 0.2–0.3% more than the total-revenue consensus in each forward quarter; different analyst samples, not an error.' },
 
         bio: { label: 'Biotechnology — revenue', short: 'Biotech', unit: 'usdM',
           periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27'],
@@ -146,8 +146,8 @@ export var dhrResults = {
           periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27'],
           act:  [2.36, 2.05, 2.02, 2.09, 1.92, 1.72, 1.71, 2.14, 1.88, 1.80, 1.89, 2.23, 2.06, 1.94, null, null, null, null, null],
           summit: [],
-          cons: [null,null,null,null,null,null,null,null,null,null,null,null,null,null, 1.93, 2.58, 2.23, 2.11, 2.13],
-          note: 'Danaher’s headline number. Every reported quarter is the figure in that quarter’s own release, so the series is complete back to 1Q23; the five quarters where the Bloomberg export also carries it agree to the cent. Danaher guides this ANNUALLY, never by quarter — the band is on the annual view.' },
+          cons: [null,null,null,null,null,null,null,null, 1.62, 1.64, 1.72, 2.14, 1.94, 1.83, 1.93, 2.58, 2.23, 2.11, 2.13],
+          note: 'Danaher’s headline number, and the line it is judged on. Every reported quarter is the figure in that quarter’s own release, so the actual is complete back to 1Q23; the five quarters where the Bloomberg export also carries it agree to the cent. CONSENSUS IS TWO SOURCES: 1Q25–2Q26 is the pre-print Street number reported on earnings day, 3Q26 onward is the Bloomberg BEst export. The pre-print half is one provider (Investing.com) for internal consistency; Zacks read the same two most recent quarters a cent higher ($1.95 for 1Q26, $1.84 for 2Q26), and its published surprise for 1Q25 (+16.05%) reproduces the $1.62 carried here — so the unusually large 2025 beats are real, not a bad number. Danaher guides this ANNUALLY, never by quarter, so the band is on the annual view.' },
 
         opinc: { label: 'Operating profit (GAAP)', short: 'Op. profit', unit: 'usdM', marginOf: 'rev', marginLabel: 'Operating margin',
           periods: ['1Q23','2Q23','3Q23','4Q23','1Q24','2Q24','3Q24','4Q24','1Q25','2Q25','3Q25','4Q25','1Q26','2Q26','3Q26','4Q26','1Q27','2Q27','3Q27'],

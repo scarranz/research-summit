@@ -45,6 +45,10 @@ import { segmentsHtml, initSegments, segmentsOverviewHtml, initSegmentsOverview,
 // js/results-data/dhr.js. Nothing bespoke: the picker, the presets, the drag-zoom, the slider,
 // the legend chips, the tables and the surprise scorecard all come from the dataset.
 import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../results.js';
+// Evolution ▸ Earnings — the Call Prep pane (docs/EARNINGS_CONVENTIONS.md §6). Its own module
+// because it is ~700 lines of its own, and because it reads the Results dataset rather than
+// re-hardcoding a single number.
+import { dhrCallPrepHtml, dhrCallPrepInit } from './dhr-callprep.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -638,14 +642,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab" data-ovst="evres">Results</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="evest">Estimates</button>'+
       '</div>'+
-      '<div class="ovt-subpane" data-ovst="evearn">'+ddPending('Earnings &mdash; setup and post-results',
-        'The Q2&#39;26 call (21-Jul-2026) is fully transcribed in the handoff, with the exchanges quoted.',
-        ['FY26 guidance as issued: core growth by segment, adjusted EPS $8.45&ndash;8.60, and every guided line item',
-         'The FY26 EPS walk, including the ~$0.07&ndash;0.08 from Masimo closing early',
-         'Guidance changes vs the prior vintage: Life Sciences up, bioprocessing down, range held',
-         'Management commentary by topic, with speaker attribution'],
-        ['Prior-quarter calls &mdash; only Q2&#39;26 was available',
-         'Guidance vintages before Q2&#39;26 (only the prior EPS range, $8.35&ndash;8.55, is held)']) +'</div>'+
+      '<div class="ovt-subpane" data-ovst="evearn">'+dhrCallPrepHtml()+'</div>'+
       '<div class="ovt-subpane" data-ovst="evres" hidden>'+resultsHtml('DHR')+'</div>'+
       // Estimates needs an `evolution` block, which needs a SERIES of dated snapshots. DHR has
       // exactly one (the Aug-2026 Bloomberg export), so resultsEvoHtml returns '' and the pane
@@ -814,6 +811,10 @@ function wireDD(root){
     if(key==='topline') requestAnimationFrame(function(){ ensureTopLine(root); });
     // Only the shared mold needs wiring — it owns the CV modal. The other three are prose.
     if(key==='mgmt') requestAnimationFrame(function(){ ensureMgmt(root); });
+    // Earnings is Evolution's DEFAULT sub-pane, so it is on screen the moment this tab opens —
+    // it never gets a sub-tab click of its own and has to be wired from here.
+    if(key==='evolution') requestAnimationFrame(function(){
+      dhrCallPrepInit(root.querySelector(DD+'[data-dd="evolution"] .ovt-subpane[data-ovst="evearn"]'), _dhrCo); });
   }; });
   // Sub-tabs, pane-scoped so panes never collide.
   root.querySelectorAll('.ov-dhr-dd .dd-pane').forEach(function(pane){
@@ -833,11 +834,18 @@ function wireDD(root){
       if(key==='evres') requestAnimationFrame(function(){
         initResults(pane.querySelector('.ovt-subpane[data-ovst="evres"] .rs-wrap'), 'DHR'); });
       if(key==='evest') requestAnimationFrame(function(){ initResultsEvo('DHR'); });
+      if(key==='evearn') requestAnimationFrame(function(){
+        dhrCallPrepInit(pane.querySelector('.ovt-subpane[data-ovst="evearn"]'), _dhrCo); });
     }; });
   });
 }
+// The company row for this mount. The Call Prep Watch List persists against company_id, so it
+// needs the object the deep dive was opened with — held here rather than threaded through every
+// wiring function.
+var _dhrCo=null;
 function deepDiveInit(c){
   var root=document.getElementById('co-detailview'); if(!root) return;
+  _dhrCo=c||null;
   wireDD(root);
   wireModal(root);
   // Top Line is the DEFAULT pane, so its General sub-pane is already on screen at mount.

@@ -767,9 +767,12 @@ function drill(id, title, body, needs){
         (needs ? '<div class="sg-needs">⚑ ' + esc(needs) + '</div>' : '') +
       '</div></div></div>';
 }
+// `n` is kept in the signature — every call site passes it and it still orders the sections — but
+// the numbered badge is no longer drawn (SAB, Sep 2026). The sections read as a sequence without
+// being counted at the reader, and dropping one no longer leaves a gap in the numbering.
 function sec(n, title, sub, body){
   return '<section class="sg-sec">' +
-    '<div class="sg-sec-h"><span class="sg-sec-n">' + n + '</span>' + esc(title) +
+    '<div class="sg-sec-h">' + esc(title) +
       (sub ? '<span class="sg-sec-sub">' + esc(sub) + '</span>' : '') + '</div>' + body + '</section>';
 }
 
@@ -1270,14 +1273,13 @@ export function segmentsOverviewHtml(ticker){
     sec(2, 'How revenue divides', 'amount · share · growth',
       chartBlockHtml('ovrev', ovList(d, 'rev'), view, OV_REV) +
       '<div class="ov-fynote">The number above each column is the group total. <b>Share</b> gives the composition and <b>Growth</b> the rate; <b>Side by side</b> drops the stacking when you want to compare segments to each other rather than to the whole. Share re-bases on whatever is visible, so hiding a segment with its chip asks “of the rest, how much is this”. What each segment earns on this revenue is in Bottom Line.</div>');
-  if (ov.interactions && ov.interactions.length){
-    h += sec(3, 'How the segments act on each other', ov.interactions.length + ' interactions',
-      '<div class="sg-ix">' + ov.interactions.map(function(it){
-        return '<div class="sg-ix-i"><div class="sg-ix-n">' + esc(it.name) + '</div>' +
-          '<p class="sg-ix-w">' + esc(it.what) + '</p>' +
-          (it.evidence ? '<p class="sg-ix-e">' + esc(it.evidence) + '</p>' : '') + '</div>';
-      }).join('') + '</div>');
-  }
+  // "How the segments act on each other" was section 3 here and is no longer rendered (SAB, Sep
+  // 2026). General now answers two questions and stops: what the segments ARE, and how the revenue
+  // divides between them.
+  // The four cards are NOT rendered anywhere else — the "Revenue interactions" section further up
+  // is a different thing (per-segment `s.interactions`, on the Segments sub-tab). Their content is
+  // still carried in the dataset at `seg.overview.interactions`, so restoring the section or moving
+  // it to another sub-tab is one call to sec(); it is simply not drawn today.
   return h + '<div class="ov-fynote sg-src">' + esc(d.seg.source) + '</div></div>';
 }
 function renderOverview(){

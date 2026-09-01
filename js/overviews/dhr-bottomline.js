@@ -35,6 +35,9 @@
 import { esc, dStdScaffold, dStdRender, dWaterfall, dTbl, dPicker, dWirePicker, dWireTables, dActivate,
          fMs, fPct, fX, fEps, fEpsD, FMT_M, FMT_EPS, FMT_BPS,
          D_ACT, D_ADJ, D_REF, D_UP, D_DOWN, D_TOTAL, D_NEUT, DHR_KIT_CSS } from "./dhr-chartkit.js";
+// The KPI strip and the expense explorer that close this pane. They take `A` as an argument rather
+// than importing it, because that module would otherwise have to import this one back.
+import { dhrExpenseHtml, dhrExpenseInit } from './dhr-expense.js';
 
 // ═══ Data ═════════════════════════════════════════════════════════════════════════════════════
 
@@ -492,6 +495,7 @@ export function dhrBottomLineHtml(){
         'and no trailing figure including it exists yet, so read it as the ceiling. The FY2019 cash spike is the ' +
         'Cytiva pre-funding: Danaher raised the money months before the deal closed in March 2020.'
     }) + '</div>' +
+    dhrExpenseHtml(A) +
     sheetHtml() +
     '</div>';
 }
@@ -499,6 +503,10 @@ export function dhrBottomLineHtml(){
 export function dhrBottomLineInit(root){
   if (!root || typeof Chart === 'undefined') return;
   dWireTables(root);
+  // The expense explorer sits BELOW the section picker, so it is on screen whichever section is
+  // chosen and is wired once here rather than per section. It draws inline SVG, not Chart.js, so
+  // it has no offsetParent problem to wait for.
+  dhrExpenseInit(root);
 
   // Each section builds the first time it is shown — Chart.js measures a canvas whose
   // offsetParent is null as zero and never recovers.

@@ -40,6 +40,10 @@ scripts/consensus/out/
 scripts/consensus/dumps_*/
 scripts/consensus/out/
 harness-*.html
+# …except the Amazon one. COMPANY_PROFILE_BLUEPRINT.md §7 tells you to copy it as the starting
+# point for a new company's harness, and a reference implementation nobody else can check out is
+# no reference at all. It contains no credentials (env.js stays ignored and is loaded separately).
+!harness-amzn.html
 PR_BODY_*.md
 scripts/segments/dcf_*.json
 scripts/segments/tenk/

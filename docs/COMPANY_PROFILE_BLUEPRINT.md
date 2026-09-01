@@ -329,7 +329,7 @@ name: `ceIRButton` hardcodes it and will happily ship on another company's page.
 ## 7. Auditing it
 
 The portal needs a login the session often does not have. Mount the module directly instead:
-`harness-<ticker>.html` (gitignored; copy `harness-amzn.html`) loads the portal stylesheets, mounts
+`harness-<ticker>.html` (copy the tracked `harness-amzn.html`; your own copy stays gitignored) loads the portal stylesheets, mounts
 `html()` + `init()` into a `#co-detailview` shell, and exercises the real ES-module parse.
 
 **Two harness gotchas that will fool you:**

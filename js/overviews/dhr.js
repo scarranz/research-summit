@@ -49,6 +49,9 @@ import { resultsHtml, initResults, resultsEvoHtml, initResultsEvo } from '../res
 // because it is ~700 lines of its own, and because it reads the Results dataset rather than
 // re-hardcoding a single number.
 import { dhrCallPrepHtml, dhrCallPrepInit } from './dhr-callprep.js';
+// Evolution ▸ Guidance — what the company put in writing (the 8-K driver table), the quotes, and
+// the event timeline. Sits after Estimates, per the sub-tab row the conventions define.
+import { dhrGuidanceHtml, dhrGuidanceInit } from './dhr-guidance.js';
 
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -641,6 +644,7 @@ function deepDiveHtml(c){
         '<button type="button" class="ovt-subtab active" data-ovst="evearn">Earnings</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="evres">Results</button>'+
         '<button type="button" class="ovt-subtab" data-ovst="evest">Estimates</button>'+
+        '<button type="button" class="ovt-subtab" data-ovst="evguid">Guidance</button>'+
       '</div>'+
       '<div class="ovt-subpane" data-ovst="evearn">'+dhrCallPrepHtml()+'</div>'+
       '<div class="ovt-subpane" data-ovst="evres" hidden>'+resultsHtml('DHR')+'</div>'+
@@ -656,6 +660,7 @@ function deepDiveHtml(c){
         ['<b>A second consensus snapshot.</b> DHR is not in <code>BBG_CONSENSUS.txt</code> or <code>Consensus_Portal.xlsm</code> (which carry AMZN, NVDA and UBER as of Aug 2026) &mdash; adding it is a Bloomberg-terminal job, not a code one.',
          '<b>A Summit DCF model.</b> <code>search_ticker(&quot;Danaher&quot;)</code> returns no matches, so there is no projection history and no Summit line anywhere in this tab.',
          'Analyst figures spoken on the Q2&#39;26 call are individual numbers, NOT consensus &mdash; they must never be labelled as such.'])) +'</div>'+
+      '<div class="ovt-subpane" data-ovst="evguid" hidden>'+dhrGuidanceHtml()+'</div>'+
     '</div>';
 
   h+='<div class="dd-pane" data-dd="valuation" hidden>'+
@@ -836,6 +841,8 @@ function wireDD(root){
       if(key==='evest') requestAnimationFrame(function(){ initResultsEvo('DHR'); });
       if(key==='evearn') requestAnimationFrame(function(){
         dhrCallPrepInit(pane.querySelector('.ovt-subpane[data-ovst="evearn"]'), _dhrCo); });
+      if(key==='evguid') requestAnimationFrame(function(){
+        dhrGuidanceInit(pane.querySelector('.ovt-subpane[data-ovst="evguid"]')); });
     }; });
   });
 }

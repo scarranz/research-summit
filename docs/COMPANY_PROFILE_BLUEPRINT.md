@@ -178,7 +178,20 @@ families (`.ce-` alone is referenced 539 times in `amzn.js`), including **four s
 components** — `sg-cards`, `ew-kpis`, `gdd-kpis`, `acx-kpis` — that are all re-inventions of
 `.ov-kpis`, which already exists in `css/overview.css`.
 
-**Why the rest has not been lifted into a stylesheet yet, and what it will take.** Two things make
+**Converging the four KPI strips is blocked on fixing the canonical one first.** This is the
+counter-intuitive part, so it is worth stating plainly: `.ov-kpis` is the *canonical name* but the
+*weaker implementation*. It is `grid-template-columns: repeat(5, 1fr)` — a hard five columns — while
+Amazon's `.ew-kpis` is `repeat(auto-fit, minmax(120px, 1fr))`, which adapts to however many tiles it
+is given. Pointing Amazon's two- and four-tile strips at `.ov-kpis` today would render them as five
+fixed columns with holes. The evidence that this is a known limitation: several overviews already
+patch around it inline with `style="grid-template-columns:repeat(4,1fr)"`.
+
+So the order of work is the reverse of what it looks like — **promote `auto-fit` into `.ov-kpis`
+first, then point companies at it.** That touches a rule used by **17 overviews at ~50 sites**, so
+it is a portal-wide design-system PR, not a per-company change. (`.ew-foot` was the easy half of the
+same job and has already been folded into `.ov-foot`: the two differed by 2–6px of padding.)
+
+**Why the CSS has not been lifted into a stylesheet yet, and what it will take.** Two things make
 it a PR of its own rather than part of a company's work:
 1. **The CSS is interpolated with JS constants** (`accent-color:'+BRAND+'`), so it cannot be moved
    statically — the interpolations have to become CSS custom properties first.
@@ -190,9 +203,15 @@ it a PR of its own rather than part of a company's work:
 
 Two consequences worth knowing before you copy anything:
 
-1. **Inline `<style>` leaks document-wide.** A pane can appear to work only because another pane
-   injected the CSS it depends on. `collapsible()` in `amzn.js` is exactly this: `.ov-collap` has no
-   stylesheet entry and works because the Overview's inline block is in the same document.
+1. **Inline `<style>` leaks document-wide — including over the canonical components.** This is not
+   theoretical. `.ov-foot` is defined in `css/overview.css` at 10.5px, and **five overviews (amzn,
+   app, dis, googl, spot) each re-declare it inline at 10px**, so the stylesheet loses and the
+   "canonical" footer is actually whatever the profile on screen injected. Verify it yourself: read
+   `document.styleSheets` for every rule matching an element and see which one wins.
+   `collapsible()` is the same failure in the other direction: `.ov-collap` has **no** stylesheet
+   entry at all and works only because the Overview's inline block is in the same document.
+   *(Left in place deliberately — removing Amazon's copy alone would make its footers differ from
+   the other four rather than converge with them. It is one edit in the portal-wide PR.)*
 2. **Both engines get this right.** `results.js` (4,201 lines) and `segments.js` (1,833 lines)
    contain **zero** inline `<style>` — their CSS is in `css/results.css`.
 
@@ -337,7 +356,7 @@ The portal needs a login the session often does not have. Mount the module direc
 | Duplicate DOM ids | collect `[id]`, count, expect the Results engine's three instances — verify every handler is pane-scoped |
 | Charts without tables | per sub-pane, count canvases with a `Chart.getChart()` against `table` elements |
 | Invalid colours | scan every chart's `backgroundColor`/`borderColor` for `NaN` |
-| Panes with no source footer | per sub-pane, look for `.ov-foot, .ov-fynote, .ew-foot, .sg-src, .ave-subh-note, .rs-ft-cap`. **The source footer currently has three different class names** (`.ov-foot` in the canonical set, `.ew-foot` in the Bottom Line panes, `.sg-src` in Top Line) — a narrower selector reports four false positives on Amazon. Converging them is a design-system item; a **new** pane uses `.ov-foot` |
+| Panes with no source footer | per sub-pane, look for `.ov-foot, .ov-fynote, .ave-subh-note, .rs-ft-cap`. A narrower selector reports false positives: `.sg-src` is not a second footer component but a **spacing modifier** on `.ov-fynote`, and the Peers pane carries its provenance in `.ave-subh-note`. (`.ew-foot`, which was a near-identical copy of `.ov-foot`, has been folded into it.) A **new** pane uses `.ov-foot` |
 | Empty panes | per sub-pane, flag `innerText.length < 400` |
 | Inline `<style>` count | `document.querySelectorAll('.copane style').length` — a new profile should add none |
 

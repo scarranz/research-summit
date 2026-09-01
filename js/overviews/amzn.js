@@ -3636,7 +3636,7 @@ var EW_CSS='<style>'+
   '.ew-far{display:flex;align-items:center;justify-content:center;color:var(--brand-2);font-size:18px;font-weight:800;padding:0 6px}'+
   '.ew-q{border-left:3px solid var(--brand);background:rgba(0,0,0,.025);border-radius:0 8px 8px 0;padding:9px 13px;margin:8px 0;font-size:12px;line-height:1.55;color:var(--navy)}'+
   '.ew-q .ew-att{display:block;margin-top:4px;font-size:10.5px;font-weight:700;color:var(--mu)}'+
-  '.ew-foot{font-size:10.5px;color:var(--mu);line-height:1.5;margin-top:10px;border-top:1px solid var(--bdr);padding-top:8px}'+
+  
   '.ew-tls{position:relative;margin:8px 0 2px;padding-left:20px}'+'.ew-tls::before{content:"";position:absolute;left:5px;top:5px;bottom:5px;width:2px;background:var(--bdr)}'+'.ew-tli{position:relative;margin-bottom:13px}.ew-tli:last-child{margin-bottom:2px}'+'.ew-tli::before{content:"";position:absolute;left:-18px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--brand-2);border:2px solid var(--card,#fff);box-shadow:0 0 0 1px var(--bdr)}'+'.ew-tlq{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--brand-2)}'+'.ew-tlt{font-size:12px;color:var(--navy);line-height:1.5;margin-top:2px}'+'.ew-tlw{font-size:10px;font-weight:700;color:var(--mu);margin-top:3px}'+'.ew-tag{display:inline-block;font-size:8px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:1px 6px;border-radius:5px;margin-left:7px;vertical-align:middle;transform:translateY(-1px)}'+'.ew-tag.why{background:rgba(192,80,77,.13);color:#B23A38}.ew-tag.fwd{background:rgba(46,139,87,.15);color:#2E7D51}.ew-tag.ctx{background:rgba(107,118,131,.15);color:#5B6673}'+
   '.ew-calls{margin-top:14px}.ew-callsum{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--brand-2);cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:5px 0}'+
   '.ew-callsum::-webkit-details-marker{display:none}.ew-callsum::before{content:"▸";font-size:11px;transition:transform .15s}.ew-calls[open] .ew-callsum::before{content:"▾"}.ew-callsum::after{content:"";flex:1;height:1px;background:var(--bdr)}'+
@@ -3734,7 +3734,7 @@ function ewBase(c){
   if(c.drivers){ h+='<div class="ew-h">Why it has moved — the drivers</div>'+ewBoxes(c.drivers); }
   if(c.extra) h+=c.extra;
   if(c.calls){ h+=ewCallsBlock(c.calls); }
-  h+='<div class="ew-foot">FY2025 figures unless noted. Sources: 10-K MD&amp;A + Notes; Amazon earnings calls (management commentary).</div>';
+  h+='<div class="ov-foot">FY2025 figures unless noted. Sources: 10-K MD&amp;A + Notes; Amazon earnings calls (management commentary).</div>';
   return h;
 }
 var EW_LINES=[
@@ -3912,7 +3912,7 @@ function aLeasesBody(){   // Leases explorer — Miscellaneous ▸ Capex & Depre
     '</div>'+
     '<div class="ew-h">Operating-lease payments by maturity</div>'+
     mbar('',[{w:16,c:BRAND2,t:'≤1yr ~$12B'},{w:38,c:acxRGBA(BRAND2,0.7),t:'2–5yr'},{w:46,c:acxRGBA(BRAND2,0.4),t:'thereafter ~$44B'}])+
-    '<div class="ew-foot">Maturities &amp; not-yet-commenced per 10-K Note 4 (FY2024); balance-sheet totals FY2025.</div>';
+    '<div class="ov-foot">Maturities &amp; not-yet-commenced per 10-K Note 4 (FY2024); balance-sheet totals FY2025.</div>';
   // Panel 4 — what Amazon leases
   var p4='<div class="ew-two">'+box('📦','Fulfillment &amp; logistics','Warehouses, sortation centers, delivery stations and (increasingly) grocery — the largest slice of operating leases. Leasing lets Amazon flex the network up and down without owning every building.')+
       box('🖥️','Data centers','A mix — Amazon <b>owns</b> core AWS capacity (the capex build) but also <b>leases</b> data-center space and power, especially to move fast; much of the not-yet-commenced pipeline is here.')+
@@ -4057,7 +4057,7 @@ var SEG_WORLD={
     '<div class="ew-q">“As fast as we install this capacity, <b>we are monetizing it</b>.” The FY26 capex frame was raised to ~$220B, partly on the higher cost of memory.<span class="ew-att">— Brian Olsavsky, CFO</span></div>'+
     segCostBox('aws')+
     ewCallsBlock(SEG_CALLS.aws)+
-    '<div class="ew-foot">Sources: 10-K Note 10 (segment capex/PP&amp;E); Q4’25–Q2’26 earnings calls; Bloomberg segment series.</div>' },
+    '<div class="ov-foot">Sources: 10-K Note 10 (segment capex/PP&amp;E); Q4’25–Q2’26 earnings calls; Bloomberg segment series.</div>' },
   us:{ t:'North America — the volume base + the ad layer', h:EW_CSS+
     segTiles([['6.9%','operating margin (FY25)'],['$29.6B','operating income'],['$35.9B','net capex (Note 10)'],['$122B','PP&E stock']])+
     '<div class="ew-h">The business</div><div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">🛒</span>First-party store + 3P marketplace + advertising</div><div class="ew-box-t">The retail surface: own inventory, third-party sellers (~61% of units), and the high-margin ad layer riding on top. Margin has climbed ~4% → 7% in three years — on mix and cost, not price.</div></div>'+
@@ -4069,7 +4069,7 @@ var SEG_WORLD={
     '<div class="ew-h">Capital footprint</div>'+segCapMini('$35.9B','$122B')+
     segCostBox('us')+
     ewCallsBlock(SEG_CALLS.us)+
-    '<div class="ew-foot">Sources: 10-K MD&amp;A (drivers: units + advertising, offset by fulfillment/tech/shipping) &amp; Note 10; Bloomberg segment series.</div>' },
+    '<div class="ov-foot">Sources: 10-K MD&amp;A (drivers: units + advertising, offset by fulfillment/tech/shipping) &amp; Note 10; Bloomberg segment series.</div>' },
   int:{ t:'International — the turnaround', h:EW_CSS+
     segTiles([['2.9%','operating margin (FY25)'],['$4.75B','operating income — from −$2.7B in ’22'],['$7.6B','net capex (Note 10)'],['$31B','PP&E stock']])+
     '<div class="ew-h">The business</div><div class="ew-box"><div class="ew-box-h"><span class="ew-box-i">🌍</span>Two businesses under one line</div><div class="ew-box-t"><b>Established markets</b> (Germany, UK, Japan) matured to profit and drive the reported margin; <b>emerging markets</b> (India, Brazil, Middle East) are still in the investment phase NA already passed through.</div></div>'+
@@ -4081,7 +4081,7 @@ var SEG_WORLD={
     '<div class="ew-h">Capital footprint</div>'+segCapMini('$7.6B','$31B')+
     segCostBox('int')+
     ewCallsBlock(SEG_CALLS.int)+
-    '<div class="ew-foot">Sources: 10-K MD&amp;A (units + advertising, FX +$903M) &amp; Note 10; Bloomberg segment series.</div>' }
+    '<div class="ov-foot">Sources: 10-K MD&amp;A (units + advertising, FX +$903M) &amp; Note 10; Bloomberg segment series.</div>' }
 };
 var A_TENK={
   segCapex:{ 2023:{na:17529,int:4144,aws:24843,corp:1828}, 2024:{na:24348,int:6643,aws:53267,corp:1494}, 2025:{na:35919,int:7617,aws:96496,corp:2320} },

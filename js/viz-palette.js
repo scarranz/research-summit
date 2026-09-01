@@ -32,6 +32,16 @@
 //  (SUMMIT_CAT3, validated all-pairs) and fold the rest into "Other".
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
+//  ⚠ CATEGORICAL IS NOT THE ONLY JOB — DO NOT "FIX" AN ORDINAL RAMP INTO THIS PALETTE.
+//  Colour does one of four jobs, and only the first one belongs here:
+//    • identity  (segments, product lines, peers, suppliers) → SUMMIT_CAT, fixed order
+//    • magnitude (fiscal years, vintages, snapshots, a heat scale) → ONE hue, light→dark. The
+//      Estimates chart drawing FY2026/27/28 as three steps of blue is CORRECT: those are ordered,
+//      so a ramp carries the order and the categorical palette would destroy it.
+//    • polarity  (above/below a base) → two hues + a neutral grey midpoint, never a hue at zero
+//    • state     (good/warning/bad) → the reserved semantics below, never reused as "series 4"
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
 export var SUMMIT_CAT = [
   '#2a78d6',   // 1 · blue
   '#eb6834',   // 2 · orange

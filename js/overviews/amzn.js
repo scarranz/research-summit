@@ -1308,7 +1308,17 @@ function ceProse(h){
   if(bullets.length) out+='<ul class="ce-pop-l">'+bullets.map(function(b){ return '<li>'+b+'</li>'; }).join('')+'</ul>';
   return out+tail;
 }
+// The Earnings CSS is ~21KB and ceStyle() is called by all THREE phase bodies (Setup, Watch,
+// Post-Results), which are built in one deepDiveHtml() pass and all live in the DOM at once — so it
+// was shipping three identical copies, ~43KB of dead duplicate. Emit once per render; the flag is
+// cleared at the top of deepDiveHtml(), so a company switch re-emits correctly.
+// (The real fix is lifting these rules into a stylesheet, but the CSS is interpolated with JS
+//  constants and eight overviews each own a copy of it — that is its own PR.)
+var _ceStyleEmitted = false;
+function ceStyleReset(){ _ceStyleEmitted = false; }
 function ceStyle(){
+  if (_ceStyleEmitted) return '';
+  _ceStyleEmitted = true;
   return '<style>'+
     /* page-styled inline prompt/confirm popover (replaces window.prompt / window.confirm) */
     '.ce-ip{z-index:9999;background:#fff;border:1px solid var(--bdr);border-radius:12px;box-shadow:0 16px 44px rgba(15,23,42,.30);padding:13px 14px;min-width:264px;max-width:380px}'+
@@ -5382,6 +5392,7 @@ function aOtherAnalysisBody(){
 }
 function deepDiveHtml(c){
   _co=c;   // capture company (id + ticker) for the Watch List DB wiring
+  ceStyleReset();   // one copy of the Earnings CSS per render, not one per phase body
   var h='<div class="ov ov-amzn ov-amzn-dd" data-brand="AMZN" style="--brand-2:var(--steel);--brand-soft:rgba(37,99,235,0.08)">';
   h+='<div class="dd-tabs">'+
       '<button type="button" class="dd-tab active" data-dd="topline">Top Line</button>'+

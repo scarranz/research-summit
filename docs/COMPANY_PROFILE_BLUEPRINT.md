@@ -117,19 +117,38 @@ Do not fabricate a vintage axis to fill a tab.
 
 ## 3. The design system
 
-### 3.1 The palette rule
+### 3.1 The palette rule — a profile does not choose colours
 
-**Summit palette everywhere; the company's brand appears only in its logo.** Tabs, pills, active
-states, KPI accents and chart chrome all come from the tokens in `css/base.css`
-(`--navy --steel --accent --ice --bdr --pos --neg --mu`). A new profile does not choose colours.
+**Chrome** — tabs, pills, active states, KPI accents — comes from the tokens in `css/base.css`
+(`--navy --steel --accent --ice --bdr --pos --neg --mu`) via `--brand`, which `.ov` already defaults
+to `var(--accent)`. **Do not set `--brand` on a profile root.** The company's brand appears in its
+logo and nowhere else, so that a chart reads the same way on every company and orange stops meaning
+Amazon.
 
-This is a decision, not a description: `amzn.js` still sets `--brand:#FF9900` inline on both roots,
-which is why Amazon currently shows orange sub-tab pills against blue section tabs and blue scenario
-pills — **three different active-state colours in one screen**. Converging on the Summit palette is
-the design-system pass; do not copy the override into a new company.
+**Chart series** come from `js/viz-palette.js` — one fixed categorical order for the whole portal,
+validated with the `dataviz` validator rather than eyeballed. Read that file's header before using
+it; the essentials:
 
-For **categorical series inside a chart**, follow the `dataviz` guidance rather than picking a hue
-ramp: seven near-identical blues (Top Line ▸ Other) are indistinguishable at the sizes we render.
+- **Assign slots in fixed order and never cycle.** Colour follows the entity, not its rank: a filter
+  that drops a series must not repaint the survivors. Past slot 8, fold into "Other" — never
+  generate a hue.
+- **Slots 3, 4 and 5 sit below 3:1 contrast on white**, so the *relief rule* applies: a chart using
+  them must also ship visible labels or its data table. Every portal chart has a table by
+  non-negotiable 3, so this is satisfied by construction — but a chart without one may not use them.
+- **Scatter, bubble and choropleth compare every pair, not just neighbours.** Cap them at three
+  slots (`SUMMIT_CAT3`) and fold the rest.
+- **Categorical is not the only job.** Fiscal years, vintages and snapshots are **ordinal** and
+  correctly use a single-hue ramp light→dark — the Estimates chart drawing FY2026/27/28 as three
+  steps of blue is right, and converting it to the categorical palette would destroy the ordering.
+  Identity gets the categorical order; magnitude gets a ramp; polarity gets two hues and a grey
+  midpoint; state gets the reserved semantics, which are never reused as "series 4".
+
+What this fixed on Amazon: the seven product lines on Top Line ▸ Other were drawn from a six-step
+ramp of four blues (**a ramp encodes magnitude, not identity**) that also **cycled**, so a seventh
+entity silently re-used the first one's colour. Both are categorical-colour errors.
+
+**Still open:** `results.js` carries its own copy of the old ramp for eight companies, so converging
+it is a portal-wide PR, not a per-company change.
 
 ### 3.2 The canonical components — and where they actually live
 
@@ -152,12 +171,22 @@ render as tofu.
 
 ### 3.3 The anti-pattern this profile is full of
 
-Amazon's Deep Dive renders **25 `<style>` elements, of which 20 are distinct** — one 21 KB block is
-emitted **three times** and a 4 KB block four times, so roughly 50 KB of duplicated CSS ships into
-the DOM on every open. Those blocks define more than twenty class families (`.ce-` alone is
-referenced 589 times in `amzn.js`), including **four separate KPI-strip components** — `sg-cards`,
-`ew-kpis`, `gdd-kpis`, `acx-kpis` — that are all re-inventions of `.ov-kpis`, which already exists in
-`css/overview.css`.
+Amazon's Deep Dive renders **23 `<style>` elements, of which 20 are distinct** — ~105 KB of CSS
+shipped as JavaScript strings. It was 25 until the Earnings block, called by all three phase bodies,
+was collapsed to one emission (~43 KB of pure duplicate). Those blocks define more than twenty class
+families (`.ce-` alone is referenced 539 times in `amzn.js`), including **four separate KPI-strip
+components** — `sg-cards`, `ew-kpis`, `gdd-kpis`, `acx-kpis` — that are all re-inventions of
+`.ov-kpis`, which already exists in `css/overview.css`.
+
+**Why the rest has not been lifted into a stylesheet yet, and what it will take.** Two things make
+it a PR of its own rather than part of a company's work:
+1. **The CSS is interpolated with JS constants** (`accent-color:'+BRAND+'`), so it cannot be moved
+   statically — the interpolations have to become CSS custom properties first.
+2. **Eight overviews each own a copy of the `.ce-*` Earnings machinery** (amzn 539 references, spot
+   401, uber 379, lyft 368, googl and meta 361 each, bbb 81, ibkr 25). Today they never collide
+   because only one profile renders at a time; the moment one copy moves to a global stylesheet it
+   starts styling the other seven. The fix is one shared `css/earnings.css` for all eight at once —
+   or, if it must be done per company, selectors scoped under that profile's root class.
 
 Two consequences worth knowing before you copy anything:
 

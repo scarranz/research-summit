@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AMZN harness</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/companies.css">
+<link rel="stylesheet" href="css/overview.css">
+<link rel="stylesheet" href="css/avgo.css">
+<link rel="stylesheet" href="css/semi-map.css">
+<link rel="stylesheet" href="css/industry.css">
+<link rel="stylesheet" href="css/results.css">
+<link rel="stylesheet" href="css/hyperscalers.css">
+<style>
+  body { background:#fff; margin:0; padding:18px 24px; font-family:Inter,system-ui,sans-serif; }
+  #harness { max-width:1180px; margin:0 auto; }
+  .hx-bar { max-width:1180px; margin:0 auto 14px; display:flex; gap:8px; align-items:center; font-size:12px; }
+  .hx-bar button { font:inherit; padding:4px 10px; border:1px solid #d7dbe2; background:#fff; border-radius:6px; cursor:pointer; }
+  .hx-bar button.on { background:#0f172a; color:#fff; border-color:#0f172a; }
+</style>
+</head>
+<body>
+<div class="hx-bar">
+  <strong>AMZN harness</strong>
+  <button type="button" id="hx-ov" class="on">Overview</button>
+  <button type="button" id="hx-dd" class="on">Deep Dive</button>
+  <span id="hx-status" style="color:#64748b"></span>
+</div>
+<div id="co-detailview">
+  <div id="harness">
+    <div class="copane active" data-pane="overview" id="hx-pane-ov"></div>
+    <div class="copane active" data-pane="deepdive" id="hx-pane-dd"></div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<script src="env.js"></script>
+<script type="module">
+  const m = await import('./js/overviews/amzn.js');
+  const ov = m.amznOverview;
+  const c = { id: 'harness-amzn', ticker: 'AMZN', name: 'Amazon.com, Inc.' };
+  const povr = document.getElementById('hx-pane-ov');
+  const pdd  = document.getElementById('hx-pane-dd');
+  povr.innerHTML = ov.html(c);
+  pdd.innerHTML  = ov.deepDive ? ov.deepDive.html(c) : '<em>no deepDive</em>';
+  ov.init(c);
+  if (ov.deepDive && ov.deepDive.init) ov.deepDive.init(c);
+  window.__ov = ov; window.__c = c;
+  const st = document.getElementById('hx-status');
+  st.textContent = 'mounted · overview ' + povr.innerHTML.length + ' chars · deepdive ' + pdd.innerHTML.length + ' chars';
+  function toggle(btn, el){ btn.addEventListener('click', function(){
+    const on = btn.classList.toggle('on'); el.style.display = on ? '' : 'none'; }); }
+  toggle(document.getElementById('hx-ov'), povr);
+  toggle(document.getElementById('hx-dd'), pdd);
+  console.log('[harness] amzn mounted');
+</script>
+</body>
+</html>

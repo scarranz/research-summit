@@ -89,7 +89,7 @@ actually use; every chart carries a table that follows its state.
 
 ## Step 5 — Verify in a harness, not by reading
 
-Copy `harness-amzn.html` to `harness-<ticker>.html` (gitignored) and mount the module. Then:
+Copy the tracked `harness-amzn.html` to `harness-<ticker>.html` (your copy stays gitignored) and mount the module. Then:
 
 - **Force a frame before asserting on any chart** — `requestAnimationFrame` is paused in a
   non-foreground tab, so an automated pass will otherwise find zero charts built.

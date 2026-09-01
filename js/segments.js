@@ -1392,25 +1392,39 @@ function custSplcSection(c, n){
         'revenue the named customers account for between them. Under ~10% it renders as a list of ' +
         'disclosed relationships, never as a concentration chart.</p>'));
   }
-  var rows = sp.customers.slice().sort(function(a, b){ return (b.pct || 0) - (a.pct || 0); });
-  var cov = sp.sumPct != null
-    ? 'They account for <b>' + pctStr(sp.sumPct / 100) + '</b> of revenue between them; the other ' +
-      pctStr(1 - sp.sumPct / 100) + ' is not attributed to anyone here.'
+  var rows = sp.customers.slice().sort(function(a, b){ return (b.amtM || 0) - (a.amtM || 0); });
+  // How much of the company this register actually reaches. Deliberately the FIRST thing said: a
+  // census this thin is a fact about the SOURCE, and reading it as concentration would be wrong.
+  var covPct = (sp.sizedSumM != null && sp.revBaseM) ? (sp.sizedSumM / sp.revBaseM * 100) : null;
+  var cov = covPct != null
+    ? 'The ' + sp.sized + ' sized relationships add to about <b>$' + (sp.sizedSumM / 1000).toFixed(1) +
+      'B</b> as filed — under <b>' + (covPct < 0.2 ? '0.2' : covPct.toFixed(1)) + '%</b> of ' +
+      esc(sp.revBaseLabel || 'revenue') + '. Read that as the reach of the register, not as ' +
+      'concentration: this company\'s customers are consumers and small sellers, and consumers do ' +
+      'not file.'
     : 'None of them carries a size, so they can be listed but not ranked.';
   return sec(n, 'Who has said they buy from Amazon', sp.named + ' named · ' + sp.sized + ' sized',
     '<p class="sg-lede">' + tierTag('COUNTERPARTY') +
       'Assembled by Bloomberg from what these companies filed about Amazon, not from what Amazon ' +
       'filed about them. ' + cov + '</p>' +
     '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr>' +
-      '<th class="rs-ft-h">Customer</th><th>Ticker</th><th>Relationship</th>' +
-      '<th>% of revenue</th><th>Basis</th><th>As of</th></tr></thead><tbody>' +
+      '<th class="rs-ft-h">Customer</th><th>Ticker</th><th>What the relationship is</th>' +
+      '<th>Size as filed</th><th>Share of their cost</th><th>Basis</th></tr></thead><tbody>' +
       rows.map(function(r){
+        // Periods differ per counterparty and are NOT annualised, so each size is shown with the
+        // period it belongs to. A blank size is a disclosed relationship Bloomberg never sized.
+        var size = r.amtM == null ? '<span class="rs-ft-nil">not sized</span>'
+          : '$' + (r.amtM >= 1000 ? (r.amtM / 1000).toFixed(1) + 'B' : r.amtM.toFixed(1) + 'M') +
+            ' <span class="rs-ft-dim">· ' + esc(r.period || '') + '</span>';
         return '<tr class="rs-ft-main"><td class="rs-ft-h">' + esc(r.name) + '</td>' +
-          '<td>' + esc(r.ticker || '—') + '</td><td>' + esc(r.relationship || '—') + '</td>' +
-          '<td>' + (r.pct == null ? '—' : pctStr(r.pct / 100)) + '</td>' +
-          '<td>' + esc(r.basis || '—') + '</td><td>' + esc(r.asOf || '—') + '</td></tr>';
+          '<td>' + esc(r.ticker || '—') + '</td><td>' + esc(r.what || r.relationship || '—') + '</td>' +
+          '<td>' + size + '</td>' +
+          '<td>' + (r.theirPct == null ? '<span class="rs-ft-nil">—</span>' : r.theirPct.toFixed(1) + '%') + '</td>' +
+          '<td>' + esc(r.basis || '—') + '</td></tr>';
       }).join('') + '</tbody></table></div>' +
-    '<p class="sg-cite">' + esc(sp.source) + (sp.file ? ' · ' + esc(sp.file) : '') + '</p>');
+    '<p class="sg-cite">Share of their cost = SPLC cost percentage: how much of that counterparty\'s ' +
+      'tracked cost goes to this company. ' + esc(sp.source) +
+      (sp.file ? ' · ' + esc(sp.file) : '') + '</p>');
 }
 
 // ── the two card decks, in the same master-detail language as the rest of Top Line ────────────

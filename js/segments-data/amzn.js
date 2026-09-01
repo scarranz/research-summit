@@ -95,7 +95,48 @@ export var amznSegments = {
     ],
     concentration: { disclosed: false, note: 'The filing carries no customer-concentration disclosure of any kind — no "no single customer accounted for 10%" sentence, and no named customer anywhere. Amazon discloses SUPPLIER concentration ("During 2025, no vendor accounted for 10% or more of our purchases") and not the customer side. Named customers therefore have to come from the earnings calls, and any sizing of a customer is somebody\'s estimate, not a disclosure.' },
     cite: { form: '10-K', period: '2025-12-31', accession: '0001018724-26-000004', url: 'https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm' },
-    splc: null,
+    // Bloomberg SPLC — the only customer register that does not depend on Amazon choosing to speak.
+    // It is assembled from what OTHER companies filed about buying from Amazon. Two things about it
+    // decide how it may be drawn, and both are stated on screen rather than smoothed over:
+    //  1. It is tiny. The fifteen sized relationships add to ~$1.0B against $716.9B of FY2025 net
+    //     sales — under 0.2%. That is a limit of the source, not a fact about Amazon: Amazon's
+    //     customers are consumers and small sellers, and consumers do not file.
+    //  2. It is all AWS. Every counterparty here is an IT reseller/distributor (TD SYNNEX, Arrow,
+    //     CDW, Computacenter, Insight, ePlus) or a software company whose product runs on AWS. Not
+    //     one retail customer appears, because retail customers have no disclosure that would name
+    //     Amazon as a supplier.
+    // `amtM` is the relationship as filed, in $M, for the period beside it — periods differ per
+    // counterparty and are NOT annualised here, so the sum is a floor, not an estimate of a year.
+    // `theirPct` is SPLC's cost percentage: the share of THAT counterparty's tracked cost which
+    // goes to Amazon. It is the informative column — Appian at 29.8% is a company that runs on AWS.
+    splc: {
+      revBaseM: 716924, revBaseLabel: 'FY2025 net sales',
+      named: 20, sized: 15, sizedSumM: 992.3,
+      source: 'Bloomberg Supply Chain Analysis (SPLC) — counterparty disclosures, not Amazon filings',
+      file: 'nvidia-map-reference/SPLC_BBG.xlsx (AMZN block, customer side)',
+      customers: [
+        { name: 'TD SYNNEX',            ticker: 'SNX',      amtM: 384.3, period: 'Q4 2025', theirPct: 2.37,  basis: 'COGS', what: 'IT distributor — resells AWS' },
+        { name: 'IBM',                  ticker: 'IBM',      amtM: 261.4, period: 'Q1 2025', theirPct: 4.02,  basis: 'COGS', what: 'Runs client workloads on AWS' },
+        { name: 'Arrow Electronics',    ticker: 'ARW',      amtM: 92.4,  period: 'Q4 2025', theirPct: 1.19,  basis: 'COGS', what: 'IT distributor — resells AWS' },
+        { name: 'CDW',                  ticker: 'CDW',      amtM: 91.6,  period: 'Q1 2025', theirPct: 2.25,  basis: 'COGS', what: 'IT reseller — resells AWS' },
+        { name: 'Computacenter',        ticker: 'CCC LN',   amtM: 57.3,  period: 'Q2 2025', theirPct: 2.47,  basis: 'COGS', what: 'European IT reseller' },
+        { name: 'Insight Enterprises',  ticker: 'NSIT',     amtM: 27.5,  period: 'Q1 2025', theirPct: 1.62,  basis: 'COGS', what: 'IT reseller — resells AWS' },
+        { name: 'CECONOMY',             ticker: 'CEC GR',   amtM: 27.0,  period: 'Q2 2026', theirPct: 0.52,  basis: 'COGS', what: 'European electronics retail' },
+        { name: 'Chunghwa Telecom',     ticker: '2412 TT',  amtM: 18.7,  period: 'Q3 2025', theirPct: 1.53,  basis: 'COGS', what: 'Taiwanese carrier — cloud' },
+        { name: 'Appian',               ticker: 'APPN',     amtM: 16.2,  period: 'Q1 2026', theirPct: 29.77, basis: 'COGS', what: 'Its product runs on AWS' },
+        { name: 'ePlus',                ticker: 'PLUS',     amtM: 6.0,   period: 'Q2 2026', theirPct: 1.35,  basis: 'COGS', what: 'IT reseller — resells AWS' },
+        { name: 'Bic Camera',           ticker: '3048 JP',  amtM: 3.4,   period: 'Q4 2025', theirPct: 0.28,  basis: 'COGS', what: 'Japanese electronics retail' },
+        { name: 'Liquidity Services',   ticker: 'LQDT',     amtM: 2.5,   period: 'FY2025',  theirPct: 3.77,  basis: 'COGS', what: 'Returns / surplus marketplace' },
+        { name: 'PCCW',                 ticker: '8 HK',     amtM: 1.9,   period: 'Q2 2025', theirPct: 0.30,  basis: 'COGS', what: 'Hong Kong carrier — cloud' },
+        { name: 'Casino Guichard',      ticker: 'CO FP',    amtM: 1.2,   period: 'Q2 2025', theirPct: 0.07,  basis: 'COGS', what: 'French grocery retail' },
+        { name: 'OneRobotics Shenzhen', ticker: '6600 HK',  amtM: 0.9,   period: 'H1 2025', theirPct: 7.21,  basis: 'COGS', what: 'Robotics — sells on Amazon' },
+        { name: 'United Natural Foods', ticker: 'UNFI',     amtM: null,  period: 'FY2025',  theirPct: null,  basis: null,   what: 'Grocery wholesaler (Whole Foods)' },
+        { name: 'Murex',                ticker: '4506683Z FP', amtM: null, period: 'FY2025', theirPct: null, basis: null,   what: 'Capital-markets software' },
+        { name: 'LTM',                  ticker: 'LTM IN',   amtM: null,  period: 'FY2025',  theirPct: null,  basis: null,   what: 'Indian IT services' },
+        { name: 'Tata Elxsi',           ticker: 'TELX IN',  amtM: null,  period: 'FY2025',  theirPct: null,  basis: null,   what: 'Indian engineering services' },
+        { name: 'Alteryx',              ticker: 'AYX',      amtM: null,  period: 'FY2023',  theirPct: null,  basis: null,   what: 'Analytics software on AWS' },
+      ],
+    },
   },
   other: [
     {

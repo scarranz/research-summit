@@ -122,6 +122,13 @@ export function consensusEvoHtml(ticker, metric){
       '<div class="cev-sends"><span data-cevend0></span><span data-cevend1></span></div>'+
     '</div>'+
     '<div class="cev-sub" data-cevsub></div>'+
+    // Non-negotiable 3 (CHART_ENGINE_REFERENCE §0.2): every chart carries a table under it, inside a
+    // dropdown, holding at minimum everything drawn. This one was the last chart in the profile
+    // without one. Same .rs-collap / .rs-ft chrome as the Results tables so it reads as native.
+    '<div class="rs-collap" data-cevtbl>'+
+      '<button type="button" class="rs-collap-h" data-cevtblb></button>'+
+      '<div class="rs-collap-b" data-cevtblbody hidden><div class="rs-tablewrap" data-cevtable></div></div>'+
+    '</div>'+
   '</div>';
 }
 
@@ -135,8 +142,10 @@ export function consensusEvoInit(root, ticker, metric){
       fysBar=host.querySelector('[data-cevfys]'), sel=host.querySelector('[data-cevmetric]'),
       winLoEl=host.querySelector('[data-cevwinlo]'), winHiEl=host.querySelector('[data-cevwinhi]'),
       fillEl=host.querySelector('[data-cevfill]'), ticksEl=host.querySelector('[data-cevticks]'),
-      end0El=host.querySelector('[data-cevend0]'), end1El=host.querySelector('[data-cevend1]');
-  var chart=null, mode='fixed', mkey=metric, onFY={}, winLo=0, winHi=labels.length-1;
+      end0El=host.querySelector('[data-cevend0]'), end1El=host.querySelector('[data-cevend1]'),
+      tblHead=host.querySelector('[data-cevtblb]'), tblBody=host.querySelector('[data-cevtblbody]'),
+      tblEl=host.querySelector('[data-cevtable]');
+  var chart=null, mode='fixed', mkey=metric, onFY={}, winLo=0, winHi=labels.length-1, tblOpen=false;
 
   function toV(m,v){ return v==null?null:+(v/(m.scale||1)).toFixed(m.scale===1?2:1); }
   function unitTip(m,y){ if(m.unit==='$') return '$'+y; if(m.unit==='$B') return '$'+y+'B'; return y+' '+m.unit; }
@@ -150,6 +159,57 @@ export function consensusEvoInit(root, ticker, metric){
     if(fillEl && n>1){ fillEl.style.left=(winLo/(n-1)*100)+'%'; fillEl.style.width=((winHi-winLo)/(n-1)*100)+'%'; }
     if(ticksEl && n>1){ var h=''; for(var i=0;i<n;i++){ h+='<span class="cev-stick'+((i>=winLo&&i<=winHi)?' on':'')+'" style="left:'+(i/(n-1)*100)+'%" title="'+esc(labels[i])+'"></span>'; } ticksEl.innerHTML=h; }
     if(end0El) end0El.textContent=labels[winLo]||''; if(end1El) end1El.textContent=labels[winHi]||'';
+    renderTable();   // the table windows with the chart
+  }
+
+  // ── The table under the chart ──────────────────────────────────────────────────────────────────
+  // Rows are the FY lines currently on the chart; columns are the snapshots inside the period
+  // window. It mirrors the chart exactly: dropping a year with its pill drops the row, and moving
+  // the range slider moves the columns. The right column is the revision the reader came for —
+  // how far the Street moved that year's number across the visible span.
+  function tblHeadHtml(){
+    var on=Object.keys((d.metrics[mkey]||{}).fixed||{}).filter(function(fy){ return onFY[fy]; }).length;
+    var n=winHi-winLo+1;
+    return '<span class="rs-collap-ic">'+(tblOpen?'▾':'▸')+'</span>Snapshot detail'+
+      '<span class="rs-collap-sub">'+(tblOpen?'hide':'show')+' · '+on+' year'+(on===1?'':'s')+
+      ' over '+n+' snapshot'+(n===1?'':'s')+'</span>';
+  }
+  function renderTable(){
+    if(!tblEl||!tblHead) return;
+    tblHead.innerHTML=tblHeadHtml();
+    if(tblBody) tblBody.hidden=!tblOpen;
+    if(!tblOpen) return;                       // build only what is on screen
+    var m=d.metrics[mkey]; if(!m){ tblEl.innerHTML=''; return; }
+    var cols=[]; for(var i=winLo;i<=winHi;i++) cols.push(i);
+    var fys=Object.keys(m.fixed).filter(function(fy){ return onFY[fy]; })
+      .sort(function(a,b){ return +a-+b; });
+    if(!fys.length){ tblEl.innerHTML='<div class="rs-ft-cap">No year selected — tap a year above to put it on the chart.</div>'; return; }
+    var h='<div class="rs-ft-cap">'+esc(m.label||m.short||mkey)+' · each column is a Bloomberg snapshot, each row a fiscal year · '+
+      '<b>◆</b> = the year had reported by then (the actual) · blank = the year was outside the forecast window at that snapshot · '+
+      'the right column is the move across the visible span</div>';
+    h+='<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr><th class="rs-ft-h"></th>';
+    cols.forEach(function(i){ h+='<th>'+esc(labels[i])+'</th>'; });
+    h+='<th class="rs-ft-s">Revision</th></tr></thead><tbody>';
+    fys.forEach(function(fy){
+      var kinds=m.fixedKind[fy], vals=m.fixed[fy], win=fyWindow(kinds, vals);
+      var col=FY_COLORS[fy]||'#334155', first=null, last=null;
+      h+='<tr><td class="rs-ft-h" style="font-weight:700;color:'+col+'">FY'+esc(fy)+'</td>';
+      cols.forEach(function(i){
+        var inWin=(i>=win.start && i<=win.end), v=inWin?toV(m, vals[i]):null;
+        if(v!=null){ if(first==null) first=v; last=v; }
+        h+='<td'+(kinds[i]==='A'?' class="rs-ft-este"':'')+'>'+
+           (v==null?'<span class="rs-ft-nil">—</span>':esc(String(unitTip(m,v)))+(kinds[i]==='A'?' <b>◆</b>':''))+'</td>';
+      });
+      var rev='<span class="rs-ft-nil">—</span>';
+      if(first!=null && last!=null && first!==0){
+        var dv=last-first, pc=dv/Math.abs(first)*100;
+        rev='<span style="color:'+(dv>=0?'#16A34A':'#DC2626')+'">'+(dv>=0?'+':'−')+Math.abs(pc).toFixed(1)+'%</span>'+
+            ' <span class="rs-ft-dim">· '+(dv>=0?'+':'−')+esc(String(unitTip(m, +Math.abs(dv).toFixed(2))))+'</span>';
+      }
+      h+='<td class="rs-ft-s">'+rev+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+    tblEl.innerHTML=h;
   }
 
   function resetFYs(){
@@ -233,6 +293,7 @@ export function consensusEvoInit(root, ticker, metric){
     applyWindow();   // re-assert the period window every rebuild (build() recreates the chart)
   }
 
+  if(tblHead) tblHead.onclick=function(){ tblOpen=!tblOpen; renderTable(); };
   sel.onchange=function(){ mkey=sel.value; resetFYs(); build(); };
   if(winLoEl) winLoEl.oninput=function(){ winLo=+this.value; if(winLo>winHi){ winHi=winLo; if(winHiEl) winHiEl.value=winHi; } applyWindow(); };
   if(winHiEl) winHiEl.oninput=function(){ winHi=+this.value; if(winHi<winLo){ winLo=winHi; if(winLoEl) winLoEl.value=winLo; } applyWindow(); };

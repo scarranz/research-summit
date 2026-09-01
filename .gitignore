@@ -43,3 +43,4 @@ harness-*.html
 PR_BODY_*.md
 scripts/segments/dcf_*.json
 scripts/segments/tenk/
+_validate_palette.js

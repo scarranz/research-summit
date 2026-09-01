@@ -35,6 +35,7 @@ import { amznSegments } from './segments-data/amzn.js';
 import { amznResults } from './results-data/amzn.js';
 import { registerResultsData, resultsHtml, initResults } from './results.js';
 import { AMZN_THEMES } from './themes-data/amzn.js';
+import { SUMMIT_CAT, SUMMIT_MUTE } from './viz-palette.js';   // the portal's fixed categorical palette
 
 // The Notes taxonomy names segments in prose; the datasets key them. One map, stated once.
 var THEME_SEG = { AMZN: { 'Amazon US': 'na', 'Amazon International': 'intl', 'AWS': 'aws' } };
@@ -50,7 +51,12 @@ export function getSegmentsData(ticker){ return SEGMENTS_DATA[ticker] || null; }
 var RS_ACT  = 'rgba(30,39,51,0.92)';
 var RS_CONS = 'rgba(124,134,148,0.85)';
 var RS_FWD  = '#2563EB';
-var SG_RAMP = ['#1B3F94', '#2563EB', '#5E8BEC', '#93B1F0', '#7A5AF8', '#2E8B57'];
+// WAS a six-step ramp — four blues, a violet and a green — used to tell SEGMENTS apart. A ramp
+// encodes magnitude, not identity, so the seven product lines on Top Line ▸ Other arrived as seven
+// near-identical blues that no reader could separate. It also CYCLED (`i % length`), so a
+// hypothetical seventh entity silently re-used the first one's colour. Both are categorical-colour
+// errors. Now the portal's fixed categorical order, assigned by slot and never cycled.
+var SG_RAMP = SUMMIT_CAT;
 
 function rsRR(ctx, x, y, w, h, r){
   ctx.beginPath();
@@ -458,7 +464,7 @@ function modesHtml(id, opts){
 function chipsHtml(id, list, view, firstIsTarget){
   return blockSeries(list, view).map(function(x, i){
     var money = x.d.unit === 'usdM' || x.d.unit === 'eps';
-    var color = !money ? RS_CONS : (firstIsTarget && i === 0 ? RS_ACT : SG_RAMP[i % SG_RAMP.length]);
+    var color = !money ? RS_CONS : (firstIsTarget && i === 0 ? RS_ACT : (SG_RAMP[i] || SUMMIT_MUTE));
     return '<button type="button" class="rs-leg' + (vis(id, x.key) ? '' : ' off') +
       '" data-sgleg="' + esc(id) + '|' + esc(x.key) + '" title="Show / hide">' +
       '<span class="rs-leg-line" style="background:' + color + '"></span>' +
@@ -526,7 +532,7 @@ function buildChartBlock(id, list, view, opts){
       return (x.d.unit === 'usdM') ? v / 1000 : (x.d.unit === 'pct' ? v * 100 : v);
     });
     var isTarget = opts.firstIsTarget && i === 0;
-    var color = !m ? RS_CONS : (isTarget ? RS_ACT : SG_RAMP[i % SG_RAMP.length]);
+    var color = !m ? RS_CONS : (isTarget ? RS_ACT : (SG_RAMP[i] || SUMMIT_MUTE));
     datasets.push((m && opts.bars && !isTarget)
       ? { label: x.label || x.d.short, data: data, type: 'bar', backgroundColor: color,
           maxBarThickness: 34, order: 3, yAxisID: 'y' }

@@ -5161,11 +5161,218 @@ function aBuildSplc(){
         scales:{ x:{ grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ callback:function(v){ return v+'%'; } } }, y:{ grid:{ display:false }, ticks:{ font:{ size:10 } } } } } }); aZoom('aSplcGeo'); }
 }
 // ─── Miscellaneous ▸ M&A and Other Analysis — future placeholders (nothing deep-dived for AMZN yet).
-function aMandaBody(){
-  return '<p class="ov-lede"><b>No M&amp;A deep-dived yet.</b> Placeholder for acquisitions Summit has studied in depth — none for Amazon to date.</p>';
+// ── Miscellaneous ▸ M&A ─────────────────────────────────────────────────────────────────────────
+// Every figure here is the number Amazon put in an acquisition note, NET OF CASH ACQUIRED — which
+// is not the number the press printed. Whole Foods was reported at $13.7B and filed at $13.2B; MGM
+// was reported at $8.45B and filed at $6.1B plus $2.5B of assumed debt repaid at closing. Where the
+// two differ, the filing wins and the gap is shown, because the gap IS the point: the cash that
+// left the building is the only figure a capital-allocation read can use.
+//
+// This pane deliberately adds NO inline <style> of its own — it is the reference for how a new pane
+// should be built. .ov-kpis/.ov-kpi, .ov-sec-h, .ov-lede, .ov-fynote and .ov-foot come from
+// css/overview.css; .rs-ft / .rs-ft-scroll from css/results.css. The one borrowed component is
+// .ov-collap, whose CSS is still injected by the Overview's inline <style> block rather than living
+// in a stylesheet — it works only because that block leaks document-wide. That is precisely the
+// thing the design-system pass has to fix, and it is noted here so the fix has a starting point.
+var AMZN_MNA = [
+  { date: 'May 12, 2017',  name: 'Souq Group',        price: 583,   what: 'Middle-East e-commerce', seg: 'International', note: 'Became Amazon.ae / Amazon.sa.' },
+  { date: 'Aug 28, 2017',  name: 'Whole Foods Market', price: 13200, what: 'Grocery chain, 400+ stores', seg: 'North America', note: 'The largest acquisition Amazon has ever made. Press reported $13.7B; the filing says $13.2B net of cash. It contributed $5.8B of net sales and a $(24)M operating loss in its first four months.' },
+  { date: 'Apr 12, 2018',  name: 'Ring',              price: 839,   what: 'Connected doorbells / home security', seg: 'North America', note: 'Devices, and the data behind Amazon Sidewalk.' },
+  { date: 'Sep 11, 2018',  name: 'PillPack',          price: 753,   what: 'Mail-order pharmacy', seg: 'North America', note: 'Became Amazon Pharmacy.' },
+  { date: 'Mar 17, 2022',  name: 'MGM Holdings',      price: 6100,  what: 'Film and TV library', seg: 'North America', note: 'Press reported $8.45B. The filing says $6.1B net of cash <b>plus $2.5B of assumed debt repaid immediately after closing</b>. Acquired assets: $3.4B of video content and $4.9B of goodwill.' },
+  { date: 'Feb 22, 2023',  name: '1Life Healthcare (One Medical)', price: 3500, what: 'Primary-care clinics', seg: 'North America', note: 'Acquired assets: $1.3B of intangibles and $2.5B of goodwill.' },
+];
+// The years Amazon named nobody — the aggregate line from each acquisition note.
+var AMZN_MNA_AGG = [
+  { yr: '2017', amt: 204,  txt: 'other companies, aggregate' },
+  { yr: '2018', amt: 57,   txt: 'other companies, aggregate' },
+  { yr: '2019', amt: 315,  txt: 'aggregate — nobody named' },
+  { yr: '2020', amt: 1200, txt: 'aggregate — nobody named, but <b>$1.1B of it was capitalised to in-process R&amp;D</b>: the shape of a pre-revenue technology purchase. Amazon announced Zoox in June 2020 and has never disclosed its price.' },
+  { yr: '2021', amt: 496,  txt: 'aggregate — nobody named' },
+  { yr: '2022', amt: 141,  txt: 'other companies, aggregate (besides MGM)' },
+  { yr: '2023', amt: null, txt: 'immaterial, besides One Medical' },
+  { yr: '2024', amt: 780,  txt: 'aggregate — nobody named, none individually material' },
+  { yr: '2025', amt: null, txt: '<b>"immaterial aggregate cash consideration"</b> — the whole year, in five words' },
+];
+function aMnaMoney(m){
+  if (m == null) return '<span class="rs-ft-nil">immaterial</span>';
+  return m >= 1000 ? '$' + (m / 1000).toFixed(1) + 'B' : '$' + m + 'M';
 }
+function aMandaBody(){
+  var h = '<p class="ov-lede"><b>Amazon has stopped buying companies.</b> It has named six acquisitions in nine years, none since February 2023. ' +
+    'In FY2025 the whole year of acquisition activity added <b>$112M</b> of goodwill — against <b>$131.8B</b> of capex. ' +
+    'The question this tab answers is not "what did Amazon buy"; it is <b>why a company with this much cash almost never buys anything</b>.</p>';
+
+  h += '<div class="ov-kpis">' + [
+    ['Goodwill added by M&amp;A, FY2025', '$112M', 'from $320M in FY2024', 'muted'],
+    ['FY2025 capex', '$131.8B', '1,177&times; the goodwill it bought', 'muted'],
+    ['Largest deal ever', '$13.2B', 'Whole Foods, Aug 2017 · net of cash', 'muted'],
+    ['Deals named since 2017', '6', 'last one Feb 2023', 'muted'],
+    ['Goodwill sitting in AWS', '$1.3B', '5.7% of group goodwill', 'muted'],
+  ].map(function(k){
+    return '<div class="ov-kpi"><div class="ov-kpi-l">' + k[0] + '</div>' +
+      '<div class="ov-kpi-v">' + k[1] + '</div>' +
+      '<div class="ov-kpi-d ' + k[3] + '">' + k[2] + '</div></div>';
+  }).join('') + '</div>';
+
+  // ① The record ────────────────────────────────────────────────────────────────────────────────
+  h += '<div class="ov-sec-h">Every acquisition Amazon has named, 2017&ndash;2025</div>';
+  h += '<p class="ov-lede">Prices are as filed &mdash; <b>net of cash acquired</b> &mdash; which is why two of them are smaller than the number you remember.</p>';
+  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr>' +
+    '<th class="rs-ft-h">Acquisition</th><th>Closed</th><th>Price, net of cash</th><th>What it bought</th><th>Segment</th>' +
+    '</tr></thead><tbody>' +
+    AMZN_MNA.map(function(d){
+      return '<tr class="rs-ft-main"><td class="rs-ft-h">' + esc(d.name) + '</td>' +
+        '<td>' + esc(d.date) + '</td><td>' + aMnaMoney(d.price) + '</td>' +
+        '<td>' + esc(d.what) + '</td><td>' + esc(d.seg) + '</td></tr>';
+    }).join('') + '</tbody></table></div>';
+  h += collapsible('What each one was for, and what the filing added',
+    AMZN_MNA.map(function(d){
+      return '<div style="margin:0 0 11px"><div style="font-size:12.5px;font-weight:800;color:var(--navy)">' +
+        esc(d.name) + ' <span style="font-weight:600;color:var(--mu)">' + esc(d.date) + ' · ' + aMnaMoney(d.price) + '</span></div>' +
+        '<div style="font-size:12px;line-height:1.55;color:var(--navy)">' + d.note + '</div></div>';
+    }).join(''));
+
+  // ② The years with no names ───────────────────────────────────────────────────────────────────
+  h += '<div class="ov-sec-h">The years Amazon named nobody</div>';
+  h += '<p class="ov-lede">A company only has to name an acquisition when it is <i>material</i>. Everything else arrives as one aggregate line ' +
+    '&mdash; and the aggregate line is where the trend shows.</p>';
+  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr>' +
+    '<th class="rs-ft-h">Year</th><th>Unnamed acquisition activity</th><th>What the note says</th>' +
+    '</tr></thead><tbody>' +
+    AMZN_MNA_AGG.map(function(a){
+      return '<tr class="rs-ft-main"><td class="rs-ft-h">' + esc(a.yr) + '</td>' +
+        '<td>' + aMnaMoney(a.amt) + '</td><td>' + a.txt + '</td></tr>';
+    }).join('') + '</tbody></table></div>';
+
+  // ③ Where the goodwill sits ───────────────────────────────────────────────────────────────────
+  h += '<div class="ov-sec-h">AWS was built, not bought</div>';
+  h += '<p class="ov-lede">Goodwill is the accumulated record of what a company paid <i>above</i> the assets it acquired &mdash; so the segment split ' +
+    'says where Amazon grew by buying and where it grew by building.</p>';
+  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr>' +
+    '<th class="rs-ft-h">Segment</th><th>Goodwill, Dec 31 2025</th><th>Share of group goodwill</th><th>FY2025 revenue</th><th>FY2025 operating income</th>' +
+    '</tr></thead><tbody>' +
+    [['North America', 19363, 426305, 29619], ['International', 2578, 161894, 4750], ['AWS', 1332, 128725, 45606]].map(function(r){
+      return '<tr class="rs-ft-main"><td class="rs-ft-h">' + r[0] + '</td>' +
+        '<td>$' + (r[1] / 1000).toFixed(1) + 'B</td>' +
+        '<td>' + (r[1] / 23273 * 100).toFixed(1) + '%</td>' +
+        '<td>$' + (r[2] / 1000).toFixed(1) + 'B</td>' +
+        '<td>$' + (r[3] / 1000).toFixed(1) + 'B</td></tr>';
+    }).join('') +
+    '<tr class="rs-ft-main"><td class="rs-ft-h" style="font-weight:700">Consolidated</td><td>$23.3B</td><td>100%</td><td>$716.9B</td><td>$80.0B</td></tr>' +
+    '</tbody></table></div>';
+  h += '<p class="ov-fynote">AWS produces <b>57% of group operating income</b> off <b>5.7% of group goodwill</b>. Nothing Amazon bought built that segment ' +
+    '&mdash; and the $19.4B parked in North America is mostly Whole Foods, MGM and One Medical, i.e. the retail and media side is where the acquired value sits.</p>';
+
+  // ④ What replaced M&A ─────────────────────────────────────────────────────────────────────────
+  h += '<div class="ov-sec-h">What replaced buying companies</div>';
+  h += '<p class="ov-lede">Two things: <b>capex</b>, at a scale no acquisition could match, and <b>minority stakes</b> that buy the position without ' +
+    'buying the company &mdash; which is also how Amazon avoids the review that killed its last deal.</p>';
+  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr>' +
+    '<th class="rs-ft-h">Cash deployed</th><th>FY2024</th><th>FY2025</th><th>What it was</th>' +
+    '</tr></thead><tbody>' +
+    '<tr class="rs-ft-main"><td class="rs-ft-h">Purchases of property &amp; equipment</td><td>$83.0B</td><td>$131.8B</td>' +
+      '<td>Technology infrastructure, majority for AWS; expected to rise again in 2026</td></tr>' +
+    '<tr class="rs-ft-main"><td class="rs-ft-h">Acquisition and other investment activity</td><td>$7.1B</td><td>$3.8B</td>' +
+      '<td>Primarily convertible notes from Anthropic, PBC &mdash; $2.7B of it in 2025</td></tr>' +
+    '<tr class="rs-ft-main"><td class="rs-ft-h">Goodwill actually created by acquisitions</td><td>$320M</td><td>$112M</td>' +
+      '<td>The entire year of buying companies</td></tr>' +
+    '</tbody></table></div>';
+  h += collapsible('The Anthropic position is now bigger than every acquisition except Whole Foods',
+    '<p style="font-size:12px;line-height:1.6;color:var(--navy)">Amazon holds Anthropic through <b>convertible notes and nonvoting preferred stock</b>, not equity control &mdash; ' +
+    'so it never appears in an acquisition note. The convertible notes alone carried an estimated fair value of <b>~$13.8B at Dec 31 2024</b>, ' +
+    'which is already larger than every deal Amazon has ever closed except Whole Foods.</p>' +
+    '<p style="font-size:12px;line-height:1.6;color:var(--navy)">It also drives the income statement. FY2025 <b>Other income (expense), net was +$15.2B</b> ' +
+    '(vs $(2.3)B in FY2024), of which <b>$7.7B</b> was the valuation gain on private-company equity &mdash; primarily the Anthropic nonvoting preferred. ' +
+    'That gain is <b>not operating income</b>, and stripping it is exactly what the <b>Normalized</b> toggle on Bottom Line ▸ General does.</p>');
+
+  // ⑤ The deal that did not happen ──────────────────────────────────────────────────────────────
+  h += '<div class="ov-sec-h">The deal that did not happen</div>';
+  h += '<p class="ov-lede">Amazon agreed to buy <b>iRobot</b> for approximately <b>$1.7B including its debt</b> (August 2022, amended July 2023). ' +
+    'In <b>January 2024 the two sides agreed to terminate</b> it, under European Commission opposition. It is the only deal in this record that Amazon ' +
+    'announced and did not complete &mdash; and the last time it tried to buy anything of size.</p>';
+
+  h += '<div class="ov-foot">Every figure from Amazon\'s own acquisition notes, net of cash acquired: FY2017 10-K (Souq, Whole Foods), FY2020 10-K ' +
+    '(Ring, PillPack, 2019&ndash;2020 aggregates), FY2022 10-K (MGM, 2021&ndash;2022), FY2023 10-K (One Medical, iRobot termination), FY2025 10-K ' +
+    '(2024&ndash;2025 activity, goodwill by segment, Anthropic). Segment revenue and operating income per the FY2025 10-K. Press-reported headline prices ' +
+    'are named only where they differ from the filed figure.</div>';
+  return h;
+}
+// ── Miscellaneous ▸ Other Analysis ──────────────────────────────────────────────────────────────
+// The genre of this tab (set by DHR) is: changes in definition or estimate that move REPORTED profit
+// without anything happening in the business. For Amazon that is overwhelmingly one thing — the
+// useful life of a server — and every figure below is Amazon's own quantification of its own change,
+// taken from the 10-K that announced it. Nothing here is a Summit estimate.
+var AMZN_LIVES = [
+  { eff: 'Jan 1, 2020', asset: 'Servers', chg: '3 → 4 years', dir: 'up',
+    effect: 'D&amp;A <b>−$2.7B</b> · net income <b>+$2.0B</b>', per: '+$3.98 / diluted share', src: 'FY2020 10-K' },
+  { eff: 'Jan 1, 2022', asset: 'Servers (networking to 6 yrs)', chg: '4 → 5 years', dir: 'up',
+    effect: 'D&amp;A <b>−$3.6B</b> · benefit to net loss <b>$2.8B</b>', per: '+$0.28 / diluted share', src: 'FY2022 10-K' },
+  { eff: 'Jan 1, 2024', asset: 'Servers', chg: '5 → 6 years', dir: 'up',
+    effect: 'anticipated <b>+$3.1B</b> to 2024 operating income', per: 'as forecast by Amazon', src: 'FY2023 10-K' },
+  { eff: 'Jan 1, 2025', asset: 'A subset of servers &amp; networking', chg: '6 → 5 years', dir: 'down',
+    effect: 'D&amp;A <b>+$1.4B</b> · net income <b>−$1.0B</b>', per: '−$0.10 / diluted share · primarily AWS', src: 'FY2025 10-K' },
+  { eff: 'Jan 1, 2025', asset: 'Heavy equipment', chg: '10 → 13 years', dir: 'up',
+    effect: 'estimated <b>+$0.9B</b> to 2025 operating income', per: 'in Fulfillment · North America + International', src: 'FY2024 10-K' },
+];
 function aOtherAnalysisBody(){
-  return '<p class="ov-lede"><b>Future placeholder.</b> Ad-hoc analysis will land here — nothing deep-dived for Amazon yet.</p>';
+  var h = '<p class="ov-lede"><b>How long a server lasts is an assumption, and Amazon has changed it four times.</b> ' +
+    'Between 2020 and 2024 every change ran the same way — lives got longer, depreciation got smaller, reported profit got bigger, by roughly ' +
+    '<b>$9.4B</b> of avoided D&amp;A across the three change-years. Then, effective January 2025, it reversed on servers for the first time. ' +
+    'None of this is a Summit adjustment: each figure is Amazon quantifying its own change in the 10-K that announced it.</p>';
+
+  h += '<div class="ov-sec-h">Every useful-life change Amazon has quantified</div>';
+  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr>' +
+    '<th class="rs-ft-h">Effective</th><th>Asset</th><th>Change</th><th>Effect as Amazon quantified it</th><th>Per share / segment</th><th>Source</th>' +
+    '</tr></thead><tbody>' +
+    AMZN_LIVES.map(function(l){
+      var arrow = l.dir === 'up'
+        ? '<span style="color:var(--pos);font-weight:700">▲ longer</span>'
+        : '<span style="color:var(--neg);font-weight:700">▼ shorter</span>';
+      return '<tr class="rs-ft-main"><td class="rs-ft-h">' + esc(l.eff) + '</td>' +
+        '<td>' + l.asset + '</td><td>' + esc(l.chg) + ' &nbsp;' + arrow + '</td>' +
+        '<td>' + l.effect + '</td><td>' + l.per + '</td>' +
+        '<td><span class="rs-ft-dim">' + esc(l.src) + '</span></td></tr>';
+    }).join('') + '</tbody></table></div>';
+  h += '<p class="ov-fynote"><b>Read the last two rows together.</b> Both took effect on the same day. Amazon <i>shortened</i> server lives — a charge that ' +
+    'lands almost entirely in <b>AWS</b> — and in the same motion <i>lengthened</i> heavy-equipment lives, a credit that lands in <b>Fulfillment</b>, ' +
+    'i.e. in the retail segments. Net across the group it is roughly a wash (−$1.4B of D&amp;A against +$0.9B of operating income); across the segments ' +
+    'it is not. A 2025 AWS margin compared with a 2024 AWS margin is not comparing the same accounting.</p>';
+  h += collapsible('Why Amazon says it shortened them, in its own words',
+    '<p style="font-size:12px;line-height:1.6;color:var(--navy)">&ldquo;The shorter useful lives are due to the increased pace of technology development, ' +
+    'particularly in the area of artificial intelligence and machine learning.&rdquo; <span style="color:var(--mu)">— FY2025 10-K, Note 1</span></p>' +
+    '<p style="font-size:12px;line-height:1.6;color:var(--navy)">That sentence is the one to keep. For five years the depreciation assumption moved in the ' +
+    'direction that helped reported profit, and the stated reason was that hardware was lasting longer. The 2025 reversal is the first time the AI cycle ' +
+    'showed up as a reason to assume the opposite — and it is a forward-looking statement about how fast Amazon expects its own AI fleet to become obsolete. ' +
+    'It applies to <b>a subset</b> of servers and networking equipment, not the fleet, so the charge is a floor rather than the full effect if the pace holds.</p>');
+
+  h += '<div class="ov-sec-h">What else sat inside FY2025 reported profit</div>';
+  h += '<p class="ov-lede">A second reason FY2025 margins are hard to compare: an unusually loaded year of settlements, severance and impairments, ' +
+    'which is why &ldquo;Other operating expense, net&rdquo; swung to <b>−$4.6B</b> from −$0.8B in FY2024.</p>';
+  h += '<div class="rs-ft-scroll"><table class="rs-ft"><thead><tr>' +
+    '<th class="rs-ft-h">Item</th><th>FY2025 amount</th><th>Where it was booked</th><th>Segment hit</th>' +
+    '</tr></thead><tbody>' +
+    [['FTC lawsuit settlement (Q3)', '$2.5B', 'Other operating expense, net', 'North America'],
+     ['Q4 settlements, tax disputes, severance, impairments', '$2.4B', 'Other operating expense, net &amp; Fulfillment', 'mostly International'],
+     ['&nbsp;&nbsp;— of which Italy tax disputes + a lawsuit', '$1.1B', 'Other operating expense, net &amp; Fulfillment', 'International'],
+     ['Severance for planned role eliminations', '~$2.7B', 'Technology &amp; infrastructure · Fulfillment · Sales &amp; marketing', 'all segments'],
+     ['Asset impairments', '~$1.3B', 'operating expenses', 'all segments']].map(function(r){
+      return '<tr class="rs-ft-main"><td class="rs-ft-h">' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td><td>' + r[3] + '</td></tr>';
+    }).join('') + '</tbody></table></div>';
+  h += '<p class="ov-fynote">The severance ($1.8B in Q3, $730M in Q4) is <b>not</b> in &ldquo;Other operating expense&rdquo; — it is spread across the ' +
+    'three functional expense lines, so it depresses each of them without ever appearing as a one-off. That is the item most likely to be read as ' +
+    'operating deleverage when it is a charge.</p>';
+
+  h += '<div class="ov-sec-h">And one that never touches operating income at all</div>';
+  h += '<p class="ov-lede">FY2025 <b>Other income (expense), net was +$15.2B</b>, against −$2.3B in FY2024 — of which <b>$7.7B</b> was the valuation gain ' +
+    'on private-company equity, primarily the <b>Anthropic</b> nonvoting preferred. It is below the operating line, it is non-cash, and it is the single ' +
+    'largest swing in the FY2025 income statement. The <b>Normalized</b> toggle on <b>Bottom Line ▸ General</b> strips it; ' +
+    '<b>Miscellaneous ▸ M&amp;A</b> covers why the stake exists.</p>';
+
+  h += '<div class="ov-foot">Useful-life changes and their quantified effects per the 10-K that announced each one (FY2020, FY2022, FY2023, FY2024 and ' +
+    'FY2025 Form 10-K, Note 1 — Description of Business and Accounting Policies). FY2025 charges and Other income per the FY2025 10-K. ' +
+    'Every amount is Amazon\'s own disclosure; no Summit adjustment is applied on this tab.</div>';
+  return h;
 }
 function deepDiveHtml(c){
   _co=c;   // capture company (id + ticker) for the Watch List DB wiring

@@ -59,8 +59,12 @@ var LINES = [
     k:'cogs', n:'Cost of sales', c:BRAND2, tag:'$10,045M · 40.9%',
     pick:function(a){ return a.rev ? a.cogs / a.rev * 100 : null; },
     kpis:[['$10,045M','Cost of sales, FY2025'],['59.1%','Gross margin'],['58.7–60.8%','Rango de 4 años'],['+3.9%','Crecimiento a/a']],
-    def:'The Company’s segment operating profit … reflects cost of sales, SG&A expenses and R&D expenses, <b>excluding depreciation, amortization of intangible assets and impairments</b>. Included within these categories of expenses are overhead expenses, stock compensation expense, restructuring charges and allocated corporate expenses.',
-    defSrc:'10-K FY2025, nota de segmentos',
+    defNote:'Danaher <b>no publica una definición única</b> de cost of sales. Publica tres políticas que, juntas, determinan qué cae dentro:',
+    defs:[
+      { x:'<b>Inventories</b> — Inventories include the costs of <b>material, labor and overhead</b>.', src:'10-K FY2025, políticas contables' },
+      { x:'<b>Shipping and Handling</b> — Shipping and handling costs are included <b>as a component of cost of sales</b>. Revenue derived from shipping and handling costs billed to customers is included in sales.', src:'10-K FY2025, políticas contables' },
+      { x:'…reflects cost of sales, SG&A expenses and R&D expenses, <b>excluding depreciation, amortization of intangible assets and impairments</b>. Included within these categories of expenses are overhead expenses, stock compensation expense, restructuring charges and allocated corporate expenses.', src:'10-K FY2025, nota de segmentos — sobre el beneficio por segmento, no sobre esta línea' }
+    ],
     comp:[
       ['Materiales y trabajo directo','El grueso. Consumibles de bioprocessing, reactivos de diagnóstico, instrumentos.'],
       ['Overhead de manufactura','Incluido explícitamente por la nota de segmentos, junto con SBC y cargos de reestructuración.'],
@@ -78,16 +82,22 @@ var LINES = [
   {
     k:'sga', n:'SG&A', c:BRAND, tag:'$8,235M · 33.5%',
     pick:function(a){ return a.rev ? a.sga / a.rev * 100 : null; },
-    kpis:[['$8,235M','SG&A, FY2025'],['33.5%','% de ventas'],['$562M','Deterioros dentro, FY2025'],['$265M','Deterioros, FY2024']],
-    def:'Advertising — Advertising costs are expensed as incurred.',
-    defSrc:'10-K FY2025, políticas contables',
+    kpis:[['$8,235M','SG&A, FY2025'],['33.5%','% de ventas'],['$562M','Deterioros totales FY2025'],['$432M','…de los cuales, el trade name']],
+    defNote:'⚠ <b>Danaher nunca define SG&A como línea.</b> Lo que publica son frases sueltas que dicen «esto cae en SG&A» — y resultan ser exactamente las que explican por qué la línea creció. Los deterioros están dentro, en las propias palabras del filing:',
+    defs:[
+      { x:'…the Company recorded a noncash impairment charge of <b>$432 million pretax</b> ($328 million after-tax) for the year ended December 31, 2025 related to a trade name <b>which is included in SG&A expenses</b> in the Consolidated Statement of Earnings.', src:'10-K FY2025, nota de intangibles — el deterioro de FY2025' },
+      { x:'…a noncash impairment charge of <b>$222 million pretax</b> ($169 million after-tax) related to the trade name for the year ended December 31, 2024, <b>which is included in SG&A expenses</b>…', src:'10-K FY2025 — el mismo cargo, un año antes' },
+      { x:'…the Company terminated three contracts with distributors and incurred <b>$56 million of costs</b> related to the termination of the arrangements, <b>which are recorded within SG&A expenses</b>…', src:'10-K FY2025' },
+      { x:'Earnings attributable to noncontrolling interests have been reflected in <b>selling, general and administrative (“SG&A”) expenses</b> and were insignificant in all periods presented.', src:'10-K FY2025, bases de presentación' },
+      { x:'<b>Advertising</b> — Advertising costs are expensed as incurred.', src:'10-K FY2025, políticas contables' }
+    ],
     comp:[
       ['Fuerza de ventas y marketing','El costo comercial de vender instrumentos y consumibles a través de tres segmentos.'],
       ['Amortización de intangibles','La mayor parte de los ~$1.7B corre por aquí. Es la razón principal de que SG&A suba mientras las ventas no.'],
       ['<b>Deterioros</b>','$265M en FY2024 y <b>$562M en FY2025</b> — casi todos en Life Sciences, y todos dentro de esta línea.'],
       ['Costos de transacción de M&A','Los cargos de Masimo aterrizan aquí y en Diagnostics.']
     ],
-    compNote: '⚠ <b>Esta es la línea que hace que la tendencia del margen operativo engañe.</b> El margen reportado cayó de 21.8% (FY23) a 19.1% (FY25). Sumando los deterioros de vuelta, el margen limpio va de ~21.8% a <b>~21.4%</b> — prácticamente plano. La caída de 270pb es casi toda deterioros, no deterioro operativo.',
+    compNote: '<b>Sobre las dos cifras de deterioro:</b> los <b>$562M</b> son el total de la compañía en FY2025; los <b>$432M</b> que cita el filing arriba son el cargo del <i>trade name</i>, que es la pieza mayor de ese total y cae en Life Sciences. No se contradicen — una contiene a la otra.<br><br>⚠ <b>Esta es la línea que hace que la tendencia del margen operativo engañe.</b> El margen reportado cayó de 21.8% (FY23) a 19.1% (FY25). Sumando los deterioros de vuelta, el margen limpio va de ~21.8% a <b>~21.4%</b> — prácticamente plano. La caída de 270pb es casi toda deterioros, no deterioro operativo.',
     why:'SG&A creció <b>+15.6% entre FY2022 y FY2025</b> mientras las ventas cayeron 7.8%. Casi nada de eso es gasto comercial: es amortización de adquisiciones y deterioros. Leer esta línea como ineficiencia comercial es el error más fácil de cometer con Danaher.',
     drivers:[
       ['Deterioros','FY2024 $265M, FY2025 $562M. Concentrados en Life Sciences. No recurrentes, pero han ocurrido dos años seguidos.'],
@@ -99,8 +109,10 @@ var LINES = [
     k:'rnd', n:'I+D', c:GREEN, tag:'$1,598M · 6.5%',
     pick:function(a){ return a.rev ? a.rnd / a.rev * 100 : null; },
     kpis:[['$1,598M','I+D, FY2025'],['6.5%','% de ventas'],['6.3–6.6%','Rango de 4 años'],['+0.9%','Crecimiento a/a']],
-    def:'The Company conducts research and development (“R&D”) activities for the purpose of developing new products, enhancing the functionality, effectiveness, ease of use and reliability of the Company’s existing products and expanding the applications for which uses of the Company’s products are appropriate. <b>R&D costs are expensed as incurred.</b>',
-    defSrc:'10-K FY2025, políticas contables',
+    defNote:'La única de las tres líneas que Danaher <b>sí define de frente</b>:',
+    defs:[
+      { x:'<b>Research and Development</b> — The Company conducts research and development (“R&D”) activities for the purpose of developing new products, enhancing the functionality, effectiveness, ease of use and reliability of the Company’s existing products and expanding the applications for which uses of the Company’s products are appropriate. The Company’s R&D efforts include internal initiatives and those that use <b>licensed or acquired technology</b>. <b>R&D costs are expensed as incurred.</b>', src:'10-K FY2025, políticas contables' }
+    ],
     comp:[
       ['Desarrollo interno','El grueso, a través de los tres segmentos.'],
       ['Tecnología licenciada o adquirida','El 10-K lo nombra explícitamente como parte del esfuerzo de I+D.'],
@@ -116,8 +128,11 @@ var LINES = [
     k:'amort', n:'Amortización de intangibles', c:AMBER, tag:'$1,697M · 6.9%',
     pick:function(a){ return a.rev ? a.amort / a.rev * 100 : null; },
     kpis:[['$1,697M','Amortización, FY2025'],['6.9%','% de ventas'],['~$1,900M','Guía FY2026 (post-Masimo)'],['$2.77','Por acción, FY2025']],
-    def:'We exclude the amortization of acquisition-related intangible assets because the amount and timing of such charges are significantly impacted by the timing and size of the Company’s acquisitions.',
-    defSrc:'8-K 2T26, definición del non-GAAP',
+    defNote:'No es una línea del estado de resultados, así que no tiene política contable propia. Lo que sí hay es la razón por la que Danaher la excluye del ajustado, y la confirmación de que corre por dentro de otras líneas:',
+    defs:[
+      { x:'<b>Amortization of Intangible Assets:</b> We exclude the amortization of acquisition-related intangible assets because <b>the amount and timing of such charges are significantly impacted by the timing and size of the Company’s acquisitions</b>.', src:'8-K 2T26, definición del non-GAAP' },
+      { x:'…reflects cost of sales, SG&A expenses and R&D expenses, <b>excluding depreciation, amortization of intangible assets and impairments</b>.', src:'10-K FY2025, nota de segmentos — por eso el beneficio por segmento no la lleva y el consolidado sí' }
+    ],
     comp:[
       ['No tiene línea propia','Corre <b>dentro</b> de cost of sales y de SG&A. No se puede leer desde el estado de resultados — sólo desde el flujo de efectivo y las notas.'],
       ['Es todo el puente GAAP → ajustado','FY2025: EPS GAAP $5.03 contra ajustado $7.80. La brecha de $2.77 es esencialmente esta línea.'],
@@ -173,6 +188,9 @@ var EXP_CSS = '<style>' + [
   '.dxp .ew-h{font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin:16px 0 8px;display:flex;align-items:center;gap:8px}',
   '.dxp .ew-h::after{content:"";flex:1;height:1px;background:var(--bdr)}',
   '.dxp .ew-h:first-child{margin-top:0}',
+  '.dxp .ew-defnote{font-size:11.5px;color:var(--mu);line-height:1.6;margin:0 0 10px}',
+  '.dxp .ew-defnote b{color:var(--navy)}',
+  '.dxp .ew-q + .ew-q{margin-top:9px}',
   '.dxp .ew-q{font-size:11.5px;line-height:1.65;color:var(--navy);font-style:italic;border-left:3px solid ' + BRAND + ';padding:0 0 0 12px;margin:0}',
   '.dxp .ew-att{display:block;font-style:normal;font-size:9.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--mu);margin-top:5px}',
   '.dxp .ew-boxes{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}',
@@ -203,7 +221,17 @@ function panel(line, A){
   var h = '<div class="ew-strip">' + line.kpis.map(function(k){
     return '<div class="ew-tile"><div class="ew-tv">' + esc(k[0]) + '</div><div class="ew-tl">' + esc(k[1]) + '</div></div>';
   }).join('') + '</div>';
-  if (line.def) h += '<div class="ew-h">Cómo lo define el filing</div><p class="ew-q">“' + line.def + '”<span class="ew-att">' + esc(line.defSrc) + '</span></p>';
+  // Several quotes per line, not one. Danaher does not define most of its expense lines as a
+  // whole — it publishes scattered policy sentences that each say "this falls in that line". One
+  // borrowed quote standing in for a definition is worse than three real ones plus a note saying
+  // no single definition exists, which is what `defNote` is for.
+  if (line.defs && line.defs.length){
+    h += '<div class="ew-h">Cómo lo define el filing</div>';
+    if (line.defNote) h += '<div class="ew-defnote">' + line.defNote + '</div>';
+    h += line.defs.map(function(d){
+      return '<p class="ew-q">“' + d.x + '”<span class="ew-att">' + esc(d.src) + '</span></p>';
+    }).join('');
+  }
   h += '<div class="ew-h">Qué hay dentro de esta línea</div>' + boxes(line.comp);
   if (line.compNote) h += '<div class="ew-warn">' + line.compNote + '</div>';
   h += '<div class="ew-h">Como % de ventas en el tiempo</div>' + spark(pts, labs, line.c);

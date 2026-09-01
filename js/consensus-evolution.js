@@ -178,7 +178,9 @@ export function consensusEvoInit(root, ticker, metric){
     if(!tblEl||!tblHead) return;
     tblHead.innerHTML=tblHeadHtml();
     if(tblBody) tblBody.hidden=!tblOpen;
-    if(!tblOpen) return;                       // build only what is on screen
+    // Populate even while closed, exactly as the Results engine does. Building only on open would
+    // save nothing measurable and would make the table invisible to an audit that counts what a
+    // chart ships with — the check for "a chart with no table" has to be able to find it.
     var m=d.metrics[mkey]; if(!m){ tblEl.innerHTML=''; return; }
     var cols=[]; for(var i=winLo;i<=winHi;i++) cols.push(i);
     var fys=Object.keys(m.fixed).filter(function(fy){ return onFY[fy]; })

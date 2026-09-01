@@ -288,7 +288,16 @@ The portal needs a login the session often does not have. Mount the module direc
 
 - **`requestAnimationFrame` is paused in a tab that is not foreground.** Every chart builder is
   behind rAF, so an automated pass can click through the whole profile and find **zero** charts
-  built. Force a frame — take a screenshot — before asserting anything about a chart.
+  built. Taking a screenshot forces one frame and builds one pane's worth. For a full sweep,
+  route rAF through a timer for the duration of the audit — that took Amazon from 4 charts built
+  to all 25:
+
+  ```js
+  const realRAF = window.requestAnimationFrame;
+  window.requestAnimationFrame = fn => setTimeout(() => fn(performance.now()), 0);
+  // …click every section and sub-tab, waiting ~500ms each…
+  window.requestAnimationFrame = realRAF;
+  ```
 - **CSS `zoom` does not reflow a Chart.js canvas.** Zooming out to fit a pane in one screenshot
   makes correct charts look broken. Audit at zoom 1 and scroll.
 
@@ -299,7 +308,7 @@ The portal needs a login the session often does not have. Mount the module direc
 | Duplicate DOM ids | collect `[id]`, count, expect the Results engine's three instances — verify every handler is pane-scoped |
 | Charts without tables | per sub-pane, count canvases with a `Chart.getChart()` against `table` elements |
 | Invalid colours | scan every chart's `backgroundColor`/`borderColor` for `NaN` |
-| Panes with no source footer | per sub-pane, look for `.ov-foot` / `.ov-fynote` / `.sg-src` |
+| Panes with no source footer | per sub-pane, look for `.ov-foot, .ov-fynote, .ew-foot, .sg-src, .ave-subh-note, .rs-ft-cap`. **The source footer currently has three different class names** (`.ov-foot` in the canonical set, `.ew-foot` in the Bottom Line panes, `.sg-src` in Top Line) — a narrower selector reports four false positives on Amazon. Converging them is a design-system item; a **new** pane uses `.ov-foot` |
 | Empty panes | per sub-pane, flag `innerText.length < 400` |
 | Inline `<style>` count | `document.querySelectorAll('.copane style').length` — a new profile should add none |
 
